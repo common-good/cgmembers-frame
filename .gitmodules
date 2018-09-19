@@ -1,0 +1,15 @@
+[submodule "cgmembers/rcredits"]
+	path = cgmembers/rcredits
+	url = git@github.com:common-good/rCredits.git
+[submodule "cgmembers/vendor/tcpdf"]
+	path = cgmembers/vendor/tcpdf
+	url = git@github.com:common-good/tcpdf.git
+[submodule "cgmembers/vendor/swiftmailer"]
+	path = cgmembers/vendor/swiftmailer
+	url = git@github.com:common-good/swiftmailer.git
+[submodule "cgmembers/vendor/parsedown"]
+	path = cgmembers/vendor/parsedown
+	url = git@github.com:common-good/parsedown.git
+[submodule "cgmembers/vendor/gherkin"]
+	path = cgmembers/vendor/gherkin
+	url = git@github.com:common-good/GherkinForDrupal.git
