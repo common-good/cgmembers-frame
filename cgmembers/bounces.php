@@ -1,4 +1,11 @@
 <?php
+
+/**
+ * @file
+ * Report (to an admin) bounced messages emailed from the server.
+ * Copy this to the web root.
+ */
+ 
 $pw = 'i{RyS)hf]c@6';
 $domain = $_SERVER['HTTP_HOST'];
 $bounceBox = "bounce@$domain";
