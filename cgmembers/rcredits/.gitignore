@@ -1,0 +1,9 @@
+GoogChart.class.php
+*.test
+doSay.txt
+*.crt
+OLD/
+GnuMICR.ttf
+unminified/
+x/
+test/

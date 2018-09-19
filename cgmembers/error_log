@@ -1,0 +1,1168 @@
+[23-Apr-2017 13:41:30 America/New_York] PHP Fatal error:  Call to undefined function theme() in /home/new/public_html/includes/errors.inc on line 245
+[23-Apr-2017 13:41:35 America/New_York] PHP Fatal error:  Call to undefined function theme() in /home/new/public_html/includes/errors.inc on line 245
+[23-Apr-2017 13:41:46 America/New_York] PHP Fatal error:  Call to undefined function theme() in /home/new/public_html/includes/errors.inc on line 245
+[23-Apr-2017 16:47:59 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 16:50:01 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 16:55:01 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 16:59:21 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:00:02 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:00:02 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:05:01 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:10:02 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:13:49 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:14:20 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:15:02 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:16:03 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:16:09 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:20:01 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:20:59 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:25:02 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:30:01 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:33:07 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:33:15 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:33:17 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:33:36 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:33:37 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:33:53 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:33:58 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:34:13 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:34:13 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:34:22 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:34:23 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:34:37 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:34:56 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:35:02 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:35:07 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:35:19 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:35:28 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:35:31 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:35:49 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:35:52 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:40:02 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:42:38 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:42:49 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:43:31 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:43:31 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:45:07 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:50:01 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:53:57 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 17:55:01 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 18:00:02 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 18:00:02 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 18:00:35 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 18:00:40 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 18:00:46 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 18:02:16 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 18:05:01 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 18:05:56 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 18:06:09 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 18:09:34 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[23-Apr-2017 18:10:02 America/New_York] PHP Fatal error:  Uncaught Error: Call to undefined function mb_split() in /home/new/public_html/rcredits/bootstrap.inc:1320
+Stack trace:
+#0 /home/new/public_html/rcredits/rcredits.module(193): ray('r w s u be db t...')
+#1 /home/new/public_html/rcredits/rcredits.module(182): funcNickname('loga')
+#2 /home/new/public_html/rcredits/rcredits.module(84): f('u.loga', 'FATAL', Array)
+#3 [internal function]: rcredits_exception_handler(Object(Error))
+#4 {main}
+  thrown in /home/new/public_html/rcredits/bootstrap.inc on line 1320
+[16-Jun-2017 14:05:54 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/rweb/rweb.inc on line 2457
+[16-Jun-2017 17:32:29 America/New_York] PHP Fatal error:  Allowed memory size of 33554432 bytes exhausted (tried to allocate 524288 bytes) in /home/new/public_html/rcredits/qo.class on line 167
+[18-Jun-2017 20:14:32 America/New_York] PHP Parse error:  syntax error, unexpected 'debug' (T_STRING) in /home/new/public_html/rcredits/admin/admin-forms.inc(443) : eval()'d code on line 2
+[19-Jun-2017 00:16:47 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Vote\required() in /home/new/public_html/rcredits/rvote/rvote-ballot.inc on line 713
+[19-Jun-2017 00:47:59 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Vote\required() in /home/new/public_html/rcredits/rvote/rvote-ballot.inc on line 713
+[19-Jun-2017 00:57:31 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Vote\required() in /home/new/public_html/rcredits/rvote/rvote-ballot.inc on line 713
+[19-Jun-2017 01:32:33 America/New_York] PHP Parse error:  syntax error, unexpected 'q' (T_STRING) in /home/new/public_html/rcredits/rvote/rvote-web.inc on line 96
+[19-Jun-2017 08:41:03 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\nextMember() in /home/new/public_html/rcredits/admin/admin-forms.inc on line 791
+[19-Jun-2017 08:41:08 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\nextMember() in /home/new/public_html/rcredits/admin/admin-forms.inc on line 791
+[19-Jun-2017 08:41:23 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\nextMember() in /home/new/public_html/rcredits/admin/admin-forms.inc on line 791
+[19-Jun-2017 08:41:54 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\nextMember() in /home/new/public_html/rcredits/admin/admin-forms.inc on line 791
+[19-Jun-2017 09:04:54 America/New_York] PHP Parse error:  syntax error, unexpected end of file in /home/new/public_html/rcredits/admin/admin-forms.inc(443) : eval()'d code on line 4
+[19-Jun-2017 15:28:23 America/New_York] PHP Parse error:  syntax error, unexpected ')' in /home/new/public_html/rcredits/admin/admin-forms.inc(453) : eval()'d code on line 1
+[19-Jun-2017 15:28:54 America/New_York] PHP Parse error:  syntax error, unexpected ')' in /home/new/public_html/rcredits/admin/admin-forms.inc(453) : eval()'d code on line 1
+[19-Jun-2017 15:31:53 America/New_York] PHP Parse error:  syntax error, unexpected ')' in /home/new/public_html/rcredits/admin/admin-forms.inc(453) : eval()'d code on line 1
+[19-Jun-2017 15:32:42 America/New_York] PHP Parse error:  syntax error, unexpected ')' in /home/new/public_html/rcredits/admin/admin-forms.inc(453) : eval()'d code on line 1
+[21-Jun-2017 07:07:16 America/New_York] PHP Parse error:  syntax error, unexpected 'permission' (T_STRING) in /home/new/public_html/rcredits/admin/admin-forms.inc(453) : eval()'d code on line 2
+[26-Jun-2017 15:10:38 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/admin/admin-forms.inc on line 753
+[26-Jun-2017 15:10:57 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/admin/admin-forms.inc on line 753
+[26-Jun-2017 15:35:39 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/admin/admin-web.inc on line 81
+[26-Jun-2017 15:36:00 America/New_York] PHP Parse error:  syntax error, unexpected ':' in /home/new/public_html/rcredits/admin/admin-web.inc on line 81
+[26-Jun-2017 15:36:19 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\fmtAmount() in /home/new/public_html/rcredits/admin/admin-web.inc on line 81
+[26-Jun-2017 15:37:48 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\fmtAmount() in /home/new/public_html/rcredits/admin/admin-web.inc on line 81
+[03-Jul-2017 16:47:18 America/New_York] PHP Parse error:  syntax error, unexpected end of file in /home/new/public_html/rcredits/rweb/rweb.inc on line 3130
+[10-Jul-2017 14:10:12 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/rcredits/rcredits.inc on line 494
+[10-Jul-2017 15:17:06 America/New_York] PHP Parse error:  syntax error, unexpected end of file in /home/new/public_html/rcredits/rweb/rweb.inc on line 1880
+[13-Jul-2017 21:44:42 America/New_York] PHP Parse error:  syntax error, unexpected '', 12), '' (T_CONSTANT_ENCAPSED_STRING), expecting ']' in /home/new/public_html/rcredits/rweb/queries.inc on line 56
+[14-Jul-2017 01:39:21 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/admin/admin-forms.inc(462) : eval()'d code on line 1
+[28-Jul-2017 12:11:34 America/New_York] PHP Parse error:  syntax error, unexpected '=' in /home/new/public_html/rcredits/admin/admin-forms.inc(462) : eval()'d code on line 15
+[29-Jul-2017 12:42:48 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/admin/admin-forms.inc(462) : eval()'d code on line 1
+[03-Aug-2017 21:38:56 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\blockView() in /home/new/public_html/rcredits/rweb/rweb.module on line 43
+[08-Aug-2017 23:00:02 America/New_York] PHP Parse error:  syntax error, unexpected end of file in /home/new/public_html/rcredits/rcredits.inc on line 386
+[11-Aug-2017 15:26:47 America/New_York] PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to allocate 11020 bytes) in /home/new/public_html/rcredits/rcredits-util.inc on line 832
+[16-Aug-2017 09:28:17 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/includes/form.inc on line 1812
+[16-Aug-2017 09:29:40 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/includes/form.inc on line 1812
+[16-Aug-2017 12:42:36 America/New_York] PHP Fatal error:  Call to undefined function rCredits\ssnErr() in /home/new/public_html/rcredits/acct.class on line 1430
+[21-Aug-2017 17:02:01 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\tellAdmin() in /home/new/public_html/rcredits/rcredits-util.inc on line 590
+[24-Aug-2017 09:55:09 America/New_York] PHP Fatal error:  Maximum execution time of 240 seconds exceeded in /home/new/public_html/includes/errors.inc on line 59
+[28-Aug-2017 10:36:15 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\tellAdmin() in /home/new/public_html/rcredits/rcredits-util.inc on line 591
+[28-Aug-2017 10:36:46 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\tellAdmin() in /home/new/public_html/rcredits/rcredits-util.inc on line 591
+[29-Aug-2017 23:40:03 America/New_York] PHP Fatal error:  Uncaught exception 'PDOException' with message 'SQLSTATE[HY000] [2002] No such file or directory' in /home/new/public_html/includes/database/database.inc:307
+Stack trace:
+#0 /home/new/public_html/includes/database/database.inc(307): PDO->__construct('mysql:host=loca...', 'new_rcredits', 'mXWa4OauWNuDakm', Array)
+#1 /home/new/public_html/includes/database/mysql/database.inc(51): DatabaseConnection->__construct('mysql:host=loca...', 'new_rcredits', 'mXWa4OauWNuDakm', Array)
+#2 /home/new/public_html/includes/database/database.inc(1689): DatabaseConnection_mysql->__construct(Array)
+#3 /home/new/public_html/includes/database/database.inc(1479): Database::openConnection('default', 'default')
+#4 /home/new/public_html/includes/database/database.inc(2351): Database::getConnection('default')
+#5 /home/new/public_html/includes/lock.inc(167): db_query('SELECT expire, ...', Array)
+#6 /home/new/public_html/includes/lock.inc(146): lock_may_be_available('variable_init')
+#7 /home/new/public_html/rcredits/bootstrap.inc(732): lo in /home/new/public_html/includes/database/database.inc on line 307
+[31-Aug-2017 12:03:43 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\tellAdmin() in /home/new/public_html/rcredits/rcredits-util.inc on line 591
+[31-Aug-2017 12:04:32 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\tellAdmin() in /home/new/public_html/rcredits/rcredits-util.inc on line 591
+[31-Aug-2017 14:46:49 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\tellAdmin() in /home/new/public_html/rcredits/rcredits-util.inc on line 591
+[31-Aug-2017 16:38:58 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/includes/form.inc on line 1812
+[31-Aug-2017 16:42:09 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/includes/form.inc on line 1812
+[02-Sep-2017 12:10:15 America/New_York] PHP Parse error:  syntax error, unexpected '<' in /home/new/public_html/rcredits/admin/admin-forms.inc(529) : eval()'d code on line 2
+[02-Sep-2017 12:26:54 America/New_York] PHP Parse error:  syntax error, unexpected '<' in /home/new/public_html/rcredits/admin/admin-forms.inc(529) : eval()'d code on line 3
+[02-Sep-2017 12:31:44 America/New_York] PHP Parse error:  syntax error, unexpected ',' in /home/new/public_html/rcredits/admin/admin-forms.inc(529) : eval()'d code on line 2
+[02-Sep-2017 12:40:21 America/New_York] PHP Parse error:  syntax error, unexpected '$zero' (T_VARIABLE) in /home/new/public_html/rcredits/admin/admin-forms.inc(529) : eval()'d code on line 8
+[04-Sep-2017 18:45:26 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/admin/admin-forms.inc(530) : eval()'d code on line 2
+[04-Sep-2017 19:25:33 America/New_York] PHP Fatal error:  Call to undefined function u\sqlSerialValue() in /home/new/public_html/rcredits/rweb/queries.inc on line 14
+[04-Sep-2017 19:26:29 America/New_York] PHP Fatal error:  Call to undefined function u\sqlSerialValue() in /home/new/public_html/rcredits/rweb/queries.inc on line 14
+[04-Sep-2017 20:13:22 America/New_York] PHP Parse error:  syntax error, unexpected ',' in /home/new/public_html/rcredits/rweb/queries.inc on line 18
+[04-Sep-2017 23:46:57 America/New_York] PHP Parse error:  syntax error, unexpected ',' in /home/new/public_html/rcredits/rweb/queries.inc on line 18
+[06-Sep-2017 10:07:48 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\tellAdmin() in /home/new/public_html/rcredits/rcredits-util.inc on line 591
+[06-Sep-2017 21:19:14 America/New_York] PHP Fatal error:  Maximum execution time of 240 seconds exceeded in /home/new/public_html/includes/errors.inc on line 59
+[06-Sep-2017 22:30:02 America/New_York] PHP Parse error:  syntax error, unexpected ''ol style="list-style-type:low' (T_ENCAPSED_AND_WHITESPACE) in /home/new/public_html/rcredits/rweb/rweb.inc on line 984
+[06-Sep-2017 22:40:26 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/admin/admin-forms.inc on line 395
+[06-Sep-2017 23:41:44 America/New_York] PHP Parse error:  syntax error, unexpected '(' in /home/new/public_html/rcredits/admin/admin-web.inc on line 82
+[07-Sep-2017 10:02:43 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\tellAdmin() in /home/new/public_html/rcredits/rcredits-util.inc on line 591
+[12-Sep-2017 09:47:26 America/New_York] PHP Parse error:  syntax error, unexpected 'list' (T_LIST) in /home/new/public_html/rcredits/admin/admin-forms.inc on line 393
+[12-Sep-2017 09:47:29 America/New_York] PHP Parse error:  syntax error, unexpected 'list' (T_LIST) in /home/new/public_html/rcredits/admin/admin-forms.inc on line 393
+[13-Sep-2017 12:50:12 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\tellAdmin() in /home/new/public_html/rcredits/rcredits-util.inc on line 591
+[13-Sep-2017 13:26:18 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\tellAdmin() in /home/new/public_html/rcredits/rcredits-util.inc on line 591
+[13-Sep-2017 16:18:33 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\tellAdmin() in /home/new/public_html/rcredits/rcredits-util.inc on line 591
+[14-Sep-2017 10:53:24 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\tellAdmin() in /home/new/public_html/rcredits/rcredits-util.inc on line 591
+[14-Sep-2017 11:56:05 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/admin/admin-forms.inc(539) : eval()'d code on line 1
+[14-Sep-2017 11:57:09 America/New_York] PHP Parse error:  syntax error, unexpected '[' in /home/new/public_html/rcredits/admin/admin-forms.inc(539) : eval()'d code on line 1
+[14-Sep-2017 15:57:33 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[14-Sep-2017 15:58:55 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[14-Sep-2017 16:02:08 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[14-Sep-2017 16:29:29 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[14-Sep-2017 18:53:45 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[14-Sep-2017 18:53:54 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[14-Sep-2017 18:53:58 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[14-Sep-2017 18:55:24 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[14-Sep-2017 19:10:51 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[14-Sep-2017 19:11:10 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[14-Sep-2017 20:26:19 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[14-Sep-2017 20:27:51 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[14-Sep-2017 20:32:15 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[14-Sep-2017 20:32:42 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[14-Sep-2017 20:34:08 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[14-Sep-2017 20:37:48 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[15-Sep-2017 08:50:23 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[15-Sep-2017 08:51:00 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[15-Sep-2017 08:52:39 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[15-Sep-2017 10:28:42 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\tellAdmin() in /home/new/public_html/rcredits/rcredits-util.inc on line 591
+[15-Sep-2017 10:44:58 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[15-Sep-2017 10:53:28 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[15-Sep-2017 10:54:02 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[15-Sep-2017 11:06:26 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[15-Sep-2017 11:08:15 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[15-Sep-2017 11:16:01 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[15-Sep-2017 11:16:30 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[15-Sep-2017 11:20:54 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[15-Sep-2017 11:20:58 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[15-Sep-2017 11:21:52 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[15-Sep-2017 12:59:35 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1199
+[15-Sep-2017 13:01:19 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1202
+[15-Sep-2017 13:04:16 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1202
+[15-Sep-2017 13:06:12 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Web\signupCoDisply() in /home/new/public_html/rcredits/acct.class on line 1202
+[15-Sep-2017 16:06:55 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\tellAdmin() in /home/new/public_html/rcredits/rcredits-util.inc on line 591
+[19-Sep-2017 11:20:05 America/New_York] PHP Fatal error:  Call to a member function firstCo() on boolean in /home/new/public_html/rcredits/rweb/rweb-help.inc on line 61
+[19-Sep-2017 11:20:08 America/New_York] PHP Fatal error:  Call to a member function firstCo() on boolean in /home/new/public_html/rcredits/rweb/rweb-help.inc on line 61
+[19-Sep-2017 11:20:11 America/New_York] PHP Fatal error:  Call to a member function firstCo() on boolean in /home/new/public_html/rcredits/rweb/rweb-help.inc on line 61
+[19-Sep-2017 11:35:29 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/includes/form.inc on line 1812
+[19-Sep-2017 11:35:38 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/includes/form.inc on line 1812
+[19-Sep-2017 11:36:49 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/includes/form.inc on line 1812
+[19-Sep-2017 14:41:08 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/includes/form.inc on line 1812
+[19-Sep-2017 14:48:51 America/New_York] PHP Parse error:  syntax error, unexpected 'unset' (T_UNSET) in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1440
+[19-Sep-2017 14:49:53 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/includes/form.inc on line 1812
+[19-Sep-2017 14:51:14 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/includes/form.inc on line 1812
+[19-Sep-2017 18:56:41 America/New_York] PHP Parse error:  syntax error, unexpected end of file in /home/new/public_html/rcredits/admin/admin-forms.inc(535) : eval()'d code on line 10
+[20-Sep-2017 23:10:21 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\EXPECT() in /home/new/public_html/rcredits/rcredits-db.inc on line 25
+[20-Sep-2017 23:28:37 America/New_York] PHP Parse error:  syntax error, unexpected ',' in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1266
+[20-Sep-2017 23:30:01 America/New_York] PHP Parse error:  syntax error, unexpected ',' in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1266
+[21-Sep-2017 00:00:02 America/New_York] PHP Parse error:  syntax error, unexpected ''invisible id prefix suffix in' (T_ENCAPSED_AND_WHITESPACE) in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 451
+[21-Sep-2017 00:01:37 America/New_York] PHP Parse error:  syntax error, unexpected ''invisible id prefix suffix in' (T_ENCAPSED_AND_WHITESPACE) in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 451
+[21-Sep-2017 00:05:01 America/New_York] PHP Parse error:  syntax error, unexpected ''invisible id prefix suffix in' (T_ENCAPSED_AND_WHITESPACE) in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 451
+[21-Sep-2017 00:06:52 America/New_York] PHP Parse error:  syntax error, unexpected ''invisible id prefix suffix in' (T_ENCAPSED_AND_WHITESPACE) in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 451
+[21-Sep-2017 00:06:58 America/New_York] PHP Parse error:  syntax error, unexpected ''invisible id prefix suffix in' (T_ENCAPSED_AND_WHITESPACE) in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 451
+[21-Sep-2017 00:08:29 America/New_York] PHP Parse error:  syntax error, unexpected ''invisible id prefix suffix in' (T_ENCAPSED_AND_WHITESPACE) in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 451
+[22-Sep-2017 12:12:45 America/New_York] PHP Fatal error:  Call to a member function firstCo() on boolean in /home/new/public_html/rcredits/rweb/rweb-help.inc on line 61
+[22-Sep-2017 12:12:50 America/New_York] PHP Fatal error:  Call to a member function firstCo() on boolean in /home/new/public_html/rcredits/rweb/rweb-help.inc on line 61
+[22-Sep-2017 15:08:59 America/New_York] PHP Parse error:  syntax error, unexpected end of file in /home/new/public_html/rcredits/admin/admin-forms.inc(535) : eval()'d code on line 6
+[22-Sep-2017 15:09:19 America/New_York] PHP Parse error:  syntax error, unexpected end of file in /home/new/public_html/rcredits/admin/admin-forms.inc(535) : eval()'d code on line 6
+[22-Sep-2017 15:09:46 America/New_York] PHP Parse error:  syntax error, unexpected end of file in /home/new/public_html/rcredits/admin/admin-forms.inc(535) : eval()'d code on line 6
+[22-Sep-2017 15:10:05 America/New_York] PHP Parse error:  syntax error, unexpected end of file in /home/new/public_html/rcredits/admin/admin-forms.inc(535) : eval()'d code on line 6
+[22-Sep-2017 15:10:19 America/New_York] PHP Parse error:  syntax error, unexpected end of file in /home/new/public_html/rcredits/admin/admin-forms.inc(535) : eval()'d code on line 6
+[22-Sep-2017 15:21:10 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/admin/admin-forms.inc(535) : eval()'d code on line 9
+[22-Sep-2017 15:30:01 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\EXPECT() in /home/new/public_html/rcredits/rcredits-db.inc on line 25
+[25-Sep-2017 12:12:15 America/New_York] PHP Parse error:  syntax error, unexpected end of file, expecting ',' or ';' in /home/new/public_html/rcredits/admin/admin-forms.inc(535) : eval()'d code on line 2
+[29-Sep-2017 10:41:53 America/New_York] PHP Fatal error:  Call to a member function setBit() on boolean in /home/new/public_html/rcredits/rweb/rweb.inc on line 174
+[29-Sep-2017 10:41:59 America/New_York] PHP Fatal error:  Call to a member function setBit() on boolean in /home/new/public_html/rcredits/rweb/rweb.inc on line 174
+[29-Sep-2017 10:42:06 America/New_York] PHP Fatal error:  Call to a member function setBit() on boolean in /home/new/public_html/rcredits/rweb/rweb.inc on line 174
+[29-Sep-2017 10:42:08 America/New_York] PHP Fatal error:  Call to a member function setBit() on boolean in /home/new/public_html/rcredits/rweb/rweb.inc on line 174
+[29-Sep-2017 10:42:26 America/New_York] PHP Fatal error:  Call to a member function setBit() on boolean in /home/new/public_html/rcredits/rweb/rweb.inc on line 174
+[02-Oct-2017 10:12:15 America/New_York] PHP Fatal error:  Call to a member function passwordOkay() on null in /home/new/public_html/rcredits/rweb/rweb.inc on line 2769
+[02-Oct-2017 10:25:26 America/New_York] PHP Fatal error:  Call to a member function passwordOkay() on null in /home/new/public_html/rcredits/rweb/rweb.inc on line 2769
+[02-Oct-2017 10:28:19 America/New_York] PHP Fatal error:  Call to a member function passwordOkay() on null in /home/new/public_html/rcredits/rweb/rweb.inc on line 2769
+[02-Oct-2017 10:32:38 America/New_York] PHP Fatal error:  Call to a member function passwordOkay() on null in /home/new/public_html/rcredits/rweb/rweb.inc on line 2769
+[05-Oct-2017 12:10:02 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\EXPECT() in /home/new/public_html/rcredits/rcredits-db.inc on line 25
+[05-Oct-2017 12:10:13 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\EXPECT() in /home/new/public_html/rcredits/rcredits-db.inc on line 25
+[05-Oct-2017 12:10:27 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\EXPECT() in /home/new/public_html/rcredits/rcredits-db.inc on line 25
+[05-Oct-2017 12:12:55 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\EXPECT() in /home/new/public_html/rcredits/rcredits-db.inc on line 25
+[05-Oct-2017 12:15:01 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\EXPECT() in /home/new/public_html/rcredits/rcredits-db.inc on line 25
+[05-Oct-2017 12:20:01 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\EXPECT() in /home/new/public_html/rcredits/rcredits-db.inc on line 25
+[05-Oct-2017 12:23:17 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\EXPECT() in /home/new/public_html/rcredits/rcredits-db.inc on line 25
+[05-Oct-2017 12:23:25 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\EXPECT() in /home/new/public_html/rcredits/rcredits-db.inc on line 25
+[05-Oct-2017 12:23:30 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\EXPECT() in /home/new/public_html/rcredits/rcredits-db.inc on line 25
+[05-Oct-2017 12:25:02 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\EXPECT() in /home/new/public_html/rcredits/rcredits-db.inc on line 25
+[06-Oct-2017 14:47:43 America/New_York] PHP Parse error:  syntax error, unexpected end of file, expecting ')' in /home/new/public_html/rcredits/acct.class on line 1056
+[06-Oct-2017 14:48:14 America/New_York] PHP Fatal error:  Call to undefined function rCredits\conmpact() in /home/new/public_html/rcredits/acct.class on line 1275
+[02-Nov-2017 12:48:24 America/New_York] PHP Fatal error:  Call to a member function passwordOkay() on null in /home/new/public_html/rcredits/rweb/rweb.inc on line 2817
+[02-Nov-2017 12:48:39 America/New_York] PHP Fatal error:  Call to a member function passwordOkay() on null in /home/new/public_html/rcredits/rweb/rweb.inc on line 2817
+[02-Nov-2017 12:48:55 America/New_York] PHP Fatal error:  Call to a member function passwordOkay() on null in /home/new/public_html/rcredits/rweb/rweb.inc on line 2817
+[02-Nov-2017 12:50:18 America/New_York] PHP Fatal error:  Call to a member function passwordOkay() on null in /home/new/public_html/rcredits/rweb/rweb.inc on line 2817
+[02-Nov-2017 12:50:38 America/New_York] PHP Fatal error:  Call to a member function passwordOkay() on null in /home/new/public_html/rcredits/rweb/rweb.inc on line 2817
+[02-Nov-2017 12:54:57 America/New_York] PHP Fatal error:  Call to a member function passwordOkay() on null in /home/new/public_html/rcredits/rweb/rweb.inc on line 2817
+[02-Nov-2017 12:55:22 America/New_York] PHP Fatal error:  Call to a member function passwordOkay() on null in /home/new/public_html/rcredits/rweb/rweb.inc on line 2817
+[02-Nov-2017 12:55:45 America/New_York] PHP Fatal error:  Call to a member function passwordOkay() on null in /home/new/public_html/rcredits/rweb/rweb.inc on line 2817
+[02-Nov-2017 12:56:32 America/New_York] PHP Fatal error:  Call to a member function passwordOkay() on null in /home/new/public_html/rcredits/rweb/rweb.inc on line 2817
+[02-Nov-2017 12:59:03 America/New_York] PHP Fatal error:  Call to a member function passwordOkay() on null in /home/new/public_html/rcredits/rweb/rweb.inc on line 2817
+[08-Nov-2017 18:24:18 America/New_York] PHP Parse error:  syntax error, unexpected ''emailCode, r\cardCode($a->mai' (T_ENCAPSED_AND_WHITESPACE) in /home/new/public_html/rcredits/admin/admin-forms.inc(558) : eval()'d code on line 10
+[23-Nov-2017 08:02:21 America/New_York] PHP Fatal error:  Call to undefined function cr\everyHour() in /home/new/public_html/rcredits/admin/admin-forms.inc(558) : eval()'d code on line 8
+[23-Nov-2017 08:06:20 America/New_York] PHP Fatal error:  Call to undefined function cr\everyHour() in /home/new/public_html/rcredits/admin/admin-forms.inc(558) : eval()'d code on line 8
+[23-Nov-2017 08:06:48 America/New_York] PHP Fatal error:  Call to undefined function cr\everyHour() in /home/new/public_html/rcredits/admin/admin-forms.inc(558) : eval()'d code on line 8
+[23-Nov-2017 08:07:21 America/New_York] PHP Fatal error:  Call to undefined function cron\everyHour() in /home/new/public_html/rcredits/admin/admin-forms.inc(558) : eval()'d code on line 8
+[23-Nov-2017 08:08:23 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Cron\everyHour() in /home/new/public_html/rcredits/admin/admin-forms.inc(559) : eval()'d code on line 9
+[23-Nov-2017 08:09:17 America/New_York] PHP Parse error:  syntax error, unexpected ''cr.everyHour());' (T_ENCAPSED_AND_WHITESPACE) in /home/new/public_html/rcredits/admin/admin-forms.inc(559) : eval()'d code on line 9
+[23-Nov-2017 08:10:50 America/New_York] PHP Parse error:  syntax error, unexpected ''cr.everyHour());' (T_ENCAPSED_AND_WHITESPACE) in /home/new/public_html/rcredits/admin/admin-forms.inc(559) : eval()'d code on line 9
+[23-Nov-2017 08:11:53 America/New_York] PHP Fatal error:  require_once(): Failed opening required '/home/new/public_html/rcredits/admin/rcron/rcron.inc' (include_path='.:/opt/cpanel/ea-php56/root/usr/share/pear') in /home/new/public_html/rcredits/admin/admin-forms.inc(559) : eval()'d code on line 9
+[23-Nov-2017 08:12:01 America/New_York] PHP Fatal error:  require_once(): Failed opening required '/home/new/public_html/rcredits/admin/rcron/rcron.inc' (include_path='.:/opt/cpanel/ea-php56/root/usr/share/pear') in /home/new/public_html/rcredits/admin/admin-forms.inc(559) : eval()'d code on line 9
+[23-Nov-2017 08:26:19 America/New_York] PHP Fatal error:  Call to undefined function queueNext() in /home/new/public_html/rcredits/admin/admin-forms.inc(559) : eval()'d code on line 28
+[23-Nov-2017 08:27:58 America/New_York] PHP Fatal error:  Call to undefined function queueNext() in /home/new/public_html/rcredits/admin/admin-forms.inc(559) : eval()'d code on line 10
+[23-Nov-2017 08:28:47 America/New_York] PHP Fatal error:  Call to undefined function queueNext() in /home/new/public_html/rcredits/admin/admin-forms.inc(559) : eval()'d code on line 10
+[23-Nov-2017 08:30:01 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Cron\() in /home/new/public_html/rcredits/rcron/rcron.inc on line 81
+[23-Nov-2017 08:30:16 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Cron\recache() in /home/new/public_html/rcredits/admin/admin-forms.inc(559) : eval()'d code on line 11
+[23-Nov-2017 09:01:56 America/New_York] PHP Parse error:  syntax error, unexpected 'debug' (T_STRING) in /home/new/public_html/rcredits/admin/admin-forms.inc(559) : eval()'d code on line 18
+[23-Nov-2017 09:08:49 America/New_York] PHP Parse error:  syntax error, unexpected ')', expecting ']' in /home/new/public_html/rcredits/rcredits.inc on line 1004
+[28-Nov-2017 10:29:43 America/New_York] PHP Fatal error:  Cannot unset string offsets in /home/new/public_html/rcredits/rcredits.inc on line 495
+[28-Nov-2017 16:23:05 America/New_York] PHP Parse error:  syntax error, unexpected 'unset' (T_UNSET) in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 2197
+[28-Nov-2017 16:41:37 America/New_York] PHP Parse error:  syntax error, unexpected '$issuedData' (T_VARIABLE) in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 2182
+[30-Nov-2017 09:33:28 America/New_York] PHP Fatal error:  Call to undefined function timeFor() in /home/new/public_html/rcredits/admin/admin-forms.inc(559) : eval()'d code on line 11
+[30-Nov-2017 09:45:35 America/New_York] PHP Fatal error:  Call to undefined function queueNext() in /home/new/public_html/rcredits/admin/admin-forms.inc(559) : eval()'d code on line 22
+[01-Dec-2017 08:21:57 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/admin/admin-forms.inc(559) : eval()'d code on line 10
+[03-Dec-2017 12:49:33 America/New_York] PHP Parse error:  syntax error, unexpected end of file, expecting ',' or ';' in /home/new/public_html/rcredits/admin/admin-forms.inc(559) : eval()'d code on line 10
+[06-Dec-2017 10:56:53 America/New_York] PHP Fatal error:  Call to undefined function _drupal_bootstrap_full() in /home/new/public_html/rcredits/bootstrap.inc on line 2119
+[06-Dec-2017 10:56:56 America/New_York] PHP Warning:  Unterminated comment starting line 7537 in /home/new/public_html/includes/common.inc on line 7537
+[15-Dec-2017 11:59:19 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Db\relation() in /home/new/public_html/rcredits/rweb/rweb.inc on line 2070
+[15-Dec-2017 13:25:45 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Db\relation() in /home/new/public_html/rcredits/rweb/rweb.inc on line 2070
+[16-Dec-2017 00:33:43 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/admin/admin-forms.inc(559) : eval()'d code on line 9
+[18-Dec-2017 11:45:46 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[18-Dec-2017 11:45:56 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[18-Dec-2017 11:46:26 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[18-Dec-2017 11:46:44 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[18-Dec-2017 11:46:54 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[18-Dec-2017 11:47:08 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[18-Dec-2017 12:46:00 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[18-Dec-2017 12:47:47 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[18-Dec-2017 13:16:38 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[18-Dec-2017 16:17:19 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[18-Dec-2017 17:51:52 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[18-Dec-2017 18:03:41 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[18-Dec-2017 18:03:46 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[18-Dec-2017 18:03:46 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[18-Dec-2017 18:50:52 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[18-Dec-2017 20:23:19 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[18-Dec-2017 23:01:11 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[18-Dec-2017 23:01:17 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[18-Dec-2017 23:01:34 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[19-Dec-2017 02:32:13 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[19-Dec-2017 03:20:16 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Cron\checkAccts() in /home/new/public_html/rcredits/admin/admin-forms.inc(560) : eval()'d code on line 9
+[19-Dec-2017 07:28:56 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[19-Dec-2017 07:28:59 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[19-Dec-2017 13:05:22 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[19-Dec-2017 17:08:29 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[20-Dec-2017 08:40:23 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[20-Dec-2017 08:40:29 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[20-Dec-2017 08:43:14 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[20-Dec-2017 08:43:24 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[20-Dec-2017 08:45:17 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[20-Dec-2017 08:48:56 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[20-Dec-2017 09:06:16 America/New_York] PHP Fatal error:  Function name must be a string in /home/new/public_html/rcredits/rweb/rweb.inc on line 2615
+[22-Dec-2017 17:17:11 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/includes/form.inc on line 1812
+[23-Dec-2017 11:36:56 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/includes/form.inc on line 1812
+[28-Dec-2017 17:26:49 America/New_York] PHP Fatal error:  Call to undefined function achify() in /home/new/public_html/rcredits/admin/admin-forms.inc(569) : eval()'d code on line 10
+[31-Dec-2017 19:38:14 America/New_York] PHP Fatal error:  Uncaught exception 'PDOException' with message 'SQLSTATE[HY000] [2002] No such file or directory' in /home/new/public_html/includes/database/database.inc:307
+Stack trace:
+#0 /home/new/public_html/includes/database/database.inc(307): PDO->__construct('mysql:host=loca...', 'new_rcredits', 'mXWa4OauWNuDakm', Array)
+#1 /home/new/public_html/includes/database/mysql/database.inc(51): DatabaseConnection->__construct('mysql:host=loca...', 'new_rcredits', 'mXWa4OauWNuDakm', Array)
+#2 /home/new/public_html/includes/database/database.inc(1689): DatabaseConnection_mysql->__construct(Array)
+#3 /home/new/public_html/includes/database/database.inc(1479): Database::openConnection('default', 'default')
+#4 /home/new/public_html/includes/database/database.inc(2351): Database::getConnection('default')
+#5 /home/new/public_html/includes/lock.inc(167): db_query('SELECT expire, ...', Array)
+#6 /home/new/public_html/includes/lock.inc(146): lock_may_be_available('variable_init')
+#7 /home/new/public_html/rcredits/bootstrap.inc(732): lo in /home/new/public_html/includes/database/database.inc on line 307
+[04-Jan-2018 16:08:19 America/New_York] PHP Fatal error:  Uncaught exception 'PDOException' with message 'SQLSTATE[HY000] [2002] No such file or directory' in /home/new/public_html/includes/database/database.inc:307
+Stack trace:
+#0 /home/new/public_html/includes/database/database.inc(307): PDO->__construct('mysql:host=loca...', 'new_rcredits', 'mXWa4OauWNuDakm', Array)
+#1 /home/new/public_html/includes/database/mysql/database.inc(51): DatabaseConnection->__construct('mysql:host=loca...', 'new_rcredits', 'mXWa4OauWNuDakm', Array)
+#2 /home/new/public_html/includes/database/database.inc(1689): DatabaseConnection_mysql->__construct(Array)
+#3 /home/new/public_html/includes/database/database.inc(1479): Database::openConnection('default', 'default')
+#4 /home/new/public_html/includes/database/database.inc(2351): Database::getConnection('default')
+#5 /home/new/public_html/includes/lock.inc(167): db_query('SELECT expire, ...', Array)
+#6 /home/new/public_html/includes/lock.inc(146): lock_may_be_available('variable_init')
+#7 /home/new/public_html/rcredits/bootstrap.inc(732): lo in /home/new/public_html/includes/database/database.inc on line 307
+[04-Jan-2018 17:52:19 America/New_York] PHP Fatal error:  Uncaught exception 'PDOException' with message 'SQLSTATE[HY000] [2002] No such file or directory' in /home/new/public_html/includes/database/database.inc:307
+Stack trace:
+#0 /home/new/public_html/includes/database/database.inc(307): PDO->__construct('mysql:host=loca...', 'new_rcredits', 'mXWa4OauWNuDakm', Array)
+#1 /home/new/public_html/includes/database/mysql/database.inc(51): DatabaseConnection->__construct('mysql:host=loca...', 'new_rcredits', 'mXWa4OauWNuDakm', Array)
+#2 /home/new/public_html/includes/database/database.inc(1689): DatabaseConnection_mysql->__construct(Array)
+#3 /home/new/public_html/includes/database/database.inc(1479): Database::openConnection('default', 'default')
+#4 /home/new/public_html/includes/database/database.inc(2351): Database::getConnection('default')
+#5 /home/new/public_html/includes/lock.inc(167): db_query('SELECT expire, ...', Array)
+#6 /home/new/public_html/includes/lock.inc(146): lock_may_be_available('variable_init')
+#7 /home/new/public_html/rcredits/bootstrap.inc(732): lo in /home/new/public_html/includes/database/database.inc on line 307
+[05-Jan-2018 19:27:43 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/includes/form.inc on line 1812
+[05-Jan-2018 19:28:39 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/includes/form.inc on line 1812
+[06-Jan-2018 16:53:13 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/includes/form.inc on line 1812
+[31-Jan-2018 23:33:01 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Cron\checkAcct() in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 9
+[31-Jan-2018 23:33:51 America/New_York] PHP Parse error:  syntax error, unexpected ''cr.checkAcct, []);' (T_ENCAPSED_AND_WHITESPACE) in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 9
+[19-Feb-2018 08:41:10 America/New_York] PHP Parse error:  syntax error, unexpected '|' in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 9
+[21-Feb-2018 12:28:19 America/New_York] PHP Fatal error:  Cannot use object of type stdClass as array in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 9
+[21-Feb-2018 12:28:30 America/New_York] PHP Parse error:  syntax error, unexpected ')' in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 9
+[21-Feb-2018 12:35:13 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/theme/templates/page.tpl.php on line 101
+[21-Feb-2018 12:36:03 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/theme/templates/page.tpl.php on line 101
+[21-Feb-2018 13:03:43 America/New_York] PHP Fatal error:  Only variables can be passed by reference in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 9
+[22-Feb-2018 15:26:50 America/New_York] PHP Parse error:  syntax error, unexpected ''zorp];' (T_ENCAPSED_AND_WHITESPACE) in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 9
+[03-Mar-2018 19:12:08 America/New_York] PHP Parse error:  syntax error, unexpected ')' in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 24
+[15-Mar-2018 21:07:33 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 10
+[15-Mar-2018 21:08:00 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 10
+[15-Mar-2018 21:12:08 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\decry() in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 11
+[18-Mar-2018 22:13:51 America/New_York] PHP Fatal error:  Uncaught exception 'PDOException' with message 'SQLSTATE[HY000] [1045] Access denied for user 'new_rcredits'@'localhost' (using password: YES)' in /home/new/public_html/includes/database/database.inc:307
+Stack trace:
+#0 /home/new/public_html/includes/database/database.inc(307): PDO->__construct('mysql:host=loca...', 'new_rcredits', 'mXWa4OauWNuDakm', Array)
+#1 /home/new/public_html/includes/database/mysql/database.inc(51): DatabaseConnection->__construct('mysql:host=loca...', 'new_rcredits', 'mXWa4OauWNuDakm', Array)
+#2 /home/new/public_html/includes/database/database.inc(1689): DatabaseConnection_mysql->__construct(Array)
+#3 /home/new/public_html/includes/database/database.inc(1479): Database::openConnection('default', 'default')
+#4 /home/new/public_html/includes/database/database.inc(2351): Database::getConnection('default')
+#5 /home/new/public_html/includes/lock.inc(167): db_query('SELECT expire, ...', Array)
+#6 /home/new/public_html/includes/lock.inc(146): lock_may_be_available('variable_init')
+#7 /home/n in /home/new/public_html/includes/database/database.inc on line 307
+[18-Mar-2018 22:14:20 America/New_York] PHP Fatal error:  Uncaught exception 'PDOException' with message 'SQLSTATE[HY000] [1044] Access denied for user 'new_rcredits'@'localhost' to database 'new_rcredits'' in /home/new/public_html/includes/database/database.inc:307
+Stack trace:
+#0 /home/new/public_html/includes/database/database.inc(307): PDO->__construct('mysql:host=loca...', 'new_rcredits', 'MOZ4_8Q5_67q_8_...', Array)
+#1 /home/new/public_html/includes/database/mysql/database.inc(51): DatabaseConnection->__construct('mysql:host=loca...', 'new_rcredits', 'MOZ4_8Q5_67q_8_...', Array)
+#2 /home/new/public_html/includes/database/database.inc(1689): DatabaseConnection_mysql->__construct(Array)
+#3 /home/new/public_html/includes/database/database.inc(1479): Database::openConnection('default', 'default')
+#4 /home/new/public_html/includes/database/database.inc(2351): Database::getConnection('default')
+#5 /home/new/public_html/includes/lock.inc(167): db_query('SELECT expire, ...', Array)
+#6 /home/new/public_html/includes/lock.inc(146): lock_may_be_available('variable_init') in /home/new/public_html/includes/database/database.inc on line 307
+[18-Mar-2018 22:14:22 America/New_York] PHP Fatal error:  Uncaught exception 'PDOException' with message 'SQLSTATE[HY000] [1044] Access denied for user 'new_rcredits'@'localhost' to database 'new_rcredits'' in /home/new/public_html/includes/database/database.inc:307
+Stack trace:
+#0 /home/new/public_html/includes/database/database.inc(307): PDO->__construct('mysql:host=loca...', 'new_rcredits', 'MOZ4_8Q5_67q_8_...', Array)
+#1 /home/new/public_html/includes/database/mysql/database.inc(51): DatabaseConnection->__construct('mysql:host=loca...', 'new_rcredits', 'MOZ4_8Q5_67q_8_...', Array)
+#2 /home/new/public_html/includes/database/database.inc(1689): DatabaseConnection_mysql->__construct(Array)
+#3 /home/new/public_html/includes/database/database.inc(1479): Database::openConnection('default', 'default')
+#4 /home/new/public_html/includes/database/database.inc(2351): Database::getConnection('default')
+#5 /home/new/public_html/includes/lock.inc(167): db_query('SELECT expire, ...', Array)
+#6 /home/new/public_html/includes/lock.inc(146): lock_may_be_available('variable_init') in /home/new/public_html/includes/database/database.inc on line 307
+[18-Mar-2018 22:15:15 America/New_York] PHP Fatal error:  Uncaught exception 'PDOException' with message 'SQLSTATE[HY000] [1044] Access denied for user 'new_rcredits'@'localhost' to database 'new_rcredits'' in /home/new/public_html/includes/database/database.inc:307
+Stack trace:
+#0 /home/new/public_html/includes/database/database.inc(307): PDO->__construct('mysql:host=loca...', 'new_rcredits', 'MOZ4_8Q5_67q_8_...', Array)
+#1 /home/new/public_html/includes/database/mysql/database.inc(51): DatabaseConnection->__construct('mysql:host=loca...', 'new_rcredits', 'MOZ4_8Q5_67q_8_...', Array)
+#2 /home/new/public_html/includes/database/database.inc(1689): DatabaseConnection_mysql->__construct(Array)
+#3 /home/new/public_html/includes/database/database.inc(1479): Database::openConnection('default', 'default')
+#4 /home/new/public_html/includes/database/database.inc(2351): Database::getConnection('default')
+#5 /home/new/public_html/includes/lock.inc(167): db_query('SELECT expire, ...', Array)
+#6 /home/new/public_html/includes/lock.inc(146): lock_may_be_available('variable_init') in /home/new/public_html/includes/database/database.inc on line 307
+[18-Mar-2018 22:53:52 America/New_York] PHP Fatal error:  Uncaught exception 'PDOException' with message 'SQLSTATE[HY000] [1045] Access denied for user 'new_user'@'localhost' (using password: YES)' in /home/new/public_html/includes/database/database.inc:307
+Stack trace:
+#0 /home/new/public_html/includes/database/database.inc(307): PDO->__construct('mysql:host=loca...', 'new_user', 'mXWa4OauWNuDakm', Array)
+#1 /home/new/public_html/includes/database/mysql/database.inc(51): DatabaseConnection->__construct('mysql:host=loca...', 'new_user', 'mXWa4OauWNuDakm', Array)
+#2 /home/new/public_html/includes/database/database.inc(1689): DatabaseConnection_mysql->__construct(Array)
+#3 /home/new/public_html/includes/database/database.inc(1479): Database::openConnection('default', 'default')
+#4 /home/new/public_html/includes/database/database.inc(2351): Database::getConnection('default')
+#5 /home/new/public_html/includes/lock.inc(167): db_query('SELECT expire, ...', Array)
+#6 /home/new/public_html/includes/lock.inc(146): lock_may_be_available('variable_init')
+#7 /home/new/public_ht in /home/new/public_html/includes/database/database.inc on line 307
+[19-Mar-2018 23:22:56 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/admin/admin-forms.inc(570) : eval()'d code on line 34
+[19-Mar-2018 23:23:17 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/admin/admin-forms.inc(570) : eval()'d code on line 35
+[19-Mar-2018 23:35:12 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/admin/admin-forms.inc(570) : eval()'d code on line 15
+[21-Mar-2018 16:37:07 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/rcredits/rcredits-util.inc on line 1488
+[21-Mar-2018 16:37:15 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/rcredits/rcredits-util.inc on line 1488
+[21-Mar-2018 16:37:46 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/rcredits/rcredits-util.inc on line 1488
+[21-Mar-2018 16:53:27 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/rcredits/rcredits-util.inc on line 1488
+[21-Mar-2018 17:00:45 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/rcredits/rcredits-util.inc on line 1488
+[21-Mar-2018 17:04:29 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/rcredits/rcredits-util.inc on line 1488
+[21-Mar-2018 17:16:45 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/rcredits/rcredits-util.inc on line 1488
+[21-Mar-2018 17:26:39 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/rcredits/rcredits-util.inc on line 1488
+[21-Mar-2018 17:28:14 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/rcredits/rcredits-util.inc on line 1488
+[21-Mar-2018 17:44:39 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/rcredits/rcredits-util.inc on line 1488
+[21-Mar-2018 18:15:43 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/rcredits/rcredits-util.inc on line 1488
+[21-Mar-2018 18:16:01 America/New_York] PHP Parse error:  syntax error, unexpected '*' in /home/new/public_html/rcredits/admin/admin-forms.inc(570) : eval()'d code on line 18
+[21-Mar-2018 18:17:08 America/New_York] PHP Parse error:  syntax error, unexpected '*' in /home/new/public_html/rcredits/admin/admin-forms.inc(570) : eval()'d code on line 18
+[21-Mar-2018 18:19:58 America/New_York] PHP Parse error:  syntax error, unexpected '*' in /home/new/public_html/rcredits/admin/admin-forms.inc(570) : eval()'d code on line 19
+[21-Mar-2018 18:22:48 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/admin/admin-forms.inc(570) : eval()'d code on line 20
+[22-Mar-2018 23:22:25 America/New_York] PHP Parse error:  syntax error, unexpected '$a' (T_VARIABLE) in /home/new/public_html/rcredits/admin/admin-forms.inc(568) : eval()'d code on line 23
+[23-Mar-2018 17:42:30 America/New_York] PHP Parse error:  syntax error, unexpected ',' in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 2181
+[23-Mar-2018 17:42:42 America/New_York] PHP Parse error:  syntax error, unexpected ',' in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 2181
+[23-Mar-2018 17:43:24 America/New_York] PHP Parse error:  syntax error, unexpected ',' in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 2181
+[26-Mar-2018 08:30:02 America/New_York] PHP Fatal error:  Uncaught exception 'PDOException' with message 'SQLSTATE[HY000] [2002] Connection refused' in /home/new/public_html/includes/database/database.inc:307
+Stack trace:
+#0 /home/new/public_html/includes/database/database.inc(307): PDO->__construct('mysql:host=loca...', 'new_user', 'MOZ4_8Q5_67q_8_...', Array)
+#1 /home/new/public_html/includes/database/mysql/database.inc(51): DatabaseConnection->__construct('mysql:host=loca...', 'new_user', 'MOZ4_8Q5_67q_8_...', Array)
+#2 /home/new/public_html/includes/database/database.inc(1689): DatabaseConnection_mysql->__construct(Array)
+#3 /home/new/public_html/includes/database/database.inc(1479): Database::openConnection('default', 'default')
+#4 /home/new/public_html/includes/database/database.inc(2351): Database::getConnection('default')
+#5 /home/new/public_html/includes/lock.inc(167): db_query('SELECT expire, ...', Array)
+#6 /home/new/public_html/includes/lock.inc(146): lock_may_be_available('variable_init')
+#7 /home/new/public_html/rcredits/bootstrap.inc(734): lock_acquir in /home/new/public_html/includes/database/database.inc on line 307
+[26-Mar-2018 11:31:15 America/New_York] PHP Fatal error:  Uncaught exception 'PDOException' with message 'SQLSTATE[HY000] [2002] Connection refused' in /home/new/public_html/includes/database/database.inc:307
+Stack trace:
+#0 /home/new/public_html/includes/database/database.inc(307): PDO->__construct('mysql:host=loca...', 'new_user', 'MOZ4_8Q5_67q_8_...', Array)
+#1 /home/new/public_html/includes/database/mysql/database.inc(51): DatabaseConnection->__construct('mysql:host=loca...', 'new_user', 'MOZ4_8Q5_67q_8_...', Array)
+#2 /home/new/public_html/includes/database/database.inc(1689): DatabaseConnection_mysql->__construct(Array)
+#3 /home/new/public_html/includes/database/database.inc(1479): Database::openConnection('default', 'default')
+#4 /home/new/public_html/includes/database/database.inc(2351): Database::getConnection('default')
+#5 /home/new/public_html/includes/lock.inc(167): db_query('SELECT expire, ...', Array)
+#6 /home/new/public_html/includes/lock.inc(146): lock_may_be_available('variable_init')
+#7 /home/new/public_html/rcredits/bootstrap.inc(734): lock_acquir in /home/new/public_html/includes/database/database.inc on line 307
+[26-Mar-2018 11:31:15 America/New_York] PHP Fatal error:  Uncaught exception 'PDOException' with message 'SQLSTATE[HY000] [2002] Connection refused' in /home/new/public_html/includes/database/database.inc:307
+Stack trace:
+#0 /home/new/public_html/includes/database/database.inc(307): PDO->__construct('mysql:host=loca...', 'new_user', 'MOZ4_8Q5_67q_8_...', Array)
+#1 /home/new/public_html/includes/database/mysql/database.inc(51): DatabaseConnection->__construct('mysql:host=loca...', 'new_user', 'MOZ4_8Q5_67q_8_...', Array)
+#2 /home/new/public_html/includes/database/database.inc(1689): DatabaseConnection_mysql->__construct(Array)
+#3 /home/new/public_html/includes/database/database.inc(1479): Database::openConnection('default', 'default')
+#4 /home/new/public_html/includes/database/database.inc(2351): Database::getConnection('default')
+#5 /home/new/public_html/includes/lock.inc(167): db_query('SELECT expire, ...', Array)
+#6 /home/new/public_html/includes/lock.inc(146): lock_may_be_available('variable_init')
+#7 /home/new/public_html/rcredits/bootstrap.inc(734): lock_acquir in /home/new/public_html/includes/database/database.inc on line 307
+[26-Mar-2018 11:31:21 America/New_York] PHP Fatal error:  Uncaught exception 'PDOException' with message 'SQLSTATE[HY000] [2002] Connection refused' in /home/new/public_html/includes/database/database.inc:307
+Stack trace:
+#0 /home/new/public_html/includes/database/database.inc(307): PDO->__construct('mysql:host=loca...', 'new_user', 'MOZ4_8Q5_67q_8_...', Array)
+#1 /home/new/public_html/includes/database/mysql/database.inc(51): DatabaseConnection->__construct('mysql:host=loca...', 'new_user', 'MOZ4_8Q5_67q_8_...', Array)
+#2 /home/new/public_html/includes/database/database.inc(1689): DatabaseConnection_mysql->__construct(Array)
+#3 /home/new/public_html/includes/database/database.inc(1479): Database::openConnection('default', 'default')
+#4 /home/new/public_html/includes/database/database.inc(2351): Database::getConnection('default')
+#5 /home/new/public_html/includes/lock.inc(167): db_query('SELECT expire, ...', Array)
+#6 /home/new/public_html/includes/lock.inc(146): lock_may_be_available('variable_init')
+#7 /home/new/public_html/rcredits/bootstrap.inc(734): lock_acquir in /home/new/public_html/includes/database/database.inc on line 307
+[26-Mar-2018 11:31:23 America/New_York] PHP Fatal error:  Uncaught exception 'PDOException' with message 'SQLSTATE[HY000] [2002] Connection refused' in /home/new/public_html/includes/database/database.inc:307
+Stack trace:
+#0 /home/new/public_html/includes/database/database.inc(307): PDO->__construct('mysql:host=loca...', 'new_user', 'MOZ4_8Q5_67q_8_...', Array)
+#1 /home/new/public_html/includes/database/mysql/database.inc(51): DatabaseConnection->__construct('mysql:host=loca...', 'new_user', 'MOZ4_8Q5_67q_8_...', Array)
+#2 /home/new/public_html/includes/database/database.inc(1689): DatabaseConnection_mysql->__construct(Array)
+#3 /home/new/public_html/includes/database/database.inc(1479): Database::openConnection('default', 'default')
+#4 /home/new/public_html/includes/database/database.inc(2351): Database::getConnection('default')
+#5 /home/new/public_html/includes/lock.inc(167): db_query('SELECT expire, ...', Array)
+#6 /home/new/public_html/includes/lock.inc(146): lock_may_be_available('variable_init')
+#7 /home/new/public_html/rcredits/bootstrap.inc(734): lock_acquir in /home/new/public_html/includes/database/database.inc on line 307
+[26-Mar-2018 11:38:11 America/New_York] PHP Fatal error:  Uncaught exception 'PDOException' with message 'SQLSTATE[HY000] [2002] Connection refused' in /home/new/public_ht[01-Apr-2018 13:34:26 America/New_York] PHP Fatal error:  Call to undefined function plain() in /home/new/public_html/rcredits/theme/template.inc on line 389
+[01-Apr-2018 13:34:35 America/New_York] PHP Fatal error:  Call to undefined function plain() in /home/new/public_html/rcredits/theme/template.inc on line 389
+[01-Apr-2018 13:38:07 America/New_York] PHP Fatal error:  Call to undefined function plain() in /home/new/public_html/rcredits/theme/template.inc on line 389
+[01-Apr-2018 13:41:41 America/New_York] PHP Fatal error:  Call to undefined function plain() in /home/new/public_html/rcredits/theme/template.inc on line 389
+[02-Apr-2018 19:52:56 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\cryptM() in /home/new/public_html/rcredits/rcredits-util.inc on line 954
+[02-Apr-2018 19:59:55 America/New_York] PHP Parse error:  syntax error, unexpected end of file, expecting '`' in /home/new/public_html/rcredits/admin/admin-forms.inc(569) : eval()'d code on line 10
+[05-Apr-2018 09:22:38 America/New_York] PHP Parse error:  syntax error, unexpected ']', expecting identifier (T_STRING) or variable (T_VARIABLE) or number (T_NUM_STRING) in /home/new/public_html/rcredits/admin/admin.inc on line 555
+[05-Apr-2018 10:00:25 America/New_York] PHP Parse error:  syntax error, unexpected ')' in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 22
+[05-Apr-2018 10:14:44 America/New_York] PHP Parse error:  syntax error, unexpected 'alt' (T_STRING) in /home/new/public_html/rcredits/rvote/rvote-ballot.inc on line 548
+[05-Apr-2018 14:11:47 America/New_York] PHP Parse error:  syntax error, unexpected '\' (T_NS_SEPARATOR), expecting identifier (T_STRING) in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 24
+[11-Apr-2018 11:49:06 America/New_York] PHP Parse error:  syntax error, unexpected 'alt' (T_STRING) in /home/new/public_html/rcredits/rvote/rvote-ballot.inc on line 548
+[12-Apr-2018 00:59:17 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Cron\cttyStats() in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 10
+[12-Apr-2018 01:31:52 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Cron\recache() in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 11
+[12-Apr-2018 01:32:26 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Cron\recache() in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 11
+[12-Apr-2018 01:35:02 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Cron\recache() in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 11
+[12-Apr-2018 01:35:46 America/New_York] PHP Fatal error:  Call to undefined function recache() in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 11
+[12-Apr-2018 01:36:25 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Cron\recache() in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 11
+[12-Apr-2018 10:58:04 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\fmt() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 2267
+[12-Apr-2018 10:58:14 America/New_York] PHP Fatal error:  Call to undefined function rCredits\Util\fmt() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 2267
+[13-Apr-2018 17:00:35 America/New_York] PHP Parse error:  syntax error, unexpected 'alt' (T_STRING) in /home/new/public_html/rcredits/rvote/rvote-ballot.inc on line 548
+[13-Apr-2018 17:00:39 America/New_York] PHP Parse error:  syntax error, unexpected 'alt' (T_STRING) in /home/new/public_html/rcredits/rvote/rvote-ballot.inc on line 548
+[15-Apr-2018 06:09:12 America/New_York] PHP Fatal error:  Call to undefined function rCredits\DB\min() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 2226
+[15-Apr-2018 06:10:03 America/New_York] PHP Fatal error:  Call to undefined function rCredits\DB\min() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 2226
+[15-Apr-2018 06:10:19 America/New_York] PHP Fatal error:  Call to undefined function rCredits\DB\min() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 2226
+[15-Apr-2018 06:11:13 America/New_York] PHP Fatal error:  Call to undefined function rCredits\DB\min() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 2226
+[15-Apr-2018 06:13:21 America/New_York] PHP Fatal error:  Call to undefined function rCredits\DB\min() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 2226
+[15-Apr-2018 13:27:49 America/New_York] PHP Fatal error:  Call to undefined function firstGraphDt() in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 10
+[15-Apr-2018 13:28:15 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 10
+[15-Apr-2018 13:29:27 America/New_York] PHP Fatal error:  Call to undefined function firstGraphDt() in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 12
+[17-Apr-2018 10:00:20 America/New_York] PHP Parse error:  syntax error, unexpected end of file, expecting ',' or ';' in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 11
+[18-Apr-2018 14:15:56 UTC] PHP Warning:  strip_tags() expects parameter 1 to be string, array given in /home/new/public_html/rcredits/boot.inc on line 8
+[19-Apr-2018 02:05:40 UTC] PHP Warning:  strip_tags() expects parameter 1 to be string, array given in /home/new/public_html/rcredits/boot.inc on line 8
+[19-Apr-2018 09:15:24 America/New_York] PHP Fatal error:  Call to undefined method rCredits\Acct::short() in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 10
+[19-Apr-2018 13:21:05 America/New_York] PHP Parse error:  syntax error, unexpected ''uid' (T_ENCAPSED_AND_WHITESPACE) in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 10
+[19-Apr-2018 13:21:54 America/New_York] PHP Parse error:  syntax error, unexpected ''uid' (T_ENCAPSED_AND_WHITESPACE) in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 10
+[19-Apr-2018 13:22:27 America/New_York] PHP Parse error:  syntax error, unexpected ''uid' (T_ENCAPSED_AND_WHITESPACE) in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 10
+[19-Apr-2018 13:23:54 America/New_York] PHP Parse error:  syntax error, unexpected ''uid' (T_ENCAPSED_AND_WHITESPACE) in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 11
+[19-Apr-2018 22:34:55 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 10
+[19-Apr-2018 22:35:43 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 10
+[19-Apr-2018 22:36:13 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 10
+[23-Apr-2018 16:58:09 America/New_York] PHP Parse error:  syntax error, unexpected 'alt' (T_STRING) in /home/new/public_html/rcredits/rvote/rvote-ballot.inc on line 548
+[25-Apr-2018 10:28:38 America/New_York] PHP Parse error:  syntax error, unexpected 'alt' (T_STRING) in /home/new/public_html/rcredits/rvote/rvote-ballot.inc on line 548
+[29-Apr-2018 19:37:16 America/New_York] PHP Parse error:  syntax error, unexpected 'alt' (T_STRING) in /home/new/public_html/rcredits/rvote/rvote-ballot.inc on line 548
+[01-May-2018 14:05:00 America/New_York] PHP Parse error:  syntax error, unexpected ';' in /home/new/public_html/rcredits/rweb/rweb.inc on line 2168
+[02-May-2018 21:34:37 America/New_York] PHP Parse error:  syntax error, unexpected 'alt' (T_STRING) in /home/new/public_html/rcredits/rvote/rvote-ballot.inc on line 548
+[02-May-2018 21:35:36 America/New_York] PHP Parse error:  syntax error, unexpected 'alt' (T_STRING) in /home/new/public_html/rcredits/rvote/rvote-ballot.inc on line 548
+[05-May-2018 11:30:23 UTC] PHP Fatal error:  Uncaught exception 'Exception' with message 'Bad JSON Violation' in /home/new/public_html/csp-report.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/new/public_html/csp-report.php on line 23
+[05-May-2018 10:46:07 America/New_York] PHP Fatal error:  Call to undefined method rCredits\Acct::ssnData() in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 10
+[05-May-2018 10:56:35 America/New_York] PHP Parse error:  syntax error, unexpected '');' (T_CONSTANT_ENCAPSED_STRING) in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 11
+[05-May-2018 10:56:44 America/New_York] PHP Parse error:  syntax error, unexpected '');' (T_CONSTANT_ENCAPSED_STRING) in /home/new/public_html/rcredits/admin/admin-forms.inc(571) : eval()'d code on line 11
+[05-May-2018 19:18:17 UTC] PHP Fatal error:  Uncaught exception 'Exception' with message 'Bad JSON Violation' in /home/new/public_html/csp-report.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/new/public_html/csp-report.php on line 23
+[06-May-2018 10:20:15 UTC] PHP Fatal error:  Uncaught exception 'Exception' with message 'Bad JSON Violation' in /home/new/public_html/csp-report.php:23
+Stack trace:
+#0 {main}
+  thrown in /home/new/public_html/csp-report.php on line 23
+[06-May-2018 11:54:35 America/New_York] PHP Fatal error:  Call to a member function can() on boolean in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 2483
+[06-May-2018 11:56:32 America/New_York] PHP Fatal error:  Call to a member function can() on boolean in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 2483
+[06-May-2018 11:58:35 America/New_York] PHP Fatal error:  Call to a member function can() on boolean in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 2483
+[06-May-2018 11:59:31 America/New_York] PHP Fatal error:  Call to a member function can() on boolean in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 2483
+[06-May-2018 12:00:05 America/New_York] PHP Fatal error:  Call to a member function can() on boolean in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 2483
+[07-May-2018 00:55:41 UTC] PHP Warning:  file_get_contents(null/ajax?op=whoami&amp;sid=4fnbuKqxobDiJz-h4ZPay8x0uhEXtqMoiGr24Luiz7g&amp;data=fullName,qid): failed to open stream: No such file or directory in /home/new/public_html/csp-report.php on line 27
+[07-May-2018 02:23:38 UTC] PHP Warning:  file_get_contents(null/ajax?op=whoami&amp;sid=ti2oEO3vhje0VB2cxQpG-9bHeiaq0rdA3JijWTscBe4&amp;data=fullName,qid): failed to open stream: No such file or directory in /home/new/public_html/csp-report.php on line 27
+[07-May-2018 02:28:15 UTC] PHP Warning:  file_get_contents(null/ajax?op=whoami&amp;sid=p-T2JiyNZ5Wzl1P4g_rJ6DodToFL1eIIJltCdmNeXEs&amp;data=fullName,qid): failed to open stream: No such file or directory in /home/new/public_html/csp-report.php on line 27
+[07-May-2018 02:28:40 UTC] PHP Warning:  file_get_contents(null/ajax?op=whoami&amp;sid=zrztA13_2r-tN_0OOasltxCK6beZg5SF_U15siFkzMc&amp;data=fullName,qid): failed to open stream: No such file or directory in /home/new/public_html/csp-report.php on line 27
+[07-May-2018 02:29:09 UTC] PHP Warning:  file_get_contents(null/ajax?op=whoami&amp;sid=_EgaU3dkN4rHVmSttl40MWjU15ISXML4Bji4maxgrRI&amp;data=fullName,qid): failed to open stream: No such file or directory in /home/new/public_html/csp-report.php on line 27
+[07-May-2018 02:31:13 UTC] PHP Warning:  file_get_contents(null/ajax?op=whoami&amp;sid=_EgaU3dkN4rHVmSttl40MWjU15ISXML4Bji4maxgrRI&amp;data=fullName,qid): failed to open stream: No such file or directory in /home/new/public_html/csp-report.php on line 27
+[07-May-2018 02:33:44 UTC] PHP Warning:  file_get_contents(null/ajax?op=whoami&amp;sid=_EgaU3dkN4rHVmSttl40MWjU15ISXML4Bji4maxgrRI&amp;data=fullName,qid): failed to open stream: No such file or directory in /home/new/public_html/csp-report.php on line 27
+[07-May-2018 02:36:39 UTC] PHP Warning:  file_get_contents(null/ajax?op=whoami&amp;sid=_EgaU3dkN4rHVmSttl40MWjU15ISXML4Bji4maxgrRI&amp;data=fullName,qid): failed to open stream: No such file or directory in /home/new/public_html/csp-report.php on line 27
+[07-May-2018 02:38:20 UTC] PHP Warning:  file_get_contents(null/ajax?op=whoami&amp;sid=_EgaU3dkN4rHVmSttl40MWjU15ISXML4Bji4maxgrRI&amp;data=fullName,qid): failed to open stream: No such file or directory in /home/new/public_html/csp-report.php on line 27
+[07-May-2018 02:39:18 UTC] PHP Warning:  file_get_contents(null/ajax?op=whoami&amp;sid=_EgaU3dkN4rHVmSttl40MWjU15ISXML4Bji4maxgrRI&amp;data=fullName,qid): failed to open stream: No such file or directory in /home/new/public_html/csp-report.php on line 27
+[07-May-2018 02:43:16 UTC] PHP Warning:  file_get_contents(null/ajax?op=whoami&amp;sid=_EgaU3dkN4rHVmSttl40MWjU15ISXML4Bji4maxgrRI&amp;data=fullName,qid): failed to open stream: No such file or directory in /home/new/public_html/csp-report.php on line 27
+[07-May-2018 02:43:16 UTC] PHP Warning:  file_get_contents(null/ajax?op=whoami&amp;sid=_EgaU3dkN4rHVmSttl40MWjU15ISXML4Bji4maxgrRI&amp;data=fullName,qid): failed to open stream: No such file or directory in /home/new/public_html/csp-report.php on line 27
+[07-May-2018 02:45:51 UTC] PHP Warning:  file_get_contents(null/ajax?op=whoami&amp;sid=_EgaU3dkN4rHVmSttl40MWjU15ISXML4Bji4maxgrRI&amp;data=fullName,qid): failed to open stream: No such file or directory in /home/new/public_html/csp-report.php on line 27
+[07-May-2018 02:47:18 UTC] PHP Warning:  file_get_contents(null/ajax?op=whoami&amp;sid=_EgaU3dkN4rHVmSttl40MWjU15ISXML4Bji4maxgrRI&amp;data=fullName,qid): failed to open stream: No such file or directory in /home/new/public_html/csp-report.php on line 27
+[07-May-2018 02:48:07 UTC] PHP Warning:  file_get_contents(null/ajax?op=whoami&amp;sid=_EgaU3dkN4rHVmSttl40MWjU15ISXML4Bji4maxgrRI&amp;data=fullName,qid): failed to open stream: No such file or directory in /home/new/public_html/csp-report.php on line 27
+[07-May-2018 02:50:45 UTC] PHP Warning:  file_get_contents(null/ajax?op=whoami&amp;sid=_EgaU3dkN4rHVmSttl40MWjU15ISXML4Bji4maxgrRI&amp;data=fullName,qid): failed to open stream: No such file or directory in /home/new/public_html/csp-report.php on line 27
+[07-May-2018 02:52:03 UTC] PHP Warning:  file_get_contents(null/ajax?op=whoami&amp;sid=_EgaU3dkN4rHVmSttl40MWjU15ISXML4Bji4maxgrRI&amp;data=fullName,qid): failed to open stream: No such file or directory in /home/new/public_html/csp-report.php on line 27
+[07-May-2018 02:52:12 UTC] PHP Warning:  file_get_contents(null/ajax?op=whoami&amp;sid=_EgaU3dkN4rHVmSttl40MWjU15ISXML4Bji4maxgrRI&amp;data=fullName,qid): failed to open stream: No such file or directory in /home/new/public_html/csp-report.php on line 27
+[07-May-2018 02:55:13 UTC] PHP Warning:  file_get_contents(null/ajax?op=whoami&amp;sid=_EgaU3dkN4rHVmSttl40MWjU15ISXML4Bji4maxgrRI&amp;data=fullName,qid): failed to open stream: No such file or directory in /home/new/public_html/csp-report.php on line 27
+[07-May-2018 02:55:38 UTC] PHP Warning:  file_get_contents(null/ajax?op=whoami&amp;sid=_EgaU3dkN4rHVmSttl40MWjU15ISXML4Bji4maxgrRI&amp;data=fullName,qid): failed to open stream: No such file or directory in /home/new/public_html/csp-report.php on line 27
+[07-May-2018 02:55:39 UTC] PHP Warning:  file_get_contents(null/ajax?op=whoami&amp;sid=_EgaU3dkN4rHVmSttl40MWjU15ISXML4Bji4maxgrRI&amp;data=fullName,qid): failed to open stream: No such file or directory in /home/new/public_html/csp-report.php on line 27
+[07-May-2018 02:55:39 UTC] PHP Warning:  file_get_contents(null/ajax?op=whoami&amp;sid=_EgaU3dkN4rHVmSttl40MWjU15ISXML4Bji4maxgrRI&amp;data=fullName,qid): failed to open stream: No such file or directory in /home/new/public_html/csp-report.php on line 27
+[07-May-2018 02:55:59 UTC] PHP Warning:  file_get_contents(null/ajax?op=whoami&amp;sid=_EgaU3dkN4rHVmSttl40MWjU15ISXML4Bji4maxgrRI&amp;data=fullName,qid): failed to open stream: No such file or directory in /home/new/public_html/csp-report.php on line 27
+[08-May-2018 16:49:30 UTC] PHP Fatal error:  Uncaught exception 'Exception' with message 'Bad Request' in /home/new/public_html/csp-report.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/new/public_html/csp-report.php on line 15
+[10-May-2018 17:17:59 UTC] PHP Fatal error:  Uncaught exception 'Exception' with message 'Bad Request' in /home/new/public_html/csp-report.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/new/public_html/csp-report.php on line 15
+[11-May-2018 12:03:34 UTC] PHP Fatal error:  Uncaught exception 'Exception' with message 'Bad Request' in /home/new/public_html/csp-report.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/new/public_html/csp-report.php on line 15
+[12-May-2018 15:33:56 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\formProxy() in /home/new/public_html/rcredits/rweb/rweb.inc on line 38
+[12-May-2018 15:35:49 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\formProxy() in /home/new/public_html/rcredits/rweb/rweb.inc on line 38
+[12-May-2018 16:47:13 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\formProxy() in /home/new/public_html/rcredits/rweb/rweb.inc on line 38
+[13-May-2018 01:46:22 UTC] PHP Fatal error:  Uncaught exception 'Exception' with message 'Bad Request' in /home/new/public_html/csp-report.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/new/public_html/csp-report.php on line 15
+[13-May-2018 03:40:27 UTC] PHP Fatal error:  Uncaught exception 'Exception' with message 'Bad Request' in /home/new/public_html/csp-report.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/new/public_html/csp-report.php on line 15
+[14-May-2018 09:36:04 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\formProxy_validate() in /home/new/public_html/includes/form.inc on line 1513
+[14-May-2018 19:40:12 America/New_York] PHP Fatal error:  Call to undefined function CG\Cron\periodic() in /home/new/public_html/rcredits/admin/admin-forms.inc(569) : eval()'d code on line 10
+[15-May-2018 09:00:12 America/New_York] PHP Fatal error:  Call to undefined function CG\Vote\showResults() in /home/new/public_html/rcredits/rvote/rvote-web.inc on line 201
+[15-May-2018 09:00:25 America/New_York] PHP Fatal error:  Call to undefined function CG\Vote\showResults() in /home/new/public_html/rcredits/rvote/rvote-web.inc on line 201
+[16-May-2018 04:54:59 UTC] PHP Fatal error:  Uncaught exception 'Exception' with message 'Bad Request' in /home/new/public_html/csp-report.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/new/public_html/csp-report.php on line 15
+[16-May-2018 17:41:12 UTC] PHP Fatal error:  Uncaught exception 'Exception' with message 'Bad Request' in /home/new/public_html/csp-report.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/new/public_html/csp-report.php on line 15
+[16-May-2018 23:03:47 UTC] PHP Fatal error:  Uncaught exception 'Exception' with message 'Bad Request' in /home/new/public_html/csp-report.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/new/public_html/csp-report.php on line 15
+[17-May-2018 14:15:34 UTC] PHP Fatal error:  Uncaught exception 'Exception' with message 'Bad Request' in /home/new/public_html/csp-report.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/new/public_html/csp-report.php on line 16
+[17-May-2018 21:19:19 UTC] PHP Fatal error:  Uncaught exception 'Exception' with message 'Bad Request' in /home/new/public_html/csp-report.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/new/public_html/csp-report.php on line 16
+[18-May-2018 20:10:39 UTC] PHP Fatal error:  Uncaught exception 'Exception' with message 'Bad Request' in /home/new/public_html/csp-report.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/new/public_html/csp-report.php on line 16
+[18-May-2018 20:49:12 UTC] PHP Fatal error:  Uncaught exception 'Exception' with message 'Bad Request' in /home/new/public_html/csp-report.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/new/public_html/csp-report.php on line 16
+[19-May-2018 07:10:51 UTC] PHP Fatal error:  Uncaught exception 'Exception' with message 'Bad Request' in /home/new/public_html/csp-report.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/new/public_html/csp-report.php on line 16
+[19-May-2018 10:35:12 UTC] PHP Fatal error:  Uncaught exception 'Exception' with message 'Bad Request' in /home/new/public_html/csp-report.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/new/public_html/csp-report.php on line 16
+[19-May-2018 23:16:33 UTC] PHP Fatal error:  Uncaught exception 'Exception' with message 'Bad Request' in /home/new/public_html/csp-report.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/new/public_html/csp-report.php on line 16
+[20-May-2018 08:09:19 UTC] PHP Fatal error:  Uncaught exception 'Exception' with message 'Bad Request' in /home/new/public_html/csp-report.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/new/public_html/csp-report.php on line 16
+[23-May-2018 02:05:57 UTC] PHP Fatal error:  Uncaught exception 'Exception' with message 'Bad Request' in /home/new/public_html/csp-report.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/new/public_html/csp-report.php on line 16
+[23-May-2018 09:28:48 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\formPass_submit() in /home/new/public_html/rcredits/rweb/rweb.inc on line 538
+[23-May-2018 09:29:05 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\formPass_submit() in /home/new/public_html/rcredits/rweb/rweb.inc on line 538
+[23-May-2018 09:46:06 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\formPass_submit() in /home/new/public_html/rcredits/rweb/rweb.inc on line 538
+[23-May-2018 09:46:37 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\formPass_submit() in /home/new/public_html/rcredits/rweb/rweb.inc on line 538
+[23-May-2018 09:46:49 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\formPass_submit() in /home/new/public_html/rcredits/rweb/rweb.inc on line 538
+[23-May-2018 09:49:16 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\formPass_submit() in /home/new/public_html/rcredits/rweb/rweb.inc on line 538
+[23-May-2018 09:49:29 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\formPass_submit() in /home/new/public_html/rcredits/rweb/rweb.inc on line 538
+[23-May-2018 09:49:51 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\formPass_submit() in /home/new/public_html/rcredits/rweb/rweb.inc on line 538
+[23-May-2018 09:49:56 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\formPass_submit() in /home/new/public_html/rcredits/rweb/rweb.inc on line 538
+[23-May-2018 13:48:31 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/includes/form.inc on line 1816
+[23-May-2018 14:11:02 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\formPass_submit() in /home/new/public_html/rcredits/rweb/rweb.inc on line 538
+[23-May-2018 14:11:26 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\formPass_submit() in /home/new/public_html/rcredits/rweb/rweb.inc on line 538
+[23-May-2018 14:11:30 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\formPass_submit() in /home/new/public_html/rcredits/rweb/rweb.inc on line 538
+[24-May-2018 14:11:28 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\formPass_submit() in /home/new/public_html/rcredits/rweb/rweb.inc on line 538
+[25-May-2018 08:44:08 America/New_York] PHP Fatal error:  Call to undefined function CG\Db\get() in /home/new/public_html/rcredits/rweb/rweb.inc on line 325
+[25-May-2018 10:42:21 America/New_York] PHP Fatal error:  Call to undefined function CG\Db\get() in /home/new/public_html/rcredits/rweb/rweb.inc on line 325
+[26-May-2018 21:35:47 America/New_York] PHP Fatal error:  Call to undefined function CG\Db\get() in /home/new/public_html/rcredits/rweb/rweb.inc on line 325
+[27-May-2018 02:29:10 America/New_York] PHP Fatal error:  Call to undefined function CG\Db\get() in /home/new/public_html/rcredits/rweb/rweb.inc on line 325
+[27-May-2018 19:49:44 America/New_York] PHP Fatal error:  Call to undefined function CG\Db\get() in /home/new/public_html/rcredits/rweb/rweb.inc on line 325
+[28-May-2018 01:30:36 America/New_York] PHP Fatal error:  Call to undefined function CG\Db\get() in /home/new/public_html/rcredits/rweb/rweb.inc on line 325
+[28-May-2018 19:03:54 America/New_York] PHP Fatal error:  Call to undefined function CG\Db\get() in /home/new/public_html/rcredits/rweb/rweb.inc on line 325
+[29-May-2018 20:50:19 America/New_York] PHP Fatal error:  Call to undefined function CG\Db\get() in /home/new/public_html/rcredits/rweb/rweb.inc on line 325
+[30-May-2018 18:44:26 America/New_York] PHP Fatal error:  Call to undefined function CG\Db\get() in /home/new/public_html/rcredits/rweb/rweb.inc on line 325
+[30-May-2018 22:54:11 America/New_York] PHP Fatal error:  Call to undefined function CG\Db\get() in /home/new/public_html/rcredits/rweb/rweb.inc on line 325
+[31-May-2018 13:20:47 America/New_York] PHP Fatal error:  Call to undefined function CG\Db\get() in /home/new/public_html/rcredits/rweb/rweb.inc on line 325
+[31-May-2018 16:23:59 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg-util.inc on line 723
+[31-May-2018 16:25:37 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg-util.inc on line 723
+[31-May-2018 17:17:20 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg-util.inc on line 723
+[31-May-2018 17:17:39 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg-util.inc on line 723
+[31-May-2018 17:18:20 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg-util.inc on line 723
+[31-May-2018 17:18:48 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg-util.inc on line 723
+[31-May-2018 17:19:04 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg-util.inc on line 723
+[31-May-2018 17:28:42 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg-util.inc on line 723
+[31-May-2018 17:30:04 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg-util.inc on line 723
+[31-May-2018 17:33:17 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg-util.inc on line 723
+[31-May-2018 23:18:14 America/New_York] PHP Fatal error:  Call to undefined function CG\Vote\showResults() in /home/new/public_html/rcredits/rvote/rvote-web.inc on line 201
+[01-Jun-2018 08:54:22 America/New_York] PHP Fatal error:  Call to undefined function CG\Db\get() in /home/new/public_html/rcredits/rweb/rweb.inc on line 325
+[01-Jun-2018 10:47:25 America/New_York] PHP Fatal error:  Call to undefined function CG\Db\get() in /home/new/public_html/rcredits/rweb/rweb.inc on line 325
+[01-Jun-2018 12:20:44 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg-util.inc on line 723
+[01-Jun-2018 12:34:22 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg-util.inc on line 723
+[01-Jun-2018 12:40:10 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg-util.inc on line 723
+[01-Jun-2018 12:41:10 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg-util.inc on line 723
+[01-Jun-2018 12:42:57 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg-util.inc on line 723
+[01-Jun-2018 12:43:44 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg-util.inc on line 723
+[01-Jun-2018 12:44:43 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg-util.inc on line 723
+[01-Jun-2018 12:54:16 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg.inc on line 631
+[01-Jun-2018 12:55:29 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg.inc on line 630
+[01-Jun-2018 12:56:23 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg.inc on line 630
+[01-Jun-2018 12:57:23 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg.inc on line 630
+[01-Jun-2018 13:00:34 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg.inc on line 630
+[01-Jun-2018 13:01:20 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg.inc on line 630
+[01-Jun-2018 13:01:41 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg.inc on line 630
+[01-Jun-2018 13:16:22 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg.inc on line 630
+[01-Jun-2018 13:18:16 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\get() in /home/new/public_html/rcredits/cg.inc on line 630
+[01-Jun-2018 13:20:31 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\lookup() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1357
+[01-Jun-2018 13:22:40 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\lookup() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1357
+[01-Jun-2018 13:24:35 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\lookup() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1357
+[01-Jun-2018 13:26:07 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\lookup() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1357
+[01-Jun-2018 13:27:49 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\lookup() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1357
+[01-Jun-2018 13:28:27 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\lookup() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1357
+[01-Jun-2018 13:29:10 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\lookup() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1357
+[01-Jun-2018 13:29:43 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\lookup() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1357
+[01-Jun-2018 13:36:09 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\lookup() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1357
+[01-Jun-2018 13:36:56 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\lookup() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1357
+[01-Jun-2018 13:37:38 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\lookup() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1357
+[01-Jun-2018 13:39:20 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\lookup() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1357
+[01-Jun-2018 13:39:43 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\lookup() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1357
+[01-Jun-2018 13:40:31 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\lookup() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1357
+[01-Jun-2018 13:41:01 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\lookup() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1357
+[01-Jun-2018 13:41:28 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\lookup() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1357
+[01-Jun-2018 13:43:07 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\lookup() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1357
+[01-Jun-2018 13:43:18 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\lookup() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1357
+[01-Jun-2018 13:44:46 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\lookup() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1357
+[01-Jun-2018 13:45:52 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\lookup() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1357
+[01-Jun-2018 14:00:13 America/New_York] PHP Fatal error:  Call to undefined function CG\DB\lookup() in /home/new/public_html/rcredits/rweb/rweb-subs.inc on line 1357
+[04-Jun-2018 15:47:21 America/New_York] PHP Parse error:  syntax error, unexpected 'as' (T_AS) in /home/new/public_html/rcredits/admin/admin-forms.inc(569) : eval()'d code on line 10
+[06-Jun-2018 23:16:16 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/includes/form.inc on line 1816
+[11-Jun-2018 16:57:01 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[11-Jun-2018 16:57:34 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[11-Jun-2018 17:44:11 America/New_York] PHP Fatal error:  Call to undefined function dedug() in /home/new/public_html/rcredits/admin/admin-forms.inc(569) : eval()'d code on line 10
+[11-Jun-2018 18:02:28 America/New_York] PHP Parse error:  syntax error, unexpected ',' in /home/new/public_html/rcredits/admin/admin-forms.inc on line 154
+[11-Jun-2018 18:10:19 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\kasort() in /home/new/public_html/rcredits/admin/admin-forms.inc on line 162
+[11-Jun-2018 18:22:29 America/New_York] PHP Parse error:  syntax error, unexpected 'channel' (T_STRING) in /home/new/public_html/rcredits/admin/admin-forms.inc on line 172
+[12-Jun-2018 22:28:37 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[12-Jun-2018 22:28:59 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[12-Jun-2018 22:29:06 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[12-Jun-2018 22:29:17 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[12-Jun-2018 22:29:34 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[14-Jun-2018 14:54:46 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[14-Jun-2018 14:54:53 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[14-Jun-2018 14:55:00 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[14-Jun-2018 15:48:53 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[14-Jun-2018 15:48:55 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[14-Jun-2018 15:49:01 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[14-Jun-2018 15:49:09 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[14-Jun-2018 15:49:14 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[14-Jun-2018 15:49:17 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[14-Jun-2018 15:49:18 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[14-Jun-2018 15:50:21 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[14-Jun-2018 15:51:03 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[14-Jun-2018 15:51:26 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[14-Jun-2018 15:53:04 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[14-Jun-2018 15:54:06 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[15-Jun-2018 14:35:38 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[15-Jun-2018 17:18:21 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[15-Jun-2018 17:21:38 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[15-Jun-2018 17:24:37 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[15-Jun-2018 17:57:48 America/New_York] PHP Fatal error:  Call to undefined function CG\Web\w\go() in /home/new/public_html/rcredits/forms/statements.inc on line 9
+[19-Jun-2018 07:29:46 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/includes/form.inc on line 1816
+[25-Jun-2018 05:33:01 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/includes/form.inc on line 1816
+[08-Jul-2018 14:32:43 America/New_York] PHP Parse error:  syntax error, unexpected '<<' (T_SL) in /home/new/public_html/rcredits/admin/admin-forms.inc(583) : eval()'d code on line 15
+[08-Jul-2018 14:46:39 America/New_York] PHP Parse error:  syntax error, unexpected end of file in /home/new/public_html/rcredits/admin/admin-forms.inc(583) : eval()'d code on line 22
+[12-Jul-2018 22:10:24 America/New_York] PHP Fatal error:  require_once(): Failed opening required '/home/new/public_html/rcredits/rweb/../rvote/rvote-web.inc' (include_path='.:/opt/cpanel/ea-php56/root/usr/share/pear') in /home/new/public_html/includes/menu.inc on line 516
+[12-Jul-2018 22:11:59 America/New_York] PHP Fatal error:  Call to undefined function CG\Vote\showResults() in /home/new/public_html/rcredits/forms/event.inc on line 43
+[14-Jul-2018 15:17:52 America/New_York] PHP Parse error:  syntax error, unexpected '$title' (T_VARIABLE) in /home/new/public_html/rcredits/forms/events.inc on line 55
+[14-Jul-2018 23:55:22 America/New_York] PHP Fatal error:  Call to undefined function CG\Vote\showResults() in /home/new/public_html/rcredits/rvote/rvote-ballot.inc on line 642
+[14-Jul-2018 23:56:34 America/New_York] PHP Fatal error:  Call to undefined function CG\Vote\showResults() in /home/new/public_html/rcredits/rvote/rvote-ballot.inc on line 642
+[15-Jul-2018 00:07:28 America/New_York] PHP Fatal error:  Call to undefined function CG\Vote\showResults() in /home/new/public_html/rcredits/rvote/rvote-ballot.inc on line 642
+[16-Jul-2018 09:51:04 America/New_York] PHP Parse error:  syntax error, unexpected '<<' (T_SL) in /home/new/public_html/rcredits/admin/admin-forms.inc(583) : eval()'d code on line 10
+[16-Jul-2018 09:52:21 America/New_York] PHP Fatal error:  Cannot access empty property in /home/new/public_html/includes/database/database.inc on line 2202
+[23-Jul-2018 21:19:57 America/New_York] PHP Fatal error:  Call to undefined function getVoters() in /home/new/public_html/rcredits/admin/admin-forms.inc(583) : eval()'d code on line 10
+[23-Jul-2018 22:34:16 America/New_York] PHP Fatal error:  Call to undefined function CG\Vote\merge_array() in /home/new/public_html/rcredits/rvote/rvote-results.inc on line 104
+[25-Jul-2018 15:08:05 America/New_York] PHP Fatal error:  Call to undefined function setBIT() in /home/new/public_html/rcredits/admin/admin-forms.inc(583) : eval()'d code on line 10
+[26-Jul-2018 16:24:25 America/New_York] PHP Fatal error:  Call to undefined function CG\Util\link() in /home/new/public_html/rcredits/forms/proposal.inc on line 66
+[09-Aug-2018 08:48:14 America/New_York] PHP Parse error:  syntax error, unexpected '=' in /home/new/public_html/rcredits/admin/admin-forms.inc(584) : eval()'d code on line 17
+[22-Aug-2018 08:42:36 America/New_York] PHP Fatal error:  Call to a member function pay() on boolean in /home/new/public_html/rcredits/forms/buy.inc on line 85
+[22-Aug-2018 10:40:29 America/New_York] PHP Fatal error:  Call to a member function pay() on boolean in /home/new/public_html/rcredits/forms/buy.inc on line 85
+[25-Aug-2018 15:28:56 America/New_York] PHP Fatal error:  Call to a member function pay() on boolean in /home/new/public_html/rcredits/forms/buy.inc on line 85
+[28-Aug-2018 13:36:44 America/New_York] PHP Fatal error:  Call to a member function pay() on boolean in /home/new/public_html/rcredits/forms/buy.inc on line 85
+[04-Sep-2018 08:35:43 America/New_York] PHP Parse error:  syntax error, unexpected end of file in /home/new/public_html/rcredits/admin/admin-forms.inc(584) : eval()'d code on line 26
+[04-Sep-2018 08:36:34 America/New_York] PHP Parse error:  syntax error, unexpected end of file in /home/new/public_html/rcredits/admin/admin-forms.inc(584) : eval()'d code on line 26
+[05-Sep-2018 09:02:00 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/rcredits/cg.inc on line 435
+[05-Sep-2018 09:02:29 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/rcredits/cg.inc on line 435
+[06-Sep-2018 16:28:20 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/rcredits/cg.inc on line 435
+[06-Sep-2018 16:31:42 America/New_York] PHP Fatal error:  Unsupported operand types in /home/new/public_html/rcredits/cg.inc on line 435
+[07-Sep-2018 11:51:06 America/New_York] PHP Fatal error:  Call to a member function pay() on boolean in /home/new/public_html/rcredits/forms/buy.inc on line 85
+[10-Sep-2018 11:05:24 America/New_York] PHP Fatal error:  Call to a member function pay() on boolean in /home/new/public_html/rcredits/forms/buy.inc on line 85
+[11-Sep-2018 09:44:27 America/New_York] PHP Parse error:  syntax error, unexpected ')' in /home/new/public_html/rcredits/admin/admin-forms.inc(584) : eval()'d code on line 11
+[11-Sep-2018 09:44:44 America/New_York] PHP Parse error:  syntax error, unexpected end of file in /home/new/public_html/rcredits/admin/admin-forms.inc(584) : eval()'d code on line 17
+[11-Sep-2018 09:45:10 America/New_York] PHP Fatal error:  Cannot break/continue 1 level in /home/new/public_html/rcredits/admin/admin-forms.inc(584) : eval()'d code on line 12
+[12-Sep-2018 15:04:16 America/New_York] PHP Parse error:  syntax error, unexpected end of file in /home/new/public_html/rcredits/admin/admin-forms.inc(584) : eval()'d code on line 10
+[12-Sep-2018 15:04:20 America/New_York] PHP Parse error:  syntax error, unexpected end of file in /home/new/public_html/rcredits/admin/admin-forms.inc(584) : eval()'d code on line 10

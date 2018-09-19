@@ -1,0 +1,255 @@
+<?php
+/**
+ * @file
+ * rCredits Web Interface
+ *
+ * An interface module for the rCredits financial system.
+ *
+ * Note: to display one of the blocks defined herein on a page, use
+ * print render(rweb_block_view('blockname'));)
+ * @todo: eliminate rweb_block_info and rweb_block_view by integrating calls to the accounts and footer sections into theme\html.tpl
+ */
+
+use CG as r;
+use CG\Backend as be;
+use CG\Util as u;
+use CG\Web as w;
+
+require_once __DIR__ . '/../cg.inc';
+require_once __DIR__ . '/rweb.inc';
+
+define('RWEB_BLOCKS', 'accounts footer');
+
+/**
+ * Implements hook_block_info().
+ */
+function rweb_block_info() {
+  $info = [];
+  foreach (ray(RWEB_BLOCKS) as $one) {
+    $def = array('info' => ucfirst($one) . ' Block');
+    $status = 1;
+    $def += compact(ray('region status'));
+    $info[$one] = $def;
+  }
+  $info['footer']['cache'] = -1;
+  $info['footer']['region'] = 'footer';
+  $info['accounts']['region'] = 'accounts';
+  return $info;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function rweb_block_view($delta = '') {
+  if (in($delta, RWEB_BLOCKS)) return ray('subject content', NULL, r\Web\showForm($delta)); // no subject for blocks
+}
+
+/**
+ * Construct a menu item from its list of parts.
+ * The last two parts (detail and icon) are used only for submenus (see subMenuHtml())
+ */
+function makeMenuItem($k, $parts) {
+  $types = ['norm' => MENU_NORMAL_ITEM, 'sub' => MENU_LOCAL_TASK, 'dft' => MENU_DEFAULT_LOCAL_TASK, 'call' => MENU_CALLBACK];
+  @list ($type, $title, $args, $perms, $func) = $parts;
+  return w\menu($k, $title, $types[$type], $func ?: 'showForm', $args, $perms);
+}
+
+/**
+ * Implements hook_menu().
+MENU_CALLBACK  Menu type -- A hidden, internal callback, typically used for API calls.
+MENU_DEFAULT_LOCAL_TASK  Menu type -- The "default" local task, which is initially active.
+MENU_LOCAL_ACTION  Menu type -- An action specific to the parent, usually rendered as a link.
+MENU_LOCAL_TASK  Menu type -- A task specific to the parent item, usually rendered as a tab.
+MENU_NORMAL_ITEM  Menu type -- A "normal" menu item that's shown in menu and breadcrumbs.
+MENU_SUGGESTED_ITEM  Menu type -- A normal menu item, hidden until enabled by an administrator.
+ * @param string $submenu: (optional) a subsection of the menu structure to return RAW (unprocessed)
+ */
+function rweb_menu($submenu = '') {
+
+  $items = array(
+    'summary' => ['norm', t('Summary'), 'Summary', 'read'],
+
+    'charge' => ['norm', t('Charge'), 'Tx 1', 'sell ok'],
+    'charge/invoices' => ['sub', t('Upload Invoices'), 'InvoiceUpload', 'co sell ok'],
+    'charge/nonmember' => ['call', t('Charge Nonmember'), 'TxNonmember', 'sell ok'],
+//    'charge/zot' => ['sub', 'zot', '', ANY], // Drupal bug: last choice is omitted
+    'pay' => ['norm', t('Pay'), 'Tx 1', 'buy ok confirmed'],
+//    'pay/one' => ['sub', t('Pay One'), 'Tx', 'co buy ok'],
+    'pay/payments' => ['sub', t('Upload Payments'), 'Payments', 'co buy ok'],
+    'pay/payroll' => ['sub', t('Upload Payroll'), 'Payroll', 'co buy ok'],
+//    'pay/zot' => ['sub', 'zot', '', ANY], // Drupal bug: last choice is omitted
+
+//    'grant' => ['norm', t('Grant'), 'Tx', 'managing_ctty'],
+//    'loan' => ['norm', t('Loan'), 'Tx', 'managing_ctty'],
+//    'invest' => ['norm', t('Invest'), 'Tx', 'managing_ctty'],
+//    'fine' => ['norm', t('Fine'), 'Tx', 'managing_ctty'],
+
+    'get' => ['norm', t('Bank'), 'Get 1', 'manage ok'],
+    
+    'invest' => ['norm', t('Invest'), 'Invest 1', 'manage ok icadmin'], // icadmin is temporary
+    'invest/list' => ['call', t('List Investments'), 'InvestList 2', 'manage ok investor'],
+    'invest/cashout' => ['call', t('Handle Requests to Cash Out Investments'), 'InvestCashout 2', 'manage ok investor icadmin'],
+    'invest/propose' => ['call', t('Propose an Investment'), 'InvestPropose 2', 'manage ok investor icadmin'],
+    'invest/rate' => ['call', t('Rate an Investment'), 'InvestRate 2', 'manage ok investor'],
+    'invest/buy-or-sell' => ['call', t('Buy or Sell a Club Investment'), 'InvestBuySell 2', 'manage ok investor icadmin'],
+    
+    'history' => ['norm', t('History'), 'History', 'read'],
+    'history/transactions' => ['sub', t('Transactions'), 'Txs 2', 'read', '', t(''), 'list'],
+    'history/invoices-to' => ['sub', t('Invoices TO You'), 'Invoices to', 'read', '', t(''), 'log-in'],
+    'history/invoices-from' => ['sub', t('Invoices FROM You'), 'Invoices from', 'read', '', t(''), 'log-out'],
+    'history/statements' => ['sub', t('Statements'), 'Statements 2', 'read', '', t(''), 'list-alt'],
+    'history/notices' => ['sub', t('Notices'), 'Notices 2', 'read', '', t(''), 'envelope'],
+    'history/tax-info' => ['sub', t('Tax Info'), 'TaxInfo 2', 'read', '', t(''), 'pawn'],
+    'history/changes' => ['sub', t('See Changes'), 'SeeChanges', 'cadmin', '', t(''), 'refresh'],
+    'history/zot' => ['sub', 'zot', '', ANY], // Drupal bug: last choice is omitted
+    'history/statement' => ['call', t('Statement'), '2', 'read', 'statement'],
+//    'history/notice' => ['call', t('Notice'), 'Notice 2', 'read'],
+    
+//    'community' => ['norm', t('Community'), 'FindCo', ANY],
+    'community' => ['norm', t('Community'), 'Community', ANY],
+    'community/data' => ['sub', t('Community & Money Data'), 'Data 2', 'read', '', t(''), 'list-alt'],
+    
+    'community/events' => ['sub', t('Democracy Events'), 'Events 2', 'ok manage', '', t(''), 'bell'],
+    'community/events/event' => ['call', t('Add/Edit Event'), 'Event 3 4', 'member'],
+    'community/events/question' => ['call', t('Add/Edit Question'), 'Question 3', 'cadmin'],
+    'community/events/option' => ['call', t('Add/Edit Option'), 'Option 3', 'cadmin'],
+    'community/events/proposal' => ['call', t('Funding Proposal'), 'Proposal 3', ANY],
+    'community/events/proposal-report' => ['call', t('Proposal Report'), 'ProposalReport 3', 'manage'],
+    'community/events/proposal-notes' => ['call', t('Proposal Notes'), 'ProposalNotes 3', 'manage'],
+    
+    'community/agreement' => ['sub', t('The Agreement'), 'Agreement', ANY, '', t(''), 'globe'],
+    'community/honors' => ['sub', t('Honored and Remembered'), 'Honors', ANY, '', t(''), 'grain'],
+    'community/invite' => ['sub', t('Invite Someone'), 'Invite', 'member manage', '', t(''), 'share-alt'],
+    'community/invite/example' => ['call', t('Invite Someone'), '', 'member manage', 'inviteExample'],
+    'community/invite/print' => ['call', t('Print Invite'), '', 'manage', 'printInvite'],
+    'community/invite/invited-whom' => ['call', 'Invited Whom', 'InvitedWhom', 'manage'],
+    'community/invite/waiting' => ['call', 'Waiting', 'Waiting', 'manage'],
+    'community/message' => ['sub', t('Message a Member'), 'Message', 'member manage', '', t(''), 'envelope'],
+    'community/find-company' => ['sub', t('Find a Company'), 'FindCo 2', ANY, '', t(''), 'search'],
+    'community/donate' => ['sub', t('Donate'), 'Donate', 'manage', '', t(''), 'thumbs-up'],
+// temporarily disabled    'community/grant' => ['sub', t('Get Paid to Organize'), 'Grant', 'prose', '', t(''), 'apple'],
+//    'community/funds' => ['sub', t('Funds in Each Community'), 'CttyFunds', ANY, '', t(''), 'usd'],
+    'community/coupons' => ['sub', t('Coupons and Gift Cards'), 'Coupons 2', 'ok manage', '', t(''), 'usd'],
+    'community/coupons/print' => ['call', t('Print Coupons'), '3', 'ok manage', 'couponsPrint'],
+    'community/coupons/list' => ['call', t('Print Coupons'), 'CouponsList 3', 'ok manage'],
+    'community/graphs' => ['sub', t('%PROJECT Graphs'), 'Graphs 2', ANY, '', t(''), 'stats'],
+    'community/flags' => ['sub', t('Risk Flags'), 'Flags 2', ANY, '', t(''), 'flag'],
+//    'community/game' => isGAME ? ['sub', t('Game'), 'Game', ANY) : NULL,
+    'community/zot' => ['sub', 'zot', '', ANY], // Drupal bug: last choice is omitted
+    'community/chart-data' => ['call', t('Chart Data'), '2', ANY, 'chartData'],
+    'community/list' => ['call', t('Community List'), '', ANY, 'cttyList'], // for charts/graphs
+    
+    'settings' => ['norm', t('Settings'), 'Settings', 'manage -closed'],
+//    'settings/settings' => ['dft', t('Settings'), 'Settings', 'manage'],
+    'settings/contact' => ['sub', t('Contact Info'), 'Contact', 'manage', '', t(''), 'user'],
+    'settings/preferences' => ['sub', t('Preferences'), 'Prefs', 'manage', '', t(''), 'cog'],
+    'settings/security' => ['sub', t('Security'), 'Security 2', 'manage -co', '', t(''), 'link'],
+    'settings/connect' => ['sub', t('Banking'), 'Connect 2', 'manage', '', t(''), 'piggy-bank'],
+    'settings/company' => ['sub', t('Company Info'), 'Company 2', 'manage co', '', t(''), 'calendar'],
+    'settings/relations' => ['sub', t('Relations'), 'Relations 2', 'manage', '', t(''), 'magnet'],
+// DISABLE FOR NOW    'settings/boxes' => ['sub', t('Devices'), 'Boxes', 'manage', '', t(''), 'phone'],
+    'settings/proxies' => ['sub', t('Proxies'), 'Proxies', 'manage -co', '', t(''), 'thumbs-up'],
+    'settings/zot' => ['sub', 'zot', '', ANY], // Drupal bug: last choice is omitted
+
+    'reset' => ['call', t('Choose New Password'), 'ResetPassword 1', ANY],
+    'settings/skip' => ['call', t('Skip Step'), '', 'manage', 'skipStep'],
+    'settings/notifications' => ['call', t('Notifications'), 'Notifications', 'manage'],
+    'settings/ssn' => ['call', t('Correct SSN'), 'Ssn 2', 'manage'],
+    'settings/password' => ['call', t('Request New Password'), 'Pass 2', ANY],
+    'settings/security/change-password' => ['call', 'Change Password', 'ChangePassword', 'manage'],
+//    'settings/security/change-pin' => ['call', 'Change PIN', 'ChangePin', 'manage'],
+    'settings/photo' => ['call', 'Photo', 'Photo 2', 'manage'],
+    'settings/photo/upload' => ['call', 'Photo Upload', '3 4', ANY, 'photoUpload'],
+//    'settings/verify-phone' => ['call', 'Verify Phone', 'VerifyPhone', 'manage dw'],
+//    'settings/readd-phone' => ['call', 'reAdd Phone', '', 'manage dw', 'addPhone'],
+    'settings/basic' => ['call', 'Basic', 'Basic', 'manage'],
+//    'settings/kba' => ['call', 'Kba', 'Kba', 'manage dw'],
+//    'settings/photo-id' => ['call', 'Kba', 'PhotoId', 'manage'],
+    'settings/proxy' => ['call', 'Proxy', 'Proxy 2', 'manage -co'],
+    'settings/verify' => ['call', 'Verify Email', 'Verify 1', 'manage'],
+    'settings/resend' => ['call', 'Resend Email', 'Resend', 'manage'],
+
+//    'handy' => isDEV ? ['norm', t('Handy'), '', 'dev', 'handyLinks'] : NULL,
+    'tests' => isDEV ? ['norm', t('Test'), '1', isDEV ? 'dev' : NULL, 'test'] : NULL,
+//    'php' => isDEV ? ['norm', t('PHP'), 'Php', 'dev'] : NULL,
+    
+    'menu' => ['call', t('Menu'), 'Menu', ANY],
+    'empty' => ['call', t('Empty'), 'Empty 1', ANY],
+    'prox' => ['call', t('Prox'), 'Prox 1 2', ANY], // proxy form called from rdo()
+
+    'request-employee-rcard' => ['call', t('Request Employee %PROJECT Card'), 'RequestRCard 1', 'manage'],
+    
+    'I' => ['call', 'Scanned QR', 'I', ANY],
+    
+    'signup-company' => ['call', t('Open a Company Account'), 'SignupCo', 'manage'],
+    'prejoin' => ['call', t('Open a Joint Account'), 'Prejoin', 'manage'],
+    'handle-invoice' => ['call', t('Handle Invoice'), 'HandleInvoice 1', ANY],
+    'rerisk' => ['call', t('Recalculate Risk'), 'Rerisk 1 2 3', 'cadmin2'],
+    'company-reports' => ['call', t('Company Reports'), 'Data 1 co', 'read co'],
+
+    'sadmin' => ['norm', t('Admin'), 'Admin', 'admin2'],
+    'sadmin/panel' => ['sub', t('Panel'), 'AdminPanel 2', 'cadmin'],
+    'sadmin/followup' => ['sub', t('Admin Action Page'), 'Followup', 'admin2'],
+    'sadmin/member-list' => ['sub', t('Member List'), 'MemberList', 'cadmin2'],
+    'sadmin/export-list' => ['sub', t('Export'), 'DownloadMemberList 2', 'cadmin2'],
+    'sadmin/deposits' => ['sub', t('Deposits'), 'Deposits', 'superadmin'],
+    'sadmin/new-member' => ['sub', t('New Member'), 'Signup code=.(admin)', 'cadmin'],
+    'sadmin/make-community' => ['sub', t('Make Ctty'), 'MakeCtty', 'superadmin'],
+//    'sadmin/sms' => ['sub', t('Test SMS'), 'SMS', 'superadmin'],
+    'sadmin/handy' => ['sub', t('Handy'), '', 'superadminORdev', 'handyLinks'],
+    'sadmin/php' => ['sub', t('PHP'), 'Php 2', 'superadminORdev'],
+    'sadmin/zot' => ['sub', 'zot', '', 'superadmin'], // Drupal bug: last choice is omitted
+    'sadmin/tx-info' => ['call', 'Transaction Info', 'TxInfo 2', 'admin2'],
+    'sadmin/deposit-details' => ['call', t('Deposit Details'), '2', 'superadmin', 'depositDetails'],
+    'sadmin/checks' => ['call', t('Checks'), '2', 'superadmin', 'printChecks'],
+    'sadmin/achs' => ['call', t('ACHs'), '2', 'superadmin', 'achBatch'],
+    'sadmin/changes' => ['call', t('See Changes'), 'SeeChanges 2', 'cadmin'],
+		'sadmin/reconcile-ctty-fund' => ['call', t('Reconcile Community Fund'), 'ReconcileCttyFund', 'superadmin'],
+    'sadmin/organizer-list' => ['call', t('Organizer List'), 'OrganizerList 2', 'admin'],
+    'rcredits/util' => ['call', 'Util', '2', 'superadmin', 'util'],
+    'sadmin/recover' => ['call', t('Empty'), 'TestRecovery 1', 'dev'], // also go here manually, if needed
+    'sadmin/delete-account' => ['call', t('Delete Account'), '2', 'superadmin', 'deleteAccount'],
+    'print-rcard' => ['call', t('Print ID Card'), '1 2', 'cadmin', 'memberID'],
+    'sadmin/show-deposits' => ['call', t('Show Deposits'), 'ShowDeposits', 'read'],
+
+    'signout' => ['norm', t('Sign out'), '1', 'signedIn', 'signout'],
+    'signin' => ['norm', t('Sign in'), 'Signin', '-signedIn'],
+//    'signin' => ['call', 'Sign in', 'Signin', ANY],
+//    'sinx' => ['call', 'Sign in from elsewhere', 'Sinx', ANY],
+    
+    'account-photo' => ['call', 'Account Photo', 'AccountPhoto 1', ANY],
+    'account-icon' => ['call', 'Icon', 'AccountPhoto small=1', ANY],
+    'help' => ['call', t('Help'), 'Help 1 2', ANY],
+    'cgbiz' => ['call', t('Common Good Business'), 'CgBiz 1', ANY],
+    'change-account' => ['call', t('Change Who'), '1', ANY, 'changeWho'],
+    'status' => ['call', 'Status', 'Membership 1', 'manage'],
+    'signup' => ['call', t('Sign Up For %PROJECT'), 'Signup', ANY],
+    'menu' => ['call', 'Main Menu', 'Menu', ANY],
+    'member' => ['call', 'Company Profile', 'Profile', ANY],
+//    'autocomplete' => ['call', 'Identify', '1 2 3', ANY, 'auto'],
+    'do' => ['call', 'Do', '1 2', ANY, 'rdo'],
+    'coup' => ['call', t('Disable account'), '1', ANY, 'coup'],
+
+//    'savings' => ['call', t('Savings'), 'ChooseSavings', ANY], // temporary until 12/15/2015 or so
+    'accept' => ['call', 'Accept Invitation', 'Accept 1', ANY], // called from promo site
+    'pos' => ['call', 'POS', '1', ANY, 'pos'], // called from the rPOS app
+    'ajax' => ['call', 'AJAX', '1', ANY, 'ajax'], // called from the rPOS app
+    'whosin' => ['call', t('Who\'s in?'), '1', ANY, 'whosin'], // called from promo site
+    'secret' => ['call', 'Secret', '', ANY, 'secrets'],
+    'error' => ['call', 'System Error', '1', ANY, 'error'],
+    'page-not-found' => ['call', t('Page Not Found'), 'PageNotFound', ANY],
+    'go2' => ['call', t('Go to 2 pages'), '1', ANY, 'go2'],
+    'pay-with-cg' => ['call', t('Pay With %RCREDITS'), 'Buy 1', ANY],
+    'authcode' => ['call', t('Supply a one-use auth code'), '', ANY, 'authcode'],
+  );
+
+  if ($submenu) {
+    foreach ($items as $k => $v) if (@$v and u\starts($k, "$submenu/")) $menu[$k] = $v;
+  } else foreach ($items as $k => $v) if (@$v) $menu[$k] = makeMenuItem($k, $v);
+
+  return $menu;
+}
+
+function rweb_menu_alter(&$items) {
+  foreach (ray('node user/password user/register') as $one) unset($items[$one]);
+}

@@ -1,0 +1,296 @@
+<?php
+/**
+ * @file
+ * rCredits
+ *
+ * A module for the rCredits financial system.
+ * This module implements rCredits as an extension to Community Accounting (mcapi).
+ *
+ * PURPOSE:
+ * Specifically, this module keeps track of and manages the following:
+ * - balances: how much credit each participating individual or enterprise has been given,
+ *             toward future goods and services
+ * - credit lines: how much advance credit each participant has been (or is to be) granted, with
+ *             the expectation that they will produce commensurate goods and services
+ * - transactions: exchanges of credit for goods and services or for other types of credit
+ * - credit issuance: how credit comes into being, before it is used in transactions
+ *
+ * CREDIT ISSUANCE:
+ * In the %PROJECT system, credit is always issued as a Ricardian Contract
+ * (see http://www.systemics.com/docs/ricardo/issuer/contract.html).
+ * Initially, for the first 6 months, credit will be issued only by the Society to Benefit Everyone, Inc.,
+ * for rebates, bonuses, and inflation adjustments. That credit will be backed by the membership
+ * promise of each participant.
+ *
+ * After 6 months, we expect that Common Good Communities will be the sole issuers of rCredits.
+ * At that time, all participants will exchange their rCredits one-for-one for new rCredits issued
+ * jointly by themselves (that is, by their Common Good Community). The new contract will spell out
+ * the financial relationship between Common Good Communities.
+ *
+ * STRUCTURE:
+ * rCredits is the central engine
+ * separate modules handle the various transaction channels: rSMS, rSmartphone, rBrowser, etc.
+ * rIssue handles credit issuance.
+ * 
+ * a companion module, rDemocracy, handles participatory financial decision-making
+ */
+
+require_once 'cg.inc';
+use CG as r;
+use CG\Util as u;
+use CG\DB as db;
+use CG\Web as w;
+use CG\Admin as a;
+use CG\Cron as cr;
+
+define('R_SYS_ERR', t('The %PROJECT system has detected an unusual problem. If your activity was interrupted, please feel free to try again.') . "<br>\n");
+define('ONE_CRON_OP', 'one cron op'); // flags a call of f('cr. in PHP window, to prevent side-effects
+
+set_exception_handler('rcredits_exception_handler');
+\drupal_register_shutdown_function('rcredits_shutdown');
+
+/**
+ * Top level exception handler (not a hook)
+ * Log the error and follow up according to channel.
+ *   Web: Jump to default member page and display a complete error message.
+ *   SMS: Give a short apology.
+ *   Smart: Give a short apology.
+ *   Uninitialized: print the full error information and die
+ */
+function rcredits_exception_handler($e) {
+  global $channel, $rsms_number;
+  global $R_FATAL_ERROR;
+  
+  list ($msg, $line0, $file0, $trace) = array($e->getMessage(), $e->getLine(), $e->getFile(), $e->getTrace());
+  $file0 = basename($file0);
+  $trace_msg = '';
+  for ($i = 0; $i < 11; $i++) {
+    $line = $file = '';
+    @extract($trace[$i]); // (file, line, function, args) OR just (function, args)
+    $line = @$line ?: '';
+    $file = basename(@$file);
+    $function = basename(@$function);
+/**/ $args = preg_replace('/Array\s+\(/sm', 'Array', print_r(@$args, 1)); // keep
+    $args = substr($args, 6); // discard the gratuitous "Array" at the start
+    $args = preg_replace('/$\s*\)$\s$/sm', '', $args);
+    $args = '    ' . str_replace("\n", "<br>\n    ", $args);
+    $args = str_replace('  ', ' &nbsp;', $args);
+    $trace_msg .= "<br>\n- $line in $file, calling $function() with:<br>\n$args";
+  }
+///    $trace = str_replace('<!--', '<! --', print_r($trace, 1));
+//    $trace_msg .= "<!--$trace-->"; // source will contain the whole trace
+  $msg = '<b>Exception:</b>' . R_SYS_ERR. "<br>\n($msg)<br>\n- $line0 ($file0)" . $trace_msg;
+  if (isPRODUCTION) {
+    $message = str_replace('&nbsp;', '', str_replace('<br>', '', $msg));
+    mail(R_ADMIN_EMAIL, t('%PROJECT FATAL ERROR'), $message);
+    $R_FATAL_ERROR = f('u.loga', 'FATAL', compact('message')); // this gets picked up by rcredits_shutdown()
+/**/ } else echo $msg;
+/**/ die(); // invoke shutdown
+}
+
+/**
+ * Shutdown function to redirect to error page, if there is an error.
+ */
+function rcredits_shutdown() {
+  global $R_FATAL_ERROR;
+  if (@$R_FATAL_ERROR) \drupal_goto('error/' . $R_FATAL_ERROR);
+}
+
+/**
+ * Implements hook_im_send().
+ */
+function rcredits_im_send($index, &$message, $subs) {
+  return FALSE; // can't send IMs yet
+
+  $message['send'] = FALSE; // disable emailing, since we sent it by IM instead
+  return TRUE;
+} 
+
+/**
+ * Implements hook_cron().
+ */
+function rcredits_cron() {//f('cr.periodic');} FAILS as f()! I don't know why
+  require_once __DIR__ . '/rcron/rcron.inc';
+  cr\periodic();
+}
+
+
+/**
+ * Implements hook_cron_queue_info().
+ */
+function rcredits_cron_queue_info() {
+  $q = makeQueue('doTask', R_CRON_PERIOD - R_MAX_TASK_TIME); // make sure it finishes before the next period
+  return compact('q');
+}
+
+function makeQueue($callback, $time = 15) {return array('worker callback' => "CG\\Cron\\$callback", 'time' => $time);}
+
+/**
+ * Set or return a global variable.
+ */
+function g($k, $v = NULL) {
+  global $$k;
+  if (isset($v)) $$k = $v;
+  return $$k;
+}
+
+/**/ function trace() {return print_r(debug_backtrace(), 1);}
+
+/** Miscellaneous functions for debugging
+ *
+ */
+/**/ function bs($n, $list = B_LIST) {d('a.flagsDesc', $n, $list);} // show bit numbers/names
+/**/ function tm($n = '') {debug($result = $n ? (is_numeric($n) ? date('m/d/Y H:i:s a', $n) : strtotime($n)) : time()); return $result;} // convert and display unixtime or string time
+function a($id = '', $agent = '') { // return an account object
+	global $lastA; 
+	$id = strlen($id) == 3 ? '.' . $id : $id;
+	if (!strpos($id, '@') and !preg_match('/[0-9]/', $id)) $id = strtoupper($id);
+	return $lastA = f('r.acct', f('t.fullQid', $id), f('t.fullQid', strtoupper(strlen($agent) == 3 ? '.' . $agent : $agent)));
+}
+function x($xid, $mya = '') {f('r.x', $xid, $mya);} // return a transaction object
+/**/ function da($idfield) {list ($id, $field) = ray($idfield); debug(a($id)->$field);}
+/**/ function step($a) {debug(us($a)->step());}
+/**/ function ctty($id) {if (!$id or !a($id)) die(trace()); return a(a($id)->community);}
+/**/ function flog($s = '') { // log to file and return log file name
+  $fileName = DRUPAL_ROOT . LOG_DIR . date('Ym') . '.log'; // new log file every month
+/**/ if (func_num_args()) file_put_contents($fileName, print_r($s, 1) . "\n", FILE_APPEND);
+  return $fileName;
+}
+/**/ function lug($s) {u\loga('debug', $s);}
+
+function who($s = '', $agent = '') {
+  $a = is_object($s) ? $s : a($s, $agent); 
+  $res = "$a->fullName ($a->mainQid $a->id)";
+  if (!$a->proSe) {
+    $aa = $a->agentA;
+    $res .=  " -- agent $aa->fullName ($aa->mainQid $aa->id)";
+  }
+/**/  debug($res);
+  return $a; // show whose account
+}
+
+/**
+ * Return a field of the indicated account.
+ * @param string $field: name of field to return
+ * @param mixed $a: account, qid, partial qid, or account record ID (defaults to current account)
+ */
+function af($field, $a = NULL) {
+  if (!isset($a)) $a = r\acct(); elseif (!is_object($a)) $a = a($a);
+  return $a ? $a->$field : NULL;
+}
+
+function q($sql, $subs = [], $log = FALSE) {return f('db.q', $sql, $subs, $log);}
+
+/**
+ * Return a function result, for a nicknamed namespace function.
+ * For example, f('u.fmtAmt 35.2') returns CG\Util\fmtAmt(35.2) = "$35.20".
+ * f('u.func arg1 arg2') OR f('u.func', arg1, arg2)
+ */
+function f($func) {
+  global $cronOp; 
+  list ($prefix, $funcName) = explode('.', $func);
+  $incs = ray('a:admin/admin.inc,y:cg-yearly.inc,w:rweb/rweb.inc,cr:rcron/rcron.inc,be:cg-backend.inc,s:rsmart/rsmart.inc,t:cg-testing.inc,i:cg-install.inc');
+  if ($flnm = @$incs[$prefix]) require_once __DIR__ . "/$flnm";
+
+  if ($prefix == 'v') {
+    include_once R_ROOT . '/rvote/rvote.inc';
+    include_once R_ROOT . '/rvote/rvote-ballot.inc';
+    include_once R_ROOT . '/rvote/rvote-results.inc';
+  }
+  
+  $args = func_get_args();
+  if (strpos($func, ' ') and count($args) == 1) $args = ray($args[0]);
+//  $func = array_shift($args);
+  array_shift($args);
+  if ($prefix == 'cr') $cronOp = $funcName; // $args ? $args[0] : ONE_CRON_OP;
+  return call_user_func_array(funcNickname($func), $args);
+}
+/**/ function d($s) {debug($result = call_user_func_array('f', func_get_args()));} // debug(f(...))
+
+/**
+ * Return the intended fully-qualified function name.
+ * @param string $func: a function name of the form x.func, where x is an abbreviated namespace
+ * @return the intended function name
+ */
+function funcNickname($func) {
+  list ($n, $func) = explode('.', $func);
+  $funcs = array_combine(ray('r w s u be db t p a cr y v i'), ray(' Web Smart Util Backend DB Testing SMS Admin Cron Special Vote Install'));
+  return 'CG\\' . ($funcs[$n] ? $funcs[$n] . '\\' : '') . $func;
+}
+
+/**
+ * Utility to do something for each record of a table
+ */
+function eachR($tnm, $func, $where = '1', $subs = []) {
+  if (!is_callable($func)) $func = funcNickname($func);
+  if (!$q = db\q("SELECT * FROM $tnm WHERE $where", $subs)) return w\say(t('Bad query'));
+	while ($row = $q->fetchAssoc()) $func($row);
+	w\say('Done');
+}
+	
+/**
+ * Utility to do something to each member account (see example below)
+ * call: eachA($func);
+ * or    eachA(function($a) {...});
+ */
+function eachA($func = 'a.changeIt', $where = 'uid>:CANONIC_ACCTS') {
+  if (strpos($where, 'ORDER BY') === FALSE) $where .= ' ORDER BY uid';
+  $result = q("SELECT uid FROM users WHERE $where")->fetchCol();
+  if (!is_callable($func)) $func = funcNickname($func);
+  foreach ($result as $uid) $func(a($uid));
+}
+
+/**
+ * Utility to do something to each existing transaction
+ * call: eachX();
+ * or    eachX(function($x) {...});
+ */
+function eachX($func = 'a.changeIt') {
+  $result = q('SELECT xid FROM r_txs')->fetchCol();
+  if (!is_callable($func)) $func = funcNickname($func);
+  foreach ($result as $xid) $func(r\x($xid)); // x() doesn't work here (without r\) -- dunno why
+}
+
+/**
+ * Execute a "patch" to a built-in Drupal script. Patched files are also copied to .../rcredits/patches/
+ * @param string $function: name of the Drupal function being patched, concatenated with the starting line number
+ * @param #2, etc.: varies.
+ * @return varies.
+ * Note that javascript patches do not appear here. 
+ * And query.js is not patched, it is simply updated to the latest jquery.min.js (currently version 1.11).
+ */
+function patch($name) {
+  global $base_url;
+  $args = func_get_args();
+  
+  // common.inc
+  if ($name == 'common2682') {
+    q('DELETE FROM sessions WHERE uid=0'); // added 4/22/2016 (else loops when Drupal sets uid=0 on timeout)
+    if (!$mya = a()) return 'signin'; // do not return!
+    if ($mya->cAdmin) return 'sadmin';
+    f('w.say', t('You do not have permission to visit that page.'), 'err');
+    return 'summary';
+    //$click = " <a href=\"$base_url\signin\">" . t('Click here to sign in.') . '</a>'; // w\go('signout') fails
+    //return t('You are not authorized to access this page.') . (isDEV ? $args[1] : '') . @$click;
+  }
+  // user.module
+  if ($name == 'user_access810') return FALSE;
+//  if ($name == 'user_account_form_validate1250') return w\emailDup($args[1], $args[2]); // does this get called?
+  if ($name == '_user_mail_notify3569') { // UNUSED
+    list ($index, $account, $language) = $args;
+//    $language = @$language ?: \user_preferred_language($account);
+    $uid = $account->uid;
+    return f('r.rMail', $index, a($uid)->email, compact('uid'));
+  }
+  if ($name == 'user_form_process_password_confirm3595') return []; // patch no longer used (see w\formReset())
+
+  // form.inc
+  $tabled = ['#tabled' => TRUE];
+  if ($name == 'form_select_options2741') return $args[1]['#options']; // this accommodation for dynamic javascript dropdowns (set #options = NULL) is inadequate when there is an error on the form (see signup form)
+  if ($name == 'form_process_password_confirm2914') return $tabled + ['#title' => t('New password:')] + ['#class' => ['password-field']];
+  if ($name == 'form_process_password_confirm2921') return $tabled + ['#title' => t('Confirm new password:')] + ['#class' => ['password-confirm']];
+  
+  if ($name == '_update_cron_notify') return; // update.fetch.inc
+  if ($name == 'file_munge_filename1174') return; // file.inc
+  if ($name == 'filter_access1023') return TRUE; // filter.module (allows all users access to all field formats)
+}
