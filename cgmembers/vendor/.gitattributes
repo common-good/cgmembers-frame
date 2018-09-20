@@ -1,1 +1,1 @@
-/gherkin export-ignore
+/gherkin/** export-ignore
