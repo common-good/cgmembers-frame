@@ -13,5 +13,5 @@
 define('DRUPAL_ROOT', getcwd());
 require_once __DIR__ . '/rcredits/bootstrap.inc';
 drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
-//\variable_set('up', 1);
+//\setV('up', 1);
 menu_execute_active_handler();

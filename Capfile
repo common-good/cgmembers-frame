@@ -15,9 +15,9 @@ require "capistrano/deploy"
 require "capistrano/scm/git"
 install_plugin Capistrano::SCM::Git
 
-require 'capistrano/scm/git-with-submodules'
-install_plugin Capistrano::SCM::Git::WithSubmodules
-
+require_relative 'lib/capistrano/scm/cap-full-git-submodule.rb'
+install_plugin Capistrano::SCM::Git::FullSubmodules
+                 
 # Include tasks from other gems included in your Gemfile
 #
 # For documentation on these, see for example:

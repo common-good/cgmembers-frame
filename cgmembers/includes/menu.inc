@@ -321,7 +321,7 @@ function menu_get_ancestors($parts) {
   $ancestors = array();
   $length =  $number_parts - 1;
   $end = (1 << $number_parts) - 1;
-  $masks = variable_get('menu_masks');
+  $masks = getV('menu_masks');
   // If the optimized menu_masks array is not available use brute force to get
   // the correct $ancestors and $placeholders returned. Do not use this as the
   // default value of the menu_masks variable to avoid building such a big
@@ -455,7 +455,7 @@ function menu_get_item($path = NULL, $router_item = NULL) {
   if (!isset($router_items[$path])) {
     // Rebuild if we know it's needed, or if the menu masks are missing which
     // occurs rarely, likely due to a race condition of multiple rebuilds.
-    if (variable_get('menu_rebuild_needed', FALSE) || !variable_get('menu_masks', array())) {
+    if (getV('menu_rebuild_needed', FALSE) || !getV('menu_masks', array())) {
       menu_rebuild();
     }
     $original_map = arg(NULL, $path);
@@ -1281,7 +1281,7 @@ function menu_tree_page_data($menu_name, $max_depth = NULL, $only_active_trail =
           }
           $parents = $active_trail;
 
-          $expanded = variable_get('menu_expanded', array());
+          $expanded = getV('menu_expanded', array());
           // Check whether the current menu has any links set to be expanded.
           if (!$only_active_trail && in_array($menu_name, $expanded)) {
             // Collect all the links set to be expanded, and then add all of
@@ -1803,7 +1803,7 @@ function menu_list_system_menus() {
  * Returns an array of links to be rendered as the Main menu.
  */
 function menu_main_menu() {
-  return menu_navigation_links(variable_get('menu_main_links_source', 'main-menu'));
+  return menu_navigation_links(getV('menu_main_links_source', 'main-menu'));
 }
 
 /**
@@ -1813,11 +1813,11 @@ function menu_secondary_menu() {
 
   // If the secondary menu source is set as the primary menu, we display the
   // second level of the primary menu.
-  if (variable_get('menu_secondary_links_source', 'user-menu') == variable_get('menu_main_links_source', 'main-menu')) {
-    return menu_navigation_links(variable_get('menu_main_links_source', 'main-menu'), 1);
+  if (getV('menu_secondary_links_source', 'user-menu') == getV('menu_main_links_source', 'main-menu')) {
+    return menu_navigation_links(getV('menu_main_links_source', 'main-menu'), 1);
   }
   else {
-    return menu_navigation_links(variable_get('menu_secondary_links_source', 'user-menu'), 0);
+    return menu_navigation_links(getV('menu_secondary_links_source', 'user-menu'), 0);
   }
 }
 
@@ -2316,7 +2316,7 @@ function menu_set_active_menu_names($menu_names = NULL) {
     $active = $menu_names;
   }
   elseif (!isset($active)) {
-    $active = variable_get('menu_default_active_menus', array_keys(menu_list_system_menus()));
+    $active = getV('menu_default_active_menus', array_keys(menu_list_system_menus()));
   }
   return $active;
 }
@@ -2728,10 +2728,10 @@ function menu_rebuild() {
     _menu_clear_page_cache();
 
     if (defined('MAINTENANCE_MODE')) {
-      variable_set('menu_rebuild_needed', TRUE);
+      setV('menu_rebuild_needed', TRUE);
     }
     else {
-      variable_del('menu_rebuild_needed');
+      delV('menu_rebuild_needed');
     }
   }
   catch (Exception $e) {
@@ -3336,7 +3336,7 @@ function _menu_clear_page_cache() {
  */
 function _menu_set_expanded_menus() {
   $names = db_query("SELECT menu_name FROM {menu_links} WHERE expanded <> 0 GROUP BY menu_name")->fetchCol();
-  variable_set('menu_expanded', $names);
+  setV('menu_expanded', $names);
 }
 
 /**
@@ -3846,7 +3846,7 @@ function _menu_router_save($menu, $masks) {
   // Insert any remaining records.
   $insert->execute();
   // Store the masks.
-  variable_set('menu_masks', $masks);
+  setV('menu_masks', $masks);
 
   return $menu;
 }
@@ -3870,7 +3870,7 @@ function _menu_router_save($menu, $masks) {
  */
 function _menu_site_is_offline($check_only = FALSE) {
   // Check if site is in maintenance mode.
-  if (variable_get('maintenance_mode', 0)) {
+  if (getV('maintenance_mode', 0)) {
     if (user_access('access site in maintenance mode')) {
       // Ensure that the maintenance mode message is displayed only once
       // (allowing for page redirects) and specifically suppress its display on

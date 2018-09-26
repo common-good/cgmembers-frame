@@ -206,7 +206,8 @@ function _drupal_theme_initialize($theme, $base_theme = array(), $registry_callb
   // Initialize the theme.
   if (isset($theme->engine)) {
     // Include the engine.
-    include_once DRUPAL_ROOT . '/' . $theme->owner;
+//    include_once DRUPAL_ROOT . '/' . $theme->owner;
+    include_once DRUPAL_ROOT . '/includes/engine.inc';
 
     $theme_engine = $theme->engine;
     if (function_exists($theme_engine . '_init')) {
