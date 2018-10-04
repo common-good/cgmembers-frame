@@ -1,6 +1,3 @@
-[submodule "cgmembers/rcredits"]
-	path = cgmembers/rcredits
-	url = git@github.com:common-good/rCredits.git
 [submodule "cgmembers/vendor/tcpdf"]
 	path = cgmembers/vendor/tcpdf
 	url = git@github.com:common-good/tcpdf.git
