@@ -342,7 +342,7 @@ function activeMonthly($item) {
   if ($ratio > 1.2 or $ratio < .8) { // big change (or any change in sign)
 		$limit = u\fmtAmt(-$a->floor); // (report total to master of joint accounts)
     $msg = 'new floor' . ($a->can(B_DEBT) ? '' : '|no floor effect');
-	  r\tellAdmin('new floor', compact(ray('limit monthly floor floorX ratio msg')));
+//	  r\tellAdmin('new floor', compact(ray('limit monthly floor floorX ratio msg')));
   // DISABLED FOR NOW if (!$a->slave) r\notify($uid, $msg, compact('limit'));
   }
   
@@ -368,7 +368,7 @@ function warnAnnualGift($item) {
 	
 	$aDonate = w\atag("/do/doDonate~$a->mainQid~$a->emailCode");
   r\notify($uid, 'annual-gift', $ray = ray('amount when aDonate', u\fmtAmt($amount), u\fmtDate($when, TRUE), $aDonate), TRUE);
-	r\tellAdmin('annual gift warning', $ray + ray('who', $a->fullName));
+//	r\tellAdmin('annual gift warning', $ray + ray('who', $a->fullName));
 }
 
 /**

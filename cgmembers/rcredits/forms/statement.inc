@@ -164,7 +164,7 @@ function statement($month = '') {
       if (in($fldName, $numFields) and $$fldName != $none) $$fldName = number_format($$fldName, 2);
       $pdf->Cell($width, 0, $$fldName, '', $head == $lastHead ? 1 : 0, $align, '', '', 1);
     }
-    foreach (['amount', 'reward'] as $k) $$k = $$k == R_NONE ? 0 : (str_replace(',', '', $$k) + 0); // convert from string
+    foreach (['amount', 'reward'] as $k) $$k = u\cleanAmount(@$$k); // convert from string
     if ($mya->id == CGID and $purpose == R_SHARING_MSG) list ($amount, $reward) = [$reward, $amount];
     if ($reward and $mya->cttyRewardy) {
       $catDesc = r\usdin($purpose) 

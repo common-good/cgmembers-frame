@@ -32,7 +32,7 @@ define('TX_OPT_PEXCHANGES', 5);
  * @param numeric $run: (also RETURNED) running total
  * @return [$header, $classes, $rows, $totals]
  */
-function getTxRows($starting, $ending, $options = [], $url0 = '', &$run = '') {
+function getTxRows($starting, $ending, $options = [], $url0 = '', &$run = 0) {
   global $mya;
   $maxRows = PHP_INT_MAX;
   
@@ -83,7 +83,7 @@ function getTxRows($starting, $ending, $options = [], $url0 = '', &$run = '') {
  * Prepare one transaction row for output (or download) and add it to the rows array.
  * @param assoc $tx: the transaction record
  */
-function doRow(&$rows, $tx, &$tot, $classes, $download = FALSE, $agents = FALSE, $channels = FALSE, $boxes = FALSE, $url0 = '', &$run = '') {
+function doRow(&$rows, $tx, &$tot, $classes, $download = FALSE, $agents = FALSE, $channels = FALSE, $boxes = FALSE, $url0 = '', &$run = 0) {
   global $rUrl, $mya;
   
 //  foreach (ray('xid amount byMe toMe reallyToMe agent data sharing tid') as $k) $$k = $myx->$k;
@@ -248,7 +248,7 @@ function addRow(&$tot, $row, $tx, $change, &$csvRow = '') {
   foreach ($row as $k => $v) $row[$k] = $v == R_NONE ? '' : strip_tags($v);
 //  if ($row['fromyou'] == $row['toyou']) $row['fromyou'] = $row['toyou'] = ''; // don't report gross on payex
   foreach (ray(TX_DOWNLOAD_MONEY_FLDS) as $k) {
-    $row[$k] = u\cleanAmount(@$row[$k]) + 0;
+    $row[$k] = u\cleanAmount(@$row[$k]);
     $tot[$k] = (@$tot[$k] ?: 0) + $row[$k]; // formatting value is useless
   }
   $tot['roundups'] += $change;

@@ -114,10 +114,10 @@ function formAdminPanel_submit($form, &$sta) {
   if (@$a and $op == 'printId') {
     if ($a->co and $a->proSe) return say(t('A company cannot have a %PROJECT card (only its agents have %PROJECT cards).'));
     if (@$make) {
-      $oldFile = DRUPAL_ROOT . $a->photoFilename(TRUE); // get this before makeCardCode
+      $oldFile = $a->photoFilename(TRUE); // get this before makeCardCode
       $a->makeCardCode(); // this changes photo filename
       if (file_exists($oldFile)) {
-        $newFile = DRUPAL_ROOT . $a->photoFilename(TRUE);
+        $newFile = $a->photoFilename(TRUE);
         rename($oldFile, $newFile);
       }
     }
@@ -822,7 +822,7 @@ function memberId($id, $agent = '') {
   $server = isPRODUCTION ? 'RC2.ME' : 'RC4.ME';
   $qrUrl = "HTTP://$region.$server/$tail" . $aa->$cardFld;
   $permitted = ($proSe or B_RELATED + r\relation('permission', $a->id, $aa->id) >= B_BUY);
-  $photo = ($aa->hasPhoto and $permitted) ? "@$aa->photo" : (DRUPAL_ROOT . R_PICTURE_DIR . R_NOT_VALID); // '@' tells tcpdf it's and image, not a file; $a->canBuy fails because admin has permission
+  $photo = ($aa->hasPhoto and $permitted) ? "@$aa->photo" : R_NOT_VALID; // '@' tells tcpdf it's an image, not a file; $a->canBuy fails because admin has permission
 
   list ($wCard, $hCard, $m, $xText) = [3.375, 2.125, .24, .06]; // card dimensions, negative page margin, text indent
 //  list ($wPhoto, $mPhoto, $xCardNo) = [1.09, .1, 2.4];
@@ -850,7 +850,7 @@ function memberId($id, $agent = '') {
   $pdf->StartTransform();
   $pdf->ScaleXY(100 * 8.5 / $wCard); // widen to page width (for extra resolution)
 
-  $pdf->Image(__DIR__ . "/../images/idcard/$bg.png", $m, $m, $wCard, $hCard, '', '', 'L', true); // file, x, y, w, h, type, link, align, resize
+  $pdf->Image(R_ROOT . "/images/idcard/$bg.png", $m, $m, $wCard, $hCard, '', '', 'L', true); // file, x, y, w, h, type, link, align, resize
 //  $pdf->Image($photo, $m+$mPhoto, $m+$mPhoto, $wPhoto, $wPhoto*4/3, '', '', 'L', true);
   $pdf->Image($photo, $xPhoto, $yPhoto, $wPhoto, $hPhoto, '', '', 'L', true);
   $pdf->Rect($xPhoto, $yPhoto, $wPhoto, $hPhoto, 'D'); // x, y, w, h, style, border, fill

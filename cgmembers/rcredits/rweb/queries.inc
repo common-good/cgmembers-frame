@@ -14,6 +14,7 @@ use CG\Util as u;
  */
 
 $bizQ = 'SELECT payee, goods, SUM(amount) AS tot, COUNT(*) AS cnt FROM r_txs WHERE goods=:FOR_GOODS AND created BETWEEN';
+$gifts = "r.amount * IF(period='M', 12, IF(period='Q', 4, 1))";
 
 $queries = [
   2 . 'Most Trusted Members' => 
@@ -45,16 +46,31 @@ $queries = [
     FROM users u LEFT JOIN users c ON c.uid=u.community WHERE c.uid<0 GROUP BY c.fullName",
 
 //     SUM(IF(t.:IS_GIFT OR t.:IS_ROUNDUPS OR t.:IS_CRUMBS OR t.:IS_PATRONAGE,0,amount)) AS `payments to CG`
-  'Donations to Common Good and Community' =>
+  'Actual Donations to Common Good and Community' =>
     "SELECT CONCAT_WS(' ', YEAR(FROM_UNIXTIME(t.created)), MONTHNAME(FROM_UNIXTIME(t.created))) AS month,
+    SUM(IF(t.:IS_PATRONAGE,amount,0)) AS recurring,
     SUM(IF(t.:IS_ROUNDUPS,amount,0)) AS roundups,
     SUM(IF(t.:IS_CRUMBS,amount,0)) AS crumbs,
-    SUM(IF(t.:IS_PATRONAGE,amount,0)) AS recurring,
     SUM(IF(t.:IS_GIFT AND NOT t.:IS_ROUNDUPS AND NOT t.:IS_CRUMBS AND NOT t.:IS_PATRONAGE,amount,0)) AS other
     FROM r_txs t LEFT JOIN users u ON u.uid=t.payer
     WHERE u.community=:ctty AND (t.:IS_GIFT OR t.:IS_ROUNDUPS OR t.:IS_CRUMBS OR t.:IS_PATRONAGE) AND t.payee=:CGID
     GROUP BY YEAR(FROM_UNIXTIME(t.created)) DESC, MONTH(FROM_UNIXTIME(t.created)) DESC",
 
+  'Expected Donations to Common Good and Community' =>
+    "SELECT c.fullName AS community, 
+    SUM(IF(NOT u.:IS_CO, $gifts, 0)) AS mYearly$,
+    AVG(IF(u.:IS_CO, NULL, IF(u.:IS_ROUNDUP, 1, 0))) AS mRoundupsPct,
+    AVG(IF(u.:IS_CO, NULL, IF(u.crumbs>0, 1, 0))) AS mCrumbsPct,
+    SUM(IF(NOT u.:IS_CO, u.crumbs, 0)) AS mCrumbs,
+    
+    SUM(IF(u.:IS_CO, $gifts, 0)) AS coYearly$,
+    AVG(IF(NOT u.:IS_CO, NULL, IF(u.:IS_ROUNDUP, 1, 0))) AS coRoundupsPct,
+    AVG(IF(NOT u.:IS_CO, NULL, IF(u.crumbs>0, 1, 0))) AS coCrumbsPct,
+    SUM(IF(u.:IS_CO, u.crumbs, 0)) AS coCrumbs
+    
+    FROM users u LEFT JOIN r_recurs r ON (r.payer=u.uid AND r.ended<>0 AND r.payee=:CGID) LEFT JOIN users c ON c.uid=u.community
+    WHERE u.:IS_OK
+    GROUP BY u.community",
 ];
 
 //    IFNULL(u.fullName, REPLACE(SUBSTRING(r.data, 27, LOCATE('\"', SUBSTRING(r.data, 28))), '\"', '')) AS name,

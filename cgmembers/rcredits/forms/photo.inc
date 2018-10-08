@@ -16,7 +16,6 @@ function formPhoto($form, &$sta, $arg = '') {
   global $mya;
   $chooserStyle = 'btn-md btn-primary';
 	extract(just('ok err recrop', $arg));
-//	$recrop = @$recrop ? plain($mya->tempPhotoFilename) : '';
 	$recrop = @$recrop ? "$base_url/account-photo/orig=1/" . time() : '';
 
   $body = t('I am attaching a photo of me for my %PROJECT card. &nbsp; - %fullName', 'fullName', $mya->fullName);
@@ -49,17 +48,10 @@ function formPhoto($form, &$sta, $arg = '') {
   $rnd = u\code();
   
   if ($mya->hasPhoto) {
-/*    $oldPhotoFilename = BASE_URL . $mya->photoFilename();
-    //$oldPhoto = 'data:image/jpeg;base64,' . base64_encode(file_get_contents($oldPhotoFilename));
-    $oldPhoto = $mya->photo ? 'data:image/jpeg;base64,' . base64_encode($mya->photo) : "$oldPhotoFilename?$rnd";
-    list ($background, $choose) = ["background-image:url($oldPhoto); background-size:cover;", t('Choose a New Photo')];
-    */
     $choose = t('Choose a New Photo');
     if (!$mya->co and $mya->ok) $desc .= '<p>' . t('triggers new card', ['field' => t('photo')]) . '</p>';
     if ($mya->superAdmin) $del = submit(t('Delete'));
   } else $choose = t('Choose a Photo File');
-//  } else list ($background, $choose) = ['', t('Choose a Photo File')];
-// <style>#photoUp, #photoUp.co { $background }</style>
 
   $class = $mya->co ? ' class="co"' : '';
   w\svar('userAgent', @$_SERVER['HTTP_USER_AGENT']); // for debugging spurious photo rotations
@@ -95,12 +87,6 @@ function formPhoto_submit($form, &$sta) {
   
   if (op($sta) == 'del') {
     u\EXPECT($mya->cAdmin and $mya->hasPhoto, 'del ghost photo');
-/*    $pictureFilename = DRUPAL_ROOT . $mya->photoFilename(TRUE);
-    $newFilename = str_replace('.jpg', '.X', $pictureFilename);
-    if (file_exists($pictureFilename)) {
-      rename($pictureFilename, $newFilename);
-    } else imagejpeg(imagecreatefromstring($mya->photo), $newFilename, 100);
-    */
     $mya->stepDone('photo', FALSE);
     $mya->update('photo', '');
     $mya->setBit(B_MEMBER, FALSE);

@@ -549,10 +549,11 @@ function showRecords($ray, $formatFunc = 'CG\\Web\\formatField', $flagsField = B
       $v = $formatFunc($k, plain($v), $flagsField);
       if ($k == 'for2' and $v == $row->for1) $v = 'same'; // admin uses this for conciseness
       $align = in($k, ALIGN_RIGHT) ? 'R' : (in($k, ALIGN_CENTER) ? 'C' : 'L');
-      foreach (ray('balance credit trust count total $') as $w) if (stripos($k, $w) !== FALSE) {
+      foreach (ray('balance credit trust count total $ pct') as $w) if (stripos($k, $w) !== FALSE) {
         $align = 'R';
-        if ($v !== '' and is_numeric($v)) $v = number_format($v, in($w, FMT_INT) ? 0 : 2);
+        if ($v !== '' and is_numeric($v)) $v = in($w, 'pct') ? u\fmtAmt($v, '%') : number_format($v, in($w, FMT_INT) ? 0 : 2);
       }
+        
 //      if (in_array($k, ray(FMT_INT))) $v = round($v);
 //      if (in_array($k, ray(FMT_2D)) or strpos($k, '$') !== FALSE) if ($v != '') $v = number_format($v, 2);
       $line .= "  <td class=\"align$align\">$v</td>\n";
@@ -2051,7 +2052,7 @@ function firstGraphDt($ctty) {
  * @param int $ctty: account record ID of community to show graphs for (defaults to all communities)
  * @param assoc $chartData: (RETURNED) a data field containing the chart data
  * @return: html of the relevant charts, in their proper divs
- * FOR DEV: http://localhost/cgmembers/rcredits/misc/chart.php?ctty=0&chart=growth&site=dev
+ * FOR DEV: http://localhost/cgmembers-frame/cgmembers/rcredits/misc/chart.php?ctty=0&chart=growth&site=dev
  */
 function showCharts($whichChart, $ctty = 0, &$chartData = '') {
   global $base_url;

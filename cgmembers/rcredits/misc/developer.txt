@@ -292,16 +292,7 @@ K. Handling USD
   - As a "money transmitter", Common Good Finance is a Money Services Business (MSB) -- a non-bank financial institution, reporting to FinCEN (a branch of the U.S. Treasury Department)
   - Each rCredits region is not a "money transmitter" because it is an agent of CGF
   
-L. Setting up a development environment
-  0. Install Apache, MySQL, and PHP (perhaps using XAMPP).
-  1. Download rc4.me/rMembersDrupal.zip and extract the files into a "rMembers" folder in your webroot.
-  2. Clone github.com/CommonGoodFinance/rCredits into webroot/cgMembers/rcredits
-  3. Create a database and populate it with "webroot/cgMembers/rcredits/rMembers db.sql"
-  4. Create a database user (and password) with all permissions.
-  5. Copy "webroot/cgMembers/rcredits/.databases (rcredits - model)" to webroot/../
-  6. Rename it .databases
-  7. Edit it: supply proper database name/user/password and arbitrary salt, word, and inviteKey.
-  8. Test by browsing to http://localhost/cgMembers and signing in with username admin -- any non-empty password will do.
+L. Setting up a development environment (see https://docs.google.com/document/d/1oQU-PPown2TV02Xg9htxByzOhUopGH-areUrlZ94Te0/edit)
 
 X. Other thoughts:
   - The test server must have the following in its .htaccess file (and the production server must NOT!):

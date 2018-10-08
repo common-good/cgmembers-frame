@@ -828,16 +828,7 @@ function weShowWithSubs($page, $subs) {
   return TRUE;
 }
 
-function makePicture($photo, $a) {
-//  $filename = DRUPAL_ROOT . $a->photoFilename('picture2', TRUE);
-//  return (bool) file_put_contents($filename, $picture);
-  return $a->update(compact('photo'));
-}
-
-/* UNUSED
-function getPicture($picture) {
-  return file_get_contents(DRUPAL_ROOT . R_PICTURE_DIR . "small/$picture.jpg");
-}*/
+function makePicture($photo, $a) {return $a->update(compact('photo'));}
 
 /**
  * Send an RPC API request to the server, for rPOS.

@@ -35,9 +35,10 @@ function splice(&$input, $key, $len = 0, $replacement = NULL) {
 function cleanAmount($amount) {
   $amount = trim($amount);
   if (substr($amount, 0, 1) == '$') $amount = substr($amount, 1);
-  if (u\nonish($amount)) $amount = 0;
   $amount = str_replace(R_NONE, '', $amount); // useful for monthly statements
-  return preg_replace('/[ \,]/', '', $amount); // ignore spaces and commas
+  $amount = preg_replace('/[ \,]/', '', $amount); // ignore spaces and commas
+  if (u\nonish($amount)) $amount = 0;
+  return $amount ?: 0;
 }
 
 /**
