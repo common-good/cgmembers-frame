@@ -1,3 +1,8 @@
+2018-10-09
+. fixed v\showProposal() to work when NOT showing grading questions
+. donations from already-members are now reported to cAdmin (not just admin)
+. separated members expected donations query from companies and improved them both
+
 2018-10-08
 . fixed urls on Dev machine to accommodate frame
 . added query to show how many members choose which kinds of donations

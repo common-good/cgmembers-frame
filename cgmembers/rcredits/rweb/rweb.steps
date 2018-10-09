@@ -367,7 +367,7 @@ function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, 
 /**
  * we tell admin (ARG) with subs: (ARG)
  *
- * in: TEST gift AMemberDonatesWithInsufficientFunds
+ * in: 
  */
 function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs);}
 
@@ -1325,7 +1325,8 @@ function memberViewsStatementFor($id, $month) {
 /**
  * we tell (ARG) CO (ARG) with subs: (ARG)
  *
- * in: TEST membership AMemberSignsInForTheFirstTime
+ * in: TEST gift AMemberDonatesWithInsufficientFunds
+ *     TEST membership AMemberSignsInForTheFirstTime
  */
 function weTellCOWithSubs($id, $topic, $subs) {return t\weTellAdmin($topic, $subs, t\uid($id));}
 

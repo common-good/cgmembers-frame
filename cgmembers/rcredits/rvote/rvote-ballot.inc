@@ -7,6 +7,18 @@ use CG\Util as u;
 use CG\Web as w;
 use CG\Vote as v;
 
+define('RECOVERY_OPTS', 
+  '<b>Use.</b> Increased Transaction Volume because we will use the Common Good system for payments (in and/or out)|' .
+  '<b>Economic Circles!</b> because we plan to pay our employees and suppliers through Common Good, whenever possible, so the funds keep circulating and perhaps never go out of the system at all|' .
+  '<b>Invitations.</b> Probable Donations from new Common Good members we invite|' .
+  '<b>Roundups.</b> Gradual Donations over the years from Common Good members who pay us, rounding their payments up to the nearest dollar and donate the change|' .
+  '<b>Percentage.</b> Gradual Donations over the years, as a tiny percentage of payments we, the Applicant, receive through the Common Good system|' .
+  '<b>Dividends</b> (depending on the project\'s financial success)|' .
+  '<b>Eventual Repayment of Loan</b>|' .
+  '<b>Interest</b> on the loan|' .
+  '<b>Other</b>'
+);
+
 /* Note that vetoing costs the voter a proportionate share of their votes. 
 For example, if there are 10 items to choose from, vetoing any one of them reduces the voter's say in the other 9 by 10%
 A comment explaining the rationale for the veto is required. Each voter gets only one veto per question, but the veto may be split among more than one option. For example, if the voter vetoes 3 options, then each veto counts as 1/3 veto.
@@ -75,42 +87,46 @@ EOF;
   return $bodymiddle;
 }
 
-function showProposal($mya, &$extras, $question, $voting = FALSE) {
+/**
+ * Display the details of a proposal, optionally along with grading questions.
+ * @param acct $mya: the current account (possibly from an email link)
+ * @param int $proposal: the proposal id
+ * @param string $err: (RETURNED) error message (empty if no error)
+ * @param bool $grading: <include grading questions>
+ * @return assoc of form fields to add to form, to be displayed
+ */
+function showProposal($mya, $proposal, &$err = FALSE, $grading = FALSE) {
   global $quids;
   $noneErr = t('There are no active proposals to grade in your community.');
+  $qcount = count($quids = getProposals($mya));
+  $qnum = array_search(-$proposal, $quids, TRUE); // this works even if the number of elections/proposal changes during grading
   
-  $ctty = $mya->community;
   /*
   // This new logic may be good:
+  $ctty = $mya->community;
   $crit = "endProposals<>0 AND type='R' AND ctty=:ctty ORDER BY endProposals DESC";
   if (!$res = db\get('id AS fundingId,endProposals AS endDate', 'r_questions', $crit, compact('ctty'))) return $noneErr;
   extract($res);
   
-  if ($endDate < time()) return showProposalGrades($fundingId, $extras);
+  if ($endDate < time()) return showProposalGrades($fundingId, $extra);
 
   $quids = getProposals($mya, $fundingId);
 // end new logic
 */
-  $quids = getProposals($mya);
-
-  if (!$qcount = count($quids)) return $noneErr;
-  u\setDft($question, -$quids[0]);
+//  u\setDft($proposal, -$quids[0]);
   
-  $row = db\get('*', 'r_proposals', 'id=-:question', compact('question'));
-//  if (!@$row['id']) return t('There are no more proposals to grade.');
+  if (!$row = db\get('*', 'r_proposals', 'id=-:proposal', compact('proposal'))) return !$err = t('There is no such proposal.');
   
-  extract(just('project categories overview purpose where when until how amount type budgetTotal budget contingency qualifications evaluation name contact phone email sponsor', $row));
+  extract(just('project categories overview purpose systemic where when until how amount recovery budgetTotal budget contingency qualifications evaluation name contact phone email sponsor', $row));
 
-  // set up question to display
-  $qnum = array_search(-$question, $quids); // this works even if the number of elections/questions changes during voting
-  $qndpy = $qnum + 1; // $qnum starts at 0
+  if ($grading) {
+    $optType = 'M'; // multiple choice
+    $tableHeader = tableHeader($optType);
+    if (!$qcount) return !$err = $noneErr;
+    $qndpy = $qnum + 1; // $qnum starts at 0
 
-  $optType = 'M'; // multiple choice
-  $tableHeader = tableHeader($optType);
-
-  if ($voting) {
-    // get current voted values for this question
-    $defaults = getCurrentVote($mya, $extras, $question, $optType, '');
+  // get current voted values for this question
+    $defaults = getCurrentVote($mya, $extra, $proposal, $optType, '');
     $optCount = $defaults['optCount'];
     $opts = getOptsX($defaults['ballot'], 'M', $defaults);
     $detail = t('Scroll down to see the proposal. Click a letter twice for X<sup>+</sup>, thrice for X<sup>-</sup>.');
@@ -137,25 +153,29 @@ $opts
 </div ballot>
 EOF;
 
-    $extras['mid'] = w\item($mid);
-    $extras['question'] = w\hidFld($question);
+    $extra['mid'] = w\item($mid);
+    $extra['question'] = w\hidFld($proposal);
     $submit = w\submit(BARE . t('Done With Proposal #') . $qndpy, 'primary', 'md', w\clas('pull-right'));
-    $extras['prev'] = w\submit('&laquo; ' . t('Previous'), 'primary', 'md', w\suffix(w\rendA('submit', $submit)));
-  }
+    $extra['prev'] = w\submit('&laquo; ' . t('Previous'), 'primary', 'md', w\suffix(w\rendA('submit', $submit)));
+  } elseif ($qnum === FALSE and !$mya->admin) return !$err = t('That proposal is not viewable at this time.');
 
-  $types = ray('Investment Loan Incentive Grant Other');
+//  $types = ray('Investment Loan Incentive Grant Other');
+
   if (is_numeric(trim(substr($sponsor, 0, 3)))) $sponsor = substr($sponsor, 3);
+  foreach (ray(RECOVERY_OPTS) as $i => $v) if (u\getBit($recovery, $i)) $ways[] = $v;
   
   $rows = [
 //    t('Project Title:') => $project,
     t('Categories:') => str_replace(' ', ', ', $categories),
     t('Description:') => $overview,
     t('Purpose:') => $purpose,
+    t('Systemic:') => $systemic,
     t('Where:') => $where,
     t('When:') => t('From %start to %end.', 'start end', u\fmtDate($when), u\fmtDate($until)),
     t('Implementation Plan:') => $how,
     t('Amount Requested:') => u\fmtAmt($amount),
-    t('Funding Type:') => $types[$type],
+    t('Recovery:') => join("\n", @$ways ?: []),
+//    t('Funding Type:') => $types[$type],
     t('Total Budget:') => u\fmtAmt($budgetTotal),
     t('Budget Details:') => $budget,
     t('Contingency Plan:') => $contingency,
@@ -173,9 +193,9 @@ EOF;
   ];
   
   $f = 0;
-  foreach ($rows as $k => $v) $extras['f' . $f++] = w\item(strtr($v, ["\n" => "<br>\n", '  ' => '&nbsp; ']), $k);
+  foreach ($rows as $k => $v) $extra['f' . $f++] = w\item(strtr($v, ["\n" => "<br>\n", '  ' => '&nbsp; ']), $k);
 
-  return '';
+  return $extra;
 }
 
 /**

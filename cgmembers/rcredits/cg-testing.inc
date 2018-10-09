@@ -643,7 +643,7 @@ function fullQid($q) {
 function uid($id, $field = 'id') {
 //  u\EXPECT($id, 'empty id'); // otherwise site loops (?)
   if (is_numeric($id) or empty($id)) return $id;
-  if ($id == 'community' or $id == 'ctty') return r\serverUid();
+  if (in($id, 'community ctty')) return r\serverUid();
   if ($id == 'cgf') return CGID;
 //  return r\qo($id)->$field; FAILS
   return r\qo(t\fullQid2($id))->$field;

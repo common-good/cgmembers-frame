@@ -46,7 +46,7 @@ define('BASE_URL', $base_url);
 define('R_PATH', '/rcredits');
 global $rUrl; $rUrl = BASE_URL . R_PATH;
 define('R_ROOT', __DIR__);
-define('ROOT', DRUPAL_ROOT . '/..');
+define('ROOT', getcwd() . '/..'); // avoid using DRUPAL_ROOT here (else gives confusing warning when tests fail)
 $parts = parse_url($base_url);
 $base_path = @$parts['path'] . '/';
 $base_root = substr($base_url, 0, strlen($base_url) - strlen(@$parts['path'])); // everything until first slash after "scheme://"
@@ -230,7 +230,7 @@ define('CO_API_URL', isDEV ? 'http://%website/cgapi/%etc' : 'https://%website/co
 define('R_TEMPLATE_DIR', '/templates');
 define('R_EMAIL_FRAME', 'email-frame');
 
-define('R_PICTURE_DIR', ROOT . '/cgPhotoTemp/'); // precede this by DRUPAL_ROOT (file) or $base_url (url)
+define('R_PICTURE_DIR', ROOT . '/cgPhotoTemp/');
 //define('R_PROOF_DIR', '/proofs/'); UNUSED
 define('R_DFT_PICTURE', R_ROOT . '/images/no-photo-available.jpg'); // default profile picture
 define('R_DFT_PICTURE_WIDE', R_ROOT . '/images/no-photo-available-wide.jpg'); // default profile picture

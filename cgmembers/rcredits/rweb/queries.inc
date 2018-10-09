@@ -56,21 +56,22 @@ $queries = [
     WHERE u.community=:ctty AND (t.:IS_GIFT OR t.:IS_ROUNDUPS OR t.:IS_CRUMBS OR t.:IS_PATRONAGE) AND t.payee=:CGID
     GROUP BY YEAR(FROM_UNIXTIME(t.created)) DESC, MONTH(FROM_UNIXTIME(t.created)) DESC",
 
-  'Expected Donations to Common Good and Community' =>
-    "SELECT c.fullName AS community, 
-    SUM(IF(NOT u.:IS_CO, $gifts, 0)) AS mYearly$,
-    AVG(IF(u.:IS_CO, NULL, IF(u.:IS_ROUNDUP, 1, 0))) AS mRoundupsPct,
-    AVG(IF(u.:IS_CO, NULL, IF(u.crumbs>0, 1, 0))) AS mCrumbsPct,
-    SUM(IF(NOT u.:IS_CO, u.crumbs, 0)) AS mCrumbs,
-    
-    SUM(IF(u.:IS_CO, $gifts, 0)) AS coYearly$,
-    AVG(IF(NOT u.:IS_CO, NULL, IF(u.:IS_ROUNDUP, 1, 0))) AS coRoundupsPct,
-    AVG(IF(NOT u.:IS_CO, NULL, IF(u.crumbs>0, 1, 0))) AS coCrumbsPct,
-    SUM(IF(u.:IS_CO, u.crumbs, 0)) AS coCrumbs
+  'Expected Member Donations to CG and Community' =>
+    $mGifts = "SELECT c.fullName AS community, 
+    COUNT(*) AS members,
+    SUM($gifts) AS yearly$,
+    SUM(IF(u.:IS_ROUNDUP, 1, 0)) AS roundupy,
+    SUM(IF(u.crumbs>0, 1, 0)) AS crumby,
+    AVG(IF(u.crumbs>0, u.crumbs, NULL)) AS avgCrumbs
     
     FROM users u LEFT JOIN r_recurs r ON (r.payer=u.uid AND r.ended<>0 AND r.payee=:CGID) LEFT JOIN users c ON c.uid=u.community
-    WHERE u.:IS_OK
-    GROUP BY u.community",
+    WHERE u.:IS_OK AND NOT u.:IS_CO
+    GROUP BY u.community
+    ~roundupy = number who do Roundups, crumby = number who do Crumb donations",
+
+  'Expected Company Donations to CG and Community' =>
+    strtr($mGifts, ['AS members' => 'AS companies', 'NOT u.:IS_CO' => 'u.:IS_CO']),
+  
 ];
 
 //    IFNULL(u.fullName, REPLACE(SUBSTRING(r.data, 27, LOCATE('\"', SUBSTRING(r.data, 28))), '\"', '')) AS name,

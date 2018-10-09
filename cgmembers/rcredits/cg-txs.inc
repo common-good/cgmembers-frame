@@ -249,7 +249,7 @@ function addRow(&$tot, $row, $tx, $change, &$csvRow = '') {
 //  if ($row['fromyou'] == $row['toyou']) $row['fromyou'] = $row['toyou'] = ''; // don't report gross on payex
   foreach (ray(TX_DOWNLOAD_MONEY_FLDS) as $k) {
     $row[$k] = u\cleanAmount(@$row[$k]);
-    $tot[$k] = (@$tot[$k] ?: 0) + $row[$k]; // formatting value is useless
+    $tot[$k] = (@$tot[$k] ?: 0) + ($row[$k] ?: 0); // formatting value is useless
   }
   $tot['roundups'] += $change;
   unset($row['amount']); // fromyou and toyou are enough
