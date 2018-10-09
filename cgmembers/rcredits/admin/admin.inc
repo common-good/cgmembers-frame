@@ -357,8 +357,7 @@ function photoFromFile($a, $filename = '', &$err = '') {
   if ($a->co) return !$err = 'tried to shrink a company photo';
 //  if ($a->hasPhoto('picture2')) return !$err = 'POS photo already exists';
   if (@$a->photo) $err = 'POS photo already exists'; // not really an error
-  $photoPath = DRUPAL_ROOT . R_PICTURE_DIR . ($filename ?: "$a->name.jpg");
-//  $a->photoFilename(TRUE));
+  $photoPath = r\pic($filename ?: "$a->name.jpg");
   $img = u\alterImg(imagecreatefromjpeg($photoPath), R_PHOTO_WIDTH, R_PHOTO_HEIGHT);
   ob_start();
   imagejpeg($img, NULL, 50);

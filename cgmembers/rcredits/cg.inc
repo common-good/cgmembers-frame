@@ -1535,3 +1535,4 @@ function iCodeDesc($iCode) {$iCodeDescs = ray(IBYS); return $iCodeDescs[min($iCo
 function cttyList() {return db\q("SELECT uid,fullname FROM users WHERE uid<0 ORDER BY created,fullName")->fetchAllKeyed();}
 function allKnowing() {global $mya; return ($mya->superAdmin and $mya->agentA->vKeyPw);}
 function clubid() {return r\serverUid();} // temporarily use the region as the club
+function pic($flnm) {if (!is_dir(R_PICTURE_DIR)) mkdir(R_PICTURE_DIR); return R_PICTURE_DIR . $flnm;}

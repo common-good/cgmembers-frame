@@ -643,7 +643,7 @@ function fullQid($q) {
 function uid($id, $field = 'id') {
 //  u\EXPECT($id, 'empty id'); // otherwise site loops (?)
   if (is_numeric($id) or empty($id)) return $id;
-  if ($id == 'community' or $id == 'ctty') return r\serverUid();
+  if (in($id, 'community ctty')) return r\serverUid();
   if ($id == 'cgf') return CGID;
 //  return r\qo($id)->$field; FAILS
   return r\qo(t\fullQid2($id))->$field;
@@ -828,16 +828,7 @@ function weShowWithSubs($page, $subs) {
   return TRUE;
 }
 
-function makePicture($photo, $a) {
-//  $filename = DRUPAL_ROOT . $a->photoFilename('picture2', TRUE);
-//  return (bool) file_put_contents($filename, $picture);
-  return $a->update(compact('photo'));
-}
-
-/* UNUSED
-function getPicture($picture) {
-  return file_get_contents(DRUPAL_ROOT . R_PICTURE_DIR . "small/$picture.jpg");
-}*/
+function makePicture($photo, $a) {return $a->update(compact('photo'));}
 
 /**
  * Send an RPC API request to the server, for rPOS.

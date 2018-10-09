@@ -68,6 +68,6 @@ Scenario: A member donates with insufficient funds
   And these "honors":
   | created | uid  | honor  | honored |*
   | %today  | .ZZA | memory | Jane Do |
-  And we tell admin "gift" with subs:
+  And we tell "ctty" CO "gift" with subs:
   | amount | period |*
   |    200 |      1 |

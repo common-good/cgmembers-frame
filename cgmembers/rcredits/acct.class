@@ -215,7 +215,7 @@ class Acct {
     if ($field == 'partRounds') return db\sum('1-MOD(amount, 1)', 'r_txs', ':IS_ROUNDUP AND payer=:id AND MOD(amount, 1)>0 AND created>=:mday1', ray('id mday1', $this->id, u\monthDay1())); // not-yet-distributed change from rounded-up payments
     if ($field == 'bankInfo') return (!$routing = substr($a->bankAccount, 4, 9)) ? NULL
       : db\get('*', 'r_banks', 'route=:routing', compact('routing'));
-	  if ($field == 'tempPhotoFilename') return DRUPAL_ROOT . R_PICTURE_DIR . "$a->mainQid.jpg";
+	  if ($field == 'tempPhotoFilename') return r\pic("$a->mainQid.jpg");
       
     if (isset(self::$rs[$a->id]->$field)) { // actual database field?
       $result = @self::$rs[$a->id]->$field; // returns NULL if field not set
@@ -1027,24 +1027,14 @@ EOF;
   }
   
   /**
-   * Return the appropriate photo for the account (a "no photo available" image, if none).
-   * ($this->photo without parens is empty for companies and empty if there is no photo)
-   *//*
-  public function photo() {
-    return $this->hasPhoto ? $this->photo : @file_get_contents(BASE_URL . $this->photoFilename());
-  }*/
-  
-  /**
    * Return an auxiliary filename for the account.
    * @param bool $ideal: return the ideal normal name, even if the file does not exist (default FALSE)
    * @return: the relative file path (relative to Drupal)
    */
   public function photoFilename($ideal = FALSE) {
-    $file = ($ideal or $this->hasPhoto)
-    ? @"$this->id-$this->cardCode.jpg" // @ for testing
+    return ($ideal or $this->hasPhoto)
+    ? r\pic(@"$this->id-$this->cardCode.jpg") // @ for testing
     : ($this->co ? R_DFT_PICTURE_WIDE : R_DFT_PICTURE);
-
-    return R_PICTURE_DIR . $file;
   }
   
   public function cardCode() {

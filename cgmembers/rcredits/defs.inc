@@ -5,7 +5,7 @@
  * (SMS, web, smartphone, etc.)
  */
 
-define('R_VERSION', '3.42h'); // software version
+define('R_VERSION', '3.42i'); // software version
 
 // definitions used in settings file
 define('US_COUNTRY_ID', 1228); // United States
@@ -28,7 +28,7 @@ define('SCRIPTS_TOP', 'x/jquery-3.3.1.min x/jquery.once x/jquery-ui.min x/bootst
 //define('SCRIPTS', 'form goo-jsapi misc charts chart-data download croppic crop-setup ballot x/bootstrap.slider.min countries print-country focus-on x/typeahead.bundle.min suggest-who on-submit chimp followup-email get-ssn change-ctty advanced-dates advanced-prefs bank-prefs which funding-criteria signup prejoint invite-link gift drupal user extend-settings'); // all possible scripts, in order (after SCRIPTS_TOP)
 define('SCRIPTS', 'x/bootstrap-toggle.min parse-query misc croppic crop-setup x/bootstrap-slider.min ballot countries x/typeahead.bundle.min on-submit scraps drupal user'); // all possible scripts, in order (after SCRIPTS_TOP). drupal and user are for password.
 
-define('DEV_ROOT', '/cgmembers'); // path to drupal root on DEV machine
+define('DEV_ROOT', '/cgMembers-frame/cgmembers'); // path to drupal root on DEV machine
 define('DEV_PW2', 'devPassword#two!'); // second password on DEV machine (len must be 16, 24, or 32)
 define('DEV_VKEYPW', 'wt38BqWMslj3uUHUOto7fNi5ExL9CC7S7ffjn_q6zCY'); // password for very secure key, on DEV machine
 define('DEV_ADMIN_PASS', '123'); // admin password when isDEV
@@ -46,6 +46,7 @@ define('BASE_URL', $base_url);
 define('R_PATH', '/rcredits');
 global $rUrl; $rUrl = BASE_URL . R_PATH;
 define('R_ROOT', __DIR__);
+define('ROOT', getcwd() . '/..'); // avoid using DRUPAL_ROOT here (else gives confusing warning when tests fail)
 $parts = parse_url($base_url);
 $base_path = @$parts['path'] . '/';
 $base_root = substr($base_url, 0, strlen($base_url) - strlen(@$parts['path'])); // everything until first slash after "scheme://"
@@ -229,12 +230,12 @@ define('CO_API_URL', isDEV ? 'http://%website/cgapi/%etc' : 'https://%website/co
 define('R_TEMPLATE_DIR', '/templates');
 define('R_EMAIL_FRAME', 'email-frame');
 
-define('R_PICTURE_DIR', '/../cgPhotoTemp/'); // precede this by DRUPAL_ROOT (file) or $base_url (url)
+define('R_PICTURE_DIR', ROOT . '/cgPhotoTemp/');
 //define('R_PROOF_DIR', '/proofs/'); UNUSED
-define('R_DFT_PICTURE', 'no-photo-available.jpg'); // default profile picture
-define('R_DFT_PICTURE_WIDE', 'no-photo-available-wide.jpg'); // default profile picture
-define('R_NOT_VALID', 'not-valid.png'); // says rcard is not valid for purchases
-define('LOG_DIR', '/../cgLogs/'); // where to store log files
+define('R_DFT_PICTURE', R_ROOT . '/images/no-photo-available.jpg'); // default profile picture
+define('R_DFT_PICTURE_WIDE', R_ROOT . '/images/no-photo-available-wide.jpg'); // default profile picture
+define('R_NOT_VALID', R_ROOT . '/images/not-valid.png'); // says rcard is not valid for purchases
+define('LOG_DIR', ROOT . '/cgLogs/'); // where to store log files
 
 // account type bits
 //$GLOBALS['account types']

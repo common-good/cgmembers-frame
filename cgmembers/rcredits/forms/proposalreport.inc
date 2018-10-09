@@ -13,17 +13,16 @@ include_once R_ROOT . '/rvote/rvote-results.inc';
 
 /**
  * Show a single proposal report.
+ * Call by .../community/events/proposal-report/p=13
  */
 function formProposalReport($form, &$sta, $args = '') {
-  include_once __DIR__ . '/../rvote/rvote.inc';
-  include_once __DIR__ . '/../rvote/rvote-ballot.inc';
   extract(just('p', $args));
   
   $mya = w\eLinkAcct($sta, $args, 'acct'); // allow any signed in account, so user can switch to personal account, below
 
   if (!@$p or !$project = db\get('project', 'r_proposals', 'id=:p', compact('p'))) return w\softErr(t('No such proposal.'));
   
-  v\showProposal($mya, $extra, -$p);
+  if (!$extra = v\showProposal($mya, -$p, $err)) w\say($err, 'err');
 
   $form['title'] = item(t('Project Proposal Details'));
   $form['project'] = item($project, t('Project:'));

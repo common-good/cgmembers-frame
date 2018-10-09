@@ -175,7 +175,6 @@ function photoUpload($uid = '', $sid = '') {
   if (!$img0 = $func($url)) return w\photoRet(t('image creation error'));
 //  if (!$mya->co)
   try {
-//    $filename = str_replace(' ', '_', DRUPAL_ROOT . R_PICTURE_DIR . "$mya->fullName-" . u\randomString(10, 'word') . '.jpg');
     if (!$recrop) imagejpeg($img0, $tempFilename, 100); // save for a few days in case we have to recrop
   } catch (Exception $e) {
 /**/    lug('failed to save photo file ' . $tempFilename);
@@ -184,14 +183,10 @@ function photoUpload($uid = '', $sid = '') {
   $img = u\alterImg($img0, $w, $h, $x1, $y1, $cropW, $cropH, $angle);
 
   try {
-/*    if ($mya->co) {
-      imagejpeg($img, DRUPAL_ROOT . $mya->photoFilename(TRUE), $quality);
-    } else { */
       ob_start();
       imagejpeg($img, NULL, $quality);
       $photo = ob_get_clean();
       $mya->update(compact('photo')); // do not combine this with line above
-//    }
   } catch (Exception $e) {
     return w\photoRet(t('Your photo could not be uploaded (%err). Try a smaller version or <%a>email it</a> to us?', ray('_err _a', $e->getMessage(), w\emailtag(NULL, t('Here is a photo for my %PROJECT card')))));
   }

@@ -154,7 +154,7 @@ function formSignup_validate($form, &$sta) {
 
   \setV('signupData', ray('time phone state companyOptions', time(), @$phone, @$state, @$companyOptions));
   if (!emailOkay($email, $acctType != CO_PERSONAL, @$myid ? r\acct($myid) : '')) return;
-  if (!phoneOk($phone, $country)) return;
+  if (!phoneOk($phone, @$country)) return;
   if ($err = u\badZip($zip)) return say($err, 'zip');
   if (!@$state) return say('bad state', 'state');
   if (!formBasic_validate($form, $sta, $acctType != CO_PERSONAL)) return;

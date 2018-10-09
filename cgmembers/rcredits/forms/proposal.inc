@@ -105,19 +105,7 @@ EOF;
   $type = radiosFld(t('Type:'), $typeDesc, required(), $typeOptions);
 	*/
 	
-  $recoveryOpts = [
-		'Increased Transaction Volume because we will use the Common Good system for payments (in and/or out)',
-		'Economic Circles! because we plan to pay our employees and suppliers through Common Good, whenever possible, so the funds keep circulating and perhaps never go out of the system at all',
-		'Probable Donations from new Common Good members we invite',
-		'Gradual Donations over the years from Common Good members who pay us, rounding their payments up to the nearest dollar and donate the change',
-		'Gradual Donations over the years, as a tiny percentage of payments we (the Applicant) receive through the Common Good system',
-		'Dividends (depending on the project\'s financial success)',
-		'Eventual Repayment of Loan, with zero or minimal interest',
-		'Eventual Repayment of Loan, with interest',
-		'Other',
-  ];
-	$recovery = boxesFld(t('Recovery:'), t('How will some or all of these funds come back to the Community Fund? For grant requests, this "coming back" may happen indirectly. (check all that apply)'), [], $recoveryOpts);
-//	$recovery = boxFlds('recs', t('Recovery:'), t('How will some or all of these funds come back to the Community Fund? (check all that apply)'), $recoveryOpts);
+	$recovery = boxesFld(t('Recovery:'), t('How will some or all of these funds come back to the Community Fund? For grant requests, this "coming back" may happen indirectly. (check all that apply)'), [], ray(RECOVERY_OPTS));
 
   $budgetTotal = textFld(t('Budget:'), [t('Total Project Budget'), t('What is the Total Project Expense Budget? Type or paste a complete Income and Expense budget below. Include your top 3 sources and amounts of committed funds. Please do not show subtotals.')], required());
   $budget = areaFld('', [t('Itemized Income and Expense Budget')], required());

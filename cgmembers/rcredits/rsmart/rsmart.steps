@@ -203,7 +203,7 @@ function memberHasNoPicture($id) {
   global $testOnly; if ($testOnly) return FALSE;
   if (!$a = r\acct(t\uid($id))) return FALSE;
   $a->update('photo', '');
-  @unlink(DRUPAL_ROOT . $a->photoFilename(TRUE));
+  @unlink($a->photoFilename(TRUE));
   return !$a->hasPhoto;
 }
 
