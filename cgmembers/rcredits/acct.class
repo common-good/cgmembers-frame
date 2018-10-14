@@ -1743,7 +1743,7 @@ X;
 		$a = $this;
     if (!$vKey = u\unfmtKey($vKey) and !$vKey = r\vKey()) return t('No private key given or available.');
 		$a->update('vKeyPw', $vKeyPw = openssl_random_pseudo_bytes(32));
-    if (isDEV) \setV('vKeyPw', $vKeyPw); // otherwise this gets lost during testing
+    /* if (isDEV) \setV('vKeyPw', $vKeyPw); // otherwise this gets lost during testing */
 		$vKeyE = u\cry('R', $vKey, FALSE, $vKeyPw);
 ///		debug('pwLen=' . strlen($vKeyPw) . ' vkELen=' . strlen($vKeyE));
 //	  r\setCryptCook('vKeyE', $vKeyE); // NO! (admin should sign out after calling with $vKey arg, to test it)

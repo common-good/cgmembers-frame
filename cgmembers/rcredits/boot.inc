@@ -22,9 +22,9 @@ if (NOT_PRODUCTION) {
 }
 
 $uri = 'I' . $_SERVER['REQUEST_URI']; // handle scanned rCard URIs
-if (isDEV) $uri = str_replace(DEV_ROOT . '/', '/', $uri);
+/*if (isDEV)*/ $uri = str_replace(ROOT_URI . '/', '/', $uri);
 $_SERVER['REQUEST_URI'] = $_GET['q'] = preg_match('~^I/[A-Z]+[\.-]~', $uri) ? $uri : \request_path();
-  
+    
 $secrets = (array) json_decode(utf8_encode(file_get_contents(dirname($_SERVER['DOCUMENT_ROOT']) . '/cg.cnf')));
 global $db_name;
 $db_name = key($secrets); // members db must be the first db name in the file
@@ -73,7 +73,7 @@ define('SESSION_LIFE', (@$_COOKIE['pkv'] or @$_POST['pkv']) ? 12 * HOUR_SECS : 2
 ini_set('session.gc_maxlifetime', SESSION_LIFE); // session timeout (and garbage collection happens)
 ini_set('session.cookie_lifetime', 0); // SESSION_LIFE); // (drupal doesn't refresh the cookie)
 
-if (isDEV or NOT_PRODUCTION) {
+if (NOT_PRODUCTION) {
   error_reporting(E_ALL);
   ini_set('display_errors', TRUE);
   ini_set('display_startup_errors', TRUE);
