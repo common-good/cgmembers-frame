@@ -31,7 +31,7 @@ server "ws.rcredits.org", roles: %w{app db web}
 # http://capistranorb.com/documentation/getting-started/configuration/
 # Feel free to add new variables to customise your setup.
 set :deploy_to, "/home/ws/cgmembers-frame"
-set :branch, "feature/cleanup"
+set :branch, "develop"
 
 
 
