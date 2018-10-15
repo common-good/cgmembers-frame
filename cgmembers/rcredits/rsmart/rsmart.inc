@@ -318,11 +318,8 @@ function photoReturn($pic) {
   u\loga('out', compact('message'));
 
   if (u\test()) {
-    $filename = DRUPAL_ROOT . R_PICTURE_DIR . R_DFT_PICTURE; // never a company photo
-///		echo "flnm=$filename";
-    $picNone = file_get_contents($filename);
+    $picNone = file_get_contents(R_DFT_PICTURE); // never a company photo
     if (u\starts(bin2hex(substr($picNone, 0, $max)), $message)) $message = 'no photo';
-//    if ($pic === '') $message = 'no photo';
     f('t.output', $message); 
     return $message;
   }

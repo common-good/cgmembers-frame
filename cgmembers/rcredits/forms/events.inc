@@ -98,7 +98,7 @@ function formEvents($form, &$sta, $args = '') {
     $middle = v\done($mya);
     if (!r\acct()) return doSay($middle, 'status');
   } elseif (@$do == 'grade') {
-    $middle = v\showProposal($mya, $extraFields, @$question, TRUE);
+    $extraFields = v\showProposal($mya, @$question, $middle, TRUE); // middle here is an error message, if anything
   } else {
     $middle = t('Event History');
     if ($cAdmin) $middle .= ' ' . button(t('Add'), "$base_url/community/events/event/do=add", '', 'warning');

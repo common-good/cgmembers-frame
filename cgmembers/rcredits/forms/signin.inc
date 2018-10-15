@@ -58,25 +58,27 @@ function formSignin_validate($form, &$sta, $type = 'both') {
   extract(just('name pass pw2 vKeyE', $sta['input']));
   if (isDEV and @$name == 'admin' and !a(1)) {
     require_once __DIR__ . '/../admin/admin.inc';
+    db\del('sessions', '1=1');
     a\setupBasicAccounts(); // happens sometimes during testing
   }
   if (!$uid = r\loginString(@$name)) return say('bad login', 'name');
   if (w\flooding($uid, $sta, $err)) return say($err, 'pass');
   $a = r\acct($uid);
-  $sta['uid'] = ((isDEV and $uid == 1) or $a->passwordOkay($pass, 'pass', $err)) ? $uid : say($err, 'pass'); // ignore admin pass on dev machine
-  w\updateFlood($sta, $success = (bool) $sta['uid']); // should be before pw2 and vKeyE checks
+  $success = (isDEV and $uid == 1) ?: ($a and $a->passwordOkay($pass, 'pass', $err)); // ignore admin pass on dev machine
+  w\updateFlood($sta, $success); // should be before pw2 and vKeyE checks
 	if (!$success) return say('login failed', 'name');
+  $sta['uid'] = $uid;
 
-  if ($uid == 1) { // later this should be if ($a->regAdmin) -- regional Admin permission
+  if ($a->superAdmin) {
     $pw2 = @$pw2 ? u\b64decode($pw2) : (isDEV ? DEV_PW2 : '');
     if ($pw2 and !$a->pw2) a(1)->update('pw2', r\passHash($pw2)); // first ever admin signin sets pw2
     if (!$a->passwordOkay($pw2, 'pw2', $err)) return say(t('Admin requires second pass.'), 'pass');
     r\setCryptCook('pw2', $pw2); // store as cookie, so pw2 is never on server
-		if (isDEV) u\setDft($vKeyE, \variable_get('vKeyE', '')); // make it easier to sign in
+		if (isDEV) u\setDft($vKeyE, getv('vKeyE', '')); // make it easier to sign in
 		if (@$vKeyE) { // set cookie for very-secure private key, encrypted (encrypt it further for cookie)
 			if (!$vKeyE = u\b64decode($vKeyE)) return w\hack(t('bad vKeyE'));
 		  r\setCryptCook('vKeyE', $vKeyE);
-			if (isDEV) \variable_set('vKeyE', $vKeyE); // remember new vKeyE, make it easier to sign in (this is not redundant)
+			if (isDEV) setv('vKeyE', $vKeyE); // remember new vKeyE, make it easier to sign in (this is not redundant)
 		}
   }
 

@@ -88,7 +88,7 @@ function formDonate_submit($form, &$sta) {
     if (!r\acceptGift($info)) $msg .= '|gift transfer later';
     say($msg);
   }
-  if ($mya->ok) r\tellAdmin('gift', $info);
+  if ($mya->ok) r\tellCo('gift', $info);
 
   return r\acct() ? w\goNextStep('donate', '') : w\doSay('');
 }

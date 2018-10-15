@@ -35,9 +35,10 @@ function splice(&$input, $key, $len = 0, $replacement = NULL) {
 function cleanAmount($amount) {
   $amount = trim($amount);
   if (substr($amount, 0, 1) == '$') $amount = substr($amount, 1);
-  if (u\nonish($amount)) $amount = 0;
   $amount = str_replace(R_NONE, '', $amount); // useful for monthly statements
-  return preg_replace('/[ \,]/', '', $amount); // ignore spaces and commas
+  $amount = preg_replace('/[ \,]/', '', $amount); // ignore spaces and commas
+  if (u\nonish($amount)) $amount = 0;
+  return $amount;
 }
 
 /**
@@ -1415,7 +1416,7 @@ function consta($prefix, $var) {return constant(strtoupper(str_replace(' ', '_',
 function isIPhone() {return preg_match('/iPhone/i', $_SERVER['HTTP_USER_AGENT']);}
 function jsonEncode($s) {return json_encode($s) ?: json_encode(u\purify($s));} // , JSON_UNESCAPED_SLASHES
 function redash($s) {return str_replace('—', '&mdash;', $s);}
-function nonish($s) {return in(strtolower($s), 'n/a nothing na none'); }
+function nonish($s) {return in(strtolower($s), 'n/a nothing na none 0.00'); }
 function padto($s, $n) {return str_pad(substr($s, 0, $n), $n);}
 function lpad($s, $n) {return str_pad(substr($s, 0, $n), $n, '0', STR_PAD_LEFT);}
 function similarEmail($e1, $e2) {return (strtolower(preg_replace('/\+.*@/', '@', $e1)) == strtolower(preg_replace('/\+.*@/', '@', $e1)));}

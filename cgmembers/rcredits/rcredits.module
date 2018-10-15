@@ -160,7 +160,7 @@ function x($xid, $mya = '') {f('r.x', $xid, $mya);} // return a transaction obje
 /**/ function step($a) {debug(us($a)->step());}
 /**/ function ctty($id) {if (!$id or !a($id)) die(trace()); return a(a($id)->community);}
 /**/ function flog($s = '') { // log to file and return log file name
-  $fileName = DRUPAL_ROOT . LOG_DIR . date('Ym') . '.log'; // new log file every month
+  $fileName = LOG_DIR . date('Ym') . '.log'; // new log file every month
 /**/ if (func_num_args()) file_put_contents($fileName, print_r($s, 1) . "\n", FILE_APPEND);
   return $fileName;
 }

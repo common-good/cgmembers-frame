@@ -143,7 +143,8 @@ function logSql($args) {
   global $mya;
   $args = date('d') . ' ' . @$mya->mainQid . ': ' . u\jsonEncode($args);
   $args = strtr($args, ['\\"' => '', '"' => '', '\\n' => '|', ';}' => '}', ';' => '; ', ',' => ', ']);
-  $fileName = DRUPAL_ROOT . LOG_DIR . date('Ym') . '.logsql'; // new log file every month
+  if (!is_dir($logdir = LOG_DIR)) mkdir($logdir);
+  $fileName = $logdir . date('Ym') . '.logsql'; // new log file every month
   file_put_contents($fileName, "$args\n", FILE_APPEND);
   return $fileName;
 }  
@@ -221,6 +222,8 @@ function idnm($table, &$field1 = '') {
   
 function scheme($table) {return f('i.scheme', $table);}
 function hasField($table, $field) {return ($scheme = scheme($table) and @$scheme['fields'][$field]);}
+function hasCol($table, $field) {global $db_name; return db\exists('INFORMATION_SCHEMA.COLUMNS', 'TABLE_SCHEMA=:db_name AND TABLE_NAME=:table AND COLUMN_NAME=:field', compact(ray('db_name table field')));}
+        
 function count($table, $where = '1', $subs = []) {return db\get('COUNT(1)', $table, $where, $subs);}
 function max($field, $table, $where = '1', $subs = []) {return db\get("MAX($field)", $table, $where, $subs);}
 function min($field, $table, $where = '1', $subs = []) {return db\get("MIN($field)", $table, $where, $subs);}

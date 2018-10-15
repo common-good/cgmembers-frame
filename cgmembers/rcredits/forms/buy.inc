@@ -75,11 +75,11 @@ function formBuy_validate($form, &$sta) {
 function formBuy_submit($form, &$sta) {
   
   extract(just('hid name amount', $sta['input']));
-  $account = strpos($name, '@') ? $name : strtoupper($name);
-  extract(just('name amount item company cancel return api request', $args = unserialize(unplain($hid))));
+//  $account = strpos($name, '@') ? $name : strtoupper($name);
+  extract(just('amount item company cancel return api request', $args = unserialize(unplain($hid))));
   u\setDft($request, '');
   
-  list ($a, $co) = [r\acct($account), r\acct($company)];
+  list ($a, $co) = [r\acct($sta['uid']), r\acct($company)];
   
   // check for op not 'submit' here, to send an invoice
   list ($index, $subs) = $a->pay($co, $amount, @$item ?: t('donation'));
