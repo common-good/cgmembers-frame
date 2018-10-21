@@ -42,17 +42,6 @@ function myTransactions($starting, $ending, $uid, $jid = 0) {
       AND $where
 EOF;
   } else { // normal account (member or community)
-  /*
-    $isPayer = '(t.payer IN (:uid, :jid) AND t.payee<>:uid)';
-
-    $sql = <<<EOF
-      SELECT t.*,
-      (SELECT fullName FROM users WHERE uid=IF($isPayer, t.payee, t.payer)) AS name
-      FROM r_txs t 
-      WHERE ($isPayer OR t.payee IN (:uid, :jid))
-      AND $where
-EOF;
-*/
     $iPay = '(payer<>0 AND payer IN (:uid, :jid))';
     $iGet = 'payee IN (:uid, :jid)';
 //    foreach (ray(TX_FLAGS) as $k) $$k = u\bit(u\consta('b', $k)); // taking and roundup flags
@@ -63,13 +52,29 @@ EOF;
 
     $sql = <<<EOF
       SELECT * FROM
-        (SELECT $txFields, u.fullName AS name FROM r_txs t1
+        (SELECT $txFields, u.uid, u.fullName AS name 
+         FROM r_txs t1
          LEFT JOIN users u ON uid=IF($iPay, payee, payer)
-         UNION SELECT $usdFields, ':R_NONE' AS name FROM r_usd WHERE amount<>0) t
+         UNION SELECT $usdFields, payee AS uid, ':R_NONE' AS name FROM r_usd WHERE amount<>0) t
       WHERE $where ORDER BY created DESC, xid>0, xid DESC;
 EOF;
   }
   return db\q($sql, $subs); 
+}
+
+/**
+ * Return customer transactions for the given period.
+ */
+function myCustTxs($starting, $ending, $mya, $a) {
+  list ($id, $jid, $biz) = [$a->id, $a->jid ?: 0, $mya->id];
+  $where = 'payer IN (:id, :jid) AND payee=:biz';
+  $sql = <<< X
+    SELECT CONCAT('tx #', payerTid) AS tid, amount AS paid, '' AS invoiced, created, :IS_ROUNDUP AS roundup, :IS_DISPUTED AS disputed, payeeFor AS purpose
+    FROM r_txs WHERE $where
+    UNION SELECT CONCAT('inv #', nvid) AS tid, '' AS paid, amount AS invoiced, created, :IS_ROUNDUP AS roundup, :IS_DISPUTED AS disputed, purpose
+    FROM r_invoices WHERE $where
+X;
+  return db\q($sql, compact(ray('id jid biz')));
 }
 
 /**

@@ -13,6 +13,7 @@
 .smallish {font-size:85%;}
 .skip {margin-left:10px;}
 .positive {color:green;} /* highlights donations and other happy amounts */
+tr.hiRow {background-color:lightyellow;}
 #edit-none {display:none;} /* for hidden submit button */
 iframe {border:0; float:right; margin-right:-60px;}
 .form-type-checkboxes > .control-label {padding-top:0;}
@@ -733,7 +734,7 @@ body.page-prox-pagedemocracydograde #edit-title {margin-bottom:0;}
   float:left;
   margin:0;
   cursor:pointer;
-  background-image:url('../images/icons/cropperIcons.png');	
+  background-image:url('../images/icons/cropper-icons.png');	
   width:30px;
   height:30px;
   text-align:center;

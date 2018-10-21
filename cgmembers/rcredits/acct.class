@@ -1816,7 +1816,7 @@ X;
       $name = u\ssnName($one, $F, $M, $L);
       $Ls[] = strtolower($L);
       if (strlen($F) > 1) $Fs[] = strtolower($F);
-      if ($M) foreach (split(' ', strtolower($M)) as $F) {
+      if ($M) foreach (explode(' ', strtolower($M)) as $F) {
         if (strlen($F) > 1) $Fs[] = $F;
       }
       if (@$one->dob) $DOBs[] = strtotime($one->dob);

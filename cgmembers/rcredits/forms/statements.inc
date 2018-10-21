@@ -9,6 +9,6 @@ function formStatements($form, $sta, $month = '') {
   if ($month) return w\go("history/statement/$month");
   
   $mo = date('F');
-  $subtext = date('d') < 10 ? t('note|Statements are not final until the 10th of the next month.', compact('mo')) : '';
+  $subtext = date('d') < 10 ? t('note|Statements are not final until the 10th of the next month.', compact('mo')) : NULL;
   return cgform(monthChoices(t('Statements'), 'statements', $subtext));
 }

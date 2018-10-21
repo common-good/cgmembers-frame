@@ -35,7 +35,7 @@ function formPrefs($form, &$sta) {
 
   $secretBal2 = boxFld('secretBal', t('Secret Balance:'), t("Don't let merchants see my balance, even if I ask."), $mya->can(B_SECRET));
   // Double confirmation: by SMS, by email, either. require extra confirmation of crucial account changes
-  $nosearch2 = boxFld('nosearch', t('No Search:'), t("Require other members to identify my account by name or account ID only &mdash; not by phone or email."), $mya->can(B_NOSEARCH));
+  if (!$mya->co) $nosearch2 = boxFld('nosearch', t('No Search:'), t("Hide my phone and email address from companies and individuals I do business with. Let members identify my account by name or account ID only &mdash; not by phone or email."), $mya->can(B_NOSEARCH));
   $debtOk2 = boxFld('debtOk', t('Debt Okay:'), t('Let me use my %PROJECT card as a <i>credit</i> card, allowing my account balance to go negative, limited by my credit limit (currently %limit), based on my average monthly account activity. I understand when I use my credit line  (that is, when my balance goes negative) it is a loan from my %PROJECT community and I will aim to bring my balance back up above zero within 30 days.', 'limit', u\fmtAmt(-$mya->floor)), $mya->can(B_DEBT));
   $posttext = item(t(<<<EOF
 <h4>** Disclaimers required by the IRS:</h4>
