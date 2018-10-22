@@ -39,3 +39,6 @@ append :linked_dirs, "cgLogs", "cgPhotoTemp"
 
 # Uncomment the following to require manually verifying the host key before first deploy.
 # set :ssh_options, verify_host_key: :secure
+
+# Locals - this one sets the umask for the deployment
+SSHKit.config.umask = '002'
