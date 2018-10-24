@@ -90,13 +90,17 @@ function makeTable($rows, $heads, $colClasses = [], $rowClasses = [], $tableTrib
   if ($rows) u\EXPECT(count($rows[0]) == count($heads), 'wrong aligns count');
   
   $heads = makeRow('th', $heads, $colClasses);
-  foreach ($rows as $i => $row) $lines[] = makeRow('td', $row, $colClasses, @$rowClasses[$i]);
-  $rows = join('', @$lines ?: []);
+  if (@$rows) {
+    foreach ($rows as $i => $row) $lines[] = makeRow('td', $row, $colClasses, @$rowClasses[$i]);
+    $rows = join('', @$lines ?: []);
+    $after = '';
+  } else $after = t('There are no such records.');
   return <<< X
 <table $tableTribs>
 $heads
 $rows
 </table>
+$after
 X;
 }
 

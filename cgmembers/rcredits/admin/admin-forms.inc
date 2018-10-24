@@ -633,18 +633,17 @@ function formShowReconciled($form, &$sta) {
   $sql = <<< X
     SELECT * FROM
 
-      (SELECT 'b' AS id, deposit AS dt, $desc AS what, SUM(amount) AS amt, COUNT(*) AS cnt,
+      (SELECT '' as extra, deposit AS dt, $desc AS what, SUM(amount) AS amt, COUNT(*) AS cnt,
         SUM(IF($neg, -amount, '')) AS outt,
         SUM(IF($neg, '', amount)) AS inn
       FROM r_usd WHERE amount<>0 AND bankTxId<>0 GROUP BY deposit,$desc DESC
-      UNION SELECT id, completed AS dt, IF(memo='', type, memo) AS what, amount AS amt, '' AS cnt,
+      UNION ALL SELECT 1 AS extra, completed AS dt, IF(memo='', type, memo) AS what, amount AS amt, '' AS cnt,
         IF(amount<0, -amount, '') AS outt,
         IF(amount<0, '', amount) AS inn
       FROM r_usd2) t
     
     ORDER BY dt DESC    
 X;
-// NOTE: id field is required to work around MySQL UNION bug (?)
 
   $bal = db\sum('amount', 'r_usd', 'bankTxId<>0') + db\sum('amount', 'r_usd2');
   $q = db\q($sql);
@@ -657,7 +656,7 @@ X;
     $balDpy = $bal;
     foreach (ray('inn outt balDpy') as $k) if ($$k) $$k = number_format($$k, 2);
     foreach (ray('dt what outt inn balDpy') as $i => $k) $line[$i] = "<td class='$k'>" . $$k . '</td>';
-    $class = $id == 'b' ? '' : ' class="hiRow"';
+    $class = $extra ? ' class="hiRow"' : '';
     $lines[] = "<tr$class>\n" . join("\n", $line) . '</tr>';
     $bal -= $amt;
   }

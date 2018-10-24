@@ -97,5 +97,5 @@ Scenario: A member asks to cash out too much
   | op  | who     | amount | goods      | purpose |*
   | pay | Bea Two | 300    | %FOR_USD | paper   |
   Then we say "error": "short to" with subs:
-  | short |*
-  | $100  |
+  | short | avail |*
+  | $100  | $200  |

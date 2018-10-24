@@ -75,6 +75,7 @@ function custStatement($args = '') {
       if (in($fldName, $numFields) and isset($$fldName)) $$fldName = number_format($$fldName ?: 0, 2);
       $pdf->Cell($width, 0, @$$fldName, '', $head == $lastHead ? 1 : 0, $align, '', '', 1);
     }
+    if ($row == $row0) $pdf->newLine(); // space after opening balance
   }
 
   $pdf->newLine();

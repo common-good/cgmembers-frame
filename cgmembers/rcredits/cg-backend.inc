@@ -377,15 +377,16 @@ function transfer($ttype, $a1, $a2, $amount, $for, $data = []) {
   if ($error = u\badAmount($amount)) return r\txRet($error, $erInfo);
 //  $need = $amount - @$payerReward; // leave room for reversing rewards (minus a negative)
 
-  if ($shortfall = $loserA->id < 0 ? 0 : $loserA->shortfall($goods, abs($amount), TRUE, $a1)) {
+  if ($shortfall = $loserA->id < 0 ? 0 : $loserA->shortfall($goods, $absAmt = abs($amount), TRUE, $a1)) {
     if (@$force) {
       $short = TRUE; // flag overdraft
     } else {
       $short = u\fmtAmt($shortfall);
+      $avail = u\fmtAmt($absAmt - $shortfall);
       $otherName = $a2->fullName;
       $msg = $reallyTaking ? ($a2->can(B_SECRET) ? 'short from vague' : 'short from') : 'short to';
       if ($channel == TX_WEB) {
-// to complex        if ($msg == 'short to' and $channel == TX_WEB and r\signedIn()) $msg .= '|increase min';
+// too complex        if ($msg == 'short to' and $channel == TX_WEB and r\signedIn()) $msg .= '|increase min';
 /*        if ($goods == FOR_GOODS) {
           if (!$loserA->can(B_DEBT) and $loserA->floor < 0 and $channel == TX_WEB) $msg .= '|try debt';
           $_aDebt = w\atag('/settings/preferences');
@@ -393,8 +394,8 @@ function transfer($ttype, $a1, $a2, $amount, $for, $data = []) {
 				*/
       }
       $loserA->suggestAuto();
-      $details = t('|%loser was short by %short trying to pay %gainer %amount', ray('loser short gainer amount', $loserA->fullName, $short, $gainerA->fullName, u\fmtAmt($amount)));
-      return r\txRet($msg, compact(ray('otherName short how details _aDebt')));
+      $details = t('|%loser was short by %short trying to pay %gainer %amount (available balance is %avail)', 'loser short gainer amount avail', $loserA->fullName, $short, $gainerA->fullName, u\fmtAmt($absAmt), $avail);
+      return r\txRet($msg, compact(ray('otherName short how details _aDebt avail')));
     }
   }
 //  $roundup = (r\acct($payer)->roundup and !@$data['isGift'] and !@$data['roundups'] and $amount > 0); // payer, not a1 or loser

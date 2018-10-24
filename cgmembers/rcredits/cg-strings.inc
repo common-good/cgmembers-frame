@@ -203,8 +203,8 @@ EOF
 //  'short cash to' => t('You are %short short for that transaction.'),
 //  'short cash from' => t('%otherName is %short short for that transaction.'),
 //  'short cash from vague' => t('%otherName does not have enough rCredits for that transaction.'),
-  'short to' => t('You are %short short for that transaction. Maybe increase your target balance?'),
-  'short from' => t('%otherName is %short short for this request (do NOT try again).'),
+  'short to' => t('You are %short short for that transaction. Available balance is %avail. Maybe increase your target balance?'),
+  'short from' => t('%otherName is %short short for this request (do NOT try again). Available balance is %avail.'),
   'short from vague' => t('%otherName does not have enough funds for this request (do NOT try again).'),
   'min too low' => t('Your target balance is set too low, causing conflicting deposits and withdrawals from your bank account. To increase your target balance to %suggestion, visit the %page page (under Settings).'),
 //  'you were short' => t('You tried to make a purchase but did not have enough funds in your account. A higher "minimum" setting might keep this from happening again. To increase your minimum to the recommended setting of %suggested, <%a1>click here</a>.'), // Arghh! some email programs apparently click this link automatically
