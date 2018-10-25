@@ -30,7 +30,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
     return hack(t('attempt to handle invoice not signed in'));
   } else if (!in($mya->id, [$payer, $payee]) or ($mya->id == $payer xor $toMe)) return hack(t('bad person in invoice payment'));
 
-  $subs = ray('amount what', u\fmtAmt($amount), $purpose);
+  $subs = ray('amount what date', u\fmtAmt($amount), $purpose, u\fmtDate($created, TRUE));
   
   if (@$toMe) {
     $a = r\acct($payer);
@@ -52,22 +52,22 @@ function formHandleInvoice($form, &$sta, $args = '') {
     $whyNot = textFld(t('Reason for dispute:'));
     $deny = submit(t('Dispute'));
     $denySet = fieldSet('denySet', compact('whyNot', 'deny'), BARE);
-    $toMe = hidFld(TRUE);
   } else { // confirming delete by originator
     $title = t('Delete?');
     $subs += ray('who', r\acct($payer)->fullName);
-    $subtext = t('Delete invoice charging %who %amount for %what?', $subs);
+    $subtext = t('Delete %date invoice charging %who %amount for %what?', $subs);
     $delete = submit(t('Delete'));
     $cancel = submit(t('Cancel'));
     $delSet = fieldSet('delSet', compact('delete', 'cancel'), BARE); // separate it from subtext
   }
   
+  $toMe = hidFld($toMe);
   $hid = w\hidFlds(compact('ret') + $inv);
   $form['#validate'] = array('CG\\Web\\formHandleInvoice_validate');
   $form['#submit'] = array('CG\\Web\\formHandleInvoice_submit');
   w\jsx('dispute');
   
-  return cgform(compact(ray('title subtext always pay dispute denySet delSet toMe hid')) + $form);
+  return cgform(compact(ray('title subtext always pay denySet delSet toMe hid')) + $form);
 }
 
 function formHandleInvoice_validate($form, &$sta) {

@@ -89,7 +89,7 @@ function couponsPrint($args = '') {
       
       if ($gift) { // gift coupon
         $pdf->say(t('at any member business', compact('name')), $x+$dxCoup, $y+$dyAt, $wCoup, '', "$ptCoup;font-stretch:semi-expanded;color:darkred", 'L');
-        $pdf->say(t('when you pay with <b>%PROJECT</b>') . '<sup style="font-size:50%;">&trade;</sup>', $x, $y+$dyDetails, $wCard, '', $ptDetails, 'C'); // text, x, y, w, h, format, align, borders
+        $pdf->say(t('when you pay with <b>%PROJECT</b>') . '<sup style="font-size:50%;">&reg;</sup>', $x, $y+$dyDetails, $wCard, '', $ptDetails, 'C'); // text, x, y, w, h, format, align, borders
         $pdf->say($slogan, $x, $y+$dyDetails+$dy, $wCard, '', "$ptSlogan;I;Verdana;font-stretch:normal;color:darkgray", 'C'); // text, x, y, w, h, fmt, align, borders
   //      $pdf->Image(__DIR__ . '/../images/heart+$70.png', $x+$dxHeart, $y+$dyHeart, $wHeart, $hHeart, '', '', '', true); // file, x, y, w, h, type, link, align, resize
 

@@ -42,7 +42,7 @@ Scenario: A member overdraws with not enough to draw on
   | op  | who  | amount | goods        | purpose |*
   | pay | .ZZB |    200 | %FOR_GOODS | food    |
   Then we say "error": "short to" with subs:
-  | short |*
-  | $70   |
+  | short | avail |*
+  | $70   | $130  |
   
 # add a scenario for drawing from two sources

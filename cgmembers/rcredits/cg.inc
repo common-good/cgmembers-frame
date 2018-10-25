@@ -238,7 +238,7 @@ function ipok($uid, $device) {
 function rMail($index, $to0, $subs, $reply0 = NULL) {
 //  require_once __DIR__ . '/dkim.php';
 //  if (isGAME) return; // no emails from game site
-  global $testEmails;
+  global $testEmails, $mya;
 
   foreach (ray('secure vsecure') as $k) unset($subs[$k]); // show not even in error messages
   $subs['site'] = BASE_URL;
@@ -284,7 +284,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
   u\loga('email', $erInfo + ['toUid' => @$toA->id]);
 
   if (isPRODUCTION !== TRUE) { // make sure we never send rogue emails from test server even if constant isn't set
-/**/  if (!u\test()) debug(compact(ray('subject to body')));
+/**/  if (!u\test() and $mya and $mya->cAdmin) debug(compact(ray('subject to body')));
     return; // no emails unless real!!
     if ($toEmail != r\regionField('email') and $toEmail != R_ADMIN_EMAIL) return TRUE;
     if (isDEV) return TRUE; // otherwise cURL error 60: SSL certificate problem: unable to get local issuer certificate

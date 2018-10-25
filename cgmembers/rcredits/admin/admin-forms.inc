@@ -295,7 +295,7 @@ function formMakeCtty($form, &$sta) {
 
   $submit = submit();
   
-  $form = compact('title', 'subtext') + nameAndEmail(t('Community')) + ssnFields(FALSE)
+  $form = compact('title', 'subtext') + nameAndEmail(-1) + ssnFields(FALSE)
     + compact(ray('phone postalAddr region zips submit'));
 //         + ssnFields(FALSE) + contactFields(['zot'=>0], FALSE) // prevent contact fields from defaulting
 //  foreach (ray('tenure owns') as $k) unset($form[$k]);
@@ -592,7 +592,7 @@ EOF;
 //define('DEPOSIT_DATE1', 1411517529); // first deposit date
 
 /**
- * Offer to print checks or a deposit slip for transfers to or from member bank accounts.
+ * Offer to print checks or a deposit slip for Dollar Pool transfers to or from member bank accounts.
  */
 function formDeposits($form, &$sta, $deposit = 0) {
   global $mya, $base_url;
@@ -623,6 +623,63 @@ EOF;
   return cgform(compact(ray('title subtext go deposits')));
 }
 
+/**
+ * Show a list of reconciled Dollar Pool transfers and other transfers in or out of that (or those) account(s).
+ */
+function formShowReconciled($form, &$sta) {
+  $neg = 'amount<0 XOR txid<0';
+  $desc = "IF(txid<0, 'BAD', IF(amount>0, 'IN', 'OUT'))";
+  
+  $sql = <<< X
+    SELECT * FROM
+
+      (SELECT '' as extra, deposit AS dt, $desc AS what, SUM(amount) AS amt, COUNT(*) AS cnt,
+        SUM(IF($neg, -amount, '')) AS outt,
+        SUM(IF($neg, '', amount)) AS inn
+      FROM r_usd WHERE amount<>0 AND bankTxId<>0 GROUP BY deposit,$desc DESC
+      UNION ALL SELECT 1 AS extra, completed AS dt, IF(memo='', type, memo) AS what, amount AS amt, '' AS cnt,
+        IF(amount<0, -amount, '') AS outt,
+        IF(amount<0, '', amount) AS inn
+      FROM r_usd2) t
+    
+    ORDER BY dt DESC    
+X;
+
+  $bal = db\sum('amount', 'r_usd', 'bankTxId<>0') + db\sum('amount', 'r_usd2');
+  $q = db\q($sql);
+  while ($row = $q->fetchAssoc()) {
+    extract($row);
+    $dt = u\fmtDate($dt, TRUE);
+    if ($cnt) $what .= ": $cnt";
+    if ($what == 'T') $what = t('transfer');
+    if ($what == 'S') $what = $amt < 0 ? t('fee') : t('interest');
+    $balDpy = $bal;
+    foreach (ray('inn outt balDpy') as $k) if ($$k) $$k = number_format($$k, 2);
+    foreach (ray('dt what outt inn balDpy') as $i => $k) $line[$i] = "<td class='$k'>" . $$k . '</td>';
+    $class = $extra ? ' class="hiRow"' : '';
+    $lines[] = "<tr$class>\n" . join("\n", $line) . '</tr>';
+    $bal -= $amt;
+  }
+  $deposits = join("\n", @$lines ?: []);
+  foreach (ray('Date Memo Payment Deposit Balance') as $i => $k) $line[$i] = "<th class='$k'>$k</th>";
+  $header = "<tr>\n" . join("\n", $line) . '</tr>';
+  $list = <<< X
+<table id="deposits">
+$header
+$deposits
+</table>
+X;
+  $title = t('Reconciled Dollar Pool Transactions');
+  $txid = db\min('txid', 'r_usd', 'bankTxId=0 AND amount<>0') ?: 999999999;
+  $asof = u\fmtDate(db\max('deposit', 'r_usd', 'txid<:txid', compact('txid')) ?: time(), TRUE);
+  $subtext = t('These Dollar Pool transactions have been matched one-to-one with the bank\'s records, for all transfers dated on or before %asof.', compact('asof'));
+  $list = item($list);
+  return cgForm(compact(ray('title subtext list')));
+}
+
+/**
+ * Show a PDF of a (populated) deposit slip for a particular Dollar Pool transfer group ("deposit") in and/or out.
+ */
 function depositDetails($args) {
   extract(just('way date total count only', $args));
   include_once __DIR__ . '/../pdf.class';

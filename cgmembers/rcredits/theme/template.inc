@@ -235,7 +235,7 @@ EOF;
       </button>
       <a class="navbar-brand" href="#"><div>
         <img src="$logo" />
-        <div id="orgname">Common Good<sup>&trade;</sup></div>
+        <div id="orgname">Common Good<sup>&reg;</sup></div>
       </div></a>
     </div>
     <div id="navbar" class="collapse navbar-collapse">

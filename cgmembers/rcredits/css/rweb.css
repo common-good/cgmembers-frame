@@ -13,6 +13,7 @@
 .smallish {font-size:85%;}
 .skip {margin-left:10px;}
 .positive {color:green;} /* highlights donations and other happy amounts */
+tr.hiRow {background-color:lightyellow;}
 #edit-none {display:none;} /* for hidden submit button */
 iframe {border:0; float:right; margin-right:-60px;}
 .form-type-checkboxes > .control-label {padding-top:0;}
@@ -670,6 +671,7 @@ body.page-prox-pagedemocracydograde #edit-title {margin-bottom:0;}
 #frm-profile #user-picture img {max-height:300px;}
 
 /* Community and Money Data */
+#frm-data .control-data {max-width:9999px; width:auto;}
 #frm-data .form-type-submit {margin-bottom:4px;}
 #frm-data button {width:300px; text-align:left; background-image: linear-gradient(#fff, #ddd 60%, #ddd);}
 /*linear-gradient(#fff, #fff 60%, #f5f5f5);*/
@@ -733,7 +735,7 @@ body.page-prox-pagedemocracydograde #edit-title {margin-bottom:0;}
   float:left;
   margin:0;
   cursor:pointer;
-  background-image:url('../images/icons/cropperIcons.png');	
+  background-image:url('../images/icons/cropper-icons.png');	
   width:30px;
   height:30px;
   text-align:center;
