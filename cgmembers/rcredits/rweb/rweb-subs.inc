@@ -1695,16 +1695,16 @@ EOF;
  * @param string $eLink: parameters from URL
  *   (RETURNED) same as $sta['eLink']
  * @param string $allow: what not-signed-in accounts to allow: individual (the default), 'acct', or 'any'
- * @return the account (defaults to current account)
+ * @return the account (defaults to current account), FALSE if error
  */
 function eLinkAcct(&$sta, &$eLink = '', $allow = 'individual') {
   if (!$eLink) extract(just('eLink', $sta)); // verifying or submitting; get stored eLink args
   extract(just('qid ecode allow', $eLink));
   $a = r\acct($qid = @$qid); // current or specified account
   if ($allow != 'any') {
-    if (!$a) return w\go('', 'requires signin');
-    if ($allow == 'individual' and $a->co) return w\go('', t('That page is for individual accounts only.'));
-    if ($qid and @$ecode != $a->emailCode) return w\hack('bad ecode');
+    if (!$a) return !w\go('', 'requires signin');
+    if ($allow == 'individual' and $a->co) return !w\go('', t('That page is for individual accounts only.'));
+    if ($qid and @$ecode != $a->emailCode) return !w\hack('bad ecode');
   }
   $eLink = $sta['eLink'] = "allow=$allow&qid=$qid&ecode=" . @$ecode; // remember it (cttys don't use ecode)
   return $a;

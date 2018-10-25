@@ -1,3 +1,8 @@
+2018-10-25
+. fixed bug in acct::recordChanges() that kept proper agent from getting recorded
+. fixed bug in vendor report that linked to customer statements rather than vendor statements
+. fixed bug in donate.inc that prevented companies from donating!!
+
 2018-10-24
 . added current amount available to short message
 . widened web reports

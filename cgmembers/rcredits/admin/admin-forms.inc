@@ -241,7 +241,7 @@ function formSeeChanges($form, &$sta, $qid = '') {
   $list[] = '<tr><th>Date</th><th>Field</th><th>Old Value</th><th>New Value</th><th>Changed by</th></tr>';
   // $rec = []; // track historical field values
 
-  $sql = 'SELECT h.created, field, oldValue, newValue, changedBy, u.name AS changerName FROM r_changes h LEFT JOIN users u ON h.changedBy=u.uid WHERE h.uid=:id ORDER BY created';
+  $sql = 'SELECT h.created, field, oldValue, newValue, changedBy, u.name AS changerName FROM r_changes h LEFT JOIN users u ON h.changedBy=u.uid WHERE h.uid=:id ORDER BY created DESC';
   $q = db\q($sql, ray('id', $a->id));
   while ($row = $q->fetchAssoc()) {
     extract($row);

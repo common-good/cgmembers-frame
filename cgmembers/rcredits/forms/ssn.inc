@@ -30,7 +30,7 @@ function formSsn_validate($form, &$sta) {
   return formBasic_validate($form, $sta, FALSE, $field);
 }
 
-function formSsn_submit($form, &$sta, $args = '') {
+function formSsn_submit($form, &$sta) {
   $mya = w\eLinkAcct($sta);
   extract(just('field', $sta['input']));
 
