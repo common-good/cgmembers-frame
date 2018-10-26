@@ -139,7 +139,7 @@ EOF;
 
 function formEvents_validate($form, &$sta) {
   extract(just('question agree op', $sta['input']));
-  $mya = w\eLinkAcct($sta, $args);
+  $mya = w\eLinkAcct($sta);
   if (@$question < 0 and w\op($sta) == 'submit') {
     // for each option, if blank then error
   }
@@ -153,9 +153,7 @@ function formEvents_submit($form, &$sta) {
   $op = (w\op($sta) == 'prev' and strpos($op, t('Previous')) === FALSE) ? 'doneWithQ' : w\op($sta);
   if ($op == 'showVotes') return w\say(v\showVotes($ctty));
   if (in($op, 'noDirect noVote')) return w\say(v\showNonVoters($ctty, $op == 'noDirect'));
-//  if ($op == 'results') return w\go("prox/page=Events&$args&results=1");
-//  if ($op == 'resultsNoProx') return w\go("prox/page=Events&$args&results=1&noProxies=1");
-  
+
   if ($op == 'gradeIt') return w\go("prox/page=Events&do=grade&$args");
   if (@$agree) return w\go("prox/page=Events&do=ballot&$args");
   

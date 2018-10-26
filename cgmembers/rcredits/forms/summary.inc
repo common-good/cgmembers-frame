@@ -79,7 +79,8 @@ function formSummary($form, &$sta) {
   }
 
   if ($mya->co) $reports = w\btn('/company-reports', t('Reports'));
-  if ($mya->id == CGID) $deposits = w\btn('/sadmin/show-deposits', t('Deposits'));
+//  if ($mya->id == CGID) $deposits = w\btn('/sadmin/show-deposits', t('Deposits'));
+  if ($mya->id == CGID) $deposits = w\btn('/sadmin/show-reconciled', t('Dollar Pool Transactions'));
   $topButtons = item(@$makeCo . @$makeJoint . @$reports . @$deposits);
 
   $title = t('Account Summary');

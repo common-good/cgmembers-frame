@@ -88,7 +88,8 @@ EOF
   // If you don\'t want any automation, type zero (then remember to refill your account explicitly when it gets low).'),
 //  'prompt max' => t('Keep AT MOST this much in my %PROJECT Account. (When your %RCREDITS balance goes above this amount by $%R_CHUNK or more, the system transfers the extra to your bank account. Blank means no automatic transfers &mdash; recommended in most cases).'),
   'legalname desc' => t(' full legal name, properly capitalized, for tax reporting and banking.'),
-  'usename desc' => t('Your full "doing-business-as" name, properly capitalized! &mdash; the full name you use most of the time.'),
+  'dba desc' => t('Your full "doing-business-as" name, properly capitalized!'),
+  'usename desc' => t('The <%b>full name</b> you use most of the time, properly capitalized!', 'b', 'b class="loud"'),
   'ssTitle' => t('Soc Sec #:'),
   'einTitle' => t('Federal ID:'),
   'ssDesc' => t('Your social security number (for tax reporting)'),
@@ -1390,22 +1391,24 @@ function findCompany($company, $companyPhone) {
 
 /**
  * Return form fields for name and email.
- * @param bool $what: prompt description of what the name is for ("Company", "Community", or "Full name")
+ * @param int $co: 1=company, 0 (or '') = personal, -1=community
  * @param string $fullName: default full name
  * @param string $email: default email address
  * @param bool $hideEmail: <don't ask for email address>
  * @param int $myid: current account record ID, if any
  * @return the relevant form fields
  */
-function nameAndEmail($what, $fullName = '', $email = '', $hideEmail = FALSE, $myid = 0) {
-  $who = $what == t('Company') ? t('The company\'s') : ($what == t('Community') ? t('The community\'s') : t('Your'));
+function nameAndEmail($co, $fullName = '', $email = '', $hideEmail = FALSE, $myid = 0) {
+  list ($what, $who) = $co 
+  ? ($co < 0 ? [t('Community'), t('The community\'s')] : [t('Company'), t('The company\'s')])
+  : [t('Full name'), t('Your')];
 //  $onchange = w\onchange("var legal=jQuery('#edit-legalname'); if (legal.val()=='') legal.val(this.value);");
 //  $fullName = textFld("$what:", ["$who " . t('full name'), t('usename desc')], required(@$fullName) + $onchange);
-  $fullName = textFld("$what:", ["$who " . t('full name'), t('usename desc')], required(@$fullName));
+  $fullName = textFld("$what:", ["$who " . t('full name'), $co ? t('dba desc') : t('usename desc')], required(@$fullName));
   $legalName = textFld(t('Legal name:'), ["$who " . t('full legal name (if different)'), $who . t('legalname desc')]);
   if ($email and !emailOkay($email, FALSE, $myid ? r\acct($myid) : '')) $hideEmail = FALSE; // make sure they can fix it
   if (strpos($email, '@' . EMAILX) and !u\test()) $hideEmail = FALSE; // handle placeholder for making joint accounts
-  $email = $hideEmail ? hidFld(@$email) : textFld(t('Email:'), [t('Email'), t('All emails from the system will be sent to this address. It will not be made public. <b>Type carefully.</b>')], required(@$email));
+  $email = $hideEmail ? hidFld(@$email) : textFld(t('Email:'), [t('Email'), t('<b>Type carefully.</b> All emails from the system will be sent to this address. It will not be made public, but will be viewable by accounts you transact with (you can choose greater privacy by clicking "Advanced" on the Settings/Preferences page).')], required(@$email));
   jsx('legal-name');
   return compact(ray('fullName legalName email'));
 }
@@ -1692,16 +1695,16 @@ EOF;
  * @param string $eLink: parameters from URL
  *   (RETURNED) same as $sta['eLink']
  * @param string $allow: what not-signed-in accounts to allow: individual (the default), 'acct', or 'any'
- * @return the account (defaults to current account)
+ * @return the account (defaults to current account), FALSE if error
  */
 function eLinkAcct(&$sta, &$eLink = '', $allow = 'individual') {
   if (!$eLink) extract(just('eLink', $sta)); // verifying or submitting; get stored eLink args
   extract(just('qid ecode allow', $eLink));
   $a = r\acct($qid = @$qid); // current or specified account
   if ($allow != 'any') {
-    if (!$a) return w\go('', 'requires signin');
-    if ($allow == 'individual' and $a->co) return w\go('', t('That page is for individual accounts only.'));
-    if ($qid and @$ecode != $a->emailCode) return w\hack('bad ecode');
+    if (!$a) return !w\go('', 'requires signin');
+    if ($allow == 'individual' and $a->co) return !w\go('', t('That page is for individual accounts only.'));
+    if ($qid and @$ecode != $a->emailCode) return !w\hack('bad ecode');
   }
   $eLink = $sta['eLink'] = "allow=$allow&qid=$qid&ecode=" . @$ecode; // remember it (cttys don't use ecode)
   return $a;

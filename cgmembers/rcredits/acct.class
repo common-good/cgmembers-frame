@@ -569,6 +569,7 @@ class Acct {
    * @param assoc $info: all changes being made
    */
   private function recordChanges($info) {
+    global $mya;
     $a = $this;
     $newChanges = justNOT(R_HIDE_CHANGES, $info); // see if there are any changes to remember
     foreach ($newChanges as $field => $v) {
@@ -577,7 +578,7 @@ class Acct {
 
 			$oldValue = $a->cryIf($field, '' . $a->$field, TRUE);
 			$newValue = $a->cryIf($field, '' . $v);
-			$record = ray('uid created field oldValue newValue changedBy', $a->uid, time(), $field, $oldValue, $newValue, $a->agentId);
+			$record = ray('uid created field oldValue newValue changedBy', $a->uid, time(), $field, $oldValue, $newValue, $mya ? $mya->agentId : 0);
       db\insert('r_changes', $record); // add a r_changes record for each changed field
     }
   }
@@ -1816,7 +1817,7 @@ X;
       $name = u\ssnName($one, $F, $M, $L);
       $Ls[] = strtolower($L);
       if (strlen($F) > 1) $Fs[] = strtolower($F);
-      if ($M) foreach (split(' ', strtolower($M)) as $F) {
+      if ($M) foreach (explode(' ', strtolower($M)) as $F) {
         if (strlen($F) > 1) $Fs[] = $F;
       }
       if (@$one->dob) $DOBs[] = strtotime($one->dob);

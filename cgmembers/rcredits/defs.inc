@@ -5,7 +5,7 @@
  * (SMS, web, smartphone, etc.)
  */
 
-define('R_VERSION', '3.42i'); // software version
+define('R_VERSION', '3.42j'); // software version
 
 // definitions used in settings file
 define('US_COUNTRY_ID', 1228); // United States
@@ -425,6 +425,7 @@ define('TX_FLAGS', 'taking disputed offline short undone undoes crumbs roundups 
 define('TX_DENIED', -1); // invoice rejected by the non-originator
 define('TX_PENDING', 0); // charged, waiting for confirmation
 define('TX_APPROVED', 1); // invoice is approved but not paid
+define('TX_PAID', 2); // any status this amount or more is a payment transaction record ID (xid)
 define('TX_STATUSES', t('-1:denied,0:OPEN,1:approved,2:paid'));
 
 // Transaction channels (roughly in order of simplicity and generality of messages) (CGF)

@@ -5,13 +5,15 @@ SO I can enjoy the rCredit system's rapid growth and be a part of that.
 
 Setup:
   Given members:
-  | id   | fullName   | address | city  | state | zip | postalAddr | rebate | flags   |*
-  | .ZZA | Abe One    | 1 A St. | Atown | AK    | 01000 | 1 A, A, AK |      5 | ok,confirmed      |
+  | id   | fullName | address | city  | state | zip | postalAddr | rebate | flags   |*
+  | .ZZA | Abe One  | 1 A St. | Atown | AK    | 01000 | 1 A, A, AK |      5 | ok,confirmed      |
+  | .ZZC | Cor Pub  | 3 C St. | Ctown | CT    | 03000 | 3 C, C, CT |      5 | ok,confirmed,co   |
   And balances:
   | id     | balance |*
   | cgf    |       0 |
   | .ZZA   |     100 |
-
+  | .ZZC   |     100 |
+  
 Scenario: A member donates
   Given next DO code is "whatever"
   When member ".ZZA" completes form "community/donate" with values:
@@ -56,6 +58,15 @@ Scenario: A member makes a recurring donation
   And we notice "gift sent" to member ".ZZA" with subs:
   | amount | rewardAmount |*
   |    $10 |        $0.50 | 
+  
+Scenario: A company makes a recurring donation
+  When member ".ZZC" completes form "community/donate" with values:
+  | gift | amount | period | honor  | honored | share |*
+  |   -1 |     10 |      M | memory | Jane Do |    10 |
+  Then transactions:
+  | xid | created | type     | amount | from | to   | purpose                            |*
+  |   1 | %today  | transfer |     10 | .ZZC | cgf  | regular donation (monthly gift #1) |
+  And we say "status": "gift successful"
 	
 Scenario: A member donates with insufficient funds
   When member ".ZZA" completes form "community/donate" with values:

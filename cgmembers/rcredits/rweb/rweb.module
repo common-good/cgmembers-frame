@@ -103,6 +103,8 @@ function rweb_menu($submenu = '') {
     'history/changes' => ['sub', t('See Changes'), 'SeeChanges', 'cadmin', '', t(''), 'refresh'],
     'history/zot' => ['sub', 'zot', '', ANY], // Drupal bug: last choice is omitted
     'history/statement' => ['call', t('Statement'), '2', 'read', 'statement'],
+    'history/customer-statement' => ['call', t('Customer Statement'), '2', 'read', 'custStatement'],
+    'company-reports' => ['call', t('Company Reports'), 'Data 1 co', 'read co'],
 //    'history/notice' => ['call', t('Notice'), 'Notice 2', 'read'],
     
 //    'community' => ['norm', t('Community'), 'FindCo', ANY],
@@ -185,8 +187,7 @@ function rweb_menu($submenu = '') {
     'prejoin' => ['call', t('Open a Joint Account'), 'Prejoin', 'manage'],
     'handle-invoice' => ['call', t('Handle Invoice'), 'HandleInvoice 1', ANY],
     'rerisk' => ['call', t('Recalculate Risk'), 'Rerisk 1 2 3', 'cadmin2'],
-    'company-reports' => ['call', t('Company Reports'), 'Data 1 co', 'read co'],
-
+    
     'sadmin' => ['norm', t('Admin'), 'Admin', 'admin2'],
     'sadmin/panel' => ['sub', t('Panel'), 'AdminPanel 2', 'cadmin'],
     'sadmin/followup' => ['sub', t('Admin Action Page'), 'Followup', 'admin2'],
@@ -212,6 +213,7 @@ function rweb_menu($submenu = '') {
     'sadmin/delete-account' => ['call', t('Delete Account'), '2', 'superadmin', 'deleteAccount'],
     'print-rcard' => ['call', t('Print ID Card'), '1 2', 'cadmin', 'memberID'],
     'sadmin/show-deposits' => ['call', t('Show Deposits'), 'ShowDeposits', 'read'],
+    'sadmin/show-reconciled' => ['call', t('Show Reconciled'), 'ShowReconciled', 'read'],
 
     'signout' => ['norm', t('Sign out'), '1', 'signedIn', 'signout'],
     'signin' => ['norm', t('Sign in'), 'Signin', '-signedIn'],

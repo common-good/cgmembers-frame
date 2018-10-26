@@ -44,7 +44,8 @@ function formInvoiceUpload_submit($form, &$sta, $args = NULL) {
     $e = ray('did line row', $did, $i + 1, join(' | ', $row)); // params for error message(s)
     if (count($row) < 3) return say('csv error', $e + ray('msg', t('Incomplete row')), 'file');
     @list ($account, $email, $amt, $desc) = $row; // desc is optional
-    if (!$account or u\starts(strtoupper($account), t('TOTAL'))) break; // should never happen unless user has a total line
+    foreach (ray('account email desc') as $k) $$k = trim($$k);
+    if (!$account or strtoupper($account) == t('TOTAL')) break; // should never happen unless user has a total line
     if ($err = u\badAmount($amt, '>=0')) {iuErr($err, $e); continue;}
     if (!$amt) {iuErr(t('The amount for this account is zero so it will not be %did', $e), $e); continue;}
 	  if (!$account or !$a = r\acct($account)) {iuErr(t('Bad account ID'), $e); continue;} // not 'bad account'
