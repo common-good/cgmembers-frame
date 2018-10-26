@@ -41,7 +41,7 @@ define('RCREDITS', t('Common Good Credits')); // don't use %PROJECT here
 define('BANK_DBA', PROJECT);
 define('PROJECT_ID', str_replace(' ', '', strtolower(PROJECT)));
 define('PROJECT_LOGO', 'logo80.png');
-define('PROMO_URL', isDEV ? 'http://localhost/cgPromo/_site' : 'http://' . CG_DOMAIN);
+define('PROMO_URL', isDEV ? '../cgPromo/_site' : 'http://' . CG_DOMAIN);
 
 define('STAGE', 'ws.rcredits.org'); // staging site (for secrets, etc.)
 define('GAME_SITE', 'game.' . CG_DOMAIN);

@@ -14,6 +14,16 @@ global $cookie_domain, $conf, $is_https, $base_secure_url, $base_insecure_url;
 
 require __DIR__ . '/defs.inc';
 
+/* echo '<br>DRUPAL_ROOT='; print_r(DRUPAL_ROOT); */
+/* echo '<br>$base_url='; print_r($base_url); */
+/* echo '<br>BASE_URL='; print_r(BASE_URL); */
+/* echo '<br>R_PATH='; print_r(R_PATH); */
+/* echo '<br>__DIR__='; print_r(__DIR__); */
+/* echo '<br>'; */
+/* echo '<br>'; */
+/* echo '<br>'; */
+/* echo '<br>'; */
+
 set_error_handler('_drupal_error_handler');
 timer_start('page');
 if (NOT_PRODUCTION) {

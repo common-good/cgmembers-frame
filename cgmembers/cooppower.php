@@ -7,7 +7,20 @@
  * Copy this to the web root.
  */
 
-define('isDEV', in_array($_SERVER['SERVER_ADDR'], ['::1', '127.0.0.1'])); // developing
+$config = (array) json_decode(utf8_encode(file_get_contents("../config/config.json")));
+if (array_key_exists('stage', $config)) {
+  define('isDEV', $config['stage'] == 'development');
+  define('isSTAGE', $config['stage'] == 'staging');
+  define('isPRODUCTION', $config['stage'] == 'production');
+  define('isGAME', $config['stage'] == 'game');
+  if (! isDEV and ! isSTAGE and ! isPRODUCTION and ! isGAME) {
+    die('Invalid value for stage in configuration file.');
+  }
+} else {
+  die('There is no configuration file ../config/config.json');
+}
+/* define('isDEV', in_array($_SERVER['SERVER_ADDR'], ['::1', '127.0.0.1'])); // developing */
+
 extract($_GET);
 
 $vars = [@$m_street, @$m_city, @$m_state, @$m_zip];
