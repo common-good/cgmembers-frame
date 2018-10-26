@@ -68,7 +68,7 @@ X;
     while ($row = $q->fetchAssoc()) {
       extract($row);
       $a = r\acct($uid);
-      $qid = w\lnk('/history/customer-statement/cust=' . $a->mainQid, $a->mainQid);
+      $qid = w\lnk(tr('/history/customer-statement/cust=%qid&way=%way', 'qid way', $a->mainQid, $nm == 'customers' ? 'IN' : 'OUT'), $a->mainQid);
       list ($email, $phone) = $a->nosearch ? ['*', '*'] : [$a->email, u\fmtPhone($a->phone, '-')];
       $res[] = [$qid, $a->fullName, $phone, $email, number_format($net, 2)];
       $classes[] = $invs ? 'hiRow' : '';

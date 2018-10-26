@@ -11,21 +11,22 @@ include_once __DIR__ . '/../cg-txs.inc';
 include_once __DIR__ . '/../statement.class';
 
 /**
- * Generate an account statement for the given customer.
- * Call with /history/customer-statement/cust=QID
+ * Generate an account statement for the given customer or vendor.
+ * Call with /history/customer-statement/cust=QID?way=WAY
+ * where WAY is either IN or OUT
  */
 function custStatement($args = '') {
   $purposeLenMax = 60; // maximum number of characters in purpose field, not including added "..."
 
   if (!$mya = r\acct()) return w\go('', t('You must first sign in.'), 'ERR');
-  extract(just('cust period', $args));
+  extract(just('cust period way', $args));
   if (!@$cust or !$a = r\acct($cust)) return w\softErr(t('No customer was specified.'));
 //  if (!@$period) return w\softErr(t('No period was specified.'));
 
 //  list ($start, $end, $period) = statementMonth($period, $mya->fyEnd ?: '12/31'); // not used yet
 
-  $q = be\myCustTxs(0, time(), $mya, $a);
-  if (!$q->rowCount()) return w\softErr(t('That is not a customer of yours.'));
+  $q = @$way == 'IN' ? be\myCustTxs(0, time(), $mya, $a) : be\myCustTxs(0, time(), $a, $mya);
+  if (!$q->rowCount()) return w\softErr(t('That is not a %thing of yours.', 'thing', $way == 'IN' ? t('customer') : t('vendor')));
 
   $pdf = new r\Statement($mya);
 

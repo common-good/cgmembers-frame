@@ -11,7 +11,7 @@ use CG\Db as db;
   If they haven't chosen a recurring donation yet, a recurring donation is the only option
 */
 function formDonate($form, &$sta, $args = '') {
-  $mya = w\eLinkAcct($sta, $args);
+  if (!$mya = w\eLinkAcct($sta, $args, 'acct')) return;
 
 	//  $oftens = [0 => t('when?')] + ray(OFTENS);
   $oftens = ray(OFTENS);
@@ -59,7 +59,7 @@ function formDonate($form, &$sta, $args = '') {
 }
 
 function formDonate_validate($form, &$sta) {
-  $mya = w\eLinkAcct($sta, $args); 
+  $mya = w\eLinkAcct($sta); 
 
   extract(just('gift amount period', $sta['input']));
 //  $amount = $gift ?: $amount;
@@ -71,7 +71,7 @@ function formDonate_validate($form, &$sta) {
 }
 
 function formDonate_submit($form, &$sta) {
-  $mya = w\eLinkAcct($sta, $args); 
+  $mya = w\eLinkAcct($sta); 
 
   extract(just('amount period honor honored roundup recurId', $sta['input']));
   $info = ray('payer payee amount period created lastTx invoiced', $mya->id, CGID, $amount, $period, NOW, 0, 0);
