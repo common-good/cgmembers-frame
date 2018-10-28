@@ -98,14 +98,14 @@ Scenario: A cashier asks to refund someone
 Scenario: A cashier asks to charge another member, with insufficient balance
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $300 for "cash": "cash out" at %now
   Then we return error "short from" with subs:
-  | otherName | short |*
-  | Bea Two   | $200  |
+  | otherName | short | avail |*
+  | Bea Two   | $200  |  $100 |
 
 Scenario: A cashier asks to refund another member, with insufficient balance
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $-400 for "cash": "cash in" at %now
   Then we return error "short to" with subs:
-  | short |*
-  | $300  |
+  | short | avail |*
+  | $300  |  $100 |
 
 Scenario: A cashier asks to pay self
   When agent "C:A" asks device "devC" to charge ".ZZC,ccC" $300 for "cash": "cash out" at %now

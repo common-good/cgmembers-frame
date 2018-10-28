@@ -52,7 +52,7 @@ function formInvoices_submit($form, &$sta) {
  */
 function invoiceList($toMe, $starting, $ending, $states, $url, $download) {
 
-  $headHelp = t('Invoice number,Date invoice was created,Who sent you the invoice,What is the the invoice for,Total invoice amount,Click a symbol to approve or deny an invoice');
+  $headHelp = t('Invoice number,Date invoice was created,Who sent you the invoice,What is the the invoice for,Total invoice amount,Click a row to change an invoice\'s status');
   $classes = ray('nvid date name purpose amount buttons');
   $headers = t('Inv#,Date,Name,Purpose,Amount,Status');
   $headHelp = array_combine($classes, ray($headHelp));
@@ -106,7 +106,7 @@ EOF;
 //      $button3 = '';
       $statuses = ray(TX_STATUSES);
       $data = unserialize($data);
-      $status = ucfirst($statuses[$status0 = $status]);
+      $status = $status1 = ucfirst($statuses[$status0 = $status]);
 //      $status = $status == TX_DENIED ? w\doLnk('reason', $statuses[$status], '', ray('title', t('Why: ') . @$data['whyNot'])) : ucfirst($statuses[$status]);
       $status = $status0 == TX_DENIED ? tags('a', w\popHelp($status, t('Reason: ') . @$data['whyNot'])) : $status;
     }
@@ -114,7 +114,10 @@ EOF;
 //    $buttons = "<div class='txs-buttons'><div>$button1</div><div>$button2</div><div>$status</div></div>";
     $buttons = "<div class='txs-buttons'>$status</div>";
     
-    if (!@$download) $row[] = $buttons;
+    if (@$download) {
+      if ($status0 == TX_DENIED) $status1 .= tr(' (%whyNot)', 'whyNot', @$data['whyNot']);
+      $row[] = $status1;
+    } else $row[] = $buttons;
     $rows[] = $row;
   }
   if ($tx and $q->fetchAssoc()) say('transaction list truncated'); // there was more than we could show

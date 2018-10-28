@@ -57,6 +57,7 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE flow AMemberOverdrawsWithNotEnoughToDrawOn
  *     MAKE gift AMemberDonates
  *     MAKE gift AMemberMakesARecurringDonation
+ *     MAKE gift ACompanyMakesARecurringDonation
  *     MAKE gift AMemberDonatesWithInsufficientFunds
  *     MAKE invest AMemberJoinsTheInvestmentClub
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
@@ -233,6 +234,7 @@ function members($list) {return t\members($list);}
  *     TEST flow AMemberDrawsAgain
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
+ *     TEST gift ACompanyMakesARecurringDonation
  *     MAKE invoice Setup
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberApprovesAnInvoiceToATrustingCustomer
@@ -328,6 +330,7 @@ function weSayWithSubs($type, $index, $subs) {
  *     TEST edittx ABuyerChangesTheGoodsStatus
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
+ *     TEST gift ACompanyMakesARecurringDonation
  *     TEST gift AMemberDonatesWithInsufficientFunds
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST membership AMemberSignsInForTheFirstTime

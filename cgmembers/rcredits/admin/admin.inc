@@ -848,7 +848,7 @@ function callDetails($type = '', $when = '') {
   if ($setup) {
     if ($info = db\get('reid,code', 'r_relations', 'other=:myid AND :IS_CUSTOMER', ['myid' => $mya->id])) {
       $_how = t('using <%a>this link</a>', '_a', w\atag(tr('%BASE_URL/signup/reid=%reid&customer=%code', $info)));
-    } else $_how = t('by signing in at %CG_DOMAIN with account ID "%acct" (then click "Sign-in problems" if you don\'t remember your password)', 'acct', $mya->mainQid);
+    } else $_how = t('by signing in at %CG_DOMAIN with account ID "%acct" (then click "Forgot password?" if you don\'t remember your password)', 'acct', $mya->mainQid);
     $email .= t('<p>Or you can complete the account on your own, %how. But please feel free to ask for help if you run into any problems at all.</p>', compact('_how'));
   } else $email .= t('<p>Here are the questions and information we have for you:</p>');
   

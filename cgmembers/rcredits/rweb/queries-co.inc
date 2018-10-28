@@ -14,9 +14,14 @@ use CG\Util as u;
 
 $name = u\sqlSerialValue('r.data', 2); // used in Customers query
 $phone = u\sqlSerialValue('r.data', 6);
+$nosearch = '<p class="small">* = information an account-holder has chosen not to share with you.</p>';
  
 $queries = [
-  t('Customers') =>
+  t('Customers') => 'customers' . t('~<p>A list of your customers (anyone who has paid you). Click an account code for a customer statement.</p>') . $nosearch,
+
+  t('Vendors') => 'vendors' . t('~<p>A list of your vendors (anyone you have paid). Click an account code for a payment and billing history.</p>') . $nosearch,
+  
+  t('%PROJECT Members You Signed Up') =>
   "SELECT IFNULL(uid, (SELECT uid FROM users WHERE fullName=$name)) AS account,
     code AS customer, IFNULL(fullName, $name) AS name, IF(u.activated, '', $phone) AS phone,
     FROM_UNIXTIME(r.created, '%m/%d/%Y') AS created,

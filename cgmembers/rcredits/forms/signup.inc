@@ -135,7 +135,7 @@ EOF
   
   $contactDefaults = compact(ray($contactDefaults));
   $contactFlds = w\contactFields($contactDefaults + ray('country state state2', @$country ?: @$hidCountry, @$state ?: @$hidState, @$state2 ?: @$hidState2), TRUE, @$myid0);
-  $nameAndEmail = w\nameAndEmail($personal ? t('Full name') : t('Company'), @$fullName, @$email, isset($contactFlds['partner']), @$myid0);
+  $nameAndEmail = w\nameAndEmail(!$personal, @$fullName, @$email, isset($contactFlds['partner']), @$myid0);
 
   $form = compact(ray('title forother subtext acctType'))
     + $nameAndEmail + $contactFlds + w\ssnFields($personal)

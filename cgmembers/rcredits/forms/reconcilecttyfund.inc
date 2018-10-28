@@ -59,16 +59,6 @@ function formReconcileCttyFund_validate($form, &$sta) {
 function formReconcileCttyFund_submit($form, &$sta) {
   global $mya;
 
-  if (!db\exists('r_usd', 'bankTxId<>0')) { // one-time setup
-  	$tot = -8045;
-	  db\q('UPDATE r_usd SET bankTxId=0; TRUNCATE r_usd2;'); // debug(
-	  db\q('UPDATE r_usd SET bankTxId=:bxid WHERE deposit<:y2015', ray('bxid y2015', bankTxId('13265328601201412310000001'), strtotime('1/1/2015')));
-	} elseif(db\exists('r_usd', 'bankTxId<>0 AND deposit>1489550400')) {
-		$tot = 59080.04;
-    db\q('UPDATE r_usd SET bankTxId=0 WHERE deposit>1489550400');
-		db\q('DELETE FROM r_usd2 WHERE id>49');
-	} else $tot = 113788.57;
-
   //select sum(amount) from r_usd where deposit<1420088400
 	extract(just('bankId acctId dtStart dtEnd balAmt dtAsOf txs', $sta['input']));
 	$txKs = ray(OFX_TX_FLDS);
@@ -94,15 +84,11 @@ function formReconcileCttyFund_submit($form, &$sta) {
     
 		$where = 'bankTxId<>0';
   	$bal = db\sum('amount', 'r_usd', $where) + db\sum('amount', 'r_usd2', $where);
-    // $errs[] = ("before amt=$trnAmt ($dtPosted): bal=$bal tot=$tot" . (round($bal - $tot) == 0 ? '' : ' DIFFERENT!'));
-	  $tot += $trnAmt;
-
 
 		$bankTxId = bankTxId($fitId);
 		$table = '(SELECT bankTxId FROM r_usd UNION SELECT bankTxId FROM r_usd2) s';
 //    $table = '(SELECT amount,bankTxId,deposit FROM r_usd UNION SELECT amount,bankTxId,completed AS deposit FROM r_usd2) t';
 		if (db\exists($table, compact('bankTxId'))) { // already reconciled
-      $tot -= $trnAmt; 
       unset($txs[$t]);
 //       $errs[] = "Tx $fitId already done.";
       continue;
@@ -114,7 +100,6 @@ function formReconcileCttyFund_submit($form, &$sta) {
 			continue;
 		} elseif (!in($trnType, 'DEP DIRECTDEP DEBIT')) {
       $errs[] = t('Bad type in OFX file -- ') . $txDesc[$fitId]; 
-      $tot -= $trnAmt;
       $ofxOnly += $trnAmt;
       unset($txs[$t]);
       continue;
@@ -153,7 +138,6 @@ function formReconcileCttyFund_submit($form, &$sta) {
     } else {
       $errs[] = tr(str_replace(':', '%', $where), $subs);
       $errs[] = t('OFX file shows a transaction with no matching batch -- ') . $txDesc[$fitId];
-      $tot -= $trnAmt;
       $ofxOnly += $trnAmt;
     }
     $where = tr(str_replace(':', '%', $where), $subs);
