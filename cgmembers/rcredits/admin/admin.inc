@@ -50,7 +50,7 @@ function setupBasicAccounts() {
   $values = array(1, 0, 'admin', t('System Administrator'), r\regionField('email'), '', 0, 0, 0, u\bit([B_ADMIN, B_CO]));
   $info = array_combine($keys, $values);
   $a1 = new r\Acct($info); // set up system admin record (uid=1)
-  /*if (isDEV)*/ $a1->update('pw2 vKeyPw', r\passHash(DEV_PW2), u\b64decode(DEV_VKEYPW));
+  $a1->update('pw2 vKeyPw', r\passHash(DEV_PW2), u\b64decode(DEV_VKEYPW));
 
   foreach (ray(t('2:PlaceHolder One,3:PlaceHolder Two')) as $k => $v) {
     $name = str_replace(' ', '', strtolower($v));

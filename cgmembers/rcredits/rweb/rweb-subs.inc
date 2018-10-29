@@ -865,9 +865,6 @@ function sanitizePage($page) {
     '(href|src|style)=(&quot;|&amp;)', // our tests output stuff like this
   ]);
 
-  echo '<br>';
-  print_r(preg_replace("~$except~", '', '<img src="http://localhost/cgmembers">'));
-  echo '<br>';
   $page = preg_replace("~$except~", '', $page);
 //  return;
   if ($tags = preg_match(FORBID_TAGS, $page, $matches) or preg_match(FORBID_ATTRS, $page, $matches)) {

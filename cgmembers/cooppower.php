@@ -19,7 +19,6 @@ if (array_key_exists('stage', $config)) {
 } else {
   die('There is no configuration file ../config/config.json');
 }
-/* define('isDEV', in_array($_SERVER['SERVER_ADDR'], ['::1', '127.0.0.1'])); // developing */
 
 extract($_GET);
 
@@ -34,8 +33,8 @@ list ($address, $city, $state, $zip) = [@$m_street, @$m_city, @$m_state, @$m_zip
 foreach (['state', 'state2'] as $k) $$k = strtoupper(@$$k); // convert states to uppercase
 
 list ($partner, $partnerCode, $action) = isDEV 
-? ['NEWAAB', '1495kJHm0h145PHh2345h', 'http://localhost/cgMembers/signup'] 
-: ['NEWAIL', '5aCnXTQvwRoqKu3YGUvp', 'signup'];
+  ? ['NEWAAB', '1495kJHm0h145PHh2345h', 'signup'] 
+  : ['NEWAIL', '5aCnXTQvwRoqKu3YGUvp', 'signup'];
 $customer = @$m_number;
 $autopay = TRUE;
 
@@ -45,25 +44,25 @@ $guts = '';
 foreach ($fields as $k) {
   $v = htmlspecialchars($$k);
   $guts .= <<<EOF
-  <input type="hidden" name="$k" value="$v" />\n
-EOF;
-  }
+    <input type="hidden" name="$k" value="$v" />\n
+    EOF;
+}
 
 /**/  echo <<<EOF
 <html style="height:100%; width:100%; display:table;">
-<body style="display:table-cell; text-align:center; vertical-align:middle;">
+  <body style="display:table-cell; text-align:center; vertical-align:middle;">
   <div style="border:2px solid darkgreen; color:darkblue; font-family:Arial; width:200px; height:100px; margin:auto; padding:10px;">
-Redirecting to CommonGood.earth...<br><br>
-<form id="theform" action="$action" method="POST">
+  Redirecting to CommonGood.earth...<br><br>
+  <form id="theform" action="$action" method="POST">
   $guts
   <input type="submit" value="Redirect NOW" />
-</form>
+  </form>
 
   </div>
-</body>
-<script>document.getElementById('theform').submit();</script>
-</html>
-EOF;
+  </body>
+  <script>document.getElementById('theform').submit();</script>
+  </html>
+  EOF;
 
 
 exit();

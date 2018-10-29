@@ -4,7 +4,6 @@
  * Set general environment and operational settings
  * Also used by /do.php, for no-sign-in database changes
  */
-
 strip($_POST); strip($_GET); // No HTML input EVER (unless encoded in a way we expect)
  
 global $base_url, $base_path, $base_root, $styleNonce;
@@ -19,10 +18,10 @@ require __DIR__ . '/defs.inc';
 /* echo '<br>BASE_URL='; print_r(BASE_URL); */
 /* echo '<br>R_PATH='; print_r(R_PATH); */
 /* echo '<br>__DIR__='; print_r(__DIR__); */
+/* /\* echo '<br>'; *\/ */
+/* /\* echo '<br>'; *\/ */
 /* echo '<br>'; */
-/* echo '<br>'; */
-/* echo '<br>'; */
-/* echo '<br>'; */
+/* /\* die('here'); *\/ */
 
 set_error_handler('_drupal_error_handler');
 timer_start('page');
@@ -32,7 +31,7 @@ if (NOT_PRODUCTION) {
 }
 
 $uri = 'I' . $_SERVER['REQUEST_URI']; // handle scanned rCard URIs
-/*if (isDEV)*/ $uri = str_replace(ROOT_URI . '/', '/', $uri);
+/*if (isDEV) $uri = str_replace(ROOT_URI . '/', '/', $uri); */
 $_SERVER['REQUEST_URI'] = $_GET['q'] = preg_match('~^I/[A-Z]+[\.-]~', $uri) ? $uri : \request_path();
     
 $secrets = (array) json_decode(utf8_encode(file_get_contents(dirname($_SERVER['DOCUMENT_ROOT']) . '/cg.cnf')));
