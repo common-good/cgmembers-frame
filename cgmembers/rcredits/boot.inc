@@ -4,6 +4,7 @@
  * Set general environment and operational settings
  * Also used by /do.php, for no-sign-in database changes
  */
+
 strip($_POST); strip($_GET); // No HTML input EVER (unless encoded in a way we expect)
  
 global $base_url, $base_path, $base_root, $styleNonce;
@@ -13,16 +14,6 @@ global $cookie_domain, $conf, $is_https, $base_secure_url, $base_insecure_url;
 
 require __DIR__ . '/defs.inc';
 
-/* echo '<br>DRUPAL_ROOT='; print_r(DRUPAL_ROOT); */
-/* echo '<br>$base_url='; print_r($base_url); */
-/* echo '<br>BASE_URL='; print_r(BASE_URL); */
-/* echo '<br>R_PATH='; print_r(R_PATH); */
-/* echo '<br>__DIR__='; print_r(__DIR__); */
-/* /\* echo '<br>'; *\/ */
-/* /\* echo '<br>'; *\/ */
-/* echo '<br>'; */
-/* /\* die('here'); *\/ */
-
 set_error_handler('_drupal_error_handler');
 timer_start('page');
 if (NOT_PRODUCTION) {
@@ -31,7 +22,6 @@ if (NOT_PRODUCTION) {
 }
 
 $uri = 'I' . $_SERVER['REQUEST_URI']; // handle scanned rCard URIs
-/*if (isDEV) $uri = str_replace(ROOT_URI . '/', '/', $uri); */
 $_SERVER['REQUEST_URI'] = $_GET['q'] = preg_match('~^I/[A-Z]+[\.-]~', $uri) ? $uri : \request_path();
     
 $secrets = (array) json_decode(utf8_encode(file_get_contents(dirname($_SERVER['DOCUMENT_ROOT']) . '/cg.cnf')));
@@ -82,7 +72,7 @@ define('SESSION_LIFE', (@$_COOKIE['pkv'] or @$_POST['pkv']) ? 12 * HOUR_SECS : 2
 ini_set('session.gc_maxlifetime', SESSION_LIFE); // session timeout (and garbage collection happens)
 ini_set('session.cookie_lifetime', 0); // SESSION_LIFE); // (drupal doesn't refresh the cookie)
 
-if (NOT_PRODUCTION) {
+if (isDEV or NOT_PRODUCTION) {
   error_reporting(E_ALL);
   ini_set('display_errors', TRUE);
   ini_set('display_startup_errors', TRUE);

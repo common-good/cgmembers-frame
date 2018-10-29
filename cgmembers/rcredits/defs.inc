@@ -57,9 +57,6 @@ define('DEV_ONLY_MSG', 'only on development machine');
 
 $host = strtolower(@$_SERVER['HTTP_HOST']);
 if (!isDEV) if (strlen($host) > 30 or !preg_match('/^\[?([a-zA-Z0-9-:\]_]+\.?)+$/', $host)) {header('HTTP 400 Bad Request'); exit();}
-/* $protocol = isDEV ? 'http://' : 'https://'; */
-/* $base_url = $protocol . $host . (isDEV ? DEV_ROOT : ''); // NO trailing slash! */
-//$base_url = $protocol . $host . (isDEV ? DEV_ROOT : '') . '/rcredits'; // NO trailing slash!
 define('BASE_URL', $base_url);
 //define('R_PATH', '/sites/all/modules/rcredits');
 define('R_PATH', '/rcredits');

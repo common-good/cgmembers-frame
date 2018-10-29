@@ -7,7 +7,7 @@
  * Copy this to the web root.
  */
 
-$config = (array) json_decode(utf8_encode(file_get_contents("../config/config.json")));
+$config = (array) json_decode(utf8_encode(file_get_contents(__DIR__ . "/../config/config.json")));
 if (array_key_exists('stage', $config)) {
   define('isDEV', $config['stage'] == 'development');
   define('isSTAGE', $config['stage'] == 'staging');
@@ -32,8 +32,8 @@ list ($address2, $city2, $state2, $zip2) = [@$street, @$city, @$state, @$zip]; /
 list ($address, $city, $state, $zip) = [@$m_street, @$m_city, @$m_state, @$m_zip]; // physical address
 foreach (['state', 'state2'] as $k) $$k = strtoupper(@$$k); // convert states to uppercase
 
-list ($partner, $partnerCode, $action) = isDEV 
-  ? ['NEWAAB', '1495kJHm0h145PHh2345h', 'signup'] 
+list ($partner, $partnerCode, $action) = isDEV
+  ? ['NEWAAB', '1495kJHm0h145PHh2345h', 'signup']
   : ['NEWAIL', '5aCnXTQvwRoqKu3YGUvp', 'signup'];
 $customer = @$m_number;
 $autopay = TRUE;
@@ -45,7 +45,7 @@ foreach ($fields as $k) {
   $v = htmlspecialchars($$k);
   $guts .= <<<EOF
     <input type="hidden" name="$k" value="$v" />\n
-    EOF;
+EOF;
 }
 
 /**/  echo <<<EOF
@@ -62,7 +62,7 @@ foreach ($fields as $k) {
   </body>
   <script>document.getElementById('theform').submit();</script>
   </html>
-  EOF;
+EOF;
 
 
 exit();

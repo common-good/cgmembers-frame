@@ -836,7 +836,6 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
   
     if (!@$form['confirm']) $form += which(); // add the choices popup form, if any
     if (!$specialForm) {
-      /* $tree = explode('/', 'home/' . str_replace(DEV_ROOT, '', $_SERVER['REQUEST_URI'])); */
       $tree = explode('/', $_SERVER['REQUEST_URI']);
       $crumbs = [];
       foreach ($tree as $k) if (preg_match('/^[a-z\-]+(\?|$)/', $k)) $crumbs[ucwords($k)] = $kk = isset($kk) ? "$kk/$k" : '';
@@ -861,7 +860,7 @@ function sanitizePage($page) {
   $except = join('|', [
     '<img src="' . BASE_URL, 
     '<iframe src="(' . str_replace(' ', '|', FRAME_SOURCES) . ')',
-    'href="(mailto:|http|#|/|"|sadmin|../)',
+    'href="(mailto:|http|#|/|"|sadmin)',
     '(href|src|style)=(&quot;|&amp;)', // our tests output stuff like this
   ]);
 
@@ -869,13 +868,7 @@ function sanitizePage($page) {
 //  return;
   if ($tags = preg_match(FORBID_TAGS, $page, $matches) or preg_match(FORBID_ATTRS, $page, $matches)) {
 /**/ $msg = t('Page has a forbidden HTML %thing: %what', 'thing what', $tags ? t('tag') : t('attribute'), print_r($matches, 1));
-    /**/ if (isDEV) {
-      /* print_r($page); */
-      echo '<br>';
-      print_r($matches);
-      echo '<br>';
-      die($msg);
-    }
+    /**/ if (isDEV) die($msg);
      if (isPRODUCTION) w\hack($msg);
 /**/ die($msg);
   }
@@ -1256,7 +1249,7 @@ EOF; */
  * @return: the button html
  */
 function goButton($label, $goto, $title) {
-  $gotoHead = ''; // isDEV ? DEV_ROOT : '';
+  $gotoHead = '';
   $name = str_replace('/', '_', $goto);
   return array($name => fld('item', '', '', button($label, "$gotoHead/$goto", $title)));
 }
