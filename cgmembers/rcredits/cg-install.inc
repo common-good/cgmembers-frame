@@ -810,7 +810,7 @@ function rebuildDb() {
       $previous = '';
       foreach ($scheme['fields'] as $field => $spec) {
         $spec = specString($spec);
-        $pos = $previous ? "AFTER `$previous`" : 'FIRST';
+        $pos = $previous === '' ?  'FIRST' : "AFTER `$previous`";
         $do = db\hasCol($table, $field) ? "CHANGE `$field`" : 'ADD';
         db\q("ALTER TABLE $table $do `$field` $spec $pos");
         $previous = $field;

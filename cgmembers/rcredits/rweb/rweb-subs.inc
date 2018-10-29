@@ -255,7 +255,7 @@ $GLOBALS['tStrings']['flooded'] = $GLOBALS['tStrings']['bad login'];
  */
 function go($page, $msg = '', $field = '') {
   global $base_url;
-  global $lastGo, $x0lastGo; list ($xlastGo, $lastGo) = [@$lastGo, $page]; // for testing
+  global $lastGo, $xlastGo; list ($xlastGo, $lastGo) = [@$lastGo, $page]; // for testing
 
   if ($msg) {
 /*    if (u\starts($page, 'empty')) {

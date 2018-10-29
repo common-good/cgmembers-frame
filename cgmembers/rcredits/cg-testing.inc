@@ -1053,7 +1053,7 @@ function pageForm($page, $msg = '', $field = '') {
       : ($result == MENU_ACCESS_DENIED ? 'access error' : "error #$result");
     t\output("page \"$page\": $result in t\\pageForm()");
   } elseif (@$lastGo == $xlastGo) setFormOut($result);
-
+  
   return $formArray;
 }
 
