@@ -5,7 +5,7 @@ SO I can support local initiatives and get a return on my savings.
  
 Setup:
   Given members:
-  | id   | fullName | floor | flags                     | state |*
+  | uid  | fullName | floor | flags                     | state |*
   | .ZZA | Abe One  |  -250 | ok,confirmed,debt,icadmin |    MA |
   | .ZZB | Bea Two  |  -250 | ok,confirmed,debt,icadmin |    MA |
   | .ZZC | Our Pub  |     0 | ok,confirmed,co         	|    MA |

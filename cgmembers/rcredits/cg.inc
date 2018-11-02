@@ -817,6 +817,7 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
   // r_countries
     'r_coupated:uid',
     'r_coupons:fromId',
+	'r_criteria:ctty:D',
     'r_do:uid:D',
     'r_events:ctty',
     'r_gifts:uid:D',
@@ -841,8 +842,8 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     'r_proxies:proxy:D',
   // r_questions
     'r_ratings:uid',
-		'r_recurs:payer:D',
-		'r_recurs:payee:D',
+	'r_recurs:payer:D',
+	'r_recurs:payee:D',
   // r_regions
     'r_relations:main:D',
     'r_relations:other:D',

@@ -8,18 +8,18 @@ Summary:
   
 Setup:
   Given members:
-  | id   | fullName   | email | city  | state | cc  | cc2  | rebate | flags      |*
+  | uid  | fullName   | email | city  | state | cc  | cc2  | rebate | flags      |*
   | .ZZA | Abe One    | a@    | Atown | AK    | ccA | ccA2 |      5 | ok         |
   | .ZZB | Bea Two    | b@    | Btown | UT    | ccB | ccB2 |      5 | ok         |
   | .ZZC | Corner Pub | c@    | Ctown | CA    | ccC |      |      5 | ok,co      |
   And devices:
-  | id   | code |*
+  | uid  | code |*
   | .ZZC | devC |
   And selling:
-  | id   | selling         |*
+  | uid  | selling         |*
   | .ZZC | this,that,other |
   And company flags:
-  | id   | coFlags      |*
+  | uid  | coFlags      |*
   | .ZZC | refund,r4usd |
   And relations:
   | main | agent | num | permission | rCard |*

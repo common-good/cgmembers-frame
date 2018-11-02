@@ -5,10 +5,10 @@ SO I can enjoy the rCredit system's rapid growth and be a part of that.
 
 Setup:
   Given members:
-  | id   | fullName   | address | city  | state | zip   | country | postalAddr | flags               | risks   |*
+  | uid  | fullName   | address | city  | state | zip   | country | postalAddr | flags               | risks   |*
   | .ZZA | Abe One    | 1 A St. | Atown | AK    | 01000 | US      | 1 A, A, AK | ok,confirmed,bankOk | hasBank |
   And balances:
-  | id   | balance | floor |*
+  | uid  | balance | floor |*
   | cgf  |       0 |     0 |
   | .ZZA |     100 |   -20 |
 
@@ -96,7 +96,7 @@ Scenario: A recurring donation cannot be completed
 
 Scenario: A non-member chooses a donation
   Given members:
-  | id   | fullName | flags  | risks   | activated | balance |*
+  | uid  | fullName | flags  | risks   | activated | balance |*
   | .ZZD | Dee Four |        | hasBank |         0 |       0 |
   | .ZZE | Eve Five | refill | hasBank | %today-9m |     200 |
   And these "recurs":
@@ -110,7 +110,7 @@ Scenario: A non-member chooses a donation
 	
 Scenario: It's time to warn about an upcoming annual donation
   Given members:
-  | id   | fullName | flags  | risks   | activated               |*
+  | uid  | fullName | flags  | risks   | activated               |*
   | .ZZD | Dee Four | ok     | hasBank | %today-1y               |
   | .ZZE | Eve Five | ok     | hasBank | %(%today-1y+7*DAY_SECS) |
   And these "recurs":

@@ -8,7 +8,7 @@ SO my company can sell stuff, give refunds, and trade rCredits for US Dollars.
 
 Setup:
   Given members:
-  | id   | fullName   | email | cc  | cc2  | floor | flags             | helper |*
+  | uid  | fullName   | email | cc  | cc2  | floor | flags             | helper |*
   | .ZZA | Abe One    | a@    | ccA | ccA2 |  -250 | ok,confirmed,debt | 0      |
   | .ZZB | Bea Two    | b@    | ccB | ccB2 |  -250 | ok,confirmed,debt | 0      |
   | .ZZC | Corner Pub | c@    | ccC |      |     0 | ok,co,confirmed   | .ZZA   |
@@ -16,13 +16,13 @@ Setup:
   | .ZZE | Eve Five   | e@    | ccE | ccE2 |  -250 | ok,secret,roundup,debt | .ZZD   |
   | .ZZF | Far Co     | f@    | ccF |      |     0 | ok,co,confirmed   | 0      |
   And devices:
-  | id   | code |*
+  | uid  | code |*
   | .ZZC | devC |
   And selling:
-  | id   | selling         |*
+  | uid  | selling         |*
   | .ZZC | this,that,other |
   And company flags:
-  | id   | coFlags      |*
+  | uid  | coFlags      |*
   | .ZZC | refund,r4usd |
   And relations:
   | main | agent | num | permission |*
@@ -38,7 +38,7 @@ Setup:
   | 4   | %today-6m | signup |    250 | ctty | .ZZE | signup  |
   | 5   | %today-6m | grant  |    250 | ctty | .ZZF | stuff   |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | ctty |    -500 |
   | .ZZA |       0 |
   | .ZZB |       0 |
@@ -66,7 +66,7 @@ Scenario: A cashier asks to charge someone
   | created | fullName | otherName  | amount | payerPurpose |*
   | %today  | Bea Two  | Corner Pub | $100   | food         |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | ctty |    -500 |
   | .ZZA |       0 |
   | .ZZB |    -100 |
@@ -87,7 +87,7 @@ Scenario: A cashier asks to refund someone
   | created | fullName | otherName  | amount | payerPurpose |*
   | %today  | Bea Two  | Corner Pub | $100   | food         |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | ctty |    -500 |
   | .ZZA |       0 |
   | .ZZB |     100 |

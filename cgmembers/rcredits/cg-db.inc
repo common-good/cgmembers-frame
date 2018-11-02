@@ -48,7 +48,7 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
  * @param assoc $subs: optional substitutions -- keys will be prefixed by ':'
  * @return: the value of what was looked up -- an assoc of values if a list of fields was requested
  *   FALSE if none
- * @see also: db\records()
+ * @see also: db\rows()
  */
 function get($fieldName, $table, $where = '1', $subs = []) {
   u\EXPECT(compact(ray('fieldName table where subs')), 'notempty notempty notempty assoc');
@@ -122,7 +122,7 @@ function insert($table, $info) {return db\update($table, $info, '');}
  * Return an array of record objects.
  * @param string $fields: comma-separated list of fields (actual or calculated) -- use * for all
  */
-function records($fields, $table, $where = '1', $subs = []) {
+function rows($fields, $table, $where = '1', $subs = []) {
   return db\q("SELECT $fields FROM $table WHERE $where", $subs)->fetchAll(); // fetchAll means fetchAllObject
 }
 

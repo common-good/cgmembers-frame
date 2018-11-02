@@ -5,7 +5,7 @@ SO I can support the Common Good System and be supported by it.
 
 Setup:
   Given members:
-  | id   | fullName   | floor | acctType    | flags       | rebate | crumbs | city |*
+  | uid  | fullName   | floor | acctType    | flags       | rebate | crumbs | city |*
   | .ZZA | Abe One    | -500  | personal    | ok,roundup  |      5 |      0 | Avil |
   | .ZZB | Bea Two    | -500  | personal    | ok,co       |     10 |      0 | Bvil |
   | .ZZC | Corner Pub | -500  | corporation | ok,co,paper |     10 |   0.02 | Cvil |
@@ -20,7 +20,7 @@ Setup:
   | .ZZB  |    100 | %today-2m |  
   | .ZZC  |    300 | %today-2m |  
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |     400 |
   | .ZZB |     100 |
   | .ZZC |     300 |
@@ -28,7 +28,7 @@ Setup:
   | xid | created   | type     | amount | from | to   | purpose |*
   |   4 | %today-9d | transfer |     10 | .ZZB | .ZZA | cash E  |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |     410 |
   | .ZZB |      90 |
   | .ZZC |     300 |
@@ -36,7 +36,7 @@ Setup:
   | xid | created   | type     | amount | from | to   | purpose |*
   |   5 | %today-8d | transfer |    100 | .ZZC | .ZZA | usd F   |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |     510 |
   | .ZZB |      90 |
   | .ZZC |     200 |
@@ -45,7 +45,7 @@ Setup:
   |   6 | %today-7d | transfer | 240.01 | .ZZA | .ZZB | what G  |
   # pennies here and below, to trigger roundup contribution
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |  269.99 |
   | .ZZB |  330.01 |
   | .ZZC |  200.00 |
@@ -53,7 +53,7 @@ Setup:
   | xid | created   | type     | amount | from | to   | purpose |*
   |   7 | %today-6d | transfer |  99.99 | .ZZA | .ZZB | pie N   |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |     170 |
   | .ZZB |     430 |
   | .ZZC |     200 |
@@ -61,7 +61,7 @@ Setup:
   | xid | created   | type     | amount | from | to   | purpose |*
   |   8 | %today-5d | transfer |    100 | .ZZC | .ZZA | labor M |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |     270 |
   | .ZZB |     430 |
   | .ZZC |     100 |
@@ -69,7 +69,7 @@ Setup:
   | xid | created   | type     | amount | from | to   | purpose |*
   |   9 | %today-4d | transfer |     50 | .ZZB | .ZZC | cash P  |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |     270 |
   | .ZZB |     380 |
   | .ZZC |     150 |
@@ -78,7 +78,7 @@ Setup:
   | xid | created   | type     | amount | from | to   | purpose |*
   |  10 | %today-3d | transfer |    120 | .ZZA | .ZZC | this Q  |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |     150 |
   | .ZZB |     380 |
   | .ZZC |     270 |
@@ -86,7 +86,7 @@ Setup:
   | xid | created   | type     | amount | from | to   | purpose |*
   |  11 | %today-1d | transfer |    100 |  .ZZA | .ZZB | cash V  |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |      50 |
   | .ZZB |     480 |
   | .ZZC |     270 |

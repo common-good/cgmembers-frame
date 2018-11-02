@@ -127,15 +127,14 @@ class Acct {
     return [$id, $agent];
   }
   
-  private static function getRecord($id, $reread = FALSE) {
-/// if (@self::$rs[$id] and !property_exists(self::$rs[$id], 'flags')) die("No flags field in record $id: " . print_r(self::$rs, 1)); // keep this
-    if (@self::$rs[$id] and !$reread) return self::$rs[$id];
-    if (!$records = db\records('*', 'users', "uid=:id LIMIT 1", compact('id'))) { // no such record here
+  private static function getRecord($uid, $reread = FALSE) {
+    if (@self::$rs[$uid] and !$reread) return self::$rs[$uid];
+    if (!$row = db\get('*', 'users', compact('uid'))) { // no such record here
       if (TRUE) return FALSE; // not foreign either
       // contact other server here, for a subset of the record
     }
 
-    return self::$rs[$id] = (object) $records[0];
+    return self::$rs[$uid] = (object) $row;
   }
 
   /**
@@ -225,7 +224,7 @@ class Acct {
     if ($field == 'hasPhoto') return db\exists('r_photos', 'uid=:id', ['id' => $a->id]);
     if ($field == 'photo') return ($result = db\get('photo', 'r_photos', 'uid=:id', ['id' => $a->id])) ? u\decry('H', $result) : '';
     if ($field == 'changes') {
-      $rows = db\records('*', 'r_changes', 'uid=:id', ['id' => $a->id]);
+      $rows = db\rows('*', 'r_changes', 'uid=:id', ['id' => $a->id]);
       foreach ($rows as $i => $row) {
 			  foreach (ray('oldValue newValue') as $k) if ($type = u\crypted($row->$k)) $rows[$i]->$k = u\decry($type, $row->$k);
 		  }
@@ -691,7 +690,7 @@ class Acct {
     $codeName = $a->proSe ? 'cardCode' : 'cardCode2';
     $code = $a->agentA->$codeName;
 //    $changes = $a->agentA->changes;
-    $changes = db\records('*', 'r_changes', 'uid=:id AND field=:fld AND created>:dt', ray('id fld dt', $a->agentId, $codeName,$created));
+    $changes = db\rows('*', 'r_changes', 'uid=:id AND field=:fld AND created>:dt', ray('id fld dt', $a->agentId, $codeName,$created));
 
     foreach ($changes as $ch) if (u\hash(str_replace($code, u\decry('S', $ch->oldValue), $wanted)) == $proof) return false;
 

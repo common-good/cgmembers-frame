@@ -5,7 +5,7 @@ SO I don't get forgotten and miss out on stuff.
 
 Setup:
   Given members:
-  | id   | fullName | email | flags   | access    | floor |*
+  | uid  | fullName | email | flags   | access    | floor |*
   | .ZZA | Abe One  | a@    |         | %today-1d |     0 |
   | .ZZB | Bea Two  | b@    |         | %today-2d |     0 |
   | .ZZD | Dee Four | d@    |         | %today-9d |     0 |
@@ -88,11 +88,11 @@ Scenario: A member gets a credit line
   | created   | type     | amount | from | to   | rebate | bonus | purpose |*
   | %today-1m | transfer |    300 | .ZZE | .ZZF |    500 |     0 | gift    |
   Then balances:
-  | id   | rewards |*
+  | uid  | rewards |*
   | .ZZE |     500 |
   When cron runs "tickle"
   Then members have:
-  | id   | floor |*
+  | uid  | floor |*
   | .ZZE |   -50 |
 Resume
 
@@ -109,11 +109,11 @@ Resume
 #  | %today-6m | transfer |    300 | .ZZE | .ZZF |   5000 |     0 | gift    |
 #  | %today-5m | transfer |   1500 | .ZZE | .ZZF |      0 |     0 | gift    |
 #  Then balances:
-#  | id   | rewards |*
+#  | uid  | rewards |*
 #  | .ZZE |    5000 |
 #  When cron runs "tickle"
 #  Then members have:
-#  | id   | floor |*
+#  | uid  | floor |*
 #  | .ZZE |  -300 |
 #  And we notice "new floor|no floor effect" to member ".ZZE" with subs:
 #  | limit |*
@@ -130,21 +130,21 @@ Resume
 #  | %today-5w | transfer |    300 | .ZZE | .ZZF | gift    |
 #  When cron runs "tickle"
 #  Then members have:
-#  | id   | floor |*
+#  | uid  | floor |*
 #  | .ZZE |     0 |
 
 Scenario: A member gets no new credit line because the change would be minimal
   Given balances:
-  | id   | rewards |*
+  | uid  | rewards |*
   | .ZZE | 500 |
   And members have:
-  | id   | floor |*
+  | uid  | floor |*
   | .ZZE |    49 |  
   And transactions:
   | created   | type     | amount | from | to   | purpose |*
   | %today-5w | transfer |    300 | .ZZE | .ZZF | gift    |
   When cron runs "tickle"
   Then members have:
-  | id   | floor |*
+  | uid  | floor |*
   | .ZZE |    49 |
   

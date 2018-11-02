@@ -6,7 +6,7 @@ SO I don't lose money or get confused.
 
 Setup:
   Given members:
-  | id   | fullName   |email | flags    |*
+  | uid  | fullName   |email | flags    |*
   | .ZZA | Abe One    | a@    | ok      |
   | .ZZB | Bea Two    | b@    | ok      |
   | .ZZC | Corner Pub | c@    | ok,co   |
@@ -14,23 +14,23 @@ Setup:
   | xid | created   | type       | amount | from | to   | purpose | taking |*
   |   1 | %today-6m | %TX_SIGNUP |      0 | ctty | .ZZA | signup  | 0      |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |       0 |
   | .ZZB |       0 |
 
 Scenario: Balances get out of whack
   Given balances:
-  | id     | balance |*
+  | uid    | balance |*
   | .ZZA   |       0 |
   | .ZZB   |      20 |
   When cron runs "recache"
   Then we tell admin "cache mismatch" with subs:
-  | id   | key     | is   | shouldBe |*
+  | uid  | key     | is   | shouldBe |*
 #   | .ZZA | balance |    0 |       10 |
 # NO  | .ZZA | rewards |    0 |       10 |
   | .ZZB | balance |   20 |        0 |
   And balances:
-  | id     | balance |*
+  | uid    | balance |*
   | .ZZA   |       0 |
   | .ZZB   |       0 |
 # (don't fix rewards)
@@ -45,10 +45,10 @@ Scenario: Balances get out of whack
   
 Scenario: Balances get a tiny bit out of whack
   Given balances:
-  | id     | balance |*
+  | uid    | balance |*
   | .ZZA   | 10.0001 |
   | .ZZB   |       0 |
   When cron runs "recache"
   Then we tell admin "cache mismatch" with subs:
-  | id   | key     | is      | shouldBe |*
+  | uid  | key     | is      | shouldBe |*
   | .ZZA | balance | 10.0001 |        0 |

@@ -8,14 +8,14 @@ SO I can pay less for stuff or treat a friend.
 
 Setup:
   Given members:
-  | id   | fullName   | floor | flags             |*
+  | uid  | fullName   | floor | flags             |*
   | .ZZA | Abe One    |  -250 | ok,confirmed,debt |
   | .ZZB | Bea Two    |  -250 | ok,confirmed,debt |
   | .ZZC | Corner Pub |  -250 | ok,confirmed,co   |  
 
 Scenario: A member redeems a gift coupon
   Given members have:
-  | id   | giftCoupons | created |*
+  | uid  | giftCoupons | created |*
   | .ZZC |           8 | 0039200 |
 # created determines 3-letter lowSecurity code (7AA), which is used in coupon code
   When member ".ZZC" completes form "community/coupons/type=gift" with values:
@@ -27,17 +27,17 @@ Scenario: A member redeems a gift coupon
 #  And member ".ZZC" visits page "community/coupons/print/type=gift&amount=10&ulimit=1&count=20", which results in:
 #  When member ".ZZC" visits page "community/coupons/print/type=gift&amount=10&count=20"
   And members have:
-  | id   | giftCoupons |*
+  | uid  | giftCoupons |*
   | .ZZC |          28 |
   When member ".ZZA" completes form "community/coupons/type=gift" with values:
   | type   | code          |*
   | redeem | DD7K CLJW EAI |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |      10 |
   | .ZZC |     -10 |
   And members have:
-  | id   | giftPot |*
+  | uid  | giftPot |*
   | .ZZA |      10 |
   When member ".ZZB" completes form "community/coupons/type=gift" with values:
   | type   | code          |*
@@ -62,7 +62,7 @@ Scenario: A member redeems a discount coupon for a dollar amount
   |   1 | %today  | transfer |    100 | .ZZA  | .ZZC | fun     |
   |   2 | %today  | transfer |    -12 | .ZZA  | .ZZC | rebate (discount coupon #1) |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |     -88 |
   | .ZZB |       0 |
   | .ZZC |      88 |
@@ -70,7 +70,7 @@ Scenario: A member redeems a discount coupon for a dollar amount
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 40     | fun     |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |    -128 |
   | .ZZC |     128 |
 
@@ -85,7 +85,7 @@ Scenario: A member redeems a discount coupon for a dollar amount
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 50     | fun     |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |     -44 |
   | .ZZB |       0 |
   | .ZZC |      44 |
@@ -93,7 +93,7 @@ Scenario: A member redeems a discount coupon for a dollar amount
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 50     | fun     |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |     -88 |
   | .ZZB |       0 |
   | .ZZC |      88 |
@@ -101,7 +101,7 @@ Scenario: A member redeems a discount coupon for a dollar amount
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 50     | fun     |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |    -138 |
   | .ZZB |       0 |
   | .ZZC |     138 |
@@ -109,7 +109,7 @@ Scenario: A member redeems a discount coupon for a dollar amount
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 50     | fun     |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |    -138 |
   | .ZZB |     -44 |
   | .ZZC |     182 |

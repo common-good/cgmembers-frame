@@ -5,7 +5,7 @@ SO I can handle those risks appropriately
 
 Setup:
   Given members:
-  | id   | fullName   | rebate | address | zip   | flags      | risks    | tenure | moves | share |*
+  | uid  | fullName   | rebate | address | zip   | flags      | risks    | tenure | moves | share |*
   | .ZZA | Abe One    |      5 | 1 A St. | 01001 | ok         | adminOk  | 21     | 0     |    10 |
   | .ZZB | Bea Two    |     10 | 2 A St. | 01001 | ok         | rents    | 43     | 1     |    20 |
   | .ZZC | Corner Pub |     10 | 3 C St. | 01003 | ok,co      | cashCo   | 18     |       |     1 |
@@ -74,14 +74,14 @@ Setup:
   |    5 | .ZZF  |   -600 | %today    |  
   |    6 | .ZZC  |   -500 | %today    |
   And member field values:
-  | id   | field      | value |*
+  | uid  | field      | value |*
   | .ZZA | community  |    -2 |
   | .ZZB | mediaConx  |    12 |
   | .ZZE | postalAddr | Box 5 |
 # don't set community to -2 until after transactions  
   When cron runs "trust"
   Then members have:
-  | id   | trust |*
+  | uid  | trust |*
   | .ZZA |  8.57 |
   | .ZZB |  8.57 |
   | .ZZD |  8.57 |
@@ -94,7 +94,7 @@ Setup:
 Scenario: We calculate risks
   When cron runs "acctRisk"
   Then members have:
-  | id   | risks |*
+  | uid  | risks |*
   | .ZZA | adminOk,trusted,geography,badConx,moreOut,big7Week |
   | .ZZB | trusted,socialConx,moves,rents,moreIn,moreOut |
   | .ZZC | cashCo,homeCo,miser,bigDay |

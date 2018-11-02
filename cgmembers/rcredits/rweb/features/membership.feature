@@ -7,7 +7,7 @@ SO I can participate actively.
 
 Setup:
   Given members:
-  | id  | fullName | phone | email | city  | state | zip | floor | flags  | pass      |*
+  | uid | fullName | phone | email | city  | state | zip | floor | flags  | pass      |*
   | .ZZA | Abe One |     1 | a@    | Atown | AK    | 01000      |     0 |        | %whatever |
   | .ZZB | Bea Two |     2 | b@    | Btown | UT    | 02000      |  -200 | member | |
   | .ZZC | Our Pub |     3 | c@    | Ctown | CA    | 03000      |     0 | co     | |
@@ -23,7 +23,7 @@ Scenario: A member signs in for the first time
   | fullName  | email | phone | country | zip | federalId | dob | acctType    | code | address | city    | state | tenure | owns | postalAddr                |*
   | Dee Four  | d@ | 413-253-0000 | US | 01002    | 123-45-6789 | 1/2/1993 | %CO_PERSONAL | c0D3 | 1 A St. | Amherst | MA    |     25 |    0 | 1 A St., Amherst, MA 01002 |
   Then members:
-  | id   | fullName | email   | country | zip | state | city    | flags     | tenure | risks | helper |*
+  | uid  | fullName | email   | country | zip | state | city    | flags     | tenure | risks | helper |*
   | .AAA | Dee Four | d@      | US      | 01002      | MA    | Amherst | confirmed |     25 | rents | .ZZA   |
   And we email "verify" to member "d@" with subs:
   | fullName | name    | quid    | site      | code      |*
@@ -77,7 +77,7 @@ Scenario: A member signs in for the first time
   Then we show "Photo ID Picture"
   And we say "status": "info saved|step completed"
 	And members have:
-	| id   | risks                |*
+	| uid  | risks                |*
 	| .AAA | hasBank,rents,ssnOff |
 
   When member ".AAA" completes form "settings/photo" with values:

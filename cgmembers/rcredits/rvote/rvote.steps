@@ -1,0 +1,77 @@
+<?php
+/**
+ * @file
+ *  Steps
+ *
+ * Provide step functions for functional testing.
+ * This file is created automatically by the Gherkin compiler.
+ *
+ * Note, therefore, that most of this file might be changed automatically
+ * when you run the compiler again. This @file header will not be affected,
+ * but all of the function header comments are (re)generated automatically.
+ *
+ * Be assured that no functions will be deleted and the compiler will
+ * not alter code within a function unless you make it look like a function header.
+ *
+ * You may also add statements just below this header (for example "use" and "require_once").
+ */
+
+use CG as r;
+use CG\DB as db;
+use CG\Testing as t;
+use CG\Util as u;
+use CG\Backend as be;
+use CG\Web as w;
+use CG\Vote as v;
+
+require_once __DIR__ . '/../defs.inc';
+
+if (basename($_SERVER['SCRIPT_FILENAME']) != 'compile.php') {
+  require_once __DIR__ . '/../cg.inc';
+  require_once __DIR__ . '/../cg-testing.inc';
+}
+
+/**
+ * Add additional setup for any or all features or tests
+ */
+function extraSetup() {
+  t\clear(TX_WEB);
+}
+
+function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, $info);}
+
+/**
+ * members: (ARG)
+ *
+ * in: MAKE grading Setup
+ */
+function members($list) {return t\members($list);}
+
+/**
+ * these (ARG): (ARG)
+ *
+ * in: MAKE grading Setup
+ *     TEST grading AMemberGradesAProposal
+ */
+function these($thing, $list) {return t\these($thing, $list);}
+
+/**
+ * member (ARG) visits page (ARG)
+ *
+ * in: MAKE grading AMemberGradesAProposal
+ */
+function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
+
+/**
+ * we show (ARG) with: (ARG)
+ *
+ * in: TEST grading AMemberGradesAProposal
+ */
+function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWith($title, $content, $debug);}
+
+/**
+ * member (ARG) completes form (ARG) with values: (ARG)
+ *
+ * in: MAKE grading AMemberGradesAProposal
+ */
+function memberCompletesFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values);}

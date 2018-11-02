@@ -957,6 +957,32 @@ function giftsToDate() {
   return u\unite($total, $x, ', ');
 }
 
+function makeCriteria() {
+  db\q('TRUNCATE r_criteria');
+  $criteria = [
+    t('How well does the project support our %PROJECT community investment priorities?') => 15,
+	  t('How well does the project promote systemic change?') => 15,
+    t('Overall, how clearly doable is the project?') => 15,
+    t('How competent is the project team to manage the project and funds effectively?') => 10,
+    t('How able is the project team to implement the project with less funding than requested?') => 5,
+    t('How useful is the project\'s evaluation plan?') => 5,
+	  t('How quickly, surely, and voluminously will the project bring funds back into our %PROJECT Community Dollar Pool?') => 10,
+    t('How close is the request to the ideal amount (%idealAmt)?') => 5,
+    t('What fraction of the total project budget is this funding request? (50% is ideal)') => 5,
+    t('How much of the total project budget has been raised/committed so far? (half is ideal)?') => 5,
+    t('How soon does the project begin? (soon after funding is best)') => 2.5,
+    t('How soon does the project end? (soon after funding is best)') => 2.5,
+    t('How local is the project?') => 2.5,
+    t('%PROJECT member sponsorship of the project.') => 2.5,
+  ];
+  
+  $id = 1;
+  foreach($criteria as $text => $points) {
+    $auto = $id < 8 ? 0 : 1;
+    db\insert('r_criteria', compact(ray('text points auto id')));
+    $id++;
+  }
+}
 /*
 to find orphaned customers
 

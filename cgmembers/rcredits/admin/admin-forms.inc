@@ -606,7 +606,7 @@ function formDeposits($form, &$sta, $deposit = 0) {
     SUM(IF(amount<0, 1, 0)) AS countOut,
     SUM(IF(amount>0, 1, 0)) AS countIn
 EOF;
-  $res = db\records($fields, 'r_usd', "deposit=$deposit AND amount<>0 AND created<=:NOW");
+  $res = db\rows($fields, 'r_usd', "deposit=$deposit AND amount<>0 AND created<=:NOW"); // fails for db\get
 //  if ($res[0]) {
   extract((array) $res[0]);
   foreach (ray('amountIn amountOut') as $k) $$k = u\fmtAmt($$k);
@@ -852,11 +852,15 @@ function printChecks($args) {
  * Print an ID card
  * @param mixed $id: qid or uid of account to make a card for
  * @param mixed $agent: qid or uid of agent
+ * @param bool $retroactive: create the id regardless of permissions (used only in testing)
  */
-function memberId($id, $agent = '') {
+function memberId($id, $agent = '', $retroactive = FALSE) {
   global $mya;
   require_once __DIR__ . '/../pdf.class';
-  if (!$a = r\acct($id, $agent) or (!$mya->admin and $a->community != $mya->community)) exit('No such account ia: ' . $id . ':' . $agent);
+  
+  $a = r\acct($id, $agent);
+  $cttyErr = (!$mya or (!$mya->admin and $a->community != $mya->community));
+  if (!$a or ($cttyErr and !$retroactive)) exit('No such account ia: ' . $id . ':' . $agent);
   
   $a->setAgentNum(); // assign an agentCode, if appropriate (and not yet done)
   $qid = $a->qid; // get this before setting $a to agent (below)
@@ -929,7 +933,7 @@ function memberId($id, $agent = '') {
 /*  if (time() < strtotime('6/20/2017')) {
     $pdf->Output(strtolower("$qid.cgcard.pd"), 'D'); // Close and output PDF document ('I')
   } else */
-  if ($mya->superAdmin) $a->setBit(B_CARDED);
+  if ($mya and $mya->superAdmin) $a->setBit(B_CARDED);
   if (u\test()) $pdf->Close(); else $pdf->Output(strtolower("$qid.cgcard.pd"), 'I'); // Close and output PDF document ('I')
 //  if (time() < strtotime('6/20/2017') and $next = nextMember($id)) w\go("print-rcard/$next");
 }
@@ -959,7 +963,7 @@ function formSMS_submit($form, $sta) {
  */
 function test($arg = '') {
   \drupal_get_messages(); // clear messages
-  $modules = u\prefixValues('rcredits/', ray('admin rweb rcron rsmart'));
+  $modules = u\prefixValues('rcredits/', ray('admin rvote rweb rcron rsmart'));
   jsx('test');
   include_once DRUPAL_ROOT . '/vendor/gherkin/test.php';
   file_put_contents(T_MSG_FILE, serialize(\drupal_get_messages()));

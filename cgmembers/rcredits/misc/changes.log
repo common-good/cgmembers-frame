@@ -1,3 +1,7 @@
+2018-11-02
+. redesigned how grading proposals works (created r_criteria table)
+. changed "id" field of users records in tests to "uid", to eliminate confusion with actual "id" field in other tables
+
 2018-10-25
 . fixed bug in acct::recordChanges() that kept proper agent from getting recorded
 . fixed bug in vendor report that linked to customer statements rather than vendor statements

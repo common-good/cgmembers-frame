@@ -10,7 +10,7 @@ SO I can charge customers on behalf of my company.
 
 Setup:
   Given members:
-  | id   | fullName   | email | city  | state | cc  | cc2  | flags      | floor |*
+  | uid  | fullName   | email | city  | state | cc  | cc2  | flags      | floor |*
   | .ZZA | Abe One    | a@    | Atown | AK    | ccA | ccA2 | ok         |     0 |
   | .ZZB | Bea Two    | b@    | Btown | UT    | ccB | ccB2 | ok         |     0 |
   | .ZZC | Corner Pub | c@    | Ctown | CA    | ccC |      | ok,co      |     0 |
@@ -19,13 +19,13 @@ Setup:
   | .ZZF | Far Co     | f@    | Ftown | FL    | ccF |      | ok,co      |     0 |
   | .ZZG | Gil Seven  | g@    | Gtown | GA    | ccG |      |            |     0 |
   And devices:
-  | id   | code |*
+  | uid  | code |*
   | .ZZC | devC |
   And selling:
-  | id   | selling         |*
+  | uid  | selling         |*
   | .ZZC | this,that,other |
   And company flags:
-  | id   | coFlags      |*
+  | uid  | coFlags      |*
   | .ZZC | refund,r4usd |
   And relations:
   | main | agent | num | permission | rCard |*
@@ -83,7 +83,7 @@ Scenario: the default cashier scans a customer card
 
 Scenario: a customer scans their own card for self-service
   Given members have:
-  | id   | pin  |*
+  | uid  | pin  |*
   | .ZZD | 4444 |
   When agent ".ZZC" asks device "devC" to identify ".ZZD,ccD" with PIN "4444"
   Then we respond with:
@@ -92,7 +92,7 @@ Scenario: a customer scans their own card for self-service
 
 Scenario: a customer scans their own card for self-service with wrong PIN
   Given members have:
-  | id   | pin  |*
+  | uid  | pin  |*
   | .ZZD | 4444 |
   When agent ".ZZC" asks device "devC" to identify ".ZZD,ccD" with PIN "1234"
   Then we return error "bad pin"
@@ -160,7 +160,7 @@ Scenario: A member makes a purchase for the first time
 #Scenario: A member makes a purchase for the first time from an exempt company
 #  Given member ".ZZD" has no photo ID recorded
 #  And company flags:
-#  | id   | flags             |*
+#  | uid  | flags             |*
 #  | .ZZC | refund,r4usd,fast |
 #  When agent ".ZZC" asks device "devC" to identify ".ZZD,ccD"
 #  Then we respond with:
