@@ -6,7 +6,7 @@ SO I can pay a partner company
 
 Setup:
   Given members:
-  | id   | fullName | flags  | emailCode | website |*
+  | uid  | fullName | flags  | emailCode | website |*
   | .ZZC | Our Pub  | ok,co  | Ccode     | z.ot    |
   | .ZZZ | Zeta Zot | ok     | Zcode     |         |   
   And member is logged out
@@ -30,7 +30,7 @@ Scenario: A newbie visits the registration page sent by a partner
   | source | radio |
   | qid |  |
   Then members:
-  | id   | fullName | email | phone        | zip   | flags | address | city   | state | postalAddr              |*
+  | uid  | fullName | email | phone        | zip   | flags | address | city   | state | postalAddr              |*
   | .AAA | Abe One  | a@    | +14132530000 | 01001 |       | 1 A St. | Agawam | MA    | POB 1, Agawam, MA 01001 |
   And relations:
   | reid | main | agent | flags    |*
@@ -59,7 +59,7 @@ Scenario: A newbie visits the registration page sent by a partner
   | fullName | email | phone     | country | zip   | federalId   | dob      | acctType     | address | city   | state | postalAddr          | tenure | owns | helper |*
   | Abe One  | a@ | 413-253-0000 | US      | 01001 | 111-22-3333 | 1/2/1990 | %CO_PERSONAL  | 1 A St. | Agawam | MA    | POB 1, Agawam, MA 01001 |     18 |    1 | .ZZC |
   Then members:
-  | id   | fullName | legalName | email | phone        | zip   | country | state | city   | flags     | floor | address | postalAddr               | tenure | owns | helper |*
+  | uid  | fullName | legalName | email | phone        | zip   | country | state | city   | flags     | floor | address | postalAddr               | tenure | owns | helper |*
   | .AAA | Abe One  | Abe One   | a@    | +14132530000 | 01001 | US      | MA    | Agawam |           | 0     |    1 A St. | POB 1, Agawam, MA 01001 |     18 |    1 | .ZZC   |
   And we email "verify" to member "a@" with subs:
   | fullName | name   | quid | site      | code      |*
@@ -69,7 +69,7 @@ Scenario: A newbie visits the registration page sent by a partner
 
 Scenario: A member visits the registration page sent by a partner
   Given members:
-  | id   | fullName | legalName | email | phone        | zip   | country | state | city   | flags     | floor | address | postalAddr               | tenure | helper |*
+  | uid  | fullName | legalName | email | phone        | zip   | country | state | city   | flags     | floor | address | postalAddr               | tenure | helper |*
   | .AAA | Abe One  | Abe One   | a@    | +14132530000 | 01001 | US      | MA    | Agawam | member    | 0     |    1 A St. | POB 1, Agawam, MA 01001 |     18 | .ZZC   |
   When someone posts to page "signup" with:
   | partner | .ZZC |

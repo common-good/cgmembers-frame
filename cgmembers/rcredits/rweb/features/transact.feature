@@ -7,7 +7,7 @@ SO I can buy and sell stuff.
 
 Setup:
   Given members:
-  | id   | fullName | address | city  | state  | zip | country  | postalAddr | floor | flags      |*
+  | uid  | fullName | address | city  | state  | zip | country  | postalAddr | floor | flags      |*
   | .ZZA | Abe One  | 1 A St. | Atown | Alaska | 01000 | US     | 1 A, A, AK |  -250 | ok,confirmed,debt         |
   | .ZZB | Bea Two  | 2 B St. | Btown | Utah   | 02000 | US     | 2 B, B, UT |     0 | ok,confirmed         |
   | .ZZC | Our Pub  | 3 C St. | Ctown | Cher   |       | France | 3 C, C, FR |     0 | ok,confirmed,co      |
@@ -23,7 +23,7 @@ Setup:
   |   2 | %today-6m | signup |    250 | ctty | .ZZB | signup  | 0      |
   |   3 | %today-6m | signup |    250 | ctty | .ZZC | signup  | 0      |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |       0 |
   | .ZZB |       0 |
   | .ZZC |       0 |
@@ -57,7 +57,7 @@ Scenario: A member confirms request to charge another member
   | nvid | created | status      | amount | from | to  | for   |*
   |    1 | %today  | %TX_PENDING |    100 | .ZZB  | .ZZA | labor |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |       0 |
   | .ZZB |       0 |
   | .ZZC |       0 |
@@ -98,14 +98,14 @@ Scenario: A member confirms request to pay another member
   | xid | created | type     | amount | from  | to   | purpose      | taking |*
   |   4 | %today  | transfer |    100 | .ZZA  | .ZZB | labor        | 0      |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |    -100 |
   | .ZZB |     100 |
   | .ZZC |       0 |
   
 Scenario: A member confirms request to pay another member a lot
   Given balances:
-  | id   | balance       |*
+  | uid  | balance       |*
   | .ZZB | %R_MAX_AMOUNT |
   When member ".ZZB" confirms form "pay" with values:
   | op  | who     | amount        | goods | purpose |*
@@ -133,7 +133,7 @@ Scenario: A member confirms request to pay a member company
   | xid | created | type     | amount | from  | to   | purpose      | taking |*
   |   4 | %today  | transfer |    100 | .ZZA  | .ZZC | stuff        | 0      |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |    -100 |
   | .ZZB |       0 |
   | .ZZC |     100 |

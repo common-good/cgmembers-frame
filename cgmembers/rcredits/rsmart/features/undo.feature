@@ -13,7 +13,7 @@ Summary:
   
 Setup:
   Given members:
-  | id   | fullName   | email | cc  | cc2  | floor | flags                |*
+  | uid  | fullName   | email | cc  | cc2  | floor | flags                |*
   | .ZZA | Abe One    | a@    | ccA | ccA2 |  -250 | ok,confirmed,debt    |
   | .ZZB | Bea Two    | b@    | ccB | ccB2 |  -250 | ok,confirmed,debt    |
   | .ZZC | Corner Pub | c@    | ccC |      |  -250 | ok,confirmed,co,debt |
@@ -21,13 +21,13 @@ Setup:
   | .ZZE | Eve Five   | e@    | ccE | ccE2 |     0 | ok,confirmed,secret  |
   | .ZZF | Far Co     | f@    | ccF |      |     0 | ok,confirmed,co      |
   And devices:
-  | id   | code |*
+  | uid  | code |*
   | .ZZC | devC |
   And selling:
-  | id   | selling         |*
+  | uid  | selling         |*
   | .ZZC | this,that,other |
   And company flags:
-  | id   | coFlags      |*
+  | uid  | coFlags      |*
   | .ZZC | refund,r4usd |
   And relations:
   | main | agent | num | permission |*
@@ -41,7 +41,7 @@ Setup:
   | 2   | %today-6m | signup   |    250 | ctty | .ZZB | signup       |      0 |
   | 3   | %today-6m | signup   |    250 | ctty | .ZZC | signup       |      0 |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | ctty |       0 |
   | .ZZA |       0 |
   | .ZZB |       0 |
@@ -142,7 +142,7 @@ Scenario: An agent asks to undo a charge, with insufficient balance
   | created | otherName  | amount | payerPurpose           |*
   | %today  | Corner Pub | $80    | whatever (reverses #2)  |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | ctty |       0 |
   | .ZZA |       0 |
   | .ZZB |     300 |
@@ -163,7 +163,7 @@ Scenario: An agent asks to undo a refund, with insufficient balance
   | created | otherName  | amount | payerPurpose         |*
   | %today  | Corner Pub | $80    | refund (reverses #2)  |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | ctty |       0 |
   | .ZZA |    -300 |
   | .ZZB |     300 |
@@ -224,7 +224,7 @@ Scenario: A cashier reverses a transaction with insufficient funds
   | created | fullName | otherName  | amount | payerPurpose          |*
   | %today  | Bea Two  | Corner Pub | $100   | cash in (reverses #2)  |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | ctty |    -100 |
   | .ZZA |      -1 |
   | .ZZB |       1 |

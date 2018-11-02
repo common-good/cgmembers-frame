@@ -28,8 +28,8 @@ function formEvent($form, &$sta, $args='') {
   
   if (isset($eid)) {
     $fields = 'type,event,details,start,end';
-    if (is_numeric($eid) and $event = v\event($fields, $eid)) {
-      extract($event); 
+    if (is_numeric($eid) and $event0 = v\event($fields, $eid)) {
+      extract($event0); // $event0 contains $event, so must not have that name (as of PHP7)
       $subtitle = item(t('for vote ending ') . u\fmtDate($end));
     }
   }
@@ -60,8 +60,9 @@ function formEvent($form, &$sta, $args='') {
 
   if ($do == 'edit') {
     if ($vote or $grading) { // must precede setting $type field
-      list ($header, $page) = $vote ? [t('Questions'), 'question'] : [t('Proposals'), 'proposal'];
-      if ($mya->cAdmin) $header .= ' ' . button(t('Add'), "$base_url/community/events/$page/eid=$eid", '', 'warning');
+//      list ($header, $page) = $vote ? [t('Questions'), 'question'] : [t('Proposals'), 'proposal'];
+      list ($header, $page) = [t('Questions'), 'question'];
+      if ($mya->cAdmin) $header .= ' ' . button(t('Add Question'), "$base_url/community/events/$page/eid=$eid", '', 'warning');
 
       $q = db\q('SELECT id AS qid,text,detail,type,budget FROM r_questions WHERE event=:eid ORDER BY id', compact('eid'));
       while ($row = $q->fetchAssoc()) {

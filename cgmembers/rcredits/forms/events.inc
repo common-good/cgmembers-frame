@@ -44,21 +44,21 @@ SELECT fullName, b.id, COUNT(v.id) as votes FROM `users` u INNER JOIN r_ballots 
   
  */
 function formEvents($form, &$sta, $args = '') {
-  global $base_url;
+  global $base_url, $mya;
   
-  extract(just('question do results eid noProxies', $args));
+  extract(just('question do results eid noProxies qid', $args));
+  if ($mya and !@$qid) $args = str_replace('qid=&ecode=', "qid=$mya->mainQid&ecode=$mya->emailCode", $args);
+  $mya = w\eLinkAcct($sta, $args, $mya ? 'acct' : 'individual'); // allow any signed in account, so user can switch to personal account, below
 
-  $mya = w\eLinkAcct($sta, $args, r\acct() ? 'acct' : 'individual'); // allow any signed in account, so user can switch to personal account, below
   $cttyA = $mya->cttyA;
 	if ($aA = r\acct()) list ($cAdmin, $superAdmin) = [$aA->cAdmin, $aA->superAdmin]; // get signed-in account, if any
 
   $title = item(t('Community Democracy') . "<br><small>$cttyA->fullName</small>");
 //  $subtitle = item($cttyA->fullName);
+  if ($event0 = v\getCurrentEvent($cttyA->id)) {
+    extract($event0); // $event0 contains $event, so must not have that name (as of PHP7)
 
-  if ($event = v\getCurrentEvent($cttyA->id)) {
-    extract($event); // this overwrites $event with short name of event (for example "Voting on 3 questions")
-
-    $end = u\fmtDate($end);
+    $end = u\fmtDate($end, TRUE);
     $begun = ($start <= time()); // event has begun
 
     if (strpos(' VG', $type) and $begun) {
@@ -69,15 +69,15 @@ function formEvents($form, &$sta, $args = '') {
         if (!$superAdmin) return compact('title');
       }
 
-			$proxLink = $aA == $mya ? '/settings/proxies' : "/prox/page=Proxy&priority=1&allow=individual&qid=$mya->mainQid&ecode=$mya->emailCode";
+	  $proxLink = $aA == $mya ? '/settings/proxies' : "/prox/page=Proxy&priority=1&allow=individual&qid=$mya->mainQid&ecode=$mya->emailCode";
       if (!@$do) $voting = $type == 'V' ? v\votingWelcome($end, $proxLink) : v\gradingWelcome($end, $proxLink); // end is displayable end date
     }
 
-    $start = $start <= time() ? t('NOW') : u\fmtDate($start);
+    $start = $start <= time() ? t('NOW') : u\fmtDate($start, TRUE);
     $status0 = t('<b>Status:</b> %event from %start to %end', compact(ray('event start end')));
     if ($details) $status0 .= u\lf2br("\n\n$details");
   } else $status0 = t('There are no upcoming %PROJECT events scheduled in your community at this time.');
-  
+
   if (!@$do) $status = item($status0);
 
   if (FALSE and $mya->community == -26742000000002) {
@@ -98,10 +98,11 @@ function formEvents($form, &$sta, $args = '') {
     $middle = v\done($mya);
     if (!r\acct()) return doSay($middle, 'status');
   } elseif (@$do == 'grade') {
-    $extraFields = v\showProposal($mya, @$question, $middle, TRUE); // middle here is an error message, if anything
+//	  if (!@$question) $question = db\min('id', 'r_proposals', 'event=:eid', compact('eid'));
+    $extraFields = v\showProposal($mya, -@$question, $middle, TRUE); // middle here is an error message, if anything
   } else {
     $middle = t('Event History');
-    if ($cAdmin) $middle .= ' ' . button(t('Add'), "$base_url/community/events/event/do=add", '', 'warning');
+    if ($cAdmin) $middle .= ' ' . button(t('Add Event'), "$base_url/community/events/event/do=add", '', 'warning');
     $middle = "<h4>$middle</h4>";
     $sql = <<<EOF
       SELECT id, end, event FROM r_events WHERE ctty=:ctty ORDER BY end DESC, id DESC
@@ -161,7 +162,7 @@ function formEvents_submit($form, &$sta) {
   if (@$question <= -1) {
     $type = 'M';
     $do = 'grade';
-    $question = -bumpQnum(-$question, v\getProposals($mya), $op);
+    if (is_numeric($question = bumpQnum(-$question, v\getProposals($mya), $op))) $question = -$question;
   } else {
     list($quids, $qutypes) = v\getQuestions('', $mya); 
     $type = $qutypes[$question];

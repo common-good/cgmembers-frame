@@ -8,7 +8,7 @@ SO my company's online account records are not incorrect for long.
 
 Setup:
   Given members:
-  | id   | fullName   | email | cc  | cc2  | floor | flags                | activated |*
+  | uid  | fullName   | email | cc  | cc2  | floor | flags                | activated |*
   | .ZZA | Abe One    | a@    | ccA | ccA2 |  -250 | ok,confirmed,debt    | %today-2y |
   | .ZZB | Bea Two    | b@    | ccB | ccB2 |  -250 | ok,confirmed,debt    | %today-2y |
   | .ZZC | Corner Pub | c@    | ccC |      |  -250 | ok,confirmed,co,debt | %today-2y |
@@ -16,13 +16,13 @@ Setup:
   | .ZZE | Eve Five   | e@    | ccE | ccE2 |     0 | ok,confirmed,secret  | %today-2y |
   | .ZZF | Far Co     | f@    | ccF |      |     0 | ok,confirmed,co      | %today-2y |
   And devices:
-  | id   | code |*
+  | uid  | code |*
   | .ZZC | devC |
   And selling:
-  | id   | selling         |*
+  | uid  | selling         |*
   | .ZZC | this,that,other |
   And company flags:
-  | id   | coFlags      |*
+  | uid  | coFlags      |*
   | .ZZC | refund,r4usd |
   And relations:
   | main | agent | num | permission |*
@@ -37,7 +37,7 @@ Setup:
   | 3   | %today-6m | signup |    250 | ctty | .ZZC | signup  |
   | 4   | %today-6m | grant  |    250 | ctty | .ZZF | stuff   |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | ctty |    -250 |
   | .ZZA |       0 |
   | .ZZB |       0 |
@@ -54,7 +54,7 @@ Scenario: A cashier charged someone offline
   | created | fullName | otherName  | amount | payerPurpose |*
   | %today  | Bea Two  | Corner Pub | $100   | food         |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | ctty |    -250 |
   | .ZZA |       0 |
   | .ZZB |    -100 |
@@ -70,7 +70,7 @@ Scenario: A cashier charged someone offline and they have insufficient balance
   | created | fullName | otherName  | amount | payerPurpose |*
   | %today  | Bea Two  | Corner Pub | $100   | food         |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | ctty |    -250 |
   | .ZZA |     200 |
   | .ZZB |    -300 |
@@ -82,7 +82,7 @@ Scenario: A cashier charged someone offline but it actually went through
   Then we respond ok txid 5 created "%now-1h" balance -100 rewards 260
   #And we notice nothing
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | ctty |    -250 |
   | .ZZA |       0 |
   | .ZZB |    -100 |
@@ -93,7 +93,7 @@ Scenario: A cashier declined to charge someone offline and it didn't go through
   Then we respond ok txid 0 created "" balance 0 rewards 250
   #And we notice nothing
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | ctty |    -250 |
   | .ZZA |       0 |
   | .ZZB |       0 |
@@ -111,7 +111,7 @@ Scenario: A cashier canceled offline a supposedly offline charge that actually w
   | created | fullName | otherName  | amount | payerPurpose       | otherRewardType | otherRewardAmount |*
   | %today  | Bea Two  | Corner Pub | $100   | food (reverses #2)  | reward          | $-10              |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | ctty |    -250 |
   | .ZZA |       0 |
   | .ZZB |       0 |
@@ -135,7 +135,7 @@ Scenario: A cashier canceled offline a supposedly offline charge that actually w
   | created | fullName | otherName  | amount | payerPurpose         |*
   | %today  | Bea Two  | Corner Pub | $100   | refund (reverses #2)  |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | ctty |    -750 |
   | .ZZA |     300 |
   | .ZZB |    -300 |
@@ -143,7 +143,7 @@ Scenario: A cashier canceled offline a supposedly offline charge that actually w
 
 Scenario: Device sends correct old proof for legit tx after member loses card, with app offline
   Given members have:
-  | id   | cardCode |*
+  | uid  | cardCode |*
   | .ZZB | ccB2     |
   // member just changed cardCode
   When reconciling "C:A" on "devC" charging ".ZZB,ccB" $100 for "goods": "food" at "%now-1h" force 1
@@ -153,7 +153,7 @@ Scenario: Device sends correct old proof for legit tx after member loses card, w
 
 Scenario: Device sends correct old proof for legit tx after member loses card, with app online
   Given members have:
-  | id   | cardCode |*
+  | uid  | cardCode |*
   | .ZZB | ccB2     |
   // member reported lost card, we just changed cardCode, now the member (or someone) tries to use the card with app online:
   When reconciling "C:A" on "devC" charging ".ZZB,ccB" $100 for "goods": "food" at "%now-1h" force 0
@@ -162,7 +162,7 @@ Scenario: Device sends correct old proof for legit tx after member loses card, w
 
 Scenario: Device sends correct old proof for legit tx after member loses card, with tx date after the change
   Given members have:
-  | id   | cardCode |*
+  | uid  | cardCode |*
   | .ZZB | ccB2     |
   // member reported lost card, we just changed cardCode, now the member (or someone) tries to use the card with app online:
 	// (use +1d not +1h, because t\hitServer rounds down to nearest day)

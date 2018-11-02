@@ -5,7 +5,7 @@ SO I can see what happened, accept or refuse offers, adjust descriptions, and co
 
 Setup:
   Given members:
-  | id   | fullName   | floor | acctType    | flags      | created    |*
+  | uid  | fullName   | floor | acctType    | flags      | created    |*
   | .ZZA | Abe One    | -100  | personal    | ok,roundup | %today-15m |
   | .ZZB | Bea Two    | -200  | personal    | ok,co      | %today-15m |
   | .ZZC | Corner Pub | -300  | corporation | ok,co      | %today-15m |
@@ -24,7 +24,7 @@ Setup:
   |  .ZZA |    -22 | %today-5d  |         0  |
   |  .ZZA |    -33 | %today-5d  |         0  |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |    1000 |
   | .ZZB |    2000 |
   | .ZZC |    3000 |
@@ -40,14 +40,14 @@ Setup:
   |   8 | %today-1w | transfer |    120 | .ZZA | .ZZC | this Q  | 1      |
   |   9 | %today-6d | transfer |    100 | .ZZA | .ZZB | cash V  | 0      |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |    1650 |
   | .ZZB |    2280 |
   | .ZZC |    2070 |
 
 Scenario: A member looks at transactions for the past year
   Given members have:
-  | id   | fullName |*
+  | uid  | fullName |*
   | ctty | ZZrCred  |
   When member ".ZZA" visits page "history/transactions/period=365"
   Then we show "Transaction History" with:
@@ -95,7 +95,7 @@ Scenario: A member looks at transactions with roundups
   | xid | created | type     | amount | from | to   | purpose  |*
   |  10 | %today  | transfer |  49.95 | .ZZA | .ZZC | sundries |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA | 1600.05 |
   When member ".ZZA" visits page "history/transactions/period=15"
   Then we show "Transaction History" with:
@@ -124,7 +124,7 @@ Scenario: A member looks at transactions with roundups
 #  | .AACH | %today-5d | transfer | deleted  |    200 | .ZZA | .ZZC | never    | 1      |
 #  | .AACK | %today-5d | transfer | disputed |    100 | .ZZC | .ZZA | cash CL  | 1      |
 #  Then balances:
-#  | id   |    r |*
+#  | uid  |    r |*
 #  | .ZZA | 1942 |
 #  | .ZZB | 2554 |
 #  | .ZZC | 2320 |

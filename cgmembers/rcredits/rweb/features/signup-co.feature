@@ -6,7 +6,7 @@ SO my company can accept rCredits payments
 
 Setup:
   Given members:
-  | id   | fullName | email | zip   | federalId   | phone        | flags |*
+  | uid  | fullName | email | zip   | federalId   | phone        | flags |*
   | .ZZA | Abe One  | a@    | 01330 | 111-22-0001 | +14136280000 | ok,member |
   | .ZZC | Our Pub  | c@    | 01301 | 111-22-3334 | +14136280003 | ok,member |
   And relations:
@@ -32,13 +32,13 @@ Scenario: A member registers a company
   | fullName | email       | phone | zip | federalId   | acctType        | company  | companyPhon | companyOptions | address | city    | state | postalAddr                 | tenure | owns |*
   | AAAme Co | aco@ | 413-253-9876 | 01002      | 111-22-0001 | %CO_CORPORATION | | | | 1 A ST. | amherst | MA    | 1 A ST., Amherst, MA 01001 |     18 |    1 |
   Then members:
-  | id   | fullName | email | zip | phone        | city    | flags        | floor | helper |*
+  | uid  | fullName | email | zip | phone        | city    | flags        | floor | helper |*
   | .AAA | AAAme Co | aco@  | 01002      | +14132539876 | Amherst | co,confirmed |     0 | .ZZA   |
   And relations:
   | main | agent | permission | employee | owner | draw |*
   | .AAA | .ZZA  | manage     |        1 |     1 |    0 |
   And balances:
-  | id   | balance | rewards |*
+  | uid  | balance | rewards |*
   | .AAA |       0 |       0 |
   And we say "status": "company is ready"
 

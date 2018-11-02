@@ -6,7 +6,7 @@ AND identify disjoint circles of trust that may flag potential security risks.
 
 Setup:
   Given members:
-  | id   | fullName   | email | flags   |*
+  | uid  | fullName   | email | flags   |*
   | .ZZA | Abe One    | a@    | ok      |
   | .ZZB | Bea Two    | b@    | ok      |
   | .ZZC | Corner Pub | c@    | ok,co   |
@@ -38,7 +38,7 @@ Setup:
 Scenario: we calculate trust
   When cron runs "trust"
   Then members have:
-  | id   | trust |*
+  | uid  | trust |*
   | .ZZA | 12.98 |
   | .ZZB |  9.47 |
   | .ZZC |     0 |

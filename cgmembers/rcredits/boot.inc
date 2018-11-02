@@ -122,11 +122,6 @@ define('isSAFARI', stripos($agt, 'Chrome') === FALSE and stripos($agt, 'Safari')
 
 // one-time database changes, if any
 $sqlOnce = <<< X
-  ALTER TABLE `r_usd2` CHANGE `bankTxId` `bankTxId` BIGINT(20) NOT NULL DEFAULT '0' COMMENT 'bank transaction ID';
-  ALTER TABLE `r_usd` CHANGE `bankTxId` `bankTxId` BIGINT(20) NOT NULL DEFAULT '0' COMMENT 'bank transaction ID';
-  ALTER TABLE `x_usd` CHANGE `bankTxId` `bankTxId` BIGINT(20) NOT NULL DEFAULT '0' COMMENT 'bank transaction ID';
-	UPDATE r_usd SET bankTxId=0 WHERE bankTxId=1;
-	UPDATE x_usd SET bankTxId=0 WHERE bankTxId=1;
 X;
 
 /**

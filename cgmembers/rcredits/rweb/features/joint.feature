@@ -5,7 +5,7 @@ SO we can share our finances, as for a typical "joint account" at a bank.
 
 Setup:
   Given members:
-  | id   | fullName   | acctType    | flags                     | rebate | minimum | created   |*
+  | uid  | fullName   | acctType    | flags                     | rebate | minimum | created   |*
   | .ZZA | Abe One    | personal    | ok,member,confirmed,ided  |     10 |     100 | %today-6m |
   | .ZZB | Bea Two    | personal    | ok,confirmed,ided         |     10 |      50 | %today-6m |
   | .ZZC | Corner Pub | corporation | ok,confirmed,ided,co      |      5 |       0 | %today-6m |
@@ -16,16 +16,16 @@ Setup:
   |   2 | %today-6m | %TX_SIGNUP |    250 | community | .ZZB | signup  | 0      |
   |   3 | %today-6m | %TX_SIGNUP |    250 | community | .ZZC | signup  | 0      |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |       0 |
   | .ZZB |       0 |
   | .ZZC |       0 |
 
 Scenario: A member requests a joint account
   Given relations:
-  | id | main | agent | permission | employee | owner | draw |*
-  | 1  | .ZZA | .ZZB  | none       |        0 |       0 |    0 |
-  | 2  | .ZZB | .ZZA  | none       |        0 |       0 |    0 |
+  | main | agent | permission | employee | owner | draw |*
+  | .ZZA | .ZZB  | none       |        0 |       0 |    0 |
+  | .ZZB | .ZZA  | none       |        0 |       0 |    0 |
   When member ".ZZA" completes relations form with values:
   | other | permission |*
   | .ZZB  | joint      |
@@ -36,14 +36,14 @@ Scenario: A member requests a joint account
   | other      | Draw | Employee | Family | Permission |
   | Bea Two    | No   | No       | No     | %can_joint |
   And members have:
-  | id   | jid | minimum |*
+  | uid  | jid | minimum |*
   | .ZZA |     |     100 |
   | .ZZB |     |      50 |
   When member ".ZZB" completes relations form with values:
   | other | permission |*
   | .ZZA  | joint      |
   Then members have:
-  | id   | jid  | minimum |*
+  | uid  | jid  | minimum |*
   | .ZZA | .ZZB |     150 |
   | .ZZB | .ZZA |       0 |
   And member ".ZZA" cache is ok
@@ -64,14 +64,14 @@ Scenario: A member requests a joint account
 
 Scenario: A joined account slave member requests a new minimum
   Given members have:
-  | id   | jid  | achMin | minimum |*
+  | uid  | jid  | achMin | minimum |*
   | .ZZA | .ZZB |     50 |     150 |
   | .ZZB | .ZZA |     50 |       0 |
   When member ".ZZB" completes form "settings/connect" with values:
   | connect | routingNumber | bankAccount | bankAccount2 | refills | target | achMin | saveWeekly |*
   |       1 |     053000196 |         123 |          123 |       1 |    300 |    100 |          2 |
   Then members have:
-  | id   | bankAccount      | last4bank | achMin | minimum | saveWeekly |*
+  | uid  | bankAccount      | last4bank | achMin | minimum | saveWeekly |*
   | .ZZA | USkk053000196123 |      6123 |    100 |     300 |          2 |
   | .ZZB |                  |           |     50 |       0 |          0 |
 
@@ -79,20 +79,20 @@ Scenario: A joined account slave member requests a new minimum
 #  | minimum | achMin | savingsAdd | saveWeekly | share |*
 #  |     200 |    100 |        250 |          0 |    10 |
 #  Then members have:
-#  | id   | minimum | savingsAdd | achMin | share |*
+#  | uid  | minimum | savingsAdd | achMin | share |*
 #  | .ZZA |     200 |        250 |    100 |     0 |
 #  | .ZZB |       0 |          0 |    100 |    10 |
 
 Scenario: A joined account member looks at transaction history and summary
 #  Given reward step is "1000"
   And members have:
-  | id   | jid  | minimum |*
+  | uid  | jid  | minimum |*
   | .ZZA | .ZZB |     150 |
   | .ZZB | .ZZA |       0 |
   And relations:
-  | id | main | agent | permission | employee | owner | draw |*
-  | 1  | .ZZA | .ZZB  | joint      |        0 |       0 |    0 |
-  | 2  | .ZZB | .ZZA  | joint      |        0 |       0 |    0 |
+  | main | agent | permission | employee | owner | draw |*
+  | .ZZA | .ZZB  | joint      |        0 |       0 |    0 |
+  | .ZZB | .ZZA  | joint      |        0 |       0 |    0 |
   And usd transfers:
   | txid | payee | amount | created   | completed |*
   |  600 | .ZZA  |   1000 | %today-2w | %today-6m |
@@ -106,7 +106,7 @@ Scenario: A joined account member looks at transaction history and summary
   |   8 | %today-2d | transfer |     50 | .ZZD | .ZZB | cash    |
   |   9 | %today-1d | transfer |    100 | .ZZC | .ZZA | labor   |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |     800 |
   | .ZZB |    1150 | 
   | .ZZC |    -100 |
@@ -150,18 +150,18 @@ Scenario: A joined account member looks at transaction history and summary
 
   Scenario: A joined account member unjoins the account
   Given members have:
-  | id   | jid  | minimum |*
+  | uid  | jid  | minimum |*
   | .ZZA | .ZZB |     150 |
   | .ZZB | .ZZA |       0 |
   And relations:
-  | id | main | agent | permission | employee | owner | draw |*
-  | 1  | .ZZA | .ZZB  | joint      |        0 |       0 |    0 |
-  | 2  | .ZZB | .ZZA  | joint      |        0 |       0 |    0 |
+  | main | agent | permission | employee | owner | draw |*
+  | .ZZA | .ZZB  | joint      |        0 |       0 |    0 |
+  | .ZZB | .ZZA  | joint      |        0 |       0 |    0 |
   And transactions: 
   | xid | created   | type     | amount | from | to   | purpose |*
   |   4 | %today-1d | transfer |    100 | .ZZC | .ZZA | labor   |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |     100 |
   | .ZZB |       0 | 
   | .ZZC |    -100 |
@@ -169,7 +169,7 @@ Scenario: A joined account member looks at transaction history and summary
   | other | permission |*
   | .ZZA  | none       |
   Then members have:
-  | id   | jid  | minimum | balance |*
+  | uid  | jid  | minimum | balance |*
   | .ZZA |      |     150 |      50 |
   | .ZZB |      |     150 |      50 |
   And member ".ZZA" cache is ok
@@ -177,9 +177,9 @@ Scenario: A joined account member looks at transaction history and summary
   
 Scenario: A member requests two joins at once
   Given relations:
-  | id | main | agent | permission | employee | owner | draw |*
-  | 1  | .ZZA | .ZZB  | none       |        0 |       0 |    0 |
-  | 2  | .ZZA | .ZZD  | none       |        0 |       0 |    0 |
+  | main | agent | permission | employee | owner | draw |*
+  | .ZZA | .ZZB  | none       |        0 |       0 |    0 |
+  | .ZZA | .ZZD  | none       |        0 |       0 |    0 |
   When member ".ZZA" completes relations form with values:
   | other | permission |*
   | .ZZB  | joint      |

@@ -20,5 +20,5 @@ function formPageNotFound($form, &$sta, $arg = '') {
     include_once __DIR__ . '/../forms/signup.inc';
     return formSignup('', $sta, 'code=' . substr($page, 1)); // invitation!
   }
-  return formEmpty(t('The page you requested does not exist.'));
+  return formEmpty(t('The page you requested (%page) does not exist.', compact('page')));
 }

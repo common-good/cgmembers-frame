@@ -5,7 +5,7 @@ SO I can view or change settings, view or handle past transactions, and/or pay o
 
 Setup:
   Given members:
-  | id   | fullName | pass | email | flags  |*
+  | uid  | fullName | pass | email | flags  |*
   | .ZZA | Abe One  | a1   | a@    | member |
   And member is logged out
 
@@ -86,7 +86,7 @@ Scenario: A member asks for a new password for an unknown account
   
 Scenario: A member asks for a new password for a company
   Given members:
-  | id   | fullName | pass | email | flags |*
+  | uid  | fullName | pass | email | flags |*
   | .ZZC | Our Pub  | c1   | c@    | co    |
   When member "?" completes form "settings/password" with values:
   | name    |*

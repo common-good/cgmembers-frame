@@ -8,18 +8,18 @@ SO I can pay less for stuff or treat a friend.
 
 Setup:
   Given members:
-  | id   | fullName   | email | cc  | cc2  | floor | flags             |*
+  | uid  | fullName   | email | cc  | cc2  | floor | flags             |*
   | .ZZA | Abe One    | a@    | ccA | ccA2 |  -250 | ok,confirmed,debt |
   | .ZZB | Bea Two    | b@    | ccB | ccB2 |  -250 | ok,confirmed,debt |
   | .ZZC | Corner Pub | c@    | ccC |      |     0 | ok,co,confirmed   |
   And devices:
-  | id   | code |*
+  | uid  | code |*
   | .ZZC | devC |
   And selling:
-  | id   | selling         |*
+  | uid  | selling         |*
   | .ZZC | this,that,other |
   And company flags:
-  | id   | coFlags      |*
+  | uid  | coFlags      |*
   | .ZZC | refund,r4usd |
   And relations:
   | reid | main | agent | num | permission |*

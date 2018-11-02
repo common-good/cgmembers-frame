@@ -5,7 +5,7 @@ SO I can spend up to my total credit line.
 
 Setup:
   Given members:
-  | id   | fullName   | rebate | flags                |*
+  | uid  | fullName   | rebate | flags                |*
   | .ZZA | Abe One    |      5 | ok,confirmed         |
   | .ZZB | Bea Two    |     10 | ok,confirmed         |
   | .ZZC | Corner Pub |     10 | ok,confirmed,co,debt |
@@ -14,7 +14,7 @@ Setup:
   | .ZZC | .ZZA  | manage     |    1 |
   | .ZZC | .ZZB  | sell       |    0 |
   And balances:
-  | id   | balance | floor |*
+  | uid  | balance | floor |*
   | .ZZA |      10 |   -10 |
   | .ZZB |     100 |   -20 |
   | .ZZC |     100 |   -20 |
