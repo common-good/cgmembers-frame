@@ -5,7 +5,7 @@ SO I can automate and control the behavior of my rCredits account.
 
 Setup:
   Given members:
-  | id   | crumbs | minimum | savingsAdd | saveWeekly | achMin | floor | flags   |*
+  | uid  | crumbs | minimum | savingsAdd | saveWeekly | achMin | floor | flags   |*
   | .ZZA |    .01 |     100 |          0 |          1 |     20 |    10 | ok,confirmed,nosearch,paper |
   | .ZZB |    .02 |     -10 |         10 |          0 |     50 |     0 | ok,confirmed,weekly,secret |
   And transactions: 
@@ -44,5 +44,5 @@ Scenario: A member changes preferences
   | roundup | crumbs | notices | statements | nosearch | secretBal |*
   |       1 |      3 | monthly | electronic |        0 |         1 |
   Then members:
-  | id   | crumbs |  flags   |*
+  | uid  | crumbs |  flags   |*
   | .ZZA |    .03 | ok,confirmed,monthly,secret,roundup |

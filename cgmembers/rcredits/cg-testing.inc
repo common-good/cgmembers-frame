@@ -16,8 +16,8 @@ use CG\Web as w;
 
 global $base_path;
 define('BASE_PATH', $base_path);
-define('T_BALANCE_FLDS', 'id balance floor rewards savingsAdd saveWeekly minimum');
-define('T_ID_FLDS', 'id uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty');
+define('T_BALANCE_FLDS', 'uid balance floor rewards savingsAdd saveWeekly minimum');
+define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter');
 
 /**
  * Allow mnemonic and abbreviated data in test scenario columns.
@@ -107,7 +107,7 @@ function doRecords($list, $thing) {
 function doThing($info, $thing) {
   global $testOnly;
   $table = 'r_' . strtolower($thing) . 's';
-  if (@$info['id']) {$info['uid'] = $info['id']; unset($info['id']);}
+// NO!  if (@$info['id']) {$info['uid'] = $info['id']; unset($info['id']);}
   return $testOnly ? verifyRecord($table, $info) : db\insert($table, $info);
 }
 
@@ -155,15 +155,15 @@ function doAccount($info = []) {
   if (is_object($info)) $info = (array) $info;
 /**/  if (!is_array($info)) {echo 'not array'; print_r($info); die(trace()); } // keep for now
   extract($info); // any user table fields
-  $id0 = @$id;
-  u\setDft($id, r\Acct::nextId()); // default to first available number
-  $uid = t\uid($id); // change .AAB to 1, etc.
+  $uid0 = @$uid;
+  u\setDft($uid, r\Acct::nextId()); // default to first available number
+  $uid = t\uid($uid); // change .AAB to 1, etc.
 
   if (@$jid) $jid = t\uid($jid);
 
 //  if (!$testOnly) { // when making, set many defaults and mods
     $nmMap = ray('ZZA:Abe One,ZZB:Bea Two,ZZC:Cat Pub,ZZD:Dee Four,ZZE:Eve Five,ZZF:Fin Corp,ZZG:Glo Seven');
-    u\setDft($fullName, substr($id, 0, 2) == 'ZZ' ? strtr($nmMap) : 'doAccount ' . u\randomString(20, 'word'));
+    u\setDft($fullName, substr($uid, 0, 2) == 'ZZ' ? strtr($nmMap) : 'doAccount ' . u\randomString(20, 'word'));
     $name = u\shortName($fullName);
     u\setDft($legalName, $fullName);
   //  $pass = @$my_password ?: '$S$D2YT5TTwLHHbbdO3Zpzi9EPcMt5WSuCTWAO274vjzYXyOxZ9kFae'; // default to 123
@@ -200,7 +200,7 @@ function doAccount($info = []) {
 
 //  if (isset($risks)) $risks = getRisks($risks, K_ACCT_RISKS);
   
-  foreach (ray('id acctType dw cc cc2') as $one) unset($info[$one]); // these are not real fields
+  foreach (ray('acctType dw cc cc2') as $one) unset($info[$one]); // these are not real fields
   u\preray(compact(ray('uid jid helper flags risks last4bank ' . $fixFields)), $info); // add in changed fields
 	
 //  fixData($info, TRUE);
@@ -223,7 +223,7 @@ function doAccount($info = []) {
 /**/ if (!$a = new r\Acct($info)) return t\output('Cannot create account: ' . print_r($info, 1));
   if (@$picture) if (!makePicture($picture, $a)) return FALSE;
   $a->stepDone('signup');
-  if ($id0 == $id) $a->setBit(B_IDED); // assume we have a photoId for givens unless a step says otherwise
+  if ($uid0 == $uid) $a->setBit(B_IDED); // assume we have a photoId for givens unless a step says otherwise
 
   return $uid;
 }
@@ -368,7 +368,7 @@ function doRelation($info) {
     $mainA->newRelation($info);
     if (@$rCard == 'yes') {
       if (!$agtA->cardCode2) r\acct($main, $other)->makeCardCode();
-      if (!@$memberIdCalled) r\Web\memberId($main, $other); // make a Company Agent rCard
+      if (!@$memberIdCalled) r\Web\memberId($main, $other, TRUE); // make a Company Agent rCard
       $memberIdCalled = TRUE;
     }
     return TRUE;
@@ -380,10 +380,10 @@ function doRelation($info) {
  */
 function doSelling($info) {
   global $testOnly;
-  extract(just('id selling', $info));
+  extract(just('uid selling', $info));
   $selling = str_replace(',', "\n", $selling);
-  if (!$a = r\acct(t\uid($id))) return t\output("Not an account: $id");
-  return $a->update(compact('selling'));
+  if (!$a = r\acct($uid)) return t\output("Not an account: $uid");
+  return $testOnly ? ($a->selling == $selling) : $a->update(compact('selling'));
 }
 
 /**
@@ -392,8 +392,8 @@ function doSelling($info) {
 function doCompanyFlags($info) {
   global $testOnly;
 
-  extract(just('id coFlags', $info));
-  if (!$a = r\acct(t\uid($id))) return t\output("Not an account: $id");
+  extract(just('uid coFlags', $info));
+  if (!$a = r\acct(t\uid($uid))) return t\output("Not an account: $uid");
   $res = 0;
   foreach (ray($coFlags) as $one) {
     $flag = u\bit(u\consta('co', $one));
@@ -475,7 +475,7 @@ function doMembersHave($info) {
   global $testOnly;
   if ($balFields = just(T_BALANCE_FLDS, $info) and !doBalance($balFields, TRUE)) return FALSE;
 
-  $a = r\acct($id = t\uid($info['id']));
+  $a = r\acct($id = t\uid($info['uid']));
   $info = justNOT(T_BALANCE_FLDS, $info); // don't rehandle balance fields, and already got id
   if (isset($info['risks'])) $info['risks'] = getRisks($info['risks'], K_ACCT_RISKS);
 //  fixData($info, TRUE);
@@ -493,11 +493,11 @@ function doMembersHave($info) {
 function memberFieldValues($list) {
   global $testOnly;
   foreach ($list as $one) {
-    extract(just('id field value', $one));
-    $a = r\acct(t\uid($id));
+    extract(just('uid field value', $one));
+    $a = r\acct(t\uid($uid));
     if ($field == 'helper' or $field == 'community') $value = t\uid($value);
     if ($testOnly) {
-      if (t\badEq('fieldValue wanted/actual:', $value, $a->o($field), $id)) return FALSE;
+      if (t\badEq('fieldValue wanted/actual:', $value, $a->o($field), $uid)) return FALSE;
     } else $a->update1($field, $value);
   }
   return TRUE;
@@ -511,31 +511,31 @@ function doBalance($info) {
   global $testOnly;
 
 /**/  if ($info != just(T_BALANCE_FLDS, $info)) return t\output("spurious field in balances: " . print_r($info, 1));
-  $id = t\uid($id0 = $info['id']);
+  $uid = $uid0 = $info['uid'];
 
-  if (!$a = r\acct($id)) return t\output("account $id0 does not exist");
+  if (!$a = r\acct($uid)) return t\output("account $uid0 does not exist");
   $a->reread(TRUE); // otherwise db updates are invisible
 
 //  if (isset($info['r']) and !isset($info['balance'])) $info['balance'] = $info['r'] - @$info['rewards']; // 20170515
 //  t\fixData($info);
 /// print_r(compact('a','id','id0'));
   if (!$testOnly) { // setting the values
-    unset($info['id']);
+    unset($info['uid']);
     return ($info ? $a->update($info) : TRUE); // handle only id being passed
   }
 
   // verify
-  if (!$calc = t\uidCredit($id)) return FALSE;
+  if (!$calc = t\uidCredit($uid)) return FALSE;
   foreach (ray($cashies = 'balance rewards') as $k) {
     $v = @$info[$k];
-    if (isset($v) and $v != '?') if ($id > 0 or $k != 'rewards') {
+    if (isset($v) and $v != '?') if ($uid > 0 or $k != 'rewards') {
       $cachedVal = $a->o($k);
-      if (t\badEq("cached $k", $cachedVal, $v, $id)) return FALSE;
-      if (!$a->jid and t\badEq("calc $k", $calc->$k, $v, $id)) return FALSE;
+      if (t\badEq("cached $k", $cachedVal, $v, $uid)) return FALSE;
+      if (!$a->jid and t\badEq("calc $k", $calc->$k, $v, $uid)) return FALSE;
     }
   }
-  foreach ($not = justNOT($cashies . ' id', $info) as $k => $v) {
-    if ($v != '?' and $k != 'committed' and $id > 0) if (t\badEq("db $k", $a->o($k), $v, $id)) return FALSE;
+  foreach ($not = justNOT($cashies, $info) as $k => $v) {
+    if ($v != '?' and $k != 'committed' and $uid > 0) if (t\badEq("db $k", $a->o($k), $v, $uid)) return FALSE;
   }
   return TRUE;
 }
@@ -1236,11 +1236,12 @@ function clear($ch = 0) {
 /**/ if (u\test() and !strpos($sceneTest->sceneName, 'Statement')) echo "scene: $sceneTest->sceneName<br>\n"; // helpful when test dies
 ///   file_put_contents(flog(), ''); // clear log file on disk
 
-  $tables = 'r_bad r_ballots r_boxes r_stakes r_coupons r_coupated r_do r_honors r_investments r_invites r_invoices r_changes r_near r_notices r_options r_pairs r_proposals r_questions r_proxies r_ratings r_recurs r_request r_relations r_shares r_stats r_tous r_txs r_usd r_usd2 r_user_industries x_users x_relations x_invoices x_txs x_usd x_photos queue sessions cache';
+  $tables = 'r_bad r_ballots r_boxes r_stakes r_coupons r_coupated r_do r_events r_honors r_investments r_invites r_invoices r_changes r_near r_notices r_options r_pairs r_proposals r_questions r_proxies r_ratings r_recurs r_request r_relations r_shares r_stats r_tous r_txs r_usd r_usd2 r_user_industries r_votes x_users x_relations x_invoices x_txs x_usd x_photos queue sessions cache';
   foreach (ray('bootstrap form menu') as $k) $tables .= " cache_$k";
   foreach (ray($tables) as $table) if (db\exists($table)) db\q("TRUNCATE $table");
 
   db\q('DELETE FROM users WHERE uid<>0');
+  db\q('DELETE FROM r_criteria WHERE ctty<>0');
   a\setupBasicAccounts();
 
   db\q('UPDATE users SET floor=0,balance=0,minimum=NULL,rewards=0,committed=0');

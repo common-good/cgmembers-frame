@@ -6,7 +6,7 @@ SO I can complete my registration and/or make sure I can be contacted by system 
 
 Setup:
   Given members:
-  | id   | fullName | address | city  | state | zip   | country | postalAddr       | email | phone       | tenure | flags  |*
+  | uid  | fullName | address | city  | state | zip   | country | postalAddr       | email | phone       | tenure | flags  |*
   | .ZZA | Abe One  | 1 A St. | Atown | AL    | 99100 | US      | 1 A, T, AK 23456 | a@    | 14132001000 |     19 | member |
 
 Scenario: A member visits the contact info page
@@ -32,7 +32,7 @@ Scenario: A member updates contact info
   | fullName | phone        | country | zip   | state | city    | address   | postalAddr | email | tenure |*
   | Abe One  | 413-253-0001 | US      | 01002 | MA    | Amherst | 2 Elm St. | PO Box 1   | a@    |     18 |
   Then members:
-  | id   | fullName   | address   | city    | state | zip   | country | postalAddr | phone       | email |*
+  | uid  | fullName   | address   | city    | state | zip   | country | postalAddr | phone       | email |*
   | .ZZA | Abe One    | 2 Elm St. | Amherst | MA    | 01002 | US      | PO Box 1   | 14132530001 | a@    |
   And we say "status": "info saved"
   
@@ -53,7 +53,7 @@ Scenario: A member updates to a different state
   | fullName | phone        | country | zip | state | city    | address   | postalAddr | email | tenure |*
   | Abe One  | 413-253-0001 | US      | 01002      | MI    | Amherst | 2 Elm St. | PO Box 1   | a@    |     18 |
   Then members:
-  | id   | fullName   | address   | city    | state | zip | country | postalAddr | phone       | email |*
+  | uid  | fullName   | address   | city    | state | zip | country | postalAddr | phone       | email |*
   | .ZZA | Abe One    | 2 Elm St. | Amherst | MI    | 01002      | US      | PO Box 1   | 14132530001 | a@    |
   And we say "status": "info saved"
   
@@ -62,6 +62,6 @@ Scenario: A member updates to a different name
   | fullName  | phone        | country | zip | state | city    | address   | postalAddr | email | tenure |*
   | Abe Other | 413-253-0001 | US      | 01002      | MA    | Amherst | 2 Elm St. | PO Box 1   | a@    |     18 |
   Then members:
-  | id   | fullName  | legalName | address   | city    | state | zip | country | postalAddr |*
+  | uid  | fullName  | legalName | address   | city    | state | zip | country | postalAddr |*
   | .ZZA | Abe Other | Abe One   | 2 Elm St. | Amherst | MA    | 01002      | US      | PO Box 1   |
   And we say "status": "info saved"

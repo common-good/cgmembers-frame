@@ -32,18 +32,25 @@ function formProposal($form, &$sta, $args = '') {
 	extract($res);
 	$end = strftime('%B %e, %G', $end); // Month d, YYYY
 	$max = preg_replace('/[^0-9]/', '', $event);
-	list ($ideal, $max) = [u\fmtAmt($max/10), u\fmtAmt($max)];
+	list ($idealAmt, $max) = [u\fmtAmt(round($max/10)), u\fmtAmt($max)];
   $options = ray(t('Sustainability / Renewable Energy, Small Business / Economic Development, Social and Economic Justice, Food Systems, Arts & Culture'));
   $optionKeys = ray(t('energy business justice food arts'));
-  $criteria = [
-    '' => t('Points'),
+  $criteria = db\q('SELECT text,points FROM r_criteria WHERE ctty=0')->fetchAllKeyed();
+  $criteria = ['' => t('Points')] + $criteria + [
+    ' ' => '____',
+    t('Total') => 100,
+	'  ' => '',
+	t('<b>Extra Credit (up to 25 points):</b> Will the project bring <i>more</i> money into the Community Fund?') => '', 
+  ];
+/*  [
+    ,
     t('How well does the project support our %PROJECT community investment priorities?') => 15,
-		t('How does the project promote systemic change?') => 15,
+	t('How well does the project promote systemic change?') => 15,
     t('Overall, how clearly doable is the project?') => 15,
     t('Ability to manage the project and funds effectively.') => 10,
-		t('How quickly and surely will funds return to the Common Good community?') => 10,
+	t('How quickly, surely, and voluminously will the project bring funds back into our Common Good Community Dollar Pool?') => 10,
     t('Evaluation plan.') => 5,
-    t('How close is the request to the ideal amount (%ideal)?', compact('ideal')) => 5,
+    t('How close is the request to the ideal amount (%idealAmt)?', compact('idealAmt')) => 5,
     t('What fraction of the total project budget are you requesting? (50% is ideal)') => 5,
     t('How much of the total project budget has been raised/committed so far? (half is ideal)?') => 5,
     t('Ability to implement project with less funding than requested.') => 5,
@@ -56,14 +63,16 @@ function formProposal($form, &$sta, $args = '') {
 		'  ' => '',
 		t('<b>Extra Credit (up to 25 points):</b> Will the project bring <i>more</i> money into the Community Fund?') => '', 
   ];
-
+*/
   foreach ($options as $k) $_list[] = "<li>$k</li>\n";
   $_list = '<ul>' . join('', $_list) . '</ul>';
 
-  foreach ($criteria as $k => $v) $crit[] = <<<EOF
-<div class="row"><div>$v</div><div>$k</div></div>\n
-EOF;
-  
+  foreach ($criteria as $text => $points) {
+	  $text = tr($text, compact('idealAmt'));
+    $text = str_replace(t('is the applicant'), t('are you'), $text);
+    $crit[] = "<div class=\"row\"><div>$points</div><div>$text</div></div>\n";
+  }
+
   $crit = '<div id="critChart" class="table">' . join('', $crit) . '</div>';
   $critPop = item(w\modal('criteria', t('Evaluation Criteria for Community Investment Proposals'), '', $crit, 'X'));
   jsx('funding-criteria');

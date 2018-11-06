@@ -5,36 +5,36 @@ SO my financial position will be progressively better.
 
 Setup:
   Given members:
-  | id   | fullName | minimum | savingsAdd | saveWeekly | achMin | floor | risks   | flags   |*
+  | uid  | fullName | minimum | savingsAdd | saveWeekly | achMin | floor | risks   | flags   |*
   | .ZZA | Abe One  |    -100 |          0 |         20 |     20 |    10 | hasBank | ok,confirmed,refill  |
   | .ZZB | Bea Two  |     100 |          0 |         20 |     20 |    10 | hasBank | ok,confirmed,cashoutW |
   
 Scenario: A member crawls out of debt
   When cron runs "everyWeek"
   Then balances:
-  | id   | minimum |*
+  | uid  | minimum |*
   | .ZZA |     -80 |
   
 Scenario: A member builds up savings
   Given members have:
-  | id   | minimum |*
+  | uid  | minimum |*
   | .ZZA |     100 |
   When cron runs "everyWeek"
   Then balances:
-  | id   | minimum | savingsAdd |*
+  | uid  | minimum | savingsAdd |*
   | .ZZA |     120 |          0 |
 
 #Scenario: A member draws down savings bit by bit
 #  Given members have:
-#  | id   | minimum | savingsAdd | saveWeekly | achMin |*
+#  | uid  | minimum | savingsAdd | saveWeekly | achMin |*
 #  | .ZZA |     100 |         25 |        -20 |     20 |
 #  When cron runs "everyWeek"
 #  Then balances:
-#  | id   | minimum | savingsAdd |*
+#  | uid  | minimum | savingsAdd |*
 #  | .ZZA |     100 |          5 |
 #  When cron runs "everyWeek"
 #  Then balances:
-#  | id   | minimum | savingsAdd |*
+#  | uid  | minimum | savingsAdd |*
 #  | .ZZA |     100 |          0 |
 
 Scenario: A member cashes out automatically
@@ -44,10 +44,10 @@ Scenario: A member cashes out automatically
   |   2 | %today-7w | transfer |    200 | .ZZA | .ZZB | stuff   |
   |   3 | %today-6w | transfer |    500 | .ZZA | .ZZB | stuff   |
   And members have:
-  | id   | activated | floor |*
+  | uid  | activated | floor |*
   | .ZZB | %today-9w |  -100 |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZB |     700 |
   When cron runs "tickle"
   Then usd transfers:

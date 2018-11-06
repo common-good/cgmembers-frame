@@ -5,7 +5,7 @@ SO I can complete my registration and/or publicize my goods and services to othe
 
 Setup:
   Given members:
-  | id   | fullName | flags |*
+  | uid  | fullName | flags |*
   | .ZZA | Abe One  |       |
   | .ZZC | Our Pub  | co,ok |
   And relations:
@@ -23,7 +23,7 @@ Scenario: A member updates company info
   | private | selling | website     | description   | employees | gross | tips |*
   |         | stuff   | www.pub.com | we do vittles |         2 |   100 |    1 |
   Then members:
-  | id   | selling | website     | description   | employees | gross |*
+  | uid  | selling | website     | description   | employees | gross |*
   | .ZZC | stuff   | www.pub.com | we do vittles |         2 |   100 |
   And we say "status": "info saved"
   

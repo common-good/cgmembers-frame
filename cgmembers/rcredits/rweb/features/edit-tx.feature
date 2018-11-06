@@ -5,7 +5,7 @@ SO I can make it right.
 
 Setup:
   Given members:
-  | id   | fullName   | rebate | flags      |*
+  | uid  | fullName   | rebate | flags      |*
   | .ZZA | Abe One    |      5 | ok,confirmed         |
   | .ZZB | Bea Two    |     10 | ok,confirmed         |
   | .ZZC | Corner Pub |     10 | ok,confirmed,co      |
@@ -20,7 +20,7 @@ Setup:
   |   3 | %today-6m | signup   |      0 |      0 |   250 | ctty | .ZZC | signup       |
   |   4 | %today    | transfer |     20 |      1 |     2 | .ZZA | .ZZB | stuff        |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |     -20 |
   | .ZZB |      20 |
   | .ZZC |       0 |
@@ -39,7 +39,7 @@ Scenario: A buyer increases a payment amount
   | amount | goods        | purpose |*
   |     40 | %FOR_GOODS | stuff   |
   Then balances:
-  | id   |  balance |*
+  | uid  |  balance |*
   | .ZZA |      -40 |
   | .ZZB |       40 |
   | .ZZC |        0 |
@@ -56,7 +56,7 @@ Scenario: A buyer changes the goods status
   | amount | goods      | purpose |*
   |     20 | %FOR_USD | stuff   |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |     -20 |
   | .ZZB |      20 |
   | .ZZC |       0 |

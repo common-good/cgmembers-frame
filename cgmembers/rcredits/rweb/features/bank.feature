@@ -8,7 +8,7 @@ SO I can spend it through the rCredits system or hold it in the rCredits system 
 
 Setup:
   Given members:
-  | id   | fullName | minimum | floor | flags             | risks   |*
+  | uid  | fullName | minimum | floor | flags             | risks   |*
   | .ZZA | Abe One  |       0 |   -20 | ok,debt,bankOk    | hasBank |
   | .ZZB | Bea Two  |       0 |     0 | ok                | hasBank |
   | .ZZC | Our Pub  |      40 |   -10 | co,ok,debt,bankOk | hasBank |
@@ -31,7 +31,7 @@ Setup:
   | 5005 |  .ZZC |     30 | %today-2d | %today-2d | %today-1d |
   | 5006 |  .ZZD |    140 | %today-2d | %today-2d | %today-1d |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |      86 |
   | .ZZB |      96 |
   | .ZZC |      30 |
@@ -48,7 +48,7 @@ Scenario: a member moves credit to the bank
   | action     | amount | why             |*
   | deposit to | $86    | at your request |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |       0 |
 
 Scenario: a member draws credit from the bank with zero floor
@@ -59,7 +59,7 @@ Scenario: a member draws credit from the bank with zero floor
   | txid | payee | amount    | created   | completed | channel |*
   | 5007 |  .ZZB | %R_ACHMIN | %tomorrow |         0 | %TX_WEB |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |      86 |
   And we say "status": "banked|bank tx number" with subs:
   | action     | amount     | checkNum | why             |*
@@ -73,7 +73,7 @@ Scenario: a member draws credit from the bank with adequate floor
   | txid | payee | amount | created | completed | channel |*
   | 5007 |  .ZZC |     10 | %today  |    %today | %TX_WEB |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZC | 40      |
   And we say "status": "banked|bank tx number|available now" with subs:
   | action     | amount | checkNum | why             |*

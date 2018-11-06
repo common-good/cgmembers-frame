@@ -5,11 +5,11 @@ SO I can enjoy the rCredit system's rapid growth and be a part of that.
 
 Setup:
   Given members:
-  | id   | fullName | address | city  | state | zip | postalAddr | rebate | flags   |*
+  | uid  | fullName | address | city  | state | zip | postalAddr | rebate | flags   |*
   | .ZZA | Abe One  | 1 A St. | Atown | AK    | 01000 | 1 A, A, AK |      5 | ok,confirmed      |
   | .ZZC | Cor Pub  | 3 C St. | Ctown | CT    | 03000 | 3 C, C, CT |      5 | ok,confirmed,co   |
   And balances:
-  | id     | balance |*
+  | uid    | balance |*
   | cgf    |       0 |
   | .ZZA   |     100 |
   | .ZZC   |     100 |

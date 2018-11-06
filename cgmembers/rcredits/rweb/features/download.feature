@@ -5,7 +5,7 @@ SO I can see what happened and possbily integrate with an accounting program.
 
 Setup:
   Given members:
-  | id   | fullName | floor | acctType    | flags      |*
+  | uid  | fullName | floor | acctType    | flags      |*
   | .ZZA | Abe One  | -100  | personal    | ok         |
   | .ZZB | Bea Two  | -200  | personal    | ok,co      |
   | .ZZC | Our Pub  | -300  | corporation | ok,co      |
@@ -35,14 +35,14 @@ Setup:
   |  10 | %today-5d | transfer |     80 | .ZZA | .ZZC | this CF  | 1      |
   |  11 | %today-5d | transfer |    100 | .ZZC | .ZZA | cash CJ  | 1      |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |     670 |
   | .ZZB |    2280 |
   | .ZZC |    3050 |
 
 Scenario: A member downloads transactions for the past year
   Given members have:
-  | id   | fullName |*
+  | uid  | fullName |*
   | ctty | ZZrCred  |
   When member ".ZZA" visits page "history/transactions/period=365&download=1"
   Then we download "%PROJECT_ID%todayn-12m-%todayn.csv" with:

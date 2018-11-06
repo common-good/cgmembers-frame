@@ -11,7 +11,7 @@ SO I can make deposits easily and review past deposits as necessary
 
 Setup:
   Given members:
-  | id   | fullName | floor | flags            | postalAddr          | phone | bankAccount     |*
+  | uid  | fullName | floor | flags            | postalAddr          | phone | bankAccount     |*
   | .ZZA | Abe One  | -500  | ok,admin    | 1 A, Aton, MA 01001 |     1 | USkk21187028101 |
   | .ZZB | Bea Two  | -500  | ok,co            | 2 B, Bton, MA 01002 |     2 | USkk21187028102 |
   | .ZZC | Cor Pub  |    0  | ok,co            | 3 C, Cton, MA 01003 |     3 | USkk21187028103 |
@@ -45,7 +45,7 @@ Scenario: admin prints checks
   | 5003 | %today    |
   | 5004 | %today    |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |     500 |
   | .ZZB |     100 |
   | .ZZC |       0 |

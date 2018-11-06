@@ -5,7 +5,7 @@ SO I can buy and sell stuff.
 
 Setup:
   Given members:
-  | id   | fullName | floor | flags             | risks   |*
+  | uid  | fullName | floor | flags             | risks   |*
   | .ZZA | Abe One  |     0 | ok,confirmed      |         |
   | .ZZB | Bea Two  |  -250 | ok,confirmed,debt |         |
   | .ZZC | Our Pub  |     0 | ok,confirmed,co   | hasBank |
@@ -19,7 +19,7 @@ Setup:
   |   2 | %today-6m | signup |    250 | ctty | .ZZB | signup  | 0      |
   |   3 | %today-6m | signup |    250 | ctty | .ZZC | signup  | 0      |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |       0 |
   | .ZZB |       0 |
   | .ZZC |       0 |
@@ -52,7 +52,7 @@ Scenario: A member confirms request to charge another member
   | nvid | created | status | amount | from | to   | for   |*
   |    1 | %today  | 4      |    100 | .ZZB | .ZZA | labor |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |     100 |
   | .ZZB |    -100 |
   | .ZZC |       0 |
@@ -108,7 +108,7 @@ Scenario: A member denies an invoice
   | payerName | created | amount | purpose | reason |*
   | Bea Two   | %dmy    |   $100 | labor   | broke  |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |       0 |
   | .ZZB |       0 |
   | .ZZC |       0 |
@@ -127,14 +127,14 @@ Scenario: A member approves an invoice with insufficient funds
   | short | payeeName | nvid |*
   | $50   | Abe One   |    1 |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |       0 |
   | .ZZB |       0 |
   | .ZZC |       0 |
 
 Scenario: A member approves invoices forevermore
   Given members have:
-  | id   | risks   |*
+  | uid  | risks   |*
   | .ZZB | hasBank |
   When member ".ZZA" confirms form "charge" with values:
   | op     | who     | amount | goods      | purpose |*
@@ -163,7 +163,7 @@ Scenario: A member approves an invoice to a trusting customer
   | nvid | created | status | amount | from | to   | for   |*
   |    1 | %today  | 4      |    100 | .ZZB | .ZZA | labor |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |     100 |
   | .ZZB |    -100 |
   | .ZZC |       0 |

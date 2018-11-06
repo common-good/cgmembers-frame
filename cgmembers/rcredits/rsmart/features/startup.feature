@@ -5,13 +5,13 @@ SO I can use it to charge customers through the rCredits system.
 
 Setup:
   Given members:
-  | id   | fullName   | phone  | email | cc  | cc2  | flags      |*
+  | uid  | fullName   | phone  | email | cc  | cc2  | flags      |*
   | .ZZA | Abe One    | +20001 | a@    | ccA | ccA2 | ok         |
   | .ZZB | Bea Two    | +20002 | b@    | ccB |      | ok         |
   | .ZZC | Corner Pub | +20003 | c@    | ccC |      | ok,co      |
   | .ZZF | For Co     | +20006 | f@    | ccF |      | co         |
   And devices:
-  | id   | code |*
+  | uid  | code |*
   | .ZZC | devC |
   And relations:
   | main | agent | num | permission |*

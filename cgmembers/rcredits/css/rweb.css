@@ -348,9 +348,11 @@ body.logged-in.one-sidebar #content {width:100%;}
 /* Export */
 .form-item-chimpSet, .form-item-chimpSet>.control-label {display:none;}
 
-/* Democracy */
-body.page-prox-pagedemocracydograde #edit-title {margin-bottom:0;}
-#frm-democracy #edit-title .control-data {padding-left:0;}
+/* Events */
+/* body.page-prox-pagedemocracydograde #edit-title {margin-bottom:0;} */
+#frm-events #edit-title {margin-bottom:0;}
+#frm-events #edit-title .control-data {padding-left:0;}
+#frm-events .control-label {color:darkgreen;}
 
 /* Funding Proposal */
 #frm-proposal #edit-subtitle .table {margin-left:25px;}
