@@ -21,7 +21,7 @@ list ($address, $city, $state, $zip) = [@$m_street, @$m_city, @$m_state, @$m_zip
 foreach (['state', 'state2'] as $k) $$k = strtoupper(@$$k); // convert states to uppercase
 
 list ($partner, $partnerCode, $action) = isDEV 
-? ['NEWAAB', '1495kJHm0h145PHh2345h', 'http://localhost/cgMembers/signup'] 
+? ['NEWAAB', '1495kJHm0h145PHh2345h', 'http://localhost/cgmembers/signup'] 
 : ['NEWAIL', '5aCnXTQvwRoqKu3YGUvp', 'signup'];
 $customer = @$m_number;
 $autopay = TRUE;

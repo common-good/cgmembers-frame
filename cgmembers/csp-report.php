@@ -6,7 +6,7 @@
  */
 
 $host = $_SERVER['HTTP_HOST'];
-if ($host == 'localhost') list ($dev, $host) = [TRUE, $host . '/cgMembers'];
+if ($host == 'localhost') list ($dev, $host) = [TRUE, $host . '/cgmembers'];
 $agt = $_SERVER['HTTP_USER_AGENT'];
 $ip = $_SERVER['REMOTE_ADDR'];
 $scheme = @$dev ? 'http' : 'https';
