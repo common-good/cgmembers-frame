@@ -89,7 +89,7 @@ function isGiveback($payer, $payee, $data) {
 function badUnpaidInv($nvid, &$inv = '') {
   $fields = 'nvid,status,amount,payer,payee,goods,purpose,flags,data,created';
   if (!$inv = db\get($fields, 'r_invoices', 'nvid=:nvid', compact('nvid'))) return 'no matching invoice';
-  if ($inv['status'] > TX_APPROVED) return 'already paid';
+  if ($inv['status'] >= TX_PAID) return 'already paid';
 }
 
 /**

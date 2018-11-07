@@ -67,12 +67,13 @@ EOF;
  */
 function myCustTxs($starting, $ending, $mya, $a) {
   list ($id, $jid, $biz) = [$a->id, $a->jid ?: 0, $mya->id];
-  $where = 'payer IN (:id, :jid) AND payee=:biz';
+  $where = '(payer IN (:id, :jid) AND payee=:biz) OR (payee IN (:id, :jid) AND payer=:biz)';
+  $amount = 'IF(payee=:biz, amount, -amount)';
   $sql = <<< X
-    SELECT CONCAT('tx #', payerTid) AS tid, amount AS paid, '' AS invoiced, created, :IS_ROUNDUP AS roundup, :IS_DISPUTED AS disputed, payeeFor AS purpose
+    SELECT CONCAT('tx #', IF(payee=:biz, payerTid, payeeTid)) AS tid, $amount AS paid, '' AS invoiced, created, :IS_ROUNDUP AS roundup, :IS_DISPUTED AS disputed, TRIM(IF(payee=:biz, payeeFor, payerFor)) AS purpose
     FROM r_txs WHERE $where
-    UNION SELECT CONCAT('inv #', nvid) AS tid, '' AS paid, amount AS invoiced, created, :IS_ROUNDUP AS roundup, :IS_DISPUTED AS disputed, purpose
-    FROM r_invoices WHERE $where
+    UNION SELECT CONCAT('inv #', nvid) AS tid, '' AS paid, $amount AS invoiced, created, :IS_ROUNDUP AS roundup, :IS_DISPUTED AS disputed, purpose
+    FROM r_invoices WHERE $where ORDER BY created
 X;
   return db\q($sql, compact(ray('id jid biz')));
 }
@@ -399,7 +400,7 @@ function transfer($ttype, $a1, $a2, $amount, $for, $data = []) {
     }
   }
 //  $roundup = (r\acct($payer)->roundup and !@$data['isGift'] and !@$data['roundups'] and $amount > 0); // payer, not a1 or loser
-  $roundup = (r\acct($payer)->roundup and !@$data['roundups'] and $amount > 0); // payer, not a1 or loser
+  $roundup = (r\acct($payer)->roundup and !@$data['roundups'] and $amount > 0 and $payee != CGID); // payer, not a1 or loser
   if ($amount > 0 AND $goods == FOR_GOODS) {
     $price = $loserA->applyCoupon($gainerA, $amount, $coupon, $coupid);
     if ($coupon) $data += compact(ray('coupon coupid'));

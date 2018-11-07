@@ -1,4 +1,4 @@
-Feature: Transactions
+Feature: Statements
 AS a member
 I WANT a prinatable report of my transactions for the month
 SO I have a formal record of them.

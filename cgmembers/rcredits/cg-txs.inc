@@ -144,11 +144,11 @@ function sortRows($rows, $descending) {
   return array_values($rows);
 }
 
-function setupDownload($starting, $ending) {
+function setupDownload($starting, $ending, $fileId = PROJECT_ID) {
   global $mya;
   $dt1 = strftime('%Y%m%d', $starting);
   $dt2 = strftime('%Y%m%d', $ending);
-  u\csvStart(($mya->cAdmin ? $mya->mainQid : PROJECT_ID) . "$dt1-$dt2.csv");
+  u\csvStart(($mya->cAdmin ? $mya->mainQid : $fileId) . "$dt1-$dt2.csv");
 }
 
 /**
