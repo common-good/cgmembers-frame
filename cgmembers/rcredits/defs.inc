@@ -28,7 +28,7 @@ define('SCRIPTS_TOP', 'x/jquery-3.3.1.min x/jquery.once x/jquery-ui.min x/bootst
 //define('SCRIPTS', 'form goo-jsapi misc charts chart-data download croppic crop-setup ballot x/bootstrap.slider.min countries print-country focus-on x/typeahead.bundle.min suggest-who on-submit chimp followup-email get-ssn change-ctty advanced-dates advanced-prefs bank-prefs which funding-criteria signup prejoint invite-link gift drupal user extend-settings'); // all possible scripts, in order (after SCRIPTS_TOP)
 define('SCRIPTS', 'x/bootstrap-toggle.min parse-query misc croppic crop-setup x/bootstrap-slider.min ballot countries x/typeahead.bundle.min on-submit scraps drupal user'); // all possible scripts, in order (after SCRIPTS_TOP). drupal and user are for password.
 
-define('DEV_ROOT', '/cgMembers-frame/cgmembers'); // path to drupal root on DEV machine
+define('DEV_ROOT', '/cgmembers-frame/cgmembers'); // path to drupal root on DEV machine
 define('DEV_PW2', 'devPassword#two!'); // second password on DEV machine (len must be 16, 24, or 32)
 define('DEV_VKEYPW', 'wt38BqWMslj3uUHUOto7fNi5ExL9CC7S7ffjn_q6zCY'); // password for very secure key, on DEV machine
 define('DEV_ADMIN_PASS', '123'); // admin password when isDEV
@@ -422,11 +422,11 @@ define('B_FUNDING', 16); // invoice has already instigated an appropriate bank t
 define('TX_FLAGS', 'taking disputed offline short undone undoes crumbs roundups roundup patronage gift loan investment stake fine noask funding');
 
 // Invoice status (txid >= TX_PAID if paid)
-define('TX_APPROVED', -2); // invoice is approved but not paid
-define('TX_DENIED', -1); // invoice rejected by the non-originator
-define('TX_PENDING', 0); // charged, waiting for confirmation
+define('TX_DENIED', -2); // invoice rejected by the non-originator
+define('TX_PENDING', -1); // charged, waiting for confirmation
+define('TX_APPROVED', 0); // invoice is approved but not paid
 define('TX_PAID', 1); // any status this amount or more is a payment transaction record ID (xid)
-define('TX_STATUSES', t('-2:approved,-1:denied,0:OPEN,1:paid'));
+define('TX_STATUSES', t('-2:denied,-1:OPEN,0:approved,1:paid'));
 
 // Transaction channels (roughly in order of simplicity and generality of messages) (CGF)
 define('TX_SYS', 0);
