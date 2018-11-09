@@ -5,7 +5,7 @@ SO I can spend it with my rCard.
 
 Setup:
   Given members:
-  | id   | fullName | floor | minimum | flags               | achMin | risks   |*
+  | uid  | fullName | floor | minimum | flags               | achMin | risks   |*
   | .ZZA | Abe One  |     0 |     100 | co,ok,refill,bankOk | 30     | hasBank |
   | .ZZB | Bea Two  |   -50 |     100 | ok,refill           | 30     |         |
   | .ZZC | Our Pub  |   -50 |     100 | ok,co               | 50     | hasBank |
@@ -15,7 +15,7 @@ Setup:
   
 Scenario: a member is barely below target
   Given balances:
-  | id   | rewards | savingsAdd | balance |*
+  | uid  | rewards | savingsAdd | balance |*
   | .ZZA |      20 |          0 | 99.99   |
   When cron runs "getFunds"
   Then usd transfers:
@@ -28,7 +28,7 @@ Scenario: a member is barely below target
 
 Scenario: a member has a negative balance
   Given balances:
-  | id   | rewards | savingsAdd | balance |*
+  | uid  | rewards | savingsAdd | balance |*
   | .ZZA |      20 |          0 | -50     |
   When cron runs "getFunds"
   Then usd transfers:
@@ -40,7 +40,7 @@ Scenario: a member has a negative balance
 
 Scenario: an unbanked member barely below target draws on another account
   Given balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA | 200   |
   | .ZZB | 99.99 |
   When cron runs "getFunds"
@@ -53,7 +53,7 @@ Scenario: an unbanked member barely below target draws on another account
   
 Scenario: an unbanked member barely below target cannot draw on another account
   Given balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA | 0      |
   | .ZZB | 99.99  |
   When cron runs "getFunds"
@@ -63,14 +63,14 @@ Scenario: an unbanked member barely below target cannot draw on another account
 
 Scenario: a member is at target
   Given balances:
-  | id   | rewards | savingsAdd | balance |*
+  | uid  | rewards | savingsAdd | balance |*
   | .ZZA |      20 |          0 |     100 |
   When cron runs "getFunds"
   Then bank transfer count is 0
   
 Scenario: a member is well below target
   Given balances:
-  | id   | rewards | savingsAdd | balance | minimum |*
+  | uid  | rewards | savingsAdd | balance | minimum |*
   | .ZZA |      25 |          0 |      50 |     151 |
   When cron runs "getFunds"
   Then usd transfers:
@@ -82,7 +82,7 @@ Scenario: a member is well below target
 
 Scenario: a member is under target but already requested barely enough funds from the bank
   Given balances:
-  | id   | rewards | savingsAdd | balance |*
+  | uid  | rewards | savingsAdd | balance |*
   | .ZZA |      20 |          0 |      20 |
   | .ZZB |      20 |          0 |     100 |
   When cron runs "getFunds"
@@ -96,17 +96,17 @@ Scenario: a member is under target but already requested barely enough funds fro
 Scenario: a member is under target and has requested insufficient funds from the bank
 # This works only if member requests more than R_USDTX_QUICK the first time (hence ZZD, whose target is 300)
   Given members:
-  | id   | fullName | floor | minimum | flags            | achMin | risks   |*
+  | uid  | fullName | floor | minimum | flags            | achMin | risks   |*
   | .ZZD | Dee Four |   -50 |     300 | ok,refill,bankOk | 30     | hasBank |
   And balances:
-  | id   | rewards | savingsAdd | balance |*
+  | uid  | rewards | savingsAdd | balance |*
   | .ZZD |      20 |          0 |      20 |
   When cron runs "getFunds"
   Then usd transfers:
   | payee | amount | deposit |*
   | .ZZD  |    280 |       0 |
   Given balances:
-  | id   | rewards | savingsAdd | balance |*
+  | uid  | rewards | savingsAdd | balance |*
   | .ZZD |      20 |          0 |   19.99 |
   When cron runs "getFunds"
   Then usd transfers:
@@ -115,7 +115,7 @@ Scenario: a member is under target and has requested insufficient funds from the
 
 Scenario: a member member with zero target has balance below target
   Given balances:
-  | id   | minimum | balance |*
+  | uid  | minimum | balance |*
   | .ZZA |       0 | -10     |
   When cron runs "getFunds"
   Then usd transfers:
@@ -124,7 +124,7 @@ Scenario: a member member with zero target has balance below target
   
 Scenario: an unbanked member with zero target has balance below target
   Given balances:
-  | id   | minimum | balance |*
+  | uid  | minimum | balance |*
   | .ZZA |       0 |   0 |
   | .ZZB |       0 | -10 |
   When cron runs "getFunds"
@@ -132,7 +132,7 @@ Scenario: an unbanked member with zero target has balance below target
 
 Scenario: a member has a deposited but not completed transfer
   Given balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |  80 |
   | .ZZB | 100 |
   And usd transfers:
@@ -144,10 +144,10 @@ Scenario: a member has a deposited but not completed transfer
 
 Scenario: an account has a target but no refills
   Given members have:
-  | id   | flags     |*
+  | uid  | flags     |*
   | .ZZB | ok,bankOk |
   And balances:
-  | id   | rewards | balance |*
+  | uid  | rewards | balance |*
   | .ZZA |       0 |     100 |
   | .ZZB |      20 |     -50 |
   When cron runs "getFunds"
@@ -155,7 +155,7 @@ Scenario: an account has a target but no refills
 
 Scenario: a non-member has a target and refills
   Given members:
-  | id   | fullName | floor | minimum | flags         | achMin | risks   |*
+  | uid  | fullName | floor | minimum | flags         | achMin | risks   |*
   | .ZZE | Eve Five |     0 |     100 | refill,bankOk | 30     | hasBank |
 	When cron runs "getFunds"
   Then usd transfers:
@@ -167,7 +167,7 @@ Scenario: a non-member has a target and refills
 	
 Scenario: member's bank account has not been verified
   Given members have:
-  | id   | balance | flags     |*
+  | uid  | balance | flags     |*
   | .ZZA |      10 | ok,refill |
   When cron runs "getFunds"
   Then usd transfers:
@@ -177,7 +177,7 @@ Scenario: member's bank account has not been verified
 
 Scenario: a member's bank account gets verified
   Given members have:
-  | id   | balance | flags     |*
+  | uid  | balance | flags     |*
   | .ZZA |       0 | ok,refill |
   And usd transfers:
   | txid | payee | amount | created   | completed | deposit   |*
@@ -185,6 +185,6 @@ Scenario: a member's bank account gets verified
 	When cron runs "everyDay"
   Then count "usd" is 0
 	And members have:
-  | id   | balance | flags            |*
+  | uid  | balance | flags            |*
   | .ZZA |       0 | ok,refill,bankOk |
 	

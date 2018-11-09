@@ -3,7 +3,7 @@
 /**
  * @file
  * Display a chart (normally in an iframe), using data from a Common Good Regional Server.
- * for example at http://localhost/cgMembers-frame/cgMembers/rcredits/chart.php?ctty=0&chart=growth
+ * for example at http://localhost/cgmembers-frame/cgmembers/rcredits/chart.php?ctty=0&chart=growth
  * NOTE: this script resides on cg4.us, not on the regional server.
  */
 
@@ -13,13 +13,13 @@ $title = 'Charts | Common Good Western Massachusetts';
 
 //$site = 'https://new.commongood.earth';
 //$site = 'https://ws.rcredits.org';
-//$site = 'http://localhost/cgMembers-frame/cgMembers';
+//$site = 'http://localhost/cgmembers-frame/cgmembers';
 
 foreach (ray('ctty chart site selectable') as $k) $$k = urlencode(@$_GET[$k]); // encode to sanitize output
 if (!$site0 = @$site) {
   $site = 'https://new.commongood.earth';
 } else if (@$site == 'dev') {
-  $site = 'http://localhost/cgMembers-frame/cgMembers';
+  $site = 'http://localhost/cgmembers-frame/cgmembers';
 } else $site = 'https://' . $site;
 
 $data = file_get_contents("$site/community/chart-data/ctty=$ctty&chart=$chart");

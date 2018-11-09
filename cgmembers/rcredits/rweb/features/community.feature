@@ -8,7 +8,7 @@ SO I can see how well the rCredits system is doing for myself, for my ctty, and 
 
 Setup:
   Given members:
-  | id   | fullName   | rebate | flags | jid   | minimum | floor | share | created   | activated |*
+  | uid  | fullName   | rebate | flags | jid   | minimum | floor | share | created   | activated |*
   | .ZZA | Abe One    |      5 | ok    | 0     |       5 |     0 |    10 | %today-6m | %today-5m |
   | .ZZB | Bea Two    |      5 | ok    | .ZZD  |    1000 |   -20 |    20 | %today-5w | %today-4w |
   | .ZZC | Corner Pub |     10 | ok,co | 0     |    2000 |    10 |    30 | %today-4w | %today-3w |
@@ -28,7 +28,7 @@ Setup:
   |  102 | .ZZC  |   3050 | %today-5d |
   |  103 | .ZZC  |    -50 | %today-2d |
   Then balances:
-  | id   | balance | rewards |*
+  | uid  | balance | rewards |*
   | .ZZA |    1000 |       0 |
   | .ZZB |    2000 |       0 |
   | .ZZC |    3000 |       0 |
@@ -55,7 +55,7 @@ Setup:
   |  30 | %today-1d | transfer  |    100 | .ZZC | .ZZA | payroll | %FOR_GOODS | %TX_WEB  |
   |  33 | %today-1d | transfer  |      1 | .ZZC | .AAB | gift    | %FOR_GOODS | %TX_CRON |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |  754.00 |
   | .ZZB | 2285.00 |
   | .ZZC | 2963.00 |

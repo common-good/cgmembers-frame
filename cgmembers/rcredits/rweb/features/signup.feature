@@ -6,7 +6,7 @@ SO I can be part of the Common Good Economy
 
 Setup:
   Given members:
-  | id   | fullName | acctType    | flags      | created  |*
+  | uid  | fullName | acctType    | flags      | created  |*
   | .ZZZ | Zeta Zot | personal    | ok         | 99654321 |
   And member is logged out
 
@@ -63,7 +63,7 @@ Scenario: A newbie registers in Western Massachusetts
   | fullName | email | phone     | country | zip   | federalId   | dob      | acctType     | address | city       | state | postalAddr                | tenure | owns | helper |*
   | Abe One  | a@ | 413-253-0000 | US      | 01002 | 111-22-3333 | 1/2/1990 | %CO_PERSONAL  | 1 A St. | Agawam | MA    | 1 A St. Agawam MA 01001 |     18 |    1 | .ZZZ   |
   Then members:
-  | id   | fullName | legalName | email | phone     | zip | country | state | city   | flags     | floor | address | postalAddr                | tenure | owns | helper |*
+  | uid  | fullName | legalName | email | phone     | zip | country | state | city   | flags     | floor | address | postalAddr                | tenure | owns | helper |*
   | .AAA | Abe One  | Abe One   | a@ | +14132530000 | 01002 | US      | MA    | Agawam | confirmed | 0     |    1 A St. | 1 A St. Agawam MA 01001 |     18 |    1 | .ZZZ  |
   And we email "verify" to member "a@" with subs:
   | fullName | name   | quid    | site      | code      |*
@@ -79,7 +79,7 @@ Scenario: A newbie registers with an unconfirmed icard invitation
   | fullName | email | phone     | country | zip | federalId   | dob      | acctType     | address | city       | state | postalAddr                | tenure | owns | helper |*
   | Abe One  | a@ | 413-253-0000 | US      | 01001      | 111-22-3333 | 1/2/1990 | %CO_PERSONAL  | 1 A St. | Agawam | MA    | 1 A St. Agawam MA 01001 |     18 |    1 | .ZZZ |
   Then members:
-  | id   | fullName | legalName | email | phone     | zip | country | state | city   | flags | floor | address | postalAddr              | tenure | owns | iCode | helper |*
+  | uid  | fullName | legalName | email | phone     | zip | country | state | city   | flags | floor | address | postalAddr              | tenure | owns | iCode | helper |*
   | .AAA | Abe One  | Abe One   | a@ | +14132530000 | 01001      | US      | MA    | Agawam |       | 0     |   1 A St. | 1 A St. Agawam MA 01001 |     18 |    1 |     5 | .ZZZ   |
   And we show "Verify Your Email Address"
   And we say "status": "info saved|step completed"
@@ -102,7 +102,7 @@ Scenario: A newbie registers with an unconfirmed self-invitation
   | fullName | email | phone     | country | zip | federalId   | dob      | acctType     | address | city       | state | postalAddr                | tenure | owns | helper |*
   | Abe One  | a@ | 413-253-0000 | US      | 01001      | 111-22-3333 | 1/2/1990 | %CO_PERSONAL  | 1 A St. | Agawam | MA    | 1 A St. Agawam MA 01001 |     18 |    1 | .ZZZ   |
   Then members:
-  | id   | fullName | legalName | email | phone     | zip | country | state | city   | flags | floor | address | postalAddr              | tenure | owns | iCode      | helper |*
+  | uid  | fullName | legalName | email | phone     | zip | country | state | city   | flags | floor | address | postalAddr              | tenure | owns | iCode      | helper |*
   | .AAA | Abe One  | Abe One   | a@ | +14132530000 | 01001      | US      | MA    | Agawam |       | 0     |   1 A St. | 1 A St. Agawam MA 01001 |     18 |    1 | %IBY_SELF | .ZZZ   |
   And we show "Verify Your Email Address"
   And we say "status": "info saved|step completed"
@@ -124,7 +124,7 @@ Scenario: A newbie registers with a different legal name
   | legalName | fullName | email | phone     | country | zip | federalId   | dob      | acctType     | address | city       | state | postalAddr                | tenure | owns | helper |*
   | Abe One   | Abey One | a@ | 413-253-0000 | US      | 01001      | 111-22-3333 | 1/2/1990 | %CO_PERSONAL  | 1 A St. | Agawam | MA    | 1 A St., Agawam, MA 01001 |     18 |    1 | .ZZZ   |
   Then members:
-  | id   | fullName | legalName | email | phone     | zip | country | state | city   | flags     | name    | helper |*
+  | uid  | fullName | legalName | email | phone     | zip | country | state | city   | flags     | name    | helper |*
   | .AAA | Abey One | Abe One   | a@ | +14132530000 | 01001      | US      | MA    | Agawam | confirmed | abeyone | .ZZZ   |
 
 Scenario: A newbie registers from elsewhere
@@ -134,8 +134,8 @@ Scenario: A newbie registers from elsewhere
   | fullName | email | phone       | zip | federalId   | dob      | acctType    | address | city | state | postalAddr                   | tenure | owns | helper |*
   | Abe One  | a@ | (333) 253-0000 | 03768-2345 | 111-22-3333 | 1/2/1990 | %CO_PERSONAL | 1 A ST. | Lyme | NH    | 1 A ST., Lyme, NH 03768-2345 |     18 |    1 | .ZZZ   |
  Then members:
-  | id      | fullName | email | phone     | zip | state | city | flags     | helper |*
-  | NEN.AAA | Abe One  | a@ | +13332530000 | 03768-2345 | NH    | Lyme | confirmed | .ZZZ   |
+  | uid    | fullName | email | phone     | zip | state | city | flags     | helper |*
+  | NENAAA | Abe One  | a@ | +13332530000 | 03768-2345 | NH    | Lyme | confirmed | .ZZZ   |
   And we show "Verify Your Email Address"
   And we say "status": "info saved|step completed"
   And we email "verify" to member "a@" with subs:
@@ -149,7 +149,7 @@ Scenario: A newbie registers with no case
   | fullName | email | phone     | zip | federalId   | dob      | acctType     | address | city    | state | postalAddr                | tenure | owns | helper |*
   | abe one  | a@ | 413-253-0000 | 01002      | 111-22-3333 | 1/2/1990 | %CO_PERSONAL  | 1 A ST. | amherst | MA    | 1 A ST., Amherst, MA 01001 |     18 |    1 | .ZZZ   |
   Then members:
-  | id   | fullName | email | phone     | zip | state | city    | flags     | floor | postalAddr | helper |*
+  | uid  | fullName | email | phone     | zip | state | city    | flags     | floor | postalAddr | helper |*
   | .AAA | Abe One  | a@ | +14132530000 | 01002      | MA    | Amherst | confirmed | 0     | 1 A ST., Amherst, MA 01001 | .ZZZ   |
 
 Scenario: A member registers bad email
@@ -178,7 +178,7 @@ Scenario: A member registers bad zip
 Scenario: A member registers again
   Given invitation to email "a@" from member ".ZZZ" is "c0D3"
   Given members:
-  | id   | fullName  | phone  | email | city  | state |*
+  | uid  | fullName  | phone  | email | city  | state |*
   | .ZZA | Abe One    | +20001 | a@   | Atown | AK    |
   When member "?" confirms form "signup/code=c0D3" with values:
   | fullName | email | phone      | zip | federalId   | dob      | acctType    |*
@@ -194,18 +194,18 @@ Scenario: A member registers again
 
 Scenario: A member registers with an existing company
   Given members:
-  | id   | fullName | email | zip | phone        | city     | flags        |*
+  | uid  | fullName | email | zip | phone        | city     | flags        |*
   | .AAD | AAAme Co | myco@ | 01330      | +14136280000 | Ashfield | co,confirmed |
   And invitation to email "a@" from member ".ZZZ" is "c0D3"
   When member "?" confirms form "signup/code=c0D3" with values:
   | fullName | email | phone   | zip | federalId   | dob      | acctType    | company  | companyPhon  | companyOptions           | address | city    | state | postalAddr                 | tenure | owns | helper |*
   | Abe One  | a@    | 413-253-0002 | 01002 | 111-22-3333 | 1/2/1990 | %CO_PERSONAL | AAAme Co | (413)628-0000 | owner=>1,contractor=>1 | 1 A ST. | amherst | MA    | 1 A ST., Amherst, MA 01001 |     18 |    1 | .ZZZ   |
   Then members:
-  | id   | fullName | email | zip | state | city    | flags     | helper |*
+  | uid  | fullName | email | zip | state | city    | flags     | helper |*
   | .AAA | Abe One  | a@    | 01002      | MA    | Amherst | confirmed | .ZZZ   |
   And relations:
-  | id   | main | agent | permission | employee | owner | draw |*
-  | .AAA | .AAD | .AAA  |            |        0 |       1 |    0 |
+  | main | agent | permission | employee | owner | draw |*
+  | .AAD | .AAA  |            |        0 |       1 |    0 |
 
 Scenario: A member registers with an unknown company
   Given invitation to email "a@" from member ".ZZZ" is "c0D3"
@@ -213,7 +213,7 @@ Scenario: A member registers with an unknown company
   | fullName | email | phone   | zip | federalId   | dob      | acctType    | company  | companyPhon  | companyOptions | address | city    | state | postalAddr                 | tenure | owns | helper |*
   | Abe One  | a@    | 413-253-9876 | 01002 | 111-22-3333 | 1/2/1990 | %CO_PERSONAL | AAAme Co | (413)628-0000 | employee=>1  | 1 A ST. | amherst | MA    | 1 A ST., Amherst, MA 01001 |     18 |    1 | .ZZZ   |
   Then members:
-  | id   | legalName | email | zip | phone        | city    | flags     | helper |*
+  | uid  | legalName | email | zip | phone        | city    | flags     | helper |*
   | .AAA | Abe One   | a@    | 01002      | +14132539876 | Amherst | confirmed | .ZZZ   |
   And no relation:
   | main | agent |*

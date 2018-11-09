@@ -7,12 +7,12 @@ SO I know where it stands.
 
 Setup:
   Given members:
-  | id   | fullName   | postalAddr                   | floor | flags      | rebate |*
+  | uid  | fullName   | postalAddr                   | floor | flags      | rebate |*
   | .ZZA | Abe One    | 1 A St., Atown, AK 01000     | -100  | ok         |      5 |
   | .ZZB | Bea Two    | 2 B St., Btown, UT 02000     | -200  | ok,roundup |     10 |
   | .ZZC | Corner Pub | 3 C St., Ctown, Cher, FRANCE | -300  | ok,co      |     10 |
   And members have:
-  | id   | created   | share |*
+  | uid  | created   | share |*
   | ctty | %today-9w |     0 |
   | .ZZA | %today-7w |    10 |
   | .ZZB | %today-6w |    20 |
@@ -39,7 +39,7 @@ Setup:
   |   7 | %today-2d | transfer |      5 |           0 |           0 | .ZZB | .ZZC | cash J       |
   |   8 | %today-1d | transfer |     80 |           4 |           8 | .ZZA | .ZZC | whatever54   |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |      10 |
   | .ZZB |     225 |
   | .ZZC |     365 |
@@ -69,7 +69,7 @@ Scenario: A member clicks the summary tab with roundups
   |   9 | %today  | transfer |  80.02 |           4 |           8 | .ZZB | .ZZC | goodies |
   When member ".ZZB" visits page "summary"
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZB |  144.98 |
   And we show "Account Summary" with:
   | Name          | Bea Two (beatwo) |
@@ -92,7 +92,7 @@ Scenario: A company agent clicks the summary tab
   
 Scenario: Member's account is not active
   Given members have:
-  | id   | flags |*
+  | uid  | flags |*
   | .ZZA |       |
   When member ".ZZA" visits page "summary"
   Then we show "Verify Your Email Address"

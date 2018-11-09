@@ -5,7 +5,7 @@ SO I can make purchases as a financial unit with my account partner.
 
 Setup:
   Given members:
-  | id   | fullName   | email | cc  | cc2  | floor | flags                | jid  |*
+  | uid  | fullName   | email | cc  | cc2  | floor | flags                | jid  |*
   | .ZZA | Abe One    | a@    | ccA | ccA2 |  -200 | ok,confirmed,debt    | .ZZB |
   | .ZZB | Bea Two    | b@    | ccB | ccB2 |  -200 | ok,confirmed,debt    | .ZZA |
   | .ZZC | Corner Pub | c@    | ccC |      |  -200 | ok,confirmed,co,debt |    0 |
@@ -13,13 +13,13 @@ Setup:
   | .ZZE | Eve Five   | e@    | ccE | ccE2 |     0 | ok,confirmed,secret  |    0 |
   | .ZZF | Far Co     | f@    | ccF |      |     0 | ok,confirmed,co      |    0 |
   And devices:
-  | id   | code |*
+  | uid  | code |*
   | .ZZC | devC |
   And selling:
-  | id   | selling         |*
+  | uid  | selling         |*
   | .ZZC | this,that,other |
   And company flags:
-  | id   | coFlags      |*
+  | uid  | coFlags      |*
   | .ZZC | refund,r4usd |
   And relations:
   | main | agent | permission | rCard |*
@@ -36,7 +36,7 @@ Setup:
   | 3   | %today-6m | signup |    200 | ctty | .ZZC | signup  |
   | 4   | %today-6m | grant  |    200 | ctty | .ZZF | stuff   |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | ctty |    -200 |
   | .ZZA |       0 |
   | .ZZB |       0 |
@@ -58,7 +58,7 @@ Scenario: A cashier asks to charge someone
   | created | fullName | otherName  | amount | payerPurpose |*
   | %today  | Bea Two  | Corner Pub | $400   | food         |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | ctty |    -200 |
   | .ZZA |       0 |
   | .ZZB |    -400 |

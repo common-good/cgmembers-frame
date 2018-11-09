@@ -141,13 +141,19 @@ function g($k, $v = NULL) {
  */
 /**/ function bs($n, $list = B_LIST) {d('a.flagsDesc', $n, $list);} // show bit numbers/names
 /**/ function tm($n = '') {debug($result = $n ? (is_numeric($n) ? date('m/d/Y H:i:s a', $n) : strtotime($n)) : time()); return $result;} // convert and display unixtime or string time
-/**/ function btm($bankTxId = '') {debug(date('m/d/Y H:i:s a', DAY_SECS * substr($bankTxId, 0, 5)));}
-function bankTxId($btxid) { // for debugging reconcilecttyfund.inc
+function btxid($bankTxId = '') {
+  $dt = DAY_SECS * substr($bankTxId, 0, 5);
+  $dt = date('Ymd', $dt + DAY_SECS); // add a day for U.S. timezones
+  $acct = '132653' . substr($bankTxId, 5, 5);
+  $txid = substr($bankTxId, -7);
+  return $acct . $dt . $txid;
+///  debug(date('m/d/Y H:i:s a', $dt));
+}
+function bankTxId($btxid) { // for reconcilecttyfund.inc (short form of bank's txid in r_usd and r_usd2)
 	list ($txid, $dt, $acct) = [substr($btxid, -7), strtotime(substr($btxid, -15, 8)), substr($btxid, 0, strlen($btxid) - 7 - 8)];
   list ($txidLen, $acctLen) = isDEV ? [1, 4] : [7, 5];
   $res = floor($dt / DAY_SECS) . substr($acct, -5, $acctLen) . substr($txid, -$txidLen);
   return 0 + $res; // (intval fails here)
-//	return 0 + (substr($acct, -5, isDEV ? 4 : 5) . floor(strtotime($dt) / DAY_SECS) . (isDEV ? substr($txid, -1) : $txid)); // (intval fails here)
 }
 function a($id = '', $agent = '') { // return an account object
 	global $lastA; 
@@ -157,7 +163,7 @@ function a($id = '', $agent = '') { // return an account object
 }
 function x($xid, $mya = '') {f('r.x', $xid, $mya);} // return a transaction object
 /**/ function da($idfield) {list ($id, $field) = ray($idfield); debug(a($id)->$field);}
-/**/ function step($a) {debug(us($a)->step());}
+/**/ function step($a) {debug(a($a)->step());}
 /**/ function ctty($id) {if (!$id or !a($id)) die(trace()); return a(a($id)->community);}
 /**/ function flog($s = '') { // log to file and return log file name
   $fileName = LOG_DIR . date('Ym') . '.log'; // new log file every month

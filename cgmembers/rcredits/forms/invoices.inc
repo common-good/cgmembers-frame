@@ -7,7 +7,7 @@ use CG as r;
 use CG\DB as db;
 use CG\Txs as x;
 
-include __DIR__ . '/../cg-txs.inc';
+include_once __DIR__ . '/../cg-txs.inc';
 
 /**
  * List Invoices
@@ -25,7 +25,7 @@ function formInvoices($form, &$sta, $toFrom, $args = '') {
   if (@$do == 'no') return w\go("handle-invoice/nvid=$nvid&toMe=$toMe&ret=" . u\urlify($url));
 */
   
-  $list = item(invoiceList($toMe, $starting, $ending, $states, $url, @$download)); // must precede starting & ending
+  $list = item(invoiceList($toMe, $starting, $ending, $states, $url, @$download, $toFrom)); // must precede starting & ending
 
   $title = t('Invoices ') . ($toMe ? t('TO You') : t('FROM You'));
   $subtext =  $toMe ? t('pay or deny an invoice') : t('edit or delete an invoice');
@@ -50,7 +50,7 @@ function formInvoices_submit($form, &$sta) {
  * Prepare the list of invoices
  * @return string table-based HTML listing the relevant invoices
  */
-function invoiceList($toMe, $starting, $ending, $states, $url, $download) {
+function invoiceList($toMe, $starting, $ending, $states, $url, $download, $toFrom) {
 
   $headHelp = t('Invoice number,Date invoice was created,Who sent you the invoice,What is the the invoice for,Total invoice amount,Click a row to change an invoice\'s status');
   $classes = ray('nvid date name purpose amount buttons');
@@ -63,7 +63,7 @@ function invoiceList($toMe, $starting, $ending, $states, $url, $download) {
 
   $maxRows = @$download ? PHP_INT_MAX : TX_MAX_ROWS; // don't overwhelm the screen
   if (@$download) {
-    $csv = x\setupDownload($starting, $ending);
+    $csv = x\setupDownload($starting, $ending, 'cg' . t('Invoices%way', 'way', $toFrom == 'to' ? t('To') : t('From')));
     u\csv($downloadHeader);
   } else $csv = FALSE;
 
@@ -77,7 +77,7 @@ function invoiceList($toMe, $starting, $ending, $states, $url, $download) {
   if (strpos($states, '2') === FALSE) $where .= ' AND i.status<>:TX_DENIED';
   */
   $sql = <<<EOF
-    SELECT nvid, i.created, u.fullName AS other, i.purpose, i.amount, i.status, i.data, t.{$me}Tid AS tid
+    SELECT nvid, i.created, u.fullName AS other, i.purpose, i.amount, i.status AS status0, i.data, t.{$me}Tid AS tid
     FROM r_invoices i 
     LEFT JOIN users u ON u.uid=i.$yu
     LEFT JOIN r_txs t ON t.xid=i.status
@@ -96,28 +96,22 @@ EOF;
     
     $do = @"$url&nvid=$nvid&do";
 
-    if ($status > 1) {
+    if ($status0 > 1) {
 //      $button1 = $button2 = $button3 = '';
       $status = t('paid') . " (Tx#$tid)";
     } else {
-//      $button1 = $toMe ? button(t(' PAY '), "$do=ok", t('Pay this invoice')) : '';
-//      $button2 = (!$toMe ?: $status == TX_PENDING) ? button(' X ', "$do=no", $toMe ? t('Deny this invoice') : t('Delete this invoice')) : '';
-//    $button3 = (!$toMe and $status == TX_PENDING) ? "<input type='image' title='Edit this invoice' src='$rUrl/images/icons/edit.png' />" : '';
-//      $button3 = '';
       $statuses = ray(TX_STATUSES);
       $data = unserialize($data);
-      $status = $status1 = ucfirst($statuses[$status0 = $status]);
-//      $status = $status == TX_DENIED ? w\doLnk('reason', $statuses[$status], '', ray('title', t('Why: ') . @$data['whyNot'])) : ucfirst($statuses[$status]);
-      $status = $status0 == TX_DENIED ? tags('a', w\popHelp($status, t('Reason: ') . @$data['whyNot'])) : $status;
+      $status = $status1 = ucfirst($statuses[$status0]);
+      if ($status0 == TX_DENIED) $status = tags('a', w\popHelp($status, t('Reason: ') . @$data['whyNot']));
     }
 
 //    $buttons = "<div class='txs-buttons'><div>$button1</div><div>$button2</div><div>$status</div></div>";
     $buttons = "<div class='txs-buttons'>$status</div>";
     
-    if (@$download) {
-      if ($status0 == TX_DENIED) $status1 .= tr(' (%whyNot)', 'whyNot', @$data['whyNot']);
-      $row[] = $status1;
-    } else $row[] = $buttons;
+    $row[] = @$download
+    ? ($status0 == TX_DENIED ? $status1 . tr(' (%whyNot)', 'whyNot', @$data['whyNot']) : $status)
+    : $buttons;
     $rows[] = $row;
   }
   if ($tx and $q->fetchAssoc()) say('transaction list truncated'); // there was more than we could show

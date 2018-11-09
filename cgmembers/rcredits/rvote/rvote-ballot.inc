@@ -99,23 +99,10 @@ function showProposal($mya, $proposal, &$err = FALSE, $grading = FALSE) {
   global $quids;
   $noneErr = t('There are no active proposals to grade in your community.');
   $qcount = count($quids = getProposals($mya));
-  $qnum = array_search(-$proposal, $quids, TRUE); // this works even if the number of elections/proposal changes during grading
+  if (!$proposal) $proposal = $quids[0];
+  $qnum = array_search($proposal . '', $quids, TRUE); // this works even if the number of elections/proposal changes during grading
   
-  /*
-  // This new logic may be good:
-  $ctty = $mya->community;
-  $crit = "endProposals<>0 AND type='R' AND ctty=:ctty ORDER BY endProposals DESC";
-  if (!$res = db\get('id AS fundingId,endProposals AS endDate', 'r_questions', $crit, compact('ctty'))) return $noneErr;
-  extract($res);
-  
-  if ($endDate < time()) return showProposalGrades($fundingId, $extra);
-
-  $quids = getProposals($mya, $fundingId);
-// end new logic
-*/
-//  u\setDft($proposal, -$quids[0]);
-  
-  if (!$row = db\get('*', 'r_proposals', 'id=-:proposal', compact('proposal'))) return !$err = t('There is no such proposal.');
+  if (!$row = db\get('*', 'r_proposals', 'id=:proposal', compact('proposal'))) return !$err = t('There is no such proposal.');
   
   extract(just('project categories overview purpose systemic where when until how amount recovery budgetTotal budget contingency qualifications evaluation name contact phone email sponsor', $row));
 
@@ -126,10 +113,10 @@ function showProposal($mya, $proposal, &$err = FALSE, $grading = FALSE) {
     $qndpy = $qnum + 1; // $qnum starts at 0
 
   // get current voted values for this question
-    $defaults = getCurrentVote($mya, $extra, $proposal, $optType, '');
+    $defaults = getCurrentVote($mya, $extra, -$proposal, $optType, '');
     $optCount = $defaults['optCount'];
     $opts = getOptsX($defaults['ballot'], 'M', $defaults);
-    $detail = t('Scroll down to see the proposal. Click a letter twice for X<sup>+</sup>, thrice for X<sup>-</sup>.');
+    $detail = t('Scroll down to see the proposal. Click a rating twice for X<sup>+</sup>, thrice for X<sup>-</sup>.');
 
     w\js('ballot');
     
@@ -154,7 +141,7 @@ $opts
 EOF;
 
     $extra['mid'] = w\item($mid);
-    $extra['question'] = w\hidFld($proposal);
+    $extra['question'] = w\hidFld(-$proposal);
     $submit = w\submit(BARE . t('Done With Proposal #') . $qndpy, 'primary', 'md', w\clas('pull-right'));
     $extra['prev'] = w\submit('&laquo; ' . t('Previous'), 'primary', 'md', w\suffix(w\rendA('submit', $submit)));
   } elseif ($qnum === FALSE and !$mya->admin) return !$err = t('That proposal is not viewable at this time.');
@@ -169,12 +156,12 @@ EOF;
     t('Categories:') => str_replace(' ', ', ', $categories),
     t('Description:') => $overview,
     t('Purpose:') => $purpose,
-    t('Systemic:') => $systemic,
+    t('Systemic Change:') => $systemic,
     t('Where:') => $where,
-    t('When:') => t('From %start to %end.', 'start end', u\fmtDate($when), u\fmtDate($until)),
+    t('When:') => t('From %start to %end.', 'start end', u\fmtDate($when, TRUE), u\fmtDate($until, TRUE)),
     t('Implementation Plan:') => $how,
     t('Amount Requested:') => u\fmtAmt($amount),
-    t('Recovery:') => join("\n", @$ways ?: []),
+    t('Recovery of Funds:') => join("\n", @$ways ?: []),
 //    t('Funding Type:') => $types[$type],
     t('Total Budget:') => u\fmtAmt($budgetTotal),
     t('Budget Details:') => $budget,
@@ -273,6 +260,11 @@ EOF;
   return "<div id=\"proposalGrades\">$list</div>";
 }
 
+/**
+ * Interpret and record the votes selected by the user.
+ * @param assoc $args: input data-slider-handle
+ * @param char $type: type of vote
+ */
 function processvote($args, $type) {
 	global $quids, $now, $ermsg;
 	if (!$optionCount = $args['optionCount']) return;
@@ -302,7 +294,7 @@ function processvote($args, $type) {
  * If the voter has no vote record yet, create it.
  * @param assoc $extras: (RETURNED) extra fields to add to the form
  * @param int $voter: who's voting (user record ID)
- * @param int $question: question ID
+ * @param int $question: question ID or negative proposal ID
  * @param char $type: question type (M=multiple-choice B=budget R=range E=essay)
  * @param char $optOrder: how to order the options
  */
@@ -313,7 +305,6 @@ function getCurrentVote($mya, &$extras, $question, $type, $optOrder) {
     $ballot = db\insert('r_ballots', compact(ray('question voter created')));
   }
   
-
   $sql = <<<EOF
     SELECT v.id AS vote, v.option, v.grade, v.gradeMax, o.minimum AS min, o.maximum AS max, v.isVeto, v.text
     FROM r_ballots b INNER JOIN r_votes v ON v.ballot=b.id LEFT JOIN r_options o ON o.id=v.option
@@ -322,8 +313,10 @@ EOF;
 	$q = db\q($sql, $subs = compact('ballot'));
 
   $rowCount = $q->rowCount();
-  if ($question < 0) $question = -min(getProposals($mya)); // grading a proposal, only first has options listed
-	$optCount = db\count('r_options', 'question=:question', compact('question'));
+
+	$optCount = $question < 0
+  ? db\count('r_criteria', 'auto=0 AND ctty=0')
+  : db\count('r_options', 'question=:question', compact('question'));
   
 	if($rowCount < $optCount) { // vote records not set up yet (or interrupted)
 		if($rowCount) db\q('DELETE FROM r_votes WHERE ballot=:ballot', compact('ballot'));
@@ -379,7 +372,9 @@ function setupVote(&$extras, $voter, $question, $optOrder, &$ballot) {
 }
 
 function setupOptions($question, $optOrder='') {
-	$q = db\q('SELECT id AS `option`, displayOrder FROM r_options WHERE question=:question', compact('question'));
+  if ($question < 0) {
+    $q = db\q('SELECT -id AS `option`, displayOrder FROM r_criteria WHERE auto=0 AND ctty=0');
+  } else $q = db\q('SELECT id AS `option`, displayOrder FROM r_options WHERE question=:question', compact('question'));
 	$opts = [];
 	while ($row = $q->fetchAssoc()) { // make a list of the options
 		extract($row);
@@ -394,10 +389,11 @@ function setupOptions($question, $optOrder='') {
 function getOptsX($ballot, $type, $defaults) {
 
 // RETURN the options in the order the voter is used to seeing them
-  $sql = 'SELECT o.text, o.detail FROM (r_options o INNER JOIN r_votes v ON v.option=o.id) INNER JOIN r_ballots b on b.id=v.ballot WHERE b.id=:ballot ORDER BY v.displayOrder';
+//  $sql = 'SELECT o.text, o.detail FROM (r_options o INNER JOIN r_votes v ON v.option=o.id) INNER JOIN r_ballots b on b.id=v.ballot WHERE b.id=:ballot ORDER BY v.displayOrder';
+  $sql = 'SELECT IFNULL(o.text, c.text) AS text, IFNULL(o.detail, c.detail) AS detail FROM r_ballots b INNER JOIN r_votes v ON v.ballot=b.id LEFT JOIN r_options o ON o.id=v.option LEFT JOIN r_criteria c ON c.id=-v.option WHERE b.id=:ballot ORDER BY v.displayOrder';
 	$q = db\q($sql, compact('ballot'));
 	for($opti = 0, $opts=''; $row = $q->fetchAssoc(); $opti++) {
-		extract($row);
+		extract(just('text detail', $row));
   	$rowclass = ($opti&1) ? 'odd' : 'even';
 		$opts .= call_user_func("CG\\Vote\\getOpts$type", $opti, $rowclass, $text, u\parseUp($detail), $defaults);
 	}
@@ -570,7 +566,7 @@ EOF;
 function optEnd($opti, $rowclass, $opttext, $optdetail, $defaults) {
 	global $rUrl;
 	$votenote = "votenote$opti";	
-  $votenoteHtml = w\rendA($votenote, w\areaFld(BARE, '', @$defaults[$votenote]));
+  $votenoteHtml = w\rendA($votenote, w\areaFld(BARE, '', w\dft(@$defaults[$votenote])));
   $optImgWrapClass = $optdetail ? 'optImgWrap' : 'hidden';
 
 	return <<<EOF
@@ -778,16 +774,9 @@ function gradingWelcome($endDate, $proxLink) {
 
   $title = w\item(t('Grade Community Investment Proposals'));
   $subtext = w\item(t(<<<EOF
-  Help grade specific proposals within our community's chosen investment priorities! You can grade just one or as many as you want. The community's chosen investment priorities are Renewable Energy, Small Business Development, Social Justice, Food Systems, and The Arts.<br><br>
+  Help grade specific proposals within our community's chosen investment priorities! Grade just one or as many as you want. Please feel free to comment; for example, if you think a proposal should be considered for an investment or loan instead of a grant. The community's chosen investment priorities are Sustainability, Small Business Development, Social Justice, Food Systems, and The Arts.<br><br>
   
-  You will be asked to give the proposal a grade (A+ to E) for each of five questions (see below). The remaining 30 points are assigned automatically based on amount, timing, location, etc. We're not looking for comparative grades at this stage. For example, if all of the proposals are very much in line with the community's investment priorities, you could give them all an A for that question.<br>
-  <ul>
-    <li>How well does the project support our %PROJECT community investment priorities? (20 points)</li>
-    <li>Overall, how clearly doable is the project? (20 points)</li>
-    <li>Ability to manage the project and funds effectively. (15 points)</li>
-    <li>Evaluation plan. (10 points)</li>
-    <li>Ability to implement project with less funding than requested. (5 points)</li>
-  </ul>
+  You will be asked to rate the proposal on each of seven questions (see below). The remaining 25 points are assigned automatically based on amount, timing, location, etc. We're not looking for comparative grades at this stage. For example, if all of the proposals are very much in line with the community's investment priorities, you could give them all the highest rating, for that question.<br><br>
   
   Before you begin, please make sure you are happy with your <%a>proxy choices</a> and adjust them as needed.<br><br>
   

@@ -47,7 +47,7 @@ function formInvoiceUpload_submit($form, &$sta, $args = NULL) {
     foreach (ray('account email desc') as $k) $$k = trim($$k);
     if (!$account or strtoupper($account) == t('TOTAL')) break; // should never happen unless user has a total line
     if ($err = u\badAmount($amt, '>=0')) {iuErr($err, $e); continue;}
-    if (!$amt) {iuErr(t('The amount for this account is zero so it will not be %did', $e), $e); continue;}
+    if (!$amt) {iuErr(t('The amount for this account is zero so it will not be %did', $e), $e, FALSE); continue;}
 	  if (!$account or !$a = r\acct($account)) {iuErr(t('Bad account ID'), $e); continue;} // not 'bad account'
     if (!$a->ok) {iuErr(t('This account is not yet activated'), $e); continue;}
     $a->setBit(B_CONFIRMED); // count this as equivalent to an invitation to the person
@@ -65,7 +65,7 @@ function formInvoiceUpload_submit($form, &$sta, $args = NULL) {
   if (!@$txs) return say('nothing to do', 'file');
   
   if (!$inv) {
-    if ($shortfall = $mya->shortfall(FOR_GOODS, $total)) return say('short to', ray('short', u\fmtAmt($shortfall)), 'file');
+    if ($shortfall = $mya->shortfall(FOR_GOODS, $total)) return say('short to', ray('short avail', u\fmtAmt($shortfall), u\fmtAmt($total - $shortfall)), 'file');
   }  
   
   foreach ($txs as $one) {
@@ -104,4 +104,8 @@ EOF
   , compact(ray('do dftDesc')));
 }
 
-function iuErr($msg, $e) {global $iuErrs;	$iuErrs[] = t('csv error', $e + compact('msg'));}
+function iuErr($msg, $e, $fatal = TRUE) {
+  global $iuErrs;	
+  $msg = t('csv error', $e + compact('msg'));
+  if ($fatal) $iuErrs[] = $msg; else w\say($msg);
+}

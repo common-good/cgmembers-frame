@@ -5,7 +5,7 @@ SO I can see what happened and possbily integrate with an accounting program.
 
 Setup:
   Given members:
-  | id   | fullName | floor | acctType    | flags      |*
+  | uid  | fullName | floor | acctType    | flags      |*
   | .ZZA | Abe One  | -100  | personal    | ok         |
   | .ZZB | Bea Two  | -200  | personal    | ok,co      |
   | .ZZC | Our Pub  | -300  | corporation | ok,co      |
@@ -21,6 +21,13 @@ Setup:
   |  502 | .ZZB  |   2000 | %today-5m | %today-5m |
   |  503 | .ZZC  |   3000 | %today-6m | %today-6m |
   |  504 | .ZZA  |    200 | %today-3d |         0 |
+  And invoices:
+  | nvid | created   | amount | from | to   | purpose  | status |*
+  |    1 | %today-3m |    240 | .ZZA | .ZZB | what G   |      6 |
+  |    2 | %today-1w |    120 | .ZZA | .ZZC | this Q   |      8 |
+  |    3 | %today-5d |     80 | .ZZA | .ZZC | this CF  |     10 |
+  |    4 | %today-5d |     99 | .ZZA | .ZZC | wrongly  | %TX_DENIED |
+  |    5 | %today-5d |     12 | .ZZA | .ZZC | realist  | %TX_APPROVED |
   And transactions: 
   | xid | created   | type     | amount | from | to   | purpose  | taking |*
   |   1 | %today-7m | signup   |    250 | ctty | .ZZA | signup   | 0      |
@@ -35,18 +42,18 @@ Setup:
   |  10 | %today-5d | transfer |     80 | .ZZA | .ZZC | this CF  | 1      |
   |  11 | %today-5d | transfer |    100 | .ZZC | .ZZA | cash CJ  | 1      |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |     670 |
   | .ZZB |    2280 |
   | .ZZC |    3050 |
 
 Scenario: A member downloads transactions for the past year
   Given members have:
-  | id   | fullName |*
+  | uid  | fullName |*
   | ctty | ZZrCred  |
   When member ".ZZA" visits page "history/transactions/period=365&download=1"
   Then we download "%PROJECT_ID%todayn-12m-%todayn.csv" with:
-  # For example rcredits20120525-20130524.csv
+  # For example commongood20120525-20130524.csv
   | Tx# | Date    | Name    | Purpose   | From Bank | From You | To You | Balance | Net  |*
   | 8   | %ymd-5d | Our Pub | cash CJ   |           |          |    100 |    670 |  100 |
   | 7   | %ymd-5d | Our Pub | this CF   |           |       80 |        |    570 |  -80 |
@@ -58,6 +65,20 @@ Scenario: A member downloads transactions for the past year
   | 2   | %ymd-5m | Bea Two | cash E    |           |          |     10 |     10 |   10 |
   |     |         | TOTALS  |           |      1000 |      540 |    210 |        |  670 |
 #  | 1   | %ymd-7m | ZZrCred | signup    |           |          |        |    250 |  250 |
+  And with download columns:
+  | column |*
+  | Date   |
+
+Scenario: A member downloads incoming invoices for the past year
+  When member ".ZZA" visits page "history/invoices-from/period=365&download=1"
+  Then we download "cgInvoicesFrom%todayn-12m-%todayn.csv" with:
+  # For example cgInvoicesFrom20120525-20130524.csv
+  | Inv# | Date    | Name    | Purpose | Amount | Status       |*
+  |    1 | %ymd-3m | Bea Two | what G  |    240 | paid (Tx#2)  |
+  |    2 | %ymd-1w | Our Pub | this Q  |    120 | paid (Tx#8)  |
+  |    3 | %ymd-5d | Our Pub | this CF |     80 | paid (Tx#10) |
+  |    4 | %ymd-5d | Our Pub | wrongly |     99 | denied ()    |
+  |    5 | %ymd-5d | Our Pub | realist |     12 | Approved     |
   And with download columns:
   | column |*
   | Date   |

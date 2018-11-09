@@ -5,7 +5,7 @@ SO BOTH OF US can make purchases with those funds.
 
 Setup:
   Given members:
-  | id   | fullName | floor | minimum | flags            | achMin | risks   | jid  |*
+  | uid  | fullName | floor | minimum | flags            | achMin | risks   | jid  |*
   | .ZZA | Abe One  |     0 |     100 | ok,refill,bankOk | 30     | hasBank | .ZZB |
   | .ZZB | Bea Two  |     0 |       0 | ok               | 10     |         | .ZZA |
   And relations:
@@ -17,14 +17,14 @@ Setup:
   | 1   | %today-6m | signup |    250 | ctty | .ZZA | signup  |
   | 2   | %today-6m | signup |    250 | ctty | .ZZB | signup  |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | ctty |       0 |
   | .ZZA |       0 |
   | .ZZB |       0 |
 
 Scenario: a joint account needs refilling
   Given balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |   50.00 |
   | .ZZB |   49.99 |
   When cron runs "getFunds"
@@ -37,7 +37,7 @@ Scenario: a joint account needs refilling
 
 Scenario: a joint account does not need refilling
   Given balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |   50.01 |
   | .ZZB |   49.99 |
   When cron runs "getFunds"

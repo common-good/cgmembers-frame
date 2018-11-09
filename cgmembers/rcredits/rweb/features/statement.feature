@@ -1,16 +1,16 @@
-Feature: Transactions
+Feature: Statements
 AS a member
 I WANT a prinatable report of my transactions for the month
 SO I have a formal record of them.
 
 Setup:
   Given members:
-  | id   | fullName   | floor | acctType    | flags | created    | rebate |*
+  | uid  | fullName   | floor | acctType    | flags | created    | rebate |*
   | .ZZA | Abe One    | -100  | personal    | ok    | %today-15m |      5 |
   | .ZZB | Bea Two    | -200  | personal    | ok,co | %today-15m |     10 |
   | .ZZC | Corner Pub | -300  | corporation | ok,co | %today-15m |     10 |
   And members have:
-  | id   | fullName |*
+  | uid  | fullName |*
   | ctty | ZZrCred  |
   And relations:
   | main | agent | permission |*
@@ -27,7 +27,7 @@ Setup:
   | 1005 |  .ZZA |    -22 | %lastm+8d | %lastm+8d |
   | 1006 |  .ZZA |    -33 | %lastm+9d | %lastm+9d |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |     956 |
   | .ZZB |    2000 |
   | .ZZC |    3000 |
@@ -45,7 +45,7 @@ Setup:
 
   | 13 | %lastm+8d | transfer |    100 | .ZZA | .ZZB | cash V  | 0      |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |    1606 |
   | .ZZB |    2280 |
   | .ZZC |    2070 |

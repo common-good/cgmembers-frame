@@ -9,7 +9,7 @@ SO my company can accept cash deposits and give customers cash.
 
 Setup:
   Given members:
-  | id   | fullName   | email | cc  | cc2  | floor | flags      |*
+  | uid  | fullName   | email | cc  | cc2  | floor | flags      |*
   | .ZZA | Abe One    | a@    | ccA | ccA2 |  -350 | ok,confirmed,debt    |
   | .ZZB | Bea Two    | b@    | ccB | ccB2 |  -150 | ok,confirmed,debt    |
   | .ZZC | Corner Pub | c@    | ccC |      |  -250 | ok,confirmed,co,debt |
@@ -17,13 +17,13 @@ Setup:
   | .ZZE | Eve Five   | e@    | ccE | ccE2 |     0 | ok,confirmed,secret  |
   | .ZZF | Far Co     | f@    | ccF |      |     0 | ok,confirmed,co      |
   And devices:
-  | id   | code |*
+  | uid  | code |*
   | .ZZC | devC |
   And selling:
-  | id   | selling         |*
+  | uid  | selling         |*
   | .ZZC | this,that,other |
   And company flags:
-  | id   | coFlags      |*
+  | uid  | coFlags      |*
   | .ZZC | refund,r4usd |
   And relations:
   | main | agent | num | permission |*
@@ -40,7 +40,7 @@ Setup:
   | 5   | %today-5m | transfer |    200 | .ZZA | .ZZC | cash    |
   | 6   | %today-4m | grant    |    250 | ctty | .ZZF | stuff   |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | ctty |    -250 |
   | .ZZA |    -200 |
   | .ZZB |     100 |
@@ -67,7 +67,7 @@ Scenario: A cashier asks to charge someone for cash
   | created | fullName | otherName  | amount | payerPurpose |*
   | %today  | Bea Two  | Corner Pub | $100   | cash out     |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | ctty |    -250 |
   | .ZZA |    -200 |
   | .ZZB |       0 |
@@ -89,7 +89,7 @@ Scenario: A cashier asks to refund someone
   | created | fullName | otherName  | amount | payeePurpose | aPayLink |*
   | %today  | Bea Two  | Corner Pub | $100   | cash in      | ?        |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | ctty |    -250 |
   | .ZZA |    -200 |
   | .ZZB |     200 |

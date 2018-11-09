@@ -5,7 +5,7 @@ SO I can buy and sell stuff on behalf of other accounts, and they on mine.
 
 Setup:
   Given members:
-  | id   | fullName   | acctType    | flags      |*
+  | uid  | fullName   | acctType    | flags      |*
   | .ZZA | Abe One    | personal    | ok         |
   | .ZZB | Bea Two    | personal    | ok         |
   | .ZZC | Corner Pub | corporation | ok,co      |

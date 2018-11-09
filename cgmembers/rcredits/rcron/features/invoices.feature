@@ -5,7 +5,7 @@ SO I can buy and sell stuff.
 
 Setup:
   Given members:
-  | id   | fullName | risks   | floor | minimum | flags                           |*
+  | uid  | fullName | risks   | floor | minimum | flags                           |*
   | .ZZA | Abe One  | hasBank |  -250 |     500 | ok,confirmed,refill,debt,bankOk |
   | .ZZB | Bea Two  |         |  -250 |     100 | ok,confirmed,debt               |
   | .ZZC | Our Pub  |         |  -250 |       0 | ok,confirmed,co,debt            |
@@ -25,14 +25,14 @@ Setup:
   |    3 | %today    | %TX_APPROVED |    300 | .ZZB | .ZZC | three |
   |    4 | %today-1w | %TX_PENDING  |    400 | .ZZA | .ZZC | four  |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |       0 |
   | .ZZB |       0 |
   | .ZZC |       0 |
 
   Scenario: Unpaid invoices get handled
 	Given balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZE |     500 |
  When cron runs "invoices"
   Then transactions: 
@@ -68,7 +68,7 @@ Setup:
   | daysAgo | amount | purpose | nvid | payerName | created |*
   |       7 | $400   | four    |    4 | Abe One   | %mdY-1w |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | .ZZA |       0 |
   | .ZZB |       0 |
   | .ZZC |     100 |

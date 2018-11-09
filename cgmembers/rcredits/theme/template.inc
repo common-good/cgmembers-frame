@@ -159,7 +159,13 @@ function rcredits_form($variables) {
     $element['#attributes']['action'] = drupal_strip_dangerous_protocols($element['#action']);
   }
 
-  $element['#id'] = str_replace('cgwebform', 'frm-', $element['#id']); // CGF
+  $frmName = str_replace('cgwebform', '', $element['#id']);
+  if ($frmName == 'prox') {
+	  $args = basename($_SERVER['REQUEST_URI']);
+	  extract(just('page', $args));
+	  $frmName = strtolower($page);
+  }
+  $element['#id'] = "frm-$frmName"; // CGF
   element_set_attributes($element, array('method', 'id'));
   if (empty($element['#attributes']['accept-charset'])) {
     $element['#attributes']['accept-charset'] = "UTF-8";

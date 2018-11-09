@@ -112,7 +112,7 @@ function rweb_menu($submenu = '') {
     'community/data' => ['sub', t('Community & Money Data'), 'Data 2', 'read', '', t(''), 'list-alt'],
     
     'community/events' => ['sub', t('Democracy Events'), 'Events 2', 'ok manage', '', t(''), 'bell'],
-    'community/events/event' => ['call', t('Add/Edit Event'), 'Event 3 4', 'member'],
+    'community/events/event' => ['call', t('Add/Edit Event'), 'Event 3 4', 'ok'],
     'community/events/question' => ['call', t('Add/Edit Question'), 'Question 3', 'cadmin'],
     'community/events/option' => ['call', t('Add/Edit Option'), 'Option 3', 'cadmin'],
     'community/events/proposal' => ['call', t('Funding Proposal'), 'Proposal 3', ANY],
@@ -121,8 +121,8 @@ function rweb_menu($submenu = '') {
     
     'community/agreement' => ['sub', t('The Agreement'), 'Agreement', ANY, '', t(''), 'globe'],
     'community/honors' => ['sub', t('Honored and Remembered'), 'Honors', ANY, '', t(''), 'grain'],
-    'community/invite' => ['sub', t('Invite Someone'), 'Invite', 'member manage', '', t(''), 'share-alt'],
-    'community/invite/example' => ['call', t('Invite Someone'), '', 'member manage', 'inviteExample'],
+    'community/invite' => ['sub', t('Invite Someone'), 'Invite', 'ok manage', '', t(''), 'share-alt'],
+    'community/invite/example' => ['call', t('Invite Someone'), '', 'ok manage', 'inviteExample'],
     'community/invite/print' => ['call', t('Print Invite'), '', 'manage', 'printInvite'],
     'community/invite/invited-whom' => ['call', 'Invited Whom', 'InvitedWhom', 'manage'],
     'community/invite/waiting' => ['call', 'Waiting', 'Waiting', 'manage'],

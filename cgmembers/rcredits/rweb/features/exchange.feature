@@ -8,7 +8,7 @@ SO I can buy more with Common Good Credits and thereby support the community and
 
 Setup:
   Given members:
-  | id   | fullName   | floor | flags      |*
+  | uid  | fullName   | floor | flags      |*
   | .ZZA | Abe One    |  -250 | ok,confirmed         |
   | .ZZB | Bea Two    |  -250 | ok,confirmed         |
   | .ZZC | Corner Pub |  -250 | ok,confirmed,co      |
@@ -25,7 +25,7 @@ Setup:
   |   3 | %today-6m | signup |    250 | ctty | .ZZC | signup  | 0      |
   |   4 | %today-6m | grant  |    200 | ctty | .ZZA | heroism | 0      |
   Then balances:
-  | id   | balance |*
+  | uid  | balance |*
   | ctty |    -200 |
   | .ZZA |     200 |
   | .ZZB |       0 |
@@ -56,7 +56,7 @@ Scenario: A member confirms request to charge another member
   | nvid | created | status      | amount | goods      | from | to   | for   |*
   |    1 | %today  | %TX_PENDING |    100 | %FOR_USD | .ZZB | .ZZA | paper |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | ctty |    -200 |
   | .ZZA |     200 |
   | .ZZB |       0 |
@@ -87,7 +87,7 @@ Scenario: A member confirms request to pay another member
   | xid | created | type     | amount | rebate | bonus | from  | to   | goods    | purpose      | taking |*
   |   5 | %today  | transfer |    100 |      0 |     0 | .ZZA  | .ZZB | %FOR_USD | paper        | 0      |
   And balances:
-  | id   | balance |*
+  | uid  | balance |*
   | ctty |    -200 |
   | .ZZA |     100 |
   | .ZZB |     100 |

@@ -737,6 +737,21 @@ function tableDefs($schema = []) {
   $indexes = index('ctty') + index('name');
   $schema['r_proposals'] = dbTable(t('funding proposals'), $fields, 'id', $foreignKeys, $indexes);
   
+  // table r_criteria
+  $fields = [
+    'id' => dbFld(t('criterion record id'), 'serial big'),
+    'text' => dbFld(t('text of the criterion'), 'text tiny'),
+    'detail' => dbFld(t('additional detail about the criterion'), 'text medium'),
+	  'points' => dbFld(t('how many points for this criterion'), 'numeric 11,2', 0), // out of 100
+	  'auto' => dbFld(t('is this criterion calculated automatically?'), 'int tiny', 0),
+    'displayOrder' => dbFld(t('where to display this criterion in the order'), 'int tiny', 0),
+    'ctty' => dbFld(t('community or region record id (zero for all)'), 'int big', 0),
+    'modified' => dbFld(t('date/time last modified'), 'int 11', 0),
+    'created' => dbFld(t('date/time created'), 'int 11', 0),
+  ];
+  $foreignKeys = foreignKey('ctty');
+  $indexes = index('ctty');
+  $schema['r_criteria'] = dbTable(t('Criteria for funding proposals'), $fields, 'id', $foreignKeys, $indexes);
 
   
   // table r_votenotes
