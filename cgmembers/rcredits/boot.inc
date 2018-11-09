@@ -89,6 +89,7 @@ define('isSAFARI', stripos($agt, 'Chrome') === FALSE and stripos($agt, 'Safari')
 
 // one-time database changes, if any
 $sqlOnce = <<< X
+UPDATE r_invoices SET status=status-1 WHERE status<2;
 X;
 
 /**

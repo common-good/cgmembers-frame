@@ -1,3 +1,13 @@
+2018-11-07
+. reordered tx statuses in defs.inc to stay in a logical order (just equal to one less than they are now)
+. lowercased cgMembers
+
+2018-11-07
+. fixed invoice download bug that showed paid invoices as OPEN
+. changed TX_APPROVED to -2 (including data changes to r_invoices table), so tests can use tx#1
+. improved customer statements and made tests for them
+. disabled roundups of donations to CG
+
 2018-11-02
 . redesigned how grading proposals works (created r_criteria table)
 . changed "id" field of users records in tests to "uid", to eliminate confusion with actual "id" field in other tables

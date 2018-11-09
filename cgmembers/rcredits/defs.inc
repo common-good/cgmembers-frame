@@ -5,7 +5,7 @@
  * (SMS, web, smartphone, etc.)
  */
 
-define('R_VERSION', '3.42k'); // software version
+define('R_VERSION', '3.42l'); // software version
 
 // definitions used in settings file
 define('US_COUNTRY_ID', 1228); // United States
@@ -471,12 +471,12 @@ define('B_NOASK', 15); // transaction was taken with ID checking OFF
 define('B_FUNDING', 16); // invoice has already instigated an appropriate bank transfer request
 define('TX_FLAGS', 'taking disputed offline short undone undoes crumbs roundups roundup patronage gift loan investment stake fine noask funding');
 
-// Invoice status (use data['disputed'] for txs) (set to txid>1 if paid)
-define('TX_DENIED', -1); // invoice rejected by the non-originator
-define('TX_PENDING', 0); // charged, waiting for confirmation
-define('TX_APPROVED', 1); // invoice is approved but not paid
-define('TX_PAID', 2); // any status this amount or more is a payment transaction record ID (xid)
-define('TX_STATUSES', t('-1:denied,0:OPEN,1:approved,2:paid'));
+// Invoice status (txid >= TX_PAID if paid)
+define('TX_DENIED', -2); // invoice rejected by the non-originator
+define('TX_PENDING', -1); // charged, waiting for confirmation
+define('TX_APPROVED', 0); // invoice is approved but not paid
+define('TX_PAID', 1); // any status this amount or more is a payment transaction record ID (xid)
+define('TX_STATUSES', t('-2:denied,-1:OPEN,0:approved,1:paid'));
 
 // Transaction channels (roughly in order of simplicity and generality of messages) (CGF)
 define('TX_SYS', 0);

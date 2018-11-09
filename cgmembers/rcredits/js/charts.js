@@ -229,7 +229,7 @@ function volumeChart() {
 }
 
 function recall(chart, ctty) {
-  var myUrl = site == 'dev' ? 'http://localhost/cgMembers-frame/cgMembers/rcredits/misc' : 'https://cg4.us';
+  var myUrl = site == 'dev' ? 'http://localhost/cgmembers-frame/cgmembers/rcredits/misc' : 'https://cg4.us';
   window.location = myUrl + '/chart.php?selectable=1&chart=' + chart + '&ctty=' + ctty + '&site=' + site;
 };
 
