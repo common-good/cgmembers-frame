@@ -9,7 +9,69 @@ define('R_VERSION', '3.42l'); // software version
 
 // definitions used in settings file
 define('US_COUNTRY_ID', 1228); // United States
-define('isDEV', in_array($_SERVER['SERVER_ADDR'], ['::1', '127.0.0.1'])); // developing
+
+global $db_name;
+
+$config = (array) json_decode(utf8_encode(file_get_contents(__DIR__ . "/../../config/config.json")));
+if (array_key_exists('stage', $config)) {
+  define('isDEV', $config['stage'] == 'development');
+  define('isSTAGE', $config['stage'] == 'staging');
+  define('isPRODUCTION', $config['stage'] == 'production');
+  define('isGAME', $config['stage'] == 'game');
+  if (! isDEV and ! isSTAGE and ! isPRODUCTION and ! isGAME) {
+    die('Invalid value for stage in configuration file.');
+  }
+} else {
+  die('There is no valid configuration file ' . __DIR__ . '/../../config/config.json');
+}
+$base_url = setFromConfig('baseUrl', $config);
+define('BASE_URL', $base_url);
+define('PROMO_URL', setFromConfig('promoUrl', $config));
+define('CO_API_URL', setFromConfig('coApiUrl', $config));
+define('CGF_EMAIL', setFromConfig('cgfEmail', $config));
+define('DKIM_PRIVATE', setFromConfig('dkimPrivate', $config));
+/* define('DKIM_PUBLIC', setFromConfig('dkimPublic', $config)); */
+define('R_INVITE_KEY', setFromConfig('inviteKey', $config));
+define('R_SSN_USER', setFromConfig('ssnUser', $config));
+define('R_SSN_PASS', setFromConfig('ssnPass', $config));
+if (! array_key_exists('db', $config)) {
+  die('the configuration file does not contain a db entry');
+}
+if (! is_array((array) $config['db'])) {
+  die('the configuration file db entry is not an array');
+}
+$db_config = (array) $config['db'];
+$db_name = setFromConfig('name', $db_config);
+$db_driver = setFromConfig('driver', $db_config);
+$db_host = setFromConfig('host', $db_config);
+$db_port = setFromConfig('port', $db_config);
+$db_user = setFromConfig('user', $db_config);
+$db_pass = setFromConfig('pass', $db_config);
+define('R_SALTY_PASSWORD', $db_pass);
+$db_salt = setFromConfig('salt', $db_config);
+define('R_WORD', hex2bin(setFromConfig('word', $db_config)));
+
+global $cryHows;
+$cryHows = (array) setFromConfig('encryption', $db_config);
+
+$databases = array (
+  'default' => 
+  array (
+    'default' => 
+    array (
+      'database' => $db_name,
+      'username' => $db_user,
+      'password' => $db_pass,
+      'collation' => 'utf8_general_ci', // or utf8mb4_general_ci
+      'host' => $db_host,
+      'port' => $db_port,
+      'driver' => $db_driver,
+      'prefix' => '',
+      'pdo' => [PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'], // or utf8mb4
+    ),
+  ),
+);
+
 require_once __DIR__ . '/cg-settings.inc'; // custom settings for this community's rCredits server
 // require .module and -util.inc at bottom
 
@@ -19,16 +81,13 @@ define('RCREDITS', t('Common Good Credits')); // don't use %PROJECT here
 define('BANK_DBA', PROJECT);
 define('PROJECT_ID', str_replace(' ', '', strtolower(PROJECT)));
 define('PROJECT_LOGO', 'logo80.png');
-define('PROMO_URL', isDEV ? 'http://localhost/cgPromo/_site' : 'http://' . CG_DOMAIN);
 
-define('STAGE', 'ws.rcredits.org'); // staging site (for secrets, etc.)
 define('GAME_SITE', 'game.' . CG_DOMAIN);
 
 define('SCRIPTS_TOP', 'x/jquery-3.3.1.min x/jquery.once x/jquery-ui.min x/bootstrap.min x/spin.min x/ladda.min x/ie10-viewport-bug-workaround x/jquery.confirm.min x/alert');
 //define('SCRIPTS', 'form goo-jsapi misc charts chart-data download croppic crop-setup ballot x/bootstrap.slider.min countries print-country focus-on x/typeahead.bundle.min suggest-who on-submit chimp followup-email get-ssn change-ctty advanced-dates advanced-prefs bank-prefs which funding-criteria signup prejoint invite-link gift drupal user extend-settings'); // all possible scripts, in order (after SCRIPTS_TOP)
 define('SCRIPTS', 'x/bootstrap-toggle.min parse-query misc croppic crop-setup x/bootstrap-slider.min ballot countries x/typeahead.bundle.min on-submit scraps drupal user'); // all possible scripts, in order (after SCRIPTS_TOP). drupal and user are for password.
 
-define('DEV_ROOT', '/cgmembers-frame/cgmembers'); // path to drupal root on DEV machine
 define('DEV_PW2', 'devPassword#two!'); // second password on DEV machine (len must be 16, 24, or 32)
 define('DEV_VKEYPW', 'wt38BqWMslj3uUHUOto7fNi5ExL9CC7S7ffjn_q6zCY'); // password for very secure key, on DEV machine
 define('DEV_ADMIN_PASS', '123'); // admin password when isDEV
@@ -38,10 +97,6 @@ define('DEV_ONLY_MSG', 'only on development machine');
 
 $host = strtolower(@$_SERVER['HTTP_HOST']);
 if (!isDEV) if (strlen($host) > 30 or !preg_match('/^\[?([a-zA-Z0-9-:\]_]+\.?)+$/', $host)) {header('HTTP 400 Bad Request'); exit();}
-$protocol = isDEV ? 'http://' : 'https://';
-$base_url = $protocol . $host . (isDEV ? DEV_ROOT : ''); // NO trailing slash!
-//$base_url = $protocol . $host . (isDEV ? DEV_ROOT : '') . '/rcredits'; // NO trailing slash!
-define('BASE_URL', $base_url);
 //define('R_PATH', '/sites/all/modules/rcredits');
 define('R_PATH', '/rcredits');
 global $rUrl; $rUrl = BASE_URL . R_PATH;
@@ -51,9 +106,6 @@ $parts = parse_url($base_url);
 $base_path = @$parts['path'] . '/';
 $base_root = substr($base_url, 0, strlen($base_url) - strlen(@$parts['path'])); // everything until first slash after "scheme://"
 
-define('isSTAGE', substr($host, 0, 6) == 'stage-' or $host == STAGE);
-define('isGAME', FALSE or ($host == GAME_SITE));
-define('isPRODUCTION', ($host == R_SERVER_ID . '.' . CG_DOMAIN) or (!isDEV and !isSTAGE and !isGAME)); // new.<CG_DOMAIN> or miw.<CG_DOMAIN>, etc. (make really sure we get this right)
 define('NOT_PRODUCTION', !isPRODUCTION); // safer to use than !isPRODUCTION (in case of typo)
 
 // time periods are defined here because this script uses them
@@ -71,7 +123,6 @@ define('EMAILX', 'example.com'); // domain for unknown, placeholder, test, or ex
 
 // Common Good Finance email and other data
 define('CGF_LEGALNAME', 'Society to Benefit Everyone, Inc.');
-define('CGF_EMAIL', isDEV ? 'cgf@example.com' : 'info@' . CG_DOMAIN);
 define('CGF_PHONE', '+1 413 628 1723');
 define('CGF_ADDRESS', '48 Buckland Road');
 define('CGF_CITY', 'Ashfield');
@@ -224,7 +275,6 @@ define('HAS_XFEE', "data LIKE '%s:4:\"xfee\";%'"); // sql to recognize a transac
 define('R_DEPOSIT_RETURN_FEE', 20); // what we charge members for a second bounced transfer
 
 define('R_USPS_WEB_TOOLS_ID', '921COMMO5331'); // USPS API credentials
-define('CO_API_URL', isDEV ? 'http://%website/cgapi/%etc' : 'https://%website/common-good-api/%etc'); // where to communicate with co-branding partners
 
 // Filenames
 define('R_TEMPLATE_DIR', '/templates');
@@ -511,4 +561,16 @@ if (@TESTING == 1) {
   }
   $specialSubs["%can_none"] = $GLOBALS['share permissions'][0];
   $specialSubs['%chk'] = '&#10004;';
+}
+
+/**
+ * Extract a value from the given configuration array (probably read in from
+ * a configuration file), dying if the key is not present.
+ * $key - the key in the configuration array, e.g., dkimPrivate
+ * $config - the configuration array itself
+ */
+function setFromConfig($key, $config) {
+  if (array_key_exists($key, $config)) {
+    return $config[$key];
+  } else die("The configuration file does not contain an entry for $key.");
 }

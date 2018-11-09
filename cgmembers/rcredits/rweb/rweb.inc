@@ -287,7 +287,6 @@ function changeWho($args = '') {
   
   w\setAcct($mya->id); // get new current account
 
-//  if (isDEV) $page = str_replace(DEV_ROOT, '', @$page);
   $page = str_replace(',', '/', @$page);
   
   w\go($mya->cAdmin ? $page : 'summary'); // go to summary, unless admin

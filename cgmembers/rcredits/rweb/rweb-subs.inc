@@ -255,7 +255,7 @@ $GLOBALS['tStrings']['flooded'] = $GLOBALS['tStrings']['bad login'];
  */
 function go($page, $msg = '', $field = '') {
   global $base_url;
-  global $lastGo, $x0lastGo; list ($xlastGo, $lastGo) = [@$lastGo, $page]; // for testing
+  global $lastGo, $xlastGo; list ($xlastGo, $lastGo) = [@$lastGo, $page]; // for testing
 
   if ($msg) {
 /*    if (u\starts($page, 'empty')) {
@@ -836,7 +836,8 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
   
     if (!@$form['confirm']) $form += which(); // add the choices popup form, if any
     if (!$specialForm) {
-      $tree = explode('/', 'home/' . str_replace(DEV_ROOT, '', $_SERVER['REQUEST_URI']));
+      $tree = explode('/', $_SERVER['REQUEST_URI']);
+      $crumbs = [];
       foreach ($tree as $k) if (preg_match('/^[a-z\-]+(\?|$)/', $k)) $crumbs[ucwords($k)] = $kk = isset($kk) ? "$kk/$k" : '';
       \drupal_set_breadcrumb($crumbs);
     }
@@ -862,12 +863,12 @@ function sanitizePage($page) {
     'href="(mailto:|http|#|/|"|sadmin)',
     '(href|src|style)=(&quot;|&amp;)', // our tests output stuff like this
   ]);
-  
+
   $page = preg_replace("~$except~", '', $page);
 //  return;
   if ($tags = preg_match(FORBID_TAGS, $page, $matches) or preg_match(FORBID_ATTRS, $page, $matches)) {
 /**/ $msg = t('Page has a forbidden HTML %thing: %what', 'thing what', $tags ? t('tag') : t('attribute'), print_r($matches, 1));
-/**/ if (isDEV) die($msg);
+    /**/ if (isDEV) die($msg);
      if (isPRODUCTION) w\hack($msg);
 /**/ die($msg);
   }
@@ -1248,7 +1249,7 @@ EOF; */
  * @return: the button html
  */
 function goButton($label, $goto, $title) {
-  $gotoHead = isDEV ? DEV_ROOT : '';
+  $gotoHead = '';
   $name = str_replace('/', '_', $goto);
   return array($name => fld('item', '', '', button($label, "$gotoHead/$goto", $title)));
 }

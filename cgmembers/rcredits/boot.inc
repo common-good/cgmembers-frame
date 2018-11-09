@@ -10,7 +10,7 @@ strip($_POST); strip($_GET); // No HTML input EVER (unless encoded in a way we e
 global $base_url, $base_path, $base_root, $styleNonce;
 global $databases, $drupal_hash_salt, $cryHows;
 global $cookie_domain, $conf, $is_https, $base_secure_url, $base_insecure_url;
- global $CGdomain;
+global $CGdomain;
 
 require __DIR__ . '/defs.inc';
 
@@ -22,41 +22,8 @@ if (NOT_PRODUCTION) {
 }
 
 $uri = 'I' . $_SERVER['REQUEST_URI']; // handle scanned rCard URIs
-if (isDEV) $uri = str_replace(DEV_ROOT . '/', '/', $uri);
 $_SERVER['REQUEST_URI'] = $_GET['q'] = preg_match('~^I/[A-Z]+[\.-]~', $uri) ? $uri : \request_path();
-  
-$secrets = (array) json_decode(utf8_encode(file_get_contents(dirname($_SERVER['DOCUMENT_ROOT']) . '/cg.cnf')));
-global $db_name;
-$db_name = key($secrets); // members db must be the first db name in the file
-extract((array) $secrets[$db_name], EXTR_PREFIX_ALL, 'db');
-
-global $cryHows; $cryHows = (array) $db_encryption;
-define('R_WORD', hex2bin($db_word));
-define('DKIM_PRIVATE', $db_dkimPrivate); // DKIM private key for email signing
-define('R_INVITE_KEY', $db_inviteKey); // this value is the same for all servers (except DEV)
-define('R_SSN_USER', @$db_ssnUser);
-define('R_SSN_PASS', @$db_ssnPass);
-define('R_SALTY_PASSWORD', $db_pass); // (Drupal's salt is too long for our encryption algorithm)
-//define('POSTMARK_TOKEN', $secrets['postmarkToken']);
-// $db_salt is used below
-
-$databases = array (
-  'default' => 
-  array (
-    'default' => 
-    array (
-      'database' => $db_name,
-      'username' => $db_user,
-      'password' => $db_pass,
-      'collation' => 'utf8_general_ci', // or utf8mb4_general_ci
-      'host' => $db_host,
-      'port' => $db_port,
-      'driver' => $db_driver,
-      'prefix' => '',
-      'pdo' => [PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'], // or utf8mb4
-    ),
-  ),
-);
+    
 
 ini_set('magic_quotes_runtime', '0'); // Don't escape quotes when reading files from the database, disk, etc.
 ini_set('session.use_cookies', '1'); // Use session cookies, not transparent sessions with the session id in the query string.
@@ -173,3 +140,4 @@ function setCSP() {
   // Use <iframe sandbox="allow-scripts" ...> for cg4.us frame showing charts
 
 }
+
