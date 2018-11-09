@@ -31,8 +31,9 @@ server "192.168.56.101", roles: %w{app db web}
 # http://capistranorb.com/documentation/getting-started/configuration/
 # Feel free to add new variables to customise your setup.
 set :repo_url, "192.168.56.1:common-good/cgmembers-frame"
-set :branch, "master"
 set :deploy_to, "/home/deploy/cgmembers-frame"
+
+ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp
 
 
 # Custom SSH Options
