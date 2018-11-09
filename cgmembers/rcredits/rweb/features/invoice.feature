@@ -41,7 +41,7 @@ Scenario: A member confirms request to charge another member
   | ~ | Pay |
   | Reason ||
   | ~ | Dispute |
-  
+
   When member ".ZZB" confirms form "handle-invoice/nvid=1&toMe=1" with values:
   | op   | ret | nvid | amount | payer | payee | purpose | created |*
   | pay  |     |    1 |    100 | .ZZB  | .ZZA  | labor   | %today  |

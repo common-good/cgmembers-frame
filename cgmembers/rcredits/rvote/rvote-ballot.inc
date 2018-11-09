@@ -774,7 +774,7 @@ function gradingWelcome($endDate, $proxLink) {
 
   $title = w\item(t('Grade Community Investment Proposals'));
   $subtext = w\item(t(<<<EOF
-  Help grade specific proposals within our community's chosen investment priorities! Grade just one or as many as you want. Please feel free to comment; for example, if you think a proposal should be considered for an investment or loan instead of a grant. The community's chosen investment priorities are Renewable Energy, Small Business Development, Social Justice, Food Systems, and The Arts.<br><br>
+  Help grade specific proposals within our community's chosen investment priorities! Grade just one or as many as you want. Please feel free to comment; for example, if you think a proposal should be considered for an investment or loan instead of a grant. The community's chosen investment priorities are Sustainability, Small Business Development, Social Justice, Food Systems, and The Arts.<br><br>
   
   You will be asked to rate the proposal on each of seven questions (see below). The remaining 25 points are assigned automatically based on amount, timing, location, etc. We're not looking for comparative grades at this stage. For example, if all of the proposals are very much in line with the community's investment priorities, you could give them all the highest rating, for that question.<br><br>
   

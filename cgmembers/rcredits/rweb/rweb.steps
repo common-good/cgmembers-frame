@@ -181,6 +181,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     TEST contact AMemberUpdatesToADifferentState
  *     TEST contact AMemberUpdatesToADifferentName
  *     MAKE coupons Setup
+ *     MAKE custstatement Setup
  *     MAKE download Setup
  *     MAKE edittx Setup
  *     MAKE exchange Setup
@@ -224,6 +225,7 @@ function members($list) {return t\members($list);}
  *
  * in: MAKE bank Setup
  *     MAKE community Setup
+ *     MAKE custstatement Setup
  *     MAKE download Setup
  *     MAKE edittx Setup
  *     MAKE edittx ABuyerDisputesACharge
@@ -410,6 +412,7 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
  *     TEST community CronCalculatesTheStatistics
  *     TEST company AMemberVisitsTheCompanyInfoPage
  *     TEST contact AMemberVisitsTheContactInfoPage
+ *     TEST custstatement ACompanyLooksAtACustomerStatement
  *     TEST edittx ABuyerChangesTheTransactionDescription
  *     TEST edittx ABuyerDisputesACharge
  *     TEST edittx ASellerReversesACharge
@@ -449,7 +452,8 @@ function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWit
 /**
  * with: (ARG)
  *
- * in: TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
+ * in: TEST custstatement ACompanyLooksAtACustomerStatement
+ *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     TEST relations ItsComplicated
  *     TEST signupco AMemberRegistersACompany
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
@@ -501,6 +505,7 @@ function withoutOptions($options) {
  * in: MAKE bank Setup
  *     MAKE community Setup
  *     MAKE company Setup
+ *     MAKE custstatement Setup
  *     MAKE download Setup
  *     MAKE edittx Setup
  *     MAKE exchange Setup
@@ -591,6 +596,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE company AMemberVisitsTheCompanyInfoPage
  *     MAKE contact AMemberVisitsTheContactInfoPage
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
+ *     MAKE download AMemberDownloadsIncomingInvoicesForThePastYear
  *     MAKE edittx ABuyerChangesTheTransactionDescription
  *     MAKE edittx ABuyerDisputesACharge
  *     MAKE edittx ASellerReversesACharge
@@ -795,6 +801,7 @@ function gifts($gifts) {return t\gifts($gifts);}
  * we download (ARG) with: (ARG)
  *
  * in: TEST download AMemberDownloadsTransactionsForThePastYear
+ *     TEST download AMemberDownloadsIncomingInvoicesForThePastYear
  */
 function weDownloadWith($name, $rows) {
   global $testOnly;
@@ -802,10 +809,10 @@ function weDownloadWith($name, $rows) {
 
   if (@$testCSVname != $name) return t\output("$testCSVname <> $name");
   if (!is_array($testCSV) or empty($testCSV)) return t\output('testCSV empty');
-  $testCSV2 = $testCSV; // don't alter this (withDownloadColumns() needs it)
-  $headers = array_shift($testCSV2);
-  if ($headers[0] == '#') $headers[0] = 't#';
-  foreach ($testCSV2 as $csvRow) {
+  $csv2 = $testCSV; // don't change this
+  $headers = array_values(array_shift($csv2));
+  if (@$headers[0] == '#') $headers[0] = 't#';
+  foreach ($csv2 as $csvRow) {
 ///  debug(compact('headers', 'csvRow'));
     $csvRow = array_combine($headers, $csvRow); // add keys
 /**/ if (!$row = array_shift($rows)) return t\output('extra row in CSV: ' . print_r($csvRow, 1));
@@ -823,14 +830,15 @@ function weDownloadWith($name, $rows) {
  * with download columns: (ARG)
  *
  * in: TEST download AMemberDownloadsTransactionsForThePastYear
+ *     TEST download AMemberDownloadsIncomingInvoicesForThePastYear
  */
 function withDownloadColumns($columns) {
   global $testOnly;
   global $testCSV, $testCSVname;
 
   if (!is_array($testCSV) or empty($testCSV)) return FALSE;
-  $testCSV2 = $testCSV; // don't alter this (just in case)
-  $headers = array_shift($testCSV2);
+  $csv2 = $testCSV; // don't alter this (just in case)
+  $headers = array_values(array_shift($csv2));
 /// debug(compact('headers','testCSV','columns'));
   foreach ($columns as $one) if (array_search($one['column'], $headers) === FALSE) return FALSE;
   return TRUE;
@@ -845,6 +853,7 @@ function withDownloadColumns($columns) {
  *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
  *     MAKE bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     MAKE community Setup
+ *     MAKE custstatement Setup
  *     MAKE download Setup
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     MAKE statement Setup
@@ -1005,7 +1014,9 @@ function devices($list) {return t\devices($list);}
 /**
  * invoices: (ARG)
  *
- * in: TEST exchange AMemberConfirmsRequestToChargeAnotherMember
+ * in: MAKE custstatement Setup
+ *     MAKE download Setup
+ *     TEST exchange AMemberConfirmsRequestToChargeAnotherMember
  *     TEST gift AMemberDonatesWithInsufficientFunds
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
@@ -1317,7 +1328,6 @@ function proxies($list) {return t\proxies($list);}
  */
 function memberViewsStatementFor($id, $month) {
   include_once R_ROOT . '/forms/statement.inc';
-  global $base_url;
   global $testOnly; if ($testOnly) return FALSE;
 
   t\logIn($id);
@@ -1402,3 +1412,18 @@ function weScripWithSubs($script, $args = []) {
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
+/**
+ * agent (ARG) views (ARG) statement for member (ARG)
+ *
+ * in: MAKE custstatement ACompanyLooksAtACustomerStatement
+ */
+function agentViewsStatementForMember($biz, $type, $cust) {
+  include_once R_ROOT . '/forms/custstatement.inc';
+  global $testOnly; if ($testOnly) return FALSE;
+
+  t\logIn($biz);
+  $way = $type == 'customer' ? 'IN' : 'OUT';
+  $cust = t\fullQid2($cust);
+  w\custStatement("cust=$cust&way=$way");
+  return TRUE;
+}

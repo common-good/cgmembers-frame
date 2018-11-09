@@ -147,7 +147,7 @@ function btxid($bankTxId = '') {
   $acct = '132653' . substr($bankTxId, 5, 5);
   $txid = substr($bankTxId, -7);
   return $acct . $dt . $txid;
-  ///  debug(date('m/d/Y H:i:s a', $dt));
+///  debug(date('m/d/Y H:i:s a', $dt));
 }
 function bankTxId($btxid) { // for reconcilecttyfund.inc (short form of bank's txid in r_usd and r_usd2)
 	list ($txid, $dt, $acct) = [substr($btxid, -7), strtotime(substr($btxid, -15, 8)), substr($btxid, 0, strlen($btxid) - 7 - 8)];

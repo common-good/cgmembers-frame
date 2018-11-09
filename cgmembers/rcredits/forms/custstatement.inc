@@ -40,7 +40,7 @@ function custStatement($args = '') {
 
   //$pdf->writeHTMLCell(40, 10, 160, 84.5, '<div style="font-size:44px;">CommonGood.earth</div>');
   list ($address, $city, $state, $zip) = u\parseAddr($a->postalAddr);
-  $pdf->Cell(0, 0, $a->j_fullName, '', 2);
+  $pdf->Cell(0, 0, $a->j_fullName . t(': Account ') . $a->mainQid, '', 2);
   $pdf->Cell(0, 0, $address, '', 2);
   $pdf->Cell(0, 0, "$city, $state $zip", '', 2);
   $pdf->newLine();
@@ -73,7 +73,9 @@ function custStatement($args = '') {
       if (!$fldName) $fldName = strtolower($head);
       $debit = ($align == 'R' and is_numeric($n = @$$fldName) and $n < 0);
       if ($debit) $pdf->SetTextColor(128, 0, 0); else $pdf->SetTextColor();
-      if (in($fldName, $numFields) and isset($$fldName)) $$fldName = number_format($$fldName ?: 0, 2);
+      if (in($fldName, $numFields) and isset($$fldName)) {
+        $$fldName = ($$fldName == '0' and $fldName != 'balance') ? '' : number_format($$fldName ?: 0, 2);
+      }
       $pdf->Cell($width, 0, @$$fldName, '', $head == $lastHead ? 1 : 0, $align, '', '', 1);
     }
     if ($row == $row0) $pdf->newLine(); // space after opening balance

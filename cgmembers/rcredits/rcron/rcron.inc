@@ -271,7 +271,7 @@ X;
 	$when = ':NOW+:WEEK_SECS';
 	$sql = <<< X
 	  SELECT u.uid,r.amount,$when AS `when`,r.created,r.period,
-		  (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_PATRONAGE AND status<=:TX_APPROVED LIMIT 1) AS invoiced,
+		  (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_PATRONAGE AND status<:TX_PAID LIMIT 1) AS invoiced,
   	  (SELECT MAX(t.created) FROM r_txs t WHERE t.payer=r.payer AND t.payee=r.payee AND t.:IS_PATRONAGE AND NOT t.:IS_UNDONE AND NOT t.:IS_UNDOES) AS lastTx
 		FROM users u LEFT JOIN r_recurs r ON r.payer=u.uid AND r.payee=:CGID AND r.ended=0
 		WHERE u.:IS_OK AND (r.period='Y' OR (r.id IS NULL AND FLOOR(($when-u.activated) / :DAY_SECS) MOD 365 = 0))
@@ -817,7 +817,7 @@ function gifts() {
 //  queueEach('gift1', 'SELECT g.* FROM r_gifts g INNER JOIN users u ON u.uid=g.uid WHERE NOT completed and giftDate<=:now AND :IS_OK', compact('now'));
   $sql = <<< X
     SELECT DISTINCT r.payer,r.payee,r.period,r.amount,r.created,
-		  (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_PATRONAGE AND status<=:TX_APPROVED LIMIT 1) AS invoiced,
+		  (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_PATRONAGE AND status<:TX_PAID LIMIT 1) AS invoiced,
   		(SELECT MAX(t.created) FROM r_txs t WHERE t.payer=r.payer AND t.payee=r.payee AND t.:IS_PATRONAGE AND NOT t.:IS_UNDONE AND NOT t.:IS_UNDOES) AS lastTx
 		FROM r_recurs r	INNER JOIN users u1 ON u1.uid=r.payer INNER JOIN users u2 ON u2.uid=r.payee
 		WHERE u1.:IS_OK AND u2.:IS_OK AND r.ended=0
