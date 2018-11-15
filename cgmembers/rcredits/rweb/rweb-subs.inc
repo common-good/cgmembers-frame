@@ -1656,7 +1656,7 @@ function invitation($code, $invitee = '', &$inviter = '', &$iCode = -1, &$err = 
  */
 function directoryList($which, $region, $withButtons = FALSE) {
   global $base_url;
-  
+
   if ($withButtons and $mya = r\acct()) {
     $canBuy = $mya->can(B_BUY);
     $canSell = $mya->can(B_SELL);
@@ -1674,19 +1674,22 @@ function directoryList($which, $region, $withButtons = FALSE) {
 
   $which = u\ignoreSuffix($which, 'ants ant ian es ers ing er or ion s');
   $which = str_replace(' ', '%', \db_like(" $which ")); // allow abbreviations of each word
-  $rows = [];
 
   $sql = <<<EOF
-    SELECT DISTINCT u.uid
+    SELECT DISTINCT u.uid, i.iid, industry
     FROM users u 
-    LEFT JOIN r_user_industries ui ON ui.uid=u.uid
-    LEFT JOIN r_industries i ON i.iid=ui.iid
+    LEFT OUTER JOIN r_user_industries ui ON ui.uid=u.uid
+    LEFT OUTER JOIN r_industries i ON i.iid=ui.iid
     WHERE :IS_CO AND u.uid>:CANONIC_ACCTS AND :IS_OK AND $regionCrit AND (u.fullName LIKE :which OR i.industry LIKE :which)
     ORDER BY u.fullName
 EOF;
-///   debug(compact(ray('region which sql')));
+  /* debug(compact(ray('region which sql'))); */
   $result = db\q($sql, compact(ray('region which')));
-  return r\companies($result->fetchCol(), FALSE);
+  $rows = [];
+  foreach ($result as $row) {
+    $rows[] = $row;
+  }
+  return r\participatingCompanies((array)$rows, FALSE);
 }
 
 /**
