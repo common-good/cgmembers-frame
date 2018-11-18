@@ -554,6 +554,8 @@ body.logged-in.one-sidebar #content {width:100%;}
 #frm-findco .cmpy-img {display:table-cell; width: 100px; overflow:hidden}
 #frm-findco .cmpy-name {display:table-cell; width:auto; max-width:300px; overflow:hidden; color:darkblue;}
 #frm-findco .cmpy-does {display:table-cell; width:auto; max-width:400px; overflow:hidden; padding-left:10px;}
+#frm-findco .cmpy-ind-wrapper {border: 1px solid black}
+#frm-findco .cmpy-ind {}
 .company-listing {color:red; font-weight:bold;}
 
 /* Pay/Charge/Tx */

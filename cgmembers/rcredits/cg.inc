@@ -1007,7 +1007,7 @@ function participatingCompanies($ctty, $email = FALSE) {
   : '<div class="row"><div class="cmpy-img"><img src="%img" alt="profile picture" /></div><div class="cmpy-name">%name</div><div class="cmpy-does">%desc</div></div>';
   $where = (is_numeric($ctty) and strlen($ctty) > 9) ? 'community=:ctty' : 'zip REGEXP :ctty';
   if ($email) $where .= ' AND activated>:REQUEST_TIME-9*:WEEK_SECS'; // show only new companies in emails
-  $iModel = '<tr colspan="3" class="cmpy-ind"><td>%industry</td></tr>';
+  $iModel = '<div class="cmpy-ind-wrapper"><div class="cmpy-ind">%industry</div>';
   $rows = is_array($ctty) 
   ? $ctty
   : db\q("SELECT uid, iid, industry FROM users LEFT OUTER JOIN r_user_industries LEFT OUTER JOIN r_industries WHERE :IS_CO AND :IS_OK AND uid>:CANONIC_ACCTS AND $where ORDER BY iid, fullName", compact('ctty'));
@@ -1024,12 +1024,12 @@ function participatingCompanies($ctty, $email = FALSE) {
     $a = r\acct($uid);
     if (!($a->coCan(CO_PRIVATE))) {
       $industry = $row['industry'];
-      $iid = $row['iid'];
+      $iid = $row['iid'] ?: -2;
       if ($iid != $lastIid) {
         if (! $firstTime) {
           $res .= '</div>';
-          $firstTime = false;
         }
+        $firstTime = false;
         $res .= tr($iModel, 'industry', $industry) . "\n";
         $lastIid = $iid;
       }
@@ -1039,6 +1039,7 @@ function participatingCompanies($ctty, $email = FALSE) {
       $res .= tr($model, '_name desc img', "$name$new", $a->shortDesc, $img) . "\n";
     }
   }
+  if (! $firstTime) $res .= '</div>';
   return $res;
 }
 
