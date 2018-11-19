@@ -1023,7 +1023,7 @@ function participatingCompanies($ctty, $email = FALSE) {
     $uid = $row['uid'];
     $a = r\acct($uid);
     if (!($a->coCan(CO_PRIVATE))) {
-      $industry = $row['industry'];
+      $industry = $row['industry'] ?: tr('Unclassified');
       $iid = $row['iid'] ?: -2;
       if ($iid != $lastIid) {
         if (! $firstTime) {
@@ -1035,7 +1035,7 @@ function participatingCompanies($ctty, $email = FALSE) {
       }
       $name = $a->website ? w\lnk("http://$a->website", $a->bestName) : $a->bestName;
       $new = ($a->activated > REQUEST_TIME - 9 * WEEK_SECS) ? $NEW : '';
-      $img = $a->photoSrc(true);
+      $img = $a->photoSrc(true) ?: 'images/no-photo-available.jpg';
       $res .= tr($model, '_name desc img', "$name$new", $a->shortDesc, $img) . "\n";
     }
   }

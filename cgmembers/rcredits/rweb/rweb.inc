@@ -133,7 +133,8 @@ function formAccountPhoto($form, &$sta, $args = '') {
 
   header("Content-type: image/jpeg");
 
-  if ($a = @$qid ? r\acct($qid, $mya->agentId) : $mya) {
+  if ($a = @$qid ? r\
+      acct($qid, $mya->agentId) : $mya) {
     if ($a->co or $a->can(B_READ)) $photo = @$orig ? @file_get_contents($a->tempPhotoFilename) : $a->photo;
   }
 //      if ($a->co ?: ($a->cardCode == $cardCode)) $photo = $a->photo; // was photo()

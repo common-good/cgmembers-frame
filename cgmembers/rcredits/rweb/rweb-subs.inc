@@ -1683,7 +1683,7 @@ function directoryList($which, $region, $withButtons = FALSE) {
     WHERE :IS_CO AND u.uid>:CANONIC_ACCTS AND :IS_OK AND $regionCrit AND (u.fullName LIKE :which OR i.industry LIKE :which)
     ORDER BY u.fullName
 EOF;
-  debug(compact(ray('region which sql')));
+  /* debug(compact(ray('region which sql'))); */
   $result = db\q($sql, compact(ray('region which')));
   $rows = [];
   foreach ($result as $row) {
