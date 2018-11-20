@@ -16,7 +16,6 @@ function formFindCo($form, &$sta, $args = '') {
   global $mya;
   extract(just('where cos', $args));
 
-  debug('$mya->community is ' . "$mya->community");
   $list = w\directoryList(@$cos, @$where ?: @$mya->community);
   $list = "<div class=\"cmpy-list\">$list</div>";
   

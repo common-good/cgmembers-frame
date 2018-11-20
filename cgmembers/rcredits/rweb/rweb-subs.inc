@@ -1657,15 +1657,19 @@ function invitation($code, $invitee = '', &$inviter = '', &$iCode = -1, &$err = 
 function directoryList($which, $region, $withButtons = FALSE) {
   global $base_url;
 
-  if ($withButtons and $mya = r\acct()) {
+  $mya = r\acct();
+  if ($withButtons and $mya) {
     $canBuy = $mya->can(B_BUY);
     $canSell = $mya->can(B_SELL);
   } else $canBuy = $canSell = FALSE;
 
   list ($symbolMember, $symbolRTrader, $symbolNonMember) = array('m', 'R', '-');
-  
-  if (!$region or (is_numeric($region) and $region < 0)) {
-    if (!$region) $region = r\serverUid();
+
+  if (!$region) {
+    $region = r\serverUid();
+    $regionCrit= ($mya and $mya->state) ? "state=:$mya->state" : 1;
+  } else if (is_numeric($region) and $region < 0) {
+    //    $regionCrit = 'community=:region';
     $regionCrit = 'community=:region';
   } else {
     $region = \db_like($region) . '%';
