@@ -551,7 +551,7 @@ body.logged-in.one-sidebar #content {width:100%;}
 /* Find Company */
 #frm-findco .row {display:table-row; max-width:700px;}
 #frm-findco .well {padding:10px 35px;}
-#frm-findco .cmpy-img {display:table-cell; overflow:hidden; vertical-align: middle; height:50px; }
+#frm-findco .cmpy-img {display:table-cell; overflow:hidden; vertical-align: middle; height:50px; margin:10px;}
 #frm-findco .cmpy-img img {overflow:hidden; height:50px; }
 #frm-findco .cmpy-name-does {display:table-cell; vertical-align: middle; margin-left:10px;}
 #frm-findco .cmpy-name {width:auto; max-width:300px; overflow:hidden; color:darkblue; margin-left:10px;}
