@@ -22,7 +22,7 @@ function formProposalReport($form, &$sta, $args = '') {
 
   if (!@$p or !$project = db\get('project', 'r_proposals', 'id=:p', compact('p'))) return w\softErr(t('No such proposal.'));
   
-  if (!$extra = v\showProposal($mya, -$p, $err)) w\say($err, 'err');
+  if (!$extra = v\showProposal($mya, $p, $err)) w\say($err, 'err');
 
   $form['title'] = item(t('Project Proposal Details'));
   $form['project'] = item($project, t('Project:'));

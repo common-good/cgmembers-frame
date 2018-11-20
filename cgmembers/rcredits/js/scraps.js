@@ -259,8 +259,7 @@ function doit(what, vs) {
     case 'tickle': 
       $('.tickle').click(function () {
         var tickle = $(this).attr('tickle');
-        if (tickle != 'NONE') $('#edit-tickle').val(tickle);
-        //fform(this).submit();
+        $('#edit-tickle').val(tickle);
         $('#edit-submit').click();
       });
       break;

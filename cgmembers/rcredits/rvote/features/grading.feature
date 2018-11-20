@@ -9,9 +9,9 @@ Setup:
   | .ZZA | Abe One  | ok     |
   | .ZZB | Bea Two  | ok     |
   And these "events":
-  | id | ctty | type | event | start     | end       |*
-  |  1 | ctty |    P | RFP   | %today-1w | %today-2d |
-  |  2 | ctty |    G | Grade | %today    | %tomorrow |
+  | id | ctty | type | event         | start     | end       |*
+  |  1 | ctty |    P | RFP ($10,000) | %today-1w | %today-2d |
+  |  2 | ctty |    G | Grade         | %today    | %tomorrow |
   And these "proposals":
   | id | event | project | overview | categories | purpose | systemic | where | when | until       | amount | recovery | ctty |*
   | 1  |     1 | Dance   | Fun!     | arts,food  | move    | mystery  | here  | %today | %today+1d |   1000 |       15 | ctty |
@@ -77,3 +77,9 @@ Scenario: A member grades a proposal
   |  5 |      1 |     -5 |     12 |       -1 |            4 |          |      0 |
   |  6 |      1 |     -6 |     13 |       -1 |            5 | good one |      0 |
   |  7 |      1 |     -7 |     -2 |       -1 |            6 | very bad |      1 |
+  
+  When member ".ZZA" visits page "community/events/do=results&eid=2"
+  Then we show "Community Democracy" with:
+  | project | who     || amount | categories || grade | notes   |
+  | Dance   |         || $1,000 | arts,food  || D+    | 2 notes |
+  | Play    |         || $2,000 | energy     || E     |         |

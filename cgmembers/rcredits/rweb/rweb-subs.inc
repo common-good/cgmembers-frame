@@ -518,7 +518,7 @@ function queryPermitted($qName, &$sql = '', &$subtext = '') {
   $cttyName = $mya->community ? $mya->cttyA->fullName : t('All Communities');
   list ($sql, $text2) = explode('~', "$sql~");
   $map[':myid'] = $mya->id;
-  $map[':ctty'] = $mya->community ?: 'community'; // alternative is for superAdmin
+  $map['=:ctty'] = $mya->community ? "=$mya->community" : '<>0'; // alternative is for superAdmin
   $sql = strtr($sql0 = $sql, $map);
   $subtext = strpos($sql0, ':ctty') ? "<h4>$cttyName</h4><br>$text2" : $text2;
   
