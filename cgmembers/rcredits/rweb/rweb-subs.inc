@@ -1681,7 +1681,7 @@ function directoryList($which, $region, $withButtons = FALSE) {
     LEFT OUTER JOIN r_user_industries ui ON ui.uid=u.uid
     LEFT OUTER JOIN r_industries i ON i.iid=ui.iid
     WHERE :IS_CO AND u.uid>:CANONIC_ACCTS AND :IS_OK AND $regionCrit AND (u.fullName LIKE :which OR i.industry LIKE :which)
-    ORDER BY u.fullName
+    ORDER BY i.iid, u.fullName
 EOF;
   /* debug(compact(ray('region which sql'))); */
   $result = db\q($sql, compact(ray('region which')));
