@@ -970,13 +970,13 @@ function noticeArgs($uid, $where = '0', $weekly = FALSE, $monthly = FALSE, $at =
  * @param bool $email: <format for use in emails and show just new companies> (else format for promo site or Find Co page)
  */
 function companies($ctty, $email = FALSE) {
-  $model = $email 
+  $model = $email
   ? '<tr><td width="200">%name</td><td style="margin-left:10px;">%desc</td></tr>'
   : '<div class="row"><div class="cmpy-name">%name</div><div class="cmpy-does">%desc</div></div>';
   $where = (is_numeric($ctty) and strlen($ctty) > 9) ? 'community=:ctty' : 'zip REGEXP :ctty';
   if ($email) $where .= ' AND activated>:REQUEST_TIME-9*:WEEK_SECS'; // show only new companies in emails
   
-  $uids = is_array($ctty) 
+  $uids = is_array($ctty)
   ? $ctty
   : db\q("SELECT DISTINCT uid FROM users WHERE :IS_CO AND :IS_OK AND uid>:CANONIC_ACCTS AND $where ORDER BY fullName", compact('ctty'))->fetchCol();
   if (!$uids) return $email ? t('no new companies this month') : t('No companies there yet. Invite them!');
@@ -993,6 +993,53 @@ function companies($ctty, $email = FALSE) {
       $res .= tr($model, '_name desc', "$name$new", $a->shortDesc) . "\n";
     }
   }
+  return $res;
+}
+
+/**
+ * Return a list of participating companies for the given community.
+ * @param mixed $ctty: uid of community OR zipcode OR zipcode pattern
+ * @param bool $email: <format for use in emails and show just new companies> (else format for promo site or Find Co page)
+ */
+function participatingCompanies($ctty, $email = FALSE) {
+  $model = $email 
+  ? '<tr><td width="200">%name</td><td style="margin-left:10px;">%desc</td></tr>'
+  : '<div class="row"><div class="cmpy-img"><img src="%img" alt="profile picture" /></div><div class="cmpy-name-does"><div class="cmpy-name">%name</div><div class="cmpy-does">%desc</div></div></div>';
+  $where = (is_numeric($ctty) and strlen($ctty) > 9) ? 'community=:ctty' : 'zip REGEXP :ctty';
+  if ($email) $where .= ' AND activated>:REQUEST_TIME-9*:WEEK_SECS'; // show only new companies in emails
+  $iModel = '<div class="cmpy-ind-wrapper"><div class="cmpy-ind">%industry</div>';
+  $rows = is_array($ctty) 
+  ? $ctty
+  : db\q("SELECT uid, iid, industry FROM users LEFT OUTER JOIN r_user_industries LEFT OUTER JOIN r_industries WHERE :IS_CO AND :IS_OK AND uid>:CANONIC_ACCTS AND $where ORDER BY industry, fullName", compact('ctty'));
+  if (!$rows) return $email ? t('no new companies this month') : t('No companies there yet. Invite them!');
+  $res = '';
+  $_newClass = $email ? 'style="color:red; font-weight:bold;"' : 'class="company-listing"';
+  $NEW = t(' <small %newClass> NEW!</small>', compact('_newClass'));
+
+  $lastIid = -1;  // negative record ids are, we hope, unlikely
+  $firstTime = true;
+  foreach ($rows as $rowObject) {
+    $row = (array)$rowObject;
+    $uid = $row['uid'];
+    $a = r\acct($uid);
+    if (!($a->coCan(CO_PRIVATE))) {
+      $industry = $row['industry'] ?: tr('Unclassified');
+      $iid = $row['iid'] ?: -2;
+      if ($iid != $lastIid) {
+        if (! $firstTime) {
+          $res .= '</div>';
+        }
+        $firstTime = false;
+        $res .= tr($iModel, 'industry', $industry) . "\n";
+        $lastIid = $iid;
+      }
+      $name = $a->website ? w\lnk("http://$a->website", $a->bestName) : $a->bestName;
+      $new = ($a->activated > REQUEST_TIME - 9 * WEEK_SECS) ? $NEW : '';
+      $img = $a->photoSrc(true) ?: 'images/no-photo-available.jpg';
+      $res .= tr($model, '_name desc img', "$name$new", $a->shortDesc, $img) . "\n";
+    }
+  }
+  if (! $firstTime) $res .= '</div>';
   return $res;
 }
 
