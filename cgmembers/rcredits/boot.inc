@@ -89,7 +89,21 @@ define('isSAFARI', stripos($agt, 'Chrome') === FALSE and stripos($agt, 'Safari')
 
 // one-time database changes, if any
 $sqlOnce = <<< X
-UPDATE r_invoices SET status=status-1 WHERE status<2;
+ALTER TABLE `r_proposals` ADD `committed` DECIMAL(11,2) NOT NULL DEFAULT '0' AFTER `budget`;
+UPDATE r_criteria SET name='suitable' WHERE id=1;
+UPDATE r_criteria SET name='systemic' WHERE id=2;
+UPDATE r_criteria SET name='doable' WHERE id=3;
+UPDATE r_criteria SET name='mgmt' WHERE id=4;
+UPDATE r_criteria SET name='cope' WHERE id=5;
+UPDATE r_criteria SET name='eval' WHERE id=6;
+UPDATE r_criteria SET name='recovery' WHERE id=7;
+UPDATE r_criteria SET name='goodAmt' WHERE id=8;
+UPDATE r_criteria SET name='budgetPct' WHERE id=9;
+UPDATE r_criteria SET name='committedPct' WHERE id=10;
+UPDATE r_criteria SET name='beginSoon' WHERE id=11;
+UPDATE r_criteria SET name='endSoon' WHERE id=12;
+UPDATE r_criteria SET name='local' WHERE id=13;
+UPDATE r_criteria SET name='sponsor' WHERE id=14;
 X;
 
 /**

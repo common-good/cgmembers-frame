@@ -34,7 +34,7 @@ function showResults($eid, $noProxies = FALSE) {
  * to test: SELECT fullName,b2.proxy,COUNT(b2.id) AS weight,grade,gradeMax,grade*COUNT(b2.id)/287 AS low,gradeMax*COUNT(b2.id)/287 AS hi FROM r_ballots b JOIN r_votes v ON v.ballot=b.id LEFT JOIN users u ON u.uid=b.voter LEFT JOIN r_ballots b2 ON (b2.proxy=b.voter AND b2.question=b.question) WHERE v.option=31 GROUP BY b2.proxy
  */
 function showResult($ctty, $qi, $question, $noProxies, $withheader = TRUE) {
-	global $thisvoter, $mya; // only if ISDEMO
+	global $mya;
 //    u\loga("0-$question", 'top');
 	$qu = db\get('id, type, text, detail, budget, minveto, result', 'r_questions', 'id=:question', compact('question'));
   extract($qu);

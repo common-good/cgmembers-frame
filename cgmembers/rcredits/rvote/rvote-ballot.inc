@@ -186,34 +186,38 @@ EOF;
 }
 
 /**
- * Return a summary of the proposals.
+ * Return a summary of the proposals, as graded by the community.
  */
-function showProposalGrades($mya, $args) {
-  $ctty = $mya->community;
-  
-  $nowish = strtotime('2/1/2017'); // ideal start and end date
-  list($bestAmt,$maxAmt) = [1000, 10000];
+function showProposalGrades($eid, $noProxies) {
+  extract(db\get('end, ctty', 'r_events', "id=:eid AND type='G'", compact('eid')));
+  $rfpId = db\max('id', 'r_events', "id<:eid AND type='P' AND ctty=:ctty", compact(ray('eid ctty')));
+  $rfpName = db\get('event', 'r_events', 'id=:rfpId', compact('rfpId'));
+  $maxAmt = preg_replace('/[^0-9]/', '', $rfpName) ?: 0;
+  $bestAmt = round($maxAmt/10);
+  $bestTime = $end + 30 * DAY_SECS;
   $bestPct = .5; // formula below needs to be generalized if this is anything but .5
+  $points = db\q('SELECT name,points FROM r_criteria')->fetchAllKeyed();
+  $gradableFields = db\col('name', 'r_criteria', 'NOT auto');
+  foreach ($gradableFields as $i => $v) $gradable[] = "(SELECT AVG(grade) FROM r_votes v LEFT JOIN r_ballots b ON b.id=v.ballot WHERE b.question=-p.id AND v.option=-$i) AS $v,\n";
+  $gradable = join('', $gradable);
   
-  $avgGradeOption = 'AVG(grade) FROM r_votes v LEFT JOIN r_ballots b ON b.id=v.ballot WHERE b.question=-p.id AND v.option';
+  $avgGradeOption = '';
   $sql = <<<EOF
 SELECT p.id, p.project, CONCAT_WS(', ', p.name, p.contact) AS who, 
   CONCAT(MID(p.phone,2,3), '-', MID(p.phone,5,3), '-', MID(p.phone,8), ' ', p.email) AS contact, p.amount, p.categories, 
   (SELECT COUNT(*) FROM r_ballots b WHERE b.question=-p.id) AS count, 
-  (SELECT $avgGradeOption=12+0) AS suitable, 
-  (SELECT $avgGradeOption=12+1) AS doable, 
-  (SELECT $avgGradeOption=12+2) AS mgmt, 
-  (SELECT $avgGradeOption=12+3) AS eval, 
-  (SELECT $avgGradeOption=12+4) AS cope,
+  $gradable
   (SELECT COUNT(v.id) FROM r_ballots b JOIN r_votes v ON v.ballot=b.id WHERE v.text <> '' AND b.question=-p.id) AS noteCount,
   MID(p.sponsor, 0, 2) AS sponsor,
   IF(MID(`where`, 0, 5)='01301', 12, 9) AS local,
   IF(type=1, 12, 0) AS goodType,
-  GREATEST(0, 12-ABS(`when`-$nowish)/:MONTH_SECS) AS goodTime1,
-  GREATEST(0, 12-ABS(until-$nowish)/:MONTH_SECS) AS goodTime2,
-  12 * IF(amount<$bestAmt, amount/$bestAmt, 1-GREATEST(0, amount-$bestAmt)/($maxAmt-$bestAmt)) AS rightAmt,
-  12 * IF(amount/budgetTotal<$bestPct, amount/budgetTotal/$bestPct, 1-(amount/budgetTotal-$bestPct)/(1-$bestPct)) AS rightPct, budgetTotal, until
-FROM r_proposals p
+  GREATEST(0, 12-ABS(`when`-$bestTime)/:MONTH_SECS) AS beginSoon,
+  GREATEST(0, 12-ABS(until-$bestTime)/:MONTH_SECS) AS endSoon,
+  12 * IF(amount<$bestAmt, amount/$bestAmt, 1-GREATEST(0, amount-$bestAmt)/($maxAmt-$bestAmt)) AS goodAmt,
+  12 * IF(amount/budgetTotal<$bestPct, amount/budgetTotal/$bestPct, 1-(amount/budgetTotal-$bestPct)/(1-$bestPct)) AS budgetPct,
+  12 * IF(committed/budgetTotal<$bestPct, committed/budgetTotal/$bestPct, 1-(committed/budgetTotal-$bestPct)/(1-$bestPct)) AS committedPct, 
+  budgetTotal, until
+FROM r_proposals p WHERE event=:rfpId
 ORDER BY p.project
 EOF;
 
@@ -221,7 +225,7 @@ EOF;
   $cols = ray(t('categories:2,project:3,who:2,amount:1,grade:1,notes:1'));
   $grades = ray('E E+ D- D D+ C- C C+ B- B B+ A- A A+');
   $notes0 = t('<a>notes</a>', '_a', w\atag(''));
-  $q = db\q($sql);
+  $q = db\q($sql, compact('rfpId'));
   $colKeys = array_keys($cols);
   $rows = [array_combine($colKeys, $colKeys)];
   while ($row = $q->fetchAssoc()) $rows[] = $row;
@@ -230,14 +234,18 @@ EOF;
     extract($row);
     
     if ($list) {
-      $sponsor = $sponsor >= 20 ? 12
+      $sponsor = 6; // dunno how to figure this yet
+/*      $sponsor = $sponsor >= 20 ? 12
       : ($sponsor >= 10 ? 9
       : ($sponsor >= 2 ? 6
-      : ($sponsor >= 1 ? 3 : 0)));
-      $grade = round((20*$suitable + 20*$doable + 15*$mgmt + 10*$eval + 5*$cope + 2.5*$sponsor + 2.5*$local + 5*$goodType + 2.5*$goodTime1 + 2.5*$goodTime2 + 5*$rightAmt + 5*$rightPct) / 95); // should include 5*committed percent and divide by 100
-      $grade = $grades[$grade];
+      : ($sponsor >= 1 ? 3 : 0)));*/
+      
+      $grade = 0;
+      foreach ($points as $k => $v) $grade += $$k * $v;
+//      $grade = round((20*$suitable + 20*$doable + 15*$mgmt + 10*$eval + 5*$cope + 2.5*$sponsor + 2.5*$local + 5*$goodType + 2.5*$goodTime1 + 2.5*$goodTime2 + 5*$rightAmt + 5*$rightPct) / 95); // should include 5*committed percent and divide by 100
+      $grade = $grades[$grade / 100];
       $amount = u\fmtAmt($amount);
-      $atag = w\atag("/prox/page=ProposalReport&p=$id&$args");
+      $atag = w\atag("/prox/page=ProposalReport&p=$id");
       $project = "<$atag>$project</a>";
       if ($noteCount) { //($comments = proposalComments($id)) {
         $atag = w\atag("/prox/page=ProposalNotes&p=$id");

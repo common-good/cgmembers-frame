@@ -119,6 +119,7 @@ EOF;
   $budgetTotal = textFld(t('Budget:'), [t('Total Project Budget'), t('What is the Total Project Expense Budget? Type or paste a complete Income and Expense budget below. Include your top 3 sources and amounts of committed funds. Please do not show subtotals.')], required());
   $budget = areaFld('', [t('Itemized Income and Expense Budget')], required());
   //   $budget = htmlFld('', [t('Itemized Income and Expense Budget')], '', required());
+  $committed = textFld(t('Committed:'), [t('Amount Already Raised'), t('How much of the project budget has already been raised?')], required());
   $contingency = areaFld(t('Contingency:'), [t('Contingency Plan, for Partial Funding'), t('Funds are limited, and projects may not receive the full amount requested. If you receive less than the amount requested, how will that impact your ability to conduct the project?')], required());
   $qualifications = areaFld(t('Qualifications:'), [t('Skills, Experience, and Qualities'), t('Who will complete the project? What are their specific skills, experience, or qualities that assure success?')], required());
   $evaluation = areaFld(t('Evaluation:'), [t('Evaluation Plan'), t('How will you measure and evaluate the project\'s success?')], required());
@@ -129,7 +130,7 @@ EOF;
   $email = textFld(t('Email:'), [t('Contact Email Address')], required());
   $sponsor = textFld(t('Sponsor:'), [t('%PROJECT Member(s) Sponsoring this Funding Proposal'), t('Name(s) of %PROJECT member(s) sponsoring this funding proposal, if any (or "self" if you are a member)')], required());
   $submitProposal = submit(t('Submit Proposal'));
-  return cgform(compact(ray('title subtext project overview categories purpose systemic where when until how amount recovery budgetTotal budget contingency qualifications evaluation name contact phone email sponsor submitProposal critPop event')));
+  return cgform(compact(ray('title subtext project overview categories purpose systemic where when until how amount recovery budgetTotal budget committed contingency qualifications evaluation name contact phone email sponsor submitProposal critPop event')));
 } 
   
 function formProposal_validate($form, &$sta) {
@@ -137,7 +138,7 @@ function formProposal_validate($form, &$sta) {
   if (!@$cats) return say(t('You must choose at least one category.'), 'categories');
   if ($err = u\badDate($when, NOW - 30 * DAY_SECS)) return sayFieldErr($err, 'when');
   if ($err = u\badDate($until, max($when, NOW))) return sayFieldErr($err, 'until');
-  foreach (['amount', 'budgetTotal'] as $k) if ($err = amtErr($k, $sta)) return sayFieldErr($err, $k);
+  foreach (ray('amount budgetTotal committed') as $k) if ($err = amtErr($k, $sta)) return sayFieldErr($err, $k);
   if (!phoneOk($phone)) return;
   if (!u\validEmail($email)) return say('bad email', compact('email'), 'email');
   u\preray(compact(ray('when until phone')), $sta['input']); // amounts get updated in $sta by amtErr()
@@ -145,7 +146,7 @@ function formProposal_validate($form, &$sta) {
 
 function formProposal_submit($form, &$sta) {
   $input = $sta['input'];
-  $dbFields = 'event project categories overview purpose systemic where when until how amount recovery budgetTotal budget contingency qualifications evaluation name contact phone email sponsor';
+  $dbFields = 'event project categories overview purpose systemic where when until how amount recovery budgetTotal budget committed contingency qualifications evaluation name contact phone email sponsor';
   $input['categories'] = join(' ', array_keys($input['cats']));
 	
 	foreach (@$input['recovery'] ?: [] as $k => $v) u\setBit($recs, $k);

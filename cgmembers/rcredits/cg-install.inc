@@ -724,6 +724,7 @@ function tableDefs($schema = []) {
     'recovery' => dbFld(t('how funds will return to the Community Fund'), 'int medium', 0),
     'budgetTotal' => dbFld(t('total expense budget'), 'numeric 11,2'),
     'budget' => dbFld(t('detailed project budget'), 'text medium'),
+    'committed' => dbFld(t('how much of the budget has already been raised'), 'numeric 11,2'),
     'contingency' => dbFld(t('how the project organizers will cope with less funding than requested'), 'text medium'),
     'qualifications' => dbFld(t('qualifications of project staff'), 'text medium'),
     'evaluation' => dbFld(t('how the success of the project will be evaluated'), 'text medium'),
@@ -740,6 +741,7 @@ function tableDefs($schema = []) {
   // table r_criteria
   $fields = [
     'id' => dbFld(t('criterion record id'), 'serial big'),
+    'name' => dbFld(t('name of criterion'), 'text tiny'),
     'text' => dbFld(t('text of the criterion'), 'text tiny'),
     'detail' => dbFld(t('additional detail about the criterion'), 'text medium'),
 	  'points' => dbFld(t('how many points for this criterion'), 'numeric 11,2', 0), // out of 100

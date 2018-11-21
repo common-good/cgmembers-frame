@@ -55,7 +55,10 @@ function formEvents($form, &$sta, $args = '') {
 
   $title = item(t('Community Democracy') . "<br><small>$cttyA->fullName</small>");
 //  $subtitle = item($cttyA->fullName);
-  if ($event0 = v\getCurrentEvent($cttyA->id)) {
+  $event0 = @$eid 
+  ? db\get('id AS eid, type, event, details, start, end', 'r_events', 'id=:eid AND ctty=:ctty', ray('eid ctty', $eid, $cttyA->id))
+  : v\getCurrentEvent($cttyA->id);
+  if ($event0) {
     extract($event0); // $event0 contains $event, so must not have that name (as of PHP7)
 
     $end = u\fmtDate($end, TRUE);
@@ -86,12 +89,12 @@ function formEvents($form, &$sta, $args = '') {
   } elseif (@$do == 'proposals') {
 		
   } elseif (@$do == 'results') {
-		$middle = v\showResults(@$eid, @$noProxies);
+		$middle = $type == 'G' ? v\showProposalGrades($eid, @$noProxies) : v\showResults($eid, @$noProxies);
   } elseif (@$do == 'options') { // UNUSED
-    list($middle, $phase, $endDate) = v\questionList(@$eid, @$question, @$do);
+    list($middle, $phase, $endDate) = v\questionList($eid, @$question, @$do);
   } elseif (@$do == 'ballot') {
     $middle = v\ballot($mya, $extraFields, @$question);
-  } elseif (@$do == 'done' and @$eid) { // @todo: handle proposals too
+  } elseif (@$do == 'done' and $eid) { // @todo: handle proposals too
     $table = "r_votes v INNER JOIN r_ballots b ON v.ballot=b.id INNER JOIN r_questions q ON q.id=b.question";
     $notes = db\col('DISTINCT v.text', $table, "q.event=:eid AND b.voter=:uid AND v.text<>''", ray('uid eid', $mya->id, $eid));
     r\tellCO($mya->fullName . t(' has voted. '), $notes);
@@ -159,7 +162,7 @@ function formEvents_submit($form, &$sta) {
   if (@$agree) return w\go("prox/page=Events&do=ballot&$args");
   
   // process ballot submission
-  if (@$question <= -1) {
+  if (@$question < 0) {
     $type = 'M';
     $do = 'grade';
     if (is_numeric($question = bumpQnum(-$question, v\getProposals($mya), $op))) $question = -$question;
