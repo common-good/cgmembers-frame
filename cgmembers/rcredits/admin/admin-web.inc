@@ -226,7 +226,7 @@ EOF;
     } else $notes = item(str_replace("\n", '<br>', $mya->notes), t('Notes:'));
 
     $note = areaFld(t('New Note:'), [t('Type a Note Here'), t('Abbreviations: PM=phone msg EM=email msg. Be sure to say what you left a message <i>about</i> (for example "PM setup")')]);
-    $suffix = submitTickle(1, t('Wait a day')) . submitTickle(2, t('2 days')) . submitTickle(7, '7') . submitTickle(30, '30') . submitTickle('', t('Auto')) . ' &nbsp; ' . submitTickle('NONE', t('Save'), 'sm');
+    $suffix = submitTickle(1, t('Wait a day')) . submitTickle(2, t('2 days')) . submitTickle(7, '7') . submitTickle(30, '30') . submitTickle('', t('Auto')) . ' &nbsp; ' . submitTickle($mya->tickle ? 'NONE' : '', t('Save'), 'sm');
     $tickle = textFld(t('Tickle:'), [t('Followup Date'), t('When to follow up ("Auto" sets an automatic Welcome or Annual date)')], dft($mya->tickle ? u\fmtDate($mya->tickle, TRUE) : '') + w\suffix($suffix));
     $source = item($mya->source, t('Source:'));
   }
@@ -247,6 +247,7 @@ EOF;
  * @param string $size: size of button (defaults to sm)
  */
 function submitTickle($v, $text, $size = 'xs') {
+  if ($v == 'NONE') return w\rent(w\submi($text, 'primary', $size)); // not change to tickler
   if ($v) $v = u\fmtDate(strtotime("+$v days"), TRUE);
   return w\rent(w\submi($text, 'primary', $size, ray('class tickle', 'tickle', $v)));
 }
@@ -271,12 +272,13 @@ function export($params) {
   $fields = @$anonymous ?
     'uid city state zip type'
       . ' created activated signed helper iCode balance rewards savingsAdd minimum share risk trust'
-      . ' cttyName co gross employees achMin pinThreshold lastiCode tenure moves mediaConx jid'
+      . ' community co gross employees achMin pinThreshold lastiCode tenure moves mediaConx jid'
       . ' owns bankName slave closed notices secret'
-  : (@$chimp ? 'id first_name last_name phone email city state zip cttyName type ecode special created'
-  : 'id first_name last_name phone email address city state zip cttyName type ecode special modified created');
+  : (@$chimp ? 'id fullName phone email city state zip community type ecode'
+  : 'id fullName phone email address city state zip community type ecode modified created');
   u\csv($fields = ray($fields), $delimiter);
 
+/*
   if ($requests) { // handle requests first, in case member status gets updated by later record
     $startDate = strtotime('8/9/2017'); // change this to -1 month?
     $sql = "SELECT * FROM r_request WHERE email<>'' and created>=$startDate";
@@ -291,13 +293,13 @@ function export($params) {
       $type = '';
       foreach (ray('phone email') as $k) $$k = u\decry('P', $$k);
       if (strpos($email, '@' . EMAILX)) continue;
-//      $cttyName = $ctty ? trim(str_replace(PROJECT, '', r\acct($ctty)->fullName)) : '';
-      $cttyName = ($zip and $ctty = r\communityUid($zip)) ? r\cttyName($ctty, TRUE) : '';
+//      $community = $ctty ? trim(str_replace(PROJECT, '', r\acct($ctty)->fullName)) : '';
+      $community = ($zip and $ctty = r\communityUid($zip)) ? r\community($ctty, TRUE) : '';
       if (!@$chimp) $zip .= "\t"; // prevent leading zeros from getting dropped on import (fails for MailChimp, so don't)
       u\csv(array_values(compact($fields)), $delimiter);
     }
   }  
-  
+*/  
   // add actual accounts
   $where = @$allCttys ? '1' : 'community=:cttyId';
   if (@$status == 0) $where .= ' AND :IS_OK';
@@ -322,7 +324,7 @@ function export($params) {
         $bankName = db\get('name', 'r_banks', 'route=:routing', compact('routing'));
       } else $bankName = '';
     } else {
-      list ($first_name, $last_name) = u\parseName($fullName);
+//      list ($first_name, $last_name) = u\parseName($fullName);
       $email = $a->email;
       $phone = $a->phone;
       list ($address, $city, $state, $zip) = u\parseAddr($a->postalAddr);
@@ -333,10 +335,10 @@ function export($params) {
       $special = '';
 // (BROKEN)      $special = $a->special;
     }
-    $cttyName = r\cttyName($a->community, TRUE);
+    $community = r\cttyName($a->community, TRUE);
     $created = u\fmtDate($a->created);
-    if (is_numeric($zip) and !@$chimp) $zip .= "\t"; // prevent interpretation as a number (fails for MailChimp, so don't)
-
+//    if (is_numeric($zip) and !@$chimp) $zip .= " "; // prevent interpretation as a number (fails for MailChimp, so don't)
+    if (!@$chimp) foreach ($fields as $k) $$k = '"' . $$k . '"'; // keeps some imports from getting confused
     u\csv(array_values(compact($fields)), $delimiter);
   }
   

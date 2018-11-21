@@ -1447,3 +1447,4 @@ function fmtKey($k, $f) {$d = '-----'; $k = chunk_split(base64_encode($k), 64); 
 function unfmtKey($k) {return base64_decode(preg_replace('/(-+[^-]+-+|[\r\n ])/', '', strpos($k, ':') ? file_get_contents($k) : $k));}
 function pubKey($k) {return openssl_pkey_get_details(openssl_pkey_get_private(fmtKey(unfmtKey($k), 'PRIVATE')))['key'];}
 function validEmail($email) {return filter_var($email, FILTER_VALIDATE_EMAIL);}
+//function bitCount(int $n) {return $n ? (($n % 2) ? 1 : 0) + bitCount($n / 2) : 0;}

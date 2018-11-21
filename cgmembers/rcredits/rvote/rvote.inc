@@ -310,6 +310,9 @@ function goDemocracy() {
 EOF;
 }
 
+/**
+ * Return the first open event row for the given community.
+ */
 function getCurrentEvent($ctty) {return db\get('id AS eid, type, event, details, start, end', 'r_events', 'ctty=:ctty AND end>:NOW ORDER BY end LIMIT 1', ray('ctty', $ctty));}
 
 /**

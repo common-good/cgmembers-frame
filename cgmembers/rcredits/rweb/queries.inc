@@ -19,6 +19,15 @@ $gifts = "r.amount * IF(period='M', 12, IF(period='Q', 4, 1))";
 $queries = [
   2 . 'Most Trusted Members' => 
     "SELECT fullName, email AS email, phone, COUNT(b.voter) AS proxiedFor, trust FROM users u LEFT JOIN r_ballots b ON b.proxy=u.uid AND b.created>:REQUEST_TIME-:YEAR_SECS WHERE u.community=:ctty AND u.:IS_OK AND NOT u.:IS_CO GROUP BY IFNULL(b.proxy, u.uid) ORDER BY COUNT(b.voter) DESC, u.trust DESC",
+    
+  2 . 'Individuals Paid By A Company' =>
+    "SELECT DISTINCT u.fullName AS company, u2.fullName AS pays, IF(r.:IS_EMPLOYEE, 'employee', IF(r.:IS_OWNER, 'owner', IF(r.:IS_CUSTOMER, 'customer', ''))) AS relation
+    FROM users u 
+    JOIN r_txs t ON t.payer=u.uid AND NOT t.:IS_UNDOES AND NOT t.:IS_UNDONE
+    JOIN users u2 ON u2.uid=t.payee AND NOT u2.:IS_CO AND u2.:IS_OK
+    LEFT JOIN r_relations r ON r.main=u.uid AND r.other=u2.uid
+    WHERE u.community=:ctty AND u.:IS_CO AND u.:IS_OK
+    ORDER BY u.community,u.fullName,relation DESC,u2.fullName",
 
   B_CO . 'Monthly Business Income (30 day totals)' => 
     "SELECT LEFT(u.fullName, 42) AS company, 

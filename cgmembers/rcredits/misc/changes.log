@@ -1,3 +1,8 @@
+2018-11-20
+. revised grading reports
+. fixed Save button on Summary page for admins, so it doesn't screw up tickle field
+. added query: Individuals Paid By A Company
+
 2018-11-07
 . reordered tx statuses in defs.inc to stay in a logical order (just equal to one less than they are now)
 . lowercased cgMembers

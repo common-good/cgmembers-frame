@@ -1761,12 +1761,23 @@ X;
    */
   public function photoHtml($small = FALSE, $unique = FALSE) {
     $a = $this;
+    return '<div id="user-picture"><img src="' . $a->photoSrc($small, $unique) . '" alt="profile picture" /></div>';
+  }
+  
+  /**
+   * Return src attribute for specified account's profile picture, no markup, just the src
+   * @param bool $unique: should the markup force reloading the image
+   * @return: value for the src attribute to display the account's picture (with a default image if none or not permitted)
+   * Use result with DRUPAL_ROOT . $result OR $base_url . $result
+   */
+  public function photoSrc($small = FALSE, $unique = FALSE) {
+    $a = $this;
     global $base_url;
     if ($unique) $unique = '&t=' . r\rTime();
     $thing = $small ? 'icon' : 'photo';
-		$qid = $a->co ? "qid=$a->mainQid" : '';
+    $qid = $a->co ? "qid=$a->mainQid" : '';
 //    if (!$a->co) $qid .= "/$a->cardCode";
-    return '<div id="user-picture"><img src="' . "$base_url/account-photo/$qid$unique" . '" alt="profile picture" /></div>';
+    return "$base_url/account-photo/$qid$unique";
   }
   
   /**
