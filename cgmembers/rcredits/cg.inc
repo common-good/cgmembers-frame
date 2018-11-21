@@ -1004,13 +1004,13 @@ function companies($ctty, $email = FALSE) {
 function participatingCompanies($ctty, $email = FALSE) {
   $model = $email 
   ? '<tr><td width="200">%name</td><td style="margin-left:10px;">%desc</td></tr>'
-  : '<div class="row"><div class="cmpy-img"><img src="%img" alt="profile picture" /></div><div class="cmpy-name">%name</div><div class="cmpy-does">%desc</div></div>';
+  : '<div class="row"><div class="cmpy-img"><img src="%img" alt="profile picture" /></div><div class="cmpy-name-does"><div class="cmpy-name">%name</div><div class="cmpy-does">%desc</div></div></div>';
   $where = (is_numeric($ctty) and strlen($ctty) > 9) ? 'community=:ctty' : 'zip REGEXP :ctty';
   if ($email) $where .= ' AND activated>:REQUEST_TIME-9*:WEEK_SECS'; // show only new companies in emails
   $iModel = '<div class="cmpy-ind-wrapper"><div class="cmpy-ind">%industry</div>';
   $rows = is_array($ctty) 
   ? $ctty
-  : db\q("SELECT uid, iid, industry FROM users LEFT OUTER JOIN r_user_industries LEFT OUTER JOIN r_industries WHERE :IS_CO AND :IS_OK AND uid>:CANONIC_ACCTS AND $where ORDER BY iid, fullName", compact('ctty'));
+  : db\q("SELECT uid, iid, industry FROM users LEFT OUTER JOIN r_user_industries LEFT OUTER JOIN r_industries WHERE :IS_CO AND :IS_OK AND uid>:CANONIC_ACCTS AND $where ORDER BY industry, fullName", compact('ctty'));
   if (!$rows) return $email ? t('no new companies this month') : t('No companies there yet. Invite them!');
   $res = '';
   $_newClass = $email ? 'style="color:red; font-weight:bold;"' : 'class="company-listing"';

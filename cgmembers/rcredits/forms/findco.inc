@@ -17,7 +17,7 @@ function formFindCo($form, &$sta, $args = '') {
   extract(just('where cos', $args));
 
   $list = w\directoryList(@$cos, @$where ?: @$mya->community);
-  $list = "<div class=\"well\">$list</div>";
+  $list = "<div class=\"cmpy-list\">$list</div>";
   
   $title = t('Companies in Your Region');
   $which = textFld(t('Search for:'), [t('Whatever'), t('Type part of company name or industry category')], dft(@$cos));
