@@ -274,16 +274,6 @@ function getQuestions($eid, $mya = NULL) {
 }
 
 /**
- * Return an HTML list of comments on a given proposal.
- */
-function proposalComments($pid) {
-  $sql = <<<EOF
-    SELECT CONCAT('(q', v.option-11, ') ', v.text, IF(v.isVeto, ' VETO!', '')) AS notes FROM r_proposals p JOIN r_ballots b ON b.question=-p.id JOIN r_votes v ON v.ballot=b.id WHERE v.text <> '' AND p.id=:pid ORDER BY p.project, v.option
-EOF;
-  return db\q($sql, compact('pid'))->fetchCol();
-}
-
-/**
  * Return an array of proposal record IDs in the requested order.
  * @param mixed $order: an account object (meaning arbitrary persistent order for that account) or string (ORDER BY clause)
  */

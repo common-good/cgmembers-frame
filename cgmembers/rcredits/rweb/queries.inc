@@ -28,6 +28,14 @@ $queries = [
     LEFT JOIN r_relations r ON r.main=u.uid AND r.other=u2.uid
     WHERE u.community=:ctty AND u.:IS_CO AND u.:IS_OK
     ORDER BY u.community,u.fullName,relation DESC,u2.fullName",
+    
+  2 . 'Transaction Totals to Date' =>
+    "SELECT COUNT(*) AS txCount, SUM(ABS(amount)) AS txDollars, 
+      SUM(IF(u2.:IS_CO AND (NOT u1.:IS_CO OR channel=:TX_POS), amount, 0)) AS inPersonDollars,
+      SUM(IF(u2.:IS_CO AND (NOT u1.:IS_CO OR channel=:TX_POS), .85*.02*amount, 0)) AS ccFeesSaved
+    FROM r_txs t JOIN users u1 ON u1.uid=t.payer JOIN users u2 ON u2.uid=t.payee
+    WHERE u1.community=:ctty OR u2.community=:ctty",
+    
 
   B_CO . 'Monthly Business Income (30 day totals)' => 
     "SELECT LEFT(u.fullName, 42) AS company, 

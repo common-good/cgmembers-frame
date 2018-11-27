@@ -868,7 +868,6 @@ function sanitizePage($page) {
 //  return;
   if ($tags = preg_match(FORBID_TAGS, $page, $matches) or preg_match(FORBID_ATTRS, $page, $matches)) {
 /**/ $msg = t('Page has a forbidden HTML %thing: %what', 'thing what', $tags ? t('tag') : t('attribute'), print_r($matches, 1));
-    /**/ if (isDEV) die($msg);
      if (isPRODUCTION) w\hack($msg);
 /**/ die($msg);
   }

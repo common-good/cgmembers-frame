@@ -197,18 +197,18 @@ function showProposalGrades($eid, $noProxies) {
   $bestTime = $end + 30 * DAY_SECS;
   $bestPct = .5; // formula below needs to be generalized if this is anything but .5
   $points = db\q('SELECT name,points FROM r_criteria')->fetchAllKeyed();
-  $gradableFields = db\col('name', 'r_criteria', 'NOT auto');
-  foreach ($gradableFields as $i => $v) $gradable[] = "(SELECT AVG(grade) FROM r_votes v LEFT JOIN r_ballots b ON b.id=v.ballot WHERE b.question=-p.id AND v.option=-$i) AS $v,\n";
+  $gradableFields = db\q('SELECT id,name FROM r_criteria WHERE NOT auto')->fetchAllKeyed();
+  foreach ($gradableFields as $id => $name) $gradable[] = "(SELECT AVG(grade) FROM r_votes v LEFT JOIN r_ballots b ON b.id=v.ballot WHERE b.question=-p.id AND v.option=-$id AND grade<>-1) AS $name,\n";
   $gradable = join('', $gradable);
   
   $avgGradeOption = '';
   $sql = <<<EOF
 SELECT p.id, p.project, CONCAT_WS(', ', p.name, p.contact) AS who, 
   CONCAT(MID(p.phone,2,3), '-', MID(p.phone,5,3), '-', MID(p.phone,8), ' ', p.email) AS contact, p.amount, p.categories, 
-  (SELECT COUNT(*) FROM r_ballots b WHERE b.question=-p.id) AS count, 
+  (SELECT COUNT(DISTINCT b.id) FROM r_ballots b LEFT JOIN r_votes v ON v.ballot=b.id WHERE b.question=-p.id AND v.grade<>-1) AS count,
   $gradable
   (SELECT COUNT(v.id) FROM r_ballots b JOIN r_votes v ON v.ballot=b.id WHERE v.text <> '' AND b.question=-p.id) AS noteCount,
-  MID(p.sponsor, 0, 2) AS sponsor,
+  MID(p.sponsor, 1, 1) AS sponsor,
   IF(MID(`where`, 0, 5)='01301', 12, 9) AS local,
   IF(type=1, 12, 0) AS goodType,
   GREATEST(0, 12-ABS(`when`-$bestTime)/:MONTH_SECS) AS beginSoon,
@@ -221,29 +221,34 @@ FROM r_proposals p WHERE event=:rfpId
 ORDER BY p.project
 EOF;
 
-  $list = '';
-  $cols = ray(t('categories:2,project:3,who:2,amount:1,grade:1,notes:1'));
+  $list = [];
+  $grade0 = 99999;
+  $cols = ray(t('categories project count who amount grade notes'));
   $grades = ray('E E+ D- D D+ C- C C+ B- B B+ A- A A+');
   $notes0 = t('<a>notes</a>', '_a', w\atag(''));
   $q = db\q($sql, compact('rfpId'));
-  $colKeys = array_keys($cols);
-  $rows = [array_combine($colKeys, $colKeys)];
+  $rows = [array_combine($cols, $cols)];
   while ($row = $q->fetchAssoc()) $rows[] = $row;
 
   foreach ($rows as $row) {
     extract($row);
     
     if ($list) {
-      $sponsor = 6; // dunno how to figure this yet
-/*      $sponsor = $sponsor >= 20 ? 12
-      : ($sponsor >= 10 ? 9
-      : ($sponsor >= 2 ? 6
-      : ($sponsor >= 1 ? 3 : 0)));*/
-      
+      $sponsor = $sponsor == 'M' ? 12 : ($sponsor == 'S' ? 6 : 0); // member, sponsor, or nothing
+      $q = db\q('SELECT DISTINCT b.id,isVeto FROM r_ballots b JOIN r_votes v ON v.ballot=b.id WHERE b.question=-:id', compact('id'));
+      if ($vetoes = array_sum($q->fetchAllKeyed())) $count .= t(', %vetoes vetoes', compact('vetoes'));
       $grade = 0;
-      foreach ($points as $k => $v) $grade += $$k * $v;
+      $gs = '';
+      foreach ($points as $k => $v) {
+        $grade += $$k * $v;
+        $gLtr = $grades[(int) max($$k, 0)];
+        $gs .= "$k:$gLtr &nbsp; ";
+      }
 //      $grade = round((20*$suitable + 20*$doable + 15*$mgmt + 10*$eval + 5*$cope + 2.5*$sponsor + 2.5*$local + 5*$goodType + 2.5*$goodTime1 + 2.5*$goodTime2 + 5*$rightAmt + 5*$rightPct) / 95); // should include 5*committed percent and divide by 100
-      $grade = $grades[$grade / 100];
+      $grade0 = $grade;
+      $gradeVal = number_format($grade / 100 / 3, 3);
+      $gradeLtr = $grades[max(0, $grade) / 100];
+      $grade = w\popHelp("$gradeVal ($gradeLtr)", $gs);
       $amount = u\fmtAmt($amount);
       $atag = w\atag("/prox/page=ProposalReport&p=$id");
       $project = "<$atag>$project</a>";
@@ -254,9 +259,9 @@ EOF;
       $rowClass = 'row';
     } else $rowClass = 'row head';
     
-    $list .= <<<EOF
+    $list[round($grade0, 4) * 10000 + (mt_rand() / mt_getrandmax())] = <<<EOF
 <div class="$rowClass">
-  <div class="project-name col col-xs-8">$project<br>$who</div>
+  <div class="project-name col col-xs-8">$project ($count)<br>$who</div>
   <div class="amount-categories col col-xs-2">$amount<br>$categories</div>
   <div class="grade-notes col col-xs-2">$grade<br>$notes</div>
 </div>
@@ -265,6 +270,8 @@ EOF;
 //    $until = u\fmtDate($until);
 ///    debug(compact(ray('categories project who amount budgetTotal until suitable doable mgmt eval cope sponsor local goodtype goodType goodTime1 goodTime2 rightAmt rightPct grade')));
   }
+  krsort($list); // highest rated proposals first
+  $list = join('', $list);
   return "<div id=\"proposalGrades\">$list</div>";
 }
 
