@@ -932,7 +932,6 @@ function logIn($id) {
  *   return verifyRecord('r_relations', $info);
  */
 function verifyRecord($table, $info) {
-///  debug(compact('table','info'));
 /**/  if (!is_array($info)) die('in verifyRecord: ' . trace()); // keep
   unset($info['data']);
   foreach ($info as $key => $value) {

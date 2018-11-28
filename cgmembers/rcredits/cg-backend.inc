@@ -164,20 +164,17 @@ function updateRelations($updates) {
  *     Someone charged me unilaterally: DISPUTED
  * @param int $xid: the transaction number
  * @param string $where: additional (security check) criteria, if any
- * @param assoc $subs: additional substitions for $where
+ * @param assoc $subs: additional substitutions for $where
  * @param bool $force: <reverse despite any shortfall or lack of permission>
  * @return array [message, subs] where subs is an assoc of [
  */
 function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
   global $mya;
   if (!$myx = r\MyX::lastTx($mya, "xid=:xid AND $where", compact('xid') + $subs)) return ['undo no match', $subs];
-///  debug(compact('xid','where','subs','tx'));
   if (!$force and $error = $myx->nonoUndo($subs)) return array($error, $subs); // check nono before confirm AND here
-
-//  $myx = r\x($tx, $mya);
   $data = $myx->data;
 
-  if (!$myx->toMe and !$myx->byMe) { // someone charged me (either unilaterally or I approved it)
+  if (!$myx->reallyToMe and !$myx->byMe) { // someone charged me (either unilaterally or I approved it)
     r\disputeTx($xid); // mark it disputed
     $solution = t('marked "disputed"');
     r\notify($myx->them, 'charge disputed', $myx->reportArgs());
@@ -207,7 +204,10 @@ u\EXPECT(compact(ray('xid amount what acct data tid toMe byMe otherTid force')),
   $old_data = $data; // remember original data from transaction we're reversing
   extract(just('xfee coupon', $data));
   $tids = u\order($toMe, $otherTid, $tid);
-  for ($i = 0; $i < 2; $i++) $what[$i] .= t(' (reverses #%tid)', 'tid', $tids[$i]);
+  for ($i = 0; $i < 2; $i++) {
+    $what0[$i] = preg_replace('/ \(' . t('reverses') . ' \#.*\)/', '', $what[$i]);
+    $what[$i] = $what0[$i] . t(' (reverses #%tid)', 'tid', $tids[$i]);
+  }
   if (@$xfee) $data['xfee'] = -$xfee;
   if (@$coupon) {
     $data['coupon'] = -$coupon;
@@ -219,28 +219,29 @@ u\EXPECT(compact(ray('xid amount what acct data tid toMe byMe otherTid force')),
   if ($force) u\preray(compact('force'), $data);
 
   $data['goods'] = $old_goods;
-  list ($message, $args) = ($byMe and $channel != TX_POS)
+  $reallyToMe = ($toMe xor $amount < 0);
+  $invoicing = (!$reallyToMe and $channel != TX_POS);
+
+  list ($message, $args) = $invoicing
   ? be\invoice($mya, $acct, $amount, $what[1], $data)
   : be\transfer($toMe ? 'charge' : 'payment', $mya, $acct, -$amount, $what, $data);
 
   if (@$args['success']) {
-    if (!$byMe) {
+    if (!$invoicing) {
       extract(just('xid tid otherTid', $args), EXTR_PREFIX_ALL, 'new');
       $old_data['undoneBy'] = $new_xid;
       $old_data['changes'][] = array(r\rTime(), $mya->agentId, 'undo', $new_xid);
-      $old_data = serialize($old_data);
-      $myFor = " (reversed by #$new_tid)";
-      $otherFor = str_replace($new_tid, $new_otherTid, $myFor);
-      list ($payerFor, $payeeFor) = u\order(!$toMe, $myFor, $otherFor);
+      $newTids = u\order($toMe, $new_otherTid, $new_tid);
+      for ($i = 0; $i < 2; $i++) $what0[$i] .= t(' (reversed by #%tid)', 'tid', $newTids[$i]);
       $sql = <<<EOF
         UPDATE r_txs SET 
-          payerFor=CONCAT(payerFor, :payerFor), 
-          payeeFor=CONCAT(payeeFor, :payeeFor),
+          payerFor=:payerFor, 
+          payeeFor=:payeeFor,
           data=:old_data,
           flags=flags|(1<<:B_UNDONE)
         WHERE xid=:xid
 EOF;
-      $subs = compact(ray('payerFor payeeFor xid old_data'));
+      $subs = ray('payerFor payeeFor xid old_data', $what0[0], $what0[1], $xid, serialize($old_data));
       db\logSql(compact(ray('sql subs')));
       db\q($sql, $subs);
     }    

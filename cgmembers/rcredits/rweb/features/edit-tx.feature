@@ -14,16 +14,16 @@ Setup:
   | .ZZC | .ZZA  |   1 | sell       |
   | .ZZC | .ZZB  |   2 | manage     |
   And transactions: 
-  | xid | created   | type     | amount | rebate | bonus | from | to   | purpose      |*
-  |   1 | %today-6m | signup   |      0 |      0 |   250 | ctty | .ZZA | signup       |
-  |   2 | %today-6m | signup   |      0 |      0 |   250 | ctty | .ZZB | signup       |
-  |   3 | %today-6m | signup   |      0 |      0 |   250 | ctty | .ZZC | signup       |
-  |   4 | %today    | transfer |     20 |      1 |     2 | .ZZA | .ZZB | stuff        |
+  | xid | created   | amount | from | to   | purpose     |*
+  |   1 | %today-6m |    250 | ctty | .ZZA | grant       |
+  |   2 | %today-6m |    250 | ctty | .ZZB | grant       |
+  |   3 | %today-6m |    250 | ctty | .ZZC | grant       |
+  |   4 | %today    |     20 | .ZZA | .ZZB | stuff       |
   Then balances:
   | uid  | balance |*
-  | .ZZA |     -20 |
-  | .ZZB |      20 |
-  | .ZZC |       0 |
+  | .ZZA |     230 |
+  | .ZZB |     270 |
+  | .ZZC |     250 |
 
 Scenario: A buyer changes the transaction description
   Given member ".ZZA" edits transaction "4" with values:
@@ -40,9 +40,9 @@ Scenario: A buyer increases a payment amount
   |     40 | %FOR_GOODS | stuff   |
   Then balances:
   | uid  |  balance |*
-  | .ZZA |      -40 |
-  | .ZZB |       40 |
-  | .ZZC |        0 |
+  | .ZZA |     210 |
+  | .ZZB |     290 |
+  | .ZZC |     250 |
   And we say "status": "info saved"
   And we notice "tx edited|new tx amount" to member ".ZZA" with subs:
   | tid | who     | amount |*
@@ -57,9 +57,9 @@ Scenario: A buyer changes the goods status
   |     20 | %FOR_USD | stuff   |
   Then balances:
   | uid  | balance |*
-  | .ZZA |     -20 |
-  | .ZZB |      20 |
-  | .ZZC |       0 |
+  | .ZZA |     230 |
+  | .ZZB |     270 |
+  | .ZZC |     250 |
   And we say "status": "info saved"
   And we notice "tx edited|new tx goods" to member ".ZZA" with subs:
   | tid | who     | what        |*
@@ -94,7 +94,7 @@ Scenario: A buyer disputes a charge
 #  | $80    | Corner Pub | charged  | "this CF" | %today-5d | request a refund of this charge |
   When member ".ZZA" confirms "X" on transaction 100
 #  When member ".ZZA" confirms form "history/transactions/period=5&do=no&xid=100" with values: ""
-Skip (test doesn't work yet)
+#Skip (test doesn't work yet)
   Then we say "status": "report undo" with subs:
   | solution |*
   | marked "disputed" |
@@ -119,6 +119,20 @@ Scenario: A seller reverses a charge
 #  Then we show "tx desc active|purpose|when|.|confirm tx action" with subs:
 #  | amount | otherName | did     | purpose   | created   | txAction            |*
 #  | $80    | Abe One   | charged | "this CF" | %today-5d | reverse this charge |
+
+Scenario: A buyer reverses a reversal
+  Given transactions:
+  | xid | created   | type     | amount | from | to   | purpose  | payerTid | taking |*
+  | 100 | %today-5d | transfer |     80 | .ZZA | .ZZC | this CF  |        2 | 1      |
+  When member "C:B" visits page "history/transactions/period=5"
+  And member "C:B" confirms "X" on transaction 100
+
+  When member ".ZZA" visits page "history/transactions/period=5"
+  And member ".ZZA" confirms "X" on transaction 101
+  Then transactions:
+  | xid | created | amount | from | to   | payeeTid | payeeFor                  |*
+  | 101 | %today  |    -80 | .ZZA | C:B  |        3 | this CF (reversed by #4)  |
+  | 102 | %today  |     80 | .ZZA | C:B  |        4 | this CF (reverses #3)     |
 
 Skip no dispute feature at the moment  
 Scenario: A member confirms OK for a disputed transaction
