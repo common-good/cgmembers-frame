@@ -1363,6 +1363,15 @@ function unSerialFix($s) {
 */
 
 /**
+ * Return the value of the constant formed by the prefix and the var.
+ */
+function consta($prefix, $var) {
+  $const = strtoupper(str_replace(' ', '_', $prefix . "_$var"));
+  u\EXPECT(defined($const), 'constant not defined');
+  return constant($const);
+}
+
+/**
  * Return the value of the given bit.
  * @param mixed $bit:
  *   string - a defined bit name (lowercase without the initial B_)
@@ -1412,7 +1421,6 @@ function preray($prefix, &$r0) {u\EXPECT(is_array($prefix) and (is_array($r0) or
 function setDft(&$param, $value) {if (!isset($param)) $param = $value;}
 function ifSet(&$param, $value) {if (isset($param)) $param = $value;} // opposite of setDft
 function log($message, $type = 'state', $info = []) {return u\loga($type, compact('message') + $info);}
-function consta($prefix, $var) {return constant(strtoupper(str_replace(' ', '_', $prefix . "_$var")));}
 function isIPhone() {return preg_match('/iPhone/i', $_SERVER['HTTP_USER_AGENT']);}
 function jsonEncode($s) {return json_encode($s) ?: json_encode(u\purify($s));} // , JSON_UNESCAPED_SLASHES
 function redash($s) {return str_replace('—', '&mdash;', $s);}
