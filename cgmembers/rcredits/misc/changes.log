@@ -1,3 +1,6 @@
+2018-11-27
+. fixed bugs in web-interface transaction reversals
+
 2018-11-20
 . revised grading reports
 . fixed Save button on Summary page for admins, so it doesn't screw up tickle field

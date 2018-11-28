@@ -230,6 +230,7 @@ function members($list) {return t\members($list);}
  *     MAKE edittx Setup
  *     MAKE edittx ABuyerDisputesACharge
  *     MAKE edittx ASellerReversesACharge
+ *     BOTH edittx ABuyerReversesAReversal
  *     MAKE exchange Setup
  *     TEST exchange AMemberConfirmsRequestToPayAnotherMember
  *     TEST flow AMemberDraws
@@ -266,6 +267,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST bank AMemberMovesTooMuchToTheBank
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST edittx ABuyerTriesToDecreaseAPaymentAmount
+ *     TEST edittx ABuyerDisputesACharge
  *     TEST exchange AMemberConfirmsRequestToChargeAnotherMember
  *     TEST exchange AMemberConfirmsRequestToPayAnotherMember
  *     TEST exchange AMemberAsksToCashOutTooMuch
@@ -600,6 +602,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE edittx ABuyerChangesTheTransactionDescription
  *     MAKE edittx ABuyerDisputesACharge
  *     MAKE edittx ASellerReversesACharge
+ *     MAKE edittx ABuyerReversesAReversal
  *     MAKE invest AMemberJoinsTheInvestmentClub
  *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMember
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
@@ -1204,6 +1207,7 @@ function memberClicksOnTransaction($id, $do, $xid) {
  * member (ARG) confirms (ARG) on transaction (ARG)
  *
  * in: MAKE edittx ABuyerDisputesACharge
+ *     MAKE edittx ABuyerReversesAReversal
  */
 function memberConfirmsOnTransaction($id, $do, $xid) {
   global $testPeriod;
