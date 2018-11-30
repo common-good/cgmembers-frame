@@ -198,6 +198,7 @@ function showProposalGrades($eid, $noProxies) {
   $bestPct = .5; // formula below needs to be generalized if this is anything but .5
   $points = db\q('SELECT name,points FROM r_criteria')->fetchAllKeyed();
   $gradableFields = db\q('SELECT id,name FROM r_criteria WHERE NOT auto')->fetchAllKeyed();
+  $gradable = [];
   foreach ($gradableFields as $id => $name) $gradable[] = "(SELECT AVG(grade) FROM r_votes v LEFT JOIN r_ballots b ON b.id=v.ballot WHERE b.question=-p.id AND v.option=-$id AND grade<>-1) AS $name,\n";
   $gradable = join('', $gradable);
   

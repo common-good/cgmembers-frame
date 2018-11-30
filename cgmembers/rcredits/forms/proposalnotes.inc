@@ -28,6 +28,7 @@ EOF;
 
   $list = '';
   foreach ($notes as $note) $list .= '<li>' . $note . '</li>';
+  $map = [];
   foreach ($criteria as $id => $name) $map["(q$id)"] = "<b>$name?</b>";
 
   $list = strtr($list, $map);
