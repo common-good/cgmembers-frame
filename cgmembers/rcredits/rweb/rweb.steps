@@ -51,9 +51,6 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     MAKE coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberRedeemsADiscountCouponForADollarAmount
- *     MAKE exchange AMemberAsksToChargeAnotherMember
- *     MAKE exchange AMemberAsksToPayAnotherMember
- *     MAKE exchange AMemberAsksToCashOutTooMuch
  *     MAKE flow AMemberOverdrawsWithNotEnoughToDrawOn
  *     MAKE gift AMemberDonates
  *     MAKE gift AMemberMakesARecurringDonation
@@ -89,8 +86,6 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE contact AMemberUpdatesToADifferentState
  *     MAKE contact AMemberUpdatesToADifferentName
  *     MAKE coupons AMemberRedeemsADiscountCouponForADollarAmount
- *     MAKE exchange AMemberConfirmsRequestToChargeAnotherMember
- *     MAKE exchange AMemberConfirmsRequestToPayAnotherMember
  *     MAKE flow AMemberDraws
  *     MAKE flow AMemberDrawsAgain
  *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMember
@@ -131,6 +126,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE transact AMemberConfirmsRequestToPayAnotherMember
  *     MAKE transact AMemberConfirmsRequestToPayAnotherMemberALot
  *     MAKE transact AMemberConfirmsRequestToPayAMemberCompany
+ *     MAKE transact AMemberPaysAnotherMemberRepeatedly
  */
 function memberConfirmsFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
 
@@ -184,7 +180,6 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE custstatement Setup
  *     MAKE download Setup
  *     MAKE edittx Setup
- *     MAKE exchange Setup
  *     MAKE flow Setup
  *     MAKE gift Setup
  *     MAKE invest Setup
@@ -231,8 +226,6 @@ function members($list) {return t\members($list);}
  *     MAKE edittx ABuyerDisputesACharge
  *     MAKE edittx ASellerReversesACharge
  *     BOTH edittx ABuyerReversesAReversal
- *     MAKE exchange Setup
- *     TEST exchange AMemberConfirmsRequestToPayAnotherMember
  *     TEST flow AMemberDraws
  *     TEST flow AMemberDrawsAgain
  *     TEST gift AMemberDonates
@@ -253,6 +246,7 @@ function members($list) {return t\members($list);}
  *     TEST transact AMemberConfirmsRequestToPayAnotherMember
  *     TEST transact AMemberConfirmsRequestToPayAnotherMemberALot
  *     TEST transact AMemberConfirmsRequestToPayAMemberCompany
+ *     TEST transact AMemberPaysAnotherMemberRepeatedly
  *     MAKE transactions Setup
  *     MAKE transactions AMemberLooksAtTransactionsWithRoundups
  */
@@ -268,9 +262,6 @@ function transactions($list) {return t\transactions($list);}
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST edittx ABuyerTriesToDecreaseAPaymentAmount
  *     TEST edittx ABuyerDisputesACharge
- *     TEST exchange AMemberConfirmsRequestToChargeAnotherMember
- *     TEST exchange AMemberConfirmsRequestToPayAnotherMember
- *     TEST exchange AMemberAsksToCashOutTooMuch
  *     TEST flow AMemberOverdrawsWithNotEnoughToDrawOn
  *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
  *     TEST joint AMemberRequestsAJointAccount
@@ -285,6 +276,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST transact AMemberConfirmsRequestToChargeAnotherMember
  *     TEST transact AMemberConfirmsRequestToPayAnotherMember
  *     TEST transact AMemberConfirmsRequestToPayAMemberCompany
+ *     TEST transact AMemberPaysAnotherMemberRepeatedly
  */
 function weSayWithSubs($type, $index, $subs) {
   global $testOnly, $testJSMsgs;
@@ -510,7 +502,6 @@ function withoutOptions($options) {
  *     MAKE custstatement Setup
  *     MAKE download Setup
  *     MAKE edittx Setup
- *     MAKE exchange Setup
  *     MAKE flow Setup
  *     MAKE invoice Setup
  *     TEST invoice AMemberApprovesInvoicesForevermore
@@ -557,9 +548,6 @@ function relations($relations) {return t\relations($relations);}
  *     TEST edittx Setup
  *     TEST edittx ABuyerIncreasesAPaymentAmount
  *     TEST edittx ABuyerChangesTheGoodsStatus
- *     TEST exchange Setup
- *     TEST exchange AMemberConfirmsRequestToChargeAnotherMember
- *     TEST exchange AMemberConfirmsRequestToPayAnotherMember
  *     MAKE flow Setup
  *     MAKE gift Setup
  *     TEST invoice Setup
@@ -784,12 +772,12 @@ function memberOnetimePasswordIs($id, $pass) {
  *
  * in: TEST edittx ABuyerIncreasesAPaymentAmount
  *     TEST edittx ABuyerChangesTheGoodsStatus
- *     TEST exchange AMemberConfirmsRequestToPayAnotherMember
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
  *     TEST invoice AMemberDeniesAnInvoice
  *     TEST transact AMemberConfirmsRequestToPayAnotherMember
  *     TEST transact AMemberConfirmsRequestToPayAMemberCompany
+ *     TEST transact AMemberPaysAnotherMemberRepeatedly
  */
 function weNoticeToMemberWithSubs($notice, $id, $subs) {return t\notice($notice, $id, $subs);}
 
@@ -1019,7 +1007,6 @@ function devices($list) {return t\devices($list);}
  *
  * in: MAKE custstatement Setup
  *     MAKE download Setup
- *     TEST exchange AMemberConfirmsRequestToChargeAnotherMember
  *     TEST gift AMemberDonatesWithInsufficientFunds
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
@@ -1218,8 +1205,7 @@ function memberConfirmsOnTransaction($id, $do, $xid) {
 /**
  * we message (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST exchange AMemberConfirmsRequestToChargeAnotherMember
- *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
+ * in: TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
@@ -1391,8 +1377,6 @@ function coupons($list) {return t\coupons($list);}
  *
  * in: TEST edittx ABuyerDisputesACharge
  *     TEST edittx ASellerReversesACharge
- *     TEST exchange AMemberAsksToChargeAnotherMember
- *     TEST exchange AMemberAsksToPayAnotherMember
  *     TEST transact AMemberAsksToChargeAnotherMemberForGoods
  *     TEST transact AMemberAsksToPayAnotherMemberForGoods
  *     TEST transact AMemberAsksToPayAnotherMemberForLoanreimbursement
@@ -1413,6 +1397,7 @@ function weScripWithSubs($script, $args = []) {
  * in: TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
  *     TEST gift AMemberDonatesWithInsufficientFunds
+ *     TEST transact AMemberPaysAnotherMemberRepeatedly
  */
 function these($thing, $list) {return t\these($thing, $list);}
 

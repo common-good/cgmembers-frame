@@ -1,3 +1,6 @@
+2018-11-29
+. implemented repeating payments feature (but not for web payments)
+
 2018-11-27
 . fixed bugs in web-interface transaction reversals
 

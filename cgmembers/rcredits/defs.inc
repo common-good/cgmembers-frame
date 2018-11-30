@@ -198,7 +198,7 @@ define('ORGANIZER_GRANT_MIN', 10); // minimum number of individuals to recruit, 
 define('ORGANIZER_GRANT_MAX', '$5,000'); // maximum organizer grant amount
 define('TICKLE_WELCOME', 2 * 7); // number of days to wait after activation, before followup
 define('TICKLE_DELAYED', 6 * 7); // number of days to wait after activation, before followup if no gift or no CGC
-define('OFTENS', 'Y:Yearly,Q:Quarterly,M:Monthly,1:Once (now)');
+define('OFTENS', 'W:Weekly,M:Monthly,Q:Quarterly,Y:Yearly,1:Once (now)');
 define('OFX_TX_FLDS', 'trnType dtPosted trnAmt fitId name memo');
 
 define('ICARD_EXPIRES', 14); // how many days until invitation card expires, after account is activated
@@ -461,7 +461,7 @@ define('B_UNDOES', 5); // undoes another transaction
 define('B_CRUMBS', 6); // monthly donation of percentage of receipts
 define('B_ROUNDUPS', 7); // monthly donation of rounded up cents
 // B_ROUNDUP is 8 (defined above) // payer donated the change to the community fund
-define('B_PATRONAGE', 9); // recurring gift
+define('B_RECURS', 9); // recurring transaction
 define('B_GIFT', 10); // grant or gift (of any type)
 define('B_LOAN', 11); // community loan
 define('B_INVESTMENT', 12); // community investment or investment club investment
@@ -469,7 +469,7 @@ define('B_STAKE', 13); // member buying or selling stake in investment club
 define('B_FINE', 14); // community fine
 define('B_NOASK', 15); // transaction was taken with ID checking OFF
 define('B_FUNDING', 16); // invoice has already instigated an appropriate bank transfer request
-define('TX_FLAGS', 'taking disputed offline short undone undoes crumbs roundups roundup patronage gift loan investment stake fine noask funding');
+define('TX_FLAGS', 'taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding');
 
 // Invoice status (txid >= TX_PAID if paid)
 define('TX_DENIED', -2); // invoice rejected by the non-originator
