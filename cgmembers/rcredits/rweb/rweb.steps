@@ -65,9 +65,6 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE bank AMemberTriesToGoBelowTheirMinimum
  *     MAKE bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     MAKE membership AMemberSignsInForTheFirstTime
- *     MAKE exchange AMemberAsksToChargeAnotherMember
- *     MAKE exchange AMemberAsksToPayAnotherMember
- *     MAKE exchange AMemberAsksToCashOutTooMuch
  *     MAKE coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberRedeemsADiscountCouponForADollarAmount
  *     MAKE flow AMemberOverdrawsWithNotEnoughToDrawOn
@@ -80,18 +77,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
 /**
  * member (ARG) confirms form (ARG) with values: (ARG)
  *
- * in: MAKE company AMemberUpdatesCompanyInfo
- *     MAKE company AMemberGivesABadEmployeeCount
- *     MAKE company AMemberGivesABadGross
- *     MAKE contact AMemberUpdatesContactInfo
- *     MAKE contact AMemberGivesABadPhone
- *     MAKE contact AMemberGivesABadEmail
- *     MAKE contact AMemberUpdatesToADifferentState
- *     MAKE contact AMemberUpdatesToADifferentName
- *     MAKE coupons AMemberRedeemsADiscountCouponForADollarAmount
- *     MAKE flow AMemberDraws
- *     MAKE flow AMemberDrawsAgain
- *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMember
+ * in: MAKE invoice AMemberConfirmsRequestToChargeAnotherMember
  *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
  *     MAKE invoice AMemberDeniesAnInvoice
@@ -106,8 +92,6 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE signin AMemberClicksALinkToResetPassword
  *     MAKE joint AMemberRequestsAJointAccount
  *     MAKE membership AMemberSignsInForTheFirstTime
- *     MAKE exchange AMemberConfirmsRequestToChargeAnotherMember
- *     MAKE exchange AMemberConfirmsRequestToPayAnotherMember
  *     MAKE signupco AMemberRegistersACompany
  *     MAKE signupco AMemberRegistersACompanyWhileManagingAnotherAccount
  *     MAKE signupco AMemberRegistersACompanyHavingGivenCompanyInfo
@@ -202,7 +186,6 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE bank Setup
  *     MAKE membership Setup
  *     TEST membership AMemberSignsInForTheFirstTime
- *     MAKE exchange Setup
  *     MAKE signupco Setup
  *     TEST signupco AMemberRegistersACompany
  *     MAKE contact Setup
@@ -210,15 +193,6 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     TEST contact AMemberUpdatesToADifferentState
  *     TEST contact AMemberUpdatesToADifferentName
  *     MAKE custstatement Setup
- *     MAKE download Setup
- *     MAKE edittx Setup
- *     MAKE flow Setup
- *     MAKE gift Setup
- *     MAKE invest Setup
- *     MAKE invoice Setup
- *     MAKE joint Setup
- *     MAKE membership Setup
- *     TEST membership AMemberSignsInForTheFirstTime
  *     MAKE partnersignup Setup
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     MAKE partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
@@ -244,20 +218,7 @@ function members($list) {return t\members($list);}
 /**
  * transactions: (ARG)
  *
- * in: MAKE bank Setup
- *     MAKE community Setup
- *     MAKE custstatement Setup
- *     MAKE download Setup
- *     MAKE edittx Setup
- *     MAKE edittx ABuyerDisputesACharge
- *     MAKE edittx ASellerReversesACharge
- *     BOTH edittx ABuyerReversesAReversal
- *     TEST flow AMemberDraws
- *     TEST flow AMemberDrawsAgain
- *     TEST gift AMemberDonates
- *     TEST gift AMemberMakesARecurringDonation
- *     TEST gift ACompanyMakesARecurringDonation
- *     MAKE invoice Setup
+ * in: MAKE invoice Setup
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberApprovesAnInvoiceToATrustingCustomer
  *     MAKE community Setup
@@ -273,12 +234,11 @@ function members($list) {return t\members($list);}
  *     MAKE edittx Setup
  *     MAKE edittx ABuyerDisputesACharge
  *     MAKE edittx ASellerReversesACharge
+ *     BOTH edittx ABuyerReversesAReversal
  *     MAKE transactions Setup
  *     MAKE transactions AMemberLooksAtTransactionsWithRoundups
  *     MAKE download Setup
  *     MAKE bank Setup
- *     MAKE exchange Setup
- *     TEST exchange AMemberConfirmsRequestToPayAnotherMember
  *     MAKE custstatement Setup
  *     MAKE summary Setup
  *     MAKE summary AMemberClicksTheSummaryTabWithRoundups
@@ -289,8 +249,6 @@ function members($list) {return t\members($list);}
  *     TEST transact AMemberConfirmsRequestToPayAnotherMemberALot
  *     TEST transact AMemberConfirmsRequestToPayAMemberCompany
  *     TEST transact AMemberPaysAnotherMemberRepeatedly
- *     MAKE transactions Setup
- *     MAKE transactions AMemberLooksAtTransactionsWithRoundups
  */
 function transactions($list) {return t\transactions($list);}
 
@@ -303,20 +261,12 @@ function transactions($list) {return t\transactions($list);}
  *     TEST joint AMemberRequestsAJointAccount
  *     TEST joint AMemberRequestsTwoJoinsAtOnce
  *     TEST edittx ABuyerTriesToDecreaseAPaymentAmount
+ *     TEST edittx ABuyerDisputesACharge
  *     TEST bank AMemberMovesCreditToTheBank
  *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
  *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
  *     TEST bank AMemberMovesTooMuchToTheBank
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
- *     TEST edittx ABuyerTriesToDecreaseAPaymentAmount
- *     TEST edittx ABuyerDisputesACharge
- *     TEST flow AMemberOverdrawsWithNotEnoughToDrawOn
- *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
- *     TEST joint AMemberRequestsAJointAccount
- *     TEST joint AMemberRequestsTwoJoinsAtOnce
- *     TEST exchange AMemberConfirmsRequestToChargeAnotherMember
- *     TEST exchange AMemberConfirmsRequestToPayAnotherMember
- *     TEST exchange AMemberAsksToCashOutTooMuch
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     TEST signup AMemberRegistersBadName
@@ -546,24 +496,7 @@ function withoutOptions($options) {
 /**
  * relations: (ARG)
  *
- * in: MAKE bank Setup
- *     MAKE community Setup
- *     MAKE company Setup
- *     MAKE custstatement Setup
- *     MAKE download Setup
- *     MAKE edittx Setup
- *     MAKE flow Setup
- *     MAKE invoice Setup
- *     TEST invoice AMemberApprovesInvoicesForevermore
- *     MAKE invoice AMemberApprovesAnInvoiceToATrustingCustomer
- *     MAKE joint AMemberRequestsAJointAccount
- *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
- *     MAKE joint AJoinedAccountMemberUnjoinsTheAccount
- *     MAKE joint AMemberRequestsTwoJoinsAtOnce
- *     MAKE membership Setup
- *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
- *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
- *     MAKE relations MemberHasAnEmployeeConfirmed
+ * in: MAKE relations MemberHasAnEmployeeConfirmed
  *     MAKE relations MemberHasAnEmployeeUnconfirmed
  *     MAKE relations MemberHasARelationWithAContractor
  *     MAKE relations MemberHasAnEmployeeClaimed
@@ -588,7 +521,6 @@ function withoutOptions($options) {
  *     MAKE download Setup
  *     MAKE bank Setup
  *     MAKE membership Setup
- *     MAKE exchange Setup
  *     MAKE signupco Setup
  *     TEST signupco AMemberRegistersACompany
  *     MAKE custstatement Setup
@@ -605,20 +537,7 @@ function relations($relations) {return t\relations($relations);}
 /**
  * balances: (ARG)
  *
- * in: TEST bank Setup
- *     TEST bank AMemberMovesCreditToTheBank
- *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
- *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
- *     TEST community Setup
- *     TEST coupons AMemberRedeemsAGiftCoupon
- *     TEST coupons AMemberRedeemsADiscountCouponForADollarAmount
- *     TEST download Setup
- *     TEST edittx Setup
- *     TEST edittx ABuyerIncreasesAPaymentAmount
- *     TEST edittx ABuyerChangesTheGoodsStatus
- *     MAKE flow Setup
- *     MAKE gift Setup
- *     TEST invoice Setup
+ * in: TEST invoice Setup
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberDeniesAnInvoice
  *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
@@ -639,9 +558,6 @@ function relations($relations) {return t\relations($relations);}
  *     TEST bank AMemberMovesCreditToTheBank
  *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
  *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
- *     TEST exchange Setup
- *     TEST exchange AMemberConfirmsRequestToChargeAnotherMember
- *     TEST exchange AMemberConfirmsRequestToPayAnotherMember
  *     TEST signupco AMemberRegistersACompany
  *     TEST coupons AMemberRedeemsAGiftCoupon
  *     TEST coupons AMemberRedeemsADiscountCouponForADollarAmount
@@ -666,23 +582,7 @@ function usd($list) {return t\usd($list);}
 /**
  * member (ARG) visits page (ARG)
  *
- * in: MAKE community CronCalculatesTheStatistics
- *     MAKE company AMemberVisitsTheCompanyInfoPage
- *     MAKE contact AMemberVisitsTheContactInfoPage
- *     MAKE download AMemberDownloadsTransactionsForThePastYear
- *     MAKE download AMemberDownloadsIncomingInvoicesForThePastYear
- *     MAKE edittx ABuyerChangesTheTransactionDescription
- *     MAKE edittx ABuyerDisputesACharge
- *     MAKE edittx ASellerReversesACharge
- *     MAKE edittx ABuyerReversesAReversal
- *     MAKE invest AMemberJoinsTheInvestmentClub
- *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMember
- *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
- *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
- *     MAKE membership AMemberSignsInForTheFirstTime
- *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
- *     MAKE preferences AMemberVisitsThePreferencesPage
- *     MAKE preferences AnotherMemberVisitsThePreferencesPage
+ * in: MAKE invest AMemberJoinsTheInvestmentClub
  *     MAKE relations MemberHasAnEmployeeConfirmed
  *     MAKE relations MemberHasAnEmployeeUnconfirmed
  *     MAKE relations MemberHasARelationWithAContractor
@@ -707,6 +607,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE edittx ABuyerChangesTheTransactionDescription
  *     MAKE edittx ABuyerDisputesACharge
  *     MAKE edittx ASellerReversesACharge
+ *     MAKE edittx ABuyerReversesAReversal
  *     MAKE transactions AMemberLooksAtTransactionsForThePastYear
  *     MAKE transactions AMemberLooksAtTransactionsForThePastFewDays
  *     MAKE transactions AMemberLooksAtTransactionsWithRoundups
@@ -869,14 +770,11 @@ function memberOnetimePasswordIs($id, $pass) {
 /**
  * we notice (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST edittx ABuyerIncreasesAPaymentAmount
- *     TEST edittx ABuyerChangesTheGoodsStatus
- *     TEST invoice AMemberDeniesAnInvoice
+ * in: TEST invoice AMemberDeniesAnInvoice
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
  *     TEST edittx ABuyerIncreasesAPaymentAmount
  *     TEST edittx ABuyerChangesTheGoodsStatus
- *     TEST exchange AMemberConfirmsRequestToPayAnotherMember
  *     TEST transact AMemberConfirmsRequestToPayAnotherMember
  *     TEST transact AMemberConfirmsRequestToPayAMemberCompany
  *     TEST transact AMemberPaysAnotherMemberRepeatedly
@@ -1107,10 +1005,7 @@ function devices($list) {return t\devices($list);}
 /**
  * invoices: (ARG)
  *
- * in: MAKE custstatement Setup
- *     MAKE download Setup
- *     TEST gift AMemberDonatesWithInsufficientFunds
- *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
+ * in: TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST invoice AMemberDeniesAnInvoice
@@ -1119,7 +1014,6 @@ function devices($list) {return t\devices($list);}
  *     TEST invoice AMemberApprovesAnInvoiceToATrustingCustomer
  *     TEST gift AMemberDonatesWithInsufficientFunds
  *     MAKE download Setup
- *     TEST exchange AMemberConfirmsRequestToChargeAnotherMember
  *     MAKE custstatement Setup
  *     TEST transact AMemberConfirmsRequestToChargeAnotherMember
  */
@@ -1314,7 +1208,6 @@ function memberConfirmsOnTransaction($id, $do, $xid) {
  * in: TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
- *     TEST exchange AMemberConfirmsRequestToChargeAnotherMember
  *     TEST signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
  *     TEST signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
  *     TEST transact AMemberConfirmsRequestToChargeAnotherMember
