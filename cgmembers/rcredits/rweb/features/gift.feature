@@ -46,8 +46,8 @@ Scenario: A member makes a recurring donation
   | gift | amount | period | honor  | honored | share |*
   |   -1 |     10 |      M | memory | Jane Do |    10 |
   Then transactions:
-  | xid | created | type     | amount | from | to   | purpose                            |*
-  |   1 | %today  | transfer |     10 | .ZZA | cgf  | regular donation (monthly gift #1) |
+  | xid | created | type     | amount | from | to   | purpose                    |*
+  |   1 | %today  | transfer |     10 | .ZZA | cgf  | regular donation (Monthly) |
   And we say "status": "gift successful"
 	And these "recurs":
 	| created | from | to  | amount | period |*
@@ -65,7 +65,7 @@ Scenario: A company makes a recurring donation
   |   -1 |     10 |      M | memory | Jane Do |    10 |
   Then transactions:
   | xid | created | type     | amount | from | to   | purpose                            |*
-  |   1 | %today  | transfer |     10 | .ZZC | cgf  | regular donation (monthly gift #1) |
+  |   1 | %today  | transfer |     10 | .ZZC | cgf  | regular donation (Monthly) |
   And we say "status": "gift successful"
 	
 Scenario: A member donates with insufficient funds

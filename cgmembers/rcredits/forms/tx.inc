@@ -38,36 +38,76 @@ function formTx($form, &$sta, $args = '') {
   $who = textFld($opDesc . t(' whom:'), [t('name, id, email, or phone')], required(@$who));
 
   $amount = textFld(t('Amount:'), [t('amount to ') . strtolower($opDesc)], required(@$amount));
-  $goodsOpts = ray(R_WHYS);
+/*  $goodsOpts = ray(R_WHYS);
   unset($goodsOpts[FOR_SHARE]); // this gets set only automatically
+  */
+  
   $purpose = textFld(t('For:'), [t('purpose or description of goods and services')], required(@$purpose));
+  if ($paying) $repeat = selectFld(t('Repeat:'), '', [], ray(OFTENS));
+  
   $scanClass = 'not-scanned';
   $$type = submit($opDesc);
 
   w\whoFldSubmit('who', $opDesc . t(' %amount to %name?'), ray('allowNonmember', !$paying));
   
-  $form = cgform(compact(ray("title buttons who amount goods purpose calc $type")));
+  $form = cgform(compact(ray("title buttons who amount purpose repeat $type")));
   $form['#attributes']['class'][] = $scanClass;
 
   return $form; // get defaults from which('info')
 }
 
 function formTx_validate($form, &$sta) {
-  extract(just('who', $sta['input']));
+  extract($info = just('who amount purpose repeat', $sta['input']));
   if (strpos($who, '@') and !u\validEmail($email = $who)) return say('bad email', compact('email'), 'who');
+  if (!$a = w\whois($who, 'who', $info, 'no self-trading', op($sta) == 'pay')) return FALSE;
+  $uid = $a->id;
+  if ($err = u\badAmount($amount, '>0')) return say($err, 'amount');
+  u\preray(compact(ray('amount uid')), $sta['input']);
 }
 
 function formTx_submit($form, &$sta) {
   global $mya;
   $myid = $mya->id;
-  extract($info = just('who amount goods purpose', $sta['input']));
-  if (strpos($who, '@')) return w\go('/charge/nonmember/' . u\urlify(serialize($info)));
+  extract($info = just('who amount purpose repeat uid', $sta['input']));
+//  if (strpos($who, '@')) return w\go('/charge/nonmember/' . u\urlify(serialize($info)));
 
-  $paying = (op($sta) == 'pay');
-  if (!$a = w\whois($who, 'who', $info, 'no self-trading', $paying)) return FALSE;
-  if ($error = u\badAmount($amount, '>0')) return say($error, 'amount');
-
-  $func = $paying ? 'pay' : 'invoice';
-  list ($msg, $args) = $mya->$func($a, $amount, $purpose, compact('goods'));
-  return say($msg, $args, @$args['success'] ? '' : 'amount');
+  $func = op($sta) == 'pay' ? 'pay' : 'invoice';
+  $DBTX = \db_transaction();
+    list ($msg, $args) = $mya->$func(r\acct($uid), $amount, $purpose);
+    $ok = @$args['success'];
+    if ($ok and $period = @$repeat) {
+      $subs = ray('payer payee', $mya->id, $uid);
+      $info = $subs + compact(ray('amount period'));
+      if ($id = db\get('id', 'r_recurs', 'payer=:payer AND payee=:payee AND ended=0', $subs)) $info += compact('id');
+      db\update('r_recurs', $info, $id ? 'id' : '', TRUE);
+      $repeats = ray(OFTENS);
+//      $often = strstr($repeats[$repeat], ' ', TRUE);
+      $often = $repeats[$repeat];
+      $msg .= '|repeats';
+    }
+  unset($DBTX);
+  
+  return say($msg, $args + compact('often'), $ok ? '' : 'amount');
 }
+
+/**
+ * Return options for repeating payments or charges
+ *//*
+function repeatOpts() {
+  $weekday = date('l');
+  $day = (int) date('j');
+  $nth = ceil($day / 7);
+  $nth .= u\stndrdth($nth);
+  $dayth = date('jS');
+  $month = date('F');
+  $res = [
+    '' => t('No'),
+// to often -- no chance to recover from failure   'D' => t('Daily'), 
+    'W' => t('Weekly on ') . $weekday,
+//    'mw' => t('Monthly on %nth %weekdays', compact('nth', 'weekday')),
+    'M' => t('Monthly on the %dayth', compact('dayth')),
+    'Y' => t('Yearly on %month %day', compact('month', 'day')),
+  ];
+  if ($day > 28) unset($res['mw']); // disallow 5th weekday (might change this to "last"?)
+  return $res;
+}*/

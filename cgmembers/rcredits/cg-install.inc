@@ -397,7 +397,7 @@ function tableDefs($schema = []) {
     'uid' => dbFld(t('member record ID'), 'int big'), 
     'good' => dbFld(t('how well this investment serves the common good (0-100)'), 'int tiny'), 
          //    'internet' => dbFld(t('how good the company looks on the web (0-100)'), 'int tiny'), 
-    'patronage' => dbFld(t('how much the member will spend here monthly'), 'numeric 11,2'),
+    'recurs' => dbFld(t('how much the member will spend here monthly'), 'numeric 11,2'),
     'comments' => dbFld(t('description of investment'), 'text medium'),
          );
   $foreignKeys = foreignKey('vestid') + foreignKey('uid');
@@ -431,13 +431,13 @@ function tableDefs($schema = []) {
       $schema['r_gifts'] = dbTable(t('Membership gift details'), $fields, 'donid', $foreignKeys, $indexes);
   */
 
-  // table r_recurs (gifts only)
+  // table r_recurs (mostly gifts, but to anyone)
   $fields = array(
     'id' => dbFld(t('record id'), 'serial'),
     'payer' => dbFld(t('uid of account making the recurring gifts'), 'int big'),
     'payee' => dbFld(t('uid of account receiving the gifts'), 'int big'),
     'amount' => dbFld(t('amount of gift'), 'numeric 11,2'),
-    'period' => dbFld(t('recurring how often (Y, Q, M, W)'), 'varchar 1'),
+    'period' => dbFld(t('recurring how often (Y, Q, M, W, D)'), 'varchar 1'),
     'created' => dbFld(t('Unixtime of gift'), 'int 11', 0),
     'ended' => dbFld(t('Unixtime of gift'), 'int 11', 0),
          );

@@ -706,7 +706,7 @@ return;
         if (strpos($payeeFor, 'everses')) u\setBit($flags, B_UNDOES);
         if (strpos($payeeFor, 'eversed')) u\setBit($flags, B_UNDONE);
         u\setBit($flags, B_GIFT);
-        if (strpos($payeeFor, 'onation (')) u\setBit($flags, B_PATRONAGE);
+        if (strpos($payeeFor, 'onation (')) u\setBit($flags, B_RECURS);
       }
     }
     if ($flags & u\bit(B_GIFT)) $x->update(compact(ray('flags payee')));

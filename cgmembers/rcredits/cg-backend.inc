@@ -268,7 +268,7 @@ function payInvoice($nvid, &$msg = '') {
   $DBTX = \db_transaction();
   $purpose .= ' (' . PROJECT . " inv#$nvid)";
 	$extra = ray('inv goods', $nvid, $goods);
-	if ($flags) foreach (ray('gift patronage investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
+	if ($flags) foreach (ray('gift recurs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
   list ($index, $subs) = $payerA->pay($payeeA, $amount, $purpose, $extra);
   if ($ok = @$subs['success']) //db\q('UPDATE r_invoices SET status=:xid WHERE nvid=:nvid', ray('xid nvid', @$subs['xid'], $nvid));
   db\update('r_invoices', ray('status nvid', @$subs['xid'], $nvid), 'nvid');
@@ -311,7 +311,7 @@ function payInvoice($nvid, &$msg = '') {
  *   'investment'
  *   'inv': record number of the invoice for which this is payment
  *   'isGift': UNUSED <the payment is a gift to a community or nonprofit>
- *   'roundups', 'crumbs', 'patronage', 'gift': gift info
+ *   'roundups', 'crumbs', 'recurs', 'gift': gift info
  *   'roundups': the payment is change being donated to the community
  * @return simple array: 
  *    index: index to result message string (if success, the index begins with "report ")

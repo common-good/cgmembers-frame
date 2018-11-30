@@ -69,7 +69,7 @@ NOTES:
   where <star> means * (not the same as for the production site) 
  */
 
-define('R_DAILY_TASKS', 'START recache checkAccts requests setNear acctStats cttyStats trust acctRisk txRisk achRisk tickle lessOften gifts invoices getFunds invest notices END'); // had homogenize, pool 
+define('R_DAILY_TASKS', 'START recache checkAccts requests setNear acctStats cttyStats trust acctRisk txRisk achRisk tickle lessOften recurs invoices getFunds invest notices END'); // had homogenize, pool 
 //define ('R_DAILY_TASKS', 'START redistribute END');
 include_once __DIR__ . '/rcron-subs.inc';
 
@@ -271,8 +271,8 @@ X;
 	$when = ':NOW+:WEEK_SECS';
 	$sql = <<< X
 	  SELECT u.uid,r.amount,$when AS `when`,r.created,r.period,
-		  (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_PATRONAGE AND status<:TX_PAID LIMIT 1) AS invoiced,
-  	  (SELECT MAX(t.created) FROM r_txs t WHERE t.payer=r.payer AND t.payee=r.payee AND t.:IS_PATRONAGE AND NOT t.:IS_UNDONE AND NOT t.:IS_UNDOES) AS lastTx
+		  (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced,
+  	  (SELECT MAX(t.created) FROM r_txs t WHERE t.payer=r.payer AND t.payee=r.payee AND t.:IS_RECURS AND NOT t.:IS_UNDONE AND NOT t.:IS_UNDOES) AS lastTx
 		FROM users u LEFT JOIN r_recurs r ON r.payer=u.uid AND r.payee=:CGID AND r.ended=0
 		WHERE u.:IS_OK AND (r.period='Y' OR (r.id IS NULL AND FLOOR(($when-u.activated) / :DAY_SECS) MOD 365 = 0))
 X;
@@ -363,7 +363,9 @@ function warnAnnualGift($item) {
 	extract(just('uid amount when created period invoiced lastTx', $item));
 	
 	$a = r\acct($uid);
-///    debug(giveNow($period, $lastTx, $created, $when));
+///   debug($item);
+///   debug(giveNow($period, $lastTx, $created, $when));
+///   debug(giveNow($period, $lastTx, $created, $when - DAY_SECS));
 	if (@$amount) if ($invoiced or !giveNow($period, $lastTx, $created, $when) or giveNow($period, $lastTx, $created, $when - DAY_SECS)) return; // not time yet for annual (or it was also time yesterday)
 	
 	$aDonate = w\atag("/do/doDonate~$a->mainQid~$a->emailCode");
@@ -811,45 +813,72 @@ function achRisk1($item) {
 }
 
 /**
- * Handle one-time and recurring gifts that it's time to handle.
+ * Handle recurring transactions that it's time to handle.
  */
-function gifts() {
-//  queueEach('gift1', 'SELECT g.* FROM r_gifts g INNER JOIN users u ON u.uid=g.uid WHERE NOT completed and giftDate<=:now AND :IS_OK', compact('now'));
+function recurs() {
+  $sql = <<< X
+    SELECT DISTINCT r.payer,r.payee,r.period,r.amount,r.created,u2.fullName AS payeeName,
+		  (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced,
+  		MAX(t.created) AS lastTxDt, MIN(t.xid) AS firstXid
+		FROM r_recurs r	
+    INNER JOIN users u1 ON u1.uid=r.payer INNER JOIN users u2 ON u2.uid=r.payee
+    LEFT JOIN (
+      SELECT t0.xid, t0.created, t0.payer, t0.payee, t0.flags
+      FROM r_txs t0 
+      ORDER BY t0.created
+    ) t ON t.payer=r.payer AND t.payee=r.payee AND t.:IS_RECURS AND NOT t.:IS_UNDONE AND NOT t.:IS_UNDOES AND t.created>=r.created-:HOUR_SECS
+		WHERE u1.:IS_OK AND u2.:IS_OK AND r.ended=0
+    GROUP BY r.id
+X;
+
+  queueEach('recurs1', $sql);
+  queueNext();
+}
+/*
   $sql = <<< X
     SELECT DISTINCT r.payer,r.payee,r.period,r.amount,r.created,
-		  (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_PATRONAGE AND status<:TX_PAID LIMIT 1) AS invoiced,
-  		(SELECT MAX(t.created) FROM r_txs t WHERE t.payer=r.payer AND t.payee=r.payee AND t.:IS_PATRONAGE AND NOT t.:IS_UNDONE AND NOT t.:IS_UNDOES) AS lastTx
+		  (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced,
+  		(SELECT MAX(t.created) FROM r_txs t WHERE t.payer=r.payer AND t.payee=r.payee AND t.:IS_RECURS AND NOT t.:IS_UNDONE AND NOT t.:IS_UNDOES) AS lastTx
 		FROM r_recurs r	INNER JOIN users u1 ON u1.uid=r.payer INNER JOIN users u2 ON u2.uid=r.payee
 		WHERE u1.:IS_OK AND u2.:IS_OK AND r.ended=0
 X;
-  queueEach('gift1', $sql);
-  queueNext();
-}
+*/
 
 /**
- * Handle a recurring gift, if it's time.
+ * Handle a recurring payment, if it's time (often a gift to CG).
  * If funds are insufficient, an approved invoice is created instead (which tries to get money as a next step).
  */
-function gift1($item) {
-	extract(just('period lastTx created invoiced', $item));
-	if (!$invoiced and giveNow($period, $lastTx, $created)) r\acceptGift($item);
+function recurs1($item) {
+	extract(just('period lastTxDt created invoiced amount payer payeeName firstXid', $item));
+	if (!$invoiced and giveNow($period, $lastTxDt, $created)) {
+    list ($payerFor, $data) = cr\setupGift($period);
+    if ($firstXid and $res = db\get('flags, payerFor', 'r_txs', 'xid=:firstXid', compact('firstXid'))) {
+      extract($res);
+      if (!u\getBit($flags, 'gift')) unset($data['gift']);
+    }
+    if (cr\recurPay($item + compact('payerFor', 'data'))) {
+      r\notify($payer, 'recur pay', ray('amount purpose to', u\fmtAmt($amount), $payerFor, $payeeName));
+    }
+  }
 }
 
 /**
  * Say whether it's time to make a recurring gift.
  * @param char $period: how often (M, Q, Y)
  * @param int $lastGift: Unixtime of last relevant gift
- * @param int $firstGift: Unixtime of first relevant gift
+ * @param int $start: Unixtime of first relevant gift
  * @param int $now: is it time as of what "now" (if not NOW, don't return true for first gift)
  */
-function giveNow($period, $lastGift, $firstGift, $now = NOW) {
+function giveNow($period, $lastGift, $start, $now = NOW) {
 	if ($now == NOW) if (!$lastGift) return TRUE;
-  $m = $period == 'M' ? 1 : ($period == 'Q' ? 3 : 12);
-	$window = $now - MONTH_SECS * $m / 3; // should be at least a third of a period since the last gift
-///	  debug(compact(ray('period lastGift firstGift now window lastTrigger m')));
-	if ($lastGift + 0 > $window) return FALSE;
-	$lastTrigger = $firstGift + (MONTH_SECS * $m) * floor(($now - $firstGift) / (MONTH_SECS * $m));
-///  	debug(compact(ray('period lastGift firstGift now window lastTrigger m')));
+  if (strpos('MQY', $period) !== FALSE) {
+    $m = $period == 'M' ? 1 : ($period == 'Q' ? 3 : 12);
+	  $windowSize = MONTH_SECS * $m; // should be at least a third of a period since the last gift
+  } else $windowSize = $period == 'W' ? WEEK_SECS : DAY_SECS;
+///  debug(compact(ray('period lastGift now windowSize lastTrigger start m')));
+	if (($now - $lastGift) < ($windowSize / 3)) return FALSE; // should be at least a third of a period since the last gift
+	$lastTrigger = $start + $windowSize * floor(($now - $start) / $windowSize); // most recent time to give
+///  debug(compact(ray('lastGift firstGift now windowSize lastTrigger m')));
 	return ($lastTrigger > $lastGift); // last Trigger must be after last gift
 }
 

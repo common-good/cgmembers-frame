@@ -395,50 +395,6 @@ function notify($uid, $index, $subs = [], $force = FALSE) {
 }
 
 /**
- * Try to transfer funds from donor to CGF.
- * @param assoc $info: the gift record data
- *    payee is expected to be an active account, but payer can be a not-yet-activated account
- * @return TRUE if the funds were successfully transferred (otherwise the payer is invoiced).
- */
-function acceptGift($info) {
-  extract(just('payer,payee,period,amount,created,lastTx,invoiced', $info));
-	foreach (ray('a1 a2', $payer, $payee) as $k => $v) $$k = r\acct($v);
-	u\EXPECT($a2->ok, 'inactive gift recipient');
-//    if (!$$k->ok) return !$msg = t('Account %who is not active.', 'who', $$k->fullName);
-	
-  if ($period != 1) {
-    $recurs = ray(t('once monthly quarterly yearly'));
-    $count = db\count('r_txs', 'payer=:payer AND payee=:payee AND :IS_PATRONAGE AND created>=:created', compact(ray('payer payee created')));
-    $purpose = t('regular donation (%how gift #%count)', 'how count', $recurs[strpos('1MQY', $period)], $count + 1);
-    $data['patronage'] = 1;
-  } else list ($recurs, $purpose) = ['', t('donation')];
-	
-  /*if ($a->shortfall(FOR_GOODS, $amount)) {
-		// create invoice
-		return FALSE; // wait until tomorrow, if not enough
-	}
-  if ($a->shortfall(FOR_GOODS, $amount, TRUE)) return FALSE; // actually draw from other accounts, as needed
-	*/
-  $data['gift'] = 1;
-
-  if ($a1->ok) {
-		list ($msg, $args) = $a1->pay($a2, $amount, $purpose, $data);
-		$success = @$args['success'];
-	} else $success = FALSE;
-
-	if ($success) {
-		r\notify($payer, 'gift sent', $args);
-	} else {
-		$data['status'] = TX_APPROVED;
-	  list ($msg, $args) = $a2->invoice($a1, $amount, $purpose, $data);
-	}
-/*  r\notify($uid, $success ? 'gift sent' : 'cannot give', $args + compact('purpose', 'msg'));
-	'cannot give' => t('Cannot transfer funds for your %purpose to %payeeName (%msg)'),
-	*/
-  return $success;
-}
-
-/**
  * Notify rCredits staff (Community Admin, if uid is specified and in their area)
  * @param string $index: the message or message index
  * @param assoc $subs: optional substitutions for the message and/or data to show (show both)

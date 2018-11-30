@@ -45,8 +45,8 @@ Scenario: A member asks to charge another member for goods
 
 Scenario: A member confirms request to charge another member
   When member ".ZZA" confirms form "charge" with values:
-  | op     | who     | amount | goods | purpose |*
-  | charge | Bea Two | 100    | %FOR_GOODS     | labor   |
+  | op     | who     | amount | purpose |*
+  | charge | Bea Two | 100    | labor   |
   Then we say "status": "report tx|balance unchanged" with subs:
   | did     | otherName | amount |*
   | charged | Bea Two   | $100   |
@@ -212,3 +212,20 @@ Scenario: A member asks to pay another member before the other has made an rCard
   | who     |*
   | Bea Two |
 Resume
+
+Scenario: A member pays another member repeatedly
+  When member ".ZZA" confirms form "pay" with values:
+  | op  | who     | amount | purpose | repeat |*
+  | pay | Bea Two | 100    |  labor  |      W |
+  Then we say "status": "report tx|repeats" with subs:
+  | did  | otherName | amount | often  |*
+  | paid | Bea Two   | $100   | Weekly |
+  And we notice "new payment" to member ".ZZB" with subs:
+  | created | fullName | otherName | amount | payeePurpose |*
+  | %today  | Bea Two  | Abe One    | $100   | labor        |
+  And transactions:
+  | xid | created | type     | amount | from  | to   | purpose      | taking |*
+  |   4 | %today  | transfer |    100 | .ZZA  | .ZZB | labor        | 0      |
+  And these "recurs":
+  | id | payer | payee | amount | period | created | ended |*
+  |  1 | .ZZA  | .ZZB  |    100 |      W | %today  |     0 |
