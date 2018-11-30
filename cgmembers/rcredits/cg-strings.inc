@@ -57,6 +57,7 @@ $GLOBALS['tStrings'] = array(
   'got fine' => t('Your %PROJECT community charged you a fee of %amountr for %purpose.'),
   'inflation details' => t('Inflation adjustment is set at 5% APR pending a reliable measure of the true inflation rate.'),
   'gift sent' => t('Your chosen gift of %amount to %PROJECT has gone through.'),
+  'recur pay' => t('Your recurring payment of %amount to %to has gone through: %purpose.'),
   'tx desc passive' => t('%otherName %otherDid you %amount'),
   'tx desc active' => t('You %did %otherName %amount'),
   'when' => t('on %created'),
@@ -142,12 +143,10 @@ $GLOBALS['tStrings'] = array(
     <p>There is no way to tell who has chosen you as their proxy. <i>Your proxy does NOT have access to your %PROJECT account, bank account, or personal information.</i></p>
 EOF
   ),
+  'repeats' => t('<br>This payment will repeat %often.'),
   'credit ban on' => t('Maybe spending below a zero balance should be temporarily banned because demand for %RCREDITS has been negative %months months in a row.'),
   'credit ban off' => t('Temporary ban on spending below a zero balance should be lifted because demand for %RCREDITS has been positive %months months in a row.'),
   'coupon redeemed' => t('Success! %amount has been added to your balance, as a gift from %giver.'),
-  'bad coupon' => t('That is not a valid coupon type.'),
-  'invalid gift card' => t('That is not a valid gift card code. Try again.'),
-  'already redeemed' => t('That coupon has already been redeemed.'),
 
   // questions
   "what's your name?" => t("To set up your %PROJECT Account, we need your full name and email address. First, what's your name?"),
@@ -267,6 +266,9 @@ EOF
   'first at home' => t('%whose first transaction must be in person in your home community.'),
   'zero transaction' => t('The transaction amount cannot be zero.'),
   'bad birthdate' => t('Birth date does not match.'),
+  'bad coupon' => t('That is not a valid coupon type.'),
+  'invalid gift card' => t('That is not a valid gift card code. Try again.'),
+  'already redeemed' => t('That coupon has already been redeemed.'),
   
 //  'savings too low' => t('Until your %PROJECT community declares itself a stable Common Good Community, your savings amount must be at least as much as the incentive rewards you have received (%rewards to date)'),
   'savings too low' => t('Your additional savings amount cannot be less than zero.'),

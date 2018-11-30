@@ -12,18 +12,15 @@ define('US_COUNTRY_ID', 1228); // United States
 
 global $db_name;
 
-$config = (array) json_decode(utf8_encode(file_get_contents(__DIR__ . "/../../config/config.json")));
-if (array_key_exists('stage', $config)) {
-  define('isDEV', $config['stage'] == 'development');
-  define('isSTAGE', $config['stage'] == 'staging');
-  define('isPRODUCTION', $config['stage'] == 'production');
-  define('isGAME', $config['stage'] == 'game');
-  if (! isDEV and ! isSTAGE and ! isPRODUCTION and ! isGAME) {
-    die('Invalid value for stage in configuration file.');
-  }
-} else {
-  die('There is no valid configuration file ' . __DIR__ . '/../../config/config.json');
-}
+$configFlnm = __DIR__ . '/../../config/config.json';
+$config = (array) json_decode(utf8_encode(file_get_contents($configFlnm)));
+/**/ if (!array_key_exists('stage', $config)) die('There is no valid config file ' . $configFlnm);
+define('isDEV', $config['stage'] == 'development');
+define('isSTAGE', $config['stage'] == 'staging');
+define('isPRODUCTION', $config['stage'] == 'production');
+define('isGAME', $config['stage'] == 'game'); // UNUSED but straggling in code
+/**/  if (!isDEV and !isSTAGE and !isPRODUCTION) die('Invalid value for stage in configuration file.');
+
 $base_url = setFromConfig('baseUrl', $config);
 define('BASE_URL', $base_url);
 define('PROMO_URL', setFromConfig('promoUrl', $config));
@@ -34,12 +31,9 @@ define('DKIM_PRIVATE', setFromConfig('dkimPrivate', $config));
 define('R_INVITE_KEY', setFromConfig('inviteKey', $config));
 define('R_SSN_USER', setFromConfig('ssnUser', $config));
 define('R_SSN_PASS', setFromConfig('ssnPass', $config));
-if (! array_key_exists('db', $config)) {
-  die('the configuration file does not contain a db entry');
-}
-if (! is_array((array) $config['db'])) {
-  die('the configuration file db entry is not an array');
-}
+if (!array_key_exists('db', $config)) die('the configuration file does not contain a db entry');
+if (!is_array((array) $config['db'])) die('the configuration file db entry is not an array');
+
 $db_config = (array) $config['db'];
 $db_name = setFromConfig('name', $db_config);
 $db_driver = setFromConfig('driver', $db_config);
@@ -198,7 +192,7 @@ define('ORGANIZER_GRANT_MIN', 10); // minimum number of individuals to recruit, 
 define('ORGANIZER_GRANT_MAX', '$5,000'); // maximum organizer grant amount
 define('TICKLE_WELCOME', 2 * 7); // number of days to wait after activation, before followup
 define('TICKLE_DELAYED', 6 * 7); // number of days to wait after activation, before followup if no gift or no CGC
-define('OFTENS', 'Y:Yearly,Q:Quarterly,M:Monthly,1:Once (now)');
+define('OFTENS', 'W:Weekly,M:Monthly,Q:Quarterly,Y:Yearly,1:Once (now)');
 define('OFX_TX_FLDS', 'trnType dtPosted trnAmt fitId name memo');
 
 define('ICARD_EXPIRES', 14); // how many days until invitation card expires, after account is activated
@@ -461,7 +455,7 @@ define('B_UNDOES', 5); // undoes another transaction
 define('B_CRUMBS', 6); // monthly donation of percentage of receipts
 define('B_ROUNDUPS', 7); // monthly donation of rounded up cents
 // B_ROUNDUP is 8 (defined above) // payer donated the change to the community fund
-define('B_PATRONAGE', 9); // recurring gift
+define('B_RECURS', 9); // recurring transaction
 define('B_GIFT', 10); // grant or gift (of any type)
 define('B_LOAN', 11); // community loan
 define('B_INVESTMENT', 12); // community investment or investment club investment
@@ -469,7 +463,7 @@ define('B_STAKE', 13); // member buying or selling stake in investment club
 define('B_FINE', 14); // community fine
 define('B_NOASK', 15); // transaction was taken with ID checking OFF
 define('B_FUNDING', 16); // invoice has already instigated an appropriate bank transfer request
-define('TX_FLAGS', 'taking disputed offline short undone undoes crumbs roundups roundup patronage gift loan investment stake fine noask funding');
+define('TX_FLAGS', 'taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding');
 
 // Invoice status (txid >= TX_PAID if paid)
 define('TX_DENIED', -2); // invoice rejected by the non-originator
@@ -570,7 +564,6 @@ if (@TESTING == 1) {
  * $config - the configuration array itself
  */
 function setFromConfig($key, $config) {
-  if (array_key_exists($key, $config)) {
-    return $config[$key];
-  } else die("The configuration file does not contain an entry for $key.");
+  if (!array_key_exists($key, $config)) die("The config file does not contain an entry for $key.");
+  return $config[$key];
 }

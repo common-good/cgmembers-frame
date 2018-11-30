@@ -5,6 +5,7 @@ use CG as r;
 use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
+use CG\Cron as cr;
 
 /*
   Give the person a chance to donate to CG from the current account.
@@ -71,6 +72,7 @@ function formDonate_validate($form, &$sta) {
 }
 
 function formDonate_submit($form, &$sta) {
+  include_once R_ROOT . '/rcron/rcron-subs.inc';
   $mya = w\eLinkAcct($sta); 
 
   extract(just('amount period honor honored roundup recurId', $sta['input']));
@@ -83,9 +85,12 @@ function formDonate_submit($form, &$sta) {
   if ($amount > 0) {
     if ($honored) db\insert('r_honors', ray('uid honor honored', $mya->id, $honor, $honored));
     if ($period != '1') db\insert('r_recurs', ray('payer payee amount period', $mya->id, CGID, $amount, $period));
-
+//    $count = db\count('r_txs', 'payer=:payer AND payee=:payee AND :IS_RECURS AND created>=:created', compact(ray('payer payee created')));
+    list ($payerFor, $data) = cr\setupGift($period);
     $msg = 'gift successful';
-    if (!r\acceptGift($info)) $msg .= '|gift transfer later';
+    if (cr\recurPay($info + compact('payerFor', 'data'))) {
+      r\notify($mya->id, 'gift sent', ray('amount', u\fmtAmt($amount)));
+    } else $msg .= '|gift transfer later';
     say($msg);
   }
   if ($mya->ok) r\tellCo('gift', $info);

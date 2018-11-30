@@ -407,10 +407,10 @@ body.logged-in.one-sidebar #content {width:100%;}
 #frm-investrate .form-group {margin-bottom:0;}
 #frm-investrate .form-item-soundness,
 #frm-investrate .form-item-good,
-#frm-investrate .form-item-patronage,
+#frm-investrate .form-item-recurs,
 #frm-investrate .form-item-comments {margin-bottom:15px;}
 #frm-investrate input#edit-good,
-#frm-investrate input#edit-patronage {width:150px;}
+#frm-investrate input#edit-recurs {width:150px;}
 
 /* Invest Buy or Sell */
 #frm-investbuysell #edit-buy {margin-right:100px;}

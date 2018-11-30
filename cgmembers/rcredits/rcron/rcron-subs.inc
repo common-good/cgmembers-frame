@@ -75,3 +75,37 @@ function queue($op, $item = []) {
     cr\doTask($item);
   } else db\insert('queue', ray('item created', serialize($item), time()));
 }
+
+
+/**
+ * Set purpose and flags for the gift
+ */
+function setupGift($period) {
+  $oftens = ray(OFTENS);
+  $purpose = $period == '1' 
+  ? t('donation') 
+  : t('regular donation (%often)', 'often', $oftens[$period]);
+  $extra['gift'] = 1;
+  if ($period != 1) $extra['recurs'] = 1;
+  return [$purpose, $extra];
+}
+
+/**
+ * Try to transfer funds from payer to payee.
+ * @param assoc $info: the payment record data
+ *    payee is expected to be an active account, but payer can be a not-yet-activated account (to be invoiced) for gifts to CG
+ * @return TRUE if the funds were successfully transferred (otherwise the payer is invoiced).
+ */
+function recurPay($info) {
+  extract(just('payer payee amount payerFor data', $info));
+  $a1 = r\acct($payer);
+  $a2 = r\acct($payee);
+	u\EXPECT($a2->ok, 'inactive recipient');
+  if ($payee != CGID) u\EXPECT($a1->ok, 'inactive payer');
+
+  if ($a1->ok and list ($msg, $args) = $a1->pay($a2, $amount, $payerFor, $data) and @$args['success']) return TRUE;
+
+  $data['status'] = TX_APPROVED;
+  list ($msg, $args) = $a2->invoice($a1, $amount, $payerFor, $data);
+  return FALSE;
+}

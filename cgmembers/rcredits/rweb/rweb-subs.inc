@@ -868,7 +868,6 @@ function sanitizePage($page) {
 //  return;
   if ($tags = preg_match(FORBID_TAGS, $page, $matches) or preg_match(FORBID_ATTRS, $page, $matches)) {
 /**/ $msg = t('Page has a forbidden HTML %thing: %what', 'thing what', $tags ? t('tag') : t('attribute'), print_r($matches, 1));
-    /**/ if (isDEV) die($msg);
      if (isPRODUCTION) w\hack($msg);
 /**/ die($msg);
   }
@@ -1687,7 +1686,6 @@ function directoryList($which, $region, $withButtons = FALSE) {
     WHERE :IS_CO AND u.uid>:CANONIC_ACCTS AND :IS_OK AND $regionCrit AND (u.fullName LIKE :which OR i.industry LIKE :which)
     ORDER BY i.industry, u.fullName
 EOF;
-  /* debug(compact(ray('region which sql'))); */
   $result = db\q($sql, compact(ray('region which')));
   $rows = [];
   foreach ($result as $row) {

@@ -28,6 +28,14 @@ $queries = [
     LEFT JOIN r_relations r ON r.main=u.uid AND r.other=u2.uid
     WHERE u.community=:ctty AND u.:IS_CO AND u.:IS_OK
     ORDER BY u.community,u.fullName,relation DESC,u2.fullName",
+    
+  2 . 'Transaction Totals to Date' =>
+    "SELECT COUNT(*) AS txCount, SUM(ABS(amount)) AS txDollars, 
+      SUM(IF(u2.:IS_CO AND (NOT u1.:IS_CO OR channel=:TX_POS), amount, 0)) AS inPersonDollars,
+      SUM(IF(u2.:IS_CO AND (NOT u1.:IS_CO OR channel=:TX_POS), .85*.02*amount, 0)) AS ccFeesSaved
+    FROM r_txs t JOIN users u1 ON u1.uid=t.payer JOIN users u2 ON u2.uid=t.payee
+    WHERE u1.community=:ctty OR u2.community=:ctty",
+    
 
   B_CO . 'Monthly Business Income (30 day totals)' => 
     "SELECT LEFT(u.fullName, 42) AS company, 
@@ -54,15 +62,15 @@ $queries = [
       SUM(IF(u.:IS_CO, IF(u.:IS_REFILL, u.minimum, 0), 0)) AS coTargetBalances 
     FROM users u LEFT JOIN users c ON c.uid=u.community WHERE c.uid<0 GROUP BY c.fullName",
 
-//     SUM(IF(t.:IS_GIFT OR t.:IS_ROUNDUPS OR t.:IS_CRUMBS OR t.:IS_PATRONAGE,0,amount)) AS `payments to CG`
+//     SUM(IF(t.:IS_GIFT OR t.:IS_ROUNDUPS OR t.:IS_CRUMBS OR t.:IS_RECURS,0,amount)) AS `payments to CG`
   'Actual Donations to Common Good and Community' =>
     "SELECT CONCAT_WS(' ', YEAR(FROM_UNIXTIME(t.created)), MONTHNAME(FROM_UNIXTIME(t.created))) AS month,
-    SUM(IF(t.:IS_PATRONAGE,amount,0)) AS recurring,
+    SUM(IF(t.:IS_RECURS,amount,0)) AS recurring,
     SUM(IF(t.:IS_ROUNDUPS,amount,0)) AS roundups,
     SUM(IF(t.:IS_CRUMBS,amount,0)) AS crumbs,
-    SUM(IF(t.:IS_GIFT AND NOT t.:IS_ROUNDUPS AND NOT t.:IS_CRUMBS AND NOT t.:IS_PATRONAGE,amount,0)) AS other
+    SUM(IF(t.:IS_GIFT AND NOT t.:IS_ROUNDUPS AND NOT t.:IS_CRUMBS AND NOT t.:IS_RECURS,amount,0)) AS other
     FROM r_txs t LEFT JOIN users u ON u.uid=t.payer
-    WHERE u.community=:ctty AND (t.:IS_GIFT OR t.:IS_ROUNDUPS OR t.:IS_CRUMBS OR t.:IS_PATRONAGE) AND t.payee=:CGID
+    WHERE u.community=:ctty AND (t.:IS_GIFT OR t.:IS_ROUNDUPS OR t.:IS_CRUMBS OR t.:IS_RECURS) AND t.payee=:CGID
     GROUP BY YEAR(FROM_UNIXTIME(t.created)) DESC, MONTH(FROM_UNIXTIME(t.created)) DESC",
 
   'Expected Member Donations to CG and Community' =>
