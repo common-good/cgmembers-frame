@@ -1,3 +1,6 @@
+2018-11-30 hotfix/tweak-repeat
+. no "Repeats:" label, defaults to no repeat, doesn't create a r_recurs record when no repeat
+
 2018-11-29
 . implemented repeating payments feature (but not for web payments)
 
