@@ -15,17 +15,22 @@ include_once R_ROOT . '/rvote/rvote-results.inc';
  * Show notes for a single proposal report.
  */
 function formProposalNotes($form, &$sta, $args = '') {
-  include_once __DIR__ . '/../rvote/rvote.inc';
   extract(just('p', $args));
 
-  if (!@$p or !$project = db\get('project', 'r_proposals', 'id=:p', compact('p'))) return w\softErr(t('No such proposal.'));
+  if (!$id = @$p or !$project = db\get('project', 'r_proposals', compact('id'))) return w\softErr(t('No such proposal.'));
+  $VETO = t('VETO!');
 
-  $notes = v\proposalComments($p) ?: [];
-//  $notes = ['note1', 'note2'];
-  $questions = ray('our priorities,doable,management,evaluation,doable with less');
+  $sql = <<<EOF
+    SELECT CONCAT('(q', -v.option, ') ', v.text, IF(v.isVeto, ' <b class="loud">$VETO</b>', '')) AS notes FROM r_proposals p JOIN r_ballots b ON b.question=-p.id JOIN r_votes v ON v.ballot=b.id WHERE v.text <> '' AND p.id=:p ORDER BY p.project, -v.option
+EOF;
+  $notes = db\q($sql, compact('p'))->fetchCol() ?: [];
+  $criteria = db\q('SELECT id,name FROM r_criteria')->fetchAllKeyed();
+
   $list = '';
   foreach ($notes as $note) $list .= '<li>' . $note . '</li>';
-  foreach ($questions as $i => $q) $map['(q' . ($i+1) . ')'] = "<b>$q?</b>";
+  $map = [];
+  foreach ($criteria as $id => $name) $map["(q$id)"] = "<b>$name?</b>";
+
   $list = strtr($list, $map);
   $list = item("<ul id=\"proposalNotesList\">$list</ul>"); // , t('Comments:')
 
@@ -36,4 +41,12 @@ function formProposalNotes($form, &$sta, $args = '') {
   w\css('rvote.css');
   
   return cgform(compact(ray('title project list back')));
+}
+
+/**
+ * Return an HTML list of comments on a given proposal.
+ */
+function proposalComments($pid) {
+
+  return ;
 }

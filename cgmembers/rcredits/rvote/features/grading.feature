@@ -83,3 +83,9 @@ Scenario: A member grades a proposal
   | project | who     || amount | categories || grade | notes   |
   | Dance   |         || $1,000 | arts,food  || D+    | 2 notes |
   | Play    |         || $2,000 | energy     || E     |         |
+  
+  When member ".ZZA" visits page "prox/page=ProposalNotes&p=1"
+  Then we show "Project Proposal Comments" with:
+  | Project | Dance ||
+  | eval?   | good one ||
+  | recovery? | very bad | VETO! |

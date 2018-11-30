@@ -12,18 +12,15 @@ define('US_COUNTRY_ID', 1228); // United States
 
 global $db_name;
 
-$config = (array) json_decode(utf8_encode(file_get_contents(__DIR__ . "/../../config/config.json")));
-if (array_key_exists('stage', $config)) {
-  define('isDEV', $config['stage'] == 'development');
-  define('isSTAGE', $config['stage'] == 'staging');
-  define('isPRODUCTION', $config['stage'] == 'production');
-  define('isGAME', $config['stage'] == 'game');
-  if (! isDEV and ! isSTAGE and ! isPRODUCTION and ! isGAME) {
-    die('Invalid value for stage in configuration file.');
-  }
-} else {
-  die('There is no valid configuration file ' . __DIR__ . '/../../config/config.json');
-}
+$configFlnm = __DIR__ . '/../../config/config.json';
+$config = (array) json_decode(utf8_encode(file_get_contents($configFlnm)));
+/**/ if (!array_key_exists('stage', $config)) die('There is no valid config file ' . $configFlnm);
+define('isDEV', $config['stage'] == 'development');
+define('isSTAGE', $config['stage'] == 'staging');
+define('isPRODUCTION', $config['stage'] == 'production');
+define('isGAME', $config['stage'] == 'game'); // UNUSED but straggling in code
+/**/  if (!isDEV and !isSTAGE and !isPRODUCTION) die('Invalid value for stage in configuration file.');
+
 $base_url = setFromConfig('baseUrl', $config);
 define('BASE_URL', $base_url);
 define('PROMO_URL', setFromConfig('promoUrl', $config));
@@ -34,12 +31,9 @@ define('DKIM_PRIVATE', setFromConfig('dkimPrivate', $config));
 define('R_INVITE_KEY', setFromConfig('inviteKey', $config));
 define('R_SSN_USER', setFromConfig('ssnUser', $config));
 define('R_SSN_PASS', setFromConfig('ssnPass', $config));
-if (! array_key_exists('db', $config)) {
-  die('the configuration file does not contain a db entry');
-}
-if (! is_array((array) $config['db'])) {
-  die('the configuration file db entry is not an array');
-}
+if (!array_key_exists('db', $config)) die('the configuration file does not contain a db entry');
+if (!is_array((array) $config['db'])) die('the configuration file db entry is not an array');
+
 $db_config = (array) $config['db'];
 $db_name = setFromConfig('name', $db_config);
 $db_driver = setFromConfig('driver', $db_config);
@@ -570,7 +564,6 @@ if (@TESTING == 1) {
  * $config - the configuration array itself
  */
 function setFromConfig($key, $config) {
-  if (array_key_exists($key, $config)) {
-    return $config[$key];
-  } else die("The configuration file does not contain an entry for $key.");
+  if (!array_key_exists($key, $config)) die("The config file does not contain an entry for $key.");
+  return $config[$key];
 }
