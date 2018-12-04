@@ -401,7 +401,7 @@ function transfer($ttype, $a1, $a2, $amount, $for, $data = []) {
     }
   }
 //  $roundup = (r\acct($payer)->roundup and !@$data['isGift'] and !@$data['roundups'] and $amount > 0); // payer, not a1 or loser
-  $roundup = (r\acct($payer)->roundup and !@$data['roundups'] and $amount > 0 and $payee != CGID); // payer, not a1 or loser
+  $roundup = (r\acct($payer)->roundup and $amount > 0 and !@$data['roundups'] and !($payee == CGID and @$data['recurs'] and $amount < 1)); // payer roundups, not a1 or loser (don't round up reversals, cashouts, roundups, or recurring gifts under $1)
   if ($amount > 0 AND $goods == FOR_GOODS) {
     $price = $loserA->applyCoupon($gainerA, $amount, $coupon, $coupid);
     if ($coupon) $data += compact(ray('coupon coupid'));

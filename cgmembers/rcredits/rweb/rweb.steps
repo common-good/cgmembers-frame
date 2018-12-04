@@ -58,6 +58,7 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE gift AMemberDonatesWithInsufficientFunds
  *     MAKE invest AMemberJoinsTheInvestmentClub
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
+ *     MAKE joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
  *     MAKE membership AMemberSignsInForTheFirstTime
  *     MAKE preferences AMemberChangesPreferences
  *     MAKE signin AMemberAsksForANewPasswordForUsername
@@ -329,6 +330,7 @@ function weSayWithSubs($type, $index, $subs) {
  *     TEST gift ACompanyMakesARecurringDonation
  *     TEST gift AMemberDonatesWithInsufficientFunds
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
+ *     TEST joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
  *     TEST membership AMemberSignsInForTheFirstTime
  *     TEST relations AMemberTriesToAddARelationWithSelf
  *     TEST relations AMemberTriesToAddARelationAgain
@@ -510,6 +512,7 @@ function withoutOptions($options) {
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     MAKE joint AJoinedAccountMemberUnjoinsTheAccount
  *     MAKE joint AMemberRequestsTwoJoinsAtOnce
+ *     TEST joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
  *     MAKE membership Setup
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner

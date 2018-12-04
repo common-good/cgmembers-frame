@@ -161,26 +161,31 @@ X;
 
 /**
  * Join or unjoin this account to another.
- * @param int $reid: relations record ID
+ * @param mixed $reid: relations record ID or [main, other]
+ *   where main and other are the main and related account record IDs
  * @param bool $join: whether to join the accounts (otherwise unjoin)
  * @return a message saying the join was successful
  */
 function setJoin($reid, $join) {
-  extract(r\relation('main,other', $reid));
+  if (is_array($reid)) {
+    list($main, $other) = $reid; 
+  } else {extract(r\relation('main,other', $reid));}
+  
   list ($a1, $a2) = [r\acct($main), r\acct($other)];
 
   if ($join) {
-    $a1->unjoin(); // zap any join or other join requests
+    $a1->unjoinAllBut($other); // zap any join or other join requests EXCEPT with $other
+    r\acct($main, $other)->update('permission', r\perm(B_JOINT));
     if (r\relation('permission', $other, $main) == r\perm(B_JOINT)) { // confirming join
       $a1->join($a2);
-      $msg = t('Success! Your accounts have been successfully joined.');
+      $msg = t('join success');
     } else { // requesting join
       $_atag = $a2->makeDo('join', $main); // seek agreement
       r\message($other, 'join accounts', ray('_atag name', $_atag, $a2->fullName));
-      $msg = t('Success! An email has been sent to the other account owner, to confirm joining with yours.');
+      $msg = t('join request success');
     }
   } else {
-    $a1->unjoin($a2);
+    $a1->unjoinAllBut();
     $msg = t('Your accounts have been successfully separated.');
   }
   return $msg;
@@ -1499,6 +1504,21 @@ function handleInvestmentRequest($stakeid, &$msg) {
   }
   unset($DBTX);
   return $ok;
+}
+
+/**
+ * Set purpose and flags for the gift
+ * @param char $period: how often to recur
+ * @return [purpose, data], where data is extra parameters for a transaction or invoice (marking it as a gift)
+ */
+function setupGift($period) {
+  $oftens = ray(OFTENS);
+  $purpose = $period == '1' 
+  ? t('donation') 
+  : t('regular donation (%often)', 'often', $oftens[$period]);
+  $extra['gift'] = 1;
+  if ($period != 1) $extra['recurs'] = 1;
+  return [$purpose, $extra];
 }
 
 /**

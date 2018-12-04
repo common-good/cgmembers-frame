@@ -192,3 +192,17 @@ Scenario: A member requests two joins at once
   | other      | Draw | Employee | Family | Permission |
   | Bea Two    | No   | No       | No     | %can_joint |
   | Dee Four   | No   | No       | No     | %can_none  |
+
+Scenario: A member creates a joint account by clicking the Summary page button
+  When member ".ZZA" completes form "prejoin" with values:
+  | old | account |*
+  |   1 | .ZZB    |
+  Then relations:
+  | main | agent | permission | employee | owner | draw |*
+  | .ZZA | .ZZB  | joint      |        0 |     0 |    0 |
+  And we say "status": "join request success"
+#  And we notice "join accounts" to member ".ZZB" with subs:
+#  | name    | _atag |*
+#  | Abe One | ?     |
+
+
