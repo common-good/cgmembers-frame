@@ -79,7 +79,7 @@ function formTx_submit($form, &$sta) {
       $subs = ray('payer payee', $mya->id, $uid);
       $info = $subs + compact(ray('amount period'));
       if ($id = db\get('id', 'r_recurs', 'payer=:payer AND payee=:payee AND ended=0', $subs)) $info += compact('id');
-      db\update('r_recurs', $info, $id ? 'id' : '', TRUE);
+      db\insertOrUpdate('r_recurs', $info, 'id');
       $repeats = ray(OFTENS);
 //      $often = strstr($repeats[$repeat], ' ', TRUE);
       $often = $repeats[$repeat];

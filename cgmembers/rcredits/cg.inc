@@ -32,7 +32,7 @@ require_once __DIR__ . '/qo.class';
  * @return record ID of the inserted record
  */
 function regionalInsert($table, $idField, $record, $region = NULL) {
-  if (@$record[$idField]) return db\insert($table, $record); // predestined id (probably for testing)
+  if (array_key_exists($idField, $record)) {return db\insert($table, $record, $idField);} // predestined id (probably for testing)
   if (!@$region) $region = -r\serverUid();
   $end = $region + ($region < 0 ? -(R_REGION_MAX - 1) : (R_REGION_MAX - 1));
   $start = $region < 0 ? $region - 1 : $region; // -1: do not use the uid of the region itself
@@ -40,7 +40,7 @@ function regionalInsert($table, $idField, $record, $region = NULL) {
   for ($try = 0; $try < 20; $try++) { // limit the retries
     if (!$id = $record[$idField] = u\firstUnusedId($idField, $table, $start, $end)) break;
     try {
-      if (db\insert($table, $record)) return $id;
+      if (db\insert($table, $record, $idField)) return $id;
     } catch (Exception $e) { // BIG MYSTERY: why does this happen sometimes with no collision?
       r\tellAdmin(t('cannot save regional: ') . $e->getMessage(), $record + ['topic' => t('cannot save')]);
     }
@@ -56,11 +56,11 @@ function regionalInsert($table, $idField, $record, $region = NULL) {
  * @return record ID of the inserted record
  */
 function insert($table, $idField, $record) {
-  if (@$record[$idField]) return db\insert($table, $record); // predestined id (probably for testing)
+  if (@$record[$idField]) return db\insert($table, $record, $idField); // predestined id (probably for testing)
   for ($try = 0; $try < 20; $try++) { // limit the retries
     if (!$id = $record[$idField] = u\firstUnusedId($idField, $table, 1)) break;
     try {
-      if (db\insert($table, $record)) return $id;
+      if (db\insert($table, $record, $idField)) return $id;
     } catch (Exception $e) { // BIG MYSTERY: can this happen sometimes with no collision?
       r\tellAdmin(t('cannot save: ') . $e->getMessage(), $record + ['topic' => t('cannot save')]);
     }
@@ -218,7 +218,7 @@ function cttys($region, $ctty = FALSE) {
  */
 function ipok($uid, $device) {
   $ip = $_SERVER['REMOTE_ADDR'];
-  if (!db\exists('r_ips', 'ip=:ip', compact('ip'))) db\insert('r_ips', compact(ray('ip uid device'))); 
+  if (!db\exists('r_ips', 'ip=:ip', compact('ip'))) db\insert('r_ips', compact(ray('ip uid device')), 'ip'); 
 }
 
 /**
@@ -329,7 +329,8 @@ function badCard($qid, $code, $msg) {
   $created = time();
   $info = compact('qid', 'code');
   if (!db\exists('r_bad', $info)) {
-    db\insert('r_bad', $info += compact('created'), 'created', TRUE);
+    $info += compact('created');
+    db\insert('r_bad', $info, 'created');
     $index = 'card marked bad';
   } else $index = 'attempted card already marked bad';
   r\tellCO($index, $info + compact('msg'));
@@ -377,7 +378,7 @@ function notify($uid, $index, $subs = [], $force = FALSE) {
   } else { //if ($a->can(B_NOTIFY_EMAIL)) {
     list ($message, $created) = array(t($index, $subs), r\rTime());
     f('t.output', "Actual Notice to $fullName: $message");
-    db\insert('r_notices', compact(ray('uid message created')));
+    db\insert('r_notices', compact(ray('uid message created')), 'msgid');
   }
   
   if ($a->can(B_BYSMS)) {
@@ -728,7 +729,7 @@ function makeDevice($uid, $code = '', $ch = NULL) {
   $created = $access = r\rTime();
   $boxnum = db\get('MAX(boxnum)', 'r_boxes', 'uid=:uid', compact('uid')) + 1;
   $info = ray('channel', $ch) + compact(ray('uid code boxnum access created'));
-  return @db\insert('r_boxes', $info);
+  return @db\insert('r_boxes', $info);  // WHY ARE WE IGNORING ERRORS HERE???????
 }
 
 /**
@@ -844,7 +845,7 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
   if ($unusable and !$delete) {
     $oldQid = r\qid($oldUid);
     list ($uid, $name, $email) = array($oldUid, "unusable-$oldQid", "unusable$oldQid@" . CG_DOMAIN);
-    db\insert('users', compact(ray('uid name email'))); // mark old uid unusable
+    db\insert('users', compact(ray('uid name email')), 'uid'); // mark old uid unusable
   }
 
   unset($DBTX); // commit

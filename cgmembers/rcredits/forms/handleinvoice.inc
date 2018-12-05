@@ -102,7 +102,7 @@ function formHandleInvoice_submit($form, &$sta) {
     
     if (@$always) {
       r\acct($payee, $payer)->setRel('customer autopay', TRUE, TRUE);
-      $msg .= '|' . t('auto pay on', compact('payeeName'));
+      $msg .= '|' . t('auto pay on', compact('payeeName'));o
     }
   } elseif ($op == 'delete') {
     db\del('r_invoices', $nvid);

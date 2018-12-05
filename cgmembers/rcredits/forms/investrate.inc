@@ -70,7 +70,7 @@ function formInvestRate_submit($form, &$sta) {
   global $mya;
   
   $vs = just('vestid good patronage comments', $sta['input']);
-  db\insert('r_ratings', $vs + ray('uid', $mya->id));
+  db\insert('r_ratings', $vs + ray('uid', $mya->id), 'ratingid');
   $clubid = $sta['input']['clubid'];
   return w\go("/invest/list/clubid=$clubid", t('You have successfully rated investment #%vestid', just('vestid', $vs)));
 }

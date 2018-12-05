@@ -29,18 +29,21 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `block` (
-  `bid` int(11) NOT NULL COMMENT 'Primary Key: Unique block ID.',
+  `bid` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique block ID.',
   `module` varchar(64) NOT NULL DEFAULT '' COMMENT 'The module from which the block originates; for example, ’user’ for the Who’s Online block, and ’block’ for any custom blocks.',
   `delta` varchar(32) NOT NULL DEFAULT '0' COMMENT 'Unique ID for block within a module.',
   `theme` varchar(64) NOT NULL DEFAULT '' COMMENT 'The theme under which the block settings apply.',
-  `status` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'Block enabled status. (1 = enabled, 0 = disabled)',
-  `weight` int(11) NOT NULL DEFAULT '0' COMMENT 'Block weight within region.',
+  `status` tinyint(4) NOT NULL DEFAULT 0 COMMENT 'Block enabled status. (1 = enabled, 0 = disabled)',
+  `weight` int(11) NOT NULL DEFAULT 0 COMMENT 'Block weight within region.',
   `region` varchar(64) NOT NULL DEFAULT '' COMMENT 'Theme region within which the block is set.',
-  `custom` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'Flag to indicate how users may control visibility of the block. (0 = Users cannot control, 1 = On by default, but can be hidden, 2 = Hidden by default, but can be shown)',
-  `visibility` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'Flag to indicate how to show blocks on pages. (0 = Show on all pages except listed pages, 1 = Show only on listed pages, 2 = Use custom PHP code to determine visibility)',
+  `custom` tinyint(4) NOT NULL DEFAULT 0 COMMENT 'Flag to indicate how users may control visibility of the block. (0 = Users cannot control, 1 = On by default, but can be hidden, 2 = Hidden by default, but can be shown)',
+  `visibility` tinyint(4) NOT NULL DEFAULT 0 COMMENT 'Flag to indicate how to show blocks on pages. (0 = Show on all pages except listed pages, 1 = Show only on listed pages, 2 = Use custom PHP code to determine visibility)',
   `pages` text NOT NULL COMMENT 'Contents of the "Pages" block; contains either a list of paths on which to include/exclude the block or PHP code, depending on "visibility" setting.',
   `title` varchar(255) NOT NULL DEFAULT '' COMMENT 'Custom title for the block. (Empty string will use block default title, <none> will remove the title, text will cause block to use specified title.)',
-  `cache` tinyint(4) NOT NULL DEFAULT '1' COMMENT 'Binary flag to indicate block cache mode. (-2: Custom cache, -1: Do not cache, 1: Cache per role, 2: Cache per user, 4: Cache per page, 8: Block cache global) See DRUPAL_CACHE_* constants in ../includes/common.inc for more detailed information.'
+  `cache` tinyint(4) NOT NULL DEFAULT 1 COMMENT 'Binary flag to indicate block cache mode. (-2: Custom cache, -1: Do not cache, 1: Cache per role, 2: Cache per user, 4: Cache per page, 8: Block cache global) See DRUPAL_CACHE_* constants in ../includes/common.inc for more detailed information.',
+   PRIMARY KEY (`bid`),
+   UNIQUE KEY `tmd` (`theme`,`module`,`delta`),
+   KEY `list` (`theme`,`status`,`region`,`weight`,`module`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Stores block settings, such as region and visibility...';
 
 --
@@ -109,10 +112,12 @@ INSERT INTO `block` (`bid`, `module`, `delta`, `theme`, `status`, `weight`, `reg
 
 CREATE TABLE `cache` (
   `cid` varchar(255) NOT NULL DEFAULT '' COMMENT 'Primary Key: Unique cache ID.',
-  `data` longblob COMMENT 'A collection of data to cache.',
-  `expire` int(11) NOT NULL DEFAULT '0' COMMENT 'A Unix timestamp indicating when the cache entry should expire, or 0 for never.',
-  `created` int(11) NOT NULL DEFAULT '0' COMMENT 'A Unix timestamp indicating when the cache entry was created.',
-  `serialized` smallint(6) NOT NULL DEFAULT '0' COMMENT 'A flag to indicate whether content is serialized (1) or not (0).'
+  `data` longblob DEFAULT NULL COMMENT 'A collection of data to cache.',
+  `expire` int(11) NOT NULL DEFAULT 0 COMMENT 'A Unix timestamp indicating when the cache entry should expire, or 0 for never.',
+  `created` int(11) NOT NULL DEFAULT 0 COMMENT 'A Unix timestamp indicating when the cache entry was created.',
+  `serialized` smallint(6) NOT NULL DEFAULT 0 COMMENT 'A flag to indicate whether content is serialized (1) or not (0).',
+  PRIMARY KEY (`cid`),
+  KEY `expire` (`expire`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Generic cache table for caching things not separated out...';
 
 -- --------------------------------------------------------
@@ -123,10 +128,12 @@ CREATE TABLE `cache` (
 
 CREATE TABLE `cache_bootstrap` (
   `cid` varchar(255) NOT NULL DEFAULT '' COMMENT 'Primary Key: Unique cache ID.',
-  `data` longblob COMMENT 'A collection of data to cache.',
-  `expire` int(11) NOT NULL DEFAULT '0' COMMENT 'A Unix timestamp indicating when the cache entry should expire, or 0 for never.',
-  `created` int(11) NOT NULL DEFAULT '0' COMMENT 'A Unix timestamp indicating when the cache entry was created.',
-  `serialized` smallint(6) NOT NULL DEFAULT '0' COMMENT 'A flag to indicate whether content is serialized (1) or not (0).'
+  `data` longblob DEFAULT NULL COMMENT 'A collection of data to cache.',
+  `expire` int(11) NOT NULL DEFAULT 0 COMMENT 'A Unix timestamp indicating when the cache entry should expire, or 0 for never.',
+  `created` int(11) NOT NULL DEFAULT 0 COMMENT 'A Unix timestamp indicating when the cache entry was created.',
+  `serialized` smallint(6) NOT NULL DEFAULT 0 COMMENT 'A flag to indicate whether content is serialized (1) or not (0).',
+  PRIMARY KEY (`cid`),
+  KEY `expire` (`expire`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Cache table for data required to bootstrap Drupal, may be...';
 
 -- --------------------------------------------------------
@@ -137,10 +144,12 @@ CREATE TABLE `cache_bootstrap` (
 
 CREATE TABLE `cache_form` (
   `cid` varchar(255) NOT NULL DEFAULT '' COMMENT 'Primary Key: Unique cache ID.',
-  `data` longblob COMMENT 'A collection of data to cache.',
-  `expire` int(11) NOT NULL DEFAULT '0' COMMENT 'A Unix timestamp indicating when the cache entry should expire, or 0 for never.',
-  `created` int(11) NOT NULL DEFAULT '0' COMMENT 'A Unix timestamp indicating when the cache entry was created.',
-  `serialized` smallint(6) NOT NULL DEFAULT '0' COMMENT 'A flag to indicate whether content is serialized (1) or not (0).'
+  `data` longblob DEFAULT NULL COMMENT 'A collection of data to cache.',
+  `expire` int(11) NOT NULL DEFAULT 0 COMMENT 'A Unix timestamp indicating when the cache entry should expire, or 0 for never.',
+  `created` int(11) NOT NULL DEFAULT 0 COMMENT 'A Unix timestamp indicating when the cache entry was created.',
+  `serialized` smallint(6) NOT NULL DEFAULT 0 COMMENT 'A flag to indicate whether content is serialized (1) or not (0).',
+  PRIMARY KEY (`cid`),
+  KEY `expire` (`expire`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Cache table for the form system to store recently built...';
 
 -- --------------------------------------------------------
@@ -151,10 +160,12 @@ CREATE TABLE `cache_form` (
 
 CREATE TABLE `cache_menu` (
   `cid` varchar(255) NOT NULL DEFAULT '' COMMENT 'Primary Key: Unique cache ID.',
-  `data` longblob COMMENT 'A collection of data to cache.',
-  `expire` int(11) NOT NULL DEFAULT '0' COMMENT 'A Unix timestamp indicating when the cache entry should expire, or 0 for never.',
-  `created` int(11) NOT NULL DEFAULT '0' COMMENT 'A Unix timestamp indicating when the cache entry was created.',
-  `serialized` smallint(6) NOT NULL DEFAULT '0' COMMENT 'A flag to indicate whether content is serialized (1) or not (0).'
+  `data` longblob DEFAULT NULL COMMENT 'A collection of data to cache.',
+  `expire` int(11) NOT NULL DEFAULT 0 COMMENT 'A Unix timestamp indicating when the cache entry should expire, or 0 for never.',
+  `created` int(11) NOT NULL DEFAULT 0 COMMENT 'A Unix timestamp indicating when the cache entry was created.',
+  `serialized` smallint(6) NOT NULL DEFAULT 0 COMMENT 'A flag to indicate whether content is serialized (1) or not (0).',
+  PRIMARY KEY (`cid`),
+  KEY `expire` (`expire`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Cache table for the menu system to store router...';
 
 -- --------------------------------------------------------
@@ -164,11 +175,14 @@ CREATE TABLE `cache_menu` (
 --
 
 CREATE TABLE `flood` (
-  `fid` int(11) NOT NULL COMMENT 'Unique flood event ID.',
+  `fid` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Unique flood event ID.',
   `event` varchar(64) NOT NULL DEFAULT '' COMMENT 'Name of event (e.g. contact).',
   `identifier` varchar(128) NOT NULL DEFAULT '' COMMENT 'Identifier of the visitor, such as an IP address or hostname.',
-  `timestamp` int(11) NOT NULL DEFAULT '0' COMMENT 'Timestamp of the event.',
-  `expiration` int(11) NOT NULL DEFAULT '0' COMMENT 'Expiration timestamp. Expired events are purged on cron run.'
+  `timestamp` int(11) NOT NULL DEFAULT 0 COMMENT 'Timestamp of the event.',
+  `expiration` int(11) NOT NULL DEFAULT 0 COMMENT 'Expiration timestamp. Expired events are purged on cron run.',
+  PRIMARY KEY (`fid`),
+  KEY `allow` (`event`,`identifier`,`timestamp`),
+  KEY `purge` (`expiration`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Flood controls the threshold of events, such as the...';
 
 -- --------------------------------------------------------
@@ -179,30 +193,35 @@ CREATE TABLE `flood` (
 
 CREATE TABLE `menu_links` (
   `menu_name` varchar(32) NOT NULL DEFAULT '' COMMENT 'The menu name. All links with the same menu name (such as ’navigation’) are part of the same menu.',
-  `mlid` int(10) UNSIGNED NOT NULL COMMENT 'The menu link ID (mlid) is the integer primary key.',
-  `plid` int(10) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'The parent link ID (plid) is the mlid of the link above in the hierarchy, or zero if the link is at the top level in its menu.',
+  `mlid` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'The menu link ID (mlid) is the integer primary key.',
+  `plid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'The parent link ID (plid) is the mlid of the link above in the hierarchy, or zero if the link is at the top level in its menu.',
   `link_path` varchar(255) NOT NULL DEFAULT '' COMMENT 'The Drupal path or external path this link points to.',
   `router_path` varchar(255) NOT NULL DEFAULT '' COMMENT 'For links corresponding to a Drupal path (external = 0), this connects the link to a menu_router.path for joins.',
   `link_title` varchar(255) NOT NULL DEFAULT '' COMMENT 'The text displayed for the link, which may be modified by a title callback stored in menu_router.',
-  `options` blob COMMENT 'A serialized array of options to be passed to the url() or l() function, such as a query string or HTML attributes.',
+  `options` blob DEFAULT NULL COMMENT 'A serialized array of options to be passed to the url() or l() function, such as a query string or HTML attributes.',
   `module` varchar(255) NOT NULL DEFAULT 'system' COMMENT 'The name of the module that generated this link.',
-  `hidden` smallint(6) NOT NULL DEFAULT '0' COMMENT 'A flag for whether the link should be rendered in menus. (1 = a disabled menu item that may be shown on admin screens, -1 = a menu callback, 0 = a normal, visible link)',
-  `external` smallint(6) NOT NULL DEFAULT '0' COMMENT 'A flag to indicate if the link points to a full URL starting with a protocol, like http:// (1 = external, 0 = internal).',
-  `has_children` smallint(6) NOT NULL DEFAULT '0' COMMENT 'Flag indicating whether any links have this link as a parent (1 = children exist, 0 = no children).',
-  `expanded` smallint(6) NOT NULL DEFAULT '0' COMMENT 'Flag for whether this link should be rendered as expanded in menus - expanded links always have their child links displayed, instead of only when the link is in the active trail (1 = expanded, 0 = not expanded)',
-  `weight` int(11) NOT NULL DEFAULT '0' COMMENT 'Link weight among links in the same menu at the same depth.',
-  `depth` smallint(6) NOT NULL DEFAULT '0' COMMENT 'The depth relative to the top level. A link with plid == 0 will have depth == 1.',
-  `customized` smallint(6) NOT NULL DEFAULT '0' COMMENT 'A flag to indicate that the user has manually created or edited the link (1 = customized, 0 = not customized).',
-  `p1` int(10) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'The first mlid in the materialized path. If N = depth, then pN must equal the mlid. If depth > 1 then p(N-1) must equal the plid. All pX where X > depth must equal zero. The columns p1 .. p9 are also called the parents.',
-  `p2` int(10) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'The second mlid in the materialized path. See p1.',
-  `p3` int(10) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'The third mlid in the materialized path. See p1.',
-  `p4` int(10) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'The fourth mlid in the materialized path. See p1.',
-  `p5` int(10) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'The fifth mlid in the materialized path. See p1.',
-  `p6` int(10) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'The sixth mlid in the materialized path. See p1.',
-  `p7` int(10) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'The seventh mlid in the materialized path. See p1.',
-  `p8` int(10) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'The eighth mlid in the materialized path. See p1.',
-  `p9` int(10) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'The ninth mlid in the materialized path. See p1.',
-  `updated` smallint(6) NOT NULL DEFAULT '0' COMMENT 'Flag that indicates that this link was generated during the update from Drupal 5.'
+  `hidden` smallint(6) NOT NULL DEFAULT 0 COMMENT 'A flag for whether the link should be rendered in menus. (1 = a disabled menu item that may be shown on admin screens, -1 = a menu callback, 0 = a normal, visible link)',
+  `external` smallint(6) NOT NULL DEFAULT 0 COMMENT 'A flag to indicate if the link points to a full URL starting with a protocol, like http:// (1 = external, 0 = internal).',
+  `has_children` smallint(6) NOT NULL DEFAULT 0 COMMENT 'Flag indicating whether any links have this link as a parent (1 = children exist, 0 = no children).',
+  `expanded` smallint(6) NOT NULL DEFAULT 0 COMMENT 'Flag for whether this link should be rendered as expanded in menus - expanded links always have their child links displayed, instead of only when the link is in the active trail (1 = expanded, 0 = not expanded)',
+  `weight` int(11) NOT NULL DEFAULT 0 COMMENT 'Link weight among links in the same menu at the same depth.',
+  `depth` smallint(6) NOT NULL DEFAULT 0 COMMENT 'The depth relative to the top level. A link with plid == 0 will have depth == 1.',
+  `customized` smallint(6) NOT NULL DEFAULT 0 COMMENT 'A flag to indicate that the user has manually created or edited the link (1 = customized, 0 = not customized).',
+  `p1` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'The first mlid in the materialized path. If N = depth, then pN must equal the mlid. If depth > 1 then p(N-1) must equal the plid. All pX where X > depth must equal zero. The columns p1 .. p9 are also called the parents.',
+  `p2` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'The second mlid in the materialized path. See p1.',
+  `p3` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'The third mlid in the materialized path. See p1.',
+  `p4` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'The fourth mlid in the materialized path. See p1.',
+  `p5` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'The fifth mlid in the materialized path. See p1.',
+  `p6` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'The sixth mlid in the materialized path. See p1.',
+  `p7` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'The seventh mlid in the materialized path. See p1.',
+  `p8` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'The eighth mlid in the materialized path. See p1.',
+  `p9` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'The ninth mlid in the materialized path. See p1.',
+  `updated` smallint(6) NOT NULL DEFAULT 0 COMMENT 'Flag that indicates that this link was generated during the update from Drupal 5.',
+  PRIMARY KEY (`mlid`),
+  KEY `path_menu` (`link_path`(128),`menu_name`),
+  KEY `menu_plid_expand_child` (`menu_name`,`plid`,`expanded`,`has_children`),
+  KEY `menu_parents` (`menu_name`,`p1`,`p2`,`p3`,`p4`,`p5`,`p6`,`p7`,`p8`,`p9`),
+  KEY `router_path` (`router_path`(128))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Contains the individual links within a menu.';
 
 --
@@ -344,13 +363,13 @@ CREATE TABLE `menu_router` (
   `load_functions` blob NOT NULL COMMENT 'A serialized array of function names (like node_load) to be called to load an object corresponding to a part of the current path.',
   `to_arg_functions` blob NOT NULL COMMENT 'A serialized array of function names (like user_uid_optional_to_arg) to be called to replace a part of the router path with another string.',
   `access_callback` varchar(255) NOT NULL DEFAULT '' COMMENT 'The callback which determines the access to this router path. Defaults to user_access.',
-  `access_arguments` blob COMMENT 'A serialized array of arguments for the access callback.',
+  `access_arguments` blob DEFAULT NULL COMMENT 'A serialized array of arguments for the access callback.',
   `page_callback` varchar(255) NOT NULL DEFAULT '' COMMENT 'The name of the function that renders the page.',
-  `page_arguments` blob COMMENT 'A serialized array of arguments for the page callback.',
+  `page_arguments` blob DEFAULT NULL COMMENT 'A serialized array of arguments for the page callback.',
   `delivery_callback` varchar(255) NOT NULL DEFAULT '' COMMENT 'The name of the function that sends the result of the page_callback function to the browser.',
-  `fit` int(11) NOT NULL DEFAULT '0' COMMENT 'A numeric representation of how specific the path is.',
-  `number_parts` smallint(6) NOT NULL DEFAULT '0' COMMENT 'Number of parts in this router path.',
-  `context` int(11) NOT NULL DEFAULT '0' COMMENT 'Only for local tasks (tabs) - the context of a local task to control its placement.',
+  `fit` int(11) NOT NULL DEFAULT 0 COMMENT 'A numeric representation of how specific the path is.',
+  `number_parts` smallint(6) NOT NULL DEFAULT 0 COMMENT 'Number of parts in this router path.',
+  `context` int(11) NOT NULL DEFAULT 0 COMMENT 'Only for local tasks (tabs) - the context of a local task to control its placement.',
   `tab_parent` varchar(255) NOT NULL DEFAULT '' COMMENT 'Only for local tasks (tabs) - the router path of the parent page (which may also be a local task).',
   `tab_root` varchar(255) NOT NULL DEFAULT '' COMMENT 'Router path of the closest non-tab parent page. For pages that are not local tasks, this will be the same as the path.',
   `title` varchar(255) NOT NULL DEFAULT '' COMMENT 'The title for the current page, or the title for the tab if this is a local task.',
@@ -358,11 +377,15 @@ CREATE TABLE `menu_router` (
   `title_arguments` varchar(255) NOT NULL DEFAULT '' COMMENT 'A serialized array of arguments for the title callback. If empty, the title will be used as the sole argument for the title callback.',
   `theme_callback` varchar(255) NOT NULL DEFAULT '' COMMENT 'A function which returns the name of the theme that will be used to render this page. If left empty, the default theme will be used.',
   `theme_arguments` varchar(255) NOT NULL DEFAULT '' COMMENT 'A serialized array of arguments for the theme callback.',
-  `type` int(11) NOT NULL DEFAULT '0' COMMENT 'Numeric representation of the type of the menu item, like MENU_LOCAL_TASK.',
+  `type` int(11) NOT NULL DEFAULT 0 COMMENT 'Numeric representation of the type of the menu item, like MENU_LOCAL_TASK.',
   `description` text NOT NULL COMMENT 'A description of this item.',
   `position` varchar(255) NOT NULL DEFAULT '' COMMENT 'The position of the block (left or right) on the system administration page for this item.',
-  `weight` int(11) NOT NULL DEFAULT '0' COMMENT 'Weight of the element. Lighter weights are higher up, heavier weights go down.',
-  `include_file` mediumtext COMMENT 'The file to include for this element, usually the page callback function lives in this file.'
+  `weight` int(11) NOT NULL DEFAULT 0 COMMENT 'Weight of the element. Lighter weights are higher up, heavier weights go down.',
+  `include_file` mediumtext DEFAULT NULL COMMENT 'The file to include for this element, usually the page callback function lives in this file.',
+  PRIMARY KEY (`path`),
+  KEY `fit` (`fit`),
+  KEY `tab_parent` (`tab_parent`(64),`weight`,`title`),
+  KEY `tab_root_weight_title` (`tab_root`(64),`weight`,`title`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Maps paths to various callbacks (access, page and title)';
 
 --
@@ -581,384 +604,13 @@ INSERT INTO `menu_router` (`path`, `load_functions`, `to_arg_functions`, `access
 --
 
 CREATE TABLE `queue` (
-  `id` bigint(20) NOT NULL COMMENT 'primary key: Unique item ID',
-  `item` longblob COMMENT 'arbitrary data for the item.',
-  `created` int(11) DEFAULT NULL COMMENT 'Unixtime record was created'
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key: Unique item ID',
+  `item` longblob DEFAULT NULL COMMENT 'arbitrary data for the item.',
+  `created` int(11) DEFAULT NULL COMMENT 'Unixtime record was created',
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Cron queue';
 
 -- --------------------------------------------------------
-
---
--- Table structure for table `registry`
---
-
-CREATE TABLE `registry` (
-  `name` varchar(255) NOT NULL DEFAULT '' COMMENT 'The name of the function, class, or interface.',
-  `type` varchar(9) NOT NULL DEFAULT '' COMMENT 'Either function or class or interface.',
-  `filename` varchar(255) NOT NULL COMMENT 'Name of the file.',
-  `module` varchar(255) NOT NULL DEFAULT '' COMMENT 'Name of the module the file belongs to.',
-  `weight` int(11) NOT NULL DEFAULT '0' COMMENT 'The order in which this module’s hooks should be invoked relative to other modules. Equal-weighted modules are ordered by name.'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Each record is a function, class, or interface name and...';
-
---
--- Dumping data for table `registry`
---
-
-INSERT INTO `registry` (`name`, `type`, `filename`, `module`, `weight`) VALUES
-('AccessDeniedTestCase', 'class', 'modules/system/system.test', 'system', 0),
-('AdminMetaTagTestCase', 'class', 'modules/system/system.test', 'system', 0),
-('ArchiverInterface', 'interface', 'includes/archiver.inc', '', 0),
-('ArchiverTar', 'class', 'modules/system/system.archiver.inc', 'system', 0),
-('ArchiverZip', 'class', 'modules/system/system.archiver.inc', 'system', 0),
-('Archive_Tar', 'class', 'modules/system/system.tar.inc', 'system', 0),
-('BatchMemoryQueue', 'class', 'includes/batch.queue.inc', '', 0),
-('BatchQueue', 'class', 'includes/batch.queue.inc', '', 0),
-('BlockAdminThemeTestCase', 'class', 'modules/block/block.test', 'block', -5),
-('BlockCacheTestCase', 'class', 'modules/block/block.test', 'block', -5),
-('BlockHashTestCase', 'class', 'modules/block/block.test', 'block', -5),
-('BlockHiddenRegionTestCase', 'class', 'modules/block/block.test', 'block', -5),
-('BlockHTMLIdTestCase', 'class', 'modules/block/block.test', 'block', -5),
-('BlockInvalidRegionTestCase', 'class', 'modules/block/block.test', 'block', -5),
-('BlockTemplateSuggestionsUnitTest', 'class', 'modules/block/block.test', 'block', -5),
-('BlockTestCase', 'class', 'modules/block/block.test', 'block', -5),
-('BlockViewModuleDeltaAlterWebTest', 'class', 'modules/block/block.test', 'block', -5),
-('call', 'class', 'rcredits/rsms/rsms-call.inc', 'rsms', 0),
-('CronQueueTestCase', 'class', 'modules/system/system.test', 'system', 0),
-('CronRunTestCase', 'class', 'modules/system/system.test', 'system', 0),
-('Database', 'class', 'includes/database/database.inc', '', 0),
-('DatabaseCondition', 'class', 'includes/database/query.inc', '', 0),
-('DatabaseConnection', 'class', 'includes/database/database.inc', '', 0),
-('DatabaseConnectionNotDefinedException', 'class', 'includes/database/database.inc', '', 0),
-('DatabaseConnection_mysql', 'class', 'includes/database/mysql/database.inc', '', 0),
-('DatabaseConnection_pgsql', 'class', 'includes/database/pgsql/database.inc', '', 0),
-('DatabaseConnection_sqlite', 'class', 'includes/database/sqlite/database.inc', '', 0),
-('DatabaseDriverNotSpecifiedException', 'class', 'includes/database/database.inc', '', 0),
-('DatabaseLog', 'class', 'includes/database/log.inc', '', 0),
-('DatabaseSchema', 'class', 'includes/database/schema.inc', '', 0),
-('DatabaseSchemaObjectDoesNotExistException', 'class', 'includes/database/schema.inc', '', 0),
-('DatabaseSchemaObjectExistsException', 'class', 'includes/database/schema.inc', '', 0),
-('DatabaseSchema_mysql', 'class', 'includes/database/mysql/schema.inc', '', 0),
-('DatabaseSchema_pgsql', 'class', 'includes/database/pgsql/schema.inc', '', 0),
-('DatabaseSchema_sqlite', 'class', 'includes/database/sqlite/schema.inc', '', 0),
-('DatabaseStatementBase', 'class', 'includes/database/database.inc', '', 0),
-('DatabaseStatementEmpty', 'class', 'includes/database/database.inc', '', 0),
-('DatabaseStatementInterface', 'interface', 'includes/database/database.inc', '', 0),
-('DatabaseStatementPrefetch', 'class', 'includes/database/prefetch.inc', '', 0),
-('DatabaseStatement_sqlite', 'class', 'includes/database/sqlite/database.inc', '', 0),
-('DatabaseTaskException', 'class', 'includes/install.inc', '', 0),
-('DatabaseTasks', 'class', 'includes/install.inc', '', 0),
-('DatabaseTasks_mysql', 'class', 'includes/database/mysql/install.inc', '', 0),
-('DatabaseTasks_pgsql', 'class', 'includes/database/pgsql/install.inc', '', 0),
-('DatabaseTasks_sqlite', 'class', 'includes/database/sqlite/install.inc', '', 0),
-('DatabaseTransaction', 'class', 'includes/database/database.inc', '', 0),
-('DatabaseTransactionCommitFailedException', 'class', 'includes/database/database.inc', '', 0),
-('DatabaseTransactionExplicitCommitNotAllowedException', 'class', 'includes/database/database.inc', '', 0),
-('DatabaseTransactionNameNonUniqueException', 'class', 'includes/database/database.inc', '', 0),
-('DatabaseTransactionNoActiveException', 'class', 'includes/database/database.inc', '', 0),
-('DatabaseTransactionOutOfOrderException', 'class', 'includes/database/database.inc', '', 0),
-('DateTimeFunctionalTest', 'class', 'modules/system/system.test', 'system', 0),
-('DefaultMailSystem', 'class', 'modules/system/system.mail.inc', 'system', 0),
-('DeleteQuery', 'class', 'includes/database/query.inc', '', 0),
-('DeleteQuery_sqlite', 'class', 'includes/database/sqlite/query.inc', '', 0),
-('DevelMailLog', 'class', 'sites/all/modules/devel/devel.mail.inc', 'devel', 0),
-('DevelMailTest', 'class', 'sites/all/modules/devel/devel.test', 'devel', 0),
-('DrupalCacheInterface', 'interface', 'includes/cache.inc', '', 0),
-('DrupalDatabaseCache', 'class', 'includes/cache.inc', '', 0),
-('DrupalDefaultEntityController', 'class', 'includes/entity.inc', '', 0),
-('DrupalEntityControllerInterface', 'interface', 'includes/entity.inc', '', 0),
-('DrupalFakeCache', 'class', 'includes/cache-install.inc', '', 0),
-('DrupalLocalStreamWrapper', 'class', 'includes/stream_wrappers.inc', '', 0),
-('DrupalPrivateStreamWrapper', 'class', 'includes/stream_wrappers.inc', '', 0),
-('DrupalPublicStreamWrapper', 'class', 'includes/stream_wrappers.inc', '', 0),
-('DrupalQueue', 'class', 'modules/system/system.queue.inc', 'system', 0),
-('DrupalQueueInterface', 'interface', 'modules/system/system.queue.inc', 'system', 0),
-('DrupalReliableQueueInterface', 'interface', 'modules/system/system.queue.inc', 'system', 0),
-('DrupalStreamWrapperInterface', 'interface', 'includes/stream_wrappers.inc', '', 0),
-('DrupalTemporaryStreamWrapper', 'class', 'includes/stream_wrappers.inc', '', 0),
-('DrupalUpdateException', 'class', 'includes/update.inc', '', 0),
-('DrupalUpdaterInterface', 'interface', 'includes/updater.inc', '', 0),
-('EnableDisableTestCase', 'class', 'modules/system/system.test', 'system', 0),
-('EntityFieldQuery', 'class', 'includes/entity.inc', '', 0),
-('EntityFieldQueryException', 'class', 'includes/entity.inc', '', 0),
-('EntityMalformedException', 'class', 'includes/entity.inc', '', 0),
-('FieldsOverlapException', 'class', 'includes/database/database.inc', '', 0),
-('FileFieldDisplayTestCase', 'class', 'modules/file/tests/file.test', 'file', 0),
-('FileFieldPathTestCase', 'class', 'modules/file/tests/file.test', 'file', 0),
-('FileFieldRevisionTestCase', 'class', 'modules/file/tests/file.test', 'file', 0),
-('FileFieldTestCase', 'class', 'modules/file/tests/file.test', 'file', 0),
-('FileFieldValidateTestCase', 'class', 'modules/file/tests/file.test', 'file', 0),
-('FileFieldWidgetTestCase', 'class', 'modules/file/tests/file.test', 'file', 0),
-('FileManagedFileElementTestCase', 'class', 'modules/file/tests/file.test', 'file', 0),
-('FilePrivateTestCase', 'class', 'modules/file/tests/file.test', 'file', 0),
-('FileTaxonomyTermTestCase', 'class', 'modules/file/tests/file.test', 'file', 0),
-('FileTokenReplaceTestCase', 'class', 'modules/file/tests/file.test', 'file', 0),
-('FileTransfer', 'class', 'includes/filetransfer/filetransfer.inc', '', 0),
-('FileTransferChmodInterface', 'interface', 'includes/filetransfer/filetransfer.inc', '', 0),
-('FileTransferException', 'class', 'includes/filetransfer/filetransfer.inc', '', 0),
-('FileTransferFTP', 'class', 'includes/filetransfer/ftp.inc', '', 0),
-('FileTransferFTPExtension', 'class', 'includes/filetransfer/ftp.inc', '', 0),
-('FileTransferLocal', 'class', 'includes/filetransfer/local.inc', '', 0),
-('FileTransferSSH', 'class', 'includes/filetransfer/ssh.inc', '', 0),
-('FilterAdminTestCase', 'class', 'modules/filter/filter.test', 'filter', 0),
-('FilterCRUDTestCase', 'class', 'modules/filter/filter.test', 'filter', 0),
-('FilterDefaultFormatTestCase', 'class', 'modules/filter/filter.test', 'filter', 0),
-('FilterFormatAccessTestCase', 'class', 'modules/filter/filter.test', 'filter', 0),
-('FilterHooksTestCase', 'class', 'modules/filter/filter.test', 'filter', 0),
-('FilterNoFormatTestCase', 'class', 'modules/filter/filter.test', 'filter', 0),
-('FilterSecurityTestCase', 'class', 'modules/filter/filter.test', 'filter', 0),
-('FilterSettingsTestCase', 'class', 'modules/filter/filter.test', 'filter', 0),
-('FilterUnitTestCase', 'class', 'modules/filter/filter.test', 'filter', 0),
-('FloodFunctionalTest', 'class', 'modules/system/system.test', 'system', 0),
-('FrontPageTestCase', 'class', 'modules/system/system.test', 'system', 0),
-('HookRequirementsTestCase', 'class', 'modules/system/system.test', 'system', 0),
-('InfoFileParserTestCase', 'class', 'modules/system/system.test', 'system', 0),
-('InsertQuery', 'class', 'includes/database/query.inc', '', 0),
-('InsertQuery_mysql', 'class', 'includes/database/mysql/query.inc', '', 0),
-('InsertQuery_pgsql', 'class', 'includes/database/pgsql/query.inc', '', 0),
-('InsertQuery_sqlite', 'class', 'includes/database/sqlite/query.inc', '', 0),
-('InvalidMergeQueryException', 'class', 'includes/database/database.inc', '', 0),
-('IPAddressBlockingTestCase', 'class', 'modules/system/system.test', 'system', 0),
-('MailSystemInterface', 'interface', 'includes/mail.inc', '', 0),
-('MemoryQueue', 'class', 'modules/system/system.queue.inc', 'system', 0),
-('MergeQuery', 'class', 'includes/database/query.inc', '', 0),
-('ModuleDependencyTestCase', 'class', 'modules/system/system.test', 'system', 0),
-('ModuleRequiredTestCase', 'class', 'modules/system/system.test', 'system', 0),
-('ModuleTestCase', 'class', 'modules/system/system.test', 'system', 0),
-('ModuleUpdater', 'class', 'modules/system/system.updater.inc', 'system', 0),
-('ModuleVersionTestCase', 'class', 'modules/system/system.test', 'system', 0),
-('NewDefaultThemeBlocks', 'class', 'modules/block/block.test', 'block', -5),
-('NoFieldsException', 'class', 'includes/database/database.inc', '', 0),
-('NonDefaultBlockAdmin', 'class', 'modules/block/block.test', 'block', -5),
-('PageNotFoundTestCase', 'class', 'modules/system/system.test', 'system', 0),
-('PagerDefault', 'class', 'includes/pager.inc', '', 0),
-('PageTitleFiltering', 'class', 'modules/system/system.test', 'system', 0),
-('Query', 'class', 'includes/database/query.inc', '', 0),
-('QueryAlterableInterface', 'interface', 'includes/database/query.inc', '', 0),
-('QueryConditionInterface', 'interface', 'includes/database/query.inc', '', 0),
-('QueryExtendableInterface', 'interface', 'includes/database/select.inc', '', 0),
-('QueryPlaceholderInterface', 'interface', 'includes/database/query.inc', '', 0),
-('QueueTestCase', 'class', 'modules/system/system.test', 'system', 0),
-('RetrieveFileTestCase', 'class', 'modules/system/system.test', 'system', 0),
-('rsmartExchange', 'class', 'rcredits/rsmart/test/Exchange.test', 'rsmart', 0),
-('rsmartIdentify', 'class', 'rcredits/rsmart/test/Identify.test', 'rsmart', 0),
-('rsmartJoint', 'class', 'rcredits/rsmart/test/Joint.test', 'rsmart', 0),
-('rsmartOffline', 'class', 'rcredits/rsmart/test/Offline.test', 'rsmart', 0),
-('rsmartStartup', 'class', 'rcredits/rsmart/test/Startup.test', 'rsmart', 0),
-('rsmartTime', 'class', 'rcredits/rsmart/test/Time.test', 'rsmart', 0),
-('rsmartTransact', 'class', 'rcredits/rsmart/test/Transact.test', 'rsmart', 0),
-('rsmartUndo', 'class', 'rcredits/rsmart/test/Undo.test', 'rsmart', 0),
-('rSMSexception', 'class', 'rcredits/rsms/rsms-call.inc', 'rsms', 0),
-('rwebBank', 'class', 'rcredits/rweb/test/Bank.test', 'rweb', 0),
-('rwebCommunity', 'class', 'rcredits/rweb/test/Community.test', 'rweb', 0),
-('rwebCompany', 'class', 'rcredits/rweb/test/Company.test', 'rweb', 0),
-('rwebContact', 'class', 'rcredits/rweb/test/Contact.test', 'rweb', 0),
-('rwebDownload', 'class', 'rcredits/rweb/test/Download.test', 'rweb', 0),
-('rwebEditTx', 'class', 'rcredits/rweb/test/EditTx.test', 'rweb', 0),
-('rwebExchange', 'class', 'rcredits/rweb/test/Exchange.test', 'rweb', 0),
-('rwebFlow', 'class', 'rcredits/rweb/test/Flow.test', 'rweb', 0),
-('rwebGift', 'class', 'rcredits/rweb/test/Gift.test', 'rweb', 0),
-('rwebJoint', 'class', 'rcredits/rweb/test/Joint.test', 'rweb', 0),
-('rwebMembership', 'class', 'rcredits/rweb/test/Membership.test', 'rweb', 0),
-('rwebPreferences', 'class', 'rcredits/rweb/test/Preferences.test', 'rweb', 0),
-('rwebReimburse', 'class', 'rcredits/rweb/test/Reimburse.test', 'rweb', 0),
-('rwebRelations', 'class', 'rcredits/rweb/test/Relations.test', 'rweb', 0),
-('rwebScanCard', 'class', 'rcredits/rweb/test/ScanCard.test', 'rweb', 0),
-('rwebSignin', 'class', 'rcredits/rweb/test/Signin.test', 'rweb', 0),
-('rwebSignup', 'class', 'rcredits/rweb/test/Signup.test', 'rweb', 0),
-('rwebSignupCo', 'class', 'rcredits/rweb/test/SignupCo.test', 'rweb', 0),
-('rwebSummary', 'class', 'rcredits/rweb/test/Summary.test', 'rweb', 0),
-('rwebTransact', 'class', 'rcredits/rweb/test/Transact.test', 'rweb', 0),
-('rwebTransactions', 'class', 'rcredits/rweb/test/Transactions.test', 'rweb', 0),
-('SelectQuery', 'class', 'includes/database/select.inc', '', 0),
-('SelectQueryExtender', 'class', 'includes/database/select.inc', '', 0),
-('SelectQueryInterface', 'interface', 'includes/database/select.inc', '', 0),
-('SelectQuery_pgsql', 'class', 'includes/database/pgsql/select.inc', '', 0),
-('SelectQuery_sqlite', 'class', 'includes/database/sqlite/select.inc', '', 0),
-('ShutdownFunctionsTest', 'class', 'modules/system/system.test', 'system', 0),
-('SiteMaintenanceTestCase', 'class', 'modules/system/system.test', 'system', 0),
-('SkipDotsRecursiveDirectoryIterator', 'class', 'includes/filetransfer/filetransfer.inc', '', 0),
-('StreamWrapperInterface', 'interface', 'includes/stream_wrappers.inc', '', 0),
-('SystemAdminTestCase', 'class', 'modules/system/system.test', 'system', 0),
-('SystemAuthorizeCase', 'class', 'modules/system/system.test', 'system', 0),
-('SystemBlockTestCase', 'class', 'modules/system/system.test', 'system', 0),
-('SystemIndexPhpTest', 'class', 'modules/system/system.test', 'system', 0),
-('SystemInfoAlterTestCase', 'class', 'modules/system/system.test', 'system', 0),
-('SystemMainContentFallback', 'class', 'modules/system/system.test', 'system', 0),
-('SystemQueue', 'class', 'modules/system/system.queue.inc', 'system', 0),
-('SystemThemeFunctionalTest', 'class', 'modules/system/system.test', 'system', 0),
-('SystemValidTokenTest', 'class', 'modules/system/system.test', 'system', 0),
-('TableSort', 'class', 'includes/tablesort.inc', '', 0),
-('TestingMailSystem', 'class', 'modules/system/system.mail.inc', 'system', 0),
-('TextFieldTestCase', 'class', 'modules/field/modules/text/text.test', 'text', 0),
-('TextSummaryTestCase', 'class', 'modules/field/modules/text/text.test', 'text', 0),
-('TextTranslationTestCase', 'class', 'modules/field/modules/text/text.test', 'text', 0),
-('ThemeRegistry', 'class', 'includes/theme.inc', '', 0),
-('ThemeUpdater', 'class', 'modules/system/system.updater.inc', 'system', 0),
-('TokenReplaceTestCase', 'class', 'modules/system/system.test', 'system', 0),
-('TokenScanTest', 'class', 'modules/system/system.test', 'system', 0),
-('TruncateQuery', 'class', 'includes/database/query.inc', '', 0),
-('TruncateQuery_mysql', 'class', 'includes/database/mysql/query.inc', '', 0),
-('TruncateQuery_sqlite', 'class', 'includes/database/sqlite/query.inc', '', 0),
-('UpdateQuery', 'class', 'includes/database/query.inc', '', 0),
-('UpdateQuery_pgsql', 'class', 'includes/database/pgsql/query.inc', '', 0),
-('UpdateQuery_sqlite', 'class', 'includes/database/sqlite/query.inc', '', 0),
-('Updater', 'class', 'includes/updater.inc', '', 0),
-('UpdaterException', 'class', 'includes/updater.inc', '', 0),
-('UpdaterFileTransferException', 'class', 'includes/updater.inc', '', 0),
-('UpdateScriptFunctionalTest', 'class', 'modules/system/system.test', 'system', 0);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `registry_file`
---
-
-CREATE TABLE `registry_file` (
-  `filename` varchar(255) NOT NULL COMMENT 'Path to the file.',
-  `hash` varchar(64) NOT NULL COMMENT 'sha-256 hash of the file’s contents when last parsed.'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Files parsed to build the registry.';
-
---
--- Dumping data for table `registry_file`
---
-
-INSERT INTO `registry_file` (`filename`, `hash`) VALUES
-('includes/00bootstrap.inc', '30cec967b4897fb6e57105692730dacfcbf2b22a93973b540150041ee0d24e36'),
-('includes/0common.inc', '43e1b7da38a0ea206559c24d963f14a9af7f875002cbc21ea5d158823d598a30'),
-('includes/0errors.inc', '72cc29840b24830df98a5628286b4d82738f2abbb78e69b4980310ff12062668'),
-('includes/0file.inc', '834daf98707d6ce675192b7bdf4e29616e375a3bfe0ddff709bd44c9e264b394'),
-('includes/0form.inc', 'b303de020c1da8f30eaf42fe48fde1dc0e287056b839bd2d44ea690b963ee8a4'),
-('includes/2bootstrap.inc', '5e69b00c09a762b1e4776713e967a0a2571a3bb40f7364c110dc30306c7c32cd'),
-('includes/actions.inc', 'f36b066681463c7dfe189e0430cb1a89bf66f7e228cbb53cdfcd93987193f759'),
-('includes/ajax.inc', 'f5d608554c6b42b976d6a97e1efffe53c657e9fbb77eabb858935bfdf4276491'),
-('includes/archiver.inc', 'bdbb21b712a62f6b913590b609fd17cd9f3c3b77c0d21f68e71a78427ed2e3e9'),
-('includes/authorize.inc', '6d64d8c21aa01eb12fc29918732e4df6b871ed06e5d41373cb95c197ed661d13'),
-('includes/batch.inc', '059da9e36e1f3717f27840aae73f10dea7d6c8daf16f6520401cc1ca3b4c0388'),
-('includes/batch.queue.inc', '554b2e92e1dad0f7fd5a19cb8dff7e109f10fbe2441a5692d076338ec908de0f'),
-('includes/cache-install.inc', 'e7ed123c5805703c84ad2cce9c1ca46b3ce8caeeea0d8ef39a3024a4ab95fa0e'),
-('includes/cache.inc', 'd01e10e4c18010b6908026f3d71b72717e3272cfb91a528490eba7f339f8dd1b'),
-('includes/common.inc', '2b2000e65e3c19a8d39286e9980bf34d3f9765a2a7d9c0297a272d5272a136e6'),
-('includes/database/database.inc', '648f0c0eebefafc25cf5298f68dfe4d9f1bc9c804f3e021559b45cf1a6f0161e'),
-('includes/database/log.inc', '9feb5a17ae2fabcf26a96d2a634ba73da501f7bcfc3599a693d916a6971d00d1'),
-('includes/database/mysql/database.inc', 'd62a2d8ca103cb3b085e7f8b894a7db14c02f20d0b1ed0bd32f6534a45b4527f'),
-('includes/database/mysql/install.inc', '6ae316941f771732fbbabed7e1d6b4cbb41b1f429dd097d04b3345aa15e461a0'),
-('includes/database/mysql/query.inc', '0212a871646c223bf77aa26b945c77a8974855373967b5fb9fdc09f8a1de88a6'),
-('includes/database/mysql/schema.inc', '6f43ac87508f868fe38ee09994fc18d69915bada0237f8ac3b717cafe8f22c6b'),
-('includes/database/pgsql/database.inc', 'd737f95947d78eb801e8ec8ca8b01e72d2e305924efce8abca0a98c1b5264cff'),
-('includes/database/pgsql/install.inc', '585b80c5bbd6f134bff60d06397f15154657a577d4da8d1b181858905f09dea5'),
-('includes/database/pgsql/query.inc', '0df57377686c921e722a10b49d5e433b131176c8059a4ace4680964206fc14b4'),
-('includes/database/pgsql/schema.inc', '1588daadfa53506aa1f5d94572162a45a46dc3ceabdd0e2f224532ded6508403'),
-('includes/database/pgsql/select.inc', 'fd4bba7887c1dc6abc8f080fc3a76c01d92ea085434e355dc1ecb50d8743c22d'),
-('includes/database/prefetch.inc', 'b5b207a66a69ecb52ee4f4459af16a7b5eabedc87254245f37cc33bebb61c0fb'),
-('includes/database/query.inc', '9171653e9710c6c0d20cff865fdead5a580367137ad4cdf81059ecc2eea61c74'),
-('includes/database/schema.inc', 'a98b69d33975e75f7d99cb85b20c36b7fc10e35a588e07b20c1b37500f5876ca'),
-('includes/database/select.inc', '5e9cdc383564ba86cb9dcad0046990ce15415a3000e4f617d6e0f30a205b852c'),
-('includes/database/sqlite/database.inc', '4281c6e80932560ecbeb07d1757efd133e8699a6fccf58c27a55df0f71794622'),
-('includes/database/sqlite/install.inc', '381f3db8c59837d961978ba3097bb6443534ed1659fd713aa563963fa0c42cc5'),
-('includes/database/sqlite/query.inc', 'f33ab1b6350736a231a4f3f93012d3aac4431ac4e5510fb3a015a5aa6cab8303'),
-('includes/database/sqlite/schema.inc', 'cd829700205a8574f8b9d88cd1eaf909519c64754c6f84d6c62b5d21f5886f8d'),
-('includes/database/sqlite/select.inc', '8d1c426dbd337733c206cce9f59a172546c6ed856d8ef3f1c7bef05a16f7bf68'),
-('includes/date.inc', '18c047be64f201e16d189f1cc47ed9dcf0a145151b1ee187e90511b24e5d2b36'),
-('includes/entity.inc', '3080fe3c30991a48f1f314a60d02e841d263a8f222337e5bde3be61afe41ee7a'),
-('includes/errors.inc', '03505bea9c52004ccff2ebc899f081b74c5f846524f41888cbcbf141629277fb'),
-('includes/file.inc', 'cf1de474b1c36b8df3254730754cd8e747c2e9daaa3dc4df6eddd7bc2b870b43'),
-('includes/file.mimetypes.inc', '33266e837f4ce076378e7e8cef6c5af46446226ca4259f83e13f605856a7f147'),
-('includes/filetransfer/filetransfer.inc', 'fdea8ae48345ec91885ac48a9bc53daf87616271472bb7c29b7e3ce219b22034'),
-('includes/filetransfer/ftp.inc', '51eb119b8e1221d598ffa6cc46c8a322aa77b49a3d8879f7fb38b7221cf7e06d'),
-('includes/filetransfer/local.inc', '7cbfdb46abbdf539640db27e66fb30e5265128f31002bd0dfc3af16ae01a9492'),
-('includes/filetransfer/ssh.inc', '92f1232158cb32ab04cbc93ae38ad3af04796e18f66910a9bc5ca8e437f06891'),
-('includes/form.inc', '0dd082d8ca8fa99e93c33b79072efe1823a45ee8d7141ce93043c5d111136a41'),
-('includes/graph.inc', '8e0e313a8bb33488f371df11fc1b58d7cf80099b886cd1003871e2c896d1b536'),
-('includes/image.inc', 'bcdc7e1599c02227502b9d0fe36eeb2b529b130a392bc709eb737647bd361826'),
-('includes/install.core.inc', 'a0585c85002e6f3d702dc505584f48b55bc13e24bee749bfe5b718fbce4847e1'),
-('includes/install.inc', '480c3cfd065d3ec00f4465e1b0a0d55d6a8927e78fd6774001c30163a5c648e3'),
-('includes/iso.inc', '0ce4c225edcfa9f037703bc7dd09d4e268a69bcc90e55da0a3f04c502bd2f349'),
-('includes/json-encode.inc', '02a822a652d00151f79db9aa9e171c310b69b93a12f549bc2ce00533a8efa14e'),
-('includes/language.inc', '4dd521af07e0ca7bf97ff145f4bd3a218acf0d8b94964e72f11212bb8af8d66e'),
-('includes/locale.inc', 'b250f375b93ffe3749f946e0ad475065c914af23e388d68e5c5df161590f086a'),
-('includes/lock.inc', 'a181c8bd4f88d292a0a73b9f1fbd727e3314f66ec3631f288e6b9a54ba2b70fa'),
-('includes/mail.inc', 'd9fb2b99025745cbb73ebcfc7ac12df100508b9273ce35c433deacf12dd6a13a'),
-('includes/menu.inc', '04431df4dbf50948c99772cdaa9f8ac6f7e52393e0a2e30bec5a1f143926487f'),
-('includes/module.inc', 'f63ab8cec01f932d7abfc2d09d91ba322e333f4ff447088ab0db4d16b5d9f676'),
-('includes/pager.inc', '6f9494b85c07a2cc3be4e54aff2d2757485238c476a7da084d25bde1d88be6d8'),
-('includes/password.inc', 'fd9a1c94fe5a0fa7c7049a2435c7280b1d666b2074595010e3c492dd15712775'),
-('includes/path.inc', '74bf05f3c68b0218730abf3e539fcf08b271959c8f4611940d05124f34a6a66f'),
-('includes/registry.inc', 'c225de772f86eebd21b0b52fa8fcc6671e05fa2374cedb3164f7397f27d3c88d'),
-('includes/session.inc', 'e92cb07f192c030232d317d4efd93babf5c85eb9dde1f5e283a2feb8f7182e6c'),
-('includes/stream_wrappers.inc', '4f1feb774a8dbc04ca382fa052f59e58039c7261625f3df29987d6b31f08d92d'),
-('includes/tablesort.inc', '2d88768a544829595dd6cda2a5eb008bedb730f36bba6dfe005d9ddd999d5c0f'),
-('includes/theme.inc', 'ab2a805bb52a54dc762f314bbba6b55b959734a87e8f96119435d08b08e6fe1f'),
-('includes/theme.maintenance.inc', '39f068b3eee4d10a90d6aa3c86db587b6d25844c2919d418d34d133cfe330f5a'),
-('includes/token.inc', '5e7898cd78689e2c291ed3cd8f41c032075656896f1db57e49217aac19ae0428'),
-('includes/unicode.entities.inc', '2b858138596d961fbaa4c6e3986e409921df7f76b6ee1b109c4af5970f1e0f54'),
-('includes/unicode.inc', 'e18772dafe0f80eb139fcfc582fef1704ba9f730647057d4f4841d6a6e4066ca'),
-('includes/update.inc', '177ce24362efc7f28b384c90a09c3e485396bbd18c3721d4b21e57dd1733bd92'),
-('includes/updater.inc', 'd2da0e74ed86e93c209f16069f3d32e1a134ceb6c06a0044f78e841a1b54e380'),
-('includes/utility.inc', '3458fd2b55ab004dd0cc529b8e58af12916e8bd36653b072bdd820b26b907ed5'),
-('includes/xmlrpc.inc', 'ea24176ec445c440ba0c825fc7b04a31b440288df8ef02081560dc418e34e659'),
-('includes/xmlrpcs.inc', '741aa8d6fcc6c45a9409064f52351f7999b7c702d73def8da44de2567946598a'),
-('modules/block/block.test', 'df1b364688b46345523dfcb95c0c48352d6a4edbc66597890d29b9b0d7866e86'),
-('modules/field/modules/text/text.test', 'a1e5cb0fa8c0651c68d560d9bb7781463a84200f701b00b6e797a9ca792a7e42'),
-('modules/file/tests/file.test', '5cb7a7a6cc14a6d4269bf4d406a304f77052be7691e0ec9b8e7c5262316d7539'),
-('modules/filter/filter.test', '13330238c7b8d280ff2dd8cfee1c001d5a994ad45e3c9b9c5fdcd963c6080926'),
-('modules/system/system.archiver.inc', 'faa849f3e646a910ab82fd6c8bbf0a4e6b8c60725d7ba81ec0556bd716616cd1'),
-('modules/system/system.mail.inc', 'd31e1769f5defbe5f27dc68f641ab80fb8d3de92f6e895f4c654ec05fc7e5f0f'),
-('modules/system/system.queue.inc', 'ef00fd41ca86de386fa134d5bc1d816f9af550cf0e1334a5c0ade3119688ca3c'),
-('modules/system/system.tar.inc', '8a31d91f7b3cd7eac25b3fa46e1ed9a8527c39718ba76c3f8c0bbbeaa3aa4086'),
-('modules/system/system.test', 'ad3c68f2cacfe6a99c065edc9aca05a22bdbc74ff6158e9918255b4633134ab4'),
-('modules/system/system.updater.inc', '338cf14cb691ba16ee551b3b9e0fa4f579a2f25c964130658236726d17563b6a'),
-('rcredits/admin/admin.inc', '85e8498142476fd2a03640b1988179cc3ea11b2d7308ff8fd8b8d4367db5b0e3'),
-('rcredits/rcredits-backend.inc', 'cf42867095a2d0d739b5c6d2d065e7be0a800a9e5e69cea6685be97948fa04d5'),
-('rcredits/rcredits-db.inc', 'a59e74a857c723f4f984d337d593e8c54693f69191cb9420af0c93cea42d1eeb'),
-('rcredits/rcredits-settings.inc', 'ef052e8ee4d46ce474151bcc64109b9af1c1c27d82c02107f246e2d9868cec40'),
-('rcredits/rcredits-util.inc', 'a5721f0fa3cca16a1f42391bd425181208f9889d9d6b7efa4fd45927f51a5278'),
-('rcredits/rcredits.inc', '07fbb343694cc0934e695b325ff3c501a6c2a66210d85f23a4d0f7143d81637d'),
-('rcredits/rcredits.install', '2d6c2587da87cc848e2a4d9d1982a9ae53a5e0becb1770d81a7d26076d053291'),
-('rcredits/rcredits.module', 'e0355c5b2e0420f1c9ccf7425a6e4b6783f8d5608ef3ec7feb503c473a37d45f'),
-('rcredits/rsmart/rsmart.inc', '7451e81a5a2ffa6442f5e4f1a9f820335e7f2d9ab4cf16d126793c5b4e1ee350'),
-('rcredits/rsmart/rsmart.module', 'a619c93027b02d922905c5d80bb1a0680d7758119deec45947f0f9d7c033a1a0'),
-('rcredits/rsmart/test/Exchange.test', '0c0a85089e0c6008f0537280fdfed00d719a03e52a2676818ee496c7e47e8d3e'),
-('rcredits/rsmart/test/Identify.test', 'f92727b09548886ac3ff9840a22aad6a418072b5212bf42934dbe2eeb898cc2c'),
-('rcredits/rsmart/test/Joint.test', '7fc5c53ba711167b31949fa23625184a83053ed1406898649469378193206fd1'),
-('rcredits/rsmart/test/Offline.test', '2c0588c68ce11b9d877331ff6c5dfebb0d4509981dea0d65f7d8037eb2a90c02'),
-('rcredits/rsmart/test/Startup.test', 'cf02a44b445dd8edb37879ed69c4ad3857acd924a3ceef7a703e9f5e10a62438'),
-('rcredits/rsmart/test/Time.test', '1109c49fb7674ab1423c69f51c1837137e73ee4aead2577456a7b396b3656aff'),
-('rcredits/rsmart/test/Transact.test', '02738c64f3547e9986fe8e5de88aa2ed96abf452b21c26e11d2cb7133c28819d'),
-('rcredits/rsmart/test/Undo.test', 'dfaa48896049f3db192adafa9681123eced8c27bc5ad56f1f14c0ac2e93e957d'),
-('rcredits/rsms/../rcredits-util.inc', 'a5721f0fa3cca16a1f42391bd425181208f9889d9d6b7efa4fd45927f51a5278'),
-('rcredits/rsms/rsms-call.inc', '99e52c9b0caffe05963b493502fa17254bb7f2bd87956e07b2298d6dad10ce28'),
-('rcredits/rsms/rsms.inc', '9a09e64aefba6ed832ab2a18ea8fff17a29a3b2956712b945f3112444baf36d5'),
-('rcredits/rsms/rsms.install', 'f2b9fe657534699a51f5af4027af72f795ff44c88f22421f831b66ff3a4aa19e'),
-('rcredits/rsms/rsms.module', '297b340d9600365b94f118bf7d25d9915c95518898ba57993e67f911be22a328'),
-('rcredits/rsms/rsms.steps', 'c601f497e69eef4d38ac823579e82c99ae733f0b59997babf658773e5d5cb356'),
-('rcredits/rweb/../admin/admin-forms.inc', '949d24850c3e22b2146a14e8e63d45adb81a94e5b67a5184f102a207f5149d82'),
-('rcredits/rweb/../admin/admin-web.inc', '84b23eb655cebcba95bfb1ae0e6f8aba0635d460d3e812324adc8457dd400000'),
-('rcredits/rweb/rweb-txs.inc', '3ecba8a6851721411e0f7b899f53771d816d2ce92dcb82e031986bc9b4ac9dc4'),
-('rcredits/rweb/rweb.inc', '887e383677e1327272ea3454c884425f24e5654ea37db08f6f97c0f1a6bff5f6'),
-('rcredits/rweb/rweb.module', '6c776e85b46d2e02bf3e3f31462b0d70169d4e960da3b82a6280151aae53c91c'),
-('rcredits/rweb/test/Bank.test', '597d3431d93f1ec4912692b3c5d7c1096d67bb367d2367c372db815579ba546e'),
-('rcredits/rweb/test/Community.test', '0d45dc489b0b1eb5ab3e66c6f2f23d929f91af14fe43ff5ae2831be7bff6981e'),
-('rcredits/rweb/test/Company.test', '6ee55d5588d26c5af6e812bd03f713917a000a1b452466cd14795ccd37156dbf'),
-('rcredits/rweb/test/Contact.test', 'ac54430e164545355ae966bc674a1a21762f7d4b81cad5dcf4a3cb479cf95a5d'),
-('rcredits/rweb/test/Download.test', 'efa24f816f422c62642d4b967445c8ff410af77d2be894a9fc77441aeb05ba7a'),
-('rcredits/rweb/test/EditTx.test', '9d19ef91def9c9ca7c1e890f5b8733ad47ec66050a890b10f9113600846b72f0'),
-('rcredits/rweb/test/Exchange.test', '6ff0d1348692b4b07d2ca0dc7f0dc3cc94b750a3117c3fbe1db656772e61ec74'),
-('rcredits/rweb/test/Flow.test', '497bd8b700dd2aa17f66acafdaa25d3c7a9c969baebca8045338508fd3c79d0d'),
-('rcredits/rweb/test/Gift.test', 'cdf2795c6094e2cea981ce8ff9e6c3a9308bff3c5ef4e5a373d769eb096b8522'),
-('rcredits/rweb/test/Joint.test', 'c25e661ca383cace28be75ceeee7a1491580e89d4494e164c5e1911a1cba1880'),
-('rcredits/rweb/test/Membership.test', '9cd29a637640db47f20131604b30acba70ea3007b0e06e587202da1f2d1fdbb8'),
-('rcredits/rweb/test/Preferences.test', '5a39f9a4e3d22c5369d85bf0bccb267dbac40a29360afd16a458ab21b908b9ab'),
-('rcredits/rweb/test/Reimburse.test', '74c41ca7ceafc7ed0658a43c0066818a1310fa0373bbcb1f9ec49567f6946c67'),
-('rcredits/rweb/test/Relations.test', 'd616cc14c3c18f326b426d218a9ff4bfaa572df7ebc775cacd3f8c06a34e8e95'),
-('rcredits/rweb/test/ScanCard.test', 'cd6c21ffd40c8e3917aedba0e1a523777027fd6076939b5bbd2658b185bd3eab'),
-('rcredits/rweb/test/Signin.test', '2ecbcfdce34092707265d647f9ffbcf5b62225a3d2541980fd390b4de19764c2'),
-('rcredits/rweb/test/Signup.test', '1ac8d0a203343d1a0aba1160a64b14e7060603a464295a6ddea988cbf29b1232'),
-('rcredits/rweb/test/SignupCo.test', '78598d583ec11e81d24a8ecf2618e8a0628f89d880d62ea3cd898aaf4b83bd1b'),
-('rcredits/rweb/test/Summary.test', 'ccb64d87da52ba228e0c59fc41f51c509ce87710b3d974eb7bfab388fc61b484'),
-('rcredits/rweb/test/Transact.test', '8680536973974ba0814fb0ee9cd0653f256b6156a555028836187d6328f8943e'),
-('rcredits/rweb/test/Transactions.test', 'd53b407f2eda38238c5208358a7e907ba904cfb2587a990bf2cf2bf560b3e40b'),
-('sites/all/modules/devel/devel.mail.inc', 'dbdc696b3e023a588359ec1207ac6997e1abe425ed301d1b1513f68a0abcf9c2'),
-('sites/all/modules/devel/devel.test', '7ee8668c46ce85c9307cf5f35ad2b18a0793dec8455114ee8c05eee36be76302');
 
 -- --------------------------------------------------------
 
@@ -968,7 +620,8 @@ INSERT INTO `registry_file` (`filename`, `hash`) VALUES
 
 CREATE TABLE `r_areas` (
   `area_code` char(3) NOT NULL DEFAULT '' COMMENT 'telephone area code',
-  `region` varchar(24) DEFAULT NULL COMMENT 'state, province, or territory'
+  `region` varchar(24) DEFAULT NULL COMMENT 'state, province, or territory',
+  PRIMARY KEY (`area_code`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
@@ -1318,7 +971,8 @@ INSERT INTO `r_areas` (`area_code`, `region`) VALUES
 CREATE TABLE `r_bad` (
   `qid` varchar(255) DEFAULT NULL COMMENT 'phoney customer qid',
   `code` varchar(255) DEFAULT NULL COMMENT 'phoney card security code',
-  `created` int(11) NOT NULL COMMENT 'Unixtime record was created'
+  `created` int(11) NOT NULL COMMENT 'Unixtime record was created',
+  PRIMARY KEY (`created`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='lost, stolen, or faked rCard codes';
 
 -- --------------------------------------------------------
@@ -1328,12 +982,16 @@ CREATE TABLE `r_bad` (
 --
 
 CREATE TABLE `r_ballots` (
-  `id` bigint(20) NOT NULL COMMENT 'ballot record id',
-  `question` bigint(20) NOT NULL DEFAULT '0' COMMENT 'question or proposal voted on by a particular voter',
-  `voter` bigint(20) NOT NULL DEFAULT '0' COMMENT 'record id of voter whose ballot this is',
-  `proxy` bigint(20) NOT NULL DEFAULT '0' COMMENT 'record id of voter who actually voted on behalf of the voter',
-  `modified` int(11) NOT NULL DEFAULT '0' COMMENT 'date/time last modified',
-  `created` int(11) NOT NULL DEFAULT '0' COMMENT 'date/time created'
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ballot record id',
+  `question` bigint(20) NOT NULL DEFAULT 0 COMMENT 'question or proposal voted on by a particular voter',
+  `voter` bigint(20) NOT NULL DEFAULT 0 COMMENT 'record id of voter whose ballot this is',
+  `proxy` bigint(20) NOT NULL DEFAULT 0 COMMENT 'record id of voter who actually voted on behalf of the voter',
+  `modified` int(11) NOT NULL DEFAULT 0 COMMENT 'date/time last modified',
+  `created` int(11) NOT NULL DEFAULT 0 COMMENT 'date/time created',
+  PRIMARY KEY (`id`),
+  KEY `question` (`question`),
+  KEY `voter` (`voter`),
+  KEY `proxy` (`proxy`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='A votable question addressed by a particular voter';
 
 -- --------------------------------------------------------
@@ -1356,7 +1014,9 @@ CREATE TABLE `r_banks` (
   `zip` char(9) DEFAULT NULL COMMENT 'bank zipcode',
   `phone` char(10) DEFAULT NULL COMMENT 'bank phone',
   `status` char(1) DEFAULT NULL COMMENT 'status',
-  `view` char(1) DEFAULT NULL COMMENT 'status'
+  `view` char(1) DEFAULT NULL COMMENT 'status',
+  PRIMARY KEY (`route`),
+  KEY `newroute` (`newRoute`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Bank routing numbers';
 
 --
@@ -21297,17 +20957,19 @@ INSERT INTO `r_banks` (`route`, `branch`, `fedRoute`, `type`, `modified`, `newRo
 --
 
 CREATE TABLE `r_boxes` (
-  `id` bigint(20) NOT NULL COMMENT 'device record id',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'device record id',
   `channel` tinyint(4) DEFAULT NULL COMMENT 'channel',
-  `boxnum` int(11) NOT NULL DEFAULT '0' COMMENT 'sequential device number for the account',
+  `code` varchar(255) DEFAULT NULL COMMENT 'device id',
+  `boxnum` int(11) NOT NULL DEFAULT 0 COMMENT 'sequential device number for the account',
   `uid` bigint(20) DEFAULT NULL COMMENT 'account record id',
   `boxName` varchar(255) DEFAULT NULL COMMENT 'member''s chosen name for this device, for this account',
-  `created` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime record was created',
-  `code` varchar(255) DEFAULT NULL COMMENT 'device id',
-  `todo` mediumtext COMMENT 'waiting for confirmation to complete this operation',
+  `todo` mediumtext DEFAULT NULL COMMENT 'waiting for confirmation to complete this operation',
   `nonce` varchar(255) DEFAULT NULL COMMENT 'waiting for this nonce, for confirmation',
-  `restricted` tinyint(4) DEFAULT '0' COMMENT 'permit no new users of this device',
-  `access` int(11) NOT NULL DEFAULT '0' COMMENT 'date/time last used'
+  `access` int(11) NOT NULL DEFAULT 0 COMMENT 'date/time last used',
+  `created` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime record was created',
+  `restricted` tinyint(4) DEFAULT 0 COMMENT 'permit no new users of this device',
+  PRIMARY KEY (`id`),
+  KEY `uid` (`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Names for devices';
 
 -- --------------------------------------------------------
@@ -21317,18 +20979,19 @@ CREATE TABLE `r_boxes` (
 --
 
 CREATE TABLE `r_company` (
-  `uid` bigint(20) NOT NULL COMMENT 'account record ID',
+  `uid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'account record ID',
   `coType` tinyint(4) DEFAULT NULL COMMENT 'type of entity',
-  `website` tinytext COMMENT 'company website domain',
-  `description` mediumtext COMMENT 'long markdown description',
-  `shortDesc` tinytext COMMENT 'one line description',
-  `selling` mediumtext COMMENT 'list of typical transaction descriptions',
-  `coFlags` bigint(20) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'miscellaneous flag bits',
-  `gross` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'average annual gross receipts',
-  `serviceArea` tinytext COMMENT 'geographic region the company serves',
-  `employees` int(11) NOT NULL DEFAULT '0' COMMENT 'number of employees',
-  `payrollStart` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime date last payroll started',
-  `payrollEnd` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime date last payroll ended'
+  `website` tinytext DEFAULT NULL COMMENT 'company website domain',
+  `description` mediumtext DEFAULT NULL COMMENT 'long markdown description',
+  `shortDesc` tinytext DEFAULT NULL COMMENT 'one line description',
+  `selling` mediumtext DEFAULT NULL COMMENT 'list of typical transaction descriptions',
+  `coFlags` bigint(20) unsigned NOT NULL DEFAULT 0 COMMENT 'miscellaneous flag bits',
+  `gross` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'average annual gross receipts',
+  `serviceArea` tinytext DEFAULT NULL COMMENT 'geographic region the company serves',
+  `employees` int(11) NOT NULL DEFAULT 0 COMMENT 'number of employees',
+  `payrollStart` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime date last payroll started',
+  `payrollEnd` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime date last payroll ended',
+  PRIMARY KEY (`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Companies';
 
 --
@@ -21345,15 +21008,19 @@ INSERT INTO `r_company` (`uid`, `coType`, `website`, `description`, `shortDesc`,
 --
 
 CREATE TABLE `r_countries` (
-  `id` int(10) UNSIGNED NOT NULL COMMENT 'Country Id',
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Country Id',
   `name` varchar(64) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT 'Country Name',
   `iso_code` char(2) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT 'ISO Code',
   `country_code` varchar(4) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT 'National prefix to be used when dialing TO this country.',
-  `address_format_id` int(10) UNSIGNED DEFAULT NULL COMMENT 'Foreign key to civicrm_address_format.id.',
+  `address_format_id` int(10) unsigned DEFAULT NULL COMMENT 'Foreign key to civicrm_address_format.id.',
   `idd_prefix` varchar(4) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT 'International direct dialing prefix from within the country TO another country',
   `ndd_prefix` varchar(4) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT 'Access prefix to call within a country to a different area',
-  `region_id` int(10) UNSIGNED NOT NULL COMMENT 'Foreign key to civicrm_worldregion.id.',
-  `is_province_abbreviated` tinyint(4) DEFAULT '0' COMMENT 'Should state/province be displayed as abbreviation?'
+  `region_id` int(10) unsigned NOT NULL COMMENT 'Foreign key to civicrm_worldregion.id.',
+  `is_province_abbreviated` tinyint(4) DEFAULT 0 COMMENT 'Should state/province be displayed as abbreviation?',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name_iso_code` (`name`,`iso_code`),
+  KEY `address_format_id` (`address_format_id`),
+  KEY `region_id` (`region_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --
@@ -21614,11 +21281,14 @@ INSERT INTO `r_countries` (`id`, `name`, `iso_code`, `country_code`, `address_fo
 --
 
 CREATE TABLE `r_coupated` (
-  `id` bigint(20) NOT NULL COMMENT 'record id',
-  `uid` bigint(20) NOT NULL DEFAULT '0' COMMENT 'account ID of account that used the coupon',
-  `coupid` bigint(20) NOT NULL DEFAULT '0' COMMENT 'coupon ID',
-  `uses` int(11) NOT NULL DEFAULT '0' COMMENT 'number of times this account has used this coupon OR iCode',
-  `when` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime the coupon was used'
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'record id',
+  `uid` bigint(20) NOT NULL DEFAULT 0 COMMENT 'account ID of account that used the coupon',
+  `coupid` bigint(20) NOT NULL DEFAULT 0 COMMENT 'coupon ID',
+  `uses` int(11) NOT NULL DEFAULT 0 COMMENT 'number of times this account has used this coupon OR iCode',
+  `when` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime the coupon was used',
+  PRIMARY KEY (`id`),
+  KEY `uid` (`uid`),
+  KEY `coupid` (`coupid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Coupons used';
 
 -- --------------------------------------------------------
@@ -21628,15 +21298,17 @@ CREATE TABLE `r_coupated` (
 --
 
 CREATE TABLE `r_coupons` (
-  `coupid` bigint(20) NOT NULL COMMENT 'record id',
-  `fromId` bigint(20) NOT NULL DEFAULT '0' COMMENT 'account ID of company offering the coupon',
-  `start` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime coupon is first valid',
-  `end` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime after which coupon is no longer valid',
+  `coupid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'record id',
+  `fromId` bigint(20) NOT NULL DEFAULT 0 COMMENT 'account ID of company offering the coupon',
+  `start` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime coupon is first valid',
+  `end` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime after which coupon is no longer valid',
   `amount` decimal(11,2) DEFAULT NULL COMMENT 'amount of discount',
   `on` varchar(255) DEFAULT NULL COMMENT 'discount on what',
-  `minimum` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'minimum purchase amount to get the discount',
-  `ulimit` int(11) NOT NULL DEFAULT '0' COMMENT 'maximum number of uses per member',
-  `flags` bigint(20) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'boolean type flags'
+  `minimum` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'minimum purchase amount to get the discount',
+  `ulimit` int(11) NOT NULL DEFAULT 0 COMMENT 'maximum number of uses per member',
+  `flags` bigint(20) unsigned NOT NULL DEFAULT 0 COMMENT 'boolean type flags',
+  PRIMARY KEY (`coupid`),
+  KEY `fromId` (`fromId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Coupons';
 
 -- --------------------------------------------------------
@@ -21646,16 +21318,18 @@ CREATE TABLE `r_coupons` (
 --
 
 CREATE TABLE `r_do` (
-  `doid` int(11) NOT NULL COMMENT 'record id',
-  `uid` bigint(20) NOT NULL DEFAULT '0' COMMENT 'related account record ID',
+  `doid` int(11) NOT NULL AUTO_INCREMENT COMMENT 'record id',
+  `expires` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime expiration',
+  `data` mediumtext DEFAULT NULL COMMENT 'serialized array of parameters',
+  `uid` bigint(20) NOT NULL DEFAULT 0 COMMENT 'related account record ID',
   `box` bigint(20) DEFAULT NULL COMMENT 'machine id',
-  `created` int(11) DEFAULT '0' COMMENT 'Unixtime record was created',
-  `completed` int(11) DEFAULT '0' COMMENT 'Unixtime action was completed',
-  `action` mediumtext COMMENT 'serialized array describing action to take',
+  `created` int(11) DEFAULT 0 COMMENT 'Unixtime record was created',
+  `completed` int(11) DEFAULT 0 COMMENT 'Unixtime action was completed',
+  `action` mediumtext DEFAULT NULL COMMENT 'serialized array describing action to take',
   `code` varchar(255) DEFAULT NULL COMMENT 'security code',
-  `before` int(11) DEFAULT '0' COMMENT 'Unixtime expiration',
-  `data` mediumtext COMMENT 'serialized array of parameters',
-  `expires` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime expiration'
+  `before` int(11) DEFAULT 0 COMMENT 'Unixtime expiration',
+  PRIMARY KEY (`doid`),
+  KEY `uid` (`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Clickable actions with no signin';
 
 -- --------------------------------------------------------
@@ -21665,13 +21339,15 @@ CREATE TABLE `r_do` (
 --
 
 CREATE TABLE `r_events` (
-  `id` int(11) NOT NULL COMMENT 'record id',
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'record id',
   `ctty` bigint(20) DEFAULT NULL COMMENT 'what community the event is in',
   `type` char(1) DEFAULT NULL COMMENT 'event type (I=in person, V=vote, G=grading, P=RFP)',
   `event` varchar(255) DEFAULT NULL COMMENT 'name of event',
-  `details` longtext COMMENT 'event details',
-  `start` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime event begins',
-  `end` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime event ends'
+  `details` longtext DEFAULT NULL COMMENT 'event details',
+  `start` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime event begins',
+  `end` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime event ends',
+  PRIMARY KEY (`id`),
+  KEY `ctty` (`ctty`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Who represents whom';
 
 -- --------------------------------------------------------
@@ -21681,15 +21357,17 @@ CREATE TABLE `r_events` (
 --
 
 CREATE TABLE `r_gifts` (
-  `donid` int(11) NOT NULL COMMENT 'gift record id',
+  `donid` int(11) NOT NULL AUTO_INCREMENT COMMENT 'gift record id',
   `uid` bigint(20) DEFAULT NULL COMMENT 'uid of account that made the gift',
   `amount` decimal(11,2) DEFAULT NULL COMMENT 'amount of gift',
   `often` varchar(1) DEFAULT NULL COMMENT 'recurring how often (Y, Q, M, 1)',
   `honor` varchar(10) DEFAULT NULL COMMENT 'what type of honor',
-  `honored` mediumtext COMMENT 'who is honored',
+  `honored` mediumtext DEFAULT NULL COMMENT 'who is honored',
   `share` decimal(6,3) DEFAULT NULL COMMENT 'percentage of rebates/bonuses to donate to CGF',
-  `giftDate` int(11) NOT NULL DEFAULT '0' COMMENT 'date/time of gift',
-  `completed` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime donation was completed'
+  `giftDate` int(11) NOT NULL DEFAULT 0 COMMENT 'date/time of gift',
+  `completed` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime donation was completed',
+  PRIMARY KEY (`donid`),
+  KEY `uid` (`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Membership gift details';
 
 -- --------------------------------------------------------
@@ -21699,9 +21377,10 @@ CREATE TABLE `r_gifts` (
 --
 
 CREATE TABLE `r_industries` (
-  `iid` int(11) NOT NULL,
+  `iid` int(11) NOT NULL AUTO_INCREMENT,
   `industry` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  `parent` int(11) NOT NULL
+  `parent` int(11) NOT NULL,
+  PRIMARY KEY (`iid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --
@@ -21795,22 +21474,25 @@ INSERT INTO `r_industries` (`iid`, `industry`, `parent`) VALUES
 --
 
 CREATE TABLE `r_investments` (
-  `vestid` bigint(20) NOT NULL COMMENT 'record ID',
+  `vestid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'record ID',
   `coid` bigint(20) DEFAULT NULL COMMENT 'member company record ID',
   `clubid` bigint(20) DEFAULT NULL COMMENT 'investment club record ID',
   `proposedBy` bigint(20) DEFAULT NULL COMMENT 'account record ID of proposer',
-  `investment` mediumtext COMMENT 'description of investment',
+  `investment` mediumtext DEFAULT NULL COMMENT 'description of investment',
   `return` decimal(10,3) DEFAULT NULL COMMENT 'predicted or actual APR',
   `types` varchar(4) DEFAULT NULL COMMENT 'D=dividends I=interest T=tax-exempt interest',
-  `terms` text COMMENT 'investment terms',
+  `terms` text DEFAULT NULL COMMENT 'investment terms',
   `assets` decimal(11,2) DEFAULT NULL COMMENT 'company assets, bond, or collateral',
   `offering` decimal(11,2) DEFAULT NULL COMMENT 'size of offering',
   `price` decimal(11,2) DEFAULT NULL COMMENT 'price per share',
-  `character` mediumtext COMMENT 'assessment of the integrity and determination of the owners',
+  `character` mediumtext DEFAULT NULL COMMENT 'assessment of the integrity and determination of the owners',
   `strength` tinyint(4) DEFAULT NULL COMMENT 'company''s financial strength (0 to 100)',
   `web` tinyint(4) DEFAULT NULL COMMENT 'impression on the web (0 to 100)',
   `history` tinyint(4) DEFAULT NULL COMMENT 'past repayment success (0 to 100)',
-  `soundness` tinyint(4) DEFAULT NULL COMMENT 'overall how sound is this investment (0 to 100)'
+  `soundness` tinyint(4) DEFAULT NULL COMMENT 'overall how sound is this investment (0 to 100)',
+  PRIMARY KEY (`vestid`),
+  KEY `coid` (`coid`),
+  KEY `proposedBy` (`proposedBy`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='potential and actual investments';
 
 -- --------------------------------------------------------
@@ -21820,14 +21502,17 @@ CREATE TABLE `r_investments` (
 --
 
 CREATE TABLE `r_invites` (
-  `id` bigint(20) NOT NULL COMMENT 'record id',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'record id',
   `code` varchar(64) DEFAULT NULL COMMENT 'secret invitation code',
   `email` varchar(255) DEFAULT NULL COMMENT 'email of invitee',
-  `inviter` bigint(20) NOT NULL DEFAULT '0' COMMENT 'uid of inviting member',
-  `invitee` bigint(20) NOT NULL DEFAULT '0' COMMENT 'uid of invited new member',
-  `invited` int(11) NOT NULL DEFAULT '0' COMMENT 'date of invitation',
+  `inviter` bigint(20) NOT NULL DEFAULT 0 COMMENT 'uid of inviting member',
+  `invitee` bigint(20) NOT NULL DEFAULT 0 COMMENT 'uid of invited new member',
+  `invited` int(11) NOT NULL DEFAULT 0 COMMENT 'date of invitation',
   `subject` varchar(255) DEFAULT NULL COMMENT 'email subject',
-  `message` mediumtext COMMENT 'email message body'
+  `message` mediumtext COMMENT 'email message body',
+  PRIMARY KEY (`id`),
+  KEY `inviter` (`inviter`),
+  KEY `code` (`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Who invited whom';
 
 -- --------------------------------------------------------
@@ -21837,15 +21522,21 @@ CREATE TABLE `r_invites` (
 --
 
 CREATE TABLE `r_invoices` (
-  `nvid` bigint(20) NOT NULL COMMENT 'the unique invoice ID',
-  `status` int(11) NOT NULL DEFAULT '0' COMMENT 'transaction record ID or status (pending or denied)',
+  `nvid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'the unique invoice ID',
+  `status` int(11) NOT NULL DEFAULT -1 COMMENT 'transaction record ID or status (approved, pending, denied, or paid)',
   `amount` decimal(11,2) DEFAULT NULL COMMENT 'amount to charge',
   `payer` bigint(20) DEFAULT NULL COMMENT 'user id of the payer',
   `payee` bigint(20) DEFAULT NULL COMMENT 'user id of the payee',
-  `goods` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'is this an invoice for real goods and services?',
-  `purpose` longtext COMMENT 'payee''s description',
-  `data` longtext COMMENT 'miscellaneous non-searchable data (serialized array)',
-  `created` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime invoice was created'
+  `goods` tinyint(4) NOT NULL DEFAULT 0 COMMENT 'is this an invoice for real goods and services?',
+  `purpose` longtext DEFAULT NULL COMMENT 'payee''s description',
+  `flags` bigint(20) unsigned NOT NULL DEFAULT 0 COMMENT 'boolean characteristics and state flags',
+  `data` longtext DEFAULT NULL COMMENT 'miscellaneous non-searchable data (serialized array)',
+  `created` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime invoice was created',
+  PRIMARY KEY (`nvid`),
+  KEY `payer` (`payer`),
+  KEY `payee` (`payee`),
+  KEY `created` (`created`),
+  KEY `status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Record of all rCredits invoices in the region';
 
 -- --------------------------------------------------------
@@ -21857,7 +21548,9 @@ CREATE TABLE `r_invoices` (
 CREATE TABLE `r_ips` (
   `ip` varchar(39) NOT NULL COMMENT 'ip address',
   `uid` bigint(20) DEFAULT NULL COMMENT 'account record ID',
-  `device` varchar(255) DEFAULT NULL COMMENT 'device code'
+  `device` varchar(255) DEFAULT NULL COMMENT 'device code',
+  PRIMARY KEY (`ip`),
+  KEY `uid` (`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='IP addresses of approved accounts';
 
 --
@@ -21876,7 +21569,8 @@ INSERT INTO `r_ips` (`ip`, `uid`, `device`) VALUES
 CREATE TABLE `r_near` (
   `uid1` bigint(20) NOT NULL COMMENT 'account record ID of one account',
   `uid2` bigint(20) NOT NULL COMMENT 'account record ID of other account',
-  `weight` mediumint(9) DEFAULT NULL COMMENT 'number of connections'
+  `weight` mediumint(9) DEFAULT NULL COMMENT 'number of connections',
+  PRIMARY KEY (`uid1`,`uid2`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='How members are connected';
 
 -- --------------------------------------------------------
@@ -21886,9 +21580,10 @@ CREATE TABLE `r_near` (
 --
 
 CREATE TABLE `r_nonmembers` (
-  `id` int(11) NOT NULL COMMENT 'non-member company record id',
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'non-member company record id',
   `company` varchar(60) DEFAULT NULL COMMENT 'company name',
-  `potential` int(11) DEFAULT '0' COMMENT 'number of members who shop there'
+  `potential` int(11) DEFAULT 0 COMMENT 'number of members who shop there',
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Local companies we want to recruit';
 
 -- --------------------------------------------------------
@@ -21898,11 +21593,13 @@ CREATE TABLE `r_nonmembers` (
 --
 
 CREATE TABLE `r_notices` (
-  `msgid` int(11) NOT NULL COMMENT 'notice record id',
+  `msgid` int(11) NOT NULL AUTO_INCREMENT COMMENT 'notice record id',
   `uid` bigint(20) DEFAULT NULL COMMENT 'account record ID of member notified',
-  `created` int(11) NOT NULL DEFAULT '0' COMMENT 'date of notice',
-  `sent` int(11) NOT NULL DEFAULT '0' COMMENT 'date sent (0 if not sent yet)',
-  `message` mediumtext COMMENT 'the notice text'
+  `created` int(11) NOT NULL DEFAULT 0 COMMENT 'date of notice',
+  `sent` int(11) NOT NULL DEFAULT 0 COMMENT 'date sent (0 if not sent yet)',
+  `message` mediumtext COMMENT 'the notice text',
+  PRIMARY KEY (`msgid`),
+  KEY `uid` (`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Message digest buffer';
 
 -- --------------------------------------------------------
@@ -21912,19 +21609,21 @@ CREATE TABLE `r_notices` (
 --
 
 CREATE TABLE `r_options` (
-  `id` bigint(20) NOT NULL COMMENT 'option record id',
-  `question` bigint(20) NOT NULL DEFAULT '0' COMMENT 'question for which this is an option',
-  `text` tinytext COMMENT 'text of the option',
-  `detail` mediumtext COMMENT 'additional detail about the option',
-  `displayOrder` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'where to display this option in the order',
-  `minimum` bigint(20) NOT NULL DEFAULT '0' COMMENT 'the least (money) to budget for this option',
-  `maximum` bigint(20) NOT NULL DEFAULT '0' COMMENT 'the most (money) to budget for this option',
-  `mandatory` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'is the minimum required?',
-  `averageGrade` decimal(5,3) NOT NULL DEFAULT '0.000' COMMENT 'average grade (in a penny vote, the fraction of all votes)',
-  `averageMax` decimal(5,3) NOT NULL DEFAULT '0.000' COMMENT 'average maximum grade (for range votes)',
-  `vetoes` int(11) NOT NULL DEFAULT '0' COMMENT 'number of vetoes for this option',
-  `modified` int(11) NOT NULL DEFAULT '0' COMMENT 'date/time last modified',
-  `created` int(11) NOT NULL DEFAULT '0' COMMENT 'date/time created'
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'option record id',
+  `question` bigint(20) NOT NULL DEFAULT 0 COMMENT 'question for which this is an option',
+  `text` tinytext DEFAULT NULL COMMENT 'text of the option',
+  `detail` mediumtext DEFAULT NULL COMMENT 'additional detail about the option',
+  `displayOrder` tinyint(4) NOT NULL DEFAULT 0 COMMENT 'where to display this option in the order',
+  `minimum` bigint(20) NOT NULL DEFAULT 0 COMMENT 'the least (money) to budget for this option',
+  `maximum` bigint(20) NOT NULL DEFAULT 0 COMMENT 'the most (money) to budget for this option',
+  `mandatory` tinyint(4) NOT NULL DEFAULT 0 COMMENT 'is the minimum required?',
+  `averageGrade` decimal(5,3) NOT NULL DEFAULT 0.000 COMMENT 'average grade (in a penny vote, the fraction of all votes)',
+  `averageMax` decimal(5,3) NOT NULL DEFAULT 0.000 COMMENT 'average maximum grade (for range votes)',
+  `vetoes` int(11) NOT NULL DEFAULT 0 COMMENT 'number of vetoes for this option',
+  `modified` int(11) NOT NULL DEFAULT 0 COMMENT 'date/time last modified',
+  `created` int(11) NOT NULL DEFAULT 0 COMMENT 'date/time created',
+  PRIMARY KEY (`id`),
+  KEY `question` (`question`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Options for a question to be voted on';
 
 -- --------------------------------------------------------
@@ -21934,14 +21633,17 @@ CREATE TABLE `r_options` (
 --
 
 CREATE TABLE `r_pairs` (
-  `id` bigint(20) NOT NULL COMMENT 'pairs record id',
-  `option1` bigint(20) NOT NULL DEFAULT '0' COMMENT 'record id of one option',
-  `option2` bigint(20) NOT NULL DEFAULT '0' COMMENT 'record id of the other option',
-  `prefer1` int(11) NOT NULL DEFAULT '0' COMMENT 'how many voters prefer the option1',
-  `prefer2` int(11) NOT NULL DEFAULT '0' COMMENT 'how many voters prefer the option2',
-  `nopreference` int(11) NOT NULL DEFAULT '0' COMMENT 'how many voters had no preference between the two options',
-  `raw` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'true if this record is calculated without counting proxies',
-  `created` int(11) NOT NULL DEFAULT '0' COMMENT 'date/time created'
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'pairs record id',
+  `option1` bigint(20) NOT NULL DEFAULT 0 COMMENT 'record id of one option',
+  `option2` bigint(20) NOT NULL DEFAULT 0 COMMENT 'record id of the other option',
+  `prefer1` int(11) NOT NULL DEFAULT 0 COMMENT 'how many voters prefer the option1',
+  `prefer2` int(11) NOT NULL DEFAULT 0 COMMENT 'how many voters prefer the option2',
+  `nopreference` int(11) NOT NULL DEFAULT 0 COMMENT 'how many voters had no preference between the two options',
+  `raw` tinyint(4) NOT NULL DEFAULT 0 COMMENT 'true if this record is calculated without counting proxies',
+  `created` int(11) NOT NULL DEFAULT 0 COMMENT 'date/time created',
+  PRIMARY KEY (`id`),
+  KEY `option1` (`option1`),
+  KEY `option2` (`option2`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Counts of preferences of one option over another';
 
 -- --------------------------------------------------------
@@ -21952,7 +21654,8 @@ CREATE TABLE `r_pairs` (
 
 CREATE TABLE `r_photos` (
   `uid` bigint(20) NOT NULL COMMENT 'account record id',
-  `photo` longblob COMMENT 'member photo'
+  `photo` longblob DEFAULT NULL COMMENT 'member photo',
+  PRIMARY KEY (`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='one photo for each account';
 
 -- --------------------------------------------------------
@@ -21962,29 +21665,35 @@ CREATE TABLE `r_photos` (
 --
 
 CREATE TABLE `r_proposals` (
-  `id` bigint(20) NOT NULL COMMENT 'proposal record id',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'proposal record id',
   `event` bigint(20) DEFAULT NULL COMMENT 'what event this question is part of',
   `project` varchar(255) DEFAULT NULL COMMENT 'project title',
-  `ctty` bigint(20) DEFAULT NULL COMMENT 'community or region record id',
-  `categories` tinytext COMMENT 'funding categories (space-separated list)',
-  `overview` mediumtext COMMENT 'project overview',
-  `purpose` mediumtext COMMENT 'why the project is needed',
-  `where` tinytext COMMENT 'zipcode where the project will take place',
+  `overview` mediumtext DEFAULT NULL COMMENT 'project overview',
+  `categories` tinytext DEFAULT NULL COMMENT 'funding categories (space-separated list)',
+  `purpose` mediumtext DEFAULT NULL COMMENT 'why the project is needed',
+  `systemic` mediumtext DEFAULT NULL COMMENT 'how the project promotes systemic change',
+  `where` tinytext DEFAULT NULL COMMENT 'zipcode where the project will take place',
   `when` int(11) DEFAULT NULL COMMENT 'project start date',
   `until` int(11) DEFAULT NULL COMMENT 'project end date',
-  `how` mediumtext COMMENT 'how the project will be accomplished',
+  `how` mediumtext DEFAULT NULL COMMENT 'how the project will be accomplished',
   `amount` decimal(11,2) DEFAULT NULL COMMENT 'amount of funding requested',
   `type` tinyint(4) DEFAULT NULL COMMENT 'type of funding',
+  `recovery` mediumint(9) NOT NULL DEFAULT 0 COMMENT 'how funds will return to the Community Fund',
   `budgetTotal` decimal(11,2) DEFAULT NULL COMMENT 'total expense budget',
-  `budget` mediumtext COMMENT 'detailed project budget',
-  `contingency` mediumtext COMMENT 'how the project organizers will cope with less funding than requested',
-  `qualifications` mediumtext COMMENT 'qualifications of project staff',
-  `evaluation` mediumtext COMMENT 'how the success of the project will be evaluated',
+  `budget` mediumtext DEFAULT NULL COMMENT 'detailed project budget',
+  `committed` decimal(11,2) DEFAULT NULL COMMENT 'how much of the budget has already been raised',
+  `contingency` mediumtext DEFAULT NULL COMMENT 'how the project organizers will cope with less funding than requested',
+  `qualifications` mediumtext DEFAULT NULL COMMENT 'qualifications of project staff',
+  `evaluation` mediumtext DEFAULT NULL COMMENT 'how the success of the project will be evaluated',
   `name` varchar(255) DEFAULT NULL COMMENT 'individual or organization making the proposal',
   `contact` varchar(255) DEFAULT NULL COMMENT 'contact person (or "self")',
   `phone` varchar(255) DEFAULT NULL COMMENT 'contact phone',
   `email` varchar(255) DEFAULT NULL COMMENT 'contact email',
-  `sponsor` tinytext COMMENT 'member(s) sponsoring the project proposal'
+  `sponsor` tinytext DEFAULT NULL COMMENT 'member(s) sponsoring the project proposal',
+  `ctty` bigint(20) DEFAULT NULL COMMENT 'community or region record id',
+  PRIMARY KEY (`id`),
+  KEY `ctty` (`ctty`),
+  KEY `name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='rCredits funding proposals';
 
 -- --------------------------------------------------------
@@ -21994,10 +21703,12 @@ CREATE TABLE `r_proposals` (
 --
 
 CREATE TABLE `r_proxies` (
-  `id` int(11) NOT NULL COMMENT 'record id',
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'record id',
   `person` bigint(20) DEFAULT NULL COMMENT 'account record id',
   `proxy` bigint(20) DEFAULT NULL COMMENT 'account record id of proxy',
-  `priority` tinyint(4) DEFAULT NULL COMMENT 'precedence of this proxy (1=top priority)'
+  `priority` tinyint(4) DEFAULT NULL COMMENT 'precedence of this proxy (1=top priority)',
+  PRIMARY KEY (`id`),
+  KEY `person` (`person`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Who represents whom';
 
 -- --------------------------------------------------------
@@ -22007,21 +21718,22 @@ CREATE TABLE `r_proxies` (
 --
 
 CREATE TABLE `r_questions` (
-  `id` bigint(20) NOT NULL COMMENT 'question record id',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'question record id',
   `event` bigint(20) DEFAULT NULL COMMENT 'what event this question is part of',
-  `repeats` bigint(20) NOT NULL DEFAULT '0' COMMENT 'pointer to question that this is a revote on (0=none)',
-  `repeatedBy` bigint(20) NOT NULL DEFAULT '0' COMMENT 'pointer to question that is a revote of this one (0=none))',
-  `text` mediumtext COMMENT 'text of the question',
-  `detail` mediumtext COMMENT 'additional detail about the question',
-  `linkDiscussion` tinytext COMMENT 'link to online discussion of the issue',
+  `repeats` bigint(20) NOT NULL DEFAULT 0 COMMENT 'pointer to question that this is a revote on (0=none)',
+  `repeatedBy` bigint(20) NOT NULL DEFAULT 0 COMMENT 'pointer to question that is a revote of this one (0=none))',
+  `text` mediumtext DEFAULT NULL COMMENT 'text of the question',
+  `detail` mediumtext DEFAULT NULL COMMENT 'additional detail about the question',
+  `linkDiscussion` tinytext DEFAULT NULL COMMENT 'link to online discussion of the issue',
   `type` char(1) NOT NULL DEFAULT 'M' COMMENT 'vote type M=multiple choice, B=budget (penny vote), R=range, E=essay',
   `units` varchar(255) DEFAULT NULL COMMENT 'budget units (defaults to money, measured in the community''s national currency)',
-  `budget` decimal(11,0) NOT NULL DEFAULT '0' COMMENT 'how much (money) is to be budgeted',
+  `budget` decimal(11,0) NOT NULL DEFAULT 0 COMMENT 'how much (money) is to be budgeted',
   `minVeto` decimal(5,3) DEFAULT NULL COMMENT 'minimum veto fraction of vote, to force reconsideration',
   `optOrder` char(1) NOT NULL DEFAULT 'S' COMMENT 'option order',
-  `voteCount` int(11) NOT NULL DEFAULT '0' COMMENT 'total number of votes',
-  `result` longtext COMMENT 'results of the vote or grading',
-  `created` int(11) NOT NULL DEFAULT '0' COMMENT 'date/time created'
+  `voteCount` int(11) NOT NULL DEFAULT 0 COMMENT 'total number of votes',
+  `result` longtext DEFAULT NULL COMMENT 'results of the vote or grading',
+  `created` int(11) NOT NULL DEFAULT 0 COMMENT 'date/time created',
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Questions to be voted on';
 
 -- --------------------------------------------------------
@@ -22031,12 +21743,15 @@ CREATE TABLE `r_questions` (
 --
 
 CREATE TABLE `r_ratings` (
-  `ratingid` bigint(20) NOT NULL COMMENT 'record ID',
+  `ratingid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'record ID',
   `vestid` int(11) DEFAULT NULL COMMENT 'investment record ID',
   `uid` bigint(20) DEFAULT NULL COMMENT 'member record ID',
   `good` tinyint(4) DEFAULT NULL COMMENT 'how well this investment serves the common good (0-100)',
   `patronage` decimal(11,2) DEFAULT NULL COMMENT 'how much the member will spend here monthly',
-  `comments` mediumtext COMMENT 'description of investment'
+  `comments` mediumtext DEFAULT NULL COMMENT 'description of investment',
+  PRIMARY KEY (`ratingid`),
+  KEY `vestid` (`vestid`),
+  KEY `uid` (`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='how a member rates an investment';
 
 -- --------------------------------------------------------
@@ -22052,7 +21767,7 @@ CREATE TABLE `r_regions` (
   `zip` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
   `postalAddr` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   `federalId` varchar(9) COLLATE utf8_unicode_ci NOT NULL,
-  `hasServer` tinyint(1) NOT NULL DEFAULT '0'
+  `hasServer` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --
@@ -22126,15 +21841,18 @@ INSERT INTO `r_regions` (`region`, `fullName`, `st`, `zip`, `postalAddr`, `feder
 --
 
 CREATE TABLE `r_relations` (
-  `reid` bigint(20) NOT NULL COMMENT 'relationship record id',
+  `reid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'relationship record id',
   `main` bigint(20) DEFAULT NULL COMMENT 'uid of the account to which others are related',
   `other` bigint(20) DEFAULT NULL COMMENT 'uid of an other account related to this account',
-  `otherNum` int(11) NOT NULL DEFAULT '0' COMMENT 'sequence number of the other (starts with 1)',
-  `permission` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'what type of permission the other has on the main account',
+  `otherNum` int(11) NOT NULL DEFAULT 0 COMMENT 'sequence number of the other (starts with 1)',
+  `permission` tinyint(4) NOT NULL DEFAULT 0 COMMENT 'what type of permission the other has on the main account',
   `code` varchar(50) DEFAULT NULL COMMENT 'the (main) company''s account ID for this other',
-  `data` mediumtext COMMENT 'serialized array of parameters',
-  `flags` bigint(20) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'boolean type flags',
-  `created` int(11) DEFAULT NULL COMMENT 'Unixtime record created'
+  `data` mediumtext DEFAULT NULL COMMENT 'serialized array of parameters',
+  `flags` bigint(20) unsigned NOT NULL DEFAULT 0 COMMENT 'boolean type flags',
+  `created` int(11) DEFAULT NULL COMMENT 'Unixtime record created',
+  PRIMARY KEY (`reid`),
+  KEY `main` (`main`),
+  KEY `other` (`other`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Who can manage which accounts, and how';
 
 -- --------------------------------------------------------
@@ -22152,7 +21870,9 @@ CREATE TABLE `r_request` (
   `email` varchar(255) DEFAULT NULL COMMENT 'email of invitee',
   `zip` varchar(60) DEFAULT NULL COMMENT 'postal code (no punctuation)',
   `ctty` bigint(20) DEFAULT NULL COMMENT 'uid of this requester''s Common Good Community',
-  `done` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'are we done with this request'
+  `done` tinyint(4) NOT NULL DEFAULT 0 COMMENT 'are we done with this request',
+  PRIMARY KEY (`listid`),
+  KEY `ctty` (`ctty`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Requests to be invited';
 
 -- --------------------------------------------------------
@@ -22162,14 +21882,16 @@ CREATE TABLE `r_request` (
 --
 
 CREATE TABLE `r_shares` (
-  `shid` bigint(20) NOT NULL COMMENT 'record ID',
+  `shid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'record ID',
   `vestid` int(11) DEFAULT NULL COMMENT 'investment record ID',
-  `shares` int(11) NOT NULL DEFAULT '0' COMMENT 'club shares in the investment bought or (if <0) sold',
-  `pending` int(11) NOT NULL DEFAULT '0' COMMENT 'number of shares to buy or (if <0) sell ASAP',
+  `shares` int(11) NOT NULL DEFAULT 0 COMMENT 'club shares in the investment bought or (if <0) sold',
+  `pending` int(11) NOT NULL DEFAULT 0 COMMENT 'number of shares to buy or (if <0) sell ASAP',
   `when` int(11) DEFAULT NULL COMMENT 'Unixtime investment made',
   `sell` int(11) DEFAULT NULL COMMENT 'number of shares to sell ASAP',
   `bought` int(11) DEFAULT NULL COMMENT 'Unixtime investment made',
-  `sold` int(11) DEFAULT NULL COMMENT 'Unixtime investment totally sold'
+  `sold` int(11) DEFAULT NULL COMMENT 'Unixtime investment totally sold',
+  PRIMARY KEY (`shid`),
+  KEY `vestid` (`vestid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='club stakes in investments';
 
 -- --------------------------------------------------------
@@ -22179,13 +21901,15 @@ CREATE TABLE `r_shares` (
 --
 
 CREATE TABLE `r_stakes` (
-  `stakeid` bigint(20) NOT NULL COMMENT 'record ID',
-  `uid` bigint(20) NOT NULL DEFAULT '0' COMMENT 'member record ID',
-  `clubid` bigint(20) NOT NULL DEFAULT '0' COMMENT 'investment club record ID',
-  `stake` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'member stake in the club',
-  `request` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'request to change stake by this amount',
-  `joined` int(11) NOT NULL DEFAULT '0' COMMENT 'when this member joined the club',
-  `requestedOut` int(11) NOT NULL DEFAULT '0' COMMENT 'when this member last requested cash out'
+  `stakeid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'record ID',
+  `uid` bigint(20) NOT NULL DEFAULT 0 COMMENT 'member record ID',
+  `clubid` bigint(20) NOT NULL DEFAULT 0 COMMENT 'investment club record ID',
+  `stake` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'member stake in the club',
+  `request` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'request to change stake by this amount',
+  `joined` int(11) NOT NULL DEFAULT 0 COMMENT 'when this member joined the club',
+  `requestedOut` int(11) NOT NULL DEFAULT 0 COMMENT 'when this member last requested cash out',
+  PRIMARY KEY (`stakeid`),
+  KEY `uid` (`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='member stakes in an investment club';
 
 -- --------------------------------------------------------
@@ -22195,10 +21919,13 @@ CREATE TABLE `r_stakes` (
 --
 
 CREATE TABLE `r_states` (
-  `id` int(10) UNSIGNED NOT NULL COMMENT 'State / Province ID',
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'State / Province ID',
   `name` varchar(64) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT 'Name of State / Province',
   `abbreviation` varchar(4) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT '2-4 Character Abbreviation of State / Province',
-  `country_id` int(10) UNSIGNED NOT NULL COMMENT 'ID of Country that State / Province belongs to'
+  `country_id` int(10) unsigned NOT NULL COMMENT 'ID of Country that State / Province belongs to',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name_country_id` (`name`,`country_id`),
+  KEY `country_id` (`country_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --
@@ -25956,40 +25683,42 @@ INSERT INTO `r_states` (`id`, `name`, `abbreviation`, `country_id`) VALUES
 --
 
 CREATE TABLE `r_stats` (
-  `id` bigint(20) NOT NULL COMMENT 'statistics record id',
-  `created` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime record was created',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'statistics record id',
+  `created` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime record was created',
   `ctty` bigint(20) DEFAULT NULL COMMENT 'community or region record id',
-  `pAccts` mediumint(9) NOT NULL DEFAULT '0' COMMENT 'number of personal accounts',
-  `bAccts` mediumint(9) NOT NULL DEFAULT '0' COMMENT 'number of company accounts',
-  `newbs` mediumint(9) NOT NULL DEFAULT '0' COMMENT 'number of not-yet-active accounts',
-  `aAccts` mediumint(9) NOT NULL DEFAULT '0' COMMENT 'number of active personal accounts',
-  `conx` decimal(10,3) NOT NULL DEFAULT '0.000' COMMENT 'number of connections per personal account',
-  `conxLocal` decimal(10,3) NOT NULL DEFAULT '0.000' COMMENT 'number of local connections per personal account',
-  `balsPos` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'amount of positive balances',
-  `balsNeg` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'amount of negative balances',
-  `balsPosCount` mediumint(9) NOT NULL DEFAULT '0' COMMENT 'number of positive balances',
-  `balsNegCount` mediumint(9) NOT NULL DEFAULT '0' COMMENT 'number of negative balances',
-  `topN` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'top N or N% of balances, whichever is greater',
-  `botN` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'bottom N or N% of balances, whichever is less',
-  `floors` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'credit lines',
-  `p2b` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'customer purchase volume',
-  `b2b` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'b2b purchase volume',
-  `b2p` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'payroll volume',
-  `p2p` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'person-to-person purchase volume',
-  `p2bCount` mediumint(9) NOT NULL DEFAULT '0' COMMENT 'customer purchase volume',
-  `b2bCount` mediumint(9) NOT NULL DEFAULT '0' COMMENT 'b2b purchase volume',
-  `b2pCount` mediumint(9) NOT NULL DEFAULT '0' COMMENT 'payroll volume',
-  `p2pCount` mediumint(9) NOT NULL DEFAULT '0' COMMENT 'person-to-person purchase volume',
-  `cashs` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'amount of exchanges for cash',
-  `cashsCount` mediumint(9) NOT NULL DEFAULT '0' COMMENT 'number of exchanges for cash',
-  `cgIn` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'amount of Common Good Credits coming into this community',
-  `cgOut` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'amount of Common Good Credits leaving this community',
-  `cgInCount` mediumint(9) NOT NULL DEFAULT '0' COMMENT 'number of transfers into this community',
-  `cgOutCount` mediumint(9) NOT NULL DEFAULT '0' COMMENT 'number of transfers out of this community',
-  `usdIn` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'amount of US Dollars brought into the system',
-  `usdOut` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'amount of US Dollars taken out of the system',
-  `usdInCount` mediumint(9) NOT NULL DEFAULT '0' COMMENT 'number of incoming bank transfers',
-  `usdOutCount` mediumint(9) NOT NULL DEFAULT '0' COMMENT 'number of outgoing bank transfers'
+  `pAccts` mediumint(9) NOT NULL DEFAULT 0 COMMENT 'number of personal accounts',
+  `bAccts` mediumint(9) NOT NULL DEFAULT 0 COMMENT 'number of company accounts',
+  `newbs` mediumint(9) NOT NULL DEFAULT 0 COMMENT 'number of not-yet-active accounts',
+  `aAccts` mediumint(9) NOT NULL DEFAULT 0 COMMENT 'number of active personal accounts',
+  `conx` decimal(10,3) NOT NULL DEFAULT 0.000 COMMENT 'number of connections per personal account',
+  `conxLocal` decimal(10,3) NOT NULL DEFAULT 0.000 COMMENT 'number of local connections per personal account',
+  `balsPos` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'amount of positive balances',
+  `balsNeg` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'amount of negative balances',
+  `balsPosCount` mediumint(9) NOT NULL DEFAULT 0 COMMENT 'number of positive balances',
+  `balsNegCount` mediumint(9) NOT NULL DEFAULT 0 COMMENT 'number of negative balances',
+  `topN` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'top N or N% of balances, whichever is greater',
+  `botN` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'bottom N or N% of balances, whichever is less',
+  `floors` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'credit lines',
+  `p2b` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'customer purchase volume',
+  `b2b` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'b2b purchase volume',
+  `b2p` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'payroll volume',
+  `p2p` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'person-to-person purchase volume',
+  `p2bCount` mediumint(9) NOT NULL DEFAULT 0 COMMENT 'customer purchase volume',
+  `b2bCount` mediumint(9) NOT NULL DEFAULT 0 COMMENT 'b2b purchase volume',
+  `b2pCount` mediumint(9) NOT NULL DEFAULT 0 COMMENT 'payroll volume',
+  `p2pCount` mediumint(9) NOT NULL DEFAULT 0 COMMENT 'person-to-person purchase volume',
+  `cashs` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'amount of exchanges for cash',
+  `cashsCount` mediumint(9) NOT NULL DEFAULT 0 COMMENT 'number of exchanges for cash',
+  `cgIn` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'amount of Common Good Credits coming into this community',
+  `cgOut` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'amount of Common Good Credits leaving this community',
+  `cgInCount` mediumint(9) NOT NULL DEFAULT 0 COMMENT 'number of transfers into this community',
+  `cgOutCount` mediumint(9) NOT NULL DEFAULT 0 COMMENT 'number of transfers out of this community',
+  `usdIn` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'amount of US Dollars brought into the system',
+  `usdOut` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'amount of US Dollars taken out of the system',
+  `usdInCount` mediumint(9) NOT NULL DEFAULT 0 COMMENT 'number of incoming bank transfers',
+  `usdOutCount` mediumint(9) NOT NULL DEFAULT 0 COMMENT 'number of outgoing bank transfers',
+  PRIMARY KEY (`id`),
+  KEY `ctty` (`ctty`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Operating statistics for communities and overall';
 
 -- --------------------------------------------------------
@@ -25999,10 +25728,12 @@ CREATE TABLE `r_stats` (
 --
 
 CREATE TABLE `r_tous` (
-  `id` int(11) NOT NULL COMMENT 'vote record id',
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'vote record id',
   `uid` bigint(20) DEFAULT NULL COMMENT 'account record ID',
-  `time` int(11) NOT NULL DEFAULT '0' COMMENT 'date/time of message',
-  `message` blob COMMENT 'the message'
+  `time` int(11) NOT NULL DEFAULT 0 COMMENT 'date/time of message',
+  `message` blob DEFAULT NULL COMMENT 'the message',
+  PRIMARY KEY (`id`),
+  KEY `uid` (`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Secure messages sent from member to us.';
 
 -- --------------------------------------------------------
@@ -26013,7 +25744,8 @@ CREATE TABLE `r_tous` (
 
 CREATE TABLE `r_transit` (
   `id` int(11) NOT NULL,
-  `location` varchar(255) COLLATE utf8_unicode_ci NOT NULL
+  `location` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  PRIMARY KEY (`location`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --
@@ -26132,11 +25864,10 @@ INSERT INTO `r_transit` (`id`, `location`) VALUES
 --
 
 CREATE TABLE `r_txs` (
-  `xid` bigint(20) NOT NULL COMMENT 'the unique transaction ID',
+  `xid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'the unique transaction ID',
   `serial` int(11) DEFAULT NULL COMMENT 'serial number of related transactions (=xid of first transaction in the group)',
   `type` tinyint(4) DEFAULT NULL COMMENT 'transaction type (transfer, rebate, etc.)',
-  `flags` bigint(20) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'boolean characteristics and state flags',
-  `goods` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'is this transfer an exchange for real goods and services?',
+  `goods` tinyint(4) NOT NULL DEFAULT 0 COMMENT 'is this transfer an exchange for real goods and services?',
   `amount` decimal(11,2) DEFAULT NULL COMMENT 'amount transferred',
   `payer` bigint(20) DEFAULT NULL COMMENT 'user id of the payer',
   `payee` bigint(20) DEFAULT NULL COMMENT 'user id of the payee',
@@ -26144,16 +25875,21 @@ CREATE TABLE `r_txs` (
   `payeeAgent` bigint(20) DEFAULT NULL COMMENT 'user id of payee''s agent (who approved this transaction for the payee)',
   `payerFor` varchar(255) DEFAULT NULL COMMENT 'payer''s description',
   `payeeFor` varchar(255) DEFAULT NULL COMMENT 'payee''s description',
-  `payerReward` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'incentive reward for payer',
-  `payeeReward` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'incentive reward for payee',
+  `payerReward` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'incentive reward for payer',
+  `payeeReward` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'incentive reward for payee',
   `payerTid` int(11) DEFAULT NULL COMMENT 'payer''s transaction ID',
   `payeeTid` int(11) DEFAULT NULL COMMENT 'payee''s transaction ID',
-  `data` longtext COMMENT 'miscellaneous non-searchable data (serialized array)',
+  `data` longtext DEFAULT NULL COMMENT 'miscellaneous non-searchable data (serialized array)',
+  `flags` bigint(20) unsigned NOT NULL DEFAULT 0 COMMENT 'boolean characteristics and state flags',
   `channel` tinyint(4) DEFAULT NULL COMMENT 'through what medium was the transaction entered',
-  `created` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime transaction was created',
-  `box` int(11) NOT NULL DEFAULT '0' COMMENT 'on what machine was the transaction entered',
+  `box` int(11) NOT NULL DEFAULT 0 COMMENT 'on what machine was the transaction entered',
+  `created` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime transaction was created',
   `risk` float DEFAULT NULL COMMENT 'suspiciousness rating',
-  `risks` bigint(20) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'list of risk factors'
+  `risks` bigint(20) unsigned NOT NULL DEFAULT 0 COMMENT 'list of risk factors',
+  PRIMARY KEY (`xid`),
+  KEY `payer` (`payer`),
+  KEY `payee` (`payee`),
+  KEY `created` (`created`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Record of all rCredits transactions in the region';
 
 -- --------------------------------------------------------
@@ -26163,17 +25899,19 @@ CREATE TABLE `r_txs` (
 --
 
 CREATE TABLE `r_usd` (
-  `txid` bigint(20) NOT NULL COMMENT 'the unique transaction ID',
+  `txid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'the unique transaction ID',
   `amount` decimal(11,2) DEFAULT NULL COMMENT 'amount of transfer',
   `payee` bigint(20) DEFAULT NULL COMMENT 'CG account record ID',
-  `created` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime transaction was created',
-  `completed` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime transaction was completed',
-  `deposit` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime transfer check was printed and deposited',
-  `bankAccount` blob COMMENT 'Bank account for the transfer',
+  `created` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime transaction was created',
+  `completed` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime transaction was completed',
+  `deposit` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime transfer check was printed and deposited',
+  `bankAccount` blob DEFAULT NULL COMMENT 'Bank account for the transfer',
   `risk` float DEFAULT NULL COMMENT 'suspiciousness rating',
-  `risks` bigint(20) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'list of risk factors',
-  `channel` tinyint(4) DEFAULT NULL COMMENT 'through what medium was the transaction entered'
-  -- `tid` int(11) DEFAULT NULL COMMENT 'payer''s transaction ID'
+  `risks` bigint(20) unsigned NOT NULL DEFAULT 0 COMMENT 'list of risk factors',
+  `bankTxId` bigint(20) NOT NULL DEFAULT 0 COMMENT 'bank transaction ID',
+  `channel` tinyint(4) DEFAULT NULL COMMENT 'through what medium was the transaction entered',
+  PRIMARY KEY (`txid`),
+  KEY `created` (`created`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Record of USD (Dwolla) transactions in the region';
 
 -- --------------------------------------------------------
@@ -26183,12 +25921,14 @@ CREATE TABLE `r_usd` (
 --
 
 CREATE TABLE `r_usd2` (
-  `id` bigint(20) NOT NULL COMMENT 'record ID',
-  `type` char(1) NOT NULL COMMENT 'transaction type (S=service charge, T=transfer between accounts)',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'record ID',
+  `type` char(1) DEFAULT NULL COMMENT 'transaction type (S=service charge, T=transfer between accounts)',
   `amount` decimal(11,2) DEFAULT NULL COMMENT 'amount of transfer',
-  `completed` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime transaction was completed',
-  `bankTxId` bigint(20) NOT NULL DEFAULT '0' COMMENT 'bank transaction id',
-  `memo` text NOT NULL COMMENT 'transaction description (from bank)'
+  `completed` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime transaction was completed',
+  `bankTxId` bigint(20) NOT NULL DEFAULT 0 COMMENT 'bank transaction ID',
+  `memo` text DEFAULT NULL COMMENT 'transaction description (from bank)',
+  PRIMARY KEY (`id`),
+  KEY `created` (`completed`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Record of transfers to or from a bank account';
 
 -- --------------------------------------------------------
@@ -26198,9 +25938,12 @@ CREATE TABLE `r_usd2` (
 --
 
 CREATE TABLE `r_user_industries` (
-  `id` int(11) NOT NULL COMMENT 'user industry record id',
-  `iid` int(11) NOT NULL DEFAULT '0' COMMENT 'industry id',
-  `uid` bigint(20) NOT NULL DEFAULT '0' COMMENT 'industry id'
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'user industry record id',
+  `iid` int(11) NOT NULL DEFAULT 0 COMMENT 'industry id',
+  `uid` bigint(20) NOT NULL DEFAULT 0 COMMENT 'industry id',
+  PRIMARY KEY (`id`),
+  KEY `uid` (`uid`),
+  KEY `iid` (`iid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='industries for each company';
 
 -- --------------------------------------------------------
@@ -26210,16 +25953,394 @@ CREATE TABLE `r_user_industries` (
 --
 
 CREATE TABLE `r_votes` (
-  `id` bigint(20) NOT NULL COMMENT 'vote record id',
-  `ballot` bigint(20) NOT NULL DEFAULT '0' COMMENT 'ballot on which this option is being graded',
-  `option` bigint(20) NOT NULL DEFAULT '0' COMMENT 'option being graded',
-  `grade` int(11) NOT NULL DEFAULT '-1' COMMENT 'grade given by a particular voter for this option',
-  `gradeMax` int(11) NOT NULL DEFAULT '-1' COMMENT 'maximum grade given by a particular voter for this range-type option',
-  `displayOrder` int(11) NOT NULL DEFAULT '0' COMMENT 'what order options were shown in to this voter',
-  `text` longtext COMMENT 'what was voter''s comment or moral objection to this option',
-  `isVeto` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'this is a veto (not a canceled veto or mere comment)',
-  `modified` int(11) NOT NULL DEFAULT '0' COMMENT 'date/time last modified'
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'vote record id',
+  `ballot` bigint(20) NOT NULL DEFAULT 0 COMMENT 'ballot on which this option is being graded',
+  `option` bigint(20) NOT NULL DEFAULT 0 COMMENT 'option being graded',
+  `grade` int(11) NOT NULL DEFAULT -1 COMMENT 'grade given by a particular voter for this option',
+  `gradeMax` int(11) NOT NULL DEFAULT -1 COMMENT 'maximum grade given by a particular voter for this range-type option',
+  `displayOrder` int(11) NOT NULL DEFAULT 0 COMMENT 'what order options were shown in to this voter',
+  `text` longtext DEFAULT NULL COMMENT 'what was voter''s comment or moral objection to this option',
+  `isVeto` tinyint(4) NOT NULL DEFAULT 0 COMMENT 'this is a veto (not a canceled veto or mere comment)',
+  `modified` int(11) NOT NULL DEFAULT 0 COMMENT 'date/time last modified',
+  PRIMARY KEY (`id`),
+  KEY `ballot` (`ballot`),
+  KEY `option` (`option`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='What grade a particular voter gave a particular options...';
+
+--
+-- Table structure for table `registry`
+--
+
+CREATE TABLE `registry` (
+  `name` varchar(255) NOT NULL DEFAULT '' COMMENT 'The name of the function, class, or interface.',
+  `type` varchar(9) NOT NULL DEFAULT '' COMMENT 'Either function or class or interface.',
+  `filename` varchar(255) NOT NULL COMMENT 'Name of the file.',
+  `module` varchar(255) NOT NULL DEFAULT '' COMMENT 'Name of the module the file belongs to.',
+  `weight` int(11) NOT NULL DEFAULT 0 COMMENT 'The order in which this module’s hooks should be invoked relative to other modules. Equal-weighted modules are ordered by name.',
+  PRIMARY KEY (`name`,`type`),
+  KEY `hook` (`type`,`weight`,`module`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Each record is a function, class, or interface name and...';
+
+--
+-- Dumping data for table `registry`
+--
+
+INSERT INTO `registry` (`name`, `type`, `filename`, `module`, `weight`) VALUES
+('AccessDeniedTestCase', 'class', 'modules/system/system.test', 'system', 0),
+('AdminMetaTagTestCase', 'class', 'modules/system/system.test', 'system', 0),
+('ArchiverInterface', 'interface', 'includes/archiver.inc', '', 0),
+('ArchiverTar', 'class', 'modules/system/system.archiver.inc', 'system', 0),
+('ArchiverZip', 'class', 'modules/system/system.archiver.inc', 'system', 0),
+('Archive_Tar', 'class', 'modules/system/system.tar.inc', 'system', 0),
+('BatchMemoryQueue', 'class', 'includes/batch.queue.inc', '', 0),
+('BatchQueue', 'class', 'includes/batch.queue.inc', '', 0),
+('BlockAdminThemeTestCase', 'class', 'modules/block/block.test', 'block', -5),
+('BlockCacheTestCase', 'class', 'modules/block/block.test', 'block', -5),
+('BlockHashTestCase', 'class', 'modules/block/block.test', 'block', -5),
+('BlockHiddenRegionTestCase', 'class', 'modules/block/block.test', 'block', -5),
+('BlockHTMLIdTestCase', 'class', 'modules/block/block.test', 'block', -5),
+('BlockInvalidRegionTestCase', 'class', 'modules/block/block.test', 'block', -5),
+('BlockTemplateSuggestionsUnitTest', 'class', 'modules/block/block.test', 'block', -5),
+('BlockTestCase', 'class', 'modules/block/block.test', 'block', -5),
+('BlockViewModuleDeltaAlterWebTest', 'class', 'modules/block/block.test', 'block', -5),
+('call', 'class', 'rcredits/rsms/rsms-call.inc', 'rsms', 0),
+('CronQueueTestCase', 'class', 'modules/system/system.test', 'system', 0),
+('CronRunTestCase', 'class', 'modules/system/system.test', 'system', 0),
+('Database', 'class', 'includes/database/database.inc', '', 0),
+('DatabaseCondition', 'class', 'includes/database/query.inc', '', 0),
+('DatabaseConnection', 'class', 'includes/database/database.inc', '', 0),
+('DatabaseConnectionNotDefinedException', 'class', 'includes/database/database.inc', '', 0),
+('DatabaseConnection_mysql', 'class', 'includes/database/mysql/database.inc', '', 0),
+('DatabaseConnection_pgsql', 'class', 'includes/database/pgsql/database.inc', '', 0),
+('DatabaseConnection_sqlite', 'class', 'includes/database/sqlite/database.inc', '', 0),
+('DatabaseDriverNotSpecifiedException', 'class', 'includes/database/database.inc', '', 0),
+('DatabaseLog', 'class', 'includes/database/log.inc', '', 0),
+('DatabaseSchema', 'class', 'includes/database/schema.inc', '', 0),
+('DatabaseSchemaObjectDoesNotExistException', 'class', 'includes/database/schema.inc', '', 0),
+('DatabaseSchemaObjectExistsException', 'class', 'includes/database/schema.inc', '', 0),
+('DatabaseSchema_mysql', 'class', 'includes/database/mysql/schema.inc', '', 0),
+('DatabaseSchema_pgsql', 'class', 'includes/database/pgsql/schema.inc', '', 0),
+('DatabaseSchema_sqlite', 'class', 'includes/database/sqlite/schema.inc', '', 0),
+('DatabaseStatementBase', 'class', 'includes/database/database.inc', '', 0),
+('DatabaseStatementEmpty', 'class', 'includes/database/database.inc', '', 0),
+('DatabaseStatementInterface', 'interface', 'includes/database/database.inc', '', 0),
+('DatabaseStatementPrefetch', 'class', 'includes/database/prefetch.inc', '', 0),
+('DatabaseStatement_sqlite', 'class', 'includes/database/sqlite/database.inc', '', 0),
+('DatabaseTaskException', 'class', 'includes/install.inc', '', 0),
+('DatabaseTasks', 'class', 'includes/install.inc', '', 0),
+('DatabaseTasks_mysql', 'class', 'includes/database/mysql/install.inc', '', 0),
+('DatabaseTasks_pgsql', 'class', 'includes/database/pgsql/install.inc', '', 0),
+('DatabaseTasks_sqlite', 'class', 'includes/database/sqlite/install.inc', '', 0),
+('DatabaseTransaction', 'class', 'includes/database/database.inc', '', 0),
+('DatabaseTransactionCommitFailedException', 'class', 'includes/database/database.inc', '', 0),
+('DatabaseTransactionExplicitCommitNotAllowedException', 'class', 'includes/database/database.inc', '', 0),
+('DatabaseTransactionNameNonUniqueException', 'class', 'includes/database/database.inc', '', 0),
+('DatabaseTransactionNoActiveException', 'class', 'includes/database/database.inc', '', 0),
+('DatabaseTransactionOutOfOrderException', 'class', 'includes/database/database.inc', '', 0),
+('DateTimeFunctionalTest', 'class', 'modules/system/system.test', 'system', 0),
+('DefaultMailSystem', 'class', 'modules/system/system.mail.inc', 'system', 0),
+('DeleteQuery', 'class', 'includes/database/query.inc', '', 0),
+('DeleteQuery_sqlite', 'class', 'includes/database/sqlite/query.inc', '', 0),
+('DevelMailLog', 'class', 'sites/all/modules/devel/devel.mail.inc', 'devel', 0),
+('DevelMailTest', 'class', 'sites/all/modules/devel/devel.test', 'devel', 0),
+('DrupalCacheInterface', 'interface', 'includes/cache.inc', '', 0),
+('DrupalDatabaseCache', 'class', 'includes/cache.inc', '', 0),
+('DrupalDefaultEntityController', 'class', 'includes/entity.inc', '', 0),
+('DrupalEntityControllerInterface', 'interface', 'includes/entity.inc', '', 0),
+('DrupalFakeCache', 'class', 'includes/cache-install.inc', '', 0),
+('DrupalLocalStreamWrapper', 'class', 'includes/stream_wrappers.inc', '', 0),
+('DrupalPrivateStreamWrapper', 'class', 'includes/stream_wrappers.inc', '', 0),
+('DrupalPublicStreamWrapper', 'class', 'includes/stream_wrappers.inc', '', 0),
+('DrupalQueue', 'class', 'modules/system/system.queue.inc', 'system', 0),
+('DrupalQueueInterface', 'interface', 'modules/system/system.queue.inc', 'system', 0),
+('DrupalReliableQueueInterface', 'interface', 'modules/system/system.queue.inc', 'system', 0),
+('DrupalStreamWrapperInterface', 'interface', 'includes/stream_wrappers.inc', '', 0),
+('DrupalTemporaryStreamWrapper', 'class', 'includes/stream_wrappers.inc', '', 0),
+('DrupalUpdateException', 'class', 'includes/update.inc', '', 0),
+('DrupalUpdaterInterface', 'interface', 'includes/updater.inc', '', 0),
+('EnableDisableTestCase', 'class', 'modules/system/system.test', 'system', 0),
+('EntityFieldQuery', 'class', 'includes/entity.inc', '', 0),
+('EntityFieldQueryException', 'class', 'includes/entity.inc', '', 0),
+('EntityMalformedException', 'class', 'includes/entity.inc', '', 0),
+('FieldsOverlapException', 'class', 'includes/database/database.inc', '', 0),
+('FileFieldDisplayTestCase', 'class', 'modules/file/tests/file.test', 'file', 0),
+('FileFieldPathTestCase', 'class', 'modules/file/tests/file.test', 'file', 0),
+('FileFieldRevisionTestCase', 'class', 'modules/file/tests/file.test', 'file', 0),
+('FileFieldTestCase', 'class', 'modules/file/tests/file.test', 'file', 0),
+('FileFieldValidateTestCase', 'class', 'modules/file/tests/file.test', 'file', 0),
+('FileFieldWidgetTestCase', 'class', 'modules/file/tests/file.test', 'file', 0),
+('FileManagedFileElementTestCase', 'class', 'modules/file/tests/file.test', 'file', 0),
+('FilePrivateTestCase', 'class', 'modules/file/tests/file.test', 'file', 0),
+('FileTaxonomyTermTestCase', 'class', 'modules/file/tests/file.test', 'file', 0),
+('FileTokenReplaceTestCase', 'class', 'modules/file/tests/file.test', 'file', 0),
+('FileTransfer', 'class', 'includes/filetransfer/filetransfer.inc', '', 0),
+('FileTransferChmodInterface', 'interface', 'includes/filetransfer/filetransfer.inc', '', 0),
+('FileTransferException', 'class', 'includes/filetransfer/filetransfer.inc', '', 0),
+('FileTransferFTP', 'class', 'includes/filetransfer/ftp.inc', '', 0),
+('FileTransferFTPExtension', 'class', 'includes/filetransfer/ftp.inc', '', 0),
+('FileTransferLocal', 'class', 'includes/filetransfer/local.inc', '', 0),
+('FileTransferSSH', 'class', 'includes/filetransfer/ssh.inc', '', 0),
+('FilterAdminTestCase', 'class', 'modules/filter/filter.test', 'filter', 0),
+('FilterCRUDTestCase', 'class', 'modules/filter/filter.test', 'filter', 0),
+('FilterDefaultFormatTestCase', 'class', 'modules/filter/filter.test', 'filter', 0),
+('FilterFormatAccessTestCase', 'class', 'modules/filter/filter.test', 'filter', 0),
+('FilterHooksTestCase', 'class', 'modules/filter/filter.test', 'filter', 0),
+('FilterNoFormatTestCase', 'class', 'modules/filter/filter.test', 'filter', 0),
+('FilterSecurityTestCase', 'class', 'modules/filter/filter.test', 'filter', 0),
+('FilterSettingsTestCase', 'class', 'modules/filter/filter.test', 'filter', 0),
+('FilterUnitTestCase', 'class', 'modules/filter/filter.test', 'filter', 0),
+('FloodFunctionalTest', 'class', 'modules/system/system.test', 'system', 0),
+('FrontPageTestCase', 'class', 'modules/system/system.test', 'system', 0),
+('HookRequirementsTestCase', 'class', 'modules/system/system.test', 'system', 0),
+('InfoFileParserTestCase', 'class', 'modules/system/system.test', 'system', 0),
+('InsertQuery', 'class', 'includes/database/query.inc', '', 0),
+('InsertQuery_mysql', 'class', 'includes/database/mysql/query.inc', '', 0),
+('InsertQuery_pgsql', 'class', 'includes/database/pgsql/query.inc', '', 0),
+('InsertQuery_sqlite', 'class', 'includes/database/sqlite/query.inc', '', 0),
+('InvalidMergeQueryException', 'class', 'includes/database/database.inc', '', 0),
+('IPAddressBlockingTestCase', 'class', 'modules/system/system.test', 'system', 0),
+('MailSystemInterface', 'interface', 'includes/mail.inc', '', 0),
+('MemoryQueue', 'class', 'modules/system/system.queue.inc', 'system', 0),
+('MergeQuery', 'class', 'includes/database/query.inc', '', 0),
+('ModuleDependencyTestCase', 'class', 'modules/system/system.test', 'system', 0),
+('ModuleRequiredTestCase', 'class', 'modules/system/system.test', 'system', 0),
+('ModuleTestCase', 'class', 'modules/system/system.test', 'system', 0),
+('ModuleUpdater', 'class', 'modules/system/system.updater.inc', 'system', 0),
+('ModuleVersionTestCase', 'class', 'modules/system/system.test', 'system', 0),
+('NewDefaultThemeBlocks', 'class', 'modules/block/block.test', 'block', -5),
+('NoFieldsException', 'class', 'includes/database/database.inc', '', 0),
+('NonDefaultBlockAdmin', 'class', 'modules/block/block.test', 'block', -5),
+('PageNotFoundTestCase', 'class', 'modules/system/system.test', 'system', 0),
+('PagerDefault', 'class', 'includes/pager.inc', '', 0),
+('PageTitleFiltering', 'class', 'modules/system/system.test', 'system', 0),
+('Query', 'class', 'includes/database/query.inc', '', 0),
+('QueryAlterableInterface', 'interface', 'includes/database/query.inc', '', 0),
+('QueryConditionInterface', 'interface', 'includes/database/query.inc', '', 0),
+('QueryExtendableInterface', 'interface', 'includes/database/select.inc', '', 0),
+('QueryPlaceholderInterface', 'interface', 'includes/database/query.inc', '', 0),
+('QueueTestCase', 'class', 'modules/system/system.test', 'system', 0),
+('RetrieveFileTestCase', 'class', 'modules/system/system.test', 'system', 0),
+('rsmartExchange', 'class', 'rcredits/rsmart/test/Exchange.test', 'rsmart', 0),
+('rsmartIdentify', 'class', 'rcredits/rsmart/test/Identify.test', 'rsmart', 0),
+('rsmartJoint', 'class', 'rcredits/rsmart/test/Joint.test', 'rsmart', 0),
+('rsmartOffline', 'class', 'rcredits/rsmart/test/Offline.test', 'rsmart', 0),
+('rsmartStartup', 'class', 'rcredits/rsmart/test/Startup.test', 'rsmart', 0),
+('rsmartTime', 'class', 'rcredits/rsmart/test/Time.test', 'rsmart', 0),
+('rsmartTransact', 'class', 'rcredits/rsmart/test/Transact.test', 'rsmart', 0),
+('rsmartUndo', 'class', 'rcredits/rsmart/test/Undo.test', 'rsmart', 0),
+('rSMSexception', 'class', 'rcredits/rsms/rsms-call.inc', 'rsms', 0),
+('rwebBank', 'class', 'rcredits/rweb/test/Bank.test', 'rweb', 0),
+('rwebCommunity', 'class', 'rcredits/rweb/test/Community.test', 'rweb', 0),
+('rwebCompany', 'class', 'rcredits/rweb/test/Company.test', 'rweb', 0),
+('rwebContact', 'class', 'rcredits/rweb/test/Contact.test', 'rweb', 0),
+('rwebDownload', 'class', 'rcredits/rweb/test/Download.test', 'rweb', 0),
+('rwebEditTx', 'class', 'rcredits/rweb/test/EditTx.test', 'rweb', 0),
+('rwebExchange', 'class', 'rcredits/rweb/test/Exchange.test', 'rweb', 0),
+('rwebFlow', 'class', 'rcredits/rweb/test/Flow.test', 'rweb', 0),
+('rwebGift', 'class', 'rcredits/rweb/test/Gift.test', 'rweb', 0),
+('rwebJoint', 'class', 'rcredits/rweb/test/Joint.test', 'rweb', 0),
+('rwebMembership', 'class', 'rcredits/rweb/test/Membership.test', 'rweb', 0),
+('rwebPreferences', 'class', 'rcredits/rweb/test/Preferences.test', 'rweb', 0),
+('rwebReimburse', 'class', 'rcredits/rweb/test/Reimburse.test', 'rweb', 0),
+('rwebRelations', 'class', 'rcredits/rweb/test/Relations.test', 'rweb', 0),
+('rwebScanCard', 'class', 'rcredits/rweb/test/ScanCard.test', 'rweb', 0),
+('rwebSignin', 'class', 'rcredits/rweb/test/Signin.test', 'rweb', 0),
+('rwebSignup', 'class', 'rcredits/rweb/test/Signup.test', 'rweb', 0),
+('rwebSignupCo', 'class', 'rcredits/rweb/test/SignupCo.test', 'rweb', 0),
+('rwebSummary', 'class', 'rcredits/rweb/test/Summary.test', 'rweb', 0),
+('rwebTransact', 'class', 'rcredits/rweb/test/Transact.test', 'rweb', 0),
+('rwebTransactions', 'class', 'rcredits/rweb/test/Transactions.test', 'rweb', 0),
+('SelectQuery', 'class', 'includes/database/select.inc', '', 0),
+('SelectQueryExtender', 'class', 'includes/database/select.inc', '', 0),
+('SelectQueryInterface', 'interface', 'includes/database/select.inc', '', 0),
+('SelectQuery_pgsql', 'class', 'includes/database/pgsql/select.inc', '', 0),
+('SelectQuery_sqlite', 'class', 'includes/database/sqlite/select.inc', '', 0),
+('ShutdownFunctionsTest', 'class', 'modules/system/system.test', 'system', 0),
+('SiteMaintenanceTestCase', 'class', 'modules/system/system.test', 'system', 0),
+('SkipDotsRecursiveDirectoryIterator', 'class', 'includes/filetransfer/filetransfer.inc', '', 0),
+('StreamWrapperInterface', 'interface', 'includes/stream_wrappers.inc', '', 0),
+('SystemAdminTestCase', 'class', 'modules/system/system.test', 'system', 0),
+('SystemAuthorizeCase', 'class', 'modules/system/system.test', 'system', 0),
+('SystemBlockTestCase', 'class', 'modules/system/system.test', 'system', 0),
+('SystemIndexPhpTest', 'class', 'modules/system/system.test', 'system', 0),
+('SystemInfoAlterTestCase', 'class', 'modules/system/system.test', 'system', 0),
+('SystemMainContentFallback', 'class', 'modules/system/system.test', 'system', 0),
+('SystemQueue', 'class', 'modules/system/system.queue.inc', 'system', 0),
+('SystemThemeFunctionalTest', 'class', 'modules/system/system.test', 'system', 0),
+('SystemValidTokenTest', 'class', 'modules/system/system.test', 'system', 0),
+('TableSort', 'class', 'includes/tablesort.inc', '', 0),
+('TestingMailSystem', 'class', 'modules/system/system.mail.inc', 'system', 0),
+('TextFieldTestCase', 'class', 'modules/field/modules/text/text.test', 'text', 0),
+('TextSummaryTestCase', 'class', 'modules/field/modules/text/text.test', 'text', 0),
+('TextTranslationTestCase', 'class', 'modules/field/modules/text/text.test', 'text', 0),
+('ThemeRegistry', 'class', 'includes/theme.inc', '', 0),
+('ThemeUpdater', 'class', 'modules/system/system.updater.inc', 'system', 0),
+('TokenReplaceTestCase', 'class', 'modules/system/system.test', 'system', 0),
+('TokenScanTest', 'class', 'modules/system/system.test', 'system', 0),
+('TruncateQuery', 'class', 'includes/database/query.inc', '', 0),
+('TruncateQuery_mysql', 'class', 'includes/database/mysql/query.inc', '', 0),
+('TruncateQuery_sqlite', 'class', 'includes/database/sqlite/query.inc', '', 0),
+('UpdateQuery', 'class', 'includes/database/query.inc', '', 0),
+('UpdateQuery_pgsql', 'class', 'includes/database/pgsql/query.inc', '', 0),
+('UpdateQuery_sqlite', 'class', 'includes/database/sqlite/query.inc', '', 0),
+('Updater', 'class', 'includes/updater.inc', '', 0),
+('UpdaterException', 'class', 'includes/updater.inc', '', 0),
+('UpdaterFileTransferException', 'class', 'includes/updater.inc', '', 0),
+('UpdateScriptFunctionalTest', 'class', 'modules/system/system.test', 'system', 0);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `registry_file`
+--
+
+CREATE TABLE `registry_file` (
+  `filename` varchar(255) NOT NULL COMMENT 'Path to the file.',
+  `hash` varchar(64) NOT NULL COMMENT 'sha-256 hash of the file’s contents when last parsed.',
+  PRIMARY KEY (`filename`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Files parsed to build the registry.';
+
+--
+-- Dumping data for table `registry_file`
+--
+
+INSERT INTO `registry_file` (`filename`, `hash`) VALUES
+('includes/00bootstrap.inc', '30cec967b4897fb6e57105692730dacfcbf2b22a93973b540150041ee0d24e36'),
+('includes/0common.inc', '43e1b7da38a0ea206559c24d963f14a9af7f875002cbc21ea5d158823d598a30'),
+('includes/0errors.inc', '72cc29840b24830df98a5628286b4d82738f2abbb78e69b4980310ff12062668'),
+('includes/0file.inc', '834daf98707d6ce675192b7bdf4e29616e375a3bfe0ddff709bd44c9e264b394'),
+('includes/0form.inc', 'b303de020c1da8f30eaf42fe48fde1dc0e287056b839bd2d44ea690b963ee8a4'),
+('includes/2bootstrap.inc', '5e69b00c09a762b1e4776713e967a0a2571a3bb40f7364c110dc30306c7c32cd'),
+('includes/actions.inc', 'f36b066681463c7dfe189e0430cb1a89bf66f7e228cbb53cdfcd93987193f759'),
+('includes/ajax.inc', 'f5d608554c6b42b976d6a97e1efffe53c657e9fbb77eabb858935bfdf4276491'),
+('includes/archiver.inc', 'bdbb21b712a62f6b913590b609fd17cd9f3c3b77c0d21f68e71a78427ed2e3e9'),
+('includes/authorize.inc', '6d64d8c21aa01eb12fc29918732e4df6b871ed06e5d41373cb95c197ed661d13'),
+('includes/batch.inc', '059da9e36e1f3717f27840aae73f10dea7d6c8daf16f6520401cc1ca3b4c0388'),
+('includes/batch.queue.inc', '554b2e92e1dad0f7fd5a19cb8dff7e109f10fbe2441a5692d076338ec908de0f'),
+('includes/cache-install.inc', 'e7ed123c5805703c84ad2cce9c1ca46b3ce8caeeea0d8ef39a3024a4ab95fa0e'),
+('includes/cache.inc', 'd01e10e4c18010b6908026f3d71b72717e3272cfb91a528490eba7f339f8dd1b'),
+('includes/common.inc', '2b2000e65e3c19a8d39286e9980bf34d3f9765a2a7d9c0297a272d5272a136e6'),
+('includes/database/database.inc', '648f0c0eebefafc25cf5298f68dfe4d9f1bc9c804f3e021559b45cf1a6f0161e'),
+('includes/database/log.inc', '9feb5a17ae2fabcf26a96d2a634ba73da501f7bcfc3599a693d916a6971d00d1'),
+('includes/database/mysql/database.inc', 'd62a2d8ca103cb3b085e7f8b894a7db14c02f20d0b1ed0bd32f6534a45b4527f'),
+('includes/database/mysql/install.inc', '6ae316941f771732fbbabed7e1d6b4cbb41b1f429dd097d04b3345aa15e461a0'),
+('includes/database/mysql/query.inc', '0212a871646c223bf77aa26b945c77a8974855373967b5fb9fdc09f8a1de88a6'),
+('includes/database/mysql/schema.inc', '6f43ac87508f868fe38ee09994fc18d69915bada0237f8ac3b717cafe8f22c6b'),
+('includes/database/pgsql/database.inc', 'd737f95947d78eb801e8ec8ca8b01e72d2e305924efce8abca0a98c1b5264cff'),
+('includes/database/pgsql/install.inc', '585b80c5bbd6f134bff60d06397f15154657a577d4da8d1b181858905f09dea5'),
+('includes/database/pgsql/query.inc', '0df57377686c921e722a10b49d5e433b131176c8059a4ace4680964206fc14b4'),
+('includes/database/pgsql/schema.inc', '1588daadfa53506aa1f5d94572162a45a46dc3ceabdd0e2f224532ded6508403'),
+('includes/database/pgsql/select.inc', 'fd4bba7887c1dc6abc8f080fc3a76c01d92ea085434e355dc1ecb50d8743c22d'),
+('includes/database/prefetch.inc', 'b5b207a66a69ecb52ee4f4459af16a7b5eabedc87254245f37cc33bebb61c0fb'),
+('includes/database/query.inc', '9171653e9710c6c0d20cff865fdead5a580367137ad4cdf81059ecc2eea61c74'),
+('includes/database/schema.inc', 'a98b69d33975e75f7d99cb85b20c36b7fc10e35a588e07b20c1b37500f5876ca'),
+('includes/database/select.inc', '5e9cdc383564ba86cb9dcad0046990ce15415a3000e4f617d6e0f30a205b852c'),
+('includes/database/sqlite/database.inc', '4281c6e80932560ecbeb07d1757efd133e8699a6fccf58c27a55df0f71794622'),
+('includes/database/sqlite/install.inc', '381f3db8c59837d961978ba3097bb6443534ed1659fd713aa563963fa0c42cc5'),
+('includes/database/sqlite/query.inc', 'f33ab1b6350736a231a4f3f93012d3aac4431ac4e5510fb3a015a5aa6cab8303'),
+('includes/database/sqlite/schema.inc', 'cd829700205a8574f8b9d88cd1eaf909519c64754c6f84d6c62b5d21f5886f8d'),
+('includes/database/sqlite/select.inc', '8d1c426dbd337733c206cce9f59a172546c6ed856d8ef3f1c7bef05a16f7bf68'),
+('includes/date.inc', '18c047be64f201e16d189f1cc47ed9dcf0a145151b1ee187e90511b24e5d2b36'),
+('includes/entity.inc', '3080fe3c30991a48f1f314a60d02e841d263a8f222337e5bde3be61afe41ee7a'),
+('includes/errors.inc', '03505bea9c52004ccff2ebc899f081b74c5f846524f41888cbcbf141629277fb'),
+('includes/file.inc', 'cf1de474b1c36b8df3254730754cd8e747c2e9daaa3dc4df6eddd7bc2b870b43'),
+('includes/file.mimetypes.inc', '33266e837f4ce076378e7e8cef6c5af46446226ca4259f83e13f605856a7f147'),
+('includes/filetransfer/filetransfer.inc', 'fdea8ae48345ec91885ac48a9bc53daf87616271472bb7c29b7e3ce219b22034'),
+('includes/filetransfer/ftp.inc', '51eb119b8e1221d598ffa6cc46c8a322aa77b49a3d8879f7fb38b7221cf7e06d'),
+('includes/filetransfer/local.inc', '7cbfdb46abbdf539640db27e66fb30e5265128f31002bd0dfc3af16ae01a9492'),
+('includes/filetransfer/ssh.inc', '92f1232158cb32ab04cbc93ae38ad3af04796e18f66910a9bc5ca8e437f06891'),
+('includes/form.inc', '0dd082d8ca8fa99e93c33b79072efe1823a45ee8d7141ce93043c5d111136a41'),
+('includes/graph.inc', '8e0e313a8bb33488f371df11fc1b58d7cf80099b886cd1003871e2c896d1b536'),
+('includes/image.inc', 'bcdc7e1599c02227502b9d0fe36eeb2b529b130a392bc709eb737647bd361826'),
+('includes/install.core.inc', 'a0585c85002e6f3d702dc505584f48b55bc13e24bee749bfe5b718fbce4847e1'),
+('includes/install.inc', '480c3cfd065d3ec00f4465e1b0a0d55d6a8927e78fd6774001c30163a5c648e3'),
+('includes/iso.inc', '0ce4c225edcfa9f037703bc7dd09d4e268a69bcc90e55da0a3f04c502bd2f349'),
+('includes/json-encode.inc', '02a822a652d00151f79db9aa9e171c310b69b93a12f549bc2ce00533a8efa14e'),
+('includes/language.inc', '4dd521af07e0ca7bf97ff145f4bd3a218acf0d8b94964e72f11212bb8af8d66e'),
+('includes/locale.inc', 'b250f375b93ffe3749f946e0ad475065c914af23e388d68e5c5df161590f086a'),
+('includes/lock.inc', 'a181c8bd4f88d292a0a73b9f1fbd727e3314f66ec3631f288e6b9a54ba2b70fa'),
+('includes/mail.inc', 'd9fb2b99025745cbb73ebcfc7ac12df100508b9273ce35c433deacf12dd6a13a'),
+('includes/menu.inc', '04431df4dbf50948c99772cdaa9f8ac6f7e52393e0a2e30bec5a1f143926487f'),
+('includes/module.inc', 'f63ab8cec01f932d7abfc2d09d91ba322e333f4ff447088ab0db4d16b5d9f676'),
+('includes/pager.inc', '6f9494b85c07a2cc3be4e54aff2d2757485238c476a7da084d25bde1d88be6d8'),
+('includes/password.inc', 'fd9a1c94fe5a0fa7c7049a2435c7280b1d666b2074595010e3c492dd15712775'),
+('includes/path.inc', '74bf05f3c68b0218730abf3e539fcf08b271959c8f4611940d05124f34a6a66f'),
+('includes/registry.inc', 'c225de772f86eebd21b0b52fa8fcc6671e05fa2374cedb3164f7397f27d3c88d'),
+('includes/session.inc', 'e92cb07f192c030232d317d4efd93babf5c85eb9dde1f5e283a2feb8f7182e6c'),
+('includes/stream_wrappers.inc', '4f1feb774a8dbc04ca382fa052f59e58039c7261625f3df29987d6b31f08d92d'),
+('includes/tablesort.inc', '2d88768a544829595dd6cda2a5eb008bedb730f36bba6dfe005d9ddd999d5c0f'),
+('includes/theme.inc', 'ab2a805bb52a54dc762f314bbba6b55b959734a87e8f96119435d08b08e6fe1f'),
+('includes/theme.maintenance.inc', '39f068b3eee4d10a90d6aa3c86db587b6d25844c2919d418d34d133cfe330f5a'),
+('includes/token.inc', '5e7898cd78689e2c291ed3cd8f41c032075656896f1db57e49217aac19ae0428'),
+('includes/unicode.entities.inc', '2b858138596d961fbaa4c6e3986e409921df7f76b6ee1b109c4af5970f1e0f54'),
+('includes/unicode.inc', 'e18772dafe0f80eb139fcfc582fef1704ba9f730647057d4f4841d6a6e4066ca'),
+('includes/update.inc', '177ce24362efc7f28b384c90a09c3e485396bbd18c3721d4b21e57dd1733bd92'),
+('includes/updater.inc', 'd2da0e74ed86e93c209f16069f3d32e1a134ceb6c06a0044f78e841a1b54e380'),
+('includes/utility.inc', '3458fd2b55ab004dd0cc529b8e58af12916e8bd36653b072bdd820b26b907ed5'),
+('includes/xmlrpc.inc', 'ea24176ec445c440ba0c825fc7b04a31b440288df8ef02081560dc418e34e659'),
+('includes/xmlrpcs.inc', '741aa8d6fcc6c45a9409064f52351f7999b7c702d73def8da44de2567946598a'),
+('modules/block/block.test', 'df1b364688b46345523dfcb95c0c48352d6a4edbc66597890d29b9b0d7866e86'),
+('modules/field/modules/text/text.test', 'a1e5cb0fa8c0651c68d560d9bb7781463a84200f701b00b6e797a9ca792a7e42'),
+('modules/file/tests/file.test', '5cb7a7a6cc14a6d4269bf4d406a304f77052be7691e0ec9b8e7c5262316d7539'),
+('modules/filter/filter.test', '13330238c7b8d280ff2dd8cfee1c001d5a994ad45e3c9b9c5fdcd963c6080926'),
+('modules/system/system.archiver.inc', 'faa849f3e646a910ab82fd6c8bbf0a4e6b8c60725d7ba81ec0556bd716616cd1'),
+('modules/system/system.mail.inc', 'd31e1769f5defbe5f27dc68f641ab80fb8d3de92f6e895f4c654ec05fc7e5f0f'),
+('modules/system/system.queue.inc', 'ef00fd41ca86de386fa134d5bc1d816f9af550cf0e1334a5c0ade3119688ca3c'),
+('modules/system/system.tar.inc', '8a31d91f7b3cd7eac25b3fa46e1ed9a8527c39718ba76c3f8c0bbbeaa3aa4086'),
+('modules/system/system.test', 'ad3c68f2cacfe6a99c065edc9aca05a22bdbc74ff6158e9918255b4633134ab4'),
+('modules/system/system.updater.inc', '338cf14cb691ba16ee551b3b9e0fa4f579a2f25c964130658236726d17563b6a'),
+('rcredits/admin/admin.inc', '85e8498142476fd2a03640b1988179cc3ea11b2d7308ff8fd8b8d4367db5b0e3'),
+('rcredits/rcredits-backend.inc', 'cf42867095a2d0d739b5c6d2d065e7be0a800a9e5e69cea6685be97948fa04d5'),
+('rcredits/rcredits-db.inc', 'a59e74a857c723f4f984d337d593e8c54693f69191cb9420af0c93cea42d1eeb'),
+('rcredits/rcredits-settings.inc', 'ef052e8ee4d46ce474151bcc64109b9af1c1c27d82c02107f246e2d9868cec40'),
+('rcredits/rcredits-util.inc', 'a5721f0fa3cca16a1f42391bd425181208f9889d9d6b7efa4fd45927f51a5278'),
+('rcredits/rcredits.inc', '07fbb343694cc0934e695b325ff3c501a6c2a66210d85f23a4d0f7143d81637d'),
+('rcredits/rcredits.install', '2d6c2587da87cc848e2a4d9d1982a9ae53a5e0becb1770d81a7d26076d053291'),
+('rcredits/rcredits.module', 'e0355c5b2e0420f1c9ccf7425a6e4b6783f8d5608ef3ec7feb503c473a37d45f'),
+('rcredits/rsmart/rsmart.inc', '7451e81a5a2ffa6442f5e4f1a9f820335e7f2d9ab4cf16d126793c5b4e1ee350'),
+('rcredits/rsmart/rsmart.module', 'a619c93027b02d922905c5d80bb1a0680d7758119deec45947f0f9d7c033a1a0'),
+('rcredits/rsmart/test/Exchange.test', '0c0a85089e0c6008f0537280fdfed00d719a03e52a2676818ee496c7e47e8d3e'),
+('rcredits/rsmart/test/Identify.test', 'f92727b09548886ac3ff9840a22aad6a418072b5212bf42934dbe2eeb898cc2c'),
+('rcredits/rsmart/test/Joint.test', '7fc5c53ba711167b31949fa23625184a83053ed1406898649469378193206fd1'),
+('rcredits/rsmart/test/Offline.test', '2c0588c68ce11b9d877331ff6c5dfebb0d4509981dea0d65f7d8037eb2a90c02'),
+('rcredits/rsmart/test/Startup.test', 'cf02a44b445dd8edb37879ed69c4ad3857acd924a3ceef7a703e9f5e10a62438'),
+('rcredits/rsmart/test/Time.test', '1109c49fb7674ab1423c69f51c1837137e73ee4aead2577456a7b396b3656aff'),
+('rcredits/rsmart/test/Transact.test', '02738c64f3547e9986fe8e5de88aa2ed96abf452b21c26e11d2cb7133c28819d'),
+('rcredits/rsmart/test/Undo.test', 'dfaa48896049f3db192adafa9681123eced8c27bc5ad56f1f14c0ac2e93e957d'),
+('rcredits/rsms/../rcredits-util.inc', 'a5721f0fa3cca16a1f42391bd425181208f9889d9d6b7efa4fd45927f51a5278'),
+('rcredits/rsms/rsms-call.inc', '99e52c9b0caffe05963b493502fa17254bb7f2bd87956e07b2298d6dad10ce28'),
+('rcredits/rsms/rsms.inc', '9a09e64aefba6ed832ab2a18ea8fff17a29a3b2956712b945f3112444baf36d5'),
+('rcredits/rsms/rsms.install', 'f2b9fe657534699a51f5af4027af72f795ff44c88f22421f831b66ff3a4aa19e'),
+('rcredits/rsms/rsms.module', '297b340d9600365b94f118bf7d25d9915c95518898ba57993e67f911be22a328'),
+('rcredits/rsms/rsms.steps', 'c601f497e69eef4d38ac823579e82c99ae733f0b59997babf658773e5d5cb356'),
+('rcredits/rweb/../admin/admin-forms.inc', '949d24850c3e22b2146a14e8e63d45adb81a94e5b67a5184f102a207f5149d82'),
+('rcredits/rweb/../admin/admin-web.inc', '84b23eb655cebcba95bfb1ae0e6f8aba0635d460d3e812324adc8457dd400000'),
+('rcredits/rweb/rweb-txs.inc', '3ecba8a6851721411e0f7b899f53771d816d2ce92dcb82e031986bc9b4ac9dc4'),
+('rcredits/rweb/rweb.inc', '887e383677e1327272ea3454c884425f24e5654ea37db08f6f97c0f1a6bff5f6'),
+('rcredits/rweb/rweb.module', '6c776e85b46d2e02bf3e3f31462b0d70169d4e960da3b82a6280151aae53c91c'),
+('rcredits/rweb/test/Bank.test', '597d3431d93f1ec4912692b3c5d7c1096d67bb367d2367c372db815579ba546e'),
+('rcredits/rweb/test/Community.test', '0d45dc489b0b1eb5ab3e66c6f2f23d929f91af14fe43ff5ae2831be7bff6981e'),
+('rcredits/rweb/test/Company.test', '6ee55d5588d26c5af6e812bd03f713917a000a1b452466cd14795ccd37156dbf'),
+('rcredits/rweb/test/Contact.test', 'ac54430e164545355ae966bc674a1a21762f7d4b81cad5dcf4a3cb479cf95a5d'),
+('rcredits/rweb/test/Download.test', 'efa24f816f422c62642d4b967445c8ff410af77d2be894a9fc77441aeb05ba7a'),
+('rcredits/rweb/test/EditTx.test', '9d19ef91def9c9ca7c1e890f5b8733ad47ec66050a890b10f9113600846b72f0'),
+('rcredits/rweb/test/Exchange.test', '6ff0d1348692b4b07d2ca0dc7f0dc3cc94b750a3117c3fbe1db656772e61ec74'),
+('rcredits/rweb/test/Flow.test', '497bd8b700dd2aa17f66acafdaa25d3c7a9c969baebca8045338508fd3c79d0d'),
+('rcredits/rweb/test/Gift.test', 'cdf2795c6094e2cea981ce8ff9e6c3a9308bff3c5ef4e5a373d769eb096b8522'),
+('rcredits/rweb/test/Joint.test', 'c25e661ca383cace28be75ceeee7a1491580e89d4494e164c5e1911a1cba1880'),
+('rcredits/rweb/test/Membership.test', '9cd29a637640db47f20131604b30acba70ea3007b0e06e587202da1f2d1fdbb8'),
+('rcredits/rweb/test/Preferences.test', '5a39f9a4e3d22c5369d85bf0bccb267dbac40a29360afd16a458ab21b908b9ab'),
+('rcredits/rweb/test/Reimburse.test', '74c41ca7ceafc7ed0658a43c0066818a1310fa0373bbcb1f9ec49567f6946c67'),
+('rcredits/rweb/test/Relations.test', 'd616cc14c3c18f326b426d218a9ff4bfaa572df7ebc775cacd3f8c06a34e8e95'),
+('rcredits/rweb/test/ScanCard.test', 'cd6c21ffd40c8e3917aedba0e1a523777027fd6076939b5bbd2658b185bd3eab'),
+('rcredits/rweb/test/Signin.test', '2ecbcfdce34092707265d647f9ffbcf5b62225a3d2541980fd390b4de19764c2'),
+('rcredits/rweb/test/Signup.test', '1ac8d0a203343d1a0aba1160a64b14e7060603a464295a6ddea988cbf29b1232'),
+('rcredits/rweb/test/SignupCo.test', '78598d583ec11e81d24a8ecf2618e8a0628f89d880d62ea3cd898aaf4b83bd1b'),
+('rcredits/rweb/test/Summary.test', 'ccb64d87da52ba228e0c59fc41f51c509ce87710b3d974eb7bfab388fc61b484'),
+('rcredits/rweb/test/Transact.test', '8680536973974ba0814fb0ee9cd0653f256b6156a555028836187d6328f8943e'),
+('rcredits/rweb/test/Transactions.test', 'd53b407f2eda38238c5208358a7e907ba904cfb2587a990bf2cf2bf560b3e40b'),
+('sites/all/modules/devel/devel.mail.inc', 'dbdc696b3e023a588359ec1207ac6997e1abe425ed301d1b1513f68a0abcf9c2'),
+('sites/all/modules/devel/devel.test', '7ee8668c46ce85c9307cf5f35ad2b18a0793dec8455114ee8c05eee36be76302');
 
 -- --------------------------------------------------------
 
@@ -26230,7 +26351,10 @@ CREATE TABLE `r_votes` (
 CREATE TABLE `semaphore` (
   `name` varchar(255) NOT NULL DEFAULT '' COMMENT 'Primary Key: Unique name.',
   `value` varchar(255) NOT NULL DEFAULT '' COMMENT 'A value for the semaphore.',
-  `expire` double NOT NULL COMMENT 'A Unix timestamp with microseconds indicating when the semaphore should expire.'
+  `expire` double NOT NULL COMMENT 'A Unix timestamp with microseconds indicating when the semaphore should expire.',
+  PRIMARY KEY (`name`),
+  KEY `value` (`value`),
+  KEY `expire` (`expire`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Table for holding semaphores, locks, flags, etc. that...';
 
 -- --------------------------------------------------------
@@ -26245,9 +26369,13 @@ CREATE TABLE `sessions` (
   `sid` varchar(128) NOT NULL COMMENT 'A session ID. The value is generated by Drupal’s session handlers.',
   `ssid` varchar(128) NOT NULL DEFAULT '' COMMENT 'Secure session ID. The value is generated by Drupal’s session handlers.',
   `hostname` varchar(128) NOT NULL DEFAULT '' COMMENT 'The IP address that last used this session ID (sid).',
-  `timestamp` int(11) NOT NULL DEFAULT '0' COMMENT 'The Unix timestamp when this session last requested a page. Old records are purged by PHP automatically.',
-  `cache` int(11) NOT NULL DEFAULT '0' COMMENT 'The time of this user’s last post. This is used when the site has specified a minimum_cache_lifetime. See cache_get().',
-  `session` longblob COMMENT 'The serialized contents of $_SESSION, an array of name/value pairs that persists across page requests by this session ID. Drupal loads $_SESSION from here at the start of each request and saves it at the end.'
+  `timestamp` int(11) NOT NULL DEFAULT 0 COMMENT 'The Unix timestamp when this session last requested a page. Old records are purged by PHP automatically.',
+  `cache` int(11) NOT NULL DEFAULT 0 COMMENT 'The time of this user’s last post. This is used when the site has specified a minimum_cache_lifetime. See cache_get().',
+  `session` longblob DEFAULT NULL COMMENT 'The serialized contents of $_SESSION, an array of name/value pairs that persists across page requests by this session ID. Drupal loads $_SESSION from here at the start of each request and saves it at the end.',
+  PRIMARY KEY (`sid`,`ssid`),
+  KEY `timestamp` (`timestamp`),
+  KEY `uid` (`uid`),
+  KEY `ssid` (`ssid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Drupal’s session handlers read and write into the...';
 
 -- --------------------------------------------------------
@@ -26261,11 +26389,14 @@ CREATE TABLE `system` (
   `name` varchar(255) NOT NULL DEFAULT '' COMMENT 'The name of the item; e.g. node.',
   `type` varchar(12) NOT NULL DEFAULT '' COMMENT 'The type of the item, either module, theme, or theme_engine.',
   `owner` varchar(255) NOT NULL DEFAULT '' COMMENT 'A theme’s ’parent’ . Can be either a theme or an engine.',
-  `status` int(11) NOT NULL DEFAULT '0' COMMENT 'Boolean indicating whether or not this item is enabled.',
-  `bootstrap` int(11) NOT NULL DEFAULT '0' COMMENT 'Boolean indicating whether this module is loaded during Drupal’s early bootstrapping phase (e.g. even before the page cache is consulted).',
-  `schema_version` smallint(6) NOT NULL DEFAULT '-1' COMMENT 'The module’s database schema version number. -1 if the module is not installed (its tables do not exist); 0 or the largest N of the module’s hook_update_N() function that has either been run or existed when the module was first installed.',
-  `weight` int(11) NOT NULL DEFAULT '0' COMMENT 'The order in which this module’s hooks should be invoked relative to other modules. Equal-weighted modules are ordered by name.',
-  `info` blob COMMENT 'A serialized array containing information from the module’s .info file; keys can include name, description, package, version, core, dependencies, and php.'
+  `status` int(11) NOT NULL DEFAULT 0 COMMENT 'Boolean indicating whether or not this item is enabled.',
+  `bootstrap` int(11) NOT NULL DEFAULT 0 COMMENT 'Boolean indicating whether this module is loaded during Drupal’s early bootstrapping phase (e.g. even before the page cache is consulted).',
+  `schema_version` smallint(6) NOT NULL DEFAULT -1 COMMENT 'The module’s database schema version number. -1 if the module is not installed (its tables do not exist); 0 or the largest N of the module’s hook_update_N() function that has either been run or existed when the module was first installed.',
+  `weight` int(11) NOT NULL DEFAULT 0 COMMENT 'The order in which this module’s hooks should be invoked relative to other modules. Equal-weighted modules are ordered by name.',
+  `info` blob DEFAULT NULL COMMENT 'A serialized array containing information from the module’s .info file; keys can include name, description, package, version, core, dependencies, and php.',
+  PRIMARY KEY (`filename`),
+  KEY `system_list` (`status`,`bootstrap`,`type`,`weight`,`name`),
+  KEY `type_name` (`type`,`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='A list of all modules, themes, and theme engines that are...';
 
 --
@@ -26332,64 +26463,68 @@ CREATE TABLE `users` (
   `uid` bigint(20) NOT NULL COMMENT 'account record ID',
   `name` varchar(60) DEFAULT NULL COMMENT 'unique user name',
   `pass` varchar(128) DEFAULT NULL COMMENT 'account password',
-  `mail` varchar(254) DEFAULT NULL COMMENT 'encrypted email address',
-  `created` int(11) NOT NULL DEFAULT '0' COMMENT 'Unix date and time record was created',
-  `access` int(11) NOT NULL DEFAULT '0' COMMENT 'Unix date and time account was last accessed',
-  `login` int(11) NOT NULL DEFAULT '0' COMMENT 'Unix date and time user last signed in',
-  `picture` int(11) NOT NULL DEFAULT '0' COMMENT 'used for temporary storage when generating statistics',
-  `data` longtext COMMENT 'serialized associative array of miscellaneous fields (not encrypted)',
-  `flags` bigint(20) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'boolean permissions and state flags',
-  `jid` bigint(20) NOT NULL DEFAULT '0' COMMENT 'account ID of joined account (0 if none)',
+  `email` varchar(254) DEFAULT NULL COMMENT 'email address',
+  `created` int(11) NOT NULL DEFAULT 0 COMMENT 'Unix date and time record was created',
+  `access` int(11) NOT NULL DEFAULT 0 COMMENT 'Unix date and time account was last accessed',
+  `login` int(11) NOT NULL DEFAULT 0 COMMENT 'Unix date and time user last signed in',
+  `picture` int(11) NOT NULL DEFAULT 0 COMMENT 'used for temporary storage when generating statistics',
+  `data` longtext DEFAULT NULL COMMENT 'serialized associative array of miscellaneous fields (not encrypted)',
+  `flags` bigint(20) unsigned NOT NULL DEFAULT 0 COMMENT 'boolean permissions and state flags',
+  `jid` bigint(20) NOT NULL DEFAULT 0 COMMENT 'account ID of joined account (0 if none)',
+  `changes` longblob DEFAULT NULL COMMENT 'changes made to the account',
   `community` bigint(20) DEFAULT NULL COMMENT 'uid of this account''s Common Good Community',
-  `secure` mediumblob COMMENT 'encrypted data',
-  `vsecure` blob COMMENT 'hyper-encrypted data',
+  `secure` mediumblob DEFAULT NULL COMMENT 'encrypted data',
+  `vsecure` blob DEFAULT NULL COMMENT 'hyper-encrypted data',
   `fullName` varchar(255) DEFAULT NULL COMMENT 'full name of the individual or entity',
   `phone` varchar(255) DEFAULT NULL COMMENT 'contact phone (no country code, no punctuation)',
   `city` varchar(60) DEFAULT NULL COMMENT 'municipality',
   `state` int(5) DEFAULT NULL COMMENT 'state/province index',
   `zip` varchar(255) DEFAULT NULL COMMENT 'postal code for physical address (no punctuation)',
   `country` int(4) DEFAULT NULL COMMENT 'country index',
-  `postalAddr` varchar(255) DEFAULT NULL COMMENT 'complete postal address',
   `notes` longtext COMMENT 'miscellaneous notes about the user or the account',
-  `tickle` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime to tickle an admin about this account',
-  `signed` int(11) NOT NULL DEFAULT '0' COMMENT 'when did this person sign the Common Good Agreement',
+  `tickle` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime to tickle an admin about this account',
+  `activated` int(11) NOT NULL DEFAULT 0 COMMENT 'when was the account activated',
+  `helper` bigint(20) DEFAULT NULL COMMENT 'who invited this person or company',
+  `iCode` int(11) DEFAULT NULL COMMENT 'sequence number of helper invitation',
+  `signed` int(11) NOT NULL DEFAULT 0 COMMENT 'when did this person sign the Common Good Agreement',
   `signedBy` varchar(60) DEFAULT NULL COMMENT 'who signed the agreement (on behalf of the account)',
   `rebate` decimal(5,3) NOT NULL DEFAULT '10.000' COMMENT 'current rebate percentage (sales bonus is proportionate)',
-  `savingsAdd` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'chosen amount to hold as savings, beyond rewards',
-  `saveWeekly` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'chosen amount to increase minimum (target balance) by, weekly',
-  `floor` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'negative credit line',
+  `savingsAdd` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'chosen amount to hold as savings, beyond rewards',
+  `saveWeekly` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'chosen amount to increase minimum (target balance) by, weekly',
+  `floor` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'negative credit line',
   `minimum` decimal(11,2) DEFAULT NULL COMMENT 'chosen target balance (for automatic refills)',
-  `rewards` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'total incentive rewards to date (cached)',
   `share` decimal(6,3) NOT NULL DEFAULT '0.000' COMMENT 'percentage of rebates/bonuses to donate to CG',
   `crumbs` decimal(6,3) DEFAULT NULL COMMENT 'percentage of each transaction to donate to CG (half to community)',
-  `balance` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'balance, not including rewards (cached)',
-  `committed` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'amount committed (for donations to CGF)',
-  `activated` int(11) NOT NULL DEFAULT '0' COMMENT 'when was the account activated',
-  `helper` bigint(20) DEFAULT NULL COMMENT 'who invited this person or company',
+  `balance` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'balance, not including rewards (cached)',
+  `rewards` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'total incentive rewards to date (cached)',
+  `committed` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'amount committed (for donations to CGF)',
   `risk` float DEFAULT NULL COMMENT 'today''s suspiciousness rating',
-  `risks` bigint(20) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'list of risk factors',
+  `risks` bigint(20) unsigned NOT NULL DEFAULT 0 COMMENT 'list of risk factors',
   `trust` float DEFAULT NULL COMMENT 'how much this person is trusted by others in the community',
-  `changes` longblob COMMENT 'changes made to the account',
   `stats` mediumtext COMMENT 'account statistics',
   `notices` tinytext COMMENT 'when to send what kind of notice',
   `lastip` varchar(39) DEFAULT NULL COMMENT 'latest IP address used',
   `special` longtext COMMENT 'special transient data',
-  `iCode` int(11) DEFAULT NULL COMMENT 'sequence number of helper invitation',
-  `email` varchar(254) DEFAULT NULL COMMENT 'encrypted email address'
-
+  `changesX` longblob COMMENT 'changes made to the account',
+  PRIMARY KEY (`uid`),
+  UNIQUE KEY `name` (`name`),
+  KEY `access` (`access`),
+  KEY `created` (`created`),
+  KEY `mail` (`email`),
+  KEY `picture` (`picture`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Stores user data.';
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`uid`, `name`, `pass`, `mail`, `created`, `access`, `login`, `picture`, `data`, `flags`, `jid`, `community`, `secure`, `vsecure`, `fullName`, `phone`, `city`, `state`, `zip`, `country`, `postalAddr`, `notes`, `tickle`, `signed`, `signedBy`, `rebate`, `savingsAdd`, `saveWeekly`, `floor`, `minimum`, `rewards`, `share`, `crumbs`, `balance`, `committed`, `activated`, `helper`, `risk`, `risks`, `trust`, `changes`, `stats`, `notices`, `lastip`, `special`, `iCode`) VALUES
-(-410044001, 'NEW.', NULL, '`!PUXMyMmJ1bUJCWlMyclhrdDRVSmZZNWJiamhUY0xUMFlqRm4wc2c9PQ', 1387083600, 1531592591, 1531592591, 0, 'a:2:{s:9:\"legalName\";s:24:\"Common Good Western Mass\";s:9:\"stepsDone\";a:8:{s:6:\"signup\";b:0;s:6:\"verify\";b:0;s:4:\"sign\";b:0;s:6:\"donate\";b:0;s:5:\"prefs\";b:0;s:7:\"company\";b:0;s:9:\"relations\";b:0;s:5:\"photo\";b:0;}}', 70, 0, -410044001, 0x602153505a61304b4342323354354b563776736e59766176524d3469744c484b484e793334514b39335466654545356d2f6e647636712f44532f70746352674845533165554e4b305146464273793373466559, 0x6021536a475856323251446a44387167417676764575614b2b565a693563554f3145526e315938676a484975504336696367392b4474744841344d346c4d77793366557564564949413d3d, 'Common Good Western Mass', NULL, NULL, 1020, '', 1228, NULL, NULL, 0, 0, NULL, '0.000', '0.00', '0.00', '0.00', NULL, '0.00', '0.000', NULL, '0.00', '0.00', 0, NULL, NULL, 0, NULL, 0x602153323352464b575245764468614e486d736e3133727a704c2b33384c3153364a67585a53666f7a652f61504f7136656c734b346f4c69312b7330634c686a65576d5347584b7365486d7079706c6f6a644a763146713064446844713863636b6c436e726a7a47796435714f756165725137525956693074376b4f65383d, NULL, NULL, NULL, NULL, NULL),
-(0, '', '', '', 0, 0, 0, 0, NULL, 0, 0, NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, NULL, '10.000', '0.00', '0.00', '0.00', NULL, '0.00', '0.000', NULL, '0.00', '0.00', 0, NULL, NULL, 0, 1, NULL, NULL, NULL, NULL, NULL, NULL),
-(1, 'admin', NULL, '`!PUXMyMmJ1bUJCWlMyclhrdDRVSmZZNWJiamhUY0xUMFlqRm4wc2c9PQ', 1531592591, 1531592591, 1531592591, 0, 'a:2:{s:9:\"legalName\";s:20:\"System Administrator\";s:9:\"stepsDone\";a:0:{}}', 1073741888, 0, 0, 0x602153767a566c694c433272742b6f4a7775733239672b662b4d757a356131474542576e5a464d7771546571524636617468656e78704f334d347055414552363257484b3653724d6947336b627a5830364a595836634a635364684864697670666b536a3938426e705a4c794b374b765856593156615773553733626d3876306a4a76537764676e634f4a3270674d792f3872676c6d697832582f6b3664334e6246466a43664b5872637939784e45705747786975415a4c5a324f3735763638484c6731624d3376592b39794d5a33314b6c485254484247597952784266585a2f6d303939327a5569447a526c4d6a465876396b7562656c7a38396a6f58614434486a6f4366374d696a5a4b75437468544579574e49492f76794448547a4f3271656d4b316b424b76355443615a765839594e, NULL, 'System Administrator', NULL, NULL, NULL, '', 0, NULL, NULL, 0, 0, NULL, '0.000', '0.00', '0.00', '0.00', NULL, '0.00', '0.000', NULL, '0.00', '0.00', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(2, 'placeholderone', NULL, '`!POWtBdmJXMD0', 1531592591, 1531592591, 1531592591, 0, 'a:2:{s:9:\"legalName\";s:15:\"PlaceHolder One\";s:9:\"stepsDone\";a:9:{s:6:\"signup\";b:0;s:6:\"verify\";b:0;s:3:\"ssn\";b:0;s:4:\"sign\";b:0;s:6:\"donate\";b:0;s:7:\"proxies\";b:0;s:5:\"prefs\";b:0;s:7:\"connect\";b:0;s:5:\"photo\";b:0;}}', 0, 0, 0, 0x602153666d65307a56466a6a676949316137386a306a5a6a65447658664b58436a5268662f654d7364615a69654672614238647631737358513662424a437a37415a516a3359626b554630704d6a5674634b762b6f4c6f6755614248316c4f73747151764d7242584b444a4b72344c6e4b58633947526a3457786c534e78715530484e533055777258626f69716e6f65683436, NULL, 'PlaceHolder One', NULL, NULL, NULL, '', 0, NULL, NULL, 0, 0, NULL, '0.000', '0.00', '0.00', '0.00', NULL, '0.00', '0.000', NULL, '0.00', '0.00', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(3, 'placeholdertwo', NULL, '`!POWtBdmJXMD0', 1531592591, 1531592591, 1531592591, 0, 'a:2:{s:9:\"legalName\";s:15:\"PlaceHolder Two\";s:9:\"stepsDone\";a:9:{s:6:\"signup\";b:0;s:6:\"verify\";b:0;s:3:\"ssn\";b:0;s:4:\"sign\";b:0;s:6:\"donate\";b:0;s:7:\"proxies\";b:0;s:5:\"prefs\";b:0;s:7:\"connect\";b:0;s:5:\"photo\";b:0;}}', 0, 0, 0, 0x602153764765307931466a4451694931656a386a656e5a6a65447658664b58335453327176654d73646159695a5272614d67647631743758542b62415a437a37415a51542f59596b554745704d6778745a4b502b6f493867586142586c6c4f4a647052764d7242584b444a4b74304c6e4c5863394b526a67477730534c7a395530484e5330576772585a4b69716e6f79523436, NULL, 'PlaceHolder Two', NULL, NULL, NULL, '', 0, NULL, NULL, 0, 0, NULL, '0.000', '0.00', '0.00', '0.00', NULL, '0.00', '0.000', NULL, '0.00', '0.00', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(410044002, 'commongood', NULL, '`!PVVVpM2V1d0ZCWkNYUDNZc1lzZGU', 1531592591, 1531592591, 1531592591, 0, 'a:2:{s:9:\"legalName\";s:11:\"Common Good\";s:9:\"stepsDone\";a:8:{s:6:\"signup\";b:0;s:6:\"verify\";b:0;s:4:\"sign\";b:0;s:6:\"donate\";b:0;s:5:\"prefs\";b:0;s:7:\"company\";b:0;s:9:\"relations\";b:0;s:5:\"photo\";b:0;}}', 67108935, 0, -410044001, 0x6021536e5956332f52423344537a70314a3463764c766f2f7750746235505561664f33586444393933543554364e64536970494b6b6f752f4e39706b7943796a765a48753766623949476b646369476b444c5048564d4a417954515858396378486b5148616767666f5272796c366276375a594a535478564b2b564b5a70745a764b4a483555436e5851617a4b7034367236596c70786856335975633153554e425045, NULL, 'Common Good', '`!PZUdLVXdzbW1LRCtaRmRrQg', 'Ashfield', 1020, '01330', 1228, NULL, NULL, 0, 0, NULL, '10.000', '0.00', '0.00', '0.00', NULL, '0.00', '0.000', NULL, '0.00', '0.00', 0, 1, NULL, 0, NULL, 0x6021535479495875524357444636616c766c3962397337726a486f3777416765764644623452764d76514c583845623678394f4f4a6a502b6e7134736952543634514775504d7134634145684d6878734c644c76364a74636553682f65333542706e535066726a586458722b5733645371424c, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `users` (`uid`, `name`, `pass`, `email`, `created`, `access`, `login`, `picture`, `data`, `flags`, `jid`, `community`, `secure`, `vsecure`, `fullName`, `phone`, `city`, `state`, `zip`, `country`, `notes`, `tickle`, `signed`, `signedBy`, `rebate`, `savingsAdd`, `saveWeekly`, `floor`, `minimum`, `rewards`, `share`, `crumbs`, `balance`, `committed`, `activated`, `helper`, `risk`, `risks`, `trust`, `changes`, `stats`, `notices`, `lastip`, `special`, `iCode`) VALUES
+(-410044001, 'NEW.', NULL, '`!PUXMyMmJ1bUJCWlMyclhrdDRVSmZZNWJiamhUY0xUMFlqRm4wc2c9PQ', 1387083600, 1531592591, 1531592591, 0, 'a:2:{s:9:\"legalName\";s:24:\"Common Good Western Mass\";s:9:\"stepsDone\";a:8:{s:6:\"signup\";b:0;s:6:\"verify\";b:0;s:4:\"sign\";b:0;s:6:\"donate\";b:0;s:5:\"prefs\";b:0;s:7:\"company\";b:0;s:9:\"relations\";b:0;s:5:\"photo\";b:0;}}', 70, 0, -410044001, 0x602153505a61304b4342323354354b563776736e59766176524d3469744c484b484e793334514b39335466654545356d2f6e647636712f44532f70746352674845533165554e4b305146464273793373466559, 0x6021536a475856323251446a44387167417676764575614b2b565a693563554f3145526e315938676a484975504336696367392b4474744841344d346c4d77793366557564564949413d3d, 'Common Good Western Mass', NULL, NULL, 1020, '', 1228, NULL, 0, 0, NULL, '0.000', '0.00', '0.00', '0.00', NULL, '0.00', '0.000', NULL, '0.00', '0.00', 0, NULL, NULL, 0, NULL, 0x602153323352464b575245764468614e486d736e3133727a704c2b33384c3153364a67585a53666f7a652f61504f7136656c734b346f4c69312b7330634c686a65576d5347584b7365486d7079706c6f6a644a763146713064446844713863636b6c436e726a7a47796435714f756165725137525956693074376b4f65383d, NULL, NULL, NULL, NULL, NULL),
+(0, '', '', '', 0, 0, 0, 0, NULL, 0, 0, NULL, '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, NULL, '10.000', '0.00', '0.00', '0.00', NULL, '0.00', '0.000', NULL, '0.00', '0.00', 0, NULL, NULL, 0, 1, NULL, NULL, NULL, NULL, NULL, NULL),
+(1, 'admin', NULL, '`!PUXMyMmJ1bUJCWlMyclhrdDRVSmZZNWJiamhUY0xUMFlqRm4wc2c9PQ', 1531592591, 1531592591, 1531592591, 0, 'a:2:{s:9:\"legalName\";s:20:\"System Administrator\";s:9:\"stepsDone\";a:0:{}}', 1073741888, 0, 0, 0x602153767a566c694c433272742b6f4a7775733239672b662b4d757a356131474542576e5a464d7771546571524636617468656e78704f334d347055414552363257484b3653724d6947336b627a5830364a595836634a635364684864697670666b536a3938426e705a4c794b374b765856593156615773553733626d3876306a4a76537764676e634f4a3270674d792f3872676c6d697832582f6b3664334e6246466a43664b5872637939784e45705747786975415a4c5a324f3735763638484c6731624d3376592b39794d5a33314b6c485254484247597952784266585a2f6d303939327a5569447a526c4d6a465876396b7562656c7a38396a6f58614434486a6f4366374d696a5a4b75437468544579574e49492f76794448547a4f3271656d4b316b424b76355443615a765839594e, NULL, 'System Administrator', NULL, NULL, NULL, '', 0, NULL, 0, 0, NULL, '0.000', '0.00', '0.00', '0.00', NULL, '0.00', '0.000', NULL, '0.00', '0.00', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(2, 'placeholderone', NULL, '`!POWtBdmJXMD0', 1531592591, 1531592591, 1531592591, 0, 'a:2:{s:9:\"legalName\";s:15:\"PlaceHolder One\";s:9:\"stepsDone\";a:9:{s:6:\"signup\";b:0;s:6:\"verify\";b:0;s:3:\"ssn\";b:0;s:4:\"sign\";b:0;s:6:\"donate\";b:0;s:7:\"proxies\";b:0;s:5:\"prefs\";b:0;s:7:\"connect\";b:0;s:5:\"photo\";b:0;}}', 0, 0, 0, 0x602153666d65307a56466a6a676949316137386a306a5a6a65447658664b58436a5268662f654d7364615a69654672614238647631737358513662424a437a37415a516a3359626b554630704d6a5674634b762b6f4c6f6755614248316c4f73747151764d7242584b444a4b72344c6e4b58633947526a3457786c534e78715530484e533055777258626f69716e6f65683436, NULL, 'PlaceHolder One', NULL, NULL, NULL, '', 0, NULL, 0, 0, NULL, '0.000', '0.00', '0.00', '0.00', NULL, '0.00', '0.000', NULL, '0.00', '0.00', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(3, 'placeholdertwo', NULL, '`!POWtBdmJXMD0', 1531592591, 1531592591, 1531592591, 0, 'a:2:{s:9:\"legalName\";s:15:\"PlaceHolder Two\";s:9:\"stepsDone\";a:9:{s:6:\"signup\";b:0;s:6:\"verify\";b:0;s:3:\"ssn\";b:0;s:4:\"sign\";b:0;s:6:\"donate\";b:0;s:7:\"proxies\";b:0;s:5:\"prefs\";b:0;s:7:\"connect\";b:0;s:5:\"photo\";b:0;}}', 0, 0, 0, 0x602153764765307931466a4451694931656a386a656e5a6a65447658664b58335453327176654d73646159695a5272614d67647631743758542b62415a437a37415a51542f59596b554745704d6778745a4b502b6f493867586142586c6c4f4a647052764d7242584b444a4b74304c6e4c5863394b526a67477730534c7a395530484e5330576772585a4b69716e6f79523436, NULL, 'PlaceHolder Two', NULL, NULL, NULL, '', 0, NULL, 0, 0, NULL, '0.000', '0.00', '0.00', '0.00', NULL, '0.00', '0.000', NULL, '0.00', '0.00', 0, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(410044002, 'commongood', NULL, '`!PVVVpM2V1d0ZCWkNYUDNZc1lzZGU', 1531592591, 1531592591, 1531592591, 0, 'a:2:{s:9:\"legalName\";s:11:\"Common Good\";s:9:\"stepsDone\";a:8:{s:6:\"signup\";b:0;s:6:\"verify\";b:0;s:4:\"sign\";b:0;s:6:\"donate\";b:0;s:5:\"prefs\";b:0;s:7:\"company\";b:0;s:9:\"relations\";b:0;s:5:\"photo\";b:0;}}', 67108935, 0, -410044001, 0x6021536e5956332f52423344537a70314a3463764c766f2f7750746235505561664f33586444393933543554364e64536970494b6b6f752f4e39706b7943796a765a48753766623949476b646369476b444c5048564d4a417954515858396378486b5148616767666f5272796c366276375a594a535478564b2b564b5a70745a764b4a483555436e5851617a4b7034367236596c70786856335975633153554e425045, NULL, 'Common Good', '`!PZUdLVXdzbW1LRCtaRmRrQg', 'Ashfield', 1020, '01330', 1228, NULL, 0, 0, NULL, '10.000', '0.00', '0.00', '0.00', NULL, '0.00', '0.000', NULL, '0.00', '0.00', 0, 1, NULL, 0, NULL, 0x6021535479495875524357444636616c766c3962397337726a486f3777416765764644623452764d76514c583845623678394f4f4a6a502b6e7134736952543634514775504d7134634145684d6878734c644c76364a74636553682f65333542706e535066726a586458722b5733645371424c, NULL, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -26399,7 +26534,8 @@ INSERT INTO `users` (`uid`, `name`, `pass`, `mail`, `created`, `access`, `login`
 
 CREATE TABLE `variable` (
   `name` varchar(128) NOT NULL DEFAULT '' COMMENT 'The name of the variable.',
-  `value` longblob NOT NULL COMMENT 'The value of the variable.'
+  `value` longblob NOT NULL COMMENT 'The value of the variable.',
+  PRIMARY KEY (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Named variable/value pairs created by Drupal core or any...';
 
 --
@@ -26508,16 +26644,22 @@ INSERT INTO `variable` (`name`, `value`) VALUES
 --
 
 CREATE TABLE `x_invoices` (
-  `deleted` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime record was deleted',
-  `nvid` bigint(20) NOT NULL COMMENT 'the unique invoice ID',
-  `status` int(11) NOT NULL DEFAULT '0' COMMENT 'transaction record ID or status (pending or denied)',
+  `deleted` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime record was deleted',
+  `nvid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'the unique invoice ID',
+  `status` int(11) NOT NULL DEFAULT -1 COMMENT 'transaction record ID or status (approved, pending, denied, or paid)',
   `amount` decimal(11,2) DEFAULT NULL COMMENT 'amount to charge',
   `payer` bigint(20) DEFAULT NULL COMMENT 'user id of the payer',
   `payee` bigint(20) DEFAULT NULL COMMENT 'user id of the payee',
-  `goods` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'is this an invoice for real goods and services?',
-  `purpose` longtext COMMENT 'payee''s description',
-  `data` longtext COMMENT 'miscellaneous non-searchable data (serialized array)',
-  `created` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime invoice was created'
+  `goods` tinyint(4) NOT NULL DEFAULT 0 COMMENT 'is this an invoice for real goods and services?',
+  `purpose` longtext DEFAULT NULL COMMENT 'payee''s description',
+  `flags` bigint(20) unsigned NOT NULL DEFAULT 0 COMMENT 'boolean characteristics and state flags',
+  `data` longtext DEFAULT NULL COMMENT 'miscellaneous non-searchable data (serialized array)',
+  `created` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime invoice was created',
+  PRIMARY KEY (`nvid`,`deleted`),
+  KEY `payer` (`payer`),
+  KEY `payee` (`payee`),
+  KEY `created` (`created`),
+  KEY `status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Record of all invoices in the region';
 
 -- --------------------------------------------------------
@@ -26527,9 +26669,10 @@ CREATE TABLE `x_invoices` (
 --
 
 CREATE TABLE `x_photos` (
-  `deleted` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime record was deleted',
+  `deleted` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime record was deleted',
   `uid` bigint(20) NOT NULL COMMENT 'account record id',
-  `photo` longblob COMMENT 'member photo'
+  `photo` longblob DEFAULT NULL COMMENT 'member photo',
+  PRIMARY KEY (`uid`,`deleted`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='one photo for each account';
 
 -- --------------------------------------------------------
@@ -26539,16 +26682,19 @@ CREATE TABLE `x_photos` (
 --
 
 CREATE TABLE `x_relations` (
-  `deleted` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime record was deleted',
-  `reid` bigint(20) NOT NULL COMMENT 'relationship record id',
+  `deleted` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime record was deleted',
+  `reid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'relationship record id',
   `main` bigint(20) DEFAULT NULL COMMENT 'uid of the account to which others are related',
   `other` bigint(20) DEFAULT NULL COMMENT 'uid of an other account related to this account',
-  `otherNum` int(11) NOT NULL DEFAULT '0' COMMENT 'sequence number of the other (starts with 1)',
-  `permission` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'what type of permission the other has on the main account',
+  `otherNum` int(11) NOT NULL DEFAULT 0 COMMENT 'sequence number of the other (starts with 1)',
+  `permission` tinyint(4) NOT NULL DEFAULT 0 COMMENT 'what type of permission the other has on the main account',
   `code` varchar(50) DEFAULT NULL COMMENT 'the (main) company''s account ID for this other',
-  `data` mediumtext COMMENT 'serialized array of parameters',
-  `flags` bigint(20) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'boolean type flags',
-  `created` int(11) DEFAULT NULL COMMENT 'Unixtime record created'
+  `data` mediumtext DEFAULT NULL COMMENT 'serialized array of parameters',
+  `flags` bigint(20) unsigned NOT NULL DEFAULT 0 COMMENT 'boolean type flags',
+  `created` int(11) DEFAULT NULL COMMENT 'Unixtime record created',
+  PRIMARY KEY (`reid`,`deleted`),
+  KEY `main` (`main`),
+  KEY `other` (`other`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Who can manage which accounts, and how';
 
 -- --------------------------------------------------------
@@ -26558,11 +26704,11 @@ CREATE TABLE `x_relations` (
 --
 
 CREATE TABLE `x_txs` (
-  `deleted` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime record was deleted',
-  `xid` bigint(20) NOT NULL COMMENT 'the unique transaction ID',
+  `deleted` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime record was deleted',
+  `xid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'the unique transaction ID',
   `serial` int(11) DEFAULT NULL COMMENT 'serial number of related transactions (=xid of first transaction in the group)',
   `type` tinyint(4) DEFAULT NULL COMMENT 'transaction type (transfer, rebate, etc.)',
-  `goods` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'is this transfer an exchange for real goods and services?',
+  `goods` tinyint(4) NOT NULL DEFAULT 0 COMMENT 'is this transfer an exchange for real goods and services?',
   `amount` decimal(11,2) DEFAULT NULL COMMENT 'amount transferred',
   `payer` bigint(20) DEFAULT NULL COMMENT 'user id of the payer',
   `payee` bigint(20) DEFAULT NULL COMMENT 'user id of the payee',
@@ -26570,17 +26716,23 @@ CREATE TABLE `x_txs` (
   `payeeAgent` bigint(20) DEFAULT NULL COMMENT 'user id of payee''s agent (who approved this transaction for the payee)',
   `payerFor` varchar(255) DEFAULT NULL COMMENT 'payer''s description',
   `payeeFor` varchar(255) DEFAULT NULL COMMENT 'payee''s description',
-  `payerReward` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'incentive reward for payer',
-  `payeeReward` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'incentive reward for payee',
+  `payerReward` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'incentive reward for payer',
+  `payeeReward` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'incentive reward for payee',
   `payerTid` int(11) DEFAULT NULL COMMENT 'payer''s transaction ID',
   `payeeTid` int(11) DEFAULT NULL COMMENT 'payee''s transaction ID',
-  `data` longtext COMMENT 'miscellaneous non-searchable data (serialized array)',
-  `flags` bigint(20) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'boolean characteristics and state flags',
+  `data` longtext DEFAULT NULL COMMENT 'miscellaneous non-searchable data (serialized array)',
+  `flags` bigint(20) unsigned NOT NULL DEFAULT 0 COMMENT 'boolean characteristics and state flags',
   `channel` tinyint(4) DEFAULT NULL COMMENT 'through what medium was the transaction entered',
-  `box` int(11) NOT NULL DEFAULT '0' COMMENT 'on what machine was the transaction entered',
-  `created` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime transaction was created',
+  `box` int(11) NOT NULL DEFAULT 0 COMMENT 'on what machine was the transaction entered',
+  `created` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime transaction was created',
   `risk` float DEFAULT NULL COMMENT 'suspiciousness rating',
-  `risks` bigint(20) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'list of risk factors'
+  `risks` bigint(20) unsigned NOT NULL DEFAULT 0 COMMENT 'list of risk factors',
+  PRIMARY KEY (`xid`,`deleted`),
+  KEY `payer` (`payer`),
+  KEY `payee` (`payee`),
+  KEY `created` (`created`),
+  KEY `payerTid` (`payerTid`),
+  KEY `payeeTid` (`payeeTid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Record of all transactions in the region';
 
 -- --------------------------------------------------------
@@ -26590,18 +26742,22 @@ CREATE TABLE `x_txs` (
 --
 
 CREATE TABLE `x_usd` (
-  `deleted` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime record was deleted',
-  `txid` bigint(20) NOT NULL COMMENT 'the unique transaction ID',
-  -- `tid` int(11) DEFAULT NULL COMMENT 'payer''s transaction ID',
+  `deleted` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime record was deleted',
+  `txid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'the unique transaction ID',
   `amount` decimal(11,2) DEFAULT NULL COMMENT 'amount of transfer',
   `payee` bigint(20) DEFAULT NULL COMMENT 'CG account record ID',
-  `created` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime transaction was created',
-  `completed` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime transaction was completed',
-  `deposit` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime transfer check was printed and deposited',
-  `bankAccount` blob COMMENT 'Bank account for the transfer',
+  `created` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime transaction was created',
+  `completed` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime transaction was completed',
+  `deposit` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime transfer check was printed and deposited',
+  `bankAccount` blob DEFAULT NULL COMMENT 'Bank account for the transfer',
   `risk` float DEFAULT NULL COMMENT 'suspiciousness rating',
-  `risks` bigint(20) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'list of risk factors',
-  `channel` tinyint(4) DEFAULT NULL COMMENT 'through what medium was the transaction entered'
+  `risks` bigint(20) unsigned NOT NULL DEFAULT 0 COMMENT 'list of risk factors',
+  `bankTxId` bigint(20) NOT NULL DEFAULT 0 COMMENT 'bank transaction ID',
+  `channel` tinyint(4) DEFAULT NULL COMMENT 'through what medium was the transaction entered',
+  PRIMARY KEY (`txid`,`deleted`),
+  KEY `created` (`created`),
+  KEY `payee` (`payee`),
+  KEY `deposit` (`deposit`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Record of transfers to or from a bank account';
 
 -- --------------------------------------------------------
@@ -26611,780 +26767,298 @@ CREATE TABLE `x_usd` (
 --
 
 CREATE TABLE `x_users` (
-  `deleted` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime record was deleted',
+  `deleted` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime record was deleted',
   `uid` bigint(20) NOT NULL COMMENT 'account record ID',
   `name` varchar(60) DEFAULT NULL COMMENT 'unique user name',
   `pass` varchar(128) DEFAULT NULL COMMENT 'account password',
-  `mail` varchar(254) DEFAULT NULL COMMENT 'encrypted email address',
-  `created` int(11) NOT NULL DEFAULT '0' COMMENT 'Unix date and time record was created',
-  `access` int(11) NOT NULL DEFAULT '0' COMMENT 'Unix date and time account was last accessed',
-  `login` int(11) NOT NULL DEFAULT '0' COMMENT 'Unix date and time user last signed in',
-  `picture` int(11) NOT NULL DEFAULT '0' COMMENT 'used for temporary storage when generating statistics',
-  `data` longtext COMMENT 'serialized associative array of miscellaneous fields (not encrypted)',
-  `flags` bigint(20) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'boolean permissions and state flags',
-  `jid` bigint(20) NOT NULL DEFAULT '0' COMMENT 'account ID of joined account (0 if none)',
+  `email` varchar(254) DEFAULT NULL COMMENT 'email address',
+  `created` int(11) NOT NULL DEFAULT 0 COMMENT 'Unix date and time record was created',
+  `access` int(11) NOT NULL DEFAULT 0 COMMENT 'Unix date and time account was last accessed',
+  `login` int(11) NOT NULL DEFAULT 0 COMMENT 'Unix date and time user last signed in',
+  `picture` int(11) NOT NULL DEFAULT 0 COMMENT 'used for temporary storage when generating statistics',
+  `data` longtext DEFAULT NULL COMMENT 'serialized associative array of miscellaneous fields (not encrypted)',
+  `flags` bigint(20) unsigned NOT NULL DEFAULT 0 COMMENT 'boolean permissions and state flags',
+  `jid` bigint(20) NOT NULL DEFAULT 0 COMMENT 'account ID of joined account (0 if none)',
+  `changes` longblob DEFAULT NULL COMMENT 'changes made to the account',
   `community` bigint(20) DEFAULT NULL COMMENT 'uid of this account''s Common Good Community',
-  `secure` mediumblob COMMENT 'encrypted data',
-  `vsecure` blob COMMENT 'hyper-encrypted data',
+  `secure` mediumblob DEFAULT NULL COMMENT 'encrypted data',
+  `vsecure` blob DEFAULT NULL COMMENT 'hyper-encrypted data',
   `fullName` varchar(255) DEFAULT NULL COMMENT 'full name of the individual or entity',
   `phone` varchar(255) DEFAULT NULL COMMENT 'contact phone (no country code, no punctuation)',
   `city` varchar(60) DEFAULT NULL COMMENT 'municipality',
   `state` int(5) DEFAULT NULL COMMENT 'state/province index',
   `zip` varchar(255) DEFAULT NULL COMMENT 'postal code for physical address (no punctuation)',
   `country` int(4) DEFAULT NULL COMMENT 'country index',
-  `postalAddr` varchar(255) DEFAULT NULL COMMENT 'complete postal address',
-  `notes` longtext COMMENT 'miscellaneous notes about the user or the account',
-  `tickle` int(11) NOT NULL DEFAULT '0' COMMENT 'Unixtime to tickle an admin about this account',
-  `signed` int(11) NOT NULL DEFAULT '0' COMMENT 'when did this person sign the Common Good Agreement',
-  `signedBy` varchar(60) DEFAULT NULL COMMENT 'who signed the agreement (on behalf of the account)',
-  `rebate` decimal(5,3) NOT NULL DEFAULT '10.000' COMMENT 'current rebate percentage (sales bonus is proportionate)',
-  `savingsAdd` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'chosen amount to hold as savings, beyond rewards',
-  `saveWeekly` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'chosen amount to increase minimum (target balance) by, weekly',
-  `floor` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'negative credit line',
-  `minimum` decimal(11,2) DEFAULT NULL COMMENT 'chosen target balance (for automatic refills)',
-  `rewards` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'total incentive rewards to date (cached)',
-  `share` decimal(6,3) NOT NULL DEFAULT '0.000' COMMENT 'percentage of rebates/bonuses to donate to CG',
-  `crumbs` decimal(6,3) DEFAULT NULL COMMENT 'percentage of each transaction to donate to CG (half to community)',
-  `balance` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'balance, not including rewards (cached)',
-  `committed` decimal(11,2) NOT NULL DEFAULT '0.00' COMMENT 'amount committed (for donations to CGF)',
-  `activated` int(11) NOT NULL DEFAULT '0' COMMENT 'when was the account activated',
+  `notes` longtext DEFAULT NULL COMMENT 'miscellaneous notes about the user or the account',
+  `tickle` int(11) NOT NULL DEFAULT 0 COMMENT 'Unixtime to tickle an admin about this account',
+  `activated` int(11) NOT NULL DEFAULT 0 COMMENT 'when was the account activated',
   `helper` bigint(20) DEFAULT NULL COMMENT 'who invited this person or company',
+  `iCode` int(11) DEFAULT NULL COMMENT 'sequence number of helper invitation',
+  `signed` int(11) NOT NULL DEFAULT 0 COMMENT 'when did this person sign the Common Good Agreement',
+  `signedBy` varchar(60) DEFAULT NULL COMMENT 'who signed the agreement (on behalf of the account)',
+  `rebate` decimal(5,3) NOT NULL DEFAULT 10.000 COMMENT 'current rebate percentage (sales bonus is proportionate)',
+  `savingsAdd` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'chosen amount to hold as savings, beyond rewards',
+  `saveWeekly` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'chosen amount to increase minimum (target balance) by, weekly',
+  `floor` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'negative credit line',
+  `minimum` decimal(11,2) DEFAULT NULL COMMENT 'chosen target balance (for automatic refills)',
+  `share` decimal(6,3) NOT NULL DEFAULT 0.000 COMMENT 'percentage of rebates/bonuses to donate to CG',
+  `crumbs` decimal(6,3) DEFAULT NULL COMMENT 'percentage of each transaction to donate to CG (half to community)',
+  `balance` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'balance, not including rewards (cached)',
+  `rewards` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'total incentive rewards to date (cached)',
+  `committed` decimal(11,2) NOT NULL DEFAULT 0.00 COMMENT 'amount committed (for donations to CGF)',
   `risk` float DEFAULT NULL COMMENT 'today''s suspiciousness rating',
-  `risks` bigint(20) UNSIGNED NOT NULL DEFAULT '0' COMMENT 'list of risk factors',
+  `risks` bigint(20) unsigned NOT NULL DEFAULT 0 COMMENT 'list of risk factors',
   `trust` float DEFAULT NULL COMMENT 'how much this person is trusted by others in the community',
-  `changes` longblob COMMENT 'changes made to the account',
-  `stats` mediumtext COMMENT 'account statistics',
-  `notices` tinytext COMMENT 'when to send what kind of notice',
+  `stats` mediumtext DEFAULT NULL COMMENT 'account statistics',
+  `notices` tinytext DEFAULT NULL COMMENT 'when to send what kind of notice',
   `lastip` varchar(39) DEFAULT NULL COMMENT 'latest IP address used',
-  `special` longtext COMMENT 'special transient data',
-  `iCode` int(11) DEFAULT NULL COMMENT 'sequence number of helper invitation'
+  `special` longtext DEFAULT NULL COMMENT 'special transient data',
+  `changesX` longblob DEFAULT NULL COMMENT 'OLD changes made to the account',
+  PRIMARY KEY (`uid`,`deleted`),
+  UNIQUE KEY `name` (`name`),
+  KEY `access` (`access`),
+  KEY `created` (`created`),
+  KEY `mail` (`email`),
+  KEY `picture` (`picture`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Stores user data.';
 
---
--- Indexes for dumped tables
---
-
---
--- Indexes for table `block`
---
-ALTER TABLE `block`
-  ADD PRIMARY KEY (`bid`),
-  ADD UNIQUE KEY `tmd` (`theme`,`module`,`delta`),
-  ADD KEY `list` (`theme`,`status`,`region`,`weight`,`module`);
-
---
--- Indexes for table `cache`
---
-ALTER TABLE `cache`
-  ADD PRIMARY KEY (`cid`),
-  ADD KEY `expire` (`expire`);
-
---
--- Indexes for table `cache_bootstrap`
---
-ALTER TABLE `cache_bootstrap`
-  ADD PRIMARY KEY (`cid`),
-  ADD KEY `expire` (`expire`);
-
---
--- Indexes for table `cache_form`
---
-ALTER TABLE `cache_form`
-  ADD PRIMARY KEY (`cid`),
-  ADD KEY `expire` (`expire`);
-
---
--- Indexes for table `cache_menu`
---
-ALTER TABLE `cache_menu`
-  ADD PRIMARY KEY (`cid`),
-  ADD KEY `expire` (`expire`);
-
---
--- Indexes for table `flood`
---
-ALTER TABLE `flood`
-  ADD PRIMARY KEY (`fid`),
-  ADD KEY `allow` (`event`,`identifier`,`timestamp`),
-  ADD KEY `purge` (`expiration`);
-
---
--- Indexes for table `menu_links`
---
-ALTER TABLE `menu_links`
-  ADD PRIMARY KEY (`mlid`),
-  ADD KEY `path_menu` (`link_path`(128),`menu_name`),
-  ADD KEY `menu_plid_expand_child` (`menu_name`,`plid`,`expanded`,`has_children`),
-  ADD KEY `menu_parents` (`menu_name`,`p1`,`p2`,`p3`,`p4`,`p5`,`p6`,`p7`,`p8`,`p9`),
-  ADD KEY `router_path` (`router_path`(128));
-
---
--- Indexes for table `menu_router`
---
-ALTER TABLE `menu_router`
-  ADD PRIMARY KEY (`path`),
-  ADD KEY `fit` (`fit`),
-  ADD KEY `tab_parent` (`tab_parent`(64),`weight`,`title`),
-  ADD KEY `tab_root_weight_title` (`tab_root`(64),`weight`,`title`);
-
---
--- Indexes for table `queue`
---
-ALTER TABLE `queue`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `registry`
---
-ALTER TABLE `registry`
-  ADD PRIMARY KEY (`name`,`type`),
-  ADD KEY `hook` (`type`,`weight`,`module`);
-
---
--- Indexes for table `registry_file`
---
-ALTER TABLE `registry_file`
-  ADD PRIMARY KEY (`filename`);
-
---
--- Indexes for table `r_areas`
---
-ALTER TABLE `r_areas`
-  ADD PRIMARY KEY (`area_code`);
-
---
--- Indexes for table `r_bad`
---
-ALTER TABLE `r_bad`
-  ADD PRIMARY KEY (`created`);
-
---
--- Indexes for table `r_ballots`
---
-ALTER TABLE `r_ballots`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `question` (`question`),
-  ADD KEY `voter` (`voter`),
-  ADD KEY `proxy` (`proxy`);
-
---
--- Indexes for table `r_banks`
---
-ALTER TABLE `r_banks`
-  ADD PRIMARY KEY (`route`),
-  ADD KEY `newroute` (`newRoute`);
-
---
--- Indexes for table `r_boxes`
---
-ALTER TABLE `r_boxes`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `uid` (`uid`);
-
---
--- Indexes for table `r_company`
---
-ALTER TABLE `r_company`
-  ADD PRIMARY KEY (`uid`);
-
---
--- Indexes for table `r_countries`
---
-ALTER TABLE `r_countries`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `name_iso_code` (`name`,`iso_code`),
-  ADD KEY `address_format_id` (`address_format_id`),
-  ADD KEY `region_id` (`region_id`);
-
---
--- Indexes for table `r_coupated`
---
-ALTER TABLE `r_coupated`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `uid` (`uid`),
-  ADD KEY `coupid` (`coupid`);
-
---
--- Indexes for table `r_coupons`
---
-ALTER TABLE `r_coupons`
-  ADD PRIMARY KEY (`coupid`),
-  ADD KEY `fromId` (`fromId`);
-
---
--- Indexes for table `r_do`
---
-ALTER TABLE `r_do`
-  ADD PRIMARY KEY (`doid`),
-  ADD KEY `uid` (`uid`);
-
---
--- Indexes for table `r_events`
---
-ALTER TABLE `r_events`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `ctty` (`ctty`);
-
---
--- Indexes for table `r_gifts`
---
-ALTER TABLE `r_gifts`
-  ADD PRIMARY KEY (`donid`),
-  ADD KEY `uid` (`uid`);
-
---
--- Indexes for table `r_industries`
---
-ALTER TABLE `r_industries`
-  ADD PRIMARY KEY (`iid`);
-
---
--- Indexes for table `r_investments`
---
-ALTER TABLE `r_investments`
-  ADD PRIMARY KEY (`vestid`),
-  ADD KEY `coid` (`coid`),
-  ADD KEY `proposedBy` (`proposedBy`);
-
---
--- Indexes for table `r_invites`
---
-ALTER TABLE `r_invites`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `inviter` (`inviter`),
-  ADD KEY `code` (`code`);
-
---
--- Indexes for table `r_invoices`
---
-ALTER TABLE `r_invoices`
-  ADD PRIMARY KEY (`nvid`),
-  ADD KEY `payer` (`payer`),
-  ADD KEY `payee` (`payee`),
-  ADD KEY `created` (`created`),
-  ADD KEY `status` (`status`);
-
---
--- Indexes for table `r_ips`
---
-ALTER TABLE `r_ips`
-  ADD PRIMARY KEY (`ip`),
-  ADD KEY `uid` (`uid`);
-
---
--- Indexes for table `r_near`
---
-ALTER TABLE `r_near`
-  ADD PRIMARY KEY (`uid1`,`uid2`);
-
---
--- Indexes for table `r_nonmembers`
---
-ALTER TABLE `r_nonmembers`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `r_notices`
---
-ALTER TABLE `r_notices`
-  ADD PRIMARY KEY (`msgid`),
-  ADD KEY `uid` (`uid`);
-
---
--- Indexes for table `r_options`
---
-ALTER TABLE `r_options`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `question` (`question`);
-
---
--- Indexes for table `r_pairs`
---
-ALTER TABLE `r_pairs`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `option1` (`option1`),
-  ADD KEY `option2` (`option2`);
-
---
--- Indexes for table `r_photos`
---
-ALTER TABLE `r_photos`
-  ADD PRIMARY KEY (`uid`);
-
---
--- Indexes for table `r_proposals`
---
-ALTER TABLE `r_proposals`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `ctty` (`ctty`),
-  ADD KEY `name` (`name`);
-
---
--- Indexes for table `r_proxies`
---
-ALTER TABLE `r_proxies`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `person` (`person`);
-
---
--- Indexes for table `r_questions`
---
-ALTER TABLE `r_questions`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `r_ratings`
---
-ALTER TABLE `r_ratings`
-  ADD PRIMARY KEY (`ratingid`),
-  ADD KEY `vestid` (`vestid`),
-  ADD KEY `uid` (`uid`);
-
---
--- Indexes for table `r_regions`
---
-ALTER TABLE `r_regions`
-  ADD PRIMARY KEY (`region`),
-  ADD UNIQUE KEY `fullName` (`fullName`),
-  ADD KEY `state` (`st`);
-
---
--- Indexes for table `r_relations`
---
-ALTER TABLE `r_relations`
-  ADD PRIMARY KEY (`reid`),
-  ADD KEY `main` (`main`),
-  ADD KEY `other` (`other`);
-
---
--- Indexes for table `r_request`
---
-ALTER TABLE `r_request`
-  ADD PRIMARY KEY (`listid`),
-  ADD KEY `ctty` (`ctty`);
-
---
--- Indexes for table `r_shares`
---
-ALTER TABLE `r_shares`
-  ADD PRIMARY KEY (`shid`),
-  ADD KEY `vestid` (`vestid`);
-
---
--- Indexes for table `r_stakes`
---
-ALTER TABLE `r_stakes`
-  ADD PRIMARY KEY (`stakeid`),
-  ADD KEY `uid` (`uid`);
-
---
--- Indexes for table `r_states`
---
-ALTER TABLE `r_states`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `name_country_id` (`name`,`country_id`),
-  ADD KEY `country_id` (`country_id`);
-
---
--- Indexes for table `r_stats`
---
-ALTER TABLE `r_stats`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `ctty` (`ctty`);
-
---
--- Indexes for table `r_tous`
---
-ALTER TABLE `r_tous`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `uid` (`uid`);
-
---
--- Indexes for table `r_transit`
---
-ALTER TABLE `r_transit`
-  ADD PRIMARY KEY (`location`);
-
---
--- Indexes for table `r_txs`
---
-ALTER TABLE `r_txs`
-  ADD PRIMARY KEY (`xid`),
-  ADD KEY `payer` (`payer`),
-  ADD KEY `payee` (`payee`),
-  ADD KEY `created` (`created`);
-
---
--- Indexes for table `r_usd`
---
-ALTER TABLE `r_usd`
-  ADD PRIMARY KEY (`txid`),
-  ADD KEY `created` (`created`);
-
---
--- Indexes for table `r_usd2`
---
-ALTER TABLE `r_usd2`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `created` (`completed`);
-
---
--- Indexes for table `r_user_industries`
---
-ALTER TABLE `r_user_industries`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `uid` (`uid`),
-  ADD KEY `iid` (`iid`);
-
---
--- Indexes for table `r_votes`
---
-ALTER TABLE `r_votes`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `ballot` (`ballot`),
-  ADD KEY `option` (`option`);
-
---
--- Indexes for table `semaphore`
---
-ALTER TABLE `semaphore`
-  ADD PRIMARY KEY (`name`),
-  ADD KEY `value` (`value`),
-  ADD KEY `expire` (`expire`);
-
---
--- Indexes for table `sessions`
---
-ALTER TABLE `sessions`
-  ADD PRIMARY KEY (`sid`,`ssid`),
-  ADD KEY `timestamp` (`timestamp`),
-  ADD KEY `uid` (`uid`),
-  ADD KEY `ssid` (`ssid`);
-
---
--- Indexes for table `system`
---
-ALTER TABLE `system`
-  ADD PRIMARY KEY (`filename`),
-  ADD KEY `system_list` (`status`,`bootstrap`,`type`,`weight`,`name`),
-  ADD KEY `type_name` (`type`,`name`);
-
---
--- Indexes for table `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`uid`),
-  ADD UNIQUE KEY `name` (`name`),
-  ADD KEY `access` (`access`),
-  ADD KEY `created` (`created`),
-  ADD KEY `mail` (`mail`),
-  ADD KEY `picture` (`picture`);
-
---
--- Indexes for table `variable`
---
-ALTER TABLE `variable`
-  ADD PRIMARY KEY (`name`);
-
---
--- Indexes for table `x_invoices`
---
-ALTER TABLE `x_invoices`
-  ADD PRIMARY KEY (`nvid`,`deleted`),
-  ADD KEY `payer` (`payer`),
-  ADD KEY `payee` (`payee`),
-  ADD KEY `created` (`created`),
-  ADD KEY `status` (`status`);
-
---
--- Indexes for table `x_photos`
---
-ALTER TABLE `x_photos`
-  ADD PRIMARY KEY (`uid`,`deleted`);
-
---
--- Indexes for table `x_relations`
---
-ALTER TABLE `x_relations`
-  ADD PRIMARY KEY (`reid`,`deleted`),
-  ADD KEY `main` (`main`),
-  ADD KEY `other` (`other`);
-
---
--- Indexes for table `x_txs`
---
-ALTER TABLE `x_txs`
-  ADD PRIMARY KEY (`xid`,`deleted`),
-  ADD KEY `payer` (`payer`),
-  ADD KEY `payee` (`payee`),
-  ADD KEY `created` (`created`),
-  ADD KEY `payerTid` (`payerTid`),
-  ADD KEY `payeeTid` (`payeeTid`);
-
---
--- Indexes for table `x_usd`
---
-ALTER TABLE `x_usd`
-  ADD PRIMARY KEY (`txid`,`deleted`),
-  ADD KEY `created` (`created`),
-  ADD KEY `payee` (`payee`),
-  ADD KEY `deposit` (`deposit`);
-
---
--- Indexes for table `x_users`
---
-ALTER TABLE `x_users`
-  ADD PRIMARY KEY (`uid`,`deleted`),
-  ADD UNIQUE KEY `name` (`name`),
-  ADD KEY `access` (`access`),
-  ADD KEY `created` (`created`),
-  ADD KEY `mail` (`mail`),
-  ADD KEY `picture` (`picture`);
-
---
--- AUTO_INCREMENT for dumped tables
---
-
---
--- AUTO_INCREMENT for table `block`
---
-ALTER TABLE `block`
-  MODIFY `bid` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique block ID.', AUTO_INCREMENT=511;
-
---
--- AUTO_INCREMENT for table `flood`
---
-ALTER TABLE `flood`
-  MODIFY `fid` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Unique flood event ID.', AUTO_INCREMENT=48;
-
---
--- AUTO_INCREMENT for table `menu_links`
---
-ALTER TABLE `menu_links`
-  MODIFY `mlid` int(10) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'The menu link ID (mlid) is the integer primary key.', AUTO_INCREMENT=1392;
-
---
--- AUTO_INCREMENT for table `queue`
---
-ALTER TABLE `queue`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key: Unique item ID';
-
---
--- AUTO_INCREMENT for table `r_ballots`
---
-ALTER TABLE `r_ballots`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ballot record id';
-
---
--- AUTO_INCREMENT for table `r_boxes`
---
-ALTER TABLE `r_boxes`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'device record id';
-
---
--- AUTO_INCREMENT for table `r_company`
---
-ALTER TABLE `r_company`
-  MODIFY `uid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'account record ID', AUTO_INCREMENT=410044003;
-
---
--- AUTO_INCREMENT for table `r_countries`
---
-ALTER TABLE `r_countries`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Country Id', AUTO_INCREMENT=1247;
-
---
--- AUTO_INCREMENT for table `r_coupated`
---
-ALTER TABLE `r_coupated`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'record id';
-
---
--- AUTO_INCREMENT for table `r_coupons`
---
-ALTER TABLE `r_coupons`
-  MODIFY `coupid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'record id';
-
---
--- AUTO_INCREMENT for table `r_do`
---
-ALTER TABLE `r_do`
-  MODIFY `doid` int(11) NOT NULL AUTO_INCREMENT COMMENT 'record id';
-
---
--- AUTO_INCREMENT for table `r_events`
---
-ALTER TABLE `r_events`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'record id';
-
---
--- AUTO_INCREMENT for table `r_gifts`
---
-ALTER TABLE `r_gifts`
-  MODIFY `donid` int(11) NOT NULL AUTO_INCREMENT COMMENT 'gift record id';
-
---
--- AUTO_INCREMENT for table `r_industries`
---
-ALTER TABLE `r_industries`
-  MODIFY `iid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=79;
-
---
--- AUTO_INCREMENT for table `r_investments`
---
-ALTER TABLE `r_investments`
-  MODIFY `vestid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'record ID';
-
---
--- AUTO_INCREMENT for table `r_invites`
---
-ALTER TABLE `r_invites`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'record id';
-
---
--- AUTO_INCREMENT for table `r_invoices`
---
-ALTER TABLE `r_invoices`
-  MODIFY `nvid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'the unique invoice ID';
-
---
--- AUTO_INCREMENT for table `r_nonmembers`
---
-ALTER TABLE `r_nonmembers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'non-member company record id';
-
---
--- AUTO_INCREMENT for table `r_notices`
---
-ALTER TABLE `r_notices`
-  MODIFY `msgid` int(11) NOT NULL AUTO_INCREMENT COMMENT 'notice record id';
-
---
--- AUTO_INCREMENT for table `r_options`
---
-ALTER TABLE `r_options`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'option record id';
-
---
--- AUTO_INCREMENT for table `r_pairs`
---
-ALTER TABLE `r_pairs`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'pairs record id';
-
---
--- AUTO_INCREMENT for table `r_proposals`
---
-ALTER TABLE `r_proposals`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'proposal record id';
-
---
--- AUTO_INCREMENT for table `r_proxies`
---
-ALTER TABLE `r_proxies`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'record id';
-
---
--- AUTO_INCREMENT for table `r_questions`
---
-ALTER TABLE `r_questions`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'question record id';
-
---
--- AUTO_INCREMENT for table `r_ratings`
---
-ALTER TABLE `r_ratings`
-  MODIFY `ratingid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'record ID';
-
---
--- AUTO_INCREMENT for table `r_relations`
---
-ALTER TABLE `r_relations`
-  MODIFY `reid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'relationship record id';
-
---
--- AUTO_INCREMENT for table `r_shares`
---
-ALTER TABLE `r_shares`
-  MODIFY `shid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'record ID';
-
---
--- AUTO_INCREMENT for table `r_stakes`
---
-ALTER TABLE `r_stakes`
-  MODIFY `stakeid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'record ID';
-
---
--- AUTO_INCREMENT for table `r_states`
---
-ALTER TABLE `r_states`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'State / Province ID', AUTO_INCREMENT=10057;
-
---
--- AUTO_INCREMENT for table `r_stats`
---
-ALTER TABLE `r_stats`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'statistics record id';
-
---
--- AUTO_INCREMENT for table `r_tous`
---
-ALTER TABLE `r_tous`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'vote record id';
-
---
--- AUTO_INCREMENT for table `r_txs`
---
-ALTER TABLE `r_txs`
-  MODIFY `xid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'the unique transaction ID';
-
---
--- AUTO_INCREMENT for table `r_usd`
---
-ALTER TABLE `r_usd`
-  MODIFY `txid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'the unique transaction ID';
-
---
--- AUTO_INCREMENT for table `r_usd2`
---
-ALTER TABLE `r_usd2`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'the unique transaction ID';
-
---
--- AUTO_INCREMENT for table `r_user_industries`
---
-ALTER TABLE `r_user_industries`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'user industry record id';
-
---
--- AUTO_INCREMENT for table `r_votes`
---
-ALTER TABLE `r_votes`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'vote record id';
-
---
--- AUTO_INCREMENT for table `x_invoices`
---
-ALTER TABLE `x_invoices`
-  MODIFY `nvid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'the unique invoice ID';
-
---
--- AUTO_INCREMENT for table `x_relations`
---
-ALTER TABLE `x_relations`
-  MODIFY `reid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'relationship record id';
-
---
--- AUTO_INCREMENT for table `x_txs`
---
-ALTER TABLE `x_txs`
-  MODIFY `xid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'the unique transaction ID';
-
---
--- AUTO_INCREMENT for table `x_usd`
---
-ALTER TABLE `x_usd`
-  MODIFY `txid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'the unique transaction ID';
-COMMIT;
+-- ALTER TABLE `block`
+--   MODIFY `bid` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique block ID.', AUTO_INCREMENT=511;
+
+-- --
+-- -- AUTO_INCREMENT for table `flood`
+-- --
+-- ALTER TABLE `flood`
+--   MODIFY `fid` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Unique flood event ID.', AUTO_INCREMENT=48;
+
+-- --
+-- -- AUTO_INCREMENT for table `menu_links`
+-- --
+-- ALTER TABLE `menu_links`
+--   MODIFY `mlid` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'The menu link ID (mlid) is the integer primary key.', AUTO_INCREMENT=1392;
+
+-- --
+-- -- AUTO_INCREMENT for table `queue`
+-- --
+-- ALTER TABLE `queue`
+--   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'primary key: Unique item ID';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_ballots`
+-- --
+-- ALTER TABLE `r_ballots`
+--   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ballot record id';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_boxes`
+-- --
+-- ALTER TABLE `r_boxes`
+--   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'device record id';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_company`
+-- --
+-- ALTER TABLE `r_company`
+--   MODIFY `uid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'account record ID', AUTO_INCREMENT=410044003;
+
+-- --
+-- -- AUTO_INCREMENT for table `r_countries`
+-- --
+-- ALTER TABLE `r_countries`
+--   MODIFY `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Country Id', AUTO_INCREMENT=1247;
+
+-- --
+-- -- AUTO_INCREMENT for table `r_coupated`
+-- --
+-- ALTER TABLE `r_coupated`
+--   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'record id';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_coupons`
+-- --
+-- ALTER TABLE `r_coupons`
+--   MODIFY `coupid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'record id';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_do`
+-- --
+-- ALTER TABLE `r_do`
+--   MODIFY `doid` int(11) NOT NULL AUTO_INCREMENT COMMENT 'record id';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_events`
+-- --
+-- ALTER TABLE `r_events`
+--   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'record id';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_gifts`
+-- --
+-- ALTER TABLE `r_gifts`
+--   MODIFY `donid` int(11) NOT NULL AUTO_INCREMENT COMMENT 'gift record id';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_industries`
+-- --
+-- ALTER TABLE `r_industries`
+--   MODIFY `iid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=79;
+
+-- --
+-- -- AUTO_INCREMENT for table `r_investments`
+-- --
+-- ALTER TABLE `r_investments`
+--   MODIFY `vestid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'record ID';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_invites`
+-- --
+-- ALTER TABLE `r_invites`
+--   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'record id';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_invoices`
+-- --
+-- ALTER TABLE `r_invoices`
+--   MODIFY `nvid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'the unique invoice ID';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_nonmembers`
+-- --
+-- ALTER TABLE `r_nonmembers`
+--   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'non-member company record id';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_notices`
+-- --
+-- ALTER TABLE `r_notices`
+--   MODIFY `msgid` int(11) NOT NULL AUTO_INCREMENT COMMENT 'notice record id';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_options`
+-- --
+-- ALTER TABLE `r_options`
+--   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'option record id';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_pairs`
+-- --
+-- ALTER TABLE `r_pairs`
+--   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'pairs record id';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_proposals`
+-- --
+-- ALTER TABLE `r_proposals`
+--   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'proposal record id';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_proxies`
+-- --
+-- ALTER TABLE `r_proxies`
+--   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'record id';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_questions`
+-- --
+-- ALTER TABLE `r_questions`
+--   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'question record id';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_ratings`
+-- --
+-- ALTER TABLE `r_ratings`
+--   MODIFY `ratingid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'record ID';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_relations`
+-- --
+-- ALTER TABLE `r_relations`
+--   MODIFY `reid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'relationship record id';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_shares`
+-- --
+-- ALTER TABLE `r_shares`
+--   MODIFY `shid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'record ID';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_stakes`
+-- --
+-- ALTER TABLE `r_stakes`
+--   MODIFY `stakeid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'record ID';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_states`
+-- --
+-- ALTER TABLE `r_states`
+--   MODIFY `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'State / Province ID', AUTO_INCREMENT=10057;
+
+-- --
+-- -- AUTO_INCREMENT for table `r_stats`
+-- --
+-- ALTER TABLE `r_stats`
+--   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'statistics record id';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_tous`
+-- --
+-- ALTER TABLE `r_tous`
+--   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'vote record id';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_txs`
+-- --
+-- ALTER TABLE `r_txs`
+--   MODIFY `xid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'the unique transaction ID';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_usd`
+-- --
+-- ALTER TABLE `r_usd`
+--   MODIFY `txid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'the unique transaction ID';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_usd2`
+-- --
+-- ALTER TABLE `r_usd2`
+--   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'the unique transaction ID';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_user_industries`
+-- --
+-- ALTER TABLE `r_user_industries`
+--   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'user industry record id';
+
+-- --
+-- -- AUTO_INCREMENT for table `r_votes`
+-- --
+-- ALTER TABLE `r_votes`
+--   MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'vote record id';
+
+-- --
+-- -- AUTO_INCREMENT for table `x_invoices`
+-- --
+-- ALTER TABLE `x_invoices`
+--   MODIFY `nvid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'the unique invoice ID';
+
+-- --
+-- -- AUTO_INCREMENT for table `x_relations`
+-- --
+-- ALTER TABLE `x_relations`
+--   MODIFY `reid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'relationship record id';
+
+-- --
+-- -- AUTO_INCREMENT for table `x_txs`
+-- --
+-- ALTER TABLE `x_txs`
+--   MODIFY `xid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'the unique transaction ID';
+
+-- --
+-- -- AUTO_INCREMENT for table `x_usd`
+-- --
+-- ALTER TABLE `x_usd`
+--   MODIFY `txid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'the unique transaction ID';
+-- COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

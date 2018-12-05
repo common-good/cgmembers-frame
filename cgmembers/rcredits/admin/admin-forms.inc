@@ -993,8 +993,7 @@ function util($arg) {
 //  if ($arg == 'modal') drupal_goto('modal');
 //  if ($arg == 'reset') r\reset();
   if ($arg == 'reset-menu') \menu_rebuild();
-  if ($arg == 'rebuild-db') {
-    f('i.rebuildDb');
+  if ($arg == 'remove-test-data') {
     if (isDEV) {
       f('t.clear'); 
       say(t('All test data has been deleted.'));
@@ -1016,7 +1015,7 @@ function handyLinks() {
 
   $links = array(
     'rcredits/util/reset-menu|Rebuild menu based on hook_menu() and revert any custom changes. All menu items return to their default settings.|Redo MENUS|menu-hamburger',
-    'rcredits/util/rebuild-db|Rebuild tables|REBUILD database|fast-backward',
+    'rcredits/util/remove-test-data|Remove test data|REMOVE test data|fast-backward',
     'rcredits/util/clear|Empty the cache and sessions tables|Clear Cache & Sessions|unchecked',
   );
 

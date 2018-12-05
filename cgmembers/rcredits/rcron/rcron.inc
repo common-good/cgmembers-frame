@@ -550,7 +550,7 @@ function requests() {
         foreach (['first', 'last'] as $k) $row[$k] = u\normalizeCase($$k);
         r\tellAdmin('invitation request', $row);
         foreach (['email', 'phone'] as $k) $row[$k] = u\cry('P', $row[$k]);
-        db\update('r_request', $row, 'listid', TRUE);
+        db\insertOrUpdate('r_request', $row, 'listid');
       } else $header = $row + ['ctty'];
     }
   }
