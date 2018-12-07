@@ -147,6 +147,8 @@ EOF
   'credit ban on' => t('Maybe spending below a zero balance should be temporarily banned because demand for %RCREDITS has been negative %months months in a row.'),
   'credit ban off' => t('Temporary ban on spending below a zero balance should be lifted because demand for %RCREDITS has been positive %months months in a row.'),
   'coupon redeemed' => t('Success! %amount has been added to your balance, as a gift from %giver.'),
+  'join success' => t('Success! Your accounts have been successfully joined.'),
+  'join request success' => t('Success! An email has been sent to the other account owner, to confirm joining with yours.'),  
 
   // questions
   "what's your name?" => t("To set up your %PROJECT Account, we need your full name and email address. First, what's your name?"),

@@ -4,11 +4,11 @@ use CG as r;
 use CG\Util as u;
 use CG\DB as db;
 
-define('F_FILEHDR', 'recType:1, priority:2, destNum:10, originNum:10, datetime:10, fileIdModifier:1, recSize:3, blocking:2, format:1, destName:23, originName:23, ref:8'); // header format
-define('F_BATCHHDR', 'recType:1, class:3, originName:16, data:20, originNum:10, secCode:3, purpose:10, when:6, entryDate:6, settle:3, status:1, destNum:8, batchNum:7'); // batch header format
-define('F_PPD', 'recType:1, txCode:2, routing:9, account:17, amount:10, id:15, name:22, data:2, addendaFlag:1, destNum:8, count:7'); // PPD (Prearranged Payment and Deposit) entry detail format
-define('F_BATCHFTR', 'recType:1, class:3, count:6, hash:10, debits:12, credits:12, originNum:10, auth:19, reserve:6, destNum:8, batchNum:7'); // end of batch (control record)
-define('F_FILEFTR', 'recType:1, batches:6, blocks:6, entries:8, hash:10, debits:12, credits:12, reserve:39'); // end of file (control record)
+define('F_FILEHDR', 'recType:R1, priority:R2, destNum:R10, originNum:R10, datetime:R10, fileIdModifier:R1, recSize:R3, blocking:R2, format:R1, destName:L23, originName:L23, ref:L8'); // header format
+define('F_BATCHHDR', 'recType:R1, class:R3, originName:L16, data:L20, originNum:R10, secCode:L3, purpose:L10, when:L6, entryDate:R6, settle:L3, status:R1, destNum:R8, batchNum:R7'); // batch header format
+define('F_PPD', 'recType:R1, txCode:R2, routing:R9, account:L17, amount:R10, id:L15, name:L22, data:L2, addendaFlag:R1, destNum:R8, count:R7'); // PPD (Prearranged Payment and Deposit) entry detail format
+define('F_BATCHFTR', 'recType:R1, class:R3, count:R6, hash:R10, debits:R12, credits:R12, originNum:R10, auth:L19, reserve:L6, destNum:R8, batchNum:R7'); // end of batch (control record)
+define('F_FILEFTR', 'recType:R1, batches:R6, blocks:R6, entries:R8, hash:R10, debits:R12, credits:R12, reserve:L39'); // end of file (control record)
 define('DEST_NUM', '011500120'); // usually a routing number for the bank providing ACH service
 
 /**
@@ -33,28 +33,6 @@ function achify($where = 'deposit=0') {
   list ($data, $purpose, $when) = ['', t('CG Credits'), strftime('%b%d')];
   $recs[] = achRecord(compact(array_keys($ray = ray(F_BATCHHDR))), $ray);
 
-/*
-  $tdRoute = '21127445'; // sending bank's routing number without the final "0"
-  $now = strftime('%y%m%d%H%M');
-  $fileId = 'A'; // distinguishes files on the same date and between the same participants (A-Z, 0-9)
-  $dest = pad('RBS CITIZENS NA', 23);
-  $source = pad(PROJECT, 23);
-  $ref = pad('', 8);
-  $recs[] = "101 {$tdRoute}0" . '1' . CGF_EIN . "$now{$fileId}094101$dest$source$ref"; // file header
-  
-  $class = '200'; // mixed credits and debits (225 for debits only, 220 for credits only)
-  $coName = pad(strtoupper(PROJECT), 16); // 'SOC BENFT EVRYON'? 'COM GOOD FINANCE'? 'COMMON GOOD FIN'?
-  $extra = pad('', 20); // discretionary (we can use this space for anything)
-  $code = 'PPD'; // prearranged payment and deposit
-  //$purpose = pad($amount > 0 ? t('rCredits') : t('money out'), 10);
-  $purpose = pad(t('CG Credits'), 10);
-  $when = pad(strftime('%b %d'), 6); // descriptive date
-  $effective = strftime('%y%m%d'); // requested settlement date
-  $batch = u\lpad(1, 7); // batch (company) number within file
-  $recs[] = "5$class$coName$extra" . '1' . CGF_EIN . "$code$purpose$when$effective" . "0001$tdRoute$batch"; // co batch header
-*/
-
-//  $where = TRUE ? 1 : 'amount<=0';
   $q = db\q("SELECT txid,payee,amount,deposit FROM r_usd WHERE $where ORDER BY txid");
   while ($row = $q->fetchAssoc()) {
     extract($row);
@@ -64,7 +42,6 @@ function achify($where = 'deposit=0') {
     $count++;
     list ($recType, $id, $name, $addendaFlag) = [6, $a->mainQid, $a->legalName, 0];
     list ($routing, $account) = u\parseBankAccount($a->bankAccount);
-/// TEST    if ($a->mainQid == 'NEWAIO') $amount = 0; // debug(
 		
 		$amount *= 100;
     if ($amount <= 0) $credits -= $amount; else $debits += $amount;
@@ -76,22 +53,6 @@ function achify($where = 'deposit=0') {
 
     $hash += substr($routing, 0, 8);
     if (!$deposit) db\update('r_usd', ray('deposit txid', strtotime('today'), $txid), 'txid');
-    
-    /*    
-    list ($route, $account) = u\parseBankAccount($a->bankAccount);
-    $bankAccountType = 'checking'; // we handle only checking accounts at this time
-    $code = @$bankAccountType == 'checking' ? ($amount < 0 ? 22 : 27) : ($amount < 0 ? 32 : 37);
-    $account = pad($account, 17);
-    if ($amount < 0) $credits -= $amount; else $debits += $amount;
-    $amount = padnum($amount, 10);
-    $acctId = pad(($a->co ? 'EIN #' : 'SSN #') . $a->federalId, 15);
-    $name = pad($a->legalName, 22);
-    $extra = pad('', 2); // discretionary
-    $trace = $tdRoute . u\lpad($txid, 7); // 15 chars total
-    $recs[] = "6$code$route$account$amount$acctId$name$extra" . "0$trace"; // one ach request
-    $count += 1;
-    $hash = substr($hash + $route, 10);
-    */
   }
   
   if (!$count) return 0;
@@ -103,24 +64,10 @@ function achify($where = 'deposit=0') {
   $blocks = ceil((2 + $count + 2) / 10); // how many blocks of 10 lines, rounded up (2 hdrs, "count" entries, 2 ftrs)
   $recs[] = achRecord(compact(array_keys($ray = ray(F_FILEFTR))), $ray);
 
-  /*
-  $count = u\lpad($count, 6);
-  $hash = u\lpad($hash, 10);
-  $debits = padnum($debits, 12);
-  $credits = padnum($credits, 12);
-  $auth = u\lpad('?', 8) . u\lpad('', 11); //
-  $b6 = pad('', 6);
-  $recs[] = "8$class$count$hash$debits$credits" . '1' . CGF_EIN . "$auth$b6$tdRoute$batch";  // batch control
-
-  $batches = u\lpad(1, 6);
-  $blocks = u\lpad(ceil((2 + $count + 2) / 10), 6); // how many blocks of 10 lines, rounded up
-  $count = u\lpad($count, 8);
-  $b39 = u\lpad('', 39);
-  $recs[] = "9$batches$blocks$count$hash$debits$credits$b39"; // file control
-  */
 /**/  foreach ($recs as $line) if (strlen($line) != $recSize) debug('bad ach line len: ' . strlen($line) . " - $line");
 
   $datetime = strftime('%Y%m%d%H%M'); // use full year (unlike ach record format)
+///    if (isDEV) debug($recs);
   header('Content-type: text/plain');
   header("Content-Disposition: attachment; filename=$CGCODE.ach-$datetime.txt");
 /**/  echo join("\n", $recs);
@@ -130,17 +77,18 @@ function achify($where = 'deposit=0') {
 /**
  * Return an ACH record for the given data and format.
  * @param assoc $values: field values, in order
- * @param assoc $lens: field lengths, in order
+ * @param assoc $jlens: field justifications (R or L) and lengths, in order
  * @return the field values, justified / filled / truncated appropriately, then concatenated.
  */
-function achRecord($values, $lens) {
+function achRecord($values, $jlens) {
   $res = '';
-  foreach ($lens as $k => $len) {
+  foreach ($jlens as $k => $jlen) {
+    list ($left, $len) = [$jlen[0] == 'L', substr($jlen, 1)];
     $v = $values[$k];
-    $res .= preg_match('/^[-,\\.0-9]+$/', $v) ? padnum($v, $len) : pad($v, $len); // (is_numeric would allow numbers with spaces)
+    $res .= $left ? pad($v, $len) : padnum($v, $len);
   }
   return $res;
 }
 
-function pad($s, $n) {return substr(str_pad($s, $n), 0, $n);}
-function padnum($n, $len) {return u\lpad(str_replace(',', '', number_format($n, 0)), $len);}
+function pad($s, $len) {return substr(str_pad($s, $len), 0, $len);}
+function padnum($n, $len) {return u\lpad(str_replace(',', '', number_format((int) $n, 0)), $len);}

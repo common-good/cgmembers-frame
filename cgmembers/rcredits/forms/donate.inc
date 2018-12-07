@@ -15,7 +15,7 @@ function formDonate($form, &$sta, $args = '') {
   if (!$mya = w\eLinkAcct($sta, $args, 'acct')) return;
 
 	//  $oftens = [0 => t('when?')] + ray(OFTENS);
-  $oftens = ray(OFTENS);
+  $oftens = array_reverse(ray(OFTENS));
   $giftLevels = array(
   // 10000 => t('Marble .. $10,000'),
   // 5000 => t('Granite ... 5,000'),
@@ -86,9 +86,9 @@ function formDonate_submit($form, &$sta) {
     if ($honored) db\insert('r_honors', ray('uid honor honored', $mya->id, $honor, $honored));
     if ($period != '1') db\insert('r_recurs', ray('payer payee amount period', $mya->id, CGID, $amount, $period));
 //    $count = db\count('r_txs', 'payer=:payer AND payee=:payee AND :IS_RECURS AND created>=:created', compact(ray('payer payee created')));
-    list ($payerFor, $data) = cr\setupGift($period);
+    list ($desc, $data) = r\setupGift($period);
     $msg = 'gift successful';
-    if (cr\recurPay($info + compact('payerFor', 'data'))) {
+    if ($mya->payApproved(CGID, $amount, $desc, $data)) {
       r\notify($mya->id, 'gift sent', ray('amount', u\fmtAmt($amount)));
     } else $msg .= '|gift transfer later';
     say($msg);
