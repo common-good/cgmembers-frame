@@ -34,7 +34,6 @@ function rdo($code, $args = '') {
 /**/	u\log(print_r(compact(ray('code args')), 1));
   global $channel;
   if (isDEV) foreach (['error', 'status'] as $k) @unlink(f('t.dosayFilename', $k)); // clear tests (no way to see if testing)
-  if (time() < strtotime('6/1/2017')) u\loga('rdo', compact('code', 'args'));
   if (strpos($code, ' ')) return doSay(plain($code));
   if ($i = strpos($code, '~') and $i < 15) { // mailChimp-type action
     @list ($op, $qid, $ecode, $mo, $v) = explode('~', $code . '~~~~~~');
@@ -42,7 +41,6 @@ function rdo($code, $args = '') {
     if (!@$op or !@$qid or !@$a = r\acct($qid) or @$ecode != $a->emailCode) return doSay(t('That is not a valid link.'));
   } else {
     if (!$info = r\doCode($code)) return doSay(t('That link is archaic.'));
-///  print_r($info);
     if ($once = is_numeric($doid = @$info['op'])) {
       if (!$row = db\get('uid,data,expires', 'r_do', 'doid=:doid', compact('doid'))) return doSay(t('That link is no longer valid.')); // already used OR deleted because it expired
       extract($row);
@@ -53,6 +51,7 @@ function rdo($code, $args = '') {
   }
   
   if (@$mo) $expires = (r\rdoMonth() > $mo + 3) ? 1 : FALSE; // finagle expiration if link is older than 3 months
+
   if (@$expires and r\rTime() >= $expires) return doSay('link expired');
 
   $channel = TX_LINK;
@@ -108,7 +107,7 @@ function rdo($code, $args = '') {
     $otherId = $v;
     $joint = r\perm(B_JOINT);
     if  (r\relation(1, $otherId, $a->id, 'permission=:joint', compact('joint'))) { // inviter still wants it?
-      $a->unjoin(); // zap any other joins or join requests
+      $a->unjoinAllBut($otherId); // zap any other joins or join requests
       r\acct($a->id, $otherId)->setRel('permission draw', $joint, 0);
       $a->join(r\acct($otherId)); // remember who is joined
       $res = TRUE;
