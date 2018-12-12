@@ -12,7 +12,6 @@ use CG\Db as db;
 function formHonors($form, &$sta) {
   $title = t('Honored and Remembered');
   $subtext = t('Listed here are the people and principles honored and remembered with a <%a>contribution</a> to %PROJECT.', '_a', atag('/community/donate'));
-  $oftens = ray(OFTENS);
   $q = db\q("SELECT DISTINCT honor,honored FROM r_honors ORDER BY honor,honored");
   $list = '';
   $type = 'none';

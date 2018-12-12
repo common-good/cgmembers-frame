@@ -26,12 +26,15 @@ Scenario: A member changes some settings
   |       1 |     211870281 |         123 |          123 |       0 |       1 |    100 |     11 |          0 |
   When member ".ZZD" visits page "sadmin/changes/NEWZZA"
   Then we show "Account Changes for Abe One" with:
-  | Date   | Field       | Old Value            | New Value                   | Changed by |
+  | Date | Field       | Old Value            | New Value                   | Changed by |
   | %dmy | flags       | ok ided              | ok ided weekly              | abeone     |
   | %dmy | flags       | ok ided weekly       | ok ided weekly paper        | abeone     |
   | %dmy | crumbs      |                 0.02 |                        0.01 | abeone     |
   | %dmy | flags       | ok ided weekly paper | ok ided refill weekly paper | abeone     |
+  And we show "Account Changes for Abe One" with:
   | %dmy | achMin      |                   10 |                          11 | abeone     |
-#  | %dmy | bankAccount | (secret)             | (secret)                    | abeone     |
+  | %dmy | bankAccount | (secret)             | (secret)                    | abeone     |
+# sometimes this happens out of order (dunno why)
+
 #  | %dmy | bankAccount |                      | USkk211870281123            | abeone     | (this will work with member "D:1" when decry('V') works)
 #  | %dmy | flags   | member ok bona | member ok bona weekly debt |

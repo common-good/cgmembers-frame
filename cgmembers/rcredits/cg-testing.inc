@@ -793,16 +793,17 @@ function memberVisitsPage($id, $page) { // pass options in URL
   return TRUE;
 }
 
-function weShowWith($title, $content = FALSE, $mustBePresent = TRUE) {
+function weShowWith($title0, $content = FALSE, $mustBePresent = TRUE) {
   global $testOnly; if (!$testOnly) return FALSE;
+  $title = tr($title0, @$content[0]); // just in case
   if ($title and !weShow($title, $mustBePresent)) return FALSE;
-  return weShow($content, $mustBePresent);
+  return $title == $title0 ? weShow($content, $mustBePresent) : TRUE;
 }
 
 function weShowWithSubs($page, $subs) {
   global $testOnly;
   global $testConfirmation; // confirmation message output, if any
-  global $formOut; // for testing
+  global $formOut;
 
   $subs = @$subs[0] ?: []; // comes in as "" if no subs
 
@@ -1130,8 +1131,13 @@ function varIs($varName, $index, $subs = []) {
 }
 
 function dropdownOptions($form) {
-  if (!preg_match_all('~<option [^>]*>.*?</option>~sm', $form, $matches)) return '';
-  return strip_tags(join(PHP_EOL, $matches[0]));
+  if (preg_match_all('~<option value="([^"]*)"[^>]*>(.*?)</option>~sm', $form, $m)) {
+    foreach ($m[1] as $i => $k) $res[] = "$k=>" . $m[2][$i];
+    return join(PHP_EOL, $res);
+  }
+//    return join(PHP_EOL
+  if (preg_match_all('~<option [^>]*>.*?</option>~sm', $form, $m)) return strip_tags(join(PHP_EOL, $m[0]));
+  return '';
 }
 
 function setChecked($name) {global $tChecked; $tChecked[] = $name;}
