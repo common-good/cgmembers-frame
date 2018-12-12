@@ -192,7 +192,7 @@ define('ORGANIZER_GRANT_MIN', 10); // minimum number of individuals to recruit, 
 define('ORGANIZER_GRANT_MAX', '$5,000'); // maximum organizer grant amount
 define('TICKLE_WELCOME', 2 * 7); // number of days to wait after activation, before followup
 define('TICKLE_DELAYED', 6 * 7); // number of days to wait after activation, before followup if no gift or no CGC
-define('OFTENS', 'W:Weekly,M:Monthly,Q:Quarterly,Y:Yearly,1:Once (now)');
+define('OFTENS', 'W:Weekly,M:Monthly,Q:Quarterly,Y:Yearly,X:Once (now)');
 define('OFX_TX_FLDS', 'trnType dtPosted trnAmt fitId name memo');
 
 define('ICARD_EXPIRES', 14); // how many days until invitation card expires, after account is activated

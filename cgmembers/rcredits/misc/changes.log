@@ -1,3 +1,5 @@
+2018-12-12 feature/fix-donate-form
+
 2018-12-01 feature/fix-join
 . joins now work even if relation pre-existed and member uses the button on the Summary page
 . cron no longer tries invoices where a party is inactive

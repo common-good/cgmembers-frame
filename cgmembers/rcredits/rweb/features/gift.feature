@@ -16,9 +16,23 @@ Setup:
   
 Scenario: A member donates
   Given next DO code is "whatever"
+  When member ".ZZA" visits page "community/donate"
+  Then we show "Donate to %PROJECT" with:
+  | Donation | One Brick |
+  | When      | How often? |
+  | Honoring | |
+  And with choices:
+  | 0 | How often? |
+  | Y | Yearly |
+  | Q | Quarterly |
+  | M | Monthly |
+  | W | Weekly |
+#  And without: (can't tell this isn't showing because it's CSS)
+#  | Other amount |
+  
   When member ".ZZA" completes form "community/donate" with values:
   | gift | amount | period | honor  | honored | share |*
-  |   -1 |     10 |      1 | memory | Jane Do |    10 |
+  |   -1 |     10 |      X | memory | Jane Do |    10 |
   Then transactions:
   | xid | created | type     | amount | from | to   | purpose      |*
   |   1 | %today  | transfer |     10 | .ZZA | cgf  | donation |
@@ -59,6 +73,26 @@ Scenario: A member makes a recurring donation
   | amount | rewardAmount |*
   |    $10 |        $0.50 | 
   
+Scenario: A member makes a new recurring donation
+	Given these "recurs":
+	| created   | from | to  | amount | period |*
+	| %today-1d | .ZZA | cgf |     25 |      Y |
+  When member ".ZZA" visits page "community/donate"
+  Then we show "donation replaces" with:
+  | period | amt |*
+  | Yearly | $25 |
+
+  When member ".ZZA" completes form "community/donate" with values:
+  | gift | amount | period | honor  | honored | share |*
+  |   -1 |     10 |      M | memory | Jane Do |    10 |
+  Then transactions:
+  | xid | created | type     | amount | from | to   | purpose                    |*
+  |   1 | %today  | transfer |     10 | .ZZA | cgf  | regular donation (Monthly) |
+  And we say "status": "gift successful"
+	And these "recurs":
+	| created | from | to  | amount | period |*
+	| %today  | .ZZA | cgf |     10 |      M |
+  
 Scenario: A company makes a recurring donation
   When member ".ZZC" completes form "community/donate" with values:
   | gift | amount | period | honor  | honored | share |*
@@ -71,7 +105,7 @@ Scenario: A company makes a recurring donation
 Scenario: A member donates with insufficient funds
   When member ".ZZA" completes form "community/donate" with values:
   | gift | amount | period | honor  | honored | share |*
-  |   -1 |    200 |      1 | memory | Jane Do |    10 |
+  |   -1 |    200 |      X | memory | Jane Do |    10 |
   Then we say "status": "gift successful|gift transfer later"
   And invoices:
   | nvid | created | amount | from | to   | purpose  | flags |*
@@ -81,4 +115,4 @@ Scenario: A member donates with insufficient funds
   | %today  | .ZZA | memory | Jane Do |
   And we tell "ctty" CO "gift" with subs:
   | amount | period |*
-  |    200 |      1 |
+  |    200 |      X |

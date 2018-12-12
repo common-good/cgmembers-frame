@@ -44,8 +44,8 @@ function formTx($form, &$sta, $args = '') {
   
   $purpose = textFld(t('For:'), [t('purpose or description of goods and services')], required(@$purpose));
   $oftens = ['' => t('No repeat')] + ray(OFTENS);
-  unset($oftens['1']);  
-  if ($paying) $repeat = selectFld(t('&nbsp;'), '', [], $oftens);
+  unset($oftens['X']);  
+  if ($paying) $repeat = selectFld(t('&nbsp;'), '', dft(''), $oftens);
   
   $scanClass = 'not-scanned';
   $$type = submit($opDesc);
