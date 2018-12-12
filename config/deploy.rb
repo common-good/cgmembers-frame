@@ -1,3 +1,5 @@
+require 'capistrano/console'
+
 # config valid for current version and patch releases of Capistrano
 lock "~> 3.11.0"
 
@@ -40,5 +42,8 @@ append :linked_dirs, "cgLogs", "cgPhotoTemp", "cgmembers/.well-known"
 # Uncomment the following to require manually verifying the host key before first deploy.
 # set :ssh_options, verify_host_key: :secure
 
+set :tmp_dir, "/home/#{fetch(:local_user)}/tmp"
+
 # Locals - this one sets the umask for the deployment
 SSHKit.config.umask = '002'
+set :pty, true
