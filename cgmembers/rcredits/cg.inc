@@ -1513,11 +1513,11 @@ function handleInvestmentRequest($stakeid, &$msg) {
  */
 function setupGift($period) {
   $oftens = ray(OFTENS);
-  $purpose = $period == '1' 
+  $purpose = $period == 'X' 
   ? t('donation') 
   : t('regular donation (%often)', 'often', $oftens[$period]);
   $extra['gift'] = 1;
-  if ($period != 1) $extra['recurs'] = 1;
+  if ($period != 'X') $extra['recurs'] = 1;
   return [$purpose, $extra];
 }
 

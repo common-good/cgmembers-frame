@@ -14,8 +14,7 @@ use CG\Cron as cr;
 function formDonate($form, &$sta, $args = '') {
   if (!$mya = w\eLinkAcct($sta, $args, 'acct')) return;
 
-	//  $oftens = [0 => t('when?')] + ray(OFTENS);
-  $oftens = array_reverse(ray(OFTENS));
+  $oftens = [0 => t('How often?')] + array_reverse(ray(OFTENS));
   $giftLevels = array(
   // 10000 => t('Marble .. $10,000'),
   // 5000 => t('Granite ... 5,000'),
@@ -35,11 +34,10 @@ function formDonate($form, &$sta, $args = '') {
 	if ($recurs = db\get('id,period,amount', 'r_recurs', 'payer=:payer AND payee=:CGID AND ended=0', ray('payer', $mya->id))) {
 		extract($recurs);
 		$recurId = hidFld($id);
-    $replaces = t('If you choose a new recurring donation, it will replace your existing %period donation of %amt.', 'period amt', $oftens[$period], u\fmtAmt($amount));
+    $replaces = t('donation replaces', 'period amt', $oftens[$period], u\fmtAmt($amount));
 	}
-	
-  if (!$mya->activated or !$recurs) {
-		unset($oftens['1']); // no one-time donation unless the account also has a recurring donation
+  if (!$mya->activated or !$recurs or !r\acct()) {
+		unset($oftens['X']); // no one-time donation unless the account also has a recurring donation and is signed in
 		$recurOnly = t(': monthly, quarterly, or yearly');
 	}
   $honors = array('honor' => 'in honor of', 'memory' => 'in memory of');
@@ -50,7 +48,7 @@ function formDonate($form, &$sta, $args = '') {
   $subtext = t('<p>(optional) Make a tax-deductible gift of any size%recurOnly. %replaces</p>', 'recurOnly replaces', @$recurOnly, @$replaces) . t('</p><p>Half of your gift supports whatever projects you decide on together in your community; half supports the operation of the %PROJECT system (to donate zero, choose "Water"). %amountTip</p><p><b class="loud">NOTE: This is a donation, not a deposit.</b> Thank you for your support!</p>', compact('amountTip'));
   $gift = selectFld(t('Donation:'), '', required($mya->co ? R_COMPANY_GIFT : R_INDIVIDUAL_GIFT), $giftLevels);
   $amount = textFld(t('Other amount $'), '');
-  $period = selectFld(t('When:'), '', required(), $oftens);
+  $period = selectFld(t('When:'), '', required(0), $oftens);
   $honor = selectFld(t('Honoring:'), '', '', $honors);
   $honored = areaFld('', [t('Honoring whom or what')]);
 //    $roundup = $mya->ok ? '' : w\roundupFld($mya),
@@ -77,14 +75,14 @@ function formDonate_submit($form, &$sta) {
 
   extract(just('amount period honor honored roundup recurId', $sta['input']));
   $info = ray('payer payee amount period created lastTx invoiced', $mya->id, CGID, $amount, $period, NOW, 0, 0);
-  if ($period != '1' and @$recurId) {
+  if ($period != 'X' and @$recurId) {
 		db\update('r_recurs', ray('id ended', $recurId, NOW), 'id');
 		say(t('Your previous recurring gift has been canceled.'));
 	}
 
   if ($amount > 0) {
     if ($honored) db\insert('r_honors', ray('uid honor honored', $mya->id, $honor, $honored));
-    if ($period != '1') db\insert('r_recurs', ray('payer payee amount period', $mya->id, CGID, $amount, $period));
+    if ($period != 'X') db\insert('r_recurs', ray('payer payee amount period', $mya->id, CGID, $amount, $period));
 //    $count = db\count('r_txs', 'payer=:payer AND payee=:payee AND :IS_RECURS AND created>=:created', compact(ray('payer payee created')));
     list ($desc, $data) = r\setupGift($period);
     $msg = 'gift successful';
