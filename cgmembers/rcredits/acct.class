@@ -979,17 +979,17 @@ EOF;
   }
   
   /**
-   * Unjoin a specific joint account or delete a specific joint account request or remove all joins and requests
-   * @param acct $b: the joined account (any and all, if empty)
+   * Remove all joins and join requests, except with the specified account record ID (if any).
+   * @param acct $except: the joined account record ID for which NOT to delete join requests
    */
-  function unjoin($b = '') {
+  function unjoinAllBut($except = FALSE) {
     $a = $this;
 
     $sql = 'UPDATE r_relations SET permission=:manage WHERE permission=:joint AND main=:id';
     $subs = ray('manage joint id', r\perm(B_MANAGE), r\perm(B_JOINT), $a->id);
 
     $DBTX = \db_transaction();
-    if ($jid = $a->jid) { // unravel a consummated join
+    if ($jid = $a->jid AND $jid != $except) { // unravel a consummated join
       $b = r\acct($jid); // ignore param (actual joined account will be unjoined and any join requests zapped)
       foreach ([$a, $b] as $ai) {
         $ai->update1('jid minimum', 0, max($a->o_minimum, $b->o_minimum));
@@ -1002,9 +1002,9 @@ EOF;
 ///      debug("amount=$amount a1=$a1->id bal=$a1->o_balance a2=$a2->id bal=$a2->o_balance");
         if ($amount > 0) $a1->pay($a2, $amount, t('joint account settlement'), ray('force goods', 1, FOR_USD));
       }
-    } elseif ($b) {
-      $sql .= ' AND other=:other';
-      $subs += ['other' => $b->id];
+    } elseif ($except) {
+      $sql .= ' AND other<>:except';
+      $subs += compact('except');
     }
     
     db\logSql(compact(ray('sql subs')));
@@ -1846,6 +1846,28 @@ X;
     $a->stepDone('ssn');
     return $a->ssnData;
   } 
+    
+  /**
+   * Try to transfer funds from payer to payee for a pre-approved payment.
+   * @param int $payee: record ID of recipient -- expected to be an active account, 
+   *   but payer can be a not-yet-activated account (to be invoiced) for gifts to CG
+   * @param numeric $amount: payment amount
+   * @param string $desc: description of payment
+   * @param assoc $data: extra data for transaction or invoice
+   * @return TRUE if the funds were successfully transferred (otherwise the payer is invoiced).
+   */
+  public function payApproved($payee, $amount, $desc, $data = []) {
+    $a = $this;
+    $a2 = r\acct($payee);
+    u\EXPECT($a2->ok, 'inactive recipient');
+    if ($payee != CGID or $a2->activated) u\EXPECT($a->ok, 'inactive payer'); // not-yet-active accounts can be invoiced for gifts to CG
+
+    if ($a->ok and list ($msg, $args) = $a->pay($a2, $amount, $desc, $data) and @$args['success']) return TRUE;
+
+    $data['status'] = TX_APPROVED;
+    list ($msg, $args) = $a2->invoice($a, $amount, $desc, $data);
+    return FALSE;
+  }
     
   /**
    * Return the account's total gifts to the Common Good.

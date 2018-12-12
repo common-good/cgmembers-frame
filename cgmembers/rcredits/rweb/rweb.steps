@@ -54,10 +54,12 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE flow AMemberOverdrawsWithNotEnoughToDrawOn
  *     MAKE gift AMemberDonates
  *     MAKE gift AMemberMakesARecurringDonation
+ *     MAKE gift AMemberMakesANewRecurringDonation
  *     MAKE gift ACompanyMakesARecurringDonation
  *     MAKE gift AMemberDonatesWithInsufficientFunds
  *     MAKE invest AMemberJoinsTheInvestmentClub
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
+ *     MAKE joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
  *     MAKE membership AMemberSignsInForTheFirstTime
  *     MAKE preferences AMemberChangesPreferences
  *     MAKE signin AMemberAsksForANewPasswordForUsername
@@ -230,6 +232,7 @@ function members($list) {return t\members($list);}
  *     TEST flow AMemberDrawsAgain
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
+ *     TEST gift AMemberMakesANewRecurringDonation
  *     TEST gift ACompanyMakesARecurringDonation
  *     MAKE invoice Setup
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
@@ -326,9 +329,11 @@ function weSayWithSubs($type, $index, $subs) {
  *     TEST edittx ABuyerChangesTheGoodsStatus
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
+ *     TEST gift AMemberMakesANewRecurringDonation
  *     TEST gift ACompanyMakesARecurringDonation
  *     TEST gift AMemberDonatesWithInsufficientFunds
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
+ *     TEST joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
  *     TEST membership AMemberSignsInForTheFirstTime
  *     TEST relations AMemberTriesToAddARelationWithSelf
  *     TEST relations AMemberTriesToAddARelationAgain
@@ -410,6 +415,8 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
  *     TEST edittx ABuyerChangesTheTransactionDescription
  *     TEST edittx ABuyerDisputesACharge
  *     TEST edittx ASellerReversesACharge
+ *     TEST gift AMemberDonates
+ *     TEST gift AMemberMakesANewRecurringDonation
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
@@ -510,6 +517,7 @@ function withoutOptions($options) {
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     MAKE joint AJoinedAccountMemberUnjoinsTheAccount
  *     MAKE joint AMemberRequestsTwoJoinsAtOnce
+ *     TEST joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
  *     MAKE membership Setup
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
@@ -591,6 +599,8 @@ function usd($list) {return t\usd($list);}
  *     MAKE edittx ABuyerDisputesACharge
  *     MAKE edittx ASellerReversesACharge
  *     MAKE edittx ABuyerReversesAReversal
+ *     MAKE gift AMemberDonates
+ *     MAKE gift AMemberMakesANewRecurringDonation
  *     MAKE invest AMemberJoinsTheInvestmentClub
  *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMember
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
@@ -1396,6 +1406,7 @@ function weScripWithSubs($script, $args = []) {
  *
  * in: TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
+ *     BOTH gift AMemberMakesANewRecurringDonation
  *     TEST gift AMemberDonatesWithInsufficientFunds
  *     TEST transact AMemberPaysAnotherMemberRepeatedly
  */
@@ -1415,4 +1426,21 @@ function agentViewsStatementForMember($biz, $type, $cust) {
   $cust = t\fullQid2($cust);
   w\custStatement("cust=$cust&way=$way");
   return TRUE;
+}
+
+/**
+ * with choices: (ARG)
+ *
+ * in: TEST gift AMemberDonates
+ */
+function withChoices($choices) {
+  global $testOnly; if (!$testOnly) return FALSE;
+  global $formOut;
+  foreach ($choices as list ($k, $v)) $ch[] = "$k=>$v";
+  $res = @$ch ? (strpos($formOut['options'], join(PHP_EOL, $ch)) !== FALSE) : FALSE;
+  if (!$res) {
+    t\output(@$ch);
+    t\output($formOut['options']);
+  }
+  return $res;
 }

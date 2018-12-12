@@ -457,7 +457,7 @@ function nonce($minLen = 1) {
 
 function ignoreSuffix($s, $suffixes) {
   $suffixes = preg_replace('/\W+/', ' ', $suffixes);
-  $pattern = str_replace(' ', ' |', trim($suffixes));
+  $pattern = preg_quote(str_replace(' ', ' |', trim($suffixes)), '`');
   return trim(preg_replace("`([^ ])($pattern )`sim", '$1 ', " $s "));
 }
 

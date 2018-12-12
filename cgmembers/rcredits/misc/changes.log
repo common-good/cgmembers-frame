@@ -1,3 +1,14 @@
+2018-12-12 feature/fix-donate-form
+
+2018-12-01 feature/fix-join
+. joins now work even if relation pre-existed and member uses the button on the Summary page
+. cron no longer tries invoices where a party is inactive
+. fixed bug in admin-achify.inc that left-filled account numbers with zeros
+. all but roundup donations to CG now get rounded, if member chooses roundups
+
+2018-11-30 hotfix/tweak-repeat
+. no "Repeats:" label, defaults to no repeat, doesn't create a r_recurs record when no repeat
+
 2018-11-29
 . implemented repeating payments feature (but not for web payments)
 

@@ -46,12 +46,13 @@ $GLOBALS['tStrings'] = array(
   'info saved' => t('Your information has been saved.'),
   'not saved' => t('No change has been made to your information.'),
 //  'payment accepted' => t('%RCREDITS payment accepted. In exchange, us%amount will be refunded to the payer, from your account.'), // UNUSED
+	'donation replaces' => t('If you choose a new recurring donation, it will replace your existing %period donation of %amt.'),
   'charge accepted' => t('Your charge to %who\'s account has been approved (it is no longer in dispute). No action is necessary.'),
   'gift successful' => t('Thank you for your donation!'),
   'nothing done' => t('Nothing was done.'),
   'nothing undone' => t('Nothing undone.'),
   'event' => t('Account %fullName (%qid) is now %status.'),
-  'approved' => t('Your account has been approved! You may now buy and sell through the %PROJECT system, including using your %PROJECT card for purchases at member businesses. Expect your %PROJECT to arrive in the mail within a few days.'),
+  'approved' => t('Your account has been approved! You may now buy and sell through the %PROJECT system, including using your %PROJECT card for purchases at member businesses. Expect your %PROJECT card to arrive in the mail within a few days.'),
   'in person' => t('Your first purchase must be in person, using your %PROJECT card (or the CGPAY app).'),
   'got funding' => t('You have received a %thing of %amountr from your %PROJECT community for %purpose.'),
   'got fine' => t('Your %PROJECT community charged you a fee of %amountr for %purpose.'),
@@ -147,6 +148,8 @@ EOF
   'credit ban on' => t('Maybe spending below a zero balance should be temporarily banned because demand for %RCREDITS has been negative %months months in a row.'),
   'credit ban off' => t('Temporary ban on spending below a zero balance should be lifted because demand for %RCREDITS has been positive %months months in a row.'),
   'coupon redeemed' => t('Success! %amount has been added to your balance, as a gift from %giver.'),
+  'join success' => t('Success! Your accounts have been successfully joined.'),
+  'join request success' => t('Success! An email has been sent to the other account owner, to confirm joining with yours.'),  
 
   // questions
   "what's your name?" => t("To set up your %PROJECT Account, we need your full name and email address. First, what's your name?"),

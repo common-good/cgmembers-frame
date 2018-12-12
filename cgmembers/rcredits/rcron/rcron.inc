@@ -494,7 +494,7 @@ function inflationAdjust($item) {
 function roundup($item) {
   extract(just('uid donate', $item));
   $a = r\acct($uid);
-  if ($donate > 0 and $a->ok) $a->pay(r\acct(CGID), $donate, t('roundups desc'), ray('created roundups gift', u\monthDay1() - 1, TRUE, TRUE));
+  if ($donate > 0 and $a->ok) $a->payApproved(CGID, $donate, t('roundups desc'), ray('created roundups gift', u\monthDay1() - 1, TRUE, TRUE));
 }
 
 /**
@@ -504,7 +504,7 @@ function roundup($item) {
 function crumbs($item) {
   extract(just('uid donate', $item));
   $a = r\acct($uid);
-  if ($donate > 0 and $a->ok) $a->pay(r\cgA(), $donate, t('crumbs desc'), ray('created crumbs gift', u\monthDay1() - 1, TRUE, TRUE));
+  if ($donate > 0 and $a->ok) $a->payApproved(CGID, $donate, t('crumbs desc'), ray('created crumbs gift', u\monthDay1() - 1, TRUE, TRUE));
 }
 
 /**
@@ -849,14 +849,14 @@ X;
  * If funds are insufficient, an approved invoice is created instead (which tries to get money as a next step).
  */
 function recurs1($item) {
-	extract(just('period lastTxDt created invoiced amount payer payeeName firstXid', $item));
+	extract(just('period lastTxDt created invoiced amount payer payee payeeName firstXid', $item));
 	if (!$invoiced and giveNow($period, $lastTxDt, $created)) {
-    list ($payerFor, $data) = cr\setupGift($period);
+    list ($payerFor, $data) = r\setupGift($period);
     if ($firstXid and $res = db\get('flags, payerFor', 'r_txs', 'xid=:firstXid', compact('firstXid'))) {
       extract($res);
       if (!u\getBit($flags, 'gift')) unset($data['gift']);
     }
-    if (cr\recurPay($item + compact('payerFor', 'data'))) {
+    if (r\acct($payer)->payApproved($payee, $amount, $payerFor, $data)) {
       r\notify($payer, 'recur pay', ray('amount purpose to', u\fmtAmt($amount), $payerFor, $payeeName));
     }
   }
@@ -938,7 +938,12 @@ function getFunds1($item) {
  * Handle pending invoices.
  */
 function invoices() {
-  $sql = 'SELECT *,:IS_FUNDING AS funding FROM r_invoices WHERE status IN (:TX_PENDING,:TX_APPROVED) ORDER BY nvid';
+  $sql = <<< X
+    SELECT i.*,i.:IS_FUNDING AS funding 
+    FROM r_invoices i LEFT JOIN users u1 ON u1.uid=i.payer LEFT JOIN users u2 ON u2.uid=i.payee
+    WHERE i.status IN (:TX_PENDING,:TX_APPROVED) AND u1.:IS_OK AND u2.:IS_OK
+    ORDER BY i.nvid
+X;
   queueEach('invoice', $sql);
   queueNext();
 }

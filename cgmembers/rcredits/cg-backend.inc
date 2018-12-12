@@ -205,7 +205,7 @@ u\EXPECT(compact(ray('xid amount what acct data tid toMe byMe otherTid force')),
   extract(just('xfee coupon', $data));
   $tids = u\order($toMe, $otherTid, $tid);
   for ($i = 0; $i < 2; $i++) {
-    $what0[$i] = preg_replace('/ \(' . t('reverses') . ' \#.*\)/', '', $what[$i]);
+    $what0[$i] = preg_replace('/ \(' . preg_quote(t('reverses'), '/') . ' \#.*\)/', '', $what[$i]);
     $what[$i] = $what0[$i] . t(' (reverses #%tid)', 'tid', $tids[$i]);
   }
   if (@$xfee) $data['xfee'] = -$xfee;
@@ -401,7 +401,7 @@ function transfer($ttype, $a1, $a2, $amount, $for, $data = []) {
     }
   }
 //  $roundup = (r\acct($payer)->roundup and !@$data['isGift'] and !@$data['roundups'] and $amount > 0); // payer, not a1 or loser
-  $roundup = (r\acct($payer)->roundup and !@$data['roundups'] and $amount > 0 and $payee != CGID); // payer, not a1 or loser
+  $roundup = (r\acct($payer)->roundup and $amount > 0 and !@$data['roundups'] and !($payee == CGID and @$data['recurs'] and $amount < 1)); // payer roundups, not a1 or loser (don't round up reversals, cashouts, roundups, or recurring gifts under $1)
   if ($amount > 0 AND $goods == FOR_GOODS) {
     $price = $loserA->applyCoupon($gainerA, $amount, $coupon, $coupid);
     if ($coupon) $data += compact(ray('coupon coupid'));
