@@ -205,7 +205,7 @@ u\EXPECT(compact(ray('xid amount what acct data tid toMe byMe otherTid force')),
   extract(just('xfee coupon', $data));
   $tids = u\order($toMe, $otherTid, $tid);
   for ($i = 0; $i < 2; $i++) {
-    $what0[$i] = preg_replace('/ \(' . t('reverses') . ' \#.*\)/', '', $what[$i]);
+    $what0[$i] = preg_replace('/ \(' . preg_quote(t('reverses'), '/') . ' \#.*\)/', '', $what[$i]);
     $what[$i] = $what0[$i] . t(' (reverses #%tid)', 'tid', $tids[$i]);
   }
   if (@$xfee) $data['xfee'] = -$xfee;
