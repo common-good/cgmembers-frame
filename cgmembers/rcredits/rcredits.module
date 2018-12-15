@@ -203,11 +203,7 @@ function q($sql, $subs = [], $log = FALSE) {return f('db.q', $sql, $subs, $log);
 function f($func) {
   global $cronOp; 
   list ($prefix, $funcName) = explode('.', $func);
-  if ($prefix == 'i') {
-    print_traceback();
-    die('here');
-  }   
-  $incs = ray('a:admin/admin.inc,y:cg-yearly.inc,w:rweb/rweb.inc,cr:rcron/rcron.inc,be:cg-backend.inc,s:rsmart/rsmart.inc,t:cg-testing.inc,i:cg-install.inc');
+  $incs = ray('a:admin/admin.inc,y:cg-yearly.inc,w:rweb/rweb.inc,cr:rcron/rcron.inc,be:cg-backend.inc,s:rsmart/rsmart.inc,t:cg-testing.inc');
   if ($flnm = @$incs[$prefix]) require_once __DIR__ . "/$flnm";
 
   if ($prefix == 'v') {
