@@ -102,10 +102,10 @@ function formHandleInvoice_submit($form, &$sta) {
     
     if (@$always) {
       r\acct($payee, $payer)->setRel('customer autopay', TRUE, TRUE);
-      $msg .= '|' . t('auto pay on', compact('payeeName'));o
+      $msg .= '|' . t('auto pay on', compact('payeeName'));
     }
   } elseif ($op == 'delete') {
-    db\del('r_invoices', $nvid);
+    db\del('r_invoices', 'nvid', $nvid);
     r\notify($payer, 'invoice withdrawn', $subs);
     $msg = 'invoice delete done';
   } elseif ($op == 'deny' or @$whyNot) {

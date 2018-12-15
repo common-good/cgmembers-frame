@@ -751,7 +751,7 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
   $nm = $a->fullName;
 
   if ($delCtty = ($delete and $a->isCtty)) { // deleting a community (merge into Seedpack)
-    db\del('users', $oldUid);
+    db\del('users', 'uid', $oldUid);
     $unusable = $delete = FALSE; // don't actually delete anything except the account record
     $newUid = r\serverUid(); // Seedpack uid
   }
@@ -843,7 +843,9 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
           $DBTX->rollback(); 
           return w\say(t('Record in table %table cannot be deleted.', compact('table')), 'err');
         }
-      } else db\del($table, "$field=:oldUid", compact('oldUid'));
+      } else {
+        db\del($table, $field, $oldUid);
+      }
     } else db\q("UPDATE $table SET $field=:newUid WHERE $field=:oldUid", compact('newUid', 'oldUid'));
   }
 

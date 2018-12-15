@@ -257,19 +257,17 @@ function setFlag($table, $id, $bit, $bool = TRUE) {
 /**
  * Make a backup copy of the record before deleting it if appropriate (then delete it).
  * @param string $table: delete a record from this table
+ * @param string $idnm: name of key field of table
  * @param mixed $id: integer id of record to delete OR criteria
  * @param assoc $subs: parameters for selection criteria
  */
-function del($table, $id, $subs = []) {
-  $xtable = $table == 'users' ? 'x_users' : str_replace('r_', 'x_', $table);
-  if (is_numeric($id)) {
-    $idnm = db\idnm($table, $field1); // $field1 not used
-    $where = "$idnm=$id";
-  } else $where = $id;
+function del($table, $idnm, $id, $subs = []) {
+  $where = is_numeric($id) ? "$idnm=$id" : $id;
   if (in($table, TRACK_DELETED)) {
+    $xtable = $table == 'users' ? 'x_users' : str_replace('r_', 'x_', $table);
     $q = db\q("INSERT INTO $xtable SELECT :NOW AS deleted,a.* FROM $table a WHERE $where", $subs);
     $ok = ($q->rowCount() > 0);
-  } else $ok = TRUE;
+  } else { $ok = TRUE; }
   if ($ok) db\q("DELETE FROM $table WHERE $where", $subs);
 }
 

@@ -58,7 +58,7 @@ function formSignin_validate($form, &$sta, $type = 'both') {
   extract(just('name pass pw2 vKeyE', $sta['input']));
   if (isDEV and @$name == 'admin' and !a(1)) {
     require_once __DIR__ . '/../admin/admin.inc';
-    db\del('sessions', '1=1');
+    db\del('sessions', NULL, '1=1');
     \CG\admin\setupBasicAccounts(); // happens sometimes during testing
   }
   if (!$uid = r\loginString(@$name)) return say('bad login', 'name');

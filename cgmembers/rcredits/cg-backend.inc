@@ -140,7 +140,7 @@ function updateRelations($updates) {
     if (!u\getBit($flags, 'customer')) u\setbit($flags, 'autopay', FALSE);
 
     if (!@$permission and !@$flags and !$wasEmpty) { // empty now and wasn't before
-      db\del('r_relations', $reid);
+      db\del('r_relations', 'reid', $reid);
       $msg = 'deleted relation';
     } else {
       $a = r\acct($main, $other);
