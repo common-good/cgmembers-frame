@@ -1860,7 +1860,7 @@ X;
     $a = $this;
     $a2 = r\acct($payee);
     u\EXPECT($a2->ok, 'inactive recipient');
-    if ($payee != CGID or $a2->activated) u\EXPECT($a->ok, 'inactive payer'); // not-yet-active accounts can be invoiced for gifts to CG
+    if ($payee != CGID or $a->activated) u\EXPECT($a->ok, 'inactive payer'); // not-yet-active accounts can be invoiced for gifts to CG
 
     if ($a->ok and list ($msg, $args) = $a->pay($a2, $amount, $desc, $data) and @$args['success']) return TRUE;
 
