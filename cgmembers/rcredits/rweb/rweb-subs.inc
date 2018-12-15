@@ -2164,7 +2164,6 @@ function fundStats($stats, $round = FALSE, $stats30 = NULL) {
     if (!in($k, 'id ctty created')) {
       if ($stats30) $stats["d_$k"] = $stats[$k] - $stats30[$k];
       $fmt = ($round or strpos($k, 'Count') or in_array($k, $intStatFlds)) ? '1' : 's$';
-      debug('$round=' . $round . '$k=' . $k . ', $fmt=' . $fmt . 'strpos($k, "Count")=' . strpos($k, 'Count'));
       if (strpos($k, 'Rate')) $fmt = '%';
 //      if (strpos($k, 'Per')) $fmt = '';
       foreach ($stats30 ? [$k, "d_$k"] : [$k] as $fnm) {

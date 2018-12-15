@@ -66,49 +66,6 @@ function get($fieldName, $table, $where = '1', $subs = []) {
 }
 function exists($table, $where = '1', $subs = []) {return db\get(1, $table, $where, $subs);}
 
-/* /\** */
-/*  * Update a database record  */
-/*  * (replaces the functionality of drupal_write_record, which does not update bigint fields properly) */
-/*  * @param string $table: table name */
-/*  * @param assoc $info: data to update (must include record key, unless inserting) */
-/*  * @param string $key: record key name (if empty then insert record, otherwise update) */
-/*  * @param bool either: if TRUE, insert the record if it does not exist (otherwise update) */
-/*  * @return: if inserting, then the id of the inserted record, else TRUE (FALSE on failure) */
-/*  *\/ */
-/* function update($table, $info, $key, $either = FALSE) { */
-/*   logSql(compact(ray('table info key either'))); */
-/*   //if ($table != 'r_log') u\loga('db', $info, "$table:$key" . ($either ? ' EITHER' : '')); */
-/*   if ($either) if (!isset($info[$key]) or !db\exists($table, "$key=:$key", [$key => $info[$key]])) $key = ''; */
-/*   $command = $key ? 'UPDATE' : 'INSERT INTO'; */
-
-/*   foreach (ray('created modified') as $k) if (!isset($info[$k]) and hasField($table, $k)) { */
-/*     if ($k == 'modified' or !$key) $info[$k] = NOW; // set these automatically */
-/*   } */
-	
-/*   $sql = ''; */
-/*   foreach ($info as $field => $v) { */
-/*     if ($field != $key) $sql .= ",`$field`=:$field"; */
-/*     if (is_array($v)) u\EXPECT(FALSE, 'array in update param'); // exception fails if called in $DBTX */
-/*   } */
-/*   $sql = "$command $table SET " . substr($sql, 1) . ($key ? " WHERE `$key`=:$key" : ''); */
-/*   ///  if ($table=='r_do') {print_r(compact(ray('table info key either command sql'))); die('dbU');} */
-/*   try { */
-/*     $result = db\q($sql, $info, !$key); */
-/*     if ($command != 'INSERT INTO') return TRUE; */
-/*     if ($result) return $result; // if there is no serial field, result will be false, so check */
-
-/*     if ($table == 'users') { */
-/*       $id = 'uid'; */
-/*     } else { */
-/*       $id = db\idnm($table, $field1); */
-/*       u\EXPECT($id and isset($info[$id]), 'no primary key ' . $id); */
-/*       if ($hasSerial = ($field1['type'] == 'serial')) return FALSE; // record ID would have been returned above */
-/*     } */
-    
-/*     return db\get($id, $table, "`$id`=:id", ray('id', $info[$id])); // return the supplied id if success */
-/*   } catch (PDOException $e) {u\EXPECT(FALSE, "PDOException: $e->message");}  */
-/* } */
-
 /**
  * Update a database record 
  * (replaces the functionality of drupal_write_record, which does not update bigint fields properly)
@@ -171,7 +128,7 @@ function insert($table, $info, $key = 'id') {
 }
 
 /**
- * Update a database record 
+ * Insert or update a database record 
  * @param string $table: table name
  * @param assoc $info: data to update (must include record key)
  * @param string $key: record key name (must not be empty)
@@ -271,21 +228,6 @@ function del($table, $idnm, $id, $subs = []) {
   if ($ok) db\q("DELETE FROM $table WHERE $where", $subs);
 }
 
-//function restore($table, $id) {
-
-/* /\** */
-/*  * Return the table's record id field name. */
-/*  * @param string $table: table name */
-/*  * @param string $field1: (RETURNED) descriptive array of first field in the table */
-/*  *\/ */
-/* function idnm($table, &$field1 = '') { */
-/*   $scheme = scheme($table); */
-/*   $id = $table == 'users' ? 'uid' : $scheme['primary key'][0]; */
-/*   $field1 = reset($scheme['fields']); */
-/*   return $id; */
-/* } */
-  
-/* function scheme($table) {return f('i.scheme', $table);} */
 function hasField($table, $field) {return hasCol($table, $field);}
 function hasCol($table, $field) {global $db_name; return db\exists('INFORMATION_SCHEMA.COLUMNS', 'TABLE_SCHEMA=:db_name AND TABLE_NAME=:table AND COLUMN_NAME=:field', compact(ray('db_name table field')));}
         
