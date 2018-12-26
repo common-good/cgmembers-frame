@@ -272,7 +272,8 @@ function formTestRecovery($form, &$sta, $doSay = FALSE) {
 	global $user; $user = $mya->account('uid pass timezone'); // timezone keeps Drupal happy in bootstrap.inc
 	\drupal_session_regenerate();
 	w\setAcct($mya->id);
-	if ($msgs = @unserialize(@file_get_contents(T_MSG_FILE))) {
+	if (file_exists(T_MSG_FILE)) {
+          $msgs = @unserialize(@file_get_contents(T_MSG_FILE));
 		unlink(T_MSG_FILE);
 		\drupal_get_messages(); // throw out any existing messages
 		$_SESSION['messages'] = $msgs;

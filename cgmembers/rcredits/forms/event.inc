@@ -115,6 +115,6 @@ function formEvent_submit($form, &$sta) {
   extract($info = just('id type event details start end', $sta['input']));
   global $mya;
   $info['end'] = strtotime('+1 day', $end) - 1; // just before the start of the next day
-  db\insertOrUpdate('r_events', $info + ['ctty' => $mya->community], 'id');
+  db\updateOrInsert('r_events', $info + ['ctty' => $mya->community], 'id');
   w\go('community/events', 'info saved');
 }

@@ -80,7 +80,7 @@ function formQuestion_submit($form, &$sta) {
   global $base_url;
   extract($info = just('id event text detail linkDiscussion type budget optOrder', $sta['input']));
 	
-  $qid = db\insertOrUpdate('r_questions', $info, 'id'); // qid is valid only if question is new
+  $qid = db\updateOrInsert('r_questions', $info, 'id'); // qid is valid only if question is new
   if (!v\realOpts($type) and !@$id) { // these question types have a single option
     db\insert('r_options', ray('question text maximum', $qid, '', $type == 'R' ? $budget : 0));
   }

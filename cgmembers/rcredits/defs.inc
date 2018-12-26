@@ -23,6 +23,7 @@ define('isGAME', $config['stage'] == 'game'); // UNUSED but straggling in code
 
 $base_url = setFromConfig('baseUrl', $config);
 define('BASE_URL', $base_url);
+define('LOCAL_URL', setFromConfigWithDefault('localUrl', $config, $base_url));
 define('PROMO_URL', setFromConfig('promoUrl', $config));
 define('CO_API_URL', setFromConfig('coApiUrl', $config));
 define('CGF_EMAIL', setFromConfig('cgfEmail', $config));
@@ -565,5 +566,17 @@ if (@TESTING == 1) {
  */
 function setFromConfig($key, $config) {
   if (!array_key_exists($key, $config)) die("The config file does not contain an entry for $key.");
+  return $config[$key];
+}
+
+/**
+ * Extract a value from the given configuration array (probably read in from
+ * a configuration file), returning a default if the key is not present.
+ * $key - the key in the configuration array, e.g., dkimPrivate
+ * $config - the configuration array itself
+ * $default - the value to return if the key is not in the array
+ */
+function setFromConfigWithDefault($key, $config, $default) {
+  if (!array_key_exists($key, $config)) return $default;
   return $config[$key];
 }

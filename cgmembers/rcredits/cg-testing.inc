@@ -1417,7 +1417,10 @@ function hasLinkResults($thing, $info) {
 
   if (!preg_match('/ href="([^"]*)"/', t\that($thing), $matches)) return FALSE;
   
-  $s = file_get_contents($matches[1]);
+  if (isDEV) {
+    $arrContextOptions = [ "ssl" => [ 'verify_peer' => false, 'verify_peer_name' => false ] ];
+    $s = file_get_contents(preg_replace('@' . BASE_URL . '@', LOCAL_URL, $matches[1]), false, stream_context_create($arrContextOptions));
+  } else { $s = file_get_contents(preg_replace('@' . BASE_URL . '@', LOCAL_URL, $matches[1])); }
   foreach (ray('error status') as $one) $$one = @file_get_contents(t\dosayFilename($one));
   $formOut['text'] = str_replace($was = '#header -->', "$was$error$status", $s);
   return t\shownWith($info, 'text', TRUE);

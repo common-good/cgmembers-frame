@@ -76,8 +76,6 @@ function exists($table, $where = '1', $subs = []) {return db\get(1, $table, $whe
  */
 function update($table, $info, $key) {
   logSql(compact(ray('table info key')));
-  //if ($table != 'r_log') u\loga('db', $info, "$table:$key" . ($either ? ' EITHER' : ''));
-  $command = 'UPDATE';
 
   if (!isset($info['modified']) and hasField($table, 'modified')) {
     $info['modified'] = NOW;
@@ -134,7 +132,7 @@ function insert($table, $info, $key = 'id') {
  * @param string $key: record key name (must not be empty)
  * @return: if inserting, then the id of the inserted record, else TRUE (FALSE on failure)
  */
-function insertOrUpdate($table, $info, $key) {
+function updateOrInsert($table, $info, $key) {
   if (db\exists($table, "$key=:$key", [$key => $info[$key]])) {
     return db\update($table, $info, $key);
   } else {
