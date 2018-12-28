@@ -984,7 +984,7 @@ function participatingCompanies($ctty, $email = FALSE) {
     $uid = $row['uid'];
     $a = r\acct($uid);
     if (!($a->coCan(CO_PRIVATE))) {
-      $industry = $row['industry'] ?: tr('Unclassified');
+      $industry = $row['sel_industry'] ?: tr('Unclassified');
       $iid = $row['iid'] ?: -2;
       if ($iid != $lastIid) {
         if (! $firstTime) {

@@ -552,7 +552,7 @@ body.logged-in.one-sidebar #content {width:100%;}
 #frm-findco .row {display:block; max-width:700px;}
 #frm-findco .well {padding:10px 35px;}
 #frm-findco .cmpy-img {display:inline-block; overflow:hidden; vertical-align: middle; height:50px; margin:5px 10px; width:50px; text-align:center;}
-#frm-findco .cmpy-img img {overflow:hidden; height:50px; }
+#frm-findco .cmpy-img img {overflow:hidden; height:50px; width: 50px; object-fit:cover;}
 #frm-findco .cmpy-name-does {display:inline-block; vertical-align: middle; margin-left:10px;}
 #frm-findco .cmpy-name {width:auto; max-width:300px; overflow:hidden; color:darkblue; margin-left:10px;}
 #frm-findco .cmpy-does {width:auto; max-width:400px; overflow:hidden; margin-left:10px;}
