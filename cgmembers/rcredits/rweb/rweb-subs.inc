@@ -1668,7 +1668,6 @@ function directoryList($which, $region, $withButtons = FALSE) {
     $region = r\serverUid();
     $regionCrit= ($mya and $mya->state) ? "state=:$mya->state" : 1;
   } else if (is_numeric($region) and $region < 0) {
-    //    $regionCrit = 'community=:region';
     $regionCrit = 'community=:region';
   } else {
     $region = \db_like($region) . '%';
@@ -1679,12 +1678,13 @@ function directoryList($which, $region, $withButtons = FALSE) {
   $which = str_replace(' ', '%', \db_like(" $which ")); // allow abbreviations of each word
 
   $sql = <<<EOF
-    SELECT DISTINCT u.uid, i.iid, industry
+    SELECT DISTINCT u.uid, i.iid, if (ISNULL(parent.industry), i.industry, parent.industry) as selIndustry
     FROM users u 
     LEFT OUTER JOIN r_user_industries ui ON ui.uid=u.uid
     LEFT OUTER JOIN r_industries i ON i.iid=ui.iid
+    LEFT OUTER JOIN r_industries parent on i.parent = parent.iid
     WHERE :IS_CO AND u.uid>:CANONIC_ACCTS AND :IS_OK AND $regionCrit AND (u.fullName LIKE :which OR i.industry LIKE :which)
-    ORDER BY i.industry, u.fullName
+    ORDER BY selIndustry, u.fullName
 EOF;
   $result = db\q($sql, compact(ray('region which')));
   $rows = [];
