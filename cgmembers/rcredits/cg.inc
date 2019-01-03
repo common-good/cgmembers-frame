@@ -980,7 +980,7 @@ function participatingCompanies($ctty, $email = FALSE) {
   $_newClass = $email ? 'style="color:red; font-weight:bold;"' : 'class="company-listing"';
   $NEW = t(' <small %newClass> NEW!</small>', compact('_newClass'));
 
-  $lastIid = -1;  // negative record ids are, we hope, unlikely
+  $lastSelIid = -1;  // negative record ids are, we hope, unlikely
   $firstTime = true;
   foreach ($rows as $rowObject) {
     $row = (array)$rowObject;
@@ -988,14 +988,14 @@ function participatingCompanies($ctty, $email = FALSE) {
     $a = r\acct($uid);
     if (!($a->coCan(CO_PRIVATE))) {
       $industry = $row['selIndustry'] ?: tr('Unclassified');
-      $iid = $row['iid'] ?: -2;
-      if ($iid != $lastIid) {
+      $selIid = $row['selIid'] ?: -2;
+      if ($selIid != $lastSelIid) {
         if (! $firstTime) {
           $res .= '</div>';
         }
         $firstTime = false;
         $res .= tr($iModel, 'industry', $industry) . "\n";
-        $lastIid = $iid;
+        $lastSelIid = $selIid;
       }
       $name = $a->website ? w\lnk("http://$a->website", $a->bestName) : $a->bestName;
       $new = ($a->activated > REQUEST_TIME - 9 * WEEK_SECS) ? $NEW : '';

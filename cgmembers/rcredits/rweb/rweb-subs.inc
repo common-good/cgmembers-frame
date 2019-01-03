@@ -1678,7 +1678,7 @@ function directoryList($which, $region, $withButtons = FALSE) {
   $which = str_replace(' ', '%', \db_like(" $which ")); // allow abbreviations of each word
 
   $sql = <<<EOF
-    SELECT DISTINCT u.uid, i.iid, if (ISNULL(parent.industry), i.industry, parent.industry) as selIndustry
+    SELECT DISTINCT u.uid, i.iid, if (ISNULL(parent.industry), i.industry, parent.industry) as selIndustry, parent.iid as selIid
     FROM users u 
     LEFT OUTER JOIN r_user_industries ui ON ui.uid=u.uid
     LEFT OUTER JOIN r_industries i ON i.iid=ui.iid
