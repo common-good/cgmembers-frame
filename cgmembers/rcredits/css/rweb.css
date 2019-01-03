@@ -235,9 +235,8 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #edit-acct-account a.ok {background-color:lightgreen; color:black;}
 #edit-acct-account a.co {background-color:yellow;}
 #edit-acct-account a.closed {background-color:black; color:silver;}
-#edit-acct-account #index {position:fixed; right:0px;};
 #index a {color:black;}
-#index {float:right; z-index:6; background-color:silver; padding:3px 0;}
+#index {position:fixed; right:0px; z-index:6; background-color:silver; padding:3px 0;}
 #index a {display:inline-block; color:darkred; padding:0px 7px 0px 7px;}
 
 #simple, #advanced {width:400px; margin:0 auto;}
