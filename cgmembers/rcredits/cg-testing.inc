@@ -1419,8 +1419,8 @@ function hasLinkResults($thing, $info) {
   
   if (isDEV) {
     $arrContextOptions = [ "ssl" => [ 'verify_peer' => false, 'verify_peer_name' => false ] ];
-    $s = file_get_contents(preg_replace('@' . BASE_URL . '@', LOCAL_URL, $matches[1]), false, stream_context_create($arrContextOptions));
-  } else { $s = file_get_contents(preg_replace('@' . BASE_URL . '@', LOCAL_URL, $matches[1])); }
+    $s = file_get_contents(preg_replace('@' . preg_quote(BASE_URL, '@') . '@', LOCAL_URL, $matches[1]), false, stream_context_create($arrContextOptions));
+  } else { $s = file_get_contents(preg_replace('@' . preg_quote(BASE_URL, '@') . '@', LOCAL_URL, $matches[1])); }
   foreach (ray('error status') as $one) $$one = @file_get_contents(t\dosayFilename($one));
   $formOut['text'] = str_replace($was = '#header -->', "$was$error$status", $s);
   return t\shownWith($info, 'text', TRUE);
