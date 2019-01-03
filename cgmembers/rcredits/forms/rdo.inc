@@ -96,7 +96,7 @@ function rdo($code, $args = '') {
     $vid = db\get('vid', 'r_votes', 'uid=:uid AND issue=:issue', compact('uid', 'issue'));
 //    $vid = 0;
 ///  debug(compact(ray('op args issue yes no vote info vid')));
-    if ($vid) db\update('r_votes', $info + compact('vid'), 'vid'); else db\insert('r_votes', $info);
+    if ($vid) db\update('r_votes', $info + compact('vid'), 'vid'); else db\insert('r_votes', $info, 'vid');
     $say = t('Thank you for your RSVP! ');
     if (@$no) $say .= t('We will miss you. ');
     r\tellAdmin('RSVP!', ['coming'=>@$yes ? 'yes' : 'no'], $uid);

@@ -85,7 +85,7 @@ $favicon = <<<EOF
 EOF;
 //  : '  <link rel="shortcut icon" href="' . $rUrl . '/images/icons/rFavicon.ico" type="image/vnd.microsoft.icon" />';
 //   <link rel="stylesheet" href="$rUrl/css/x/bootstrap-glyphicons.css?$version" /> 
- 
+
 /**/ echo <<<EOF
 <!DOCTYPE html>
 <html lang="$language->language" dir="$language->dir"

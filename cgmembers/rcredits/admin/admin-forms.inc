@@ -272,7 +272,8 @@ function formTestRecovery($form, &$sta, $doSay = FALSE) {
 	global $user; $user = $mya->account('uid pass timezone'); // timezone keeps Drupal happy in bootstrap.inc
 	\drupal_session_regenerate();
 	w\setAcct($mya->id);
-	if ($msgs = @unserialize(@file_get_contents(T_MSG_FILE))) {
+	if (file_exists(T_MSG_FILE)) {
+          $msgs = @unserialize(@file_get_contents(T_MSG_FILE));
 		unlink(T_MSG_FILE);
 		\drupal_get_messages(); // throw out any existing messages
 		$_SESSION['messages'] = $msgs;
@@ -993,8 +994,7 @@ function util($arg) {
 //  if ($arg == 'modal') drupal_goto('modal');
 //  if ($arg == 'reset') r\reset();
   if ($arg == 'reset-menu') \menu_rebuild();
-  if ($arg == 'rebuild-db') {
-    f('i.rebuildDb');
+  if ($arg == 'remove-test-data') {
     if (isDEV) {
       f('t.clear'); 
       say(t('All test data has been deleted.'));
@@ -1016,7 +1016,7 @@ function handyLinks() {
 
   $links = array(
     'rcredits/util/reset-menu|Rebuild menu based on hook_menu() and revert any custom changes. All menu items return to their default settings.|Redo MENUS|menu-hamburger',
-    'rcredits/util/rebuild-db|Rebuild tables|REBUILD database|fast-backward',
+    'rcredits/util/remove-test-data|Remove test data|REMOVE test data|fast-backward',
     'rcredits/util/clear|Empty the cache and sessions tables|Clear Cache & Sessions|unchecked',
   );
 

@@ -66,10 +66,10 @@ function formInvestBuySell_submit($form, &$sta) {
     if ($equity) {
       $extraMsg = $success ? t('You successfully purchased %amt shares of %co at %price.', 'amt co price', $sharesDpy, $coA->fullName, $priceDpy) : t('No shares were purchased.');
     } else $extraMsg = $success ? t('You loaned %amt to %co.', 'amt co', u\fmtAmt($shares), $coA->fullName) : t('Nothing was loaned.');
-    if ($success) db\insert('r_shares', ray('vestid shares when', $vestid, $shares, NOW));
+    if ($success) db\insert('r_shares', ray('vestid shares when', $vestid, $shares, NOW), 'shid');
   } else { // sell
 //    $shid = db\min('shid', 'r_shares', compact('vestid'));
-    $shid = db\insert('r_shares', ray('vestid shares pending when', $vestid, 0, -$shares, NOW));
+    $shid = db\insert('r_shares', ray('vestid shares pending when', $vestid, 0, -$shares, NOW), 'shid');
     if ($equity) {    
       $for = t('redeeming investment: %amt shares at %price', 'amt price', $sharesDpy, $priceDpy);
     } else $for = t('redeeming loan');

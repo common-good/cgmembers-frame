@@ -647,7 +647,7 @@ function badCodes($bad) {
 
   return $testOnly
   ? db\exists('r_bad', 'qid=:qid AND code=:code', compact('qid', 'code'))
-  : db\insert('r_bad', ray('qid code created', $qid, $code, time()));
+  : db\insert('r_bad', ray('qid code created', $qid, $code, time()), 'created');
 }
 
 /**

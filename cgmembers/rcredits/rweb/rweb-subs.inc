@@ -1678,7 +1678,7 @@ function directoryList($which, $region, $withButtons = FALSE) {
   $which = str_replace(' ', '%', \db_like(" $which ")); // allow abbreviations of each word
 
   $sql = <<<EOF
-    SELECT DISTINCT u.uid, i.iid, if (ISNULL(parent.industry), i.industry, parent.industry) as selIndustry
+    SELECT DISTINCT u.uid, i.iid, if (ISNULL(parent.industry), i.industry, parent.industry) as selIndustry, parent.iid as selIid
     FROM users u 
     LEFT OUTER JOIN r_user_industries ui ON ui.uid=u.uid
     LEFT OUTER JOIN r_industries i ON i.iid=ui.iid
@@ -2152,8 +2152,7 @@ function fundStats($stats, $round = FALSE, $stats30 = NULL) {
     $res['cttyName'] = $ctty == r\serverUid() ? t('Seedpack (Outliers)') : trim(strtr($cttyA->fullName, [t('Region')=>'', PROJECT=>'']));
   } else $res['cttyName'] = t('TOTAL');
 
-  $scheme = f('i.scheme', 'r_stats');
-  $fields = $scheme['fields'];
+  $intStatFlds = [ 'pAccts', 'bAccts', 'newbs', 'aAccts', 'conx', 'conxLocal' ]; // excludes fields ending in 'Count'
   
   // calculate monthly velocity with respect to total credit in circulation (balsPos not bals)
   foreach ($rateFlds = ray('cg usd txs local') as $z) {
@@ -2164,7 +2163,7 @@ function fundStats($stats, $round = FALSE, $stats30 = NULL) {
   foreach (array_keys($stats) as $k) {
     if (!in($k, 'id ctty created')) {
       if ($stats30) $stats["d_$k"] = $stats[$k] - $stats30[$k];
-      $fmt = ($round or strpos($k, 'Count') or @$fields[$k]['type'] == 'int') ? '1' : 's$';
+      $fmt = ($round or strpos($k, 'Count') or in_array($k, $intStatFlds)) ? '1' : 's$';
       if (strpos($k, 'Rate')) $fmt = '%';
 //      if (strpos($k, 'Per')) $fmt = '';
       foreach ($stats30 ? [$k, "d_$k"] : [$k] as $fnm) {
