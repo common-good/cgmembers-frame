@@ -26,16 +26,16 @@ define('CGID', getV('cgf_uid')); // Common Good's account ID (has to be here rat
  */
 function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   global $channel;
-//  \db_query("SET NAMES 'utf8'"); // only needed once per connection, but hey
+  //  \db_query("SET NAMES 'utf8'"); // only needed once per connection, but hey
   u\EXPECT(compact(ray('sql subs')), 'notempty assoc');
-//  if (strpos($sql, 'INSERT INTO') !== FALSE and strpos($sql, ' VALUES (')) $return = \Database::RETURN_INSERT_ID;
+  //  if (strpos($sql, 'INSERT INTO') !== FALSE and strpos($sql, ' VALUES (')) $return = \Database::RETURN_INSERT_ID;
   if ($retId) $return = \Database::RETURN_INSERT_ID;
   if (preg_match('/^DELETE FROM ([^ ]+)( |$)/', $sql, $match) and !in(NO_LOGSQL_TABLES, @$match)) logSql(compact(ray('sql subs retId')));
   if ($log and strpos($sql, 'SELECT ') === FALSE) u\loga('db', $subs + compact('sql'));
   try {
     return \db_query(u\SUBS($sql), u\prefixKeys(':', $subs), compact('return'));
   } catch (Exception $e) {
-/**/ if (@$channel == TX_WEB) r\Web\exception_handler($e); else die('in q');
+    /**/ if (@$channel == TX_WEB) r\Web\exception_handler($e); else die('in q');
   }
 }
 
@@ -56,7 +56,7 @@ function get($fieldName, $table, $where = '1', $subs = []) {
   if (is_array($where)) list ($where, $subs) = [u\where($where), $where];
   if (!strpos($where, ' LIMIT ')) $where .= ' LIMIT 1';
   $sql = "SELECT $fieldName FROM $table WHERE $where";
-/// debug(compact('sql','subs'));
+  /// debug(compact('sql','subs'));
   $result = db\q($sql, $subs);
   $fieldCount = strpos($fieldName, '(') ? 1 : substr_count($fieldName, ',') + 1; // function or array, not both
   if (substr($fieldName, -1, 1) == '*') $many = TRUE; elseif ($fieldCount > 1) $several = TRUE;
@@ -70,42 +70,26 @@ function exists($table, $where = '1', $subs = []) {return db\get(1, $table, $whe
  * Update a database record 
  * (replaces the functionality of drupal_write_record, which does not update bigint fields properly)
  * @param string $table: table name
- * @param assoc $info: data to update (must include record key, unless inserting)
- * @param string $key: record key name (if empty then insert record, otherwise update)
- * @param bool either: if TRUE, insert the record if it does not exist (otherwise update)
- * @return: if inserting, then the id of the inserted record, else TRUE (FALSE on failure)
+ * @param assoc $info: data to update (must include record key)
+ * @param string $key: record key name (must not be empty)
+ * @return: TRUE (FALSE on failure)
  */
-function update($table, $info, $key, $either = FALSE) {
-  logSql(compact(ray('table info key either')));
-  //if ($table != 'r_log') u\loga('db', $info, "$table:$key" . ($either ? ' EITHER' : ''));
-  if ($either) if (!isset($info[$key]) or !db\exists($table, "$key=:$key", [$key => $info[$key]])) $key = '';
-  $command = $key ? 'UPDATE' : 'INSERT INTO';
+function update($table, $info, $key) {
+  logSql(compact(ray('table info key')));
 
-  foreach (ray('created modified') as $k) if (!isset($info[$k]) and hasField($table, $k)) {
-		if ($k == 'modified' or !$key) $info[$k] = NOW; // set these automatically
-	}
+  if (!isset($info['modified']) and hasField($table, 'modified')) {
+    $info['modified'] = NOW;
+  }
 	
   $sql = '';
   foreach ($info as $field => $v) {
     if ($field != $key) $sql .= ",`$field`=:$field";
     if (is_array($v)) u\EXPECT(FALSE, 'array in update param'); // exception fails if called in $DBTX
   }
-  $sql = "$command $table SET " . substr($sql, 1) . ($key ? " WHERE `$key`=:$key" : '');
-///  if ($table=='r_do') {print_r(compact(ray('table info key either command sql'))); die('dbU');}
+  $sql = "UPDATE $table SET " . substr($sql, 1) . " WHERE `$key`=:$key";
   try {
     $result = db\q($sql, $info, !$key);
-    if ($command != 'INSERT INTO') return TRUE;
-    if ($result) return $result; // if there is no serial field, result will be false, so check
-
-    if ($table == 'users') {
-      $id = 'uid';
-    } else {
-      $id = db\idnm($table, $field1);
-      u\EXPECT($id and isset($info[$id]), 'no primary key ' . $id);
-      if ($hasSerial = ($field1['type'] == 'serial')) return FALSE; // record ID would have been returned above
-    }
-    
-    return db\get($id, $table, "`$id`=:id", ray('id', $info[$id])); // return the supplied id if success
+    return TRUE;
   } catch (PDOException $e) {u\EXPECT(FALSE, "PDOException: $e->message");} 
 }
 
@@ -114,9 +98,47 @@ function update($table, $info, $key, $either = FALSE) {
  * (replaces half the functionality of drupal_write_record)
  * @param string $table: table name
  * @param assoc $info: data to insert
+ * @param string $key: key field name, defaults to 'id'
  * @return: record key of the inserted record (FALSE on failure)
  */
-function insert($table, $info) {return db\update($table, $info, '');}
+function insert($table, $info, $key = 'id') {
+  logSql(compact(ray('table info')));
+
+  foreach (ray('created modified') as $k) if (!isset($info[$k]) and hasField($table, $k)) {
+    $info[$k] = NOW; // set these automatically
+  }
+	
+  $sql = '';
+  foreach ($info as $field => $v) {
+    /* if ($field == $key) u\EXPECT(FALSE, 'key value specified in database insert'); // may actually be needed */
+    if (is_array($v)) u\EXPECT(FALSE, 'array in insert param'); // exception fails if called in $DBTX
+    $sql .= ",`$field`=:$field";
+  }
+  $sql = "INSERT INTO $table SET " . substr($sql, 1);  // get rid of leading comma
+  try {
+    $result = db\q($sql, $info, TRUE);
+    if ($result) return $result; // if there is no serial field, result will be false, so check
+
+    u\EXPECT($key and isset($info[$key]), 'no primary key ' . $key);
+    return db\get($key, $table, "`$key`=:key", ray('key', $info[$key])); // return the supplied id if success
+
+  } catch (PDOException $e) {u\EXPECT(FALSE, "PDOException: $e->message");} 
+}
+
+/**
+ * Insert or update a database record 
+ * @param string $table: table name
+ * @param assoc $info: data to update (must include record key)
+ * @param string $key: record key name (must not be empty)
+ * @return: if inserting, then the id of the inserted record, else TRUE (FALSE on failure)
+ */
+function updateOrInsert($table, $info, $key) {
+  if (db\exists($table, "$key=:$key", [$key => $info[$key]])) {
+    return db\update($table, $info, $key);
+  } else {
+    return db\insert($table, $info, $key);
+  }
+}
 
 /**
  * Return an array of record objects.
@@ -190,38 +212,21 @@ function setFlag($table, $id, $bit, $bool = TRUE) {
 /**
  * Make a backup copy of the record before deleting it if appropriate (then delete it).
  * @param string $table: delete a record from this table
+ * @param string $idnm: name of key field of table
  * @param mixed $id: integer id of record to delete OR criteria
  * @param assoc $subs: parameters for selection criteria
  */
-function del($table, $id, $subs = []) {
-  $xtable = $table == 'users' ? 'x_users' : str_replace('r_', 'x_', $table);
-  if (is_numeric($id)) {
-    $idnm = db\idnm($table, $field1); // $field1 not used
-    $where = "$idnm=$id";
-  } else $where = $id;
+function del($table, $idnm, $id, $subs = []) {
+  $where = is_numeric($id) ? "$idnm=$id" : $id;
   if (in($table, TRACK_DELETED)) {
+    $xtable = $table == 'users' ? 'x_users' : str_replace('r_', 'x_', $table);
     $q = db\q("INSERT INTO $xtable SELECT :NOW AS deleted,a.* FROM $table a WHERE $where", $subs);
     $ok = ($q->rowCount() > 0);
-  } else $ok = TRUE;
+  } else { $ok = TRUE; }
   if ($ok) db\q("DELETE FROM $table WHERE $where", $subs);
 }
 
-//function restore($table, $id) {
-
-/**
- * Return the table's record id field name.
- * @param string $table: table name
- * @param string $field1: (RETURNED) descriptive array of first field in the table
- */
-function idnm($table, &$field1 = '') {
-  $scheme = scheme($table);
-  $id = $table == 'users' ? 'uid' : $scheme['primary key'][0];
-  $field1 = reset($scheme['fields']);
-  return $id;
-}
-  
-function scheme($table) {return f('i.scheme', $table);}
-function hasField($table, $field) {return ($scheme = scheme($table) and @$scheme['fields'][$field]);}
+function hasField($table, $field) {return hasCol($table, $field);}
 function hasCol($table, $field) {global $db_name; return db\exists('INFORMATION_SCHEMA.COLUMNS', 'TABLE_SCHEMA=:db_name AND TABLE_NAME=:table AND COLUMN_NAME=:field', compact(ray('db_name table field')));}
         
 function count($table, $where = '1', $subs = []) {return db\get('COUNT(1)', $table, $where, $subs);}

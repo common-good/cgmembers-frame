@@ -123,7 +123,7 @@ function formCoupons_submit($form, &$sta) {
 		if ($end) $end = strtotime('tomorrow', $end) - 1; // last second of the day
 	}
 
-  if ($gift or $automatic) db\insert('r_coupons', compact(ray('amount on minimum start end ulimit flags')) + ray('fromId', $myid));
+  if ($gift or $automatic) db\insert('r_coupons', compact(ray('amount on minimum start end ulimit flags')) + ray('fromId', $myid), 'coupid');
   if ($gift) {unset($start); unset($end);} // don't pass these to printCoupons()
 
   $args = u\urlify(http_build_query($ray = compact(ray('type amount minimum ulimit count on start end automatic'))));

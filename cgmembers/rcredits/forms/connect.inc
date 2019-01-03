@@ -123,10 +123,10 @@ function formConnect_submit($form, &$sta) {
   list ($cashoutW, $cashoutM) = [$connect and @$cashout == 1, $connect and @$cashout == 2];
   $fields = ray('hasBank last4bank refill cashoutW cashoutM minimum achMin saveWeekly');
   if ($bankAccount != 'no change') { // bank account changed. update and reverify.
-		$fields[] = 'bankAccount'; // avoid overwriting v-encrypted value
-		$mya->setBit(B_BANKOK, FALSE);
-    if (!$connect) db\del('r_usd', 'deposit=0 AND payee=:id', ray('id', $mya->id)); // no transfers for a deleted bank connection
-	}
+    $fields[] = 'bankAccount'; // avoid overwriting v-encrypted value
+    $mya->setBit(B_BANKOK, FALSE);
+    if (!$connect) db\del('r_usd', 'id', 'deposit=0 AND payee=:id', ray('id', $mya->id)); // no transfers for a deleted bank connection
+  }
   $mya->update(compact($fields));
   
   if (@$autoboxes and $orig = unserialize($autoboxes)) foreach ($orig as $uid => $wasSet) {

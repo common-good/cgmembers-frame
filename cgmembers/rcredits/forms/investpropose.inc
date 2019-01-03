@@ -94,6 +94,6 @@ function formInvestPropose_submit($form, &$sta) {
   } else $a = r\acct($company);
 
   list ($coid, $proposedBy) = [$a->id, $mya->id];
-  db\insert('r_investments', compact(ray('coid proposedBy ' . INVEST_FLDS)));
+  db\insert('r_investments', compact(ray('coid proposedBy ' . INVEST_FLDS)), 'vestid');
   w\go("/invest/list/clubid=$clubid", t('Your proposed investment has been saved.'));
 }
