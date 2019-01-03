@@ -73,7 +73,7 @@ EOF
   
   $form = $nearly ? 
       cgform(compact(ray('title subtext email dupsOk trusted subject message submit')))
-    : compact(ray('title subtext'));
+    : cgform(compact(ray('title subtext')));
   return $form;
 }
 
