@@ -9,10 +9,12 @@ use CG\Txs as x;
 
 include_once __DIR__ . '/../cg-txs.inc';
 
+print_r(debug_backtrace());
+
 /**
  * List Transactions
  */
-function formShowRecurs($form, &$sta, $args = '') {
+function formShowRecurring($form, &$sta, $args = '') {
   die('got here');
   w\downloadCheck('history/show-recurring');
   
@@ -108,9 +110,9 @@ EOF;
   return cgform($form);
 }
 
-function formShowRecurs_validate($form, &$sta) {w\dateRangeValidate($sta);}
+function formShowRecurring_validate($form, &$sta) {w\dateRangeValidate($sta);}
 
-function formShowRecurs_submit($form, &$sta) {
+function formShowRecurring_submit($form, &$sta) {
 //  if (confirming_s($sta)) return;
   return w\dateRangeRedirect('history/transactions', $sta);
 }
@@ -197,7 +199,7 @@ function recurEdit_submit($form, &$sta) {
   return w\go('history', 'info saved');
 }
 
-function handleShowRecurs($do, $xid, &$sta, $args) {
+function handleShowRecurring($do, $xid, &$sta, $args) {
   $url = str_replace('&do=', '&did=', "history/transactions/$args"); // don't do it again
 
   if (substr($xid, 0, 1) == 'b') { // reversing bank transfer
