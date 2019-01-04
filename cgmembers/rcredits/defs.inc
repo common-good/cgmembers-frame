@@ -110,6 +110,7 @@ define('DAY_SECS', 24 * HOUR_SECS);
 define('WEEK_SECS', 7 * DAY_SECS);
 define('WEEK7_SECS', 52 * DAY_SECS);
 define('MONTH_SECS', 30.4368 * DAY_SECS);
+define('QUARTER_SECS', round(3 * MONTH_SECS));
 define('YEAR_SECS', round(12 * MONTH_SECS));
 define('FLOOR_DAYS', 183); // how many days to consider for credit line calculation
 
@@ -195,6 +196,7 @@ define('TICKLE_WELCOME', 2 * 7); // number of days to wait after activation, bef
 define('TICKLE_DELAYED', 6 * 7); // number of days to wait after activation, before followup if no gift or no CGC
 define('OFTENS', 'W:Weekly,M:Monthly,Q:Quarterly,Y:Yearly,X:Once (now)');
 define('OFX_TX_FLDS', 'trnType dtPosted trnAmt fitId name memo');
+define('OFTENS_SECS', ['W' => WEEK_SECS, 'M' => MONTH_SECS, 'Q' => QUARTER_SECS, 'Y' => YEAR_SECS]);
 
 define('ICARD_EXPIRES', 14); // how many days until invitation card expires, after account is activated
 define('ICARD_CODELEN_MIN', 10); // minimum length for an invitation code
