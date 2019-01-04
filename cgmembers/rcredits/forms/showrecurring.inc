@@ -23,7 +23,7 @@ function formShowRecurring($form, &$sta, $args = '') {
   extract(just('recId do', $args)); 
   if (isset($do) and $do == 'stop' and isset($recId)) {
     $result = handleStop($recId, $sta, $args);
-    if ($result) return $result;
+    // if ($result) return $result;
   }
   /*
      extract(just('dateRange downloadMsg url starting ending', dateRange($args, 'history/transactions')));
