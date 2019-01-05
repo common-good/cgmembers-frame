@@ -21,40 +21,39 @@ Setup:
 Scenario: A member looks at their recurring transactions
   When member ".ZZA" visits page "history/show-recurring"
   Then we show "Recurring Transactions for Abe One" with:
-  | To   | Amount | How often? | Starting | Next    | Ending   |
+  | To         | Amount | How often? | Starting | Next     | Ending   |
   | Corner Pub | 37.00  | Quarterly  | %mdY-13m | ~%mdY+2m |          |
-  | Bea Two | 43.00  | Weekly    | %mdY-13m |         | %mdY-11m |
-  | Bea Two | 59.59  | Yearly     | %mdY-16m | %mdY+8m |          |
+  | Bea Two    | 43.00  | Weekly     | %mdY-13m |          | %mdY-11m |
+  | Bea Two    | 59.59  | Yearly     | %mdY-16m | %mdY+8m  |          |
   
 Scenario: A member stops a recurring transaction
   When member ".ZZA" visits page "history/show-recurring/recId=99900&do=stop"
   Then we show "Recurring Transactions for Abe One" with:
-  | To   | Amount | How often? | Starting | Next    | Ending   |
-  | Corner Pub | 37.00  | Quarterly  | %mdY-13m |         | %mdY     |
-  | Bea Two | 43.00  | Weekly    | %mdY-13m |         | %mdY-11m |
-  | Bea Two | 59.59  | Yearly     | %mdY-16m | %mdY+8m |          |
-  When member ".ZZA" visits page "history/show-recurring/recId=99900&do=stop"
-  Then we show "recur already ended"
-  And we show "Recurring Transactions for Abe One" with:
-  | To   | Amount | How often? | Starting | Next    | Ending   |
-  | Corner Pub | 37.00  | Quarterly  | %mdY-13m |         | %mdY     |
-  | Bea Two | 43.00  | Weekly    | %mdY-13m |         | %mdY-11m |
-  | Bea Two | 59.59  | Yearly     | %mdY-16m | %mdY+8m |          |
+  | To         | Amount | How often? | Starting | Next     | Ending   |
+  | Corner Pub | 37.00  | Quarterly  | %mdY-13m |          | %mdY     |
+  | Bea Two    | 43.00  | Weekly     | %mdY-13m |          | %mdY-11m |
+  | Bea Two    | 59.59  | Yearly     | %mdY-16m | %mdY+8m  |          |
+
+Scenario: A member stops a stopped recurring transaction
+  When member ".ZZA" visits page "history/show-recurring/recId=99901&do=stop"
+  Then we show "Recurring Transactions for Abe One" with:
+  | To         | Amount | How often? | Starting | Next     | Ending   |
+  | Corner Pub | 37.00  | Quarterly  | %mdY-13m | ~%mdY+2m |          |
+  | Bea Two    | 43.00  | Weekly     | %mdY-13m |          | %mdY-11m |
+  | Bea Two    | 59.59  | Yearly     | %mdY-16m | %mdY+8m  |          |
 
 Scenario: A member attempts to stop a non-existent recurring transaction
   When member ".ZZA" visits page "history/show-recurring/recId=99999&do=stop"
-  Then we show "invalid recur id"
-  And we show "Recurring Transactions for Abe One" with:
-  | To   | Amount | How often? | Starting | Next    | Ending   |
-  | Corner Pub | 37.00  | Quarterly  | %mdY-13m |  %mdY+2m |    |
-  | Bea Two | 43.00  | Weekly    | %mdY-13m |         | %mdY-11m |
-  | Bea Two | 59.59  | Yearly     | %mdY-16m | %mdY+8m |          |
+  Then we show "Recurring Transactions for Abe One" with:
+  | To         | Amount | How often? | Starting | Next     | Ending   |
+  | Corner Pub | $37.00 | Quarterly  | %mdY-13m | ~%mdY+2m |          |
+  | Bea Two    | $43.00 | Weekly     | %mdY-13m |          | %mdY-11m |
+  | Bea Two    | $59.59 | Yearly     | %mdY-16m | %mdY+8m  |          |
 
-Scenario: A member attempts to stop another member's. recurring transaction
+Scenario: A member attempts to stop another member's recurring transaction
   When member ".ZZA" visits page "history/show-recurring/recId=99904&do=stop"
-  Then we show "recur not yours"
-  And we show "Recurring Transactions for Abe One" with:
-  | To   | Amount | How often? | Starting | Next    | Ending   |
-  | Corner Pub | 37.00  | Quarterly  | %mdY-13m |         %mdY+2m |      |
-  | Bea Two | 43.00  | Weekly    | %mdY-13m |         | %mdY-11m |
-  | Bea Two | 59.59  | Yearly     | %mdY-16m | %mdY+8m |          |
+  Then we show "Recurring Transactions for Abe One" with:
+  | To         | Amount | How often? | Starting | Next     | Ending   |
+  | Corner Pub | 37.00  | Quarterly  | %mdY-13m | ~%mdY+2m |          |
+  | Bea Two    | 43.00  | Weekly     | %mdY-13m |          | %mdY-11m |
+  | Bea Two    | 59.59  | Yearly     | %mdY-16m | %mdY+8m  |          |
