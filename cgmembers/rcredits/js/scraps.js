@@ -223,14 +223,15 @@ function doit(what, vs) {
 
     case 'invite-link': $('#inviteLink').click(function () {SelectText(this.id);}); break;
 
-    case 'gift':
+    case 'amtChoice':
       var other = jQuery('.form-item-amount'); 
-      var gift = jQuery('#edit-gift');
-      if (gift.val() == -1) other.show(); else other.hide();
+      var amtChoice = jQuery('#edit-amtchoice');
+      if (amtChoice.val() == -1) other.show(); else other.hide();
       
-      gift.change(function () {
-        if(gift.val() == -1) {
+      amtChoice.change(function () {
+        if(amtChoice.val() == -1) {
           other.show(); 
+          jQuery('.form-item-amtChoice').hide();
           jQuery('#edit-amount').focus();
         } else other.hide();
       });

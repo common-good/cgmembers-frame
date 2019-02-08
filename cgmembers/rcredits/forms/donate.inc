@@ -46,27 +46,20 @@ function formDonate($form, &$sta, $args = '') {
   $title = t('Donate to %PROJECT');
   $amountTip = $mya->co ? '' : t('The most common amounts chosen are $50 and $25.');
   $subtext = t('<p>(optional) Make a tax-deductible gift of any size%recurOnly. %replaces</p>', 'recurOnly replaces', @$recurOnly, @$replaces) . t('</p><p>Half of your gift supports whatever projects you decide on together in your community; half supports the operation of the %PROJECT system (to donate zero, choose "Water"). %amountTip</p><p><b class="loud">NOTE: This is a donation, not a deposit.</b> Thank you for your support!</p>', compact('amountTip'));
-  $gift = selectFld(t('Donation:'), '', required($mya->co ? R_COMPANY_GIFT : R_INDIVIDUAL_GIFT), $giftLevels);
+  $amtChoice = selectFld(t('Donation:'), '', required($mya->co ? R_COMPANY_GIFT : R_INDIVIDUAL_GIFT), $giftLevels);
   $amount = textFld(t('Other amount $'), '');
   $period = selectFld(t('When:'), '', required(0), $oftens);
   $honor = selectFld(t('Honoring:'), '', '', $honors);
   $honored = areaFld('', [t('Honoring whom or what')]);
 //    $roundup = $mya->ok ? '' : w\roundupFld($mya),
 
-  jsx('gift');
-  return cgform(compact(ray('title subtext gift amount period honor honored recurId')) + w\setupFoot(t('Donate')) + compact('wait'));
+  jsx('amtChoice');
+  return cgform(compact(ray('title subtext amtChoice amount period honor honored recurId')) + w\setupFoot(t('Donate')) + compact('wait'));
 }
 
 function formDonate_validate($form, &$sta) {
   $mya = w\eLinkAcct($sta); 
-
-  extract(just('gift amount period', $sta['input']));
-//  $amount = $gift ?: $amount;
-  if ($gift != -1) $amount = $gift;
-//  if (!$amount) return say('missing field', array('field' => 'amount'), 'amount');
-  if ($amount and !$period) return say('missing field', array('field' => 'when'), 'period');
-  if ($err = u\badAmount($amount, '>=0')) return say($err, 'amount');
-  $sta['input'] = compact(ray('amount')) + $sta['input'];
+  if (!w\checkAmtChoice($sta)) return;
 }
 
 function formDonate_submit($form, &$sta) {

@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Definitions common to the various rCredits interfaces
+ * Definitions common to the various CG interfaces
  * (SMS, web, smartphone, etc.)
  */
 
@@ -66,12 +66,12 @@ $databases = array (
   ),
 );
 
-require_once __DIR__ . '/cg-settings.inc'; // custom settings for this community's rCredits server
+require_once __DIR__ . '/cg-settings.inc'; // custom settings for this community's CG server
 // require .module and -util.inc at bottom
 
 define('PROJECT', t('Common Good')); // project name
 define('CG_DOMAIN', 'CommonGood.earth');
-define('RCREDITS', t('Common Good Credits')); // don't use %PROJECT here
+define('RCREDITS', t('Common Good credit')); // don't use %PROJECT here
 define('BANK_DBA', PROJECT);
 define('PROJECT_ID', str_replace(' ', '', strtolower(PROJECT)));
 define('PROJECT_LOGO', 'logo80.png');
@@ -165,18 +165,19 @@ define('R_CRON_PERIOD', 5*60); // how many seconds between cron runs (must divid
 define('R_MAX_TASK_TIME', 1*60); // what's the longest a queued cron task might take
 define('PERSONAL_STEP_COUNT', t('seven'));
 define('COMPANY_STEP_COUNT', t('eight'));
-define('R_STEPS', 'signup:signup, verify, ssn, sign:community/agreement, donate:community/donate, proxies, prefs:settings/preferences, connect, company, relations, photo'); // membership steps
+define('R_STEPS', 'signup:signup, verify, ssn, sign:community/agreement, donate:community/donate, backing:community/backing, proxies, prefs:settings/preferences, connect, company, relations, photo'); // membership steps
 define('R_NOLOG', SECURE_FLDS . ' ' . VSECURE_FLDS . ' data secure vsecure secret oneTimeLoginUrl password pass pass1 pass2 vKeyE newPass external_input form_build_id'); // don't log these (external_input may contain passwords and is duplicated as individual fields)
 define('R_NOLOG_FORMS', 'Admin Test Handy footer accounts history settings settings/icon community Summary Php'); // don't log visits to these forms
 define('R_ANON_FORMS', R_NOLOG_FORMS . ' Signup Signin PageNotFound Sinx Pass Empty TestRecovery ChangePassword Help Community Democracy Agreement CttyFunds Reports Flags Game Menu I ResetPassword Profile Accept Buy HandleInvoice FindCo'); // no login required
 define('SSN_ERR_INDEX', 'CGerror'); // where to put/find error messages in ssnData
-define('BY_CASH', '(cash)'); // app includes this in description, for a purchase of rCredits by cash
-define('BY_CHECK', '(check)'); // app includes this in description, for a purchase of rCredits by check
-define('BY_CARD', '(card)'); // app includes this in description, for a purchase of rCredits by credit card
+define('BY_CASH', '(cash)'); // app includes this in description, for a purchase of CG credit by cash
+define('BY_CHECK', '(check)'); // app includes this in description, for a purchase of CG credit by check
+define('BY_CARD', '(card)'); // app includes this in description, for a purchase of CG credit by credit card
 define('R_ON_FILE', t('(on file)'));
 define('DEPOSIT_SQL', '(amount>0 XOR txid<0)'); // SQL fragment for "transfer is from bank to CG"
 define('DOLLAR_POOL', 1); // uid of dollar pool account
 define('CANONIC_ACCTS', 3); // number of canonic accounts (admin/dollar pool, placeholders,...)
+define('AGGREGATE_MIN', 1); // minimum number of members to show aggregate data
 
 define('R_TEMP_NAME_PREFIX', 'unknown ');
 define('CO_PHOTO_FACTOR', 3); // make company photos this many times as big as individual photos
@@ -185,7 +186,7 @@ define('MAX_UPLOAD_SIZE', 4 * 1024000); // maximum upload size in bytes
 define('R_URL_SLASH', '%_%'); // Drupal gets confused by slashes in a url, even if urlencoded
 define('R_EXCHANGE_LIMITS', '1:5000,7:20000,49:80000,365:500000'); // per day, week, 7-week, year
 define('R_INVITE_DAYS', 30); // number of days to accept invitation to membership
-//define('R_MAXR_DEFAULT', -1); // suggested maximum amount to hold in rCredits (-1 = no limit)
+//define('R_MAXR_DEFAULT', -1); // suggested maximum amount to hold in CG credit (-1 = no limit)
 define('R_CARDCODE_LEN', 14); // length of rCard security code (long to deter easy copying, max 14 for small QR)
 define('R_CARD_COST', 5); // cost to order a company or replacement rCard
 define('ORGANIZER_GRANT_MIN', 10); // minimum number of individuals to recruit, to be eligible for a grant
@@ -236,8 +237,8 @@ define('FOR_SHARE', 3); // "sharing" gift to CGF (comes out of rewards)
 //define('FOR_INVESTMENT', 4); // only in invoices (use B_INVESTMENT in txs)
 //define('FOR_STAKE', 5); // only in invoices (use B_STAKE in txs)
 
-define('R_CHUNK', 10); // chunk size for buying rCredits (sales amounts are a multiple of this)
-define('R_MIN_DEFAULT', 100); // suggested minimum amount to hold in rCredits
+define('R_CHUNK', 10); // chunk size for buying CG credit (sales amounts are a multiple of this)
+define('R_MIN_DEFAULT', 100); // suggested minimum amount to hold in CG credit
 define('R_ACHMIN', 10); // minimum granularity of withdrawals from bank account
 define('R_ACHMIN_DEFAULT', 50); // suggested achMin
 //define('R_ACH_TRIES', 3); // how many times to retry an ACH
@@ -300,7 +301,7 @@ define('CO_u10', 10); //
 define('CO_u11', 11); //
 define('CO_u12', 12); //
 define('CO_PRIVATE', 13); // company is not to be listed publicly (on promo site, etc.)
-define('CO_ATM', 14); // can trade cgCredits for cash, even if balance is less than floor
+define('CO_ATM', 14); // can trade cg credit for cash, even if balance is less than floor
 
 define('APP_CANS', 15); // company permission bits when signed OUT: bits 15-21
 define('CO_CHARGE', 0);
@@ -327,7 +328,7 @@ define('APP_CAN_BIT_DESCS', t('charge customers,undo last transaction,give %RCRE
 // for documentation of IS_OK etc. see u\SUBS()
 define('B_MEMBER', 0); // fulfilled membership requirements (ready to be approved).
 define('B_CONFIRMED', 1); // invitation has been confirmed (in advance by form invite OR explicitly OR implicitly by newb first buying from the inviter in person)
-define('B_OK', 2); // can use rCredits for real (set by admin when ready). Set FALSE to freeze ctty funds (NYI)
+define('B_OK', 2); // can use CG for real (set by admin when ready). Set FALSE to freeze ctty funds (NYI)
 define('B_CARDED', 3); // card has been printed and mailed
 define('B_IDED', 4); // a cashier has verified the member's government-issued photo ID
 define('B_REFILL', 5); // refill the account automatically (up to a target amount)
@@ -389,7 +390,7 @@ define('REL_DATA_FLDS', 'fullName email phone address city state zip address2 ci
 define('B_RELATED', 100); // has a relationship record
 define('B_NONE', 100); // no access
 define('B_READ', 101); // can view Transaction History
-define('B_SCAN', 102); // can accept rCard payments for goods or cash for rCredits (or view Transaction History -- permissions are cummulative)
+define('B_SCAN', 102); // can accept CG Card payments for goods or cash for CG (or view Transaction History -- permissions are cummulative)
 define('B_REFUND', 103); // can undo transactions and make refunds or trade cash at point of sale
 define('B_SELL', 104); // can send invoices (or scan or view)
 define('B_BUY', 105); // can make purchase for the account (or sell or scan or view)
@@ -484,7 +485,7 @@ define('TX_AJAX', 7);
 define('TX_FOREIGN', 8); // user clicked a "Pay with CG" button or request an app to charge them
 define('TX_CHANNELS', 'Sys SMS Web App Tone Cron Link Ajax Foreign'); // can't translate, because used in t() (find a solution)
 
-// Transaction types (all but type TX_TRANSFER and TX_BANK create rCredits) -- negative types generally not shown
+// Transaction types (all but type TX_TRANSFER and TX_BANK create credit) -- negative types generally not shown
 define('TX_BONUS', -2); // UNUSED sales bonus (negative reward types are invisible on transaction history)
 define('TX_REBATE', -1); // UNUSED sales rebate
 define('TX_TRANSFER', 0); // normal fund transfer (usually for actual goods and services) -- not creating rC
@@ -494,8 +495,8 @@ define('TX_INFLATION', 3); // reward to conpensate for inflation
 define('TX_HELPER', 4); // reward for inviting and assisting with account opening
 define('TX_REWARDS', '-2,-1,1,2,3,4'); // only these count as rewards
 
-define('TX_FINE', 9); // destroys rCredits (this is essentially a negative grant)
-define('TX_XFEE', 10); // exchange fee (for buying rCredits with a credit/debit card or check)
+define('TX_FINE', 9); // destroys CG credit (this is essentially a negative grant)
+define('TX_XFEE', 10); // exchange fee (for buying CG credit with a credit/debit card or check)
 define('TX_GRANT', 11);
 define('TX_LOAN', 12);
 define('TX_INVEST', 13); // equity investment (community purchase are TX_TRANSFER)

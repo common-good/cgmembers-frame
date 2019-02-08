@@ -1233,6 +1233,8 @@ function drupal_unpack($obj, $field = 'data') {
  *   But if the string starts with '|', discard it and treat all vertical bars as simple characters.
  */
 function t($string, $subs0 = []) {
+  if (is_array($subs0) and @$subs0['aMember_Organizations']) debug($subs0);
+//  if (@$subs0['aMember_Organizations']) debug(['str'=>$string] + $subs0);
   global $language, $channel;
   static $custom_strings;
 

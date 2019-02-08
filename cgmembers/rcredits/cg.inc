@@ -840,7 +840,7 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
       if (!$deletable) {
         if (db\exists($table, "$field=:oldUid", compact('oldUid'))) {
           $DBTX->rollback(); 
-          return w\say(t('Record in table %table cannot be deleted.', compact('table')), 'err');
+          return w\say(t('Record in table %table (field %field) cannot be deleted.', compact('table', 'field')), 'err');
         }
       } else db\del($table, "$field=:oldUid", compact('oldUid'));
     } else db\q("UPDATE $table SET $field=:newUid WHERE $field=:oldUid", compact('newUid', 'oldUid'));

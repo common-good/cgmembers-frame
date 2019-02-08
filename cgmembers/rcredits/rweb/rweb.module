@@ -104,7 +104,9 @@ function rweb_menu($submenu = '') {
     'history/zot' => ['sub', 'zot', '', ANY], // Drupal bug: last choice is omitted
     'history/statement' => ['call', t('Statement'), '2', 'read', 'statement'],
     'history/customer-statement' => ['call', t('Customer Statement'), '2', 'read', 'custStatement'],
+
     'company-reports' => ['call', t('Company Reports'), 'Data 1 co', 'read co'],
+    'company-reports/demographics' => ['call', t('Customer Demographics'), 'Demographics', 'read co'],
 //    'history/notice' => ['call', t('Notice'), 'Notice 2', 'read'],
     
 //    'community' => ['norm', t('Community'), 'FindCo', ANY],
@@ -120,6 +122,7 @@ function rweb_menu($submenu = '') {
     'community/events/proposal-notes' => ['call', t('Proposal Notes'), 'ProposalNotes 3', 'manage'],
     
     'community/agreement' => ['sub', t('The Agreement'), 'Agreement', ANY, '', t(''), 'globe'],
+    'community/backing' => ['sub', t('Backing Promise'), 'Backing', ANY, '', t(''), 'knight'],
     'community/honors' => ['sub', t('Honored and Remembered'), 'Honors', ANY, '', t(''), 'grain'],
     'community/invite' => ['sub', t('Invite Someone'), 'Invite', 'ok manage', '', t(''), 'share-alt'],
     'community/invite/example' => ['call', t('Invite Someone'), '', 'ok manage', 'inviteExample'],

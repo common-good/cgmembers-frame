@@ -1,3 +1,11 @@
+2019-02-08
+. bug fix: rounding errors in admin-achify.inc
+. new agreement
+. backing page
+. demographics report
+. GNU license file
+. change from "Common Good Credits" to Common Good credit
+
 2018-12-12 feature/fix-donate-form
 
 2018-12-01 feature/fix-join

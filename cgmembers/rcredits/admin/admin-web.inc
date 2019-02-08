@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * rCredits admin
+ * CG admin
  */
 namespace CG\Web;
 
