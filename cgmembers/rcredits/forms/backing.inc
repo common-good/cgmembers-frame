@@ -16,7 +16,7 @@ function formBacking($form, &$sta, $args = '') {
   $subtext = t(<<< X
   <p>Please choose a dollar amount you will back, for one year. This limited promise we all make to each other assures that any <i>other</i> credit in your account is 100% backed &mdash; by Dollars and/or collateral and/or Backing Promises.</p>
 
-  <p>In the event of a <%aCrunch>cash crunch</a> within one year of today, you agree to increase your balance by the backing amount you chose, within 7 days and to bring your balance up to that new target at least once a week until the cash crunch ends. If your %PROJECT Community ends instead of recovering, you would likely forfeit the amount you promised to back [<%aExample>example</a>].
+  <p>In the event of a <%aCrunch>cash crunch</a> within one year of today, you agree to increase your balance, within 7 days, by the backing amount you chose and to bring your balance up to that new target at least once a week until the cash crunch ends. If your %PROJECT Community ends instead of recovering, the amount you chose to back becomes a donation (from you to your %PROJECT Community, for all the great things it funded) [<%aExample>example</a>].
 
   <p>"If there is a cash crunch within the next 12 months, I promise to buy this amount of %PROJECT credit to back the system as described above."</p>
 X

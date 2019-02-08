@@ -58,7 +58,6 @@ function formDonate($form, &$sta, $args = '') {
 }
 
 function formDonate_validate($form, &$sta) {
-  $mya = w\eLinkAcct($sta); 
   if (!w\checkAmtChoice($sta)) return;
 }
 
