@@ -32,7 +32,7 @@ X
   $posttext = t('<b>Note:</b> Every year you will be invited to make another backing promise for the next 12 months.');
 
   jsx('amtChoice');
-  return cgform(compact(ray('title subtext amtChoice amount signedBy date')) + w\setupFoot(t('Promise'), t('Promise')) + compact('posttext'));
+  return cgform(compact(ray('title subtext amtChoice amount signedBy date')) + w\setupFoot(t('Promise')) + compact('posttext'));
 }
   
 function formBacking_validate($form, &$sta) {
