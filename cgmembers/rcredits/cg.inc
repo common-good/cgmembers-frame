@@ -1260,7 +1260,7 @@ function averageBalance($uid, $start, $end = NULL, $noj = FALSE) {
   if (!$days = round(($end + 1 - $start) / DAY_SECS)) return [0, 0, 0, 0]; // rounding is for daylight savings time changes
   $info = be\creditInfo(ray('uid asof', $uid, $start - 1));
   $min = $bal = $info->balance;
-  $rbal = $info->rewards;
+//  $rbal = $info->rewards;
   $jid = @$noj ? 0 : (r\acct($uid)->jid ?: 0);
   $isPayer = 't.payer IN (:uid, :jid)';
   $isPayee = 't.payee IN (:uid, :jid)'; // account can be both payer and payee, if joint account
@@ -1276,8 +1276,8 @@ function averageBalance($uid, $start, $end = NULL, $noj = FALSE) {
     SELECT SUM($signedAmt) AS total,
     FLOOR((t.completed-$start)/:DAY_SECS) AS day 
     FROM (
-      (SELECT type,payer,payee,amount,payerReward,payeeReward,created AS completed FROM r_txs)
-      UNION (SELECT :TX_BANK,1 AS payer,payee,amount,0,0,completed FROM r_usd)
+      (SELECT type,payer,payee,amount,created AS completed FROM r_txs)
+      UNION (SELECT :TX_BANK,1 AS payer,payee,amount,completed FROM r_usd)
     ) t WHERE ($isPayer XOR $isPayee) AND completed BETWEEN $start AND $end 
     GROUP BY day
 X;

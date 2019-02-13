@@ -75,7 +75,7 @@ function formTx_submit($form, &$sta) {
 
   $func = op($sta) == 'pay' ? 'pay' : 'invoice';
   $DBTX = \db_transaction();
-    list ($msg, $args) = $mya->$func(r\acct($uid), $amount, $purpose);
+    list ($msg, $args) = $mya->$func(r\acct($uid), $amount, $purpose, @$repeat ? ['recurs' => 1] : []);
     $ok = @$args['success'];
     if ($ok and $period = @$repeat) {
       $subs = ray('payer payee', $mya->id, $uid);

@@ -633,6 +633,9 @@ body.logged-in.one-sidebar #content {width:100%;}
 /* Options (Preferences) */
 /* #frm-options .form-item-payHow {border-top:1px solid darkgreen; padding-top:5px;} */
 #frm-prefs #edit-posttext .control-data {font-size:80%; border-top:1px solid silver;}
+#frm-prefs #edit-crumbs,
+#frm-prefs #edit-food,
+#frm-prefs #edit-snap {display:inline-block; max-width:200px;}
 
 /* Proxy */
 /*#frm-proxy button {display:none;}*/

@@ -42,7 +42,8 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
 /**
  * member (ARG) completes form (ARG) with values: (ARG)
  *
- * in: MAKE bank AMemberMovesCreditToTheBank
+ * in: MAKE backing AMemberChangesBackingAmount
+ *     MAKE bank AMemberMovesCreditToTheBank
  *     MAKE bank AMemberDrawsCreditFromTheBankWithZeroFloor
  *     MAKE bank AMemberDrawsCreditFromTheBankWithAdequateFloor
  *     MAKE bank AMemberMovesTooLittleToTheBank
@@ -170,7 +171,9 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
 /**
  * members: (ARG)
  *
- * in: MAKE bank Setup
+ * in: MAKE backing Setup
+ *     TEST backing AMemberChangesBackingAmount
+ *     MAKE bank Setup
  *     MAKE community Setup
  *     MAKE company Setup
  *     TEST company AMemberUpdatesCompanyInfo
@@ -220,7 +223,9 @@ function members($list) {return t\members($list);}
 /**
  * transactions: (ARG)
  *
- * in: MAKE bank Setup
+ * in: MAKE backing Setup
+ *     MAKE backing AMemberChangesBackingAmount
+ *     MAKE bank Setup
  *     MAKE community Setup
  *     MAKE custstatement Setup
  *     MAKE download Setup
@@ -234,18 +239,14 @@ function members($list) {return t\members($list);}
  *     TEST gift AMemberMakesARecurringDonation
  *     TEST gift AMemberMakesANewRecurringDonation
  *     TEST gift ACompanyMakesARecurringDonation
- *     MAKE invoice Setup
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberApprovesAnInvoiceToATrustingCustomer
- *     MAKE joint Setup
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     MAKE joint AJoinedAccountMemberUnjoinsTheAccount
- *     MAKE preferences Setup
  *     MAKE preferences AMemberChangesPreferences
  *     MAKE statement Setup
  *     MAKE summary Setup
  *     MAKE summary AMemberClicksTheSummaryTabWithRoundups
- *     MAKE transact Setup
  *     TEST transact AMemberConfirmsRequestToPayAnotherMember
  *     TEST transact AMemberConfirmsRequestToPayAnotherMemberALot
  *     TEST transact AMemberConfirmsRequestToPayAMemberCompany
@@ -316,7 +317,8 @@ function weSayWithSubs($type, $index, $subs) {
 /**
  * we say (ARG): (ARG)
  *
- * in: TEST bank AMemberMovesTooLittleToTheBank
+ * in: TEST backing AMemberChangesBackingAmount
+ *     TEST bank AMemberMovesTooLittleToTheBank
  *     TEST bank AMemberTriesToGoBelowTheirMinimum
  *     TEST company AMemberUpdatesCompanyInfo
  *     TEST contact AMemberUpdatesContactInfo
@@ -407,7 +409,8 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
 /**
  * we show (ARG) with: (ARG)
  *
- * in: TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
+ * in: TEST backing AMemberVisitsTheBackingPage
+ *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST community CronCalculatesTheStatistics
  *     TEST company AMemberVisitsTheCompanyInfoPage
  *     TEST contact AMemberVisitsTheContactInfoPage
@@ -455,6 +458,8 @@ function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWit
  *
  * in: TEST custstatement ACompanyLooksAtACustomerStatement
  *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
+ *     TEST preferences AMemberVisitsThePreferencesPage
+ *     TEST preferences AnotherMemberVisitsThePreferencesPage
  *     TEST relations ItsComplicated
  *     TEST signupco AMemberRegistersACompany
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
@@ -590,7 +595,8 @@ function usd($list) {return t\usd($list);}
 /**
  * member (ARG) visits page (ARG)
  *
- * in: MAKE community CronCalculatesTheStatistics
+ * in: MAKE backing AMemberVisitsTheBackingPage
+ *     MAKE community CronCalculatesTheStatistics
  *     MAKE company AMemberVisitsTheCompanyInfoPage
  *     MAKE contact AMemberVisitsTheContactInfoPage
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
@@ -1153,7 +1159,8 @@ function memberCacheIsOk($id) {return r\acct(t\uid($id))->cacheOk();}
 /**
  * member (ARG) has no photo ID recorded
  *
- * in: MAKE preferences AMemberChangesPreferences
+ * in: MAKE backing AMemberChangesBackingAmount
+ *     MAKE preferences AMemberChangesPreferences
  */
 function memberHasNoPhotoIDRecorded($id) {return t\noPhotoId($id);}
 
@@ -1261,7 +1268,6 @@ function weShowChecked($what, $wantSet = TRUE) {
  * we show unchecked: (ARG)
  *
  * in: TEST preferences AMemberVisitsThePreferencesPage
- *     TEST preferences AnotherMemberVisitsThePreferencesPage
  */
 function weShowUnchecked($what) {return weShowChecked($what, FALSE);}
 

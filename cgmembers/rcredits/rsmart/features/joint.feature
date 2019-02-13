@@ -31,9 +31,6 @@ Setup:
   | .ZZB | .ZZA  | joint      |       |
   And transactions: 
   | xid | created   | type   | amount | from | to   | purpose |*
-  | 1   | %today-6m | signup |    200 | ctty | .ZZA | signup  |
-  | 2   | %today-6m | signup |    200 | ctty | .ZZB | signup  |
-  | 3   | %today-6m | signup |    200 | ctty | .ZZC | signup  |
   | 4   | %today-6m | grant  |    200 | ctty | .ZZF | stuff   |
   Then balances:
   | uid  | balance |*

@@ -52,6 +52,7 @@ function extraSetup($feature) {
  *     MAKE monthly Setup
  *     MAKE notices Setup
  *     MAKE recache Setup
+ *     MAKE recurs Setup
  *     MAKE risk Setup
  *     MAKE tickle Setup
  *     MAKE trust Setup
@@ -86,7 +87,7 @@ function members($list) {return t\members($list);}
  *     TEST recache Setup
  *     BOTH recache BalancesGetOutOfWhack
  *     MAKE recache BalancesGetATinyBitOutOfWhack
- *     MAKE tickle AMemberGetsNoNewCreditLineBecauseTheChangeWouldBeMinimal
+ *     MAKE recurs Setup
  *     TEST weekly AMemberCrawlsOutOfDebt
  *     TEST weekly AMemberBuildsUpSavings
  *     TEST weekly AMemberCashesOutAutomatically
@@ -127,6 +128,8 @@ function balances($list) {return t\balances($list);}
  *     MAKE notices AMemberGetsSomeWeeklyNotices
  *     MAKE recache BalancesGetOutOfWhack
  *     MAKE recache BalancesGetATinyBitOutOfWhack
+ *     MAKE recurs ARecurringDonationHappenedYesterday
+ *     MAKE recurs ARecurringDonationHappenedLongEnoughAgoToRepeat
  *     MAKE risk Setup
  *     MAKE risk WeCalculateRisks
  *     MAKE tickle ANewbieHasNotTakenTheFirstStep
@@ -135,7 +138,6 @@ function balances($list) {return t\balances($list);}
  *     MAKE tickle ANonmemberHasNotAcceptedTheInvitationFromANotyetactiveMember
  *     MAKE tickle ANonmemberHasAcceptedTheInvitation
  *     MAKE tickle ANonmemberHasAcceptedAnInvitationFromSomeoneElseInstead
- *     MAKE tickle AMemberGetsNoNewCreditLineBecauseTheChangeWouldBeMinimal
  *     MAKE trust WeCalculateTrust
  *     MAKE weekly AMemberCrawlsOutOfDebt
  *     MAKE weekly AMemberBuildsUpSavings
@@ -197,15 +199,14 @@ function relations($relations) {return t\relations($relations);}
  *     BOTH gifts ASecondRecurringDonationCanBeCompleted
  *     TEST gifts ADonationInvoiceCanBeCompleted
  *     MAKE gifts ItsTimeToWarnAboutAnUpcomingAnnualDonation
- *     MAKE invoices Setup
  *     TEST invoices UnpaidInvoicesGetHandled
- *     MAKE joint Setup
  *     MAKE monthly Setup
  *     TEST monthly InflationAdjustmentsRoundUpDonationsAndCrumbDonationsAreMade
  *     MAKE recache Setup
+ *     MAKE recurs ARecurringDonationHappenedYesterday
+ *     BOTH recurs ARecurringDonationHappenedLongEnoughAgoToRepeat
  *     MAKE risk Setup
  *     TEST risk WeCalculateRisks
- *     MAKE tickle AMemberGetsNoNewCreditLineBecauseTheChangeWouldBeMinimal
  *     MAKE weekly AMemberCashesOutAutomatically
  */
 function transactions($list) {return t\transactions($list);}
@@ -366,7 +367,6 @@ function weMessageMemberWithTopicAndSubs($id, $topic, $subs) {
  *     MAKE communitybits CommunityBansSpendingBelowZero
  *     TEST risk Setup
  *     TEST risk WeCalculateRisks
- *     BOTH tickle AMemberGetsNoNewCreditLineBecauseTheChangeWouldBeMinimal
  *     TEST trust WeCalculateTrust
  *     MAKE weekly AMemberBuildsUpSavings
  *     MAKE weekly AMemberCashesOutAutomatically
@@ -537,6 +537,8 @@ function stats($list) {return t\stats($list);}
  *     MAKE gifts ARecurringDonationCannotBeCompleted
  *     MAKE gifts ANonmemberChoosesADonation
  *     MAKE gifts ItsTimeToWarnAboutAnUpcomingAnnualDonation
+ *     MAKE recurs ARecurringDonationHappenedYesterday
+ *     MAKE recurs ARecurringDonationHappenedLongEnoughAgoToRepeat
  *     MAKE risk Setup
  */
 function these($thing, $list) {return t\these($thing, $list);}
@@ -551,6 +553,8 @@ function these($thing, $list) {return t\these($thing, $list);}
  *     TEST gifts ANonmemberChoosesADonation
  *     TEST invoices UnpaidInvoicesGetHandled
  *     TEST invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
+ *     TEST recurs ARecurringDonationHappenedYesterday
+ *     TEST recurs ARecurringDonationHappenedLongEnoughAgoToRepeat
  */
 function countIs($what, $count) {return t\count($what, $count);}
 

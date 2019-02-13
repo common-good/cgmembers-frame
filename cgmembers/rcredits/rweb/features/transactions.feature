@@ -30,9 +30,6 @@ Setup:
   | .ZZC |    3000 |
   Given transactions: 
   | xid | created   | type     | amount | from | to   | purpose | taking |*
-  |   1 | %today-7m | signup   |      0 | ctty | .ZZA | signup  | 0      |
-  |   2 | %today-6m | signup   |      0 | ctty | .ZZB | signup  | 0      |
-  |   3 | %today-6m | signup   |      0 | ctty | .ZZC | signup  | 0      |
   |   4 | %today-5m | transfer |     10 | .ZZB | .ZZA | cash E  | 0      |
   |   5 | %today-4m | transfer |   1100 | .ZZC | .ZZA | usd F   | 1      |
   |   6 | %today-3m | transfer |    240 | .ZZA | .ZZB | what G  | 0      |
@@ -58,11 +55,11 @@ Scenario: A member looks at transactions for the past year
   | End          |   | 1,650.00 | %dmy     |
   And with:
   |~tid | Date   | Name       | Purpose  | Amount   |  Balance |~do |
-  | 6   | %mdy-6d | Bea Two    | cash V  |  -100.00 | 1,650.00 | X  |
-  | 5   | %mdy-1w | Corner Pub | this Q  |  -120.00 | 1,750.00 | X  |
-  | 4   | %mdy-3m | Bea Two    | what G  |  -240.00 | 1,870.00 | X  |
-  | 3   | %mdy-4m | Corner Pub | usd F   | 1,100.00 | 2,110.00 | X  |
-  | 2   | %mdy-5m | Bea Two    | cash E  |    10.00 | 1,010.00 | X  |
+  | 5   | %mdy-6d | Bea Two    | cash V  |  -100.00 | 1,650.00 | X  |
+  | 4   | %mdy-1w | Corner Pub | this Q  |  -120.00 | 1,750.00 | X  |
+  | 3   | %mdy-3m | Bea Two    | what G  |  -240.00 | 1,870.00 | X  |
+  | 2   | %mdy-4m | Corner Pub | usd F   | 1,100.00 | 2,110.00 | X  |
+  | 1   | %mdy-5m | Bea Two    | cash E  |    10.00 | 1,010.00 | X  |
 #  | 1   | %mdy-7m | ZZrCred    | signup  |     0.00 |   .00 |    |
   And without:
   | rebate  |
@@ -79,8 +76,8 @@ Scenario: A member looks at transactions for the past few days
   | End          |   | 1,650.00 | %dmy     |
   And with:
   |~tid | Date   | Name       | Purpose    | Amount  |  Balance |~do |
-  | 6   | %mdy-6d | Bea Two    | cash V    | -100.00 | 1,650.00 | X  |
-  | 5   | %mdy-1w | Corner Pub | this Q    | -120.00 | 1,750.00 | X  |
+  | 5   | %mdy-6d | Bea Two    | cash V    | -100.00 | 1,650.00 | X  |
+  | 4   | %mdy-1w | Corner Pub | this Q    | -120.00 | 1,750.00 | X  |
   And without:
   | pie N    |
   | whatever |
@@ -107,9 +104,9 @@ Scenario: A member looks at transactions with roundups
   | End          |   | 1,600.00 | %dmy     |
   And with:
   |~tid | Date    | Name       | Purpose   | Amount  |  Balance |~do |
-  | 7   | %mdy    | Corner Pub | sundries  |  -50.00 | 1,600.00 | X  |
-  | 6   | %mdy-6d | Bea Two    | cash V    | -100.00 | 1,650.00 | X  |
-  | 5   | %mdy-1w | Corner Pub | this Q    | -120.00 | 1,750.00 | X  |
+  | 6   | %mdy    | Corner Pub | sundries  |  -50.00 | 1,600.00 | X  |
+  | 5   | %mdy-6d | Bea Two    | cash V    | -100.00 | 1,650.00 | X  |
+  | 4   | %mdy-1w | Corner Pub | this Q    | -120.00 | 1,750.00 | X  |
   
 #Scenario: Transactions with other states show up properly
 #  Given transactions:

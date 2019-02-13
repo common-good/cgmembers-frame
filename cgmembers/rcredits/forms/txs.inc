@@ -246,21 +246,22 @@ function txSummary($starting, $ending, &$endBalance = '') {
   $startBalance = round($o_balance - ($o_roundups - $o_roundupsPaid), 2);
 
   $dif = [];
-  foreach (ray('inProper outProper rewards bank savings roundups') as $key) $dif[$key] = $nowInfo[$key] - $oldInfo[$key];
+  foreach (ray('inProper outProper bank roundups') as $key) $dif[$key] = $nowInfo[$key] - $oldInfo[$key];
   extract($dif, EXTR_PREFIX_ALL, 'd');
   $p_committed = $mya->committed; // this will include all pending commitments
-  $d_savings -= $d_rewards;
-  list ($toSavings, $fromSavings) = u\order($d_savings >= 0, abs($d_savings), 0);
-  $d_outProper += $toSavings + $d_roundups;
-  $d_inProper += $fromSavings;
+//  $d_savings -= $d_rewards;
+//  list ($toSavings, $fromSavings) = u\order($d_savings >= 0, abs($d_savings), 0);
+//  $d_outProper += $toSavings + $d_roundups;
+  $d_outProper += $d_roundups;
+//  $d_inProper += $fromSavings;
   
-  $fields = 'old bank in out rewards new';
-  $values = array($startBalance, $d_bank, $d_inProper, $d_outProper, $d_rewards, $endBalance); // both
+  $fields = 'old bank in out new';
+  $values = array($startBalance, $d_bank, $d_inProper, $d_outProper, $endBalance); // both
   $values = array_combine(ray($fields), $values);
 
   $p_inProper = $p_outProper = $p_rewards = 0; // temporary until we include unpaid invoice data here
   $p_balance = $p_bank - $p_committed;
-  $values += compact(ray('p_inProper p_bank p_outProper p_rewards p_committed p_balance n_savings o_savings fromSavings toSavings d_roundups'));
+  $values += compact(ray('p_inProper p_bank p_outProper p_committed p_balance d_roundups'));
 
   foreach ($values as $key => $value) $$key = number_format($value, 2);
 

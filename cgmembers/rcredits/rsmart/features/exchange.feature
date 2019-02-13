@@ -33,9 +33,6 @@ Setup:
   | .ZZF | .ZZE  |   1 | sell       |
   And transactions: 
   | xid | created   | type     | amount | from | to   | purpose |*
-  | 1   | %today-6m | signup   |    350 | ctty | .ZZA | signup  |
-  | 2   | %today-6m | signup   |    150 | ctty | .ZZB | signup  |
-  | 3   | %today-6m | signup   |    250 | ctty | .ZZC | signup  |
   | 4   | %today-5m | transfer |    100 | .ZZC | .ZZB | cash    |
   | 5   | %today-5m | transfer |    200 | .ZZA | .ZZC | cash    |
   | 6   | %today-4m | grant    |    250 | ctty | .ZZF | stuff   |

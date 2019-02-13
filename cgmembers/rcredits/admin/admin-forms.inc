@@ -181,7 +181,7 @@ function formAdminPanel_submit($form, &$sta) {
     $fields = <<<EOF
     xid, t.created, t.flags, t.type AS ty, t.goods AS gd, t.:IS_TAKING AS k,
     IF (LOCATE('"force";s:1:"1"', u1.data)>0, 1, IF(LOCATE('"force";s:2:"-1"', u1.data)>0, -1, IF(LOCATE('"force";s:1:"0"', u1.data)>0, '0', ''))) AS f,
-    payer, payee, amount, payerReward, payeeReward, payerFor AS for1, payeeFor AS for2, payerTid AS tid1, payeeTid AS tid2
+    payer, payee, amount, payerFor AS for1, payeeFor AS for2, payerTid AS tid1, payeeTid AS tid2
 EOF;
     if ($mya->admin) $fields = str_replace('u1.', '', $fields);
     return say(a\showQuery('r_txs', 1, 'xid DESC', $fields, ['payer', 'payee']));

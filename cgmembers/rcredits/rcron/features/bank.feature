@@ -15,8 +15,8 @@ Setup:
   
 Scenario: a member is barely below target
   Given balances:
-  | uid  | rewards | savingsAdd | balance |*
-  | .ZZA |      20 |          0 | 99.99   |
+  | uid  | savingsAdd | balance |*
+  | .ZZA |          0 | 99.99   |
   When cron runs "getFunds"
   Then usd transfers:
   | txid | payee | amount | channel  |*
@@ -28,8 +28,8 @@ Scenario: a member is barely below target
 
 Scenario: a member has a negative balance
   Given balances:
-  | uid  | rewards | savingsAdd | balance |*
-  | .ZZA |      20 |          0 | -50     |
+  | uid  | savingsAdd | balance |*
+  | .ZZA |          0 | -50     |
   When cron runs "getFunds"
   Then usd transfers:
   | txid | payee | amount | channel  |*
@@ -63,15 +63,15 @@ Scenario: an unbanked member barely below target cannot draw on another account
 
 Scenario: a member is at target
   Given balances:
-  | uid  | rewards | savingsAdd | balance |*
-  | .ZZA |      20 |          0 |     100 |
+  | uid  | savingsAdd | balance |*
+  | .ZZA |          0 |     100 |
   When cron runs "getFunds"
   Then bank transfer count is 0
   
 Scenario: a member is well below target
   Given balances:
-  | uid  | rewards | savingsAdd | balance | minimum |*
-  | .ZZA |      25 |          0 |      50 |     151 |
+  | uid  | savingsAdd | balance | minimum |*
+  | .ZZA |          0 |      50 |     151 |
   When cron runs "getFunds"
   Then usd transfers:
   | txid | payee | amount              | channel  |*
@@ -82,9 +82,9 @@ Scenario: a member is well below target
 
 Scenario: a member is under target but already requested barely enough funds from the bank
   Given balances:
-  | uid  | rewards | savingsAdd | balance |*
-  | .ZZA |      20 |          0 |      20 |
-  | .ZZB |      20 |          0 |     100 |
+  | uid  | savingsAdd | balance |*
+  | .ZZA |          0 |      20 |
+  | .ZZB |          0 |     100 |
   When cron runs "getFunds"
   Then usd transfers:
   | payee | amount | channel  |*
@@ -99,15 +99,15 @@ Scenario: a member is under target and has requested insufficient funds from the
   | uid  | fullName | floor | minimum | flags            | achMin | risks   |*
   | .ZZD | Dee Four |   -50 |     300 | ok,refill,bankOk | 30     | hasBank |
   And balances:
-  | uid  | rewards | savingsAdd | balance |*
-  | .ZZD |      20 |          0 |      20 |
+  | uid  | savingsAdd | balance |*
+  | .ZZD |          0 |      20 |
   When cron runs "getFunds"
   Then usd transfers:
   | payee | amount | deposit |*
   | .ZZD  |    280 |       0 |
   Given balances:
-  | uid  | rewards | savingsAdd | balance |*
-  | .ZZD |      20 |          0 |   19.99 |
+  | uid  | savingsAdd | balance |*
+  | .ZZD |          0 |   19.99 |
   When cron runs "getFunds"
   Then usd transfers:
   | payee | amount |*
@@ -147,9 +147,9 @@ Scenario: an account has a target but no refills
   | uid  | flags     |*
   | .ZZB | ok,bankOk |
   And balances:
-  | uid  | rewards | balance |*
-  | .ZZA |       0 |     100 |
-  | .ZZB |      20 |     -50 |
+  | uid  | balance |*
+  | .ZZA |     100 |
+  | .ZZB |     -50 |
   When cron runs "getFunds"
   Then bank transfer count is 0
 

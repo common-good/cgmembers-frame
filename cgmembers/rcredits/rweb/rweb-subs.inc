@@ -2314,7 +2314,7 @@ function css($sheet, $weight = -99) {
 function checkAmtChoice(&$sta, $min = 0) { 
   extract(just('amtChoice amount period', $sta['input']));
   if ($amtChoice != -1) $amount = $amtChoice;
-  if ($amount and !$period) return say('missing field', array('field' => 'when'), 'period');
+  if (isset($period) and !$period and $amount) return say('missing field', array('field' => 'when'), 'period');
   if ($err = u\badAmount($amount, '>=0')) return say($err, 'amount');
   if ($amount < $min) return say(t('The amount must be at least $%min.', compact('min')), 'amount');
   $sta['input'] = compact(ray('amount')) + $sta['input'];

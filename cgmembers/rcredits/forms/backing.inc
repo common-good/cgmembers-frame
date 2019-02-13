@@ -14,9 +14,9 @@ function formBacking($form, &$sta, $args = '') {
   
   $title = t('Backing Promise');
   $subtext = t(<<< X
-  <p>Please choose a dollar amount you will back, for one year. This limited promise we all make to each other assures that any <i>other</i> credit in your account is 100% backed &mdash; by Dollars and/or collateral and/or Backing Promises.</p>
+  <p>Backing makes it possible for your community to make grants. Please choose a dollar amount you will back, for 12 months. This limited promise we all make to each other assures that any <i>other</i> credit in your account is 100% backed &mdash; by Dollars and/or collateral and/or Backing Promises.</p>
 
-  <p>In the event of a <%aCrunch>cash crunch</a> within one year of today, you agree to increase your balance, within 7 days, by the backing amount you chose and to bring your balance up to that new target at least once a week until the cash crunch ends. If your %PROJECT Community ends instead of recovering, the amount you chose to back becomes a donation (from you to your %PROJECT Community, for all the great things it funded) [<%aExample>example</a>].
+  <p>In the event of a <%aCrunch>cash crunch</a> within one year of today, you agree to increase your balance, within 7 days, by the backing amount you chose and to bring your balance up to that new target at least once a week until the cash crunch ends. If your %PROJECT Community <i>ends</i> instead of recovering, the amount you chose to back becomes a donation (from you to your %PROJECT Community, for all the great things it funded) [<%aExample>example</a>].
 
   <p>"If there is a cash crunch within the next 12 months, I promise to buy this amount of %PROJECT credit to back the system as described above."</p>
 X
@@ -25,7 +25,7 @@ X
   foreach (ray('10000 2000 500 100 20 1') as $k) $choices[$k] = u\fmtAmt($k);
   $choices[-1] = t('Other');
   $minDesc = t(' (minimum $1)');
-  $amtChoice = selectFld(t('Amount:'), '', required(100) + suffix($minDesc), $choices);
+  $amtChoice = selectFld(t('Amount:'), '', required(1) + suffix($minDesc), $choices);
   $amount = textFld(t('Amount $'), '', suffix($minDesc));
   $signedBy = w\signedBy();
   $date = item(u\fmtDate(NULL, TRUE), t('Date:'));
@@ -42,11 +42,9 @@ function formBacking_validate($form, &$sta) {
   
 function formBacking_submit($form, &$sta) {
   global $mya;
-//  $us = new r\usd($mya = r\acct());
   extract(just('amount', $sta['input']));
-
-	$why = t('at your request');
-  $mya->bank(op($sta) == 'get' ? $amount : -$amount, $why);
-  say($why); // expanded message
-//  r\tellAdmin('banked' . $extra, $subs);
+  if ($amount < $mya->backing) say('backing in effect');
+  $mya->update('backing backingDate', $amount, strtotime('today'));
+  if ($amount > 1) say(t('Thank you for backing your %PROJECT community!'));
+  return w\goNextStep('backing');
 }

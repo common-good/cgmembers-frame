@@ -48,7 +48,7 @@ function members($list) {return t\members($list);}
 /**
  * transactions: (ARG)
  *
- * in: MAKE checks Setup
+ * in: 
  */
 function transactions($list) {return t\transactions($list);}
 

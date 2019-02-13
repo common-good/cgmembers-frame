@@ -5,16 +5,11 @@ SO we can share our finances, as for a typical "joint account" at a bank.
 
 Setup:
   Given members:
-  | uid  | fullName   | acctType    | flags                     | rebate | minimum | created   |*
-  | .ZZA | Abe One    | personal    | ok,member,confirmed,ided  |     10 |     100 | %today-6m |
-  | .ZZB | Bea Two    | personal    | ok,confirmed,ided         |     10 |      50 | %today-6m |
-  | .ZZC | Corner Pub | corporation | ok,confirmed,ided,co      |      5 |       0 | %today-6m |
-  | .ZZD | Dee Four   | personal    | ok,confirmed,ided         |     10 |       0 | %today-6m |
-  And transactions: 
-  | xid | created   | type       | amount | from      | to   | purpose | taking |*
-  |   1 | %today-6m | %TX_SIGNUP |    250 | community | .ZZA | signup  | 0      |
-  |   2 | %today-6m | %TX_SIGNUP |    250 | community | .ZZB | signup  | 0      |
-  |   3 | %today-6m | %TX_SIGNUP |    250 | community | .ZZC | signup  | 0      |
+  | uid  | fullName   | acctType    | flags                     | minimum | created   |*
+  | .ZZA | Abe One    | personal    | ok,member,confirmed,ided  |     100 | %today-6m |
+  | .ZZB | Bea Two    | personal    | ok,confirmed,ided         |      50 | %today-6m |
+  | .ZZC | Corner Pub | corporation | ok,confirmed,ided,co      |       0 | %today-6m |
+  | .ZZD | Dee Four   | personal    | ok,confirmed,ided         |       0 | %today-6m |
   Then balances:
   | uid  | balance |*
   | .ZZA |       0 |
@@ -128,8 +123,8 @@ Scenario: A joined account member looks at transaction history and summary
 #  | 601 | %mdy-2w |            | from bank | 600.00 | --         | ZZB  | X |
 
   |~tid | Date    | Name       | Purpose   | Amount |  Balance | ~ |
-  | 5   | %mdy-1d | Corner Pub | labor     | 100.00 | 1,950.00 | X |
-  | 4   | %mdy-2d | Dee Four   |  cash     |  50.00 | 1,850.00 | X |
+  | 4   | %mdy-1d | Corner Pub | labor     | 100.00 | 1,950.00 | X |
+  | 3   | %mdy-2d | Dee Four   |  cash     |  50.00 | 1,850.00 | X |
 #  | 3   | %mdy-1w | Abe One    | usd       | 500.00   | 500.00 |  +0    | X |
   | 602 | %mdy-2w |            | from bank | 400.00 | 1,800.00 |   |
   | 601 | %mdy-2w |            | from bank | 600.00 | 1,400.00 |   |

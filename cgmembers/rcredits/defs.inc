@@ -143,7 +143,7 @@ define('GAME_COMPANIES', '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty
 define('R_REGION_FLDS', 'region,fullName,st,zip,federalId,hasServer');
 define('R_DATE_FLDS', 'created completed deposit sent invited giftDate signed login access yesterday'); // date field names for testing
 define('CO_FLDS', 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd'); // account fields stored in r_company
-define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone achMin pinThreshold lastTx lastiCode tenure moves mediaConx source getAppData appData'); // fields stored in the account's "data" array field (serialized)
+define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone achMin pinThreshold lastTx lastiCode tenure moves mediaConx source getAppData appData snap'); // fields stored in the account's "data" array field (serialized)
 define('MASTER_NUMERIC_FLDS', 'minimum achMin savingsAdd saveWeekly');
 define('MASTER_FLDS', MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank refill'); // only in master, for joint accounts
 define('R_MONEY_FLDS', 'balance rewards floor giftPot committed'); // financial amount fields in account record
@@ -165,7 +165,7 @@ define('R_CRON_PERIOD', 5*60); // how many seconds between cron runs (must divid
 define('R_MAX_TASK_TIME', 1*60); // what's the longest a queued cron task might take
 define('PERSONAL_STEP_COUNT', t('seven'));
 define('COMPANY_STEP_COUNT', t('eight'));
-define('R_STEPS', 'signup:signup, verify, ssn, sign:community/agreement, donate:community/donate, backing:community/backing, proxies, prefs:settings/preferences, connect, company, relations, photo'); // membership steps
+define('R_STEPS', 'signup:signup, verify, ssn, sign:community/agreement, backing:community/backing, donate:community/donate, proxies, prefs:settings/preferences, connect, company, relations, photo'); // membership steps
 define('R_NOLOG', SECURE_FLDS . ' ' . VSECURE_FLDS . ' data secure vsecure secret oneTimeLoginUrl password pass pass1 pass2 vKeyE newPass external_input form_build_id'); // don't log these (external_input may contain passwords and is duplicated as individual fields)
 define('R_NOLOG_FORMS', 'Admin Test Handy footer accounts history settings settings/icon community Summary Php'); // don't log visits to these forms
 define('R_ANON_FORMS', R_NOLOG_FORMS . ' Signup Signin PageNotFound Sinx Pass Empty TestRecovery ChangePassword Help Community Democracy Agreement CttyFunds Reports Flags Game Menu I ResetPassword Profile Accept Buy HandleInvoice FindCo'); // no login required
