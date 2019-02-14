@@ -192,8 +192,8 @@ function doit(what, vs) {
         $('#connectFields2').toggle(show);
         require('#edit-routingnumber, #edit-bankaccount, #edit-bankaccount2, #edit-refills-0, #edit-refills-1', show);
         var text = show ? vs['connectLabel'] : vs['saveLabel'];
-        $('#edit-submit').val(text);
-        $('#edit-submit .ladda-label').html(text);
+        $('#edit-submit, #edit-nextStep').val(text);
+        $('#edit-submit .ladda-label, #edit-nextStep .ladda-label').html(text);
       }
       if ($('#edit-connect-1')[0]) {
         showBank($('#edit-connect-1').attr('checked') == 'checked');

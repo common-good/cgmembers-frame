@@ -455,7 +455,7 @@ function invoice($a1, $a2, $amount, $purpose = NULL, $extra = []) {
   
   u\EXPECT(compact(ray('a1 a2 amount purpose')), 'acct acct float string');
   extract(just($ks = 'goods status', $extra));
-	foreach (justNOT("goods status shid coupon coupid force", $extra) as $k => $v) {
+	foreach (justNOT("goods status shid coupon coupid force inv", $extra) as $k => $v) {
     u\setBit($flags, $k, $v);
     unset($extra[$k]); // don't leave bits in extras (data field)
   }

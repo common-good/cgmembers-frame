@@ -12,9 +12,8 @@ Setup:
 Scenario: A member visits the preferences page
   When member ".ZZA" visits page "settings/preferences"
   Then we show "Account Preferences" with:
-  | Round Up?   |  |
-  | Food Fund   |  |
   | SNAP Number |  |
+  | Round Up?   |  |
   And radio "statements" is "printed statements"
   And radio "notices" is "daily"
   And we show checked:
@@ -22,19 +21,20 @@ Scenario: A member visits the preferences page
   And we show unchecked:
   | Secret Balance | Don't let merchants |
   And with:
-  | Backing | $100 |
+  | Food Fund |  |
+  | Backing   | $100 |
 
 Scenario: Another member visits the preferences page
   When member ".ZZB" visits page "settings/preferences"
   Then we show "Account Preferences" with:
   | Crumbs | 2 |
-  | Food   |   |
   And radio "statements" is "accept electronic"
   And radio "notices" is "weekly"
   And we show checked:
   | Secret Balance | Don't let merchants |
   And with:
-  | Backing | $10 |
+  | Food Fund |  |
+  | Backing   | $10 |
 
 Scenario: A member changes preferences
   Given transactions: 
