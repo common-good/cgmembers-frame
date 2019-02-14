@@ -82,7 +82,7 @@ class X {
    * @return the transaction array, with extra info added (FALSE if the save fails)
    */
   private function save($xray) {
-    if (!$xid = db\insert('r_txs', $xray)) return FALSE;
+    if (!$xid = db\insert('r_txs', $xray, 'xid')) return FALSE;
     if (!@$xray['serial'] or @$xray['rewards']['xfee']) { // main and fee transactions need some touching up
       extract(just('payer payee', $xray));
       $payerTid = $payer > 0 ? r\xid2tid($xid, $payer) : 0;

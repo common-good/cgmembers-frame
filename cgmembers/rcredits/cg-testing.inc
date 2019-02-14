@@ -104,11 +104,11 @@ function doRecords($list, $thing) {
 /*
  * Generic record-maker/record-tester.
  */
-function doThing($info, $thing) {
+function doThing($info, $thing, $key = 'id') {
   global $testOnly;
   $table = 'r_' . strtolower($thing) . 's';
 // NO!  if (@$info['id']) {$info['uid'] = $info['id']; unset($info['id']);}
-  return $testOnly ? verifyRecord($table, $info) : db\insert($table, $info);
+  return $testOnly ? verifyRecord($table, $info) : db\insert($table, $info, $key);
 }
 
 function these($thing, $list) {return doRecords($list, ucwords(substr($thing, 0, strlen($thing) - 1)));}
@@ -319,7 +319,7 @@ function doTx($info, $thing) {
   }
   
   if ($inv) {
-    return db\insert('r_invoices', $info);
+    return db\insert('r_invoices', $info, 'nvid');
   } else {
     $x = new r\X($info);
     return $x->xid;
@@ -576,7 +576,7 @@ function usdTransfers($txs) {
       u\setDft($tx['txid'], t\seq());
       u\setDft($tx['risk'], NULL);
       u\setDft($tx['created'], @$tx['completed']);
-      if (!db\insert('r_usd', $tx)) return FALSE;
+      if (!db\insert('r_usd', $tx, 'txid')) return FALSE;
 //      if (@$tx['completed']) $a->update('r', $a->o_r - $tx['amount']);
       if (@$tx['completed']) $a->update('balance', $a->o_balance + $tx['amount']);
     }
@@ -1419,7 +1419,10 @@ function hasLinkResults($thing, $info) {
 
   if (!preg_match('/ href="([^"]*)"/', t\that($thing), $matches)) return FALSE;
   
-  $s = file_get_contents($matches[1]);
+  if (isDEV) {
+    $arrContextOptions = [ "ssl" => [ 'verify_peer' => false, 'verify_peer_name' => false ] ];
+    $s = file_get_contents(preg_replace('@' . preg_quote(BASE_URL, '@') . '@', LOCAL_URL, $matches[1]), false, stream_context_create($arrContextOptions));
+  } else { $s = file_get_contents(preg_replace('@' . preg_quote(BASE_URL, '@') . '@', LOCAL_URL, $matches[1])); }
   foreach (ray('error status') as $one) $$one = @file_get_contents(t\dosayFilename($one));
   $formOut['text'] = str_replace($was = '#header -->', "$was$error$status", $s);
   return t\shownWith($info, 'text', TRUE);

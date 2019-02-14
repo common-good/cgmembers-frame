@@ -32,7 +32,7 @@ require_once __DIR__ . '/qo.class';
  * @return record ID of the inserted record
  */
 function regionalInsert($table, $idField, $record, $region = NULL) {
-  if (@$record[$idField]) return db\insert($table, $record); // predestined id (probably for testing)
+  if (array_key_exists($idField, $record)) {return db\insert($table, $record, $idField);} // predestined id (probably for testing)
   if (!@$region) $region = -r\serverUid();
   $end = $region + ($region < 0 ? -(R_REGION_MAX - 1) : (R_REGION_MAX - 1));
   $start = $region < 0 ? $region - 1 : $region; // -1: do not use the uid of the region itself
@@ -40,7 +40,7 @@ function regionalInsert($table, $idField, $record, $region = NULL) {
   for ($try = 0; $try < 20; $try++) { // limit the retries
     if (!$id = $record[$idField] = u\firstUnusedId($idField, $table, $start, $end)) break;
     try {
-      if (db\insert($table, $record)) return $id;
+      if (db\insert($table, $record, $idField)) return $id;
     } catch (Exception $e) { // BIG MYSTERY: why does this happen sometimes with no collision?
       r\tellAdmin(t('cannot save regional: ') . $e->getMessage(), $record + ['topic' => t('cannot save')]);
     }
@@ -56,11 +56,11 @@ function regionalInsert($table, $idField, $record, $region = NULL) {
  * @return record ID of the inserted record
  */
 function insert($table, $idField, $record) {
-  if (@$record[$idField]) return db\insert($table, $record); // predestined id (probably for testing)
+  if (@$record[$idField]) return db\insert($table, $record, $idField); // predestined id (probably for testing)
   for ($try = 0; $try < 20; $try++) { // limit the retries
     if (!$id = $record[$idField] = u\firstUnusedId($idField, $table, 1)) break;
     try {
-      if (db\insert($table, $record)) return $id;
+      if (db\insert($table, $record, $idField)) return $id;
     } catch (Exception $e) { // BIG MYSTERY: can this happen sometimes with no collision?
       r\tellAdmin(t('cannot save: ') . $e->getMessage(), $record + ['topic' => t('cannot save')]);
     }
@@ -223,7 +223,7 @@ function cttys($region, $ctty = FALSE) {
  */
 function ipok($uid, $device) {
   $ip = $_SERVER['REMOTE_ADDR'];
-  if (!db\exists('r_ips', 'ip=:ip', compact('ip'))) db\insert('r_ips', compact(ray('ip uid device'))); 
+  if (!db\exists('r_ips', 'ip=:ip', compact('ip'))) db\insert('r_ips', compact(ray('ip uid device')), 'ip'); 
 }
 
 /**
@@ -334,7 +334,8 @@ function badCard($qid, $code, $msg) {
   $created = time();
   $info = compact('qid', 'code');
   if (!db\exists('r_bad', $info)) {
-    db\insert('r_bad', $info += compact('created'), 'created', TRUE);
+    $info += compact('created');
+    db\insert('r_bad', $info, 'created');
     $index = 'card marked bad';
   } else $index = 'attempted card already marked bad';
   r\tellCO($index, $info + compact('msg'));
@@ -382,7 +383,7 @@ function notify($uid, $index, $subs = [], $force = FALSE) {
   } else { //if ($a->can(B_NOTIFY_EMAIL)) {
     list ($message, $created) = array(t($index, $subs), r\rTime());
     f('t.output', "Actual Notice to $fullName: $message");
-    db\insert('r_notices', compact(ray('uid message created')));
+    db\insert('r_notices', compact(ray('uid message created')), 'msgid');
   }
   
   if ($a->can(B_BYSMS)) {
@@ -733,7 +734,7 @@ function makeDevice($uid, $code = '', $ch = NULL) {
   $created = $access = r\rTime();
   $boxnum = db\get('MAX(boxnum)', 'r_boxes', 'uid=:uid', compact('uid')) + 1;
   $info = ray('channel', $ch) + compact(ray('uid code boxnum access created'));
-  return @db\insert('r_boxes', $info);
+  return @db\insert('r_boxes', $info);  // WHY ARE WE IGNORING ERRORS HERE???????
 }
 
 /**
@@ -750,7 +751,7 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
   $nm = $a->fullName;
 
   if ($delCtty = ($delete and $a->isCtty)) { // deleting a community (merge into Seedpack)
-    db\del('users', $oldUid);
+    db\del('users', 'uid', $oldUid);
     $unusable = $delete = FALSE; // don't actually delete anything except the account record
     $newUid = r\serverUid(); // Seedpack uid
   }
@@ -842,14 +843,16 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
           $DBTX->rollback(); 
           return w\say(t('Record in table %table (field %field) cannot be deleted.', compact('table', 'field')), 'err');
         }
-      } else db\del($table, "$field=:oldUid", compact('oldUid'));
+      } else {
+        db\del($table, $field, $oldUid);
+      }
     } else db\q("UPDATE $table SET $field=:newUid WHERE $field=:oldUid", compact('newUid', 'oldUid'));
   }
 
   if ($unusable and !$delete) {
     $oldQid = r\qid($oldUid);
     list ($uid, $name, $email) = array($oldUid, "unusable-$oldQid", "unusable$oldQid@" . CG_DOMAIN);
-    db\insert('users', compact(ray('uid name email'))); // mark old uid unusable
+    db\insert('users', compact(ray('uid name email')), 'uid'); // mark old uid unusable
   }
 
   unset($DBTX); // commit
@@ -977,22 +980,22 @@ function participatingCompanies($ctty, $email = FALSE) {
   $_newClass = $email ? 'style="color:red; font-weight:bold;"' : 'class="company-listing"';
   $NEW = t(' <small %newClass> NEW!</small>', compact('_newClass'));
 
-  $lastIid = -1;  // negative record ids are, we hope, unlikely
+  $lastSelIid = -1;  // negative record ids are, we hope, unlikely
   $firstTime = true;
   foreach ($rows as $rowObject) {
     $row = (array)$rowObject;
     $uid = $row['uid'];
     $a = r\acct($uid);
     if (!($a->coCan(CO_PRIVATE))) {
-      $industry = $row['industry'] ?: tr('Unclassified');
-      $iid = $row['iid'] ?: -2;
-      if ($iid != $lastIid) {
+      $industry = $row['selIndustry'] ?: tr('Unclassified');
+      $selIid = $row['selIid'] ?: -2;
+      if ($selIid != $lastSelIid) {
         if (! $firstTime) {
           $res .= '</div>';
         }
         $firstTime = false;
         $res .= tr($iModel, 'industry', $industry) . "\n";
-        $lastIid = $iid;
+        $lastSelIid = $selIid;
       }
       $name = $a->website ? w\lnk("http://$a->website", $a->bestName) : $a->bestName;
       $new = ($a->activated > REQUEST_TIME - 9 * WEEK_SECS) ? $NEW : '';

@@ -224,7 +224,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 /* nav */
 #edit-acct-account {display:none; position:absolute; z-index:5; top:49px; width:100%;}
 #edit-acct-account.collapse.in {display:block;}
-#edit-acct-account .index-detail {display:none; position:absolute; left:0; top:30px; width:100%; height:315px; background-color:lightgray; border:2px solid darkred; font-size:11px;}
+#edit-acct-account .index-detail {display:none; position:fixed; left:0; top:80px; width:100%; height:315px; background-color:lightgray; border:2px solid darkred; font-size:11px;}
 #edit-acct-account .index-detail div {display:inline-block; width:185px; margin-bottom:15px;}
 #edit-acct-account .index-detail a {background-color:white; padding:2px 0 2px 5px; margin:1px 3px; width:173px; height:19px; overflow:hidden; display:inline-block; white-space:nowrap;}
 #edit-acct-account .index-detail a small {font-size:70%;}
@@ -236,7 +236,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #edit-acct-account a.co {background-color:yellow;}
 #edit-acct-account a.closed {background-color:black; color:silver;}
 #index a {color:black;}
-#index {float:right; z-index:6; background-color:silver; padding:3px 0;}
+#index {position:fixed; right:0px; z-index:6; background-color:silver; padding:3px 0;}
 #index a {display:inline-block; color:darkred; padding:0px 7px 0px 7px;}
 
 #simple, #advanced {width:400px; margin:0 auto;}
@@ -551,12 +551,12 @@ body.logged-in.one-sidebar #content {width:100%;}
 /* Find Company */
 #frm-findco .row {display:block; max-width:700px;}
 #frm-findco .well {padding:10px 35px;}
-#frm-findco .cmpy-img {display:inline-block; overflow:hidden; vertical-align: middle; height:50px; margin:5px 10px; width:50px; text-align:center;}
-#frm-findco .cmpy-img img {overflow:hidden; height:50px; }
+#frm-findco .cmpy-img {display:inline-block; overflow:hidden; vertical-align: middle; height:48px; margin:5px 5px 5px 20px; width:64px; text-align:center;}
+#frm-findco .cmpy-img img {overflow:hidden; height:48px; width: 64px; object-fit:cover;}
 #frm-findco .cmpy-name-does {display:inline-block; vertical-align: middle; margin-left:10px;}
 #frm-findco .cmpy-name {width:auto; max-width:300px; overflow:hidden; color:darkblue; margin-left:10px;}
 #frm-findco .cmpy-does {width:auto; max-width:400px; overflow:hidden; margin-left:10px;}
-#frm-findco .cmpy-ind-wrapper {border-top: 1px solid black;}
+#frm-findco .cmpy-ind-wrapper {border-top: 1px solid black; margin-top: 5px;}
 #frm-findco .cmpy-ind {font-weight:bold; margin: 10px 5px;}
 .company-listing {color:red; font-weight:bold;}
 

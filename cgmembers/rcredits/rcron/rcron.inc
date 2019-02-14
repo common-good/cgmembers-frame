@@ -205,14 +205,14 @@ X;
     if ($jA = $a->jA and $jA->jid == $a->id) $jA->update('jid', 0);
     r\deleteAccount($a);
   } , $where);
-//  db\del('users', $where); // abandoned new joint acct (must postcede setting jids)
+//  db\del('users', 'uid', $where); // abandoned new joint acct (must postcede setting jids)
 
   // Notice which bank accounts have been verified
 	$where = 'amount=0 AND deposit<>0 AND deposit<:NOW-:DAY_SECS';
 	$q = db\q("SELECT payee FROM r_usd WHERE $where");
 	$DBTX = db_transaction();
 	while ($row = $q->fetchAssoc()) r\acct($row['payee'])->setBit(B_BANKOK);
-	db\del('r_usd', $where);
+	db\del('r_usd', 'txid', $where);
 	unset($DBTX);
 	db\q('DELETE FROM x_usd WHERE amount=0'); // no need to track these
 }
@@ -550,7 +550,7 @@ function requests() {
         foreach (['first', 'last'] as $k) $row[$k] = u\normalizeCase($$k);
         r\tellAdmin('invitation request', $row);
         foreach (['email', 'phone'] as $k) $row[$k] = u\cry('P', $row[$k]);
-        db\update('r_request', $row, 'listid', TRUE);
+        db\updateOrInsert('r_request', $row, 'listid');
       } else $header = $row + ['ctty'];
     }
   }
