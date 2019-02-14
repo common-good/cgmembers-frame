@@ -58,7 +58,7 @@ class Acct {
     u\setDft($name, r\uniqueName($fullName, $info));
     u\setDft($flags, 0);
     $co = ($flags & u\bit(B_CO));
-    u\setDft($rebate, R_REBATE);
+//    u\setDft($rebate, R_REBATE);
     if (@$state and !is_numeric($state)) { // allow state abbrevs within US
       $state = db\get('id', 'r_states', 'abbreviation=:state and country_id=:US_COUNTRY_ID', compact('state'));
     }
@@ -90,7 +90,7 @@ class Acct {
     self::$rs[$a->id] = (object) $record;
 
     foreach (ray('number region') as $k) unset($info[$k]);
-    u\preray(compact(ray('phone email pass fullName legalName flags rebate state community created login access emailCode cardCode stepsDone')), $info); // things we may have added or changed
+    u\preray(compact(ray('phone email pass fullName legalName flags state community created login access emailCode cardCode stepsDone')), $info); // things we may have added or changed
     $a->update($info); // this is a lot easier to do after saving the record
     unset($DBTX); // commit
   }

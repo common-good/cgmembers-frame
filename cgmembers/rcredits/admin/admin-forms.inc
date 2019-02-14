@@ -181,7 +181,7 @@ function formAdminPanel_submit($form, &$sta) {
     $fields = <<<EOF
     xid, t.created, t.flags, t.type AS ty, t.goods AS gd, t.:IS_TAKING AS k,
     IF (LOCATE('"force";s:1:"1"', u1.data)>0, 1, IF(LOCATE('"force";s:2:"-1"', u1.data)>0, -1, IF(LOCATE('"force";s:1:"0"', u1.data)>0, '0', ''))) AS f,
-    payer, payee, amount, payerReward, payeeReward, payerFor AS for1, payeeFor AS for2, payerTid AS tid1, payeeTid AS tid2
+    payer, payee, amount, payerFor AS for1, payeeFor AS for2, payerTid AS tid1, payeeTid AS tid2
 EOF;
     if ($mya->admin) $fields = str_replace('u1.', '', $fields);
     return say(a\showQuery('r_txs', 1, 'xid DESC', $fields, ['payer', 'payee']));
@@ -197,7 +197,7 @@ EOF;
 }
 
 /**
- * Show people interested in rCredits in particular zipcodes.
+ * Show people interested in CG in particular zipcodes.
  */
 function formOrganizerList($form, &$sta, $where = '') {
   $title = t('Organizer List');
@@ -817,7 +817,7 @@ function achBatch($args) {
 
 /**
  * Create a PDF of all relevant checks.
- * @param string $way: IN (from member bank account to rCredits) or OUT (from rCredits to member bank account)
+ * @param string $way: IN (from member bank account to CG) or OUT (from CG to member bank account)
  * @param int $date: deposit/check date
  * @param bool $reprint: UNUSED whether to include a reprint of the previous deposit's checks
  * @param int $previous: UNUSED date of previous deposit
@@ -1056,49 +1056,3 @@ EOF; */
   return "<h2 id=\"edit-title\"><br>Handy Links</h2><div class='develw'>\n$result</div>";
   */
 }
-
-/**
- * Reinstall all of rCredits
- */
-function reinstall() {
-  global $base_path;
-  list ($buildId, $token) = isDEV ? 
-    array('8TlWDkqTg6AuTshAyc8pi8iIVuYkB4Wz4naJd9eCu4s', 'Gmsmx1AKlG1Jsr3y78BMwnXX3TSkN-i-8okCgHkl_Bk')
-  : array('lSsN1II4kj5gKQQxkm3bn7t0RVW-ZCntoAIhr7H9XbM', 'RwHRLEIACfa2ICgcLTOfRdDvpxADnpooX3JeSF1KXZg');
-  $warning = isDEV ? '' : ('WARNING! This is ' . $_SERVER['HTTP_HOST']);
-
-/**/ echo <<<EOF
-    $warning<br><br>
-<form action="{$base_path}devel/reinstall?destination=handy" method="post" id="devel-reinstall" accept-charset="UTF-8"><div><div class="form-item form-type-checkboxes form-item-list">
- <div id="edit-list" class="form-checkboxes"><div class="form-item form-type-checkbox form-item-list-block">
-
- <div class="form-item form-type-checkbox form-item-list-rcredits">
- <input type="checkbox" checked="checked" id="edit-list-rcredits" name="list[rcredits]" value="rcredits" class="form-checkbox" />  <label class="option" for="edit-list-rcredits">rcredits </label>
-</div>
-
-<div class="form-item form-type-checkbox form-item-list-rsmart">
- <input type="checkbox" checked="checked" id="edit-list-rsmart" name="list[rsmart]" value="rsmart" class="form-checkbox" />  <label class="option" for="edit-list-rsmart">rsmart </label>
-</div>
-
-<div class="form-item form-type-checkbox form-item-list-rsms">
- <input type="checkbox" checked="checked" id="edit-list-rsms" name="list[rsms]" value="rsms" class="form-checkbox" />  <label class="option" for="edit-list-rsms">rsms </label>
-</div>
-
-<div class="form-item form-type-checkbox form-item-list-rweb">
- <input type="checkbox" checked="checked" id="edit-list-rweb" name="list[rweb]" value="rweb" class="form-checkbox" />  <label class="option" for="edit-list-rweb">rweb </label>
-</div>
-
-</div></div>
-<input type="submit" id="edit-submit" name="op" value="Reinstall" class="form-submit" />
-
-<input type="hidden" name="form_build_id" value="form-$buildId" />
-<input type="hidden" name="form_token" value="$token" />
-<input type="hidden" name="form_id" value="devel_reinstall" />
-
-</form>
-
-EOF;
-
-  exit();
-}
-

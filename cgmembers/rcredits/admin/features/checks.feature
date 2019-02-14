@@ -16,12 +16,6 @@ Setup:
   | .ZZB | Bea Two  | -500  | ok,co            | 2 B, Bton, MA 01002 |     2 | USkk21187028102 |
   | .ZZC | Cor Pub  |    0  | ok,co            | 3 C, Cton, MA 01003 |     3 | USkk21187028103 |
   
-  And transactions: 
-  | xid | created   | type     | amount | from | to   | purpose |*
-  |   1 | %today-2m | signup   |    100 | ctty | .ZZA | signup  |
-  |   2 | %today-2m | signup   |    100 | ctty | .ZZB | signup  |
-  |   3 | %today-2m | signup   |    100 | ctty | .ZZC | signup  |
-  
 Scenario: admin prints checks
   Given usd transfers:
   | txid | payee | amount | created   | deposit   | completed |*

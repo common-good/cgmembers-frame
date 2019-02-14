@@ -668,8 +668,7 @@ X;
   $row1 = db\q($sql, $subs)->fetchAssoc() ?: []; // giftsEver, giftsPastMo
   
   $sql = <<< X
-    SELECT SUM(IF(type=:TX_TRANSFER, payerReward+payeeReward, 0)) AS beneEver,
-    SUM(IF(type=:TX_TRANSFER AND created>=:monthAgo, payerReward+payeeReward, 0)) AS benePastMo,
+    SELECT 0 AS beneEver, 0 AS benePastMo,
     SUM(IF(type IN (:TX_GRANT), amount, 0)) AS extraEver,
     SUM(IF(type IN (:TX_GRANT) AND created>=:monthAgo, amount, 0)) AS extraPastMo
     FROM r_txs WHERE :uid IN (payer, payee) AND created<:asof

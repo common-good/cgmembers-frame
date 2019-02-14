@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * rCredits admin
+ * CG admin
    error_reporting(E_ALL);
   ini_set("display_errors", 1);
 
@@ -22,7 +22,7 @@ use CG\Web as w;
  * To prepare for export for developers, f('t.clear');
  */
 function setupBasicAccounts() {
-  $keys = ray('uid community name fullName email zip country minimum rebate flags');
+  $keys = ray('uid community name fullName email zip country minimum flags');
   $flags = u\bit(B_CO) | u\bit(B_OK);
   
   $q = db\q('SELECT :R_REGION_FLDS FROM r_regions');
@@ -38,7 +38,7 @@ function setupBasicAccounts() {
       $fullName = PROJECT . ' ' . $fullName;
       $uid = r\serverUid($region);
       $state = db\get('id', 'r_states', 'abbreviation=:st', compact('st'));
-      $values = array($uid, $uid, $region . '.', $fullName, $email, $zip, R_COUNTRY_ID, 0, 0, $flags);
+      $values = array($uid, $uid, $region . '.', $fullName, $email, $zip, R_COUNTRY_ID, 0, $flags);
       $info = array_combine($keys, $values);
       $info += compact(ray('postalAddr state federalId'));
       new r\Acct($info);
@@ -47,14 +47,14 @@ function setupBasicAccounts() {
   //$region = db\get("CONCAT(iso_code, 'A')", 'r_countries', 'id=:country', compact('country'));
   if (!isDEV) return; // don't mess with existing members on stage or production server
   
-  $values = array(1, 0, 'admin', t('System Administrator'), r\regionField('email'), '', 0, 0, 0, u\bit([B_ADMIN, B_CO]));
+  $values = array(1, 0, 'admin', t('System Administrator'), r\regionField('email'), '', 0, 0, u\bit([B_ADMIN, B_CO]));
   $info = array_combine($keys, $values);
   $a1 = new r\Acct($info); // set up system admin record (uid=1)
   if (isDEV) $a1->update('pw2 vKeyPw', r\passHash(DEV_PW2), u\b64decode(DEV_VKEYPW));
 
   foreach (ray(t('2:PlaceHolder One,3:PlaceHolder Two')) as $k => $v) {
     $name = str_replace(' ', '', strtolower($v));
-    $values = array($k, 0, $name, $v, 'z@o.t', '', 0, 0, 0, 0);
+    $values = array($k, 0, $name, $v, 'z@o.t', '', 0, 0, 0);
     $info = array_combine($keys, $values);
     new r\Acct($info);
   }  
@@ -65,7 +65,7 @@ function setupBasicAccounts() {
     if (db\exists('users', 'uid=' . CGID)) return; // already done
     if (NOT_PRODUCTION and db\exists('users', "name='cornerstore'")) return; // already done
 
-    $values = array(r\qo('NEWAAB')->id, $server, u\shortName(PROJECT), PROJECT, CGF_EMAIL, '01330', US_COUNTRY_ID, 0, R_REBATE, u\bit([B_MEMBER, B_CONFIRMED, B_OK, B_CO, B_ICADMIN]));
+    $values = array(r\qo('NEWAAB')->id, $server, u\shortName(PROJECT), PROJECT, CGF_EMAIL, '01330', US_COUNTRY_ID, 0, u\bit([B_MEMBER, B_CONFIRMED, B_OK, B_CO, B_ICADMIN]));
     $info = array_combine($keys, $values);
     list ($phone, $address, $city, $state) = array(u\fmtPhone(CGF_PHONE, '+n'), CGF_ADDRESS, CGF_CITY, R_STATE_ID);
     $helper = 1; //$wws->id;
@@ -718,41 +718,6 @@ return;
   eachA(function($a) {
     list ($balance, $rewards) = [$a->balance, $a->rewards]; // remember old values
 /**/    if (!$a->cacheOk(FALSE, FALSE) and (abs($a->balance - $balance) > .005 or abs($a->rewards - $rewards > 20))) debug("$a->id $a->fullName new: $a->balance+$a->rewards old: $balance+$rewards jid=$a->jid");
-  });
-}
-
-// go through and revise rebates to negative something when appropriate and set "short" bit
-function special3() {
-  return; // too complicated; don't do it.
-  global $asql;
-  $asql = <<<EOF
-SELECT xid,type,goods,amount,payer,payee,payerReward,payeeReward,flags,created FROM r_txs WHERE payer=:uid OR payee=:uid
-UNION (SELECT txid AS xid,:TX_BANK AS type,0 AS goods,amount,payer,0 AS payee,0 AS payerReward,0 AS payeeReward,0 AS flags,created FROM r_usd WHERE payer=:uid)
-ORDER BY created,xid
-EOF;
-  eachA(function($a) {
-    $TEST = TRUE;
-    global $asql;
-    $balance = $rewards = 0;
-    $q = db\q($asql, ['uid' => $a->id]);
-    while ($row = $q->fetchAssoc()) {
-      extract($row);
-      if ($type == 0 AND $a->id == $payer AND $goods != FOR_SHARE AND !(flags & B_UNDONE)) {
-        $payerReward = r\reward($payer, $payee, $amount);
-        if ($payerReward != $row['payerReward']) {
-/**/          debug("$a->fullName xid=$xid newreward=$payerReward old=" . $row['payerReward']); 
-          if (!$TEST) x($xid)->update(compact('payerReward'));
-        }
-      }
-      list ($dbal, $drew) = $a->id == $payer ? [-$amount, $payerReward] : [$amount, $payeeReward];
-///      debug(compact(ray('row balance dbal rewards drew')));
-      $balance += $dbal;
-      $rewards += $drew;
-    }
-    list ($newbal, $newrew) = [round($balance, 2), round($rewards, 2)];
-    list ($balance, $rewards) = [$a->balance, $a->rewards]; // remember old values
-/**/    if (!$a->cacheOk(FALSE, FALSE)) flog("$a->id $a->fullName new: $a->balance+$a->rewards old: $balance+$rewards jid=$a->jid");
-/**/    if ($a->balance != $newbal or $a->rewards != $newrew) debug("MISCALC $a->id $a->fullName cache: $a->balance+$a->rewards runningCalc: $newbal+$newrew ");
   });
 }
 

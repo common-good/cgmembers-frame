@@ -7,7 +7,7 @@ use CG\Util as u;
 use CG\Db as db;
 
 /**
- * Give member a chance to sign the rCredits Agreement. (agreement revised 4/17/2014)
+ * Give member a chance to sign the Common Good Agreement. (agreement revised 2/5/2019)
  */
 function formAgreement($form, &$sta) {
   global $mya;
@@ -16,74 +16,49 @@ function formAgreement($form, &$sta) {
 //  $id = "edit-$name";
 //  $check = boxFld('checkNUMBER', '', '', attrib(compact('id')));
   $model = @\render(boxFld('checkNUMBER'));
-  $_instructions = '';
+  $_addendum = '';
 
   if (!$mya) {
     // nothing to be done if signed out
   } elseif ($date = $mya->signed) {
-    $instructions = '';
     $date = u\fmtDate($date);
     say('signed agreement', compact('date'));
     $signedBy = item("Signed by <b>$mya->signedBy</b>, $date");
   } elseif (!$mya->co and !$mya->proSe and !$mya->cAdmin) { // can't sign for someone else!
     say('self must sign', 'signedBy');
   } else {
-    $signerA = $mya->cAdmin ? ($mya->co ? r\acct($mya->helper) : $mya) : $mya->agentA;
-    $behalf = $mya->co ? t('(on behalf of %co) ', 'co', $mya->fullName) : '';
-    $signedBy = textFld(t('Signed:'), $behalf . t('Type your full name here ') . "($signerA->legalName)", required($mya->cAdmin ? $signerA->legalNameDpy : ''));
+    $signedBy = w\signedBy();
     $setupFoot = w\setupFoot();
+    $_addendum = $mya->cAdmin ? t('ADMINISTRATORS need not put checkmarks in the boxes.') : '';
+  }    
+  $topics = ray('Members Member-Organizations CGC Dollar-Pool Backing Without-Limit Disputes Participation');
+  foreach ($topics as $k) $args["_a$k"] = atag("/help/agreement#$k");
 
-    $_addendum = $mya->cAdmin ? t('<p>ADMINISTRATORS need not put checkmarks in the boxes.</p>') : '';
-    
-    $instructions = t(<<<EOF
-      <div id="instructions" class="well">
-      <p><b>Instructions:</b> Put a check mark in each checkbox to indicate you have read and understand that section. If there are no participating businesses near you, some of this Agreement will not apply to you &mdash; <b class="loud">YET!</b> But when enough people have joined, you will be able to start a %PROJECT Community together quickly, to enjoy the benefits of economic democracy.</p>
-      <p><b>Summary.</b> In the first part of the agreement (A), you acknowledge the intent and purpose of the %PROJECT system. In the second part (B), you agree to use the %PROJECT system the way it is designed to work.</p>
-      %addendum
-      </div>
-EOF
-    , compact('_addendum'));
-  }
-
-  $_personOnly = ($mya and $mya->co) ? '' : t(<<<EOF
-  <li>[7] I agree to <%aParticipate>participate</a> in managing the Common Good Economy to the best of my ability and as my life circumstances allow.</li>
-EOF
-  , '_ol1 _aParticipate _aDecision _ol2 _aOther', 
-    'ol class="abc"', atag('/help/participate'), atag('/help/decision-principles'), 'ol class="roman"', atag('/help/other-decisions'));
-
-  $prolog = ($mya and $mya->co) ? t('<h4>As a responsible participant in the Common Good Economy:</h4>') : t(<<<EOF
-%instructions
-<h4>A. I recognize that:</h4>
-<ul>
-  <li>[-2] %RCREDITS are intended as the basis for the Common Good Economy -- a democratic, community-centered economic system that puts people and planet first.</li>
-  <li>[-1]When I pay or accept payment in Common Good Credits, I am building the Common Good Economy.</li>
-  <li>[0]When I pay attention, make suggestions for improvement, and participate in decisions with other Common Good members, I am building the Common Good Economy.</li>
-</ul>
-
-<h4>B. As a responsible participant in the Common Good Economy:</h4>
-EOF
-  , ray('_instructions _aIssue', @$instructions, atag('/help/issuing-credits')));
-  
-  $agreement = $prolog . t(<<<EOF
+  $agreement = t(<<< X
+<div id="instructions" class="well">
+<p><b>Instructions:</b> Put a check mark by each section to indicate you have read and understand it. %addendum</p>
+</div>
+<div id="agreement">
 <ol>
-  <li>[1] As long as I can spend my %RCREDITS easily or exchange them easily for US Dollars, I will accept them without limit as payment for my goods and services (or labor). I will exchange %RCREDITS for US Dollars only if I cannot spend them easily.</li>
-  <li>[2] I will accept %RCREDITS from members of any <%aCGC>Common Good Community</a> in good standing.</li>
-  <li>[3] If <%aCrunch>needed</a> I will <%aBack>back</a> %RCREDITS up to my average monthly use over the past six months.</li>
-  <li>[4] Whenever I exchange %RCREDITS for US Dollars or vice versa, I will exchange them one for one, and I will price my goods and services (or labor) the same in %RCREDITS and in US Dollars. </li>
-  <li>[5] I understand I may receive from the community a credit line that I can spend but cannot <%aCashOut>cash out</a>. If I use my credit line and then stop participating (or if my %PROJECT Community or the entire %PROJECT System <%aGrace>closes down</a>), I will bring my negative balance up to zero as soon as possible.</li>
-  <li>[6] When there is a dispute in my dealings with other %PROJECT participants, I will follow the <%aDispute>Dispute Resolution Process</a> and will honor its outcome.</li>
-  %personOnly
+  <li>[1] <b>Who.</b> I understand this is an agreement among all %PROJECT <%aMembers>Members</a> and <%aMember-Organizations>Member Organizations</a>, in my <%aCGC>%PROJECT Community</a> and elsewhere.</li>
+  <li>[2] <b>Community control.</b> I understand the %PROJECT System is designed to take back control of our local economy  from big business and distant government. I am willing to participate with other Members to bring about this shift.</li>
+  <li>[3] <b>Investing together.</b> I understand whenever I put money in my %PROJECT account by buying %PROJECT credit, there is more money in the <%aDollar-Pool>Dollar Pool</a> so my community has more money to invest.</li>
+  <li>[4] <b>Backing together.</b> I understand my %PROJECT credit is <%aBacking>backed</a> 100% or more -- partly by Dollars and partly by Members and Member Organizations.</li>
+  <li>[5] <b>Accepting payments.</b> I will accept %PROJECT credit as payment, <%aWithout-Limit>without limit or surcharge</a>.</li>
+  <li>[6] <b>Account Balance.</b> If I spend more than the balance in my %PROJECT account, resulting in a negative balance, I will bring my balance up to zero or more within 30 days.</li>
+  <li>[7] <b>Disputes.</b> When there is a dispute, I will follow the <%aDisputes>%PROJECT Dispute Resolution Process</a> and will honor its outcome.</li>
+  <li>[8] <b>Changes.</b> I understand I will have the <%aParticipation>opportunity to participate</a> in any decision to change this Agreement, and using my account after changes have been approved implies agreement to those changes.</li>
 </ol>
 </div>
-EOF
-  , '_div _aCGC _aCrunch _aBack _aCashOut _aGrace _aEthics _aDispute _personOnly',
-  'div id="agreement"', atag('/help/common-good-community'), atag('/help/cashflow'), atag('/help/backing-common-good-credits'), atag('/help/cashing-out'), atag('/help/closing-down'), atag('/help/ethics'), atag('/help/dispute-resolution-process'), $_personOnly);
+X
+  , compact('_addendum') + $args);
 
   for ($i = R_AGREE_0; $i <= R_AGREE_9; $i++) {
     $box = str_replace('checkNUMBER', "check$i", $model);
     $agreement = str_replace("[$i]", (!$mya or !$mya->can(B_MANAGE) or @$date) ? '' : $box, $agreement);
   }
-  $agreement = fld('item', '', '', $agreement);
+//  $agreement = fld('item', '', '', $agreement);
+  $agreement = w\item($agreement);
   
   return cgform(compact(ray('title agreement signedBy')) + (@$setupFoot ?: []));
 }
@@ -99,6 +74,6 @@ function formAgreement_submit($form, &$sta) {
   global $mya;
   $signed = r\rTime();
   extract(just('signedBy', $sta['input']));
-  r\acct()->update($info = compact('signed', 'signedBy'));
+  $mya->update($info = compact('signed', 'signedBy'));
   return w\goNextStep('sign');
 }

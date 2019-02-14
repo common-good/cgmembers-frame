@@ -8,11 +8,11 @@ SO I can see how well the rCredits system is doing for myself, for my ctty, and 
 
 Setup:
   Given members:
-  | uid  | fullName   | rebate | flags | jid   | minimum | floor | share | created   | activated |*
-  | .ZZA | Abe One    |      5 | ok    | 0     |       5 |     0 |    10 | %today-6m | %today-5m |
-  | .ZZB | Bea Two    |      5 | ok    | .ZZD  |    1000 |   -20 |    20 | %today-5w | %today-4w |
-  | .ZZC | Corner Pub |     10 | ok,co | 0     |    2000 |    10 |    30 | %today-4w | %today-3w |
-  | .ZZD | Dee Four   |      5 | ok    | .ZZB  |    1000 |   -20 |    20 | %today-5w | %today-4w |
+  | uid  | fullName   | flags | jid   | minimum | floor | created   | activated |*
+  | .ZZA | Abe One    | ok    | 0     |       5 |     0 | %today-6m | %today-5m |
+  | .ZZB | Bea Two    | ok    | .ZZD  |    1000 |   -20 | %today-5w | %today-4w |
+  | .ZZC | Corner Pub | ok,co | 0     |    2000 |    10 | %today-4w | %today-3w |
+  | .ZZD | Dee Four   | ok    | .ZZB  |    1000 |   -20 | %today-5w | %today-4w |
   And relations:
   | main | agent | permission |*
   | .ZZA | .ZZB  | buy        |
@@ -28,15 +28,12 @@ Setup:
   |  102 | .ZZC  |   3050 | %today-5d |
   |  103 | .ZZC  |    -50 | %today-2d |
   Then balances:
-  | uid  | balance | rewards |*
-  | .ZZA |    1000 |       0 |
-  | .ZZB |    2000 |       0 |
-  | .ZZC |    3000 |       0 |
+  | uid  | balance |*
+  | .ZZA |    1000 |
+  | .ZZB |    2000 |
+  | .ZZC |    3000 |
   Given transactions: 
   | xid | created   | type      | amount | from | to   | purpose | goods      |*
-  |   1 | %today-4m | signup    |    250 | ctty | .ZZA | signup  | %FOR_USD |
-  |   2 | %today-4m | signup    |    250 | ctty | .ZZB | signup  | %FOR_USD |
-  |   3 | %today-4m | signup    |    250 | ctty | .ZZC | signup  | %FOR_USD |
   |   4 | %today-3m | transfer  |     10 | .ZZB | .ZZA | cash E  | %FOR_USD |
   |   5 | %today-3m | transfer  |    100 | .ZZC | .ZZA | usd F   | %FOR_USD |
   |   6 | %today-3m | transfer  |    240 | .ZZA | .ZZB | what G  | %FOR_GOODS |
@@ -46,9 +43,6 @@ Setup:
   |  15 | %today-2w | transfer  |     50 | .ZZB | .ZZC | p2b     | %FOR_GOODS | %TX_WEB  |
   |  18 | %today-1w | transfer  |    120 | .ZZA | .ZZC | this Q  | %FOR_GOODS | %TX_WEB  |
   |  23 | %today-6d | transfer  |    100 | .ZZA | .ZZB | cash V  | %FOR_USD | %TX_WEB  |
-  |  24 | %today-2d | inflation |      1 | ctty | .ZZA | inflate | %FOR_USD | %TX_WEB  |
-  |  25 | %today-2d | inflation |      2 | ctty | .ZZB | inflate | %FOR_USD | %TX_WEB  |
-  |  26 | %today-2d | inflation |      3 | ctty | .ZZC | inflate | %FOR_USD | %TX_WEB  |
   |  27 | %today-2d | grant     |      4 | ctty | .ZZA | grant   | %FOR_USD | %TX_WEB  |
   |  28 | %today-2d | loan      |      5 | ctty | .ZZB | loan    | %FOR_USD | %TX_WEB  |
   |  29 | %today-2d | fine      |     -6 | ctty | .ZZC | fine    | %FOR_USD | %TX_WEB  |

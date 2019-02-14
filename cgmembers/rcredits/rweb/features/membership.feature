@@ -46,12 +46,18 @@ Scenario: A member signs in for the first time
   And we say "status": "info saved|step completed"
   
   When member ".AAA" completes form "community/agreement" with name "Dee Four" and all checkboxes
+  Then we show "Backing"
+  And we say "status": "info saved|step completed"
+  
+  When member ".AAA" completes form "community/backing" with values:
+  | amtChoice | signedBy |*
+  |       100 | Dee Four |
   Then we show "Donate"
   And we say "status": "info saved|step completed"
 
   When member ".AAA" completes form "community/donate" with values:
-  | gift | period | honor | honored |*
-  |   50 |      M |     - |         |
+  | amtChoice | period | honor | honored |*
+  |        50 |      M |     - |         |
   Then we show "Proxies"
   And we say "status": "info saved|step completed"
   
