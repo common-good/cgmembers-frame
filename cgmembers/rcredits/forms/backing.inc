@@ -25,7 +25,7 @@ X
   $choices0 = ray('10000 2000 500 100 20 1');
   $dft = ($mya->backing + 0) ?: 1;
   if ($dft and !in_array($dft, $choices0)) $choices0[] = $dft;
-  debug($dft);
+  /* debug($dft); */
   foreach ($choices0 as $k) $choices[$k] = u\fmtAmt($k);
   $choices[-1] = t('Other');
   $minDesc = t(' (minimum $1)');
