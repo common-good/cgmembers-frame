@@ -169,7 +169,8 @@ function formAdminPanel_submit($form, &$sta) {
   // handle all other buttons with showQuery()
   if ($op == 'users') {
     $fields = 'uid, flags, balance, rewards, savingsAdd AS saveAdd, minimum AS min, floor, city, zip AS zip';
-    return say(a\showQuery('users', 1, 'name', $fields));
+    return say(a\showQuery('users', 1, 'name', $fields) .
+               w\showRecords(db\q("SELECT uid, sum(amount) from r_entries group by uid")->fetchAll(), 'CG\\Admin\\formatField'));
   }
   
   $logFields = "channel,type,myid,IF(agent=myid,':R_NONE',agent) AS agent, REPLACE(info, ',', ', ') AS info";
@@ -184,7 +185,39 @@ function formAdminPanel_submit($form, &$sta) {
     payer, payee, amount, payerReward, payeeReward, payerFor AS for1, payeeFor AS for2, payerTid AS tid1, payeeTid AS tid2
 EOF;
     if ($mya->admin) $fields = str_replace('u1.', '', $fields);
-    return say(a\showQuery('r_txs', 1, 'xid DESC', $fields, ['payer', 'payee']));
+
+    $hFields = "t.xid, t.created, flags, type, goods, initiator";
+    $hRay = ['xid', 'created', 'flags', 'type', 'goods', 'initiator'];
+    $eFields = "uid, amount, description, acctTid";
+    $eRay = ['uid', 'amount', 'description', 'acctTid'];
+    $fieldsRay = array_merge($hRay, $eRay);
+    $fields = $hFields . ', ' . $eFields;
+    $tables = "r_entries e JOIN r_tx_hdrs t ON (e.xid=t.xid)";
+    $results = db\q("SELECT $fields FROM $tables ORDER BY e.xid DESC");
+    // FROM r_entries ORDER BY xid DESC")->fetchAll(), 'CG\\Admin\\formatField'));
+    if ($results->rowCount() == 0) {
+      return say('data set is empty');
+    }
+    $oldXid = -1;  // shouldn't ever happen
+    $lines = "<table>\n<tr><th>" . join('</th><th>', $fieldsRay) . "</th></tr>\n";
+    foreach ($results as $result) {
+      $row = (array)$result;
+      $lines .= '<tr>';
+      $xid = $row['xid'];
+      foreach ($row as $k => $v) {
+        if (($xid == $oldXid) and in_array($k, $hRay)) {
+          $lines .= "  <td></td>\n";
+        } else {
+          $v = a\formatField($k, $v, B_LIST);
+          $align = in($k, ALIGN_RIGHT) ? 'R' : (in($k, ALIGN_CENTER) ? 'C' : 'L');
+          $lines .= "  <td class=\"align$align\">$v</td>\n";
+        }
+      }
+      $lines .= "</tr>\n";
+      $oldXid = $xid;
+    }
+    $lines .= "</table>\n";
+    return say($lines);
   }
 
   if ($op == 'gifts') return say(a\showQuery('r_recurs', '', 'id DESC', 'id,created,payer,payee,amount,period,ended', ray('payer payee')));
@@ -391,10 +424,13 @@ function formFollowup($form, &$sta, $args = '') {
   if ($mya->superAdmin) $by = "(notes LIKE '%ZAP%' AND BINARY notes LIKE '%ZAP%') OR (!activated AND :IS_MEMBER) DESC, " . $by;
   
   $sql = <<<EOF
-    SELECT DISTINCT uid, community, tickle, fullName, phone, u.data, u.created, activated, notes, :IS_CO AS co, t.created AS lastTx, :IS_MEMBER AS member, :IS_OK AS ok, :IS_CARDED AS carded
-    FROM users u LEFT JOIN (SELECT created,payer,payee FROM r_txs ORDER BY created DESC LIMIT 1) t ON uid IN (payer, payee)
-    WHERE uid>:CANONIC_ACCTS AND NOT :IS_NONUDGE AND NOT (activated and NOT :IS_OK) AND $where2 AND (tickle>0 OR NOT :IS_MEMBER
-      OR t.created<$now-60*:DAY_SECS OR t.created IS NULL)
+    SELECT DISTINCT u.uid, community, tickle, fullName, phone, u.data, u.created, activated, notes,
+           :IS_CO AS co, e.created AS lastTx, :IS_MEMBER AS member, :IS_OK AS ok, :IS_CARDED AS carded
+    FROM users u LEFT JOIN (SELECT uid,t.xid,t.created
+                            FROM r_entries e JOIN r_tx_hdrs t on t.xid=e.xid
+                            ORDER BY t.created DESC LIMIT 1) e ON e.uid=u.uid
+    WHERE u.uid>:CANONIC_ACCTS AND NOT :IS_NONUDGE AND NOT (activated and NOT :IS_OK) AND $where2
+          AND (tickle>0 OR NOT :IS_MEMBER OR e.created<$now-60*:DAY_SECS OR e.created IS NULL)
     ORDER BY $by
 EOF;
 
@@ -623,7 +659,7 @@ EOF;
 
   return cgform(compact(ray('title subtext go deposits')));
 }
-
+//????????
 /**
  * Show a list of reconciled Dollar Pool transfers and other transfers in or out of that (or those) account(s).
  */
@@ -1003,6 +1039,7 @@ function util($arg) {
   if ($arg == 'clear') foreach (ray('cache cache_bootstrap cache_form cache_menu sessions') as $table) {
     db\q("TRUNCATE TABLE $table");
   }
+  if ($arg == 'splitTxs') a\splitTxs();
   if ($arg == 'php') w\go('devel/php');
   
   say("DONE with \"$arg\".");
@@ -1018,6 +1055,7 @@ function handyLinks() {
     'rcredits/util/reset-menu|Rebuild menu based on hook_menu() and revert any custom changes. All menu items return to their default settings.|Redo MENUS|menu-hamburger',
     'rcredits/util/remove-test-data|Remove test data|REMOVE test data|fast-backward',
     'rcredits/util/clear|Empty the cache and sessions tables|Clear Cache & Sessions|unchecked',
+    'rcredits/util/splitTxs|Fill the r_tx_hdrs and r_entries tables from the r_txs table|Split all transactions|fast-forward',
   );
 
 /*    'devel/settings|Helper functions, pages, and blocks to assist Drupal developers. The devel blocks can be managed via the block administration page.|Devel settings|cog',

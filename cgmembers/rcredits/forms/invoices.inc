@@ -77,11 +77,12 @@ function invoiceList($toMe, $starting, $ending, $states, $url, $download, $toFro
   if (strpos($states, '2') === FALSE) $where .= ' AND i.status<>:TX_DENIED';
   */
   $sql = <<<EOF
-    SELECT nvid, i.created, u.fullName AS other, i.purpose, i.amount, i.status AS status0, i.data, t.{$me}Tid AS tid
+    SELECT nvid, i.created, u.fullName AS other, i.purpose, i.amount, i.status AS status0, i.data, e.acctTid AS tid
     FROM r_invoices i 
     LEFT JOIN users u ON u.uid=i.$yu
-    LEFT JOIN r_txs t ON t.xid=i.status
-    WHERE $where
+    LEFT JOIN r_tx_hdrs t ON t.xid=i.status
+    JOIN r_entries e ON t.xid=e.xid
+    WHERE ($where) AND e.uid=u.uid
     ORDER BY (i.status>2), nvid DESC
 EOF;
 //    ORDER BY (i.status=:TX_PENDING OR i.status=:TX_APPROVED) DESC, nvid DESC

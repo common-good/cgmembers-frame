@@ -114,87 +114,92 @@ function formTxs_submit($form, &$sta) {
   return w\dateRangeRedirect('history/transactions', $sta);
 }
 
-/**
- * Return a form to edit the given transaction.
- * @param int $xid: the transaction id
- * @return the form (FALSE on error)
- */
 function txEdit($xid) {
-  global $mya;
-  if (!$myx = r\MyX::lastTx($mya, 'xid=:xid', compact('xid'), TRUE)) return FALSE; // bail on hack attempt
-  extract(just('taking toMe payer payee amount goods payerFor payeeFor created', $myx->ray));
-
-  if (!$mya->can($taking ? B_SELL : B_BUY)) return FALSE;
-
-  $form = array(    
-    '#validate' => array('CG\\Web\\txEdit_validate'),
-    '#submit' => array('CG\\Web\\txEdit_submit'),
-  );
-
-  $purpose = $toMe ? $payeeFor : $payerFor;
-  $orig = hidFld(serialize($myx->ray));
-  $title = t('Edit Transaction');
-  $to = item(r\acct($toMe ? $payer : $payee)->fullName, $toMe ? t('From:') : t('To:'));
-  $amount = textFld(t('Amount: $'), '', dft(number_format($amount,2)));
-  $goods = $mya->cttyRewardy ? radiosFld('&nbsp;', '', dft((int) $goods), ray(R_WHYS)) : hidFld($goods);
-  $purpose = textFld(t('For:'), '', dft(u\nonish(@$purpose) ? '' : $purpose));
-  $created0 = hidFld($created);
-  if ($mya->cAdmin) $created = textFld(t('Date:'), '', dft(u\fmtDate($created, TRUE))); else unset($created);
-  $submit = t('Update');
-
-  return cgform($form + compact(ray('title to amount goods purpose created0 created submit orig')));
+  debug('No longer allowed to edit transactions.');
+  return;
 }
 
-function txEdit_validate($form, &$sta) {
-  global $base_url;
-  global $mya;
-  extract(just('created0 created amount goods purpose orig', $sta['input']));
-  extract($orig = unserialize($orig), EXTR_PREFIX_ALL, 'x');
-  $dif = abs($amount - $x_amount);
+/* /\** */
+/*  * Return a form to edit the given transaction. */
+/*  * @param int $xid: the transaction id */
+/*  * @return the form (FALSE on error) */
+/*  *\/ */
+/* function txEdit($xid) { */
+/*   global $mya; */
+/*   if (!$myx = r\MyX::lastTx($mya, 'xid=:xid', compact('xid'), TRUE)) return FALSE; // bail on hack attempt */
+/*   extract(just('taking toMe payer payee amount goods payerFor payeeFor created', $myx->ray)); */
+
+/*   if (!$mya->can($taking ? B_SELL : B_BUY)) return FALSE; */
+
+/*   $form = array(     */
+/*     '#validate' => array('CG\\Web\\txEdit_validate'), */
+/*     '#submit' => array('CG\\Web\\txEdit_submit'), */
+/*   ); */
+
+/*   $purpose = $toMe ? $payeeFor : $payerFor; */
+/*   $orig = hidFld(serialize($myx->ray)); */
+/*   $title = t('Edit Transaction'); */
+/*   $to = item(r\acct($toMe ? $payer : $payee)->fullName, $toMe ? t('From:') : t('To:')); */
+/*   $amount = textFld(t('Amount: $'), '', dft(number_format($amount,2))); */
+/*   $goods = $mya->cttyRewardy ? radiosFld('&nbsp;', '', dft((int) $goods), ray(R_WHYS)) : hidFld($goods); */
+/*   $purpose = textFld(t('For:'), '', dft(u\nonish(@$purpose) ? '' : $purpose)); */
+/*   $created0 = hidFld($created); */
+/*   if ($mya->cAdmin) $created = textFld(t('Date:'), '', dft(u\fmtDate($created, TRUE))); else unset($created); */
+/*   $submit = t('Update'); */
+
+/*   return cgform($form + compact(ray('title to amount goods purpose created0 created submit orig'))); */
+/* } */
+
+/* function txEdit_validate($form, &$sta) { */
+/*   global $base_url; */
+/*   global $mya; */
+/*   extract(just('created0 created amount goods purpose orig', $sta['input'])); */
+/*   extract($orig = unserialize($orig), EXTR_PREFIX_ALL, 'x'); */
+/*   $dif = abs($amount - $x_amount); */
   
-  if ($goods == FOR_GOODS and trim($purpose) == '') return say('missing purpose', 'purpose');
-  if ($dif and $err = u\badAmount($amount, $mya->cAdmin ? '' : '>0')) return say($err, 'amount');
-  if (isset($created) and $err = u\badDate($created, $created0 - 180 * DAY_SECS, time() + 7 * DAY_SECS)) return say($err, 'created');
-  if (!$mya->cAdmin and ($x_toMe ? ($amount > $x_amount) : ($amount < $x_amount))) {
-    $who = r\acct($x_toMe ? $x_payer : $x_payee)->name;
-    $action = $x_toMe ? t('increase') : t('decrease');
-    $date = u\fmtDate($x_created);
-    $amount = u\fmtAmt($amount);
-    $purpose = urlencode($purpose);
-    $_a = atag("/charge/who=$who&amount=$dif&goods=$goods&purpose=$purpose ($action amount of $date payment to $amount)");
-    $amount = u\fmtAmt($x_amount);
-    return say(t('illegal amount change', compact(ray('amount action _a'))), 'amount');
-  }
-  u\preray(compact('amount', 'created'), $sta['input']);
-}
+/*   if ($goods == FOR_GOODS and trim($purpose) == '') return say('missing purpose', 'purpose'); */
+/*   if ($dif and $err = u\badAmount($amount, $mya->cAdmin ? '' : '>0')) return say($err, 'amount'); */
+/*   if (isset($created) and $err = u\badDate($created, $created0 - 180 * DAY_SECS, time() + 7 * DAY_SECS)) return say($err, 'created'); */
+/*   if (!$mya->cAdmin and ($x_toMe ? ($amount > $x_amount) : ($amount < $x_amount))) { */
+/*     $who = r\acct($x_toMe ? $x_payer : $x_payee)->name; */
+/*     $action = $x_toMe ? t('increase') : t('decrease'); */
+/*     $date = u\fmtDate($x_created); */
+/*     $amount = u\fmtAmt($amount); */
+/*     $purpose = urlencode($purpose); */
+/*     $_a = atag("/charge/who=$who&amount=$dif&goods=$goods&purpose=$purpose ($action amount of $date payment to $amount)"); */
+/*     $amount = u\fmtAmt($x_amount); */
+/*     return say(t('illegal amount change', compact(ray('amount action _a'))), 'amount'); */
+/*   } */
+/*   u\preray(compact('amount', 'created'), $sta['input']); */
+/* } */
 
-function txEdit_submit($form, &$sta) {
-  extract(just('created amount goods purpose orig', $sta['input']));
-  extract($orig = unserialize(unplain($orig)), EXTR_PREFIX_ALL, 'x');
-  $a = r\acct(); $id = $a->id;
-  $x = r\x($x_xid, $a);
-  u\EXPECT($x, 'submitted non-tx!');
-  u\EXPECT($a->cAdmin or $x->payer == $id or $x->payee == $id, "not our xid:$x_xid id=$id");
+/* function txEdit_submit($form, &$sta) { */
+/*   extract(just('created amount goods purpose orig', $sta['input'])); */
+/*   extract($orig = unserialize(unplain($orig)), EXTR_PREFIX_ALL, 'x'); */
+/*   $a = r\acct(); $id = $a->id; */
+/*   $x = r\x($x_xid, $a); */
+/*   u\EXPECT($x, 'submitted non-tx!'); */
+/*   u\EXPECT($a->cAdmin or $x->payer == $id or $x->payee == $id, "not our xid:$x_xid id=$id"); */
 
-  $forField = $x_toMe ? 'payeeFor' : 'payerFor';
-  if ($purpose != $orig[$forField]) $changes[$forField] = $purpose; // $x->setField($forField, $purpose);
-  if ($goodsChange = ($goods != $x_goods)) $changes['goods'] = $goods; // $x->setField('goods', $goods);
-  if ($amtChange = ($amount != $x_amount)) $changes['amount'] = $amount; // $x->setField('amount', $amount);
-  if (isset($created) and $created != $x_created) $changes['created'] = $created; // $x->setField('created', $created);
-  if (@$changes) $x->setFields($changes);
-  if ($amtChange or $goodsChange) {
-    $agent = r\agent();
-    $msg = 'tx edited' . ($goodsChange ? '|new tx goods' : '') . ($amtChange ? '|new tx amount' : '');
-    $what = ray(R_WHYS)[$goods];
-    $amount = u\fmtAmt($amount);
+/*   $forField = $x_toMe ? 'payeeFor' : 'payerFor'; */
+/*   if ($purpose != $orig[$forField]) $changes[$forField] = $purpose; // $x->setField($forField, $purpose); */
+/*   if ($goodsChange = ($goods != $x_goods)) $changes['goods'] = $goods; // $x->setField('goods', $goods); */
+/*   if ($amtChange = ($amount != $x_amount)) $changes['amount'] = $amount; // $x->setField('amount', $amount); */
+/*   if (isset($created) and $created != $x_created) $changes['created'] = $created; // $x->setField('created', $created); */
+/*   if (@$changes) $x->setFields($changes); */
+/*   if ($amtChange or $goodsChange) { */
+/*     $agent = r\agent(); */
+/*     $msg = 'tx edited' . ($goodsChange ? '|new tx goods' : '') . ($amtChange ? '|new tx amount' : ''); */
+/*     $what = ray(R_WHYS)[$goods]; */
+/*     $amount = u\fmtAmt($amount); */
 
-    foreach ([$x_payer => $x_payerTid, $x_payee => $x_payeeTid] as $uid => $tid) {
-      $who = $uid == $agent->id ? t('you') : $agent->fullName;
-      r\notify($uid, $msg, compact(ray('who tid amount what')));
-    }
-  }
-  return w\go('history', 'info saved');
-}
+/*     foreach ([$x_payer => $x_payerTid, $x_payee => $x_payeeTid] as $uid => $tid) { */
+/*       $who = $uid == $agent->id ? t('you') : $agent->fullName; */
+/*       r\notify($uid, $msg, compact(ray('who tid amount what'))); */
+/*     } */
+/*   } */
+/*   return w\go('history', 'info saved'); */
+/* } */
 
 function handleTx($do, $xid, &$sta, $args) {
   $url = str_replace('&do=', '&did=', "history/transactions/$args"); // don't do it again
@@ -318,7 +323,7 @@ function txSummary($starting, $ending, &$endBalance = '') {
  * Handle click 'OK' or 'NO' (approving or undoing a transaction)
  */
 function txOKorNO($task, $xid) {
-  if (!r\MyX::lastTx(r\acct(), 'xid=:xid', compact('xid'), TRUE)) return FALSE; // bail on hack attempt
+  if (!r\MyX::lastTx(r\acct(), 't.xid=:xid', compact('xid'), TRUE)) return FALSE; // bail on hack attempt
   list ($message, $args) = be\undoTx($xid); // X (reverse it)
   say($message, $args);
 }

@@ -257,10 +257,10 @@ X;
     SELECT uid, GREATEST(inVol, outVol) AS monthly, $sinceActivated/30 AS months
     FROM (
       SELECT uid, u.flags, activated,
-      SUM(IF(payee=uid, amount, 0))/6 AS inVol,
-      SUM(IF(payer=uid, amount, 0))/6 AS outVol
-      FROM users u LEFT JOIN r_txs t ON uid IN (payer, payee) 
-      WHERE t.created>=$start AND $sinceActivated % 30 = 0 GROUP BY uid
+      SUM(IF(amount>0, amount, 0))/6 AS inVol,
+      SUM(IF(amount<0, -amount, 0))/6 AS outVol
+      FROM users u LEFT JOIN r_entries e ON u.uid=e.uid JOIN r_tx_hdrs t1 ON e.xid=t1.xid
+      WHERE t1.created>=$start AND $sinceActivated % 30 = 0 GROUP BY uid
     ) t 
     WHERE $sinceActivated>0 AND uid > 1 AND :IS_OK
 X;
@@ -272,9 +272,12 @@ X;
 	$sql = <<< X
 	  SELECT u.uid,r.amount,$when AS `when`,r.created,r.period,
 		  (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced,
-  	  (SELECT MAX(t.created) FROM r_txs t WHERE t.payer=r.payer AND t.payee=r.payee AND t.:IS_RECURS AND NOT t.:IS_UNDONE AND NOT t.:IS_UNDOES) AS lastTx
-		FROM users u LEFT JOIN r_recurs r ON r.payer=u.uid AND r.payee=:CGID AND r.ended=0
-		WHERE u.:IS_OK AND (r.period='Y' OR (r.id IS NULL AND FLOOR(($when-u.activated) / :DAY_SECS) MOD 365 = 0))
+  	  (SELECT MAX(t.created) FROM r_tx_hdrs t JOIN r_entries e1 ON e1.xid=t.xid JOIN r_entries e2 ON e2.xid=t.xid
+           WHERE e1.uid=r.payer AND e2.uid=r.payee AND t.:IS_RECURS
+           AND NOT EXISTS(SELECT xid FROM r_tx_hdrs t2 WHERE t2.reverses=t.xid)
+           AND t.reverses IS NOT NULL) AS lastTx
+           FROM users u LEFT JOIN r_recurs r ON r.payer=u.uid AND r.payee=:CGID AND r.ended=0
+           WHERE u.:IS_OK AND (r.period='Y' OR (r.id IS NULL AND FLOOR(($when-u.activated) / :DAY_SECS) MOD 365 = 0))
 X;
 //		AND FLOOR((:NOW-IFNULL(r.created, u.activated)) / :DAY_SECS) MOD 365 <= 365 - 7
 
@@ -426,18 +429,22 @@ function everyMonth() {
   $bene = u\test() ? CGID : db\get('uid', 'users', "name='bene' AND uid<0");
   $start = u\monthDay1($end = u\monthDay1() - 1); // mark start and end of preceding month
   if (u\test()) $start = strtotime('-30 days', $end = strtotime('today') - 1) + 1; // test: the past 30 days
-  queueEach('whatsup', "SELECT uid, u.:IS_CO as co, MAX(t.created) AS lastTx from users u LEFT JOIN r_txs t ON uid IN (payer, payee) WHERE uid>:CANONIC_ACCTS AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $start");
+  queueEach('whatsup', "SELECT uid, u.:IS_CO AS co, MAX(e.created) AS lastTx FROM users u LEFT JOIN r_entries e ON e.uid=u.uid WHERE uid>:CANONIC_ACCTS AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $start");
   queueEach('inflationAdjust', "SELECT uid, $start AS start, $end AS end FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS");  
 //  queueEach('shareCommitted', 'SELECT uid, committed, share FROM users WHERE :IS_OK AND committed>0');
-  queueEach('roundup', "SELECT payer as uid, SUM(1-MOD(amount, 1)) AS donate FROM r_txs WHERE :IS_ROUNDUP AND amount>0 AND MOD(amount, 1)>0 AND created BETWEEN $start AND $end GROUP BY payer");
+  /* queueEach('roundup', "SELECT payer as uid, SUM(1-MOD(amount, 1)) AS donate FROM r_txs WHERE :IS_ROUNDUP AND amount>0 AND MOD(amount, 1)>0 AND created BETWEEN $start AND $end GROUP BY payer"); */
   
   $sql = <<< X
-    SELECT u.uid, SUM(t.amount)*u.crumbs AS donate FROM r_txs t LEFT JOIN users u ON u.uid=t.payee 
-    WHERE t.payer>0 AND u.crumbs>0 AND t.created BETWEEN $start AND $end GROUP BY t.payee
+    SELECT u.uid, SUM(MAX(0,-e.amount))*u.crumbs AS donate
+    FROM r_tx_hdrs t JOIN r_entries e ON t.xid=e.xid LEFT JOIN users u ON u.uid=e.uid 
+    WHERE e.uid>0 AND u.crumbs>0 AND t.created BETWEEN $start AND $end GROUP BY t.xid
 X;
   queueEach('crumbs', $sql); // no crumbs on rewards
 
-	// figure amount to share with each official Common Good Community
+  debug('unfinished   ' . debug_backtrace());
+  return;
+  
+  // figure amount to share with each official Common Good Community
   $sql = <<< X
       SELECT $end AS `end`, u.community AS ctty, SUM(IF(t.payee=:CGID, t.amount, 0)) AS `in`,
         SUM(IF(t.payer=:CGID AND t.created<=$end, t.amount, 0)) AS `out`,
@@ -473,7 +480,10 @@ function everyYear() {
  * Calculate and credit inflation adjustment to each member account.
  */
 function inflationAdjust($item) {
-  return; // UNUSED
+
+  debug('Unused   ' . debug_backtrace());
+  return;
+  
   extract(just('uid start end', $item));
   $a = r\acct($uid);
   if ($a->slave) return; // slave in joint account gets no inflation (master gets inflation for both)
@@ -616,7 +626,7 @@ function setNear() {
   $queries = join(' UNION ', [
     'SELECT DISTINCT inviter AS id1, invitee AS id2, 1 AS w FROM r_invites WHERE invitee',
     'SELECT DISTINCT person AS id1, proxy AS id2, 1 AS w FROM r_proxies',
-    'SELECT DISTINCT payer AS id1, payee AS id2, 1 AS w FROM r_txs WHERE payer>0 AND payee>0',
+    'SELECT DISTINCT payer.xid AS id1, payee.xid AS id2, 1 AS w FROM r_tx_hdrs JOIN r_entries payer ON payer.xid = t.xid JOIN r_entries payee ON payee.xid = t.xid WHERE payer.uid>0 AND payee.uid>0',
     'SELECT DISTINCT main AS id1, other AS id2, 1 AS w FROM r_relations',
     'SELECT DISTINCT u1.uid AS id1, u2.uid AS id2, 0.5 AS w FROM users u1 INNER JOIN users u2 ON (u2.city=u1.city OR u2.zip=u1.zip) WHERE u1.uid<>u2.uid',
   ]); // each type of relationship counts as one point
@@ -662,10 +672,14 @@ function acctStats1($item, $asof = NULL) {
   $subs = compact('uid', 'monthAgo', 'asof');
   
   $sql = <<< X
-    SELECT SUM(amount) AS giftsEver, SUM(IF(created<:monthAgo, 0, amount)) AS giftsPastMo
-    FROM r_txs WHERE payer=:uid AND payee=:CGID AND :IS_GIFT AND created<:asof
+    SELECT SUM(payee.amount) AS giftsEver, SUM(IF(created<:monthAgo, 0, amount)) AS giftsPastMo
+    FROM r_tx_hdrs t JOIN r_entries payer ON payer.xid=t.xid JOIN r_entries payee ON payee.xid=t.xid
+    WHERE payer.uid=:uid AND payee.uid=:CGID AND :IS_GIFT AND created<:asof
 X;
   $row1 = db\q($sql, $subs)->fetchAssoc() ?: []; // giftsEver, giftsPastMo
+
+  debug('Unfinished  ' . debug_backtrace());
+  return;
   
   $sql = <<< X
     SELECT SUM(IF(type=:TX_TRANSFER, payerReward+payeeReward, 0)) AS beneEver,
@@ -693,6 +707,10 @@ X;
  * @param int $dt1: date to start (-1 means pick up where we left off)
  */
 function cttyStats($dt1 = 0) {
+
+  debug('Unfinished   ' . debug_backtrace());
+  return;
+  
   if (!$dt1) { // normally this is called without a date
     cttyStats1(['ctty' => 0]); // for all our communities total
     queueEach('cttyStats1', 'SELECT DISTINCT uid AS ctty FROM users WHERE uid<0'); // and one at a time
@@ -790,7 +808,7 @@ function acctRisk1($item) {
  * Include any substantial payments from the community (over $100).
  */
 function txRisk() {
-  queueEach('txRisk1', 'SELECT * FROM r_txs WHERE risk IS NULL AND ABS(amount)>0 AND (payer>0 OR ABS(amount)>:K_CTTY_THRESHOLD) ORDER BY created');
+  queueEach('txRisk1', 'SELECT DISTINCT t.xid FROM r_tx_hdrs t JOIN r_entries e WHERE risk IS NULL AND ABS(amount)>0 AND (uid>0 OR ABS(amount)>:K_CTTY_THRESHOLD)');
   queueNext();
 }
 
@@ -816,6 +834,10 @@ function achRisk1($item) {
  * Handle recurring transactions that it's time to handle.
  */
 function recurs() {
+
+  debug('Unfinished   ' . debug_backtrace());
+  return;
+  
   $sql = <<< X
     SELECT DISTINCT r.payer,r.payee,r.period,r.amount,r.created,u2.fullName AS payeeName,
 		  (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced,
@@ -849,7 +871,11 @@ X;
  * If funds are insufficient, an approved invoice is created instead (which tries to get money as a next step).
  */
 function recurs1($item) {
-	extract(just('period lastTxDt created invoiced amount payer payee payeeName firstXid', $item));
+
+  debug('Unfinished   ' . debug_backtrace());
+  return;
+
+  extract(just('period lastTxDt created invoiced amount payer payee payeeName firstXid', $item));
 	if (!$invoiced and giveNow($period, $lastTxDt, $created)) {
     list ($payerFor, $data) = r\setupGift($period);
     if ($firstXid and $res = db\get('flags, payerFor', 'r_txs', 'xid=:firstXid', compact('firstXid'))) {

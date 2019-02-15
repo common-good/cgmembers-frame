@@ -16,6 +16,9 @@ include_once __DIR__ . '/../statement.class';
  * where WAY is either IN or OUT
  */
 function custStatement($args = '') {
+  debug('Unfinished   ' . debug_backtrace());
+  return;
+  
   $purposeLenMax = 60; // maximum number of characters in purpose field, not including added "..."
 
   if (!$mya = r\acct()) return w\go('', t('You must first sign in.'), 'ERR');

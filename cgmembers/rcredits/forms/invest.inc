@@ -153,7 +153,11 @@ function clubVal(&$investments = 0, &$liquid = 0, &$reserve = 0) {
  * @param numeric $icVal: club's total current value
  */
 function myClubVal($clubVal) {
-	global $mya;
+
+  debug('Unfinished   ' . debug_backtrace());
+  return;
+
+  global $mya;
 	$stake = 'IF(payer=:clubid,-amount,amount)';
 	$share = "(:NOW-created)*$stake";
 	$isMe = ':myid IN (payer, payee)';

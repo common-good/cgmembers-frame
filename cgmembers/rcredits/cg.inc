@@ -82,13 +82,10 @@ function isGiveback($payer, $payee, $data) {
 
 /**
  * Return an error message if the given invoice is already paid or doesn't exist.
- * @param int $nvid: record ID of invoice
- * @param assoc $inv: (RETURNED) the invoice record
+ * @param assoc $inv: the invoice record
  * @return the error message (FALSE if no error)
  */
-function badUnpaidInv($nvid, &$inv = '') {
-  $fields = 'nvid,status,amount,payer,payee,goods,purpose,flags,data,created';
-  if (!$inv = db\get($fields, 'r_invoices', 'nvid=:nvid', compact('nvid'))) return 'no matching invoice';
+function badUnpaidInv($inv) {
   if ($inv['status'] >= TX_PAID) return 'already paid';
 }
 
@@ -101,9 +98,9 @@ function badUnpaidInv($nvid, &$inv = '') {
 function xid2tid($xid, $uid) {
   $jid = r\acct($uid)->jid ?: 0;
   $isIt = ' IN (:uid, :jid)';
-  $where = "(payer$isIt OR payee$isIt) AND xid<:xid AND type>=0";
-  $max = "MAX(GREATEST(IF(payee$isIt, payeeTid, 0), IF(payer$isIt, payerTid, 0)))";
-  return db\get($max, 'r_txs', $where, compact('uid', 'xid', 'jid')) + 1;
+  $where = "(e.uid$isIt) AND xid<:xid";
+  $max = "MAX(e.acctTid)";
+  return db\get($max, 'r_entries e', $where, compact('uid', 'xid', 'jid')) + 1;
 }
 
 /**
@@ -381,7 +378,9 @@ function notify($uid, $index, $subs = [], $force = FALSE) {
   if ($force) {
     $mailed = r\rMail($index, $a, $subs, @$subs['reply'] ?: 'ctty');
   } else { //if ($a->can(B_NOTIFY_EMAIL)) {
+    debug('cg.inc: $index, $subs=' . $index . ', ' . print_r($subs, true));
     list ($message, $created) = array(t($index, $subs), r\rTime());
+    debug($message);
     f('t.output', "Actual Notice to $fullName: $message");
     db\insert('r_notices', compact(ray('uid message created')), 'msgid');
   }
@@ -757,9 +756,8 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
   }
   
   if ($delete) {
-    if (db\exists($table = 'r_txs', 'payer=:oldUid OR payee=:oldUid', compact('oldUid'))
-      or db\exists($table = 'r_ballots', ':oldUid IN (voter, proxy)', compact('oldUid'))
-      or db\exists($table = 'r_usd', 'payee=:oldUid', compact('oldUid'))) {
+    if (db\exists($table = 'r_entries', 'uid=:oldUid', compact('oldUid'))
+        or db\exists($table = 'r_ballots', ':oldUid IN (voter, proxy)', compact('oldUid'))) {
       return w\say(t('Account "%name" has records in table %table, so it cannot be deleted.', 'name table', $a->fullName, $table), 'err');
     }
   } elseif (!$newUid) {
@@ -817,12 +815,13 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     'r_stats:ctty:D',
     'r_tous:uid:D',
   // r_transit
-    'r_txs:payer',
-    'r_txs:payee',
-    'r_txs:payerAgent',
-    'r_txs:payeeAgent',
-    'r_usd:payee',
-  // r_usd2
+    /* 'r_txs:payer', */
+    /* 'r_txs:payee', */
+    /* 'r_txs:payerAgent', */
+    /* 'r_txs:payeeAgent', */
+    /* 'r_usd:payee', */
+    'r_entries:uid',
+    // r_usd2
     'r_user_industries:uid:D',
   // r_votes
     'sessions:uid:D',
@@ -866,11 +865,11 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
  *   includes success=TRUE if the transaction was successful
  * @param bool $confirm: UNUSED <to be confirmed> (default FALSE)
  */
-function txRet($message, $info = []) {
+function txRet($message, $info = [], $confirm = FALSE, $xid = 0) {
   $info0 = $info;
   if (is_array($message)) {list ($message, $info, $confirm) = $message; $info += $info0;}
   if (!@$info['success']) r\tellCO('failed transaction', $info + compact('message', 'confirm'));
-  return [$message, $info];
+  return [$message, $info, $confirm, $xid];
 }
 
 /**
@@ -1111,6 +1110,8 @@ X;
   $res += db\q($sql, $subs)->fetchAssoc() ?: [];
 
 // get transaction table data
+  debug('unimplemented');
+  if (false) {
   $sql = '';
   list ($cgIn, $cgOut) = $ctty == 0 // make cgIn and cgOut selectors
   ? ['SUM(IF(u.community=u2.community, amount, 0))',
@@ -1129,10 +1130,10 @@ X;
   
   $sql = <<< X
     SELECT $sql
-    FROM r_txs t 
-    LEFT JOIN $accounts u ON u.uid=t.payer 
-    LEFT JOIN $accounts u2 ON u2.uid=t.payee
-    WHERE $cttysCrit AND $creCrit
+    FROM r_tx_hdrs t JOIN r_entries e1 on t.xid=e1.xid JOIN r_entries e2 on t.xid=e2.xid
+    LEFT JOIN $accounts u ON u.uid=e1.uid 
+    LEFT JOIN $accounts u2 ON u2.uid=e2.uid
+    WHERE $cttysCrit AND $creCrit AND e1.amount<0 AND e2.amount>0
 X;
   $res += db\q($sql, $subs)->fetchAssoc() ?: [];
   
@@ -1140,12 +1141,15 @@ X;
   $recent = $created - 60 * DAY_SECS; // not n months (keep length of time consistent)
 
   $sql = <<< X
-    SELECT COUNT(DISTINCT payer) as aAccts FROM r_txs  t
-    JOIN $accounts u ON u.uid=t.payer
-    WHERE NOT u.:IS_CO AND $cttyCrit AND $creCrit AND created>$recent
+    SELECT COUNT(DISTINCT payer) as aAccts FROM r_entries e
+    JOIN $accounts u ON u.uid=e.uid
+    WHERE e.amount < 0 AND NOT u.:IS_CO AND $cttyCrit AND $creCrit AND created>$recent
 X;
   $res += db\q($sql, $subs)->fetchAssoc() ?: [];
 
+  print_r(debug_backtrace());
+  die('unfinished');
+  
   // get conx, conxLocal
   foreach (ray('conx conxLocal', 1, "u2.$thisCtty") as $k => $crit) {
     if (!$ctty) $crit = 1; // avoid local query when doing stats for ALL cttys
@@ -1171,6 +1175,11 @@ X;
     $isPayer = '(payer IN (uid, jid) AND payer<>0)';
     $isPayee = '(payee IN (uid, jid))';
 
+  print_r(debug_backtrace());
+
+  print_r(debug_backtrace());
+  die('unfinished');
+    
     // NOTE: xid and txid are needed here to prevent merging
     $txs = <<< X
       ((SELECT txid AS xid, 0 AS payer, payee, amount, completed AS created FROM r_usd WHERE amount<>0)
@@ -1235,7 +1244,7 @@ X;
   foreach ($res as $k => $v) {if (is_null($v)) $res[$k] = 0;}
   $info = compact('created', 'ctty') + $res;
   if ($created >= R_LAUNCH) db\insert('r_stats', $info);
-  return $info;
+  return $info;}
 }
 
 /**
@@ -1251,10 +1260,10 @@ function topN($res, $n = 3) {return max($n, round($n * array_sum(just('bAccts aA
  * @param int $start: starting date (should be 0 hours) -- first full day to include in the period
  * @param int $end: ending date (should be 0 hours) -- last full day to include in the period
  * @param bool $noj: ignore any joined account
- * @return array: [balance, min, rewards, days]
+ * @return array: [balance, min, days] used to include rewards
  *    balance: the average end-of-day balance for that period (possibly with fractional cents)
  *    min:     minimum end-of-day balance in the period
- *    rewards: the average end-of-day credit reserve amount for that period (possibly with fractional cents)
+ *    NO: rewards: the average end-of-day credit reserve amount for that period (possibly with fractional cents)
  *    days:    (unused) number of days from start to end, inclusive
  */
 function averageBalance($uid, $start, $end = NULL, $noj = FALSE) {
@@ -1275,13 +1284,11 @@ function averageBalance($uid, $start, $end = NULL, $noj = FALSE) {
   // use "1" as payee for r_usd, to avoid matching jid=0
 //    SUM(IF($isPayer, payerReward, payeeReward)) AS rtotal,
 //    SUM(IF(t.goods=:FOR_SHARE, $signedAmt, 0)) AS share,
+
   $sql = <<< X
-    SELECT SUM($signedAmt) AS total,
-    FLOOR((t.completed-$start)/:DAY_SECS) AS day 
-    FROM (
-      (SELECT type,payer,payee,amount,payerReward,payeeReward,created AS completed FROM r_txs)
-      UNION (SELECT :TX_BANK,1 AS payer,payee,amount,0,0,completed FROM r_usd)
-    ) t WHERE ($isPayer XOR $isPayee) AND completed BETWEEN $start AND $end 
+    SELECT SUM(e.amount) AS total, FLOOR((t.created-$start)/:DAY_SECS) AS day 
+    FROM r_tx_hdrs t JOIN r_entries e ON (t.xid=e.xid)
+    WHERE e.uid IN (:uid, :jid) AND t.created BETWEEN $start AND $end
     GROUP BY day
 X;
 
@@ -1550,7 +1557,7 @@ function doCode($code) { // accommodate temporary weirdness because email client
 } 
 function makeDoCode($ray) {return substr(u\cry('P', serialize($ray)), strlen(CRYPT_FLAG));}
 function cgA() {return r\acct(CGID);}
-function disputeTx($xid) {return db\setFlag('r_txs', $xid, B_DISPUTED, TRUE);}
+function disputeTx($xid) {return db\setFlag('r_tx_hdrs', $xid, B_DISPUTED, TRUE);}
 function denyInv($nvid) {return db\setData('r_invoices', $nvid, ['denied' => TRUE]);}
 function stepsDone0() {return array_fill_keys(array_keys(ray(R_STEPS)), FALSE);}
 function isReward($type) {return in($type, TX_REWARDS);}

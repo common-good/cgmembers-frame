@@ -50,6 +50,9 @@ function queryFile($isco) {return R_ROOT . ($isco ? '/rweb/queries-co.inc' : '/r
  */
 function getReport($nm) {
   global $mya;
+
+  print_r(debug_backtrace());
+  die('unfinished');
   
   if ($nm == 'customers' or $nm == 'vendors') {
     $heads = ray(t('Account,Name,Phone,Email,Net Ever'));

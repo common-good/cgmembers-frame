@@ -256,7 +256,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
   -webkit-animation: puff .5s linear; /* Chrome, Safari, Opera */
   animation: puff .5s linear;  
 }
-.page-sadmin #messages {margin:0;}
+.page-sadmin #messages {margin:50px 0 0 0;}
 #messages .messages {display:inline-block; max-width:800px; text-align:left; margin:28px auto 10px 0; background-position:8px; background-repeat:no-repeat; border:1px solid; padding:10px 10px 10px 40px;
   border-radius:8px; -moz-border-
   :8px; -webkit-border-radius:8px;

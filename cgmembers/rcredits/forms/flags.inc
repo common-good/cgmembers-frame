@@ -42,6 +42,10 @@ EOF;
   foreach ($headers as $v) {$vLow = strtolower($v); $txHeader .= "<th class=\"k-$vLow\">$v</th>";}
   $txHeader = "<tr>$txHeader</tr>";
   $subs = compact('starting', 'ending');
+
+  print_r(debug_backtrace());
+  die('unfinished');
+  
   $sql = <<<EOF
     SELECT t.risk AS score,xid,t.created,amount,payer,payee,payeeFor AS description,t.risks 
     FROM r_txs t LEFT JOIN users u1 ON u1.uid=payer LEFT JOIN users u2 ON u2.uid=payee 

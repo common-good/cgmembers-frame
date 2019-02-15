@@ -9,13 +9,13 @@ SO my company can accept cash deposits and give customers cash.
 
 Setup:
   Given members:
-  | uid  | fullName   | email | cc  | cc2  | floor | flags      |*
-  | .ZZA | Abe One    | a@    | ccA | ccA2 |  -350 | ok,confirmed,debt    |
-  | .ZZB | Bea Two    | b@    | ccB | ccB2 |  -150 | ok,confirmed,debt    |
-  | .ZZC | Corner Pub | c@    | ccC |      |  -250 | ok,confirmed,co,debt |
-  | .ZZD | Dee Four   | d@    | ccD | ccD2 |     0 | ok,confirmed         |
-  | .ZZE | Eve Five   | e@    | ccE | ccE2 |     0 | ok,confirmed,secret  |
-  | .ZZF | Far Co     | f@    | ccF |      |     0 | ok,confirmed,co      |
+  | uid  | fullName   | email | cc  | cc2  | floor | balance | flags      |*
+  | .ZZA | Abe One    | a@    | ccA | ccA2 |  -350 |       0 | ok,confirmed,debt    |
+  | .ZZB | Bea Two    | b@    | ccB | ccB2 |  -150 |       0 | ok,confirmed,debt    |
+  | .ZZC | Corner Pub | c@    | ccC |      |  -250 |       0 | ok,confirmed,co,debt |
+  | .ZZD | Dee Four   | d@    | ccD | ccD2 |     0 |       0 | ok,confirmed         |
+  | .ZZE | Eve Five   | e@    | ccE | ccE2 |     0 |       0 | ok,confirmed,secret  |
+  | .ZZF | Far Co     | f@    | ccF |      |     0 |       0 | ok,confirmed,co      |
   And devices:
   | uid  | code |*
   | .ZZC | devC |
@@ -33,18 +33,18 @@ Setup:
   | .ZZF | .ZZE  |   1 | sell       |
   And transactions: 
   | xid | created   | type     | amount | from | to   | purpose |*
-  | 1   | %today-6m | signup   |    350 | ctty | .ZZA | signup  |
-  | 2   | %today-6m | signup   |    150 | ctty | .ZZB | signup  |
-  | 3   | %today-6m | signup   |    250 | ctty | .ZZC | signup  |
-  | 4   | %today-5m | transfer |    100 | .ZZC | .ZZB | cash    |
-  | 5   | %today-5m | transfer |    200 | .ZZA | .ZZC | cash    |
+  | 1   | %today-6m | transfer |    350 | ctty | .ZZA | payment |
+  | 2   | %today-6m | transfer |    150 | ctty | .ZZB | payment |
+  | 3   | %today-6m | transfer |    250 | ctty | .ZZC | payment |
+  | 4   | %today-5m | transfer |    100 | .ZZC | .ZZB | refund  |
+  | 5   | %today-5m | transfer |    200 | .ZZA | .ZZC | payment |
   | 6   | %today-4m | grant    |    250 | ctty | .ZZF | stuff   |
   Then balances:
   | uid  | balance |*
-  | ctty |    -250 |
-  | .ZZA |    -200 |
-  | .ZZB |     100 |
-  | .ZZC |     100 |
+  | ctty |   -1000 |
+  | .ZZA |     150 |
+  | .ZZB |     250 |
+  | .ZZC |     350 |
   | .ZZF |     250 |
 
 #Variants: with/without an agent
@@ -68,10 +68,11 @@ Scenario: A cashier asks to charge someone for cash
   | %today  | Bea Two  | Corner Pub | $100   | cash out     |
   And balances:
   | uid  | balance |*
-  | ctty |    -250 |
-  | .ZZA |    -200 |
-  | .ZZB |       0 |
-  | .ZZC |     200 |
+  | ctty |   -1000 |
+  | .ZZA |     150 |
+  | .ZZB |     150 |
+  | .ZZC |     450 |
+  | .ZZF |     250 |
 
 Scenario: A cashier asks to refund someone
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $-100 for "cash": "cash in" at %now

@@ -124,6 +124,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE signup AMemberRegistersWithAnUnknownCompany
  *     MAKE signup AMemberRegistersWithACompanyWithNoRelation
  *     MAKE signup AMemberRegistersWithABadCompanyPhone
+ *     MAKE temp ANewbieRegistersFromElsewhere
  *     MAKE transact AMemberConfirmsRequestToChargeAnotherMember
  *     MAKE transact AMemberConfirmsRequestToPayAnotherMember
  *     MAKE transact AMemberConfirmsRequestToPayAnotherMemberALot
@@ -212,6 +213,8 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     TEST signup AMemberRegistersWithAnUnknownCompany
  *     MAKE statement Setup
  *     MAKE summary Setup
+ *     MAKE temp Setup
+ *     TEST temp ANewbieRegistersFromElsewhere
  *     MAKE transact Setup
  *     MAKE transactions Setup
  */
@@ -350,6 +353,7 @@ function weSayWithSubs($type, $index, $subs) {
  *     TEST signup AMemberRegistersBadEmail
  *     TEST signup AMemberRegistersBadZip
  *     TEST signup AMemberRegistersWithACompanyWithNoRelation
+ *     TEST temp ANewbieRegistersFromElsewhere
  */
 function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
 
@@ -365,6 +369,7 @@ function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
  *     TEST signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
  *     TEST signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
  *     TEST signup ANewbieRegistersFromElsewhere
+ *     TEST temp ANewbieRegistersFromElsewhere
  */
 function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, $email, $subs);}
 
@@ -394,6 +399,7 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
  *     TEST signup ANewbieRegistersFromElsewhere
  *     TEST summary MembersAccountIsNotActive
+ *     TEST temp ANewbieRegistersFromElsewhere
  */
 function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
 
@@ -645,6 +651,7 @@ function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
  *     MAKE signin Setup
  *     MAKE signin AMemberClicksALinkToResetPassword
  *     MAKE signup Setup
+ *     MAKE temp Setup
  */
 function memberIsLoggedOut() {
   global $testOnly, $mya;
@@ -674,6 +681,7 @@ function memberIsLoggedOut() {
  *     MAKE signup AMemberRegistersWithAnUnknownCompany
  *     MAKE signup AMemberRegistersWithACompanyWithNoRelation
  *     MAKE signup AMemberRegistersWithABadCompanyPhone
+ *     MAKE temp ANewbieRegistersFromElsewhere
  */
 function invitationToEmailFromMemberIs($email, $id, $code) {
   global $testOnly; if ($testOnly) return FALSE;
@@ -1104,6 +1112,7 @@ function memberIsLoggedIn($id) {
  *     MAKE signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
  *     MAKE signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
  *     MAKE signup ANewbieRegistersFromElsewhere
+ *     MAKE temp ANewbieRegistersFromElsewhere
  */
 function nextRandomCodeIs($code) {global $nextCode; return $nextCode = $code;}
 

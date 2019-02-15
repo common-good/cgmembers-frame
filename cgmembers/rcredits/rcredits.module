@@ -260,7 +260,7 @@ function eachA($func = 'a.changeIt', $where = 'uid>:CANONIC_ACCTS') {
  * or    eachX(function($x) {...});
  */
 function eachX($func = 'a.changeIt') {
-  $result = q('SELECT xid FROM r_txs')->fetchCol();
+  $result = q('SELECT xid FROM r_tx_hdrs')->fetchCol();
   if (!is_callable($func)) $func = funcNickname($func);
   foreach ($result as $xid) $func(r\x($xid)); // x() doesn't work here (without r\) -- dunno why
 }
