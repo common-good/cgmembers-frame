@@ -5,10 +5,10 @@ SO I can spend up to my total credit line.
 
 Setup:
   Given members:
-  | uid  | fullName   | rebate | flags                |*
-  | .ZZA | Abe One    |      5 | ok,confirmed         |
-  | .ZZB | Bea Two    |     10 | ok,confirmed         |
-  | .ZZC | Corner Pub |     10 | ok,confirmed,co,debt |
+  | uid  | fullName   | flags                |*
+  | .ZZA | Abe One    | ok,confirmed         |
+  | .ZZB | Bea Two    | ok,confirmed         |
+  | .ZZC | Corner Pub | ok,confirmed,co,debt |
   And relations:
   | main | agent | permission | draw |*
   | .ZZC | .ZZA  | manage     |    1 |

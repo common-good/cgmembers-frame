@@ -5,15 +5,10 @@ SO I can support the Common Good System and be supported by it.
 
 Setup:
   Given members:
-  | uid  | fullName   | floor | acctType    | flags       | rebate | crumbs | city |*
-  | .ZZA | Abe One    | -500  | personal    | ok,roundup  |      5 |      0 | Avil |
-  | .ZZB | Bea Two    | -500  | personal    | ok,co       |     10 |      0 | Bvil |
-  | .ZZC | Corner Pub | -500  | corporation | ok,co,paper |     10 |   0.02 | Cvil |
-  And transactions: 
-  | xid | created   | type     | amount | from | to   | purpose |*
-  |   1 | %today-2m | signup   |    100 | ctty | .ZZA | signup  |
-  |   2 | %today-2m | signup   |    100 | ctty | .ZZB | signup  |
-  |   3 | %today-2m | signup   |    100 | ctty | .ZZC | signup  |
+  | uid  | fullName   | floor | acctType    | flags       | crumbs | city |*
+  | .ZZA | Abe One    | -500  | personal    | ok,roundup  |      0 | Avil |
+  | .ZZB | Bea Two    | -500  | personal    | ok,co       |      0 | Bvil |
+  | .ZZC | Corner Pub | -500  | corporation | ok,co,paper |   0.02 | Cvil |
   And usd transfers:
   | payee | amount | completed |*
   | .ZZA  |    400 | %today-2m |  

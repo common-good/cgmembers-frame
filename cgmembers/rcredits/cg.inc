@@ -840,7 +840,7 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
       if (!$deletable) {
         if (db\exists($table, "$field=:oldUid", compact('oldUid'))) {
           $DBTX->rollback(); 
-          return w\say(t('Record in table %table cannot be deleted.', compact('table')), 'err');
+          return w\say(t('Record in table %table (field %field) cannot be deleted.', compact('table', 'field')), 'err');
         }
       } else {
         db\del($table, $field, $oldUid);
@@ -1272,7 +1272,7 @@ function averageBalance($uid, $start, $end = NULL, $noj = FALSE) {
   if (!$days = round(($end + 1 - $start) / DAY_SECS)) return [0, 0, 0, 0]; // rounding is for daylight savings time changes
   $info = be\creditInfo(ray('uid asof', $uid, $start - 1));
   $min = $bal = $info->balance;
-  $rbal = $info->rewards;
+//  $rbal = $info->rewards;
   $jid = @$noj ? 0 : (r\acct($uid)->jid ?: 0);
   $isPayer = 't.payer IN (:uid, :jid)';
   $isPayee = 't.payee IN (:uid, :jid)'; // account can be both payer and payee, if joint account

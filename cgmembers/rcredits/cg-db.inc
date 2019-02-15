@@ -144,8 +144,10 @@ function updateOrInsert($table, $info, $key) {
  * Return an array of record objects.
  * @param string $fields: comma-separated list of fields (actual or calculated) -- use * for all
  */
-function rows($fields, $table, $where = '1', $subs = []) {
-  return db\q("SELECT $fields FROM $table WHERE $where", $subs)->fetchAll(); // fetchAll means fetchAllObject
+function rows($fields, $table, $where = '1', $subs = [], $labeled = TRUE) {
+  $res = db\q("SELECT $fields FROM $table WHERE $where", $subs)->fetchAll(); // fetchAll means fetchAllObject
+  if (!$labeled) foreach ($res as $i => $one) $res[$i] = array_values((array) $one);
+  return $res;
 }
 
 /**
@@ -156,6 +158,9 @@ function col($field, $table, $where = '1', $subs = []) {
 }
 function lst($field, $table, $where = '1', $subs = []) { // lst because "list" is a reserved word
   return join(', ', db\col($field, $table, $where, $subs));
+}
+function keyed($table, $where = '1', $subs = []) {
+  return db\q("SELECT * FROM $table WHERE $where", $subs)->fetchAllKeyed();
 }
 
 /**

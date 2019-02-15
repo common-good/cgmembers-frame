@@ -251,21 +251,22 @@ function txSummary($starting, $ending, &$endBalance = '') {
   $startBalance = round($o_balance - ($o_roundups - $o_roundupsPaid), 2);
 
   $dif = [];
-  foreach (ray('inProper outProper rewards bank savings roundups') as $key) $dif[$key] = $nowInfo[$key] - $oldInfo[$key];
+  foreach (ray('inProper outProper bank roundups') as $key) $dif[$key] = $nowInfo[$key] - $oldInfo[$key];
   extract($dif, EXTR_PREFIX_ALL, 'd');
   $p_committed = $mya->committed; // this will include all pending commitments
-  $d_savings -= $d_rewards;
-  list ($toSavings, $fromSavings) = u\order($d_savings >= 0, abs($d_savings), 0);
-  $d_outProper += $toSavings + $d_roundups;
-  $d_inProper += $fromSavings;
+//  $d_savings -= $d_rewards;
+//  list ($toSavings, $fromSavings) = u\order($d_savings >= 0, abs($d_savings), 0);
+//  $d_outProper += $toSavings + $d_roundups;
+  $d_outProper += $d_roundups;
+//  $d_inProper += $fromSavings;
   
-  $fields = 'old bank in out rewards new';
-  $values = array($startBalance, $d_bank, $d_inProper, $d_outProper, $d_rewards, $endBalance); // both
+  $fields = 'old bank in out new';
+  $values = array($startBalance, $d_bank, $d_inProper, $d_outProper, $endBalance); // both
   $values = array_combine(ray($fields), $values);
 
   $p_inProper = $p_outProper = $p_rewards = 0; // temporary until we include unpaid invoice data here
   $p_balance = $p_bank - $p_committed;
-  $values += compact(ray('p_inProper p_bank p_outProper p_rewards p_committed p_balance n_savings o_savings fromSavings toSavings d_roundups'));
+  $values += compact(ray('p_inProper p_bank p_outProper p_committed p_balance d_roundups'));
 
   foreach ($values as $key => $value) $$key = number_format($value, 2);
 
@@ -277,8 +278,8 @@ function txSummary($starting, $ending, &$endBalance = '') {
   $PRIMARY = w\popHelp(t('Balance'), t('Your balance is what you use for spending and for receiving payments.'));
   $STARTING = w\popHelp(t('Starting Balance'), t('Your %PROJECT Account balance at the start of this time period'));
   $BANK = w\popHelp(t('From Bank'), t('How much was transferred from your bank account to your %PROJECT Account'));
-  $IN = w\popHelp(t('Funds Received'), t('How many %RCREDITS you received, in this period'));
-  $OUT = w\popHelp(t('Funds Paid Out*'), t('How many %RCREDITS you paid out, in this period'));
+  $IN = w\popHelp(t('Funds Received'), t('How much %RCREDITS you received, in this period'));
+  $OUT = w\popHelp(t('Funds Paid Out*'), t('How much %RCREDITS you paid out, in this period'));
   $REWARDS = w\popHelp(t('Credit Line+'), ($mya->cttyRewardy ? t('Incentive rewards') : t('Credit line increases')) . t(' you received in this period (rewards go automatically into your Credit Reserve)'));
   $ENDING = w\popHelp(t('Ending Balance'), t('Your %PROJECT Account balance at the end of this time period'));
   $SAVINGS = w\popHelp(t('Credit Reserve'), t('Amount in your Credit Reserve, to spend in a pinch (once your %PROJECT community declares itself stable, this additional amount is yours to keep)'));

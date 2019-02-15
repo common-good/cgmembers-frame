@@ -21,6 +21,8 @@ $queries = [
 
   t('Vendors') => 'vendors' . t('~<p>A list of your vendors (anyone you have paid). Click an account code for a payment and billing history.</p>') . $nosearch,
   
+  t('Customer Demographics') => 'demographics',
+  
   t('%PROJECT Members You Signed Up') =>
   "SELECT IFNULL(uid, (SELECT uid FROM users WHERE fullName=$name)) AS account,
     code AS customer, IFNULL(fullName, $name) AS name, IF(u.activated, '', $phone) AS phone,

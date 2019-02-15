@@ -53,6 +53,8 @@ function getReport($nm) {
 
   print_r(debug_backtrace());
   die('unfinished');
+
+  $myid = $mya->id;
   
   if ($nm == 'customers' or $nm == 'vendors') {
     $heads = ray(t('Account,Name,Phone,Email,Net Ever'));
@@ -67,7 +69,7 @@ function getReport($nm) {
         FROM r_invoices WHERE $where AND status<:TX_PAID
       ) x LEFT JOIN users u ON u.uid=x.uid GROUP BY u.uid ORDER BY fullName
 X;
-    $q = db\q($sql, ray('myid', $mya->id));
+    $q = db\q($sql, compact('myid'));
     while ($row = $q->fetchAssoc()) {
       extract($row);
       $a = r\acct($uid);
@@ -76,42 +78,8 @@ X;
       $res[] = [$qid, $a->fullName, $phone, $email, number_format($net, 2)];
       $classes[] = $invs ? 'hiRow' : '';
     }
-    return w\item(makeTable(@$res, $heads, $colClasses, @$rowClasses));
+    return w\item(w\makeTable(@$res, $heads, $colClasses, @$rowClasses));
+  } elseif ($nm == 'demographics') {
+    w\go('/company-reports/demographics');
   }
-}
-
-/**
- * Return a table as specified.
- * @param ray $rows: set of row data
- * @param ray $heads: column headers
- * @param string $colClasses: (optional) class of each column
- * @param ray $rowClasses: (optional) class of each row
- * @return HTML of the full table
- */
-function makeTable($rows, $heads, $colClasses = [], $rowClasses = [], $tableTribs = 'id=adhoc') {
-  u\EXPECT(count($colClasses) == count($heads), 'wrong aligns count');
-  if ($rows) u\EXPECT(count($rows[0]) == count($heads), 'wrong aligns count');
-  
-  $heads = makeRow('th', $heads, $colClasses);
-  if (@$rows) {
-    foreach ($rows as $i => $row) $lines[] = makeRow('td', $row, $colClasses, @$rowClasses[$i]);
-    $rows = join('', @$lines ?: []);
-    $after = '';
-  } else $after = t('There are no such records.');
-  return <<< X
-<table $tableTribs>
-$heads
-$rows
-</table>
-$after
-X;
-}
-
-function makeRow($tag, $row, $colClasses = [], $rowClass = '') {
-  foreach ($row as $i => $k) {
-    if ($class = $colClasses[$i]) $class = " class=\"$class\"";
-    $line[$i] = "<$tag$class>$k</$tag>";
-  }
-  if ($rowClass) $rowClass = " class=\"$rowClass\"";
-  return "<tr$rowClass>\n" . join("\n", $line) . '</tr>';
 }

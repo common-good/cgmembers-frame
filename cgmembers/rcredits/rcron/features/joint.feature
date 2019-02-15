@@ -12,10 +12,6 @@ Setup:
   | main | agent | permission |*
   | .ZZA | .ZZB  | joint      |
   | .ZZB | .ZZA  | joint      |
-  And transactions: 
-  | xid | created   | type   | amount | from | to   | purpose |*
-  | 1   | %today-6m | signup |    250 | ctty | .ZZA | signup  |
-  | 2   | %today-6m | signup |    250 | ctty | .ZZB | signup  |
   Then balances:
   | uid  | balance |*
   | ctty |       0 |

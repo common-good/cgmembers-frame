@@ -16,7 +16,7 @@ use CG\Web as w;
 
 global $base_path;
 define('BASE_PATH', $base_path);
-define('T_BALANCE_FLDS', 'uid balance floor rewards savingsAdd saveWeekly minimum');
+define('T_BALANCE_FLDS', 'uid balance floor savingsAdd saveWeekly minimum');
 define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account initiator initiatorAgent');
 
 /**
@@ -156,6 +156,7 @@ function doAccount($info = []) {
 
   if (is_object($info)) $info = (array) $info;
 /**/  if (!is_array($info)) {echo 'not array'; print_r($info); die(trace()); } // keep for now
+//  unset($info['rebate']);
   extract($info); // any user table fields
   $uid0 = @$uid;
   u\setDft($uid, r\Acct::nextId()); // default to first available number
@@ -195,7 +196,7 @@ function doAccount($info = []) {
     if (@$cc2) $cardCode2 = $cc2;
     if (isset($risks)) $risks = getRisks($risks, K_ACCT_RISKS);
 
-    $fixFields = 'rebate fullName legalName name pass email secure community zip country postalAddr cardCode cardCode2 ' . $moneyFields;
+    $fixFields = 'fullName legalName name pass email secure community zip country postalAddr cardCode cardCode2 ' . $moneyFields;
 //  } else $fixFields = '';
 
 //  if (isset($flags) and isset($acctType) and $acctType !== CO_PERSONAL and $acctType != 'personal') $flags .= ',co';

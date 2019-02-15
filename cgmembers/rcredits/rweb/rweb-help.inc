@@ -39,6 +39,17 @@ function rawHelp($i, $tag = '', &$args = '') {
 X
   , compact('_aPage', '_aInfo', 'username', 'site'));
   
+  $_cashflow = t(<<< X
+    <p>As a %PROJECT Community you and other members decide together when to spend, grant, lend, and/or invest some of the US Dollars members have put into their %PROJECT accounts, which are held in a Community Fund Dollar Pool in a bank.</p>
+    
+    <p>Your %PROJECT Community must take care to keep enough money in the Community Dollar Pool to cover requests by members to move funds to their bank account, trading some of their %RCREDITS for US Dollars.</p>
+    
+    <p>If you and your community misjudge and members transfer large amounts, all at once, from their %PROJECT account to their bank account and/or transfer much less than usual from their bank account to their %PROJECT account, the amount in the community’s Dollar Pool becomes less and less. Then at some point when a member requests a transfer to their bank account, there might not be enough Dollars left to complete that request until more US Dollars come in. We call this a cash crunch.</p>
+
+    <p>Backing Promises from members assure that additional Dollars are always available within 7 days for participants to transfer to their bank account, allowing for continued smooth operations even in the unlikely event of a cash crunch.</p>
+X
+  );
+  
   //Help is also available for the <a href="%BASE_URL/help/sms">Text Messaging Interface</a>.
   $back = '<p>' . 
   w\backButton() . '</p>';
@@ -62,8 +73,8 @@ X
   if ($i == 'other') return t(<<< X
     <h2>Need Help Signing In?</h2>
     <p>If your username and password aren't working, no worries. Just click "<%aForgot>Forgot it</a>" here or on the sign-in page, to get an email for choosing a new password.</p>
-    <h2>About %RCREDITS&reg;</h2>
-    <p>%RCREDITS is a credits/debit card and payment system to support the common good. It is also a %PROJECT Economics Toolkit, to help you and people everywhere create a democratic, community-centered economic system that puts people and planet first -- one community at a time.</p>
+    <h2>About %PROJECT&reg;</h2>
+    <p>%PROJECT is a credit/debit card and payment system to support the common good. It is also a %PROJECT Economics Toolkit, to help you and people everywhere create a democratic, community-centered economic system that puts people and planet first -- one community at a time.</p>
     <p>We take transparency seriously &mdash; for true democratic control of our local economy we have to be able to see what's going on. Even if you are not a member, you can see what's happening in the %PROJECT economy graphically on the <%aCtty>Community page</a>.</p>
     <p>The <%aAgree>%PROJECT Agreement</a> is at the heart of the %PROJECT system. It is the promise we make together to accept %RCREDITS that gives them value.</p>
     <p>Participation in %PROJECT is by invitation. Ask a friend to invite you or <%aPromo>request an invitation here</a> and we will let you know when the %PROJECT Economy comes to your community.</p>
@@ -151,15 +162,15 @@ X
     );
 
   if ($i == 'issuing-credits') return t(<<< X
-    <p>%RCREDITS are a type of credit. Like any medium of exchange, they represent value. They make it possible for us to trade goods and services with each other in our community, without having to trade something directly with whoever has what we want, and without having to give them something of precisely the same value ("barter"). The medium of exchange lets us give any amount of our goods or services to any participant in the economy, then receive the same value of goods or services from some other participant(s). If everyone both buys and sells, the credits move through the community in interconnected circles of exchange.</p>
-    <p>From the start, %RCREDITS are issued as a one-to-one stand-in for US Dollars.</p>
-    <p>Once %RCREDITS become well-established and popular in a community, we can also issue them together, with careful planning, as grants, zero-interest loans, equity investments, and incentives for doing the right thing. Together we can fund whatever enterprises and activities we decide would be best -- for our community, for communities elsewhere, and for the world.</p>
+    <p>%RCREDITS is a type of credit. Like any medium of exchange, it represents value. %RCREDITS makes it possible for us to trade goods and services with each other in our community, without having to trade something directly with whoever has what we want, and without having to give them something of precisely the same value ("barter"). The medium of exchange lets us give any amount of our goods or services to any participant in the economy, then receive the same value of goods or services from some other participant(s). If everyone both buys and sells, the credits move through the community in interconnected circles of exchange.</p>
+    <p>From the start, %RCREDITS is issued as a one-to-one stand-in for US Dollars.</p>
+    <p>Once %RCREDITS becomes well-established and popular in a community, we can also issue it together, with careful planning, as grants, zero-interest loans, equity investments, and incentives for doing the right thing. Together we can fund whatever enterprises and activities we decide would be best -- for our community, for communities elsewhere, and for the world.</p>
     <p>Issuing %RCREDITS is a community responsibility. This is the key to creating a %PROJECT Economy. We must issue as much credit as we need, to fund our priorities -- but no more than the value we as a community are capable of producing.</p>
 X
   ) . $back;
   
   if ($i == 'common-good-community') return t(<<< X
-    <p>The purpose of the %PROJECT system is to create and fund community-centered participatory democracy. In a %PROJECT Community* you decide together how many %RCREDITS to issue (within safe limits) and what to fund with them.</p>
+    <p>The purpose of the %PROJECT system is to create and fund community-centered participatory democracy. In a %PROJECT Community* you decide together how much %RCREDITS to issue (within safe limits) and what to fund with it.</p>
     
     <p>A %PROJECT Community is in "Good Standing" when it is issuing %RCREDITS responsibly, so they accurately represent the potential of its members to produce corresponding goods and services in the short term. A %PROJECT Community may lose its good standing if it runs a trade deficit with other %PROJECT Communities and fails to redeem it in a timely manner. %PROJECT staff and the other %PROJECT Communities will provide ongoing feedback, to prevent this from happening accidentally.</p>
     <hr class="narrow">
@@ -167,31 +178,57 @@ X
 X
   , '_aClearness', atag('https://docs.google.com/document/d/1-lBTNHTxIPrTSrIK18ZdbcMeEPS5g5jFhST34VGkR8E')) . $back;
   
-  if ($i == 'cashflow') return t(<<< X
-    <p>As a %PROJECT Community you and other members decide together when to spend, grant, lend, and/or invest some of the US Dollars members have put into their %PROJECT accounts, which are held in a Community Fund Dollar Pool in a bank.</p>
-    
-    <p>Your %PROJECT Community must take care to keep enough money in the Community Dollar Pool to cover requests by members to <%aCashout>move funds to their bank account</a>, trading some of their %RCREDITS for US Dollars.</p>
-    
-    <p>If you misjudge and use too much of the Community's Dollar Pool, you will have a short-term cash flow challenge until more US Dollars come in. The "<%aBack>backing</a>" clause in the %PROJECT Agreement provides stability, so your %PROJECT Community can handle such challenges smoothly.</p>
-X
-  , '_aCashout _aBack', atag('/cashing-out'), atag('/backing-common-good-credits')) . $back;
+  if ($i == 'cashflow') return $_cashflow . $back;
 
+//  <p>Like the Federal Reserve's backing for US Dollars held as bank deposits, backing for %RCREDITS helps prevent unfounded fears from causing a "<%aCrunch>run on the bank</a>". All members agree to back %RCREDITS so your %PROJECT Community can continue to run smoothly.</p>
+  
   if ($i == 'backing-common-good-credits') return t(<<< X
-    <p>To ensure that %RCREDITS maintain their value, you (and every other member) agree to accept however many you typically spend and/or receive in a month, even if your %PROJECT Community is unable to redeem them immediately for US Dollars.</p>
+    <h4>What is "backing"?</h4>
 
-    <p>Like the Federal Reserve's backing for US Dollars held as bank deposits, backing for %RCREDITS helps prevent unfounded fears from causing a "<%aCrunch>run on the bank</a>". All members agree to back %RCREDITS so your %PROJECT Community can continue to run smoothly.</p>
+    <p>Backing [a %PROJECT Community] is a promise, made by supportive members and member organizations one year at a time, to buy additional %PROJECT credit in the event of a cash crunch or termination of the %PROJECT Community. These promises give you the security of knowing your %PROJECT credit is backed by Dollars held in the Dollar Pool and/or by promises, helping prevent the sort of panic that can lead to a cash crunch. Backing Promises are a key component of taking responsibility and control of our own local economy.</p>
+
+    <p>The promise you make in the %PROJECT Agreement is also a sort of Backing Promise. When you pay someone more than is in your %PROJECT account balance, that extra %PROJECT credit is backed by your promise to bring your balance back up to zero or more within 30 days.</p>
+
+    <!--p>What fraction of my %PROJECT credit is backed by Dollars in the Dollar Pool? Click the button below to see the figures for each %PROJECT Community.</p>
+
+    <h4>Backing Percentages</h4-->
+
+    <h4>What is a cash crunch?</h4>
+
+    %cashflow
+
+    <h4>What happens if the amount of backing goes down too far?</h4>
+
+    <p>Whatever permanent expenditures your %PROJECT Community makes (such as grants, social dividends, etc.), beyond whatever donations it has received, that’s how much is not backed by Dollars in the Dollar Pool, so that’s how much needs to be backed by Backing Promises. </p>
+
+    <p>If you make such permanent expenditures together, then if someday members of your %PROJECT Community reduce their backing to the point your %PROJECT credit is no longer adequately backed, the most likely result is that your %PROJECT System would evolve or roll over into some other system. But if your %PROJECT Community ends, without any replacement, here’s how that would go:</p>
+
+    <p>The amount of backing can only go down at first by about 0.3% per day, because Backing Promises do not end all at the same time. It would take a whole year for the backing to go to zero, if every single participant decided not to renew their commitment. This pace would give you and your %PROJECT Community about seven and a half months to search for solutions before the system would need to be shut down.</p>
+
+    <p>For example, suppose you and your %PROJECT Community follow the recommended policy and make no permanent expenditures beyond what would be 200% backed by members. And suppose you (collectively) choose to set 125% as the absolute minimum backing. In the event your collective backing commitment declines from 200% to a mere 125%, your Backing Promise becomes a charitable contribution. All your other %PROJECT credit would then be exchanged automatically for Dollars (for example by transferring it to your bank account). Any small balance left in the Dollar Pool (because of more than 100% backing) would then be returned to the backer(s) who gave the most. And the system would end. </p>
+
+    <p>As long as most participants honor their Backing Promise, only the amount you choose for your Backing Promise is at risk.</p>
 X
-  , '_aCrunch', atag('/cashflow')) . $back;
+  , compact('_cashflow')) . $back;
 
+  if ($i == 'backing-example') return t(<<< X
+    <p>Suppose you promise $100 in backing. Then if there is a cash crunch within one year, you would immediately transfer $100 from your bank account to your Common Good account. Then in the unlikely event your Common Good Community ends instead of recovering, your $100 becomes a donation for all the wonderful things you funded together.</p>
+    
+    <p>The Common Good System flourishes only as much as we commit to it. How important is it to you? How much do you and your community stand to gain over the next 3 years, for example?</p>
+
+    <p>For businesses, we can easily predict how much will be saved in credit card fees and the value of increased customer loyalty. But for individuals (and also for businesses), the value of Common Good investments and grants and greater local control of our destiny may be immeasurable.</p>
+X
+  ) . $back;
+  
   if ($i == 'cashing-out') return t(<<< X
-    <p>%RCREDITS have value and act like money because we agree to accept them as payment for our good and services, so they move from member to member to member as a token of exchange. When someone pays you in %RCREDITS, you can spend those funds &mdash; OR you can "cash them out" by transferring them to your bank account or exchanging them for US Dollars.</p>
-    <p>You can cash out %RCREDITS that someone <i>pays</i> you, but any %RCREDITS you borrow, using your credit line, must continue to circulate within the %PROJECT system. You cannot cash them out &mdash; you can only spend them.</p>
+    <p>%RCREDITS has value and acts like money because we agree to accept it as payment for our good and services, so it moves from member to member to member as a token of exchange. When someone pays you in %RCREDITS, you can spend those funds &mdash; OR you can "cash it out" by transferring it to your bank account or exchanging it for US Dollars.</p>
+    <p>You can cash out %RCREDITS that someone <i>pays</i> you, but any %RCREDITS you borrow, using your credit line, must continue to circulate within the %PROJECT system. You cannot cash it out &mdash; you can only spend it.</p>
     <p>You can help keep the %PROJECT system healthy by maintaining a positive balance most of the time.</p>  
 X
 , '_aReserve', atag('/credit-reserve')) . $back;
 
 /*  if ($i == 'credit-reserve') return t(<<< X
-    <p><b>Background.</b> It is crucial to the success of the %PROJECT system that most members maintain a positive account balance, so there are some %RCREDITS to circulate in the community. While the system is small, it is a bit frail in that regard, so we need to be extra careful to make sure there is no "<%aCrunch>cash flow crunch</a>" at least until we are ready to handle it as a strong, well-functioning democratic %PROJECT community.</p>
+    <p><b>Background.</b> It is crucial to the success of the %PROJECT system that most members maintain a positive account balance, so there is some %RCREDITS to circulate in the community. While the system is small, it is a bit frail in that regard, so we need to be extra careful to make sure there is no "<%aCrunch>cash flow crunch</a>" at least until we are ready to handle it as a strong, well-functioning democratic %PROJECT community.</p>
 
     <p><b>Your Credit Reserve.</b> So we divide your account into two pieces: your Balance and your Credit Reserve. Your incentive rewards go into the Credit Reserve, to encourage you to keep them in the system until you need them. This is like a traditional reserve credit line that kicks in whenever you would otherwise overdraw your checking account &mdash; except there are no fees here. You can spend those reserved funds any time, simply by letting your Balance go negative.</p>
 
@@ -284,9 +321,42 @@ X
   ) . $back;
 
   if ($i == 'agreement') return t(<<< X
-    <p>The %PROJECT Agreement is at the heart of the the %PROJECT system. It is our agreement to accept %RCREDITS from each other that gives them value. Please read each section carefully and click the checkboxes to indicate your agreement. For more specific information, click the hyperlinks in the text.</p>
+    <a name="Member"></a>
+    <a name="Member-Organization"></a>
+    <a name="CGC"></a>
+    <p>The %PROJECT Agreement is at the heart of the the %PROJECT system. It is our agreement to accept %PROJECT payments from each other that assures the value of %RCREDITS.</p>
+
+    <p>A <b>Member</b> is any individual person who has signed this Agreement and has an active %PROJECT account.</p>
+
+    <p>A <b>Member Organization</b> is any group, organization, or business that has signed this Agreement and has an active %PROJECT account.</p>
+
+    <a name="Dollar-Pool"></a>
+    <p>A <b>%PROJECT Community</b> is a group of Members and Member Organizations in a particular geographic region, defined (by the Members there) by a set of zip codes. The purpose of the %PROJECT system is to create and fund community-centered participatory democracy. In a %PROJECT Community you decide together how much %PROJECT credit to issue (within safe limits) and what to fund with it.</p>
+    
+    <p>There are no specific requirements for a group of members to become a sovereign %PROJECT Community. But <%aClearness>these Clearness Questions</a> will help you get ready for that responsibility.</p>
+
+    <a name="Backing"></a>
+    <p><b>Dollar Pool.</b> A bank account, owned by your %PROJECT Community. When you buy %PROJECT credit by transferring funds from your bank account to your %PROJECT account, your Dollars go into the Dollar Pool and the system gives you that amount of %PROJECT credit. You can then use your credit to buy something from a participating business by presenting your card (or your phone if you have our free "CGPay" smartphone app). You can also pay someone online by clicking a "Pay With %PROJECT" button on a website. Or sign in at CommonGood.earth and click "Pay" on the menu. Meanwhile, just as a bank can invest the money in your checking account, you and your %PROJECT Community can use the money in the Dollar Pool to invest in worthwhile projects for the community and the common good.</p>
+
+    <p><b>Backed.</b> Backing [a %PROJECT Community] is a promise, made by supportive members and member organizations one year at a time, to buy additional %PROJECT credit in the event of a cash crunch or termination of the %PROJECT Community. These promises give you the security of knowing your %PROJECT credit is backed by Dollars held in the Dollar Pool and/or by promises, helping prevent the sort of panic that can lead to a cash crunch. Backing Promises are a key component of taking responsibility and control of our own local economy.</p>
+
+    <a name="Without-Limit"></a>
+    <p>The promise you make in the %PROJECT Agreement is also a sort of Backing Promise. When you pay someone more than is in your %PROJECT account balance, that extra %PROJECT credit is backed by your promise to bring your balance back up to zero or more within 30 days.</p>
+
+    <p><b>Without limit or surcharge.</b> As part of the %PROJECT Agreement, you promise to accept %PROJECT payments "without limit or surcharge".</p>
+
+    <a name="Disputes"></a>
+    <p><i>"Without limit"</i> means you will not tell a customer they have to use cash, credit card, or check to pay part of what they owe you. </p>
+
+    <a name="Participation"></a>
+    <p><i>"Without surcharge"</i> means you will charge the same amount as for other payment methods, unless you choose to give a discount for %PROJECT payments.</p>
+
+    <p><b>Disputes.</b> We expect Members will generally resolve disputes amicably, but in the event a more formal resolution is needed, you agree to follow <%aDisputes>this process</a>.</p>
+    
+    <p>You will have the <b>opportunity to participate</b> in any decision to change the %PROJECT Agreement. This means you will receive an email invitation to attend discussions of any proposed change. And you will have an equal vote with all other Members on any such proposal that comes to a vote. You and other Members have a responsibility to all Members of your %PROJECT Community to encourage participation, to value the wisdom of each individual, and to be as inclusive as possible in all stages of the democratic process.</p>
+    
 X
-  );
+  , '_aClearness _aDisputes', atag('https://docs.google.com/document/d/1-lBTNHTxIPrTSrIK18ZdbcMeEPS5g5jFhST34VGkR8E'), atag('/help/dispute-resolution-process')) . $back;
 
   if ($i == 'donate') return t(<<< X
     <p>Your donation helps fund administration and promotion of the %PROJECT system during the pilot phase. It is also a formal "sealing" of your signature on the %PROJECT Agreement.</p>
@@ -342,10 +412,10 @@ X
   if ($i == 'dollar-pool') return w\chartFrame('funds') . t(<<< X
     <p>There are two kinds of funds in the %PROJECT system:</p>
     <ul>
-      <li><b class="cgcredits">%RCREDITS</b>. These are the funds we issue together as a community, by agreeing to accept them as payment for our goods and services (or labor). We issue %RCREDITS in two ways: (1) in exchange for US Dollars AND (2) by allowing member accounts to have a negative balance. The orange area shows the total negative balances. The amount of %RCREDITS is exactly equal to the Dollar Pool amount (blue line) plus the amount of negative balances.</li>
+      <li><b class="cgcredits">%RCREDITS</b>. This is the credit ("money") we issue together as a community, by agreeing to accept it as payment for our goods and services (or labor). We issue %RCREDITS in two ways: (1) in exchange for US Dollars AND (2) by allowing member accounts to have a negative balance. The orange area shows the total negative balances. The amount of %RCREDITS is exactly equal to the Dollar Pool amount (blue line) plus the amount of negative balances.</li>
       <li><p><b class="usd">US Dollars</b>. When you transfer funds from bank account to your %PROJECT Account, that money goes into the %PROJECT Community Fund Dollar Pool &mdash; a bank account owned by the community. You get an equal amount of %RCREDITS to use instead, to buy something from a participating business.</p>
       
-      <p>The business can then use those %RCREDITS to pay its employees and suppliers, those suppliers pay their employees and suppliers, then all those employees become customers again and use those same %RCREDITS to buy things again from participating businesses. The credits go around and around.</p>
+      <p>The business can then use that %RCREDITS to pay its employees and suppliers, those suppliers pay their employees and suppliers, then all those employees become customers again and use that same %RCREDITS to buy things again from participating businesses. The credit goes around and around.</p>
 
       <p>Meanwhile, the Dollars you put in have <i>not</i> been used for purchases, so as participation grows the Dollar Pool accumulates more and more US Dollars, waiting to be used. From time to time when someone can't easily spend all their credits within the %PROJECT System, they trade some back in for US Dollars from the Dollar Pool. So the amount in the Dollar Pool goes up and down a little as it grows.</p>
       
@@ -411,9 +481,9 @@ Incentives are a sort of diffuse grant. **Made-up Examples:** Get a 10% rebate o
 
 **Arguments for MORE than $20,000.** Our Dollar Pool has grown steadily since the end of 2015, with no dips of more than $8,000, before resuming the steady climb. If that trend continues, we could use as much as $93,000 this year ($101,000 minus $8,000).
 ![CGG July 2018 Dollar Pool](%BASE_URL/rcredits/images/rvote/CGG-2018-07-dollar-pool.png)
-**Arguments for LESS than $20,000.** The red line on the chart shows the total in the top 10 Common Good accounts: $94,000. If all 10 at once try to transfer their Common Good Credits to their bank accounts it would be like a “run on the bank” and some people would have to wait for more money to come in, before they could take money out.
+**Arguments for LESS than $20,000.** The red line on the chart shows the total in the top 10 Common Good accounts: $94,000. If all 10 at once try to transfer their Common Good Credits to their bank accounts it would be like a "run on the bank" and some people would have to wait for more money to come in, before they could take money out.
 
-Similarly, the yellow line on the chart shows the total amount members are saving to spend later**: $84,000. If everyone at once tried to transfer these savings to a bank account, it would be like a “run on the bank” and some people would have to wait before they could take money out.
+Similarly, the yellow line on the chart shows the total amount members are saving to spend later**: $84,000. If everyone at once tried to transfer these savings to a bank account, it would be like a "run on the bank" and some people would have to wait before they could take money out.
 
 * ** The amount members are saving is the amount NOT used last month for transactions.
 

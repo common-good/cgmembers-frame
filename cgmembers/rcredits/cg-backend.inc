@@ -49,6 +49,8 @@ EOF;
     list ($fromBank, $toBank) = [t('from bank'), t('to bank')];
     $txFields = "t.xid, amount, flags, IF($iPay, -amount, 0) AS fromYou, IF($iPay, 0, amount) AS toYou, uid, type, t.created, $initiator IN (:uid, :jid) AS byMe, t.:IS_DISPUTED AS disputed, $iGet AS toMe, description, agentUid AS agent, acctTid AS tid, goods, (goods=:FOR_SHARE) AS sharing, channel";
     $usdFields = "txid AS xid, amount, 0 AS flags, IF(:DEPOSIT_SQL, 0, -amount) AS fromYou, IF(:DEPOSIT_SQL, amount, 0) AS toYou, uid, :TX_BANK AS type, completed AS created, TRUE AS byMe, FALSE AS disputed, IF(:DEPOSIT_SQL, 1, 0) AS toMe, IF(:DEPOSIT_SQL, '$fromBank', '$toBank') AS description, '' AS agent, txid AS tid, :FOR_USD AS goods, 0 AS sharing, channel";
+    /* $txFields = "xid, amount, t1.flags, IF($iPay, amount, 0) AS fromyou, IF($iPay, 0, amount) AS toyou, payer, payee, type, t1.created, t1.data, $iPay XOR t1.:IS_TAKING AS byMe, t1.:IS_ROUNDUP AS roundup, t1.:IS_DISPUTED AS disputed, $iGet AS toMe, IF($iPay, payerFor, payeeFor) AS description, IF($iPay, payerAgent, payeeAgent) AS agent, IF(:uid<0, xid, IF($iPay, payerTid, payeeTid)) AS tid, goods, (goods=:FOR_SHARE) AS sharing, channel"; */
+    /* $usdFields = "txid AS xid, amount, 0 AS flags, IF(:DEPOSIT_SQL, 0, -amount) AS fromyou, IF(:DEPOSIT_SQL, amount, 0) AS toyou, 0 AS payer, payee, :TX_BANK AS type, completed AS created, '' AS data, TRUE AS byMe, FALSE AS roundup, FALSE AS disputed, IF(:DEPOSIT_SQL, 1, 0) AS toMe, IF(:DEPOSIT_SQL, '$fromBank', '$toBank') AS description, '' AS agent, txid AS tid, :FOR_USD AS goods, 0 AS sharing, channel"; */
     $where = "created BETWEEN :starting AND :ending AND amount<>0 AND type>=0 AND ($iPay XOR $iGet)"; // omit invisible transactions
 
     $sql = <<<EOF
@@ -126,8 +128,9 @@ function get1099b($payee, $year = NULL) {
     $sql = <<<EOF
       SELECT created, amount, payer, payeeFor AS `for`
       FROM r_entries e JOIN r_tx_hdrs t WHERE e.uid=:payee AND NOT EXISTS (SELECT xid from r_tx_hdrs r where r.reverses=t.xid) AND t.reverses IS NULL AND created BETWEEN $start AND $end 
-             AND t.type NOT IN (:TX_REWARDS)
              ORDER BY created
+      /* FROM r_txs WHERE payee=:payee AND NOT :IS_UNDONE AND NOT :IS_UNDOES AND created BETWEEN $start AND $end  */
+      /* ORDER BY created */
 EOF;
     //      AND (goods=:FOR_GOODS OR type<>:TX_TRANSFER)
     //      AND (goods OR (type NOT IN (:TX_TRANSFER, :TX_REFUND)))
@@ -619,8 +622,9 @@ function invoice($a1, $a2, $amount, $purpose = NULL, $extra = []) {
   global $channel;
   
   u\EXPECT(compact(ray('a1 a2 amount purpose')), 'acct acct float string');
-  extract(just('goods status', $extra));
-  foreach (justNOT("goods status shid coupon coupid force", $extra) as $k => $v) {
+  $ks = 'goods status';
+  extract(just('$ks', $extra));
+  foreach (justNOT("goods status shid coupon coupid force inv", $extra) as $k => $v) {
     u\setBit($flags, $k, $v);
     unset($extra[$k]); // don't leave bits in extras (data field)
   }
@@ -820,7 +824,6 @@ function creditInfo($args = []) {
     SELECT 
     SUM(IF(amount > 0, amount, 0)) AS `in`,
     SUM(IF(amount < 0, -amount, 0)) AS `out`, 
-    0 AS rewards,
     IF(uid=:CG_ROUNDUPS_UID,-amount,0) AS roundups,
     0 AS partRounds,
     IF(uid=:CG_ROUNDUPS_UID,-amount,0) AS roundupsPaid,
@@ -831,7 +834,7 @@ function creditInfo($args = []) {
     WHERE (e.uid IN (:uid, :jid)) AND t.created<=:asof
 EOF;
   
-  $sums = isset($pending) ? ray('in out rewards share xfees xin', 0, 0, 0, 0, 0, 0) : db\q($sql, $subs)->fetchAssoc();
+  $sums = isset($pending) ? ray('in out xfees xin', 0, 0, 0, 0) : db\q($sql, $subs)->fetchAssoc();
 
   /* $where = @$pending ? 'created<=:asof AND NOT completed' : 'completed AND completed<=:asof'; */
   /* $sql = "SELECT SUM(amount) AS bank FROM r_usd t WHERE $isPayee AND amount<>0 AND $where"; */
@@ -846,8 +849,8 @@ EOF;
   //  $in -= $xin; $out -= $xin;
   $outProper = $out;
   $inProper = $in; // - $rewards;
-  if ($uid == CGID) $inProper -= $share; else $outProper += $share;
-  $rewards += $share; // share is negative for everyone but CGF
+//  if ($uid == CGID) $inProper -= $share; else $outProper += $share;
+//  $rewards += $share; // share is negative for everyone but CGF
   
   // figure savings
   if ($asof == $asof0) {
@@ -860,10 +863,10 @@ EOF;
       //      $savings += $addOLD;
     }
   }
-  //  $balance = $r - $savings;
-  $savings = $rewards; // tentative savings before additions ( = oldSavings - oldSavingsAdd) (used in transaction summary)
+//  $balance = $r - $savings;
+//  $savings = $rewards; // tentative savings before additions ( = oldSavings - oldSavingsAdd) (used in transaction summary)
   
-  $resultKeys = 'in out rewards share refunds fees xfees xin inProper outProper balance r bank savings roundups partRounds roundupsPaid';
+  $resultKeys = 'in out refunds fees xfees xin inProper outProper balance r bank roundups partRounds roundupsPaid';
   $result = compact(ray($resultKeys));
   
   foreach ($result as $k => $v) $result[$k] = $v = round($v, 2);

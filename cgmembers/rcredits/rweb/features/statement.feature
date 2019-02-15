@@ -5,10 +5,10 @@ SO I have a formal record of them.
 
 Setup:
   Given members:
-  | uid  | fullName   | floor | acctType    | flags | created    | rebate |*
-  | .ZZA | Abe One    | -100  | personal    | ok    | %today-15m |      5 |
-  | .ZZB | Bea Two    | -200  | personal    | ok,co | %today-15m |     10 |
-  | .ZZC | Corner Pub | -300  | corporation | ok,co | %today-15m |     10 |
+  | uid  | fullName   | floor | acctType    | flags | created    |*
+  | .ZZA | Abe One    | -100  | personal    | ok    | %today-15m |
+  | .ZZB | Bea Two    | -200  | personal    | ok,co | %today-15m |
+  | .ZZC | Corner Pub | -300  | corporation | ok,co | %today-15m |
   And members have:
   | uid  | fullName |*
   | ctty | ZZrCred  |
@@ -33,9 +33,6 @@ Setup:
   | .ZZC |    3000 |
   Given transactions: 
   | xid| created   | type     | amount | from | to   | purpose | taking |*
-  | 1  | %lastm+1d | signup   |    250 | ctty | .ZZA | signup  | 0      |
-  | 2  | %lastm+2d | signup   |    250 | ctty | .ZZB | signup  | 0      |
-  | 3  | %lastm+2d | signup   |    250 | ctty | .ZZC | signup  | 0      |
   | 4  | %lastm+3d | transfer |     10 | .ZZB | .ZZA | cash E  | 0      |
   | 5  | %lastm+4d | transfer |   1100 | .ZZC | .ZZA | usd F   | 1      |
   | 6  | %lastm+5d | transfer |    240 | .ZZA | .ZZB | what G  | 0      |
@@ -59,12 +56,12 @@ Scenario: A member looks at a statement for previous month
   And with:
   | Tx   | Date       | Name       | Purpose  | Amount  |
 #  | 1    | %lastmd+1d | ZZrCred    | signup  |     0.00 |
-  | 2    | %lastmd+3d | Bea Two    | cash E  |    10.00 |
-  | 3    | %lastmd+4d | Corner Pub | usd F   | 1,100.00 |
-  | 4    | %lastmd+5d | Bea Two    | what G  |  -240.00 |
+  | 1    | %lastmd+3d | Bea Two    | cash E  |    10.00 |
+  | 2    | %lastmd+4d | Corner Pub | usd F   | 1,100.00 |
+  | 3    | %lastmd+5d | Bea Two    | what G  |  -240.00 |
   | 1004 | %lastmd+5d | --         | from bank |  11.00 |
-  | 5    | %lastmd+7d | Corner Pub | this Q  |  -120.00 |
-  | 6    | %lastmd+8d | Bea Two    | cash V  |  -100.00 |
+  | 4    | %lastmd+7d | Corner Pub | this Q  |  -120.00 |
+  | 5    | %lastmd+8d | Bea Two    | cash V  |  -100.00 |
   | 1005 | %lastmd+8d | --         | to bank |   -22.00 |
   | 1006 | %lastmd+9d | --         | to bank |   -33.00 |
   And without:

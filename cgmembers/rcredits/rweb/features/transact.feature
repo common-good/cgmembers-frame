@@ -17,11 +17,6 @@ Setup:
   | .ZZB | .ZZA  | read       |
   | .ZZC | .ZZB  | buy        |
   | .ZZC | .ZZA  | sell       |
-  And transactions: 
-  | xid | created   | type   | amount | from | to   | purpose | taking |*
-  |   1 | %today-6m | signup |    250 | ctty | .ZZA | signup  | 0      |
-  |   2 | %today-6m | signup |    250 | ctty | .ZZB | signup  | 0      |
-  |   3 | %today-6m | signup |    250 | ctty | .ZZC | signup  | 0      |
   Then balances:
   | uid  | balance |*
   | .ZZA |       0 |
@@ -96,7 +91,7 @@ Scenario: A member confirms request to pay another member
   | %today  | Bea Two  | Abe One    | $100   | labor        |
   And transactions:
   | xid | created | type     | amount | from  | to   | purpose      | taking |*
-  |   4 | %today  | transfer |    100 | .ZZA  | .ZZB | labor        | 0      |
+  |   1 | %today  | transfer |    100 | .ZZA  | .ZZB | labor        | 0      |
   And balances:
   | uid  | balance |*
   | .ZZA |    -100 |
@@ -112,7 +107,7 @@ Scenario: A member confirms request to pay another member a lot
   | pay | Our Pub | %R_MAX_AMOUNT | %FOR_GOODS     | food    |
   Then transactions:
   | xid | created | type     | amount        | from  | to   | purpose      | taking |*
-  |   4 | %today  | transfer | %R_MAX_AMOUNT | .ZZB  | .ZZC | food         | 0      |
+  |   1 | %today  | transfer | %R_MAX_AMOUNT | .ZZB  | .ZZC | food         | 0      |
   
 Scenario: A member confirms request to pay a member company
   Given next DO code is "whatever"
@@ -131,7 +126,7 @@ Scenario: A member confirms request to pay a member company
   | Physical address: | 1 A St., Atown, AK 01000 |
   And transactions:
   | xid | created | type     | amount | from  | to   | purpose      | taking |*
-  |   4 | %today  | transfer |    100 | .ZZA  | .ZZC | stuff        | 0      |
+  |   1 | %today  | transfer |    100 | .ZZA  | .ZZC | stuff        | 0      |
   And balances:
   | uid  | balance |*
   | .ZZA |    -100 |
@@ -225,7 +220,7 @@ Scenario: A member pays another member repeatedly
   | %today  | Bea Two  | Abe One    | $100   | labor        |
   And transactions:
   | xid | created | type     | amount | from  | to   | purpose      | taking |*
-  |   4 | %today  | transfer |    100 | .ZZA  | .ZZB | labor        | 0      |
+  |   1 | %today  | transfer |    100 | .ZZA  | .ZZB | labor        | 0      |
   And these "recurs":
   | id | payer | payee | amount | period | created | ended |*
   |  1 | .ZZA  | .ZZB  |    100 |      W | %today  |     0 |

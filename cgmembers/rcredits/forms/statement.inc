@@ -28,12 +28,13 @@ function statement($period = '') {
   extract(just('frombank fromyou toyou reward roundups', $tot));
 //  list ($fromyou, $toyou) = $amount < 0 ? [-$amount, 0] : [0, $amount];
   $bal0 = $info0->balance - $info0->partRounds; // balance BEFORE start of this period
-  list ($savings0, $savings9) = [$info0->savings, $info->savings];
-  $dSavings = round($savings9 - $reward - $savings0, 2);
-  list ($toSavings, $fromSavings) = u\order($dSavings >= 0, abs($dSavings), 0);
+//  list ($savings0, $savings9) = [$info0->savings, $info->savings];
+//  $dSavings = round($savings9 - $reward - $savings0, 2);
+//  list ($toSavings, $fromSavings) = u\order($dSavings >= 0, abs($dSavings), 0);
   // $fromyou += $toSavings;
   // $toyou += $fromSavings;
-  list ($bal9, $rewardsEver) = array($info->balance - $info->partRounds, $info->rewards);
+//  list ($bal9, $rewardsEver) = array($info->balance - $info->partRounds, $info->rewards);
+  list ($bal9) = array($info->balance - $info->partRounds);
 
   $committed = $mya->committed;
   list ($avg) = r\averageBalance($mya->id, $mya->created, $end, TRUE);
@@ -75,17 +76,17 @@ function statement($period = '') {
   $pdf->colHeads($fields[1]);
 
   list ($plus, $minus, $equals, $space) = array('+', '-', '=', ' ');
-  list ($total0, $underline9, $total9) = [$bal0 + $savings0, str_repeat('-', 17), $bal9 + $savings9];
+  list ($total0, $underline9, $total9) = [$bal0, str_repeat('-', 17), $bal9];
   $underline0 = $underline9;
 
-  $yield = number_format($avg ? round(100 * $rewardsEver / $avg) : 0, 1) . '%';
-  $numFields = ray('total0 bal0 amount frombank fromyou toyou reward bal9 rewardsEver committed savings0 savings9 fromSavings toSavings total9');
+//  $yield = number_format($avg ? round(100 * $rewardsEver / $avg) : 0, 1) . '%';
+  $numFields = ray('total0 bal0 amount frombank fromyou toyou bal9 rewardsEver committed ');
   foreach ($numFields as $one) $$one = number_format(@$$one ?: 0, 2); // ?: is needed because $$one might be null or ''
   
   $pdf->setFontSize(.9 * $size);
   for ($i = 1; $i <= 1; $i++) foreach ($fields[$i] as $one) {
     list ($head, $fldName, $width, $align) = explode('/', "$one/");
-    foreach (ray('fromyou fromSavings reward', 1, 1, 3) as $k => $v) if ($fldName == $k) $$k .= str_repeat(' ', $v); // footnote alignment
+    foreach (ray('fromyou', 1) as $k => $v) if ($fldName == $k) $$k .= str_repeat(' ', $v); // footnote alignment
     $pdf->Cell($width, 0, @$fldName ? @$$fldName : '', '', @$fldName[strlen(@$fldName) - 1] == '9' ? 1 : 0, $align);
   }
   

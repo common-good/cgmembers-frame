@@ -1290,6 +1290,18 @@ function plusMonths($n, $time = '') {
 }
 
 /**
+ * Return the median value in an array
+ */
+function median($ray) {
+  sort($ray);
+  if (!$len = count($ray)) return NULL;
+  $mid = (int) $len / 2;
+  $v = $ray[$mid];
+  $v2 = @$ray[$mid + 1];
+  return (($len & 2) and is_numeric($v) and is_numeric($v2)) ? ($v + $v2) / 2 : $v;
+}
+
+/**
  * XOR a string of bits with a mask
  */
 function strXor($a, $mask) {

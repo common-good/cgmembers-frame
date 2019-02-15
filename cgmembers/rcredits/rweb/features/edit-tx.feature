@@ -5,10 +5,10 @@ SO I can make it right.
 
 Setup:
   Given members:
-  | uid  | fullName   | rebate | flags      |*
-  | .ZZA | Abe One    |      5 | ok,confirmed         |
-  | .ZZB | Bea Two    |     10 | ok,confirmed         |
-  | .ZZC | Corner Pub |     10 | ok,confirmed,co      |
+  | uid  | fullName   | flags      |*
+  | .ZZA | Abe One    | ok,confirmed         |
+  | .ZZB | Bea Two    | ok,confirmed         |
+  | .ZZC | Corner Pub | ok,confirmed,co      |
   And relations:
   | main | agent | num | permission |*
   | .ZZC | .ZZA  |   1 | sell       |

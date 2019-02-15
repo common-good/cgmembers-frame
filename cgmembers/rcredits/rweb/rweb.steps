@@ -42,26 +42,7 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
 /**
  * member (ARG) completes form (ARG) with values: (ARG)
  *
- * in: MAKE bank AMemberMovesCreditToTheBank
- *     MAKE bank AMemberDrawsCreditFromTheBankWithZeroFloor
- *     MAKE bank AMemberDrawsCreditFromTheBankWithAdequateFloor
- *     MAKE bank AMemberMovesTooLittleToTheBank
- *     MAKE bank AMemberMovesTooMuchToTheBank
- *     MAKE bank AMemberTriesToGoBelowTheirMinimum
- *     MAKE bank AMemberAsksToDoTwoTransfersOutInOneDay
- *     MAKE coupons AMemberRedeemsAGiftCoupon
- *     MAKE coupons AMemberRedeemsADiscountCouponForADollarAmount
- *     MAKE flow AMemberOverdrawsWithNotEnoughToDrawOn
- *     MAKE gift AMemberDonates
- *     MAKE gift AMemberMakesARecurringDonation
- *     MAKE gift AMemberMakesANewRecurringDonation
- *     MAKE gift ACompanyMakesARecurringDonation
- *     MAKE gift AMemberDonatesWithInsufficientFunds
- *     MAKE invest AMemberJoinsTheInvestmentClub
- *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
- *     MAKE joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
- *     MAKE membership AMemberSignsInForTheFirstTime
- *     MAKE preferences AMemberChangesPreferences
+ * in: MAKE invest AMemberJoinsTheInvestmentClub
  *     MAKE signin AMemberAsksForANewPasswordForUsername
  *     MAKE signin AMemberAsksForANewPasswordForAccountID
  *     MAKE signin AMemberAsksForANewPasswordForEmail
@@ -70,6 +51,26 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE signin AMemberClicksALinkToResetPassword
  *     MAKE signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     MAKE signin AMemberClicksALinkToResetPasswordForUnknownAccount
+ *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
+ *     MAKE joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
+ *     MAKE gift AMemberDonates
+ *     MAKE gift AMemberMakesARecurringDonation
+ *     MAKE gift AMemberMakesANewRecurringDonation
+ *     MAKE gift ACompanyMakesARecurringDonation
+ *     MAKE gift AMemberDonatesWithInsufficientFunds
+ *     MAKE preferences AMemberChangesPreferences
+ *     MAKE bank AMemberMovesCreditToTheBank
+ *     MAKE bank AMemberDrawsCreditFromTheBankWithZeroFloor
+ *     MAKE bank AMemberDrawsCreditFromTheBankWithAdequateFloor
+ *     MAKE bank AMemberMovesTooLittleToTheBank
+ *     MAKE bank AMemberMovesTooMuchToTheBank
+ *     MAKE bank AMemberTriesToGoBelowTheirMinimum
+ *     MAKE bank AMemberAsksToDoTwoTransfersOutInOneDay
+ *     MAKE membership AMemberSignsInForTheFirstTime
+ *     MAKE coupons AMemberRedeemsAGiftCoupon
+ *     MAKE coupons AMemberRedeemsADiscountCouponForADollarAmount
+ *     MAKE backing AMemberChangesBackingAmount
+ *     MAKE flow AMemberOverdrawsWithNotEnoughToDrawOn
  *     MAKE transact AMemberAsksToChargeAnotherMemberForGoods
  *     MAKE transact AMemberAsksToPayAnotherMemberForGoods
  *     MAKE transact AMemberAsksToPayAnotherMemberForLoanreimbursement
@@ -79,36 +80,34 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
 /**
  * member (ARG) confirms form (ARG) with values: (ARG)
  *
- * in: MAKE company AMemberUpdatesCompanyInfo
- *     MAKE company AMemberGivesABadEmployeeCount
- *     MAKE company AMemberGivesABadGross
- *     MAKE contact AMemberUpdatesContactInfo
- *     MAKE contact AMemberGivesABadPhone
- *     MAKE contact AMemberGivesABadEmail
- *     MAKE contact AMemberUpdatesToADifferentState
- *     MAKE contact AMemberUpdatesToADifferentName
- *     MAKE coupons AMemberRedeemsADiscountCouponForADollarAmount
- *     MAKE flow AMemberDraws
- *     MAKE flow AMemberDrawsAgain
- *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMember
+ * in: MAKE invoice AMemberConfirmsRequestToChargeAnotherMember
  *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
  *     MAKE invoice AMemberDeniesAnInvoice
  *     MAKE invoice AMemberApprovesAnInvoiceWithInsufficientFunds
  *     MAKE invoice AMemberApprovesInvoicesForevermore
  *     MAKE invoice AMemberApprovesAnInvoiceToATrustingCustomer
- *     MAKE joint AMemberRequestsAJointAccount
- *     MAKE membership AMemberSignsInForTheFirstTime
- *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     MAKE signin AMemberSignsInWithUsernameOnTheMemberSite
  *     MAKE signin AMemberSignsInWithAccountIDOnTheMemberSite
  *     MAKE signin AMemberSignsInWithEmailOnTheMemberSite
  *     MAKE signin AMemberTypesTheWrongPassword
  *     MAKE signin AMemberTypesAnUnknownUsernameID
  *     MAKE signin AMemberClicksALinkToResetPassword
+ *     MAKE joint AMemberRequestsAJointAccount
+ *     MAKE membership AMemberSignsInForTheFirstTime
  *     MAKE signupco AMemberRegistersACompany
  *     MAKE signupco AMemberRegistersACompanyWhileManagingAnotherAccount
  *     MAKE signupco AMemberRegistersACompanyHavingGivenCompanyInfo
+ *     MAKE contact AMemberUpdatesContactInfo
+ *     MAKE contact AMemberGivesABadPhone
+ *     MAKE contact AMemberGivesABadEmail
+ *     MAKE contact AMemberUpdatesToADifferentState
+ *     MAKE contact AMemberUpdatesToADifferentName
+ *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
+ *     MAKE coupons AMemberRedeemsADiscountCouponForADollarAmount
+ *     MAKE company AMemberUpdatesCompanyInfo
+ *     MAKE company AMemberGivesABadEmployeeCount
+ *     MAKE company AMemberGivesABadGross
  *     MAKE signup ANewbieVisitsTheRegistrationPageWithAUsedInvite
  *     MAKE signup ANewbieRegistersInWesternMassachusetts
  *     MAKE signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
@@ -125,6 +124,8 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE signup AMemberRegistersWithACompanyWithNoRelation
  *     MAKE signup AMemberRegistersWithABadCompanyPhone
  *     MAKE temp ANewbieRegistersFromElsewhere
+ *     MAKE flow AMemberDraws
+ *     MAKE flow AMemberDrawsAgain
  *     MAKE transact AMemberConfirmsRequestToChargeAnotherMember
  *     MAKE transact AMemberConfirmsRequestToPayAnotherMember
  *     MAKE transact AMemberConfirmsRequestToPayAnotherMemberALot
@@ -171,36 +172,38 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
 /**
  * members: (ARG)
  *
- * in: MAKE bank Setup
+ * in: MAKE invest Setup
+ *     MAKE relations Setup
+ *     MAKE invoice Setup
+ *     MAKE signin Setup
+ *     MAKE signin AMemberAsksForANewPasswordForACompany
  *     MAKE community Setup
- *     MAKE company Setup
- *     TEST company AMemberUpdatesCompanyInfo
+ *     MAKE joint Setup
+ *     MAKE gift Setup
+ *     MAKE scancard Setup
+ *     MAKE preferences Setup
+ *     TEST preferences AMemberChangesPreferences
+ *     MAKE statement Setup
+ *     MAKE edittx Setup
+ *     MAKE transactions Setup
+ *     MAKE download Setup
+ *     MAKE bank Setup
+ *     MAKE membership Setup
+ *     TEST membership AMemberSignsInForTheFirstTime
+ *     MAKE signupco Setup
+ *     TEST signupco AMemberRegistersACompany
  *     MAKE contact Setup
  *     TEST contact AMemberUpdatesContactInfo
  *     TEST contact AMemberUpdatesToADifferentState
  *     TEST contact AMemberUpdatesToADifferentName
- *     MAKE coupons Setup
  *     MAKE custstatement Setup
- *     MAKE download Setup
- *     MAKE edittx Setup
- *     MAKE flow Setup
- *     MAKE gift Setup
- *     MAKE invest Setup
- *     MAKE invoice Setup
- *     MAKE joint Setup
- *     MAKE membership Setup
- *     TEST membership AMemberSignsInForTheFirstTime
  *     MAKE partnersignup Setup
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     MAKE partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
- *     MAKE preferences Setup
- *     TEST preferences AMemberChangesPreferences
- *     MAKE relations Setup
- *     MAKE scancard Setup
- *     MAKE signin Setup
- *     MAKE signin AMemberAsksForANewPasswordForACompany
- *     MAKE signupco Setup
- *     TEST signupco AMemberRegistersACompany
+ *     MAKE coupons Setup
+ *     MAKE summary Setup
+ *     MAKE company Setup
+ *     TEST company AMemberUpdatesCompanyInfo
  *     MAKE signup Setup
  *     TEST signup ANewbieRegistersInWesternMassachusetts
  *     TEST signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
@@ -215,70 +218,70 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE summary Setup
  *     MAKE temp Setup
  *     TEST temp ANewbieRegistersFromElsewhere
+ *     MAKE backing Setup
+ *     TEST backing AMemberChangesBackingAmount
+ *     MAKE flow Setup
  *     MAKE transact Setup
- *     MAKE transactions Setup
  */
 function members($list) {return t\members($list);}
 
 /**
  * transactions: (ARG)
  *
- * in: MAKE bank Setup
+ * in: TEST invoice AMemberConfirmsRequestToChargeAnotherMember
+ *     TEST invoice AMemberApprovesAnInvoiceToATrustingCustomer
  *     MAKE community Setup
- *     MAKE custstatement Setup
- *     MAKE download Setup
- *     MAKE edittx Setup
- *     MAKE edittx ABuyerDisputesACharge
- *     MAKE edittx ASellerReversesACharge
- *     BOTH edittx ABuyerReversesAReversal
- *     TEST flow AMemberDraws
- *     TEST flow AMemberDrawsAgain
+ *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
+ *     MAKE joint AJoinedAccountMemberUnjoinsTheAccount
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
  *     TEST gift AMemberMakesANewRecurringDonation
  *     TEST gift ACompanyMakesARecurringDonation
- *     MAKE invoice Setup
- *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
- *     TEST invoice AMemberApprovesAnInvoiceToATrustingCustomer
- *     MAKE joint Setup
- *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
- *     MAKE joint AJoinedAccountMemberUnjoinsTheAccount
- *     MAKE preferences Setup
  *     MAKE preferences AMemberChangesPreferences
  *     MAKE statement Setup
+ *     MAKE edittx Setup
+ *     MAKE edittx ABuyerDisputesACharge
+ *     MAKE edittx ASellerReversesACharge
+ *     BOTH edittx ABuyerReversesAReversal
+ *     MAKE transactions Setup
+ *     MAKE transactions AMemberLooksAtTransactionsWithRoundups
+ *     MAKE download Setup
+ *     MAKE bank Setup
+ *     MAKE custstatement Setup
  *     MAKE summary Setup
  *     MAKE summary AMemberClicksTheSummaryTabWithRoundups
- *     MAKE transact Setup
+ *     MAKE backing Setup
+ *     MAKE backing AMemberChangesBackingAmount
+ *     TEST flow AMemberDraws
+ *     TEST flow AMemberDrawsAgain
  *     TEST transact AMemberConfirmsRequestToPayAnotherMember
  *     TEST transact AMemberConfirmsRequestToPayAnotherMemberALot
  *     TEST transact AMemberConfirmsRequestToPayAMemberCompany
  *     TEST transact AMemberPaysAnotherMemberRepeatedly
- *     MAKE transactions Setup
- *     MAKE transactions AMemberLooksAtTransactionsWithRoundups
  */
 function transactions($list) {return t\transactions($list);}
 
 /**
  * we say (ARG): (ARG) with subs: (ARG)
  *
- * in: TEST bank AMemberMovesCreditToTheBank
+ * in: TEST relations AMemberAddsARelation
+ *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
+ *     TEST signin AMemberAsksForANewPasswordForACompany
+ *     TEST joint AMemberRequestsAJointAccount
+ *     TEST joint AMemberRequestsTwoJoinsAtOnce
+ *     TEST edittx ABuyerTriesToDecreaseAPaymentAmount
+ *     TEST edittx ABuyerDisputesACharge
+ *     TEST bank AMemberMovesCreditToTheBank
  *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
  *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
  *     TEST bank AMemberMovesTooMuchToTheBank
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
- *     TEST edittx ABuyerTriesToDecreaseAPaymentAmount
- *     TEST edittx ABuyerDisputesACharge
- *     TEST flow AMemberOverdrawsWithNotEnoughToDrawOn
- *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
- *     TEST joint AMemberRequestsAJointAccount
- *     TEST joint AMemberRequestsTwoJoinsAtOnce
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
- *     TEST relations AMemberAddsARelation
- *     TEST signin AMemberAsksForANewPasswordForACompany
  *     TEST signup AMemberRegistersBadName
  *     TEST signup AMemberRegistersAgain
  *     TEST signup AMemberRegistersWithABadCompanyPhone
+ *     TEST flow AMemberOverdrawsWithNotEnoughToDrawOn
  *     TEST transact AMemberConfirmsRequestToChargeAnotherMember
  *     TEST transact AMemberConfirmsRequestToPayAnotherMember
  *     TEST transact AMemberConfirmsRequestToPayAMemberCompany
@@ -319,33 +322,33 @@ function weSayWithSubs($type, $index, $subs) {
 /**
  * we say (ARG): (ARG)
  *
- * in: TEST bank AMemberMovesTooLittleToTheBank
+ * in: TEST relations AMemberTriesToAddARelationWithSelf
+ *     TEST relations AMemberTriesToAddARelationAgain
+ *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
+ *     TEST signin AMemberTypesTheWrongPassword
+ *     TEST signin AMemberTypesAnUnknownUsernameID
+ *     TEST signin AMemberAsksForANewPasswordForAnUnknownAccount
+ *     TEST signin AMemberClicksALinkToResetPasswordWithWrongCode
+ *     TEST signin AMemberClicksALinkToResetPasswordForUnknownAccount
+ *     TEST joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
+ *     TEST gift AMemberDonates
+ *     TEST gift AMemberMakesARecurringDonation
+ *     TEST gift AMemberMakesANewRecurringDonation
+ *     TEST gift ACompanyMakesARecurringDonation
+ *     TEST gift AMemberDonatesWithInsufficientFunds
+ *     TEST edittx ABuyerIncreasesAPaymentAmount
+ *     TEST edittx ABuyerChangesTheGoodsStatus
+ *     TEST bank AMemberMovesTooLittleToTheBank
  *     TEST bank AMemberTriesToGoBelowTheirMinimum
- *     TEST company AMemberUpdatesCompanyInfo
+ *     TEST membership AMemberSignsInForTheFirstTime
+ *     TEST signupco AMemberRegistersACompany
  *     TEST contact AMemberUpdatesContactInfo
  *     TEST contact AMemberGivesABadPhone
  *     TEST contact AMemberGivesABadEmail
  *     TEST contact AMemberUpdatesToADifferentState
  *     TEST contact AMemberUpdatesToADifferentName
  *     TEST coupons AMemberRedeemsAGiftCoupon
- *     TEST edittx ABuyerIncreasesAPaymentAmount
- *     TEST edittx ABuyerChangesTheGoodsStatus
- *     TEST gift AMemberDonates
- *     TEST gift AMemberMakesARecurringDonation
- *     TEST gift AMemberMakesANewRecurringDonation
- *     TEST gift ACompanyMakesARecurringDonation
- *     TEST gift AMemberDonatesWithInsufficientFunds
- *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
- *     TEST joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
- *     TEST membership AMemberSignsInForTheFirstTime
- *     TEST relations AMemberTriesToAddARelationWithSelf
- *     TEST relations AMemberTriesToAddARelationAgain
- *     TEST signin AMemberTypesTheWrongPassword
- *     TEST signin AMemberTypesAnUnknownUsernameID
- *     TEST signin AMemberAsksForANewPasswordForAnUnknownAccount
- *     TEST signin AMemberClicksALinkToResetPasswordWithWrongCode
- *     TEST signin AMemberClicksALinkToResetPasswordForUnknownAccount
- *     TEST signupco AMemberRegistersACompany
+ *     TEST company AMemberUpdatesCompanyInfo
  *     TEST signup ANewbieRegistersInWesternMassachusetts
  *     TEST signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
  *     TEST signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
@@ -354,17 +357,18 @@ function weSayWithSubs($type, $index, $subs) {
  *     TEST signup AMemberRegistersBadZip
  *     TEST signup AMemberRegistersWithACompanyWithNoRelation
  *     TEST temp ANewbieRegistersFromElsewhere
+ *     TEST backing AMemberChangesBackingAmount
  */
 function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
 
 /**
  * we email (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST membership AMemberSignsInForTheFirstTime
- *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
- *     TEST signin AMemberAsksForANewPasswordForUsername
+ * in: TEST signin AMemberAsksForANewPasswordForUsername
  *     TEST signin AMemberAsksForANewPasswordForAccountID
  *     TEST signin AMemberAsksForANewPasswordForEmail
+ *     TEST membership AMemberSignsInForTheFirstTime
+ *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     TEST signup ANewbieRegistersInWesternMassachusetts
  *     TEST signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
  *     TEST signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
@@ -384,14 +388,15 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  * we show (ARG)
  *
  * in: TEST invest AMemberJoinsTheInvestmentClub
- *     TEST membership AMemberSignsInForTheFirstTime
- *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     TEST signin AMemberSignsInWithUsernameOnTheMemberSite
  *     TEST signin AMemberSignsInWithAccountIDOnTheMemberSite
  *     TEST signin AMemberSignsInWithEmailOnTheMemberSite
  *     TEST signin AMemberClicksALinkToResetPassword
  *     TEST signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     TEST signin AMemberClicksALinkToResetPasswordForUnknownAccount
+ *     TEST membership AMemberSignsInForTheFirstTime
+ *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
+ *     TEST summary MembersAccountIsNotActive
  *     TEST signup ANewbieVisitsTheRegistrationPageWithExpiredInvite
  *     TEST signup ANewbieVisitsTheRegistrationPageWithAUsedInvite
  *     TEST signup ANewbieRegistersInWesternMassachusetts
@@ -413,25 +418,7 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
 /**
  * we show (ARG) with: (ARG)
  *
- * in: TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
- *     TEST community CronCalculatesTheStatistics
- *     TEST company AMemberVisitsTheCompanyInfoPage
- *     TEST contact AMemberVisitsTheContactInfoPage
- *     TEST custstatement ACompanyLooksAtACustomerStatement
- *     TEST edittx ABuyerChangesTheTransactionDescription
- *     TEST edittx ABuyerDisputesACharge
- *     TEST edittx ASellerReversesACharge
- *     TEST gift AMemberDonates
- *     TEST gift AMemberMakesANewRecurringDonation
- *     TEST invest AMemberJoinsTheInvestmentClub
- *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
- *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
- *     TEST joint AMemberRequestsAJointAccount
- *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
- *     TEST joint AMemberRequestsTwoJoinsAtOnce
- *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
- *     TEST preferences AMemberVisitsThePreferencesPage
- *     TEST preferences AnotherMemberVisitsThePreferencesPage
+ * in: TEST invest AMemberJoinsTheInvestmentClub
  *     TEST relations MemberHasAnEmployeeConfirmed
  *     TEST relations MemberHasAnEmployeeUnconfirmed
  *     TEST relations MemberHasARelationWithAContractor
@@ -442,44 +429,65 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
  *     TEST relations MemberCompanyHasRelations
  *     TEST relations ItsComplicated
  *     TEST relations AMemberAddsARelation
- *     TEST scancard SomeoneScansACompanyAgentCard
+ *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
+ *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST signin AMemberVisitsTheMemberSite
- *     TEST signupco AMemberRegistersACompany
+ *     TEST community CronCalculatesTheStatistics
+ *     TEST joint AMemberRequestsAJointAccount
+ *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
+ *     TEST joint AMemberRequestsTwoJoinsAtOnce
+ *     TEST gift AMemberDonates
+ *     TEST gift AMemberMakesANewRecurringDonation
+ *     TEST scancard SomeoneScansACompanyAgentCard
+ *     TEST preferences AMemberVisitsThePreferencesPage
+ *     TEST preferences AnotherMemberVisitsThePreferencesPage
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
+ *     TEST edittx ABuyerChangesTheTransactionDescription
+ *     TEST edittx ABuyerDisputesACharge
+ *     TEST edittx ASellerReversesACharge
+ *     TEST transactions AMemberLooksAtTransactionsForThePastYear
+ *     TEST transactions AMemberLooksAtTransactionsForThePastFewDays
+ *     TEST transactions AMemberLooksAtTransactionsWithRoundups
+ *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
+ *     TEST signupco AMemberRegistersACompany
+ *     TEST contact AMemberVisitsTheContactInfoPage
+ *     TEST custstatement ACompanyLooksAtACustomerStatement
+ *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     TEST summary AMemberClicksTheSummaryTab
  *     TEST summary AMemberClicksTheSummaryTabWithRoundups
  *     TEST summary AnAgentClicksTheSummaryTabWithoutPermissionToManage
  *     TEST summary ACompanyAgentClicksTheSummaryTab
- *     TEST transactions AMemberLooksAtTransactionsForThePastYear
- *     TEST transactions AMemberLooksAtTransactionsForThePastFewDays
- *     TEST transactions AMemberLooksAtTransactionsWithRoundups
+ *     TEST company AMemberVisitsTheCompanyInfoPage
+ *     TEST backing AMemberVisitsTheBackingPage
  */
 function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWith($title, $content, $debug);}
 
 /**
  * with: (ARG)
  *
- * in: TEST custstatement ACompanyLooksAtACustomerStatement
+ * in: TEST relations ItsComplicated
  *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
- *     TEST relations ItsComplicated
- *     TEST signupco AMemberRegistersACompany
+ *     TEST preferences AMemberVisitsThePreferencesPage
+ *     TEST preferences AnotherMemberVisitsThePreferencesPage
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST transactions AMemberLooksAtTransactionsForThePastYear
  *     TEST transactions AMemberLooksAtTransactionsForThePastFewDays
  *     TEST transactions AMemberLooksAtTransactionsWithRoundups
+ *     TEST signupco AMemberRegistersACompany
+ *     TEST custstatement ACompanyLooksAtACustomerStatement
  */
 function with($content) {return weShow($content);}
 
 /**
  * without: (ARG)
  *
- * in: TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
- *     TEST relations MemberHasAnEmployer
+ * in: TEST relations MemberHasAnEmployer
  *     TEST relations MemberCompanyHasRelations
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
- *     TEST summary AnAgentClicksTheSummaryTabWithoutPermissionToManage
  *     TEST transactions AMemberLooksAtTransactionsForThePastYear
  *     TEST transactions AMemberLooksAtTransactionsForThePastFewDays
+ *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
+ *     TEST summary AnAgentClicksTheSummaryTabWithoutPermissionToManage
  */
 function without($content) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -509,25 +517,7 @@ function withoutOptions($options) {
 /**
  * relations: (ARG)
  *
- * in: MAKE bank Setup
- *     MAKE community Setup
- *     MAKE company Setup
- *     MAKE custstatement Setup
- *     MAKE download Setup
- *     MAKE edittx Setup
- *     MAKE flow Setup
- *     MAKE invoice Setup
- *     TEST invoice AMemberApprovesInvoicesForevermore
- *     MAKE invoice AMemberApprovesAnInvoiceToATrustingCustomer
- *     MAKE joint AMemberRequestsAJointAccount
- *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
- *     MAKE joint AJoinedAccountMemberUnjoinsTheAccount
- *     MAKE joint AMemberRequestsTwoJoinsAtOnce
- *     TEST joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
- *     MAKE membership Setup
- *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
- *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
- *     MAKE relations MemberHasAnEmployeeConfirmed
+ * in: MAKE relations MemberHasAnEmployeeConfirmed
  *     MAKE relations MemberHasAnEmployeeUnconfirmed
  *     MAKE relations MemberHasARelationWithAContractor
  *     MAKE relations MemberHasAnEmployeeClaimed
@@ -537,52 +527,70 @@ function withoutOptions($options) {
  *     MAKE relations MemberCompanyHasRelations
  *     MAKE relations ItsComplicated
  *     MAKE relations AMemberTriesToAddARelationAgain
+ *     MAKE invoice Setup
+ *     TEST invoice AMemberApprovesInvoicesForevermore
+ *     MAKE invoice AMemberApprovesAnInvoiceToATrustingCustomer
+ *     MAKE community Setup
+ *     MAKE joint AMemberRequestsAJointAccount
+ *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
+ *     MAKE joint AJoinedAccountMemberUnjoinsTheAccount
+ *     MAKE joint AMemberRequestsTwoJoinsAtOnce
+ *     TEST joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
  *     MAKE scancard Setup
+ *     MAKE statement Setup
+ *     MAKE edittx Setup
+ *     MAKE transactions Setup
+ *     MAKE download Setup
+ *     MAKE bank Setup
+ *     MAKE membership Setup
  *     MAKE signupco Setup
  *     TEST signupco AMemberRegistersACompany
- *     TEST signup AMemberRegistersWithAnExistingCompany
- *     MAKE statement Setup
+ *     MAKE custstatement Setup
+ *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
+ *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     MAKE summary Setup
+ *     MAKE company Setup
+ *     TEST signup AMemberRegistersWithAnExistingCompany
+ *     MAKE flow Setup
  *     MAKE transact Setup
- *     MAKE transactions Setup
  */
 function relations($relations) {return t\relations($relations);}
 
 /**
  * balances: (ARG)
  *
- * in: TEST bank Setup
- *     TEST bank AMemberMovesCreditToTheBank
- *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
- *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
- *     TEST community Setup
- *     TEST coupons AMemberRedeemsAGiftCoupon
- *     TEST coupons AMemberRedeemsADiscountCouponForADollarAmount
- *     TEST download Setup
- *     TEST edittx Setup
- *     TEST edittx ABuyerIncreasesAPaymentAmount
- *     TEST edittx ABuyerChangesTheGoodsStatus
- *     MAKE flow Setup
- *     MAKE gift Setup
- *     TEST invoice Setup
+ * in: TEST invoice Setup
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberDeniesAnInvoice
  *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
  *     TEST invoice AMemberApprovesAnInvoiceToATrustingCustomer
+ *     TEST community Setup
  *     TEST joint Setup
  *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     TEST joint AJoinedAccountMemberUnjoinsTheAccount
- *     TEST signupco AMemberRegistersACompany
+ *     MAKE gift Setup
  *     TEST statement Setup
+ *     TEST edittx Setup
+ *     TEST edittx ABuyerIncreasesAPaymentAmount
+ *     TEST edittx ABuyerChangesTheGoodsStatus
+ *     TEST transactions Setup
+ *     TEST transactions AMemberLooksAtTransactionsWithRoundups
+ *     TEST download Setup
+ *     TEST bank Setup
+ *     TEST bank AMemberMovesCreditToTheBank
+ *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
+ *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
+ *     TEST signupco AMemberRegistersACompany
+ *     TEST coupons AMemberRedeemsAGiftCoupon
+ *     TEST coupons AMemberRedeemsADiscountCouponForADollarAmount
  *     TEST summary Setup
  *     TEST summary AMemberClicksTheSummaryTabWithRoundups
+ *     MAKE flow Setup
  *     TEST transact Setup
  *     TEST transact AMemberConfirmsRequestToChargeAnotherMember
  *     TEST transact AMemberConfirmsRequestToPayAnotherMember
  *     MAKE transact AMemberConfirmsRequestToPayAnotherMemberALot
  *     TEST transact AMemberConfirmsRequestToPayAMemberCompany
- *     TEST transactions Setup
- *     TEST transactions AMemberLooksAtTransactionsWithRoundups
  */
 function balances($list) {return t\balances($list);}
 
@@ -596,25 +604,7 @@ function usd($list) {return t\usd($list);}
 /**
  * member (ARG) visits page (ARG)
  *
- * in: MAKE community CronCalculatesTheStatistics
- *     MAKE company AMemberVisitsTheCompanyInfoPage
- *     MAKE contact AMemberVisitsTheContactInfoPage
- *     MAKE download AMemberDownloadsTransactionsForThePastYear
- *     MAKE download AMemberDownloadsIncomingInvoicesForThePastYear
- *     MAKE edittx ABuyerChangesTheTransactionDescription
- *     MAKE edittx ABuyerDisputesACharge
- *     MAKE edittx ASellerReversesACharge
- *     MAKE edittx ABuyerReversesAReversal
- *     MAKE gift AMemberDonates
- *     MAKE gift AMemberMakesANewRecurringDonation
- *     MAKE invest AMemberJoinsTheInvestmentClub
- *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMember
- *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
- *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
- *     MAKE membership AMemberSignsInForTheFirstTime
- *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
- *     MAKE preferences AMemberVisitsThePreferencesPage
- *     MAKE preferences AnotherMemberVisitsThePreferencesPage
+ * in: MAKE invest AMemberJoinsTheInvestmentClub
  *     MAKE relations MemberHasAnEmployeeConfirmed
  *     MAKE relations MemberHasAnEmployeeUnconfirmed
  *     MAKE relations MemberHasARelationWithAContractor
@@ -624,32 +614,51 @@ function usd($list) {return t\usd($list);}
  *     MAKE relations MemberHasAccessToEmployeeAccount
  *     MAKE relations MemberCompanyHasRelations
  *     MAKE relations ItsComplicated
- *     MAKE scancard SomeoneScansAMemberCard
- *     MAKE scancard SomeoneScansACompanyAgentCard
+ *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMember
+ *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
  *     MAKE signin AMemberVisitsTheMemberSite
  *     MAKE signin AMemberClicksALinkToResetPassword
  *     MAKE signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     MAKE signin AMemberClicksALinkToResetPasswordForUnknownAccount
- *     MAKE signup ANewbieVisitsTheRegistrationPageWithExpiredInvite
- *     MAKE signup ANewbieVisitsTheRegistrationPageWithAUsedInvite
+ *     MAKE community CronCalculatesTheStatistics
+ *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
+ *     MAKE gift AMemberDonates
+ *     MAKE gift AMemberMakesANewRecurringDonation
+ *     MAKE scancard SomeoneScansAMemberCard
+ *     MAKE scancard SomeoneScansACompanyAgentCard
+ *     MAKE preferences AMemberVisitsThePreferencesPage
+ *     MAKE preferences AnotherMemberVisitsThePreferencesPage
+ *     MAKE edittx ABuyerChangesTheTransactionDescription
+ *     MAKE edittx ABuyerDisputesACharge
+ *     MAKE edittx ASellerReversesACharge
+ *     MAKE edittx ABuyerReversesAReversal
+ *     MAKE transactions AMemberLooksAtTransactionsForThePastYear
+ *     MAKE transactions AMemberLooksAtTransactionsForThePastFewDays
+ *     MAKE transactions AMemberLooksAtTransactionsWithRoundups
+ *     MAKE download AMemberDownloadsTransactionsForThePastYear
+ *     MAKE download AMemberDownloadsIncomingInvoicesForThePastYear
+ *     MAKE membership AMemberSignsInForTheFirstTime
+ *     MAKE contact AMemberVisitsTheContactInfoPage
+ *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     MAKE summary AMemberClicksTheSummaryTab
  *     MAKE summary AMemberClicksTheSummaryTabWithRoundups
  *     MAKE summary AnAgentClicksTheSummaryTabWithoutPermissionToManage
  *     MAKE summary ACompanyAgentClicksTheSummaryTab
  *     MAKE summary MembersAccountIsNotActive
- *     MAKE transactions AMemberLooksAtTransactionsForThePastYear
- *     MAKE transactions AMemberLooksAtTransactionsForThePastFewDays
- *     MAKE transactions AMemberLooksAtTransactionsWithRoundups
+ *     MAKE company AMemberVisitsTheCompanyInfoPage
+ *     MAKE signup ANewbieVisitsTheRegistrationPageWithExpiredInvite
+ *     MAKE signup ANewbieVisitsTheRegistrationPageWithAUsedInvite
+ *     MAKE backing AMemberVisitsTheBackingPage
  */
 function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
 
 /**
  * member is logged out
  *
- * in: MAKE membership AMemberSignsInForTheFirstTime
- *     MAKE partnersignup Setup
- *     MAKE signin Setup
+ * in: MAKE signin Setup
  *     MAKE signin AMemberClicksALinkToResetPassword
+ *     MAKE membership AMemberSignsInForTheFirstTime
+ *     MAKE partnersignup Setup
  *     MAKE signup Setup
  *     MAKE temp Setup
  */
@@ -788,11 +797,11 @@ function memberOnetimePasswordIs($id, $pass) {
 /**
  * we notice (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST edittx ABuyerIncreasesAPaymentAmount
- *     TEST edittx ABuyerChangesTheGoodsStatus
+ * in: TEST invoice AMemberDeniesAnInvoice
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
- *     TEST invoice AMemberDeniesAnInvoice
+ *     TEST edittx ABuyerIncreasesAPaymentAmount
+ *     TEST edittx ABuyerChangesTheGoodsStatus
  *     TEST transact AMemberConfirmsRequestToPayAnotherMember
  *     TEST transact AMemberConfirmsRequestToPayAMemberCompany
  *     TEST transact AMemberPaysAnotherMemberRepeatedly
@@ -856,18 +865,18 @@ function withDownloadColumns($columns) {
 /**
  * usd transfers: (ARG)
  *
- * in: MAKE bank Setup
+ * in: MAKE community Setup
+ *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
+ *     MAKE statement Setup
+ *     MAKE transactions Setup
+ *     MAKE download Setup
+ *     MAKE bank Setup
  *     TEST bank AMemberMovesCreditToTheBank
  *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
  *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
  *     MAKE bank AMemberAsksToDoTwoTransfersOutInOneDay
- *     MAKE community Setup
  *     MAKE custstatement Setup
- *     MAKE download Setup
- *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
- *     MAKE statement Setup
  *     MAKE summary Setup
- *     MAKE transactions Setup
  */
 function usdTransfers($tx) {return t\usdTransfers($tx);}
 
@@ -936,18 +945,18 @@ function statisticsGetSet($time) {
 /**
  * members have: (ARG)
  *
- * in: BOTH coupons AMemberRedeemsAGiftCoupon
- *     MAKE download AMemberDownloadsTransactionsForThePastYear
- *     MAKE invoice AMemberApprovesInvoicesForevermore
+ * in: MAKE invoice AMemberApprovesInvoicesForevermore
  *     TEST joint AMemberRequestsAJointAccount
  *     BOTH joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     BOTH joint AJoinedAccountMemberUnjoinsTheAccount
- *     TEST membership AMemberSignsInForTheFirstTime
  *     MAKE statement Setup
+ *     MAKE transactions AMemberLooksAtTransactionsForThePastYear
+ *     MAKE download AMemberDownloadsTransactionsForThePastYear
+ *     TEST membership AMemberSignsInForTheFirstTime
+ *     BOTH coupons AMemberRedeemsAGiftCoupon
  *     MAKE summary Setup
  *     MAKE summary MembersAccountIsNotActive
- *     MAKE transactions AMemberLooksAtTransactionsForThePastYear
  */
 function membersHave($list) {return t\membersHave($list);}
 
@@ -1023,16 +1032,16 @@ function devices($list) {return t\devices($list);}
 /**
  * invoices: (ARG)
  *
- * in: MAKE custstatement Setup
- *     MAKE download Setup
- *     TEST gift AMemberDonatesWithInsufficientFunds
- *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
+ * in: TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST invoice AMemberDeniesAnInvoice
  *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
  *     TEST invoice AMemberApprovesInvoicesForevermore
  *     TEST invoice AMemberApprovesAnInvoiceToATrustingCustomer
+ *     TEST gift AMemberDonatesWithInsufficientFunds
+ *     MAKE download Setup
+ *     MAKE custstatement Setup
  *     TEST transact AMemberConfirmsRequestToChargeAnotherMember
  */
 function invoices($list) {return t\invoices($list);}
@@ -1086,11 +1095,11 @@ function aMemberPostsToWithValues($page, $values) {return memberConfirmsFormWith
 /**
  * member (ARG) is logged in
  *
- * in: TEST membership AMemberSignsInForTheFirstTime
- *     TEST signin AMemberSignsInWithUsernameOnTheMemberSite
+ * in: TEST signin AMemberSignsInWithUsernameOnTheMemberSite
  *     TEST signin AMemberSignsInWithAccountIDOnTheMemberSite
  *     TEST signin AMemberSignsInWithEmailOnTheMemberSite
  *     TEST signin AMemberClicksALinkToResetPassword
+ *     TEST membership AMemberSignsInForTheFirstTime
  */
 function memberIsLoggedIn($id) {
   global $testOnly, $mya;
@@ -1100,14 +1109,14 @@ function memberIsLoggedIn($id) {
 /**
  * next random code is (ARG)
  *
- * in: MAKE membership AMemberSignsInForTheFirstTime
- *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
- *     MAKE signin AMemberAsksForANewPasswordForUsername
+ * in: MAKE signin AMemberAsksForANewPasswordForUsername
  *     MAKE signin AMemberAsksForANewPasswordForAccountID
  *     MAKE signin AMemberAsksForANewPasswordForEmail
  *     MAKE signin AMemberClicksALinkToResetPassword
  *     MAKE signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     MAKE signin AMemberClicksALinkToResetPasswordForUnknownAccount
+ *     MAKE membership AMemberSignsInForTheFirstTime
+ *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     MAKE signup ANewbieRegistersInWesternMassachusetts
  *     MAKE signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
  *     MAKE signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
@@ -1129,12 +1138,12 @@ function weSayErrorInField($field, $index) {
 /**
  * member (ARG) completes relations form with values: (ARG)
  *
- * in: MAKE joint AMemberRequestsAJointAccount
- *     MAKE joint AJoinedAccountMemberUnjoinsTheAccount
- *     MAKE joint AMemberRequestsTwoJoinsAtOnce
- *     MAKE relations AMemberAddsARelation
+ * in: MAKE relations AMemberAddsARelation
  *     MAKE relations AMemberTriesToAddARelationWithSelf
  *     MAKE relations AMemberTriesToAddARelationAgain
+ *     MAKE joint AMemberRequestsAJointAccount
+ *     MAKE joint AJoinedAccountMemberUnjoinsTheAccount
+ *     MAKE joint AMemberRequestsTwoJoinsAtOnce
  */
 function memberCompletesRelationsFormWithValues($id1, $list) {
   foreach ($list as $i => $rec) {
@@ -1163,6 +1172,7 @@ function memberCacheIsOk($id) {return r\acct(t\uid($id))->cacheOk();}
  * member (ARG) has no photo ID recorded
  *
  * in: MAKE preferences AMemberChangesPreferences
+ *     MAKE backing AMemberChangesBackingAmount
  */
 function memberHasNoPhotoIDRecorded($id) {return t\noPhotoId($id);}
 
@@ -1270,7 +1280,6 @@ function weShowChecked($what, $wantSet = TRUE) {
  * we show unchecked: (ARG)
  *
  * in: TEST preferences AMemberVisitsThePreferencesPage
- *     TEST preferences AnotherMemberVisitsThePreferencesPage
  */
 function weShowUnchecked($what) {return weShowChecked($what, FALSE);}
 
