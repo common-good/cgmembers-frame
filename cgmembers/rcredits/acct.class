@@ -295,7 +295,7 @@ class Acct {
     if (!$a->co) return NULL;
 		$subs = ray('uid', $a->id);
     if (!$info = db\get('*', 'r_company', 'uid=:uid', $subs)) {
-      db\insert('r_company', $subs);
+      db\insert('r_company', $subs, 'uid');
       return @$subs[$k]; // NULL unless $k is 'uid'
     } else return $info[$k];
   }
@@ -303,7 +303,7 @@ class Acct {
   /**
    * Set one or more company fields
    */
-  private function setCo($info) {db\update('r_company', $info + ray('uid', $this->id), 'uid', TRUE);}
+  private function setCo($info) {db\updateOrInsert('r_company', $info + ['uid' => $this->id], 'uid');}
   
   /**
    * Return the value of a relationship field for this compound account.
@@ -334,7 +334,7 @@ class Acct {
       u\preray(compact('flags'), $info);
     }
     if ($reid = $a->relfld('reid')) {
-      return db\update('r_relations', $info + compact('reid'), 'reid', TRUE);
+      return db\updateOrInsert('r_relations', $info + ['reid' => $reid], 'reid');
     } else $a->newRelation($info + ray('other', $a->agentId));
   }      
   
@@ -519,7 +519,7 @@ class Acct {
 
     if (isset($info['photo'])) {
       if ($info['photo']) { // setting photo
-        db\update('r_photos', ray('uid photo', $a->id, u\cry('H', $info['photo'])), 'uid', TRUE);
+        db\updateOrInsert('r_photos', ['uid' => $a->id, 'photo' => u\cry('H', $info['photo'])], 'uid');
       } else db\q('DELETE FROM r_photos WHERE uid=:uid', ['uid' => $a->id]);
       unset($info['photo']);
     }
@@ -674,7 +674,7 @@ class Acct {
     if ($ulimit and $uses >= $ulimit) return $price;
     $rebate = $amount < 0 ? -$price * $amount * .01 : $amount;
 // NO do this in x.class   be\transfer('charge', $sellerA, $a, $rebate, FOR_GOODS, t('rebate (discount coupon #%coupid)', compact('coupid')));
-    db\update('r_coupated', ray('id coupid uid uses when', $id, $coupid, $a->id, $uses + 1, time()), 'id', TRUE);
+    db\updateOrInsert('r_coupated', ['id' => $id, 'coupid' => $coupid, 'uid' => $a->id, 'uses' => $uses + 1, 'when' => time()], 'id');
     return max(0, $price - $rebate); // effective price (for potential gift certificate)
   }
   
@@ -1052,7 +1052,7 @@ EOF;
     $aA = $a->agentA;
     $field = $a->proSe ? 'cardCode' : 'cardCode2';
     if ($aA->$field) r\badCard($qid, $aA->$field, t('making new card')); // (don't mark previous code bad if none)
-//    if ($oldCode = $aA->$field) db\insert('r_bad', ray('qid code created', $qid, $oldCode, time()));
+//    if ($oldCode = $aA->$field) db\insert('r_bad', ray('qid code created', $qid, $oldCode, time()), 'created');
     $aA->update($field, $newCode ?: r\cardCode($qid)); // resave the secure fields
   }
     
@@ -1327,7 +1327,7 @@ EOF;
       db\update('r_usd', compact(ray('txid amount completed bankAccount')), 'txid');
     } else {
 //      if (isGAME) $tx += ['members' => $a->members];
-      $txid = db\insert('r_usd', $tx += compact(ray('amount payee created completed bankAccount channel')));
+                  $txid = db\insert('r_usd', $tx += compact(ray('amount payee created completed bankAccount channel')), 'txid');
       u\EXPECT((bool) $txid, 'saving usd record');
     }
 
@@ -1375,7 +1375,7 @@ EOF;
 		if (db\exists('r_usd', compact(ray('amount payee bankAccount')))) return; // already being verified
 		for ($txid = 1; $txid < 999999; $txid++) { // actual transfers start sometime after 999,999
 			if (db\exists('r_usd', 'txid=:txid', compact('txid'))) continue;
-			if ($txid = db\insert('r_usd', compact(ray('txid amount payee bankAccount channel')))) break;
+			if ($txid = db\insert('r_usd', compact(ray('txid amount payee bankAccount channel')), 'txid')) break;
 		}
 		u\EXPECT($txid, 'ran out of low txids');
 	}			
@@ -1548,7 +1548,7 @@ X;
     
     if (@$life) {
       $data = ray('uid expires data', $this->id, r\rTime() + $life, serialize($info));
-      $info = ray('op', db\insert('r_do', $data)); // (preliminary) op is r_do record ID
+      $info = ray('op', db\insert('r_do', $data, 'doid')); // (preliminary) op is r_do record ID
     } else $info += ['mo'=>rdoMonth()]; // remember month, in case we need to know when link was created
 
     return BASE_URL . "/do/" . r\makeDoCode($info);

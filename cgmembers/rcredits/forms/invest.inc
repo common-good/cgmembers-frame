@@ -100,7 +100,7 @@ function formInvest_submit($form, &$sta) {
   
   if (@$signedBy) {
     extract(just('clubid', unserialize($old)));
-    db\insert('r_stakes', ray('uid clubid joined', $mya->id, $clubid, time()));
+    db\insert('r_stakes', ray('uid clubid joined', $mya->id, $clubid, time()), 'stakeid');
     return say(t('You are now a member of the club!'));
   }
 

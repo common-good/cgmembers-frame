@@ -53,6 +53,6 @@ function formOption_validate($form, &$sta) {
 function formOption_submit($form, &$sta) {
   global $base_url;
   extract($info = just('id question text detail maximum minimum', $sta['input']));
-  db\update('r_options', $info, @$id ? 'id' : '', TRUE);
+  db\updateOrInsert('r_options', $info, 'id');
   w\go("community/events/question/qid=$question", 'info saved');
 }

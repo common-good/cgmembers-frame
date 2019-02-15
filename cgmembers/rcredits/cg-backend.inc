@@ -139,7 +139,7 @@ function updateRelations($updates) {
     if (!u\getBit($flags, 'customer')) u\setbit($flags, 'autopay', FALSE);
 
     if (!@$permission and !@$flags and !$wasEmpty) { // empty now and wasn't before
-      db\del('r_relations', $reid);
+      db\del('r_relations', 'reid', $reid);
       $msg = 'deleted relation';
     } else {
       $a = r\acct($main, $other);
@@ -471,7 +471,7 @@ function invoice($a1, $a2, $amount, $purpose = NULL, $extra = []) {
   u\setDft($status, ($channel != TX_FOREIGN and r\relation(':IS_AUTOPAY', $payee, $payer)) ? TX_APPROVED : TX_PENDING);
   $data = serialize($extra);
   $info = compact(ray('amount status payer payee goods purpose created flags data'));
-  $nvid = db\insert('r_invoices', $info);
+  $nvid = db\insert('r_invoices', $info, 'nvid');
   $a1->update('lastTx', [$nvid, $payer - $payee, round(-$amount, 2), $created, 'inv']);
 
   if ($status == TX_PENDING) {

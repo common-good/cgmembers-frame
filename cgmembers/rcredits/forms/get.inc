@@ -20,7 +20,7 @@ function formGet($form, &$sta, $args = '') {
   $jid = $mya->jid ?: 0;
   extract(just('cancel', $args));
   if ($txid = @$cancel) {
-    db\del('r_usd', $txid);
+    db\del('r_usd', 'txid', $txid);
     say('transfer canceled', compact('txid'));
     r\tellAdmin("canceled exchange #$txid");
   }

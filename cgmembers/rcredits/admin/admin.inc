@@ -337,7 +337,7 @@ function getBanks() {
     }
     $branch = $branch == 'B' ? 1 : 0;
     foreach (ray('name address city') as $field) $$field = ucwords(strtolower(trim($$field)));
-    db\insert('r_banks', compact(ray($fieldNames)));
+    db\insert('r_banks', compact(ray($fieldNames)), 'route');
   }
 }
 
