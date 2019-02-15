@@ -32,7 +32,7 @@ class ReformatTransactions extends AbstractMigration
     $txsTable = $this->table('r_txs');
     $txHdrsTable = $this->table('r_tx_hdrs');
     $entriesTable = $this->table('r_entries');
-    $disputesTbl = $this->table('r_disputed');
+    $disputesTbl = $this->table('r_disputes');
     $maxXid = 0;
     
     $sql = 'select * from r_txs';
@@ -53,8 +53,15 @@ class ReformatTransactions extends AbstractMigration
       $data = unserialize($data) ?: [];
       $maxXid = max($maxXid, $xid);
 
+      /* $hdrInfo = ray('xid type goods initiator initiatorAgent flags channel box risk risks reverses created', ); */
+      /* $entryInfo = ray('xid amount uid agentUid description acctTid relType related', ); */
+      /* $disputeInfo = ray('xid reason status', ); */
 
-      // initiator[Agent]
+      // xid doesn't change
+      // type doesn't change if it's in the correct list
+      // goods doesn't change if it's valid
+
+      // initiator[Agent] -- payee[Agent] or payer[Agent] -- turn off TAKING flag
       if (u\getBit($flags, B_TAKING)) {
         $initiator = $payee;
         $initiatorAgent = $payeeAgent;
@@ -63,7 +70,16 @@ class ReformatTransactions extends AbstractMigration
         $initiator = $payer;
         $initiatorAgent = $payerAgent;
       }
+      
+      // channel doesn't change
+      // box doesn't change
+      // risk doesn't change
+      // risks doesn't change
+      
+      // created doesn't change
 
+      // reverses
+      // flags
 
       
       // forces in data
@@ -145,9 +161,20 @@ class ReformatTransactions extends AbstractMigration
 
       // reverses
       $reverses = null;
-      if (u\getBit($flags, B_UNDONE) or u\getBit($flags, B_UNDOES) or
-          array_key_exists('undo', $data) or array_key_exists('undone', $data) or array_key_exists('undoes', $data)
-          or array_key_exists('undoneBy', $data)) {
+      if (arrayGet($data, 'undoes', null) != null) { // this tx reverses another tx
+        $reverses = $data['undoes'];
+        unset($data['undoes']);
+        u\setBit($flags, B_UNDOES, false);  // just in case
+        if (
+        $undoneBy[$reverses] = $xid;
+      }
+
+      if (arrayGet($data, 'undoneBy', null) != null) { // apparently we're being undone
+        u\setBit($flags, B_UNDONE, false);
+        
+      if (u\getBit($flags, B_UNDONE) or
+          array_key_exists('undo', $data) or array_key_exists('undone', $data) or
+          array_key_exists('undoes', $data) or array_key_exists('undoneBy', $data)) {
         if (u\getBit($flags, B_UNDONE) and (array_key_exists('undo', $data)
                                             or array_key_exists('undoneBy', $data))) {
           $undoneBy[$xid] = $data['undoneBy'];
