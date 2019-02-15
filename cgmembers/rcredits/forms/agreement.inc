@@ -33,6 +33,7 @@ function formAgreement($form, &$sta) {
   }    
   $topics = ray('Members Member-Organizations CGC Dollar-Pool Backing Without-Limit Disputes Participation');
   foreach ($topics as $k) $args["_a$k"] = atag("/help/agreement#$k");
+  $args['_aDetails'] = atag('/help/agreement');
 
   $agreement = t(<<< X
 <div id="instructions" class="well">
@@ -40,15 +41,16 @@ function formAgreement($form, &$sta) {
 </div>
 <div id="agreement">
 <ol>
-  <li>[1] <b>Who.</b> I understand this is an agreement among all %PROJECT <%aMembers>Members</a> and <%aMember-Organizations>Member Organizations</a>, in my <%aCGC>%PROJECT Community</a> and elsewhere.</li>
-  <li>[2] <b>Community control.</b> I understand the %PROJECT System is designed to take back control of our local economy  from big business and distant government. I am willing to participate with other Members to bring about this shift.</li>
-  <li>[3] <b>Investing together.</b> I understand whenever I put money in my %PROJECT account by buying %PROJECT credit, there is more money in the <%aDollar-Pool>Dollar Pool</a> so my community has more money to invest.</li>
+  <li>[1] <b>Who.</b> I understand this is an agreement among all %PROJECT <%aMembers>Members</a> and <%aMember-Organizations>Member Organizations</a> everywhere &mdash; including in my <%aCGC>%PROJECT Community</a>.</li>
+  <li>[2] <b>Community control.</b> I understand we can use the Common Good System, as a community, to take control of our local economy. I am willing to participate with other Members to do that, and to support other communities to do the same.</li>
+  <li>[3] <b>Investing together.</b> I understand whenever I put money in my %PROJECT account by buying %PROJECT credit, there is more money in the <%aDollar-Pool>Dollar Pool</a>, so my community has more money to invest while I use my credit for purchases.</li>
   <li>[4] <b>Backing together.</b> I understand my %PROJECT credit is <%aBacking>backed</a> 100% or more -- partly by Dollars and partly by Members and Member Organizations.</li>
   <li>[5] <b>Accepting payments.</b> I will accept %PROJECT credit as payment, <%aWithout-Limit>without limit or surcharge</a>.</li>
   <li>[6] <b>Account Balance.</b> If I spend more than the balance in my %PROJECT account, resulting in a negative balance, I will bring my balance up to zero or more within 30 days.</li>
   <li>[7] <b>Disputes.</b> When there is a dispute, I will follow the <%aDisputes>%PROJECT Dispute Resolution Process</a> and will honor its outcome.</li>
-  <li>[8] <b>Changes.</b> I understand I will have the <%aParticipation>opportunity to participate</a> in any decision to change this Agreement, and using my account after changes have been approved implies agreement to those changes.</li>
+  <li>[8] <b>Changes.</b> I understand I will have the <%aParticipation>opportunity to participate</a> in any decision to change this Agreement, and if I use my account after changes have been approved, that means I agree to those changes.</li>
 </ol>
+<br><p class="full center"><%aDetails>Details (how it works for you)</a></p>
 </div>
 X
   , compact('_addendum') + $args);

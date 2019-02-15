@@ -15,11 +15,11 @@ function formPrefs($form, &$sta) {
 
   if ($mya->co) {
     $crumbs0 = $mya->crumbs * 100;
-    $crumbs = textFld(t('Crumbs:'), [t('Contribution Percentage'), t('Another way to fund the common Good! Contribute a small percentage of every payment you receive. For example, "1%" means donate one penny for each dollar you receive. Smaller amounts such as 0.5% are also very welcome.')], dft($crumbs0 ? "$crumbs0%" : '') + suffix(' %'));
+    $crumbs = textFld(t('Crumbs:'), [t('Contribution Percentage'), t('Another way to fund the common Good! Contribute a small percentage of every payment you receive. For example, "1%" means donate one penny for each dollar you receive. Smaller amounts such as 0.5% are also very welcome.')], dft($crumbs0 ?: '') + suffix(' %'));
   } else {$roundup = w\roundupFld($mya);}
   
   $food0 = $mya->food * 100;
-  $food = textFld(t('Food Fund:'), [t('Contribution Percentage'), t('Pay a little extra every time you pay for food or meals with %PROJECT, to lower the cost of healthy local food for people who can\'t afford it otherwise. For example, 5% here means when you buy a $10 pizza, you contribute 50 cents to the %PROJECT Food Fund.')], dft($food0 ? "$food0%" : '') + suffix(' %'));
+  $food = textFld(t('Food Fund:'), [t('Contribution Percentage'), t('Pay a little extra every time you pay for food or meals with %PROJECT, to lower the cost of healthy local food for people who can\'t afford it otherwise. For example, 5% here means when you buy a $10 pizza, you contribute 50 cents to the %PROJECT Food Fund. To donate to the %PROJECT Food Fund directly, use the "Pay" button and type "Food Fund".')], dft($food0 ?: '') + suffix(' %'));
   
   if (!$mya->co) $snap = textFld(t('SNAP Number:'), [t('SNAP Number'), t('If you are eligible for SNAP, type your number here, to get a discount on food you buy through %PROJECT. If you are NOT eligible for SNAP, but need help with food expenses, call us at %phone.', 'phone', u\fmtPhone(CGF_PHONE, '-'))]);
   
@@ -54,13 +54,13 @@ function formPrefs($form, &$sta) {
 EOF
   , ray('regName regAddr', r\regionfield('legalName'), r\regionfield('postalAddr'))));
 
-  $advancedFields = 'achMin smsNotices2 notices secretBal2 nosearch2 backing';
+  $advancedFields = 'achMin smsNotices2 notices secretBal2 nosearch2 food backing';
   
 //  $submit = submit(t('Update Preferences'));
   
 
   jsx('advanced-prefs', compact('advancedFields'));
-  $form = compact(ray('title subtext roundup crumbs food snap debtOk2 statements showAdvancet ' . $advancedFields)) + w\setupFoot() + compact('posttext');
+  $form = compact(ray('title subtext snap roundup crumbs debtOk2 statements showAdvancet ' . $advancedFields)) + w\setupFoot() + compact('posttext');
   return cgform($form);
 }
 
@@ -71,7 +71,8 @@ function formPrefs_validate($form, &$sta) {
   if ($err = u\badAmount($crumbs, '>=0', 1, 100)) return say($err, 'crumbs');
   $food = @$food ?: 0;
   if ($err = u\badAmount($food, '>=0', 1, 100)) return say($err, 'food');
-  if (@$snap and $err = snapErr($snap)) return say($err, 'snap');
+  snapErr($snap); // just to remove punctuation
+/// (no SNAP checking for now)  if (@$snap and $err = snapErr($snap)) return say($err, 'snap');
   u\preray(compact(ray('crumbs food snap')), $sta['input']); // update trimmed percentage
 }
 

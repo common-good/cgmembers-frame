@@ -1,3 +1,12 @@
+2019-02-14 feature/agreement-food-and-backing-touchup
+. bug fix: fatal error when invoice got paid
+. agreement wording changes
+. bug fix for changing backing amount
+. show transaction descriptions on Flags page only for cAdmin2+
+. move food fund field to advanced settings
+. accept ANY format for SNAP number (until we make sure we're not excluding people)
+. fixed submit label on Connect page
+
 2019-02-12 feature/new-agreement-and-backing
 . bug fix: rounding errors in admin-achify.inc
 . new agreement

@@ -22,10 +22,14 @@ function formBacking($form, &$sta, $args = '') {
 X
   , '_aCrunch _aExample', atag('/help/cashflow'), atag('/help/backing-example'));
   
-  foreach (ray('10000 2000 500 100 20 1') as $k) $choices[$k] = u\fmtAmt($k);
+  $choices0 = ray('10000 2000 500 100 20 1');
+  $dft = ($mya->backing + 0) ?: 1;
+  if ($dft and !in_array($dft, $choices0)) $choices0[] = $dft;
+  debug($dft);
+  foreach ($choices0 as $k) $choices[$k] = u\fmtAmt($k);
   $choices[-1] = t('Other');
   $minDesc = t(' (minimum $1)');
-  $amtChoice = selectFld(t('Amount:'), '', required(1) + suffix($minDesc), $choices);
+  $amtChoice = selectFld(t('Amount:'), '', required($dft) + suffix($minDesc), $choices);
   $amount = textFld(t('Amount $'), '', suffix($minDesc));
   $signedBy = w\signedBy();
   $date = item(u\fmtDate(NULL, TRUE), t('Date:'));
@@ -37,7 +41,9 @@ X
   
 function formBacking_validate($form, &$sta) {
   if (w\badSignature($sta)) return;
-  if (!w\checkAmtChoice($sta)) return;
+  if (!w\checkAmtChoice($sta, 1)) return;
+  extract(just('amount', $sta['input'])); // this must come AFTER checkAmtChoice
+  if (strpos($amount, '.')) return say('too fractional', 'amount');
 }
   
 function formBacking_submit($form, &$sta) {
