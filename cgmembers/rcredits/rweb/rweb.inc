@@ -350,7 +350,7 @@ function formTxNonmember_submit($form, &$sta) {
   be\invoiceNonmember($name, $info);
 }
 
-function formMenu($form, &$sta) {return array('title' => item('Menu'));}
+function formMenu($form, &$sta) {return cgform(array('title' => item('Menu')));}
 
 /**
  * Present an empty slate for status and error messages.
@@ -410,7 +410,7 @@ function formWaiting($form, &$sta) {
     }
   } else $list = [t('No one in your area is currently waiting to be invited.')];
   $list = item('<table>' . join('', $list) . '</table>');
-  return compact('title', 'list');
+  return cgform(compact('title', 'list'));
 }
 
 /**
@@ -444,7 +444,7 @@ EOF;
   $list .= "</table>\n";
   
   $list = item($list);
-  return compact(ray('title subtext list'));
+  return cgform(compact(ray('title subtext list')));
 }
 
 define('R_BASIC_FLDS', 'fullName federalId dob');

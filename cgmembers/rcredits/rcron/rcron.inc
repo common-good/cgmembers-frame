@@ -205,14 +205,14 @@ X;
     if ($jA = $a->jA and $jA->jid == $a->id) $jA->update('jid', 0);
     r\deleteAccount($a);
   } , $where);
-//  db\del('users', $where); // abandoned new joint acct (must postcede setting jids)
+//  db\del('users', 'uid', $where); // abandoned new joint acct (must postcede setting jids)
 
   // Notice which bank accounts have been verified
 	$where = 'amount=0 AND deposit<>0 AND deposit<:NOW-:DAY_SECS';
 	$q = db\q("SELECT payee FROM r_usd WHERE $where");
 	$DBTX = db_transaction();
 	while ($row = $q->fetchAssoc()) r\acct($row['payee'])->setBit(B_BANKOK);
-	db\del('r_usd', $where);
+	db\del('r_usd', 'txid', $where);
 	unset($DBTX);
 	db\q('DELETE FROM x_usd WHERE amount=0'); // no need to track these
 }
@@ -550,7 +550,7 @@ function requests() {
         foreach (['first', 'last'] as $k) $row[$k] = u\normalizeCase($$k);
         r\tellAdmin('invitation request', $row);
         foreach (['email', 'phone'] as $k) $row[$k] = u\cry('P', $row[$k]);
-        db\update('r_request', $row, 'listid', TRUE);
+        db\updateOrInsert('r_request', $row, 'listid');
       } else $header = $row + ['ctty'];
     }
   }
@@ -668,8 +668,7 @@ X;
   $row1 = db\q($sql, $subs)->fetchAssoc() ?: []; // giftsEver, giftsPastMo
   
   $sql = <<< X
-    SELECT SUM(IF(type=:TX_TRANSFER, payerReward+payeeReward, 0)) AS beneEver,
-    SUM(IF(type=:TX_TRANSFER AND created>=:monthAgo, payerReward+payeeReward, 0)) AS benePastMo,
+    SELECT 0 AS beneEver, 0 AS benePastMo,
     SUM(IF(type IN (:TX_GRANT), amount, 0)) AS extraEver,
     SUM(IF(type IN (:TX_GRANT) AND created>=:monthAgo, amount, 0)) AS extraPastMo
     FROM r_txs WHERE :uid IN (payer, payee) AND created<:asof

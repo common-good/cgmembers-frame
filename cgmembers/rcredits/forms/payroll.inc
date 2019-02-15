@@ -20,7 +20,7 @@ function formPayroll($form, &$sta) {
 
   $subtext = t(<<<EOF
   <ul id="instructions">
-  <li><b>Ask your participating employees</b> how many %RCREDITS they can receive each pay period, without having to cash them out (how many can they easily spend in two weeks, for example). Or pay them entirely in %RCREDITS (your choice*).</li>
+  <li><b>Ask your participating employees</b> how much %RCREDITS they can receive each pay period, without having to cash them out (how much can they easily spend in two weeks, for example). Or pay them entirely in %RCREDITS (your choice*).</li>
   <li><b>In your accounting software</b>, create an after-tax payroll deduction called "%PROJECT" (you need do this only once). Set the %PROJECT deduction for each employee to the amount of %RCREDITS they asked to be paid. Use that same amount for the employee's account line in the spreadsheet you will create, as described below. Run payroll, to pay the US Dollar part of their wages, calculate taxes, etc.</li>
 %instructions
   </ul>

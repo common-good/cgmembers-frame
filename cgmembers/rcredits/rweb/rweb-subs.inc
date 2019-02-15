@@ -13,8 +13,8 @@ use CG\Web as w;
  */
 
 define('R_NONE', '<span class="none">--</span>'); // how to show an empty field let the tests see null values
-define('R_AGREE_0', -2); // number of the first point in the rCredits Agreement
-define('R_AGREE_9', 7); // number of the last point in the rCredits Agreement
+define('R_AGREE_0', 1); // number of the first point in the rCredits Agreement
+define('R_AGREE_9', 8); // number of the last point in the rCredits Agreement
 define('REQ', '*'); // marks required fields (use this as start of field's label)
 define('BARE', '-'); // marks bare (unwrapped) fields -- no div wrapper around them
 
@@ -132,7 +132,7 @@ EOF
   'increase min' => t('<%a>Click here</a> to increase your target balance!', '_a', atag('/settings/preferences')),
   'no such company' => t('There is no such company.'),
   'op canceled' => t('Operation Canceled.'),
-  'demand not yet' => t('You will be notified when there are some %RCREDITS for you to buy with US Dollars.'),
+  'demand not yet' => t('You will be notified when there is some %RCREDITS for you to buy with US Dollars.'),
   'confirm delete cell' => t('Are you sure you want to remove the selected mobile phones from this account?'),
   'already related' => t('That person is already related to this account. If you want to change the settings, find this person in the list and change the settings on that row.'),
   'already cell' => t('That mobile phone (%number) is already connected to this account.'),
@@ -430,7 +430,7 @@ function cgform($form, $onSubmit = '', $labeled = TRUE, $level = 0) {
   }
   $form['#attributes']['class'][] = $labeled ? 'form-horizontal' : 'form-vertical';
  
-  foreach (ray('title subtext buttons list back submit') as $k) if ($v = @$form[$k] and !is_array($v)) $form[$k] = $k == 'submit' ? submit($v) : item($v); // let these common items be created simply
+  foreach (ray('title subtext posttext buttons list back submit') as $k) if ($v = @$form[$k] and !is_array($v)) $form[$k] = $k == 'submit' ? submit($v) : item($v); // let these common items be created simply
   
   foreach ($form as $k => $v) if (substr($k, 0, 1) != '#') {
     $type = @$v['#type'];
@@ -757,12 +757,12 @@ function bitsFld($label, $bitRay, $prefix, $bits, $aliases = []) {
 }
 
 /**
- * Return a "signed by" field.
+ * Return a signature field for the Common Good Agreement or for backing.
  */
 function signedBy() {
   global $mya;
   $behalf = $mya->co ? t('(on behalf of %co) ', 'co', $mya->fullName) : '';
-  $signerA = $mya->cAdmin ? ($mya->co ? $mya->helperA : $mya) : $mya->agentA;
+  $signerA = $mya->cAdmin ? ($mya->co ?$mya->helperA : $mya) : $mya->agentA;
   return textFld(t('Signed:'), $behalf . t('Type your full name here ') . "($signerA->legalName)", required($mya->cAdmin ? $signerA->legalNameDpy : ''));
 }
 
@@ -1668,7 +1668,6 @@ function directoryList($which, $region, $withButtons = FALSE) {
     $region = r\serverUid();
     $regionCrit= ($mya and $mya->state) ? "state=:$mya->state" : 1;
   } else if (is_numeric($region) and $region < 0) {
-    //    $regionCrit = 'community=:region';
     $regionCrit = 'community=:region';
   } else {
     $region = \db_like($region) . '%';
@@ -1679,12 +1678,13 @@ function directoryList($which, $region, $withButtons = FALSE) {
   $which = str_replace(' ', '%', \db_like(" $which ")); // allow abbreviations of each word
 
   $sql = <<<EOF
-    SELECT DISTINCT u.uid, i.iid, industry
+    SELECT DISTINCT u.uid, i.iid, if (ISNULL(parent.industry), i.industry, parent.industry) as selIndustry, parent.iid as selIid
     FROM users u 
     LEFT OUTER JOIN r_user_industries ui ON ui.uid=u.uid
     LEFT OUTER JOIN r_industries i ON i.iid=ui.iid
+    LEFT OUTER JOIN r_industries parent on i.parent = parent.iid
     WHERE :IS_CO AND u.uid>:CANONIC_ACCTS AND :IS_OK AND $regionCrit AND (u.fullName LIKE :which OR i.industry LIKE :which)
-    ORDER BY i.industry, u.fullName
+    ORDER BY selIndustry, u.fullName
 EOF;
   $result = db\q($sql, compact(ray('region which')));
   $rows = [];
@@ -2152,8 +2152,7 @@ function fundStats($stats, $round = FALSE, $stats30 = NULL) {
     $res['cttyName'] = $ctty == r\serverUid() ? t('Seedpack (Outliers)') : trim(strtr($cttyA->fullName, [t('Region')=>'', PROJECT=>'']));
   } else $res['cttyName'] = t('TOTAL');
 
-  $scheme = f('i.scheme', 'r_stats');
-  $fields = $scheme['fields'];
+  $intStatFlds = [ 'pAccts', 'bAccts', 'newbs', 'aAccts', 'conx', 'conxLocal' ]; // excludes fields ending in 'Count'
   
   // calculate monthly velocity with respect to total credit in circulation (balsPos not bals)
   foreach ($rateFlds = ray('cg usd txs local') as $z) {
@@ -2164,7 +2163,7 @@ function fundStats($stats, $round = FALSE, $stats30 = NULL) {
   foreach (array_keys($stats) as $k) {
     if (!in($k, 'id ctty created')) {
       if ($stats30) $stats["d_$k"] = $stats[$k] - $stats30[$k];
-      $fmt = ($round or strpos($k, 'Count') or @$fields[$k]['type'] == 'int') ? '1' : 's$';
+      $fmt = ($round or strpos($k, 'Count') or in_array($k, $intStatFlds)) ? '1' : 's$';
       if (strpos($k, 'Rate')) $fmt = '%';
 //      if (strpos($k, 'Per')) $fmt = '';
       foreach ($stats30 ? [$k, "d_$k"] : [$k] as $fnm) {
@@ -2306,6 +2305,22 @@ function css($sheet, $weight = -99) {
 }
 
 /**
+ * Verify dollar amount choice (with "other amount" field).
+ * @param assoc $sta: (MODIFIED) form status array, from form's verify function
+ * @param numeric min: minimum amount
+ * @return <success>
+ */
+function checkAmtChoice(&$sta, $min = 0) { 
+  extract(just('amtChoice amount period', $sta['input']));
+  if ($amtChoice != -1) $amount = $amtChoice;
+  if (isset($period) and !$period and $amount) return say('missing field', array('field' => 'when'), 'period');
+  if ($err = u\badAmount($amount, '>=0')) return say($err, 'amount');
+  if ($amount < $min) return say(t('The amount must be at least $%min.', compact('min')), 'amount');
+  $sta['input'] = compact(ray('amount')) + $sta['input'];
+  return TRUE;
+}
+
+/**
  * Return standard fields for the bottom of any form used during account setup.
  * 
  */
@@ -2314,10 +2329,10 @@ function setupFoot($label = '', $extra = []) {
   if ($mya and !$mya->member) {
     if ($remains = $mya->stepsRemaining() - 1) { // don't count current step
       $skip = button(t('Skip for now'), "$base_url/settings/skip", t('Leave this step for last'), 'warning', 'xs', ['class' => 'skip']);
-      $nextStep = submit(t('Next ') . '&raquo;', '', '', w\suffix($skip));
+      $nextStep = submit($label ?: (t('Next ') . '&raquo;'), '', '', w\suffix($skip));
       $steps = $remains == 1 ? t('step') : t('steps');
       $progress = item(t('Just <b>%n</b> more %steps to go', 'n steps', $remains, $steps));
-    } else $nextStep = submit(t('Finish'));
+    } else $nextStep = submit($label ?: t('Finish'));
   } else $submit = submit($label, '', '', $extra);
   return compact(ray('submit nextStep progress'));
 }
@@ -2428,6 +2443,42 @@ function signupCoDisplay($info, &$company = '') {
   if (!@$info) return '';
   extract($info);
   return @$owner . ' ' . @$employee . ': ' . @$company;
+}
+
+/**
+ * Return a table as specified.
+ * @param ray $rows: set of row data
+ * @param ray $heads: column headers
+ * @param string $colClasses: (optional) class of each column
+ * @param ray $rowClasses: (optional) class of each row
+ * @return HTML of the full table
+ */
+function makeTable($rows, $heads, $colClasses = [], $rowClasses = [], $tableTribs = 'id=adhoc') {
+  u\EXPECT(!$colClasses or count($colClasses) == count($heads), 'wrong aligns count');
+  if ($rows) u\EXPECT(count($rows[0]) == count($heads), 'wrong heads count');
+  
+  $heads = makeRow('th', $heads, $colClasses);
+  if (@$rows) {
+    foreach ($rows as $i => $row) $lines[] = makeRow('td', $row, $colClasses, @$rowClasses[$i]);
+    $rows = join('', @$lines ?: []);
+    $after = '';
+  } else $after = t('There are no such records.');
+  return <<< X
+<table $tableTribs>
+$heads
+$rows
+</table>
+$after
+X;
+}
+
+function makeRow($tag, $row, $colClasses = [], $rowClass = '') {
+  foreach ($row as $i => $k) {
+    if ($class = @$colClasses[$i]) $class = " class=\"$class\"";
+    $line[$i] = "<$tag$class>$k</$tag>";
+  }
+  if ($rowClass) $rowClass = " class=\"$rowClass\"";
+  return "<tr$rowClass>\n" . join("\n", $line) . '</tr>';
 }
 
 /**

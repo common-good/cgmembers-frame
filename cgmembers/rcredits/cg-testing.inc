@@ -16,7 +16,7 @@ use CG\Web as w;
 
 global $base_path;
 define('BASE_PATH', $base_path);
-define('T_BALANCE_FLDS', 'uid balance floor rewards savingsAdd saveWeekly minimum');
+define('T_BALANCE_FLDS', 'uid balance floor savingsAdd saveWeekly minimum');
 define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account');
 
 /**
@@ -104,11 +104,11 @@ function doRecords($list, $thing) {
 /*
  * Generic record-maker/record-tester.
  */
-function doThing($info, $thing) {
+function doThing($info, $thing, $key = 'id') {
   global $testOnly;
   $table = 'r_' . strtolower($thing) . 's';
 // NO!  if (@$info['id']) {$info['uid'] = $info['id']; unset($info['id']);}
-  return $testOnly ? verifyRecord($table, $info) : db\insert($table, $info);
+  return $testOnly ? verifyRecord($table, $info) : db\insert($table, $info, $key);
 }
 
 function these($thing, $list) {return doRecords($list, ucwords(substr($thing, 0, strlen($thing) - 1)));}
@@ -154,6 +154,7 @@ function doAccount($info = []) {
 
   if (is_object($info)) $info = (array) $info;
 /**/  if (!is_array($info)) {echo 'not array'; print_r($info); die(trace()); } // keep for now
+//  unset($info['rebate']);
   extract($info); // any user table fields
   $uid0 = @$uid;
   u\setDft($uid, r\Acct::nextId()); // default to first available number
@@ -193,7 +194,7 @@ function doAccount($info = []) {
     if (@$cc2) $cardCode2 = $cc2;
     if (isset($risks)) $risks = getRisks($risks, K_ACCT_RISKS);
 
-    $fixFields = 'rebate fullName legalName name pass email secure community zip country postalAddr cardCode cardCode2 ' . $moneyFields;
+    $fixFields = 'fullName legalName name pass email secure community zip country postalAddr cardCode cardCode2 ' . $moneyFields;
 //  } else $fixFields = '';
 
 //  if (isset($flags) and isset($acctType) and $acctType !== CO_PERSONAL and $acctType != 'personal') $flags .= ',co';
@@ -271,17 +272,17 @@ function doTx($info, $thing) {
 //    if (@$xid and !is_numeric($xid)) $xid = u\a2n($xid);
     u\setDft($type, TX_TRANSFER);
     foreach (ray('type') as $one) if (!is_numeric($$one)) $$one = u\consta('tx', $$one);
-    if (r\isReward($type) and $amount) list ($payerReward, $payeeReward, $amount) = [0, $amount, 0];
+/*    if (r\isReward($type) and $amount) list ($payerReward, $payeeReward, $amount) = [0, $amount, 0];
     if (isset($rebate)) $payerReward = $rebate;
     if (isset($bonus)) $payeeReward = $bonus;
-    
+  */  
     if (is_array(@$for) or @$for != 'roundups desc') if (@$payer) $roundup = r\acct($payer)->roundup;
     
     if (!$testOnly) {
       u\setDft($goods, ($type != TX_TRANSFER or u\forCash(@$for)) ? FOR_USD : FOR_GOODS);
       if ($goods == FOR_GOODS) {
-        u\setDft($payerReward, r\reward($payer, $payee, $amount, TRUE));
-        u\setDft($payeeReward, r\reward($payer, $payee, $amount, FALSE));
+//        u\setDft($payerReward, r\reward($payer, $payee, $amount, TRUE));
+//        u\setDft($payeeReward, r\reward($payer, $payee, $amount, FALSE));
       }
     }
     if (in(@$purpose, 'offline')) $data['force'] = 1;
@@ -297,7 +298,8 @@ function doTx($info, $thing) {
     foreach (ray(TX_FLAGS) as $k) if (@$$k or $$k = in($k, $flags0)) u\setBit($flags, $k, $$k);
   }
   
-  $fields = 'xid payer payee amount payerReward payeeReward type goods flags data risk risks';
+//  $fields = 'xid payer payee amount payerReward payeeReward type goods flags data risk risks';
+  $fields = 'xid payer payee amount type goods flags data risk risks';
   if (!$testOnly) $fields .= $inv ? ' created' : ' created channel'; // when creating, add these if not already explicit
   if (!$inv) $fields .= ' payerAgent payeeAgent';
   
@@ -317,7 +319,7 @@ function doTx($info, $thing) {
   }
   
   if ($inv) {
-    return db\insert('r_invoices', $info);
+    return db\insert('r_invoices', $info, 'nvid');
   } else {
     $x = new r\X($info);
     return $x->xid;
@@ -574,7 +576,7 @@ function usdTransfers($txs) {
       u\setDft($tx['txid'], t\seq());
       u\setDft($tx['risk'], NULL);
       u\setDft($tx['created'], @$tx['completed']);
-      if (!db\insert('r_usd', $tx)) return FALSE;
+      if (!db\insert('r_usd', $tx, 'txid')) return FALSE;
 //      if (@$tx['completed']) $a->update('r', $a->o_r - $tx['amount']);
       if (@$tx['completed']) $a->update('balance', $a->o_balance + $tx['amount']);
     }
@@ -1417,7 +1419,10 @@ function hasLinkResults($thing, $info) {
 
   if (!preg_match('/ href="([^"]*)"/', t\that($thing), $matches)) return FALSE;
   
-  $s = file_get_contents($matches[1]);
+  if (isDEV) {
+    $arrContextOptions = [ "ssl" => [ 'verify_peer' => false, 'verify_peer_name' => false ] ];
+    $s = file_get_contents(preg_replace('@' . preg_quote(BASE_URL, '@') . '@', LOCAL_URL, $matches[1]), false, stream_context_create($arrContextOptions));
+  } else { $s = file_get_contents(preg_replace('@' . preg_quote(BASE_URL, '@') . '@', LOCAL_URL, $matches[1])); }
   foreach (ray('error status') as $one) $$one = @file_get_contents(t\dosayFilename($one));
   $formOut['text'] = str_replace($was = '#header -->', "$was$error$status", $s);
   return t\shownWith($info, 'text', TRUE);

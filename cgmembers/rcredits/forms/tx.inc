@@ -75,13 +75,13 @@ function formTx_submit($form, &$sta) {
 
   $func = op($sta) == 'pay' ? 'pay' : 'invoice';
   $DBTX = \db_transaction();
-    list ($msg, $args) = $mya->$func(r\acct($uid), $amount, $purpose);
+    list ($msg, $args) = $mya->$func(r\acct($uid), $amount, $purpose, @$repeat ? ['recurs' => 1] : []);
     $ok = @$args['success'];
     if ($ok and $period = @$repeat) {
       $subs = ray('payer payee', $mya->id, $uid);
       $info = $subs + compact(ray('amount period'));
       if ($id = db\get('id', 'r_recurs', 'payer=:payer AND payee=:payee AND ended=0', $subs)) $info += compact('id');
-      db\update('r_recurs', $info, $id ? 'id' : '', TRUE);
+      db\updateOrInsert('r_recurs', $info, 'id');
       $repeats = ray(OFTENS);
 //      $often = strstr($repeats[$repeat], ' ', TRUE);
       $often = $repeats[$repeat];

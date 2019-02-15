@@ -30,7 +30,7 @@ function achify($where = 'deposit=0') {
   list ($recType, $class, $secCode, $settle, $status) = [5, 200, 'PPD', '', 1]; // 200=mixed (maybe), 225=debits, 220=credits
   $entryDate = strftime('%y%m%d', strtotime('tomorrow'));
   $batchNum = 1; // batch (company) number within file
-  list ($data, $purpose, $when) = ['', t('CG Credits'), strftime('%b%d')];
+  list ($data, $purpose, $when) = ['', t('CG Credit'), strftime('%b%d')];
   $recs[] = achRecord(compact(array_keys($ray = ray(F_BATCHHDR))), $ray);
 
   $q = db\q("SELECT txid,payee,amount,deposit FROM r_usd WHERE $where ORDER BY txid");
@@ -85,10 +85,9 @@ function achRecord($values, $jlens) {
   foreach ($jlens as $k => $jlen) {
     list ($left, $len) = [$jlen[0] == 'L', substr($jlen, 1)];
     $v = $values[$k];
-    $res .= $left ? pad($v, $len) : padnum($v, $len);
+    $res .= $left 
+    ? substr(str_pad($v, $len), 0, $len)
+    : u\lpad(strval((int) round($v)), $len);
   }
   return $res;
 }
-
-function pad($s, $len) {return substr(str_pad($s, $len), 0, $len);}
-function padnum($n, $len) {return u\lpad(str_replace(',', '', number_format((int) $n, 0)), $len);}

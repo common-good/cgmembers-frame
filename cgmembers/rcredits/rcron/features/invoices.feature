@@ -13,11 +13,6 @@ Setup:
   And relations:
   | main | agent | permission |*
   | .ZZC | .ZZB  | buy        |
-  And transactions: 
-  | xid | created   | type   | amount | from | to   | purpose | taking |*
-  |   1 | %today-6m | signup |    250 | ctty | .ZZA | signup  | 0      |
-  |   2 | %today-6m | signup |    250 | ctty | .ZZB | signup  | 0      |
-  |   3 | %today-6m | signup |    250 | ctty | .ZZC | signup  | 0      |
   And invoices:
   | nvid | created   | status       | amount | from | to   | for   |*
   |    1 | %today    | %TX_APPROVED |    100 | .ZZA | .ZZC | one   |
@@ -37,8 +32,8 @@ Setup:
  When cron runs "invoices"
   Then transactions: 
   | xid | created | type     | amount | from | to   | purpose             | taking |*
-  |   4 | %today  | transfer |    100 | .ZZA | .ZZC | one (%PROJECT inv#1) | 0      |
-	Then count "txs" is 4
+  |   1 | %today  | transfer |    100 | .ZZA | .ZZC | one (%PROJECT inv#1) | 0      |
+	Then count "txs" is 1
 	And count "usd" is 2
 	And count "invoices" is 4
 	And usd transfers:
@@ -47,7 +42,7 @@ Setup:
   |    2 | .ZZA  |    200 | %today  |         0 |
   And invoices:
   | nvid | created   | status       | amount | from | to   | for   | flags   |*
-  |    1 | %today    | 4            |    100 | .ZZA | .ZZC | one   | funding |
+  |    1 | %today    | 1            |    100 | .ZZA | .ZZC | one   | funding |
   |    2 | %today    | %TX_APPROVED |    200 | .ZZA | .ZZC | two   | funding |
   |    3 | %today    | %TX_APPROVED |    300 | .ZZB | .ZZC | three |         |
   |    4 | %today-1w | %TX_PENDING  |    400 | .ZZA | .ZZC | four  |         |
@@ -91,6 +86,6 @@ Scenario: Non-member unpaid invoice does not generate a transfer request
   | nvid | created   | status       | amount | from | to   | for   |*
   |    5 | %today    | %TX_APPROVED |    100 | .ZZE | .ZZC | one   |
   When cron runs "invoices"
-	Then count "txs" is 4
+	Then count "txs" is 1
 	And count "usd" is 2
 	And count "invoices" is 5
