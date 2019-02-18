@@ -26,7 +26,7 @@ class ReformatTransactions extends AbstractMigration
     
     $requiredFields = ray('xid serial type goods amount payer payee payerAgent payeeAgent payerFor payeeFor payerReward payeeReward payerTid payeeTid data flags channel box created risk risks');
     
-    $flagsMask = (1<<B_OFFLINE | 1<<B_SHORT | 1<<B_RECURS | 1<<B_GIFT | 1<<B_FUNDING);
+    $flagsMask = (1 << B_OFFLINE | 1 << B_SHORT | 1 << B_RECURS | 1 << B_GIFT | 1 << B_FUNDING | 1 << B_CRUMBS);
     $dataMask = ray('');
 
     $txsTable = $this->table('r_txs');
@@ -34,34 +34,217 @@ class ReformatTransactions extends AbstractMigration
     $entriesTable = $this->table('r_entries');
     $disputesTbl = $this->table('r_disputes');
     $maxXid = 0;
+
+    $xFees = [];
+    $couponValue = [];
+    $coupId = [];
+
+    $allChangeKeys = [];
+    $allForceValues = [];
+    $allForceValues[-1] = 0;
+    $allForceValues[0] = 0;
+    $allForceValues[1] = 0;
     
     $sql = 'select * from r_txs';
     $results = $this->query($sql);
-
     print("CHANGES ARE DISCARDED\n");
     print("force in data BEING IGNORED\n\n");
 
-    foreach ($results as $result) {
-      $result = (array)$result;
+    while (true) {
+      $result = $results->fetch(PDO::FETCH_ASSOC);
+      if (!$result) break;
 
-      $xid = $result['xid'];
-      $missingFields = array_diff_key($requiredFields, $result);
-      if ($missingFields != []) {
-        print("MISSING FIELD(S) $missingFields IN R_TXS $xid\n");
+      extract($result);
+      if (is_string($data)) {
+        $data = unserialize($data);
+        if (!is_array($data)) $data = [];
       }
-      extract(just($requiredFields, $result));
-      $data = unserialize($data) ?: [];
       $maxXid = max($maxXid, $xid);
+      
+      $reverses = null;
+      $payerEntry = ray('xid amount uid agentUid description acctTid relType related',
+                        $xid, 0-$amount, $payer, $payerAgent, $payerFor, $payerTid, null, null);
+      $payeeEntry = ray('xid amount uid agentUid description acctTid relType related',
+                        $xid, $amount, $payee, $payeeAgent, $payeeFor, $payeeTid, null, null);
+      $otherEntries = [];
 
-      /* $hdrInfo = ray('xid type goods initiator initiatorAgent flags channel box risk risks reverses created', ); */
-      /* $entryInfo = ray('xid amount uid agentUid description acctTid relType related', ); */
-      /* $disputeInfo = ray('xid reason status', ); */
+      // xid is untouched
 
-      // xid doesn't change
-      // type doesn't change if it's in the correct list
-      // goods doesn't change if it's valid
+      // serial
+      if ($serial != $xid) {  // this is the next part of a group of transactions
+        if ($type == TX_XFEE) {
+          $feeAmt = arrayGet($xFees, $serial, null);
+          if ($feeAmt != null) {
+            if ($amount != $feeAmt) {
+              print("INCONSISTENCY: $serial wants $feeAmt, fee txn is for $amount\n");
+            } else {
+              $payerEntry['amount'] -= $amount;
+              $otherEntries[] = ray('xid amount uid agentUid description acctTid relType related',
+                                    $xid, 0-$amount, $payee, $payeeAgent, $payeeFor, $payeeTid, null, null);
+              unset($xFees[$serial]);
+              $type = TX_TRANSFER;
+            }
+          } else {
+            print("INCONSISTENCY: $xid is for $amount but original txn, $serial, has no fee\n");
+          }
+        } elseif ($type == TX_TRANSFER) {
+          $cValue = arrayGet($couponValue, $serial, null);
+          $cId = arrayGet($coupId, $serial, null);
+          if ($cValue != null and $cId != null) { // looks like a coupon
+            if (round($cValue, 2) != -$amount) {
+              print("INCONSISTENCY: cValue is $cValue, but coupon tx is for $amount on $xid\n");
+            } else {
+              $otherEntries[] = ray('xid amount uid agentUid description acctTid relType related',
+                                    $xid, $amount, $payee, $payeeAgent, $payeeFor, $payeeTid, null, null);
+              $payerEntry['amount'] -= $amount;
+              unset($couponValue[$serial]);
+              unset($coupId[$serial]);
+            }
+          } else {
+            print("NOT HANDLED: serial is $serial, xid is $xid.\n");
+          }
+        } else {
+          print("NOT HANDLED: serial is $serial, xid is $xid, type is $type.\n");
+        }
+      }
+      
+      // type
+      if (!array_key_exists($type, [TX_TRANSFER => 1, TX_SIGNUP => 1, TX_GRANT => 1, TX_LOAN => 1])) {
+        print("NOT HANDLED: type is $type on $xid\n");
+      }
 
-      // initiator[Agent] -- payee[Agent] or payer[Agent] -- turn off TAKING flag
+      // goods
+      if (!array_key_exists($goods, [FOR_GOODS => 1, FOR_USD => 1, FOR_NONGOODS => 1, FOR_SHARE => 1])) {
+        print("NOT HANDLED: goods is $goods on $xid\n");
+      }
+
+      // data and flags
+      // data: changes undoneBy force inv disputed isGift undoneNO undoes xfee coupon coupid
+
+      if (array_key_exists('changes', $data)) {
+        if (false) {
+          $changes = $data['changes'];
+          foreach ($changes as $index => $change) {
+            if (!array_key_exists(2, $change)) {
+              print_r("In $xid, changes contains $index => ");
+              print_r($change);
+              print_r("\n");
+              /* print_r("BAD CHANGES is $xid"); */
+              /* print_r($changes); */
+              /* print_r("\n"); */
+              /* print_r($change); */
+              /* print_r("\n"); */
+            } else {
+              $allChangeKeys[$change[2]] = 1;
+            }
+          }
+        }
+        unset($data['changes']);
+      }
+
+      if (array_key_exists('undoneBy', $data)) {
+        $reverser = $data['undoneBy'];
+        if (arrayGet($undoes, $reverser, null) != null) {
+          print("INCONSISTENCY: tx $xid apparently undone by $reverser\n");
+        }
+        $undoes[$reverser] = $xid;
+        $undoneBy[$xid] = $reverser;
+        u\setBit($flags, B_UNDONE, false);
+        unset($data['undoneBy']);
+      }
+      
+      if (array_key_exists('force', $data)) {
+        $force = $data['force'];
+        $allForceValues[$force] += 1;
+        unset($data['force']);
+        u\setBit($flags, B_OFFLINE);
+      }
+      
+      if (array_key_exists('inv', $data)) {
+        $nvid = $data['inv'];
+        $result = $this->query("SELECT status FROM r_invoices WHERE nvid='$nvid'");
+        if ($result == false) {
+          print("ERROR GETTING r_invoices on xid=$xid, (nvid=$nvid), result=$result\n");
+        }
+        $status = $result->fetch()['status'];
+        if ($status != $xid and $status != $reverses) {
+          print("INCONSISTENCY: tx $xid refers to invoice $nvid, but that invoice's status is $status, (reverses=$reverses)\n");
+        }
+        unset($data['inv']);
+      }
+      
+      if (array_key_exists('disputed', $data)) {
+        $dispute = $data['disputed'];
+        if ($dispute) {
+          print("NOT HANDLED: dispute $dispute in $xid\n");
+        } else {
+          $reason = '?';
+          if (arrayGet($undoes, $xid, null) != null) { // transaction was reversed
+            $status = DS_ACCEPTED;  // dispute has been adjudged correct and offsetting transaction generated
+          } else {
+            $status = DS_DENIED;
+          }
+          $disputesTbl->insert(ray('xid, reason, status', $xid, $reason, $status))->save();
+        }                       
+        unset($data['disputed']);
+        u\setBit($flags, B_DISPUTED, false);
+      }
+      
+      if (array_key_exists('isGift', $data)) {
+        u\setBit($flags, B_GIFT, true);
+        unset($data['isGift']);
+      }
+      
+      if (array_key_exists('undoneNO', $data)) {
+        print("IGNORING: undoneNO in $xid\n");
+        unset($data['undoneNO']);
+      }
+
+      if (u\getBit($flags, B_UNDOES) and !array_key_exists('undoes', $data)) {
+        if (array_key_exists($xid, $undoes)) {  // the tx we're reversing knows us
+          $undoneBy[$undoes[$xid]] = $xid;
+          u\setBit($flags, B_UNDOES, false);
+        } else {
+          print("INCONSISTENCY: undoes flag set, no undoes data, and no entry in undoneBy array\n");
+          print_r($undoes);
+          print_r("\n");
+          print_r($undoneBy);
+          print_r("\n");
+        }
+      }
+      
+      if (!u\getBit($flags, B_UNDOES) and array_key_exists('undoes', $data)) {
+        print("INCONSISTENCY: no undoes flag set but undoes data present\n");
+      }
+      if (array_key_exists('undoes', $data)) {
+        $reverses = $data['undoes'];
+        if (arrayGet($undoneBy, $reverses, $xid) != $xid) {
+          $early = $undoneBy[$reverses];
+          print("INCONSISTENCY: tx $reverses is being undone by tx $xid, but was already undone by tx $early\n");
+        } else {
+          $undoneBy[$reverses] = $xid;
+          $undoes[$xid] = $reverses;
+        }
+        u\setBit($flags, B_UNDOES, false);
+        unset($data['undoes']);
+      }
+      
+      if (array_key_exists('xfee', $data)) {
+        $xFees[$xid] = $data['xfee'];  // save the data to indicate that we need xfee entries
+        unset($data['xfee']);
+      }
+
+      if (array_key_exists('coupon', $data)) {
+        $couponValue[$xid] = $data['coupon'];
+        unset($data['coupon']);
+      }
+      
+      if (array_key_exists('coupid', $data)) {
+        $coupId[$xid] = $data['coupid'];
+        unset($data['coupid']);
+      }
+
+      // flags: taking disputed offline short undone undoes crumbs roundups roundup recurs gift
       if (u\getBit($flags, B_TAKING)) {
         $initiator = $payee;
         $initiatorAgent = $payeeAgent;
@@ -70,231 +253,103 @@ class ReformatTransactions extends AbstractMigration
         $initiator = $payer;
         $initiatorAgent = $payerAgent;
       }
-      
-      // channel doesn't change
-      // box doesn't change
-      // risk doesn't change
-      // risks doesn't change
-      
-      // created doesn't change
 
-      // reverses
-      // flags
-
-      
-      // forces in data
-      if (is_array($data) and array_key_exists('force', $data)) {
-        unset($data['force']);
-      }
-
-      // inv in data
-      if (arrayGet($data, 'inv', '') != '') {
-        $invoiceLinkFound = true;
-        $invoiceLink = $data['inv'];
-        unset($data['inv']);
-      } else {
-        $invoiceLinkFound = false;
-      }
-      
-      // isGift in data
-      if ((arrayGet($data, 'isGift', null) != null) and
-          (!u\getBit($result['flags'], B_GIFT)) and
-	  ($payee < 0)) { // repair flag   
-	u\setBit($result['flags'], B_GIFT);
-	unset($data['isGift']);
-      }
-      if (arrayGet($data, 'isGift', null) != null) {
-        if (u\getBit($result['flags'], B_GIFT)) {
-	  // it's cool
+      if (u\getBit($flags, B_DISPUTED)) {
+        if ($reverses != null) {  // reverses a disputed transaction
         } else {
-          print("INCONSISTENCY: data contains isGift, payee=$payee, xid=$xid\n");
-	  print_r($result);
+          print("INCONSISTENCY: disputed flag set, but no dispute data recorded on $xid\n");
         }
-      }
-
-      // Investments
-      if (u\getBit($flags, B_INVESTMENT)) {
-        print("INVESTMENT FLAG ON on $xid, record is " . print_r($result) . " -- IGNORING FLAG\n");
-        u\setBit($flags, B_INVESTMENT, false);
-      }
-
-      // Throw away changes
-      if ($data and array_key_exists('changes', $data)) {
-        unset($data['changes']);
-        /* print("CHANGES BEING DISCARDED on xid $xid\n"); */
-      }
-
-      if (array_key_exists('undoneNO', $data) or array_key_exists('unNO', $data)) {
-        unset($data['undoneNO']);
-        unset($data['unNO']);
-      }
-        
-      // Disputed?
-      if (u\getBit($flags, B_DISPUTED) or (array_key_exists('disputed', $data))) {
         u\setBit($flags, B_DISPUTED, false);
-	if (array_key_exists('disputed', $data)) {
-	  if ($data['disputed']) {  // still being disputed?
-	    print("DISPUTED TRANSACTION: apparently still in dispute, xid=$xid\n");
-	    print_r($result);
-	    print_r(unserialize($result['data']));
-	  } else {  //dispute resolved?
-	    if (arrayGet($data, 'undoneBy', false)) { // dispute resolved by undo
-	      $disputeInfo = ray('xid reason status', $xid, '', DS_ACCEPTED);
-	      $disputesTbl->insert($disputeInfo)->save();
-	    } else {  // dispute resolved by rejection
-	      $disputeInfo = ray('xid reason status', $xid, '', DS_DENIED);
-	      $disputesTbl->insert($disputeInfo)->save();
-	      // print("DISPUTED TRANSACTION: apparently rejected, xid=$xid\n");
-	      // print_r($result);
-	      // print_r(unserialize($result['data']));
-	    }
-	    unset($data['disputed']);
-	  }
-	} else {  // dispute resolved by rejection
- 	  $disputeInfo = ray('xid reason status', $xid, '', DS_DENIED);
- 	  $disputesTbl->insert($disputeInfo)->save();
-	   // print("DISPUTED TRANSACTION: flag set, data not set, xid=$xid\n");
-	   // print_r($result);
-	   // print_r(unserialize($result['data']));
-	}
       }
 
-      // reverses
-      $reverses = null;
-      if (arrayGet($data, 'undoes', null) != null) { // this tx reverses another tx
-        $reverses = $data['undoes'];
-        unset($data['undoes']);
-        u\setBit($flags, B_UNDOES, false);  // just in case
-        if (
-        $undoneBy[$reverses] = $xid;
-      }
+      // B_OFFLINE is left alone
 
-      if (arrayGet($data, 'undoneBy', null) != null) { // apparently we're being undone
+      // B_SHORT is left alone
+      
+      if (u\getBit($flags, B_UNDONE)) {  // if there had been undoneBy data we would have turned this off earlier
+        print("NOT HANDLED: flag B_UNDONE on $xid\n");
         u\setBit($flags, B_UNDONE, false);
-        
-      if (u\getBit($flags, B_UNDONE) or
-          array_key_exists('undo', $data) or array_key_exists('undone', $data) or
-          array_key_exists('undoes', $data) or array_key_exists('undoneBy', $data)) {
-        if (u\getBit($flags, B_UNDONE) and (array_key_exists('undo', $data)
-                                            or array_key_exists('undoneBy', $data))) {
-          $undoneBy[$xid] = $data['undoneBy'];
-          $undoes[$data['undoneBy']] = $xid;
-          u\setBit($flags, B_UNDONE, false);
-          unset($data['undo']);
-          unset($data['undoneBy']);
         }
-        if (u\getBit($flags, B_UNDOES) and (array_key_exists($xid, $undoes))) {
-          u\setBit($flags, B_UNDOES, false);
-          $reverses = $undoes[$xid];
-          unset($undoes[$xid]);
-        }
-        if (u\getBit($flags, B_UNDOES) and strpos($payerFor, 'reverses')) {
-          u\setBit($flags, B_UNDOES, false);
-        }
-      }
-      if (u\getBit($flags, B_UNDONE) or u\getBit($flags, B_UNDOES) or
-          array_key_exists('undo', $data) or array_key_exists('undone', $data) or array_key_exists('undoes', $data)
-          or array_key_exists('undoneBy', $data)) {
-        print("Record $xid participates in undoing\n");
-        print_r(just('flags data xid', $result));
+      
+      if (u\getBit($flags, B_UNDOES)) {  // if we knew what it undid we would have turned this off earlier
+        print("NOT HANDLED: flag B_UNDOES on $xid\n");
+        u\setBit($flags, B_UNDOES, false);
       }
 
-      // How about B_ROUNDUP?
+      // B_CRUMBS is left alone
+      
+      if (u\getBit($flags, B_ROUNDUPS)) {
+        $xid = 0;  // flag that this transaction should be ignored
+        /* print("IGNORING ROUNDUPS on $xid\n"); */
+        u\setBit($flags, B_ROUNDUPS, false);
+      }
+
+      $roundupDonation = 0;
       if (u\getBit($flags, B_ROUNDUP)) {
-        if ($amount > 0) {
-	  $amount ?????????????????
-}
-
-
-      // check type, goods, flags, and data
-      if (!array_key_exists($type, [TX_TRANSFER, TX_SIGNUP, TX_GRANT, TX_LOAN])) {
-        print("NOT HANDLED: type is $type on $xid\n");
+        if ($amount > 0 and $payee > 0) {  // communities don't make roundup donations
+          $cents = fmod($amount, 1);
+          if ($cents > 0) {
+            $roundupDonation = round(1 - $cents, 2);
+            $payerEntry['amount'] += $roundupDonation;
+            $entries[] = ray('xid amount uid agentUid description acctTid relType related',
+                             $xid, $roundupDonation, CG_ROUNDUPS_UID, CG_ROUNDUPS_UID, t('roundup donation'), $payerTid,
+                             null, null);
+            /* print("ROUNDUP DONATION will be $roundupDonation on $xid\n"); */
+          }
+        }
+        u\setBit($flags, B_ROUNDUP, false);
       }
-      if (!array_key_exists($goods, [FOR_GOODS, FOR_USD, FOR_NONGOODS, FOR_SHARE])) {
-        print("NOT HANDLED: goods is $goods on $xid\n");
-      }
+
+      // B_RECURS is left alone
+
+      // B_GIFT is left alone
+      
+      // Check for unexpected flags or data
       if (($flags & ~$flagsMask) != 0) {
-        print("NOT HANDLED: flags is $flags on $xid\n");
+        $hexFlags = dechex($flags);
+        print("NOT HANDLED: flags is $hexFlags on $xid\n");
 	print_r($data);
       }
-      if ($data and $data != []) {
+
+      if ($data != []) {
         print("NOT HANDLED: data is " . print_r($result['data'], true) . " on $xid\n");
       }
-      
-      // build r_tx_hdrs record
-      $hdr = ray('xid type goods initiator initiatorAgent flags channel box risk risks reverses created',
-                 $xid, $type, $goods, $initiator, $initiatorAgent, $flags, $channel, $box, $risk, $risks, $reverses, $created);
-      
-      /* if (u\getBit($flags, B_ROUNDUPS)) { */
-      /*   debug("NOT HANDLED YET: ROUNDUPS on $xid"); */
-      /* } */
-    
-      /* if (u\getBit($flags, B_ROUNDUP)) { */
-      /*   debug("NOT HANDLED YET: ROUNDUP on $xid"); */
-      /* } */
-    
-      /* if (u\getBit($flags, B_RECURS)) { */
-      /*   debug("NOT HANDLED YET: RECURS on $xid"); */
-      /* } */
-
-      /* if (u\getBit($flags, B_LOAN)) { */
-      /*   debug("UNEXPECTED LOAN on $xid"); */
-      /* } */
-    
-      /* if (u\getBit($flags, B_INVESTMENT)) { */
-      /*   debug("UNEXPECTED INVESTMENT on $xid"); */
-      /* } */
-    
-      /* if (u\getBit($flags, B_STAKE)) { */
-      /*   debug("UNEXPECTED STAKE on $xid"); */
-      /* } */
-    
-      /* if (u\getBit($flags, B_FINE)) { */
-      /*   debug("UNEXPECTED FINE on $xid"); */
-      /* } */
-    
-      /* if (u\getBit($flags, B_NOASK)) { */
-      /*   debug("UNEXPECTED NOASK on $xid"); */
-      /* } */
 
       //
-      $payerEntry = [];
-      $payerEntry = just('xid', $result);
-      $payerEntry['amount'] = 0-$amount;
-      $payerEntry['uid'] = $payer;
-      $payerEntry['agentUid'] = $payerAgent;
-      $payerEntry['description'] = $payerFor;
-      $payerEntry['acctTid'] = $payerTid;
-      if ($invoiceLinkFound) {
-        $payerEntry['relType'] = 'I';
-        $payerEntry['related'] = $invoiceLink;
-      } else {
-        $payerEntry['relType'] = null;
-        $payerEntry['related'] = null;
+      if ($xid != 0) {
+        $hdrInfo = compact(ray('xid type goods initiator initiatorAgent flags channel box risk risks reverses created'));
+        $txHdrsTable->insert($hdrInfo)->save();
+        $entriesTable->insert($payerEntry)->insert($payeeEntry)->save();
+        foreach ($entriesTable as $key => $entry) {
+          if (array_key_exists('0', $entry)) {
+            print_r($entry);
+          }
+          $entriesTable->insert($entry)->save();
+        }
       }
-
-      $payeeEntry = [];
-      $payeeEntry = just('xid', $result);
-      $payeeEntry['amount'] = $amount;
-      $payeeEntry['uid'] = $payee;
-      $payeeEntry['agentUid'] = $payeeAgent;
-      $payeeEntry['description'] = $payeeFor;
-      $payeeEntry['acctTid'] = $payeeTid;
-      if ($invoiceLinkFound) {
-        $payerEntry['relType'] = 'I';
-        $payerEntry['related'] = $invoiceLink;
-      } else {
-        $payerEntry['relType'] = null;
-        $payerEntry['related'] = null;
-      }
-
-      $txHdrsTable->insert($hdr)->save();
-      $entriesTable->insert($payerEntry)->insert($payeeEntry)->save();
     }
 
-    print("Leftover undone bys:\n");
-    foreach ($undoneBy as $k => $v) {
-      print("$k was undone by $v\n");
+    if ($xFees != []) {
+      print_r("Leftover xFees: ");
+      print_r($xFees);
+      print_r("\n");
+    }
+    if ($couponValue != []) {
+      print_r("Leftover couponValue: ");
+      print_r($couponValue);
+      print_r("\n");
+    }
+    if ($coupId != []) {
+      print_r("Leftover coupId: ");
+      print_r($coupId);
+      print_r("\n");
+    }
+
+    foreach ($allChangeKeys as $changeKey => $v) {
+      print_r("change: $changeKey\n");
+    }
+    foreach ($allForceValues as $forceKey => $forceCount) {
+      print_r("force $forceKey: $forceCount\n");
     }
   
     /*---------------------------------------------------------------*/
@@ -313,30 +368,31 @@ class ReformatTransactions extends AbstractMigration
         print("NOT HANDLED: USD MISSING FIELDS " . print_r($missingFields, true) . "\n");
       }
       extract(just($requiredFields, $result));
-      
-      $xid = $nextXid;
-      $type = TX_BANK;
-      $goods = FOR_USD;
-      $initiator = $payee; // Assume that the payee initiated the transaction, because we don't really know.
-      $initiatorAgent = $payee; // And that they did it themselves...
-      $flags = 0;
-      $box = null;
-      $reverses = null;
-      $created = $completed;
-      
-      $hdr = compact('xid type goods initiator intiatorAgent flags channel box risk risks reverses created');
+
+      $tid = $this->fetchRow("SELECT MAX(acctTid) AS maxTid FROM r_entries WHERE uid='$payee'");
+      if (!$tid) {
+        print_r("ERROR: can't get tid for $payee\n");
+        $tid = 1;
+      } else {
+        $tid = $tid['maxTid'];
+      }
+          
+      $hdr = compact('xid type goods initiator intiatorAgent flags channel box risk risks reverses created',
+                     $nextXid, TX_BANK, FOR_USD, $payee, $payer, 0, $channel, null, $risk, $risks, null, $completed);
 
       $e1 = compact('xid amount uid agentUid description acctTid relType related',
-                    $xid, -$amount, CG_BANK_UID, CG_BANK_UID, ($amount > 0) ? 'from bank' : 'to bank', $bankTxId, null, null);
+                    $nextXid, -$amount, CG_BANK_UID, CG_BANK_UID, ($amount > 0) ? t('from bank') : t('to bank'),
+                    $bankTxId, null, null);
 
       $e2 = compact('xid amount uid agentUid description acctTid relType related',
-                    $xid, $amount, $payee, $payee, ($amount > 0) ? 'from bank' : 'to bank', $txid, null, null);
+                    $nextXid, $amount, $payee, $payee, ($amount > 0) ? t('from bank') : t('to bank'), $tid, null, null);
 
 
       $txHdrsTable->insert($hdr)->save();
       $entriesTable->insert($e1)->insert($e2)->save();
-      if ($this->execute("UPDATE r_usd SET xid='$xid' WHERE txid='$txid'") != 1) {
-        print("ERROR UPDATING r_usd on xid=$xid\n");
+      $result = $this->execute("UPDATE r_usd SET xid='$nextXid' WHERE txid='$txid'");
+      if ($result != 1) {
+        print("ERROR UPDATING r_usd on xid=$xid: $result\n");
       }
     }
 
@@ -359,33 +415,30 @@ class ReformatTransactions extends AbstractMigration
       // Checking
       switch ($type) {
       case 'S':
-        $result['initiator'] = CG_BANK_UID;
+        $initiator = CG_BANK_UID;
         break;
       case 'T':
-        $result['initiator'] = CG_ADMIN_UID;
+        $initiator = CG_ADMIN_UID;
         break;
       default:
         print('BAD USD2 TYPE: ' . $result['type'] . "\n");
       }
 
-      $xid = $nextXid;
-      $initiator = ($result['type'] == 'S') ? CG_BANK_UID : CG_ADMIN_UID;
       $initiatorAgent = $initiator;
 
       $hdr = compact('xid type goods initiator intiatorAgent flags channel box risk risks reverses created',
-                     $xid, TX_BANK, FOR_USD, $initiator, $initiatorAgent, 0, null, null, null, null, $completed);
+                     $nextXid, TX_BANK, FOR_USD, $initiator, $initiatorAgent, 0, null, null, null, null, null, $completed);
       $e1 = compact('xid amount uid agentUid description acctTid relType related',
-                    $xid, -$amount, CG_BANK_UID, CG_BANK_UID, $memo, $bankTxId, null, null);
+                    $nextXid, -$amount, CG_BANK_UID, CG_BANK_UID, $memo, $bankTxId, null, null);
       $e2 = compact('xid amount uid agentUid description acctTid relType related',
-                    $xid, $amount, CG_BANK_UID, CG_BANK_UID, $memo, $bankTxId, null, null);
+                    $nextXid, $amount, CG_BANK_UID, CG_BANK_UID, $memo, $bankTxId, null, null);
 
       $txHdrsTable->insert($hdr)->save();
       $entriesTable->insert($e1)->insert($e2)->save();
       if ($this->execute("UPDATE r_usd2 SET xid='$xid' WHERE id='$id'") != 1) {
-        print("ERROR UPDATING r_usd2 on xid=$xid\n");
+        print("ERROR UPDATING r_usd2 on xid=$nextXid\n");
       }
     }
-
   }
 
   public function down() {
