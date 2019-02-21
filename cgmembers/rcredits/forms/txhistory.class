@@ -1,0 +1,154 @@
+<?php
+namespace CG\Web;
+use CG\Web as w;
+use CG as r;
+use CG\DB as db;
+use CG\Backend as be;
+use CG\Util as u;
+
+require_once __DIR__ . '/TxProcessor.interface';
+
+/**
+ * @file
+ * Class to generate transaction history reports; extends 
+ *
+ */
+
+class TxHistory implements TxProcessor {
+  private $body = '';
+  private $uids = [];
+  private $tidValue = '';
+  private $dateValue = '';
+  private $count = 0;
+  
+  public function __construct($uids) {
+    $this->uids = $uids;
+  }
+  
+  /**
+   * Called before the first transaction.
+   */
+  public function hdr() {
+    /* global $mya, $agtViaBoxHelp; */
+
+    $headHelp = t('|Transaction number|Date transaction was completed|Who did you pay or receive from|What is the purpose of the transaction (usually the item or service purchased)|Amounts you spent or received|Running balance|Click a symbol to reverse a transaction')/* . @$agtViaBoxHelp*/;
+
+    $classes = 'tid date name purpose amount balance buttons'/* . (@$agtViaBoxHelp ? ' agent channel box' : '')*/;
+    $headHelp = array_combine(ray($classes), ray($headHelp));
+    $headers = t('Tx#,Date,Name,Purpose,Amount,Balance,Action'); //From You, To You,Net');
+    $header = array_combine(ray($classes), ray($headers)); // make splices and additions easy and clear
+
+    /* if (@$agents) $header['agent'] = t('Agent'); */
+    /* if (@$channels) $header['channel'] = t('Via'); */
+    /* if (@$boxes) $header['box'] = t('Box'); */
+    
+    $hdr = '';
+    foreach ($header as $class => $text) {
+      $header[$class] = w\popHelp($text, $headHelp[$class]);
+    }
+
+    $this->links .= <<<EOF
+<div class="$class">
+  <div class="tid-date col-xs-2">
+    <div class="tid col-sm-5">$this->tidValue</div>
+    <div class="date col-sm-7">$this->dateValue</div>
+  </div>
+  <div class="name-purpose col-xs-$c1">
+    <div class="name col-sm-6">$name</div>
+    <div class="purpose col-sm-6">$description</div>
+  </div>
+  <div class="amount-reward col-xs-$c2">
+    <div class="amount col-sm-$c3">$amount</div>
+    <div class="runBalance col-sm-$c4">$runBalance</div>
+  </div>
+  <div class="buttons col-xs-1">
+
+  </div>
+</div>
+
+  }
+
+  /**
+   * Called before each transaction.
+   * @param assoc $info: all of the data for this entry (includes transaction data)
+   */
+  public function txnHdr($info) {
+    $this->body .= "<tbody>\n";
+    $this->tidValue = $info['tid'];
+    $this->dateValue = u\fmtDate($info['created']);;
+  }
+
+  /**
+   * Called for each entry of a transaction.
+   * @param assoc $info: all of the data for this entry (includes transaction data)
+   */
+  public function processEntry($info) {
+    if (in_array($info['uid'], $this->uids)) return;  // only show the other end of the transaction
+    extract(just('name description amount runBalance', $info));
+    $amount = u\fmtAmt(- $amount, '');
+    $runBalance = u\fmtAmt($runBalance, '');
+    $class = 'row txRow';
+    /* if (!$list) $class .= ' head'; */
+    $class .= ' page-' . floor($this->count / MIN_TX_ROWS);
+    $class .= ' PAGE-' . floor($this->count / NORMAL_TX_ROWS);
+
+    /* $small = floor($this->count / MIN_TX_ROWS); */
+    /* $large = floor($this->count / NORMAL_TX_ROWS); */
+    /* $this->body .= "<tr class='row txRow page-$small PAGE-$large'>"; */
+    /* $this->body .= "<td class='tid'>$this->tidValue</td>"; */
+    /* $this->body .= "<td class='created'>$this->dateValue</td>"; */
+    /* $this->body .= "<td class='name'>$name</td>"; */
+    /* $this->body .= "<td class='description'>$description</td>"; */
+    /* $this->body .= "<td class='amount'>$amount</td>"; */
+    /* $this->body .= "<td class='runBalance'>$runBalance</td>"; */
+    /* $this->body .= "</tr>"; */
+    list ($c1, $c2, $c3, $c4) = [6, 3, 5, 7];
+
+    $this->body .= <<<EOF
+<div class="$class">
+  <div class="tid-date col-xs-2">
+    <div class="tid col-sm-5">$this->tidValue</div>
+    <div class="date col-sm-7">$this->dateValue</div>
+  </div>
+  <div class="name-purpose col-xs-$c1">
+    <div class="name col-sm-6">$name</div>
+    <div class="purpose col-sm-6">$description</div>
+  </div>
+  <div class="amount-reward col-xs-$c2">
+    <div class="amount col-sm-$c3">$amount</div>
+    <div class="runBalance col-sm-$c4">$runBalance</div>
+  </div>
+  <div class="buttons col-xs-1">
+
+  </div>
+</div>
+EOF;
+
+    $this->tidValue = '';
+    $this->dateValue = '';
+  }
+
+  /**
+   * Called after each transaction.
+   * @param assoc $info: all of the data for this entry (includes transaction data)
+   */
+  public function txnFtr($info) {
+    $this->body .= "<td></td>\n";
+    $this->body .= "</tbody>\n";
+    $this->count += 1;
+  }
+
+  /**
+   * Called after the last transaction.
+   */
+  public function ftr() {
+  }
+
+  /**
+   * Get the built HTML
+   */
+  public function get() {
+    return w\item(w\tag("table", $this->body));
+    return [$header, $classes, sortRows($rows, @$descending), $totDone];
+  }
+}

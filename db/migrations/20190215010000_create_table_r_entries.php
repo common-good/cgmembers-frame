@@ -13,8 +13,8 @@ class CreateTableREntries extends AbstractMigration
     $this->addBigInt($entryTable, 'xid', ['length' => 20, 'null' => false, 'comment' => 'the ID of the transaction to which this entry belongs']);
     /* $this->addTinyInt($entryTable, 'entryType', ['length' => 4, 'null' => 'false', 'comment' => 'entry type']); */
     $entryTable->addColumn('amount', 'decimal', ['precision' => 11, 'scale' => 2, 'signed' => true, 'null' => false, 'default' => '0.00', 'comment' => 'amount, may be negative']);
-    $this->addBigInt($entryTable, 'uid', ['length' => 20, 'null' => true, 'comment' => 'user id of the account to which this entry applies (null indicates external source, e.g., for money transferred in from a bank']);
-    $this->addBigInt($entryTable, 'agentUid', ['length' => 20, 'null' => true, 'comment' => "user id of account's agent (who approved this transaction for this account)"]);
+    $this->addBigInt($entryTable, 'uid', ['length' => 20, 'null' => false, 'comment' => 'user id of the account to which this entry applies']);
+    $this->addBigInt($entryTable, 'agentUid', ['length' => 20, 'null' => false, 'comment' => "user id of account's agent (who approved this transaction for this account)"]);
     $entryTable->addColumn('description', 'string', ['length' => 255, 'default' => 'NULL', 'comment' => 'description for this entry']);
     $entryTable->addColumn('acctTid', 'integer', ['length' => 11, 'null' => true, 'comment' => 'transaction ID for the account to which this entry applies']);
     $entryTable->addColumn('relType', 'string', ['length' => 1, 'null' => true, 'comment' => "type of related record, 'D' for coupated, 'I' for invoice"]);

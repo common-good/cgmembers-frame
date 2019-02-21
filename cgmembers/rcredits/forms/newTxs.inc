@@ -12,17 +12,25 @@ include_once __DIR__ . '/../cg-txs.inc';
 /**
  * List Transactions
  */
-function formTxs($form, &$sta, $args = '') {
-  w\downloadCheck('history/transactions');
+function formNewTxs($form, &$sta, $args = '') {
+  global $mya;
+  global $testPeriod;
+  
+  w\downloadCheck('history/new-transactions');
   
   global $agtViaBoxHelp, $base_url;
   $agtViaBoxHelp = t('||Agent is who did the transaction on your behalf.|Channel (Via) is where the transaction originated -- what type of device: Web, Smartphone, SMS, or Automatic.|Box is where the transaction originated -- which specific device.');
   $optHelp = $agtViaBoxHelp . t('||Exchanges are 1-to-1 trades of US Dollars for %RCREDITS (usually automatic).|PExchanges are daily automatic payment exchanges of %RCREDITS between company and employee. The company pays the employee in US Dollars, then the employee trades back some US Dollars 1-to-1 for %RCREDITS. The net effect is that the employee gets paid partly in US Dollars, partly in %RCREDITS.');
-  global $mya;
 
-  extract(just('options period starting ending do xid download downloaded', $args)); 
+  $options = arrayGet($args, 'options', []);
+  $testPeriod = arrayGet($args, 'period', TX_DEFAULT_PERIOD);
+  $starting = arrayGet($args, 'starting', null);
+  $ending = arrayGet($args, 'starting', null);
+  $do = arrayGet($args, 'do', null);
+  $xid = arrayGet($args, 'xid', null);
+  $download = arrayGet($args, 'download', null);
+  $downloaded = arrayGet($args, 'downloaded', null);
   
-  global $testPeriod; $testPeriod = @$period ?: TX_DEFAULT_PERIOD; // remember for tests
   if (@$do) if ($result = handleTx($do, $xid, $sta, $args)) return $result;
   extract(just('dateRange downloadMsg url starting ending', dateRange($args, 'history/transactions')));
 
@@ -107,9 +115,9 @@ EOF;
   return cgform($form);
 }
 
-function formTxs_validate($form, &$sta) {w\dateRangeValidate($sta);}
+function formNewTxs_validate($form, &$sta) {w\dateRangeValidate($sta);}
 
-function formTxs_submit($form, &$sta) {
+function formNewTxs_submit($form, &$sta) {
 //  if (confirming_s($sta)) return;
   return w\dateRangeRedirect('history/transactions', $sta);
 }
@@ -119,7 +127,7 @@ function formTxs_submit($form, &$sta) {
  * @param int $xid: the transaction id
  * @return the form (FALSE on error)
  */
-function txEdit($xid) {
+function newTxEdit($xid) {
   global $mya;
   if (!$myx = r\MyX::lastTx($mya, 'xid=:xid', compact('xid'), TRUE)) return FALSE; // bail on hack attempt
   extract(just('taking toMe payer payee amount goods payerFor payeeFor created', $myx->ray));
@@ -127,8 +135,8 @@ function txEdit($xid) {
   if (!$mya->can($taking ? B_SELL : B_BUY)) return FALSE;
 
   $form = array(    
-    '#validate' => array('CG\\Web\\txEdit_validate'),
-    '#submit' => array('CG\\Web\\txEdit_submit'),
+    '#validate' => array('CG\\Web\\newTxEdit_validate'),
+    '#submit' => array('CG\\Web\\newTxEdit_submit'),
   );
 
   $purpose = $toMe ? $payeeFor : $payerFor;
@@ -145,7 +153,7 @@ function txEdit($xid) {
   return cgform($form + compact(ray('title to amount goods purpose created0 created submit orig')));
 }
 
-function txEdit_validate($form, &$sta) {
+function newTxEdit_validate($form, &$sta) {
   global $base_url;
   global $mya;
   extract(just('created0 created amount goods purpose orig', $sta['input']));
@@ -168,7 +176,7 @@ function txEdit_validate($form, &$sta) {
   u\preray(compact('amount', 'created'), $sta['input']);
 }
 
-function txEdit_submit($form, &$sta) {
+function newTxEdit_submit($form, &$sta) {
   extract(just('created amount goods purpose orig', $sta['input']));
   extract($orig = unserialize(unplain($orig)), EXTR_PREFIX_ALL, 'x');
   $a = r\acct(); $id = $a->id;
@@ -217,7 +225,7 @@ function handleTx($do, $xid, &$sta, $args) {
   }
   
   if (!$xid = (int) @$xid) return FALSE;
-  if ($do == 'edit') return txEdit($xid);
+  if ($do == 'edit') return newTxEdit($xid);
   if ($do == 'ok' or $do == 'no') {
     txOKorNO($do, $xid);
     return w\go($url); // back to the normal form

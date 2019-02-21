@@ -47,7 +47,7 @@ function seeHidden($a) {
  * @param float $newAmt: what the amount should be
  */ /*
 function changeTxAmt($xid, $oldAmt, $newAmt) {
-  if (!$rec = db\get('payer,payee,amount,created,goods', 'r_txs', 'xid=:xid', compact('xid'))) return say(t('No such transaction.'), 'ERR');
+  if (!$rec = db\get('payer,payee,amount,created,goods', 'r_ txs', 'xid=:xid', compact('xid'))) return say(t('No such transaction.'), 'ERR');
   extract($rec);
   if ($amount != $oldAmt) return say(t('The existing amount of that transaction is different.'), 'ERR');
   if (u\fmtDate($created) != u\fmtDate(r\rTime())) return say(t('That transaction is not from today.'), 'ERR');
@@ -55,7 +55,7 @@ function changeTxAmt($xid, $oldAmt, $newAmt) {
   if (!$amount = round($newAmt, 2)) return say(t('Bad new amount.'), 'ERR');
 
   $DBTX = \db_transaction();
-  db\update('r_txs', compact('xid', 'amount'), 'xid');
+  db\update('r_ txs', compact('xid', 'amount'), 'xid');
   $change = $newAmt - $oldAmt;
   if ($payee > 0) db\q('UPDATE users SET r=r+:change WHERE uid=:payee', compact('change', 'payee'));
   if ($payer > 0) db\q('UPDATE users SET r=r-:change WHERE uid=:payer', compact('change', 'payer'));
@@ -193,14 +193,15 @@ EOF;
       $moves = item($mya->moves === '' ? '?' : $mya->moves, t('Moves:'), t('(How many times has this person changed counties in the past decade?)'));
 
 //    $who = textFld(t('Be who:'), t('Type a name, id, email, or phone of a (different) member account to manage.'), autocomplete($admin ? '' : 'ctty')); // keep this for when we need it (just add to returned fields)
-  }      
+    }      
 
-  if ($mya->id == CGID) {
-    $sql = <<<EOF
-      SELECT u.community AS ctty, SUM(IF(payee=:uid, amount, 0)) AS `in`,
-        SUM(IF(payer=:uid, amount, 0)) AS `out`
-      FROM r_txs t LEFT JOIN users u ON u.uid=IF(payer=:uid, payee, payer)
-      WHERE ((payer=:uid AND payee<0) OR payee=:uid) AND t.:IS_GIFT GROUP BY community
+    if ($uid /*$mya->id*/ == CGID) {
+      $sql = <<<EOF
+        SELECT u.community AS ctty, SUM(IF(e.amount > 0, amount, 0)) AS `in`,
+        SUM(IF(e.amount < 0, 0, amount)) AS `out`
+        FROM r_entries e JOIN users u ON e.uid = u.uid JOIN r_tx_hdrs t ON e.xid = t.xid
+        WHERE e.uid = :uid AND t.:IS_GIFT
+        GROUP BY ctty
 EOF;
     $q = db\q($sql, compact('uid'));
     $lines = '<tr><th>Community</th><th>Donations</th><th>Paid</th><th>Due</th></tr>';

@@ -176,18 +176,20 @@ define('BY_CHECK', '(check)'); // app includes this in description, for a purcha
 define('BY_CARD', '(card)'); // app includes this in description, for a purchase of CG credit by credit card
 define('R_ON_FILE', t('(on file)'));
 define('DEPOSIT_SQL', '(amount>0 XOR txid<0)'); // SQL fragment for "transfer is from bank to CG"
-
 define('DOLLAR_POOL', 1); // uid of dollar pool account
-define('CANONIC_ACCTS', 512); // number of canonic accounts (admin/dollar pool, placeholders,...)
-define('AGGREGATE_MIN', 1); // minimum number of members to show aggregate data
+define('CANONIC_ACCTS', 257); // number of canonic accounts (admin/dollar pool, placeholders,...)
 
-define('CG_ADMIN_UID', 1);  // uid of administrator account
-define('PLACEHOLDER_1_UID', 2);  // uid of first placeholder
-define('PLACEHOLDER_2_UID', 3);  // uid of second placeholder
-define('CG_ROUNDUPS_UID', 129);  // Donations start at 128 (128 used for general donations)
-define('CG_CRUMBS_UID', 130);  //
-define('CG_INCOMING_BANK_UID', 256);  // Bank accounts start at 256
-define('CG_OUTGOING_BANK_UID', 257);  //
+define('CG_EMPTY_UID', 0); // members who are not signed in
+define('CG_ADMIN_UID', 1); // the administrator
+define('CG_PROXY_2_UID', 2); // 2 and 3 are placeholders for proxies
+define('CG_PROXY_3_UID', 3);
+
+define('CG_ROUNDUPS_UID', 128);
+define('CG_CRUMBS_UID', 129);
+
+define('CG_BANK_UID', 256); // the uid of the account that represents all of the region's bank accounts
+
+define('AGGREGATE_MIN', 1); // minimum number of members to show aggregate data
 
 define('R_TEMP_NAME_PREFIX', 'unknown ');
 define('CO_PHOTO_FACTOR', 3); // make company photos this many times as big as individual photos
@@ -522,13 +524,14 @@ define('TX_MAX_ROWS', 500); // (unused) maximum number of transactions to load a
 define('TX_MAX_MOS', 18); // maximum transaction months, for display
 define('TX_MAX_DAYS', 30.5 * TX_MAX_MOS + 2); // maximum days in a transaction query (18 months) -- 2 for leap day & daylight
 define('TX_DOWNLOAD_MONEY_FLDS', 'frombank fromyou toyou reward net');
-define('NEW_TX_DOWNLOAD_MONEY_FLDS', 'frombank fromyou toyou net');
 define('TX_DATA_FLDS', 'undoneBy undoes force changes'); // serialized pseudo-fields in the data field of a transaction record
 
-define('DS_OPEN', 1);  // dispute not resolved
-define('DS_ACCEPTED', 2);  // dispute accepted and transaction reversed
-define('DS_DENIED', 3);  // dispute denied
-
+// Status for disputes
+define('DS_OPEN', 1); // Transaction has been disputed, no resolution
+define('DS_DENIED', 2); // Dispute has been denied, no foundation for it
+define('DS_ACCEPTED', 3); // Dispute has been adjudged correct and an
+		          // offsetting transaction has been generated.
+			  
 $GLOBALS['emailSubjects'] = array(
 /*  'new-payment' => t('%PROJECT PAYMENT from {otherName}'),
   'new-charge' => t('%PROJECT CHARGE from {otherName}'),

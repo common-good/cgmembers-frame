@@ -46,8 +46,8 @@ EOF;
     $iGet = 'payee IN (:uid, :jid)';
 //    foreach (ray(TX_FLAGS) as $k) $$k = u\bit(u\consta('b', $k)); // taking and roundup flags
     list ($fromBank, $toBank) = [t('from bank'), t('to bank')];
-    $txFields = "xid, amount, t1.flags, IF($iPay, amount, 0) AS fromyou, IF($iPay, 0, amount) AS toyou, payer, payee, type, t1.created, t1.data, $iPay XOR t1.:IS_TAKING AS byMe, t1.:IS_ROUNDUP AS roundup, t1.:IS_DISPUTED AS disputed, $iGet AS toMe, IF($iPay, payerFor, payeeFor) AS description, IF($iPay, payerAgent, payeeAgent) AS agent, IF(:uid<0, xid, IF($iPay, payerTid, payeeTid)) AS tid, goods, (goods=:FOR_SHARE) AS sharing, channel";
-    $usdFields = "txid AS xid, amount, 0 AS flags, IF(:DEPOSIT_SQL, 0, -amount) AS fromyou, IF(:DEPOSIT_SQL, amount, 0) AS toyou, 0 AS payer, payee, :TX_BANK AS type, completed AS created, '' AS data, TRUE AS byMe, FALSE AS roundup, FALSE AS disputed, IF(:DEPOSIT_SQL, 1, 0) AS toMe, IF(:DEPOSIT_SQL, '$fromBank', '$toBank') AS description, '' AS agent, txid AS tid, :FOR_USD AS goods, 0 AS sharing, channel";
+    $txFields = "xid, amount, t1.flags, IF($iPay, amount, 0) AS fromyou, IF($iPay, 0, amount) AS toyou, IF($iPay, payerReward, payeeReward) AS reward, payer, payee, type, t1.created, t1.data, $iPay XOR t1.:IS_TAKING AS byMe, t1.:IS_ROUNDUP AS roundup, t1.:IS_DISPUTED AS disputed, $iGet AS toMe, IF($iPay, payerFor, payeeFor) AS description, IF($iPay, payerAgent, payeeAgent) AS agent, IF(:uid<0, xid, IF($iPay, payerTid, payeeTid)) AS tid, goods, (goods=:FOR_SHARE) AS sharing, channel";
+    $usdFields = "txid AS xid, amount, 0 AS flags, IF(:DEPOSIT_SQL, 0, -amount) AS fromyou, IF(:DEPOSIT_SQL, amount, 0) AS toyou, 0 AS reward, 0 AS payer, payee, :TX_BANK AS type, completed AS created, '' AS data, TRUE AS byMe, FALSE AS roundup, FALSE AS disputed, IF(:DEPOSIT_SQL, 1, 0) AS toMe, IF(:DEPOSIT_SQL, '$fromBank', '$toBank') AS description, '' AS agent, txid AS tid, :FOR_USD AS goods, 0 AS sharing, channel";
     $where = "created BETWEEN :starting AND :ending AND amount<>0 AND type>=0 AND ($iPay XOR $iGet)"; // omit invisible transactions
 
     $sql = <<<EOF
@@ -79,72 +79,6 @@ X;
 }
 
 /**
- * Processes a set of transactions, e.g., for generating a report.
- * @param TxProcessor $processor: an implementation of the TxProcessor interface to interact with
- * @param integer $starting: the starting unix time
- * @param integer $ending: the ending unix time
- * @param mixed $uids: the uid or uids whose transactions we're going to process
- *        if $uids is an array it is the set of uids;
- *        if $uids is an integer it is the only uid
- * @param integer $jid: the joint account holder (if any)
- * @return TRUE on success, FALSE otherwise.
- */
-function processTxs($processor, $uids, $starting=null, $ending=null) {
-  if (is_integer($uids)) { $uids = [ $uids ]; }
-
-  $where = '';
-  if (!is_null($starting)) { $where .= " AND (t.created >= '$starting')"; }
-  if (!is_null($ending)) { $where .= " AND (t.created <= '$ending')"; }
-
-  $sql = <<< EOF
-    SELECT t.*, e.*, u.fullName as name,
-           (SELECT MAX(acctTid) FROM r_entries re WHERE xid = t.xid AND uid in (:uids)) AS tid
-    FROM r_entries e LEFT JOIN r_tx_hdrs t USING (xid) LEFT JOIN users u USING (uid)
-    WHERE (xid IN (SELECT DISTINCT xid FROM r_entries WHERE (uid IN (:uids))))
-          $where
-    ORDER BY created, e.xid, (uid BETWEEN 1 AND 512) ASC, name
-EOF;
-  $result = db\q($sql, ['uids' => $uids]);
-  u\EXPECT($result, "Failure reading transactions for user " . print_r($uids, true));
-
-  $myBalance = balanceAsOf($starting);
-  
-  $processor->hdr();
-  $lastXid = 0;  // no xid should ever be 0
-  $lastRow = null;
-  foreach ($result as $row) {
-    $row = (array)$row;
-    if ($row['xid'] != $lastXid) {
-      if (!is_null($lastRow)) {  // if there was a transaction already
-        $processor->txnFtr($lastRow);
-      }
-      $processor->txnHdr($row);
-      $lastXid = $row['xid'];
-    }
-    if (in_array($row['uid'], $uids)) $myBalance += $row['amount'];
-    $row['runBalance'] = $myBalance;
-    $processor->processEntry($row);
-    $lastRow = $row;
-  }
-  if (!is_null($lastRow)) {  // there was a transaction in progress
-    $processor->txnFtr($lastRow);
-  }
-  $processor->ftr();
-}
-
-/**
- * Returns the balance in an account as of a specified date.
- * @param integer $uid: the user id of the account
- * @param integer $date: the unix time to consider
- */
-function balanceAsOf($uid, $date=null) {
-  if (is_null($date)) return 0;
-  $a = r\acct($uid);
-  ($a->jid != 0) ? $uids = [$uid, $a->jid] : [$uid];
-  return db\sum('amount', 'r_entries', 'uid IN (:uids)', ['uids' => $uids]);
-}
-  
-/**
  * Return an array of member names (called with ajax, so current user is passed as arguments).
  * POLICY QUESTION: Restrict to member's community? (yes for now)
  * @param int $myid: account record ID
@@ -175,6 +109,7 @@ function get1099b($payee, $year = NULL) {
     $sql = <<<EOF
       SELECT created, amount, payer, payeeFor AS `for`
       FROM r_txs WHERE payee=:payee AND NOT :IS_UNDONE AND NOT :IS_UNDOES AND created BETWEEN $start AND $end 
+      AND type NOT IN (:TX_REWARDS)
       ORDER BY created
 EOF;
 //      AND (goods=:FOR_GOODS OR type<>:TX_TRANSFER)
@@ -521,7 +456,7 @@ function invoice($a1, $a2, $amount, $purpose = NULL, $extra = []) {
   
   u\EXPECT(compact(ray('a1 a2 amount purpose')), 'acct acct float string');
   extract(just($ks = 'goods status', $extra));
-	foreach (justNOT("goods status shid coupon coupid force inv", $extra) as $k => $v) {
+	foreach (justNOT("goods status shid coupon coupid force", $extra) as $k => $v) {
     u\setBit($flags, $k, $v);
     unset($extra[$k]); // don't leave bits in extras (data field)
   }
@@ -715,6 +650,7 @@ function creditInfo($args = []) {
     SELECT 
     SUM(IF($isPayee, amount, 0)) AS `in`,
     SUM(IF($isPayer, amount, 0)) AS `out`, 
+    SUM(IF($isPayer AND :uid>0, payerReward, payeeReward)) AS rewards,
     SUM(IF(t.:IS_ROUNDUP AND $isPayer AND MOD(amount, 1)>0, 1-MOD(amount, 1), 0)) AS roundups,
     SUM(IF(t.:IS_ROUNDUP AND $isPayer AND MOD(amount, 1)>0 AND t.created>=$mday1, 1-MOD(amount, 1), 0)) AS partRounds,
     SUM(IF(t.:IS_ROUNDUPS AND $isPayer, amount, 0)) AS roundupsPaid,
@@ -725,7 +661,7 @@ function creditInfo($args = []) {
     WHERE ($isPayer OR $isPayee) AND t.created<=:asof
 EOF;
   
-  $sums = @$pending ? ray('in out xfees xin', 0, 0, 0, 0) : db\q($sql, $subs)->fetchAssoc();
+  $sums = @$pending ? ray('in out rewards share xfees xin', 0, 0, 0, 0, 0, 0) : db\q($sql, $subs)->fetchAssoc();
 
   $where = @$pending ? 'created<=:asof AND NOT completed' : 'completed AND completed<=:asof';
   $sql = "SELECT SUM(amount) AS bank FROM r_usd t WHERE $isPayee AND amount<>0 AND $where";
@@ -740,8 +676,8 @@ EOF;
 //  $in -= $xin; $out -= $xin;
   $outProper = $out;
   $inProper = $in; // - $rewards;
-//  if ($uid == CGID) $inProper -= $share; else $outProper += $share;
-//  $rewards += $share; // share is negative for everyone but CGF
+  if ($uid == CGID) $inProper -= $share; else $outProper += $share;
+  $rewards += $share; // share is negative for everyone but CGF
   
   // figure savings
   if ($asof == $asof0) {
@@ -755,9 +691,9 @@ EOF;
     }
   }
 //  $balance = $r - $savings;
-//  $savings = $rewards; // tentative savings before additions ( = oldSavings - oldSavingsAdd) (used in transaction summary)
+  $savings = $rewards; // tentative savings before additions ( = oldSavings - oldSavingsAdd) (used in transaction summary)
   
-  $resultKeys = 'in out refunds fees xfees xin inProper outProper balance r bank roundups partRounds roundupsPaid';
+  $resultKeys = 'in out rewards share refunds fees xfees xin inProper outProper balance r bank savings roundups partRounds roundupsPaid';
   $result = compact(ray($resultKeys));
   
   foreach ($result as $k => $v) $result[$k] = $v = round($v, 2);

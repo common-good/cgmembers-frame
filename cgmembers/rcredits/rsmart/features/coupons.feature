@@ -30,50 +30,28 @@ Scenario: A member redeems a gift coupon
   | coupid | fromId | amount | minimum | ulimit | flags | start  | end       |*
   |      1 |   .ZZC |     10 |       0 |      1 |     0 | %today | %today+7d |
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $100 for "goods": "food" at %today
-  Then transaction headers: 
-  | xid | goods | initiator | initiatorAgent | created |*
-  | 1   |   0   | .ZZC      | .ZZC           | %today  |
-  And transaction entries:
-  | xid | amount |  uid | description             | relType | related |*
-  | 1   |    -90 | .ZZB | food                    |         |         |
-  | 1   |    100 | .ZZC | food                    |         |         |
-  | 1   |    -10 | .ZZC | discount rebate (on #1) |   D     |    1    |
-
+  Then transactions: 
+  | xid | created | amount | from | to   | purpose |*
+  | 1   | %today  |    100 | .ZZB | :ZZA | food    |
+  | 2   | %today  |    -10 | .ZZB | .ZZC | discount rebate (on #1) |
+  
   When agent "C:A" asks device "devC" to undo transaction with subs:
   | member | code | amount | goods | description | created |*
   | .ZZB   | ccB  | 100.00 |     1 | food        | %today  |
-  Then transaction headers:
-  | xid | initiator | initiatorAgent | created | reverses |*
-  | 1   | .ZZC      | .ZZC           | %today  |          |
-  | 2   | .ZZC      | .ZZC           | %today  |        1 |
-  And transaction header count is 2
-  And transaction entries:
-  | xid | amount |  uid | description                           | relType | related |*
-  | 1   |    -90 | .ZZB | food                                  |         |         |
-  | 1   |    100 | .ZZC | food                                  |         |         |
-  | 1   |    -10 | .ZZC | discount rebate (on #1)               |    D    |    1    |
-  | 2   |     90 | .ZZB | food (reverses #1)                    |         |         |
-  | 2   |   -100 | .ZZC | food (reverses #1)                    |         |         |
-  | 2   |     10 | .ZZC | discount rebate (on #1) (reverses #1) |    D    |    1    |
+  Then transactions:
+  | xid | created | amount | from | to   | purpose |*
+  | 3   | %today  |   -100 | .ZZB | :ZZA | food (reverses #1)   |
+  | 4   | %today  |     10 | .ZZB | .ZZC | discount rebate (on #2) |
 
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $50 for "goods": "sundries" at %today
-  Then transaction headers: 
-  | xid | initiator | initiatorAgent | created | reverses |*
-  | 3   | .ZZC      | .ZZC           | %today  |          |
-  And transaction entries:
-  | xid | amount |  uid | description             | relType | related |*
-  | 3   |    -40 | .ZZB | sundries                |         |         |
-  | 3   |     50 | .ZZC | sundries                |         |         |
-  | 3   |    -10 | .ZZC | discount rebate (on #3) |    D    |    1    |
+  Then transactions: 
+  | xid | created | amount | from | to   | purpose |*
+  | 5   | %today  |     50 | .ZZB | :ZZA | sundries |
+  | 6   | %today  |    -10 | .ZZB | .ZZC | discount rebate (on #3) |
   
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $60 for "goods": "stuff" at %today
-  Then transaction headers: 
-  | xid | initiator | initiatorAgent | created |*
-  | 4   | .ZZC      | .ZZC           | %today  |
-  And transaction entries:
-  | xid | amount |  uid | description | relType | related |*
-  | 4   |    -60 | .ZZB | stuff       |         |         |
-  | 4   |     60 | .ZZC | stuff       |         |         |
-  And transaction header count is 4
-  And transaction entry count is 11
+  Then transactions: 
+  | xid | created | amount | from | to   | purpose |*
+  | 7   | %today  |     60 | .ZZB | :ZZA | stuff   |
+  And transaction count is 7
 # ulimit has been reached, so no rebate

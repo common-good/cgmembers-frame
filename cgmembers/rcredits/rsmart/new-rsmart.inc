@@ -347,6 +347,11 @@ function photoReturn($pic) {
  */
 function charge($args, $type = 'charge') {
   global $mya;
+
+  debug("charge(,$type)");
+  debug($args);
+  debug($mya);
+  debug($mya->fullName);
   
   $keys = 'agent member amount goods description created';
   if ($err = missingArg($keys, $args)) return posErr($err);
@@ -364,12 +369,14 @@ function charge($args, $type = 'charge') {
     return badTx($args, "Account $member", $err);
   } else $name = $a->fullName; // for use in error messages
   if ($mya->id == $a->id) return posErr('shoulda been login'); // should never happen
-
+  debug($a->fullName);
+  
   $selfhelp = ($goods == '2');
   $goods = $goods == "3" ? FOR_NONGOODS : ($goods == "0" ? FOR_USD : FOR_GOODS); // selfhelp is FOR_GOODS
   if (@$force) {
     $subs = ray('created payer payee amount goods payeeFor', $created, $a->id, $mya->id, $amount, $goods, $description);
-    if ($q = db\get('xid,data', 'r_txs', $subs)) extract($q);
+    $q = db\q('SELECT t.xid FROM r_tx_hdrs t JOIN r_entries payer ON t.xid=payer.xid JOIN r_entries payee ON t.xid=payee.xid WHERE created=:created AND payer.uid=:payer AND payee.uid=:payee AND payee.amount=:amount AND goods=:goods AND payee.description=:payeeFor', $subs);
+    if ($q->rowCount() == 1) extract($q->fetchAssoc());
   }
   
   $amount = str_replace(',', '', number_format($amount, 2)); // make sure both cents digits are included
@@ -383,19 +390,20 @@ function charge($args, $type = 'charge') {
       return badTx($args, $name, $err);
     }
   }
-
+  debug('my amount=' . $amount);
   if (@$force == "1" and @$xid) { // does exist and should (always background)
     $message = $did = $undo = '';
     $txid = $xid;
   } elseif (@$force == "-1" and @$xid) { // does exists and shouldn't
     $did = '';
     $undo = $xid;
-    $data = unserialize($data);
-    if ($txid = @$data['undoneBy']) { // already got reversed
-      $created = db\get('created', 'r_txs', 'xid=:txid', compact('txid'));
+    /* $data = unserialize($data); */
+    $created = db\get('created', 'r_tx_hdrs', 'reverses=:xid', compact('xid'));
+    if ($created) { // already got reversed
       $message = "Transaction has been reversed.";
     } else {
-      list ($msg, $subs) = be\undoTx($xid, (@$amount < 0 and !$mya->co) ? 'payer=:myid' : 'payee=:myid', ['myid' => $mya->id], $force);
+      echo('got here');
+      list ($msg, $subs) = be\undoTx($xid, 'e.uid=:myid', ['myid' => $mya->id], $force);
       if (is_array($msg)) list ($msg, $subs) = [$msg[0], $msg[1] + $subs];
       if (!@$subs['success']) return badTx($args, $name, $msg, $subs);
       $txid = $subs['xid'];
@@ -408,13 +416,16 @@ function charge($args, $type = 'charge') {
     $txid = 0;
     $message = "Transaction has been canceled.";
   } else { // doesn't exist and should (forcing or not)
+    debug('another amount=' . $amount);
     if (@$amount < 0 and $a->co and $a->proSe) return badTx($args, $name, $msg, $subs);
     if (@$amount < 0 and !$mya->co) list ($type, $amount) = ['payment', -$amount];
-    list ($msg, $subs) = be\transfer($type, $mya, $a, @$amount, @$description, compact(ray('goods created force')));
+    debug($amount);
+    list ($msg, $subs, $confUnused, $xid) = be\transfer($type, $mya, $a, @$amount, @$description, compact(ray('goods created force')));
+    debug('be\transfer returned ' . $msg);
+    debug($subs);
     if (!@$subs['success']) return badTx($args, $name, $msg, $subs);
 
     if (!@$force and $aa = $a->agentA and $mya->co and !$aa->ided) $aa->setBit(B_IDED);
-    $txid = $subs['xid'];
     if ($selfhelp) {
       $msg = 'selfhelp tx';
       if ($mya->cttyRewardy) $msg .= '|for why|reward other';
@@ -422,6 +433,8 @@ function charge($args, $type = 'charge') {
       $forCash = $goods == FOR_USD ? t('for USD') : '';
       $did = t('just did', $subs + compact('forCash'));
     }
+    debug($msg);
+    debug($subs);
     $message = t($msg, $subs);
     $undo = t('confirm undo', $subs);
   }
@@ -561,7 +574,7 @@ function balrew($a) {
 function getDescriptions($a) {
   $ray = [];
   //if ($default = $a->description) $ray[] = $default;
-  $sql = 'SELECT payeeFor, COUNT( payeeFor )  FROM r_txs WHERE payee=:id GROUP BY payeeFor ORDER BY COUNT(payeeFor) DESC';
+  $sql = 'SELECT description AS payeeFor, COUNT(description) FROM r_entries e WHERE amount>0 AND uid=:id GROUP BY payeeFor ORDER BY COUNT(payeeFor) DESC';
   return $ray + (db\q($sql, ray('id', $a->id))->fetchCol() ?: []);
 }
 

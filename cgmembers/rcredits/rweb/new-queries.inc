@@ -13,7 +13,12 @@ use CG\Util as u;
  * Note: query names cannot contain any of the following characters: /&? (because they confuse the url).
  */
 
+print_r(debug_backtrace());
+die('unfinished');
+
+/* This shouldn't work! --
 $bizQ = 'SELECT payee, goods, SUM(amount) AS tot, COUNT(*) AS cnt FROM r_txs WHERE goods=:FOR_GOODS AND created BETWEEN';
+*/
 $gifts = "r.amount * IF(period='M', 12, IF(period='Q', 4, 1))";
 
 $queries = [

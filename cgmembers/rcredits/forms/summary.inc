@@ -95,6 +95,10 @@ function formSummary($form, &$sta) {
     $balanceDesc = '';
     if ($mya->rewards) $balanceDesc .= t(' (see <%a>History</a>)', '_a', atag('/history'));
     $balance = item($balance . "<small>$balanceDesc</small>", t('Balance:'));
+
+    $newBalance = db\get('sum(amount) as newBalance', 'r_entries', 'uid=:uid', ['uid' => $mya->id]);
+    $newBalance = item($newBalance, t('New Balance:'));
+
 //    $savings = item(u\fmtAmt($mya->savings) . t('<small> (your total incentive rewards to date)</small>', [
 //    list ($rewardNote, $rewardDesc) = $mya->cttyRewardy ? [t('<small> (your total incentive rewards to date)</small>'), t('This amount will be yours to keep, once your community reaches a certain size.')] : ['', t('Some of this amount may be yours to keep, at your %PROJECT community\'s decision, once membership reaches a certain size.')];
 //    $savings = item(u\fmtAmt($mya->rewards) . $rewardNote, t('Credit Line:'), $rewardDesc);
@@ -120,7 +124,7 @@ function formSummary($form, &$sta) {
   } else $extra = '';
   $accountId = item(($mya->mainQid ?: 'N/A') . ' (' . $acctType . ')' . $extra, t('ID:'));
 
-  $fields = 'photo title clickPhoto showCustomers topButtons accountId accountName details address legalName shortName federalId community balance creditLine creditLimit committed invites cttyBene';
+  $fields = 'photo title clickPhoto showCustomers topButtons accountId accountName details address legalName shortName federalId community balance newBalance creditLine creditLimit committed invites cttyBene';
   foreach (ray('details') as $k) $$k = @$form[$k]; unset($form[$k]); // put these on the left if admin
   $fields = compact(ray($fields));
   

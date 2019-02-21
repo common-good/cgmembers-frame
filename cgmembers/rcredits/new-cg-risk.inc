@@ -74,24 +74,35 @@ function acctRisk1($uid, &$risk = 0, &$calc = 0) {
 
 /*
  * Calculate a risk score for the given transaction.
- * @param assoc $tx: the transaction array
+ * @param numeric $xid: the transaction id
  * @param numeric $risk: (RETURNED) the normalized risk score
  * @param numeric $calc: (RETURNED) the original calculated risk
- */ 
-function txRisk1($tx, &$risk = 0, &$calc = 0) {
+ */
+function txRisk1($xid, &$risk = 0, &$calc = 0) {
+  global $_xid; $_xid=$xid;
   global $_risk; $_risk = '';
-  extract($tx); // all tx fields
-  global $_xid; $_xid = $xid; // for debugging
-  extract(just('force undoneBy undoes xfee', unserialize($data)));
 
-  $cttyPayer = ($payer < 0);
-  if ($neg = ($amount < 0)) list ($payer, $payee, $amount) = array($payee, $payer, -$amount);
-  list ($a1, $a2) = array(r\acct($payer), r\acct($payee));
+  print_r(debug_backtrace());
+  die('unfinished');
+
+  EXPECT($xid, 'numeric');
+  $tx = r\x($xid);
+  $entries = $tx->entries;
+  
+  extract($tx->ray); // all tx fields
+
+  /* extract(just('force undoneBy undoes xfee', unserialize($data))); */
+
+  /* $cttyPayer = ($payer < 0); */
+  /* if ($neg = ($amount < 0)) list ($payer, $payee, $amount) = array($payee, $payer, -$amount); */
+  /* list ($a1, $a2) = array(r\acct($payer), r\acct($payee)); */
   
   if ($risks & u\bit(K_ADMINOK)) setRisk('txAdminOk'); // administrator blessed this transaction
-  if (@$undoes and $undoneData = @unserialize(db\get('data', 'r_txs', 'xid=:undoes', compact('undoes')))) {
-    if (@$undoneData['undoes']) setRisk('redo');
-  }
+
+  /* Redos are not currently allowed */
+  /* if (@$undoes and $undoneData = @unserialize(db\get('data', 'r_txs', 'xid=:undoes', compact('undoes')))) { */
+  /*   if (@$undoneData['undoes']) setRisk('redo'); */
+  /* } */
   
   if (!$cttyPayer) { // most transfers to/from the community should be ignored
     if ($goods != FOR_GOODS) {
@@ -135,6 +146,7 @@ function txRisk1($tx, &$risk = 0, &$calc = 0) {
   db\update('r_txs', compact('xid', 'risk', 'risks'), 'xid');
 }
 
+
 /*
  * Calculate a risk score for the given ACH.
  * @param assoc $tx: the ACH transaction array
@@ -144,6 +156,9 @@ function txRisk1($tx, &$risk = 0, &$calc = 0) {
 function achRisk1($tx, &$risk = 0, &$calc = 0) {
   global $_risk; $_risk = '';
 
+  print_r(debug_backtrace());
+  die('unfinished achRisk1');
+  
   extract($tx); // all tx fields
   global $_txid; $_txid = $txid; // for debugging
   
@@ -231,21 +246,19 @@ function setBigRisk($uid, $ago, $threshold, $bitName) {
   $since = $now - $ago - 2 * HOUR_SECS; // an extra couple hours to handle daylight time changes and cron timing
   $mySql =<<<EOF
     SELECT COUNT(*) AS count0, 
-      SUM(IF(:DEPOSIT_SQL,amount,0)) AS `in`, 
-      SUM(IF(:DEPOSIT_SQL,0,-amount)) AS `out`
-    FROM (SELECT txid,amount,created FROM r_usd 
-      WHERE payee=:uid AND completed>=created AND amount<>0
-    UNION SELECT 0 AS txid,IF(payee=:uid, amount, -amount) AS amount,created FROM r_txs 
-       WHERE payer=:uid OR payee=:uid) t
-    WHERE created BETWEEN :since AND :now
+           SUM(IF(amount>0,amount,0)) AS `in`, 
+           SUM(IF(amount<0,0,-amount)) AS `out`
+    FROM r_entries e
+    WHERE e.uid=:uid AND created BETWEEN :since AND :now
 EOF;
-  if (!$res = db\q($mySql, compact(ray('uid since now')))->fetchAssoc()) return;
+  $res = db\q($mySql, compact(ray('uid since now')))->fetchAssoc();
+  if (!$res) return;
   extract($res);
   $a = r\acct($uid);
   if (max($in, $out) > $threshold * max(1, $a->employees)) setRisk($bitName);
   if ($ago == YEAR_SECS) list ($bigYearIn, $bigYearOut) = array($in, $out);
   if ($ago == WEEK7_SECS) {
-    $firstTxDate = db\get('MIN(created)', 'r_txs', ':uid IN (payer, payee)', compact('uid')) ?: $now;
+    $firstTxDate = db\get('MIN(created)', 'r_entries', 'uid=:uid', compact('uid')) ?: $now;
     if ($yearLen = min(YEAR_SECS, $now - $firstTxDate)) {
       if ($in > (1 + K_UNUSUAL_BUMP / 100) * $bigYearIn * $ago / $yearLen) setRisk('moreIn');
       if ($out > (1 + K_UNUSUAL_BUMP / 100) * $bigYearOut * $ago / $yearLen) setRisk('moreOut');
@@ -274,6 +287,10 @@ function setBigRisks($uid) {
  * @param int $count: number of transactions between payer and payee in the past 7 weeks
  */
 function setBigToFrom($way, $field, $uid, $amount, $created, $count) {
+
+  print_r(debug_backtrace());
+  die('unfinished');
+
   $since = $created - WEEK7_SECS; // just recent activity by customers, in case many are new
   $other = $field == 'payer' ? 'payee' : 'payer';
   
@@ -305,9 +322,9 @@ EOF;
  */
 function setOriginRisk($uid, $created, $amount) {
   $since = $created - YEAR_SECS;
-  $table = 'SELECT IF(amount<0,payer,payee) AS uid,risk,created,amount FROM r_txs';
+  $table = 'SELECT uid,risk,t.created,amount FROM r_entries e JOIN r_tx_hdrs t ON e.xid=t.xid';
   $where = 'uid=:uid AND risk IS NOT NULL AND created BETWEEN :since AND :created';
-  $avgRisk = db\get('AVG(risk/ABS(amount))', "($table) t", $where, compact(ray('uid since created'))) / (K_RED / K_THRESHOLD);
+  $avgRisk = db\get('AVG(risk/ABS(amount))', "$table", $where, compact(ray('uid since created'))) / (K_RED / K_THRESHOLD);
 ///  debug(compact('uid','amount','since','table','where','avgRisk'));
   if ($avgRisk > 0) setRisk('origins', $multiplier = $avgRisk, $multiplier > 1/2);
 }

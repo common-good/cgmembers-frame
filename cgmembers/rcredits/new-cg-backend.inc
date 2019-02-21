@@ -12,11 +12,11 @@ use CG\Util as u;
 use CG\Backend as be;
 use CG\Web as w;
 
-define('REAL', @$_SERVER['SystemRoot'] != 'C:\\Windows'); // used?
+// define('REAL', @$_SERVER['SystemRoot'] != 'C:\\Windows'); // used? No.
 // require_once __DIR__ . '/cg-util.inc';
 
 /**
- * Return the user's transactions for the given period (inclusive)
+ * Return the user's transaction entries for the given period (inclusive)
  * @param int $starting: starting time (the beginning of some day)
  * @param int $ending: ending time (the end of some day)
  * @param mixed $uid: account record ID for which to return transactions
@@ -26,15 +26,16 @@ define('REAL', @$_SERVER['SystemRoot'] != 'C:\\Windows'); // used?
  * NOTE: Denied invoices are included only for the payee, otherwise all complete or tentative transactions
  * other than rebates and bonuses are included (even those will be included if the 'include_bonuses' option is set).
  */
-function myTransactions($starting, $ending, $uid, $jid = 0) {
+function myTxEntries($starting, $ending, $uid, $jid = 0) {
   $subs = compact(ray('starting ending uid jid'));
   
   if ($uid == 'ctty') { // all transactions in the community or region (not currently used)
+    die('not currently used');
     global $mya;
     $uid = $mya->community;
     $where = 't.created>=:starting AND t.created<=:ending'
-    . ' AND t.type>=0' // omit invisible transactions
-    . ' ORDER BY t.created DESC, t.xid DESC';
+      . ' AND t.type>=0' // omit invisible transactions
+      . ' ORDER BY t.created DESC, t.xid DESC';
     $sql = <<<EOF
       SELECT t.*, IF(t.:IS_TAKING, t.payeeFor, t.payerFor) AS purpose
       FROM r_txs t LEFT JOIN users u1 ON u1.uid=t.payer LEFT JOIN users u2 ON u2.uid=t.payee
@@ -42,108 +43,60 @@ function myTransactions($starting, $ending, $uid, $jid = 0) {
       AND $where
 EOF;
   } else { // normal account (member or community)
-    $iPay = '(payer<>0 AND payer IN (:uid, :jid))';
-    $iGet = 'payee IN (:uid, :jid)';
-//    foreach (ray(TX_FLAGS) as $k) $$k = u\bit(u\consta('b', $k)); // taking and roundup flags
+    $iPay = '(amount < 0 AND uid IN (:uid, :jid))';
+    $iGet = '(amount > 0 AND uid IN (:uid, :jid))';
+    //    foreach (ray(TX_FLAGS) as $k) $$k = u\bit(u\consta('b', $k)); // taking and roundup flags
     list ($fromBank, $toBank) = [t('from bank'), t('to bank')];
-    $txFields = "xid, amount, t1.flags, IF($iPay, amount, 0) AS fromyou, IF($iPay, 0, amount) AS toyou, payer, payee, type, t1.created, t1.data, $iPay XOR t1.:IS_TAKING AS byMe, t1.:IS_ROUNDUP AS roundup, t1.:IS_DISPUTED AS disputed, $iGet AS toMe, IF($iPay, payerFor, payeeFor) AS description, IF($iPay, payerAgent, payeeAgent) AS agent, IF(:uid<0, xid, IF($iPay, payerTid, payeeTid)) AS tid, goods, (goods=:FOR_SHARE) AS sharing, channel";
-    $usdFields = "txid AS xid, amount, 0 AS flags, IF(:DEPOSIT_SQL, 0, -amount) AS fromyou, IF(:DEPOSIT_SQL, amount, 0) AS toyou, 0 AS payer, payee, :TX_BANK AS type, completed AS created, '' AS data, TRUE AS byMe, FALSE AS roundup, FALSE AS disputed, IF(:DEPOSIT_SQL, 1, 0) AS toMe, IF(:DEPOSIT_SQL, '$fromBank', '$toBank') AS description, '' AS agent, txid AS tid, :FOR_USD AS goods, 0 AS sharing, channel";
+    $txFields = "t.xid, amount, flags, IF($iPay, -amount, 0) AS fromYou, IF($iPay, 0, amount) AS toYou, uid, type, t.created, $initiator IN (:uid, :jid) AS byMe, t.:IS_DISPUTED AS disputed, $iGet AS toMe, description, agentUid AS agent, acctTid AS tid, goods, (goods=:FOR_SHARE) AS sharing, channel";
+    $usdFields = "txid AS xid, amount, 0 AS flags, IF(:DEPOSIT_SQL, 0, -amount) AS fromYou, IF(:DEPOSIT_SQL, amount, 0) AS toYou, uid, :TX_BANK AS type, completed AS created, TRUE AS byMe, FALSE AS disputed, IF(:DEPOSIT_SQL, 1, 0) AS toMe, IF(:DEPOSIT_SQL, '$fromBank', '$toBank') AS description, '' AS agent, txid AS tid, :FOR_USD AS goods, 0 AS sharing, channel";
+    /* $txFields = "xid, amount, t1.flags, IF($iPay, amount, 0) AS fromyou, IF($iPay, 0, amount) AS toyou, payer, payee, type, t1.created, t1.data, $iPay XOR t1.:IS_TAKING AS byMe, t1.:IS_ROUNDUP AS roundup, t1.:IS_DISPUTED AS disputed, $iGet AS toMe, IF($iPay, payerFor, payeeFor) AS description, IF($iPay, payerAgent, payeeAgent) AS agent, IF(:uid<0, xid, IF($iPay, payerTid, payeeTid)) AS tid, goods, (goods=:FOR_SHARE) AS sharing, channel"; */
+    /* $usdFields = "txid AS xid, amount, 0 AS flags, IF(:DEPOSIT_SQL, 0, -amount) AS fromyou, IF(:DEPOSIT_SQL, amount, 0) AS toyou, 0 AS payer, payee, :TX_BANK AS type, completed AS created, '' AS data, TRUE AS byMe, FALSE AS roundup, FALSE AS disputed, IF(:DEPOSIT_SQL, 1, 0) AS toMe, IF(:DEPOSIT_SQL, '$fromBank', '$toBank') AS description, '' AS agent, txid AS tid, :FOR_USD AS goods, 0 AS sharing, channel"; */
     $where = "created BETWEEN :starting AND :ending AND amount<>0 AND type>=0 AND ($iPay XOR $iGet)"; // omit invisible transactions
 
     $sql = <<<EOF
-      SELECT * FROM
-        (SELECT $txFields, u.uid, u.fullName AS name 
-         FROM r_txs t1
-         LEFT JOIN users u ON uid=IF($iPay, payee, payer)
-         UNION SELECT $usdFields, payee AS uid, ':R_NONE' AS name FROM r_usd WHERE amount<>0) t
-      WHERE $where ORDER BY created DESC, xid>0, xid DESC;
+      SELECT $txFields FROM r_entries e LEFT JOIN r_tx_hdrs t ON e.xid=t.xid
+      WHERE e.xid IN (SELECT DISTINCT xid FROM r_entries
+                      WHERE t.created BETWEEN :starting AND :ending AND amount<>0 AND e.uid IN (:uid, :jid))
+      WHERE type >=0
+      UNION ALL
+      SELECT $usdFields, payee AS uid, ':R_NONE' AS name FROM r_usd WHERE amount <>0
+      WHERE created BETWEEN :starting AND :ending AND amount<>0 AND type>=0 AND ($iPay XOR $iGet)
+      ORDER BY created DESC, xid DESC
 EOF;
   }
   return db\q($sql, $subs); 
 }
 
 /**
- * Return customer transactions for the given period.
+ * Return customer transaction entries for the given period.
+ * @param unixtime $starting: start of the period
+ * @param unixtime $ending: end of the period
+ * @param acct $mya: account of business
+ * @param acct $a: account of customer
+ * @return the record set, FALSE on failure
  */
-function myCustTxs($starting, $ending, $mya, $a) {
+function myCustTxEntries($starting, $ending, $mya, $a) {
+  debug('Unfinished   ' . debug_backtrace());
+  return FALSE;
+  
   list ($id, $jid, $biz) = [$a->id, $a->jid ?: 0, $mya->id];
   $where = '(payer IN (:id, :jid) AND payee=:biz) OR (payee IN (:id, :jid) AND payer=:biz)';
   $amount = 'IF(payee=:biz, amount, -amount)';
-  $sql = <<< X
-    SELECT CONCAT('tx #', IF(payee=:biz, payerTid, payeeTid)) AS tid, $amount AS paid, '' AS invoiced, created, :IS_ROUNDUP AS roundup, :IS_DISPUTED AS disputed, TRIM(IF(payee=:biz, payeeFor, payerFor)) AS purpose
-    FROM r_txs WHERE $where
-    UNION SELECT CONCAT('inv #', nvid) AS tid, '' AS paid, $amount AS invoiced, created, :IS_ROUNDUP AS roundup, :IS_DISPUTED AS disputed, purpose
-    FROM r_invoices WHERE $where ORDER BY created
-X;
-  return db\q($sql, compact(ray('id jid biz')));
-}
-
-/**
- * Processes a set of transactions, e.g., for generating a report.
- * @param TxProcessor $processor: an implementation of the TxProcessor interface to interact with
- * @param integer $starting: the starting unix time
- * @param integer $ending: the ending unix time
- * @param mixed $uids: the uid or uids whose transactions we're going to process
- *        if $uids is an array it is the set of uids;
- *        if $uids is an integer it is the only uid
- * @param integer $jid: the joint account holder (if any)
- * @return TRUE on success, FALSE otherwise.
- */
-function processTxs($processor, $uids, $starting=null, $ending=null) {
-  if (is_integer($uids)) { $uids = [ $uids ]; }
-
-  $where = '';
-  if (!is_null($starting)) { $where .= " AND (t.created >= '$starting')"; }
-  if (!is_null($ending)) { $where .= " AND (t.created <= '$ending')"; }
-
-  $sql = <<< EOF
-    SELECT t.*, e.*, u.fullName as name,
-           (SELECT MAX(acctTid) FROM r_entries re WHERE xid = t.xid AND uid in (:uids)) AS tid
-    FROM r_entries e LEFT JOIN r_tx_hdrs t USING (xid) LEFT JOIN users u USING (uid)
-    WHERE (xid IN (SELECT DISTINCT xid FROM r_entries WHERE (uid IN (:uids))))
-          $where
-    ORDER BY created, e.xid, (uid BETWEEN 1 AND 512) ASC, name
+  $sql = <<<EOF
+    SELECT CONCAT('tx #', acctTid) as tid, $amount AS paid, '' AS invoiced,
+           t.created, :IS_DISPUTED AS disputed, description AS purpose
+    FROM r_entries e LEFT JOIN r_tx_hdrs t ON e.xid=t.xid
+    WHERE e.xid IN (SELECT t.xid FROM r_tx_hdrs t JOIN r_entries e1 ON t.xid=e1.xid JOIN r_entries e2 ON t.xid=e2.xid
+                    WHERE t.created BETWEEN :starting AND :ending AND amount<>0 AND e1.uid=:biz AND e2.uid IN (:id, :jid))
+    UNION ALL
+    SELECT CONCAT('inv #', nvid) AS tid, '' AS paid, $amount AS invoiced, created, :IS_DISPUTED as disputed, purpose
+    FROM r_invoices
+    WHERE $where
+    ORDER BY created DESC, tid DESC
 EOF;
-  $result = db\q($sql, ['uids' => $uids]);
-  u\EXPECT($result, "Failure reading transactions for user " . print_r($uids, true));
-
-  $myBalance = balanceAsOf($starting);
-  
-  $processor->hdr();
-  $lastXid = 0;  // no xid should ever be 0
-  $lastRow = null;
-  foreach ($result as $row) {
-    $row = (array)$row;
-    if ($row['xid'] != $lastXid) {
-      if (!is_null($lastRow)) {  // if there was a transaction already
-        $processor->txnFtr($lastRow);
-      }
-      $processor->txnHdr($row);
-      $lastXid = $row['xid'];
-    }
-    if (in_array($row['uid'], $uids)) $myBalance += $row['amount'];
-    $row['runBalance'] = $myBalance;
-    $processor->processEntry($row);
-    $lastRow = $row;
-  }
-  if (!is_null($lastRow)) {  // there was a transaction in progress
-    $processor->txnFtr($lastRow);
-  }
-  $processor->ftr();
+  return db\q($sql, compact(ray('id jid biz starting ending')));
 }
 
-/**
- * Returns the balance in an account as of a specified date.
- * @param integer $uid: the user id of the account
- * @param integer $date: the unix time to consider
- */
-function balanceAsOf($uid, $date=null) {
-  if (is_null($date)) return 0;
-  $a = r\acct($uid);
-  ($a->jid != 0) ? $uids = [$uid, $a->jid] : [$uid];
-  return db\sum('amount', 'r_entries', 'uid IN (:uids)', ['uids' => $uids]);
-}
-  
 /**
  * Return an array of member names (called with ajax, so current user is passed as arguments).
  * POLICY QUESTION: Restrict to member's community? (yes for now)
@@ -168,17 +121,19 @@ function memberRay($myid, $aid, $coOnly = FALSE) {
 function get1099b($payee, $year = NULL) {
   global $q1099, $ignore1099;
   
-  if (!@$q1099) {
+  if (!isset($q1099)) {
     u\setDft($year, strtotime('last day of December last year'));
     $end = strlen($year) < 6 ? strtotime('1/1/' . ($year + 1)) - 1 : strtotime('tomorrow', $year);
     $start = strtotime('1 year ago', $end) + 1;
     $sql = <<<EOF
       SELECT created, amount, payer, payeeFor AS `for`
-      FROM r_txs WHERE payee=:payee AND NOT :IS_UNDONE AND NOT :IS_UNDOES AND created BETWEEN $start AND $end 
-      ORDER BY created
+      FROM r_entries e JOIN r_tx_hdrs t WHERE e.uid=:payee AND NOT EXISTS (SELECT xid from r_tx_hdrs r where r.reverses=t.xid) AND t.reverses IS NULL AND created BETWEEN $start AND $end 
+             ORDER BY created
+      /* FROM r_txs WHERE payee=:payee AND NOT :IS_UNDONE AND NOT :IS_UNDOES AND created BETWEEN $start AND $end  */
+      /* ORDER BY created */
 EOF;
-//      AND (goods=:FOR_GOODS OR type<>:TX_TRANSFER)
-//      AND (goods OR (type NOT IN (:TX_TRANSFER, :TX_REFUND)))
+    //      AND (goods=:FOR_GOODS OR type<>:TX_TRANSFER)
+    //      AND (goods OR (type NOT IN (:TX_TRANSFER, :TX_REFUND)))
     $q1099 = db\q($sql, compact('payee'));
   }
   return $q1099->fetchAssoc() ?: ($q1099 = NULL);
@@ -192,25 +147,25 @@ EOF;
  * @return string: a report of what got updated
  */
 function updateRelations($updates) {
-///  debug($updates);
+  ///  debug($updates);
   $myid = r\acct()->id;
   $report = '';
   foreach ($updates as $reid => $data) {
     extract(just('main other fullName permission flags', $data['original']));
-    $wasEmpty = (!@$permission and !@$flags);
+    $wasEmpty = (empty($permission) and empty($flags));
     unset($data['original']);
     extract(just('permission flags', $data));
-//    foreach (ray('employee owner customer draws') as $k) u\setBit($flags, $k, @$data[$k]);
-    foreach (ray('employee owner customer draw') as $k) u\setBit($flags, $k, @$data[$k]); // drawS?
+    //    foreach (ray('employee owner customer draws') as $k) u\setBit($flags, $k, @$data[$k]);
+    foreach (ray('employee owner customer draw') as $k) u\setBit($flags, $k, arrayGet($data, $k, NULL)); // drawS?
     if (!u\getBit($flags, 'customer')) u\setbit($flags, 'autopay', FALSE);
 
-    if (!@$permission and !@$flags and !$wasEmpty) { // empty now and wasn't before
+    if (empty($permission) and empty($flags) and !$wasEmpty) { // empty now and wasn't before
       db\del('r_relations', 'reid', $reid);
       $msg = 'deleted relation';
     } else {
       $a = r\acct($main, $other);
-      if (@$data) $a->setRel($data); // db\update('r_relations', $data + $reidSub, 'reid');
-      if (@$data['draw']) r\acct($other)->setBit(B_DRAWS);
+      if (!empty($data)) $a->setRel($data); // db\update('r_relations', $data + $reidSub, 'reid');
+      if (array_key_exists('draw', $data)) r\acct($other)->setBit(B_DRAWS);
       $msg = 'updated relation';
     }
     $otherName = $fullName;
@@ -235,61 +190,124 @@ function updateRelations($updates) {
  */
 function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
   global $mya;
-  if (!$myx = r\MyX::lastTx($mya, "xid=:xid AND $where", compact('xid') + $subs)) return ['undo no match', $subs];
-  if (!$force and $error = $myx->nonoUndo($subs)) return array($error, $subs); // check nono before confirm AND here
-  $data = $myx->data;
+
+  $myx = r\MyX::lastTx($mya, "t.xid=:xid AND $where", compact('xid') + $subs);
+  if (!$myx) return ['undo no match', $subs];
+  if (!$force) {
+    $error = $myx->nonoUndo($subs);
+    if ($error) return array($error, $subs); // check nono before confirm AND here
+  }
+  /* $data = $myx->data; */
 
   if (!$myx->reallyToMe and !$myx->byMe) { // someone charged me (either unilaterally or I approved it)
     r\disputeTx($xid); // mark it disputed
     $solution = t('marked "disputed"');
     r\notify($myx->them, 'charge disputed', $myx->reportArgs());
   } else {
-//    $amounts = just('amount payerReward payeeReward', $myx->ray);
-    $what = [$myx->payerFor, $myx->payeeFor];
-    return reverse($xid, $myx->amount, $what, $myx->a2, $data, $myx->goods, $myx->tid, $myx->toMe, $myx->byMe, $myx->tid2, $force); // create an offsetting transaction
+    $result = reverse($xid);
+    return $result; // create an offsetting transaction
   }
 
-  $amount = u\fmtAmt($myx->amount);
+  $amount = u\fmtAmt($myx->myAmount);
   $tofrom = !$myx->toMe ? t('to') : t('from');
-  $otherUid = $myx->otherUid;
-  $other = r\acct($otherUid)->fullName;
+  /* $otherUid = $myx->otherUid; */
+  /* $other = r\acct($otherUid)->fullName; */
   $success = TRUE;
-  return ['report undo', compact(ray('success amount other tofrom solution otherUid'))];
+  return ['report undo', compact(ray('success amount tofrom solution'))];
 }
 
 /**
  * Create an offsetting transaction or invoice (nearly the same as the original but with a negative amount).
  */
-function reverse($xid, $amount, $what, $acct, $data, $old_goods, $tid, $toMe, $byMe, $otherTid, $force) {
+function reverse($xid) {
   global $mya, $channel;
-///    print_r(compact(ray('xid amount acct data tid toMe'))); die();
-u\EXPECT(compact(ray('xid amount what acct data tid toMe byMe otherTid force')), 'id float array acct assoc|empty int bool bool int int|empty'); // otherTid may be 0 (for reversing rewards)
-  
-  if (!is_array($data)) $data = [];
-  $old_data = $data; // remember original data from transaction we're reversing
-  extract(just('xfee coupon', $data));
-  $tids = u\order($toMe, $otherTid, $tid);
-  for ($i = 0; $i < 2; $i++) {
-    $what0[$i] = preg_replace('/ \(' . preg_quote(t('reverses'), '/') . ' \#.*\)/', '', $what[$i]);
-    $what[$i] = $what0[$i] . t(' (reverses #%tid)', 'tid', $tids[$i]);
-  }
-  if (@$xfee) $data['xfee'] = -$xfee;
-  if (@$coupon) {
-    $data['coupon'] = -$coupon;
-    $payer = $toMe ? $acct->id : $mya->id;
-    db\q('UPDATE r_coupated SET uses=uses-:duse WHERE uid=:payer AND coupid=:coupid', ray('duse payer coupid', ($coupon < 0 ? -1 : 1), $payer, $data['coupid']));
-  }
-  $data['undoes'] = $xid; // remember what we're reversing (especially to get the realness right)
-//  foreach ($amounts as $k => $v) $amounts[$k] = -$v;
-  if ($force) u\preray(compact('force'), $data);
 
-  $data['goods'] = $old_goods;
+  $nvid = db\get('nvid', 'r_invoices', 'status=:xid', ['xid' => $xid]);
+  if ($nvid) return reverseInvoice($nvid, $xid);
+    
+  // OK -- it's not a transaction related to an invoice
+  $DBTX = \db_transaction();
+  if (db\exists('r_tx_hdrs', 'reverses=:xid', ['xid' => $xid])) {
+    return r\txRet('already reversed', compact('xid'));
+  }
+  $oldHdrRows = db\rows('*', 'r_tx_hdrs', 'xid=:xid', ['xid' => $xid]);
+  if (count($oldHdrRows) != 1) {
+    return r\txRet('no transaction', compact('xid'));
+  }
+  $oldHdr = (array)$oldHdrRows[0];
+  
+  if (arrayGet($oldHdr, 'reverses', null) != null) {
+    $reversed = $oldHdr['reverses'];
+    return r\txRet('cannot reverse reversing transaction', compact('xid'));
+  }
+
+  // It seems OK to reverse it
+  unset($oldHdr['xid']);
+  $oldHdr['reverses'] = $xid;
+  $rXid = db\insert('r_tx_hdrs', $oldHdr, 'xid');
+  if (empty($rXid)) {
+    return r\txRet('tx save err', $oldHdr);
+  }
+  $oldEntryRows = db\rows('*', 'r_entries', 'xid=:xid', ['xid' => $xid]);
+  foreach ($oldEntryRows as $rowObject) {
+    $entryRow = (array)$rowObject;
+    if ($entryRow['relType'] == 'D') { // related to a coupated record
+      $coupId = $entryRow['related'];
+      if (!db\q('UPDATE r_coupated SET uses=uses-1 WHERE id=:coupId', ['coupId' => $coupId])) {
+        return r\txRet('tx save err', $entryRow);
+      }
+    }
+    $entryRow['xid'] = $rXid;  // new entry belongs to reversing transaction
+    $entryRow['amount'] = - $entryRow['amount'];
+    $entryRow['description'] .= ' (' . t('reverses #') . $entryRow['acctTid'] . ')';
+    $entryRow['acctTid'] = r\xid2tid($rXid, $entryRow['uid']);
+    unset($entryRow['id']);
+    $rEid = db\insert('r_entries', $entryRow, 'id');
+    if (empty($rEid)) {
+      return r\txRet('tx save err', $entryRow);
+    }
+  }
+  $DBTX = null;
+  
+  return r\txRet('report undo!', ['solution' => 'reversed']);
+}
+
+
+/**
+ * Create an offsetting transaction or invoice (nearly the same as the original but with a negative amount).
+ */
+function reverseInvoice($nvid, $xid/*, $amount, $what, $acct, $data, $old_goods, $tid, $toMe, $byMe, $otherTid, $force*/) {
+  global $mya, $channel;
+
+  die('unimplemented');
+  
+/* ///    print_r(compact(ray('xid amount acct data tid toMe'))); die(); */
+/* u\EXPECT(compact(ray('xid amount what acct data tid toMe byMe otherTid force')), 'id float array acct assoc|empty int bool bool int int|empty'); // otherTid may be 0 (for reversing rewards) */
+
+  
+/*   if (!is_array($data)) $data = []; */
+/*   $old_data = $data; // remember original data from transaction we're reversing */
+/*   extract(just('xfee coupon', $data)); */
+/*   $tids = u\order($toMe, $otherTid, $tid); */
+/*   for ($i = 0; $i < 2; $i++) { */
+/*     $what0[$i] = preg_replace('/ \(' . preg_quote(t('reverses'), '/') . ' \#.*\)/', '', $what[$i]); */
+/*     $what[$i] = $what0[$i] . t(' (reverses #%tid)', 'tid', $tids[$i]); */
+/*   } */
+/*   if (@$xfee) $data['xfee'] = -$xfee; */
+/*   if (@$coupon) { */
+/*     $data['coupon'] = -$coupon; */
+/*     $payer = $toMe ? $acct->id : $mya->id; */
+/*     db\q('UPDATE r_coupated SET uses=uses-:duse WHERE uid=:payer AND coupid=:coupid', ray('duse payer coupid', ($coupon < 0 ? -1 : 1), $payer, $data['coupid'])); */
+/*   } */
+/*   $data['undoes'] = $xid; // remember what we're reversing (especially to get the realness right) */
+/* //  foreach ($amounts as $k => $v) $amounts[$k] = -$v; */
+/*   if ($force) u\preray(compact('force'), $data); */
+
+/*   $data['goods'] = $old_goods; */
   $reallyToMe = ($toMe xor $amount < 0);
   $invoicing = (!$reallyToMe and $channel != TX_POS);
 
-  list ($message, $args) = $invoicing
-  ? be\invoice($mya, $acct, $amount, $what[1], $data)
-  : be\transfer($toMe ? 'charge' : 'payment', $mya, $acct, -$amount, $what, $data);
+  list ($message, $args) = be\invoice($mya, $acct, $amount, $what[1], $data);
 
   if (@$args['success']) {
     if (!$invoicing) {
@@ -325,28 +343,32 @@ EOF;
  * @return TRUE if the payment was successful
  */
 function payInvoice($nvid, &$msg = '') {
-  if ($msg = r\badUnpaidInv($nvid, $inv)) return FALSE;
+  $DBTX = \db_transaction();
+  $inv = db\get('*', 'r_invoices', 'nvid=:nvid', compact('nvid'));
+  if ($msg = r\badUnpaidInv($inv)) {
+    $DBTX->rollback();
+    return FALSE;
+  }
   extract(just('payer payee amount goods purpose data flags', $inv));
   $payerA = r\acct($payer);
   $payeeA = r\acct($payee);
   
-  $DBTX = \db_transaction();
   $purpose .= ' (' . PROJECT . " inv#$nvid)";
-	$extra = ray('inv goods', $nvid, $goods);
-	if ($flags) foreach (ray('gift recurs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
+  $extra = ray('inv goods', $nvid, $goods);
+  if ($flags) foreach (ray('gift recurs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
   list ($index, $subs) = $payerA->pay($payeeA, $amount, $purpose, $extra);
-  if ($ok = @$subs['success']) //db\q('UPDATE r_invoices SET status=:xid WHERE nvid=:nvid', ray('xid nvid', @$subs['xid'], $nvid));
-  db\update('r_invoices', ray('status nvid', @$subs['xid'], $nvid), 'nvid');
+  $ok = arrayGet($subs, 'success', FALSE);
+  if ($ok) db\update('r_invoices', ray('status nvid', $subs['xid'], $nvid), 'nvid');
 
-	if (u\getBit(@$flags, B_INVESTMENT)) { // club reclaiming an investment
-/*
-    $res = db\get('shid,vestid', 'r_shares s LEFT JOIN r_investments i ON i.vestid=s.vestid', 'coid=:coid AND clubid=:clubid AND pending<0', ray('coid clubid', $payer, $payee));
-    if ($res) {
+  if (u\getBit(@$flags, B_INVESTMENT)) { // club reclaiming an investment
+    /*
+      $res = db\get('shid,vestid', 'r_shares s LEFT JOIN r_investments i ON i.vestid=s.vestid', 'coid=:coid AND clubid=:clubid AND pending<0', ray('coid clubid', $payer, $payee));
+      if ($res) {
       extract($res); // shid vestid
-      */
+    */
     if ($data = unserialize($data) and $shid = $data('shid')) { // record the sale
       db\update('r_shares', ray('shid shares pending when', $shid, -$amount, 0, NOW), 'shid');
-    } else r\tellCo(t('Invoice payment marked as "for investment (repayment)" has no corresponding SELL request in shares table.'), $inv, $payee);
+    } else { r\tellCo(t('Invoice payment marked as "for investment (repayment)" has no corresponding SELL request in shares table.'), $inv, $payee); }
   }
   unset($DBTX);
   
@@ -355,11 +377,22 @@ function payInvoice($nvid, &$msg = '') {
 }
 
 /**
+ * Extract a value from an array given its key; if the key is not present in the array then
+ * return the specified default value.
+ * @param array $arr: the array from which to extract
+ * @param mixed $key: the key to check
+ * @param mixed $dft: the default value
+ */
+function arrayGet($arr, $key, $dft) {
+  return array_key_exists($key, $arr) ? $arr[$key] : $dft;
+}
+
+/**
  * Create a transaction
  * call by: list ($msg, $args) = be\transfer(...);
  * @param string $ttype: payment, charge, or invoice payment
- * @param acct $a1: acct object for first party (usually current user)
- * @param acct $a2: acct object for the other party
+ * @param acct $myAcct (a1): acct object for the initiator (usually current user)
+ * @param acct $otherAcct (a2): acct object for the other party
  *   OR 'ALL' (paying employees) -- currently UNUSED
  * @param mixed $amount: the transaction amount OR an assoc of numeric fields for the transaction (amount and rewards)
  * @param string $for OR array($payerFor, $payeeFor): description of the transaction's purpose (user input)
@@ -382,124 +415,193 @@ function payInvoice($nvid, &$msg = '') {
  *    index: index to result message string (if success, the index begins with "report ")
  *    subs: replacement parameters, specific to the message (in particular, success=TRUE or FALSE)
  *    confirm: UNUSED boolean "this needs to be confirmed"
+ *    xid: transaction id of created transaction
  *
  * Do something different, based on these boolean values: 
  *   $taking (charge vs. payment), 
  *   $oked UNUSED (user confirmed the transaction request),
  *   $goods (the transaction is an exchange for real stuff),
  *   $shortfall (how inadequate the payer's balance is)
-  */
-function transfer($ttype, $a1, $a2, $amount, $for, $data = []) {
-  global $scanned, $channel;
-  u\EXPECT(compact(ray('a1 a2 data')), 'acct acct assoc');
-  list ($created, $goods) = [r\rTime(), FOR_GOODS]; // defaults
-  extract(just('created goods', $data));
-  u\setDft($for, ray(R_WHYS)[$goods]);
+ */
+function transfer($ttype, $myAcct, $otherAcct, $amount, $for, $data = []) {
 
+  $myAcct->reread(true);
+  $otherAcct->reread(true);
+  debug("transfer($ttype, " . print_r($myAcct, true) . ', ' . print_r($otherAcct, true) . ', ' . $amount . ', ' . print_r($for, true) . ', ' . print_r($data, true) . '), myName=' . $myAcct->fullName . ', otherName=' . $otherAcct->fullName);
+  
+  global $scanned, $channel;
+  u\EXPECT(compact(ray('myAcct otherAcct data')), 'acct acct assoc');
+
+  $created = arrayGet($data, 'created', r\rTime()); // set some defaults
+  $goods = arrayGet($data, 'goods', FOR_GOODS);
+  u\setDft($for, ray(R_WHYS)[$goods]);
+  $force = arrayGet($data, 'force', FALSE);
+  
   $type = TX_TRANSFER;
-//  if (is_array($amount)) extract(just('amount payerReward payeeReward', $amount));
   if (is_array($amount)) extract(just('amount', $amount));
-  list ($myid, $uid) = array($a1->id, $a2->id);
+  list ($myId, $otherId) = array($myAcct->id, $otherAcct->id);
   foreach (just('force offline investment created goods', $data) as $k => $v) {
     $$k = $v;
-    if ($k != 'force') unset($data[$k]); // keep force in data also
+    unset($data[$k]);
   }
-  if (@$force == 1) $offline = TRUE; // temporary until app handles this right
+  if ($force) $offline = TRUE; // temporary until app handles this right
   $taking = ($ttype == 'charge');
-  $erInfo = compact(ray('ttype amount goods for force')) + ray('a1 a2 op', $a1->fullName, $a2->fullName, $taking ? t('charged') : t('paid'));
-  $amount = round($amount, 2); // ignore fractions of cents
-  if (!@$amount) {
-/**/  r\tellAdmin('zero transaction', $erInfo + ['stack' => trace()]);
+  $erInfo = compact(ray('ttype amount goods for force')) + ray('myAcct otherAcct op', $myAcct->fullName, $otherAcct->fullName, $taking ? t('charged') : t('paid'));
+  if (empty($amount) or $amount == 0) {
+    /**/  r\tellAdmin('zero transaction', $erInfo + ['stack' => trace()]);
     return r\txRet('zero transaction', $erInfo);
   }
+  $amount = round($amount, 2); // ignore fractions of cents
   $reallyTaking = ($taking xor $amount < 0); // not taking if charging a negative amount
 
-  list ($loserA, $gainerA) = u\order($reallyTaking, $a2, $a1);
+  list ($loserA, $gainerA) = u\order($reallyTaking, $otherAcct, $myAcct);
   $erInfo += ['loserId' => $loserA->id];
-  list ($payer, $payee) = u\order($taking, $uid, $myid); // Analyze who's buying or selling
-  list ($payerAgent, $payeeAgent) = u\order($taking, $a2->agentId, $a1->agentId);
+  list ($payer, $payee) = u\order($taking, $otherId, $myId); // Analyze who's buying or selling
+  list ($payerAgent, $payeeAgent) = u\order($taking, $otherAcct->agentId, $myAcct->agentId);
 
-  if (!@$force and !@$data['inv'] and r\dupTx($uid, $myid, $taking ? $amount : -$amount)) return r\txRet('duplicate transaction', $erInfo);
-  if ($err = r\txPermErr($a1, $a2, $taking, $amount < 0)) { // Check permissions
+  if (!$force and !array_key_exists('inv', $data) and r\dupTx($otherId, $myId, $taking ? $amount : -$amount)) {
+    return r\txRet('duplicate transaction', $erInfo);
+  }
+  $err = r\txPermErr($myAcct, $otherAcct, $taking, $amount < 0);
+  if ($err) { // Check permissions
     list ($erMsg, $erSubs) = $err;
-    if (@$force) {
+    if ($force) {
       $msg = 'forced without perm';
       $erInfo += ['date' => u\fmtDate($created)];
-      foreach (['agent1'=>$a1, 'agent2'=>$a2] as $k => $a) $erInfo += [$k => $a->proSe ? t('self') : $a->fullName];
-      foreach ([$a1, $a2] as $a) if (!$a->proSe) r\message($a->id, $msg, $erInfo);
+      foreach (['agent1'=>$myAcct, 'agent2'=>$otherAcct] as $k => $a) $erInfo += [$k => $a->proSe ? t('self') : $a->fullName];
+      foreach ([$myAcct, $otherAcct] as $a) if (!$a->proSe) r\message($a->id, $msg, $erInfo);
       r\tellAdmin($msg . ' ' . t($erMsg, $erSubs), $erInfo + $erSubs);
-    } else return r\txRet($erMsg, $erInfo + $erSubs);
-  }
+    } else {
+      return r\txRet($erMsg, $erInfo + $erSubs);
+    } }
   
-  foreach ([$a1, $a2] as $a) if (!$a->co and !($channel == TX_POS ? $a->agentA->ided : $a->ided)) {
-    if (@$force) {
-      r\tellAdmin('forced without photoId', $erInfo); 
-    } elseif ($gainerA->id != CGID) { // and !$gainerA->coCan(CO_FAST)
-//      r\tellAdmin('tx without photoId', $erInfo); 
-//      return r\txRet($a == $a1 ? 'no photoid' : 'other no photoid', $erInfo + ['who' => $a2->fullName]);
-    }
-  }
+  foreach ([$myAcct, $otherAcct] as $a) {
+    if (!$a->co and !($channel == TX_POS ? $a->agentA->ided : $a->ided)) {
+      if ($force) {
+        r\tellAdmin('forced without photoId', $erInfo); 
+      } elseif ($gainerA->id != CGID) { // and !$gainerA->coCan(CO_FAST)
+        //      r\tellAdmin('tx without photoId', $erInfo); 
+        //      return r\txRet($a == $myAcct ? 'no photoid' : 'other no photoid', $erInfo + ['who' => $otherAcct->fullName]);
+      } } }
   
-  // Check the amount and calculate any balance shortfall
-  if ($error = u\badAmount($amount)) return r\txRet($error, $erInfo);
-//  $need = $amount - @$payerReward; // leave room for reversing rewards (minus a negative)
+  // Check the amount
+  $error = u\badAmount($amount);
+  if ($error) return r\txRet($error, $erInfo);
 
-  if ($shortfall = $loserA->id < 0 ? 0 : $loserA->shortfall($goods, $absAmt = abs($amount), TRUE, $a1)) {
-    if (@$force) {
+  $DBTX = db_transaction(); // Start it here so we don't have race problems with coupons or transaction ids
+  $payerTid = $payer > 0 ? r\xid2tid(PHP_INT_MAX, $payer) : 0;
+  $payeeTid = $payee > 0 ? r\xid2tid(PHP_INT_MAX, $payee) : 0;
+
+  $adjAmt = $amount;
+  
+  // Coupons
+  $coupEntry = NULL;
+  $rebate = 0;
+  if ($amount > 0 AND $goods == FOR_GOODS) {
+    $table = 'r_coupons c LEFT JOIN r_coupated d ON (d.coupid=c.coupid AND d.uid=:myId)';
+    $where = 'fromId=:id AND :now BETWEEN start AND end AND :price>=minimum AND (ulimit=0 OR uses<ulimit OR uses IS NULL) ORDER BY (uses IS NULL), end DESC';
+    $subs = ray('id now price myId', $myId, time(), $amount, $otherId);
+    $res = db\get('c.coupid,amount AS cAmt,ulimit,id AS dId,uses', $table, $where, $subs);
+    if ($res) {
+      extract($res);
+      $rebate = $cAmt < 0 ? -$price * $cAmt * 0.01 : $cAmt;
+      $dId = db\updateOrInsert('r_coupated', ['id' => $dId, 'coupid' => $coupid, 'uid' => $loserA->id, 'uses' => $uses + 1, 'when' => time()], 'id');
+      $coupEntry = ray('amount uid agentUid description acctTid relType related', -$rebate, $gainerA->id, $gainerA->id, tr('discount rebate (on #%tid)', ['tid' => $payeeTid]), $payeeTid, 'D', $dId);
+      $adjAmt -= $rebate;
+    }
+    /* $pot = $loserA->giftPot; */
+    /* if ($pot != 0) $loserA->update('giftPot', max(0, $pot - $price)); // use up gift coupons, if any (if tx gets reversed, gift recipient can cash it out, but that's no biggie) */
+  }
+
+  // Calculate any balance shortfall
+  $absAmt = abs($adjAmt);
+  $shortfall = ($loserA->id < 0) ? 0 : $loserA->shortfall($goods, $absAmt, TRUE, $myAcct);
+  if ($shortfall) {
+    if ($force) {
       $short = TRUE; // flag overdraft
     } else {
       $short = u\fmtAmt($shortfall);
       $avail = u\fmtAmt($absAmt - $shortfall);
-      $otherName = $a2->fullName;
-      $msg = $reallyTaking ? ($a2->can(B_SECRET) ? 'short from vague' : 'short from') : 'short to';
+      $otherName = $otherAcct->fullName;
+      $msg = $reallyTaking ? ($otherAcct->can(B_SECRET) ? 'short from vague' : 'short from') : 'short to';
       if ($channel == TX_WEB) {
-// too complex        if ($msg == 'short to' and $channel == TX_WEB and r\signedIn()) $msg .= '|increase min';
-/*        if ($goods == FOR_GOODS) {
-          if (!$loserA->can(B_DEBT) and $loserA->floor < 0 and $channel == TX_WEB) $msg .= '|try debt';
-          $_aDebt = w\atag('/settings/preferences');
-        } //elseif ($a1->cttyRewardy) $msg .= '|short cash help|maybe not cash';
-				*/
+        // too complex        if ($msg == 'short to' and $channel == TX_WEB and r\signedIn()) $msg .= '|increase min';
+        /*        if ($goods == FOR_GOODS) {
+                  if (!$loserA->can(B_DEBT) and $loserA->floor < 0 and $channel == TX_WEB) $msg .= '|try debt';
+                  $_aDebt = w\atag('/settings/preferences');
+                  } //elseif ($myAcct->cttyRewardy) $msg .= '|short cash help|maybe not cash';
+        */
       }
       $loserA->suggestAuto();
       $details = t('|%loser was short by %short trying to pay %gainer %amount (available balance is %avail)', 'loser short gainer amount avail', $loserA->fullName, $short, $gainerA->fullName, u\fmtAmt($absAmt), $avail);
+      $DBTX->rollback();
       return r\txRet($msg, compact(ray('otherName short how details _aDebt avail')));
     }
   }
-//  $roundup = (r\acct($payer)->roundup and !@$data['isGift'] and !@$data['roundups'] and $amount > 0); // payer, not a1 or loser
-  $roundup = (r\acct($payer)->roundup and $amount > 0 and !@$data['roundups'] and !($payee == CGID and @$data['recurs'] and $amount < 1)); // payer roundups, not a1 or loser (don't round up reversals, cashouts, roundups, or recurring gifts under $1)
-  if ($amount > 0 AND $goods == FOR_GOODS) {
-    $price = $loserA->applyCoupon($gainerA, $amount, $coupon, $coupid);
-    if ($coupon) $data += compact(ray('coupon coupid'));
-    if ($pot = $loserA->giftPot) $loserA->update('giftPot', max(0, $pot - $price)); // use up gift coupons, if any (if tx gets reversed, gift recipient can cash it out, but that's no biggie)
+
+  $roundup = (r\acct($payer)->roundup and $adjAmt > 0 and !($payee == CGID and !empty($recurs) and $adjAmt < 1)); // payer roundups, not myAcct or loser (don't round up reversals, cashouts, roundups, or recurring gifts under $1)
+  if ($roundup) {
+    $change = fmod($adjAmt, 1.0);
+    if ($change != 0) {
+      $contrib = 1.00 - $change;
+      $eRoundup=ray('amount uid agentUid description', $contrib, CG_ROUNDUPS_UID, $payerAgent, t('roundup donation'));
+      $adjAmt += $contrib;
+    }
+  } else {
+    $eRoundup = NULL;
+  }
+
+  $flags = (array_key_exists('force', $data) ? u\bit(B_OFFLINE) : 0) |
+    (array_key_exists('offline', $data) ? u\bit(B_OFFLINE) : 0) |
+    (array_key_exists('short', $data) ? u\bit(B_SHORT) : 0) |
+    (array_key_exists('recurs', $data) ? u\bit(B_RECURS) : 0) |
+    (array_key_exists('gift', $data) ? u\bit(B_GIFT) : 0) |
+    (array_key_exists('funding', $data) ? u\bit(B_FUNDING) : 0) |
+    (array_key_exists('investment', $data) ? u\bit(B_INVESTMENT) : 0);
+  $initiator = $myAcct->id;
+  $initiatorAgent = $myAcct->id;
+
+  // Set up to create
+  $hdrInfo = compact(ray('type goods initiator initiatorAgent channel created')); //amount payer payee payerAgent payeeAgent for data taking roundup force offline investment short'));
+  $entries = [];
+  $entries[] = ray('amount uid agentUid description acctTid', -round($adjAmt, 2), $payer, $payerAgent, (is_array($for) ? $for[0] : $for), $payerTid);
+  $entries[] = ray('amount uid agentUid description acctTid', round($amount, 2), $payee, $payeeAgent, is_array($for) ? $for[1] : $for, $payeeTid);
+
+  if (!empty($coupEntry)) $entries[] = $coupEntry;
+  if (!empty($eRoundup)) $entries[] = $eRoundup;
+
+  $myx = new r\MyX($hdrInfo, $entries, $myAcct, TRUE);
+  if (!$myx) {
+    $DBTX->rollback();
+    return r\txRet('tx save err', $erInfo);
   }
   
-//  $info = compact(ray('type created amount payer payee payerReward payeeReward payerAgent payeeAgent for data taking roundup goods force offline investment short'));
-  $info = compact(ray('type created amount payer payee payerAgent payeeAgent for data taking roundup goods force offline investment short'));
-  if (!$myx = new r\MyX($info, $a1, TRUE)) return r\txRet('tx save err', $erInfo);
+  $DBTX = null;
   
   // Report results
-  $args = $myx->reportArgs(TRUE, $shortfall);
-
-  // notify other party by email about any completed transaction
-  foreach ([$a1, $a2] as $a) if (!$a->confirmed) $a->setBit(B_CONFIRMED);
+  /* $args = $myx->reportArgs(TRUE, $shortfall); */
+  $args = ray('myName otherName amount payeePurpose payerPurpose', $myAcct->fullName, $otherAcct->fullName, $adjAmt, is_array($for) ? $for[0] : $for, is_array($for) ? $for[1] : $for);
+  debug($args);
+// notify other party by email about any completed transaction
+  foreach ([$myAcct, $otherAcct] as $a) if (!$a->confirmed) $a->setBit(B_CONFIRMED);
   $notice = $reallyTaking ? 'new charge'
     : (($amount < 0 and $goods == FOR_GOODS) ? 'new refund' : 'new payment');
-  if ($notice == 'new payment' and $a2->co) { // not "new charge" (the most common); payment at payer's initiative
+  if ($notice == 'new payment' and $otherAcct->co) { // not "new charge" (the most common); payment at payer's initiative
     $notice = 'new payment linked';
-    $args['_aPayLink'] = $a2->makeDo('addr', $myid, 0); // link to address, so merchant can ship or nonprofit can thank
-//      "<$atag>" . check_plain($args['myName']) . '</a>';
+    $args['_aPayLink'] = $otherAcct->makeDo('addr', $myId, 0); // link to address, so merchant can ship or nonprofit can thank
+    //      "<$atag>" . check_plain($args['myName']) . '</a>';
   }
-//  if (@$args['otherRewardAmount'] and $a1->cttyRewardy) $notice .= '|reward other';
-  r\notify($uid, $notice, $args);
+  //  if (@$args['otherRewardAmount'] and $myAcct->cttyRewardy) $notice .= '|reward other';
+  r\notify($otherId, $notice, $args);
   $msg = 'report tx';
-/*  if ($a1->cttyRewardy) {
-    $msg .= '|for why';
-    if ($goods == FOR_GOODS) $msg .=  ($channel == TX_POS and $a1->co) ? '|reward customer' : '|the reward';
-  } */
-//  } else $msg = $ttype;
+  /*  if ($myAcct->cttyRewardy) {
+      $msg .= '|for why';
+      if ($goods == FOR_GOODS) $msg .=  ($channel == TX_POS and $myAcct->co) ? '|reward customer' : '|the reward';
+      } */
+  //  } else $msg = $ttype;
 
-//  if (isPRODUCTION) r\tellAdmin('tx', compact('msg') + $args); // a backup record of all txs (until the backup server works)
-  return r\txRet($msg, $args);
+  //  if (isPRODUCTION) r\tellAdmin('tx', compact('msg') + $args); // a backup record of all txs (until the backup server works)
+  return r\txRet($msg, $args + ['xid' => $myx->xid], FALSE, $myx->xid);
 }
 
 /**
@@ -520,8 +622,9 @@ function invoice($a1, $a2, $amount, $purpose = NULL, $extra = []) {
   global $channel;
   
   u\EXPECT(compact(ray('a1 a2 amount purpose')), 'acct acct float string');
-  extract(just($ks = 'goods status', $extra));
-	foreach (justNOT("goods status shid coupon coupid force inv", $extra) as $k => $v) {
+  $ks = 'goods status';
+  extract(just('$ks', $extra));
+  foreach (justNOT("goods status shid coupon coupid force inv", $extra) as $k => $v) {
     u\setBit($flags, $k, $v);
     unset($extra[$k]); // don't leave bits in extras (data field)
   }
@@ -553,7 +656,7 @@ function invoice($a1, $a2, $amount, $purpose = NULL, $extra = []) {
   }
 
   $msg = 'report tx';
-//  if ($a1->cttyRewardy) $msg .= '|for why';
+  //  if ($a1->cttyRewardy) $msg .= '|for why';
   if ($amount > 0) $msg .= '|balance unchanged';
   return array($msg, $subs + ['success'=>TRUE]);
 }
@@ -577,30 +680,30 @@ function invoiceNonmember($name, $info) {
  * @param bool $oked: TRUE actually do it? (otherwise just see if it can be done)
  * @return int: the incentive amount (FALSE on failure)
  *//*
-function fund($uid, $type, $amount, $for) {
-  $payeeAgent = $payee = $uid;
-  global $mya; // (null, if just registering or running as cron)
-  $isReward = r\isReward($type);
-  u\EXPECT($isReward or @$mya->can(B_MANAGING_CTTY), 'non-automatic reward by non ctty agent');
-  if ($type == TX_FINE) $amount = -$amount;
-//  if (!$oked) return $amount;
-  if ($isReward) list ($payerReward, $payeeReward, $amount) = [0, $amount, 0];
-///    debug(compact(ray('uid type amount for isReward payeeReward')));
+     function fund($uid, $type, $amount, $for) {
+     $payeeAgent = $payee = $uid;
+     global $mya; // (null, if just registering or running as cron)
+     $isReward = r\isReward($type);
+     u\EXPECT($isReward or @$mya->can(B_MANAGING_CTTY), 'non-automatic reward by non ctty agent');
+     if ($type == TX_FINE) $amount = -$amount;
+     //  if (!$oked) return $amount;
+     if ($isReward) list ($payerReward, $payeeReward, $amount) = [0, $amount, 0];
+     ///    debug(compact(ray('uid type amount for isReward payeeReward')));
   
-  $a = r\acct($payee);
-  $payer = $a->community;
-  $payerAgent = (@$mya and $mya->id < 0) ? $mya->agentId : $payer; // take note if funded by community admin
+     $a = r\acct($payee);
+     $payer = $a->community;
+     $payerAgent = (@$mya and $mya->id < 0) ? $mya->agentId : $payer; // take note if funded by community admin
   
-  if (!new r\X(compact(ray('type amount payer payee payerReward payeeReward payerAgent payeeAgent for taking')))) return FALSE;
-  $types = ray(TX_TYPES);
-  $thing = $isReward ? t('reward') : $types[$type];
-  $subs = ray('amount purpose thing', u\fmtAmt(abs($amount)), $for, $thing);
-  $index = $type == TX_FINE ? 'got fine' : 'got funding';
-  if ($type == TX_INFLATION) $index .= '|inflation details';
-  if ($a->cttyRewardy or !$isReward) r\notify($uid, $index, $subs); // don't report rewards unless rewarding
-  return $amount;
-}
-*/
+     if (!new r\X(compact(ray('type amount payer payee payerReward payeeReward payerAgent payeeAgent for taking')))) return FALSE;
+     $types = ray(TX_TYPES);
+     $thing = $isReward ? t('reward') : $types[$type];
+     $subs = ray('amount purpose thing', u\fmtAmt(abs($amount)), $for, $thing);
+     $index = $type == TX_FINE ? 'got fine' : 'got funding';
+     if ($type == TX_INFLATION) $index .= '|inflation details';
+     if ($a->cttyRewardy or !$isReward) r\notify($uid, $index, $subs); // don't report rewards unless rewarding
+     return $amount;
+     }
+   */
 
 /**
  * @return FALSE if success; else array($error_message, $subs)
@@ -619,7 +722,7 @@ function addCell($number, $validate = FALSE) {
       extract($result, EXTR_PREFIX_ALL, 'old');
       if ($old_uid == $myid) return array('already cell', $subs);
       $accountName = accountName($old_uid);
-//      if (!isTempAccount($old_uid)) return array('cell taken', compact(ray('number accountName')));
+      //      if (!isTempAccount($old_uid)) return array('cell taken', compact(ray('number accountName')));
     }
     return NULL;
   }
@@ -661,8 +764,8 @@ function identify($who, $myid, $paying, $self_message = 'no self-trading') {
   $cmail = strpos($who, '@') ? u\cry('P', strtolower($who)) : '-';
 
   $cttyCrit = $mya->admin 
-  ? '1' 
-  : (($paying ? ':IS_OK AND ' : '') . "(:IS_CO OR community=$mya->community)"); // restrict to own community and approved (as of 7/6/2017)
+    ? '1' 
+    : (($paying ? ':IS_OK AND ' : '') . "(:IS_CO OR community=$mya->community)"); // restrict to own community and approved (as of 7/6/2017)
   
   $sql = <<<EOF
     SELECT DISTINCT uid,fullName
@@ -672,7 +775,7 @@ function identify($who, $myid, $paying, $self_message = 'no self-trading') {
     ORDER BY fullName
 EOF;
 
-// LEFT JOIN r_boxes s ON u.uid = s.uid ... OR :who=s.code (search for cell not allowed if it isn't the account's primary phone)
+  // LEFT JOIN r_boxes s ON u.uid = s.uid ... OR :who=s.code (search for cell not allowed if it isn't the account's primary phone)
 
   $result = db\q($sql, compact(ray('who short cphone cmail')))->fetchAllKeyed(0, 1);
   
@@ -699,45 +802,51 @@ EOF;
  */
 function creditInfo($args = []) {
   extract(just('uid pending asof noj', $args));
-  if (!$a = r\acct(@$uid)) return NULL; else $uid = $a->id;
-  $jid = @$noj ? 0 : ($a->jid ?: 0);
+  if (!isset($uid)) return NULL;
+  $a = r\acct($uid);
+  if (!$a) return NULL;
+  $uid = $a->id;
+  $jid = isset($noj) ? ($a->jid ?: 0) : 0;
 
-  u\setDft($asof, $asof0 = r\rTime() + DAY_SECS);
+  $asof0 = r\rTime();
+  u\setDft($asof, r\rTime() + DAY_SECS);
   $mday1 = u\monthDay1($asof); // start of relevant month, for partial (not-yet-given) roundups calculation
   if ($asof == u\plusMonths(1, $mday1) - 1) $mday1 = $asof + 1; // for asof the end of month, there are no partRounds
   $subs = compact(ray('uid jid asof'));
   $isPayer = 't.payer IN (:uid, :jid)';
   $isPayee = 't.payee IN (:uid, :jid)'; // account can be both payer and payee, if joint account
   $signedAmt = "IF($isPayer, -amount, amount)";
-//    SUM(IF(t.type IN (:TX_REWARDS), amount, 0)) AS rewards,
-  
+  //    SUM(IF(t.type IN (:TX_REWARDS), amount, 0)) AS rewards,
+
+  debug(db\q('SELECT SUM(amount) FROM r_entries e JOIN r_tx_hdrs t on e.xid=t.xid
+    WHERE (e.uid IN (:uid, :jid)) AND t.created<=:asof', $subs)->fetch());
   $sql = <<<EOF
     SELECT 
-    SUM(IF($isPayee, amount, 0)) AS `in`,
-    SUM(IF($isPayer, amount, 0)) AS `out`, 
-    SUM(IF(t.:IS_ROUNDUP AND $isPayer AND MOD(amount, 1)>0, 1-MOD(amount, 1), 0)) AS roundups,
-    SUM(IF(t.:IS_ROUNDUP AND $isPayer AND MOD(amount, 1)>0 AND t.created>=$mday1, 1-MOD(amount, 1), 0)) AS partRounds,
-    SUM(IF(t.:IS_ROUNDUPS AND $isPayer, amount, 0)) AS roundupsPaid,
-    SUM(IF(t.goods=:FOR_SHARE, $signedAmt, 0)) AS share,
-    SUM(IF(t.type=:TX_XFEE, $signedAmt, 0)) AS xfees,
-    SUM(IF(:HAS_XFEE, $signedAmt, 0)) AS xin
-    FROM r_txs t
-    WHERE ($isPayer OR $isPayee) AND t.created<=:asof
+    SUM(IF(amount > 0, amount, 0)) AS `in`,
+    SUM(IF(amount < 0, -amount, 0)) AS `out`, 
+    IF(uid=:CG_ROUNDUPS_UID,-amount,0) AS roundups,
+    0 AS partRounds,
+    IF(uid=:CG_ROUNDUPS_UID,-amount,0) AS roundupsPaid,
+    SUM(IF(t.goods=:FOR_SHARE, -amount, 0)) AS share,
+    SUM(IF(t.type=:TX_XFEE, -amount, 0)) AS xfees,
+    0 AS xin
+    FROM r_entries e JOIN r_tx_hdrs t on e.xid=t.xid
+    WHERE (e.uid IN (:uid, :jid)) AND t.created<=:asof
 EOF;
   
-  $sums = @$pending ? ray('in out xfees xin', 0, 0, 0, 0) : db\q($sql, $subs)->fetchAssoc();
+  $sums = isset($pending) ? ray('in out xfees xin', 0, 0, 0, 0) : db\q($sql, $subs)->fetchAssoc();
 
-  $where = @$pending ? 'created<=:asof AND NOT completed' : 'completed AND completed<=:asof';
-  $sql = "SELECT SUM(amount) AS bank FROM r_usd t WHERE $isPayee AND amount<>0 AND $where";
-  $sums += db\q($sql, $subs)->fetchAssoc();
+  /* $where = @$pending ? 'created<=:asof AND NOT completed' : 'completed AND completed<=:asof'; */
+  /* $sql = "SELECT SUM(amount) AS bank FROM r_usd t WHERE $isPayee AND amount<>0 AND $where"; */
+  /* $sums += db\q($sql, $subs)->fetchAssoc(); */
 
   foreach ($sums as $k => $v) $sums[$k] = $v + 0; // no nulls
   extract($sums);
 
-//  $bank = -$bank; // make it "from bank" instead of "to bank"
-  $balance = ($in - $out) + $bank;
-//  $r = $balance + $rewards;
-//  $in -= $xin; $out -= $xin;
+  //  $bank = -$bank; // make it "from bank" instead of "to bank"
+  $balance = ($in - $out) /*+ $bank*/;
+  //  $r = $balance + $rewards;
+  //  $in -= $xin; $out -= $xin;
   $outProper = $out;
   $inProper = $in; // - $rewards;
 //  if ($uid == CGID) $inProper -= $share; else $outProper += $share;
@@ -745,13 +854,13 @@ EOF;
   
   // figure savings
   if ($asof == $asof0) {
-//    $savings = $a->j_savings;
+    //    $savings = $a->j_savings;
   } else {
-//    $savings = $rewards; // tentative savings before additions ( = oldSavings - oldSavingsAdd)
+    //    $savings = $rewards; // tentative savings before additions ( = oldSavings - oldSavingsAdd)
     foreach ($jid ? [$a, r\acct($jid)] : [$a] as $ai) if ($chs = $ai->changes) {
       $addOLD = $ai->savingsAdd; // start with present
       foreach ($chs as $dt => $info) if ($dt > $asof) $addOLD = @$info['savingsAdd']; else break;
-//      $savings += $addOLD;
+      //      $savings += $addOLD;
     }
   }
 //  $balance = $r - $savings;
@@ -770,7 +879,8 @@ EOF;
  * @return an assoc of names keyed by account record IDs (FALSE if none)
  */
 function accountChoices() {
-  if (!$mya = r\acct()) return FALSE;
+  $mya = r\acct();
+  if (!$mya) return FALSE;
   $result[$aid = $mya->agentId] = $mya->agentA->fullName;
   $nameOrder = "IF(MID(fullName, 2, 2)='. ', MID(fullName, 4), IF(MID(fullName, 2, 1)=' ', MID(fullName, 3), IF(MID(fullName, 1, 4)='the ', MID(fullName, 5), fullName)))"; // ignore "the ", "a ", and initialled first name (eg "X." or "X")
   $sqlNormal = 'SELECT r.main AS id, u.fullname FROM r_relations r LEFT JOIN users u ON u.uid=r.main WHERE r.other=:aid AND r.permission>0'; // normal selection SQL
@@ -780,9 +890,9 @@ function accountChoices() {
     $q = @db\q("SELECT uid AS id, fullName FROM users WHERE $where ORDER BY (uid<0) DESC, $nameOrder");
   } elseif ($mya->cAdmin) {
     $sql = <<<EOF
-SELECT DISTINCT id, fullName FROM
-  (SELECT uid AS id, fullName FROM users WHERE community=:ctty UNION $sqlNormal) w
-ORDER BY (id<0) DESC, $nameOrder
+      SELECT DISTINCT id, fullName FROM
+      (SELECT uid AS id, fullName FROM users WHERE community=:ctty UNION $sqlNormal) w
+      ORDER BY (id<0) DESC, $nameOrder
 EOF;
     $q = @db\q($sql, ray('ctty aid', $mya->community, $aid));
   } else $q = @db\q("$sqlNormal ORDER BY $nameOrder", compact('aid')); // the usual case

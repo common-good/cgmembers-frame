@@ -5,8 +5,8 @@
    error_reporting(E_ALL);
   ini_set("display_errors", 1);
 
-   include_once __DIR__ . '/../rcredits/admin/admin.inc';
- */
+ include_once __DIR__ . '/../rcredits/admin/admin.inc';
+*/
 namespace CG\Admin;
 
 use CG as r;
@@ -29,7 +29,7 @@ function setupBasicAccounts() {
   while ($row = $q->fetchAssoc()) { // create or update all regions
     extract($row);
     if (!$hasServer) continue;
-//    if (isDEV and !in_array($region, [R_SERVER_ID])) continue; // don't slow the tests down
+    //    if (isDEV and !in_array($region, [R_SERVER_ID])) continue; // don't slow the tests down
     if ($uid = db\get('uid', 'users', "name=CONCAT(:region, '.')", compact('region'))) {
       r\acct($uid)->update(compact(ray('zip federalId flags')));
     } else {
@@ -59,11 +59,19 @@ function setupBasicAccounts() {
     new r\Acct($info);
   }  
 
-  new r\Acct(array_combine($keys, array(CG_ROUNDUPS_UID, 0, t('roundup'), t('Roundup Donations'), 'cg@commongood.earth', '', 0, 0, 0))); 
-  new r\Acct(array_combine($keys, array(CG_CRUMBS_UID, 0, t('crumbs'), t('Crumb Donations'), 'cg@commongood.earth', '', 0, 0, 0))); 
-  new r\Acct(array_combine($keys, array(CG_INCOMING_BANK_UID, 0, t('bank-in'), t('Incoming bank'), 'cg@commongood.earth', '', 0, 0, 0))); 
-  new r\Acct(array_combine($keys, array(CG_OUTGOING_BANK_UID, 0, t('bank-out'), t('Outgoing bank'), 'cg@commongood.earth', '', 0, 0, 0)));
-  
+  $values = array(CG_BANK_UID, 0, 'CG Bank Accounts', t('CG Bank Accounts'), 'banks@commongood.earth', '', 0, 0, 0,
+                  u\bit([B_OK, B_CONFIRMED]));
+  $info = array_combine($keys, $values);
+  new r\Acct($info); // set up record for banking
+  $values = array(CG_ROUNDUPS_UID, 0, 'CG Roundup Donations', t('CG Roundup Donations'), 'info@commongood.earth', '', 0, 0, 0,
+                  u\bit([B_OK, B_CONFIRMED]));
+  $info = array_combine($keys, $values);
+  new r\Acct($info); // set up record for banking
+  $values = array(CG_CRUMBS_UID, 0, 'CG Crumb Donations', t('CG Crumb Donations'), 'info@commongood.earth', '', 0, 0, 0,
+                  u\bit([B_OK, B_CONFIRMED]));
+  $info = array_combine($keys, $values);
+  new r\Acct($info); // set up record for banking
+
   $server = r\serverUid();
   if ($server == r\serverUid('NEW')) { // no need to set up CGF unless in Western Mass (or testing)
     r\acct($server)->update('created', R_LAUNCH); // a date in the past makes tests work better
@@ -78,7 +86,7 @@ function setupBasicAccounts() {
     $cgf = new r\Acct($info);
     \setV('cgf_uid', $cgf->id);
     $cgf->update('emailCode website', '1495kJHm0h145PHh2345h', 'cg4.us');
-//    $cgf->newRelation($wws->id, r\perm(B_MANAGE));
+    //    $cgf->newRelation($wws->id, r\perm(B_MANAGE));
   }
 }
 
@@ -86,9 +94,9 @@ function setupBasicAccounts() {
  * Re-setup the test cards on the STAGING server, after importing data from the PRODUCTION server.
  * Set bogus email addresses and phones so we DEFINITELY don't accidentally email someone (happened once)
  */
- define('TEST_ACCTS', 'aaa aab aad aaq aak abb');
- define('DEV_ACCTS', ''); // developer accounts
- define('R_COS', 'CAAAAA RMCAAA MIWAAA INAAAA NEWAAD NEWAIG NEWAKH NENAAB NEWALJ NEWAKD'); // community organizers, staff, and programmers to treat as cAdmins on test server (not the superAdmin's personal account, so the superAdmin can sign in as an ordinary individual user).
+define('TEST_ACCTS', 'aaa aab aad aaq aak abb');
+define('DEV_ACCTS', ''); // developer accounts
+define('R_COS', 'CAAAAA RMCAAA MIWAAA INAAAA NEWAAD NEWAIG NEWAKH NENAAB NEWALJ NEWAKD'); // community organizers, staff, and programmers to treat as cAdmins on test server (not the superAdmin's personal account, so the superAdmin can sign in as an ordinary individual user).
  
 function makeTestAccounts() {
   if (isPRODUCTION) return; // protects us even if the constant is not set
@@ -96,7 +104,7 @@ function makeTestAccounts() {
   $a = a('aab');
   $selling = "groceries\ngifts\nsundries\ndeli\nbaked goods";
   $a->update('name fullName selling', 'cornerstore', 'Corner Store', $selling);
-//  $a->setBitx(CO_REQUIRE_CASHIER, FALSE, 'coFlags');
+  //  $a->setBitx(CO_REQUIRE_CASHIER, FALSE, 'coFlags');
 
   $a = a('aaa');
   $a->update('name fullName cardCode2', 'mariamanager', 'Maria Manager', 'WeHlioM5JZv1O9G');
@@ -108,7 +116,7 @@ function makeTestAccounts() {
   
   $a = a('aaq');
   $a->update('name fullName', 'helgas', 'Helga\'s Hardware');
-//  $a->setBitx(CO_REQUIRE_CASHIER, TRUE, 'coFlags');
+  //  $a->setBitx(CO_REQUIRE_CASHIER, TRUE, 'coFlags');
   a\photoFromFile($a);
   
   $a = a('aak');
@@ -140,9 +148,9 @@ function makeTestAdmins() {
 function showSteps($a) {
   $steps = '';
   if (!$a->ok and $a->id != 1) foreach (($a->stepsDone ?: []) as $k => $done) {
-    $color = $done ? 'done' : 'not-done';
-    if (!in($k, $a->co ? 'proxies' : 'company relations')) $steps .= "<b class=\"step-$color\">$k </b>";
-  }
+      $color = $done ? 'done' : 'not-done';
+      if (!in($k, $a->co ? 'proxies' : 'company relations')) $steps .= "<b class=\"step-$color\">$k </b>";
+    }
   return $steps;
 }
 
@@ -152,12 +160,23 @@ function showSteps($a) {
 function showActivity($a) {
   $uid = $a->id;
   $when = u\plusMonths(-3);
-  $count = $a->co ? db\count('r_txs', 'payee=:uid AND created>:when', compact('uid', 'when'))
-    : db\count('r_txs', 'payer=:uid AND payee<>:CGID AND created>:when', compact(ray('uid cgf when')));
+  $count = $a->co ? db\count('r_entries', 'uid=:uid AND amount > 0 AND created>:when', compact('uid', 'when'))
+    : db\count('r_entries', 'uid=:uid AND amount < 0 /*AND payee<>:CGID*/ AND created>:when', compact(ray('uid cgf when')));
   $ret = t('%count %what', 'count what', $count, $a->co ? t('sales') : t('purchases'));
   foreach (ray('created activated signed') as $k) $subs[$k] = $a->$k ? u\fmtDate($a->$k) : t('NO');
   $subs['use'] = u\fmtDate($a->ok ? $a->access : $a->login);
   $ret .= t(' in the past 3 months (created %created, signed %signed, activated %activated, last use/signin %use)', $subs);
+
+  // new version
+  $uid = $a->id;
+  $when = u\plusMonths(-3);
+  $count = $a->co ? db\count('r_entries', 'payee=:uid AND amount < 0 AND created>:when', compact('uid', 'when'))
+    : db\count('r_entries', 'payee=:uid AND payee<>:CGID AND amount > 0 AND created>:when', compact(ray('uid cgf when')));
+  $ret .= t('  New: %count %what', 'count what', $count, $a->co ? t('sales') : t('purchases'));
+  foreach (ray('created activated signed') as $k) $subs[$k] = $a->$k ? u\fmtDate($a->$k) : t('NO');
+  $subs['use'] = u\fmtDate($a->ok ? $a->access : $a->login);
+  $ret .= t('  in the past 3 months (created %created, signed %signed, activated %activated, last use/signin %use)', $subs);
+  
   return $ret;
 }
 
@@ -171,8 +190,8 @@ function showRelations($a) {
   $ret = '';
   $sql = <<<EOF
     SELECT IF(r.main=:uid, other, main) AS them, main, IF(r.main=:uid, u2.fullName, u1.fullName) as who, 
-      permission, r.:IS_EMPLOYEE AS employee, r.:IS_OWNER AS owner, r.:IS_DRAW AS draw,
-      r.:IS_CUSTOMER AS customer, r.:IS_AUTOPAY AS autopay, u1.:IS_CO AS iCo, u2.:IS_CO AS uCo
+    permission, r.:IS_EMPLOYEE AS employee, r.:IS_OWNER AS owner, r.:IS_DRAW AS draw,
+    r.:IS_CUSTOMER AS customer, r.:IS_AUTOPAY AS autopay, u1.:IS_CO AS iCo, u2.:IS_CO AS uCo
     FROM r_relations r LEFT JOIN users u1 ON u1.uid=r.main LEFT JOIN users u2 ON u2.uid=r.other
     WHERE :uid IN (r.main, r.other) AND :uid<>:jid AND (permission OR r.:IS_EMPLOYEE OR r.:IS_OWNER OR r.:IS_DRAW OR NOT r.:IS_CUSTOMER)
 EOF;
@@ -189,38 +208,38 @@ EOF;
       $extra = '<small> (' . r\qid($them) . ' / ' . a\cardLink("$main/$them") . ')</small>';
       $role = $owner ? t('owned by')
         : ($draw ? t('drawn on by')
-        : ($permission >= B_MANAGE ? t('managed by')
-        : (($permission >= B_SCAN or $employee) ? t('employs')
-        : ($permission >= B_READ ? t('readable by')
-        : t('probably employs')))));
+           : ($permission >= B_MANAGE ? t('managed by')
+              : (($permission >= B_SCAN or $employee) ? t('employs')
+                 : ($permission >= B_READ ? t('readable by')
+                    : t('probably employs')))));
     } else {
       $role = $owner ? t('owns')
         : ($draw ? t('draws from')
-        : ($permission >= B_MANAGE ? t('manages')
-        : (($permission >= B_SCAN or $employee) ? t('works for')
-        : ($permission >= B_READ ? t('can read')
-        : ($customer ? t('buys from')
-        : t('probably works for'))))));
+           : ($permission >= B_MANAGE ? t('manages')
+              : (($permission >= B_SCAN or $employee) ? t('works for')
+                 : ($permission >= B_READ ? t('can read')
+                    : ($customer ? t('buys from')
+                       : t('probably works for'))))));
     }
     $ret .= ($ret ? ', ' : '') . "$role <a href=\"$base_url/change-account/acct=$them&page=summary\">$who</a>$extra";
   }
   return $ret;
 }
 
-define('ID_KEYS', 'id uid t.uid myid payer payee main other inviter invitee proxy person owner defaultAgent');
+define('ID_KEYS', 'id uid t.uid myid payer payee main other inviter invitee proxy person owner defaultAgent initiator t.initiator');
 
 /**
  * Return the given field, formatted for viewing.
  */
 function formatField($k, $v, $flagsField = B_LIST) {
   $v = $v . ''; // convert to string
-//  if ($k == 'bankAccount' and u\starts($v, '~')) $v = 'c' . $v; // FUDGE to repair broken crypt flag (?)
-//  while (u\starts($v, CRYPT_FLAG)) $v = u\decrypt($v);
+  //  if ($k == 'bankAccount' and u\starts($v, '~')) $v = 'c' . $v; // FUDGE to repair broken crypt flag (?)
+  //  while (u\starts($v, CRYPT_FLAG)) $v = u\decrypt($v);
   if ($v and in($k, ID_KEYS) and strlen($v) >= strlen(CGID)) {
     if ($a = r\acct($v)) $v = $a->name; else $v .= t(' (missing)'); // eg, when uid is changed
   } // member ID. Don't include agent/payerAgent/etc. here
   if ($v and $k == 'channel') $v = u\rayv(ray(TX_CHANNELS), $v);
-///  if ($k == 'reid') $v = str_replace(R_MEMBER_MARK, R_AGENT_MARK, r\qid($v));
+  ///  if ($k == 'reid') $v = str_replace(R_MEMBER_MARK, R_AGENT_MARK, r\qid($v));
   if ($v and in($k, R_DATE_FLDS)) $v = '<div class="date-field">' . strftime('%d%b', $v) . '<span class="year-field">\'' . strftime('%y', $v) . '<br>' . strftime(isDEV ? '%I:%M %p' : '%l:%M %P', $v) . '</span></div>';
   if ($k == 'flags') $v = "<div class=\"format-flags\">" . a\flagsDesc($v, $flagsField) . '</div>';
   return $v;
@@ -238,7 +257,7 @@ function showQuery($table, $where = '1', $order = '', $fields = '*', $joinFields
   $limit = 500; // max records to show
   global $mya;
   
-  $flagsField = $table == 'r_txs' ? TX_FLAGS : B_LIST;
+  $flagsField = ($table == 'r_txs' or $table == 'r_tx_hdrs') ? TX_FLAGS : B_LIST;
   if (!$mya->admin and $joinFields) {
     if ($table != 'users') {
       if (!is_array($joinFields)) $joinFields = array($joinFields);
@@ -277,8 +296,8 @@ function ssnShow($a) {
   if (@$addresses['lastname']) $addresses = [$addresses];
   foreach($addresses as $rec) {
     $rec = (object) $rec;
-/**/ $rows[] = array($rec->datereported ? u\fmtDate(strtotime($rec->datereported)) : '', u\ssnName($rec), $rec->dob ? u\fmtDate(strtotime($rec->dob)) : '', u\ssnAddr($rec), ucwords(@strtolower(print_r($rec->county, 1)))); // county was an array once
-/**/ if (r\rTime() - @strtotime($rec->datereported) < 10 * YEAR_SECS) $counties[print_r($rec->county, 1)] = 1;
+    /**/ $rows[] = array($rec->datereported ? u\fmtDate(strtotime($rec->datereported)) : '', u\ssnName($rec), $rec->dob ? u\fmtDate(strtotime($rec->dob)) : '', u\ssnAddr($rec), ucwords(@strtolower(print_r($rec->county, 1)))); // county was an array once
+    /**/ if (r\rTime() - @strtotime($rec->datereported) < 10 * YEAR_SECS) $counties[print_r($rec->county, 1)] = 1;
   }
   if (!@$a->moves) $a->update('moves', max(0, count($counties) - 1));
   
@@ -289,10 +308,10 @@ function ssnShow($a) {
   }
   
   return <<< EOF
-  <table>
-  <tr><th>SSN CHECK</th><th>Name</th><th>BDate</th><th>Address</th><th>County</th></tr>
-  $lines
-  </table>
+    <table>
+    <tr><th>SSN CHECK</th><th>Name</th><th>BDate</th><th>Address</th><th>County</th></tr>
+    $lines
+    </table>
 EOF;
 } 
 
@@ -301,17 +320,18 @@ EOF;
  * @param int $keepUpto: date of last valid stats records (redo all subsequent dates)
  */
 function fixStats() {
-/*
-  db\q('TRUNCATE r_stats');
-  f('cr.cttyStats');
-*/
+  /*
+    db\q('TRUNCATE r_stats');
+    f('cr.cttyStats');
+  */
 }
 
 function pioneerBonus($a) {
+  die('What?');
   if (!$a->ok or $a->co) return;
-  if (db\exists('r_txs', "payee=:uid AND payer=-8915 AND amount=100", ray('uid', $a->id))) return;
-/**/  debug("Pioneer bonus to $a->fullName");
-//  be\fund($a->id, TX_SIGNUP, 100, 'pioneer bonus');
+  if (db\exists('r_ txs', "payee=:uid AND payer=-8915 AND amount=100", ray('uid', $a->id))) return;
+  /**/  debug("Pioneer bonus to $a->fullName");
+  //  be\fund($a->id, TX_SIGNUP, 100, 'pioneer bonus');
 }
 
 
@@ -322,9 +342,9 @@ function pioneerBonus($a) {
  * Download from http://www.fededirectory.frb.org/agreement.cfm
  * branch is o (main office) or B (branch)
  * type is 0=fed bank 1=use routing 2=use newRouting
-  include_once __DIR__ . '/../rcredits/admin/admin.inc';
-  f('a.getBanks');
- */
+ include_once __DIR__ . '/../rcredits/admin/admin.inc';
+ f('a.getBanks');
+*/
 function getBanks() {
   return; // seldom used (and move SQL name fixes here? see changes.log)
   $fieldNames = 'route branch fedRoute type modified newRoute name address city state zip phone status view';
@@ -353,14 +373,14 @@ function getBanks() {
  * @param string $filename: the photo filename (defaults to account's shortname)
  * @param string $err: (RETURNED) the error message, if any
  * @return <success>
-  include_once __DIR__ . '/../rcredits/admin/admin.inc';
-  debug (f('a.photoFromFile', a('aaa'), $err));
-  debug ($err);
-  currently called only from a.makeTestAccounts()
- */
+ include_once __DIR__ . '/../rcredits/admin/admin.inc';
+ debug (f('a.photoFromFile', a('aaa'), $err));
+ debug ($err);
+ currently called only from a.makeTestAccounts()
+*/
 function photoFromFile($a, $filename = '', &$err = '') {
   if ($a->co) return !$err = 'tried to shrink a company photo';
-//  if ($a->hasPhoto('picture2')) return !$err = 'POS photo already exists';
+  //  if ($a->hasPhoto('picture2')) return !$err = 'POS photo already exists';
   if (@$a->photo) $err = 'POS photo already exists'; // not really an error
   $photoPath = r\pic($filename ?: "$a->name.jpg");
   $img = u\alterImg(imagecreatefromjpeg($photoPath), R_PHOTO_WIDTH, R_PHOTO_HEIGHT);
@@ -374,9 +394,9 @@ function photoFromFile($a, $filename = '', &$err = '') {
 /**
  * Move a field out of data or secure and into its own field in users.
  * (call after reinstall)
-   include_once __DIR__ . '/../rcredits/admin/admin.inc';
-  f('a.moveFieldFrom', 'helper', 'data');
- */
+ include_once __DIR__ . '/../rcredits/admin/admin.inc';
+ f('a.moveFieldFrom', 'helper', 'data');
+*/
 function moveFieldFrom($field, $from = 'data') {
   $uids = db\q('SELECT uid FROM users WHERE uid<0 OR uid>:CANONIC_ACCTS')->fetchCol();
   foreach ($uids as $uid) {
@@ -394,9 +414,9 @@ function moveFieldFrom($field, $from = 'data') {
 
 /**
  * Move a field into data or secure in users.
-   include_once __DIR__ . '/../rcredits/admin/admin.inc';
-  f('a.moveFieldTo', 'question', 'secure');
- */
+ include_once __DIR__ . '/../rcredits/admin/admin.inc';
+ f('a.moveFieldTo', 'question', 'secure');
+*/
 function moveFieldTo($field, $to = 'data') {
   $q = db\q("SELECT uid,$field FROM users WHERE uid<0 OR uid>:CANONIC_ACCTS");
   while ($row = $q->fetchAssoc()) {
@@ -412,12 +432,12 @@ function moveFieldTo($field, $to = 'data') {
  * General purpose utility, usually called from eachAcct, as above.
  * For example:
  *    changeIt($a);
-  include_once __DIR__ . '/../rcredits/admin/admin.inc';
-  foreach (array(3201932, 3244519, 3350610, 3510402) as $one) {
-  f('a.changeIt', $one);
-OR changeIt(a('aaa'));
-}
- */
+ include_once __DIR__ . '/../rcredits/admin/admin.inc';
+ foreach (array(3201932, 3244519, 3350610, 3510402) as $one) {
+ f('a.changeIt', $one);
+ OR changeIt(a('aaa'));
+ }
+*/
 function changeIt($a) {
   if ($a->bankAccount) $a->setRisk('hasBank');
   $a->setBit(4, FALSE);
@@ -445,9 +465,9 @@ function deposits() {
   global $base_url;
   $sql = <<<EOF
     SELECT SUM(IF(amount>0 AND txid>0, amount, 0)) AS amountIn, SUM(IF(amount>0 AND txid>0, 1, 0)) AS countIn,
-      SUM(IF(amount<0 AND txid>0, amount, 0)) AS amountOut, SUM(IF(amount<0 AND txid>0, 1, 0)) AS countOut,
-      SUM(IF(txid<0, amount, 0)) AS amountBad, SUM(IF(txid<0, 1, 0)) AS countBad,
-      deposit
+    SUM(IF(amount<0 AND txid>0, amount, 0)) AS amountOut, SUM(IF(amount<0 AND txid>0, 1, 0)) AS countOut,
+    SUM(IF(txid<0, amount, 0)) AS amountBad, SUM(IF(txid<0, 1, 0)) AS countBad,
+    deposit
     FROM r_usd WHERE amount<>0 and created<=:NOW
     GROUP BY deposit ORDER BY deposit<>0, deposit DESC, amount<0
 EOF;
@@ -467,19 +487,19 @@ EOF;
         $date = strftime('%Y%m%d', $deposit ?: $today);
         $details = w\btn("/sadmin/deposit-details/date=$deposit&total=$total&count=$count", t('details'));
         if (!$deposit or $deposit >= $today - 90 * DAY_SECS) $details .=
-          ' ' . w\btn('', t('flnm'), 'default', 'xs', ray('class data-flnm', 'filename', "CGach-$date.csv"))
-        . ' ' . w\lnk("/sadmin/achs/date=$deposit&mark=0", t('download'));
+                                                               ' ' . w\btn('', t('flnm'), 'default', 'xs', ray('class data-flnm', 'filename', "CGach-$date.csv"))
+                                                               . ' ' . w\lnk("/sadmin/achs/date=$deposit&mark=0", t('download'));
         if ($count) $details .= ' ' . w\btn("/sadmin/checks/way=In&date=$deposit&mark=0", t('checks')); 
       } else $dateDpy = $details = '';
 
       $deposits[] =<<<EOF
-<tr>
-  <td>$dateDpy</td>
-  <td>$wayDesc</td>
-  <td>$count</td>
-  <td>$total</td>
-  <td>$details</td>
-</tr>
+        <tr>
+        <td>$dateDpy</td>
+        <td>$wayDesc</td>
+        <td>$count</td>
+        <td>$total</td>
+        <td>$details</td>
+        </tr>
 EOF;
       $firstline = FALSE;
     }
@@ -487,47 +507,47 @@ EOF;
   $deposits = join("\n", @$deposits ?: []);
   $header = t('<tr><th>Transfers</th><th></th><th>Count</th><th>Total</th><th></th></tr>');
   return <<<EOF
-<table id="deposits">
-$header
-$deposits
-</table>
+    <table id="deposits">
+    $header
+    $deposits
+    </table>
 EOF;
 
 }
 
 /*
-    foreach (['In'=>t('IN'), 'Out'=>t('OUT'), 'Bad'=>t('BAD')] as $way => $wayDesc) {
-      list ($total, $count) = [u\fmtAmt(${"amount$way"}, ''), number_format(${"count$way"})];
-      if (!$count) continue;
-      $details = w\btn("/sadmin/deposit-details/way=$way&date=$deposit&total=$total&count=$count", t('details'), w\away());
-      if ($way == 'Out') {
-        list ($WAY, $date) = [t('OUT'), strftime('%Y%m%d', $deposit ?: strtotime('today'))];
-        $details = w\btn('', t('flnm'), 'default', 'xs', ray('class data-flnm', 'filename', "CGach$WAY-$date.csv")) . ' ' . $details;
-      }
+  foreach (['In'=>t('IN'), 'Out'=>t('OUT'), 'Bad'=>t('BAD')] as $way => $wayDesc) {
+  list ($total, $count) = [u\fmtAmt(${"amount$way"}, ''), number_format(${"count$way"})];
+  if (!$count) continue;
+  $details = w\btn("/sadmin/deposit-details/way=$way&date=$deposit&total=$total&count=$count", t('details'), w\away());
+  if ($way == 'Out') {
+  list ($WAY, $date) = [t('OUT'), strftime('%Y%m%d', $deposit ?: strtotime('today'))];
+  $details = w\btn('', t('flnm'), 'default', 'xs', ray('class data-flnm', 'filename', "CGach$WAY-$date.csv")) . ' ' . $details;
+  }
 
-      list ($func, $label) = ($way != 'Out' or ($deposit > 0 and $deposit < strtotime('1/10/2017')))
-      ? ['checks', t('checks')] 
-      : ['achs', t('ACHes')];
-      $deposits[] =<<<EOF
-<tr>
+  list ($func, $label) = ($way != 'Out' or ($deposit > 0 and $deposit < strtotime('1/10/2017')))
+  ? ['checks', t('checks')] 
+  : ['achs', t('ACHes')];
+  $deposits[] =<<<EOF
+  <tr>
   <td>$dateDpy</td>
   <td>$wayDesc</td>
   <td>$count</td>
   <td>$total</td>
   <td>$details &nbsp; <a href="$base_url/sadmin/$func/way=$way&date=$deposit&mark=0" target="_blank">$label</a></td>
-</tr>
+  </tr>
 EOF;
-    }
+  }
   }
   $deposits = @$deposits ? join("\n", $deposits) : '<tr><td colspan=5>No deposits</td></tr>';
   $header = '<tr><th>Deposit</th><th></th><th>Count</th><th>Total</th><th></th></tr>';
   return <<<EOF
-<table id="deposits">
-$header
-$deposits
-</table>
+  <table id="deposits">
+  $header
+  $deposits
+  </table>
 EOF;
-}
+  }
 */
 
 /**
@@ -540,19 +560,19 @@ EOF;
 function printCheck(&$ck, $pos, $tx, $mark) {
   extract(just('txid created payee amount deposit bankAccount', $tx));
   $escrow = 'USkk' . ESCROW_ROUTING . ($amount > 0 ? ESCROW_IN : ESCROW_OUT);
-	$bankAccount = u\decry('V', $bankAccount);
+  $bankAccount = u\decry('V', $bankAccount);
   $a = r\acct($payee);
-//  $a->fixTxBankAccount($bankAccount, $txid);
+  //  $a->fixTxBankAccount($bankAccount, $txid);
   
   list ($fromName, $addr, $phone, $fromAcct, $toName, $toAcct) = $amount > 0 // which way
-//    ? [$a->legalNameDpy, $a->postalAddr, $a->phone, $bankAccount, PROJECT, $escrow] // from bank to escrow
+    //    ? [$a->legalNameDpy, $a->postalAddr, $a->phone, $bankAccount, PROJECT, $escrow] // from bank to escrow
     ? [$a->legalNameDpy, $a->postalAddr, $a->phone, $bankAccount, BANK_DBA, $escrow] // from bank to escrow
     : [PROJECT . ' (' . CGF_LEGALNAME . ')', CGF_POSTALADDR, CGF_PHONE, $escrow, $a->legalNameDpy, $bankAccount]; //e2b
   $memo = $amount > 0 ? t('for %RCREDITS') : t('for DEPOSIT to account #') . substr($toAcct, 4 + 9);
 
   list ($signature, $belowLine) = $amount > 0 
-  ? [t('Pre-authorized Check'), t('No Signature Required')] 
-  : ['', SIGNATORY];
+    ? [t('Pre-authorized Check'), t('No Signature Required')] 
+    : ['', SIGNATORY];
   
   list ($W, $H) = array($ck->pageW, $ck->pageH);
   $lineH = $ck->lineH; // standard line height in inches
@@ -591,24 +611,24 @@ function printCheck(&$ck, $pos, $tx, $mark) {
   
   $ck->say(u\n2english($dollars) . " and $cents/100", $m, $y += .65, 6.9, $lineH, '', '', 'B');
   $ck->say('DOLLARS', $m + 6.9, '', '', $lineH, '8');
-//  $ck->Image(__DIR__ . '/../images/icons/padlock.gif', $W - $m - .5, $y, $lineH, $lineH);
+  //  $ck->Image(__DIR__ . '/../images/icons/padlock.gif', $W - $m - .5, $y, $lineH, $lineH);
   
   $ck->say("<b>$b_name</b><br><small>$b_address<br>$b_city, $b_state $b_zip</small>", $m + 1, $y += .4, '', '', '9');
   
   $ck->say($signature, $W - $W / 3, $y + .35, $W / 3 - $m, $lineH, 'CAPS', 'C', 'B'); // $y+ not +=
   $ck->say($belowLine, '', $y + .35 + $lineH, $W / 3 - $m, $lineH, '8;CAPS', 'C');
-//  if (!$signature) $ck->Image(__DIR__ . '/../images/checksig.png', $W - $W / 3, $y, $W / 3 - $m, 5 * $lineH);
+  //  if (!$signature) $ck->Image(__DIR__ . '/../images/checksig.png', $W - $W / 3, $y, $W / 3 - $m, 5 * $lineH);
   
   $ck->say('MEMO:', $m, $y += .5, '', $lineH, '8');
   $ck->say($memo, $m + .5, '');
 
   // clear band must be at least .625" high, at least 0.1875" from bottom (so leave more). Micr should be 12pt
-//  if ($a->id != 26742000000042) {
-//    $ck->say("A{$routing}A {$account}C $txid", $m, $mt - $m + CHECK_HEIGHT - .25 - $lineH * (12 / PDF_FONT_SIZE), '', '', 'GnuMICR 12');
-//  } else 
+  //  if ($a->id != 26742000000042) {
+  //    $ck->say("A{$routing}A {$account}C $txid", $m, $mt - $m + CHECK_HEIGHT - .25 - $lineH * (12 / PDF_FONT_SIZE), '', '', 'GnuMICR 12');
+  //  } else 
   $account = str_replace('-', 'D', $account); // show dashes properly
   $ck->say("C000{$txid}C A{$routing}A {$account}C", $m, $mt - $m + CHECK_HEIGHT - .25 - $lineH * (12 / PDF_FONT_SIZE), '', '', 'GnuMICR;12');
-//  $ck->say('', 0, $mt - $m + CHECK_HEIGHT, $W, 1, '', '', 'T'); // comment this out
+  //  $ck->say('', 0, $mt - $m + CHECK_HEIGHT, $W, 1, '', '', 'T'); // comment this out
   
   if (!$deposit and $mark) db\update('r_usd', ray('deposit txid', strtotime('today'), $txid), 'txid');
 }
@@ -618,117 +638,117 @@ function printCheck(&$ck, $pos, $tx, $mark) {
  */
 function adminSignin() {
   global $box;
-//  $pw2 = @$_COOKIE['pw2'];
-//  u\EXPECT($pw2, 'no pw2!');
+  //  $pw2 = @$_COOKIE['pw2'];
+  //  u\EXPECT($pw2, 'no pw2!');
   
-/*  $q = db\q("SELECT txid,payee,bankAccount FROM r_usd WHERE bankAccount NOT LIKE ':CRYPT_FLAG%'");
-  while ($row = $q->fetchAssoc()) {
-    extract($row);
-    if (substr($bankAccount, 0, 2) == 'US') {
+  /*  $q = db\q("SELECT txid,payee,bankAccount FROM r_usd WHERE bankAccount NOT LIKE ':CRYPT_FLAG%'");
+      while ($row = $q->fetchAssoc()) {
+      extract($row);
+      if (substr($bankAccount, 0, 2) == 'US') {
       $bankAccount = r\crypt($bankAccount . '', 0, $pw2);
       db\update('r_usd', compact('txid', 'bankAccount'), 'txid');
       w\say(t('bank account super-encrypted in exchange record #%txid.', compact('txid')));
-    } else r\tellAdmin('bad bank account in exchange record', ray('txid b0 hex', $txid, $b0, bin2hex($b0)));
+      } else r\tellAdmin('bad bank account in exchange record', ray('txid b0 hex', $txid, $b0, bin2hex($b0)));
 
-    $a = r\acct($payee);
-    if ($b0 = $bankAccount = $a->bankAccount and !u\starts($a->secure['bankAccount'], CRYPT_FLAG)) {
+      $a = r\acct($payee);
+      if ($b0 = $bankAccount = $a->bankAccount and !u\starts($a->secure['bankAccount'], CRYPT_FLAG)) {
       if (substr($bankAccount, 0, 2) == 'US') {
-//        $bankAccount = u\crypt($bankAccount . '', 0, $pw2);
-        $a->update(compact('bankAccount')); // might be different (newer) than in r_usd (super-encryption is automatic)
-        w\say(t('bank account super-encrypted for user %user', 'user', $a->fullName));
+      //        $bankAccount = u\crypt($bankAccount . '', 0, $pw2);
+      $a->update(compact('bankAccount')); // might be different (newer) than in r_usd (super-encryption is automatic)
+      w\say(t('bank account super-encrypted for user %user', 'user', $a->fullName));
       } else r\tellAdmin('bad bank account', ray('b0 hex', $b0, bin2hex($b0)));
-    }
-  }
-	*/
+      }
+      }
+  */
 }
 
 /*
-function moveFieldsToHidden() {
+  function moveFieldsToHidden() {
   $q = db\q("SELECT uid FROM users WHERE uid<>0");
   $dataFields = [];
   $secureFields = ray('photoId pin bankAccount');
   while ($row = $q->fetchAssoc()) {
-    extract($row);
-    $a = r\acct($uid);
-    if ($a->pin or $a->bankAccount) continue; // don't do this twice (and overwrite with nulls)!
-    $data = $a->data;
-    $secure = $a->secure;
-    foreach ($dataFields as $k) $$k = @$data[$k];
-    foreach ($secureFields as $k) $$k = @$secure[$k];
-    $data = $secure = [];
-    foreach (ray(DATA_FLDS) as $k) if (!is_null($a->$k)) $data[$k] = $a->$k;
-    foreach (ray(SECURE_FLDS) as $k) if (!is_null($a->$k)) $secure[$k] = $a->$k;
-///    debug($row + compact($dataFields, $secureFields, 'data', 'secure'));
-    $a->update(compact($dataFields, $secureFields, 'data', 'secure'));
+  extract($row);
+  $a = r\acct($uid);
+  if ($a->pin or $a->bankAccount) continue; // don't do this twice (and overwrite with nulls)!
+  $data = $a->data;
+  $secure = $a->secure;
+  foreach ($dataFields as $k) $$k = @$data[$k];
+  foreach ($secureFields as $k) $$k = @$secure[$k];
+  $data = $secure = [];
+  foreach (ray(DATA_FLDS) as $k) if (!is_null($a->$k)) $data[$k] = $a->$k;
+  foreach (ray(SECURE_FLDS) as $k) if (!is_null($a->$k)) $secure[$k] = $a->$k;
+  ///    debug($row + compact($dataFields, $secureFields, 'data', 'secure'));
+  $a->update(compact($dataFields, $secureFields, 'data', 'secure'));
   }
-}
+  }
 */
 
 /**
  * Make sure the very secure fields are encrypted with the admin's extra password.
  *//*
-function secureVery($a = '') {
-  if (!r\acct()->superAdmin) return; // don't bother if not admin
-  if ($a) {
-    if ($vflds = just(VSECURE_FLDS, $a->secure)) return $a->update($vflds); // extra encryption
-  } else {
-    $q = db\q('SELECT uid FROM users WHERE :IS_OK');
-    while ($row = $q->fetchAssoc()) secureVery(r\acct($row['uid']));
-  }
-}*/
+     function secureVery($a = '') {
+     if (!r\acct()->superAdmin) return; // don't bother if not admin
+     if ($a) {
+     if ($vflds = just(VSECURE_FLDS, $a->secure)) return $a->update($vflds); // extra encryption
+     } else {
+     $q = db\q('SELECT uid FROM users WHERE :IS_OK');
+     while ($row = $q->fetchAssoc()) secureVery(r\acct($row['uid']));
+     }
+     }*/
 
 /**
  * Show sluggish accounts
  */
- /*
-function showSlugs() {
-  $q = f('db.q', 'SELECT u.uid, u.fullName, (SELECT created FROM r_txs WHERE payer=u.uid AND payee>0 AND payee<>26742000000002 ORDER BY created DESC LIMIT 1) AS lastUse, u.activated FROM users u WHERE u.uid>0  AND community=-26742000000001 ORDER BY lastUse, u.activated');
+/*
+  function showSlugs() {
+  $q = f('db.q', 'SELECT u.uid, u.fullName, (SELECT created FROM r_ txs WHERE payer=u.uid AND payee>0 AND payee<>26742000000002 ORDER BY created DESC LIMIT 1) AS lastUse, u.activated FROM users u WHERE u.uid>0  AND community=-26742000000001 ORDER BY lastUse, u.activated');
   while ($row = $q->fetchAssoc()) {
-    extract($row);
-    $a = a($uid);
-    if ($a->ok) {
-      $ray = [$a->fullName, f('u.fmtPhone', $a->phone), $a->email, @$lastUse ? f('u.fmtDate', $lastUse) : t('never'), '(' . f('u.fmtDate', @$activated) . ')'];
-/** /    echo join("\t", $ray) . "\n";
-    }
+  extract($row);
+  $a = a($uid);
+  if ($a->ok) {
+  $ray = [$a->fullName, f('u.fmtPhone', $a->phone), $a->email, @$lastUse ? f('u.fmtDate', $lastUse) : t('never'), '(' . f('u.fmtDate', @$activated) . ')'];
+  /** /    echo join("\t", $ray) . "\n";
   }
-}
+  }
+  }
 */
 
-// print iCards for all active members in the greater Greenfield ctty
-// be sure to chmod ...rcredits/temp to 777 before running this.
-function special() {
-return;
-  eachX(function($x) {
-    foreach (ray('type payer payee goods flags taking amount payeeFor') as $k) $$k = $x->$k;
-    if ($payeeFor == 'contribution (percentage of past month receipts)' and ($payee < 0 or $payee == CGID)) {
-      foreach ([B_GIFT, B_CRUMBS] as $k) u\setBit($flags, $k);
-      $payee = CGID;
-    } elseif ($payeeFor == 'contribution of rounded-up payment change' and ($payee < 0 or $payee == CGID)) {
-      foreach ([B_GIFT, B_ROUNDUPS] as $k) u\setBit($flags, $k);
-      $payee = CGID;
-    } elseif ($payee == CGID and $payer > 0) {
-      foreach (ray('ontribution onation everses') as $k) if (strpos($payeeFor, $k)) {
-        if (strpos($payeeFor, 'everses')) u\setBit($flags, B_UNDOES);
-        if (strpos($payeeFor, 'eversed')) u\setBit($flags, B_UNDONE);
-        u\setBit($flags, B_GIFT);
-        if (strpos($payeeFor, 'onation (')) u\setBit($flags, B_RECURS);
-      }
-    }
-    if ($flags & u\bit(B_GIFT)) $x->update(compact(ray('flags payee')));
-  });
-}
+/* // print iCards for all active members in the greater Greenfield ctty */
+/* // be sure to chmod ...rcredits/temp to 777 before running this. */
+/* function special() { */
+/*   return; */
+/*   eachX(function($x) { */
+/*       foreach (ray('type payer payee goods flags taking amount payeeFor') as $k) $$k = $x->$k; */
+/*       if ($payeeFor == 'contribution (percentage of past month receipts)' and ($payee < 0 or $payee == CGID)) { */
+/*         foreach ([B_GIFT, B_CRUMBS] as $k) u\setBit($flags, $k); */
+/*         $payee = CGID; */
+/*       } elseif ($payeeFor == 'contribution of rounded-up payment change' and ($payee < 0 or $payee == CGID)) { */
+/*         foreach ([B_GIFT, B_ROUNDUPS] as $k) u\setBit($flags, $k); */
+/*         $payee = CGID; */
+/*       } elseif ($payee == CGID and $payer > 0) { */
+/*         foreach (ray('ontribution onation everses') as $k) if (strpos($payeeFor, $k)) { */
+/*           if (strpos($payeeFor, 'everses')) u\setBit($flags, B_UNDOES); */
+/*           if (strpos($payeeFor, 'eversed')) u\setBit($flags, B_UNDONE); */
+/*           u\setBit($flags, B_GIFT); */
+/*           if (strpos($payeeFor, 'onation (')) u\setBit($flags, B_RECURS); */
+/*         } */
+/*       } */
+/*       if ($flags & u\bit(B_GIFT)) $x->update(compact(ray('flags payee'))); */
+/*     }); */
+/* } */
 
 function special2() {
-return;
+  return;
   eachA(function($a) {
-    list ($balance, $rewards) = [$a->balance, $a->rewards]; // remember old values
-/**/    if (!$a->cacheOk(FALSE, FALSE) and (abs($a->balance - $balance) > .005 or abs($a->rewards - $rewards > 20))) debug("$a->id $a->fullName new: $a->balance+$a->rewards old: $balance+$rewards jid=$a->jid");
-  });
+      list ($balance, $rewards) = [$a->balance, $a->rewards]; // remember old values
+      /**/    if (!$a->cacheOk(FALSE, FALSE) and (abs($a->balance - $balance) > .005 or abs($a->rewards - $rewards > 20))) debug("$a->id $a->fullName new: $a->balance+$a->rewards old: $balance+$rewards jid=$a->jid");
+    });
 }
 
 function showRequests() {
-$cutoff = strtotime('-1 year');
-$q = f('db.q','SELECT * FROM r_request WHERE created>:cutoff ORDER BY listid DESC', compact('cutoff'));
+  $cutoff = strtotime('-1 year');
+  $q = f('db.q','SELECT * FROM r_request WHERE created>:cutoff ORDER BY listid DESC', compact('cutoff'));
   $list[] = "id\tfirst name\tlast name\tphone\temail\tcreated";
   while ($row = $q->fetchAssoc()) {
     extract($row); // listid created first last phone email
@@ -746,7 +766,7 @@ function showInactive() {
     if ($a->slave) continue;
     $dt = f('u.fmtDate', $a->access);
     $ok = $a->ok ? '(member)' : '';
-/**/ echo "$a->phone\t$a->fullName\t$dt\t$ok\n";
+    /**/ echo "$a->phone\t$a->fullName\t$dt\t$ok\n";
   }
 }
 
@@ -779,22 +799,22 @@ function callDetails($type = '', $when = '') {
   
   if (!$mya->member) {
     $head .= $setup ? '<p>Do you need help?</p>' : '';
-//    return "<div class=\"well\"><h3>$head$body</h3></div>";
+    //    return "<div class=\"well\"><h3>$head$body</h3></div>";
   }
 
-	$subs = ray('id', $mya->id);
+  $subs = ray('id', $mya->id);
   $gifts = $mya->giftsDesc() 
-	?: (db\sum('amount', 'r_txs', 'payer=:id AND payee=:CGID AND :IS_GIFT', $subs)
+    ?: (db\sum('payer.amount', 'r_tx_hdrs t JOIN r_entries payer ON payer.xid=t.xid JOIN r_entries payee ON payee.xid=t.xid', 'payer.uid=:id AND payee.uid=:CGID AND t.:IS_GIFT', $subs)
 	?: db\get('amount', 'r_recurs', 'payer=:id AND payee=:CGID AND ended=0', $subs)); // a promised gift counts here, if none yet
   
-/*        $help = $gifts ? 'thanks' : 'ask';
-        $msg = t('<span class="loud">%when <b>Welcome</b></span> to %PROJECT, How\'s it going%lastTx? %help donation(s), %signupCo volunteer? [<%a>details</a>]', 'when lastTx help signupCo _a', u\fmtDate($when, TRUE), $a->lastTxDesc(), ucfirst($help), @$signupCo, w\atag("/help/welcome/gifts=$gifts"));
-         if ($a->paper) $msg .= t(' <span class="loud">Paper statements</span> at $%R_STATEMENT_COST/month &mdash; really?');
-    $gift = $gifts ? t('Thanks for donation(s). Annual gift?') : t('Donate?');
-    $feature = $a->co ? t('cash-out') : t('joint account');
+  /*        $help = $gifts ? 'thanks' : 'ask';
+            $msg = t('<span class="loud">%when <b>Welcome</b></span> to %PROJECT, How\'s it going%lastTx? %help donation(s), %signupCo volunteer? [<%a>details</a>]', 'when lastTx help signupCo _a', u\fmtDate($when, TRUE), $a->lastTxDesc(), ucfirst($help), @$signupCo, w\atag("/help/welcome/gifts=$gifts"));
+            if ($a->paper) $msg .= t(' <span class="loud">Paper statements</span> at $%R_STATEMENT_COST/month &mdash; really?');
+            $gift = $gifts ? t('Thanks for donation(s). Annual gift?') : t('Donate?');
+            $feature = $a->co ? t('cash-out') : t('joint account');
 
-    return [t('Annual'), $when = strtotime("+$yearsIn years", $activated), t('<span class="loud">%when <b>Annual</b></span>: Thanks for participating. How\'s it going%lastTx? %gift Mailing address okay? Volunteer? Consider %feature? [<%a>details</a>]', 'when lastTx gift _a feature', u\fmtDate($when, TRUE), $a->lastTxDesc(), $gift, w\atag("/help/annual/gifts=$gifts&years=$yearsIn"), $feature)];
-         */
+            return [t('Annual'), $when = strtotime("+$yearsIn years", $activated), t('<span class="loud">%when <b>Annual</b></span>: Thanks for participating. How\'s it going%lastTx? %gift Mailing address okay? Volunteer? Consider %feature? [<%a>details</a>]', 'when lastTx gift _a feature', u\fmtDate($when, TRUE), $a->lastTxDesc(), $gift, w\atag("/help/annual/gifts=$gifts&years=$yearsIn"), $feature)];
+  */
       
   $welcome = t('<li><b>Welcome</b> to %PROJECT. Thanks for participating!</li>');
   if (!$mya->co and $myCo = $mya->firstCo()) {
@@ -806,9 +826,9 @@ function callDetails($type = '', $when = '') {
   if ($mya->balance < 0) $how .= t('<li><b>Negative</b>. You have a negative balance of <%b>%bal</b>. Do you need help getting money into your account? That amount is, in effect, borrowed from your local community of %PROJECT members. So it is much better of course, for the community\'s financial health, if you bring your balance back up above zero when you can.</li>', '_b bal', 'b class="outgoing"', u\fmtAmt($mya->balance));
   
   $reason = $setup ? t('see if I might help you finish opening your %PROJECT account')
-  : ($type == 'welcome' ? t('welcome you to %PROJECT, check in, make sure you got your card, and ask you some questions')
-  : ($type == 'annual' ? t('thank you for being a member, make sure we have your address right, and ask some questions')
-  : t('ERROR')));
+    : ($type == 'welcome' ? t('welcome you to %PROJECT, check in, make sure you got your card, and ask you some questions')
+       : ($type == 'annual' ? t('thank you for being a member, make sure we have your address right, and ask some questions')
+          : t('ERROR')));
   $intro = t('Hi, this is %name with %PROJECT. I\'m calling to %reason.', 'name reason', $mya->agentA->fullName, $reason);
   $live = $intro . t(' Is this a good time?');
   $callback = t('Please give me a call back when you can at %phone', ['phone' => u\fmtPhone($mya->agentA->phone, '-')]);
@@ -831,17 +851,17 @@ function callDetails($type = '', $when = '') {
     $options .= t('If you have questions about our "Pay With %PROJECT" button for your website, our invoicing system, or accounting statements, we can help you with any of those.');
   } else { // individual
     $_volunteer = join("</li>\n<li>", explode('~', t(
-      'Hand out promo cards and schedule appointments with local businesses.'
-    . '~Help new members open their %PROJECT account.'
-    . '~Call new members to welcome them and see if they have questions.'
-    . '~Assemble promotional materials (at home or with other volunteers).'
-    . '~Deliver things.'
-    . '~Print and mail things.'
-    . '~Take photographs.'
-    . '~Help set up for meetings.'
-    . '~Help add new features to the software.'
-    . '~Serve on the board of directors.'
-    )));
+                                                     'Hand out promo cards and schedule appointments with local businesses.'
+                                                     . '~Help new members open their %PROJECT account.'
+                                                     . '~Call new members to welcome them and see if they have questions.'
+                                                     . '~Assemble promotional materials (at home or with other volunteers).'
+                                                     . '~Deliver things.'
+                                                     . '~Print and mail things.'
+                                                     . '~Take photographs.'
+                                                     . '~Help set up for meetings.'
+                                                     . '~Help add new features to the software.'
+                                                     . '~Serve on the board of directors.'
+                                                     )));
     $_volunteerLink = t('<%a>volunteer</a>', '_a', 'a href="#volunteer" data-toggle="collapse"');
     $volunteer = t('<li><b>Volunteer</b>. (if supportive) Would you like to %volunteerLink with %PROJECT?<ul id="volunteer" class="collapse"><li>%volunteer</li></ul></li>', compact(ray('_volunteerLink _volunteer')));
     $coAsk = '';
@@ -888,28 +908,32 @@ function callDetails($type = '', $when = '') {
  * Return statistics about member donations for members signed up after a certain date.
  */
 function donationTrend($co = FALSE, $since = NULL) {
-	u\setDft($since, NOW - YEAR_SECS);
-	$co = $co ? 'u.:IS_CO' : 'NOT u.:IS_CO';
-	$where = "$co AND u.:IS_OK AND u.created>:since";
+  u\setDft($since, NOW - YEAR_SECS);
+  $co = $co ? 'u.:IS_CO' : 'NOT u.:IS_CO';
+  $where = "$co AND u.:IS_OK AND u.created>:since";
 	
-	$sql =<<< X
-	  SELECT AVG(g.amount*IF(often='M', 12, IF(often='Q', 4, IF(often='Y', 1, 0)))) AS regular
-		FROM r_recurs g LEFT JOIN users u ON u.uid=g.payer
-		WHERE g.payee=:CGID AND $where
+  $sql =<<< X
+    SELECT AVG(g.amount*IF(often='M', 12, IF(often='Q', 4, IF(often='Y', 1, 0)))) AS regular
+    FROM r_recurs g LEFT JOIN users u ON u.uid=g.payer
+    WHERE g.payee=:CGID AND $where
 X;
   $subs = compact('since');
-	$res = db\q($sql, $subs)->fetchAssoc();
+  $res = db\q($sql, $subs)->fetchAssoc();
 	
-	$sql = "SELECT AVG(u.:IS_ROUNDUP) AS roundupRatio, AVG(u.crumbs) AS crumbs FROM users u WHERE $where";
-	$res += db\q($sql, $subs)->fetchAssoc();
+  $sql = "SELECT AVG(u.:IS_ROUNDUP) AS roundupRatio, AVG(u.crumbs) AS crumbs FROM users u WHERE $where";
+  $res += db\q($sql, $subs)->fetchAssoc();
 	
-	$accts = db\count('users u', $where, $subs);
+  $accts = db\count('users u', $where, $subs);
 	
-	$sql = "SELECT COUNT(*) AS txCount,AVG(amount%1) AS cents FROM r_txs t JOIN users u ON u.uid=t.payer WHERE $where";
-	$res += db\q($sql, $subs)->fetchAssoc();
-	$txTotal = db\q("SELECT SUM(t.amount) FROM r_txs t JOIN users u ON u.uid=t.payee WHERE $where", $subs)->fetchField();
-	
-	return $res + compact(ray('accts txCount txTotal'));
+  $sql = "SELECT COUNT(*) AS txCount, AVG(amount%1) AS cents FROM r_entries e JOIN users u ON u.uid=e.uid WHERE $where";
+  $res += db\q($sql, $subs)->fetchAssoc();
+  $txTotal = db\q("SELECT SUM(e.amount) FROM r_entries e JOIN r_tx_hdrs t ON e.xid=t.xid JOIN users u ON u.uid=e.uid WHERE $where", $subs)->fetchField();
+
+  $newTxTotal = db\q("SELECT SUM(e.amount) FROM r_entries e JOIN users u on u.uid=e.uid WHERE $where", $subs)->fetchField();
+  if ($txTotal != $newTxTotal) {
+    debug("in donationTrend: $txTotal != $newTxTotal");
+  }
+  return $res + compact(ray('accts txCount txTotal'));
 }
 
 /**
@@ -930,21 +954,21 @@ function giftsToDate() {
 function makeCriteria() {
   db\q('TRUNCATE r_criteria');
   $criteria = [
-    t('How well does the project support our %PROJECT community investment priorities?') => 15,
-	  t('How well does the project promote systemic change?') => 15,
-    t('Overall, how clearly doable is the project?') => 15,
-    t('How competent is the project team to manage the project and funds effectively?') => 10,
-    t('How able is the project team to implement the project with less funding than requested?') => 5,
-    t('How useful is the project\'s evaluation plan?') => 5,
-	  t('How quickly, surely, and voluminously will the project bring funds back into our %PROJECT Community Dollar Pool?') => 10,
-    t('How close is the request to the ideal amount (%idealAmt)?') => 5,
-    t('What fraction of the total project budget is this funding request? (50% is ideal)') => 5,
-    t('How much of the total project budget has been raised/committed so far? (half is ideal)?') => 5,
-    t('How soon does the project begin? (soon after funding is best)') => 2.5,
-    t('How soon does the project end? (soon after funding is best)') => 2.5,
-    t('How local is the project?') => 2.5,
-    t('%PROJECT member sponsorship of the project.') => 2.5,
-  ];
+               t('How well does the project support our %PROJECT community investment priorities?') => 15,
+               t('How well does the project promote systemic change?') => 15,
+               t('Overall, how clearly doable is the project?') => 15,
+               t('How competent is the project team to manage the project and funds effectively?') => 10,
+               t('How able is the project team to implement the project with less funding than requested?') => 5,
+               t('How useful is the project\'s evaluation plan?') => 5,
+               t('How quickly, surely, and voluminously will the project bring funds back into our %PROJECT Community Dollar Pool?') => 10,
+               t('How close is the request to the ideal amount (%idealAmt)?') => 5,
+               t('What fraction of the total project budget is this funding request? (50% is ideal)') => 5,
+               t('How much of the total project budget has been raised/committed so far? (half is ideal)?') => 5,
+               t('How soon does the project begin? (soon after funding is best)') => 2.5,
+               t('How soon does the project end? (soon after funding is best)') => 2.5,
+               t('How local is the project?') => 2.5,
+               t('%PROJECT member sponsorship of the project.') => 2.5,
+               ];
   
   $id = 1;
   foreach($criteria as $text => $points) {
@@ -954,10 +978,229 @@ function makeCriteria() {
   }
 }
 /*
-to find orphaned customers
+  to find orphaned customers
 
-eachA(function ($a) {
+  eachA(function ($a) {
   $name = str_replace("'", "\\'", $a->fullName);
-///  if ($reid = f('db.lookup', 'reid', 'r_relations', "other=0 AND data LIKE '%$name%' AND reid NOT IN(26742000000222, 26742000000216)")) debug("$reid $name $a->id");
-});
+  ///  if ($reid = f('db.lookup', 'reid', 'r_relations', "other=0 AND data LIKE '%$name%' AND reid NOT IN(26742000000222, 26742000000216)")) debug("$reid $name $a->id");
+  });
 */
+
+function splitTxs() {
+  $sql = 'select * from r_txs';
+  $results = db\q($sql);
+  /* foreach (ray(TX_FLAGS) as $flag) { */
+  /*   debug($flag . ' = ' . u\bit($flag)); */
+  /* } */
+
+  $flagsMask = u\bit(ray('disputed offline short recurs gift funding'));
+  $undoneBy = [];
+  
+  foreach ($results as $result) {
+    $result = (array)$result;
+    $result['data'] = unserialize($result['data']);
+    debug($result);
+
+    extract($result);
+
+    $hdr = just('xid type goods channel box created risk risks', $result);
+    if (u\getBit($flags, 'taking')) {
+      $hdr['initiator'] = $payee;
+      $hdr['initiatorAgent'] = $payeeAgent;
+    } else {
+      $hdr['initiator'] = $payer;
+      $hdr['initiatorAgent'] = $payerAgent;
+    }
+    $hdr['flags'] = $flags & $flagsMask;
+
+    if (u\getBit($flags, 'undone')) {
+      $undoneBy[$xid] = $data['undoneBy'];
+    }
+
+    if (u\getBit($flags, B_UNDOES)) {
+      $undoes = $data['undoes'];
+      if ($undoneBy[$undoes] != $xid) {
+        debug("CONSISTENCY PROBLEM UNDO on $undoes and $xid");
+      }
+      $hdr['reverses'] = $undoes;
+    } else {
+      $hdr['reverses'] = null;
+    }
+
+    if ($data != []) {
+      debug("NOT HANDLED: data field contains $data");
+    }
+    
+    if (!in_array($type, [TX_TRANSFER, TX_SIGNUP, TX_GRANT])) {
+      debug("NOT HANDLED: type is $type on $xid");
+    }
+    
+    if (u\getBit($flags, B_CRUMBS)) {
+      debug("NOT HANDLED YET: CRUMBS on $xid");
+    }
+    
+    if (u\getBit($flags, B_ROUNDUPS)) {
+      debug("NOT HANDLED YET: ROUNDUPS on $xid");
+    }
+    
+    if (u\getBit($flags, B_ROUNDUP)) {
+      debug("NOT HANDLED YET: ROUNDUP on $xid");
+    }
+    
+    if (u\getBit($flags, B_RECURS)) {
+      debug("NOT HANDLED YET: RECURS on $xid");
+    }
+
+    if (u\getBit($flags, B_LOAN)) {
+      debug("UNEXPECTED LOAN on $xid");
+    }
+    
+    if (u\getBit($flags, B_INVESTMENT)) {
+      debug("UNEXPECTED INVESTMENT on $xid");
+    }
+    
+    if (u\getBit($flags, B_STAKE)) {
+      debug("UNEXPECTED STAKE on $xid");
+    }
+    
+    if (u\getBit($flags, B_FINE)) {
+      debug("UNEXPECTED FINE on $xid");
+    }
+    
+    if (u\getBit($flags, B_NOASK)) {
+      debug("UNEXPECTED NOASK on $xid");
+    }
+
+    $payerEntry = [];
+    $payerEntry = just('xid created', $result);
+    $payerEntry['amount'] = -$amount;
+    $payerEntry['uid'] = $payer;
+    $payerEntry['agentUid'] = $payerAgent;
+    $payerEntry['description'] = $payerFor;
+    $payerEntry['acctTid'] = $payerTid;
+
+    $payeeEntry = [];
+    $payeeEntry = just('xid created', $result);
+    $payeeEntry['amount'] = $amount;
+    $payeeEntry['uid'] = $payee;
+    $payeeEntry['agentUid'] = $payeeAgent;
+    $payeeEntry['description'] = $payeeFor;
+    $payeeEntry['acctTid'] = $payeeTid;
+
+    debug($hdr);
+    debug($payerEntry);
+    debug($payeeEntry);
+
+    db\insert('r_tx_hdrs', $hdr, 'xid');
+    db\insert('r_entries', $payerEntry, 'id');
+    db\insert('r_entries', $payeeEntry, 'id');
+  }
+  
+  /*---------------------------------------------------------------*/
+  /* Now for r_usd */
+  $sql = 'select * from r_usd';
+  $results = db\q($sql);
+
+  foreach ($results as $result) {
+    $result = (array)$result;
+    debug($result);
+
+    extract($result);
+
+    $hdr = [];
+    // xid is automatically assigned
+    $hdr['type'] = ($amount >= 0) ? TX_XFR_IN : TX_XFR_OUT;
+    $hdr['goods'] = FOR_USD;
+    $hdr['initiator'] = $payee; // Assume that the payee initiated the transaction, because we don't really know.
+    $hdr['initiatorAgent'] = null;
+    $hdr['flags'] = 0;
+    $hdr['channel'] = $channel;
+    $hdr['box'] = null;
+    $hdr['risk'] = $risk;
+    $hdr['risks'] = $risks;
+    $hdr['reverses'] = null;
+    $hdr['created'] = $created;
+
+    $xid = db\insert('r_tx_hdrs', $hdr, 'xid');
+
+    $e1 = [];
+    $e1['xid'] = $xid;
+    $e1['amount'] = -$amount;
+    $e1['uid'] = CG_BANK_UID;
+    $e1['agentUid'] = null;
+    $e1['description'] = '';
+    $e1['acctTid'] = $bankTxId;
+    $e1['created'] = $created;
+
+    $e2 = [];
+    $e2['xid'] = $xid;
+    $e2['amount'] = $amount;
+    $e2['uid'] = $payee;
+    $e2['agentUid'] = null;
+    $e2['description'] = ($amount > 0) ? t('from bank') : t('to bank');
+    $e2['acctTid'] = $txid;
+    $e2['created'] = $created;
+
+    debug($hdr);
+    debug($e1);
+    debug($e2);
+
+    db\insert('r_entries', $e1, 'id');
+    db\insert('r_entries', $e2, 'id');
+    db\update('r_usd', ['txid' => $txid, 'xid' => $xid], 'txid');
+  }
+
+  /*---------------------------------------------------------------*/
+  /* Now for r_usd2 */
+  $sql = 'select * from r_usd2';
+  $results = db\q($sql);
+
+  foreach ($results as $result) {
+    $result = (array)$result;
+    debug($result);
+
+    extract($result);
+
+    $hdr = [];
+    // xid is automatically assigned
+    $hdr['type'] = TX_BANK;
+    $hdr['goods'] = FOR_USD;
+    $hdr['initiator'] = ($type == 'S') ? CG_BANK_UID : CG_ADMIN_UID;
+    $hdr['initiatorAgent'] = null;
+    $hdr['flags'] = 0;
+    $hdr['channel'] = null;
+    $hdr['box'] = null;
+    $hdr['risk'] = null;
+    $hdr['risks'] = null;
+    $hdr['reverses'] = null;
+    $hdr['created'] = $completed;
+
+    $xid = db\insert('r_tx_hdrs', $hdr, 'xid');
+
+    $e1 = [];
+    $e1['xid'] = $xid;
+    $e1['amount'] = -$amount;
+    $e1['uid'] = CG_BANK_UID;
+    $e1['agentUid'] = null;
+    $e1['description'] = $memo;
+    $e1['acctTid'] = $bankTxId;
+    $e1['created'] = $completed;
+
+    $e2 = [];
+    $e2['xid'] = $xid;
+    $e2['amount'] = $amount;
+    $e2['uid'] = CG_BANK_UID;
+    $e2['agentUid'] = null;
+    $e2['description'] = $memo;
+    $e2['acctTid'] = $bankTxId;
+    $e2['created'] = $completed;
+
+    debug($hdr);
+    debug($e1);
+    debug($e2);
+
+    db\insert('r_entries', $e1, 'id');
+    db\insert('r_entries', $e2, 'id');
+    db\update('r_usd2', ['txid' => $txid, 'xid' => $xid], 'txid');
+  }
+}
