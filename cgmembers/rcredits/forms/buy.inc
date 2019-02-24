@@ -12,6 +12,15 @@ define ('AUTHCODE_TIMEOUT', 10 * 60); // number of seconds before authcode expir
 /**
  * Pay with Common Good Credits, arriving from some other site or from rDo().
  * @param string $doCode: the encrypted code from rDo, if any, or 'done'
+ 
+* The payment form, if any, is displayed when a member clicks a "Pay [or Donate] With Common Good" button
+ * on the company's website, linked to this page with one or more of the following parameters (either amount or type is required):
+ *   item: name of item being paid for
+ *   amount: amount to be paid
+ *   return: URL to return to after payment is made
+ *   type: "Donate"
+ item=commemorative+ear+plugs&amount=23&return=http://whatever&cancel=http://whatever&type=Donate),
+  
  */
 function formBuy($form, &$sta, $doCode = '') {
   if ($doCode == 'done') return []; // shows result message and nothing else

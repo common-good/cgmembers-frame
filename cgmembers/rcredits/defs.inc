@@ -185,7 +185,7 @@ define('CO_PHOTO_FACTOR', 3); // make company photos this many times as big as i
 define('MAX_UPLOAD_SIZE', 4 * 1024000); // maximum upload size in bytes
 
 define('R_URL_SLASH', '%_%'); // Drupal gets confused by slashes in a url, even if urlencoded
-define('R_EXCHANGE_LIMITS', '1:5000,7:20000,49:80000,365:500000'); // per day, week, 7-week, year
+define('R_EXCHANGE_LIMITS', '1:5000,7:20000,52:80000,365:500000'); // per day, week, 7-week, year
 define('R_INVITE_DAYS', 30); // number of days to accept invitation to membership
 //define('R_MAXR_DEFAULT', -1); // suggested maximum amount to hold in CG credit (-1 = no limit)
 define('R_CARDCODE_LEN', 14); // length of rCard security code (long to deter easy copying, max 14 for small QR)
@@ -417,10 +417,11 @@ define('S_USD_IN', t('USD in'));
 
 // Risk definitions (for accounts and transactions) -- suspiciousness for possible reporting to FinCEN
 define('K_THRESHOLD', 200); // how big an amount in a single transaction is suspicious
-define('K_DAY_THRESHOLD', 300); // how big an amount spent or received by an individual in one day is suspicious
+/*define('K_DAY_THRESHOLD', 300); // how big an amount spent or received by an individual in one day is suspicious
 define('K_WEEK_THRESHOLD', 600); // how large an amount is suspicious in one week
 define('K_7WEEK_THRESHOLD', 1200); // how large an amount is suspicious in one 52-day period
-define('K_YEAR_THRESHOLD', 2400); // how large an amount is suspicious in one year
+define('K_YEAR_THRESHOLD', 2400); // how large an amount is suspicious in one year */
+define('K_THRESHOLD_PCT', 5); // what percent of top accounts transaction volume per employee to flag
 define('K_LIMIT_FACTOR', 3); // how many times the various thresholds is a prohibited amount
 define('K_UNUSUAL_BUMP', 20); // what percentage 7-week increase (in or out) is suspicious
 define('K_BIT_MIN', .05); // lowest risk factor that sets a bit
@@ -434,7 +435,7 @@ define('K_CTTY_THRESHOLD', 100); // minimum size of community transactions to co
 // names and weights of account and transaction risks (and, for negative weights, assurance)
 // weight is the number of such risks that together would make the account or transaction suspicious
 // a weight of "X" means the risk is named but does not contribute to the total risk score
-define('K_ACCT_RISKS', 'adminOk:-0.3,trusted:-4,socialConx:-3,hasBank:-3,geography:4,cashCo:2,new:5,moves:3,rents:10,badConx:2,homeCo:20,shady:3,miser:5,photoOff:1,addrOff:5,ssnOff:1,dobOff:4,poBox:5,fishy:2,moreIn:2,moreOut:2,bigDay:1,bigWeek:1,big7Week:1,bigYear:2');
+define('K_ACCT_RISKS', 'adminOk:-0.3,trusted:-4,UNUSED:-3,hasBank:-3,geography:4,cashCo:2,new:5,moves:3,rents:10,badConx:2,homeCo:20,shady:3,miser:5,UNUSED2:1,addrOff:5,ssnOff:1,dobOff:4,poBox:5,fishy:2,moreIn:2,moreOut:2,bigDay:1,bigWeek:1,big7Week:1,bigYear:2');
 define('K_ACCT_RISKS_EDITABLE', 'adminOk cashCo rents shady photoOff addrOff ssnOff dobOff fishy');
 define('K_TX_RISKS', 'txAdminOk:-0.3,redo:2,exchange:2,cashIn:5,cashOut:2,fromBank:5,toBank:2,b2p:2,p2p:2,inhouse:2,fromSuspect:3,toSuspect:3,absent:4,invoiceless:4,bigFrom:3,biggestFrom:3,oftenFrom:3,bigTo:3,biggestTo:3,oftenTo:3,offline:10,firstOffline:3,origins:3,suspectOut:2'); // names and size of transaction risks
 define('K_ADMINOK', 0); // community admin blessed the account or transaction

@@ -76,7 +76,6 @@ Setup:
   And member field values:
   | uid  | field      | value |*
   | .ZZA | community  |    -2 |
-  | .ZZB | mediaConx  |    12 |
   | .ZZE | postalAddr | Box 5 |
 # don't set community to -2 until after transactions  
   When cron runs "trust"
@@ -96,7 +95,7 @@ Scenario: We calculate risks
   Then members have:
   | uid  | risks |*
   | .ZZA | adminOk,trusted,geography,badConx,moreOut,big7Week |
-  | .ZZB | trusted,socialConx,moves,rents,moreIn,moreOut |
+  | .ZZB | trusted,moves,rents,moreIn,moreOut |
   | .ZZC | cashCo,homeCo,miser,bigDay |
   | .ZZD | trusted,hasBank,miser |
   | .ZZE | new,shady,poBox,moreIn |

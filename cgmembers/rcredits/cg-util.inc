@@ -1257,6 +1257,19 @@ function n2english($num, $tri = 0) {
 }
 
 /**
+ * Return the distance (miles) between two points on Earth.
+ */
+function earthDistance($lat1, $lon1, $lat2, $lon2, $unit = 'miles') {
+  if ($lat1 == $lat2 and $lon1 == $lon2) return 0;
+  $theta = $lon1 - $lon2;
+  $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) +  cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
+  $dist = acos($dist);
+  $dist = rad2deg($dist);
+  $miles = $dist * 60 * 1.1515;
+
+  return $unit == 'miles' ? $miles : ($miles * 1.609344); // miles or kilometers
+}
+/**
  * Say whether one string abbreviates another.
  * @param string $starts: the possible abbreviation
  * @param string $s: the possibly abbreviated string

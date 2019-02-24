@@ -762,7 +762,7 @@ function bitsFld($label, $bitRay, $prefix, $bits, $aliases = []) {
 function signedBy() {
   global $mya;
   $behalf = $mya->co ? t('(on behalf of %co) ', 'co', $mya->fullName) : '';
-  $signerA = $mya->cAdmin ? ($mya->co ?$mya->helperA : $mya) : $mya->agentA;
+  $signerA = $mya->cAdmin ? (($mya->co and $mya->helper) ? $mya->helperA : $mya) : $mya->agentA;
   return textFld(t('Signed:'), $behalf . t('Type your full name here ') . "($signerA->legalName)", required($mya->cAdmin ? $signerA->legalNameDpy : ''));
 }
 

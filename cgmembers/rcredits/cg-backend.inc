@@ -86,7 +86,7 @@ X;
  */
 function memberRay($myid, $aid, $coOnly = FALSE) {
   if (!$a = r\acct($myid, $aid)) return [];
-  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : "community=$a->community OR :IS_CO");
+  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : "state=$a->state OR community=$a->community OR :IS_CO");
   return db\q("SELECT fullName FROM users WHERE :IS_OK AND $where ORDER BY fullName")->fetchCol();
 }
 

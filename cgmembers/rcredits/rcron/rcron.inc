@@ -69,7 +69,7 @@ NOTES:
   where <star> means * (not the same as for the production site) 
  */
 
-define('R_DAILY_TASKS', 'START recache checkAccts requests setNear acctStats cttyStats trust acctRisk txRisk achRisk tickle lessOften recurs invoices getFunds invest notices END'); // had homogenize, pool 
+define('R_DAILY_TASKS', 'START recache checkAccts requests setNear acctStats cttyStats trust acctRisk acctRiskFinsh txRisk achRisk tickle lessOften recurs invoices getFunds invest notices END'); // had homogenize, pool 
 //define ('R_DAILY_TASKS', 'START redistribute END');
 include_once __DIR__ . '/rcron-subs.inc';
 
@@ -772,6 +772,8 @@ X;
  * Do the whole thing twice, to take into account relations with suspicious individuals.
  */
 function acctRisk() {
+  setv('newThresholds', ray('bigDay bigWeek big7Week bigYear', 0, 0, 0, 0));
+
   db\q('UPDATE users SET risk=NULL'); // avoid unnecessary badConx. don't touch risks though!
   for ($i=0; $i<2; $i++) { // do it twice (for good and bad Conx)
     queueEach('acctRisk1', 'SELECT uid FROM users WHERE uid>1 and :IS_OK ORDER BY :IS_CO DESC');
@@ -781,7 +783,25 @@ function acctRisk() {
 
 function acctRisk1($item) {
   include_once __DIR__ . '/../cg-risk.inc';
-  k\acctRisk1($item['uid']);
+  global $newThresholds;
+  
+  $newThresholds = getv('newThresholds');
+  k\acctRisk1($item['uid'], getv('riskThresholds', [0,0,0,0]));
+  setv('newThresholds', $newThresholds);
+}
+
+/**
+ * Finish aggregating threshold data collected from within acctRisk1.
+ */
+function acctRiskFinsh() {
+  $newThresholds = getv('newThresholds');
+  $index = ceil(count($newThresholds[key($newThresholds)]) * K_THRESHOLD_PCT); // pointer to threshold value
+  foreach ($newThresholds as $k => $ray) {
+    rsort($ray);
+    $riskThresholds[$k] = $ray[$index];
+  }
+  setv('riskThresholds', $riskThresholds);
+  queueNext();
 }
 
 /**

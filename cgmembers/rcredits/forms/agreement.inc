@@ -41,7 +41,7 @@ function formAgreement($form, &$sta) {
 </div>
 <div id="agreement">
 <ol>
-  <li>[1] <b>Who.</b> I understand this is an agreement among all %PROJECT <%aMembers>Members</a> and <%aMember-Organizations>Member Organizations</a> everywhere &mdash; including in my <%aCGC>%PROJECT Community</a>.</li>
+  <li>[1] <b>Who.</b> I make this agreement with all %PROJECT <%aMembers>Members</a> and <%aMember-Organizations>Member Organizations</a> everywhere &mdash; especially with Members and Member Organizations in my <%aCGC>%PROJECT Community</a>.</li>
   <li>[2] <b>Community control.</b> I understand we can use the Common Good System, as a community, to take control of our local economy. I am willing to participate with other Members to do that, and to support other communities to do the same.</li>
   <li>[3] <b>Investing together.</b> I understand whenever I put money in my %PROJECT account by buying %PROJECT credit, there is more money in the <%aDollar-Pool>Dollar Pool</a>, so my community has more money to invest while I use my credit for purchases.</li>
   <li>[4] <b>Backing together.</b> I understand my %PROJECT credit is <%aBacking>backed</a> 100% or more -- partly by Dollars and partly by Members and Member Organizations.</li>
