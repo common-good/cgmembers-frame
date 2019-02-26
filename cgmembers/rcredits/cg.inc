@@ -1312,6 +1312,52 @@ X;
 }
 
 /**
+ * Return the average balance, average credit reserve, and minimum balance for the given account (possibly joint) and period.
+ * @param array $uids: account record IDs (can be a community or region too)
+ * @param int $start: starting date (should be 0 hours) -- first full day to include in the period
+ * @param int $end: (exclusive) ending date -- midnight of the day following the last day to include in the period
+ * @param bool $noj: ignore any joined account
+ * @return array: [balance, min, days] used to include rewards
+ *    balance: the average end-of-day balance for that period (possibly with fractional cents)
+ *    min:     minimum end-of-day balance in the period
+ *    days:    (unused) number of days from start to end, inclusive
+ */
+function newAverageBalance($uids, $start, $end = NULL, $noj = FALSE) {
+  if (is_null($end)) { $end = r\rTime(); }
+  $days = round(($end + 1 - $start) / DAY_SECS);
+  if ($days == 0) return [0, 0, 0, 0]; // rounding is for daylight savings time changes
+  $info = be\newCreditInfo(ray('uids asof', $uids, $start));
+  $min = $bal = $info->balance;
+  /* $jid = $noj ? 0 : (r\acct($uid)->jid ?: 0); */
+
+  $day = 0;
+  $avg = $ravg = 0;
+
+  $sql = <<< EOF
+    SELECT SUM(e.amount) AS dailyTotal, FLOOR((t.created-$start)/:DAY_SECS) AS day 
+    FROM r_tx_hdrs t JOIN r_entries e USING (xid)
+    WHERE e.uid IN (:uids) AND t.created >= $start AND t.created < $end
+    GROUP BY day
+EOF;
+
+  $q = db\q($sql, ['uids' => $uids]);
+
+  while($row = $q->fetchAssoc()) {
+    $prevDay = $day;
+    extract($row); // dailyTotal, day
+    $avg += $bal * ($day - $prevDay) / $days;
+    $bal += $dailyTotal;
+    $min = min($min, $bal);
+  }
+  $prevDay = $day;
+  $days = round(($end - $start) / DAY_SECS); // end of period
+  $avg += $bal * ($days - $prevDay) / $days;
+  $min = round($min, 2);
+  return [$avg, $min, $days];
+}
+
+
+/**
  * Return the current time (manipulated for the rCredits Game and possibly for tests)
  */
 function rTime() {

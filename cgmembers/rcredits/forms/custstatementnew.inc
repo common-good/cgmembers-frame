@@ -15,17 +15,21 @@ include_once __DIR__ . '/../statement.class';
  * Call with /history/customer-statement/cust=QID?way=WAY
  * where WAY is either IN or OUT
  */
-function custStatement($args = '') {
+function custStatementNew($args = '') {
   $purposeLenMax = 60; // maximum number of characters in purpose field, not including added "..."
 
   if (!$mya = r\acct()) return w\go('', t('You must first sign in.'), 'ERR');
-  extract(just('cust period way', $args));
-  if (!@$cust or !$a = r\acct($cust)) return w\softErr(t('No customer was specified.'));
+  $cust = arrayGet($args, 'cust', null);
+  $period = arrayGet($args, 'period', null);
+  $way = arrayGet($args, 'way', 'OUT');
+
+  $a = is_null($cust) ? null : r\acct($cust);
+  if (is_null($a)) return w\softErr(t('No customer was specified.'));
 //  if (!@$period) return w\softErr(t('No period was specified.'));
 
 //  list ($start, $end, $period) = statementMonth($period, $mya->fyEnd ?: '12/31'); // not used yet
-
-  $q = @$way == 'IN' ? be\myCustTxs(0, time(), $mya, $a) : be\myCustTxs(0, time(), $a, $mya);
+  $uids = is_null($a->jid) or $a->jid == 0 ? [ $a->id ] : [ $a->id, $a->jid ];
+  $way == 'IN' ? be\getCustTxsNew($mya, $uids, 0, time()+1) : be\getCustTxsNew($a->id, $mya->id, 0, time()+1);$mya);
   if (!$q->rowCount()) return w\softErr(t('That is not a %thing of yours.', 'thing', $way == 'IN' ? t('customer') : t('vendor')));
 
   $pdf = new r\Statement($mya);
@@ -91,3 +95,4 @@ function custStatement($args = '') {
   $pdf->Cell($pageWidth - 2 * $m, 0, "$closing", '', 1 , 'L', TRUE);
   $pdf->finish(t('Statement-%acct-%date.pdf', 'acct date', $a->mainQid, strftime('%m-%d-%Y', time()))); //Close and output PDF document
 }
+

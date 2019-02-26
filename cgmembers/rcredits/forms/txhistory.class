@@ -20,6 +20,7 @@ class TxHistory implements TxProcessor {
   private $tidValue = '';
   private $dateValue = '';
   private $count = 0;
+  private $runBalance = 0;
   
   public function __construct($uids) {
     $this->uids = $uids;
@@ -31,41 +32,58 @@ class TxHistory implements TxProcessor {
   public function hdr() {
     /* global $mya, $agtViaBoxHelp; */
 
-    $headHelp = t('|Transaction number|Date transaction was completed|Who did you pay or receive from|What is the purpose of the transaction (usually the item or service purchased)|Amounts you spent or received|Running balance|Click a symbol to reverse a transaction')/* . @$agtViaBoxHelp*/;
 
-    $classes = 'tid date name purpose amount balance buttons'/* . (@$agtViaBoxHelp ? ' agent channel box' : '')*/;
-    $headHelp = array_combine(ray($classes), ray($headHelp));
-    $headers = t('Tx#,Date,Name,Purpose,Amount,Balance,Action'); //From You, To You,Net');
-    $header = array_combine(ray($classes), ray($headers)); // make splices and additions easy and clear
+    /* $helpFields = 'tid date state purpose name amount fromyou toyou buttons net' . (@$agtViaBoxHelp ? ' agent channel box' : ''); */
 
+    /* $headHelp = array_combine(ray($helpFields), ray($headHelp)); */
+    /* $classes = 'tid date name purpose amount fromyou toyou net buttons'; */
+    /* $headers = t('Tx#,Date,Name,Purpose,Amount,From You, To You,Net,Action'); */
+    
+    /* $header = array_combine(ray($classes), ray($headers)); // make splices and additions easy and clear */
     /* if (@$agents) $header['agent'] = t('Agent'); */
     /* if (@$channels) $header['channel'] = t('Via'); */
     /* if (@$boxes) $header['box'] = t('Box'); */
     
-    $hdr = '';
-    foreach ($header as $class => $text) {
-      $header[$class] = w\popHelp($text, $headHelp[$class]);
-    }
-
-    $this->links .= <<<EOF
-<div class="$class">
-  <div class="tid-date col-xs-2">
-    <div class="tid col-sm-5">$this->tidValue</div>
-    <div class="date col-sm-7">$this->dateValue</div>
+    /* foreach ($header as $cls => $hdr) $header[$cls] = w\popHelp($hdr, $headHelp[$class]); */
+    
+    /* return array(array_keys($header), array_values($header), @array_values($downloadHeader)); */
+    
+    $tid = w\popHelp(t('Tx#'), t('Transaction number'));
+    $date = w\popHelp(t('Date'), t('Date transaction was completed'));
+    $name = w\popHelp(t('Name'), t('Who did you pay or receive from'));
+    $purpose = w\popHelp(t('Purpose'), t('What is the purpose of the transaction (usually the item or service purchased)'));
+    $amount = w\popHelp(t('Amount'), t('Amounts you spent or received'));
+    /* $fromyou = w\popHelp(t('From You'), t('fromyou')); */
+    /* $toyou = w\popHelp(t('To You'), t('toyou')); */
+    /* $net = w\popHelp(t('Net'), t('The net change in account balance')); */
+    $runBalance = w\popHelp(t('Balance'), t('The balance in the account after this transaction'));
+    $buttons = w\popHelp(t('Action'), t('Click a symbol to reverse a transaction or to edit the purpose'));
+    
+    $this->body = <<<EOF
+<div id="txlist">
+  <div id="txs-links" class="row">
+    <div class="showMore col-xs-3">
+      <a title="Show more transactions per page"><span class="glyphicon glyphicon-plus"></span>Show more</a>
+    </div>
+    <div class="dates col-xs-2">
+      <a title="Select dates to show"><span class="glyphicon glyphicon-calendar"></span>Dates</a>
+    </div>
+    <div class="download col-xs-3">
+      <a title="Select dates and download as CSV file"><span class="glyphicon glyphicon-download-alt"></span>Download</a>
+    </div>
+    <div class="totals col-xs-2">
+      <a data-toggle="modal" data-target="#txs-totals" title="Show totals for the selected period"><span class="glyphicon glyphicon-usd"></span>Totals</a>
+    </div>
+    <div class="nav col-xs-1">
+      <a class="prevPage" title="Previous Page"><span class="glyphicon glyphicon-triangle-left"></span></a>
+      <a class="nextPage" title="Next Page"><span class="glyphicon glyphicon-triangle-right"></span></a>
+    </div>
   </div>
-  <div class="name-purpose col-xs-$c1">
-    <div class="name col-sm-6">$name</div>
-    <div class="purpose col-sm-6">$description</div>
-  </div>
-  <div class="amount-reward col-xs-$c2">
-    <div class="amount col-sm-$c3">$amount</div>
-    <div class="runBalance col-sm-$c4">$runBalance</div>
-  </div>
-  <div class="buttons col-xs-1">
-
-  </div>
-</div>
-
+  <table>
+    <thead>
+      <tr><th>$tid</th><th>$date</th><th>$name</th><th>$purpose</th><th>$amount</th><th>$runBalance</th><th>$buttons</th></tr>
+    </thead>
+EOF;
   }
 
   /**
@@ -73,9 +91,14 @@ class TxHistory implements TxProcessor {
    * @param assoc $info: all of the data for this entry (includes transaction data)
    */
   public function txnHdr($info) {
-    $this->body .= "<tbody>\n";
     $this->tidValue = $info['tid'];
-    $this->dateValue = u\fmtDate($info['created']);;
+    $this->dateValue = u\fmtDate($info['created']);
+    $this->runBalance = u\fmtAmt($info['runBalance'], '');
+
+    $class = "txrow ";
+    $class .= 'page-' . floor($this->count / MIN_TX_ROWS);
+    $class .= ' PAGE-' . floor($this->count / NORMAL_TX_ROWS);
+    $this->body .= "<tbody class=\"$class\">\n";
   }
 
   /**
@@ -84,48 +107,40 @@ class TxHistory implements TxProcessor {
    */
   public function processEntry($info) {
     if (in_array($info['uid'], $this->uids)) return;  // only show the other end of the transaction
-    extract(just('name description amount runBalance', $info));
+    extract(just('name description amount', $info));
     $amount = u\fmtAmt(- $amount, '');
-    $runBalance = u\fmtAmt($runBalance, '');
-    $class = 'row txRow';
-    /* if (!$list) $class .= ' head'; */
-    $class .= ' page-' . floor($this->count / MIN_TX_ROWS);
+    $buttons = '';
+
+    $class = "txrow ";
+    $class .= 'page-' . floor($this->count / MIN_TX_ROWS);
     $class .= ' PAGE-' . floor($this->count / NORMAL_TX_ROWS);
 
-    /* $small = floor($this->count / MIN_TX_ROWS); */
-    /* $large = floor($this->count / NORMAL_TX_ROWS); */
-    /* $this->body .= "<tr class='row txRow page-$small PAGE-$large'>"; */
-    /* $this->body .= "<td class='tid'>$this->tidValue</td>"; */
-    /* $this->body .= "<td class='created'>$this->dateValue</td>"; */
-    /* $this->body .= "<td class='name'>$name</td>"; */
-    /* $this->body .= "<td class='description'>$description</td>"; */
-    /* $this->body .= "<td class='amount'>$amount</td>"; */
-    /* $this->body .= "<td class='runBalance'>$runBalance</td>"; */
-    /* $this->body .= "</tr>"; */
-    list ($c1, $c2, $c3, $c4) = [6, 3, 5, 7];
-
     $this->body .= <<<EOF
-<div class="$class">
-  <div class="tid-date col-xs-2">
-    <div class="tid col-sm-5">$this->tidValue</div>
-    <div class="date col-sm-7">$this->dateValue</div>
-  </div>
-  <div class="name-purpose col-xs-$c1">
-    <div class="name col-sm-6">$name</div>
-    <div class="purpose col-sm-6">$description</div>
-  </div>
-  <div class="amount-reward col-xs-$c2">
-    <div class="amount col-sm-$c3">$amount</div>
-    <div class="runBalance col-sm-$c4">$runBalance</div>
-  </div>
-  <div class="buttons col-xs-1">
-
-  </div>
-</div>
+<tr class="$class">
+  <td class="tid">$this->tidValue</td>
+  <td class="date">$this->dateValue</td>
+  <td class="name">$name</td>
+  <td class="purpose">$description</td>
+  <td class="amount">$amount</td>
+  <td class="runBalance">$this->runBalance</td>
+  <td class="buttons">$buttons</td>
+</tr>
 EOF;
+/*     $this->body .= <<<EOF */
+/* <tr> */
+/*   <td class="tid col-sm-5">$this->tidValue</td> */
+/*   <td class="date col-sm-7">$this->dateValue</td> */
+/*   <td class="name col-sm-6">$name</td> */
+/*   <td class="purpose col-sm-6">$description</td> */
+/*   <td class="amount col-sm-5">$amount</td> */
+/*   <td class="runBalance col-sm-7">$this->runBalance</td> */
+/*   <td class="buttons col-xs-1">$buttons</td> */
+/* </tr> */
+/* EOF; */
 
     $this->tidValue = '';
     $this->dateValue = '';
+    $this->runBalance = '';
   }
 
   /**
@@ -133,7 +148,6 @@ EOF;
    * @param assoc $info: all of the data for this entry (includes transaction data)
    */
   public function txnFtr($info) {
-    $this->body .= "<td></td>\n";
     $this->body .= "</tbody>\n";
     $this->count += 1;
   }
@@ -142,13 +156,16 @@ EOF;
    * Called after the last transaction.
    */
   public function ftr() {
+    /* if ($this->count < 1) { */
+    /*   $this->body = t('no txs'); */
+    /* } */
+    $this->body .= "</table>\n</div>\n";
   }
 
   /**
    * Get the built HTML
    */
-  public function get() {
-    return w\item(w\tag("table", $this->body));
-    return [$header, $classes, sortRows($rows, @$descending), $totDone];
+  public function getBody() {
+    return w\item($this->body);
   }
 }

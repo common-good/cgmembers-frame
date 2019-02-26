@@ -23,17 +23,17 @@ function formAdmin($form, &$sta) {return w\subMenu(t('Admin Options'), 'sadmin')
   
 /**
  * Make various administrative operations available to the admin and cAdmin.
-'wrong community' => 'SELECT * FROM `users` WHERE uid>0 AND MID(community, 2, 7)<>MID(uid, 1, 7)',
+ * 'wrong community' => 'SELECT * FROM `users` WHERE uid>0 AND MID(community, 2, 7)<>MID(uid, 1, 7)',
  */
 function formAdminPanel($form, &$sta, $args = '') {
   extract(just('qid', $args));
   global $mya;
   if (!$mya->cAdmin) hack('panel');
 
-  $tables = 'users txs usd gifts proxies relations invites'; // tables to show
+  $tables = 'users txs newTxs usd gifts proxies relations invites'; // tables to show
   $queries = [
-    '' => '',
-  ];
+              '' => '',
+              ];
   
   $title = t('System Administration');
   
@@ -45,19 +45,19 @@ function formAdminPanel($form, &$sta, $args = '') {
   
   if ($mya->superAdmin) {
     if (r\up()) $stop = submi(t('STOP')); else $start = submi(t('START'));
-/*    if (time() < strtotime('6/20/2017')) {
-      global $base_url;
-      $members = db\col('uid', 'users', ':IS_OK AND NOT :IS_CO AND activated<1486098000 ORDER BY community, uid');
-      foreach($members as $k) {
-        $list[] = <<<EOF
-<a href="$base_url/print-rcard/$k" target="_blank" class="btn btn-xs btn-primary" role="button" onclick="this.style.display='none';">NEXT</a>
+    /*    if (time() < strtotime('6/20/2017')) {
+          global $base_url;
+          $members = db\col('uid', 'users', ':IS_OK AND NOT :IS_CO AND activated<1486098000 ORDER BY community, uid');
+          foreach($members as $k) {
+          $list[] = <<<EOF
+          <a href="$base_url/print-rcard/$k" target="_blank" class="btn btn-xs btn-primary" role="button" onclick="this.style.display='none';">NEXT</a>
 EOF;
-      }
-      $start = item(join('', $list));
-    } */
+          }
+          $start = item(join('', $list));
+          } */
     $do1099btest = submi(t('1099B TEST'));
     $do1099b = submi('1099B');
-		$reconcile = submi('Reconcile Ctty Fund');
+    $reconcile = submi('Reconcile Ctty Fund');
     $tables .= ' notices boxes do stats usd nonmembers';
     $special = submi(t('Special'));
     $askForAppData = submi(t('Ask for App Data'));
@@ -69,8 +69,8 @@ EOF;
   }
 
   $printId = submi(t('Print ID'));
-//  $connectBank = submi(t('Connect Bank'));
-//  $seeHidden = submi(t('See Hidden'));
+  //  $connectBank = submi(t('Connect Bank'));
+  //  $seeHidden = submi(t('See Hidden'));
   $seeData = submi(t('See Data'));
   $seeChanges = submi(t('See Changes'));
   if (!$mya->superAdmin and $ctty = $mya->community) { // not super
@@ -126,19 +126,19 @@ function formAdminPanel_submit($form, &$sta) {
     $a->update('getAppData appData', '!report', []);
     say(t('Request for app data sent to ') . $a->fullName);
   } elseif ($op == 'seeAppData') {
-/**/  debug($a->appData);
+    /**/  debug($a->appData);
   } elseif ($op == 'seeSecure' and @$a) {
-      say(u\rayTable(ray('fullName phone dob physicalAddr', $a->fullName, substr(@$a->phone, 2), $admin ? u\fmtDate(@$a->dob) : '', @$a->address . ' ' . $a->zip)));
-//      seeHidden($a);
-      seeSecure($a);
+    say(u\rayTable(ray('fullName phone dob physicalAddr', $a->fullName, substr(@$a->phone, 2), $admin ? u\fmtDate(@$a->dob) : '', @$a->address . ' ' . $a->zip)));
+    //      seeHidden($a);
+    seeSecure($a);
   } elseif ($op == 'resetSSN' and @$a) {
     $a->setBit(B_MEMBER, FALSE);
     $a->stepDone('ssn', FALSE);
     $a->update('ssnData', '');    
   } elseif ($op == 'seeData') {
     if (@$a and $a->proSe) say(u\rayTable($a->data, FALSE, TRUE));
-/*  } elseif ($op == 'connectBank') {
-    r\Web\connectBank($a); */
+    /*  } elseif ($op == 'connectBank') {
+        r\Web\connectBank($a); */
   } elseif ($op == 'seeChanges') {
     w\go("sadmin/changes/$a->mainQid");
   } elseif ($op == 'ssnLink') {
@@ -146,8 +146,8 @@ function formAdminPanel_submit($form, &$sta) {
   } elseif ($op == 'do1099b' or $test1099 = ($op == 'do1099btest')) {
     include_once __DIR__ . '/../cg-yearly.inc';
     r\Special\do1099bs(@$test1099);
-	} elseif ($op == 'reconcile') {
-		w\go('sadmin/reconcile-ctty-fund');
+  } elseif ($op == 'reconcile') {
+    w\go('sadmin/reconcile-ctty-fund');
   } elseif ($op == 'inviteeStatus') {
     return w\go('community/invite/invited-whom');
   } elseif ($op == 'organizerList') {
@@ -156,12 +156,12 @@ function formAdminPanel_submit($form, &$sta) {
     global $signupCos; $signupCos = [];
     $crit = $mya->admin ? '1' : 'community=' . $mya->community;
     eachA(function ($a) {
-      global $signupCos;
-      if ($signupCo = $a->signupCo) {
-        extract($signupCo);
-        $signupCos[strtolower("$a->community$company$a->id")] = ray('acct fullName relation company', $a->mainQid, $a->fullName, @$isOwner ? t('owner') : ((@$employee or @$employeeOk) ? t('employee') : (@$contractor ? t('contractor') : '')), $company);
-      }
-    }, $crit . ' ORDER BY community');
+        global $signupCos;
+        if ($signupCo = $a->signupCo) {
+          extract($signupCo);
+          $signupCos[strtolower("$a->community$company$a->id")] = ray('acct fullName relation company', $a->mainQid, $a->fullName, @$isOwner ? t('owner') : ((@$employee or @$employeeOk) ? t('employee') : (@$contractor ? t('contractor') : '')), $company);
+        }
+      }, $crit . ' ORDER BY community');
     ksort($signupCos);
     w\say($signupCos ? w\showRecords($signupCos) : t('No such companies.'));
   }
@@ -174,17 +174,26 @@ function formAdminPanel_submit($form, &$sta) {
   
   $logFields = "channel,type,myid,IF(agent=myid,':R_NONE',agent) AS agent, REPLACE(info, ',', ', ') AS info";
 
-/// if ($op == 'log') return say(str_replace("\n", "<br><br>\n", file_get_contents(flog()))); // say(a\showQuery('r_log', 1, 'logid DESC', $logFields, 'myid'));
-//  if ($op == 'tells') return say(a\showQuery('r_log', "info LIKE '%tell-staff%' ORDER BY logid DESC LIMIT 50", 'logid DESC', $logFields, 'myid'));
+  /// if ($op == 'log') return say(str_replace("\n", "<br><br>\n", file_get_contents(flog()))); // say(a\showQuery('r_log', 1, 'logid DESC', $logFields, 'myid'));
+  //  if ($op == 'tells') return say(a\showQuery('r_log', "info LIKE '%tell-staff%' ORDER BY logid DESC LIMIT 50", 'logid DESC', $logFields, 'myid'));
 
   if ($op == 'txs') {
     $fields = <<<EOF
-    xid, t.created, t.flags, t.type AS ty, t.goods AS gd, t.:IS_TAKING AS k,
-    IF (LOCATE('"force";s:1:"1"', u1.data)>0, 1, IF(LOCATE('"force";s:2:"-1"', u1.data)>0, -1, IF(LOCATE('"force";s:1:"0"', u1.data)>0, '0', ''))) AS f,
-    payer, payee, amount, payerFor AS for1, payeeFor AS for2, payerTid AS tid1, payeeTid AS tid2
+      xid, t.created, t.flags, t.type AS ty, t.goods AS gd, t.:IS_TAKING AS k,
+      IF (LOCATE('"force";s:1:"1"', u1.data)>0, 1, IF(LOCATE('"force";s:2:"-1"', u1.data)>0, -1, IF(LOCATE('"force";s:1:"0"', u1.data)>0, '0', ''))) AS f,
+      payer, payee, amount, payerFor AS for1, payeeFor AS for2, payerTid AS tid1, payeeTid AS tid2
 EOF;
     if ($mya->admin) $fields = str_replace('u1.', '', $fields);
     return say(a\showQuery('r_txs', 1, 'xid DESC', $fields, ['payer', 'payee']));
+  }
+
+  if ($op == 'newTxs') {
+    $fields = <<<EOF
+      xid, t.created, t.flags, t.type AS ty, t.goods AS gd, t.initiator AS init,
+      uid, amount, description AS `for`, acctTid AS tid
+EOF;
+    if ($mya->admin) $fields = str_replace('u1.', '', $fields);
+    return say(a\showQuery('r_tx_hdrs LEFT JOIN r_entries USING (xid)', 1, 'xid DESC', $fields, ['uid']));
   }
 
   if ($op == 'gifts') return say(a\showQuery('r_recurs', '', 'id DESC', 'id,created,payer,payee,amount,period,ended', ray('payer payee')));
@@ -213,12 +222,12 @@ function formOrganizerList($form, &$sta, $where = '') {
     }
     $list = join('', $list);
     $list = item(<<<EOF
-<table id="organizer-list">
-<tr><th>Name</th><th>phone</th><th>email</th><th>zip</th></tr>
-$list
-</table>
+                 <table id="organizer-list">
+                 <tr><th>Name</th><th>phone</th><th>email</th><th>zip</th></tr>
+                 $list
+                 </table>
 EOF
-  );
+                 );
   } else {
     $subtext = t('Enter a list of zipcodes (or partial zipcodes), separated by spaces.');
     $zips = textFld(t('Zips:'));
@@ -246,15 +255,15 @@ function formSeeChanges($form, &$sta, $qid = '') {
   while ($row = $q->fetchAssoc()) {
     extract($row);
     $date = u\fmtDate($created);
-		foreach (ray('oldValue newValue') as $k) $$k = a\formatField($field, ($type = u\crypted($$k)) ? decryChange($type, $$k) : $$k);
+    foreach (ray('oldValue newValue') as $k) $$k = a\formatField($field, ($type = u\crypted($$k)) ? decryChange($type, $$k) : $$k);
     $changedBy = $changerName ?: "($changedBy)";
     $list[] = "<tr><td>$date</td><td>$field</td><td>$oldValue</td><td>$newValue</td><td>$changedBy</td></tr>";
   }
 	
-	if (count($list) > 1) {
-		$list = join("\n", $list);
+  if (count($list) > 1) {
+    $list = join("\n", $list);
     $list = item("<table>$list</table>");
-	} else $list = t('No changes');
+  } else $list = t('No changes');
   
   return cgform(compact(ray('title list')));
 }
@@ -265,20 +274,20 @@ function decryChange($type, $v) {return ($type == 'V' and !r\allKnowing()) ? t('
  * Log back in to admin automatically.
  */
 function formTestRecovery($form, &$sta, $doSay = FALSE) {
-//  if (isDEV and !r\acct()) { // called after testing, in case session got destroyed
+  //  if (isDEV and !r\acct()) { // called after testing, in case session got destroyed
   if (!isDEV) return;
-    //$uid = \user_authenticate('admin', DEV_ADMIN_PASS);
-	$mya = r\acct(1);
-	global $user; $user = $mya->account('uid pass timezone'); // timezone keeps Drupal happy in bootstrap.inc
-	\drupal_session_regenerate();
-	w\setAcct($mya->id);
-	if (file_exists(T_MSG_FILE)) {
-          $msgs = @unserialize(@file_get_contents(T_MSG_FILE));
-		unlink(T_MSG_FILE);
-		\drupal_get_messages(); // throw out any existing messages
-		$_SESSION['messages'] = $msgs;
-	}
-	return w\go('sadmin');
+  //$uid = \user_authenticate('admin', DEV_ADMIN_PASS);
+  $mya = r\acct(1);
+  global $user; $user = $mya->account('uid pass timezone'); // timezone keeps Drupal happy in bootstrap.inc
+  \drupal_session_regenerate();
+  w\setAcct($mya->id);
+  if (file_exists(T_MSG_FILE)) {
+    $msgs = @unserialize(@file_get_contents(T_MSG_FILE));
+    unlink(T_MSG_FILE);
+    \drupal_get_messages(); // throw out any existing messages
+    $_SESSION['messages'] = $msgs;
+  }
+  return w\go('sadmin');
 }
 
 /**
@@ -298,8 +307,8 @@ function formMakeCtty($form, &$sta) {
   
   $form = compact('title', 'subtext') + nameAndEmail(-1) + ssnFields(FALSE)
     + compact(ray('phone postalAddr region zips submit'));
-//         + ssnFields(FALSE) + contactFields(['zot'=>0], FALSE) // prevent contact fields from defaulting
-//  foreach (ray('tenure owns') as $k) unset($form[$k]);
+  //         + ssnFields(FALSE) + contactFields(['zot'=>0], FALSE) // prevent contact fields from defaulting
+  //  foreach (ray('tenure owns') as $k) unset($form[$k]);
   return cgform($form);
 }
 
@@ -318,10 +327,10 @@ function formMakeCtty_validate($form, &$sta) {
   }
   if (!emailOkay($email, $mya->co, $mya)) return; 
   if (!phoneOk($phone)) return;
-//  $name = strtolower(substr($email, 0, strpos($email, '@')));
+  //  $name = strtolower(substr($email, 0, strpos($email, '@')));
   $name = u\shortName($fullName);
   if ($otherName = db\get('fullName', 'users', 'name=:name', compact('name'))) return say('shortname taken', compact('otherName'), 'fullName');
-//  $name = r\uniqueName($fullName);
+  //  $name = r\uniqueName($fullName);
 
   if ($err = u\badSsn($federalId)) return say($err, ['what' => 'federalId'], 'federalId');
   
@@ -367,7 +376,7 @@ function formFollowup($form, &$sta, $args = '') {
   global $base_url;
   global $mya;
   
-	if (!$mya or !$mya->cAdmin) return w\go('');
+  if (!$mya or !$mya->cAdmin) return w\go('');
   extract(just('uid one recent', $args));
   
   if (@$uid) {
@@ -386,15 +395,15 @@ function formFollowup($form, &$sta, $args = '') {
   foreach ($cttys as $k => $v) $cttys[$k] = trim(str_replace(PROJECT, '', $v));
   
   $by = @$recent
-  ? "notes IS NULL OR notes='' OR MID(notes,1,6)='knows ', (MID(notes,6,4)*37+LOCATE(MID(notes,3,3),'JanFebMarAprMayJunJulAugSepOctNovDec'))*32+MID(notes,1,2) DESC"
-  : "($todayEnd - IF(tickle>0, tickle, u.created)) * IF(tickle>$todayEnd, -5 * 366 * :DAY_SECS, 1)"; // today's calls first, then yesterday, 2 days ago etc., then tomorrow, the next day, etc.
+    ? "notes IS NULL OR notes='' OR MID(notes,1,6)='knows ', (MID(notes,6,4)*37+LOCATE(MID(notes,3,3),'JanFebMarAprMayJunJulAugSepOctNovDec'))*32+MID(notes,1,2) DESC"
+    : "($todayEnd - IF(tickle>0, tickle, u.created)) * IF(tickle>$todayEnd, -5 * 366 * :DAY_SECS, 1)"; // today's calls first, then yesterday, 2 days ago etc., then tomorrow, the next day, etc.
   if ($mya->superAdmin) $by = "(notes LIKE '%ZAP%' AND BINARY notes LIKE '%ZAP%') OR (!activated AND :IS_MEMBER) DESC, " . $by;
   
   $sql = <<<EOF
     SELECT DISTINCT uid, community, tickle, fullName, phone, u.data, u.created, activated, notes, :IS_CO AS co, t.created AS lastTx, :IS_MEMBER AS member, :IS_OK AS ok, :IS_CARDED AS carded
     FROM users u LEFT JOIN (SELECT created,payer,payee FROM r_txs ORDER BY created DESC LIMIT 1) t ON uid IN (payer, payee)
     WHERE uid>:CANONIC_ACCTS AND NOT :IS_NONUDGE AND NOT (activated and NOT :IS_OK) AND $where2 AND (tickle>0 OR NOT :IS_MEMBER
-      OR t.created<$now-60*:DAY_SECS OR t.created IS NULL)
+                                                                                                     OR t.created<$now-60*:DAY_SECS OR t.created IS NULL)
     ORDER BY $by
 EOF;
 
@@ -415,22 +424,22 @@ EOF;
     foreach (['tickle', 'activated'] as $k) if ($$k) $$k = strtotime('today', $$k); // round down to nearest day
     $days = round(($tickle - $activated) / DAY_SECS); // tickle: days since activation
     list ($type, $color) = !$activated 
-    ? (strpos($notes, 'ZAP') 
-      ? [t('DELETE'), 'zap']
-      : ($member ? [t('activate'), 'zap'] : (strpos($data, '"signup";b:0') ? [t('pre'), 'pre'] : [t('setup'), 'setup']))
-      )
-//    : (round(($activated + TICKLE_WELCOME - $tickle) / DAY_SECS) == 0 ? [t('welcome2'), 'welcome']
-//    : (round(($activated + TICKLE_DELAYED - $tickle) / DAY_SECS) == 0 ? [t('welcome6'), 'welcome']
-    : (strpos($notes, 'ZAP') ? [t('DEACTIVATE'), 'zap']
-		: (!$carded ? [t('print card'), 'print-card']
-    : (between($days, TICKLE_WELCOME - 1, TICKLE_WELCOME + 14) ? [t('welcome2'), 'welcome']
-    : (between($days, TICKLE_DELAYED - 1, TICKLE_DELAYED + 14) ? [t('welcome6'), 'welcome']
-    : (($activated < strtotime('9/2/2017') and $tickle < $activated + 90 * DAY_SECS and !$notes) ? [t('welcome'), 'welcome']
-    : (($tickle and $days % 365 < 30) ? [t('annual'), 'annual'] // +/-:2/29
-//    in_array(($tickle - $activated) % DAY_SECS, [0, 1, DAY_SECS - 1])) ? [t('annual'), 'annual'] // +/-:2/29
-    : (($lastTx < $now - 60 * DAY_SECS and $now - $activated > 60 * DAY_SECS) ? [t('dormant'), 'dormant']
-    : ($tickle ? [t('followup'), 'fu']
-    : ( [t('other'), 'fu'] )))))))));
+      ? (strpos($notes, 'ZAP') 
+         ? [t('DELETE'), 'zap']
+         : ($member ? [t('activate'), 'zap'] : (strpos($data, '"signup";b:0') ? [t('pre'), 'pre'] : [t('setup'), 'setup']))
+         )
+      //    : (round(($activated + TICKLE_WELCOME - $tickle) / DAY_SECS) == 0 ? [t('welcome2'), 'welcome']
+      //    : (round(($activated + TICKLE_DELAYED - $tickle) / DAY_SECS) == 0 ? [t('welcome6'), 'welcome']
+      : (strpos($notes, 'ZAP') ? [t('DEACTIVATE'), 'zap']
+         : (!$carded ? [t('print card'), 'print-card']
+            : (between($days, TICKLE_WELCOME - 1, TICKLE_WELCOME + 14) ? [t('welcome2'), 'welcome']
+               : (between($days, TICKLE_DELAYED - 1, TICKLE_DELAYED + 14) ? [t('welcome6'), 'welcome']
+                  : (($activated < strtotime('9/2/2017') and $tickle < $activated + 90 * DAY_SECS and !$notes) ? [t('welcome'), 'welcome']
+                     : (($tickle and $days % 365 < 30) ? [t('annual'), 'annual'] // +/-:2/29
+                        //    in_array(($tickle - $activated) % DAY_SECS, [0, 1, DAY_SECS - 1])) ? [t('annual'), 'annual'] // +/-:2/29
+                        : (($lastTx < $now - 60 * DAY_SECS and $now - $activated > 60 * DAY_SECS) ? [t('dormant'), 'dormant']
+                           : ($tickle ? [t('followup'), 'fu']
+                              : ( [t('other'), 'fu'] )))))))));
 
     if ($mya->superAdmin and $type == t('DELETE')) $type = w\lnk("$base_url/sadmin/delete-account/$uid", $type);
     if (in($color, $whities)) $color .= ' fu-whitey';
@@ -450,6 +459,111 @@ EOF;
   
   return cgform(compact(ray('title subtitle list')), '', FALSE);
 }
+
+//////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Show a list of standard calls to make (to help new members, check-in, ask for donation, etc.)
+ * @param form $form: the form to complete
+ * @param ? $sta: ? 
+ * @param assoc $args: optional arguments; can contain:
+ *   int uid: (optional) account to deal with
+ *   bool one: (optional) <show just my community>
+ *   bool recent: (optional) <show latest notes first>
+ */
+function formNewFollowup($form, &$sta, $args = []) {
+  global $base_url;
+  global $mya;
+  
+  if (!$mya or !$mya->cAdmin) return w\go('');
+  $uid = u\arrayGet($args, 'uid', null);
+  $one = u\arrayGet($args, 'one', null);
+  $recent = u\arrayGet($args, 'recent', null);
+  
+  if (!is_null($uid)) {
+    w\setAcct($uid); // switch to that user
+    return formSummary($form, $sta);
+  }
+
+  $title = t('Admin Action Page');
+  $subtitle = item(t('<p>Start with today and work backward. Click an account name.</p><ul><li><b>Live Person.</b> If you get a live person, click "live" for a script. Then, if no followup is needed, make a note about your conversation and click "Auto".</li><li><b>Message #1.</b> If you get a machine, click "msg1" for a Phone Message script, type "PM setup" or "PM welcome" or whatever as a note, and click the "2 days" button.</li><li><b>Message #2.</b> If you already left one message, try 3 more times to catch them live. If you still don\'t catch them click "msg2" for a Phone Message script, then click "email" to send them an Email Message. Type "EM setup" or whatever and click the "7" button if this is for a Setup or Annual check-in or the "Auto" button if it is for a Welcome.</li><li><b>After Setup Help Email.</b> If the email gets no response for a setup help call, keep phoning or emailing at 1-, 2-, or 7-day intervals until you reach them or we close the account.</li><li><b>After Annual Check-in Email.</b> If the email gets no response for an Annual check-in, send a US Mail fund appeal/check-in.</li></ul><p>(comments on this standard procedure are welcome)</p>') . w\btn('/sadmin/followup/one=1', t('Show just my community')) . ' &nbsp; ' . w\btn('/sadmin/followup', t('Show ALL')) . ' &nbsp; ' . w\btn('/sadmin/followup/recent=1', t('Recent notes first')));
+  
+  $now = time();
+  $todayEnd = strtotime('tomorrow') - 1;
+  list ($where1, $where2) = (($mya->admin or $mya->isAdmin2) and is_null($one)) ? [1, 1] : [0, "community=$mya->community"];
+  $cttys = r\cttyList();
+  $cttys[key($cttys)] = t('Seedpack');
+  foreach ($cttys as $k => $v) $cttys[$k] = trim(str_replace(PROJECT, '', $v));
+  
+  $by = !is_null($recent)
+    ? "notes IS NULL OR notes='' OR MID(notes,1,6)='knows ', (MID(notes,6,4)*37+LOCATE(MID(notes,3,3),'JanFebMarAprMayJunJulAugSepOctNovDec'))*32+MID(notes,1,2) DESC"
+    : "($todayEnd - IF(tickle>0, tickle, u.created)) * IF(tickle>$todayEnd, -5 * 366 * :DAY_SECS, 1)"; // today's calls first, then yesterday, 2 days ago etc., then tomorrow, the next day, etc.
+  if ($mya->superAdmin) $by = "(notes LIKE '%ZAP%' AND BINARY notes LIKE '%ZAP%') OR (!activated AND :IS_MEMBER) DESC, "
+                              . $by;
+  
+  $sql = <<<EOF
+    SELECT DISTINCT uid, community, tickle, fullName, phone, u.data, u.created, activated, notes, :IS_CO AS co,
+    MAX(t.created) AS lastTx, :IS_MEMBER AS member, :IS_OK AS ok, :IS_CARDED AS carded
+    FROM users u LEFT JOIN r_entries e USING (uid) LEFT JOIN r_tx_hdrs t USING (xid)
+    WHERE uid>:CANONIC_ACCTS AND NOT :IS_NONUDGE AND NOT (activated and NOT :IS_OK) AND $where2
+    AND (tickle>0 OR NOT :IS_MEMBER OR t.created<$now-60*:DAY_SECS OR t.created IS NULL)
+    ORDER BY $by
+EOF;
+
+  $fields = ray('ctty type call name phone notes');
+  if (!is_null($one)) array_shift($fields);
+  $q = db\q($sql);
+  $guts = $heads = '';
+  foreach ($fields as $k) {
+    $heads .= "<th class=\"hd-$k\">" . ucfirst($k) . '</th>';
+    $guts .= "<td>$k</td>";
+  }
+  $list = "<table id=\"memberlist\"><tr>$heads</tr>\n";
+  $emails = '';
+  $whities = ray('zap fu'); // use white font for these backgrounds
+  
+  while ($row = $q->fetchAssoc()) {
+    extract($row);
+    foreach (['tickle', 'activated'] as $k) if ($$k) $$k = strtotime('today', $$k); // round down to nearest day
+    $days = round(($tickle - $activated) / DAY_SECS); // tickle: days since activation
+    list ($type, $color) = !$activated 
+      ? (strpos($notes, 'ZAP') 
+         ? [t('DELETE'), 'zap']
+         : ($member ? [t('activate'), 'zap'] : (strpos($data, '"signup";b:0') ? [t('pre'), 'pre'] : [t('setup'), 'setup']))
+         )
+      //    : (round(($activated + TICKLE_WELCOME - $tickle) / DAY_SECS) == 0 ? [t('welcome2'), 'welcome']
+      //    : (round(($activated + TICKLE_DELAYED - $tickle) / DAY_SECS) == 0 ? [t('welcome6'), 'welcome']
+      : (strpos($notes, 'ZAP') ? [t('DEACTIVATE'), 'zap']
+         : (!$carded ? [t('print card'), 'print-card']
+            : (between($days, TICKLE_WELCOME - 1, TICKLE_WELCOME + 14) ? [t('welcome2'), 'welcome']
+               : (between($days, TICKLE_DELAYED - 1, TICKLE_DELAYED + 14) ? [t('welcome6'), 'welcome']
+                  : (($activated < strtotime('9/2/2017') and $tickle < $activated + 90 * DAY_SECS and !$notes) ? [t('welcome'), 'welcome']
+                     : (($tickle and $days % 365 < 30) ? [t('annual'), 'annual'] // +/-:2/29
+                        //    in_array(($tickle - $activated) % DAY_SECS, [0, 1, DAY_SECS - 1])) ? [t('annual'), 'annual'] // +/-:2/29
+                        : (($lastTx < $now - 60 * DAY_SECS and $now - $activated > 60 * DAY_SECS) ? [t('dormant'), 'dormant']
+                           : ($tickle ? [t('followup'), 'fu']
+                              : ( [t('other'), 'fu'] )))))))));
+
+    if ($mya->superAdmin and $type == t('DELETE')) $type = w\lnk("$base_url/sadmin/delete-account/$uid", $type);
+    if (in($color, $whities)) $color .= ' fu-whitey';
+    $type = "<span class=\"fu-$color\">$type</span>";
+    $call = u\fmtDate($tickle ?: $created);
+    $name = w\lnk("$base_url/change-account/acct=$uid&page=summary", $fullName ?: $uid);
+    if ($co) $name = "<span class=\"co\">$name</span>";
+    $phone = u\fmtPhone(u\decry('P', $phone), '-');
+    $notes = strtr($notes, ["\n" => '|| ', date('Y') => '']);
+    if ($type == t('pre')) $notes = db\get('code', 'r_relations', 'other=:uid AND :IS_CUSTOMER', compact('uid')) . " $notes";
+    $notes = substr($notes, 0, 200) . (strlen($notes) > 200 ? '...' : '');
+    $ctty = $cttys[$community];
+    $list .= strtr("<tr>$guts</tr>\n", compact($fields));
+  }
+  if (!isset($tickle)) $list .= t('There are no followup calls to be made.');
+  $list .= "</table>\n";
+  
+  return cgform(compact(ray('title subtitle list')), '', FALSE);
+}
+
+//////////////////////////////////////////////////////////////////////////////
 
 /**
  * Show a list of members in the current account's community
@@ -487,13 +601,13 @@ function formMemberList($form, &$sta) {
     
     $one = "<tr><td colspan=4 class=\"memberlist-line2\">$date: $steps$bits$notes</td></tr>\n";
     $list .= <<<EOF
-<tr>
-<td class="$nameClass">$fullName</td>
-<td><a href="mailto:$email" target="_blank">$email</a></td>
-<td>$phone</td>
-<td>$postalAddr</td>
-</tr>
-$one
+      <tr>
+      <td class="$nameClass">$fullName</td>
+      <td><a href="mailto:$email" target="_blank">$email</a></td>
+      <td>$phone</td>
+      <td>$postalAddr</td>
+      </tr>
+      $one
 EOF;
     $emails .= "$email, ";
   }
@@ -525,26 +639,26 @@ function formDownloadMemberList($form, &$sta, $args = '') {
   $title = t('Download Member List');
   $expMo = r\rdoMonth();
   $subtext = t(<<<EOF
-<p>Generate a CSV format spreadsheet for accounts in your community (%cttyName). We recommend you use a service like MailChimp and import this list there before each mailing. Company accounts and members are marked, so there is generally no need to export them separately &mdash; you can do that separation within the mailing program.</p>
-<p>Action links for individual accounts take the form %code, where expMonth is the number of an expiration month (the current month is number %expMo). For example, a link from MailChimp to the democracy page, expiring next month, would be:</p>
-<blockquote>%example</blockquote>
-<p>Other action choices might be listed here someday. :)</p>
+               <p>Generate a CSV format spreadsheet for accounts in your community (%cttyName). We recommend you use a service like MailChimp and import this list there before each mailing. Company accounts and members are marked, so there is generally no need to export them separately &mdash; you can do that separation within the mailing program.</p>
+                                                                                                                                                                                                                                                                                                                    <p>Action links for individual accounts take the form %code, where expMonth is the number of an expiration month (the current month is number %expMo). For example, a link from MailChimp to the democracy page, expiring next month, would be:</p>
+               <blockquote>%example</blockquote>
+               <p>Other action choices might be listed here someday. :)</p>
 EOF
-  , 'cttyName code expMo _example', $cttyA->fullName, 'do/action~qid~ecode~monthNum', $expMo, $base_url . '/do/doEvents~*|ID|*~*|ECODE|*~' . ($expMo + 1));
+    , 'cttyName code expMo _example', $cttyA->fullName, 'do/action~qid~ecode~monthNum', $expMo, $base_url . '/do/doEvents~*|ID|*~*|ECODE|*~' . ($expMo + 1));
   
-  $chimp = boolFld(t('Exporting to MailChimp?'), '', TRUE);
+$chimp = boolFld(t('Exporting to MailChimp?'), '', TRUE);
   
-  if ($mya->admin) $allCttys2 = boxFld('allCttys', t('All communities:'), '', TRUE); // temporary for CGF oversight
-  $requests2 = boxFld('requests', t('Include requests:'), t('Include non-members who have requested an invitation 8/9/2017 or later.'), TRUE);
-  $status = w\radiosFld(t('Status:'), '', dft(2), ray('active not-yet-active both'));
-  $types = w\radiosfld(t('Types:'), '', dft(2), ray('individuals companies both'));
-  $anonymous = boxFld('anonymous', t('Anonymous:'), t('Export only non-identifying information (for data-mapping and analysis)'), FALSE);
-  $chimpSet = w\fieldSet('fields', compact(ray('allCttys2 requests2 status types anonymous')));
+if ($mya->admin) $allCttys2 = boxFld('allCttys', t('All communities:'), '', TRUE); // temporary for CGF oversight
+$requests2 = boxFld('requests', t('Include requests:'), t('Include non-members who have requested an invitation 8/9/2017 or later.'), TRUE);
+$status = w\radiosFld(t('Status:'), '', dft(2), ray('active not-yet-active both'));
+$types = w\radiosfld(t('Types:'), '', dft(2), ray('individuals companies both'));
+$anonymous = boxFld('anonymous', t('Anonymous:'), t('Export only non-identifying information (for data-mapping and analysis)'), FALSE);
+$chimpSet = w\fieldSet('fields', compact(ray('allCttys2 requests2 status types anonymous')));
   
-  $submit = t('Download');
+$submit = t('Download');
   
-  w\jsx('chimp');
-  return cgform(compact(ray('title subtext chimp chimpSet submit download')));
+w\jsx('chimp');
+return cgform(compact(ray('title subtext chimp chimpSet submit download')));
 }
 
 function formDownloadMemberList_submit($form, &$sta) {
@@ -570,24 +684,24 @@ function formPhp_submit($form, &$sta) {
   extract(just('code', $sta['input']));
   \setV('code', $code); // remember for next time
   $code = <<<EOF
-use CG as r;
-use CG\DB as db;
-use CG\Backend as be;
-use CG\Util as u;
-use CG\Admin as a;
-use CG\Web as w;  
-use CG\Cron as cr;
-use CG\Smart as s;
-use CG\Vote as v;
-$code
+    use CG as r;
+  use CG\DB as db;
+  use CG\Backend as be;
+  use CG\Util as u;
+  use CG\Admin as a;
+  use CG\Web as w;  
+  use CG\Cron as cr;
+  use CG\Smart as s;
+  use CG\Vote as v;
+  $code
 EOF;
   
   if (!isPRODUCTION) $code = "use CG\Testing as t;\n" . $code;
   ob_start();
   eval($code);
   $res = ob_get_clean();
-/**/  \drupal_set_message(print_r($res, 1));
-//  w\go('sadmin/php/');
+  /**/  \drupal_set_message(print_r($res, 1));
+  //  w\go('sadmin/php/');
 }
 
 //define('DEPOSIT_DATE1', 1411517529); // first deposit date
@@ -597,7 +711,7 @@ EOF;
  */
 function formDeposits($form, &$sta, $deposit = 0) {
   global $mya, $base_url;
-//  if ($deposit) return w\go("sadmin/deposit/$deposit");
+  //  if ($deposit) return w\go("sadmin/deposit/$deposit");
 
   $title = t('Bank Transfers');
 
@@ -608,13 +722,13 @@ function formDeposits($form, &$sta, $deposit = 0) {
     SUM(IF(amount>0, 1, 0)) AS countIn
 EOF;
   $res = db\rows($fields, 'r_usd', "deposit=$deposit AND amount<>0 AND created<=:NOW"); // fails for db\get
-//  if ($res[0]) {
+  //  if ($res[0]) {
   extract((array) $res[0]);
   foreach (ray('amountIn amountOut') as $k) $$k = u\fmtAmt($$k);
   $subtext = t('<b>New IN:</b> &nbsp;%countIn (%amountIn)<b class="newout">New OUT:</b> %countOut (%amountOut)', compact(ray('countIn amountIn countOut amountOut')));
   if ($mya->superAdmin) {
     $go = w\btn("/sadmin/checks/way=In&date=$deposit&mark=1", t('Print Checks'))
-    . ' ' . w\btn("$base_url/sadmin/achs/date=$deposit&mark=1", t('Download ACH file'));
+      . ' ' . w\btn("$base_url/sadmin/achs/date=$deposit&mark=1", t('Download ACH file'));
     $go = item($go, ' ');
   }
   
@@ -634,14 +748,14 @@ function formShowReconciled($form, &$sta) {
   $sql = <<< X
     SELECT * FROM
 
-      (SELECT '' as extra, deposit AS dt, $desc AS what, SUM(amount) AS amt, COUNT(*) AS cnt,
-        SUM(IF($neg, -amount, '')) AS outt,
-        SUM(IF($neg, '', amount)) AS inn
-      FROM r_usd WHERE amount<>0 AND bankTxId<>0 GROUP BY deposit,$desc DESC
-      UNION ALL SELECT 1 AS extra, completed AS dt, IF(memo='', type, memo) AS what, amount AS amt, '' AS cnt,
-        IF(amount<0, -amount, '') AS outt,
-        IF(amount<0, '', amount) AS inn
-      FROM r_usd2) t
+    (SELECT '' as extra, deposit AS dt, $desc AS what, SUM(amount) AS amt, COUNT(*) AS cnt,
+     SUM(IF($neg, -amount, '')) AS outt,
+     SUM(IF($neg, '', amount)) AS inn
+     FROM r_usd WHERE amount<>0 AND bankTxId<>0 GROUP BY deposit,$desc DESC
+     UNION ALL SELECT 1 AS extra, completed AS dt, IF(memo='', type, memo) AS what, amount AS amt, '' AS cnt,
+     IF(amount<0, -amount, '') AS outt,
+     IF(amount<0, '', amount) AS inn
+     FROM r_usd2) t
     
     ORDER BY dt DESC    
 X;
@@ -665,10 +779,10 @@ X;
   foreach (ray('Date Memo Payment Deposit Balance') as $i => $k) $line[$i] = "<th class='$k'>$k</th>";
   $header = "<tr>\n" . join("\n", $line) . '</tr>';
   $list = <<< X
-<table id="deposits">
-$header
-$deposits
-</table>
+    <table id="deposits">
+    $header
+    $deposits
+    </table>
 X;
   $title = t('Reconciled Dollar Pool Transactions');
   $txid = db\min('txid', 'r_usd', 'bankTxId=0 AND amount<>0') ?: 999999999;
@@ -695,40 +809,40 @@ function depositDetails($args) {
   $pdf->SetAutoPageBreak($count > ($in ? 47 : 9), $m+.1); // leave space at bottom (count compensates for TCPDF bug)
   $pdf->setPrintHeader(FALSE);
   $pdf->setPrintFooter(TRUE);
-//  $pdf->setLanguageArray($l); // (eg "page" in footer)
+  //  $pdf->setLanguageArray($l); // (eg "page" in footer)
 
-//  list ($activity, $where) = $in ? [t('DEPOSIT'), '(NOT (amount<0 XOR txid<0))'] : [t('CASHOUT'), '(amount<0 XOR txid<0)'];
+  //  list ($activity, $where) = $in ? [t('DEPOSIT'), '(NOT (amount<0 XOR txid<0))'] : [t('CASHOUT'), '(amount<0 XOR txid<0)'];
   $activity = t('Bank Transfer');
   $where = 1;
   $today = $date == 1 ? t('(Historical)') : u\fmtDate($date ?: r\rTime());
   $escrow = $in ? ESCROW_IN : ESCROW_OUT;
   $pdf->setupFooter('', BANK_DBA . " $activity $today", ['........ A5990D1155A '.$escrow.'C', 'GnuMICR;12'], 'Page @PAGE of @PAGES');
-//  $pdf->setupFooter('', BANK_DBA . " $activity $today", ['ACHes', 'GnuMICR;12'], 'Page @PAGE of @PAGES');
+  //  $pdf->setupFooter('', BANK_DBA . " $activity $today", ['ACHes', 'GnuMICR;12'], 'Page @PAGE of @PAGES');
   $pdf->AddPage();
 
   $left = t(<<<EOF
-<h1><b>%activity Details</b><br>
-%today</h1><br>
-<br>
-<br>
-<b>%CGF_LEGALNAME<br>
-dba %BANK_DBA</b><br>
-%CGF_POSTALADDR<br>
-%CGF_PHONE<br>
-<br>
-<br>
-<b>%BANK_NAME</b><br>
-Account #%escrow<br>
-%BANK_ADDR<br>
-<br>
-<br>
-<b>TOTAL: %total</b><br>
-%count checks<br>
+            <h1><b>%activity Details</b><br>
+            %today</h1><br>
+            <br>
+            <br>
+            <b>%CGF_LEGALNAME<br>
+            dba %BANK_DBA</b><br>
+            %CGF_POSTALADDR<br>
+            %CGF_PHONE<br>
+            <br>
+            <br>
+            <b>%BANK_NAME</b><br>
+            Account #%escrow<br>
+            %BANK_ADDR<br>
+            <br>
+            <br>
+            <b>TOTAL: %total</b><br>
+            %count checks<br>
 EOF
-  , compact(ray('activity today total count escrow')));
+            , compact(ray('activity today total count escrow')));
 
   $pdf->say($left, $m, 0);
-//    SELECT ABS(amount) AS amount, txid, uid, u.fullName AS name FROM r_usd t LEFT JOIN users u ON u.uid=t.payee 
+  //    SELECT ABS(amount) AS amount, txid, uid, u.fullName AS name FROM r_usd t LEFT JOIN users u ON u.uid=t.payee 
 
   $sql = <<<EOF
     SELECT amount, txid, uid, u.fullName AS name FROM r_usd t LEFT JOIN users u ON u.uid=t.payee 
@@ -740,8 +854,8 @@ EOF;
   
   while ($row = $q->fetchAssoc()) {
     extract($row);
-// (needs htmlcell instead of cell)   if (!$in) $name = r\acct($uid)->bankInfoLink();
-//    if (!$in) $name = r\acct($uid)->legalNameDpy;
+    // (needs htmlcell instead of cell)   if (!$in) $name = r\acct($uid)->bankInfoLink();
+    //    if (!$in) $name = r\acct($uid)->legalNameDpy;
     $pdf->setX($x);
     if (@$only and ($amount > 0 xor $in)) continue;
     if ($amount < 0) $pdf->SetTextColor(255, 0, 0);
@@ -772,8 +886,8 @@ EOF;
 
   $date = strftime('%Y%m%d', $date);
   if (u\test()) $pdf->Close(); else 
-//  $pdf->Output(PROJECT . "-deposit-$way-$date.pdf", 'I'); //Close and output
-  $pdf->Output(PROJECT . "-deposit-$date.pdf", 'I'); //Close and output
+    //  $pdf->Output(PROJECT . "-deposit-$way-$date.pdf", 'I'); //Close and output
+    $pdf->Output(PROJECT . "-deposit-$date.pdf", 'I'); //Close and output
 }
 
 /**
@@ -782,7 +896,7 @@ EOF;
 function achBatch($args) {
   include DRUPAL_ROOT . '/rcredits/admin/admin-achify.inc';
   extract(just('way date mark', $args));
-//  achify("deposit=$date");
+  //  achify("deposit=$date");
   w\achify("deposit=$date AND amount<=0 AND created<=:NOW"); // temporarily only money going OUT or verifying bank account
   if (u\test()) return;
 }
@@ -796,23 +910,23 @@ function achBatch($args) {
   $date = strftime('%Y%m%d', $date ?: time());
   u\csvStart("CGach$way-$date.csv");
   while ($tx = $q->fetchAssoc()) {
-    extract($tx);
-    $a = r\acct($payee);
-//    $a->fixTxBankAccount($bankAccount, $txid);
-    $bankAccount = u\decry('V', $bankAccount); // 2018-03-16
-    $routing = substr($bankAccount, 4, 9);
-    $account = substr($bankAccount, 4 + 9);
-    $fullName = substr($a->fullName, 0, 22); // Citizens Bank limits this field to 22 chars
-    $amount = number_format(abs($amount), 2);
-    $addenda = substr(PROJECT . " tx#$txid", 0, 79); // Citizens Bank limits this field to 79 chars
-    $row = [$payee, $fullName, $routing, $account, $amount, $addenda];
-    u\csv($row);
-    if (!$deposit and $mark) db\update('r_usd', ray('deposit txid', strtotime('today'), $txid), 'txid');
+  extract($tx);
+  $a = r\acct($payee);
+  //    $a->fixTxBankAccount($bankAccount, $txid);
+  $bankAccount = u\decry('V', $bankAccount); // 2018-03-16
+  $routing = substr($bankAccount, 4, 9);
+  $account = substr($bankAccount, 4 + 9);
+  $fullName = substr($a->fullName, 0, 22); // Citizens Bank limits this field to 22 chars
+  $amount = number_format(abs($amount), 2);
+  $addenda = substr(PROJECT . " tx#$txid", 0, 79); // Citizens Bank limits this field to 79 chars
+  $row = [$payee, $fullName, $routing, $account, $amount, $addenda];
+  u\csv($row);
+  if (!$deposit and $mark) db\update('r_usd', ray('deposit txid', strtotime('today'), $txid), 'txid');
   }
   
   if (u\test()) return;
   exit();
-}
+  }
 */
 
 /**
@@ -830,7 +944,7 @@ function printChecks($args) {
   $ck->setPrintHeader(FALSE);
   $ck->setPrintFooter(FALSE);
   $ck->setPageUnit('in'); // measure everything in inches
-//  $ck->SetMargins(0, 0, 0); // left/top/right margin
+  //  $ck->SetMargins(0, 0, 0); // left/top/right margin
   $ck->SetAutoPageBreak(FALSE);
 
   $ways = ['IN'=>'(amount>0 AND txid>0)', 'OUT'=>'(amount<0 AND txid>0)', 'BAD'=>'txid<0', 'VERIFY'=>'amount=0'];
@@ -845,7 +959,7 @@ function printChecks($args) {
   }
   $date = strftime('%Y-%m-%d', $date);
   if (u\test()) $ck->Close(); else $ck->Output(PROJECT . "-deposit-checks-$way-$date.pdf", 'I'); //Close and output 
-//  say($count . t(' checks printed'));
+  //  say($count . t(' checks printed'));
 }
 
 
@@ -870,7 +984,7 @@ function memberId($id, $agent = '', $retroactive = FALSE) {
   
   $acctName = $a->bestName;
   $nameFont = strlen($acctName) > 38 ? 'font-stretch:condensed;'
-  : (strlen($acctName) > 33 ? 'font-stretch:semi-condensed;' : '');
+    : (strlen($acctName) > 33 ? 'font-stretch:semi-condensed;' : '');
   
   if (!$proSe = $a->proSe) {
     if (!@$a->agentA->cardCode2) $a->makeCardCode(); // NOT r\cardCode($a->qid);
@@ -878,8 +992,8 @@ function memberId($id, $agent = '', $retroactive = FALSE) {
   } else $aa = $a;
 
   list ($cardFld, $role, $ptQid, $yName, $bg) = $proSe 
-  ? ['cardCode', t('Member'), 10, 1.70, 'bg'] 
-  : ['cardCode2', t('Company'), '9.5;font-stretch:semi-condensed', 1.64, 'bgCo'];
+    ? ['cardCode', t('Member'), 10, 1.70, 'bg'] 
+    : ['cardCode2', t('Company'), '9.5;font-stretch:semi-condensed', 1.64, 'bgCo'];
 
   $server = isPRODUCTION ? 'RC2.ME' : 'RC4.ME';
   $qrUrl = "HTTP://$region.$server/$tail" . $aa->$cardFld;
@@ -887,21 +1001,21 @@ function memberId($id, $agent = '', $retroactive = FALSE) {
   $photo = ($aa->hasPhoto and $permitted) ? "@$aa->photo" : R_NOT_VALID; // '@' tells tcpdf it's an image, not a file; $a->canBuy fails because admin has permission
 
   list ($wCard, $hCard, $m, $xText) = [3.375, 2.125, .24, .06]; // card dimensions, negative page margin, text indent
-//  list ($wPhoto, $mPhoto, $xCardNo) = [1.09, .1, 2.4];
+  //  list ($wPhoto, $mPhoto, $xCardNo) = [1.09, .1, 2.4];
   list ($xProj, $yProj) = [1.54, $m+.04];
   list ($xSite, $ySite, $wPhoto, $mxPhoto, $myPhoto, $xCardNo) = [$xProj+.035, $yProj+.29, 1.1, .085, .09, 2.4];
   list ($cCG, $cSite, $cName) = ['#000065', 'black', '#004000'];
   list ($xTest, $xPhoto, $yPhoto, $hPhoto) = [$m+$wCard-.74, $m+$mxPhoto, $m+$myPhoto, $wPhoto*4/3];
 
   $style = array( // style for barcode
-    'border' => 0,
-    'vpadding' => '0',
-    'hpadding' => '0',
-    'fgcolor' => array(0,0,0),
-    'bgcolor' => false, //array(255,255,255)
-    'module_width' => 1, // width of a single module in points
-    'module_height' => 1, // height of a single module in points
-  );
+                 'border' => 0,
+                 'vpadding' => '0',
+                 'hpadding' => '0',
+                 'fgcolor' => array(0,0,0),
+                 'bgcolor' => false, //array(255,255,255)
+                 'module_width' => 1, // width of a single module in points
+                 'module_height' => 1, // height of a single module in points
+                  );
 
   $pdf = new r\Pdf();
   $pdf->setPrintHeader(FALSE);
@@ -913,7 +1027,7 @@ function memberId($id, $agent = '', $retroactive = FALSE) {
   $pdf->ScaleXY(100 * 8.5 / $wCard); // widen to page width (for extra resolution)
 
   $pdf->Image(R_ROOT . "/images/idcard/$bg.png", $m, $m, $wCard, $hCard, '', '', 'L', true); // file, x, y, w, h, type, link, align, resize
-//  $pdf->Image($photo, $m+$mPhoto, $m+$mPhoto, $wPhoto, $wPhoto*4/3, '', '', 'L', true);
+  //  $pdf->Image($photo, $m+$mPhoto, $m+$mPhoto, $wPhoto, $wPhoto*4/3, '', '', 'L', true);
   $pdf->Image($photo, $xPhoto, $yPhoto, $wPhoto, $hPhoto, '', '', 'L', true);
   $pdf->Rect($xPhoto, $yPhoto, $wPhoto, $hPhoto, 'D'); // x, y, w, h, style, border, fill
   $pdf->say(PROJECT, $xProj, $yProj, '', '', "18;Arial MT Medium;color:white;", 'L');
@@ -931,12 +1045,12 @@ function memberId($id, $agent = '', $retroactive = FALSE) {
   if (NOT_PRODUCTION) $pdf->say(t('TEST'), $xTest, $m+$hCard-.19, .5, '', '6.5;color:darkred', 'C');
 
   $pdf->StopTransform();
-/*  if (time() < strtotime('6/20/2017')) {
-    $pdf->Output(strtolower("$qid.cgcard.pd"), 'D'); // Close and output PDF document ('I')
-  } else */
+  /*  if (time() < strtotime('6/20/2017')) {
+      $pdf->Output(strtolower("$qid.cgcard.pd"), 'D'); // Close and output PDF document ('I')
+      } else */
   if ($mya and $mya->superAdmin) $a->setBit(B_CARDED);
   if (u\test()) $pdf->Close(); else $pdf->Output(strtolower("$qid.cgcard.pd"), 'I'); // Close and output PDF document ('I')
-//  if (time() < strtotime('6/20/2017') and $next = nextMember($id)) w\go("print-rcard/$next");
+  //  if (time() < strtotime('6/20/2017') and $next = nextMember($id)) w\go("print-rcard/$next");
 }
 
 function formSMS($form, &$sta) {
@@ -968,16 +1082,16 @@ function test($arg = '') {
   jsx('test');
   include_once DRUPAL_ROOT . '/vendor/gherkin/test.php';
   file_put_contents(T_MSG_FILE, serialize(\drupal_get_messages()));
-//  $_SESSION = [];
+  //  $_SESSION = [];
   if (ini_get("session.use_cookies")) { // from PHP's session_destroy page
     $params = session_get_cookie_params();
     setcookie(session_name(), '', time() - 42000,
-        $params["path"], $params["domain"],
-        $params["secure"], $params["httponly"]
-    );
+              $params["path"], $params["domain"],
+              $params["secure"], $params["httponly"]
+              );
   }
   if (session_id() and $_SESSION) session_destroy();
-	db\q('DELETE FROM sessions');
+  db\q('DELETE FROM sessions');
   \drupal_goto('sadmin/recover'); // has to be a form available when logged out
 }
 
@@ -986,13 +1100,13 @@ function test($arg = '') {
  * @param int $uid: account to delete
  */
 function deleteAccount($uid) {
-	r\deleteAccount($uid);
-	return w\go('/sadmin/followup');
+  r\deleteAccount($uid);
+  return w\go('/sadmin/followup');
 }
 
 function util($arg) {
-//  if ($arg == 'modal') drupal_goto('modal');
-//  if ($arg == 'reset') r\reset();
+  //  if ($arg == 'modal') drupal_goto('modal');
+  //  if ($arg == 'reset') r\reset();
   if ($arg == 'reset-menu') \menu_rebuild();
   if ($arg == 'remove-test-data') {
     if (isDEV) {
@@ -1001,8 +1115,8 @@ function util($arg) {
     } else a\setupBasicAccounts();
   }
   if ($arg == 'clear') foreach (ray('cache cache_bootstrap cache_form cache_menu sessions') as $table) {
-    db\q("TRUNCATE TABLE $table");
-  }
+      db\q("TRUNCATE TABLE $table");
+    }
   if ($arg == 'php') w\go('devel/php');
   
   say("DONE with \"$arg\".");
@@ -1015,44 +1129,44 @@ function handyLinks() {
   $test_path = "$base_url/sites/all/modules";
 
   $links = array(
-    'rcredits/util/reset-menu|Rebuild menu based on hook_menu() and revert any custom changes. All menu items return to their default settings.|Redo MENUS|menu-hamburger',
-    'rcredits/util/remove-test-data|Remove test data|REMOVE test data|fast-backward',
-    'rcredits/util/clear|Empty the cache and sessions tables|Clear Cache & Sessions|unchecked',
-  );
+                 'rcredits/util/reset-menu|Rebuild menu based on hook_menu() and revert any custom changes. All menu items return to their default settings.|Redo MENUS|menu-hamburger',
+                 'rcredits/util/remove-test-data|Remove test data|REMOVE test data|fast-backward',
+                 'rcredits/util/clear|Empty the cache and sessions tables|Clear Cache & Sessions|unchecked',
+                 );
 
-/*    'devel/settings|Helper functions, pages, and blocks to assist Drupal developers. The devel blocks can be managed via the block administration page.|Devel settings|cog',
-    'devel/cache/clear?destination=sadmin|Clear the CSS cache and all database cache tables which store page, node, theme and variable caches.|Empty cache|new-window',
-    'devel/reference|View a list of currently defined user functions with documentation links.|Functions|education',
-    'devel/elements|View the active form/render elements for this site.|Elements|align-center',
-    'devel/phpinfo|View your server&#039;s PHP configuration|PHPinfo()|queen',
-    'devel/variable?destination=sadmin|Edit and delete site variables.|Variables|copy',
-    */
-//    "$test_path/gherkin/compile.php?module=rcredits/rsms&return=1|Compile rSMS|",
-//    'rcredits/test?menu=1|Test Menu|',
-//    'rcredits/util/changeAgent|Change Agent to Bea|',
-//    'sms|Simulate an SMS transaction|Simulate SMS',
-//    'admin/config/development/testing|Test|Test',
-//    'deletetests.php|Delete old tests|Delete old tests',
-//    'rcredits/util/reset|Reset rCredits|',
-//    'devel/entity/info|View entity information across the whole site.|Entity info',
-//    'devel/php|Execute some PHP code|Execute PHP Code',
-//    'devel/field/info|View fields information across the whole site.|Field info',
-//(empty array)    'devel/menu/item?path=node|Details about a given menu item.|Menu item',
-//    'devel/reinstall?destination=sadmin/handy|Run hook_uninstall() and then hook_install() for a given module.|Reinstall modules',
-//    'devel/run-cron|Run cron|Run cron',
-//    'devel/session|List the contents of SESSION.|Session viewer',
-//    'devel/theme/registry|View a list of available theme functions across the whole site.|Theme registry',
+  /*    'devel/settings|Helper functions, pages, and blocks to assist Drupal developers. The devel blocks can be managed via the block administration page.|Devel settings|cog',
+        'devel/cache/clear?destination=sadmin|Clear the CSS cache and all database cache tables which store page, node, theme and variable caches.|Empty cache|new-window',
+        'devel/reference|View a list of currently defined user functions with documentation links.|Functions|education',
+        'devel/elements|View the active form/render elements for this site.|Elements|align-center',
+        'devel/phpinfo|View your server&#039;s PHP configuration|PHPinfo()|queen',
+        'devel/variable?destination=sadmin|Edit and delete site variables.|Variables|copy',
+  */
+  //    "$test_path/gherkin/compile.php?module=rcredits/rsms&return=1|Compile rSMS|",
+  //    'rcredits/test?menu=1|Test Menu|',
+  //    'rcredits/util/changeAgent|Change Agent to Bea|',
+  //    'sms|Simulate an SMS transaction|Simulate SMS',
+  //    'admin/config/development/testing|Test|Test',
+  //    'deletetests.php|Delete old tests|Delete old tests',
+  //    'rcredits/util/reset|Reset rCredits|',
+  //    'devel/entity/info|View entity information across the whole site.|Entity info',
+  //    'devel/php|Execute some PHP code|Execute PHP Code',
+  //    'devel/field/info|View fields information across the whole site.|Field info',
+  //(empty array)    'devel/menu/item?path=node|Details about a given menu item.|Menu item',
+  //    'devel/reinstall?destination=sadmin/handy|Run hook_uninstall() and then hook_install() for a given module.|Reinstall modules',
+  //    'devel/run-cron|Run cron|Run cron',
+  //    'devel/session|List the contents of SESSION.|Session viewer',
+  //    'devel/theme/registry|View a list of available theme functions across the whole site.|Theme registry',
 
   foreach ($links as $link) {
     list ($url, $detail, $label, $icon) = explode('|', $link);
     if (!$label) $label = $detail;
     $handy[$url] = ['', $label, '', ANY, '', $detail, @$icon];
-/*    $result[] = <<<EOF
-<div><a href="$url" title="$detail">$label</a></div>
+    /*    $result[] = <<<EOF
+          <div><a href="$url" title="$detail">$label</a></div>
 EOF; */
   }
   return w\subMenu(t('<h2>Handy Links</h2>'), $handy);
-/*  $result = join(' | ', $result);
-  return "<h2 id=\"edit-title\"><br>Handy Links</h2><div class='develw'>\n$result</div>";
+  /*  $result = join(' | ', $result);
+      return "<h2 id=\"edit-title\"><br>Handy Links</h2><div class='develw'>\n$result</div>";
   */
 }

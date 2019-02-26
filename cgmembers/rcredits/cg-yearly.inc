@@ -93,6 +93,32 @@ function do1099b($year, $payee, &$total, $mod = '', $badNames = [], $badTINs = [
   return $bCount;
 }
 
+/**
+ * Create B records for each income transaction, for each payee.
+ * @param int $year: the relevant fiscal year
+ * @param int $payee: payee's account ID
+ * @param float $total: running total amount for all B forms so far
+ * @param string $mod: normally ''. C=show corrected info. G=show incorrect name and/or TIN (as submitted before)
+ * @param assoc $badNames: list of incorrectly reported names, indexed by uid
+ * @param assoc $badTINs: list of incorrectly reported TINs, indexed by uid
+ * @return number of B records created
+ */
+function do1099bNew($year, $payee, &$total, $mod = '', $badNames = [], $badTINs = []) {
+//  global $amts99;
+  $bCount = 0;
+  while ($row = be\get1099bNew($payee, $year)) {
+    extract(just('created amount for', $row));
+    if ($amount <= 0) continue; // IRS says do NOT report non-positive transactions on 1099-B
+    if ($mod == 'G') $amount = 0; // IRS says zero out amount when showing the bad old data
+    $total += $amount;
+//    $amts99[] = $amount;
+    $bCount++;
+    $a = r\acct($payee); $id = $a->id;
+    putRec(recB($year, $a, $created, fmtAmt($amount), $for, $mod, @$badNames[$id], @$badTINs[$id]));
+  }
+  return $bCount;
+}
+
 function recT($year, $testMode) {
   //$region = r\acct(r\serverUid());
   $prior = pad(($year < date('Y') - 1) ? 'P' : '', 1); // P for prior year data, else ' '

@@ -13,7 +13,7 @@ use CG\Risk as k;
  * This function uses jQuery code defined in misc.js
  * UNUSED @param string $qid: (optional) ID or qid of the account to summarize and manage (for cAdmin)
  */
-function formSummary($form, &$sta) {
+function formNewSummary($form, &$sta) {
   global $base_url;
 //  if (!$mya = r\acct($qid)) return w\go(isGAME ? 'community/game' : PROMO_URL);
   
@@ -38,7 +38,7 @@ function formSummary($form, &$sta) {
 
   if ($mya->admin2 and !$mya->proSe) { // some kind of admin (but not self)
     include_once __DIR__ . '/../admin/admin-web.inc';  
-    $form = w\adminSummary();
+    $form = w\adminSummaryNew();
     foreach (ray('photo legalName shortName federalId community') as $k) if (@$form[$k]) { // move these up (see return line)
       $$k = $form[$k];
       unset($form[$k]);
@@ -62,7 +62,7 @@ function formSummary($form, &$sta) {
   }
 
   extract(just('returnMo return cttyBeneMo cttyBene', $mya->j_stats()));
-  $gifts = u\fmtAmt($mya->totalGifts());
+  $gifts = u\fmtAmt($mya->totalGiftsNew());
 //  $cttyBene = item("$cttyBeneMo " . t('over the past month') . "<br>$cttyBene " . t('overall (ever), including %gifts in contributions', compact('gifts')), t('Social return:'), t('Financial benefit to your community to date, from your participation together with other members, empowering economic democracy! [<%a>details</a>]', '_a', atag('/help/social-return')));  
   $cttyBene = NULL;
 //  $cttyBene = item("$cttyBene " . t('overall, including your %gifts in contributions', compact('gifts')), t('Social return:'), t('Financial benefit to your community to date, from your participation together with other members, empowering economic democracy! [<%a>details</a>]', '_a', atag('/help/social-return')));  
@@ -145,7 +145,7 @@ function formSummary($form, &$sta) {
   return cgform($form, '', TRUE);
 }
 
-function formSummary_validate($form, &$sta) {
+function formNewSummary_validate($form, &$sta) {
 //  if (!r\acct()->cAdmin2) return hack('non-admin submitted summary form');
   if (in(op($sta), 'openCompany openJoint')) return;
 
@@ -183,7 +183,7 @@ function formSummary_validate($form, &$sta) {
   u\preray(compact(ray('tickle helper who creditLimit')), $sta['input']);
 }
 
-function formSummary_submit($form, &$sta) {
+function formNewSummary_submit($form, &$sta) {
   global $mya;
   $op = op($sta);
 
@@ -196,7 +196,7 @@ function formSummary_submit($form, &$sta) {
 
   if (!@$tickle) {
     $tickleDone = $mya->ok ? ($note and !$tickle and $mya->tickle) : 'activate';
-    list ($zot, $tickle) = $mya->nextTickle($tickleDone);
+    list ($zot, $tickle) = $mya->nextTickleNew($tickleDone);
 //    if ($tickleDone) $note = trim(t('(%typeDone) ', 'type', @$note ? '': "$tickleType ") . @$note);
 //    if ($tickleDone === TRUE) $note = trim(t('Done ') . @$note);
   }
@@ -213,7 +213,7 @@ function formSummary_submit($form, &$sta) {
   
   $DBTX = \db_transaction();
 
-  if ($mya->cAdmin or $mya->admin) setRisksAndFlags($mya, @$risks, @$adminable); // don't test for isset (allow turning off all bits); must precede ->activate() because that function sets ssnOff bit
+  if ($mya->cAdmin or $mya->admin) setRisksAndFlagsNew($mya, @$risks, @$adminable); // don't test for isset (allow turning off all bits); must precede ->activate() because that function sets ssnOff bit
     
   if (!$mya->isCtty) {
     $fullName = $mya->fullName;
@@ -237,7 +237,7 @@ function formSummary_submit($form, &$sta) {
   say('info saved');
 }
 
-function setRisksAndFlags($a, $risks, $adminable) {
+function setRisksAndFlagsNew($a, $risks, $adminable) {
   $risks0 = $a->risks;
   $a->setRisks($risks); // set or unset the adminable risk bits
   if ($a->risks != $risks0) { // if anything changed, refigure ALL risks (some affect others)

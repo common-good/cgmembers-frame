@@ -1383,6 +1383,7 @@ function consta($prefix, $var) {
   return constant($const);
 }
 
+  
 /**
  * Return the value of the given bit.
  * @param mixed $bit:
@@ -1469,3 +1470,4 @@ function pubKey($k) {return openssl_pkey_get_details(openssl_pkey_get_private(fm
 function validEmail($email) {return filter_var($email, FILTER_VALIDATE_EMAIL);}
 //function bitCount(int $n) {return $n ? (($n % 2) ? 1 : 0) + bitCount($n / 2) : 0;}
 function stndrdth($n) {return date('S', mktime(1,1,1,1,( (($n>=10)+($n>=20)+($n==0))*10 + $n%10) ));}
+function arrayGet($arr, $key, $dft) { return array_key_exists($key, $arr) ? $arr[$key] : $dft; }

@@ -371,7 +371,7 @@ function txColoredState($disputed) {
  * @param numeric $amount: transaction amount
  * @param bool $dups: (RETURNED) set TRUE if this category has at least two transactions in it
  */
-function addCat(&$cats, $purpose, $amount, &$dups) {    
+function addCat(&$cats, $purpose, $amount, &$dups) {
   if (strpos($purpose, '(') === 0 and ($i = strpos($purpose, ')')) and $i < strlen($purpose) - 1) {
     $purpose = trim(substr($purpose, $i + 1)); // remove reversal info, if any
   }

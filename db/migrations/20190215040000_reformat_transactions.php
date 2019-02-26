@@ -241,7 +241,8 @@ class ReformatTransactions extends AbstractMigration
       if (array_key_exists('coupon', $data) and array_key_exists('coupid', $data)) {
         $couponValue[$xid] = $data['coupon'];  // save coupon data for later consistency checking
         $coupId[$xid] = $data['coupid'];
-        $payerEntry['amount'] = $couponValue[$xid];
+        /* $payeeEntry['amount'] += $couponValue[$xid]; */
+        $payerEntry['amount'] += $couponValue[$xid];
         $otherEntries[] = ray('xid amount uid agentUid description acctTid relType related',
                               $xid, -$couponValue[$xid], $payee, $payeeAgent, $payeeFor, $payeeTid, 'C', $coupId[$xid]);
         unset($data['coupon']);
