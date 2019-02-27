@@ -88,7 +88,7 @@ X;
  * @param integer $jid: the joint account holder (if any)
  * @return an array of transactions each element of which is a single entry associated with the transaction.  Note that tx_hdrs data is in each of the entries.  If there's a failure it will return FALSE.
  */
-function newGetTxs($uids, $starting=null, $ending=null) {
+function getTxsNew($uids, $starting=null, $ending=null) {
   /* echo("newGetTxs(" . print_r($uids, true) . ", $starting, $ending)"); */
   /* die('here'); */
   if (is_integer($uids)) { $uids = [ $uids ]; }
@@ -142,28 +142,60 @@ EOF;
 }
 
 /**
- * Generates an array of transactions between a business and a customer, with added data, for the given period.
- * @param integer $bizUid: the uid of the business
- * @param array $custUids: an array of uids for the customer (normally the acct and the joint acct)
+ * Generates an array of transactions between two accounts, with added data, for the given period.
+ * @param array $aUids: the uids for member a
+ * @param array $bUids: the uids for member b
  * @param unixtime $starting: the starting date/time for the period
  * @param unixtime $ending: the ending date/time for the period (exclusive), e.g., $starting plus one day
  */
-function getCustTxsNew($bizUid, $custUids, $starting, $ending) {
-  debug("getCustTxsNew is WRONG!");
-  $where = '(payer IN (:id, :jid) AND payee=:biz) OR (payee IN (:id, :jid) AND payer=:biz)';
-  $amount = 'IF(payee=:biz, amount, -amount)';
+function getCustTxsNew($aUids, $bUids, $starting, $ending) {
+  u\EXPECT('array array int int', $aUids, $bUids, $starting, $ending);
   $sql = <<< X
-    SELECT CONCAT('tx #', bEntry.acctTid) AS tid, -bEntry.amount AS paid, '' AS invoiced, created,
-           :IS_DISPUTED AS disputed, bEntry.description AS purpose 
-    FROM r_users biz JOIN r_entries bEntry USING(uid) JOIN r_tx_hdrs t USING(xid) JOIN r_entries cEntry USING(xid)
-    WHERE bEntry.uid=:bizUid AND cEntry.uid IN (:custUids)
+    SELECT CONCAT('tx #', aEntry.acctTid) AS tid, -aEntry.amount AS paid, '' AS invoiced, created,
+           :IS_DISPUTED AS disputed, aEntry.description AS purpose 
+    FROM r_users ua JOIN r_entries aEntry USING(uid) JOIN r_tx_hdrs t USING(xid) JOIN r_entries bEntry USING(xid)
+    WHERE aEntry.uid IN (:aUids) AND bEntry.uid IN (:bUids)
     UNION ALL
-    SELECT CONCAT('inv #', nvid) AS tid, '' AS paid, amount AS invoiced, created, :IS_DISPUTED AS disputed,
-           bEntry.description AS purpose
-    FROM r_invoices WHERE '(payer IN (:custUids) AND payee=:bizUid) OR (payee IN (:custUids) AND payer=:bizUid)
+    SELECT CONCAT('inv #', nvid) AS tid, '' AS paid, amount AS invoiced,
+           created, :IS_DISPUTED AS disputed, aEntry.description AS purpose
+    FROM r_invoices WHERE (payer IN (:aUids) AND payee IN (:bUids)) OR (payee IN (:aUids) AND payer IN (:bUids))
     ORDER BY created
 X;
-  return db\q($sql, compact(ray('bizUid custUids')));
+
+  $results = db\q($sql, ['aUids' => $aUids, 'bUids' => $bUids]);
+  u\EXPECT($results, "Failure reading transactions between users " . print_r($aUids, true) . " and " print_r($bUids, true);
+
+  $lastTid = null;  // no tid should ever be null
+  $txs = [];  // an array of arrays of entries
+  $entries = [];
+  foreach ($results as $result) {
+    $entry = (array)$result;
+    if ($entry['tid'] != $lastTid) {  // start of new transaction
+      if ($entries != []) {  // if there was a transaction already
+        $txs[] = $entries;
+        $entries = [];
+      }
+      $lastTid = $entry['tid'];
+    }
+    $entries[] = $entry;
+  }
+  if ($entries != []) {
+    $txs[] = $entries;
+  }
+  // arrange for running balance to appear in, and be the same in, every entry for a transaction
+  $myBalance = balanceAsOf($uids[0], $starting);
+  foreach ($txs as $i => $entries) {
+    foreach ($entries as $entry) {
+      if (in_array($entry['uid'], $uids)) $myBalance += $entry['amount'];
+    }
+    foreach ($entries as $j => $entry) {
+      $entry['runBalance'] = $myBalance;
+      $entries[$j] = $entry;
+    }
+    $txs[$i] = $entries;
+  }
+
+  return $txs;
 }
 
 /**
@@ -351,6 +383,47 @@ function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
 }
 
 /**
+ * Undo the given transaction.
+ * Situations:
+ *     I paid someone (byMe):            REVERSE (invoice)
+ *     I charged someone (toMe/byMe):    REVERSE (pay back)
+ *     Someone paid me (toMe):           REVERSE (pay back)
+ *     Someone invoiced me and I approved it: DISPUTED
+ *     Someone charged me unilaterally: DISPUTED
+ * @param int $xid: the transaction number
+ * @param string $where: additional (security check) criteria, if any
+ * @param assoc $subs: additional substitutions for $where
+ * @param bool $force: <reverse despite any shortfall or lack of permission>
+ * @return array [message, subs] where subs is an assoc of [
+ */
+function undoTxNew($xid, $where = '1', $subs = [], $force = FALSE) {
+  global $mya;
+
+  $myx = db\get('*', 'r_tx_hdrs', "xid=:xid AND $where", compact('xid') + $subs);
+  if (!$myx) return ['undo no match', $subs];
+  ???????????????
+  if (!$force and $error = $myx->nonoUndo($subs)) return array($error, $subs); // check nono before confirm AND here
+  ???????????????
+
+  if (!$myx->reallyToMe and !$myx->byMe) { // someone charged me (either unilaterally or I approved it)
+    r\disputeTx($xid); // mark it disputed
+    $solution = t('marked "disputed"');
+    r\notify($myx->them, 'charge disputed', $myx->reportArgs());
+  } else {
+//    $amounts = just('amount payerReward payeeReward', $myx->ray);
+    $what = [$myx->payerFor, $myx->payeeFor];
+    return reverse($xid, $myx->amount, $what, $myx->a2, $data, $myx->goods, $myx->tid, $myx->toMe, $myx->byMe, $myx->tid2, $force); // create an offsetting transaction
+  }
+
+  $amount = u\fmtAmt($myx->amount);
+  $tofrom = !$myx->toMe ? t('to') : t('from');
+  $otherUid = $myx->otherUid;
+  $other = r\acct($otherUid)->fullName;
+  $success = TRUE;
+  return ['report undo', compact(ray('success amount other tofrom solution otherUid'))];
+}
+
+/**
  * Create an offsetting transaction or invoice (nearly the same as the original but with a negative amount).
  */
 function reverse($xid, $amount, $what, $acct, $data, $old_goods, $tid, $toMe, $byMe, $otherTid, $force) {
@@ -413,13 +486,13 @@ EOF;
 /////////////////////////////////////////////////
 
 /**
- * Create an offsetting transaction or invoice (nearly the same as the original but with a negative amount).
+ * Create an offsetting transaction or invoice (nearly the same as the original but with the entries negated).
  */
 function reverseNew($xid) {
   global $mya, $channel;
 
   $nvid = db\get('nvid', 'r_invoices', 'status=:xid', ['xid' => $xid]);
-  if ($nvid) return reverseInvoice($nvid, $xid);
+  if ($nvid) return reverseInvoiceNew($nvid, $xid);
     
   // OK -- it's not a transaction related to an invoice
   $DBTX = \db_transaction();
@@ -432,25 +505,20 @@ function reverseNew($xid) {
   }
   $oldHdr = (array)$oldHdrRows[0];
   
-  /* if (arrayGet($oldHdr, 'reverses', null) != null) { */
-  /*   $reversed = $oldHdr['reverses']; */
-  /*   return r\txRet('cannot reverse reversing transaction', compact('xid')); */
-  /* } */
-
   // It seems OK to reverse it
-  unset($oldHdr['xid']);
-  $oldHdr['reverses'] = $xid;
-  $rXid = db\insert('r_tx_hdrs', $oldHdr, 'xid');
+  $newHdr = except('xid', $oldHdr);
+  $newHdr['reverses'] = $xid;
+  $rXid = db\insert('r_tx_hdrs', $newHdr, 'xid');
   if (empty($rXid)) {
-    return r\txRet('tx save err', $oldHdr);
+    return r\txRet('tx save err', $newHdr);
   }
   $oldEntryRows = db\rows('*', 'r_entries', 'xid=:xid', ['xid' => $xid]);
   foreach ($oldEntryRows as $rowObject) {
     $entryRow = (array)$rowObject;
     if ($entryRow['relType'] == 'D') { // related to a coupated record
       $coupId = $entryRow['related'];
-      if (!db\q('UPDATE r_coupated SET uses=uses-1 WHERE id=:coupId AND uid=:uid',
-                ['coupId' => $coupId, 'uid' => $entryRow['uid']])) {
+      if (!db\q('UPDATE r_coupated SET uses=uses-1 WHERE id=:coupId',
+                ['coupId' => $coupId])) {
         return r\txRet('tx save err', $entryRow);
       }
     }
@@ -471,16 +539,24 @@ function reverseNew($xid) {
 
 
 /**
- * Create an offsetting transaction or invoice (nearly the same as the original but with a negative amount).
+ * Create an offsetting invoice (nearly the same as the original but with a negative amount).
  */
-function reverseInvoice($nvid, $xid/*, $amount, $what, $acct, $data, $old_goods, $tid, $toMe, $byMe, $otherTid, $force*/) {
+function reverseInvoiceNew($nvid, $xid=null/*, $amount, $what, $acct, $data, $old_goods, $tid, $toMe, $byMe, $otherTid, $force*/) {
   global $mya, $channel;
+///    print_r(compact(ray('xid amount acct data tid toMe'))); die();
+  u\EXPECT(compact(ray('nvid xid')), 'id id|empty');
 
-  die('unimplemented');
-  
-/* ///    print_r(compact(ray('xid amount acct data tid toMe'))); die(); */
-/* u\EXPECT(compact(ray('xid amount what acct data tid toMe byMe otherTid force')), 'id float array acct assoc|empty int bool bool int int|empty'); // otherTid may be 0 (for reversing rewards) */
-
+  $x = db\get('*', 'r_invoices', 'nvid=:nvid', ['nvid' => $nvid]);
+  u\EXPECT($x, 'invoice doesn''t exist');
+  if (is_empty($xid)) {
+    if ($x['status'] > 0) {
+      $xid = $x['status'];
+    } else {
+      u\EXPECT(FALSE, 'invoice has not been paid');
+    }
+  } else {
+    u\EXPECT($xid == $x['status'], 'mismatch between nvid and xid');
+  }
   
 /*   if (!is_array($data)) $data = []; */
 /*   $old_data = $data; // remember original data from transaction we're reversing */
@@ -501,8 +577,8 @@ function reverseInvoice($nvid, $xid/*, $amount, $what, $acct, $data, $old_goods,
 /*   if ($force) u\preray(compact('force'), $data); */
 
 /*   $data['goods'] = $old_goods; */
-  $reallyToMe = ($toMe xor $amount < 0);
-  $invoicing = (!$reallyToMe and $channel != TX_POS);
+/*   $reallyToMe = ($toMe xor $amount < 0); */
+/*   $invoicing = (!$reallyToMe and $channel != TX_POS); */
 
   list ($message, $args) = be\invoice($mya, $acct, $amount, $what[1], $data);
 
@@ -514,8 +590,8 @@ function reverseInvoice($nvid, $xid/*, $amount, $what, $acct, $data, $old_goods,
       $newTids = u\order($toMe, $new_otherTid, $new_tid);
       for ($i = 0; $i < 2; $i++) $what0[$i] .= t(' (reversed by #%tid)', 'tid', $newTids[$i]);
       $sql = <<<EOF
-        UPDATE r_txs SET
-          payerFor=:payerFor,
+        UPDATE r_txs SET 
+          payerFor=:payerFor, 
           payeeFor=:payeeFor,
           data=:old_data,
           flags=flags|(1<<:B_UNDONE)
@@ -524,7 +600,7 @@ EOF;
       $subs = ray('payerFor payeeFor xid old_data', $what0[0], $what0[1], $xid, serialize($old_data));
       db\logSql(compact(ray('sql subs')));
       db\q($sql, $subs);
-    }
+    }    
     $message = 'report undo|' . $message;
     $args['solution'] = 'reversed';
   }

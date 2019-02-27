@@ -21,6 +21,8 @@ define('T_MSG_FILE', 'test-messages.txt');
  */
 function formAdmin($form, &$sta) {return w\subMenu(t('Admin Options'), 'sadmin');}
   
+function formNewAdmin($form, &$sta) {return w\subMenu(t('Admin Options (New)'), 'sadmin');}
+  
 /**
  * Make various administrative operations available to the admin and cAdmin.
  * 'wrong community' => 'SELECT * FROM `users` WHERE uid>0 AND MID(community, 2, 7)<>MID(uid, 1, 7)',
@@ -31,6 +33,72 @@ function formAdminPanel($form, &$sta, $args = '') {
   if (!$mya->cAdmin) hack('panel');
 
   $tables = 'users txs newTxs usd gifts proxies relations invites'; // tables to show
+  $queries = [
+              '' => '',
+              ];
+  
+  $title = t('System Administration');
+  
+  $inviteeStatus = submi(t('Invitee Status'));
+  $organizerList = submi(t('Local Requests'));
+  $signupCos = submi(t('Connections to Companies'));
+  $queries = selectFld(t('Query:'), '', '', $queries);
+  $account = textFld(t('Account:'), t('Account to do something to'), dft(@$qid ?: svar('adminingAcct')));
+  
+  if ($mya->superAdmin) {
+    if (r\up()) $stop = submi(t('STOP')); else $start = submi(t('START'));
+    /*    if (time() < strtotime('6/20/2017')) {
+          global $base_url;
+          $members = db\col('uid', 'users', ':IS_OK AND NOT :IS_CO AND activated<1486098000 ORDER BY community, uid');
+          foreach($members as $k) {
+          $list[] = <<<EOF
+          <a href="$base_url/print-rcard/$k" target="_blank" class="btn btn-xs btn-primary" role="button" onclick="this.style.display='none';">NEXT</a>
+EOF;
+          }
+          $start = item(join('', $list));
+          } */
+    $do1099btest = submi(t('1099B TEST'));
+    $do1099b = submi('1099B');
+    $reconcile = submi('Reconcile Ctty Fund');
+    $tables .= ' notices boxes do stats usd nonmembers';
+    $special = submi(t('Special'));
+    $askForAppData = submi(t('Ask for App Data'));
+    $seeAppData = submi(t('See App Data'));
+    $ssnLink = submi(t('SSN Link'));
+    $seeSecure = submi(t('See Secure'));
+    $resetSSN = submi(t('Recheck SSN'));
+    $make2 = boxFld('make', t('Make:'));
+  }
+
+  $printId = submi(t('Print ID'));
+  //  $connectBank = submi(t('Connect Bank'));
+  //  $seeHidden = submi(t('See Hidden'));
+  $seeData = submi(t('See Data'));
+  $seeChanges = submi(t('See Changes'));
+  if (!$mya->superAdmin and $ctty = $mya->community) { // not super
+    $cttyName = ($cttyA = r\acct($ctty)) ? $cttyA->fullName : NULL;
+    if ($mya->cttyUp) $stopCtty = submi(t('STOP ') . $cttyName); else $startCtty = submi(t('START ') . $cttyName);
+  }
+
+  foreach (ray($tables) as $one) $do[$one] = submi($one);
+  $do += compact(ray('inviteeStatus organizerList signupCos do1099btest do1099b reconcile special stop start stopCtty startCtty'));
+  $do = fieldSet('do', $do);
+  
+  $acctSet = fieldSet('acctSet', compact(ray('account make2 printId seeData seeChanges ssnLink seeSecure resetSSN askForAppData seeAppData')));
+
+  return cgform(compact(ray('title do acctSet')));
+}
+
+/**
+ * Make various administrative operations available to the admin and cAdmin.
+ * 'wrong community' => 'SELECT * FROM `users` WHERE uid>0 AND MID(community, 2, 7)<>MID(uid, 1, 7)',
+ */
+function formNewAdminPanel($form, &$sta, $args = '') {
+  extract(just('qid', $args));
+  global $mya;
+  if (!$mya->cAdmin) hack('panel');
+
+  $tables = 'users newTxs usd gifts proxies relations invites'; // tables to show
   $queries = [
               '' => '',
               ];
@@ -188,6 +256,114 @@ EOF;
   }
 
   if ($op == 'newTxs') {
+    $fields = <<<EOF
+      xid, t.created, t.flags, t.type AS ty, t.goods AS gd, t.initiator AS init,
+      uid, amount, description AS `for`, acctTid AS tid
+EOF;
+    if ($mya->admin) $fields = str_replace('u1.', '', $fields);
+    return say(a\showQuery('r_tx_hdrs LEFT JOIN r_entries USING (xid)', 1, 'xid DESC', $fields, ['uid']));
+  }
+
+  if ($op == 'gifts') return say(a\showQuery('r_recurs', '', 'id DESC', 'id,created,payer,payee,amount,period,ended', ray('payer payee')));
+  if ($op == 'invites') return say(a\showQuery('r_invites', 1, 'invited DESC', 'invited, inviter, invitee, email', 'inviter'));
+  if ($op == 'notices') return say(a\showQuery('r_notices', 1, 'msgid DESC'));
+  if ($op == 'proxies') return say(a\showQuery('r_proxies', 1, 'id DESC', 'person, proxy, priority', 'person'));
+  if ($op == 'relations') return say(a\showQuery('r_relations', 1, 'main DESC, reid', 'reid,main,other,otherNum,:IS_DRAW AS draw,permission,:IS_EMPLOYEE AS employee,:IS_OWNER AS owner,:IS_CUSTOMER AS customer,:IS_AUTOPAY AS autopay,code', 'main'));
+  if ($op == 'usd') return say(a\showQuery('r_usd', 1, 'created DESC'));
+  foreach (ray('boxes do stats nonmembers') as $one) if ($op == $one) return say(a\showQuery("r_$one"));
+}
+
+function formNewAdminPanel_submit($form, &$sta) {
+  global $base_url;
+  global $mya;
+  
+  extract(just('account make', $sta['input']));
+  $op = op($sta);
+
+  if ($op == 'start' or $op == 'stop') {
+    r\up($op == 'start');
+    return r\up() ? say(t('System is UP.')) : say(t('System is DOWN.'), 'ERR');
+  }
+  if ($op == 'special') return a\special();
+  if ($up = ($op == 'startCtty') or $op == 'stopCtty') {
+    $ctty = r\acct($mya->community);
+    $ctty->setBit(B_OK, $up);
+    return $up ? say(t('Community is UP.')) : say(t('Community is DOWN.'), 'ERR');
+  }
+
+  if (@$account) {
+    if (!$a = a($account)) return say('That is not an account.'); // should use whois first
+    svar('adminingAcct', $account); // remember what account we're working on
+    if (!$mya->admin and $a->community != $mya->community) return say('That account is not in your community.', 'ERR');
+  } else $a = $mya;
+  
+  if (@$a and $op == 'printId') {
+    if ($a->co and $a->proSe) return say(t('A company cannot have a %PROJECT card (only its agents have %PROJECT cards).'));
+    if (@$make) {
+      $oldFile = $a->photoFilename(TRUE); // get this before makeCardCode
+      $a->makeCardCode(); // this changes photo filename
+      if (file_exists($oldFile)) {
+        $newFile = $a->photoFilename(TRUE);
+        rename($oldFile, $newFile);
+      }
+    }
+    return w\go('print-rcard/' . $a->id . ($a->co ? "/$a->agentId" : ''));
+  } elseif ($op == 'askForAppData') {
+    $a->update('getAppData appData', '!report', []);
+    say(t('Request for app data sent to ') . $a->fullName);
+  } elseif ($op == 'seeAppData') {
+    /**/  debug($a->appData);
+  } elseif ($op == 'seeSecure' and @$a) {
+    say(u\rayTable(ray('fullName phone dob physicalAddr', $a->fullName, substr(@$a->phone, 2), $admin ? u\fmtDate(@$a->dob) : '', @$a->address . ' ' . $a->zip)));
+    //      seeHidden($a);
+    seeSecure($a);
+  } elseif ($op == 'resetSSN' and @$a) {
+    $a->setBit(B_MEMBER, FALSE);
+    $a->stepDone('ssn', FALSE);
+    $a->update('ssnData', '');    
+  } elseif ($op == 'seeData') {
+    if (@$a and $a->proSe) say(u\rayTable($a->data, FALSE, TRUE));
+    /*  } elseif ($op == 'connectBank') {
+        r\Web\connectBank($a); */
+  } elseif ($op == 'seeChanges') {
+    w\go("sadmin/changes/$a->mainQid");
+  } elseif ($op == 'ssnLink') {
+    w\say($a->fullName. t(' SSN Link:<br><br> &nbsp; %PROMO_URL/do/doSsn~%qid~%code &nbsp; ', 'qid code', $a->mainQid, $a->emailCode));
+  } elseif ($op == 'do1099b' or $test1099 = ($op == 'do1099btest')) {
+    include_once __DIR__ . '/../cg-yearly.inc';
+    r\Special\do1099bsNew(@$test1099);
+  } elseif ($op == 'reconcile') {
+    w\go('sadmin/reconcile-ctty-fund');
+  } elseif ($op == 'inviteeStatus') {
+    return w\go('community/invite/invited-whom');
+  } elseif ($op == 'organizerList') {
+    return w\go('sadmin/organizer-list');
+  } elseif ($op == 'signupCos') {
+    global $signupCos; $signupCos = [];
+    $crit = $mya->admin ? '1' : 'community=' . $mya->community;
+    eachA(function ($a) {
+        global $signupCos;
+        if ($signupCo = $a->signupCo) {
+          extract($signupCo);
+          $signupCos[strtolower("$a->community$company$a->id")] = ray('acct fullName relation company', $a->mainQid, $a->fullName, @$isOwner ? t('owner') : ((@$employee or @$employeeOk) ? t('employee') : (@$contractor ? t('contractor') : '')), $company);
+        }
+      }, $crit . ' ORDER BY community');
+    ksort($signupCos);
+    w\say($signupCos ? w\showRecords($signupCos) : t('No such companies.'));
+  }
+  
+  // handle all other buttons with showQuery()
+  if ($op == 'users') {
+    $fields = 'uid, flags, balance, rewards, savingsAdd AS saveAdd, minimum AS min, floor, city, zip AS zip';
+    return say(a\showQuery('users', 1, 'name', $fields));
+  }
+  
+  $logFields = "channel,type,myid,IF(agent=myid,':R_NONE',agent) AS agent, REPLACE(info, ',', ', ') AS info";
+
+  /// if ($op == 'log') return say(str_replace("\n", "<br><br>\n", file_get_contents(flog()))); // say(a\showQuery('r_log', 1, 'logid DESC', $logFields, 'myid'));
+  //  if ($op == 'tells') return say(a\showQuery('r_log', "info LIKE '%tell-staff%' ORDER BY logid DESC LIMIT 50", 'logid DESC', $logFields, 'myid'));
+
+  if ($op == 'txs') {
     $fields = <<<EOF
       xid, t.created, t.flags, t.type AS ty, t.goods AS gd, t.initiator AS init,
       uid, amount, description AS `for`, acctTid AS tid

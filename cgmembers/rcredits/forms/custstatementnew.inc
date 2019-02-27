@@ -28,8 +28,9 @@ function custStatementNew($args = '') {
 //  if (!@$period) return w\softErr(t('No period was specified.'));
 
 //  list ($start, $end, $period) = statementMonth($period, $mya->fyEnd ?: '12/31'); // not used yet
-  $uids = is_null($a->jid) or $a->jid == 0 ? [ $a->id ] : [ $a->id, $a->jid ];
-  $way == 'IN' ? be\getCustTxsNew($mya, $uids, 0, time()+1) : be\getCustTxsNew($a->id, $mya->id, 0, time()+1);$mya);
+  $custUids = is_null($a->jid) or $a->jid == 0 ? [ $a->id ] : [ $a->id, $a->jid ];
+  $q = ($way == 'IN') ? be\getCustTxsNew([$mya->id], $custUids, 0, time()+1)
+                      : be\getCustTxsNew($custUids, [$mya->id], 0, time()+1);
   if (!$q->rowCount()) return w\softErr(t('That is not a %thing of yours.', 'thing', $way == 'IN' ? t('customer') : t('vendor')));
 
   $pdf = new r\Statement($mya);
@@ -54,7 +55,7 @@ function custStatementNew($args = '') {
   $pdf->setFontSize($size);
   $pdf->barHead('STATEMENT');
   $lastHead = 'Balance';
-  $fields = ray("Date//25/ /space/1/ /tid/20/C Description/purpose/83/ /space/1/ Invoiced//20/R /space/1/ Paid//20/R /space/10/ Balance//20/R");
+  $fields = ray("Date//25/ /space/1/ /tid/20/C Description/purpose/83/ /space/1/ Invoiced//20/R /space/1/ Paid//20/R /space/10/ Balance/runBalance/20/R");
   $pdf->colHeads($fields);
   $pdf->setFontSize(.6 * $size); // a bit of space below field headers
   $pdf->newLine();
@@ -95,4 +96,3 @@ function custStatementNew($args = '') {
   $pdf->Cell($pageWidth - 2 * $m, 0, "$closing", '', 1 , 'L', TRUE);
   $pdf->finish(t('Statement-%acct-%date.pdf', 'acct date', $a->mainQid, strftime('%m-%d-%Y', time()))); //Close and output PDF document
 }
-

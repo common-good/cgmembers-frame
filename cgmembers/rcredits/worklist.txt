@@ -35,10 +35,10 @@ admin/admin.inc
                 admin/admin-web.inc -- Done earlier
         donationTrend -- New
 cg-backend.inc
-        myTransactions
-                cg-txs.inc
-        myCustTxs
-                forms/custstatement.inc
+        myTransactions -- getTxsNew
+                cg-txs.inc -- don't implement
+        myCustTxs -- getCustTxsNew
+                forms/custstatement.inc -- custstatementnew.inc
         get1099b
                 cg-yearly.inc
                 forms/taxinfo.inc
