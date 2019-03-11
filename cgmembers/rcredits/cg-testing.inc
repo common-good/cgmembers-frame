@@ -16,7 +16,7 @@ use CG\Web as w;
 
 global $base_path;
 define('BASE_PATH', $base_path);
-define('T_BALANCE_FLDS', 'uid balance floor rewards savingsAdd saveWeekly minimum');
+define('T_BALANCE_FLDS', 'uid balance floor savingsAdd saveWeekly minimum');
 define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account');
 
 /**
@@ -154,6 +154,7 @@ function doAccount($info = []) {
 
   if (is_object($info)) $info = (array) $info;
 /**/  if (!is_array($info)) {echo 'not array'; print_r($info); die(trace()); } // keep for now
+//  unset($info['rebate']);
   extract($info); // any user table fields
   $uid0 = @$uid;
   u\setDft($uid, r\Acct::nextId()); // default to first available number
@@ -193,7 +194,7 @@ function doAccount($info = []) {
     if (@$cc2) $cardCode2 = $cc2;
     if (isset($risks)) $risks = getRisks($risks, K_ACCT_RISKS);
 
-    $fixFields = 'rebate fullName legalName name pass email secure community zip country postalAddr cardCode cardCode2 ' . $moneyFields;
+    $fixFields = 'fullName legalName name pass email secure community zip country postalAddr cardCode cardCode2 ' . $moneyFields;
 //  } else $fixFields = '';
 
 //  if (isset($flags) and isset($acctType) and $acctType !== CO_PERSONAL and $acctType != 'personal') $flags .= ',co';
@@ -263,7 +264,7 @@ function doTx($info, $thing) {
   if (isset($risks)) $risks = getRisks($risks, K_TX_RISKS);
 
   if ($inv) {
-    u\setDft($goods, u\forCash(@$for) ? FOR_USD : FOR_GOODS);
+    if (!$testOnly) u\setDft($goods, u\forCash(@$for) ? FOR_USD : FOR_GOODS);
   } else {
     $data = [];
     if (!$testOnly) u\setDft($risk, NULL); // indicates that risk has not been calculated yet
@@ -271,17 +272,17 @@ function doTx($info, $thing) {
 //    if (@$xid and !is_numeric($xid)) $xid = u\a2n($xid);
     u\setDft($type, TX_TRANSFER);
     foreach (ray('type') as $one) if (!is_numeric($$one)) $$one = u\consta('tx', $$one);
-    if (r\isReward($type) and $amount) list ($payerReward, $payeeReward, $amount) = [0, $amount, 0];
+/*    if (r\isReward($type) and $amount) list ($payerReward, $payeeReward, $amount) = [0, $amount, 0];
     if (isset($rebate)) $payerReward = $rebate;
     if (isset($bonus)) $payeeReward = $bonus;
-    
+  */  
     if (is_array(@$for) or @$for != 'roundups desc') if (@$payer) $roundup = r\acct($payer)->roundup;
     
     if (!$testOnly) {
       u\setDft($goods, ($type != TX_TRANSFER or u\forCash(@$for)) ? FOR_USD : FOR_GOODS);
       if ($goods == FOR_GOODS) {
-        u\setDft($payerReward, r\reward($payer, $payee, $amount, TRUE));
-        u\setDft($payeeReward, r\reward($payer, $payee, $amount, FALSE));
+//        u\setDft($payerReward, r\reward($payer, $payee, $amount, TRUE));
+//        u\setDft($payeeReward, r\reward($payer, $payee, $amount, FALSE));
       }
     }
     if (in(@$purpose, 'offline')) $data['force'] = 1;
@@ -297,7 +298,8 @@ function doTx($info, $thing) {
     foreach (ray(TX_FLAGS) as $k) if (@$$k or $$k = in($k, $flags0)) u\setBit($flags, $k, $$k);
   }
   
-  $fields = 'xid payer payee amount payerReward payeeReward type goods flags data risk risks';
+//  $fields = 'xid payer payee amount payerReward payeeReward type goods flags data risk risks';
+  $fields = 'xid payer payee amount type goods flags data risk risks';
   if (!$testOnly) $fields .= $inv ? ' created' : ' created channel'; // when creating, add these if not already explicit
   if (!$inv) $fields .= ' payerAgent payeeAgent';
   
@@ -1163,12 +1165,23 @@ function strip($form) {
   return $form;
 }
 
+/**
+ * Compare two values and complain if they aren't close to equal.
+ * eq($a, $b) for strings
+ * eq($a, $b, $offBy) for numbers
+ * eq($a, $b, $arrayIdentifier) for arrays
+ * @return <the values are equal>
+ */
 function eq($a, $b, $offBy = .0001) {
   $result = (is_numeric($a) and is_numeric($b)) ? 
       (abs($a - $b) < $offBy)
     : ($a == $b or (empty($a) and empty($b)));
 /// if (!$result) echo 'not equal: ' . print_r(compact('a','b'), 1); // keep for now
-  if (!$result) output("unequal: a=$a b=$b", 'error');
+  if (!$result) {
+    if (is_array($a)) {
+/**/  output('unequal arrays ($offBy):<br>' . print_r($a, 1) . print_r($b, 1));
+    } else {output("unequal: a=$a b=$b", 'error');}
+  }
   return $result;
 }
 

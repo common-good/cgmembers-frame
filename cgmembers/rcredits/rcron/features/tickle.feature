@@ -85,8 +85,8 @@ Skip
 Scenario: A member gets a credit line
 # This fails if run on a day of the month that the previous month doesn't have (for example on 10/31)
   Given transactions:
-  | created   | type     | amount | from | to   | rebate | bonus | purpose |*
-  | %today-1m | transfer |    300 | .ZZE | .ZZF |    500 |     0 | gift    |
+  | created   | type     | amount | from | to   | purpose |*
+  | %today-1m | transfer |    300 | .ZZE | .ZZF | gift    |
   Then balances:
   | uid  | rewards |*
   | .ZZE |     500 |
@@ -133,6 +133,7 @@ Resume
 #  | uid  | floor |*
 #  | .ZZE |     0 |
 
+Skip (such a change doesn't get reported, but it still happens)
 Scenario: A member gets no new credit line because the change would be minimal
   Given balances:
   | uid  | rewards |*

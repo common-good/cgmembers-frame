@@ -8,10 +8,10 @@ Summary:
   
 Setup:
   Given members:
-  | uid  | fullName   | email | city  | state | cc  | cc2  | rebate | flags      |*
-  | .ZZA | Abe One    | a@    | Atown | AK    | ccA | ccA2 |      5 | ok         |
-  | .ZZB | Bea Two    | b@    | Btown | UT    | ccB | ccB2 |      5 | ok         |
-  | .ZZC | Corner Pub | c@    | Ctown | CA    | ccC |      |      5 | ok,co      |
+  | uid  | fullName   | email | city  | state | cc  | cc2  | flags      |*
+  | .ZZA | Abe One    | a@    | Atown | AK    | ccA | ccA2 | ok         |
+  | .ZZB | Bea Two    | b@    | Btown | UT    | ccB | ccB2 | ok         |
+  | .ZZC | Corner Pub | c@    | Ctown | CA    | ccC |      | ok,co      |
   And devices:
   | uid  | code |*
   | .ZZC | devC |

@@ -30,9 +30,7 @@ Setup:
   |    5 | %today-5d |     12 | .ZZA | .ZZC | realist  | %TX_APPROVED |
   And transactions: 
   | xid | created   | type     | amount | from | to   | purpose  | taking |*
-  |   1 | %today-7m | signup   |    250 | ctty | .ZZA | signup   | 0      |
-  |   2 | %today-6m | signup   |    250 | ctty | .ZZB | signup   | 0      |
-  |   3 | %today-6m | signup   |    250 | ctty | .ZZC | signup   | 0      |
+
   |   4 | %today-5m | transfer |     10 | .ZZB | .ZZA | cash E   | 0      |
   |   5 | %today-4m | transfer |    100 | .ZZC | .ZZA | usd F    | 1      |
   |   6 | %today-3m | transfer |    240 | .ZZA | .ZZB | what G   | 0      |
@@ -55,14 +53,14 @@ Scenario: A member downloads transactions for the past year
   Then we download "%PROJECT_ID%todayn-12m-%todayn.csv" with:
   # For example commongood20120525-20130524.csv
   | Tx# | Date    | Name    | Purpose   | From Bank | From You | To You | Balance | Net  |*
-  | 8   | %ymd-5d | Our Pub | cash CJ   |           |          |    100 |    670 |  100 |
-  | 7   | %ymd-5d | Our Pub | this CF   |           |       80 |        |    570 |  -80 |
-  | 6   | %ymd-6d | Bea Two | cash V    |           |      100 |        |    650 | -100 |
-  | 5   | %ymd-1w | Our Pub | this Q    |           |      120 |        |    750 | -120 |
-  | 4   | %ymd-3m | Bea Two | what G    |           |      240 |        |    870 | -240 |
+  | 7   | %ymd-5d | Our Pub | cash CJ   |           |          |    100 |    670 |  100 |
+  | 6   | %ymd-5d | Our Pub | this CF   |           |       80 |        |    570 |  -80 |
+  | 5   | %ymd-6d | Bea Two | cash V    |           |      100 |        |    650 | -100 |
+  | 4   | %ymd-1w | Our Pub | this Q    |           |      120 |        |    750 | -120 |
+  | 3   | %ymd-3m | Bea Two | what G    |           |      240 |        |    870 | -240 |
   | 501 | %ymd-4m |         | from bank |      1000 |          |        |   1110 | 1000 |
-  | 3   | %ymd-4m | Our Pub | usd F     |           |          |    100 |    110 |  100 |
-  | 2   | %ymd-5m | Bea Two | cash E    |           |          |     10 |     10 |   10 |
+  | 2   | %ymd-4m | Our Pub | usd F     |           |          |    100 |    110 |  100 |
+  | 1   | %ymd-5m | Bea Two | cash E    |           |          |     10 |     10 |   10 |
   |     |         | TOTALS  |           |      1000 |      540 |    210 |        |  670 |
 #  | 1   | %ymd-7m | ZZrCred | signup    |           |          |        |    250 |  250 |
   And with download columns:

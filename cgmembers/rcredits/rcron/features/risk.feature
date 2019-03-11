@@ -5,16 +5,16 @@ SO I can handle those risks appropriately
 
 Setup:
   Given members:
-  | uid  | fullName   | rebate | address | zip   | flags      | risks    | tenure | moves | share |*
-  | .ZZA | Abe One    |      5 | 1 A St. | 01001 | ok         | adminOk  | 21     | 0     |    10 |
-  | .ZZB | Bea Two    |     10 | 2 A St. | 01001 | ok         | rents    | 43     | 1     |    20 |
-  | .ZZC | Corner Pub |     10 | 3 C St. | 01003 | ok,co      | cashCo   | 18     |       |     1 |
-  | .ZZD | Dee Four   |     10 | 3 C St. | 01003 | ok         | hasBank  | 25     | 0     |     5 |
-  | .ZZE | Eve Five   |     10 | 5 A St. | 01001 | ok         | shady    | 1      | 0     |     8 |
-  | .ZZF | Flo Six    |     10 | 6 A St. | 01001 | ok,roundup | photoOff | 32     | 0     |    50 |
-  | .ZZG | Guy Seven  |     10 | 7 A St. | 01001 | ok         | addrOff  | 11     | 5     |    25 |
-  | .ZZH | Hal Eight  |     10 | 8 A St. | 01001 | ok         | ssnOff   | 100    | 10    |    25 |
-  | .ZZI | Ida Nine   |     10 | 9 A St. | 01001 | ok         | fishy    | 3      | 20    |    25 |
+  | uid  | fullName   | address | zip   | flags      | risks    | tenure | moves |*
+  | .ZZA | Abe One    | 1 A St. | 01001 | ok         | adminOk  | 21     | 0     |
+  | .ZZB | Bea Two    | 2 A St. | 01001 | ok         | rents    | 43     | 1     |
+  | .ZZC | Corner Pub | 3 C St. | 01003 | ok,co      | cashCo   | 18     |       |
+  | .ZZD | Dee Four   | 3 C St. | 01003 | ok         | hasBank  | 25     | 0     |
+  | .ZZE | Eve Five   | 5 A St. | 01001 | ok         | shady    | 1      | 0     |
+  | .ZZF | Flo Six    | 6 A St. | 01001 | ok,roundup |          | 32     | 0     |
+  | .ZZG | Guy Seven  | 7 A St. | 01001 | ok         | addrOff  | 11     | 5     |
+  | .ZZH | Hal Eight  | 8 A St. | 01001 | ok         | ssnOff   | 100    | 10    |
+  | .ZZI | Ida Nine   | 9 A St. | 01001 | ok         | fishy    | 3      | 20    |
   And invites:
   | inviter | invitee | email |*
   | .ZZA    | .ZZD    | d2@   |
@@ -76,9 +76,12 @@ Setup:
   And member field values:
   | uid  | field      | value |*
   | .ZZA | community  |    -2 |
-  | .ZZB | mediaConx  |    12 |
   | .ZZE | postalAddr | Box 5 |
 # don't set community to -2 until after transactions  
+  And riskThresholds:
+  | Day | Week | 7Week | Year |*
+  | 300 |  600 |  1200 | 2400 |
+
   When cron runs "trust"
   Then members have:
   | uid  | trust |*
@@ -96,15 +99,22 @@ Scenario: We calculate risks
   Then members have:
   | uid  | risks |*
   | .ZZA | adminOk,trusted,geography,badConx,moreOut,big7Week |
-  | .ZZB | trusted,socialConx,moves,rents,moreIn,moreOut |
+  | .ZZB | trusted,moves,rents,moreIn,moreOut |
   | .ZZC | cashCo,homeCo,miser,bigDay |
   | .ZZD | trusted,hasBank,miser |
   | .ZZE | new,shady,poBox,moreIn |
-  | .ZZF | photoOff,bigDay,bigWeek |
+  | .ZZF | bigDay,bigWeek |
   | .ZZG | new,moves,badConx,addrOff |
   | .ZZH | moves,ssnOff |
   | .ZZI | new,moves,fishy |
 # Do not specify exact risk because minor tweaks in the calculations cause major changes
+
+  Given riskThresholdPercent is "10"
+  When cron runs "acctRiskFinish"
+  Then riskThresholds:
+  | Day | Week | 7Week | Year |*
+  | 330 |  340 |   635 |  785 |
+
   When cron runs "txRisk"
   Then transactions:
   | xid | risks |*

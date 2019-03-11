@@ -14,7 +14,7 @@ use CG as r;
 use CG\DB as db;
 use CG\Util as u;
 use CG\Backend as be;
-use CG\Web as w; // use only in rTime (for the game)
+use CG\Web as w; // use sparingly
 
 require_once __DIR__ . '/cg-strings.inc';
 require_once __DIR__ . '/cg-db.inc';
@@ -841,7 +841,7 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
       if (!$deletable) {
         if (db\exists($table, "$field=:oldUid", compact('oldUid'))) {
           $DBTX->rollback(); 
-          return w\say(t('Record in table %table cannot be deleted.', compact('table')), 'err');
+          return w\say(t('Record in table %table (field %field) cannot be deleted.', compact('table', 'field')), 'err');
         }
       } else {
         db\del($table, $field, $oldUid);
@@ -1263,7 +1263,7 @@ function averageBalance($uid, $start, $end = NULL, $noj = FALSE) {
   if (!$days = round(($end + 1 - $start) / DAY_SECS)) return [0, 0, 0, 0]; // rounding is for daylight savings time changes
   $info = be\creditInfo(ray('uid asof', $uid, $start - 1));
   $min = $bal = $info->balance;
-  $rbal = $info->rewards;
+//  $rbal = $info->rewards;
   $jid = @$noj ? 0 : (r\acct($uid)->jid ?: 0);
   $isPayer = 't.payer IN (:uid, :jid)';
   $isPayee = 't.payee IN (:uid, :jid)'; // account can be both payer and payee, if joint account
@@ -1279,8 +1279,8 @@ function averageBalance($uid, $start, $end = NULL, $noj = FALSE) {
     SELECT SUM($signedAmt) AS total,
     FLOOR((t.completed-$start)/:DAY_SECS) AS day 
     FROM (
-      (SELECT type,payer,payee,amount,payerReward,payeeReward,created AS completed FROM r_txs)
-      UNION (SELECT :TX_BANK,1 AS payer,payee,amount,0,0,completed FROM r_usd)
+      (SELECT type,payer,payee,amount,created AS completed FROM r_txs)
+      UNION (SELECT :TX_BANK,1 AS payer,payee,amount,completed FROM r_usd)
     ) t WHERE ($isPayer XOR $isPayee) AND completed BETWEEN $start AND $end 
     GROUP BY day
 X;
@@ -1534,6 +1534,13 @@ function xfee($for, $amount) {
   return '' . round(strpos($for, BY_CARD) ? -R_XFEE_CARD * $amount : R_XFEE_CHECK, 2);
 }
   
+  
+function makeDoCode($ray) {
+  $code = substr(u\cry('P', serialize($ray)), strlen(CRYPT_FLAG));
+  w\svar('TESTDOCODE', $code); // must be on separate line (PHP bug)
+  return $code; // must be on separate line (PHP bug)
+}
+  
 // Single line functions that need no explanation
 function serverUid($regionId = R_SERVER_ID) {return -1 - R_REGION_MAX * u\a2n($regionId);} // -u\a2n($regionId) - 1;}
 function emailTemplate($key) {return file_get_contents(__DIR__ . R_TEMPLATE_DIR . "/$key.html");}
@@ -1542,13 +1549,7 @@ function realCountry($country) {return db\get('name', 'r_countries', 'id=:countr
 function realState($state, $country = R_COUNTRY_ID) {return db\get($country == US_COUNTRY_ID ? 'abbreviation' : 'name', 'r_states', 'id=:state and country_id=:country', compact('state', 'country'));}
 function perm($bit) {return $bit - B_RELATED;}
 function foreignServer($uid) {return (r\uidRegion($uid) != serverUid());}
-//function doCode($code) {return @unserialize(@u\decry('P', CRYPT_FLAG . $code));} // this is how it should be (see forms/rdo.inc)
-function doCode($code) { // accommodate temporary weirdness because email clients bollix CRYPT_FLAG in an href
-//  foreach ([0, 1] as $i) {if ($code[0] == CRYPT_FLAG[$i]) $code = substr($code, 1);} // delete this line after 7/1/2018
-  if (substr(u\b64decode($code), 0, 2) == 'c~') return FALSE; // signal archaic link
-  return @unserialize(@u\decry('P', CRYPT_FLAG . $code));
-} 
-function makeDoCode($ray) {return substr(u\cry('P', serialize($ray)), strlen(CRYPT_FLAG));}
+function doCode($code) {return @unserialize(@u\decry('P', CRYPT_FLAG . $code));} // this is how it should be (see forms/rdo.inc)
 function cgA() {return r\acct(CGID);}
 function disputeTx($xid) {return db\setFlag('r_txs', $xid, B_DISPUTED, TRUE);}
 function denyInv($nvid) {return db\setData('r_invoices', $nvid, ['denied' => TRUE]);}

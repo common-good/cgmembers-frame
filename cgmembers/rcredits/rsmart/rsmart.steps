@@ -72,13 +72,11 @@ function relations($relations) {return t\relations($relations);}
  *
  * in: TEST coupons AMemberRedeemsAGiftCoupon
  *     MAKE exchange Setup
- *     MAKE identify Setup
  *     MAKE joint Setup
  *     MAKE offline Setup
  *     MAKE offline ACashierChargedSomeoneOfflineAndTheyHaveInsufficientBalance
  *     MAKE offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThroughButCustomerIsBroke
  *     MAKE transact Setup
- *     MAKE undo Setup
  *     MAKE undo AnAgentAsksToUndoACharge
  *     MAKE undo AnAgentAsksToUndoAChargeWhenBalanceIsSecret
  *     MAKE undo AnAgentAsksToUndoARefund

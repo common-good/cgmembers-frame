@@ -664,30 +664,6 @@ function seeAssoc($info) {
 }
 
 /**
- * Return the distance between two points on Earth.
- * @param
- * @param float $lat1, $lon1 = Latitude and Longitude of point 1 (in decimal degrees)
- * @param float $lat2, $lon2 = Latitude and Longitude of point 2 (in decimal degrees)
- * @param string $unit = the unit you desire for results                             
- *                    where: 'M' is statute miles                      
- *                           'K' is kilometers (default)                                 
- *                           'N' is nautical miles  
- */ 
-function distance($lat1, $lon1, $lat2, $lon2, $unit = 'K') {
-  $theta = $lon1 - $lon2;
-  $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) +  cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
-  $dist = acos($dist);
-  $dist = rad2deg($dist);
-  $miles = $dist * 60 * 1.1515;
-  $unit = strtoupper($unit);
-
-  if ($unit == 'K') return ($miles * 1.609344);
-  if ($unit == 'N') return ($miles * 0.8684);
-  if ($unit == 'M') return $miles;
-  return FALSE;
-}
-
-/**
  * Look up the given SSN and return xml data.
  */
 function ssnLookup($ssn) {
@@ -888,13 +864,15 @@ function csvStart($filename) {
 
 /**
  * Output to the csv file.
- * @param array $a: the line to output
+ * @param array $line: the line to output
  * Note we use fputs to work around PHP's inability to omit enclosure for fputcsv.
  */
-function csv($a, $delimiter = ',') {
+function csv($line, $delimiter = ',') {
   global $csvFile, $testCSV;
-  if (u\test()) {$testCSV[] = $a; return;}
-  if ($delimiter == ',') fputcsv($csvFile, $a, $delimiter); else fputs($csvFile, join($delimiter, $a) . "\n");
+///  echo join($delimiter, $line) . "\n"; return; // debug(
+  if (u\test()) {$testCSV[] = $line; return;}
+  fputcsv($csvFile, $line, $delimiter);
+//  if ($delimiter == ',') fputcsv($csvFile, $line, $delimiter); else fputs($csvFile, join($delimiter, $line) . "\n");
 }
 
 /**
@@ -1257,6 +1235,45 @@ function n2english($num, $tri = 0) {
 }
 
 /**
+ * Return the distance (miles) between two points on Earth.
+ */
+function earthDistance($lat1, $lon1, $lat2, $lon2, $unit = 'miles') {
+  if ($lat1 == $lat2 and $lon1 == $lon2) return 0;
+  $theta = $lon1 - $lon2;
+  $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) +  cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
+  $dist = acos($dist);
+  $dist = rad2deg($dist);
+  $miles = $dist * 60 * 1.1515;
+
+  return $unit == 'miles' ? $miles : ($miles * 1.609344); // miles or kilometers
+}
+
+/**
+ * Return MySQL for nearby locations. 
+ * See be\identify, NEIGHBOR_QUERY, and NEIGHBOR_RMAX for current implementation.
+ *
+ * MySQL:
+ $unitFactor = $km? 111.111 : 69;
+   SELECT $unitFactor * DEGREES(ACOS(LEAST(1.0, 
+       COS(RADIANS(latitude))
+     * COS(RADIANS(:lat))
+     * COS(RADIANS(longitude - :lon))
+     + SIN(RADIANS(latitude))
+     * SIN(RADIANS(:lat))
+   ))) AS distance
+ 
+ * Fast, approximate MySQL (most accurate around 45 degrees latitude, off by 22% for same-latitude points in Northern Alaska)
+   SELECT $unitFactor * SQRT(
+       POW(latitude-:lat, 2)
+     + POW((longitude-:lon) * (.71 + .0116*(latitude+:lat)/2), 2)
+   ) AS distance
+  where .71 is 49/69 and .0116 is .8/69 (approximate change in miles per degree longitude per degree latitude away from 45)
+ */
+function earthDistanceWithin($lat, $lon, $distance, $unit = 'miles') {
+
+}
+
+/**
  * Say whether one string abbreviates another.
  * @param string $starts: the possible abbreviation
  * @param string $s: the possibly abbreviated string
@@ -1286,6 +1303,18 @@ function plusMonths($n, $time = '') {
   $res = strtotime($n . ' months', $time);
   $day = date('d', $res);
   return $day == date('d', $time) ? $res : strtotime(-$day, $res); // use last day of month if same day fails
+}
+
+/**
+ * Return the median value in an array
+ */
+function median($ray) {
+  sort($ray);
+  if (!$len = count($ray)) return NULL;
+  $mid = (int) $len / 2;
+  $v = $ray[$mid];
+  $v2 = @$ray[$mid + 1];
+  return (($len & 2) and is_numeric($v) and is_numeric($v2)) ? ($v + $v2) / 2 : $v;
 }
 
 /**

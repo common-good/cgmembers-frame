@@ -32,9 +32,6 @@ Setup:
   | .ZZF | .ZZE  |   1 | sell       |
   And transactions: 
   | xid | created   | type   | amount | from | to   | purpose |*
-  | 1   | %today-6m | signup |    250 | ctty | .ZZA | signup  |
-  | 2   | %today-6m | signup |    250 | ctty | .ZZB | signup  |
-  | 3   | %today-6m | signup |    250 | ctty | .ZZC | signup  |
   | 4   | %today-6m | grant  |    250 | ctty | .ZZF | stuff   |
   Then balances:
   | uid  | balance |*
@@ -108,8 +105,8 @@ Scenario: A cashier canceled offline a supposedly offline charge that actually w
   | created | fullName | otherName  | amount | payerPurpose | otherRewardType | otherRewardAmount |*
   | %today  | Bea Two  | Corner Pub | $100   | food         | reward          | $10               |
   And we notice "new refund" to member ".ZZB" with subs:
-  | created | fullName | otherName  | amount | payerPurpose       | otherRewardType | otherRewardAmount |*
-  | %today  | Bea Two  | Corner Pub | $100   | food (reverses #2)  | reward          | $-10              |
+  | created | fullName | otherName  | amount | payerPurpose       |*
+  | %today  | Bea Two  | Corner Pub | $100   | food (reverses #1) |
   And balances:
   | uid  | balance |*
   | ctty |    -250 |
@@ -133,7 +130,7 @@ Scenario: A cashier canceled offline a supposedly offline charge that actually w
   | %today  | Bea Two  | Corner Pub | $100   | refund       |
   And we notice "new charge" to member ".ZZB" with subs:
   | created | fullName | otherName  | amount | payerPurpose         |*
-  | %today  | Bea Two  | Corner Pub | $100   | refund (reverses #2)  |
+  | %today  | Bea Two  | Corner Pub | $100   | refund (reverses #1)  |
   And balances:
   | uid  | balance |*
   | ctty |    -750 |

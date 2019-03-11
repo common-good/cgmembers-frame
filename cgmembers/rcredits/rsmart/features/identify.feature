@@ -33,13 +33,6 @@ Setup:
   | .ZZC | .ZZB  |   2 | scan       | yes   |
   | .ZZC | .ZZD  |   3 | read       |       |
   | .ZZF | .ZZE  |   1 | buy        |       |
-  And transactions: 
-  | created   | type   | amount | from | to   | purpose |*
-  | %today-6m | signup | 250    | ctty | .ZZA | signup  |
-  | %today-6m | signup | 250    | ctty | .ZZB | signup  |
-  | %today-6m | signup | 250    | ctty | .ZZC | signup  |
-  | %today-6m | signup | 250    | ctty | .ZZD | signup  |
-  | %today-6m | signup | 250    | ctty | .ZZE | signup  |
 
 Scenario: a cashier signs in
   When agent "" asks device "devC" to identify "C:B,ccB2"

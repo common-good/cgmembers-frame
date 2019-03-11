@@ -18,10 +18,7 @@ Setup:
 	| .ZZC | .ZZB  |     manage |
   And transactions:
   | xid | created    | type   | amount | from | to   | purpose |*
-  | 1   | %today-10d | signup |     20 | ctty | .ZZA | signup  |
-  | 2   | %today-10d | grant  |    100 | ctty | .ZZB | grant   |
-  | 3   | %today-10d | signup |     10 | ctty | .ZZC | signup  |
-  | 4   | %today-10d | signup |     20 | ctty | .ZZD | signup  |
+  | 4   | %today-10d | grant  |    100 | ctty | .ZZB | grant   |
   And usd transfers:
   | txid | payee | amount | created   | completed | deposit   |*
   | 5001 |  .ZZA |     99 | %today-7d | %today-5d | %today-1d |
@@ -115,7 +112,7 @@ Scenario: a member asks to do two transfers out in one day
   When member ".ZZD" completes form "get" with values:
   | op  | amount |*
   | put |     10 |
-  Then we show "Exchange US Dollars for Common Good Credits" with:
+  Then we show "Transfer Funds" with:
   |~Pending |
   | You have total pending exchange requests of $6 to your bank account. |
   And we say "error": "short put" with subs:

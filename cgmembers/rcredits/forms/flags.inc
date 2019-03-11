@@ -15,7 +15,7 @@ function formFlags($form, &$sta, $args = '') {
   include R_ROOT . '/rweb/risk-descs.inc';
 
 // fails  u\setDft($args['period'], 1);
-  extract(just('period starting ending download downloaded', $args)); 
+  extract($args = just('period starting ending download downloaded', $args)); 
   if (!@$period) $args['period'] = $period = 7;
   extract(just('dateRange url starting ending', dateRange($args, 'community/flags', [], '', FALSE)));
   $url = hidFld($url);
@@ -39,6 +39,7 @@ EOF;
   for ($i = 0; $line = riskLine($q, K_ACCT_RISKS, $red) and ($i < K_LINES); $i++) $accts .= $line;
   
   $headers = ray(t('Score Tx# Date Amount From To Description Risks'));
+  if (!$mya->cAdmin2) unset($headers[6]); // no Description unless admin
   foreach ($headers as $v) {$vLow = strtolower($v); $txHeader .= "<th class=\"k-$vLow\">$v</th>";}
   $txHeader = "<tr>$txHeader</tr>";
   $subs = compact('starting', 'ending');
@@ -101,11 +102,13 @@ function formFlags_submit($form, &$sta) {dateRangeRedirect('community/flags', $s
  * @return an HTML table row to show the record
  */
 function riskLine($q, $descs, &$red = '') {
+  global $mya;
   global $riskUids; if (!@$riskUids) $riskUids = [];
   global $base_url; 
   $abridgable = ray(t('labor,automatic transfer,donation,deferred'));
   if (!$row = $q->fetchAssoc()) return FALSE;
   
+  if (!$mya->cAdmin2) unset($row['description']);
   if (@$row['amount'] + 0 < 0) list ($row['payer'], $row['payee'], $row['amount']) = array(@$row['payee'], @$row['payer'], -$row['amount']); // don't show user negative amounts
   extract(just('uid xid created description score amount risks', $row));
 

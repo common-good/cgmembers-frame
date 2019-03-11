@@ -13,11 +13,6 @@ Setup:
   And relations:
   | main | agent | permission |*
   | .ZZC | .ZZB  | buy        |
-  And transactions: 
-  | xid | created   | type   | amount | from | to   | purpose | taking |*
-  |   1 | %today-6m | signup |    250 | ctty | .ZZA | signup  | 0      |
-  |   2 | %today-6m | signup |    250 | ctty | .ZZB | signup  | 0      |
-  |   3 | %today-6m | signup |    250 | ctty | .ZZC | signup  | 0      |
   Then balances:
   | uid  | balance |*
   | .ZZA |       0 |
@@ -47,10 +42,10 @@ Scenario: A member confirms request to charge another member
   | pay  |     |    1 |    100 | .ZZB  | .ZZA  | labor   | %today  |
   Then transactions:
   | xid | created | amount | from | to   | purpose                | taking |*
-  |   4 | %today  |    100 | .ZZB | .ZZA | labor (%PROJECT inv#1)  | 0      |
+  |   1 | %today  |    100 | .ZZB | .ZZA | labor (%PROJECT inv#1)  | 0      |
   And invoices:
   | nvid | created | status | amount | from | to   | for   |*
-  |    1 | %today  | 4      |    100 | .ZZB | .ZZA | labor |
+  |    1 | %today  | 1      |    100 | .ZZB | .ZZA | labor |
   And balances:
   | uid  | balance |*
   | .ZZA |     100 |
@@ -158,10 +153,10 @@ Scenario: A member approves an invoice to a trusting customer
   | charge | Bea Two | 100    | %FOR_GOODS | labor   |
   Then transactions:
   | xid | created | amount | from | to   | purpose                | taking |*
-  |   4 | %today  |    100 | .ZZB | .ZZA | labor (%PROJECT inv#1)  | 0      |
+  |   1 | %today  |    100 | .ZZB | .ZZA | labor (%PROJECT inv#1)  | 0      |
   And invoices:
   | nvid | created | status | amount | from | to   | for   |*
-  |    1 | %today  | 4      |    100 | .ZZB | .ZZA | labor |
+  |    1 | %today  | 1      |    100 | .ZZB | .ZZA | labor |
   And balances:
   | uid  | balance |*
   | .ZZA |     100 |

@@ -13,8 +13,8 @@ use CG\Web as w;
  */
 
 define('R_NONE', '<span class="none">--</span>'); // how to show an empty field let the tests see null values
-define('R_AGREE_0', -2); // number of the first point in the rCredits Agreement
-define('R_AGREE_9', 7); // number of the last point in the rCredits Agreement
+define('R_AGREE_0', 1); // number of the first point in the rCredits Agreement
+define('R_AGREE_9', 8); // number of the last point in the rCredits Agreement
 define('REQ', '*'); // marks required fields (use this as start of field's label)
 define('BARE', '-'); // marks bare (unwrapped) fields -- no div wrapper around them
 
@@ -132,7 +132,7 @@ EOF
   'increase min' => t('<%a>Click here</a> to increase your target balance!', '_a', atag('/settings/preferences')),
   'no such company' => t('There is no such company.'),
   'op canceled' => t('Operation Canceled.'),
-  'demand not yet' => t('You will be notified when there are some %RCREDITS for you to buy with US Dollars.'),
+  'demand not yet' => t('You will be notified when there is some %RCREDITS for you to buy with US Dollars.'),
   'confirm delete cell' => t('Are you sure you want to remove the selected mobile phones from this account?'),
   'already related' => t('That person is already related to this account. If you want to change the settings, find this person in the list and change the settings on that row.'),
   'already cell' => t('That mobile phone (%number) is already connected to this account.'),
@@ -430,7 +430,7 @@ function cgform($form, $onSubmit = '', $labeled = TRUE, $level = 0) {
   }
   $form['#attributes']['class'][] = $labeled ? 'form-horizontal' : 'form-vertical';
  
-  foreach (ray('title subtext buttons list back submit') as $k) if ($v = @$form[$k] and !is_array($v)) $form[$k] = $k == 'submit' ? submit($v) : item($v); // let these common items be created simply
+  foreach (ray('title subtext posttext buttons list back submit') as $k) if ($v = @$form[$k] and !is_array($v)) $form[$k] = $k == 'submit' ? submit($v) : item($v); // let these common items be created simply
   
   foreach ($form as $k => $v) if (substr($k, 0, 1) != '#') {
     $type = @$v['#type'];
@@ -757,12 +757,12 @@ function bitsFld($label, $bitRay, $prefix, $bits, $aliases = []) {
 }
 
 /**
- * Return a "signed by" field.
+ * Return a signature field for the Common Good Agreement or for backing.
  */
 function signedBy() {
   global $mya;
   $behalf = $mya->co ? t('(on behalf of %co) ', 'co', $mya->fullName) : '';
-  $signerA = $mya->cAdmin ? ($mya->co ? $mya->helperA : $mya) : $mya->agentA;
+  $signerA = $mya->cAdmin ? (($mya->co and $mya->helper) ? $mya->helperA : $mya) : $mya->agentA;
   return textFld(t('Signed:'), $behalf . t('Type your full name here ') . "($signerA->legalName)", required($mya->cAdmin ? $signerA->legalNameDpy : ''));
 }
 
@@ -1424,7 +1424,7 @@ function contactFields($defaults = [], $step0, $myid = 0) {
   global $mya;
 //  $country = $state = ''; // make sure these are not NULL
   $partnerExtras = ' partner customer partnerCode'; // add-on fields passed through only for partner signup (start with space) (even partnerCode is necessary, in case form is redrawn on error)
-  $fields = 'phone country physical address city state zip tenure owns sameAddr2 address2 city2 state2 zip2 postalAddr hidCountry hidState hidState2 source source2';
+  $fields = 'phone country physical address city state zip tenure owns sameAddr2 address2 city2 state2 zip2 postalAddr hidCountry hidState hidState2 other source';
   $a = $myid ? r\acct($myid) : FALSE;
   foreach ($defaults as $k => $v) if (is_null($v)) unset($defaults[$k]); // needed for joint account setup
   extract($defaults + ($a ? (array) $a->account($fields) : []));
@@ -1473,7 +1473,7 @@ function contactFields($defaults = [], $step0, $myid = 0) {
 */
     $stateAttrib = $addressAttrib = $cityAttrib = $zipAttrib = [];
     $phone = textFld(t('Phone:'), [t('Your phone number')], required(@$phone ? u\fmtPhone($phone): ''));
-    $faxetc = @$faxetc ? textFld(t('Fax etc:'), [t('Other contact info'),t('List other ways to contact you: fax, mobile, IM, etc. This field is NOT public.')], dft(@$faxetc)) : NULL;
+//    $faxetc = @$faxetc ? textFld(t('Fax etc:'), [t('Other contact info'),t('List other ways to contact you: fax, mobile, IM, etc. This field is NOT public.')], dft(@$faxetc)) : NULL;
 //    $country = selectFld(t('Country:'), t(''), dft(@$country) + $countryAttrib); // can't use required() here
     $country = selectFld(t('Country:'), t(''), dft(@$country)); // can't use required() here
     $physical = item('', t('Physical Address'));
@@ -1493,9 +1493,10 @@ function contactFields($defaults = [], $step0, $myid = 0) {
     $state2 = selectFld(t('State:'), t(''), dft(@$state2) + $stateAttrib); // can't use required() here
     $zip2 = textFld(t('Postal Code:'), [t('Postal code'), ''], required(@$zip2) + $zipAttrib);
     
+    $other = item('', t('Other Information'));
     if (!@$mya or !$mya->co) {
       $source = $step0 ? textFld(t('Referred by:'), [t('How you heard about %PROJECT'), t('Where did you hear about %PROJECT? (name of company or person, web address, publication name, radio station name, or whatever)')]) : NULL;
-      $source2 = $step0 ? textFld(t('Code:'), [t('Invitation or card code'), t('If you have an invitation or card code, type it here ("B" for brochure). Otherwise leave blank.')]) : NULL;
+//      $source2 = $step0 ? textFld(t('Code:'), [t('Invitation or card code'), t('If you have an invitation or card code, type it here ("B" for brochure). Otherwise leave blank.')]) : NULL;
     } else $source = hidFld(@$source);
   }
 
@@ -1728,7 +1729,9 @@ function hack($message, $info = []) {
  * @param bool $goPromo: <go to Promo site after signout>
  */
 function signout($goPromo = TRUE) {
+  if (isDEV and u\test()) setAcct(NULL); else
   @\session_destroy();
+
   if (isDEV and !u\test()) w\go('signin');
   if ($goPromo) return w\go(PROMO_URL . '?region=x');
 }
@@ -2305,6 +2308,22 @@ function css($sheet, $weight = -99) {
 }
 
 /**
+ * Verify dollar amount choice (with "other amount" field).
+ * @param assoc $sta: (MODIFIED) form status array, from form's verify function
+ * @param numeric min: minimum amount
+ * @return <success>
+ */
+function checkAmtChoice(&$sta, $min = 0) { 
+  extract(just('amtChoice amount period', $sta['input']));
+  if ($amtChoice != -1) $amount = $amtChoice;
+  if (isset($period) and !$period and $amount) return say('missing field', array('field' => 'when'), 'period');
+  if ($err = u\badAmount($amount, '>=0')) return say($err, 'amount');
+  if ($amount < $min) return say(t('The amount must be at least $%min.', compact('min')), 'amount');
+  $sta['input'] = compact(ray('amount')) + $sta['input'];
+  return TRUE;
+}
+
+/**
  * Return standard fields for the bottom of any form used during account setup.
  * 
  */
@@ -2313,10 +2332,10 @@ function setupFoot($label = '', $extra = []) {
   if ($mya and !$mya->member) {
     if ($remains = $mya->stepsRemaining() - 1) { // don't count current step
       $skip = button(t('Skip for now'), "$base_url/settings/skip", t('Leave this step for last'), 'warning', 'xs', ['class' => 'skip']);
-      $nextStep = submit(t('Next ') . '&raquo;', '', '', w\suffix($skip));
+      $nextStep = submit($label ?: (t('Next ') . '&raquo;'), '', '', w\suffix($skip));
       $steps = $remains == 1 ? t('step') : t('steps');
       $progress = item(t('Just <b>%n</b> more %steps to go', 'n steps', $remains, $steps));
-    } else $nextStep = submit(t('Finish'));
+    } else $nextStep = submit($label ?: t('Finish'));
   } else $submit = submit($label, '', '', $extra);
   return compact(ray('submit nextStep progress'));
 }
@@ -2427,6 +2446,42 @@ function signupCoDisplay($info, &$company = '') {
   if (!@$info) return '';
   extract($info);
   return @$owner . ' ' . @$employee . ': ' . @$company;
+}
+
+/**
+ * Return a table as specified.
+ * @param ray $rows: set of row data
+ * @param ray $heads: column headers
+ * @param string $colClasses: (optional) class of each column
+ * @param ray $rowClasses: (optional) class of each row
+ * @return HTML of the full table
+ */
+function makeTable($rows, $heads, $colClasses = [], $rowClasses = [], $tableTribs = 'id=adhoc') {
+  u\EXPECT(!$colClasses or count($colClasses) == count($heads), 'wrong aligns count');
+  if ($rows) u\EXPECT(count($rows[0]) == count($heads), 'wrong heads count');
+  
+  $heads = makeRow('th', $heads, $colClasses);
+  if (@$rows) {
+    foreach ($rows as $i => $row) $lines[] = makeRow('td', $row, $colClasses, @$rowClasses[$i]);
+    $rows = join('', @$lines ?: []);
+    $after = '';
+  } else $after = t('There are no such records.');
+  return <<< X
+<table $tableTribs>
+$heads
+$rows
+</table>
+$after
+X;
+}
+
+function makeRow($tag, $row, $colClasses = [], $rowClass = '') {
+  foreach ($row as $i => $k) {
+    if ($class = @$colClasses[$i]) $class = " class=\"$class\"";
+    $line[$i] = "<$tag$class>$k</$tag>";
+  }
+  if ($rowClass) $rowClass = " class=\"$rowClass\"";
+  return "<tr$rowClass>\n" . join("\n", $line) . '</tr>';
 }
 
 /**

@@ -35,11 +35,6 @@ Setup:
   | .ZZC | .ZZB  |   2 | refund     |
   | .ZZC | .ZZD  |   3 | read       |
   | .ZZF | .ZZE  |   1 | sell       |
-  And transactions: 
-  | xid | created   | type     | amount | from | to   | purpose      | taking |*
-  | 1   | %today-7m | signup   |    250 | ctty | .ZZA | signup       |      0 |
-  | 2   | %today-6m | signup   |    250 | ctty | .ZZB | signup       |      0 |
-  | 3   | %today-6m | signup   |    250 | ctty | .ZZC | signup       |      0 |
   Then balances:
   | uid  | balance |*
   | ctty |       0 |
@@ -68,12 +63,11 @@ Scenario: An agent asks to undo a charge
   And with undo "4"
   And we notice "new refund" to member ".ZZA" with subs:
   | created | otherName  | amount | payerPurpose           |*
-  | %today  | Corner Pub | $80    | whatever (reverses #2)  |
+  | %today  | Corner Pub | $80    | whatever (reverses #1)  |
 
 Scenario: An agent asks to undo a charge when balance is secret
   Given transactions: 
   | xid | created   | type     | amount | from | to   | purpose      | taking |*
-  | 4   | %today-6m | signup   |    250 | ctty | .ZZE | signup       |      0 |
   | 5   | %today-1d | transfer |     80 | .ZZE | .ZZC | whatever     |      1 |
   When agent "C:B" asks device "devC" to undo transaction 5 code "ccE"
   Then we respond ok txid 6 created %now balance "*0" rewards 250 saying:
@@ -83,7 +77,7 @@ Scenario: An agent asks to undo a charge when balance is secret
   And with undo "5"
   And we notice "new refund" to member ".ZZE" with subs:
   | created | otherName  | amount | payerPurpose           |*
-  | %today  | Corner Pub | $80    | whatever (reverses #2)  |
+  | %today  | Corner Pub | $80    | whatever (reverses #1)  |
 
 Scenario: An agent asks to undo a refund
   Given transactions: 
@@ -97,7 +91,7 @@ Scenario: An agent asks to undo a refund
   And with undo "4"
   And we notice "new charge" to member ".ZZA" with subs:
   | created | otherName  | amount | payerPurpose         |*
-  | %today  | Corner Pub | $80    | refund (reverses #2)  |
+  | %today  | Corner Pub | $80    | refund (reverses #1)  |
 
 Scenario: An agent asks to undo a cash-out charge
   Given transactions: 
@@ -111,7 +105,7 @@ Scenario: An agent asks to undo a cash-out charge
   And with undo "4"
   And we notice "new payment linked" to member ".ZZA" with subs:
   | created | fullName | otherName  | amount | payeePurpose           | aPayLink |*
-  | %today  | Abe One  | Corner Pub | $80    | cash out (reverses #2)  | ?        |
+  | %today  | Abe One  | Corner Pub | $80    | cash out (reverses #1)  | ?        |
 
 Scenario: An agent asks to undo a cash-in payment
   Given transactions: 
@@ -125,7 +119,7 @@ Scenario: An agent asks to undo a cash-in payment
   And with undo "4"
   And we notice "new charge" to member ".ZZA" with subs:
   | created | fullName | otherName  | amount | payerPurpose |*
-  | %today  | Abe One  | Corner Pub | $80    | cash in (reverses #2)  |
+  | %today  | Abe One  | Corner Pub | $80    | cash in (reverses #1)  |
 
 Scenario: An agent asks to undo a charge, with insufficient balance  
   Given transactions: 
@@ -140,7 +134,7 @@ Scenario: An agent asks to undo a charge, with insufficient balance
   And with undo "4"
   And we notice "new refund" to member ".ZZA" with subs:
   | created | otherName  | amount | payerPurpose           |*
-  | %today  | Corner Pub | $80    | whatever (reverses #2)  |
+  | %today  | Corner Pub | $80    | whatever (reverses #1)  |
   And balances:
   | uid  | balance |*
   | ctty |       0 |
@@ -161,7 +155,7 @@ Scenario: An agent asks to undo a refund, with insufficient balance
   And with undo "4"
   And we notice "new charge" to member ".ZZA" with subs:
   | created | otherName  | amount | payerPurpose         |*
-  | %today  | Corner Pub | $80    | refund (reverses #2)  |
+  | %today  | Corner Pub | $80    | refund (reverses #1)  |
   And balances:
   | uid  | balance |*
   | ctty |       0 |
@@ -222,7 +216,7 @@ Scenario: A cashier reverses a transaction with insufficient funds
   And with undo "5"
   And we notice "new charge" to member ".ZZA" with subs:
   | created | fullName | otherName  | amount | payerPurpose          |*
-  | %today  | Bea Two  | Corner Pub | $100   | cash in (reverses #2)  |
+  | %today  | Bea Two  | Corner Pub | $100   | cash in (reverses #1)  |
   And balances:
   | uid  | balance |*
   | ctty |    -100 |

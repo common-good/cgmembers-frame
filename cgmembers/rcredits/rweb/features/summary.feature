@@ -7,16 +7,16 @@ SO I know where it stands.
 
 Setup:
   Given members:
-  | uid  | fullName   | postalAddr                   | floor | flags      | rebate |*
-  | .ZZA | Abe One    | 1 A St., Atown, AK 01000     | -100  | ok         |      5 |
-  | .ZZB | Bea Two    | 2 B St., Btown, UT 02000     | -200  | ok,roundup |     10 |
-  | .ZZC | Corner Pub | 3 C St., Ctown, Cher, FRANCE | -300  | ok,co      |     10 |
+  | uid  | fullName   | postalAddr                   | floor | flags      |*
+  | .ZZA | Abe One    | 1 A St., Atown, AK 01000     | -100  | ok         |
+  | .ZZB | Bea Two    | 2 B St., Btown, UT 02000     | -200  | ok,roundup |
+  | .ZZC | Corner Pub | 3 C St., Ctown, Cher, FRANCE | -300  | ok,co      |
   And members have:
-  | uid  | created   | share |*
-  | ctty | %today-9w |     0 |
-  | .ZZA | %today-7w |    10 |
-  | .ZZB | %today-6w |    20 |
-  | .ZZC | %today-6w |    30 |
+  | uid  | created   |*
+  | ctty | %today-9w |
+  | .ZZA | %today-7w |
+  | .ZZB | %today-6w |
+  | .ZZC | %today-6w |
   And usd transfers:
   | payee | amount | completed |*
   | .ZZA  |  100   | %today-7w |
@@ -29,15 +29,15 @@ Setup:
   | .ZZC | .ZZB  |   1 | buy        |
   | .ZZC | .ZZA  |   2 | sell       |
   And transactions: 
-  | xid | created   | type     | amount | payerReward | payeeReward | from | to   | purpose      |*
-  |   1 | %today-7w | signup   |      0 |           0 |         250 | ctty | .ZZA | signup       |
-  |   2 | %today-6w | signup   |      0 |           0 |         250 | ctty | .ZZB | signup       |
-  |   3 | %today-6w | signup   |      0 |           0 |         250 | ctty | .ZZC | signup       |
-  |   4 | %today-5w | transfer |     10 |           0 |           0 | .ZZB | .ZZA | cash E       |
-  |   5 | %today-4w | transfer |     20 |           0 |           0 | .ZZC | .ZZA | usd F        |
-  |   6 | %today-3w | transfer |     40 |           2 |           4 | .ZZA | .ZZB | whatever43   |
-  |   7 | %today-2d | transfer |      5 |           0 |           0 | .ZZB | .ZZC | cash J       |
-  |   8 | %today-1d | transfer |     80 |           4 |           8 | .ZZA | .ZZC | whatever54   |
+  | xid | created   | type     | amount | from | to   | purpose      |*
+  |   1 | %today-7w | signup   |      0 | ctty | .ZZA | signup       |
+  |   2 | %today-6w | signup   |      0 | ctty | .ZZB | signup       |
+  |   3 | %today-6w | signup   |      0 | ctty | .ZZC | signup       |
+  |   4 | %today-5w | transfer |     10 | .ZZB | .ZZA | cash E       |
+  |   5 | %today-4w | transfer |     20 | .ZZC | .ZZA | usd F        |
+  |   6 | %today-3w | transfer |     40 | .ZZA | .ZZB | whatever43   |
+  |   7 | %today-2d | transfer |      5 | .ZZB | .ZZC | cash J       |
+  |   8 | %today-1d | transfer |     80 | .ZZA | .ZZC | whatever54   |
   Then balances:
   | uid  | balance |*
   | .ZZA |      10 |
@@ -65,8 +65,8 @@ Scenario: A member clicks the summary tab
   
 Scenario: A member clicks the summary tab with roundups
   Given transactions:
-  | xid | created | type     | amount | payerReward | payeeReward | from | to   | purpose |*
-  |   9 | %today  | transfer |  80.02 |           4 |           8 | .ZZB | .ZZC | goodies |
+  | xid | created | type     | amount | from | to   | purpose |*
+  |   9 | %today  | transfer |  80.02 | .ZZB | .ZZC | goodies |
   When member ".ZZB" visits page "summary"
   Then balances:
   | uid  | balance |*

@@ -145,7 +145,7 @@ function formAdminPanel_submit($form, &$sta) {
     w\say($a->fullName. t(' SSN Link:<br><br> &nbsp; %PROMO_URL/do/doSsn~%qid~%code &nbsp; ', 'qid code', $a->mainQid, $a->emailCode));
   } elseif ($op == 'do1099b' or $test1099 = ($op == 'do1099btest')) {
     include_once __DIR__ . '/../cg-yearly.inc';
-    r\Special\do1099bs(@$test1099);
+    r\Special\do1099s(@$test1099);
 	} elseif ($op == 'reconcile') {
 		w\go('sadmin/reconcile-ctty-fund');
   } elseif ($op == 'inviteeStatus') {
@@ -181,7 +181,7 @@ function formAdminPanel_submit($form, &$sta) {
     $fields = <<<EOF
     xid, t.created, t.flags, t.type AS ty, t.goods AS gd, t.:IS_TAKING AS k,
     IF (LOCATE('"force";s:1:"1"', u1.data)>0, 1, IF(LOCATE('"force";s:2:"-1"', u1.data)>0, -1, IF(LOCATE('"force";s:1:"0"', u1.data)>0, '0', ''))) AS f,
-    payer, payee, amount, payerReward, payeeReward, payerFor AS for1, payeeFor AS for2, payerTid AS tid1, payeeTid AS tid2
+    payer, payee, amount, payerFor AS for1, payeeFor AS for2, payerTid AS tid1, payeeTid AS tid2
 EOF;
     if ($mya->admin) $fields = str_replace('u1.', '', $fields);
     return say(a\showQuery('r_txs', 1, 'xid DESC', $fields, ['payer', 'payee']));
@@ -197,7 +197,7 @@ EOF;
 }
 
 /**
- * Show people interested in rCredits in particular zipcodes.
+ * Show people interested in CG in particular zipcodes.
  */
 function formOrganizerList($form, &$sta, $where = '') {
   $title = t('Organizer List');
@@ -367,7 +367,7 @@ function formFollowup($form, &$sta, $args = '') {
   global $base_url;
   global $mya;
   
-	if (!$mya or !$mya->cAdmin) return w\go('');
+	if (!$mya or (!$mya->cAdmin2 and !$mya->admin2)) return w\go('');
   extract(just('uid one recent', $args));
   
   if (@$uid) {
@@ -510,12 +510,14 @@ EOF;
 
 function formDownloadMemberList($form, &$sta, $args = '') {
   global $base_url;
+
   extract($params = just(EXPORT_PARAMS, $args));
   if (@$do == 'export') return w\export($params);
 
   if (@$do == 'done') {
     $do = 'export';
     $params = http_build_query(compact(ray(EXPORT_PARAMS)));
+///    return w\go("$base_url/sadmin/export-list/$params"); // debug(
     $download = item("<iframe src=\"$base_url/sadmin/export-list/$params\" class=\"hidden\"></iframe>");
   }
   
@@ -817,7 +819,7 @@ function achBatch($args) {
 
 /**
  * Create a PDF of all relevant checks.
- * @param string $way: IN (from member bank account to rCredits) or OUT (from rCredits to member bank account)
+ * @param string $way: IN (from member bank account to CG) or OUT (from CG to member bank account)
  * @param int $date: deposit/check date
  * @param bool $reprint: UNUSED whether to include a reprint of the previous deposit's checks
  * @param int $previous: UNUSED date of previous deposit
@@ -835,7 +837,7 @@ function printChecks($args) {
 
   $ways = ['IN'=>'(amount>0 AND txid>0)', 'OUT'=>'(amount<0 AND txid>0)', 'BAD'=>'txid<0', 'VERIFY'=>'amount=0'];
   $where = $ways[strtoupper($way)];
-  $q = db\q("SELECT txid,created,payee,amount,deposit,bankAccount FROM r_usd WHERE deposit=:date AND created<=:NOW AND $where ORDER BY created, txid", compact('date'));
+  $q = db\q("SELECT txid,created,payee,amount,deposit,bankAccount FROM r_usd WHERE deposit=:date AND created<=:NOW AND $where ORDER BY txid", compact('date'));
   $pos = 3; // before first position of 3, on 3-up check paper
   $count = 0;
   while ($tx = $q->fetchAssoc()) {
@@ -1056,49 +1058,3 @@ EOF; */
   return "<h2 id=\"edit-title\"><br>Handy Links</h2><div class='develw'>\n$result</div>";
   */
 }
-
-/**
- * Reinstall all of rCredits
- */
-function reinstall() {
-  global $base_path;
-  list ($buildId, $token) = isDEV ? 
-    array('8TlWDkqTg6AuTshAyc8pi8iIVuYkB4Wz4naJd9eCu4s', 'Gmsmx1AKlG1Jsr3y78BMwnXX3TSkN-i-8okCgHkl_Bk')
-  : array('lSsN1II4kj5gKQQxkm3bn7t0RVW-ZCntoAIhr7H9XbM', 'RwHRLEIACfa2ICgcLTOfRdDvpxADnpooX3JeSF1KXZg');
-  $warning = isDEV ? '' : ('WARNING! This is ' . $_SERVER['HTTP_HOST']);
-
-/**/ echo <<<EOF
-    $warning<br><br>
-<form action="{$base_path}devel/reinstall?destination=handy" method="post" id="devel-reinstall" accept-charset="UTF-8"><div><div class="form-item form-type-checkboxes form-item-list">
- <div id="edit-list" class="form-checkboxes"><div class="form-item form-type-checkbox form-item-list-block">
-
- <div class="form-item form-type-checkbox form-item-list-rcredits">
- <input type="checkbox" checked="checked" id="edit-list-rcredits" name="list[rcredits]" value="rcredits" class="form-checkbox" />  <label class="option" for="edit-list-rcredits">rcredits </label>
-</div>
-
-<div class="form-item form-type-checkbox form-item-list-rsmart">
- <input type="checkbox" checked="checked" id="edit-list-rsmart" name="list[rsmart]" value="rsmart" class="form-checkbox" />  <label class="option" for="edit-list-rsmart">rsmart </label>
-</div>
-
-<div class="form-item form-type-checkbox form-item-list-rsms">
- <input type="checkbox" checked="checked" id="edit-list-rsms" name="list[rsms]" value="rsms" class="form-checkbox" />  <label class="option" for="edit-list-rsms">rsms </label>
-</div>
-
-<div class="form-item form-type-checkbox form-item-list-rweb">
- <input type="checkbox" checked="checked" id="edit-list-rweb" name="list[rweb]" value="rweb" class="form-checkbox" />  <label class="option" for="edit-list-rweb">rweb </label>
-</div>
-
-</div></div>
-<input type="submit" id="edit-submit" name="op" value="Reinstall" class="form-submit" />
-
-<input type="hidden" name="form_build_id" value="form-$buildId" />
-<input type="hidden" name="form_token" value="$token" />
-<input type="hidden" name="form_id" value="devel_reinstall" />
-
-</form>
-
-EOF;
-
-  exit();
-}
-
