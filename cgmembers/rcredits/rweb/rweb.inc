@@ -523,7 +523,7 @@ function formFooter() {
     <%aHelp>Help</a>
 <br>&nbsp;
 </div>
-copyright &copy; %year <%aSite>%PROJECT<sup>&reg;</sup></a><span id="footer-details">, a nonprofit organization<br/>
+copyright &copy; %year <%aSite>%PROJECT<sup> &reg;</sup></a><span id="footer-details">, a nonprofit organization<br/>
 %CGF_POSTALADDR<br/>
 %CGF_PHONE &nbsp; <%aEmail>%CGF_EMAIL</a><br>
 <br>

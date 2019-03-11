@@ -32,8 +32,8 @@ define('DKIM_PRIVATE', setFromConfig('dkimPrivate', $config));
 define('R_INVITE_KEY', setFromConfig('inviteKey', $config));
 define('R_SSN_USER', setFromConfig('ssnUser', $config));
 define('R_SSN_PASS', setFromConfig('ssnPass', $config));
-if (!array_key_exists('db', $config)) die('the configuration file does not contain a db entry');
-if (!is_array((array) $config['db'])) die('the configuration file db entry is not an array');
+/**/ if (!array_key_exists('db', $config)) die('the configuration file does not contain a db entry');
+/**/ if (!is_array((array) $config['db'])) die('the configuration file db entry is not an array');
 
 $db_config = (array) $config['db'];
 $db_name = setFromConfig('name', $db_config);
@@ -183,6 +183,11 @@ define('AGGREGATE_MIN', 1); // minimum number of members to show aggregate data
 define('R_TEMP_NAME_PREFIX', 'unknown ');
 define('CO_PHOTO_FACTOR', 3); // make company photos this many times as big as individual photos
 define('MAX_UPLOAD_SIZE', 4 * 1024000); // maximum upload size in bytes
+
+define('GEOCODE_URL', 'https://geocoding.geo.census.gov/geocoder/locations/');
+define('NEIGHBOR_RADIUS', 40); // how far away (in miles) can a member see names of other individual members?
+define('NEIGHBOR_RMAX', NEIGHBOR_RADIUS * NEIGHBOR_RADIUS / 69 / 69); // squared and adjusted for degrees, not miles
+define('NEIGHBOR_QUERY', '(POW(latitude-:lat, 2) + POW((longitude-:lon) * (.71 + .0116*(latitude+:lat)/2), 2))');
 
 define('R_URL_SLASH', '%_%'); // Drupal gets confused by slashes in a url, even if urlencoded
 define('R_EXCHANGE_LIMITS', '1:5000,7:20000,52:80000,365:500000'); // per day, week, 7-week, year
@@ -376,12 +381,12 @@ define('R_CTTY_BENE', 'cttyBuys+signups+rebates+bonuss+inflations+givebacks+gran
 
 // Relationship flags
 define('B_EMPLOYEE', 0); // is employed by main account
-define('B_OWNER', 1); // is employed by main account
-define('B_CUSTOMER', 2); // is employed by main account
-define('B_AUTOPAY', 3); // is employed by main account
-define('B_r4', 4); // is employed by main account
-define('B_r5', 5); // is employed by main account
-define('B_r6', 6); // is employed by main account
+define('B_OWNER', 1); // owns the main account
+define('B_CUSTOMER', 2); // is a customer of main account
+define('B_AUTOPAY', 3); // preapproves any invoice from main account
+define('B_r4', 4); //  by main account
+define('B_r5', 5); //  by main account
+define('B_r6', 6); //  by main account
 define('B_DRAW', 7); // can draw funds from main account (same number as B_DRAWS in the users table)
 define('REL_FLAGS', 'employee owner customer autopay r4 r5 r6 draw');
 define('REL_FLDS', 'main other otherNum permission code');
@@ -567,7 +572,7 @@ if (@TESTING == 1) {
  * $config - the configuration array itself
  */
 function setFromConfig($key, $config) {
-  if (!array_key_exists($key, $config)) die("The config file does not contain an entry for $key.");
+/**/ if (!array_key_exists($key, $config)) die("The config file does not contain an entry for $key.");
   return $config[$key];
 }
 

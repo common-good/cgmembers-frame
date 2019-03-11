@@ -38,10 +38,10 @@ function extraSetup() {
 /**
  * members: (ARG)
  *
- * in: MAKE changes Setup
- *     MAKE checks Setup
- *     MAKE activate Setup
+ * in: MAKE activate Setup
  *     TEST activate AdminActivatesAnAccount
+ *     MAKE changes Setup
+ *     MAKE checks Setup
  */
 function members($list) {return t\members($list);}
 
@@ -80,8 +80,8 @@ function weShowWith($title, $content = FALSE, $showDebugs = TRUE) {
 /**
  * member (ARG) completes form (ARG) with values: (ARG)
  *
- * in: MAKE changes AMemberChangesSomeSettings
- *     MAKE activate AdminActivatesAnAccount
+ * in: MAKE activate AdminActivatesAnAccount
+ *     MAKE changes AMemberChangesSomeSettings
  */
 function memberCompletesFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values);}
 
@@ -132,3 +132,10 @@ function weNoticeToMemberWithSubs($notice, $id, $subs) {return t\notice($notice,
  */
 function memberHasNoPhotoIDRecorded($id) {return t\noPhotoId($id);}
 
+
+/**
+ * with: (ARG)
+ *
+ * in: TEST changes AMemberChangesSomeSettings
+ */
+function with($content) {return t\weShow($content);}

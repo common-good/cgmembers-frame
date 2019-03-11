@@ -35,16 +35,13 @@ function formAgreement($form, &$sta) {
   foreach ($topics as $k) $args["_a$k"] = atag("/help/agreement#$k");
   $args['_aDetails'] = atag('/help/agreement');
 
-  $agreement = t(<<< X
-<div id="instructions" class="well">
-<p><b>Instructions:</b> Put a check mark by each section to indicate you have read and understand it. %addendum</p>
-</div>
+  $agreement0 = t(<<< X
 <div id="agreement">
 <ol>
   <li>[1] <b>Who.</b> I make this agreement with all %PROJECT <%aMembers>Members</a> and <%aMember-Organizations>Member Organizations</a> everywhere &mdash; especially with Members and Member Organizations in my <%aCGC>%PROJECT Community</a>.</li>
-  <li>[2] <b>Community control.</b> I understand we can use the Common Good System, as a community, to take control of our local economy. I am willing to participate with other Members to do that, and to support other communities to do the same.</li>
+  <li>[2] <b>Community control.</b> I understand we can use the Common Good System, as a democratic community, to reclaim control of our local economy for the common good. I am willing to participate with other Members to do that, and to support other communities to do the same.</li>
   <li>[3] <b>Investing together.</b> I understand whenever I put money in my %PROJECT account by buying %PROJECT credit, there is more money in the <%aDollar-Pool>Dollar Pool</a>, so my community has more money to invest while I use my credit for purchases.</li>
-  <li>[4] <b>Backing together.</b> I understand my %PROJECT credit is <%aBacking>backed</a> 100% or more -- partly by Dollars and partly by Members and Member Organizations.</li>
+  <li>[4] <b>Backing together.</b> I understand my %PROJECT credit is <%aBacking>backed</a> 100% or more &mdash; partly by Dollars and partly by Members and Member Organizations.</li>
   <li>[5] <b>Accepting payments.</b> I will accept %PROJECT credit as payment, <%aWithout-Limit>without limit or surcharge</a>.</li>
   <li>[6] <b>Account Balance.</b> If I spend more than the balance in my %PROJECT account, resulting in a negative balance, I will bring my balance up to zero or more within 30 days.</li>
   <li>[7] <b>Disputes.</b> When there is a dispute, I will follow the <%aDisputes>%PROJECT Dispute Resolution Process</a> and will honor its outcome.</li>
@@ -53,14 +50,24 @@ function formAgreement($form, &$sta) {
 <br><p class="full center"><%aDetails>Details (how it works for you)</a></p>
 </div>
 X
-  , compact('_addendum') + $args);
+  , $args);  
+
+  $agreement = $mya->co
+  ? t('<p>I commit %coName to the terms of the <%a>%PROJECT Agreement</a> (the same agreement I signed as an individual).</p>', 'coName _a', $mya->fullName, 'a id="show-agreement"') . '<div id="wrap-agreement">' . $agreement0 . '</div>'
+  : t(<<< X
+<div id="instructions" class="well">
+<p><b>Instructions:</b> Put a check mark by each section to indicate you have read and understand it. %addendum</p>
+</div>
+X
+  , compact('_addendum')) . $agreement0;
 
   for ($i = R_AGREE_0; $i <= R_AGREE_9; $i++) {
     $box = str_replace('checkNUMBER', "check$i", $model);
-    $agreement = str_replace("[$i]", (!$mya or !$mya->can(B_MANAGE) or @$date) ? '' : $box, $agreement);
+    $agreement = str_replace("[$i]", (!$mya or $mya->co or !$mya->can(B_MANAGE) or @$date) ? '' : $box, $agreement);
   }
 //  $agreement = fld('item', '', '', $agreement);
   $agreement = w\item($agreement);
+  jsx('agree');
   
   return cgform(compact(ray('title agreement signedBy')) + (@$setupFoot ?: []));
 }
@@ -68,7 +75,7 @@ X
 function formAgreement_validate($form, &$sta) {
   global $mya;
   list ($i0, $i9) = $mya->co ? [1, R_AGREE_9 - 1] : [R_AGREE_0, R_AGREE_9]; // companies omit prolog and democracy question
-  if (!$mya->cAdmin) for ($i = $i0; $i <= $i9; $i++) if (!@$sta['input']["check$i"]) return say('incomplete agreement', "check$i");
+  if (!$mya->co and !$mya->cAdmin) for ($i = $i0; $i <= $i9; $i++) if (!@$sta['input']["check$i"]) return say('incomplete agreement', "check$i");
   if (w\badSignature($sta)) return;
 }
 

@@ -69,7 +69,7 @@ NOTES:
   where <star> means * (not the same as for the production site) 
  */
 
-define('R_DAILY_TASKS', 'START recache checkAccts requests setNear acctStats cttyStats trust acctRisk acctRiskFinsh txRisk achRisk tickle lessOften recurs invoices getFunds invest notices END'); // had homogenize, pool 
+define('R_DAILY_TASKS', 'START recache checkAccts requests setNear acctStats cttyStats trust acctRisk acctRiskFinish txRisk achRisk tickle lessOften recurs invoices getFunds invest notices END'); // had homogenize, pool 
 //define ('R_DAILY_TASKS', 'START redistribute END');
 include_once __DIR__ . '/rcron-subs.inc';
 
@@ -162,8 +162,10 @@ function everyHour() { // stuff to do every hour
     if (NOW - $lastDaily > DAY_SECS) r\tellAdmin('daily cron FAILED');
   }
   
-  db\q('DELETE FROM cache_form WHERE created<:REQUEST_TIME-:HOUR_SECS'); // clean up form cache
+  db\q('DELETE FROM cache_form WHERE created<:REQUEST_TIME-:HOUR_SECS'); // clean up form cache (is this needed?)
 
+  $uids = db\col('uid', 'users', 'latitude=0 AND longitude=0 AND uid<>0') ?: [];
+  foreach ($uids as $uid) r\acct($uid)->setLocus();
   // r\tellAdmin('hourly cron');
 }
 
@@ -772,7 +774,7 @@ X;
  * Do the whole thing twice, to take into account relations with suspicious individuals.
  */
 function acctRisk() {
-  setv('newThresholds', ray('bigDay bigWeek big7Week bigYear', 0, 0, 0, 0));
+  setv('newThresholds', ray('bigDay bigWeek big7Week bigYear', [], [], [], []));
 
   db\q('UPDATE users SET risk=NULL'); // avoid unnecessary badConx. don't touch risks though!
   for ($i=0; $i<2; $i++) { // do it twice (for good and bad Conx)
@@ -786,16 +788,19 @@ function acctRisk1($item) {
   global $newThresholds;
   
   $newThresholds = getv('newThresholds');
-  k\acctRisk1($item['uid'], getv('riskThresholds', [0,0,0,0]));
+  k\acctRisk1($item['uid'], getv('riskThresholds', ray('bigDay:0,bigWeek:0,big7Week:0,bigYear:0')));
   setv('newThresholds', $newThresholds);
 }
 
 /**
  * Finish aggregating threshold data collected from within acctRisk1.
  */
-function acctRiskFinsh() {
+function acctRiskFinish() {
+  global $testThresholdPct;
   $newThresholds = getv('newThresholds');
-  $index = ceil(count($newThresholds[key($newThresholds)]) * K_THRESHOLD_PCT); // pointer to threshold value
+  $pct = K_THRESHOLD_PCT;
+  if (u\test()) $pct = $testThresholdPct;
+  $index = ceil(count($newThresholds[key($newThresholds)]) * $pct / 100); // pointer to threshold value
   foreach ($newThresholds as $k => $ray) {
     rsort($ray);
     $riskThresholds[$k] = $ray[$index];

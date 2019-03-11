@@ -80,14 +80,15 @@ X;
 
 /**
  * Return an array of member names (called with ajax, so current user is passed as arguments).
- * POLICY QUESTION: Restrict to member's community? (yes for now)
+ * Restricted to within NEIGHBOR_RADIUS miles of the member
  * @param int $myid: account record ID
  * @param int $aid: agent account record ID
  */
 function memberRay($myid, $aid, $coOnly = FALSE) {
   if (!$a = r\acct($myid, $aid)) return [];
-  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : "state=$a->state OR community=$a->community OR :IS_CO");
-  return db\q("SELECT fullName FROM users WHERE :IS_OK AND $where ORDER BY fullName")->fetchCol();
+//  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : "state=$a->state OR community=$a->community OR :IS_CO");
+  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : "(:NEIGHBOR_QUERY<:NEIGHBOR_RMAX OR community=$a->community OR :IS_CO)");
+  return db\col('fullName', 'users', ":IS_OK uid<>:myid AND $where ORDER BY fullName", ray('myid lat lon', $myid, $a->latitude, $a->longitude));
 }
 
 /**
@@ -263,14 +264,19 @@ function payInvoice($nvid, &$msg = '') {
   extract(just('payer payee amount goods purpose data flags', $inv));
   $payerA = r\acct($payer);
   $payeeA = r\acct($payee);
+  if ($data = unserialize($data)) extract(just('api request shid', $data));
   
   $DBTX = \db_transaction();
   $purpose .= ' (' . PROJECT . " inv#$nvid)";
 	$extra = ray('inv goods', $nvid, $goods);
 	if ($flags) foreach (ray('gift recurs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
   list ($index, $subs) = $payerA->pay($payeeA, $amount, $purpose, $extra);
-  if ($ok = @$subs['success']) //db\q('UPDATE r_invoices SET status=:xid WHERE nvid=:nvid', ray('xid nvid', @$subs['xid'], $nvid));
-  db\update('r_invoices', ray('status nvid', @$subs['xid'], $nvid), 'nvid');
+  $ok = @$subs['success'];
+  
+  if ($ok) {
+    db\update('r_invoices', ray('status nvid', @$subs['xid'], $nvid), 'nvid');
+    if (@$api) u\post($api, ray('request ok msg', @$request, (int) $ok, tr($index, $subs)));
+  }
 
 	if (u\getBit(@$flags, B_INVESTMENT)) { // club reclaiming an investment
 /*
@@ -278,7 +284,7 @@ function payInvoice($nvid, &$msg = '') {
     if ($res) {
       extract($res); // shid vestid
       */
-    if ($data = unserialize($data) and $shid = $data('shid')) { // record the sale
+    if ($shid) { // record the sale
       db\update('r_shares', ray('shid shares pending when', $shid, -$amount, 0, NOW), 'shid');
     } else r\tellCo(t('Invoice payment marked as "for investment (repayment)" has no corresponding SELL request in shares table.'), $inv, $payee);
   }
@@ -455,7 +461,7 @@ function invoice($a1, $a2, $amount, $purpose = NULL, $extra = []) {
   
   u\EXPECT(compact(ray('a1 a2 amount purpose')), 'acct acct float string');
   extract(just($ks = 'goods status', $extra));
-	foreach (justNOT("goods status shid coupon coupid force inv", $extra) as $k => $v) {
+	foreach (justNOT("goods status shid coupon coupid force inv api request", $extra) as $k => $v) {
     u\setBit($flags, $k, $v);
     unset($extra[$k]); // don't leave bits in extras (data field)
   }
@@ -502,40 +508,6 @@ function invoiceNonmember($name, $info) {
   
 }
   
-/**
- * Record a transfer (of cgCredits) to or from the community.
- * @param int $uid: uid of the account to credit or debit
- * @param int $type: what type of transfer
- * @param int $amount: how much to transfer
- * @param string $for: purpose of funding
- * @param bool $oked: TRUE actually do it? (otherwise just see if it can be done)
- * @return int: the incentive amount (FALSE on failure)
- *//*
-function fund($uid, $type, $amount, $for) {
-  $payeeAgent = $payee = $uid;
-  global $mya; // (null, if just registering or running as cron)
-  $isReward = r\isReward($type);
-  u\EXPECT($isReward or @$mya->can(B_MANAGING_CTTY), 'non-automatic reward by non ctty agent');
-  if ($type == TX_FINE) $amount = -$amount;
-//  if (!$oked) return $amount;
-  if ($isReward) list ($payerReward, $payeeReward, $amount) = [0, $amount, 0];
-///    debug(compact(ray('uid type amount for isReward payeeReward')));
-  
-  $a = r\acct($payee);
-  $payer = $a->community;
-  $payerAgent = (@$mya and $mya->id < 0) ? $mya->agentId : $payer; // take note if funded by community admin
-  
-  if (!new r\X(compact(ray('type amount payer payee payerReward payeeReward payerAgent payeeAgent for taking')))) return FALSE;
-  $types = ray(TX_TYPES);
-  $thing = $isReward ? t('reward') : $types[$type];
-  $subs = ray('amount purpose thing', u\fmtAmt(abs($amount)), $for, $thing);
-  $index = $type == TX_FINE ? 'got fine' : 'got funding';
-  if ($type == TX_INFLATION) $index .= '|inflation details';
-  if ($a->cttyRewardy or !$isReward) r\notify($uid, $index, $subs); // don't report rewards unless rewarding
-  return $amount;
-}
-*/
-
 /**
  * @return FALSE if success; else array($error_message, $subs)
  */
@@ -594,21 +566,22 @@ function identify($who, $myid, $paying, $self_message = 'no self-trading') {
   if (!$short = u\shortName(" $who ", '%')) $short = '-'; // abbreviations must not be null or zeroes
   $cmail = strpos($who, '@') ? u\cry('P', strtolower($who)) : '-';
 
-  $cttyCrit = $mya->admin 
-  ? '1' 
-  : (($paying ? ':IS_OK AND ' : '') . "(:IS_CO OR community=$mya->community)"); // restrict to own community and approved (as of 7/6/2017)
+  $where = '(name LIKE :short OR :who=fullName OR (!:IS_NOSEARCH AND (:cphone=phone OR :cmail=email))) AND ';
+  $where .= $mya->admin ? '1' : "(:IS_CO OR :NEIGHBOR_QUERY<:NEIGHBOR_RMAX)"; // restrict to nearby
+  if ($paying) $where .= ' AND :IS_OK';
   
   $sql = <<<EOF
     SELECT DISTINCT uid,fullName
     FROM users 
-    WHERE (name LIKE :short OR :who=fullName OR (!:IS_NOSEARCH AND (:cphone=phone OR :cmail=email)))
-    AND $cttyCrit
+    WHERE $where
     ORDER BY fullName
 EOF;
 
 // LEFT JOIN r_boxes s ON u.uid = s.uid ... OR :who=s.code (search for cell not allowed if it isn't the account's primary phone)
 
-  $result = db\q($sql, compact(ray('who short cphone cmail')))->fetchAllKeyed(0, 1);
+  list ($lat, $lon) = $mya ? [$mya->latitude ?: 0, $mya->longitude ?: 0] : [0, 0]; // avoid NULL (PHP bug?)
+  $subs = compact(ray('who short cphone cmail lat lon'));
+  $result = db\q($sql, $subs)->fetchAllKeyed(0, 1);
   
   // QID? if not, maybe first word is a QID if this is from a list showing QID and fullName
   $qid = trim(($i = strpos($who, ':')) ? substr($who, 0, $i) : strtoupper($who));
@@ -712,7 +685,7 @@ function accountChoices() {
   if ($mya->admin or $mya->isAdmin2) {
     $where = $mya->superAdmin ? '1' : 'uid NOT IN (0,1,2,3)';
     $q = @db\q("SELECT uid AS id, fullName FROM users WHERE $where ORDER BY (uid<0) DESC, $nameOrder");
-  } elseif ($mya->cAdmin) {
+  } elseif ($mya->cAdmin2) {
     $sql = <<<EOF
 SELECT DISTINCT id, fullName FROM
   (SELECT uid AS id, fullName FROM users WHERE community=:ctty UNION $sqlNormal) w

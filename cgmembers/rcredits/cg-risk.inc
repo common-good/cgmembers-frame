@@ -17,6 +17,7 @@ use CG\Util as u;
  * @param numeric $calc: (RETURNED) the original calculated risk
  */ 
 function acctRisk1($uid, $thresholds, &$risk = 0, &$calc = 0) {
+
   global $_risk; $_risk = '';
   
   $a = r\acct($uid);
@@ -56,7 +57,7 @@ function acctRisk1($uid, $thresholds, &$risk = 0, &$calc = 0) {
 ///  	debug(ray('uid roundup crumbs sum', $uid, $a->roundup, $a->crumbs, db\get("SUM(amount*IF(period='M',12,IF(period='Q',4,1)))", 'r_recurs', 'payer=:id AND payee=:cg', $idSub + ray('cg', CGID)) + 0));
   //  and $a->share < K_MISER_SHARE
   
-  setRisk('photoOff', $a); // photo mismatches ID or DOB
+//  setRisk('photoOff', $a); // photo mismatches ID or DOB
   setRisk('addrOff', $a); // addr mismatches ID
   if (strpos($a->postalAddr, $a->address) === FALSE or strpos($a->postalAddr, 'box') !== FALSE) setRisk('poBox'); // separate postal address
   setRisk('ssnOff', $a); // weird, conflicting, or unknown SSN history

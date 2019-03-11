@@ -367,7 +367,7 @@ function formFollowup($form, &$sta, $args = '') {
   global $base_url;
   global $mya;
   
-	if (!$mya or !$mya->cAdmin) return w\go('');
+	if (!$mya or (!$mya->cAdmin2 and !$mya->admin2)) return w\go('');
   extract(just('uid one recent', $args));
   
   if (@$uid) {
@@ -510,12 +510,14 @@ EOF;
 
 function formDownloadMemberList($form, &$sta, $args = '') {
   global $base_url;
+
   extract($params = just(EXPORT_PARAMS, $args));
   if (@$do == 'export') return w\export($params);
 
   if (@$do == 'done') {
     $do = 'export';
     $params = http_build_query(compact(ray(EXPORT_PARAMS)));
+///    return w\go("$base_url/sadmin/export-list/$params"); // debug(
     $download = item("<iframe src=\"$base_url/sadmin/export-list/$params\" class=\"hidden\"></iframe>");
   }
   
