@@ -363,7 +363,7 @@ class Acct {
       $subs = compact('inviterName');
       $msg = 'approved';
       if (!$a->confirmed) $msg .= ($helper > 1 ? '|must confirm' : '|in person');
-      r\message($a->id, $msg, $subs);
+      r\message($a->id, $msg, $subs + ['youName' => $a->fullName]);
     }
 
     if ($firstTime and !$a->co) { // no bonus or helper bonus for a company signing up
@@ -1051,7 +1051,7 @@ EOF;
     $qid = $a->qid;
     $aA = $a->agentA;
     $field = $a->proSe ? 'cardCode' : 'cardCode2';
-    if ($aA->$field) r\badCard($qid, $aA->$field, t('making new card')); // (don't mark previous code bad if none)
+    if ($aA->$field) r\badCard($qid, $aA->$field, t('making new card for %nm', 'nm', $a->fullName)); // (don't mark previous code bad if none)
 //    if ($oldCode = $aA->$field) db\insert('r_bad', ray('qid code created', $qid, $oldCode, time()), 'created');
     $aA->update($field, $newCode ?: r\cardCode($qid)); // resave the secure fields
   }
@@ -1661,7 +1661,21 @@ X;
 //    unset($DBTX);
     return TRUE;
   }
-  
+
+  /**
+   * Set the account's latitude and longitude.
+   * For example: eachA(function ($a) {$a->setLocus();}, 'latitude=0 AND longitude=0');
+   */
+  public function setLocus() {
+    if (u\test()) return; // doesn't work on DEV machine yet
+    $a = $this;
+    $params = ray('address city state zip format benchmark', $a->address, $a->city, r\realState($a->state), $a->zip, 'json', 'Public_AR_Current');
+    if (!$res = file_get_contents($url = GEOCODE_URL . http_build_query($params))) return r\tellAdmin(t('setLocus <%a>failed</a>', '_a', $url));
+    if (!$matches = (array) @$res->result->addressMatches) return r\tellAdmin(t('setLocus <%a>returned</a> no matches', 'a', $url));
+    $coods = @$matches[0]->coordinates;
+    $a->update('latitude longitude', $coods->y, $coods->x);
+  }    
+   
   /**
    * Say whether this settings/agent has the permission.
    * @param int $bit: the permission in question (DEFAULT B_READ)

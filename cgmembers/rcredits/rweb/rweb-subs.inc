@@ -762,7 +762,7 @@ function bitsFld($label, $bitRay, $prefix, $bits, $aliases = []) {
 function signedBy() {
   global $mya;
   $behalf = $mya->co ? t('(on behalf of %co) ', 'co', $mya->fullName) : '';
-  $signerA = $mya->cAdmin ? ($mya->co ?$mya->helperA : $mya) : $mya->agentA;
+  $signerA = $mya->cAdmin ? (($mya->co and $mya->helper) ? $mya->helperA : $mya) : $mya->agentA;
   return textFld(t('Signed:'), $behalf . t('Type your full name here ') . "($signerA->legalName)", required($mya->cAdmin ? $signerA->legalNameDpy : ''));
 }
 
@@ -1424,7 +1424,7 @@ function contactFields($defaults = [], $step0, $myid = 0) {
   global $mya;
 //  $country = $state = ''; // make sure these are not NULL
   $partnerExtras = ' partner customer partnerCode'; // add-on fields passed through only for partner signup (start with space) (even partnerCode is necessary, in case form is redrawn on error)
-  $fields = 'phone country physical address city state zip tenure owns sameAddr2 address2 city2 state2 zip2 postalAddr hidCountry hidState hidState2 source source2';
+  $fields = 'phone country physical address city state zip tenure owns sameAddr2 address2 city2 state2 zip2 postalAddr hidCountry hidState hidState2 other source';
   $a = $myid ? r\acct($myid) : FALSE;
   foreach ($defaults as $k => $v) if (is_null($v)) unset($defaults[$k]); // needed for joint account setup
   extract($defaults + ($a ? (array) $a->account($fields) : []));
@@ -1473,7 +1473,7 @@ function contactFields($defaults = [], $step0, $myid = 0) {
 */
     $stateAttrib = $addressAttrib = $cityAttrib = $zipAttrib = [];
     $phone = textFld(t('Phone:'), [t('Your phone number')], required(@$phone ? u\fmtPhone($phone): ''));
-    $faxetc = @$faxetc ? textFld(t('Fax etc:'), [t('Other contact info'),t('List other ways to contact you: fax, mobile, IM, etc. This field is NOT public.')], dft(@$faxetc)) : NULL;
+//    $faxetc = @$faxetc ? textFld(t('Fax etc:'), [t('Other contact info'),t('List other ways to contact you: fax, mobile, IM, etc. This field is NOT public.')], dft(@$faxetc)) : NULL;
 //    $country = selectFld(t('Country:'), t(''), dft(@$country) + $countryAttrib); // can't use required() here
     $country = selectFld(t('Country:'), t(''), dft(@$country)); // can't use required() here
     $physical = item('', t('Physical Address'));
@@ -1493,9 +1493,10 @@ function contactFields($defaults = [], $step0, $myid = 0) {
     $state2 = selectFld(t('State:'), t(''), dft(@$state2) + $stateAttrib); // can't use required() here
     $zip2 = textFld(t('Postal Code:'), [t('Postal code'), ''], required(@$zip2) + $zipAttrib);
     
+    $other = item('', t('Other Information'));
     if (!@$mya or !$mya->co) {
       $source = $step0 ? textFld(t('Referred by:'), [t('How you heard about %PROJECT'), t('Where did you hear about %PROJECT? (name of company or person, web address, publication name, radio station name, or whatever)')]) : NULL;
-      $source2 = $step0 ? textFld(t('Code:'), [t('Invitation or card code'), t('If you have an invitation or card code, type it here ("B" for brochure). Otherwise leave blank.')]) : NULL;
+//      $source2 = $step0 ? textFld(t('Code:'), [t('Invitation or card code'), t('If you have an invitation or card code, type it here ("B" for brochure). Otherwise leave blank.')]) : NULL;
     } else $source = hidFld(@$source);
   }
 
@@ -1728,7 +1729,9 @@ function hack($message, $info = []) {
  * @param bool $goPromo: <go to Promo site after signout>
  */
 function signout($goPromo = TRUE) {
+  if (isDEV and u\test()) setAcct(NULL); else
   @\session_destroy();
+
   if (isDEV and !u\test()) w\go('signin');
   if ($goPromo) return w\go(PROMO_URL . '?region=x');
 }

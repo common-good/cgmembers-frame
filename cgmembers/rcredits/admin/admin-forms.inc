@@ -145,7 +145,7 @@ function formAdminPanel_submit($form, &$sta) {
     w\say($a->fullName. t(' SSN Link:<br><br> &nbsp; %PROMO_URL/do/doSsn~%qid~%code &nbsp; ', 'qid code', $a->mainQid, $a->emailCode));
   } elseif ($op == 'do1099b' or $test1099 = ($op == 'do1099btest')) {
     include_once __DIR__ . '/../cg-yearly.inc';
-    r\Special\do1099bs(@$test1099);
+    r\Special\do1099s(@$test1099);
 	} elseif ($op == 'reconcile') {
 		w\go('sadmin/reconcile-ctty-fund');
   } elseif ($op == 'inviteeStatus') {
@@ -367,7 +367,7 @@ function formFollowup($form, &$sta, $args = '') {
   global $base_url;
   global $mya;
   
-	if (!$mya or !$mya->cAdmin) return w\go('');
+	if (!$mya or (!$mya->cAdmin2 and !$mya->admin2)) return w\go('');
   extract(just('uid one recent', $args));
   
   if (@$uid) {
@@ -510,12 +510,14 @@ EOF;
 
 function formDownloadMemberList($form, &$sta, $args = '') {
   global $base_url;
+
   extract($params = just(EXPORT_PARAMS, $args));
   if (@$do == 'export') return w\export($params);
 
   if (@$do == 'done') {
     $do = 'export';
     $params = http_build_query(compact(ray(EXPORT_PARAMS)));
+///    return w\go("$base_url/sadmin/export-list/$params"); // debug(
     $download = item("<iframe src=\"$base_url/sadmin/export-list/$params\" class=\"hidden\"></iframe>");
   }
   
@@ -835,7 +837,7 @@ function printChecks($args) {
 
   $ways = ['IN'=>'(amount>0 AND txid>0)', 'OUT'=>'(amount<0 AND txid>0)', 'BAD'=>'txid<0', 'VERIFY'=>'amount=0'];
   $where = $ways[strtoupper($way)];
-  $q = db\q("SELECT txid,created,payee,amount,deposit,bankAccount FROM r_usd WHERE deposit=:date AND created<=:NOW AND $where ORDER BY created, txid", compact('date'));
+  $q = db\q("SELECT txid,created,payee,amount,deposit,bankAccount FROM r_usd WHERE deposit=:date AND created<=:NOW AND $where ORDER BY txid", compact('date'));
   $pos = 3; // before first position of 3, on 3-up check paper
   $count = 0;
   while ($tx = $q->fetchAssoc()) {
