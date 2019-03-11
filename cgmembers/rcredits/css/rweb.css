@@ -1129,3 +1129,5 @@ div.password-confirm .error {font-weight:bold; color:red;}
 
 .grant-td {padding:5px;}
 .grant-th {width:50%; text-align:left; padding:5px;}
+
+.amount {text-align:right;}

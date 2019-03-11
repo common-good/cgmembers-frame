@@ -127,7 +127,7 @@ function selling($list) {return doRecords($list, 'Selling');}
 function companyFlags($list) {return doRecords($list, 'CompanyFlags');}
 function coupons($list) {return doRecords($list, 'Coupon');}
 function stats($list) {return doRecords($list, 'Stat');}
-
+function recurs($list) {return doRecords($list, 'Recur');}
 /**
  * Create device (box) records.
  */

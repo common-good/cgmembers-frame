@@ -201,6 +201,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     TEST preferences AMemberChangesPreferences
  *     MAKE relations Setup
  *     MAKE scancard Setup
+ *     MAKE showrecurs Setup
  *     MAKE signin Setup
  *     MAKE signin AMemberAsksForANewPasswordForACompany
  *     MAKE signupco Setup
@@ -446,6 +447,11 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
  *     TEST relations ItsComplicated
  *     TEST relations AMemberAddsARelation
  *     TEST scancard SomeoneScansACompanyAgentCard
+ *     TEST showrecurs AMemberLooksAtTheirRecurringTransactions
+ *     TEST showrecurs AMemberStopsARecurringTransaction
+ *     TEST showrecurs AMemberStopsAStoppedRecurringTransaction
+ *     TEST showrecurs AMemberAttemptsToStopANonexistentRecurringTransaction
+ *     TEST showrecurs AMemberAttemptsToStopAnotherMembersRecurringTransaction
  *     TEST signin AMemberVisitsTheMemberSite
  *     TEST signupco AMemberRegistersACompany
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
@@ -634,6 +640,11 @@ function usd($list) {return t\usd($list);}
  *     MAKE relations ItsComplicated
  *     MAKE scancard SomeoneScansAMemberCard
  *     MAKE scancard SomeoneScansACompanyAgentCard
+ *     MAKE showrecurs AMemberLooksAtTheirRecurringTransactions
+ *     MAKE showrecurs AMemberStopsARecurringTransaction
+ *     MAKE showrecurs AMemberStopsAStoppedRecurringTransaction
+ *     MAKE showrecurs AMemberAttemptsToStopANonexistentRecurringTransaction
+ *     MAKE showrecurs AMemberAttemptsToStopAnotherMembersRecurringTransaction
  *     MAKE signin AMemberVisitsTheMemberSite
  *     MAKE signin AMemberClicksALinkToResetPassword
  *     MAKE signin AMemberClicksALinkToResetPasswordWithWrongCode
@@ -1461,3 +1472,10 @@ function withChoices($choices) {
   }
   return $res;
 }
+
+/**
+ * recurs: (ARG)
+ *
+ * in: MAKE showrecurs Setup
+ */
+function recurs($list) {return t\recurs($list);}
