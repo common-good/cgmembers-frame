@@ -346,7 +346,7 @@ function transfer($ttype, $a1, $a2, $amount, $for, $data = []) {
   }
   if (@$force == 1) $offline = TRUE; // temporary until app handles this right
   $taking = ($ttype == 'charge');
-  $erInfo = compact(ray('ttype amount goods for force')) + ray('a1 a2 op', $a1->fullName, $a2->fullName, $taking ? t('charged') : t('paid'));
+  $erInfo = @compact(ray('ttype amount goods for force')) + ray('a1 a2 op', $a1->fullName, $a2->fullName, $taking ? t('charged') : t('paid'));
   $amount = round($amount, 2); // ignore fractions of cents
   if (!@$amount) {
 /**/  r\tellAdmin('zero transaction', $erInfo + ['stack' => trace()]);
@@ -402,7 +402,7 @@ function transfer($ttype, $a1, $a2, $amount, $for, $data = []) {
       }
       $loserA->suggestAuto();
       $details = t('|%loser was short by %short trying to pay %gainer %amount (available balance is %avail)', 'loser short gainer amount avail', $loserA->fullName, $short, $gainerA->fullName, u\fmtAmt($absAmt), $avail);
-      return r\txRet($msg, compact(ray('otherName short how details _aDebt avail')));
+      return r\txRet($msg, @compact(ray('otherName short how details _aDebt avail')));
     }
   }
 //  $roundup = (r\acct($payer)->roundup and !@$data['isGift'] and !@$data['roundups'] and $amount > 0); // payer, not a1 or loser
@@ -414,7 +414,7 @@ function transfer($ttype, $a1, $a2, $amount, $for, $data = []) {
   }
   
 //  $info = compact(ray('type created amount payer payee payerReward payeeReward payerAgent payeeAgent for data taking roundup goods force offline investment short'));
-  $info = compact(ray('type created amount payer payee payerAgent payeeAgent for data taking roundup goods force offline investment short'));
+  $info = @compact(ray('type created amount payer payee payerAgent payeeAgent for data taking roundup goods force offline investment short'));
   if (!$myx = new r\MyX($info, $a1, TRUE)) return r\txRet('tx save err', $erInfo);
   
   // Report results
@@ -665,7 +665,7 @@ EOF;
 //  $savings = $rewards; // tentative savings before additions ( = oldSavings - oldSavingsAdd) (used in transaction summary)
   
   $resultKeys = 'in out refunds fees xfees xin inProper outProper balance r bank roundups partRounds roundupsPaid';
-  $result = compact(ray($resultKeys));
+  $result = @compact(ray($resultKeys));
   
   foreach ($result as $k => $v) $result[$k] = $v = round($v, 2);
 

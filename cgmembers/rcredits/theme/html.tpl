@@ -67,7 +67,7 @@ foreach ($s as $id => $v) { // having selected the scripts, format for inclusion
   
   if (strpos($v, ';')) { // temporary for inline
     $scripts .= w\tags('script', $v, compact('id')) . "\n";
-  } else $scripts .= w\tags('script', '', compact(ray('id src nonce'))) . "\n";
+  } else $scripts .= w\tags('script', '', @compact(ray('id src nonce'))) . "\n";
 }
 
 w\sanitizePage($page); // assure no HTML insertion of script, styles, etc.

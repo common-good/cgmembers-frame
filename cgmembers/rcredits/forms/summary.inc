@@ -122,7 +122,7 @@ function formSummary($form, &$sta) {
 
   $fields = 'photo title clickPhoto showCustomers topButtons accountId accountName details address legalName shortName federalId community balance creditLine creditLimit committed invites cttyBene';
   foreach (ray('details') as $k) $$k = @$form[$k]; unset($form[$k]); // put these on the left if admin
-  $fields = compact(ray($fields));
+  $fields = @compact(ray($fields));
   
 //  if ($mya->superAdmin and !$mya->ok) $onSubmit = w\whoFldSubmit('helper', t('This person was invited by %name, yes?'));
   if ($mya->admin2 and !$mya->proSe) {

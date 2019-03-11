@@ -1,3 +1,7 @@
+2019-03-11
+. upgraded to MariaDb10.3.13, so put "@" in front of compact() where it was intended to omit missing variables and changed "continue" to "continue 2" in one place in vendor/tcpdf/tcpdf.php
+. fixed bugs in account::setLocus() (never worked), including changing latitude and longitude fields to 11,8 in users table
+
 2019-03-10  feature/pay-with-cg-link
 . people can now pay buy clicking on a simple link on a website or in an email -- no company code is specified and user must confirm by clickin a link in an email invoice (api and request parameters are stored in the invoice, so calling website can be notified upon payment)
 . added latitude and longitude fields

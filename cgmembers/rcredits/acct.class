@@ -90,7 +90,7 @@ class Acct {
     self::$rs[$a->id] = (object) $record;
 
     foreach (ray('number region') as $k) unset($info[$k]);
-    u\preray(compact(ray('phone email pass fullName legalName flags state community created login access emailCode cardCode stepsDone')), $info); // things we may have added or changed
+    u\preray(@compact(ray('phone email pass fullName legalName flags state community created login access emailCode cardCode stepsDone')), $info); // things we may have added or changed
     $a->update($info); // this is a lot easier to do after saving the record
     unset($DBTX); // commit
   }
@@ -737,7 +737,7 @@ class Acct {
       $access = r\rTime();
       if ($channel == TX_WEB) $login = $access;
       $lastip = $_SERVER['REMOTE_ADDR'];
-      $a->update(compact('login', 'access', 'lastip'));
+      $a->update(@compact('login', 'access', 'lastip'));
     }
     if (@$a->ok) r\ipok($a->id, $box); // box is not very important
     return $mya = $a;
@@ -1450,7 +1450,7 @@ EOF;
 		}
 		
 		$msg = join('|', $msg);
-		$args = compact(ray('suggested _a1 _aSecret _aDebt'));
+		$args = @compact(ray('suggested _a1 _aSecret _aDebt'));
 		if ($web) return t($msg, $args); else r\notify($a->id, $msg, $args);
 	}
 	
@@ -1669,9 +1669,10 @@ X;
   public function setLocus() {
     if (u\test()) return; // doesn't work on DEV machine yet
     $a = $this;
-    $params = ray('address city state zip format benchmark', $a->address, $a->city, r\realState($a->state), $a->zip, 'json', 'Public_AR_Current');
-    if (!$res = file_get_contents($url = GEOCODE_URL . http_build_query($params))) return r\tellAdmin(t('setLocus <%a>failed</a>', '_a', $url));
-    if (!$matches = (array) @$res->result->addressMatches) return r\tellAdmin(t('setLocus <%a>returned</a> no matches', 'a', $url));
+    $params = ray('street city state zip format benchmark', $a->address, $a->city, r\realState($a->state), $a->zip, 'json', 'Public_AR_Current');
+    if (!$res = file_get_contents($url = GEOCODE_URL . http_build_query($params))) return r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)));
+    $res = json_decode($res);
+    if (!$matches = (array) @$res->result->addressMatches) return r\tellAdmin(t('setLocus <%a>returned</a> no matches', 'a', w\atag($url)));
     $coods = @$matches[0]->coordinates;
     $a->update('latitude longitude', $coods->y, $coods->x);
   }    

@@ -184,7 +184,7 @@ define('R_TEMP_NAME_PREFIX', 'unknown ');
 define('CO_PHOTO_FACTOR', 3); // make company photos this many times as big as individual photos
 define('MAX_UPLOAD_SIZE', 4 * 1024000); // maximum upload size in bytes
 
-define('GEOCODE_URL', 'https://geocoding.geo.census.gov/geocoder/locations/');
+define('GEOCODE_URL', 'https://geocoding.geo.census.gov/geocoder/locations/address?');
 define('NEIGHBOR_RADIUS', 40); // how far away (in miles) can a member see names of other individual members?
 define('NEIGHBOR_RMAX', NEIGHBOR_RADIUS * NEIGHBOR_RADIUS / 69 / 69); // squared and adjusted for degrees, not miles
 define('NEIGHBOR_QUERY', '(POW(latitude-:lat, 2) + POW((longitude-:lon) * (.71 + .0116*(latitude+:lat)/2), 2))');
