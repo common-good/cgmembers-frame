@@ -13,8 +13,8 @@ class PayWithCgLink extends AbstractMigration {
         ->update();
     }
     $this->table('r_stats')
-      ->addColumn('payees', 'decimal', ['precision' => 11, 'scale'=>2, 'null' => false, 'default' => '0', 'comment' => 'mean plus 10% of top quartile number of payees per active account over the past 30 days', 'after' => 'usdOutCount']) 
-      ->addColumn('basket', 'decimal', ['precision' => 11, 'scale'=>2, 'null' => false, 'default' => '0', 'comment' => 'mean (positive) amount per transaction over the past 30 days', 'after' => 'payees']) 
+      ->addColumn('payees', 'decimal', ['precision' => 11, 'scale'=>2, 'null' => false, 'default' => '0', 'comment' => 'median number of payees per active account over the past 30 days', 'after' => 'usdOutCount']) 
+      ->addColumn('basket', 'decimal', ['precision' => 11, 'scale'=>2, 'null' => false, 'default' => '0', 'comment' => 'median (positive) amount per transaction over the past 30 days', 'after' => 'payees']) 
       ->update();    
   }
 
