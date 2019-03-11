@@ -183,7 +183,7 @@ function logSql($args) {
  * @param assoc $values: values to add to the data field in that record
  */
 function setData($table, $id, $values) {
-  $keys = ray('users r_txs r_invoices', 'uid', 'xid', 'nvid');
+  $keys = ray('users r_invoices r_tx_hdrs', 'uid', 'nvid', 'xid');
   $key = $keys[$table];
   u\EXPECT($key, 'bad table');
   $data = db\get('data', $table, "$key=:id", compact('id'));
@@ -206,7 +206,7 @@ function setData($table, $id, $values) {
 function setFlag($table, $id, $bit, $bool = TRUE) {
   if ($table == 'users') return r\acct($id)->setBit($bit, $bool);
 
-  $keys = ray('users r_txs r_invoices', 'uid', 'xid', 'nvid');
+  $keys = ray('users_txs r_invoices r_tx_hdrs', 'uid', 'nvid', 'xid');
   $key = $keys[$table];
   u\EXPECT($key, 'bad table');
   $flags = db\get('flags', $table, "$key=:id", compact('id'));

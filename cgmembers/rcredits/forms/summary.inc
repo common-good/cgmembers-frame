@@ -96,10 +96,6 @@ function formSummary($form, &$sta) {
     if ($mya->rewards) $balanceDesc .= t(' (see <%a>History</a>)', '_a', atag('/history'));
     $balance = item($balance . "<small>$balanceDesc</small>", t('Balance:'));
 
-    $uids = ($mya->jid != 0) ? [$mya->id, $mya->jid] : [$mya->id];
-    $newBalance = db\get('SUM(amount) AS newBalance', 'r_entries', 'uid IN (:uids)', ['uids' => $uids]);
-    $newBalance = item(u\fmtAmt($newBalance), t('New Balance:'));
-
 //    $savings = item(u\fmtAmt($mya->savings) . t('<small> (your total incentive rewards to date)</small>', [
 //    list ($rewardNote, $rewardDesc) = $mya->cttyRewardy ? [t('<small> (your total incentive rewards to date)</small>'), t('This amount will be yours to keep, once your community reaches a certain size.')] : ['', t('Some of this amount may be yours to keep, at your %PROJECT community\'s decision, once membership reaches a certain size.')];
 //    $savings = item(u\fmtAmt($mya->rewards) . $rewardNote, t('Credit Line:'), $rewardDesc);

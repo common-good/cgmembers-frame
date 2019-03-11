@@ -19,13 +19,18 @@ function custStatement($args = '') {
   $purposeLenMax = 60; // maximum number of characters in purpose field, not including added "..."
 
   if (!$mya = r\acct()) return w\go('', t('You must first sign in.'), 'ERR');
-  extract(just('cust period way', $args));
-  if (!@$cust or !$a = r\acct($cust)) return w\softErr(t('No customer was specified.'));
+  $cust = arrayGet($args, 'cust', null);
+  $period = arrayGet($args, 'period', null);
+  $way = arrayGet($args, 'way', 'OUT');
+
+  $a = is_null($cust) ? null : r\acct($cust);
+  if (is_null($a)) return w\softErr(t('No customer was specified.'));
 //  if (!@$period) return w\softErr(t('No period was specified.'));
 
 //  list ($start, $end, $period) = statementMonth($period, $mya->fyEnd ?: '12/31'); // not used yet
-
-  $q = @$way == 'IN' ? be\myCustTxs(0, time(), $mya, $a) : be\myCustTxs(0, time(), $a, $mya);
+  $custUids = is_null($a->jid) or $a->jid == 0 ? [ $a->id ] : [ $a->id, $a->jid ];
+  $q = ($way == 'IN') ? be\getCustTxs([$mya->id], $custUids, 0, time()+1)
+                      : be\getCustTxs($custUids, [$mya->id], 0, time()+1);
   if (!$q->rowCount()) return w\softErr(t('That is not a %thing of yours.', 'thing', $way == 'IN' ? t('customer') : t('vendor')));
 
   $pdf = new r\Statement($mya);
@@ -50,7 +55,7 @@ function custStatement($args = '') {
   $pdf->setFontSize($size);
   $pdf->barHead('STATEMENT');
   $lastHead = 'Balance';
-  $fields = ray("Date//25/ /space/1/ /tid/20/C Description/purpose/83/ /space/1/ Invoiced//20/R /space/1/ Paid//20/R /space/10/ Balance//20/R");
+  $fields = ray("Date//25/ /space/1/ /tid/20/C Description/purpose/83/ /space/1/ Invoiced//20/R /space/1/ Paid//20/R /space/10/ Balance/runBalance/20/R");
   $pdf->colHeads($fields);
   $pdf->setFontSize(.6 * $size); // a bit of space below field headers
   $pdf->newLine();

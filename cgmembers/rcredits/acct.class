@@ -211,7 +211,6 @@ class Acct {
     if ($field == 'prefsSet') return !is_null($a->o_minimum); // preferences have been set at least once
     if ($field == 'hasCustomers') return db\exists('r_relations', 'main=:id AND :IS_CUSTOMER', ['id' => $a->id]);
     if ($field == 'superAdmin') return ($a->agentId == 1) ?: (u\test() and $a->admin and $a->agentA->name == 'abeone');
-    if ($field == 'partRounds') return db\sum('1-MOD(amount, 1)', 'r_txs', ':IS_ROUNDUP AND payer=:id AND MOD(amount, 1)>0 AND created>=:mday1', ray('id mday1', $this->id, u\monthDay1())); // not-yet-distributed change from rounded-up payments
     if ($field == 'bankInfo') return (!$routing = substr($a->bankAccount, 4, 9)) ? NULL
                                 : db\get('*', 'r_banks', 'route=:routing', compact('routing'));
     if ($field == 'tempPhotoFilename') return r\pic("$a->mainQid.jpg");
@@ -229,6 +228,10 @@ class Acct {
         foreach (ray('oldValue newValue') as $k) if ($type = u\crypted($row->$k)) $rows[$i]->$k = u\decry($type, $row->$k);
       }
       return $rows;
+    }
+    if ($field == 'balance') {
+      $a->reread(true);
+      return db\get('balance', 'users', 'uid=:id', ['id' => $a->id]);
     }
     if (in($field, 'data secure vsecure') and !is_array($result)) { // special not yet arrayed
       if (!$result) return [];
@@ -659,23 +662,27 @@ class Acct {
   /**
    * Apply a discount coupon to the current purchase, if any exists.
    * @param acct $sellerA: account that issued the coupon
-   * @param numeric $price: original price to be paid
-   * @param numeric $rebate: (RETURNED) how much rebate the customer gets (FALSE if none)
-   * @param int $coupid: (RETURNED) coupon id of the relevant coupon (FALSE if none)
-   * @return the final effective price to be paid
+   * @param numeric $price: original price to be paid, must be non-negative
+   * @return assoc of
+   *   numeric $rebate: how much rebate the customer gets (0 if none)
+   *   int $coupatedid: id of the relevant coupated record (FALSE if none)
    */
-  public function applyCoupon($sellerA, $price, &$rebate = '', &$coupid = '') {
+  public function applyCoupon($sellerA, $price) {
     $a = $this;
     $table = 'r_coupons c LEFT JOIN r_coupated d ON (d.coupid=c.coupid AND d.uid=:myid)';
     $where = 'fromId=:id AND :now BETWEEN start AND end AND :price>=minimum AND NOT flags ORDER BY (ulimit=0 OR uses<ulimit) DESC, (uses IS NULL), end DESC'; // not a gift
     $subs = ray('id now price myid', $sellerA->id, time(), $price, $a->id);
-    if (!$res = db\get('c.coupid,amount,ulimit,id,uses', $table, $where, $subs)) return $price;
+    if (!$res = db\get('c.on,c.coupid,amount,ulimit,id,uses', $table, $where, $subs)) return [0, 0];
     extract($res);
     if ($ulimit and $uses >= $ulimit) return $price;
     $rebate = $amount < 0 ? -$price * $amount * .01 : $amount;
-    // NO do this in x.class   be\transfer('charge', $sellerA, $a, $rebate, FOR_GOODS, t('rebate (discount coupon #%coupid)', compact('coupid')));
-    db\updateOrInsert('r_coupated', ['id' => $id, 'coupid' => $coupid, 'uid' => $a->id, 'uses' => $uses + 1, 'when' => time()], 'id');
-    return max(0, $price - $rebate); // effective price (for potential gift certificate)
+    // NO do this in x.class   be\transfer('charge', $sellerA, $a, $rebate, FOR_GOODS, t('rebate (discount coupon #%coupid', compact('coupid')));
+    if (empty($id)) {
+      $id = db\insert('r_coupated', ['coupid' => $coupid, 'uid' => $a->id, 'uses' => 1, 'when' => time()], 'id');
+    } else {
+      db\update('r_coupated', ['id' => $id, 'coupid' => $coupid, 'uid' => $a->id, 'uses' => $uses + 1, 'when' => time()], 'id');
+    }
+    return [max(0, $rebate), $id]; // effective price (for potential gift certificate)
   }
   
   /**
@@ -765,7 +772,6 @@ class Acct {
    * @param float $need: the amount needed
    * @param bool $get: draw from other accounts as needed, then say whether there is enough
    * @param acct $actor: account of the individual or company initiating the transaction
-   * @param bool $retrying: UNUSED recursed after updating cache usd amount
    * @return how much short this account is, of what's needed
    */
   public function shortfall($goods, $need = 0, $get = FALSE, $actor = NULL) {
@@ -1492,43 +1498,6 @@ EOF;
   }
 
   /**
-   * Return the next suggested date, type, and description to contact this member for a standard checkin.
-   * @param mixed $done: <asking because a checkin was just completed> or "activate"
-   * @return [$type, $date] or ['', 0, ''] if none
-   *   $type: a one-word call type
-   *   $date: the suggested date
-   */
-  public function nextTickleNew($done = FALSE) {
-    $a = $this;
-
-    $now = time();
-    $activate = ($done . '' == 'activate');
-    if ($activate) {
-      list ($done, $activated) = ['', $now];
-    } else {
-      if (!$a->member) {
-        if ($a->nonudge or $now - $a->created < HOUR_SECS) return ['', 0];
-        return [@$a->federalId ? 'setup' : 'pre', max(0, $a->created)];
-      } elseif (!$a->ok) return ['activate', $now];
-      $activated = max($a->activated, strtotime('1/1/2013')); // max is for testing
-    }
-    
-    if ($a->signupCo) $signupCo = w\signupCoDisplay($a->signupCo) . ',';
-    $daysIn = ($now - $activated) / DAY_SECS; // how many days after activation are we
-    $tickleDaysIn = $a->tickle ? ($a->tickle - $activated) / DAY_SECS : 0; // how many days after activation to tickle
-
-    if ($activate or ($tickleDaysIn < 90 and $daysIn < ($done ? 8 : 90))) { // not welcoming if wrong time or done at right time
-      $when = $activated + (($a->giftsDescNew() and !$a->cttyA->isRegion) ? TICKLE_WELCOME : TICKLE_DELAYED) * DAY_SECS;
-      return ['welcome', $when];
-    }
-    $yearsIn = max(1, round($daysIn / 365.25));
-    if ($done and abs($yearsIn * 365.25 - $daysIn < 30)) $yearsIn++;
-    return ['annual', strtotime("+$yearsIn years", $activated)]; // Annual
-    // if (($daysIn + 30) mod 365 < 2 * 30) 
-    //return [0, ''];
-  }
-
-  /**
    * Return a description of the members gift history. The total gifts include first planned gift, if none completed yet.
    * @param string $period: (RETURNED) frequency of latest gift
    * @param string $totalGifts: (RETURNED) total gifts with no mention of latest
@@ -1537,61 +1506,23 @@ EOF;
   public function giftsDesc(&$period = '', &$totalGifts = '') {
     $a = $this;
     $gift = '';
-    //      db\get($a->ok ? 'SUM(amount)' : 'amount', 'r_gifts', 'uid=:uid', compact('uid')) ?: 0;
-    $fields = 'r.created AS recurStart,r.amount AS recurAmt,r.period,h.honor,h.honored,t.created AS lastGiftDate,t.amount AS lastGift';
-    $table = <<< X
-      users u LEFT JOIN r_recurs r ON r.payer=u.uid AND r.payee=:CGID AND r.ended=0
-      LEFT JOIN r_honors h ON h.uid=u.uid
-      LEFT JOIN (SELECT payer,created,amount from r_txs x WHERE x.payer=:id AND x.payee=:CGID AND x.:IS_GIFT AND NOT x.:IS_UNDONE AND NOT x.:IS_UNDOES ORDER BY created DESC LIMIT 1) t 
-      ON t.payer=u.uid
-X;
-    if ($info = db\get($fields, $table, 'u.uid=:id', ray('id', $a->id))) {
-      extract($info);
-      if ($period) {
-        $oftens = ray(OFTENS);
-        list ($period, $recurAmt, $recurStart) = [@$oftens[$period], u\fmtAmt($recurAmt), u\fmtDate($recurStart, TRUE)];
-        $gift = "<%b>$recurAmt</b> $period";
-      }
-      $gift = u\unite($gift, t('Last: %lastGift (%lastGiftDate)', 'lastGift lastGiftDate', u\fmtAmt($lastGift), u\fmtDate($lastGiftDate, TRUE)), ', ');
-      if ($info = db\get('honor,honored', 'r_honors', "uid=:id AND honor<>'' ORDER BY id DESC", ['id' => $a->id])) {
-        extract($info);
-        $gift = u\unite($gift, u\honorDesc($honor) . $honored, ', ');
-      }
-    }
-
-    if ($totalGifts = ($amt = $a->totalGifts()) ? u\fmtAmt($amt) : (@$amount ?: '')) $totalGifts = t('<%b>%totalGifts</b> to date', compact('totalGifts'));
-    $totalGifts .= trim(($a->roundup ? t(' +<%b>roundups</b>') : '') . ($a->crumbs > 0 ? t(' +<%b>%crumbs% crumbs</b>', 'crumbs', $a->crumbs * 100) : ''));
-    foreach (ray('totalGifts gift') as $k) $$k = tr($$k, '_b', 'b class="positive"'); // must do to each, not together
-
-    return u\unite($totalGifts, $gift, ', ');
-  }
-
-  /**
-   * Return a description of the members gift history. The total gifts include first planned gift, if none completed yet.
-   * @param string $period: (RETURNED) frequency of latest gift
-   * @param string $totalGifts: (RETURNED) total gifts with no mention of latest
-   * @return: description of gifts (FALSE if none)
-   */
-  public function giftsDescNew(&$period = '', &$totalGifts = '') {
-    $a = $this;
-    $gift = '';
     /* A gift is a transaction where one entry refers to the member and another entry refers to CG. */
     $sql = <<< EOF
       SELECT r.created AS recurStart, r.amount AS recurAmt, r.period, h.honor, h.honored,
              t.created AS lastGiftDate, e2.amount AS lastGift 
       FROM r_recurs r
-           LEFT OUTER JOIN r_honors h USING (uid)
-           LEFT OUTER JOIN r_tx_hdrs t
-           JOIN r_entries e1 USING (xid)
-           JOIN r_entries e2 USING(xid)
-      WHERE r.payer=:id AND r.payee=:CGID AND e1.uid=:id AND e2.uid=:CGID AND
-            t.:IS_GIFT AND NOT t:IS_REVERSED AND t.reverses IS NULL ORDER BY created DESC LIMIT 1
+      LEFT OUTER JOIN r_honors h ON r.payer=h.uid
+      JOIN r_entries e1 ON r.payer=e1.uid
+      LEFT OUTER JOIN r_tx_hdrs t USING(xid)
+      JOIN r_entries e2 ON e2.xid=t.xid AND e2.uid=r.payee
+      WHERE (r.payer = :id) AND (r.payee = :CGID) AND (e1.uid = :id) AND (e2.uid = :CGID) AND
+            t.:IS_GIFT AND NOT :HAS_REVERSER AND t.reverses IS NULL ORDER BY t.created DESC LIMIT 1
 EOF;
     $results = db\q($sql, ['id' => $a->id]);
     if (!$results) { return FALSE; }
     extract($results->fetchAssoc());
     if ($period) {
-      $period = getArray(ray(OFTENS), 'period', '');
+      $period = u\arrayGet(ray(OFTENS), 'period', '');
       $recurAmt = u\fmtAmt($recurAmt);
       $recurStart = u\fmtDate($recurStart, TRUE);
       $gift = "<%b>$recurAmt</b> $period";
@@ -1959,15 +1890,8 @@ EOF;
    * Return the account's total gifts to the Common Good.
    */
   function totalGifts() {
-    return db\sum('amount', 'r_txs', 'payer=:payer AND payee=:CGID AND :IS_GIFT AND NOT :IS_UNDONE AND NOT :IS_UNDOES', ray('payer', $this->id));
-  }
-
-  /**
-   * Return the account's total gifts to the Common Good.
-   */
-  function totalGiftsNew() {
-    return db\sum('e1.amount', 'r_tx_hdrs t JOIN r_entry e1 USING(xid) JOIN r_entry e2 USING(xid)',
-                  'e1.uid=:payer AND e2.uid=:CGID AND t.:IS_GIFT AND NOT t.:IS_REVERSED AND t.reverses IS NULL',
+    return db\sum('e1.amount', 'r_tx_hdrs t JOIN r_entries e1 USING(xid) JOIN r_entries e2 USING(xid)',
+                  'e1.uid=:payer AND e2.uid=:CGID AND :IS_GIFT AND NOT :HAS_REVERSER AND t.reverses IS NULL',
                   [ 'payer' => $this->id ]);
   }
   
@@ -1992,9 +1916,14 @@ EOF;
     return array_values($this->isCtty ? array_intersect($res, ray(B_CTTY_BITS)) : array_diff($res, ray(B_CTTY_BITS)));
   }
   public function pay($a2, $amt, $for, $extra = []) {return be\transfer('payment', $this, $a2, $amt, $for, $extra);}
-  public function charge($a2, $amt, $for, $extra = []) {return be\transfer('charge', $this, $a2, $amt, $for, $extra);}  
-  public function invoice($a2, $amt, $for = NULL, $extra = []) {return be\invoice($this, $a2, $amt, $for, $extra);}
-  
+  public function charge($a2, $amt, $for, $extra = []) {return be\transfer('charge', $this, $a2, $amt, $for, $extra);}   public function invoice($a2, $amt, $for = NULL, $extra = []) {return be\invoice($this, $a2, $amt, $for, $extra);}
+
+  public function nextTid() {
+    $maxTid = db\get('MAX(acctTid)', 'r_entries', 'uid in (:uids)', ['uids' => [$this->id, $this->jid]]);
+    /// debug("maxTid is $maxTid");
+    if (empty($maxTid)) $maxTid = 0;
+    return 1 + $maxTid;
+  }
 } // end of class
 
 /**

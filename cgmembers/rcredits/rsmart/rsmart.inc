@@ -82,7 +82,8 @@ function pos($args = FALSE) {
   global $channel; $channel = TX_POS;
   global $scanned; $scanned = true;
   global $mya;
-  
+
+  debug('pos($args=' . print_r($args, true));
   if (!r\up()) exit('system down'); // app does not (and should not) distinguish this from system failure
   if (is_object($args)) $args = (array) $args; // this helps with debugging when passing json_decoded args
   if (is_string($args)) $args = urlq2ray($args); // convert from query string to array
@@ -99,13 +100,15 @@ function pos($args = FALSE) {
   if (isDEV and $op == 'test') return test($args0);
   
   $mya = getAgent(@$agent ?: @$member, $agentErr);
+  debug("mya=" . print_r($mya, true));
 ///     print_r(compact(ray('mya agent member agentErr')));
-
+  // debug('$mya=' . print_r($mya, true));
   if (@$device) { // device was specified, substitute its record id, herein
     if (!$mya) return posErr($agentErr);
     if ($deviceId = getDevice($device, $mya->id)) {
       $edit = ray('id access', $deviceId, r\rTime());
       db\update('r_boxes', $edit, 'id'); // remember time last accessed so we can drop the deadwood
+      $args['device'] = $deviceId;
     } elseif ($op != 'identify') return posErr('unknown device');
   } elseif (@$agent or $op != 'identify') return posErr('missing device');
   
@@ -222,6 +225,8 @@ function getTime($args) {
 function identify($args) {
   global $mya;
 
+  // debug('entering identify ' . print_r($args, true));
+  
   $companyInfo = getCompanyInfo();
   if ($err = missingArg($keys = 'device member code version', $args)) return posErr($err, [], $companyInfo);
   extract(just($keys . ' agent pin signin', $args)); // no agent on scanin
@@ -230,7 +235,6 @@ function identify($args) {
     if ($info = machine(@$member, $code)) return ok($info + $companyInfo); // purchase from fuel pump or other machine
     if (!$a = getMember(@$member, $code, $err, $version > 217)) return posErr($err, [], $companyInfo);
   } else $a = $mya; // get agent
-
   if ($version > 217 and !u\test()) {
     if (@$signin) {
       if (@$agent) {
@@ -250,8 +254,7 @@ function identify($args) {
     $signin = ($logon == 1); // ditto
     if (@$signin and $a->proSe and !$a->co) return posErr('scan in first', [], $companyInfo);
   }
-  
-  if (@$device) $deviceId = getDevice($device, $mya->id);
+  if (@$device) $deviceId = $device; //getDevice($device, $mya->id);
 
   if (@$signin) { //  identifying agent
 //    if ($a->proSe and (!$a->co or $a->coCan(CO_REQUIRE_CASHIER))) return posErr('scan in first');
@@ -347,11 +350,14 @@ function photoReturn($pic) {
  */
 function charge($args, $type = 'charge') {
   global $mya;
-  
+
+  debug('charge(' . print_r($args, true) . ", $type)");
   $keys = 'agent member amount goods description created';
   if ($err = missingArg($keys, $args)) return posErr($err);
   extract(just($keys . ' proof force version', $args));
-
+  extract(u\exactly('description device', $args, ['', null]));
+  $box = $device;
+  
   if (!@$member) return posErr('missing member'); // handle empty string (versus missing param)
   if ($version > 216 and !@$proof) return posErr(missingArg('proof', []));
   if (@$description === '') return posErr('missing description');
@@ -368,8 +374,16 @@ function charge($args, $type = 'charge') {
   $selfhelp = ($goods == '2');
   $goods = $goods == "3" ? FOR_NONGOODS : ($goods == "0" ? FOR_USD : FOR_GOODS); // selfhelp is FOR_GOODS
   if (@$force) {
+    $sql = <<<EOF
+      SELECT xid
+      FROM r_tx_hdrs t JOIN r_entries payer USING(xid) JOIN r_entries payee USING(xid)
+      WHERE t.created=:created AND payer.uid=:payer AND payee.uid=:payee
+            AND (payer.amount=-:amount OR payee.amount=:amount) AND t.goods=:goods AND payee.description=:payeeFor
+EOF;
     $subs = ray('created payer payee amount goods payeeFor', $created, $a->id, $mya->id, $amount, $goods, $description);
-    if ($q = db\get('xid,data', 'r_txs', $subs)) extract($q);
+    $q = db\q($sql, $subs);
+    $x = $q->fetch(\PDO::FETCH_ASSOC);
+    if ($x) extract($x);
   }
   
   $amount = str_replace(',', '', number_format($amount, 2)); // make sure both cents digits are included
@@ -390,12 +404,13 @@ function charge($args, $type = 'charge') {
   } elseif (@$force == "-1" and @$xid) { // does exists and shouldn't
     $did = '';
     $undo = $xid;
-    $data = unserialize($data);
-    if ($txid = @$data['undoneBy']) { // already got reversed
-      $created = db\get('created', 'r_txs', 'xid=:txid', compact('txid'));
+
+    $revRes = db\get('xid AS `undo`, created', 'r_tx_hdrs', 'reverses=:xid', ['xid'=>$xid]);
+    if ($revRes) { // already got reversed
+      extract(just('undo created', $revRes));
       $message = "Transaction has been reversed.";
     } else {
-      list ($msg, $subs) = be\undoTx($xid, (@$amount < 0 and !$mya->co) ? 'payer=:myid' : 'payee=:myid', ['myid' => $mya->id], $force);
+      list ($msg, $subs) = be\undoTx($xid, (@$amount < 0 and !$mya->co) ? 'e.amount > 0 AND e.uid=:myid' : "e.amount='$amount' AND e.uid=:myid", ['myid' => $mya->id], $force);
       if (is_array($msg)) list ($msg, $subs) = [$msg[0], $msg[1] + $subs];
       if (!@$subs['success']) return badTx($args, $name, $msg, $subs);
       $txid = $subs['xid'];
@@ -408,9 +423,10 @@ function charge($args, $type = 'charge') {
     $txid = 0;
     $message = "Transaction has been canceled.";
   } else { // doesn't exist and should (forcing or not)
+    debug("doesn't exist and should (forcing or not)");
     if (@$amount < 0 and $a->co and $a->proSe) return badTx($args, $name, $msg, $subs);
     if (@$amount < 0 and !$mya->co) list ($type, $amount) = ['payment', -$amount];
-    list ($msg, $subs) = be\transfer($type, $mya, $a, @$amount, @$description, compact(ray('goods created force')));
+    list ($msg, $subs) = be\transfer($type, $mya, $a, @$amount, @$description, compact(ray('goods created force box')));
     if (!@$subs['success']) return badTx($args, $name, $msg, $subs);
 
     if (!@$force and $aa = $a->agentA and $mya->co and !$aa->ided) $aa->setBit(B_IDED);
@@ -547,9 +563,8 @@ function getMember($qid, $code, &$err = '', $requireCode = TRUE) {
 function balrew($a) {
   global $mya;
   if (!$mya->co) $a = $mya;
-  $balance = (($a->can(B_SECRET) and $mya->co) ? '*' : '') . round($a->balance - $a->partRounds, 2);
-//  $rewards = $a->rewards;
-  $rewards = -$a->floor;
+  $balance = (($a->can(B_SECRET) and $mya->co) ? '*' : '') . round($a->balance, 2);
+  $rewards = 0;
   return compact('balance', 'rewards');
 }
 
@@ -561,7 +576,7 @@ function balrew($a) {
 function getDescriptions($a) {
   $ray = [];
   //if ($default = $a->description) $ray[] = $default;
-  $sql = 'SELECT payeeFor, COUNT( payeeFor )  FROM r_txs WHERE payee=:id GROUP BY payeeFor ORDER BY COUNT(payeeFor) DESC';
+  $sql = 'SELECT description AS payeeFor, COUNT(description) FROM r_entries WHERE uid=:id AND amount > 0 GROUP BY payeeFor ORDER BY COUNT(description) DESC';
   return $ray + (db\q($sql, ray('id', $a->id))->fetchCol() ?: []);
 }
 

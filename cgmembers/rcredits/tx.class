@@ -9,21 +9,31 @@ require_once __DIR__ . '/txentry.class';
 
 /**
  * @file
- * rCredits Transaction class (and extension MyTx, which looks at the transaction from one party's view)
+ * CG credit Transaction class
  *
  * Note that a transaction has at least two entries, which this class also contains
  */
 
 class Tx {
-  const TX_HDR_FIELDS = ['xid', 'type', 'goods', 'initiator', 'initiatorAgent', 'flags',
+  const TX_HDR_FIELDS = ['xid', 'type', 'goods', 'actor', 'actorAgent', 'flags',
                          'channel', 'box', 'risk', 'risks', 'reverses', 'created'];
-  const INSERT_FIELDS = ['type', 'goods', 'initiator', 'initiatorAgent', 'flags',
+  const INSERT_FIELDS = ['type', 'goods', 'actor', 'actorAgent', 'flags',
                          'channel', 'box', 'risk', 'risks', 'reverses', 'created'];
-  const REQUIRED_FIELDS = ['type', 'goods', 'initiator', 'flags', 'entries'];
-  const ALLOWED_FIELDS = ['xid', 'type', 'goods', 'initiator', 'initiatorAgent', 'flags',
-                          'channel', 'box', 'risk', 'risks', 'reverses', 'created', 'entries'];
+  const REQUIRED_FIELDS = ['type', 'goods', 'actor', 'flags'];
 
-  private $properties;
+  public $xid;
+  public $type;
+  public $goods;
+  public $actor;
+  public $actorAgent;
+  public $flags;
+  public $channel;
+  public $box;
+  public $risk;
+  public $risks;
+  public $reverses;
+  public $created;
+  public $entries;
   
   /**
    * Instantiate (construct) a transaction record.
@@ -31,14 +41,25 @@ class Tx {
    *                     but must only include ALLOWED_FIELD entries.
    */
   function __construct($info) {
-    u\EXPECT(array_diff(Tx::REQUIRED_FIELDS, array_keys($info)) == [], 'missing fields in Tx::createNew');
-    u\EXPECT(array_diff(array_keys($info), Tx::ALLOWED_FIELDS) == [], 'extra fields in Tx::createNew:' .
-             print_r(array_diff(array_keys($info), Tx::ALLOWED_FIELDS), true));
-    u\EXPECT(count($info['entries']) >= 2, 'transactions must have at least two entries');
+    print_r(Tx::REQUIRED_FIELDS);
+    print_r(array_keys($info));
+    print_r($info);
+    $missing = array_diff(Tx::REQUIRED_FIELDS, array_keys($info));
+    u\EXPECT($missing == [], "missing fields in Tx::createNew: " . print_r($missing, true));
 
-    $this->properties = $info;  // OK because array assignment is by copying
-    if (!array_key_exists('xid', $this->properties)) { $this->properties['xid'] = 0; }
-    if (!array_key_exists('created', $this->properties)) { $this->properties['created'] = time(); };
+    $this->xid = u\arrayGet($info, 'xid', 0);
+    $this->type = u\arrayGet($info, 'type', null);
+    $this->goods = u\arrayGet($info, 'goods', null);
+    $this->actor = u\arrayGet($info, 'actor', null);
+    $this->actorAgent = u\arrayGet($info, 'actorAgent', null);
+    $this->flags = u\arrayGet($info, 'flags', null);
+    $this->channel = u\arrayGet($info, 'channel', null);
+    $this->box = u\arrayGet($info, 'box', null);
+    $this->risk = u\arrayGet($info, 'risk', null);
+    $this->risks = u\arrayGet($info, 'risks', 0);
+    $this->reverses = u\arrayGet($info, 'reverses', null);
+    $this->created = u\arrayGet($info, 'created', r\rTime());
+    $this->entries = u\arrayGet($info, 'entries', []);
   }
 
   /**
@@ -47,16 +68,65 @@ class Tx {
    * @return the value if it exists, else NULL
    */
   public function __get($f) {
-    $x = $this;
-    if (array_key_exists($f, $x->properties)) {
-      return $x->properties[$f];
-    }
+    $tx = $this;
     switch ($f) {
-    case 'properties':
-      return $this->properties;
+    case 'payerEntry':
+      return $this->getPayerEntry();
+    case 'payeeEntry':
+      return $this->getPayeeEntry();
+    case 'actorEntry':
+      return $this->getActorEntry();
+    case 'otherEntry':
+      return $this->getPayerEntry()->uid == $this->actor ? $this->getPayeeEntry() : $this->getPayerEntry();
     default:
       u\EXPECT(FALSE, "unexpected field '$f' requested");
     }
+  }
+
+  private function getPayerEntry() {
+    foreach ($this->entries as $entry) {
+      if ($entry->entryType == ENTRY_PAYER) return $entry;
+    }
+    return null;
+  }
+
+  private function getPayeeEntry() {
+    foreach ($this->entries as $entry) {
+      if ($entry->entryType == ENTRY_PAYEE) return $entry;
+    }
+    return null;
+  }
+
+  private function getActorEntry() {
+    foreach ($this->entries as $entry) {
+      if ($entry->uid == $this->actor) return $entry;
+    }
+    return null;
+  }
+
+  public function getAmount($a) {
+    $total = 0;
+    foreach ($this->entries as $entry) {
+      if ($entry->uid == $a->uid or $entry->uid == $a->jid) $total += $entry->amount;
+    }
+    return $total;
+  }
+
+  public function getMyTid($me) {
+    $myTid = 0;
+    foreach ($this->entries as $entry) {
+      if ($entry->uid == $me->uid or $entry->uid == $me->jid) {
+        $myTid = max($myTid, $entry->acctTid);
+      }
+    }
+    return $myTid;
+  }
+
+  /**
+   * Add some entries to this transaction.
+   */
+  public function addEntries($entries) {
+    $this->entries += $entries;
   }
 
   /**
@@ -64,14 +134,14 @@ class Tx {
    * @param xid $xid: transaction record id
    * @return the new instance of Tx
    */
-  static function read($xid) {
-    u\EXPECT(is_integer($xid));
+  static function read($xid, $where = '1', $subs = []) {
+    /* u\EXPECT(is_integer($xid)); */
     
     $DBTX = db_transaction();
-    $info = db\get('*', 'r_tx_hdrs', 'xid=:xid', ['xid' => $xid]);
-    u\EXPECT($info, "Transaction $xid not found");
+    $info = db\get('*', 'r_tx_hdrs', "(xid=:xid) AND $where", $subs + ['xid' => $xid]);
+    if (!$info) return FALSE;
     $entries = r\TxEntry::readAll($xid);
-    u\EXPECT($entries, "No entries found for transaction $xid");
+    if (!$entries) return FALSE;
     unset($DBTX);
     return new Tx($info + ['entries' => $entries]);
   }
@@ -81,17 +151,131 @@ class Tx {
    * @return the xid of the transaction
    */
   function insert() {
-    $x = $this;
+    $tx = $this;
     $DBTX = db_transaction();
-    u\EXPECT($x->properties['xid'] == 0, "We're not allowing modification of transactions.");
-    $xid = db\insert('r_tx_hdrs', just(Tx::INSERT_FIELDS, $x->properties), 'xid');
+    u\EXPECT($tx->xid == 0, "We're not allowing modification of transactions.");
+    $xid = db\insert('r_tx_hdrs', just(Tx::INSERT_FIELDS, (array)$tx), 'xid');
     u\EXPECT($xid, "Failed to insert transaction header record");
-    foreach ($x->properties['entries'] as $entry) {
+    foreach ($tx->entries as $entry) {
+      if (empty($entry->acctTid)) {
+        $entry->acctTid = r\acct($entry->uid)->nextTid;
+      }
+    }
+    foreach ($tx->entries as $entry) {
       $eid = $entry->insert($xid);
       u\EXPECT($eid, "Failed to insert transaction entry");
+      /* $a = r\acct($entry->uid); */
+      /* $newBalance = $a->balance + $entry->amount; */
+      /* $a->update(['balance' => $newBalance]); */
     }
+    $this->xid = $xid;
     unset($DBTX);
     return $xid;
+  }
+
+  static public function readAll($uids, $starting=null, $ending=null) {
+    u\EXPECT([$uids, $starting, $ending], 'array integer integer');
+    $restrict = '';
+    if ($starting != null) { $restrict .= " AND (t.created >= '$starting')"; }
+    if ($ending != null) { $restrict .= " AND (t.created <= '$ending')"; }
+    $DBTX = db_transaction();
+    $sql = <<< EOF
+      SELECT t.*, e.*
+      FROM r_tx_hdrs t LEFT JOIN r_entries e USING (xid)
+      WHERE (t.xid IN (SELECT DISTINCT xid FROM r_entries WHERE $users)) $restrict
+      ORDER BY e.xid
+EOF;
+    $result = db\q($sql, []);
+    u\EXPECT($result, "Failure reading transactions for user(s) " . print_r($uids, true));
+    $lastXid = 0;  // no xid should ever be 0
+    $txs = [];
+    $entries = [];
+    foreach ($result as $row) {
+      $row = (array)$row;
+      if ($row['xid'] != $lastXid) { // start of new transaction
+        $lastXid = $row['xid'];
+        if ($entries != []) { // there was a transaction in progress
+          $txs[] = new Tx(just(Tx::TX_HDR_FIELDS, $row) + ['entries' => $entries]);
+          $entries = [];
+        }
+      }
+      $entry = new TxEntry(just(r\TxEntry::ENTRY_FIELDS, $row));
+      $entries[] = $entry;
+    }
+    if ($entries != []) { // last one
+      $txs[] = new Tx(just(Tx::TX_HDR_FIELDS, $row) + ['entries' => $entries]);
+    }
+    unset($DBTX);
+    return $txs;
+  }
+
+  /**
+   * Return the last transaction meeting the given criteria, for the given user.
+   * Rebates, bonuses, and deleted transactions are ignored
+   * @param acct $a: the acct object for the user
+   * @param string $where: additional criteria (defaults to 1 = any)
+   * @param array $subs: optional substitutions (will be prefixed with colons)
+   * @return associative array: the old transaction record (FALSE if none)
+   */
+  static function lastTx($a, $where = 1, $subs = []) {
+    $DBTX = db_transaction();
+    $txHdr = db\get('t.*', 'r_tx_hdrs t JOIN r_entries e USING(xid)',
+                    "e.uid='$a->id' AND `type`>=0 AND $where ORDER BY t.created DESC LIMIT 1", $subs);
+    if (!$txHdr) return FALSE;
+    $xid = $txHdr['xid'];
+    $entries = r\TxEntry::readAll($xid);
+    if (!$entries) return FALSE;
+    unset($DBTX);
+    return new Tx($txHdr + ['entries' => $entries]);
+  }
+
+  /**
+   * Format and return args for reporting a transaction (old or new) to the current account.
+   * Not all returned args are used for any particular type of transaction.
+   * Note that templates and tests depend on the names of some of these fields
+   * @param acct $a: the account to report for (usually the current account)
+   * @param int $getBalance: 0=don't get any balances, 1=get my balance and tid, 2=get other party's balance and tid also
+   * @param float $shortfall: how much short my balance is, for a transaction (if any)
+   * @return assoc array of args
+   */
+  public function reportArgs($me, $getMyBalance = FALSE, $shortfall = 0) {
+    global $channel;
+    $tx = $this;
+
+    $payerE = $this->payerEntry;
+    $payeeE = $this->payeeEntry;
+
+    $amount = ($tx->actor == $payerE->uid) ? $payerE->amount : $payeeE->amount;
+      
+    $other = r\acct(($me->isMe($payerE->uid)) ? $payeeE->uid : $payerE->uid);
+    
+    $banking = ($tx->type == TX_BANK);
+    $toMe = $banking ? ($amount < 0 xor $xid < 0) : $me->isMe($payeeE->uid);
+    
+    $reverses = !empty($tx->reverses);
+    $role = $toMe ? 'payee' : 'payer';
+    $purpose = $toMe ? $payeeE->description : $payerE->description;
+    $tid = $toMe ? $payeeE->acctTid : $payerE->acctTid;
+    $tofrom = $toMe ? t('from') : t('to'); 
+    $why = ray(R_WHYS)[$tx->goods];
+    if ($getMyBalance and ($me->can(B_BUY))) { $balance = u\fmtAmt($me->avail(FOR_GOODS)); }
+    else { $balance = null; }
+
+    if ($amount < 0) {
+      $amount = 0-$amount;
+      $tofrom = t('to');
+      $did = $toMe ? (($this->goods == FOR_GOODS) ? t('refunded') : t('credited')) : t('charged');
+    } else {
+      $did = $toMe ? ($reverses ? t('re-charged') : t('charged'))
+        : (($this->channel == TX_POS and $me->co) ? t('credited') : t('paid'));
+    }
+
+    $balance = ($getMyBalance and $me->can(B_BUY)) ? $me->avail(FOR_GOODS) : 0;
+    
+    return ray('created created0 xid role why payerPurpose payeePurpose toMe amount tofrom balance otherUid myName otherName short success did',  // . ' role'
+               u\fmtDate($tx->created), $tx->created, $tx->xid, $role, $why, $payerE->description,
+               $payeeE->description, $toMe, u\fmtAmt($amount), $tofrom, $balance, $other->id, $me->fullName,
+               $other->fullName, u\fmtAmt($shortfall), TRUE, $did);
   }
 
   /* /\** */
@@ -349,77 +533,165 @@ class Tx {
 /*   return @$x->xid ? $x : FALSE; */
 /* } */
 
-class MyTx extends Tx {
-  private $uid;
-  private $jid;
+/* class MyTx extends Tx { */
+  /* private $uids; */
   
-  function __construct($uid, $info, $jid=0) {
-    $x = $this;
-    $x->uid = $uid;
-    $x->jid = $jid;
-    parent::__construct($info);
-  }
+  /* function __construct($uids, $info) { */
+  /*   print_r($info); */
+  /*   $x = $this; */
+  /*   $x->uids = $uids; */
+  /*   parent::__construct($info); */
+  /* } */
 
-  function __get($f) {
-    switch ($f) {
-    case 'uid':
-      return $this->uid;
-    case 'myTid':
-      return $this->getMyTid();
-    default:
-      return parent::__get($f);
-    }
-  }
+  /* function __get($f) { */
+  /*   switch ($f) { */
+  /*   case 'uid': */
+  /*     return $this->uid; */
+  /*   case 'myTid': */
+  /*     return $this->getMyTid(); */
+  /*   case 'myAmount': */
+  /*     return $this->getMyAmount(); */
+  /*   default: */
+  /*     return parent::__get($f); */
+  /*   } */
+  /* } */
 
-  private function getMyTid() {
-    $myTid = 0;
-    foreach ($this->entries as $entry) {
-      if ($entry->uid == $this->uid or $entry->uid == $this->jid) {
-        $myTid = max($myTid, $entry->acctTid);
-      }
-    }
-    return $myTid;
-  }
   
-  /**
-   * Read all transactions for a particular user.
-   * @param integer $uid: the uid of the user
-   * @param timestamp $starting: the starting unix timestamp
-   * @param timestamp $ending: the ending unix timestamp
-   * @return an array of Txs, all the transactions of that user
-   */
-  static public function readAll($starting, $ending, $uid, $jid=0) {
-    $restrict = ($starting != null and $ending != null) ? "AND (t.created BETWEEN '$starting' AND '$ending')" : "";
-    $users = ($jid != 0) ? "uid IN ('$uid', '$jid')" : "uid='$uid'";
-    $DBTX = db_transaction();
-    $sql = <<< EOF
-      SELECT t.*, e.*
-      FROM r_tx_hdrs t LEFT JOIN r_entries e USING (xid)
-      WHERE (t.xid IN (SELECT DISTINCT xid FROM r_entries WHERE $users))
-            $restrict
-      ORDER BY e.xid
-EOF;
-    $result = db\q($sql, []);
-    u\EXPECT($result, "Failure reading transactions for user $uid");
-    $lastXid = 0;  // no xid should ever be 0
-    $txs = [];
-    $entries = [];
-    foreach ($result as $row) {
-      $row = (array)$row;
-      if ($row['xid'] != $lastXid) {
-        $lastXid = $row['xid'];
-        if ($entries != []) {
-          $txs[] = new MyTx($uid, just(Tx::TX_HDR_FIELDS, $row) + ['entries' => $entries], $jid);
-          $entries = [];
-        }
-      }
-      $entry = new TxEntry(just(r\TxEntry::ENTRY_FIELDS, $row));
-      $entries[] = $entry;
-    }
-    if ($entries != []) { // last one
-      $txs[] = new MyTx($uid, just(Tx::TX_HDR_FIELDS, $row) + ['entries' => $entries], $jid);
-    }
-    unset($DBTX);
-    return $txs;
-  }
-}
+  /* /\** */
+  /*  * Read an existing transaction record, with its entries. */
+  /*  * @param array $uids: the ids of the users associated with the account */
+  /*  * @param xid $xid: transaction record id */
+  /*  * @return the new instance of Tx */
+  /*  *\/ */
+  /* static function readMyTx($uids, $xid, $where = '1', $subs = []) { */
+  /*   $DBTX = db_transaction(); */
+  /*   $info = db\get('*', 'r_tx_hdrs', "(xid=:xid) AND $where", $subs + ['xid' => $xid]); */
+  /*   u\EXPECT($info != false, "Transaction $xid not found"); */
+  /*   $entries = r\TxEntry::readAll($xid); */
+  /*   u\EXPECT(!is_null($entries), "No entries found for transaction $xid"); */
+  /*   unset($DBTX); */
+  /*   return new MyTx($uids, $info + ['entries' => $entries]); */
+  /* } */
+  
+  /* /\** */
+  /*  * Read all transactions for the accounts specified by the listed uids. */
+  /*  * @param array $uids: the uids of the users associated with this account */
+  /*  * @param timestamp $starting: the starting unix timestamp */
+  /*  * @param timestamp $ending: the ending unix timestamp */
+  /*  * @return an array of Txs, all the transactions of those users within those dates */
+  /*  *\/ */
+/*   static public function readAll($uids, $starting=null, $ending=null) { */
+/*     u\EXPECT([$uids, $starting, $ending], 'array integer integer'); */
+/*     $restrict = ''; */
+/*     if ($starting != null) { $restrict .= " AND (t.created >= '$starting')"; } */
+/*     if ($ending != null) { $restrict .= " AND (t.created <= '$ending')"; } */
+/*     $DBTX = db_transaction(); */
+/*     $sql = <<< EOF */
+/*       SELECT t.*, e.* */
+/*       FROM r_tx_hdrs t LEFT JOIN r_entries e USING (xid) */
+/*       WHERE (t.xid IN (SELECT DISTINCT xid FROM r_entries WHERE $users)) $restrict */
+/*       ORDER BY e.xid */
+/* EOF; */
+/*     $result = db\q($sql, []); */
+/*     u\EXPECT($result, "Failure reading transactions for user(s) " . print_r($uids, true)); */
+/*     $lastXid = 0;  // no xid should ever be 0 */
+/*     $txs = []; */
+/*     $entries = []; */
+/*     foreach ($result as $row) { */
+/*       $row = (array)$row; */
+/*       if ($row['xid'] != $lastXid) { // start of new transaction */
+/*         $lastXid = $row['xid']; */
+/*         if ($entries != []) { // there was a transaction in progress */
+/*           $txs[] = new MyTx($uids, just(Tx::TX_HDR_FIELDS, $row) + ['entries' => $entries]); */
+/*           $entries = []; */
+/*         } */
+/*       } */
+/*       $entry = new TxEntry(just(r\TxEntry::ENTRY_FIELDS, $row)); */
+/*       $entries[] = $entry; */
+/*     } */
+/*     if ($entries != []) { // last one */
+/*       $txs[] = new MyTx($uids, just(Tx::TX_HDR_FIELDS, $row) + ['entries' => $entries]); */
+/*     } */
+/*     unset($DBTX); */
+/*     return $txs; */
+/*   } */
+
+/*   /\** */
+/*    * Return the last transaction meeting the given criteria, for the given user. */
+/*    * Rebates, bonuses, and deleted transactions are ignored */
+/*    * @param string $where: the criteria (defaults to 1 = any) */
+/*    * @param array $subs: optional substitutions (will be prefixed with colons) */
+/*    * @return associative array: the old transaction record (FALSE if none) */
+/*    *\/ */
+/*   static function lastTx($a, $where = 1, $subs = [], $cache = FALSE) { */
+/*     $DBTX = db_transaction(); */
+/*     $txHdr = db\get('t.*', 'r_tx_hdrs t JOIN r_entries e USING(xid)', "e.uid='$a->id' AND `type`>=0 AND $where ORDER BY t.created DESC LIMIT 1", $subs); */
+/*     if (!$txHdr) return FALSE; */
+/*     $xid = $txHdr['xid']; */
+/*     $entries = r\TxEntry::readAll($xid); */
+/*     if (!$entries) return FALSE; */
+/*     unset($DBTX); */
+/*     return new MyTx([$a], $txHdr + ['entries' => $entries]); */
+/*   } */
+
+/*   /\** */
+/*    * Format and return args for reporting a transaction (old or new) to the current account. */
+/*    * Not all returned args are used for any particular type of transaction. */
+/*    * Note that templates and tests depend on the names of some of these fields */
+/*    * @param acct $a: the account to report to (usually the current account) */
+/*    * @param array $tx: the transaction array (including xid) */
+/*    * @param int $getBalance: 0=don't get any balances, 1=get my balance and tid, 2=get other party's balance and tid also */
+/*    * @param float $shortfall: how much short my balance is, for a transaction (if any) */
+/*    * @return assoc array of args */
+/*    *\/ */
+/*   public function reportArgs($getMyBalance = FALSE, $shortfall = 0) { */
+/*     global $channel; */
+/*     $x1 = $this; */
+/*     $a1 = $x1->a; */
+/*     $x2 = $x1->themX; */
+/*     $a2 = r\acct($otherUid = $x1->them); */
+/*     $tx = $x1->ray0; */
+/* //    $fields = 'data amount goods payer payee payerReward payeeReward toMe payerPurpose payeePurpose payerTid payeeTid created'; */
+/*     $fields = 'data amount goods payer payee toMe payerPurpose payeePurpose payerTid payeeTid created'; */
+/*     foreach (ray($fields) as $k) $$k = $x1->$k; */
+/* //    extract(just('rebate bonus', $data)); */
+
+/*     $reverses = isset($data['undoes']); */
+/*     $role = $toMe ? 'payee' : 'payer'; */
+/*     u\both($tx, 'purpose', $toMe, $payeePurpose, $payerPurpose); */
+/*     u\both($tx, 'tid', $toMe, @$payeeTid, @$payerTid); // no tid if unconfirmed */
+/*     $tofrom = $toMe ? t('from') : t('to'); */
+/*   //  $confirmAction = $toMe ? t('charge') : ($channel == TX_POS ? t('credit') : t('pay')); */
+/*     $why = ray(R_WHYS)[$goods]; */
+
+/*     If ($amount < 0) { // for POS */
+/*       $amount = -$amount; // rephrase as positive */
+/*       $tofrom = t('to'); */
+/*   //    $confirmAction = $toMe ? t('credit') : t('charge'); */
+/*       u\both($tx, 'did', $toMe, $goods == FOR_GOODS ?  t('refunded') : t('credited'), t('charged')); */
+/* //      if (r\isGiveback($payee, $payer, $data)) list ($tx['did'], $a2, $why) = [t('gave'), $a1, t('returning rewards to the community')]; */
+/*     } else u\both($tx, 'did', $toMe, $reverses ? t('re-charged') : t('charged'), (($channel == TX_POS and $a1->co) ? t('credited') : t('paid'))); */
+
+/* ///     debug(compact('tx','toMe','amount','reverses','goods')); */
+
+/*     $amount = u\fmtAmt($amount); */
+/*     $short = u\fmtAmt($shortfall); */
+/*     if ($getMyBalance) { */
+/*       if ($a1->can(B_BUY)) $balance = u\fmtAmt($a1->avail(FOR_GOODS)); */
+/*     } */
+    
+/* /\*    if ($goods == FOR_GOODS) { */
+/*   //    u\both($tx, 'rewardType', $toMe, t('bonus'), t('rebate')); */
+/* //      u\both($tx, 'rewardType', $toMe, t('reward'), t('reward')); */
+/* //      u\both($tx, 'rewardAmount', $toMe, u\fmtAmt(@$payeeReward + 0), u\fmtAmt(@$payerReward + 0)); */
+/*     } */
+/*     *\/ */
+/*     $myName = $a1->fullName; */
+/*     $otherName = $a2->fullName; */
+/*     $created = u\fmtDate($created0 = $created); */
+
+/*     $success = TRUE; */
+/*     foreach (ray('r payer payee') as $one) unset($tx[$one]); // else preempts all subs that start thus */
+/*     return compact(ray('created created0 xid role why payerPurpose payeePurpose toMe amount tofrom balance otherUid myName otherName short success')) + $tx; */
+/*   } */
+/* } */

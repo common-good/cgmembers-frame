@@ -1,24 +1,24 @@
 flamingo:rcredits ridgway$ grep -rl r_txs *
 acct.class
-        giftsDesc  -- New
-                   nextTickle -- New
-                              admin/admin-web.inc
-                                admin-summary  -- New
-                              forms/newsummary.inc -- Done
-                              forms/summary.inc -- New
-                admin/admin-web.inc -- Done
-                        admin-summary  -- New
-                admin/admin.inc -- Done
-                        callDetails -- New
-                                    admin/admin-web.inc -- Done
-                                        adminSummary -- New
-                                    admin/admin.inc -- Done
-                        giftsToDate -- New
-                                    admin/admin.inc -- Done
-                                        callDetails -- New
-        totalGifts -- New
-                forms/summary.inc -- Done
-                        setRisksAndFlags -- New
+  giftsDesc  -- New
+  nextTickle -- New
+    admin/admin-web.inc
+      admin-summary  -- New
+    forms/newsummary.inc -- Done
+    forms/summary.inc -- New
+    admin/admin-web.inc -- Done
+    admin-summary  -- New
+    admin/admin.inc -- Done
+      callDetails -- New
+        admin/admin-web.inc -- Done
+          adminSummary -- New
+        admin/admin.inc -- Done
+      giftsToDate -- New
+        admin/admin.inc -- Done
+          callDetails -- New
+  totalGifts -- New
+    forms/summary.inc -- Done
+  setRisksAndFlags -- New
 admin/admin-forms.inc -- Done
         formAdminPanel_submit -- newTxs operation created
         formFollowup -- formNewFollowup created
@@ -35,98 +35,107 @@ admin/admin.inc
                 admin/admin-web.inc -- Done earlier
         donationTrend -- New
 cg-backend.inc
-        myTransactions -- getTxsNew
-                cg-txs.inc -- don't implement
-        myCustTxs -- getCustTxsNew
-                forms/custstatement.inc -- custstatementnew.inc
-        get1099b
-                cg-yearly.inc
-                forms/taxinfo.inc
-        reverse
-                all over the place
-        creditInfo
-                acct.class
-                admin/admin-web.inc
-                cg-backend.inc
-                cg-testing.inc
-                cg.inc
-                forms/statement.inc
-                forms/txs.inc
+  myTransactions -- getTxsNew
+    cg-txs.inc -- don't implement
+  myCustTxs -- getCustTxsNew
+    forms/custstatement.inc -- custstatementnew.inc
+  get1099b -- get1099bNew
+    cg-yearly.inc
+      do1099b -- do1099bNew
+        doPayer -- doPayerNew
+          do1099bs -- do1099bsNew
+            admin/admin-forms -- added formNewAdminPanel
+            forms/taxinfo.inc -- newtaxinfo.inc
+  reverse -- reverseNew
+    undoTx -- undoTxGivenEntry
+  creditInfo -- creditInfoNew
+    acct.class
+      admin/admin-web.inc
+      cg-backend.inc
+      cg-testing.inc
+      cg.inc
+      forms/statement.inc
+      forms/txs.inc
+  payInvoice
+    forms/handleinvoice.inc
+    forms/invoices.inc
+    rcron/rcron.inc
 cg-risk.inc
-        txRisk1
-                rcron/rcron.inc
-                rweb/rweb.inc
-        setBigRisk
-        setBigToFrom
-        setOriginRisk
+  txRisk1
+    rcron/rcron.inc
+    rweb/rweb.inc
+  setBigRisk
+  setBigToFrom
+  setOriginRisk
 cg-testing.inc
-        doTx
-                cg-backend.inc
-                cg-testing.inc
-                forms/newtxs.inc
-                forms/newTxs.inc~
-                forms/oldnextxs.inc
-                forms/txs.inc
-                rsmart/rsmart.inc
-        txCountIs
-                rsmart/rsmart.steps
-        clear
-                all over the place
+  doTx
+    cg-backend.inc
+    cg-testing.inc
+    forms/newtxs.inc
+    forms/newTxs.inc~
+    forms/oldnextxs.inc
+    forms/txs.inc
+    rsmart/rsmart.inc
+  txCountIs
+    rsmart/rsmart.steps
+  clear
+    all over the place
 cg.inc
-        xid2tid
-                cg.inc
-                x.class
-        changeUid
-        getStats
-        averageBalance
-                forms/statement.inc
-                rcron/rcron.inc
-        disputeTx
-                cg-backend.inc
+  dupTx
+  xid2tid
+    cg.inc
+    x.class
+  changeUid
+  getStats
+  averageBalance
+    forms/statement.inc
+    rcron/rcron.inc
+  disputeTx
+    cg-backend.inc
 forms/data.inc
-        getReport
+  getReport
 forms/demographics.inc
 forms/donate.inc
 forms/flags.inc
-        formFlags
+  formFlags
 forms/invest.inc
-        myClubVal
+  myClubVal
 rcredits.module
-        eachX
-                admin/admin.inc
+  eachX
+  admin/admin.inc
 rcron/rcron.inc
-        tickle
-                acct.class
-                admin/admin-forms.inc
-                admin/admin-web.inc
-                defs.inc
-                forms/summary.inc
-                rcron/rcron.inc
-                rcron/rcron.steps
-        everyMonth
-        inflationAdjust
-        setNear
-        acctStats1
-        cttyStats
-                admin/admin.inc
-        txRisk
-                acct.class
-                cg-risk.inc
-                rcron/rcron.inc
-                rweb/rweb-help.inc
-                rweb/rweb.inc
-        recurs
-                all over the place
-        recurs1
+  tickle
+    acct.class
+    admin/admin-forms.inc
+    admin/admin-web.inc
+    defs.inc
+    forms/summary.inc
+    rcron/rcron.inc
+    rcron/rcron.steps
+  everyMonth
+  inflationAdjust
+  setNear
+  acctStats1
+  cttyStats
+     admin/admin.inc
+  txRisk
+    acct.class
+    cg-risk.inc
+    rcron/rcron.inc
+    rweb/rweb-help.inc
+    rweb/rweb.inc
+  recurs
+    all over the place
+  recurs1
 rsmart/rsmart.inc
-        charge
-                acct.class
-                rsmart/rsmart.inc
-        getDescriptions
+  charge
+    acct.class
+    rsmart/rsmart.inc
+  getDescriptions
 rweb/queries-co.inc
-        body
+  body
 rweb/queries.inc
-        body
+  body
 x.class
-        all over the place
+  all over the place
         

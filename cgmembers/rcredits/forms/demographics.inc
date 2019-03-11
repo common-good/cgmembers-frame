@@ -12,7 +12,7 @@ function formDemographics($form, &$sta) {
 
   $title = t('Customer Demographics');
   
-  $q = db\q('SELECT DISTINCT payer FROM r_txs WHERE payee=:myid', compact('myid'));
+  $q = db\q('SELECT DISTINCT payer FROM r_entries WHERE uid=:myid', compact('myid'));
   $count = $q->rowCount();
   if ($count < AGGREGATE_MIN) return w\go('/company-reports', t('There are not enough customers (%count) to show demographics (minimum %AGGREGATE_MIN).', compact('count')));
   
@@ -25,15 +25,18 @@ function formDemographics($form, &$sta) {
   
   $tnm = <<< X
     (SELECT ucust.zip, COUNT(ucust.zip) count
-     FROM r_txs tcust
-     JOIN users ucust ON ucust.uid=tcust.payer
-     WHERE tcust.payee=:myid AND NOT ucust.:IS_CO
+     FROM r_tx_hdrs tcust
+     JOIN r_entries payer USING(xid)
+     JOIN r_entries payee USING(xid)
+     JOIN users ucust ON ucust.uid=payer.uid
+     WHERE payee.uid=:myid AND NOT ucust.:IS_CO AND payer.amount < 0 AND payee.amount > 0
      GROUP BY ucust.zip
      ORDER BY count LIMIT 5
     ) x
 X;
   $zips = db\rows('*', $tnm, 1, compact('myid'), FALSE);
-
+  debug('This is unfinished because I don''t understand it.');
+  /*
   $tnm = <<< X
     (SELECT uco.fullName AS company, COUNT(tco.payee) AS count
      FROM r_txs tcust JOIN r_txs tco ON tco.payer=tcust.payer AND tco.payee<>:myid
@@ -45,7 +48,8 @@ X;
     ) x
 X;
   $pays = db\rows('*', $tnm, 1, compact('myid'), FALSE);
-  
+  */
+  $pays = [];
   // calculate medians and avgs
   $age = w\item((int) u\median($ages), t('Median Age:'));
   $tenure = w\item((int) u\median($tenures), t('Median Tenure:'), t('months at current location'));

@@ -60,13 +60,15 @@ function getReport($nm) {
     $heads = ray(t('Account,Name,Phone,Email,Net Ever'));
     $colClasses = ray(',,,,num');
     list ($us, $them) = $nm == 'customers' ? ['payee', 'payer'] : ['payer', 'payee'];
-    $where = "$us=:myid AND amount<>0 GROUP BY $them";
+    $whereInv = "$us=:myid AND amount<>0 GROUP BY $them";
+    $whereTx = "$us.uid=:myid AND amount<>0 GROUP BY $them.uid";
     $sql = <<< X
       SELECT u.uid,SUM(net0) AS net, SUM(invs0) AS invs FROM (
         SELECT $them AS uid, SUM(amount) AS net0, 0 AS invs0
-        FROM r_txs WHERE $where
+        FROM r_tx_hdrs JOIN r_entries payer USING(xid) JOIN r_entries payee USING(xid)
+        WHERE $whereTx
         UNION SELECT $them AS uid,0 AS net0, SUM(amount) AS invs0
-        FROM r_invoices WHERE $where AND status<:TX_PAID
+        FROM r_invoices WHERE $whereInv AND status<:TX_PAID
       ) x LEFT JOIN users u ON u.uid=x.uid GROUP BY u.uid ORDER BY fullName
 X;
     $q = db\q($sql, compact('myid'));

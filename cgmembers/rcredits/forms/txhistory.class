@@ -156,9 +156,9 @@ EOF;
    * Called after the last transaction.
    */
   public function ftr() {
-    /* if ($this->count < 1) { */
-    /*   $this->body = t('no txs'); */
-    /* } */
+    if ($this->count < 1) {
+      $this->body .= '<tr><td colspan=6>' . t('no txs') . '</td></tr>';
+    }
     $this->body .= "</table>\n</div>\n";
   }
 

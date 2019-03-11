@@ -35,7 +35,7 @@ Setup:
   | .ZZC | .ZZB  |   2 | refund     |
   | .ZZC | .ZZD  |   3 | read       |
   | .ZZF | .ZZE  |   1 | sell       |
-  Then balances:
+  And balances:
   | uid  | balance |*
   | ctty |       0 |
   | .ZZA |       0 |
@@ -56,7 +56,7 @@ Scenario: An agent asks to undo a charge
   | member | code | amount | goods | description | created   |*
   | .ZZA   | ccA  | 80.00  |     1 | whatever    | %today-1d |
 #  When agent "C:B" asks device "devC" to undo transaction 4 code "ccA"
-  Then we respond ok txid 5 created %now balance 0 rewards 250 saying:
+  Then we respond ok txid 5 created %now balance 0 saying:
   | solution | did      | otherName | amount | why   |*
   | reversed | refunded | Abe One   | $80    | goods |
   And with did ""
@@ -70,9 +70,9 @@ Scenario: An agent asks to undo a charge when balance is secret
   | xid | created   | type     | amount | from | to   | purpose      | taking |*
   | 5   | %today-1d | transfer |     80 | .ZZE | .ZZC | whatever     |      1 |
   When agent "C:B" asks device "devC" to undo transaction 5 code "ccE"
-  Then we respond ok txid 6 created %now balance "*0" rewards 250 saying:
-  | solution | did      | otherName | amount | why   | reward |*
-  | reversed | refunded | Eve Five  | $80    | goods | $-4    |
+  Then we respond ok txid 6 created %now balance "*0" saying:
+  | solution | did      | otherName | amount | why   |*
+  | reversed | refunded | Eve Five  | $80    | goods |
   And with did ""
   And with undo "5"
   And we notice "new refund" to member ".ZZE" with subs:
@@ -84,9 +84,9 @@ Scenario: An agent asks to undo a refund
   | xid | created   | type     | amount | from | to   | purpose      | taking |*
   | 4   | %today-1d | transfer |    -80 | .ZZA | .ZZC | refund       |      1 |
   When agent "C:B" asks device "devC" to undo transaction 4 code "ccA"
-  Then we respond ok txid 5 created %now balance 0 rewards 250 saying:
-  | solution | did        | otherName | amount | why   | reward |*
-  | reversed | re-charged | Abe One   | $80    | goods | $4     |
+  Then we respond ok txid 5 created %now balance 0 saying:
+  | solution | did        | otherName | amount | why   |*
+  | reversed | re-charged | Abe One   | $80    | goods |
   And with did ""
   And with undo "4"
   And we notice "new charge" to member ".ZZA" with subs:
@@ -98,7 +98,7 @@ Scenario: An agent asks to undo a cash-out charge
   | xid | created   | type     | amount | from | to   | purpose  | goods      | taking |*
   | 4   | %today-1d | transfer |     80 | .ZZA | .ZZC | cash out | %FOR_USD |      1 |
   When agent "C:B" asks device "devC" to undo transaction 4 code "ccA"
-  Then we respond ok txid 5 created %now balance 0 rewards 250 saying:
+  Then we respond ok txid 5 created %now balance 0 saying:
   | solution | did      | otherName | amount | why |*
   | reversed | credited | Abe One   | $80    | usd |
   And with did ""
@@ -112,7 +112,7 @@ Scenario: An agent asks to undo a cash-in payment
   | xid | created   | type     | amount | from | to   | purpose | goods      | taking |*
   | 4   | %today-1d | transfer |    -80 | .ZZA | .ZZC | cash in | %FOR_USD |      1 |
   When agent "C:B" asks device "devC" to undo transaction 4 code "ccA"
-  Then we respond ok txid 5 created %now balance 0 rewards 250 saying:
+  Then we respond ok txid 5 created %now balance 0 saying:
   | solution | did        | otherName | amount | why |*
   | reversed | re-charged | Abe One   | $80    | usd |
   And with did ""
@@ -127,7 +127,7 @@ Scenario: An agent asks to undo a charge, with insufficient balance
   | 4   | %today-1d | transfer |     80 | .ZZA | .ZZC | whatever     | %FOR_GOODS |      1 |
   | 5   | %today    | transfer |    300 | .ZZC | .ZZB | cash out     | %FOR_USD   |      0 |
   When agent "C:B" asks device "devC" to undo transaction 4 code "ccA"
-  Then we respond ok txid 6 created %now balance 0 rewards 250 saying:
+  Then we respond ok txid 6 created %now balance 0 saying:
   | solution | did      | otherName | amount | why   |*
   | reversed | refunded | Abe One   | $80    | goods |
   And with did ""
@@ -148,7 +148,7 @@ Scenario: An agent asks to undo a refund, with insufficient balance
   | 4   | %today-1d | transfer |    -80 | .ZZA | .ZZC | refund       | %FOR_GOODS |      1 |
   | 5   | %today    | transfer |    300 | .ZZA | .ZZB | cash out     | %FOR_USD   |      0 |
   When agent "C:B" asks device "devC" to undo transaction 4 code "ccA"
-  Then we respond ok txid 6 created %now balance -300 rewards 250 saying:
+  Then we respond ok txid 6 created %now balance -300 saying:
   | solution | did        | otherName | amount | why   |*
   | reversed | re-charged | Abe One   | $80    | goods |
   And with did ""
@@ -168,7 +168,7 @@ Scenario: An agent asks to undo a charge, without permission
   | xid | created   | type     | amount | from | to   | purpose      | goods        | taking |*
   | 4   | %today-1d | transfer |     80 | .ZZB | .ZZC | whatever     | %FOR_GOODS |      1 |
   When agent "C:A" asks device "devC" to undo transaction 4 code "ccB"
-  Then we respond ok txid 5 created %now balance 0 rewards 250 saying:
+  Then we respond ok txid 5 created %now balance 0 saying:
   | solution | did      | otherName | amount | why   |*
   | reversed | refunded | Bea Two   | $80    | goods |
 #  Then we return error "no perm" with subs:
@@ -183,7 +183,7 @@ Scenario: An agent asks to undo a refund, without permission
   | xid | created   | type     | amount | from | to   | purpose      | goods        | taking |*
   | 4   | %today-1d | transfer |    -80 | .ZZB | .ZZC | refund       | %FOR_GOODS |      1 |
   When agent "C:D" asks device "devC" to undo transaction 4 code "ccB"
-  Then we respond ok txid 5 created %now balance 0 rewards 250 saying:
+  Then we respond ok txid 5 created %now balance 0 saying:
   | solution | did        | otherName | amount | why   |*
   | reversed | re-charged | Bea Two   | $80    | goods |
 #  Then we return error "no perm" with subs:
@@ -195,7 +195,7 @@ Scenario: An agent asks to undo a non-existent transaction
   When agent "C:B" asks device "devC" to undo transaction with subs:
   | member | code | amount | goods | description   | created   |*
   | .ZZA   | ccA  | 80.00  |     1 | neverhappened | %today-1d |
-  Then we respond ok txid 0 created "" balance 0 rewards 250
+  Then we respond ok txid 0 created "" balance 0
   And with did ""
   And with undo ""
 
@@ -211,7 +211,7 @@ Scenario: A cashier reverses a transaction with insufficient funds
   | xid | created | type     | amount | from | to   | purpose |*
   | 6   | %today  | transfer |      1 | .ZZA | .ZZB | cash    |
   When agent "C:B" asks device "devC" to charge ".ZZA,ccA" $-100 for "cash": "cash in" at "%now-1h" force -1
-  Then we respond ok txid 7 created %now balance -1 rewards 250
+  Then we respond ok txid 7 created %now balance -1
 #  And with proof of agent "C:B" amount -100.00 created "%now-1h" member ".ZZA" code "ccA"
   And with undo "5"
   And we notice "new charge" to member ".ZZA" with subs:

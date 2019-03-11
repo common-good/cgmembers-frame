@@ -49,8 +49,9 @@ EOF;
   
   $sql = <<<EOF
     SELECT t.risk AS score,xid,t.created,amount,payer,payee,payeeFor AS description,t.risks 
-    FROM r_txs t LEFT JOIN users u1 ON u1.uid=payer LEFT JOIN users u2 ON u2.uid=payee 
-    WHERE (payer>0 OR ABS(amount)>:K_CTTY_THRESHOLD) 
+    FROM r_tx_hdrs t JOIN r_entries payer USING(xid) JOIN r_entries payee USING(xid)
+    LEFT JOIN users u1 ON u1.uid=payer LEFT JOIN users u2 ON u2.uid=payee 
+    WHERE payer.amount < 0 AND payee.amount > 0 (payer.uid>0 OR ABS(payer.amount)>:K_CTTY_THRESHOLD) 
     AND $cttysCrit AND t.created BETWEEN :starting AND :ending 
     ORDER BY t.risk DESC LIMIT :K_LINES
 EOF;

@@ -158,15 +158,16 @@ function myClubVal($clubVal) {
   return;
 
   global $mya;
-	$stake = 'IF(payer=:clubid,-amount,amount)';
+	$stake = 'amount'; // 'IF(payer.uid=:clubid,-amount,amount)';
 	$share = "(:NOW-created)*$stake";
-	$isMe = ':myid IN (payer, payee)';
+	$isMe = ':myid IN (payer.uid, payee.uid)';
 	$sql = <<<X
 	  SELECT SUM($stake) AS totalStake,
 		       SUM($share) AS totalShare,
 		       SUM(IF($isMe, $stake, 0)) AS myStake,
 					 SUM(IF($isMe, $share, 0)) AS myShare
-	  FROM r_txs WHERE :clubid IN (payer, payee) AND :IS_STAKE
+	  FROM r_tx_hdrs t JOIN r_entries payer USING(xid) JOIN r_entries payee USING(xid)
+    WHERE payer.amount < 0 AND payee.amount > 0 AND :clubid IN (payer.uid, payee.uid) AND :IS_STAKE
 X;
   extract(db\q($sql, ray('myid clubid', $mya->id, $mya->iclubid))->fetchAssoc());
 	$share = ($totalShare + 0) ? $myShare / $totalShare : 0;

@@ -68,7 +68,6 @@ function rweb_menu($submenu = '') {
 
   $items = array(
     'summary' => ['norm', t('Summary'), 'Summary', 'read'],
-    'new-summary' => ['norm', t('New Summary'), 'New Summary', 'read'],
 
     'charge' => ['norm', t('Charge'), 'Tx 1', 'sell ok'],
     'charge/invoices' => ['sub', t('Upload Invoices'), 'InvoiceUpload', 'co sell ok'],
@@ -96,17 +95,14 @@ function rweb_menu($submenu = '') {
     
     'history' => ['norm', t('History'), 'History', 'read'],
     'history/transactions' => ['sub', t('Transactions'), 'Txs 2', 'read', '', t(''), 'list'],
-    'history/new-transactions' => ['sub', t('Transactions (New format)'), 'NewTxs 2', 'read', '', t(''), 'list'],
     'history/invoices-to' => ['sub', t('Invoices TO You'), 'Invoices to', 'read', '', t(''), 'log-in'],
     'history/invoices-from' => ['sub', t('Invoices FROM You'), 'Invoices from', 'read', '', t(''), 'log-out'],
     'history/statements' => ['sub', t('Statements'), 'Statements 2', 'read', '', t(''), 'list-alt'],
-    'history/new-statements' => ['sub', t('New Statements'), 'newstatements 2', 'read', '', t(''), 'list-alt'],
     'history/notices' => ['sub', t('Notices'), 'Notices 2', 'read', '', t(''), 'envelope'],
     'history/tax-info' => ['sub', t('Tax Info'), 'TaxInfo 2', 'read', '', t(''), 'pawn'],
     'history/changes' => ['sub', t('See Changes'), 'SeeChanges', 'cadmin', '', t(''), 'refresh'],
     'history/zot' => ['sub', 'zot', '', ANY], // Drupal bug: last choice is omitted
     'history/statement' => ['call', t('Statement'), '2', 'read', 'statement'],
-    'history/new-statement' => ['call', t('Statement'), '2', 'read', 'newStatement'],
     'history/customer-statement' => ['call', t('Customer Statement'), '2', 'read', 'custStatement'],
 
     'company-reports' => ['call', t('Company Reports'), 'Data 1 co', 'read co'],

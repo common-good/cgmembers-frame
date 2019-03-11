@@ -47,37 +47,6 @@ function do1099bs($testMode = FALSE, $badNames = [], $badTINs = [], $year = NULL
 }
 
 /**
- * Create 1099-B reports for the IRS as a downloadable file to be uploaded to the IRS FIRE site.
- * Log in at fire.irs.gov (or fire.test.irs.gov)
- * @param mixed $testMode: must be set non-FALSE for a successful test. If >1, it is a single uid to test.
- * @param assoc $badNames: names reported incorrectly, indexed by uid
- * @param assoc $badTINs: EINs (no punctuation) reported incorrectly, indexed by uid
- * @param int $year: reporting year (defaults to most recent completed calendar year)
- * example for corrections: f('y.do1099bs', FALSE, [23947972 => 'Miss Pelled'], [29274902 => '292039482'], 2015);
- */
-function do1099bsNew($testMode = FALSE, $badNames = [], $badTINs = [], $year = NULL) {
-  global $err1099;
-  u\setDft($year, date('Y') - 1);
-  u\beginDownload("forms1099b-FY$year.bin$testMode"); // binary file extension: discourage automatic changes during FTP
-  putRec(recT($year, $testMode));
-  
-  $uids = array_keys($badNames + $badTINs);
-  $where = ($uids = join(',', $uids ?: [])) ? "uid IN ($uids)" : 'activated'; // making :uids a parameter fails 
-  $sql = "SELECT uid FROM users WHERE $where ORDER BY uid";
-
-  if ($uids) { // show bad old data first if correcting
-    doPayerNew($year, $sql, $totals, 'G', $badNames, $badTINs);
-    $bCount = doPayerNew($year, $sql, $totals, 'C'); // corrected data
-  } else $bCount = doPayerNew($year, $sql, $totals);
-  
-  $aCount = $uids ? 2 : 1;
-  putRec(recK($bCount * $aCount, $totals));
-  putRec(recF($bCount * $aCount, $aCount));
-  flush();
-  if (@$err1099) return w\go('sadmin/panel'); else exit(); // shouldn't we exit in any case?
-}
-
-/**
  * Handle all appropriate payees for the payer (that is the Common Good regional server).
  * @return the number of payee ("B") records.
  */
@@ -90,27 +59,6 @@ function doPayer($year, $sql, &$totals, $mod = '', $badNames = [], $badTINs = []
   while ($row = $q->fetchAssoc()) {
     extract($row); // uid
     $bCount += do1099b($year, $uid, $total, $mod, $badNames, $badTINs);
-    $bFactor = ($badNames or $badTINs) ? 2 : 1; // two records for each payee, if correcting
-    if ($seq1099 + 0 != $bCount * $bFactor + 2) return err1099(t('Record count %rc at odds with payee count %pc.', 'rc pc', $seq1099, $bCount));   
-  }
-  $totals = u\lpad(0, 6 * 18) . u\lpad(fmtAmt($total), 18) . u\lpad(0, 9 * 18);
-  putRec(recC($bCount, $totals));
-  return $bCount;
-}
-
-/**
- * Handle all appropriate payees for the payer (that is the Common Good regional server).
- * @return the number of payee ("B") records.
- */
-function doPayerNew($year, $sql, &$totals, $mod = '', $badNames = [], $badTINs = []) {
-  global $seq1099;
-  putRec(recA($year));
-  $bCount = 0; // IRS instructions pub 1220 call this "number of payees", but say it means "number of B records"
-  $total = 0;
-  $q = db\q($sql);
-  while ($row = $q->fetchAssoc()) {
-    extract($row); // uid
-    $bCount += do1099bNew($year, $uid, $total, $mod, $badNames, $badTINs);
     $bFactor = ($badNames or $badTINs) ? 2 : 1; // two records for each payee, if correcting
     if ($seq1099 + 0 != $bCount * $bFactor + 2) return err1099(t('Record count %rc at odds with payee count %pc.', 'rc pc', $seq1099, $bCount));   
   }
@@ -133,32 +81,6 @@ function do1099b($year, $payee, &$total, $mod = '', $badNames = [], $badTINs = [
 //  global $amts99;
   $bCount = 0;
   while ($row = be\get1099b($payee, $year)) {
-    extract(just('created amount for', $row));
-    if ($amount <= 0) continue; // IRS says do NOT report non-positive transactions on 1099-B
-    if ($mod == 'G') $amount = 0; // IRS says zero out amount when showing the bad old data
-    $total += $amount;
-//    $amts99[] = $amount;
-    $bCount++;
-    $a = r\acct($payee); $id = $a->id;
-    putRec(recB($year, $a, $created, fmtAmt($amount), $for, $mod, @$badNames[$id], @$badTINs[$id]));
-  }
-  return $bCount;
-}
-
-/**
- * Create B records for each income transaction, for each payee.
- * @param int $year: the relevant fiscal year
- * @param int $payee: payee's account ID
- * @param float $total: running total amount for all B forms so far
- * @param string $mod: normally ''. C=show corrected info. G=show incorrect name and/or TIN (as submitted before)
- * @param assoc $badNames: list of incorrectly reported names, indexed by uid
- * @param assoc $badTINs: list of incorrectly reported TINs, indexed by uid
- * @return number of B records created
- */
-function do1099bNew($year, $payee, &$total, $mod = '', $badNames = [], $badTINs = []) {
-//  global $amts99;
-  $bCount = 0;
-  while ($row = be\get1099bNew($payee, $year)) {
     extract(just('created amount for', $row));
     if ($amount <= 0) continue; // IRS says do NOT report non-positive transactions on 1099-B
     if ($mod == 'G') $amount = 0; // IRS says zero out amount when showing the bad old data

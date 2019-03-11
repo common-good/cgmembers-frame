@@ -21,8 +21,6 @@ define('T_MSG_FILE', 'test-messages.txt');
  */
 function formAdmin($form, &$sta) {return w\subMenu(t('Admin Options'), 'sadmin');}
   
-function formNewAdmin($form, &$sta) {return w\subMenu(t('Admin Options (New)'), 'sadmin');}
-  
 /**
  * Make various administrative operations available to the admin and cAdmin.
  * 'wrong community' => 'SELECT * FROM `users` WHERE uid>0 AND MID(community, 2, 7)<>MID(uid, 1, 7)',
@@ -32,73 +30,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   global $mya;
   if (!$mya->cAdmin) hack('panel');
 
-  $tables = 'users txs newTxs usd gifts proxies relations invites'; // tables to show
-  $queries = [
-              '' => '',
-              ];
-  
-  $title = t('System Administration');
-  
-  $inviteeStatus = submi(t('Invitee Status'));
-  $organizerList = submi(t('Local Requests'));
-  $signupCos = submi(t('Connections to Companies'));
-  $queries = selectFld(t('Query:'), '', '', $queries);
-  $account = textFld(t('Account:'), t('Account to do something to'), dft(@$qid ?: svar('adminingAcct')));
-  
-  if ($mya->superAdmin) {
-    if (r\up()) $stop = submi(t('STOP')); else $start = submi(t('START'));
-    /*    if (time() < strtotime('6/20/2017')) {
-          global $base_url;
-          $members = db\col('uid', 'users', ':IS_OK AND NOT :IS_CO AND activated<1486098000 ORDER BY community, uid');
-          foreach($members as $k) {
-          $list[] = <<<EOF
-          <a href="$base_url/print-rcard/$k" target="_blank" class="btn btn-xs btn-primary" role="button" onclick="this.style.display='none';">NEXT</a>
-EOF;
-          }
-          $start = item(join('', $list));
-          } */
-    $do1099btest = submi(t('1099B TEST'));
-    $do1099b = submi('1099B');
-    $reconcile = submi('Reconcile Ctty Fund');
-    $tables .= ' notices boxes do stats usd nonmembers';
-    $special = submi(t('Special'));
-    $askForAppData = submi(t('Ask for App Data'));
-    $seeAppData = submi(t('See App Data'));
-    $ssnLink = submi(t('SSN Link'));
-    $seeSecure = submi(t('See Secure'));
-    $resetSSN = submi(t('Recheck SSN'));
-    $make2 = boxFld('make', t('Make:'));
-  }
-
-  $printId = submi(t('Print ID'));
-  //  $connectBank = submi(t('Connect Bank'));
-  //  $seeHidden = submi(t('See Hidden'));
-  $seeData = submi(t('See Data'));
-  $seeChanges = submi(t('See Changes'));
-  if (!$mya->superAdmin and $ctty = $mya->community) { // not super
-    $cttyName = ($cttyA = r\acct($ctty)) ? $cttyA->fullName : NULL;
-    if ($mya->cttyUp) $stopCtty = submi(t('STOP ') . $cttyName); else $startCtty = submi(t('START ') . $cttyName);
-  }
-
-  foreach (ray($tables) as $one) $do[$one] = submi($one);
-  $do += compact(ray('inviteeStatus organizerList signupCos do1099btest do1099b reconcile special stop start stopCtty startCtty'));
-  $do = fieldSet('do', $do);
-  
-  $acctSet = fieldSet('acctSet', compact(ray('account make2 printId seeData seeChanges ssnLink seeSecure resetSSN askForAppData seeAppData')));
-
-  return cgform(compact(ray('title do acctSet')));
-}
-
-/**
- * Make various administrative operations available to the admin and cAdmin.
- * 'wrong community' => 'SELECT * FROM `users` WHERE uid>0 AND MID(community, 2, 7)<>MID(uid, 1, 7)',
- */
-function formNewAdminPanel($form, &$sta, $args = '') {
-  extract(just('qid', $args));
-  global $mya;
-  if (!$mya->cAdmin) hack('panel');
-
-  $tables = 'users newTxs usd gifts proxies relations invites'; // tables to show
+  $tables = 'users txs usd gifts proxies relations invites'; // tables to show
   $queries = [
               '' => '',
               ];
@@ -225,6 +157,8 @@ function formAdminPanel_submit($form, &$sta) {
     $crit = $mya->admin ? '1' : 'community=' . $mya->community;
     eachA(function ($a) {
         global $signupCos;
+        debug(gettype($a));
+        if (is_integer($a)) $a = r\acct($a);
         if ($signupCo = $a->signupCo) {
           extract($signupCo);
           $signupCos[strtolower("$a->community$company$a->id")] = ray('acct fullName relation company', $a->mainQid, $a->fullName, @$isOwner ? t('owner') : ((@$employee or @$employeeOk) ? t('employee') : (@$contractor ? t('contractor') : '')), $company);
@@ -247,132 +181,14 @@ function formAdminPanel_submit($form, &$sta) {
 
   if ($op == 'txs') {
     $fields = <<<EOF
-      xid, t.created, t.flags, t.type AS ty, t.goods AS gd, t.:IS_TAKING AS k,
-      IF (LOCATE('"force";s:1:"1"', u1.data)>0, 1, IF(LOCATE('"force";s:2:"-1"', u1.data)>0, -1, IF(LOCATE('"force";s:1:"0"', u1.data)>0, '0', ''))) AS f,
-      payer, payee, amount, payerFor AS for1, payeeFor AS for2, payerTid AS tid1, payeeTid AS tid2
-EOF;
-    if ($mya->admin) $fields = str_replace('u1.', '', $fields);
-    return say(a\showQuery('r_txs', 1, 'xid DESC', $fields, ['payer', 'payee']));
-  }
-
-  if ($op == 'newTxs') {
-    $fields = <<<EOF
-      xid, t.created, t.flags, t.type AS ty, t.goods AS gd, t.initiator AS init,
+      xid, t.created, t.flags, t.type AS ty, t.goods AS gd, t.actor AS init,
       uid, amount, description AS `for`, acctTid AS tid
 EOF;
     if ($mya->admin) $fields = str_replace('u1.', '', $fields);
     return say(a\showQuery('r_tx_hdrs LEFT JOIN r_entries USING (xid)', 1, 'xid DESC', $fields, ['uid']));
   }
 
-  if ($op == 'gifts') return say(a\showQuery('r_recurs', '', 'id DESC', 'id,created,payer,payee,amount,period,ended', ray('payer payee')));
-  if ($op == 'invites') return say(a\showQuery('r_invites', 1, 'invited DESC', 'invited, inviter, invitee, email', 'inviter'));
-  if ($op == 'notices') return say(a\showQuery('r_notices', 1, 'msgid DESC'));
-  if ($op == 'proxies') return say(a\showQuery('r_proxies', 1, 'id DESC', 'person, proxy, priority', 'person'));
-  if ($op == 'relations') return say(a\showQuery('r_relations', 1, 'main DESC, reid', 'reid,main,other,otherNum,:IS_DRAW AS draw,permission,:IS_EMPLOYEE AS employee,:IS_OWNER AS owner,:IS_CUSTOMER AS customer,:IS_AUTOPAY AS autopay,code', 'main'));
-  if ($op == 'usd') return say(a\showQuery('r_usd', 1, 'created DESC'));
-  foreach (ray('boxes do stats nonmembers') as $one) if ($op == $one) return say(a\showQuery("r_$one"));
-}
-
-function formNewAdminPanel_submit($form, &$sta) {
-  global $base_url;
-  global $mya;
-  
-  extract(just('account make', $sta['input']));
-  $op = op($sta);
-
-  if ($op == 'start' or $op == 'stop') {
-    r\up($op == 'start');
-    return r\up() ? say(t('System is UP.')) : say(t('System is DOWN.'), 'ERR');
-  }
-  if ($op == 'special') return a\special();
-  if ($up = ($op == 'startCtty') or $op == 'stopCtty') {
-    $ctty = r\acct($mya->community);
-    $ctty->setBit(B_OK, $up);
-    return $up ? say(t('Community is UP.')) : say(t('Community is DOWN.'), 'ERR');
-  }
-
-  if (@$account) {
-    if (!$a = a($account)) return say('That is not an account.'); // should use whois first
-    svar('adminingAcct', $account); // remember what account we're working on
-    if (!$mya->admin and $a->community != $mya->community) return say('That account is not in your community.', 'ERR');
-  } else $a = $mya;
-  
-  if (@$a and $op == 'printId') {
-    if ($a->co and $a->proSe) return say(t('A company cannot have a %PROJECT card (only its agents have %PROJECT cards).'));
-    if (@$make) {
-      $oldFile = $a->photoFilename(TRUE); // get this before makeCardCode
-      $a->makeCardCode(); // this changes photo filename
-      if (file_exists($oldFile)) {
-        $newFile = $a->photoFilename(TRUE);
-        rename($oldFile, $newFile);
-      }
-    }
-    return w\go('print-rcard/' . $a->id . ($a->co ? "/$a->agentId" : ''));
-  } elseif ($op == 'askForAppData') {
-    $a->update('getAppData appData', '!report', []);
-    say(t('Request for app data sent to ') . $a->fullName);
-  } elseif ($op == 'seeAppData') {
-    /**/  debug($a->appData);
-  } elseif ($op == 'seeSecure' and @$a) {
-    say(u\rayTable(ray('fullName phone dob physicalAddr', $a->fullName, substr(@$a->phone, 2), $admin ? u\fmtDate(@$a->dob) : '', @$a->address . ' ' . $a->zip)));
-    //      seeHidden($a);
-    seeSecure($a);
-  } elseif ($op == 'resetSSN' and @$a) {
-    $a->setBit(B_MEMBER, FALSE);
-    $a->stepDone('ssn', FALSE);
-    $a->update('ssnData', '');    
-  } elseif ($op == 'seeData') {
-    if (@$a and $a->proSe) say(u\rayTable($a->data, FALSE, TRUE));
-    /*  } elseif ($op == 'connectBank') {
-        r\Web\connectBank($a); */
-  } elseif ($op == 'seeChanges') {
-    w\go("sadmin/changes/$a->mainQid");
-  } elseif ($op == 'ssnLink') {
-    w\say($a->fullName. t(' SSN Link:<br><br> &nbsp; %PROMO_URL/do/doSsn~%qid~%code &nbsp; ', 'qid code', $a->mainQid, $a->emailCode));
-  } elseif ($op == 'do1099b' or $test1099 = ($op == 'do1099btest')) {
-    include_once __DIR__ . '/../cg-yearly.inc';
-    r\Special\do1099bsNew(@$test1099);
-  } elseif ($op == 'reconcile') {
-    w\go('sadmin/reconcile-ctty-fund');
-  } elseif ($op == 'inviteeStatus') {
-    return w\go('community/invite/invited-whom');
-  } elseif ($op == 'organizerList') {
-    return w\go('sadmin/organizer-list');
-  } elseif ($op == 'signupCos') {
-    global $signupCos; $signupCos = [];
-    $crit = $mya->admin ? '1' : 'community=' . $mya->community;
-    eachA(function ($a) {
-        global $signupCos;
-        if ($signupCo = $a->signupCo) {
-          extract($signupCo);
-          $signupCos[strtolower("$a->community$company$a->id")] = ray('acct fullName relation company', $a->mainQid, $a->fullName, @$isOwner ? t('owner') : ((@$employee or @$employeeOk) ? t('employee') : (@$contractor ? t('contractor') : '')), $company);
-        }
-      }, $crit . ' ORDER BY community');
-    ksort($signupCos);
-    w\say($signupCos ? w\showRecords($signupCos) : t('No such companies.'));
-  }
-  
-  // handle all other buttons with showQuery()
-  if ($op == 'users') {
-    $fields = 'uid, flags, balance, rewards, savingsAdd AS saveAdd, minimum AS min, floor, city, zip AS zip';
-    return say(a\showQuery('users', 1, 'name', $fields));
-  }
-  
-  $logFields = "channel,type,myid,IF(agent=myid,':R_NONE',agent) AS agent, REPLACE(info, ',', ', ') AS info";
-
-  /// if ($op == 'log') return say(str_replace("\n", "<br><br>\n", file_get_contents(flog()))); // say(a\showQuery('r_log', 1, 'logid DESC', $logFields, 'myid'));
-  //  if ($op == 'tells') return say(a\showQuery('r_log', "info LIKE '%tell-staff%' ORDER BY logid DESC LIMIT 50", 'logid DESC', $logFields, 'myid'));
-
-  if ($op == 'txs') {
-    $fields = <<<EOF
-      xid, t.created, t.flags, t.type AS ty, t.goods AS gd, t.initiator AS init,
-      uid, amount, description AS `for`, acctTid AS tid
-EOF;
-    if ($mya->admin) $fields = str_replace('u1.', '', $fields);
-    return say(a\showQuery('r_tx_hdrs LEFT JOIN r_entries USING (xid)', 1, 'xid DESC', $fields, ['uid']));
-  }
-
-  if ($op == 'gifts') return say(a\showQuery('r_recurs', '', 'id DESC', 'id,created,payer,payee,amount,period,ended', ray('payer payee')));
+  if ($op == 'gifts') return say(a\showQuery('r_recurs', 1, 'id DESC', 'id,created,payer,payee,amount,period,ended', ray('payer payee')));
   if ($op == 'invites') return say(a\showQuery('r_invites', 1, 'invited DESC', 'invited, inviter, invitee, email', 'inviter'));
   if ($op == 'notices') return say(a\showQuery('r_notices', 1, 'msgid DESC'));
   if ($op == 'proxies') return say(a\showQuery('r_proxies', 1, 'id DESC', 'person, proxy, priority', 'person'));
@@ -548,106 +364,7 @@ function formMakeCtty_submit($form, &$sta) {
  * @param bool $one: (optional) <show just my community>
  * @param bool $recent: (optional) <show latest notes first>
  */
-function formFollowup($form, &$sta, $args = '') {
-  global $base_url;
-  global $mya;
-  
-  if (!$mya or !$mya->cAdmin) return w\go('');
-  extract(just('uid one recent', $args));
-  
-  if (@$uid) {
-    w\setAcct($uid); // switch to that user
-    return formSummary($form, $sta);
-  }
-
-  $title = t('Admin Action Page');
-  $subtitle = item(t('<p>Start with today and work backward. Click an account name.</p><ul><li><b>Live Person.</b> If you get a live person, click "live" for a script. Then, if no followup is needed, make a note about your conversation and click "Auto".</li><li><b>Message #1.</b> If you get a machine, click "msg1" for a Phone Message script, type "PM setup" or "PM welcome" or whatever as a note, and click the "2 days" button.</li><li><b>Message #2.</b> If you already left one message, try 3 more times to catch them live. If you still don\'t catch them click "msg2" for a Phone Message script, then click "email" to send them an Email Message. Type "EM setup" or whatever and click the "7" button if this is for a Setup or Annual check-in or the "Auto" button if it is for a Welcome.</li><li><b>After Setup Help Email.</b> If the email gets no response for a setup help call, keep phoning or emailing at 1-, 2-, or 7-day intervals until you reach them or we close the account.</li><li><b>After Annual Check-in Email.</b> If the email gets no response for an Annual check-in, send a US Mail fund appeal/check-in.</li></ul><p>(comments on this standard procedure are welcome)</p>') . w\btn('/sadmin/followup/one=1', t('Show just my community')) . ' &nbsp; ' . w\btn('/sadmin/followup', t('Show ALL')) . ' &nbsp; ' . w\btn('/sadmin/followup/recent=1', t('Recent notes first')));
-  
-  $now = time();
-  $todayEnd = strtotime('tomorrow') - 1;
-  list ($where1, $where2) = (($mya->admin or $mya->isAdmin2) and !@$one) ? [1, 1] : [0, "community=$mya->community"];
-  $cttys = r\cttyList();
-  $cttys[key($cttys)] = t('Seedpack');
-  foreach ($cttys as $k => $v) $cttys[$k] = trim(str_replace(PROJECT, '', $v));
-  
-  $by = @$recent
-    ? "notes IS NULL OR notes='' OR MID(notes,1,6)='knows ', (MID(notes,6,4)*37+LOCATE(MID(notes,3,3),'JanFebMarAprMayJunJulAugSepOctNovDec'))*32+MID(notes,1,2) DESC"
-    : "($todayEnd - IF(tickle>0, tickle, u.created)) * IF(tickle>$todayEnd, -5 * 366 * :DAY_SECS, 1)"; // today's calls first, then yesterday, 2 days ago etc., then tomorrow, the next day, etc.
-  if ($mya->superAdmin) $by = "(notes LIKE '%ZAP%' AND BINARY notes LIKE '%ZAP%') OR (!activated AND :IS_MEMBER) DESC, " . $by;
-  
-  $sql = <<<EOF
-    SELECT DISTINCT uid, community, tickle, fullName, phone, u.data, u.created, activated, notes, :IS_CO AS co, t.created AS lastTx, :IS_MEMBER AS member, :IS_OK AS ok, :IS_CARDED AS carded
-    FROM users u LEFT JOIN (SELECT created,payer,payee FROM r_txs ORDER BY created DESC LIMIT 1) t ON uid IN (payer, payee)
-    WHERE uid>:CANONIC_ACCTS AND NOT :IS_NONUDGE AND NOT (activated and NOT :IS_OK) AND $where2 AND (tickle>0 OR NOT :IS_MEMBER
-                                                                                                     OR t.created<$now-60*:DAY_SECS OR t.created IS NULL)
-    ORDER BY $by
-EOF;
-
-  $fields = ray('ctty type call name phone notes');
-  if (@$one) array_shift($fields);
-  $q = db\q($sql);
-  $guts = $heads = '';
-  foreach ($fields as $k) {
-    $heads .= "<th class=\"hd-$k\">" . ucfirst($k) . '</th>';
-    $guts .= "<td>$k</td>";
-  }
-  $list = "<table id=\"memberlist\"><tr>$heads</tr>\n";
-  $emails = '';
-  $whities = ray('zap fu'); // use white font for these backgrounds
-  
-  while ($row = $q->fetchAssoc()) {
-    extract($row);
-    foreach (['tickle', 'activated'] as $k) if ($$k) $$k = strtotime('today', $$k); // round down to nearest day
-    $days = round(($tickle - $activated) / DAY_SECS); // tickle: days since activation
-    list ($type, $color) = !$activated 
-      ? (strpos($notes, 'ZAP') 
-         ? [t('DELETE'), 'zap']
-         : ($member ? [t('activate'), 'zap'] : (strpos($data, '"signup";b:0') ? [t('pre'), 'pre'] : [t('setup'), 'setup']))
-         )
-      //    : (round(($activated + TICKLE_WELCOME - $tickle) / DAY_SECS) == 0 ? [t('welcome2'), 'welcome']
-      //    : (round(($activated + TICKLE_DELAYED - $tickle) / DAY_SECS) == 0 ? [t('welcome6'), 'welcome']
-      : (strpos($notes, 'ZAP') ? [t('DEACTIVATE'), 'zap']
-         : (!$carded ? [t('print card'), 'print-card']
-            : (between($days, TICKLE_WELCOME - 1, TICKLE_WELCOME + 14) ? [t('welcome2'), 'welcome']
-               : (between($days, TICKLE_DELAYED - 1, TICKLE_DELAYED + 14) ? [t('welcome6'), 'welcome']
-                  : (($activated < strtotime('9/2/2017') and $tickle < $activated + 90 * DAY_SECS and !$notes) ? [t('welcome'), 'welcome']
-                     : (($tickle and $days % 365 < 30) ? [t('annual'), 'annual'] // +/-:2/29
-                        //    in_array(($tickle - $activated) % DAY_SECS, [0, 1, DAY_SECS - 1])) ? [t('annual'), 'annual'] // +/-:2/29
-                        : (($lastTx < $now - 60 * DAY_SECS and $now - $activated > 60 * DAY_SECS) ? [t('dormant'), 'dormant']
-                           : ($tickle ? [t('followup'), 'fu']
-                              : ( [t('other'), 'fu'] )))))))));
-
-    if ($mya->superAdmin and $type == t('DELETE')) $type = w\lnk("$base_url/sadmin/delete-account/$uid", $type);
-    if (in($color, $whities)) $color .= ' fu-whitey';
-    $type = "<span class=\"fu-$color\">$type</span>";
-    $call = u\fmtDate($tickle ?: $created);
-    $name = w\lnk("$base_url/change-account/acct=$uid&page=summary", $fullName ?: $uid);
-    if ($co) $name = "<span class=\"co\">$name</span>";
-    $phone = u\fmtPhone(u\decry('P', $phone), '-');
-    $notes = strtr($notes, ["\n" => '|| ', date('Y') => '']);
-    if ($type == t('pre')) $notes = db\get('code', 'r_relations', 'other=:uid AND :IS_CUSTOMER', compact('uid')) . " $notes";
-    $notes = substr($notes, 0, 200) . (strlen($notes) > 200 ? '...' : '');
-    $ctty = $cttys[$community];
-    $list .= strtr("<tr>$guts</tr>\n", compact($fields));
-  }
-  if (!isset($tickle)) $list .= t('There are no followup calls to be made.');
-  $list .= "</table>\n";
-  
-  return cgform(compact(ray('title subtitle list')), '', FALSE);
-}
-
-//////////////////////////////////////////////////////////////////////////////////
-
-/**
- * Show a list of standard calls to make (to help new members, check-in, ask for donation, etc.)
- * @param form $form: the form to complete
- * @param ? $sta: ? 
- * @param assoc $args: optional arguments; can contain:
- *   int uid: (optional) account to deal with
- *   bool one: (optional) <show just my community>
- *   bool recent: (optional) <show latest notes first>
- */
-function formNewFollowup($form, &$sta, $args = []) {
+function formFollowup($form, &$sta, $args = []) {
   global $base_url;
   global $mya;
   
@@ -674,18 +391,35 @@ function formNewFollowup($form, &$sta, $args = []) {
   $by = !is_null($recent)
     ? "notes IS NULL OR notes='' OR MID(notes,1,6)='knows ', (MID(notes,6,4)*37+LOCATE(MID(notes,3,3),'JanFebMarAprMayJunJulAugSepOctNovDec'))*32+MID(notes,1,2) DESC"
     : "($todayEnd - IF(tickle>0, tickle, u.created)) * IF(tickle>$todayEnd, -5 * 366 * :DAY_SECS, 1)"; // today's calls first, then yesterday, 2 days ago etc., then tomorrow, the next day, etc.
-  if ($mya->superAdmin) $by = "(notes LIKE '%ZAP%' AND BINARY notes LIKE '%ZAP%') OR (!activated AND :IS_MEMBER) DESC, "
-                              . $by;
+  if ($mya->superAdmin) $by = "(notes LIKE '%ZAP%' AND BINARY notes LIKE '%ZAP%') OR (!activated AND u.:IS_MEMBER) DESC, " . $by;
   
+/*   $sql = <<<EOF */
+/*     SELECT uid, community, tickle, fullName, phone, u.data, u.created, activated, notes, u.:IS_CO AS co, */
+/*     t.created AS lastTx, u.:IS_MEMBER AS member, u.:IS_OK AS ok, u.:IS_CARDED AS carded */
+/*     FROM users u LEFT JOIN r_entries e USING(uid) LEFT JOIN r_tx_hdrs t USING (xid) */
+/*     WHERE uid>:CANONIC_ACCTS AND NOT u.:IS_NONUDGE AND NOT (activated and NOT u.:IS_OK) AND $where2 */
+/*     AND (tickle>0 OR NOT u.:IS_MEMBER OR t.created<$now-60*:DAY_SECS OR t.created IS NULL) */
+/*     ORDER BY $by */
+/* EOF; */
+/*   $sql = <<<EOF */
+/*     SELECT uid, community, tickle, fullName, phone, u.data, u.created, activated, notes, u.:IS_CO AS co, */
+/*     t.created AS lastTx, u.:IS_MEMBER AS member, u.:IS_OK AS ok, u.:IS_CARDED AS carded */
+/*     FROM ( SELECT uid, community, tickle, fullName, phone, data, created, activated, notes, flags */
+/*            FROM users */
+/*            WHERE uid>:CANONIC_ACCTS AND NOT :IS_NONUDGE AND NOT (activated and NOT :IS_OK) AND $where2) u */
+/*     LEFT JOIN r_entries e USING(uid) JOIN r_tx_hdrs t USING (xid) */
+/*     WHERE (tickle>0 OR NOT u.:IS_MEMBER OR t.created<$now-60*:DAY_SECS OR t.created IS NULL) */
+/* EOF; */
+/*     /\* ORDER BY $by *\/ */
   $sql = <<<EOF
-    SELECT DISTINCT uid, community, tickle, fullName, phone, u.data, u.created, activated, notes, :IS_CO AS co,
-    MAX(t.created) AS lastTx, :IS_MEMBER AS member, :IS_OK AS ok, :IS_CARDED AS carded
-    FROM users u LEFT JOIN r_entries e USING (uid) LEFT JOIN r_tx_hdrs t USING (xid)
-    WHERE uid>:CANONIC_ACCTS AND NOT :IS_NONUDGE AND NOT (activated and NOT :IS_OK) AND $where2
-    AND (tickle>0 OR NOT :IS_MEMBER OR t.created<$now-60*:DAY_SECS OR t.created IS NULL)
+    SELECT DISTINCT u.uid, community, tickle, fullName, phone, u.data, u.created, activated, notes, :IS_CO AS co, t.created AS lastTx, :IS_MEMBER AS member, :IS_OK AS ok, :IS_CARDED AS carded
+    FROM users u LEFT JOIN (SELECT t0.created,e0.uid FROM r_tx_hdrs t0 JOIN r_entries e0 USING(xid) ORDER BY created DESC LIMIT 1) t USING(uid)
+    WHERE u.uid>:CANONIC_ACCTS AND NOT :IS_NONUDGE AND NOT (activated and NOT :IS_OK) AND $where2 AND (tickle>0 OR NOT :IS_MEMBER
+      OR t.created<$now-60*:DAY_SECS OR t.created IS NULL)
     ORDER BY $by
 EOF;
-
+  
+  /* SELECT uid, t.created as lastTx FROM users u LEFT JOIN r_entries e USING(uid) LEFT JOIN r_tx_hdrs t USING(xid) WHERE uid>:CANONIC_ACCTS AND NOT u.:IS_NONUDGE AND NOT (activated and NOT u.:IS_OK) AND (tickle>0 OR NOT u.:IS_MEMBER OR t.created<$now-60*:DAY_SECS OR t.created IS NULL); */
   $fields = ray('ctty type call name phone notes');
   if (!is_null($one)) array_shift($fields);
   $q = db\q($sql);

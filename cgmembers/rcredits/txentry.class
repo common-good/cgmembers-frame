@@ -16,11 +16,19 @@ use CG\Util as u;
 
 class TxEntry {
   const REQUIRED_FIELDS = ['amount', 'uid', 'agentUid'];
-  const INSERT_FIELDS = ['amount', 'uid', 'agentUid', 'description', 'acctTid', 'relType', 'related'];
-  const ENTRY_FIELDS = ['id', 'xid', 'amount', 'uid', 'agentUid', 'description', 'acctTid', 'relType', 'related'];
+  const INSERT_FIELDS = ['entryType', 'amount', 'uid', 'agentUid', 'description', 'acctTid', 'relType', 'related'];
+  const ENTRY_FIELDS = ['id', 'xid', 'entryType', 'amount', 'uid', 'agentUid', 'description', 'acctTid', 'relType', 'related'];
   const ALLOWED_FIELDS = TxEntry::ENTRY_FIELDS;
 
-  private $properties = [];
+  public $id;
+  public $xid;
+  public $amount;
+  public $uid;
+  public $agentUid;
+  public $description;
+  public $acctTid;
+  public $relType;
+  public $related;
 
   /**
    * Instantiate (construct) a transaction entry record.
@@ -30,8 +38,16 @@ class TxEntry {
   function __construct($info) {
     u\EXPECT(array_diff(TxEntry::REQUIRED_FIELDS, array_keys($info)) == [], 'missing fields in Entry:' . print_r(array_diff_key(TxEntry::REQUIRED_FIELDS, $info), true) . 'passed: ' . print_r($info, true));
     u\EXPECT(array_diff(array_keys($info), TxEntry::ALLOWED_FIELDS) == [], 'extra fields in Entry:' . print_r(array_diff(array_keys($info), TxEntry::ALLOWED_FIELDS), true));
-    $this->properties = $info;  // OK because array assignment is by copying
-    /* print_r($this->properties); */
+    $this->id = u\arrayGet($info, 'id', null);
+    $this->xid = u\arrayGet($info, 'xid', null);
+    $this->entryType = u\arrayGet($info, 'entryType', 0);
+    $this->amount = u\arrayGet($info, 'amount', null);
+    $this->uid = u\arrayGet($info, 'uid', null);
+    $this->agentUid = u\arrayGet($info, 'agentUid', null);
+    $this->description = u\arrayGet($info, 'description', null);
+    $this->acctTid = u\arrayGet($info, 'acctTid', null);
+    $this->relType = u\arrayGet($info, 'relType', null);
+    $this->related = u\arrayGet($info, 'related', null);
   }
 
   /**
@@ -41,16 +57,8 @@ class TxEntry {
    */
   public function __get($f) {
     $e = $this;
-    if (array_key_exists($f, $e->properties)) {
-      return $e->properties[$f];
-    }
     switch ($f) {
-    case 'acctTid':
-      return '';
-    case 'properties':
-      return $this->properties;
     default:
-      print_r($e->properties);
       u\EXPECT(FALSE, "unexpected field $f requested");
     }
   }
@@ -62,13 +70,13 @@ class TxEntry {
    * @return an array containing the new instances of Entry (FALSE on failure)
    */
   static function readAll($xid) {
-    u\EXPECT(is_integer($xid));
-
     $entries = [];
     $rows = db\rows('*', 'r_entries', 'xid=:xid', ['xid' => $xid]);
     if (!$rows) { return FALSE; }
-    foreach ($rows as $row) {
-      $entries[] = new Entry($row);
+    foreach ($rows as $rowO) {
+      $row = (array)$rowO;
+      if (array_key_exists('deleted', $row)) unset($row['deleted']);
+      $entries[] = new TxEntry($row);
     }
     return $entries;
   }
@@ -81,8 +89,7 @@ class TxEntry {
    */
   function insert($xid) {
     $e = $this;
-    $id = db\insert('r_entries', just(['xid'] + TxEntry::INSERT_FIELDS, $e->properties), 'id');
-    u\EXPECT($id, "Failed to insert transaction entry record");
+    $id = db\insert('r_entries', just(TxEntry::INSERT_FIELDS, (array)$e) + ['xid'=>$xid], 'id');
     return $id;
   }
 }

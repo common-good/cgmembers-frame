@@ -1471,3 +1471,23 @@ function validEmail($email) {return filter_var($email, FILTER_VALIDATE_EMAIL);}
 //function bitCount(int $n) {return $n ? (($n % 2) ? 1 : 0) + bitCount($n / 2) : 0;}
 function stndrdth($n) {return date('S', mktime(1,1,1,1,( (($n>=10)+($n>=20)+($n==0))*10 + $n%10) ));}
 function arrayGet($arr, $key, $dft) { return array_key_exists($key, $arr) ? $arr[$key] : $dft; }
+
+/**
+ * Return exactly the specified key/value pairs from the given array.  If a particular 
+ * key is not in the array then use the associated default value.
+ * Typical use: extract(exactly('key2 key4 key 7', $info, [default2, default4, default7]));
+ * @param string/array $these: flat array or space-delimited array of field names
+ * @param array/object/string $info: possible key/value pairs to return (passed as array, object, or UrlArgString)
+ * @param mixed $defaults: if an array there must be one entry for each key, otherwise the single value is used
+ *                         for every key
+ * @return array of the results [NOT trimmed, because values might be encrypted!]
+ */
+function exactly($these, $info, $defaults) {
+  $ray = is_string($info) ? urlq2ray($info) : (array) $info;
+  if (!is_array($these)) $these = ray($these);
+  $result = just($these, $ray);
+  foreach ($these as $i => $k) {
+    if (!array_key_exists($k, $result)) $result[$k] = (is_array($defaults) ? $defaults[$i] : $defaults);
+  }
+  return $result;
+}

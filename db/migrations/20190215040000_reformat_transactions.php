@@ -59,10 +59,10 @@ class ReformatTransactions extends AbstractMigration
       $maxXid = max($maxXid, $xid);
       
       $reverses = null;
-      $payerEntry = ray('xid amount uid agentUid description acctTid relType related',
-                        $xid, 0-$amount, $payer, $payerAgent, $payerFor, $payerTid, null, null);
-      $payeeEntry = ray('xid amount uid agentUid description acctTid relType related',
-                        $xid, $amount, $payee, $payeeAgent, $payeeFor, $payeeTid, null, null);
+      $payerEntry = ray('xid entryType amount uid agentUid description acctTid relType related',
+                        $xid, ENTRY_PAYER, 0-$amount, $payer, $payerAgent, $payerFor, $payerTid, null, null);
+      $payeeEntry = ray('xid entryType amount uid agentUid description acctTid relType related',
+                        $xid, ENTRY_PAYEE, $amount, $payee, $payeeAgent, $payeeFor, $payeeTid, null, null);
       $otherEntries = [];
 
       // xid is untouched
@@ -232,9 +232,10 @@ class ReformatTransactions extends AbstractMigration
       if (array_key_exists('xfee', $data)) {
         $xFeeAmt = $data['xfee'];
         $xFees[$xid] = $xFeeAmt;  // save the data to check consistency
-        $payerEntry['amount'] -= $xFeeAmt;  // reduce payer amount by fees
         $otherEntries[] = ray('xid amount uid agentUid description acctTid relType related',
                               $xid, $xFeeAmt, $payee, $payeeAgent, t('transaction fee'), $payeeTid, null, null);
+        $otherEntries[] = ray('xid amount uid agentUid description acctTid relType related',
+                              $xid, -$xFeeAmt, $payer, $payerAgent, t('transaction fee'), $payerTid, null, null);
         unset($data['xfee']);
       }
 
@@ -242,21 +243,22 @@ class ReformatTransactions extends AbstractMigration
         $couponValue[$xid] = $data['coupon'];  // save coupon data for later consistency checking
         $coupId[$xid] = $data['coupid'];
         /* $payeeEntry['amount'] += $couponValue[$xid]; */
-        $payerEntry['amount'] += $couponValue[$xid];
         $otherEntries[] = ray('xid amount uid agentUid description acctTid relType related',
                               $xid, -$couponValue[$xid], $payee, $payeeAgent, $payeeFor, $payeeTid, 'C', $coupId[$xid]);
+        $otherEntries[] = ray('xid amount uid agentUid description acctTid relType related',
+                              $xid, $couponValue[$xid], $payer, $payerAgent, $payerFor, $payerTid, 'C', $coupId[$xid]);
         unset($data['coupon']);
         unset($data['coupid']);
       }
       
       // flags: taking disputed offline short undone undoes crumbs roundups roundup recurs gift
       if (u\getBit($flags, B_TAKING)) {
-        $initiator = $payee;
-        $initiatorAgent = $payeeAgent;
+        $actor = $payee;
+        $actorAgent = $payeeAgent;
         u\setBit($flags, B_TAKING, false);
       } else {
-        $initiator = $payer;
-        $initiatorAgent = $payerAgent;
+        $actor = $payer;
+        $actorAgent = $payerAgent;
       }
 
       if (u\getBit($flags, B_DISPUTED)) {
@@ -296,8 +298,11 @@ class ReformatTransactions extends AbstractMigration
           if ($cents > 0) {
             $roundupDonation = round(1 - $cents, 2);
             $payerEntry['amount'] -= $roundupDonation;
-            $otherEntries[] = ray('xid amount uid agentUid description acctTid relType related',
-                                  $xid, $roundupDonation, CG_ROUNDUPS_UID, CG_ROUNDUPS_UID,
+            $otherEntries[] = ray('xid entryType amount uid agentUid description acctTid relType related',
+                                  $xid, ENTRY_DONATION, $roundupDonation, CG_ROUNDUPS_UID, CG_ROUNDUPS_UID,
+                                  t('roundup donation'), '', null, null);
+            $otherEntries[] = ray('xid entryType amount uid agentUid description acctTid relType related',
+                                  $xid, ENTRY_DONATION, -$roundupDonation, $payer, $payerAgent,
                                   t('roundup donation'), $payerTid, null, null);
             /* print("ROUNDUP DONATION will be $roundupDonation on $xid\n"); */
           }
@@ -322,7 +327,7 @@ class ReformatTransactions extends AbstractMigration
 
       //
       if ($xid != 0) {
-        $hdrInfo = compact(ray('xid type goods initiator initiatorAgent flags channel box risk risks reverses created'));
+        $hdrInfo = compact(ray('xid type goods actor actorAgent flags channel box risk risks reverses created'));
         $txHdrsTable->insert($hdrInfo)->save();
         $entriesTable->insert($payerEntry)->insert($payeeEntry)->save();
         foreach ($otherEntries as $key => $entry) {
@@ -377,7 +382,7 @@ class ReformatTransactions extends AbstractMigration
       if (is_null($channel)) $channel = TX_SYS;
       if (is_null($risks)) $risks = 0;
       
-      $hdr = ray('xid type goods initiator initiatorAgent flags channel box risk risks reverses created',
+      $hdr = ray('xid type goods actor actorAgent flags channel box risk risks reverses created',
                  $nextXid, TX_BANK, FOR_USD, $payee, $payee, 0, $channel, null, $risk, $risks, null, $completed);
 
       $bankUid = $amount >= 0 ? CG_INCOMING_BANK_UID : CG_OUTGOING_BANK_UID;
@@ -416,19 +421,19 @@ class ReformatTransactions extends AbstractMigration
       // Checking
       switch ($type) {
       case 'S':
-        $initiator = CG_INCOMING_BANK_UID;
+        $actor = CG_INCOMING_BANK_UID;
         break;
       case 'T':
-        $initiator = CG_ADMIN_UID;
+        $actor = CG_ADMIN_UID;
         break;
       default:
         print('BAD USD2 TYPE: ' . $result['type'] . "\n");
       }
 
-      $initiatorAgent = $initiator;
+      $actorAgent = $actor;
 
-      $hdr = ray('xid type goods initiator initiatorAgent flags channel box risk risks reverses created',
-                 $nextXid, TX_BANK, FOR_USD, $initiator, $initiatorAgent, 0, TX_SYS, null, null, 0, null, $completed);
+      $hdr = ray('xid type goods actor actorAgent flags channel box risk risks reverses created',
+                 $nextXid, TX_BANK, FOR_USD, $actor, $actorAgent, 0, TX_SYS, null, null, 0, null, $completed);
       $e1 = ray('xid amount uid agentUid description acctTid relType related',
                 $nextXid, -$amount, CG_INCOMING_BANK_UID, CG_INCOMING_BANK_UID, $memo, $bankTxId, null, null);
       $e2 = ray('xid amount uid agentUid description acctTid relType related',
@@ -443,8 +448,9 @@ class ReformatTransactions extends AbstractMigration
   }
 
   public function down() {
-    $this->execute('DELETE FROM r_entries');
-    $this->execute('DELETE FROM r_tx_hdrs');
+    $this->execute('DELETE FROM all_entries');
+    $this->execute('DELETE FROM all_tx_hdrs');
+    $this->execute('DELETE FROM all_disputes');
     $this->execute('UPDATE r_usd SET xid=DEFAULT');
     $this->execute('UPDATE r_usd2 SET xid=DEFAULT');
   }

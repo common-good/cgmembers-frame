@@ -9,37 +9,26 @@ require_once 'cgmembers/rcredits/defs.inc';
 
 class CreateTableRDisputes extends AbstractMigration
 {
-    /**
-     * Change Method.
-     *
-     * Write your reversible migrations using this method.
-     *
-     * More information on writing migrations is available here:
-     * http://docs.phinx.org/en/latest/migrations.html#the-abstractmigration-class
-     *
-     * The following commands can be used in this method and Phinx will
-     * automatically reverse them when rolling back:
-     *
-     *    createTable
-     *    renameTable
-     *    addColumn
-     *    renameColumn
-     *    addIndex
-     *    addForeignKey
-     *
-     * Remember to call "create()" or "update()" and NOT "save()" when working
-     * with the Table class.
-     */
-    public function change()
-    {
-      $disputesTable = $this->table('r_disputes', ['comment' => 'record of disputes transactions']);
-      
-      $this->addBigInt($disputesTable, 'xid', ['length' => 20, 'null' => false, 'comment' => 'id of the transaction in dispute']);
-      $disputesTable->addColumn('reason', 'string', ['length' => 255, 'null' => false, 'comment' => 'reason the transaction is being disputes']);
-      $this->addTinyInt($disputesTable, 'status', ['length' => 4, 'null' => false, 'default' => DS_OPEN, 'comment' => 'status of the dispute']);
-      $disputesTable->create();
-    }
+  public function up()
+  {
+    $disputesTable = $this->table('all_disputes', ['comment' => 'record of disputes transactions']);
 
+    $this->addBigInt($disputesTable, 'xid', ['length' => 20, 'null' => false, 'comment' => 'id of the transaction in dispute']);
+    $disputesTable->addColumn('reason', 'string', ['length' => 255, 'null' => false, 'comment' => 'reason the transaction is being disputes']);
+    $this->addTinyInt($disputesTable, 'status', ['length' => 4, 'null' => false, 'default' => DS_OPEN, 'comment' => 'status of the dispute']);
+    $this->addBigInt($disputesTable, 'deleted', ['length' => 20, 'null' => true, 'default' => true, 'comment' => "unix timestamp of when the dispute record was deleted, null if it hasn't been"]);
+    $disputesTable->create();
+
+    $this->execute('CREATE VIEW r_disputes AS SELECT id, xid, reason, status FROM all_disputes WHERE deleted IS NULL');
+    $this->execute('CREATE VIEW x_disputes AS SELECT id, xid, reason, status, deleted FROM all_disputes WHERE deleted IS NOT NULL');
+  }
+
+  public function down() {
+    $this->execute('DROP VIEW IF EXISTS x_disputes');
+    $this->execute('DROP VIEW IF EXISTS r_disputes');
+    $this->table('all_disputes')->drop();
+  }
+  
   private function addTinyInt($table, $name, $options = []) {
     $options['length'] = MysqlAdapter::INT_TINY;
     $table->addColumn($name, 'integer', $options);

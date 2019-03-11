@@ -102,7 +102,7 @@ function formRerisk($form, &$sta, $type = '', $id = '', $show = FALSE) {
     $w = ''; $m = K_RED;
   } elseif ($type == 'tx') {
     $x = r\x($id);
-    k\txRisk1($x->ray, $risk, $calc);
+    k\txRisk1($x->xid, $risk, $calc);
     $w = u\fmtAmt($x->amount);
     $m = t('@K_RED / @K_THRESHOLD');
   }

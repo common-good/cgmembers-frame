@@ -87,7 +87,7 @@ define('DEV_PW2', 'devPassword#two!'); // second password on DEV machine (len mu
 define('DEV_VKEYPW', 'wt38BqWMslj3uUHUOto7fNi5ExL9CC7S7ffjn_q6zCY'); // password for very secure key, on DEV machine
 define('DEV_ADMIN_PASS', '123'); // admin password when isDEV
 define('DEFAULT_PROXIES', '2, 3'); // account record IDs for place-holder proxies
-define('TRACK_DELETED', 'r_invoices r_photos r_relations r_txs r_usd users'); // remember rows in these tables if we delete them
+define('TRACK_DELETED', 'r_invoices r_photos r_relations r_usd users'); // remember rows in these tables if we delete them
 define('DEV_ONLY_MSG', 'only on development machine');
 
 $host = strtolower(@$_SERVER['HTTP_HOST']);
@@ -278,6 +278,7 @@ define('R_CODE_LEN', 20); // length of most random identifiers
 define('R_DUPTX_MINS', 4); // number of minutes before a duplicate transaction is allowed
 define('HAS_XFEE', "data LIKE '%s:4:\"xfee\";%'"); // sql to recognize a transaction that has an exchange fee
 define('R_DEPOSIT_RETURN_FEE', 20); // what we charge members for a second bounced transfer
+define('HAS_REVERSER', "(EXISTS (SELECT tRev FROM r_tx_hdrs WHERE tRev.reverses=t.xid))");
 
 define('R_USPS_WEB_TOOLS_ID', '921COMMO5331'); // USPS API credentials
 
@@ -474,7 +475,8 @@ define('B_STAKE', 13); // member buying or selling stake in investment club
 define('B_FINE', 14); // community fine
 define('B_NOASK', 15); // transaction was taken with ID checking OFF
 define('B_FUNDING', 16); // invoice has already instigated an appropriate bank transfer request
-define('TX_FLAGS', 'taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding');
+/* define('TX_FLAGS', 'taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding'); */
+define('TX_FLAGS', 'offline short crumbs roundups recurs gift loan investment stake fine noask funding');
 
 // Invoice status (txid >= TX_PAID if paid)
 define('TX_DENIED', -2); // invoice rejected by the non-originator
@@ -528,6 +530,12 @@ define('TX_DATA_FLDS', 'undoneBy undoes force changes'); // serialized pseudo-fi
 define('DS_OPEN', 1);  // dispute not resolved
 define('DS_ACCEPTED', 2);  // dispute accepted and transaction reversed
 define('DS_DENIED', 3);  // dispute denied
+
+define('ENTRY_OTHER', 0);
+define('ENTRY_PAYER', 1);  // the uid in this entry is for the payer
+define('ENTRY_PAYEE', 2);  // the uid in this entry is for the payee
+define('ENTRY_DONATION', 3);  // this is a transaction-related donation (e.g., roundup donations)
+                              // the precise nature can be determined from the uid
 
 $GLOBALS['emailSubjects'] = array(
 /*  'new-payment' => t('%PROJECT PAYMENT from {otherName}'),

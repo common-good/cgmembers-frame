@@ -20,29 +20,26 @@ function statement($period = '') {
   if (!$mya = r\acct()) return w\go('', t('You must first sign in.'), 'ERR');
 
   list ($start, $end, $period) = statementMonth($period, $mya->fyEnd ?: '12/31');
+
+  $uids = ($mya->jid != 0) ? [ $mya->id, $mya->jid ] : [ $mya->id ];
+  /* list ($header, $classes, $rows, $tot) = x\getTxRows($start, $end, ray('descending', FALSE)); // get the transaction data */
+  $startBals = be\creditInfo($uids, $start);
+  /* print_r($startBals); */
+  $endBals = be\creditInfo($uids, $end);
+  /* print_r($endBals); */
   
-  list ($header, $classes, $rows, $tot) = x\getTxRows($start, $end, ray('descending', FALSE)); // get the transaction data
-  $info = be\creditInfo(ray('asof', $end));
-  $info0 = be\creditInfo(ray('asof', $start - 1));
-
-  extract(just('frombank fromyou toyou reward roundups', $tot));
-//  list ($fromyou, $toyou) = $amount < 0 ? [-$amount, 0] : [0, $amount];
-  $bal0 = $info0->balance - $info0->partRounds; // balance BEFORE start of this period
-//  list ($savings0, $savings9) = [$info0->savings, $info->savings];
-//  $dSavings = round($savings9 - $reward - $savings0, 2);
-//  list ($toSavings, $fromSavings) = u\order($dSavings >= 0, abs($dSavings), 0);
-  // $fromyou += $toSavings;
-  // $toyou += $fromSavings;
-//  list ($bal9, $rewardsEver) = array($info->balance - $info->partRounds, $info->rewards);
-  list ($bal9) = array($info->balance - $info->partRounds);
-
+  extract(just('frombank fromyou toyou', $tot));
+  $bal0 = $startBals['balance']; // balance BEFORE start of this period
+  $bal9 = $endBals['balance'];
+  $in0 = $startBals['in'];
+  $in9 = $endBals['in'];
+  $out0 = $startBals['out'];
+  $out9 = $endBals['out'];
+  $fromyou = $out9 - $out0;
+  $toyou = $in9 - $in0;
+  $frombank = $endBals['bank'] - $startBals['bank'];
   $committed = $mya->committed;
-  list ($avg) = r\averageBalance($mya->id, $mya->created, $end, TRUE);
-  if ($jid = $mya->jid and $j = r\acct($jid)) {
-    list ($avg2) = r\averageBalance($j->id, $j->created, $end, TRUE);
-    $avg += $avg2;
-  }
-  if ($mya->cttyRewardy) $toSavings = $savings9 - $savings0;
+  list ($avg) = r\averageBalance($uids, $mya->created, $end, TRUE);
     
   $pdf = new r\Statement($mya, $period);
 
@@ -54,9 +51,7 @@ function statement($period = '') {
   $pdf->AddPage();
   $pageWidth = $pdf->getPageWidth();
 
-  //$pdf->writeHTMLCell(40, 10, 160, 84.5, '<div style="font-size:44px;">CommonGood.earth</div>');
   list ($address, $city, $state, $zip) = u\parseAddr($mya->postalAddr);
-//  $pdf->setX($m + 10);
   $pdf->Cell(0, 0, $mya->j_fullName, '', 2);
   $pdf->Cell(0, 0, $address, '', 2);
   $pdf->Cell(0, 0, "$city, $state $zip", '', 2);
@@ -68,94 +63,90 @@ function statement($period = '') {
   $savingsTitle = t('Credit line:');
 
   $pdf->barHead('SUMMARY');
-  list ($w, $rew1, $fromRew, $rew2, $rew34) = $mya->cttyRewardy
-  ? [8, ' /plus/8/R/; Rewards**//23/R;', ' /plus/8/R/; /reward/23/R;', 'fromSavings', ' //8; //23;']
-  : [15, '', '', '', ''];
     
-  $fields[1] = explode('; ', "/balTitle/15/; Starting/bal0/28/R; /plus/$w/R; From Bank/frombank/23/R; /minus/$w/C; Paid*/fromyou/23/R; /plus/$w/R; Received/toyou/23/R;$rew1 /equals/$w/R; Ending/bal9/28/R");
+  $fields[1] = explode('; ', "/balTitle/15/; Starting/bal0/28/R; /plus/15/R; From Bank/frombank/23/R; /minus/15/C; Paid/fromyou/23/R; /plus/15/R; Received/toyou/23/R; /equals/15/R; Ending/bal9/28/R");
   $pdf->colHeads($fields[1]);
 
   list ($plus, $minus, $equals, $space) = array('+', '-', '=', ' ');
   list ($total0, $underline9, $total9) = [$bal0, str_repeat('-', 17), $bal9];
   $underline0 = $underline9;
 
-//  $yield = number_format($avg ? round(100 * $rewardsEver / $avg) : 0, 1) . '%';
-  $numFields = ray('total0 bal0 amount frombank fromyou toyou bal9 rewardsEver committed ');
+  $numFields = ray('total0 bal0 amount frombank fromyou toyou bal9 committed in out');
   foreach ($numFields as $one) $$one = number_format(@$$one ?: 0, 2); // ?: is needed because $$one might be null or ''
   
   $pdf->setFontSize(.9 * $size);
-  for ($i = 1; $i <= 1; $i++) foreach ($fields[$i] as $one) {
-    list ($head, $fldName, $width, $align) = explode('/', "$one/");
-    foreach (ray('fromyou', 1) as $k => $v) if ($fldName == $k) $$k .= str_repeat(' ', $v); // footnote alignment
-    $pdf->Cell($width, 0, @$fldName ? @$$fldName : '', '', @$fldName[strlen(@$fldName) - 1] == '9' ? 1 : 0, $align);
+  for ($i = 1; $i <= 1; $i++) {
+    foreach ($fields[$i] as $one) {
+      list ($head, $fldName, $width, $align) = explode('/', "$one/");
+      foreach (ray('fromyou', 1) as $k => $v) {
+        if ($fldName == $k) $$k .= str_repeat(' ', $v); // footnote alignment
+      }
+      $pdf->Cell($width, 0, @$fldName ? @$$fldName : '', '', @$fldName[strlen(@$fldName) - 1] == '9' ? 1 : 0, $align);
+    }
   }
   
   $pdf->newLine();
   list ($labelWidth, $numWidth) = array(45, 25);
-  if ($mya->cttyRewardy) $pdf->Cell($labelWidth, 0, "Incentive Rewards Ever: $rewardsEver", '', 1);
 
   $pdf->setFontSize(.8 * $size);
-  $pdf->newLine();
-  $change = '$' . number_format(@$roundups + 0, 2);
-  $pdf->Cell($pageWidth, 0, "  * Including $change in rounded-up change donated to the community fund.", '', 1, 'L');
-  if ($mya->cttyRewardy) $pdf->Cell($pageWidth, 0, t('** Rewards are yours to keep once your %PROJECT community says so. In the meantime you can borrow them interest-free.'), '', 1, 'L');
-  
   $pdf->newLine();
 
   $pdf->setFontSize($size);
   $pdf->barHead('DETAILS');
-  list ($rew, $lastHead, $purposeW) = $mya->cttyRewardy ? [' Reward//22/R', 'Reward', 70] : ['', 'Amount', 90];
-  $fields = ray("Tx#/tid/15/C /space/1/ Date//17/ Name//55/ /space/1/ Purpose//$purposeW/ /space/1/ Amount//20/R$rew");
+  $lastHead = 'Amount';
+  $fields = ray("Tx#/tid/15/C /space/1/ Date//17/ Name//55/ /space/1/ Purpose/description/90/ /space/1/ Amount//20/R");
   $pdf->colHeads($fields);
   $pdf->setFontSize(.9 * $size);
   $none = strip_tags(R_NONE);
-  foreach ($rows as $row) {
-    foreach ($row as $k => $v) $row[$k] = str_replace(',', '', strip_tags($v));
-    extract(just('tid date name amount purpose reward', array_combine($classes, $row)));
-    $date = strftime('%b %d', strtotime($date)); // reformat for single month
-    if (strlen($purpose) > $purposeLenMax + 3) $purpose = substr($purpose, 0, $purposeLenMax) . '...';
 
-    foreach ($fields as $one) {
-      list ($head, $fldName, $width, $align) = explode('/', $one);
-      if (!$fldName) $fldName = strtolower($head);
-      $debit = ($align == 'R' and is_numeric($n = str_replace(',', '', $$fldName)) and $n < 0);
-      if ($debit) $pdf->SetTextColor(128, 0, 0); else $pdf->SetTextColor();
-      if (in($fldName, $numFields) and $$fldName != $none) $$fldName = number_format($$fldName, 2);
-      $pdf->Cell($width, 0, $$fldName, '', $head == $lastHead ? 1 : 0, $align, '', '', 1);
+  $txs = be\getTxs($uids, $start, $end);
+
+  $cats = [];
+  $dups = FALSE;
+  foreach ($txs as $entries) {
+    foreach ($entries as $entry) {
+      if (in_array($entry['uid'], $uids)) continue;
+      extract(just('tid created name description amount', $entry));
+      $date = strftime('%b %d', $created); // reformat for single month
+      if (strlen($purpose) > $purposeLenMax + 3) $purpose = substr($purpose, 0, $purposeLenMax) . '...';
+      $amount = -$amount;  // since we're looking at it from the other party's view
+      
+      foreach ($fields as $field) {
+        list ($head, $fldName, $width, $align) = explode('/', $field);
+        if (!$fldName) $fldName = strtolower($head);
+        $n = str_replace(',', '', $$fldName);
+        $debit = ($align == 'R' and is_numeric($n) and $n < 0);
+        if ($debit) { $pdf->SetTextColor(128, 0, 0); }
+        else { $pdf->SetTextColor(); }
+        if (in($fldName, $numFields) and $$fldName != $none) $$fldName = number_format($$fldName, 2);
+        $pdf->Cell($width, 0, $$fldName, '', $head == $lastHead ? 1 : 0, $align, '', '', 1);
+      }
+      foreach (['amount', 'reward'] as $k) {
+        $$k = u\cleanAmount(@$$k) ?: 0; // convert from string
+      }
+      if ($amount) x\addCat($cats, $description, $amount, $dups);
     }
-    foreach (['amount', 'reward'] as $k) $$k = u\cleanAmount(@$$k) ?: 0; // convert from string
-    if ($mya->id == CGID and $purpose == R_SHARING_MSG) list ($amount, $reward) = [$reward, $amount];
-    if ($reward and $mya->cttyRewardy) {
-      $catDesc = r\usdin($purpose) 
-      ? t('exchange fees') // this is not a reward and should be moved out of this block
-      : (u\starts($purpose, INFLATION_DESC)
-        ? (INFLATION_DESC . t(' rewards')) // can't put reward in parens because then addCat strips it off
-        : t('other rewards'));
-      x\addCat($cats, $catDesc, $reward, $zot);
-    }
-    if ($amount) x\addCat($cats, $purpose, $amount, $dups);
   }
   
-  if (!$rows) {
+  if ($txs = []) {
     $pdf->newLine();
     $pdf->Cell($pageWidth, 0, t('There are no transactions this month.'), '', 1 , 'L');
   }
   
-  if (@$dups) { // don't show categorization unless it's worthwhile
+  if ($dups) { // don't show categorization unless it's worthwhile
     $pdf->setFontSize($size);
     $pdf->newLine();
     $pdf->barHead('CATEGORY TOTALS');
     $fields = ray('Category/cat/75/ Total/total/25/R Count/count/17/R');
     $pdf->colHeads($fields);
     $pdf->setFontSize(.9 * $size);
-
     x\finishCats($cats);
     
     foreach ($cats as $cat => $ray) {
       list ($count, $amount) = $ray;
       $total = number_format($amount, 2);
-      foreach ($fields as $one) {
-        list ($head, $fldName, $width, $align) = explode('/', $one);
+      foreach ($fields as $field) {
+        list ($head, $fldName, $width, $align) = explode('/', $field);
         $pdf->Cell($width, 0, $$fldName, '', $head == 'Count' ? 1 : 0, $align, '', '', 1);
       }
     }
@@ -167,22 +158,28 @@ function statement($period = '') {
 /**
  * Return the start and end dates and human-readable description of a given month, quarter, or year.
  * @param string $period: mmmyyyy (month) or CYyyyy (calendar year) or FYyyyy (fiscal year)
- * @return [$start, $end, $periodDesc]
+ * @return [$start, $end, $periodDesc] -
+ *   start is the start of the current period
+ *   end is one second beyond the end of the current period, so use should be exclusive not inclusive
  */
 function statementMonth($period, $fiscalYearEnd = '12/31') {
   $type = substr($period, 0, 2); // CY, FY, Q<n>, or other
 
-  if (is_numeric($year = substr($period, 2))) {  
+  $year = substr($period, 2);
+  if (is_numeric($year)) {  
     if (substr($type, 0, 1) == 'Q') {
       list ($endMo, $endDay) = [3 * substr($type, 1), in($type, 'Q1 Q4') ? 31 : 30];
       $lastDay = "$endMo/$endDay/$year";
-    } else $lastDay = $type == 'CY' ? "12/31/$year" : "$fiscalYearEnd/$year";
-    $end = strtotime($lastDay) + DAY_SECS - 1; // fails if FY ends on clock change day
-    list ($start, $periodDesc) = [u\plusMonths(-12, $end + 1), "$type $year"];
+    } else {
+      $lastDay = $type == 'CY' ? "12/31/$year" : "$fiscalYearEnd/$year";
+    }
+    $end = strtotime($lastDay) + DAY_SECS; // fails if FY ends on clock change day
+    list ($start, $periodDesc) = [u\plusMonths(-12, $end), "$type $year"];
   } else {
-    if (!$start = strtotime("1$period")) return w\softErr(t('That is not a recognizable month.'));
+    $start = strtotime("1$period");
+    if (!$start) { return w\softErr(t('That is not a recognizable month.')); }
     $start = u\monthDay1($start);
-    list ($end, $periodDesc) = [u\plusMonths(1, $start) - 1, strftime('%B %Y', $start)];
+    list ($end, $periodDesc) = [u\plusMonths(1, $start), strftime('%B %Y', $start)];
   }
   return [$start, $end, $periodDesc];
-}  
+}

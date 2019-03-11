@@ -36,7 +36,7 @@ Setup:
   | 4   | %today-5m | transfer |    100 | .ZZC | .ZZB | cash    |
   | 5   | %today-5m | transfer |    200 | .ZZA | .ZZC | cash    |
   | 6   | %today-4m | grant    |    250 | ctty | .ZZF | stuff   |
-  Then balances:
+  And balances:
   | uid  | balance |*
   | ctty |    -250 |
   | .ZZA |    -200 |
@@ -50,7 +50,7 @@ Setup:
 
 Scenario: A cashier asks to charge someone for cash
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $100 for "cash": "cash out" at %now
-  Then we respond ok txid 7 created %now balance 0 rewards 150
+  Then we respond ok txid 7 created %now balance 0
   And with message "report tx" with subs:
   | did     | otherName | amount |*
   | charged | Bea Two   | $100   |
@@ -65,14 +65,14 @@ Scenario: A cashier asks to charge someone for cash
   | %today  | Bea Two  | Corner Pub | $100   | cash out     |
   And balances:
   | uid  | balance |*
-  | ctty |    -250 |
   | .ZZA |    -200 |
   | .ZZB |       0 |
   | .ZZC |     200 |
+  | .ZZF |     250 |
 
 Scenario: A cashier asks to refund someone
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $-100 for "cash": "cash in" at %now
-  Then we respond ok txid 7 created %now balance 200 rewards 150
+  Then we respond ok txid 7 created %now balance 200
   And with message "report tx" with subs:
   | did      | otherName | amount |*
   | credited | Bea Two   | $100   |

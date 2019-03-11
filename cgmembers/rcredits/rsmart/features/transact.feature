@@ -34,7 +34,7 @@ Setup:
   | xid | created   | type   | amount | from | to   | purpose |*
   | 3   | %today-6m | grant  |    250 | ctty | .ZZC | growth  |
   | 5   | %today-6m | grant  |    250 | ctty | .ZZF | stuff   |
-  Then balances:
+  And balances:
   | uid  | balance |*
   | ctty |    -500 |
   | .ZZA |       0 |
@@ -50,7 +50,7 @@ Setup:
 Scenario: A cashier asks to charge someone
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $100 for "goods": "food" at %now
   # cash exchange would be for "cash": "cash out"
-  Then we respond ok txid 6 created %now balance -100 rewards 260 saying:
+  Then we respond ok txid 6 created %now balance -100 saying:
   | did     | otherName | amount | why   |*
   | charged | Bea Two   | $100   | goods |
   And with did
@@ -71,7 +71,7 @@ Scenario: A cashier asks to charge someone
 
 Scenario: A cashier asks to refund someone
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $-100 for "goods": "food" at %now
-  Then we respond ok txid 6 created %now balance 100 rewards 240 saying:
+  Then we respond ok txid 6 created %now balance 100 saying:
   | did      | otherName | amount | why   |*
   | refunded | Bea Two   | $100   | goods |
   And with did
@@ -164,10 +164,10 @@ Scenario: Device sends wrong proof
 Scenario: A cashier in the same community asks to charge someone unconfirmed
   When agent "C:A" asks device "devC" to charge ".ZZE,ccE" $100.02 for "goods": "food" at %now
   # cash exchange would be for "cash": "cash out"
-  Then we respond ok txid 6 created %now balance "*-101" rewards 260 saying:
+  Then we respond ok txid 6 created %now balance "*-101" saying:
   # asterisk means secret balance
-  | did     | otherName | amount  | why   | reward |*
-  | charged | Eve Five  | $100.02 | goods | $10    |
+  | did     | otherName | amount  | why   |*
+  | charged | Eve Five  | $100.02 | goods |
 #  Then we return error "not confirmed" with subs:
 #  | youName  | inviterName |*
 #  | Eve Five | Dee Four    |
