@@ -76,7 +76,7 @@ EOF
   js('crop-setup', 'recrop uid', $recrop, $mya->id);
   css('x/croppic.css');
 
-  $form = compact(ray('title nextStep progress desc newPhoto del'));
+  $form = @compact(ray('title nextStep progress desc newPhoto del'));
   return cgform($form);
 }
 

@@ -60,7 +60,7 @@ EOF
   
 
   jsx('advanced-prefs', compact('advancedFields'));
-  $form = compact(ray('title subtext snap roundup crumbs debtOk2 statements showAdvancet ' . $advancedFields)) + w\setupFoot() + compact('posttext');
+  $form = @compact(ray('title subtext snap roundup crumbs debtOk2 statements showAdvancet ' . $advancedFields)) + w\setupFoot() + compact('posttext');
   return cgform($form);
 }
 

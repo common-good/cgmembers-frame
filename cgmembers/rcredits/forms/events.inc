@@ -138,7 +138,7 @@ EOF;
   w\js('ballot');
   w\css('rvote.css');
   
-  return cgform(compact(ray('args title subtitle status showVotes')) + (@$voting ?: []) + compact('middle') + (@$extraFields ?: []));
+  return cgform(@compact(ray('args title subtitle status showVotes')) + (@$voting ?: []) + compact('middle') + (@$extraFields ?: []));
 }
 
 function formEvents_validate($form, &$sta) {

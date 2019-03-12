@@ -175,7 +175,7 @@ function formSummary_validate($form, &$sta) {
   if (@$rTrader and isset($mediaConx) and $err = u\badAmount($mediaConx, '>=0', 0)) return sayFieldErr($err, 'mediaConx');
   if (isset($moves) and $err = u\badAmount($moves, '>=0', 0)) return sayFieldErr($err, 'moves');
 //  if (@$who and !$who = whois($who, 'who', $sta['input'])) return say(t('I don\'t know what account you mean to go to.'), 'who');
-  u\preray(compact(ray('tickle helper who creditLimit')), $sta['input']);
+  u\preray(@compact(ray('tickle helper who creditLimit')), $sta['input']);
 }
 
 function formSummary_submit($form, &$sta) {
@@ -225,7 +225,7 @@ function formSummary_submit($form, &$sta) {
   if (isset($rTrader)) $mya->setBit(B_OK, @$rTrader, TRUE);
   if ($mya->helper and ($mya->ok or !@$helper)) unset($helper); // don't overwrite if too late or empty
 //  $floor = -$creditLimit; // floor is calculated automatically
-  $mya->update(compact(ray('legalName federalId tickle notes helper mediaConx moves')));
+  $mya->update(@compact(ray('legalName federalId tickle notes helper mediaConx moves')));
   
   unset($DBTX);
   

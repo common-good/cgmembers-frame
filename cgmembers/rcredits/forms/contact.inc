@@ -59,7 +59,7 @@ function formContact_validate($form, &$sta) {
   if (!phoneOk($phone, $country)) return;
   if (u\poAddress($address)) return say('po in location', 'address');
   
-  u\preray(compact(ray($normals . ' email phone name')), $sta['input']); // fix formatting and add name
+  u\preray(@compact(ray($normals . ' email phone name')), $sta['input']); // fix formatting and add name
 }
 
 function formContact_submit($form, &$sta) {

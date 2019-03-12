@@ -53,13 +53,13 @@ function formConnect($form, &$sta, $args = '') {
     $bankAccount = passFld(t('Account:'), t('Type <b class="loud">carefully</b> your <b>checking</b> account number. The bank charges us $20 if you get this wrong. <span>Savings accounts will not work, at this time.</span>'));
     $bankAccount2 = passFld(t('Again:'), t('Type your account number again.<br>(we need to be REALLY SURE we don\'t connect to the wrong account)'));
   
-    $connectFields = fieldSet('connectFields2', compact(ray('checkHint routingNumber bankAccount bankAccount2 cashout autopay autoboxes refills targetFields')), BARE);
+    $connectFields = fieldSet('connectFields2', @compact(ray('checkHint routingNumber bankAccount bankAccount2 cashout autopay autoboxes refills targetFields')), BARE);
 //    $submit = submit(t('Connect'));
     $fields = 'title subtext connect connectFields';
   }
 
   jsx('bank-prefs', $vs = ray('connectLabel saveLabel mindft', t('Connect'), t('Save'), R_MIN_DEFAULT));
-  return cgform(compact(ray($fields)) + w\setupFoot($hasBank ? $vs['saveLabel'] : $vs['connectLabel']));
+  return cgform(@compact(ray($fields)) + w\setupFoot($hasBank ? $vs['saveLabel'] : $vs['connectLabel']));
 }
 
 function formConnect_validate($form, &$sta) {

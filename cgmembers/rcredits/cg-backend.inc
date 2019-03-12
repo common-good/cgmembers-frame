@@ -476,7 +476,7 @@ function invoice($a1, $a2, $amount, $purpose = NULL, $extra = []) {
   $created = r\rTime();
   u\setDft($status, ($channel != TX_FOREIGN and r\relation(':IS_AUTOPAY', $payee, $payer)) ? TX_APPROVED : TX_PENDING);
   $data = serialize($extra);
-  $info = compact(ray('amount status payer payee goods purpose created flags data'));
+  $info = @compact(ray('amount status payer payee goods purpose created flags data'));
   $nvid = db\insert('r_invoices', $info, 'nvid');
   $a1->update('lastTx', [$nvid, $payer - $payee, round(-$amount, 2), $created, 'inv']);
 

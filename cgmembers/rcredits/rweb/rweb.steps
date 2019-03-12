@@ -344,6 +344,10 @@ function weSayWithSubs($type, $index, $subs) {
  *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     TEST relations AMemberTriesToAddARelationWithSelf
  *     TEST relations AMemberTriesToAddARelationAgain
+ *     TEST showrecurs AMemberStopsARecurringTransaction
+ *     TEST showrecurs AMemberStopsAStoppedRecurringTransaction
+ *     TEST showrecurs AMemberAttemptsToStopANonexistentRecurringTransaction
+ *     TEST showrecurs AMemberAttemptsToStopAnotherMembersRecurringTransaction
  *     TEST signin AMemberTypesTheWrongPassword
  *     TEST signin AMemberTypesAnUnknownUsernameID
  *     TEST signin AMemberAsksForANewPasswordForAnUnknownAccount

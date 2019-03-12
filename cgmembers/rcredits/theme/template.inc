@@ -441,7 +441,7 @@ function rcredits_checkbox($variables) {
   $type = 'checkbox';
   if (@$checked or @$default_value) $checked = 'checked'; else unset($checked);
   if (@$checked) f('t.setChecked', $title);
-  $tribs = u\tribs(compact('type', 'checked', 'class') + $attributes);
+  $tribs = u\tribs(@compact('type', 'checked', 'class') + $attributes);
   return "<input $tribs />";
 }
 

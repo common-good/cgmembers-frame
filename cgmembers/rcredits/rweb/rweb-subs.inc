@@ -787,7 +787,7 @@ function badSignature(&$sta) {
 function whoFldSubmit($field, $question, $extra = []) {
   extract(just('amount allowNonmember coOnly', $extra));
   js('x/typeahead.bundle.min');
-  jsx('suggest-who', compact(ray('field question amount allowNonmember coOnly')));
+  jsx('suggest-who', @compact(ray('field question amount allowNonmember coOnly')));
 }
 
 /**
@@ -1300,7 +1300,7 @@ function acctType($acctType) {
 function suCompanyRelation($other, $data) {
   extract(just('company companyPhone owner employee contractor', $data));
   if ($main = findCompany($company, @$companyPhone)) { // company account exists
-    return r\acct($main)->newRelation(compact(ray('other employee owner'))); // no permissions/draw (for security)
+    return r\acct($main)->newRelation(@compact(ray('other employee owner'))); // no permissions/draw (for security)
   } else return FALSE;
 }
 
@@ -1533,7 +1533,7 @@ function ssnFields($personal = TRUE) {
   
   $federalId = passFld($ssTitle, [t($personal ? 'ssDesc' : 'einDesc'), @$ssReason], required() + autofill('off')); // textfield so user doesn't have to retype on error
   
-  return compact(ray('dob federalId sponsor'));
+  return @compact(ray('dob federalId sponsor'));
 }
 
 /**
@@ -2398,7 +2398,7 @@ function atag($href, $extras = []) {
   if ($href and !u\starts($href, BASE_URL)) {
     if (substr($href, 0, 6) == 'mailto' or substr($href, 0, 4) == 'http') $extras += w\away();
   } elseif (!$href) unset($href); // don't show empty href
-  return 'a ' . u\tribs(compact('href') + $extras);
+  return 'a ' . u\tribs(@compact('href') + $extras);
 }
 function emailtag($email = NULL, $subject = '', $body = '') {
   u\setDft($email, r\regionfield('email'));

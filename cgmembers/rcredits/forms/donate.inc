@@ -54,7 +54,7 @@ function formDonate($form, &$sta, $args = '') {
 //    $roundup = $mya->ok ? '' : w\roundupFld($mya),
 
   jsx('amtChoice');
-  return cgform(compact(ray('title subtext amtChoice amount period honor honored recurId')) + w\setupFoot(t('Donate')) + compact('wait'));
+  return cgform(@compact(ray('title subtext amtChoice amount period honor honored recurId')) + w\setupFoot(t('Donate')) + @compact('wait'));
 }
 
 function formDonate_validate($form, &$sta) {

@@ -373,7 +373,7 @@ function drupal_session_regenerate() {
 
   if (drupal_session_started()) {
     $old_session_id = session_id();
-    session_destroy();
+    if (session_status() == PHP_SESSION_ACTIVE) session_destroy();
   }
   session_id(drupal_random_key());
 
