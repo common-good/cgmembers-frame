@@ -26,6 +26,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
 
   extract(just('nvid amount payer payee purpose created data', $inv));
   if (@$code) {
+    if ($code == 'TESTDOCODE') $code = w\svar($code); // most recently created doCode
     if (!$info = r\doCode($code)) return hack(t('fake doCode in handleInvoice'));
     if (@$mya and $payer != $mya->id) w\signout(FALSE); // make sure we're signed out of any possibly different acct
   } elseif (!$mya) {

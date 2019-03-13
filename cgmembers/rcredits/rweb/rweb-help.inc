@@ -552,8 +552,8 @@ X
     foreach (ray(K_ACCT_RISKS) as $k => $weight) {
       $extra = '';
       if ($k == 'trusted') $extra = t('This risk factor is multiplied by the number of other accounts that trust this member. Being chosen as an alternate proxy counts as half. Likewise being chosen as someone\'s proxy\'s proxy counts as half.');
-      if ($k == 'socialConx' or $k == 'badConx') $extra = t('This risk factor is multiplied by the number of such connections.');
-      if ($k == 'geography') $extra = t('Federal and state law enforcement agencies have identified 28 High Intensity Drug Trafficking Areas (HIDTAs), which include 16 percent of all counties in the United States and 60 percent of the U.S. population. For example, Washtenaw County, Michigan has been designated as part of the Michigan HIDTA. Since so much of the population qualifies, the risk weight is low.');
+      if ($k == 'badConx') $extra = t('This risk factor is multiplied by the number of such connections.');
+      if ($k == 'geography') $extra = t('Federal and state law enforcement agencies have identified 28 High Intensity Drug Trafficking Areas (HIDTAs), which include 16 percent of all counties in the United States and 60 percent of the U.S. population. For example, Washtenaw County, Michigan has been designated as part of the Michigan HIDTA. Unfortunately, since such a high proportion of the U.S. population lives in these areas, the risk weight here is very low, for practical reasons.');
       if ($k == 'new') $extra = t('This risk factor is divided by the number of years the member (individual or company) has been at its current address.');
       if ($k == 'moves') $extra = t('This risk factor is multiplied by the number of times the member has moved, over the past decade (if known)');
       if ($k == 'bigDay') $extra = t('For individual accounts, the number of "employees" is 1.');
@@ -564,7 +564,7 @@ X
     foreach (ray(K_TX_RISKS) as $k => $weight) {
       $extra = '';
       if ($k == 'origins') $extra = t('This risk factor is multiplied by the average risk of the payer\'s receiving transactions over the past year.');
-      if (in($k, 'fromSuspect toSuspect suspectOut suspectIn')) $extra = t('This risk factor is multiplied by the suspicious account risk, divided by the "unusually large" threshold ($%K_THRESHOLD).');
+      if (in($k, 'fromSuspect toSuspect suspectOut suspectIn')) $extra = t('This risk factor is multiplied by the suspicious account risk, divided by the "unusually large" threshold: $%K_THRESHOLD.');
       if ($k == 'invoiceless') $extra = t('And no mention of an invoice in the transaction description.');
       $txRisks .= ($line = riskHelpLine($k, $weight, $extra, $tag));
       if ($tag == $k) $_special = $line;
@@ -579,8 +579,8 @@ X
       <div id="risk-help">
       <table id="special-flag">%special</table>
       <p>Suspicious Activity Risk Scores (flags) are calculated based on a weight divisor assigned to each type of risk. That divisor (shown in square brackets for each item below) is an assessment of how many same-sized risks would together make an account or transaction suspicious -- a higher divisor means less risk. <span class="goodRisk">Risk factors with a negative divisor</span> (shown in green) are mitigating.</p>
-      <p>Risk scores are then proportional to the sum of the inverses of those weight divisors - a higher score means more risk. For transactions, the score is further multiplied by the transaction amount and divided by the "unusually large" threshold ($%K_THRESHOLD). All risk scores (whether for accounts, transactions, or ACHs) are finally multiplied by %K_RED and rounded to the nearest integer. So %K_RED is the minimum "suspicious" score.</p>
-      <p>For example, a $300 transaction with two risk factors having weight divisors of 3 and 5 respectively, would be scored 100 * 300 * (&#8531; + &#x2155;) / %K_THRESHOLD = %score (asterisk here means multiply, slash means divide).</p>
+      <p>Risk scores are then proportional to the sum of the inverses of those weight divisors - a higher score means more risk. For transactions, the score is further multiplied by the transaction amount and divided by the "unusually large" threshold, set VERY conservatively to $%K_THRESHOLD. All risk scores are finally multiplied by %K_RED and rounded to the nearest integer. So %K_RED is the minimum "suspicious" score.</p>
+      <p>For example, a $300 transaction with two risk factors having weight divisors of 3 and 5 respectively, would be scored as FLOOR ( (⅓ + ⅕) * (300 / %K_THRESHOLD) * 100 ) = %score (asterisk here means multiply, slash means divide).</p>
 X
     , compact('_score', '_special')) . $acctRisks . $txRisks . '</div risk-help>';
   }

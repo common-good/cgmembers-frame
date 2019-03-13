@@ -35,7 +35,7 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   try {
     return \db_query(u\SUBS($sql), u\prefixKeys(':', $subs), compact('return'));
   } catch (Exception $e) {
-    /**/ if (@$channel == TX_WEB) r\Web\exception_handler($e); else die('in q');
+/**/ if (@$channel == TX_WEB) r\Web\exception_handler($e); else die('in q');
   }
 }
 
@@ -133,7 +133,7 @@ function insert($table, $info, $key = 'id') {
  * @return: if inserting, then the id of the inserted record, else TRUE (FALSE on failure)
  */
 function updateOrInsert($table, $info, $key) {
-  if (db\exists($table, "$key=:$key", [$key => $info[$key]])) {
+  if (@$info[$key] and db\exists($table, "$key=:$key", [$key => $info[$key]])) {
     return db\update($table, $info, $key);
   } else {
     return db\insert($table, $info, $key);

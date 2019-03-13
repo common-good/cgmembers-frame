@@ -101,6 +101,7 @@ function rweb_menu($submenu = '') {
     'history/notices' => ['sub', t('Notices'), 'Notices 2', 'read', '', t(''), 'envelope'],
     'history/tax-info' => ['sub', t('Tax Info'), 'TaxInfo 2', 'read', '', t(''), 'pawn'],
     'history/changes' => ['sub', t('See Changes'), 'SeeChanges', 'cadmin', '', t(''), 'refresh'],
+    'history/show-recurring' => ['sub', t('Recurring transactions'), 'ShowRecurring', 'read', '', t(''), 'list'],
     'history/zot' => ['sub', 'zot', '', ANY], // Drupal bug: last choice is omitted
     'history/statement' => ['call', t('Statement'), '2', 'read', 'statement'],
     'history/customer-statement' => ['call', t('Customer Statement'), '2', 'read', 'custStatement'],

@@ -12,10 +12,12 @@ use CG\Util as u;
 /*
  * Calculate a risk score for the given account.
  * @param int $uid: account record ID
+ * @param assoc $thresholds: volume thresholds for each period length
  * @param numeric $risk: (RETURNED) the normalized risk score
  * @param numeric $calc: (RETURNED) the original calculated risk
  */ 
-function acctRisk1($uid, &$risk = 0, &$calc = 0) {
+function acctRisk1($uid, $thresholds, &$risk = 0, &$calc = 0) {
+
   global $_risk; $_risk = '';
   
   $a = r\acct($uid);
@@ -44,7 +46,7 @@ function acctRisk1($uid, &$risk = 0, &$calc = 0) {
   $relationsRisk = db\count('r_relations r LEFT JOIN users u ON u.uid=r.main', 'r.permission>0 AND r.other=:id AND u.risk>=:K_RED', $idSub); // access to (trusted by) suspect businesses
   setRisk('badConx', $conxRisk + $relationsRisk, 'ifany'); // invited suspicious accounts
 
-  setRisk('socialConx', $a->mediaConx, 'ifany'); // 1st or 2nd-degree social media connections to administrator
+// UNUSED  setRisk('socialConx', $a->mediaConx, 'ifany'); // 1st or 2nd-degree social media connections to administrator
 
 //  if ($a->co and db\exists('users', 'uid<>:id AND address=:address AND zip=:zip', ray('id address zip', $a->id, $a->address, $a->zip))) setRisk('homeCo'); // company shares physical address
   if ($a->co and $a->dupAddr()) setRisk('homeCo'); // company shares physical address (encryption requires func)
@@ -55,14 +57,14 @@ function acctRisk1($uid, &$risk = 0, &$calc = 0) {
 ///  	debug(ray('uid roundup crumbs sum', $uid, $a->roundup, $a->crumbs, db\get("SUM(amount*IF(period='M',12,IF(period='Q',4,1)))", 'r_recurs', 'payer=:id AND payee=:cg', $idSub + ray('cg', CGID)) + 0));
   //  and $a->share < K_MISER_SHARE
   
-  setRisk('photoOff', $a); // photo mismatches ID or DOB
+//  setRisk('photoOff', $a); // photo mismatches ID or DOB
   setRisk('addrOff', $a); // addr mismatches ID
   if (strpos($a->postalAddr, $a->address) === FALSE or strpos($a->postalAddr, 'box') !== FALSE) setRisk('poBox'); // separate postal address
   setRisk('ssnOff', $a); // weird, conflicting, or unknown SSN history
   setRisk('dobOff', $a); // birth date unverifiable in SSN check
     // activity
   setRisk('fishy', $a); // something else fishy
-  setBigRisks($uid);
+  setBigRisks($uid, $thresholds);
 
   extract(setRisk());
   $calc = $risk;
@@ -94,7 +96,7 @@ function txRisk1($xid, &$risk = 0, &$calc = 0) {
   if (!isNull($reverser)) setRisk('redo');
 
   $fields = <<<EOF
-    payer.uid AS payerU, payee.uid AS payeeU, payee.amount AS amount, goods, payee.:IS_CO AS payeeIsCo,
+    payer.uid AS payerU, payee.uid AS payeeU, payee.amount AS amount, payee.:IS_CO AS payeeIsCo,
     payer.:IS_CO AS payerIsCo, payeeE.description AS payeeFor, payerE.description AS payerFor,
     t.:IS_OFFLINE AS offline
 EOF;
@@ -106,7 +108,7 @@ EOF;
 ";
   $rows = db\rows($fields, $table, $where, ['xid'=>$xid]);
   foreach ($rows AS $row) {
-    extract(exactly('payerU payeeU amount goods payeeIsCo payerIsCo payeeFor payerFor offline', $row, null));
+    extract(exactly('payerU payeeU amount payeeIsCo payerIsCo payeeFor payerFor offline', $row, null));
 
     $cttyPayer = ($payer < 0);
     $payerA = r\acct($payerU);
@@ -250,11 +252,13 @@ EOF;
  * Set one of the "big" risk bits and/or the "more" bits.
  * @param int $uid: the account record ID
  * @param int $ago: how many seconds ago to start the period to be analyzed
- * @param int $threshold: max total dollar amount for an account's activity before it is flagged as suspicious
+ * @param assoc $thresholds: max total dollar amounts for an account's activity before it is flagged (indexed by $bitName)
  * @param string $bitName: the bit to set
  */
-function setBigRisk($uid, $ago, $threshold, $bitName) {
-  global $bigYearIn, $bigYearOut;
+function setBigRisk($uid, $ago, $thresholds, $bitName) {
+  global $bigYearIn, $bigYearOut, $newThresholds;
+  
+  $threshold = $thresholds[$bitName];
   $now = r\rTime();
   $since = $now - $ago - 2 * HOUR_SECS; // an extra couple hours to handle daylight time changes and cron timing
   $mySql =<<<EOF
@@ -272,8 +276,11 @@ EOF;
   if (!$res = db\q($mySql, compact(ray('uid since now')))->fetchAssoc()) return;
   extract($res);
   $a = r\acct($uid);
-  if (max($in, $out) > $threshold * max(1, $a->employees)) setRisk($bitName);
-  if ($ago == YEAR_SECS) list ($bigYearIn, $bigYearOut) = array($in, $out);
+  $max = max($in, $out) / max(1, $a->employees);
+  if ($max > $threshold) setRisk($bitName);
+  if (@$newThresholds) $newThresholds[$bitName][] = $max; // collect data for next time (see cr\acctRisk)
+//  if (max($in, $out) > $threshold * max(1, $a->employees)) setRisk($bitName);
+  if ($ago == YEAR_SECS) list ($bigYearIn, $bigYearOut) = [$in, $out];
   if ($ago == WEEK7_SECS) {
     $firstTxDate = db\get('MIN(created)', 'r_tx_hdrs JOIN r_entries USING(xid)', 'e.uid=:uid',
                           compact('uid')) ?: $now;
@@ -289,11 +296,11 @@ EOF;
  * Set the various "big" risk bits as appropriate.
  * @param int $uid: the account record ID
  */
-function setBigRisks($uid) {
-  setBigRisk($uid, YEAR_SECS, K_YEAR_THRESHOLD, 'bigYear'); // must precede big7Week
-  setBigRisk($uid, WEEK7_SECS, K_7WEEK_THRESHOLD, 'big7Week');
-  setBigRisk($uid, WEEK_SECS, K_WEEK_THRESHOLD, 'bigWeek');
-  setBigRisk($uid, DAY_SECS, K_DAY_THRESHOLD, 'bigDay');
+function setBigRisks($uid, $thresholds) {
+  setBigRisk($uid, YEAR_SECS, $thresholds, 'bigYear'); // must precede big7Week
+  setBigRisk($uid, WEEK7_SECS, $thresholds, 'big7Week');
+  setBigRisk($uid, WEEK_SECS, $thresholds, 'bigWeek');
+  setBigRisk($uid, DAY_SECS, $thresholds, 'bigDay');
 }
 
 /**

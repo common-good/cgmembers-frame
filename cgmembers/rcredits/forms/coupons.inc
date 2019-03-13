@@ -106,7 +106,7 @@ function formCoupons_submit($form, &$sta) {
     $res = db\get('fromId,amount', 'r_coupons', 'coupid=:coupid', compact('coupid'));
     extract($res);
     $fromA = r\acct($fromId);
-    $fromA->pay($mya, $amount, t('gift'), ray('force', 1));
+    $fromA->pay($mya, $amount, t('gift'), null, ray('force', 1));
     db\insert('r_coupated', ray('uid coupid uses when', $myid, $coupid, $iCode, time()));
     $mya->update('giftPot', $mya->giftPot + $amount);
     return say(t('coupon redeemed', 'amount giver', u\fmtAmt($amount), $fromA->fullName));

@@ -163,8 +163,9 @@ function formTxs_submit($form, &$sta) {
  */
 function txEdit($xid) {
   global $mya;
-  if (!$myx = r\MyX::lastTx($mya, 'xid=:xid', compact('xid'), TRUE)) return FALSE; // bail on hack attempt
-  extract(just('taking toMe payer payee amount goods payerFor payeeFor created', $myx->ray));
+  $tx = $mya->lastTx('xid=:xid', compact('xid'));
+  if (empty($tx)) return FALSE; // bail on hack attempt
+  extract(just('taking toMe payer payee amount goods payerFor payeeFor created', $tx->ray));
 
   if (!$mya->can($taking ? B_SELL : B_BUY)) return FALSE;
 
@@ -174,7 +175,7 @@ function txEdit($xid) {
   );
 
   $purpose = $toMe ? $payeeFor : $payerFor;
-  $orig = hidFld(serialize($myx->ray));
+  $orig = hidFld(serialize($tx->ray));
   $title = t('Edit Transaction');
   $to = item(r\acct($toMe ? $payer : $payee)->fullName, $toMe ? t('From:') : t('To:'));
   $amount = textFld(t('Amount: $'), '', dft(number_format($amount,2)));

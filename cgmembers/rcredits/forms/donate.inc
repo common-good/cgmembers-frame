@@ -78,7 +78,7 @@ function formDonate_submit($form, &$sta) {
 //    $count = db\count('r_txs', 'payer=:payer AND payee=:payee AND :IS_RECURS AND created>=:created', compact(ray('payer payee created')));
     list ($desc, $data) = r\setupGift($period);
     $msg = 'gift successful';
-    if ($mya->payApproved(CGID, $amount, $desc, $data)) {
+    if ($mya->payApproved(CGID, $amount, $desc, $data['goods'], $data)) {
       r\notify($mya->id, 'gift sent', ray('amount', u\fmtAmt($amount)));
     } else $msg .= '|gift transfer later';
     say($msg);

@@ -61,7 +61,7 @@ function formInvestBuySell_submit($form, &$sta) {
   
   $DBTX = \db_transaction();
   if (op($sta) == 'buy') {
-    list ($index, $subs) = $clubA->pay($coA, $total, $type, ray('investment goods', 1, FOR_USD));
+    list ($index, $subs) = $clubA->pay($coA, $total, $type, FOR_USD, ray('investment', 1));
     $success = @$subs['success'];
     if ($equity) {
       $extraMsg = $success ? t('You successfully purchased %amt shares of %co at %price.', 'amt co price', $sharesDpy, $coA->fullName, $priceDpy) : t('No shares were purchased.');

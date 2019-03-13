@@ -225,7 +225,7 @@ function devices($list) {return t\devices($list);}
  * in: MAKE exchange Setup
  *     TEST exchange ACashierAsksToChargeSomeoneForCash
  *     TEST exchange ACashierAsksToRefundSomeone
- *     MAKE joint Setup
+ *     TEST joint Setup
  *     TEST joint ACashierAsksToChargeSomeone
  *     TEST offline Setup
  *     TEST offline ACashierChargedSomeoneOffline
@@ -767,3 +767,4 @@ function transactionEntryCountIs($n) { return t\count('entries', $n); }
  * in: TEST coupons AMemberRedeemsAGiftCoupon
  */
 function coupated($list) { return t\coupatedRecords($list); }
+

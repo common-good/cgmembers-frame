@@ -70,6 +70,8 @@ class Tx {
   public function __get($f) {
     $tx = $this;
     switch ($f) {
+    case 'otherId':
+      return ($this->actor == $this->payerId) ? $this->payeeId : $this->payeeId;
     case 'payerEntry':
       return $this->getPayerEntry();
     case 'payeeEntry':
@@ -164,9 +166,6 @@ class Tx {
     foreach ($tx->entries as $entry) {
       $eid = $entry->insert($xid);
       u\EXPECT($eid, "Failed to insert transaction entry");
-      /* $a = r\acct($entry->uid); */
-      /* $newBalance = $a->balance + $entry->amount; */
-      /* $a->update(['balance' => $newBalance]); */
     }
     $this->xid = $xid;
     unset($DBTX);
@@ -212,20 +211,19 @@ EOF;
   /**
    * Return the last transaction meeting the given criteria, for the given user.
    * Rebates, bonuses, and deleted transactions are ignored
-   * @param acct $a: the acct object for the user
+   * @param array $uids: an array of uids to consider
    * @param string $where: additional criteria (defaults to 1 = any)
    * @param array $subs: optional substitutions (will be prefixed with colons)
    * @return associative array: the old transaction record (FALSE if none)
    */
-  static function lastTx($a, $where = 1, $subs = []) {
-    $DBTX = db_transaction();
+  static function lastTx($uids, $where = 1, $subs = []) {
     $txHdr = db\get('t.*', 'r_tx_hdrs t JOIN r_entries e USING(xid)',
-                    "e.uid='$a->id' AND `type`>=0 AND $where ORDER BY t.created DESC LIMIT 1", $subs);
+                    "e.uid IN (:uids) AND `type`>=0 AND $where ORDER BY t.created DESC LIMIT 1",
+                    $subs + ['uids' => $uids]);
     if (!$txHdr) return FALSE;
     $xid = $txHdr['xid'];
     $entries = r\TxEntry::readAll($xid);
     if (!$entries) return FALSE;
-    unset($DBTX);
     return new Tx($txHdr + ['entries' => $entries]);
   }
 
@@ -260,7 +258,8 @@ EOF;
     $why = ray(R_WHYS)[$tx->goods];
     if ($getMyBalance and ($me->can(B_BUY))) { $balance = u\fmtAmt($me->avail(FOR_GOODS)); }
     else { $balance = null; }
-
+    debug("balance is $balance");
+    
     if ($amount < 0) {
       $amount = 0-$amount;
       $tofrom = t('to');
@@ -271,6 +270,7 @@ EOF;
     }
 
     $balance = ($getMyBalance and $me->can(B_BUY)) ? $me->avail(FOR_GOODS) : 0;
+    debug("balance is $balance");
     
     return ray('created created0 xid role why payerPurpose payeePurpose toMe amount tofrom balance otherUid myName otherName short success did',  // . ' role'
                u\fmtDate($tx->created), $tx->created, $tx->xid, $role, $why, $payerE->description,

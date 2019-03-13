@@ -357,6 +357,9 @@ function charge($args, $type = 'charge') {
   extract(just($keys . ' proof force version', $args));
   extract(u\exactly('description device', $args, ['', null]));
   $box = $device;
+
+  $goods = $args['goods'];
+  unset($args['goods']);
   
   if (!@$member) return posErr('missing member'); // handle empty string (versus missing param)
   if ($version > 216 and !@$proof) return posErr(missingArg('proof', []));
@@ -426,7 +429,13 @@ EOF;
     debug("doesn't exist and should (forcing or not)");
     if (@$amount < 0 and $a->co and $a->proSe) return badTx($args, $name, $msg, $subs);
     if (@$amount < 0 and !$mya->co) list ($type, $amount) = ['payment', -$amount];
-    list ($msg, $subs) = be\transfer($type, $mya, $a, @$amount, @$description, compact(ray('goods created force box')));
+    $bal = $a->balance;
+    debug("before transfer, balance is $bal");
+    list ($msg, $subs) = be\transfer($type, $mya, $a, @$amount, @$description, $goods, compact(ray('created force box')));
+    $bal = $a->balance;
+    debug("after transfer, balance is $bal");
+    debug("after transfer msg=" . print_r($msg, true));
+    debug("after transfer subs=" . print_r($subs, true));
     if (!@$subs['success']) return badTx($args, $name, $msg, $subs);
 
     if (!@$force and $aa = $a->agentA and $mya->co and !$aa->ided) $aa->setBit(B_IDED);
@@ -442,8 +451,9 @@ EOF;
     $undo = t('confirm undo', $subs);
   }
 
-  extract(balrew($a));
-
+  /* extract(balrew($a)); */
+  $balance = $a->balance;
+  debug(compact(ray('message txid created balance rewards did undo')));
   return ok(compact(ray('message txid created balance rewards did undo')));
 }
 

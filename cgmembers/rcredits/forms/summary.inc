@@ -238,7 +238,7 @@ function setRisksAndFlags($a, $risks, $adminable) {
   $a->setRisks($risks); // set or unset the adminable risk bits
   if ($a->risks != $risks0) { // if anything changed, refigure ALL risks (some affect others)
     include_once __DIR__ . '/../cg-risk.inc';
-    k\acctRisk1($a->id);
+    k\acctRisk1($a->id, getv('riskThresholds', [0,0,0,0]));
   }
   $a->setBits(@$adminable);
 }

@@ -145,9 +145,9 @@ function formAdminPanel_submit($form, &$sta) {
     w\say($a->fullName. t(' SSN Link:<br><br> &nbsp; %PROMO_URL/do/doSsn~%qid~%code &nbsp; ', 'qid code', $a->mainQid, $a->emailCode));
   } elseif ($op == 'do1099b' or $test1099 = ($op == 'do1099btest')) {
     include_once __DIR__ . '/../cg-yearly.inc';
-    r\Special\do1099bs(@$test1099);
-  } elseif ($op == 'reconcile') {
-    w\go('sadmin/reconcile-ctty-fund');
+    r\Special\do1099s(@$test1099);
+	} elseif ($op == 'reconcile') {
+		w\go('sadmin/reconcile-ctty-fund');
   } elseif ($op == 'inviteeStatus') {
     return w\go('community/invite/invited-whom');
   } elseif ($op == 'organizerList') {
@@ -368,7 +368,7 @@ function formFollowup($form, &$sta, $args = []) {
   global $base_url;
   global $mya;
   
-  if (!$mya or !$mya->cAdmin) return w\go('');
+	if (!$mya or (!$mya->cAdmin2 and !$mya->admin2)) return w\go('');
   $uid = u\arrayGet($args, 'uid', null);
   $one = u\arrayGet($args, 'one', null);
   $recent = u\arrayGet($args, 'recent', null);
@@ -395,7 +395,7 @@ function formFollowup($form, &$sta, $args = []) {
   
 /*   $sql = <<<EOF */
 /*     SELECT uid, community, tickle, fullName, phone, u.data, u.created, activated, notes, u.:IS_CO AS co, */
-/*     t.created AS lastTx, u.:IS_MEMBER AS member, u.:IS_OK AS ok, u.:IS_CARDED AS carded */
+/*     t.created AS lastTxTime, u.:IS_MEMBER AS member, u.:IS_OK AS ok, u.:IS_CARDED AS carded */
 /*     FROM users u LEFT JOIN r_entries e USING(uid) LEFT JOIN r_tx_hdrs t USING (xid) */
 /*     WHERE uid>:CANONIC_ACCTS AND NOT u.:IS_NONUDGE AND NOT (activated and NOT u.:IS_OK) AND $where2 */
 /*     AND (tickle>0 OR NOT u.:IS_MEMBER OR t.created<$now-60*:DAY_SECS OR t.created IS NULL) */
@@ -403,7 +403,7 @@ function formFollowup($form, &$sta, $args = []) {
 /* EOF; */
 /*   $sql = <<<EOF */
 /*     SELECT uid, community, tickle, fullName, phone, u.data, u.created, activated, notes, u.:IS_CO AS co, */
-/*     t.created AS lastTx, u.:IS_MEMBER AS member, u.:IS_OK AS ok, u.:IS_CARDED AS carded */
+/*     t.created AS lastTxTime, u.:IS_MEMBER AS member, u.:IS_OK AS ok, u.:IS_CARDED AS carded */
 /*     FROM ( SELECT uid, community, tickle, fullName, phone, data, created, activated, notes, flags */
 /*            FROM users */
 /*            WHERE uid>:CANONIC_ACCTS AND NOT :IS_NONUDGE AND NOT (activated and NOT :IS_OK) AND $where2) u */
@@ -412,14 +412,14 @@ function formFollowup($form, &$sta, $args = []) {
 /* EOF; */
 /*     /\* ORDER BY $by *\/ */
   $sql = <<<EOF
-    SELECT DISTINCT u.uid, community, tickle, fullName, phone, u.data, u.created, activated, notes, :IS_CO AS co, t.created AS lastTx, :IS_MEMBER AS member, :IS_OK AS ok, :IS_CARDED AS carded
+    SELECT DISTINCT u.uid, community, tickle, fullName, phone, u.data, u.created, activated, notes, :IS_CO AS co, t.created AS lastTxTime, :IS_MEMBER AS member, :IS_OK AS ok, :IS_CARDED AS carded
     FROM users u LEFT JOIN (SELECT t0.created,e0.uid FROM r_tx_hdrs t0 JOIN r_entries e0 USING(xid) ORDER BY created DESC LIMIT 1) t USING(uid)
     WHERE u.uid>:CANONIC_ACCTS AND NOT :IS_NONUDGE AND NOT (activated and NOT :IS_OK) AND $where2 AND (tickle>0 OR NOT :IS_MEMBER
       OR t.created<$now-60*:DAY_SECS OR t.created IS NULL)
     ORDER BY $by
 EOF;
   
-  /* SELECT uid, t.created as lastTx FROM users u LEFT JOIN r_entries e USING(uid) LEFT JOIN r_tx_hdrs t USING(xid) WHERE uid>:CANONIC_ACCTS AND NOT u.:IS_NONUDGE AND NOT (activated and NOT u.:IS_OK) AND (tickle>0 OR NOT u.:IS_MEMBER OR t.created<$now-60*:DAY_SECS OR t.created IS NULL); */
+  /* SELECT uid, t.created as lastTxTime FROM users u LEFT JOIN r_entries e USING(uid) LEFT JOIN r_tx_hdrs t USING(xid) WHERE uid>:CANONIC_ACCTS AND NOT u.:IS_NONUDGE AND NOT (activated and NOT u.:IS_OK) AND (tickle>0 OR NOT u.:IS_MEMBER OR t.created<$now-60*:DAY_SECS OR t.created IS NULL); */
   $fields = ray('ctty type call name phone notes');
   if (!is_null($one)) array_shift($fields);
   $q = db\q($sql);
@@ -450,7 +450,7 @@ EOF;
                   : (($activated < strtotime('9/2/2017') and $tickle < $activated + 90 * DAY_SECS and !$notes) ? [t('welcome'), 'welcome']
                      : (($tickle and $days % 365 < 30) ? [t('annual'), 'annual'] // +/-:2/29
                         //    in_array(($tickle - $activated) % DAY_SECS, [0, 1, DAY_SECS - 1])) ? [t('annual'), 'annual'] // +/-:2/29
-                        : (($lastTx < $now - 60 * DAY_SECS and $now - $activated > 60 * DAY_SECS) ? [t('dormant'), 'dormant']
+                        : (($lastTxTime < $now - 60 * DAY_SECS and $now - $activated > 60 * DAY_SECS) ? [t('dormant'), 'dormant']
                            : ($tickle ? [t('followup'), 'fu']
                               : ( [t('other'), 'fu'] )))))))));
 
@@ -534,12 +534,14 @@ EOF;
 
 function formDownloadMemberList($form, &$sta, $args = '') {
   global $base_url;
+
   extract($params = just(EXPORT_PARAMS, $args));
   if (@$do == 'export') return w\export($params);
 
   if (@$do == 'done') {
     $do = 'export';
     $params = http_build_query(compact(ray(EXPORT_PARAMS)));
+///    return w\go("$base_url/sadmin/export-list/$params"); // debug(
     $download = item("<iframe src=\"$base_url/sadmin/export-list/$params\" class=\"hidden\"></iframe>");
   }
   
@@ -859,7 +861,7 @@ function printChecks($args) {
 
   $ways = ['IN'=>'(amount>0 AND txid>0)', 'OUT'=>'(amount<0 AND txid>0)', 'BAD'=>'txid<0', 'VERIFY'=>'amount=0'];
   $where = $ways[strtoupper($way)];
-  $q = db\q("SELECT txid,created,payee,amount,deposit,bankAccount FROM r_usd WHERE deposit=:date AND created<=:NOW AND $where ORDER BY created, txid", compact('date'));
+  $q = db\q("SELECT txid,created,payee,amount,deposit,bankAccount FROM r_usd WHERE deposit=:date AND created<=:NOW AND $where ORDER BY txid", compact('date'));
   $pos = 3; // before first position of 3, on 3-up check paper
   $count = 0;
   while ($tx = $q->fetchAssoc()) {

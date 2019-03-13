@@ -18,7 +18,7 @@ class CreateTableREntries extends AbstractMigration
     $entryTable->addColumn('description', 'string', ['length' => 255, 'default' => 'NULL', 'comment' => 'description for this entry']);
     $entryTable->addColumn('acctTid', 'integer', ['length' => 11, 'null' => true, 'comment' => 'transaction ID for the account to which this entry applies']);
     $entryTable->addColumn('relType', 'string', ['length' => 1, 'null' => true, 'comment' => "type of related record, 'D' for coupated, 'I' for invoice"]);
-    $this->addBigInt($entryTable, 'related', ['length' => 20, 'null' => true, 'comment' => "id of related record"]);
+    $this->addBigInt($entryTable, 'relatedId', ['length' => 20, 'null' => true, 'comment' => "id of related record"]);
     $this->addBigInt($entryTable, 'deleted', ['length' => 20, 'null' => true, 'default' => null, 'comment' => "UNIXTIME when record was deleted, else null"]);
     
     $entryTable->addIndex(['xid']);

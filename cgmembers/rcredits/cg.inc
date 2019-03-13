@@ -14,7 +14,7 @@ use CG as r;
 use CG\DB as db;
 use CG\Util as u;
 use CG\Backend as be;
-use CG\Web as w; // use only in rTime (for the game)
+use CG\Web as w; // use sparingly
 
 require_once __DIR__ . '/cg-strings.inc';
 require_once __DIR__ . '/cg-db.inc';
@@ -118,10 +118,10 @@ function dupTx($a, $other, $amount) {
   global $channel;
   if ($channel == TX_WEB) return FALSE; // allow dups on web interface
   $lastTx = $a->lastTx;
-  if (!$lastTx) return FALSE;
-  list ($xid, $dif, $oldAmt, $created) = $lastTx;
-  ///  t\log(compact(ray('uid other amount lastTx')));
-  return ($dif == $other->id - $a->id and $amount == $oldAmt and r\rTime() - $created < R_DUPTX_MINS * MIN_SECS);
+  if (!$lastTx) { return FALSE; }
+  /* debug("lastTx was: " . print_r($lastTx, true)); */
+  /* debug("dupTx: lastTx->payerId=$lastTx->payerId, ->payeeId=$lastTx->payeeId, ->payerAmount=$lastTx->payerAmount, ->payeeAmount=$lastTx->payeeAmount, $a->id, $amount"); */
+  return ($lastTx->actorId == $a->id and $lastTx->otherId == $other->id and ($lastTx->payerAmount == $amount or $lastTx->payerAmount == $amount)) and ((r\rTime() - $lastTx->created) < R_DUPTX_MINS * MIN_SECS);
 }
  
 /**
@@ -1580,6 +1580,12 @@ function disputeTx($xid, $reason = '') {
   }
   unset($DBTX);
 }
+  
+function makeDoCode($ray) {
+  $code = substr(u\cry('P', serialize($ray)), strlen(CRYPT_FLAG));
+  w\svar('TESTDOCODE', $code); // must be on separate line (PHP bug)
+  return $code; // must be on separate line (PHP bug)
+}
 
 // Single line functions that need no explanation
 function serverUid($regionId = R_SERVER_ID) {return -1 - R_REGION_MAX * u\a2n($regionId);} // -u\a2n($regionId) - 1;}
@@ -1589,13 +1595,7 @@ function realCountry($country) {return db\get('name', 'r_countries', 'id=:countr
 function realState($state, $country = R_COUNTRY_ID) {return db\get($country == US_COUNTRY_ID ? 'abbreviation' : 'name', 'r_states', 'id=:state and country_id=:country', compact('state', 'country'));}
 function perm($bit) {return $bit - B_RELATED;}
 function foreignServer($uid) {return (r\uidRegion($uid) != serverUid());}
-//function doCode($code) {return @unserialize(@u\decry('P', CRYPT_FLAG . $code));} // this is how it should be (see forms/rdo.inc)
-function doCode($code) { // accommodate temporary weirdness because email clients bollix CRYPT_FLAG in an href
-  //  foreach ([0, 1] as $i) {if ($code[0] == CRYPT_FLAG[$i]) $code = substr($code, 1);} // delete this line after 7/1/2018
-  if (substr(u\b64decode($code), 0, 2) == 'c~') return FALSE; // signal archaic link
-  return @unserialize(@u\decry('P', CRYPT_FLAG . $code));
-} 
-function makeDoCode($ray) {return substr(u\cry('P', serialize($ray)), strlen(CRYPT_FLAG));}
+function doCode($code) {return @unserialize(@u\decry('P', CRYPT_FLAG . $code));} // this is how it should be (see forms/rdo.inc)
 function cgA() {return r\acct(CGID);}
 function denyInv($nvid) {return db\setData('r_invoices', $nvid, ['denied' => TRUE]);}
 function stepsDone0() {return array_fill_keys(array_keys(ray(R_STEPS)), FALSE);}

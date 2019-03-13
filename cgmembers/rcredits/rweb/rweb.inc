@@ -98,7 +98,7 @@ function formRerisk($form, &$sta, $type = '', $id = '', $show = FALSE) {
   $showRiskCalc = '';
 
   if ($type == 'acct') {
-    k\acctRisk1($id, $risk, $calc);
+    k\acctRisk1($id, getv('riskThresholds', [0,0,0,0]), $risk, $calc);
     $w = ''; $m = K_RED;
   } elseif ($type == 'tx') {
     $x = r\x($id);
@@ -291,36 +291,6 @@ function changeWho($args = '') {
   $page = str_replace(',', '/', @$page);
   
   w\go($mya->cAdmin ? $page : 'summary'); // go to summary, unless admin
-}
-
-/**
- * Display the member company's profile (no editable fields here)
- */
-function formProfile($form, &$sta, $company = '') {
-  $uid = db\get('uid', 'users', 'name=:company', compact('company'));
-  $a = r\acct($uid);
-  if (!$uid or !$a->co) return w\softErr(t('That is not a %PROJECT company profile page.'));
-
-  $pic = item($a->photoHtml());
-  $state = r\realState($a->state);
-  $country = r\realCountry($a->country);
-  $siteList = '';
-  if ($website = $a->website) foreach (ray($website) as $one) {
-    $atag = atag("http://$one");
-    $siteList .= "<$atag>$one</a><br>";
-  }
-    
-  $title = $a->fullName;
-  $phone = 'Phone: ' . u\fmtPhone($a->phone, '+');
-  $physical = "$a->address<br>$a->city, $state $a->zip";
-  $mailing = str_replace('<br>', ', ', $physical) == $a->postalAddr ? '' : "Mailing address: $a->postalAddr<br>";
-
-  $contact = item("$physical $country<br>$mailing<br>
-    $phone<br>
-    $siteList");
-	$desc = item($a->coDesc());	
-
-  return cgform(compact(ray('pic title contact desc')));
 }
 
 /**
@@ -553,7 +523,7 @@ function formFooter() {
     <%aHelp>Help</a>
 <br>&nbsp;
 </div>
-copyright &copy; %year <%aSite>%PROJECT<sup>&reg;</sup></a><span id="footer-details">, a nonprofit organization<br/>
+copyright &copy; %year <%aSite>%PROJECT<sup> &reg;</sup></a><span id="footer-details">, a nonprofit organization<br/>
 %CGF_POSTALADDR<br/>
 %CGF_PHONE &nbsp; <%aEmail>%CGF_EMAIL</a><br>
 <br>

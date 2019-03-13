@@ -34,7 +34,7 @@ set :repo_url, "192.168.57.1:common-good/cgmembers-frame"
 set :deploy_to, "/home/deploy/cgmembers-frame"
 
 ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp
-
+set :default_env, { path: "/usr/bin:$PATH" }
 
 # Custom SSH Options
 # ==================

@@ -11,8 +11,8 @@ Setup:
   | .ZZB | Bea Two    | b@    | ok      |
   | .ZZC | Corner Pub | c@    | ok,co   |
   And transactions: 
-  | xid | created   | type       | amount | from | to   | purpose | taking |*
-  |   1 | %today-6m | %TX_SIGNUP |      0 | ctty | .ZZA | signup  | 0      |
+  | xid | created   | amount | from | to   | purpose | taking |*
+  |   1 | %today-6m |      0 | ctty | .ZZA | signup  | 0      |
   Then balances:
   | uid  | balance |*
   | .ZZA |       0 |

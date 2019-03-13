@@ -6,8 +6,8 @@ SO I can make purchases as a financial unit with my account partner.
 Setup:
   Given members:
   | uid  | fullName   | email | cc  | cc2  | floor | flags                | jid  | balance |*
-  | .ZZA | Abe One    | a@    | ccA | ccA2 |  -200 | ok,confirmed,debt    | .ZZB |       0 |
-  | .ZZB | Bea Two    | b@    | ccB | ccB2 |  -200 | ok,confirmed,debt    | .ZZA |       0 |
+  | .ZZA | Abe One    | a@    | ccA | ccA2 |  -250 | ok,confirmed,debt    | .ZZB |       0 |
+  | .ZZB | Bea Two    | b@    | ccB | ccB2 |  -250 | ok,confirmed,debt    | .ZZA |       0 |
   | .ZZC | Corner Pub | c@    | ccC |      |  -200 | ok,confirmed,co,debt |    0 |       0 |
   | .ZZD | Dee Four   | d@    | ccD | ccD2 |     0 | ok,confirmed         |    0 |       0 |
   | .ZZE | Eve Five   | e@    | ccE | ccE2 |     0 | ok,confirmed,secret  |    0 |       0 |
@@ -32,7 +32,7 @@ Setup:
   And transactions: 
   | xid | created   | type   | amount | from | to   | purpose |*
   | 4   | %today-6m | grant  |    200 | ctty | .ZZF | stuff   |
-  And balances:
+  Then balances:
   | uid  | balance |*
   | .ZZA |       0 |
   | .ZZB |       0 |
@@ -55,7 +55,7 @@ Scenario: A cashier asks to charge someone
   | %today  | Bea Two  | Corner Pub | $400   | food         |
   And balances:
   | uid  | balance |*
-  | .ZZA |       0 |
+  | .ZZA |    -400 |
   | .ZZB |    -400 |
   | .ZZC |     400 |
   | .ZZF |     200 |

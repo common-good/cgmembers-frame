@@ -170,7 +170,7 @@ EOF;
     foreach ($riskBits as $k) {
       $class = $acctRisks[$k] < 0 ? 'goodRisk' : 'badRisk';
       if (!isset($risksEditable[$k])) $class .= ' noEdit';
-      $dpy = w\popHelp($k, $riskHelp[$k], '#');
+      $dpy = w\popHelp($k, @$riskHelp[$k], '#');
       $aliases[$k] = "<div class=\"$class\">$dpy</div>";
     }
     $risks = bitsFld(t('Risks:'), $mya->risks, '', K_ACCT_RISKS, $aliases);
@@ -261,8 +261,9 @@ function export($params) {
   extract(just(EXPORT_PARAMS, $params));
   global $mya;
   $cttyA = r\acct($mya->community);
+  $solarUid = db\get('uid', 'users', "name='cooppower'");
 
-  $filename = ($allCttys ? PROJECT : str_replace('.', '', $cttyA->name))
+  $filename = (@$allCttys ? PROJECT : str_replace('.', '', $cttyA->name))
   . (@$status == 0 ? t('-active') : (@$status == 1 ? t('-notyet') : ''))
   . (@$types == 0 ? t('-members') : (@$types == 1 ? t('-orgs') : t('-accounts')))
   . '.csv';
@@ -275,31 +276,9 @@ function export($params) {
       . ' community co gross employees achMin pinThreshold lastiCode tenure moves mediaConx jid'
       . ' owns bankName slave closed notices secret'
   : (@$chimp ? 'id fullName phone email city state zip community type ecode'
-  : 'id fullName phone email address city state zip community type ecode modified created');
+  : 'id fullName manages lastTx solar snap phone email address city state zip community type ecode modified created');
   u\csv($fields = ray($fields), $delimiter);
 
-/*
-  if ($requests) { // handle requests first, in case member status gets updated by later record
-    $startDate = strtotime('8/9/2017'); // change this to -1 month?
-    $sql = "SELECT * FROM r_request WHERE email<>'' and created>=$startDate";
-    if (!$mya->admin) $sql .= " AND ctty=$mya->community";
-    $q = db\q($sql);
-    while ($row = $q->fetchAssoc()) {
-      extract($row);
-      if (db\exists('users', 'email=:email', compact('email'))) continue; // don't duplicate or send to nonudge people
-      list ($id, $first_name, $last_name, $modified) = [$listid, $first, $last, time()];
-      $address = $city = $state = $ecode = $special = '';
-//      $type = $ctty == 0 ? '' : 'member';
-      $type = '';
-      foreach (ray('phone email') as $k) $$k = u\decry('P', $$k);
-      if (strpos($email, '@' . EMAILX)) continue;
-//      $community = $ctty ? trim(str_replace(PROJECT, '', r\acct($ctty)->fullName)) : '';
-      $community = ($zip and $ctty = r\communityUid($zip)) ? r\community($ctty, TRUE) : '';
-      if (!@$chimp) $zip .= "\t"; // prevent leading zeros from getting dropped on import (fails for MailChimp, so don't)
-      u\csv(array_values(compact($fields)), $delimiter);
-    }
-  }  
-*/  
   // add actual accounts
   $where = @$allCttys ? '1' : 'community=:cttyId';
   if (@$status == 0) $where .= ' AND :IS_OK';
@@ -308,7 +287,7 @@ function export($params) {
   if (@$types == 1) $where .= ' AND :IS_CO';
 
   $sql = "SELECT uid AS id, fullName FROM users WHERE uid>:CANONIC_ACCTS AND NOT :IS_NONUDGE AND (NOT activated OR :IS_OK) AND $where ORDER BY :IS_OK, -signed, -created";
-
+  
   $q = db\q($sql, ray('cttyId', $cttyA->id));
   while ($row = $q->fetchAssoc()) {
     extract($row);
@@ -332,13 +311,18 @@ function export($params) {
       $id = $a->mainQid;
       $ecode = "$a->emailCode";
       $modified = u\fmtDate(time());
+      $manages = db\get('fullName', 'r_relations r LEFT JOIN users u ON u.uid=r.main', 'r.permission>=:B_MANAGE-:B_RELATED AND u.:IS_CO AND r.other=:id', ['id' => $a->id]);
+      $tx = $a->lastTx;
+      $lastTx = empty($tx) ? '' : u\fmtDate($tx->created, TRUE);
+      $solar = $solarUid ? r\relation(t("'solar'"), $solarUid, $a->id, ':IS_CUSTOMER') : '';
+      $snap = $a->snap ? t('SNAP') : '';
       $special = '';
 // (BROKEN)      $special = $a->special;
     }
     $community = r\cttyName($a->community, TRUE);
     $created = u\fmtDate($a->created);
 //    if (is_numeric($zip) and !@$chimp) $zip .= " "; // prevent interpretation as a number (fails for MailChimp, so don't)
-    if (!@$chimp) foreach ($fields as $k) $$k = '"' . $$k . '"'; // keeps some imports from getting confused
+//    if (!@$chimp) foreach ($fields as $k) $$k = '"' . $$k . '"'; // keeps some imports from getting confused
     u\csv(array_values(compact($fields)), $delimiter);
   }
   

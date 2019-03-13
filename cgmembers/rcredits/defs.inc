@@ -32,8 +32,8 @@ define('DKIM_PRIVATE', setFromConfig('dkimPrivate', $config));
 define('R_INVITE_KEY', setFromConfig('inviteKey', $config));
 define('R_SSN_USER', setFromConfig('ssnUser', $config));
 define('R_SSN_PASS', setFromConfig('ssnPass', $config));
-if (!array_key_exists('db', $config)) die('the configuration file does not contain a db entry');
-if (!is_array((array) $config['db'])) die('the configuration file db entry is not an array');
+/**/ if (!array_key_exists('db', $config)) die('the configuration file does not contain a db entry');
+/**/ if (!is_array((array) $config['db'])) die('the configuration file db entry is not an array');
 
 $db_config = (array) $config['db'];
 $db_name = setFromConfig('name', $db_config);
@@ -110,6 +110,7 @@ define('DAY_SECS', 24 * HOUR_SECS);
 define('WEEK_SECS', 7 * DAY_SECS);
 define('WEEK7_SECS', 52 * DAY_SECS);
 define('MONTH_SECS', 30.4368 * DAY_SECS);
+define('QUARTER_SECS', round(3 * MONTH_SECS));
 define('YEAR_SECS', round(12 * MONTH_SECS));
 define('FLOOR_DAYS', 183); // how many days to consider for credit line calculation
 
@@ -144,7 +145,8 @@ define('GAME_COMPANIES', '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty
 define('R_REGION_FLDS', 'region,fullName,st,zip,federalId,hasServer');
 define('R_DATE_FLDS', 'created completed deposit sent invited giftDate signed login access yesterday'); // date field names for testing
 define('CO_FLDS', 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd'); // account fields stored in r_company
-define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone achMin pinThreshold lastTx lastiCode tenure moves mediaConx source getAppData appData snap'); // fields stored in the account's "data" array field (serialized)
+define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone achMin pinThreshold lastiCode tenure moves mediaConx source getAppData appData snap'); // fields stored in the account's "data" array field (serialized)
+/* define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone achMin pinThreshold lastTx lastiCode tenure moves mediaConx source getAppData appData snap'); // fields stored in the account's "data" array field (serialized) */
 define('MASTER_NUMERIC_FLDS', 'minimum achMin savingsAdd saveWeekly');
 define('MASTER_FLDS', MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank refill'); // only in master, for joint accounts
 define('R_MONEY_FLDS', 'balance rewards floor giftPot committed'); // financial amount fields in account record
@@ -152,7 +154,8 @@ define('JOINT_FLDS', R_MONEY_FLDS . ' savings'); // add these together for joint
 define('PSECURE_FLDS', 'phone email'); // personal fields that get encrypted in a searchable way (P)
 define('VSECURE_FLDS', 'federalId dob bankAccount'); // very secure fields (pgp-encrypted)
 define('SECURE_FLDS', 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode cardCode cardCode2 pin question answer idProof oneTimePass last4bank'); // non-personal encrypted fields (must be complete list)
-define('R_HIDE_CHANGES', R_MONEY_FLDS . ' pw2 vKeyPw ssnData hasBank changes init login access activated data secure vsecure stepsDone lastTx lastiCode pass oneTimePass notes picture photo trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd'); // do not record changes to these fields: anything often-changed (automatically or not)
+define('R_HIDE_CHANGES', R_MONEY_FLDS . ' pw2 vKeyPw ssnData hasBank changes init login access activated data secure vsecure stepsDone lastiCode pass oneTimePass notes picture photo trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd'); // do not record changes to these fields: anything often-changed (automatically or not)
+/* define('R_HIDE_CHANGES', R_MONEY_FLDS . ' pw2 vKeyPw ssnData hasBank changes init login access activated data secure vsecure stepsDone lastTx lastiCode pass oneTimePass notes picture photo trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd'); // do not record changes to these fields: anything often-changed (automatically or not) */
 define('R_APP_DATA_GETS', '!log !device !members !txs '); // data requests from the rPOS app
 //  define('R_AVAIL_BUY', '(balance-IF(u.:IS_DEBT, floor, GREATEST(floor, 0)))'); // balance available to spend
 define('R_SHARE_MAX', 50); // minimum sharing percentage
@@ -186,6 +189,7 @@ define('PLACEHOLDER_1_UID', 2);  // uid of first placeholder
 define('PLACEHOLDER_2_UID', 3);  // uid of second placeholder
 define('CG_ROUNDUPS_UID', 129);  // Donations start at 128 (128 used for general donations)
 define('CG_CRUMBS_UID', 130);  //
+define('CG_SERVICE_CHARGES_UID', 192);
 define('CG_INCOMING_BANK_UID', 256);  // Bank accounts start at 256
 define('CG_OUTGOING_BANK_UID', 257);  //
 
@@ -193,8 +197,13 @@ define('R_TEMP_NAME_PREFIX', 'unknown ');
 define('CO_PHOTO_FACTOR', 3); // make company photos this many times as big as individual photos
 define('MAX_UPLOAD_SIZE', 4 * 1024000); // maximum upload size in bytes
 
+define('GEOCODE_URL', 'https://geocoding.geo.census.gov/geocoder/locations/');
+define('NEIGHBOR_RADIUS', 40); // how far away (in miles) can a member see names of other individual members?
+define('NEIGHBOR_RMAX', NEIGHBOR_RADIUS * NEIGHBOR_RADIUS / 69 / 69); // squared and adjusted for degrees, not miles
+define('NEIGHBOR_QUERY', '(POW(latitude-:lat, 2) + POW((longitude-:lon) * (.71 + .0116*(latitude+:lat)/2), 2))');
+
 define('R_URL_SLASH', '%_%'); // Drupal gets confused by slashes in a url, even if urlencoded
-define('R_EXCHANGE_LIMITS', '1:5000,7:20000,49:80000,365:500000'); // per day, week, 7-week, year
+define('R_EXCHANGE_LIMITS', '1:5000,7:20000,52:80000,365:500000'); // per day, week, 7-week, year
 define('R_INVITE_DAYS', 30); // number of days to accept invitation to membership
 //define('R_MAXR_DEFAULT', -1); // suggested maximum amount to hold in CG credit (-1 = no limit)
 define('R_CARDCODE_LEN', 14); // length of rCard security code (long to deter easy copying, max 14 for small QR)
@@ -205,6 +214,7 @@ define('TICKLE_WELCOME', 2 * 7); // number of days to wait after activation, bef
 define('TICKLE_DELAYED', 6 * 7); // number of days to wait after activation, before followup if no gift or no CGC
 define('OFTENS', 'W:Weekly,M:Monthly,Q:Quarterly,Y:Yearly,X:Once (now)');
 define('OFX_TX_FLDS', 'trnType dtPosted trnAmt fitId name memo');
+define('OFTENS_SECS', ['W' => WEEK_SECS, 'M' => MONTH_SECS, 'Q' => QUARTER_SECS, 'Y' => YEAR_SECS]);
 
 define('ICARD_EXPIRES', 14); // how many days until invitation card expires, after account is activated
 define('ICARD_CODELEN_MIN', 10); // minimum length for an invitation code
@@ -240,10 +250,10 @@ define('N_NUDGE', 9); // your invitee needs a nudge
 define('N_SUGGESTION', 10); // suggestion from the system
 
 define('R_WHYS', t('goods and services,exchange of US Dollars or other currency,loan/reimbursement/etc.,') . R_SHARING_MSG); // transaction purposes
-define('FOR_GOODS', 0); // index into R_WHYS for goods
-define('FOR_USD', 1); // index into R_WHYS for USD exchange
-define('FOR_NONGOODS', 2); // index into R_WHYS for loan, etc.
-define('FOR_SHARE', 3); // "sharing" gift to CGF (comes out of rewards)
+define('OLD_FOR_GOODS', 0); // index into R_WHYS for goods
+define('OLD_FOR_USD', 1); // index into R_WHYS for USD exchange
+define('OLD_FOR_NONGOODS', 2); // index into R_WHYS for loan, etc.
+//define('FOR_SHARE', 3); // "sharing" gift to CGF (comes out of rewards)
 //define('FOR_INVESTMENT', 4); // only in invoices (use B_INVESTMENT in txs)
 //define('FOR_STAKE', 5); // only in invoices (use B_STAKE in txs)
 
@@ -386,12 +396,12 @@ define('R_CTTY_BENE', 'cttyBuys+signups+rebates+bonuss+inflations+givebacks+gran
 
 // Relationship flags
 define('B_EMPLOYEE', 0); // is employed by main account
-define('B_OWNER', 1); // is employed by main account
-define('B_CUSTOMER', 2); // is employed by main account
-define('B_AUTOPAY', 3); // is employed by main account
-define('B_r4', 4); // is employed by main account
-define('B_r5', 5); // is employed by main account
-define('B_r6', 6); // is employed by main account
+define('B_OWNER', 1); // owns the main account
+define('B_CUSTOMER', 2); // is a customer of main account
+define('B_AUTOPAY', 3); // preapproves any invoice from main account
+define('B_r4', 4); //  by main account
+define('B_r5', 5); //  by main account
+define('B_r6', 6); //  by main account
 define('B_DRAW', 7); // can draw funds from main account (same number as B_DRAWS in the users table)
 define('REL_FLAGS', 'employee owner customer autopay r4 r5 r6 draw');
 define('REL_FLDS', 'main other otherNum permission code');
@@ -427,10 +437,11 @@ define('S_USD_IN', t('USD in'));
 
 // Risk definitions (for accounts and transactions) -- suspiciousness for possible reporting to FinCEN
 define('K_THRESHOLD', 200); // how big an amount in a single transaction is suspicious
-define('K_DAY_THRESHOLD', 300); // how big an amount spent or received by an individual in one day is suspicious
+/*define('K_DAY_THRESHOLD', 300); // how big an amount spent or received by an individual in one day is suspicious
 define('K_WEEK_THRESHOLD', 600); // how large an amount is suspicious in one week
 define('K_7WEEK_THRESHOLD', 1200); // how large an amount is suspicious in one 52-day period
-define('K_YEAR_THRESHOLD', 2400); // how large an amount is suspicious in one year
+define('K_YEAR_THRESHOLD', 2400); // how large an amount is suspicious in one year */
+define('K_THRESHOLD_PCT', 5); // what percent of top accounts transaction volume per employee to flag
 define('K_LIMIT_FACTOR', 3); // how many times the various thresholds is a prohibited amount
 define('K_UNUSUAL_BUMP', 20); // what percentage 7-week increase (in or out) is suspicious
 define('K_BIT_MIN', .05); // lowest risk factor that sets a bit
@@ -444,7 +455,7 @@ define('K_CTTY_THRESHOLD', 100); // minimum size of community transactions to co
 // names and weights of account and transaction risks (and, for negative weights, assurance)
 // weight is the number of such risks that together would make the account or transaction suspicious
 // a weight of "X" means the risk is named but does not contribute to the total risk score
-define('K_ACCT_RISKS', 'adminOk:-0.3,trusted:-4,socialConx:-3,hasBank:-3,geography:4,cashCo:2,new:5,moves:3,rents:10,badConx:2,homeCo:20,shady:3,miser:5,photoOff:1,addrOff:5,ssnOff:1,dobOff:4,poBox:5,fishy:2,moreIn:2,moreOut:2,bigDay:1,bigWeek:1,big7Week:1,bigYear:2');
+define('K_ACCT_RISKS', 'adminOk:-0.3,trusted:-4,UNUSED:-3,hasBank:-3,geography:4,cashCo:2,new:5,moves:3,rents:10,badConx:2,homeCo:20,shady:3,miser:5,UNUSED2:1,addrOff:5,ssnOff:1,dobOff:4,poBox:5,fishy:2,moreIn:2,moreOut:2,bigDay:1,bigWeek:1,big7Week:1,bigYear:2');
 define('K_ACCT_RISKS_EDITABLE', 'adminOk cashCo rents shady photoOff addrOff ssnOff dobOff fishy');
 define('K_TX_RISKS', 'txAdminOk:-0.3,redo:2,exchange:2,cashIn:5,cashOut:2,fromBank:5,toBank:2,b2p:2,p2p:2,inhouse:2,fromSuspect:3,toSuspect:3,absent:4,invoiceless:4,bigFrom:3,biggestFrom:3,oftenFrom:3,bigTo:3,biggestTo:3,oftenTo:3,offline:10,firstOffline:3,origins:3,suspectOut:2'); // names and size of transaction risks
 define('K_ADMINOK', 0); // community admin blessed the account or transaction
@@ -459,14 +470,14 @@ define('FLOW_BOTH', 3);
 
 // Transaction flags (for flags field in transaction records)
 define('B_TAKING', 0); // payee initiated the transaction
-define('B_DISPUTED', 1); // non-originator disputes the transaction
+define('OLD_B_DISPUTED', 1); // non-originator disputes the transaction -- signaled by existence of r_disputes
 define('B_OFFLINE', 2); // transaction was taken offline (or was forced?)
 define('B_SHORT', 3); // transaction was taken (offline) despite credit shortfall
-define('B_UNDONE', 4); // undone by another transaction
-define('B_UNDOES', 5); // undoes another transaction
+define('OLD_B_UNDONE', 4); // undone by another transaction -- signaled by existence of reversing transaction
+define('OLD_B_UNDOES', 5); // undoes another transaction -- signaled by reversesXid not null
 define('B_CRUMBS', 6); // monthly donation of percentage of receipts
-define('B_ROUNDUPS', 7); // monthly donation of rounded up cents
-// B_ROUNDUP is 8 (defined above) // payer donated the change to the community fund
+define('OLD_B_ROUNDUPS', 7); // monthly donation of rounded up cents -- no longer occurs
+// B_ROUNDUP is 8 (defined above) // payer donated the change to the community fund -- not used here, 
 define('B_RECURS', 9); // recurring transaction
 define('B_GIFT', 10); // grant or gift (of any type)
 define('B_LOAN', 11); // community loan
@@ -476,7 +487,7 @@ define('B_FINE', 14); // community fine
 define('B_NOASK', 15); // transaction was taken with ID checking OFF
 define('B_FUNDING', 16); // invoice has already instigated an appropriate bank transfer request
 /* define('TX_FLAGS', 'taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding'); */
-define('TX_FLAGS', 'offline short crumbs roundups recurs gift loan investment stake fine noask funding');
+define('TX_FLAGS', 'offline short crumbs recurs gift loan investment stake fine noask funding');
 
 // Invoice status (txid >= TX_PAID if paid)
 define('TX_DENIED', -2); // invoice rejected by the non-originator
@@ -498,14 +509,19 @@ define('TX_FOREIGN', 8); // user clicked a "Pay with CG" button or request an ap
 define('TX_CHANNELS', 'Sys SMS Web App Tone Cron Link Ajax Foreign'); // can't translate, because used in t() (find a solution)
 
 // Transaction types (all but type TX_TRANSFER and TX_BANK create credit) -- negative types generally not shown
-define('TX_BONUS', -2); // UNUSED sales bonus (negative reward types are invisible on transaction history)
-define('TX_REBATE', -1); // UNUSED sales rebate
-define('TX_TRANSFER', 0); // normal fund transfer (usually for actual goods and services) -- not creating rC
-define('TX_SIGNUP', 1); // signup incentive reward
-define('TX_GIVEBACK', 2); // gift to the community (UNUSED)
-define('TX_INFLATION', 3); // reward to conpensate for inflation
-define('TX_HELPER', 4); // reward for inviting and assisting with account opening
-define('TX_REWARDS', '-2,-1,1,2,3,4'); // only these count as rewards
+define('OLD_TX_BONUS', -2); // UNUSED sales bonus (negative reward types are invisible on transaction history)
+define('OLD_TX_REBATE', -1); // UNUSED sales rebate
+define('OLD_TX_TRANSFER', 0); // normal fund transfer (usually for actual goods and services) -- not creating rC
+define('OLD_TX_SIGNUP', 1); // signup incentive reward
+define('OLD_TX_GIVEBACK', 2); // gift to the community (UNUSED)
+define('OLD_TX_INFLATION', 3); // reward to conpensate for inflation
+define('OLD_TX_HELPER', 4); // reward for inviting and assisting with account opening
+define('OLD_TX_REWARDS', '-2,-1,1,2,3,4'); // only these count as rewards
+
+define('TX_CHARGE', 1);
+define('TX_PAYMENT', 2);
+define('TX_USD', 3); // dollars transferred into or out of Common Good
+define('TX_DRAW', 4); // drawing money from another account
 
 define('TX_FINE', 9); // destroys CG credit (this is essentially a negative grant)
 define('TX_XFEE', 10); // exchange fee (for buying CG credit with a credit/debit card or check)
@@ -514,6 +530,8 @@ define('TX_LOAN', 12);
 define('TX_INVEST', 13); // equity investment (community purchase are TX_TRANSFER)
 define('TX_BANK', 99); // used only internally, to mark bank transfers
 define('TX_TYPES', 'payment signup giveback inflation helper u5 u6 u7 u8 fine xfee grant loan investment');
+
+define('TX_WHYS', t('charge for goods and services, payment for goods and services,exchange of US Dollars or other currency,drawing from account,loan/reimbursement/etc.,')); // transaction purposes
 
 define('TX_DEFAULT_PERIOD', 90); // number of days to show in transaction history, by default
 define('TX_DEFAULT_INV_PERIOD', -2); // number of days to show in invoice history, by default (all of them)
@@ -530,6 +548,7 @@ define('TX_DATA_FLDS', 'undoneBy undoes force changes'); // serialized pseudo-fi
 define('DS_OPEN', 1);  // dispute not resolved
 define('DS_ACCEPTED', 2);  // dispute accepted and transaction reversed
 define('DS_DENIED', 3);  // dispute denied
+
 
 define('ENTRY_OTHER', 0);
 define('ENTRY_PAYER', 1);  // the uid in this entry is for the payer
@@ -588,7 +607,7 @@ if (@TESTING == 1) {
  * $config - the configuration array itself
  */
 function setFromConfig($key, $config) {
-  if (!array_key_exists($key, $config)) die("The config file does not contain an entry for $key.");
+/**/ if (!array_key_exists($key, $config)) die("The config file does not contain an entry for $key.");
   return $config[$key];
 }
 
