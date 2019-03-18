@@ -127,7 +127,7 @@ function selling($list) {return doRecords($list, 'Selling');}
 function companyFlags($list) {return doRecords($list, 'CompanyFlags');}
 function coupons($list) {return doRecords($list, 'Coupon');}
 function stats($list) {return doRecords($list, 'Stat');}
-
+function recurs($list) {return doRecords($list, 'Recur');}
 /**
  * Create device (box) records.
  */
@@ -264,7 +264,7 @@ function doTx($info, $thing) {
   if (isset($risks)) $risks = getRisks($risks, K_TX_RISKS);
 
   if ($inv) {
-    u\setDft($goods, u\forCash(@$for) ? FOR_USD : FOR_GOODS);
+    if (!$testOnly) u\setDft($goods, u\forCash(@$for) ? FOR_USD : FOR_GOODS);
   } else {
     $data = [];
     if (!$testOnly) u\setDft($risk, NULL); // indicates that risk has not been calculated yet
@@ -1165,12 +1165,23 @@ function strip($form) {
   return $form;
 }
 
+/**
+ * Compare two values and complain if they aren't close to equal.
+ * eq($a, $b) for strings
+ * eq($a, $b, $offBy) for numbers
+ * eq($a, $b, $arrayIdentifier) for arrays
+ * @return <the values are equal>
+ */
 function eq($a, $b, $offBy = .0001) {
   $result = (is_numeric($a) and is_numeric($b)) ? 
       (abs($a - $b) < $offBy)
     : ($a == $b or (empty($a) and empty($b)));
 /// if (!$result) echo 'not equal: ' . print_r(compact('a','b'), 1); // keep for now
-  if (!$result) output("unequal: a=$a b=$b", 'error');
+  if (!$result) {
+    if (is_array($a)) {
+/**/  output('unequal arrays ($offBy):<br>' . print_r($a, 1) . print_r($b, 1));
+    } else {output("unequal: a=$a b=$b", 'error');}
+  }
   return $result;
 }
 

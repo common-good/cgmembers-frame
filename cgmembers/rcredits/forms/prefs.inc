@@ -21,7 +21,7 @@ function formPrefs($form, &$sta) {
   $food0 = $mya->food * 100;
   $food = textFld(t('Food Fund:'), [t('Contribution Percentage'), t('Pay a little extra every time you pay for food or meals with %PROJECT, to lower the cost of healthy local food for people who can\'t afford it otherwise. For example, 5% here means when you buy a $10 pizza, you contribute 50 cents to the %PROJECT Food Fund. To donate to the %PROJECT Food Fund directly, use the "Pay" button and type "Food Fund".')], dft($food0 ?: '') + suffix(' %'));
   
-  if (!$mya->co) $snap = textFld(t('SNAP Number:'), [t('SNAP Number'), t('If you are eligible for SNAP, type your number here, to get a discount on food you buy through %PROJECT. If you are NOT eligible for SNAP, but need help with food expenses, call us at %phone.', 'phone', u\fmtPhone(CGF_PHONE, '-'))]);
+  if (!$mya->co) $snap = textFld(t('SNAP Number:'), [t('SNAP Number'), t('If you are eligible for SNAP, type your number here, to get a discount on food you buy through %PROJECT. If you are NOT eligible for SNAP, but need help with food expenses, call us at %phone.', 'phone', u\fmtPhone(CGF_PHONE, '-'))], dft($mya->snap));
   
   $backing0 = u\fmtAmt(($mya->backing + 0) ?: 1);
   $backing = item($backing0, t('Backing:'), t('Backing allows you and your community to make grants. For the next 12 months, if there is a cash crunch, you agree to buy this much more %PROJECT credit. If the system fails utterly in that time, your %backing0 credit becomes a contribution.', compact('backing0')), suffix(' <small>[' . lnk('/community/backing', t('change')) . ']</small>'));
@@ -91,7 +91,8 @@ function formPrefs_submit($form, $sta) {
   $food /= 100;
   $info = compact(ray($fields)) + $bits;
 
-  if (@$statements) r\tellAdmin(t('%who wants paper statements', 'who', $mya->mainQid), ['topic' => t('paper')]);
+  if (@$statements) r\tellAdmin(t('%who wants paper statements', 'who', $mya->fullName), ['topic' => t('paper')]);
+  if (@$snap) r\tellAdmin(t('%who has SNAP', 'who', $mya->fullName), ['topic' => t('SNAP')]);
   
   $mya->update($info);
 //  $mya->stepDone('prefs', $details = $old + $info + ['flags' => u\bits($mya->flags)]);

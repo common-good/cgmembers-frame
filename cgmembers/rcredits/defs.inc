@@ -5,7 +5,7 @@
  * (SMS, web, smartphone, etc.)
  */
 
-define('R_VERSION', '3.42t'); // software version
+define('R_VERSION', '3.42u'); // software version
 
 // definitions used in settings file
 define('US_COUNTRY_ID', 1228); // United States
@@ -32,8 +32,8 @@ define('DKIM_PRIVATE', setFromConfig('dkimPrivate', $config));
 define('R_INVITE_KEY', setFromConfig('inviteKey', $config));
 define('R_SSN_USER', setFromConfig('ssnUser', $config));
 define('R_SSN_PASS', setFromConfig('ssnPass', $config));
-if (!array_key_exists('db', $config)) die('the configuration file does not contain a db entry');
-if (!is_array((array) $config['db'])) die('the configuration file db entry is not an array');
+/**/ if (!array_key_exists('db', $config)) die('the configuration file does not contain a db entry');
+/**/ if (!is_array((array) $config['db'])) die('the configuration file db entry is not an array');
 
 $db_config = (array) $config['db'];
 $db_name = setFromConfig('name', $db_config);
@@ -110,6 +110,7 @@ define('DAY_SECS', 24 * HOUR_SECS);
 define('WEEK_SECS', 7 * DAY_SECS);
 define('WEEK7_SECS', 52 * DAY_SECS);
 define('MONTH_SECS', 30.4368 * DAY_SECS);
+define('QUARTER_SECS', round(3 * MONTH_SECS));
 define('YEAR_SECS', round(12 * MONTH_SECS));
 define('FLOOR_DAYS', 183); // how many days to consider for credit line calculation
 
@@ -184,8 +185,13 @@ define('R_TEMP_NAME_PREFIX', 'unknown ');
 define('CO_PHOTO_FACTOR', 3); // make company photos this many times as big as individual photos
 define('MAX_UPLOAD_SIZE', 4 * 1024000); // maximum upload size in bytes
 
+define('GEOCODE_URL', 'https://geocoding.geo.census.gov/geocoder/locations/');
+define('NEIGHBOR_RADIUS', 40); // how far away (in miles) can a member see names of other individual members?
+define('NEIGHBOR_RMAX', NEIGHBOR_RADIUS * NEIGHBOR_RADIUS / 69 / 69); // squared and adjusted for degrees, not miles
+define('NEIGHBOR_QUERY', '(POW(latitude-:lat, 2) + POW((longitude-:lon) * (.71 + .0116*(latitude+:lat)/2), 2))');
+
 define('R_URL_SLASH', '%_%'); // Drupal gets confused by slashes in a url, even if urlencoded
-define('R_EXCHANGE_LIMITS', '1:5000,7:20000,49:80000,365:500000'); // per day, week, 7-week, year
+define('R_EXCHANGE_LIMITS', '1:5000,7:20000,52:80000,365:500000'); // per day, week, 7-week, year
 define('R_INVITE_DAYS', 30); // number of days to accept invitation to membership
 //define('R_MAXR_DEFAULT', -1); // suggested maximum amount to hold in CG credit (-1 = no limit)
 define('R_CARDCODE_LEN', 14); // length of rCard security code (long to deter easy copying, max 14 for small QR)
@@ -196,6 +202,7 @@ define('TICKLE_WELCOME', 2 * 7); // number of days to wait after activation, bef
 define('TICKLE_DELAYED', 6 * 7); // number of days to wait after activation, before followup if no gift or no CGC
 define('OFTENS', 'W:Weekly,M:Monthly,Q:Quarterly,Y:Yearly,X:Once (now)');
 define('OFX_TX_FLDS', 'trnType dtPosted trnAmt fitId name memo');
+define('OFTENS_SECS', ['W' => WEEK_SECS, 'M' => MONTH_SECS, 'Q' => QUARTER_SECS, 'Y' => YEAR_SECS]);
 
 define('ICARD_EXPIRES', 14); // how many days until invitation card expires, after account is activated
 define('ICARD_CODELEN_MIN', 10); // minimum length for an invitation code
@@ -376,12 +383,12 @@ define('R_CTTY_BENE', 'cttyBuys+signups+rebates+bonuss+inflations+givebacks+gran
 
 // Relationship flags
 define('B_EMPLOYEE', 0); // is employed by main account
-define('B_OWNER', 1); // is employed by main account
-define('B_CUSTOMER', 2); // is employed by main account
-define('B_AUTOPAY', 3); // is employed by main account
-define('B_r4', 4); // is employed by main account
-define('B_r5', 5); // is employed by main account
-define('B_r6', 6); // is employed by main account
+define('B_OWNER', 1); // owns the main account
+define('B_CUSTOMER', 2); // is a customer of main account
+define('B_AUTOPAY', 3); // preapproves any invoice from main account
+define('B_r4', 4); //  by main account
+define('B_r5', 5); //  by main account
+define('B_r6', 6); //  by main account
 define('B_DRAW', 7); // can draw funds from main account (same number as B_DRAWS in the users table)
 define('REL_FLAGS', 'employee owner customer autopay r4 r5 r6 draw');
 define('REL_FLDS', 'main other otherNum permission code');
@@ -417,10 +424,11 @@ define('S_USD_IN', t('USD in'));
 
 // Risk definitions (for accounts and transactions) -- suspiciousness for possible reporting to FinCEN
 define('K_THRESHOLD', 200); // how big an amount in a single transaction is suspicious
-define('K_DAY_THRESHOLD', 300); // how big an amount spent or received by an individual in one day is suspicious
+/*define('K_DAY_THRESHOLD', 300); // how big an amount spent or received by an individual in one day is suspicious
 define('K_WEEK_THRESHOLD', 600); // how large an amount is suspicious in one week
 define('K_7WEEK_THRESHOLD', 1200); // how large an amount is suspicious in one 52-day period
-define('K_YEAR_THRESHOLD', 2400); // how large an amount is suspicious in one year
+define('K_YEAR_THRESHOLD', 2400); // how large an amount is suspicious in one year */
+define('K_THRESHOLD_PCT', 5); // what percent of top accounts transaction volume per employee to flag
 define('K_LIMIT_FACTOR', 3); // how many times the various thresholds is a prohibited amount
 define('K_UNUSUAL_BUMP', 20); // what percentage 7-week increase (in or out) is suspicious
 define('K_BIT_MIN', .05); // lowest risk factor that sets a bit
@@ -434,7 +442,7 @@ define('K_CTTY_THRESHOLD', 100); // minimum size of community transactions to co
 // names and weights of account and transaction risks (and, for negative weights, assurance)
 // weight is the number of such risks that together would make the account or transaction suspicious
 // a weight of "X" means the risk is named but does not contribute to the total risk score
-define('K_ACCT_RISKS', 'adminOk:-0.3,trusted:-4,socialConx:-3,hasBank:-3,geography:4,cashCo:2,new:5,moves:3,rents:10,badConx:2,homeCo:20,shady:3,miser:5,photoOff:1,addrOff:5,ssnOff:1,dobOff:4,poBox:5,fishy:2,moreIn:2,moreOut:2,bigDay:1,bigWeek:1,big7Week:1,bigYear:2');
+define('K_ACCT_RISKS', 'adminOk:-0.3,trusted:-4,UNUSED:-3,hasBank:-3,geography:4,cashCo:2,new:5,moves:3,rents:10,badConx:2,homeCo:20,shady:3,miser:5,UNUSED2:1,addrOff:5,ssnOff:1,dobOff:4,poBox:5,fishy:2,moreIn:2,moreOut:2,bigDay:1,bigWeek:1,big7Week:1,bigYear:2');
 define('K_ACCT_RISKS_EDITABLE', 'adminOk cashCo rents shady photoOff addrOff ssnOff dobOff fishy');
 define('K_TX_RISKS', 'txAdminOk:-0.3,redo:2,exchange:2,cashIn:5,cashOut:2,fromBank:5,toBank:2,b2p:2,p2p:2,inhouse:2,fromSuspect:3,toSuspect:3,absent:4,invoiceless:4,bigFrom:3,biggestFrom:3,oftenFrom:3,bigTo:3,biggestTo:3,oftenTo:3,offline:10,firstOffline:3,origins:3,suspectOut:2'); // names and size of transaction risks
 define('K_ADMINOK', 0); // community admin blessed the account or transaction
@@ -566,7 +574,7 @@ if (@TESTING == 1) {
  * $config - the configuration array itself
  */
 function setFromConfig($key, $config) {
-  if (!array_key_exists($key, $config)) die("The config file does not contain an entry for $key.");
+/**/ if (!array_key_exists($key, $config)) die("The config file does not contain an entry for $key.");
   return $config[$key];
 }
 
