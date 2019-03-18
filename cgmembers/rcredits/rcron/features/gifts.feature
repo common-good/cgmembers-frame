@@ -18,8 +18,8 @@ Scenario: A brand new recurring donation can be completed
   | %yesterday | .ZZA  | cgf   |     10 |      M |
   When cron runs "recurs"
   Then transactions:
-  | xid | created | type     | amount | from | to  | purpose                    | flags          |*
-  |   1 | %today  | transfer |     10 | .ZZA | cgf | regular donation (Monthly) | gift,recurs |
+  | xid | created | amount | from | to  | purpose                    | flags          |*
+  |   1 | %today  |     10 | .ZZA | cgf | regular donation (Monthly) | gift,recurs |
   And we notice "new payment linked" to member "cgf" with subs:
   | otherName | amount | payeePurpose               | aPayLink |*
   | Abe One   | $10    | regular donation (Monthly) | ?        |
@@ -32,8 +32,8 @@ Scenario: A brand new recurring donation can be completed
   | amount | purpose                    | to       |*
   |    $10 | regular donation (Monthly) | %PROJECT |
 #  And we tell admin "gift accepted" with subs:
-#  | amount | myName  | often | rewardType | *
-#  |     10 | Abe One |     1 | reward     |
+#  | amount | myName  | often | *
+#  |     10 | Abe One |     1 |
   # and many other fields
 	And count "txs" is 1
 	And count "usd" is 0
@@ -48,12 +48,12 @@ Scenario: A second recurring donation can be completed
   | created   | payer | payee | amount | period |*
   | %today-3m | .ZZA  | cgf   |     10 |      M |
   And transactions:
-  | xid | created    | type     | amount | from | to  | purpose                            | flags          |*
-  |   1 | %today-32d | transfer |     10 | .ZZA | cgf | regular donation (Monthly) | gift,recurs |
+  | xid | created    | amount | from | to  | purpose                    | flags       |*
+  |   1 | %today-32d |     10 | .ZZA | cgf | regular donation (Monthly) | gift,recurs |
   When cron runs "recurs"
   Then transactions:
-  | xid | created | type     | amount | from | to  | purpose                    | flags          |*
-  |   2 | %today  | transfer |     10 | .ZZA | cgf | regular donation (monthly) | gift,recurs |
+  | xid | created | amount | from | to  | purpose                    | flags          |*
+  |   2 | %today  |     10 | .ZZA | cgf | regular donation (monthly) | gift,recurs |
 	
 Scenario: A donation invoice can be completed
 # even if the member has never yet made an rCard purchase
@@ -63,8 +63,8 @@ Scenario: A donation invoice can be completed
   And member ".ZZA" has no photo ID recorded
   When cron runs "invoices"
   Then transactions: 
-  | xid | created | type     | amount | from | to  | purpose                      | flags |*
-  |   1 | %today  | transfer |     50 | .ZZA | cgf | donation (Common Good inv#2) | gift  |
+  | xid | created | amount | from | to  | purpose                      | flags |*
+  |   1 | %today  |     50 | .ZZA | cgf | donation (Common Good inv#2) | gift  |
 	And invoices:
   | nvid | created   | status | amount | from | to  | for      | flags |*
   |    2 | %today    | 1      |     50 | .ZZA | cgf | donation | gift  |	
@@ -86,7 +86,7 @@ Scenario: A recurring donation cannot be completed
   And count "usd" is 1
   And count "invoices" is 1
   And	invoices:
-  | nvid | created   | status       | amount | from | to  | for                                | flags                  |*
+  | nvid | created   | status       | amount | from | to  | for                        | flags               |*
   |    1 | %today    | %TX_APPROVED |    200 | .ZZA | cgf | regular donation (Monthly) | gift,recurs,funding |	
 
 	When cron runs "recurs"
@@ -117,8 +117,8 @@ Scenario: It's time to warn about an upcoming annual donation
   | created                 | payer | payee | amount | period |*
   | %(%today-1y+7*DAY_SECS) | .ZZD  | cgf   |      1 |      Y |
 	And transactions:
-  | xid | created                 | type     | amount | from | to  | purpose                            | flags          |*
-  |   1 | %(%today-1y+7*DAY_SECS) | transfer |     10 | .ZZD | cgf | regular donation (Monthly) | gift,recurs |
+  | xid | created                 | amount | from | to  | purpose                    | flags       |*
+  |   1 | %(%today-1y+7*DAY_SECS) |     10 | .ZZD | cgf | regular donation (Monthly) | gift,recurs |
   When cron runs "tickle"
 	Then we email "annual-gift" to member "d@example.com" with subs:
 	| amount | when    | aDonate |*

@@ -29,6 +29,6 @@ class InitializeBalances extends AbstractMigration
     public function up()
     {
       $this->execute('UPDATE users u SET balance='
-                     . '(SELECT SUM(amount) FROM r_entries e WHERE e.uid IN (u.uid, u.jid))');
+                     . 'IFNULL((SELECT SUM(amount) FROM r_entries e WHERE e.uid IN (u.uid, u.jid)), 0)');
     }
 }

@@ -41,8 +41,8 @@ Scenario: A member requests a joint account
   | uid  | jid  | minimum |*
   | .ZZA | .ZZB |     150 |
   | .ZZB | .ZZA |       0 |
-  And member ".ZZA" cache is ok
-  And member ".ZZB" cache is ok
+  # And member ".ZZA" cache is ok
+  # And member ".ZZB" cache is ok
   # cache is ok tests acct::cacheOk, to make sure cron doesn't muck with the cached amounts
   
   When member ".ZZA" confirms form "pay" with values:
@@ -51,10 +51,10 @@ Scenario: A member requests a joint account
   And member ".ZZB" confirms form "pay" with values:
   | op  | who        | amount | goods      | purpose |*
   | pay | Corner Pub |    300 | %FOR_GOODS | crud    |
-  Then member ".ZZA" cache is ok
-  And member ".ZZB" cache is ok
-  Then member ".ZZA" cache is ok
-  And member ".ZZB" cache is ok
+  # Then member ".ZZA" cache is ok
+  # And member ".ZZB" cache is ok
+  # Then member ".ZZA" cache is ok
+  # And member ".ZZB" cache is ok
   # do it twice, to make sure cacheOk() doesn't screw it up
 
 Scenario: A joined account slave member requests a new minimum
@@ -167,8 +167,8 @@ Scenario: A joined account member looks at transaction history and summary
   | uid  | jid  | minimum | balance |*
   | .ZZA |      |     150 |      50 |
   | .ZZB |      |     150 |      50 |
-  And member ".ZZA" cache is ok
-  And member ".ZZB" cache is ok
+  # And member ".ZZA" cache is ok
+  # And member ".ZZB" cache is ok
   
 Scenario: A member requests two joins at once
   Given relations:

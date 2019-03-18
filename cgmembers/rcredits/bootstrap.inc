@@ -1265,7 +1265,7 @@ function t($string, $subs0 = []) {
       }
     }
   }
-  return @$subs ? strtr($string, $subs) : $string;
+  return !empty($subs) ? strtr($string, $subs) : $string;
 }
 function tr($s) {return t($s, rayy(func_get_args(), 1));}
 
@@ -1466,7 +1466,13 @@ function format_string($string, array $args = array()) {
  * @see drupal_validate_utf8()
  * @ingroup sanitization
  */
-function plain($text) {return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');}
+function plain($text) {
+  if(!is_string($text)) {
+    print_r("argument passed to plain has type " . gettype($text));
+    var_dump(debug_backtrace());
+    die('plain');
+  }
+  return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');}
 function check_plain($text) {return plain($text);}
 function unplain($text) {return htmlspecialchars_decode($text, ENT_QUOTES);} // reverse \check_plain
 

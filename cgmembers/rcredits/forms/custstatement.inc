@@ -15,13 +15,13 @@ include_once __DIR__ . '/../statement.class';
  * Call with /history/customer-statement/cust=QID?way=WAY
  * where WAY is either IN or OUT
  */
-function custStatement($args = '') {
+function custStatement($args = []) {
   $purposeLenMax = 60; // maximum number of characters in purpose field, not including added "..."
 
   if (!$mya = r\acct()) return w\go('', t('You must first sign in.'), 'ERR');
-  $cust = arrayGet($args, 'cust', null);
-  $period = arrayGet($args, 'period', null);
-  $way = arrayGet($args, 'way', 'OUT');
+  $cust = u\arrayGet($args, 'cust', null);
+  $period = u\arrayGet($args, 'period', null);
+  $way = u\arrayGet($args, 'way', 'OUT');
 
   $a = is_null($cust) ? null : r\acct($cust);
   if (is_null($a)) return w\softErr(t('No customer was specified.'));
@@ -31,7 +31,7 @@ function custStatement($args = '') {
   $custUids = is_null($a->jid) or $a->jid == 0 ? [ $a->id ] : [ $a->id, $a->jid ];
   $q = ($way == 'IN') ? be\getCustTxs([$mya->id], $custUids, 0, time()+1)
                       : be\getCustTxs($custUids, [$mya->id], 0, time()+1);
-  if (!$q->rowCount()) return w\softErr(t('That is not a %thing of yours.', 'thing', $way == 'IN' ? t('customer') : t('vendor')));
+  if (count($q) == 0) return w\softErr(t('That is not a %thing of yours.', 'thing', $way == 'IN' ? t('customer') : t('vendor')));
 
   $pdf = new r\Statement($mya);
 

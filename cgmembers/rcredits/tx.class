@@ -15,23 +15,23 @@ require_once __DIR__ . '/txentry.class';
  */
 
 class Tx {
-  const TX_HDR_FIELDS = ['xid', 'type', 'goods', 'actor', 'actorAgent', 'flags',
-                         'channel', 'box', 'risk', 'risks', 'reverses', 'created'];
-  const INSERT_FIELDS = ['type', 'goods', 'actor', 'actorAgent', 'flags',
-                         'channel', 'box', 'risk', 'risks', 'reverses', 'created'];
-  const REQUIRED_FIELDS = ['type', 'goods', 'actor', 'flags'];
+  const TX_HDR_FIELDS = ['xid', 'goods', 'actorId', 'actorAgentId', 'flags',
+                         'channel', 'box', 'goods', 'risk', 'risks', 'reversesXid', 'created'];
+  const INSERT_FIELDS = ['goods', 'actorId', 'actorAgentId', 'flags',
+                         'channel', 'box', 'goods', 'risk', 'risks', 'reversesXid', 'created'];
+  const REQUIRED_FIELDS = ['goods', 'actorId', 'flags'];
 
   public $xid;
   public $type;
   public $goods;
-  public $actor;
-  public $actorAgent;
+  public $actorId;
+  public $actorAgentId;
   public $flags;
   public $channel;
   public $box;
   public $risk;
   public $risks;
-  public $reverses;
+  public $reversesXid;
   public $created;
   public $entries;
   
@@ -41,23 +41,19 @@ class Tx {
    *                     but must only include ALLOWED_FIELD entries.
    */
   function __construct($info) {
-    print_r(Tx::REQUIRED_FIELDS);
-    print_r(array_keys($info));
-    print_r($info);
     $missing = array_diff(Tx::REQUIRED_FIELDS, array_keys($info));
     u\EXPECT($missing == [], "missing fields in Tx::createNew: " . print_r($missing, true));
 
     $this->xid = u\arrayGet($info, 'xid', 0);
-    $this->type = u\arrayGet($info, 'type', null);
     $this->goods = u\arrayGet($info, 'goods', null);
-    $this->actor = u\arrayGet($info, 'actor', null);
-    $this->actorAgent = u\arrayGet($info, 'actorAgent', null);
+    $this->actorId = u\arrayGet($info, 'actorId', null);
+    $this->actorAgentId = u\arrayGet($info, 'actorAgentId', null);
     $this->flags = u\arrayGet($info, 'flags', null);
     $this->channel = u\arrayGet($info, 'channel', null);
     $this->box = u\arrayGet($info, 'box', null);
     $this->risk = u\arrayGet($info, 'risk', null);
     $this->risks = u\arrayGet($info, 'risks', 0);
-    $this->reverses = u\arrayGet($info, 'reverses', null);
+    $this->reversesXid = u\arrayGet($info, 'reversesXid', null);
     $this->created = u\arrayGet($info, 'created', r\rTime());
     $this->entries = u\arrayGet($info, 'entries', []);
   }
@@ -70,16 +66,16 @@ class Tx {
   public function __get($f) {
     $tx = $this;
     switch ($f) {
-    case 'otherId':
-      return ($this->actor == $this->payerId) ? $this->payeeId : $this->payeeId;
-    case 'payerEntry':
-      return $this->getPayerEntry();
-    case 'payeeEntry':
-      return $this->getPayeeEntry();
-    case 'actorEntry':
-      return $this->getActorEntry();
-    case 'otherEntry':
-      return $this->getPayerEntry()->uid == $this->actor ? $this->getPayeeEntry() : $this->getPayerEntry();
+    case 'actorEntry': return $this->getActorEntry();
+    case 'otherEntry': return $this->payerEntry->uid == $this->actorId ? $this->payeeEntry : $this->payerEntry;
+    case 'payerEntry': return $this->getPayerEntry();
+    case 'payeeEntry': return $this->getPayeeEntry();
+    case 'payerId': return $this->payerEntry->uid;
+    case 'payeeId': return $this->payeeEntry->uid;
+    case 'otherId': return $this->otherEntry->uid;
+    case 'actor': return r\acct($this->actorId);
+    case 'actorAmount': return$this->getActorAmount();
+    case 'other': return r\acct($this->otherId);
     default:
       u\EXPECT(FALSE, "unexpected field '$f' requested");
     }
@@ -99,9 +95,9 @@ class Tx {
     return null;
   }
 
-  private function getActorEntry() {
+  private function getActorIdEntry() {
     foreach ($this->entries as $entry) {
-      if ($entry->uid == $this->actor) return $entry;
+      if ($entry->uid == $this->actorId) return $entry;
     }
     return null;
   }
@@ -109,7 +105,15 @@ class Tx {
   public function getAmount($a) {
     $total = 0;
     foreach ($this->entries as $entry) {
-      if ($entry->uid == $a->uid or $entry->uid == $a->jid) $total += $entry->amount;
+      if ($entry->uid == $a->id or $entry->uid == $a->jid) $total += $entry->amount;
+    }
+    return $total;
+  }
+
+  public function getActorAmount() {
+    $total = 0;
+    foreach ($this->entries as $entry) {
+      if ($entry->uid == $this->actorId) $total += $entry->amount;
     }
     return $total;
   }
@@ -128,7 +132,7 @@ class Tx {
    * Add some entries to this transaction.
    */
   public function addEntries($entries) {
-    $this->entries += $entries;
+    $this->entries += array_merge($this->entries, $entries);
   }
 
   /**
@@ -152,15 +156,19 @@ class Tx {
    * Save this transaction in the database (header record plus all entries).
    * @return the xid of the transaction
    */
-  function insert() {
+  function insert($allowModification = FALSE) {
     $tx = $this;
     $DBTX = db_transaction();
-    u\EXPECT($tx->xid == 0, "We're not allowing modification of transactions.");
-    $xid = db\insert('r_tx_hdrs', just(Tx::INSERT_FIELDS, (array)$tx), 'xid');
+    if ($allowModification) {
+      $xid = db\updateOrInsert('r_tx_hdrs', just(Tx::TX_HDR_FIELDS, (array)$tx), 'xid');
+    } else {
+      u\EXPECT($tx->xid == 0, "We're not allowing modification of transactions.");
+      $xid = db\insert('r_tx_hdrs', just(Tx::INSERT_FIELDS, (array)$tx), 'xid');
+    }
     u\EXPECT($xid, "Failed to insert transaction header record");
     foreach ($tx->entries as $entry) {
       if (empty($entry->acctTid)) {
-        $entry->acctTid = r\acct($entry->uid)->nextTid;
+        $entry->acctTid = r\acct($entry->uid)->nextTid();
       }
     }
     foreach ($tx->entries as $entry) {
@@ -218,7 +226,7 @@ EOF;
    */
   static function lastTx($uids, $where = 1, $subs = []) {
     $txHdr = db\get('t.*', 'r_tx_hdrs t JOIN r_entries e USING(xid)',
-                    "e.uid IN (:uids) AND `type`>=0 AND $where ORDER BY t.created DESC LIMIT 1",
+                    "e.uid IN (:uids) AND $where ORDER BY t.created DESC LIMIT 1",
                     $subs + ['uids' => $uids]);
     if (!$txHdr) return FALSE;
     $xid = $txHdr['xid'];
@@ -243,11 +251,11 @@ EOF;
     $payerE = $this->payerEntry;
     $payeeE = $this->payeeEntry;
 
-    $amount = ($tx->actor == $payerE->uid) ? $payerE->amount : $payeeE->amount;
+    $amount = ($tx->actorId == $payerE->uid) ? $payerE->amount : $payeeE->amount;
       
     $other = r\acct(($me->isMe($payerE->uid)) ? $payeeE->uid : $payerE->uid);
     
-    $banking = ($tx->type == TX_BANK);
+    $banking = be\isBankUid($other->id);
     $toMe = $banking ? ($amount < 0 xor $xid < 0) : $me->isMe($payeeE->uid);
     
     $reverses = !empty($tx->reverses);
@@ -258,7 +266,6 @@ EOF;
     $why = ray(R_WHYS)[$tx->goods];
     if ($getMyBalance and ($me->can(B_BUY))) { $balance = u\fmtAmt($me->avail(FOR_GOODS)); }
     else { $balance = null; }
-    debug("balance is $balance");
     
     if ($amount < 0) {
       $amount = 0-$amount;
@@ -270,7 +277,6 @@ EOF;
     }
 
     $balance = ($getMyBalance and $me->can(B_BUY)) ? $me->avail(FOR_GOODS) : 0;
-    debug("balance is $balance");
     
     return ray('created created0 xid role why payerPurpose payeePurpose toMe amount tofrom balance otherUid myName otherName short success did',  // . ' role'
                u\fmtDate($tx->created), $tx->created, $tx->xid, $role, $why, $payerE->description,
@@ -278,6 +284,26 @@ EOF;
                $other->fullName, u\fmtAmt($shortfall), TRUE, $did);
   }
 
+  /**
+   * Determine whether the record can be undone
+   * @param assoc $subs: (RETURNED) necessary substitutions, if any, including whatever was already there
+   * @return string: the error message (FALSE if the current agent CAN undo it on behalf of the current account)
+   */
+  function nonoUndo(&$subs = []) {
+    //    global $mya;
+    //    extract(just('amount toMe data payer payee payerTid payeeTid taking', $oldRecord));
+    //    $data = unserialize($data);
+    if (db\exists('r_tx_hdrs', 'reversesXid=:xid', ['xid' => $this->xid])) {
+      return 'already undone';
+    }
+
+    $a1 = r\acct($tx->toMe ? $tx->payeeId : $tx->payerId, $tx->actor->agentId);
+    $a2 = r\acct($tx->toMe ? $tx->payerId : $tx->payeeId); // second account's permissions are irrelevant
+    if ($err = r\txPermErr($a1, $a2, $tx->toMe, $tx->toMe xor $tx->actorE->amount < 0)) return $err;
+
+    return FALSE;
+  }
+  
   /* /\** */
   /*  * Keep track of r, rewards, and committed amounts in the account record */
   /*  * None of these figures is authoritative except 'committed'.  */
@@ -360,7 +386,7 @@ EOF;
 
 /*   /\** */
 /*    * Return an appropriate message about the transaction */
-/*    * @param string $type: what type of message to return (actor, youDid, theyDid, or reverse) */
+/*    * @param string $type: what type of message to return (actorId, youDid, theyDid, or reverse) */
 /*    * @param string $desc: how much of the description to include: none (''), vague, or full */
 /*    * @param bool $withDate: <include the transaction date in the message> */
 /*    * @return the message */
@@ -385,7 +411,7 @@ EOF;
 /*     $neg = (int) ($amount < 0); */
 /*     $index = 4 * $byMe + 2 * $toMe + $neg; */
 
-/*     if ($msgType == 'actor') $msgType = $byMe ? 'youDid' : 'theyDid'; */
+/*     if ($msgType == 'actorId') $msgType = $byMe ? 'youDid' : 'theyDid'; */
 /*     $types = explode(',', $$msgType); */
 /*     $action = $types[$index]; */
 

@@ -81,41 +81,41 @@ function acctRisk1($uid, $thresholds, &$risk = 0, &$calc = 0) {
  * @param numeric $calc: (RETURNED) the original calculated risk
  */ 
 function txRisk1($xid, &$risk = 0, &$calc = 0) {
-  u\EXPECT([$xid], 'number|string');
   global $_risk; $_risk = '';
   global $_xid; $_xid = $xid; // for debugging
-
-  $result = db\get('t.*, r.xid AS reverser', 'r_tx_hdrs t LEFT JOIN r_tx_hdrs r ON r.reverses=t.xid', 'xid=:xid', ['xid'=>$xid]);
-  u\EXPECT(is_array($result), "transaction not found: $xid");
-  extract(exactly('flags reverser', $result, 0, null));
+  u\EXPECT(!is_array($xid), "xid is array");
+  $reverser = db\get('r.xid AS reverser', 'r_tx_hdrs t LEFT JOIN r_tx_hdrs r ON r.reversesXid=t.xid', 't.xid=:xid', ['xid'=>$xid]);
+  /* u\EXPECT(is_array($result), "transaction not found: $xid"); */
+  /* extract(u\exactly('reverser', $result, 0, null)); */
   /* $cttyPayer = ($payer < 0); */
   /* if ($neg = ($amount < 0)) list ($payer, $payee, $amount) = array($payee, $payer, -$amount); */
   /* list ($a1, $a2) = array(r\acct($payer), r\acct($payee)); */
+  if (!isset($risks)) $risks = 0;
   
   if ($risks & u\bit(K_ADMINOK)) setRisk('txAdminOk'); // administrator blessed this transaction
-  if (!isNull($reverser)) setRisk('redo');
+  if (!is_null($reverser)) setRisk('redo');
 
   $fields = <<<EOF
-    payer.uid AS payerU, payee.uid AS payeeU, payee.amount AS amount, payee.:IS_CO AS payeeIsCo,
+    payerE.uid AS payerU, payeeE.uid AS payeeU, payeeE.amount AS amount, payee.:IS_CO AS payeeIsCo,
     payer.:IS_CO AS payerIsCo, payeeE.description AS payeeFor, payerE.description AS payerFor,
-    t.:IS_OFFLINE AS offline
+    t.:IS_OFFLINE AS offline, t.goods
 EOF;
   $table = <<<EOF
     r_tx_hdrs t JOIN r_entries payerE USING(xid) JOIN r_entries payeeE USING(xid)
     JOIN users payer ON payerE.uid=payer.uid JOIN users payee ON payeeE.uid=payee.uid
 EOF;
-  $where = "xid=:xid AND payerE.id<payee.id AND payerE.amount<0 AND payeeE.amount>0
+  $where = "xid=:xid AND payerE.id<payeeE.id AND payerE.amount<0 AND payeeE.amount>0
 ";
   $rows = db\rows($fields, $table, $where, ['xid'=>$xid]);
   foreach ($rows AS $row) {
-    extract(exactly('payerU payeeU amount payeeIsCo payerIsCo payeeFor payerFor offline', $row, null));
+    extract(u\exactly('payerU payeeU amount payeeIsCo payerIsCo payeeFor payerFor offline goods', $row, null));
 
     $cttyPayer = ($payer < 0);
     $payerA = r\acct($payerU);
     $payeeA = r\acct($payeeU);
 
     if ($payerU < 0) continue; // most transfers to/from the community should be ignored
-    if ($goods != FOR_GOODS) {
+    if ($goods == FOR_USD) {
       if ($payeeIsCo) {
         setRisk(($channel == TX_POS and r\usdin($payeeFor)) ? (/*@$xfee ? 'bankIn' :*/ 'cashIn') : 'cashOut');
       } else {
@@ -132,7 +132,7 @@ EOF;
 
     $since = $created - WEEK7_SECS; // just recent activity by customers, in case many are new
     $count = db\count('r_tx_hdrs JOIN r_entries payer USING(xid) JOIN r_entries payee USING(xid)',
-                      'payer.amount < 0 AND payee.amount > 0 AND payer.id < payee.id AND payer.uid=:payer AND payee.uid=:payee AND created BETWEEN :since AND :created', compact(ray('payer payee since created')));
+                      'payer.amount < 0 AND payee.amount > 0 AND payer.id < payee.id AND payer.uid=:payer AND payee.uid=:payee AND created BETWEEN :since AND :created', ray('payer payee since created', $payerU, $payeeU, $since, $created));
     setBigToFrom('From', 'payer', $payerU, $amount, $created, $count);
     setBigToFrom('To', 'payee', $payeeU, $amount, $created, $count);
 
@@ -282,7 +282,7 @@ EOF;
 //  if (max($in, $out) > $threshold * max(1, $a->employees)) setRisk($bitName);
   if ($ago == YEAR_SECS) list ($bigYearIn, $bigYearOut) = [$in, $out];
   if ($ago == WEEK7_SECS) {
-    $firstTxDate = db\get('MIN(created)', 'r_tx_hdrs JOIN r_entries USING(xid)', 'e.uid=:uid',
+    $firstTxDate = db\get('MIN(created)', 'r_tx_hdrs JOIN r_entries e USING(xid)', 'e.uid=:uid',
                           compact('uid')) ?: $now;
     $yearLen = min(YEAR_SECS, $now - $firstTxDate);
     if ($yearLen) {
@@ -347,7 +347,7 @@ function setOriginRisk($uid, $created, $amount) {
   $table = 'r_entries JOIN r_tx_hdrs USING(xid)';
   $where = 'uid=:uid AND risk IS NOT NULL AND created BETWEEN :since AND :created';
 
-  $avgRisk = db\get('AVG(risk/ABS(amount))', "($table) t", $where, compact(ray('uid since created'))) / (K_RED / K_THRESHOLD);
+  $avgRisk = db\get('AVG(risk/ABS(amount))', "$table", $where, compact(ray('uid since created'))) / (K_RED / K_THRESHOLD);
 ///  debug(compact('uid','amount','since','table','where','avgRisk'));
   if ($avgRisk > 0) setRisk('origins', $multiplier = $avgRisk, $multiplier > 1/2);
 }

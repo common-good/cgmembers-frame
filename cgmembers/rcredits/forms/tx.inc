@@ -70,12 +70,13 @@ function formTx_validate($form, &$sta) {
 function formTx_submit($form, &$sta) {
   global $mya;
   $myid = $mya->id;
-  extract($info = just('who amount purpose repeat uid', $sta['input']));
+  extract($info = just('who amount purpose repeat uid goods', $sta['input']));
 //  if (strpos($who, '@')) return w\go('/charge/nonmember/' . u\urlify(serialize($info)));
 
+  u\setDft($goods, FOR_GOODS);
   $func = op($sta) == 'pay' ? 'pay' : 'invoice';
   $DBTX = \db_transaction();
-    list ($msg, $args) = $mya->$func(r\acct($uid), $amount, $purpose, @$repeat ? ['recurs' => 1] : []);
+  list ($msg, $args) = $mya->$func(r\acct($uid), $amount, $purpose, $goods, @$repeat ? ['recurs' => 1] : []);
     $ok = @$args['success'];
     if ($func == 'pay' and $mya->snap) r\tellAdmin(t('SNAP member %who %did something', 'who did', $mya->fullName, $ok ? t('bought') : t('tried to buy')), ['topic' => t('SNAP purchase') . ($ok ? '' : t(' failed'))]);
 

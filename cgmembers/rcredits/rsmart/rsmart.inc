@@ -83,7 +83,6 @@ function pos($args = FALSE) {
   global $scanned; $scanned = true;
   global $mya;
 
-  debug('pos($args=' . print_r($args, true));
   if (!r\up()) exit('system down'); // app does not (and should not) distinguish this from system failure
   if (is_object($args)) $args = (array) $args; // this helps with debugging when passing json_decoded args
   if (is_string($args)) $args = urlq2ray($args); // convert from query string to array
@@ -100,9 +99,7 @@ function pos($args = FALSE) {
   if (isDEV and $op == 'test') return test($args0);
   
   $mya = getAgent(@$agent ?: @$member, $agentErr);
-  debug("mya=" . print_r($mya, true));
 ///     print_r(compact(ray('mya agent member agentErr')));
-  // debug('$mya=' . print_r($mya, true));
   if (@$device) { // device was specified, substitute its record id, herein
     if (!$mya) return posErr($agentErr);
     if ($deviceId = getDevice($device, $mya->id)) {
@@ -225,8 +222,6 @@ function getTime($args) {
 function identify($args) {
   global $mya;
 
-  // debug('entering identify ' . print_r($args, true));
-  
   $companyInfo = getCompanyInfo();
   if ($err = missingArg($keys = 'device member code version', $args)) return posErr($err, [], $companyInfo);
   extract(just($keys . ' agent pin signin', $args)); // no agent on scanin
@@ -351,7 +346,6 @@ function photoReturn($pic) {
 function charge($args, $type = 'charge') {
   global $mya;
 
-  debug('charge(' . print_r($args, true) . ", $type)");
   $keys = 'agent member amount goods description created';
   if ($err = missingArg($keys, $args)) return posErr($err);
   extract(just($keys . ' proof force version', $args));
@@ -408,7 +402,7 @@ EOF;
     $did = '';
     $undo = $xid;
 
-    $revRes = db\get('xid AS `undo`, created', 'r_tx_hdrs', 'reverses=:xid', ['xid'=>$xid]);
+    $revRes = db\get('xid AS `undo`, created', 'r_tx_hdrs', 'reversesXid=:xid', ['xid'=>$xid]);
     if ($revRes) { // already got reversed
       extract(just('undo created', $revRes));
       $message = "Transaction has been reversed.";
@@ -426,16 +420,11 @@ EOF;
     $txid = 0;
     $message = "Transaction has been canceled.";
   } else { // doesn't exist and should (forcing or not)
-    debug("doesn't exist and should (forcing or not)");
     if (@$amount < 0 and $a->co and $a->proSe) return badTx($args, $name, $msg, $subs);
     if (@$amount < 0 and !$mya->co) list ($type, $amount) = ['payment', -$amount];
     $bal = $a->balance;
-    debug("before transfer, balance is $bal");
     list ($msg, $subs) = be\transfer($type, $mya, $a, @$amount, @$description, $goods, compact(ray('created force box')));
     $bal = $a->balance;
-    debug("after transfer, balance is $bal");
-    debug("after transfer msg=" . print_r($msg, true));
-    debug("after transfer subs=" . print_r($subs, true));
     if (!@$subs['success']) return badTx($args, $name, $msg, $subs);
 
     if (!@$force and $aa = $a->agentA and $mya->co and !$aa->ided) $aa->setBit(B_IDED);
@@ -452,8 +441,7 @@ EOF;
   }
 
   /* extract(balrew($a)); */
-  $balance = $a->balance;
-  debug(compact(ray('message txid created balance rewards did undo')));
+  $balance = (($a->can(B_SECRET) and $mya->co) ? '*' : '') . round($a->balance, 2);
   return ok(compact(ray('message txid created balance rewards did undo')));
 }
 

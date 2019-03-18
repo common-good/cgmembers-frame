@@ -275,8 +275,9 @@ X;
 	  SELECT u.uid,r.amount,$when AS `when`,r.created,r.period,
 		  (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced,
       (SELECT MAX(t.created) FROM r_entries payer JOIN r_tx_hdrs t USING(xid) JOIN r_entries payee USING(xid)
+             LEFT JOIN r_tx_hdrs tRev ON tRev.reversesXid=t.xid
        WHERE payer.uid=r.payer AND payee.uid=r.payee AND t.:IS_RECURS AND
-             NOT :HAS_REVERSER AND reverses IS NULL) AS lastTx
+             tRev.xid IS NULL AND t.reversesXid IS NULL) AS lastTx
 		FROM users u LEFT JOIN r_recurs r ON r.payer=u.uid AND r.payee=:CGID AND r.ended=0
 		WHERE u.:IS_OK AND (r.period='Y' OR (r.id IS NULL AND FLOOR(($when-u.activated) / :DAY_SECS) MOD 365 = 0))
 X;
@@ -431,12 +432,12 @@ function everyMonth() {
   $start = u\monthDay1($end = u\monthDay1() - 1); // mark start and end of preceding month
   if (u\test()) $start = strtotime('-30 days', $end = strtotime('today') - 1) + 1; // test: the past 30 days
   queueEach('whatsup', "SELECT uid, u.:IS_CO as co, MAX(t.created) AS lastTx FROM users u LEFT JOIN r_entries e USING(uid) JOIN r_tx_hdrs t USING(xid) WHERE uid>:CANONIC_ACCTS AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $start");
-  queueEach('inflationAdjust', "SELECT uid, $start AS start, $end AS end FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS");  
+  /* queueEach('inflationAdjust', "SELECT uid, $start AS start, $end AS end FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS");   */
 //  queueEach('shareCommitted', 'SELECT uid, committed, share FROM users WHERE :IS_OK AND committed>0');
   /* queueEach('roundup', "SELECT payer as uid, SUM(1-MOD(amount, 1)) AS donate FROM r_txs WHERE :IS_ROUNDUP AND amount>0 AND MOD(amount, 1)>0 AND created BETWEEN $start AND $end GROUP BY payer"); */
   
   $sql = <<< X
-    SELECT u.uid, SUM(t.amount)*u.crumbs AS donate
+    SELECT u.uid, SUM(payer.amount)*u.crumbs AS donate
     FROM users u LEFT JOIN r_entries payee USING(uid) JOIN r_tx_hdrs t USING(xid) JOIN r_entries payer USING(xid)
     WHERE payer.uid>0 AND u.crumbs>0 AND t.created BETWEEN $start AND $end GROUP BY payee.uid
 X;
@@ -581,18 +582,18 @@ X;
  * Also give signup bonus, if appropriate.
  */
 function recache() {
-  $fields = 'uid, minimum, floor'; // this isn't actually used
-  queueEach('recache1', "SELECT $fields FROM users WHERE :IS_OK"); // make this IS_MEMBER if early gift
-  queueNext();
+  /* $fields = 'uid, minimum, floor'; // this isn't actually used */
+  /* queueEach('recache1', "SELECT $fields FROM users WHERE :IS_OK"); // make this IS_MEMBER if early gift */
+  /* queueNext(); */
 }
 
-function recache1($item) {
-  extract($item);
-//  if (u\test() and realId($uid)) return; // ignore real accounts in tests
-  $a = r\acct($uid);
-  $a->cacheOk();
-  //$a->update(compact(array_keys($item)));
-}
+/* function recache1($item) { */
+/*   extract($item); */
+/* //  if (u\test() and realId($uid)) return; // ignore real accounts in tests */
+/*   $a = r\acct($uid); */
+/*   $a->cacheOk(); */
+/*   //$a->update(compact(array_keys($item))); */
+/* } */
 
 /**
  * Check accounts for consistency, scams, whatever.
@@ -832,6 +833,8 @@ EOF;
 
 function txRisk1($xid) {
   include_once __DIR__ . '/../cg-risk.inc';
+  if (is_array($xid)) $xid = $xid['xid'];
+  u\EXPECT(!is_array($xid), "xid is array");
   k\txRisk1($xid);
 }
 
@@ -859,12 +862,12 @@ function recurs() {
 		FROM r_recurs r	
     INNER JOIN users u1 ON u1.uid=r.payer INNER JOIN users u2 ON u2.uid=r.payee
     LEFT JOIN (
-      SELECT t0.xid, t0.created, payer.uid AS payer, payee.uid AS payee, t0.flags
+      SELECT t0.xid, t0.created, payerE.uid AS payer, payeeE.uid AS payee, t0.flags, reversesXid
       FROM r_tx_hdrs t0 JOIN r_entries payerE USING(xid) JOIN r_entries payeeE USING(xid)
       WHERE payerE.id < payeeE.id AND payerE.amount < 0 AND payeeE.amount > 0
       ORDER BY t0.created
-    ) t ON t.payer=r.payer AND t.payee=r.payee AND t.:IS_RECURS AND NOT t.:IS_UNDONE AND NOT t.:IS_UNDOES AND t.created>=r.created-:HOUR_SECS
-		WHERE u1.:IS_OK AND u2.:IS_OK AND r.ended=0
+    ) t ON t.payer=r.payer AND t.payee=r.payee AND t.:IS_RECURS AND t.reversesXid IS NULL AND t.created>=r.created-:HOUR_SECS JOIN r_tx_hdrs tRev ON tRev.reversesXid=t.xid
+		WHERE u1.:IS_OK AND u2.:IS_OK AND r.ended=0 AND tRev.xid IS NULL
     GROUP BY r.id
 X;
 
@@ -997,7 +1000,8 @@ function invoice($item) {
     $short = round($a->advances() + $amount - $a->avail(), 2); //	consider credit already used for advances from the bank
 
     if ($short <= 0) { // pay the invoice if we have enough funds
-      if (!$ok = be\payInvoice($nvid, $msg)) r\tellAdmin(t('invoice payment failed in cron'), compact('msg') + $item);
+      list($ok, $msg) = be\payInvoice($nvid);
+      if (!$ok) r\tellAdmin(t('invoice payment failed in cron'), compact('msg') + $item);
     } else $ok = FALSE;
 		
 		if ((!$ok or $a->balance < 0) and !$funding) {

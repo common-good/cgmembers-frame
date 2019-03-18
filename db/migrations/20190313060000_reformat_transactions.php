@@ -333,8 +333,8 @@ class ReformatTransactions extends AbstractMigration
 
       //
       if ($xid != 0) {
-        $hdrInfo = just('xid channel boxId risk risks created', $oldTx) +
-          ray('type actorId actorAgentId flags channel boxId reversesXid',
+        $hdrInfo = just('xid channel box risk risks created', $oldTx) +
+          ray('type actorId actorAgentId flags channel box reversesXid',
               $newType, $actorId, $actorAgentId, $flags, $channel, $oldTx['box'], null);
         $txHdrsTable->insert($hdrInfo)->save();
         $entriesTable->insert($payerEntry)->insert($payeeEntry)->save();
@@ -389,7 +389,7 @@ class ReformatTransactions extends AbstractMigration
       if (is_null($channel)) $channel = TX_SYS;
       if (is_null($risks)) $risks = 0;
       
-      $hdr = ray('xid type actorId actorAgentId flags channel boxId risk risks reversesXid created',
+      $hdr = ray('xid type actorId actorAgentId flags channel box risk risks reversesXid created',
                  $nextXid, TX__USD, $payee, $payee, 0, $channel, null, $risk, $risks, null, $completed);
 
       $bankUid = $amount >= 0 ? CG_INCOMING_BANK_UID : CG_OUTGOING_BANK_UID;
@@ -441,7 +441,7 @@ class ReformatTransactions extends AbstractMigration
 
       $actorAgentId = $actorId;
 
-      $hdr = ray('xid type actorId actorAgentId flags channel boxId risk risks reversesXid created',
+      $hdr = ray('xid type actorId actorAgentId flags channel box risk risks reversesXid created',
                  $nextXid, TX_USD, $actorId, $actorAgentId, 0, TX_SYS, null, null, 0, null, $completed);
       $e1 = ray('xid entryType amount uid agentUid description acctTid relType relatedId',
                 $nextXid, ENTRY_PAYER, -$amount, CG_INCOMING_BANK_UID, CG_INCOMING_BANK_UID, $memo, $bankTxId, null, null);

@@ -32,10 +32,10 @@ Setup:
   | .ZZC | .ZZD  |   3 | read       |
   | .ZZF | .ZZE  |   1 | sell       |
   And transactions: 
-  | xid | created   | type     | amount | from | to   | purpose |*
-  | 4   | %today-5m | transfer |    100 | .ZZC | .ZZB | cash    |
-  | 5   | %today-5m | transfer |    200 | .ZZA | .ZZC | cash    |
-  | 6   | %today-4m | grant    |    250 | ctty | .ZZF | stuff   |
+  | xid | created   | amount | from | to   | purpose |*
+  | 4   | %today-5m |    100 | .ZZC | .ZZB | cash    |
+  | 5   | %today-5m |    200 | .ZZA | .ZZC | cash    |
+  | 6   | %today-4m |    250 | ctty | .ZZF | stuff   |
   And balances:
   | uid  | balance |*
   | ctty |    -250 |

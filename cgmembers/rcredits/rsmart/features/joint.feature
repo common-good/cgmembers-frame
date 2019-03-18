@@ -30,8 +30,8 @@ Setup:
   | .ZZA | .ZZB  | joint      |       |
   | .ZZB | .ZZA  | joint      |       |
   And transactions: 
-  | xid | created   | type   | amount | from | to   | purpose |*
-  | 4   | %today-6m | grant  |    200 | ctty | .ZZF | stuff   |
+  | xid | created   | amount | from | to   | purpose |*
+  | 4   | %today-6m |    200 | ctty | .ZZF | stuff   |
   Then balances:
   | uid  | balance |*
   | .ZZA |       0 |

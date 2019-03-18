@@ -111,7 +111,7 @@ function insert($table, $info, $key = 'id') {
   $sql = '';
   foreach ($info as $field => $v) {
     /* if ($field == $key) u\EXPECT(FALSE, 'key value specified in database insert'); // may actually be needed */
-    if (is_array($v)) u\EXPECT(FALSE, 'array in insert param'); // exception fails if called in $DBTX
+    if (is_array($v)) u\EXPECT(FALSE, "array in insert param for field $field"); // exception fails if called in $DBTX
     $sql .= ",`$field`=:$field";
   }
   $sql = "INSERT INTO $table SET " . substr($sql, 1);  // get rid of leading comma

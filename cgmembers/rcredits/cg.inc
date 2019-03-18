@@ -32,7 +32,7 @@ require_once __DIR__ . '/qo.class';
  * @return record ID of the inserted record
  */
 function regionalInsert($table, $idField, $record, $region = NULL) {
-  if (array_key_exists($idField, $record)) {return db\insert($table, $record, $idField);} // predestined id (probably for testing)
+  if (!empty(u\arrayGet($record, $idField, null))) {return db\insert($table, $record, $idField);} // predestined id (probably for testing)
   if (!@$region) $region = -r\serverUid();
   $end = $region + ($region < 0 ? -(R_REGION_MAX - 1) : (R_REGION_MAX - 1));
   $start = $region < 0 ? $region - 1 : $region; // -1: do not use the uid of the region itself
@@ -88,6 +88,7 @@ function insert($table, $idField, $record) {
  */
 function badUnpaidInv($nvid, &$inv = '') {
   $fields = 'nvid,status,amount,payer,payee,goods,purpose,flags,data,created';
+  if (is_array($nvid)) $nvid = $nvid['nvid'];
   if (!$inv = db\get($fields, 'r_invoices', 'nvid=:nvid', compact('nvid'))) return 'no matching invoice';
   if ($inv['status'] >= TX_PAID) return 'already paid';
 }
@@ -369,13 +370,14 @@ function message($uid, $index, $subs = [], $topic = '') {
  * @param bool $force: send by email NOW
  */
 function notify($uid, $index, $subs = [], $force = FALSE) {
+  /* debug("notify($uid, '$index', " . print_r($subs, true) . ", $force)"); */
   global $channel;
   if (isGAME) return;
   $a = r\acct($uid);
   u\EXPECT($a, 'no account');
   $subs['uid'] = $uid;
   $subs['qid'] = $a->qid;
-  $subs['otherName'] = @$subs['myName']; // notifying someone else about US, if anyone
+  $subs['otherName'] = u\arrayGet($subs, 'myName', null); // notifying someone else about US, if anyone
   $fullName = $a->fullName;
   $warnIndexes = ray('new invoice,new offer,charge disputed');
   
@@ -1111,6 +1113,7 @@ function getStats($ctty, $created = NULL) {
     $ctty ? [$thisCtty, 'payerE.uid=:ctty', 'payeeE.uid=:ctty', "(u.$thisCtty OR u2.$thisCtty)"]
           : ['community<>0', 'payerE.uid<1', 'payeeE.uid<1', '1'];
   $creCrit = 'created<=:created';
+  $tCreCrit = 't.created<=:created';
   $nonCtty = 'uid>:CANONIC_ACCTS';
   $accounts = "(SELECT uid,jid,community,flags FROM users WHERE $nonCtty)";
   $isMaster = '(jid=0 OR uid<jid)';
@@ -1144,53 +1147,53 @@ X;
   // get bank transfer data
   $in = 'amount>0 AND xid<=0';
   
-  $sql = <<< X
-    SELECT
-    SUM(IF($in, amount, 0)) AS usdInPending,
-    SUM(IF($in, 0, amount)) AS usdOutPending,
-    SUM(IF($in, 1, 0)) AS usdInPendingCount,
-    SUM(IF($in, 0, 1)) AS usdOutPendingCount
-    FROM r_usd t LEFT JOIN $accounts u ON u.uid=t.payee
-    WHERE $cttyCrit AND t.completed AND t.completed<=:created AND t.amount<>0
-X;
-  $res += db\q($sql, $subs)->fetchAssoc() ?: [];
+/*   $sql = <<< X */
+/*     SELECT */
+/*     SUM(IF($in, amount, 0)) AS usdInPending, */
+/*     SUM(IF($in, 0, amount)) AS usdOutPending, */
+/*     SUM(IF($in, 1, 0)) AS usdInPendingCount, */
+/*     SUM(IF($in, 0, 1)) AS usdOutPendingCount */
+/*     FROM r_usd t LEFT JOIN $accounts u ON u.uid=t.payee */
+/*     WHERE $cttyCrit AND t.completed AND t.completed<=:created AND t.amount<>0 */
+/* X; */
+/*   $res += db\q($sql, $subs)->fetchAssoc() ?: []; */
 
   $thisIn = "bankE.amount < 0";  // if bank's amount is negative, ours is positive
   $sql = <<< X
     SELECT
-    SUM(IF($thisIn, -amount, 0)) AS usdIn,
-    SUM(IF($thisIn, 0, amount)) AS usdOut,
+    SUM(IF($thisIn, -bankE.amount, 0)) AS usdIn,
+    SUM(IF($thisIn, 0, bankE.amount)) AS usdOut,
     SUM(IF($thisIn, 1, 0)) AS usdInCount,
     SUM(IF($thisIn, 0, 1)) AS usdOutCount
-    FROM r_entries e1 JOIN r_tx_hdrs t USING(xid) JOIN bankE USING(xid) LEFT JOIN $accounts u ON u.uid=e1.uid
-    WHERE $cttyCrit AND t.completed AND t.completed<=:created AND t.amount<>0
-          AND bankE.uid IN (CG_INCOMING_BANK_UID, CG_OUTGOING_BANK_UID)
+    FROM r_entries e1 JOIN r_tx_hdrs t USING(xid) JOIN r_entries bankE USING(xid) LEFT JOIN $accounts u ON u.uid=e1.uid
+    WHERE $cttyCrit AND t.created<=:created
+    AND bankE.uid IN (:bankUids)
 X;
-  $res += db\q($sql, $subs)->fetchAssoc() ?: [];
+  $res += db\q($sql, $subs + ['bankUids'=>[CG_INCOMING_BANK_UID, CG_OUTGOING_BANK_UID]])->fetchAssoc() ?: [];
 
   // get transaction table data
   $sql = '';
   list ($cgIn, $cgOut) = $ctty == 0 // make cgIn and cgOut selectors
-    ? ['SUM(IF(u.community=u2.community, amount, 0))',             //!! I think this is wrong
-       'SUM(IF(u.community=u2.community, 0, amount))']
-    : ["SUM(IF(NOT u.$thisCtty AND u2.$thisCtty, amount, 0))\n",
-       "SUM(IF(u.$thisCtty AND NOT (u2.$thisCtty), -amount, 0))\n"];
+    ? ['SUM(IF(u.community=u2.community, payeeE.amount, 0))',             //!! I think this is wrong
+       'SUM(IF(u.community=u2.community, 0, payeeE.amount))']
+    : ["SUM(IF(NOT u.$thisCtty AND u2.$thisCtty, payeeE.amount, 0))\n",
+       "SUM(IF(u.$thisCtty AND NOT (u2.$thisCtty), -payeeE.amount, 0))\n"];
   foreach (ray('cgIn cgOut') as $k) $sql .= "${$k} AS $k,\n";
   
   foreach (ray('p2b:01,b2b:11,b2p:10,p2p:00') as $k => $v) { // make x2x selectors
     foreach ([0, 1] as $i) ${'not' . $i} = $v[$i] ? '' : 'NOT';
-    $sql .= "SUM(IF(goods<>:FOR_USD AND $not0 u.:IS_CO AND $not1 u2.:IS_CO, amount, 0)) AS $k,\n";
+    $sql .= "SUM(IF(goods<>:FOR_USD AND $not0 u.:IS_CO AND $not1 u2.:IS_CO, payeeE.amount, 0)) AS $k,\n";
   }
-  $sql .= "SUM(IF(payer>1 AND goods=:FOR_USD, ABS(amount), 0)) AS cashs,\n";
-  $sql .= strtr($sql, ['-amount' => '1', 'amount' => '1', ",\n" => "Count,\n"]); // add counts
+  $sql .= "SUM(IF(payerE.uid>1 AND goods=:FOR_USD, payeeE.amount, 0)) AS cashs,\n";
+  $sql .= strtr($sql, ['payeeE.amount' => '1', 'payerE.amount' => '1', ",\n" => "Count,\n"]); // add counts
   $sql = str_replace(",\n!", '', $sql . '!'); // remove final comma in field list
   
   $sql = <<< X
     SELECT $sql
     FROM r_tx_hdrs t JOIN r_entries payerE USING (xid) JOIN r_entries payeeE USING(xid)
-    LEFT JOIN $accounts u ON u.uid=payer.uid 
-    LEFT JOIN $accounts u2 ON u2.uid=payee.uid
-    WHERE payerE.amount < 0 AND payeeE.amount > 0 $cttysCrit AND $creCrit
+    LEFT JOIN $accounts u ON u.uid=payerE.uid 
+    LEFT JOIN $accounts u2 ON u2.uid=payeeE.uid
+    WHERE payerE.amount < 0 AND payeeE.amount > 0 AND $cttysCrit AND $creCrit
 X;
   $res += db\q($sql, $subs)->fetchAssoc() ?: [];
   
@@ -1199,8 +1202,8 @@ X;
 
   $sql = <<< X
     SELECT COUNT(DISTINCT payerE.uid) as aAccts
-    FROM r_entries payerE JOIN $accounts u ON u.uid=payerE.uid
-    WHERE payerE.amount < 0 NOT u.:IS_CO AND $cttyCrit AND $creCrit AND created>$recent
+    FROM r_entries payerE JOIN $accounts u ON u.uid=payerE.uid JOIN r_tx_hdrs t
+    WHERE payerE.amount < 0 AND NOT u.:IS_CO AND $cttyCrit AND $creCrit AND t.created>$recent
 X;
   $res += db\q($sql, $subs)->fetchAssoc() ?: [];
 
@@ -1237,7 +1240,7 @@ X;
        SUM(IF(amount > 0, amount, 0)) AS amtsIn,
        SUM(IF(amount < 0, -amount, 0)) AS amtsOut
        FROM users u JOIN r_entries e USING(uid) JOIN r_tx_hdrs t USING(xid)
-       WHERE $isMaster and $cttyCrit AND $creCrit)
+       WHERE $isMaster and $cttyCrit AND $tCreCrit)
 X;
 
     // get OLD balsPos, balsNeg, floors

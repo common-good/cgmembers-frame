@@ -31,10 +31,10 @@ Scenario: A member redeems a gift coupon
   |      1 |   .ZZC |     10 |       0 |      1 |     0 | %today | %today+7d |
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $100 for "goods": "food" at %today
   Then transaction headers:
-  | xid | type | goods | actor | actorAgent | flags  | channel | box  | risks | reverses | created |*
-  | 1   | 0    | 0     | .ZZC      | .ZZA           | 0      | 3       | devC |     0 |          | %today  |
+  | xid | goods | actorId | actorAgentId | flags  | channel | box  | risks | reversesXid | created |*
+  | 1   | 0     | .ZZC  | .ZZA       | 0      | 3       | devC   |     0 |          | %today  |
   And transaction entries: 
-  | xid | amount |  uid | agentUid | acctTid | description             | relType | related |*
+  | xid | amount |  uid | agentUid | acctTid | description             | relType | relatedId |*
   | 1   |    100 | .ZZC | .ZZA     | 1       | food                    |         |         |
   | 1   |   -100 | .ZZB | .ZZB     | 1       | food                    |         |         |
   | 1   |     10 | .ZZB | .ZZB     | 1       | discount rebate (on #1) | D       | 1       |
@@ -47,10 +47,10 @@ Scenario: A member redeems a gift coupon
   | member | code | amount | goods | description | created |*
   | .ZZB   | ccB  | 100.00 |     1 | food        | %today  |
   Then transaction headers:
-  | xid | type | goods | actor | actorAgent | flags  | channel | box  | risks | reverses | created |*
-  | 2   | 0    | 0     | .ZZC      | .ZZA           | 0      | 3       | devC |     0 | 1        | %today  |
+  | xid | goods | actorId | actorAgentId | flags  | channel | box | risks | reversesXid | created |*
+  | 2   | 0     | .ZZC  | .ZZA       | 0      | 3       | devC  |     0 | 1        | %today  |
   And transaction entries: 
-  | xid | amount |  uid | agentUid | acctTid | description                           | relType | related |*
+  | xid | amount |  uid | agentUid | acctTid | description                           | relType | relatedId |*
   | 2   |   -100 | .ZZC | .ZZA     | 2       | food (reverses #1)                    |         |         |
   | 2   |    100 | .ZZB | .ZZB     | 2       | food (reverses #1)                    |         |         |
   | 2   |    -10 | .ZZB | .ZZB     | 2       | discount rebate (on #1) (reverses #1) | D       | 1       |
@@ -61,10 +61,10 @@ Scenario: A member redeems a gift coupon
 
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $50 for "goods": "sundries" at %today
   Then transaction headers:
-  | xid | type | goods | actor | actorAgent | flags  | channel | box  | risks | reverses | created |*
-  | 3   | 0    | 0     | .ZZC      | .ZZA           | 0      | 3       | devC |     0 |          | %today  |
+  | xid | goods | actorId | actorAgentId | flags  | channel | box | risks | reversesXid | created |*
+  | 3   | 0     | .ZZC  | .ZZA       | 0      | 3       | devC  |     0 |          | %today  |
   And transaction entries: 
-  | xid | amount |  uid | agentUid | acctTid | description             | relType | related |*
+  | xid | amount |  uid | agentUid | acctTid | description             | relType | relatedId |*
   | 3   |     50 | .ZZC | .ZZA     | 3       | sundries                |         |         |
   | 3   |    -50 | .ZZB | .ZZB     | 3       | sundries                |         |         |
   | 3   |    -10 | .ZZC | .ZZA     | 3       | discount rebate (on #3) | D       | 1       |
@@ -75,10 +75,10 @@ Scenario: A member redeems a gift coupon
 
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $60 for "goods": "stuff" at %today
   Then transaction headers:
-  | xid | type | goods | actor | actorAgent | flags  | channel | box  | risks | reverses | created |*
-  | 4   | 0    | 0     | .ZZC      | .ZZA           | 0      | 3       | devC |     0 |          | %today  |
+  | xid | goods | actorId | actorAgentId | flags  | channel | box  | risks | reversesXid | created |*
+  | 4   | 0     | .ZZC  | .ZZA       | 0      | 3       | devC   |     0 |          | %today  |
   And transaction entries: 
-  | xid | amount |  uid | agentUid | acctTid | description             | relType | related |*
+  | xid | amount |  uid | agentUid | acctTid | description             | relType | relatedId |*
   | 4   |     60 | .ZZC | .ZZA     | 4       | stuff                   |         |         |
   | 4   |    -60 | .ZZB | .ZZB     | 4       | stuff                   |         |         |
   And coupated:

@@ -31,8 +31,10 @@ Setup:
   | .ZZE |     500 |
  When cron runs "invoices"
   Then transactions: 
-  | xid | created | type     | amount | from | to   | purpose             | taking |*
-  |   1 | %today  | transfer |    100 | .ZZA | .ZZC | one (%PROJECT inv#1) | 0      |
+  | xid | created | amount | from | to   | purpose              | taking |*
+  |   1 | %today  |    100 | .ZZA | .ZZC | one (%PROJECT inv#1) | 0      |
+  # | xid | created | type     | amount | from | to   | purpose             | taking |*
+  # |   1 | %today  | transfer |    100 | .ZZA | .ZZC | one (%PROJECT inv#1) | 0      |
 	Then count "txs" is 1
 	And count "usd" is 2
 	And count "invoices" is 4

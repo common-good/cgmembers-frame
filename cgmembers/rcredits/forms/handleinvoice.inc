@@ -94,7 +94,7 @@ function formHandleInvoice_submit($form, &$sta) {
   if ($op == 'pay' and !@$whyNot) {
     $short = round($amount - $fromA->avail(), 2);
     if ($fromA->ok and $short <= 0) {
-      $ok = be\payInvoice($nvid, $msg);
+      list($ok, $msg) = be\payInvoice($nvid);
     } else {
       db\update('r_invoices', ray('nvid status', $nvid, TX_APPROVED), 'nvid');
       if ($fromA->ok) {

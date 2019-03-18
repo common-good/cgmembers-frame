@@ -59,7 +59,7 @@ function setupBasicAccounts() {
     new r\Acct($info);
   }  
 
-  new r\Acct(array_combine($keys, array(CG_ROUNDUPS_UID, 0, t('roundup'), t('Roundup Donations'), 'cg@commongood.earth', '', 0, 0, 0))); 
+  $x1=new r\Acct(array_combine($keys, array(CG_ROUNDUPS_UID, 0, t('roundup'), t('Roundup Donations'), 'cg@commongood.earth', '', 0, 0, 0)));
   new r\Acct(array_combine($keys, array(CG_CRUMBS_UID, 0, t('crumbs'), t('Crumb Donations'), 'cg@commongood.earth', '', 0, 0, 0))); 
   new r\Acct(array_combine($keys, array(CG_INCOMING_BANK_UID, 0, t('bank-in'), t('Incoming bank'), 'cg@commongood.earth', '', 0, 0, 0))); 
   new r\Acct(array_combine($keys, array(CG_OUTGOING_BANK_UID, 0, t('bank-out'), t('Outgoing bank'), 'cg@commongood.earth', '', 0, 0, 0)));
@@ -783,7 +783,7 @@ function callDetails($type = '', $when = '') {
   $table = "r_entries payer join r_tx_hdrs t using(xid) join r_entries payee using(xid)";
   $subs = ray('id', $mya->id);
   $gifts = $mya->giftsDesc() 
-    ?: (db\sum('amount', $table, 'payer.uid=:id AND payer.amount < 0 AND payee.uid=:CGID AND payee.amount > 0 AND :IS_GIFT', $subs)
+    ?: (db\sum('payee.amount', $table, 'payer.uid=:id AND payer.amount < 0 AND payee.uid=:CGID AND payee.amount > 0 AND :IS_GIFT', $subs)
 	?: db\get('amount', 'r_recurs', 'payer=:id AND payee=:CGID AND ended=0', $subs)); // a promised gift counts here, if none yet
   
   /*        $help = $gifts ? 'thanks' : 'ask';

@@ -30,8 +30,8 @@ class CreateTableREntries extends AbstractMigration
 
     $entryTable->create();
 
-    $this->execute('CREATE VIEW r_entries AS SELECT id, xid, entryType, amount, uid, agentUid, description, acctTid, relType, related FROM all_entries WHERE deleted IS NULL');
-    $this->execute('CREATE VIEW x_entries AS SELECT id, xid, entryType, amount, uid, agentUid, description, acctTid, relType, related, deleted FROM all_entries WHERE deleted IS NOT NULL');
+    $this->execute('CREATE VIEW r_entries AS SELECT id, xid, entryType, amount, uid, agentUid, description, acctTid, relType, relatedId FROM all_entries WHERE deleted IS NULL');
+    $this->execute('CREATE VIEW x_entries AS SELECT id, xid, entryType, amount, uid, agentUid, description, acctTid, relType, relatedId, deleted FROM all_entries WHERE deleted IS NOT NULL');
   }
 
   private function addTinyInt($table, $name, $options = []) {

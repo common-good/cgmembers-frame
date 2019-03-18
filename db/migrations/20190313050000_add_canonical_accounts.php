@@ -19,6 +19,6 @@ class AddCanonicalAccounts extends AbstractMigration
 
   public function down() {
     $keys = 'uid community name fullName email zip country minimum flags';
-    $this->execute("DELETE FROM users where uid IN (CG_ROUNDUPS_UID, CG_CRUMBS_UID, CG_SERVICE_CHARGES_UID, CG_INCOMING_BANK_UID, CG_OUTGOING_BANK_UID)");
+    $this->execute("DELETE FROM users where uid IN (" . CG_ROUNDUPS_UID . ", " . CG_CRUMBS_UID . ", " . CG_SERVICE_CHARGES_UID . ", " . CG_INCOMING_BANK_UID . ", " . CG_OUTGOING_BANK_UID . ")");
   }
 }

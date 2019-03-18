@@ -21,7 +21,7 @@ function formInvoices($form, &$sta, $toFrom, $args = '') {
   $choices = array(t('open'), t('paid'), t('denied'));
   extract(just('dateRange url starting ending states', dateRange($args, "history/invoices-$toFrom", $choices, '0,1,2')));
 /*
-  if (@$do == 'ok') {$ok = be\payInvoice($nvid, $msg); say($msg, $ok ? '' : 'ERR');}
+  if (@$do == 'ok') {list($ok, $msg) = be\payInvoice($nvid); say($msg, $ok ? '' : 'ERR');}
   if (@$do == 'no') return w\go("handle-invoice/nvid=$nvid&toMe=$toMe&ret=" . u\urlify($url));
 */
   

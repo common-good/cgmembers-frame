@@ -95,57 +95,6 @@ function members($list) {return t\members($list);}
 function balances($list) {return t\balances($list);}
 
 /**
- * cron runs (ARG)
- *
- * in: MAKE bank AMemberIsBarelyBelowTarget
- *     MAKE bank AMemberHasANegativeBalance
- *     MAKE bank AnUnbankedMemberBarelyBelowTargetDrawsOnAnotherAccount
- *     MAKE bank AnUnbankedMemberBarelyBelowTargetCannotDrawOnAnotherAccount
- *     MAKE bank AMemberIsAtTarget
- *     MAKE bank AMemberIsWellBelowTarget
- *     MAKE bank AMemberIsUnderTargetButAlreadyRequestedBarelyEnoughFundsFromTheBank
- *     MAKE bank AMemberIsUnderTargetAndHasRequestedInsufficientFundsFromTheBank
- *     MAKE bank AMemberMemberWithZeroTargetHasBalanceBelowTarget
- *     MAKE bank AnUnbankedMemberWithZeroTargetHasBalanceBelowTarget
- *     MAKE bank AMemberHasADepositedButNotCompletedTransfer
- *     MAKE bank AnAccountHasATargetButNoRefills
- *     MAKE bank ANonmemberHasATargetAndRefills
- *     MAKE bank MembersBankAccountHasNotBeenVerified
- *     MAKE bank AMembersBankAccountGetsVerified
- *     MAKE communitybits CommunityBansSpendingBelowZero
- *     MAKE gifts ABrandNewRecurringDonationCanBeCompleted
- *     MAKE gifts ASecondRecurringDonationCanBeCompleted
- *     MAKE gifts ADonationInvoiceCanBeCompleted
- *     MAKE gifts ARecurringDonationCannotBeCompleted
- *     MAKE gifts ANonmemberChoosesADonation
- *     MAKE gifts ItsTimeToWarnAboutAnUpcomingAnnualDonation
- *     MAKE invoices UnpaidInvoicesGetHandled
- *     MAKE invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
- *     MAKE joint AJointAccountNeedsRefilling
- *     MAKE joint AJointAccountDoesNotNeedRefilling
- *     MAKE monthly InflationAdjustmentsRoundUpDonationsAndCrumbDonationsAreMade
- *     MAKE notices AMemberGetsSomeNotices
- *     MAKE notices AMemberGetsSomeWeeklyNotices
- *     MAKE recache BalancesGetOutOfWhack
- *     MAKE recache BalancesGetATinyBitOutOfWhack
- *     MAKE recurs ARecurringDonationHappenedYesterday
- *     MAKE recurs ARecurringDonationHappenedLongEnoughAgoToRepeat
- *     MAKE risk Setup
- *     MAKE risk WeCalculateRisks
- *     MAKE tickle ANewbieHasNotTakenTheFirstStep
- *     MAKE tickle ANewbieHasTakenSomeStepsButNotAll
- *     MAKE tickle ANonmemberHasNotAcceptedTheInvitation
- *     MAKE tickle ANonmemberHasNotAcceptedTheInvitationFromANotyetactiveMember
- *     MAKE tickle ANonmemberHasAcceptedTheInvitation
- *     MAKE tickle ANonmemberHasAcceptedAnInvitationFromSomeoneElseInstead
- *     MAKE trust WeCalculateTrust
- *     MAKE weekly AMemberCrawlsOutOfDebt
- *     MAKE weekly AMemberBuildsUpSavings
- *     MAKE weekly AMemberCashesOutAutomatically
- */
-function cronRuns($op) {return t\cronRuns($op);}
-
-/**
  * usd transfers: (ARG)
  *
  * in: TEST bank AMemberIsBarelyBelowTarget
@@ -459,7 +408,7 @@ function communityEmailForMemberIs($id, $email) {
 /**
  * member (ARG) cache is ok
  *
- * in: TEST monthly InflationAdjustmentsRoundUpDonationsAndCrumbDonationsAreMade
+ * in: 
  */
 function memberCacheIsOk($id) {return r\acct(t\uid($id))->cacheOk();}
 
@@ -589,3 +538,54 @@ function riskThresholdPercentIs($pct) {
   $testThresholdPct = $pct;
   return TRUE;
 }
+
+/**
+ * cron runs (ARG)
+ *
+ * in: MAKE bank AMemberIsBarelyBelowTarget
+ *     MAKE bank AMemberHasANegativeBalance
+ *     MAKE bank AnUnbankedMemberBarelyBelowTargetDrawsOnAnotherAccount
+ *     MAKE bank AnUnbankedMemberBarelyBelowTargetCannotDrawOnAnotherAccount
+ *     MAKE bank AMemberIsAtTarget
+ *     MAKE bank AMemberIsWellBelowTarget
+ *     MAKE bank AMemberIsUnderTargetButAlreadyRequestedBarelyEnoughFundsFromTheBank
+ *     MAKE bank AMemberIsUnderTargetAndHasRequestedInsufficientFundsFromTheBank
+ *     MAKE bank AMemberMemberWithZeroTargetHasBalanceBelowTarget
+ *     MAKE bank AnUnbankedMemberWithZeroTargetHasBalanceBelowTarget
+ *     MAKE bank AMemberHasADepositedButNotCompletedTransfer
+ *     MAKE bank AnAccountHasATargetButNoRefills
+ *     MAKE bank ANonmemberHasATargetAndRefills
+ *     MAKE bank MembersBankAccountHasNotBeenVerified
+ *     MAKE bank AMembersBankAccountGetsVerified
+ *     MAKE communitybits CommunityBansSpendingBelowZero
+ *     MAKE gifts ABrandNewRecurringDonationCanBeCompleted
+ *     MAKE gifts ASecondRecurringDonationCanBeCompleted
+ *     MAKE gifts ADonationInvoiceCanBeCompleted
+ *     MAKE gifts ARecurringDonationCannotBeCompleted
+ *     MAKE gifts ANonmemberChoosesADonation
+ *     MAKE gifts ItsTimeToWarnAboutAnUpcomingAnnualDonation
+ *     MAKE invoices UnpaidInvoicesGetHandled
+ *     MAKE invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
+ *     MAKE joint AJointAccountNeedsRefilling
+ *     MAKE joint AJointAccountDoesNotNeedRefilling
+ *     MAKE monthly InflationAdjustmentsRoundUpDonationsAndCrumbDonationsAreMade
+ *     MAKE notices AMemberGetsSomeNotices
+ *     MAKE notices AMemberGetsSomeWeeklyNotices
+ *     MAKE recache BalancesGetOutOfWhack
+ *     MAKE recache BalancesGetATinyBitOutOfWhack
+ *     MAKE recurs ARecurringDonationHappenedYesterday
+ *     MAKE recurs ARecurringDonationHappenedLongEnoughAgoToRepeat
+ *     MAKE risk Setup
+ *     MAKE risk WeCalculateRisks
+ *     MAKE tickle ANewbieHasNotTakenTheFirstStep
+ *     MAKE tickle ANewbieHasTakenSomeStepsButNotAll
+ *     MAKE tickle ANonmemberHasNotAcceptedTheInvitation
+ *     MAKE tickle ANonmemberHasNotAcceptedTheInvitationFromANotyetactiveMember
+ *     MAKE tickle ANonmemberHasAcceptedTheInvitation
+ *     MAKE tickle ANonmemberHasAcceptedAnInvitationFromSomeoneElseInstead
+ *     MAKE trust WeCalculateTrust
+ *     MAKE weekly AMemberCrawlsOutOfDebt
+ *     MAKE weekly AMemberBuildsUpSavings
+ *     MAKE weekly AMemberCashesOutAutomatically
+ */
+function cronRuns($op) {return t\cronRuns($op);}

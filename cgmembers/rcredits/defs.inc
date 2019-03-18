@@ -249,10 +249,10 @@ define('N_CHANGED', 8); // transaction/invoice edited, canceled, or disputed
 define('N_NUDGE', 9); // your invitee needs a nudge
 define('N_SUGGESTION', 10); // suggestion from the system
 
-define('R_WHYS', t('goods and services,exchange of US Dollars or other currency,loan/reimbursement/etc.,') . R_SHARING_MSG); // transaction purposes
-define('OLD_FOR_GOODS', 0); // index into R_WHYS for goods
-define('OLD_FOR_USD', 1); // index into R_WHYS for USD exchange
-define('OLD_FOR_NONGOODS', 2); // index into R_WHYS for loan, etc.
+define('R_WHYS', t('goods and services,exchange of US Dollars or other currency,loan/reimbursement/etc.')); // . R_SHARING_MSG); // transaction purposes
+define('FOR_GOODS', 0); // index into R_WHYS for goods
+define('FOR_USD', 1); // index into R_WHYS for USD exchange
+define('FOR_NONGOODS', 2); // index into R_WHYS for loan, etc.
 //define('FOR_SHARE', 3); // "sharing" gift to CGF (comes out of rewards)
 //define('FOR_INVESTMENT', 4); // only in invoices (use B_INVESTMENT in txs)
 //define('FOR_STAKE', 5); // only in invoices (use B_STAKE in txs)
@@ -470,7 +470,7 @@ define('FLOW_BOTH', 3);
 
 // Transaction flags (for flags field in transaction records)
 define('B_TAKING', 0); // payee initiated the transaction
-define('OLD_B_DISPUTED', 1); // non-originator disputes the transaction -- signaled by existence of r_disputes
+define('B_DISPUTED', 1); // non-originator disputes the transaction -- signaled by existence of r_disputes (NOT LEGAL FOR TRANSACTIONS, BUT STILL USED BY INVOICES
 define('B_OFFLINE', 2); // transaction was taken offline (or was forced?)
 define('B_SHORT', 3); // transaction was taken (offline) despite credit shortfall
 define('OLD_B_UNDONE', 4); // undone by another transaction -- signaled by existence of reversing transaction
@@ -511,25 +511,22 @@ define('TX_CHANNELS', 'Sys SMS Web App Tone Cron Link Ajax Foreign'); // can't t
 // Transaction types (all but type TX_TRANSFER and TX_BANK create credit) -- negative types generally not shown
 define('OLD_TX_BONUS', -2); // UNUSED sales bonus (negative reward types are invisible on transaction history)
 define('OLD_TX_REBATE', -1); // UNUSED sales rebate
-define('OLD_TX_TRANSFER', 0); // normal fund transfer (usually for actual goods and services) -- not creating rC
 define('OLD_TX_SIGNUP', 1); // signup incentive reward
 define('OLD_TX_GIVEBACK', 2); // gift to the community (UNUSED)
 define('OLD_TX_INFLATION', 3); // reward to conpensate for inflation
 define('OLD_TX_HELPER', 4); // reward for inviting and assisting with account opening
 define('OLD_TX_REWARDS', '-2,-1,1,2,3,4'); // only these count as rewards
 
-define('TX_CHARGE', 1);
-define('TX_PAYMENT', 2);
-define('TX_USD', 3); // dollars transferred into or out of Common Good
-define('TX_DRAW', 4); // drawing money from another account
+define('TX_TRANSFER', 0); // normal fund transfer (usually for actual goods and services) -- not creating rC
+define('TX_USD', 1); // dollars transferred into or out of Common Good
 
-define('TX_FINE', 9); // destroys CG credit (this is essentially a negative grant)
-define('TX_XFEE', 10); // exchange fee (for buying CG credit with a credit/debit card or check)
-define('TX_GRANT', 11);
-define('TX_LOAN', 12);
-define('TX_INVEST', 13); // equity investment (community purchase are TX_TRANSFER)
-define('TX_BANK', 99); // used only internally, to mark bank transfers
-define('TX_TYPES', 'payment signup giveback inflation helper u5 u6 u7 u8 fine xfee grant loan investment');
+/* define('TX_FINE', 9); // destroys CG credit (this is essentially a negative grant) */
+/* define('TX_XFEE', 10); // exchange fee (for buying CG credit with a credit/debit card or check) */
+/* define('TX_GRANT', 11); */
+/* define('TX_LOAN', 12); */
+/* define('TX_INVEST', 13); // equity investment (community purchase are TX_TRANSFER) */
+/* define('TX_BANK', 99); // used only internally, to mark bank transfers */
+define('TX_TYPES', 'transfer usd');
 
 define('TX_WHYS', t('charge for goods and services, payment for goods and services,exchange of US Dollars or other currency,drawing from account,loan/reimbursement/etc.,')); // transaction purposes
 

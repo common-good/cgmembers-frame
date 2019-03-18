@@ -39,10 +39,10 @@ Scenario: A member builds up savings
 
 Scenario: A member cashes out automatically
   Given transactions:
-  | xid | created   | type     | amount | from | to   | purpose |*
-  |   1 | %today-8w | signup   |    900 | ctty | .ZZA | signup  |
-  |   2 | %today-7w | transfer |    200 | .ZZA | .ZZB | stuff   |
-  |   3 | %today-6w | transfer |    500 | .ZZA | .ZZB | stuff   |
+  | xid | created   | amount | from | to   | purpose |*
+  |   1 | %today-8w |    900 | ctty | .ZZA | signup  |
+  |   2 | %today-7w |    200 | .ZZA | .ZZB | stuff   |
+  |   3 | %today-6w |    500 | .ZZA | .ZZB | stuff   |
   And members have:
   | uid  | activated | floor |*
   | .ZZB | %today-9w |  -100 |
