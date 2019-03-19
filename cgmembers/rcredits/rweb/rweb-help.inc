@@ -588,7 +588,7 @@ X
 
 function riskHelpLine($k, $weight, $extra = '', $tag) {
   global $riskHelp;
-  $basic = u\uc1($riskHelp[$k]);
+  if (!$basic = u\uc1(@$riskHelp[$k])) return '';
 //  $class = $tag == $k ? 'tagged' : ($weight < 0 ? 'goodRisk' : 'badRisk');
   $class = $weight < 0 ? 'goodRisk' : 'badRisk';
   return "<tr><td class=\"$class\">$k</td><td class=\"weight\">[$weight]</td><td>$basic. $extra</td></tr>\n";

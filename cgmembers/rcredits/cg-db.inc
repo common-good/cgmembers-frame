@@ -28,12 +28,11 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   global $channel;
   //  \db_query("SET NAMES 'utf8'"); // only needed once per connection, but hey
   u\EXPECT(compact(ray('sql subs')), 'notempty assoc');
-  //  if (strpos($sql, 'INSERT INTO') !== FALSE and strpos($sql, ' VALUES (')) $return = \Database::RETURN_INSERT_ID;
   if ($retId) $return = \Database::RETURN_INSERT_ID;
   if (preg_match('/^DELETE FROM ([^ ]+)( |$)/', $sql, $match) and !in(NO_LOGSQL_TABLES, @$match)) logSql(compact(ray('sql subs retId')));
   if ($log and strpos($sql, 'SELECT ') === FALSE) u\loga('db', $subs + compact('sql'));
   try {
-    return \db_query(u\SUBS($sql), u\prefixKeys(':', $subs), compact('return'));
+    return \db_query(u\SUBS($sql), u\prefixKeys(':', $subs), @compact('return'));
   } catch (Exception $e) {
 /**/ if (@$channel == TX_WEB) r\Web\exception_handler($e); else die('in q');
   }

@@ -152,7 +152,8 @@ EOF
   'join request success' => t('Success! An email has been sent to the other account owner, to confirm joining with yours.'),  
   'backing in effect' => t('Your previous backing promise will remain in effect through its end date. Then it will be replaced by this new promise.'),
   'pay button success' => t('<h3>Success!</h3>An email has been sent to you, with a link to confirm this payment.'),
-
+  'recur stopped' => t('Success: The recurring transaction is ended.'),
+  
   // questions
   "what's your name?" => t("To set up your %PROJECT Account, we need your full name and email address. First, what's your name?"),
   "what's your name really?" => t("Hmm. I don't know if I believe that. What's your name really?"),

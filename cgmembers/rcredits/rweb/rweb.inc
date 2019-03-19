@@ -335,7 +335,7 @@ function formEmpty($form, &$sta = '', $args = '') {
   if (@$msg) say(plain($msg), @$field);
   if (@$say) $subtext = t('<p>To protect your account, <%span>no sign-in was required</span> for this action. To sign in safely, always go to %CG_DOMAIN.</p><p>You may now close this browser page.</p>', '_span', 'span class="loud"');
 ///   FAILS :(  if ($doSay == 'test') $testMessages = item(print_r(\drupal_get_messages(), 1));
-  return cgform(compact(ray('title testMessages subtext')));
+  return cgform(@compact(ray('title testMessages subtext')));
 }
 
 /**
@@ -437,7 +437,7 @@ function formBasic_validate($form, &$sta, $co = 'mya', $fields = R_BASIC_FLDS) {
   if (!$co and isset($dob) and $err = u\badDob($dob)) return say($err, 'dob');
   if (isset($federalId) and $err = u\badSsn($federalId, @$dob)) return say($err, compact('what'), 'federalId');
 
-  u\preray(compact(ray($fields)), $sta['input']);
+  u\preray(@compact(ray($fields)), $sta['input']);
   return TRUE;
 }
 

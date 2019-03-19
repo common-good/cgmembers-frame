@@ -652,7 +652,6 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
     $DBTX->rollback();
     return r\txRet('tx save error');
   }
-
   unset($DBTX);
   
   // Report results

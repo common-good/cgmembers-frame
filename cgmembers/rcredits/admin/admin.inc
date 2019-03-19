@@ -40,7 +40,7 @@ function setupBasicAccounts() {
       $state = db\get('id', 'r_states', 'abbreviation=:st', compact('st'));
       $values = array($uid, $uid, $region . '.', $fullName, $email, $zip, R_COUNTRY_ID, 0, $flags);
       $info = array_combine($keys, $values);
-      $info += compact(ray('postalAddr state federalId'));
+      $info += @compact(ray('postalAddr state federalId'));
       new r\Acct($info);
     }
   }

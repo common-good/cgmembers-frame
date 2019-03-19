@@ -64,7 +64,7 @@ function fixData(&$info, $direct = FALSE) {
 		$info[$k2] = $info[$k];
 		unset($info[$k]);
 	}
-  $info = compact(ray($fields)) + $info;
+  $info = @compact(ray($fields)) + $info;
 }
 
 /**
@@ -210,7 +210,7 @@ function doAccount($info = []) {
 //  if (isset($risks)) $risks = getRisks($risks, K_ACCT_RISKS);
   
   foreach (ray('acctType dw cc cc2') as $one) unset($info[$one]); // these are not real fields
-  u\preray(compact(ray('uid jid helper flags risks last4bank ' . $fixFields)), $info); // add in changed fields
+  u\preray(@compact(ray('uid jid helper flags risks last4bank ' . $fixFields)), $info); // add in changed fields
 	
 //  fixData($info, TRUE);
 
@@ -386,7 +386,7 @@ function doRelation($info) {
   foreach (ray(REL_FLAGS) as $k) if (@$$k) u\setBit($flags, $k);
   
   foreach (ray('id agent num rCard ' . REL_FLAGS) as $k) unset($info[$k]);
-  $info += compact(ray('reid main other otherNum flags'));
+  $info += @compact(ray('reid main other otherNum flags'));
   
   if ($testOnly) {
     return verifyRecord('r_relations', $info);
@@ -881,7 +881,7 @@ function hitServer($op, $extra = [], $agent, $device = '', $version = 221) {
   }
   if (@$goods and !is_numeric($goods)) $goods = t\goodsBit($goods);
 
-  $input = compact(ray('op agent device version amount member proof goods')) + $extra;
+  $input = @compact(ray('op agent device version amount member proof goods')) + $extra;
 /**/ t\output('request: ' . print_r($input, 1), 'input'); // keep this
   $rposResult = r\Smart\pos($input);
   if ($op != 'photo') $rposResult = (array) json_decode($rposResult);
@@ -1207,7 +1207,7 @@ function eq($a, $b, $offBy = .0001) {
 /// if (!$result) echo 'not equal: ' . print_r(compact('a','b'), 1); // keep for now
   if (!$result) {
     if (is_array($a)) {
-/**/  output('unequal arrays ($offBy):<br>' . print_r($a, 1) . print_r($b, 1));
+/**/  output("unequal arrays ($offBy):<br>" . print_r($a, 1) . print_r($b, 1));
     } else {output("unequal: a=$a b=$b", 'error');}
   }
   return $result;

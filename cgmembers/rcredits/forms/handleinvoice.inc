@@ -70,7 +70,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
   $form['#submit'] = array('CG\\Web\\formHandleInvoice_submit');
   w\jsx('dispute');
   
-  return cgform(compact(ray('title subtext always pay denySet delSet toMe hid')) + $form);
+  return cgform(@compact(ray('title subtext always pay denySet delSet toMe hid')) + $form);
 }
 
 function formHandleInvoice_validate($form, &$sta) {
