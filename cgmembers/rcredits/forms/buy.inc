@@ -90,7 +90,7 @@ function formBuy($form, &$sta, $doCode = '') {
   $submit = submit($verb, '', 'md', w\suffix($option));
   focusOn($amount0 ? 'name' : 'amount');
   
-  return cgform(compact(ray('title subtext payment name pass hid submit')));
+  return cgform(@compact(ray('title subtext payment name pass hid submit')));
 }
 
 function formBuy_validate($form, &$sta) {
@@ -114,7 +114,7 @@ function formBuy_submit($form, &$sta) {
   
   // check for op not 'submit' here, to set confirm=TRUE and send an invoice?
   list ($index, $subs) = $confirm 
-  ? $co->invoice($a, $amount, $item, compact(ray('api request'))) 
+  ? $co->invoice($a, $amount, $item, @compact(ray('api request'))) 
   : $a->pay($co, $amount, $item);
   $ok = @$subs['success'];
   $msg = tr($index, $subs);

@@ -52,7 +52,7 @@ function formInvest($form, &$sta, $args) {
 		$pct = $clubVal0 ? $myVal0 / $clubVal0 : 0;
 		$clubVal = item(t('%val (%liquid liquid)', 'val liquid', u\fmtAmt($clubVal0), u\fmtAmt($liquid0)), t('Club Value:'));
 		$myShare = item(tr('%amt (%pct)', 'amt pct', u\fmtAmt($myVal0), u\fmtAmt($pct, '%')), t('Your Share:'));
-    $submit = fieldSet('submit2', compact('buy', 'sell'), ' ');
+    $submit = fieldSet('submit2', @compact('buy', 'sell'), ' ');
   } else { // not a member yet
     $old = hidFld(serialize(compact('clubid')));
     $title = t('Join Your Local Investment Club');
@@ -67,7 +67,7 @@ X
     $submit = t('Join');
   }
 
-  return cgform(compact(ray('title subtext buttons signedBy old count investments liquid reserve clubVal myShare myRequest amount submit')));
+  return cgform(@compact(ray('title subtext buttons signedBy old count investments liquid reserve clubVal myShare myRequest amount submit')));
 }
 
 function formInvest_validate($form, &$sta) {

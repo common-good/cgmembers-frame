@@ -27,7 +27,7 @@ function formTxs($form, &$sta, $args = '') {
   extract(just('dateRange downloadMsg url starting ending', dateRange($args, 'history/transactions')));
 
   $descending = TRUE;
-  $optionSet = compact(ray('download agents channels boxes descending'));
+  $optionSet = @compact(ray('download agents channels boxes descending'));
 
   $summary = fld('markup', '', '', array('markup' => txSummary($starting, $ending, $run)));
   $txRows = x\getTxRows($starting, $ending, $optionSet, $url, $run);
@@ -100,7 +100,7 @@ EOF;
   $title = t('Transaction History');
   extract(just('simple advanced downloadMsg', $dateRange));
   $dateRange = w\fieldSet('dateRange', compact(ray('simple advanced downloadMsg')), BARE);
-  $form = compact(ray('title dateRange summary transactions states'));
+  $form = @compact(ray('title dateRange summary transactions states'));
   
   jsx('paginate', compact('pgFactor'));
   jsx('reverse-tx', 'msg title', t('Reverse this transaction?'), t('Reverse'));
@@ -142,7 +142,7 @@ function txEdit($xid) {
   if ($mya->cAdmin) $created = textFld(t('Date:'), '', dft(u\fmtDate($created, TRUE))); else unset($created);
   $submit = t('Update');
 
-  return cgform($form + compact(ray('title to amount goods purpose created0 created submit orig')));
+  return cgform($form + @compact(ray('title to amount goods purpose created0 created submit orig')));
 }
 
 function txEdit_validate($form, &$sta) {
@@ -165,7 +165,7 @@ function txEdit_validate($form, &$sta) {
     $amount = u\fmtAmt($x_amount);
     return say(t('illegal amount change', compact(ray('amount action _a'))), 'amount');
   }
-  u\preray(compact('amount', 'created'), $sta['input']);
+  u\preray(@compact('amount', 'created'), $sta['input']);
 }
 
 function txEdit_submit($form, &$sta) {

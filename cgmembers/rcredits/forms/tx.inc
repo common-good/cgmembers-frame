@@ -52,7 +52,7 @@ function formTx($form, &$sta, $args = '') {
 
   w\whoFldSubmit('who', $opDesc . t(' %amount to %name?'), ray('allowNonmember', !$paying));
   
-  $form = cgform(compact(ray("title buttons who amount purpose repeat $type")));
+  $form = cgform(@compact(ray("title buttons who amount purpose repeat $type")));
   $form['#attributes']['class'][] = $scanClass;
 
   return $form; // get defaults from which('info')
@@ -91,7 +91,7 @@ function formTx_submit($form, &$sta) {
     }
   unset($DBTX);
   
-  return say($msg, $args + compact('often'), $ok ? '' : 'amount');
+  return say($msg, $args + @compact('often'), $ok ? '' : 'amount');
 }
 
 /**

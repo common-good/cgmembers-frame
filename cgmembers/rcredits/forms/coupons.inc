@@ -61,7 +61,7 @@ X
   $type = hidFld(@$type);
   jsx('coupons');
   
-  return cgform(compact(ray('title buttons subtext code amount count minimum start end ulimit automatic on submit type')));
+  return cgform(@compact(ray('title buttons subtext code amount count minimum start end ulimit automatic on submit type')));
 }
 
 function formCoupons_validate($form, &$sta) {
@@ -95,7 +95,7 @@ function formCoupons_validate($form, &$sta) {
     u\preray(compact(ray('coupid iCode')), $sta['input']); // pass the results to submit function
   } else return say(t('bad coupon'), 'err');
   
-  u\preray(compact(ray($fields)), $sta['input']); // remember fixed numeric values
+  u\preray(@compact(ray($fields)), $sta['input']); // remember fixed numeric values
 }
 
 function formCoupons_submit($form, &$sta) {
@@ -123,10 +123,10 @@ function formCoupons_submit($form, &$sta) {
 		if ($end) $end = strtotime('tomorrow', $end) - 1; // last second of the day
 	}
 
-  if ($gift or $automatic) db\insert('r_coupons', compact(ray('amount on minimum start end ulimit flags')) + ray('fromId', $myid), 'coupid');
+  if ($gift or $automatic) db\insert('r_coupons', @compact(ray('amount on minimum start end ulimit flags')) + ray('fromId', $myid), 'coupid');
   if ($gift) {unset($start); unset($end);} // don't pass these to printCoupons()
 
-  $args = u\urlify(http_build_query($ray = compact(ray('type amount minimum ulimit count on start end automatic'))));
+  $args = u\urlify(http_build_query($ray = @compact(ray('type amount minimum ulimit count on start end automatic'))));
 	r\tellCo(t('New Coupons!'), $ray);
   if (u\test()) $args = u\deurlify($args);
 	$url = "/community/coupons/print/$args";

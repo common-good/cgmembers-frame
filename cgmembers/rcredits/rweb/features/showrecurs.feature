@@ -28,7 +28,8 @@ Scenario: A member looks at their recurring transactions
   
 Scenario: A member stops a recurring transaction
   When member ".ZZA" visits page "history/show-recurring/recId=99900&do=stop"
-  Then we show "Recurring Transactions for Abe One" with:
+  Then we say "status": "recur stopped"
+  And we show "Recurring Transactions for Abe One" with:
   | To         | Amount | How often? | Starting | Next     | Ending   |
   | Corner Pub | 37.00  | Quarterly  | %mdY-13m |          | %mdY     |
   | Bea Two    | 43.00  | Weekly     | %mdY-13m |          | %mdY-11m |
@@ -36,7 +37,8 @@ Scenario: A member stops a recurring transaction
 
 Scenario: A member stops a stopped recurring transaction
   When member ".ZZA" visits page "history/show-recurring/recId=99901&do=stop"
-  Then we show "Recurring Transactions for Abe One" with:
+  Then we say "error": "recur already ended"
+  And we show "Recurring Transactions for Abe One" with:
   | To         | Amount | How often? | Starting | Next     | Ending   |
   | Corner Pub | 37.00  | Quarterly  | %mdY-13m | ~%mdY+2m |          |
   | Bea Two    | 43.00  | Weekly     | %mdY-13m |          | %mdY-11m |
@@ -44,7 +46,8 @@ Scenario: A member stops a stopped recurring transaction
 
 Scenario: A member attempts to stop a non-existent recurring transaction
   When member ".ZZA" visits page "history/show-recurring/recId=99999&do=stop"
-  Then we show "Recurring Transactions for Abe One" with:
+  Then we say "error": "invalid recur id"
+  And we show "Recurring Transactions for Abe One" with:
   | To         | Amount | How often? | Starting | Next     | Ending   |
   | Corner Pub | $37.00 | Quarterly  | %mdY-13m | ~%mdY+2m |          |
   | Bea Two    | $43.00 | Weekly     | %mdY-13m |          | %mdY-11m |
@@ -52,7 +55,8 @@ Scenario: A member attempts to stop a non-existent recurring transaction
 
 Scenario: A member attempts to stop another member's recurring transaction
   When member ".ZZA" visits page "history/show-recurring/recId=99904&do=stop"
-  Then we show "Recurring Transactions for Abe One" with:
+  Then we say "error": "recur not yours"
+  And we show "Recurring Transactions for Abe One" with:
   | To         | Amount | How often? | Starting | Next     | Ending   |
   | Corner Pub | 37.00  | Quarterly  | %mdY-13m | ~%mdY+2m |          |
   | Bea Two    | 43.00  | Weekly     | %mdY-13m |          | %mdY-11m |

@@ -399,7 +399,7 @@ function NEWfld($type, $label, $desc = '', $other = []) {
   if (!@$title) $title = $placeholder; // hover text defaults to same as hint
   foreach (['placeholder', 'title'] as $k) if ($$k) $tribs[$k] = $$k;
 
-  return compact(ray('type label required bare help tribs other')); // see rend()
+  return @compact(ray('type label required bare help tribs other')); // see rend()
 }
 
 // only barely begun
@@ -591,7 +591,7 @@ function fld($type, $title = '', $help = '', $other = [], $options = NULL) {
   if ($type == 'select' and !isset($other['default_value'])) $other['default_value'] = $options ? key($options) : ''; // Drupal's select fails without a default
   $title_display = 'before';
 //  if (isset($other['value']) and !isset($other['default_value'])) $other['default_value'] = $other['value'];
-  $field = u\prefixKeys('#', $other + compact(ray('type title title_display required bare help options')));
+  $field = u\prefixKeys('#', $other + @compact(ray('type title title_display required bare help options')));
   return $field;
 }
 
@@ -626,7 +626,7 @@ function submi($title = '', $style = '', $size = 'xs', $other = []) {
  */
 function buttonFld($value, $href = '', $title = NULL, $style = 'success', $size = 'xs', $extra = []) {
   $class = trim(@$extra['class'] . " btn btn-$style btn-$size");
-  return NEWfld('button', BARE, ['', '', $title], compact(ray('href value title class id')) + $extra);
+  return NEWfld('button', BARE, ['', '', $title], @compact(ray('href value title class id')) + $extra);
 }
 function button($value, $href = '', $title = NULL, $style = 'success', $size = 'xs', $extra = []) {
   return rend([buttonFld($value, $href, $title, $style, $size, $extra)]);
@@ -787,7 +787,7 @@ function badSignature(&$sta) {
 function whoFldSubmit($field, $question, $extra = []) {
   extract(just('amount allowNonmember coOnly', $extra));
   js('x/typeahead.bundle.min');
-  jsx('suggest-who', compact(ray('field question amount allowNonmember coOnly')));
+  jsx('suggest-who', @compact(ray('field question amount allowNonmember coOnly')));
 }
 
 /**
@@ -1300,7 +1300,7 @@ function acctType($acctType) {
 function suCompanyRelation($other, $data) {
   extract(just('company companyPhone owner employee contractor', $data));
   if ($main = findCompany($company, @$companyPhone)) { // company account exists
-    return r\acct($main)->newRelation(compact(ray('other employee owner'))); // no permissions/draw (for security)
+    return r\acct($main)->newRelation(@compact(ray('other employee owner'))); // no permissions/draw (for security)
   } else return FALSE;
 }
 
@@ -1533,7 +1533,7 @@ function ssnFields($personal = TRUE) {
   
   $federalId = passFld($ssTitle, [t($personal ? 'ssDesc' : 'einDesc'), @$ssReason], required() + autofill('off')); // textfield so user doesn't have to retype on error
   
-  return compact(ray('dob federalId sponsor'));
+  return @compact(ray('dob federalId sponsor'));
 }
 
 /**
@@ -1787,7 +1787,7 @@ function dateRange($args, $url, $choices = [], $settings = '', $downloadable = T
   $submitPeriod = submi(t('Show')); // label has to be different from submitDates (see below)
   if ($downloadable) $downloadPeriod = submi(t('Download'));
 ///  $actions = render($submitPeriod) . render(@$downloadPeriod) . render($showAdvanced);
-  $actions = fieldSet('actionsSimple', compact('submitPeriod', 'downloadPeriod'), '', suffix($showAdvanced2));
+  $actions = fieldSet('actionsSimple', @compact('submitPeriod', 'downloadPeriod'), '', suffix($showAdvanced2));
 ///  $period = selectFld(t('For the past:'), '', dft($period), $txDays);
 //  $onchange = "$('#edit-starting, #edit-ending').val('');";
 //  $onchange = "var id='#edit-submitPeriod'; if (!$(id).is(':visible')) id='#edit-downloadPeriod'; $(id).click();";
@@ -1801,12 +1801,12 @@ function dateRange($args, $url, $choices = [], $settings = '', $downloadable = T
 //  $showSimple2 = '<a id="showSimple" href="javascript:void(0);" onclick="jQuery(\'#advanced\').hide(); jQuery(\'#simple\').show();">simpler</a>';
   $showSimple2 = '<a id="showSimple">simpler</a>';
   if ($downloadable) $downloadDates = submi(t('download')); // must be lowercase
-  $actions = fieldSet('actionsAdvanced', compact('submitDates', 'downloadDates'), '', suffix($showSimple2));
+  $actions = fieldSet('actionsAdvanced', @compact('submitDates', 'downloadDates'), '', suffix($showSimple2));
   $starting = textFld(t('Starting:'), '', dft(u\fmtDate($starting)));
   $ending = textFld(t('Ending:'), '', dft(u\fmtDate($ending)));
   if ($downloadable) $downloadMsg = item(t('<b class="loud">TIP</b>: Tell your browser to allow popups for this site.'));
-  $advanced = fieldSet('advanced', compact(ray('starting ending states2 actions')), BARE);
-  $dateRange = compact(ray('simple advanced downloadMsg'));
+  $advanced = fieldSet('advanced', @compact(ray('starting ending states2 actions')), BARE);
+  $dateRange = @compact(ray('simple advanced downloadMsg'));
   return compact('dateRange') + $res;
 }
 
@@ -2337,7 +2337,7 @@ function setupFoot($label = '', $extra = []) {
       $progress = item(t('Just <b>%n</b> more %steps to go', 'n steps', $remains, $steps));
     } else $nextStep = submit($label ?: t('Finish'));
   } else $submit = submit($label, '', '', $extra);
-  return compact(ray('submit nextStep progress'));
+  return @compact(ray('submit nextStep progress'));
 }
 
 /**
@@ -2398,7 +2398,7 @@ function atag($href, $extras = []) {
   if ($href and !u\starts($href, BASE_URL)) {
     if (substr($href, 0, 6) == 'mailto' or substr($href, 0, 4) == 'http') $extras += w\away();
   } elseif (!$href) unset($href); // don't show empty href
-  return 'a ' . u\tribs(compact('href') + $extras);
+  return 'a ' . u\tribs(@compact('href') + $extras);
 }
 function emailtag($email = NULL, $subject = '', $body = '') {
   u\setDft($email, r\regionfield('email'));

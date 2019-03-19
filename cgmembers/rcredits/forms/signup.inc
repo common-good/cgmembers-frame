@@ -133,16 +133,16 @@ EOF
   $iCode = hidFld(@$iCode + 0);
   $helper = hidFld(@$helper ? r\acct($helper)->id : @$inviter);
   
-  $contactDefaults = compact(ray($contactDefaults));
+  $contactDefaults = @compact(ray($contactDefaults));
   $contactFlds = w\contactFields($contactDefaults + ray('country state state2', @$country ?: @$hidCountry, @$state ?: @$hidState, @$state2 ?: @$hidState2), TRUE, @$myid0);
   $nameAndEmail = w\nameAndEmail(!$personal, @$fullName, @$email, isset($contactFlds['partner']), @$myid0);
 
-  $form = compact(ray('title forother subtext acctType'))
+  $form = @compact(ray('title forother subtext acctType'))
     + $nameAndEmail + $contactFlds + w\ssnFields($personal)
-    + compact(ray('calling companyInfo buysAt submit myid args confirmed helper iCode notes'));
+    + @compact(ray('calling companyInfo buysAt submit myid args confirmed helper iCode notes'));
 //  keep_values($form);
 //  $sponsorConfirmation = w\whoFldSubmit('sponsor', t('Your sponsoring organization is %name, yes?'));
-  jsx('signup', compact('clarify'));
+  jsx('signup', @compact('clarify'));
   return cgform($form);
 }
 
@@ -172,7 +172,7 @@ function formSignup_validate($form, &$sta) {
     if (@$company and $err = u\badName($company)) return say($err, array('field' => 'Company'), 'company');
     if (@$companyPhon and !$companyPhone = u\fmtPhone($companyPhon, '+n')) return say('bad company phone', compact('companyPhone'), 'companyPhone');
     if (!$gotrelation) return say('what relation', 'company');
-    $signupCo = compact(ray('company companyPhone employee owner contractor'));
+    $signupCo = @compact(ray('company companyPhone employee owner contractor'));
   }
   
   if (!@$legalName) $legalName = $fullName;
@@ -186,7 +186,7 @@ function formSignup_validate($form, &$sta) {
   if (@$confirmed) $flags |= u\bit(B_CONFIRMED); // companies are always pre-confirmed, because the company account is opened by a member
 //  $administer_users = FALSE; // for testing (keep Drupal from griping)
   $status = 1;
-  u\preray(compact(ray('fullName legalName phone address city zip postalAddr email flags signupCo status')), $sta['input']);
+  u\preray(@compact(ray('fullName legalName phone address city zip postalAddr email flags signupCo status')), $sta['input']);
 }
 
 function formSignup_submit($form, &$sta) {
@@ -204,7 +204,7 @@ function formSignup_submit($form, &$sta) {
   if (@$notes) list ($source, $notes) = [trim("$notes $source"), ''];
   if (@$source2) $source = trim(strtoupper($source2) . "-$source");
 
-  $info = compact(ray($dbFields));
+  $info = @compact(ray($dbFields));
   if ($acctType != CO_PERSONAL) $info += ray('coType', $acctType);
   
 //  $DBTX = \db_transaction();
@@ -346,7 +346,7 @@ function newCustomer($reid, $args) {
     w\say('new customer welcome', ['partnerName' => $partnerA->fullName]);
     try { // give them a way to continue, even if they haven't completed the first page
       $noFrame = TRUE;
-      r\rMail('partner-signup', $email, compact(ray('fullName reid customer noFrame'))); // so customer can continue
+      r\rMail('partner-signup', $email, @compact(ray('fullName reid customer noFrame'))); // so customer can continue
     } catch (Exception $e) {r\tellAdmin('bad email addr from partner', $args);} // bad email gets caught in signup submit also
     tellPartner($partnerA, $a, 'start', $customer);
   }

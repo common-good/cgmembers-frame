@@ -31,13 +31,12 @@ Scenario: A member signs in for the first time
   And member ".AAA" one-time password is set to "WHATEVER"
   And member ".AAA" is logged in
   And we show "Verify Your Email Address"
-  And we say "status": "info saved|step completed"
 
   When member ".AAA" completes form "settings/verify" with values:
   | verify   | pass1      | pass2      | strong |*
   | WHATEVER | %whatever3 | %whatever3 |      1 |
   Then we show "Confirm Your Social Security Number"
-  And we say "status": "info saved|step completed"
+  And we say "status": "pass saved|step completed"
 
   When member ".AAA" completes form "settings/ssn" with values:
   | federalId   | field     |*

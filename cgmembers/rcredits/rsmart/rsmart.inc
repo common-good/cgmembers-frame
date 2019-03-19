@@ -283,7 +283,7 @@ function identify($args) {
 
   $name = $a->agentA->fullName;
   
-  return ok(compact(ray('logon first device name place company balance rewards default time')) + $companyInfo);
+  return ok(@compact(ray('logon first device name place company balance rewards default time')) + $companyInfo);
 }
 
 /**

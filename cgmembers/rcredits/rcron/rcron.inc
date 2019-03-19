@@ -164,7 +164,7 @@ function everyHour() { // stuff to do every hour
   
   db\q('DELETE FROM cache_form WHERE created<:REQUEST_TIME-:HOUR_SECS'); // clean up form cache (is this needed?)
 
-  $uids = db\col('uid', 'users', 'latitude=0 AND longitude=0 AND uid<>0') ?: [];
+  $uids = db\col('uid', 'users', 'latitude=0 AND longitude=0 AND (uid<0 OR uid>:CANONIC_ACCTS)') ?: [];
   foreach ($uids as $uid) r\acct($uid)->setLocus();
   // r\tellAdmin('hourly cron');
 }

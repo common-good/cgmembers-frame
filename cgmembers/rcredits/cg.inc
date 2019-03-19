@@ -414,7 +414,7 @@ function tellAdmin($index, $subs = [], $uid = NULL) {
 
   if (!$tellCO = isset($uid)) $uid = @$subs['uid'];
   if ($mya = r\acct(@$uid)) $who = "$mya->fullName ($mya->mainQid)"; // (default to current account)
-  $message = t($index, $subs) . u\seeAssoc($subs + compact('who'));
+  $message = t($index, $subs) . u\seeAssoc($subs + @compact('who'));
     
   if ($tellCO) { // account specified, so tell Community Admin
     $email = $mya->cttyA->email;
@@ -422,7 +422,7 @@ function tellAdmin($index, $subs = [], $uid = NULL) {
 
   $noFrame = TRUE;
   $topic = strlen($index) < 50 ? strip_tags($index) : '';
-  $subs = compact(ray('who email message topic noFrame uid')) + $subs;
+  $subs = @compact(ray('who email message topic noFrame uid')) + $subs;
   $replyTo = (@$uid and $a = r\acct($uid) and $a->email) ? [$a->email => $a->fullName] : NULL;
   r\rMail('tell-staff', $email, $subs, $replyTo);
   if ($email != R_ADMIN_EMAIL) r\rMail('tell-staff', SYS_EMAIL, $subs, $replyTo); // always tell one or more staff (for now)
@@ -869,7 +869,7 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
 function txRet($message, $info = []) {
   $info0 = $info;
   if (is_array($message)) {list ($message, $info, $confirm) = $message; $info += $info0;}
-  if (!@$info['success']) r\tellCO('failed transaction', $info + compact('message', 'confirm'));
+  if (!@$info['success']) r\tellCO('failed transaction', $info + @compact('message', 'confirm'));
   return [$message, $info];
 }
 
@@ -1060,11 +1060,9 @@ function getStats($ctty, $created = NULL) {
   $created0 = $created;
   u\setDft($created, time());
   $created = strtotime('today', $created); // use start of day
-  $subs = compact('created', $ctty ? 'ctty' : '');
+  $subs = @compact('created', $ctty ? 'ctty' : '');
   $thisCtty = 'community=:ctty';
-  list ($cttyCrit, $payerCrit, $payeeCrit, $cttysCrit) = $ctty ? 
-    [$thisCtty, 'payer=:ctty', 'payee=:ctty', "(u.$thisCtty OR u2.$thisCtty)"]
-  : ['community<>0', 'payer<1', 'payee<1', '1'];
+  list ($cttyCrit, $cttysCrit) = $ctty ? [$thisCtty, "(u.$thisCtty OR u2.$thisCtty)"] : ['community<>0', '1'];
   $creCrit = 'created<=:created';
   $nonCtty = 'uid>:CANONIC_ACCTS';
   $accounts = "(SELECT uid,jid,community,flags FROM users WHERE $nonCtty)";
@@ -1137,14 +1135,15 @@ X;
   $res += db\q($sql, $subs)->fetchAssoc() ?: [];
   
   // get aAccts
-  $recent = $created - 60 * DAY_SECS; // not n months (keep length of time consistent)
+  $recent = ':created-60*:DAY_SECS'; // not n months (keep length of time consistent)
 
   $sql = <<< X
     SELECT COUNT(DISTINCT payer) as aAccts FROM r_txs  t
     JOIN $accounts u ON u.uid=t.payer
-    WHERE NOT u.:IS_CO AND $cttyCrit AND $creCrit AND created>$recent
+    WHERE $cttyCrit AND $creCrit AND created>$recent
 X;
   $res += db\q($sql, $subs)->fetchAssoc() ?: [];
+//    WHERE NOT u.:IS_CO AND $cttyCrit AND $creCrit AND created>$recent
 
   // get conx, conxLocal
   foreach (ray('conx conxLocal', 1, "u2.$thisCtty") as $k => $crit) {
@@ -1165,6 +1164,25 @@ X;
 X;
     $res += db\q($sql, $subs)->fetchAssoc() ?: [];
   }
+  
+  // get payees
+  $sql = <<< X
+    SELECT MEDIAN(payees0) OVER () AS payees FROM (
+      SELECT u.uid, COUNT(DISTINCT t.payee) AS payees0
+      FROM users u JOIN r_txs t ON u.uid=t.payer
+      WHERE u.:IS_OK AND t.created>$recent AND $nonCtty AND $cttyCrit
+    ) x LIMIT 1
+X;
+    $res += db\q($sql, $subs)->fetchAssoc() ?: [];
+    
+  // get basket
+  $sql = <<< X
+    SELECT SUM(amount) AS basket FROM r_txs t
+    JOIN users u ON u.uid=t.payer
+    JOIN users u2 ON u2.uid=t.payee
+    WHERE t.created>$recent AND $cttysCrit
+X;
+    $res += db\q($sql, $subs)->fetchAssoc() ?: [];
   
   if (@$created0 and $created < strtotime('today')) { // redoing stats for the past, so figure bals, floors, and topN the hard way
     $recent = strtotime(-FLOOR_DAYS . ' days', $created); // six months ago
