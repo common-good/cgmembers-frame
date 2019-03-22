@@ -495,23 +495,9 @@ define('TX_AJAX', 7);
 define('TX_FOREIGN', 8); // user clicked a "Pay with CG" button or request an app to charge them
 define('TX_CHANNELS', 'Sys SMS Web App Tone Cron Link Ajax Foreign'); // can't translate, because used in t() (find a solution)
 
-// Transaction types (all but type TX_TRANSFER and TX_BANK create credit) -- negative types generally not shown
-define('TX_BONUS', -2); // UNUSED sales bonus (negative reward types are invisible on transaction history)
-define('TX_REBATE', -1); // UNUSED sales rebate
+// Transaction types
 define('TX_TRANSFER', 0); // normal fund transfer (usually for actual goods and services) -- not creating rC
-define('TX_SIGNUP', 1); // signup incentive reward
-define('TX_GIVEBACK', 2); // gift to the community (UNUSED)
-define('TX_INFLATION', 3); // reward to conpensate for inflation
-define('TX_HELPER', 4); // reward for inviting and assisting with account opening
-define('TX_REWARDS', '-2,-1,1,2,3,4'); // only these count as rewards
-
-define('TX_FINE', 9); // destroys CG credit (this is essentially a negative grant)
-define('TX_XFEE', 10); // exchange fee (for buying CG credit with a credit/debit card or check)
-define('TX_GRANT', 11);
-define('TX_LOAN', 12);
-define('TX_INVEST', 13); // equity investment (community purchase are TX_TRANSFER)
 define('TX_BANK', 99); // used only internally, to mark bank transfers
-define('TX_TYPES', 'payment signup giveback inflation helper u5 u6 u7 u8 fine xfee grant loan investment');
 
 define('TX_DEFAULT_PERIOD', 90); // number of days to show in transaction history, by default
 define('TX_DEFAULT_INV_PERIOD', -2); // number of days to show in invoice history, by default (all of them)

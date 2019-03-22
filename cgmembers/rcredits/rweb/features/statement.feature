@@ -32,15 +32,15 @@ Setup:
   | .ZZB |    2000 |
   | .ZZC |    3000 |
   Given transactions: 
-  | xid| created   | type     | amount | from | to   | purpose | taking |*
-  | 4  | %lastm+3d | transfer |     10 | .ZZB | .ZZA | cash E  | 0      |
-  | 5  | %lastm+4d | transfer |   1100 | .ZZC | .ZZA | usd F   | 1      |
-  | 6  | %lastm+5d | transfer |    240 | .ZZA | .ZZB | what G  | 0      |
+  | xid| created   | amount | from | to   | purpose | taking |*
+  | 4  | %lastm+3d |     10 | .ZZB | .ZZA | cash E  | 0      |
+  | 5  | %lastm+4d |   1100 | .ZZC | .ZZA | usd F   | 1      |
+  | 6  | %lastm+5d |    240 | .ZZA | .ZZB | what G  | 0      |
 
-  | 9  | %lastm+6d | transfer |     50 | .ZZB | .ZZC | cash P  | 0      |
-  | 10 | %lastm+7d | transfer |    120 | .ZZA | .ZZC | this Q  | 1      |
+  | 9  | %lastm+6d |     50 | .ZZB | .ZZC | cash P  | 0      |
+  | 10 | %lastm+7d |    120 | .ZZA | .ZZC | this Q  | 1      |
 
-  | 13 | %lastm+8d | transfer |    100 | .ZZA | .ZZB | cash V  | 0      |
+  | 13 | %lastm+8d |    100 | .ZZA | .ZZB | cash V  | 0      |
   Then balances:
   | uid  | balance |*
   | .ZZA |    1606 |

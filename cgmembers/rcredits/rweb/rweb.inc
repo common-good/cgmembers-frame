@@ -480,28 +480,6 @@ function chartData($args = '') {
   exit();
 }
 
-function formGraphs($form, &$sta, $args) {
-  $a = w\eLinkAcct($sta, $args, 'any'); // may be called with qid=<communityUid>
-  extract(just('qid', $args));
-
-  $title = t('Community Statistics');
-  $dft = ($a and @$qid !== '0') ? $a->community : 0; $dft += 0; // + 0 for admin
-  $subtext = t('This page helps us keep an eye on our economy so we can manage it effectively together. Choose a chart. <%b>Hover</b> over a graph for the numbers.', '_b', 'class="loud"');
-  
-  $charts = item(w\chartFrame('growth', TRUE, @$a->community ?: 0)); // src must be first
-  if (u\test()) $charts = item(w\showCharts('all', $dft, $chartData));
-  
-  return cgform(compact(ray('title subtext charts')));
-}
-
-function formGraphs_validate($form, &$sta) {
-  formTxs_validate($form, $sta);
-}
-
-function formGraphs_submit($form, &$sta) {
-  formTxs_submit($form, $sta, 'community');
-}
-
 function formFooter() {
   global $base_url, $rUrl;
 //  $layout = (svar('layout') == 'Mobile') ? 'Desktop' : 'Mobile';

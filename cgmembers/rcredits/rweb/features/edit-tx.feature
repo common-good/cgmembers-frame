@@ -78,8 +78,8 @@ Scenario: A buyer tries to decrease a payment amount
 
 Scenario: A buyer disputes a charge
   Given transactions:
-  | xid | created   | type     | amount | from | to   | purpose  | flags  |*
-  | 100 | %today-5d | transfer |     80 | .ZZA | .ZZC | this CF  | taking |
+  | xid | created   | amount | from | to   | purpose  | flags  |*
+  | 100 | %today-5d |     80 | .ZZA | .ZZC | this CF  | taking |
   When member ".ZZA" visits page "history/transactions/period=5"
   Then we show "Transaction History" with:
   |~tid | Date    | Name       | Purpose | Amount | ~ |
@@ -106,8 +106,8 @@ Resume
   
 Scenario: A seller reverses a charge
   Given transactions:
-  | xid | created   | type     | amount | from | to   | purpose  | taking |*
-  | 100 | %today-5d | transfer |     80 | .ZZA | .ZZC | this CF  | 1      |
+  | xid | created   | amount | from | to   | purpose  | taking |*
+  | 100 | %today-5d |     80 | .ZZA | .ZZC | this CF  | 1      |
   When member "C:B" visits page "history/transactions/period=5"
   Then we show "Transaction History" with:
   |~tid | Date   | Name    | Purpose | Amount | ~ |
@@ -122,8 +122,8 @@ Scenario: A seller reverses a charge
 
 Scenario: A buyer reverses a reversal
   Given transactions:
-  | xid | created   | type     | amount | from | to   | purpose  | payerTid | taking |*
-  | 100 | %today-5d | transfer |     80 | .ZZA | .ZZC | this CF  |        2 | 1      |
+  | xid | created   | amount | from | to   | purpose  | payerTid | taking |*
+  | 100 | %today-5d |     80 | .ZZA | .ZZC | this CF  |        2 | 1      |
   When member "C:B" visits page "history/transactions/period=5"
   And member "C:B" confirms "X" on transaction 100
 
@@ -137,8 +137,8 @@ Scenario: A buyer reverses a reversal
 Skip no dispute feature at the moment  
 Scenario: A member confirms OK for a disputed transaction
   Given transactions:
-  | xid | created   | type     | flags    | amount | from | to   | purpose  | taking |*
-  | 100 | %today-5d | transfer | disputed |     80 | .ZZA | .ZZC | this CF  | 1      |
+  | xid | created   | flags    | amount | from | to   | purpose  | taking |*
+  | 100 | %today-5d | disputed |     80 | .ZZA | .ZZC | this CF  | 1      |
   When member ".ZZA" completes form "history/transactions/period=5&do=ok&xid=100" with values: ""
   Then we say "status": "confirm accept" with subs:
   | who        | did     | amount | for       | date    | do                  |*

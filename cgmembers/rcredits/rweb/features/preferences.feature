@@ -38,8 +38,8 @@ Scenario: Another member visits the preferences page
 
 Scenario: A member changes preferences
   Given transactions: 
-  | xid | created   | type   | amount | from | to   | purpose |*
-  |   3 | %today-1m | grant  |    250 | ctty | .ZZA | grant   |
+  | xid | created   | amount | from | to   | purpose |*
+  |   3 | %today-1m |    250 | ctty | .ZZA | grant   |
   And member ".ZZA" has no photo ID recorded
   When member ".ZZA" completes form "settings/preferences" with values:
   | roundup | crumbs | notices | statements | nosearch | secretBal | food | snap |*

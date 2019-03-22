@@ -9,9 +9,9 @@ Setup:
   | .ZZA | Abe One   |    .01 |     100 |          0 |          1 |     20 |       0 |    10 | ok,confirmed,nosearch,paper |
   | .ZZB | Bea Two   |    .02 |     -10 |         10 |          0 |     50 |      10 |     0 | ok,co,confirmed,weekly,secret |
   And transactions: 
-  | xid | created   | type   | amount | from | to   | purpose | taking |*
-  |   1 | %today-6m | signup |    250 | ctty | .ZZA | signup  | 0      |
-  |   2 | %today-6m | signup |    250 | ctty | .ZZB | signup  | 0      |
+  | xid | created   | amount | from | to   | purpose | taking |*
+  |   1 | %today-6m |    250 | ctty | .ZZA | signup  | 0      |
+  |   2 | %today-6m |    250 | ctty | .ZZB | signup  | 0      |
   
 Scenario: A member visits the backing page
   When member ".ZZA" visits page "community/backing"
@@ -21,8 +21,8 @@ Scenario: A member visits the backing page
 
 Scenario: A member changes backing amount
   Given transactions: 
-  | xid | created   | type   | amount | from | to   | purpose |*
-  |   3 | %today-1m | grant  |    250 | ctty | .ZZA | grant   |
+  | xid | created   | amount | from | to   | purpose |*
+  |   3 | %today-1m |    250 | ctty | .ZZA | grant   |
   And member ".ZZA" has no photo ID recorded
   When member ".ZZA" completes form "community/backing" with values:
   | amtChoice | signedBy |*
