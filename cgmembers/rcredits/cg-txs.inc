@@ -81,7 +81,7 @@ function getTxRows($starting, $ending, $options = [], $url0 = '', &$run = 0) {
 function doRow(&$rows, $tx, &$tot, $classes, $download = FALSE, $agents = FALSE, $channels = FALSE, $boxes = FALSE, $url0 = '', &$run = 0) {
   global $rUrl, $mya;
   
-  extract(just('xid uid fromyou toyou reward byMe toMe reallyToMe agent data flags roundup disputed sharing tid name type created description', $tx));
+  extract(just('xid uid fromyou toyou reward byMe toMe reallyToMe agent data flags roundup disputed tid name type created description', $tx));
 //  $myx = r\x($tx, $mya);
 
   if (@$data) $data = unserialize($data);
@@ -95,16 +95,14 @@ function doRow(&$rows, $tx, &$tot, $classes, $download = FALSE, $agents = FALSE,
   
   $reallyToMe = ($toMe xor $toyou < 0);
   $banking = ($type == TX_BANK);
-  $isExtra = (in($type, TX_REWARDS) and !$banking);
-  if ($isExtra or $sharing += 0) if (!$mya->cttyRewardy) return;
 
   $net = number_format($mya->cttyRewardy ? $amt + $reward : $amt, 2);
   
   $url = "$url0&xid=" . ($banking ? 'b' : '') . $xid;
-  $button1 = ($mya->can(@$reallyToMe ? B_SELL : B_BUY) and !$isExtra and !$banking) ? "<a href=\"$url&do=edit\" title=\"Edit Transaction\"><img src=\"$rUrl/images/icons/edit.png\" width=16 height=16 border=0 /></a>" : '';
+  $button1 = ($mya->can(@$reallyToMe ? B_SELL : B_BUY) and !$banking) ? "<a href=\"$url&do=edit\" title=\"Edit Transaction\"><img src=\"$rUrl/images/icons/edit.png\" width=16 height=16 border=0 /></a>" : '';
   $title = t('Reverse');
 
-  $button2 = ((($mya->can(@$reallyToMe ? B_BUY : B_SELL) and !$isExtra and !$banking) or $mya->superAdmin) and !@$data['undoneBy']) ? w\btn("$url&do=no", ' X ', 'primary', 'xs', compact('title')) : ''; // (admin not cAdmin)
+  $button2 = ((($mya->can(@$reallyToMe ? B_BUY : B_SELL) and !$banking) or $mya->superAdmin) and !@$data['undoneBy']) ? w\btn("$url&do=no", ' X ', 'primary', 'xs', compact('title')) : ''; // (admin not cAdmin)
   $button3 = (!$byMe and $disputed) ? w\button('OK', "$url&do=ok", r\MyX::msg0($tx, 'theyDid')) : ''; // w\txAct($toMe, $byMe, $reallyToMe)
 
   $buttons = "<div class=\"col-xs-6\">$button1</div><div class=\"col-xs-6\">$button2</div>";
@@ -196,7 +194,6 @@ function addRow(&$tot, $row, $tx, $change, &$csvRow = '') {
     $row['fromyou'] = $row['toyou'] = '';
   } else {
     $frombank = '';
-    if (in($type, TX_REWARDS)) $row['fromyou'] = $row['toyou'] = '';
   }
   
   unset($row['buttons']); // don't download status or buttons

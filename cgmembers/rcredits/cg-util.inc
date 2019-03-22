@@ -1414,7 +1414,6 @@ function setBit(&$n, $b, $on = TRUE) {return $n = $on ? (@$n | u\bit($b)) : (@$n
 
 // Single line functions that need little or no explanation
 function test() {return (@TESTING == 1);} // set in test.php (when running an acceptance test)
-function nn($a, $else = '') {return is_null($a) ? $else : $a;}
 function num($a, $else = 0) {return is_numeric($a) ? $a : $else;}
 function eq($a, $b, $else = FALSE) {return $a == $b ? $a : $else;}
 function neq($a, $b, $else = FALSE) {return $a != $b ? $a : $else;}

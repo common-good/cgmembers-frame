@@ -85,8 +85,8 @@ Skip
 Scenario: A member gets a credit line
 # This fails if run on a day of the month that the previous month doesn't have (for example on 10/31)
   Given transactions:
-  | created   | type     | amount | from | to   | purpose |*
-  | %today-1m | transfer |    300 | .ZZE | .ZZF | gift    |
+  | created   | amount | from | to   | purpose |*
+  | %today-1m |    300 | .ZZE | .ZZF | gift    |
   Then balances:
   | uid  | rewards |*
   | .ZZE |     500 |
@@ -105,9 +105,9 @@ Resume
 #Scenario: A member gets a bigger credit line after several months
 # This fails if run on a day of the month that the previous month doesn't have (for example on 10/31)
 #  Given transactions:
-#  | created   | type     | amount | from | to   | rebate | bonus | purpose |*
-#  | %today-6m | transfer |    300 | .ZZE | .ZZF |   5000 |     0 | gift    |
-#  | %today-5m | transfer |   1500 | .ZZE | .ZZF |      0 |     0 | gift    |
+#  | created   | amount | from | to   | rebate | bonus | purpose |*
+#  | %today-6m |    300 | .ZZE | .ZZF |   5000 |     0 | gift    |
+#  | %today-5m |   1500 | .ZZE | .ZZF |      0 |     0 | gift    |
 #  Then balances:
 #  | uid  | rewards |*
 #  | .ZZE |    5000 |
@@ -126,8 +126,8 @@ Resume
 #  | payee | amount | created   |*
 #  | .ZZE  | 500   | %today-6w |
 #  And transactions:
-#  | created   | type     | amount | from | to   | purpose |*
-#  | %today-5w | transfer |    300 | .ZZE | .ZZF | gift    |
+#  | created   | amount | from | to   | purpose |*
+#  | %today-5w |    300 | .ZZE | .ZZF | gift    |
 #  When cron runs "tickle"
 #  Then members have:
 #  | uid  | floor |*
@@ -142,8 +142,8 @@ Scenario: A member gets no new credit line because the change would be minimal
   | uid  | floor |*
   | .ZZE |    49 |  
   And transactions:
-  | created   | type     | amount | from | to   | purpose |*
-  | %today-5w | transfer |    300 | .ZZE | .ZZF | gift    |
+  | created   | amount | from | to   | purpose |*
+  | %today-5w |    300 | .ZZE | .ZZF | gift    |
   When cron runs "tickle"
   Then members have:
   | uid  | floor |*

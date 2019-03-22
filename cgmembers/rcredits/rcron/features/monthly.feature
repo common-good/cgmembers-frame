@@ -20,24 +20,24 @@ Setup:
   | .ZZB |     100 |
   | .ZZC |     300 |
   When transactions: 
-  | xid | created   | type     | amount | from | to   | purpose |*
-  |   4 | %today-9d | transfer |     10 | .ZZB | .ZZA | cash E  |
+  | xid | created   | amount | from | to   | purpose |*
+  |   4 | %today-9d |     10 | .ZZB | .ZZA | cash E  |
   Then balances:
   | uid  | balance |*
   | .ZZA |     410 |
   | .ZZB |      90 |
   | .ZZC |     300 |
   When transactions: 
-  | xid | created   | type     | amount | from | to   | purpose |*
-  |   5 | %today-8d | transfer |    100 | .ZZC | .ZZA | usd F   |
+  | xid | created   | amount | from | to   | purpose |*
+  |   5 | %today-8d |    100 | .ZZC | .ZZA | usd F   |
   Then balances:
   | uid  | balance |*
   | .ZZA |     510 |
   | .ZZB |      90 |
   | .ZZC |     200 |
   When transactions: 
-  | xid | created   | type     | amount | from | to   | purpose |*
-  |   6 | %today-7d | transfer | 240.01 | .ZZA | .ZZB | what G  |
+  | xid | created   | amount | from | to   | purpose |*
+  |   6 | %today-7d | 240.01 | .ZZA | .ZZB | what G  |
   # pennies here and below, to trigger roundup contribution
   Then balances:
   | uid  | balance |*
@@ -45,24 +45,24 @@ Setup:
   | .ZZB |  330.01 |
   | .ZZC |  200.00 |
   When transactions: 
-  | xid | created   | type     | amount | from | to   | purpose |*
-  |   7 | %today-6d | transfer |  99.99 | .ZZA | .ZZB | pie N   |
+  | xid | created   | amount | from | to   | purpose |*
+  |   7 | %today-6d |  99.99 | .ZZA | .ZZB | pie N   |
   Then balances:
   | uid  | balance |*
   | .ZZA |     170 |
   | .ZZB |     430 |
   | .ZZC |     200 |
   When transactions: 
-  | xid | created   | type     | amount | from | to   | purpose |*
-  |   8 | %today-5d | transfer |    100 | .ZZC | .ZZA | labor M |
+  | xid | created   | amount | from | to   | purpose |*
+  |   8 | %today-5d |    100 | .ZZC | .ZZA | labor M |
   Then balances:
   | uid  | balance |*
   | .ZZA |     270 |
   | .ZZB |     430 |
   | .ZZC |     100 |
   When transactions: 
-  | xid | created   | type     | amount | from | to   | purpose |*
-  |   9 | %today-4d | transfer |     50 | .ZZB | .ZZC | cash P  |
+  | xid | created   | amount | from | to   | purpose |*
+  |   9 | %today-4d |     50 | .ZZB | .ZZC | cash P  |
   Then balances:
   | uid  | balance |*
   | .ZZA |     270 |
@@ -70,16 +70,16 @@ Setup:
   | .ZZC |     150 |
   # A: (21*(100+400) + 110+400 + 130+480 + 92+280 + -3+280 + 2*(107+280) + 3*(31+140))/30 * R/12 = 
   When transactions: 
-  | xid | created   | type     | amount | from | to   | purpose |*
-  |  10 | %today-3d | transfer |    120 | .ZZA | .ZZC | this Q  |
+  | xid | created   | amount | from | to   | purpose |*
+  |  10 | %today-3d |    120 | .ZZA | .ZZC | this Q  |
   Then balances:
   | uid  | balance |*
   | .ZZA |     150 |
   | .ZZB |     380 |
   | .ZZC |     270 |
   When transactions: 
-  | xid | created   | type     | amount | from | to   | purpose |*
-  |  11 | %today-1d | transfer |    100 |  .ZZA | .ZZB | cash V  |
+  | xid | created   | amount | from | to   | purpose |*
+  |  11 | %today-1d |    100 |  .ZZA | .ZZB | cash V  |
   Then balances:
   | uid  | balance |*
   | .ZZA |      50 |
@@ -108,11 +108,11 @@ Resume
   
 # roundups (creation date is last second of previous month)
   And transactions:
-  | xid | created | type     | amount | from | to  | purpose       | flags         |*
-  | 12  |       ? | transfer |   1.00 | .ZZA | cgf | roundups desc | gift,roundups |
+  | xid | created | amount | from | to  | purpose       | flags         |*
+  | 12  |       ? |   1.00 | .ZZA | cgf | roundups desc | gift,roundups |
  
 # crumbs (creation date is last second of previous month)
-  | 13  |       ? | transfer |   3.40 | .ZZC | cgf | crumbs desc   | gift,crumbs   |
+  | 13  |       ? |   3.40 | .ZZC | cgf | crumbs desc   | gift,crumbs   |
 
 # alerting admin about paper statements
   And we tell admin "Send paper statements" with subs:
@@ -121,5 +121,5 @@ Resume
 
 # NO (Seedpack gets no distribution) distribution of shares to CGCs
 #  And transactions:
-#  | xid | created | type     | amount | from | to   | flags |*
-#  |  20 |       ? | transfer |   2.20 |  cgf | ctty | gift  |
+#  | xid | created | amount | from | to   | flags |*
+#  |  20 |       ? |   2.20 |  cgf | ctty | gift  |

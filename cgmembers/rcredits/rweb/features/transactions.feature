@@ -29,13 +29,13 @@ Setup:
   | .ZZB |    2000 |
   | .ZZC |    3000 |
   Given transactions: 
-  | xid | created   | type     | amount | from | to   | purpose | taking |*
-  |   4 | %today-5m | transfer |     10 | .ZZB | .ZZA | cash E  | 0      |
-  |   5 | %today-4m | transfer |   1100 | .ZZC | .ZZA | usd F   | 1      |
-  |   6 | %today-3m | transfer |    240 | .ZZA | .ZZB | what G  | 0      |
-  |   7 | %today-2w | transfer |     50 | .ZZB | .ZZC | cash P  | 0      |
-  |   8 | %today-1w | transfer |    120 | .ZZA | .ZZC | this Q  | 1      |
-  |   9 | %today-6d | transfer |    100 | .ZZA | .ZZB | cash V  | 0      |
+  | xid | created   | amount | from | to   | purpose | taking |*
+  |   4 | %today-5m |     10 | .ZZB | .ZZA | cash E  | 0      |
+  |   5 | %today-4m |   1100 | .ZZC | .ZZA | usd F   | 1      |
+  |   6 | %today-3m |    240 | .ZZA | .ZZB | what G  | 0      |
+  |   7 | %today-2w |     50 | .ZZB | .ZZC | cash P  | 0      |
+  |   8 | %today-1w |    120 | .ZZA | .ZZC | this Q  | 1      |
+  |   9 | %today-6d |    100 | .ZZA | .ZZB | cash V  | 0      |
   Then balances:
   | uid  | balance |*
   | .ZZA |    1650 |
@@ -89,8 +89,8 @@ Scenario: A member looks at transactions for the past few days
 
 Scenario: A member looks at transactions with roundups
   Given transactions:
-  | xid | created | type     | amount | from | to   | purpose  |*
-  |  10 | %today  | transfer |  49.95 | .ZZA | .ZZC | sundries |
+  | xid | created | amount | from | to   | purpose  |*
+  |  10 | %today  |  49.95 | .ZZA | .ZZC | sundries |
   Then balances:
   | uid  | balance |*
   | .ZZA | 1600.05 |
@@ -110,16 +110,16 @@ Scenario: A member looks at transactions with roundups
   
 #Scenario: Transactions with other states show up properly
 #  Given transactions:
-#  | xid   | created   | type     | state    | amount | from | to   | purpose  | taking |*
-#  | .AACA | %today-5d | transfer | denied   |    100 | .ZZC | .ZZA | labor CA | 0      |
-#  | .AACB | %today-5d | rebate   | denied   |      5 | ctty | .ZZC | rebate   | 0      |
-#  | .AACC | %today-5d | bonus    | denied   |     10 | ctty | .ZZA | bonus    | 0      |
-#  | .AACD | %today-5d | transfer | denied   |      5 | .ZZA | .ZZC | cash CE  | 1      |
-#  | .AACE | %today-5d | transfer | disputed |     80 | .ZZA | .ZZC | this CF  | 1      |
-#  | .AACF | %today-5d | rebate   | disputed |      4 | ctty | .ZZA | rebate   | 0      |
-#  | .AACG | %today-5d | bonus    | disputed |      8 | ctty | .ZZC | bonus    | 0      |
-#  | .AACH | %today-5d | transfer | deleted  |    200 | .ZZA | .ZZC | never    | 1      |
-#  | .AACK | %today-5d | transfer | disputed |    100 | .ZZC | .ZZA | cash CL  | 1      |
+#  | xid   | created   | state    | amount | from | to   | purpose  | taking |*
+#  | .AACA | %today-5d | denied   |    100 | .ZZC | .ZZA | labor CA | 0      |
+#  | .AACB | %today-5d | denied   |      5 | ctty | .ZZC | 0      |
+#  | .AACC | %today-5d | denied   |     10 | ctty | .ZZA | 0      |
+#  | .AACD | %today-5d | denied   |      5 | .ZZA | .ZZC | cash CE  | 1      |
+#  | .AACE | %today-5d | disputed |     80 | .ZZA | .ZZC | this CF  | 1      |
+#  | .AACF | %today-5d | disputed |      4 | ctty | .ZZA | 0      |
+#  | .AACG | %today-5d | disputed |      8 | ctty | .ZZC | 0      |
+#  | .AACH | %today-5d | deleted  |    200 | .ZZA | .ZZC | never    | 1      |
+#  | .AACK | %today-5d | disputed |    100 | .ZZC | .ZZA | cash CL  | 1      |
 #  Then balances:
 #  | uid  |    r |*
 #  | .ZZA | 1942 |

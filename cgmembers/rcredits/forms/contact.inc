@@ -68,9 +68,11 @@ function formContact_submit($form, &$sta) {
   unset($info['owns']);
   
   global $mya;
-  if ($mya->id == 1) unset($info['name']); // don't change 'admin'
+  if ($mya->id == 1 OR $mya->isRegion) unset($info['name']); // don't change 'admin' or region shortname
   
   $info = u\normalizeCase(just('fullName city address postalAddr', $info)) + $info;
+  if ("$address $city $state" != "$mya->address $mya->city $mya->state") $info += ray('latitude longitude', 0, 0); // regeolocate
+  
   $partnerInfo = just('email phone address city state zip postalAddr', $info); // what to tell partner about
 
   $mya->eachPartner(function($coA, $custA, $custCode) { // tell partner what changed
