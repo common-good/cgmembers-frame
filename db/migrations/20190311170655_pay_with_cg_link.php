@@ -41,8 +41,8 @@ class PayWithCgLink extends AbstractMigration
     //!!!!!!!!!!!!! server, so these fields are added conditionally in a later migration, just to be sure.
     //!!!!!!!!!!!!! (20190322132821_one_metric.php
     $this->table('x_users')
-      ->addColumn('latitude', 'decimal', ['precision' => 11, 'scale'=>8, 'null' => false, 'default' => '0', 'comment' => 'latitude of account\'s physical address', 'after' => 'country']) 
-      ->addColumn('longitude', 'decimal', ['precision' => 11, 'scale'=>8, 'null' => false, 'default' => '0', 'comment' => 'longitude of account\'s physical address', 'after' => 'latitude']) 
+      ->addColumn('latitude', 'decimal', ['precision' => 11, 'scale'=>8, 'null' => false, 'default' => '0', 'comment' => "latitude of account's physical address", 'after' => 'country']) 
+      ->addColumn('longitude', 'decimal', ['precision' => 11, 'scale'=>8, 'null' => false, 'default' => '0', 'comment' => "longitude of account's physical address", 'after' => 'latitude']) 
       ->update();
   }
 }
