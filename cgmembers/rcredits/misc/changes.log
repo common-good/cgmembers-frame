@@ -1,3 +1,7 @@
+2019-03-22 feature/fix-metrics
+. fixed the graphics for the one-metric feature
+. changed chart.php so it is just a stub and the main code is all in rweb/
+
 2019-03-21 feature/one-metric
 . added calculations of median payees, median basket, donation types, and invitations to stats
 . created success metrics graph

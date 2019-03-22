@@ -1031,7 +1031,7 @@ function stats($ctty = 0, $when = NULL, $exact = FALSE) {
   u\setDft($when, strtotime('today'));
 
   list ($cttyCrit, $subs) = $ctty ? ['community=:ctty', compact('ctty')] : ['1', []];
-  $cttyStart = db\min('created', 'users', $cttyCrit, $subs);
+  $cttyStart = db\min('created', 'users', "$cttyCrit AND uid>:CANONIC_ACCTS", $subs);
   if (!$cttyStart or $when < $cttyStart) {
     $info = db\cols('r_stats', 'id');
     $info = ['created' => $when] + array_combine($info, array_fill(0, count($info), 0));
@@ -1040,7 +1040,6 @@ function stats($ctty = 0, $when = NULL, $exact = FALSE) {
     $sql = "SELECT * FROM r_stats WHERE created $sign :when AND ctty=:ctty ORDER BY created LIMIT 1";
     $info = db\q($sql, compact('ctty', 'when'))->fetchAssoc() ?: r\getStats($ctty, $when, $exact);
   }
-
   // add composite calculated fields to info  
   extract($info);
   $info['bals'] = $bals = $balsPos + $balsNeg;
