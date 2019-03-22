@@ -911,6 +911,7 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
  * @param bool $confirm: UNUSED <to be confirmed> (default FALSE)
  */
 function txRet($message, $info = []) {
+  debug(debug_backtrace());
   $info0 = $info;
   if (is_array($message)) {list ($message, $info, $confirm) = $message; $info += $info0;}
   if (!@$info['success']) r\tellCO('failed transaction', $info + @compact('message', 'confirm'));

@@ -95,7 +95,7 @@ class Tx {
     return null;
   }
 
-  private function getActorIdEntry() {
+  private function getActorEntry() {
     foreach ($this->entries as $entry) {
       if ($entry->uid == $this->actorId) return $entry;
     }

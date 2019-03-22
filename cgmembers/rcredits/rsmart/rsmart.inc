@@ -79,6 +79,7 @@ $GLOBALS['tStrings'] += array(
  *   message: an error message or help message to display on the device; or not set
  */
 function pos($args = FALSE) {
+  debug("pos(" . print_r($args, true) . ")");
   global $channel; $channel = TX_POS;
   global $scanned; $scanned = true;
   global $mya;
@@ -344,6 +345,7 @@ function photoReturn($pic) {
  * @return: json (ok, message, txid, created, balance, undo)
  */
 function charge($args, $type = 'charge') {
+  debug("r\Smart\charge(" . print_r($args, true) . ", $type)");
   global $mya;
 
   $keys = 'agent member amount goods description created';
@@ -379,8 +381,11 @@ function charge($args, $type = 'charge') {
 EOF;
     $subs = ray('created payer payee amount goods payeeFor', $created, $a->id, $mya->id, $amount, $goods, $description);
     $q = db\q($sql, $subs);
+    debug($q);
     $x = $q->fetch(\PDO::FETCH_ASSOC);
+    debug($x);
     if ($x) extract($x);
+    debug($xid);
   }
   
   $amount = str_replace(',', '', number_format($amount, 2)); // make sure both cents digits are included
@@ -403,6 +408,7 @@ EOF;
     $undo = $xid;
 
     $revRes = db\get('xid AS `undo`, created', 'r_tx_hdrs', 'reversesXid=:xid', ['xid'=>$xid]);
+    debug($revRes);
     if ($revRes) { // already got reversed
       extract(just('undo created', $revRes));
       $message = "Transaction has been reversed.";
@@ -444,7 +450,9 @@ EOF;
 
   /* extract(balrew($a)); */
   $balance = (($a->can(B_SECRET) and $mya->co) ? '*' : '') . round($a->balance, 2);
-  return ok(compact(ray('message txid created balance rewards did undo')));
+  $xx = ok(compact(ray('message txid created balance rewards did undo')));
+  debug($xx);
+  return $xx;
 }
 
 /**

@@ -685,6 +685,9 @@ function withProofOfAgentAmountCreatedMemberCode($agent, $amount, $created, $mem
 function weRespondOkTxidCreatedBalanceSaying($txid, $created, $balance, $msg = NULL) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $rposResult;
+
+  debug("weRespond...($txid, $created, $balance, " . print_r($msg, true));
+  debug($rposResult);
   
   extract($rposResult, EXTR_PREFIX_ALL, 'a'); // actual results
   $ok = '1';
