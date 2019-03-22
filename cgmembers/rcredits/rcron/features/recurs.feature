@@ -18,8 +18,8 @@ Scenario: A recurring donation happened yesterday
   | created    | payer | payee | amount | period |*
   | %yesterday | .ZZA  | .ZZC  |     10 |      M |
   And transactions:
-  | xid | created    | type     | amount | from | to   | purpose         | flags  |*
-  |   1 | %yesterday | transfer |     10 | .ZZA | .ZZC | monthly payment | recurs |
+  | xid | created    | amount | from | to   | purpose         | flags  |*
+  |   1 | %yesterday |     10 | .ZZA | .ZZC | monthly payment | recurs |
   When cron runs "recurs"
   Then count "txs" is 1
   
@@ -28,10 +28,10 @@ Scenario: A recurring donation happened long enough ago to repeat
   | created    | payer | payee | amount | period |*
   | %today-35d | .ZZA  | .ZZC  |     10 |      M |
   And transactions:
-  | xid | created    | type     | amount | from | to   | purpose         | flags  |*
-  |   1 | %today-35d | transfer |     10 | .ZZA | .ZZC | monthly payment | recurs |
+  | xid | created    | amount | from | to   | purpose         | flags  |*
+  |   1 | %today-35d |     10 | .ZZA | .ZZC | monthly payment | recurs |
   When cron runs "recurs"
   Then count "txs" is 2
   And transactions:
-  | xid | created | type     | amount | from | to   | purpose         | flags  |*
-  |   2 | %today  | transfer |     10 | .ZZA | .ZZC | monthly payment | recurs |  
+  | xid | created | amount | from | to   | purpose         | flags  |*
+  |   2 | %today  |     10 | .ZZA | .ZZC | monthly payment | recurs |  

@@ -23,31 +23,38 @@ if (!$site0 = @$site) {
 } else $site = 'https://' . $site;
 
 $data = file_get_contents("$site/community/chart-data/ctty=$ctty&chart=$chart");
+
+///  if ($chart == 'success') die($data);
 /**/ if ($site0 != 'dev' and strlen($data) < 200) die($data);
 $version = time();
 
 if ($selectable) {
   $cttys = file_get_contents("$site/community/list");
   $cttys = (array) json_decode($cttys);
+//  $cttys[-1] = 'Northern PV';
   $cttys = opts($cttys, $ctty);
+  
+  $atoms = opts(['d' => 'Days', 'w' => 'Weeks', 'm' => 'Months', 'y' => 'Years'], 'w');
+  
+  $downloadText = 'Download by Month';
 
   $charts = [
+    'success' => 'Success Metrics',
     'funds' => 'Dollar Pool',
     'growth' => 'Growth',
-    'banking' => 'Exchanges for Dollars',
+    'banking' => 'Bank Transfers',
     'volume' => 'Transaction Volume',
     'velocity' => 'Circulation Velocity',
   ];
-
-  $help = str_replace(' ', '-', strtolower($charts[$chart]));
-  $help = "<div id=\"help-line\"><a href=\"$site/help/$help/qid=$ctty\">More information</a></div>";
 
   $charts = opts($charts, $chart);
 
   $controls = <<<X
     <div>
-    <select id="ctty" class="form-control">$cttys</select><br>
+    <select id="ctty" class="form-control">$cttys</select>
+    <!--select id="atom" class="form-control">$atoms</select--><br>
     <select id="chart" class="form-control">$charts</select>
+    <a href="$site/community/graphs/ctty=$ctty&download=1" class="controlish">$downloadText</a>
     </div>
 X;
 } else $controls = $help = '';
@@ -85,7 +92,9 @@ X;
   
 <style>
   .form-control {width:auto; margin-left:30px;}
-  #chart {font-size:200%; font-weight:bold; height:200%;}
+  .controlish {display:block; margin:5px 0 0 30px;}
+  #ctty, #atom {display:inline-block;}
+  #chart {font-size:200%; font-weight:bold; height:200%; margin-top:10px;}
   #chart, #chart .selected {color:darkgreen;}
   .onechart {margin-left:-50px;}
   #help-line {margin-left:190px;}
@@ -94,9 +103,9 @@ X;
 
 <body>
 $controls
-<div id="{$chart}Chart" class="onechart"></div>
+<div id="onechart" class="onechart"></div>
 <div id="chart-data"><!--$data--></div>
-$help
+<div id="help-line"><a href="$site/help/CHARTHELP/qid=$ctty">More information</a></div>
 
 <script src="$site/rcredits/js/x/jquery-3.3.1.min.js"></script>
 <script id="script-goo-jsapi" src="https://www.google.com/jsapi"></script>
@@ -106,6 +115,8 @@ $help
 </body>
 </html>
 EOF;
+
+//<div id="{$chart}Chart" class="onechart"></div>
 
 exit();
 

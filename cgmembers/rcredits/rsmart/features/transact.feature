@@ -31,9 +31,9 @@ Setup:
   | .ZZC | .ZZD  |   3 | read       |
   | .ZZF | .ZZE  |   1 | sell       |
   And transactions: 
-  | xid | created   | type   | amount | from | to   | purpose |*
-  | 3   | %today-6m | grant  |    250 | ctty | .ZZC | growth  |
-  | 5   | %today-6m | grant  |    250 | ctty | .ZZF | stuff   |
+  | xid | created   | amount | from | to   | purpose |*
+  | 3   | %today-6m |    250 | ctty | .ZZC | growth  |
+  | 5   | %today-6m |    250 | ctty | .ZZF | stuff   |
   Then balances:
   | uid  | balance |*
   | ctty |    -500 |

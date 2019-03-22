@@ -45,8 +45,8 @@ Scenario: an unbanked member barely below target draws on another account
   | .ZZB | 99.99 |
   When cron runs "getFunds"
   Then transactions:
-  | xid | type     | amount | from | to   | goods         | taking | purpose      |*
-  |   1 | transfer |   0.01 | .ZZA | .ZZB | %FOR_NONGOODS |      1 | automatic transfer to NEWZZB,automatic transfer from NEWZZA |
+  | xid | amount | from | to   | goods         | taking | purpose      |*
+  |   1 |   0.01 | .ZZA | .ZZB | %FOR_NONGOODS |      1 | automatic transfer to NEWZZB,automatic transfer from NEWZZA |
   And we notice "drew" to member ".ZZB" with subs:
   | amount | why       |*
   | $0.01  | to bring your balance up to the target you set |

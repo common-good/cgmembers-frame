@@ -31,8 +31,8 @@ Setup:
   | .ZZC | .ZZD  |   3 | read       |
   | .ZZF | .ZZE  |   1 | sell       |
   And transactions: 
-  | xid | created   | type   | amount | from | to   | purpose |*
-  | 4   | %today-6m | grant  |    250 | ctty | .ZZF | stuff   |
+  | xid | created   | amount | from | to   | purpose |*
+  | 4   | %today-6m |    250 | ctty | .ZZF | stuff   |
   Then balances:
   | uid  | balance |*
   | ctty |    -250 |
@@ -59,8 +59,8 @@ Scenario: A cashier charged someone offline
 
 Scenario: A cashier charged someone offline and they have insufficient balance
   Given transactions: 
-  | xid | created | type     | amount | from | to   | purpose |*
-  | 5   | %today  | transfer |    200 | .ZZB | .ZZA | cash    |
+  | xid | created | amount | from | to   | purpose |*
+  | 5   | %today  |    200 | .ZZB | .ZZA | cash    |
   When reconciling "C:A" on "devC" charging ".ZZB,ccB" $100 for "goods": "food" at "%now-1h" force 1
   Then we respond ok txid 6 created "%now-1h" balance -300 rewards 240
   And we notice "new charge" to member ".ZZB" with subs:
@@ -102,8 +102,8 @@ Scenario: A cashier canceled offline a supposedly offline charge that actually w
   Then we respond ok txid 6 created %now balance 0 rewards 250
   And with undo "5"
   And we notice "new charge" to member ".ZZB" with subs:
-  | created | fullName | otherName  | amount | payerPurpose | otherRewardType | otherRewardAmount |*
-  | %today  | Bea Two  | Corner Pub | $100   | food         | reward          | $10               |
+  | created | fullName | otherName  | amount | payerPurpose |*
+  | %today  | Bea Two  | Corner Pub | $100   | food         |
   And we notice "new refund" to member ".ZZB" with subs:
   | created | fullName | otherName  | amount | payerPurpose       |*
   | %today  | Bea Two  | Corner Pub | $100   | food (reverses #1) |
@@ -116,12 +116,12 @@ Scenario: A cashier canceled offline a supposedly offline charge that actually w
 
 Scenario: A cashier canceled offline a supposedly offline charge that actually went through, but customer is broke
   Given transactions: 
-  | xid | created | type     | amount | from | to   | purpose |*
-  | 5   | %today  | grant    |    500 | ctty | .ZZC | growth  |
+  | xid | created | amount | from | to   | purpose |*
+  | 5   | %today  |    500 | ctty | .ZZC | growth  |
   And agent "C:A" asks device "devC" to charge ".ZZB,ccB" $-100 for "goods": "refund" at "%now-1h"
   And transactions: 
-  | xid | created | type     | amount | from | to   | purpose |*
-  | 7   | %today  | transfer |    300 | .ZZB | .ZZA | cash    |
+  | xid | created | amount | from | to   | purpose |*
+  | 7   | %today  |    300 | .ZZB | .ZZA | cash    |
   When reconciling "C:A" on "devC" charging ".ZZB,ccB" $-100 for "goods": "refund" at "%now-1h" force -1
   Then we respond ok txid 8 created %now balance -300 rewards 250
   And with undo "6"

@@ -24,18 +24,18 @@ Scenario: A member draws
   | op  | who  | amount | goods        | purpose |*
   | pay | .ZZB |     30 | %FOR_GOODS | food    |
   Then transactions:
-  | xid | type     | amount | from | to   | purpose      |*
-  |   1 | transfer |     20 | .ZZC | .ZZA | automatic transfer to NEWZZA,automatic transfer from NEWZZC |
-  |   2 | transfer |     30 | .ZZA | .ZZB | food         |
+  | xid | amount | from | to   | purpose      |*
+  |   1 |     20 | .ZZC | .ZZA | automatic transfer to NEWZZA,automatic transfer from NEWZZC |
+  |   2 |     30 | .ZZA | .ZZB | food         |
   
 Scenario: A member draws again
   When member ".ZZA" confirms form "pay" with values:
   | op  | who  | amount | goods        | purpose |*
   | pay | .ZZB |    130 | %FOR_GOODS | food    |
   Then transactions:
-  | xid | type     | amount | from | to   | purpose      |*
-  |   1 | transfer |    120 | .ZZC | .ZZA | automatic transfer to NEWZZA,automatic transfer from NEWZZC |
-  |   2 | transfer |    130 | .ZZA | .ZZB | food         |
+  | xid | amount | from | to   | purpose      |*
+  |   1 |    120 | .ZZC | .ZZA | automatic transfer to NEWZZA,automatic transfer from NEWZZC |
+  |   2 |    130 | .ZZA | .ZZB | food         |
 
 Scenario: A member overdraws with not enough to draw on
   When member ".ZZA" completes form "pay" with values:

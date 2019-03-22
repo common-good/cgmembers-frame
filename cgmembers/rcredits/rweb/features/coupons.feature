@@ -58,9 +58,9 @@ Scenario: A member redeems a discount coupon for a dollar amount
   | did    | otherName  | amount |*
   | paid   | Corner Pub | $100   |
   And transactions:
-  | xid | created | type     | amount | from  | to   | purpose |*
-  |   1 | %today  | transfer |    100 | .ZZA  | .ZZC | fun     |
-  |   2 | %today  | transfer |    -12 | .ZZA  | .ZZC | rebate (discount coupon #1) |
+  | xid | created | amount | from  | to   | purpose |*
+  |   1 | %today  |    100 | .ZZA  | .ZZC | fun     |
+  |   2 | %today  |    -12 | .ZZA  | .ZZC | rebate (discount coupon #1) |
   And balances:
   | uid  | balance |*
   | .ZZA |     -88 |

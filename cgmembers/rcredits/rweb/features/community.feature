@@ -33,21 +33,21 @@ Setup:
   | .ZZB |    2000 |
   | .ZZC |    3000 |
   Given transactions: 
-  | xid | created   | type      | amount | from | to   | purpose | goods      |*
-  |   4 | %today-3m | transfer  |     10 | .ZZB | .ZZA | cash E  | %FOR_USD |
-  |   5 | %today-3m | transfer  |    100 | .ZZC | .ZZA | usd F   | %FOR_USD |
-  |   6 | %today-3m | transfer  |    240 | .ZZA | .ZZB | what G  | %FOR_GOODS |
+  | xid | created   | amount | from | to   | purpose | goods      |*
+  |   4 | %today-3m |     10 | .ZZB | .ZZA | cash E  | %FOR_USD |
+  |   5 | %today-3m |    100 | .ZZC | .ZZA | usd F   | %FOR_USD |
+  |   6 | %today-3m |    240 | .ZZA | .ZZB | what G  | %FOR_GOODS |
 #  And statistics get set "%tomorrow-1m"
   And transactions: 
-  | xid | created   | type      | amount | from | to   | purpose | goods      | channel  |*
-  |  15 | %today-2w | transfer  |     50 | .ZZB | .ZZC | p2b     | %FOR_GOODS | %TX_WEB  |
-  |  18 | %today-1w | transfer  |    120 | .ZZA | .ZZC | this Q  | %FOR_GOODS | %TX_WEB  |
-  |  23 | %today-6d | transfer  |    100 | .ZZA | .ZZB | cash V  | %FOR_USD | %TX_WEB  |
-  |  27 | %today-2d | grant     |      4 | ctty | .ZZA | grant   | %FOR_USD | %TX_WEB  |
-  |  28 | %today-2d | loan      |      5 | ctty | .ZZB | loan    | %FOR_USD | %TX_WEB  |
-  |  29 | %today-2d | fine      |     -6 | ctty | .ZZC | fine    | %FOR_USD | %TX_WEB  |
-  |  30 | %today-1d | transfer  |    100 | .ZZC | .ZZA | payroll | %FOR_GOODS | %TX_WEB  |
-  |  33 | %today-1d | transfer  |      1 | .ZZC | .AAB | gift    | %FOR_GOODS | %TX_CRON |
+  | xid | created   | amount | from | to   | purpose | goods      | channel  |*
+  |  15 | %today-2w |     50 | .ZZB | .ZZC | p2b     | %FOR_GOODS | %TX_WEB  |
+  |  18 | %today-1w |    120 | .ZZA | .ZZC | this Q  | %FOR_GOODS | %TX_WEB  |
+  |  23 | %today-6d |    100 | .ZZA | .ZZB | cash V  | %FOR_USD | %TX_WEB  |
+  |  27 | %today-2d |      4 | ctty | .ZZA | grant   | %FOR_USD | %TX_WEB  |
+  |  28 | %today-2d |      5 | ctty | .ZZB | loan    | %FOR_USD | %TX_WEB  |
+  |  29 | %today-2d |     -6 | ctty | .ZZC | fine    | %FOR_USD | %TX_WEB  |
+  |  30 | %today-1d |    100 | .ZZC | .ZZA | payroll | %FOR_GOODS | %TX_WEB  |
+  |  33 | %today-1d |      1 | .ZZC | .AAB | gift    | %FOR_GOODS | %TX_CRON |
   Then balances:
   | uid  | balance |*
   | .ZZA |  754.00 |
@@ -66,9 +66,9 @@ Scenario: cron calculates the statistics
   |~CG Growth: | 3 members + 2 co |
   |~Dollar Pool: | $6,000 |
 #  |~CG | $6,002 |
-  |~Circulation Velocity: | 6.2% per mo. |
+  |~Circulation Velocity: | 6.4% per mo. |
   |~Monthly Bank Transfers | $6,000 (net) |
-  |~Monthly Transactions | 5 @ $74.20 |
+  |~Monthly Transactions | 8 @ $48.25 |
 # 2 members and 2 companies -- including CGF
   
 #  | Accounts        | 5 (3 personal, 2 companies) — up 5 from a month ago |

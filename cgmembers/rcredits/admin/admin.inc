@@ -306,7 +306,6 @@ function pioneerBonus($a) {
   if (!$a->ok or $a->co) return;
   if (db\exists('r_txs', "payee=:uid AND payer=-8915 AND amount=100", ray('uid', $a->id))) return;
 /**/  debug("Pioneer bonus to $a->fullName");
-//  be\fund($a->id, TX_SIGNUP, 100, 'pioneer bonus');
 }
 
 
