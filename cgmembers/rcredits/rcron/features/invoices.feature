@@ -35,7 +35,7 @@ Setup:
   |   1 | %today  |    100 | .ZZA | .ZZC | one (%PROJECT inv#1) | 0      |
   # | xid | created | type     | amount | from | to   | purpose             | taking |*
   # |   1 | %today  | transfer |    100 | .ZZA | .ZZC | one (%PROJECT inv#1) | 0      |
-	Then count "txs" is 1
+	Then count "tx_hdrs" is 1
 	And count "usd" is 2
 	And count "invoices" is 4
 	And usd transfers:
@@ -88,6 +88,6 @@ Scenario: Non-member unpaid invoice does not generate a transfer request
   | nvid | created   | status       | amount | from | to   | for   |*
   |    5 | %today    | %TX_APPROVED |    100 | .ZZE | .ZZC | one   |
   When cron runs "invoices"
-	Then count "txs" is 1
+	Then count "tx_hdrs" is 1
 	And count "usd" is 2
 	And count "invoices" is 5

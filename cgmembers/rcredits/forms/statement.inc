@@ -28,7 +28,7 @@ function statement($period = '') {
   $endBals = be\creditInfo($uids, $end);
   /* print_r($endBals); */
   
-  extract(just('frombank fromyou toyou', $tot));
+  /* extract(just('frombank fromyou toyou', $tot)); */
   $bal0 = $startBals['balance']; // balance BEFORE start of this period
   $bal9 = $endBals['balance'];
   $in0 = $startBals['in'];
@@ -108,7 +108,7 @@ function statement($period = '') {
       if (in_array($entry['uid'], $uids)) continue;
       extract(just('tid created name description amount', $entry));
       $date = strftime('%b %d', $created); // reformat for single month
-      if (strlen($purpose) > $purposeLenMax + 3) $purpose = substr($purpose, 0, $purposeLenMax) . '...';
+      if (strlen($description) > $purposeLenMax + 3) $description = substr($description, 0, $purposeLenMax) . '...';
       $amount = -$amount;  // since we're looking at it from the other party's view
       
       foreach ($fields as $field) {

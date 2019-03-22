@@ -121,10 +121,10 @@ X;
     $txs[] = $entries;
   }
   // arrange for running balance to appear in, and be the same in, every entry for a transaction
-  $myBalance = balanceAsOf($uids[0], $starting);
+  $myBalance = balanceAsOf($aUids[0], $starting);
   foreach ($txs as $i => $entries) {
     foreach ($entries as $entry) {
-      if (in_array($entry['uid'], $uids)) $myBalance += $entry['amount'];
+      if (in_array($entry['uid'], $aUids)) $myBalance += $entry['amount'];
     }
     foreach ($entries as $j => $entry) {
       $entry['runBalance'] = $myBalance;
@@ -173,7 +173,7 @@ function balanceAsOf($uids, $date=null) {
   if (is_null($date)) return 0;
   if (is_integer($uids)) {
     $a = r\acct($uids);
-    ($a->jid != 0) ? $uids = [$uids, $a->jid] : [$uid];
+    ($a->jid != 0) ? $uids = [$uids, $a->jid] : [$uids];
   }
   return db\sum('amount', 'r_entries JOIN r_tx_hdrs USING(xid)', 'uid IN (:uids) AND created<:date', ['uids' => $uids, 'date' => $date]);
 }
@@ -412,8 +412,7 @@ function reverse($xid) {
 /**
  * Pay the given invoice, possibly without being signed in.
  * @param int $nvid: record ID of invoice to pay
- * @param string $msg: success or error message
- * @return [TRUE] if the payment was successful
+ * @return [TRUE, explanation] if the payment was successful
  *         [FALSE, explanation] if the payment failed
  */
 function payInvoice($nvid) {
@@ -504,6 +503,9 @@ function payInvoice($nvid) {
  */
 function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
   global $scanned, $channel;
+
+  debug($for);
+  
   u\EXPECT('string acct acct number string|array int assoc', $type, $actor, $other, $amount, $for, $goods, $data);
   if (is_null($goods)) $goods = FOR_GOODS;
   u\EXPECT(!is_null($goods), "bad goods");
@@ -515,6 +517,9 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
   case 'payment':
   case 'invoice payment':
     $taking = false;
+    break;
+  case 'transfer': // until we figure out what it should be
+    $taking = $amount < 0;
     break;
   default:
     u\EXPECT(false, "type must not be '$type'.");
@@ -532,15 +537,19 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
   list ($actorId, $otherId) = array($actor->id, $other->id);
 
   if ($force != 0) $offline = TRUE; // temporary until app handles this right
+
+  debug('here');
   
   $erInfo = compact(ray('goods amount for force')) + ray('actor other op', $actor->fullName, $other->fullName, $taking ? t('charged') : t('paid'));
   $amount = round($amount, 2); // ignore fractions of cents
   if ($amount == 0) {
 /**/  r\tellAdmin('zero transaction', $erInfo + ['stack' => trace()]);
-    return r\txRet('zero transaction', $erInfo);
+    return r\txRet('zero transaction', $erInfo + ['success' => false]);
   }
   $reallyTaking = ($taking xor $amount < 0); // not taking if charging a negative amount
 
+  debug('here');
+  
   list ($loser, $gainer) = u\order($reallyTaking, $other, $actor);
   list ($loserFor, $gainerFor) = u\order($reallyTaking, $otherFor, $actorFor);
   $loserTid = $loser->nextTid();
@@ -554,10 +563,13 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
   if (!empty($lastTx) and !$force and $channel != TX_WEB and $lastTx->actorId == $actorId
       and $lastTx->otherId == $otherId and $lastTx->goods == $goods and $lastTx->getAmount($actor) == $amount
       and ((r\rTime() - $lastTx->created) < R_DUPTX_MINS * MIN_SECS)) {
-    return r\txRet('duplicate transaction', $erInfo);
+    return r\txRet('duplicate transaction', $erInfo + ['success' => false]);
   }
 
+  debug('here');
+  
   if ($err = r\txPermErr($actor, $other, $taking, $amount < 0)) { // Check permissions
+    debug($err);
     list ($erMsg, $erSubs) = $err;
     if ($force) {
       $msg = 'forced without perm';
@@ -565,8 +577,10 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
       foreach (['agent1'=>$actor, 'agent2'=>$other] as $k => $a) $erInfo += [$k => $a->proSe ? t('self') : $a->fullName];
       foreach ([$actor, $other] as $a) if (!$a->proSe) r\message($a->id, $msg, $erInfo);
       r\tellAdmin($msg . ' ' . t($erMsg, $erSubs), $erInfo + $erSubs);
-    } else return r\txRet($erMsg, $erInfo + $erSubs);
+    } else return r\txRet($erMsg, $erInfo + $erSubs + ['success'=>false]);
   }
+
+  debug('here');
   
   foreach ([$actor, $other] as $a) if (!$a->co and !($channel == TX_POS ? $a->agentA->ided : $a->ided)) {
     if ($force) {
@@ -576,9 +590,9 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
 //      return r\txRet($a == $actor ? 'no photoid' : 'other no photoid', $erInfo + ['who' => $other->fullName]);
     }
   }
-  
+  debug('here');
   // Check the amount
-  if ($error = u\badAmount($amount)) return r\txRet($error, $erInfo);
+  if ($error = u\badAmount($amount)) return r\txRet($error, $erInfo+['success'=>false]);
 //  $need = $amount - @$payerReward; // leave room for reversing rewards (minus a negative)
 
   $gainerType = ($gainer->isMe($payer)) ? ENTRY_PAYER : ENTRY_PAYEE;
@@ -595,10 +609,11 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
   $tx = new r\Tx($info);
   if (!$tx) {
     $DBTX->rollback();
-    return r\txRet('tx create err', $erInfo);
+    return r\txRet('tx create err', $erInfo+['success'=>false]);
   }
   $entries = [new r\TxEntry(['entryType' => $gainerType, 'amount' => abs($amount), 'uid' => $gainer->id, 'agentUid' => $gainer->agentId, 'description' => $gainerFor, 'acctTid' => $gainerTid]),
               new r\TxEntry(['entryType' => $loserType, 'amount' => 0-abs($amount), 'uid' => $loser->id, 'agentUid' => $loser->agentId, 'description' => $loserFor, 'acctTid' => $loserTid])];
+  debug('here');
 
   // Apply coupon
   if ($amount > 0 AND ($goods != TX_USD)) {
@@ -607,9 +622,11 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
   } else {
     $rebate = 0;
   }
+  debug('here');
   
   // Calculate any balance shortfall
   $needed = abs($amount)-$rebate;
+  debug($needed);
   if ($shortfall = $loser->id < 0 ? 0 : $loser->shortfall($goods, $needed, TRUE, $actor)) {
     if ($force) {
       $short = TRUE; // flag overdraft
@@ -629,7 +646,7 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
       $loser->suggestAuto();
       $details = t('|%loser was short by %short trying to pay %gainer %amount (available balance is %avail)', 'loser short gainer amount avail', $loser->fullName, $short, $gainer->fullName, u\fmtAmt($needed), $avail);
       $DBTX->rollback();
-      return r\txRet($msg, compact(ray('otherName short details avail')));
+      return r\txRet($msg, compact(ray('otherName short details avail')) + ['success'=>false]);
     }
   }
 
@@ -650,7 +667,7 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
   $xid = $tx->insert();
   if (!$xid) {
     $DBTX->rollback();
-    return r\txRet('tx save error');
+    return r\txRet('tx save error', ['success'=>false]);
   }
   unset($DBTX);
   
@@ -695,7 +712,7 @@ function sendNotifications($reversing, $tx, $shortfall) {
   $args = $tx->reportArgs($tx->actor, TRUE, $shortfall);
   if ($notice == 'new payment' and $other->co) { // not "new charge" (the most common); payment at payer's initiative
     $notice = 'new payment linked';
-    $args['_aPayLink'] = $other->makeDo('addr', $actorId, 0); // link to address, so merchant can ship or nonprofit can thank
+    $args['_aPayLink'] = $other->makeDo('addr', $tx->actorId, 0); // link to address, so merchant can ship or nonprofit can thank
   }
   r\notify($tx->otherId, $notice, $args);
   $msg = 'report tx';
@@ -849,8 +866,8 @@ function invoice($actor, $other, $amount, $purpose = NULL, $goods, $extra = []) 
     $subs += ray('_a1 reply email phone', $link, $payeeId, $actor->email, u\fmtPhone($actor->phone));
     r\message($payerId, 'new invoice', $subs); // tell other party by email about this invoice
   } else { // pre-approved!
-    if (!$other->shortfall(TX_CHARGE, $amount)) { // don't try to pay yet if short
-      $ok = be\payInvoice($nvid, $msg);
+    if (!$other->shortfall(TX_TRANSFER, $amount)) { // don't try to pay yet if short
+      list($ok, $msg) = be\payInvoice($nvid);
       if (!$ok) r\tellAdmin(t('invoice payment failed'), compact('msg') + $subs + $info);
     }
   }

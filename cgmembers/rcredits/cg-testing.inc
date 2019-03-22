@@ -337,9 +337,8 @@ function doInvoice($info) {
   $missing = array_diff_key(['amount'=>1, 'payer'=>1, 'payee'=>1, 'purpose'=>1], $info);
   u\EXPECT($missing == [], "missing fields " . print_r($missing, true));
 
-  $invInfo = u\exactly('status goods created', $info, [TX_PENDING, u\forCash($purpose) ? FOR_USD : FOR_GOODS, r\rTime()]);
+  $invInfo = u\exactly('status goods created', $info, [TX_PENDING, u\forCash($info['purpose']) ? FOR_USD : FOR_GOODS, r\rTime()]);
   $invInfo = array_merge($invInfo, just('nvid amount flags data payer payee', $info));  // extract directly, and might not be present
-  $invInfo = array_merge($invInfo, ray('purpose', $purpose));
   $nvid = db\updateOrInsert('r_invoices', $invInfo, 'nvid');
   u\EXPECT(!empty($nvid));
   $xid = $invInfo['status'];
@@ -588,8 +587,11 @@ function usdTransferCount($where = '1') {
 
 function usdTransfers($txs) {
   global $testOnly, $channel; $channel0 = $channel;
+  static $count = 0;
 
   foreach ($txs as $tx) { // do not extract $tx, because setDft will fail after the first unless we unset vars
+    debug("doing tx # $count");
+    $count += 1;
     if (@$tx['payee']) $payee = $tx['payee'] = t\uid($tx['payee']);
 
     if ($testOnly) {
@@ -601,9 +603,15 @@ function usdTransfers($txs) {
       u\setDft($tx['txid'], t\seq());
       u\setDft($tx['risk'], NULL);
       u\setDft($tx['created'], @$tx['completed']);
+      debug('creating r_usd');
       if (!db\insert('r_usd', $tx, 'txid')) return FALSE;
 //      if (@$tx['completed']) $a->update('r', $a->o_r - $tx['amount']);
-      if (@$tx['completed']) $a->update('balance', $a->o_balance + $tx['amount']);
+      if (@$tx['completed']) {
+        debug('creating transfer');
+        EXPECT(be\transfer('transfer', r\acct(CG_INCOMING_BANK_UID), $a, $tx['amount'], 'usd transfer', FOR_USD,
+                           ['created' => $tx['completed']]),
+               'failure creating completion transaction');
+      }
     }
   }
   return TRUE;

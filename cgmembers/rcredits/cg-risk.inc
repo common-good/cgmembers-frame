@@ -96,9 +96,9 @@ function txRisk1($xid, &$risk = 0, &$calc = 0) {
   if (!is_null($reverser)) setRisk('redo');
 
   $fields = <<<EOF
-    payerE.uid AS payerU, payeeE.uid AS payeeU, payeeE.amount AS amount, payee.:IS_CO AS payeeIsCo,
+    payerE.uid AS payerId, payeeE.uid AS payeeId, payeeE.amount AS amount, payee.:IS_CO AS payeeIsCo,
     payer.:IS_CO AS payerIsCo, payeeE.description AS payeeFor, payerE.description AS payerFor,
-    t.:IS_OFFLINE AS offline, t.goods
+    t.:IS_OFFLINE AS offline, t.goods, t.created, t.channel
 EOF;
   $table = <<<EOF
     r_tx_hdrs t JOIN r_entries payerE USING(xid) JOIN r_entries payeeE USING(xid)
@@ -108,13 +108,13 @@ EOF;
 ";
   $rows = db\rows($fields, $table, $where, ['xid'=>$xid]);
   foreach ($rows AS $row) {
-    extract(u\exactly('payerU payeeU amount payeeIsCo payerIsCo payeeFor payerFor offline goods', $row, null));
+    extract(u\exactly('payerId payeeId amount payeeIsCo payerIsCo payeeFor payerFor offline goods created channel', $row, null));
 
-    $cttyPayer = ($payer < 0);
-    $payerA = r\acct($payerU);
-    $payeeA = r\acct($payeeU);
+    $cttyPayer = ($payerId < 0);
+    $payerA = r\acct($payerId);
+    $payeeA = r\acct($payeeId);
 
-    if ($payerU < 0) continue; // most transfers to/from the community should be ignored
+    if ($payerId < 0) continue; // most transfers to/from the community should be ignored
     if ($goods == FOR_USD) {
       if ($payeeIsCo) {
         setRisk(($channel == TX_POS and r\usdin($payeeFor)) ? (/*@$xfee ? 'bankIn' :*/ 'cashIn') : 'cashOut');
@@ -123,20 +123,20 @@ EOF;
       }
       if ($payerA->risk >= K_RED) setRisk('suspectOut');
     } else {
-      if ($payerIsCo and !$payeeIsCo and !r\isEmployee($payeeU, $payerU)) setRisk('b2p'); // company payment to non-employee individual
+      if ($payerIsCo and !$payeeIsCo and !r\isEmployee($payeeId, $payerId)) setRisk('b2p'); // company payment to non-employee individual
     }
     $samePostal = ($payerA->postalAddr == $payeeA->postalAddr);
     $withCo = ($payerIsCo or $payeeIsCo); // at least one party is a company
     if (!$withCo and !$samePostal) setRisk('p2p'); // transaction between individuals at different postal addresses
-    if ($withCo and (r\owning($payerU, $payeeU) or $samePostal or r\isEmployee($payerU, $payeeU))) setRisk('inhouse'); // transaction with owner or family member same address or payment by employee
+    if ($withCo and (r\owning($payerId, $payeeId) or $samePostal or r\isEmployee($payerId, $payeeId))) setRisk('inhouse'); // transaction with owner or family member same address or payment by employee
 
     $since = $created - WEEK7_SECS; // just recent activity by customers, in case many are new
     $count = db\count('r_tx_hdrs JOIN r_entries payer USING(xid) JOIN r_entries payee USING(xid)',
-                      'payer.amount < 0 AND payee.amount > 0 AND payer.id < payee.id AND payer.uid=:payer AND payee.uid=:payee AND created BETWEEN :since AND :created', ray('payer payee since created', $payerU, $payeeU, $since, $created));
-    setBigToFrom('From', 'payer', $payerU, $amount, $created, $count);
-    setBigToFrom('To', 'payee', $payeeU, $amount, $created, $count);
+                      'payer.amount < 0 AND payee.amount > 0 AND payer.id < payee.id AND payer.uid=:payer AND payee.uid=:payee AND created BETWEEN :since AND :created', ray('payer payee since created', $payerId, $payeeId, $since, $created));
+    setBigToFrom('From', 'payer', $payerId, $amount, $created, $count);
+    setBigToFrom('To', 'payee', $payeeId, $amount, $created, $count);
 
-    setOriginRisk($payerU, $created, $amount);
+    setOriginRisk($payerId, $created, $amount);
 
     if ($channel == TX_WEB or $channel == TX_SMS) {
       setRisk('absent'); // transaction by web or SMS (no in person)
@@ -144,17 +144,17 @@ EOF;
         setRisk('invoiceless'); // payment to non-employee without an invoice
       }
     }
-  }
 
-  setRisk('fromSuspect', $payerA->risk / K_RED, $payerA->risk >= K_RED); // payment from suspicious account
-  setRisk('toSuspect', $payeeA->risk / K_RED, $payeeA->risk >= K_RED); // payment to suspicious account
+    setRisk('fromSuspect', $payerA->risk / K_RED, $payerA->risk >= K_RED); // payment from suspicious account
+    setRisk('toSuspect', $payeeA->risk / K_RED, $payeeA->risk >= K_RED); // payment to suspicious account
   
-  if ($offline) { // offline
-    setRisk('offline');
-    if (!db\exists('r_tx_hdrs t JOIN r_entries payer USING(xid) JOIN r_entries payee USING(xid)',
-                   'payer.uid=:payer AND payee.uid=:payee AND xid<>:xid AND payee.amount>0',
-                   compact('payer', 'payee', 'xid'))) {
-      setRisk('firstOffline'); // offline for first payment to this company
+    if ($offline) { // offline
+      setRisk('offline');
+      if (!db\exists('r_tx_hdrs t JOIN r_entries payer USING(xid) JOIN r_entries payee USING(xid)',
+                     'payer.uid=:payer AND payee.uid=:payee AND xid<>:xid AND payee.amount>0',
+                     compact('payer', 'payee', 'xid'))) {
+        setRisk('firstOffline'); // offline for first payment to this company
+      }
     }
   }
   
@@ -318,9 +318,9 @@ function setBigToFrom($way, $field, $uid, $amount, $created, $count) {
   
   $subtotals =<<<EOF
     SELECT AVG(ABS(amount)) as avg0, MAX(ABS(amount)) AS max0, COUNT(*) AS count0 
-    FROM r_txs 
-    WHERE payer>0 AND IF(amount<0,$other,$field)=:uid AND created>:since 
-    GROUP BY IF(amount<0,$field,$other)
+    FROM r_entries e JOIN r_tx_hdrs t USING(xid)
+    WHERE e.uid=:uid AND t.created>:since 
+    GROUP BY e.uid
 EOF;
   $sql = <<< EOF
     SELECT SUM(IF(:amount<avg0, 1, 0)) AS less, 

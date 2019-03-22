@@ -5,10 +5,10 @@ SO I can spend it with my rCard.
 
 Setup:
   Given members:
-  | uid  | fullName | floor | minimum | flags               | achMin | risks   |*
-  | .ZZA | Abe One  |     0 |     100 | co,ok,refill,bankOk | 30     | hasBank |
-  | .ZZB | Bea Two  |   -50 |     100 | ok,refill           | 30     |         |
-  | .ZZC | Our Pub  |   -50 |     100 | ok,co               | 50     | hasBank |
+  | uid  | fullName | floor | minimum | flags                         | achMin | risks   |*
+  | .ZZA | Abe One  |     0 |     100 | co,ok,refill,bankOk,confirmed | 30     | hasBank |
+  | .ZZB | Bea Two  |   -50 |     100 | ok,refill,confirmed           | 30     |         |
+  | .ZZC | Our Pub  |   -50 |     100 | ok,co                         | 50     | hasBank |
   And relations:
   | main | agent | draw |*
   |.ZZA | .ZZB  | 1    |
@@ -161,7 +161,7 @@ Scenario: a non-member has a target and refills
   Then usd transfers:
   | txid | payee | amount | channel  |*
   |    1 | .ZZA  |    100 | %TX_CRON |
-	And count "txs" is 0
+	And count "tx_hdrs" is 0
 	And count "usd" is 1
 	And count "invoices" is 0
 	

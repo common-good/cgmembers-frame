@@ -412,7 +412,9 @@ EOF;
       if (!@$subs['success']) return badTx($args, $name, $msg, $subs);
       $txid = $subs['xid'];
       $created = $subs['created0'];
-      $message = t($msg, $subs);
+      $subsNoTx = $subs;
+      unset($subsNoTx['newTx']);
+      $message = t($msg, $subsNoTx);
       r\tellAdmin('reversing tx', ray('xid uid created message subs', $xid, $mya->id, u\fmtDate($created), $message, $subs));
     }
   } elseif (@$force == "-1" and !@$xid) { // doesn't exist and shouldn't

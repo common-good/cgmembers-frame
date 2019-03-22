@@ -48,73 +48,73 @@ Scenario: a member moves credit to the bank
   | uid  | balance |*
   | .ZZA |       0 |
 
-Scenario: a member draws credit from the bank with zero floor
-  When member ".ZZB" completes form "get" with values:
-  | op  | amount    |*
-  | get | %R_ACHMIN |
-  Then usd transfers:
-  | txid | payee | amount    | created   | completed | channel |*
-  | 5007 |  .ZZB | %R_ACHMIN | %tomorrow |         0 | %TX_WEB |
-  And balances:
-  | uid  | balance |*
-  | .ZZA |      86 |
-  And we say "status": "banked|bank tx number" with subs:
-  | action     | amount     | checkNum | why             |*
-  | draw from  | $%R_ACHMIN |     5007 | at your request |
+# Scenario: a member draws credit from the bank with zero floor
+#   When member ".ZZB" completes form "get" with values:
+#   | op  | amount    |*
+#   | get | %R_ACHMIN |
+#   Then usd transfers:
+#   | txid | payee | amount    | created   | completed | channel |*
+#   | 5007 |  .ZZB | %R_ACHMIN | %tomorrow |         0 | %TX_WEB |
+#   And balances:
+#   | uid  | balance |*
+#   | .ZZA |      86 |
+#   And we say "status": "banked|bank tx number" with subs:
+#   | action     | amount     | checkNum | why             |*
+#   | draw from  | $%R_ACHMIN |     5007 | at your request |
 
-Scenario: a member draws credit from the bank with adequate floor
-  When member "C:B" completes form "get" with values:
-  | op  | amount |*
-  | get |     10 |
-  Then usd transfers:
-  | txid | payee | amount | created | completed | channel |*
-  | 5007 |  .ZZC |     10 | %today  |    %today | %TX_WEB |
-  And balances:
-  | uid  | balance |*
-  | .ZZC | 40      |
-  And we say "status": "banked|bank tx number|available now" with subs:
-  | action     | amount | checkNum | why             |*
-  | draw from  |    $10 |     5007 | at your request |
+# Scenario: a member draws credit from the bank with adequate floor
+#   When member "C:B" completes form "get" with values:
+#   | op  | amount |*
+#   | get |     10 |
+#   Then usd transfers:
+#   | txid | payee | amount | created | completed | channel |*
+#   | 5007 |  .ZZC |     10 | %today  |    %today | %TX_WEB |
+#   And balances:
+#   | uid  | balance |*
+#   | .ZZC | 40      |
+#   And we say "status": "banked|bank tx number|available now" with subs:
+#   | action     | amount | checkNum | why             |*
+#   | draw from  |    $10 |     5007 | at your request |
   
-Scenario: a member moves too little to the bank
-  When member ".ZZA" completes form "get" with values:
-  | op  | amount           |*
-  | put | %(%R_ACHMIN-.01) |
-  Then we say "error": "bank too little"
+# Scenario: a member moves too little to the bank
+#   When member ".ZZA" completes form "get" with values:
+#   | op  | amount           |*
+#   | put | %(%R_ACHMIN-.01) |
+#   Then we say "error": "bank too little"
 
-#Scenario: a member tries to cash out rewards and/or pending withdrawals
-#  When member ".ZZA" completes form "get" with values:
-#  | op  | amount |*
-#  | put |     87 |
-#  Then we say "error": "short put|short cash help" with subs:
-#  | max |*
-#  | $86 |
+# #Scenario: a member tries to cash out rewards and/or pending withdrawals
+# #  When member ".ZZA" completes form "get" with values:
+# #  | op  | amount |*
+# #  | put |     87 |
+# #  Then we say "error": "short put|short cash help" with subs:
+# #  | max |*
+# #  | $86 |
 
-Scenario: a member moves too much to the bank
-  When member ".ZZB" completes form "get" with values:
-  | op  | amount |*
-  | put |    200 |
-  Then we say "error": "short put" with subs:
-  | max |*
-  | $96 |
-  # one chunk each from ctty, A, and D. Only $2 from C.
+# Scenario: a member moves too much to the bank
+#   When member ".ZZB" completes form "get" with values:
+#   | op  | amount |*
+#   | put |    200 |
+#   Then we say "error": "short put" with subs:
+#   | max |*
+#   | $96 |
+#   # one chunk each from ctty, A, and D. Only $2 from C.
 
-Scenario: a member tries to go below their minimum
-  When member ".ZZD" completes form "get" with values:
-  | op  | amount |*
-  | put |     61 |
-  Then we say "error": "change min first"
+# Scenario: a member tries to go below their minimum
+#   When member ".ZZD" completes form "get" with values:
+#   | op  | amount |*
+#   | put |     61 |
+#   Then we say "error": "change min first"
 
-Scenario: a member asks to do two transfers out in one day
-  Given usd transfers:
-  | payee | amount | created   |*
-  |  .ZZD |     -6 | %today    |
-  When member ".ZZD" completes form "get" with values:
-  | op  | amount |*
-  | put |     10 |
-  Then we show "Transfer Funds" with:
-  |~Pending |
-  | You have total pending exchange requests of $6 to your bank account. |
-  And we say "error": "short put" with subs:
-  | max |*
-  | $0  |
+# Scenario: a member asks to do two transfers out in one day
+#   Given usd transfers:
+#   | payee | amount | created   |*
+#   |  .ZZD |     -6 | %today    |
+#   When member ".ZZD" completes form "get" with values:
+#   | op  | amount |*
+#   | put |     10 |
+#   Then we show "Transfer Funds" with:
+#   |~Pending |
+#   | You have total pending exchange requests of $6 to your bank account. |
+#   And we say "error": "short put" with subs:
+#   | max |*
+#   | $0  |

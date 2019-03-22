@@ -35,11 +35,11 @@ Scenario: A brand new recurring donation can be completed
 #  | amount | myName  | often | *
 #  |     10 | Abe One |     1 |
   # and many other fields
-	And count "txs" is 1
+	And count "tx_hdrs" is 1
 	And count "usd" is 0
 	And count "invoices" is 0
 	When cron runs "recurs"
-	Then count "txs" is 1
+	Then count "tx_hdrs" is 1
 	And count "usd" is 0
 	And count "invoices" is 0
 
@@ -77,12 +77,12 @@ Scenario: A recurring donation cannot be completed
 	Then invoices:
   | nvid | created   | status       | amount | from | to  | for                                | flags          |*
   |    1 | %today    | %TX_APPROVED |    200 | .ZZA | cgf | regular donation (Monthly) | gift,recurs |	
-	And count "txs" is 0
+	And count "tx_hdrs" is 0
 	And count "usd" is 0
 	And count "invoices" is 1
 
   When cron runs "invoices"
-	Then count "txs" is 0
+	Then count "tx_hdrs" is 0
   And count "usd" is 1
   And count "invoices" is 1
   And	invoices:
@@ -90,7 +90,7 @@ Scenario: A recurring donation cannot be completed
   |    1 | %today    | %TX_APPROVED |    200 | .ZZA | cgf | regular donation (Monthly) | gift,recurs,funding |	
 
 	When cron runs "recurs"
-	Then count "txs" is 0
+	Then count "tx_hdrs" is 0
   And count "usd" is 1
   And count "invoices" is 1
 
@@ -104,7 +104,7 @@ Scenario: A non-member chooses a donation
   | %today-3y | .ZZD  | cgf   |      1 |      Y |
   | %today-3m | .ZZE  | cgf   |    200 |      M |
   When cron runs "recurs"
-	Then count "txs" is 0
+	Then count "tx_hdrs" is 0
 	And count "usd" is 0
 	And count "invoices" is 0
 	

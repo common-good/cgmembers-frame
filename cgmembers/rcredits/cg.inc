@@ -1231,19 +1231,19 @@ X;
   // get payees
   $sql = <<< X
     SELECT MEDIAN(payees0) OVER () AS payees FROM (
-      SELECT u.uid, COUNT(DISTINCT t.payee) AS payees0
-      FROM users u JOIN r_txs t ON u.uid=t.payer
-      WHERE u.:IS_OK AND t.created>$recent AND $nonCtty AND $cttyCrit
+      SELECT u.uid, COUNT(DISTINCT payee.uid) AS payees0
+      FROM users u LEFT OUTER JOIN r_entries payer ON u.uid=payer.uid JOIN r_tx_hdrs t USING(xid) JOIN r_entries payee USING(xid)
+      WHERE u.:IS_OK AND t.created>$recent AND u.$nonCtty AND $cttyCrit
     ) x LIMIT 1
 X;
     $res += db\q($sql, $subs)->fetchAssoc() ?: [];
     
   // get basket
   $sql = <<< X
-    SELECT SUM(amount) AS basket FROM r_txs t
-    JOIN users u ON u.uid=t.payer
-    JOIN users u2 ON u2.uid=t.payee
-    WHERE t.created>$recent AND $cttysCrit
+    SELECT SUM(payee.amount) AS basket
+    FROM r_tx_hdrs t JOIN r_entries payer USING(xid) JOIN r_entries payee USING(xid)
+         JOIN users u ON u.uid=payer.uid JOIN users u2 ON u2.uid=payee.uid
+    WHERE payer.amount < 0 AND payee.amount > 0 AND t.created>$recent AND $cttysCrit
 X;
     $res += db\q($sql, $subs)->fetchAssoc() ?: [];
   
@@ -1335,8 +1335,8 @@ function averageBalance($uid, $start, $end = NULL, $noj = FALSE) {
   if (is_null($end)) { $end = r\rTime(); }
   $days = round(($end + 1 - $start) / DAY_SECS);
   if ($days == 0) return [0, 0, 0, 0]; // rounding is for daylight savings time changes
-  $info = be\creditInfo(ray('uids asof', $uids, $start));
-  $min = $bal = $info->balance;
+  $info = be\creditInfo(ray('uids asof', [$uid], $start));
+  $min = $bal = $info['balance'];
   /* $jid = $noj ? 0 : (r\acct($uid)->jid ?: 0); */
 
   $day = 0;
@@ -1349,7 +1349,7 @@ function averageBalance($uid, $start, $end = NULL, $noj = FALSE) {
     GROUP BY day
 EOF;
 
-  $q = db\q($sql, ['uids' => $uids]);
+  $q = db\q($sql, ['uids' => [$uid]]);
 
   while($row = $q->fetchAssoc()) {
     $prevDay = $day;
@@ -1405,23 +1405,23 @@ function riskList($risks, $descs) {
  * @return [message, subs, confirmed] on error, else false
  */
 function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
+
+  debug("txPermErr($a1->id, $a2->id, $taking, $neg");
+  
   global $scanned, $channel;
   
   $invoicing = ($taking and $channel == TX_WEB);
   if ($invoicing and !$a2->confirmed) $a2->setBit(B_CONFIRMED);
 
-  if (!$a2->ok and (!$invoicing or $a2->closed)) {
-    return array('non member', ['otherName' => $a2->fullName], FALSE); // okay to invoice (and maybe someday pay) a not-yet-active, but not a no-longer-active account
-  }
+  // Check a1
   u\EXPECT($a1->ok, 'main account inactive tx');
-  foreach ([$a1, $a2] as $a) {
-    $other = $a == $a1 ? $a2 : $a1; // if neither confirmed nor confirming icard by tx with inviter
-    //    if (!$a->confirmed and !($a->iCode == IBY_ICARD and $a->helper == $other->id)) { 
-    //    if (!$a->confirmed and $a->helper != $other->id) { 
-    if (!$a->confirmed and $other->id > 0 and $other->id != CGID) { // communities and CG can transact with anyone
+  if (!$a1->isCanonical) {
+    //    if (!$a1->confirmed and !($a1->iCode == IBY_ICARD and $a1->helper == $a2->id)) { 
+    //    if (!$a1->confirmed and $a1->helper != $a2->id) { 
+    if (!$a1->confirmed and !$a2->isCanonical) { // communities and CG can transact with anyone
       if ($a1->community != $a2->community or $channel != TX_POS) { // first tx must be in-person at home
-        return FALSE ? ['not confirmed', ray('youName inviterName', $a->fullName, $a->helperA->fullName), FALSE]
-          : ['first at home', ray('whose', $a == $a1 ? t('Your') : "$a->fullName's"), FALSE]; // "FALSE ?" should be $a1->cttyA->invites ?
+        return FALSE ? ['not confirmed', ray('youName inviterName', $a1->fullName, $a1->helperA->fullName), FALSE]
+          : ['first at home', ray('whose', $a1 == $a1 ? t('Your') : "$a1->fullName's"), FALSE]; // "FALSE ?" should be $a1->cttyA->invites ?
       }
     }
   }
@@ -1431,18 +1431,14 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   if ($scanned and $taking) list ($myAccess, $myWhat) = $neg ? array(B_REFUND, t('refunds')) : array(B_SCAN, t('sales'));
   ///  debug(compact(ray('taking neg scanned myAccess otherAccess myWhat otherWhat')));
   if (!$a1->can($myAccess)) return array("no perm", ray('what', $myWhat), FALSE);
-  if (!$a2->can($otherAccess)) if (!($invoicing and $a2->proSe)) return array("other no perm", ray('otherName what', $a2->agentA->fullName, $otherWhat), FALSE);
+  if ((!$a2->can($otherAccess)) and (!($invoicing and $a2->proSe))) {
+    return array("other no perm", ray('otherName what', $a2->agentA->fullName, $otherWhat), FALSE);
+  }
   //  if (!$a1->can($myAccess)) return array("no $myAccessErr", [], FALSE);
   //  if (!$a2->can($otherAccess)) return array("other no $otherAccessErr", ray('otherName', $a2->agentA->fullName), FALSE);
 
-  /*
-    if ($a1->id > 0 and $a2->id != CGID) { // allow rewards and donations in not-yet-active communities
-    if (!$a1->cttyActive) return array('community not active', ray('whose', t('Your')), FALSE);
-    if (!$a2->cttyActive) return array('community not active', ray('whose', t('That account\'s')), FALSE);
-    }
-  */
-  if (!$a1->cttyUp) return array('your community down', ray('contact', $a1->cAdminContact()), FALSE);
-  if (!$a2->cttyUp) return array('other community down', [], FALSE);
+  if (!$a1->cttyUp and !$a1->isCanonical) return array('your community down', ray('contact', $a1->cAdminContact()), FALSE);
+  if (!$a2->cttyUp and !$a2->isCanonical) return array('other community down', [], FALSE);
   if ($a1->id == $a2->id) return array('no self-trading', [], FALSE);
   return FALSE;
 }

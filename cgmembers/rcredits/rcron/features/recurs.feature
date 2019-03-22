@@ -21,7 +21,7 @@ Scenario: A recurring donation happened yesterday
   | xid | created    | amount | from | to   | purpose         | flags  |*
   |   1 | %yesterday |     10 | .ZZA | .ZZC | monthly payment | recurs |
   When cron runs "recurs"
-  Then count "txs" is 1
+  Then count "tx_hdrs" is 1
   
 Scenario: A recurring donation happened long enough ago to repeat
   Given these "recurs":
@@ -31,7 +31,7 @@ Scenario: A recurring donation happened long enough ago to repeat
   | xid | created    | amount | from | to   | purpose         | flags  |*
   |   1 | %today-35d |     10 | .ZZA | .ZZC | monthly payment | recurs |
   When cron runs "recurs"
-  Then count "txs" is 2
+  Then count "tx_hdrs" is 2
   And transactions:
   | xid | created | amount | from | to   | purpose         | flags  |*
-  |   2 | %today  |     10 | .ZZA | .ZZC | monthly payment | recurs |  
+  |   2 | %today  |     10 | .ZZA | .ZZC | monthly payment | recurs |

@@ -1467,12 +1467,20 @@ function format_string($string, array $args = array()) {
  * @ingroup sanitization
  */
 function plain($text) {
-  if(!is_string($text)) {
+  switch (gettype($text)) {
+  case 'string':
+  case 'integer':
+  case 'boolean':
+  case 'double':
+    return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+  case 'NULL':
+    return 'null';
+  default:
     print_r("argument passed to plain has type " . gettype($text));
     var_dump(debug_backtrace());
     die('plain');
   }
-  return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');}
+}
 function check_plain($text) {return plain($text);}
 function unplain($text) {return htmlspecialchars_decode($text, ENT_QUOTES);} // reverse \check_plain
 

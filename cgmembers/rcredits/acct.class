@@ -161,6 +161,10 @@ class Acct {
       return db\get('balance', 'users', 'uid=:id', ['id' => $this->id]);
     case 'lastTx':
       return $this->lastTx();
+    case 'isCanonical':
+      return $this->id > 0 and $this->id < CANONIC_ACCTS;
+    default:
+      break;  // fall through
     }
       
     if (u\starts($field, 'o_')) { // ignore joinedness of the account, if it is joint ("own" account)
@@ -555,7 +559,7 @@ class Acct {
     */	
 
     $info = justNOT(SECURE_FLDS . ' ' . VSECURE_FLDS . ' ' . DATA_FLDS, $info); // don't pass these
-    return $info ? db\update('users', $info + ['uid' => $this->id], 'uid') : TRUE;
+    return $info ? db\update('users', /*array_filter($info, function($x) { })*/ $info + ['uid' => $this->id], 'uid') : TRUE;
   }
 
   /**
@@ -1623,6 +1627,8 @@ EOF;
    */
   public function can($bit = B_READ) {
 
+    if ($this->isCanonical and in($bit, B_MEMBER, B_CONFIRMED, B_OK, B_NONUDGE, B_DEBT)) return true;
+
     if ($bit <= B_MAX) { // ordinary bits
       $can = (bool) ($this->flags & (1 << $bit)); // these are easy. be efficient.
       if (in($bit, [B_ADMIN2, B_CADMIN2, B_CADMIN, B_ADMIN])) {
@@ -1811,7 +1817,7 @@ EOF;
    * @param assoc $data: extra data for transaction or invoice
    * @return TRUE if the funds were successfully transferred (otherwise the payer is invoiced).
    */
-  public function payApproved($payeeId, $amount, $desc, $data = []) {
+  public function payApproved($payeeId, $amount, $desc, $goods, $data = []) {
     $payee = r\acct($payeeId);
     u\EXPECT($payee->ok, 'inactive recipient');
     if ($payeeId != CGID or $this->activated) u\EXPECT($this->ok, 'inactive payer'); // not-yet-active accounts can be invoiced for gifts to CG

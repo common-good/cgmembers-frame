@@ -495,23 +495,13 @@ function everyYear() {
 /* } */
 
 /**
- * Donate rounded change to the community. Date the transaction in the preceding month (in which the roundups originate).
- * Allow this even if account is inactive (donation has already been made, from member's point of view).
- */
-function roundup($item) {
-  extract(just('uid donate', $item));
-  $a = r\acct($uid);
-  if ($donate > 0 and $a->ok) $a->payApproved(CGID, $donate, t('roundups desc'), null, ray('created roundups gift', u\monthDay1() - 1, TRUE, TRUE));
-}
-
-/**
  * Donate percentage of funds received to the community.
  * Allow this even if account is inactive (donation has already been made, from member's point of view).
  */
 function crumbs($item) {
   extract(just('uid donate', $item));
   $a = r\acct($uid);
-  if ($donate > 0 and $a->ok) $a->payApproved(CGID, $donate, t('crumbs desc'), ray('created crumbs gift', u\monthDay1() - 1, TRUE, TRUE));
+  if ($donate > 0 and $a->ok) $a->payApproved(CGID, $donate, t('crumbs desc'), FOR_NONGOODS, ray('created crumbs gift', u\monthDay1() - 1, TRUE, TRUE));
 }
 
 /**
@@ -892,10 +882,11 @@ function recurs1($item) {
 	extract(just('period lastTxDt created invoiced amount payer payee payeeName firstXid', $item));
 	if (!$invoiced and giveNow($period, $lastTxDt, $created)) {
     list ($payerFor, $data) = r\setupGift($period);
-    if ($firstXid and $res = db\get('description AS payerFor', 'r_tx_hdrs JOIN r_entries payer USING(xid)', 'xid=:firstXid AND payer.uid=:payer', compact('firstXid payer'))) {
+    if ($firstXid and $res = db\get('description AS payerFor, goods', 'r_tx_hdrs JOIN r_entries payer USING(xid)', 'xid=:firstXid AND payer.uid=:payer', compact('firstXid payer'))) {
       extract($res);
     }
-    if (r\acct($payer)->payApproved($payee, $amount, $payerFor, $data)) {
+    if (!is_set($goods)) $goods = FOR_NONGOODS;
+    if (r\acct($payer)->payApproved($payee, $amount, $payerFor, $goods, $data)) {
       r\notify($payer, 'recur pay', ray('amount purpose to', u\fmtAmt($amount), $payerFor, $payeeName));
     }
   }
@@ -995,8 +986,8 @@ function invoice($item) {
   
   if ($status == TX_APPROVED) {
 		if (!$a->ok) return; // don't try to pay from an inactive account (we can delay collection by temporarily deactivating)
-		if ($a->roundup) $amount = ceil($amount);
-		$amtFld = $a->roundup ? 'CEILING(amount)' : 'amount';
+		/* if ($a->roundup) $amount = ceil($amount); */
+		$amtFld = 'amount'; // $a->roundup ? 'CEILING(amount)' : 'amount';
     $short = round($a->advances() + $amount - $a->avail(), 2); //	consider credit already used for advances from the bank
 
     if ($short <= 0) { // pay the invoice if we have enough funds

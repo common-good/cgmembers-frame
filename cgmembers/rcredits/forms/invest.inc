@@ -153,24 +153,15 @@ function clubVal(&$investments = 0, &$liquid = 0, &$reserve = 0) {
  * @param numeric $icVal: club's total current value
  */
 function myClubVal($clubVal) {
-
-  debug('Unfinished   ' . debug_backtrace());
-  return;
-
   global $mya;
 	$stake = 'amount'; // 'IF(payer.uid=:clubid,-amount,amount)';
 	$share = "(:NOW-created)*$stake";
-	$isMe = ':myid IN (payer.uid, payee.uid)';
 	$sql = <<<X
 	  SELECT SUM($stake) AS totalStake,
-		       SUM($share) AS totalShare,
-		       SUM(IF($isMe, $stake, 0)) AS myStake,
-					 SUM(IF($isMe, $share, 0)) AS myShare
-	  FROM r_tx_hdrs t JOIN r_entries payer USING(xid) JOIN r_entries payee USING(xid)
-    WHERE payer.amount < 0 AND payee.amount > 0 AND :clubid IN (payer.uid, payee.uid) AND :IS_STAKE
+           SUM(IF(e.uid=:myid, $stake, 0)) AS myStake
+	  FROM r_tx_hdrs t JOIN r_entries e USING(xid)
+    WHERE e.uid=:clubid AND :IS_STAKE
 X;
   extract(db\q($sql, ray('myid clubid', $mya->id, $mya->iclubid))->fetchAssoc());
-	$share = ($totalShare + 0) ? $myShare / $totalShare : 0;
-	if ($clubVal > $totalStake) $share *= (1 - ICLUB_TITHE); // reserve some profit for community and CG
-	return round($myStake + $share * ($clubVal - $totalStake), 2);
+	return round($myStake, 2);
 }
