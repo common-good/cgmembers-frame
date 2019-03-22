@@ -36,6 +36,13 @@ class PayWithCgLink extends AbstractMigration
       ->addColumn('payees', 'decimal', ['precision' => 11, 'scale'=>2, 'null' => false, 'default' => '0', 'comment' => 'median number of payees per active account over the past 30 days', 'after' => 'usdOutCount']) 
       ->addColumn('basket', 'decimal', ['precision' => 11, 'scale'=>2, 'null' => false, 'default' => '0', 'comment' => 'median (positive) amount per transaction over the past 30 days', 'after' => 'payees']) 
       ->update();    
-    
+
+    //!!!!!!!!!!!!! Note that the following was added after the fields were added by hand on the production
+    //!!!!!!!!!!!!! server, so these fields are added conditionally in a later migration, just to be sure.
+    //!!!!!!!!!!!!! (20190322132821_one_metric.php
+    $this->table('x_users')
+      ->addColumn('latitude', 'decimal', ['precision' => 11, 'scale'=>8, 'null' => false, 'default' => '0', 'comment' => 'latitude of account\'s physical address', 'after' => 'country']) 
+      ->addColumn('longitude', 'decimal', ['precision' => 11, 'scale'=>8, 'null' => false, 'default' => '0', 'comment' => 'longitude of account\'s physical address', 'after' => 'latitude']) 
+      ->update();
   }
 }
