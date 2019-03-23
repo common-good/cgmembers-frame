@@ -2044,12 +2044,14 @@ define('DATA_POINTS', 18); // how many x-axis data points to show in each datase
  * @param int $ctty: community account ID
  * @param bool $selectable: <show the account and community selectors> (default FALSE)
  */
-function chartFrame($chart = 'growth', $selectable = FALSE, $ctty = NULL) {
+function chartFrame($chart, $selectable = FALSE, $ctty = NULL) {
   global $base_url, $mya;
   u\setDft($ctty, $mya ? $mya->community : 0);
+  $region = r\acct('!' . R_SERVER_ID)->fullName;
   list ($w, $h) = $selectable ? [600, 600]: [480, 320];
-  $url = isDEV ? "$base_url/rcredits/misc/chart.php?site=dev" : ("https://cg4.us/chart.php?site=" . str_replace('https://', '', $base_url));
-  return w\tag('iframe', '', ray('src width height', "$url&ctty=0&chart=$chart&selectable=$selectable&t=" . time(), $w, $h)); // src must be first
+//  $url = isDEV ? "$base_url/rcredits/misc/chart.php?site=dev" : ("https://cg4.us/chart.php?site=" . str_replace('https://', '', $base_url));
+  $url = (isDEV ? "$base_url/rcredits/misc" : "https://cg4.us") . "/chart.php?site=$base_url";
+  return w\tag('iframe', '', ray('src width height', "$url&region=$region&ctty=0&chart=$chart&selectable=$selectable&t=" . time(), $w, $h)); // src must be first
 }
 
 function firstGraphDt($ctty) {  
@@ -2072,7 +2074,8 @@ function showCharts($whichChart, $ctty = 0, &$chartData = '', $download = FALSE)
 
   list ($in, $out, $net, $personal, $companies) = array(t('in'), t('out'), t('net'), t('personal'), t('companies'));
   $txTypes = ray('p2p p2b b2b b2p', t('Person-to-person'), t('Person-to-business (mostly by %PROJECT card)'), t('Business-to-business (paying suppliers)'), t('Business-to-person (including payroll)'));
-  $today = strtotime('today', db\max('created', 'r_stats', compact('ctty')));
+  $latest = time(); // db\max('created', 'r_stats', compact('ctty')); // show only as much data as we have
+  $today = strtotime('today', $latest ?: time());
 //  $dt1 = w\firstGraphDt($ctty);
   $period = 'months';
 
@@ -2083,12 +2086,13 @@ function showCharts($whichChart, $ctty = 0, &$chartData = '', $download = FALSE)
   for ($ago = DATA_POINTS; $ago >= 0; $ago--) {
     $dt = strtotime("-$ago $period", $today);
     if (!@$dt1) $dt1 = $dt; // remember first date for this community
-    if (!$stats = r\stats($ctty, $dt, TRUE)) continue;
+//    if (!$stats = r\stats($ctty, $dt, TRUE) or !$stats['created']) continue;
+    $stats = r\stats($ctty, $dt, TRUE);
     extract(just('ctty created', $stats)); // careful with this (don't overwrite local vars)
-    $stats30 = r\stats($ctty, strtotime('-30 days', $created)); 
+    $stats30 = r\stats($ctty, strtotime('-31 days', $created)); // 30 gets weird for partially-populated r_stats so use 31
     extract(w\fundStats($stats, FALSE, $stats30)); // format, originals in {var}0, difs in d_{var}
     $gifts0 =  $patronage0 + $d_roundups0 + $d_crumbs0;
-    $success0 = $aAccts0 * $payees0 * $basket0 * $gifts0;
+    $success0 = $aAccts0 * $payees0 * $basket0 * $gifts0 / 500000;
     
     if ($download) {
       $pctActive = $aAccts0 / (($bAccts0 + $pAccts0) ?: 1);
@@ -2098,7 +2102,7 @@ function showCharts($whichChart, $ctty = 0, &$chartData = '', $download = FALSE)
     } else {
   //    $ray = ray('v f', $pAccts0 + $bAccts0, $bAccts);
   //    $growthData[] = [$created, vf($bAccts, $pAccts0), $pAccts0, $newbs0, $aAccts0, $conx0, $conxLocal0];  
-      $successData[] = [$created, $success0, $aAccts0, $gifts0, $payees0, $basket0, $invites0];
+      $successData[] = [$created, $success0, $aAccts0, $gifts0, $payees0, $basket0, $d_invites0];
       $growthData[] = [$created, vf($bAccts, $pAccts0), $pAccts0, $newbs0, $aAccts0];  
       $fundsData[] = [$created, vf($balsPos), vf($usd), vf(u\fmtAmt($balsPos0 - $d_txs0)), vf($topN), vf($botN), vf($floors), vf($balsNeg)]; // $bals === $usd, so not shown
       $velocityData[] = [$created, vf($cgRate, $localRate0), vf($localRate), vf($usdVolRate)];

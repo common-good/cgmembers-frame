@@ -15,6 +15,7 @@ var getv = parseUrlQuery($('#script-charts').attr('src').replace(/^[^\?]+\??/,''
 var ctty = getv['ctty'];
 var chartName = getv['chart'];
 var site = getv['site'];
+var region = getv['theregion'];
 
 var ch = $('#chart-data').html();
 ch = ch.substr(4, ch.length - 7); // trim off the comment markers
@@ -246,8 +247,8 @@ function volumeChart() {
 }
 
 function recall(chart, ctty) {
-  var myUrl = site == 'dev' ? 'http://localhost/cgmembers-frame/cgmembers/rcredits/misc' : 'https://cg4.us';
-  window.location = myUrl + '/chart.php?selectable=1&chart=' + chart + '&ctty=' + ctty + '&site=' + site;
+  var myUrl = site.search('cgmembers') > 0 ? 'http://localhost/cgmembers-frame/cgmembers/rcredits/misc' : 'https://cg4.us';
+  window.location = myUrl + '/chart.php?selectable=1&chart=' + chartName + '&ctty=' + ctty + '&site=' + site + '&region=' + region;
 };
 
 function fixChartClass(context) {
@@ -272,7 +273,8 @@ function dtFmt() {return period == 'y' ? 'yyyy' : (period == 'm' ? 'MMM' : (peri
  * @param int remove: index of column to remove, if any
  */
 function myRows(table, dataName, remove) {
-  var dataSet = ch[dataName];
+//  var dataSet = ch[dataName];
+  var dataSet = JSON.parse(JSON.stringify(ch[dataName])); // get a COPY of the original dataset (multiply by 1000 only once)
   for (i in dataSet) {
     dataSet[i][0] = new Date(dataSet[i][0] * 1000);
     if (remove) dataSet[i].splice(remove, 1); 
