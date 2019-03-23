@@ -47,24 +47,24 @@ Setup:
   | .ZZI  |   cgf |      5 |     Y |
 # share is irrelevant here as long as it is non-negative
   And transactions: 
-  | xid | created   | type     | amount | from | to   | purpose | channel |*
-  |   1 | %today-7m | signup   |    250 | ctty | .ZZA | signup  | %TX_SYS |
-  |   2 | %today-6m | signup   |    250 | ctty | .ZZB | signup  | %TX_SYS |
-  |   3 | %today-6m | signup   |    250 | ctty | .ZZE | signup  | %TX_SYS |
-  |   4 | %today-5m | transfer |     10 | .ZZB | .ZZA | cash E  | %TX_POS |
-  |   5 | %today-1m | transfer |   1100 | .ZZA | .ZZC | USD in (cash) | %TX_POS |
+  | xid | created   | amount | from | to   | purpose | channel |*
+  |   1 | %today-7m |    250 | ctty | .ZZA | signup  | %TX_SYS |
+  |   2 | %today-6m |    250 | ctty | .ZZB | signup  | %TX_SYS |
+  |   3 | %today-6m |    250 | ctty | .ZZE | signup  | %TX_SYS |
+  |   4 | %today-5m |     10 | .ZZB | .ZZA | cash E  | %TX_POS |
+  |   5 | %today-1m |   1100 | .ZZA | .ZZC | USD in (cash) | %TX_POS |
   # (cash) is required else a transaction fee transaction is created
-  |   6 | %today-3w | transfer |    240 | .ZZA | .ZZB | what G  | %TX_POS |
+  |   6 | %today-3w |    240 | .ZZA | .ZZB | what G  | %TX_POS |
 
-  |   7 | %today-2w | transfer |     50 | .ZZB | .ZZC | cash P  | %TX_POS |
-  |   8 | %today-1w | transfer |    120 | .ZZA | .ZZH | offline | %TX_POS |
+  |   7 | %today-2w |     50 | .ZZB | .ZZC | cash P  | %TX_POS |
+  |   8 | %today-1w |    120 | .ZZA | .ZZH | offline | %TX_POS |
 
-  |   9 | %today-6d | transfer |    100 | .ZZA | .ZZB | cash V  | %TX_WEB |
-  |  10 | %today-1d | transfer |    120 | .ZZA | .ZZC | undoneBy:17 | %TX_POS |
-  |  11 | %today-1d | transfer |   -120 | .ZZA | .ZZC | undoes:14 | %TX_POS |
-  |  12 | %today-1d | transfer |     40 | .ZZC | .ZZE | labor   | %TX_WEB |
-  |  13 | %today-1d | transfer |     10 | .ZZF | .ZZE | cash    | %TX_WEB |
-  |  14 | %today-1d | transfer |     11 | .ZZF | .ZZE | cash    | %TX_WEB |  
+  |   9 | %today-6d |    100 | .ZZA | .ZZB | cash V  | %TX_WEB |
+  |  10 | %today-1d |    120 | .ZZA | .ZZC | undoneBy:17 | %TX_POS |
+  |  11 | %today-1d |   -120 | .ZZA | .ZZC | undoes:14 | %TX_POS |
+  |  12 | %today-1d |     40 | .ZZC | .ZZE | labor   | %TX_WEB |
+  |  13 | %today-1d |     10 | .ZZF | .ZZE | cash    | %TX_WEB |
+  |  14 | %today-1d |     11 | .ZZF | .ZZE | cash    | %TX_WEB |  
   And usd transfers:
   | txid | payee | amount | completed |*
   |    1 | .ZZA  |    400 | %today-2m |  
@@ -100,6 +100,8 @@ Scenario: We calculate risks
   | uid  | risks |*
   | .ZZA | adminOk,trusted,geography,badConx,moreOut,big7Week |
   | .ZZB | trusted,moves,rents,moreIn,moreOut |
+#  | .ZZC | cashCo,homeCo,miser,bigDay,bigWeek,big7Week |
+# time of day makes a difference
   | .ZZC | cashCo,homeCo,miser,bigDay |
   | .ZZD | trusted,hasBank,miser |
   | .ZZE | new,shady,poBox,moreIn |
@@ -113,6 +115,8 @@ Scenario: We calculate risks
   When cron runs "acctRiskFinish"
   Then riskThresholds:
   | Day | Week | 7Week | Year |*
+#  | 621 |  621 |  1270 | 1570 |
+# time of day makes a difference
   | 330 |  340 |   635 |  785 |
 
   When cron runs "txRisk"

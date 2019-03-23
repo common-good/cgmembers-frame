@@ -26,7 +26,7 @@ function formSignupCo($form, &$sta) {
 //  $flow = radiosFld(t(''), '', required(0), $flows);
   $flow = hidFld(0);
   $submit = t('Open Account');
-  return cgform(compact(ray('title relationPrompt relation flowPrompt flow submit')));
+  return cgform(@compact(ray('title relationPrompt relation flowPrompt flow submit')));
 }
 
 function formSignupCo_validate($form, &$sta) {

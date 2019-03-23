@@ -73,7 +73,7 @@ class Acct {
 
     if (!@$uid and !@$region) $region = @$zip ? -r\region(@$country, @$state, @$zip) : -r\uidRegion($community);
 
-    $record = compact('uid', 'name');
+    $record = @compact('uid', 'name');
     
     $DBTX = db_transaction();
     $uid = r\regionalInsert('users', 'uid', $record, @$region);
@@ -90,7 +90,7 @@ class Acct {
     self::$rs[$a->id] = (object) $record;
 
     foreach (ray('number region') as $k) unset($info[$k]);
-    u\preray(compact(ray('phone email pass fullName legalName flags state community created login access emailCode cardCode stepsDone')), $info); // things we may have added or changed
+    u\preray(@compact(ray('phone email pass fullName legalName flags state community created login access emailCode cardCode stepsDone')), $info); // things we may have added or changed
     $a->update($info); // this is a lot easier to do after saving the record
     unset($DBTX); // commit
   }
@@ -368,11 +368,9 @@ class Acct {
 
     if ($firstTime and !$a->co) { // no bonus or helper bonus for a company signing up
       if ($a->ssnData['CGerror'] and !$a->risk('ssnOff') and !$a->risk('dobOff')) $a->setRisk('ssnOff'); // make SURE this bit gets set (might not if admin signs the person up
-//      be\fund($a->id, TX_SIGNUP, R_SIGNUP_BONUS, t('signup bonus'));
 
       if (!$a->helperA->co and !$a->helperA->superAdmin) { // no helper bonus for company referral or help by superAdmin (cAdmin is okay) [don't require $a->confirmed]
         $fullName = $a->fullName;
-//        be\fund($hId = $a->helper, TX_HELPER, R_HELPER_BONUS, t('invite reward', compact('fullName')));
         $helped = db\count('users', ':IS_OK AND NOT :IS_CO AND helper=:hId', ray('hId', $a->helper)) + 0;
         if ($helped == ORGANIZER_GRANT_MIN) {
   //            r\message($a->helper, 'organizer grant', ['_a' => w\atag('/community/grant')]);
@@ -737,7 +735,7 @@ class Acct {
       $access = r\rTime();
       if ($channel == TX_WEB) $login = $access;
       $lastip = $_SERVER['REMOTE_ADDR'];
-      $a->update(compact('login', 'access', 'lastip'));
+      $a->update(@compact('login', 'access', 'lastip'));
     }
     if (@$a->ok) r\ipok($a->id, $box); // box is not very important
     return $mya = $a;
@@ -1450,7 +1448,7 @@ EOF;
 		}
 		
 		$msg = join('|', $msg);
-		$args = compact(ray('suggested _a1 _aSecret _aDebt'));
+		$args = @compact(ray('suggested _a1 _aSecret _aDebt'));
 		if ($web) return t($msg, $args); else r\notify($a->id, $msg, $args);
 	}
 	
@@ -1655,25 +1653,37 @@ X;
     $a = $this;
     if (!db\exists('users', 'uid<1 AND uid=:newCtty', compact('newCtty'))) return !$err = 'bad ctty';
     
-//    $DBTX = \db_transaction();
     $a->update('community', $newCtty);
-//    if ($retro) db\q('UPDATE r_txs SET payer=:newCtty WHERE payee=:myid AND type IN (:TX_REWARDS)', ray('newCtty myid', $newCtty, $a->id));
-//    unset($DBTX);
     return TRUE;
   }
 
   /**
    * Set the account's latitude and longitude.
    * For example: eachA(function ($a) {$a->setLocus();}, 'latitude=0 AND longitude=0');
+   *
+   * Choices for geocoding services:
+   * https://api.opencagedata.com/geocode/v1/json?q=ADDRESS&key=API_KEY (free for up to 2,500 a day)
+   * https://maps.googleapis.com/maps/api/geocode/json?address=ADDRESS&key=API_KEY (we are not signed up yet, 0.5c each)
+   * https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?format=json&benchmark=Public_AR_Current&address=ADDRESS (no API_KEY needed, but fails 7% of the time and no way to approximate the address)
    */
-  public function setLocus() {
+  public function setLocus($lat = NULL, $lon = NULL) {
     if (u\test()) return; // doesn't work on DEV machine yet
     $a = $this;
-    $params = ray('address city state zip format benchmark', $a->address, $a->city, r\realState($a->state), $a->zip, 'json', 'Public_AR_Current');
-    if (!$res = file_get_contents($url = GEOCODE_URL . http_build_query($params))) return r\tellAdmin(t('setLocus <%a>failed</a>', '_a', $url));
-    if (!$matches = (array) @$res->result->addressMatches) return r\tellAdmin(t('setLocus <%a>returned</a> no matches', 'a', $url));
+    if (!is_null($lat)) return $a->update('latitude longitude', $lat, $lon);
+    
+    $params = ray('q key', "$a->address, $a->city, " . r\realState($a->state), GEOCODE_KEY);
+//    $params = ray('street city state', $a->address, $a->city, r\realState($a->state)); // US Census
+    if (!$res = file_get_contents($url = GEOCODE_URL . http_build_query($params))) return r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)));
+    $res = json_decode($res);
+    if (!$coods = @$res->results[0]->geometry) {
+      $a->setRisk('addrOff');
+      return r\tellAdmin(t('setLocus <%a>returned</a> no match', 'a', w\atag($url)));
+    }
+/*    if (!$matches = (array) @$res->result->addressMatches) return r\tellAdmin(t('setLocus <%a>returned</a> no matches', 'a', w\atag($url))); // US Census
     $coods = @$matches[0]->coordinates;
-    $a->update('latitude longitude', $coods->y, $coods->x);
+    $coods = [$coods->y, $coods->x];
+    */
+    $a->update('latitude longitude', $coods->lat, $coods->lng);
   }    
    
   /**

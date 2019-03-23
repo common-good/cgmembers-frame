@@ -22,6 +22,8 @@ require_once __DIR__ . '/acct.class';
 require_once __DIR__ . '/x.class';
 require_once __DIR__ . '/qo.class';
 
+define('RECENT_SECS', 60 * DAY_SECS); // back how long is "recent" (don't change this without recreating r_stats data)
+
 /**
  * Save a record in the given table, in the appropriate regional section of the id field's number space.
  * @param string $table: table to save in (users or r_relations)
@@ -414,7 +416,7 @@ function tellAdmin($index, $subs = [], $uid = NULL) {
 
   if (!$tellCO = isset($uid)) $uid = @$subs['uid'];
   if ($mya = r\acct(@$uid)) $who = "$mya->fullName ($mya->mainQid)"; // (default to current account)
-  $message = t($index, $subs) . u\seeAssoc($subs + compact('who'));
+  $message = t($index, $subs) . u\seeAssoc($subs + @compact('who'));
     
   if ($tellCO) { // account specified, so tell Community Admin
     $email = $mya->cttyA->email;
@@ -422,7 +424,7 @@ function tellAdmin($index, $subs = [], $uid = NULL) {
 
   $noFrame = TRUE;
   $topic = strlen($index) < 50 ? strip_tags($index) : '';
-  $subs = compact(ray('who email message topic noFrame uid')) + $subs;
+  $subs = @compact(ray('who email message topic noFrame uid')) + $subs;
   $replyTo = (@$uid and $a = r\acct($uid) and $a->email) ? [$a->email => $a->fullName] : NULL;
   r\rMail('tell-staff', $email, $subs, $replyTo);
   if ($email != R_ADMIN_EMAIL) r\rMail('tell-staff', SYS_EMAIL, $subs, $replyTo); // always tell one or more staff (for now)
@@ -869,7 +871,7 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
 function txRet($message, $info = []) {
   $info0 = $info;
   if (is_array($message)) {list ($message, $info, $confirm) = $message; $info += $info0;}
-  if (!@$info['success']) r\tellCO('failed transaction', $info + compact('message', 'confirm'));
+  if (!@$info['success']) r\tellCO('failed transaction', $info + @compact('message', 'confirm'));
   return [$message, $info];
 }
 
@@ -1020,29 +1022,41 @@ function cttyPaidEver($ctty = 0) {
 /**
  * Return system-wide or community-wide statistics.
  * @param int $ctty: uid of community or region (0 means ALL)
- * @param int $when: latest statistics date to return
+ * @param int $when: latest statistics date to return (or the exact date if $exact is TRUE)
  *   if NULL, calculate statics for today
+ * @param bool $exact: <get statistics for $when, not a later date> (used for retroactive repair of r_stats table)
  * @return assoc of named statistics for one community on one date (see r_stats table def)
  */
-function stats($ctty = 0, $when = NULL) {
+function stats($ctty = 0, $when = NULL, $exact = FALSE) {
   u\setDft($when, strtotime('today'));
-  $sql = 'SELECT * FROM r_stats WHERE created>=:when AND ctty=:ctty ORDER BY created LIMIT 1';
 
-  $info = db\q($sql, compact('ctty', 'when'))->fetchAssoc() ?: r\getStats($ctty, $when);
-
+  list ($cttyCrit, $subs) = $ctty ? ['community=:ctty', compact('ctty')] : ['1', []];
+  $cttyStart = db\min('created', 'users', "$cttyCrit AND uid>:CANONIC_ACCTS", $subs);
+  if (!$cttyStart or $when < $cttyStart) {
+    $info = db\cols('r_stats', 'id');
+    $info = ['created' => $when] + array_combine($info, array_fill(0, count($info), 0));
+  } else {
+    $sign = $exact ? '=' : '>=';
+    $sql = "SELECT * FROM r_stats WHERE created $sign :when AND ctty=:ctty ORDER BY created LIMIT 1";
+    $info = db\q($sql, compact('ctty', 'when'))->fetchAssoc() ?: r\getStats($ctty, $when, $exact);
+  }
+  // add composite calculated fields to info  
   extract($info);
   $info['bals'] = $bals = $balsPos + $balsNeg;
+  
   foreach (ray('cg usd') as $z) {
     $info[$z] = ${$z . 'In'} + ${$z . 'Out'};
-    $info["{$z}Vol"] = ${$z . 'In'} - ${$z . 'Out'};
-    $info["{$z}VolCount"] = ${$z . 'InCount'} - ${$z . 'OutCount'};
+//    $info["{$z}"] = ${$z . 'In'} - ${$z . 'Out'};
+    $info["{$z}Count"] = ${$z . 'InCount'} - ${$z . 'OutCount'};
   }
+  $info['usdVol'] = $info['usdIn'] + -$info['usdOut'];
+  
   foreach (['', 'In', 'Out'] as $z) {
-    if ($ctty) $info["usd$z"] += $info["cg$z"]; // settle trade imbalance with USD
+    if ($ctty) $info["usd$z"] += $info["cg$z"]; // settle trade imbalance with USD (so count it as community USD activity)
   }
   foreach (['', 'Count'] as $z) {
-    $info["txsVol$z"] = ${"p2p$z"} + ${"b2b$z"} + ${"p2b$z"} + ${"b2p$z"} + ${"cashs$z"};
-    $info["localVol$z"] = $info["txsVol$z"] - $info[$ctty == 0 ? 'cgOut' : "cgVol$z"];
+    $info["txs$z"] = ${"p2p$z"} + ${"b2b$z"} + ${"p2b$z"} + ${"b2p$z"} + ${"cashs$z"};
+    $info["local$z"] = $info["txs$z"] - $info[$ctty ? "cg$z" : "cgOut$z"];
   }
   
   return $info;
@@ -1053,18 +1067,16 @@ function stats($ctty = 0, $when = NULL) {
  * See the "// get" lines to see what statistics are collected and returned.
  * @param int $ctty: community or region (0 means ALL)
  * @param int $created: creation date for the statistics record (defaults to current date)
+ * @param bool $exact: <get statistics for $when, not a later date> (used for retroactive repair of r_stats table)
  * @return the created record
- * @todo: change r field to bal and include replacements for USD
  */
-function getStats($ctty, $created = NULL) {
+function getStats($ctty, $created = NULL, $exact = FALSE) {
   $created0 = $created;
   u\setDft($created, time());
   $created = strtotime('today', $created); // use start of day
-  $subs = compact('created', $ctty ? 'ctty' : '');
+  $subs = @compact('created', $ctty ? 'ctty' : '');
   $thisCtty = 'community=:ctty';
-  list ($cttyCrit, $payerCrit, $payeeCrit, $cttysCrit) = $ctty ? 
-    [$thisCtty, 'payer=:ctty', 'payee=:ctty', "(u.$thisCtty OR u2.$thisCtty)"]
-  : ['community<>0', 'payer<1', 'payee<1', '1'];
+  list ($cttyCrit, $cttysCrit) = $ctty ? [$thisCtty, "(u.$thisCtty OR u2.$thisCtty)"] : ['community<>0', '1'];
   $creCrit = 'created<=:created';
   $nonCtty = 'uid>:CANONIC_ACCTS';
   $accounts = "(SELECT uid,jid,community,flags FROM users WHERE $nonCtty)";
@@ -1073,7 +1085,7 @@ function getStats($ctty, $created = NULL) {
   $slave = "(SELECT uid AS uid2, balance AS balance2 FROM users WHERE $nonCtty) u2 ON u2.uid2=u.jid";
   
   $res = [];
-  // get account counts (can't be combined with financial data because of joint accounts
+  // get account counts (can't be combined with financial data query because of joint accounts
   $sql = <<< X
 	  SELECT SUM(IF(:IS_OK AND activated<=:created AND NOT :IS_CO, 1, 0)) AS pAccts, 
       SUM(IF(:IS_OK AND activated<=:created AND :IS_CO, 1, 0)) AS bAccts,
@@ -1123,7 +1135,7 @@ X;
     foreach ([0, 1] as $i) ${'not' . $i} = $v[$i] ? '' : 'NOT';
     $sql .= "SUM(IF(goods<>:FOR_USD AND $not0 u.:IS_CO AND $not1 u2.:IS_CO, amount, 0)) AS $k,\n";
   }
-  $sql .= "SUM(IF(payer>1 AND goods=:FOR_USD, ABS(amount), 0)) AS cashs,\n";
+  $sql .= "SUM(IF(goods=:FOR_USD, ABS(amount), 0)) AS cashs,\n";
   $sql .= strtr($sql, ['-amount' => '1', 'amount' => '1', ",\n" => "Count,\n"]); // add counts
   $sql = str_replace(",\n!", '', $sql . '!'); // remove final comma in field list
   
@@ -1137,14 +1149,15 @@ X;
   $res += db\q($sql, $subs)->fetchAssoc() ?: [];
   
   // get aAccts
-  $recent = $created - 60 * DAY_SECS; // not n months (keep length of time consistent)
+  $recent = 'created>:created - ' . RECENT_SECS; // not n months (keep length of time consistent)
 
   $sql = <<< X
     SELECT COUNT(DISTINCT payer) as aAccts FROM r_txs  t
     JOIN $accounts u ON u.uid=t.payer
-    WHERE NOT u.:IS_CO AND $cttyCrit AND $creCrit AND created>$recent
+    WHERE $cttyCrit AND $creCrit AND $recent
 X;
   $res += db\q($sql, $subs)->fetchAssoc() ?: [];
+//    WHERE NOT u.:IS_CO AND $cttyCrit AND $creCrit AND $recent
 
   // get conx, conxLocal
   foreach (ray('conx conxLocal', 1, "u2.$thisCtty") as $k => $crit) {
@@ -1154,7 +1167,7 @@ X;
         SELECT me, COUNT(DISTINCT other) AS conx, SUM(isRecentPayer) AS recentPays, u2.community
         FROM (
           SELECT u0.uid AS me, 
-            IF(u0.uid=payer AND t0.created>$recent, 1, 0) as isRecentPayer,
+            IF(u0.uid=payer AND t0.$recent, 1, 0) as isRecentPayer,
             IF(u0.uid=payer, payee, payer) AS other 
           FROM users u0
           JOIN r_txs t0 ON u0.uid in (payer, payee) 
@@ -1166,8 +1179,50 @@ X;
     $res += db\q($sql, $subs)->fetchAssoc() ?: [];
   }
   
+  // get recent payees (median payees per "active" account), roundups, and crumbs (total per month)
+  $monthFactor = MONTH_SECS / RECENT_SECS;
+  $sql = <<< X
+    SELECT MEDIAN(payees0) OVER () AS payees,
+      SUM(roundups0) * $monthFactor AS roundups,
+      SUM(crumbs0) * $monthFactor AS crumbs
+    FROM (
+      SELECT u.uid, COUNT(DISTINCT t.payee) AS payees0,
+        IF(t.:IS_ROUNDUPS, amount, 0) AS roundups0,
+        IF(t.:IS_CRUMBS, amount, 0) AS crumbs0
+      FROM r_txs t JOIN users u ON u.uid=t.payer
+      WHERE t.$recent AND $nonCtty AND $cttyCrit
+    ) x LIMIT 1
+X;
+    $res += db\q($sql, $subs)->fetchAssoc() ?: [];
+    
+  // get basket (median transaction size recently)
+  $sql = <<< X
+    SELECT MEDIAN(ABS(amount)) OVER () AS basket 
+    FROM r_txs t
+    JOIN users u ON u.uid=t.payer
+    JOIN users u2 ON u2.uid=t.payee
+    WHERE t.$recent AND $cttysCrit
+X;
+    $res += db\q($sql, $subs)->fetchAssoc() ?: [];
+    
+  // get patronage (total recurring gifts expected per month)
+  $sql = <<< X
+    SELECT SUM(amount * IF(period='Y', 1/12, IF(period='M', 1/4, IF(period='W', :WEEK_SECS/:MONTH_SECS, 0)))) AS patronage
+    FROM r_recurs r JOIN users u ON u.uid=r.payer
+    WHERE payee=:CGID AND r.created<:created AND (ended=0 OR ended>:created-:YEAR_SECS) AND u.$cttyCrit
+X;
+    $res += db\q($sql, $subs)->fetchAssoc() ?: [];
+   
+  // get invites ever
+  $sql = <<< X
+    SELECT COUNT(*) AS invites FROM r_invites i JOIN users u ON u.uid=i.inviter WHERE i.invited<:created AND u.$cttyCrit
+X;
+    $res += db\q($sql, $subs)->fetchAssoc() ?: [];    
+  
+/// *********************************    
+  
   if (@$created0 and $created < strtotime('today')) { // redoing stats for the past, so figure bals, floors, and topN the hard way
-    $recent = strtotime(-FLOOR_DAYS . ' days', $created); // six months ago
+    $recently = strtotime(-FLOOR_DAYS . ' days', $created); // six months ago
     $isPayer = '(payer IN (uid, jid) AND payer<>0)';
     $isPayee = '(payee IN (uid, jid))';
 
@@ -1180,8 +1235,8 @@ X;
     $pastTxs = <<< X
       (SELECT DISTINCT uid,
         SUM(IF($isPayer, -amount, amount)) AS amts,
-        SUM(IF($isPayee AND created>$recent, amount, 0)) AS amtsIn,
-        SUM(IF($isPayer AND created>$recent, amount, 0)) AS amtsOut
+        SUM(IF($isPayee AND created>$recently, amount, 0)) AS amtsIn,
+        SUM(IF($isPayer AND created>$recently, amount, 0)) AS amtsOut
         FROM $accounts u0 LEFT JOIN $txs t0 ON ($isPayer OR $isPayee)
         WHERE amount IS NOT NULL AND $isMaster AND $cttyCrit AND $creCrit GROUP BY uid)
 X;
@@ -1233,8 +1288,10 @@ X;
   }
   
   foreach ($res as $k => $v) {if (is_null($v)) $res[$k] = 0;}
-  $info = compact('created', 'ctty') + $res;
-  if ($created >= R_LAUNCH) db\insert('r_stats', $info);
+  $hdr = compact('created', 'ctty');
+  $info = $hdr + $res;
+  $id = db\get('id', 'r_stats', $hdr);
+  if ($id) db\update('r_stats', compact('id') + $info, 'id'); else db\insert('r_stats', $info);
   return $info;
 }
 
@@ -1554,7 +1611,6 @@ function cgA() {return r\acct(CGID);}
 function disputeTx($xid) {return db\setFlag('r_txs', $xid, B_DISPUTED, TRUE);}
 function denyInv($nvid) {return db\setData('r_invoices', $nvid, ['denied' => TRUE]);}
 function stepsDone0() {return array_fill_keys(array_keys(ray(R_STEPS)), FALSE);}
-function isReward($type) {return in($type, TX_REWARDS);}
 //function usdin($for) {return u\abbreviates('usd in (', strtolower(is_array($for) ? $for[1] : $for));}
 function usdin($for) {return u\abbreviates(S_USD_IN, is_array($for) ? $for[1] : $for, TRUE);}
 function regionField($fld) {return ($a = r\acct(serverUid())) ? $a->$fld : NULL;}

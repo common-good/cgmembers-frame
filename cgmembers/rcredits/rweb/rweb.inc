@@ -335,7 +335,7 @@ function formEmpty($form, &$sta = '', $args = '') {
   if (@$msg) say(plain($msg), @$field);
   if (@$say) $subtext = t('<p>To protect your account, <%span>no sign-in was required</span> for this action. To sign in safely, always go to %CG_DOMAIN.</p><p>You may now close this browser page.</p>', '_span', 'span class="loud"');
 ///   FAILS :(  if ($doSay == 'test') $testMessages = item(print_r(\drupal_get_messages(), 1));
-  return cgform(compact(ray('title testMessages subtext')));
+  return cgform(@compact(ray('title testMessages subtext')));
 }
 
 /**
@@ -437,7 +437,7 @@ function formBasic_validate($form, &$sta, $co = 'mya', $fields = R_BASIC_FLDS) {
   if (!$co and isset($dob) and $err = u\badDob($dob)) return say($err, 'dob');
   if (isset($federalId) and $err = u\badSsn($federalId, @$dob)) return say($err, compact('what'), 'federalId');
 
-  u\preray(compact(ray($fields)), $sta['input']);
+  u\preray(@compact(ray($fields)), $sta['input']);
   return TRUE;
 }
 
@@ -478,28 +478,6 @@ function chartData($args = '') {
 /**/  if (!@$data) die(t('No such chart data.'));
 /**/  echo $data;
   exit();
-}
-
-function formGraphs($form, &$sta, $args) {
-  $a = w\eLinkAcct($sta, $args, 'any'); // may be called with qid=<communityUid>
-  extract(just('qid', $args));
-
-  $title = t('Community Statistics');
-  $dft = ($a and @$qid !== '0') ? $a->community : 0; $dft += 0; // + 0 for admin
-  $subtext = t('This page helps us keep an eye on our economy so we can manage it effectively together. Choose a chart. <%b>Hover</b> over a graph for the numbers.', '_b', 'class="loud"');
-  
-  $charts = item(w\chartFrame('growth', TRUE, @$a->community ?: 0)); // src must be first
-  if (u\test()) $charts = item(w\showCharts('all', $dft, $chartData));
-  
-  return cgform(compact(ray('title subtext charts')));
-}
-
-function formGraphs_validate($form, &$sta) {
-  formTxs_validate($form, $sta);
-}
-
-function formGraphs_submit($form, &$sta) {
-  formTxs_submit($form, $sta, 'community');
 }
 
 function formFooter() {

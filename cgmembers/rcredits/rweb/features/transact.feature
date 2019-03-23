@@ -90,8 +90,8 @@ Scenario: A member confirms request to pay another member
   | created | fullName | otherName | amount | payeePurpose |*
   | %today  | Bea Two  | Abe One    | $100   | labor        |
   And transactions:
-  | xid | created | type     | amount | from  | to   | purpose      | taking |*
-  |   1 | %today  | transfer |    100 | .ZZA  | .ZZB | labor        | 0      |
+  | xid | created | amount | from  | to   | purpose      | taking |*
+  |   1 | %today  |    100 | .ZZA  | .ZZB | labor        | 0      |
   And balances:
   | uid  | balance |*
   | .ZZA |    -100 |
@@ -106,8 +106,8 @@ Scenario: A member confirms request to pay another member a lot
   | op  | who     | amount        | goods | purpose |*
   | pay | Our Pub | %R_MAX_AMOUNT | %FOR_GOODS     | food    |
   Then transactions:
-  | xid | created | type     | amount        | from  | to   | purpose      | taking |*
-  |   1 | %today  | transfer | %R_MAX_AMOUNT | .ZZB  | .ZZC | food         | 0      |
+  | xid | created | amount        | from  | to   | purpose      | taking |*
+  |   1 | %today  | %R_MAX_AMOUNT | .ZZB  | .ZZC | food         | 0      |
   
 Scenario: A member confirms request to pay a member company
   Given next DO code is "whatever"
@@ -125,8 +125,8 @@ Scenario: A member confirms request to pay a member company
   | ~postalAddr | 1 A, A, AK |
   | Physical address: | 1 A St., Atown, AK 01000 |
   And transactions:
-  | xid | created | type     | amount | from  | to   | purpose      | taking |*
-  |   1 | %today  | transfer |    100 | .ZZA  | .ZZC | stuff        | 0      |
+  | xid | created | amount | from  | to   | purpose      | taking |*
+  |   1 | %today  |    100 | .ZZA  | .ZZC | stuff        | 0      |
   And balances:
   | uid  | balance |*
   | .ZZA |    -100 |
@@ -219,8 +219,8 @@ Scenario: A member pays another member repeatedly
   | created | fullName | otherName | amount | payeePurpose |*
   | %today  | Bea Two  | Abe One    | $100   | labor        |
   And transactions:
-  | xid | created | type     | amount | from  | to   | purpose      | taking |*
-  |   1 | %today  | transfer |    100 | .ZZA  | .ZZB | labor        | 0      |
+  | xid | created | amount | from  | to   | purpose      | taking |*
+  |   1 | %today  |    100 | .ZZA  | .ZZB | labor        | 0      |
   And these "recurs":
   | id | payer | payee | amount | period | created | ended |*
   |  1 | .ZZA  | .ZZB  |    100 |      W | %today  |     0 |

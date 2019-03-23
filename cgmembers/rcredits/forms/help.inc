@@ -35,7 +35,7 @@ function formHelp($form, &$sta, $what = '', $args = '') {
   }
 
   if (is_array($args)) $data = $args; // include returned data, if any
-  return cgform(compact(ray('title text message file data submit')));
+  return cgform(@compact(ray('title text message file data submit')));
 }
 
 function formHelp_validate($form, &$sta) {

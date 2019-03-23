@@ -46,8 +46,8 @@ EOF;
     $iGet = 'payee IN (:uid, :jid)';
 //    foreach (ray(TX_FLAGS) as $k) $$k = u\bit(u\consta('b', $k)); // taking and roundup flags
     list ($fromBank, $toBank) = [t('from bank'), t('to bank')];
-    $txFields = "xid, amount, t1.flags, IF($iPay, amount, 0) AS fromyou, IF($iPay, 0, amount) AS toyou, payer, payee, type, t1.created, t1.data, $iPay XOR t1.:IS_TAKING AS byMe, t1.:IS_ROUNDUP AS roundup, t1.:IS_DISPUTED AS disputed, $iGet AS toMe, IF($iPay, payerFor, payeeFor) AS description, IF($iPay, payerAgent, payeeAgent) AS agent, IF(:uid<0, xid, IF($iPay, payerTid, payeeTid)) AS tid, goods, (goods=:FOR_SHARE) AS sharing, channel";
-    $usdFields = "txid AS xid, amount, 0 AS flags, IF(:DEPOSIT_SQL, 0, -amount) AS fromyou, IF(:DEPOSIT_SQL, amount, 0) AS toyou, 0 AS payer, payee, :TX_BANK AS type, completed AS created, '' AS data, TRUE AS byMe, FALSE AS roundup, FALSE AS disputed, IF(:DEPOSIT_SQL, 1, 0) AS toMe, IF(:DEPOSIT_SQL, '$fromBank', '$toBank') AS description, '' AS agent, txid AS tid, :FOR_USD AS goods, 0 AS sharing, channel";
+    $txFields = "xid, amount, t1.flags, IF($iPay, amount, 0) AS fromyou, IF($iPay, 0, amount) AS toyou, payer, payee, type, t1.created, t1.data, $iPay XOR t1.:IS_TAKING AS byMe, t1.:IS_ROUNDUP AS roundup, t1.:IS_DISPUTED AS disputed, $iGet AS toMe, IF($iPay, payerFor, payeeFor) AS description, IF($iPay, payerAgent, payeeAgent) AS agent, IF(:uid<0, xid, IF($iPay, payerTid, payeeTid)) AS tid, goods, channel";
+    $usdFields = "txid AS xid, amount, 0 AS flags, IF(:DEPOSIT_SQL, 0, -amount) AS fromyou, IF(:DEPOSIT_SQL, amount, 0) AS toyou, 0 AS payer, payee, :TX_BANK AS type, completed AS created, '' AS data, TRUE AS byMe, FALSE AS roundup, FALSE AS disputed, IF(:DEPOSIT_SQL, 1, 0) AS toMe, IF(:DEPOSIT_SQL, '$fromBank', '$toBank') AS description, '' AS agent, txid AS tid, :FOR_USD AS goods, channel";
     $where = "created BETWEEN :starting AND :ending AND amount<>0 AND type>=0 AND ($iPay XOR $iGet)"; // omit invisible transactions
 
     $sql = <<<EOF
@@ -88,7 +88,9 @@ function memberRay($myid, $aid, $coOnly = FALSE) {
   if (!$a = r\acct($myid, $aid)) return [];
 //  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : "state=$a->state OR community=$a->community OR :IS_CO");
   $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : "(:NEIGHBOR_QUERY<:NEIGHBOR_RMAX OR community=$a->community OR :IS_CO)");
-  return db\col('fullName', 'users', ":IS_OK uid<>:myid AND $where ORDER BY fullName", ray('myid lat lon', $myid, $a->latitude, $a->longitude));
+  $subs = compact('myid');
+  if (!$coOnly and !$a->admin) $subs += ray('lat lon', $a->latitude, $a->longitude);
+  return db\col('fullName', 'users', ":IS_OK AND uid<>:myid AND $where ORDER BY fullName", $subs);
 }
 
 /**
@@ -202,13 +204,12 @@ u\EXPECT(compact(ray('xid amount what acct data tid toMe byMe otherTid force')),
   
   if (!is_array($data)) $data = [];
   $old_data = $data; // remember original data from transaction we're reversing
-  extract(just('xfee coupon', $data));
+  extract(just('coupon', $data));
   $tids = u\order($toMe, $otherTid, $tid);
   for ($i = 0; $i < 2; $i++) {
     $what0[$i] = preg_replace('/ \(' . preg_quote(t('reverses'), '/') . ' \#.*\)/', '', $what[$i]);
     $what[$i] = $what0[$i] . t(' (reverses #%tid)', 'tid', $tids[$i]);
   }
-  if (@$xfee) $data['xfee'] = -$xfee;
   if (@$coupon) {
     $data['coupon'] = -$coupon;
     $payer = $toMe ? $acct->id : $mya->id;
@@ -346,7 +347,7 @@ function transfer($ttype, $a1, $a2, $amount, $for, $data = []) {
   }
   if (@$force == 1) $offline = TRUE; // temporary until app handles this right
   $taking = ($ttype == 'charge');
-  $erInfo = compact(ray('ttype amount goods for force')) + ray('a1 a2 op', $a1->fullName, $a2->fullName, $taking ? t('charged') : t('paid'));
+  $erInfo = @compact(ray('ttype amount goods for force')) + ray('a1 a2 op', $a1->fullName, $a2->fullName, $taking ? t('charged') : t('paid'));
   $amount = round($amount, 2); // ignore fractions of cents
   if (!@$amount) {
 /**/  r\tellAdmin('zero transaction', $erInfo + ['stack' => trace()]);
@@ -402,7 +403,7 @@ function transfer($ttype, $a1, $a2, $amount, $for, $data = []) {
       }
       $loserA->suggestAuto();
       $details = t('|%loser was short by %short trying to pay %gainer %amount (available balance is %avail)', 'loser short gainer amount avail', $loserA->fullName, $short, $gainerA->fullName, u\fmtAmt($absAmt), $avail);
-      return r\txRet($msg, compact(ray('otherName short how details _aDebt avail')));
+      return r\txRet($msg, @compact(ray('otherName short how details _aDebt avail')));
     }
   }
 //  $roundup = (r\acct($payer)->roundup and !@$data['isGift'] and !@$data['roundups'] and $amount > 0); // payer, not a1 or loser
@@ -414,7 +415,7 @@ function transfer($ttype, $a1, $a2, $amount, $for, $data = []) {
   }
   
 //  $info = compact(ray('type created amount payer payee payerReward payeeReward payerAgent payeeAgent for data taking roundup goods force offline investment short'));
-  $info = compact(ray('type created amount payer payee payerAgent payeeAgent for data taking roundup goods force offline investment short'));
+  $info = @compact(ray('type created amount payer payee payerAgent payeeAgent for data taking roundup goods force offline investment short'));
   if (!$myx = new r\MyX($info, $a1, TRUE)) return r\txRet('tx save err', $erInfo);
   
   // Report results
@@ -476,7 +477,7 @@ function invoice($a1, $a2, $amount, $purpose = NULL, $extra = []) {
   $created = r\rTime();
   u\setDft($status, ($channel != TX_FOREIGN and r\relation(':IS_AUTOPAY', $payee, $payer)) ? TX_APPROVED : TX_PENDING);
   $data = serialize($extra);
-  $info = compact(ray('amount status payer payee goods purpose created flags data'));
+  $info = @compact(ray('amount status payer payee goods purpose created flags data'));
   $nvid = db\insert('r_invoices', $info, 'nvid');
   $a1->update('lastTx', [$nvid, $payer - $payee, round(-$amount, 2), $created, 'inv']);
 
@@ -616,7 +617,6 @@ function creditInfo($args = []) {
   $isPayer = 't.payer IN (:uid, :jid)';
   $isPayee = 't.payee IN (:uid, :jid)'; // account can be both payer and payee, if joint account
   $signedAmt = "IF($isPayer, -amount, amount)";
-//    SUM(IF(t.type IN (:TX_REWARDS), amount, 0)) AS rewards,
   
   $sql = <<<EOF
     SELECT 
@@ -624,15 +624,12 @@ function creditInfo($args = []) {
     SUM(IF($isPayer, amount, 0)) AS `out`, 
     SUM(IF(t.:IS_ROUNDUP AND $isPayer AND MOD(amount, 1)>0, 1-MOD(amount, 1), 0)) AS roundups,
     SUM(IF(t.:IS_ROUNDUP AND $isPayer AND MOD(amount, 1)>0 AND t.created>=$mday1, 1-MOD(amount, 1), 0)) AS partRounds,
-    SUM(IF(t.:IS_ROUNDUPS AND $isPayer, amount, 0)) AS roundupsPaid,
-    SUM(IF(t.goods=:FOR_SHARE, $signedAmt, 0)) AS share,
-    SUM(IF(t.type=:TX_XFEE, $signedAmt, 0)) AS xfees,
-    SUM(IF(:HAS_XFEE, $signedAmt, 0)) AS xin
+    SUM(IF(t.:IS_ROUNDUPS AND $isPayer, amount, 0)) AS roundupsPaid
     FROM r_txs t
     WHERE ($isPayer OR $isPayee) AND t.created<=:asof
 EOF;
   
-  $sums = @$pending ? ray('in out xfees xin', 0, 0, 0, 0) : db\q($sql, $subs)->fetchAssoc();
+  $sums = @$pending ? ray('in out', 0, 0) : db\q($sql, $subs)->fetchAssoc();
 
   $where = @$pending ? 'created<=:asof AND NOT completed' : 'completed AND completed<=:asof';
   $sql = "SELECT SUM(amount) AS bank FROM r_usd t WHERE $isPayee AND amount<>0 AND $where";
@@ -643,29 +640,20 @@ EOF;
 
 //  $bank = -$bank; // make it "from bank" instead of "to bank"
   $balance = ($in - $out) + $bank;
-//  $r = $balance + $rewards;
-//  $in -= $xin; $out -= $xin;
   $outProper = $out;
   $inProper = $in; // - $rewards;
-//  if ($uid == CGID) $inProper -= $share; else $outProper += $share;
-//  $rewards += $share; // share is negative for everyone but CGF
   
   // figure savings
   if ($asof == $asof0) {
-//    $savings = $a->j_savings;
   } else {
-//    $savings = $rewards; // tentative savings before additions ( = oldSavings - oldSavingsAdd)
     foreach ($jid ? [$a, r\acct($jid)] : [$a] as $ai) if ($chs = $ai->changes) {
       $addOLD = $ai->savingsAdd; // start with present
       foreach ($chs as $dt => $info) if ($dt > $asof) $addOLD = @$info['savingsAdd']; else break;
-//      $savings += $addOLD;
     }
   }
-//  $balance = $r - $savings;
-//  $savings = $rewards; // tentative savings before additions ( = oldSavings - oldSavingsAdd) (used in transaction summary)
   
-  $resultKeys = 'in out refunds fees xfees xin inProper outProper balance r bank roundups partRounds roundupsPaid';
-  $result = compact(ray($resultKeys));
+  $resultKeys = 'in out refunds fees inProper outProper balance r bank roundups partRounds roundupsPaid';
+  $result = @compact(ray($resultKeys));
   
   foreach ($result as $k => $v) $result[$k] = $v = round($v, 2);
 

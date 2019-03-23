@@ -65,7 +65,7 @@ EOF;
     $atm = boolFld(t('ATM service:'), t('Allow company to trade %RCREDITS for cash even if their balance is less than their rewards (in-person only).'), $mya->coCan(CO_ATM) ?: 0);
   }
 //  $submit = submit();
-  return cgform(compact(ray('title links photo name private categories selling shortDesc employees gross website code descPreface description can2 tips fast atm')) + w\setupFoot(''));
+  return cgform(@compact(ray('title links photo name private categories selling shortDesc employees gross website code descPreface description can2 tips fast atm')) + w\setupFoot(''));
 }
 
 function formCompany_validate($form, &$sta) {
@@ -96,7 +96,7 @@ function formCompany_submit($form, &$sta) {
   $mya->setCoBit(CO_TIP, $tips);
   if ($mya->cAdmin) $mya->setCoBit(CO_FAST, @$fast);
   if ($mya->cAdmin) $mya->setCoBit(CO_ATM, $atm);
-  $mya->update(compact(ray('description shortDesc website selling employees gross')));
+  $mya->update(@compact(ray('description shortDesc website selling employees gross')));
   
   if (@$categories) $mya->setCategories($categories);
 

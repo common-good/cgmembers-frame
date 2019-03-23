@@ -8,30 +8,25 @@ use CG\Db as db;
 use CG\Cron as cr;
 
 /*
-  Give the person a chance to donate to CG from the current account.
-  If they haven't chosen a recurring donation yet, a recurring donation is the only option
+  Invite the member to contribute to the Food Fund.
 */
-function formDonate($form, &$sta, $args = '') {
+function formFood($form, &$sta, $args = '') {
   if (!$mya = w\eLinkAcct($sta, $args, 'acct')) return;
 
   $oftens = [0 => t('How often?')] + array_reverse(ray(OFTENS));
-  $giftLevels = array(
-  // 10000 => t('Marble .. $10,000'),
-  // 5000 => t('Granite ... 5,000'),
-    2500 => t('Slate .... $2,500'),
-    1000 => t('Glass .... $1,000'),
-     500 => t('Iron ....... $500'),
-     250 => t('Oak ........ $250'),
-     100 => t('Two Bricks . $100'),
-      50 => t('One Brick ... $50'),
-      25 => t('Half Brick .. $25'),
-//       0 => t('None for now . $0'),
-      -1 => t('Water ... (other)'),
-//      10 => t('Tile ........ $10'),
-//       5 => t('Cloth ........ $5'),
-  );
+  $giftLevels = [
+    1000 => t('$1,000'),
+     500 => t('$500'),
+     250 => t('$250'),
+     100 => t('$100'),
+      50 => t('$50'),
+      25 => t('$25'),
+       0 => t('$0'),
+      -1 => t('Other)'),
+  ];
 
-	if ($recurs = db\get('id,period,amount', 'r_recurs', 'payer=:payer AND payee=:CGID AND ended=0', ray('payer', $mya->id))) {
+  $foodId = db\get('uid', 'users', "name='foodfund'");
+	if ($recurs = db\get('id,period,amount', 'r_recurs', 'payer=:payer AND payee=:foodId AND ended=0', ray('payer foodId', $mya->id, $foodId))) {
 		extract($recurs);
 		$recurId = hidFld($id);
     $replaces = t('donation replaces', 'period amt', $oftens[$period], u\fmtAmt($amount));
@@ -40,28 +35,30 @@ function formDonate($form, &$sta, $args = '') {
 		unset($oftens['X']); // no one-time donation unless the account also has a recurring donation and is signed in
 		$recurOnly = t(': monthly, quarterly, or yearly');
 	}
-  $honors = array('honor' => 'in honor of', 'memory' => 'in memory of');
    
 //  $inSetup = $mya->ok ? '' : t(' The amount you choose will come from your account once it is activated and has enough funds.</p>');
   $title = t('Donate to %PROJECT');
-  $amountTip = $mya->co ? '' : t('The most common amounts chosen are $50 and $25.');
-  $subtext = t('<p>(optional) Make a tax-deductible gift of any size%recurOnly. %replaces</p>', 'recurOnly replaces', @$recurOnly, @$replaces) . t('</p><p>Half of your gift supports whatever projects you decide on together in your community; half supports the operation of the %PROJECT system (to donate zero, choose "Water"). %amountTip</p><p><b class="loud">NOTE: This is a donation, not a deposit.</b> Thank you for your support!</p>', compact('amountTip'));
+  
+  $food0 = $mya->food * 100;
+  $food = textFld(t('Food Percentage:'), [t('Contribution Percentage'), t('Pay a little extra every time you pay for food or meals with %PROJECT, to lower the cost of healthy local food for people who can\'t afford it otherwise. For example, 5% here means when you buy a $10 pizza, you contribute 50 cents to the %PROJECT Food Fund. To donate to the %PROJECT Food Fund directly, use the "Pay" button and type "Food Fund".')], dft($food0 ?: '') + suffix(' %'));
+    
+  $subtext = t('<p>(optional) Make a tax-deductible gift of any size to the Food Fund%recurOnly. %replaces</p>', 'recurOnly replaces', @$recurOnly, @$replaces);
   $amtChoice = selectFld(t('Donation:'), '', required($mya->co ? R_COMPANY_GIFT : R_INDIVIDUAL_GIFT), $giftLevels);
   $amount = textFld(t('Other amount $'), '');
-  $period = selectFld(t('When:'), '', required(0), $oftens);
-  $honor = selectFld(t('Honoring:'), '', '', $honors);
-  $honored = areaFld('', [t('Honoring whom or what')]);
-//    $roundup = $mya->ok ? '' : w\roundupFld($mya),
+  $period = selectFld(t('How often:'), '', required(0), $oftens);
 
   jsx('amtChoice');
-  return cgform(@compact(ray('title subtext amtChoice amount period honor honored recurId')) + w\setupFoot(t('Donate')) + @compact('wait'));
+  return cgform(@compact(ray('title subtext food amtChoice amount period submit recurId')));
 }
 
-function formDonate_validate($form, &$sta) {
+function formFood_validate($form, &$sta) {
   if (!w\checkAmtChoice($sta)) return;
+  $food = @$food ?: 0;
+  if ($err = u\badAmount($food, '>=0', 1, 100)) return say($err, 'food');
+  u\preray(compact(ray('food')), $sta['input']); // update trimmed percentage
 }
 
-function formDonate_submit($form, &$sta) {
+function formFood_submit($form, &$sta) {
   include_once R_ROOT . '/rcron/rcron-subs.inc';
   $mya = w\eLinkAcct($sta); 
 

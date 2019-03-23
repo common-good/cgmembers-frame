@@ -96,7 +96,7 @@ EOF;
   $go = submit(t('Save Changes'));
   $showCustomers = hidFld(@$showCustomers);
 
-  $form = compact(ray('title subtext buttons list newPerson go showCustomers'));
+  $form = @compact(ray('title subtext buttons list newPerson go showCustomers'));
 
   if (!$mya->member and !$mya->stepDone['relations']) $form += w\setupFoot();
   w\whoFldSubmit('newperson', t('Create a new relation with %name?'));

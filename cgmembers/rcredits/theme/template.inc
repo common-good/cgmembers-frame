@@ -398,7 +398,7 @@ function rcredits_radio($variables) {
   if (isset($return_value) and $value == $return_value) $checked = 'checked';
   $type = 'radio';
   $class[] = 'form-radio';
-  $tribs = u\tribs(compact(ray('type class checked')) + $attributes);
+  $tribs = u\tribs(@compact(ray('type class checked')) + $attributes);
   if (@$checked) f('t.setRadio', $parents[0], $title);
 
   return "<input $tribs />";
@@ -415,7 +415,7 @@ function rcredits_submit($variables) {
 //  u\setDft($size, 'md');
 //  u\setDft($style, 'primary');
 //  u\setDft($name, @$parents[0]);
-  $variables['element']['#children'] = $res = spinLink('submit', $value, $id, @$style, @$size, compact(ray($special)));
+  $variables['element']['#children'] = $res = spinLink('submit', $value, $id, @$style, @$size, @compact(ray($special)));
 /*
   <<<EOF
   <button type="submit" id="$id" name="$name" value="$value" class="btn btn-$style btn-$size ladda-button" data-style="expand-right">
@@ -441,7 +441,7 @@ function rcredits_checkbox($variables) {
   $type = 'checkbox';
   if (@$checked or @$default_value) $checked = 'checked'; else unset($checked);
   if (@$checked) f('t.setChecked', $title);
-  $tribs = u\tribs(compact('type', 'checked', 'class') + $attributes);
+  $tribs = u\tribs(@compact('type', 'checked', 'class') + $attributes);
   return "<input $tribs />";
 }
 
@@ -510,7 +510,7 @@ function rcredits_hidden($variables) {
   \element_set_attributes($variables['element'], array('name', 'value'));
   $type = 'hidden';
   extract(rcElement($variables, 'attributes id'));
-  $tribs = u\tribs(compact(ray('type id value')) + $attributes);
+  $tribs = u\tribs(@compact(ray('type id value')) + $attributes);
   return "<input $tribs />\n";
 }
 
@@ -565,7 +565,7 @@ function spinLink($href, $text, $id = '', $style = 'primary', $size = 'md', $oth
   if (!@$other['target']) $class .= ' ladda-button'; // don't spin if opening a window
 
 //  foreach ($other + compact(ray($attrs)) as $k => $v) if ($v = plain($v)) $attrs2 = @$attrs2 . " $k=\"$v\"";
-  $attrs2 = u\tribs($other + compact('class', ray($attrs)));
+  $attrs2 = u\tribs($other + @compact('class', ray($attrs)));
   //$attrs2 = \drupal_attributes($other + compact(ray($attrs)));
 
   return <<<EOF

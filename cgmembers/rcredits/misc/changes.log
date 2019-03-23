@@ -1,3 +1,28 @@
+2019-03-22 feature/fix-metrics
+. fixed the graphics for the one-metric feature
+. changed chart.php so it is just a stub and the main code is all in rweb/
+
+2019-03-21 feature/one-metric
+. added calculations of median payees, median basket, donation types, and invitations to stats
+. created success metrics graph
+. community transactions are now included in stats
+. changed graph selection to JS (fast!)
+. added an option to download graph data
+. fixed wrong param count bug in be\memberRay
+. removed references to transaction type
+. revised debug() function to show even duplicate output
+. changed u\nn() function to nn() in bootstrap (no namespace) and added check for !isset
+. change in address triggers redo of geolocation
+. moved formGraphs from rweb.inc to forms/graphs.inc
+. fixed undiscovered bug in calculation of need for credit ban (in rcron.inc)
+. fixed bug in calculation of velocity (for graph)
+. added hooks for later option to change range and granularity of graphs by javascript
+
+2019-03-11 feature/fix-setlocus
+. upgraded to MariaDb10.3.13, so put "@" in front of compact() where it was intended to omit missing variables and changed "continue" to "continue 2" in one place in vendor/tcpdf/tcpdf.php
+. fixed bugs in account::setLocus() (never worked), including changing latitude and longitude fields to 11,8 in users table
+. added calculation of payees and basket to r\getStats() and adjusted aAccts (active accounts) to include companies
+
 2019-03-10  feature/pay-with-cg-link
 . people can now pay buy clicking on a simple link on a website or in an email -- no company code is specified and user must confirm by clickin a link in an email invoice (api and request parameters are stored in the invoice, so calling website can be notified upon payment)
 . added latitude and longitude fields

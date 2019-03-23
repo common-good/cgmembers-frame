@@ -79,32 +79,24 @@ function nextRecur($starting, $period) {
   }
 }
 
-function formShowRecurring_validate($form, &$sta) {/*w\dateRangeValidate($sta);*/}
+function formShowRecurring_validate($form, &$sta) {}
 
-function formShowRecurring_submit($form, &$sta) {
-  //  if (confirming_s($sta)) return;
-  return FALSE;/*w\dateRangeRedirect('history/transactions', $sta);*/
-}
+function formShowRecurring_submit($form, &$sta) {}
 
 function handleStop($recId, &$sta, $args) {
   global $mya;
   
   $url = BASE_URL . '/history/show-recurring';
-  $sql = 'SELECT id as recId, payer, payee, amount, period, created, ended FROM r_recurs WHERE id = :recId';
+  $sql = 'SELECT id as recId, payer, amount, ended FROM r_recurs WHERE id = :recId';
   $results = db\q($sql, ['recId' => $recId]);
-  if ($results->rowCount() != 1) {
-    return r\Web\say(strip_tags(t('invalid recur id')), 'err');
-  }
+  if ($results->rowCount() != 1) return w\say('invalid recur id', 'err');
+
   $row = $results->fetch(\PDO::FETCH_ASSOC);
   extract(just('recId payer ended', $row));
-  if (! is_null($ended) and $ended != 0) {
-    return r\Web\say(strip_tags(t('recur already ended')), 'err');
-  }
-  if ($payer != $mya->id) {
-    return r\Web\say(strip_tags(t('recur not yours')), 'err');
-  }
+  if (! is_null($ended) and $ended != 0) return w\say('recur already ended', 'err');
+  if ($payer != $mya->id) return w\say('recur not yours', 'err');
 
   db\update('r_recurs', ['id' => $recId, 'ended' => r\rTime()], 'id');
-  return r\Web\say(strip_tags(t('recurring transaction stopped')));
+  return w\say('recur stopped');
 }
 

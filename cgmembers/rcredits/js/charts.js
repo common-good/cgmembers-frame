@@ -13,58 +13,80 @@
 var getv = parseUrlQuery($('#script-charts').attr('src').replace(/^[^\?]+\??/,''));
 //alert($('#script-charts').attr('src').replace(/^[^\?]+\??/,''));
 var ctty = getv['ctty'];
-var chart = getv['chart'];
+var chartName = getv['chart'];
 var site = getv['site'];
+var region = getv['theregion'];
 
 var ch = $('#chart-data').html();
 ch = ch.substr(4, ch.length - 7); // trim off the comment markers
 ch = JSON.parse(ch);
 var vs = ch['vs'];
 var dt1 = vs['dt1'];
+var period = vs['period'];
+var helpline = $('#help-line');
+
+fixChartClass($('#chart'));
+
+var chartAreaW = '50%'; // leave room for yAxis labels and legend
+var chartW = 960; // was 480
+var chartH = 300;
+if (getv['selectable']) {chartW = 600; chartH = 400;}
+var chart; // the chart object
+
+chartHelp = {
+  'success':'success-metrics',
+  'funds':'dollar-pool',
+  'growth':'growth',
+  'banking':'bank-transfers',
+  'volume':'transaction-volume',
+  'velocity':'circulation-velocity'
+};
 
 $('#ctty').change(function () {recall(chart, $(this).val());});
 $('#chart').change(function () {
   fixChartClass($(this));
-  recall($(this).val(), ctty);}
-);
-fixChartClass($('#chart'));
+  chgHelp(chartName, $(this).val());
+  chartName = $(this).val();
+  chart.clearChart();
+  var fn = window[chartName + 'Chart'];
+  fn();
+});
+chgHelp('', chartName);
 
-var chartAreaW = '50%'; // leave room for yAxis labels and legend
-var chartW = 480;
-var chartH = 300;
-if (getv['selectable']) {chartW = 600; chartH = 400;}
-
-// (should be on member site instead) $('#edit-ctty').change(function () {window.location = baseUrl + '/community/graphs/qid=' + $(this).val();});
-
-google.setOnLoadCallback(window[chart + 'Chart']);  
+google.setOnLoadCallback(window[chartName + 'Chart']);  
 
 google.load('visualization', '1.0', {'packages':['corechart']});
 
-function allChart() {
-  growthChart();
-  fundsChart();
-  velocityChart();
-  bankingChart();
-  volumeChart();
-//  issuedChart();
+function successChart() {
+  var data = new google.visualization.DataTable();
+  data.addColumn('date', 'Date');
+  data.addColumn('number', 'Success');
+  data.addColumn('number', 'Active');
+  data.addColumn('number', 'Gifts');
+  data.addColumn('number', 'Payees');
+  data.addColumn('number', 'Basket');
+  data.addColumn('number', 'Invites');
+  myRows(data, 'successData');
+        
+  var options = {
+    title:'Success metric: ' + vs['success'],
+    width:chartW, height:chartH,
+    series: [
+      {areaOpacity:0, color:'blue'}, // success
+      {areaOpacity:0, color:'green'}, // aAccts
+      {areaOpacity:0 , color:'silver'}, // gifts
+      {areaOpacity:0, color:'red'}, // payees
+      {areaOpacity:0, color:'yellow'}, // basket
+      {areaOpacity:0, color:'orange'} // invites
+    ],
+//    hAxis: {viewWindow: {min:new Date(dt1 * 1000)}, format:dtFmt(), gridlines: {count:5}, title:'', titleTextStyle: {color:'darkgray'}},
+    hAxis: {viewWindow: {min:new Date(dt1 * 1000)}, format:dtFmt(), title:'', titleTextStyle: {color:'darkgray'}},
+    chartArea: {width:chartAreaW},
+    legend: {position:'right'}
+  };
+
+  doChart(data, options);
 }
-
-function dtFmt() {return (((new Date()).getTime() - dt1 * 1000) /1000/60/60/24/365.25 < 4) ? 'yyyy-MM' : 'yyyy';}
-
-/**
- * Add a row to the table.
- * @param obj table: the gChart table object
- * @param string dataName: name of the dataset, embedded in the html
- * @param int remove: index of column to remove, if any
- */
-function myRows(table, dataName, remove) {
-  var dataSet = ch[dataName];
-  for (i in dataSet) {
-    dataSet[i][0] = new Date(dataSet[i][0] * 1000);
-    if (remove) dataSet[i].splice(remove, 1); 
-    table.addRow(dataSet[i]);    
-  }
-};
 
 function growthChart() {
   var data = new google.visualization.DataTable();
@@ -93,13 +115,12 @@ function growthChart() {
 //      {areaOpacity:0, color:'yellow'}, // conx/aAcct
 //      {areaOpacity:0, color:'orange'} // conxLocal/aAcct
     ],
-    hAxis: {viewWindow: {min:new Date(dt1 * 1000)}, format:dtFmt(), gridlines: {count:5}, title:'', titleTextStyle: {color:'darkgray'}},
+//    hAxis: {viewWindow: {min:new Date(dt1 * 1000)}, format:dtFmt(), gridlines: {count:5}, title:'', titleTextStyle: {color:'darkgray'}},
+    hAxis: {viewWindow: {min:new Date(dt1 * 1000)}, format:dtFmt(), title:'', titleTextStyle: {color:'darkgray'}},
     chartArea: {width:chartAreaW},
     legend: {position:'right'}
   };
-
-  var chart = new google.visualization.AreaChart(document.getElementById('growthChart'));
-  chart.draw(data, options);
+  doChart(data, options);
 }
 
 function fundsChart() {
@@ -135,8 +156,7 @@ function fundsChart() {
     legend: {position:'right'}
   };
 
-  var chart = new google.visualization.AreaChart(document.getElementById('fundsChart'));
-  chart.draw(data, options);
+  doChart(data, options);
 }
 
 function velocityChart() {
@@ -168,8 +188,7 @@ function velocityChart() {
     legend: {position:'right'}
   };
 
-  var chart = new google.visualization.AreaChart(document.getElementById('velocityChart'));
-  chart.draw(data, options);
+  doChart(data, options);
 }
 
 function bankingChart() {
@@ -183,7 +202,7 @@ function bankingChart() {
   myRows(data, 'bankingData', ctty == 0 ? 3 : 0);
 
   var options = {
-    title:'Monthly USD Transfers: ' + vs['usd'],
+    title:'Monthly Bank Transfers: ' + vs['usd'],
     width:chartW, height:chartH,
     series: [
       {areaOpacity:1, color:'green'},
@@ -199,8 +218,7 @@ function bankingChart() {
 
   if (ctty == 0) options['series'].splice(3, 1); // remove "Exports", which actually means intra
 
-  var chart = new google.visualization.AreaChart(document.getElementById('bankingChart'));
-  chart.draw(data, options);
+  doChart(data, options);
 }
 
 function volumeChart() {
@@ -224,16 +242,51 @@ function volumeChart() {
     legend: {position:'right'}
   };
 
-  var chart = new google.visualization.LineChart(document.getElementById('volumeChart'));
+  chart = new google.visualization.LineChart(document.getElementById('onechart'));
   chart.draw(data, options);
 }
 
 function recall(chart, ctty) {
-  var myUrl = site == 'dev' ? 'http://localhost/cgmembers-frame/cgmembers/rcredits/misc' : 'https://cg4.us';
-  window.location = myUrl + '/chart.php?selectable=1&chart=' + chart + '&ctty=' + ctty + '&site=' + site;
+  var myUrl = site.search('cgmembers') > 0 ? 'http://localhost/cgmembers-frame/cgmembers/rcredits/misc' : 'https://cg4.us';
+  window.location = myUrl + '/chart.php?selectable=1&chart=' + chartName + '&ctty=' + ctty + '&site=' + site + '&region=' + region;
 };
 
 function fixChartClass(context) {
   $('option', context).removeClass();
   $(':selected', context).addClass('selected');
+}
+
+/**
+ * Draw an area chart with the given data and options.
+ */
+function doChart(data, options) {
+  chart = new google.visualization.AreaChart(document.getElementById('onechart'));
+  chart.draw(data, options);
+}
+
+function dtFmt() {return period == 'y' ? 'yyyy' : (period == 'm' ? 'MMM' : (period == 'w' ? 'MM/DD' : 'E'));}
+
+/**
+ * Add a row to the table.
+ * @param obj table: the gChart table object
+ * @param string dataName: name of the dataset, embedded in the html
+ * @param int remove: index of column to remove, if any
+ */
+function myRows(table, dataName, remove) {
+//  var dataSet = ch[dataName];
+  var dataSet = JSON.parse(JSON.stringify(ch[dataName])); // get a COPY of the original dataset (multiply by 1000 only once)
+  for (i in dataSet) {
+    dataSet[i][0] = new Date(dataSet[i][0] * 1000);
+    if (remove) dataSet[i].splice(remove, 1); 
+    table.addRow(dataSet[i]);    
+  }
+};
+
+/**
+ * Change the help link.
+ */
+function chgHelp(from, to) {
+  from = from == '' ? 'CHARTHELP' : chartHelp[from];
+  to = chartHelp[to];
+  helpline.html(helpline.html().replace(from, to));
 }

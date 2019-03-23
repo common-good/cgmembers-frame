@@ -29,15 +29,15 @@ Setup:
   | .ZZC | .ZZB  |   1 | buy        |
   | .ZZC | .ZZA  |   2 | sell       |
   And transactions: 
-  | xid | created   | type     | amount | from | to   | purpose      |*
-  |   1 | %today-7w | signup   |      0 | ctty | .ZZA | signup       |
-  |   2 | %today-6w | signup   |      0 | ctty | .ZZB | signup       |
-  |   3 | %today-6w | signup   |      0 | ctty | .ZZC | signup       |
-  |   4 | %today-5w | transfer |     10 | .ZZB | .ZZA | cash E       |
-  |   5 | %today-4w | transfer |     20 | .ZZC | .ZZA | usd F        |
-  |   6 | %today-3w | transfer |     40 | .ZZA | .ZZB | whatever43   |
-  |   7 | %today-2d | transfer |      5 | .ZZB | .ZZC | cash J       |
-  |   8 | %today-1d | transfer |     80 | .ZZA | .ZZC | whatever54   |
+  | xid | created   | amount | from | to   | purpose      |*
+  |   1 | %today-7w |      0 | ctty | .ZZA | signup       |
+  |   2 | %today-6w |      0 | ctty | .ZZB | signup       |
+  |   3 | %today-6w |      0 | ctty | .ZZC | signup       |
+  |   4 | %today-5w |     10 | .ZZB | .ZZA | cash E       |
+  |   5 | %today-4w |     20 | .ZZC | .ZZA | usd F        |
+  |   6 | %today-3w |     40 | .ZZA | .ZZB | whatever43   |
+  |   7 | %today-2d |      5 | .ZZB | .ZZC | cash J       |
+  |   8 | %today-1d |     80 | .ZZA | .ZZC | whatever54   |
   Then balances:
   | uid  | balance |*
   | .ZZA |      10 |
@@ -65,8 +65,8 @@ Scenario: A member clicks the summary tab
   
 Scenario: A member clicks the summary tab with roundups
   Given transactions:
-  | xid | created | type     | amount | from | to   | purpose |*
-  |   9 | %today  | transfer |  80.02 | .ZZB | .ZZC | goodies |
+  | xid | created | amount | from | to   | purpose |*
+  |   9 | %today  |  80.02 | .ZZB | .ZZC | goodies |
   When member ".ZZB" visits page "summary"
   Then balances:
   | uid  | balance |*

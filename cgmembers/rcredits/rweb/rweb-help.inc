@@ -380,7 +380,7 @@ X
   );
   if ($i == 'proxies') return t('proxy help');
 
-  if ($i == 'demand' or $i == 'exchanges-for-dollars') return w\chartFrame('banking') . t(<<< X
+  if ($i == 'demand' or $i == 'bank-transfers') return w\chartFrame('banking') . t(<<< X
     <p>This chart show the amount of Dollars flowing into and out of the Dollar Pool &mdash; either through transfers <b class="out">to</b> or <b class="in">from</b> a participant's bank account OR through trade with another community. <b class="export">Exports</b> bring Dollars in from another %PROJECT Community. <b class="import">Imports</b> send Dollars out to another %PROJECT community.</p>
     <p>The "demand" for %RCREDITS is the net amount of US Dollars people want to trade for %RCREDITS. As long as people have plenty of places to spend within the %PROJECT system, they will generally keep moving money in. So the demand gives us a pretty reliable measure of the system's soundness.</p>
     <p>We can keep issuing %RCREDITS (in exchange for Dollars or as negative account balances) as long as there is a net inflow of US Dollars (more <b class="in">green</b> than <b class="out">orange</b> on the chart &mdash; an increasing demand). If members need to make more purchases outside the %PROJECT network and are taking more US Dollars <b class="out">out</b> of the system than they are putting <b class="in">in</b> (a decreasing demand), then we must temporarily slow down <i>issuing</i> %RCREDITS. So when the community's demand is negative three months in a row, the system automatically alerts the %PROJECT Community's administrators, who can put a temporary ban on spending below a zero balance.</p>
@@ -588,7 +588,7 @@ X
 
 function riskHelpLine($k, $weight, $extra = '', $tag) {
   global $riskHelp;
-  $basic = u\uc1($riskHelp[$k]);
+  if (!$basic = u\uc1(@$riskHelp[$k])) return '';
 //  $class = $tag == $k ? 'tagged' : ($weight < 0 ? 'goodRisk' : 'badRisk');
   $class = $weight < 0 ? 'goodRisk' : 'badRisk';
   return "<tr><td class=\"$class\">$k</td><td class=\"weight\">[$weight]</td><td>$basic. $extra</td></tr>\n";

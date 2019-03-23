@@ -40,7 +40,7 @@ function setupBasicAccounts() {
       $state = db\get('id', 'r_states', 'abbreviation=:st', compact('st'));
       $values = array($uid, $uid, $region . '.', $fullName, $email, $zip, R_COUNTRY_ID, 0, $flags);
       $info = array_combine($keys, $values);
-      $info += compact(ray('postalAddr state federalId'));
+      $info += @compact(ray('postalAddr state federalId'));
       new r\Acct($info);
     }
   }
@@ -148,7 +148,7 @@ function showActivity($a) {
   $uid = $a->id;
   $when = u\plusMonths(-3);
   $count = $a->co ? db\count('r_txs', 'payee=:uid AND created>:when', compact('uid', 'when'))
-    : db\count('r_txs', 'payer=:uid AND payee<>:CGID AND created>:when', compact(ray('uid cgf when')));
+    : db\count('r_txs', 'payer=:uid AND payee<>:CGID AND created>:when', @compact(ray('uid cgf when')));
   $ret = t('%count %what', 'count what', $count, $a->co ? t('sales') : t('purchases'));
   foreach (ray('created activated signed') as $k) $subs[$k] = $a->$k ? u\fmtDate($a->$k) : t('NO');
   $subs['use'] = u\fmtDate($a->ok ? $a->access : $a->login);
@@ -306,7 +306,6 @@ function pioneerBonus($a) {
   if (!$a->ok or $a->co) return;
   if (db\exists('r_txs', "payee=:uid AND payer=-8915 AND amount=100", ray('uid', $a->id))) return;
 /**/  debug("Pioneer bonus to $a->fullName");
-//  be\fund($a->id, TX_SIGNUP, 100, 'pioneer bonus');
 }
 
 

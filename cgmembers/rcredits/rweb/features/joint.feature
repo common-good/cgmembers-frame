@@ -95,11 +95,11 @@ Scenario: A joined account member looks at transaction history and summary
   |  602 | .ZZA  |    400 | %today-2w | %today-2w |
   |  603 | .ZZA  |   -100 | %today    |         0 |
   And transactions: 
-  | xid | created   | type     | amount | from | to   | purpose |*
-  |   4 | %today-1m | transfer |    200 | .ZZA | .ZZD | favors  |
-  |   7 | %today-1w | transfer |    500 | .ZZA | .ZZB | usd     |
-  |   8 | %today-2d | transfer |     50 | .ZZD | .ZZB | cash    |
-  |   9 | %today-1d | transfer |    100 | .ZZC | .ZZA | labor   |
+  | xid | created   | amount | from | to   | purpose |*
+  |   4 | %today-1m |    200 | .ZZA | .ZZD | favors  |
+  |   7 | %today-1w |    500 | .ZZA | .ZZB | usd     |
+  |   8 | %today-2d |     50 | .ZZD | .ZZB | cash    |
+  |   9 | %today-1d |    100 | .ZZC | .ZZA | labor   |
   Then balances:
   | uid  | balance |*
   | .ZZA |     800 |
@@ -153,8 +153,8 @@ Scenario: A joined account member looks at transaction history and summary
   | .ZZA | .ZZB  | joint      |        0 |       0 |    0 |
   | .ZZB | .ZZA  | joint      |        0 |       0 |    0 |
   And transactions: 
-  | xid | created   | type     | amount | from | to   | purpose |*
-  |   4 | %today-1d | transfer |    100 | .ZZC | .ZZA | labor   |
+  | xid | created   | amount | from | to   | purpose |*
+  |   4 | %today-1d |    100 | .ZZC | .ZZA | labor   |
   Then balances:
   | uid  | balance |*
   | .ZZA |     100 |

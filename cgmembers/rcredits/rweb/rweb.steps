@@ -344,6 +344,10 @@ function weSayWithSubs($type, $index, $subs) {
  *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     TEST relations AMemberTriesToAddARelationWithSelf
  *     TEST relations AMemberTriesToAddARelationAgain
+ *     TEST showrecurs AMemberStopsARecurringTransaction
+ *     TEST showrecurs AMemberStopsAStoppedRecurringTransaction
+ *     TEST showrecurs AMemberAttemptsToStopANonexistentRecurringTransaction
+ *     TEST showrecurs AMemberAttemptsToStopAnotherMembersRecurringTransaction
  *     TEST signin AMemberTypesTheWrongPassword
  *     TEST signin AMemberTypesAnUnknownUsernameID
  *     TEST signin AMemberAsksForANewPasswordForAnUnknownAccount
@@ -948,7 +952,8 @@ function cronRuns($op) {return t\cronRuns($op);}
  */
 function statisticsGetSet($time) {
   global $testOnly; if ($testOnly) return FALSE;
-  return r\getStats(r\serverUid(), $time) ? TRUE : FALSE;
+//  return r\getStats(r\serverUid(), $time) ? TRUE : FALSE;
+  return r\stats(r\serverUid(), $time) ? TRUE : FALSE;
 }
 
 /**

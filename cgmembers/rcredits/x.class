@@ -107,7 +107,7 @@ class X {
     $data = unserialize($data);
     
     if ($amount = @$data['xfee']) {
-      list ($type, $goods, $payerAgent, $payeeAgent, $taking) = array(TX_XFEE, FOR_USD, $payer, $payee, TRUE);
+      list ($goods, $payerAgent, $payeeAgent, $taking) = array(FOR_USD, $payer, $payee, TRUE);
       $for = ($amount == R_XFEE_CHECK and !strpos($payeeFor, BY_CARD)) ? t('check fee') : t('card fee');
       if ($xray = $this->save($this->setup(compact(ray(TX_FLDS))))) {
         $xrays[] = $xray;
@@ -118,7 +118,7 @@ class X {
       list ($goods, $payerAgent, $payeeAgent, $taking) = array(FOR_USD, $payer, $payee, TRUE);
       $for = t('discount rebate (on #%tid)');
       $for = [tr($for, 'tid', $payerTid), tr($for, 'tid', $payeeTid)];
-      if ($xray = $this->save($this->setup(compact(ray(TX_FLDS))))) {
+      if ($xray = $this->save($this->setup(@compact(ray(TX_FLDS))))) {
         $xrays[] = $xray;
       } else return FALSE;
     }
@@ -189,7 +189,7 @@ class X {
     $data = $data ? serialize($data) : '';
 //    if (isGAME and $payer > 0) $info += ['members' => $a1->members];
 
-    return compact(ray($fields . ' payeeFor channel box')) + $info;
+    return @compact(ray($fields . ' payeeFor channel box')) + $info;
   }
 
   /**
@@ -518,7 +518,7 @@ class MyX extends x {
 
     $success = TRUE;
     foreach (ray('r payer payee') as $one) unset($tx[$one]); // else preempts all subs that start thus
-    return compact(ray('created created0 xid role why payerPurpose payeePurpose toMe amount tofrom balance otherUid myName otherName short success')) + $tx;
+    return @compact(ray('created created0 xid role why payerPurpose payeePurpose toMe amount tofrom balance otherUid myName otherName short success')) + $tx;
   }
 
   /**

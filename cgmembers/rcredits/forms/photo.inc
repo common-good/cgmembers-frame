@@ -39,8 +39,8 @@ function formPhoto($form, &$sta, $arg = '') {
     <ul>
     <li>It should be a color photo of you and only you (you can crop other people out).</li>
     <li>It must show clearly your full face (no sunglasses, eyes open).</li>
-    <li>Your head should fill most of the frame (no shoulders needed).</li></ul>', '_b', 'b class="loud"');    
-    $desc .= t('<p>2. Play with the buttons to adjust the position, size, and rotation, then click the <%img>button to upload the image. Please feel free to %emailIt, if that is easier for you.', '_b _emailIt _img', 'b class="crop-button"', $emailIt, "img src=\"$rUrl/images/icons/crop.png\" height=\"20\" /");
+    <li class="loud">Include the top of your head and your chin, with just a little space above and below.</li></ul>', '_b', 'b class="loud"');    
+    $desc .= t('<p>2. Drag to reposition, use the buttons to adjust size and rotation, then click the <%img>button to upload. Please feel free to %emailIt, if that is easier for you.', '_b _emailIt _img', 'b class="crop-button"', $emailIt, "img src=\"$rUrl/images/icons/crop.png\" height=\"20\" /");
   }
   
   $title = t('Photo ID Picture');
@@ -76,7 +76,7 @@ EOF
   js('crop-setup', 'recrop uid', $recrop, $mya->id);
   css('x/croppic.css');
 
-  $form = compact(ray('title nextStep progress desc newPhoto del'));
+  $form = @compact(ray('title nextStep progress desc newPhoto del'));
   return cgform($form);
 }
 

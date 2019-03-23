@@ -399,7 +399,7 @@ function NEWfld($type, $label, $desc = '', $other = []) {
   if (!@$title) $title = $placeholder; // hover text defaults to same as hint
   foreach (['placeholder', 'title'] as $k) if ($$k) $tribs[$k] = $$k;
 
-  return compact(ray('type label required bare help tribs other')); // see rend()
+  return @compact(ray('type label required bare help tribs other')); // see rend()
 }
 
 // only barely begun
@@ -591,7 +591,7 @@ function fld($type, $title = '', $help = '', $other = [], $options = NULL) {
   if ($type == 'select' and !isset($other['default_value'])) $other['default_value'] = $options ? key($options) : ''; // Drupal's select fails without a default
   $title_display = 'before';
 //  if (isset($other['value']) and !isset($other['default_value'])) $other['default_value'] = $other['value'];
-  $field = u\prefixKeys('#', $other + compact(ray('type title title_display required bare help options')));
+  $field = u\prefixKeys('#', $other + @compact(ray('type title title_display required bare help options')));
   return $field;
 }
 
@@ -626,7 +626,7 @@ function submi($title = '', $style = '', $size = 'xs', $other = []) {
  */
 function buttonFld($value, $href = '', $title = NULL, $style = 'success', $size = 'xs', $extra = []) {
   $class = trim(@$extra['class'] . " btn btn-$style btn-$size");
-  return NEWfld('button', BARE, ['', '', $title], compact(ray('href value title class id')) + $extra);
+  return NEWfld('button', BARE, ['', '', $title], @compact(ray('href value title class id')) + $extra);
 }
 function button($value, $href = '', $title = NULL, $style = 'success', $size = 'xs', $extra = []) {
   return rend([buttonFld($value, $href, $title, $style, $size, $extra)]);
@@ -787,7 +787,7 @@ function badSignature(&$sta) {
 function whoFldSubmit($field, $question, $extra = []) {
   extract(just('amount allowNonmember coOnly', $extra));
   js('x/typeahead.bundle.min');
-  jsx('suggest-who', compact(ray('field question amount allowNonmember coOnly')));
+  jsx('suggest-who', @compact(ray('field question amount allowNonmember coOnly')));
 }
 
 /**
@@ -1300,7 +1300,7 @@ function acctType($acctType) {
 function suCompanyRelation($other, $data) {
   extract(just('company companyPhone owner employee contractor', $data));
   if ($main = findCompany($company, @$companyPhone)) { // company account exists
-    return r\acct($main)->newRelation(compact(ray('other employee owner'))); // no permissions/draw (for security)
+    return r\acct($main)->newRelation(@compact(ray('other employee owner'))); // no permissions/draw (for security)
   } else return FALSE;
 }
 
@@ -1533,7 +1533,7 @@ function ssnFields($personal = TRUE) {
   
   $federalId = passFld($ssTitle, [t($personal ? 'ssDesc' : 'einDesc'), @$ssReason], required() + autofill('off')); // textfield so user doesn't have to retype on error
   
-  return compact(ray('dob federalId sponsor'));
+  return @compact(ray('dob federalId sponsor'));
 }
 
 /**
@@ -1787,7 +1787,7 @@ function dateRange($args, $url, $choices = [], $settings = '', $downloadable = T
   $submitPeriod = submi(t('Show')); // label has to be different from submitDates (see below)
   if ($downloadable) $downloadPeriod = submi(t('Download'));
 ///  $actions = render($submitPeriod) . render(@$downloadPeriod) . render($showAdvanced);
-  $actions = fieldSet('actionsSimple', compact('submitPeriod', 'downloadPeriod'), '', suffix($showAdvanced2));
+  $actions = fieldSet('actionsSimple', @compact('submitPeriod', 'downloadPeriod'), '', suffix($showAdvanced2));
 ///  $period = selectFld(t('For the past:'), '', dft($period), $txDays);
 //  $onchange = "$('#edit-starting, #edit-ending').val('');";
 //  $onchange = "var id='#edit-submitPeriod'; if (!$(id).is(':visible')) id='#edit-downloadPeriod'; $(id).click();";
@@ -1801,12 +1801,12 @@ function dateRange($args, $url, $choices = [], $settings = '', $downloadable = T
 //  $showSimple2 = '<a id="showSimple" href="javascript:void(0);" onclick="jQuery(\'#advanced\').hide(); jQuery(\'#simple\').show();">simpler</a>';
   $showSimple2 = '<a id="showSimple">simpler</a>';
   if ($downloadable) $downloadDates = submi(t('download')); // must be lowercase
-  $actions = fieldSet('actionsAdvanced', compact('submitDates', 'downloadDates'), '', suffix($showSimple2));
+  $actions = fieldSet('actionsAdvanced', @compact('submitDates', 'downloadDates'), '', suffix($showSimple2));
   $starting = textFld(t('Starting:'), '', dft(u\fmtDate($starting)));
   $ending = textFld(t('Ending:'), '', dft(u\fmtDate($ending)));
   if ($downloadable) $downloadMsg = item(t('<b class="loud">TIP</b>: Tell your browser to allow popups for this site.'));
-  $advanced = fieldSet('advanced', compact(ray('starting ending states2 actions')), BARE);
-  $dateRange = compact(ray('simple advanced downloadMsg'));
+  $advanced = fieldSet('advanced', @compact(ray('starting ending states2 actions')), BARE);
+  $dateRange = @compact(ray('simple advanced downloadMsg'));
   return compact('dateRange') + $res;
 }
 
@@ -2036,7 +2036,7 @@ function vf($f, $add = 0) {
   return compact('v', 'f');
 }
  
-define('DATA_POINTS', 50); // how many x-axis data points to show in each dataset
+define('DATA_POINTS', 18); // how many x-axis data points to show in each dataset
 
 /**
  * Return an iframe containing a chart
@@ -2044,12 +2044,14 @@ define('DATA_POINTS', 50); // how many x-axis data points to show in each datase
  * @param int $ctty: community account ID
  * @param bool $selectable: <show the account and community selectors> (default FALSE)
  */
-function chartFrame($chart = 'growth', $selectable = FALSE, $ctty = NULL) {
+function chartFrame($chart, $selectable = FALSE, $ctty = NULL) {
   global $base_url, $mya;
   u\setDft($ctty, $mya ? $mya->community : 0);
+  $region = r\acct('!' . R_SERVER_ID)->fullName;
   list ($w, $h) = $selectable ? [600, 600]: [480, 320];
-  $url = isDEV ? "$base_url/rcredits/misc/chart.php?site=dev" : ("https://cg4.us/chart.php?site=" . str_replace('https://', '', $base_url));
-  return w\tag('iframe', '', ray('src width height', "$url&ctty=0&chart=$chart&selectable=$selectable&t=" . time(), $w, $h)); // src must be first
+//  $url = isDEV ? "$base_url/rcredits/misc/chart.php?site=dev" : ("https://cg4.us/chart.php?site=" . str_replace('https://', '', $base_url));
+  $url = (isDEV ? "$base_url/rcredits/misc" : "https://cg4.us") . "/chart.php?site=$base_url";
+  return w\tag('iframe', '', ray('src width height', "$url&region=$region&ctty=0&chart=$chart&selectable=$selectable&t=" . time(), $w, $h)); // src must be first
 }
 
 function firstGraphDt($ctty) {  
@@ -2060,84 +2062,99 @@ function firstGraphDt($ctty) {
 
 /**
  * Display charts representing the condition of the %PROJECT system in the given community.
- * @param string $whichChart: which chart or set of charts to display
+ * @param string $whichChart: which chart to display
  * @param int $ctty: account record ID of community to show graphs for (defaults to all communities)
  * @param assoc $chartData: (RETURNED) a data field containing the chart data
- * @return: html of the relevant charts, in their proper divs
+ * @param bool $download: <download month data instead of showing graph>
+ * @return: nothing unless testing (in which case it returns html of the relevant charts, in their proper divs)
  * FOR DEV: http://localhost/cgmembers-frame/cgmembers/rcredits/misc/chart.php?ctty=0&chart=growth&site=dev
  */
-function showCharts($whichChart, $ctty = 0, &$chartData = '') {
+function showCharts($whichChart, $ctty = 0, &$chartData = '', $download = FALSE) {
   global $base_url;
 
   list ($in, $out, $net, $personal, $companies) = array(t('in'), t('out'), t('net'), t('personal'), t('companies'));
   $txTypes = ray('p2p p2b b2b b2p', t('Person-to-person'), t('Person-to-business (mostly by %PROJECT card)'), t('Business-to-business (paying suppliers)'), t('Business-to-person (including payroll)'));
-  $today = strtotime('today');
-  $dt1 = w\firstGraphDt($ctty);
-    
-  $delta = max(1, floor(($today - $dt1) / DAY_SECS / DATA_POINTS));
-  $dt = strtotime((-DATA_POINTS * $delta) . ' days', $today);
-  $charts = ray('growth funds velocity banking volume issued', 'growth', 'dollar-pool', 'circulation-velocity', 'exchanges-for-dollars', 'transaction-volume', 'issuing-credits');
-  if ($whichChart != 'all') $charts = just($whichChart, $charts);
+  $latest = time(); // db\max('created', 'r_stats', compact('ctty')); // show only as much data as we have
+  $today = strtotime('today', $latest ?: time());
+//  $dt1 = w\firstGraphDt($ctty);
+  $period = 'months';
+
+  $charts = ray('success growth funds velocity banking volume', 'success-metrics', 'growth', 'dollar-pool', 'circulation-velocity', 'bank-transfers', 'transaction-volume');
   foreach ($charts as $k => $zot) u\setDft(${$k . 'Data'}, []);
-
-  while ($dt <= $today) {
-    $stats = r\stats($ctty, $dt);
+  $downData[] = ray('Companies Members Active Joining P2P P2B B2P B2B PctActive MemsPerCo TxsPerActive PayeesPerActive Basket');
+  
+  for ($ago = DATA_POINTS; $ago >= 0; $ago--) {
+    $dt = strtotime("-$ago $period", $today);
+    if (!@$dt1) $dt1 = $dt; // remember first date for this community
+//    if (!$stats = r\stats($ctty, $dt, TRUE) or !$stats['created']) continue;
+    $stats = r\stats($ctty, $dt, TRUE);
     extract(just('ctty created', $stats)); // careful with this (don't overwrite local vars)
-    if (!@$dt1) $dt1 = $created; // remember first date for this community
-    $stats30 = r\stats($ctty, strtotime('-30 days', $created)); 
+    $stats30 = r\stats($ctty, strtotime('-31 days', $created)); // 30 gets weird for partially-populated r_stats so use 31
     extract(w\fundStats($stats, FALSE, $stats30)); // format, originals in {var}0, difs in d_{var}
-    $ray = ray('v f', $pAccts0 + $bAccts0, $bAccts);
-//    $growthData[] = [$created, vf($bAccts, $pAccts0), $pAccts0, $newbs0, $aAccts0, $conx0, $conxLocal0];  
-    $growthData[] = [$created, vf($bAccts, $pAccts0), $pAccts0, $newbs0, $aAccts0];  
-    $fundsData[] = [$created, vf($balsPos), vf($usd), vf(u\fmtAmt($balsPos0 - $d_txsVol0)), vf($topN), vf($botN), vf($floors), vf($balsNeg)]; // $bals === $usd, so not shown
-    $velocityData[] = [$created, vf($cgRate, $localRate0), vf($localRate), vf($usdRate)];
-    $bankingData[] = [$created, vf($d_usdIn), vf($d_usdOut), vf($d_cgIn), vf($d_cgOut)];
-
-    $x2x = [];
-    foreach ($txTypes as $k => $desc) {
-      $v = max(1, ${"d_{$k}0"}); // to make the logarithmic scale look okay
-      $cnt = ${"d_{$k}Count"};
-      $cnt .= $cnt ? ' @ ' . u\fmtAmt($v / $cnt) . ' avg' : '';
-      $f = ${"d_{$k}"} . " ($cnt) $desc"; // eg "$123 (7 @ $6.25 avg)"
-      $x2x[] = compact('v', 'f');
-    }
-    array_unshift($x2x, $created);
-    $volumeData[] = $x2x;
+    $gifts0 =  $patronage0 + $d_roundups0 + $d_crumbs0;
+    $success0 = $aAccts0 * $payees0 * $basket0 * $gifts0 / 500000;
     
+    if ($download) {
+      $pctActive = $aAccts0 / (($bAccts0 + $pAccts0) ?: 1);
+      $memsPerCo = $bAccts0 ? $pAccts0 / $bAccts0 : 0;
+      $txsPerActive = $aAccts0 ? $txsCount0 / $aAccts0 : 0;
+      $downData[] = [$bAccts0, $pAccts0, $aAccts0, $newbs0, $d_p2p0, $d_p2b0, $d_b2p0, $d_b2b0, $pctActive, $memsPerCo, $txsPerActive, $payees0, $basket0];
+    } else {
+  //    $ray = ray('v f', $pAccts0 + $bAccts0, $bAccts);
+  //    $growthData[] = [$created, vf($bAccts, $pAccts0), $pAccts0, $newbs0, $aAccts0, $conx0, $conxLocal0];  
+      $successData[] = [$created, $success0, $aAccts0, $gifts0, $payees0, $basket0, $d_invites0];
+      $growthData[] = [$created, vf($bAccts, $pAccts0), $pAccts0, $newbs0, $aAccts0];  
+      $fundsData[] = [$created, vf($balsPos), vf($usd), vf(u\fmtAmt($balsPos0 - $d_txs0)), vf($topN), vf($botN), vf($floors), vf($balsNeg)]; // $bals === $usd, so not shown
+      $velocityData[] = [$created, vf($cgRate, $localRate0), vf($localRate), vf($usdVolRate)];
+      $bankingData[] = [$created, vf($d_usdIn), vf($d_usdOut), vf($d_cgIn), vf($d_cgOut)];
+
+      $x2x = [];
+      foreach ($txTypes as $k => $desc) {
+        $v = max(1, ${"d_{$k}0"}); // to make the logarithmic scale look okay
+        $cnt = ${"d_{$k}Count"};
+        $cnt .= $cnt ? ' @ ' . u\fmtAmt($v / $cnt) . ' avg' : '';
+        $f = ${"d_{$k}"} . " ($cnt) $desc"; // eg "$123 (7 @ $6.25 avg)"
+        $x2x[] = compact('v', 'f');
+      }
+      array_unshift($x2x, $created);
+      $volumeData[] = $x2x;
+    }    
     // add a pie chart for p2p,... cash purchase (one for volume, one for count?)
     // also pie for circling/explicit savings/biz required nut/other (runny)
     // pie for admin showing channel? member activity (0 txs/mo, 1-5, etc.), where's the money, etc.
 
-    $dt = strtotime("+$delta days", $dtX = $dt);
-    if ($dt > $today and $dtX < $today) $dt = $today; // always show the latest
+//    $dt = strtotime("+$delta days", $dtX = $dt);
+//    if ($dt > $today and $dtX < $today) $dt = $today; // always show the latest
   }
 
+  if ($download) {$chartData = $downData; return;}
   
-//    $rate = number_format(100 * $d_txs, 1) . '%';
-
+  $success = number_format($success0, 2);
   $accts = "$pAccts members + $bAccts companies";
-//  $funds = "$usd + {$balsPos}cg";
   $funds = $usd;
-//  $velocity = ($bals0 ? $txsRate : 0) . t(' per mo.'); // FAILS (wrong amount)
-  $velocity = ($bals0 ? u\fmtAmt($localRate0 + $cgRate0, '%') : 0) . t(' per mo.');
+  $velocity = ($bals0 ? u\fmtAmt($txsRate0, '%') : 0) . t(' per mo.');
   $usd = $d_usd . t(' (net)');
 
-  $avg = u\fmtAmt($d_txsVolCount0 ? $d_txsVol0 / $d_txsVolCount0 : 0);
-  $txs = "$d_txsVolCount @ $avg avg";
+  $avg = u\fmtAmt($d_txsCount0 ? $d_txs0 / $d_txsCount0 : 0);
+  $txs = "$d_txsCount @ $avg avg";
   $topPct = $aAccts0 >= 100 ? '%' : '';
 
-  $vs = compact(ray('accts funds velocity usd txs topPct dt1'));
+  $period = $period[0];
+  $vs = compact(ray('success accts funds velocity usd txs topPct dt1 period'));
 
   foreach($charts as $k => $help) {
-    $one = "<div id=\"{$k}Chart\" class=\"onechart ct-chart ct-golden-section\"></div>";
-    if (count($charts) > 1) $one = "<a href=\"$base_url/help/$help/qid=$ctty\">$one</a>";
+//    $one = "<div id=\"{$k}Chart\" class=\"onechart ct-chart ct-golden-section\"></div>";
+    $one = "<div id=\"onechart\" class=\"onechart ct-chart ct-golden-section\"></div>";
+//    if (count($charts) > 1) $one = "<a href=\"$base_url/help/$help/qid=$ctty\">$one</a>";
     $charts[$k] = "<div>$one</div>";
     $dataNames[] = $k . 'Data';
   }
 
   $chartData = json_encode($data = compact('vs', $dataNames));
+///  debug(compact(ray('data chartData')));
+  if (u\test()) return $chartData;
 
-  return u\test() ? $chartData : join('', $charts);
+//  return $whichChart == 'all' ? join('', $charts) : $charts[$whichChart];
 }
 
 
@@ -2147,7 +2164,7 @@ function showCharts($whichChart, $ctty = 0, &$chartData = '') {
  */
 function fundStats($stats, $round = FALSE, $stats30 = NULL) {
   extract($stats);
-  if ($stats30) extract($stats30, EXTR_PREFIX_ALL, 'o');
+//  if ($stats30) extract($stats30, EXTR_PREFIX_ALL, 'o');
 //  list ($r0, $usd0) = array($r, $usd);
 
   if ($ctty) { // a community
@@ -2155,11 +2172,12 @@ function fundStats($stats, $round = FALSE, $stats30 = NULL) {
     $res['cttyName'] = $ctty == r\serverUid() ? t('Seedpack (Outliers)') : trim(strtr($cttyA->fullName, [t('Region')=>'', PROJECT=>'']));
   } else $res['cttyName'] = t('TOTAL');
 
-  $intStatFlds = [ 'pAccts', 'bAccts', 'newbs', 'aAccts', 'conx', 'conxLocal' ]; // excludes fields ending in 'Count'
-  
+  $intStatFlds = ray('pAccts bAccts newbs aAccts conx conxLocal'); // excludes fields ending in 'Count'
+//  $intStatFlds = [ 'pAccts', 'bAccts', 'newbs', 'aAccts', 'conx', 'conxLocal' ]; // excludes fields ending in 'Count'
+
   // calculate monthly velocity with respect to total credit in circulation (balsPos not bals)
-  foreach ($rateFlds = ray('cg usd txs local') as $z) {
-    $stats["{$z}Rate"] = ($stats["{$z}Vol"] - $stats30["{$z}Vol"]) / (($balsPos + 0) ?: 1);
+  foreach ($rateFlds = ray('cg usdVol txs local') as $z) {
+    $stats["{$z}Rate"] = ($stats[$z] - $stats30[$z]) / (($balsPos + 0) ?: 1);
     $stats30["{$z}Rate"] = 0; // just to make d_ not die
   }
     
@@ -2337,7 +2355,7 @@ function setupFoot($label = '', $extra = []) {
       $progress = item(t('Just <b>%n</b> more %steps to go', 'n steps', $remains, $steps));
     } else $nextStep = submit($label ?: t('Finish'));
   } else $submit = submit($label, '', '', $extra);
-  return compact(ray('submit nextStep progress'));
+  return @compact(ray('submit nextStep progress'));
 }
 
 /**
@@ -2398,7 +2416,7 @@ function atag($href, $extras = []) {
   if ($href and !u\starts($href, BASE_URL)) {
     if (substr($href, 0, 6) == 'mailto' or substr($href, 0, 4) == 'http') $extras += w\away();
   } elseif (!$href) unset($href); // don't show empty href
-  return 'a ' . u\tribs(compact('href') + $extras);
+  return 'a ' . u\tribs(@compact('href') + $extras);
 }
 function emailtag($email = NULL, $subject = '', $body = '') {
   u\setDft($email, r\regionfield('email'));
