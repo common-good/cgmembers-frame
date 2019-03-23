@@ -165,7 +165,7 @@ function everyHour() { // stuff to do every hour
   db\q('DELETE FROM cache_form WHERE created<:REQUEST_TIME-:HOUR_SECS'); // clean up form cache (is this needed?)
 
 //  $uids = db\col('uid', 'users', 'latitude=0 AND longitude=0 AND (uid<0 OR uid>:CANONIC_ACCTS)') ?: [];
-  $sql = 'SELECT uid FROM users WHERE latitude=0 AND longitude=0 AND (uid<0 OR uid>:CANONIC_ACCTS)';
+  $sql = 'SELECT uid FROM users WHERE latitude=0 AND longitude=0 AND risks&(1<<:K_ADDROFF)=0 AND (uid<0 OR uid>:CANONIC_ACCTS)';
   queueEach('geocode', $sql);  
   // r\tellAdmin('hourly cron');
 }

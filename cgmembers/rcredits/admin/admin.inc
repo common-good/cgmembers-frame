@@ -298,7 +298,7 @@ EOF;
 function fixStats() {
 /*
   db\q('TRUNCATE r_stats');
-  f('cr.cttyStats');
+  f('cr.cttyStats', -1);
 */
 }
 
