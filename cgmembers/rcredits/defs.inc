@@ -448,6 +448,7 @@ define('K_ACCT_RISKS_EDITABLE', 'adminOk cashCo rents shady photoOff addrOff ssn
 define('K_TX_RISKS', 'txAdminOk:-0.3,redo:2,exchange:2,cashIn:5,cashOut:2,fromBank:5,toBank:2,b2p:2,p2p:2,inhouse:2,fromSuspect:3,toSuspect:3,absent:4,invoiceless:4,bigFrom:3,biggestFrom:3,oftenFrom:3,bigTo:3,biggestTo:3,oftenTo:3,offline:10,firstOffline:3,origins:3,suspectOut:2'); // names and size of transaction risks
 define('K_ADMINOK', 0); // community admin blessed the account or transaction
 define('K_HASBANK', 3); // account has a connected bank account
+define('K_ADDROFF', 14); // account's physical address is wonky (can't be geolocated or whatever)
 define('HAS_BANK', 'risks&(1<<' . K_HASBANK . ')'); // mysql criterion (not surrounding parens, so we can do u.:HAS_BANK)
 define('MASTER', '(uid<jid)'); // account is the master in a joint account
 

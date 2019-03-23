@@ -1,3 +1,6 @@
+2019-03-23
+. fixed bug in rcron.inc that kept trying to setLocus even after addrOff risk bit was set
+
 2019-03-22 feature/fix-pay
 . payments were failing for admins (in be\identify)
 
