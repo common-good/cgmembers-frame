@@ -204,9 +204,13 @@ Scenario: A cashier reverses a transaction with insufficient funds
   | xid | created   | amount | from | to   | purpose |*
   | 4   | %today-1m |    100 | ctty | .ZZC | jnsaqwa |
   And agent "C:B" asks device "devC" to charge ".ZZA,ccA" $-100 for "cash": "cash in" at "%now-1h" force 0
-  Then transactions: 
-  | xid | created | amount | from | to   | purpose |*
-  | 5   | %now-1h |   -100 | .ZZA | C:B  | cash in |
+  Then transaction headers: 
+  | xid | created | actorId | actorAgentId |*
+  | 5   | %now-1h |    .ZZC |         .ZZB |
+  And transaction entries:
+  | xid | entryType    | amount | uid  | agentUid | description | acctTid |*
+  |   5 | %ENTRY_PAYER |    100 | .ZZA | .ZZA     | cash in     | 1       |
+  |   5 | %ENTRY_PAYEE |   -100 | .ZZC | .ZZB     | cash in     | 2       |
   Given transactions:
   | xid | created | amount | from | to   | purpose |*
   | 6   | %today  |      1 | .ZZA | .ZZB | cash    |
@@ -223,4 +227,3 @@ Scenario: A cashier reverses a transaction with insufficient funds
   | .ZZA |      -1 |
   | .ZZB |       1 |
   | .ZZC |     100 |
-  

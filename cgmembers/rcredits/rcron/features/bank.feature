@@ -187,4 +187,3 @@ Scenario: a member's bank account gets verified
 	And members have:
   | uid  | balance | flags            |*
   | .ZZA |       0 | ok,refill,bankOk |
-	

@@ -136,6 +136,13 @@ class Tx {
   }
 
   /**
+   * Add an entry to this transaction.
+   */
+  public function addEntry($entry) {
+    $this->entries[] = $entry;
+  }
+
+  /**
    * Read an existing transaction record, with its entries.
    * @param xid $xid: transaction record id
    * @return the new instance of Tx
@@ -225,9 +232,10 @@ EOF;
    * @return associative array: the old transaction record (FALSE if none)
    */
   static function lastTx($uids, $where = 1, $subs = []) {
+    debug("lastTx(" . print_r($uids, true) . ", '$where', " . print_r($subs, true) . ")");
     $txHdr = db\get('t.*', 'r_tx_hdrs t JOIN r_entries e USING(xid)',
                     "e.uid IN (:uids) AND $where ORDER BY t.created DESC LIMIT 1",
-                    $subs + ['uids' => $uids]);
+                    ['uids' => $uids] + $subs);
     if (!$txHdr) return FALSE;
     $xid = $txHdr['xid'];
     $entries = r\TxEntry::readAll($xid);

@@ -85,7 +85,7 @@ function relations($relations) {return t\relations($relations);}
  *     MAKE undo AnAgentAsksToUndoARefundWithInsufficientBalance
  *     MAKE undo AnAgentAsksToUndoAChargeWithoutPermission
  *     MAKE undo AnAgentAsksToUndoARefundWithoutPermission
- *     BOTH undo ACashierReversesATransactionWithInsufficientFunds
+ *     MAKE undo ACashierReversesATransactionWithInsufficientFunds
  */
 function transactions($list) {return t\transactions($list);}
 
@@ -260,8 +260,11 @@ function agentAsksDeviceToUndoTransactionCode($agent, $device, $txid, $code) {
   global $testOnly; if ($testOnly) return FALSE;
 
   $fields = 'member amount goods description created force code proof';
-  if ($q = db\get('e.uid AS payer, e.agentUid AS payerAgent, amount, goods, description, t.created',
-                  'r_tx_hdrs t JOIN r_entries e ON t.xid=e.xid AND amount < 0', 't.xid=:txid', compact('txid'))) {
+  $q = db\get('e.uid AS payer, e.agentUid AS payerAgent, 0-amount AS amount, goods, description, t.created',
+              "r_tx_hdrs t JOIN r_entries e USING(xid)", "t.xid=:txid AND e.entryType=:entryType",
+              ['txid'=>$txid, 'entryType'=>ENTRY_PAYER]);
+  debug($q);
+  if ($q) {
     extract($q);
     $member = r\qid($payer, $payerAgent);
     list ($goods, $force, $proof) = [(int) ($goods == FOR_GOODS), -1, 'calc'];
@@ -271,6 +274,9 @@ function agentAsksDeviceToUndoTransactionCode($agent, $device, $txid, $code) {
   }
   return t\hitServer('charge', $args, $agent, $device);
 }
+
+// with code: agent:C:B device:devC txid:5 code:ccE
+// with subs: agent:C:B device:devC  member:.ZZA code:ccA amount:80 goods:1 description:whatever created:%today-1d
 
 /**
  * agent (ARG) asks device (ARG) to undo transaction with subs: (ARG)
@@ -740,6 +746,7 @@ function transactionCountIs($n) {return t\txCountIs($n);}
  * transaction headers: (ARG)
  *
  * in: TEST coupons AMemberRedeemsAGiftCoupon
+ *     TEST undo ACashierReversesATransactionWithInsufficientFunds
  */
 function transactionHeaders($list) { return t\txHdrs($list); }
 
@@ -747,6 +754,7 @@ function transactionHeaders($list) { return t\txHdrs($list); }
  * transaction entries: (ARG)
  *
  * in: TEST coupons AMemberRedeemsAGiftCoupon
+ *     TEST undo ACashierReversesATransactionWithInsufficientFunds
  */
 function transactionEntries($list) { return t\txEntries($list); }
 

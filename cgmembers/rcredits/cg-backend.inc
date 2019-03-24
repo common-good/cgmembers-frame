@@ -357,13 +357,13 @@ function reverse($xid) {
   $DBTX = null;
 
   $message = 'report undo|report tx';
-  $did = ($tx->actorEntry->amount > 0) ? 'refunded' : 'charged';
+  $did = ($tx->actorEntry->amount > 0) ? ($tx->goods==FOR_GOODS ? 'refunded' : 'credited') : 're-charged';
   
   $xx = r\txRet($message, ['ok'=>1, 'txid'=>$xid, 'created'=>$newTx->created,
                            'balance'=>$mya->can(B_SECRET) ? '*0' : $mya->balance,
                            'success'=>true, 'xid'=>$xid, 'created0'=>$newTx->created, 'newTx'=>$newTx,
                            'solution'=>'reversed', 'did'=>$did, 'otherName'=>$tx->other->fullName,
-                           'amount'=>u\fmtAmt($newTx->otherEntry->amount), 'why' => $tx->otherEntry->description]);
+                           'amount'=>u\fmtAmt(abs($newTx->otherEntry->amount)), 'why' => $tx->otherEntry->description]);
   debug($xx);
   return $xx;
 }
@@ -463,7 +463,7 @@ function payInvoice($nvid) {
  */
 function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
   global $scanned, $channel;
-  debug("transfer($type, $actor->id, $other->id, $amount, $for, $goods, )" . print_r($data, true));
+  debug("transfer($type, $actor->id, $other->id, $amount, " . print_r($for, true) . ", $goods, )" . print_r($data, true));
   
   u\EXPECT('string acct acct number string|array int assoc', $type, $actor, $other, $amount, $for, $goods, $data);
   if (is_null($goods)) $goods = FOR_GOODS;
@@ -490,7 +490,7 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
   $short = FALSE;
   
   if (is_null($for)) $for = ray(R_WHYS)[$goods];
-  list($actorFor, $otherFor) = (is_array($for)) ? $for : [$for, $for];
+  list($otherFor, $actorFor) = (is_array($for)) ? $for : [$for, $for];
 
   if (is_array($amount)) extract(just('amount', $amount));
   list ($actorId, $otherId) = array($actor->id, $other->id);
@@ -644,7 +644,9 @@ function sendNotifications($reversing, $tx, $shortfall) {
   if ($reversing) {
     /*if ($byMe and !$toMe and $wasInvoice) $original = 'invoice-payment';
       else*/
-    if ($byMe and !$toMe) $notice = 'new refund';  // I made a payment, reversing requires invoice
+    if ($byMe and !$toMe) {
+      $notice = ($tx->goods == FOR_GOODS) ? 'new refund' : 'new payment';
+    } // I made a payment, reversing requires invoice
     elseif ($byMe and $toMe) $notice = 'new charge';  // I charged other, reversing is refunding
     elseif (!$byMe and $toMe) $notice = 'payment';  // Other made payment to me, reverse is refunding
     else /*!byMe and !$toMe*/ $notice = 'dispute';  // Other charged me, reversing requires dispute

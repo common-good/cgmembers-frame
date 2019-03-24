@@ -377,15 +377,12 @@ function charge($args, $type = 'charge') {
       SELECT xid
       FROM r_tx_hdrs t JOIN r_entries payer USING(xid) JOIN r_entries payee USING(xid)
       WHERE t.created=:created AND payer.uid=:payer AND payee.uid=:payee
-            AND (payer.amount=-:amount OR payee.amount=:amount) AND t.goods=:goods AND payee.description=:payeeFor
+            AND (payer.amount=:amount OR payee.amount=:amount) AND t.goods=:goods AND payee.description=:payeeFor
 EOF;
     $subs = ray('created payer payee amount goods payeeFor', $created, $a->id, $mya->id, $amount, $goods, $description);
     $q = db\q($sql, $subs);
-    debug($q);
     $x = $q->fetch(\PDO::FETCH_ASSOC);
-    debug($x);
     if ($x) extract($x);
-    debug($xid);
   }
   
   $amount = str_replace(',', '', number_format($amount, 2)); // make sure both cents digits are included
@@ -413,7 +410,9 @@ EOF;
       extract(just('undo created', $revRes));
       $message = "Transaction has been reversed.";
     } else {
-      list ($msg, $subs) = be\undoTx($xid, (@$amount < 0 and !$mya->co) ? 'e.amount > 0 AND e.uid=:myid' : "e.amount='$amount' AND e.uid=:myid", ['myid' => $mya->id], $force);
+      list ($msg, $subs) = be\undoTx($xid, (@$amount < 0 and !$mya->co) ? 'e.amount > 0' : "e.amount='$amount'", [], $force);
+      debug($msg);
+      debug($subs);
       if (is_array($msg)) list ($msg, $subs) = [$msg[0], $msg[1] + $subs];
       if (!@$subs['success']) return badTx($args, $name, $msg, $subs);
       $txid = $subs['xid'];

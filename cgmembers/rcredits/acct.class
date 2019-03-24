@@ -1323,13 +1323,34 @@ EOF;
     $DBTX = \db_transaction();
 
     if ($txid) { // unless transfer is already marked complete
-      $realAmt = db\get('amount', 'r_usd', 'txid=:txid', compact('txid'));
-      if ($amount != $realAmt) r\tellAdmin(t('bad completeUsdTx amt'), compact(ray('txid amount realAmt automatic')));
-      if (!db\update('r_usd', ['txid'=>$txid, 'completed'=>r\rTime()], 'txid')) return FALSE;
+      $values = db\get('amount as realAmt, payee AS payeeId, risk, risks, channel', 'r_usd', 'txid=:txid', compact('txid'));
+      extract(u\exactly('realAmt payeeId risk risks channel', array_filter($values), [0, 0, null, 0, TX_SYS]));
+      
+      if ($amount != $realAmt) {
+        r\tellAdmin(t('bad completeUsdTx amt'), compact(ray('txid amount realAmt automatic')));
+        return FALSE;  // ??
+      }
+      $completed = r\rTime();
+      $bankId =  ($amount > 0) ? CG_INCOMING_BANK_UID : CG_OUTGOING_BANK_UID;
+      $tx = new r\Tx(['goods' => FOR_USD, 'actorId' => $payeeId, 'actorAgentId' => 0, 'flags' => 0, 'channel' => $channel,
+                      'risk' => $risk, 'risks' => $risks, 'created' => $completed]);
+      $tx->addEntry(new r\TxEntry(['entryType' => ENTRY_PAYER, 'amount' => 0-$amount, 'uid' => $bankId, 'agentUid' => 0,
+                                   'description' => ($amount > 0) ? t('transfer to CG') : t('transfer from CG')]));
+      $tx->addEntry(new r\TxEntry(['entryType' => ENTRY_PAYEE, 'amount' => $amount, 'uid' => $payeeId, 'agentUid' => 0,
+                                   'description' => $amount > 0 ? t('transfer in') : t('transfer out')]));
+      $xid = $tx->insert();
+      if (!$xid) {
+        $DBTX.rollback();
+        return FALSE;
+      }
+      if (!db\update('r_usd', ['txid'=>$txid, 'completed'=>r\rTime()], 'txid')) {
+        $DBTX.rollback();
+        return FALSE;
+      }
+    } else {
+      /**/ die('why are we trying to mark a non-existent transfer complete?');
     }
     
-    //    $this->update('r', $this->o_r + $amount);
-    /* $this->update('balance', $this->o_balance + $amount); */
     unset($DBTX);
     
     $transfer = $automatic ? t('automatic transfer') : t('transfer');

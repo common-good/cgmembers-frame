@@ -247,7 +247,7 @@ function doAccount($info = []) {
  */
 function doTx($info, $thing) {
   global $testOnly, $channel;
-
+  debug("doTx($thing, " . print_r($info, true) . ")");
   unset($info['type']);
   u\EXPECT($thing != 'Invoice', 'use doInvoice for invoices, not doTx');
   /* output($info); */
@@ -299,7 +299,7 @@ function doTx($info, $thing) {
   
 //  if ($testOnly or @$type == TX_REBATE or @$type == TX_BONUS) {
   if ($testOnly) {
-    return verifyRecord('r_tx_hdrs', $hdrInfo) and verifyRecord('r_entries', $payerEntry) and verifyRecord('r_entries', $payeeEntry);
+    return verifyRecord('r_tx_hdrs', array_filter($hdrInfo)) and verifyRecord('r_entries', array_filter($payerEntry)) and verifyRecord('r_entries', array_filter($payeeEntry));
   }
 
   /* debug($hdrInfo); */

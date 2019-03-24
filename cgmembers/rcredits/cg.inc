@@ -911,7 +911,6 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
  * @param bool $confirm: UNUSED <to be confirmed> (default FALSE)
  */
 function txRet($message, $info = []) {
-  debug(debug_backtrace());
   $info0 = $info;
   if (is_array($message)) {list ($message, $info, $confirm) = $message; $info += $info0;}
   if (!@$info['success']) r\tellCO('failed transaction', $info + @compact('message', 'confirm'));
@@ -1438,8 +1437,8 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   //  if (!$a1->can($myAccess)) return array("no $myAccessErr", [], FALSE);
   //  if (!$a2->can($otherAccess)) return array("other no $otherAccessErr", ray('otherName', $a2->agentA->fullName), FALSE);
 
-  if (!$a1->cttyUp and !$a1->isCanonical) return array('your community down', ray('contact', $a1->cAdminContact()), FALSE);
-  if (!$a2->cttyUp and !$a2->isCanonical) return array('other community down', [], FALSE);
+  /* if (!$a1->cttyUp and !$a1->isCanonical) return array('your community down', ray('contact', $a1->cAdminContact()), FALSE); */
+  /* if (!$a2->cttyUp and !$a2->isCanonical) return array('other community down', [], FALSE); */
   if ($a1->id == $a2->id) return array('no self-trading', [], FALSE);
   return FALSE;
 }
