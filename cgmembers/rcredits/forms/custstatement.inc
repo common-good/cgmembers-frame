@@ -28,7 +28,7 @@ function custStatement($args = []) {
 //  if (!@$period) return w\softErr(t('No period was specified.'));
 
 //  list ($start, $end, $period) = statementMonth($period, $mya->fyEnd ?: '12/31'); // not used yet
-  $custUids = is_null($a->jid) or $a->jid == 0 ? [ $a->id ] : [ $a->id, $a->jid ];
+  $custUids = empty($a->jid) ? [ $a->id ] : [ $a->id, $a->jid ];
   $q = ($way == 'IN') ? be\getCustTxs([$mya->id], $custUids, 0, time()+1)
                       : be\getCustTxs($custUids, [$mya->id], 0, time()+1);
   if (count($q) == 0) return w\softErr(t('That is not a %thing of yours.', 'thing', $way == 'IN' ? t('customer') : t('vendor')));
@@ -64,13 +64,15 @@ function custStatement($args = []) {
   $bal = 0;
   $row0 = ['purpose' => t('Opening balance')];
 
-  while ($row = @$row ? $q->fetchAssoc() : $row0) {
+  foreach ($q as $row) { //$row = @$row ? $q/*->fetchAssoc()*/ : $row0) {
+    debug($row);
     if (!@$classes) $classes = array_keys($row);
 //    extract(just('tid date name amount purpose reward', array_combine($classes, $row)));
     extract(just('tid created purpose invoiced paid', $row));
     $date = @$created ? u\fmtDate($created, TRUE) : '';
     $bal += (@$invoiced ?: 0) - (@$paid ?: 0);
     $balance = $bal;
+    debug("$date, $bal, $balance");
     if (strlen(@$purpose) > $purposeLenMax + 3) $purpose = substr($purpose, 0, $purposeLenMax) . '...';
 
     foreach ($fields as $one) {

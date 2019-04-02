@@ -576,6 +576,7 @@ function expect1($arg, $value, $type, $ret) {
 /**/ $msg = "Expected \$$arg ('" . print_r($value, 1) . "') to be type '$type'."; // standard err message (keep this)
   if (strpos($type, '|')) {
     foreach (explode('|', $type) as $one) if (expect1($arg, $value, $one, TRUE) == '') return '';
+    /* print_r(gettype($value)); */
     EXPECT(FALSE, $msg, $ret);
   }
   if (strpos($type, '&')) {

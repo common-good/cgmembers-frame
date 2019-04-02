@@ -75,6 +75,7 @@ class Tx {
     case 'otherId': return $this->otherEntry->uid;
     case 'actor': return r\acct($this->actorId);
     case 'actorAmount': return$this->getActorAmount();
+    case 'payerAmount': return $this->payerEntry->amount;
     case 'other': return r\acct($this->otherId);
     default:
       u\EXPECT(FALSE, "unexpected field '$f' requested");
@@ -166,8 +167,9 @@ class Tx {
   function insert($allowModification = FALSE) {
     $tx = $this;
     $DBTX = db_transaction();
-    if ($allowModification) {
-      $xid = db\updateOrInsert('r_tx_hdrs', just(Tx::TX_HDR_FIELDS, (array)$tx), 'xid');
+    if ($allowModification and $tx->xid != 0) {
+      $xid = $tx->xid;
+      u\EXPECT(db\updateOrInsert('r_tx_hdrs', just(Tx::TX_HDR_FIELDS, (array)$tx), 'xid'), "failure inserting tx");
     } else {
       u\EXPECT($tx->xid == 0, "We're not allowing modification of transactions.");
       $xid = db\insert('r_tx_hdrs', just(Tx::INSERT_FIELDS, (array)$tx), 'xid');
@@ -175,6 +177,7 @@ class Tx {
     u\EXPECT($xid, "Failed to insert transaction header record");
     foreach ($tx->entries as $entry) {
       if (empty($entry->acctTid)) {
+        /* print_r(r\acct($entry->uid)); */
         $entry->acctTid = r\acct($entry->uid)->nextTid();
       }
     }
@@ -232,7 +235,7 @@ EOF;
    * @return associative array: the old transaction record (FALSE if none)
    */
   static function lastTx($uids, $where = 1, $subs = []) {
-    debug("lastTx(" . print_r($uids, true) . ", '$where', " . print_r($subs, true) . ")");
+    /// debug("lastTx(" . print_r($uids, true) . ", '$where', " . print_r($subs, true) . ")");
     $txHdr = db\get('t.*', 'r_tx_hdrs t JOIN r_entries e USING(xid)',
                     "e.uid IN (:uids) AND $where ORDER BY t.created DESC LIMIT 1",
                     ['uids' => $uids] + $subs);

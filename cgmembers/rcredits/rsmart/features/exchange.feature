@@ -36,7 +36,7 @@ Setup:
   | 4   | %today-5m |    100 | .ZZC | .ZZB | cash    |
   | 5   | %today-5m |    200 | .ZZA | .ZZC | cash    |
   | 6   | %today-4m |    250 | ctty | .ZZF | stuff   |
-  And balances:
+  Then balances:
   | uid  | balance |*
   | ctty |    -250 |
   | .ZZA |    -200 |

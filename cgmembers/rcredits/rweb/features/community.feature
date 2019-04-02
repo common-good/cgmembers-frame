@@ -55,7 +55,8 @@ Setup:
   | .ZZC | 2963.00 |
   | .AAB |    1.00 |
   # total rewards < total r, because we made a grant, a loan, and a fine.
-  
+
+Skip until we merge develop
 Scenario: cron calculates the statistics
 #  When cron runs "acctStats"
   Given statistics get set "%today-30d"
@@ -84,3 +85,4 @@ Scenario: cron calculates the statistics
 #  | b2b             | 1 ($1) / mo = $0.50 / acct |
 #  | b2p             | 1 ($100) / mo = $50 / acct |
 #  | Velocity        | 4.0% per month |
+Resume

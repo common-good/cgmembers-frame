@@ -365,14 +365,15 @@ function activeWeekly($item) {
  * This is called at the right time for members with no recurring donation OR for any member with an annual donation (whether it's time or not).
  */
 function warnAnnualGift($item) {
+  /// debug('warnAnnualGift(' . print_r($item, true) .')');
 	extract(just('uid amount when created period invoiced lastTx', $item));
-	
 	$a = r\acct($uid);
-///   debug($item);
-///   debug(giveNow($period, $lastTx, $created, $when));
-///   debug(giveNow($period, $lastTx, $created, $when - DAY_SECS));
-	if (@$amount) if ($invoiced or !giveNow($period, $lastTx, $created, $when) or giveNow($period, $lastTx, $created, $when - DAY_SECS)) return; // not time yet for annual (or it was also time yesterday)
-	
+
+	if (!empty($amount)) {
+    if (!empty($invoiced) or !giveNow($period, $lastTx, $created, $when) or giveNow($period, $lastTx, $created, $when - DAY_SECS)) {
+      return; // not time yet for annual (or it was also time yesterday)
+    }
+  }
 	$aDonate = w\atag("/do/doDonate~$a->mainQid~$a->emailCode");
   r\notify($uid, 'annual-gift', $ray = ray('amount when aDonate', u\fmtAmt($amount), u\fmtDate($when, TRUE), $aDonate), TRUE);
 //	r\tellAdmin('annual gift warning', $ray + ray('who', $a->fullName));
@@ -437,9 +438,10 @@ function everyMonth() {
   /* queueEach('roundup', "SELECT payer as uid, SUM(1-MOD(amount, 1)) AS donate FROM r_txs WHERE :IS_ROUNDUP AND amount>0 AND MOD(amount, 1)>0 AND created BETWEEN $start AND $end GROUP BY payer"); */
   
   $sql = <<< X
-    SELECT u.uid, SUM(payer.amount)*u.crumbs AS donate
-    FROM users u LEFT JOIN r_entries payee USING(uid) JOIN r_tx_hdrs t USING(xid) JOIN r_entries payer USING(xid)
-    WHERE payer.uid>0 AND u.crumbs>0 AND t.created BETWEEN $start AND $end GROUP BY payee.uid
+    SELECT u.uid, SUM(IF(payer.amount<0,0-payer.amount,0))*u.crumbs AS donate
+    FROM users u LEFT JOIN r_entries payer USING(uid) JOIN r_tx_hdrs t USING(xid)
+    WHERE payer.entryType=:ENTRY_PAYER AND u.crumbs>0 AND t.created BETWEEN $start AND $end
+    GROUP BY uid
 X;
   queueEach('crumbs', $sql); // no crumbs on rewards
 
@@ -499,9 +501,10 @@ function everyYear() {
  * Allow this even if account is inactive (donation has already been made, from member's point of view).
  */
 function crumbs($item) {
+  ///  debug($item);
   extract(just('uid donate', $item));
   $a = r\acct($uid);
-  if ($donate > 0 and $a->ok) $a->payApproved(CGID, $donate, t('crumbs desc'), FOR_NONGOODS, ray('created crumbs gift', u\monthDay1() - 1, TRUE, TRUE));
+  if ($donate > 0 and $a->ok) $a->payApproved(CG_CRUMBS_UID, $donate, t('crumbs desc'), FOR_NONGOODS, ray('created crumbs gift', u\monthDay1() - 1, TRUE, TRUE));
 }
 
 /**
@@ -845,22 +848,37 @@ function achRisk1($item) {
  * Handle recurring transactions that it's time to handle.
  */
 function recurs() {
-  $sql = <<< X
-    SELECT DISTINCT r.payer,r.payee,r.period,r.amount,r.created,u2.fullName AS payeeName,
-		  (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced,
-  		MAX(t.created) AS lastTxDt, MIN(t.xid) AS firstXid
-		FROM r_recurs r	
-    INNER JOIN users u1 ON u1.uid=r.payer INNER JOIN users u2 ON u2.uid=r.payee
-    LEFT JOIN (
-      SELECT t0.xid, t0.created, payerE.uid AS payer, payeeE.uid AS payee, t0.flags, reversesXid
-      FROM r_tx_hdrs t0 JOIN r_entries payerE USING(xid) JOIN r_entries payeeE USING(xid)
-      WHERE payerE.id < payeeE.id AND payerE.amount < 0 AND payeeE.amount > 0
-      ORDER BY t0.created
-    ) t ON t.payer=r.payer AND t.payee=r.payee AND t.:IS_RECURS AND t.reversesXid IS NULL AND t.created>=r.created-:HOUR_SECS JOIN r_tx_hdrs tRev ON tRev.reversesXid=t.xid
-		WHERE u1.:IS_OK AND u2.:IS_OK AND r.ended=0 AND tRev.xid IS NULL
-    GROUP BY r.id
-X;
-
+  // want period, created, amount, payerId, payeeId, payeeName, invoiced, lastTxDt, firstXid for each recur
+  $sql = <<< EOF
+    SELECT DISTINCT r.period, r.created, r.amount, r.payer AS payerId, r.payee AS payeeId,
+    uPayee.fullName AS payeeName,
+    (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced,
+    (SELECT MAX(t.created)
+     FROM r_tx_hdrs t JOIN r_entries payerE USING(xid) JOIN r_entries payeeE USING(xid)
+     WHERE payerE.uid=r.payer AND payeeE.uid=r.payee AND payerE.entryType=:ENTRY_PAYER AND payeeE.entryType=:ENTRY_PAYEE
+     AND t.:IS_RECURS) AS lastTxDt,
+    (SELECT MIN(t.xid)
+     FROM r_tx_hdrs t JOIN r_entries payerE USING(xid) JOIN r_entries payeeE USING(xid)
+     WHERE payerE.uid=r.payer AND payeeE.uid=r.payee AND payerE.entryType=:ENTRY_PAYER AND payeeE.entryType=:ENTRY_PAYEE
+     AND t.:IS_RECURS
+     AND t.reversesXid IS NULL AND NOT EXISTS(SELECT xid FROM r_tx_hdrs tr WHERE tr.reversesXid = t.xid)) AS firstXid
+    FROM r_recurs r INNER JOIN users uPayee ON uPayee.uid=r.payee
+EOF;
+/*   $sql = <<< X */
+/*     SELECT DISTINCT r.payer,r.payee,r.period,r.amount,r.created,u2.fullName AS payeeName, */
+/* 		  (SELECT 1 FROM r_invoices i */
+/*        WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced, */
+/*       MAX(t.created) AS lastTxDt, MIN(t.xid) AS firstXid */
+/* 		FROM r_recurs r	 */
+/*          INNER JOIN users u1 ON u1.uid=r.payer INNER JOIN users u2 ON u2.uid=r.payee */
+/*          LEFT OUTER JOIN (SELECT t0.xid, t0.created, payerE.uid AS payer, payeeE.uid AS payee, t0.flags, reversesXid */
+/*                           FROM r_tx_hdrs t0 JOIN r_entries payerE USING(xid) JOIN r_entries payeeE USING(xid) */
+/*                           WHERE payerE.entryType=ENTRY_PAYER AND payeeE.entryType=ENTRY_PAYEE */
+/*                           ORDER BY t0.created) t */
+/*     ON t.payer=r.payer AND t.payee=r.payee AND t.:IS_RECURS AND t.reversesXid IS NULL AND t.created>=r.created-:HOUR_SECS JOIN r_tx_hdrs tRev ON tRev.reversesXid=t.xid */
+/* 		WHERE u1.:IS_OK AND u2.:IS_OK AND r.ended=0 AND tRev.xid IS NULL */
+/*     GROUP BY r.id */
+/* X; */
   queueEach('recurs1', $sql);
   queueNext();
 }
@@ -879,15 +897,17 @@ X;
  * If funds are insufficient, an approved invoice is created instead (which tries to get money as a next step).
  */
 function recurs1($item) {
-	extract(just('period lastTxDt created invoiced amount payer payee payeeName firstXid', $item));
+	extract(just('period lastTxDt created invoiced amount payerId payeeId payeeName firstXid', $item));
 	if (!$invoiced and giveNow($period, $lastTxDt, $created)) {
-    list ($payerFor, $data) = r\setupGift($period);
-    if ($firstXid and $res = db\get('description AS payerFor, goods', 'r_tx_hdrs JOIN r_entries payer USING(xid)', 'xid=:firstXid AND payer.uid=:payer', compact('firstXid payer'))) {
+    if (!empty($firstXid) and $res = db\get('description AS payerFor, goods, flags AS oldFlags', 'r_tx_hdrs JOIN r_entries payer USING(xid)', 'xid=:firstXid AND payer.uid=:payerId', compact(ray('firstXid payerId')))) {
       extract($res);
+      $data = (u\getBit($oldFlags, B_GIFT)) ? ['gift'=>1, 'recurs'=>1] : ['recurs'=>1];
+    } else {
+      list ($payerFor, $data) = r\setupGift($period);
     }
-    if (!is_set($goods)) $goods = FOR_NONGOODS;
-    if (r\acct($payer)->payApproved($payee, $amount, $payerFor, $goods, $data)) {
-      r\notify($payer, 'recur pay', ray('amount purpose to', u\fmtAmt($amount), $payerFor, $payeeName));
+    if (!isset($goods)) $goods = FOR_NONGOODS;
+    if (r\acct($payerId)->payApproved($payeeId, $amount, $payerFor, $goods, $data)) {
+      r\notify($payerId, 'recur pay', ray('amount purpose to', u\fmtAmt($amount), $payerFor, $payeeName));
     }
   }
 }
@@ -900,7 +920,9 @@ function recurs1($item) {
  * @param int $now: is it time as of what "now" (if not NOW, don't return true for first gift)
  */
 function giveNow($period, $lastGift, $start, $now = NOW) {
-	if ($now == NOW) if (!$lastGift) return TRUE;
+	if ($now == NOW) {
+    if (empty($lastGift)) return TRUE;
+  }
   if (strpos('MQY', $period) !== FALSE) {
     $m = $period == 'M' ? 1 : ($period == 'Q' ? 3 : 12);
 	  $windowSize = MONTH_SECS * $m; // should be at least a third of a period since the last gift
@@ -953,14 +975,14 @@ function completeUsdTx($item) {
   extract(just('txid payee amount channel', $item));
   $realAmt = db\get('amount', 'r_usd', 'txid=:txid', compact('txid'));
   if ($amount != $realAmt) r\tellAdmin('bad completeUsdTx amount', $item + compact('realAmt'));
-  r\acct($payee)->completeUsdTx($txid, $amount, @$channel == TX_CRON);
+  be\completeUsdTx(r\acct($payee), $txid, $amount, @$channel == TX_CRON);
 }
 
 function getFunds1($item) {
   extract(just('uid jid', $item));
   $a = r\acct($uid);
-	$amount = $a->minimum - $a->balance;
-	if ($a->hasBank) $amount += db\sum('amount', 'r_invoices', 'status=:TX_APPROVED AND :IS_FUNDING AND payer IN (:uid,:jid)', $item) - $a->waitingFromBank(); // subtract out other non-invoice-related transfers
+	$amount = ($a->minimum - $a->balance) - $a->getPendingDeposits();
+	if ($a->hasBank) $amount += db\sum('amount', 'r_invoices', 'status=:TX_APPROVED AND :IS_FUNDING AND payer IN (:uid,:jid)', $item) /*- $a->waitingFromBank()*/; // subtract out other non-invoice-related transfers
 	$a->getFunds($amount, t('to target'));
 }
 
@@ -970,7 +992,7 @@ function getFunds1($item) {
 function invoices() {
   $sql = <<< X
     SELECT i.*,i.:IS_FUNDING AS funding 
-    FROM r_invoices i LEFT JOIN users u1 ON u1.uid=i.payer LEFT JOIN users u2 ON u2.uid=i.payee
+    FROM r_invoices i JOIN users u1 ON u1.uid=i.payer JOIN users u2 ON u2.uid=i.payee
     WHERE i.status IN (:TX_PENDING,:TX_APPROVED) AND u1.:IS_OK AND u2.:IS_OK
     ORDER BY i.nvid
 X;

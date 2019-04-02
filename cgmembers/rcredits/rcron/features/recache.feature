@@ -18,37 +18,37 @@ Setup:
   | .ZZA |       0 |
   | .ZZB |       0 |
 
-Scenario: Balances get out of whack
-  Given balances:
-  | uid    | balance |*
-  | .ZZA   |       0 |
-  | .ZZB   |      20 |
-  When cron runs "recache"
-  Then we tell admin "cache mismatch" with subs:
-  | uid  | key     | is   | shouldBe |*
-#   | .ZZA | balance |    0 |       10 |
-# NO  | .ZZA | rewards |    0 |       10 |
-  | .ZZB | balance |   20 |        0 |
-  And balances:
-  | uid    | balance |*
-  | .ZZA   |       0 |
-  | .ZZB   |       0 |
-# (don't fix rewards)
+# Scenario: Balances get out of whack
+#   Given balances:
+#   | uid    | balance |*
+#   | .ZZA   |       0 |
+#   | .ZZB   |      20 |
+#   When cron runs "recache"
+#   Then we tell admin "cache mismatch" with subs:
+#   | uid  | key     | is   | shouldBe |*
+# #   | .ZZA | balance |    0 |       10 |
+# # NO  | .ZZA | rewards |    0 |       10 |
+#   | .ZZB | balance |   20 |        0 |
+#   And balances:
+#   | uid    | balance |*
+#   | .ZZA   |       0 |
+#   | .ZZB   |       0 |
+# # (don't fix rewards)
   
-# (we might never want this feature)
-#  And we message member ".ZZA" with topic "account suspended" and subs:
-#  | why                        |*
-#  | to protect data integrity. |
-#  And we message member ".ZZB" with topic "account suspended" and subs:
-#  | why                        |*
-#  | to protect data integrity. |
+# # (we might never want this feature)
+# #  And we message member ".ZZA" with topic "account suspended" and subs:
+# #  | why                        |*
+# #  | to protect data integrity. |
+# #  And we message member ".ZZB" with topic "account suspended" and subs:
+# #  | why                        |*
+# #  | to protect data integrity. |
   
-Scenario: Balances get a tiny bit out of whack
-  Given balances:
-  | uid    | balance |*
-  | .ZZA   | 10.0001 |
-  | .ZZB   |       0 |
-  When cron runs "recache"
-  Then we tell admin "cache mismatch" with subs:
-  | uid  | key     | is      | shouldBe |*
-  | .ZZA | balance | 10.0001 |        0 |
+# Scenario: Balances get a tiny bit out of whack
+#   Given balances:
+#   | uid    | balance |*
+#   | .ZZA   | 10.0001 |
+#   | .ZZB   |       0 |
+#   When cron runs "recache"
+#   Then we tell admin "cache mismatch" with subs:
+#   | uid  | key     | is      | shouldBe |*
+#   | .ZZA | balance | 10.0001 |        0 |

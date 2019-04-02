@@ -79,7 +79,7 @@ $GLOBALS['tStrings'] += array(
  *   message: an error message or help message to display on the device; or not set
  */
 function pos($args = FALSE) {
-  debug("pos(" . print_r($args, true) . ")");
+  ///  debug("pos(" . print_r($args, true) . ")");
   global $channel; $channel = TX_POS;
   global $scanned; $scanned = true;
   global $mya;
@@ -345,7 +345,7 @@ function photoReturn($pic) {
  * @return: json (ok, message, txid, created, balance, undo)
  */
 function charge($args, $type = 'charge') {
-  debug("r\Smart\charge(" . print_r($args, true) . ", $type)");
+  ///  debug("r\Smart\charge(" . print_r($args, true) . ", $type)");
   global $mya;
 
   $keys = 'agent member amount goods description created';
@@ -405,14 +405,11 @@ EOF;
     $undo = $xid;
 
     $revRes = db\get('xid AS `undo`, created', 'r_tx_hdrs', 'reversesXid=:xid', ['xid'=>$xid]);
-    debug($revRes);
     if ($revRes) { // already got reversed
       extract(just('undo created', $revRes));
       $message = "Transaction has been reversed.";
     } else {
       list ($msg, $subs) = be\undoTx($xid, (@$amount < 0 and !$mya->co) ? 'e.amount > 0' : "e.amount='$amount'", [], $force);
-      debug($msg);
-      debug($subs);
       if (is_array($msg)) list ($msg, $subs) = [$msg[0], $msg[1] + $subs];
       if (!@$subs['success']) return badTx($args, $name, $msg, $subs);
       $txid = $subs['xid'];
@@ -449,9 +446,7 @@ EOF;
 
   /* extract(balrew($a)); */
   $balance = (($a->can(B_SECRET) and $mya->co) ? '*' : '') . round($a->balance, 2);
-  $xx = ok(compact(ray('message txid created balance rewards did undo')));
-  debug($xx);
-  return $xx;
+  return ok(compact(ray('message txid created balance rewards did undo')));
 }
 
 /**

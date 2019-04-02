@@ -111,7 +111,7 @@ Scenario: A non-member chooses a donation
 Scenario: It's time to warn about an upcoming annual donation
   Given members:
   | uid  | fullName | flags  | risks   | activated               |*
-  | .ZZD | Dee Four | ok     | hasBank | %today-1y               |
+  | .ZZD | Dee Four | ok     | hasBank | %(%today-1y+DAY_SECS)   |
   | .ZZE | Eve Five | ok     | hasBank | %(%today-1y+7*DAY_SECS) |
   And these "recurs":
   | created                 | payer | payee | amount | period |*

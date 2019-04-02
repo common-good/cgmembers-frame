@@ -34,7 +34,7 @@ Setup:
   | xid | created   | amount | from | to   | purpose |*
   | 3   | %today-6m |    250 | ctty | .ZZC | growth  |
   | 5   | %today-6m |    250 | ctty | .ZZF | stuff   |
-  And balances:
+  Then balances:
   | uid  | balance |*
   | ctty |    -500 |
   | .ZZA |       0 |

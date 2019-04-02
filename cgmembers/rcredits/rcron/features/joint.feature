@@ -19,10 +19,14 @@ Setup:
   | .ZZB |       0 |
 
 Scenario: a joint account needs refilling
-  Given balances:
+  Given transactions:
+  | xid | created | amount | from | to   | purpose | taking |*
+  |   1 | %today  |     50 | ctty | .ZZA | setup   | 0      |
+  |   2 | %today  |  49.99 | ctty | .ZZB | setup   | 0      |
+  Then balances:
   | uid  | balance |*
-  | .ZZA |   50.00 |
-  | .ZZB |   49.99 |
+  | .ZZA |   99.99 |
+  | .ZZB |   99.99 |
   When cron runs "getFunds"
   Then usd transfers:
   | txid | payee | amount |*
@@ -32,9 +36,13 @@ Scenario: a joint account needs refilling
   | draw from | $30    |        1 | to bring your balance up to the target you set |
 
 Scenario: a joint account does not need refilling
-  Given balances:
+  Given transactions:
+  | xid | created | amount | from | to   | purpose | taking |*
+  |   1 | %today  |  50.01 | ctty | .ZZA | setup   | 0      |
+  |   2 | %today  |  49.99 | ctty | .ZZB | setup   | 0      |
+  Then balances:
   | uid  | balance |*
-  | .ZZA |   50.01 |
-  | .ZZB |   49.99 |
+  | .ZZA |     100 |
+  | .ZZB |     100 |
   When cron runs "getFunds"
   Then bank transfer count is 0

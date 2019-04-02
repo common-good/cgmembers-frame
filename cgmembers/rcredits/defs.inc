@@ -106,13 +106,13 @@ define('NOT_PRODUCTION', !isPRODUCTION); // safer to use than !isPRODUCTION (in 
 
 // time periods are defined here because this script uses them
 define('MIN_SECS', 60);
-define('HOUR_SECS', 60 * MIN_SECS);
-define('DAY_SECS', 24 * HOUR_SECS);
-define('WEEK_SECS', 7 * DAY_SECS);
-define('WEEK7_SECS', 52 * DAY_SECS);
-define('MONTH_SECS', 30.4368 * DAY_SECS);
-define('QUARTER_SECS', round(3 * MONTH_SECS));
-define('YEAR_SECS', round(12 * MONTH_SECS));
+define('HOUR_SECS', 60 * MIN_SECS);  // 3600
+define('DAY_SECS', 24 * HOUR_SECS);  // 86,400
+define('WEEK_SECS', 7 * DAY_SECS);   // 604,800
+define('WEEK7_SECS', 52 * DAY_SECS); // 4,492,900
+define('MONTH_SECS', 30.4368 * DAY_SECS);  // 18,408,176.64
+define('QUARTER_SECS', round(3 * MONTH_SECS));  // 55,224,530
+define('YEAR_SECS', round(12 * MONTH_SECS));    // 220,898,120
 define('FLOOR_DAYS', 183); // how many days to consider for credit line calculation
 
 define('REGION_DOMAIN', R_SERVER_ID . '.' . CG_DOMAIN);

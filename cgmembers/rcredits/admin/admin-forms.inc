@@ -157,7 +157,6 @@ function formAdminPanel_submit($form, &$sta) {
     $crit = $mya->admin ? '1' : 'community=' . $mya->community;
     eachA(function ($a) {
         global $signupCos;
-        debug(gettype($a));
         if (is_integer($a)) $a = r\acct($a);
         if ($signupCo = $a->signupCo) {
           extract($signupCo);

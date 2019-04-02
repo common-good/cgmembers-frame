@@ -222,7 +222,7 @@ function devices($list) {return t\devices($list);}
 /**
  * balances: (ARG)
  *
- * in: MAKE exchange Setup
+ * in: TEST exchange Setup
  *     TEST exchange ACashierAsksToChargeSomeoneForCash
  *     TEST exchange ACashierAsksToRefundSomeone
  *     TEST joint Setup
@@ -234,7 +234,7 @@ function devices($list) {return t\devices($list);}
  *     TEST offline ACashierDeclinedToChargeSomeoneOfflineAndItDidntGoThrough
  *     TEST offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThrough
  *     TEST offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThroughButCustomerIsBroke
- *     MAKE transact Setup
+ *     TEST transact Setup
  *     TEST transact ACashierAsksToChargeSomeone
  *     TEST transact ACashierAsksToRefundSomeone
  *     MAKE undo Setup
@@ -263,7 +263,6 @@ function agentAsksDeviceToUndoTransactionCode($agent, $device, $txid, $code) {
   $q = db\get('e.uid AS payer, e.agentUid AS payerAgent, 0-amount AS amount, goods, description, t.created',
               "r_tx_hdrs t JOIN r_entries e USING(xid)", "t.xid=:txid AND e.entryType=:entryType",
               ['txid'=>$txid, 'entryType'=>ENTRY_PAYER]);
-  debug($q);
   if ($q) {
     extract($q);
     $member = r\qid($payer, $payerAgent);
@@ -692,8 +691,8 @@ function weRespondOkTxidCreatedBalanceSaying($txid, $created, $balance, $msg = N
   global $testOnly; if (!$testOnly) return FALSE;
   global $rposResult;
 
-  debug("weRespond...($txid, $created, $balance, " . print_r($msg, true));
-  debug($rposResult);
+  ///  debug("weRespond...($txid, $created, $balance, " . print_r($msg, true));
+  ///  debug($rposResult);
   
   extract($rposResult, EXTR_PREFIX_ALL, 'a'); // actual results
   $ok = '1';

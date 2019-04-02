@@ -44,6 +44,12 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *
  * in: MAKE backing AMemberChangesBackingAmount
  *     MAKE bank AMemberMovesCreditToTheBank
+ *     MAKE bank AMemberDrawsCreditFromTheBankWithZeroFloor
+ *     MAKE bank AMemberDrawsCreditFromTheBankWithAdequateFloor
+ *     MAKE bank AMemberMovesTooLittleToTheBank
+ *     MAKE bank AMemberMovesTooMuchToTheBank
+ *     MAKE bank AMemberTriesToGoBelowTheirMinimum
+ *     MAKE bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     MAKE coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberRedeemsADiscountCouponForADollarAmount
  *     MAKE flow AMemberOverdrawsWithNotEnoughToDrawOn
@@ -227,8 +233,6 @@ function members($list) {return t\members($list);}
  *     MAKE community Setup
  *     MAKE custstatement Setup
  *     MAKE download Setup
- *     TEST flow AMemberDraws
- *     TEST flow AMemberDrawsAgain
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
  *     TEST gift AMemberMakesANewRecurringDonation
@@ -247,7 +251,6 @@ function members($list) {return t\members($list);}
  *     TEST transact AMemberConfirmsRequestToPayAMemberCompany
  *     TEST transact AMemberPaysAnotherMemberRepeatedly
  *     MAKE transactions Setup
- *     MAKE transactions AMemberLooksAtTransactionsWithRoundups
  */
 function transactions($list) {return t\transactions($list);}
 
@@ -255,6 +258,10 @@ function transactions($list) {return t\transactions($list);}
  * we say (ARG): (ARG) with subs: (ARG)
  *
  * in: TEST bank AMemberMovesCreditToTheBank
+ *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
+ *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
+ *     TEST bank AMemberMovesTooMuchToTheBank
+ *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST flow AMemberOverdrawsWithNotEnoughToDrawOn
  *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
  *     TEST joint AMemberRequestsAJointAccount
@@ -307,6 +314,8 @@ function weSayWithSubs($type, $index, $subs) {
  * we say (ARG): (ARG)
  *
  * in: TEST backing AMemberChangesBackingAmount
+ *     TEST bank AMemberMovesTooLittleToTheBank
+ *     TEST bank AMemberTriesToGoBelowTheirMinimum
  *     TEST company AMemberUpdatesCompanyInfo
  *     TEST contact AMemberUpdatesContactInfo
  *     TEST contact AMemberGivesABadPhone
@@ -403,17 +412,15 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
  * we show (ARG) with: (ARG)
  *
  * in: TEST backing AMemberVisitsTheBackingPage
- *     TEST community CronCalculatesTheStatistics
+ *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST company AMemberVisitsTheCompanyInfoPage
  *     TEST contact AMemberVisitsTheContactInfoPage
- *     TEST custstatement ACompanyLooksAtACustomerStatement
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesANewRecurringDonation
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST joint AMemberRequestsAJointAccount
- *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     TEST joint AMemberRequestsTwoJoinsAtOnce
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     TEST paybutton AMemberClicksAPayWithCommonGoodButton
@@ -452,9 +459,7 @@ function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWit
 /**
  * with: (ARG)
  *
- * in: TEST custstatement ACompanyLooksAtACustomerStatement
- *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
- *     TEST preferences AMemberVisitsThePreferencesPage
+ * in: TEST preferences AMemberVisitsThePreferencesPage
  *     TEST preferences AnotherMemberVisitsThePreferencesPage
  *     TEST relations ItsComplicated
  *     TEST signupco AMemberRegistersACompany
@@ -547,6 +552,8 @@ function relations($relations) {return t\relations($relations);}
  *
  * in: TEST bank Setup
  *     TEST bank AMemberMovesCreditToTheBank
+ *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
+ *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
  *     TEST community Setup
  *     TEST coupons AMemberRedeemsAGiftCoupon
  *     TEST coupons AMemberRedeemsADiscountCouponForADollarAmount
@@ -559,7 +566,6 @@ function relations($relations) {return t\relations($relations);}
  *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
  *     TEST invoice AMemberApprovesAnInvoiceToATrustingCustomer
  *     TEST joint Setup
- *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     TEST joint AJoinedAccountMemberUnjoinsTheAccount
  *     TEST signupco AMemberRegistersACompany
  *     TEST statement Setup
@@ -586,17 +592,13 @@ function usd($list) {return t\usd($list);}
  * member (ARG) visits page (ARG)
  *
  * in: MAKE backing AMemberVisitsTheBackingPage
- *     MAKE community CronCalculatesTheStatistics
  *     MAKE company AMemberVisitsTheCompanyInfoPage
  *     MAKE contact AMemberVisitsTheContactInfoPage
- *     MAKE download AMemberDownloadsTransactionsForThePastYear
- *     MAKE download AMemberDownloadsIncomingInvoicesForThePastYear
  *     MAKE gift AMemberDonates
  *     MAKE gift AMemberMakesANewRecurringDonation
  *     MAKE invest AMemberJoinsTheInvestmentClub
  *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMember
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
- *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     MAKE membership AMemberSignsInForTheFirstTime
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     MAKE paybutton AMemberClicksAPayWithCommonGoodButton
@@ -801,8 +803,7 @@ function gifts($gifts) {return t\gifts($gifts);}
 /**
  * we download (ARG) with: (ARG)
  *
- * in: TEST download AMemberDownloadsTransactionsForThePastYear
- *     TEST download AMemberDownloadsIncomingInvoicesForThePastYear
+ * in: 
  */
 function weDownloadWith($name, $rows) {
   global $testOnly;
@@ -830,8 +831,7 @@ function weDownloadWith($name, $rows) {
 /**
  * with download columns: (ARG)
  *
- * in: TEST download AMemberDownloadsTransactionsForThePastYear
- *     TEST download AMemberDownloadsIncomingInvoicesForThePastYear
+ * in: 
  */
 function withDownloadColumns($columns) {
   global $testOnly;
@@ -850,6 +850,9 @@ function withDownloadColumns($columns) {
  *
  * in: MAKE bank Setup
  *     TEST bank AMemberMovesCreditToTheBank
+ *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
+ *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
+ *     MAKE bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     MAKE community Setup
  *     MAKE custstatement Setup
  *     MAKE download Setup
@@ -906,16 +909,14 @@ function agentCardCodeIs($id, $cardCode2) {
 /**
  * cron runs (ARG)
  *
- * in: MAKE community CronCalculatesTheStatistics
- *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
- *     MAKE summary Setup
+ * in: MAKE summary Setup
  */
 function cronRuns($op) {return t\cronRuns($op);}
 
 /**
  * statistics get set (ARG)
  *
- * in: MAKE community CronCalculatesTheStatistics
+ * in: 
  */
 function statisticsGetSet($time) {
   global $testOnly; if ($testOnly) return FALSE;
@@ -926,7 +927,6 @@ function statisticsGetSet($time) {
  * members have: (ARG)
  *
  * in: BOTH coupons AMemberRedeemsAGiftCoupon
- *     MAKE download AMemberDownloadsTransactionsForThePastYear
  *     MAKE invoice AMemberApprovesInvoicesForevermore
  *     TEST joint AMemberRequestsAJointAccount
  *     BOTH joint AJoinedAccountSlaveMemberRequestsANewMinimum
@@ -1407,7 +1407,7 @@ function these($thing, $list) {return t\these($thing, $list);}
 /**
  * agent (ARG) views (ARG) statement for member (ARG)
  *
- * in: MAKE custstatement ACompanyLooksAtACustomerStatement
+ * in: 
  */
 function agentViewsStatementForMember($biz, $type, $cust) {
   include_once R_ROOT . '/forms/custstatement.inc';
@@ -1443,3 +1443,23 @@ function withChoices($choices) {
  * in: MAKE showrecurs Setup
  */
 function recurs($list) {return t\recurs($list);}
+
+/**
+ * tx headers: (ARG)
+ *
+ * in: MAKE transactions AMemberLooksAtTransactionsWithRoundups
+ */
+function txHeaders($list) {
+  return t\txHdrs($list);
+}
+
+/**
+ * tx entries: (ARG)
+ *
+ * in: TEST flow AMemberDraws
+ *     TEST flow AMemberDrawsAgain
+ *     MAKE transactions AMemberLooksAtTransactionsWithRoundups
+ */
+function txEntries($list) {
+  return t\txEntries($list);
+}

@@ -109,20 +109,20 @@ function badUnpaidInv($nvid, &$inv = '') {
 
 /**
  * Say whether an account's proposed transaction duplicates the last recent one.
- * @param int $a: the account
- * @param int $other: the other account
+ * @param int $aId: the account id
+ * @param int $otherId: the other accountId
  * @param float $amount: the amount proposed to transfer from the account to the other account (can be negative)
  * @return TRUE if the proposed transaction duplicates the last one.
  * @see also X::cacheTotals(), where the transaction data is recorded
  */
-function dupTx($a, $other, $amount) {
+function dupTx($aId, $otherId, $amount) {
   global $channel;
   if ($channel == TX_WEB) return FALSE; // allow dups on web interface
-  $lastTx = $a->lastTx;
+  $lastTx = r\acct($aId)->lastTx;
   if (!$lastTx) { return FALSE; }
   /* debug("lastTx was: " . print_r($lastTx, true)); */
   /* debug("dupTx: lastTx->payerId=$lastTx->payerId, ->payeeId=$lastTx->payeeId, ->payerAmount=$lastTx->payerAmount, ->payeeAmount=$lastTx->payeeAmount, $a->id, $amount"); */
-  return ($lastTx->actorId == $a->id and $lastTx->otherId == $other->id and ($lastTx->payerAmount == $amount or $lastTx->payerAmount == $amount)) and ((r\rTime() - $lastTx->created) < R_DUPTX_MINS * MIN_SECS);
+  return ($lastTx->actorId == $aId and $lastTx->otherId == $otherId and ($lastTx->payerAmount == $amount or $lastTx->payerAmount == $amount)) and ((r\rTime() - $lastTx->created) < R_DUPTX_MINS * MIN_SECS);
 }
  
 /**
@@ -1332,10 +1332,11 @@ function topN($res, $n = 3) {return max($n, round($n * array_sum(just('bAccts aA
  *    days:    (unused) number of days from start to end, inclusive
  */
 function averageBalance($uid, $start, $end = NULL, $noj = FALSE) {
+  $uids = is_array($uid) ? $uid : [$uid];
   if (is_null($end)) { $end = r\rTime(); }
   $days = round(($end + 1 - $start) / DAY_SECS);
   if ($days == 0) return [0, 0, 0, 0]; // rounding is for daylight savings time changes
-  $info = be\creditInfo(ray('uids asof', [$uid], $start));
+  $info = be\creditInfo($uids, $start);
   $min = $bal = $info['balance'];
   /* $jid = $noj ? 0 : (r\acct($uid)->jid ?: 0); */
 
@@ -1348,8 +1349,7 @@ function averageBalance($uid, $start, $end = NULL, $noj = FALSE) {
     WHERE e.uid IN (:uids) AND t.created >= $start AND t.created < $end
     GROUP BY day
 EOF;
-
-  $q = db\q($sql, ['uids' => [$uid]]);
+  $q = db\q($sql, ['uids' => $uids]);
 
   while($row = $q->fetchAssoc()) {
     $prevDay = $day;
@@ -1406,7 +1406,7 @@ function riskList($risks, $descs) {
  */
 function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
 
-  debug("txPermErr($a1->id, $a2->id, $taking, $neg");
+  ///  debug("txPermErr($a1->id, $a2->id, $taking, $neg");
   
   global $scanned, $channel;
   

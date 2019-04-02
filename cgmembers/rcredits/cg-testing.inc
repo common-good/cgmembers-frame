@@ -16,8 +16,8 @@ use CG\Web as w;
 
 global $base_path;
 define('BASE_PATH', $base_path);
-define('T_BALANCE_FLDS', 'uid balance floor savingsAdd saveWeekly minimum');
-define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account actorId actorAgentId agentUid');
+define('T_BALANCE_FLDS', 'uid balance floor minimum');
+define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account actorId actorAgentId agentUid payerId payeeId');
 
 /**
  * Allow mnemonic and abbreviated data in test scenario columns.
@@ -26,18 +26,24 @@ define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer pa
  */
 function fixData(&$info, $direct = FALSE) {
   global $rUrl, $testVars;
+  /* print_r("fixData("); */
+  /* print_r($info); */
+  /* print_r(", $direct)"); */
   $fields = 'email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state box';
   if (@$testVars) foreach ($info as $k => $v) if (strpos($v, '@') !== FALSE) {
     foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", $var, $v);
   }
+  /* print_r("<br>1-->"); */
+  /* print_r($info); */
   extract(just($fields, $info));
-
   if (@$who) $who = t\fullQid($who);
   foreach (ray('flags adminable') as $k) if (isset($$k)) $$k = t\fixFlags($$k);
   if (isset($adminable)) {
     for ($i = 0; $i < B_MAX; $i++) if (u\getBit($adminable, $i)) $adminable2[$i] = TRUE;
     $adminable = @$adminable2 ?: [];
   }
+  /* print_r("<br>2-->"); */
+  /* print_r($info); */
  	extract(fixState(@$state, @$country));
 
 	foreach (ray('why error') as $k) if (isset($$k)) $$k = tr($$k); // convert embedded message references to actual text
@@ -56,15 +62,30 @@ function fixData(&$info, $direct = FALSE) {
   if (@$box) {
     $box = db\get('id', 'r_boxes', '`code`=:box', ['box'=>$box]);
   }
+  /* print_r("<br>3-->"); */
+  /* print_r($info); */
 
   foreach (just(T_ID_FLDS, $info) as $k => $v) {
-    if (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, 'ctty cgf')) $info[$k] = t\uid($v) ?: 0;
+    /* print_r("before: $k => $v, "); */
+    if (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, 'ctty cgf')) {
+      /* print_r('here'); */
+      $info[$k] = t\uid($v) ?: 0;
+    }
+    /* $xx=$info[$k]; */
+    /* print_r("after: $k => $xx<br>"); */
   }
+  /* print_r("<br>4-->"); */
+  /* print_r($info); */
 	foreach (ray('from:payer,to:payee,fromAgent:payerAgent,toAgent:payeeAgent') as $k => $k2) if (isset($info[$k])) {
 		$info[$k2] = $info[$k];
 		unset($info[$k]);
 	}
+  /* print_r("<br>5-->"); */
+  /* print_r($info); */
   $info = @compact(ray($fields)) + $info;
+  /* print_r("<br>6-->"); */
+  /* print_r($info); */
+  /* print_r('<br>'); */
 }
 
 /**
@@ -247,26 +268,27 @@ function doAccount($info = []) {
  */
 function doTx($info, $thing) {
   global $testOnly, $channel;
-  debug("doTx($thing, " . print_r($info, true) . ")");
-  unset($info['type']);
+  /* unset($info['type']); */
   u\EXPECT($thing != 'Invoice', 'use doInvoice for invoices, not doTx');
   /* output($info); */
   extract(u\exactly('xid serial amount payer payee payerAgent payeeAgent payerFor payeeFor payerTid payeeTid data flags box risk purpose for', $info, null));  // These are what appear in r_txs
-  extract(u\exactly('created type channel risks goods', $info, [r\rTime(), TX_TRANSFER, TX_SYS, 0, FOR_GOODS]));  // These are what appear in r_txs
+  extract(u\exactly('created type channel risks goods', $info, [r\rTime(), 'transfer', TX_SYS, 0, FOR_GOODS]));  // These are what appear in r_txs
   extract(u\exactly('taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding', $info, FALSE));  // These are flags that might appear
   extract(u\exactly('purpose', $info, FALSE));
+
+  if (empty($payerAgent)) $payerAgent = $payer;
+  if (empty($payeeAgent)) $payeeAgent = $payee;
   
   $payer = t\uid($payer);
   $payerAgent = t\uid($payerAgent);
   $payee = t\uid($payee);
   $payeeAgent = t\uid($payeeAgent);
-  
+
   if ($purpose) $for = $purpose; // ?: 'cash';
   if (strpos($for, ',')) $for = explode(',', $for); // specifying both payerFor and payeeFor
   if ($for and empty($payerFor) and empty($payeeFor)) list ($payerFor, $payeeFor) = is_array($for) ? $for : array($for, $for);
   if (!$payerFor) $payerFor = t('payerFor');
-  if (!$payeeFor) $payeeFor = t('payerFor');
-
+  if (!$payeeFor) $payeeFor = t('payeeFor');
   if (isset($risks)) $risks = getRisks($risks, K_TX_RISKS);
 
   if (!is_numeric($type)) $type = u\consta('TX', $type);
@@ -279,12 +301,11 @@ function doTx($info, $thing) {
     $reverses = null;
   }
 
-  if (is_null($payerAgent)) $payerAgent = $payer;
-  if (is_null($payeeAgent)) $payeeAgent = $payee;
+  if (empty($payerAgent)) $payerAgent = $payer;
+  if (empty($payeeAgent)) $payeeAgent = $payee;
   
-  $flagString = $flags;
-  $flags = is_null($flagString) ? 0 : u\bit($flagString);
-
+  /* $flagString = $flags; */
+  $flags = is_null($flags) ? 0 : $flags;
   $hdrInfo = ray('xid goods actorId actorAgentId flags channel box risk risks reversesXid created',
                  $xid, $goods, ($taking ? $payee : $payer), ($taking ? $payeeAgent : $payerAgent), $flags,
                  $channel, $box, $risk, $risks, null/* $reversesXid */, $created);
@@ -302,18 +323,9 @@ function doTx($info, $thing) {
     return verifyRecord('r_tx_hdrs', array_filter($hdrInfo)) and verifyRecord('r_entries', array_filter($payerEntry)) and verifyRecord('r_entries', array_filter($payeeEntry));
   }
 
-  /* debug($hdrInfo); */
-  /* debug($payerEntry); */
-  /* debug($payeeEntry); */
-  /* echo '<br>---<br>'; */
-  /* print_r($hdrInfo); */
-  /* echo '<br>---<br>'; */
-  /* print_r($payerEntry); */
-  /* echo '<br>---<br>'; */
-  /* print_r($payeeEntry); */
-  /* echo '<br>---<br>'; */
   $hdrInfo['entries'] = [new r\TxEntry($payerEntry), new r\TxEntry($payeeEntry)];
   $tx = new r\Tx($hdrInfo);
+  /* print_r($tx); */
   return $tx->insert(TRUE);
 }
 
@@ -326,19 +338,19 @@ function doTx($info, $thing) {
  */
 function doInvoice($info) {
   global $testOnly, $channel;
+  ///debug("doInvoice(" . print_r($info, true) . "), testOnly=$testOnly");
   extract($info);
-
   $info['for'] = u\arrayGet($info, 'for', 'this or that');
   $info['purpose'] = u\arrayGet($info, 'purpose', $info['for']);
   unset($info['for']);
-  
+  $xx = $info['purpose'];
   if ($testOnly) return verifyRecord('r_invoices', $info);
 
   $missing = array_diff_key(['amount'=>1, 'payer'=>1, 'payee'=>1, 'purpose'=>1], $info);
   u\EXPECT($missing == [], "missing fields " . print_r($missing, true));
 
   $invInfo = u\exactly('status goods created', $info, [TX_PENDING, u\forCash($info['purpose']) ? FOR_USD : FOR_GOODS, r\rTime()]);
-  $invInfo = array_merge($invInfo, just('nvid amount flags data payer payee', $info));  // extract directly, and might not be present
+  $invInfo = array_merge($invInfo, just('nvid amount flags data payer payee purpose', $info));  // extract directly, and might not be present
   $nvid = db\updateOrInsert('r_invoices', $invInfo, 'nvid');
   u\EXPECT(!empty($nvid));
   $xid = $invInfo['status'];
@@ -347,6 +359,7 @@ function doInvoice($info) {
     $txInfo['xid'] = $xid;
     doTx($txInfo, 'invoice-payment');
   }
+  return $nvid;
 }
 
 /**
@@ -474,6 +487,9 @@ function count($what, $count) {
 	global $testOnly; if (!$testOnly) return FALSE;
 	
 	$what = $what == 'accounts' ? 'users' : "r_$what";
+  if ($what == 'r_tx_hdrs') {
+    return db\count($what, "xid > 0") == $count;
+  }
 	return (db\count($what) == $count);
 }
 
@@ -498,7 +514,8 @@ function doneStep($id, $step) {
  */
 function doMembersHave($info) {
   global $testOnly;
-  if ($balFields = just(T_BALANCE_FLDS, $info) and !doBalance($balFields, TRUE)) return FALSE;
+  $balFields = just(T_BALANCE_FLDS, $info);
+  if (!empty($balFields) and !doBalance($balFields, TRUE)) return FALSE;
 
   $a = r\acct($id = t\uid($info['uid']));
   $info = justNOT(T_BALANCE_FLDS, $info); // don't rehandle balance fields, and already got id
@@ -529,11 +546,12 @@ function memberFieldValues($list) {
 }
 
 /**
- * Make the cached balances and other numeric fields be thus and such.
+ * Test that the balance is thus and such.
  * "?" in a field means ignore its value when testing
  */
 function doBalance($info) {
   global $testOnly;
+  static $testXid = 0;
 
 /**/  if ($info != just(T_BALANCE_FLDS, $info)) return t\output("spurious field in balances: " . print_r($info, 1));
   $uid = $uid0 = $info['uid'];
@@ -541,26 +559,44 @@ function doBalance($info) {
   if (!$a = r\acct($uid)) return t\output("account $uid0 does not exist");
   $a->reread(TRUE); // otherwise db updates are invisible
 
+  if ($testOnly) {
+    foreach ($info as $k => $v) if ($v != '?') {
+      if (t\badEq("db $k", $a->o($k), $v, $uid)) return FALSE;
+    }
+    return TRUE;
+  }
+    
+  if (array_key_exists('balance', $info)) {
+    $testXid -= 1;
+    if (abs($info['balance']-$a->balance) >= 0.005) {
+      $res = be\transfer('charge', r\acct(CGID), $a, -($info['balance']-$a->balance), 'set balance for testing', FOR_NONGOODS,
+                         ['force'=>1, 'xid'=>$testXid]);
+      u\EXPECT($res[0], "trouble creating transfer to set balance");
+    }
+  }
+
+  foreach ($info as $k => $v) {
+    if ($k == 'balance' or $k == 'uid') continue;
+    $a->update($k, $v);
+  }
+/* if (!empty(array_intersect(array_keys($info), ray(T_READ_ONLY_FLDS)))) { */
+  /*   u\EXPECT($testOnly, 'cannot set balances directly, must use transactions'); */
+  /* } */
+
+  
+  // verify
 //  if (isset($info['r']) and !isset($info['balance'])) $info['balance'] = $info['r'] - @$info['rewards']; // 20170515
 //  t\fixData($info);
 /// print_r(compact('a','id','id0'));
-  if (!$testOnly) { // setting the values
-    unset($info['uid']);
-    return ($info ? $a->update($info) : TRUE); // handle only id being passed
-  }
-
-  // verify
-  if (!$calc = t\uidCredit($uid)) return FALSE;
-  /* t\output("calc: " . print_r($calc, true)); */
-  foreach (ray($cashies = 'balance rewards') as $k) {
-    $v = array_key_exists($k, $info) ? $info[$k] : null;
-    if (!is_null($v) and $v != '?') if ($uid > 0 or $k != 'rewards') {
-      $cachedVal = $a->o($k);
-      if (t\badEq("cached $k", $cachedVal, $v, $uid)) return FALSE;
-      if (!$a->jid and t\badEq("calc $k", $calc[$k], $v, $uid)) return FALSE;
-    }
-  }
-  foreach ($not = justNOT($cashies, $info) as $k => $v) {
+  /* foreach (ray($cashies = 'balance') as $k) { */
+  /*   $v = array_key_exists($k, $info) ? $info[$k] : null; */
+  /*   if (!is_null($v) and $v != '?') if ($uid > 0 or $k != 'rewards') { */
+  /*     $cachedVal = $a->o($k); */
+  /*     if (t\badEq("cached $k", $cachedVal, $v, $uid)) return FALSE; */
+  /*     if (!$a->jid and t\badEq("calc $k", $calc[$k], $v, $uid)) return FALSE; */
+  /*   } */
+  /* } */
+  foreach ($info as $k => $v) {
     if ($v != '?' and $k != 'committed' and $uid > 0) if (t\badEq("db $k", $a->o($k), $v, $uid)) return FALSE;
   }
   return TRUE;
@@ -590,28 +626,39 @@ function usdTransfers($txs) {
   static $count = 0;
 
   foreach ($txs as $tx) { // do not extract $tx, because setDft will fail after the first unless we unset vars
-    debug("doing tx # $count");
     $count += 1;
-    if (@$tx['payee']) $payee = $tx['payee'] = t\uid($tx['payee']);
+
+    if (array_key_exists('payee', $tx)) $tx['payee'] = t\uid($tx['payee']);
 
     if ($testOnly) {
       if (isset($tx['risks'])) $tx['risks'] = getRisks($tx['risks'], K_TX_RISKS);
       if (!verifyRecord('r_usd', $tx)) return FALSE;
-    } else {
-      if (!$a = r\acct(@$payee)) return t\output('Bad payee: ' . @$payee);
-      $tx['bankAccount'] = @$a->vsecure['bankAccount'];
-      u\setDft($tx['txid'], t\seq());
-      u\setDft($tx['risk'], NULL);
-      u\setDft($tx['created'], @$tx['completed']);
-      debug('creating r_usd');
-      if (!db\insert('r_usd', $tx, 'txid')) return FALSE;
-//      if (@$tx['completed']) $a->update('r', $a->o_r - $tx['amount']);
-      if (@$tx['completed']) {
-        debug('creating transfer');
-        EXPECT(be\transfer('transfer', r\acct(CG_INCOMING_BANK_UID), $a, $tx['amount'], 'usd transfer', FOR_USD,
-                           ['created' => $tx['completed']]),
-               'failure creating completion transaction');
-      }
+      return TRUE;
+    }
+    
+    extract(u\exactly('amount completed', $tx, null));
+    
+    $amount = u\arrayGet($tx, 'amount', null);
+    $err = u\badAmount($amount);
+    if ($err) {
+      t\output($err);
+      return false;
+    }
+    
+    $a = r\acct($tx['payee']);
+    if (empty($a)) return t\output('Bad payee: ' . @$payee);
+    $txid = be\createUsdTransfer($a, $amount, u\arrayGet($tx, 'created', r\rTime()), u\arrayGet($tx, 'txid', null));
+    if (!$txid) {
+      t\output('failure creating usd xfr: ' . $txid);
+      return FALSE;
+    }
+
+    if (!empty($tx['deposit'])) {
+      u\EXPECT(db\update('r_usd', just('txid deposit', $tx), 'txid'), 'failure depositing usd');
+    }
+    if (!empty($tx['completed'])) {
+      u\EXPECT(be\completeUsdTx($a, $txid, $tx['amount'], u\arrayGet($tx, 'automatic', false), $completed),
+               'failure completing usd transfer');
     }
   }
   return TRUE;
@@ -678,12 +725,25 @@ function fullQid($q) {
  * Interpret the given identifier (int, full qid, or local qid) as an account ID.
  */
 function uid($id, $field = 'id') {
+  /* print_r("   uid($id, $field)-->"); */
 //  u\EXPECT($id, 'empty id'); // otherwise site loops (?)
-  if (is_numeric($id) or empty($id)) return $id;
-  if (in($id, 'community ctty')) return r\serverUid();
-  if ($id == 'cgf') return CGID;
+  if (is_numeric($id) or empty($id)) {
+    /* print_r("$id<br>"); */
+    return $id;
+  }
+  if (in($id, 'community ctty')) {
+    $xx = r\serverUid();
+    /* print_r("$xx<br>"); */
+    return $xx;
+  }
+  if ($id == 'cgf') {
+    /* print_r("CGID<br>"); */
+    return CGID;
+  }
 //  return r\qo($id)->$field; FAILS
-  return r\qo(t\fullQid2($id))->$field;
+  $xx = r\qo(t\fullQid2($id))->$field;
+  /* print_r("$xx<br>"); */
+  return $xx;
 }
 function agent($id) {return t\uid($id, 'agent');}
 
@@ -873,7 +933,7 @@ function makePicture($photo, $a) {return $a->update(compact('photo'));}
  * @todo: after everyone is up to version 217, add penultimate param: $proof = 'calc'
  */
 function hitServer($op, $extra = [], $agent, $device = '', $version = 221) {
-  debug("hitServer($op, " . print_r($extra, true) . ", $agent, $device, $version)");
+  /// debug("hitServer($op, " . print_r($extra, true) . ", $agent, $device, $version)");
   global $rposResult;
   if ($agent) $agent = t\fullQid2($agent);
   extract(just('amount member code created proof goods', $extra));
@@ -1381,7 +1441,8 @@ function badEq($type, $v1, $v2, $id) {
 function shownWith($content, $type = 'text', $mustBePresent = TRUE) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $formOut;
-
+  /// debug("shownWith(" . print_r($content, true) . ", $type, $mustBePresent)");
+  
   $model = t\strip($formOut[$type]);
 //  if (!$model and $type == 'text') $model = file_get_contents(TEST_PDF_FLNM);
 

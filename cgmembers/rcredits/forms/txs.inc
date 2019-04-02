@@ -278,31 +278,41 @@ function handleTx($do, $xid, &$sta, $args) {
 function txSummary($starting, $ending, &$endBalance = '') {
   global $mya;
   $myid = $mya->id;
+  $jid = $mya->jid;
+  $uids = empty($jid) ? [$myid] : [$myid, $jid];
+
+  debug("$myid, $jid");
+  debug($uids);
+  debug($jid);
+  debug(empty($jid));
+
   
   $endingNow = ($ending > r\rTime());
   $previous_ending = $starting - 1;
-  extract($nowInfo = (array) be\creditInfo(array('asof' => $ending)), EXTR_PREFIX_ALL, 'n');
+  $nowInfo = be\creditInfo($uids, $ending);
+  extract($nowInfo, EXTR_PREFIX_ALL, 'n');
   $endBalance = $n_balance;
-  extract($pendingInfo = (array) be\creditInfo(ray('pending asof', TRUE, $ending)), EXTR_PREFIX_ALL, 'p');
-  $oldInfo = (array) be\creditInfo(array('asof' => $previous_ending));
+  
+  $oldInfo = be\creditInfo($uids, $starting);
   extract($oldInfo, EXTR_PREFIX_ALL, 'o');
-///  debug(compact('nowInfo','oldInfo'));
   $startBalance = round($o_balance, 2);
 
+  debug(compact('nowInfo','oldInfo'));
+
   $dif = [];
-  foreach (ray('inProper outProper bank') as $key) $dif[$key] = $nowInfo[$key] - $oldInfo[$key];
+  foreach (ray('inProper outProper fromBank') as $key) $dif[$key] = $nowInfo[$key] - $oldInfo[$key];
   extract($dif, EXTR_PREFIX_ALL, 'd');
-  $p_committed = $mya->committed; // this will include all pending commitments
+  /* $p_committed = $mya->committed; // this will include all pending commitments */
   
-  $fields = 'old bank in out new';
-  $values = array($startBalance, $d_bank, $d_inProper, $d_outProper, $endBalance); // both
-  $values = array_combine(ray($fields), $values);
+  /* $fields = 'old bank in out new'; */
+  /* $values = array($startBalance, $d_bank, $d_inProper, $d_outProper, $endBalance); // both */
+  /* $values = array_combine(ray($fields), $values); */
 
-  $p_inProper = $p_outProper = 0; // temporary until we include unpaid invoice data here
-  $p_balance = $p_bank - $p_committed;
-  $values += compact(ray('p_inProper p_bank p_outProper p_committed p_balance d_roundups'));
+  /* $p_inProper = $p_outProper = 0; // temporary until we include unpaid invoice data here */
+  /* $p_balance = $p_bank - $p_committed; */
+  /* $values += compact(ray('p_inProper p_bank p_outProper p_committed p_balance d_roundups')); */
 
-  foreach ($values as $key => $value) $$key = number_format($value, 2);
+  /* foreach ($values as $key => $value) $$key = number_format($value, 2); */
 
   $starting = u\fmtDate($starting);
   $ending = u\fmtDate($ending);
@@ -318,18 +328,33 @@ function txSummary($starting, $ending, &$endBalance = '') {
   $ENDING = w\popHelp(t('Ending Balance'), t('Your %PROJECT Account balance at the end of this time period'));
   $SAVINGS = w\popHelp(t('Credit Reserve'), t('Amount in your Credit Reserve, to spend in a pinch (once your %PROJECT community declares itself stable, this additional amount is yours to keep)'));
   $PENDING = w\popHelp(t('pending'), t('Pending transfers from your bank account to your %PROJECT Account'));
-  if ($p_bank) $p_bank = str_replace('+ -', '- ', $endingNow ? "+ $p_bank $PENDING" : '');
+  /* if ($p_bank) $p_bank = str_replace('+ -', '- ', $endingNow ? "+ $p_bank $PENDING" : ''); */
   
-  $p_balance = u\starts($p_balance, '-') ? '- ' . substr($p_balance, 1) : "+ $p_balance";
+  /* $p_balance = u\starts($p_balance, '-') ? '- ' . substr($p_balance, 1) : "+ $p_balance"; */
+  $o_balance = u\fmtAmt($o_balance, '$');
+  $d_fromBank = u\fmtAmt($d_fromBank, '$');
+  /* $n_pendingBank = $n_pendingBank == 0 ? '' : u\fmtAmt($n_pendingBank, '$') . t(' Pending'); */
+  $d_inProper = u\fmtAmt($d_inProper, '$');
+  $d_outProper = u\fmtAmt($d_outProper, '$');
+  $n_balance = u\fmtAmt($n_balance, '$');
+
+  if (!$endingNow) {
+    $n_pendingBank = '';
+  } elseif ($n_pendingBank > 0) {
+    $n_pendingBank = '+ ' . u\fmtAmt($n_pendingBank, '') . " $PENDING";
+  } elseif ($n_pendingBank == 0) {
+    $n_pendingBank = '';
+  } else {  // $n_pendingBank < 0
+    $n_pendingBank = '- ' . u\fmtAmt(-$n_pendingBank, '') . " $PENDING";
+  }
   
-  $toSavings = $fromSavings = '';
   $rows = [
            ray("||$PRIMARY|"),
-           ray("$STARTING||$old|$starting"),
-           ray("$BANK|+|$bank|$p_bank"),
-           ray("$IN|+|$in|"),
-           ray("$OUT|-|$out|"),
-           ray("$ENDING||$new|$ending"),
+           ray("$STARTING||$o_balance|$starting"),
+           ray("$BANK|+|$d_fromBank|$n_pendingBank"),
+           ray("$IN|+|$d_inProper|"),
+           ray("$OUT|-|$d_outProper|"),
+           ray("$ENDING||$n_balance|$ending"),
            ];  
   
   $attributes = ['id' => 'txsum'];

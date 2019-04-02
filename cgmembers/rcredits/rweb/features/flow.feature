@@ -22,20 +22,24 @@ Setup:
 Scenario: A member draws
   When member ".ZZA" confirms form "pay" with values:
   | op  | who  | amount | goods        | purpose |*
-  | pay | .ZZB |     30 | %FOR_GOODS | food    |
-  Then transactions:
-  | xid | type     | amount | from | to   | purpose      |*
-  |   1 | transfer |     20 | .ZZC | .ZZA | automatic transfer to NEWZZA,automatic transfer from NEWZZC |
-  |   2 | transfer |     30 | .ZZA | .ZZB | food         |
+  | pay | .ZZB |     30 | %FOR_GOODS   | food    |
+  Then tx entries:
+  | xid | entryType    | amount | uid  | description                    |*
+  |   1 | %ENTRY_PAYEE |     20 | .ZZA | automatic transfer from NEWZZC |
+  |   1 | %ENTRY_PAYER |    -20 | .ZZC | automatic transfer to NEWZZA   |
+  |   2 | %ENTRY_PAYEE |     30 | .ZZB | food                           |
+  |   2 | %ENTRY_PAYER |    -30 | .ZZA | food                           |
   
 Scenario: A member draws again
   When member ".ZZA" confirms form "pay" with values:
   | op  | who  | amount | goods        | purpose |*
   | pay | .ZZB |    130 | %FOR_GOODS | food    |
-  Then transactions:
-  | xid | type     | amount | from | to   | purpose      |*
-  |   1 | transfer |    120 | .ZZC | .ZZA | automatic transfer to NEWZZA,automatic transfer from NEWZZC |
-  |   2 | transfer |    130 | .ZZA | .ZZB | food         |
+  Then tx entries:
+  | xid | entryType    | amount | uid  | description      |*
+  |   1 | %ENTRY_PAYEE |    120 | .ZZA | automatic transfer from NEWZZC |
+  |   1 | %ENTRY_PAYER |   -120 | .ZZC | automatic transfer to NEWZZA   |
+  |   2 | %ENTRY_PAYEE |    130 | .ZZB | food                           |
+  |   2 | %ENTRY_PAYER |   -130 | .ZZA | food                           |
 
 Scenario: A member overdraws with not enough to draw on
   When member ".ZZA" completes form "pay" with values:

@@ -92,7 +92,7 @@ EOF;
    */
   public function txnHdr($info) {
     $this->tidValue = $info['tid'];
-    $this->dateValue = u\fmtDate($info['created']);
+    $this->dateValue = strftime('%m/%d/%y', $info['created']);
     $this->runBalance = u\fmtAmt($info['runBalance'], '');
 
     $class = "txrow ";
@@ -106,7 +106,7 @@ EOF;
    * @param assoc $info: all of the data for this entry (includes transaction data)
    */
   public function processEntry($info) {
-    if (in_array($info['uid'], $this->uids)) return;  // only show the other end of the transaction
+    if (!in_array($info['uid'], $this->uids)) return;
     extract(just('name description amount', $info));
     $amount = u\fmtAmt(- $amount, '');
     $buttons = '';

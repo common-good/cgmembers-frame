@@ -23,28 +23,25 @@ Setup:
   |  504 | .ZZA  |    200 | %today-3d |         0 |
   And invoices:
   | nvid | created   | amount | from | to   | purpose  | status |*
-  |    1 | %today-3m |    240 | .ZZA | .ZZB | what G   |      6 |
-  |    2 | %today-1w |    120 | .ZZA | .ZZC | this Q   |      8 |
-  |    3 | %today-5d |     80 | .ZZA | .ZZC | this CF  |     10 |
+  |    1 | %today-3m |    240 | .ZZA | .ZZB | what G   |      7 |
+  |    2 | %today-1w |    120 | .ZZA | .ZZC | this Q   |      9 |
+  |    3 | %today-5d |     80 | .ZZA | .ZZC | this CF  |      1 |
   |    4 | %today-5d |     99 | .ZZA | .ZZC | wrongly  | %TX_DENIED |
   |    5 | %today-5d |     12 | .ZZA | .ZZC | realist  | %TX_APPROVED |
   And transactions: 
   | xid | created   | type     | amount | from | to   | purpose  | taking |*
-
-  |   4 | %today-5m | transfer |     10 | .ZZB | .ZZA | cash E   | 0      |
-  |   5 | %today-4m | transfer |    100 | .ZZC | .ZZA | usd F    | 1      |
-  |   6 | %today-3m | transfer |    240 | .ZZA | .ZZB | what G   | 0      |
-  |   7 | %today-2w | transfer |     50 | .ZZB | .ZZC | cash P   | 0      |
-  |   8 | %today-1w | transfer |    120 | .ZZA | .ZZC | this Q   | 1      |
-  |   9 | %today-6d | transfer |    100 | .ZZA | .ZZB | cash V   | 0      |
-  |  10 | %today-5d | transfer |     80 | .ZZA | .ZZC | this CF  | 1      |
-  |  11 | %today-5d | transfer |    100 | .ZZC | .ZZA | cash CJ  | 1      |
+  |   5 | %today-5m | transfer |     10 | .ZZB | .ZZA | cash E   | 0      |
+  |   6 | %today-4m | transfer |    100 | .ZZC | .ZZA | usd F    | 1      |
+  |   8 | %today-2w | transfer |     50 | .ZZB | .ZZC | cash P   | 0      |
+  |  10 | %today-6d | transfer |    100 | .ZZA | .ZZB | cash V   | 0      |
+  |  12 | %today-5d | transfer |    100 | .ZZC | .ZZA | cash CJ  | 1      |
   Then balances:
   | uid  | balance |*
   | .ZZA |     670 |
   | .ZZB |    2280 |
   | .ZZC |    3050 |
 
+Skip until we can figure out how to look at "downloaded" results
 Scenario: A member downloads transactions for the past year
   Given members have:
   | uid  | fullName |*
@@ -80,4 +77,4 @@ Scenario: A member downloads incoming invoices for the past year
   And with download columns:
   | column |*
   | Date   |
-
+Resume

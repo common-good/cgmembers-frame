@@ -27,7 +27,8 @@ function statement($period = '') {
   /* print_r($startBals); */
   $endBals = be\creditInfo($uids, $end);
   /* print_r($endBals); */
-  
+  debug($startBals);
+  debug($endBals);
   /* extract(just('frombank fromyou toyou', $tot)); */
   $bal0 = $startBals['balance']; // balance BEFORE start of this period
   $bal9 = $endBals['balance'];
@@ -37,7 +38,19 @@ function statement($period = '') {
   $out9 = $endBals['out'];
   $fromyou = $out9 - $out0;
   $toyou = $in9 - $in0;
-  $frombank = $endBals['bank'] - $startBals['bank'];
+  $frombank = $endBals['fromBank'] - $startBals['fromBank'];
+  $tobank = $endBals['toBank'] - $startBals['toBank'];
+  $bank = $frombank - $tobank;
+
+  debug($fromyou);
+  $fromyou -= $tobank;
+  debug($fromyou);
+  debug($toyou);
+  /* $toyou -= $frombank; */
+  debug($toyou);
+
+  debug("$in0, $in9, $out0, $out9, $frombank, $tobank, $bank, $fromyou, $toyou");
+  
   $committed = $mya->committed;
   list ($avg) = r\averageBalance($uids, $mya->created, $end, TRUE);
     
@@ -63,15 +76,14 @@ function statement($period = '') {
   $savingsTitle = t('Credit line:');
 
   $pdf->barHead('SUMMARY');
-    
-  $fields[1] = explode('; ', "/balTitle/15/; Starting/bal0/28/R; /plus/15/R; From Bank/frombank/23/R; /minus/15/C; Paid/fromyou/23/R; /plus/15/R; Received/toyou/23/R; /equals/15/R; Ending/bal9/28/R");
+  $fields[1] = explode('; ', "/balTitle/15/; Starting/bal0/28/R; /plus/15/R; From Bank/bank/23/R; /minus/15/C; Paid*/fromyou/23/R; /plus/15/R; Received/toyou/23/R; /equals/15/R; Ending/bal9/28/R");
   $pdf->colHeads($fields[1]);
 
   list ($plus, $minus, $equals, $space) = array('+', '-', '=', ' ');
   list ($total0, $underline9, $total9) = [$bal0, str_repeat('-', 17), $bal9];
   $underline0 = $underline9;
 
-  $numFields = ray('total0 bal0 amount frombank fromyou toyou bal9 committed in out');
+  $numFields = ray('total0 bal0 amount frombank fromyou toyou bal9 committed in out bank');
   foreach ($numFields as $one) $$one = number_format(@$$one ?: 0, 2); // ?: is needed because $$one might be null or ''
   
   $pdf->setFontSize(.9 * $size);

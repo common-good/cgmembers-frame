@@ -115,8 +115,8 @@ Scenario: Inflation adjustments, round up donations, and crumb donations are mad
  
 # crumbs (creation date is last second of previous month)
   Then transactions: 
-  | xid | created | amount | from | to  | purpose       | flags       |*
-  | 13  |       ? |   3.40 | .ZZC | cgf | crumbs desc   | gift,crumbs |
+  | xid | created | amount | from | to             | purpose                                             | flags       |*
+  | 12  |       ? |   4.00 | .ZZC | %CG_CRUMBS_UID | crumbs donations: percentage of past month receipts | gift,crumbs |
 
 # alerting admin about paper statements
   And we tell admin "Send paper statements" with subs:
