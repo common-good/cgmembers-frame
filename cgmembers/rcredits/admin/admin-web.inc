@@ -65,6 +65,7 @@ function changeTxAmt($xid, $oldAmt, $newAmt) {
 
 /**
  * Return Summary fields exclusively for community admins (admin, admin2, cAdmin, cAdmin2).
+ * (move this to summary.inc)
  */
 function adminSummary() {
   global $mya, $base_url;
@@ -131,7 +132,7 @@ EOF;
       $risk = item(round($mya->risk) . ' ' . button(t('Recalc'), "$base_url/rerisk/acct/$uid/1"), t('Risk Score:'));
       if (!$mya->co) $trust = item(number_format($mya->trust, 1), t('Trust:'));
 
-    if (!$mya->ok) { // don't show helper field if it's moot (too late -- somebody already got credit)
+    if (!$mya->ok or $mya->helper == 1) { // don't show helper field if it's moot (too late -- somebody already got credit)
         if ($helper = $mya->helper ?: ($mya->co ? $mya->by : db\get('inviter', 'r_invites', 'invitee=:uid', compact('uid')))) {
           $hA = r\acct($helper);
           $helper = "$hA->mainQid: $hA->fullName";

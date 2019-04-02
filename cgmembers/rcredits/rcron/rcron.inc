@@ -164,10 +164,13 @@ function everyHour() { // stuff to do every hour
   
   db\q('DELETE FROM cache_form WHERE created<:REQUEST_TIME-:HOUR_SECS'); // clean up form cache (is this needed?)
 
-  $uids = db\col('uid', 'users', 'latitude=0 AND longitude=0 AND (uid<0 OR uid>:CANONIC_ACCTS)') ?: [];
-  foreach ($uids as $uid) r\acct($uid)->setLocus();
+//  $uids = db\col('uid', 'users', 'latitude=0 AND longitude=0 AND (uid<0 OR uid>:CANONIC_ACCTS)') ?: [];
+  $sql = 'SELECT uid FROM users WHERE latitude=0 AND longitude=0 AND risks&(1<<:K_ADDROFF)=0 AND (uid<0 OR uid>:CANONIC_ACCTS)';
+  queueEach('geocode', $sql);  
   // r\tellAdmin('hourly cron');
 }
+
+function geocode($item) {r\acct($item['uid'])->setLocus();}
 
 /**
  * Account checks to do every hour.
@@ -478,22 +481,32 @@ function everyYear() {
   r\tellAdmin(t('Generate 1099-B forms for IRS and states'), compact('topic'));
 }
 
+/**
+ * Calculate and credit inflation adjustment to each member account.
+ */
+function inflationAdjust($item) {
+  return; // UNUSED (but hey, we might do this someday)
+  extract(just('uid start end', $item));
+  $a = r\acct($uid);
+  if ($a->slave) return; // slave in joint account gets no inflation (master gets inflation for both)
+  if (db\exists('r_txs', 'payee=:uid AND type=:TX_INFLATION AND created>=:end', compact('uid', 'end'))) return;
+  list ($avg, $min) = r\averageBalance($uid, $start, $end);
+//  if ($adjustment > 0)  // don't adjust debts
+//  foreach ([t('average balance') => $avg, t('credit reserve') => $ravg] as $k => $v) {
+  foreach ([t('average balance') => $avg] as $k => $v) {
+    $adjustment = round($v * R_INFLATION_RATE / 12, 2);
+//    if ($adjustment) be\fund($uid, TX_INFLATION, $adjustment, INFLATION_DESC . t(' on your ') . $k);
+  }
+}
+
 /* /\** */
-/*  * Calculate and credit inflation adjustment to each member account. */
+/*  * Donate rounded change to the community. Date the transaction in the preceding month (in which the roundups originate). */
+/*  * Allow this even if account is inactive (donation has already been made, from member's point of view). */
 /*  *\/ */
-/* function inflationAdjust($item) { */
-/*   return; // UNUSED */
-/*   extract(just('uid start end', $item)); */
+/* function roundup($item) { */
+/*   extract(just('uid donate', $item)); */
 /*   $a = r\acct($uid); */
-/*   if ($a->slave) return; // slave in joint account gets no inflation (master gets inflation for both) */
-/*   if (db\exists('r_txs', 'payee=:uid AND type=:TX_INFLATION AND created>=:end', compact('uid', 'end'))) return; */
-/*   list ($avg, $min) = r\averageBalance($uid, $start, $end); */
-/* //  if ($adjustment > 0)  // don't adjust debts */
-/* //  foreach ([t('average balance') => $avg, t('credit reserve') => $ravg] as $k => $v) { */
-/*   foreach ([t('average balance') => $avg] as $k => $v) { */
-/*     $adjustment = round($v * R_INFLATION_RATE / 12, 2); */
-/* //    if ($adjustment) be\fund($uid, TX_INFLATION, $adjustment, INFLATION_DESC . t(' on your ') . $k); */
-/*   } */
+/*   if ($donate > 0 and $a->ok) $a->payApproved(CGID, $donate, t('roundups desc'), ray('created roundups gift', u\monthDay1() - 1, TRUE, TRUE)); */
 /* } */
 
 /**
@@ -667,16 +680,19 @@ function acctStats1($item, $asof = NULL) {
     WHERE payer.uid=:uid AND payee.uid=:CGID AND :IS_GIFT AND created<:asof
 X;
   $row1 = db\q($sql, $subs)->fetchAssoc() ?: []; // giftsEver, giftsPastMo
-  
-  $sql = <<< X
-    SELECT 0 AS beneEver, 0 AS benePastMo,
-    SUM(IF(type IN (:TX_GRANT), amount, 0)) AS extraEver,
-    SUM(IF(type IN (:TX_GRANT) AND created>=:monthAgo, amount, 0)) AS extraPastMo
-    FROM r_entries e JOIN r_tx_hdrs t USING(xid)
-    WHERE e.uid=:uid AND created<:asof
-X;
-  $row2 = db\q($sql, $subs)->fetchAssoc() ?: []; // get beneEver (purchase rewards), benePastMo, extraEver, extraPastMo
-  
+
+  /* Vanished somewhere else */
+/*   $sql = <<< X */
+/*     SELECT 0 AS beneEver, 0 AS benePastMo, */
+/*     SUM(IF(type IN (:TX_GRANT), amount, 0)) AS extraEver, */
+/*     SUM(IF(type IN (:TX_GRANT) AND created>=:monthAgo, amount, 0)) AS extraPastMo */
+/*     FROM r_entries e JOIN r_tx_hdrs t USING(xid) */
+/*     WHERE e.uid=:uid AND created<:asof */
+/* X; */
+/*   $row2 = db\q($sql, $subs)->fetchAssoc() ?: []; // get beneEver (purchase rewards), benePastMo, extraEver, extraPastMo */
+
+  $row2 = [];  
+
   $sql = <<< X
     SELECT SUM(-amount) AS bankedEver, SUM(IF(completed<:monthAgo, 0, -amount)) AS bankedPastMo
     FROM r_usd WHERE payee=:uid AND completed AND completed<:asof AND amount<>0
@@ -707,12 +723,11 @@ X;
     $cttys = db\q($sql)->fetchAllKeyed();
     u\preray([0 => min($cttys)], $cttys); // show all dates overall
 
-    $now = r\rTime();
     if ($dt1 < 0) $dt1 = db\max('created', 'r_stats'); // repeat last date to catch missing cttys
-    if (!$dt1) $dt1 = @$cttys[0] ?: $now;
+    if (!$dt1) $dt1 = @$cttys[0] ?: NOW;
     $dt = strtotime('today', $dt1); // use first moment of the day
 
-    while ($dt <= $now) {
+    while ($dt <= NOW) {
       foreach ($cttys as $ctty => $start) if ($start <= $dt) {
         $item = compact('ctty', 'dt');
         if (isPRODUCTION) cr\queue('cttyStats1', $item); else cttyStats1($item);
@@ -730,14 +745,16 @@ function cttyStats1($item) {
   extract(just('ctty dt', $item));
   u\setDft($dt, $today = strtotime('today'));
 
-  $stats = r\stats($ctty, $dt); // record stats for one community on the regional server, for the given date
-  if ($dt == $today and $ctty) { // check demand for CG in the ctty
+  $stats = r\stats($ctty, $dt); // calculate stats for one community on the regional server, for the given date
+  
+  // see if we need to set or turn off a "credit ban"
+  if ($dt == $today and $ctty) {
     $allPos = $allNeg = TRUE;
     for ($i = 0; $i <= BAN_MONTHS; $i++) {
-      $usdX = @$usd; // following month's Dollar Pool total
+      $usdX = nn($usd, 0); // following month's Dollar Pool total
       $ago = -30 * $i;
-      if ($i > 0) $stats = r\stats($ctty, strtotime($ago . ' days', $dt)); // 0 is already done
-      $usd = $stats['usdIn'] - $stats['usdOut']; // this month's Dollar Pool total
+      $stats = r\stats($ctty, strtotime($ago . ' days', $dt));
+      $usd = $stats['usdIn'] + $stats['usdOut']; // this month's Dollar Pool total++
       if ($i > 0) {if ($usdX - $usd < 0) $allPos = FALSE; else $allNeg = FALSE;}
     }
     $cttyA = r\acct($ctty);

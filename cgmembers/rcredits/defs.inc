@@ -5,7 +5,7 @@
  * (SMS, web, smartphone, etc.)
  */
 
-define('R_VERSION', '3.42u'); // software version
+define('R_VERSION', '3.42w'); // software version
 
 // definitions used in settings file
 define('US_COUNTRY_ID', 1228); // United States
@@ -461,6 +461,7 @@ define('K_ACCT_RISKS_EDITABLE', 'adminOk cashCo rents shady photoOff addrOff ssn
 define('K_TX_RISKS', 'txAdminOk:-0.3,redo:2,exchange:2,cashIn:5,cashOut:2,fromBank:5,toBank:2,b2p:2,p2p:2,inhouse:2,fromSuspect:3,toSuspect:3,absent:4,invoiceless:4,bigFrom:3,biggestFrom:3,oftenFrom:3,bigTo:3,biggestTo:3,oftenTo:3,offline:10,firstOffline:3,origins:3,suspectOut:2'); // names and size of transaction risks
 define('K_ADMINOK', 0); // community admin blessed the account or transaction
 define('K_HASBANK', 3); // account has a connected bank account
+define('K_ADDROFF', 14); // account's physical address is wonky (can't be geolocated or whatever)
 define('HAS_BANK', 'risks&(1<<' . K_HASBANK . ')'); // mysql criterion (not surrounding parens, so we can do u.:HAS_BANK)
 define('MASTER', '(uid<jid)'); // account is the master in a joint account
 
@@ -509,27 +510,9 @@ define('TX_AJAX', 7);
 define('TX_FOREIGN', 8); // user clicked a "Pay with CG" button or request an app to charge them
 define('TX_CHANNELS', 'Sys SMS Web App Tone Cron Link Ajax Foreign'); // can't translate, because used in t() (find a solution)
 
-// Transaction types (all but type TX_TRANSFER and TX_BANK create credit) -- negative types generally not shown
-define('OLD_TX_BONUS', -2); // UNUSED sales bonus (negative reward types are invisible on transaction history)
-define('OLD_TX_REBATE', -1); // UNUSED sales rebate
-define('OLD_TX_SIGNUP', 1); // signup incentive reward
-define('OLD_TX_GIVEBACK', 2); // gift to the community (UNUSED)
-define('OLD_TX_INFLATION', 3); // reward to conpensate for inflation
-define('OLD_TX_HELPER', 4); // reward for inviting and assisting with account opening
-define('OLD_TX_REWARDS', '-2,-1,1,2,3,4'); // only these count as rewards
-
+// Transaction types
 define('TX_TRANSFER', 0); // normal fund transfer (usually for actual goods and services) -- not creating rC
-define('TX_USD', 1); // dollars transferred into or out of Common Good
-
-/* define('TX_FINE', 9); // destroys CG credit (this is essentially a negative grant) */
-/* define('TX_XFEE', 10); // exchange fee (for buying CG credit with a credit/debit card or check) */
-/* define('TX_GRANT', 11); */
-/* define('TX_LOAN', 12); */
-/* define('TX_INVEST', 13); // equity investment (community purchase are TX_TRANSFER) */
-/* define('TX_BANK', 99); // used only internally, to mark bank transfers */
-define('TX_TYPES', 'transfer usd');
-
-define('TX_WHYS', t('charge for goods and services, payment for goods and services,exchange of US Dollars or other currency,drawing from account,loan/reimbursement/etc.,')); // transaction purposes
+define('TX_BANK', 99); // used only internally, to mark bank transfers
 
 define('TX_DEFAULT_PERIOD', 90); // number of days to show in transaction history, by default
 define('TX_DEFAULT_INV_PERIOD', -2); // number of days to show in invoice history, by default (all of them)

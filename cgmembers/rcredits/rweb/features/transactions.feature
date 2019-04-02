@@ -117,16 +117,16 @@ Scenario: A member looks at transactions with roundups
   
 #Scenario: Transactions with other states show up properly
 #  Given transactions:
-#  | xid   | created   | type     | state    | amount | from | to   | purpose  | taking |*
-#  | .AACA | %today-5d | transfer | denied   |    100 | .ZZC | .ZZA | labor CA | 0      |
-#  | .AACB | %today-5d | rebate   | denied   |      5 | ctty | .ZZC | rebate   | 0      |
-#  | .AACC | %today-5d | bonus    | denied   |     10 | ctty | .ZZA | bonus    | 0      |
-#  | .AACD | %today-5d | transfer | denied   |      5 | .ZZA | .ZZC | cash CE  | 1      |
-#  | .AACE | %today-5d | transfer | disputed |     80 | .ZZA | .ZZC | this CF  | 1      |
-#  | .AACF | %today-5d | rebate   | disputed |      4 | ctty | .ZZA | rebate   | 0      |
-#  | .AACG | %today-5d | bonus    | disputed |      8 | ctty | .ZZC | bonus    | 0      |
-#  | .AACH | %today-5d | transfer | deleted  |    200 | .ZZA | .ZZC | never    | 1      |
-#  | .AACK | %today-5d | transfer | disputed |    100 | .ZZC | .ZZA | cash CL  | 1      |
+#  | xid   | created   | state    | amount | from | to   | purpose  | taking |*
+#  | .AACA | %today-5d | denied   |    100 | .ZZC | .ZZA | labor CA | 0      |
+#  | .AACB | %today-5d | denied   |      5 | ctty | .ZZC | 0      |
+#  | .AACC | %today-5d | denied   |     10 | ctty | .ZZA | 0      |
+#  | .AACD | %today-5d | denied   |      5 | .ZZA | .ZZC | cash CE  | 1      |
+#  | .AACE | %today-5d | disputed |     80 | .ZZA | .ZZC | this CF  | 1      |
+#  | .AACF | %today-5d | disputed |      4 | ctty | .ZZA | 0      |
+#  | .AACG | %today-5d | disputed |      8 | ctty | .ZZC | 0      |
+#  | .AACH | %today-5d | deleted  |    200 | .ZZA | .ZZC | never    | 1      |
+#  | .AACK | %today-5d | disputed |    100 | .ZZC | .ZZA | cash CL  | 1      |
 #  Then balances:
 #  | uid  |    r |*
 #  | .ZZA | 1942 |

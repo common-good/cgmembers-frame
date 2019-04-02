@@ -1729,10 +1729,7 @@ EOF;
     
     if (!db\exists('users', 'uid<1 AND uid=:newCtty', compact('newCtty'))) return !$err = 'bad ctty';
     
-    //    $DBTX = \db_transaction();
     $a->update('community', $newCtty);
-    //    if ($retro) db\q('UPDATE r_txs SET payer=:newCtty WHERE payee=:myid AND type IN (:TX_REWARDS)', ray('newCtty myid', $newCtty, $a->id));
-    //    unset($DBTX);
     return TRUE;
   }
 

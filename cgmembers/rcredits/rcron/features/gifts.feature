@@ -31,9 +31,6 @@ Scenario: A brand new recurring donation can be completed
   And we notice "recur pay" to member ".ZZA" with subs:
   | amount | purpose                    | to       |*
   |    $10 | regular donation (Monthly) | %PROJECT |
-#  And we tell admin "gift accepted" with subs:
-#  | amount | myName  | often | *
-#  |     10 | Abe One |     1 |
   # and many other fields
 	And count "tx_hdrs" is 1
 	And count "usd" is 0

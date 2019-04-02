@@ -232,6 +232,7 @@ function del($table, $idnm, $id, $subs = []) {
 
 function hasField($table, $field) {return hasCol($table, $field);}
 function hasCol($table, $field) {global $db_name; return db\exists('INFORMATION_SCHEMA.COLUMNS', 'TABLE_SCHEMA=:db_name AND TABLE_NAME=:table AND COLUMN_NAME=:field', compact(ray('db_name table field')));}
+function cols($table, $except = '') {global $db_name; return db\col('COLUMN_NAME', 'INFORMATION_SCHEMA.COLUMNS', 'TABLE_SCHEMA=:db_name AND TABLE_NAME=:table AND COLUMN_NAME<>:except', compact(ray('table db_name except')));}
         
 function count($table, $where = '1', $subs = []) {return db\get('COUNT(1)', $table, $where, $subs);}
 function max($field, $table, $where = '1', $subs = []) {return db\get("MAX($field)", $table, $where, $subs);}

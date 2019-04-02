@@ -89,30 +89,28 @@ Setup:
 Scenario: Inflation adjustments, round up donations, and crumb donations are made
   When cron runs "everyMonth"
 
-# Skip no inflation at present
-# # inflation  
-#   | xid| created | amount | bonus                               | from | to   | purpose |*
-#   | 12 | %today  |      0 | %(round(%R_INFLATION_RATE*29.2, 2)) | ctty | .ZZA | %IAOY average balance |
-#   # 29.6?
-# #  | 13 | %today |      0 | %(round(%R_INFLATION_RATE *8.8, 2)) | ctty | .ZZA | %IAOY credit reserve  |
-#   | 13 | %today |      0 | %(round(%R_INFLATION_RATE*13.6, 2)) | ctty | .ZZB | %IAOY average balance |
-#   # 14.2?
-# #  | 15 | %today |      0 | %(round(%R_INFLATION_RATE *9.0, 2)) | ctty | .ZZB | %IAOY credit reserve  |
-#   | 14 | %today |      0 | %(round(%R_INFLATION_RATE*22.8, 2)) | ctty | .ZZC | %IAOY average balance |
-#   # 23.0?
-# #  | 17 | %today |      0 | %(round(%R_INFLATION_RATE *8.6, 2)) | ctty | .ZZC | %IAOY credit reserve  |
-# Resume
-#   # Then member ".ZZA" cache is ok
-#   # And member ".ZZB" cache is ok
-#   # And member ".ZZC" cache is ok
+Skip no inflation at present
+# inflation  
+  Then transactions: 
+  | xid| created| type      | amount | bonus                               | from | to   | purpose |*
+  | 12 | %today | inflation |      0 | %(round(%R_INFLATION_RATE*29.2, 2)) | ctty | .ZZA | %IAOY average balance |
+  # 29.6?
+#  | 13 | %today | inflation |      0 | %(round(%R_INFLATION_RATE *8.8, 2)) | ctty | .ZZA | %IAOY credit reserve  |
+  | 13 | %today | inflation |      0 | %(round(%R_INFLATION_RATE*13.6, 2)) | ctty | .ZZB | %IAOY average balance |
+  # 14.2?
+#  | 15 | %today | inflation |      0 | %(round(%R_INFLATION_RATE *9.0, 2)) | ctty | .ZZB | %IAOY credit reserve  |
+  | 14 | %today | inflation |      0 | %(round(%R_INFLATION_RATE*22.8, 2)) | ctty | .ZZC | %IAOY average balance |
+  # 23.0?
+#  | 17 | %today | inflation |      0 | %(round(%R_INFLATION_RATE *8.6, 2)) | ctty | .ZZC | %IAOY credit reserve  |
+Resume
 
-# Skip roundups are not handled as they occur
-# # roundups (creation date is last second of previous month)
-#   And transactions:
-#   | xid | created | amount | from | to  | purpose       | flags         |*
-#   | 12  |       ? |   1.00 | .ZZA | cgf | roundups desc | gift,roundups |
-# Resume
- 
+Skip roundups - they're handled as they occur now
+# roundups (creation date is last second of previous month)
+  And transactions:
+  | xid | created | amount | from | to  | purpose       | flags         |*
+  | 12  |       ? |   1.00 | .ZZA | cgf | roundups desc | gift,roundups |
+Resume
+
 # crumbs (creation date is last second of previous month)
   Then transactions: 
   | xid | created | amount | from | to             | purpose                                             | flags       |*

@@ -7562,14 +7562,12 @@ function _drupal_flush_css_js() {
  *   string. Set $print_r to TRUE when dealing with a recursive data structure
  *   as var_export() will generate an error.
  */
-function debug($data, $label = NULL, $print_r = FALSE) {
-  // Print $data contents to string.
-  $string = check_plain($print_r ? print_r($data, TRUE) : var_export($data, TRUE));
-
-  // Display values with pre-formatting to increase readability.
-  $string = '<pre>' . $string . '</pre>';
-
-  trigger_error(trim($label ? "$label: $string" : $string));
+/**/ function debug($data, $label = NULL, $print_r = FALSE) {
+  global $debugCounter;
+  $debugCounter = nn($debugCounter, 0) + 1;
+  $string = check_plain($print_r ? print_r($data, TRUE) : var_export($data, TRUE)); // Print $data contents to string.
+  $string = ($label ?: $debugCounter) . '<pre>' . $string . '</pre>'; // "pre" to increase readability.
+  trigger_error($string);
 }
 
 /**

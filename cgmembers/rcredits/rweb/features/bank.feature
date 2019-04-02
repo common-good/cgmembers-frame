@@ -17,8 +17,8 @@ Setup:
 	| main | other | permission |*
 	| .ZZC | .ZZB  |     manage |
   And transactions:
-  | xid | created    | type   | amount | from | to   | purpose |*
-  | 4   | %today-10d | grant  |    100 | ctty | .ZZB | grant   |
+  | xid | created    | amount | from | to   | purpose |*
+  | 4   | %today-10d |    100 | ctty | .ZZB | grant   |
   And usd transfers:
   | txid | payee | amount | created   | completed | deposit   |*
   | 5001 |  .ZZA |     99 | %today-7d | %today-5d | %today-1d |

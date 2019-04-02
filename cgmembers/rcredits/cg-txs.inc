@@ -79,6 +79,21 @@ function getTxRows($starting, $ending, $options = [], $url0 = '', &$run = 0) {
  */
 function doRow(&$rows, $tx, &$tot, $classes, $download = FALSE, $agents = FALSE, $channels = FALSE, $boxes = FALSE, $url0 = '', &$run = 0) {
   global $rUrl, $mya;
+          /**** from develop branch ****/
+/*   extract(just('xid uid fromyou toyou reward byMe toMe reallyToMe agent data flags roundup disputed tid name type created description', $tx)); */
+/* //  $myx = r\x($tx, $mya); */
+
+/*   if (@$data) $data = unserialize($data); */
+/*   if (u\getBit(@$flags, B_ROUNDUPS) and !$toMe) return; // don't show contributions of roundups except to recipient (CGF) */
+
+/*   $change = ceil($fromyou) - $fromyou; */
+/*   $fromyou0 = $fromyou; */
+/*   if (@$roundup and !$toMe and $change > .005) $fromyou = ceil($fromyou); else $change = 0; */
+/*   $tx['amount'] = $amt = $toMe ? $toyou : -$fromyou; // this may be different from $tx[$amount] */
+/*   if ($download and $mya->co) $name = r\acct($uid)->mainQid . ': ' . $name; // include qid in downloads (so businesses can identify their customers) */
+  
+/*   $reallyToMe = ($toMe xor $toyou < 0); */
+/*   $banking = ($type == TX_BANK); */
 
   $csvRow = [];
   
@@ -90,6 +105,31 @@ function doRow(&$rows, $tx, &$tot, $classes, $download = FALSE, $agents = FALSE,
     //  $myx = r\x($tx, $mya);
 
     if ($download and $mya->co) $name = r\acct($uid)->mainQid . ': ' . $name; // include qid in downloads (so businesses can identify their customers)
+
+      /**** from develop branch ****/
+  /*     $url = "$url0&xid=" . ($banking ? 'b' : '') . $xid; */
+  /* $button1 = ($mya->can(@$reallyToMe ? B_SELL : B_BUY) and !$banking) ? "<a href=\"$url&do=edit\" title=\"Edit Transaction\"><img src=\"$rUrl/images/icons/edit.png\" width=16 height=16 border=0 /></a>" : ''; */
+  /* $title = t('Reverse'); */
+
+  /* $button2 = ((($mya->can(@$reallyToMe ? B_BUY : B_SELL) and !$banking) or $mya->superAdmin) and !@$data['undoneBy']) ? w\btn("$url&do=no", ' X ', 'primary', 'xs', compact('title')) : ''; // (admin not cAdmin) */
+  /* $button3 = (!$byMe and $disputed) ? w\button('OK', "$url&do=ok", r\MyX::msg0($tx, 'theyDid')) : ''; // w\txAct($toMe, $byMe, $reallyToMe) */
+
+  /* $buttons = "<div class=\"col-xs-6\">$button1</div><div class=\"col-xs-6\">$button2</div>"; */
+  /* $date = strftime($download ? '%Y-%m-%d' : '%m/%d/%y', $created); // %d-%b */
+  /* if (strlen($tid0 = $tid) > 4) $tid = "<small>$tid</small>"; */
+
+  /* if (!$mya->cttyRewardy) list ($reward, $run) = [$run, $run - $amt]; */
+  /* foreach (ray('amt fromyou fromyou0 toyou reward') as $k) $$k = $$k ? number_format($$k, 2) : R_NONE; */
+  /* if ($mya->cttyRewardy) if (strpos($reward, '-') === FALSE) $reward = '+' . $reward; */
+  /* if ($change and !$download) $amt = w\popHelp($amt, t('Rounded up from %fromyou0', compact('fromyou0'))); */
+  /* $row = array($tid, $date, @$name, $description, $amt, $fromyou, $toyou, $reward, $net, $buttons); */
+
+  /* if (@$agents) $row[] = (!@$agent or ($mya->isMe($agent) and $mya->co) or $agent < 0) ? R_NONE  */
+  /* : ($download ? r\qid($agent) : substr(r\qid($agent), 3)); */
+  /* if (@$channels and $txChannels = ray(TX_CHANNELS)) $row[] = $txChannels[$channel]; */
+  /* if (@$boxes) $row[] = db\get('boxnum', 'r_boxes', 'id=:tx_box', compact('tx_box')); */
+  /* addRow($tot, array_combine($classes, $row), $tx, $change, $csvRow); */
+  /* if ($download) return u\csv($csvRow); // not STDOUT */
   
     $banking = ($type == TX_BANK);
   
@@ -184,14 +224,6 @@ function txFields($download = FALSE, $agents = FALSE, $channels = FALSE, $boxes 
 function addRow(&$tot, $row, $tx, $change, &$csvRow = '') {
   extract(just('xid type toMe amount', $tx));
 
-  /* if ($type == TX_BANK) { */
-  /*   $frombank = $amount; */
-  /*   $row['fromyou'] = $row['toyou'] = ''; */
-  /* } else { */
-  /*   $frombank = ''; */
-  /*   if (in($type, TX_REWARDS)) $row['fromyou'] = $row['toyou'] = ''; */
-  /* } */
-  
   unset($row['buttons']); // don't download status or buttons
   /* u\splice($row, 'amount', 0, compact('frombank')); // insert a bank row */
 

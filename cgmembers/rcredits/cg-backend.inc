@@ -194,7 +194,9 @@ function memberRay($myid, $aid, $coOnly = FALSE) {
   if (!$a = r\acct($myid, $aid)) return [];
 //  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : "state=$a->state OR community=$a->community OR :IS_CO");
   $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : "(:NEIGHBOR_QUERY<:NEIGHBOR_RMAX OR community=$a->community OR :IS_CO)");
-  return db\col('fullName', 'users', ":IS_OK uid<>:myid AND $where ORDER BY fullName", ray('myid lat lon', $myid, $a->latitude, $a->longitude));
+  $subs = compact('myid');
+  if (!$coOnly and !$a->admin) $subs += ray('lat lon', $a->latitude, $a->longitude);
+  return db\col('fullName', 'users', ":IS_OK AND uid<>:myid AND $where ORDER BY fullName", $subs);
 }
 
 /**
@@ -891,7 +893,7 @@ function deleteCell($number) {
  * Figure out who the user meant. Only OK people in the user's community are eligible (except admin sees all).
  *
  * @param string $who: how the user referred to the trader (name, phone, email, uid, or temporary code)
- * @param int $myid: current user's account record ID
+ * @param int $mya: current user's account
  * @param bool $paying: <we're preparing to pay this person> (in which case the person has to have an active account)
  * @param string $self_message: index to error message for identifying oneself
  *   If true, the other trader will be created only if specified by email or phone
@@ -899,20 +901,26 @@ function deleteCell($number) {
  *   the other trader's acct
  *   array(error index, array of substitutions, array of possible fullNames (0 or more) indexed by uid)
  */
-function identify($who, $myid, $paying, $self_message = 'no self-trading') {
+function identify($who, $mya, $paying, $self_message = 'no self-trading') {
+  if (!$mya) return ['search forbidden', [], []];
+  $myid = $mya->id;
   $who = trim($who);
   $subs = compact('who');
-  if (!$mya = r\acct($myid)) return ['search forbidden', [], []];
   if ($phone = u\fmtPhone($who, '+n')) {
     $who = $phone; $cphone = u\cry('P', $phone);
   } else $cphone = '-';
   
   if (!$short = u\shortName(" $who ", '%')) $short = '-'; // abbreviations must not be null or zeroes
   $cmail = strpos($who, '@') ? u\cry('P', strtolower($who)) : '-';
+  $subs = compact(ray('who short cphone cmail'));
 
-  $where = '(name LIKE :short OR :who=fullName OR (!:IS_NOSEARCH AND (:cphone=phone OR :cmail=email))) AND ';
-  $where .= $mya->admin ? '1' : "(:IS_CO OR :NEIGHBOR_QUERY<:NEIGHBOR_RMAX)"; // restrict to nearby
+  $where = '(name LIKE :short OR :who=fullName OR (!:IS_NOSEARCH AND (:cphone=phone OR :cmail=email)))';
   if ($paying) $where .= ' AND :IS_OK';
+  if (!$mya->admin) {
+    $where .= " AND (:IS_CO OR :NEIGHBOR_QUERY<:NEIGHBOR_RMAX)"; // restrict to nearby
+    list ($lat, $lon) = $mya ? [$mya->latitude ?: 0, $mya->longitude ?: 0] : [0, 0]; // avoid NULL (PHP bug?)
+    $subs += compact(ray('lat lon'));
+  }
   
   $sql = <<<EOF
     SELECT DISTINCT uid,fullName
@@ -921,10 +929,6 @@ function identify($who, $myid, $paying, $self_message = 'no self-trading') {
     ORDER BY fullName
 EOF;
 
-// LEFT JOIN r_boxes s ON u.uid = s.uid ... OR :who=s.code (search for cell not allowed if it isn't the account's primary phone)
-
-  list ($lat, $lon) = $mya ? [$mya->latitude ?: 0, $mya->longitude ?: 0] : [0, 0]; // avoid NULL (PHP bug?)
-  $subs = compact(ray('who short cphone cmail lat lon'));
   $result = db\q($sql, $subs)->fetchAllKeyed(0, 1);
   
   // QID? if not, maybe first word is a QID if this is from a list showing QID and fullName
@@ -952,9 +956,6 @@ function exception_error_handler($severity, $message, $file, $line) {
  */
 function creditInfo($uids, $asof = null) {
   ///  debug("creditInfo(" . print_r($uids, true) . ", $asof)");
-  /* set_error_handler("CG\\backend\\exception_error_handler"); */
-  /* t\output("uids is next:"); */
-  /* t\output($uids); */
   u\EXPECT(is_array($uids), 'bad call to creditInfo');
   global $mya;
   
@@ -963,8 +964,8 @@ function creditInfo($uids, $asof = null) {
   /* $mday1 = u\monthDay1($asof); // start of relevant month, for partial (not-yet-given) roundups calculation */
   /* if ($asof == u\plusMonths(1, $mday1) - 1) $mday1 = $asof + 1; // for asof the end of month, there are no partRounds */
   $subs = compact(ray('uids asof'));
-  /* $isPayer = 't.payer IN (:uid, :jid)'; */
-  /* $isPayee = 't.payee IN (:uid, :jid)'; // account can be both payer and payee, if joint account */
+  $isPayer = '(t.payer IN (:uids) AND e.entryType=:ENTRY_PAYER)'; 
+  $isPayee = '(t.payee IN (:uids) AND e.entryType=:ENTRY_PAYEE)'; // account can be both payer and payee, if joint account
   /* $signedAmt = "IF($isPayer, -amount, amount)"; */
 //    SUM(IF(t.type IN (:TX_REWARDS), amount, 0)) AS rewards,
   

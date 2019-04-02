@@ -1393,6 +1393,7 @@ function in($what, $list) {
 }
 
 function between($what, $low, $high) {return ($low <= $what and $what <= $high);}
+function nn(&$a, $else = '') {return (!isset($a) or is_null($a)) ? $else : $a;} // "not null"
 
 /**
  * Formats a string for HTML display by replacing variable placeholders.

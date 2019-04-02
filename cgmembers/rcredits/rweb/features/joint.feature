@@ -156,8 +156,8 @@ Resume.
   | .ZZA | .ZZB  | joint      |        0 |       0 |    0 |
   | .ZZB | .ZZA  | joint      |        0 |       0 |    0 |
   And transactions: 
-  | xid | created   | type     | amount | from | to   | purpose |*
-  |   4 | %today-1d | transfer |    100 | .ZZC | .ZZA | labor   |
+  | xid | created   | amount | from | to   | purpose |*
+  |   4 | %today-1d |    100 | .ZZC | .ZZA | labor   |
   Then balances:
   | uid  | balance |*
   | .ZZA |     100 |
