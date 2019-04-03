@@ -106,7 +106,7 @@ EOF;
    * @param assoc $info: all of the data for this entry (includes transaction data)
    */
   public function processEntry($info) {
-    if (!in_array($info['uid'], $this->uids)) return;
+    if (in_array($info['uid'], $this->uids)) return;
     extract(just('name description amount', $info));
     $amount = u\fmtAmt(- $amount, '');
     $buttons = '';

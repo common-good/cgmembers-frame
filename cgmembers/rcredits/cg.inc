@@ -1214,7 +1214,7 @@ X;
   $sql = <<< X
     SELECT COUNT(DISTINCT payerE.uid) as aAccts
     FROM r_entries payerE JOIN $accounts u USING (uid) JOIN r_tx_hdrs t
-    WHERE payerE.entryType = ENTRY_PAYER AND NOT u.:IS_CO AND $cttyCrit AND $creCrit AND t.created>$recent
+    WHERE payerE.entryType = :ENTRY_PAYER AND NOT u.:IS_CO AND $cttyCrit AND $creCrit AND t.created>$recent
 X;
   $res += db\q($sql, $subs)->fetchAssoc() ?: [];
 //    WHERE NOT u.:IS_CO AND $cttyCrit AND $creCrit AND $recent
@@ -1226,7 +1226,7 @@ X;
       SELECT AVG(conx) as $k
       FROM ( SELECT me, COUNT(DISTINCT other) AS conx, SUM(isRecentPayer) AS recentPays, u2.community
              FROM ( SELECT u0.uid AS me,
-                           IF (e0.amount < 0 AND t0.created>$recent, 1, 0) as isRecentPayer,
+                           IF (e0.amount < 0 AND t0.$recent, 1, 0) as isRecentPayer,
                            e2.uid AS other 
                     FROM users u0
                          JOIN r_entries e0 USING (uid)
@@ -1250,10 +1250,10 @@ X;
       SUM(crumbs0) * $monthFactor AS crumbs
     FROM (
           SELECT u.uid, COUNT(DISTINCT payee.uid) AS payees0,
-          IF (payee.uid=:CG_ROUNDUPS_UID, amount, 0) AS roundups0,
-          IF (payee.uid=:CG_CRUMBS_UID, amount, 0) AS crumbs0
+          IF (payee.uid=:CG_ROUNDUPS_UID, payee.amount, 0) AS roundups0,
+          IF (payee.uid=:CG_CRUMBS_UID, payee.amount, 0) AS crumbs0
       FROM users u LEFT OUTER JOIN r_entries payer USING(uid) JOIN r_tx_hdrs t USING(xid) JOIN r_entries payee USING(xid)
-      WHERE payer.entryType=:ENTRY_PAYER u.:IS_OK AND t.created>$recent AND u.$nonCtty AND $cttyCrit
+      WHERE payer.entryType=:ENTRY_PAYER AND u.:IS_OK AND t.$recent AND u.$nonCtty AND $cttyCrit
     ) x LIMIT 1
 X;
     $res += db\q($sql, $subs)->fetchAssoc() ?: [];
@@ -1263,7 +1263,7 @@ X;
     SELECT MEDIAN(ABS(payee.amount)) OVER () AS basket
     FROM r_tx_hdrs t JOIN r_entries payer USING(xid) JOIN r_entries payee USING(xid)
          JOIN users u ON u.uid=payer.uid JOIN users u2 ON u2.uid=payee.uid
-    WHERE payer.entryType = :ENTRY_PAYER AND payee.entryType = :ENTRY_PAYEE AND t.created>$recent AND $cttysCrit
+    WHERE payer.entryType = :ENTRY_PAYER AND payee.entryType = :ENTRY_PAYEE AND t.$recent AND $cttysCrit
 X;
     $res += db\q($sql, $subs)->fetchAssoc() ?: [];
     
@@ -1285,8 +1285,8 @@ X;
   
   if (@$created0 and $created < strtotime('today')) { // redoing stats for the past, so figure bals, floors, and topN the hard way
     $recently = strtotime(-FLOOR_DAYS . ' days', $created); // six months ago
-    $isPayer = '(payer IN (uid, jid) AND payer<>0 AND e.entryType=ENTRY_PAYER)';
-    $isPayee = '(payee IN (uid, jid) AND e.entryType=ENTRY_PAYEE)';
+    $isPayer = '(payer IN (uid, jid) AND payer<>0 AND e.entryType=:ENTRY_PAYER)';
+    $isPayee = '(payee IN (uid, jid) AND e.entryType=:ENTRY_PAYEE)';
 
     $pastTxs = <<< X
       (SELECT uid,

@@ -256,6 +256,7 @@ EOF;
    * @return assoc array of args
    */
   public function reportArgs($me, $getMyBalance = FALSE, $shortfall = 0) {
+    debug("reportArgs($me->id, $getMyBalance, $shortfall)");
     global $channel;
     $tx = $this;
 
@@ -277,22 +278,24 @@ EOF;
     $why = ray(R_WHYS)[$tx->goods];
     if ($getMyBalance and ($me->can(B_BUY))) { $balance = u\fmtAmt($me->avail(FOR_GOODS)); }
     else { $balance = null; }
-    
+
+    debug("actor: $this->actorId, payer: $payerE->uid, payee: $payeeE->uid");
+    debug(compact(ray('amount toMe reverses')));
     if ($amount < 0) {
       $amount = 0-$amount;
       $tofrom = t('to');
-      $did = $toMe ? (($this->goods == FOR_GOODS) ? t('refunded') : t('credited')) : t('charged');
+      /* $did = $toMe ? (($this->goods == FOR_GOODS) ? t('refunded') : t('credited')) : t('charged'); */
     } else {
-      $did = $toMe ? ($reverses ? t('re-charged') : t('charged'))
-        : (($this->channel == TX_POS and $me->co) ? t('credited') : t('paid'));
+      /* $did = $toMe ? ($reverses ? t('re-charged') : t('charged')) */
+      /*   : (($this->channel == TX_POS and $me->co) ? t('credited') : t('paid')); */
     }
 
     $balance = ($getMyBalance and $me->can(B_BUY)) ? $me->avail(FOR_GOODS) : 0;
     
-    return ray('created created0 xid role why payerPurpose payeePurpose toMe amount tofrom balance otherUid myName otherName short success did',  // . ' role'
+    return ray('created created0 xid role why payerPurpose payeePurpose toMe amount tofrom balance otherUid myName otherName short success',  // . ' role'
                u\fmtDate($tx->created), $tx->created, $tx->xid, $role, $why, $payerE->description,
                $payeeE->description, $toMe, u\fmtAmt($amount), $tofrom, $balance, $other->id, $me->fullName,
-               $other->fullName, u\fmtAmt($shortfall), TRUE, $did);
+               $other->fullName, u\fmtAmt($shortfall), TRUE);
   }
 
   /**

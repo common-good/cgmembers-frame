@@ -8,13 +8,15 @@ Setup:
   | uid  | fullName | minimum | achMin | floor | risks   | flags   |*
   | .ZZA | Abe One  |    -100 |     20 |    10 | hasBank | ok,confirmed,refill  |
   | .ZZB | Bea Two  |     100 |     20 |    10 | hasBank | ok,confirmed,cashoutW |
-  
+
+Skip temporarily.
 Scenario: A member crawls out of debt
   When cron runs "everyWeek"
   Then balances:
   | uid  | minimum |*
   | .ZZA |     -80 |
-  
+Resume.
+
 # Scenario: A member builds up savings
 #   Given members have:
 #   | uid  | minimum |*

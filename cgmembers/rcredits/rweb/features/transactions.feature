@@ -110,10 +110,11 @@ Scenario: A member looks at transactions with roundups
 #  | Credit Line+ | + |          |          |
   | End          |   | 1,600.00 | %dmy     |
   And with:
-  |~tid | Date    | Name       | Purpose   | Amount  |  Balance |~do |
-  | 51  | %mdy    | Corner Pub | sundries  |  -50.00 | 1,600.00 | X  |
-  | 29  | %mdy-6d | Bea Two    | cash V    | -100.00 | 1,650.00 | X  |
-  | 28  | %mdy-1w | Corner Pub | this Q    | -120.00 | 1,750.00 | X  |
+  |~tid | Date    | Name              | Purpose          | Amount  |  Balance |~do |
+  | 51  | %mdy    | Corner Pub        | sundries         |  -49.95 | 1,600.00 |    |
+  |     |         | Roundup Donations | roundup donation |   -0.05 |          |    | 
+  | 29  | %mdy-6d | Bea Two           | cash V           | -100.00 | 1,650.00 |    |
+  | 28  | %mdy-1w | Corner Pub        | this Q           | -120.00 | 1,750.00 |    |
   
 #Scenario: Transactions with other states show up properly
 #  Given transactions:

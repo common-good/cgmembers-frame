@@ -311,7 +311,7 @@ function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
     
     $message = t($message, $info);
     
-    sendNotifications(true, $newTx, 0);
+    sendNotifications('undo', $newTx, 0);
     return [$message, $info];
   }
 }
@@ -380,11 +380,12 @@ function reverse($xid) {
  *         [FALSE, explanation] if the payment failed
  */
 function payInvoice($nvid) {
-  /// debug("payInvoice($nvid)");
+  debug("payInvoice($nvid)");
   
   u\EXPECT('int', $nvid);
   $msg = r\badUnpaidInv($nvid, $inv);
   if ($msg) return [FALSE, $msg];
+  debug($inv);
   extract(u\exactly('payer payee amount goods purpose data flags', $inv, [null, null, 0.0, FOR_GOODS, null, '', 0]));
   $payerId = $payer;
   $payeeId = $payee;
@@ -399,7 +400,7 @@ function payInvoice($nvid) {
 	if ($flags) foreach (ray('gift recurs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
 
   list ($index, $subs) = be\transfer('invoice payment', $payer, $payee, $amount, $purpose, $goods, $extra);
-
+  debug(compact(ray('index subs')));
   $ok = u\arrayGet($subs, 'success', FALSE);
   if ($ok) {
     db\update('r_invoices', ray('status nvid', $subs['xid'], $nvid), 'nvid');
@@ -569,7 +570,7 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
               new r\TxEntry(['entryType' => $loserType, 'amount' => 0-abs($amount), 'uid' => $loser->id, 'agentUid' => $loser->agentId, 'description' => $loserFor, 'acctTid' => $loserTid])];
 
   // Apply coupon
-  if ($amount > 0 AND ($goods != TX_USD)) {
+  if ($amount > 0 AND ($goods != FOR_USD)) {
     list($rebate, $couponEntries) = handleCoupon($loser, $gainer, $amount, $loserTid, $gainerTid);
     $entries = array_merge($entries, $couponEntries);
   } else {
@@ -631,43 +632,91 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
   // notify other party by email about any completed transaction
   foreach ([$actor, $other] as $a) if (!$a->confirmed) $a->setBit(B_CONFIRMED);
 
-  sendNotifications(false, $tx, $shortfall);
+  return sendNotifications($type, $tx, $shortfall);
 
-/* //  if (isPRODUCTION) r\tellAdmin('tx', compact('msg') + $args); // a backup record of all txs (until the backup server works) */
-  $msg = 'report tx';
-  $args = $tx->reportArgs($actor, TRUE, $shortfall);
-  $retVal = r\txRet($msg, $args + compact('msg'));
-  return $retVal;
+/* /\* //  if (isPRODUCTION) r\tellAdmin('tx', compact('msg') + $args); // a backup record of all txs (until the backup server works) *\/ */
+/*   $msg = 'report tx'; */
+/*   $args = $tx->reportArgs($actor, TRUE, $shortfall); */
+/*   debug(compact(ray('msg args'))); */
+/*   $retVal = r\txRet($msg, $args + compact('msg')); */
+/*   return $retVal; */
 }
 
 // $reversing=1, actor is 553, $tx = $80 from 553 to 551
 // $byme = true; $tome = false
-function sendNotifications($reversing, $tx, $shortfall) {
-
-  ///  debug("sendNotifications($reversing, " . print_r($tx,true) . ", $shortfall");
+function sendNotifications($type, $tx, $shortfall) {
+  u\EXPECT(compact(ray('type tx shortfall')), 'string tx int|float');
+  debug("sendNotifications($type, " . print_r($tx,true) . ", $shortfall");
   
-  global $mya;
-  $byMe = true; //$mya->isMe($tx->actorId);
+  /* global $mya; */
+  /* $mya = r\acct(); */
+  /* print_r("mya=" . print_r($mya, true)); */
+  /* $byMe = $mya->isMe($tx->actorId); */
   $toMe = $tx->actorAmount > 0;
-  if ($reversing) {
-    /*if ($byMe and !$toMe and $wasInvoice) $original = 'invoice-payment';
-      else*/
+
+  switch ($type) {
+  case 'charge':
+  case 'draw':
+    if (!$toMe) {   // I made a payment to other
+      if ($tx->goods == FOR_GOODS) {
+        $notice = 'new refund';
+        $did = 'refunded';
+      } else {  // I made a payment to other
+        $notice = 'new payment';
+        $did = 'credited';
+      }
+    } else {
+      $notice = 'new charge';  // I charged other
+      $did = 'charged';
+    }
+    break;
+  /* case 'transfer': */
+  /*   $taking = false; */
+  /*   if ($byMe and !$toMe) { */
+  /*     if ($tx->goods == FOR_GOODS) $notice = 'new refund';  // I made a payment to other */
+  /*     else $notice = 'new payment';  // I made a payment to other */
+  /*   } */
+  /*   elseif ($byMe and $toMe) $notice = 'new charge';  // I charged other */
+  /*   elseif (!$byMe and $toMe) $notice = 'new payment';  // Other made a payment to me */
+  /*   else /\*!byMe and !$toMe*\/ $notice = 'new charge'; // Other charged me */
+  /*   break; */
+  case 'payment':
+    if (!$toMe) {
+      $notice = 'new payment';  // I made a payment to other
+      $did = 'paid';
+    } else {
+      $notice = 'new charge';  // I charged other
+      $did = 'charged';
+    }
+    break;
+  case 'invoice payment':
+    if (!$toMe) {
+      $notice = 'new payment';  // I made a payment to other
+      $did = 'paid';
+    } else {
+      $notice = 'new charge';  // I charged other -- I don't think this should happen.  JVER
+      $did = 'charged';
+    }
+    break;
+  case 'undo':
+    $mya = r\acct();
+    $byMe = $mya->isMe($tx->actorId);
     if ($byMe and !$toMe) {
       $notice = ($tx->goods == FOR_GOODS) ? 'new refund' : 'new payment';
-    } // I made a payment, reversing requires invoice
-    elseif ($byMe and $toMe) $notice = 'new charge';  // I charged other, reversing is refunding
-    elseif (!$byMe and $toMe) $notice = 'payment';  // Other made payment to me, reverse is refunding
-    else /*!byMe and !$toMe*/ $notice = 'dispute';  // Other charged me, reversing requires dispute
-  } else {
-    /*if ($byMe and !$toMe and $wasInvoice) $original = 'invoice-payment';
-      else*/
-    if ($byMe and !$toMe) {
-      if ($tx->goods == FOR_GOODS) $notice = 'new refund';  // I made a payment to other
-      else $notice = 'new payment';  // I made a payment to other
+      $did = ($tx->goods == FOR_GOODS) ? 'refunded' : 'credited';
+    } elseif ($byMe and $toMe) {
+      $notice = 'new charge';  // I charged other, reversing is refunding
+      $did = 'charged';
+    } elseif (!$byMe and $toMe) {
+      $notice = 'payment';  // Other made payment to me, reverse is refunding
+      $did = 'paid';
+    } else { /*!byMe and !$toMe*/
+      $notice = 'dispute';  // Other charged me, reversing requires dispute
+      $did = 'disputed';
     }
-    elseif ($byMe and $toMe) $notice = 'new charge';  // I charged other
-    elseif (!$byMe and $toMe) $notice = 'new payment';  // Other made a payment to me
-    else /*!byMe and !$toMe*/ $notice = 'new charge'; // Other charged me
+    break;
+  default:
+    u\EXPECT(false, "type must not be '$type'.");
   }
   if ($notice == 'charge' and $tx->goods == FOR_USD) $notice = 'cash out';
 
@@ -679,6 +728,7 @@ function sendNotifications($reversing, $tx, $shortfall) {
   }
   r\notify($tx->otherId, $notice, $args);
   $msg = 'report tx';
+  return r\txRet($msg, $tx->reportArgs($tx->actor, TRUE, $shortfall) + compact(ray('msg did')));
 }
 
 /**
@@ -1151,9 +1201,9 @@ function completeUsdTx($a, $txid, $amount, $automatic, $completed = null) {
     $tx = new r\Tx(['goods' => FOR_USD, 'actorId' => $payeeId, 'actorAgentId' => $payeeId, 'flags' => 0, 'channel' => $channel,
                     'risk' => $risk, 'risks' => $risks, 'created' => $completed]);
     $tx->addEntry(new r\TxEntry(['entryType' => ENTRY_PAYER, 'amount' => 0-$amount, 'uid' => $bankId, 'agentUid' => $bankId,
-                                 'description' => ($amount > 0) ? t('from bank') : t('to bank')]));
+                                 'description' => ($amount > 0) ? t('transfer to CG') : t('transfer in')]));
     $tx->addEntry(new r\TxEntry(['entryType' => ENTRY_PAYEE, 'amount' => $amount, 'uid' => $payeeId, 'agentUid' => $payeeId,
-                                 'description' => $amount > 0 ? t('from bank') : t('to bank')]));
+                                 'description' => $amount < 0 ? t('transfer to CG') : t('transfer in')]));
     $xid = $tx->insert();
     if (!$xid) {
       $DBTX.rollback();

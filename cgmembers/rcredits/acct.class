@@ -35,6 +35,7 @@ class Acct {
    *   (2) a flat array of user table IDs: [uid, agent] where uid is the main account and agent is the agent's id
    */
   function __construct($info = []) {
+    /* debug($info); */
     $a = $this;
     if (!is_numeric(key($info))) { // u\isAssoc($info)) { // specifying field values
       $a->createNew($info); // create new db record
@@ -55,6 +56,10 @@ class Acct {
     extract(u\exactly('email fullName legalName flags state zip created country number uid region', $info,
                       [ strtolower(u\randomString(10, 'word')) . '@' . EMAILX, null, null, 0, null, null, r\rTime(), US_COUNTRY_ID, null, null, null ]));
     extract(u\exactly('community', $info, r\communityUid($zip)));
+    if ($state == 'NH') {
+      print_r("$zip -> $community\n");
+      die('here');
+    }
     extract(u\exactly('login', $info, $created));
     extract(u\exactly('access', $info, $login));
     extract(u\exactly('phone', $info, $number));
@@ -1368,6 +1373,7 @@ EOF;
     if ($amount0 > 0) $msg .= '|bank tx number' . ($completed ? '|available now' : '');
     $action = $amount0 < 0 ? t('deposit to') : t('draw from');
     $msg = tr($msg, ray('action amount checkNum', $action, u\fmtAmt(abs(@$amount0)), $txid));
+    if (empty($why)) $why = '';
     r\notify($a->id, $why = tr($msg, compact('why')));
 
     return $txid;

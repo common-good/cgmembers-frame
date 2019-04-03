@@ -190,6 +190,11 @@ function formSignup_validate($form, &$sta) {
 }
 
 function formSignup_submit($form, &$sta) {
+  /* print_r("formSignup_submit("); */
+  /* print_r($form); */
+  /* print_r($sta); */
+  /* print_r(")"); */
+  /* die('here'); */
   global $mya;
   $dbFields = 'fullName legalName email flags phone federalId dob pin country zip address city state postalAddr helper iCode notes wants calling signupCo tenure source';
   extract(just('myid confirmed acctType args ats owns partner customer source2 ' . $dbFields, $sta['input']));
@@ -208,13 +213,18 @@ function formSignup_submit($form, &$sta) {
   if ($acctType != CO_PERSONAL) $info += ray('coType', $acctType);
   
 //  $DBTX = \db_transaction();
-
   if (@$myid) {
+    /* print_r($info); */
+    /* die('there'); */
+
     $a = r\acct($myid);
     if ($a->jid) $info['name'] = r\uniqueName($fullName, $info); // make sure name reflects partner name
     $a->update($info);
     $name = $a->name;
   } else {
+    /* print_r($info); */
+    /* die('here'); */
+    /* debug($info); */
     if (!$a = new r\Acct($info)) {unset($DBTX); return say('cannot create account', 'zot');}
     list ($myid, $name) = [$a->id, $a->name];
   }

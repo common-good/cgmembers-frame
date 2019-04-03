@@ -90,7 +90,6 @@ function members($list) {return t\members($list);}
  *     TEST monthly Setup
  *     TEST recache Setup
  *     TEST recurs Setup
- *     TEST weekly AMemberCrawlsOutOfDebt
  *     TEST weekly AMemberCashesOutAutomatically
  */
 function balances($list) {return t\balances($list);}
@@ -589,7 +588,6 @@ function riskThresholdPercentIs($pct) {
  *     MAKE tickle ANonmemberHasAcceptedTheInvitation
  *     MAKE tickle ANonmemberHasAcceptedAnInvitationFromSomeoneElseInstead
  *     MAKE trust WeCalculateTrust
- *     MAKE weekly AMemberCrawlsOutOfDebt
  *     MAKE weekly AMemberCashesOutAutomatically
  */
 function cronRuns($op) {return t\cronRuns($op);}
