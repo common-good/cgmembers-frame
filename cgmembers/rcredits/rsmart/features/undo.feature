@@ -35,7 +35,7 @@ Setup:
   | .ZZC | .ZZB  |   2 | refund     |
   | .ZZC | .ZZD  |   3 | read       |
   | .ZZF | .ZZE  |   1 | sell       |
-  And balances:
+  Then balances:
   | uid  | balance |*
   | ctty |       0 |
   | .ZZA |       0 |

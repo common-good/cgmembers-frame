@@ -104,12 +104,12 @@ Skip no inflation at present
 #  | 17 | %today | inflation |      0 | %(round(%R_INFLATION_RATE *8.6, 2)) | ctty | .ZZC | %IAOY credit reserve  |
 Resume
 
-Skip roundups - they're handled as they occur now
-# roundups (creation date is last second of previous month)
-  And transactions:
-  | xid | created | amount | from | to  | purpose       | flags         |*
-  | 12  |       ? |   1.00 | .ZZA | cgf | roundups desc | gift,roundups |
-Resume
+# Skip roundups - they're handled as they occur now
+# # roundups (creation date is last second of previous month)
+#   And transactions:
+#   | xid | created | amount | from | to  | purpose       | flags         |*
+#   | 12  |       ? |   1.00 | .ZZA | cgf | roundups desc | gift,roundups |
+# Resume
 
 # crumbs (creation date is last second of previous month)
   Then transactions: 

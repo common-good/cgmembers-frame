@@ -94,54 +94,55 @@ Setup:
   | .ZZH |     1 |
   | .ZZI |     1 |
 
-# Scenario: We calculate risks
-#   When cron runs "acctRisk"
-#   Then members have:
-#   | uid  | risks |*
-#   | .ZZA | adminOk,trusted,geography,badConx,moreOut,big7Week |
-#   | .ZZB | trusted,moves,rents,moreIn,moreOut |
-# #  | .ZZC | cashCo,homeCo,miser,bigDay,bigWeek,big7Week |
-# # time of day makes a difference
-#   | .ZZC | cashCo,homeCo,miser,bigDay |
-#   | .ZZD | trusted,hasBank,miser |
-#   | .ZZE | new,shady,poBox,moreIn |
-#   | .ZZF | bigDay,bigWeek |
-#   | .ZZG | new,moves,badConx,addrOff |
-#   | .ZZH | moves,ssnOff |
-#   | .ZZI | new,moves,fishy |
-# # Do not specify exact risk because minor tweaks in the calculations cause major changes
+Scenario: We calculate risks
+  When cron runs "acctRisk"
+  Then members have:
+  | uid  | risks |*
+  | .ZZA | adminOk,trusted,geography,badConx,moreOut,big7Week |
+  | .ZZB | trusted,moves,rents,moreIn,moreOut |
+#  | .ZZC | cashCo,homeCo,miser,bigDay,bigWeek,big7Week |
+# time of day makes a difference
+  | .ZZC | cashCo,homeCo,miser,bigDay |
+  | .ZZD | trusted,hasBank,miser |
+  | .ZZE | new,shady,poBox,moreIn |
+  | .ZZF | bigDay,bigWeek |
+  | .ZZG | new,moves,badConx,addrOff |
+  | .ZZH | moves,ssnOff |
+  | .ZZI | new,moves,fishy |
+# Do not specify exact risk because minor tweaks in the calculations cause major changes
 
-#   Given riskThresholdPercent is "10"
-#   When cron runs "acctRiskFinish"
-#   Then riskThresholds:
-#   | Day | Week | 7Week | Year |*
-# #  | 621 |  621 |  1270 | 1570 |
-# # time of day makes a difference
-#   | 330 |  340 |   635 |  785 |
+  Given riskThresholdPercent is "10"
+  When cron runs "acctRiskFinish"
+  Then riskThresholds:
+  | Day | Week | 7Week | Year |*
+#  | 621 |  621 |  1270 | 1570 |
+# time of day makes a difference
+  | 330 |  340 |   635 |  785 |
+# | 1100 | 1100 | 1221 | 1221 | is what I got most recently
 
-#   When cron runs "txRisk"
-#   Then transactions:
-#   | xid | risks |*
-#   |   1 | |
-#   |   2 | |
-#   |   3 | |
-#   |   4 | exchange,p2p |
-#   |   5 | cashIn,inhouse,toSuspect,biggestFrom,biggestTo |
-#   |   6 | p2p,biggestTo |
-#   |   7 | cashOut,toSuspect,biggestFrom |
-#   |   8 | p2p,toSuspect,biggestTo,offline,firstOffline |
-#   |   9 | exchange,p2p,absent,invoiceless,bigFrom,bigTo |
-#   |  10 | inhouse,toSuspect,oftenFrom,oftenTo |
-#   |  11 | fromSuspect,biggestFrom,biggestTo,origins |
-#   |  12 | b2p,fromSuspect,toSuspect,absent,invoiceless,biggestTo,origins |
-#   |  13 | exchange,p2p,fromSuspect,toSuspect,absent,invoiceless,bigFrom,bigTo,suspectOut |
-#   |  14 | exchange,p2p,fromSuspect,toSuspect,absent,invoiceless,biggestFrom,suspectOut |
-#   When cron runs "achRisk"
-#   Then usd transfers:
-#   | txid | payee | risks |*
-#   |    1 |  .ZZA | |
-#   |    2 |  .ZZB | |
-#   |    3 |  .ZZC | |
-#   |    4 |  .ZZE | toSuspect |
-#   |    5 |  .ZZF | toBank,suspectOut |
-#   |    6 |  .ZZC | toBank,origins,suspectOut |
+  When cron runs "txRisk"
+  Then transactions:
+  | xid | risks |*
+  |   1 | |
+  |   2 | |
+  |   3 | |
+  |   4 | exchange,p2p |
+  |   5 | cashIn,inhouse,toSuspect,biggestFrom,biggestTo |
+  |   6 | p2p,biggestTo |
+  |   7 | cashOut,toSuspect,biggestFrom |
+  |   8 | p2p,toSuspect,biggestTo,offline,firstOffline |
+  |   9 | exchange,p2p,absent,invoiceless,bigFrom,bigTo |
+  |  10 | inhouse,toSuspect,oftenFrom,oftenTo |
+  |  11 | fromSuspect,biggestFrom,biggestTo,origins |
+  |  12 | b2p,fromSuspect,toSuspect,absent,invoiceless,biggestTo,origins |
+  |  13 | exchange,p2p,fromSuspect,toSuspect,absent,invoiceless,bigFrom,bigTo,suspectOut |
+  |  14 | exchange,p2p,fromSuspect,toSuspect,absent,invoiceless,biggestFrom,suspectOut |
+  When cron runs "achRisk"
+  Then usd transfers:
+  | txid | payee | risks |*
+  |    1 |  .ZZA | |
+  |    2 |  .ZZB | |
+  |    3 |  .ZZC | |
+  |    4 |  .ZZE | toSuspect |
+  |    5 |  .ZZF | toBank,suspectOut |
+  |    6 |  .ZZC | toBank,origins,suspectOut |

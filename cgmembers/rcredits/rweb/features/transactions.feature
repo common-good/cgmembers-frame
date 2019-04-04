@@ -29,13 +29,13 @@ Setup:
   | .ZZB |    2000 |
   | .ZZC |    3000 |
   Given transactions: 
-  | xid | created   | type     | amount | from | to   | purpose | taking | payerTid | payeeTid |*
-  |  14 | %today-5m | transfer |     10 | .ZZB | .ZZA | cash E  | 0      |       24 |       34 |
-  |  15 | %today-4m | transfer |   1100 | .ZZC | .ZZA | usd F   | 1      |       25 |       35 |
-  |  16 | %today-3m | transfer |    240 | .ZZA | .ZZB | what G  | 0      |       26 |       36 |
-  |  17 | %today-2w | transfer |     50 | .ZZB | .ZZC | cash P  | 0      |       27 |       37 |
-  |  18 | %today-1w | transfer |    120 | .ZZA | .ZZC | this Q  | 1      |       28 |       38 |
-  |  19 | %today-6d | transfer |    100 | .ZZA | .ZZB | cash V  | 0      |       29 |       39 |
+  | xid | created   | amount | from | to   | purpose | taking | payerTid | payeeTid |*
+  |  14 | %today-5m |     10 | .ZZB | .ZZA | cash E  | 0      |       24 |       34 |
+  |  15 | %today-4m |   1100 | .ZZC | .ZZA | usd F   | 1      |       25 |       35 |
+  |  16 | %today-3m |    240 | .ZZA | .ZZB | what G  | 0      |       26 |       36 |
+  |  17 | %today-2w |     50 | .ZZB | .ZZC | cash P  | 0      |       27 |       37 |
+  |  18 | %today-1w |    120 | .ZZA | .ZZC | this Q  | 1      |       28 |       38 |
+  |  19 | %today-6d |    100 | .ZZA | .ZZB | cash V  | 0      |       29 |       39 |
   Then balances:
   | uid  | balance |*
   | .ZZA |    1650 |

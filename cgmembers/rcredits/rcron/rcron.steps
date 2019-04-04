@@ -67,18 +67,18 @@ function members($list) {return t\members($list);}
 /**
  * balances: (ARG)
  *
- * in: TEST bank AMemberIsBarelyBelowTarget
- *     TEST bank AMemberHasANegativeBalance
- *     TEST bank AnUnbankedMemberBarelyBelowTargetDrawsOnAnotherAccount
- *     TEST bank AnUnbankedMemberBarelyBelowTargetCannotDrawOnAnotherAccount
- *     TEST bank AMemberIsAtTarget
- *     TEST bank AMemberIsWellBelowTarget
- *     TEST bank AMemberIsUnderTargetButAlreadyRequestedBarelyEnoughFundsFromTheBank
+ * in: MAKE bank AMemberIsBarelyBelowTarget
+ *     MAKE bank AMemberHasANegativeBalance
+ *     MAKE bank AnUnbankedMemberBarelyBelowTargetDrawsOnAnotherAccount
+ *     MAKE bank AnUnbankedMemberBarelyBelowTargetCannotDrawOnAnotherAccount
+ *     MAKE bank AMemberIsAtTarget
+ *     MAKE bank AMemberIsWellBelowTarget
+ *     MAKE bank AMemberIsUnderTargetButAlreadyRequestedBarelyEnoughFundsFromTheBank
  *     MAKE bank AMemberIsUnderTargetAndHasRequestedInsufficientFundsFromTheBank
- *     TEST bank AMemberWithZeroTargetHasBalanceBelowTarget
- *     TEST bank AnUnbankedMemberWithZeroTargetHasBalanceBelowTarget
- *     TEST bank AMemberHasADepositedButNotCompletedTransfer
- *     TEST bank AnAccountHasATargetButNoRefills
+ *     MAKE bank AMemberWithZeroTargetHasBalanceBelowTarget
+ *     MAKE bank AnUnbankedMemberWithZeroTargetHasBalanceBelowTarget
+ *     MAKE bank AMemberHasADepositedButNotCompletedTransfer
+ *     MAKE bank AnAccountHasATargetButNoRefills
  *     MAKE communitybits Setup
  *     MAKE gifts Setup
  *     TEST invoices Setup
@@ -86,10 +86,12 @@ function members($list) {return t\members($list);}
  *     TEST invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
  *     TEST joint Setup
  *     TEST joint AJointAccountNeedsRefilling
- *     TEST joint AJointAccountDoesNotNeedRefilling
+ *     MAKE joint AJointAccountDoesNotNeedRefilling
  *     TEST monthly Setup
  *     TEST recache Setup
- *     TEST recurs Setup
+ *     MAKE recurs Setup
+ *     TEST weekly AMemberCrawlsOutOfDebt
+ *     TEST weekly AMemberBuildsUpSavings
  *     TEST weekly AMemberCashesOutAutomatically
  */
 function balances($list) {return t\balances($list);}
@@ -111,6 +113,7 @@ function balances($list) {return t\balances($list);}
  *     TEST joint AJointAccountNeedsRefilling
  *     MAKE monthly Setup
  *     MAKE risk Setup
+ *     TEST risk WeCalculateRisks
  *     TEST weekly AMemberCashesOutAutomatically
  */
 function usdTransfers($tx) {return t\usdTransfers($tx);}
@@ -142,32 +145,20 @@ function relations($relations) {return t\relations($relations);}
 /**
  * transactions: (ARG)
  *
- * in: MAKE bank AMemberIsBarelyBelowTarget
- *     MAKE bank AMemberHasANegativeBalance
- *     BOTH bank AnUnbankedMemberBarelyBelowTargetDrawsOnAnotherAccount
- *     MAKE bank AnUnbankedMemberBarelyBelowTargetCannotDrawOnAnotherAccount
- *     MAKE bank AMemberIsAtTarget
- *     MAKE bank AMemberIsWellBelowTarget
- *     MAKE bank AMemberIsUnderTargetButAlreadyRequestedBarelyEnoughFundsFromTheBank
- *     MAKE bank AMemberWithZeroTargetHasBalanceBelowTarget
- *     MAKE bank AnUnbankedMemberWithZeroTargetHasBalanceBelowTarget
- *     MAKE bank AMemberHasADepositedButNotCompletedTransfer
- *     MAKE bank AnAccountHasATargetButNoRefills
- *     MAKE bank MembersBankAccountHasNotBeenVerified
+ * in: TEST bank AnUnbankedMemberBarelyBelowTargetDrawsOnAnotherAccount
  *     TEST gifts ABrandNewRecurringDonationCanBeCompleted
  *     BOTH gifts ASecondRecurringDonationCanBeCompleted
  *     TEST gifts ADonationInvoiceCanBeCompleted
  *     MAKE gifts ItsTimeToWarnAboutAnUpcomingAnnualDonation
  *     TEST invoices UnpaidInvoicesGetHandled
  *     MAKE joint AJointAccountNeedsRefilling
- *     MAKE joint AJointAccountDoesNotNeedRefilling
  *     MAKE monthly Setup
  *     TEST monthly InflationAdjustmentsRoundUpDonationsAndCrumbDonationsAreMade
  *     MAKE recache Setup
- *     MAKE recurs Setup
  *     MAKE recurs ARecurringDonationHappenedYesterday
  *     BOTH recurs ARecurringDonationHappenedLongEnoughAgoToRepeat
  *     MAKE risk Setup
+ *     TEST risk WeCalculateRisks
  *     MAKE weekly AMemberCashesOutAutomatically
  */
 function transactions($list) {return t\transactions($list);}
@@ -325,7 +316,9 @@ function weMessageMemberWithTopicAndSubs($id, $topic, $subs) {
  *     BOTH bank AMembersBankAccountGetsVerified
  *     MAKE communitybits CommunityBansSpendingBelowZero
  *     TEST risk Setup
+ *     TEST risk WeCalculateRisks
  *     TEST trust WeCalculateTrust
+ *     MAKE weekly AMemberBuildsUpSavings
  *     MAKE weekly AMemberCashesOutAutomatically
  */
 function membersHave($list) {return t\membersHave($list);}
@@ -520,6 +513,7 @@ function countIs($what, $count) {return t\count($what, $count);}
  * riskThresholds: (ARG)
  *
  * in: MAKE risk Setup
+ *     TEST risk WeCalculateRisks
  */
 function riskThresholds($ray) {
   global $testOnly;
@@ -536,7 +530,7 @@ function riskThresholds($ray) {
 /**
  * riskThresholdPercent is (ARG)
  *
- * in: 
+ * in: MAKE risk WeCalculateRisks
  */
 function riskThresholdPercentIs($pct) {
   global $testOnly; if ($testOnly) return FALSE;
@@ -581,6 +575,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE recurs ARecurringDonationHappenedYesterday
  *     MAKE recurs ARecurringDonationHappenedLongEnoughAgoToRepeat
  *     MAKE risk Setup
+ *     MAKE risk WeCalculateRisks
  *     MAKE tickle ANewbieHasNotTakenTheFirstStep
  *     MAKE tickle ANewbieHasTakenSomeStepsButNotAll
  *     MAKE tickle ANonmemberHasNotAcceptedTheInvitation
@@ -588,6 +583,8 @@ function riskThresholdPercentIs($pct) {
  *     MAKE tickle ANonmemberHasAcceptedTheInvitation
  *     MAKE tickle ANonmemberHasAcceptedAnInvitationFromSomeoneElseInstead
  *     MAKE trust WeCalculateTrust
+ *     MAKE weekly AMemberCrawlsOutOfDebt
+ *     MAKE weekly AMemberBuildsUpSavings
  *     MAKE weekly AMemberCashesOutAutomatically
  */
 function cronRuns($op) {return t\cronRuns($op);}

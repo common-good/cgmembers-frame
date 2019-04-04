@@ -16,7 +16,7 @@ use CG\Web as w;
 
 global $base_path;
 define('BASE_PATH', $base_path);
-define('T_BALANCE_FLDS', 'uid balance floor minimum');
+define('T_BALANCE_FLDS', 'uid balance floor minimum savingsAdd');
 define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account actorId actorAgentId agentUid payerId payeeId');
 
 /**
@@ -489,6 +489,8 @@ function count($what, $count) {
 	$what = $what == 'accounts' ? 'users' : "r_$what";
   if ($what == 'r_tx_hdrs') {
     return db\count($what, "xid > 0") == $count;
+  } else if ($what == 'r_txs') {
+    return db\count('r_tx_hdrs', "xid > 0") == $count;
   }
 	return (db\count($what) == $count);
 }

@@ -41,9 +41,6 @@ Scenario: A member requests a joint account
   | uid  | jid  | minimum |*
   | .ZZA | .ZZB |     150 |
   | .ZZB | .ZZA |       0 |
-  # And member ".ZZA" cache is ok
-  # And member ".ZZB" cache is ok
-  # cache is ok tests acct::cacheOk, to make sure cron doesn't muck with the cached amounts
   
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | goods      | purpose |*
@@ -51,11 +48,6 @@ Scenario: A member requests a joint account
   And member ".ZZB" confirms form "pay" with values:
   | op  | who        | amount | goods      | purpose |*
   | pay | Corner Pub |    300 | %FOR_GOODS | crud    |
-  # Then member ".ZZA" cache is ok
-  # And member ".ZZB" cache is ok
-  # Then member ".ZZA" cache is ok
-  # And member ".ZZB" cache is ok
-  # do it twice, to make sure cacheOk() doesn't screw it up
 
 Scenario: A joined account slave member requests a new minimum
   Given members have:
@@ -95,12 +87,11 @@ Scenario: A joined account member looks at transaction history and summary
   |  602 | .ZZA  |    400 | %today-2w | %today-2w |
   |  603 | .ZZA  |   -100 | %today    |         0 |
   And transactions: 
-  | xid | created   | type     | amount | from | to   | purpose |*
-  |   5 | %today-1m | transfer |    200 | .ZZA | .ZZD | favors  |
-  |   6 | %today-1w | transfer |    500 | .ZZA | .ZZB | usd     |
-  |   7 | %today-2d | transfer |     50 | .ZZD | .ZZB | cash    |
-  |   8 | %today-1d | transfer |    100 | .ZZC | .ZZA | labor   |
-Skip until we figure out uncompleted transfers out....
+  | xid | created   | amount | from | to   | purpose |*
+  |   5 | %today-1m |    200 | .ZZA | .ZZD | favors  |
+  |   6 | %today-1w |    500 | .ZZA | .ZZB | usd     |
+  |   7 | %today-2d |     50 | .ZZD | .ZZB | cash    |
+  |   8 | %today-1d |    100 | .ZZC | .ZZA | labor   |  
   Then balances:
   | uid  | balance |*
   | .ZZA |    1850 |
@@ -145,7 +136,6 @@ Skip until we figure out uncompleted transfers out....
 #  | Social return | $68.75 |
 #  | including     | $0 |
 
-Resume.
   Scenario: A joined account member unjoins the account
   Given members have:
   | uid  | jid  | minimum |*
@@ -170,8 +160,6 @@ Resume.
   | uid  | jid  | minimum | balance |*
   | .ZZA |      |     150 |      50 |
   | .ZZB |      |     150 |      50 |
-  # And member ".ZZA" cache is ok
-  # And member ".ZZB" cache is ok
   
 Scenario: A member requests two joins at once
   Given relations:

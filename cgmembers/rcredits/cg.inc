@@ -1285,15 +1285,16 @@ X;
   
   if (@$created0 and $created < strtotime('today')) { // redoing stats for the past, so figure bals, floors, and topN the hard way
     $recently = strtotime(-FLOOR_DAYS . ' days', $created); // six months ago
+    $uids = 
     $isPayer = '(payer IN (uid, jid) AND payer<>0 AND e.entryType=:ENTRY_PAYER)';
     $isPayee = '(payee IN (uid, jid) AND e.entryType=:ENTRY_PAYEE)';
 
     $pastTxs = <<< X
       (SELECT uid,
-         SUM(IF($isPayer, -amount, amount)) AS amts,
+         SUM(amount) AS amts,
          SUM(IF(amount > 0, amount, 0)) AS amtsIn,
          SUM(IF(amount < 0, -amount, 0)) AS amtsOut
-       FROM $accounts u0 u LEFT OUTER JOIN r_entries e USING(uid) JOIN r_tx_hdrs t USING(xid)
+       FROM $accounts u LEFT OUTER JOIN r_entries e USING(uid) JOIN r_tx_hdrs t USING(xid)
        WHERE amount IS NOT NULL AND $isMaster and $cttyCrit AND $tCreCrit
        GROUP BY uid)
 X;

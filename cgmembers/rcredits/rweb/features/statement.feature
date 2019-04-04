@@ -32,20 +32,19 @@ Setup:
   | .ZZB |    2000 |
   | .ZZC |    3000 |
   Given transactions: 
-  | xid | created   | type     | amount | from | to   | purpose | taking | payerTid | payeeTid |*
-  | 14  | %lastm+3d | transfer |     10 | .ZZB | .ZZA | cash E  | 0      |      114 |      214 |
-  | 15  | %lastm+4d | transfer |   1100 | .ZZC | .ZZA | usd F   | 1      |      115 |      215 |
-  | 16  | %lastm+5d | transfer |    240 | .ZZA | .ZZB | what G  | 0      |      116 |      216 |
-  | 19  | %lastm+6d | transfer |     50 | .ZZB | .ZZC | cash P  | 0      |      119 |      219 |
-  | 20  | %lastm+7d | transfer |    120 | .ZZA | .ZZC | this Q  | 1      |      120 |      220 |
-  | 23  | %lastm+8d | transfer |    100 | .ZZA | .ZZB | cash V  | 0      |      123 |      223 |
+  | xid | created   | amount | from | to   | purpose | taking | payerTid | payeeTid |*
+  | 14  | %lastm+3d |     10 | .ZZB | .ZZA | cash E  | 0      |      114 |      214 |
+  | 15  | %lastm+4d |   1100 | .ZZC | .ZZA | usd F   | 1      |      115 |      215 |
+  | 16  | %lastm+5d |    240 | .ZZA | .ZZB | what G  | 0      |      116 |      216 |
+  | 19  | %lastm+6d |     50 | .ZZB | .ZZC | cash P  | 0      |      119 |      219 |
+  | 20  | %lastm+7d |    120 | .ZZA | .ZZC | this Q  | 1      |      120 |      220 |
+  | 23  | %lastm+8d |    100 | .ZZA | .ZZB | cash V  | 0      |      123 |      223 |
   Then balances:
   | uid  | balance |*
   | .ZZA |    1606 |
   | .ZZB |    2280 |
   | .ZZC |    2070 |
 
-Skip until we've figured this out.
 Scenario: A member looks at a statement for previous month
   When member ".ZZA" views statement for %lastmy
   Then we show "ZZA" with:
@@ -66,4 +65,3 @@ Scenario: A member looks at a statement for previous month
   And without:
   | rebate  |
   | bonus   |
-Resume

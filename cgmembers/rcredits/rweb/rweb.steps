@@ -116,6 +116,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
  *     MAKE signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
  *     MAKE signup ANewbieRegistersWithADifferentLegalName
+ *     MAKE signup ANewbieRegistersFromElsewhere
  *     MAKE signup ANewbieRegistersWithNoCase
  *     MAKE signup AMemberRegistersBadEmail
  *     MAKE signup AMemberRegistersBadName
@@ -209,6 +210,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     TEST signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
  *     TEST signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
  *     TEST signup ANewbieRegistersWithADifferentLegalName
+ *     TEST signup ANewbieRegistersFromElsewhere
  *     TEST signup ANewbieRegistersWithNoCase
  *     MAKE signup AMemberRegistersAgain
  *     BOTH signup AMemberRegistersWithAnExistingCompany
@@ -342,6 +344,7 @@ function weSayWithSubs($type, $index, $subs) {
  *     TEST signup ANewbieRegistersInWesternMassachusetts
  *     TEST signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
  *     TEST signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
+ *     TEST signup ANewbieRegistersFromElsewhere
  *     TEST signup AMemberRegistersBadEmail
  *     TEST signup AMemberRegistersBadZip
  *     TEST signup AMemberRegistersWithACompanyWithNoRelation
@@ -359,6 +362,7 @@ function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
  *     TEST signup ANewbieRegistersInWesternMassachusetts
  *     TEST signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
  *     TEST signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
+ *     TEST signup ANewbieRegistersFromElsewhere
  */
 function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, $email, $subs);}
 
@@ -386,6 +390,7 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST signup ANewbieRegistersInWesternMassachusetts
  *     TEST signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
  *     TEST signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
+ *     TEST signup ANewbieRegistersFromElsewhere
  *     TEST summary MembersAccountIsNotActive
  */
 function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
@@ -402,14 +407,17 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
  *
  * in: TEST backing AMemberVisitsTheBackingPage
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
+ *     TEST community CronCalculatesTheStatistics
  *     TEST company AMemberVisitsTheCompanyInfoPage
  *     TEST contact AMemberVisitsTheContactInfoPage
+ *     TEST custstatement ACompanyLooksAtACustomerStatement
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesANewRecurringDonation
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST joint AMemberRequestsAJointAccount
+ *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     TEST joint AMemberRequestsTwoJoinsAtOnce
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     TEST paybutton AMemberClicksAPayWithCommonGoodButton
@@ -434,6 +442,7 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
  *     TEST showrecurs AMemberAttemptsToStopAnotherMembersRecurringTransaction
  *     TEST signin AMemberVisitsTheMemberSite
  *     TEST signupco AMemberRegistersACompany
+ *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST summary AMemberClicksTheSummaryTab
  *     TEST summary AMemberClicksTheSummaryTabWithRoundups
  *     TEST summary AnAgentClicksTheSummaryTabWithoutPermissionToManage
@@ -447,10 +456,13 @@ function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWit
 /**
  * with: (ARG)
  *
- * in: TEST preferences AMemberVisitsThePreferencesPage
+ * in: TEST custstatement ACompanyLooksAtACustomerStatement
+ *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
+ *     TEST preferences AMemberVisitsThePreferencesPage
  *     TEST preferences AnotherMemberVisitsThePreferencesPage
  *     TEST relations ItsComplicated
  *     TEST signupco AMemberRegistersACompany
+ *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST transactions AMemberLooksAtTransactionsForThePastYear
  *     TEST transactions AMemberLooksAtTransactionsForThePastFewDays
  *     TEST transactions AMemberLooksAtTransactionsWithRoundups
@@ -463,6 +475,7 @@ function with($content) {return weShow($content);}
  * in: TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     TEST relations MemberHasAnEmployer
  *     TEST relations MemberCompanyHasRelations
+ *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST summary AnAgentClicksTheSummaryTabWithoutPermissionToManage
  *     TEST transactions AMemberLooksAtTransactionsForThePastYear
  *     TEST transactions AMemberLooksAtTransactionsForThePastFewDays
@@ -552,6 +565,7 @@ function relations($relations) {return t\relations($relations);}
  *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
  *     TEST invoice AMemberApprovesAnInvoiceToATrustingCustomer
  *     TEST joint Setup
+ *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     TEST joint AJoinedAccountMemberUnjoinsTheAccount
  *     TEST signupco AMemberRegistersACompany
  *     TEST statement Setup
@@ -578,13 +592,17 @@ function usd($list) {return t\usd($list);}
  * member (ARG) visits page (ARG)
  *
  * in: MAKE backing AMemberVisitsTheBackingPage
+ *     MAKE community CronCalculatesTheStatistics
  *     MAKE company AMemberVisitsTheCompanyInfoPage
  *     MAKE contact AMemberVisitsTheContactInfoPage
+ *     MAKE download AMemberDownloadsTransactionsForThePastYear
+ *     MAKE download AMemberDownloadsIncomingInvoicesForThePastYear
  *     MAKE gift AMemberDonates
  *     MAKE gift AMemberMakesANewRecurringDonation
  *     MAKE invest AMemberJoinsTheInvestmentClub
  *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMember
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
+ *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     MAKE membership AMemberSignsInForTheFirstTime
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     MAKE paybutton AMemberClicksAPayWithCommonGoodButton
@@ -652,6 +670,7 @@ function memberIsLoggedOut() {
  *     MAKE signup ANewbieVisitsTheRegistrationPageWithAUsedInvite
  *     MAKE signup ANewbieRegistersInWesternMassachusetts
  *     MAKE signup ANewbieRegistersWithADifferentLegalName
+ *     MAKE signup ANewbieRegistersFromElsewhere
  *     MAKE signup ANewbieRegistersWithNoCase
  *     MAKE signup AMemberRegistersBadEmail
  *     MAKE signup AMemberRegistersBadName
@@ -786,7 +805,8 @@ function gifts($gifts) {return t\gifts($gifts);}
 /**
  * we download (ARG) with: (ARG)
  *
- * in: 
+ * in: TEST download AMemberDownloadsTransactionsForThePastYear
+ *     TEST download AMemberDownloadsIncomingInvoicesForThePastYear
  */
 function weDownloadWith($name, $rows) {
   global $testOnly;
@@ -814,7 +834,8 @@ function weDownloadWith($name, $rows) {
 /**
  * with download columns: (ARG)
  *
- * in: 
+ * in: TEST download AMemberDownloadsTransactionsForThePastYear
+ *     TEST download AMemberDownloadsIncomingInvoicesForThePastYear
  */
 function withDownloadColumns($columns) {
   global $testOnly;
@@ -892,14 +913,16 @@ function agentCardCodeIs($id, $cardCode2) {
 /**
  * cron runs (ARG)
  *
- * in: MAKE summary Setup
+ * in: MAKE community CronCalculatesTheStatistics
+ *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
+ *     MAKE summary Setup
  */
 function cronRuns($op) {return t\cronRuns($op);}
 
 /**
  * statistics get set (ARG)
  *
- * in: 
+ * in: MAKE community CronCalculatesTheStatistics
  */
 function statisticsGetSet($time) {
   global $testOnly; if ($testOnly) return FALSE;
@@ -911,6 +934,7 @@ function statisticsGetSet($time) {
  * members have: (ARG)
  *
  * in: BOTH coupons AMemberRedeemsAGiftCoupon
+ *     MAKE download AMemberDownloadsTransactionsForThePastYear
  *     MAKE invoice AMemberApprovesInvoicesForevermore
  *     TEST joint AMemberRequestsAJointAccount
  *     BOTH joint AJoinedAccountSlaveMemberRequestsANewMinimum
@@ -1082,6 +1106,7 @@ function memberIsLoggedIn($id) {
  *     MAKE signup ANewbieRegistersInWesternMassachusetts
  *     MAKE signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
  *     MAKE signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
+ *     MAKE signup ANewbieRegistersFromElsewhere
  */
 function nextRandomCodeIs($code) {global $nextCode; return $nextCode = $code;}
 
@@ -1300,7 +1325,7 @@ function proxies($list) {return t\proxies($list);}
 /**
  * member (ARG) views statement for (ARG)
  *
- * in: 
+ * in: MAKE statement AMemberLooksAtAStatementForPreviousMonth
  */
 function memberViewsStatementFor($id, $month) {
   include_once R_ROOT . '/forms/statement.inc';
@@ -1389,7 +1414,7 @@ function these($thing, $list) {return t\these($thing, $list);}
 /**
  * agent (ARG) views (ARG) statement for member (ARG)
  *
- * in: 
+ * in: MAKE custstatement ACompanyLooksAtACustomerStatement
  */
 function agentViewsStatementForMember($biz, $type, $cust) {
   include_once R_ROOT . '/forms/custstatement.inc';

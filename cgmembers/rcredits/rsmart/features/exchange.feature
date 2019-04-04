@@ -65,6 +65,7 @@ Scenario: A cashier asks to charge someone for cash
   | %today  | Bea Two  | Corner Pub | $100   | cash out     |
   And balances:
   | uid  | balance |*
+  | ctty |    -250 |
   | .ZZA |    -200 |
   | .ZZB |       0 |
   | .ZZC |     200 |

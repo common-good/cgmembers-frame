@@ -36,11 +36,7 @@ Scenario: a joint account needs refilling
   | draw from | $30    |        1 | to bring your balance up to the target you set |
 
 Scenario: a joint account does not need refilling
-  Given transactions:
-  | xid | created | amount | from | to   | purpose | taking |*
-  |   1 | %today  |  50.01 | ctty | .ZZA | setup   | 0      |
-  |   2 | %today  |  49.99 | ctty | .ZZB | setup   | 0      |
-  Then balances:
+  Given balances:
   | uid  | balance |*
   | .ZZA |     100 |
   | .ZZB |     100 |

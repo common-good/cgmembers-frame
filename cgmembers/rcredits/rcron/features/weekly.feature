@@ -5,27 +5,25 @@ SO my financial position will be progressively better.
 
 Setup:
   Given members:
-  | uid  | fullName | minimum | achMin | floor | risks   | flags   |*
-  | .ZZA | Abe One  |    -100 |     20 |    10 | hasBank | ok,confirmed,refill  |
-  | .ZZB | Bea Two  |     100 |     20 |    10 | hasBank | ok,confirmed,cashoutW |
+  | uid  | fullName | minimum | savingsAdd | saveWeekly | achMin | floor | risks   | flags                 |*
+  | .ZZA | Abe One  |    -100 |          0 |         20 |     20 |    10 | hasBank | ok,confirmed,refill   |
+  | .ZZB | Bea Two  |     100 |          0 |         20 |     20 |    10 | hasBank | ok,confirmed,cashoutW |
 
-Skip temporarily.
 Scenario: A member crawls out of debt
   When cron runs "everyWeek"
   Then balances:
   | uid  | minimum |*
   | .ZZA |     -80 |
-Resume.
 
-# Scenario: A member builds up savings
-#   Given members have:
-#   | uid  | minimum |*
-#   | .ZZA |     100 |
-#   When cron runs "everyWeek"
-#   Then balances:
-#   | uid  | minimum | savingsAdd |*
-#   | .ZZA |     120 |          0 |
-
+Scenario: A member builds up savings
+  Given members have:
+  | uid  | minimum |*
+  | .ZZA |     100 |
+  When cron runs "everyWeek"
+  Then balances:
+  | uid  | minimum | savingsAdd |*
+  | .ZZA |     120 |          0 |
+q
 #Scenario: A member draws down savings bit by bit
 #  Given members have:
 #  | uid  | minimum | savingsAdd | saveWeekly | achMin |*

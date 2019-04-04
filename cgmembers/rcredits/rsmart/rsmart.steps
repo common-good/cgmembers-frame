@@ -237,7 +237,7 @@ function devices($list) {return t\devices($list);}
  *     TEST transact Setup
  *     TEST transact ACashierAsksToChargeSomeone
  *     TEST transact ACashierAsksToRefundSomeone
- *     MAKE undo Setup
+ *     TEST undo Setup
  *     TEST undo AnAgentAsksToUndoAChargeWithInsufficientBalance
  *     TEST undo AnAgentAsksToUndoARefundWithInsufficientBalance
  *     TEST undo ACashierReversesATransactionWithInsufficientFunds
