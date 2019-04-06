@@ -101,6 +101,7 @@ function pos($args = FALSE) {
   
   $mya = getAgent(@$agent ?: @$member, $agentErr);
 ///     print_r(compact(ray('mya agent member agentErr')));
+
   if (@$device) { // device was specified, substitute its record id, herein
     if (!$mya) return posErr($agentErr);
     if ($deviceId = getDevice($device, $mya->id)) {
@@ -231,6 +232,7 @@ function identify($args) {
     if ($info = machine(@$member, $code)) return ok($info + $companyInfo); // purchase from fuel pump or other machine
     if (!$a = getMember(@$member, $code, $err, $version > 217)) return posErr($err, [], $companyInfo);
   } else $a = $mya; // get agent
+
   if ($version > 217 and !u\test()) {
     if (@$signin) {
       if (@$agent) {
@@ -250,6 +252,7 @@ function identify($args) {
     $signin = ($logon == 1); // ditto
     if (@$signin and $a->proSe and !$a->co) return posErr('scan in first', [], $companyInfo);
   }
+
   if (@$device) $deviceId = $device; //getDevice($device, $mya->id);
 
   if (@$signin) { //  identifying agent
@@ -566,8 +569,7 @@ function balrew($a) {
   global $mya;
   if (!$mya->co) $a = $mya;
   $balance = (($a->can(B_SECRET) and $mya->co) ? '*' : '') . round($a->balance, 2);
-  $rewards = 0;
-  return compact('balance', 'rewards');
+  return compact('balance');
 }
 
 /**

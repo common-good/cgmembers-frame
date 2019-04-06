@@ -23,18 +23,21 @@ Setup:
   |  504 | .ZZA  |    200 | %today-3d |         0 |
   And invoices:
   | nvid | created   | amount | from | to   | purpose  | status |*
-  |    1 | %today-3m |    240 | .ZZA | .ZZB | what G   |      1 |
-  |    2 | %today-1w |    120 | .ZZA | .ZZC | this Q   |      2 |
-  |    3 | %today-5d |     80 | .ZZA | .ZZC | this CF  |      3 |
+  |    1 | %today-3m |    240 | .ZZA | .ZZB | what G   |     11 |
+  |    2 | %today-1w |    120 | .ZZA | .ZZC | this Q   |     12 |
+  |    3 | %today-5d |     80 | .ZZA | .ZZC | this CF  |     13 |
   |    4 | %today-5d |     99 | .ZZA | .ZZC | wrongly  | %TX_DENIED |
   |    5 | %today-5d |     12 | .ZZA | .ZZC | realist  | %TX_APPROVED |
   And transactions: 
   | xid | created   | amount | from | to   | purpose  | taking |*
-  |   4 | %today-5m |     10 | .ZZB | .ZZA | cash E   | 0      |
-  |   5 | %today-4m |    100 | .ZZC | .ZZA | usd F    | 1      |
-  |   6 | %today-2w |     50 | .ZZB | .ZZC | cash P   | 0      |
-  |   7 | %today-6d |    100 | .ZZA | .ZZB | cash V   | 0      |
-  |   8 | %today-5d |    100 | .ZZC | .ZZA | cash CJ  | 1      |
+  |  11 | %today-3m |    240 | .ZZA | .ZZB | what G   | 0      |
+  |  12 | %today-1w |    120 | .ZZA | .ZZC | this Q   | 0      |
+  |  13 | %today-5d |     80 | .ZZA | .ZZC | this CF  | 0      |
+  |  24 | %today-5m |     10 | .ZZB | .ZZA | cash E   | 0      |
+  |  25 | %today-4m |    100 | .ZZC | .ZZA | usd F    | 1      |
+  |  26 | %today-2w |     50 | .ZZB | .ZZC | cash P   | 0      |
+  |  27 | %today-6d |    100 | .ZZA | .ZZB | cash V   | 0      |
+  |  28 | %today-5d |    100 | .ZZC | .ZZA | cash CJ  | 1      |
   Then balances:
   | uid  | balance |*
   | .ZZA |     670 |
@@ -48,20 +51,20 @@ Scenario: A member downloads transactions for the past year
   When member ".ZZA" visits page "history/transactions/period=365&download=1"
   Then we download "%PROJECT_ID%todayn-12m-%todayn.csv" with:
   # For example commongood20120525-20130524.csv
-  | Tx# | Date    | Name    | Purpose   | From Bank | From You | To You | Balance | Net  |*
-  | 7   | %ymd-5d | Our Pub | cash CJ   |           |          |    100 |    670 |  100 |
-  | 6   | %ymd-5d | Our Pub | this CF   |           |       80 |        |    570 |  -80 |
-  | 5   | %ymd-6d | Bea Two | cash V    |           |      100 |        |    650 | -100 |
-  | 4   | %ymd-1w | Our Pub | this Q    |           |      120 |        |    750 | -120 |
-  | 3   | %ymd-3m | Bea Two | what G    |           |      240 |        |    870 | -240 |
-  | 501 | %ymd-4m |         | from bank |      1000 |          |        |   1110 | 1000 |
-  | 2   | %ymd-4m | Our Pub | usd F     |           |          |    100 |    110 |  100 |
-  | 1   | %ymd-5m | Bea Two | cash E    |           |          |     10 |     10 |   10 |
-  |     |         | TOTALS  |           |      1000 |      540 |    210 |        |  670 |
+  | Tx# | Date    | Name          | Purpose        | From Bank | From You | To You | Balance | Net  |*
+  | 8   | %ymd-5d | Our Pub       | cash CJ        |           |          |    100 |    670 |  100 |
+  | 13  | %ymd-5d | Our Pub       | this CF        |           |       80 |        |    570 |  -80 |
+  | 27  | %ymd-6d | Bea Two       | cash V         |           |      100 |        |    650 | -100 |
+  | 12  | %ymd-1w | Our Pub       | this Q         |           |      120 |        |    750 | -120 |
+  | 11  | %ymd-3m | Bea Two       | what G         |           |      240 |        |    870 | -240 |
+  | 1   | %ymd-4m | Incoming bank | transfer to CG |      1000 |          |        |   1110 | 1000 |
+  | 25  | %ymd-4m | Our Pub       | usd F          |           |          |    100 |    110 |  100 |
+  | 24  | %ymd-5m | Bea Two       | cash E         |           |          |     10 |     10 |   10 |
+  |     |         | TOTALS        |                |      1000 |      540 |    210 |        |  670 |
 #  | 1   | %ymd-7m | ZZrCred | signup    |           |          |        |    250 |  250 |
-  And with download columns:
-  | column |*
-  | Date   |
+#   And with download columns:
+#   | column |*
+#   | Date   |
 
 Scenario: A member downloads incoming invoices for the past year
   When member ".ZZA" visits page "history/invoices-from/period=365&download=1"
@@ -73,6 +76,6 @@ Scenario: A member downloads incoming invoices for the past year
   |    3 | %ymd-5d | Our Pub | this CF |     80 | paid (Tx#10) |
   |    4 | %ymd-5d | Our Pub | wrongly |     99 | denied ()    |
   |    5 | %ymd-5d | Our Pub | realist |     12 | Approved     |
-  And with download columns:
-  | column |*
-  | Date   |
+#   And with download columns:
+#   | column |*
+#   | Date   |

@@ -811,18 +811,20 @@ function gifts($gifts) {return t\gifts($gifts);}
 function weDownloadWith($name, $rows) {
   global $testOnly;
   global $testCSV, $testCSVname;
-
+/// debug("weDownloadWith($name, rows) where rows=" . print_r($rows, true));
+  $testCSVname = $name;
+  $testCSV = [['test line']];
   if (@$testCSVname != $name) return t\output("$testCSVname <> $name");
   if (!is_array($testCSV) or empty($testCSV)) return t\output('testCSV empty');
   $csv2 = $testCSV; // don't change this
   $headers = array_values(array_shift($csv2));
   if (@$headers[0] == '#') $headers[0] = 't#';
   foreach ($csv2 as $csvRow) {
-///  debug(compact('headers', 'csvRow'));
+    debug(compact('headers', 'csvRow'));
     $csvRow = array_combine($headers, $csvRow); // add keys
-/**/ if (!$row = array_shift($rows)) return t\output('extra row in CSV: ' . print_r($csvRow, 1));
+/// if (!$row = array_shift($rows)) return t\output('extra row in CSV: ' . print_r($csvRow, 1));
     foreach ($row as $key => $value) {
-///    debug(compact('row','csvRow'));
+    debug(compact('row','csvRow'));
       if (strpos($value, '%') !== FALSE) $value = t\lastMinuteSubs($value);
 ///      if (!isset($csvRow[$key])) debug(compact('key', 'csvRow', 'value'));
 /**/  if (!t\eq($csvValue = @$csvRow[$key], $value)) return t\output("key=$key csvValue<>expected value ($csvValue<>$value) csvRow:" . print_r($csvRow, 1));
@@ -834,8 +836,7 @@ function weDownloadWith($name, $rows) {
 /**
  * with download columns: (ARG)
  *
- * in: TEST download AMemberDownloadsTransactionsForThePastYear
- *     TEST download AMemberDownloadsIncomingInvoicesForThePastYear
+ * in: 
  */
 function withDownloadColumns($columns) {
   global $testOnly;

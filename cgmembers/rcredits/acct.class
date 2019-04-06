@@ -35,13 +35,10 @@ class Acct {
    *   (2) a flat array of user table IDs: [uid, agent] where uid is the main account and agent is the agent's id
    */
   function __construct($info = []) {
-    /* debug($info); */
     $a = $this;
     if (!is_numeric(key($info))) { // u\isAssoc($info)) { // specifying field values
       $a->createNew($info); // create new db record
-    } else {
-      list($a->id, $a->agentId) = $info;
-    } // called from r\acct()
+    } else { list($a->id, $a->agentId) = $info; } // called from r\acct()
     $a->qo = r\qo($a->id, $a->proSe ? '' : $a->agentId);
   }    
 
@@ -56,10 +53,6 @@ class Acct {
     extract(u\exactly('email fullName legalName flags state zip created country number uid region', $info,
                       [ strtolower(u\randomString(10, 'word')) . '@' . EMAILX, null, null, 0, null, null, r\rTime(), US_COUNTRY_ID, null, null, null ]));
     extract(u\exactly('community', $info, r\communityUid($zip)));
-    if ($state == 'NH') {
-      print_r("$zip -> $community\n");
-      die('here');
-    }
     extract(u\exactly('login', $info, $created));
     extract(u\exactly('access', $info, $login));
     extract(u\exactly('phone', $info, $number));
@@ -96,8 +89,7 @@ class Acct {
 
     foreach (ray('number region') as $k) unset($info[$k]);
     u\preray(@compact(ray('phone email pass fullName legalName flags state community created login access emailCode cardCode stepsDone')), $info); // things we may have added or changed
-    $result = $a->update($info); // this is a lot easier to do after saving the record
-
+    $a->update($info); // this is a lot easier to do after saving the record
     unset($DBTX); // commit
   }
 
@@ -110,7 +102,7 @@ class Acct {
    * @return [$id, $agent] where id and agent are actual record IDs
    */
   public static function viable($id00, $agent0='', &$error='', $test = TRUE) {
-    /* print_r("viable($id00, $agent0,?,$test)"); */
+    ///    print_r("viable($id00, $agent0,?,$test)");
     if (is_numeric($id00) and is_numeric($agent0)) return [$id00, $agent0];
     $id0 = $id00;
     if (strpos($id0, AGT_MARK)) list ($id0, $agentCode) = explode(AGT_MARK, $id0); // new company qid format
@@ -124,8 +116,10 @@ class Acct {
       list ($agent, $zot) = r\qo($agent0)->ia;
       if ($error = u\EXPECT($agent == $zot, 'agent agent not allowed', $test)) return FALSE;
     }
+    
     $got = (bool) self::getRecord($id); // read the record into cache
     if ($error = u\EXPECT($got, 'That account does not exist.', $test)) return FALSE; // don't use t() here (many calls)
+
     if (isset($agentCode)) $agent = r\qo($id0 . AGT_MARK . $agentCode)->agent; // new company qid format
 
     if ($error = u\EXPECT($id and $agent, "Missing acct property: [$id, $agent]", $test)) return FALSE;
@@ -133,23 +127,23 @@ class Acct {
   }
   
   private static function getRecord($uid, $reread = FALSE) {
-    /* print_r("getRecord($uid, $reread)"); */
+    ///    print_r("getRecord($uid, $reread)");
     if (@self::$rs[$uid] and !$reread) return self::$rs[$uid];
     if (!$row = db\get('*', 'users', compact('uid'))) { // no such record here
       if (TRUE) return FALSE; // not foreign either
       // contact other server here, for a subset of the record
     }
+    
     return self::$rs[$uid] = (object) $row;
   }
 
   /**
    * Read in the account record, if we haven't yet.
-   * This function should be called before any reference to self::$rs[$a->id] (except in contructor).
+   * This function should be called before any reference to self::$rs[$this->id] (except in contructor).
    * @param bool $force: reread even if we already have an account record (used only externally)
    */
   public function reread($force = FALSE) {
-    $a = $this;
-    if (!@self::$rs[$a->id] or $force) self::getRecord($a->id, TRUE);
+    if (!@self::$rs[$this->id] or $force) self::getRecord($this->id, TRUE);
   }
   
   /**
@@ -160,8 +154,8 @@ class Acct {
    * @return the value if it exists, else NULL
    */
   public function __get($field) {
-    $a = $this;
     global $mya, $pwV;
+    $a = $this;
     $a->reread(); // make sure record has been read in
 
     // The following fields are always only for the current user
@@ -304,7 +298,6 @@ class Acct {
    * @return <at least one of $fields is in the $specialType list>
    */
   private function special($fields, $specialType) {
-    $a = $this;
     $specials = constant("{$specialType}_FLDS");
     return is_array($fields) ? (bool) array_intersect($fields, ray($specials))
       : (strpos($fields, ' ') === FALSE ? u\inList($fields, $specials) // be efficient, if just one field
@@ -424,6 +417,7 @@ class Acct {
    * @return if joint: the sum or concatenation of the member account values, otherwise just the normal value
    *//*
        private function jGet($field) {
+       $a = $this;
        if (!$jid = $a->jid) return $a->$field;
        if (in_array($field, ray(MASTER_FLDS))) return $a->masterA->$field;
        $j = u\nn(r\acct($jid)->$field, 0); // use 0 if other value is null
@@ -493,14 +487,14 @@ class Acct {
     u\EXPECT(!isset($info['savings']), 'archaic savings field');
     //    if ($jid = $a->jid and $jInfo = just(MASTER_FLDS . ' savings', $info)) {
     if ($a->jid and $jInfo = just(MASTER_FLDS, $info)) {
-      list ($a2, $a1) = u\order($a->slave, $this, $a->jA); // set $a1 master, $a2 slave
+      list ($a2, $a1) = u\order($a->slave, $a, $a->jA); // set $a1 master, $a2 slave
 
       $jInfo2 = array_fill_keys(ray(MASTER_FLDS), 0);
       unset($jInfo2['achMin']); // no change to slave achMin
       $a2->update1($jInfo2);
       
       //      $a2->update1(MASTER_FLDS, FALSE, '', '', FALSE, @$jInfo['achMin'] ?: $a1->achMin, 0, 0, 0); // not much for slave
-      //      $a->updateSavings($jInfo, $a1 == $this ? $a2->rewards : $a1->rewards); // update savings in master
+//      $a->updateSavings($jInfo, $a1 == $this ? $a2->rewards : $a1->rewards); // update savings in master
       $a1->update1($jInfo);
       //      if (!$info = justNOT(MASTER_FLDS . ' savings', $info)) return TRUE; // fall through if something else to update
       if (!$info = justNOT(MASTER_FLDS, $info)) return TRUE; // fall through if something else to update
@@ -527,8 +521,8 @@ class Acct {
    * Update the account record in the database (with no special treatment of joint accounts).
    */
   public function update1($info) { // public only for testing
-    $a = $this;
     global $mya;
+    $a = $this;
     if (!is_array($info)) $info = rayy(func_get_args());
 
     foreach ($bits = just(B_LIST, $info) as $k => $v) {$a->setBit($k, $v); unset($info[$k]);}
@@ -582,7 +576,7 @@ class Acct {
     */	
 
     $info = justNOT(SECURE_FLDS . ' ' . VSECURE_FLDS . ' ' . DATA_FLDS, $info); // don't pass these
-    return $info ? db\update('users', /*array_filter($info, function($x) { })*/ $info + ['uid' => $a->id], 'uid') : TRUE;
+    return $info ? db\update('users', $info + ['uid' => $a->id], 'uid') : TRUE;
   }
 
   /**
@@ -590,8 +584,8 @@ class Acct {
    * @param assoc $info: all changes being made
    */
   private function recordChanges($info) {
-    $a = $this;
     global $mya;
+    $a = $this;
     $newChanges = justNOT(R_HIDE_CHANGES, $info); // see if there are any changes to remember
     foreach ($newChanges as $field => $v) {
       $ak = $a->$field;
@@ -648,7 +642,7 @@ class Acct {
   }
 		
   
-  //  public function isNonprofit() {return (bool) ($a->coFlags & u\bit(CO_NONPROFIT));}
+//  public function isNonprofit() {return (bool) ($a->coFlags & u\bit(CO_NONPROFIT));}
   
   /**
    * Create a new relationship record for the current account (as "main") relating to some agent.
@@ -657,7 +651,6 @@ class Acct {
    * @return: the record ID of the new relationship record
    */
   function newRelation($info) {
-    $a = $this;
     u\EXPECT($info['other'] or @$info['data'], 'missing other in new relation'); // placeholder for "other" ok if there's data
     foreach (ray(REL_FLAGS) as $k) if (isset($info[$k])) {
       u\setBit($info['flags'], $k, $info[$k]);
@@ -665,7 +658,7 @@ class Acct {
     }
     //      $info[$k] = (int) @$info[$k];
     $info['created'] = time();
-    return r\regionalInsert('r_relations', 'reid', $info + ['main' => $a->id], -$a->region);
+    return r\regionalInsert('r_relations', 'reid', $info + ['main' => $this->id], -$this->region);
   }
 
   /**
@@ -702,10 +695,9 @@ class Acct {
    * Return the account's name and qid, with a link to a fuller description.
    */
   public function linkedDesc() {
-    $a = $this;
     global $base_url;
-    $qid = "<a href=\"$base_url/change-account/acct=$a->mainQid&page=summary\">$a->mainQid</a>";
-    return "$a->fullName ($qid)";
+    $qid = "<a href=\"$base_url/change-account/acct=$this->mainQid&page=summary\">$this->mainQid</a>";
+    return "$this->fullName ($qid)";
   }
   
   /**
@@ -717,7 +709,6 @@ class Acct {
    */
   public function setBit($bit, $on = TRUE) {
     $a = $this;
-    
     if (!is_numeric($bit)) $bit = u\consta('b', $bit);
     $res = $a->setBitx($bit, $on, 'flags'); 
     if (@self::$perms[$id][$a->agentId]) {
@@ -726,7 +717,7 @@ class Acct {
     return $res;
   }
   
-  // public function refreshCan() {self::$perms[$a->id] = NULL;} // UNUSED force redo in can()
+  // public function refreshCan() {self::$perms[$this->id] = NULL;} // UNUSED force redo in can()
 
   /**
    * Set the current account being managed (must be static so we can set account to empty)
@@ -773,20 +764,16 @@ class Acct {
    * @return how much short this account is, of what's needed
    */
   public function shortfall($goods, $need = 0, $get = FALSE, $actor = NULL) {
-    $a = $this;
     global $channel;
+    $a = $this;
     // don't allow companies to spend rewards unless they have ATM permission and are exchanging r for USD
     if ($a->isCanonical) return 0;
-    if ($a->co and COMPANY_FREEZE and $this == $actor and $a->coCan(CO_ATM) and $goods == FOR_USD)
-      $goods = FOR_GOODS;
+    if ($a->co and COMPANY_FREEZE and $a == $actor and $a->coCan(CO_ATM) and $goods == FOR_USD) { $goods = FOR_GOODS; }
     $avail = $a->avail($goods);
     if ($avail >= $need) return 0; // plenty without drawing from other accounts
 
-    if ($get) {
-      $avail += $a->draw(($a->refill ? $a->minimum : 0) + $need - $a->balance);
-    } else {
-      $avail += $a->canDraw();
-    }
+    if ($get) { $avail += $a->draw(($a->refill ? $a->minimum : 0) + $need - $a->balance); }
+    else { $avail += $a->canDraw(); }
     return max(0, $need - $avail); 
   }
   
@@ -870,7 +857,7 @@ X;
     }
     $msg = $left == $need ? 'cannot draw' : 'drew';
     $msg = tr($msg, 'amount', u\fmtAmt($need - $left));
-    r\notify($a->id, tr($msg, ['why'=>$why]));
+    r\notify($a->id, tr($msg, compact('why')));
 
     return round($need - $left, 2);
   }
@@ -920,8 +907,8 @@ EOF;
     $fields = ray(MASTER_NUMERIC_FLDS);
 
     $DBTX = \db_transaction();
-    foreach ([$this, $b] as $i => $ai) {
-      $aj = $i == 0 ? $b : $this; // the other account
+    foreach ([$a, $b] as $i => $ai) {
+      $aj = $i == 0 ? $b : $a; // the other account
       $ai->update('jid', $aj->id);
       /* NO! bankAccount is available only to regional admins
          if (!$ai->o_hasBank and $aj->o_hasBank) {
@@ -943,7 +930,6 @@ EOF;
     $a = $this;
     $balance = db\sum('amount', 'r_entries', 'uid=:uid', ['uid'=>$a->id]);
     if (empty($balance)) $balance = 0;
-    print_r("in recomputeBalance: $balance");
     $result = db\update('users', ['uid'=>$a->id, 'balance'=>$balance], 'uid');
     u\EXPECT($result == 1, "trouble updating balance");
     $a->reread();
@@ -955,6 +941,7 @@ EOF;
    */
   function unjoinAllBut($except = FALSE) {
     $a = $this;
+    
     $sql = 'UPDATE r_relations SET permission=:manage WHERE permission=:joint AND main=:id';
     $subs = ray('manage joint id', r\perm(B_MANAGE), r\perm(B_JOINT), $a->id);
 
@@ -963,7 +950,6 @@ EOF;
       $b = r\acct($jid); // ignore param (actual joined account will be unjoined and any join requests zapped)
       foreach ([$a, $b] as $ai) {
         $ai->update1('jid minimum', 0, max($a->o_minimum, $b->o_minimum));
-        /* $ai->cacheOk(); // make sure each account is left with its proper cached amounts */
         //        $ai->setBit(B_JOINED, FALSE);
       }
       if ($a->ok and $b->ok) { // no need to settle with closed or not-yet-open account
@@ -988,13 +974,12 @@ EOF;
    * @param string $why: the reason for suspending (to tell member and staff)
    */
   public function suspend($why = '') {
-    $a = $this;
-    $a->setBit(B_OK, FALSE); // suspend the account
+    $this->setBit(B_OK, FALSE); // suspend the account
     if ($why) {
-      r\message($a->id, 'account suspended', compact('why'));
-      $notes = u\fmtDate() . ': ' . t('account suspended') . " $why\n" . @$a->notes;
-      $a->update(compact('notes'));
-      r\tellAdmin('account suspended', ray('uid fullName why', $a->id, $a->fullName, $why));
+      r\message($this->id, 'account suspended', compact('why'));
+      $notes = u\fmtDate() . ': ' . t('account suspended') . " $why\n" . @$this->notes;
+      $this->update(compact('notes'));
+      r\tellAdmin('account suspended', ray('uid fullName why', $this->id, $this->fullName, $why));
     }      
   }
   
@@ -1004,16 +989,14 @@ EOF;
    * @return: the relative file path (relative to Drupal)
    */
   public function photoFilename($ideal = FALSE) {
-    $a = $this;
-    return ($ideal or $a->hasPhoto)
-      ? r\pic(@"$a->id-$a->cardCode.jpg") // @ for testing
-      : ($a->co ? R_DFT_PICTURE_WIDE : R_DFT_PICTURE);
+    return ($ideal or $this->hasPhoto)
+      ? r\pic(@"$this->id-$this->cardCode.jpg") // @ for testing
+      : ($this->co ? R_DFT_PICTURE_WIDE : R_DFT_PICTURE);
   }
   
   public function cardCode() {
-    $a = $this;
-    $field = $a->proSe ? 'cardCode' : 'cardCode2';
-    return $a->agentA->$field;
+    $field = $this->proSe ? 'cardCode' : 'cardCode2';
+    return $this->agentA->$field;
   }
 
   /**
@@ -1022,7 +1005,6 @@ EOF;
    */
   function makeCardCode($newCode = '') {
     $a = $this;
-    
     $qid = $a->qid;
     $aA = $a->agentA;
     $field = $a->proSe ? 'cardCode' : 'cardCode2';
@@ -1035,7 +1017,6 @@ EOF;
    * Add a date stamp and agent's initials to the given note (before updating the notes field with it).
    */
   public function stampNote($note) {
-    $a = $this;
     $rep = strtolower(u\initials(r\agent()->legalName) ?: 'WS');
     //    $date = str_replace('-', '', u\fmtDate());
     $date = u\fmtDate();
@@ -1051,19 +1032,19 @@ EOF;
    */
   function stepDone($step, $done = TRUE, $details = []) {
     $a = $this;
-    
     $stepsDone = $a->stepsDone;
 
-    if (!@$stepsDone[$step]) { // unless already done
+    if (empty($stepsDone[$step])) { // unless already done
       //      if ($done) r\tellAdmin(t('Step completed: ') . strtoupper($step), $details, $a->id);
     } // elseif (!$a->cAdmin) r\tellAdmin(t('Settings changed: ') . strtoupper($step), $details, $a->id);
    
     $stepsDone[$step] = $done;
     $a->update(compact('stepsDone'));
-    if (!$nextStep = $a->nextStep()) {
+    $nextStep = $a->nextStep();
+    if (empty($nextStep)) {
       r\tellCO(t('New Member (%name)', ['name' => $a->fullName]));
       $a->setBit(B_MEMBER);
-      //    r\membershipEvent($this, 'member');
+//    r\membershipEvent($a, 'member');
       $a->update('tickle', time());
     }
     return $nextStep;
@@ -1073,8 +1054,7 @@ EOF;
    * Return the next step to do.
    */
   function nextStep() {
-    $a = $this;
-    $steps = $a->stepsDone ?: []; // don't change the real data ([] for admin)
+    $steps = $this->stepsDone ?: []; // don't change the real data ([] for admin)
     foreach ($steps as $step => $done) if (!$done) return $step;
     return FALSE;
   }
@@ -1089,7 +1069,6 @@ EOF;
   public function nextStepUrl($stepDone = '', &$msg = NULL, $info = []) {
     $a = $this;
     
-    
     if ($stepDone) u\setDft($msg, 'info saved');
     if ($a->closed) return '';
     if ($a->ok) return $stepDone == '' ? '' : "settings/$stepDone"; // "going" to current page makes tests work
@@ -1098,13 +1077,13 @@ EOF;
           if ($stepDone) $nextStep = $stepDone; else return 'summary';
           } else { */
     $nextStep = $stepDone ? $a->stepDone($stepDone, TRUE, $info) : $a->nextStep();
-    if (!$nextStep) {
+    if (empty($nextStep)) {
       $approval = $a->co ? 'company approval' : 'individual approval';
       // fails with sysadmin as helper  if (!$a->confirmed) $approval .= '|' . t('must be confirmed', 'inviterName', @$a->helperA->fullName);
       
       if (!$stepDone) $msg = "setup complete|$approval|join thanks"; // show on display, not on done
       return 'summary'; // go nowhere if not completing a step
-    } elseif (!$a->member) $msg .= '|step completed';
+    } elseif (!$a->member) { $msg .= '|step completed'; }
 
     $steps = ray(R_STEPS);
     return $a->member ? '' : ($steps[$nextStep] ?: "settings/$nextStep");
@@ -1120,7 +1099,6 @@ EOF;
    *//*
        public function fixTxBankAccount(&$bankAccount, $txid) {
        $a = $this;
-
        $ba1 = $bankAccount = ($pw2 = @$_COOKIE['pw2']) ? u\decrypt($ba0 = $bankAccount, 0, $pw2) : '';
        if (substr($bankAccount, 0, 2) <> 'US' and ($ba2 = $bankAccount = $a->bankAccount) and $pw2) { // bank account got screwed up somehow -- probably double-encrypted (happened again 12/7/2017 7:27am and 12/21/2017 10:05. Fixed?)
        r\tellAdmin('screwed up bank account', ray('who ba0 ba1 ba2 hex0', $a->fullName, $ba0, $ba1, $ba2, bin2hex($ba0)));
@@ -1136,9 +1114,8 @@ EOF;
    * @return the once-use password
    */
   function oneTimePass($name) {
-    $a = $this;
     global $base_url;
-
+    $a = $this;
     //  $pass = strtolower(u\nonce()); // not a hash, easy to remember and type
     $verifying = !$a->stepDone['verify'];
     $pass = u\randomString($verifying ? 3 : R_CODE_LEN, $verifying ? 'upper' : 'word'); // use
@@ -1157,7 +1134,6 @@ EOF;
    */
   function passwordOkay($password, $passFieldName = '', &$err = '') {
     $a = $this;
-    
     if (@$a->oneTimePass) {
       extract(just('pass expires', $a->oneTimePass));
       if ($password == @$pass) return ($a->admin or r\rTime() < @$expires) ?: !($err = 'pass expired');
@@ -1170,7 +1146,6 @@ EOF;
   
   public function stepsRemaining() {
     $a = $this;
-    
     $steps = $a->stepsDone ?: [];
     $dones = array_sum($steps);
     return count($steps) - $dones;
@@ -1180,18 +1155,16 @@ EOF;
    * Return the Community Admin's account record ID.
    */
   function cAdminUid() {
-    $a = $this;
-    return db\get('uid', 'users', 'community=:ctty AND :IS_CADMIN', ray('ctty', $a->community));
+    return db\get('uid', 'users', 'community=:ctty AND :IS_CADMIN', ray('ctty', $this->community));
   }
   
   /**
    * Return the community admin's contact info.
    */
   function cAdminContact() {
-    $a = $this;
-    if (!$id = $a->cAdminUid()) return t('(no Community Admin)');
-    $cAdmin = r\acct($id);
-    return "$cAdmin->fullName - $cAdmin->email";
+    if (!$id = $this->cAdminUid()) return t('(no Community Admin)');
+    $a = r\acct($id);
+    return "$a->fullName - $a->email";
   }
   
   /**
@@ -1201,7 +1174,6 @@ EOF;
    */
   public function j_stats() {
     $a = $this;
-    
     $fields = 'returnMo return cttyBeneMo cttyBene';
     if (!$a->member or $a->isCtty) return ray($fields, 0, 0, 0, 0);
     
@@ -1237,9 +1209,8 @@ EOF;
    * Return the rough business structure of a company, as required by Dwolla.
    */
   function businessStructure() {
-    $a = $this;
-    u\EXPECT($a->co, 'not a company');
-    return $a->coCan(CO_CORPORATION) ? 'Corporation' : ($a->coCan(CO_PARTNERSHIP) ? 'Partnership' : 'SoleProprietorship');
+    u\EXPECT($this->co, 'not a company');
+    return $this->coCan(CO_CORPORATION) ? 'Corporation' : ($this->coCan(CO_PARTNERSHIP) ? 'Partnership' : 'SoleProprietorship');
   }
    
   /**
@@ -1247,8 +1218,7 @@ EOF;
    * @return: the number or null if none
    */
   public function smsNumber() {  
-    $a = $this;
-    $id = $a->id;
+    $id = $this->id;
     return db\get('code', 'r_boxes', "uid=:id AND code REGEX '+[:digit:]{7,15}'", compact('id')); // was status=:SMS_PRIMARY
   }
 
@@ -1257,15 +1227,13 @@ EOF;
    * @param numeric $combinable: (RETURNED) how much is waiting and checks haven't been printed yet (incoming only)
    */
   public function waitingFromBank(&$combinable = 0) {
-    $a = $this;
-    $id = ($jid = $a->jid) ? "$a->id,$jid" : $a->id;
+    $id = ($jid = $this->jid) ? "$this->id,$jid" : $this->id;
     extract(db\q("SELECT SUM(amount) AS amt, SUM(IF(deposit OR amount<0, 0, amount)) AS combinable FROM r_usd WHERE payee IN ($id) AND NOT completed")->fetchAssoc());
     return $amt;
   }
 	
   public function advances() {
-    $a = $this;
-    $id = ($jid = $a->jid) ? "$a->id,$jid" : $a->id;
+    $id = ($jid = $this->jid) ? "$this->id,$jid" : $this->id;
     return db\sum('amount', 'r_usd', "payee IN ($id) AND amount>0 AND :NOW-created<:DAY_SECS*:R_USDTX_DAYS");
   }
 
@@ -1292,26 +1260,6 @@ EOF;
     return $res;
   }
 
-  public function getBookBalance() {
-    $a = $this;
-    return $a->balance + $a->getPendingDeposits();
-  }
-  
-  /* /\** */
-  /*  * Collected balance is the transaction balance less any outgoing invoices. */
-  /*  * We don't expect there to be any outstanding outgoing transfers. */
-  /*  *\/ */
-  /* public function getCollectedBalance() { */
-    
-  /*   return $balance; */
-  /* } */
-
-  /* /\** */
-  /*  * Uncollected balance is collected balance plus any incoming invoices and any outstanding incoming USD transfers. */
-  /*  *\/ */
-  /* public function getUncollectedBalance() { */
-  /* } */
-  
   /**
    * Transfer funds to an account from a connected bank account or drawable Common Good account.
    * Always bring the balance up to balance up to zero or (if autorefill is yes) the target balance PLUS the requested amount.
@@ -1342,11 +1290,11 @@ EOF;
    * @return the transaction number (FALSE if failure)
    */
   public function bank($amount, &$why = '', $tx = []) {
-    $a = $this;
     ///    debug("->bank($amount, $why, " . print_r($tx, true) . ")");
     global $channel;
     $amount0 = $amount; // remember original amount requested
 		
+    $a = $this;
     $payee = $a->id;
     if ($tx) extract($tx);
     //    u\setDft($tid, r\getUsdTid($payee));
@@ -1379,27 +1327,6 @@ EOF;
     return $txid;
   }
 	
-  /* /\** */
-  /*  * Return information about a same-direction request to combine with. */
-  /*  * @param numeric $amount: amount requested */
-  /*  *                         (RETURNED) amount, modified as appropriate */
-  /*  * @param int $completed: desired completion date (NULL if none) */
-  /*  * @param int $completed: (RETURNED) completion date of new or modified request (0 if not yet) */
-  /*  * @return $txid transaction ID of transaction to modify (FALSE if none) */
-  /*  *\/ */
-  /* private function combineUsdTx(&$amount, &$completed) { */
-  /*   $a = $this; */
-    
-  /*   if (!$a->bankOk) return FALSE; */
-  /*   if ($amount > 0 and $amount + $a->advances() - $a->balance > -$a->floor) $completed = 0; // only 0 if bringing in beyond credit line */
-  /*   $where = 'payee=:id AND amount>0 AND NOT deposit AND NOT completed'; */
-  /*   if ($res = db\get('txid,amount AS oldAmount', 'r_usd', $where, ray('id', $a->id))) { */
-  /*     extract($res); */
-  /*     $amount += $oldAmount; */
-  /*   } else $txid = FALSE; */
-  /*   return $txid; */
-  /* } */
-
   /**
    * Create a zero USD transfer record to verify the bank account.
    */
@@ -1427,64 +1354,12 @@ EOF;
     if (!$a->bank(-$cashout, $zot)) return;
   }
   
-  /* /\** */
-  /*  * Mark an incoming USD transfer complete, update cache, and report. */
-  /*  * @param int $txid: the transfer record ID (if empty, no need to mark it complete) */
-  /*  * @param numeric $amount: transfer amount from bank to CG (positive) */
-  /*  * @param bool $automatic: <transfer was created automatically> */
-  /*  * @return <success> */
-  /*  *\/ */
-  /* public function completeUsdTx($txid, $amount, $automatic) { */
-  /* $a = $this; */
-  
-    
-  /*   $DBTX = \db_transaction(); */
-
-  /*   if ($txid) { // unless transfer is already marked complete */
-  /*     $values = db\get('amount as realAmt, payee AS payeeId, risk, risks, channel', 'r_usd', 'txid=:txid', compact('txid')); */
-  /*     extract(u\exactly('realAmt payeeId risk risks channel', array_filter($values), [0, 0, null, 0, TX_SYS])); */
-      
-  /*     if ($amount != $realAmt) { */
-  /*       r\tellAdmin(t('bad completeUsdTx amt'), compact(ray('txid amount realAmt automatic'))); */
-  /*       return FALSE;  // ?? */
-  /*     } */
-  /*     $completed = r\rTime(); */
-  /*     $bankId =  ($amount > 0) ? CG_INCOMING_BANK_UID : CG_OUTGOING_BANK_UID; */
-  /*     $tx = new r\Tx(['goods' => FOR_USD, 'actorId' => $payeeId, 'actorAgentId' => 0, 'flags' => 0, 'channel' => $channel, */
-  /*                     'risk' => $risk, 'risks' => $risks, 'created' => $completed]); */
-  /*     $tx->addEntry(new r\TxEntry(['entryType' => ENTRY_PAYER, 'amount' => 0-$amount, 'uid' => $bankId, 'agentUid' => 0, */
-  /*                                  'description' => ($amount > 0) ? t('transfer to CG') : t('transfer from CG')])); */
-  /*     $tx->addEntry(new r\TxEntry(['entryType' => ENTRY_PAYEE, 'amount' => $amount, 'uid' => $payeeId, 'agentUid' => 0, */
-  /*                                  'description' => $amount > 0 ? t('transfer in') : t('transfer out')])); */
-  /*     $xid = $tx->insert(); */
-  /*     if (!$xid) { */
-  /*       $DBTX.rollback(); */
-  /*       return FALSE; */
-  /*     } */
-  /*     if (!db\update('r_usd', ['txid'=>$txid, 'completed'=>r\rTime()], 'txid')) { */
-  /*       $DBTX.rollback(); */
-  /*       return FALSE; */
-  /*     } */
-  /*   } else { */
-  /*     /\* /\\**\\/ die('why are we trying to mark a non-existent transfer complete?'); *\/ */
-  /*   } */
-    
-  /*   unset($DBTX); */
-    
-  /*   $transfer = $automatic ? t('automatic transfer') : t('transfer'); */
-  /*   $amount = u\fmtAmt($amount); */
-  /*   r\notify($a->id, 'transfer complete', compact('transfer', 'amount')); */
-  /*   //    if (!$a->can(B_BONA)) r\message($a->id, 'account funded'); */
-  /*   return TRUE; */
-  /* } */
-
   /**
    * Suggest autorrefills or a higher minimum, etc. (because of a failed purchase).
    * This might make sense to use on the WEB interface also (just change the $channel line below), but the message would need to be added AFTER the basic error message.
    */
   public function suggestAuto() {
     $a = $this;
-    
     global $channel; if (!in_array($channel, [TX_POS])) return;
 		
     $web = ($channel == TX_WEB);
@@ -1521,7 +1396,6 @@ EOF;
    */
   public function nextTickle($done = FALSE) {
     $a = $this;
-    
 
     $now = time();
     $activate = ($done . '' == 'activate');
@@ -1558,7 +1432,6 @@ EOF;
    */
   public function giftsDesc(&$period = '', &$totalGifts = '') {
     $a = $this;
-    
     $gift = '';
     /* A gift is a transaction where one entry refers to the member and another entry refers to CG. */
     $sql = <<< EOF
@@ -1591,7 +1464,7 @@ EOF;
 
     $amt = $a->totalGifts();
     $totalGifts = ($amt) ? u\fmtAmt($amt) : null;
-    if (!is_null($totalGifts)) {
+    if (!empty($totalGifts)) {
       $totalGifts = t('<%b>%totalGifts</b> to date', compact('totalGifts'));
     }
     $totalGifts .= trim(($a->roundup ? t(' +<%b>roundups</b>') : '') .
@@ -1613,22 +1486,20 @@ EOF;
    * @see also r\Web\rdo()
    */
   function makeDo0($op, $v = NULL, $life = WEEK7_SECS, $info = []) {
-    $a = $this;
     //  extract($data = rayy(func_get_args()) ?: $data);
     extract($info);
     $info += compact('op');
     if (!is_null($v)) $info += compact('v');
     
     if (@$life) {
-      $data = ray('uid expires data', $a->id, r\rTime() + $life, serialize($info));
+      $data = ray('uid expires data', $this->id, r\rTime() + $life, serialize($info));
       $info = ray('op', db\insert('r_do', $data, 'doid')); // (preliminary) op is r_do record ID
     } else $info += ['mo'=>rdoMonth()]; // remember month, in case we need to know when link was created
 
     return BASE_URL . "/do/" . r\makeDoCode($info);
   }
   function makeDo($op, $v = NULL, $life = WEEK7_SECS, $info = []) {
-    $a = $this;
-    return 'a href="' . $a->makeDo0($op, $v, $life, $info) . '"';
+    return 'a href="' . $this->makeDo0($op, $v, $life, $info) . '"';
   }
   
   /**
@@ -1639,11 +1510,10 @@ EOF;
    * @return <successful>
    */
   public function setBitx($bit, $on = TRUE, $field = 'flags') {
-    $a = $this;
     if ($bit > B_MAX) $field .= 1 + floor($bit / (B_MAX + 1));
-    $n = $a->$field;
+    $n = $this->$field;
     u\setBit($n, $bit, $on);
-    return $a->update($field, $n);
+    return $this->update($field, $n);
   }
 
   /**
@@ -1672,13 +1542,12 @@ EOF;
   public function setCoBit($bit, $on = TRUE) {$this->setBitx($bit, $on, 'coFlags');}
   
   public function setCoCans($cans) {
-    $a = $this;
-    $coFlags = $a->coFlags;
+    $coFlags = $this->coFlags;
     for ($i = 0; $i < 2 * APP_CAN_BITS; $i++) {
       $bit = u\bit(APP_CANS + $i);
       $coFlags = isset($cans[$i]) ? ($coFlags | $bit) : ($coFlags & ~$bit);
     }
-    $a->update(compact('coFlags'));
+    $this->update(compact('coFlags'));
   }
 
   /**
@@ -1686,11 +1555,10 @@ EOF;
    * @param array $values: numeric array of bit values (eg [3 => 3, 5 => 5])
    */
   public function setRisks($values) {
-    $a = $this;
-    $risks = $a->risks;
+    $risks = $this->risks;
     $riskBits = array_values(just(K_ACCT_RISKS_EDITABLE, array_flip(array_keys(ray(K_ACCT_RISKS))))); // editable risk bits
     foreach ($riskBits as $bit) u\setBit($risks, $bit, isset($values[$bit]));
-    $a->update(compact('risks')); // update all at once, for efficiency
+    $this->update(compact('risks')); // update all at once, for efficiency
   }
   
   /**
@@ -1699,7 +1567,6 @@ EOF;
    */
   public function setBits($values) {
     $a = $this;
-    
     u\setDft($values, []); // fails in arg list (dunno why)
     $flags = $a->flags;
     foreach ($a->adminables() as $bitName) { // set all these on or off
@@ -1716,7 +1583,6 @@ EOF;
    */
   public function dupAddr() {
     $a = $this;
-    
     if (!$address = $a->address) return FALSE;
     $q = db\q('SELECT uid FROM users WHERE :IS_OK AND uid<>:id AND zip=:zip', ray('id zip', $a->id, $a->zip));
     while ($row = $q->fetchAssoc()) if (r\acct($row['uid'])->address = $address) return TRUE;
@@ -1732,7 +1598,6 @@ EOF;
    */   
   public function changeCtty($newCtty, $retro = FALSE, &$err = '') {
     $a = $this;
-    
     if (!db\exists('users', 'uid<1 AND uid=:newCtty', compact('newCtty'))) return !$err = 'bad ctty';
     
     $a->update('community', $newCtty);
@@ -1749,7 +1614,6 @@ EOF;
    * https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?format=json&benchmark=Public_AR_Current&address=ADDRESS (no API_KEY needed, but fails 7% of the time and no way to approximate the address)
    */
   public function setLocus($lat = NULL, $lon = NULL) {
-    $a = $this;
     if (u\test()) return; // doesn't work on DEV machine yet
     $a = $this;
     if (!is_null($lat)) return $a->update('latitude longitude', $lat, $lon);
@@ -1802,8 +1666,7 @@ EOF;
    */
   private function getCans($bit) {
     $a = $this;
-    
-    $aa = $a->agentA;
+    $aa = $this->agentA;
     $id = $a->id;
     
     $cans[B_PERSON] = !$a->can(B_CO);
@@ -1842,7 +1705,6 @@ EOF;
    */
   public function makeVKeyE($vKey = '') {
     $a = $this;
-    
     if (!$vKey = u\unfmtKey($vKey) and !$vKey = r\vKey()) return t('No private key given or available.');
     $a->update('vKeyPw', $vKeyPw = openssl_random_pseudo_bytes(32));
     if (isDEV) \setV('vKeyPw', $vKeyPw); // otherwise this gets lost during testing
@@ -1860,9 +1722,8 @@ EOF;
    *   custCode: the company's identifier for the customer
    */
   public function eachPartner($func) {
-    $a = $this;
     $sql = 'SELECT main, code FROM r_relations WHERE other=:id AND :IS_CUSTOMER ORDER BY code';
-    $res = q($sql, ['id' => $a->id])->fetchAllKeyed();
+    $res = q($sql, ['id' => $this->id])->fetchAllKeyed();
     foreach ($res as $main => $code) $func(r\acct($main), $this, $code);
   }
   
@@ -1874,7 +1735,6 @@ EOF;
    */
   public function photoHtml($small = FALSE, $unique = FALSE) {
     $a = $this;
-    
     return '<div id="user-picture"><img src="' . $a->photoSrc($small, $unique) . '" alt="profile picture" /></div>';
   }
   
@@ -1886,7 +1746,6 @@ EOF;
    */
   public function photoSrc($small = FALSE, $unique = FALSE) {
     $a = $this;
-    
     global $base_url;
     if ($unique) $unique = '&t=' . r\rTime();
     $thing = $small ? 'icon' : 'photo';
@@ -1907,7 +1766,6 @@ EOF;
    */
   public function ssnCheck($force = FALSE) {
     $a = $this;
-    
     if ($a->federalId == '000000000') return t('Nonmember SSN.');
     if (!@$a->federalId) return t('No SSN yet.');
     if ($a->federalId == '999999999') return t('SSN is a test.');
@@ -1991,10 +1849,9 @@ EOF;
    * Return the account's total gifts to the Common Good.
    */
   function totalGifts() {
-    $a = $this;
     return db\sum('e1.amount', 'r_tx_hdrs t JOIN r_entries e1 USING(xid) JOIN r_entries e2 USING(xid) JOIN r_tx_hdrs tRev ON t.xid=tRev.reversesXid',
                   'e1.uid=:payerId AND e2.uid=:CGID AND t.:IS_GIFT AND tRev.xid IS NULL AND t.reversesXid IS NULL',
-                  [ 'payerId' => $a->id ]);
+                  [ 'payerId' => $this->id ]);
   }
   
   /**
@@ -2003,8 +1860,7 @@ EOF;
    * @param assoc $ssnData: whatever ssn Data we received from the lookup service
    */
   public function ssnErr($s, $ssnData = []) {
-    $a = $this;
-    $a->update('ssnData', $res = $ssnData + [SSN_ERR_INDEX => $s]);
+    $this->update('ssnData', $res = $ssnData + [SSN_ERR_INDEX => $s]);
     return $res;
   }
   
@@ -2016,9 +1872,8 @@ EOF;
   public function lastTxDesc() {return ($tx = $this->lastTx) ? t(' (Last tx: %dt)', 'dt', u\fmtDate($tx->created, TRUE)) : '';}
   public function firstCo() {return db\get('fullName', 'r_relations r INNER JOIN users u ON r.main=u.uid', 'r.permission>0 AND r.other=:id AND u.:IS_CO ORDER BY r.created LIMIT 1', ['id' => $this->id]);}
   public function adminables() {
-    $a = $this;
-    $res = ray(B_ADMINABLE . ($a->admin ? ' admin2' : '') . ($a->superAdmin ? ' admin' : ''));
-    return array_values($a->isCtty ? array_intersect($res, ray(B_CTTY_BITS)) : array_diff($res, ray(B_CTTY_BITS)));
+    $res = ray(B_ADMINABLE . ($this->admin ? ' admin2' : '') . ($this->superAdmin ? ' admin' : ''));
+    return array_values($this->isCtty ? array_intersect($res, ray(B_CTTY_BITS)) : array_diff($res, ray(B_CTTY_BITS)));
   }
   public function pay($a2, $amt, $for, $goods, $extra = []) {return be\transfer('payment', $this, $a2, $amt, $for, $goods, $extra);}
   public function charge($a2, $amt, $for, $goods, $extra = []) {return be\transfer('charge', $this, $a2, $amt, $for, $goods, $extra);}

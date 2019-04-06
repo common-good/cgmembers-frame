@@ -368,11 +368,9 @@ function formFollowup($form, &$sta, $args = []) {
   global $mya;
   
 	if (!$mya or (!$mya->cAdmin2 and !$mya->admin2)) return w\go('');
-  $uid = u\arrayGet($args, 'uid', null);
-  $one = u\arrayGet($args, 'one', null);
-  $recent = u\arrayGet($args, 'recent', null);
+  extract(exactly('uid one recent', $args, null));
   
-  if (!is_null($uid)) {
+  if (!empty($uid)) {
     w\setAcct($uid); // switch to that user
     return formSummary($form, $sta);
   }
@@ -382,34 +380,16 @@ function formFollowup($form, &$sta, $args = []) {
   
   $now = time();
   $todayEnd = strtotime('tomorrow') - 1;
-  list ($where1, $where2) = (($mya->admin or $mya->isAdmin2) and is_null($one)) ? [1, 1] : [0, "community=$mya->community"];
+  list ($where1, $where2) = (($mya->admin or $mya->isAdmin2) and empty($one)) ? [1, 1] : [0, "community=$mya->community"];
   $cttys = r\cttyList();
   $cttys[key($cttys)] = t('Seedpack');
   foreach ($cttys as $k => $v) $cttys[$k] = trim(str_replace(PROJECT, '', $v));
   
-  $by = !is_null($recent)
+  $by = !empty($recent)
     ? "notes IS NULL OR notes='' OR MID(notes,1,6)='knows ', (MID(notes,6,4)*37+LOCATE(MID(notes,3,3),'JanFebMarAprMayJunJulAugSepOctNovDec'))*32+MID(notes,1,2) DESC"
     : "($todayEnd - IF(tickle>0, tickle, u.created)) * IF(tickle>$todayEnd, -5 * 366 * :DAY_SECS, 1)"; // today's calls first, then yesterday, 2 days ago etc., then tomorrow, the next day, etc.
   if ($mya->superAdmin) $by = "(notes LIKE '%ZAP%' AND BINARY notes LIKE '%ZAP%') OR (!activated AND u.:IS_MEMBER) DESC, " . $by;
   
-/*   $sql = <<<EOF */
-/*     SELECT uid, community, tickle, fullName, phone, u.data, u.created, activated, notes, u.:IS_CO AS co, */
-/*     t.created AS lastTxTime, u.:IS_MEMBER AS member, u.:IS_OK AS ok, u.:IS_CARDED AS carded */
-/*     FROM users u LEFT JOIN r_entries e USING(uid) LEFT JOIN r_tx_hdrs t USING (xid) */
-/*     WHERE uid>:CANONIC_ACCTS AND NOT u.:IS_NONUDGE AND NOT (activated and NOT u.:IS_OK) AND $where2 */
-/*     AND (tickle>0 OR NOT u.:IS_MEMBER OR t.created<$now-60*:DAY_SECS OR t.created IS NULL) */
-/*     ORDER BY $by */
-/* EOF; */
-/*   $sql = <<<EOF */
-/*     SELECT uid, community, tickle, fullName, phone, u.data, u.created, activated, notes, u.:IS_CO AS co, */
-/*     t.created AS lastTxTime, u.:IS_MEMBER AS member, u.:IS_OK AS ok, u.:IS_CARDED AS carded */
-/*     FROM ( SELECT uid, community, tickle, fullName, phone, data, created, activated, notes, flags */
-/*            FROM users */
-/*            WHERE uid>:CANONIC_ACCTS AND NOT :IS_NONUDGE AND NOT (activated and NOT :IS_OK) AND $where2) u */
-/*     LEFT JOIN r_entries e USING(uid) JOIN r_tx_hdrs t USING (xid) */
-/*     WHERE (tickle>0 OR NOT u.:IS_MEMBER OR t.created<$now-60*:DAY_SECS OR t.created IS NULL) */
-/* EOF; */
-/*     /\* ORDER BY $by *\/ */
   $sql = <<<EOF
     SELECT DISTINCT u.uid, community, tickle, fullName, phone, u.data, u.created, activated, notes, :IS_CO AS co, t.created AS lastTxTime, :IS_MEMBER AS member, :IS_OK AS ok, :IS_CARDED AS carded
     FROM users u LEFT JOIN (SELECT t0.created,e0.uid FROM r_tx_hdrs t0 JOIN r_entries e0 USING(xid) ORDER BY created DESC LIMIT 1) t USING(uid)
@@ -418,9 +398,8 @@ function formFollowup($form, &$sta, $args = []) {
     ORDER BY $by
 EOF;
   
-  /* SELECT uid, t.created as lastTxTime FROM users u LEFT JOIN r_entries e USING(uid) LEFT JOIN r_tx_hdrs t USING(xid) WHERE uid>:CANONIC_ACCTS AND NOT u.:IS_NONUDGE AND NOT (activated and NOT u.:IS_OK) AND (tickle>0 OR NOT u.:IS_MEMBER OR t.created<$now-60*:DAY_SECS OR t.created IS NULL); */
   $fields = ray('ctty type call name phone notes');
-  if (!is_null($one)) array_shift($fields);
+  if (!empty($one)) array_shift($fields);
   $q = db\q($sql);
   $guts = $heads = '';
   foreach ($fields as $k) {
@@ -471,8 +450,6 @@ EOF;
   
   return cgform(compact(ray('title subtitle list')), '', FALSE);
 }
-
-//////////////////////////////////////////////////////////////////////////////
 
 /**
  * Show a list of members in the current account's community

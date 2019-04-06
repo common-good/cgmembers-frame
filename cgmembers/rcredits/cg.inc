@@ -35,7 +35,7 @@ define('RECENT_SECS', 60 * DAY_SECS); // back how long is "recent" (don't change
  */
 function regionalInsert($table, $idField, $record, $region = NULL) {
   if (!empty(u\arrayGet($record, $idField, null))) {return db\insert($table, $record, $idField);} // predestined id (probably for testing)
-  if (!@$region) $region = -r\serverUid();
+  if (empty($region)) $region = -r\serverUid();
   $end = $region + ($region < 0 ? -(R_REGION_MAX - 1) : (R_REGION_MAX - 1));
   $start = $region < 0 ? $region - 1 : $region; // -1: do not use the uid of the region itself
 
@@ -90,24 +90,10 @@ function insert($table, $idField, $record) {
  */
 function badUnpaidInv($nvid, &$inv = '') {
   $fields = 'nvid,status,amount,payer,payee,goods,purpose,flags,data,created';
-  if (is_array($nvid)) $nvid = $nvid['nvid'];
+  if (is_array($nvid)) $nvid = $nvid['nvid'];  // really shouldn't happen -- but apparently did at some point
   if (!$inv = db\get($fields, 'r_invoices', 'nvid=:nvid', compact('nvid'))) return 'no matching invoice';
   if ($inv['status'] >= TX_PAID) return 'already paid';
 }
-
-/* /\** */
-/*  * Return the user's sequential transaction number */
-/*  * @param int $xid: the transaction record number */
-/*  * @param int $uid: the user's uid */
-/*  * @return string: the user's transaction number */
-/*  *\/ */
-/* function xid2tid($xid, $uid) { */
-/*   $jid = r\acct($uid)->jid ?: 0; */
-/*   $isIt = ' IN (:uid, :jid)'; */
-/*   $where = "(payer$isIt OR payee$isIt) AND xid<:xid AND type>=0"; */
-/*   $max = "MAX(GREATEST(IF(payee$isIt, payeeTid, 0), IF(payer$isIt, payerTid, 0)))"; */
-/*   return db\get($max, 'r_txs', $where, compact('uid', 'xid', 'jid')) + 1; */
-/* } */
 
 /**
  * Say whether an account's proposed transaction duplicates the last recent one.
@@ -122,9 +108,9 @@ function dupTx($aId, $otherId, $amount) {
   if ($channel == TX_WEB) return FALSE; // allow dups on web interface
   $lastTx = r\acct($aId)->lastTx;
   if (!$lastTx) { return FALSE; }
-  /* debug("lastTx was: " . print_r($lastTx, true)); */
-  /* debug("dupTx: lastTx->payerId=$lastTx->payerId, ->payeeId=$lastTx->payeeId, ->payerAmount=$lastTx->payerAmount, ->payeeAmount=$lastTx->payeeAmount, $a->id, $amount"); */
-  return ($lastTx->actorId == $aId and $lastTx->otherId == $otherId and ($lastTx->payerAmount == $amount or $lastTx->payerAmount == $amount)) and ((r\rTime() - $lastTx->created) < R_DUPTX_MINS * MIN_SECS);
+  return (($lastTx->actorId == $aId and $lastTx->otherId == $otherId
+           and ($lastTx->payerAmount == $amount or $lastTx->payerAmount == $amount))
+          and ((r\rTime() - $lastTx->created) < R_DUPTX_MINS * MIN_SECS));
 }
  
 /**
@@ -372,7 +358,7 @@ function message($uid, $index, $subs = [], $topic = '') {
  * @param bool $force: send by email NOW
  */
 function notify($uid, $index, $subs = [], $force = FALSE) {
-  /* debug("notify($uid, '$index', " . print_r($subs, true) . ", $force)"); */
+  ///  debug("notify($uid, '$index', " . print_r($subs, true) . ", $force)");
   global $channel;
   if (isGAME) return;
   $a = r\acct($uid);
@@ -1134,8 +1120,8 @@ function getStats($ctty, $created = NULL, $exact = FALSE) {
   $res = [];
   // get account counts (can't be combined with financial data query because of joint accounts
   $sql = <<< X
-	  SELECT SUM(IF(:IS_OK AND activated<=:created AND NOT :IS_CO, 1, 0)) AS pAccts, 
-    SUM(IF(:IS_OK AND activated<=:created AND :IS_CO, 1, 0)) AS bAccts,
+	  SELECT SUM(IF(:IS_OK AND activated<=:created AND activated<>0 AND NOT :IS_CO, 1, 0)) AS pAccts, 
+    SUM(IF(:IS_OK AND activated<=:created AND activated<>0 AND :IS_CO, 1, 0)) AS bAccts,
     SUM(IF(NOT activated OR activated>:created, 1, 0)) AS newbs
     FROM users u
     WHERE $nonCtty AND $cttyCrit AND $creCrit	
@@ -1145,12 +1131,12 @@ X;
   // get users table financial data (must happen before topN/botN)
   $sql = <<< X
     SELECT 
-    SUM(IF($masterBal>0, $masterBal, 0)) AS balsPos,
-    SUM(IF($masterBal<0, $masterBal, 0)) AS balsNeg,
-    SUM(IF($masterBal>0, 1, 0)) AS balsPosCount,
-    SUM(IF($masterBal<0, 1, 0)) AS balsNegCount,
+    SUM(IF(balance>0, balance, 0)) AS balsPos,
+    SUM(IF(balance<0, balance, 0)) AS balsNeg,
+    SUM(IF(balance>0, 1, 0)) AS balsPosCount,
+    SUM(IF(balance<0, 1, 0)) AS balsNegCount,
     SUM(IF(:IS_OK, floor, 0)) AS floors
-    FROM users u LEFT JOIN $slave
+    FROM users u /*LEFT JOIN $slave*/
     WHERE $nonCtty AND $isMaster AND $cttyCrit AND $creCrit
 X;
   $res += db\q($sql, $subs)->fetchAssoc() ?: [];
@@ -1158,29 +1144,17 @@ X;
   // get bank transfer data
   $in = 'amount>0 AND xid<=0';
   
-/*   $sql = <<< X */
-/*     SELECT */
-/*     SUM(IF($in, amount, 0)) AS usdInPending, */
-/*     SUM(IF($in, 0, amount)) AS usdOutPending, */
-/*     SUM(IF($in, 1, 0)) AS usdInPendingCount, */
-/*     SUM(IF($in, 0, 1)) AS usdOutPendingCount */
-/*     FROM r_usd t LEFT JOIN $accounts u ON u.uid=t.payee */
-/*     WHERE $cttyCrit AND t.completed AND t.completed<=:created AND t.amount<>0 */
-/* X; */
-/*   $res += db\q($sql, $subs)->fetchAssoc() ?: []; */
-
-  $thisIn = "bankE.amount < 0";  // if bank's amount is negative, ours is positive
+  $thisIn = "t.amount > 0";
   $sql = <<< X
     SELECT
-    SUM(IF($thisIn, -bankE.amount, 0)) AS usdIn,
-    SUM(IF($thisIn, 0, bankE.amount)) AS usdOut,
+    SUM(IF($thisIn, amount, 0)) AS usdIn,
+    SUM(IF($thisIn, 0, amount)) AS usdOut,
     SUM(IF($thisIn, 1, 0)) AS usdInCount,
     SUM(IF($thisIn, 0, 1)) AS usdOutCount
-    FROM r_entries e1 JOIN r_tx_hdrs t USING(xid) JOIN r_entries bankE USING(xid) LEFT JOIN $accounts u ON u.uid=e1.uid
-    WHERE $cttyCrit AND t.created<=:created
-    AND bankE.uid IN (:bankUids)
+    FROM r_usd t LEFT JOIN users u ON (u.uid=t.payee AND uid>:CANONIC_ACCTS)
+    WHERE $cttyCrit AND t.completed IS NOT NULL AND t.completed<=:created AND t.amount<>0
 X;
-  $res += db\q($sql, $subs + ['bankUids'=>[CG_INCOMING_BANK_UID, CG_OUTGOING_BANK_UID]])->fetchAssoc() ?: [];
+  $res += db\q($sql, $subs)->fetchAssoc() ?: [];
 
   // get transaction table data
   $sql = '';
@@ -1195,7 +1169,7 @@ X;
     foreach ([0, 1] as $i) ${'not' . $i} = $v[$i] ? '' : 'NOT';
     $sql .= "SUM(IF(goods<>:FOR_USD AND $not0 u.:IS_CO AND $not1 u2.:IS_CO, payeeE.amount, 0)) AS $k,\n";
   }
-  $sql .= "SUM(IF(payerE.uid>1 AND goods=:FOR_USD, payeeE.amount, 0)) AS cashs,\n";
+  $sql .= "SUM(IF((payerE.uid>:CANONIC_ACCTS OR payerE.uid < 0) AND goods=:FOR_USD, ABS(payeeE.amount), 0)) AS cashs,\n";
   $sql .= strtr($sql, ['payeeE.amount' => '1', 'payerE.amount' => '1', ",\n" => "Count,\n"]); // add counts
   $sql = str_replace(",\n!", '', $sql . '!'); // remove final comma in field list
   
@@ -1204,7 +1178,7 @@ X;
     FROM r_tx_hdrs t JOIN r_entries payerE USING (xid) JOIN r_entries payeeE USING(xid)
     LEFT JOIN $accounts u ON u.uid=payerE.uid 
     LEFT JOIN $accounts u2 ON u2.uid=payeeE.uid
-    WHERE payerE.amount < 0 AND payeeE.amount > 0 AND $cttysCrit AND $creCrit
+    WHERE payerE.entryType=:ENTRY_PAYER AND payeeE.entryType=:ENTRY_PAYEE > 0 AND $cttysCrit AND $creCrit
 X;
   $res += db\q($sql, $subs)->fetchAssoc() ?: [];
   
@@ -1285,7 +1259,6 @@ X;
   
   if (@$created0 and $created < strtotime('today')) { // redoing stats for the past, so figure bals, floors, and topN the hard way
     $recently = strtotime(-FLOOR_DAYS . ' days', $created); // six months ago
-    $uids = 
     $isPayer = '(payer IN (uid, jid) AND payer<>0 AND e.entryType=:ENTRY_PAYER)';
     $isPayee = '(payee IN (uid, jid) AND e.entryType=:ENTRY_PAYEE)';
 
@@ -1334,9 +1307,9 @@ X;
     $topN = topN($res); // NOTE: this line must be duplicated above because $res is different
     $sql = <<< X
       SELECT SUM(bal) AS topN FROM 
-      (SELECT $masterBal AS bal FROM users u LEFT JOIN $slave
+      (SELECT balance AS bal FROM users u
        WHERE $nonCtty AND $isMaster AND $cttyCrit AND $creCrit GROUP BY uid
-       ORDER BY $masterBal DESC LIMIT $topN) u
+       ORDER BY balance DESC LIMIT $topN) u
 X;
     $res += db\q($sql, $subs)->fetchAssoc() ?: [];
     
@@ -1478,8 +1451,8 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   //  if (!$a1->can($myAccess)) return array("no $myAccessErr", [], FALSE);
   //  if (!$a2->can($otherAccess)) return array("other no $otherAccessErr", ray('otherName', $a2->agentA->fullName), FALSE);
 
-  /* if (!$a1->cttyUp and !$a1->isCanonical) return array('your community down', ray('contact', $a1->cAdminContact()), FALSE); */
-  /* if (!$a2->cttyUp and !$a2->isCanonical) return array('other community down', [], FALSE); */
+  if (!$a1->cttyUp and !$a1->isCanonical) return array('your community down', ray('contact', $a1->cAdminContact()), FALSE);
+  if (!$a2->cttyUp and !$a2->isCanonical) return array('other community down', [], FALSE);
   if ($a1->id == $a2->id) return array('no self-trading', [], FALSE);
   return FALSE;
 }

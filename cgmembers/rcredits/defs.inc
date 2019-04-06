@@ -147,7 +147,6 @@ define('R_REGION_FLDS', 'region,fullName,st,zip,federalId,hasServer');
 define('R_DATE_FLDS', 'created completed deposit sent invited giftDate signed login access yesterday'); // date field names for testing
 define('CO_FLDS', 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd'); // account fields stored in r_company
 define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone achMin pinThreshold lastiCode tenure moves mediaConx source getAppData appData snap'); // fields stored in the account's "data" array field (serialized)
-/* define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone achMin pinThreshold lastTx lastiCode tenure moves mediaConx source getAppData appData snap'); // fields stored in the account's "data" array field (serialized) */
 define('MASTER_NUMERIC_FLDS', 'minimum achMin savingsAdd saveWeekly');
 define('MASTER_FLDS', MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank refill'); // only in master, for joint accounts
 define('R_MONEY_FLDS', 'balance rewards floor giftPot committed'); // financial amount fields in account record
@@ -156,7 +155,6 @@ define('PSECURE_FLDS', 'phone email'); // personal fields that get encrypted in 
 define('VSECURE_FLDS', 'federalId dob bankAccount'); // very secure fields (pgp-encrypted)
 define('SECURE_FLDS', 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode cardCode cardCode2 pin question answer idProof oneTimePass last4bank'); // non-personal encrypted fields (must be complete list)
 define('R_HIDE_CHANGES', R_MONEY_FLDS . ' pw2 vKeyPw ssnData hasBank changes init login access activated data secure vsecure stepsDone lastiCode pass oneTimePass notes picture photo trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd'); // do not record changes to these fields: anything often-changed (automatically or not)
-/* define('R_HIDE_CHANGES', R_MONEY_FLDS . ' pw2 vKeyPw ssnData hasBank changes init login access activated data secure vsecure stepsDone lastTx lastiCode pass oneTimePass notes picture photo trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd'); // do not record changes to these fields: anything often-changed (automatically or not) */
 define('R_APP_DATA_GETS', '!log !device !members !txs '); // data requests from the rPOS app
 //  define('R_AVAIL_BUY', '(balance-IF(u.:IS_DEBT, floor, GREATEST(floor, 0)))'); // balance available to spend
 define('R_SHARE_MAX', 50); // minimum sharing percentage
@@ -488,7 +486,6 @@ define('B_STAKE', 13); // member buying or selling stake in investment club
 define('B_FINE', 14); // community fine
 define('B_NOASK', 15); // transaction was taken with ID checking OFF
 define('B_FUNDING', 16); // invoice has already instigated an appropriate bank transfer request
-/* define('TX_FLAGS', 'taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding'); */
 define('TX_FLAGS', 'offline short crumbs recurs gift loan investment stake fine noask funding');
 
 // Invoice status (txid >= TX_PAID if paid)
@@ -522,8 +519,7 @@ define('NORMAL_TX_ROWS', 30); // normal number of transaction lines to show
 define('TX_MAX_ROWS', 500); // (unused) maximum number of transactions to load at once
 define('TX_MAX_MOS', 18); // maximum transaction months, for display
 define('TX_MAX_DAYS', 30.5 * TX_MAX_MOS + 2); // maximum days in a transaction query (18 months) -- 2 for leap day & daylight
-define('TX_DOWNLOAD_MONEY_FLDS', 'frombank fromyou toyou reward net');
-define('NEW_TX_DOWNLOAD_MONEY_FLDS', 'frombank fromyou toyou net');
+define('TX_DOWNLOAD_MONEY_FLDS', 'frombank fromyou toyou net');
 define('TX_DATA_FLDS', 'undoneBy undoes force changes'); // serialized pseudo-fields in the data field of a transaction record
 
 define('DS_OPEN', 1);  // dispute not resolved

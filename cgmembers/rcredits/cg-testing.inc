@@ -16,7 +16,7 @@ use CG\Web as w;
 
 global $base_path;
 define('BASE_PATH', $base_path);
-define('T_BALANCE_FLDS', 'uid balance floor minimum savingsAdd');
+define('T_BALANCE_FLDS', 'uid balance floor savingsAdd saveWeekly minimum');
 define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account actorId actorAgentId agentUid payerId payeeId');
 
 /**
@@ -26,24 +26,18 @@ define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer pa
  */
 function fixData(&$info, $direct = FALSE) {
   global $rUrl, $testVars;
-  /* print_r("fixData("); */
-  /* print_r($info); */
-  /* print_r(", $direct)"); */
   $fields = 'email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state box';
   if (@$testVars) foreach ($info as $k => $v) if (strpos($v, '@') !== FALSE) {
     foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", $var, $v);
   }
-  /* print_r("<br>1-->"); */
-  /* print_r($info); */
   extract(just($fields, $info));
+
   if (@$who) $who = t\fullQid($who);
   foreach (ray('flags adminable') as $k) if (isset($$k)) $$k = t\fixFlags($$k);
   if (isset($adminable)) {
     for ($i = 0; $i < B_MAX; $i++) if (u\getBit($adminable, $i)) $adminable2[$i] = TRUE;
     $adminable = @$adminable2 ?: [];
   }
-  /* print_r("<br>2-->"); */
-  /* print_r($info); */
  	extract(fixState(@$state, @$country));
 
 	foreach (ray('why error') as $k) if (isset($$k)) $$k = tr($$k); // convert embedded message references to actual text
@@ -59,33 +53,16 @@ function fixData(&$info, $direct = FALSE) {
     if (@$federalId) u\digits($federalId);
     if (@$dob) $dob = strtotime(str_replace('/', '-', $dob));
   }
-  if (@$box) {
-    $box = db\get('id', 'r_boxes', '`code`=:box', ['box'=>$box]);
-  }
-  /* print_r("<br>3-->"); */
-  /* print_r($info); */
+  if (!empty($box)) { $box = db\get('id', 'r_boxes', '`code`=:box', ['box'=>$box]); }
 
   foreach (just(T_ID_FLDS, $info) as $k => $v) {
-    /* print_r("before: $k => $v, "); */
-    if (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, 'ctty cgf')) {
-      /* print_r('here'); */
-      $info[$k] = t\uid($v) ?: 0;
-    }
-    /* $xx=$info[$k]; */
-    /* print_r("after: $k => $xx<br>"); */
+    if (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, 'ctty cgf')) { $info[$k] = t\uid($v) ?: 0; }
   }
-  /* print_r("<br>4-->"); */
-  /* print_r($info); */
 	foreach (ray('from:payer,to:payee,fromAgent:payerAgent,toAgent:payeeAgent') as $k => $k2) if (isset($info[$k])) {
 		$info[$k2] = $info[$k];
 		unset($info[$k]);
 	}
-  /* print_r("<br>5-->"); */
-  /* print_r($info); */
   $info = @compact(ray($fields)) + $info;
-  /* print_r("<br>6-->"); */
-  /* print_r($info); */
-  /* print_r('<br>'); */
 }
 
 /**
@@ -268,9 +245,7 @@ function doAccount($info = []) {
  */
 function doTx($info, $thing) {
   global $testOnly, $channel;
-  /* unset($info['type']); */
   u\EXPECT($thing != 'Invoice', 'use doInvoice for invoices, not doTx');
-  /* output($info); */
   extract(u\exactly('xid serial amount payer payee payerAgent payeeAgent payerFor payeeFor payerTid payeeTid data flags box risk purpose for', $info, null));  // These are what appear in r_txs
   extract(u\exactly('created type channel risks goods', $info, [r\rTime(), 'transfer', TX_SYS, 0, FOR_GOODS]));  // These are what appear in r_txs
   extract(u\exactly('taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding', $info, FALSE));  // These are flags that might appear
@@ -355,9 +330,10 @@ function doInvoice($info) {
   u\EXPECT(!empty($nvid));
   $xid = $invInfo['status'];
   if ($xid > 0) {  // it was paid, and the status refers to the transaction
-    $txInfo = just('created amount payer payee purpose for', $invInfo);
-    $txInfo['xid'] = $xid;
-    doTx($txInfo, 'invoice-payment');
+    // No -- don't do this, because there is insufficient information
+    /* $txInfo = just('created amount payer payee purpose for', $invInfo); */
+    /* $txInfo['xid'] = $xid; */
+    /* doTx($txInfo, 'invoice-payment'); */
   }
   return $nvid;
 }
@@ -484,15 +460,20 @@ function notice($notice, $id, $subs = []) {
  * Say whether the record count in a table is correct.
  */
 function count($what, $count) {
-	global $testOnly; if (!$testOnly) return FALSE;
-	
-	$what = $what == 'accounts' ? 'users' : "r_$what";
-  if ($what == 'r_tx_hdrs') {
-    return db\count($what, "xid > 0") == $count;
-  } else if ($what == 'r_txs') {
+	global $testOnly;
+  if (!$testOnly) return FALSE;
+
+  switch ($what) {
+  case 'accounts':
+    return db\count('users') == $count;
+  /* case 'r_txs': */
+  /* case 'r_tx_hdrs': */
+  case 'tx_hdrs':
+  case 'txs':
     return db\count('r_tx_hdrs', "xid > 0") == $count;
+  default:
+    return db\count('r_' . $what) == $count;
   }
-	return (db\count($what) == $count);
 }
 
 /**
@@ -548,7 +529,8 @@ function memberFieldValues($list) {
 }
 
 /**
- * Test that the balance is thus and such.
+ * Make the balance and other numeric fields be thus and such.
+ * Balance is set by creating dummy transactions (with negative xids)
  * "?" in a field means ignore its value when testing
  */
 function doBalance($info) {
@@ -581,23 +563,8 @@ function doBalance($info) {
     if ($k == 'balance' or $k == 'uid') continue;
     $a->update($k, $v);
   }
-/* if (!empty(array_intersect(array_keys($info), ray(T_READ_ONLY_FLDS)))) { */
-  /*   u\EXPECT($testOnly, 'cannot set balances directly, must use transactions'); */
-  /* } */
-
   
   // verify
-//  if (isset($info['r']) and !isset($info['balance'])) $info['balance'] = $info['r'] - @$info['rewards']; // 20170515
-//  t\fixData($info);
-/// print_r(compact('a','id','id0'));
-  /* foreach (ray($cashies = 'balance') as $k) { */
-  /*   $v = array_key_exists($k, $info) ? $info[$k] : null; */
-  /*   if (!is_null($v) and $v != '?') if ($uid > 0 or $k != 'rewards') { */
-  /*     $cachedVal = $a->o($k); */
-  /*     if (t\badEq("cached $k", $cachedVal, $v, $uid)) return FALSE; */
-  /*     if (!$a->jid and t\badEq("calc $k", $calc[$k], $v, $uid)) return FALSE; */
-  /*   } */
-  /* } */
   foreach ($info as $k => $v) {
     if ($v != '?' and $k != 'committed' and $uid > 0) if (t\badEq("db $k", $a->o($k), $v, $uid)) return FALSE;
   }
@@ -625,11 +592,8 @@ function usdTransferCount($where = '1') {
 
 function usdTransfers($txs) {
   global $testOnly, $channel; $channel0 = $channel;
-  static $count = 0;
 
   foreach ($txs as $tx) { // do not extract $tx, because setDft will fail after the first unless we unset vars
-    $count += 1;
-
     if (array_key_exists('payee', $tx)) $tx['payee'] = t\uid($tx['payee']);
 
     if ($testOnly) {
@@ -697,7 +661,6 @@ function cronRuns($op) {
  */
 function uidCredit($uid, $ignoreCalc = TRUE) {
   $info = be\creditInfo([$uid]);
-  /* t\output("uidCredit info: " . print_r($info, true)); */
   $a = r\acct($uid);
   if ($uid > 0 and !$a->jid) foreach (ray('balance') as $k) { // (community amounts don't get cached)
       $v1 = u\arrayGet($info, $k, null);
@@ -727,25 +690,12 @@ function fullQid($q) {
  * Interpret the given identifier (int, full qid, or local qid) as an account ID.
  */
 function uid($id, $field = 'id') {
-  /* print_r("   uid($id, $field)-->"); */
 //  u\EXPECT($id, 'empty id'); // otherwise site loops (?)
-  if (is_numeric($id) or empty($id)) {
-    /* print_r("$id<br>"); */
-    return $id;
-  }
-  if (in($id, 'community ctty')) {
-    $xx = r\serverUid();
-    /* print_r("$xx<br>"); */
-    return $xx;
-  }
-  if ($id == 'cgf') {
-    /* print_r("CGID<br>"); */
-    return CGID;
-  }
+  if (is_numeric($id) or empty($id)) { return $id; }
+  if (in($id, 'community ctty')) { return r\serverUid(); }
+  if ($id == 'cgf') { return CGID; }
 //  return r\qo($id)->$field; FAILS
-  $xx = r\qo(t\fullQid2($id))->$field;
-  /* print_r("$xx<br>"); */
-  return $xx;
+  return r\qo(t\fullQid2($id))->$field;
 }
 function agent($id) {return t\uid($id, 'agent');}
 

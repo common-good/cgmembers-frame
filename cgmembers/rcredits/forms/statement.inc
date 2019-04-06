@@ -27,8 +27,6 @@ function statement($period = '') {
   /* print_r($startBals); */
   $endBals = be\creditInfo($uids, $end);
   /* print_r($endBals); */
-  debug($startBals);
-  debug($endBals);
   /* extract(just('frombank fromyou toyou', $tot)); */
   $bal0 = $startBals['balance']; // balance BEFORE start of this period
   $bal9 = $endBals['balance'];
@@ -42,14 +40,8 @@ function statement($period = '') {
   $tobank = $endBals['toBank'] - $startBals['toBank'];
   $bank = $frombank - $tobank;
 
-  debug($fromyou);
   $fromyou -= $tobank;
-  debug($fromyou);
-  debug($toyou);
   /* $toyou -= $frombank; */
-  debug($toyou);
-
-  debug("$in0, $in9, $out0, $out9, $frombank, $tobank, $bank, $fromyou, $toyou");
   
   $committed = $mya->committed;
   list ($avg) = r\averageBalance($uids, $mya->created, $end, TRUE);
@@ -175,6 +167,7 @@ function statement($period = '') {
  *   end is one second beyond the end of the current period, so use should be exclusive not inclusive
  */
 function statementMonth($period, $fiscalYearEnd = '12/31') {
+  ///  debug("statementMonth($period, $fiscalYearEnd)");
   $type = substr($period, 0, 2); // CY, FY, Q<n>, or other
 
   $year = substr($period, 2);

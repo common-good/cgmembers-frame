@@ -2134,13 +2134,6 @@ interface DatabaseStatementInterface extends Traversable {
  *
  * @see http://us.php.net/pdostatement
  */
-function is_string_or_number($x) {
-  $t = gettype($x);
-  if ($t == 'string' or $t == 'integer' or $t == 'double') return 1;
-  print_r("x='$x'");
-  return 0;
-}
-  
 class DatabaseStatementBase extends PDOStatement implements DatabaseStatementInterface {
 
   /**
@@ -2176,31 +2169,6 @@ class DatabaseStatementBase extends PDOStatement implements DatabaseStatementInt
     }
 
 //    if (is_object(@$args[':other'])) die(print_r(debug_backtrace(), 1));
-    /* $args = array_filter($args); */
-    /* if ((array_sum(array_map('is_string_or_number', $args))/\* + array_sum(array_map('is_numeric', $args))*\/ */
-         
-    /*      /\*+ array_sum(array_map('is_null', $args))*\/) != count($args)) { */
-    /*   print_r(gettype($args)); */
-    /*   print_r('<br>'); */
-    /*   print_r($args); */
-    /*   print_r('<br>'); */
-    /*   if (array_key_exists(':cids_0', $args)) { */
-    /*     $qqq = is_string_or_number($args[':cids_0']); */
-    /*     print_r("issn(args[:cids_0])=$qqq"); */
-    /*   } */
-    /*   print_r(array_map('is_string_or_number', $args)); */
-    /*   print_r('<br>'); */
-    /*   print_r('' + array_sum(array_map('is_string_or_number', $args))); */
-    /*   /\* print_r(array_sum(array_map('is_numeric', $args))); *\/ */
-    /*   /\* print_r(array_sum(array_map('is_null', $args))); *\/ */
-    /*   print_r(' ' + count($args)); */
-    /*   print_r(array_map('gettype', $args)); */
-    /*   if (array_key_exists('phone', $args)) { */
-    /*     print_r(is_set($args['phone'])); */
-    /*   } */
-    /*   print_r(debug_backtrace()); */
-    /*   die('here'); */
-    /* } */
     $return = parent::execute($args);
     
     if (!empty($logger)) {

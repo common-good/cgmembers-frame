@@ -254,17 +254,6 @@ function eachA($func = 'a.changeIt', $where = 'uid>:CANONIC_ACCTS') {
   foreach ($result as $uid) $func(a($uid));
 }
 
-/* /\** */
-/*  * Utility to do something to each existing transaction */
-/*  * call: eachX(); */
-/*  * or    eachX(function($x) {...}); */
-/*  *\/ */
-/* function eachX($func = 'a.changeIt') { */
-/*   $result = q('SELECT xid FROM r_txs')->fetchCol(); */
-/*   if (!is_callable($func)) $func = funcNickname($func); */
-/*   foreach ($result as $xid) $func(r\x($xid)); // x() doesn't work here (without r\) -- dunno why */
-/* } */
-
 /**
  * Execute a "patch" to a built-in Drupal script. Patched files are also copied to .../rcredits/patches/
  * @param string $function: name of the Drupal function being patched, concatenated with the starting line number

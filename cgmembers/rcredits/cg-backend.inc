@@ -14,8 +14,6 @@ use CG\Web as w;
 require_once __DIR__ . '/tx.class';
 require_once __DIR__ . '/txentry.class';
 
-use CG\Testing as t;
-
 define('REAL', @$_SERVER['SystemRoot'] != 'C:\\Windows'); // used?
 // require_once __DIR__ . '/cg-util.inc';
 
@@ -41,11 +39,10 @@ function getTxs($uids, $starting=null, $ending=null) {
     FROM r_entries e LEFT JOIN r_tx_hdrs t USING (xid) LEFT JOIN users u USING (uid)
     WHERE (xid IN (SELECT DISTINCT xid FROM r_entries WHERE (uid IN (:uids))))
           $where
-    ORDER BY created, e.xid, (uid BETWEEN 1 AND 512) ASC, name
+    ORDER BY created, tid, e.xid, name
 EOF;
   $results = db\q($sql, ['uids' => $uids]);
   u\EXPECT($results, "Failure reading transactions for user " . print_r($uids, true));
-
   $lastXid = 0;  // no xid should ever be 0
   $txs = [];  // an array of arrays of entries
   $entries = [];
@@ -70,7 +67,7 @@ EOF;
       if (in_array($entry['uid'], $uids)) $myBalance += $entry['amount'];
     }
     foreach ($entries as $j => $entry) {
-      $entry['runBalance'] = $myBalance;
+      $entry['balance'] = $myBalance;
       $entries[$j] = $entry;
     }
     $txs[$i] = $entries;
@@ -80,28 +77,28 @@ EOF;
 
 /**
  * Generates an array of transactions between two accounts, with added data, for the given period.
- * @param array $aUids: the uids for member a
+ * @param array $aUids: the uids for member a (normally a business)
  * @param array $bUids: the uids for member b
  * @param unixtime $starting: the starting date/time for the period
  * @param unixtime $ending: the ending date/time for the period, e.g., $starting plus one day
  */
 function getCustTxs($aUids, $bUids, $starting, $ending) {
-  debug("getCustTxs(" . print_r($aUids, true) . ", " . print_r($bUids, true) . ", $starting, $ending)");
+  ///  debug("getCustTxs(" . print_r($aUids, true) . ", " . print_r($bUids, true) . ", $starting, $ending)");
                                                               
   u\EXPECT('array array int int', $aUids, $bUids, $starting, $ending);
   $sql = <<< X
-    SELECT CONCAT('tx #', aEntry.acctTid) AS tid,
-           -aEntry.amount AS paid,
-           '' AS invoiced, t.created,
-           (d.status=:DS_OPEN) AS disputed, aEntry.description AS purpose 
+    SELECT DISTINCT CONCAT('tx #', aEntry.acctTid) AS tid,
+           aEntry.amount AS paid,
+           '' AS invoiced, t.created, 
+           (d.status=:DS_OPEN) AS disputed, aEntry.description AS purpose
     FROM r_entries aEntry JOIN r_tx_hdrs t USING(xid) JOIN r_entries bEntry USING(xid)
          LEFT JOIN r_disputes d USING(xid)
     WHERE aEntry.uid IN (:aUids) AND bEntry.uid IN (:bUids)
     UNION ALL
-    SELECT CONCAT('inv #', nvid) AS tid, '' AS paid, amount AS invoiced,
+    SELECT CONCAT('inv #', nvid) AS tid, '' AS paid, IF (payee IN (:aUids), amount, -amount) AS invoiced,
            inv.created AS created, :IS_DISPUTED AS disputed, inv.purpose AS purpose
     FROM r_invoices inv
-    WHERE (payer IN (:aUids) AND payee IN (:bUids)) OR (payee IN (:aUids) AND payer IN (:bUids))
+    WHERE (payer IN (:aUids) AND payee IN (:bUids)) OR (payee IN (:aUids) AND payer IN (:bUids)) AND status>:TX_DENIED
     ORDER BY created
 X;
 
@@ -111,35 +108,16 @@ X;
   $lastTid = null;  // no tid should ever be null
   $txs = [];  // an array of arrays of entries
   $entries = [];
+  $myBalance = 0.00; //balanceAsOf($aUids[0], $starting);
+  $entries[] = ['created'=>'', 'tid'=>'', 'purpose'=>t('Opening balance'), 'invoiced'=>'', 'paid'=>'', 'balance'=>$myBalance];
   foreach ($results as $result) {
     $entry = (array)$result;
-    debug($entry);
-    if ($entry['tid'] != $lastTid) {  // start of new transaction
-      if ($entries != []) {  // if there was a transaction already
-        $txs[] = $entries;
-        $entries = [];
-      }
-      $lastTid = $entry['tid'];
-    }
+    if (!empty($entry['paid'])) { $myBalance -= $entry['paid']; }
+    $entry['balance'] = $myBalance;
     $entries[] = $entry;
   }
-  if ($entries != []) {
-    $txs[] = $entries;
-  }
-  // arrange for running balance to appear in, and be the same in, every entry for a transaction
-  $myBalance = balanceAsOf($aUids[0], $starting);
-  foreach ($txs as $i => $entries) {
-    foreach ($entries as $entry) {
-      if (in_array($entry['uid'], $aUids)) $myBalance += $entry['amount'];
-    }
-    foreach ($entries as $j => $entry) {
-      $entry['runBalance'] = $myBalance;
-      $entries[$j] = $entry;
-    }
-    $txs[$i] = $entries;
-  }
 
-  return $txs;
+  return $entries;
 }
 
 /**
@@ -237,7 +215,7 @@ EOF;
  * @return string: a report of what got updated
  */
 function updateRelations($updates) {
-  /* debug("updateRelations(" . print_r($updates, true) . ")"); */
+  ///  debug("updateRelations(" . print_r($updates, true) . ")");
   $myid = r\acct()->id;
   $report = '';
   foreach ($updates as $reid => $data) {
@@ -267,11 +245,11 @@ function updateRelations($updates) {
 /**
  * Undo the given transaction.
  * Situations:
- *     I paid someone (byMe):            REVERSE (invoice)  original was payment
- *     I charged someone (toMe/byMe):    REVERSE (pay back) original was charge
- *     Someone paid me (toMe):           REVERSE (pay back) original was payment
- *     Someone invoiced me and I approved it: DISPUTED      original was invoice-payment
- *     Someone charged me unilaterally: DISPUTED            original was charge
+ *     I paid someone (byMe):            REVERSE (invoice)
+ *     I charged someone (toMe/byMe):    REVERSE (pay back)
+ *     Someone paid me (toMe):           REVERSE (pay back)
+ *     Someone invoiced me and I approved it: DISPUTED
+ *     Someone charged me unilaterally: DISPUTED
  * @param int $xid: the transaction number
  * @param string $where: additional (security check) criteria, if any
  * @param assoc $subs: additional substitutions for $where
@@ -281,7 +259,7 @@ function updateRelations($updates) {
 function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
   global $mya;
 
-  /* debug("undoTx($xid, $where, , $force)" . print_r($subs, true)); */
+  /// debug("undoTx($xid, $where, , $force)" . print_r($subs, true));
   
   u\EXPECT('int string assoc bool', $xid, $where, $subs, $force);
 
@@ -380,12 +358,11 @@ function reverse($xid) {
  *         [FALSE, explanation] if the payment failed
  */
 function payInvoice($nvid) {
-  debug("payInvoice($nvid)");
+  /// debug("payInvoice($nvid)");
   
   u\EXPECT('int', $nvid);
   $msg = r\badUnpaidInv($nvid, $inv);
   if ($msg) return [FALSE, $msg];
-  debug($inv);
   extract(u\exactly('payer payee amount goods purpose data flags', $inv, [null, null, 0.0, FOR_GOODS, null, '', 0]));
   $payerId = $payer;
   $payeeId = $payee;
@@ -400,7 +377,6 @@ function payInvoice($nvid) {
 	if ($flags) foreach (ray('gift recurs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
 
   list ($index, $subs) = be\transfer('invoice payment', $payer, $payee, $amount, $purpose, $goods, $extra);
-  debug(compact(ray('index subs')));
   $ok = u\arrayGet($subs, 'success', FALSE);
   if ($ok) {
     db\update('r_invoices', ray('status nvid', $subs['xid'], $nvid), 'nvid');
@@ -469,7 +445,7 @@ function payInvoice($nvid) {
  */
 function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
   global $scanned, $channel;
-  debug("transfer($type, $actor->id, $other->id, $amount, " . print_r($for, true) . ", $goods, )" . print_r($data, true));
+  ///  debug("transfer($type, $actor->id, $other->id, $amount, " . print_r($for, true) . ", $goods, )" . print_r($data, true));
   
   u\EXPECT('string acct acct number string|array int assoc', $type, $actor, $other, $amount, $for, $goods, $data);
   if (is_null($goods)) $goods = FOR_GOODS;
@@ -646,7 +622,7 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
 // $byme = true; $tome = false
 function sendNotifications($type, $tx, $shortfall) {
   u\EXPECT(compact(ray('type tx shortfall')), 'string tx int|float');
-  debug("sendNotifications($type, " . print_r($tx,true) . ", $shortfall");
+  ///  debug("sendNotifications($type, " . print_r($tx,true) . ", $shortfall");
   
   /* global $mya; */
   /* $mya = r\acct(); */
@@ -670,16 +646,6 @@ function sendNotifications($type, $tx, $shortfall) {
       $did = 'charged';
     }
     break;
-  /* case 'transfer': */
-  /*   $taking = false; */
-  /*   if ($byMe and !$toMe) { */
-  /*     if ($tx->goods == FOR_GOODS) $notice = 'new refund';  // I made a payment to other */
-  /*     else $notice = 'new payment';  // I made a payment to other */
-  /*   } */
-  /*   elseif ($byMe and $toMe) $notice = 'new charge';  // I charged other */
-  /*   elseif (!$byMe and $toMe) $notice = 'new payment';  // Other made a payment to me */
-  /*   else /\*!byMe and !$toMe*\/ $notice = 'new charge'; // Other charged me */
-  /*   break; */
   case 'payment':
     if (!$toMe) {
       $notice = 'new payment';  // I made a payment to other
@@ -1127,9 +1093,9 @@ function createUsdTransfer($payee, $amount, $created=null, $txid=null) {
   } else {
     u\EXPECT(db\updateOrInsert('r_usd', ['txid'=>$txid] + $info, 'txid'), 'failure updating r_usd');
   }
-  /* if ($amount < 0) { // transfer to the bank */
-  /*   if (!completeUsdTx($payee, $txid, $amount, FALSE)) return FALSE; */
-  /* } */
+  if ($amount < 0) { // transfer to the bank
+    if (!completeUsdTx($payee, $txid, $amount, FALSE, $created)) return FALSE;
+  }
   return $txid;
 }
 
@@ -1201,9 +1167,9 @@ function completeUsdTx($a, $txid, $amount, $automatic, $completed = null) {
     $tx = new r\Tx(['goods' => FOR_USD, 'actorId' => $payeeId, 'actorAgentId' => $payeeId, 'flags' => 0, 'channel' => $channel,
                     'risk' => $risk, 'risks' => $risks, 'created' => $completed]);
     $tx->addEntry(new r\TxEntry(['entryType' => ENTRY_PAYER, 'amount' => 0-$amount, 'uid' => $bankId, 'agentUid' => $bankId,
-                                 'description' => ($amount > 0) ? t('transfer to CG') : t('transfer in')]));
+                                 'description' => ($amount > 0) ? t('transfer to CG') : t('transfer to bank')]));
     $tx->addEntry(new r\TxEntry(['entryType' => ENTRY_PAYEE, 'amount' => $amount, 'uid' => $payeeId, 'agentUid' => $payeeId,
-                                 'description' => $amount < 0 ? t('transfer to CG') : t('transfer in')]));
+                                 'description' => $amount > 0 ? t('transfer to bank') : t('transfer to CG')]));
     $xid = $tx->insert();
     if (!$xid) {
       $DBTX.rollback();

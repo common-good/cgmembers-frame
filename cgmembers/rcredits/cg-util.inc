@@ -576,7 +576,6 @@ function expect1($arg, $value, $type, $ret) {
 /**/ $msg = "Expected \$$arg ('" . print_r($value, 1) . "') to be type '$type'."; // standard err message (keep this)
   if (strpos($type, '|')) {
     foreach (explode('|', $type) as $one) if (expect1($arg, $value, $one, TRUE) == '') return '';
-    /* print_r(gettype($value)); */
     EXPECT(FALSE, $msg, $ret);
   }
   if (strpos($type, '&')) {
@@ -855,7 +854,7 @@ function csvStart($filename) {
   global $csvFile;
   global $testCSVname; $testCSVname = $filename;
   global $testCSV; $testCSV = [];
-
+  
   if (u\test()) return;  
   header('Content-type: text/plain');
   header("Content-Disposition: attachment; filename=\"$filename\";");
@@ -1400,7 +1399,6 @@ function consta($prefix, $var) {
   u\EXPECT(defined($const), 'constant not defined');
   return constant($const);
 }
-
   
 /**
  * Return the value of the given bit.
@@ -1489,7 +1487,9 @@ function validEmail($email) {return filter_var($email, FILTER_VALIDATE_EMAIL);}
 function stndrdth($n) {return date('S', mktime(1,1,1,1,( (($n>=10)+($n>=20)+($n==0))*10 + $n%10) ));}
 function arrayGet($arr, $key, $dft) {
   if (is_string($arr)) $arr = urlq2ray($arr);
-  u\EXPECT(is_array($arr), 'non-array'); return array_key_exists($key, $arr) ? $arr[$key] : $dft; }
+  u\EXPECT(is_array($arr), 'non-array');
+  return array_key_exists($key, $arr) ? $arr[$key] : $dft;
+}
 
 /**
  * Return exactly the specified key/value pairs from the given array.  If a particular 

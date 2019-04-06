@@ -27,7 +27,6 @@ TODO:
 
 DAILY (every 5 mins for 5 mins, starting at 2am)
 - * usdTxsThere() rollback lost USD transactions, mark completed deposits/withdrawals
-- ** recache() check / recalc cached r, rewards, and usd
 - checkAccts() check for consistency, security, scams
 - ** stats(): calculate daily statistics and record in r_stats and in the stats field of user records
 - ** paySuppliers(): automatic payment exchanges to suppliers
@@ -69,7 +68,7 @@ NOTES:
   where <star> means * (not the same as for the production site) 
  */
 
-define('R_DAILY_TASKS', 'START recache checkAccts requests setNear acctStats cttyStats trust acctRisk acctRiskFinish txRisk achRisk tickle lessOften recurs invoices getFunds invest notices END'); // had homogenize, pool 
+define('R_DAILY_TASKS', 'START checkAccts requests setNear acctStats cttyStats trust acctRisk acctRiskFinish txRisk achRisk tickle lessOften recurs invoices getFunds invest notices END'); // had homogenize, pool 
 //define ('R_DAILY_TASKS', 'START redistribute END');
 include_once __DIR__ . '/rcron-subs.inc';
 
@@ -370,12 +369,11 @@ function activeWeekly($item) {
 function warnAnnualGift($item) {
   /// debug('warnAnnualGift(' . print_r($item, true) .')');
 	extract(just('uid amount when created period invoiced lastTx', $item));
+  
 	$a = r\acct($uid);
 
 	if (!empty($amount)) {
-    if (!empty($invoiced) or !giveNow($period, $lastTx, $created, $when) or giveNow($period, $lastTx, $created, $when - DAY_SECS)) {
-      return; // not time yet for annual (or it was also time yesterday)
-    }
+    if (!empty($invoiced) or !giveNow($period, $lastTx, $created, $when) or giveNow($period, $lastTx, $created, $when - DAY_SECS)) { return; } // not time yet for annual (or it was also time yesterday)
   }
 	$aDonate = w\atag("/do/doDonate~$a->mainQid~$a->emailCode");
   r\notify($uid, 'annual-gift', $ray = ray('amount when aDonate', u\fmtAmt($amount), u\fmtDate($when, TRUE), $aDonate), TRUE);
@@ -437,8 +435,6 @@ function everyMonth() {
   if (u\test()) $start = strtotime('-30 days', $end = strtotime('today') - 1) + 1; // test: the past 30 days
   queueEach('whatsup', "SELECT uid, u.:IS_CO as co, MAX(t.created) AS lastTx FROM users u LEFT JOIN r_entries e USING(uid) JOIN r_tx_hdrs t USING(xid) WHERE uid>:CANONIC_ACCTS AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $start");
   /* queueEach('inflationAdjust', "SELECT uid, $start AS start, $end AS end FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS");   */
-//  queueEach('shareCommitted', 'SELECT uid, committed, share FROM users WHERE :IS_OK AND committed>0');
-  /* queueEach('roundup', "SELECT payer as uid, SUM(1-MOD(amount, 1)) AS donate FROM r_txs WHERE :IS_ROUNDUP AND amount>0 AND MOD(amount, 1)>0 AND created BETWEEN $start AND $end GROUP BY payer"); */
   
   $sql = <<< X
     SELECT u.uid, SUM(IF(payer.amount<0,0-payer.amount,0))*u.crumbs AS donate
@@ -498,16 +494,6 @@ function inflationAdjust($item) {
 //    if ($adjustment) be\fund($uid, TX_INFLATION, $adjustment, INFLATION_DESC . t(' on your ') . $k);
   }
 }
-
-/* /\** */
-/*  * Donate rounded change to the community. Date the transaction in the preceding month (in which the roundups originate). */
-/*  * Allow this even if account is inactive (donation has already been made, from member's point of view). */
-/*  *\/ */
-/* function roundup($item) { */
-/*   extract(just('uid donate', $item)); */
-/*   $a = r\acct($uid); */
-/*   if ($donate > 0 and $a->ok) $a->payApproved(CGID, $donate, t('roundups desc'), ray('created roundups gift', u\monthDay1() - 1, TRUE, TRUE)); */
-/* } */
 
 /**
  * Donate percentage of funds received to the community.
@@ -582,24 +568,6 @@ X;
   
   queueNext();
 }
-
-/**
- * Recalculate and update cached financial balances for each account.
- * Also give signup bonus, if appropriate.
- */
-function recache() {
-  /* $fields = 'uid, minimum, floor'; // this isn't actually used */
-  /* queueEach('recache1', "SELECT $fields FROM users WHERE :IS_OK"); // make this IS_MEMBER if early gift */
-  /* queueNext(); */
-}
-
-/* function recache1($item) { */
-/*   extract($item); */
-/* //  if (u\test() and realId($uid)) return; // ignore real accounts in tests */
-/*   $a = r\acct($uid); */
-/*   $a->cacheOk(); */
-/*   //$a->update(compact(array_keys($item))); */
-/* } */
 
 /**
  * Check accounts for consistency, scams, whatever.
@@ -680,17 +648,6 @@ function acctStats1($item, $asof = NULL) {
     WHERE payer.uid=:uid AND payee.uid=:CGID AND :IS_GIFT AND created<:asof
 X;
   $row1 = db\q($sql, $subs)->fetchAssoc() ?: []; // giftsEver, giftsPastMo
-
-  /* Vanished somewhere else */
-/*   $sql = <<< X */
-/*     SELECT 0 AS beneEver, 0 AS benePastMo, */
-/*     SUM(IF(type IN (:TX_GRANT), amount, 0)) AS extraEver, */
-/*     SUM(IF(type IN (:TX_GRANT) AND created>=:monthAgo, amount, 0)) AS extraPastMo */
-/*     FROM r_entries e JOIN r_tx_hdrs t USING(xid) */
-/*     WHERE e.uid=:uid AND created<:asof */
-/* X; */
-/*   $row2 = db\q($sql, $subs)->fetchAssoc() ?: []; // get beneEver (purchase rewards), benePastMo, extraEver, extraPastMo */
-
   $row2 = [];  
 
   $sql = <<< X
@@ -881,21 +838,6 @@ function recurs() {
      AND t.reversesXid IS NULL AND NOT EXISTS(SELECT xid FROM r_tx_hdrs tr WHERE tr.reversesXid = t.xid)) AS firstXid
     FROM r_recurs r INNER JOIN users uPayee ON uPayee.uid=r.payee
 EOF;
-/*   $sql = <<< X */
-/*     SELECT DISTINCT r.payer,r.payee,r.period,r.amount,r.created,u2.fullName AS payeeName, */
-/* 		  (SELECT 1 FROM r_invoices i */
-/*        WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced, */
-/*       MAX(t.created) AS lastTxDt, MIN(t.xid) AS firstXid */
-/* 		FROM r_recurs r	 */
-/*          INNER JOIN users u1 ON u1.uid=r.payer INNER JOIN users u2 ON u2.uid=r.payee */
-/*          LEFT OUTER JOIN (SELECT t0.xid, t0.created, payerE.uid AS payer, payeeE.uid AS payee, t0.flags, reversesXid */
-/*                           FROM r_tx_hdrs t0 JOIN r_entries payerE USING(xid) JOIN r_entries payeeE USING(xid) */
-/*                           WHERE payerE.entryType=ENTRY_PAYER AND payeeE.entryType=ENTRY_PAYEE */
-/*                           ORDER BY t0.created) t */
-/*     ON t.payer=r.payer AND t.payee=r.payee AND t.:IS_RECURS AND t.reversesXid IS NULL AND t.created>=r.created-:HOUR_SECS JOIN r_tx_hdrs tRev ON tRev.reversesXid=t.xid */
-/* 		WHERE u1.:IS_OK AND u2.:IS_OK AND r.ended=0 AND tRev.xid IS NULL */
-/*     GROUP BY r.id */
-/* X; */
   queueEach('recurs1', $sql);
   queueNext();
 }
@@ -1025,8 +967,7 @@ function invoice($item) {
   
   if ($status == TX_APPROVED) {
 		if (!$a->ok) return; // don't try to pay from an inactive account (we can delay collection by temporarily deactivating)
-		/* if ($a->roundup) $amount = ceil($amount); */
-		$amtFld = 'amount'; // $a->roundup ? 'CEILING(amount)' : 'amount';
+		$amtFld = 'amount';
     $short = round($a->advances() + $amount - $a->avail(), 2); //	consider credit already used for advances from the bank
 
     if ($short <= 0) { // pay the invoice if we have enough funds

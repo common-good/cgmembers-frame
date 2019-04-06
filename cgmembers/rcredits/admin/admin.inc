@@ -153,7 +153,6 @@ function showSteps($a) {
 function showActivity($a) {
   $uid = $a->id;
   $when = u\plusMonths(-3);
-  $tbl = "";
   $count = $a->co ? db\count('r_entries JOIN r_tx_hdrs USING (xid)',
                              'uid=:uid AND created>:when', compact('uid', 'when'))
     : db\count('r_entries payer JOIN r_tx_hdrs USING(xid) JOIN r_entries payee USING (xid)',

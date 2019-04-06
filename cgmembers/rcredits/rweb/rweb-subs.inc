@@ -2074,15 +2074,15 @@ function showCharts($whichChart, $ctty = 0, &$chartData = '', $download = FALSE)
 
   list ($in, $out, $net, $personal, $companies) = array(t('in'), t('out'), t('net'), t('personal'), t('companies'));
   $txTypes = ray('p2p p2b b2b b2p', t('Person-to-person'), t('Person-to-business (mostly by %PROJECT card)'), t('Business-to-business (paying suppliers)'), t('Business-to-person (including payroll)'));
-  $latest = time(); // db\max('created', 'r_stats', compact('ctty')); // show only as much data as we have
-  $today = strtotime('today', $latest ?: time());
+  $latest = r\rtime(); // db\max('created', 'r_stats', compact('ctty')); // show only as much data as we have
+  $today = strtotime('today', $latest);
 //  $dt1 = w\firstGraphDt($ctty);
   $period = 'months';
 
   $charts = ray('success growth funds velocity banking volume', 'success-metrics', 'growth', 'dollar-pool', 'circulation-velocity', 'bank-transfers', 'transaction-volume');
   foreach ($charts as $k => $zot) u\setDft(${$k . 'Data'}, []);
   $downData[] = ray('Companies Members Active Joining P2P P2B B2P B2B PctActive MemsPerCo TxsPerActive PayeesPerActive Basket');
-  
+
   for ($ago = DATA_POINTS; $ago >= 0; $ago--) {
     $dt = strtotime("-$ago $period", $today);
     if (!@$dt1) $dt1 = $dt; // remember first date for this community
@@ -2128,7 +2128,7 @@ function showCharts($whichChart, $ctty = 0, &$chartData = '', $download = FALSE)
   }
 
   if ($download) {$chartData = $downData; return;}
-  
+
   $success = number_format($success0, 2);
   $accts = "$pAccts members + $bAccts companies";
   $funds = $usd;
@@ -2180,7 +2180,6 @@ function fundStats($stats, $round = FALSE, $stats30 = NULL) {
     $stats["{$z}Rate"] = ($stats[$z] - $stats30[$z]) / (($balsPos + 0) ?: 1);
     $stats30["{$z}Rate"] = 0; // just to make d_ not die
   }
-    
   foreach (array_keys($stats) as $k) {
     if (!in($k, 'id ctty created')) {
       if ($stats30) $stats["d_$k"] = $stats[$k] - $stats30[$k];

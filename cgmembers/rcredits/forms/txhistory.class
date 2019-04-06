@@ -93,7 +93,7 @@ EOF;
   public function txnHdr($info) {
     $this->tidValue = $info['tid'];
     $this->dateValue = strftime('%m/%d/%y', $info['created']);
-    $this->runBalance = u\fmtAmt($info['runBalance'], '');
+    $this->runBalance = u\fmtAmt($info['balance'], '');
 
     $class = "txrow ";
     $class .= 'page-' . floor($this->count / MIN_TX_ROWS);

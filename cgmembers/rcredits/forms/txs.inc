@@ -23,71 +23,6 @@ function formTxs($form, &$sta, $args = '') {
   $agtViaBoxHelp = t('||Agent is who did the transaction on your behalf.|Channel (Via) is where the transaction originated -- what type of device: Web, Smartphone, SMS, or Automatic.|Box is where the transaction originated -- which specific device.');
   $optHelp = $agtViaBoxHelp . t('||Exchanges are 1-to-1 trades of US Dollars for %RCREDITS (usually automatic).|PExchanges are daily automatic payment exchanges of %RCREDITS between company and employee. The company pays the employee in US Dollars, then the employee trades back some US Dollars 1-to-1 for %RCREDITS. The net effect is that the employee gets paid partly in US Dollars, partly in %RCREDITS.');
 
-/*   $argsA = ray($args); */
-/*   $options = u\arrayGet($argsA, 'options', []); */
-/*   $testPeriod = u\arrayGet($argsA, 'period', TX_DEFAULT_PERIOD); */
-/*   $starting = u\arrayGet($argsA, 'starting', null); */
-/*   $ending = u\arrayGet($argsA, 'ending', null); */
-/*   $do = u\arrayGet($argsA, 'do', FALSE); */
-/*   $xid = u\arrayGet($argsA, 'xid', null); */
-/*   $download = u\arrayGet($argsA, 'download', null); */
-/*   $downloaded = u\arrayGet($argsA, 'downloaded', null); */
-  
-/*   if ($do) { */
-/*     $result = handleTx($do, $xid, $sta, $args); */
-/*     if ($result) return $result; */
-/*   } */
-/*   /\* extract(just('dateRange downloadMsg url starting ending', dateRange($args, 'history/transactions'))); *\/ */
-
-/*   $descending = TRUE; */
-/*   $optionSet = compact(ray('download agents channels boxes descending')); */
-
-/*   $summary = fld('markup', '', '', ['markup' => txSummary($starting, $ending, $run)]); */
-
-/*   $fmtStarting = u\fmtDate($starting); */
-/*   $fmtEnding = u\fmtDate($ending); */
-/*   $dateRangeStuff = <<<EOF */
-/* <fieldset class="form-wrapper" id="dateRange"> */
-/*   <div id="simple"> */
-/*     <label for="period" class="control-label col-sm-offset-1 col-xs-2">For the past:</label> */
-/*     <select id="edit-period" name="period" class="form-control"> */
-/*       <option value="1">Day</option> */
-/*       <option value="7">7 days</option> */
-/*       <option value="30">30 days</option> */
-/*       <option value="90" selected="selected">90 days</option> */
-/*       <option value="180">6 months</option> */
-/*       <option value="365">12 months</option> */
-/*       <option value="-1">Year to date</option> */
-/*       <option value="-2">Ever</option> */
-/*     </select> */
-/*   </div> */
-/*   <div id="advanced"> */
-/*     <div> */
-/*       <label for="starting" class="control-label col-sm-offset-1 col-xs-2">Starting:</label> */
-/*       <input type="text" class="form-control input-md" id="edit-starting" name="starting" value="$fmtStarting" size="60" maxlength="128" /> */
-/*     </div> */
-/*     <div> */
-/*       <label for="ending" class="control-label col-sm-offset-1 col-xs-2">Ending:</label> */
-/*       <input type="text" class="form-control input-md" id="edit-ending" name="ending" value="$fmtEnding" size="60" maxlength="128" /> */
-/*     </div> */
-/*   </div> */
-/*   <div id="actions"> */
-/*     <button title="" type="submit" name="op" id="edit-submitDates" value="show" data-style="zoom-out"> */
-/*       <span class="ladda-label">show</span> */
-/*     </button> */
-/*     <button title="" name="op" id="edit-advanced" value="showAdvanced"> */
-/*       <span class="ladda-label">advanced</span> */
-/*     </button> */
-/*     <button title="" name="op" id="edit-simpler" value="showSimpler"> */
-/*       <span class="ladda-label">simpler</span> */
-/*     </button> */
-/*   </div> */
-/*   <input type="hidden" name="advOrSimple" value="simple" /> */
-/* </fieldset> */
-/* EOF; */
-
-/*   $dateRangeStuff = item($dateRangeStuff); */
-
   extract(just('options period starting ending do xid download downloaded', $args)); 
   
   global $testPeriod; $testPeriod = @$period ?: TX_DEFAULT_PERIOD; // remember for tests
@@ -106,7 +41,7 @@ function formTxs($form, &$sta, $args = '') {
 
   be\processTxs($processor, $uids, $starting, $ending, TRUE);
 
-  if (u\test() and @$download) return; // simulate exit, for tests
+  /* if (u\test() and @$download) return; // simulate exit, for tests */
   /* list ($header, $classes, $rows, $totals) = $txRows; */
   
   /* array_unshift($rows, $header); // put header at start */
@@ -281,12 +216,6 @@ function txSummary($starting, $ending, &$endBalance = '') {
   $jid = $mya->jid;
   $uids = empty($jid) ? [$myid] : [$myid, $jid];
 
-  debug("$myid, $jid");
-  debug($uids);
-  debug($jid);
-  debug(empty($jid));
-
-  
   $endingNow = ($ending > r\rTime());
   $previous_ending = $starting - 1;
   $nowInfo = be\creditInfo($uids, $ending);
@@ -296,8 +225,6 @@ function txSummary($starting, $ending, &$endBalance = '') {
   $oldInfo = be\creditInfo($uids, $starting);
   extract($oldInfo, EXTR_PREFIX_ALL, 'o');
   $startBalance = round($o_balance, 2);
-
-  debug(compact('nowInfo','oldInfo'));
 
   $dif = [];
   foreach (ray('inProper outProper fromBank') as $key) $dif[$key] = $nowInfo[$key] - $oldInfo[$key];

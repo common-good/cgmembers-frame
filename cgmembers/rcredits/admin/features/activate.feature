@@ -22,3 +22,4 @@ Scenario: Admin activates an account
   Then members:
   | uid  | flags               | helper |*
   | .ZZD | member,confirmed,ok |   .ZZB |
+

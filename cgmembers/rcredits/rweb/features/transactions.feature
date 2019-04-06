@@ -20,12 +20,12 @@ Setup:
   |  .ZZA |   1000 | %today-13m | %today-13m |
   |  .ZZB |   2000 | %today-13m | %today-13m |
   |  .ZZC |   3000 | %today-13m | %today-13m |
-  |  .ZZA |     11 | %today-1w  |         0  |
-  |  .ZZA |    -22 | %today-5d  |         0  |
-  |  .ZZA |    -33 | %today-5d  |         0  |
+  |  .ZZA |     11 | %today-3d  |         0  |
+  |  .ZZA |    -22 | %today-5d  | %today-5d  |
+  |  .ZZA |    -33 | %today-5d  | %today-5d  |
   Then balances:
   | uid  | balance |*
-  | .ZZA |    1000 |
+  | .ZZA |     945 |
   | .ZZB |    2000 |
   | .ZZC |    3000 |
   Given transactions: 
@@ -38,7 +38,7 @@ Setup:
   |  19 | %today-6d |    100 | .ZZA | .ZZB | cash V  | 0      |       29 |       39 |
   Then balances:
   | uid  | balance |*
-  | .ZZA |    1650 |
+  | .ZZA |    1595 |
   | .ZZB |    2280 |
   | .ZZC |    2070 |
 
@@ -49,18 +49,21 @@ Scenario: A member looks at transactions for the past year
   When member ".ZZA" visits page "history/transactions/period=365"
   Then we show "Transaction History" with:
   | Start        |   | 1,000.00 | %dmy-12m |
+  | From Bank    | + |     0.00 | + 11.00 Pending |
   | Received     | + | 1,110.00 |          |
-  | Out          | - |   460.00 |          |
+  | Out          | - |   515.00 |          |
 #  | Credit Line+ |   |          |          |
-  | End          |   | 1,650.00 | %dmy     |
+  | End          |   | 1,595.00 | %dmy     |
   And with:
-  |~tid | Date   | Name       | Purpose  | Amount   |  Balance |
-  | 29  | %mdy-6d | Bea Two    | cash V  |  -100.00 | 1,650.00 |
-  | 28  | %mdy-1w | Corner Pub | this Q  |  -120.00 | 1,750.00 |
-  | 26  | %mdy-3m | Bea Two    | what G  |  -240.00 | 1,870.00 |
-  | 35  | %mdy-4m | Corner Pub | usd F   | 1,100.00 | 2,110.00 |
-  | 34  | %mdy-5m | Bea Two    | cash E  |    10.00 | 1,010.00 |
-#  | 1   | %mdy-7m | ZZrCred    | signup  |     0.00 |   .00 |    |
+  |~tid | Date    | Name          | Purpose          | Amount   |  Balance | Action |
+  |  3  | %mdy-5d | Outgoing bank | transfer to bank |   -33.00 | 1,595.00 |        |
+  |  2  | %mdy-5d | Outgoing bank | transfer to bank |   -22.00 | 1,628.00 |        |
+  | 29  | %mdy-6d | Bea Two       | cash V           |  -100.00 | 1,650.00 |        |
+  | 28  | %mdy-1w | Corner Pub    | this Q           |  -120.00 | 1,750.00 |        |
+  | 26  | %mdy-3m | Bea Two       | what G           |  -240.00 | 1,870.00 |        |
+  | 35  | %mdy-4m | Corner Pub    | usd F            | 1,100.00 | 2,110.00 |        |
+  | 34  | %mdy-5m | Bea Two       | cash E           |    10.00 | 1,010.00 |        |
+#  | 1   | %mdy-7m | ZZrCred       | signup           |     0.00 |      .00 |        |
   And without:
   | rebate  |
   | bonus   |
@@ -69,15 +72,17 @@ Scenario: A member looks at transactions for the past few days
   When member ".ZZA" visits page "history/transactions/period=15"
   Then we show "Transaction History" with:
   | Start        |   | 1,870.00 | %dmy-15d |
-  | From Bank    | + |     0.00 | - 44.00 Pending |
+  | From Bank    | + |     0.00 | + 11.00 Pending |
   | Received     | + |     0.00 |          |
-  | Out          | - |   220.00 |          |
+  | Out          | - |   275.00 |          |
 #  | Credit Line+ | + |          |          |
-  | End          |   | 1,650.00 | %dmy     |
+  | End          |   | 1,595.00 | %dmy     |
   And with:
-  |~tid | Date    | Name       | Purpose   | Amount  |  Balance |
-  | 29  | %mdy-6d | Bea Two    | cash V    | -100.00 | 1,650.00 |
-  | 28  | %mdy-1w | Corner Pub | this Q    | -120.00 | 1,750.00 |
+  |~tid | Date    | Name          | Purpose          | Amount  |  Balance |
+  |  3  | %mdy-5d | Outgoing bank | transfer to bank |  -33.00 | 1,595.00 |
+  |  2  | %mdy-5d | Outgoing bank | transfer to bank |  -22.00 | 1,628.00 |
+  | 29  | %mdy-6d | Bea Two       | cash V           | -100.00 | 1,650.00 |
+  | 28  | %mdy-1w | Corner Pub    | this Q           | -120.00 | 1,750.00 |
   And without:
   | pie N    |
   | whatever |
@@ -100,19 +105,21 @@ Scenario: A member looks at transactions with roundups
   # |  10 | %today  | transfer |  49.95 | .ZZA | .ZZC | sundries |       40 |       50 |
   Then balances:
   | uid  | balance |*
-  | .ZZA | 1600.00 |
+  | .ZZA | 1545.00 |
   When member ".ZZA" visits page "history/transactions/period=15"
   Then we show "Transaction History" with:
   | Start        |   | 1,870.00 | %dmy-15d |
-  | From Bank    | + |     0.00 | - 44.00 Pending |
+  | From Bank    | + |     0.00 | + 11.00 Pending |
   | Received     | + |     0.00 |          |
-  | Out          | - |   270.00 |          |
+  | Out          | - |   325.00 |          |
 #  | Credit Line+ | + |          |          |
-  | End          |   | 1,600.00 | %dmy     |
+  | End          |   | 1,545.00 | %dmy     |
   And with:
   |~tid | Date    | Name              | Purpose          | Amount  |  Balance |~do |
-  | 51  | %mdy    | Corner Pub        | sundries         |  -49.95 | 1,600.00 |    |
+  | 51  | %mdy    | Corner Pub        | sundries         |  -49.95 | 1,545.00 |    |
   |     |         | Roundup Donations | roundup donation |   -0.05 |          |    | 
+  |  3  | %mdy-5d | Outgoing bank     | transfer to bank |  -33.00 | 1,595.00 |    |
+  |  2  | %mdy-5d | Outgoing bank     | transfer to bank |  -22.00 | 1,628.00 |    |
   | 29  | %mdy-6d | Bea Two           | cash V           | -100.00 | 1,650.00 |    |
   | 28  | %mdy-1w | Corner Pub        | this Q           | -120.00 | 1,750.00 |    |
   

@@ -32,7 +32,6 @@ function custStatement($args = []) {
   $q = ($way == 'IN') ? be\getCustTxs([$mya->id], $custUids, 0, time()+1)
                       : be\getCustTxs($custUids, [$mya->id], 0, time()+1);
   if (count($q) == 0) return w\softErr(t('That is not a %thing of yours.', 'thing', $way == 'IN' ? t('customer') : t('vendor')));
-
   $pdf = new r\Statement($mya);
 
   $size = $pdf->getFontSizePt();
@@ -55,7 +54,7 @@ function custStatement($args = []) {
   $pdf->setFontSize($size);
   $pdf->barHead('STATEMENT');
   $lastHead = 'Balance';
-  $fields = ray("Date//25/ /space/1/ /tid/20/C Description/purpose/83/ /space/1/ Invoiced//20/R /space/1/ Paid//20/R /space/10/ Balance/runBalance/20/R");
+  $fields = ray("Date//25/ /space/1/ /tid/20/C Description/purpose/83/ /space/1/ Invoiced//20/R /space/1/ Paid//20/R /space/10/ Balance/balance/20/R");
   $pdf->colHeads($fields);
   $pdf->setFontSize(.6 * $size); // a bit of space below field headers
   $pdf->newLine();
@@ -64,15 +63,13 @@ function custStatement($args = []) {
   $bal = 0;
   $row0 = ['purpose' => t('Opening balance')];
 
-  foreach ($q as $row) { //$row = @$row ? $q/*->fetchAssoc()*/ : $row0) {
-    debug($row);
+  foreach ($q as $row) {
     if (!@$classes) $classes = array_keys($row);
 //    extract(just('tid date name amount purpose reward', array_combine($classes, $row)));
     extract(just('tid created purpose invoiced paid', $row));
     $date = @$created ? u\fmtDate($created, TRUE) : '';
     $bal += (@$invoiced ?: 0) - (@$paid ?: 0);
     $balance = $bal;
-    debug("$date, $bal, $balance");
     if (strlen(@$purpose) > $purposeLenMax + 3) $purpose = substr($purpose, 0, $purposeLenMax) . '...';
 
     foreach ($fields as $one) {

@@ -36,13 +36,17 @@ function formGet($form, &$sta, $args = '') {
   $credit = u\fmtAmt(-$mya->floor);
   $waiting0 = $mya->waitingFromBank();
 
-  if (!db\exists('r_usd', 'payee IN (:myid,:jid) AND amount<0 AND created>:dayAgo', ray('myid jid dayAgo', $myid, $jid, strtotime('-1 day')))) { // limit to one withdrawal request per 24 hours
+  $pendOut = db\get('amount', 'r_usd', 'payee IN (:myid,:jid) AND amount<0 AND created>:dayAgo', ray('myid jid dayAgo', $myid, $jid, strtotime('-1 day')));
+  if (!$pendOut) { // limit to one withdrawal request per 24 hours
     $avail = $mya->avail(FOR_USD); // drawing from connected accounts not allowed
     foreach (ray(R_EXCHANGE_LIMITS) as $days => $limit) {
       $sofar = $days == 1 ? 0 : db\get('-SUM(amount)', 'r_usd', 'payee=:myid AND amount<0 AND created>:date', ray('myid date', $myid, strtotime("-$days days")));
       $avail = min($avail, $limit - $sofar);
     }
-  } else $avail = 0;
+  } else {
+    $avail = 0;
+    $waiting0 = $pendOut;
+  }
 
   $cashoutable = u\fmtAmt(max(0, min($mya->balDpy, $avail)));
   if ($waiting = u\fmtAmt(abs($waiting0))) {

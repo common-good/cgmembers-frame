@@ -59,7 +59,8 @@ function formTx($form, &$sta, $args = '') {
 }
 
 function formTx_validate($form, &$sta) {
-  extract($info = just('who amount purpose repeat', $sta['input']));
+  $info = just('who amount purpose repeat', $sta['input']);
+  extract($info);
   if (strpos($who, '@') and !u\validEmail($email = $who)) return say('bad email', compact('email'), 'who');
   if (!$a = w\whois($who, 'who', $info, 'no self-trading', op($sta) == 'pay')) return FALSE;
   $uid = $a->id;

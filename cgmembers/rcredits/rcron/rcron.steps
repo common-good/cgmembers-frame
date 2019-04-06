@@ -54,7 +54,6 @@ function extraSetup($feature) {
  *     MAKE joint Setup
  *     MAKE monthly Setup
  *     MAKE notices Setup
- *     MAKE recache Setup
  *     MAKE recurs Setup
  *     MAKE risk Setup
  *     MAKE tickle Setup
@@ -88,7 +87,6 @@ function members($list) {return t\members($list);}
  *     TEST joint AJointAccountNeedsRefilling
  *     MAKE joint AJointAccountDoesNotNeedRefilling
  *     TEST monthly Setup
- *     TEST recache Setup
  *     MAKE recurs Setup
  *     TEST weekly AMemberCrawlsOutOfDebt
  *     TEST weekly AMemberBuildsUpSavings
@@ -154,7 +152,6 @@ function relations($relations) {return t\relations($relations);}
  *     MAKE joint AJointAccountNeedsRefilling
  *     MAKE monthly Setup
  *     TEST monthly InflationAdjustmentsRoundUpDonationsAndCrumbDonationsAreMade
- *     MAKE recache Setup
  *     MAKE recurs ARecurringDonationHappenedYesterday
  *     BOTH recurs ARecurringDonationHappenedLongEnoughAgoToRepeat
  *     MAKE risk Setup

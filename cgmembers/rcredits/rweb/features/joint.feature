@@ -85,7 +85,8 @@ Scenario: A joined account member looks at transaction history and summary
   |  600 | .ZZA  |   1000 | %today-6m | %today-6m |
   |  601 | .ZZB  |    600 | %today-2w | %today-2w |
   |  602 | .ZZA  |    400 | %today-2w | %today-2w |
-  |  603 | .ZZA  |   -100 | %today    |         0 |
+  |  603 | .ZZA  |   -100 | %today    | %today    |
+  # txid 603 used to have completed 0, but that's wrong -- we always immediately complete transfers out
   And transactions: 
   | xid | created   | amount | from | to   | purpose |*
   |   5 | %today-1m |    200 | .ZZA | .ZZD | favors  |
@@ -114,13 +115,13 @@ Scenario: A joined account member looks at transaction history and summary
 #  | 602 | %mdy-2w |            | from bank | 400.00 | --         | ZZA  | X |
 #  | 601 | %mdy-2w |            | from bank | 600.00 | --         | ZZB  | X |
 
-  | Tx# | Date    | Name          | Purpose   |  Amount |  Balance | Action |
-  |   4 | %mdy    | Outgoing bank | to bank   | -100.00 | 1,850.00 |        |
-  |   8 | %mdy-1d | Corner Pub    | labor     |  100.00 | 1,950.00 |        |
-  |   7 | %mdy-2d | Dee Four      | cash      |   50.00 | 1,850.00 |        |
-#  | 3   | %mdy-1w | Abe One    | usd       | 500.00   | 500.00 |  +0    | X |
-  |   3 | %mdy-2w | Incoming bank | from bank |  400.00 | 1,800.00 |        |
-  |   2 | %mdy-2w | Incoming bank | from bank |  600.00 | 1,400.00 |        |
+  | Tx# | Date    | Name          | Purpose          |  Amount |  Balance | Action |
+  |   4 | %mdy    | Outgoing bank | transfer to bank | -100.00 | 1,850.00 |        |
+  |   8 | %mdy-1d | Corner Pub    | labor            |  100.00 | 1,950.00 |        |
+  |   7 | %mdy-2d | Dee Four      | cash             |   50.00 | 1,850.00 |        |
+#  | 3   | %mdy-1w | Abe One       | usd              | 500.00  |   500.00 |  +0    |
+  |   3 | %mdy-2w | Incoming bank | transfer to CG   |  400.00 | 1,800.00 |        |
+  |   2 | %mdy-2w | Incoming bank | transfer to CG   |  600.00 | 1,400.00 |        |
   Given cron runs "acctStats"
   When member ".ZZB" visits page "summary"
   Then we show "Account Summary" with:
