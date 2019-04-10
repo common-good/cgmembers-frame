@@ -1,3 +1,10 @@
+2019-04-09 feature/stats-tweaks
+. mocked up food fund giving page
+. fixed bug in payee and basket stats
+. changed getstats to optionally recreate only specific data (for quickness)
+. refactored charts.js to simplify creation of new charts
+. granularity of chart can now be selected with a dropdown, in javascript
+
 2019-03-22 feature/fix-metrics
 . fixed the graphics for the one-metric feature
 . changed chart.php so it is just a stub and the main code is all in rweb/

@@ -2062,14 +2062,13 @@ function firstGraphDt($ctty) {
 
 /**
  * Display charts representing the condition of the %PROJECT system in the given community.
- * @param string $whichChart: which chart to display
  * @param int $ctty: account record ID of community to show graphs for (defaults to all communities)
- * @param assoc $chartData: (RETURNED) a data field containing the chart data
+ * @param string $period: grain of displayed data (days, weeks, months, or years)
  * @param bool $download: <download month data instead of showing graph>
- * @return: nothing unless testing (in which case it returns html of the relevant charts, in their proper divs)
+ * @return: an assoc of chart data for the specified period
  * FOR DEV: http://localhost/cgmembers-frame/cgmembers/rcredits/misc/chart.php?ctty=0&chart=growth&site=dev
  */
-function showCharts($whichChart, $ctty = 0, &$chartData = '', $download = FALSE) {
+function showCharts($ctty = 0, $period = 'months', $download = FALSE) {
   global $base_url;
 
   list ($in, $out, $net, $personal, $companies) = array(t('in'), t('out'), t('net'), t('personal'), t('companies'));
@@ -2077,7 +2076,6 @@ function showCharts($whichChart, $ctty = 0, &$chartData = '', $download = FALSE)
   $latest = time(); // db\max('created', 'r_stats', compact('ctty')); // show only as much data as we have
   $today = strtotime('today', $latest ?: time());
 //  $dt1 = w\firstGraphDt($ctty);
-  $period = 'months';
 
   $charts = ray('success growth funds velocity banking volume', 'success-metrics', 'growth', 'dollar-pool', 'circulation-velocity', 'bank-transfers', 'transaction-volume');
   foreach ($charts as $k => $zot) u\setDft(${$k . 'Data'}, []);
@@ -2093,6 +2091,7 @@ function showCharts($whichChart, $ctty = 0, &$chartData = '', $download = FALSE)
     extract(w\fundStats($stats, FALSE, $stats30)); // format, originals in {var}0, difs in d_{var}
     $gifts0 =  $patronage0 + $d_roundups0 + $d_crumbs0;
     $success0 = $aAccts0 * $payees0 * $basket0 * $gifts0 / 500000;
+    if (u\test()) $success0 *= 500000; // invisible when normalized, so don't
     
     if ($download) {
       $pctActive = $aAccts0 / (($bAccts0 + $pAccts0) ?: 1);
@@ -2127,7 +2126,7 @@ function showCharts($whichChart, $ctty = 0, &$chartData = '', $download = FALSE)
 //    if ($dt > $today and $dtX < $today) $dt = $today; // always show the latest
   }
 
-  if ($download) {$chartData = $downData; return;}
+  if ($download) return $downData;
   
   $success = number_format($success0, 2);
   $accts = "$pAccts members + $bAccts companies";
@@ -2139,22 +2138,16 @@ function showCharts($whichChart, $ctty = 0, &$chartData = '', $download = FALSE)
   $txs = "$d_txsCount @ $avg avg";
   $topPct = $aAccts0 >= 100 ? '%' : '';
 
-  $period = $period[0];
-  $vs = compact(ray('success accts funds velocity usd txs topPct dt1 period'));
+  $vs = compact(ray('success accts funds velocity usd txs topPct dt1'));
 
   foreach($charts as $k => $help) {
-//    $one = "<div id=\"{$k}Chart\" class=\"onechart ct-chart ct-golden-section\"></div>";
     $one = "<div id=\"onechart\" class=\"onechart ct-chart ct-golden-section\"></div>";
 //    if (count($charts) > 1) $one = "<a href=\"$base_url/help/$help/qid=$ctty\">$one</a>";
     $charts[$k] = "<div>$one</div>";
     $dataNames[] = $k . 'Data';
   }
 
-  $chartData = json_encode($data = compact('vs', $dataNames));
-///  debug(compact(ray('data chartData')));
-  if (u\test()) return $chartData;
-
-//  return $whichChart == 'all' ? join('', $charts) : $charts[$whichChart];
+  return compact('vs', $dataNames);
 }
 
 

@@ -693,6 +693,7 @@ function cttyStats($dt1 = 0) {
   if (!$dt1) { // normally this is called without a date
     cttyStats1(['ctty' => 0]); // for all our communities total
     queueEach('cttyStats1', 'SELECT DISTINCT uid AS ctty FROM users WHERE uid<0'); // and one at a time
+    queueNext();
   } else { // recreate stats data from the beginning of time
     $sql = <<< X
       SELECT community AS ctty, MIN(t.created) AS start
@@ -714,8 +715,6 @@ X;
       $dt = strtotime('+1 days', $dt); // every day, not just GRAIN
     }
   }
-
-  queueNext();
 }
 
 define('BAN_MONTHS', 3); // number of months in a row to have + or - demand, to set credit ban on/off

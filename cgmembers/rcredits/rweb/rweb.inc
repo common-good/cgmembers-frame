@@ -466,18 +466,21 @@ function formI($form, &$sta, $who = '') {
  * Show raw data for charting.
  * This data is typical requested by cg4.us/charts.php for display in an iframe on the community/graphs page (etc)
  * @param string $args: URL query string with
- *   chart   name of chart to provide data for
  *   ctty    community to provide data for
- *   dt0     first date to include
- *   dt9     last date to include
  * @return: does not return. Prints the data (json-encoded) and exits.
  */
 function chartData($args = '') {
-  extract(just('chart ctty dt0 dt9', $args));
-  showCharts(@$chart, @$ctty, $data);
+  extract(just('ctty', $args));
+  
+  $data = showAllCharts(nn($ctty, 0));
 /**/  if (!@$data) die(t('No such chart data.'));
 /**/  echo $data;
   exit();
+}
+
+function showAllCharts($ctty = 0) {
+  foreach (ray('days weeks months years') as $period) $res[$period[0]] = showCharts(nn($ctty, 0), $period);
+  return json_encode($res);
 }
 
 function formFooter() {

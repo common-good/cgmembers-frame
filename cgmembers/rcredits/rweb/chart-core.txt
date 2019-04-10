@@ -17,7 +17,7 @@
 $parms = ray('site ctty chart selectable region');
 foreach ($parms as $k) $$k = @$_GET[$k]; // encode to sanitize output
 $query = http_build_query(compact($parms));
-$data = file_get_contents("$site/community/chart-data/ctty=$ctty&chart=$chart");
+$data = file_get_contents("$site/community/chart-data/ctty=$ctty");
 
 /**/ if (!strpos($site, 'cgmembers') and strlen($data) < 200) die($data);
 $version = time();
@@ -47,7 +47,7 @@ if ($selectable) {
   $controls = <<<X
     <div>
     <select id="ctty" class="form-control">$cttys</select>
-    <!--select id="atom" class="form-control">$atoms</select--><br>
+    <select id="atom" class="form-control">$atoms</select><br>
     <select id="chart" class="form-control">$charts</select>
     <a href="$site/community/graphs/ctty=$ctty&download=1" class="controlish">$downloadText</a>
     </div>

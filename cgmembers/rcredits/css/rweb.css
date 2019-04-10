@@ -967,6 +967,12 @@ div.password-confirm .error {font-weight:bold; color:red;}
 /*#frm-donate #edit-period {display:block; float:left;}*/
 #frm-donate .form-item-period {display:block;}
 
+/* Food Fund */
+#frm-food #edit-food {display:inline-block; width:200px;}
+#frm-food #edit-amtchoice {display:inline-block; width:200px;}
+#frm-food #edit-amtchoice {font-family:"Lucida Console",Menlo,Monaco,"Courier New",monospace;}
+#frm-food .form-item-period {display:block;}
+
 /* Backing */
 #frm-backing #edit-amtchoice {font-family:"Lucida Console",Menlo,Monaco,"Courier New",monospace;}
 #frm-backing #edit-amtchoice,
