@@ -1908,7 +1908,7 @@ function rangeDates($period, $starting = '', $ending = '') {
  */
 function whois($who, $field_name, $info, $selfMsg = 'no self-trading', $paying = FALSE) {
   global $mya;
-  if (u\isAcct($result = be\identify($who, @$mya->id, $paying, $selfMsg))) return $result;
+  if (u\isAcct($result = be\identify($who, @$mya, $paying, $selfMsg))) return $result;
   list ($msg, $args, $choices) = $result;
 //  foreach (ray('form_build_id form_token form_id op') as $one) unset($info[$one]); // just for neatness
   if (u\abbreviates('who=', $last = basename($return = \current_path()))) $return = dirname($return);
