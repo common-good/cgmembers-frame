@@ -19,7 +19,6 @@ use CG\Web as w; // use sparingly
 require_once __DIR__ . '/cg-strings.inc';
 require_once __DIR__ . '/cg-db.inc';
 require_once __DIR__ . '/acct.class';
-require_once __DIR__ . '/x.class';
 require_once __DIR__ . '/qo.class';
 
 define('RECENT_SECS', 60 * DAY_SECS); // back how long is "recent" (don't change this without recreating r_stats data)
@@ -1566,7 +1565,7 @@ function handleInvestmentRequest($stakeid, &$msg) {
   $stake += $request;
   
   $DBTX = \db_transaction();
-  list ($index, $subs) = $a->pay($clubA, $request, t('investment'), ray('stake goods', 1, FOR_USD));
+  list ($index, $subs) = be\transfer('payment', $a, $clubA, $request, t('investment'), ray('stake goods', 1, FOR_USD));
   $msg = t($index, $subs);
   if ($ok = $subs['success']) {
     db\update('r_stakes', ray('stakeid stake request', $stakeid, $stake, 0), 'stakeid');

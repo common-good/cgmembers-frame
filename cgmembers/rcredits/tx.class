@@ -315,5 +315,5 @@ EOF;
 
     return FALSE;
   }
-} // end of class x
+} // end of class tx
 

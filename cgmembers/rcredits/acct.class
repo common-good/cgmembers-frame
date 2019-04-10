@@ -406,7 +406,7 @@ class Acct {
   function setCategories($cats) {
     $a = $this;
     $DBTX = db_transaction();
-    db\q('DELETE FROM r_user_industries WHERE uid=:id', ray('id', $a->id)); // out with the old
+    db\del('r_user_industries', 'id', 'uid=:id', ['id'=>$a->id]);  // out with the old
     foreach ($cats as $iid) db\insert('r_user_industries', ray('uid iid', $a->id, $iid));
     unset($DBTX); // commit
   }  
@@ -536,7 +536,9 @@ class Acct {
     if (isset($info['photo'])) {
       if ($info['photo']) { // setting photo
         db\updateOrInsert('r_photos', ['uid' => $a->id, 'photo' => u\cry('H', $info['photo'])], 'uid');
-      } else db\q('DELETE FROM r_photos WHERE uid=:uid', ['uid' => $a->id]);
+      } else {
+        db\del('r_photos', 'uid', $a->id);
+      }
       unset($info['photo']);
     }
     foreach (ray(PSECURE_FLDS) as $k) if (isset($info[$k])) $info[$k] = u\cry('P', $info[$k]);
@@ -870,7 +872,7 @@ X;
     $subs = ['person' => $a->id, 'priority' => $priority];
     if (empty($proxy))
       return db\get('proxy', 'r_proxies', 'person=:person AND priority=:priority', $subs);
-    db\q('DELETE FROM r_proxies WHERE person=:person AND priority=:priority', $subs);
+    db\del('r_proxies', 'id', 'person=:person AND priority=:priority', $subs);
     $subs['proxy'] = $proxy;
     db\insert('r_proxies', $info);
   }
@@ -1837,11 +1839,11 @@ EOF;
     if ($payeeId != CGID /*or $a->activated*/) u\EXPECT($a->ok, 'inactive payer'); // not-yet-active accounts can be invoiced for gifts to CG
 
     if ($a->ok) {
-      list ($msg, $args) = $a->pay($payee, $amount, $desc, $goods, $data);
+      list ($msg, $args) = be\transfer('payment', $a, $payee, $amount, $desc, $goods, $data);
       if (u\arrayGet($args, 'success', FALSE)) return TRUE;
     }
     $data['status'] = TX_APPROVED;
-    list ($msg, $args) = $payee->invoice($this, $amount, $desc, $goods, $data);
+    list ($msg, $args) = be\invoice($payee, $this, $amount, $desc, $goods, $data);
     return FALSE;
   }
 
@@ -1875,9 +1877,6 @@ EOF;
     $res = ray(B_ADMINABLE . ($this->admin ? ' admin2' : '') . ($this->superAdmin ? ' admin' : ''));
     return array_values($this->isCtty ? array_intersect($res, ray(B_CTTY_BITS)) : array_diff($res, ray(B_CTTY_BITS)));
   }
-  public function pay($a2, $amt, $for, $goods, $extra = []) {return be\transfer('payment', $this, $a2, $amt, $for, $goods, $extra);}
-  public function charge($a2, $amt, $for, $goods, $extra = []) {return be\transfer('charge', $this, $a2, $amt, $for, $goods, $extra);}
-  public function invoice($a2, $amt, $for = NULL, $goods, $extra = []) {return be\invoice($this, $a2, $amt, $for, $goods, $extra);}
 
   public function nextTid() {
     $a = $this;

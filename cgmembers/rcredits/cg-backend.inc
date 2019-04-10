@@ -449,7 +449,6 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
   
   u\EXPECT('string acct acct number string|array int assoc', $type, $actor, $other, $amount, $for, $goods, $data);
   if (is_null($goods)) $goods = FOR_GOODS;
-  u\EXPECT(!is_null($goods), "bad goods");
   switch ($type) {
   case 'charge':
   case 'draw':
@@ -472,9 +471,8 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
   $short = FALSE;
   
   if (is_null($for)) $for = ray(R_WHYS)[$goods];
-  list($otherFor, $actorFor) = (is_array($for)) ? $for : [$for, $for];
+  list($actorFor, $otherFor) = (is_array($for)) ? $for : [$for, $for];
 
-  if (is_array($amount)) extract(just('amount', $amount));
   list ($actorId, $otherId) = array($actor->id, $other->id);
 
   if ($force != 0) $offline = TRUE; // temporary until app handles this right
@@ -900,7 +898,7 @@ function addCell($number, $validate = FALSE) {
 
 function deleteCell($number) {
   $number = u\fmtPhone($number, '+n'); // internal format
-  db\q('DELETE FROM r_boxes WHERE code=:number LIMIT 1', compact('number'));
+  db\del('r_boxes', 'id', 'code=:number LIMIT 1', compact('number'));
   $number = u\fmtPhone($number); // pretty format
   return array('report delete cell', compact('number'));
 }

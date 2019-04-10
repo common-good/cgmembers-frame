@@ -23,7 +23,7 @@ Scenario: A member builds up savings
   Then balances:
   | uid  | minimum | savingsAdd |*
   | .ZZA |     120 |          0 |
-q
+
 #Scenario: A member draws down savings bit by bit
 #  Given members have:
 #  | uid  | minimum | savingsAdd | saveWeekly | achMin |*

@@ -222,7 +222,12 @@ function setFlag($table, $id, $bit, $bool = TRUE) {
  */
 function del($table, $idnm, $id, $subs = []) {
   $where = is_numeric($id) ? "$idnm=$id" : $id;
-  if (in($table, TRACK_DELETED)) {
+  if (in($table, DELETED_BY_VIEW)) {
+    $all_table = str_replace('r_', 'all_', $table);
+    $q = db\q("UPDATE $all_table SET deleted=:NOW WHERE (deleted IS NULL OR deleted=0) AND $where");
+    $ok = ($q->rowCount() > 0);
+    return;
+  } elseif (in($table, TRACK_DELETED)) {
     $xtable = $table == 'users' ? 'x_users' : str_replace('r_', 'x_', $table);
     $q = db\q("INSERT INTO $xtable SELECT :NOW AS deleted,a.* FROM $table a WHERE $where", $subs);
     $ok = ($q->rowCount() > 0);

@@ -129,7 +129,7 @@ function formInvest_submit($form, &$sta) {
   say($msg);
 }
 
-//		list ($msg, $subs) = $mya->invoice(r\acct($mya->iclubid), $amount, t('redeem investment'), ray('goods stakeid', FOR_STAKE, $stakeid));
+//		list ($msg, $subs) = be\invoice($mya, r\acct($mya->iclubid), $amount, t('redeem investment'), ray('goods stakeid', FOR_STAKE, $stakeid));
 //		say($msg, $subs);
 
 /**

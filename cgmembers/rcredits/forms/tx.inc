@@ -75,22 +75,26 @@ function formTx_submit($form, &$sta) {
 //  if (strpos($who, '@')) return w\go('/charge/nonmember/' . u\urlify(serialize($info)));
 
   u\setDft($goods, FOR_GOODS);
-  $func = op($sta) == 'pay' ? 'pay' : 'invoice';
   $DBTX = \db_transaction();
-  list ($msg, $args) = $mya->$func(r\acct($uid), $amount, $purpose, $goods, @$repeat ? ['recurs' => 1] : []);
-    $ok = @$args['success'];
-    if ($func == 'pay' and $mya->snap) r\tellAdmin(t('SNAP member %who %did something', 'who did', $mya->fullName, $ok ? t('bought') : t('tried to buy')), ['topic' => t('SNAP purchase') . ($ok ? '' : t(' failed'))]);
+  $func = op($sta);
+  if ($func == 'pay') {
+    list ($msg, $args) = be\transfer('payment', $mya, r\acct($uid), $amount, $purpose, $goods, @$repeat ? ['recurs' => 1] : []);
+  } else {
+    list ($msg, $args) = be\invoice($mya, r\acct($uid), $amount, $purpose, $goods, @$repeat ? ['recurs' => 1] : []);
+  }
+  $ok = @$args['success'];
+  if ($func == 'pay' and $mya->snap) r\tellAdmin(t('SNAP member %who %did something', 'who did', $mya->fullName, $ok ? t('bought') : t('tried to buy')), ['topic' => t('SNAP purchase') . ($ok ? '' : t(' failed'))]);
 
-    if ($ok and $period = @$repeat) {
-      $subs = ray('payer payee', $mya->id, $uid);
-      $info = $subs + compact(ray('amount period'));
-      if ($id = db\get('id', 'r_recurs', 'payer=:payer AND payee=:payee AND ended=0', $subs)) $info += compact('id');
-      db\updateOrInsert('r_recurs', $info, 'id');
-      $repeats = ray(OFTENS);
+  if ($ok and $period = @$repeat) {
+    $subs = ray('payer payee', $mya->id, $uid);
+    $info = $subs + compact(ray('amount period'));
+    if ($id = db\get('id', 'r_recurs', 'payer=:payer AND payee=:payee AND ended=0', $subs)) $info += compact('id');
+    db\updateOrInsert('r_recurs', $info, 'id');
+    $repeats = ray(OFTENS);
 //      $often = strstr($repeats[$repeat], ' ', TRUE);
-      $often = $repeats[$repeat];
-      $msg .= '|repeats';
-    }
+    $often = $repeats[$repeat];
+    $msg .= '|repeats';
+  }
   unset($DBTX);
   
   return say($msg, $args + @compact('often'), $ok ? '' : 'amount');

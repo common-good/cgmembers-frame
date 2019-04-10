@@ -89,6 +89,8 @@ define('DEV_VKEYPW', 'wt38BqWMslj3uUHUOto7fNi5ExL9CC7S7ffjn_q6zCY'); // password
 define('DEV_ADMIN_PASS', '123'); // admin password when isDEV
 define('DEFAULT_PROXIES', '2, 3'); // account record IDs for place-holder proxies
 define('TRACK_DELETED', 'r_invoices r_photos r_relations r_usd users'); // remember rows in these tables if we delete them
+define('DELETED_BY_VIEW', 'r_tx_hdrs r_entries r_disputes'); // these tables are actually views on the all_ version of
+                                                             // themselves, and deletion is just by setting "deleted"
 define('DEV_ONLY_MSG', 'only on development machine');
 
 $host = strtolower(@$_SERVER['HTTP_HOST']);

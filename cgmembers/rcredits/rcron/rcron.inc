@@ -515,7 +515,7 @@ function cgc($item) {
   if ($kickBack > 0) {
     list ($a, $cgfA) = [r\acct($ctty), r\cgA()];
     $desc = t('50% share of local donations through %dt', 'dt', u\fmtDate($end));
-    if ($a->ok) $cgfA->pay($a, $kickBack, $desc, FOR_NONGOODS, ray('created gift', u\monthDay1() - 1, TRUE));
+    if ($a->ok) be\transfer('payment', $cgfA, $a, $kickBack, $desc, FOR_NONGOODS, ray('created gift', u\monthDay1() - 1, TRUE));
   }
 }  
   

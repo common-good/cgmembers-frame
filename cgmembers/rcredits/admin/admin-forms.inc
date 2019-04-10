@@ -368,7 +368,7 @@ function formFollowup($form, &$sta, $args = []) {
   global $mya;
   
 	if (!$mya or (!$mya->cAdmin2 and !$mya->admin2)) return w\go('');
-  extract(exactly('uid one recent', $args, null));
+  extract(u\exactly('uid one recent', $args, null));
   
   if (!empty($uid)) {
     w\setAcct($uid); // switch to that user
@@ -979,7 +979,7 @@ function test($arg = '') {
               );
   }
   if (session_id() and $_SESSION) session_destroy();
-  db\q('DELETE FROM sessions');
+  db\del('sessions', '(sid, ssid)', '1=1');  // Yeah, this is a little funky...
   \drupal_goto('sadmin/recover'); // has to be a form available when logged out
 }
 
