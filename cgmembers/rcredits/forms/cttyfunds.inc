@@ -6,7 +6,7 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
-
+/** * @file * Display a table summarizing the financial position of each community * UNUSED (will need a significant overhaul) */
 
 function formCttyFunds($form, &$sta) {
   global $mya;

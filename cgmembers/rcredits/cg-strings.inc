@@ -244,7 +244,7 @@ EOF
   'bank unverified' => t('You cannot exchange %RCREDITS for US Dollars until your bank account has been verified.'),
   'no ALL' => t('"ALL" (meaning all employees) is not allowed here.'),
   'no employees' => t('There are no employees related to this account.'),
-  'shortname taken' => t('WARNING: There is already an account with a nearly identical name ("%otherName").'),
+  'shortname taken' => t('There is already an account with a nearly identical name ("%otherName").'),
   'cannot contact' => t('We are unable to contact %fullName by email or text message. You may want follow up directly.'),
   'no last customer' => t('The system does not know who your last customer was.'),
   'max exchange' => t('The amount you can transfer or exchange in %period is limited to %amount.'),
