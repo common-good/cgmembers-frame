@@ -24,11 +24,10 @@ function formGraphs($form, &$sta, $args) {
     $header[] = ''; // column for data descriptor
     for ($ago = DATA_POINTS; $ago >= 0; $ago--) {
       $dt = strtotime("-$ago months", $today);
-      $header[] = strftime('%h %d', $dt);
+      $header[] = strftime('%d%h%Y', $dt);
     }
     u\csv($header);
-    $chartData['m'] = w\showCharts($ctty, 'months', 'download');
-    $chartData = json_encode($chartData);
+    $chartData = w\showCharts($ctty, 'months', 'download');
     if ($chartData) for ($i = 0; $i < count($chartData[0]); $i++) {
       for ($m = 0; $m < count($chartData); $m++) $row[$m] = $chartData[$m][$i];
       u\csv($row);

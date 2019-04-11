@@ -50,7 +50,7 @@ google.setOnLoadCallback(window.setPeriod);
 
 
 function successChart() {
-  var data = myRows('successData', 'Success, Active, Gifts, Payees, Basket, Invites');
+  var data = myRows('successData', 'Success, Active, Gifts / 5, Payees * 50, Basket, Invites');
   var colors = 'blue green silver red yellow orange';
   doChart('Success metric: ' + vs.success, data, colors);
 }
@@ -120,8 +120,8 @@ function doChart(title, data, colors, params = {}) {
     series: series,
     width: chartW, height:chartH,
     hAxis: {
-      viewWindow: {min:new Date(vs.dt1 * 1000)}, 
-      format: period == 'y' ? 'yyyy' : (period == 'm' ? 'MMM`yy' : (period == 'w' ? 'MMMdd' : 'Edd')), // ` not ' (chrome bug)
+//      viewWindow: {min:new Date(vs.dt1 * 1000)}, 
+      format: period == 'y' ? 'yyyy' : ('mq'.includes(period) ? 'MMM`yy' : (period == 'w' ? 'MMMdd' : 'Edd')), // ` not ' (chrome bug)
       gridlines: {count:gridlines}, 
       title: '', 
       titleTextStyle: {color:'darkgray'}

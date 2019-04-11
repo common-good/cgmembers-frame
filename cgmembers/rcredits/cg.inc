@@ -1035,7 +1035,7 @@ function cttyPaidEver($ctty = 0) {
  * @param ray $redo: list of names of calculations to redo (ALL for all, NULL for none)
  * @return assoc of named statistics for one community on one date (see r_stats table def)
  */
-function stats($ctty = 0, $when = NULL, $redo = NULL) {
+function stats($ctty = 0, $when = NULL, $redo = '') {
   u\setDft($when, strtotime('today'));
 
   if ($ctty == 1) { // for the server's region overall (omitting distant communities hosted here)
@@ -1045,12 +1045,11 @@ function stats($ctty = 0, $when = NULL, $redo = NULL) {
     list ($cttyCrit, $subs) = $ctty ? ['community=:ctty', compact('ctty')] : ['community<>0', []];
   }
   $cttyStart = db\min('created', 'users', "$cttyCrit AND uid>:CANONIC_ACCTS", $subs);
-  if (!$cttyStart or $when < $cttyStart) {
+  if (!$cttyStart or $when < max($cttyStart, R_LAUNCH)) {
     $info = db\cols('r_stats', 'id');
     $info = ['created' => $when] + array_combine($info, array_fill(0, count($info), 0));
   } else {
-    $sign = $redo ? '=' : '>=';
-    $sql = "SELECT * FROM r_stats WHERE created $sign :when AND ctty=:ctty ORDER BY created LIMIT 1";
+    $sql = "SELECT * FROM r_stats WHERE created=:when AND ctty=:ctty ORDER BY created LIMIT 1";
     $info = db\q($sql, compact('ctty', 'when'))->fetchAssoc();
     $do = 'accts bals usd txs aAccts conx conxLocal payees basket patronage invites topN botN'; // normal
     if ($redo) $do = $redo == 'ALL' ? str_replace('bals', 'bals bals2', $do) : $redo;
@@ -1090,6 +1089,7 @@ function stats($ctty = 0, $when = NULL, $redo = NULL) {
  * Called ONLY from stats()
  */
 function getStats($ctty, $created, $cttyCrit, $do = NULL) {
+  u\EXPECT($created >= R_LAUNCH, 'getStats old date');
   $created0 = $created;
   $subs = compact('created', $ctty ? 'ctty' : NULL);
   $thisCtty = 'community=:ctty';
@@ -1216,7 +1216,7 @@ X;
     
   // get patronage (total recurring gifts expected per month)
   $sqls['patronage'] = <<< X
-    SELECT SUM(amount * IF(period='Y', 1/12, IF(period='M', 1/4, IF(period='W', :WEEK_SECS/:MONTH_SECS, 0)))) AS patronage
+    SELECT SUM(amount * IF(period='Y', 1/12, IF(period='Q', 1/3, IF(period='W', :MONTH_SECS/:WEEK_SECS, 1)))) AS patronage
     FROM r_recurs r JOIN users u ON u.uid=r.payer
     WHERE payee=:CGID AND r.created<:created AND (ended=0 OR ended>:created-:YEAR_SECS) AND u.$cttyCrit
 X;
