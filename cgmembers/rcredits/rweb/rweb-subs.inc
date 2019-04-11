@@ -2036,7 +2036,7 @@ function vf($f, $add = 0) {
   return compact('v', 'f');
 }
  
-define('DATA_POINTS', 18); // how many x-axis data points to show in each dataset
+define('DATA_POINTS', 18); // how many x-axis data points to show for each granularity (day, week, etc.)
 
 /**
  * Return an iframe containing a chart
@@ -2073,31 +2073,29 @@ function showCharts($ctty = 0, $period = 'months', $download = FALSE) {
 
   list ($in, $out, $net, $personal, $companies) = array(t('in'), t('out'), t('net'), t('personal'), t('companies'));
   $txTypes = ray('p2p p2b b2b b2p', t('Person-to-person'), t('Person-to-business (mostly by %PROJECT card)'), t('Business-to-business (paying suppliers)'), t('Business-to-person (including payroll)'));
-  $latest = time(); // db\max('created', 'r_stats', compact('ctty')); // show only as much data as we have
-  $today = strtotime('today', $latest ?: time());
-//  $dt1 = w\firstGraphDt($ctty);
+  $today = strtotime('today');
 
   $charts = ray('success growth funds velocity banking volume', 'success-metrics', 'growth', 'dollar-pool', 'circulation-velocity', 'bank-transfers', 'transaction-volume');
   foreach ($charts as $k => $zot) u\setDft(${$k . 'Data'}, []);
-  $downData[] = ray('Companies Members Active Joining P2P P2B B2P B2B PctActive MemsPerCo TxsPerActive PayeesPerActive Basket');
+  $downData[] = ray('Companies Members Active Joining P2P P2B B2P B2B PctActive MemsPerCo TxsPerActive PayeesPerActive Basket Gifts Invites');
   
   for ($ago = DATA_POINTS; $ago >= 0; $ago--) {
-    $dt = strtotime("-$ago $period", $today);
-    if (!@$dt1) $dt1 = $dt; // remember first date for this community
-//    if (!$stats = r\stats($ctty, $dt, TRUE) or !$stats['created']) continue;
-    $stats = r\stats($ctty, $dt, TRUE);
+    $dt = strtotime($period == 'quarters' ? (-3*$ago) . ' months' : "-$ago $period", $today);
+    if ($dt < R_LAUNCH) continue;
+    $stats = r\stats($ctty, $dt);
     extract(just('ctty created', $stats)); // careful with this (don't overwrite local vars)
-    $stats30 = r\stats($ctty, strtotime('-31 days', $created)); // 30 gets weird for partially-populated r_stats so use 31
+    $stats30 = r\stats($ctty, strtotime('-30 days', $created));
     extract(w\fundStats($stats, FALSE, $stats30)); // format, originals in {var}0, difs in d_{var}
-    $gifts0 =  $patronage0 + $d_roundups0 + $d_crumbs0;
-    $success0 = $aAccts0 * $payees0 * $basket0 * $gifts0 / 500000;
-    if (u\test()) $success0 *= 500000; // invisible when normalized, so don't
+    $gifts0 =  ($patronage0 + $d_roundups0 + $d_crumbs0) / 5; // normalize (/)
+    $payees0 *= 50; // normalize (*)
+    $success0 = $aAccts0 * $payees0 * $basket0 / 2000; // normalize (/)
+    if (u\test()) $success0 *= 2000; // invisible when normalized, so don't
     
     if ($download) {
       $pctActive = $aAccts0 / (($bAccts0 + $pAccts0) ?: 1);
       $memsPerCo = $bAccts0 ? $pAccts0 / $bAccts0 : 0;
       $txsPerActive = $aAccts0 ? $txsCount0 / $aAccts0 : 0;
-      $downData[] = [$bAccts0, $pAccts0, $aAccts0, $newbs0, $d_p2p0, $d_p2b0, $d_b2p0, $d_b2b0, $pctActive, $memsPerCo, $txsPerActive, $payees0, $basket0];
+      $downData[] = [$bAccts0, $pAccts0, $aAccts0, $newbs0, $d_p2p0, $d_p2b0, $d_b2p0, $d_b2b0, $pctActive, $memsPerCo, $txsPerActive, $payees0, $basket0, $gifts0, $d_invites0];
     } else {
   //    $ray = ray('v f', $pAccts0 + $bAccts0, $bAccts);
   //    $growthData[] = [$created, vf($bAccts, $pAccts0), $pAccts0, $newbs0, $aAccts0, $conx0, $conxLocal0];  
@@ -2138,7 +2136,7 @@ function showCharts($ctty = 0, $period = 'months', $download = FALSE) {
   $txs = "$d_txsCount @ $avg avg";
   $topPct = $aAccts0 >= 100 ? '%' : '';
 
-  $vs = compact(ray('success accts funds velocity usd txs topPct dt1'));
+  $vs = compact(ray('success accts funds velocity usd txs topPct'));
 
   foreach($charts as $k => $help) {
     $one = "<div id=\"onechart\" class=\"onechart ct-chart ct-golden-section\"></div>";

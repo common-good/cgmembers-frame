@@ -29,7 +29,7 @@ if ($selectable) {
 //  $cttys[-1] = 'Northern PV';
   $cttys = opts($cttys, $ctty);
   
-  $atoms = opts(['d' => 'Days', 'w' => 'Weeks', 'm' => 'Months', 'y' => 'Years'], 'w');
+  $atoms = opts(['d' => 'Days', 'w' => 'Weeks', 'm' => 'Months', 'q' => 'Quarters', 'y' => 'Years'], 'w');
   
   $downloadText = 'Download by Month';
 

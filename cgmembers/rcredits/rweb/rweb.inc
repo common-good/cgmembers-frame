@@ -479,7 +479,7 @@ function chartData($args = '') {
 }
 
 function showAllCharts($ctty = 0) {
-  foreach (ray('days weeks months years') as $period) $res[$period[0]] = showCharts(nn($ctty, 0), $period);
+  foreach (ray('days weeks months quarters years') as $period) $res[$period[0]] = showCharts(nn($ctty, 0), $period);
   return json_encode($res);
 }
 
