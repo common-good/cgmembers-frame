@@ -1246,7 +1246,7 @@ X;
     FROM tx_hdrs t JOIN tx_entries payer USING(xid) JOIN tx_entries payee USING(xid)
          JOIN users u ON u.uid=payer.uid JOIN users u2 ON u2.uid=payee.uid
     WHERE payer.entryType = :ENTRY_PAYER AND payee.entryType = :ENTRY_PAYEE AND t.$recent AND $cttysCrit
-           AND NOT t.:IS_ROUNDUPS AND NOT t.:IS_CRUMBS AND NOT t.:IS_FOOD
+          AND NOT t.:IS_CRUMBS AND NOT t.:IS_FOOD
 X;
     
   // get patronage (total recurring gifts expected per month)
@@ -1293,7 +1293,7 @@ X;
     $sqls['topN'] = <<< X
       SELECT SUM(amts) AS topN FROM 
       (SELECT DISTINCT uid, amts FROM $pastTxs u1 
-       WHERE $nonCtty AND amts IS NOT NULL ORDER BY amts DESC LIMIT $topNSQL) u
+       WHERE $nonCtty AND amts IS NOT NULL ORDER BY amts DESC LIMIT %topnSQL) u
 X;
 /*     $res += db\q($sql, $subs)->fetchAssoc() ?: []; */
 
@@ -1312,7 +1312,7 @@ X;
       SELECT SUM(bal) AS topN FROM 
       (SELECT balance AS bal FROM users u
        WHERE $nonCtty AND $isMaster AND $cttyCrit AND $creCrit GROUP BY uid
-       ORDER BY balance DESC LIMIT $topNSQL) u
+       ORDER BY balance DESC LIMIT %topnSQL) u
 X;
   }
 
