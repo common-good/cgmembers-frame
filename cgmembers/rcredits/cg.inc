@@ -1040,11 +1040,11 @@ function stats($ctty = 0, $when = NULL, $redo = '') {
 
   if ($ctty == 1) { // for the server's region overall (omitting distant communities hosted here)
     list ($start, $end) = r\regionRange();
-    list ($cttyCrit, $subs) = ["uid BETWEEN $start AND $end", []];
+    $cttyCrit = "uid BETWEEN $start AND $end";
   } else { // for one community or all
-    list ($cttyCrit, $subs) = $ctty ? ['community=:ctty', compact('ctty')] : ['community<>0', []];
+    $cttyCrit = $ctty ? "community=$ctty" : 'community<>0';
   }
-  $cttyStart = db\min('created', 'users', "$cttyCrit AND uid>:CANONIC_ACCTS", $subs);
+  $cttyStart = db\min('created', 'users', "$cttyCrit AND uid>:CANONIC_ACCTS");
   if (!$cttyStart or $when < max($cttyStart, R_LAUNCH)) {
     $info = db\cols('r_stats', 'id');
     $info = ['created' => $when] + array_combine($info, array_fill(0, count($info), 0));
@@ -1091,10 +1091,9 @@ function stats($ctty = 0, $when = NULL, $redo = '') {
 function getStats($ctty, $created, $cttyCrit, $do = NULL) {
   u\EXPECT($created >= R_LAUNCH, 'getStats old date');
   $created0 = $created;
-  $subs = compact('created', $ctty ? 'ctty' : NULL);
-  $thisCtty = 'community=:ctty';
-  list ($cttyCrit, $cttysCrit) = $ctty ? [$thisCtty, "(u.$thisCtty OR u2.$thisCtty)"] : ['community<>0', '1'];
   $creCrit = 'created<=:created';
+  $subs = compact('created');
+  $cttysCrit = $ctty ? "(u.$cttyCrit OR u2.$cttyCrit)" : '1';
   $nonCtty = 'uid>:CANONIC_ACCTS';
   $accounts = "(SELECT uid,jid,community,flags FROM users WHERE $nonCtty)";
   $isMaster = '(jid=0 OR uid<jid)';
@@ -1140,8 +1139,8 @@ X;
   list ($cgIn, $cgOut) = $ctty == 0 // make cgIn and cgOut selectors
   ? ['SUM(IF(u.community=u2.community, amount, 0))',
      'SUM(IF(u.community=u2.community, 0, amount))']
-  : ["SUM(IF(NOT (u.$thisCtty) AND u2.$thisCtty, amount, 0))\n",
-     "SUM(IF(u.$thisCtty AND NOT (u2.$thisCtty), -amount, 0))\n"];
+  : ["SUM(IF(NOT (u.$cttyCrit) AND u2.$cttyCrit, amount, 0))\n",
+     "SUM(IF(u.$cttyCrit AND NOT (u2.$cttyCrit), -amount, 0))\n"];
   foreach (ray('cgIn cgOut') as $k) $sql .= "${$k} AS $k,\n";
   
   foreach (ray('p2b:01,b2b:11,b2p:10,p2p:00') as $k => $v) { // make x2x selectors
@@ -1171,7 +1170,7 @@ X;
 //    WHERE NOT u.:IS_CO AND $cttyCrit AND $creCrit AND $recent
 
   // get conx, conxLocal
-  foreach (ray('conx conxLocal', 1, "u2.$thisCtty") as $k => $crit) {
+  foreach (ray('conx conxLocal', 1, "u2.$cttyCrit") as $k => $crit) {
     if (!$ctty) $crit = 1; // avoid local query when doing stats for ALL cttys
     $sqls[$k] = <<< X
       SELECT AVG(conx) as $k FROM (
