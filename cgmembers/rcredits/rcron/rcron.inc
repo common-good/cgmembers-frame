@@ -702,7 +702,7 @@ function cttyStats($dt1 = 0, $redo = '') {
       WHERE uid>:CANONIC_ACCTS AND (t.created>=:R_LAUNCH OR t.created IS NULL) GROUP BY community ORDER BY -community
 X;
     $cttys = db\q($sql)->fetchAllKeyed();
-    u\preray([0 => min($cttys)], $cttys); // show all dates overall
+    u\preray([0 => min($cttys), 1 => min($cttys)], $cttys); // show all dates overall
 
     if ($dt1 < 0) $dt1 = db\max('created', 'r_stats'); // repeat last date to catch missing cttys
     if (!$dt1) $dt1 = @$cttys[0] ?: NOW;
