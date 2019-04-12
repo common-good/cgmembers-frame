@@ -153,9 +153,9 @@ function showSteps($a) {
 function showActivity($a) {
   $uid = $a->id;
   $when = u\plusMonths(-3);
-  $count = $a->co ? db\count('r_entries JOIN r_tx_hdrs USING (xid)',
+  $count = $a->co ? db\count('tx_entries JOIN tx_hdrs USING (xid)',
                              'uid=:uid AND created>:when', compact('uid', 'when'))
-    : db\count('r_entries payer JOIN r_tx_hdrs USING(xid) JOIN r_entries payee USING (xid)',
+    : db\count('tx_entries payer JOIN tx_hdrs USING(xid) JOIN tx_entries payee USING (xid)',
                'payer.uid=:uid AND payer.amount < 0 AND payee.uid<>:CGID AND payee.amount > 0 AND created>:when',
                compact(ray('uid cgf when')));
   $ret = t('%count %what', 'count what', $count, $a->co ? t('sales') : t('purchases'));
@@ -242,7 +242,7 @@ function showQuery($table, $where = '1', $order = '', $fields = '*', $joinFields
   $limit = 500; // max records to show
   global $mya;
   
-  $flagsField = ($table == 'r_tx_hdrs') ? TX_FLAGS : B_LIST;
+  $flagsField = ($table == 'tx_hdrs') ? TX_FLAGS : B_LIST;
   if (!$mya->admin and $joinFields) {
     if ($table != 'users') {
       if (!is_array($joinFields)) $joinFields = array($joinFields);
@@ -780,7 +780,7 @@ function callDetails($type = '', $when = '') {
     //    return "<div class=\"well\"><h3>$head$body</h3></div>";
   }
 
-  $table = "r_entries payer join r_tx_hdrs t using(xid) join r_entries payee using(xid)";
+  $table = "tx_entries payer join tx_hdrs t using(xid) join tx_entries payee using(xid)";
   $subs = ray('id', $mya->id);
   $gifts = $mya->giftsDesc() 
     ?: (db\sum('payee.amount', $table, 'payer.uid=:id AND payer.amount < 0 AND payee.uid=:CGID AND payee.amount > 0 AND :IS_GIFT', $subs)
@@ -905,17 +905,17 @@ function callDetails($type = '', $when = '') {
 /*   $accts = db\count('users u', $where, $subs); */
 	
 /*   $sql = "SELECT COUNT(*) AS txCount,AVG(amount%1) AS cents FROM r_txs t JOIN users u ON u.uid=t.payer WHERE $where"; */
-/*   $sql = "SELECT COUNT(*) AS txCount, AVG(amount%1) AS cents FROM r_entries e JOIN users USING(uid) WHERE $where"; */
+/*   $sql = "SELECT COUNT(*) AS txCount, AVG(amount%1) AS cents FROM tx_entries e JOIN users USING(uid) WHERE $where"; */
 /*   $sql = <<< EOF */
 /*     SELECT COUNT(*) AS txCount,AVG(amount%1) AS cents */
 /*     FROM r_txs t JOIN users u USING(uid) */
-/*     WHERE EXISTS(SELECT 1 FROM r_entries e WHERE e.xid=t.xid) AND $where */
+/*     WHERE EXISTS(SELECT 1 FROM tx_entries e WHERE e.xid=t.xid) AND $where */
 /* EOF; */
   
 /*   $res += db\q($sql, $subs)->fetchAssoc(); */
-/*   $txTotal = db\q("SELECT SUM(e.amount) FROM r_entries e JOIN r_tx_hdrs t USING(xid) JOIN users u USING(uid) JOIN r_entries e2 USING(xid) WHERE $where", $subs)->fetchField(); */
+/*   $txTotal = db\q("SELECT SUM(e.amount) FROM tx_entries e JOIN tx_hdrs t USING(xid) JOIN users u USING(uid) JOIN tx_entries e2 USING(xid) WHERE $where", $subs)->fetchField(); */
 
-/*   $txTotal = db\sum("MAX(0, amount)", "r_entries e JOIN users u USING(uid)", $where, $subs); */
+/*   $txTotal = db\sum("MAX(0, amount)", "tx_entries e JOIN users u USING(uid)", $where, $subs); */
 /*   return $res + compact(ray('accts txCount txTotal')); */
 /* } */
 

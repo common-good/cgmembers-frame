@@ -13,7 +13,7 @@ function formDemographics($form, &$sta) {
   $statStart = strtotime('10/23/2014'); // earliest 
   $title = t('Customer Demographics');
   
-  $q = db\q('SELECT DISTINCT payer FROM r_entries WHERE uid=:myid', compact('myid'));
+  $q = db\q('SELECT DISTINCT payer FROM tx_entries WHERE uid=:myid', compact('myid'));
   $count = $q->rowCount();
   if ($count < AGGREGATE_MIN) return w\go('/company-reports', t('There are not enough customers (%count) to show demographics (minimum %AGGREGATE_MIN).', compact('count')));
   
@@ -30,9 +30,9 @@ function formDemographics($form, &$sta) {
   /*
   $tnm = <<< X
     (SELECT ucust.city, COUNT(DISTINCT ucust.uid) count
-     FROM r_tx_hdrs tcust
-     JOIN r_entries payer USING(xid)
-     JOIN r_entries payee USING(xid)
+     FROM tx_hdrs tcust
+     JOIN tx_entries payer USING(xid)
+     JOIN tx_entries payee USING(xid)
      JOIN users ucust ON ucust.uid=payer.uid
      WHERE payee.uid=:myid AND NOT ucust.:IS_CO AND payer.amount < 0 AND payee.amount > 0
      GROUP BY ucust.state, ucust.city

@@ -159,7 +159,7 @@ function myClubVal($clubVal) {
 	$sql = <<<X
 	  SELECT SUM($stake) AS totalStake,
            SUM(IF(e.uid=:myid, $stake, 0)) AS myStake
-	  FROM r_tx_hdrs t JOIN r_entries e USING(xid)
+	  FROM tx_hdrs t JOIN tx_entries e USING(xid)
     WHERE e.uid=:clubid AND :IS_STAKE
 X;
   extract(db\q($sql, ray('myid clubid', $mya->id, $mya->iclubid))->fetchAssoc());

@@ -263,7 +263,7 @@ X;
       SELECT uid, u.flags, activated,
       SUM(IF(amount > 0, amount, 0))/6 AS inVol,
       SUM(IF(amount < 0, -amount, 0))/6 AS outVol
-      FROM users u LEFT JOIN r_entries e USING(uid) JOIN r_tx_hdrs t USING(xid)
+      FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid)
       WHERE t.created>=$start AND $sinceActivated % 30 = 0 GROUP BY uid
     ) t 
     WHERE $sinceActivated>0 AND uid > 1 AND :IS_OK
@@ -276,8 +276,8 @@ X;
 	$sql = <<< X
 	  SELECT u.uid,r.amount,$when AS `when`,r.created,r.period,
 		  (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced,
-      (SELECT MAX(t.created) FROM r_entries payer JOIN r_tx_hdrs t USING(xid) JOIN r_entries payee USING(xid)
-             LEFT JOIN r_tx_hdrs tRev ON tRev.reversesXid=t.xid
+      (SELECT MAX(t.created) FROM tx_entries payer JOIN tx_hdrs t USING(xid) JOIN tx_entries payee USING(xid)
+             LEFT JOIN tx_hdrs tRev ON tRev.reversesXid=t.xid
        WHERE payer.uid=r.payer AND payee.uid=r.payee AND t.:IS_RECURS AND
              tRev.xid IS NULL AND t.reversesXid IS NULL) AS lastTx
 		FROM users u LEFT JOIN r_recurs r ON r.payer=u.uid AND r.payee=:CGID AND r.ended=0
@@ -433,12 +433,12 @@ function everyMonth() {
   $bene = u\test() ? CGID : db\get('uid', 'users', "name='bene' AND uid<0");
   $start = u\monthDay1($end = u\monthDay1() - 1); // mark start and end of preceding month
   if (u\test()) $start = strtotime('-30 days', $end = strtotime('today') - 1) + 1; // test: the past 30 days
-  queueEach('whatsup', "SELECT uid, u.:IS_CO as co, MAX(t.created) AS lastTx FROM users u LEFT JOIN r_entries e USING(uid) JOIN r_tx_hdrs t USING(xid) WHERE uid>:CANONIC_ACCTS AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $start");
+  queueEach('whatsup', "SELECT uid, u.:IS_CO as co, MAX(t.created) AS lastTx FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid) WHERE uid>:CANONIC_ACCTS AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $start");
   /* queueEach('inflationAdjust', "SELECT uid, $start AS start, $end AS end FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS");   */
   
   $sql = <<< X
     SELECT u.uid, SUM(IF(payer.amount<0,0-payer.amount,0))*u.crumbs AS donate
-    FROM users u LEFT JOIN r_entries payer USING(uid) JOIN r_tx_hdrs t USING(xid)
+    FROM users u LEFT JOIN tx_entries payer USING(uid) JOIN tx_hdrs t USING(xid)
     WHERE payer.entryType=:ENTRY_PAYER AND u.crumbs>0 AND t.created BETWEEN $start AND $end
     GROUP BY uid
 X;
@@ -450,7 +450,7 @@ X;
            ( SELECT COUNT(1)
              FROM r_usd d LEFT JOIN users du ON du.uid=d.payee 
              WHERE d.txid<0 AND d.amount<0 AND du.community=u.community AND d.created<=$end ) AS bounces
-    FROM r_tx_hdrs t JOIN r_entries cg USING(xid) JOIN r_entries other USING(xid) LEFT JOIN users u ON u.uid=other.uid
+    FROM tx_hdrs t JOIN tx_entries cg USING(xid) JOIN tx_entries other USING(xid) LEFT JOIN users u ON u.uid=other.uid
     WHERE cg.uid=ctty AND t.:IS_GIFT AND community NOT IN($server, $bene) AND t.created <= $end
     GROUP BY community
 X;
@@ -597,7 +597,7 @@ function setNear() {
   $queries = join(' UNION ', [
     'SELECT DISTINCT inviter AS id1, invitee AS id2, 1 AS w FROM r_invites WHERE invitee',
     'SELECT DISTINCT person AS id1, proxy AS id2, 1 AS w FROM r_proxies',
-    'SELECT DISTINCT payer.uid AS id1, payee.uid AS id2, 1 AS w FROM r_tx_hdrs JOIN r_entries payer USING(xid) JOIN r_entries payee USING(xid) WHERE payer.uid>0 AND payee.uid>0 AND payer.id < payee.id',
+    'SELECT DISTINCT payer.uid AS id1, payee.uid AS id2, 1 AS w FROM tx_hdrs JOIN tx_entries payer USING(xid) JOIN tx_entries payee USING(xid) WHERE payer.uid>0 AND payee.uid>0 AND payer.id < payee.id',
     'SELECT DISTINCT main AS id1, other AS id2, 1 AS w FROM r_relations',
     'SELECT DISTINCT u1.uid AS id1, u2.uid AS id2, 0.5 AS w FROM users u1 INNER JOIN users u2 ON (u2.city=u1.city OR u2.zip=u1.zip) WHERE u1.uid<>u2.uid',
   ]); // each type of relationship counts as one point
@@ -644,7 +644,7 @@ function acctStats1($item, $asof = NULL) {
   
   $sql = <<< X
     SELECT SUM(payee.amount) AS giftsEver, SUM(IF(created<:monthAgo, 0, payee.amount)) AS giftsPastMo
-    FROM r_tx_hdrs JOIN r_entries payer USING(xid) JOIN r_entries payee USING(xid)
+    FROM tx_hdrs JOIN tx_entries payer USING(xid) JOIN tx_entries payee USING(xid)
     WHERE payer.uid=:uid AND payee.uid=:CGID AND :IS_GIFT AND created<:asof
 X;
   $row1 = db\q($sql, $subs)->fetchAssoc() ?: []; // giftsEver, giftsPastMo
@@ -673,7 +673,7 @@ function cttyStats($dt1 = 0) {
   } else { // recreate stats data from the beginning of time
     $sql = <<< X
       SELECT community AS ctty, MIN(t.created) AS start
-      FROM users u LEFT JOIN r_entries payee USING(uid) JOIN r_tx_hdrs t USING(xid)
+      FROM users u LEFT JOIN tx_entries payee USING(uid) JOIN tx_hdrs t USING(xid)
       WHERE uid>:CANONIC_ACCTS AND (t.created>=:R_LAUNCH OR t.created IS NULL)
       GROUP BY community ORDER BY community DESC
 X;
@@ -790,7 +790,7 @@ function acctRiskFinish() {
  */
 function txRisk() {
   $sql = <<<EOF
-    SELECT DISTINCT xid FROM r_tx_hdrs JOIN r_entries e USING(xid)
+    SELECT DISTINCT xid FROM tx_hdrs JOIN tx_entries e USING(xid)
     WHERE risk IS NULL AND ABS(amount)>0 AND (e.uid>0 OR ABS(amount)>:K_CTTY_THRESHOLD)
     ORDER BY created
 EOF;
@@ -828,14 +828,14 @@ function recurs() {
     uPayee.fullName AS payeeName,
     (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced,
     (SELECT MAX(t.created)
-     FROM r_tx_hdrs t JOIN r_entries payerE USING(xid) JOIN r_entries payeeE USING(xid)
+     FROM tx_hdrs t JOIN tx_entries payerE USING(xid) JOIN tx_entries payeeE USING(xid)
      WHERE payerE.uid=r.payer AND payeeE.uid=r.payee AND payerE.entryType=:ENTRY_PAYER AND payeeE.entryType=:ENTRY_PAYEE
      AND t.:IS_RECURS) AS lastTxDt,
     (SELECT MIN(t.xid)
-     FROM r_tx_hdrs t JOIN r_entries payerE USING(xid) JOIN r_entries payeeE USING(xid)
+     FROM tx_hdrs t JOIN tx_entries payerE USING(xid) JOIN tx_entries payeeE USING(xid)
      WHERE payerE.uid=r.payer AND payeeE.uid=r.payee AND payerE.entryType=:ENTRY_PAYER AND payeeE.entryType=:ENTRY_PAYEE
      AND t.:IS_RECURS
-     AND t.reversesXid IS NULL AND NOT EXISTS(SELECT xid FROM r_tx_hdrs tr WHERE tr.reversesXid = t.xid)) AS firstXid
+     AND t.reversesXid IS NULL AND NOT EXISTS(SELECT xid FROM tx_hdrs tr WHERE tr.reversesXid = t.xid)) AS firstXid
     FROM r_recurs r INNER JOIN users uPayee ON uPayee.uid=r.payee
 EOF;
   queueEach('recurs1', $sql);
@@ -858,7 +858,7 @@ X;
 function recurs1($item) {
 	extract(just('period lastTxDt created invoiced amount payerId payeeId payeeName firstXid', $item));
 	if (!$invoiced and giveNow($period, $lastTxDt, $created)) {
-    if (!empty($firstXid) and $res = db\get('description AS payerFor, goods, flags AS oldFlags', 'r_tx_hdrs JOIN r_entries payer USING(xid)', 'xid=:firstXid AND payer.uid=:payerId', compact(ray('firstXid payerId')))) {
+    if (!empty($firstXid) and $res = db\get('description AS payerFor, goods, flags AS oldFlags', 'tx_hdrs JOIN tx_entries payer USING(xid)', 'xid=:firstXid AND payer.uid=:payerId', compact(ray('firstXid payerId')))) {
       extract($res);
       $data = (u\getBit($oldFlags, B_GIFT)) ? ['gift'=>1, 'recurs'=>1] : ['recurs'=>1];
     } else {

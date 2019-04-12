@@ -182,7 +182,7 @@ function logSql($args) {
  * @param assoc $values: values to add to the data field in that record
  */
 function setData($table, $id, $values) {
-  $keys = ray('users r_invoices r_tx_hdrs', 'uid', 'nvid', 'xid');
+  $keys = ray('users r_invoices tx_hdrs', 'uid', 'nvid', 'xid');
   $key = $keys[$table];
   u\EXPECT($key, 'bad table');
   $data = db\get('data', $table, "$key=:id", compact('id'));
@@ -205,7 +205,7 @@ function setData($table, $id, $values) {
 function setFlag($table, $id, $bit, $bool = TRUE) {
   if ($table == 'users') return r\acct($id)->setBit($bit, $bool);
 
-  $keys = ray('users_txs r_invoices r_tx_hdrs', 'uid', 'nvid', 'xid');
+  $keys = ray('users_txs r_invoices tx_hdrs', 'uid', 'nvid', 'xid');
   $key = $keys[$table];
   u\EXPECT($key, 'bad table');
   $flags = db\get('flags', $table, "$key=:id", compact('id'));
@@ -223,7 +223,7 @@ function setFlag($table, $id, $bit, $bool = TRUE) {
 function del($table, $idnm, $id, $subs = []) {
   $where = is_numeric($id) ? "$idnm=$id" : $id;
   if (in($table, DELETED_BY_VIEW)) {
-    $all_table = str_replace('r_', 'all_', $table);
+    $all_table = $table . '_all';
     $q = db\q("UPDATE $all_table SET deleted=:NOW WHERE (deleted IS NULL OR deleted=0) AND $where");
     $ok = ($q->rowCount() > 0);
     return;

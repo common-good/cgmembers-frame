@@ -9,13 +9,13 @@ class CreateBalanceTriggers extends AbstractMigration
     $this->execute('DROP TRIGGER IF EXISTS updEntry');
     $this->execute('DROP TRIGGER IF EXISTS delEntry');
     $this->execute('DROP TRIGGER IF EXISTS insEntry');
-    $this->execute('CREATE TRIGGER insEntry AFTER INSERT ON all_entries FOR EACH ROW '
+    $this->execute('CREATE TRIGGER insEntry AFTER INSERT ON tx_entries_all FOR EACH ROW '
                    . 'UPDATE users u SET balance=balance+NEW.amount '
                    . 'WHERE NEW.uid IN (u.uid, u.jid)');
-    $this->execute('CREATE TRIGGER delEntry AFTER DELETE ON all_entries FOR EACH ROW '
+    $this->execute('CREATE TRIGGER delEntry AFTER DELETE ON tx_entries_all FOR EACH ROW '
                    . 'UPDATE users u SET balance=balance-OLD.amount '
                    . 'WHERE OLD.uid IN (u.uid, u.jid)');
-    $this->execute('CREATE TRIGGER updEntry AFTER UPDATE ON all_entries FOR EACH ROW BEGIN '
+    $this->execute('CREATE TRIGGER updEntry AFTER UPDATE ON tx_entries_all FOR EACH ROW BEGIN '
                    . 'UPDATE users u SET balance=balance-(IF(OLD.deleted IS NULL,0,OLD.amount)) '
                    . 'WHERE OLD.uid IN (u.uid, u.jid); '
                    . 'UPDATE users u SET balance=balance+(IF(NEW.deleted IS NULL,0,NEW.amount)) '

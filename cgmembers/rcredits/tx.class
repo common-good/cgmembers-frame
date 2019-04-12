@@ -152,7 +152,7 @@ class Tx {
     /* u\EXPECT(is_integer($xid)); */
     
     $DBTX = db_transaction();
-    $info = db\get('*', 'r_tx_hdrs', "(xid=:xid) AND $where", $subs + ['xid' => $xid]);
+    $info = db\get('*', 'tx_hdrs', "(xid=:xid) AND $where", $subs + ['xid' => $xid]);
     if (!$info) return FALSE;
     $entries = r\TxEntry::readAll($xid);
     if (!$entries) return FALSE;
@@ -169,10 +169,10 @@ class Tx {
     $DBTX = db_transaction();
     if ($allowModification and $tx->xid != 0) {
       $xid = $tx->xid;
-      u\EXPECT(db\updateOrInsert('r_tx_hdrs', just(Tx::TX_HDR_FIELDS, (array)$tx), 'xid'), "failure inserting tx");
+      u\EXPECT(db\updateOrInsert('tx_hdrs', just(Tx::TX_HDR_FIELDS, (array)$tx), 'xid'), "failure inserting tx");
     } else {
       u\EXPECT($tx->xid == 0, "We're not allowing modification of transactions.");
-      $xid = db\insert('r_tx_hdrs', just(Tx::INSERT_FIELDS, (array)$tx), 'xid');
+      $xid = db\insert('tx_hdrs', just(Tx::INSERT_FIELDS, (array)$tx), 'xid');
     }
     u\EXPECT($xid, "Failed to insert transaction header record");
     foreach ($tx->entries as $entry) {
@@ -198,8 +198,8 @@ class Tx {
     $DBTX = db_transaction();
     $sql = <<< EOF
       SELECT t.*, e.*
-      FROM r_tx_hdrs t LEFT JOIN r_entries e USING (xid)
-      WHERE (t.xid IN (SELECT DISTINCT xid FROM r_entries WHERE $users)) $restrict
+      FROM tx_hdrs t LEFT JOIN tx_entries e USING (xid)
+      WHERE (t.xid IN (SELECT DISTINCT xid FROM tx_entries WHERE $users)) $restrict
       ORDER BY e.xid
 EOF;
     $result = db\q($sql, []);
@@ -236,7 +236,7 @@ EOF;
    */
   static function lastTx($uids, $where = 1, $subs = []) {
     /// debug("lastTx(" . print_r($uids, true) . ", '$where', " . print_r($subs, true) . ")");
-    $txHdr = db\get('t.*', 'r_tx_hdrs t JOIN r_entries e USING(xid)',
+    $txHdr = db\get('t.*', 'tx_hdrs t JOIN tx_entries e USING(xid)',
                     "e.uid IN (:uids) AND $where ORDER BY t.created DESC LIMIT 1",
                     ['uids' => $uids] + $subs);
     if (!$txHdr) return FALSE;
@@ -305,7 +305,7 @@ EOF;
     //    global $mya;
     //    extract(just('amount toMe data payer payee payerTid payeeTid taking', $oldRecord));
     //    $data = unserialize($data);
-    if (db\exists('r_tx_hdrs', 'reversesXid=:xid', ['xid' => $this->xid])) {
+    if (db\exists('tx_hdrs', 'reversesXid=:xid', ['xid' => $this->xid])) {
       return 'already undone';
     }
 

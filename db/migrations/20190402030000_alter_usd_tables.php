@@ -30,19 +30,19 @@ class AlterUsdTables extends AbstractMigration
   public function change()
   {
     $usdTable = $this->table('r_usd');
-    $usdTable->addColumn('xid', 'integer', ['length' => MysqlAdapter::INT_BIG, 'default' => 0, 'comment' => 'id of related r_tx_hdrs record']);
+    $usdTable->addColumn('xid', 'integer', ['length' => MysqlAdapter::INT_BIG, 'default' => 0, 'comment' => 'id of related tx_hdrs record']);
     $usdTable->update();
 
     $usd2Table = $this->table('r_usd2');
-    $usd2Table->addColumn('xid', 'integer', ['length' => MysqlAdapter::INT_BIG, 'default' => 0, 'comment' => 'id of related r_tx_hdrs record']);
+    $usd2Table->addColumn('xid', 'integer', ['length' => MysqlAdapter::INT_BIG, 'default' => 0, 'comment' => 'id of related tx_hdrs record']);
     $usd2Table->update();
 
     $xusdTable = $this->table('x_usd');
-    $xusdTable->addColumn('xid', 'integer', ['length' => MysqlAdapter::INT_BIG, 'default' => 0, 'comment' => 'id of related r_tx_hdrs record']);
+    $xusdTable->addColumn('xid', 'integer', ['length' => MysqlAdapter::INT_BIG, 'default' => 0, 'comment' => 'id of related tx_hdrs record']);
     $xusdTable->update();
 
     /* $xusd2Table = $this->table('x_usd2'); */
-    /* $xusd2Table->addColumn('xid', 'integer', ['length' => MysqlAdapter::INT_BIG, 'default' => 0, 'comment' => 'id of related r_tx_hdrs record']); */
+    /* $xusd2Table->addColumn('xid', 'integer', ['length' => MysqlAdapter::INT_BIG, 'default' => 0, 'comment' => 'id of related tx_hdrs record']); */
     /* $xusd2Table->update(); */
   }
 }

@@ -7,11 +7,11 @@ use Phinx\Db\Adapter\MysqlAdapter;
 require_once 'cgmembers/rcredits/bootstrap.inc';
 require_once 'cgmembers/rcredits/defs.inc';
 
-class CreateTableRDisputes extends AbstractMigration
+class CreateTableTxDisputesAll extends AbstractMigration
 {
   public function up()
   {
-    $disputesTable = $this->table('all_disputes', ['comment' => 'record of disputes transactions']);
+    $disputesTable = $this->table('tx_disputes_all', ['comment' => 'record of dispute of transaction']);
 
     $this->addBigInt($disputesTable, 'xid', ['length' => 20, 'null' => false, 'comment' => 'id of the transaction in dispute']);
     $disputesTable->addColumn('reason', 'string', ['length' => 255, 'null' => false, 'comment' => 'reason the transaction is being disputes']);
@@ -19,14 +19,14 @@ class CreateTableRDisputes extends AbstractMigration
     $this->addBigInt($disputesTable, 'deleted', ['length' => 20, 'null' => true, 'default' => true, 'comment' => "unix timestamp of when the dispute record was deleted, null if it hasn't been"]);
     $disputesTable->create();
 
-    $this->execute('CREATE VIEW r_disputes AS SELECT id, xid, reason, status FROM all_disputes WHERE deleted IS NULL');
-    $this->execute('CREATE VIEW x_disputes AS SELECT id, xid, reason, status, deleted FROM all_disputes WHERE deleted IS NOT NULL');
+    $this->execute('CREATE VIEW tx_disputes AS SELECT id, xid, reason, status FROM tx_disputes_all WHERE deleted IS NULL');
+    $this->execute('CREATE VIEW tx_disputes_deleted AS SELECT id, xid, reason, status, deleted FROM tx_disputes_all WHERE deleted IS NOT NULL');
   }
 
   public function down() {
-    $this->execute('DROP VIEW IF EXISTS x_disputes');
-    $this->execute('DROP VIEW IF EXISTS r_disputes');
-    $this->table('all_disputes')->drop();
+    $this->execute('DROP VIEW IF EXISTS tx_disputes');
+    $this->execute('DROP VIEW IF EXISTS tx_disputes_deleted');
+    $this->table('tx_disputes_all')->drop();
   }
   
   private function addTinyInt($table, $name, $options = []) {

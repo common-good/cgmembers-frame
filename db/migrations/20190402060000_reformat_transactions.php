@@ -27,9 +27,9 @@ class ReformatTransactions extends AbstractMigration
     $flagsMask = (1 << B_OFFLINE | 1 << B_SHORT | 1 << B_RECURS | 1 << B_GIFT | 1 << B_FUNDING | 1 << B_CRUMBS);
 
     $txsTable = $this->table('r_txs');
-    $txHdrsTable = $this->table('r_tx_hdrs');
-    $entriesTable = $this->table('r_entries');
-    $disputesTbl = $this->table('r_disputes');
+    $txHdrsTable = $this->table('tx_hdrs');
+    $entriesTable = $this->table('tx_entries');
+    $disputesTbl = $this->table('tx_disputes');
     $maxXid = 0;
 
     $xFees = [];
@@ -457,9 +457,9 @@ class ReformatTransactions extends AbstractMigration
   }
 
   public function down() {
-    $this->execute('DELETE FROM all_entries');
-    $this->execute('DELETE FROM all_tx_hdrs');
-    $this->execute('DELETE FROM all_disputes');
+    $this->execute('DELETE FROM tx_entries_all');
+    $this->execute('DELETE FROM tx_hdrs_all');
+    $this->execute('DELETE FROM tx_disputes_all');
     $this->execute('UPDATE r_usd SET xid=DEFAULT');
     $this->execute('UPDATE r_usd2 SET xid=DEFAULT');
   }

@@ -851,7 +851,7 @@ X;
       if ($amount > 0) {
         list ($fromQid, $toQid) = [r\qid($uid), $a->mainQid];
         list ($payerId, $payeeId) = [$uid, $a->id];
-        $for = [$auto . $to . $toQid, $auto . $from . $fromQid];
+        $for = [$auto . $from . $fromQid, $auto . $to . $toQid];
         list($message, $subs) = be\transfer('draw', $this, r\acct($uid), $amount, $for, FOR_NONGOODS);
         if ($subs['success']) $left -= $amount;
         if ($left <= 0) break;
@@ -930,7 +930,7 @@ EOF;
 
   private function recomputeBalance() {
     $a = $this;
-    $balance = db\sum('amount', 'r_entries', 'uid=:uid', ['uid'=>$a->id]);
+    $balance = db\sum('amount', 'tx_entries', 'uid=:uid', ['uid'=>$a->id]);
     if (empty($balance)) $balance = 0;
     $result = db\update('users', ['uid'=>$a->id, 'balance'=>$balance], 'uid');
     u\EXPECT($result == 1, "trouble updating balance");
@@ -1441,10 +1441,10 @@ EOF;
              t.created AS lastGiftDate, e2.amount AS lastGift 
       FROM r_recurs r
            LEFT OUTER JOIN r_honors h ON r.payer=h.uid
-           JOIN r_entries e1 ON r.payer=e1.uid
-           LEFT OUTER JOIN r_tx_hdrs t USING(xid)
-           JOIN r_entries e2 ON e2.xid=t.xid AND e2.uid=r.payee
-           LEFT OUTER JOIN r_tx_hdrs tRev ON tRev.reversesXid=t.xid
+           JOIN tx_entries e1 ON r.payer=e1.uid
+           LEFT OUTER JOIN tx_hdrs t USING(xid)
+           JOIN tx_entries e2 ON e2.xid=t.xid AND e2.uid=r.payee
+           LEFT OUTER JOIN tx_hdrs tRev ON tRev.reversesXid=t.xid
       WHERE (r.payer = :id) AND (r.payee = :CGID) AND (e1.uid = :id) AND (e2.uid = :CGID) AND
             t.:IS_GIFT AND tRev.xid IS NULL AND t.reversesXid IS NULL ORDER BY t.created DESC LIMIT 1
 EOF;
@@ -1851,7 +1851,7 @@ EOF;
    * Return the account's total gifts to the Common Good.
    */
   function totalGifts() {
-    return db\sum('e1.amount', 'r_tx_hdrs t JOIN r_entries e1 USING(xid) JOIN r_entries e2 USING(xid) JOIN r_tx_hdrs tRev ON t.xid=tRev.reversesXid',
+    return db\sum('e1.amount', 'tx_hdrs t JOIN tx_entries e1 USING(xid) JOIN tx_entries e2 USING(xid) JOIN tx_hdrs tRev ON t.xid=tRev.reversesXid',
                   'e1.uid=:payerId AND e2.uid=:CGID AND t.:IS_GIFT AND tRev.xid IS NULL AND t.reversesXid IS NULL',
                   [ 'payerId' => $this->id ]);
   }
@@ -1880,7 +1880,7 @@ EOF;
 
   public function nextTid() {
     $a = $this;
-    $maxTid = db\get('MAX(acctTid)', 'r_entries', 'uid in (:uids)', ['uids' => [$a->id, $a->jid]]);
+    $maxTid = db\get('MAX(acctTid)', 'tx_entries', 'uid in (:uids)', ['uids' => [$a->id, $a->jid]]);
     /// debug("maxTid is $maxTid");
     if (empty($maxTid)) $maxTid = 0;
     return 1 + $maxTid;

@@ -71,7 +71,7 @@ class TxEntry {
    */
   static function readAll($xid) {
     $entries = [];
-    $rows = db\rows('*', 'r_entries', 'xid=:xid', ['xid' => $xid]);
+    $rows = db\rows('*', 'tx_entries', 'xid=:xid', ['xid' => $xid]);
     if (!$rows) { return FALSE; }
     foreach ($rows as $rowO) {
       $row = (array)$rowO;
@@ -89,7 +89,7 @@ class TxEntry {
    */
   function insert($xid) {
     $e = $this;
-    $id = db\insert('r_entries', just(TxEntry::INSERT_FIELDS, (array)$e) + ['xid'=>$xid], 'id');
+    $id = db\insert('tx_entries', just(TxEntry::INSERT_FIELDS, (array)$e) + ['xid'=>$xid], 'id');
     return $id;
   }
 }

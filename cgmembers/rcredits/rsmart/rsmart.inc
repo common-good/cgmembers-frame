@@ -378,7 +378,7 @@ function charge($args, $type = 'charge') {
   if (@$force) {
     $sql = <<<EOF
       SELECT xid
-      FROM r_tx_hdrs t JOIN r_entries payer USING(xid) JOIN r_entries payee USING(xid)
+      FROM tx_hdrs t JOIN tx_entries payer USING(xid) JOIN tx_entries payee USING(xid)
       WHERE t.created=:created AND payer.uid=:payer AND payee.uid=:payee
             AND (payer.amount=:amount OR payee.amount=:amount) AND t.goods=:goods AND payee.description=:payeeFor
 EOF;
@@ -407,7 +407,7 @@ EOF;
     $did = '';
     $undo = $xid;
 
-    $revRes = db\get('xid AS `undo`, created', 'r_tx_hdrs', 'reversesXid=:xid', ['xid'=>$xid]);
+    $revRes = db\get('xid AS `undo`, created', 'tx_hdrs', 'reversesXid=:xid', ['xid'=>$xid]);
     if ($revRes) { // already got reversed
       extract(just('undo created', $revRes));
       $message = "Transaction has been reversed.";
@@ -580,7 +580,7 @@ function balrew($a) {
 function getDescriptions($a) {
   $ray = [];
   //if ($default = $a->description) $ray[] = $default;
-  $sql = 'SELECT description AS payeeFor, COUNT(description) FROM r_entries WHERE uid=:id AND amount > 0 GROUP BY payeeFor ORDER BY COUNT(description) DESC';
+  $sql = 'SELECT description AS payeeFor, COUNT(description) FROM tx_entries WHERE uid=:id AND amount > 0 GROUP BY payeeFor ORDER BY COUNT(description) DESC';
   return $ray + (db\q($sql, ray('id', $a->id))->fetchCol() ?: []);
 }
 

@@ -84,7 +84,7 @@ function txRisk1($xid, &$risk = 0, &$calc = 0) {
   global $_risk; $_risk = '';
   global $_xid; $_xid = $xid; // for debugging
   u\EXPECT(!is_array($xid), "xid is array");
-  $reverser = db\get('r.xid AS reverser', 'r_tx_hdrs t LEFT JOIN r_tx_hdrs r ON r.reversesXid=t.xid', 't.xid=:xid', ['xid'=>$xid]);
+  $reverser = db\get('r.xid AS reverser', 'tx_hdrs t LEFT JOIN tx_hdrs r ON r.reversesXid=t.xid', 't.xid=:xid', ['xid'=>$xid]);
   /* u\EXPECT(is_array($result), "transaction not found: $xid"); */
   /* extract(u\exactly('reverser', $result, 0, null)); */
   /* $cttyPayer = ($payer < 0); */
@@ -101,7 +101,7 @@ function txRisk1($xid, &$risk = 0, &$calc = 0) {
     t.:IS_OFFLINE AS offline, t.goods, t.created, t.channel
 EOF;
   $table = <<<EOF
-    r_tx_hdrs t JOIN r_entries payerE USING(xid) JOIN r_entries payeeE USING(xid)
+    tx_hdrs t JOIN tx_entries payerE USING(xid) JOIN tx_entries payeeE USING(xid)
     JOIN users payer ON payerE.uid=payer.uid JOIN users payee ON payeeE.uid=payee.uid
 EOF;
   $where = "xid=:xid AND payerE.id<payeeE.id AND payerE.amount<0 AND payeeE.amount>0
@@ -131,7 +131,7 @@ EOF;
     if ($withCo and (r\owning($payerId, $payeeId) or $samePostal or r\isEmployee($payerId, $payeeId))) setRisk('inhouse'); // transaction with owner or family member same address or payment by employee
 
     $since = $created - WEEK7_SECS; // just recent activity by customers, in case many are new
-    $count = db\count('r_tx_hdrs JOIN r_entries payer USING(xid) JOIN r_entries payee USING(xid)',
+    $count = db\count('tx_hdrs JOIN tx_entries payer USING(xid) JOIN tx_entries payee USING(xid)',
                       'payer.amount < 0 AND payee.amount > 0 AND payer.id < payee.id AND payer.uid=:payer AND payee.uid=:payee AND created BETWEEN :since AND :created', ray('payer payee since created', $payerId, $payeeId, $since, $created));
     setBigToFrom('From', 'payer', $payerId, $amount, $created, $count);
     setBigToFrom('To', 'payee', $payeeId, $amount, $created, $count);
@@ -150,7 +150,7 @@ EOF;
   
     if ($offline) { // offline
       setRisk('offline');
-      if (!db\exists('r_tx_hdrs t JOIN r_entries payer USING(xid) JOIN r_entries payee USING(xid)',
+      if (!db\exists('tx_hdrs t JOIN tx_entries payer USING(xid) JOIN tx_entries payee USING(xid)',
                      'payer.uid=:payer AND payee.uid=:payee AND xid<>:xid AND payee.amount>0',
                      compact('payer', 'payee', 'xid'))) {
         setRisk('firstOffline'); // offline for first payment to this company
@@ -162,7 +162,7 @@ EOF;
   $calc = $risk;
   if ($risk > 0) $risk *= $amount; // (don't exaggerate negative risk)
   $risk *= K_RED / K_THRESHOLD; // normalize
-  db\update('r_tx_hdrs', compact('xid', 'risk', 'risks'), 'xid');
+  db\update('tx_hdrs', compact('xid', 'risk', 'risks'), 'xid');
 }
 
 /*
@@ -269,7 +269,7 @@ function setBigRisk($uid, $ago, $thresholds, $bitName) {
            WHERE payee=:uid AND completed>=created AND amount<>0
            UNION ALL
            SELECT 0 AS txid, amount, created
-           FROM r_entries e JOIN r_tx_hdrs t USING(xid) 
+           FROM tx_entries e JOIN tx_hdrs t USING(xid) 
            WHERE e.uid=:uid ) t 
     WHERE created BETWEEN :since AND :now
 EOF;
@@ -282,7 +282,7 @@ EOF;
 //  if (max($in, $out) > $threshold * max(1, $a->employees)) setRisk($bitName);
   if ($ago == YEAR_SECS) list ($bigYearIn, $bigYearOut) = [$in, $out];
   if ($ago == WEEK7_SECS) {
-    $firstTxDate = db\get('MIN(created)', 'r_tx_hdrs JOIN r_entries e USING(xid)', 'e.uid=:uid',
+    $firstTxDate = db\get('MIN(created)', 'tx_hdrs JOIN tx_entries e USING(xid)', 'e.uid=:uid',
                           compact('uid')) ?: $now;
     $yearLen = min(YEAR_SECS, $now - $firstTxDate);
     if ($yearLen) {
@@ -318,7 +318,7 @@ function setBigToFrom($way, $field, $uid, $amount, $created, $count) {
   
   $subtotals =<<<EOF
     SELECT AVG(ABS(amount)) as avg0, MAX(ABS(amount)) AS max0, COUNT(*) AS count0 
-    FROM r_entries e JOIN r_tx_hdrs t USING(xid)
+    FROM tx_entries e JOIN tx_hdrs t USING(xid)
     WHERE e.uid=:uid AND t.created>:since 
     GROUP BY e.uid
 EOF;
@@ -344,7 +344,7 @@ EOF;
  */
 function setOriginRisk($uid, $created, $amount) {
   $since = $created - YEAR_SECS;
-  $table = 'r_entries JOIN r_tx_hdrs USING(xid)';
+  $table = 'tx_entries JOIN tx_hdrs USING(xid)';
   $where = 'uid=:uid AND risk IS NOT NULL AND created BETWEEN :since AND :created';
 
   $avgRisk = db\get('AVG(risk/ABS(amount))', "$table", $where, compact(ray('uid since created'))) / (K_RED / K_THRESHOLD);

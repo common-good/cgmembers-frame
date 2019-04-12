@@ -184,7 +184,7 @@ function formAdminPanel_submit($form, &$sta) {
       uid, amount, description AS `for`, acctTid AS tid
 EOF;
     if ($mya->admin) $fields = str_replace('u1.', '', $fields);
-    return say(a\showQuery('r_tx_hdrs LEFT JOIN r_entries USING (xid)', 1, 'xid DESC', $fields, ['uid']));
+    return say(a\showQuery('tx_hdrs LEFT JOIN tx_entries USING (xid)', 1, 'xid DESC', $fields, ['uid']));
   }
 
   if ($op == 'gifts') return say(a\showQuery('r_recurs', 1, 'id DESC', 'id,created,payer,payee,amount,period,ended', ray('payer payee')));
@@ -392,7 +392,7 @@ function formFollowup($form, &$sta, $args = []) {
   
   $sql = <<<EOF
     SELECT DISTINCT u.uid, community, tickle, fullName, phone, u.data, u.created, activated, notes, :IS_CO AS co, t.created AS lastTxTime, :IS_MEMBER AS member, :IS_OK AS ok, :IS_CARDED AS carded
-    FROM users u LEFT JOIN (SELECT t0.created,e0.uid FROM r_tx_hdrs t0 JOIN r_entries e0 USING(xid) ORDER BY created DESC LIMIT 1) t USING(uid)
+    FROM users u LEFT JOIN (SELECT t0.created,e0.uid FROM tx_hdrs t0 JOIN tx_entries e0 USING(xid) ORDER BY created DESC LIMIT 1) t USING(uid)
     WHERE u.uid>:CANONIC_ACCTS AND NOT :IS_NONUDGE AND NOT (activated and NOT :IS_OK) AND $where2 AND (tickle>0 OR NOT :IS_MEMBER
       OR t.created<$now-60*:DAY_SECS OR t.created IS NULL)
     ORDER BY $by

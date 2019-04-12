@@ -787,7 +787,7 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
   }
   
   if ($delete) {
-    if (db\exists($table = 'r_entries', 'uid=:oldUid', compact('oldUid'))
+    if (db\exists($table = 'tx_entries', 'uid=:oldUid', compact('oldUid'))
         or db\exists($table = 'r_ballots', ':oldUid IN (voter, proxy)', compact('oldUid'))
         or db\exists($table = 'r_usd', 'payee=:oldUid', compact('oldUid'))) {
       return w\say(t('Account "%name" has records in table %table, so it cannot be deleted.', 'name table', $a->fullName, $table), 'err');
@@ -810,10 +810,7 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
                 'r_coupated:uid',
                 'r_coupons:fromId',
                 'r_criteria:ctty:D',
-                // 'r_disputes',
                 'r_do:uid:D',
-                'r_entries:uid',
-                'r_entries:agentUid',
                 'r_events:ctty',
                 'r_gifts:uid:D',
                 'r_honors:uid:D', // honors are deletable if donation never completed
@@ -850,13 +847,16 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
                 'r_stats:ctty:D',
                 'r_tous:uid:D',
                 // r_transit
-                'r_tx_hdrs:actor',
-                'r_tx_hdrs:actorAgent',
                 'r_usd:payee',
                 // r_usd2
                 'r_user_industries:uid:D',
                 // r_votes
                 'sessions:uid:D',
+                // 'tx_disputes',
+                'tx_entries:uid',
+                'tx_entries:agentUid',
+                'tx_hdrs:actor',
+                'tx_hdrs:actorAgent',
                 'users:jid',
                 'users:uid:D',
                 'users:helper',
@@ -1174,7 +1174,7 @@ X;
   
   $sql = <<< X
     SELECT $sql
-    FROM r_tx_hdrs t JOIN r_entries payerE USING (xid) JOIN r_entries payeeE USING(xid)
+    FROM tx_hdrs t JOIN tx_entries payerE USING (xid) JOIN tx_entries payeeE USING(xid)
     LEFT JOIN $accounts u ON u.uid=payerE.uid 
     LEFT JOIN $accounts u2 ON u2.uid=payeeE.uid
     WHERE payerE.entryType=:ENTRY_PAYER AND payeeE.entryType=:ENTRY_PAYEE > 0 AND $cttysCrit AND $creCrit
@@ -1186,7 +1186,7 @@ X;
 
   $sql = <<< X
     SELECT COUNT(DISTINCT payerE.uid) as aAccts
-    FROM r_entries payerE JOIN $accounts u USING (uid) JOIN r_tx_hdrs t
+    FROM tx_entries payerE JOIN $accounts u USING (uid) JOIN tx_hdrs t
     WHERE payerE.entryType = :ENTRY_PAYER AND NOT u.:IS_CO AND $cttyCrit AND $creCrit AND t.created>$recent
 X;
   $res += db\q($sql, $subs)->fetchAssoc() ?: [];
@@ -1202,9 +1202,9 @@ X;
                            IF (e0.amount < 0 AND t0.$recent, 1, 0) as isRecentPayer,
                            e2.uid AS other 
                     FROM users u0
-                         JOIN r_entries e0 USING (uid)
-                         JOIN r_tx_hdrs t0 USING (xid)
-                         JOIN r_entries e2 USING (xid)
+                         JOIN tx_entries e0 USING (uid)
+                         JOIN tx_hdrs t0 USING (xid)
+                         JOIN tx_entries e2 USING (xid)
                     WHERE (e2.id != e0.id) AND t0.$creCrit AND u0.$nonCtty and NOT u0.:IS_CO AND u0.$cttyCrit
                   ) t
                   LEFT JOIN users u2 ON u2.uid=other
@@ -1225,7 +1225,7 @@ X;
           SELECT u.uid, COUNT(DISTINCT payee.uid) AS payees0,
           IF (payee.uid=:CG_ROUNDUPS_UID, payee.amount, 0) AS roundups0,
           IF (payee.uid=:CG_CRUMBS_UID, payee.amount, 0) AS crumbs0
-      FROM users u LEFT OUTER JOIN r_entries payer USING(uid) JOIN r_tx_hdrs t USING(xid) JOIN r_entries payee USING(xid)
+      FROM users u LEFT OUTER JOIN tx_entries payer USING(uid) JOIN tx_hdrs t USING(xid) JOIN tx_entries payee USING(xid)
       WHERE payer.entryType=:ENTRY_PAYER AND u.:IS_OK AND t.$recent AND u.$nonCtty AND $cttyCrit
     ) x LIMIT 1
 X;
@@ -1234,7 +1234,7 @@ X;
   // get basket (median transaction size recently)
   $sql = <<< X
     SELECT MEDIAN(ABS(payee.amount)) OVER () AS basket
-    FROM r_tx_hdrs t JOIN r_entries payer USING(xid) JOIN r_entries payee USING(xid)
+    FROM tx_hdrs t JOIN tx_entries payer USING(xid) JOIN tx_entries payee USING(xid)
          JOIN users u ON u.uid=payer.uid JOIN users u2 ON u2.uid=payee.uid
     WHERE payer.entryType = :ENTRY_PAYER AND payee.entryType = :ENTRY_PAYEE AND t.$recent AND $cttysCrit
 X;
@@ -1266,7 +1266,7 @@ X;
          SUM(amount) AS amts,
          SUM(IF(amount > 0, amount, 0)) AS amtsIn,
          SUM(IF(amount < 0, -amount, 0)) AS amtsOut
-       FROM $accounts u LEFT OUTER JOIN r_entries e USING(uid) JOIN r_tx_hdrs t USING(xid)
+       FROM $accounts u LEFT OUTER JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid)
        WHERE amount IS NOT NULL AND $isMaster and $cttyCrit AND $tCreCrit
        GROUP BY uid)
 X;
@@ -1358,7 +1358,7 @@ function averageBalance($uid, $start, $end = NULL, $noj = FALSE) {
 
   $sql = <<< EOF
     SELECT SUM(e.amount) AS dailyTotal, FLOOR((t.created-$start)/:DAY_SECS) AS day 
-    FROM r_tx_hdrs t JOIN r_entries e USING (xid)
+    FROM tx_hdrs t JOIN tx_entries e USING (xid)
     WHERE e.uid IN (:uids) AND t.created >= $start AND t.created < $end
     GROUP BY day
 EOF;
@@ -1602,10 +1602,10 @@ function xfee($for, $amount) {
 
 function disputeTx($xid, $reason = '') {
   $DBTX = db\transaction();
-  if (db\exists('r_disputes', "xid=:xid", ['xid'=>$xid])) {
+  if (db\exists('tx_disputes', "xid=:xid", ['xid'=>$xid])) {
     EXPECT(FALSE, "transaction $xid is already disputed");
   } else {
-    EXPECT(db\insert('r_disputes', ['xid', 'reason', 'status'], 'id'), "error inserting dispute record");
+    EXPECT(db\insert('tx_disputes', ['xid', 'reason', 'status'], 'id'), "error inserting dispute record");
   }
   unset($DBTX);
 }

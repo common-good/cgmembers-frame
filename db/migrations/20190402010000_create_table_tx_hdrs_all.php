@@ -4,11 +4,11 @@
 use Phinx\Migration\AbstractMigration;
 use Phinx\Db\Adapter\MysqlAdapter;
 
-class CreateTableRTxHdrs extends AbstractMigration
+class CreateTableTxHdrsAll extends AbstractMigration
 {
   public function up()
   {
-    $hdrTable = $this->table('all_tx_hdrs', ['id' => false, 'primary_key' => 'xid', 'comment' => 'Record of all rCredits transactions in the region']);
+    $hdrTable = $this->table('tx_hdrs_all', ['id' => false, 'primary_key' => 'xid', 'comment' => 'Record of all rCredits transactions in the region']);
 
     $this->addBigInt($hdrTable, 'xid', ['length' => 20, 'identity' => true, 'null' => false, 'comment' => 'the unique transaction ID']);
     $this->addBigInt($hdrTable, 'actorId', ['length' => 20, 'null' => false, 'comment' => "user id of the transaction's initiator"]);
@@ -31,12 +31,12 @@ class CreateTableRTxHdrs extends AbstractMigration
     /* $hdrTable->addForeignKey('actorId', 'users', 'uid', ['delete' => 'RESTRICT', 'update' => 'CASCADE']); */
     /* $hdrTable->addForeignKey('actorAgentId', 'users', 'uid', ['delete' => 'RESTRICT', 'update' => 'CASCADE']); */
     /* $hdrTable->addForeignKey('box', 'r_boxes', 'id', ['delete' => 'RESTRICT', 'update' => 'CASCADE']); */
-    /* $hdrTable->addForeignKey('reversesXid', 'r_tx_hdrs', 'xid', ['delete' => 'RESTRICT', 'update' => 'CASCADE']); */
+    /* $hdrTable->addForeignKey('reversesXid', 'tx_hdrs', 'xid', ['delete' => 'RESTRICT', 'update' => 'CASCADE']); */
 
     $hdrTable->create();
 
-    $this->execute('CREATE VIEW r_tx_hdrs AS SELECT xid, actorId, actorAgentId, flags, channel, box, goods, risk, risks, reversesXid, created FROM all_tx_hdrs WHERE deleted IS NULL');
-    $this->execute('CREATE VIEW x_tx_hdrs AS SELECT xid, actorId, actorAgentId, flags, channel, box, goods, risk, risks, reversesXid, created, deleted FROM all_tx_hdrs WHERE deleted IS NOT NULL');
+    $this->execute('CREATE VIEW tx_hdrs AS SELECT xid, actorId, actorAgentId, flags, channel, box, goods, risk, risks, reversesXid, created FROM tx_hdrs_all WHERE deleted IS NULL');
+    $this->execute('CREATE VIEW tx_hdrs_deleted AS SELECT xid, actorId, actorAgentId, flags, channel, box, goods, risk, risks, reversesXid, created, deleted FROM tx_hdrs_all WHERE deleted IS NOT NULL');
   }
 
   private function addTinyInt($table, $name, $options = []) {
@@ -52,9 +52,8 @@ class CreateTableRTxHdrs extends AbstractMigration
   }
 
   public function down() {
-    $this->execute('DROP VIEW IF EXISTS x_tx_hdrs');
-    $this->execute('DROP VIEW IF EXISTS r_tx_hdrs');
-    $this->execute('DROP TABLE IF EXISTS r_tx_hdrs');
-    $this->execute('DROP TABLE IF EXISTS all_tx_hdrs');
+    $this->execute('DROP VIEW IF EXISTS tx_hdrs_delete');
+    $this->execute('DROP VIEW IF EXISTS tx_hdrs');
+    $this->execute('DROP TABLE IF EXISTS tx_hdrs_all');
   }
 }

@@ -61,7 +61,7 @@ function getReport($nm) {
     $sql = <<< X
       SELECT u.uid,SUM(net0) AS net, SUM(invs0) AS invs FROM (
         SELECT $them AS uid, SUM(amount) AS net0, 0 AS invs0
-        FROM r_tx_hdrs JOIN r_entries payer USING(xid) JOIN r_entries payee USING(xid)
+        FROM tx_hdrs JOIN tx_entries payer USING(xid) JOIN tx_entries payee USING(xid)
         WHERE $whereTx
         UNION SELECT $them AS uid,0 AS net0, SUM(amount) AS invs0
         FROM r_invoices WHERE $whereInv AND status<:TX_PAID

@@ -21,9 +21,11 @@ class TxHistory implements TxProcessor {
   private $dateValue = '';
   private $count = 0;
   private $runBalance = 0;
+  private $baseUrl = null;
   
-  public function __construct($uids) {
+  public function __construct($uids, $baseUrl) {
     $this->uids = $uids;
+    $this->baseUrl = $baseUrl;
   }
   
   /**
@@ -99,6 +101,13 @@ EOF;
     $class .= 'page-' . floor($this->count / MIN_TX_ROWS);
     $class .= ' PAGE-' . floor($this->count / NORMAL_TX_ROWS);
     $this->body .= "<tbody class=\"$class\">\n";
+    $url = "$baseUrl?xid=&do=no";
+    $xid = $info['xid'];
+    $undoButton = w\btn("$this->baseUrl&xid=$xid&do=no", ' X ', 'primary', 'xs', ['title'=>t('Reverse')]);
+    if (canUndo) {
+      $this->buttons = $undoButton;
+    }
+    /* $undoButton = ((($mya->can(@$reallyToMe ? B_BUY : B_SELL) and !$banking) or $mya->superAdmin) and !@$data['undoneBy']) ? w\btn("$url&do=no", ' X ', 'primary', 'xs', compact('title')) : ''; // (admin not cAdmin) */
   }
 
   /**
@@ -141,6 +150,7 @@ EOF;
     $this->tidValue = '';
     $this->dateValue = '';
     $this->runBalance = '';
+    $this->buttons = '';
   }
 
   /**

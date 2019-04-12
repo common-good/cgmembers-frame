@@ -261,7 +261,7 @@ function agentAsksDeviceToUndoTransactionCode($agent, $device, $txid, $code) {
 
   $fields = 'member amount goods description created force code proof';
   $q = db\get('e.uid AS payer, e.agentUid AS payerAgent, 0-amount AS amount, goods, description, t.created',
-              "r_tx_hdrs t JOIN r_entries e USING(xid)", "t.xid=:txid AND e.entryType=:entryType",
+              "tx_hdrs t JOIN tx_entries e USING(xid)", "t.xid=:txid AND e.entryType=:entryType",
               ['txid'=>$txid, 'entryType'=>ENTRY_PAYER]);
   if ($q) {
     extract($q);

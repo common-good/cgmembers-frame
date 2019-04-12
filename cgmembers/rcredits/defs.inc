@@ -89,7 +89,7 @@ define('DEV_VKEYPW', 'wt38BqWMslj3uUHUOto7fNi5ExL9CC7S7ffjn_q6zCY'); // password
 define('DEV_ADMIN_PASS', '123'); // admin password when isDEV
 define('DEFAULT_PROXIES', '2, 3'); // account record IDs for place-holder proxies
 define('TRACK_DELETED', 'r_invoices r_photos r_relations r_usd users'); // remember rows in these tables if we delete them
-define('DELETED_BY_VIEW', 'r_tx_hdrs r_entries r_disputes'); // these tables are actually views on the all_ version of
+define('DELETED_BY_VIEW', 'tx_hdrs tx_entries tx_disputes'); // these tables are actually views on the _all version of
                                                              // themselves, and deletion is just by setting "deleted"
 define('DEV_ONLY_MSG', 'only on development machine');
 
@@ -289,7 +289,7 @@ define('R_CODE_LEN', 20); // length of most random identifiers
 define('R_DUPTX_MINS', 4); // number of minutes before a duplicate transaction is allowed
 define('HAS_XFEE', "data LIKE '%s:4:\"xfee\";%'"); // sql to recognize a transaction that has an exchange fee
 define('R_DEPOSIT_RETURN_FEE', 20); // what we charge members for a second bounced transfer
-define('HAS_REVERSER', "(EXISTS (SELECT tRev FROM r_tx_hdrs WHERE tRev.reverses=t.xid))");
+define('HAS_REVERSER', "(EXISTS (SELECT tRev FROM tx_hdrs WHERE tRev.reverses=t.xid))");
 
 define('R_USPS_WEB_TOOLS_ID', '921COMMO5331'); // USPS API credentials
 
@@ -472,7 +472,7 @@ define('FLOW_BOTH', 3);
 
 // Transaction flags (for flags field in transaction records)
 define('B_TAKING', 0); // payee initiated the transaction
-define('B_DISPUTED', 1); // non-originator disputes the transaction -- signaled by existence of r_disputes (NOT LEGAL FOR TRANSACTIONS, BUT STILL USED BY INVOICES
+define('B_DISPUTED', 1); // non-originator disputes the transaction -- signaled by existence of tx_disputes (NOT LEGAL FOR TRANSACTIONS, BUT STILL USED BY INVOICES
 define('B_OFFLINE', 2); // transaction was taken offline (or was forced?)
 define('B_SHORT', 3); // transaction was taken (offline) despite credit shortfall
 define('OLD_B_UNDONE', 4); // undone by another transaction -- signaled by existence of reversing transaction

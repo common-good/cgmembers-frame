@@ -200,7 +200,7 @@ EOF;
     $sql = <<<EOF
       SELECT u.community AS ctty, SUM(IF(amount > 0, amount, 0)) AS `in`,
         SUM(IF(amount < 0, - amount, 0)) AS `out`
-      FROM users u LEFT JOIN r_entries e USING(uid) JOIN r_tx_hdrs t USING (xid)
+      FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING (xid)
       WHERE (u.uid=:uid) AND t.:IS_GIFT GROUP BY community
 EOF;
     $q = db\q($sql, compact('uid'));

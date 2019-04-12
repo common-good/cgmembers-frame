@@ -80,8 +80,8 @@ function invoiceList($toMe, $starting, $ending, $states, $url, $download, $toFro
     SELECT nvid, i.created, u.fullName AS other, i.purpose, i.amount, i.status AS status0, i.data, e.acctTid AS tid
     FROM r_invoices i 
     LEFT JOIN users u ON u.uid=i.$yu
-    LEFT JOIN r_tx_hdrs t ON t.xid=i.status
-    JOIN r_entries e ON t.xid=e.xid
+    LEFT JOIN tx_hdrs t ON t.xid=i.status
+    JOIN tx_entries e ON t.xid=e.xid
     WHERE ($where) AND e.uid=u.uid
     ORDER BY (i.status>2), nvid DESC
 EOF;

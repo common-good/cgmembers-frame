@@ -35,9 +35,9 @@ function getTxs($uids, $starting=null, $ending=null) {
 
   $sql = <<< EOF
     SELECT t.*, e.*, u.fullName as name,
-           (SELECT MAX(acctTid) FROM r_entries re WHERE xid = t.xid AND uid in (:uids)) AS tid
-    FROM r_entries e LEFT JOIN r_tx_hdrs t USING (xid) LEFT JOIN users u USING (uid)
-    WHERE (xid IN (SELECT DISTINCT xid FROM r_entries WHERE (uid IN (:uids))))
+           (SELECT MAX(acctTid) FROM tx_entries re WHERE xid = t.xid AND uid in (:uids)) AS tid
+    FROM tx_entries e LEFT JOIN tx_hdrs t USING (xid) LEFT JOIN users u USING (uid)
+    WHERE (xid IN (SELECT DISTINCT xid FROM tx_entries WHERE (uid IN (:uids))))
           $where
     ORDER BY created, tid, e.xid, name
 EOF;
@@ -91,8 +91,8 @@ function getCustTxs($aUids, $bUids, $starting, $ending) {
            aEntry.amount AS paid,
            '' AS invoiced, t.created, 
            (d.status=:DS_OPEN) AS disputed, aEntry.description AS purpose
-    FROM r_entries aEntry JOIN r_tx_hdrs t USING(xid) JOIN r_entries bEntry USING(xid)
-         LEFT JOIN r_disputes d USING(xid)
+    FROM tx_entries aEntry JOIN tx_hdrs t USING(xid) JOIN tx_entries bEntry USING(xid)
+         LEFT JOIN tx_disputes d USING(xid)
     WHERE aEntry.uid IN (:aUids) AND bEntry.uid IN (:bUids)
     UNION ALL
     SELECT CONCAT('inv #', nvid) AS tid, '' AS paid, IF (payee IN (:aUids), amount, -amount) AS invoiced,
@@ -159,7 +159,7 @@ function balanceAsOf($uids, $date=null) {
     $a = r\acct($uids);
     ($a->jid != 0) ? $uids = [$uids, $a->jid] : [$uids];
   }
-  return db\sum('amount', 'r_entries JOIN r_tx_hdrs USING(xid)', 'uid IN (:uids) AND created<:date', ['uids' => $uids, 'date' => $date]);
+  return db\sum('amount', 'tx_entries JOIN tx_hdrs USING(xid)', 'uid IN (:uids) AND created<:date', ['uids' => $uids, 'date' => $date]);
 }
   
 /**
@@ -195,7 +195,7 @@ function get1099b($payee, $year = NULL) {
     $start = strtotime('1 year ago', $end) + 1;
     $sql = <<<EOF
       SELECT created, payeeE.amount AS amount, payerE.uid AS payer, CONCAT(payeeE.description, t.type) AS `for`
-      FROM r_entries payerE JOIN r_tx_hdrs t USING(xid) JOIN r_entries payeeE USING(xid)
+      FROM tx_entries payerE JOIN tx_hdrs t USING(xid) JOIN tx_entries payeeE USING(xid)
       WHERE payeeE.uid=:payee AND NOT :HAS_REVERSER AND reversesXid IS NULL AND created BETWEEN $start AND $end
              AND payeeE.amount > 0 AND payerE.amount < 0 AND t.type <> :TX_BANK
       ORDER BY created
@@ -303,7 +303,7 @@ function reverse($xid) {
   /* debug("reverse($xid)"); */
 
   $DBTX = \db_transaction();
-  if (db\exists('r_tx_hdrs', 'reversesXid=:xid', ['xid' => $xid])) {
+  if (db\exists('tx_hdrs', 'reversesXid=:xid', ['xid' => $xid])) {
     return r\txRet('already reversed', compact('xid'));
   }
   $tx = r\Tx::read($xid);
@@ -796,7 +796,7 @@ function maxTid($uids) {
     $uids = $a->jid != 0 ? [$uids, $a->jid] : [$uids];
   }
   u\EXPECT(is_array($uids), 'argument should be an array');
-  return db\max('acctTid', 'r_entries', 'uid IN (:uids)', ['uids' => $uids]);
+  return db\max('acctTid', 'tx_entries', 'uid IN (:uids)', ['uids' => $uids]);
 }
 
 /**
@@ -984,7 +984,7 @@ function creditInfo($uids, $asof = null) {
 //    SUM(IF(t.type IN (:TX_REWARDS), amount, 0)) AS rewards,
   
     /* select sum(amount) AS txAmount, sum(if(amount>0 and txid IS NOT NULL, amount, 0)) AS bankAmount */
-    /* from r_tx_hdrs t join r_entries e using(xid) left outer join r_usd d using(xid) */
+    /* from tx_hdrs t join tx_entries e using(xid) left outer join r_usd d using(xid) */
     /* where uid in (:uids) and t.created<:asof GROUP BY xid; */
   
   $sql = <<<EOF
@@ -994,7 +994,7 @@ function creditInfo($uids, $asof = null) {
            SUM(IF(bankAmount<0, 0-bankAmount, 0)) AS `toBank`
     FROM ( SELECT xid, SUM(e.amount) AS txAmount,
                   SUM(IF(d.txid IS NOT NULL, e.amount, 0)) AS bankAmount
-           FROM r_tx_hdrs t JOIN r_entries e USING(xid) LEFT OUTER JOIN r_usd d USING(xid)
+           FROM tx_hdrs t JOIN tx_entries e USING(xid) LEFT OUTER JOIN r_usd d USING(xid)
            WHERE uid IN (:uids) and t.created<:asof
            GROUP BY t.xid) t
 EOF;

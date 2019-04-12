@@ -4,11 +4,11 @@
 use Phinx\Migration\AbstractMigration;
 use Phinx\Db\Adapter\MysqlAdapter;
 
-class CreateTableREntries extends AbstractMigration
+class CreateTableTxEntriesAll extends AbstractMigration
 {
   public function up()
   {
-    $entryTable = $this->table('all_entries', ['comment' => 'Record of a transaction line entry']);  // primary key is id
+    $entryTable = $this->table('tx_entries_all', ['comment' => 'Record of a transaction line entry']);  // primary key is id
     
     $this->addBigInt($entryTable, 'xid', ['length' => 20, 'null' => false, 'default' => '0', 'comment' => 'the ID of the transaction to which this entry belongs']);
     $this->addTinyInt($entryTable, 'entryType', ['length' => 4, 'null' => 'false', 'comment' => 'entry type']);
@@ -24,14 +24,14 @@ class CreateTableREntries extends AbstractMigration
     $entryTable->addIndex(['xid']);
     $entryTable->addIndex(['uid']);
 
-    /* $entryTable->addForeignKey('xid', 'r_tx_hdrs', 'xid', ['delete' => 'RESTRICT', 'update' => 'CASCADE']); */
+    /* $entryTable->addForeignKey('xid', 'tx_hdrs_all', 'xid', ['delete' => 'RESTRICT', 'update' => 'CASCADE']); */
     /* $entryTable->addForeignKey('uid', 'users', 'uid', ['delete' => 'RESTRICT', 'update' => 'CASCADE']); */
     /* $entryTable->addForeignKey('agentUid', 'users', 'uid', ['delete' => 'RESTRICT', 'update' => 'CASCADE']); */
 
     $entryTable->create();
 
-    $this->execute('CREATE VIEW r_entries AS SELECT id, xid, entryType, amount, uid, agentUid, description, acctTid, relType, relatedId FROM all_entries WHERE deleted IS NULL');
-    $this->execute('CREATE VIEW x_entries AS SELECT id, xid, entryType, amount, uid, agentUid, description, acctTid, relType, relatedId, deleted FROM all_entries WHERE deleted IS NOT NULL');
+    $this->execute('CREATE VIEW tx_entries AS SELECT id, xid, entryType, amount, uid, agentUid, description, acctTid, relType, relatedId FROM tx_entries_all WHERE deleted IS NULL');
+    $this->execute('CREATE VIEW tx_entries_deleted AS SELECT id, xid, entryType, amount, uid, agentUid, description, acctTid, relType, relatedId, deleted FROM tx_entries_all WHERE deleted IS NOT NULL');
   }
 
   private function addTinyInt($table, $name, $options = []) {
@@ -47,10 +47,8 @@ class CreateTableREntries extends AbstractMigration
   }
 
   public function down() {
-    $this->execute('DROP VIEW IF EXISTS x_entries');
-    $this->execute('DROP VIEW IF EXISTS r_entries');
-    $this->execute('DROP TABLE IF EXISTS r_entries');
-    $this->execute('DROP TABLE IF EXISTS all_entries');
-    /* $this->table('all_entries')->drop(); */
+    $this->execute('DROP VIEW IF EXISTS tx_entries');
+    $this->execute('DROP VIEW IF EXISTS tx_entries_deleted');
+    $this->execute('DROP TABLE IF EXISTS tx_entries_all');
   }
 }

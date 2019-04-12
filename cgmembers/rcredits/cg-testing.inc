@@ -107,7 +107,15 @@ function doRecords($list, $thing) {
  */
 function doThing($info, $thing, $key = 'id') {
   global $testOnly;
-  $table = 'r_' . strtolower($thing) . 's';
+  if ($thing == 'Entrie') {
+    $table = 'tx_entries';
+  } elseif (in_array(strtolower($thing), ['tx_hdrs', 'tx_entries', 'tx_disputes'])) {
+    $table = strtolower($thing);
+  } elseif (in_array(strtolower($thing), ['tx_hdr', 'tx_entrie', 'tx_dispute'])) {
+    $table = strtolower($thing) . 's';
+  } else {
+    $table = 'r_' . strtolower($thing) . 's';
+  }
   if ($thing == 'Coupated') $table = 'r_coupated';
 // NO!  if (@$info['id']) {$info['uid'] = $info['id']; unset($info['id']);}
   return $testOnly ? verifyRecord($table, $info) : db\insert($table, $info, $key);
@@ -295,7 +303,7 @@ function doTx($info, $thing) {
   
 //  if ($testOnly or @$type == TX_REBATE or @$type == TX_BONUS) {
   if ($testOnly) {
-    return verifyRecord('r_tx_hdrs', array_filter($hdrInfo)) and verifyRecord('r_entries', array_filter($payerEntry)) and verifyRecord('r_entries', array_filter($payeeEntry));
+    return verifyRecord('tx_hdrs', array_filter($hdrInfo)) and verifyRecord('tx_entries', array_filter($payerEntry)) and verifyRecord('tx_entries', array_filter($payeeEntry));
   }
 
   $hdrInfo['entries'] = [new r\TxEntry($payerEntry), new r\TxEntry($payeeEntry)];
@@ -467,10 +475,10 @@ function count($what, $count) {
   case 'accounts':
     return db\count('users') == $count;
   /* case 'r_txs': */
-  /* case 'r_tx_hdrs': */
+  /* case 'tx_hdrs': */
   case 'tx_hdrs':
   case 'txs':
-    return db\count('r_tx_hdrs', "xid > 0") == $count;
+    return db\count('tx_hdrs', "xid > 0") == $count;
   default:
     return db\count('r_' . $what) == $count;
   }
@@ -911,7 +919,7 @@ function hitServer($op, $extra = [], $agent, $device = '', $version = 221) {
 
 function txCountIs($n) {
   global $testOnly; if (!$testOnly) return FALSE;
-  return (db\count('r_tx_hdrs') == $n);
+  return (db\count('tx_hdrs') == $n);
 }
 
 /**
@@ -1299,7 +1307,7 @@ function clear($ch = 0) {
 /**/ if (u\test() and !strpos($sceneTest->sceneName, 'Statement')) echo "scene: $sceneTest->sceneName<br>\n"; // helpful when test dies
 ///   file_put_contents(flog(), ''); // clear log file on disk
 
-  $tables = 'r_bad r_ballots r_boxes r_stakes r_coupons r_coupated all_disputes r_do all_entries r_events r_honors r_investments r_invites r_invoices r_changes r_near r_notices r_options r_pairs r_proposals r_questions r_proxies r_ratings r_recurs r_request r_relations r_shares r_stats r_tous all_tx_hdrs r_usd r_usd2 r_user_industries r_votes x_users x_relations x_invoices x_usd x_photos queue sessions cache';
+  $tables = 'r_bad r_ballots r_boxes r_stakes r_coupons r_coupated r_do r_events r_honors r_investments r_invites r_invoices r_changes r_near r_notices r_options r_pairs r_proposals r_questions r_proxies r_ratings r_recurs r_request r_relations r_shares r_stats r_tous r_usd r_usd2 r_user_industries r_votes tx_disputes_all tx_entries_all tx_hdrs_all x_users x_relations x_invoices x_usd x_photos queue sessions cache';
   foreach (ray('bootstrap form menu') as $k) $tables .= " cache_$k";
   foreach (ray($tables) as $table) if (db\exists($table)) db\q("TRUNCATE $table");
 
