@@ -24,10 +24,10 @@ function formGraphs($form, &$sta, $args) {
     $header[] = ''; // column for data descriptor
     for ($ago = DATA_POINTS; $ago >= 0; $ago--) {
       $dt = strtotime("-$ago months", $today);
-      $header[] = strftime('%h %d', $dt);
+      $header[] = strftime('%d%h%Y', $dt);
     }
     u\csv($header);
-    w\showCharts($chart, $ctty, $chartData, 'download');
+    $chartData = w\showCharts($ctty, 'months', 'download');
     if ($chartData) for ($i = 0; $i < count($chartData[0]); $i++) {
       for ($m = 0; $m < count($chartData); $m++) $row[$m] = $chartData[$m][$i];
       u\csv($row);
@@ -38,7 +38,7 @@ function formGraphs($form, &$sta, $args) {
     $subtext = t('This page helps us keep an eye on our economy so we can manage it effectively together. Choose a chart. <%b>Hover</b> over a graph for the numbers.', '_b', 'class="loud"');
     
     $charts = item(w\chartFrame('success', TRUE, $ctty));
-    if (u\test()) $charts = item(w\showCharts('all', $ctty, $chartData));
+    if (u\test()) $charts = item(w\showAllCharts($ctty));
     
     return cgform(compact(ray('title subtext charts')));
   }

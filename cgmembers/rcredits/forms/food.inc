@@ -11,9 +11,12 @@ use CG\Cron as cr;
   Invite the member to contribute to the Food Fund.
 */
 function formFood($form, &$sta, $args = '') {
+  extract(just('welcome', $args));
   if (!$mya = w\eLinkAcct($sta, $args, 'acct')) return;
 
-  $oftens = [0 => t('How often?')] + array_reverse(ray(OFTENS));
+  $oftens = array_reverse(ray(OFTENS));
+  unset($oftens['X']); // no one-time donation here
+  
   $giftLevels = [
     1000 => t('$1,000'),
      500 => t('$500'),
@@ -22,33 +25,51 @@ function formFood($form, &$sta, $args = '') {
       50 => t('$50'),
       25 => t('$25'),
        0 => t('$0'),
-      -1 => t('Other)'),
+      -1 => t('Other'),
   ];
 
-  $foodId = db\get('uid', 'users', "name='foodfund'");
-	if ($recurs = db\get('id,period,amount', 'r_recurs', 'payer=:payer AND payee=:foodId AND ended=0', ray('payer foodId', $mya->id, $foodId))) {
-		extract($recurs);
-		$recurId = hidFld($id);
-    $replaces = t('donation replaces', 'period amt', $oftens[$period], u\fmtAmt($amount));
-	}
-  if (!$mya->activated or !$recurs or !r\acct()) {
-		unset($oftens['X']); // no one-time donation unless the account also has a recurring donation and is signed in
-		$recurOnly = t(': monthly, quarterly, or yearly');
-	}
-   
-//  $inSetup = $mya->ok ? '' : t(' The amount you choose will come from your account once it is activated and has enough funds.</p>');
-  $title = t('Donate to %PROJECT');
+  if (isset($welcome)) {
+    $title = t('Welcome to the<br>%PROJECT Food Fund!');
+    $subtext = t(<<< X
+      <p>Probably you came to this page because you see the wealth of healthy local food we have in the Pioneer Valley (or wherever you live) and it troubles you that 1 out of every 8 families can't afford to buy that good food. %PROJECT offers you an easy way to support families that need help the most.</p>
+      
+      <p>Pay a little extra every time you pay for food or meals with Common Good, to help provide reliable access to healthy local food to people who can't afford it otherwise. OR donate to the Common Good Food Fund directly — weekly, monthly, quarterly, or yearly. Your contributions are tax-deductible.
+
+      <p>Sign in below to your %PROJECT account or <a>click here</a> to open your free %PROJECT account now.</p>  
+      
+      <h4>Financially Challenged?</h4>
+      <p>If you are eligible for SNAP, please consider participating in our Food Fund pilot and get $20 off each month on healthy local food at Simple Gifts Farm in Amherst. Participation is limited to 10 families. There are still a few slots available. <a>Click here</a> to open a free %PROJECT account.</p>
+      <p>The discount happens automatically when you pay with your %PROJECT card.</p>
+X
+  );
+    $accountId = textFld(t('Account ID:'));
+    $pass = textFld(t('Password:'));
+    $food = $amtChoice = $amount = $period = $recurId = $or = NULL;
+  } else {
+    $foodId = db\get('uid', 'users', "name='foodfund'");
+    if ($recurs = db\get('id,period,amount', 'r_recurs', 'payer=:payer AND payee=:foodId AND ended=0', ray('payer foodId', $mya->id, $foodId))) {
+      extract($recurs);
+      $recurId = hidFld($id);
+      $replaces = t('donation replaces', 'period amt', $oftens[$period], u\fmtAmt($amount));
+    } else $replaces = '';
+
+    $title = t('%PROJECT Food Fund');
+    $subtext = t('<p>Make a tax-deductible gift of any size to the Food Fund.</p><p>Pay a little extra every time you pay for food or meals with %PROJECT, to help provide reliable access to healthy local food to people who can\'t afford it otherwise. For example, 5% here means when you buy a $10 pizza, you contribute 50 cents to the fund.</p><p><b>OR</b> donate to the %PROJECT Food Fund directly &mdash; weekly, monthly, quarterly, or yearly. Recurring donations are best, so the people we are helping can count on it. (If you prefer to make a one-time contribution, use the "Pay" button and type "Food Fund".) %replaces</p>', compact('replaces'));
+
+    $accountId = $pass = NULL;
+    $food0 = $mya->food * 100;
+    $food = textFld(t('Contribution Percentage:'), [t('Percentage')], dft($food0 ?: '') + suffix(' %'));
+    $or = item(t('OR'));
+      
+    $amtChoice = selectFld(t('Donation:'), '', required($mya->co ? R_COMPANY_GIFT : R_INDIVIDUAL_GIFT), $giftLevels);
+    $amount = textFld(t('Other amount $'), '');
+    $period = selectFld(t('How often:'), '', required('M'), $oftens);
+  }
   
-  $food0 = $mya->food * 100;
-  $food = textFld(t('Food Percentage:'), [t('Contribution Percentage'), t('Pay a little extra every time you pay for food or meals with %PROJECT, to lower the cost of healthy local food for people who can\'t afford it otherwise. For example, 5% here means when you buy a $10 pizza, you contribute 50 cents to the %PROJECT Food Fund. To donate to the %PROJECT Food Fund directly, use the "Pay" button and type "Food Fund".')], dft($food0 ?: '') + suffix(' %'));
-    
-  $subtext = t('<p>(optional) Make a tax-deductible gift of any size to the Food Fund%recurOnly. %replaces</p>', 'recurOnly replaces', @$recurOnly, @$replaces);
-  $amtChoice = selectFld(t('Donation:'), '', required($mya->co ? R_COMPANY_GIFT : R_INDIVIDUAL_GIFT), $giftLevels);
-  $amount = textFld(t('Other amount $'), '');
-  $period = selectFld(t('How often:'), '', required(0), $oftens);
+  $submit = submit();
 
   jsx('amtChoice');
-  return cgform(@compact(ray('title subtext food amtChoice amount period submit recurId')));
+  return cgform(@compact(ray('title subtext food or amtChoice amount period accountId pass submit recurId')));
 }
 
 function formFood_validate($form, &$sta) {
