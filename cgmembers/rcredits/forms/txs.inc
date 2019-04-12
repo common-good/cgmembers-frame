@@ -37,7 +37,7 @@ function formTxs($form, &$sta, $args = '') {
 
   
   $uids = ($mya->jid > 0) ? [ $mya->id, $mya->jid ] : [ $mya->id ];
-  $processor = new TxHistory($uids, "BASE_URL/history/transactions/period=$period&starting=$starting&ending=$ending");
+  $processor = new TxHistory($uids, "$url");
 
   be\processTxs($processor, $uids, $starting, $ending, TRUE);
 

@@ -62,7 +62,7 @@ class TxHistory implements TxProcessor {
     $buttons = w\popHelp(t('Action'), t('Click a symbol to reverse a transaction or to edit the purpose'));
     
     $this->body = <<<EOF
-<div id="txlist">
+<div id="txlist" class="table table-striped">
   <div id="txs-links" class="row">
     <div class="showMore col-xs-3">
       <a title="Show more transactions per page"><span class="glyphicon glyphicon-plus"></span>Show more</a>
@@ -81,10 +81,21 @@ class TxHistory implements TxProcessor {
       <a class="nextPage" title="Next Page"><span class="glyphicon glyphicon-triangle-right"></span></a>
     </div>
   </div>
-  <table>
-    <thead>
-      <tr><th>$tid</th><th>$date</th><th>$name</th><th>$purpose</th><th>$amount</th><th>$runBalance</th><th>$buttons</th></tr>
-    </thead>
+  <div class="row txRow head page--1 PAGE--1">
+    <div class="tid-date col-xs-2">
+      <div class="tid col-sm-5">$tid</div>
+      <div class="date col-sm-7">$date</div>
+    </div>
+    <div class="name-purpose col-xs-6">
+      <div class="name col-sm-6">$name</div>
+      <div class="purpose col-sm-6">$purpose</div>
+    </div>
+    <div class="amount-reward col-xs-3">
+      <div class="amount col-sm-5">$amount</div>
+      <div class="runBalance col-sm-7">$runBalance</div>
+    </div>
+    <div class="buttons col-xs-1">$buttons</div>
+  </div>
 EOF;
   }
 
@@ -93,21 +104,27 @@ EOF;
    * @param assoc $info: all of the data for this entry (includes transaction data)
    */
   public function txnHdr($info) {
+    global $mya;
+    
     $this->tidValue = $info['tid'];
     $this->dateValue = strftime('%m/%d/%y', $info['created']);
     $this->runBalance = u\fmtAmt($info['balance'], '');
 
-    $class = "txrow ";
+    $class = "row txRow ";
     $class .= 'page-' . floor($this->count / MIN_TX_ROWS);
     $class .= ' PAGE-' . floor($this->count / NORMAL_TX_ROWS);
     $this->body .= "<tbody class=\"$class\">\n";
-    $url = "$baseUrl?xid=&do=no";
+    $url = "BASE_URL?xid=&do=no";
     $xid = $info['xid'];
     $undoButton = w\btn("$this->baseUrl&xid=$xid&do=no", ' X ', 'primary', 'xs', ['title'=>t('Reverse')]);
-    if (canUndo) {
+    if (true) {
       $this->buttons = $undoButton;
     }
     /* $undoButton = ((($mya->can(@$reallyToMe ? B_BUY : B_SELL) and !$banking) or $mya->superAdmin) and !@$data['undoneBy']) ? w\btn("$url&do=no", ' X ', 'primary', 'xs', compact('title')) : ''; // (admin not cAdmin) */
+    $rowClasses = "row txRow " . 'page-' . floor($this->count / MIN_TX_ROWS) . ' PAGE-' . floor($this->count / NORMAL_TX_ROWS);
+    $this->body .= <<<EOF
+      <div class="$rowClasses">
+EOF;
   }
 
   /**
@@ -120,30 +137,32 @@ EOF;
     $amount = u\fmtAmt(- $amount, '');
     $buttons = '';
 
-    $class = "txrow ";
-    $class .= 'page-' . floor($this->count / MIN_TX_ROWS);
-    $class .= ' PAGE-' . floor($this->count / NORMAL_TX_ROWS);
-
     $this->body .= <<<EOF
-<tr class="$class">
-  <td class="tid">$this->tidValue</td>
-  <td class="date">$this->dateValue</td>
-  <td class="name">$name</td>
-  <td class="purpose">$description</td>
-  <td class="amount">$amount</td>
-  <td class="runBalance">$this->runBalance</td>
-  <td class="buttons">$buttons</td>
-</tr>
+<div class="txentry">
+  <div class="tid-date col-xs-2">
+    <div class="tid col-sm-5">$this->tidValue</div>
+    <div class="date col-sm-7">$this->dateValue</div>
+  </div>
+  <div class="name-purpose col-xs-6">
+    <div class="name col-sm-6">$name</div>
+    <div class="purpose col-sm-6">$description</div>
+  </div>
+  <div class="amount-reward col-xs-3">
+    <div class="amount col-sm-5">$amount</div>
+    <div class="runBalance col-sm-7">$this->runBalance</div>
+  </div>
+  <div class="buttons col-xs-1">$buttons</div>
+</div>
 EOF;
 /*     $this->body .= <<<EOF */
 /* <tr> */
-/*   <td class="tid col-sm-5">$this->tidValue</td> */
-/*   <td class="date col-sm-7">$this->dateValue</td> */
-/*   <td class="name col-sm-6">$name</td> */
-/*   <td class="purpose col-sm-6">$description</td> */
-/*   <td class="amount col-sm-5">$amount</td> */
-/*   <td class="runBalance col-sm-7">$this->runBalance</td> */
-/*   <td class="buttons col-xs-1">$buttons</td> */
+/*   <div class="tid col-sm-5">$this->tidValue</div> */
+/*   <div class="date col-sm-7">$this->dateValue</div> */
+/*   <div class="name col-sm-6">$name</div> */
+/*   <div class="purpose col-sm-6">$description</div> */
+/*   <div class="amount col-sm-5">$amount</div> */
+/*   <div class="runBalance col-sm-7">$this->runBalance</div> */
+/*   <div class="buttons col-xs-1">$buttons</div> */
 /* </tr> */
 /* EOF; */
 
@@ -158,7 +177,7 @@ EOF;
    * @param assoc $info: all of the data for this entry (includes transaction data)
    */
   public function txnFtr($info) {
-    $this->body .= "</tbody>\n";
+    $this->body .= "</div>\n";
     $this->count += 1;
   }
 
@@ -167,9 +186,9 @@ EOF;
    */
   public function ftr() {
     if ($this->count < 1) {
-      $this->body .= '<tr><td colspan=6>' . t('no txs') . '</td></tr>';
+      $this->body .= '<div><div colspan=6>' . t('no txs') . '</div></div>';
     }
-    $this->body .= "</table>\n</div>\n";
+    $this->body .= "</div>\n</div>\n";
   }
 
   /**

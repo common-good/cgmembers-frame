@@ -70,9 +70,11 @@ class Acct {
     foreach (ray($co ? 'proxies connect ssn' : 'company relations') as $k) unset($stepsDone[$k]);
 
     if (empty($uid) and empty($region)) $region = empty($zip) ? -r\region($country, $state, $zip) : -r\uidRegion($community);
-
-    $record = @compact('uid', 'name');
-    
+    if (empty($uid)) {
+      $record = compact('name');
+    } else {
+      $record = compact('uid', 'name');
+    }
     $DBTX = db_transaction();
     $uid = r\regionalInsert('users', 'uid', $record, $region);
     u\EXPECT($uid != 0, 'zero regionalinsert');
