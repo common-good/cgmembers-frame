@@ -1,3 +1,10 @@
+2019-04-09 feature/stats-tweaks
+. mocked up food fund giving page
+. fixed bug in payee and basket stats
+. changed getstats to optionally recreate only specific data (for quickness)
+. refactored charts.js to simplify creation of new charts
+. granularity of chart can now be selected with a dropdown, in javascript
+
 2019-03-23
 . fixed bug in rcron.inc that kept trying to setLocus even after addrOff risk bit was set
 

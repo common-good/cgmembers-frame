@@ -665,11 +665,13 @@ X;
 /**
  * Update system-wide and community-wide stats
  * @param int $dt1: date to start (-1 means pick up where we left off)
+ * @param string $redo: space-delimited list of statistics to recalculate (ALL for all, '' for none) -- used by admin only
  */
-function cttyStats($dt1 = 0) {
+function cttyStats($dt1 = 0, $redo = '') {
   if (!$dt1) { // normally this is called without a date
     cttyStats1(['ctty' => 0]); // for all our communities total
     queueEach('cttyStats1', 'SELECT DISTINCT uid AS ctty FROM users WHERE uid<0'); // and one at a time
+    queueNext();
   } else { // recreate stats data from the beginning of time
     $sql = <<< X
       SELECT community AS ctty, MIN(t.created) AS start
@@ -686,23 +688,21 @@ X;
 
     while ($dt <= NOW) {
       foreach ($cttys as $ctty => $start) if ($start <= $dt) {
-        $item = compact('ctty', 'dt');
+        $item = compact(ray('ctty dt redo'));
         if (isPRODUCTION) cr\queue('cttyStats1', $item); else cttyStats1($item);
       }
       $dt = strtotime('+1 days', $dt); // every day, not just GRAIN
     }
   }
-
-  queueNext();
 }
 
 define('BAN_MONTHS', 3); // number of months in a row to have + or - demand, to set credit ban on/off
 
 function cttyStats1($item) {
-  extract(just('ctty dt', $item));
+  extract(just('ctty dt redo', $item));
   u\setDft($dt, $today = strtotime('today'));
 
-  $stats = r\stats($ctty, $dt); // calculate stats for one community on the regional server, for the given date
+  $stats = r\stats($ctty, $dt, nn($redo)); // calculate stats for one community on the regional server, for the given date
   
   // see if we need to set or turn off a "credit ban"
   if ($dt == $today and $ctty) {

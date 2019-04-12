@@ -482,13 +482,14 @@ define('OLD_B_ROUNDUPS', 7); // monthly donation of rounded up cents -- no longe
 // B_ROUNDUP is 8 (defined above) // payer donated the change to the community fund -- not used here, 
 define('B_RECURS', 9); // recurring transaction
 define('B_GIFT', 10); // grant or gift (of any type)
-define('B_LOAN', 11); // community loan
-define('B_INVESTMENT', 12); // community investment or investment club investment
+define('B_LOAN', 11); // community loan (UNUSED?)
+define('B_INVESTMENT', 12); // community investment (UNUSED?) or investment club investment
 define('B_STAKE', 13); // member buying or selling stake in investment club
-define('B_FINE', 14); // community fine
+define('B_FINE', 14); // community fine (UNUSED?)
 define('B_NOASK', 15); // transaction was taken with ID checking OFF
 define('B_FUNDING', 16); // invoice has already instigated an appropriate bank transfer request
-define('TX_FLAGS', 'offline short crumbs recurs gift loan investment stake fine noask funding');
+define('B_FOOD', 17); // contribution to food fund
+define('TX_FLAGS', 'offline short crumbs recurs gift loan investment stake fine noask funding food');
 
 // Invoice status (txid >= TX_PAID if paid)
 define('TX_DENIED', -2); // invoice rejected by the non-originator

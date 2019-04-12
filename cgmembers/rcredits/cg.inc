@@ -33,10 +33,8 @@ define('RECENT_SECS', 60 * DAY_SECS); // back how long is "recent" (don't change
  * @return record ID of the inserted record
  */
 function regionalInsert($table, $idField, $record, $region = NULL) {
-  if (!empty(u\arrayGet($record, $idField, null))) {return db\insert($table, $record, $idField);} // predestined id (probably for testing)
-  if (empty($region)) $region = -r\serverUid();
-  $end = $region + ($region < 0 ? -(R_REGION_MAX - 1) : (R_REGION_MAX - 1));
-  $start = $region < 0 ? $region - 1 : $region; // -1: do not use the uid of the region itself
+  if (array_key_exists($idField, $record)) {return db\insert($table, $record, $idField);} // predestined id (probably for testing)
+  list ($start, $end, $region) = r\regionRange($region);
 
   for ($try = 0; $try < 20; $try++) { // limit the retries
     if (!$id = $record[$idField] = u\firstUnusedId($idField, $table, $start, $end)) break;
@@ -47,6 +45,16 @@ function regionalInsert($table, $idField, $record, $region = NULL) {
     }
   }
   u\EXPECT(FALSE, "failed to save $table record in region $region after $try tries.");
+}
+
+/**
+ * Return an array of the region's start and end in the users table, inclusive (and region's record ID).
+ */
+function regionRange($region = NULL) {
+  u\setDft($region, -r\serverUid()); // get positive of region UID
+  $end = $region + ($region < 0 ? -(R_REGION_MAX - 1) : (R_REGION_MAX - 1));
+  $start = $region < 0 ? $region - 1 : $region; // -1: do not use the uid of the region itself
+  return [$start, $end, -$region];
 }
 
 /**
@@ -1050,24 +1058,32 @@ function cttyPaidEver($ctty = 0) {
 
 /**
  * Return system-wide or community-wide statistics.
- * @param int $ctty: uid of community or region (0 means ALL)
- * @param int $when: latest statistics date to return (or the exact date if $exact is TRUE)
+ * @param int $ctty: uid of community or region -- 0 means ALL, 1 means the server's region (for example, qids starting "NEW")
+ * @param int $when: latest statistics date to return (or the exact date if $redo is not NULL)
  *   if NULL, calculate statics for today
- * @param bool $exact: <get statistics for $when, not a later date> (used for retroactive repair of r_stats table)
+ * @param ray $redo: list of names of calculations to redo (ALL for all, NULL for none)
  * @return assoc of named statistics for one community on one date (see r_stats table def)
  */
-function stats($ctty = 0, $when = NULL, $exact = FALSE) {
+function stats($ctty = 0, $when = NULL, $redo = '') {
   u\setDft($when, strtotime('today'));
 
-  list ($cttyCrit, $subs) = $ctty ? ['community=:ctty', compact('ctty')] : ['1', []];
+  if ($ctty == 1) { // for the server's region overall (omitting distant communities hosted here)
+    list ($start, $end) = r\regionRange();
+    list ($cttyCrit, $subs) = ["uid BETWEEN $start AND $end", []];
+  } else { // for one community or all
+    list ($cttyCrit, $subs) = $ctty ? ['community=:ctty', compact('ctty')] : ['community<>0', []];
+  }
   $cttyStart = db\min('created', 'users', "$cttyCrit AND uid>:CANONIC_ACCTS", $subs);
-  if (!$cttyStart or $when < $cttyStart) {
+  if (!$cttyStart or $when < max($cttyStart, R_LAUNCH)) {
     $info = db\cols('r_stats', 'id');
     $info = ['created' => $when] + array_combine($info, array_fill(0, count($info), 0));
   } else {
-    $sign = $exact ? '=' : '>=';
-    $sql = "SELECT * FROM r_stats WHERE created $sign :when AND ctty=:ctty ORDER BY created LIMIT 1";
-    $info = db\q($sql, compact('ctty', 'when'))->fetchAssoc() ?: r\getStats($ctty, $when, $exact);
+    $sql = "SELECT * FROM r_stats WHERE created=:when AND ctty=:ctty ORDER BY created LIMIT 1";
+    $info = db\q($sql, compact('ctty', 'when'))->fetchAssoc();
+    $do = 'accts bals usd txs aAccts conx conxLocal payees basket patronage invites topN botN'; // normal
+    if ($redo) $do = $redo == 'ALL' ? str_replace('bals', 'bals bals2', $do) : $redo;
+    if (!$info or $redo) $info = r\getStats($ctty, $when, $cttyCrit, $do); // create stats if none for this date OR redoing
+// meta fields are NEEDED for testing    if ($redo) return $info; // no need to return meta fields when redoing
   }
   // add composite calculated fields to info  
   extract($info);
@@ -1093,17 +1109,18 @@ function stats($ctty = 0, $when = NULL, $exact = FALSE) {
 
 /**
  * Calculate and record statistics for the given community.
- * See the "// get" lines to see what statistics are collected and returned.
- * @param int $ctty: community or region (0 means ALL)
- * @param int $created: creation date for the statistics record (defaults to current date)
- * @param bool $exact: <get statistics for $when, not a later date> (used for retroactive repair of r_stats table)
+ * @param int $ctty: uid of community or region -- 0 means ALL, 1 means the server's region (for example, qids starting "NEW")
+ * @param int $created: date for which to create (or update) and return statistics
+ * @param string $cttyCrit: MySQO criteria to select records for the given community
+ * @param ray $do: list of names of calculations to do
  * @return the created record
+ * See the "// get" lines to see what statistics are collected and returned.
+ * Called ONLY from stats()
  */
-function getStats($ctty, $created = NULL, $exact = FALSE) {
+function getStats($ctty, $created, $cttyCrit, $do = NULL) {
+  u\EXPECT($created >= R_LAUNCH, 'getStats old date');
   $created0 = $created;
-  u\setDft($created, time());
-  $created = strtotime('today', $created); // use start of day
-  $subs = @compact('created', $ctty ? 'ctty' : '');
+  $subs = compact('created', $ctty ? 'ctty' : NULL);
   $thisCtty = 'community=:ctty';
   list ($cttyCrit, $payerCrit, $payeeCrit, $cttysCrit) =
     $ctty ? [$thisCtty, 'payerE.uid=:ctty', 'payeeE.uid=:ctty', "(u.$thisCtty OR u2.$thisCtty)"]
@@ -1116,19 +1133,17 @@ function getStats($ctty, $created = NULL, $exact = FALSE) {
   $masterBal = '(balance+IFNULL(balance2, 0))';
   $slave = "(SELECT uid AS uid2, balance AS balance2 FROM users WHERE $nonCtty) u2 ON u2.uid2=u.jid";
   
-  $res = [];
   // get account counts (can't be combined with financial data query because of joint accounts
-  $sql = <<< X
-	  SELECT SUM(IF(:IS_OK AND activated<=:created AND activated<>0 AND NOT :IS_CO, 1, 0)) AS pAccts, 
-    SUM(IF(:IS_OK AND activated<=:created AND activated<>0 AND :IS_CO, 1, 0)) AS bAccts,
-    SUM(IF(NOT activated OR activated>:created, 1, 0)) AS newbs
+  $sqls['accts'] = <<< X
+    SELECT SUM(IF(:IS_OK AND activated<=:created AND activated<>0 AND NOT :IS_CO, 1, 0)) AS pAccts, 
+      SUM(IF(:IS_OK AND activated<=:created AND activated<>0 AND :IS_CO, 1, 0)) AS bAccts,
+      SUM(IF(NOT activated OR activated>:created, 1, 0)) AS newbs
     FROM users u
     WHERE $nonCtty AND $cttyCrit AND $creCrit	
 X;
-  $res += db\q($sql, $subs)->fetchAssoc() ?: [];
 
   // get users table financial data (must happen before topN/botN)
-  $sql = <<< X
+  $sqls['bals'] = <<< X
     SELECT 
     SUM(IF(balance>0, balance, 0)) AS balsPos,
     SUM(IF(balance<0, balance, 0)) AS balsNeg,
@@ -1138,13 +1153,12 @@ X;
     FROM users u /*LEFT JOIN $slave*/
     WHERE $nonCtty AND $isMaster AND $cttyCrit AND $creCrit
 X;
-  $res += db\q($sql, $subs)->fetchAssoc() ?: [];
 
   // get bank transfer data
   $in = 'amount>0 AND xid<=0';
   
   $thisIn = "t.amount > 0";
-  $sql = <<< X
+  $sqls['usd'] = <<< X
     SELECT
     SUM(IF($thisIn, amount, 0)) AS usdIn,
     SUM(IF($thisIn, 0, amount)) AS usdOut,
@@ -1153,14 +1167,13 @@ X;
     FROM r_usd t LEFT JOIN users u ON (u.uid=t.payee AND uid>:CANONIC_ACCTS)
     WHERE $cttyCrit AND t.completed IS NOT NULL AND t.completed<=:created AND t.amount<>0
 X;
-  $res += db\q($sql, $subs)->fetchAssoc() ?: [];
 
   // get transaction table data
   $sql = '';
   list ($cgIn, $cgOut) = $ctty == 0 // make cgIn and cgOut selectors
     ? ['SUM(IF(u.community=u2.community, payeeE.amount, 0))',             //!! I think this is wrong
        'SUM(IF(u.community=u2.community, 0, payeeE.amount))']
-    : ["SUM(IF(NOT u.$thisCtty AND u2.$thisCtty, payeeE.amount, 0))\n",
+    : ["SUM(IF(NOT (u.$thisCtty) AND u2.$thisCtty, payeeE.amount, 0))\n",
        "SUM(IF(u.$thisCtty AND NOT (u2.$thisCtty), -payeeE.amount, 0))\n"];
   foreach (ray('cgIn cgOut') as $k) $sql .= "${$k} AS $k,\n";
   
@@ -1171,31 +1184,29 @@ X;
   $sql .= "SUM(IF((payerE.uid>:CANONIC_ACCTS OR payerE.uid < 0) AND goods=:FOR_USD, ABS(payeeE.amount), 0)) AS cashs,\n";
   $sql .= strtr($sql, ['payeeE.amount' => '1', 'payerE.amount' => '1', ",\n" => "Count,\n"]); // add counts
   $sql = str_replace(",\n!", '', $sql . '!'); // remove final comma in field list
-  
-  $sql = <<< X
+
+  $sqls['txs'] = <<< X
     SELECT $sql
     FROM tx_hdrs t JOIN tx_entries payerE USING (xid) JOIN tx_entries payeeE USING(xid)
     LEFT JOIN $accounts u ON u.uid=payerE.uid 
     LEFT JOIN $accounts u2 ON u2.uid=payeeE.uid
     WHERE payerE.entryType=:ENTRY_PAYER AND payeeE.entryType=:ENTRY_PAYEE > 0 AND $cttysCrit AND $creCrit
 X;
-  $res += db\q($sql, $subs)->fetchAssoc() ?: [];
   
   // get aAccts
   $recent = 'created>:created - ' . RECENT_SECS; // not n months (keep length of time consistent)
 
-  $sql = <<< X
+  $sqls['aAccts'] = <<< X
     SELECT COUNT(DISTINCT payerE.uid) as aAccts
-    FROM tx_entries payerE JOIN $accounts u USING (uid) JOIN tx_hdrs t
-    WHERE payerE.entryType = :ENTRY_PAYER AND NOT u.:IS_CO AND $cttyCrit AND $creCrit AND t.created>$recent
+          FROM tx_entries payerE JOIN $accounts u USING (uid) JOIN tx_hdrs t USING (xid)
+    WHERE payerE.entryType = :ENTRY_PAYER AND NOT u.:IS_CO AND $cttyCrit AND $creCrit AND t.$recent
 X;
-  $res += db\q($sql, $subs)->fetchAssoc() ?: [];
 //    WHERE NOT u.:IS_CO AND $cttyCrit AND $creCrit AND $recent
 
   // get conx, conxLocal
   foreach (ray('conx conxLocal', 1, "u2.$thisCtty") as $k => $crit) {
     if (!$ctty) $crit = 1; // avoid local query when doing stats for ALL cttys
-    $sql = <<< X
+    $sqls[$k] = <<< X
       SELECT AVG(conx) as $k
       FROM ( SELECT me, COUNT(DISTINCT other) AS conx, SUM(isRecentPayer) AS recentPays, u2.community
              FROM ( SELECT u0.uid AS me,
@@ -1212,12 +1223,11 @@ X;
            ) u3
       WHERE recentPays>0        
 X;
-    $res += db\q($sql, $subs)->fetchAssoc() ?: [];
   }
   
   // get recent payees (median payees per "active" account), roundups, and crumbs (total per month)
   $monthFactor = MONTH_SECS / RECENT_SECS;
-  $sql = <<< X
+  $sqls['payees'] = <<< X
     SELECT MEDIAN(payees0) OVER () AS payees,
       SUM(roundups0) * $monthFactor AS roundups,
       SUM(crumbs0) * $monthFactor AS crumbs
@@ -1229,31 +1239,28 @@ X;
       WHERE payer.entryType=:ENTRY_PAYER AND u.:IS_OK AND t.$recent AND u.$nonCtty AND $cttyCrit
     ) x LIMIT 1
 X;
-    $res += db\q($sql, $subs)->fetchAssoc() ?: [];
     
-  // get basket (median transaction size recently)
-  $sql = <<< X
+  // get basket (median transaction size recently) -- this should probably omit structural transactions (roundups, etc.)
+  $sqls['basket']  = <<< X
     SELECT MEDIAN(ABS(payee.amount)) OVER () AS basket
     FROM tx_hdrs t JOIN tx_entries payer USING(xid) JOIN tx_entries payee USING(xid)
          JOIN users u ON u.uid=payer.uid JOIN users u2 ON u2.uid=payee.uid
     WHERE payer.entryType = :ENTRY_PAYER AND payee.entryType = :ENTRY_PAYEE AND t.$recent AND $cttysCrit
+           AND NOT t.:IS_ROUNDUPS AND NOT t.:IS_CRUMBS AND NOT t.:IS_FOOD
 X;
-    $res += db\q($sql, $subs)->fetchAssoc() ?: [];
     
   // get patronage (total recurring gifts expected per month)
-  $sql = <<< X
-    SELECT SUM(amount * IF(period='Y', 1/12, IF(period='M', 1/4, IF(period='W', :WEEK_SECS/:MONTH_SECS, 0)))) AS patronage
+  $sqls['patronage'] = <<< X
+    SELECT SUM(amount * IF(period='Y', 1/12, IF(period='Q', 1/3, IF(period='W', :MONTH_SECS/:WEEK_SECS, 1)))) AS patronage
     FROM r_recurs r JOIN users u ON u.uid=r.payer
     WHERE payee=:CGID AND r.created<:created AND (ended=0 OR ended>:created-:YEAR_SECS) AND u.$cttyCrit
 X;
-    $res += db\q($sql, $subs)->fetchAssoc() ?: [];
    
   // get invites ever
-  $sql = <<< X
+  $sqls['invites'] = <<< X
     SELECT COUNT(*) AS invites FROM r_invites i JOIN users u ON u.uid=i.inviter WHERE i.invited<:created AND u.$cttyCrit
 X;
-    $res += db\q($sql, $subs)->fetchAssoc() ?: [];    
-  
+
 /// *********************************    
   
   if (@$created0 and $created < strtotime('today')) { // redoing stats for the past, so figure bals, floors, and topN the hard way
@@ -1272,7 +1279,7 @@ X;
 X;
 
     // get OLD balsPos, balsNeg, floors
-    $sql = <<< X
+    $sqls['bals2'] = <<< X
       SELECT 
       SUM(IF(amts>0, amts, 0)) AS balsPos,
       SUM(IF(amts<0, amts, 0)) AS balsNeg,
@@ -1281,40 +1288,41 @@ X;
       -SUM(GREATEST(amtsOut,amtsIn))/6 AS floors
       FROM $pastTxs t
 X;
-    $res = (db\q($sql, $subs)->fetchAssoc() ?: []) + $res; // put $res 2nd so OLD takes precedence
    
     // get OLD topN
-    $topN = topN($res); // NOTE: this line must be duplicated below because $res is different
-    $sql = <<< X
+    $sqls['topN'] = <<< X
       SELECT SUM(amts) AS topN FROM 
       (SELECT DISTINCT uid, amts FROM $pastTxs u1 
-       WHERE $nonCtty AND amts IS NOT NULL ORDER BY amts DESC LIMIT $topN) u
+       WHERE $nonCtty AND amts IS NOT NULL ORDER BY amts DESC LIMIT $topNSQL) u
 X;
-    $res += db\q($sql, $subs)->fetchAssoc() ?: [];
+/*     $res += db\q($sql, $subs)->fetchAssoc() ?: []; */
 
-    // get OLD botN
-    $sql = strtr($sql, ray('topN DESC', 'botN', ''));
-    $res += db\q($sql, $subs)->fetchAssoc() ?: [];
+/*     // get OLD botN */
+/*     $sql = strtr($sql, ray('topN DESC', 'botN', '')); */
+/*     $res += db\q($sql, $subs)->fetchAssoc() ?: []; */
 
-/*     $txs = <<< X */
-/*       ((SELECT txid AS xid, 0 AS payer, payee, amount, completed AS created FROM r_usd WHERE amount<>0) */
-/*        UNION (SELECT xid, payer, payee, amount, created FROM r_txs)) */
-/* X; */
+/* /\*     $txs = <<< X *\/ */
+/* /\*       ((SELECT txid AS xid, 0 AS payer, payee, amount, completed AS created FROM r_usd WHERE amount<>0) *\/ */
+/* /\*        UNION (SELECT xid, payer, payee, amount, created FROM r_txs)) *\/ */
+/* /\* X; *\/ */
 
   } else {
-    // get topN
-    $topN = topN($res); // NOTE: this line must be duplicated above because $res is different
-    $sql = <<< X
+    // get regular topN
+    $sqls['topN'] = <<< X
       SELECT SUM(bal) AS topN FROM 
       (SELECT balance AS bal FROM users u
        WHERE $nonCtty AND $isMaster AND $cttyCrit AND $creCrit GROUP BY uid
-       ORDER BY balance DESC LIMIT $topN) u
+       ORDER BY balance DESC LIMIT $topNSQL) u
 X;
-    $res += db\q($sql, $subs)->fetchAssoc() ?: [];
-    
-    // get botN
-    $sql = strtr($sql, ray('topN DESC', 'botN', ''));
-    $res += db\q($sql, $subs)->fetchAssoc() ?: [];
+  }
+
+  $sqls['botN'] = strtr($sqls['topN'], ray('topN DESC', 'botN', ''));
+
+  $res = [];
+  foreach (ray($do) as $k) {
+    if (!$sql = nn($sqls[$k])) continue; // don't do bals2 if bal was good enough
+    if ($k == 'topN' or $k == 'botN') $sql = tr($sql, '_topnSQL', topN($res));
+    $res = (db\q($sql, $subs)->fetchAssoc() ?: []) + $res; // +$res so OLD takes precedence for bals2
   }
   
   foreach ($res as $k => $v) {if (is_null($v)) $res[$k] = 0;}
