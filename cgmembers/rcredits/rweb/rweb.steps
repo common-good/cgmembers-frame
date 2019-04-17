@@ -111,7 +111,20 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE signupco AMemberRegistersACompany
  *     MAKE signupco AMemberRegistersACompanyWhileManagingAnotherAccount
  *     MAKE signupco AMemberRegistersACompanyHavingGivenCompanyInfo
- *     MAKE signup ANewbieRegistersFromElsewhere
+ *     MAKE signup ANewbieVisitsTheRegistrationPageWithAUsedInvite
+ *     MAKE signup ANewbieRegistersInWesternMassachusetts
+ *     MAKE signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
+ *     MAKE signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
+ *     MAKE signup ANewbieRegistersWithADifferentLegalName
+ *     MAKE signup ANewbieRegistersWithNoCase
+ *     MAKE signup AMemberRegistersBadEmail
+ *     MAKE signup AMemberRegistersBadName
+ *     MAKE signup AMemberRegistersBadZip
+ *     MAKE signup AMemberRegistersAgain
+ *     MAKE signup AMemberRegistersWithAnExistingCompany
+ *     MAKE signup AMemberRegistersWithAnUnknownCompany
+ *     MAKE signup AMemberRegistersWithACompanyWithNoRelation
+ *     MAKE signup AMemberRegistersWithABadCompanyPhone
  *     MAKE transact AMemberConfirmsRequestToChargeAnotherMember
  *     MAKE transact AMemberConfirmsRequestToPayAnotherMember
  *     MAKE transact AMemberConfirmsRequestToPayAnotherMemberALot
@@ -192,7 +205,14 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE signupco Setup
  *     TEST signupco AMemberRegistersACompany
  *     MAKE signup Setup
- *     TEST signup ANewbieRegistersFromElsewhere
+ *     TEST signup ANewbieRegistersInWesternMassachusetts
+ *     TEST signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
+ *     TEST signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
+ *     TEST signup ANewbieRegistersWithADifferentLegalName
+ *     TEST signup ANewbieRegistersWithNoCase
+ *     MAKE signup AMemberRegistersAgain
+ *     BOTH signup AMemberRegistersWithAnExistingCompany
+ *     TEST signup AMemberRegistersWithAnUnknownCompany
  *     MAKE statement Setup
  *     MAKE summary Setup
  *     MAKE transact Setup
@@ -245,6 +265,9 @@ function transactions($list) {return t\transactions($list);}
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     TEST relations AMemberAddsARelation
  *     TEST signin AMemberAsksForANewPasswordForACompany
+ *     TEST signup AMemberRegistersBadName
+ *     TEST signup AMemberRegistersAgain
+ *     TEST signup AMemberRegistersWithABadCompanyPhone
  *     TEST transact AMemberConfirmsRequestToChargeAnotherMember
  *     TEST transact AMemberConfirmsRequestToPayAnotherMember
  *     TEST transact AMemberConfirmsRequestToPayAMemberCompany
@@ -316,7 +339,12 @@ function weSayWithSubs($type, $index, $subs) {
  *     TEST signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     TEST signin AMemberClicksALinkToResetPasswordForUnknownAccount
  *     TEST signupco AMemberRegistersACompany
- *     TEST signup ANewbieRegistersFromElsewhere
+ *     TEST signup ANewbieRegistersInWesternMassachusetts
+ *     TEST signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
+ *     TEST signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
+ *     TEST signup AMemberRegistersBadEmail
+ *     TEST signup AMemberRegistersBadZip
+ *     TEST signup AMemberRegistersWithACompanyWithNoRelation
  */
 function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
 
@@ -328,7 +356,9 @@ function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
  *     TEST signin AMemberAsksForANewPasswordForUsername
  *     TEST signin AMemberAsksForANewPasswordForAccountID
  *     TEST signin AMemberAsksForANewPasswordForEmail
- *     TEST signup ANewbieRegistersFromElsewhere
+ *     TEST signup ANewbieRegistersInWesternMassachusetts
+ *     TEST signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
+ *     TEST signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
  */
 function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, $email, $subs);}
 
@@ -351,7 +381,11 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST signin AMemberClicksALinkToResetPassword
  *     TEST signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     TEST signin AMemberClicksALinkToResetPasswordForUnknownAccount
- *     TEST signup ANewbieRegistersFromElsewhere
+ *     TEST signup ANewbieVisitsTheRegistrationPageWithExpiredInvite
+ *     TEST signup ANewbieVisitsTheRegistrationPageWithAUsedInvite
+ *     TEST signup ANewbieRegistersInWesternMassachusetts
+ *     TEST signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
+ *     TEST signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
  *     TEST summary MembersAccountIsNotActive
  */
 function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
@@ -499,6 +533,7 @@ function withoutOptions($options) {
  *     MAKE scancard Setup
  *     MAKE signupco Setup
  *     TEST signupco AMemberRegistersACompany
+ *     TEST signup AMemberRegistersWithAnExistingCompany
  *     MAKE statement Setup
  *     MAKE summary Setup
  *     MAKE transact Setup
@@ -589,6 +624,8 @@ function usd($list) {return t\usd($list);}
  *     MAKE signin AMemberClicksALinkToResetPassword
  *     MAKE signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     MAKE signin AMemberClicksALinkToResetPasswordForUnknownAccount
+ *     MAKE signup ANewbieVisitsTheRegistrationPageWithExpiredInvite
+ *     MAKE signup ANewbieVisitsTheRegistrationPageWithAUsedInvite
  *     MAKE summary AMemberClicksTheSummaryTab
  *     MAKE summary AMemberClicksTheSummaryTabWithRoundups
  *     MAKE summary AnAgentClicksTheSummaryTabWithoutPermissionToManage
@@ -624,7 +661,19 @@ function memberIsLoggedOut() {
  *
  * in: MAKE membership AMemberSignsInForTheFirstTime
  *     MAKE signupco AMemberRegistersACompany
- *     MAKE signup ANewbieRegistersFromElsewhere
+ *     MAKE signup ANewbieVisitsTheRegistrationPageWithExpiredInvite
+ *     MAKE signup ANewbieVisitsTheRegistrationPageWithAUsedInvite
+ *     MAKE signup ANewbieRegistersInWesternMassachusetts
+ *     MAKE signup ANewbieRegistersWithADifferentLegalName
+ *     MAKE signup ANewbieRegistersWithNoCase
+ *     MAKE signup AMemberRegistersBadEmail
+ *     MAKE signup AMemberRegistersBadName
+ *     MAKE signup AMemberRegistersBadZip
+ *     MAKE signup AMemberRegistersAgain
+ *     MAKE signup AMemberRegistersWithAnExistingCompany
+ *     MAKE signup AMemberRegistersWithAnUnknownCompany
+ *     MAKE signup AMemberRegistersWithACompanyWithNoRelation
+ *     MAKE signup AMemberRegistersWithABadCompanyPhone
  */
 function invitationToEmailFromMemberIs($email, $id, $code) {
   global $testOnly; if ($testOnly) return FALSE;
@@ -640,7 +689,7 @@ function invitationToEmailFromMemberIs($email, $id, $code) {
 /**
  * no relation: (ARG)
  *
- * in: 
+ * in: TEST signup AMemberRegistersWithAnUnknownCompany
  */
 function noRelation($relations) {
   global $testOnly;
@@ -949,7 +998,7 @@ function nextDOCodeIs($code) {
 /**
  * invitation (ARG) was sent on (ARG)
  *
- * in: 
+ * in: MAKE signup ANewbieVisitsTheRegistrationPageWithExpiredInvite
  */
 function invitationWasSentOn($code, $dt) {
   global $testOnly; if ($testOnly) return FALSE;
@@ -993,7 +1042,7 @@ function signupCompanyInfoIsRemembered() {
 /**
  * signup company info for account (ARG) is remembered
  *
- * in: 
+ * in: TEST signup AMemberRegistersWithAnUnknownCompany
  */
 function signupCompanyInfoForAccountIsRemembered($id) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -1049,7 +1098,9 @@ function memberIsLoggedIn($id) {
  *     MAKE signin AMemberClicksALinkToResetPassword
  *     MAKE signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     MAKE signin AMemberClicksALinkToResetPasswordForUnknownAccount
- *     MAKE signup ANewbieRegistersFromElsewhere
+ *     MAKE signup ANewbieRegistersInWesternMassachusetts
+ *     MAKE signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
+ *     MAKE signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
  */
 function nextRandomCodeIs($code) {global $nextCode; return $nextCode = $code;}
 
@@ -1163,6 +1214,8 @@ function memberConfirmsOnTransaction($id, $do, $xid) {
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
+ *     TEST signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
+ *     TEST signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
  *     TEST transact AMemberConfirmsRequestToChargeAnotherMember
  */
 function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($index, $id, $subs);}
@@ -1170,7 +1223,7 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
 /**
  * member (ARG) email invitation code is (ARG)
  *
- * in: 
+ * in: MAKE signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
  */
 function memberEmailInvitationCodeIs($id, $code) {
   global $testOnly; // for now, choose the test code according to the creation date (in the tests)
@@ -1235,6 +1288,9 @@ function rewardStepIs($step) {
  *
  * in: TEST membership AMemberSignsInForTheFirstTime
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
+ *     TEST signup ANewbieRegistersInWesternMassachusetts
+ *     TEST signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
+ *     TEST signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
  */
 function memberOnetimePasswordIsSetTo($id, $pass) {
   global $testOnly; if (!$testOnly) return FALSE;
