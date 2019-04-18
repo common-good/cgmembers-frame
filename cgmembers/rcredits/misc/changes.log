@@ -1,3 +1,13 @@
+2019-04-17 feature/food-fund-and-bug-fixes
+. created anonymize for removing personal data from test server
+. fixed bug that left user signed in directly to company account (no agent) upon opening the new company account
+. fixed mixed-case email bug
+. fixed notices months list crash
+. fixed duplicate sequential entries in company list
+. fixed bug that miscalculated payees and basket, based on tx date >, rather than BETWEEN
+. changed calculation of basket and payees to average (median almost never changes)
+. fixed bug that calculated stats before start of a community
+
 2019-04-09 feature/stats-tweaks
 . mocked up food fund giving page
 . fixed bug in payee and basket stats

@@ -307,12 +307,13 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
   }
   
   require_once DRUPAL_ROOT . '/vendor/swiftmailer/lib/swift_required.php';
-  $transport = \Swift_SmtpTransport::newInstance()
-    ->setHost(CG_SMTP_SERVER)
-    ->setPort(CG_SMTP_PORT)
-    ->setEncryption(CG_SMTP_TLS)
-    ->setUsername(CG_SMTP_USER)
-    ->setPassword(CG_SMTP_PASS);
+  $transport = \Swift_SendmailTransport::newInstance('/usr/sbin/sendmail -bs');
+  /* $transport = \Swift_SmtpTransport::newInstance() */
+  /*   ->setHost(CG_SMTP_SERVER) */
+  /*   ->setPort(CG_SMTP_PORT) */
+  /*   ->setEncryption(CG_SMTP_TLS) */
+  /*   ->setUsername(CG_SMTP_USER) */
+  /*   ->setPassword(CG_SMTP_PASS); */
   $mailer = \Swift_Mailer::newInstance($transport);
 
   $privateKey = "-----BEGIN RSA PRIVATE KEY-----\n" . str_replace(' ', "\n", DKIM_PRIVATE) . "\n-----END RSA PRIVATE KEY-----";
@@ -976,53 +977,6 @@ function companies($ctty, $email = FALSE) {
 }
 
 /**
- * Return a list of participating companies for the given community.
- * @param mixed $ctty: uid of community OR zipcode OR zipcode pattern
- * @param bool $email: <format for use in emails and show just new companies> (else format for promo site or Find Co page)
- */
-function participatingCompanies($ctty, $email = FALSE) {
-  $model = $email 
-  ? '<tr><td width="200">%name</td><td style="margin-left:10px;">%desc</td></tr>'
-  : '<div class="row"><div class="cmpy-img"><img src="%img" alt="profile picture" /></div><div class="cmpy-name-does"><div class="cmpy-name">%name</div><div class="cmpy-does">%desc</div></div></div>';
-  $where = (is_numeric($ctty) and strlen($ctty) > 9) ? 'community=:ctty' : 'zip REGEXP :ctty';
-  if ($email) $where .= ' AND activated>:REQUEST_TIME-9*:WEEK_SECS'; // show only new companies in emails
-  $iModel = '<div class="cmpy-ind-wrapper"><div class="cmpy-ind">%industry</div>';
-  $rows = is_array($ctty) 
-  ? $ctty
-  : db\q("SELECT uid, iid, industry FROM users LEFT OUTER JOIN r_user_industries LEFT OUTER JOIN r_industries WHERE :IS_CO AND :IS_OK AND uid>:CANONIC_ACCTS AND $where ORDER BY industry, fullName", compact('ctty'));
-  if (!$rows) return $email ? t('no new companies this month') : t('No companies there yet. Invite them!');
-  $res = '';
-  $_newClass = $email ? 'style="color:red; font-weight:bold;"' : 'class="company-listing"';
-  $NEW = t(' <small %newClass> NEW!</small>', compact('_newClass'));
-
-  $lastSelIid = -1;  // negative record ids are, we hope, unlikely
-  $firstTime = true;
-  foreach ($rows as $rowObject) {
-    $row = (array)$rowObject;
-    $uid = $row['uid'];
-    $a = r\acct($uid);
-    if (!($a->coCan(CO_PRIVATE))) {
-      $industry = $row['selIndustry'] ?: tr('Unclassified');
-      $selIid = $row['selIid'] ?: -2;
-      if ($selIid != $lastSelIid) {
-        if (! $firstTime) {
-          $res .= '</div>';
-        }
-        $firstTime = false;
-        $res .= tr($iModel, 'industry', $industry) . "\n";
-        $lastSelIid = $selIid;
-      }
-      $name = $a->website ? w\lnk("http://$a->website", $a->bestName) : $a->bestName;
-      $new = ($a->activated > REQUEST_TIME - 9 * WEEK_SECS) ? $NEW : '';
-      $img = $a->photoSrc(true) ?: 'images/no-photo-available.jpg';
-      $res .= tr($model, '_name desc img', "$name$new", $a->shortDesc, $img) . "\n";
-    }
-  }
-  if (! $firstTime) $res .= '</div>';
-  return $res;
-}
-
-/**
  * Return the amount the community has ever paid out
  */
 function cttyPaidEver($ctty = 0) {
@@ -1046,10 +1000,12 @@ function stats($ctty = 0, $when = NULL, $redo = '') {
   if ($ctty == 1) { // for the server's region overall (omitting distant communities hosted here)
     list ($start, $end) = r\regionRange();
     $cttyCrit = "uid BETWEEN $start AND $end";
+    $cttyStart = db\min('created', 'users', "$cttyCrit AND uid>:CANONIC_ACCTS");
   } else { // for one community or all
     $cttyCrit = $ctty ? "community=$ctty" : 'community<>0';
+    $cttyStart = db\min('created', 'users', "$cttyCrit AND uid<0");
   }
-  $cttyStart = db\min('created', 'users', "$cttyCrit AND uid>:CANONIC_ACCTS");
+
   if (!$cttyStart or $when < max($cttyStart, R_LAUNCH)) {
     $info = db\cols('r_stats', 'id');
     $info = ['created' => $when] + array_combine($info, array_fill(0, count($info), 0));
@@ -1059,7 +1015,7 @@ function stats($ctty = 0, $when = NULL, $redo = '') {
     $do = 'accts bals usd txs aAccts conx conxLocal payees basket patronage invites topN botN'; // normal
     if ($redo) $do = $redo == 'ALL' ? str_replace('bals', 'bals bals2', $do) : $redo;
     if (!$info or $redo) $info = r\getStats($ctty, $when, $cttyCrit, $do); // create stats if none for this date OR redoing
-// meta fields are NEEDED for testing    if ($redo) return $info; // no need to return meta fields when redoing
+    if ($redo) return $info;
   }
   // add composite calculated fields to info  
   extract($info);
@@ -1088,7 +1044,7 @@ function stats($ctty = 0, $when = NULL, $redo = '') {
  * @param int $ctty: uid of community or region -- 0 means ALL, 1 means the server's region (for example, qids starting "NEW")
  * @param int $created: date for which to create (or update) and return statistics
  * @param string $cttyCrit: MySQO criteria to select records for the given community
- * @param ray $do: list of names of calculations to do
+ * @param string $do: space-delimited list of names of calculations to do
  * @return the created record
  * See the "// get" lines to see what statistics are collected and returned.
  * Called ONLY from stats()
@@ -1165,12 +1121,12 @@ X;
 X;
   
   // get aAccts
-  $recent = 'created>:created - ' . RECENT_SECS; // not n months (keep length of time consistent)
+  $recent = 'created BETWEEN :created-' . (RECENT_SECS-1) . ' AND :created'; // not n months (keep length of time consistent)
 
   $sqls['aAccts'] = <<< X
     SELECT COUNT(DISTINCT payer) as aAccts FROM r_txs  t
     JOIN $accounts u ON u.uid=t.payer
-    WHERE $cttyCrit AND $creCrit AND $recent
+    WHERE $cttyCrit AND $recent
 X;
 //    WHERE NOT u.:IS_CO AND $cttyCrit AND $creCrit AND $recent
 
@@ -1182,21 +1138,23 @@ X;
         SELECT me, COUNT(DISTINCT other) AS conx, SUM(isRecentPayer) AS recentPays, u2.community
         FROM (
           SELECT u0.uid AS me, 
-            IF(u0.uid=payer AND t0.$recent, 1, 0) as isRecentPayer,
+            IF(u0.uid=payer, 1, 0) as isRecentPayer,
             IF(u0.uid=payer, payee, payer) AS other 
           FROM users u0
           JOIN r_txs t0 ON u0.uid in (payer, payee) 
-          WHERE t0.$creCrit AND u0.$nonCtty and NOT u0.:IS_CO AND u0.$cttyCrit
+          WHERE t0.$recent AND u0.$nonCtty and NOT u0.:IS_CO AND u0.$cttyCrit
         ) t LEFT JOIN users u2 ON u2.uid=other WHERE $crit AND u2.$nonCtty
         GROUP BY t.me
       ) u3 WHERE recentPays>0        
 X;
   }
   
+//    SELECT MEDIAN(payees0) OVER () AS payees,
+
   // get recent payees (median payees per "active" account), roundups, and crumbs (total per month)
   $monthFactor = MONTH_SECS / RECENT_SECS;
   $sqls['payees'] = <<< X
-    SELECT MEDIAN(payees0) OVER () AS payees,
+    SELECT AVG(payees0) AS payees,
       SUM(roundups0) * $monthFactor AS roundups,
       SUM(crumbs0) * $monthFactor AS crumbs
     FROM (
@@ -1209,9 +1167,9 @@ X;
     ) x LIMIT 1
 X;
     
-  // get basket (median transaction size recently) -- this should probably omit structural transactions (roundups, etc.)
+  // get basket (median transaction size recently) -- this should omit structural transactions (roundups, etc.)
   $sqls['basket']  = <<< X
-    SELECT MEDIAN(ABS(amount)) OVER () AS basket 
+    SELECT AVG(ABS(amount)) AS basket 
     FROM r_txs t
     JOIN users u ON u.uid=t.payer
     JOIN users u2 ON u2.uid=t.payee
@@ -1293,6 +1251,7 @@ X;
   $hdr = compact('created', 'ctty');
   $info = $hdr + $res;
   $id = db\get('id', 'r_stats', $hdr);
+
   if ($id) db\update('r_stats', compact('id') + $info, 'id'); else db\insert('r_stats', $info);
   return $info;
 }
