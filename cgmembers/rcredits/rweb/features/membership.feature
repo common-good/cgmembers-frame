@@ -45,12 +45,6 @@ Scenario: A member signs in for the first time
   And we say "status": "info saved|step completed"
   
   When member ".AAA" completes form "community/agreement" with name "Dee Four" and all checkboxes
-  Then we show "Backing"
-  And we say "status": "info saved|step completed"
-  
-  When member ".AAA" completes form "community/backing" with values:
-  | amtChoice | signedBy |*
-  |       100 | Dee Four |
   Then we show "Donate"
   And we say "status": "info saved|step completed"
 
@@ -88,6 +82,12 @@ Scenario: A member signs in for the first time
   When member ".AAA" completes form "settings/photo" with values:
   | op       |*
   | nextStep |
+  Then we show "Backing"
+  And we say "status": "info saved|step completed"
+  
+  When member ".AAA" completes form "community/backing" with values:
+  | amtChoice | signedBy |*
+  |       100 | Dee Four |
   Then we say "status": "setup complete|individual approval|join thanks"
   And we tell ".AAA" CO "New Member (Dee Four)" with subs:
   | fullName | quid | status |*

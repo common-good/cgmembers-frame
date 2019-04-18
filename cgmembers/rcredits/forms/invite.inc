@@ -68,7 +68,7 @@ EOF
   $default = @$mya->data['inviteBody'] ?: t('invite default', 'name', $mya->fullName);
   $messageHelp = t('Invite them to sign up, and say why. A <%a>description of %PROJECT</a> will follow your message.', '_a', atag('/community/invite/example', w\away()));
   $message = areaFld(t('Message:'), $messageHelp, required($default));
-  if ($mya->proSe or !$mya->cAdmin) $submit = t('Send'); // don't let cAdmins send on behalf of anyone
+  $submit = ($mya->proSe or !$mya->cAdmin) ? t('Send') : NULL; // don't let cAdmins send on behalf of anyone
   jsx('invite-link');
   
   $form = $nearly ? 

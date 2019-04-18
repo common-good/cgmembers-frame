@@ -52,7 +52,7 @@ function formAgreement($form, &$sta) {
 X
   , $args);  
 
-  $agreement = $mya->co
+  $agreement = ($mya and $mya->co)
   ? t('<p>I commit %coName to the terms of the <%a>%PROJECT Agreement</a> (the same agreement I signed as an individual).</p>', 'coName _a', $mya->fullName, 'a id="show-agreement"') . '<div id="wrap-agreement">' . $agreement0 . '</div>'
   : t(<<< X
 <div id="instructions" class="well">
