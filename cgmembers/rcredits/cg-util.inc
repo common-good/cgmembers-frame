@@ -399,47 +399,6 @@ function diff($a, $b) {
 }
 
 /**
- * Get the long version of the indicated message(s) (if any), make any substitutions,
- * and return the result.
- * Channel determines which message set to use (each simpler channel provides a fallback)
- *
- * @param string $message
- *   name of the message (index into $GLOBALS[channel# . ' messages'])
- *   or a list of such message indices, separated by "|"
- *   or a two-element array: array(message, subs)
- * @param assoc $subs: (optional) parameter values keyed by name
- * @param string $mark: parameter mark (normally '@') will be prepended to the keys.
- * @todo get the r\'s out of this utilities file OR stop trying to separate u\ from r\
- */   /*
-function t($message, $subs = [], $adhocChannel = '', $mark = '@') {
-  global $channel;
- 
-  if (!$adhocChannel) $adhocChannel = $channel;
-  if (is_array($message)) list ($message, $subs) = $message;
-  u\EXPECT(!is_array($message), 'message array');
-  if (!$subs) $subs = []; // accept ''
-  $messages = explode('|', $message);
-  $channels = ray(TX_CHANNELS);
-
-  foreach ($messages as $i => $message) {
-    $ch1 = $adhocChannel ?: (count($channels) - 1);
-    for ($ch = $ch1; $ch > 0; $ch--) if ($model = @$GLOBALS["$ch messages"][$message]) break;
-    if (!@$model) $model = $message;
-    if($p = strpos($model, '. Type ')) {
-      if ($channel != TX_SMS and $adhocChannel != TX_SMS) $model = substr($model, 0, $p + 1); // don't tell the user to type something unless it's SMS
-    }
-    if (@$subs['href']) $model = str_replace('<a>', '<a href="@href">', $model);
-// NO (use raw message instead)   EXPECT(@$model, "missing message '$message'"); 
-//    u\EXPECT(!is_array(@$subs['message']), 'subs message array');
-//    u\EXPECT(!is_array($model), 'model array');
-//    u\EXPECT(!is_array($i), 'i array');
-    $messages[$i] = SUBS(strtr($model, prefixKeys($mark, $subs, 'noArray')), $mark);
-  }
-  return str_replace(' .', '.', join(' ', $messages));
-}
-*/
-
-/**
  * Return random uppercase dictionary word of 3-6 chars
  * The word will not be a valid command or command abbreviation.
  * @todo: get these r\'s out of here.
@@ -1485,6 +1444,7 @@ function pubKey($k) {return openssl_pkey_get_details(openssl_pkey_get_private(fm
 function validEmail($email) {return filter_var($email, FILTER_VALIDATE_EMAIL);}
 //function bitCount(int $n) {return $n ? (($n % 2) ? 1 : 0) + bitCount($n / 2) : 0;}
 function stndrdth($n) {return date('S', mktime(1,1,1,1,( (($n>=10)+($n>=20)+($n==0))*10 + $n%10) ));}
+
 function arrayGet($arr, $key, $dft) {
   if (is_string($arr)) $arr = urlq2ray($arr);
   u\EXPECT(is_array($arr), 'non-array');
@@ -1510,3 +1470,4 @@ function exactly($these, $info, $defaults) {
   }
   return $result;
 }
+function prob($p, $yes = TRUE, $no = FALSE) {return (mt_rand() / mt_getrandmax()) < $p ? $yes : $no;}

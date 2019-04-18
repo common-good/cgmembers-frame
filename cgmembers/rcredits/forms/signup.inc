@@ -9,7 +9,7 @@ use CG\Db as db;
 include_once R_ROOT . '/forms/signin.inc';
 
 /**
- * Modify the user registration form.
+ * The user signs up for a Common Good account (an individual or company account)
  * @param string $args: if not empty, 
  *   a urlencoded assoc (from an email invitation or the "Create a Company Account" button) OR
  *   an assoc gleaned from POSTed parameters (for combined signup with Coop Power's heating fuel program, for example)
@@ -41,8 +41,8 @@ function formSignup($form, &$sta, $args = '') {
   if (u\test() and is_array(@$myid)) return; // array means returned r\go
     
   $myid = hidFld($myid0 = @$myid);
-
-  if (@$personal and r\signedIn()) return formEmpty('must be signed out');
+  
+  if (nn($personal) and r\signedIn()) return formEmpty('must be signed out');
   $sta['no_cache'] = TRUE; // otherwise the javascript-populated dropdowns get lost
   u\setDft($personal, TRUE);
 
@@ -71,9 +71,9 @@ function formSignup($form, &$sta, $args = '') {
     $ia = r\acct($inviter);
     $inviterEmail = plain($ia->email);
     $inviterName = plain($ia->fullName);
+    // email inviter?
   }
 
-  $count = $personal ? PERSONAL_STEP_COUNT : COMPANY_STEP_COUNT;
   $proxyInfo = w\lnk('help/proxies', t('more about proxies'), w\away());
   $proxyInfo = "<small>[$proxyInfo]</small>";
   $proxyInfo = w\btn('/help/proxies', t('more about proxies'), 'default', 'xs', w\away());
@@ -83,7 +83,7 @@ function formSignup($form, &$sta, $args = '') {
   : t(<<<EOF
 <p>Opening a %PROJECT Account takes 10-15 minutes and is very much like opening an online bank account. For example, you will be asked for your social security number or tax ID.</p>
 
-<p>After this page we will guide you through <%b>several short steps</b>. Here are some highlights:</p>
+<p>After this page we will guide you through <%bSteps>several short steps</b>. Here are some highlights:</p>
 <ul>
   <li>You will be asked to <b>sign</b> the short but ESSENTIAL %PROJECT Agreement.</li>
   <li>You will need to upload a <b>photo</b> for your %PROJECT card. Your photo will be encrypted and will not be visible to other members (unless you show it to them).</li>
@@ -91,9 +91,9 @@ function formSignup($form, &$sta, $args = '') {
   <li>Your name and city will be visible to other members who may wish to select you as their <b>proxy</b> in the community's democratic process. %proxyInfo</li>
   <li>You will need your <b>bank</b> account information if you choose to connect it. Connecting a bank account makes it easier to transfer funds into and out of your %PROJECT account.</li>
 </ul>
-<p>If you need help, please <%a>ask</a> (our contact information is at the bottom of every page).</p>
+<p>If you need help, please <%aHelp>ask</a> (our contact information is at the bottom of every page).</p>
 EOF
-  , '_b _a count _proxyInfo', 'b class="loud"', w\emailtag(CGF_EMAIL, t('signup help')), $count, $proxyInfo);
+  , '_bSteps _aHelp _proxyInfo', 'b class="loud"', w\emailtag(CGF_EMAIL, t('signup help')), $proxyInfo);
 
 //Opening a %PROJECT Account is very much like opening an online bank account. After this long signup page there are <%b>some short steps</b> we will guide you through. If you need help, please don't hesitate to ask (<%a>click here to send us an email</a>).
 
@@ -131,9 +131,11 @@ EOF
   $args = hidFld(@$args);
   $confirmed = hidFld(@$iCode == IBY_FORM); // iff inviter used form (or opening a company account), invitation is already confirmed
   $iCode = hidFld(@$iCode + 0);
-  $helper = hidFld(@$helper ? r\acct($helper)->id : @$inviter);
+  $helperA = nn($helper) ? r\acct($helper) : NULL;
+  $helper = hidFld($helperA ? $helperA->id : @$inviter);
   
   $contactDefaults = @compact(ray($contactDefaults));
+  if (!$personal and !nn($source)) $contactDefaults['source'] = $helperA ? $helperA->fullName : '';
   $contactFlds = w\contactFields($contactDefaults + ray('country state state2', @$country ?: @$hidCountry, @$state ?: @$hidState, @$state2 ?: @$hidState2), TRUE, @$myid0);
   $nameAndEmail = w\nameAndEmail(!$personal, @$fullName, @$email, isset($contactFlds['partner']), @$myid0);
 
@@ -152,7 +154,7 @@ function formSignup_validate($form, &$sta) {
 //  if (!$inviteOk) return w\go('signup'); // in case user resubmits
   //and @$code != bin2hex(R_WORD)
 
-  \setV('signupData', ray('time phone state companyOptions', time(), @$phone, @$state, @$companyOptions));
+  setV('signupData', ray('time phone state companyOptions', time(), @$phone, @$state, @$companyOptions));
   if (!emailOkay($email, $acctType != CO_PERSONAL, @$myid ? r\acct($myid) : '')) return;
   if (!phoneOk($phone, @$country)) return;
   if ($err = u\badZip($zip)) return say($err, 'zip');
@@ -195,7 +197,7 @@ function formSignup_submit($form, &$sta) {
   extract(just('myid confirmed acctType args ats owns partner customer source2 ' . $dbFields, $sta['input']));
   if (u\test() and !@$args) $args = basename($_SERVER['REQUEST_URI']);
   u\EXPECT((bool) $args, 'no args');
-  extract(just('code', $args));
+  extract(just('code food', $args));
   if (isDEV) $helper = $helper + 0; // don't let lack of helper stop us
 
   $wants = wants(@$ats);
@@ -216,10 +218,10 @@ function formSignup_submit($form, &$sta) {
     if (!$a = new r\Acct($info)) {unset($DBTX); return say('cannot create account', 'zot');}
     list ($myid, $name) = [$a->id, $a->name];
   }
-  
-  if (!@$mya or !$mya->cAdmin) w\setAcct(NULL); // sign agent out if creating joint Account (so it looks joint)
   $mya = w\setAcct($myid); // this works for both an individual account (proSe) and a company account (with agent)
   $qid = $mya->mainQid;
+  
+  if (nn($food)) $mya->stepDone('food', FALSE); // signed up through Food Fund promo (cg4.us/food), so add this special step
   
   if (@$iCode < 0) w\invitation($code, $myid); // mark the invitation used
   $email = u\cry('P', $email);
@@ -270,7 +272,8 @@ function formSignup_submit($form, &$sta) {
  * @param acct $a: the account to join, if it exists (otherwise create it) -- UNUSED
  */
 function jointSignup($a = NULL) {
-  $mya = r\acct();
+  global $mya; // was  $mya = r\acct();
+  
   if ($mya->jid) return $mya->jid; // in case form gets run twice
   if (!$a) {
     $fields = 'fullName phone address city state zip country postalAddr source minimum achMin';
@@ -284,6 +287,7 @@ function jointSignup($a = NULL) {
   }
   $mya->newRelation(ray('other permission', $a->id, r\perm(B_JOINT)));
   $a->join($mya);
+  w\setAcct(NULL); // sign agent out so it looks joint
   return $a->id;
 }
 

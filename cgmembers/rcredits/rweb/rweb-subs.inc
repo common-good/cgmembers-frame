@@ -762,7 +762,9 @@ function bitsFld($label, $bitRay, $prefix, $bits, $aliases = []) {
 function signedBy() {
   global $mya;
   $behalf = $mya->co ? t('(on behalf of %co) ', 'co', $mya->fullName) : '';
-  $signerA = $mya->cAdmin ? (($mya->co and $mya->helper) ? $mya->helperA : $mya) : $mya->agentA;
+  $signerA = $mya->cAdmin 
+  ? (($mya->co and $mya->helper) ? $mya->helperA : $mya) 
+  : $mya->agentA;
   return textFld(t('Signed:'), $behalf . t('Type your full name here ') . "($signerA->legalName)", required($mya->cAdmin ? $signerA->legalNameDpy : ''));
 }
 
@@ -1021,7 +1023,7 @@ function updateFlood($sta, $success) {
  * @return the current or new account
  */
 function setAcct($myid = '') {
-  global $channel, $boxUser, $box;
+  global $channel, $boxUser, $box, $mya;
 
   if (is_null($myid)) {
     svar('myid', NULL); svar('agentId', NULL);
@@ -1319,16 +1321,15 @@ function suCreatorRelation($helper, $args, $myid) {
 
 /**
  * Check email format and duplication and complain if appropriate.
- * @param string $email0: the email address to check (also RETURNED with improvements)
+ * @param string $email: the email address to check (also RETURNED with improvements)
  * @param bool $dupsOk: <allow duplication of another account's email address>
  * @param acct $a: current account if any
  * @return: TRUE if email is okay to use, else FALSE
  */
-function emailOkay(&$email0, $dupsOk, $a = FALSE, $suppressErr = FALSE) {
-// NO  $email = strtolower(str_replace("'", '&#039;', $email0));
-  if (!u\validEmail($email = $email0)) return $suppressErr ? FALSE : say('bad email', compact('email'), 'email');
+function emailOkay(&$email, $dupsOk, $a = FALSE, $suppressErr = FALSE) {
+  $email = strtolower($email);
+  if (!u\validEmail($email)) return $suppressErr ? FALSE : say('bad email', compact('email'), 'email');
   if (!$dupsOk and emailDup($email, $a ? $a->id : 0, $suppressErr)) return FALSE;
-  $email0 = $email;
   return TRUE;
 }
 
@@ -1339,15 +1340,16 @@ function emailOkay(&$email0, $dupsOk, $a = FALSE, $suppressErr = FALSE) {
  * @param int $uid: the account it is for (0 if the account is not created yet)
  * @return <email is a dup>
  */
-function emailDup($email0, $uid, $suppressErr = FALSE) {
+function emailDup($email, $uid, $suppressErr = FALSE) {
   global $base_url;
-  $email = u\cry('P', $email0);
-  if (!$who = db\get('fullName', 'users', 'email=:email and uid<>:uid AND NOT :IS_CO', compact('email', 'uid'))) return FALSE;
+  $email = strtolower($email);
+  $crypt = u\cry('P', $email);
+  if (!$who = db\get('fullName', 'users', 'email=:crypt and uid<>:uid AND NOT :IS_CO', compact('crypt', 'uid'))) return FALSE;
   if (!$suppressErr) {
-    $_a = atag("/settings/password/$email0");
-    $emailTagged = str_replace('@', '+whatever@', $email0);
+    $_a = atag("/settings/password/$email");
+    $emailTagged = str_replace('@', '+whatever@', $email);
     $dupMsg = 'duplicate email';
-    if (stripos($email0, '@gmail.com')) $dupMsg .= '|email plus';
+    if (stripos($email, '@gmail.com')) $dupMsg .= '|email plus';
     if (!$uid) $forgot = '|forgot password';
     say($dupMsg . @$forgot, compact(ray('emailTagged who _a')), 'email');
   }
@@ -1494,10 +1496,10 @@ function contactFields($defaults = [], $step0, $myid = 0) {
     $zip2 = textFld(t('Postal Code:'), [t('Postal code'), ''], required(@$zip2) + $zipAttrib);
     
     $other = item('', t('Other Information'));
-    if (!@$mya or !$mya->co) {
+    if ((!@$mya or !$mya->co) and !nn($source)) {
       $source = $step0 ? textFld(t('Referred by:'), [t('How you heard about %PROJECT'), t('Where did you hear about %PROJECT? (name of company or person, web address, publication name, radio station name, or whatever)')]) : NULL;
 //      $source2 = $step0 ? textFld(t('Code:'), [t('Invitation or card code'), t('If you have an invitation or card code, type it here ("B" for brochure). Otherwise leave blank.')]) : NULL;
-    } else $source = hidFld(@$source);
+    } else $source = hidFld(nn($source));
   }
 
   if (!in('tenure', $fieldsToHide)) $tenure = $step0 ? textFld(t('How long:'), [t('MONTHS at current address.'), t('How long have you been at your current address, in months (roughly)')], required(@$tenure)) : NULL;
@@ -1646,53 +1648,6 @@ function invitation($code, $invitee = '', &$inviter = '', &$iCode = -1, &$err = 
     }
     return u\decry('P', $email); // $inviter is returned implicitly
   }
-}
-
-/**
- * Return a formatted, categorized list of businesses
- * @param string $which: word search for business name or industry
- * @param mixed $region: community (the default), zip (maybe partial), or country (maybe partial)
- * @param bool $withButtons: include "Pay" and "Chg" buttons
- */
-function directoryList($which, $region, $withButtons = FALSE) {
-  global $base_url;
-
-  $mya = r\acct();
-  if ($withButtons and $mya) {
-    $canBuy = $mya->can(B_BUY);
-    $canSell = $mya->can(B_SELL);
-  } else $canBuy = $canSell = FALSE;
-
-  list ($symbolMember, $symbolRTrader, $symbolNonMember) = array('m', 'R', '-');
-
-  if (!$region) {
-    $region = r\serverUid();
-    $regionCrit= ($mya and $mya->state) ? "state=:$mya->state" : 1;
-  } else if (is_numeric($region) and $region < 0) {
-    $regionCrit = 'community=:region';
-  } else {
-    $region = \db_like($region) . '%';
-    $regionCrit = '(zip LIKE :region OR country LIKE :region)';
-  }
-
-  $which = u\ignoreSuffix($which, 'ants ant ian es ers ing er or ion s');
-  $which = str_replace(' ', '%', \db_like(" $which ")); // allow abbreviations of each word
-
-  $sql = <<<EOF
-    SELECT DISTINCT u.uid, i.iid, if (ISNULL(parent.industry), i.industry, parent.industry) as selIndustry, parent.iid as selIid
-    FROM users u 
-    LEFT OUTER JOIN r_user_industries ui ON ui.uid=u.uid
-    LEFT OUTER JOIN r_industries i ON i.iid=ui.iid
-    LEFT OUTER JOIN r_industries parent on i.parent = parent.iid
-    WHERE :IS_CO AND u.uid>:CANONIC_ACCTS AND :IS_OK AND $regionCrit AND (u.fullName LIKE :which OR i.industry LIKE :which)
-    ORDER BY selIndustry, u.fullName
-EOF;
-  $result = db\q($sql, compact(ray('region which')));
-  $rows = [];
-  foreach ($result as $row) {
-    $rows[] = $row;
-  }
-  return r\participatingCompanies((array)$rows, FALSE);
 }
 
 /**
@@ -2086,10 +2041,10 @@ function showCharts($ctty = 0, $period = 'months', $download = FALSE) {
     extract(just('ctty created', $stats)); // careful with this (don't overwrite local vars)
     $stats30 = r\stats($ctty, strtotime('-30 days', $created));
     extract(w\fundStats($stats, FALSE, $stats30)); // format, originals in {var}0, difs in d_{var}
-    $gifts0 =  ($patronage0 + $d_roundups0 + $d_crumbs0) / 5; // normalize (/)
+    $gifts0 =  max(0, ($patronage0 + $d_roundups0 + $d_crumbs0)) / 5; // normalize (/)
     $payees0 *= 50; // normalize (*)
-    $success0 = $aAccts0 * $payees0 * $basket0 / 2000; // normalize (/)
-    if (u\test()) $success0 *= 2000; // invisible when normalized, so don't
+    $success0 = $aAccts0 * $payees0 * $basket0 / 8000; // normalize (/)
+    if (u\test()) $success0 *= 8000; // invisible when normalized, so don't
     
     if ($download) {
       $pctActive = $aAccts0 / (($bAccts0 + $pAccts0) ?: 1);
@@ -2224,9 +2179,9 @@ function monthChoices($title, $things, $subtext = '', $end = -1, $target = '_bla
   } else $list = t('There are no %things available yet for this account.', 'things', strtolower($title));
   
   $title = item($title);
-  if ($subtext) $subtext = item($subtext);
+  $subtext = nn($subtext) ? item($subtext) : NULL;
   $list = item($list);
-  return compact('title', 'subtext', 'list');
+  return compact(ray('title subtext list'));
 }
 
 /**

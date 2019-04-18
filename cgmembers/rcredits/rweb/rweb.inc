@@ -48,6 +48,7 @@ function formProx($form, &$sta, $args) {
  */
 function cttyList() {
   $cttys = db\q('SELECT uid,fullName FROM users WHERE uid<0 ORDER BY fullName')->fetchAllKeyed();
+  $cttys[1] = trim(str_replace(PROJECT, '', r\regionField('fullName')));
   $cttys[0] = t('ALL communities');
   foreach ($cttys as $k => $v) $cttys[$k] = trim(str_replace(PROJECT, '', $v));
   asort($cttys);
@@ -213,9 +214,9 @@ function formAccounts($form, &$sta) {
   foreach ($accounts as $uid => $choice) {
     $a = r\acct($uid);
     if (!$a and isDEV) continue; // ignore this if testing -- "current" account has been undermined is all
-    if ($mya->cAdmin or $mya->isAdmin2) {
+    if ($mya->cAdmin2 or $mya->isAdmin2) {
       $qid = $a->mainQid;
-      if ($mya->cAdmin and !$mya->admin) $qid = substr($qid, -2, 2); // show just last two letters for cAdmins
+      if ($mya->cAdmin2 and !$mya->admin) $qid = substr($qid, -2, 2); // show just last two letters for cAdmins
       if ($a->isCtty) { // show communities in a separate category
 //        $class = $a->id < 0 ? 'cgc' : '';
         $choice = r\cttyName($uid);
@@ -232,7 +233,7 @@ function formAccounts($form, &$sta) {
     $choices[$uid] = $choice;
   }
 
-  if ($mya->cAdmin or $mya->isAdmin2) {
+  if ($mya->cAdmin2 or $mya->isAdmin2) {
     ksort($ltrs);
     $index = $details = '';
     foreach ($ltrs as $ltr => $accts) {

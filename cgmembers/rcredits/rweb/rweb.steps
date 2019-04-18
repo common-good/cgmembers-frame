@@ -53,6 +53,7 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberRedeemsADiscountCouponForADollarAmount
  *     MAKE flow AMemberOverdrawsWithNotEnoughToDrawOn
+ *     MAKE food AMemberVisitsTheFoodPage
  *     MAKE gift AMemberDonates
  *     MAKE gift AMemberMakesARecurringDonation
  *     MAKE gift AMemberMakesANewRecurringDonation
@@ -185,6 +186,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE custstatement Setup
  *     MAKE download Setup
  *     MAKE flow Setup
+ *     MAKE food Setup
  *     MAKE gift Setup
  *     MAKE invest Setup
  *     MAKE invoice Setup
@@ -318,6 +320,9 @@ function weSayWithSubs($type, $index, $subs) {
  *     TEST contact AMemberUpdatesToADifferentState
  *     TEST contact AMemberUpdatesToADifferentName
  *     TEST coupons AMemberRedeemsAGiftCoupon
+ *     TEST edittx ABuyerIncreasesAPaymentAmount
+ *     TEST edittx ABuyerChangesTheGoodsStatus
+ *     TEST food AMemberVisitsTheFoodPage
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
  *     TEST gift AMemberMakesANewRecurringDonation
@@ -372,7 +377,10 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
 /**
  * we show (ARG)
  *
- * in: TEST invest AMemberJoinsTheInvestmentClub
+ * in: TEST food ANonmemberVisitsTheFoodPage
+ *     TEST food AMemberSignsInAndSeesLink
+ *     TEST food AMemberVisitsTheFoodPage
+ *     TEST invest AMemberJoinsTheInvestmentClub
  *     TEST membership AMemberSignsInForTheFirstTime
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     TEST signin AMemberSignsInWithUsernameOnTheMemberSite
@@ -592,6 +600,13 @@ function usd($list) {return t\usd($list);}
  *     MAKE contact AMemberVisitsTheContactInfoPage
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
  *     MAKE download AMemberDownloadsIncomingInvoicesForThePastYear
+ *     MAKE edittx ABuyerChangesTheTransactionDescription
+ *     MAKE edittx ABuyerDisputesACharge
+ *     MAKE edittx ASellerReversesACharge
+ *     MAKE edittx ABuyerReversesAReversal
+ *     MAKE food ANonmemberVisitsTheFoodPage
+ *     MAKE food AMemberSignsInAndSeesLink
+ *     MAKE food AMemberVisitsTheFoodPage
  *     MAKE gift AMemberDonates
  *     MAKE gift AMemberMakesANewRecurringDonation
  *     MAKE invest AMemberJoinsTheInvestmentClub
@@ -930,6 +945,7 @@ function statisticsGetSet($time) {
  *
  * in: BOTH coupons AMemberRedeemsAGiftCoupon
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
+ *     TEST food AMemberVisitsTheFoodPage
  *     MAKE invoice AMemberApprovesInvoicesForevermore
  *     TEST joint AMemberRequestsAJointAccount
  *     BOTH joint AJoinedAccountSlaveMemberRequestsANewMinimum
@@ -1397,7 +1413,8 @@ function weScripWithSubs($script, $args = []) {
 /**
  * these (ARG): (ARG)
  *
- * in: TEST gift AMemberDonates
+ * in: TEST food AMemberVisitsTheFoodPage
+ *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
  *     BOTH gift AMemberMakesANewRecurringDonation
  *     TEST gift AMemberDonatesWithInsufficientFunds

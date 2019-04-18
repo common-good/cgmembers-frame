@@ -68,6 +68,7 @@ class Acct {
                                      
     $stepsDone = $uid == 1 ? [] : r\stepsDone0();
     foreach (ray($co ? 'proxies connect ssn' : 'company relations') as $k) unset($stepsDone[$k]);
+    $stepsDone['food'] = TRUE; // omit this step unless signing up through Food Fund promo (set FALSE in signup.inc)
 
     if (empty($uid) and empty($region)) $region = empty($zip) ? -r\region($country, $state, $zip) : -r\uidRegion($community);
     if (empty($uid)) {

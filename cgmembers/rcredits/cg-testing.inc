@@ -176,39 +176,40 @@ function doAccount($info = []) {
 
   if (@$jid) $jid = t\uid($jid);
 
-//  if (!$testOnly) { // when making, set many defaults and mods
-    $nmMap = ray('ZZA:Abe One,ZZB:Bea Two,ZZC:Cat Pub,ZZD:Dee Four,ZZE:Eve Five,ZZF:Fin Corp,ZZG:Glo Seven');
-    u\setDft($fullName, substr($uid, 0, 2) == 'ZZ' ? strtr($nmMap) : 'doAccount ' . u\randomString(20, 'word'));
-    $name = u\shortName($fullName);
-    u\setDft($legalName, $fullName);
-  //  $pass = @$my_password ?: '$S$D2YT5TTwLHHbbdO3Zpzi9EPcMt5WSuCTWAO274vjzYXyOxZ9kFae'; // default to 123
-    if (trim(@$pass) === '') $pass = '123';
+  $nmMap = ray('ZZA:Abe One,ZZB:Bea Two,ZZC:Cat Pub,ZZD:Dee Four,ZZE:Eve Five,ZZF:Fin Corp,ZZG:Glo Seven');
+  u\setDft($fullName, substr($uid, 0, 2) == 'ZZ' ? strtr($nmMap) : 'doAccount ' . u\randomString(20, 'word'));
+  $name = u\shortName($fullName);
+  u\setDft($legalName, $fullName);
+//  $pass = @$my_password ?: '$S$D2YT5TTwLHHbbdO3Zpzi9EPcMt5WSuCTWAO274vjzYXyOxZ9kFae'; // default to 123
+  if (trim(@$pass) === '') $pass = '123';
 
-    $zza = r\qo('.ZZA')->id;
-    $mailDft = ($zza <= $uid and $uid < $zza + 26) ? chr(ord('a') + $uid - $zza) : u\randomString(10, 'word');
-    u\setDft($email, $mailDft . '@' . EMAILX); // a@example.com, etc.
+  $zza = r\qo('.ZZA')->id;
+  $mailDft = ($zza <= $uid and $uid < $zza + 26) ? chr(ord('a') + $uid - $zza) : u\randomString(10, 'word');
+  u\setDft($email, $mailDft . '@' . EMAILX); // a@example.com, etc.
 
-    u\setDft($community, r\serverUid());
-    u\setDft($zip, '01301');
-    u\setDft($country, 'US');
-   	extract(fixState(@$state, @$country));
+  u\setDft($community, r\serverUid());
+  u\setDft($zip, '01301');
+  u\setDft($country, 'US');
+  extract(fixState(@$state, @$country));
 
-		u\setDft($address, '1 My Street');
-		u\setDft($city, 'Mytown');
-    u\setDft($postalAddr, @$address2 ? "$address2, $city2, $state2 $zip2" : "$address, $city, $state $zip");
+  u\setDft($address, '1 My Street');
+  u\setDft($city, 'Mytown');
+  u\setDft($postalAddr, @$address2 ? "$address2, $city2, $state2 $zip2" : "$address, $city, $state $zip");
 
 //    u\setDft($photoId, "$state-{$zip}999");
-    u\setDft($helper, t\uid('.AAB')); // everyone but .AAB should have a helper
+  u\setDft($helper, t\uid('.AAB')); // everyone but .AAB should have a helper
 /**/  if ($helper === '') die(trace()); // set helper to zero if none, never blank
-    u\setDft($last4bank, @substr(@$bankAccount, -4, 4));
+  u\setDft($last4bank, @substr(@$bankAccount, -4, 4));
+  
+  if (u\getBit(@$flags, B_OK)) u\setBit($flags, B_MEMBER);
 
-    $moneyFields = 'committed floor rewards'; // not minimum because NULL means not set, in Membership page
-    foreach (ray($moneyFields) as $one) u\setDft($$one, 0);
-    if (@$cc) $cardCode = $cc;
-    if (@$cc2) $cardCode2 = $cc2;
-    if (isset($risks)) $risks = getRisks($risks, K_ACCT_RISKS);
+  $moneyFields = 'committed floor rewards'; // not minimum because NULL means not set, in Membership page
+  foreach (ray($moneyFields) as $one) u\setDft($$one, 0);
+  if (@$cc) $cardCode = $cc;
+  if (@$cc2) $cardCode2 = $cc2;
+  if (isset($risks)) $risks = getRisks($risks, K_ACCT_RISKS);
 
-    $fixFields = 'fullName legalName name pass email secure community zip country postalAddr cardCode cardCode2 ' . $moneyFields;
+  $fixFields = 'fullName legalName name pass email secure community zip country postalAddr cardCode cardCode2 ' . $moneyFields;
 //  } else $fixFields = '';
 
 //  if (isset($flags) and isset($acctType) and $acctType !== CO_PERSONAL and $acctType != 'personal') $flags .= ',co';
@@ -219,7 +220,7 @@ function doAccount($info = []) {
   u\preray(@compact(ray('uid jid helper flags risks last4bank ' . $fixFields)), $info); // add in changed fields
 	
 //  fixData($info, TRUE);
-
+/*
   if ($testOnly) {
     if (!$a = r\acct($uid)) return output("No such uid: $uid");
     $a->reread(TRUE); // this is required, for example, for cron's Trust test
@@ -234,7 +235,7 @@ function doAccount($info = []) {
     }
     return TRUE;
   }
-
+*/
 /**/ if (!$a = new r\Acct($info)) return t\output('Cannot create account: ' . print_r($info, 1));
   if (@$picture) if (!makePicture($picture, $a)) return FALSE;
   $a->stepDone('signup');

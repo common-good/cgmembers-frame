@@ -15,16 +15,7 @@ use CG\Risk as k;
  */
 function formSummary($form, &$sta) {
   global $base_url;
-//  if (!$mya = r\acct($qid)) return w\go(isGAME ? 'community/game' : PROMO_URL);
-  
   global $mya; $myid = $mya->id;
-
-//  if ($qid and $mya and $a = r\acct($qid, $myid)) return w\changeWho("acct=$qid");
-
-//  if (($mya->cAdmin or $mya->isAdmin2) and $qid and $a = r\acct($qid) and ($mya->admin or $mya->isAdmin2 or $a->community == $mya->agentA->community)) {
-/*    w\setAcct($a->id); // switch to this account until further notice
-    w\go('summary'); // refresh page, switching to new account
-  } */
 
   if ($mya->closed) say(t('Your account is closed, but you can still see your account history.'));
 
@@ -69,23 +60,23 @@ function formSummary($form, &$sta) {
     
   // $showCustomers = item(w\btn('/community/data/qName=6Customers', t('Customer List')));
 
-  if ($mya->canManage) {
+  if ($mya->canManage and $mya->member) {
     $hasMultipleAccounts = ($mya->co or db\exists('r_relations r LEFT JOIN users u ON u.uid=r.main', 'other=:id AND permission>0 AND u.:IS_CO', ['id' => $mya->agentId]));
     $another = $hasMultipleAccounts ? t('Another') : t('a');
     $makeCo = w\btn('/signup-company', t('Open %another Company Account', compact('another')), 'primary', 'xs');
 //    if (!$mya->jid and !$mya->co) $makeJoint = w\btn('/signup/joint=1', t('Make this a joint account'), 'primary', 'xs');
-    if ($mya->member and !$mya->jid and !$mya->co) $makeJoint = w\btn('/prejoin', t('Make this a joint account'), 'primary', 'xs');
+    $makeJoint = ($mya->member and !$mya->jid and !$mya->co) ? w\btn('/prejoin', t('Make this a joint account'), 'primary', 'xs') : '';
+    $goFood = $mya->food > 0 ? lnk('/settings/food', t('Food Fund')) : btn('/settings/food', t('Food Fund'), 'warning');
     if (!$mya->co and $hasMultipleAccounts) $clickPhoto = item(t('Click your photo%where to manage your other account(s).', 'where', $mya->cAdmin ? t(' in the upper right corner') : ''));
-  }
+  } else $makeCo = $makeJoint = $goFood = $reports = '';
 
-  if ($mya->co) $reports = w\btn('/company-reports', t('Reports'));
+  $reports = $mya->co ? w\btn('/company-reports', t('Reports')) : '';
 //  if ($mya->id == CGID) $deposits = w\btn('/sadmin/show-deposits', t('Deposits'));
-  if ($mya->id == CGID) $deposits = w\btn('/sadmin/show-reconciled', t('Dollar Pool Transactions'));
-  $topButtons = item(@$makeCo . @$makeJoint . @$reports . @$deposits);
+  $deposits = $mya->id == CGID ? w\btn('/sadmin/show-reconciled', t('Dollar Pool Transactions')) : '';
+  $topButtons = item($makeCo . $makeJoint . $goFood . $reports . $deposits);
 
   $title = t('Account Summary');
-  if (isDEV and !$mya->proSe) $agentName = ' &nbsp; &nbsp; ' . t('<b>Agent: </b>') . $mya->agentA->fullName;
-  $accountName = item($mya->j_fullName . ($mya->jid ? '<br>' : ' ') . "($mya->j_name)" . @$agentName, t('Name:'));
+  $accountName = item($mya->j_fullName . ($mya->jid ? '<br>' : ' ') . "($mya->j_name)", t('Name:'));
   $address = item($mya->postalAddr . @$extras, t('Postal Addr:'));
   if (!$mya->isCtty) { // unless this is a community or region account
     $acctType = $mya->co ? t('company account') : ($mya->jid ? t('joint account') : t('personal account'));
@@ -223,7 +214,7 @@ function formSummary_submit($form, &$sta) {
   }
 
   if (isset($rTrader)) $mya->setBit(B_OK, @$rTrader, TRUE);
-  if ($mya->helper and ($mya->ok or !@$helper)) unset($helper); // don't overwrite if too late or empty
+  if (!nn($helper)) unset($helper); // don't overwrite if too late or empty
 //  $floor = -$creditLimit; // floor is calculated automatically
   $mya->update(@compact(ray('legalName federalId tickle notes helper mediaConx moves')));
   

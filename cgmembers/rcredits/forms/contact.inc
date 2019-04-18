@@ -20,7 +20,7 @@ function formContact($form, &$sta) {
   $fullName = textFld($mya->co ? t('Company Name:') : t('Your Name:'), $nameDesc, required(@$mya->fullName));
 //  $onchange = w\onchange("jQuery('.form-item-pass').show();");
   $email = textFld(t('Email:'), '', required(@$mya->email));
-  if (!$mya->cAdmin) $pass = passFld(t('Password:'), t('Required for changing email address'));
+  $pass = $mya->cAdmin ? NULL : passFld(t('Password:'), t('Required for changing email address'));
 
   $submit = submit();
   $sta['no_cache'] = TRUE; // otherwise the javascript-populated dropdowns get lost

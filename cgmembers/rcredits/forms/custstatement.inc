@@ -62,17 +62,18 @@ function custStatement($args = []) {
 
   $bal = 0;
   $row0 = ['purpose' => t('Opening balance')];
+  $space = '';
 
-  foreach ($q as $row) {
+  while ($row = isset($row) ? $q->fetchAssoc() : $row0) {
     if (!@$classes) $classes = array_keys($row);
 //    extract(just('tid date name amount purpose reward', array_combine($classes, $row)));
     extract(just('tid created purpose invoiced paid', $row));
-    $date = @$created ? u\fmtDate($created, TRUE) : '';
-    $bal += (@$invoiced ?: 0) - (@$paid ?: 0);
+    $date = nn($created) ? u\fmtDate($created, TRUE) : '';
+    if ($row != $row0) $bal += (float) $invoiced - (float) $paid; // nn($invoiced, 0) + nn($paid, 0) fails (PHP bug)
     $balance = $bal;
-    if (strlen(@$purpose) > $purposeLenMax + 3) $purpose = substr($purpose, 0, $purposeLenMax) . '...';
+    $x = $pdf->GetX();
 
-    foreach ($fields as $one) {
+    foreach ($fields as $i => $one) {
       list ($head, $fldName, $width, $align) = explode('/', $one);
       if (!$fldName) $fldName = strtolower($head);
       $debit = ($align == 'R' and is_numeric($n = @$$fldName) and $n < 0);
@@ -80,8 +81,17 @@ function custStatement($args = []) {
       if (in($fldName, $numFields) and isset($$fldName)) {
         $$fldName = ($$fldName == '0' and $fldName != 'balance') ? '' : number_format($$fldName ?: 0, 2);
       }
-      $pdf->Cell($width, 0, @$$fldName, '', $head == $lastHead ? 1 : 0, $align, '', '', 1);
+      if ($fldName == 'purpose') {
+        $pdf->MultiCell($width, 0, $purpose, 0, 'L', '', 1);
+        $nextY = $pdf->GetY();
+      } else {
+        if ($i == 0) $y = $pdf->GetY(); else $pdf->SetXY($x, $y, FALSE);
+        $pdf->Cell($width, 0, nn($$fldName), '', 0, $align, '', '', 1);
+      }
+      $x += $width;
     }
+    $pdf->SetY($nextY);
+
     if ($row == $row0) $pdf->newLine(); // space after opening balance
   }
 

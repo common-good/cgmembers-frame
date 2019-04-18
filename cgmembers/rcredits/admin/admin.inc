@@ -960,6 +960,83 @@ function makeCriteria() {
     $id++;
   }
 }
+
+/**
+ * Return a random name.
+ */
+
+define('vowels', 'aeiou');
+define('consonants', 'bcdfghjklmnpqrstvwxyz');
+define('vowels2', 'ar er ir or ur ay ey oy aw ew ow');
+
+function randomName() {
+  $cons = !u\prob(1/8); // decide whether to start with consonant(s) or vowel(s)
+  $res = ucfirst(cOrV($cons)) . cOrV(!$cons); // first two characters
+  if (u\prob(1/16)) return $res;
+  $res .= cOrV($cons);
+  if (u\prob(1/4)) return $res;
+  $res .= cOrV(!$cons);
+  $p = .25;
+  while (u\prob($p)) {
+    $res .= cOrV($cons);
+    $cons = !$cons;
+    $p /= 2; // extra letters are increasingly unlikely
+  }
+  return $res;
+}
+
+/**
+ * Return a consonant or vowel or combination.
+ */
+function cOrV($cons) {
+  return $cons ? getCons() : getVow();
+}
+
+function getCons($p2 = 1/3) {return randC(consonants) . ($p2 ? u\prob($p2, getCons(0)) : '');}
+function getVow($p2 = 1/3) {return u\prob(1/8, getVow2(), randC(vowels) . ($p2 ? u\prob($p2, getVow(0)) : ''));}
+function randC($s) {return $s[rand(0, strlen($s) - 1)];}
+function getVow2() {$ray = ray(vowels2); return $ray[rand(0, count($ray) - 1)];}
+function randDigits($digits = 10) {return u\randomString($digits, 'digits');}
+function randRouting() {return db\get('route', 'r_banks', 'LENGTH(route)=9');}
+
+/**
+ * Randomize personal data in all accounts (for staging site).
+ */
+function anonymize() {
+  if (isPRODUCTION) return;
+  
+  $uids = db\col('uid', 'users', 'uid>:CANONIC_ACCTS AND uid<>:CGID ORDER BY fullName');
+  foreach ($uids as $uid) {
+    $a = r\acct($uid);
+    $fullName = randomName() . ' ' . randomName();
+    if ($a->co) $fullName .= ' Co';
+    $legalName = $fullName;
+    $name = u\shortName($fullName);
+    $email = strtolower(randomName()) . '@example.com';
+    $address = mt_rand(1, 9999) . randomName() . ' St.';
+    $city = randomName();
+    $postalAddr = $a->risk('poBox') ? 'PO Box ' . mt_rand(1, 99999) : $address;
+    $postalAddr .= ", $a->st $a->zip";
+    $signedBy = $a->signedBy ? $fullName : '';
+    $latitude = $longitude = 0;
+    $dob = mktime(0, 0, 0, mt_rand(1,12), mt_rand(1,31), date('Y') - mt_rand(18, 100));
+    $phone = '+1' . mt_rand(2, 9) . randDigits(9);
+    $federalId = $a->federalId == '000000000' ? $a->federalId : ($a->federalId ? randDigits(9) : '');
+    if ($a->bankAccount) {
+      $bankAccount = 'USkk' . randRouting() . randDigits(10);
+      $last4bank = substr($bankAccount, -4, 4);
+    } $bankAccount = $last4bank = '';
+    $notes = $photo = $appData = $ssnData = '';
+    $pin = randDigits(4);
+    $snap = $a->snap ? randDigits() : '';
+    foreach (ray($randStrings = 'cardCode cardCode2 emailCode question answer') as $k) $$k = u\randomString();
+    $a->update(compact(ray($randStrings . ' fullName legalName name email address city postalAddr signedBy latitude longitude dob phone federalId bankAccount last4bank notes photo appData ssnData pin snap')));
+  }
+  db\q('UPDATE r_usd SET bankAccount=:ba', ['ba' => 'USkk' . randDigits(19)]);
+  db\q('DELETE FROM r_changes WHERE created>=:NOW');
+  flog('zot'); unlink(flog());
+}
+
 /*
   to find orphaned customers
 
