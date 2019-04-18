@@ -82,8 +82,8 @@ function formPrefs_submit($form, $sta) {
 
   $fields = 'crumbs food snap';
   extract(just($fields . ' roundup smsNotices notices statements nosearch debtOk secretBal', $sta['input']));
-//  $mya->setBit(B_NOTIFY_EMAIL, $notifyBy & 1, FALSE);
-//  $flags = $mya->flags;
+///  if ($food) $mya->stepsDone('food'); // don't show the food fund page unnecessarily?
+
   foreach (ray($fields) as $k) $old["_old $k"] = $mya->$k;
   $old += ['_old flags' => u\bits($mya->flags)];
   $bits = ray('roundup weekly monthly paper secret debt nosearch', $roundup, @$notices == 1, @$notices == 2, @$statements, @$secretBal, @$debtOk, @$nosearch);
@@ -95,9 +95,7 @@ function formPrefs_submit($form, $sta) {
   if (@$snap) r\tellAdmin(t('%who has SNAP', 'who', $mya->fullName), ['topic' => t('SNAP')]);
   
   $mya->update($info);
-//  $mya->stepDone('prefs', $details = $old + $info + ['flags' => u\bits($mya->flags)]);
   return w\goNextStep('prefs');
-//  return $mya->ok ? say('options saved') : w\go('status', 'options saved|step completed');
 }
 
 /**

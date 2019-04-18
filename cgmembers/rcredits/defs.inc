@@ -171,9 +171,7 @@ define('USERNAME_MAX_LENGTH', '100'); // max length of "name" field
 define('R_ADMIN_CAN_MANAGE_CTTYS', TRUE); // should be false once communities can manage themselves
 define('R_CRON_PERIOD', 5*60); // how many seconds between cron runs (must divide an hour evenly)
 define('R_MAX_TASK_TIME', 1*60); // what's the longest a queued cron task might take
-define('PERSONAL_STEP_COUNT', t('seven'));
-define('COMPANY_STEP_COUNT', t('eight'));
-define('R_STEPS', 'signup:signup, verify, ssn, sign:community/agreement, backing:community/backing, donate:community/donate, proxies, prefs:settings/preferences, connect, company, relations, photo'); // membership steps
+define('R_STEPS', 'signup:signup, verify, ssn, sign:community/agreement, donate:community/donate, proxies, prefs:settings/preferences, connect, company, relations, photo, food, backing:community/backing'); // membership steps
 define('R_NOLOG', SECURE_FLDS . ' ' . VSECURE_FLDS . ' data secure vsecure secret oneTimeLoginUrl password pass pass1 pass2 vKeyE newPass external_input form_build_id'); // don't log these (external_input may contain passwords and is duplicated as individual fields)
 define('R_NOLOG_FORMS', 'Admin Test Handy footer accounts history settings settings/icon community Summary Php'); // don't log visits to these forms
 define('R_ANON_FORMS', R_NOLOG_FORMS . ' Signup Signin PageNotFound Sinx Pass Empty TestRecovery ChangePassword Help Community Democracy Agreement CttyFunds Reports Flags Game Menu I ResetPassword Profile Accept Buy HandleInvoice FindCo'); // no login required

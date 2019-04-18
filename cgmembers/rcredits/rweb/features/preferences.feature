@@ -46,4 +46,4 @@ Scenario: A member changes preferences
   |       1 |      3 | monthly | electronic |        0 |         1 |    5 | 04-293-38-A2837 |
   Then members:
   | uid  | crumbs | food | snap         | flags   |*
-  | .ZZA |    .03 | 0.05 | 0429338A2837 | ok,confirmed,monthly,secret,roundup |
+  | .ZZA |    .03 | 0.05 | 0429338A2837 | ok,member,confirmed,monthly,secret,roundup |
