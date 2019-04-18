@@ -693,19 +693,20 @@ X;
 function cttyStats($dt1 = 0, $redo = '') {
   if (!$dt1) { // normally this is called without a date
     cttyStats1(['ctty' => 0]); // for all our communities total
+    cttyStats1(['ctty' => 1]); // for all communities in the server's region
     queueEach('cttyStats1', 'SELECT DISTINCT uid AS ctty FROM users WHERE uid<0'); // and one at a time
     queueNext();
   } else { // recreate stats data from the beginning of time
-    $sql = <<< X
-      SELECT community AS ctty, MIN(t.created) AS start
+/*      SELECT community AS ctty, MIN(t.created) AS start
       FROM users u LEFT JOIN r_txs t ON t.payee=u.uid 
       WHERE uid>:CANONIC_ACCTS AND (t.created>=:R_LAUNCH OR t.created IS NULL) GROUP BY community ORDER BY -community
-X;
+      */
+    $sql = 'SELECT uid AS ctty, created FROM users WHERE uid<0 ORDER BY -community';
     $cttys = db\q($sql)->fetchAllKeyed();
     u\preray([0 => min($cttys), 1 => min($cttys)], $cttys); // show all dates overall
 
     if ($dt1 < 0) $dt1 = db\max('created', 'r_stats'); // repeat last date to catch missing cttys
-    if (!$dt1) $dt1 = @$cttys[0] ?: NOW;
+    if (!$dt1) $dt1 = nn($cttys[0]) ?: NOW;
     $dt = strtotime('today', $dt1); // use first moment of the day
 
     while ($dt <= NOW) {
