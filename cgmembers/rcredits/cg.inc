@@ -307,12 +307,13 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
   }
   
   require_once DRUPAL_ROOT . '/vendor/swiftmailer/lib/swift_required.php';
-  $transport = \Swift_SmtpTransport::newInstance()
-    ->setHost(CG_SMTP_SERVER)
-    ->setPort(CG_SMTP_PORT)
-    ->setEncryption(CG_SMTP_TLS)
-    ->setUsername(CG_SMTP_USER)
-    ->setPassword(CG_SMTP_PASS);
+  $transport = \Swift_SendmailTransport::newInstance('/usr/sbin/sendmail -bs');
+  /* $transport = \Swift_SmtpTransport::newInstance() */
+  /*   ->setHost(CG_SMTP_SERVER) */
+  /*   ->setPort(CG_SMTP_PORT) */
+  /*   ->setEncryption(CG_SMTP_TLS) */
+  /*   ->setUsername(CG_SMTP_USER) */
+  /*   ->setPassword(CG_SMTP_PASS); */
   $mailer = \Swift_Mailer::newInstance($transport);
 
   $privateKey = "-----BEGIN RSA PRIVATE KEY-----\n" . str_replace(' ', "\n", DKIM_PRIVATE) . "\n-----END RSA PRIVATE KEY-----";
