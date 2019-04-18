@@ -16,7 +16,7 @@ class CreateTableTxEntriesAll extends AbstractMigration
     $this->addBigInt($entryTable, 'uid', ['length' => 20, 'null' => false, 'comment' => 'user id of the account to which this entry applies']);
     $this->addBigInt($entryTable, 'agentUid', ['length' => 20, 'null' => true, 'comment' => "user id of account's agent (who approved this transaction for this account)"]);
     $entryTable->addColumn('description', 'string', ['length' => 255, 'default' => 'NULL', 'comment' => 'description for this entry']);
-    $entryTable->addColumn('acctTid', 'integer', ['length' => 11, 'null' => true, 'comment' => 'transaction ID for the account to which this entry applies']);
+    $entryTable->addColumn('acctTid', 'string', ['length' => 255, 'null' => true, 'comment' => 'transaction ID for the account to which this entry applies']);
     $entryTable->addColumn('relType', 'string', ['length' => 1, 'null' => true, 'comment' => "type of related record, 'D' for coupated, 'I' for invoice"]);
     $this->addBigInt($entryTable, 'relatedId', ['length' => 20, 'null' => true, 'comment' => "id of related record"]);
     $this->addBigInt($entryTable, 'deleted', ['length' => 20, 'null' => true, 'default' => null, 'comment' => "UNIXTIME when record was deleted, else null"]);

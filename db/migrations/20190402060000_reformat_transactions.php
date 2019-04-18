@@ -8,6 +8,8 @@ require_once 'cgmembers/rcredits/cg-util.inc';
 
 use CG\Util as u;
 
+define('OLD_TX_XFEE', 10);
+
 class ReformatTransactions extends AbstractMigration
 {
   /**
@@ -30,6 +32,7 @@ class ReformatTransactions extends AbstractMigration
     $txHdrsTable = $this->table('tx_hdrs');
     $entriesTable = $this->table('tx_entries');
     $disputesTbl = $this->table('tx_disputes');
+    $coupatedTbl = $this->table('r_coupated');
     $maxXid = 0;
 
     $xFees = [];
@@ -48,6 +51,7 @@ class ReformatTransactions extends AbstractMigration
       if (empty($oldTx)) break;
 
       extract($oldTx);
+      $dataString = $data;
       if (is_string($data)) {
         $data = unserialize($data);
         if (!is_array($data)) $data = [];
@@ -65,7 +69,7 @@ class ReformatTransactions extends AbstractMigration
 
       // serial
       if ($serial != $xid) {  // this is the next part of a group of transactions
-        if ($type == TX_XFEE) {
+        if ($type == OLD_TX_XFEE) {
           $feeAmt = arrayGet($xFees, $serial, null);
           if ($feeAmt != null) {
             if ($amount != $feeAmt) {
@@ -99,24 +103,24 @@ class ReformatTransactions extends AbstractMigration
         }
       }
       
-      // type
-      if (!array_key_exists($type, [OLD_TX_TRANSFER => 1, TX_GRANT => 1, TX_LOAN => 1])) {
-        print("NOT HANDLED: type is $type on " . $oldTx['xid'] . "\n");
-      }
+      /* // type */
+      /* if (!array_key_exists($type, [OLD_TX_TRANSFER => 1, TX_GRANT => 1, TX_LOAN => 1])) { */
+      /*   print("NOT HANDLED: type is $type on " . $oldTx['xid'] . "\n"); */
+      /* } */
 
       // goods
       if (!array_key_exists($goods, [FOR_GOODS => 1, FOR_USD => 1, FOR_NONGOODS => 1])) {
         print("NOT HANDLED: goods is $goods on $xid\n");
       }
 
-      if ($type == OLD_TX_TRANSFER) {
-        if ($goods == OLD_FOR_GOODS) $newType = TX_GOODS;
-        elseif ($goods == OLD_FOR_USD) $newType = TX_USD;
-        elseif ($goods == OLD_FOR_NONGOODS) $newType = TX_SERVICES;
-        else die('should never get here');
-      } else {
-        $newType = $type;
-      }
+      /* if ($type == OLD_TX_TRANSFER) { */
+      /*   if ($goods == OLD_FOR_GOODS) $newType = TX_GOODS; */
+      /*   elseif ($goods == OLD_FOR_USD) $newType = TX_USD; */
+      /*   elseif ($goods == OLD_FOR_NONGOODS) $newType = TX_SERVICES; */
+      /*   else die('should never get here'); */
+      /* } else { */
+      /*   $newType = $type; */
+      /* } */
       
       // data and flags
       // data: changes undoneBy force inv disputed isGift undoneNO undoes xfee coupon coupid
@@ -125,14 +129,14 @@ class ReformatTransactions extends AbstractMigration
         $changes = $data['changes'];
         foreach ($changes as $index => $change) {
           if (!array_key_exists(2, $change)) {
-            print_r("In $xid, changes contains $index => ");
-            print_r($change);
-            print_r("\n");
-            print_r("BAD CHANGES is $xid");
-            print_r($changes);
-            print_r("\n");
-            print_r($change);
-            print_r("\n");
+            if (!preg_match('/[0-9]{10}( [A-Z]{6})?/', $index)) {
+              print_r("In $xid, payer is $payer, payee is $payee, changes contains '$index' => ");
+              print_r($change);
+              print_r("\n");
+              /* print_r("BAD CHANGES in $xid:"); */
+              /* print_r($change); */
+              /* print_r("\n"); */
+            }
           } else {
             $allChangeKeys[$change[2]] = 1;
           }
@@ -147,7 +151,7 @@ class ReformatTransactions extends AbstractMigration
         }
         $undoes[$reverser] = $xid;
         $undoneBy[$xid] = $reverser;
-        u\setBit($flags, B_UNDONE, false);
+        u\setBit($flags, OLD_B_UNDONE, false);
         unset($data['undoneBy']);
       }
       
@@ -158,8 +162,8 @@ class ReformatTransactions extends AbstractMigration
           print("ERROR GETTING r_invoices on xid=$xid, (nvid=$nvid), result=$result\n");
         }
         $status = $result->fetch()['status'];
-        if ($status != $xid and $status != $reverses) {
-          print("INCONSISTENCY: tx $xid refers to invoice $nvid, but that invoice's status is $status, (reverses=$reverses)\n");
+        if ($status != $xid and $status != $reversesXid) {
+          print("INCONSISTENCY: tx $xid refers to invoice $nvid, but that invoice's status is $status, (reversesXid=$reversesXid)\n");
         }
         $payeeEntry['relType'] = 'I';
         $payeeEntry['relatedId'] = $nvid;
@@ -177,7 +181,7 @@ class ReformatTransactions extends AbstractMigration
           } else {
             $status = DS_DENIED;
           }
-          $disputesTbl->insert(ray('xid, reason, status', $xid, $reason, $status))->save();
+          $disputesTbl->insert(ray('xid uid reason status', $xid, $payer, $reason, $status))->save();
         }                       
         unset($data['disputed']);
         u\setBit($flags, B_DISPUTED, false);
@@ -193,11 +197,11 @@ class ReformatTransactions extends AbstractMigration
         unset($data['undoneNO']);
       }
 
-      if (u\getBit($flags, B_UNDOES) and !array_key_exists('undoes', $data)) {
+      if (u\getBit($flags, OLD_B_UNDOES) and !array_key_exists('undoes', $data)) {
         if (array_key_exists($xid, $undoes)) {  // the tx we're reversing knows us
           $reversesXid = $undoes[$xid];
           $undoneBy[$xid] = $reversesXid;
-          u\setBit($flags, B_UNDOES, false);
+          u\setBit($flags, OLD_B_UNDOES, false);
         } else {
           print("INCONSISTENCY: undoes flag set, no undoes data, and no entry in undoneBy array\n");
           print_r($undoes);
@@ -208,27 +212,27 @@ class ReformatTransactions extends AbstractMigration
         }
       }
       
-      if (!u\getBit($flags, B_UNDOES) and array_key_exists('undoes', $data)) {
+      if (!u\getBit($flags, OLD_B_UNDOES) and array_key_exists('undoes', $data)) {
         print("INCONSISTENCY: no undoes flag set but undoes data present\n");
       }
       
       if (array_key_exists('undoes', $data)) {
         $reversesXid = $data['undoes'];
         if (arrayGet($undoneBy, $reversesXid, $xid) != $xid) {
-          $early = $undoneBy[$reverses];
-          print("INCONSISTENCY: tx $reverses is being undone by tx $xid, but was already undone by tx $early\n");
+          $early = $undoneBy[$reversesXid];
+          print("INCONSISTENCY: tx $reversesXid is being undone by tx $xid, but was already undone by tx $early\n");
         } else {
           $undoneBy[$reversesXid] = $xid;
           $undoes[$xid] = $reversesXid;
         }
-        u\setBit($flags, B_UNDOES, false);
+        u\setBit($flags, OLD_B_UNDOES, false);
         unset($data['undoes']);
       }
 
       if (array_key_exists('force', $data)) {
         $force = $data['force'];
         $force = (u\getBit($flags, B_OFFLINE) ? 'T' : 'F') . (u\getBit($flags, B_SHORT) ? 'T' : 'F') .
-          ($reverses == null ? 'F' : 'T') . $force;
+          ($reversesXid == null ? 'F' : 'T') . $force;
         if (!array_key_exists($force, $allForceValues)) { $allForceValues[$force] = 1; }
         else { $allForceValues[$force] += 1; }
         unset($data['force']);
@@ -248,11 +252,19 @@ class ReformatTransactions extends AbstractMigration
       if (array_key_exists('coupon', $data) and array_key_exists('coupid', $data)) {
         $couponValue[$xid] = $data['coupon'];  // save coupon data for later consistency checking
         $coupId[$xid] = $data['coupid'];
+        $cid = $data['coupid'];
+        $coupated = $this->query("select * from r_coupated where uid=$payer and coupid=$cid");
+        if (empty($coupated)) {
+          print("Coupated record missing for user $uid, coupon $cid\n");
+          $coupatedId = $coupated['id'];
+        } else {
+          $coupatedId = null;
+        }
         /* $payeeEntry['amount'] += $couponValue[$xid]; */
         $otherEntries[] = ray('xid entryType amount uid agentUid description acctTid relType relatedId',
-                              $xid, ENTRY_OTHER, -$couponValue[$xid], $payee, $payeeAgent, $payeeFor, $payeeTid, 'C', $coupId[$xid]);
-        $otherEntries[] = ray('xid amount uid agentUid description acctTid relType relatedId',
-                              $xid, ENTRY_OTHER, $couponValue[$xid], $payer, $payerAgent, $payerFor, $payerTid, 'C', $coupId[$xid]);
+                              $xid, ENTRY_OTHER, -$couponValue[$xid], $payee, $payeeAgent, $payeeFor, $payeeTid, 'D', $coupatedId);
+        $otherEntries[] = ray('xid entryType amount uid agentUid description acctTid relType relatedId',
+                              $xid, ENTRY_OTHER, $couponValue[$xid], $payer, $payerAgent, $payerFor, $payerTid, 'D', $coupatedId);
         unset($data['coupon']);
         unset($data['coupid']);
       }
@@ -279,22 +291,22 @@ class ReformatTransactions extends AbstractMigration
 
       // B_SHORT is left alone
       
-      if (u\getBit($flags, B_UNDONE)) {  // if there had been undoneBy data we would have turned this off earlier
-        print("NOT HANDLED: flag B_UNDONE on $xid\n");
-        u\setBit($flags, B_UNDONE, false);
+      if (u\getBit($flags, OLD_B_UNDONE)) {  // if there had been undoneBy data we would have turned this off earlier
+        print("NOT HANDLED: flag OLD_B_UNDONE on $xid\n");
+        u\setBit($flags, OLD_B_UNDONE, false);
       }
       
-      if (u\getBit($flags, B_UNDOES)) {  // if we knew what it undid we would have turned this off earlier
-        print("NOT HANDLED: flag B_UNDOES on $xid\n");
-        u\setBit($flags, B_UNDOES, false);
+      if (u\getBit($flags, OLD_B_UNDOES)) {  // if we knew what it undid we would have turned this off earlier
+        print("NOT HANDLED: flag OLD_B_UNDOES on $xid\n");
+        u\setBit($flags, OLD_B_UNDOES, false);
       }
 
       // B_CRUMBS is left alone
       
-      if (u\getBit($flags, B_ROUNDUPS)) {
+      if (u\getBit($flags, OLD_B_ROUNDUPS)) {
         $xid = 0;  // flag that this transaction should be ignored
         /* print("IGNORING ROUNDUPS on $xid\n"); */
-        u\setBit($flags, B_ROUNDUPS, false);
+        u\setBit($flags, OLD_B_ROUNDUPS, false);
       }
 
       $roundupDonation = 0;
@@ -303,7 +315,7 @@ class ReformatTransactions extends AbstractMigration
           $cents = fmod($amount, 1);
           if ($cents > 0) {
             $roundupDonation = round(1 - $cents, 2);
-            $payerEntry['amount'] -= $roundupDonation;
+            /* $payerEntry['amount'] -= $roundupDonation; */
             $otherEntries[] = ray('xid entryType amount uid agentUid description acctTid relType relatedId',
                                   $xid, ENTRY_DONATION, $roundupDonation, CG_ROUNDUPS_UID, CG_ROUNDUPS_UID,
                                   t('roundup donation'), '', null, null);
@@ -333,9 +345,9 @@ class ReformatTransactions extends AbstractMigration
 
       //
       if ($xid != 0) {
-        $hdrInfo = just('xid channel box risk risks created', $oldTx) +
-          ray('type actorId actorAgentId flags channel box reversesXid',
-              $newType, $actorId, $actorAgentId, $flags, $channel, $oldTx['box'], null);
+        $hdrInfo = just('xid goods risk risks created', $oldTx) +
+          ray('actorId actorAgentId flags channel boxId reversesXid',
+              $actorId, $actorAgentId, $flags, $channel, $oldTx['box'], null);
         $txHdrsTable->insert($hdrInfo)->save();
         $entriesTable->insert($payerEntry)->insert($payeeEntry)->save();
         foreach ($otherEntries as $key => $entry) {
@@ -377,8 +389,7 @@ class ReformatTransactions extends AbstractMigration
     $oldTxs = $this->query('select * from r_usd');
     $nextXid = $maxXid;
     
-    foreach ($results as $result) {
-      $nextXid += 1;
+    foreach ($oldTxs as $result) {
       $oldTx = (array)$result;
       $missingFields = array_diff_key($requiredFields, $oldTx);
       if ($missingFields != []) {
@@ -386,11 +397,15 @@ class ReformatTransactions extends AbstractMigration
       }
       extract(just($requiredFields, $oldTx));
 
+      if (empty($completed)) continue;  // no transaction associated with incomplete US$ transfer
+      
       if (is_null($channel)) $channel = TX_SYS;
       if (is_null($risks)) $risks = 0;
       
-      $hdr = ray('xid type actorId actorAgentId flags channel box risk risks reversesXid created',
-                 $nextXid, TX__USD, $payee, $payee, 0, $channel, null, $risk, $risks, null, $completed);
+      $nextXid += 1;
+      
+      $hdr = ray('xid actorId actorAgentId flags channel boxId goods risk risks reversesXid created',
+                 $nextXid, $payee, $payee, 0, $channel, null, FOR_USD, $risk, $risks, null, $completed);
 
       $bankUid = $amount >= 0 ? CG_INCOMING_BANK_UID : CG_OUTGOING_BANK_UID;
       $e1 = ray('xid entryType amount uid agentUid description acctTid relType relatedId',
@@ -417,7 +432,6 @@ class ReformatTransactions extends AbstractMigration
     $results = $this->query($sql);
 
     foreach ($results as $result) {
-      $nextXid += 1;
       $result = (array)$result;
       $missingFields = array_diff_key($requiredFields, $result);
       if ($missingFields != []) {
@@ -425,6 +439,8 @@ class ReformatTransactions extends AbstractMigration
       }
       extract(just($requiredFields, $result));
 
+      if (empty($completed)) continue;  // no transaction associated with incomplete US$ transfer
+      
       // Checking
       switch ($type) {
       case 'S':
@@ -441,16 +457,18 @@ class ReformatTransactions extends AbstractMigration
 
       $actorAgentId = $actorId;
 
-      $hdr = ray('xid type actorId actorAgentId flags channel box risk risks reversesXid created',
-                 $nextXid, TX_USD, $actorId, $actorAgentId, 0, TX_SYS, null, null, 0, null, $completed);
+      $nextXid += 1;
+
+      $hdr = ray('xid actorId actorAgentId flags channel boxId goods risk risks reversesXid created',
+                 $nextXid, $actorId, $actorAgentId, 0, TX_SYS, null, FOR_USD, null, 0, null, $completed);
       $e1 = ray('xid entryType amount uid agentUid description acctTid relType relatedId',
                 $nextXid, ENTRY_PAYER, -$amount, CG_INCOMING_BANK_UID, CG_INCOMING_BANK_UID, $memo, $bankTxId, null, null);
-      $e2 = ray('xid amount uid agentUid description acctTid relType relatedId',
-                $nextXid, ENTRY_PAYEE, $amount, CG_SERVICE_CHARINCOMING_BANK_UID, CG_INCOMING_BANK_UID, $memo, $bankTxId, null, null);
+      $e2 = ray('xid entryType amount uid agentUid description acctTid relType relatedId',
+                $nextXid, ENTRY_PAYEE, $amount, CG_SERVICE_CHARGES_UID, CG_INCOMING_BANK_UID, $memo, $bankTxId, null, null);
 
       $txHdrsTable->insert($hdr)->save();
       $entriesTable->insert($e1)->insert($e2)->save();
-      if ($this->execute("UPDATE r_usd2 SET xid='$xid' WHERE id='$id'") != 1) {
+      if ($this->execute("UPDATE r_usd2 SET xid='$nextXid' WHERE id='$id'") != 1) {
         print("ERROR UPDATING r_usd2 on xid=$nextXid\n");
       }
     }

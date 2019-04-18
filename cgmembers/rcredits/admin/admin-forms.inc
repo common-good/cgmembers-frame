@@ -993,20 +993,36 @@ function deleteAccount($uid) {
 }
 
 function util($arg) {
-  //  if ($arg == 'modal') drupal_goto('modal');
-  //  if ($arg == 'reset') r\reset();
-  if ($arg == 'reset-menu') \menu_rebuild();
-  if ($arg == 'remove-test-data') {
+  switch ($arg) {
+  /* case 'modal': */
+  /*   drupal_goto('modal'); */
+  /*   break; */
+  /* case 'reset': */
+  /*   r\reset(); */
+  /*   break; */
+  case 'reset-menu':
+    \menu_rebuild();
+    break;
+  case 'remove-test-data':
     if (isDEV) {
       f('t.clear'); 
       say(t('All test data has been deleted.'));
-    } else a\setupBasicAccounts();
-  }
-  if ($arg == 'clear') foreach (ray('cache cache_bootstrap cache_form cache_menu sessions') as $table) {
+    } else { a\setupBasicAccounts(); }
+    break;
+  case 'clear':
+    foreach (ray('cache cache_bootstrap cache_form cache_menu sessions') as $table) {
       db\q("TRUNCATE TABLE $table");
     }
-  if ($arg == 'php') w\go('devel/php');
-  
+    break;
+  case 'php':
+    w\go('devel/php');
+    break;
+  case 'check-sanity':
+    be\checkSanity();
+    break;
+  default:
+    break;
+  }
   say("DONE with \"$arg\".");
   return w\go('sadmin');
 }
@@ -1020,6 +1036,7 @@ function handyLinks() {
                  'rcredits/util/reset-menu|Rebuild menu based on hook_menu() and revert any custom changes. All menu items return to their default settings.|Redo MENUS|menu-hamburger',
                  'rcredits/util/remove-test-data|Remove test data|REMOVE test data|fast-backward',
                  'rcredits/util/clear|Empty the cache and sessions tables|Clear Cache & Sessions|unchecked',
+                 'rcredits/util/check-sanity|Check the consistency of the database (incomplete)|Check Sanity|menu-hamburger',
                  );
 
   /*    'devel/settings|Helper functions, pages, and blocks to assist Drupal developers. The devel blocks can be managed via the block administration page.|Devel settings|cog',

@@ -1194,3 +1194,130 @@ function accountName($uid) {
   $acct = r\acct($uid);
   return $acct->fullName . ' ' . u\hug($acct->mainQid);
 }
+
+/**
+ * Check the sanity of the database.  This currently only checks the tables added or modified in the transaction reformatting.
+ */
+function checkSanity() {
+  // Check transactions and their associated entries
+  $xids = db\rows('xid', 'tx_hdrs');
+  foreach ($xids as $xidO) {
+    $xid = $xidO->xid;
+    $tx = r\Tx::read($xid);
+    foreignKeyCheck('Tx', $xid, 'actorId', 'users', 'uid', $tx->actorId);
+    foreignKeyCheck('Tx', $xid, 'actorAgentId', 'users', 'uid', $tx->actorAgentId);
+    foreignKeyCheck('Tx', $xid, 'box', 'r_boxes', 'id', $tx->boxId);
+    foreignKeyCheck('Tx', $xid, 'reversesXid', 'tx_hdrs', 'xid', $tx->reversesXid);
+    if (($tx->flags & ~u\bit(ray(TX_FLAGS))) != 0) { sanityError("Tx $xid flags has extraneous bits set"); }
+    if (!in_array($tx->goods, [FOR_GOODS, FOR_USD, FOR_NONGOODS])) { sanityError("Tx $xid goods is bad: $tx->goods"); }
+
+    $total = 0;
+    foreach ($tx->entries as $entry) {
+      $total += $entry->amount;
+    }
+    if ($total != 0) { sanityError("Tx $xid entries do not sum to 0"); }
+  }
+
+  // Check all entries
+  $entryIds = db\rows('id', 'tx_entries');
+  $total = 0;
+  foreach ($entryIds as $entryIdO) {
+    $entryId = $entryIdO->id;
+    $entry = r\TxEntry::read($entryId);
+    foreignKeyCheck('TxEntry', $entryId, 'xid', 'tx_hdrs', 'xid', $entry->xid);
+    foreignKeyCheck('TxEntry', $entryId, 'uid', 'users', 'uid', $entry->uid);
+    foreignKeyCheck('TxEntry', $entryId, 'agentUid', 'users', 'uid', $entry->agentUid);
+    if (!in_array($entry->entryType, [ENTRY_OTHER, ENTRY_PAYER, ENTRY_PAYEE, ENTRY_DONATION])) {
+      sanityError("TxEntry $entryId entryType is invalid: $entry->entryType");
+    }
+    if (!empty($entry->relType)) {
+      switch ($entry->relType) {
+      case 'D':
+        foreignKeyCheck('TxEntry', $entryId, 'relatedId', 'r_coupated', 'id', $entry->relatedId);
+        break;
+      case 'I':
+        foreignKeyCheck('TxEntry', $entryId, 'relatedId', 'r_invoices', 'nvid', $entry->relatedId);
+        break;
+      default:
+        sanityError("TxEntry $entryId relType is illegal: $entry->relType");
+      }
+    }
+    $total += $entry->amount;
+  }
+  if ($total != 0) { sanityError("Total of all tx_entries is not 0"); }
+
+  // Check r_usd
+  $txids = db\rows('txid', 'r_usd');
+  foreach ($txids as $txidO) {
+    $txid = $txidO->txid;
+    $info = db\get('*', 'r_usd', ['txid'=>$txid]);
+    if (!empty($info['xid'])) {
+      if (!empty($info['completed'])) {
+        if ((!db\exists('tx_entries', ['xid'=>$info['xid'], 'uid'=>$info['payee'], 'amount'=>$info['amount']]))
+            or (!db\exists('tx_hdrs', ['xid'=>$info['xid'], 'created'=>$info['completed']]))) {
+          sanityError("r_usd $txid is completed, but the xid doesn't match a transaction");
+        }
+      } else {
+        sanityError("r_usd is not marked completed, but has an associated tx_hdr");
+      }
+    } else {
+      if (!empty($info['completed'])) {
+        sanityError("r_usd is marked completed, but has no associated tx_hdr");
+      }
+    }
+  }
+
+  // Check r_usd2
+  $ids = db\rows('id', 'r_usd2');
+  foreach ($ids as $idO) {
+    $id = $idO->id;
+    $info = db\get('*', 'r_usd2', ['id'=>$id]);
+    if (!empty($info['xid'])) {
+      if (!empty($info['completed'])) {
+        if ((!db\exists('tx_entries', ['xid'=>$info['xid'], 'amount'=>$info['amount']]))
+            or (!db\exists('tx_hdrs', ['xid'=>$info['xid'], 'created'=>$info['completed']]))) {
+          sanityError("r_usd2 $id is completed, but the xid doesn't match a tx_entry");
+        }
+      } else {
+        sanityError("r_usd2 $id is not marked completed, but has an associated tx_hdr");
+      }
+    } else {
+      if (!empty($info['completed'])) {
+        sanityError("r_usd2 $id is marked completed, but has no associated tx_hdr");
+      }
+    }
+  }
+
+  // Check tx_disputes
+  $ids = db\rows('id', 'tx_disputes');
+  foreach ($ids as $idO) {
+    $id = $idO->id;
+    $info = db\get('*', 'tx_disputes', ['id'=>$id]);
+    foreignKeyCheck('tx_disputes', $id, 'xid', 'tx_hdrs', 'xid', $info['xid']);
+    foreignKeyCheck('tx_disputes', $id, 'uid', 'users', 'uid', $info['uid']);
+    if (!in_array($info['status'], [DS_OPEN, DS_ACCEPTED, DS_DENIED])) {
+      $status = $info['status'];
+      sanityError("tx_disputes $id status field is invalid: $status");
+    }
+  }
+
+/*   // Check r_invoices */
+/*   $nvids = db\rows('nvid', 'r_invoices'); */
+/*   foreach ($nvids as $nvidO) { */
+/*     $nvid = $nvidO->nvid; */
+/*     $info = db\get('*', 'r_invoices', ['nvid'=>$nvid]); */
+/*     if ($info['status'] > 0) { */
+/*       foreignKeyCheck('r_invoices', $nvid, 'status', 'tx_hdrs', 'xid', $info['status']); */
+/*       $ */
+
+}
+
+function foreignKeyCheck($prefix, $ref, $field, $table, $keyFld, $keyVal) {
+  if (!empty($keyVal) and !db\exists($table, [$keyFld=>$keyVal])) {
+    sanityError("$prefix $ref $field refers to non-existent $table $keyVal");
+  }
+}
+
+function sanityError($s) {
+  debug($s);
+}

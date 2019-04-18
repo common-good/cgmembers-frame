@@ -1396,7 +1396,7 @@ function unSerialFix($s) {
  */
 function consta($prefix, $var) {
   $const = strtoupper(str_replace(' ', '_', $prefix . "_$var"));
-  u\EXPECT(defined($const), 'constant not defined');
+  u\EXPECT(defined($const), "constant not defined: $const");
   return constant($const);
 }
   

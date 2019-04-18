@@ -16,9 +16,9 @@ require_once __DIR__ . '/txentry.class';
 
 class Tx {
   const TX_HDR_FIELDS = ['xid', 'goods', 'actorId', 'actorAgentId', 'flags',
-                         'channel', 'box', 'goods', 'risk', 'risks', 'reversesXid', 'created'];
+                         'channel', 'boxId', 'goods', 'risk', 'risks', 'reversesXid', 'created'];
   const INSERT_FIELDS = ['goods', 'actorId', 'actorAgentId', 'flags',
-                         'channel', 'box', 'goods', 'risk', 'risks', 'reversesXid', 'created'];
+                         'channel', 'boxId', 'goods', 'risk', 'risks', 'reversesXid', 'created'];
   const REQUIRED_FIELDS = ['goods', 'actorId', 'flags'];
 
   public $xid;
@@ -28,7 +28,7 @@ class Tx {
   public $actorAgentId;
   public $flags;
   public $channel;
-  public $box;
+  public $boxId;
   public $risk;
   public $risks;
   public $reversesXid;
@@ -50,7 +50,7 @@ class Tx {
     $this->actorAgentId = u\arrayGet($info, 'actorAgentId', null);
     $this->flags = u\arrayGet($info, 'flags', null);
     $this->channel = u\arrayGet($info, 'channel', null);
-    $this->box = u\arrayGet($info, 'box', null);
+    $this->boxId = u\arrayGet($info, 'boxId', null);
     $this->risk = u\arrayGet($info, 'risk', null);
     $this->risks = u\arrayGet($info, 'risks', 0);
     $this->reversesXid = u\arrayGet($info, 'reversesXid', null);

@@ -64,6 +64,17 @@ class TxEntry {
   }
 
   /**
+   * Read a transaction entry record given its id.
+   * @param integer $id: the id of the transaction entry record.
+   * @return the new TxEntry object.
+   */
+  static function read($id) {
+    $info = db\get('*', 'tx_entries', ['id' => $id]);
+    if (!$info) { return FALSE; }
+    return new TxEntry($info);
+  }
+
+  /**
    * Read all of the transaction entry records associated with a particular transaction.
    * This should only be called in the context of a database transaction.
    * @param integer $xid: the transaction id of the transaction the entries belon to.
