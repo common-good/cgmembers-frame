@@ -5,7 +5,7 @@
  * (SMS, web, smartphone, etc.)
  */
 
-define('R_VERSION', '3.42y'); // software version
+define('R_VERSION', '3.42z'); // software version
 
 // definitions used in settings file
 define('US_COUNTRY_ID', 1228); // United States
@@ -28,6 +28,11 @@ define('LOCAL_URL', setFromConfigWithDefault('localUrl', $config, $base_url));
 define('PROMO_URL', setFromConfig('promoUrl', $config));
 define('CO_API_URL', setFromConfig('coApiUrl', $config));
 define('CGF_EMAIL', setFromConfig('cgfEmail', $config));
+define('CG_SMTP_SERVER', setFromConfigWithDefault('cgSmtpServer', $config, 'smtp.gmail.com'));
+define('CG_SMTP_TLS', setFromConfigWithDefault('cgSmtpTls', $config, 'tls'));
+define('CG_SMTP_PORT', setFromConfigWithDefault('cgSmtpPort', $config, 587));
+define('CG_SMTP_USER', setFromConfigWithDefault('cgSmtpUser', $config, CGF_EMAIL));
+define('CG_SMTP_PASS', setFromConfig('cgSmtpPass', $config));
 define('DKIM_PRIVATE', setFromConfig('dkimPrivate', $config));
 /* define('DKIM_PUBLIC', setFromConfig('dkimPublic', $config)); */
 define('R_INVITE_KEY', setFromConfig('inviteKey', $config));
