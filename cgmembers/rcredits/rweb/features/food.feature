@@ -9,6 +9,11 @@ Setup:
   | .ZZA | Abe One   |  -250 | ok,confirmed,nosearch,paper,debt |
   | .ZZB | Bea Two   |  -250 | ok,co,confirmed,weekly,secret |
   | .ZZF | Food Fund |     0 | ok,co,confirmed |
+  And balances:
+  | uid  | balance |*
+  | .ZZA |     200 |
+  | .ZZB |       0 |
+  | .ZZF |       0 |
   
 Scenario: A non-member visits the food page
   When member "?" visits page "settings/food/welcome=1"

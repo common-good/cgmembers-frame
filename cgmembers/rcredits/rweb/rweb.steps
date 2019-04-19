@@ -320,8 +320,6 @@ function weSayWithSubs($type, $index, $subs) {
  *     TEST contact AMemberUpdatesToADifferentState
  *     TEST contact AMemberUpdatesToADifferentName
  *     TEST coupons AMemberRedeemsAGiftCoupon
- *     TEST edittx ABuyerIncreasesAPaymentAmount
- *     TEST edittx ABuyerChangesTheGoodsStatus
  *     TEST food AMemberVisitsTheFoodPage
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
@@ -561,6 +559,7 @@ function relations($relations) {return t\relations($relations);}
  *     TEST coupons AMemberRedeemsADiscountCouponForADollarAmount
  *     TEST download Setup
  *     MAKE flow Setup
+ *     MAKE food Setup
  *     MAKE gift Setup
  *     TEST invoice Setup
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
@@ -600,10 +599,6 @@ function usd($list) {return t\usd($list);}
  *     MAKE contact AMemberVisitsTheContactInfoPage
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
  *     MAKE download AMemberDownloadsIncomingInvoicesForThePastYear
- *     MAKE edittx ABuyerChangesTheTransactionDescription
- *     MAKE edittx ABuyerDisputesACharge
- *     MAKE edittx ASellerReversesACharge
- *     MAKE edittx ABuyerReversesAReversal
  *     MAKE food ANonmemberVisitsTheFoodPage
  *     MAKE food AMemberSignsInAndSeesLink
  *     MAKE food AMemberVisitsTheFoodPage
@@ -829,11 +824,11 @@ function weDownloadWith($name, $rows) {
   $headers = array_values(array_shift($csv2));
   if (@$headers[0] == '#') $headers[0] = 't#';
   foreach ($csv2 as $csvRow) {
-    debug(compact('headers', 'csvRow'));
+///    debug(compact('headers', 'csvRow'));
     $csvRow = array_combine($headers, $csvRow); // add keys
 /// if (!$row = array_shift($rows)) return t\output('extra row in CSV: ' . print_r($csvRow, 1));
     foreach ($row as $key => $value) {
-    debug(compact('row','csvRow'));
+///    debug(compact('row','csvRow'));
       if (strpos($value, '%') !== FALSE) $value = t\lastMinuteSubs($value);
 ///      if (!isset($csvRow[$key])) debug(compact('key', 'csvRow', 'value'));
 /**/  if (!t\eq($csvValue = @$csvRow[$key], $value)) return t\output("key=$key csvValue<>expected value ($csvValue<>$value) csvRow:" . print_r($csvRow, 1));

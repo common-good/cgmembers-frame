@@ -26,7 +26,7 @@ define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer pa
  */
 function fixData(&$info, $direct = FALSE) {
   global $rUrl, $testVars;
-  $fields = 'email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state box';
+  $fields = 'email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId';
   if (@$testVars) foreach ($info as $k => $v) if (strpos($v, '@') !== FALSE) {
     foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", $var, $v);
   }
@@ -53,7 +53,9 @@ function fixData(&$info, $direct = FALSE) {
     if (@$federalId) u\digits($federalId);
     if (@$dob) $dob = strtotime(str_replace('/', '-', $dob));
   }
-  if (!empty($box)) { $box = db\get('id', 'r_boxes', '`code`=:box', ['box'=>$box]); }
+  if (!empty($boxId)) {
+    $boxId = db\get('id', 'r_boxes', '`code`=:boxId', ['boxId'=>$boxId]);
+  }
 
   foreach (just(T_ID_FLDS, $info) as $k => $v) {
     if (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, 'ctty cgf')) { $info[$k] = t\uid($v) ?: 0; }
@@ -117,8 +119,15 @@ function doThing($info, $thing, $key = 'id') {
     $table = 'r_' . strtolower($thing) . 's';
   }
   if ($thing == 'Coupated') $table = 'r_coupated';
+  if ($table == 'tx_hdrs') {
+    $key = 'xid';
+  }
 // NO!  if (@$info['id']) {$info['uid'] = $info['id']; unset($info['id']);}
-  return $testOnly ? verifyRecord($table, $info) : db\insert($table, $info, $key);
+  if ($testOnly) {
+    return verifyRecord($table, $info);
+  } else {
+    return db\insert($table, $info, $key);
+  }
 }
 
 function these($thing, $list) {return doRecords($list, ucwords(substr($thing, 0, strlen($thing) - 1)));}
@@ -245,7 +254,7 @@ function doAccount($info = []) {
 }
 
 /**
- * Fabricate transactions (or invoices) OR test them.
+ * Fabricate transactions OR test them.
  * @param assoc $info: transaction or invoice data to create or test
  *   Minimum parameters: amount, from, to
  * @return:
@@ -255,7 +264,7 @@ function doAccount($info = []) {
 function doTx($info, $thing) {
   global $testOnly, $channel;
   u\EXPECT($thing != 'Invoice', 'use doInvoice for invoices, not doTx');
-  extract(u\exactly('xid serial amount payer payee payerAgent payeeAgent payerFor payeeFor payerTid payeeTid data flags box risk purpose for', $info, null));  // These are what appear in r_txs
+  extract(u\exactly('xid serial amount payer payee payerAgent payeeAgent payerFor payeeFor payerTid payeeTid data flags boxId risk purpose for', $info, null));  // These are what appear in r_txs
   extract(u\exactly('created type channel risks goods', $info, [r\rTime(), 'transfer', TX_SYS, 0, FOR_GOODS]));  // These are what appear in r_txs
   extract(u\exactly('taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding', $info, FALSE));  // These are flags that might appear
   extract(u\exactly('purpose', $info, FALSE));
@@ -290,9 +299,9 @@ function doTx($info, $thing) {
   
   /* $flagString = $flags; */
   $flags = is_null($flags) ? 0 : $flags;
-  $hdrInfo = ray('xid goods actorId actorAgentId flags channel box risk risks reversesXid created',
+  $hdrInfo = ray('xid goods actorId actorAgentId flags channel boxId risk risks reversesXid created',
                  $xid, $goods, ($taking ? $payee : $payer), ($taking ? $payeeAgent : $payerAgent), $flags,
-                 $channel, $box, $risk, $risks, null/* $reversesXid */, $created);
+                 $channel, $boxId, $risk, $risks, null/* $reversesXid */, $created);
   /* $hdrInfo = array_filter($hdrInfo); */
   $payerEntry = ray('xid entryType amount uid agentUid description acctTid relType relatedId',
                     $xid, ENTRY_PAYER, 0-$amount, $payer, $payerAgent, $payerFor, $payerTid, null, null);
@@ -309,7 +318,6 @@ function doTx($info, $thing) {
 
   $hdrInfo['entries'] = [new r\TxEntry($payerEntry), new r\TxEntry($payeeEntry)];
   $tx = new r\Tx($hdrInfo);
-  /* print_r($tx); */
   return $tx->insert(TRUE);
 }
 

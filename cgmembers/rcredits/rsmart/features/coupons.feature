@@ -31,7 +31,7 @@ Scenario: A member redeems a gift coupon
   |      1 |   .ZZC |     10 |       0 |      1 |     0 | %today | %today+7d |
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $100 for "goods": "food" at %today
   Then transaction headers:
-  | xid | goods | actorId | actorAgentId | flags  | channel | box  | risks | reversesXid | created |*
+  | xid | goods | actorId | actorAgentId | flags  | channel | boxId  | risks | reversesXid | created |*
   | 1   | 0     | .ZZC  | .ZZA       | 0      | 3       | devC   |     0 |          | %today  |
   And transaction entries: 
   | xid | amount |  uid | agentUid | acctTid | description             | relType | relatedId |*
@@ -47,7 +47,7 @@ Scenario: A member redeems a gift coupon
   | member | code | amount | goods | description | created |*
   | .ZZB   | ccB  | 100.00 |     1 | food        | %today  |
   Then transaction headers:
-  | xid | goods | actorId | actorAgentId | flags  | channel | box | risks | reversesXid | created |*
+  | xid | goods | actorId | actorAgentId | flags  | channel | boxId | risks | reversesXid | created |*
   | 2   | 0     | .ZZC  | .ZZA       | 0      | 3       | devC  |     0 | 1        | %today  |
   And transaction entries: 
   | xid | amount |  uid | agentUid | acctTid | description                           | relType | relatedId |*
@@ -61,7 +61,7 @@ Scenario: A member redeems a gift coupon
 
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $50 for "goods": "sundries" at %today
   Then transaction headers:
-  | xid | goods | actorId | actorAgentId | flags  | channel | box | risks | reversesXid | created |*
+  | xid | goods | actorId | actorAgentId | flags  | channel | boxId | risks | reversesXid | created |*
   | 3   | 0     | .ZZC  | .ZZA       | 0      | 3       | devC  |     0 |          | %today  |
   And transaction entries: 
   | xid | amount |  uid | agentUid | acctTid | description             | relType | relatedId |*
@@ -75,7 +75,7 @@ Scenario: A member redeems a gift coupon
 
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $60 for "goods": "stuff" at %today
   Then transaction headers:
-  | xid | goods | actorId | actorAgentId | flags  | channel | box  | risks | reversesXid | created |*
+  | xid | goods | actorId | actorAgentId | flags  | channel | boxId  | risks | reversesXid | created |*
   | 4   | 0     | .ZZC  | .ZZA       | 0      | 3       | devC   |     0 |          | %today  |
   And transaction entries: 
   | xid | amount |  uid | agentUid | acctTid | description             | relType | relatedId |*

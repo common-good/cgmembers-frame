@@ -355,7 +355,7 @@ function charge($args, $type = 'charge') {
   if ($err = missingArg($keys, $args)) return posErr($err);
   extract(just($keys . ' proof force version', $args));
   extract(u\exactly('description device', $args, ['', null]));
-  $box = $device;
+  $boxId = $device;
 
   $goods = $args['goods'];
   unset($args['goods']);
@@ -430,7 +430,7 @@ EOF;
     if (@$amount < 0 and $a->co and $a->proSe) return badTx($args, $name, $msg, $subs);
     if (@$amount < 0 and !$mya->co) list ($type, $amount) = ['payment', -$amount];
     $bal = $a->balance;
-    list ($msg, $subs) = be\transfer($type, $mya, $a, @$amount, @$description, $goods, compact(ray('created force box')));
+    list ($msg, $subs) = be\transfer($type, $mya, $a, @$amount, @$description, $goods, compact(ray('created force boxId')));
     $bal = $a->balance;
     if (!@$subs['success']) return badTx($args, $name, $msg, $subs);
 

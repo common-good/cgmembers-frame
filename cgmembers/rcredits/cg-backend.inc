@@ -300,7 +300,7 @@ function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
 function reverse($xid) {
   global $mya, $channel;
 
-  /* debug("reverse($xid)"); */
+  /// debug("reverse($xid)");
 
   $DBTX = \db_transaction();
   if (db\exists('tx_hdrs', 'reversesXid=:xid', ['xid' => $xid])) {
@@ -413,7 +413,7 @@ function payInvoice($nvid) {
  *   indexed by any of:
  *   'created': time of transaction (defaults to current time)
  *   'force': <do the transaction despite any shortfall (1 for original tx, -1 for forced reversal)>
- *   'box': the device on which the transaction was initiated
+ *   'boxId': the id of the device on which the transaction was initiated
  *   'offline'
  *   'loan'
  *   'investment'
@@ -465,7 +465,7 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
     u\EXPECT(false, "type must not be '$type'.");
   }
   
-  extract(u\exactly('created force box', $data, [r\rTime(), 0, null]));
+  extract(u\exactly('created force boxId', $data, [r\rTime(), 0, null]));
   extract(u\exactly('offline loan investment stake fine noask funding crumbs recurs gift', $data, FALSE));
 
   $short = FALSE;
@@ -532,9 +532,8 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
     | ($recurs ? 1 << B_RECURS : 0) | ($gift ? 1 << B_GIFT : 0) | ($loan ? 1 << B_LOAN : 0)
     | ($investment ? 1 << B_INVESTMENT : 0) | ($stake ? 1 << B_STAKE : 0) | ($fine ? 1 << B_FINE : 0)
     | ($noask ? 1 << B_NOASK : 0) | ($funding ? 1 << B_FUNDING : 0);
-  $info = ray('actorId actorAgentId flags channel box goods created',
-              $actor->id, $actor->agentId, $flags, $channel, $box, $goods, $created); //amount created payer payee payerAgent payeeAgent for data taking roundup goods force offline investment short'));
-  /* print_r($info); */
+  $info = ray('actorId actorAgentId flags channel boxId goods created',
+              $actor->id, $actor->agentId, $flags, $channel, $boxId, $goods, $created); //amount created payer payee payerAgent payeeAgent for data taking roundup goods force offline investment short'));
   $tx = new r\Tx($info);
   if (!$tx) {
     $DBTX->rollback();
@@ -607,13 +606,6 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
   foreach ([$actor, $other] as $a) if (!$a->confirmed) $a->setBit(B_CONFIRMED);
 
   return sendNotifications($type, $tx, $shortfall);
-
-/* /\* //  if (isPRODUCTION) r\tellAdmin('tx', compact('msg') + $args); // a backup record of all txs (until the backup server works) *\/ */
-/*   $msg = 'report tx'; */
-/*   $args = $tx->reportArgs($actor, TRUE, $shortfall); */
-/*   debug(compact(ray('msg args'))); */
-/*   $retVal = r\txRet($msg, $args + compact('msg')); */
-/*   return $retVal; */
 }
 
 // $reversing=1, actor is 553, $tx = $80 from 553 to 551
@@ -624,7 +616,6 @@ function sendNotifications($type, $tx, $shortfall) {
   
   /* global $mya; */
   /* $mya = r\acct(); */
-  /* print_r("mya=" . print_r($mya, true)); */
   /* $byMe = $mya->isMe($tx->actorId); */
   $toMe = $tx->actorAmount > 0;
 
@@ -1319,5 +1310,5 @@ function foreignKeyCheck($prefix, $ref, $field, $table, $keyFld, $keyVal) {
 }
 
 function sanityError($s) {
-  debug($s);
+  debug("Sanity error: " . $s);
 }

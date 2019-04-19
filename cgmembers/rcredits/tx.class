@@ -177,7 +177,6 @@ class Tx {
     u\EXPECT($xid, "Failed to insert transaction header record");
     foreach ($tx->entries as $entry) {
       if (empty($entry->acctTid)) {
-        /* print_r(r\acct($entry->uid)); */
         $entry->acctTid = r\acct($entry->uid)->nextTid();
       }
     }

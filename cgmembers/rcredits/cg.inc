@@ -1167,7 +1167,7 @@ X;
       SELECT AVG(conx) as $k
       FROM ( SELECT me, COUNT(DISTINCT other) AS conx, SUM(isRecentPayer) AS recentPays, u2.community
              FROM ( SELECT u0.uid AS me,
-                           IF (e0.entryType = ENTRY_PAYER AND t0.$recent, 1, 0) as isRecentPayer,
+                    IF (e0.entryType = :ENTRY_PAYER AND t0.$recent, 1, 0) as isRecentPayer,
                            e2.uid AS other 
                     FROM users u0
                          JOIN tx_entries e0 USING (uid)
@@ -1195,7 +1195,7 @@ X;
           IF (payee.uid=:CG_ROUNDUPS_UID, payee.amount, 0) AS roundups0,
           IF (payee.uid=:CG_CRUMBS_UID, payee.amount, 0) AS crumbs0
       FROM users u LEFT OUTER JOIN tx_entries payer USING(uid) JOIN tx_hdrs t USING(xid) JOIN tx_entries payee USING(xid)
-      WHERE payer.entryType=:ENTRY_PAYER AND u.:IS_OK AND t.$recent AND u.$nonCtty AND $cttyCrit
+      WHERE payer.entryType=:ENTRY_PAYER AND u.:IS_OK AND t.$recent AND u.$nonCtty AND u.$cttyCrit
     ) x LIMIT 1
 X;
     

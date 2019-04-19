@@ -64,7 +64,7 @@ function custStatement($args = []) {
   $row0 = ['purpose' => t('Opening balance')];
   $space = '';
 
-  while ($row = isset($row) ? $q->fetchAssoc() : $row0) {
+  foreach ($q as $row) {
     if (!@$classes) $classes = array_keys($row);
 //    extract(just('tid date name amount purpose reward', array_combine($classes, $row)));
     extract(just('tid created purpose invoiced paid', $row));

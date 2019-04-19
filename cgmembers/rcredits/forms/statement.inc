@@ -24,9 +24,7 @@ function statement($period = '') {
   $uids = ($mya->jid != 0) ? [ $mya->id, $mya->jid ] : [ $mya->id ];
   /* list ($header, $classes, $rows, $tot) = x\getTxRows($start, $end, ray('descending', FALSE)); // get the transaction data */
   $startBals = be\creditInfo($uids, $start);
-  /* print_r($startBals); */
   $endBals = be\creditInfo($uids, $end);
-  /* print_r($endBals); */
   /* extract(just('frombank fromyou toyou', $tot)); */
   $bal0 = $startBals['balance']; // balance BEFORE start of this period
   $bal9 = $endBals['balance'];
