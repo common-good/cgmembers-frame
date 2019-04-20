@@ -25,6 +25,8 @@ function setupBasicAccounts() {
   $keys = ray('uid community name fullName email zip country minimum flags');
   $flags = u\bit(B_CO) | u\bit(B_OK);
   
+  if (!db\exists('users', 'uid=0')) db\insert('users', ['uid' => 0]); // required for signed-out messages (w\say())
+  
   $q = db\q('SELECT :R_REGION_FLDS FROM r_regions');
   while ($row = $q->fetchAssoc()) { // create or update all regions
     extract($row);
