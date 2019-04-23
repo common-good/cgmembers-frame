@@ -99,7 +99,7 @@ function formEvents($form, &$sta, $args = '') {
     $notes = db\col('DISTINCT v.text', $table, "q.event=:eid AND b.voter=:uid AND v.text<>''", ray('uid eid', $mya->id, $eid));
     r\tellCO($mya->fullName . t(' has voted. '), $notes);
     $middle = v\done($mya);
-    if (!r\acct()) return doSay($middle, 'status');
+    if (!r\acct()) return doSay($middle, 'err');
   } elseif (@$do == 'grade') {
 //	  if (!@$question) $question = db\min('id', 'r_proposals', 'event=:eid', compact('eid'));
     $extraFields = v\showProposal($mya, -@$question, $middle, TRUE); // middle here is an error message, if anything

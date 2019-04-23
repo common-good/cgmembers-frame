@@ -35,11 +35,13 @@ X
 
   $title = t('%PROJECT Food Fund');
   $food = $amtChoice = $amount = $period = $recurId = $or = $submit = $recurs = NULL;
+  $_payExtra = t('Pay a little extra every time you pay for food or meals with %PROJECT, to help provide reliable access to healthy local food to people who can\'t afford it otherwise.');
+  $_orRegular = t('<b>OR</b> donate to the %PROJECT Food Fund directly &mdash; weekly, monthly, quarterly, or yearly.');
 
   if (isset($welcome) and !$mya) { // came here signed out (or non-member)
     $title = '<small>' . t('Welcome to the') . '<br></small>' . $title;
     $subtext = $welcomeText . t(<<< X
-      <p>Pay a little extra every time you pay for food or meals with %PROJECT, to help provide reliable access to healthy local food to people who can't afford it otherwise. OR donate to the %PROJECT Food Fund directly — weekly, monthly, quarterly, or yearly. Your contributions are tax-deductible.
+      <p>%payExtra %orRegular Your contributions are tax-deductible.
 
       <p>Sign in to your %PROJECT account and click <%aFood>Food Fund</a> or <%aSignup>click here</a> to open your free %PROJECT account now.</p>
       
@@ -47,21 +49,35 @@ X
       <p>If you are eligible for SNAP, please consider participating in our Food Fund pilot and get $20 off each month on healthy local food at Simple Gifts Farm in Amherst. Participation is limited to 10 families. There are still a few slots available. <%aSignup>Click here</a> to open a free %PROJECT account.</p>
       <p>The discount happens automatically when you pay with your %PROJECT card.</p>
 X
-    , '_aSignup _aFood', atag('/signup/food=1'), atagB('', 'warning'));
+    , '_payExtra _orRegular _aSignup _aFood', $_payExtra, $_orRegular, atag('/signup/food=1'), atagB('', 'warning'));
   } elseif ($mya and $mya->canManage) {
     $foodId = db\get('uid', 'users', "name='foodfund'");
     if ($recurs = db\get('id,period,amount', 'r_recurs', 'payer=:payer AND payee=:foodId AND ended=0', ray('payer foodId', $mya->id, $foodId))) {
       extract($recurs);
       $recurs = hidFld(serialize($recurs));
       $replaces = t('donation replaces', 'period amt', $oftens[$period], u\fmtAmt($amount));
-    } else $replaces = '';
+      $period0 = $period;
+      $amount += 0;
+      $amtChoice0 = isset($giftLevels[$amount]) ? $amount : -1;
+      $amount0 = $amtChoice0 == -1 ? $amount : '';
+    } else {
+      $replaces = '';
+      $period0 = 'M';
+      $amtChoice0 = '0';
+      $amount0 = '';
+    }
     
-    $whenActive = $mya->ok ? '' : t('when your account is activated');
+    $whenActive = $mya->ok 
+    ? (r\acct() ? '' : t('sign in at %CG_DOMAIN to')) 
+    : t('when your account is activated');
 
     $subtext = isset($welcome) ? $welcomeText : '';
-    $subtext .= t('<p>Make a tax-deductible gift of any size to the Food Fund.</p><p>Pay a little extra every time you pay for food or meals with %PROJECT, to help provide reliable access to healthy local food to people who can\'t afford it otherwise. For example, 5% here means when you buy a $10 pizza, you contribute 50 cents to the fund.</p>
-    <p><b>OR</b> donate to the %PROJECT Food Fund directly &mdash; weekly, monthly, quarterly, or yearly.</p>
-    <p>Percentage or recurring donations are better than one-time contributions, so the people we are helping can count on it. (If you prefer to make a one-time contribution, %whenActive use the "Pay" button and type "Food Fund".) %replaces</p>', compact('replaces', 'whenActive'));
+    $subtext .= t('<p>Make a tax-deductible gift of any size to the Food Fund.</p>
+    <p>%payExtra For example, 5% here means when you buy a $10 pizza, you contribute 50 cents to the fund.</p>
+    
+    <p>%orRegular %replaces</p>
+    
+    <p>Percentage or recurring donations are better than one-time contributions, so the people we are helping can count on it. (If you prefer to make a one-time contribution, %whenActive use the "Pay" button to pay "Food Fund".)</p>', compact(ray('_payExtra _orRegular replaces whenActive')));
 
     $accountId = $pass = NULL;
     $food0 = $mya->food * 100;
@@ -69,9 +85,9 @@ X
     $or = item(t('AND / OR'));
       
 //    $amtChoice = selectFld(t('Donation:'), '', required($mya->co ? R_COMPANY_GIFT : R_INDIVIDUAL_GIFT), $giftLevels);
-    $amtChoice = selectFld(t('Donation:'), '', required($mya->food), $giftLevels);
-    $amount = textFld(t('Other amount $'), '');
-    $period = selectFld(t('How often:'), '', required('M'), $oftens);
+    $amtChoice = selectFld(t('Donation:'), '', dft($amtChoice0), $giftLevels);
+    $amount = textFld(t('Other amount $'), '', dft($amount0));
+    $period = selectFld(t('How often:'), '', dft($period0), $oftens);
     $submit = submit();
   } else {$subtext = t('You do not have permission to use this page.');}
   
@@ -93,13 +109,20 @@ function formFood_submit($form, &$sta) {
   extract($info = just('food amount period recurs', $sta['input']));
   
   $food /= 100;
-  $mya->update(compact('food'));
+  $pctGift = t('Your percentage contribution to the Food Fund');
+  if ($food - $mya->food) {
+    $mya->update(compact('food'));
+    say(t('%pctGift is now %food.', 'pctGift food', $pctGift, u\fmtAmt($food, '%')));
+  } elseif ($food) {say(t('%pctGift is unchanged.', compact('pctGift')));}
   
   if (@$recurs) {
     extract(just('id period amount', unserialize($recurs)), EXTR_PREFIX_ALL, 'x');
     if ($x_period != $period or $x_amount != $amount) {
       db\update('r_recurs', ray('id ended', $x_id, NOW), 'id');
       say(t('Your previous recurring contribution has been canceled.'));
+    } else {
+      $amount = 0;
+      say(t('Your recurring contribution is unchanged.'));
     }
 	}
 
@@ -115,5 +138,6 @@ function formFood_submit($form, &$sta) {
   }
   if ($mya->ok) r\tellCo(t('Food Fund gift'), $info);
 
-  return r\acct() ? w\goNextStep('food', '') : w\doSay('');
+  say(t('Thank you for supporting the Food Fund.'));
+  return r\acct() ? ($mya->member ? w\go('') : w\goNextStep('food', '')) : w\doSay();
 }
