@@ -5,7 +5,7 @@
  * (SMS, web, smartphone, etc.)
  */
 
-define('R_VERSION', '3.43a'); // software version
+define('R_VERSION', '3.43b'); // software version
 
 // definitions used in settings file
 define('US_COUNTRY_ID', 1228); // United States
@@ -82,8 +82,6 @@ define('RCREDITS', t('Common Good credit')); // don't use %PROJECT here
 define('BANK_DBA', PROJECT);
 define('PROJECT_ID', str_replace(' ', '', strtolower(PROJECT)));
 define('PROJECT_LOGO', 'logo80.png');
-
-define('GAME_SITE', 'game.' . CG_DOMAIN);
 
 define('SCRIPTS_TOP', 'x/jquery-3.3.1.min x/jquery.once x/jquery-ui.min x/bootstrap.min x/spin.min x/ladda.min x/ie10-viewport-bug-workaround x/jquery.confirm.min x/alert');
 //define('SCRIPTS', 'form goo-jsapi misc charts chart-data download croppic crop-setup ballot x/bootstrap.slider.min countries print-country focus-on x/typeahead.bundle.min suggest-who on-submit chimp followup-email get-ssn change-ctty advanced-dates advanced-prefs bank-prefs which funding-criteria signup prejoint invite-link gift drupal user extend-settings'); // all possible scripts, in order (after SCRIPTS_TOP)

@@ -516,7 +516,7 @@ body.logged-in.one-sidebar #content {width:100%;}
 #frm-summary .admin .form-checkboxes {width:500px; max-width:500px;}
 #frm-summary #edit-notes .control-data {width:450px; max-height:150px; overflow-x:hidden; overflow-y:scroll; overflow-wrap:break-word}
 #frm-summary #edit-tickle {max-width:120px; display:inline-block;}
-#frm-summary #edit-photo img {max-width:100px;}
+#frm-summary #edit-photo img {max-width:100px; margin-top:-20px;}
 #frm-summary #edit-creditlimit .help-block,
 #frm-summary #edit-committed .help-block,
 #frm-summary #edit-balance .help-block,
