@@ -85,11 +85,6 @@ function txRisk1($xid, &$risk = 0, &$calc = 0) {
   global $_xid; $_xid = $xid; // for debugging
   u\EXPECT(!is_array($xid), "xid is array");
   $reverser = db\get('r.xid AS reverser', 'tx_hdrs t LEFT JOIN tx_hdrs r ON r.reversesXid=t.xid', 't.xid=:xid', ['xid'=>$xid]);
-  /* u\EXPECT(is_array($result), "transaction not found: $xid"); */
-  /* extract(u\exactly('reverser', $result, 0, null)); */
-  /* $cttyPayer = ($payer < 0); */
-  /* if ($neg = ($amount < 0)) list ($payer, $payee, $amount) = array($payee, $payer, -$amount); */
-  /* list ($a1, $a2) = array(r\acct($payer), r\acct($payee)); */
   if (!isset($risks)) $risks = 0;
   
   if ($risks & u\bit(K_ADMINOK)) setRisk('txAdminOk'); // administrator blessed this transaction
@@ -104,8 +99,7 @@ EOF;
     tx_hdrs t JOIN tx_entries payerE USING(xid) JOIN tx_entries payeeE USING(xid)
     JOIN users payer ON payerE.uid=payer.uid JOIN users payee ON payeeE.uid=payee.uid
 EOF;
-  $where = "xid=:xid AND payerE.id<payeeE.id AND payerE.amount<0 AND payeeE.amount>0
-";
+  $where = "xid=:xid AND payerE.entryType=:ENTRY_PAYER AND payerE.entryType=:ENTRY_PAYEE"; // AND payeeE.amount>0
   $rows = db\rows($fields, $table, $where, ['xid'=>$xid]);
   foreach ($rows AS $row) {
     extract(u\exactly('payerId payeeId amount payeeIsCo payerIsCo payeeFor payerFor offline goods created channel', $row, null));
@@ -115,9 +109,9 @@ EOF;
     $payeeA = r\acct($payeeId);
 
     if ($payerId < 0) continue; // most transfers to/from the community should be ignored
-    if ($goods == FOR_USD) {
-      if ($payeeIsCo) {
-        setRisk(($channel == TX_POS and r\usdin($payeeFor)) ? (/*@$xfee ? 'bankIn' :*/ 'cashIn') : 'cashOut');
+    if ($goods != FOR_GOODS) {
+      if ($amount < 0 ? $payerIsCo : $payeeIsCo) {
+        setRisk($amount < 0 and ($channel == TX_POS and r\usdin($payeeFor)) ? 'cashIn' : 'cashOut');
       } else {
         setRisk('exchange');
       }
@@ -132,7 +126,7 @@ EOF;
 
     $since = $created - WEEK7_SECS; // just recent activity by customers, in case many are new
     $count = db\count('tx_hdrs JOIN tx_entries payer USING(xid) JOIN tx_entries payee USING(xid)',
-                      'payer.amount < 0 AND payee.amount > 0 AND payer.id < payee.id AND payer.uid=:payer AND payee.uid=:payee AND created BETWEEN :since AND :created', ray('payer payee since created', $payerId, $payeeId, $since, $created));
+                      'payer.entryType=:ENTRY_PAYER and payee.entryType=:ENTRY_PAYEE AND payer.uid=:payer AND payee.uid=:payee AND created BETWEEN :since AND :created', ray('payer payee since created', $payerId, $payeeId, $since, $created));
     setBigToFrom('From', 'payer', $payerId, $amount, $created, $count);
     setBigToFrom('To', 'payee', $payeeId, $amount, $created, $count);
 
@@ -265,9 +259,9 @@ function setBigRisk($uid, $ago, $thresholds, $bitName) {
     SELECT COUNT(*) AS count0, 
       SUM(IF(:DEPOSIT_SQL,amount,0)) AS `in`, 
       SUM(IF(:DEPOSIT_SQL,0,-amount)) AS `out`
-    FROM ( SELECT txid, amount, created FROM r_usd 
+    FROM ( /*SELECT txid, amount, created FROM r_usd 
            WHERE payee=:uid AND completed>=created AND amount<>0
-           UNION ALL
+           UNION ALL*/
            SELECT 0 AS txid, amount, created
            FROM tx_entries e JOIN tx_hdrs t USING(xid) 
            WHERE e.uid=:uid ) t 
@@ -318,9 +312,9 @@ function setBigToFrom($way, $field, $uid, $amount, $created, $count) {
   
   $subtotals =<<<EOF
     SELECT AVG(ABS(amount)) as avg0, MAX(ABS(amount)) AS max0, COUNT(*) AS count0 
-    FROM tx_entries e JOIN tx_hdrs t USING(xid)
-    WHERE e.uid=:uid AND t.created>:since 
-    GROUP BY e.uid
+    FROM tx_entries payer JOIN tx_hdrs t USING(xid) JOIN tx_entries payee USING(xid)
+    WHERE payer.entryType=:ENTRY_PAYER AND payee.entryType=:ENTRY_PAYEE AND payer.uid>0 AND IF(payee.amount<0,$other,$field)=:uid AND t.created>:since 
+    GROUP BY IF (amount<0,$other,$field).uid
 EOF;
   $sql = <<< EOF
     SELECT SUM(IF(:amount<avg0, 1, 0)) AS less, 

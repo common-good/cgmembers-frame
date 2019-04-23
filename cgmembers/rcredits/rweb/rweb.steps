@@ -559,7 +559,6 @@ function relations($relations) {return t\relations($relations);}
  *     TEST coupons AMemberRedeemsADiscountCouponForADollarAmount
  *     TEST download Setup
  *     MAKE flow Setup
- *     MAKE food Setup
  *     MAKE gift Setup
  *     TEST invoice Setup
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
