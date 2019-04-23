@@ -34,15 +34,15 @@ function rdo($code, $args = '') {
 /**/	u\log(print_r(compact(ray('code args')), 1));
   global $channel;
   if (isDEV) foreach (['error', 'status'] as $k) @unlink(f('t.dosayFilename', $k)); // clear tests (no way to see if testing)
-  if (strpos($code, ' ')) return doSay(plain($code));
+  if (strpos($code, ' ')) return doSay(plain($code), 'err');
   if ($i = strpos($code, '~') and $i < 15) { // mailChimp-type action
     @list ($op, $qid, $ecode, $mo, $v) = explode('~', $code . '~~~~~~');
 /**/		u\log(print_r(compact(ray('op qid ecode mo v code')), 1));
-    if (!@$op or !@$qid or !@$a = r\acct($qid) or @$ecode != $a->emailCode) return doSay(t('That is not a valid link.'));
+    if (!@$op or !@$qid or !@$a = r\acct($qid) or @$ecode != $a->emailCode) return doSay(t('That is not a valid link.'), 'err');
   } else {
-    if (!$info = r\doCode($code)) return doSay(t('That link is archaic.'));
+    if (!$info = r\doCode($code)) return doSay(t('That link is archaic.'), 'err');
     if ($once = is_numeric($doid = @$info['op'])) {
-      if (!$row = db\get('uid,data,expires', 'r_do', 'doid=:doid', compact('doid'))) return doSay(t('That link is no longer valid.')); // already used OR deleted because it expired
+      if (!$row = db\get('uid,data,expires', 'r_do', 'doid=:doid', compact('doid'))) return doSay(t('That link is no longer valid.'), 'err'); // already used OR deleted because it expired
       extract($row);
       $info = unserialize($data) + $row; // get new op, etc.
       $a = r\acct($uid);
@@ -52,7 +52,7 @@ function rdo($code, $args = '') {
   
   if (@$mo) $expires = (r\rdoMonth() > $mo + 3) ? 1 : FALSE; // finagle expiration if link is older than 3 months
 
-  if (@$expires and r\rTime() >= $expires) return doSay('link expired');
+  if (@$expires and r\rTime() >= $expires) return doSay('link expired', 'err');
 
   $channel = TX_LINK;
   
@@ -71,25 +71,24 @@ function rdo($code, $args = '') {
     $a = r\acct($v);
     $phone = $a->co ? t('Phone: ') . u\fmtPhone($a->phone) : '';
     $addr = t('Physical address: ') . r\location($a, TRUE);
-    return doSay(tr('%nm<br>%postal<br>%addr<br>%phone<br>', 'nm postal addr phone', $a->fullName, $a->postalAddr, $addr, $phone), 'ok');
+    return doSay(tr('%nm<br>%postal<br>%addr<br>%phone<br>', 'nm postal addr phone', $a->fullName, $a->postalAddr, $addr, $phone));
   } 
   
   if ($op == 'inv') {
-    $inv = db\get('*', 'r_invoices', 'nvid=:v', compact('v'));
-    $err = r\badUnpaidInv($inv);
-    if ($err) return doSay($err);
+    $err = r\badUnpaidInv($v);
+    if ($err) return doSay($err, 'err');
     return w\go("/handle-invoice/nvid=$v&toMe=1&code=$code");
   } 
   
   if ($op == 'confirmInvite') {
     $a = r\acct($v);
     $a->setBit(B_CONFIRMED);
-    return doSay(t('Your invitation to %nm is confirmed!', 'nm', $a->fullName), 'ok');
+    return doSay(t('Your invitation to %nm is confirmed!', 'nm', $a->fullName));
   }
   
   if ($op == 'vote' or $op == 'yesno') { // NOTE: about a third of the time, $_POST comes in empty (even from the same computer)
     $issue = $v;
-    if ($issue != '20141220') return doSay('link expired');
+    if ($issue != '20141220') return doSay('link expired', 'err');
 //    $vote = 0;
 //    foreach (ray('wl sl wd ed no') as $k => $vv) $vote |= u\setBit($vote, $k, isset($_POST[$vv]));
     extract(just('yes no', $args));
@@ -116,9 +115,9 @@ function rdo($code, $args = '') {
     }
   }
 
-  if (!@$res) return doSay(t('Request failed.'));
+  if (!@$res) return doSay(t('Request failed.'), 'err');
   if ($once) db\q('DELETE FROM r_do WHERE doid=:doid', compact('doid'));
 
-  return doSay(@$say . t('Your request was successfully completed.'), 'ok');
+  return doSay(@$say . t('Your request was successfully completed.'));
 }
 

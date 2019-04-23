@@ -62,7 +62,6 @@ function formDonate_validate($form, &$sta) {
 }
 
 function formDonate_submit($form, &$sta) {
-  include_once R_ROOT . '/rcron/rcron-subs.inc';
   $mya = w\eLinkAcct($sta); 
 
   extract(just('amount period honor honored roundup recurId', $sta['input']));
@@ -85,5 +84,5 @@ function formDonate_submit($form, &$sta) {
   }
   if ($mya->ok) r\tellCo('gift', $info);
 
-  return r\acct() ? w\goNextStep('donate', '') : w\doSay('');
+  return r\acct() ? w\goNextStep('donate', '') : w\doSay();
 }

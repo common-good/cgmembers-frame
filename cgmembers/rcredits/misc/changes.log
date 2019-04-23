@@ -1,3 +1,7 @@
+2019-04-20 feature/food-fund-better
+. improvements to food fund page
+. users record uid=0 is created by testing, if it doesn't exist
+
 2019-04-17 feature/food-fund-and-bug-fixes
 . created anonymize for removing personal data from test server
 . fixed bug that left user signed in directly to company account (no agent) upon opening the new company account

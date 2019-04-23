@@ -38,5 +38,5 @@ function formSsn_submit($form, &$sta) {
   if ($same = ($mya->$field == $$field)) $mya->setRisk($field == 'dob' ? 'dobOff' : 'ssnOff');
   $mya->update(compact($field));
 //  r\tellAdmin('new ' . $field, ray('uid same', $mya->id, $same ? t('Yes') : t('No')));
-  return r\acct() ? w\goNextStep('ssn') : doSay(t('info saved|setup complete'), 'ok'); // r\acct not $mya!
+  return r\acct() ? w\goNextStep('ssn') : doSay(t('info saved|setup complete')); // r\acct not $mya!
 }

@@ -1875,10 +1875,11 @@ function whois($who, $field_name, $info, $selfMsg = 'no self-trading', $paying =
 /**
  * Output the No-signin result message and terminate.
  * @param string $msg: the message or message index
+ * @param string $err: 'err' or ''
  */
-function doSay($msg, $ok = FALSE) {
-  if (isDEV) @file_put_contents(f('t.dosayFilename', $ok ? 'status' : 'error'), $msg); // no way to know if actually testing
-  return w\go('empty/say=1', $msg, !$ok);
+function doSay($msg = '', $err = '') {
+  if (isDEV) @file_put_contents(f('t.dosayFilename', $err ? 'error' : 'status'), $msg); // no way to know if actually testing
+  return w\go('empty/say=1', $msg, $err);
 }
 
 /**

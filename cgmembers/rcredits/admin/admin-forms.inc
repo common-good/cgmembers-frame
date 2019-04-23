@@ -519,7 +519,7 @@ function formDownloadMemberList($form, &$sta, $args = '') {
     $params = http_build_query(compact(ray(EXPORT_PARAMS)));
 ///    return w\go("$base_url/sadmin/export-list/$params"); // debug(
     $download = item("<iframe src=\"$base_url/sadmin/export-list/$params\" class=\"hidden\"></iframe>");
-  }
+  } else {$download = NULL;}
   
   global $mya;
   $cttyA = $mya->cttyA;
@@ -552,6 +552,7 @@ return cgform(compact(ray('title subtext chimp chimpSet submit download')));
 function formDownloadMemberList_submit($form, &$sta) {
   extract(just(EXPORT_PARAMS, $sta['input']));
   $do = 'done';
+  u\setDft($anonymous, FALSE); // for a checkbox, unchecked results in not set
   return w\go('sadmin/export-list/' . http_build_query(compact(ray(EXPORT_PARAMS))), t('Download initiated.'));
 }
 
