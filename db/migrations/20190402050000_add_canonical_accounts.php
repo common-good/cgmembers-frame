@@ -23,7 +23,7 @@ class AddCanonicalAccounts extends AbstractMigration {
                 'email'=>'cg@commongood.earth', 'zip'=>'', 'country'=>0, 'minimum'=>0, 'flags'=>6])
       ->insert(['uid'=>CG_SERVICE_CHARGES_UID, 'community'=>0, 'name'=>'service charges', 'fullName'=>'Service Charges',
                 'email'=>'cg@commongood.earth', 'zip'=>'', 'country'=>0, 'minimum'=>0, 'flags'=>6])
-      ->insert(['uid'=>CG_INCOMING_BANK_UID, 'community'=>0, 'name'=>'bank-in', 'fullName'=>'--'),
+      ->insert(['uid'=>CG_INCOMING_BANK_UID, 'community'=>0, 'name'=>'bank-in', 'fullName'=>'--',
                 'email'=>'cg@commongood.earth', 'zip'=>'', 'country'=>0, 'minimum'=>0, 'flags'=>6]) 
       ->insert(['uid'=>CG_OUTGOING_BANK_UID, 'community'=>0, 'name'=>'bank-out', 'fullName'=>'--',
                 'email'=>'cg@commongood.earth', 'zip'=>'', 'country'=>0, 'minimum'=>0, 'flags'=>6])
