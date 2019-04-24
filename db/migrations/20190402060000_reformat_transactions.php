@@ -3,52 +3,52 @@
 
 use Phinx\Migration\AbstractMigration;
 
-/* **************************************************************************************************
- * The following lines are taken from cgmembers/rcredits/defs.inc as of the time this migration
- * was created.
- */
-// Transaction flags (for flags field in transaction records)
-define('B_TAKING', 0); // payee initiated the transaction
-define('B_DISPUTED', 1); // non-originator disputes the transaction -- signaled by existence of tx_disputes (NOT LEGAL FOR TRANSACTIONS, BUT STILL USED BY INVOICES
-define('B_OFFLINE', 2); // transaction was taken offline (or was forced?)
-define('B_SHORT', 3); // transaction was taken (offline) despite credit shortfall
-define('OLD_B_UNDONE', 4); // undone by another transaction -- signaled by existence of reversing transaction
-define('OLD_B_UNDOES', 5); // undoes another transaction -- signaled by reversesXid not null
-define('B_CRUMBS', 6); // monthly donation of percentage of receipts
-define('OLD_B_ROUNDUPS', 7); // monthly donation of rounded up cents -- no longer occurs
-// B_ROUNDUP is 8 (defined above) // payer donated the change to the community fund -- not used here, 
-define('B_RECURS', 9); // recurring transaction
-define('B_GIFT', 10); // grant or gift (of any type)
-define('B_LOAN', 11); // community loan (UNUSED?)
-define('B_INVESTMENT', 12); // community investment (UNUSED?) or investment club investment
-define('B_STAKE', 13); // member buying or selling stake in investment club
-define('B_FINE', 14); // community fine (UNUSED?)
-define('B_NOASK', 15); // transaction was taken with ID checking OFF
-define('B_FUNDING', 16); // invoice has already instigated an appropriate bank transfer request
-define('B_FOOD', 17); // contribution to food fund
-define('TX_FLAGS', 'offline short crumbs recurs gift loan investment stake fine noask funding food');
 
-// Transaction types
-define('TX_TRANSFER', 0); // normal fund transfer (usually for actual goods and services) -- not creating rC
-define('OLD_TX_XFEE', 10);
-define('TX_BANK', 99); // used only internally, to mark bank transfers
+class ReformatTransactions extends AbstractMigration {
+  /* **************************************************************************************************
+   * The following lines are taken from cgmembers/rcredits/defs.inc as of the time this migration
+   * was created.
+   */
+  // Transaction flags (for flags field in transaction records)
+  const B_TAKING = 0; // payee initiated the transaction
+  const B_DISPUTED = 1; // non-originator disputes the transaction -- signaled by existence of tx_disputes (NOT LEGAL FOR TRANSACTIONS, BUT STILL USED BY INVOICES
+  const B_OFFLINE = 2; // transaction was taken offline (or was forced?)
+  const B_SHORT = 3; // transaction was taken (offline) despite credit shortfall
+  const OLD_B_UNDONE = 4; // undone by another transaction -- signaled by existence of reversing transaction
+  const OLD_B_UNDOES = 5; // undoes another transaction -- signaled by reversesXid not null
+  const B_CRUMBS = 6; // monthly donation of percentage of receipts
+  const OLD_B_ROUNDUPS = 7; // monthly donation of rounded up cents -- no longer occurs
+  // B_ROUNDUP is 8 (const bove) // payer donated the change to the community fund -- not used here, 
+  const B_RECURS = 9; // recurring transaction
+  const B_GIFT = 10; // grant or gift (of any type)
+  const B_LOAN = 11; // community loan (UNUSED?)
+  const B_INVESTMENT = 12; // community investment (UNUSED?) or investment club investment
+  const B_STAKE = 13; // member buying or selling stake in investment club
+  const B_FINE = 14; // community fine (UNUSED?)
+  const B_NOASK = 15; // transaction was taken with ID checking OFF
+  const B_FUNDING = 16; // invoice has already instigated an appropriate bank transfer request
+  const B_FOOD = 17; // contribution to food fund
+  const TX_FLAGS = 'offline short crumbs recurs gift loan investment stake fine noask funding food';
 
-define('DS_OPEN', 1);  // dispute not resolved
-define('DS_ACCEPTED', 2);  // dispute accepted and transaction reversed
-define('DS_DENIED', 3);  // dispute denied
+  // Transaction types
+  const TX_TRANSFER = 0; // normal fund transfer (usually for actual goods and services) -- not creating rC
+  const OLD_TX_XFEE = 10;
+  const TX_BANK = 99; // used only internally, to mark bank transfers
+
+  const DS_OPEN = 1;  // dispute not resolved
+  const DS_ACCEPTED = 2;  // dispute accepted and transaction reversed
+  const DS_DENIED = 3;  // dispute denied
 
 
-define('ENTRY_OTHER', 0);
-define('ENTRY_PAYER', 1);  // the uid in this entry is for the payer
-define('ENTRY_PAYEE', 2);  // the uid in this entry is for the payee
-define('ENTRY_DONATION', 3);  // this is a transaction-related donation (e.g., roundup donations)
-                              // the precise nature can be determined from the uid
+  const ENTRY_OTHER = 0;
+  const ENTRY_PAYER = 1;  // the uid in this entry is for the payer
+  const ENTRY_PAYEE = 2;  // the uid in this entry is for the payee
+  const ENTRY_DONATION = 3;  // this is a transaction-related donation (e.g., roundup donations)
+  // the precise nature can be determined from the uid
 
-/* This ends the section of lines taken from cgmembers/rcredits/defs.inc 
- * *************************************************************************************************/
-
-class ReformatTransactions extends AbstractMigration
-{
+  /* This ends the section of lines taken from cgmembers/rcredits/defs.inc 
+   * *************************************************************************************************/
+  
   /**
    * Up method.Change Method.
    *
@@ -373,7 +373,7 @@ class ReformatTransactions extends AbstractMigration
       if (($flags & ~$flagsMask) != 0) {
         $hexFlags = dechex($flags);
         print("NOT HANDLED: flags is $hexFlags on $xid\n");
-	print_r($data);
+        print_r($data);
       }
 
       if ($data != []) {
