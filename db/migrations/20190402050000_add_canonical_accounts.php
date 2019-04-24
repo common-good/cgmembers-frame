@@ -2,7 +2,16 @@
 
 
 use Phinx\Migration\AbstractMigration;
-require_once 'cgmembers/rcredits/defs.inc';
+
+define('CG_ADMIN_UID', 1);  // uid of administrator account
+define('PLACEHOLDER_1_UID', 2);  // uid of first placeholder
+define('PLACEHOLDER_2_UID', 3);  // uid of second placeholder
+define('CG_ROUNDUPS_UID', 129);  // Donations start at 128 (128 used for general donations)
+define('CG_CRUMBS_UID', 130);  //
+define('CG_SERVICE_CHARGES_UID', 192);
+define('CG_INCOMING_BANK_UID', 256);  // Bank accounts start at 256
+define('CG_OUTGOING_BANK_UID', 257);  //
+
 
 class AddCanonicalAccounts extends AbstractMigration
 {

@@ -4,8 +4,7 @@
 use Phinx\Migration\AbstractMigration;
 use Phinx\Db\Adapter\MysqlAdapter;
 
-require_once 'cgmembers/rcredits/bootstrap.inc';
-require_once 'cgmembers/rcredits/defs.inc';
+define('DS_OPEN', 1);
 
 class CreateTableTxDisputesAll extends AbstractMigration
 {
