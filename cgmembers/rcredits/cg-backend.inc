@@ -1310,5 +1310,5 @@ function foreignKeyCheck($prefix, $ref, $field, $table, $keyFld, $keyVal) {
 }
 
 function sanityError($s) {
-  debug("Sanity error: " . $s);
+  say("Sanity error: " . $s, 'err');
 }

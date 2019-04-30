@@ -993,6 +993,15 @@ function deleteAccount($uid) {
   return w\go('/sadmin/followup');
 }
 
+/**
+ * Check database sanity.
+ */
+function checkSanity() {
+  be\checkSanity();
+  say('Sanity check complete');
+  return w\go('sadmin');
+}
+
 function util($arg) {
   switch ($arg) {
   /* case 'modal': */
@@ -1018,9 +1027,6 @@ function util($arg) {
   case 'php':
     w\go('devel/php');
     break;
-  case 'check-sanity':
-    be\checkSanity();
-    break;
   default:
     break;
   }
@@ -1037,7 +1043,6 @@ function handyLinks() {
                  'rcredits/util/reset-menu|Rebuild menu based on hook_menu() and revert any custom changes. All menu items return to their default settings.|Redo MENUS|menu-hamburger',
                  'rcredits/util/remove-test-data|Remove test data|REMOVE test data|fast-backward',
                  'rcredits/util/clear|Empty the cache and sessions tables|Clear Cache & Sessions|unchecked',
-                 'rcredits/util/check-sanity|Check the consistency of the database (incomplete)|Check Sanity|menu-hamburger',
                  );
 
   /*    'devel/settings|Helper functions, pages, and blocks to assist Drupal developers. The devel blocks can be managed via the block administration page.|Devel settings|cog',
