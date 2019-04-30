@@ -518,7 +518,7 @@ function EXPECT($assertion, $message = '', $ret = FALSE) {
 ///    EXPECT(compact(ray('args types')), 'assoc string'); // can't do this because infinite recursion
 ///    EXPECT(count($args) != count($types = explode(' ', $types)), 'wrong number of types expected'); // infinite recursion
     $vs = explode(' ', $types);
-/**/ if (isDEV and count($args) != count($vs)) debug(debug_backtrace());
+/**/ if (isDEV and count($args) != count($vs)) die(print_r(debug_backtrace(), 1));
     $types = array_combine(array_keys($args), $vs); // not ray() here, $types may have '|'
     foreach ($args as $key => $value) if ($error = expect1($key, $value, $types[$key], $ret)) return $error;
   } elseif (!$assertion) {

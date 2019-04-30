@@ -17,7 +17,7 @@ use CG\Web as w;
 global $base_path;
 define('BASE_PATH', $base_path);
 define('T_BALANCE_FLDS', 'uid balance floor savingsAdd saveWeekly minimum');
-define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account');
+define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account clubid');
 
 /**
  * Allow mnemonic and abbreviated data in test scenario columns.
@@ -64,6 +64,13 @@ function fixData(&$info, $direct = FALSE) {
   $info = @compact(ray($fields)) + $info;
 }
 
+/**
+ * Say whether the given variable is set correctly OR set it.
+ */
+function varIs($k, $v) {
+  global $testOnly;
+  return ($v == ($testOnly ? getv($k) : setv($k, $v)));
+}
 /**
  * Interpret flag names
  */
@@ -266,6 +273,9 @@ function doTx($info, $thing) {
 
   if ($inv) {
     if (!$testOnly) u\setDft($goods, u\forCash(@$for) ? FOR_USD : FOR_GOODS);
+    if (isset($status)) {
+      if (!is_numeric($status)) $status = u\consta('tx', $status);
+    } else $status = TX_PENDING;
   } else {
     $data = [];
     if (!$testOnly) u\setDft($risk, NULL); // indicates that risk has not been calculated yet
@@ -300,7 +310,7 @@ function doTx($info, $thing) {
   }
   
 //  $fields = 'xid payer payee amount payerReward payeeReward type goods flags data risk risks';
-  $fields = 'xid payer payee amount type goods flags data risk risks';
+  $fields = 'xid payer payee amount status type goods flags data risk risks';
   if (!$testOnly) $fields .= $inv ? ' created' : ' created channel'; // when creating, add these if not already explicit
   if (!$inv) $fields .= ' payerAgent payeeAgent';
   
@@ -1119,13 +1129,13 @@ function postLogout($function) {
 }
 
 /**
- * Assign a name to a variable that can be used in tests using the "%varable" pseudo-Gherkin syntax.
+ * Assign a name to a test variable that can be used in tests using the "%varable" pseudo-Gherkin syntax.
  * @param string $varName: variable name
  * @param string $index: a string or a message index
  * @param assoc $subs: substitutions (if any)
  * @return TRUE
  */
-function varIs($varName, $index, $subs = []) {
+function tvarIs($varName, $index, $subs = []) {
   global $testOnly; if ($testOnly) return FALSE;
   global $testVars;
   $testVars[$varName] = t($index, $subs[0]);

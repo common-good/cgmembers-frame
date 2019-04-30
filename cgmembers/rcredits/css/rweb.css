@@ -441,6 +441,9 @@ body.logged-in.one-sidebar #content {width:100%;}
 #frm-followup #memberlist th.hd-ctty,
 #frm-followup #memberlist th.hd-phone {width:95px;}
 
+/* Admin Variables */
+#frm-variables td {max-width:700px;}
+
 /* Member List */
 #memberlist .name a {font-weight:bold;}
 #memberlist .co a {color:darkred;}
@@ -978,6 +981,26 @@ div.password-confirm .error {font-weight:bold; color:red;}
 #frm-backing #edit-amtchoice,
 #frm-backing #edit-amount,
 #frm-backing #edit-signedby {max-width:200px; display:inline-block;}
+
+/* Balance Sheet */
+#frm-balancesheet .control-label {text-align:left; padding:0 0 0 35px; width:300px; font-weight:normal;}
+#frm-balancesheet .form-group {margin-bottom:0;}
+#frm-balancesheet .control-data {width:100px; text-align:right; padding:0;}
+#frm-balancesheet #edit-title .control-data,
+#frm-balancesheet #edit-subtext .control-data {width:auto; text-align:left;}
+#frm-balancesheet #edit-title .control-label,
+#frm-balancesheet #edit-subtext .control-label {width:0; min-width:0;}
+#frm-balancesheet .form-item-assetLabel label,
+#frm-balancesheet .form-item-liabilityLabel label,
+#frm-balancesheet #edit-netAssets {font-size:110%; margin-top:20px; font-weight:bold;}
+#frm-balancesheet #edit-netAssets,
+#frm-balancesheet #edit-assetTotal,
+#frm-balancesheet #edit-liabilityTotal,
+#frm-balancesheet #edit-assetTotal label,
+#frm-balancesheet #edit-liabilityTotal label,
+#frm-balancesheet #edit-netAssets label {font-size:100%; font-weight:bold;}
+#frm-balancesheet #edit-assetTotal .control-data,
+#frm-balancesheet #edit-liabilityTotal .control-data {border-top:solid black 1px;}
 
 /* Community Funds */
 #cttyFunds {width:100%;}

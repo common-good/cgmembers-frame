@@ -175,6 +175,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *
  * in: MAKE backing Setup
  *     TEST backing AMemberChangesBackingAmount
+ *     MAKE balancesheet Setup
  *     MAKE bank Setup
  *     MAKE community Setup
  *     MAKE company Setup
@@ -230,6 +231,7 @@ function members($list) {return t\members($list);}
  *
  * in: MAKE backing Setup
  *     MAKE backing AMemberChangesBackingAmount
+ *     MAKE balancesheet Setup
  *     MAKE bank Setup
  *     MAKE community Setup
  *     MAKE custstatement Setup
@@ -425,6 +427,7 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
  * we show (ARG) with: (ARG)
  *
  * in: TEST backing AMemberVisitsTheBackingPage
+ *     TEST balancesheet AMemberLooksAtTheBalanceSheet
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST community CronCalculatesTheStatistics
  *     TEST company AMemberVisitsTheCompanyInfoPage
@@ -530,7 +533,8 @@ function withoutOptions($options) {
 /**
  * relations: (ARG)
  *
- * in: MAKE bank Setup
+ * in: MAKE balancesheet Setup
+ *     MAKE bank Setup
  *     MAKE community Setup
  *     MAKE company Setup
  *     MAKE custstatement Setup
@@ -572,7 +576,8 @@ function relations($relations) {return t\relations($relations);}
 /**
  * balances: (ARG)
  *
- * in: TEST bank Setup
+ * in: TEST balancesheet Setup
+ *     TEST bank Setup
  *     TEST bank AMemberMovesCreditToTheBank
  *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
  *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
@@ -618,6 +623,7 @@ function usd($list) {return t\usd($list);}
  * member (ARG) visits page (ARG)
  *
  * in: MAKE backing AMemberVisitsTheBackingPage
+ *     MAKE balancesheet AMemberLooksAtTheBalanceSheet
  *     MAKE community CronCalculatesTheStatistics
  *     MAKE company AMemberVisitsTheCompanyInfoPage
  *     MAKE contact AMemberVisitsTheContactInfoPage
@@ -887,7 +893,8 @@ function withDownloadColumns($columns) {
 /**
  * usd transfers: (ARG)
  *
- * in: MAKE bank Setup
+ * in: MAKE balancesheet Setup
+ *     MAKE bank Setup
  *     TEST bank AMemberMovesCreditToTheBank
  *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
  *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
@@ -1056,7 +1063,8 @@ function devices($list) {return t\devices($list);}
 /**
  * invoices: (ARG)
  *
- * in: MAKE custstatement Setup
+ * in: MAKE balancesheet Setup
+ *     MAKE custstatement Setup
  *     MAKE download Setup
  *     TEST gift AMemberDonatesWithInsufficientFunds
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
@@ -1447,7 +1455,8 @@ function weScripWithSubs($script, $args = []) {
 /**
  * these (ARG): (ARG)
  *
- * in: TEST food AMemberVisitsTheFoodPage
+ * in: MAKE balancesheet Setup
+ *     TEST food AMemberVisitsTheFoodPage
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
  *     BOTH gift AMemberMakesANewRecurringDonation
@@ -1495,3 +1504,10 @@ function withChoices($choices) {
  * in: MAKE showrecurs Setup
  */
 function recurs($list) {return t\recurs($list);}
+
+/**
+ * variable (ARG) is (ARG)
+ *
+ * in: MAKE balancesheet AMemberLooksAtTheBalanceSheet
+ */
+function variableIs($k, $v) {return t\varIs($k, $v);}

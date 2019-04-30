@@ -17,7 +17,6 @@ use CG\Util as u;
  * @param numeric $calc: (RETURNED) the original calculated risk
  */ 
 function acctRisk1($uid, $thresholds, &$risk = 0, &$calc = 0) {
-
   global $_risk; $_risk = '';
   
   $a = r\acct($uid);
@@ -232,7 +231,7 @@ function setBigRisk($uid, $ago, $thresholds, $bitName) {
   
   $threshold = $thresholds[$bitName];
   $now = r\rTime();
-  $since = $now - $ago - 2 * HOUR_SECS; // an extra couple hours to handle daylight time changes and cron timing
+  $since = $now - $ago; // was - 2 * HOUR_SECS -- an extra couple hours to handle daylight time changes and cron timing
   $mySql =<<<EOF
     SELECT COUNT(*) AS count0, 
       SUM(IF(:DEPOSIT_SQL,amount,0)) AS `in`, 
@@ -248,7 +247,7 @@ EOF;
   $a = r\acct($uid);
   $max = max($in, $out) / max(1, $a->employees);
   if ($max > $threshold) setRisk($bitName);
-  if (@$newThresholds) $newThresholds[$bitName][] = $max; // collect data for next time (see cr\acctRisk)
+  if (isset($newThresholds)) $newThresholds[$bitName][] = $max; // collect data for next time (see cr\acctRisk)
 //  if (max($in, $out) > $threshold * max(1, $a->employees)) setRisk($bitName);
   if ($ago == YEAR_SECS) list ($bigYearIn, $bigYearOut) = [$in, $out];
   if ($ago == WEEK7_SECS) {

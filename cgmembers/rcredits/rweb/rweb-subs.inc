@@ -801,10 +801,12 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
   setAcct(); // in case it's an anonymous form, so webAccess doesn't have a chance to set up
   if (!@$formSta['confirm'] and !in($function, R_NOLOG_FORMS)) {
     $formName = str_replace(base_path(), '', $_SERVER['REQUEST_URI']);
-    if ($logs = $_POST) {
-/**/  u\loga('in', $formName . substr(print_r(u\noSecrets($logs), 1), 5)); // without "Array"
-    } else {
-      if (strpos($formName, 'sadmin/') === FALSE and strpos($formName, 'account-') === FALSE) u\loga('form', [$formName]);
+    $logit = TRUE;
+    foreach(ray('sadmin/ account- /wp-admin') as $k) if (strpos($formName, $k) !== FALSE) $logit = FALSE;
+    if ($logit) {
+      if ($logs = $_POST) {
+/**/    u\loga('in', $formName . substr(print_r(u\noSecrets($logs), 1), 5)); // without "Array"
+      } else {u\loga('form', [$formName]);}
     }
   }
 
@@ -1502,8 +1504,16 @@ function contactFields($defaults = [], $step0, $myid = 0) {
     } else $source = hidFld(nn($source));
   }
 
-  if (!in('tenure', $fieldsToHide)) $tenure = $step0 ? textFld(t('How long:'), [t('MONTHS at current address.'), t('How long have you been at your current address, in months (roughly)')], required(@$tenure)) : NULL;
-  if (!in('owns', $fieldsToHide)) $owns = boolFld('', '', $step0 ? @$owns : $a->owns, [t('Rent'), t('Own')]); // default fails
+  $tenure = (in('tenure', $fieldsToHide) or !$step0) ? NULL : textFld(t('How long:'), [t('MONTHS at current address.'), t('How long have you been at your current address, in months (roughly)')], required(@$tenure));
+/* (beginning of new feature)
+  $tenure = NULL; // use years and months instead
+  if (!in('tenure', $fieldsToHide) and $step0) {
+    $years = textFld(t('How long:'), [t('Years'), t('How long have you been at your current address (roughly)')], required() + suffix(t(' years')));
+    $months = textFld('', t('Months'), required() + suffix(t(' months')));
+    $fields = str_replace('tenure', 'years months', $fields);
+  }
+  */
+  $owns = in('owns', $fieldsToHide) ? NULL : boolFld('', '', $step0 ? @$owns : $a->owns, [t('Rent'), t('Own')]); // default fails
 
   return compact(ray($fields));
 }  

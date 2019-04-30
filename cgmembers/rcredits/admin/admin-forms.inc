@@ -1015,12 +1015,11 @@ function util($arg) {
 function handyLinks() {
   global $base_path, $base_url, $base_root;
 
-  $test_path = "$base_url/sites/all/modules";
-
   $links = array(
     'rcredits/util/reset-menu|Rebuild menu based on hook_menu() and revert any custom changes. All menu items return to their default settings.|Redo MENUS|menu-hamburger',
     'rcredits/util/remove-test-data|Remove test data|REMOVE test data|fast-backward',
     'rcredits/util/clear|Empty the cache and sessions tables|Clear Cache & Sessions|unchecked',
+    'sadmin/variables|Edit and delete site variables.|Variables|copy',
   );
 
 /*    'devel/settings|Helper functions, pages, and blocks to assist Drupal developers. The devel blocks can be managed via the block administration page.|Devel settings|cog',
@@ -1028,17 +1027,13 @@ function handyLinks() {
     'devel/reference|View a list of currently defined user functions with documentation links.|Functions|education',
     'devel/elements|View the active form/render elements for this site.|Elements|align-center',
     'devel/phpinfo|View your server&#039;s PHP configuration|PHPinfo()|queen',
-    'devel/variable?destination=sadmin|Edit and delete site variables.|Variables|copy',
     */
-//    "$test_path/gherkin/compile.php?module=rcredits/rsms&return=1|Compile rSMS|",
-//    'rcredits/test?menu=1|Test Menu|',
 //    'rcredits/util/changeAgent|Change Agent to Bea|',
 //    'sms|Simulate an SMS transaction|Simulate SMS',
 //    'admin/config/development/testing|Test|Test',
 //    'deletetests.php|Delete old tests|Delete old tests',
 //    'rcredits/util/reset|Reset rCredits|',
 //    'devel/entity/info|View entity information across the whole site.|Entity info',
-//    'devel/php|Execute some PHP code|Execute PHP Code',
 //    'devel/field/info|View fields information across the whole site.|Field info',
 //(empty array)    'devel/menu/item?path=node|Details about a given menu item.|Menu item',
 //    'devel/reinstall?destination=sadmin/handy|Run hook_uninstall() and then hook_install() for a given module.|Reinstall modules',
@@ -1058,4 +1053,74 @@ EOF; */
 /*  $result = join(' | ', $result);
   return "<h2 id=\"edit-title\"><br>Handy Links</h2><div class='develw'>\n$result</div>";
   */
+}
+
+/**
+ * Display variables
+ */
+function formVariables() {
+  $header = array(
+    'name' => array('data' => t('Name'), 'field' => 'name', 'sort' => 'asc'),
+    'value' => array('data' => t('Value'), 'field' => 'value'),
+    'length' => array('data' => t('Length'), 'field' => 'length'),
+    'edit' => array('data' => t('Operations')),
+  );
+
+  $rows = db\rows('name,LENGTH(value) AS length', 'variable', '1 ORDER BY name');
+
+  foreach ($rows as $row) {
+    // $variables[$row->name] = '';
+    $options[$row->name]['name'] = check_plain($row->name);
+    $value = getv($row->name);
+    $complex = (is_array($value) or is_object($value));
+    if ($complex) {
+/**/  $value = str_replace("\n", "<br>\n", print_r($value, 1));
+    } else {$value = check_plain($value);}
+
+    $options[$row->name]['value'] = $value;
+    $options[$row->name]['length'] = $row->length;
+    $options[$row->name]['edit'] = $complex ? '' : l(t('Edit'), "sadmin/variables/edit/$row->name");
+  }
+  $form['variables'] = array(
+    '#type' => 'tableselect',
+    '#header' => $header,
+    '#options' => $options,
+    '#empty' => t('No variables.'),
+  );
+
+  return $form;
+}
+
+function formVariables_submit($form, &$form_state) {
+  $deletes = array_filter($form_state['values']['variables']);
+  array_walk($deletes, 'variable_del');
+  if (count($deletes)) {
+    drupal_set_message(format_plural(count($deletes), 'One variable deleted.', '@count variables deleted.'));
+  }
+}
+
+function formVariableEdit($form, &$form_state, $name) {
+  
+  $title = t('Edit Variable');
+  $subtext = $name;
+  
+  $value = getv($name, t('not found'));
+  
+  if (is_array($value) or is_object($value)) {
+    $value = item(t('Sorry, complex variable types may not be edited yet.'), t('New value'));
+    $name = $new = $submit = NULL;
+  } else {
+/**/  $value = print_r($value, 1);
+    $name = hidFld($name);
+    $new = areaFld(t('New Value:'), '', dft($value . ''));
+    $value = item($value . '', t('Old value:'));
+    $submit = submit();
+  }
+  return cgform(compact(ray('title subtext name value new submit')));
+}
+
+function formVariableEdit_submit($form, &$sta) {
+  extract(just('name new', $sta['input']));
+  setv($name, $new);
+  say(t('Saved new value for %name.', compact('name')));
 }

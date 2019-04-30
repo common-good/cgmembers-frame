@@ -800,7 +800,7 @@ function setV($name, $value) {
 
   cache_clear_all('variables', 'cache_bootstrap');
 
-  $conf[$name] = $value;
+  return $conf[$name] = $value;
 }
 function variable_set($k, $v) {return setV($k, $v);} // for legacy Drupal
 
@@ -1322,7 +1322,7 @@ function ray($s, $value1 = NULL) {
     : FALSE))));
 
   $simple = $pattern ? mb_split($pattern, $s) : array($s);
-  if (!strpos($pattern, ',') or !strpos($s, ':')) return $simple; // no subargs
+  if (!preg_match('/[\,\|]/', $pattern) or !strpos($s, ':')) return $simple; // no subargs
 
   $ray = [];
   foreach ($simple as $one) {
