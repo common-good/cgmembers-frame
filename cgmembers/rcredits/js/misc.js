@@ -175,6 +175,27 @@ function which(jForm, fid, title, body) {
   });
 }
 
+/**
+ * Activate typeahead functionality for an account input element.
+ * @param string sel: input element selector
+ * @param bool coOnly: <include only companies>
+ */
+function suggestWho(sel, coOnly) {
+  var members = new Bloodhound({
+  //  datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
+    datumTokenizer: Bloodhound.tokenizers.whitespace,
+    queryTokenizer: Bloodhound.tokenizers.whitespace,
+    prefetch: {
+      url: ajaxUrl + '?op=typeWho&data=' + coOnly + '&sid=' + ajaxSid,
+      cache: false
+    }
+  });
+  $(sel).wrap('<div></div>').typeahead(
+    {minLength: 3, highlight: true},
+    {name: 'cgMembers', source: members} //    display: 'value',
+  );
+}
+    
 var signoutWarning = 'You still there? (otherwise we\'ll sign you out, to protect your account)';
 
 function sessionTimeout() {

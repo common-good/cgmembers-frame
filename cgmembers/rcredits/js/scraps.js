@@ -130,33 +130,18 @@ function doit(what, vs) {
       suggestWho(fid, vs['coOnly']);
       $(fid).focus(); // must be after suggestWho
       form.submit(function (e) {
-        if ($(fid).val() == '') return true; // don't show the "which" form twice
+        if ($(fid).val() == '') return true; // in case this field is optional
         return who(form, fid, vs['question'], vs['amount'] || $('input[name=amount]', form).val(), vs['allowNonmember'], vs['coOnly']);
       });
+      break;
       
-      function suggestWho(sel, coOnly) {
-        var members = new Bloodhound({
-        //  datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
-          datumTokenizer: Bloodhound.tokenizers.whitespace,
-          queryTokenizer: Bloodhound.tokenizers.whitespace,
-          prefetch: {
-            url: ajaxUrl + '?op=typeWho&data=' + coOnly + '&sid=' + ajaxSid,
-            cache: false
-          }
-        });
-        $(sel).wrap('<div></div>').typeahead(
-          {
-            minLength: 3,
-            highlight: true
-          },
-          {
-            name: 'rMembers',
-        //    display: 'value',
-            source: members
-          }
-        );
-      }
-      
+    case 'new-acct':
+      var fid = '#edit-newacct';
+      var form = $('#frm-accounts');
+      suggestWho(fid, '');
+      form.submit(function (e) {
+        return who(form, fid, vs['switchQuestion'], false, true, false);
+      });
       break;
 
     case 'invest-proposal':
