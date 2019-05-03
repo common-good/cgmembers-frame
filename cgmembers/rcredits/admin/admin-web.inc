@@ -78,8 +78,9 @@ function adminSummary() {
   if ($others = db\lst('fullName', 'sessions s JOIN users u ON u.uid=s.uid', ':uid=IFNULL(s.acct, s.uid) AND s.uid<>:agentId', ray('uid agentId', $uid, $mya->agentId))) {
     w\say(t('<b class="loud">Other people</b> signed in to this account: %others', compact('others')));
   }
-  
-  if ($mya->isCtty) { // managing a community itself
+
+  if ($mya->isCtty) { // managing a community itself (omit a lot of fields)
+  /*
     $sql = <<<EOF
       SELECT
       SUM(IF(:IS_OK AND :IS_CO, 1, 0)) AS cos,
@@ -93,14 +94,14 @@ EOF;
 //    $count = item(db\count('users', 'community=:ctty AND uid<>:ctty', compact('ctty')), t('Members:'));
     $count = item(t('%tot = %mems members + %cos companies + %inProcess in process + %closed closed', $res), t('Accounts:'));
     $cInfo = be\creditInfo();
-    foreach ($fields = ray('balance in rewards out') as $k) {
+    foreach ($fields = ray('balance in out') as $k) {
       $v = $cInfo->$k;
 //      if ($k == 'out') $v -= $cInfo->rewards;
 //      if ($k == 'r') $v += $cInfo->rewards;
       $$k = u\fmtAmt($v + 0);
     }
-    
-    $balance = item(t('%balance = %in in - %out out (Credit issued: %rewards)', compact($fields)), t('Funds:'));
+    */
+//    $balance = item(t('%balance = %in in - %out out (Credit issued: %rewards)', compact($fields)), t('Funds:'));
   } else { // managing some individual account
     if (!$mya->ok) $mya->nextStep();
 

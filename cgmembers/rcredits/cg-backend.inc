@@ -80,7 +80,7 @@ X;
 
 /**
  * Return an array of member names (called with ajax, so current user is passed as arguments).
- * Restricted to within NEIGHBOR_RADIUS miles of the member
+ * Restricted to within NEIGHBOR_RMAX miles of the member
  * @param int $myid: account record ID
  * @param int $aid: agent account record ID
  */
@@ -88,8 +88,10 @@ function memberRay($myid, $aid, $coOnly = FALSE) {
   if (!$a = r\acct($myid, $aid)) return [];
 //  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : "state=$a->state OR community=$a->community OR :IS_CO");
   $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : "(:NEIGHBOR_QUERY<:NEIGHBOR_RMAX OR community=$a->community OR :IS_CO)");
+  if (isDEV) $where = str_replace(':NEIGHBOR_QUERY', '0', $where); // no lat/lon on dev machines yet
   $subs = compact('myid');
-  if (!$coOnly and !$a->admin) $subs += ray('lat lon', $a->latitude, $a->longitude);
+  if (!$coOnly and !$a->admin and !isDEV) $subs += ray('lat lon', $a->latitude, $a->longitude);
+///   flog(db\col('fullName', 'users', ":IS_OK AND uid<>:myid AND $where ORDER BY fullName", $subs));
   return db\col('fullName', 'users', ":IS_OK AND uid<>:myid AND $where ORDER BY fullName", $subs);
 }
 
@@ -568,10 +570,17 @@ function identify($who, $mya, $paying, $self_message = 'no self-trading') {
   if (!$short = u\shortName(" $who ", '%')) $short = '-'; // abbreviations must not be null or zeroes
   $cmail = strpos($who, '@') ? u\cry('P', strtolower($who)) : '-';
   $subs = compact(ray('who short cphone cmail'));
+  $anyAdmin = ($mya->cAdmin2 or $mya->isAdmin2);
 
-  $where = '(name LIKE :short OR :who=fullName OR (!:IS_NOSEARCH AND (:cphone=phone OR :cmail=email)))';
+  $searchable = $anyAdmin ? '1' : '!:IS_NOSEARCH';
+  $where = "(name LIKE :short OR :who=fullName OR ($searchable AND (:cphone=phone OR :cmail=email)))";
+  if ($anyAdmin) {
+    $qid = strtoupper(strlen($who) == 3 ? R_SERVER_ID . $who : $who);
+    if (u\isQid($qid) and $a = r\acct($qid)) $where .= " OR uid=$a->id";
+    $where = "($where OR uid=:who)";
+  }
   if ($paying) $where .= ' AND :IS_OK';
-  if (!$mya->admin) {
+  if (!$mya->admin and !$mya->isAdmin2) {
     $where .= " AND (:IS_CO OR :NEIGHBOR_QUERY<:NEIGHBOR_RMAX)"; // restrict to nearby
     list ($lat, $lon) = $mya ? [$mya->latitude ?: 0, $mya->longitude ?: 0] : [0, 0]; // avoid NULL (PHP bug?)
     $subs += compact(ray('lat lon'));
@@ -580,7 +589,7 @@ function identify($who, $mya, $paying, $self_message = 'no self-trading') {
   $sql = <<<EOF
     SELECT DISTINCT uid,fullName
     FROM users 
-    WHERE $where
+    WHERE $where AND uid<>0
     ORDER BY fullName
 EOF;
 

@@ -1497,7 +1497,7 @@ function contactFields($defaults = [], $step0, $myid = 0) {
     $state2 = selectFld(t('State:'), t(''), dft(@$state2) + $stateAttrib); // can't use required() here
     $zip2 = textFld(t('Postal Code:'), [t('Postal code'), ''], required(@$zip2) + $zipAttrib);
     
-    $other = item('', t('Other Information'));
+    $other = $step0 ? item('', t('Other Information')) : NULL;
     if ((!@$mya or !$mya->co) and !nn($source)) {
       $source = $step0 ? textFld(t('Referred by:'), [t('How you heard about %PROJECT'), t('Where did you hear about %PROJECT? (name of company or person, web address, publication name, radio station name, or whatever)')]) : NULL;
 //      $source2 = $step0 ? textFld(t('Code:'), [t('Invitation or card code'), t('If you have an invitation or card code, type it here ("B" for brochure). Otherwise leave blank.')]) : NULL;
@@ -1865,7 +1865,7 @@ function rangeDates($period, $starting = '', $ending = '') {
  * @param string $field_name: name of the field the user typed in
  * @param array $info: field values to be stored, then reinstated when the page is refreshed to show the choices
  * @param string $selfMsg: index to error message to give if user self-refers
- * @param bool $paying: <we're preparing to pay this person> (in which case the persn has to have an active account)
+ * @param bool $paying: <we're preparing to pay this person> (in which case the person has to have an active account)
  * @return:
  *   NULL if there is an error
  *   acct of the identified person
@@ -2491,6 +2491,7 @@ function op($sta) {global $testOp; return u\test() ? $testOp : substr(@$sta['inp
 function verifyBy($byVoice) {return $byVoice ? t('Voice') : t('SMS');}
 //function blurbLink() {global $rUrl; return "<a href=\"$rUrl/templates/invite.html\" target=\"_blank\">" . t('description of %PROJECT') . '</a>';}
 function sayFieldErr($err, $field) {return say(strtoupper($field) . ': ' . t($err), $field);}
+function err($msg) {return say($msg, 'err');}
 function rent($element) {return \render($element);} // Drupal makes render hard, requires pass by reference
 function goNextStep($step, $msg = NULL, $info = []) {if ($step = r\acct()->nextStepUrl($step, $msg, $info)) w\go($step, $msg); elseif (@$msg) say($msg);}
 function away() {return ['target' => '_blank'];}

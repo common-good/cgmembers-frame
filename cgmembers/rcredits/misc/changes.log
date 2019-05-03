@@ -1,3 +1,9 @@
+2019-05-2019 feature/show-autopays
+. fixed bug in setLocus that chose first possible match rather than the one with highest confidence
+. removed emails from bottom of Member List page
+. general account search for admins
+. also show autopays on recurring transactions page
+
 2019-04-29 feature/balance-sheet
 . stopped logging attempted hacks of wp-admin
 . community balance sheet (on Community menu)

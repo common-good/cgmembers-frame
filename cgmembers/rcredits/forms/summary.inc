@@ -78,14 +78,15 @@ function formSummary($form, &$sta) {
   $title = t('Account Summary');
   $accountName = item($mya->j_fullName . ($mya->jid ? '<br>' : ' ') . "($mya->j_name)", t('Name:'));
   $address = item($mya->postalAddr . @$extras, t('Postal Addr:'));
-  if (!$mya->isCtty) { // unless this is a community or region account
-    $acctType = $mya->co ? t('company account') : ($mya->jid ? t('joint account') : t('personal account'));
-    $balance = u\fmtAmt($mya->balDpy);
+  $balance = u\fmtAmt($mya->balDpy);
 //    $totalDesc = u\fmtAmt($mya->r);
 //    $balanceDesc = $mya->savings ? t(' plus your savings, for a total of @total', ['@total' => $totalDesc]) : '';
-    $balanceDesc = '';
-    if ($mya->rewards) $balanceDesc .= t(' (see <%a>History</a>)', '_a', atag('/history'));
-    $balance = item($balance . "<small>$balanceDesc</small>", t('Balance:'));
+//    $balanceDesc = '';
+  $balanceDesc = $mya->activated ? t(' <small>(see <%a>History</a>)</small>', '_a', atag('/history')) : '';
+  $balance = item($balance . $balanceDesc, t('Balance:'));
+
+    if (!$mya->isCtty) { // unless this is a community or region account
+    $acctType = $mya->co ? t('company account') : ($mya->jid ? t('joint account') : t('personal account'));
 //    $savings = item(u\fmtAmt($mya->savings) . t('<small> (your total incentive rewards to date)</small>', [
 //    list ($rewardNote, $rewardDesc) = $mya->cttyRewardy ? [t('<small> (your total incentive rewards to date)</small>'), t('This amount will be yours to keep, once your community reaches a certain size.')] : ['', t('Some of this amount may be yours to keep, at your %PROJECT community\'s decision, once membership reaches a certain size.')];
 //    $savings = item(u\fmtAmt($mya->rewards) . $rewardNote, t('Credit Line:'), $rewardDesc);

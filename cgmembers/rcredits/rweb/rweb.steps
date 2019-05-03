@@ -353,6 +353,7 @@ function weSayWithSubs($type, $index, $subs) {
  *     TEST showrecurs AMemberStopsAStoppedRecurringTransaction
  *     TEST showrecurs AMemberAttemptsToStopANonexistentRecurringTransaction
  *     TEST showrecurs AMemberAttemptsToStopAnotherMembersRecurringTransaction
+ *     TEST showrecurs AMemberStopsAnAutopayment
  *     TEST signin AMemberTypesTheWrongPassword
  *     TEST signin AMemberTypesAnUnknownUsernameID
  *     TEST signin AMemberAsksForANewPasswordForAnUnknownAccount
@@ -465,6 +466,7 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
  *     TEST showrecurs AMemberStopsAStoppedRecurringTransaction
  *     TEST showrecurs AMemberAttemptsToStopANonexistentRecurringTransaction
  *     TEST showrecurs AMemberAttemptsToStopAnotherMembersRecurringTransaction
+ *     TEST showrecurs AMemberStopsAnAutopayment
  *     TEST signin AMemberVisitsTheMemberSite
  *     TEST signupco AMemberRegistersACompany
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
@@ -500,6 +502,7 @@ function with($content) {return weShow($content);}
  * in: TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     TEST relations MemberHasAnEmployer
  *     TEST relations MemberCompanyHasRelations
+ *     TEST showrecurs AMemberStopsAnAutopayment
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST summary AnAgentClicksTheSummaryTabWithoutPermissionToManage
  *     TEST transactions AMemberLooksAtTransactionsForThePastYear
@@ -664,6 +667,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE showrecurs AMemberStopsAStoppedRecurringTransaction
  *     MAKE showrecurs AMemberAttemptsToStopANonexistentRecurringTransaction
  *     MAKE showrecurs AMemberAttemptsToStopAnotherMembersRecurringTransaction
+ *     MAKE showrecurs AMemberStopsAnAutopayment
  *     MAKE signin AMemberVisitsTheMemberSite
  *     MAKE signin AMemberClicksALinkToResetPassword
  *     MAKE signin AMemberClicksALinkToResetPasswordWithWrongCode
@@ -1461,6 +1465,8 @@ function weScripWithSubs($script, $args = []) {
  *     TEST gift AMemberMakesARecurringDonation
  *     BOTH gift AMemberMakesANewRecurringDonation
  *     TEST gift AMemberDonatesWithInsufficientFunds
+ *     MAKE showrecurs Setup
+ *     TEST showrecurs AMemberStopsAnAutopayment
  *     TEST transact AMemberPaysAnotherMemberRepeatedly
  */
 function these($thing, $list) {return t\these($thing, $list);}

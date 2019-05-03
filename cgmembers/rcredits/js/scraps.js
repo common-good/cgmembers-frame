@@ -130,7 +130,7 @@ function doit(what, vs) {
       suggestWho(fid, vs['coOnly']);
       $(fid).focus(); // must be after suggestWho
       form.submit(function (e) {
-        if ($(fid).val() == '') return true; // field is not required if we're here, so accept empty val
+        if ($(fid).val() == '') return true; // don't show the "which" form twice
         return who(form, fid, vs['question'], vs['amount'] || $('input[name=amount]', form).val(), vs['allowNonmember'], vs['coOnly']);
       });
       
@@ -144,7 +144,6 @@ function doit(what, vs) {
             cache: false
           }
         });
-
         $(sel).wrap('<div></div>').typeahead(
           {
             minLength: 3,

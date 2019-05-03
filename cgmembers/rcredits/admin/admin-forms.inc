@@ -218,7 +218,8 @@ function formOrganizerList($form, &$sta, $where = '') {
 $list
 </table>
 EOF
-  );
+    );
+    $subtext = $zips = $submit = NULL;
   } else {
     $subtext = t('Enter a list of zipcodes (or partial zipcodes), separated by spaces.');
     $zips = textFld(t('Zips:'));
@@ -495,13 +496,10 @@ function formMemberList($form, &$sta) {
 </tr>
 $one
 EOF;
-    $emails .= "$email, ";
   }
   $list .= "</table>\n";
   
-  $emails = $cAdmin ? item($emails, t('All emails')) : NULL;
-
-  return cgform(compact(ray('title list emails')), '', FALSE);
+  return cgform(compact(ray('title list')), '', FALSE);
 }
 
 /**

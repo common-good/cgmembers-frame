@@ -27,6 +27,7 @@ $('.submenu a[data-trigger="manual"]').click(function () {
   $(this).popover('toggle');
   $('.submenu a').not($(this)).popover('hide');
 });
+$('#extras button img').click(function () {$('#edit-accounts').toggle(); $('#edit-newacct').focus();}); // show outer div first
 
 var page=0;
 var more=false;
@@ -126,10 +127,6 @@ function yesno(question, yes, no) {
   $.confirm({title: 'Yes or No', text: question, confirm: yes, cancel: no, confirmButton: 'Yes', cancelButton: 'No'});
 }
 
-function which(question, choices, choose, cancel) {
-  $("#which").modal("show");
-}
-
 var yesSubmit = false; // set true when user confirms submission (or makes a choice)
 var jForm; // jquery form object
 
@@ -151,8 +148,8 @@ function who(form, fid, question, amount, allowNonmember, coOnly) {
           yesSubmit = true; jForm.submit();
         }, noSubmit);
       } else which(jForm, fid, j.title, j.which);
-    } else if (allowNonmember && who.includes('@')) {
-      yesno('The email address (' + who + ') is for a non-member (or for a member with a non-public email address). Do you want to send them an invoice anyway, with an invitation to join?', function() {
+    } else if (allowNonmember && who.includes('@') && fid != '#edit-newacct') {
+      yesno('The email address (' + who + ') is for a non-member (or for a member with a non-public email address). Do [' + question.replace('?', '') + '] anyway, with an invitation to join?', function() {
         yesSubmit = true; jForm.submit();
       }, noSubmit);
     } else {
