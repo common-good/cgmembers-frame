@@ -242,7 +242,7 @@ class ReformatTransactions extends AbstractMigration {
           } else {
             $status = self::DS_DENIED;
           }
-          $disputesTbl->insert(ray('xid uid reason status', $xid, $payer, $reason, $status))->save();
+          $disputesTbl->insert(ray('xid uid agentUid reason status', $xid, $payer, $payer, $reason, $status))->save();
         }                       
         unset($data['disputed']);
         setBit($flags, self::B_DISPUTED, false);
