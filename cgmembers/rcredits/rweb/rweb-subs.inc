@@ -542,8 +542,9 @@ define('FMT_INT', 'trust count');
 //define('FMT_2D', 'negativeBalanceTotal positiveBalanceTotal');
  
 function showRecords($ray, $formatFunc = 'CG\\Web\\formatField', $flagsField = B_LIST) {
-  if (!$ray or empty($ray)) return 'data set is empty';
-  $lines[] = '<tr><th>' . join('</th><th>', array_keys((array) $ray[0])) . "</th></tr>\n";
+  if (!$ray or empty($ray) or count($ray)==0) return 'data set is empty';
+  $first = reset($ray);
+  $lines[] = '<tr><th>' . join('</th><th>', array_keys($first)) . "</th></tr>\n";
   foreach ($ray as $row) {
     $line = '';
     foreach ($row as $k => $v) {

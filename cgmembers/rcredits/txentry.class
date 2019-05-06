@@ -22,6 +22,7 @@ class TxEntry {
 
   public $id;
   public $xid;
+  public $entryType;
   public $amount;
   public $uid;
   public $agentUid;
@@ -29,7 +30,8 @@ class TxEntry {
   public $acctTid;
   public $relType;
   public $relatedId;
-
+  private $agentId;
+  
   /**
    * Instantiate (construct) a transaction entry record.
    * @param assoc $info: array of field values for new transaction, must include REQUIRED_FIELD entries,
@@ -63,6 +65,10 @@ class TxEntry {
     }
   }
 
+  public function __set($name, $value) {
+    u\EXPECT(FALSE, "Cannot set $name");
+  }
+  
   /**
    * Read a transaction entry record given its id.
    * @param integer $id: the id of the transaction entry record.

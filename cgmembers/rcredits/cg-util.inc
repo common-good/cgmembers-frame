@@ -561,7 +561,7 @@ function expect1($arg, $value, $type, $ret) {
     case 'qid': return EXPECT(isQid($value), $msg, $ret);
     case 'string': return EXPECT(is_string($value), $msg, $ret);
     case 'zid': return EXPECT(isZid($value), $msg, $ret);
-    default: return EXPECT(is_object($value) and strtolower(get_class($value)) == "cg\\$type", $msg, $ret);
+  default: return EXPECT(is_object($value) and strcasecmp(get_class($value), "cg\\$type")==0, $msg, $ret);
   }
   throw new \Exception("bad type \"$type\" ($msg)");
 }

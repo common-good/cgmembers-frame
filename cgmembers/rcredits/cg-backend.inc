@@ -35,7 +35,9 @@ function getTxs($uids, $starting=null, $ending=null) {
 
   $sql = <<< EOF
     SELECT t.*, e.*, u.fullName as name,
-           (SELECT MAX(acctTid) FROM tx_entries re WHERE xid = t.xid AND uid in (:uids)) AS tid
+           (SELECT MAX(acctTid) FROM tx_entries re WHERE xid = t.xid AND uid in (:uids)) AS tid,
+    (EXISTS (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=t.xid)) AS isReversed,
+    (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=t.xid AND d.status=:DS_OPEN)) AS isDisputed
     FROM tx_entries e LEFT JOIN tx_hdrs t USING (xid) LEFT JOIN users u USING (uid)
     WHERE (xid IN (SELECT DISTINCT xid FROM tx_entries WHERE (uid IN (:uids))))
           $where
@@ -63,11 +65,20 @@ EOF;
   // arrange for running balance to appear in, and be the same in, every entry for a transaction
   $myBalance = balanceAsOf($uids, $starting);
   foreach ($txs as $i => $entries) {
+    $myTxAmount = 0;
+    $byMe = FALSE;
+    $banking = FALSE;
     foreach ($entries as $entry) {
-      if (in_array($entry['uid'], $uids)) $myBalance += $entry['amount'];
+      if (in_array($entry['uid'], $uids)) $myTxAmount += $entry['amount'];
+      if (in_array($entry['uid'], $uids) and in_array($entry['actorId'], $uids)) $byMe = TRUE;
+      if (in_array($entry['uid'], [CG_INCOMING_BANK_UID, CG_OUTGOING_BANK_UID])) $banking = TRUE;
     }
+    $myBalance += $myTxAmount;
     foreach ($entries as $j => $entry) {
+      $entry['myAmount'] = $myTxAmount;
       $entry['balance'] = $myBalance;
+      $entry['byMe'] = $byMe;
+      $entry['banking'] = $banking;
       $entries[$j] = $entry;
     }
     $txs[$i] = $entries;
@@ -194,10 +205,14 @@ function get1099b($payee, $year = NULL) {
     $end = strlen($year) < 6 ? strtotime('1/1/' . ($year + 1)) - 1 : strtotime('tomorrow', $year);
     $start = strtotime('1 year ago', $end) + 1;
     $sql = <<<EOF
-      SELECT created, payeeE.amount AS amount, payerE.uid AS payer, CONCAT(payeeE.description, t.type) AS `for`
+      SELECT t.created, payeeE.amount AS amount, payerE.uid AS payer, payeeE.description AS `for`
       FROM tx_entries payerE JOIN tx_hdrs t USING(xid) JOIN tx_entries payeeE USING(xid)
-      WHERE payeeE.uid=:payee AND NOT :HAS_REVERSER AND reversesXid IS NULL AND created BETWEEN $start AND $end
-             AND payeeE.amount > 0 AND payerE.amount < 0 AND t.type <> :TX_BANK
+             LEFT JOIN tx_hdrs tRev ON tRev.reversesXid=t.xid
+      WHERE payeeE.uid=:payee AND tRev.xid IS NULL AND t.reversesXid IS NULL
+             AND t.created BETWEEN $start AND $end
+             AND payeeE.entryType=:ENTRY_PAYEE AND payerE.entryType=:ENTRY_PAYER
+             AND payeeE.amount > 0 AND payerE.amount < 0
+             AND payerE.uid IN (:CG_INCOMING_BANK_UID, :CG_OUTGOING_BANK_UID)
       ORDER BY created
 EOF;
 //      AND (goods=:FOR_GOODS OR type<>:TX_TRANSFER)
@@ -259,7 +274,7 @@ function updateRelations($updates) {
 function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
   global $mya;
 
-  /// debug("undoTx($xid, $where, , $force)" . print_r($subs, true));
+  ///  debug("undoTx($xid, $where, , $force)" . print_r($subs, true));
   
   u\EXPECT('int string assoc bool', $xid, $where, $subs, $force);
 
@@ -274,11 +289,11 @@ function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
   if (!$byMe and !$toMe) { // someone charged me (either unilaterally or I approved it)
     r\disputeTx($xid); // mark it disputed
     $solution = t('marked "disputed"');
-    r\notify($tx->them, 'charge disputed', $tx->reportArgs($mya)); //, $tx->getMyAmt(), $payer, $payee, $payerPurpose, $payeePurpose));
-    $amount = u\fmtAmt($tx->amount);
+    r\notify($tx->otherId, 'charge disputed', $tx->reportArgs($mya)); //, $tx->getMyAmt(), $payer, $payee, $payerPurpose, $payeePurpose));
+    $amount = u\fmtAmt($tx->otherEntry->amount);
     $tofrom = !$tx->toMe ? t('to') : t('from');
     $otherUid = $tx->otherUid;
-    $other = r\acct($otherUid)->fullName;
+    $other = $tx->other->fullName;
     $success = TRUE;
     return ['report undo', compact(ray('success amount other tofrom solution otherUid'))];
   } else {
@@ -552,7 +567,7 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
   
   // Calculate any balance shortfall
   $needed = abs($amount)-$rebate;
-  if ($shortfall = $loser->id < 0 ? 0 : $loser->shortfall($goods, $needed, TRUE, $actor)) {
+  if ($shortfall = ($loser->id < 0 ? 0 : $loser->shortfall($goods, $needed, TRUE, $actor))) {
     if ($force) {
       $short = TRUE; // flag overdraft
     } else {
@@ -1012,6 +1027,20 @@ EOF;
 }
 
 /**
+ * Returns the roundup donations made by the specified users in the specified period.
+ * @param array $uids -- the uids of the users, generally the main user or the main and joint users
+ * @param unixtime $start -- the start of the period
+ * @param unixtime $end -- the end of the period
+ * @return the total roundup donations
+ */
+function roundupDonations($uids, $start, $end) {
+  $value = db\sum('amount', 'tx_entries JOIN tx_hdrs USING(xid)',
+                  'entryType=:ENTRY_DONATION AND created BETWEEN :start AND :end AND uid IN (:uids)',
+                  compact(ray('uids start end')));
+  return -$value;
+}
+
+/**
  * Return a list of account choices for the current user (agent of the current account)
  * @return an assoc of names keyed by account record IDs (FALSE if none)
  */
@@ -1072,7 +1101,7 @@ function createUsdTransfer($payee, $amount, $created=null, $txid=null) {
   
   $created = empty($created) ? r\rTime() : $created;
   if (empty($txid)) $txid = 1 + db\max('txid', 'r_usd');
-  $bankAccount = u\arrayGet($payee->vsecure, 'bankAccount', null);
+  $bankAccount = isDEV ? 'xxxxy' : u\arrayGet($payee->vsecure, 'bankAccount', null);
   
   $info = ray('amount payee created bankAccount channel',
               $amount, $payee->id, $created, $bankAccount, $channel);

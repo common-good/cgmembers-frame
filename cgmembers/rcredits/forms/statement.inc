@@ -25,6 +25,7 @@ function statement($period = '') {
   /* list ($header, $classes, $rows, $tot) = x\getTxRows($start, $end, ray('descending', FALSE)); // get the transaction data */
   $startBals = be\creditInfo($uids, $start);
   $endBals = be\creditInfo($uids, $end);
+  $roundups = be\roundupDonations($uids, $start, $end);
   /* extract(just('frombank fromyou toyou', $tot)); */
   $bal0 = $startBals['balance']; // balance BEFORE start of this period
   $bal9 = $endBals['balance'];
@@ -43,7 +44,9 @@ function statement($period = '') {
   
   $committed = $mya->committed;
   list ($avg) = r\averageBalance($uids, $mya->created, $end, TRUE);
-    
+
+  $txs = be\getTxs($uids, $start, $end);
+
   $pdf = new r\Statement($mya, $period);
 
   $size = $pdf->getFontSizePt();
@@ -92,6 +95,9 @@ function statement($period = '') {
 
   $pdf->setFontSize(.8 * $size);
   $pdf->newLine();
+  $change = u\fmtAmt($roundups, '$');
+  $pdf->Cell($pageWidth, 0, " * Including $change in rounded-up change donated to the community fund.", '', 1, 'L');
+  $pdf->newLine();
 
   $pdf->setFontSize($size);
   $pdf->barHead('DETAILS');
@@ -100,8 +106,6 @@ function statement($period = '') {
   $pdf->colHeads($fields);
   $pdf->setFontSize(.9 * $size);
   $none = strip_tags(R_NONE);
-
-  $txs = be\getTxs($uids, $start, $end);
 
   $cats = [];
   $dups = FALSE;

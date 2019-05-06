@@ -718,14 +718,6 @@ function adminSignin() {
 /*     }); */
 /* } */
 
-/* function special2() { */
-/*   return; */
-/*   eachA(function($a) { */
-/*       list ($balance, $rewards) = [$a->balance, $a->rewards]; // remember old values */
-/*       /\**\/    if (!$a->cacheOk(FALSE, FALSE) and (abs($a->balance - $balance) > .005 or abs($a->rewards - $rewards > 20))) debug("$a->id $a->fullName new: $a->balance+$a->rewards old: $balance+$rewards jid=$a->jid"); */
-/*     }); */
-/* } */
-
 function showRequests() {
   $cutoff = strtotime('-1 year');
   $q = f('db.q','SELECT * FROM r_request WHERE created>:cutoff ORDER BY listid DESC', compact('cutoff'));

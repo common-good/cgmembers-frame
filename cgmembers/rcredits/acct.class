@@ -877,7 +877,7 @@ X;
       return db\get('proxy', 'r_proxies', 'person=:person AND priority=:priority', $subs);
     db\del('r_proxies', 'id', 'person=:person AND priority=:priority', $subs);
     $subs['proxy'] = $proxy;
-    db\insert('r_proxies', $info);
+    db\insert('r_proxies', $subs);
   }
 
   /**

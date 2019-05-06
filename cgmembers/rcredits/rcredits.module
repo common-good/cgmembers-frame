@@ -36,12 +36,14 @@
  */
 
 require_once 'cg.inc';
+require_once 'cg-testing.inc';
 use CG as r;
 use CG\Util as u;
 use CG\DB as db;
 use CG\Web as w;
 use CG\Admin as a;
 use CG\Cron as cr;
+use CG\Testing as t;
 
 define('R_SYS_ERR', t('The %PROJECT system has detected an unusual problem. If your activity was interrupted, please feel free to try again.') . "<br>\n");
 define('ONE_CRON_OP', 'one cron op'); // flags a call of f('cr. in PHP window, to prevent side-effects
@@ -156,10 +158,12 @@ function bankTxId($btxid) { // for reconcilecttyfund.inc (short form of bank's t
   return 0 + $res; // (intval fails here)
 }
 function a($id = '', $agent = '') { // return an account object
-	global $lastA; 
-	$id = strlen($id) == 3 ? '.' . $id : $id;
+	global $lastA;
+  if (is_string($id) and (!ctype_digit($id)) and strlen($id)==3) { $id = '.' . $id; }
 	if (!strpos($id, '@') and !preg_match('/[0-9]/', $id)) $id = strtoupper($id);
-	return $lastA = f('r.acct', f('t.fullQid', $id), f('t.fullQid', strtoupper(strlen($agent) == 3 ? '.' . $agent : $agent)));
+	$lastA = r\acct(t\fullQid($id), t\fullQid(strtoupper(strlen($agent) == 3 ? '.' . $agent : $agent)));
+  /* u\EXPECT([$lastA], 'Acct'); */
+	return $lastA;
 }
 function x($xid, $mya = '') {f('r.x', $xid, $mya);} // return a transaction object
 /**/ function da($idfield) {list ($id, $field) = ray($idfield); debug(a($id)->$field);}

@@ -396,7 +396,7 @@ function formInvitedWhom($form, &$sta) {
   $old = strtotime((R_INVITE_DAYS + 2) . ' days ago');
   $sql = <<<EOF
     SELECT DISTINCT IFNULL(u1.fullName, i.email) AS who, invited, invited<:old AS expired,
-      (u1.flags&(1<<:B_MEMBER)) AS member
+    (u1.flags&(1<<:B_MEMBER)) AS member, u1.:IS_CO as co, u1.:IS_OK as ok
     FROM r_invites i LEFT JOIN users u1 ON u1.uid=i.invitee
     WHERE i.inviter=:uid ORDER BY invited DESC
 EOF;

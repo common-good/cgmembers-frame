@@ -297,7 +297,10 @@ function txSummary($starting, $ending, &$endBalance = '') {
  * Handle click 'OK' or 'NO' (approving or undoing a transaction)
  */
 function txOKorNO($task, $xid) {
-  if (!r\MyX::lastTx(r\acct(), 'xid=:xid', compact('xid'), TRUE)) return FALSE; // bail on hack attempt
+  $a = r\acct();
+  $uids = empty($a->jid) ? [$a->uid] : [$a->uid, $a->jid];
+  $result = r\Tx::lastTx($uids, 'xid=:xid', compact('xid'));
+  if (empty($result)) return FALSE;
   list ($message, $args) = be\undoTx($xid); // X (reverse it)
   say($message, $args);
 }

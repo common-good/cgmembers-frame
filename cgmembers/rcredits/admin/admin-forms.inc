@@ -157,12 +157,13 @@ function formAdminPanel_submit($form, &$sta) {
     $crit = $mya->admin ? '1' : 'community=' . $mya->community;
     eachA(function ($a) {
         global $signupCos;
-        if (is_integer($a)) $a = r\acct($a);
+        if (is_integer($a) or (is_string($a) and ctype_digit($a))) $a = r\acct($a);
+        u\EXPECT([$a], 'Acct');
         if ($signupCo = $a->signupCo) {
           extract($signupCo);
           $signupCos[strtolower("$a->community$company$a->id")] = ray('acct fullName relation company', $a->mainQid, $a->fullName, @$isOwner ? t('owner') : ((@$employee or @$employeeOk) ? t('employee') : (@$contractor ? t('contractor') : '')), $company);
         }
-      }, $crit . ' ORDER BY community');
+      }, '(uid<0 OR uid>:CANONIC_ACCTS) AND ' . $crit . ' ORDER BY community');
     ksort($signupCos);
     w\say($signupCos ? w\showRecords($signupCos) : t('No such companies.'));
   }
@@ -180,7 +181,7 @@ function formAdminPanel_submit($form, &$sta) {
 
   if ($op == 'txs') {
     $fields = <<<EOF
-      xid, t.created, t.flags, t.type AS ty, t.goods AS gd, t.actor AS init,
+      xid, t.created, t.flags, t.goods AS gd, t.actorId AS init,
       uid, amount, description AS `for`, acctTid AS tid
 EOF;
     if ($mya->admin) $fields = str_replace('u1.', '', $fields);
@@ -205,13 +206,14 @@ function formOrganizerList($form, &$sta, $where = '') {
     $where = preg_replace('/[^[0-9 ]/', '', $where); // prevent SQL injection, in case admin is evil
     $where = "zip LIKE '" . str_replace(' ', "%' or zip LIKE '", $where) . "%'";
     $q = db\q("SELECT * FROM r_request WHERE $where");
+    $list = [];
     while ($row = $q->fetchAssoc()) {
       extract(just('first last phone email zip', $row));
       $phone = u\fmtPhone(u\decry('P', $phone));
       $email = u\decry('P', $email);
       $list[] = "<tr><td>$first $last</td><td>$phone</td><td>$email</td><td>$zip</td></tr>\n";
     }
-    $list = join('', $list);
+    $list = join("\n", $list);
     $list = item(<<<EOF
                  <table id="organizer-list">
                  <tr><th>Name</th><th>phone</th><th>email</th><th>zip</th></tr>
@@ -224,7 +226,7 @@ EOF
     $zips = textFld(t('Zips:'));
     $submit = t('Go');
   }
-  return compact(ray('title subtext zips submit list'));
+  return cgform(compact(ray('title subtext zips submit list')));
 }
 
 function formOrganizerList_submit($form, &$sta) {

@@ -1568,13 +1568,17 @@ function xfee($for, $amount) {
 }
 
 function disputeTx($xid, $reason = '') {
-  $DBTX = db\transaction();
+  $a = r\acct();
+  if (empty($a)) return FALSE;
+  $DBTX = db_transaction();
   if (db\exists('tx_disputes', "xid=:xid", ['xid'=>$xid])) {
-    EXPECT(FALSE, "transaction $xid is already disputed");
+    u\EXPECT(FALSE, "transaction $xid is already disputed");
   } else {
-    EXPECT(db\insert('tx_disputes', ['xid', 'reason', 'status'], 'id'), "error inserting dispute record");
+    $result = db\insert('tx_disputes', ['xid'=>$xid, 'reason'=>$reason, 'status'=>DS_OPEN, 'uid'=>$a->uid], 'id');
+    u\EXPECT($result, "error inserting dispute record");
   }
   unset($DBTX);
+  return TRUE;
 }
   
 function makeDoCode($ray) {

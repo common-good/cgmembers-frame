@@ -59,7 +59,7 @@ class TxHistory implements TxProcessor {
     /* $toyou = w\popHelp(t('To You'), t('toyou')); */
     /* $net = w\popHelp(t('Net'), t('The net change in account balance')); */
     $runBalance = w\popHelp(t('Balance'), t('The balance in the account after this transaction'));
-    $buttons = w\popHelp(t('Action'), t('Click a symbol to reverse a transaction or to edit the purpose'));
+    $buttons = w\popHelp(t('Action'), t('Click a symbol to reverse a transaction'));
     
     $this->body = <<<EOF
 <div id="txlist" class="table table-striped">
@@ -116,14 +116,23 @@ EOF;
     $this->body .= "<tbody class=\"$class\">\n";
     $url = "BASE_URL?xid=&do=no";
     $xid = $info['xid'];
-    $undoButton = w\btn("$this->baseUrl&xid=$xid&do=no", ' X ', 'primary', 'xs', ['title'=>t('Reverse')]);
-    if (true) {
-      $this->buttons = $undoButton;
+
+    // I am payee and amount > 0 or I am payer and amount < 0
+    $reallyToMe = $info['myAmount'] > 0;
+
+    if ((($mya->can($reallyToMe ? B_BUY : B_SELL) and !$info['banking']) or $mya->superAdmin) and !$info['isReversed'] and !$info['isDisputed']) {
+      $this->buttons = w\btn("$this->baseUrl&xid=$xid&do=no", ' X ', 'primary', 'xs', ['title'=>t('Reverse')]);
+    } else {
+      $this->buttons = '';
     }
-    /* $undoButton = ((($mya->can(@$reallyToMe ? B_BUY : B_SELL) and !$banking) or $mya->superAdmin) and !@$data['undoneBy']) ? w\btn("$url&do=no", ' X ', 'primary', 'xs', compact('title')) : ''; // (admin not cAdmin) */
-    $rowClasses = "row txRow " . 'page-' . floor($this->count / MIN_TX_ROWS) . ' PAGE-' . floor($this->count / NORMAL_TX_ROWS);
+    $pageClasses = 'page-' . floor($this->count / MIN_TX_ROWS) . ' PAGE-' . floor($this->count / NORMAL_TX_ROWS);
+    $disputedClass = ($info['isDisputed']) ? ' disputed' : '';
     $this->body .= <<<EOF
-      <div class="$rowClasses">
+      <div class="row txRow $pageClasses$disputedClass">
+        <div class="sepRow">
+          <div class="separator"></div>
+          <div class="sepBlank"></div>
+        </div>
 EOF;
   }
 
@@ -135,7 +144,6 @@ EOF;
     if (in_array($info['uid'], $this->uids)) return;
     extract(just('name description amount', $info));
     $amount = u\fmtAmt(- $amount, '');
-    $buttons = '';
 
     $this->body .= <<<EOF
 <div class="txentry">
@@ -151,7 +159,7 @@ EOF;
     <div class="amount col-sm-5">$amount</div>
     <div class="runBalance col-sm-7">$this->runBalance</div>
   </div>
-  <div class="buttons col-xs-1">$buttons</div>
+  <div class="buttons col-xs-1">$this->buttons</div>
 </div>
 EOF;
 /*     $this->body .= <<<EOF */

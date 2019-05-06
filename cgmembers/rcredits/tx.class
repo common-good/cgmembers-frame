@@ -11,7 +11,7 @@ require_once __DIR__ . '/txentry.class';
  * @file
  * CG credit Transaction class
  *
- * Note that a transaction has at least two entries, which this class also contains
+ * Note that a transaction has at least two entries, which this class refers to
  */
 
 class Tx {
@@ -67,20 +67,27 @@ class Tx {
     $tx = $this;
     switch ($f) {
     case 'actorEntry': return $this->getActorEntry();
-    case 'otherEntry': return $this->payerEntry->uid == $this->actorId ? $this->payeeEntry : $this->payerEntry;
+    case 'otherEntry': return ($this->payerEntry->uid == $this->actorId) ? $this->payeeEntry : $this->payerEntry;
     case 'payerEntry': return $this->getPayerEntry();
     case 'payeeEntry': return $this->getPayeeEntry();
     case 'payerId': return $this->payerEntry->uid;
     case 'payeeId': return $this->payeeEntry->uid;
+    case 'otherUid':
     case 'otherId': return $this->otherEntry->uid;
     case 'actor': return r\acct($this->actorId);
-    case 'actorAmount': return$this->getActorAmount();
+    case 'actorAmount': return $this->getActorAmount();
     case 'payerAmount': return $this->payerEntry->amount;
     case 'other': return r\acct($this->otherId);
+    case 'toMe': return $this->payeeEntry->uid==r\acct()->uid;
     default:
       u\EXPECT(FALSE, "unexpected field '$f' requested");
     }
   }
+
+  public function __set($name, $value) {
+    u\EXPECT(FALSE, "Cannot set $name");
+  }
+  
 
   private function getPayerEntry() {
     foreach ($this->entries as $entry) {
@@ -235,14 +242,13 @@ EOF;
    */
   static function lastTx($uids, $where = 1, $subs = []) {
     /// debug("lastTx(" . print_r($uids, true) . ", '$where', " . print_r($subs, true) . ")");
-    $txHdr = db\get('t.*', 'tx_hdrs t JOIN tx_entries e USING(xid)',
-                    "e.uid IN (:uids) AND $where ORDER BY t.created DESC LIMIT 1",
-                    ['uids' => $uids] + $subs);
-    if (!$txHdr) return FALSE;
-    $xid = $txHdr['xid'];
-    $entries = r\TxEntry::readAll($xid);
-    if (!$entries) return FALSE;
-    return new Tx($txHdr + ['entries' => $entries]);
+    $xid = db\get('t.xid', 'tx_hdrs t JOIN tx_entries e USING(xid)',
+                  "e.uid IN (:uids) AND $where ORDER BY t.created DESC LIMIT 1",
+                  ['uids' => $uids] + $subs);
+    if (empty($xid)) return FALSE;
+    $tx = Tx::read($xid);
+    if (empty($tx)) return FALSE;
+    return $tx;
   }
 
   /**
@@ -308,9 +314,10 @@ EOF;
       return 'already undone';
     }
 
-    $a1 = r\acct($tx->toMe ? $tx->payeeId : $tx->payerId, $tx->actor->agentId);
-    $a2 = r\acct($tx->toMe ? $tx->payerId : $tx->payeeId); // second account's permissions are irrelevant
-    if ($err = r\txPermErr($a1, $a2, $tx->toMe, $tx->toMe xor $tx->actorE->amount < 0)) return $err;
+    $a1 = r\acct($this->toMe ? $this->payeeId : $this->payerId, $this->actor->agentUid);
+    $a2 = r\acct($this->toMe ? $this->payerId : $this->payeeId); // second account's permissions are irrelevant
+    $err = r\txPermErr($a1, $a2, $this->toMe, $this->toMe xor $this->actorEntry->amount < 0);
+    if ($err) return $err;
 
     return FALSE;
   }

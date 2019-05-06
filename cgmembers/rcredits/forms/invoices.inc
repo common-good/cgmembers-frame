@@ -81,8 +81,8 @@ function invoiceList($toMe, $starting, $ending, $states, $url, $download, $toFro
     FROM r_invoices i 
     LEFT JOIN users u ON u.uid=i.$yu
     LEFT JOIN tx_hdrs t ON t.xid=i.status
-    JOIN tx_entries e ON t.xid=e.xid
-    WHERE ($where) AND e.uid=u.uid
+    LEFT JOIN tx_entries e ON e.xid=i.status AND e.uid=u.uid
+    WHERE ($where)
     ORDER BY (i.status>2), nvid DESC
 EOF;
 //    ORDER BY (i.status=:TX_PENDING OR i.status=:TX_APPROVED) DESC, nvid DESC
