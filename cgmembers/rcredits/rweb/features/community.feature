@@ -58,7 +58,7 @@ Setup:
   
 Scenario: cron calculates the statistics
 #  When cron runs "acctStats"
-  Given statistics get set "%today-30d"
+  Given statistics get set "%daystart-30d"
   When cron runs "cttyStats"
   And member ".ZZA" visits page "community/graphs"
   Then we show "Statistics" with:

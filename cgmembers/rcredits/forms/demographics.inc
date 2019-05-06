@@ -19,7 +19,7 @@ function formDemographics($form, &$sta) {
   
   while ($id = $q->fetchField()) {
     $a = r\acct($id);
-    $ages[] = (time() - $a->dob) / YEAR_SECS;
+    $ages[] = (now() - $a->dob) / YEAR_SECS;
     if ($a->created >= $statStart) {
       $tenures[] = $a->tenure;
       $owns[] = $a->owns ? 1 : 0;

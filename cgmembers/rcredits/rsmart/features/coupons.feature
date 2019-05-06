@@ -29,29 +29,29 @@ Scenario: A member redeems a gift coupon
   Given  coupons:
   | coupid | fromId | amount | minimum | ulimit | flags | start  | end       |*
   |      1 |   .ZZC |     10 |       0 |      1 |     0 | %today | %today+7d |
-  When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $100 for "goods": "food" at %today
+  When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $100 for "goods": "food" at %now  
   Then transactions: 
   | xid | created | amount | from | to   | purpose |*
-  | 1   | %today  |    100 | .ZZB | :ZZA | food    |
-  | 2   | %today  |    -10 | .ZZB | .ZZC | discount rebate (on #1) |
+  | 1   | %now    |    100 | .ZZB | :ZZA | food    |
+  | 2   | %now    |    -10 | .ZZB | .ZZC | discount rebate (on #1) |
   
   When agent "C:A" asks device "devC" to undo transaction with subs:
   | member | code | amount | goods | description | created |*
   | .ZZB   | ccB  | 100.00 |     1 | food        | %today  |
   Then transactions:
   | xid | created | amount | from | to   | purpose |*
-  | 3   | %today  |   -100 | .ZZB | :ZZA | food (reverses #1)   |
-  | 4   | %today  |     10 | .ZZB | .ZZC | discount rebate (on #2) |
+  | 3   | %now    |   -100 | .ZZB | :ZZA | food (reverses #1)   |
+  | 4   | %now    |     10 | .ZZB | .ZZC | discount rebate (on #2) |
 
-  When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $50 for "goods": "sundries" at %today
+  When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $50 for "goods": "sundries" at %now  
   Then transactions: 
   | xid | created | amount | from | to   | purpose |*
-  | 5   | %today  |     50 | .ZZB | :ZZA | sundries |
-  | 6   | %today  |    -10 | .ZZB | .ZZC | discount rebate (on #3) |
+  | 5   | %now    |     50 | .ZZB | :ZZA | sundries |
+  | 6   | %now    |    -10 | .ZZB | .ZZC | discount rebate (on #3) |
   
-  When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $60 for "goods": "stuff" at %today
+  When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $60 for "goods": "stuff" at %now  
   Then transactions: 
   | xid | created | amount | from | to   | purpose |*
-  | 7   | %today  |     60 | .ZZB | :ZZA | stuff   |
+  | 7   | %now    |     60 | .ZZB | :ZZA | stuff   |
   And transaction count is 7
 # ulimit has been reached, so no rebate

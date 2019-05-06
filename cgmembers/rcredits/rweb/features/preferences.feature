@@ -7,31 +7,31 @@ Setup:
   Given members:
   | uid  | crumbs | minimum | savingsAdd | saveWeekly | achMin | backing | floor | flags   |*
   | .ZZA |    .01 |     100 |          0 |          1 |     20 |     100 |    10 | ok,confirmed,nosearch,paper |
-  | .ZZB |    .02 |     -10 |         10 |          0 |     50 |      10 |     0 | ok,co,confirmed,weekly,secret |
+  | .ZZC |    .02 |     -10 |         10 |          0 |     50 |      10 |     0 | ok,co,confirmed,weekly,secret |
+  And these "relations":
+  | reid | main | other | permission |*
+  |    1 | .ZZC | .ZZA  | manage     |
   
 Scenario: A member visits the preferences page
   When member ".ZZA" visits page "settings/preferences"
   Then we show "Account Preferences" with:
-  | SNAP Number |  |
-  | Round Up?   |  |
+  | Food Assistance? |  |
+  | Round Up         |  |
   And radio "statements" is "printed statements"
   And radio "notices" is "daily"
-  And we show checked:
-  | No Search | by name or account ID only |
-  And we show unchecked:
-  | Secret Balance | Don't let merchants |
+  And radio "secretBal" is "No"
+  And radio "nosearch" is "Yes"
   And with:
   | Food Fund |  |
   | Backing   | $100 |
 
-Scenario: Another member visits the preferences page
-  When member ".ZZB" visits page "settings/preferences"
+Scenario: A company agent visits the preferences page
+  When member "C:A" visits page "settings/preferences"
   Then we show "Account Preferences" with:
   | Crumbs | 2 |
   And radio "statements" is "accept electronic"
   And radio "notices" is "weekly"
-  And we show checked:
-  | Secret Balance | Don't let merchants |
+  And radio "secretBal" is "Yes"
   And with:
   | Food Fund |  |
   | Backing   | $10 |

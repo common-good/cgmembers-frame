@@ -154,7 +154,7 @@ function rweb_menu($submenu = '') {
     'settings/connect' => ['sub', t('Banking'), 'Connect 2', 'manage', '', t(''), 'piggy-bank'],
     'settings/company' => ['sub', t('Company Info'), 'Company 2', 'manage co', '', t(''), 'calendar'],
     'settings/relations' => ['sub', t('Relations'), 'Relations 2', 'manage', '', t(''), 'magnet'],
-// DISABLE FOR NOW    'settings/boxes' => ['sub', t('Devices'), 'Boxes', 'manage', '', t(''), 'phone'],
+// DISABLE FOR now()    'settings/boxes' => ['sub', t('Devices'), 'Boxes', 'manage', '', t(''), 'phone'],
     'settings/proxies' => ['sub', t('Proxies'), 'Proxies', 'manage -co', '', t(''), 'thumbs-up'],
     'settings/zot' => ['sub', 'zot', '', ANY], // Drupal bug: last choice is omitted
 

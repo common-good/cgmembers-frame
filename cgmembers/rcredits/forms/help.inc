@@ -47,7 +47,7 @@ function formHelp_submit($form, &$sta) {
   $uid = $mya->id;
   $who = "$mya->fullName ($mya->mainQid)";
   extract(just('message file', $sta['input']));
-  $time = r\rTime();
+  $time = now();
   $msg = 'msg to admin';
 
   foreach ($_FILES['files'] as $k => $v) $file[$k] = $v['file'];

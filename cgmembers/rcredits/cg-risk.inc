@@ -29,7 +29,7 @@ function acctRisk1($uid, $thresholds, &$risk = 0, &$calc = 0) {
   if (!$a->cttyA or $a->cttyA->risk('geography')) setRisk('geography'); // HIDTA (eg Washtenaw cty, MI) (!$a->cttyA is for tests)
   // criminal
   setRisk('cashCo', $a); // high-risk company type according to regs
-  $tenure = $a->tenure / 12 + (r\rTime() - $a->created) / YEAR_SECS; // years of residence ($a->tenure is in months)
+  $tenure = $a->tenure / 12 + (now() - $a->created) / YEAR_SECS; // years of residence ($a->tenure is in months)
   setRisk('new', $tenure ? .5 / ($tenure * $tenure) : 99999, $tenure < 1); // half a year is the standard
   setRisk('moves', $a->moves, $a->moves > 0); // moves over past decade
   setRisk('rents', $a);
@@ -230,7 +230,7 @@ function setBigRisk($uid, $ago, $thresholds, $bitName) {
   global $bigYearIn, $bigYearOut, $newThresholds;
   
   $threshold = $thresholds[$bitName];
-  $now = r\rTime();
+  $now = now();
   $since = $now - $ago; // was - 2 * HOUR_SECS -- an extra couple hours to handle daylight time changes and cron timing
   $mySql =<<<EOF
     SELECT COUNT(*) AS count0, 

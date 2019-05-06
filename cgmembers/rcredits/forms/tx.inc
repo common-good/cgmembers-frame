@@ -80,9 +80,10 @@ function formTx_submit($form, &$sta) {
     if ($func == 'pay' and $mya->snap) r\tellAdmin(t('SNAP member %who %did something', 'who did', $mya->fullName, $ok ? t('bought') : t('tried to buy')), ['topic' => t('SNAP purchase') . ($ok ? '' : t(' failed'))]);
 
     if ($ok and $period = @$repeat) {
-      $subs = ray('payer payee', $mya->id, $uid);
-      $info = $subs + compact(ray('amount period'));
-      if ($id = db\get('id', 'r_recurs', 'payer=:payer AND payee=:payee AND ended=0', $subs)) $info += compact('id');
+      $subs = ray('payer payee ended', $mya->id, $uid, 0);
+      $created = today(); // make sure this is earlier than tx date AND as early as possible in the day
+      $info = $subs + compact(ray('amount period created'));
+      if ($id = db\get('id', 'r_recurs', $subs)) $info += compact('id');
       db\updateOrInsert('r_recurs', $info, 'id');
       $repeats = ray(OFTENS);
 //      $often = strstr($repeats[$repeat], ' ', TRUE);
@@ -93,25 +94,3 @@ function formTx_submit($form, &$sta) {
   
   return say($msg, $args + @compact('often'), $ok ? '' : 'amount');
 }
-
-/**
- * Return options for repeating payments or charges
- *//*
-function repeatOpts() {
-  $weekday = date('l');
-  $day = (int) date('j');
-  $nth = ceil($day / 7);
-  $nth .= u\stndrdth($nth);
-  $dayth = date('jS');
-  $month = date('F');
-  $res = [
-    '' => t('No'),
-// to often -- no chance to recover from failure   'D' => t('Daily'), 
-    'W' => t('Weekly on ') . $weekday,
-//    'mw' => t('Monthly on %nth %weekdays', compact('nth', 'weekday')),
-    'M' => t('Monthly on the %dayth', compact('dayth')),
-    'Y' => t('Yearly on %month %day', compact('month', 'day')),
-  ];
-  if ($day > 28) unset($res['mw']); // disallow 5th weekday (might change this to "last"?)
-  return $res;
-}*/

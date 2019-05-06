@@ -365,7 +365,7 @@ function formEmpty($form, &$sta = '', $args = '') {
 function authcode() {
   extract($args = just('company cocode', $_GET));
   if (!@$cocode or !u\isQid(@$company) or !($co = r\acct($company)) or !$co->co or $co->emailCode != $cocode) exit(t('bad company account ID or cocode'));
-  $now = time();
+  $now = now();
   exit(substr(u\cry('P', u\randomString(1) . serialize(compact('cocode', 'now'))), 2));
 }
 
@@ -416,7 +416,7 @@ function formInvitedWhom($form, &$sta) {
   $old = strtotime((R_INVITE_DAYS + 2) . ' days ago');
   $sql = <<<EOF
     SELECT DISTINCT IFNULL(u1.fullName, i.email) AS who, invited, invited<:old AS expired,
-      (u1.flags&(1<<:B_MEMBER)) AS member
+      u1.:IS_MEMBER AS member, u1.:IS_OK AS ok, u1.:IS_CO AS co
     FROM r_invites i LEFT JOIN users u1 ON u1.uid=i.invitee
     WHERE i.inviter=:uid ORDER BY invited DESC
 EOF;

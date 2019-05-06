@@ -259,7 +259,7 @@ function doTx($info, $thing) {
   $inv = ($thing == 'Invoice');
   extract($info);
 
-  u\setDft($created, r\rTime());
+  u\setDft($created, now());
 	foreach (ray('payer payee') as $k) if (@$$k) txUid($$k, $$k, ${$k . 'Agent'});
 //  if (@$payer) txUid($from, $payer, $fromAgent);
 //  if (@$payee) txUid($to, $payee, $toAgent);
@@ -605,7 +605,7 @@ function cronRuns($op) {
   global $cronOp; $cronOp = $op;
   include_once __DIR__ . '/rcron/rcron.inc';
   
-  $now = r\rTime();
+  $now = now();
   \setV('r_last_cron', ray('day week month', $now, $now, $now)); // normally don't run periodics
 
   if ($op == 'ALL') { //  or strpos(R_DAILY_TASKS, " $op ")
@@ -696,7 +696,6 @@ function noSuchEmail($index, $email) {
   return !findEmail($index, $email, []);
 //  $subject = strtr($GLOBALS['emailSubjects'][$index], $esubs);
 //  $pattern = strtr('%"index":"INDEX","email":"EMAIL"%', ray('INDEX EMAIL', $index, $email));
-//  return !db\exists('r_log', 'info LIKE :pattern', compact('pattern'));
 }
 
 /** 
@@ -1244,9 +1243,11 @@ function output($msg, $color = 'error') {
 function clear($ch = 0) {
 /**/  if (!isDEV or isPRODUCTION) die('clear ' . DEV_ONLY_MSG);
   include_once __DIR__ . '/admin/admin.inc';
+  global $tTime; $tTime = time(); // all events happen simultaneously during a test (conceptually)
   global $lastGo, $formOut, $formArray, $formSta, $testOp, $testConfirmation, $tChecked, $tRadios, $testEmails;
   global $nextCode; $nextCode = NULL;
   global $sms_devel; $sms_devel = TRUE;
+  global $newThresholds; unset($newThresholds);
   global $testRewardStep; $testRewardStep = 500;
 //  global $testRewarding; $testRewarding = TRUE; // normally set this true in tests only if testing this feature
   global $T_POST; $T_POST = $_POST = [];
@@ -1262,12 +1263,14 @@ function clear($ch = 0) {
 /**/ if (u\test() and !strpos($sceneTest->sceneName, 'Statement')) echo "scene: $sceneTest->sceneName<br>\n"; // helpful when test dies
 ///   file_put_contents(flog(), ''); // clear log file on disk
 
-  $tables = 'r_bad r_ballots r_boxes r_stakes r_coupons r_coupated r_do r_events r_honors r_investments r_invites r_invoices r_changes r_near r_notices r_options r_pairs r_proposals r_questions r_proxies r_ratings r_recurs r_request r_relations r_shares r_stats r_tous r_txs r_usd r_usd2 r_user_industries r_votes x_users x_relations x_invoices x_txs x_usd x_photos queue sessions cache';
+  $tables = 'r_bad r_ballots r_boxes r_changes r_company r_coupated r_coupons r_do r_events r_honors r_investments r_invites r_invoices r_ips r_near r_notices r_options r_pairs r_photos r_proposals r_proxies r_questions r_ratings r_recurs r_relations r_request r_shares r_stakes r_stats r_tous r_txs r_usd r_usd2 r_user_industries r_votes x_invoices x_photos x_relations x_txs x_usd x_users queue sessions cache';
   foreach (ray('bootstrap form menu') as $k) $tables .= " cache_$k";
   foreach (ray($tables) as $table) if (db\exists($table)) db\q("TRUNCATE $table");
 
   db\q('DELETE FROM users WHERE uid<>0');
   db\q('DELETE FROM r_criteria WHERE ctty<>0');
+  $varKeys = ray('backingReserve code companies newThresholds negReserve r_last_cron riskThresholds version');
+  db\q("DELETE FROM variable WHERE name IN ('" . join("','", $varKeys) . "')");
   a\setupBasicAccounts();
 
   db\q('UPDATE users SET floor=0,balance=0,minimum=NULL,rewards=0,committed=0');

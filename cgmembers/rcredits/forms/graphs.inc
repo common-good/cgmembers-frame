@@ -18,12 +18,11 @@ function formGraphs($form, &$sta, $args) {
   if (@$download) { // download a spreadsheet with the chart data
     $dt = strftime('%Y%m%d');
     u\setDft($chart, 'success');
-    $today = strtotime('today');
     $cttyName = $ctty ? r\acct($ctty)->name : t('region');
     u\csvStart("$chart-$cttyName-$dt.csv");
     $header[] = ''; // column for data descriptor
     for ($ago = DATA_POINTS; $ago >= 0; $ago--) {
-      $dt = strtotime("-$ago months", $today);
+      $dt = strtotime("-$ago months", today());
       $header[] = strftime('%d%h%Y', $dt);
     }
     u\csv($header);

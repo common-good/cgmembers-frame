@@ -51,7 +51,7 @@ function formInvite($form, &$sta) {
     <ul>
       <li><b>BEST: Print a sheet</b> of invitation cards, %size, on card stock: <%aFront>front</a>, <%aBack>back</a>.<br>(or <%aMailInvites>ask to have some mailed to you</a> at no charge)</li>
       <li><b>Tell your %friend</b> to sign in at %CG_DOMAIN with invitation #&nbsp;%inviteCode or send them this link: <div id=inviteLink>%inviteLink</div></li>
-      <li><b>Complete the form below</b> to send an invitation NOW:</li>
+      <li><b>Complete the form below</b> to send an invitation now():</li>
     </ul>
 EOF
   , compact(ray('_a1 _a2 _size where _aFront _aBack _aMailInvites _inviteLink inviteCode friend')));
@@ -61,7 +61,7 @@ EOF
 
   $email = textFld(t('Email:'), [t('Their email address'), t('An email address for the person you want to invite')]);
 //  $emails = areaFld(t('Email(s):'), t('A comma-separated list of email addresses to invite'));
-  if ($mya->cAdmin) $dupsOk = boolFld(t('Dups Okay?'), '', FALSE);
+  $dupsOk = $mya->cAdmin ? boolFld(t('Dups Okay?'), '', FALSE) : NULL;
   $trusted = boolFld(t('Trusted?'), t('If you lent this person (or people) $250, would you trust them to pay it back?'), $mya->cAdmin ?: NULL);
   $subject = textFld(t('Subject:'), t('The subject of your message'), required($mya->fullName . t(' invites you to %PROJECT')));
 

@@ -50,11 +50,11 @@ Setup:
 
 Scenario: An agent asks to undo a charge
   Given transactions: 
-  | xid | created   | amount | from | to   | purpose      | goods        | taking |*
-  | 4   | %today-1d |     80 | .ZZA | .ZZC | whatever     | %FOR_GOODS |      1 |
+  | xid | created | amount | from | to   | purpose      | goods      | taking |*
+  | 4   | %now-1d |     80 | .ZZA | .ZZC | whatever     | %FOR_GOODS |      1 |
   When agent "C:B" asks device "devC" to undo transaction with subs:
-  | member | code | amount | goods | description | created   |*
-  | .ZZA   | ccA  | 80.00  |     1 | whatever    | %today-1d |
+  | member | code | amount | goods | description | created |*
+  | .ZZA   | ccA  | 80.00  |     1 | whatever    | %now-1d |
 #  When agent "C:B" asks device "devC" to undo transaction 4 code "ccA"
   Then we respond ok txid 5 created %now balance 0 rewards 250 saying:
   | solution | did      | otherName | amount | why   |*
@@ -63,7 +63,7 @@ Scenario: An agent asks to undo a charge
   And with undo "4"
   And we notice "new refund" to member ".ZZA" with subs:
   | created | otherName  | amount | payerPurpose           |*
-  | %today  | Corner Pub | $80    | whatever (reverses #1)  |
+  | %now    | Corner Pub | $80    | whatever (reverses #1)  |
 
 Scenario: An agent asks to undo a charge when balance is secret
   Given transactions: 

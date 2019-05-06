@@ -16,7 +16,7 @@ function formPhoto($form, &$sta, $arg = '') {
   global $mya;
   $chooserStyle = 'btn-md btn-primary';
 	extract(just('ok err recrop', $arg));
-	$recrop = @$recrop ? "$base_url/account-photo/orig=1/" . time() : '';
+	$recrop = @$recrop ? "$base_url/account-photo/orig=1/" . now() : '';
 
   $body = t('I am attaching a photo of me for my %PROJECT card. &nbsp; - %fullName', 'fullName', $mya->fullName);
   $emailIt = t('<%a>Email one to us</a>', '_a', atag('mailto:' . r\regionField('email') . '?subject=photo&body=' . $body));

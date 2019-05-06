@@ -68,7 +68,7 @@ function badAmount(&$amount, $restriction = '', $fractionLimit = 2, $max = NULL)
  * Say whether a given date of birth is bad. Convert dob to internal format.
  */
 function badDob(&$dob) {
-  list ($min, $max) = array(r\rTime() - 150 * 365.25 * DAY_SECS, r\rTime() + 9 * 31 * DAY_SECS);
+  list ($min, $max) = [u\plusMonths(-150 * 12), u\plusMonths(9)]; // 150 years old to just conceived
   return u\badDate($dob, $min, $max); // badDate makes dob internal
 }
 
@@ -491,7 +491,8 @@ function SUBS($string, $prefix = ':', $flagField = 'flags') {
   if ($prefix == ':') $string = preg_replace("/([a-z]+[0-9]?\.)?{$prefix}IS_([A-Z0-9_]*)/ms", "($1$flagField&(1<<:B_$2)<>0)", $string); // only for queries
 //  $string = preg_replace("/\\{$prefix}IS_([A-Z0-9_]*)/ms", "($flagField&(1<<:B_$1))", $string);
   $subs = constantSubs($string, $prefix);
-  return $subs ? strtr($string, $subs) : $string;
+  $subs[':NOW'] = now(); // use current time (hypothetical time when testing)
+  return strtr($string, $subs);
 }
 
 /**
@@ -1157,8 +1158,8 @@ function where($ray) {
  * @return the common speech term for the next business day starting then.
  */
 function nextBusDay($start = 0) {
-  return (strftime('%u', r\rTime() + $start) > 5 and !u\test()) ? t('Monday')
-  : ($start == 0 ? t('today') : ($start == 1 ? t('tomorrow') : strftime('%A', r\rTime() + $start)));
+  return (strftime('%u', now() + $start) > 5 and !u\test()) ? t('Monday')
+  : ($start == 0 ? t('today') : ($start == 1 ? t('tomorrow') : strftime('%A', now() + $start)));
 }
 
 define('ENGLISH_ONES', t(' One Two Three Four Five Six Seven Eight Nine Ten Eleven Twelve Thirteen Fourteen Fifteen Sixteen Seventeen Eighteen Nineteen'));
@@ -1256,8 +1257,8 @@ function ends($s, $ends, $noCase = FALSE) {return abbreviates($ends, $s, $noCase
  * @return int: the resulting time, same day of month if possible, otherwise last day of month.
  * strtotime() should do this, but it actually returns March 2nd for strtotime('-1 month', strtotime('3/30/2014'))
  */
-function plusMonths($n, $time = '') {
-  if ($time === '') $time = time();
+function plusMonths($n, $time = NULL) {
+  u\setDft($time, now());
   if ($n > 0) $n = '+' . $n;
   $res = strtotime($n . ' months', $time);
   $day = date('d', $res);
@@ -1397,11 +1398,11 @@ function isName($value) {return preg_match('/^[ \\x{00c0}-\\x{01ff}a-zA-Z0-9\,\.
 function isAcct($acct) {return (is_object($acct) and get_class($acct) == 'CG\\Acct');}
 function hug($s, $arms = '()') {return substr($arms, 0, 1) . $s . substr($arms, -1, 1);} // deprecated
 function s2t($s) {return strtotime(preg_match('/[A-Z]/i', $s) ? $s : str_replace('-', '/', $s));}
-function fmtDate($time = NULL, $numeric = FALSE) {return strftime($numeric ? '%m/%d/%Y' : '%d%b%Y', isset($time) ? $time : r\rTime());}
-function fmtTime($time = NULL) {return strtolower(strftime('%I:%M%p', isset($time) ? $time : r\rTime()));}
+function fmtDate($time = NULL, $numeric = FALSE) {return strftime($numeric ? '%m/%d/%Y' : '%d%b%Y', nn($time, now()));}
+function fmtTime($time = NULL) {return strtolower(strftime('%I:%M%p', nn($time, now())));}
 function lastCall($far = 4) {$back = debug_backtrace(); return array_slice($back, 1, $far);}
 function digits(&$n) {return $n = preg_replace('/\D/', '', @$n);}
-function monthDay1($time = NULL) {return strtotime(strftime('1%b%Y', isset($time) ? $time : r\rTime()));}
+function monthDay1($time = NULL) {return strtotime(strftime('1%b%Y', nn($time, now())));}
 function monthDif($dt2, $dt1) {return (date('Y', $dt2) - date('Y', $dt1)) * 12 + (date('m', $dt2) - date('m', $dt1));}
 function prefix($prefix, &$var) {$var = $prefix . $var;}
 function preray($prefix, &$r0) {u\EXPECT(is_array($prefix) and (is_array($r0) or is_object($r0)), 'badray');$r = $prefix + (array) $r0; $r0 = is_object($r0) ? (object) $r : $r;}

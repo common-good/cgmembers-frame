@@ -74,7 +74,7 @@ function setupBasicAccounts() {
     $info += compact(ray('email phone address city state helper'));
     $cgf = new r\Acct($info);
     \setV('cgf_uid', $cgf->id);
-    $cgf->update('emailCode website', '1495kJHm0h145PHh2345h', 'cg4.us');
+    $cgf->update('emailCode website activated created', '1495kJHm0h145PHh2345h', 'cg4.us', R_LAUNCH, R_LAUNCH);
 //    $cgf->newRelation($wws->id, r\perm(B_MANAGE));
   }
 }
@@ -275,7 +275,7 @@ function ssnShow($a) {
   foreach($addresses as $rec) {
     $rec = (object) $rec;
 /**/ $rows[] = array($rec->datereported ? u\fmtDate(strtotime($rec->datereported)) : '', u\ssnName($rec), $rec->dob ? u\fmtDate(strtotime($rec->dob)) : '', u\ssnAddr($rec), ucwords(@strtolower(print_r($rec->county, 1)))); // county was an array once
-/**/ if (r\rTime() - @strtotime($rec->datereported) < 10 * YEAR_SECS) $counties[print_r($rec->county, 1)] = 1;
+/**/ if (now() - @strtotime($rec->datereported) < 10 * YEAR_SECS) $counties[print_r($rec->county, 1)] = 1;
   }
   if (!@$a->moves) $a->update('moves', max(0, count($counties) - 1));
   
@@ -436,21 +436,22 @@ function flagsDesc($n, $list) {
 
 /**
  * Return a table of deposits.
+ * for example a\deposits(0, TRUE); (to help with reconciliation)
  */
-function deposits() {
+function deposits($starting = 0, $showTxIds = FALSE) {
   global $base_url;
   $sql = <<<EOF
     SELECT SUM(IF(amount>0 AND txid>0, amount, 0)) AS amountIn, SUM(IF(amount>0 AND txid>0, 1, 0)) AS countIn,
       SUM(IF(amount<0 AND txid>0, amount, 0)) AS amountOut, SUM(IF(amount<0 AND txid>0, 1, 0)) AS countOut,
       SUM(IF(txid<0, amount, 0)) AS amountBad, SUM(IF(txid<0, 1, 0)) AS countBad,
-      deposit
-    FROM r_usd WHERE amount<>0 and created<=:NOW
+      deposit, IF(txid<0, 'bad', IF(amount>0, 'in', 'out')) AS type
+    FROM r_usd WHERE amount<>0 AND created<=:NOW AND created>=:starting
     GROUP BY deposit ORDER BY deposit<>0, deposit DESC, amount<0
 EOF;
 
-  $today = strtotime('today');
+  $today = today();
   $ways = ray('In Out Bad', t('IN'), t('OUT'), t('BAD')); // translate, don't use strtoupper
-  $q = db\q($sql); // include today's potential deposit at the top
+  $q = db\q($sql, compact('starting')); // include today's potential deposit at the top
 
   while ($row = $q->fetchAssoc()) {
     extract($row);
@@ -459,14 +460,21 @@ EOF;
       list ($total, $count) = [u\fmtAmt(${"amount$way"}, ''), number_format(${"count$way"})];
       if (!$count) continue;
       if ($firstline) {
-        $dateDpy = $deposit == 1 ? t('<b>ANCIENT</b>') : ($deposit ? u\fmtDate($deposit) : t('<b>TODAY</b>'));
+        $dateDpy = $deposit == 1 ? t('<b>ANCIENT</b>') : ($deposit ? u\fmtDate($deposit, TRUE) : t('<b>TODAY</b>'));
         $date = strftime('%Y%m%d', $deposit ?: $today);
         $details = w\btn("/sadmin/deposit-details/date=$deposit&total=$total&count=$count", t('details'));
         if (!$deposit or $deposit >= $today - 90 * DAY_SECS) $details .=
           ' ' . w\btn('', t('flnm'), 'default', 'xs', ray('class data-flnm', 'filename', "CGach-$date.csv"))
         . ' ' . w\lnk("/sadmin/achs/date=$deposit&mark=0", t('download'));
-        if ($count) $details .= ' ' . w\btn("/sadmin/checks/way=In&date=$deposit&mark=0", t('checks')); 
+        if ($count) $details .= ' ' . w\btn("/sadmin/checks/way=In&date=$deposit&mark=0", t('checks'));
       } else $dateDpy = $details = '';
+
+      if ($showTxIds) {
+        $where = $type == 'bad' ? 'txid<0' : ('txid>0 AND amount' . ($type == 'in' ? '>0' : '<0'));
+        $baids = db\col('bankTxId', 'r_usd', "deposit=:deposit AND $where", compact('deposit'));
+        foreach ($baids as $i => $baid) $baids[$i] = btxid($baid);
+        $bankTxIds = '<td>' . join(', ', $baids) . '</td>';
+      } else {$bankTxIds = '';}
 
       $deposits[] =<<<EOF
 <tr>
@@ -475,16 +483,18 @@ EOF;
   <td>$count</td>
   <td>$total</td>
   <td>$details</td>
+  $bankTxIds
 </tr>
 EOF;
       $firstline = FALSE;
     }
   }
   $deposits = join("\n", @$deposits ?: []);
-  $header = t('<tr><th>Transfers</th><th></th><th>Count</th><th>Total</th><th></th></tr>');
+  $header = t('<th>Transfers</th><th></th><th>Count</th><th>Total</th><th></th>');
+  $header .= $showTxIds ? t('<th>Bank Tx IDs</th>') : '';
   return <<<EOF
 <table id="deposits">
-$header
+<tr>$header</tr>
 $deposits
 </table>
 EOF;
@@ -497,7 +507,7 @@ EOF;
       if (!$count) continue;
       $details = w\btn("/sadmin/deposit-details/way=$way&date=$deposit&total=$total&count=$count", t('details'), w\away());
       if ($way == 'Out') {
-        list ($WAY, $date) = [t('OUT'), strftime('%Y%m%d', $deposit ?: strtotime('today'))];
+        list ($WAY, $date) = [t('OUT'), strftime('%Y%m%d', $deposit ?: today())];
         $details = w\btn('', t('flnm'), 'default', 'xs', ray('class data-flnm', 'filename', "CGach$WAY-$date.csv")) . ' ' . $details;
       }
 
@@ -579,7 +589,7 @@ function printCheck(&$ck, $pos, $tx, $mark) {
   $ck->say("<b>$txid</b>", -$W / 4, '', -$W / 4 - $m, '', '', 'R');
 
   $ck->say('DATE:', 6.7, $y += .4, '', .25, '8');
-  $ck->say(u\fmtDate($deposit ?: r\rTime()), 7.1, '', '', .25);
+  $ck->say(u\fmtDate($deposit ?: now()), 7.1, '', '', .25);
 
   $ck->say('Pay to the<br>Order of', $m, $y += .4, '', 2 * $lineH, '8;CAPS');
   $ck->say("  $toName", $m + .7, $y + $lineH, 5.9, $lineH, '', '', 'BR');
@@ -606,7 +616,7 @@ function printCheck(&$ck, $pos, $tx, $mark) {
   $ck->say("C000{$txid}C A{$routing}A {$account}C", $m, $mt - $m + CHECK_HEIGHT - .25 - $lineH * (12 / PDF_FONT_SIZE), '', '', 'GnuMICR;12');
 //  $ck->say('', 0, $mt - $m + CHECK_HEIGHT, $W, 1, '', '', 'T'); // comment this out
   
-  if (!$deposit and $mark) db\update('r_usd', ray('deposit txid', strtotime('today'), $txid), 'txid');
+  if (!$deposit and $mark) db\update('r_usd', ray('deposit txid', today(), $txid), 'txid');
 }
 
 /**
@@ -763,7 +773,7 @@ function nextMember($id = 0) {
 function callDetails($type = '', $when = '') {
   global $mya;
   
-  $now = time();
+  $now = now();
   $keys = ray('nocall pre setup activate welcome annual');
   $heads = ray(t('No call,Just beginning,Setup,Activate,Welcome,Annual'));
   $heads = array_combine($keys, $heads);
@@ -884,7 +894,7 @@ function callDetails($type = '', $when = '') {
  * Return statistics about member donations for members signed up after a certain date.
  */
 function donationTrend($co = FALSE, $since = NULL) {
-	u\setDft($since, NOW - YEAR_SECS);
+	u\setDft($since, now() - YEAR_SECS);
 	$co = $co ? 'u.:IS_CO' : 'NOT u.:IS_CO';
 	$where = "$co AND u.:IS_OK AND u.created>:since";
 	

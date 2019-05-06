@@ -9,13 +9,13 @@ Setup:
   | .ZZA | Abe One  | ok     |
   | .ZZB | Bea Two  | ok     |
   And these "events":
-  | id | ctty | type | event         | start     | end       |*
-  |  1 | ctty |    P | RFP ($10,000) | %today-1w | %today-2d |
-  |  2 | ctty |    G | Grade         | %today    | %tomorrow |
+  | id | ctty | type | event         | start        | end          |*
+  |  1 | ctty |    P | RFP ($10,000) | %daystart-1w | %daystart-2d |
+  |  2 | ctty |    G | Grade         | %daystart    | %daystart+1d |
   And these "proposals":
-  | id | event | project | overview | categories | purpose | systemic | where | when | until       | amount | recovery | ctty |*
-  | 1  |     1 | Dance   | Fun!     | arts,food  | move    | mystery  | here  | %today | %today+1d |   1000 |       15 | ctty |
-  | 2  |     1 | Play    | Funner   | energy     |  health | very     | there | %today | %today+2d |   2000 |       48 | ctty |
+  | id | event | project | overview | categories | purpose | systemic | where | when      | until        | amount | recovery | ctty |*
+  | 1  |     1 | Dance   | Fun!     | arts,food  | move    | mystery  | here  | %daystart | %daystart+1d |   1000 |       15 | ctty |
+  | 2  |     1 | Play    | Funner   | energy     |  health | very     | there | %daystart | %daystart+2d |   2000 |       48 | ctty |
 
 Scenario: A member grades a proposal
   When member ".ZZA" visits page "community/events"

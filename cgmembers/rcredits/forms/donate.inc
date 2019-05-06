@@ -65,9 +65,9 @@ function formDonate_submit($form, &$sta) {
   $mya = w\eLinkAcct($sta); 
 
   extract(just('amount period honor honored roundup recurId', $sta['input']));
-  $info = ray('payer payee amount period created lastTx invoiced', $mya->id, CGID, $amount, $period, NOW, 0, 0);
+  $info = ray('payer payee amount period created lastTx invoiced', $mya->id, CGID, $amount, $period, now(), 0, 0);
   if ($period != 'X' and @$recurId) {
-		db\update('r_recurs', ray('id ended', $recurId, NOW), 'id');
+		db\update('r_recurs', ray('id ended', $recurId, now()), 'id');
 		say(t('Your previous recurring gift has been canceled.'));
 	}
 

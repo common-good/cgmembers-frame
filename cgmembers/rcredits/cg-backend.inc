@@ -233,7 +233,7 @@ u\EXPECT(compact(ray('xid amount what acct data tid toMe byMe otherTid force')),
     if (!$invoicing) {
       extract(just('xid tid otherTid', $args), EXTR_PREFIX_ALL, 'new');
       $old_data['undoneBy'] = $new_xid;
-      $old_data['changes'][] = array(r\rTime(), $mya->agentId, 'undo', $new_xid);
+      $old_data['changes'][] = array(now(), $mya->agentId, 'undo', $new_xid);
       $newTids = u\order($toMe, $new_otherTid, $new_tid);
       for ($i = 0; $i < 2; $i++) $what0[$i] .= t(' (reversed by #%tid)', 'tid', $newTids[$i]);
       $sql = <<<EOF
@@ -288,7 +288,7 @@ function payInvoice($nvid, &$msg = '') {
       extract($res); // shid vestid
       */
     if ($shid) { // record the sale
-      db\update('r_shares', ray('shid shares pending when', $shid, -$amount, 0, NOW), 'shid');
+      db\update('r_shares', ray('shid shares pending when', $shid, -$amount, 0, now()), 'shid');
     } else r\tellCo(t('Invoice payment marked as "for investment (repayment)" has no corresponding SELL request in shares table.'), $inv, $payee);
   }
   unset($DBTX);
@@ -335,7 +335,7 @@ function payInvoice($nvid, &$msg = '') {
 function transfer($ttype, $a1, $a2, $amount, $for, $data = []) {
   global $scanned, $channel;
   u\EXPECT(compact(ray('a1 a2 data')), 'acct acct assoc');
-  list ($created, $goods) = [r\rTime(), FOR_GOODS]; // defaults
+  list ($created, $goods) = [now(), FOR_GOODS]; // defaults
   extract(just('created goods', $data));
   u\setDft($for, ray(R_WHYS)[$goods]);
 
@@ -476,7 +476,7 @@ function invoice($a1, $a2, $amount, $purpose = NULL, $extra = []) {
   if ($err = r\txPermErr($a1, $a2, TRUE)) return r\txRet($err, $subs);
   if (r\dupTx($payee, $payer, -$amount)) return r\txRet('duplicate transaction', $subs);
   
-  $created = r\rTime();
+  $created = now();
   u\setDft($status, ($channel != TX_FOREIGN and r\relation(':IS_AUTOPAY', $payee, $payer)) ? TX_APPROVED : TX_PENDING);
   $data = serialize($extra);
   $info = @compact(ray('amount status payer payee goods purpose created flags data'));
@@ -621,7 +621,7 @@ function creditInfo($args = []) {
   if (!$a = r\acct(@$uid)) return NULL; else $uid = $a->id;
   $jid = @$noj ? 0 : ($a->jid ?: 0);
 
-  u\setDft($asof, $asof0 = r\rTime() + DAY_SECS);
+  u\setDft($asof, $asof0 = now() + DAY_SECS);
   $mday1 = u\monthDay1($asof); // start of relevant month, for partial (not-yet-given) roundups calculation
   if ($asof == u\plusMonths(1, $mday1) - 1) $mday1 = $asof + 1; // for asof the end of month, there are no partRounds
   $subs = compact(ray('uid jid asof'));

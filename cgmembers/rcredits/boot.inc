@@ -103,7 +103,7 @@ define('FRAME_SOURCES', "https://cg4.us/chart.php $base_url/rcredits/misc/chart.
  * nonces are for spin.min.js on iPhone (but it doesn't work)
  */
 function setCSP() {
-  $styleNonce = base64_encode(substr(hash('sha256', PROJECT . time(), TRUE), 0, 32));
+  $styleNonce = base64_encode(substr(hash('sha256', PROJECT . now(), TRUE), 0, 32));
   $sid = session_id();
 
   \drupal_add_http_header('Content-Security-Policy', 

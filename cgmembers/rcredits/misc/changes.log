@@ -1,4 +1,19 @@
-2019-05-2019 feature/show-autopays
+2019-05-05 feature/misc-todos
+. fixed bug that doubled and mislabeled first recurring donation (not to CG)
+. changed SNAP question to "Do you qualify for any of the following"
+. show banktxid(s) on deposits screen
+. deposits screen: filterable by start date (earliest to show) and limit to 42 checks
+. fixed bug: box was not recorded for smartphone transactions
+. overhauled dates, using new function now() to replace r\rTime(), allowing tests to set hypothetical times
+. moved account activation function from acct class to forms\summary.inc (where it is called). no changes made.
+. added option to several db functions (in cg-db.inc) to present parameters as an associative array, without a "where" parameter.
+. added tables and variable table variables to _clear() in cg-testing.inc
+. changed tenure field to ask for years and months instead of just months
+. made format on preferences page more consistent
+. simplified summary page for communities, now that there is a balance sheet page
+. consolidated last cron variable in variables table
+
+2019-05-02 feature/show-autopays
 . fixed bug in setLocus that chose first possible match rather than the one with highest confidence
 . removed emails from bottom of Member List page
 . general account search for admins

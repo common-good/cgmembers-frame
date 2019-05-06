@@ -48,7 +48,7 @@ EOF;
     $fAmount = u\fmtAmt($amount, '$');
     $fPeriod = t(ray(OFTENS)[$period]);
     $fCreated = u\fmtDate($created, TRUE);
-    $finished = (0 < $ended) and ($ended < time());
+    $finished = (0 < $ended) and ($ended < now());
     $fNext = $finished ? '' : u\fmtDate(nextRecur($created, $period), TRUE);
     $fEnded = $ended <= 0 ? '' : u\fmtDate($ended, TRUE);
     $button = $finished ? '' : t('Stop recurring transaction');
@@ -95,7 +95,7 @@ function addLine($info, $classes, $url) {
 function nextRecur($starting, $period) {
   if (array_key_exists($period, OFTENS_SECS)) {
     $perSecs = OFTENS_SECS[$period];
-    $nPer = ceil((r\rTime() - $starting) / $perSecs);
+    $nPer = ceil((now() - $starting) / $perSecs);
     return round($starting + ($nPer * $perSecs));
   } else {
     return FALSE;
@@ -116,7 +116,7 @@ function stopRecur($id) {
   if ($ended) return w\err('recur already ended');
   if ($payer != $mya->id) return w\err('recur not yours');
 
-  db\update('r_recurs', ray('id ended', $id, time()), 'id');
+  db\update('r_recurs', ray('id ended', $id, now()), 'id');
   return w\say('recur stopped');
 }
 

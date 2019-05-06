@@ -449,7 +449,7 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
  *     TEST paybutton AMemberClicksAPayWithCommonGoodButton
  *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     TEST preferences AMemberVisitsThePreferencesPage
- *     TEST preferences AnotherMemberVisitsThePreferencesPage
+ *     TEST preferences ACompanyAgentVisitsThePreferencesPage
  *     TEST relations MemberHasAnEmployeeConfirmed
  *     TEST relations MemberHasAnEmployeeUnconfirmed
  *     TEST relations MemberHasARelationWithAContractor
@@ -486,7 +486,7 @@ function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWit
  * in: TEST custstatement ACompanyLooksAtACustomerStatement
  *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     TEST preferences AMemberVisitsThePreferencesPage
- *     TEST preferences AnotherMemberVisitsThePreferencesPage
+ *     TEST preferences ACompanyAgentVisitsThePreferencesPage
  *     TEST relations ItsComplicated
  *     TEST signupco AMemberRegistersACompany
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
@@ -650,7 +650,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE paybutton AMemberClicksAPayWithCommonGoodButton
  *     MAKE paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     MAKE preferences AMemberVisitsThePreferencesPage
- *     MAKE preferences AnotherMemberVisitsThePreferencesPage
+ *     MAKE preferences ACompanyAgentVisitsThePreferencesPage
  *     MAKE relations MemberHasAnEmployeeConfirmed
  *     MAKE relations MemberHasAnEmployeeUnconfirmed
  *     MAKE relations MemberHasARelationWithAContractor
@@ -1294,8 +1294,7 @@ function memberEmailInvitationCodeIs($id, $code) {
 /**
  * we show checked: (ARG)
  *
- * in: TEST preferences AMemberVisitsThePreferencesPage
- *     TEST preferences AnotherMemberVisitsThePreferencesPage
+ * in: 
  */
 function weShowChecked($what, $wantSet = TRUE) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -1316,7 +1315,7 @@ function weShowChecked($what, $wantSet = TRUE) {
 /**
  * we show unchecked: (ARG)
  *
- * in: TEST preferences AMemberVisitsThePreferencesPage
+ * in: 
  */
 function weShowUnchecked($what) {return weShowChecked($what, FALSE);}
 
@@ -1324,7 +1323,7 @@ function weShowUnchecked($what) {return weShowChecked($what, FALSE);}
  * radio (ARG) is (ARG)
  *
  * in: TEST preferences AMemberVisitsThePreferencesPage
- *     TEST preferences AnotherMemberVisitsThePreferencesPage
+ *     TEST preferences ACompanyAgentVisitsThePreferencesPage
  */
 function radioIs($k, $v) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -1465,6 +1464,7 @@ function weScripWithSubs($script, $args = []) {
  *     TEST gift AMemberMakesARecurringDonation
  *     BOTH gift AMemberMakesANewRecurringDonation
  *     TEST gift AMemberDonatesWithInsufficientFunds
+ *     MAKE preferences Setup
  *     MAKE showrecurs Setup
  *     TEST showrecurs AMemberStopsAnAutopayment
  *     TEST transact AMemberPaysAnotherMemberRepeatedly
@@ -1517,3 +1517,36 @@ function recurs($list) {return t\recurs($list);}
  * in: MAKE balancesheet AMemberLooksAtTheBalanceSheet
  */
 function variableIs($k, $v) {return t\varIs($k, $v);}
+
+/**
+ * field (ARG) is (ARG) field (ARG)
+ *
+ * in: TEST transact AMemberPaysAnotherMemberRepeatedly
+ */
+function fieldIsField($fld1, $op, $fld2) {
+  global $testOnly; if (!$testOnly) return FALSE;
+  foreach ([1,2] as $i) {
+    $fi = $f[$i] = explode('/', ${'fld' . $i}); // tnm/idFnm/id/fldNm
+    $v[$i] = db\get($fi[3], 'r_' . $fi[0], [$fi[1] => $fi[2]]);
+  }
+  switch ($op) {
+    case "<": return ($v[1] < $v[2]);
+    case "<=": return ($v[1] <= $v[2]);
+    case "=": return ($v[1] == $v[2]);
+    case ">=": return ($v[1] >= $v[2]);
+    case ">": return ($v[1] > $v[2]);
+    default: return FALSE;
+  }
+}
+
+/**
+ * date field (ARG) rounded (ARG) in (ARG) record (ARG) (id field (ARG))
+ *
+ * in: TEST transact AMemberPaysAnotherMemberRepeatedly
+ */
+function dateFieldRoundedInRecordidField($dateFnm, $round, $tnm, $id, $idFnm) {
+  global $testOnly; if (!$testOnly) return FALSE;
+  $date = db\get($dateFnm, "r_$tnm", [$idFnm => $id]);
+  $rounded = (strtotime('today', $date) == $date);
+  return ($round == 'yes' xor !$rounded);
+}
