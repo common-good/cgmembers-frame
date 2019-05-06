@@ -25,7 +25,7 @@ function custStatement($args = '') {
 
 //  list ($start, $end, $period) = statementMonth($period, $mya->fyEnd ?: '12/31'); // not used yet
 
-  $q = @$way == 'IN' ? be\myCustTxs(0, time(), $mya, $a) : be\myCustTxs(0, time(), $a, $mya);
+  $q = @$way == 'IN' ? be\myCustTxs(0, now(), $mya, $a) : be\myCustTxs(0, now(), $a, $mya);
   if (!$q->rowCount()) return w\softErr(t('That is not a %thing of yours.', 'thing', $way == 'IN' ? t('customer') : t('vendor')));
 
   $pdf = new r\Statement($mya);
@@ -99,5 +99,5 @@ function custStatement($args = '') {
 
   $pdf->SetFillColorArray([255, 255, 0]); // yellow
   $pdf->Cell($pageWidth - 2 * $m, 0, "$closing", '', 1 , 'L', TRUE);
-  $pdf->finish(t('Statement-%acct-%date.pdf', 'acct date', $a->mainQid, strftime('%m-%d-%Y', time()))); //Close and output PDF document
+  $pdf->finish(t('Statement-%acct-%date.pdf', 'acct date', $a->mainQid, strftime('%m-%d-%Y', now()))); //Close and output PDF document
 }

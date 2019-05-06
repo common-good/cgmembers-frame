@@ -22,7 +22,7 @@ function couponsPrint($args = '') {
   $amount =  $amount < 0 ? u\fmtAmt(-$amount / 100, '%s') : u\fmtAmt($amount, 's$');
   u\setDft($count, 8);
 
-  if (@$start == strtotime('today')) $start = '';
+  if (@$start == today()) $start = '';
   if (@$end) {
     $end = u\fmtDate(@$end, TRUE);
     $dates = @$start ? u\fmtDate($start, TRUE) . t(' to ') . $end : (t('expires ') . $end);

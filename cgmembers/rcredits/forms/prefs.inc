@@ -21,7 +21,20 @@ function formPrefs($form, &$sta) {
   $food0 = $mya->food * 100;
   $food = textFld(t('Food Fund:'), [t('Contribution Percentage'), t('Pay a little extra every time you pay for food or meals with %PROJECT, to lower the cost of healthy local food for people who can\'t afford it otherwise. For example, 5% here means when you buy a $10 pizza, you contribute 50 cents to the %PROJECT Food Fund. To donate to the %PROJECT Food Fund directly, use the "Pay" button and type "Food Fund".')], dft($food0 ?: '') + suffix(' %'));
   
-  if (!$mya->co) $snap = textFld(t('SNAP Number:'), [t('SNAP Number'), t('If you are eligible for SNAP, type your number here, to get a discount on food you buy through %PROJECT. If you are NOT eligible for SNAP, but need help with food expenses, call us at %phone.', 'phone', u\fmtPhone(CGF_PHONE, '-'))], dft($mya->snap));
+  if (!$mya->co) {
+/*    $bits = ray(SNAP_BITS);
+    $bitNames = array_keys($bits);
+    foreach ($bitNames as $i => $k) {
+      $dpy = w\popHelp($k, $bits[$k], '#');
+      $aliases[$k] = "<div\">$dpy</div>";
+    }
+    $snap = bitsFld(t('Eligibilities:'), $mya->snap, 'b', $bitNames, $bits, t(''));*/
+    $list = 'CHIP, CNP, EAEDC, EITC, Fuel Assistance, Medicaid, LIHEAP, Section 8, SNAP, SSP, TAFDC, TANF, WIC';
+    $st = r\realState($mya->state);
+    if ($st == 'MA') $list .= ', HIP';
+//    if ($st == 'VT') $list .= ', XXX';
+    $snap = boolFld(t('Food Assistance?'), t('If you struggle to afford healthy food, consider answering "Yes" here. This is a request for financial assistance from other %PROJECT members in your community. Your answer is private &mdash; only program administrators can tell who is receiving this assistance. Typically answer "Yes" if you are eligible for any of the following (whether or not you have actually applied): %list.', compact('list')), $mya->snap);
+  } else $snap = NULL;
   
   $backing0 = u\fmtAmt(($mya->backing + 0) ?: 1);
   $backing = item($backing0, t('Backing:'), t('Backing allows you and your community to make grants. For the next 12 months, if there is a cash crunch, you agree to buy this much more %PROJECT credit. If the system fails utterly in that time, your %backing0 credit becomes a contribution.', compact('backing0')), suffix(' <small>[' . lnk('/community/backing', t('change')) . ']</small>'));
@@ -42,10 +55,10 @@ function formPrefs($form, &$sta) {
   $notices = radiosFld(t('Email Notices:'), t('How often, at most, do you want an email digest of your %PROJECT notices? (No email if no notices.)'), dft($dft), $noticeRadios);
 //  $smsNotices2 = boxFld('smsNotices', t('SMS notices:'), t('Send me a text message when I receive a payment, charge, or invoice (requires a <a href="' . $base_url . '/settings/boxes">connected cell phone</a>).'), $mya->can(B_BYSMS)); // (currently disabled)
 
-  $secretBal2 = boxFld('secretBal', t('Secret Balance:'), t("Don't let merchants see my balance, even if I ask."), $mya->can(B_SECRET));
+  $secretBal = boolFld(t('Secret Balance:'), t("Don't let merchants see my balance, even if I ask."), $mya->can(B_SECRET));
   // Double confirmation: by SMS, by email, either. require extra confirmation of crucial account changes
-  if (!$mya->co) $nosearch2 = boxFld('nosearch', t('No Search:'), t("Hide my phone and email address from companies and individuals I do business with. Let members identify my account by name or account ID only &mdash; not by phone or email."), $mya->can(B_NOSEARCH));
-  $debtOk2 = boxFld('debtOk', t('Debt Okay:'), t('Let me use my %PROJECT card as a <i>credit</i> card, allowing my account balance to go negative, limited by my credit limit (currently %limit), based on my average monthly account activity. I understand when I use my credit line  (that is, when my balance goes negative) it is a loan from my %PROJECT community and I will aim to bring my balance back up above zero within 30 days.', 'limit', u\fmtAmt(-$mya->floor)), $mya->can(B_DEBT));
+  $nosearch = $mya->co ? NULL : boolFld(t('No Search:'), t("Hide my phone and email address from companies and individuals I do business with. Let members identify my account by name or account ID only &mdash; not by phone or email."), $mya->can(B_NOSEARCH));
+  $debtOk = boolFld(t('Debt Okay:'), t('Let me use my %PROJECT card as a <i>credit</i> card, allowing my account balance to go negative, limited by my credit limit (currently %limit), based on my average monthly account activity. I understand when I use my credit line  (that is, when my balance goes negative) it is a loan from my %PROJECT community and I will aim to bring my balance back up above zero within 30 days.', 'limit', u\fmtAmt(-$mya->floor)), $mya->can(B_DEBT));
   $posttext = item(t(<<<EOF
 <h4>** Disclaimers required by the IRS:</h4>
 <p>Your choice of how to receive statements applies to all statements you receive from now on. You can change your preference at any time by returning to this Preferences page (on the Settings menu) or by notifying the regional administrator by mail: %regName, %regAddr. Any change will be confirmed in writing (electronically if you accept electronic statements, otherwise by US Mail).</p>
@@ -54,13 +67,13 @@ function formPrefs($form, &$sta) {
 EOF
   , ray('regName regAddr', r\regionfield('legalName'), r\regionfield('postalAddr'))));
 
-  $advancedFields = 'achMin smsNotices2 notices secretBal2 nosearch2 food backing';
+  $advancedFields = 'achMin smsNotices2 notices secretBal nosearch food backing';
   
 //  $submit = submit(t('Update Preferences'));
   
 
   jsx('advanced-prefs', compact('advancedFields'));
-  $form = @compact(ray('title subtext snap roundup crumbs debtOk2 statements showAdvancet ' . $advancedFields)) + w\setupFoot() + compact('posttext');
+  $form = @compact(ray('title subtext snap roundup crumbs debtOk statements showAdvancet ' . $advancedFields)) + w\setupFoot() + compact('posttext');
   return cgform($form);
 }
 

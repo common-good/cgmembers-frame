@@ -25,7 +25,6 @@ X
   $choices0 = ray('10000 2000 500 100 20 1');
   $dft = ($mya->backing + 0) ?: 1;
   if ($dft and !in_array($dft, $choices0)) $choices0[] = $dft;
-  /* debug($dft); */
   foreach ($choices0 as $k) $choices[$k] = u\fmtAmt($k);
   $choices[-1] = t('Other');
   $minDesc = t(' (minimum $1)');
@@ -50,7 +49,7 @@ function formBacking_submit($form, &$sta) {
   global $mya;
   extract(just('amount', $sta['input']));
   if ($amount < $mya->backing) say('backing in effect');
-  $mya->update('backing backingDate', $amount, strtotime('today'));
+  $mya->update('backing backingDate', $amount, today());
   if ($amount > 1) say(t('Thank you for backing your %PROJECT community!'));
   return w\goNextStep('backing');
 }

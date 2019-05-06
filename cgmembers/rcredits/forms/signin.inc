@@ -106,7 +106,7 @@ function formSignin_submit($form, &$sta, $goto = 'summary') {
 //  svar('scanned_in', FALSE);
   setAcct($uid); // , TRUE);
 
-//  r\setCook('loginto', '', r\rTime()-1); // no more default login
+//  r\setCook('loginto', '', now()-1); // no more default login
   u\loga('signin', ['name' => $mya->name]);
 //  if ($mya->superAdmin) f('a.adminSignin');
   if (isSTAGE and !$mya->cAdmin) f('a.makeTestAdmins'); // make sure rCOs can test stuff

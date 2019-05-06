@@ -683,13 +683,13 @@ EOF;
   return item($question . $list, $label, '', ['class' => ['boxes']] + $other);
 }
 
-function fieldSet($id, $flds, $label = '', $other = []) {return fld('fieldset', $label, '', compact('id') + $other) + $flds;}
+function fieldSet($id, $flds, $label = '', $desc = '', $other = []) {return fld('fieldset', $label, $desc, compact('id') + $other) + $flds;}
 
 /**
  * Return a form field for donating fractional dollars.
  */
 function roundupFld($a) {
-  return w\boolFld(t('Round Up?'), t('Fund the common good! Round all your payments up to a whole dollar amount and donate the cents to local nonprofits, community investments, and the common good.'), $a ? $a->roundup : FALSE);
+  return w\boolFld(t('Round Up!'), t('Fund the common good! Round all your payments up to a whole dollar amount and donate the cents to local nonprofits, community investments, and the common good.'), $a ? $a->roundup : FALSE);
 }
 
 /**
@@ -742,9 +742,10 @@ function boxesFld($title, $desc, $defaults, $choices, $aliases = NULL) {
  * @param string $prefix: prefix for defined constants for this bit array field (empty means use $bits index)
  * @param string $bits: array (space or comma-delimited) of names of bits to include (without prefixes)
  * @param assoc $aliases: map of bit names to their display aliases (which may include formatting)
+ * @param string $desc: helpful description to show below the field
  */
-function bitsFld($label, $bitRay, $prefix, $bits, $aliases = []) {
-  $bits = ray($bits);
+function bitsFld($label, $bitRay, $prefix, $bits, $aliases = [], $desc = '') {
+  if (!is_array($bits)) $bits = ray($bits);
   if (!is_numeric(key($bits))) $bits = array_keys($bits); // ignore values (eg weights for risk arrays)
   $defaults = [];
   foreach ($bits as $bit => $bitName) {
@@ -753,7 +754,7 @@ function bitsFld($label, $bitRay, $prefix, $bits, $aliases = []) {
     $bitAliases[$bit] = @$aliases ? strtr($bitName, $aliases) : $bitName;
     if (u\getBit($bitRay, $bit)) $defaults[] = $bit;
   }
-  return boxesFld($label, '', $defaults, $bitNames, $bitAliases);
+  return boxesFld($label, $desc, $defaults, $bitNames, $bitAliases);
 }
 
 /**
@@ -801,10 +802,12 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
   setAcct(); // in case it's an anonymous form, so webAccess doesn't have a chance to set up
   if (!@$formSta['confirm'] and !in($function, R_NOLOG_FORMS)) {
     $formName = str_replace(base_path(), '', $_SERVER['REQUEST_URI']);
-    if ($logs = $_POST) {
-/**/  u\loga('in', $formName . substr(print_r(u\noSecrets($logs), 1), 5)); // without "Array"
-    } else {
-      if (strpos($formName, 'sadmin/') === FALSE and strpos($formName, 'account-') === FALSE) u\loga('form', [$formName]);
+    $logit = TRUE;
+    foreach(ray('sadmin/ account- /wp-admin') as $k) if (strpos($formName, $k) !== FALSE) $logit = FALSE;
+    if ($logit) {
+      if ($logs = $_POST) {
+/**/    u\loga('in', $formName . substr(print_r(u\noSecrets($logs), 1), 5)); // without "Array"
+      } else {u\loga('form', [$formName]);}
     }
   }
 
@@ -946,9 +949,9 @@ function box() {
 function boxUser($code, $uid) {
   if ($id = @$_COOKIE[$cookid = 'boxnum' . $uid] and !u\test()) return $id; // we only get this if last set today
   if ($id = db\get('id', 'r_boxes', 'code=:code AND uid=:uid', compact(ray('code uid')))) {
-    db\update('r_boxes', ray('id access', $id, r\rTime()), 'id');
+    db\update('r_boxes', ray('id access', $id, now()), 'id');
   } else $id = r\makeDevice($uid, $code, TX_WEB);
-  return r\setCook($cookid, $id, r\rTime() + SESSION_LIFE);
+  return r\setCook($cookid, $id, now() + SESSION_LIFE);
 }
 
 /**
@@ -1495,15 +1498,21 @@ function contactFields($defaults = [], $step0, $myid = 0) {
     $state2 = selectFld(t('State:'), t(''), dft(@$state2) + $stateAttrib); // can't use required() here
     $zip2 = textFld(t('Postal Code:'), [t('Postal code'), ''], required(@$zip2) + $zipAttrib);
     
-    $other = item('', t('Other Information'));
+    $other = $step0 ? item('', t('Other Information')) : NULL;
     if ((!@$mya or !$mya->co) and !nn($source)) {
       $source = $step0 ? textFld(t('Referred by:'), [t('How you heard about %PROJECT'), t('Where did you hear about %PROJECT? (name of company or person, web address, publication name, radio station name, or whatever)')]) : NULL;
 //      $source2 = $step0 ? textFld(t('Code:'), [t('Invitation or card code'), t('If you have an invitation or card code, type it here ("B" for brochure). Otherwise leave blank.')]) : NULL;
     } else $source = hidFld(nn($source));
   }
 
-  if (!in('tenure', $fieldsToHide)) $tenure = $step0 ? textFld(t('How long:'), [t('MONTHS at current address.'), t('How long have you been at your current address, in months (roughly)')], required(@$tenure)) : NULL;
-  if (!in('owns', $fieldsToHide)) $owns = boolFld('', '', $step0 ? @$owns : $a->owns, [t('Rent'), t('Own')]); // default fails
+//  $tenure = (in('tenure', $fieldsToHide) or !$step0) ? NULL : textFld(t('How long:'), [t('MONTHS at current address.'), t('How long have you been at your current address, in months (roughly)')], required(@$tenure));
+  if (!in('tenure', $fieldsToHide) and $step0) {
+    $years = textFld(BARE, [t('Years')], suffix(t('&nbsp years + ')));
+    $months = textFld(BARE, [t('Months')], suffix(t('&nbsp months')));
+    $tenure = fieldSet('tenure2', compact('years', 'months'), t('How long:'), t('How long have you been at your current address (roughly)'));
+  } else {$tenure = NULL;}
+
+  $owns = in('owns', $fieldsToHide) ? NULL : boolFld('', '', $step0 ? @$owns : $a->owns, [t('Rent'), t('Own')]); // default fails
 
   return compact(ray($fields));
 }  
@@ -1742,7 +1751,7 @@ function dateRange($args, $url, $choices = [], $settings = '', $downloadable = T
   $submitPeriod = submi(t('Show')); // label has to be different from submitDates (see below)
   if ($downloadable) $downloadPeriod = submi(t('Download'));
 ///  $actions = render($submitPeriod) . render(@$downloadPeriod) . render($showAdvanced);
-  $actions = fieldSet('actionsSimple', @compact('submitPeriod', 'downloadPeriod'), '', suffix($showAdvanced2));
+  $actions = fieldSet('actionsSimple', @compact('submitPeriod', 'downloadPeriod'), '', '', suffix($showAdvanced2));
 ///  $period = selectFld(t('For the past:'), '', dft($period), $txDays);
 //  $onchange = "$('#edit-starting, #edit-ending').val('');";
 //  $onchange = "var id='#edit-submitPeriod'; if (!$(id).is(':visible')) id='#edit-downloadPeriod'; $(id).click();";
@@ -1756,7 +1765,7 @@ function dateRange($args, $url, $choices = [], $settings = '', $downloadable = T
 //  $showSimple2 = '<a id="showSimple" href="javascript:void(0);" onclick="jQuery(\'#advanced\').hide(); jQuery(\'#simple\').show();">simpler</a>';
   $showSimple2 = '<a id="showSimple">simpler</a>';
   if ($downloadable) $downloadDates = submi(t('download')); // must be lowercase
-  $actions = fieldSet('actionsAdvanced', @compact('submitDates', 'downloadDates'), '', suffix($showSimple2));
+  $actions = fieldSet('actionsAdvanced', @compact('submitDates', 'downloadDates'), '', '', suffix($showSimple2));
   $starting = textFld(t('Starting:'), '', dft(u\fmtDate($starting)));
   $ending = textFld(t('Ending:'), '', dft(u\fmtDate($ending)));
   if ($downloadable) $downloadMsg = item(t('<b class="loud">TIP</b>: Tell your browser to allow popups for this site.'));
@@ -1836,9 +1845,9 @@ function dateRangeRedirect($page, &$sta) {
 function rangeDates($period, $starting = '', $ending = '') {
   global $txDays;
   if (@$starting and !is_numeric($starting) and $err = u\badDate($starting)) say($err, 'starting');
-  if (@$starting > r\rTime()) say('beyond today', 'starting');
+  if (@$starting > now()) say('beyond today', 'starting');
   if (@$ending and !is_numeric($ending) and $err = u\badDate($ending)) say($err, 'ending');
-  if (!@$ending or $ending > r\rTime()) $ending = r\rTime();
+  if (!@$ending or $ending > now()) $ending = now();
 
   $period = (int) @$starting ? ($ending - $starting) / DAY_SECS : (@$period ?: TX_DEFAULT_PERIOD);
   $ago = $period == '1' ? '1 day' : (@$txDays[$period] ?: ($period . ' days'));
@@ -1855,7 +1864,7 @@ function rangeDates($period, $starting = '', $ending = '') {
  * @param string $field_name: name of the field the user typed in
  * @param array $info: field values to be stored, then reinstated when the page is refreshed to show the choices
  * @param string $selfMsg: index to error message to give if user self-refers
- * @param bool $paying: <we're preparing to pay this person> (in which case the persn has to have an active account)
+ * @param bool $paying: <we're preparing to pay this person> (in which case the person has to have an active account)
  * @return:
  *   NULL if there is an error
  *   acct of the identified person
@@ -2007,7 +2016,7 @@ function chartFrame($chart, $selectable = FALSE, $ctty = NULL) {
   list ($w, $h) = $selectable ? [600, 600]: [480, 320];
 //  $url = isDEV ? "$base_url/rcredits/misc/chart.php?site=dev" : ("https://cg4.us/chart.php?site=" . str_replace('https://', '', $base_url));
   $url = (isDEV ? "$base_url/rcredits/misc" : "https://cg4.us") . "/chart.php?site=$base_url";
-  return w\tag('iframe', '', ray('src width height', "$url&region=$region&ctty=0&chart=$chart&selectable=$selectable&t=" . time(), $w, $h)); // src must be first
+  return w\tag('iframe', '', ray('src width height', "$url&region=$region&ctty=0&chart=$chart&selectable=$selectable&t=" . now(), $w, $h)); // src must be first
 }
 
 function firstGraphDt($ctty) {  
@@ -2029,7 +2038,7 @@ function showCharts($ctty = 0, $period = 'months', $download = FALSE) {
 
   list ($in, $out, $net, $personal, $companies) = array(t('in'), t('out'), t('net'), t('personal'), t('companies'));
   $txTypes = ray('p2p p2b b2b b2p', t('Person-to-person'), t('Person-to-business (mostly by %PROJECT card)'), t('Business-to-business (paying suppliers)'), t('Business-to-person (including payroll)'));
-  $today = strtotime('today');
+  $today = today();
 
   $charts = ray('success growth funds velocity banking volume', 'success-metrics', 'growth', 'dollar-pool', 'circulation-velocity', 'bank-transfers', 'transaction-volume');
   foreach ($charts as $k => $zot) u\setDft(${$k . 'Data'}, []);
@@ -2214,7 +2223,7 @@ function sendInvite($email, $subject, $message, $dupsOk = TRUE) {
   
   if (!$dupsOk) { // applies only to community admins
     $cemail = u\cry('P', $email);
-    $now = r\rTime();
+    $now = now();
     if (db\exists('r_invites', 'email=:cemail and :now-invited<:R_INVITE_DAYS*:DAY_SECS', compact('cemail', 'now'))) return say(t('NOT sent to %email (dup).', compact('email')));
 //     if (db\exists('users', 'email=:email', compact('email'))) return say("NOT sent to $email (already a member).");
   }
@@ -2268,7 +2277,7 @@ function webAccess($perms = NULL) {
 function css($sheet, $weight = -99) {
   global $rUrl;
   $options = ['group' => CSS_THEME, 'preprocess' => FALSE, 'external' => TRUE] + weight($weight);
-  $version = isPRODUCTION ? R_VERSION : time();
+  $version = isPRODUCTION ? R_VERSION : now();
   \drupal_add_css("$rUrl/css/$sheet?$version", $options);
 }
 
@@ -2481,6 +2490,7 @@ function op($sta) {global $testOp; return u\test() ? $testOp : substr(@$sta['inp
 function verifyBy($byVoice) {return $byVoice ? t('Voice') : t('SMS');}
 //function blurbLink() {global $rUrl; return "<a href=\"$rUrl/templates/invite.html\" target=\"_blank\">" . t('description of %PROJECT') . '</a>';}
 function sayFieldErr($err, $field) {return say(strtoupper($field) . ': ' . t($err), $field);}
+function err($msg) {return say($msg, 'err');}
 function rent($element) {return \render($element);} // Drupal makes render hard, requires pass by reference
 function goNextStep($step, $msg = NULL, $info = []) {if ($step = r\acct()->nextStepUrl($step, $msg, $info)) w\go($step, $msg); elseif (@$msg) say($msg);}
 function away() {return ['target' => '_blank'];}

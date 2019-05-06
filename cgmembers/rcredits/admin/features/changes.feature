@@ -29,9 +29,9 @@ Scenario: A member changes some settings
   | Date | Field       | Old Value            | New Value                   | Changed by |
   | %dmy | flags       | ok ided              | ok ided weekly              | abeone     |
   | %dmy | flags       | ok ided weekly       | ok ided weekly paper        | abeone     |
+  | %dmy | flags       | ok ided weekly paper | ok ided refill weekly paper | abeone     |
   And with:
   | %dmy | crumbs      |                 0.02 |                        0.01 | abeone     |
-  | %dmy | flags       | ok ided weekly paper | ok ided refill weekly paper | abeone     |
   And with:
   | %dmy | achMin      |                   10 |                          11 | abeone     |
   | %dmy | bankAccount | (secret)             | (secret)                    | abeone     |

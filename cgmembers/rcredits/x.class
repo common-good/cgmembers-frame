@@ -162,7 +162,7 @@ class X {
     u\setDft($payerAgent, $payer);
     u\setDft($payeeAgent, $payee);
     u\setDft($flags, 0);
-    u\setDft($created, r\rTime());
+    u\setDft($created, now());
     u\setDft($data, []);
 
     if ($type != TX_BANK and !isset($payerFor)) {
@@ -172,7 +172,7 @@ class X {
     }
     
     $goods += 0;
-    $box = @$boxUser ?: 0;
+    $box = nn($boxUser, 0);
 //    if (r\isGiveback($payee, $payer, @$data)) $type = TX_GIVEBACK;
 //    if (!isset($payerReward) and !isset($payeeReward)) extract($this->getRewards($info)); // payerReward and payeeReward
 
@@ -247,7 +247,7 @@ class X {
 //    extract((array) $a->account($cacheFields = 'balance rewards committed lastTx access'));
     extract((array) $a->account($cacheFields = 'balance committed lastTx access'));
 
-    if ($channel != TX_CRON) $access = r\rTime(); // track last transaction or login (just major access)
+    if ($channel != TX_CRON) $access = now(); // track last transaction or login (just major access)
 
     $toMe = $uid == $t_payee ? -1 : 1;
     if ($t_payer > 0) $lastTx = array($t_xid, $toMe * ($t_payee - $t_payer), round($toMe * $t_amount, 2), $t_created);
@@ -342,7 +342,7 @@ class X {
     }
 
     $agt = $mya->proSe ? '' : (' ' . $mya->agentA->mainQid); // don't record agent if proSe
-    $dataRay['changes'][r\rTime() . $agt] = just($chKeys, $xray);
+    $dataRay['changes'][now() . $agt] = just($chKeys, $xray);
     $toChange['data'] = $dataRay;
     $x->update($toChange);
 

@@ -45,7 +45,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   
   if ($mya->superAdmin) {
     if (r\up()) $stop = submi(t('STOP')); else $start = submi(t('START'));
-/*    if (time() < strtotime('6/20/2017')) {
+/*    if (now() < strtotime('6/20/2017')) {
       global $base_url;
       $members = db\col('uid', 'users', ':IS_OK AND NOT :IS_CO AND activated<1486098000 ORDER BY community, uid');
       foreach($members as $k) {
@@ -174,9 +174,6 @@ function formAdminPanel_submit($form, &$sta) {
   
   $logFields = "channel,type,myid,IF(agent=myid,':R_NONE',agent) AS agent, REPLACE(info, ',', ', ') AS info";
 
-/// if ($op == 'log') return say(str_replace("\n", "<br><br>\n", file_get_contents(flog()))); // say(a\showQuery('r_log', 1, 'logid DESC', $logFields, 'myid'));
-//  if ($op == 'tells') return say(a\showQuery('r_log', "info LIKE '%tell-staff%' ORDER BY logid DESC LIMIT 50", 'logid DESC', $logFields, 'myid'));
-
   if ($op == 'txs') {
     $fields = <<<EOF
     xid, t.created, t.flags, t.type AS ty, t.goods AS gd, t.:IS_TAKING AS k,
@@ -218,7 +215,8 @@ function formOrganizerList($form, &$sta, $where = '') {
 $list
 </table>
 EOF
-  );
+    );
+    $subtext = $zips = $submit = NULL;
   } else {
     $subtext = t('Enter a list of zipcodes (or partial zipcodes), separated by spaces.');
     $zips = textFld(t('Zips:'));
@@ -378,7 +376,7 @@ function formFollowup($form, &$sta, $args = '') {
   $title = t('Admin Action Page');
   $subtitle = item(t('<p>Start with today and work backward. Click an account name.</p><ul><li><b>Live Person.</b> If you get a live person, click "live" for a script. Then, if no followup is needed, make a note about your conversation and click "Auto".</li><li><b>Message #1.</b> If you get a machine, click "msg1" for a Phone Message script, type "PM setup" or "PM welcome" or whatever as a note, and click the "2 days" button.</li><li><b>Message #2.</b> If you already left one message, try 3 more times to catch them live. If you still don\'t catch them click "msg2" for a Phone Message script, then click "email" to send them an Email Message. Type "EM setup" or whatever and click the "7" button if this is for a Setup or Annual check-in or the "Auto" button if it is for a Welcome.</li><li><b>After Setup Help Email.</b> If the email gets no response for a setup help call, keep phoning or emailing at 1-, 2-, or 7-day intervals until you reach them or we close the account.</li><li><b>After Annual Check-in Email.</b> If the email gets no response for an Annual check-in, send a US Mail fund appeal/check-in.</li></ul><p>(comments on this standard procedure are welcome)</p>') . w\btn('/sadmin/followup/one=1', t('Show just my community')) . ' &nbsp; ' . w\btn('/sadmin/followup', t('Show ALL')) . ' &nbsp; ' . w\btn('/sadmin/followup/recent=1', t('Recent notes first')));
   
-  $now = time();
+  $now = now();
   $todayEnd = strtotime('tomorrow') - 1;
   list ($where1, $where2) = (($mya->admin or $mya->isAdmin2) and !@$one) ? [1, 1] : [0, "community=$mya->community"];
   $cttys = r\cttyList();
@@ -495,13 +493,10 @@ function formMemberList($form, &$sta) {
 </tr>
 $one
 EOF;
-    $emails .= "$email, ";
   }
   $list .= "</table>\n";
   
-  $emails = $cAdmin ? item($emails, t('All emails')) : NULL;
-
-  return cgform(compact(ray('title list emails')), '', FALSE);
+  return cgform(compact(ray('title list')), '', FALSE);
 }
 
 /**
@@ -675,7 +670,7 @@ $deposits
 X;
   $title = t('Reconciled Dollar Pool Transactions');
   $txid = db\min('txid', 'r_usd', 'bankTxId=0 AND amount<>0') ?: 999999999;
-  $asof = u\fmtDate(db\max('deposit', 'r_usd', 'txid<:txid', compact('txid')) ?: time(), TRUE);
+  $asof = u\fmtDate(db\max('deposit', 'r_usd', 'txid<:txid', compact('txid')) ?: now(), TRUE);
   $subtext = t('These Dollar Pool transactions have been matched one-to-one with the bank\'s records, for all transfers dated on or before %asof.', compact('asof'));
   $list = item($list);
   return cgForm(compact(ray('title subtext list')));
@@ -703,7 +698,7 @@ function depositDetails($args) {
 //  list ($activity, $where) = $in ? [t('DEPOSIT'), '(NOT (amount<0 XOR txid<0))'] : [t('CASHOUT'), '(amount<0 XOR txid<0)'];
   $activity = t('Bank Transfer');
   $where = 1;
-  $today = $date == 1 ? t('(Historical)') : u\fmtDate($date ?: r\rTime());
+  $today = $date == 1 ? t('(Historical)') : u\fmtDate($date ?: now());
   $escrow = $in ? ESCROW_IN : ESCROW_OUT;
   $pdf->setupFooter('', BANK_DBA . " $activity $today", ['........ A5990D1155A '.$escrow.'C', 'GnuMICR;12'], 'Page @PAGE of @PAGES');
 //  $pdf->setupFooter('', BANK_DBA . " $activity $today", ['ACHes', 'GnuMICR;12'], 'Page @PAGE of @PAGES');
@@ -796,7 +791,7 @@ function achBatch($args) {
   $q = db\q("SELECT txid,created,payee,amount,deposit,bankAccount FROM r_usd WHERE deposit=:date AND $where ORDER BY created, txid", compact('date'));
   if (!$q->rowCount()) return w\go('sadmin/deposits', t('There are no transactions for that ACH batch.'));
 
-  $date = strftime('%Y%m%d', $date ?: time());
+  $date = strftime('%Y%m%d', $date ?: now());
   u\csvStart("CGach$way-$date.csv");
   while ($tx = $q->fetchAssoc()) {
     extract($tx);
@@ -810,7 +805,7 @@ function achBatch($args) {
     $addenda = substr(PROJECT . " tx#$txid", 0, 79); // Citizens Bank limits this field to 79 chars
     $row = [$payee, $fullName, $routing, $account, $amount, $addenda];
     u\csv($row);
-    if (!$deposit and $mark) db\update('r_usd', ray('deposit txid', strtotime('today'), $txid), 'txid');
+    if (!$deposit and $mark) db\update('r_usd', ray('deposit txid', today(), $txid), 'txid');
   }
   
   if (u\test()) return;
@@ -825,9 +820,12 @@ function achBatch($args) {
  * @param bool $reprint: UNUSED whether to include a reprint of the previous deposit's checks
  * @param int $previous: UNUSED date of previous deposit
  * @param bool $mark: whether to set the deposit date for each relevant transfer, in r_usd
+ * @param int $limit: maximum number of checks to print (defaults to 42, the most we can mail for a 3oz stamp)
  */
+ define('CHECK_LIMIT', 42); // default maximum numbere of checks to print at a time
+ 
 function printChecks($args) {
-  extract(just('way date mark', $args));
+  extract(just('way date mark limit', $args));
   include_once __DIR__ . '/../pdf.class';
   $ck = new r\Pdf();
   $ck->setPrintHeader(FALSE);
@@ -838,7 +836,11 @@ function printChecks($args) {
 
   $ways = ['IN'=>'(amount>0 AND txid>0)', 'OUT'=>'(amount<0 AND txid>0)', 'BAD'=>'txid<0', 'VERIFY'=>'amount=0'];
   $where = $ways[strtoupper($way)];
-  $q = db\q("SELECT txid,created,payee,amount,deposit,bankAccount FROM r_usd WHERE deposit=:date AND created<=:NOW AND $where ORDER BY txid", compact('date'));
+  $sql = "SELECT txid,created,payee,amount,deposit,bankAccount FROM r_usd WHERE deposit=:date AND created<=:NOW AND $where ORDER BY txid";
+  $subs = compact('date');
+  u\setDft($limit, CHECK_LIMIT);
+  if (is_numeric($limit)) $sql .= " LIMIT $limit"; // ' LIMIT :limit' fails
+  $q = db\q($sql, $subs);
   $pos = 3; // before first position of 3, on 3-up check paper
   $count = 0;
   while ($tx = $q->fetchAssoc()) {
@@ -934,12 +936,12 @@ function memberId($id, $agent = '', $retroactive = FALSE) {
   if (NOT_PRODUCTION) $pdf->say(t('TEST'), $xTest, $m+$hCard-.19, .5, '', '6.5;color:darkred', 'C');
 
   $pdf->StopTransform();
-/*  if (time() < strtotime('6/20/2017')) {
+/*  if (now() < strtotime('6/20/2017')) {
     $pdf->Output(strtolower("$qid.cgcard.pd"), 'D'); // Close and output PDF document ('I')
   } else */
   if ($mya and $mya->superAdmin) $a->setBit(B_CARDED);
   if (u\test()) $pdf->Close(); else $pdf->Output(strtolower("$qid.cgcard.pd"), 'I'); // Close and output PDF document ('I')
-//  if (time() < strtotime('6/20/2017') and $next = nextMember($id)) w\go("print-rcard/$next");
+//  if (now() < strtotime('6/20/2017') and $next = nextMember($id)) w\go("print-rcard/$next");
 }
 
 function formSMS($form, &$sta) {
@@ -974,7 +976,7 @@ function test($arg = '') {
 //  $_SESSION = [];
   if (ini_get("session.use_cookies")) { // from PHP's session_destroy page
     $params = session_get_cookie_params();
-    setcookie(session_name(), '', time() - 42000,
+    setcookie(session_name(), '', now() - 42000,
         $params["path"], $params["domain"],
         $params["secure"], $params["httponly"]
     );
@@ -1015,12 +1017,11 @@ function util($arg) {
 function handyLinks() {
   global $base_path, $base_url, $base_root;
 
-  $test_path = "$base_url/sites/all/modules";
-
   $links = array(
     'rcredits/util/reset-menu|Rebuild menu based on hook_menu() and revert any custom changes. All menu items return to their default settings.|Redo MENUS|menu-hamburger',
     'rcredits/util/remove-test-data|Remove test data|REMOVE test data|fast-backward',
     'rcredits/util/clear|Empty the cache and sessions tables|Clear Cache & Sessions|unchecked',
+    'sadmin/variables|Edit and delete site variables.|Variables|copy',
   );
 
 /*    'devel/settings|Helper functions, pages, and blocks to assist Drupal developers. The devel blocks can be managed via the block administration page.|Devel settings|cog',
@@ -1028,17 +1029,13 @@ function handyLinks() {
     'devel/reference|View a list of currently defined user functions with documentation links.|Functions|education',
     'devel/elements|View the active form/render elements for this site.|Elements|align-center',
     'devel/phpinfo|View your server&#039;s PHP configuration|PHPinfo()|queen',
-    'devel/variable?destination=sadmin|Edit and delete site variables.|Variables|copy',
     */
-//    "$test_path/gherkin/compile.php?module=rcredits/rsms&return=1|Compile rSMS|",
-//    'rcredits/test?menu=1|Test Menu|',
 //    'rcredits/util/changeAgent|Change Agent to Bea|',
 //    'sms|Simulate an SMS transaction|Simulate SMS',
 //    'admin/config/development/testing|Test|Test',
 //    'deletetests.php|Delete old tests|Delete old tests',
 //    'rcredits/util/reset|Reset rCredits|',
 //    'devel/entity/info|View entity information across the whole site.|Entity info',
-//    'devel/php|Execute some PHP code|Execute PHP Code',
 //    'devel/field/info|View fields information across the whole site.|Field info',
 //(empty array)    'devel/menu/item?path=node|Details about a given menu item.|Menu item',
 //    'devel/reinstall?destination=sadmin/handy|Run hook_uninstall() and then hook_install() for a given module.|Reinstall modules',
@@ -1058,4 +1055,74 @@ EOF; */
 /*  $result = join(' | ', $result);
   return "<h2 id=\"edit-title\"><br>Handy Links</h2><div class='develw'>\n$result</div>";
   */
+}
+
+/**
+ * Display variables
+ */
+function formVariables() {
+  $header = array(
+    'name' => array('data' => t('Name'), 'field' => 'name', 'sort' => 'asc'),
+    'value' => array('data' => t('Value'), 'field' => 'value'),
+    'length' => array('data' => t('Length'), 'field' => 'length'),
+    'edit' => array('data' => t('Operations')),
+  );
+
+  $rows = db\rows('name,LENGTH(value) AS length', 'variable', '1 ORDER BY name');
+
+  foreach ($rows as $row) {
+    // $variables[$row->name] = '';
+    $options[$row->name]['name'] = check_plain($row->name);
+    $value = getv($row->name);
+    $complex = (is_array($value) or is_object($value));
+    if ($complex) {
+/**/  $value = str_replace("\n", "<br>\n", print_r($value, 1));
+    } else {$value = check_plain($value);}
+
+    $options[$row->name]['value'] = $value;
+    $options[$row->name]['length'] = $row->length;
+    $options[$row->name]['edit'] = $complex ? '' : l(t('Edit'), "sadmin/variables/edit/$row->name");
+  }
+  $form['variables'] = array(
+    '#type' => 'tableselect',
+    '#header' => $header,
+    '#options' => $options,
+    '#empty' => t('No variables.'),
+  );
+
+  return $form;
+}
+
+function formVariables_submit($form, &$form_state) {
+  $deletes = array_filter($form_state['values']['variables']);
+  array_walk($deletes, 'variable_del');
+  if (count($deletes)) {
+    drupal_set_message(format_plural(count($deletes), 'One variable deleted.', '@count variables deleted.'));
+  }
+}
+
+function formVariableEdit($form, &$form_state, $name) {
+  
+  $title = t('Edit Variable');
+  $subtext = $name;
+  
+  $value = getv($name, t('not found'));
+  
+  if (is_array($value) or is_object($value)) {
+    $value = item(t('Sorry, complex variable types may not be edited yet.'), t('New value'));
+    $name = $new = $submit = NULL;
+  } else {
+/**/  $value = print_r($value, 1);
+    $name = hidFld($name);
+    $new = areaFld(t('New Value:'), '', dft($value . ''));
+    $value = item($value . '', t('Old value:'));
+    $submit = submit();
+  }
+  return cgform(compact(ray('title subtext name value new submit')));
+}
+
+function formVariableEdit_submit($form, &$sta) {
+  extract(just('name new', $sta['input']));
+  setv($name, $new);
+  say(t('Saved new value for %name.', compact('name')));
 }

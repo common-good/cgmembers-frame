@@ -154,7 +154,7 @@ function txEdit_validate($form, &$sta) {
   
   if ($goods == FOR_GOODS and trim($purpose) == '') return say('missing purpose', 'purpose');
   if ($dif and $err = u\badAmount($amount, $mya->cAdmin ? '' : '>0')) return say($err, 'amount');
-  if (isset($created) and $err = u\badDate($created, $created0 - 180 * DAY_SECS, time() + 7 * DAY_SECS)) return say($err, 'created');
+  if (isset($created) and $err = u\badDate($created, $created0 - 180 * DAY_SECS, now() + 7 * DAY_SECS)) return say($err, 'created');
   if (!$mya->cAdmin and ($x_toMe ? ($amount > $x_amount) : ($amount < $x_amount))) {
     $who = r\acct($x_toMe ? $x_payer : $x_payee)->name;
     $action = $x_toMe ? t('increase') : t('decrease');
@@ -209,7 +209,7 @@ function handleTx($do, $xid, &$sta, $args) {
     extract($tx);
     if (!$deposit) { // transfer request has not been processed yet
 		  u\EXPECT($completed, 'incomplete bank tx should not be on list');
-      $deposit = $tx['deposit'] = NOW; // mark both done
+      $deposit = $tx['deposit'] = now(); // mark both done
       db\update('r_usd', compact(ray('txid deposit')), 'txid');
     }
     $mya->bank($amount, t('to reverse failed transfer #%txid', compact('txid')), $tx);
@@ -236,7 +236,7 @@ function txSummary($starting, $ending, &$endBalance = '') {
   global $mya;
   $myid = $mya->id;
   
-  $endingNow = ($ending > r\rTime());
+  $endingNow = ($ending > now());
   $previous_ending = $starting - 1;
   extract($nowInfo = (array) be\creditInfo(array('asof' => $ending)), EXTR_PREFIX_ALL, 'n');
   $endBalance = round($n_balance - ($n_roundups - $n_roundupsPaid), 2);

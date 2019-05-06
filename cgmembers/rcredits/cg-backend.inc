@@ -80,7 +80,7 @@ X;
 
 /**
  * Return an array of member names (called with ajax, so current user is passed as arguments).
- * Restricted to within NEIGHBOR_RADIUS miles of the member
+ * Restricted to within NEIGHBOR_RMAX miles of the member
  * @param int $myid: account record ID
  * @param int $aid: agent account record ID
  */
@@ -88,8 +88,10 @@ function memberRay($myid, $aid, $coOnly = FALSE) {
   if (!$a = r\acct($myid, $aid)) return [];
 //  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : "state=$a->state OR community=$a->community OR :IS_CO");
   $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : "(:NEIGHBOR_QUERY<:NEIGHBOR_RMAX OR community=$a->community OR :IS_CO)");
+  if (isDEV) $where = str_replace(':NEIGHBOR_QUERY', '0', $where); // no lat/lon on dev machines yet
   $subs = compact('myid');
-  if (!$coOnly and !$a->admin) $subs += ray('lat lon', $a->latitude, $a->longitude);
+  if (!$coOnly and !$a->admin and !isDEV) $subs += ray('lat lon', $a->latitude, $a->longitude);
+///   flog(db\col('fullName', 'users', ":IS_OK AND uid<>:myid AND $where ORDER BY fullName", $subs));
   return db\col('fullName', 'users', ":IS_OK AND uid<>:myid AND $where ORDER BY fullName", $subs);
 }
 
@@ -231,7 +233,7 @@ u\EXPECT(compact(ray('xid amount what acct data tid toMe byMe otherTid force')),
     if (!$invoicing) {
       extract(just('xid tid otherTid', $args), EXTR_PREFIX_ALL, 'new');
       $old_data['undoneBy'] = $new_xid;
-      $old_data['changes'][] = array(r\rTime(), $mya->agentId, 'undo', $new_xid);
+      $old_data['changes'][] = array(now(), $mya->agentId, 'undo', $new_xid);
       $newTids = u\order($toMe, $new_otherTid, $new_tid);
       for ($i = 0; $i < 2; $i++) $what0[$i] .= t(' (reversed by #%tid)', 'tid', $newTids[$i]);
       $sql = <<<EOF
@@ -286,7 +288,7 @@ function payInvoice($nvid, &$msg = '') {
       extract($res); // shid vestid
       */
     if ($shid) { // record the sale
-      db\update('r_shares', ray('shid shares pending when', $shid, -$amount, 0, NOW), 'shid');
+      db\update('r_shares', ray('shid shares pending when', $shid, -$amount, 0, now()), 'shid');
     } else r\tellCo(t('Invoice payment marked as "for investment (repayment)" has no corresponding SELL request in shares table.'), $inv, $payee);
   }
   unset($DBTX);
@@ -333,7 +335,7 @@ function payInvoice($nvid, &$msg = '') {
 function transfer($ttype, $a1, $a2, $amount, $for, $data = []) {
   global $scanned, $channel;
   u\EXPECT(compact(ray('a1 a2 data')), 'acct acct assoc');
-  list ($created, $goods) = [r\rTime(), FOR_GOODS]; // defaults
+  list ($created, $goods) = [now(), FOR_GOODS]; // defaults
   extract(just('created goods', $data));
   u\setDft($for, ray(R_WHYS)[$goods]);
 
@@ -474,7 +476,7 @@ function invoice($a1, $a2, $amount, $purpose = NULL, $extra = []) {
   if ($err = r\txPermErr($a1, $a2, TRUE)) return r\txRet($err, $subs);
   if (r\dupTx($payee, $payer, -$amount)) return r\txRet('duplicate transaction', $subs);
   
-  $created = r\rTime();
+  $created = now();
   u\setDft($status, ($channel != TX_FOREIGN and r\relation(':IS_AUTOPAY', $payee, $payer)) ? TX_APPROVED : TX_PENDING);
   $data = serialize($extra);
   $info = @compact(ray('amount status payer payee goods purpose created flags data'));
@@ -568,10 +570,17 @@ function identify($who, $mya, $paying, $self_message = 'no self-trading') {
   if (!$short = u\shortName(" $who ", '%')) $short = '-'; // abbreviations must not be null or zeroes
   $cmail = strpos($who, '@') ? u\cry('P', strtolower($who)) : '-';
   $subs = compact(ray('who short cphone cmail'));
+  $anyAdmin = ($mya->cAdmin2 or $mya->isAdmin2);
 
-  $where = '(name LIKE :short OR :who=fullName OR (!:IS_NOSEARCH AND (:cphone=phone OR :cmail=email)))';
+  $searchable = $anyAdmin ? '1' : '!:IS_NOSEARCH';
+  $where = "(name LIKE :short OR :who=fullName OR ($searchable AND (:cphone=phone OR :cmail=email)))";
+  if ($anyAdmin) {
+    $qid = strtoupper(strlen($who) == 3 ? R_SERVER_ID . $who : $who);
+    if (u\isQid($qid) and $a = r\acct($qid)) $where .= " OR uid=$a->id";
+    $where = "($where OR uid=:who)";
+  }
   if ($paying) $where .= ' AND :IS_OK';
-  if (!$mya->admin) {
+  if (!$mya->admin and !$mya->isAdmin2) {
     $where .= " AND (:IS_CO OR :NEIGHBOR_QUERY<:NEIGHBOR_RMAX)"; // restrict to nearby
     list ($lat, $lon) = $mya ? [$mya->latitude ?: 0, $mya->longitude ?: 0] : [0, 0]; // avoid NULL (PHP bug?)
     $subs += compact(ray('lat lon'));
@@ -580,7 +589,7 @@ function identify($who, $mya, $paying, $self_message = 'no self-trading') {
   $sql = <<<EOF
     SELECT DISTINCT uid,fullName
     FROM users 
-    WHERE $where
+    WHERE $where AND uid<>0
     ORDER BY fullName
 EOF;
 
@@ -612,7 +621,7 @@ function creditInfo($args = []) {
   if (!$a = r\acct(@$uid)) return NULL; else $uid = $a->id;
   $jid = @$noj ? 0 : ($a->jid ?: 0);
 
-  u\setDft($asof, $asof0 = r\rTime() + DAY_SECS);
+  u\setDft($asof, $asof0 = now() + DAY_SECS);
   $mday1 = u\monthDay1($asof); // start of relevant month, for partial (not-yet-given) roundups calculation
   if ($asof == u\plusMonths(1, $mday1) - 1) $mday1 = $asof + 1; // for asof the end of month, there are no partRounds
   $subs = compact(ray('uid jid asof'));

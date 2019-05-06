@@ -86,7 +86,7 @@ EOF;
   <p>The purpose of 1099-B is to report transactions, not total income. So don't worry if some of the payments listed here aren't income (such as reimbursements). Also, you may receive a Form W2 or 1099-MISC from your employer or customers for some of these payments. Take care not to over-report your income by counting things twice.</p>
   <p>For more information, see <%aTips>%PROJECT Payments and Accounting Tips</a>.</p>
 EOF
-  , '_aTaxHelp _aTips', atag('/help/taxes'), atag('http://cg4.us/doc/payments.pdf?t=' . time())) . $negatives;
+  , '_aTaxHelp _aTips', atag('/help/taxes'), atag('http://cg4.us/doc/payments.pdf?t=' . now())) . $negatives;
   
   $submit = submit(); // display suppressed in CSS
   $go = w\submi(t('Change')); // requires suppressed submit button (find a better way)

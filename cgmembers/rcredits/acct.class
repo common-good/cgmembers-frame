@@ -63,7 +63,7 @@ class Acct {
       $state = db\get('id', 'r_states', 'abbreviation=:state and country_id=:US_COUNTRY_ID', compact('state'));
     }
     u\setDft($community, r\communityUid(@$zip)); // defaults to current server
-    u\setDft($created, r\rTime());
+    u\setDft($created, now());
     u\setDft($login, $created);
     u\setDft($access, $login);
     u\setDft($country, US_COUNTRY_ID);
@@ -340,51 +340,6 @@ class Acct {
   }      
   
   /**
-   * Activate the account.
-   * @param int $helper: account record ID of account that invited this one
-   */
-  public function activate($helper) {
-    $a = $this;
-    u\EXPECT($mya = r\acct() and $mya->cAdmin, 'should be ctty admin'); // only ctty admin can approve an account
-
-    $DBTX = \db_transaction();
-    u\EXPECT($helper, 'no helper!');
-    $a->update(compact('helper')); // must precede welcome message
-    $a->setBit(B_OK, TRUE, TRUE); // must precede welcome message
-    $a->setBit(B_NONUDGE, FALSE, TRUE);
-    
-    if ($firstTime = !$a->activated) { // first time activation
-//      u\EXPECT($a->superAdmin, 'initial activation is only for superadmin');
-      $a->update('activated', time() - 1); // must precede update of vsecure, so it gets V-encrypted
-      $a->update('vsecure', $a->vsecure); // hyper-encrypt
-      $a->eachPartner(function($coA, $zot, $custCode) { // tell partner: account is activated
-        if ($api = $coA->api()) u\post($api, ray('partnerCode qid op name', $coA->emailCode, $a->mainQid, 'complete', $a->fullName));
-      });
-      $inviterName = @$a->helperA->fullName;
-      $subs = compact('inviterName');
-      $msg = 'approved';
-      if (!$a->confirmed) $msg .= ($helper > 1 ? '|must confirm' : '|in person');
-      r\message($a->id, $msg, $subs + ['youName' => $a->fullName]);
-    }
-
-    if ($firstTime and !$a->co) { // no bonus or helper bonus for a company signing up
-      if ($a->ssnData['CGerror'] and !$a->risk('ssnOff') and !$a->risk('dobOff')) $a->setRisk('ssnOff'); // make SURE this bit gets set (might not if admin signs the person up
-
-      if (!$a->helperA->co and !$a->helperA->superAdmin) { // no helper bonus for company referral or help by superAdmin (cAdmin is okay) [don't require $a->confirmed]
-        $fullName = $a->fullName;
-        $helped = db\count('users', ':IS_OK AND NOT :IS_CO AND helper=:hId', ray('hId', $a->helper)) + 0;
-        if ($helped == ORGANIZER_GRANT_MIN) {
-  //            r\message($a->helper, 'organizer grant', ['_a' => w\atag('/community/grant')]);
-          list ($name, $topic) = [$a->helperA->fullName, t('eligible')];
-          r\tellAdmin('eligible for grant', compact(ray('name topic')));
-        }
-      }
-    }
-    
-    unset($DBTX); 
-  }
-
-  /**
    * Set the company categories.
    */
   function setCategories($cats) {
@@ -576,7 +531,7 @@ class Acct {
 
 			$oldValue = $a->cryIf($field, '' . $a->$field, TRUE);
 			$newValue = $a->cryIf($field, '' . $v);
-			$record = ray('uid created field oldValue newValue changedBy', $a->uid, time(), $field, $oldValue, $newValue, $mya ? $mya->agentId : 0);
+			$record = ray('uid created field oldValue newValue changedBy', $a->uid, now(), $field, $oldValue, $newValue, $mya ? $mya->agentId : 0);
       db\insert('r_changes', $record); // add a r_changes record for each changed field
     }
   }
@@ -590,8 +545,8 @@ class Acct {
   
 //     $changes = $a->changes; // must precede ->rawChanges
 // //    $encrypted = u\starts($a->rawChanges, CRYPT_FLAG);
-// //    for ($k = r\rTime(); isset($changes[$k]); $k++);
-//     $time = r\rTime();
+// //    for ($k = now(); isset($changes[$k]); $k++);
+//     $time = now();
 //     if (isset($changes[$time])) {
 //       $changes[$time] += $newChanges;
 //     } else u\preray([$time => $newChanges], $changes); // put the new changes first
@@ -601,7 +556,7 @@ class Acct {
 
 //    foreach ($newChanges as $k => $v) {  // add a r_changes record for each changed field
 /*      $record = [ 'uid' => $a->uid,
-                  'created' => r\rTime(),
+                  'created' => now(),
                   'field' => $k,
                   'oldValue' => u\cry('S', '' . $a->$k),
                   'newValue' => u\cry('S', '' . $v),
@@ -640,7 +595,7 @@ class Acct {
       unset($info[$k]);
     }
 //      $info[$k] = (int) @$info[$k];
-    $info['created'] = time();
+    $info['created'] = now();
     return r\regionalInsert('r_relations', 'reid', $info + ['main' => $this->id], -$this->region);
   }
 
@@ -667,13 +622,13 @@ class Acct {
     $a = $this;
     $table = 'r_coupons c LEFT JOIN r_coupated d ON (d.coupid=c.coupid AND d.uid=:myid)';
     $where = 'fromId=:id AND :now BETWEEN start AND end AND :price>=minimum AND NOT flags ORDER BY (ulimit=0 OR uses<ulimit) DESC, (uses IS NULL), end DESC'; // not a gift
-    $subs = ray('id now price myid', $sellerA->id, time(), $price, $a->id);
+    $subs = ray('id now price myid', $sellerA->id, now(), $price, $a->id);
     if (!$res = db\get('c.coupid,amount,ulimit,id,uses', $table, $where, $subs)) return $price;
     extract($res);
     if ($ulimit and $uses >= $ulimit) return $price;
     $rebate = $amount < 0 ? -$price * $amount * .01 : $amount;
 // NO do this in x.class   be\transfer('charge', $sellerA, $a, $rebate, FOR_GOODS, t('rebate (discount coupon #%coupid)', compact('coupid')));
-    db\updateOrInsert('r_coupated', ['id' => $id, 'coupid' => $coupid, 'uid' => $a->id, 'uses' => $uses + 1, 'when' => time()], 'id');
+    db\updateOrInsert('r_coupated', ['id' => $id, 'coupid' => $coupid, 'uid' => $a->id, 'uses' => $uses + 1, 'when' => now()], 'id');
     return max(0, $price - $rebate); // effective price (for potential gift certificate)
   }
   
@@ -733,7 +688,7 @@ class Acct {
     global $mya, $channel, $box; 
     global $user; if (empty($user)) $user = (object) ['uid' => $a ? $a->id : 0]; // probably needed only for rWeb login form testing
     if ($a and $a != $mya and !$a->admin2) { // admin access doesn't count
-      $access = r\rTime();
+      $access = now();
       if ($channel == TX_WEB) $login = $access;
       $lastip = $_SERVER['REMOTE_ADDR'];
       $a->update(@compact('login', 'access', 'lastip'));
@@ -1051,7 +1006,7 @@ EOF;
     $aA = $a->agentA;
     $field = $a->proSe ? 'cardCode' : 'cardCode2';
     if ($aA->$field) r\badCard($qid, $aA->$field, t('making new card for %nm', 'nm', $a->fullName)); // (don't mark previous code bad if none)
-//    if ($oldCode = $aA->$field) db\insert('r_bad', ray('qid code created', $qid, $oldCode, time()), 'created');
+//    if ($oldCode = $aA->$field) db\insert('r_bad', ray('qid code created', $qid, $oldCode, now()), 'created');
     $aA->update($field, $newCode ?: r\cardCode($qid)); // resave the secure fields
   }
     
@@ -1086,7 +1041,7 @@ EOF;
       r\tellCO(t('New Member (%name)', ['name' => $a->fullName]));
       $a->setBit(B_MEMBER);
 //    r\membershipEvent($a, 'member');
-      $a->update('tickle', time());
+      $a->update('tickle', now());
     }
     return $nextStep;
   }
@@ -1160,8 +1115,8 @@ EOF;
   //  $pass = strtolower(u\nonce()); // not a hash, easy to remember and type
     $verifying = !$a->stepDone['verify'];
     $pass = u\randomString($verifying ? 3 : R_CODE_LEN, $verifying ? 'upper' : 'word'); // use
-///  /**/ if (isDEV or (NOT_PRODUCTION and time() - $a->created < HOUR_SECS)) \drupal_set_message('Link: ' . "<a href='$base_url/reset/id=$name&code=$pass'>reset</a>");
-    $expires = r\rTime() + HOUR_SECS * R_SIGNIN_HOURS;
+///  /**/ if (isDEV or (NOT_PRODUCTION and now() - $a->created < HOUR_SECS)) \drupal_set_message('Link: ' . "<a href='$base_url/reset/id=$name&code=$pass'>reset</a>");
+    $expires = now() + HOUR_SECS * R_SIGNIN_HOURS;
     $a->update('oneTimePass', compact('pass', 'expires'));
     return $pass;
   } 
@@ -1177,7 +1132,7 @@ EOF;
     $a = $this;
     if (@$a->oneTimePass) {
       extract(just('pass expires', $a->oneTimePass));
-      if ($password == @$pass) return ($a->admin or r\rTime() < @$expires) ?: !($err = 'pass expired');
+      if ($password == @$pass) return ($a->admin or now() < @$expires) ?: !($err = 'pass expired');
     }
 
     require_once DRUPAL_ROOT . '/includes/password.inc';
@@ -1231,7 +1186,7 @@ EOF;
     } else $created = $a->created;
     
     extract($stats);
-    $years = round((strtotime('today') - strtotime('today', $created)) / DAY_SECS) * DAY_SECS / YEAR_SECS;
+    $years = round((today() - strtotime('today', $created)) / DAY_SECS) * DAY_SECS / YEAR_SECS;
     // rounding is to assure consistency for tests, despite daylight savings time changes
     $returnMo = @$avgBalPastMo > 0 ? 
         number_format(100 * 12 * @$extraPastMo / $avgBalPastMo, 1)
@@ -1315,9 +1270,9 @@ EOF;
     $bankAccount = @$a->vsecure['bankAccount']; // already-encrypted bank account (@ is for testing)
     if ($tx) extract($tx);
 //    u\setDft($tid, r\getUsdTid($payee));
-		$okNow = ($amount < 0 or $a->bankOk); // "okay to create the request NOW"
+		$okNow = ($amount < 0 or $a->bankOk); // "okay to create the request now()"
 		if (!$okNow) $a->verifyBank();
-    u\setDft($created, $okNow ? NOW : NOW + DAY_SECS);
+    u\setDft($created, $okNow ? now() : now() + DAY_SECS);
     u\setDft($completed, ($amount < 0 or $a->bankOk) ? $created : 0);
 
     $DBTX = \db_transaction();
@@ -1406,7 +1361,7 @@ EOF;
     if ($txid) { // unless transfer is already marked complete
       $realAmt = db\get('amount', 'r_usd', 'txid=:txid', compact('txid'));
       if ($amount != $realAmt) r\tellAdmin(t('bad completeUsdTx amt'), compact(ray('txid amount realAmt automatic')));
-      if (!db\update('r_usd', ['txid'=>$txid, 'completed'=>r\rTime()], 'txid')) return FALSE;
+      if (!db\update('r_usd', ['txid'=>$txid, 'completed'=>now()], 'txid')) return FALSE;
     }
     
 //    $a->update('r', $a->o_r + $amount);
@@ -1463,7 +1418,7 @@ EOF;
   public function nextTickle($done = FALSE) {
     $a = $this;
 
-    $now = time();
+    $now = now();
     $activate = ($done . '' == 'activate');
     if ($activate) {
       list ($done, $activated) = ['', $now];
@@ -1499,7 +1454,6 @@ EOF;
   public function giftsDesc(&$period = '', &$totalGifts = '') {
     $a = $this;
 		$gift = '';
-//      db\get($a->ok ? 'SUM(amount)' : 'amount', 'r_gifts', 'uid=:uid', compact('uid')) ?: 0;
     $fields = 'r.created AS recurStart,r.amount AS recurAmt,r.period,h.honor,h.honored,t.created AS lastGiftDate,t.amount AS lastGift';
 		$table = <<< X
 		  users u LEFT JOIN r_recurs r ON r.payer=u.uid AND r.payee=:CGID AND r.ended=0
@@ -1546,7 +1500,7 @@ X;
     if (!is_null($v)) $info += compact('v');
     
     if (@$life) {
-      $data = ray('uid expires data', $this->id, r\rTime() + $life, serialize($info));
+      $data = ray('uid expires data', $this->id, now() + $life, serialize($info));
       $info = ray('op', db\insert('r_do', $data, 'doid')); // (preliminary) op is r_do record ID
     } else $info += ['mo'=>rdoMonth()]; // remember month, in case we need to know when link was created
 
@@ -1673,18 +1627,22 @@ X;
     if (!is_null($lat)) return $a->update('latitude longitude', $lat, $lon);
     
     $params = ray('q key', "$a->address, $a->city, " . r\realState($a->state), GEOCODE_KEY);
-//    $params = ray('street city state', $a->address, $a->city, r\realState($a->state)); // US Census
-    if (!$res = file_get_contents($url = GEOCODE_URL . http_build_query($params))) return r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)));
-    $res = json_decode($res);
-    if (!$coods = @$res->results[0]->geometry) {
-      $a->setRisk('addrOff');
-      return r\tellAdmin(t('setLocus <%a>returned</a> no match', 'a', w\atag($url)));
-    }
-/*    if (!$matches = (array) @$res->result->addressMatches) return r\tellAdmin(t('setLocus <%a>returned</a> no matches', 'a', w\atag($url))); // US Census
+/*
+    $params = ray('street city state', $a->address, $a->city, r\realState($a->state)); // US Census
+    if (!$matches = (array) @$res->result->addressMatches) return r\tellAdmin(t('setLocus <%a>returned</a> no matches', 'a', w\atag($url))); // US Census
     $coods = @$matches[0]->coordinates;
     $coods = [$coods->y, $coods->x];
     */
-    $a->update('latitude longitude', $coods->lat, $coods->lng);
+    if (!$res = file_get_contents($url = GEOCODE_URL . http_build_query($params))) return r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)));
+    $res = json_decode($res);
+    foreach (nn($res->results, []) as $one) $coods[$one->confidence] = $one->geometry;
+
+    if (!nn($coods)) {
+      $a->setRisk('addrOff');
+      return r\tellAdmin(t('setLocus <%a>returned</a> no match', 'a', w\atag($url)));
+    }
+    $best = max(array_keys($coods));
+    $a->update('latitude longitude', $coods[$best]->lat, $coods[$best]->lng);    
   }    
    
   /**
@@ -1798,7 +1756,7 @@ X;
   public function photoSrc($small = FALSE, $unique = FALSE) {
     $a = $this;
     global $base_url;
-    if ($unique) $unique = '&t=' . r\rTime();
+    if ($unique) $unique = '&t=' . now();
     $thing = $small ? 'icon' : 'photo';
     $qid = $a->co ? "qid=$a->mainQid" : '';
 //    if (!$a->co) $qid .= "/$a->cardCode";

@@ -97,11 +97,11 @@ function run() {
     \lock_release('cron');
   } else u\log(t('Attempted to run cron while it was already running.'));
 
-  $end = time() + R_CRON_PERIOD - R_MAX_TASK_TIME;
+  $end = now() + R_CRON_PERIOD - R_MAX_TASK_TIME;
   $sql = 'SELECT id,item FROM queue ORDER BY id';
   $q = db\q($sql);
   
-  while (time() < $end and $row = $q->fetchAssoc()) {
+  while (now() < $end and $row = $q->fetchAssoc()) {
     extract($row);
     try {
       cr\doTask(unserialize($item));
@@ -149,7 +149,7 @@ function periodic() {
   foreach ($cttys as $ctty) { // should never happen, but it does. figure out where.
     $a = r\acct($ctty);
     foreach ([B_UP, B_CGC] as $bit) if (!$a->can($bit)) {
-/**/  r\tellAdmin(t('Community bits got unset!'), ray('ctty bit time trace', $ctty, $bit, time(), trace()));
+/**/  r\tellAdmin(t('Community bits got unset!'), ray('ctty bit time trace', $ctty, $bit, now(), trace()));
       $a->setBit($bit);
     }
   }
@@ -158,8 +158,8 @@ function periodic() {
 function everyHour() { // stuff to do every hour
 //  queueEach('acctHourly', "SELECT uid FROM users WHERE uid<>0");
   if (strftime('%H') + 0 == (R_DAILY_HOUR + 6) % 24) {
-    $lastDaily = getV('last_daily_cron', 0);
-    if (NOW - $lastDaily > DAY_SECS) r\tellAdmin('daily cron FAILED');
+    $lastCron = getV('r_last_cron', []);
+    if (now() - nn($lastCron['end'], 0) > DAY_SECS) r\tellAdmin('daily cron FAILED');
   }
   
   db\q('DELETE FROM cache_form WHERE created<:REQUEST_TIME-:HOUR_SECS'); // clean up form cache (is this needed?)
@@ -227,8 +227,7 @@ X;
  */
 function tickle() {
 //  $delays = '1,2,3,5,8,13,21,34,55,89,144'; // Fibonacci progression of delays
-  $today = strtotime('today');
-  $timeSince = "(ROUND(($today-@DATE)/:DAY_SECS, 0))"; // $today works better in tests than :REQUEST_TIME or time()
+  $timeSince = "(ROUND((:NOW-@DATE)/:DAY_SECS, 0))";
 
   // Remind invitee to accept
   $delays = '8';
@@ -257,7 +256,7 @@ X;
 
   $sinceActivated = 'DATEDIFF(CURDATE(), FROM_UNIXTIME(activated))';
   // Do every 30 days after activation date
-  $start = strtotime(-FLOOR_DAYS . ' days', $today);
+  $start = strtotime(-FLOOR_DAYS . ' days', now());
   $sql = <<< X
     SELECT uid, GREATEST(inVol, outVol) AS monthly, $sinceActivated/30 AS months
     FROM (
@@ -348,7 +347,7 @@ function activeMonthly($item) {
 		$limit = u\fmtAmt(-$a->floor); // (report total to master of joint accounts)
     $msg = 'new floor' . ($a->can(B_DEBT) ? '' : '|no floor effect');
 //	  r\tellAdmin('new floor', compact(ray('limit monthly floor floorX ratio msg')));
-  // DISABLED FOR NOW if (!$a->slave) r\notify($uid, $msg, compact('limit'));
+  // DISABLED FOR now() if (!$a->slave) r\notify($uid, $msg, compact('limit'));
   }
   
   if ($a->cashoutM) $a->cashout();
@@ -398,14 +397,14 @@ function lessOften() {
  * @param string $chosen: the chosen value to match or exceed
  */
 function often($period, $chosen) {
-  if (!timeFor(r\rTime(), $period, $chosen)) return;
+  if (!timeFor(now(), $period, $chosen)) return;
 
   $lastCron = getV('r_last_cron');
-  $lastCron[$period] = r\rTime();
+  $lastCron[$period] = now();
   \setV('r_last_cron', $lastCron); // remember that this periodic activity has been done
   $function = 'CG\\Cron\\every' . ucwords($period);
   $topic = t('cron period', compact('period'));
-  $time = strftime('%I:%M%P', r\rTime());
+  $time = strftime('%I:%M%P', now());
   $msg = t('Running cron for the %period, at %time', compact('period', 'time'));
   if ($period != 'hour' and $period != 'day') r\tellAdmin($msg, compact('topic'));
   $function(); // do it
@@ -430,7 +429,7 @@ function everyMonth() {
   $server = r\serverUid();
   $bene = u\test() ? CGID : db\get('uid', 'users', "name='bene' AND uid<0");
   $start = u\monthDay1($end = u\monthDay1() - 1); // mark start and end of preceding month
-  if (u\test()) $start = strtotime('-30 days', $end = strtotime('today') - 1) + 1; // test: the past 30 days
+  if (u\test()) $start = strtotime('-30 days', $end = today() - 1) + 1; // test: the past 30 days
   queueEach('whatsup', "SELECT uid, u.:IS_CO as co, MAX(t.created) AS lastTx from users u LEFT JOIN r_txs t ON uid IN (payer, payee) WHERE uid>:CANONIC_ACCTS AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $start");
   queueEach('inflationAdjust', "SELECT uid, $start AS start, $end AS end FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS");  
 //  queueEach('shareCommitted', 'SELECT uid, committed, share FROM users WHERE :IS_OK AND committed>0');
@@ -657,7 +656,7 @@ function acctStats() {
  */
 function acctStats1($item, $asof = NULL) {
   extract(just('uid', $item));
-  u\setDft($asof, r\rTime());
+  u\setDft($asof, now());
   $a = r\acct($uid);
   $asof = strtotime('today', $asof);
   $monthAgo = u\plusMonths(-1, $asof);
@@ -706,10 +705,10 @@ function cttyStats($dt1 = 0, $redo = '') {
     u\preray([0 => min($cttys), 1 => min($cttys)], $cttys); // show all dates overall
 
     if ($dt1 < 0) $dt1 = db\max('created', 'r_stats'); // repeat last date to catch missing cttys
-    if (!$dt1) $dt1 = nn($cttys[0]) ?: NOW;
+    if (!$dt1) $dt1 = nn($cttys[0]) ?: now();
     $dt = strtotime('today', $dt1); // use first moment of the day
 
-    while ($dt <= NOW) {
+    while ($dt <= now()) {
       foreach ($cttys as $ctty => $start) if ($start <= $dt) {
         $item = compact(ray('ctty dt redo'));
         if (isPRODUCTION) cr\queue('cttyStats1', $item); else cttyStats1($item);
@@ -723,7 +722,7 @@ define('BAN_MONTHS', 3); // number of months in a row to have + or - demand, to 
 
 function cttyStats1($item) {
   extract(just('ctty dt redo', $item));
-  u\setDft($dt, $today = strtotime('today'));
+  u\setDft($dt, $today = today());
 
   $stats = r\stats($ctty, $dt, nn($redo)); // calculate stats for one community on the regional server, for the given date
   
@@ -886,21 +885,25 @@ function recurs1($item) {
 
 /**
  * Say whether it's time to make a recurring gift.
- * @param char $period: how often (M, Q, Y)
+ * @param char $period: how often (W, M, Q, Y)
  * @param int $lastGift: Unixtime of last relevant gift
  * @param int $start: Unixtime of first relevant gift
- * @param int $now: is it time as of what "now" (if not NOW, don't return true for first gift)
+ * @param int $now: is it time as of what "now" (if not now(), don't return true for first gift)
  */
-function giveNow($period, $lastGift, $start, $now = NOW) {
-	if ($now == NOW) if (!$lastGift) return TRUE;
+function giveNow($period, $lastGift, $start, $now = NULL) {
+	if (is_null($now) and !$lastGift) return TRUE; // never given, so now's the time
+  // the isnull($now) check above is because we ask in advance about an annual gift even when the member didn't make one
+  u\setDft($now, now());
+
   if (strpos('MQY', $period) !== FALSE) {
     $m = $period == 'M' ? 1 : ($period == 'Q' ? 3 : 12);
 	  $windowSize = MONTH_SECS * $m; // should be at least a third of a period since the last gift
   } else $windowSize = $period == 'W' ? WEEK_SECS : DAY_SECS;
-///  debug(compact(ray('period lastGift now windowSize lastTrigger start m')));
+///  debug(compact(ray('period lastGift now windowSize start m')));
 	if (($now - $lastGift) < ($windowSize / 3)) return FALSE; // should be at least a third of a period since the last gift
 	$lastTrigger = $start + $windowSize * floor(($now - $start) / $windowSize); // most recent time to give
-///  debug(compact(ray('lastGift firstGift now windowSize lastTrigger m')));
+///  debug(compact(ray('lastGift now windowSize lastTrigger m')));
+///  debug($lastTrigger > $lastGift);
 	return ($lastTrigger > $lastGift); // last Trigger must be after last gift
 }
 
@@ -997,8 +1000,7 @@ function invoice($item) {
 			unset($DBTX);
 		}
   } elseif ($status == TX_PENDING) {
-    $today = strtotime('today'); // not time(), because tests fail erratically
-    $daysAgo = max(1, round(($today - $created) / DAY_SECS));
+    $daysAgo = max(1, round((now() - $created) / DAY_SECS));
     if ($daysAgo % 7 == 0) {
       $subs = ray('daysAgo created amount purpose nvid _a1 payerName payeeName email phone', $daysAgo, u\fmtDate($created, TRUE), u\fmtAmt($amount), $purpose, $nvid, $a->makeDo('inv', $nvid), $a->fullName, $payeeName, $a2->email, $a2->phone);
       r\message($payer, 'stale invoice', $subs + ['reply' => $payee]); // tell other party by email about this invoice
@@ -1046,7 +1048,7 @@ function notices() {
 function notice($item) {
   extract(just('uid daily weekly monthly', $item));
 
-  $now = r\rTime();
+  $now = now();
   if ($args = r\noticeArgs($uid, 'NOT sent', $weekly, $monthly)) {
     $args['messages'] = str_replace('stule=', 'style=', $args['messages']); // revert in emails (but CSP forbids inline online)
     r\notify($uid, 'notices', $args, TRUE);
@@ -1060,9 +1062,10 @@ function notice($item) {
 function END() {
   global $mya; $mya = NULL; // don't tell Admin the last current member
   if (db\exists('queue')) r\tellAdmin('queue has dingleberries'); else db\q('TRUNCATE queue'); // reset serial field
-  \setV('last_daily_cron', NOW);
   $lastCron = getV('r_last_cron', []);
-  $elapsed = NOW - @$lastCron['day'];
+  $lastCron['end'] = now();
+  setV('r_last_cron', $lastCron);
+  $elapsed = now() - @$lastCron['day'];
   $time = strftime('%I:%M%P');
   $msg = t('At %time, after %elapsed secs, daily cron ended successfully.', compact(ray('time elapsed')));
   $topic = t('cron end');

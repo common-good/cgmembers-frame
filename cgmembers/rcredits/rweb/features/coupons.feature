@@ -49,8 +49,8 @@ Scenario: A member redeems a discount coupon for a dollar amount
   | type     | amount | minimum | start | end     | ulimit | automatic |*
   | discount |     12 |      20 | %mdY  | %mdY+9d |      1 |         1 |
   Then coupons:
-  | coupid | amount | minimum | ulimit | flags | start  | end       |*
-  |      1 |     12 |      20 |      1 |     0 | %today | %(%today+10d-1) |
+  | coupid | amount | minimum | ulimit | flags | start     | end                |*
+  |      1 |     12 |      20 |      1 |     0 | %daystart | %(%daystart+10d-1) |
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 100    | fun     |
@@ -79,8 +79,8 @@ Scenario: A member redeems a discount coupon for a dollar amount
   | type     | amount | minimum | start | end     | ulimit | automatic |*
   | discount |    12% |      20 | %mdY  | %mdY+9d |      2 |         1 |
   Then coupons:
-  | coupid | amount | minimum | ulimit | flags | start  | end       |*
-  |      1 |    -12 |      20 |      2 |     0 | %today | %(%today+10d-1) |
+  | coupid | amount | minimum | ulimit | flags | start     | end                |*
+  |      1 |    -12 |      20 |      2 |     0 | %daystart | %(%daystart+10d-1) |
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 50     | fun     |

@@ -20,7 +20,7 @@ $query = http_build_query(compact($parms));
 $data = file_get_contents("$site/community/chart-data/ctty=$ctty");
 
 /**/ if (!strpos($site, 'cgmembers') and strlen($data) < 200) die($data);
-$version = time();
+$version = now();
 $title = 'Charts | ' . $region;
 
 if ($selectable) {

@@ -44,7 +44,7 @@ use CG\Util as u;
  */
 
 global $rUrl, $base_url, $pageScripts, $scriptScraps, $mya, $styleNonce;
-$version = isPRODUCTION ? R_VERSION : time();
+$version = isPRODUCTION ? R_VERSION : now();
 $styles = preg_replace('~<style.*</style>~ms', '', $styles); // zap all the drupal styles
 
 // handle scripts
@@ -53,7 +53,7 @@ $s = array_flip(ray(SCRIPTS_TOP)); // standard (included first on every page)
 $s += just(array_keys($pageScripts), array_merge(array_flip(ray(SCRIPTS)), $pageScripts)); // select and reorder ad hoc scripts
 /**/ if (count($s) < count(ray(SCRIPTS_TOP)) + count($pageScripts)) die('scripts! ' . print_r(justNOT(ray(SCRIPTS_TOP . ' ' . SCRIPTS), ray($pageScripts)), 1) . print_r($pageScripts, 1));
 $scripts = '';
-$tm = time();
+$tm = now();
 
 foreach ($s as $id => $v) { // having selected the scripts, format for inclusion in page
   $id0 = $id;

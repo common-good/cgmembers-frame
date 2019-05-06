@@ -205,8 +205,19 @@ function photoUpload($uid = '', $sid = '') {
 function formAccounts($form, &$sta) {
   global $base_url, $rUrl;
   if (!$mya = r\acct()) return []; //['signin' => item('<a href="' . "$base_url/signin" . '">Sign in</a>')];
-
   $myid = @$mya->id; // may be a non-existent account if tests are run while looking at .ZZA, for example
+  
+  if ($mya->cAdmin2 or $mya->isAdmin2) { // admin: show a search box instead of a list of choices
+    $newAcct = textFld(t('Switch to account:'), [t('Type part of name, phone, email, record ID, or qid.')]);
+    $submit = submit('Go');
+    $accounts = fieldSet('edit-accounts', compact(ray('newAcct submit')));
+    // can't use w\whoFldSubmit here because it fights with some pages (Pay, Charge, etc.)
+    js('x/typeahead.bundle.min');
+    jsx('new-acct', ray('switchQuestion', t('Switch to %name?')));
+    
+    return compact('accounts');
+  }
+  
   if (!$accounts = be\accountChoices()) return [];
 //  if (!in_array($myid, @$accounts) and $mya->can()) array_splice($accounts, 1, 0, $myid); // admin or cadmin
   $choices = $ltrs = [];
@@ -233,7 +244,7 @@ function formAccounts($form, &$sta) {
     $choices[$uid] = $choice;
   }
 
-  if ($mya->cAdmin2 or $mya->isAdmin2) {
+/*  if ($mya->cAdmin2 or $mya->isAdmin2) {
     ksort($ltrs);
     $index = $details = '';
     foreach ($ltrs as $ltr => $accts) {
@@ -256,22 +267,31 @@ function formAccounts($form, &$sta) {
     }
     $account = item("<div id=\"index\">$index</div>$details");
   } else {
+    */
     $links = '';
     foreach ($choices as $k => $v) {
       $one = $k == $mya->id ? $v : r\changeAcctLink($k, $v);
       $links .= "<li>$one</li>\n";
     }
-    $account = item("<ul>$links</ul>");
-  }
+    $accounts = item("<ul>$links</ul>");
+//  }
   
-  $form = u\prefixKeys('acct_', compact(ray('account')));
-  return $form;
+  return compact('accounts');
+}
+
+function formAccounts_validate($form, &$sta) {
+  extract(just('newAcct accounts', $sta['input']));
+//  t('Type part of name, phone, email, record ID, or qid.')
+  if (strpos($newAcct, '@') and !u\validEmail($email = $newAcct)) return say('bad email', compact('email'), 'newAcct');
+  if (!$a = w\whois($newAcct, 'newAcct', [], t('You are already in that account.'), FALSE)) return FALSE;
+  u\preray(compact('a'), $sta['input']); // ['uid' => $a->id]
 }
 
 function formAccounts_submit($form, &$sta) {
-  extract(just('op acct_account', $sta['input']));
-  $op = op($sta);
-  if ($op == 'Menu') return w\go('menu'); 
+  extract(just('a', $sta['input']));
+  changeWho('acct=' . $a->id);
+//  $op = op($sta);
+//  if ($op == 'Menu') return w\go('menu'); 
 }
 
 /**
@@ -281,11 +301,11 @@ function changeWho($args = '') {
   global $mya;
   extract(just('acct page', $args));
 
-  if (@$acct == 'signout') return signout();
-  if (!@$mya and !isDEV) return say(t('No previous account. Try again.')); // get old current account
+  if (nn($acct) == 'signout') return signout();
+  if (!$mya and !isDEV) return say(t('No previous account. Try again.')); // get old current account
+  if (!$mya->cAdmin2 and !$mya->isAdmin2 and !$mya->can()) return hack('accts');
   $mya = r\acct($acct, @$mya->agentId); // tentative new account
-  
-  if (!@$mya or (!@$mya->admin and !@$mya->isAdmin2 and !$mya->can())) return hack('accts');
+  if (!$mya->admin and !$mya->isAdmin2 and $mya->community != $mya->agentA->community) return say(t('You can switch only to accounts in your community.'));
   
   w\setAcct($mya->id); // get new current account
 
@@ -345,7 +365,7 @@ function formEmpty($form, &$sta = '', $args = '') {
 function authcode() {
   extract($args = just('company cocode', $_GET));
   if (!@$cocode or !u\isQid(@$company) or !($co = r\acct($company)) or !$co->co or $co->emailCode != $cocode) exit(t('bad company account ID or cocode'));
-  $now = time();
+  $now = now();
   exit(substr(u\cry('P', u\randomString(1) . serialize(compact('cocode', 'now'))), 2));
 }
 
@@ -396,7 +416,7 @@ function formInvitedWhom($form, &$sta) {
   $old = strtotime((R_INVITE_DAYS + 2) . ' days ago');
   $sql = <<<EOF
     SELECT DISTINCT IFNULL(u1.fullName, i.email) AS who, invited, invited<:old AS expired,
-      (u1.flags&(1<<:B_MEMBER)) AS member
+      u1.:IS_MEMBER AS member, u1.:IS_OK AS ok, u1.:IS_CO AS co
     FROM r_invites i LEFT JOIN users u1 ON u1.uid=i.invitee
     WHERE i.inviter=:uid ORDER BY invited DESC
 EOF;

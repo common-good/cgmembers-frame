@@ -29,19 +29,19 @@ Scenario: A member changes backing amount
   |       500 | Abe One  |
   Then members:
   | uid  | backing | backingDate |*
-  | .ZZA |     500 | %today      |
+  | .ZZA |     500 | %daystart      |
   
   When member ".ZZA" completes form "community/backing" with values:
   | amtChoice | signedBy |*
   |      1000 | Abe One  |
   Then members:
   | uid  | backing | backingDate |*
-  | .ZZA |    1000 | %today      |
+  | .ZZA |    1000 | %daystart      |
 
   When member ".ZZA" completes form "community/backing" with values:
   | amtChoice | signedBy |*
   |         1 | Abe One  |
   Then members:
   | uid  | backing | backingDate |*
-  | .ZZA |       1 | %today      |
+  | .ZZA |       1 | %daystart      |
   And we say "status": "backing in effect"

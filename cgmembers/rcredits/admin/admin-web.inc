@@ -50,7 +50,7 @@ function changeTxAmt($xid, $oldAmt, $newAmt) {
   if (!$rec = db\get('payer,payee,amount,created,goods', 'r_txs', 'xid=:xid', compact('xid'))) return say(t('No such transaction.'), 'ERR');
   extract($rec);
   if ($amount != $oldAmt) return say(t('The existing amount of that transaction is different.'), 'ERR');
-  if (u\fmtDate($created) != u\fmtDate(r\rTime())) return say(t('That transaction is not from today.'), 'ERR');
+  if (u\fmtDate($created) != u\fmtDate(now())) return say(t('That transaction is not from today.'), 'ERR');
   if ($goods) return say(t('That transaction has rewards.'), 'ERR');
   if (!$amount = round($newAmt, 2)) return say(t('Bad new amount.'), 'ERR');
 
@@ -78,29 +78,9 @@ function adminSummary() {
   if ($others = db\lst('fullName', 'sessions s JOIN users u ON u.uid=s.uid', ':uid=IFNULL(s.acct, s.uid) AND s.uid<>:agentId', ray('uid agentId', $uid, $mya->agentId))) {
     w\say(t('<b class="loud">Other people</b> signed in to this account: %others', compact('others')));
   }
-  
-  if ($mya->isCtty) { // managing a community itself
-    $sql = <<<EOF
-      SELECT
-      SUM(IF(:IS_OK AND :IS_CO, 1, 0)) AS cos,
-      SUM(IF(:IS_OK AND NOT :IS_CO, 1, 0)) AS mems,
-      SUM(IF(NOT :IS_OK AND :IS_NONUDGE, 1, 0)) AS closed,
-      SUM(IF(NOT :IS_OK AND NOT :IS_NONUDGE, 1, 0)) AS inProcess
-      FROM users WHERE community=:ctty AND uid<>:ctty
-EOF;
-    $res = db\q($sql, compact('ctty'))->fetchAssoc();
-    $res['tot'] = array_sum($res);
-//    $count = item(db\count('users', 'community=:ctty AND uid<>:ctty', compact('ctty')), t('Members:'));
-    $count = item(t('%tot = %mems members + %cos companies + %inProcess in process + %closed closed', $res), t('Accounts:'));
-    $cInfo = be\creditInfo();
-    foreach ($fields = ray('balance in rewards out') as $k) {
-      $v = $cInfo->$k;
-//      if ($k == 'out') $v -= $cInfo->rewards;
-//      if ($k == 'r') $v += $cInfo->rewards;
-      $$k = u\fmtAmt($v + 0);
-    }
-    
-    $balance = item(t('%balance = %in in - %out out (Credit issued: %rewards)', compact($fields)), t('Funds:'));
+
+  if ($mya->isCtty) { // managing a community itself (omit a lot of fields)
+
   } else { // managing some individual account
     if (!$mya->ok) $mya->nextStep();
 
@@ -312,7 +292,7 @@ function export($params) {
       $phone = u\fmtPhone($phone);
       $id = $a->mainQid;
       $ecode = "$a->emailCode";
-      $modified = u\fmtDate(time());
+      $modified = u\fmtDate(now());
       $manages = db\get('fullName', 'r_relations r LEFT JOIN users u ON u.uid=r.main', 'r.permission>=:B_MANAGE-:B_RELATED AND u.:IS_CO AND r.other=:id', ['id' => $a->id]);
       $lastTx = ($tx = $a->lastTx) ? u\fmtDate($tx[3], TRUE) : '';
       $solar = $solarUid ? r\relation(t("'solar'"), $solarUid, $a->id, ':IS_CUSTOMER') : '';

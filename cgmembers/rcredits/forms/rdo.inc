@@ -52,7 +52,7 @@ function rdo($code, $args = '') {
   
   if (@$mo) $expires = (r\rdoMonth() > $mo + 3) ? 1 : FALSE; // finagle expiration if link is older than 3 months
 
-  if (@$expires and r\rTime() >= $expires) return doSay('link expired', 'err');
+  if (@$expires and now() >= $expires) return doSay('link expired', 'err');
 
   $channel = TX_LINK;
   
