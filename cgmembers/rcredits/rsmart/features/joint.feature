@@ -53,7 +53,7 @@ Scenario: A cashier asks to charge someone
   | %dmy    | $400   | from   | Bea Two   |
   And we notice "new charge" to member ".ZZB" with subs:
   | created | fullName | otherName  | amount | payerPurpose |*
-  | %today  | Bea Two  | Corner Pub | $400   | food         |
+  | %now    | Bea Two  | Corner Pub | $400   | food         |
   And balances:
   | uid  | balance |*
   | ctty |    -200 |

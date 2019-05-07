@@ -51,7 +51,7 @@ class Acct {
     extract($info);
 
     extract(u\exactly('email fullName legalName flags state zip created country number uid region', $info,
-                      [ strtolower(u\randomString(10, 'word')) . '@' . EMAILX, null, null, 0, null, null, r\rTime(), US_COUNTRY_ID, null, null, null ]));
+                      [ strtolower(u\randomString(10, 'word')) . '@' . EMAILX, null, null, 0, null, null, now(), US_COUNTRY_ID, null, null, null ]));
     extract(u\exactly('community', $info, r\communityUid($zip)));
     extract(u\exactly('login', $info, $created));
     extract(u\exactly('access', $info, $login));
@@ -362,7 +362,7 @@ class Acct {
    * Activate the account.
    * @param int $helper: account record ID of account that invited this one
    */
-  public function activate($helper) {
+  /*  public function activate($helper) {
     $a = $this;
     u\EXPECT($mya = r\acct() and $mya->cAdmin, 'should be ctty admin'); // only ctty admin can approve an account
 
@@ -402,6 +402,7 @@ class Acct {
     
     unset($DBTX); 
   }
+  */
 
   /**
    * Set the company categories.
@@ -598,7 +599,7 @@ class Acct {
 
       $oldValue = $a->cryIf($field, '' . $a->$field, TRUE);
       $newValue = $a->cryIf($field, '' . $v);
-      $record = ray('uid created field oldValue newValue changedBy', $a->uid, time(), $field, $oldValue, $newValue, $mya ? $mya->agentId : 0);
+      $record = ray('uid created field oldValue newValue changedBy', $a->uid, now(), $field, $oldValue, $newValue, $mya ? $mya->agentId : 0);
       db\insert('r_changes', $record); // add a r_changes record for each changed field
     }
   }
@@ -662,7 +663,7 @@ class Acct {
       unset($info[$k]);
     }
     //      $info[$k] = (int) @$info[$k];
-    $info['created'] = time();
+    $info['created'] = now();
     return r\regionalInsert('r_relations', 'reid', $info + ['main' => $this->id], -$this->region);
   }
 
@@ -734,7 +735,7 @@ class Acct {
     global $user;
     if (empty($user)) $user = (object) ['uid' => $a ? $a->id : 0]; // probably needed only for rWeb login form testing
     if ($a and $a != $mya and !$a->admin2) { // admin access doesn't count
-      $access = r\rTime();
+      $access = now();
       if ($channel == TX_WEB) $login = $access;
       $lastip = $_SERVER['REMOTE_ADDR'];
       $a->update(@compact('login', 'access', 'lastip'));
@@ -1014,7 +1015,7 @@ EOF;
     $aA = $a->agentA;
     $field = $a->proSe ? 'cardCode' : 'cardCode2';
     if ($aA->$field) r\badCard($qid, $aA->$field, t('making new card for %nm', 'nm', $a->fullName)); // (don't mark previous code bad if none)
-//    if ($oldCode = $aA->$field) db\insert('r_bad', ray('qid code created', $qid, $oldCode, time()), 'created');
+//    if ($oldCode = $aA->$field) db\insert('r_bad', ray('qid code created', $qid, $oldCode, now()), 'created');
     $aA->update($field, $newCode ?: r\cardCode($qid)); // resave the secure fields
   }
     
@@ -1050,7 +1051,7 @@ EOF;
       r\tellCO(t('New Member (%name)', ['name' => $a->fullName]));
       $a->setBit(B_MEMBER);
 //    r\membershipEvent($a, 'member');
-      $a->update('tickle', time());
+      $a->update('tickle', now());
     }
     return $nextStep;
   }
@@ -1125,7 +1126,7 @@ EOF;
     $verifying = !$a->stepDone['verify'];
     $pass = u\randomString($verifying ? 3 : R_CODE_LEN, $verifying ? 'upper' : 'word'); // use
     ///  /**/ if (isDEV or (NOT_PRODUCTION and time() - $a->created < HOUR_SECS)) \drupal_set_message('Link: ' . "<a href='$base_url/reset/id=$name&code=$pass'>reset</a>");
-    $expires = r\rTime() + HOUR_SECS * R_SIGNIN_HOURS;
+    $expires = now() + HOUR_SECS * R_SIGNIN_HOURS;
     $a->update('oneTimePass', compact('pass', 'expires'));
     return $pass;
   } 
@@ -1141,7 +1142,7 @@ EOF;
     $a = $this;
     if (@$a->oneTimePass) {
       extract(just('pass expires', $a->oneTimePass));
-      if ($password == @$pass) return ($a->admin or r\rTime() < @$expires) ?: !($err = 'pass expired');
+      if ($password == @$pass) return ($a->admin or now() < @$expires) ?: !($err = 'pass expired');
     }
 
     require_once DRUPAL_ROOT . '/includes/password.inc';
@@ -1195,7 +1196,7 @@ EOF;
     } else $created = $a->created;
     
     extract($stats);
-    $years = round((strtotime('today') - strtotime('today', $created)) / DAY_SECS) * DAY_SECS / YEAR_SECS;
+    $years = round((today() - strtotime('today', $created)) / DAY_SECS) * DAY_SECS / YEAR_SECS;
     // rounding is to assure consistency for tests, despite daylight savings time changes
     $returnMo = @$avgBalPastMo > 0 ? 
       number_format(100 * 12 * @$extraPastMo / $avgBalPastMo, 1)
@@ -1305,7 +1306,7 @@ EOF;
     //    u\setDft($tid, r\getUsdTid($payee));
     $okNow = ($amount < 0 or $a->bankOk); // "okay to create the request NOW"
     if (!$okNow) $a->verifyBank();
-    u\setDft($created, $okNow ? NOW : NOW + DAY_SECS);
+    u\setDft($created, $okNow ? now() : now() + DAY_SECS);
     u\setDft($completed, ($amount < 0 or $a->bankOk) ? $created : 0);
 
     list($txid, $amount, $completed) = be\combineUsdTx($a, $amount, $completed);
@@ -1402,7 +1403,7 @@ EOF;
   public function nextTickle($done = FALSE) {
     $a = $this;
 
-    $now = time();
+    $now = now();
     $activate = ($done . '' == 'activate');
     if ($activate) {
       list ($done, $activated) = ['', $now];
@@ -1497,7 +1498,7 @@ EOF;
     if (!is_null($v)) $info += compact('v');
     
     if (@$life) {
-      $data = ray('uid expires data', $this->id, r\rTime() + $life, serialize($info));
+      $data = ray('uid expires data', $this->id, now() + $life, serialize($info));
       $info = ray('op', db\insert('r_do', $data, 'doid')); // (preliminary) op is r_do record ID
     } else $info += ['mo'=>rdoMonth()]; // remember month, in case we need to know when link was created
 
@@ -1624,18 +1625,22 @@ EOF;
     if (!is_null($lat)) return $a->update('latitude longitude', $lat, $lon);
     
     $params = ray('q key', "$a->address, $a->city, " . r\realState($a->state), GEOCODE_KEY);
-//    $params = ray('street city state', $a->address, $a->city, r\realState($a->state)); // US Census
-    if (!$res = file_get_contents($url = GEOCODE_URL . http_build_query($params))) return r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)));
-    $res = json_decode($res);
-    if (!$coods = @$res->results[0]->geometry) {
-      $a->setRisk('addrOff');
-      return r\tellAdmin(t('setLocus <%a>returned</a> no match', 'a', w\atag($url)));
-    }
-/*    if (!$matches = (array) @$res->result->addressMatches) return r\tellAdmin(t('setLocus <%a>returned</a> no matches', 'a', w\atag($url))); // US Census
+/*
+    $params = ray('street city state', $a->address, $a->city, r\realState($a->state)); // US Census
+    if (!$matches = (array) @$res->result->addressMatches) return r\tellAdmin(t('setLocus <%a>returned</a> no matches', 'a', w\atag($url))); // US Census
     $coods = @$matches[0]->coordinates;
     $coods = [$coods->y, $coods->x];
     */
-    $a->update('latitude longitude', $coods->lat, $coods->lng);
+    if (!$res = file_get_contents($url = GEOCODE_URL . http_build_query($params))) return r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)));
+    $res = json_decode($res);
+    foreach (nn($res->results, []) as $one) $coods[$one->confidence] = $one->geometry;
+
+    if (!nn($coods)) {
+      $a->setRisk('addrOff');
+      return r\tellAdmin(t('setLocus <%a>returned</a> no match', 'a', w\atag($url)));
+    }
+    $best = max(array_keys($coods));
+    $a->update('latitude longitude', $coods[$best]->lat, $coods[$best]->lng);    
   }    
    
   /**
@@ -1752,7 +1757,7 @@ EOF;
   public function photoSrc($small = FALSE, $unique = FALSE) {
     $a = $this;
     global $base_url;
-    if ($unique) $unique = '&t=' . r\rTime();
+    if ($unique) $unique = '&t=' . now();
     $thing = $small ? 'icon' : 'photo';
     $qid = $a->co ? "qid=$a->mainQid" : '';
     //    if (!$a->co) $qid .= "/$a->cardCode";

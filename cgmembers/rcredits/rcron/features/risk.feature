@@ -100,9 +100,8 @@ Scenario: We calculate risks
   | uid  | risks |*
   | .ZZA | adminOk,trusted,geography,badConx,moreOut,big7Week |
   | .ZZB | trusted,moves,rents,moreIn,moreOut |
-#  | .ZZC | cashCo,homeCo,miser,bigDay,bigWeek,big7Week |
-# time of day makes a difference
-  | .ZZC | cashCo,homeCo,miser,bigDay |
+  | .ZZC | cashCo,homeCo,miser,bigDay,bigWeek,big7Week |
+#  | .ZZC | cashCo,homeCo,miser,bigDay | (this happens sometimes but is WRONG: 1270>1200 and 660>600)
   | .ZZD | trusted,hasBank,miser |
   | .ZZE | new,shady,poBox,moreIn |
   | .ZZF | bigDay,bigWeek |
@@ -115,10 +114,8 @@ Scenario: We calculate risks
   When cron runs "acctRiskFinish"
   Then riskThresholds:
   | Day | Week | 7Week | Year |*
-#  | 621 |  621 |  1270 | 1570 |
-# time of day makes a difference
-  | 330 |  340 |   635 |  785 |
-# | 1100 | 1100 | 1221 | 1221 | is what I got most recently
+  | 621 |  621 |  1270 | 1570 |
+#  | 330 |  340 |   635 |  785 |
 
   When cron runs "txRisk"
   Then transactions:

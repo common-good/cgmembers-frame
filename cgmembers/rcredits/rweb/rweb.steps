@@ -174,6 +174,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *
  * in: MAKE backing Setup
  *     TEST backing AMemberChangesBackingAmount
+ *     MAKE balancesheet Setup
  *     MAKE bank Setup
  *     MAKE community Setup
  *     MAKE company Setup
@@ -225,7 +226,9 @@ function members($list) {return t\members($list);}
 /**
  * transactions: (ARG)
  *
- * in: MAKE backing AMemberChangesBackingAmount
+ * in: MAKE backing Setup
+ *     MAKE backing AMemberChangesBackingAmount
+ *     MAKE balancesheet Setup
  *     MAKE bank Setup
  *     MAKE community Setup
  *     MAKE custstatement Setup
@@ -336,6 +339,7 @@ function weSayWithSubs($type, $index, $subs) {
  *     TEST showrecurs AMemberStopsAStoppedRecurringTransaction
  *     TEST showrecurs AMemberAttemptsToStopANonexistentRecurringTransaction
  *     TEST showrecurs AMemberAttemptsToStopAnotherMembersRecurringTransaction
+ *     TEST showrecurs AMemberStopsAnAutopayment
  *     TEST signin AMemberTypesTheWrongPassword
  *     TEST signin AMemberTypesAnUnknownUsernameID
  *     TEST signin AMemberAsksForANewPasswordForAnUnknownAccount
@@ -407,6 +411,7 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
  * we show (ARG) with: (ARG)
  *
  * in: TEST backing AMemberVisitsTheBackingPage
+ *     TEST balancesheet AMemberLooksAtTheBalanceSheet
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST community CronCalculatesTheStatistics
  *     TEST company AMemberVisitsTheCompanyInfoPage
@@ -424,7 +429,7 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
  *     TEST paybutton AMemberClicksAPayWithCommonGoodButton
  *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     TEST preferences AMemberVisitsThePreferencesPage
- *     TEST preferences AnotherMemberVisitsThePreferencesPage
+ *     TEST preferences ACompanyAgentVisitsThePreferencesPage
  *     TEST relations MemberHasAnEmployeeConfirmed
  *     TEST relations MemberHasAnEmployeeUnconfirmed
  *     TEST relations MemberHasARelationWithAContractor
@@ -441,6 +446,7 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
  *     TEST showrecurs AMemberStopsAStoppedRecurringTransaction
  *     TEST showrecurs AMemberAttemptsToStopANonexistentRecurringTransaction
  *     TEST showrecurs AMemberAttemptsToStopAnotherMembersRecurringTransaction
+ *     TEST showrecurs AMemberStopsAnAutopayment
  *     TEST signin AMemberVisitsTheMemberSite
  *     TEST signupco AMemberRegistersACompany
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
@@ -460,7 +466,7 @@ function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWit
  * in: TEST custstatement ACompanyLooksAtACustomerStatement
  *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     TEST preferences AMemberVisitsThePreferencesPage
- *     TEST preferences AnotherMemberVisitsThePreferencesPage
+ *     TEST preferences ACompanyAgentVisitsThePreferencesPage
  *     TEST relations ItsComplicated
  *     TEST signupco AMemberRegistersACompany
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
@@ -476,6 +482,7 @@ function with($content) {return weShow($content);}
  * in: TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     TEST relations MemberHasAnEmployer
  *     TEST relations MemberCompanyHasRelations
+ *     TEST showrecurs AMemberStopsAnAutopayment
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST summary AnAgentClicksTheSummaryTabWithoutPermissionToManage
  *     TEST transactions AMemberLooksAtTransactionsForThePastYear
@@ -509,7 +516,8 @@ function withoutOptions($options) {
 /**
  * relations: (ARG)
  *
- * in: MAKE bank Setup
+ * in: MAKE balancesheet Setup
+ *     MAKE bank Setup
  *     MAKE community Setup
  *     MAKE company Setup
  *     MAKE custstatement Setup
@@ -550,7 +558,8 @@ function relations($relations) {return t\relations($relations);}
 /**
  * balances: (ARG)
  *
- * in: TEST bank Setup
+ * in: TEST balancesheet Setup
+ *     TEST bank Setup
  *     TEST bank AMemberMovesCreditToTheBank
  *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
  *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
@@ -593,6 +602,7 @@ function usd($list) {return t\usd($list);}
  * member (ARG) visits page (ARG)
  *
  * in: MAKE backing AMemberVisitsTheBackingPage
+ *     MAKE balancesheet AMemberLooksAtTheBalanceSheet
  *     MAKE community CronCalculatesTheStatistics
  *     MAKE company AMemberVisitsTheCompanyInfoPage
  *     MAKE contact AMemberVisitsTheContactInfoPage
@@ -612,7 +622,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE paybutton AMemberClicksAPayWithCommonGoodButton
  *     MAKE paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     MAKE preferences AMemberVisitsThePreferencesPage
- *     MAKE preferences AnotherMemberVisitsThePreferencesPage
+ *     MAKE preferences ACompanyAgentVisitsThePreferencesPage
  *     MAKE relations MemberHasAnEmployeeConfirmed
  *     MAKE relations MemberHasAnEmployeeUnconfirmed
  *     MAKE relations MemberHasARelationWithAContractor
@@ -629,6 +639,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE showrecurs AMemberStopsAStoppedRecurringTransaction
  *     MAKE showrecurs AMemberAttemptsToStopANonexistentRecurringTransaction
  *     MAKE showrecurs AMemberAttemptsToStopAnotherMembersRecurringTransaction
+ *     MAKE showrecurs AMemberStopsAnAutopayment
  *     MAKE signin AMemberVisitsTheMemberSite
  *     MAKE signin AMemberClicksALinkToResetPassword
  *     MAKE signin AMemberClicksALinkToResetPasswordWithWrongCode
@@ -856,7 +867,8 @@ function withDownloadColumns($columns) {
 /**
  * usd transfers: (ARG)
  *
- * in: MAKE bank Setup
+ * in: MAKE balancesheet Setup
+ *     MAKE bank Setup
  *     TEST bank AMemberMovesCreditToTheBank
  *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
  *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
@@ -1025,7 +1037,8 @@ function devices($list) {return t\devices($list);}
 /**
  * invoices: (ARG)
  *
- * in: MAKE custstatement Setup
+ * in: MAKE balancesheet Setup
+ *     MAKE custstatement Setup
  *     MAKE download Setup
  *     TEST gift AMemberDonatesWithInsufficientFunds
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
@@ -1244,8 +1257,7 @@ function memberEmailInvitationCodeIs($id, $code) {
 /**
  * we show checked: (ARG)
  *
- * in: TEST preferences AMemberVisitsThePreferencesPage
- *     TEST preferences AnotherMemberVisitsThePreferencesPage
+ * in: 
  */
 function weShowChecked($what, $wantSet = TRUE) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -1266,7 +1278,7 @@ function weShowChecked($what, $wantSet = TRUE) {
 /**
  * we show unchecked: (ARG)
  *
- * in: TEST preferences AMemberVisitsThePreferencesPage
+ * in: 
  */
 function weShowUnchecked($what) {return weShowChecked($what, FALSE);}
 
@@ -1274,7 +1286,7 @@ function weShowUnchecked($what) {return weShowChecked($what, FALSE);}
  * radio (ARG) is (ARG)
  *
  * in: TEST preferences AMemberVisitsThePreferencesPage
- *     TEST preferences AnotherMemberVisitsThePreferencesPage
+ *     TEST preferences ACompanyAgentVisitsThePreferencesPage
  */
 function radioIs($k, $v) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -1407,11 +1419,15 @@ function weScripWithSubs($script, $args = []) {
 /**
  * these (ARG): (ARG)
  *
- * in: TEST food AMemberVisitsTheFoodPage
+ * in: MAKE balancesheet Setup
+ *     TEST food AMemberVisitsTheFoodPage
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
  *     BOTH gift AMemberMakesANewRecurringDonation
  *     TEST gift AMemberDonatesWithInsufficientFunds
+ *     MAKE preferences Setup
+ *     MAKE showrecurs Setup
+ *     TEST showrecurs AMemberStopsAnAutopayment
  *     TEST transact AMemberPaysAnotherMemberRepeatedly
  */
 function these($thing, $list) {return t\these($thing, $list);}
@@ -1474,4 +1490,45 @@ function txHeaders($list) {
  */
 function txEntries($list) {
   return t\txEntries($list);
+  }
+
+/**
+ * variable (ARG) is (ARG)
+ *
+ * in: MAKE balancesheet AMemberLooksAtTheBalanceSheet
+ */
+function variableIs($k, $v) {return t\varIs($k, $v);}
+
+/**
+ * field (ARG) is (ARG) field (ARG)
+ *
+ * in: TEST transact AMemberPaysAnotherMemberRepeatedly
+ */
+function fieldIsField($fld1, $op, $fld2) {
+  global $testOnly; if (!$testOnly) return FALSE;
+  foreach ([1,2] as $i) {
+    $fi = $f[$i] = explode('/', ${'fld' . $i}); // tnm/idFnm/id/fldNm
+    $v[$i] = db\get($fi[3], 'r_' . $fi[0], [$fi[1] => $fi[2]]);
+  }
+  switch ($op) {
+    case "<": return ($v[1] < $v[2]);
+    case "<=": return ($v[1] <= $v[2]);
+    case "=": return ($v[1] == $v[2]);
+    case ">=": return ($v[1] >= $v[2]);
+    case ">": return ($v[1] > $v[2]);
+    default: return FALSE;
+  }
+}
+
+/**
+ * date field (ARG) rounded (ARG) in (ARG) record (ARG) (id field (ARG))
+ *
+ * in: TEST transact AMemberPaysAnotherMemberRepeatedly
+ */
+function dateFieldRoundedInRecordidField($dateFnm, $round, $tnm, $id, $idFnm) {
+  global $testOnly; if (!$testOnly) return FALSE;
+  $date = db\get($dateFnm, "r_$tnm", [$idFnm => $id]);
+  $rounded = (strtotime('today', $date) == $date);
+  return ($round == 'yes' xor !$rounded);
+  }
 }

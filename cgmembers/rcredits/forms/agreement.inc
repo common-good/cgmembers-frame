@@ -87,7 +87,7 @@ function formAgreement_validate($form, &$sta) {
 
 function formAgreement_submit($form, &$sta) {
   global $mya;
-  $signed = r\rTime();
+  $signed = now();
   extract(just('signedBy', $sta['input']));
   $mya->update($info = compact('signed', 'signedBy'));
   return w\goNextStep('sign');

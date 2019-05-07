@@ -62,7 +62,7 @@ function formEvents($form, &$sta, $args = '') {
     extract($event0); // $event0 contains $event, so must not have that name (as of PHP7)
 
     $end = u\fmtDate($end, TRUE);
-    $begun = ($start <= time()); // event has begun
+    $begun = ($start <= now()); // event has begun
 
     if (strpos(' VG', $type) and $begun) {
       if (!$mya->proSe or $mya->co) { // "or" is necessary if a voting link is accidentally sent to a company
@@ -76,7 +76,7 @@ function formEvents($form, &$sta, $args = '') {
       if (!@$do) $voting = $type == 'V' ? v\votingWelcome($end, $proxLink) : v\gradingWelcome($end, $proxLink); // end is displayable end date
     }
 
-    $start = $start <= time() ? t('NOW') : u\fmtDate($start, TRUE);
+    $start = $start <= now() ? t('NOW') : u\fmtDate($start, TRUE);
     $status0 = t('<b>Status:</b> %event from %start to %end', compact(ray('event start end')));
     if ($details) $status0 .= u\lf2br("\n\n$details");
   } else $status0 = t('There are no upcoming %PROJECT events scheduled in your community at this time.');
@@ -115,7 +115,7 @@ EOF;
     while ($row = $q->fetchAssoc()) {
       extract($row, EXTR_PREFIX_ALL, 'e');
       $buttons = $cAdmin ? button(t('Edit'), "$base_url/community/events/event/do=edit&eid=$e_id", '', 'warning') : '';
-      if ($cAdmin or $e_end < time()) {
+      if ($cAdmin or $e_end < now()) {
 				$btn = button('%text', "$base_url/community/events/do=results&eid=$e_id%noprox", '', 'success');
 				$buttons .= ' &nbsp; ' . tr($btn, 'text noprox', t('Results'), '');
 //				if ($cAdmin) $buttons .= ' ' . tr($btn, 'text noprox', t('Without Proxies'), '&noProxies=1');

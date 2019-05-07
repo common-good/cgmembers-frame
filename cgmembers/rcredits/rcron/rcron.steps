@@ -391,7 +391,7 @@ function memberHasNoPhotoIDRecorded($id) {return t\noPhotoId($id);}
  *
  * in: 
  */
-function variableIsWithSubs($var, $index, $subs) {return t\varIs($var, $index, $subs);}
+function variableIsWithSubs($var, $index, $subs) {return t\tvarIs($var, $index, $subs);}
 
 /**
  * community email for member (ARG) is (ARG)

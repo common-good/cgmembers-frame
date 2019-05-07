@@ -17,7 +17,7 @@ use CG\Web as w;
 global $base_path;
 define('BASE_PATH', $base_path);
 define('T_BALANCE_FLDS', 'uid balance floor savingsAdd saveWeekly minimum');
-define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account actorId actorAgentId agentUid payerId payeeId');
+define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId');
 
 /**
  * Allow mnemonic and abbreviated data in test scenario columns.
@@ -67,6 +67,13 @@ function fixData(&$info, $direct = FALSE) {
   $info = @compact(ray($fields)) + $info;
 }
 
+/**
+ * Say whether the given variable is set correctly OR set it.
+ */
+function varIs($k, $v) {
+  global $testOnly;
+  return ($v == ($testOnly ? getv($k) : setv($k, $v)));
+}
 /**
  * Interpret flag names
  */
@@ -265,7 +272,7 @@ function doTx($info, $thing) {
   global $testOnly, $channel;
   u\EXPECT($thing != 'Invoice', 'use doInvoice for invoices, not doTx');
   extract(u\exactly('xid serial amount payer payee payerAgent payeeAgent payerFor payeeFor payerTid payeeTid data flags boxId risk purpose for', $info, null));  // These are what appear in r_txs
-  extract(u\exactly('created type channel risks goods', $info, [r\rTime(), 'transfer', TX_SYS, 0, FOR_GOODS]));  // These are what appear in r_txs
+  extract(u\exactly('created type channel risks goods', $info, [now(), 'transfer', TX_SYS, 0, FOR_GOODS]));  // These are what appear in r_txs
   extract(u\exactly('taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding', $info, FALSE));  // These are flags that might appear
   extract(u\exactly('purpose', $info, FALSE));
 
@@ -293,6 +300,13 @@ function doTx($info, $thing) {
   } else {
     $reverses = null;
   }
+  
+//  $fields = 'xid payer payee amount payerReward payeeReward type goods flags data risk risks';
+  $fields = 'xid payer payee amount status type goods flags data risk risks';
+  if (!$testOnly) $fields .= $inv ? ' created' : ' created channel'; // when creating, add these if not already explicit
+  if (!$inv) $fields .= ' payerAgent payeeAgent';
+  
+  $info = @compact(ray($fields)) + $info; // apply modifications
 
   if (empty($payerAgent)) $payerAgent = $payer;
   if (empty($payeeAgent)) $payeeAgent = $payee;
@@ -657,7 +671,7 @@ function cronRuns($op) {
   global $cronOp; $cronOp = $op;
   include_once __DIR__ . '/rcron/rcron.inc';
   
-  $now = r\rTime();
+  $now = now();
   \setV('r_last_cron', ray('day week month', $now, $now, $now)); // normally don't run periodics
 
   if ($op == 'ALL') { //  or strpos(R_DAILY_TASKS, " $op ")
@@ -749,7 +763,6 @@ function noSuchEmail($index, $email) {
   return !findEmail($index, $email, []);
 //  $subject = strtr($GLOBALS['emailSubjects'][$index], $esubs);
 //  $pattern = strtr('%"index":"INDEX","email":"EMAIL"%', ray('INDEX EMAIL', $index, $email));
-//  return !db\exists('r_log', 'info LIKE :pattern', compact('pattern'));
 }
 
 /** 
@@ -1183,13 +1196,13 @@ function postLogout($function) {
 }
 
 /**
- * Assign a name to a variable that can be used in tests using the "%varable" pseudo-Gherkin syntax.
+ * Assign a name to a test variable that can be used in tests using the "%varable" pseudo-Gherkin syntax.
  * @param string $varName: variable name
  * @param string $index: a string or a message index
  * @param assoc $subs: substitutions (if any)
  * @return TRUE
  */
-function varIs($varName, $index, $subs = []) {
+function tvarIs($varName, $index, $subs = []) {
   global $testOnly; if ($testOnly) return FALSE;
   global $testVars;
   $testVars[$varName] = t($index, $subs[0]);
@@ -1298,9 +1311,11 @@ function output($msg, $color = 'error') {
 function clear($ch = 0) {
 /**/  if (!isDEV or isPRODUCTION) die('clear ' . DEV_ONLY_MSG);
   include_once __DIR__ . '/admin/admin.inc';
+  global $tTime; $tTime = time(); // all events happen simultaneously during a test (conceptually)
   global $lastGo, $formOut, $formArray, $formSta, $testOp, $testConfirmation, $tChecked, $tRadios, $testEmails;
   global $nextCode; $nextCode = NULL;
   global $sms_devel; $sms_devel = TRUE;
+  global $newThresholds; unset($newThresholds);
   global $testRewardStep; $testRewardStep = 500;
 //  global $testRewarding; $testRewarding = TRUE; // normally set this true in tests only if testing this feature
   global $T_POST; $T_POST = $_POST = [];
@@ -1316,12 +1331,14 @@ function clear($ch = 0) {
 /**/ if (u\test() and !strpos($sceneTest->sceneName, 'Statement')) echo "scene: $sceneTest->sceneName<br>\n"; // helpful when test dies
 ///   file_put_contents(flog(), ''); // clear log file on disk
 
-  $tables = 'r_bad r_ballots r_boxes r_stakes r_coupons r_coupated r_do r_events r_honors r_investments r_invites r_invoices r_changes r_near r_notices r_options r_pairs r_proposals r_questions r_proxies r_ratings r_recurs r_request r_relations r_shares r_stats r_tous r_usd r_usd2 r_user_industries r_votes tx_disputes_all tx_entries_all tx_hdrs_all x_users x_relations x_invoices x_usd x_photos queue sessions cache';
+  $tables = 'r_bad r_ballots r_boxes r_changes r_company r_coupated r_coupons r_do r_events r_honors r_investments r_invites r_invoices r_ips r_near r_notices r_options r_pairs r_photos r_proposals r_proxies r_questions r_ratings r_recurs r_relations r_request r_shares r_stakes r_stats r_tous r_usd r_usd2 r_user_industries r_votes tx_disputes_all tx_entries_all tx_hdrs_all x_invoices x_photos x_relations x_usd x_users queue sessions cache';
   foreach (ray('bootstrap form menu') as $k) $tables .= " cache_$k";
   foreach (ray($tables) as $table) if (db\exists($table)) db\q("TRUNCATE $table");
 
   db\q('DELETE FROM users WHERE uid<>0');
   db\q('DELETE FROM r_criteria WHERE ctty<>0');
+  $varKeys = ray('backingReserve code companies newThresholds negReserve r_last_cron riskThresholds version');
+  db\q("DELETE FROM variable WHERE name IN ('" . join("','", $varKeys) . "')");
   a\setupBasicAccounts();
 
   db\q('UPDATE users SET floor=0,balance=0,minimum=NULL,rewards=0,committed=0');

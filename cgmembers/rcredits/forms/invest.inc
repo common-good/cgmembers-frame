@@ -100,7 +100,7 @@ function formInvest_submit($form, &$sta) {
   
   if (@$signedBy) {
     extract(just('clubid', unserialize($old)));
-    db\insert('r_stakes', ray('uid clubid joined', $mya->id, $clubid, time()), 'stakeid');
+    db\insert('r_stakes', ray('uid clubid joined', $mya->id, $clubid, now()), 'stakeid');
     return say(t('You are now a member of the club!'));
   }
 
@@ -114,7 +114,7 @@ function formInvest_submit($form, &$sta) {
   extract(just('stakeid clubid stake request requestedOut', unserialize($old)));
   $buy = (op($sta) == 'buy');
   $request = round($request + ($buy ? $amount : -$amount), 2);
-	if (!$buy) $requestedOut = NOW;
+	if (!$buy) $requestedOut = now();
   db\update('r_stakes', compact(ray('stakeid request requestedOut')), 'stakeid');
   
   if ($buy and $request > 0) {

@@ -800,7 +800,7 @@ function setV($name, $value) {
 
   cache_clear_all('variables', 'cache_bootstrap');
 
-  $conf[$name] = $value;
+  return $conf[$name] = $value;
 }
 function variable_set($k, $v) {return setV($k, $v);} // for legacy Drupal
 
@@ -1322,7 +1322,7 @@ function ray($s, $value1 = NULL) {
     : FALSE))));
 
   $simple = $pattern ? mb_split($pattern, $s) : array($s);
-  if (!strpos($pattern, ',') or !strpos($s, ':')) return $simple; // no subargs
+  if (!preg_match('/[\,\|]/', $pattern) or !strpos($s, ':')) return $simple; // no subargs
 
   $ray = [];
   foreach ($simple as $one) {
@@ -1573,80 +1573,7 @@ function watchdog_exception($type, Exception $exception, $message = NULL, $varia
    $variables += _drupal_decode_exception($exception);
 //   watchdog($type, $message, $variables, $severity, $link);
 }
-
-/**
- * Logs a system message.
- *
- * @param $type
- *   The category to which this message belongs. Can be any string, but the
- *   general practice is to use the name of the module calling watchdog().
- * @param $message
- *   The message to store in the log. Keep $message translatable
- *   by not concatenating dynamic values into it! Variables in the
- *   message should be added by using placeholder strings alongside
- *   the variables argument to declare the value of the placeholders.
- *   See t() for documentation on how $message and $variables interact.
- * @param $variables
- *   Array of variables to replace in the message on display or
- *   NULL if message is already translated or not possible to
- *   translate.
- * @param $severity
- *   The severity of the message; one of the following values as defined in
- *   @link http://www.faqs.org/rfcs/rfc3164.html RFC 3164: @endlink
- *   - WATCHDOG_EMERGENCY: Emergency, system is unusable.
- *   - WATCHDOG_ALERT: Alert, action must be taken immediately.
- *   - WATCHDOG_CRITICAL: Critical conditions.
- *   - WATCHDOG_ERROR: Error conditions.
- *   - WATCHDOG_WARNING: Warning conditions.
- *   - WATCHDOG_NOTICE: (default) Normal but significant conditions.
- *   - WATCHDOG_INFO: Informational messages.
- *   - WATCHDOG_DEBUG: Debug-level messages.
- * @param $link
- *   A link to associate with the message.
- *
- * @see watchdog_severity_levels()
- * @see hook_watchdog()
- */
-function watchdog($type, $message, $variables = [], $severity = WATCHDOG_NOTICE, $link = NULL) {
-  return; // cg 20170513
-  global $user, $base_root;
-
-  static $in_error_state = FALSE;
-
-  // It is possible that the error handling will itself trigger an error. In that case, we could
-  // end up in an infinite loop. To avoid that, we implement a simple static semaphore.
-  if (!$in_error_state && function_exists('module_implements')) {
-    $in_error_state = TRUE;
-
-    // The user object may not exist in all conditions, so 0 is substituted if needed.
-    $user_uid = isset($user->uid) ? $user->uid : 0;
-
-    // Prepare the fields to be logged
-    $log_entry = array(
-      'type'        => $type,
-      'message'     => $message,
-      'variables'   => $variables,
-      'severity'    => $severity,
-      'link'        => $link,
-      'user'        => $user,
-      'uid'         => $user_uid,
-      'request_uri' => $base_root . request_uri(),
-      'referer'     => isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '',
-      'ip'          => ip_address(),
-      // Request time isn't accurate for long processes, use time() instead.
-      'timestamp'   => time(),
-    );
-
-    // Call the logging hooks to log/process the message
-    foreach (module_implements('watchdog') as $module) {
-      module_invoke($module, 'watchdog', $log_entry);
-    }
-
-    // It is critical that the semaphore is only cleared here, in the parent
-    // watchdog() call (not outside the loop), to prevent recursive execution.
-    $in_error_state = FALSE;
-  }
-}
+function watchdog() {return;}
 
 /**
  * Sets a message to display to the user.
@@ -2300,7 +2227,7 @@ function drupal_generate_test_ua($prefix) {
   }
   // Generate a moderately secure HMAC based on the database credentials.
   $salt = uniqid('', TRUE);
-  $check_string = $prefix . ';' . time() . ';' . $salt;
+  $check_string = $prefix . ';' . REQUEST_TIME . ';' . $salt;
   return $check_string . ';' . drupal_hmac_base64($check_string, $key);
 }
 

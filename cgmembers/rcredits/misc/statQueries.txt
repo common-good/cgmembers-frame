@@ -1,4 +1,4 @@
-$created = time() - 90 * DAY_SECS;
+$created = now() - 90 * DAY_SECS;
 
 // What fraction of new members choose to round up? 17/24
 $roundups = db\count('users', ':IS_MEMBER AND :IS_ROUNDUP AND created>:created', compact('created'));

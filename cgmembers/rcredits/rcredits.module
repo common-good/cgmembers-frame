@@ -128,6 +128,15 @@ function rcredits_cron_queue_info() {
 function makeQueue($callback, $time = 15) {return array('worker callback' => "CG\\Cron\\$callback", 'time' => $time);}
 
 /**
+ * Return the current time (or hypothetical current time for testing).
+ */
+function now() {
+  global $tTime; // hypothetical time, if any, for running a test on development machine
+  return nn($tTime, time());
+}
+function today() {return strtotime('today', now());}
+
+/**
  * Set or return a global variable.
  */
 function g($k, $v = NULL) {
@@ -142,11 +151,11 @@ function g($k, $v = NULL) {
  *
  */
 /**/ function bs($n, $list = B_LIST) {d('a.flagsDesc', $n, $list);} // show bit numbers/names
-/**/ function tm($n = '') {debug($result = $n ? (is_numeric($n) ? date('m/d/Y H:i:s a', $n) : strtotime($n)) : time()); return $result;} // convert and display unixtime or string time
+/**/ function tm($n = '') {debug($result = $n ? (is_numeric($n) ? date('m/d/Y H:i:s a', $n) : strtotime($n)) : now()); return $result;} // convert and display unixtime or string time
 function btxid($bankTxId = '') {
   $dt = DAY_SECS * substr($bankTxId, 0, 5);
   $dt = date('Ymd', $dt + DAY_SECS); // add a day for U.S. timezones
-  $acct = '132653' . substr($bankTxId, 5, 5);
+  $acct = substr(ESCROW_IN, 0, 6) . substr($bankTxId, 5, 5);
   $txid = substr($bankTxId, -7);
   return $acct . $dt . $txid;
 ///  debug(date('m/d/Y H:i:s a', $dt));

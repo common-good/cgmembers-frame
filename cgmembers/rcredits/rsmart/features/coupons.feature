@@ -29,7 +29,7 @@ Scenario: A member redeems a gift coupon
   Given  coupons:
   | coupid | fromId | amount | minimum | ulimit | flags | start  | end       |*
   |      1 |   .ZZC |     10 |       0 |      1 |     0 | %today | %today+7d |
-  When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $100 for "goods": "food" at %today
+  When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $100 for "goods": "food" at %now
   Then transaction headers:
   | xid | goods | actorId | actorAgentId | flags  | channel | boxId  | risks | reversesXid | created |*
   | 1   | 0     | .ZZC  | .ZZA       | 0      | 3       | devC   |     0 |          | %today  |

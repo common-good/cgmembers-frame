@@ -61,7 +61,7 @@ Scenario: A cashier asks to charge someone
   | %dmy    | $100   | from   | Bea Two   |
   And we notice "new charge" to member ".ZZB" with subs:
   | created | fullName | otherName  | amount | payerPurpose |*
-  | %today  | Bea Two  | Corner Pub | $100   | food         |
+  | %now    | Bea Two  | Corner Pub | $100   | food         |
   And balances:
   | uid  | balance |*
   | ctty |    -500 |
@@ -82,7 +82,7 @@ Scenario: A cashier asks to refund someone
   | %dmy    | $100   | to     | Bea Two   |
   And we notice "new refund" to member ".ZZB" with subs:
   | created | fullName | otherName  | amount | payerPurpose |*
-  | %today  | Bea Two  | Corner Pub | $100   | food         |
+  | %now    | Bea Two  | Corner Pub | $100   | food         |
   And balances:
   | uid  | balance |*
   | ctty |    -500 |

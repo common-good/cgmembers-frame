@@ -296,13 +296,13 @@ function processvote($args, $type) {
       if ($type == 'R') $gradeMax = @$args['max'];
     }
       
-    list ($id, $text, $modified) = [$args["vote$opti"], @$args["votenote$opti"], time()];
+    list ($id, $text, $modified) = [$args["vote$opti"], @$args["votenote$opti"], now()];
 ///    debug(compact(ray('args type quids now optionCount opti isVeto type grade id text modified')));
     db\update('r_votes', @compact(ray('id grade gradeMax text isVeto modified')), 'id');
 	}
 	$ballot = $args['ballot'];
   $voter = db\get('voter', 'r_ballots', 'id=:ballot', compact('ballot'));
-  db\update('r_ballots', ray('id proxy modified', $ballot, $voter, time()), 'id');
+  db\update('r_ballots', ray('id proxy modified', $ballot, $voter, now()), 'id');
 }
 
 /**
@@ -317,7 +317,7 @@ function processvote($args, $type) {
 function getCurrentVote($mya, &$extras, $question, $type, $optOrder) {
   $voter = $mya->id;
 	if (!$ballot = db\get('id', 'r_ballots', 'question=:question AND voter=:voter', compact('question', 'voter'))) {
-    $created = time();
+    $created = now();
     $ballot = db\insert('r_ballots', compact(ray('question voter created')));
   }
   

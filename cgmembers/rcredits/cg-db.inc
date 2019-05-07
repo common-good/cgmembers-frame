@@ -77,7 +77,7 @@ function update($table, $info, $key) {
   logSql(compact(ray('table info key')));
 
   if (!isset($info['modified']) and hasField($table, 'modified')) {
-    $info['modified'] = NOW;
+    $info['modified'] = now();
   }
 	
   $sql = '';
@@ -104,7 +104,7 @@ function insert($table, $info, $key = 'id') {
   logSql(compact(ray('table info')));
 
   foreach (ray('created modified') as $k) if (!isset($info[$k]) and hasField($table, $k)) {
-    $info[$k] = NOW; // set these automatically
+    $info[$k] = now(); // set these automatically
   }
 	
   $sql = '';
@@ -144,6 +144,7 @@ function updateOrInsert($table, $info, $key) {
  * @param string $fields: comma-separated list of fields (actual or calculated) -- use * for all
  */
 function rows($fields, $table, $where = '1', $subs = [], $labeled = TRUE) {
+  if (is_array($where)) list ($where, $subs) = [u\where($where), $where];
   $res = db\q("SELECT $fields FROM $table WHERE $where", $subs)->fetchAll(); // fetchAll means fetchAllObject
   if (!$labeled) foreach ($res as $i => $one) $res[$i] = array_values((array) $one);
   return $res;
@@ -153,12 +154,14 @@ function rows($fields, $table, $where = '1', $subs = [], $labeled = TRUE) {
  * Return an array of matching data.
  */
 function col($field, $table, $where = '1', $subs = []) {
+  if (is_array($where)) list ($where, $subs) = [u\where($where), $where];
   return db\q("SELECT $field FROM $table WHERE $where", $subs)->fetchCol();
 }
 function lst($field, $table, $where = '1', $subs = []) { // lst because "list" is a reserved word
   return join(', ', db\col($field, $table, $where, $subs));
 }
 function keyed($table, $where = '1', $subs = []) {
+  if (is_array($where)) list ($where, $subs) = [u\where($where), $where];
   return db\q("SELECT * FROM $table WHERE $where", $subs)->fetchAllKeyed();
 }
 

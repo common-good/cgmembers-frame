@@ -150,17 +150,24 @@ EOF
 
 function formSignup_validate($form, &$sta) {
   if (!isset($sta['buttons'])) $sta['buttons'] = []; // for testing (keep Drupal from griping)
-  extract(just('myid confirmed acctType email phone country tenure pin company companyPhon companyOptions fullName legalName zip address city state postalAddr', $sta['input']));
+  extract(just('myid confirmed acctType email phone country years months pin company companyPhon companyOptions fullName legalName zip address city state postalAddr', $sta['input']));
 //  if (!$inviteOk) return w\go('signup'); // in case user resubmits
   //and @$code != bin2hex(R_WORD)
 
-  setV('signupData', ray('time phone state companyOptions', time(), @$phone, @$state, @$companyOptions));
+///  setV('signupData', ray('time phone state companyOptions', now(), @$phone, @$state, @$companyOptions));
   if (!emailOkay($email, $acctType != CO_PERSONAL, @$myid ? r\acct($myid) : '')) return;
   if (!phoneOk($phone, @$country)) return;
   if ($err = u\badZip($zip)) return say($err, 'zip');
   if (!@$state) return say('bad state', 'state');
   if (!formBasic_validate($form, $sta, $acctType != CO_PERSONAL)) return;
-  if ($err = u\badAmount($tenure, '>=0')) return say(t('How-long: ') . t($err), 'tenure');
+  
+  if (!isset($years) and !isset($months)) return say(t('You must say how long you\'ve been there.'), 'years');
+  foreach (ray('years months') as $k) {
+    if (!nn($$k)) $$k = 0;
+    if ($err = u\badAmount($$k, '>=0')) return say(t('How-long: ') . t($err), $k);
+  }
+  $tenure = $years * 12 + $months;
+  
 //  if (@$pin === '') return say('pin required', 'pin');
 //  if (@$pin and strlen($pin) != 4) return say('wrong pin len', 'pin');
   
@@ -188,7 +195,7 @@ function formSignup_validate($form, &$sta) {
   if (@$confirmed) $flags |= u\bit(B_CONFIRMED); // companies are always pre-confirmed, because the company account is opened by a member
 //  $administer_users = FALSE; // for testing (keep Drupal from griping)
   $status = 1;
-  u\preray(@compact(ray('fullName legalName phone address city zip postalAddr email flags signupCo status')), $sta['input']);
+  u\preray(@compact(ray('fullName legalName phone address city zip postalAddr email tenure flags signupCo status')), $sta['input']);
 }
 
 function formSignup_submit($form, &$sta) {

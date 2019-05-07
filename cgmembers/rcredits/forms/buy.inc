@@ -43,7 +43,7 @@ function formBuy($form, &$sta, $doCode = '') {
     $confirm = TRUE;
   } elseif (strtolower($code) != t('demo')) { // not looking at the demo
     if (strpos($code, ' ') or !$cocodes = substr(u\decry('P', CRYPT_FLAG . $code), 1) or !$cocodes = unserialize($cocodes) or @$cocodes['cocode'] != $co->emailCode) return w\softErr('bad co code'); // space in code is probably "bad company ID or cocode" message
-    $t = time() - @$cocodes['now'];
+    $t = now() - @$cocodes['now'];
     if ($t < 0 or $t > AUTHCODE_TIMEOUT) return w\softErr('co code timeout');
   } else {$tst = t('<span class="loud">DEMO</span>');}
   

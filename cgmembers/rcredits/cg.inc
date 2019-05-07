@@ -117,7 +117,7 @@ function dupTx($aId, $otherId, $amount) {
   if (!$lastTx) { return FALSE; }
   return (($lastTx->actorId == $aId and $lastTx->otherId == $otherId
            and ($lastTx->payerAmount == $amount or $lastTx->payerAmount == $amount))
-          and ((r\rTime() - $lastTx->created) < R_DUPTX_MINS * MIN_SECS));
+          and ((now() - $lastTx->created) < R_DUPTX_MINS * MIN_SECS));
 }
  
 /**
@@ -192,7 +192,7 @@ function setJoin($reid, $join) {
  * Return the number of months since the first rdo of this type (for conciseness).
  */
 function rdoMonth($time = NULL) {
-  u\setDft($time, r\rTime());
+  u\setDft($time, now());
   return round(($time - strtotime('12/1/2014')) / (MONTH_SECS));
 }
 
@@ -294,17 +294,20 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
   }
   
   require_once DRUPAL_ROOT . '/vendor/swiftmailer/lib/swift_required.php';
+  $transport = \Swift_SendmailTransport::newInstance('/usr/sbin/sendmail -bs');
+/*
   $transport = \Swift_SmtpTransport::newInstance()
     ->setHost(CG_SMTP_SERVER)
     ->setPort(CG_SMTP_PORT)
     ->setEncryption(CG_SMTP_TLS)
     ->setUsername(CG_SMTP_USER)
     ->setPassword(CG_SMTP_PASS);
+    */
   $mailer = \Swift_Mailer::newInstance($transport);
 
   $privateKey = "-----BEGIN RSA PRIVATE KEY-----\n" . str_replace(' ', "\n", DKIM_PRIVATE) . "\n-----END RSA PRIVATE KEY-----";
   $signer = new \Swift_Signers_DKIMSigner($privateKey, EMAIL_DOMAIN, 'system');
-
+  
   $m = \Swift_SignedMessage::newInstance()
     ->attachSigner($signer)
     ->setSubject($subject)
@@ -333,7 +336,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
  * @param string $msg: type of error
  */
 function badCard($qid, $code, $msg) {
-  $created = time();
+  $created = now();
   $info = compact('qid', 'code');
   if (!db\exists('r_bad', $info)) {
     $info += compact('created');
@@ -384,7 +387,7 @@ function notify($uid, $index, $subs = [], $force = FALSE) {
   if ($force) {
     $mailed = r\rMail($index, $a, $subs, @$subs['reply'] ?: 'ctty');
   } else { //if ($a->can(B_NOTIFY_EMAIL)) {
-    list ($message, $created) = array(t($index, $subs), r\rTime());
+    list ($message, $created) = array(t($index, $subs), now());
     f('t.output', "Actual Notice to $fullName: $message");
     db\insert('r_notices', compact(ray('uid message created')), 'msgid');
   }
@@ -555,7 +558,7 @@ function iCardAcct($code0, &$iCode = NULL) {
  */
 function setCook($key, $value, $expires = NULL, $raw = FALSE) {
 	u\EXPECT(($len = strlen(rawurlencode("$key=$value"))) <= 4096, "cookie too long len=$len"); // 4094 not 4096 (browser bug?)
-  u\setDft($expires, r\rTime() + 365250 * DAY_SECS);
+  u\setDft($expires, now() + 365250 * DAY_SECS);
 	$func = $raw ? 'setcookie' : 'setrawcookie';
   $res = $func($key, $value, (int) $expires, '/'); // make it easy (fails without '/')
 	u\EXPECT($res, 'cookie failed');
@@ -647,7 +650,7 @@ function uniqueName($fullName, $info = []) {
     $fullName = R_TEMP_NAME_PREFIX .
       (@$phone ?  u\fmtPhone($phone, 'n')
        : (@$email ? R_TEMP_NAME_PREFIX . strtr($email, ['@'=>'AT', '.'=>'DOT'])
-          : substr(md5('zot' . strval(r\rTime())), 0, 10))); // pseudo random
+          : substr(md5('zot' . strval(now())), 0, 10))); // pseudo random
   }
   $name = $name0 = u\shortName($fullName);
 
@@ -774,7 +777,7 @@ function makeDevice($uid, $code = '', $ch = NULL) {
       $boxName = u\firstUnusedId('boxName', 'r_boxes', 1, PHP_INT_MAX-1, $where, compact('uid'));
       } else */
   //if (!$boxName) $boxName = $code; // code serves as boxName for dumb cell phones
-  $created = $access = r\rTime();
+  $created = $access = now();
   $boxnum = db\get('MAX(boxnum)', 'r_boxes', 'uid=:uid', compact('uid')) + 1;
   $info = ray('channel', $ch) + compact(ray('uid code boxnum access created'));
   return @db\insert('r_boxes', $info);  // WHY ARE WE IGNORING ERRORS HERE???????
@@ -929,7 +932,7 @@ function txRet($message, $info = []) {
  */
 function invite($email, $inviter, $code = '', $subject = '', $message = '') {
   $code = $code ?: u\code();
-  $invited = r\rTime();
+  $invited = now();
   $email = u\cry('P', $email);
   $info = compact(ray('code invited email inviter subject message'));
   db\insert('r_invites', $info);
@@ -946,7 +949,7 @@ function invite($email, $inviter, $code = '', $subject = '', $message = '') {
  * @return assoc of all parameters in the notices template (FALSE if none)
  */
 function noticeArgs($uid, $where = '0', $weekly = FALSE, $monthly = FALSE, $at = NULL) {
-  u\setDft($at, r\rTime());
+  u\setDft($at, now());
   $a = r\acct($uid);
   
   if ($where) {
@@ -1023,7 +1026,7 @@ function cttyPaidEver($ctty = 0) {
  * @return assoc of named statistics for one community on one date (see r_stats table def)
  */
 function stats($ctty = 0, $when = NULL, $redo = '') {
-  u\setDft($when, strtotime('today'));
+  u\setDft($when, today());
 
   if ($ctty == 1) { // for the server's region overall (omitting distant communities hosted here)
     list ($start, $end) = r\regionRange();
@@ -1221,7 +1224,7 @@ X;
 
 /// *********************************    
   
-  if (@$created0 and $created < strtotime('today')) { // redoing stats for the past, so figure bals, floors, and topN the hard way
+  if (@$created0 and $created < today()) { // redoing stats for the past, so figure bals, floors, and topN the hard way
     $recently = strtotime(-FLOOR_DAYS . ' days', $created); // six months ago
     $isPayer = '(payer IN (uid, jid) AND payer<>0 AND e.entryType=:ENTRY_PAYER)';
     $isPayee = '(payee IN (uid, jid) AND e.entryType=:ENTRY_PAYEE)';
@@ -1281,6 +1284,7 @@ X;
     if (!$sql = nn($sqls[$k])) continue; // don't do bals2 if bal was good enough
     if ($k == 'topN' or $k == 'botN') $sql = tr($sql, '_topnSQL', topN($res));
     $res = (db\q($sql, $subs)->fetchAssoc() ?: []) + $res; // +$res so OLD takes precedence for bals2
+///   if ($created == today() and $k == 'accts') debug(compact(ray('res sql subs')));    
   }
   
   foreach ($res as $k => $v) {if (is_null($v)) $res[$k] = 0;}
@@ -1345,16 +1349,6 @@ EOF;
   return [$avg, $min, $days];
 }
 
-
-/**
- * Return the current time (manipulated for the rCredits Game and possibly for tests)
- */
-function rTime() {
-  if (isGAME) {
-    extract(w\gameVars());
-    return mktime(0, 0, 0, $week, 4 * $day, date('Y'));
-  } else return u\test() ? strtotime('today') : time(); // so times in tests are reliable
-}
 
 /**
  * Interpret an integer bit array of risks.
@@ -1465,7 +1459,7 @@ function suggest($a, $index, $subs, $page = 'Preferences') {
  * @return the full url
  */
 function promoLink($page = '') {
-  if (r\signedIn()) $page .= '?region=' . R_SERVER_ID . '&tm=' . r\rTime();
+  if (r\signedIn()) $page .= '?region=' . R_SERVER_ID . '&tm=' . now();
   return PROMO_URL . "/$page";
 }
 

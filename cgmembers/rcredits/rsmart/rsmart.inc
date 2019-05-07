@@ -82,8 +82,8 @@ function pos($args = FALSE) {
   ///  debug("pos(" . print_r($args, true) . ")");
   global $channel; $channel = TX_POS;
   global $scanned; $scanned = true;
-  global $mya;
-
+  global $mya, $boxUser;
+  
   if (!r\up()) exit('system down'); // app does not (and should not) distinguish this from system failure
   if (is_object($args)) $args = (array) $args; // this helps with debugging when passing json_decoded args
   if (is_string($args)) $args = urlq2ray($args); // convert from query string to array
@@ -104,8 +104,8 @@ function pos($args = FALSE) {
 
   if (@$device) { // device was specified, substitute its record id, herein
     if (!$mya) return posErr($agentErr);
-    if ($deviceId = getDevice($device, $mya->id)) {
-      $edit = ray('id access', $deviceId, r\rTime());
+    if ($boxUser = getDevice($device, $mya->id)) {
+      $edit = ray('id access', $boxUser, now());
       db\update('r_boxes', $edit, 'id'); // remember time last accessed so we can drop the deadwood
       $args['device'] = $deviceId;
     } elseif ($op != 'identify') return posErr('unknown device');
@@ -188,7 +188,7 @@ function getTime($args) {
   global $mya;
   if ($err = missingArg($keys = 'version', $args)) return posErr($err); 
   extract(just($keys . ' data', $args));
-  $time = r\rTime();
+  $time = now();
   
   if ($version < RPOS_VERSION) $message = $version < 218 
   ? t("IMPORTANT: Your app needs updating.\n\nSearch for \"CG Pay\" in the Google Play Store, to download the latest version.")
@@ -271,7 +271,7 @@ function identify($args) {
     }
     $default = $mya->mainQid;
     $company = $mya->fullName;
-    $time = r\rTime();
+    $time = now();
     
   } else { // identifying customer
     if (!@$deviceId) return posErr('unknown device'); // tried to scan a customer card before very first agent scan-in
@@ -536,7 +536,7 @@ function getMember($qid, $code, &$err = '', $requireCode = TRUE) {
     if (!$inviter = r\iCardAcct($code, $seq)) return !$err = 'bad member';
     if (!$uid = db\get('uid', 'users', 'helper=:inviter AND seq=:seq', compact('inviter', 'seq'))) return !$err = 'bad icard';
     $a = r\acct($uid);
-    if (time() - $a->activated > ICARD_EXPIRES * DAY_SECS) return !$err = 'expired icard';
+    if (now() - $a->activated > ICARD_EXPIRES * DAY_SECS) return !$err = 'expired icard';
     $code = $a->cardCode; // no need for function here
   } else { */
 //    $customer = preg_match('/[\\.:]/', $customer0) ? $customer0 : r\qo::qr2($customer0);
@@ -555,7 +555,7 @@ function getMember($qid, $code, &$err = '', $requireCode = TRUE) {
 
 /*    if ($account_id != $q_account_id) { // this is a transient id scanned from the other party's smart device
       $transientId = basename(dirname($q_account_id));
-      $recent = r\rTime() - R_TRANSIENCE;
+      $recent = now() - R_TRANSIENCE;
       if (db\get('transientId', 'r_boxes', 'code=:code AND access>=:recent') != $transientId) return be\error('bad transient id');
     } */
 }

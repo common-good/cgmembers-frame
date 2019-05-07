@@ -41,7 +41,7 @@ function questionList($eid, $question='', $doWhat='') {
   global $base_url;
 	global $voting;
 
-//	$q = db\q("SELECT id, (CASE WHEN (endGrading<>0 AND :now>endVoting) then 'G' WHEN :now>endVoting THEN 'R' WHEN :now>endProposals THEN 'V' WHEN :now>endIdeas THEN 'P' ELSE 'I' END) AS phase, repeats, repeatedBy, text, detail,  linkIdeas, linkProposals, created, (CASE WHEN endVoting=0 THEN 0 WHEN (endGrading<>0 AND :now>endVoting) THEN endGrading WHEN :now>endVoting THEN endVoting-:now WHEN :now>endProposals THEN endVoting WHEN :now>endIdeas THEN endProposals ELSE endIdeas END) AS endDate, budget, units FROM r_questions WHERE ctty IN (:ctty, 0) AND endIdeas<>0 ORDER BY endDate, id", ray('ctty now', $cttyA->id, $now = time()));
+//	$q = db\q("SELECT id, (CASE WHEN (endGrading<>0 AND :now>endVoting) then 'G' WHEN :now>endVoting THEN 'R' WHEN :now>endProposals THEN 'V' WHEN :now>endIdeas THEN 'P' ELSE 'I' END) AS phase, repeats, repeatedBy, text, detail,  linkIdeas, linkProposals, created, (CASE WHEN endVoting=0 THEN 0 WHEN (endGrading<>0 AND :now>endVoting) THEN endGrading WHEN :now>endVoting THEN endVoting-:now WHEN :now>endProposals THEN endVoting WHEN :now>endIdeas THEN endProposals ELSE endIdeas END) AS endDate, budget, units FROM r_questions WHERE ctty IN (:ctty, 0) AND endIdeas<>0 ORDER BY endDate, id", ray('ctty now', $cttyA->id, $now = now()));
 
   $sql = <<< X
 		SELECT q.id, repeats, repeatedBy, text, detail, linkDiscussion, q.created, budget, units,
@@ -56,7 +56,7 @@ X;
 	$qdivs = $list = '';
 	while($row = $q->fetchAssoc()) {
 		extract($row); // get parms
-		if($endDate < 0) $endDate = NOW - $endDate; // correct for reverse sorting of closed votes (negative means number of days ago)
+		if($endDate < 0) $endDate = now() - $endDate; // correct for reverse sorting of closed votes (negative means number of days ago)
 
 		if($phase == 'V') $voting = ($voting and $endDate) ? min($voting, $endDate) : $endDate; // report soonest closing date
 		$endDatedpy = $endDate ? u\fmtDate($endDate) : '?';
@@ -260,7 +260,7 @@ function getQuestions($eid, $mya = NULL) {
     $event = v\getCurrentEvent($mya->community);
     extract(just('eid', $event));
   }
-  $now = time();
+  $now = now();
 //  $crit = 'ctty IN (:ctty, 0) AND :NOW>endProposals AND (:NOW<endVoting OR endVoting=0)';
 	$q = db\q('SELECT id AS question, type FROM r_questions WHERE event=:eid', compact('eid'));
 
@@ -284,6 +284,7 @@ function getProposals($mya, $order = '') {
     $plus = date('i', $mya->created);
     $mod = date('s', $mya->created);
     $order = "(id*$plus)%$mod, id"; // randomize but stay the same for this member
+    if (u\test()) $order = 'id'; // be consistent so we can test
   }
   
   return db\col('id', 'r_proposals', 'ctty IN (:ctty, 0) ORDER BY ' . $order, compact('ctty')); 

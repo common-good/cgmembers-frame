@@ -135,7 +135,7 @@ function salesSql() {
   $fields = 'payee';
   for ($i = 0; $i <= 3; $i++) {
     $nextMonth = @$monthi;
-    $monthi = strtotime("$i months ago", r\rTime());
+    $monthi = strtotime("$i months ago", now());
     if ($i > 0) $fields .= ",SUM(IF(created>=$monthi AND created<$nextMonth, amount, 0)) AS sales$i";
   }
   return "SELECT $fields FROM txs WHERE type=:TX_TRANSFER AND goods AND created>=$monthi AND payee=u.uid";
@@ -148,7 +148,7 @@ function salesSql() {
  * @param int $months: how far back to look
  */
 function demandSql($other, $minRepeats, $months) {
-  $earliest = strtotime("$months ago", r\rTime());
+  $earliest = strtotime("$months ago", now());
   $me = $other == 'payer' ? 'payee' : 'payer';
   return <<<EOF
   SELECT SUM(GREATEST(0, minimum-r)) AS demand 

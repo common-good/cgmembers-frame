@@ -275,7 +275,7 @@ define('R_PIXEL_FACTOR', 200); // what to multiply the aspect ratio components b
 define('R_INDIVIDUAL_GIFT', 50); // suggested donation for individuals
 define('R_COMPANY_GIFT', 250); // suggested donation for companies
 define('R_BUYS_BEFORE_BONUS', 1); // number of purchases required before signup bonus (should probably be 3)
-define('R_REGION_MAX', isDEV ? 46000 : 3000000000); // maximum uids in a region (46k,3T ~sqrt(PHP_INT_MAX))
+define('R_REGION_MAX', 3000000000); // maximum uids in a region (46k,3T ~sqrt(PHP_INT_MAX))
 define('R_ACCT_REGION', '(-FLOOR((uid-1)/' . R_REGION_MAX . ')-1)'); // SQL region expression
 define('R_SIGNIN_HOURS', 24); // window for signing in after registering or resetting password
 define('R_MEMBER_MARK', '.'); // divides region from specific identifier in member IDs

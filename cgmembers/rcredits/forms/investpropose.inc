@@ -70,7 +70,7 @@ function formInvestPropose_validate($form, &$sta) {
     if (!$a = whois($company, 'company', $info, t('no self-investing'))) return FALSE;
     $company = $a->id;
   } else {
-    if ($err = u\badDate($dob, '', time())) return say($err, 'dob');
+    if ($err = u\badDate($dob, '', now())) return say($err, 'dob');
     if ($err = u\badAmount($gross, '>=0', 2, '')) return sayFieldErr($err, 'gross');
   }
   $toRate = 'strength web history soundness';

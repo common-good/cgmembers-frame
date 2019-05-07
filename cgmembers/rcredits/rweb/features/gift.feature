@@ -108,8 +108,8 @@ Scenario: A member donates with insufficient funds
   |        -1 |    200 |      X | memory | Jane Do |
   Then we say "status": "gift successful|gift transfer later"
   And invoices:
-  | nvid | created | amount | from | to   | purpose  | flags |*
-  |    1 | %today  |    200 | .ZZA | cgf  | donation | gift  |
+  | nvid | created | amount | from | to   | purpose  | flags | status   |*
+  |    1 | %today  |    200 | .ZZA | cgf  | donation | gift  | approved |
   And these "honors":
   | created | uid  | honor  | honored |*
   | %today  | .ZZA | memory | Jane Do |

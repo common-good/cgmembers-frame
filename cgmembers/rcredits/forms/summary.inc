@@ -78,14 +78,15 @@ function formSummary($form, &$sta) {
   $title = t('Account Summary');
   $accountName = item($mya->j_fullName . ($mya->jid ? '<br>' : ' ') . "($mya->j_name)", t('Name:'));
   $address = item($mya->postalAddr . @$extras, t('Postal Addr:'));
-  if (!$mya->isCtty) { // unless this is a community or region account
-    $acctType = $mya->co ? t('company account') : ($mya->jid ? t('joint account') : t('personal account'));
-    $balance = u\fmtAmt($mya->balDpy);
+  $balance = u\fmtAmt($mya->balDpy);
 //    $totalDesc = u\fmtAmt($mya->r);
 //    $balanceDesc = $mya->savings ? t(' plus your savings, for a total of @total', ['@total' => $totalDesc]) : '';
-    $balanceDesc = '';
-    if ($mya->rewards) $balanceDesc .= t(' (see <%a>History</a>)', '_a', atag('/history'));
-    $balance = item($balance . "<small>$balanceDesc</small>", t('Balance:'));
+//    $balanceDesc = '';
+  $balanceDesc = $mya->activated ? t(' <small>(see <%a>History</a>)</small>', '_a', atag('/history')) : '';
+  $balance = item($balance . $balanceDesc, t('Balance:'));
+
+    if (!$mya->isCtty) { // unless this is a community or region account
+    $acctType = $mya->co ? t('company account') : ($mya->jid ? t('joint account') : t('personal account'));
 //    $savings = item(u\fmtAmt($mya->savings) . t('<small> (your total incentive rewards to date)</small>', [
 //    list ($rewardNote, $rewardDesc) = $mya->cttyRewardy ? [t('<small> (your total incentive rewards to date)</small>'), t('This amount will be yours to keep, once your community reaches a certain size.')] : ['', t('Some of this amount may be yours to keep, at your %PROJECT community\'s decision, once membership reaches a certain size.')];
 //    $savings = item(u\fmtAmt($mya->rewards) . $rewardNote, t('Credit Line:'), $rewardDesc);
@@ -118,8 +119,8 @@ function formSummary($form, &$sta) {
 //  if ($mya->superAdmin and !$mya->ok) $onSubmit = w\whoFldSubmit('helper', t('This person was invited by %name, yes?'));
   if ($mya->admin2 and !$mya->proSe) {
     $class = ['class' => ['admin']];
-    $right = w\fieldSet('right2', $form, '', $class); // the admin part
-    $left = w\fieldSet('left2', $fields, '', $class);
+    $right = w\fieldSet('right2', $form, '', '', $class); // the admin part
+    $left = w\fieldSet('left2', $fields, '', '', $class);
     $form = compact('right', 'left');
     $form['none'] = submit('none'); // force _submit despite lack of submit button    
   } else $form = $fields;
@@ -199,7 +200,7 @@ function formSummary_submit($form, &$sta) {
   
   $DBTX = \db_transaction();
 
-  if ($mya->cAdmin or $mya->admin) setRisksAndFlags($mya, @$risks, @$adminable); // don't test for isset (allow turning off all bits); must precede ->activate() because that function sets ssnOff bit
+  if ($mya->cAdmin or $mya->admin) setRisksAndFlags($mya, @$risks, @$adminable); // don't test for isset (allow turning off all bits); must precede activate() because that function sets ssnOff bit
     
   if (!$mya->isCtty) {
     $fullName = $mya->fullName;
@@ -209,7 +210,7 @@ function formSummary_submit($form, &$sta) {
     }
 
     if (@$rTrader and !$mya->ok) {
-      $mya->activate($helper);
+      activate($helper);
     } elseif (@$federalId and $federalId != $mya->federalId) $mya->update('ssnData', '');
   }
 
@@ -231,4 +232,49 @@ function setRisksAndFlags($a, $risks, $adminable) {
     k\acctRisk1($a->id, getv('riskThresholds', [0,0,0,0]));
   }
   $a->setBits(@$adminable);
+}
+
+/**
+ * Activate the account.
+ * @param int $helper: account record ID of account that invited this one
+ */
+function activate($helper) {
+  global $mya;
+  u\EXPECT($mya and $mya->cAdmin, 'should be ctty admin'); // only ctty admin can approve an account
+
+  $DBTX = \db_transaction();
+  u\EXPECT($helper, 'no helper!');
+  $mya->update(compact('helper')); // must precede welcome message
+  $mya->setBit(B_OK, TRUE, TRUE); // must precede welcome message
+  $mya->setBit(B_NONUDGE, FALSE, TRUE);
+  
+  if ($firstTime = !$mya->activated) { // first time activation
+//      u\EXPECT($mya->superAdmin, 'initial activation is only for superadmin');
+    $mya->update('activated', now() - 1); // must precede update of vsecure, so it gets V-encrypted
+    $mya->update('vsecure', $mya->vsecure); // hyper-encrypt
+    $mya->eachPartner(function($coA, $zot, $custCode) { // tell partner: account is activated
+      if ($api = $coA->api()) u\post($api, ray('partnerCode qid op name', $coA->emailCode, $mya->mainQid, 'complete', $mya->fullName));
+    });
+    $inviterName = @$mya->helperA->fullName;
+    $subs = compact('inviterName');
+    $msg = 'approved';
+    if (!$mya->confirmed) $msg .= ($helper > 1 ? '|must confirm' : '|in person');
+    r\message($mya->id, $msg, $subs + ['youName' => $mya->fullName]);
+  }
+
+  if ($firstTime and !$mya->co) { // no bonus or helper bonus for a company signing up
+    if ($mya->ssnData['CGerror'] and !$mya->risk('ssnOff') and !$mya->risk('dobOff')) $mya->setRisk('ssnOff'); // make SURE this bit gets set (might not if admin signs the person up
+
+    if (!$mya->helperA->co and !$mya->helperA->superAdmin) { // no helper bonus for company referral or help by superAdmin (cAdmin is okay) [don't require $mya->confirmed]
+      $fullName = $mya->fullName;
+      $helped = db\count('users', ':IS_OK AND NOT :IS_CO AND helper=:hId', ray('hId', $mya->helper)) + 0;
+      if ($helped == ORGANIZER_GRANT_MIN) {
+//            r\message($mya->helper, 'organizer grant', ['_a' => w\atag('/community/grant')]);
+        list ($name, $topic) = [$mya->helperA->fullName, t('eligible')];
+        r\tellAdmin('eligible for grant', compact(ray('name topic')));
+      }
+    }
+  }
+  
+  unset($DBTX); 
 }

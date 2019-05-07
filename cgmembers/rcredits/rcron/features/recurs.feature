@@ -32,6 +32,7 @@ Scenario: A recurring donation happened long enough ago to repeat
   |   1 | %today-35d |     10 | .ZZA | .ZZC | monthly payment | recurs |
   When cron runs "recurs"
   Then count "txs" is 2
+  And count "invoices" is 0
   And transactions:
   | xid | created | amount | from | to   | purpose         | flags  |*
   |   2 | %today  |     10 | .ZZA | .ZZC | monthly payment | recurs |

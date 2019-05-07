@@ -136,8 +136,8 @@ EOF;
 function formProposal_validate($form, &$sta) {
   extract(just('cats when until amount budgetTotal phone email', $sta['input']));
   if (!@$cats) return say(t('You must choose at least one category.'), 'categories');
-  if ($err = u\badDate($when, NOW - 30 * DAY_SECS)) return sayFieldErr($err, 'when');
-  if ($err = u\badDate($until, max($when, NOW))) return sayFieldErr($err, 'until');
+  if ($err = u\badDate($when, now() - 30 * DAY_SECS)) return sayFieldErr($err, 'when');
+  if ($err = u\badDate($until, max($when, now()))) return sayFieldErr($err, 'until');
   foreach (ray('amount budgetTotal committed') as $k) if ($err = amtErr($k, $sta)) return sayFieldErr($err, $k);
   if (!phoneOk($phone)) return;
   if (!u\validEmail($email)) return say('bad email', compact('email'), 'email');
