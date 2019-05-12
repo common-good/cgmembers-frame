@@ -574,7 +574,7 @@ function printCheck(&$ck, $pos, $tx, $mark) {
   $phone = u\fmtPhone($phone);
   $routing = substr($fromAcct, 4, 9);
   $account = substr($fromAcct, 4 + 9);
-  
+
   $bankInfo = db\get('*', 'r_banks', 'route=:routing', compact('routing'));
   if (!$bankInfo) {w\say("Skipped transaction #$txid for $a->fullName (no bank info)"); return;}
   //u\EXPECT((bool) $bankInfo, 'no bank info');

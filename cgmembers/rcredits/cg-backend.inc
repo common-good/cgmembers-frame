@@ -482,7 +482,7 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
     u\EXPECT(false, "type must not be '$type'.");
   }
   
-  extract(u\exactly('created force boxId', $data, [r\rTime(), 0, null]));
+  extract(u\exactly('created force boxId', $data, [now(), 0, null]));
   extract(u\exactly('offline loan investment stake fine noask funding crumbs recurs gift', $data, FALSE));
 
   $short = FALSE;
@@ -514,7 +514,7 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
   $lastTx = $actor->lastTx();
   if (!empty($lastTx) and !$force and $channel != TX_WEB and $lastTx->actorId == $actorId
       and $lastTx->otherId == $otherId and $lastTx->goods == $goods and $lastTx->getAmount($actor) == $amount
-      and ((r\rTime() - $lastTx->created) < R_DUPTX_MINS * MIN_SECS)) {
+      and ((now() - $lastTx->created) < R_DUPTX_MINS * MIN_SECS)) {
     return r\txRet('duplicate transaction', $erInfo + ['success' => false]);
   }
 
@@ -725,7 +725,7 @@ function isBankUid($uid) {
  */
 function handleCoupon($buyer, $seller, $price, $buyerTid, $sellerTid, $when=null) {
   /// debug("handleCoupon($buyer->id, $seller->id, $price, $buyerTid, $sellerTid, $when)");
-  if (is_null($when)) $when = r\rTime();
+  if (is_null($when)) $when = now();
   $sql = <<<EOF
     SELECT `on`, c.coupid, amount, ulimit, id, uses
     FROM r_coupons c LEFT JOIN r_coupated d ON (c.coupid=d.coupid AND d.uid=:buyerId)
@@ -742,10 +742,10 @@ EOF;
   $rebate = ($amount < 0) ? $price * (0-$amount) * .01 : $amount;
   if ($rebate <= 0) return [0, []];
   if (empty($id)) {
-    $id = db\insert('r_coupated', ['coupid' => $coupid, 'uid' => $buyer->id, 'uses' => 1, 'when' => time()], 'id');
+    $id = db\insert('r_coupated', ['coupid' => $coupid, 'uid' => $buyer->id, 'uses' => 1, 'when' => now()], 'id');
   } else {
     db\update('r_coupated', ['id' => $id, 'coupid' => $coupid, 'uid' => $buyer->id, 'uses' => $uses + 1,
-                             'when' => r\rTime()], 'id');
+                             'when' => now()], 'id');
   }
   return [ $rebate,
            [ new r\TxEntry(ray('amount entryType uid agentUid description acctTid relType relatedId',
@@ -830,7 +830,7 @@ function invoice($actor, $other, $amount, $purpose, $goods, $extra = []) {
   u\EXPECT(compact(ray('actor other amount purpose')), 'acct acct float string');
   $ks = 'status';
   extract(just($ks, $extra));
-  extract(u\exactly('goods created', $extra, [FOR_GOODS, r\rTime()]));
+  extract(u\exactly('goods created', $extra, [FOR_GOODS, now()]));
 	foreach (justNOT("status shid coupon coupid force inv api request created", $extra) as $k => $v) {
     u\setBit($flags, $k, $v);
     unset($extra[$k]); // don't leave bits in extras (data field)
@@ -988,7 +988,7 @@ function creditInfo($uids, $asof = null) {
   u\EXPECT(is_array($uids), 'bad call to creditInfo');
   global $mya;
   
-  $asof = empty($asof) ? (r\rTime() + DAY_SECS) : $asof;
+  $asof = empty($asof) ? (now() + DAY_SECS) : $asof;
 
   /* $mday1 = u\monthDay1($asof); // start of relevant month, for partial (not-yet-given) roundups calculation */
   /* if ($asof == u\plusMonths(1, $mday1) - 1) $mday1 = $asof + 1; // for asof the end of month, there are no partRounds */
@@ -1108,9 +1108,9 @@ function createUsdTransfer($payee, $amount, $created=null, $txid=null) {
   global $channel;
   ///  debug("createUsdTransfer($payee->id, $amount, $created, $txid)");
   
-  $created = empty($created) ? r\rTime() : $created;
+  $created = empty($created) ? now() : $created;
   if (empty($txid)) $txid = 1 + db\max('txid', 'r_usd');
-  $bankAccount = isDEV ? 'xxxxy' : u\arrayGet($payee->vsecure, 'bankAccount', null);
+  $bankAccount = /*isDEV ? 'xxxxy' :*/ u\arrayGet($payee->vsecure, 'bankAccount', null);
   
   $info = ray('amount payee created bankAccount channel',
               $amount, $payee->id, $created, $bankAccount, $channel);
@@ -1171,7 +1171,7 @@ function combineUsdTx($a, $amount, $completed) {
 function completeUsdTx($a, $txid, $amount, $automatic, $completed = null) {
   ///  debug("completeUsdTx($a->id, $txid, $amount, $automatic, $completed)");
   u\EXPECT([$a, $txid, $automatic], 'acct int|string|empty bool');
-  if (empty($completed)) $completed = r\rTime();
+  if (empty($completed)) $completed = now();
   $err = u\badAmount($amount);
   if ($err) {
     t\output($err);
@@ -1204,7 +1204,7 @@ function completeUsdTx($a, $txid, $amount, $automatic, $completed = null) {
       return FALSE;
     }
     
-    if (!db\update('r_usd', ['txid'=>$txid, 'xid'=>$xid, 'completed'=>r\rTime()], 'txid')) {
+    if (!db\update('r_usd', ['txid'=>$txid, 'xid'=>$xid, 'completed'=>$completed], 'txid')) {
       r\tellAdmin(t('usd update failed'), compact($txid, $amount, $automatic));
       $DBTX.rollback();
       return FALSE;

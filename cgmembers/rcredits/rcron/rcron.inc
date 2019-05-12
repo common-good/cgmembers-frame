@@ -212,7 +212,7 @@ X;
 //  db\del('users', 'uid', $where); // abandoned new joint acct (must postcede setting jids)
 
   // Notice which bank accounts have been verified
-	$where = 'amount=0 AND deposit<>0 AND deposit<:NOW-:DAY_SECS';
+	$where = 'amount=0 AND deposit<>0 AND deposit<UNIX_TIMESTAMP()-:DAY_SECS';
 	$q = db\q("SELECT payee FROM r_usd WHERE $where");
 	$DBTX = db_transaction();
 	while ($row = $q->fetchAssoc()) r\acct($row['payee'])->setBit(B_BANKOK);
@@ -271,7 +271,7 @@ X;
   
   queueEach('activeWeekly', "SELECT uid, $sinceActivated/7 AS weeks FROM users");
 	
-	$when = ':NOW+:WEEK_SECS';
+	$when = 'UNIX_TIMESTAMP()+:WEEK_SECS';
 	$sql = <<< X
 	  SELECT u.uid,r.amount,$when AS `when`,r.created,r.period,
 		  (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced,

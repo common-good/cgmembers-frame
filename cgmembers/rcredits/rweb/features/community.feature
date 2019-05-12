@@ -22,11 +22,11 @@ Setup:
   | .ZZB | .ZZD  | joint      |
   | .ZZD | .ZZB  | joint      |
   And usd transfers:
-  | txid | payee | amount | completed | xid |*
-  |  100 | .ZZA  |   1000 | %today-3d |   1 |
-  |  101 | .ZZB  |   2000 | %today-4d |   2 |
-  |  102 | .ZZC  |   3050 | %today-5d |   3 |
-  |  103 | .ZZC  |    -50 | %today-2d |   4 |
+  | txid | payee | amount | created    | completed | xid |*
+  |  100 | .ZZA  |   1000 | %today-20d | %today-13d |   1 |
+  |  101 | .ZZB  |   2000 | %today-21d | %today-14d |   2 |
+  |  102 | .ZZC  |   3050 | %today-22d | %today-15d |   3 |
+  |  103 | .ZZC  |    -50 | %today-12d | %today-12d |   4 |
   Then balances:
   | uid  | balance |*
   | ctty |       0 |
@@ -68,7 +68,7 @@ Scenario: cron calculates the statistics
 #  | Community: | Seedpack |
 # was 2 co, but that included the community, which is not activated
   |~Success: | 0.04 |
-  |~CG Growth: | 3 members + 1 co |
+  |~CG Growth: | 3 members + 2 co |
   |~Dollar Pool: | $6,000 |
 #  |~CG | $6,002 |
   |~Circulation Velocity: | 6.4% per mo. |

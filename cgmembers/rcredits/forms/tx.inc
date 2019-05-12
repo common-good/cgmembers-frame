@@ -86,10 +86,10 @@ function formTx_submit($form, &$sta) {
   if ($func == 'pay' and $mya->snap) r\tellAdmin(t('SNAP member %who %did something', 'who did', $mya->fullName, $ok ? t('bought') : t('tried to buy')), ['topic' => t('SNAP purchase') . ($ok ? '' : t(' failed'))]);
 
   if ($ok and $period = @$repeat) {
-    $subs = ray('payer payee ended', $mya->id, $uid, 0);
     $created = today();
-    $info = $subs + compact(ray('amount period created'));
-    if ($id = db\get('id', 'r_recurs', 'payer=:payer AND payee=:payee AND created=:created AND ended=0', $subs)) $info += compact('id');
+    $subs = ray('payer payee created ended', $mya->id, $uid, $created, 0);
+    $info = $subs + compact(ray('amount period'));
+    if ($id = db\get('id', 'r_recurs', 'payer=:payer AND payee=:payee AND created=:created AND ended=:ended', $subs)) $info += compact('id');
     db\updateOrInsert('r_recurs', $info, 'id');
     $repeats = ray(OFTENS);
 //      $often = strstr($repeats[$repeat], ' ', TRUE);

@@ -2091,7 +2091,7 @@ function showCharts($ctty = 0, $period = 'months', $download = FALSE) {
   }
 
   if ($download) return $downData;
-  
+
   $success = number_format($success0, 2);
   $accts = "$pAccts members + $bAccts companies";
   $funds = $usd;
@@ -2123,7 +2123,6 @@ function fundStats($stats, $round = FALSE, $stats30 = NULL) {
   extract($stats);
 //  if ($stats30) extract($stats30, EXTR_PREFIX_ALL, 'o');
 //  list ($r0, $usd0) = array($r, $usd);
-
   if ($ctty) { // a community
     $cttyA = r\acct($ctty);
     $res['cttyName'] = $ctty == r\serverUid() ? t('Seedpack (Outliers)') : trim(strtr($cttyA->fullName, [t('Region')=>'', PROJECT=>'']));

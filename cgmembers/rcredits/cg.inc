@@ -1058,7 +1058,6 @@ function stats($ctty = 0, $when = NULL, $redo = '') {
     $info["{$z}Count"] = ${$z . 'InCount'} - ${$z . 'OutCount'};
   }
   $info['usdVol'] = $info['usdIn'] + -$info['usdOut'];
-  
   foreach (['', 'In', 'Out'] as $z) {
     if ($ctty) $info["usd$z"] += $info["cg$z"]; // settle trade imbalance with USD (so count it as community USD activity)
   }
@@ -1081,6 +1080,7 @@ function stats($ctty = 0, $when = NULL, $redo = '') {
  * Called ONLY from stats()
  */
 function getStats($ctty, $created, $cttyCrit, $do = NULL) {
+  ///  debug("getStats('$ctty', '$created', '$cttyCrit', '$do')");
   u\EXPECT($created >= R_LAUNCH, 'getStats old date');
   $created0 = $created;
   $creCrit = 'created<=:created';
@@ -1119,11 +1119,11 @@ X;
   $thisIn = "t.amount > 0";
   $sqls['usd'] = <<< X
     SELECT
-    SUM(IF($thisIn, amount, 0)) AS usdIn,
-    SUM(IF($thisIn, 0, amount)) AS usdOut,
-    SUM(IF($thisIn, 1, 0)) AS usdInCount,
-    SUM(IF($thisIn, 0, 1)) AS usdOutCount
-    FROM r_usd t LEFT JOIN users u ON (u.uid=t.payee AND uid>:CANONIC_ACCTS)
+    SUM(IF(amount>0, amount, 0)) AS usdIn,
+    SUM(IF(amount<0, amount, 0)) AS usdOut,
+    SUM(IF(amount>0, 1, 0)) AS usdInCount,
+    SUM(IF(amount<0, 1, 0)) AS usdOutCount
+    FROM r_usd t LEFT JOIN users u ON (u.uid=t.payee AND uid NOT BETWEEN 256 AND 511)
     WHERE $cttyCrit AND t.completed IS NOT NULL AND t.completed<=:created AND t.amount<>0
 X;
 
@@ -1286,12 +1286,11 @@ X;
     $res = (db\q($sql, $subs)->fetchAssoc() ?: []) + $res; // +$res so OLD takes precedence for bals2
 ///   if ($created == today() and $k == 'accts') debug(compact(ray('res sql subs')));    
   }
-  
+
   foreach ($res as $k => $v) {if (is_null($v)) $res[$k] = 0;}
   $hdr = compact('created', 'ctty');
   $info = $hdr + $res;
   $id = db\get('id', 'r_stats', $hdr);
-
   if ($id) db\update('r_stats', compact('id') + $info, 'id'); else db\insert('r_stats', $info);
   return $info;
 }

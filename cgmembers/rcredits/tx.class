@@ -54,7 +54,7 @@ class Tx {
     $this->risk = u\arrayGet($info, 'risk', null);
     $this->risks = u\arrayGet($info, 'risks', 0);
     $this->reversesXid = u\arrayGet($info, 'reversesXid', null);
-    $this->created = u\arrayGet($info, 'created', r\rTime());
+    $this->created = u\arrayGet($info, 'created', now());
     $this->entries = u\arrayGet($info, 'entries', []);
   }
 

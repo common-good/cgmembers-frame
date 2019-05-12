@@ -101,13 +101,11 @@ function pos($args = FALSE) {
   
   $mya = getAgent(@$agent ?: @$member, $agentErr);
 ///     print_r(compact(ray('mya agent member agentErr')));
-
   if (@$device) { // device was specified, substitute its record id, herein
     if (!$mya) return posErr($agentErr);
     if ($boxUser = getDevice($device, $mya->id)) {
       $edit = ray('id access', $boxUser, now());
       db\update('r_boxes', $edit, 'id'); // remember time last accessed so we can drop the deadwood
-      $args['device'] = $deviceId;
     } elseif ($op != 'identify') return posErr('unknown device');
   } elseif (@$agent or $op != 'identify') return posErr('missing device');
   
@@ -253,7 +251,7 @@ function identify($args) {
     if (@$signin and $a->proSe and !$a->co) return posErr('scan in first', [], $companyInfo);
   }
 
-  if (@$device) $deviceId = $device; //getDevice($device, $mya->id);
+  if (@$device) $deviceId = getDevice($device, $mya->id);
 
   if (@$signin) { //  identifying agent
 //    if ($a->proSe and (!$a->co or $a->coCan(CO_REQUIRE_CASHIER))) return posErr('scan in first');
@@ -350,16 +348,19 @@ function photoReturn($pic) {
 function charge($args, $type = 'charge') {
   ///  debug("r\Smart\charge(" . print_r($args, true) . ", $type)");
   global $mya;
-
+  global $boxUser;
+  
   $keys = 'agent member amount goods description created';
   if ($err = missingArg($keys, $args)) return posErr($err);
   extract(just($keys . ' proof force version', $args));
-  extract(u\exactly('description device', $args, ['', null]));
-  $boxId = $device;
-
-  $goods = $args['goods'];
-  unset($args['goods']);
+  $boxId = $boxUser;
   
+  /* extract(u\exactly('description device', $args, ['', null])); */
+  /* $boxId = $device; */
+
+  /* $goods = $args['goods']; */
+  /* unset($args['goods']); */
+   
   if (!@$member) return posErr('missing member'); // handle empty string (versus missing param)
   if ($version > 216 and !@$proof) return posErr(missingArg('proof', []));
   if (@$description === '') return posErr('missing description');

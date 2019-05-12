@@ -192,8 +192,10 @@ define('PLACEHOLDER_2_UID', 3);  // uid of second placeholder
 define('CG_ROUNDUPS_UID', 129);  // Donations start at 128 (128 used for general donations)
 define('CG_CRUMBS_UID', 130);  //
 define('CG_SERVICE_CHARGES_UID', 192);
+define('MINIMUM_BANK_UID', 256);
 define('CG_INCOMING_BANK_UID', 256);  // Bank accounts start at 256
 define('CG_OUTGOING_BANK_UID', 257);  //
+define('MAXIMUM_BANK_UID', 511);
 
 define('R_TEMP_NAME_PREFIX', 'unknown ');
 define('CO_PHOTO_FACTOR', 3); // make company photos this many times as big as individual photos

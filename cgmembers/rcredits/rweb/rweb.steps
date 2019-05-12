@@ -142,22 +142,22 @@ function memberConfirmsFormWithValues($id, $page, $values) {return t\completeFor
 function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
   global $testOnly; if ($testOnly) return FALSE;
   global $skipToStep;
-//  $result = t\postLogout(__FUNCTION__) ?: 
+  //  $result = t\postLogout(__FUNCTION__) ?: 
   return MemberConfirmsFormWithValues('?', $page, $values);
-//  $skipToStep = NULL;
+  //  $skipToStep = NULL;
   return $result;
 }
 
 /*
   $sta = array();
- * $sta['input']['mail'] = 'robouser@example.com';
- * $sta['input']['pass']['pass1'] = 'password';
- * $sta['input']['pass']['pass2'] = 'password';
- * $sta['input']['op'] = t('Create new account');
- * drupal_form_submit('user_register_form', $sta);
- * @endcode
+  * $sta['input']['mail'] = 'robouser@example.com';
+  * $sta['input']['pass']['pass1'] = 'password';
+  * $sta['input']['pass']['pass2'] = 'password';
+  * $sta['input']['op'] = t('Create new account');
+  * drupal_form_submit('user_register_form', $sta);
+  * @endcode
  
- function drupal_get_form($form_id) {
+  function drupal_get_form($form_id) {
   $sta = array();
 
   $args = func_get_args();
@@ -166,8 +166,8 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
   $sta['build_info']['args'] = $args;
 
   return drupal_build_form($form_id, $sta);
-}
- */
+  }
+*/
 
 /**
  * members: (ARG)
@@ -226,8 +226,7 @@ function members($list) {return t\members($list);}
 /**
  * transactions: (ARG)
  *
- * in: MAKE backing Setup
- *     MAKE backing AMemberChangesBackingAmount
+ * in: MAKE backing AMemberChangesBackingAmount
  *     MAKE balancesheet Setup
  *     MAKE bank Setup
  *     MAKE community Setup
@@ -303,9 +302,9 @@ function weSayWithSubs($type, $index, $subs) {
       $actual = strtr($actual, ["ACTUAL: \r\n"=>'', "Confirm\r\n"=>'', "\r\nOkay\r\n"=>'', "Cancel\r\n\r\n"=>'']);
       if ($actual == $tmsg) {$res = TRUE; break;}
     }
-//  $res = (@$msgs[$type] and array_search($wantMsg, $msgs[$type]) !== FALSE);
+    //  $res = (@$msgs[$type] and array_search($wantMsg, $msgs[$type]) !== FALSE);
   }
-///  if (!@$res) debug(compact('wantMsg', 'msgs')); // + ['dmsgs'=>\drupal_get_messages(NULL, FALSE)]);
+  ///  if (!@$res) debug(compact('wantMsg', 'msgs')); // + ['dmsgs'=>\drupal_get_messages(NULL, FALSE)]);
   t\output("EXPECT: $wantMsg", 'output'); // this must come after array_search!
   return @$res;
 }
@@ -412,6 +411,7 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
  *
  * in: TEST backing AMemberVisitsTheBackingPage
  *     TEST balancesheet AMemberLooksAtTheBalanceSheet
+ *     TEST balancesheet ANonmemberLooksAtTheBalanceSheet
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST community CronCalculatesTheStatistics
  *     TEST company AMemberVisitsTheCompanyInfoPage
@@ -603,6 +603,7 @@ function usd($list) {return t\usd($list);}
  *
  * in: MAKE backing AMemberVisitsTheBackingPage
  *     MAKE balancesheet AMemberLooksAtTheBalanceSheet
+ *     MAKE balancesheet ANonmemberLooksAtTheBalanceSheet
  *     MAKE community CronCalculatesTheStatistics
  *     MAKE company AMemberVisitsTheCompanyInfoPage
  *     MAKE contact AMemberVisitsTheContactInfoPage
@@ -702,7 +703,7 @@ function invitationToEmailFromMemberIs($email, $id, $code) {
   if ($iid = db\get('id', 'r_invites', 'email=:email AND inviter=:uid', compact('email', 'uid'))) {
     db\q('UPDATE r_invites SET code=:code WHERE id=:iid', compact('code', 'iid'));
   } elseif ($code) r\invite($email, $uid, $code);
-//  t\SERVER('REQUEST_URI', "whatever/$code"); // fake the URI
+  //  t\SERVER('REQUEST_URI', "whatever/$code"); // fake the URI
   return TRUE;
 }
 
@@ -825,7 +826,7 @@ function gifts($gifts) {return t\gifts($gifts);}
 function weDownloadWith($name, $rows) {
   global $testOnly;
   global $testCSV, $testCSVname;
-/// debug("weDownloadWith($name, rows) where rows=" . print_r($rows, true));
+  /// debug("weDownloadWith($name, rows) where rows=" . print_r($rows, true));
   $testCSVname = $name;
   $testCSV = [['test line']];
   if (@$testCSVname != $name) return t\output("$testCSVname <> $name");
@@ -834,14 +835,14 @@ function weDownloadWith($name, $rows) {
   $headers = array_values(array_shift($csv2));
   if (@$headers[0] == '#') $headers[0] = 't#';
   foreach ($csv2 as $csvRow) {
-///    debug(compact('headers', 'csvRow'));
+    ///    debug(compact('headers', 'csvRow'));
     $csvRow = array_combine($headers, $csvRow); // add keys
-/// if (!$row = array_shift($rows)) return t\output('extra row in CSV: ' . print_r($csvRow, 1));
+    /// if (!$row = array_shift($rows)) return t\output('extra row in CSV: ' . print_r($csvRow, 1));
     foreach ($row as $key => $value) {
-///    debug(compact('row','csvRow'));
+      ///    debug(compact('row','csvRow'));
       if (strpos($value, '%') !== FALSE) $value = t\lastMinuteSubs($value);
-///      if (!isset($csvRow[$key])) debug(compact('key', 'csvRow', 'value'));
-/**/  if (!t\eq($csvValue = @$csvRow[$key], $value)) return t\output("key=$key csvValue<>expected value ($csvValue<>$value) csvRow:" . print_r($csvRow, 1));
+      ///      if (!isset($csvRow[$key])) debug(compact('key', 'csvRow', 'value'));
+      /**/  if (!t\eq($csvValue = @$csvRow[$key], $value)) return t\output("key=$key csvValue<>expected value ($csvValue<>$value) csvRow:" . print_r($csvRow, 1));
     }
   }
   return TRUE;
@@ -859,7 +860,7 @@ function withDownloadColumns($columns) {
   if (!is_array($testCSV) or empty($testCSV)) return FALSE;
   $csv2 = $testCSV; // don't alter this (just in case)
   $headers = array_values(array_shift($csv2));
-/// debug(compact('headers','testCSV','columns'));
+  /// debug(compact('headers','testCSV','columns'));
   foreach ($columns as $one) if (array_search($one['column'], $headers) === FALSE) return FALSE;
   return TRUE;
 }
@@ -942,7 +943,7 @@ function cronRuns($op) {return t\cronRuns($op);}
  */
 function statisticsGetSet($time) {
   global $testOnly; if ($testOnly) return FALSE;
-//  return r\getStats(r\serverUid(), $time) ? TRUE : FALSE;
+  //  return r\getStats(r\serverUid(), $time) ? TRUE : FALSE;
   return r\stats(r\serverUid(), $time) ? TRUE : FALSE;
 }
 
@@ -1490,12 +1491,13 @@ function txHeaders($list) {
  */
 function txEntries($list) {
   return t\txEntries($list);
-  }
+}
 
 /**
  * variable (ARG) is (ARG)
  *
  * in: MAKE balancesheet AMemberLooksAtTheBalanceSheet
+ *     MAKE balancesheet ANonmemberLooksAtTheBalanceSheet
  */
 function variableIs($k, $v) {return t\varIs($k, $v);}
 
@@ -1508,15 +1510,16 @@ function fieldIsField($fld1, $op, $fld2) {
   global $testOnly; if (!$testOnly) return FALSE;
   foreach ([1,2] as $i) {
     $fi = $f[$i] = explode('/', ${'fld' . $i}); // tnm/idFnm/id/fldNm
-    $v[$i] = db\get($fi[3], 'r_' . $fi[0], [$fi[1] => $fi[2]]);
+    $tbl = strStarts($fi[0], 'tx_') ? $fi[0] : 'r_' . $fi[0];
+    $v[$i] = db\get($fi[3], $tbl, [$fi[1] => $fi[2]]);
   }
   switch ($op) {
-    case "<": return ($v[1] < $v[2]);
-    case "<=": return ($v[1] <= $v[2]);
-    case "=": return ($v[1] == $v[2]);
-    case ">=": return ($v[1] >= $v[2]);
-    case ">": return ($v[1] > $v[2]);
-    default: return FALSE;
+  case "<": return ($v[1] < $v[2]);
+  case "<=": return ($v[1] <= $v[2]);
+  case "=": return ($v[1] == $v[2]);
+  case ">=": return ($v[1] >= $v[2]);
+  case ">": return ($v[1] > $v[2]);
+  default: return FALSE;
   }
 }
 
@@ -1527,8 +1530,12 @@ function fieldIsField($fld1, $op, $fld2) {
  */
 function dateFieldRoundedInRecordidField($dateFnm, $round, $tnm, $id, $idFnm) {
   global $testOnly; if (!$testOnly) return FALSE;
-  $date = db\get($dateFnm, "r_$tnm", [$idFnm => $id]);
+  if (!strStarts($tnm, 'tx_')) $tnm = 'r_' . $tnm;
+  $date = db\get($dateFnm, $tnm, [$idFnm => $id]);
   $rounded = (strtotime('today', $date) == $date);
   return ($round == 'yes' xor !$rounded);
-  }
+}
+
+function strStarts($haystack, $needle) {
+  return strpos($haystack, $needle) === 0;
 }

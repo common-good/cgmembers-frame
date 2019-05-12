@@ -262,7 +262,7 @@ function doAccount($info = []) {
 
 /**
  * Fabricate transactions OR test them.
- * @param assoc $info: transaction or invoice data to create or test
+ * @param assoc $info: transaction data to create or test
  *   Minimum parameters: amount, from, to
  * @return:
  *   if $testOnly return TRUE if the data is as expected
@@ -303,8 +303,8 @@ function doTx($info, $thing) {
   
 //  $fields = 'xid payer payee amount payerReward payeeReward type goods flags data risk risks';
   $fields = 'xid payer payee amount status type goods flags data risk risks';
-  if (!$testOnly) $fields .= $inv ? ' created' : ' created channel'; // when creating, add these if not already explicit
-  if (!$inv) $fields .= ' payerAgent payeeAgent';
+  if (!$testOnly) $fields .= ' created channel'; // when creating, add these if not already explicit
+  $fields .= ' payerAgent payeeAgent';
   
   $info = @compact(ray($fields)) + $info; // apply modifications
 
@@ -355,7 +355,12 @@ function doInvoice($info) {
   $missing = array_diff_key(['amount'=>1, 'payer'=>1, 'payee'=>1, 'purpose'=>1], $info);
   u\EXPECT($missing == [], "missing fields " . print_r($missing, true));
 
-  $invInfo = u\exactly('status goods created', $info, [TX_PENDING, u\forCash($info['purpose']) ? FOR_USD : FOR_GOODS, r\rTime()]);
+  $invInfo = u\exactly('status goods created', $info, [TX_PENDING, u\forCash($info['purpose']) ? FOR_USD : FOR_GOODS, now()]);
+  switch ($invInfo['status']) {
+  case 'denied': $invInfo['status'] = TX_DENIED; break;
+  case 'pending': $invInfo['status'] = TX_PENDING; break;
+  case 'approved': $invInfo['status'] = TX_APPROVED; break;
+  }
   $invInfo = array_merge($invInfo, just('nvid amount flags data payer payee purpose', $info));  // extract directly, and might not be present
   $nvid = db\updateOrInsert('r_invoices', $invInfo, 'nvid');
   u\EXPECT(!empty($nvid));
@@ -623,34 +628,30 @@ function usdTransferCount($where = '1') {
 
 function usdTransfers($txs) {
   global $testOnly, $channel; $channel0 = $channel;
-
   foreach ($txs as $tx) { // do not extract $tx, because setDft will fail after the first unless we unset vars
     if (array_key_exists('payee', $tx)) $tx['payee'] = t\uid($tx['payee']);
-
     if ($testOnly) {
       if (isset($tx['risks'])) $tx['risks'] = getRisks($tx['risks'], K_TX_RISKS);
       if (!verifyRecord('r_usd', $tx)) return FALSE;
       return TRUE;
     }
-    
     extract(u\exactly('amount completed', $tx, null));
-    
+
     $amount = u\arrayGet($tx, 'amount', null);
     $err = u\badAmount($amount);
     if ($err) {
       t\output($err);
       return false;
     }
-    
     $a = r\acct($tx['payee']);
     if (empty($a)) return t\output('Bad payee: ' . @$payee);
-    $txid = be\createUsdTransfer($a, $amount, u\arrayGet($tx, 'created', r\rTime()), u\arrayGet($tx, 'txid', null));
+    $txid = be\createUsdTransfer($a, $amount, u\arrayGet($tx, 'created', now()), u\arrayGet($tx, 'txid', null));
     if (!$txid) {
       t\output('failure creating usd xfr: ' . $txid);
       return FALSE;
     }
-
     if (!empty($tx['deposit'])) {
+      $xde=$tx['deposit'];
       u\EXPECT(db\update('r_usd', just('txid deposit', $tx), 'txid'), 'failure depositing usd');
     }
     if (!empty($tx['completed'])) {
