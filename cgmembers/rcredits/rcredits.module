@@ -178,7 +178,7 @@ function a($id = '', $agent = '', $create = FALSE) { // return an account object
   /*   $result = db\insert('users', ['uid'=>$newId], 'uid'); */
   /*   $lastA = r\acct(t\fullQid($id), t\fullQid(strtoupper(strlen($agent) == 3 ? '.' . $agent : $agent))); */
   /*   } */
-  u\EXPECT([$lastA], 'Acct');
+  /*  u\EXPECT([$lastA], 'Acct'); */
 	return $lastA;
 }
 function x($xid, $mya = '') {f('r.x', $xid, $mya);} // return a transaction object
