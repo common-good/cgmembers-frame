@@ -35,6 +35,9 @@ class Acct {
    *   (2) a flat array of user table IDs: [uid, agent] where uid is the main account and agent is the agent's id
    */
   function __construct($info = []) {
+    ///    print_r("Acct::__construct(");
+    ///    print_r($info);
+    ///    print_r(")<br>");
     $a = $this;
     if (!is_numeric(key($info))) { // u\isAssoc($info)) { // specifying field values
       $a->createNew($info); // create new db record
@@ -47,6 +50,9 @@ class Acct {
    * @param assoc $info: array of field values for new account (only fullName is required)
    */
   private function createNew($info) {
+    ///    print_r("Acct::createNew(");
+    ///    print_r($info);
+    ///    print_r(")<br>");
     $a = $this;
     extract($info);
 
@@ -105,7 +111,7 @@ class Acct {
    * @return [$id, $agent] where id and agent are actual record IDs
    */
   public static function viable($id00, $agent0='', &$error='', $test = TRUE) {
-    ///    print_r("viable($id00, $agent0,?,$test)");
+    ///    print_r("Acct::viable($id00, $agent0, $error, $test)<br>");
     if (is_numeric($id00) and is_numeric($agent0)) return [$id00, $agent0];
     $id0 = $id00;
     if (strpos($id0, AGT_MARK)) list ($id0, $agentCode) = explode(AGT_MARK, $id0); // new company qid format
@@ -119,7 +125,7 @@ class Acct {
       list ($agent, $zot) = r\qo($agent0)->ia;
       if ($error = u\EXPECT($agent == $zot, 'agent agent not allowed', $test)) return FALSE;
     }
-    
+
     $got = (bool) self::getRecord($id); // read the record into cache
     if ($error = u\EXPECT($got, 'That account does not exist.', $test)) return FALSE; // don't use t() here (many calls)
 
@@ -1911,6 +1917,7 @@ EOF;
  * @return the appropriate account object (FALSE if none)
  */
 function acct($uid = '', $agent = '', &$error = '') {
+  ///  print_r("acct($uid, $agent, $error)<br>");
   u\EXPECT(!is_array($uid), 'array uid'); // otherwise hangs (at least for a drupal field array)
   global $mya; // use this ONLY in this class file
   if (!$uid) return $mya ?: (!$error = 'There is no current account.');
@@ -1919,7 +1926,6 @@ function acct($uid = '', $agent = '', &$error = '') {
   } elseif (FALSE and preg_match('/[0-9]( |-|\\)) ?[0-9]{4}/', $uid)) {
     $uid = db\get('uid', 'users', 'phone=:phone ORDER BY :IS_CO', ['phone' => u\cry('P', u\fmtPhone($uid, '+n'))]);
   }
-  //  if (!$ua = r\Acct::viable($uid, $agent, $error, TRUE)) return FALSE;
   if (!$ua = r\Acct::viable($uid, $agent, $error, TRUE)) return FALSE;
   return new r\Acct($ua); // the only place we call new r\Acct() with a flat array (meaning an existing account)
 }

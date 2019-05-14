@@ -166,12 +166,19 @@ function bankTxId($btxid) { // for reconcilecttyfund.inc (short form of bank's t
   $res = floor($dt / DAY_SECS) . substr($acct, -5, $acctLen) . substr($txid, -$txidLen);
   return 0 + $res; // (intval fails here)
 }
-function a($id = '', $agent = '') { // return an account object
+
+function a($id = '', $agent = '', $create = FALSE) { // return an account object
+  ///  print_r("a($id, $agent)<br>");
 	global $lastA;
   if (is_string($id) and (!ctype_digit($id)) and strlen($id)==3) { $id = '.' . $id; }
 	if (!strpos($id, '@') and !preg_match('/[0-9]/', $id)) $id = strtoupper($id);
 	$lastA = r\acct(t\fullQid($id), t\fullQid(strtoupper(strlen($agent) == 3 ? '.' . $agent : $agent)));
-  /* u\EXPECT([$lastA], 'Acct'); */
+  if (empty($lastA)) {
+    $newId = r\qo($id, $agent)->id;
+    $result = db\insert('users', ['uid'=>$newId], 'uid');
+    $lastA = r\acct(t\fullQid($id), t\fullQid(strtoupper(strlen($agent) == 3 ? '.' . $agent : $agent)));
+    }
+  u\EXPECT([$lastA], 'Acct');
 	return $lastA;
 }
 function x($xid, $mya = '') {f('r.x', $xid, $mya);} // return a transaction object

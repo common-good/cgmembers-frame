@@ -95,30 +95,31 @@ define('R_COS', 'CAAAAA RMCAAA MIWAAA INAAAA NEWAAD NEWAIG NEWAKH NENAAB NEWALJ 
  
 function makeTestAccounts() {
   if (isPRODUCTION) return; // protects us even if the constant is not set
+  /// print_r("makeTestAccounts()<br>");
 
-  $a = a('aab');
+  $a = a('aab', '', true);
   $selling = "groceries\ngifts\nsundries\ndeli\nbaked goods";
   $a->update('name fullName selling', 'cornerstore', 'Corner Store', $selling);
   //  $a->setBitx(CO_REQUIRE_CASHIER, FALSE, 'coFlags');
 
-  $a = a('aaa');
+  $a = a('aaa', '', true);
   $a->update('name fullName cardCode2', 'mariamanager', 'Maria Manager', 'WeHlioM5JZv1O9G');
   a\photoFromFile($a);
   
-  $a = a('aad');
+  $a = a('aad', '', true);
   $a->update('name fullName cardCode2', 'cathycashier', 'Cathy Cashier', 'ME04nW44DHzxVDg');
   a\photoFromFile($a);
   
-  $a = a('aaq');
+  $a = a('aaq', '', true);
   $a->update('name fullName', 'helgas', 'Helga\'s Hardware');
   //  $a->setBitx(CO_REQUIRE_CASHIER, TRUE, 'coFlags');
   a\photoFromFile($a);
   
-  $a = a('aak');
+  $a = a('aak', '', true);
   $a->update('name fullName cardCode cardCode2', 'curtcustomer', 'Curt Customer', 'NyCBBlUF1qWNZ2k', 'utbYceW3KLLCcaw');
   a\photoFromFile($a);
   
-  $a = a('abb');
+  $a = a('abb', '', true);
   $a->update('name fullName cardCode', 'susanshopper', 'Susan Shopper', 'ZzhWMCq0zcBowqw');
   a\photoFromFile($a);
   
