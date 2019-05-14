@@ -173,7 +173,7 @@ function a($id = '', $agent = '', $create = FALSE) { // return an account object
   if (is_string($id) and (!ctype_digit($id)) and strlen($id)==3) { $id = '.' . $id; }
 	if (!strpos($id, '@') and !preg_match('/[0-9]/', $id)) $id = strtoupper($id);
 	$lastA = r\acct(t\fullQid($id), t\fullQid(strtoupper(strlen($agent) == 3 ? '.' . $agent : $agent)));
-  if (empty($lastA)) {
+  if (empty($lastA) and $create) {
     $newId = r\qo($id, $agent)->id;
     $result = db\insert('users', ['uid'=>$newId], 'uid');
     $lastA = r\acct(t\fullQid($id), t\fullQid(strtoupper(strlen($agent) == 3 ? '.' . $agent : $agent)));
