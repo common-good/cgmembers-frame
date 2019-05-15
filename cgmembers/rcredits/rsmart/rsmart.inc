@@ -449,6 +449,7 @@ EOF;
   }
 
   /* extract(balrew($a)); */
+  $rewards = 0;
   $balance = (($a->can(B_SECRET) and $mya->co) ? '*' : '') . round($a->balance, 2);
   return ok(compact(ray('message txid created balance rewards did undo')));
 }
