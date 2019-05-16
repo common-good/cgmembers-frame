@@ -448,9 +448,7 @@ EOF;
     $undo = t('confirm undo', $subs);
   }
 
-  /* extract(balrew($a)); */
-  $rewards = 0;
-  $balance = (($a->can(B_SECRET) and $mya->co) ? '*' : '') . round($a->balance, 2);
+  extract(balrew($a));
   return ok(compact(ray('message txid created balance rewards did undo')));
 }
 
@@ -571,7 +569,8 @@ function balrew($a) {
   global $mya;
   if (!$mya->co) $a = $mya;
   $balance = (($a->can(B_SECRET) and $mya->co) ? '*' : '') . round($a->balance, 2);
-  return compact('balance');
+  $rewards = 0;
+  return compact(ray('balance rewards'));
 }
 
 /**
