@@ -1,0 +1,87 @@
+<?php
+namespace CG\Web;
+use CG\Web as w;
+use CG as r;
+use CG\DB as db;
+use CG\Backend as be;
+use CG\Util as u;
+
+require_once __DIR__ . '/txprocessor.interface';
+
+/**
+ * @file
+ * Class to generate transaction history reports; extends 
+ *
+ */
+
+class TxHistoryDownload implements TxProcessor {
+  private $body = '';
+  private $uids = [];
+  private $tidValue = '';
+  private $dateValue = '';
+  private $count = 0;
+  private $runBalance = 0;
+  private $baseUrl = null;
+  private $totals = [];
+  
+  public function __construct($uids, $baseUrl) {
+    $this->uids = $uids;
+    $this->baseUrl = $baseUrl;
+  }
+  
+  /**
+   * Called before the first transaction.
+   */
+  public function hdr() {
+    $csvRow = [t('Tx#'), t('Date'),t('Name'),t('Purpose'), t('From Bank'), t('From You'), t('To You'), t('Balance'), t('Net'), t('Agent')];
+    u\csv($csvRow);
+    foreach (ray(TX_DOWNLOAD_MONEY_FLDS) as $k => $fld) $this->totals[$fld] = 0;
+  }
+
+  /**
+   * Called before each transaction.
+   * @param assoc $info: all of the data for this entry (includes transaction data)
+   */
+  public function txnHdr($info) {
+  }
+
+  /**
+   * Called for each entry of a transaction.
+   * @param assoc $info: all of the data for this entry (includes transaction data)
+   */
+  public function processEntry($info) {
+    if (in_array($info['uid'], $this->uids)) return;
+    extract(u\exactly('tid created name description amount balance agentUid banking', $info, null));
+    $frombank = $banking ? round(-$amount, 2) : 0;
+    $fromyou = round($amount > 0 ? $amount : 0, 2);
+    $toyou = round($amount < 0 ? -$amount : 0, 2);
+    $balance = round($balance, 2);
+    $net = round($amount, 2);
+    $csvRow = [$tid, strftime('%Y-%m-%d', $created), $name, $description,
+               $frombank, $fromyou, $toyou, $balance, $net,
+               r\qo($agentUid)->mainQid];
+    u\csv($csvRow);
+    foreach (ray(TX_DOWNLOAD_MONEY_FLDS) as $k => $fld) {
+      $this->totals[$fld] += $$fld;
+    }
+  }
+
+  /**
+   * Called after each transaction.
+   * @param assoc $info: all of the data for this entry (includes transaction data)
+   */
+  public function txnFtr($info) {
+  }
+
+  /**
+   * Called after the last transaction.
+   */
+  public function ftr() {
+    $csvRow = ['', '', 'TOTALS', '', $this->totals['frombank'], $this->totals['fromyou'], $this->totals['toyou'], $this->totals['net']];
+    u\csv($csvRow);
+    /* if ($this->count < 1) { */
+    /*   $this->body .= '<div><div colspan=6>' . t('no txs') . '</div></div>'; */
+    /* } */
+    /* $this->body .= "</div>\n</div>\n"; */
+  }
+}

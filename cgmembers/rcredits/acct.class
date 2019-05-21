@@ -1892,9 +1892,15 @@ EOF;
     return array_values($this->isCtty ? array_intersect($res, ray(B_CTTY_BITS)) : array_diff($res, ray(B_CTTY_BITS)));
   }
 
+  /**
+   * Get the next Transaction Id for this account.  The call to GREATEST is used
+   * to ensure that the comparison is done numerically, rather than by string
+   * comparison (in which case 98 would be greater than 101).  The
+   * "goods<>:FOR_USD" is to avoid USD transactions.
+   */
   public function nextTid() {
     $a = $this;
-    $maxTid = db\get('MAX(acctTid)', 'tx_entries', 'uid in (:uids)', ['uids' => [$a->id, $a->jid]]);
+    $maxTid = db\get('MAX(GREATEST(acctTid,0))', 'tx_entries join tx_hdrs using(xid)', 'uid in (:uids) AND goods<>:FOR_USD', ['uids' => [$a->id, $a->jid]]);
     /// debug("maxTid is $maxTid");
     if (empty($maxTid)) $maxTid = 0;
     return 1 + $maxTid;

@@ -13,6 +13,8 @@ function formDemographics($form, &$sta) {
   $statStart = strtotime('10/23/2014'); // earliest 
   $title = t('Customer Demographics');
   
+  /**/debug("This is unfinished because I don't understand it.");
+  /*
   $q = db\q('SELECT DISTINCT payer FROM tx_entries WHERE uid=:myid', compact('myid'));
   $count = $q->rowCount();
   if ($count < AGGREGATE_MIN) return w\go('/company-reports', t('There are not enough customers (%count) to show demographics (minimum %AGGREGATE_MIN).', compact('count')));
@@ -26,8 +28,6 @@ function formDemographics($form, &$sta) {
     }
   }
   
-  /**/debug('This is unfinished because I don''t understand it.');
-  /*
   $tnm = <<< X
     (SELECT ucust.city, COUNT(DISTINCT ucust.uid) count
      FROM tx_hdrs tcust
@@ -42,7 +42,6 @@ X;
   $cities = db\rows('*', $tnm, 1, compact('myid'), FALSE);
 
   $pays = db\rows('*', $tnm, 1, compact('myid'), FALSE);
-  */
   $pays = [];
   // calculate medians and avgs
   $count = w\item(number_format(count($ages)), t('Customer Count:'));
@@ -53,4 +52,7 @@ X;
   $pays = w\item(makeTable($pays, [t('Company'), t('Count')]), t('Also Shop At:'));
   
   return w\cgform(compact(ray('title count age tenure owns cities pays')));
+  */
+  $data = w\item("This report is temporarily unavailable.");
+  return w\cgform(compact(ray('title data')));
 }

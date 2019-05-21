@@ -64,7 +64,8 @@ $queries = [
      SUM(IF(u.balance>=0, 1, 0)) AS positiveBalanceCount,
      SUM(IF(u.balance>=0, u.balance, 0)) AS positiveBalanceTotal
      FROM users u LEFT JOIN users c ON c.uid=u.community 
-     WHERE IFNULL(u.jid,0)=0 AND u.:IS_OK GROUP BY c.fullName",
+     WHERE IFNULL(u.jid,0)=0 AND u.:IS_OK AND u.uid NOT BETWEEN 0 AND (:CANONIC_ACCTS-1)
+     GROUP BY c.fullName",
   
   'Company and Member Balances and Credit Lines' =>
     "SELECT c.fullName AS community,
@@ -99,7 +100,7 @@ $queries = [
             SUM(IF(u.crumbs>0, 1, 0)) AS crumby,
             AVG(IF(u.crumbs>0, u.crumbs, NULL)) AS avgCrumbs
     FROM users u LEFT JOIN r_recurs r ON (r.payer=u.uid AND r.ended<>0 AND r.payee=:CGID) LEFT JOIN users c ON c.uid=u.community
-    WHERE u.:IS_OK AND NOT u.:IS_CO
+    WHERE u.:IS_OK AND NOT u.:IS_CO AND u.uid NOT BETWEEN 0 AND (:CANONIC_ACCTS-1)
     GROUP BY u.community
     ~roundupy = number who do Roundups, crumby = number who do Crumb donations",
 

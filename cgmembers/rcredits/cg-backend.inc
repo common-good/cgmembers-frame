@@ -33,13 +33,19 @@ function getTxs($uids, $starting=null, $ending=null) {
   if (!is_null($starting)) { $where .= " AND (t.created >= '$starting')"; }
   if (!is_null($ending)) { $where .= " AND (t.created <= '$ending')"; }
 
+  // tReversed and eReversed refer to the transaction that this transaction reverses.
+  // tReversedBy and eReversedBy refer to the transaction that reverses this transaction.
   $sql = <<< EOF
-    SELECT t.*, e.*, u.fullName as name,
-           (SELECT MAX(acctTid) FROM tx_entries re WHERE xid = t.xid AND uid in (:uids)) AS tid,
-    (EXISTS (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=t.xid)) AS isReversed,
-    (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=t.xid AND d.status=:DS_OPEN)) AS isDisputed
+    SELECT t.*, e.*, u.fullName AS name,
+           (SELECT MAX(GREATEST(acctTid,0)) FROM tx_entries re WHERE re.xid = t.xid AND uid in (:uids)) AS tid,
+           (EXISTS (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=t.xid)) AS isReversed,
+    (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=t.xid AND d.status=:DS_OPEN)) AS isDisputed,
+    (SELECT MAX(GREATEST(acctTid,0)) FROM tx_entries eReversed WHERE eReversed.xid=tReversed.xid AND eReversed.uid IN (:uids) AND eReversed.xid=tReversed.xid) AS reversedTid,
+    (SELECT MAX(GREATEST(acctTid,0)) FROM tx_entries eReversedBy WHERE tReversedBy.reversesXid=t.xid AND eReversedBy.uid IN (:uids) AND eReversedBy.xid=tReversedBy.xid) AS reversedByTid
     FROM tx_entries e LEFT JOIN tx_hdrs t USING (xid) LEFT JOIN users u USING (uid)
-    WHERE (xid IN (SELECT DISTINCT xid FROM tx_entries WHERE (uid IN (:uids))))
+         LEFT JOIN tx_hdrs tReversed ON (t.reversesXid=tReversed.xid)
+         LEFT JOIN tx_hdrs tReversedBy ON (t.xid=tReversedBy.reversesXid)
+    WHERE (t.xid IN (SELECT DISTINCT xid FROM tx_entries WHERE (uid IN (:uids))))
           $where
     ORDER BY created, tid, e.xid, name
 EOF;
@@ -79,6 +85,8 @@ EOF;
       $entry['balance'] = $myBalance;
       $entry['byMe'] = $byMe;
       $entry['banking'] = $banking;
+      if (!empty($entry['reversedTid'])) $entry['description'] .= t(" (reverses #" . $entry['reversedTid'] . ")");
+      if (!empty($entry['reversedByTid'])) $entry['description'] .= t(" (reversed by #" . $entry['reversedByTid'] . ")");
       $entries[$j] = $entry;
     }
     $txs[$i] = $entries;
@@ -346,9 +354,11 @@ function reverse($xid) {
     $newEntry->id = null;
     $newEntry->xid = null;  // new entry belongs to reversing transaction
     $newEntry->amount = 0-$oldEntry->amount;
-    $newEntry->description .= ' (' . t('reverses #') . $oldEntry->acctTid . ')';
+    /* $newEntry->description .= ' (' . t('reverses #') . $oldEntry->acctTid . ')'; */
     $newEntry->acctTid = r\acct($newEntry->uid)->nextTid();
     $newTx->entries[] = $newEntry;
+    /* $oldEntry->description .= ' (' . t('reversed by #') . $newEntry->acctTid . ')'; */
+    /* u\EXPECT(db\update('tx_entries', just('id description', $oldEntry), 'id'), 'failure updating tx_entries'); */
   }
   $xid = $newTx->insert();
   if (!$xid) {

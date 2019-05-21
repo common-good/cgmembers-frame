@@ -8,7 +8,6 @@ use CG\DB as db;
 use CG\Txs as x;
 
 include_once __DIR__ . '/../cg-txs.inc';
-require_once __DIR__ . '/txhistory.class';
 
 /**
  * List Transactions
@@ -37,15 +36,22 @@ function formTxs($form, &$sta, $args = '') {
 
   
   $uids = ($mya->jid > 0) ? [ $mya->id, $mya->jid ] : [ $mya->id ];
-  $processor = new TxHistory($uids, "$url");
+  if (@$download) {
+    global $mya;
+    $dt1 = strftime('%Y%m%d', $starting);
+    $dt2 = strftime('%Y%m%d', $ending);
+    u\csvStart(($mya->cAdmin ? $mya->mainQid : PROJECT_ID) . "$dt1-$dt2.csv");
+    require_once __DIR__ . '/txhistorydownload.class';
+    $processor = new TxHistoryDownload($uids, "$url");
+  } else {
+    require_once __DIR__ . '/txhistory.class';
+    $processor = new TxHistory($uids, "$url");
+  }
 
   be\processTxs($processor, $uids, $starting, $ending, TRUE);
 
-  /* if (u\test() and @$download) return; // simulate exit, for tests */
-  /* list ($header, $classes, $rows, $totals) = $txRows; */
-  
-  /* array_unshift($rows, $header); // put header at start */
-  
+  if (@$download) exit();
+  /* if (u\test() and @$download) return; */
   
   $pgFactor = MIN_TX_ROWS / NORMAL_TX_ROWS;
 

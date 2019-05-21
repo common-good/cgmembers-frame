@@ -214,6 +214,8 @@ class ReformatTransactions extends AbstractMigration {
         $undoneBy[$xid] = $reverser;
         setBit($flags, self::OLD_B_UNDONE, false);
         unset($data['undoneBy']);
+        $payerEntry['description'] = preg_replace('/ \(?reverse(s|d by) #[0-9]*\)?/', '', $payerEntry['description']); 
+        $payeeEntry['description'] = preg_replace('/ \(?reverse(s|d by) #[0-9]*\)?/', '', $payeeEntry['description']); 
       }
 
       if (array_key_exists('inv', $data)) {
@@ -258,19 +260,24 @@ class ReformatTransactions extends AbstractMigration {
         unset($data['undoneNO']);
       }
 
-      if (getBit($flags, self::OLD_B_UNDOES) and !array_key_exists('undoes', $data)) {
-        if (array_key_exists($xid, $undoes)) {  // the tx we're reversing knows us
-          $reversesXid = $undoes[$xid];
-          $undoneBy[$xid] = $reversesXid;
-          setBit($flags, self::OLD_B_UNDOES, false);
-        } else {
-          print("INCONSISTENCY: undoes flag set, no undoes data, and no entry in undoneBy array\n");
-          print_r($undoes);
-          print_r("\n");
-          print_r($undoneBy);
-          print_r("\n");
-          $reversesXid = null;
+      if (getBit($flags, self::OLD_B_UNDOES)) {
+        if (!array_key_exists('undoes', $data)) {
+          if (array_key_exists($xid, $undoes)) {  // the tx we're reversing knows us
+            $reversesXid = $undoes[$xid];
+            $undoneBy[$xid] = $reversesXid;
+          } else {
+            print("INCONSISTENCY: undoes flag set, no undoes data, and no entry in undoneBy array\n");
+            print_r($undoes);
+            print_r("\n");
+            print_r($undoneBy);
+            print_r("\n");
+            $reversesXid = null;
+          }
         }
+        $payerEntry['description'] = preg_replace('/ \(?reverse(s|d by) #[0-9]*\)?/', '', $payerEntry['description']); 
+        $payeeEntry['description'] = preg_replace('/ \(?reverse(s|d by) #[0-9]*\)?/', '', $payeeEntry['description']); 
+        setBit($flags, self::OLD_B_UNDOES, false);
+        unset($data['undoes']);
       }
 
       
@@ -289,6 +296,8 @@ class ReformatTransactions extends AbstractMigration {
         }
         setBit($flags, self::OLD_B_UNDOES, false);
         unset($data['undoes']);
+        $payerEntry['description'] = preg_replace('/ \(?reverse(s|d by) #[0-9]*\)?/', '', $payerEntry['description']); 
+        $payeeEntry['description'] = preg_replace('/ \(?reverse(s|d by) #[0-9]*\)?/', '', $payeeEntry['description']); 
       }
 
       if (array_key_exists('force', $data)) {

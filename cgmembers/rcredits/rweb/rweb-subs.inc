@@ -542,8 +542,9 @@ define('FMT_INT', 'trust count');
 //define('FMT_2D', 'negativeBalanceTotal positiveBalanceTotal');
  
 function showRecords($ray, $formatFunc = 'CG\\Web\\formatField', $flagsField = B_LIST) {
+  ///  debug("showRecords(" . print_r($ray, true) . ", $formatFunc, $flagsField)");
   if (!$ray or empty($ray) or count($ray)==0) return 'data set is empty';
-  $first = reset($ray);
+  $first = (array)reset($ray);
   $lines[] = '<tr><th>' . join('</th><th>', array_keys($first)) . "</th></tr>\n";
   foreach ($ray as $row) {
     $line = '';
@@ -799,6 +800,7 @@ function whoFldSubmit($field, $question, $extra = []) {
  * Also sets up $formArray and $formSta, for testing.
  */
 function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
+  ///  debug("showForm('$function', $arg1, $arg2, $arg3, $arg4)");
   global $formArray, $formSta, $rUrl;
   setAcct(); // in case it's an anonymous form, so webAccess doesn't have a chance to set up
   if (!@$formSta['confirm'] and !in($function, R_NOLOG_FORMS)) {
