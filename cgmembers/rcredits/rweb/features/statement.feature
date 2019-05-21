@@ -54,14 +54,14 @@ Scenario: A member looks at a statement for previous month
   And with:
   | Tx  | Date        | Name          | Purpose   | Amount   |
 #  | 1   | %lastmd+1d  | ZZrCred       | signup    |     0.00 |
-  |   2 | %lastmd+2d  | Incoming bank | transfer to CG   |    11.00 |
+  |   2 | %lastmd+2d  | --            | transfer to CG   |    11.00 |
   | 214 | %lastmd+3d  | Bea Two       | cash E           |    10.00 |
   | 215 | %lastmd+4d  | Corner Pub    | usd F            | 1,100.00 |
   | 116 | %lastmd+5d  | Bea Two       | what G           |  -240.00 |
   | 120 | %lastmd+7d  | Corner Pub    | this Q           |  -120.00 |
-  |   3 | %lastmd+8d  | Outgoing bank | transfer to bank |   -22.00 |
+  |   3 | %lastmd+8d  | --            | transfer to bank |   -22.00 |
   | 123 | %lastmd+9d  | Bea Two       | cash V           |  -100.00 |
-  |   4 | %lastmd+10d | Outgoing bank | transfer to bank |   -33.00 |
+  |   4 | %lastmd+10d | --            | transfer to bank |   -33.00 |
   And without:
   | rebate  |
   | bonus   |

@@ -50,8 +50,8 @@ function formTxs($form, &$sta, $args = '') {
 
   be\processTxs($processor, $uids, $starting, $ending, TRUE);
 
+  if (u\test() and @$download) return;
   if (@$download) exit();
-  /* if (u\test() and @$download) return; */
   
   $pgFactor = MIN_TX_ROWS / NORMAL_TX_ROWS;
 

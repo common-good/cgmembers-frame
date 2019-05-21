@@ -62,8 +62,8 @@ Scenario: An agent asks to undo a charge
   And with did ""
   And with undo "4"
   And we notice "new refund" to member ".ZZA" with subs:
-  | created | otherName  | amount | payerPurpose           |*
-  | %now    | Corner Pub | $80    | whatever (reverses #1)  |
+  | created | otherName  | amount | payerPurpose |*
+  | %now    | Corner Pub | $80    | whatever     |
 
 Scenario: An agent asks to undo a charge when balance is secret
   Given transactions: 
@@ -76,8 +76,8 @@ Scenario: An agent asks to undo a charge when balance is secret
   And with did ""
   And with undo "5"
   And we notice "new refund" to member ".ZZE" with subs:
-  | created | otherName  | amount | payerPurpose           |*
-  | %today  | Corner Pub | $80    | whatever (reverses #1)  |
+  | created | otherName  | amount | payerPurpose |*
+  | %today  | Corner Pub | $80    | whatever     |
 
 Scenario: An agent asks to undo a refund
   Given transactions: 
@@ -90,8 +90,8 @@ Scenario: An agent asks to undo a refund
   And with did ""
   And with undo "4"
   And we notice "new charge" to member ".ZZA" with subs:
-  | created | otherName  | amount | payerPurpose         |*
-  | %today  | Corner Pub | $80    | refund (reverses #1)  |
+  | created | otherName  | amount | payerPurpose |*
+  | %today  | Corner Pub | $80    | refund       |
 
 Scenario: An agent asks to undo a cash-out charge
   Given transactions: 
@@ -104,8 +104,8 @@ Scenario: An agent asks to undo a cash-out charge
   And with did ""
   And with undo "4"
   And we notice "new payment linked" to member ".ZZA" with subs:
-  | created | fullName | otherName  | amount | payeePurpose           | aPayLink |*
-  | %today  | Abe One  | Corner Pub | $80    | cash out (reverses #1)  | ?        |
+  | created | fullName | otherName  | amount | payeePurpose | aPayLink |*
+  | %today  | Abe One  | Corner Pub | $80    | cash out     | ?        |
 
 Scenario: An agent asks to undo a cash-in payment
   Given transactions: 
@@ -119,7 +119,7 @@ Scenario: An agent asks to undo a cash-in payment
   And with undo "4"
   And we notice "new charge" to member ".ZZA" with subs:
   | created | fullName | otherName  | amount | payerPurpose |*
-  | %today  | Abe One  | Corner Pub | $80    | cash in (reverses #1)  |
+  | %today  | Abe One  | Corner Pub | $80    | cash in      |
 
 Scenario: An agent asks to undo a charge, with insufficient balance  
   Given transactions: 
@@ -133,8 +133,8 @@ Scenario: An agent asks to undo a charge, with insufficient balance
   And with did ""
   And with undo "4"
   And we notice "new refund" to member ".ZZA" with subs:
-  | created | otherName  | amount | payerPurpose           |*
-  | %today  | Corner Pub | $80    | whatever (reverses #1)  |
+  | created | otherName  | amount | payerPurpose |*
+  | %today  | Corner Pub | $80    | whatever     |
   And balances:
   | uid  | balance |*
   | ctty |       0 |
@@ -154,8 +154,8 @@ Scenario: An agent asks to undo a refund, with insufficient balance
   And with did ""
   And with undo "4"
   And we notice "new charge" to member ".ZZA" with subs:
-  | created | otherName  | amount | payerPurpose         |*
-  | %today  | Corner Pub | $80    | refund (reverses #1)  |
+  | created | otherName  | amount | payerPurpose |*
+  | %today  | Corner Pub | $80    | refund       |
   And balances:
   | uid  | balance |*
   | ctty |       0 |
@@ -219,8 +219,8 @@ Scenario: A cashier reverses a transaction with insufficient funds
 #  And with proof of agent "C:B" amount -100.00 created "%now-1h" member ".ZZA" code "ccA"
   And with undo "5"
   And we notice "new charge" to member ".ZZA" with subs:
-  | created | fullName | otherName  | amount | payerPurpose          |*
-  | %today  | Bea Two  | Corner Pub | $100   | cash in (reverses #1)  |
+  | created | fullName | otherName  | amount | payerPurpose |*
+  | %today  | Bea Two  | Corner Pub | $100   | cash in      |
   And balances:
   | uid  | balance |*
   | ctty |    -100 |

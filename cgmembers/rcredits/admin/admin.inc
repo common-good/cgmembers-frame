@@ -64,8 +64,8 @@ function setupBasicAccounts() {
   $x1=new r\Acct(array_combine($keys, array(CG_ROUNDUPS_UID, 0, t('roundup'), t('Roundup Donations'), 'cg@commongood.earth', '', 0, 0, 6)));
   new r\Acct(array_combine($keys, array(CG_CRUMBS_UID, 0, t('crumbs'), t('Crumb Donations'), 'cg@commongood.earth', '', 0, 0, 6))); 
   new r\Acct(array_combine($keys, array(CG_SERVICE_CHARGES_UID, 0, t('bank fees'), t('Bank service charges'), 'cg@commongood.earth', '', 0, 0, 6))); 
-  new r\Acct(array_combine($keys, array(CG_INCOMING_BANK_UID, 0, t('bank-in'), t('Incoming bank'), 'cg@commongood.earth', '', 0, 0, 6))); 
-  new r\Acct(array_combine($keys, array(CG_OUTGOING_BANK_UID, 0, t('bank-out'), t('Outgoing bank'), 'cg@commongood.earth', '', 0, 0, 6)));
+  new r\Acct(array_combine($keys, array(CG_INCOMING_BANK_UID, 0, t('bank-in'), t('--'), 'cg@commongood.earth', '', 0, 0, 6))); 
+  new r\Acct(array_combine($keys, array(CG_OUTGOING_BANK_UID, 0, t('bank-out'), t('--'), 'cg@commongood.earth', '', 0, 0, 6)));
   
   $server = r\serverUid();
   if ($server == r\serverUid('NEW')) { // no need to set up CGF unless in Western Mass (or testing)

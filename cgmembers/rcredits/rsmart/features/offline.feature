@@ -109,8 +109,8 @@ Scenario: A cashier canceled offline a supposedly offline charge that actually w
   | created | fullName | otherName  | amount | payerPurpose |*
   | %today  | Bea Two  | Corner Pub | $100   | food         |
   And we notice "new refund" to member ".ZZB" with subs:
-  | created | fullName | otherName  | amount | payerPurpose       |*
-  | %today  | Bea Two  | Corner Pub | $100   | food (reverses #1) |
+  | created | fullName | otherName  | amount | payerPurpose |*
+  | %today  | Bea Two  | Corner Pub | $100   | food         |
   And balances:
   | uid  | balance |*
   | ctty |    -250 |
@@ -133,8 +133,8 @@ Scenario: A cashier canceled offline a supposedly offline charge that actually w
   | created | fullName | otherName  | amount | payerPurpose |*
   | %today  | Bea Two  | Corner Pub | $100   | refund       |
   And we notice "new charge" to member ".ZZB" with subs:
-  | created | fullName | otherName  | amount | payerPurpose          |*
-  | %today  | Bea Two  | Corner Pub | $100   | refund (reverses #1)  |
+  | created | fullName | otherName  | amount | payerPurpose |*
+  | %today  | Bea Two  | Corner Pub | $100   | refund       |
   And balances:
   | uid  | balance |*
   | ctty |    -750 |

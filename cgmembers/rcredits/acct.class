@@ -1900,7 +1900,7 @@ EOF;
    */
   public function nextTid() {
     $a = $this;
-    $maxTid = db\get('MAX(GREATEST(acctTid,0))', 'tx_entries join tx_hdrs using(xid)', 'uid in (:uids) AND goods<>:FOR_USD', ['uids' => [$a->id, $a->jid]]);
+    $maxTid = db\get('MAX(GREATEST(acctTid,0))', 'tx_entries join tx_hdrs using(xid)', 'uid in (:uids)', ['uids' => [$a->id, $a->jid]]);
     /// debug("maxTid is $maxTid");
     if (empty($maxTid)) $maxTid = 0;
     return 1 + $maxTid;
