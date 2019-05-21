@@ -70,8 +70,7 @@ function relations($relations) {return t\relations($relations);}
 /**
  * transactions: (ARG)
  *
- * in: TEST coupons AMemberRedeemsAGiftCoupon
- *     MAKE exchange Setup
+ * in: MAKE exchange Setup
  *     MAKE joint Setup
  *     MAKE offline Setup
  *     MAKE offline ACashierChargedSomeoneOfflineAndTheyHaveInsufficientBalance
@@ -86,7 +85,7 @@ function relations($relations) {return t\relations($relations);}
  *     MAKE undo AnAgentAsksToUndoARefundWithInsufficientBalance
  *     MAKE undo AnAgentAsksToUndoAChargeWithoutPermission
  *     MAKE undo AnAgentAsksToUndoARefundWithoutPermission
- *     BOTH undo ACashierReversesATransactionWithInsufficientFunds
+ *     MAKE undo ACashierReversesATransactionWithInsufficientFunds
  */
 function transactions($list) {return t\transactions($list);}
 
@@ -259,9 +258,12 @@ function balances($list) {return t\balances($list);}
  */
 function agentAsksDeviceToUndoTransactionCode($agent, $device, $txid, $code) {
   global $testOnly; if ($testOnly) return FALSE;
-  
+
   $fields = 'member amount goods description created force code proof';
-  if ($q = db\get('payer, payerAgent, amount, goods, payeeFor AS description, created', 'r_txs', 'xid=:txid', compact('txid'))) {
+  $q = db\get('e.uid AS payer, e.agentUid AS payerAgent, 0-amount AS amount, goods, description, t.created',
+              "tx_hdrs t JOIN tx_entries e USING(xid)", "t.xid=:txid AND e.entryType=:entryType",
+              ['txid'=>$txid, 'entryType'=>ENTRY_PAYER]);
+  if ($q) {
     extract($q);
     $member = r\qid($payer, $payerAgent);
     list ($goods, $force, $proof) = [(int) ($goods == FOR_GOODS), -1, 'calc'];
@@ -271,6 +273,9 @@ function agentAsksDeviceToUndoTransactionCode($agent, $device, $txid, $code) {
   }
   return t\hitServer('charge', $args, $agent, $device);
 }
+
+// with code: agent:C:B device:devC txid:5 code:ccE
+// with subs: agent:C:B device:devC  member:.ZZA code:ccA amount:80 goods:1 description:whatever created:%today-1d
 
 /**
  * agent (ARG) asks device (ARG) to undo transaction with subs: (ARG)
@@ -562,7 +567,7 @@ function withDid($subs) {
 }
 
 /**
- * we respond ok txid (ARG) created (ARG) balance (ARG) rewards (ARG)
+ * we respond ok txid (ARG) created (ARG) balance (ARG)
  *
  * in: TEST exchange ACashierAsksToChargeSomeoneForCash
  *     TEST exchange ACashierAsksToRefundSomeone
@@ -574,8 +579,8 @@ function withDid($subs) {
  *     TEST undo AnAgentAsksToUndoANonexistentTransaction
  *     TEST undo ACashierReversesATransactionWithInsufficientFunds
  */
-function weRespondOkTxidCreatedBalanceRewards($txid, $created, $balance, $rewards) {
-  return weRespondOkTxidCreatedBalanceRewardsSaying($txid, $created, $balance, $rewards);
+function weRespondOkTxidCreatedBalance($txid, $created, $balance) {
+  return weRespondOkTxidCreatedBalanceSaying($txid, $created, $balance);
 }
 
 /**
@@ -664,7 +669,7 @@ function withProofOfAgentAmountCreatedMemberCode($agent, $amount, $created, $mem
   return (@$rposResult['proof'] == u\hash($proof));
 }
 /**
- * we respond ok txid (ARG) created (ARG) balance (ARG) rewards (ARG) saying: (ARG)
+ * we respond ok txid (ARG) created (ARG) balance (ARG) saying: (ARG)
  *
  * in: TEST joint ACashierAsksToChargeSomeone
  *     TEST offline ACashierChargedSomeoneOffline
@@ -682,28 +687,21 @@ function withProofOfAgentAmountCreatedMemberCode($agent, $amount, $created, $mem
  *     TEST undo AnAgentAsksToUndoAChargeWithoutPermission
  *     TEST undo AnAgentAsksToUndoARefundWithoutPermission
  */
-function weRespondOkTxidCreatedBalanceRewardsSaying($txid, $created, $balance, $rewards, $msg = NULL) {
+function weRespondOkTxidCreatedBalanceSaying($txid, $created, $balance, $msg = NULL) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $rposResult;
+
+  ///  debug("weRespond...($txid, $created, $balance, " . print_r($msg, true));
+  ///  debug($rposResult);
   
   extract($rposResult, EXTR_PREFIX_ALL, 'a'); // actual results
   $ok = '1';
-  // NOTE: rewards are now IGNORED
   foreach (ray('ok txid balance') as $k) if (@$rposResult[$k] != $$k) $error = 1;
   if (!t\approxTime(@$a_created, $created)) $error = 2;
   
   if (@$msg) {
     $msg = $msg[0];
     $index = (@$msg['solution'] ? 'report undo|' : '') . 'report tx'; // |for why
-/*
-    if (t\rewarding()) {
-      $index .= '|for why';
-      $msg['otherRewardAmount'] = @$msg['reward']; unset($msg['reward']);
-      if ($msg['why'] == 'goods') $index .= '|reward customer';
-      $whys = ray(R_WHYS); 
-      $msg['why'] = $whys[constant('FOR_' . strtoupper($msg['why']))];
-    }
-    */
     $wantMsg = t($index, $msg);
     if ($a_message != $wantMsg) $error = 3;
 ///    debug(compact('a_message','wantMsg','error'));
@@ -712,7 +710,7 @@ function weRespondOkTxidCreatedBalanceRewardsSaying($txid, $created, $balance, $
 
   if (@$error) {
     if (@$msg) u\preray(compact('wantMsg'), $msg);
-/**/ t\output('Expecting (but did not get): ' . print_r(compact(ray('ok txid created balance rewards msg')), 1), 'expect');
+/**/ t\output('Expecting (but did not get): ' . print_r(compact(ray('ok txid created balance msg')), 1), 'expect');
 /**/ t\output('Got: ' . print_r($rposResult + compact('error'), 1));
     return FALSE;
   } else return TRUE;
@@ -735,9 +733,48 @@ function weChangeMemberCardCode($id) {
  * in: MAKE coupons AMemberRedeemsAGiftCoupon
  */
 function coupons($list) {return t\coupons($list);}
+
 /**
  * transaction count is (ARG)
  *
- * in: TEST coupons AMemberRedeemsAGiftCoupon
+ * in: 
  */
 function transactionCountIs($n) {return t\txCountIs($n);}
+
+/**
+ * transaction headers: (ARG)
+ *
+ * in: TEST coupons AMemberRedeemsAGiftCoupon
+ *     TEST undo ACashierReversesATransactionWithInsufficientFunds
+ */
+function transactionHeaders($list) { return t\txHdrs($list); }
+
+/**
+ * transaction entries: (ARG)
+ *
+ * in: TEST coupons AMemberRedeemsAGiftCoupon
+ *     TEST undo ACashierReversesATransactionWithInsufficientFunds
+ */
+function transactionEntries($list) { return t\txEntries($list); }
+
+/**
+ * transaction header count is (ARG)
+ *
+ * in: TEST coupons AMemberRedeemsAGiftCoupon
+ */
+function transactionHeaderCountIs($n) { return t\count('tx_hdrs', $n); }
+
+/**
+ * transaction entry count is (ARG)
+ *
+ * in: 
+ */
+function transactionEntryCountIs($n) { return t\count('entries', $n); }
+
+/**
+ * coupated: (ARG)
+ *
+ * in: TEST coupons AMemberRedeemsAGiftCoupon
+ */
+function coupated($list) { return t\coupatedRecords($list); }
+

@@ -112,7 +112,7 @@ function formSummary($form, &$sta) {
   } else $extra = '';
   $accountId = item(($mya->mainQid ?: 'N/A') . ' (' . $acctType . ')' . $extra, t('ID:'));
 
-  $fields = 'photo title clickPhoto showCustomers topButtons accountId accountName details address legalName shortName federalId community balance creditLine creditLimit committed invites cttyBene';
+  $fields = 'photo title clickPhoto showCustomers topButtons accountId accountName details address legalName shortName federalId community balance newBalance creditLine creditLimit committed invites cttyBene';
   foreach (ray('details') as $k) $$k = @$form[$k]; unset($form[$k]); // put these on the left if admin
   $fields = @compact(ray($fields));
   

@@ -21,8 +21,8 @@ Setup:
 
 Scenario: A member confirms request to charge another member
   When member ".ZZA" confirms form "charge" with values:
-  | op     | who     | amount | goods | purpose |*
-  | charge | Bea Two | 100    | %FOR_GOODS     | labor   |
+  | op     | who     | amount | goods      | purpose |*
+  | charge | Bea Two | 100    | %FOR_GOODS | labor   |
   Then invoices:
   | nvid | created | status      | amount | from | to   | for   |*
   |    1 | %today  | %TX_PENDING |    100 | .ZZB | .ZZA | labor |

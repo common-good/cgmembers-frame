@@ -34,27 +34,54 @@ function formGet($form, &$sta, $args = '') {
 //  $toSpend = u\fmtAmt($mya->r - $mya->committed);
   $balance = u\fmtAmt($mya->balDpy);
   $credit = u\fmtAmt(-$mya->floor);
-  $waiting0 = $mya->waitingFromBank();
+  $fromBank = $mya->waitingFromBank();
 
-  if (!db\exists('r_usd', 'payee IN (:myid,:jid) AND amount<0 AND created>:dayAgo', ray('myid jid dayAgo', $myid, $jid, strtotime('-1 day')))) { // limit to one withdrawal request per 24 hours
+  $toBank = db\get('amount', 'r_usd', 'payee IN (:myid,:jid) AND amount<0 AND created>:dayAgo', ray('myid jid dayAgo', $myid, $jid, strtotime('-1 day')));
+  if (empty($toBank)) { // limit to one withdrawal request per 24 hours
     $avail = $mya->avail(FOR_USD); // drawing from connected accounts not allowed
     foreach (ray(R_EXCHANGE_LIMITS) as $days => $limit) {
       $sofar = $days == 1 ? 0 : db\get('-SUM(amount)', 'r_usd', 'payee=:myid AND amount<0 AND created>:date', ray('myid date', $myid, strtotime("-$days days")));
       $avail = min($avail, $limit - $sofar);
     }
-  } else $avail = 0;
+  } else {
+    $avail = 0;
+  }
 
+  $toBankFmt = u\fmtAmt(-$toBank);
+  $fromBankFmt = u\fmtAmt($fromBank);
   $cashoutable = u\fmtAmt(max(0, min($mya->balDpy, $avail)));
-  if ($waiting = u\fmtAmt(abs($waiting0))) {
+  if ($fromBank != 0) {
     $where = 'payee IN (:myid, :jid) AND completed=0 AND deposit=0 ORDER BY txid DESC';
     if ($rec = db\get('amount, txid', 'r_usd', $where, compact('myid', 'jid'))) {
       extract($rec);
-      $text = t('Cancel') . (($amount == $waiting0) ? '' : (' ' . u\fmtAmt(abs($amount)) . t(' request')));
+      if ($toBank == 0) {
+        $text = t('Cancel');
+      } else {
+        $text = t('Cancel %fromBankFmt request', compact('fromBankFmt'));
+      }
       $link = " <a class=\"buttino\" href=\"$base_url/get/cancel=$txid\">$text</a>";
+    } else { $link = ''; }
+  } else { $link = ''; }
+  
+  /* $way = $waiting0 < 0 ? t('to') : ('from'); */
+  if ($fromBank == 0) {
+    if ($toBank == 0) {
+      $waiting = t('You have no pending exchange requests.');
+    } else {
+      $waiting = t('You have total pending exchange requests of %toBankFmt to your bank account.',
+                   compact('toBankFmt'));
+    }
+  } else {
+    if ($toBank = 0) {
+      $waiting = t('You have total pending exchange requests of %fromBankFmt from your bank account.',
+                   compact('fromBankFmt'));
+    } else {
+      $waiting = t('You have total pending exchange requests of %toBankFmt to, and %fromBankFmt from, your bank account.',
+                   compact('toBankFmt', 'fromBankFmt'));
     }
   }
-  $way = $waiting0 < 0 ? t('to') : ('from');
-  $waiting = item($waiting == '$0' ? t('You have no pending exchange requests.') : (t('You have total pending exchange requests of %waiting %way your bank account.', compact('waiting', 'way')) . @$link), t('Pending:')); // amount already requested (if any)
+  $waiting = item($waiting . $link, t('Pending:'));
+  /* $waiting = item($waiting == '$0' ? t('You have no pending exchange requests.') : (t('You have total pending exchange requests of %waiting %way your bank account.', compact('waiting', 'way')) . @$link), t('Pending:')); // amount already requested (if any) */
   $avail = hidFld($avail);
   $credit = u\fmtAmt(-$mya->floor);
   $balances = item(t('balances', compact(ray('balance credit cashoutable'))), t('Balance:'));
@@ -89,7 +116,9 @@ function formGet_validate($form, &$sta) {
   
 function formGet_submit($form, &$sta) {
   global $mya;
-//  $us = new r\usd($mya = r\acct());
+  $mya = r\acct();
+  u\EXPECT([$mya], 'Acct');
+  //  $us = new r\usd($mya = r\acct());
   extract(just('amount', $sta['input']));
 
 	$why = t('at your request');

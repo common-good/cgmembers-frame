@@ -5,16 +5,16 @@ SO my financial position will be progressively better.
 
 Setup:
   Given members:
-  | uid  | fullName | minimum | savingsAdd | saveWeekly | achMin | floor | risks   | flags   |*
-  | .ZZA | Abe One  |    -100 |          0 |         20 |     20 |    10 | hasBank | ok,confirmed,refill  |
+  | uid  | fullName | minimum | savingsAdd | saveWeekly | achMin | floor | risks   | flags                 |*
+  | .ZZA | Abe One  |    -100 |          0 |         20 |     20 |    10 | hasBank | ok,confirmed,refill   |
   | .ZZB | Bea Two  |     100 |          0 |         20 |     20 |    10 | hasBank | ok,confirmed,cashoutW |
-  
+
 Scenario: A member crawls out of debt
   When cron runs "everyWeek"
   Then balances:
   | uid  | minimum |*
   | .ZZA |     -80 |
-  
+
 Scenario: A member builds up savings
   Given members have:
   | uid  | minimum |*

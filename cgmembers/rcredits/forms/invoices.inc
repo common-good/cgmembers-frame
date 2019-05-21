@@ -21,7 +21,7 @@ function formInvoices($form, &$sta, $toFrom, $args = '') {
   $choices = array(t('open'), t('paid'), t('denied'));
   extract(just('dateRange url starting ending states', dateRange($args, "history/invoices-$toFrom", $choices, '0,1,2')));
 /*
-  if (@$do == 'ok') {$ok = be\payInvoice($nvid, $msg); say($msg, $ok ? '' : 'ERR');}
+  if (@$do == 'ok') {list($ok, $msg) = be\payInvoice($nvid); say($msg, $ok ? '' : 'ERR');}
   if (@$do == 'no') return w\go("handle-invoice/nvid=$nvid&toMe=$toMe&ret=" . u\urlify($url));
 */
   
@@ -77,11 +77,12 @@ function invoiceList($toMe, $starting, $ending, $states, $url, $download, $toFro
   if (strpos($states, '2') === FALSE) $where .= ' AND i.status<>:TX_DENIED';
   */
   $sql = <<<EOF
-    SELECT nvid, i.created, u.fullName AS other, i.purpose, i.amount, i.status AS status0, i.data, t.{$me}Tid AS tid
+    SELECT nvid, i.created, u.fullName AS other, i.purpose, i.amount, i.status AS status0, i.data, e.acctTid AS tid
     FROM r_invoices i 
     LEFT JOIN users u ON u.uid=i.$yu
-    LEFT JOIN r_txs t ON t.xid=i.status
-    WHERE $where
+    LEFT JOIN tx_hdrs t ON t.xid=i.status
+    LEFT JOIN tx_entries e ON e.xid=i.status AND e.uid=u.uid
+    WHERE ($where)
     ORDER BY (i.status>2), nvid DESC
 EOF;
 //    ORDER BY (i.status=:TX_PENDING OR i.status=:TX_APPROVED) DESC, nvid DESC

@@ -75,7 +75,8 @@ function rdo($code, $args = '') {
   } 
   
   if ($op == 'inv') {
-    if ($err = r\badUnpaidInv($v)) return doSay($err, 'err');
+    $err = r\badUnpaidInv($v);
+    if ($err) return doSay($err, 'err');
     return w\go("/handle-invoice/nvid=$v&toMe=1&code=$code");
   } 
   

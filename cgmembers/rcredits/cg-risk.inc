@@ -75,65 +75,87 @@ function acctRisk1($uid, $thresholds, &$risk = 0, &$calc = 0) {
 
 /*
  * Calculate a risk score for the given transaction.
- * @param assoc $tx: the transaction array
+ * @param xid $xid: the transaction identifier
  * @param numeric $risk: (RETURNED) the normalized risk score
  * @param numeric $calc: (RETURNED) the original calculated risk
  */ 
-function txRisk1($tx, &$risk = 0, &$calc = 0) {
+function txRisk1($xid, &$risk = 0, &$calc = 0) {
   global $_risk; $_risk = '';
-  extract($tx); // all tx fields
   global $_xid; $_xid = $xid; // for debugging
-  extract(just('force undoneBy undoes xfee', unserialize($data)));
-
-  $cttyPayer = ($payer < 0);
-  if ($neg = ($amount < 0)) list ($payer, $payee, $amount) = array($payee, $payer, -$amount);
-  list ($a1, $a2) = array(r\acct($payer), r\acct($payee));
+  u\EXPECT(!is_array($xid), "xid is array");
+  $reverser = db\get('r.xid AS reverser', 'tx_hdrs t LEFT JOIN tx_hdrs r ON r.reversesXid=t.xid', 't.xid=:xid', ['xid'=>$xid]);
+  if (!isset($risks)) $risks = 0;
   
   if ($risks & u\bit(K_ADMINOK)) setRisk('txAdminOk'); // administrator blessed this transaction
-  if (@$undoes and $undoneData = @unserialize(db\get('data', 'r_txs', 'xid=:undoes', compact('undoes')))) {
-    if (@$undoneData['undoes']) setRisk('redo');
-  }
-  
-  if (!$cttyPayer) { // most transfers to/from the community should be ignored
+  if (!is_null($reverser)) setRisk('redo');
+
+  $fields = <<<EOF
+    payerE.uid AS payerId, payeeE.uid AS payeeId, payeeE.amount AS amount, payee.:IS_CO AS payeeIsCo,
+    payer.:IS_CO AS payerIsCo, payeeE.description AS payeeFor, payerE.description AS payerFor,
+    t.:IS_OFFLINE AS offline, t.goods, t.created, t.channel
+EOF;
+  $table = <<<EOF
+    tx_hdrs t JOIN tx_entries payerE USING(xid) JOIN tx_entries payeeE USING(xid)
+    JOIN users payer ON payerE.uid=payer.uid JOIN users payee ON payeeE.uid=payee.uid
+EOF;
+  $where = "xid=:xid AND payerE.entryType=:ENTRY_PAYER AND payerE.entryType=:ENTRY_PAYEE"; // AND payeeE.amount>0
+  $rows = db\rows($fields, $table, $where, ['xid'=>$xid]);
+  foreach ($rows AS $row) {
+    extract(u\exactly('payerId payeeId amount payeeIsCo payerIsCo payeeFor payerFor offline goods created channel', $row, null));
+
+    $cttyPayer = ($payerId < 0);
+    $payerA = r\acct($payerId);
+    $payeeA = r\acct($payeeId);
+
+    if ($payerId < 0) continue; // most transfers to/from the community should be ignored
     if ($goods != FOR_GOODS) {
-      if ($neg ? $a1->co : $a2->co) {
-        setRisk((!$neg and $channel == TX_POS and r\usdin($payeeFor)) ? (@$xfee ? 'bankIn' : 'cashIn') : 'cashOut');
-      } else setRisk('exchange');
-      if ($a1->risk >= K_RED) setRisk('suspectOut');
+      if ($amount < 0 ? $payerIsCo : $payeeIsCo) {
+        setRisk($amount < 0 and ($channel == TX_POS and r\usdin($payeeFor)) ? 'cashIn' : 'cashOut');
+      } else {
+        setRisk('exchange');
+      }
+      if ($payerA->risk >= K_RED) setRisk('suspectOut');
     } else {
-      if ($b2p = ($a1->co and !$a2->co and !r\isEmployee($payee, $payer))) setRisk('b2p'); // company payment to non-employee individual
+      if ($payerIsCo and !$payeeIsCo and !r\isEmployee($payeeId, $payerId)) setRisk('b2p'); // company payment to non-employee individual
     }
-    $samePostal = ($a1->postalAddr == $a2->postalAddr);
-    $withCo = ($a1->co or $a2->co); // at least one party is a company
+    $samePostal = ($payerA->postalAddr == $payeeA->postalAddr);
+    $withCo = ($payerIsCo or $payeeIsCo); // at least one party is a company
     if (!$withCo and !$samePostal) setRisk('p2p'); // transaction between individuals at different postal addresses
-    if ($withCo and (r\owning($payer, $payee) or $samePostal or r\isEmployee($payer, $payee))) setRisk('inhouse'); // transaction with owner or family member same address or payment by employee
+    if ($withCo and (r\owning($payerId, $payeeId) or $samePostal or r\isEmployee($payerId, $payeeId))) setRisk('inhouse'); // transaction with owner or family member same address or payment by employee
 
     $since = $created - WEEK7_SECS; // just recent activity by customers, in case many are new
-    $count = db\count('r_txs', 'payer=:payer AND payee=:payee AND created BETWEEN :since AND :created', compact(ray('payer payee since created')));
-    setBigToFrom('From', 'payer', $payer, $amount, $created, $count);
-    setBigToFrom('To', 'payee', $payee, $amount, $created, $count);
+    $count = db\count('tx_hdrs JOIN tx_entries payer USING(xid) JOIN tx_entries payee USING(xid)',
+                      'payer.entryType=:ENTRY_PAYER and payee.entryType=:ENTRY_PAYEE AND payer.uid=:payer AND payee.uid=:payee AND created BETWEEN :since AND :created', ray('payer payee since created', $payerId, $payeeId, $since, $created));
+    setBigToFrom('From', 'payer', $payerId, $amount, $created, $count);
+    setBigToFrom('To', 'payee', $payeeId, $amount, $created, $count);
 
-    setOriginRisk($amount < 0 ? $payee : $payer, $created, $amount);
+    setOriginRisk($payerId, $created, $amount);
 
     if ($channel == TX_WEB or $channel == TX_SMS) {
       setRisk('absent'); // transaction by web or SMS (no in person)
-      if (strpos($payeeFor.$payerFor, 'inv#') === FALSE and strpos($payeeFor.$payerFor, 'invoice') === FALSE and !r\isEmployee($payee, $payer)) setRisk('invoiceless'); // payment to non-employee without an invoice
+      if (!db\exists('r_invoices', 'status=:xid', ['xid'=>$xid])) {
+        setRisk('invoiceless'); // payment to non-employee without an invoice
+      }
     }
-  }
 
-  setRisk('fromSuspect', $a1->risk / K_RED, $a1->risk >= K_RED); // payment from suspicious account
-  setRisk('toSuspect', $a2->risk / K_RED, $a2->risk >= K_RED); // payment to suspicious account
+    setRisk('fromSuspect', $payerA->risk / K_RED, $payerA->risk >= K_RED); // payment from suspicious account
+    setRisk('toSuspect', $payeeA->risk / K_RED, $payeeA->risk >= K_RED); // payment to suspicious account
   
-  if (@$force) { // offline
-    setRisk('offline');
-    if (!db\exists('r_txs', 'payer=:payer AND payee=:payee AND xid<>:xid', compact('payer', 'payee', 'xid'))) setRisk('firstOffline'); // offline for first payment to this company
+    if ($offline) { // offline
+      setRisk('offline');
+      if (!db\exists('tx_hdrs t JOIN tx_entries payer USING(xid) JOIN tx_entries payee USING(xid)',
+                     'payer.uid=:payer AND payee.uid=:payee AND xid<>:xid AND payee.amount>0',
+                     compact('payer', 'payee', 'xid'))) {
+        setRisk('firstOffline'); // offline for first payment to this company
+      }
+    }
   }
   
   extract(setRisk());
   $calc = $risk;
   if ($risk > 0) $risk *= $amount; // (don't exaggerate negative risk)
   $risk *= K_RED / K_THRESHOLD; // normalize
-  db\update('r_txs', compact('xid', 'risk', 'risks'), 'xid');
+  db\update('tx_hdrs', compact('xid', 'risk', 'risks'), 'xid');
 }
 
 /*
@@ -236,10 +258,12 @@ function setBigRisk($uid, $ago, $thresholds, $bitName) {
     SELECT COUNT(*) AS count0, 
       SUM(IF(:DEPOSIT_SQL,amount,0)) AS `in`, 
       SUM(IF(:DEPOSIT_SQL,0,-amount)) AS `out`
-    FROM (SELECT txid,amount,created FROM r_usd 
-      WHERE payee=:uid AND completed>=created AND amount<>0
-    UNION SELECT 0 AS txid,IF(payee=:uid, amount, -amount) AS amount,created FROM r_txs 
-       WHERE payer=:uid OR payee=:uid) t
+    FROM ( /*SELECT txid, amount, created FROM r_usd 
+           WHERE payee=:uid AND completed>=created AND amount<>0
+           UNION ALL*/
+           SELECT 0 AS txid, amount, created
+           FROM tx_entries e JOIN tx_hdrs t USING(xid) 
+           WHERE e.uid=:uid ) t 
     WHERE created BETWEEN :since AND :now
 EOF;
   if (!$res = db\q($mySql, compact(ray('uid since now')))->fetchAssoc()) return;
@@ -251,8 +275,10 @@ EOF;
 //  if (max($in, $out) > $threshold * max(1, $a->employees)) setRisk($bitName);
   if ($ago == YEAR_SECS) list ($bigYearIn, $bigYearOut) = [$in, $out];
   if ($ago == WEEK7_SECS) {
-    $firstTxDate = db\get('MIN(created)', 'r_txs', ':uid IN (payer, payee)', compact('uid')) ?: $now;
-    if ($yearLen = min(YEAR_SECS, $now - $firstTxDate)) {
+    $firstTxDate = db\get('MIN(created)', 'tx_hdrs JOIN tx_entries e USING(xid)', 'e.uid=:uid',
+                          compact('uid')) ?: $now;
+    $yearLen = min(YEAR_SECS, $now - $firstTxDate);
+    if ($yearLen) {
       if ($in > (1 + K_UNUSUAL_BUMP / 100) * $bigYearIn * $ago / $yearLen) setRisk('moreIn');
       if ($out > (1 + K_UNUSUAL_BUMP / 100) * $bigYearOut * $ago / $yearLen) setRisk('moreOut');
     }
@@ -285,9 +311,9 @@ function setBigToFrom($way, $field, $uid, $amount, $created, $count) {
   
   $subtotals =<<<EOF
     SELECT AVG(ABS(amount)) as avg0, MAX(ABS(amount)) AS max0, COUNT(*) AS count0 
-    FROM r_txs 
-    WHERE payer>0 AND IF(amount<0,$other,$field)=:uid AND created>:since 
-    GROUP BY IF(amount<0,$field,$other)
+    FROM tx_entries payer JOIN tx_hdrs t USING(xid) JOIN tx_entries payee USING(xid)
+    WHERE payer.entryType=:ENTRY_PAYER AND payee.entryType=:ENTRY_PAYEE AND payer.uid>0 AND IF(payee.amount<0,$other,$field)=:uid AND t.created>:since 
+    GROUP BY IF (amount<0,$other,$field).uid
 EOF;
   $sql = <<< EOF
     SELECT SUM(IF(:amount<avg0, 1, 0)) AS less, 
@@ -311,9 +337,10 @@ EOF;
  */
 function setOriginRisk($uid, $created, $amount) {
   $since = $created - YEAR_SECS;
-  $table = 'SELECT IF(amount<0,payer,payee) AS uid,risk,created,amount FROM r_txs';
+  $table = 'tx_entries JOIN tx_hdrs USING(xid)';
   $where = 'uid=:uid AND risk IS NOT NULL AND created BETWEEN :since AND :created';
-  $avgRisk = db\get('AVG(risk/ABS(amount))', "($table) t", $where, compact(ray('uid since created'))) / (K_RED / K_THRESHOLD);
+
+  $avgRisk = db\get('AVG(risk/ABS(amount))', "$table", $where, compact(ray('uid since created'))) / (K_RED / K_THRESHOLD);
 ///  debug(compact('uid','amount','since','table','where','avgRisk'));
   if ($avgRisk > 0) setRisk('origins', $multiplier = $avgRisk, $multiplier > 1/2);
 }

@@ -178,10 +178,10 @@ function adminSummary() {
 
   if ($mya->id == CGID) {
     $sql = <<<EOF
-      SELECT u.community AS ctty, SUM(IF(payee=:uid, amount, 0)) AS `in`,
-        SUM(IF(payer=:uid, amount, 0)) AS `out`
-      FROM r_txs t LEFT JOIN users u ON u.uid=IF(payer=:uid, payee, payer)
-      WHERE ((payer=:uid AND payee<0) OR payee=:uid) AND t.:IS_GIFT GROUP BY community
+      SELECT u.community AS ctty, SUM(IF(amount > 0, amount, 0)) AS `in`,
+        SUM(IF(amount < 0, - amount, 0)) AS `out`
+      FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING (xid)
+      WHERE (u.uid=:uid) AND t.:IS_GIFT GROUP BY community
 EOF;
     $q = db\q($sql, compact('uid'));
     $lines = '<tr><th>Community</th><th>Donations</th><th>Paid</th><th>Due</th></tr>';
@@ -294,7 +294,8 @@ function export($params) {
       $ecode = "$a->emailCode";
       $modified = u\fmtDate(now());
       $manages = db\get('fullName', 'r_relations r LEFT JOIN users u ON u.uid=r.main', 'r.permission>=:B_MANAGE-:B_RELATED AND u.:IS_CO AND r.other=:id', ['id' => $a->id]);
-      $lastTx = ($tx = $a->lastTx) ? u\fmtDate($tx[3], TRUE) : '';
+      $tx = $a->lastTx;
+      $lastTx = empty($tx) ? '' : u\fmtDate($tx->created, TRUE);
       $solar = $solarUid ? r\relation(t("'solar'"), $solarUid, $a->id, ':IS_CUSTOMER') : '';
       $snap = $a->snap ? t('SNAP') : '';
       $special = '';

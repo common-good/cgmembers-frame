@@ -61,7 +61,7 @@ function formInvestBuySell_submit($form, &$sta) {
   
   $DBTX = \db_transaction();
   if (op($sta) == 'buy') {
-    list ($index, $subs) = $clubA->pay($coA, $total, $type, ray('investment goods', 1, FOR_USD));
+    list ($index, $subs) = be\transfer('payment', $clubA, $coA, $total, $type, FOR_USD, ray('investment', 1));
     $success = @$subs['success'];
     if ($equity) {
       $extraMsg = $success ? t('You successfully purchased %amt shares of %co at %price.', 'amt co price', $sharesDpy, $coA->fullName, $priceDpy) : t('No shares were purchased.');
@@ -73,7 +73,7 @@ function formInvestBuySell_submit($form, &$sta) {
     if ($equity) {    
       $for = t('redeeming investment: %amt shares at %price', 'amt price', $sharesDpy, $priceDpy);
     } else $for = t('redeeming loan');
-    list ($index, $subs) = $clubA->invoice($coA, $total, $for, ray('investment goods shid', 1, FOR_USD, $shid));
+    list ($index, $subs) = be\invoice($clubA, $coA, $total, $for, ray('investment goods shid', 1, FOR_USD, $shid));
 //    if (@$count + 0 == 1) { // the usual case -- one shares record
     $extraMsg = '';
   }

@@ -6,7 +6,7 @@
 # server "example.com", user: "deploy", roles: %w{app db web}, my_property: :my_value
 # server "example.com", user: "deploy", roles: %w{app web}, other_property: :other_value
 # server "db.example.com", user: "deploy", roles: %w{db}
-server "192.168.56.101", roles: %w{app db web}
+server "192.168.57.101", roles: %w{app db web}
 
 
 # role-based syntax
@@ -30,7 +30,7 @@ server "192.168.56.101", roles: %w{app db web}
 # For available Capistrano configuration variables see the documentation page.
 # http://capistranorb.com/documentation/getting-started/configuration/
 # Feel free to add new variables to customise your setup.
-set :repo_url, "192.168.57.101:common-good/cgmembers-frame"
+set :repo_url, "192.168.57.1:common-good/cgmembers-frame"
 set :deploy_to, "/home/deploy/cgmembers-frame"
 
 ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp

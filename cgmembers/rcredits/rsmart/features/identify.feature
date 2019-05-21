@@ -65,14 +65,14 @@ Scenario: a manager signs in
 Scenario: a cashier scans a customer card
   When agent "C:B" asks device "devC" to identify ".ZZD,ccD"
   Then we respond with:
-  | ok | name     | descriptions    | can          | bad | place     | company | logon | balance | rewards |*
-  | 1  | Dee Four | this,that,other | refund,r4usd |     | Dtown, DE |         | 0     | 0       | 444     |
+  | ok | name     | descriptions    | can          | bad | place     | company | logon | balance |*
+  | 1  | Dee Four | this,that,other | refund,r4usd |     | Dtown, DE |         | 0     | 0       |
 
 Scenario: the default cashier scans a customer card
   When agent ".ZZC" asks device "devC" to identify ".ZZD,ccD"
   Then we respond with:
-  | ok | name     | descriptions    | can          | bad | place     | company | logon | balance | rewards |*
-  | 1  | Dee Four | this,that,other | refund,r4usd |     | Dtown, DE |         | 0     | 0       | 444     |
+  | ok | name     | descriptions    | can          | bad | place     | company | logon | balance |*
+  | 1  | Dee Four | this,that,other | refund,r4usd |     | Dtown, DE |         | 0     | 0       |
 
 Scenario: a customer scans their own card for self-service
   Given members have:
@@ -80,8 +80,8 @@ Scenario: a customer scans their own card for self-service
   | .ZZD | 4444 |
   When agent ".ZZC" asks device "devC" to identify ".ZZD,ccD" with PIN "4444"
   Then we respond with:
-  | ok | name     | descriptions    | can          | bad | place     | company | logon | balance | rewards |*
-  | 1  | Dee Four | this,that,other | refund,r4usd |     | Dtown, DE |         | 0     | 0       | 444     |
+  | ok | name     | descriptions    | can          | bad | place     | company | logon | balance |*
+  | 1  | Dee Four | this,that,other | refund,r4usd |     | Dtown, DE |         | 0     | 0       |
 
 Scenario: a customer scans their own card for self-service with wrong PIN
   Given members have:
@@ -112,8 +112,8 @@ Scenario: a cashier asks us to identify the cashier's own card
 Scenario: a cashier scans a customer card whose balance is secret
   When agent "C:B" asks device "devC" to identify ".ZZE,ccE"
   Then we respond with:
-  | ok | name     | descriptions    | can          | bad | place     | company | logon | balance | rewards |*
-  | 1  | Eve Five | this,that,other | refund,r4usd |     | Etown, IL |         | 0     | *0      | 555     |
+  | ok | name     | descriptions    | can          | bad | place     | company | logon | balance |*
+  | 1  | Eve Five | this,that,other | refund,r4usd |     | Etown, IL |         | 0     | *0      |
 
 Scenario: a cashier scans a company customer card
   When agent "C:B" asks device "devC" to identify "F:E,ccE2"
@@ -146,8 +146,8 @@ Scenario: A member makes a purchase for the first time
   Given member ".ZZD" has no photo ID recorded
   When agent ".ZZC" asks device "devC" to identify ".ZZD,ccD"
   Then we respond with:
-  | ok | name     | descriptions    | can          | bad | place     | company | logon | balance | rewards |*
-  | 1  | Dee Four | this,that,other | refund,r4usd |     | Dtown, DE |         | -1    | 0       | 444     |
+  | ok | name     | descriptions    | can          | bad | place     | company | logon | balance |*
+  | 1  | Dee Four | this,that,other | refund,r4usd |     | Dtown, DE |         | -1    | 0       |
 
 # disabled because "fast" bit is no longer used  
 #Scenario: A member makes a purchase for the first time from an exempt company
@@ -157,5 +157,5 @@ Scenario: A member makes a purchase for the first time
 #  | .ZZC | refund,r4usd,fast |
 #  When agent ".ZZC" asks device "devC" to identify ".ZZD,ccD"
 #  Then we respond with:
-#  | ok | name     | descriptions    | can          | bad | place     | company | logon | balance | rewards |*
-#  | 1  | Dee Four | this,that,other | refund,r4usd |     | Dtown, DE |         | 0     | 0       | 250     |
+#  | ok | name     | descriptions    | can          | bad | place     | company | logon | balance |*
+#  | 1  | Dee Four | this,that,other | refund,r4usd |     | Dtown, DE |         | 0     | 0       |

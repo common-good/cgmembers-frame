@@ -221,9 +221,9 @@ Scenario: A member pays another member repeatedly
   And transactions:
   | xid | created | amount | from  | to   | purpose      | taking |*
   |   1 | %today  |    100 | .ZZA  | .ZZB | labor        | 0      |
-  And date field "created" rounded "no" in "txs" record "1" (id field "xid")
+  And date field "created" rounded "no" in "tx_hdrs" record "1" (id field "xid")
   And these "recurs":
   | id | payer | payee | amount | period | created | ended |*
   |  1 | .ZZA  | .ZZB  |    100 |      W | %today  |     0 |
   And date field "created" rounded "yes" in "recurs" record "1" (id field "id")
-  And field "txs/xid/1/created" is ">=" field "recurs/id/1/created"
+  And field "tx_hdrs/xid/1/created" is ">=" field "recurs/id/1/created"

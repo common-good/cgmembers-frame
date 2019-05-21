@@ -85,7 +85,10 @@ function showPage(add) {
   page += add;
   var pghd = more ? '.PAGE-' : '.page-'; 
   $('.prevPage').css('visibility', page < 1 ? 'hidden' : 'visible'); 
-  $('.nextPage').css('visibility', $(pghd + (page + 1)).length ? 'visible' : 'hidden'); 
+  $('.nextPage').css('visibility', $(pghd + (page + 1)).length ? 'visible' : 'hidden');
+  var rows = $('tr.txrow');
+  var thisPage = rows.filter(more + page).show();
+  rows.not(thisPage).hide();
   $('.txRow').hide(); 
   $('.txRow.head, ' + pghd + page).show();
 }

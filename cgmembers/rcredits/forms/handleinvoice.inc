@@ -19,8 +19,10 @@ function formHandleInvoice($form, &$sta, $args = '') {
   global $mya;
   extract(just('nvid ret code toMe webpay', $args));
   $ret = @$ret ? @u\deurlify($ret) : 'empty/1';
-  
-  if ($err = r\badUnpaidInv(@$nvid, $inv)) return w\go($ret, $err, 'ERR');
+
+  $inv = db\get('*', 'r_invoices', 'nvid=:nvid', compact('nvid'));
+  $err = r\badUnpaidInv($inv);
+  if ($err) return w\go($ret, $err, 'ERR');
 
   extract(just('nvid amount payer payee purpose created data', $inv));
   if (@$code) {
@@ -92,7 +94,7 @@ function formHandleInvoice_submit($form, &$sta) {
   if ($op == 'pay' and !@$whyNot) {
     $short = round($amount - $fromA->avail(), 2);
     if ($fromA->ok and $short <= 0) {
-      $ok = be\payInvoice($nvid, $msg);
+      list($ok, $msg) = be\payInvoice($nvid);
     } else {
       db\update('r_invoices', ray('nvid status', $nvid, TX_APPROVED), 'nvid');
       if ($fromA->ok) {

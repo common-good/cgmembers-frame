@@ -59,7 +59,8 @@ function formTx($form, &$sta, $args = '') {
 }
 
 function formTx_validate($form, &$sta) {
-  extract($info = just('who amount purpose repeat', $sta['input']));
+  $info = just('who amount purpose repeat', $sta['input']);
+  extract($info);
   if (strpos($who, '@') and !u\validEmail($email = $who)) return say('bad email', compact('email'), 'who');
   if (!$a = w\whois($who, 'who', $info, 'no self-trading', op($sta) == 'pay')) return FALSE;
   $uid = $a->id;
@@ -70,26 +71,31 @@ function formTx_validate($form, &$sta) {
 function formTx_submit($form, &$sta) {
   global $mya;
   $myid = $mya->id;
-  extract($info = just('who amount purpose repeat uid', $sta['input']));
+  extract($info = just('who amount purpose repeat uid goods', $sta['input']));
 //  if (strpos($who, '@')) return w\go('/charge/nonmember/' . u\urlify(serialize($info)));
 
-  $func = op($sta) == 'pay' ? 'pay' : 'invoice';
+  u\setDft($goods, FOR_GOODS);
   $DBTX = \db_transaction();
-    list ($msg, $args) = $mya->$func(r\acct($uid), $amount, $purpose, @$repeat ? ['recurs' => 1] : []);
-    $ok = @$args['success'];
-    if ($func == 'pay' and $mya->snap) r\tellAdmin(t('SNAP member %who %did something', 'who did', $mya->fullName, $ok ? t('bought') : t('tried to buy')), ['topic' => t('SNAP purchase') . ($ok ? '' : t(' failed'))]);
+  $func = op($sta);
+  if ($func == 'pay') {
+    list ($msg, $args) = be\transfer('payment', $mya, r\acct($uid), $amount, $purpose, $goods, @$repeat ? ['recurs' => 1] : []);
+  } else {
+    list ($msg, $args) = be\invoice($mya, r\acct($uid), $amount, $purpose, $goods, @$repeat ? ['recurs' => 1] : []);
+  }
+  $ok = @$args['success'];
+  if ($func == 'pay' and $mya->snap) r\tellAdmin(t('SNAP member %who %did something', 'who did', $mya->fullName, $ok ? t('bought') : t('tried to buy')), ['topic' => t('SNAP purchase') . ($ok ? '' : t(' failed'))]);
 
-    if ($ok and $period = @$repeat) {
-      $subs = ray('payer payee ended', $mya->id, $uid, 0);
-      $created = today(); // make sure this is earlier than tx date AND as early as possible in the day
-      $info = $subs + compact(ray('amount period created'));
-      if ($id = db\get('id', 'r_recurs', $subs)) $info += compact('id');
-      db\updateOrInsert('r_recurs', $info, 'id');
-      $repeats = ray(OFTENS);
+  if ($ok and $period = @$repeat) {
+    $created = today();
+    $subs = ray('payer payee created ended', $mya->id, $uid, $created, 0);
+    $info = $subs + compact(ray('amount period'));
+    if ($id = db\get('id', 'r_recurs', 'payer=:payer AND payee=:payee AND created=:created AND ended=:ended', $subs)) $info += compact('id');
+    db\updateOrInsert('r_recurs', $info, 'id');
+    $repeats = ray(OFTENS);
 //      $often = strstr($repeats[$repeat], ' ', TRUE);
-      $often = $repeats[$repeat];
-      $msg .= '|repeats';
-    }
+    $often = $repeats[$repeat];
+    $msg .= '|repeats';
+  }
   unset($DBTX);
   
   return say($msg, $args + @compact('often'), $ok ? '' : 'amount');

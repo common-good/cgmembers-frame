@@ -5,10 +5,10 @@ SO I can spend it with my rCard.
 
 Setup:
   Given members:
-  | uid  | fullName | floor | minimum | flags               | achMin | risks   |*
-  | .ZZA | Abe One  |     0 |     100 | co,ok,refill,bankOk | 30     | hasBank |
-  | .ZZB | Bea Two  |   -50 |     100 | ok,refill           | 30     |         |
-  | .ZZC | Our Pub  |   -50 |     100 | ok,co               | 50     | hasBank |
+  | uid  | fullName | floor | minimum | flags                         | achMin | risks   |*
+  | .ZZA | Abe One  |     0 |     100 | co,ok,refill,bankOk,confirmed | 30     | hasBank |
+  | .ZZB | Bea Two  |   -50 |     100 | ok,refill,confirmed           | 30     |         |
+  | .ZZC | Our Pub  |   -50 |     100 | ok,co                         | 50     | hasBank |
   And relations:
   | main | agent | draw |*
   |.ZZA | .ZZB  | 1    |
@@ -16,7 +16,7 @@ Setup:
 Scenario: a member is barely below target
   Given balances:
   | uid  | savingsAdd | balance |*
-  | .ZZA |          0 | 99.99   |
+  | .ZZA |          0 |   99.99 |
   When cron runs "getFunds"
   Then usd transfers:
   | txid | payee | amount | channel  |*
@@ -45,7 +45,7 @@ Scenario: an unbanked member barely below target draws on another account
   | .ZZB | 99.99 |
   When cron runs "getFunds"
   Then transactions:
-  | xid | amount | from | to   | goods         | taking | purpose      |*
+  | xid | amount | from | to   | goods         | taking | purpose                                                     |*
   |   1 |   0.01 | .ZZA | .ZZB | %FOR_NONGOODS |      1 | automatic transfer to NEWZZB,automatic transfer from NEWZZA |
   And we notice "drew" to member ".ZZB" with subs:
   | amount | why       |*
@@ -69,14 +69,18 @@ Scenario: a member is at target
   Then bank transfer count is 0
   
 Scenario: a member is well below target
-  Given balances:
-  | uid  | savingsAdd | balance | minimum |*
-  | .ZZA |          0 |      50 |     151 |
+  Given members:
+  | uid  | fullName | floor | minimum | flags                         | achMin | risks   |*
+  | .ZZF | Fox 6    |     0 |     151 | co,ok,refill,bankOk,confirmed | 30     | hasBank |
+  And balances:
+  | uid  | balance | minimum |*
+  | .ZZA |     150 |     100 |
+  | .ZZF |      50 |     151 |
   When cron runs "getFunds"
   Then usd transfers:
   | txid | payee | amount              | channel  |*
-  |    1 | .ZZA  | %(100 + %R_ACHMIN) | %TX_CRON |
-  And we notice "banked|bank tx number" to member ".ZZA" with subs:
+  |    1 | .ZZF  | %(100 + %R_ACHMIN) | %TX_CRON |
+  And we notice "banked|bank tx number" to member ".ZZF" with subs:
   | action    | amount              | checkNum | why       |*
   | draw from | $%(100 + %R_ACHMIN) |        1 | to bring your balance up to the target you set |
 
@@ -103,30 +107,36 @@ Scenario: a member is under target and has requested insufficient funds from the
   | .ZZD |          0 |      20 |
   When cron runs "getFunds"
   Then usd transfers:
-  | payee | amount | deposit |*
-  | .ZZD  |    280 |       0 |
+  | payee | amount | deposit | completed |*
+  | .ZZD  |    280 |       0 |         0 |
   Given balances:
   | uid  | savingsAdd | balance |*
   | .ZZD |          0 |   19.99 |
   When cron runs "getFunds"
   Then usd transfers:
-  | payee | amount |*
+  | payee | amount          |*
   | .ZZD  | %(280+R_ACHMIN) |
 
-Scenario: a member member with zero target has balance below target
-  Given balances:
-  | uid  | minimum | balance |*
-  | .ZZA |       0 | -10     |
+Scenario: a member with zero target has balance below target
+  Given members:
+  | uid  | minimum | achMin | flags            | risks   |*
+  | .ZZD |       0 |     30 | ok,refill,bankOk | hasBank |
+  And balances:
+  | uid  | balance | minimum |*
+  | .ZZD |     -10 |       0 |
   When cron runs "getFunds"
   Then usd transfers:
   | payee | amount |*
-  | .ZZA  |     30 |
+  | .ZZD  |     30 |
   
 Scenario: an unbanked member with zero target has balance below target
-  Given balances:
+  Given members:
+  | uid  | minimum | achMin | flags | risks |*
+  | .ZZD |       0 |     30 |       |       |
+  And balances:
   | uid  | minimum | balance |*
-  | .ZZA |       0 |   0 |
-  | .ZZB |       0 | -10 |
+  | .ZZA |     100 |     110 |
+  | .ZZD |       0 |    -110 |
   When cron runs "getFunds"
   Then bank transfer count is 0
 
@@ -187,4 +197,3 @@ Scenario: a member's bank account gets verified
 	And members have:
   | uid  | balance | flags            |*
   | .ZZA |       0 | ok,refill,bankOk |
-	

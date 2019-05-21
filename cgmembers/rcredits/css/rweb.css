@@ -263,7 +263,7 @@ fieldset#edit-accounts label {padding-right:8px;}
   -webkit-animation: puff .5s linear; /* Chrome, Safari, Opera */
   animation: puff .5s linear;  
 }
-.page-sadmin #messages {margin:0;}
+.page-sadmin #messages {margin:50px 0 0 0;}
 #messages .messages {display:inline-block; max-width:800px; text-align:left; margin:28px auto 10px 0; background-position:8px; background-repeat:no-repeat; border:1px solid; padding:10px 10px 10px 40px;
   border-radius:8px; -moz-border-
   :8px; -webkit-border-radius:8px;
@@ -889,28 +889,40 @@ div.password-confirm .error {font-weight:bold; color:red;}
 #txlist {border:1px solid silver; padding:10px; width:100%; max-width:1024px; margin:10px auto; font-size:85%;}
 #txlist-title {width:100%; margin-top:0px;}
 #txlist div.row {margin-left:0; margin-right:0;}
-#txlist .row >div {border-top:1px solid #d9d9d9; margin:0 auto;}
-#txlist .row>div>div {padding-top:10px; padding-bottom:8px; min-height:35px;}
+#txlist .row >div {margin:0 auto;}
+/* #txlist .row >div {border-top:1px solid #d9d9d9; margin:0 auto;} */
+#txlist .row>div>div {padding-top:5px; padding-bottom:4px; min-height:2ex;}
+/* #txlist div.row {margin-left:0; margin-right:0;} */
+/* #txlist .txRow {border:0; margin:0 auto; padding-top:5px; padding-bottom:5px;} */
+/* #txlist .txRow {border-top:1px solid #d9d9d9; margin:0 auto; padding-top:5px; padding-bottom:5px;} */
+/* #txlist .txEntry {padding-top:1px; padding-bottom:1px; min-height:12px;} */
 
 #txlist .tid-date, 
 #txlist .name-purpose, 
-#txlist .amount-reward {padding:0;}
+#txlist .amount-reward {padding: 0;}
+/* #txlist .amount-reward {border-top: 1px solid #d9d9d9; border-left:0; border-right: 0; border-bottom: 0;} */
 #txlist .tid, #txlist .date {text-align:center;}
 #txlist .tid {font-weight:bold;}
-#txlist .amount, #txlist .reward {text-align:right;}
-
-#txlist .row .buttons {padding:0 0 0 5px; border:0; min-width:30px; max-width:50px;}
+#txlist .amount, #txlist .reward, #txlist .runBalance {text-align:right;}
+    
+#txlist .row .buttons {padding:5px 0 4px 0; border:0; min-width:30px; max-width:50px;}
 #txlist .row .buttons div {max-width:50%;}
 #txlist .buttons a.btn-xs {font-size:9px; margin:0;}
 #txlist .buttons div {padding:0;}
 #txlist .row div .reward {font-size:85%;}
+
+#txlist .sepRow {display:inline-block; width: 100%; height: 1px;}
+#txlist .separator {border-top: 1px solid #d9d9d9; height: 1px; width: 91.6667%; padding:0; margin:0;}
+#txlist .sepBlank {width:8.3333%; border:0; height:1px; padding:0;margin:0;}
 
 #txlist .txRow {display:none;}
 #txlist .txRow.head,
 #txlist .txRow.page-0 {display:block;}
 
 #txlist .row.head >div {border-bottom:0;}
+/* #txlist .row.head >div {border-bottom:0; padding-bottom:0; padding-top:5px; padding-bottom:5px;} */
 #txlist .row.head>div>div {background:#757575; color:white; font-weight:bold; border-right:1px solid white;}
+/* #txlist .row.head>div>div {background:#757575; color:white; font-weight:bold; border-right:1px solid white; padding-bottom: 5px; padding-top: 5px;} */
 #txlist .row.head .buttons {color:white; background-color:white; border:0;}
 #txlist .row.head .reward {font-size:100%;}
 #txlist tr:hover {background-color:#aaffaa;}
@@ -919,6 +931,9 @@ div.password-confirm .error {font-weight:bold; color:red;}
 #txs-links.row >div {border:0; padding:0;}
 #txs-links span {padding-right:3px;}
 #txs-links .nav, #txs-links .nav span {padding:0; text-align:right;}
+
+fieldset#dateRange #simple {}
+fieldset#dateRange #advanced {display:none;}
 
 /* Transaction Summary Table */
 #txsum {padding-bottom:10px;}

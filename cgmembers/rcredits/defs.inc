@@ -91,7 +91,9 @@ define('DEV_PW2', 'devPassword#two!'); // second password on DEV machine (len mu
 define('DEV_VKEYPW', 'wt38BqWMslj3uUHUOto7fNi5ExL9CC7S7ffjn_q6zCY'); // password for very secure key, on DEV machine
 define('DEV_ADMIN_PASS', '123'); // admin password when isDEV
 define('DEFAULT_PROXIES', '2, 3'); // account record IDs for place-holder proxies
-define('TRACK_DELETED', 'r_invoices r_photos r_relations r_txs r_usd users'); // remember rows in these tables if we delete them
+define('TRACK_DELETED', 'r_invoices r_photos r_relations r_usd users'); // remember rows in these tables if we delete them
+define('DELETED_BY_VIEW', 'tx_hdrs tx_entries tx_disputes'); // these tables are actually views on the _all version of
+                                                             // themselves, and deletion is just by setting "deleted"
 define('DEV_ONLY_MSG', 'only on development machine');
 
 $host = strtolower(@$_SERVER['HTTP_HOST']);
@@ -109,13 +111,13 @@ define('NOT_PRODUCTION', !isPRODUCTION); // safer to use than !isPRODUCTION (in 
 
 // time periods are defined here because this script uses them
 define('MIN_SECS', 60);
-define('HOUR_SECS', 60 * MIN_SECS);
-define('DAY_SECS', 24 * HOUR_SECS);
-define('WEEK_SECS', 7 * DAY_SECS);
-define('WEEK7_SECS', 52 * DAY_SECS);
-define('MONTH_SECS', 30.4368 * DAY_SECS);
-define('QUARTER_SECS', round(3 * MONTH_SECS));
-define('YEAR_SECS', round(12 * MONTH_SECS));
+define('HOUR_SECS', 60 * MIN_SECS);  // 3600
+define('DAY_SECS', 24 * HOUR_SECS);  // 86,400
+define('WEEK_SECS', 7 * DAY_SECS);   // 604,800
+define('WEEK7_SECS', 52 * DAY_SECS); // 4,492,900
+define('MONTH_SECS', 30.4368 * DAY_SECS);  // 18,408,176.64
+define('QUARTER_SECS', round(3 * MONTH_SECS));  // 55,224,530
+define('YEAR_SECS', round(12 * MONTH_SECS));    // 220,898,120
 define('FLOOR_DAYS', 183); // how many days to consider for credit line calculation
 
 define('REGION_DOMAIN', R_SERVER_ID . '.' . CG_DOMAIN);
@@ -149,7 +151,7 @@ define('GAME_COMPANIES', '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty
 define('R_REGION_FLDS', 'region,fullName,st,zip,federalId,hasServer');
 define('R_DATE_FLDS', 'created completed deposit sent invited giftDate signed login access yesterday'); // date field names for testing
 define('CO_FLDS', 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd'); // account fields stored in r_company
-define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone achMin pinThreshold lastTx lastiCode tenure moves mediaConx source getAppData appData snap'); // fields stored in the account's "data" array field (serialized)
+define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone achMin pinThreshold lastiCode tenure moves mediaConx source getAppData appData snap'); // fields stored in the account's "data" array field (serialized)
 define('MASTER_NUMERIC_FLDS', 'minimum achMin savingsAdd saveWeekly');
 define('MASTER_FLDS', MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank refill'); // only in master, for joint accounts
 define('R_MONEY_FLDS', 'balance rewards floor giftPot committed'); // financial amount fields in account record
@@ -157,7 +159,7 @@ define('JOINT_FLDS', R_MONEY_FLDS . ' savings'); // add these together for joint
 define('PSECURE_FLDS', 'phone email'); // personal fields that get encrypted in a searchable way (P)
 define('VSECURE_FLDS', 'federalId dob bankAccount'); // very secure fields (pgp-encrypted)
 define('SECURE_FLDS', 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode cardCode cardCode2 pin question answer idProof oneTimePass last4bank'); // non-personal encrypted fields (must be complete list)
-define('R_HIDE_CHANGES', R_MONEY_FLDS . ' pw2 vKeyPw ssnData hasBank changes init login access activated data secure vsecure stepsDone lastTx lastiCode pass oneTimePass notes picture photo trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd'); // do not record changes to these fields: anything often-changed (automatically or not)
+define('R_HIDE_CHANGES', R_MONEY_FLDS . ' pw2 vKeyPw ssnData hasBank changes init login access activated data secure vsecure stepsDone lastiCode pass oneTimePass notes picture photo trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd'); // do not record changes to these fields: anything often-changed (automatically or not)
 define('R_APP_DATA_GETS', '!log !device !members !txs '); // data requests from the rPOS app
 //  define('R_AVAIL_BUY', '(balance-IF(u.:IS_DEBT, floor, GREATEST(floor, 0)))'); // balance available to spend
 define('R_SHARE_MAX', 50); // minimum sharing percentage
@@ -179,9 +181,21 @@ define('BY_CHECK', '(check)'); // app includes this in description, for a purcha
 define('BY_CARD', '(card)'); // app includes this in description, for a purchase of CG credit by credit card
 define('R_ON_FILE', t('(on file)'));
 define('DEPOSIT_SQL', '(amount>0 XOR txid<0)'); // SQL fragment for "transfer is from bank to CG"
+
 define('DOLLAR_POOL', 1); // uid of dollar pool account
-define('CANONIC_ACCTS', 3); // number of canonic accounts (admin/dollar pool, placeholders,...)
+define('CANONIC_ACCTS', 512); // number of canonic accounts (admin/dollar pool, placeholders,...)
 define('AGGREGATE_MIN', 1); // minimum number of members to show aggregate data
+
+define('CG_ADMIN_UID', 1);  // uid of administrator account
+define('PLACEHOLDER_1_UID', 2);  // uid of first placeholder
+define('PLACEHOLDER_2_UID', 3);  // uid of second placeholder
+define('CG_ROUNDUPS_UID', 129);  // Donations start at 128 (128 used for general donations)
+define('CG_CRUMBS_UID', 130);  //
+define('CG_SERVICE_CHARGES_UID', 192);
+define('MINIMUM_BANK_UID', 256);
+define('CG_INCOMING_BANK_UID', 256);  // Bank accounts start at 256
+define('CG_OUTGOING_BANK_UID', 257);  //
+define('MAXIMUM_BANK_UID', 511);
 
 define('R_TEMP_NAME_PREFIX', 'unknown ');
 define('CO_PHOTO_FACTOR', 3); // make company photos this many times as big as individual photos
@@ -239,11 +253,11 @@ define('N_CHANGED', 8); // transaction/invoice edited, canceled, or disputed
 define('N_NUDGE', 9); // your invitee needs a nudge
 define('N_SUGGESTION', 10); // suggestion from the system
 
-define('R_WHYS', t('goods and services,exchange of US Dollars or other currency,loan/reimbursement/etc.,') . R_SHARING_MSG); // transaction purposes
+define('R_WHYS', t('goods and services,exchange of US Dollars or other currency,loan/reimbursement/etc.')); // . R_SHARING_MSG); // transaction purposes
 define('FOR_GOODS', 0); // index into R_WHYS for goods
 define('FOR_USD', 1); // index into R_WHYS for USD exchange
 define('FOR_NONGOODS', 2); // index into R_WHYS for loan, etc.
-define('FOR_SHARE', 3); // "sharing" gift to CGF (comes out of rewards)
+//define('FOR_SHARE', 3); // "sharing" gift to CGF (comes out of rewards)
 //define('FOR_INVESTMENT', 4); // only in invoices (use B_INVESTMENT in txs)
 //define('FOR_STAKE', 5); // only in invoices (use B_STAKE in txs)
 
@@ -278,6 +292,7 @@ define('R_CODE_LEN', 20); // length of most random identifiers
 define('R_DUPTX_MINS', 4); // number of minutes before a duplicate transaction is allowed
 define('HAS_XFEE', "data LIKE '%s:4:\"xfee\";%'"); // sql to recognize a transaction that has an exchange fee
 define('R_DEPOSIT_RETURN_FEE', 20); // what we charge members for a second bounced transfer
+define('HAS_REVERSER', "(EXISTS (SELECT tRev FROM tx_hdrs WHERE tRev.reverses=t.xid))");
 
 define('R_USPS_WEB_TOOLS_ID', '921COMMO5331'); // USPS API credentials
 
@@ -460,14 +475,14 @@ define('FLOW_BOTH', 3);
 
 // Transaction flags (for flags field in transaction records)
 define('B_TAKING', 0); // payee initiated the transaction
-define('B_DISPUTED', 1); // non-originator disputes the transaction
+define('B_DISPUTED', 1); // non-originator disputes the transaction -- signaled by existence of tx_disputes (NOT LEGAL FOR TRANSACTIONS, BUT STILL USED BY INVOICES
 define('B_OFFLINE', 2); // transaction was taken offline (or was forced?)
 define('B_SHORT', 3); // transaction was taken (offline) despite credit shortfall
-define('B_UNDONE', 4); // undone by another transaction
-define('B_UNDOES', 5); // undoes another transaction
+define('OLD_B_UNDONE', 4); // undone by another transaction -- signaled by existence of reversing transaction
+define('OLD_B_UNDOES', 5); // undoes another transaction -- signaled by reversesXid not null
 define('B_CRUMBS', 6); // monthly donation of percentage of receipts
-define('B_ROUNDUPS', 7); // monthly donation of rounded up cents
-// B_ROUNDUP is 8 (defined above) // payer donated the change to the community fund
+define('OLD_B_ROUNDUPS', 7); // monthly donation of rounded up cents -- no longer occurs
+// B_ROUNDUP is 8 (defined above) // payer donated the change to the community fund -- not used here, 
 define('B_RECURS', 9); // recurring transaction
 define('B_GIFT', 10); // grant or gift (of any type)
 define('B_LOAN', 11); // community loan (UNUSED?)
@@ -477,7 +492,7 @@ define('B_FINE', 14); // community fine (UNUSED?)
 define('B_NOASK', 15); // transaction was taken with ID checking OFF
 define('B_FUNDING', 16); // invoice has already instigated an appropriate bank transfer request
 define('B_FOOD', 17); // contribution to food fund
-define('TX_FLAGS', 'taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding food');
+define('TX_FLAGS', 'offline short crumbs recurs gift loan investment stake fine noask funding food');
 
 // Invoice status (txid >= TX_PAID if paid)
 define('TX_DENIED', -2); // invoice rejected by the non-originator
@@ -510,8 +525,19 @@ define('NORMAL_TX_ROWS', 30); // normal number of transaction lines to show
 define('TX_MAX_ROWS', 500); // (unused) maximum number of transactions to load at once
 define('TX_MAX_MOS', 18); // maximum transaction months, for display
 define('TX_MAX_DAYS', 30.5 * TX_MAX_MOS + 2); // maximum days in a transaction query (18 months) -- 2 for leap day & daylight
-define('TX_DOWNLOAD_MONEY_FLDS', 'frombank fromyou toyou reward net');
+define('TX_DOWNLOAD_MONEY_FLDS', 'frombank fromyou toyou net');
 define('TX_DATA_FLDS', 'undoneBy undoes force changes'); // serialized pseudo-fields in the data field of a transaction record
+
+define('DS_OPEN', 1);  // dispute not resolved
+define('DS_ACCEPTED', 2);  // dispute accepted and transaction reversed
+define('DS_DENIED', 3);  // dispute denied
+
+
+define('ENTRY_OTHER', 0);
+define('ENTRY_PAYER', 1);  // the uid in this entry is for the payer
+define('ENTRY_PAYEE', 2);  // the uid in this entry is for the payee
+define('ENTRY_DONATION', 3);  // this is a transaction-related donation (e.g., roundup donations)
+                              // the precise nature can be determined from the uid
 
 $GLOBALS['emailSubjects'] = array(
 /*  'new-payment' => t('%PROJECT PAYMENT from {otherName}'),

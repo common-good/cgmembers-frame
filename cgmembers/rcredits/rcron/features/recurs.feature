@@ -5,9 +5,9 @@ SO I can save on memory and labor.
 
 Setup:
   Given members:
-  | uid  | fullName | address | city  | state | zip   | country | postalAddr | flags               | risks   |*
-  | .ZZA | Abe One  | 1 A St. | Atown | AK    | 01000 | US      | 1 A, A, AK | ok,confirmed,bankOk | hasBank |
-  | .ZZC | Cor Pub  | 3 C St. | Ctown | CT    | 03000 | US      | 3 C, C, CT | ok,co,confirmed     |         |
+  | uid  | fullName | address | city  | state | zip   | country | postalAddr | flags               | risks   | floor |*
+  | .ZZA | Abe One  | 1 A St. | Atown | AK    | 01000 | US      | 1 A, A, AK | ok,confirmed,bankOk | hasBank |   -20 |
+  | .ZZC | Cor Pub  | 3 C St. | Ctown | CT    | 03000 | US      | 3 C, C, CT | ok,co,confirmed     |         |     0 |
   And balances:
   | uid  | balance | floor |*
   | cgf  |       0 |     0 |
@@ -35,4 +35,4 @@ Scenario: A recurring donation happened long enough ago to repeat
   And count "invoices" is 0
   And transactions:
   | xid | created | amount | from | to   | purpose         | flags  |*
-  |   2 | %today  |     10 | .ZZA | .ZZC | monthly payment | recurs |  
+  |   2 | %today  |     10 | .ZZA | .ZZC | monthly payment | recurs |

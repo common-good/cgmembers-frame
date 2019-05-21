@@ -114,8 +114,8 @@ function formBuy_submit($form, &$sta) {
   
   // check for op not 'submit' here, to set confirm=TRUE and send an invoice?
   list ($index, $subs) = $confirm 
-  ? $co->invoice($a, $amount, $item, @compact(ray('api request'))) 
-  : $a->pay($co, $amount, $item);
+    ? be\invoice($co, $a, $amount, $item, @compact(ray('api request'))) 
+    : be\transfer('payment', $a, $co, $amount, $item);
   $ok = @$subs['success'];
   $msg = tr($index, $subs);
   

@@ -1,0 +1,113 @@
+<?php
+namespace CG;
+use CG as r;
+use CG\DB as db;
+use CG\Backend as be;
+use CG\Util as u;
+
+/**
+ * @file
+ * rCredits Transaction class (and extension MyTX, which looks at the transaction from one party's view)
+ *
+ * Note that a transaction has at least two entries, which this class also contains
+ */
+
+/* define('TX_FLDS', 'serial type amount goods payer payee payerAgent payeeAgent for flags created'); */
+
+class TxEntry {
+  const REQUIRED_FIELDS = ['amount', 'uid', 'agentUid'];
+  const INSERT_FIELDS = ['entryType', 'amount', 'uid', 'agentUid', 'description', 'acctTid', 'relType', 'relatedId'];
+  const ENTRY_FIELDS = ['id', 'xid', 'entryType', 'amount', 'uid', 'agentUid', 'description', 'acctTid', 'relType', 'relatedId'];
+  const ALLOWED_FIELDS = TxEntry::ENTRY_FIELDS;
+
+  public $id;
+  public $xid;
+  public $entryType;
+  public $amount;
+  public $uid;
+  public $agentUid;
+  public $description;
+  public $acctTid;
+  public $relType;
+  public $relatedId;
+  private $agentId;
+  
+  /**
+   * Instantiate (construct) a transaction entry record.
+   * @param assoc $info: array of field values for new transaction, must include REQUIRED_FIELD entries,
+   *                     but must only include ALLOWED_FIELD entries.
+   */
+  function __construct($info) {
+    u\EXPECT(array_diff(TxEntry::REQUIRED_FIELDS, array_keys($info)) == [], 'missing fields in Entry:' . print_r(array_diff_key(TxEntry::REQUIRED_FIELDS, $info), true) . 'passed: ' . print_r($info, true));
+    u\EXPECT(array_diff(array_keys($info), TxEntry::ALLOWED_FIELDS) == [], 'extra fields in Entry:' . print_r(array_diff(array_keys($info), TxEntry::ALLOWED_FIELDS), true));
+    $this->id = u\arrayGet($info, 'id', null);
+    $this->xid = u\arrayGet($info, 'xid', null);
+    $this->entryType = u\arrayGet($info, 'entryType', 0);
+    $this->amount = u\arrayGet($info, 'amount', null);
+    $this->uid = u\arrayGet($info, 'uid', null);
+    $this->agentUid = u\arrayGet($info, 'agentUid', null);
+    $this->description = u\arrayGet($info, 'description', null);
+    $this->acctTid = u\arrayGet($info, 'acctTid', null);
+    $this->relType = u\arrayGet($info, 'relType', null);
+    $this->relatedId = u\arrayGet($info, 'relatedId', null);
+  }
+
+  /**
+   * Return the value of the specified field that is not a simple property of the class.
+   * @param string $field: name of field value to get
+   * @return the value if it exists, else NULL
+   */
+  public function __get($f) {
+    $e = $this;
+    switch ($f) {
+    default:
+      u\EXPECT(FALSE, "unexpected field $f requested");
+    }
+  }
+
+  public function __set($name, $value) {
+    u\EXPECT(FALSE, "Cannot set $name");
+  }
+  
+  /**
+   * Read a transaction entry record given its id.
+   * @param integer $id: the id of the transaction entry record.
+   * @return the new TxEntry object.
+   */
+  static function read($id) {
+    $info = db\get('*', 'tx_entries', ['id' => $id]);
+    if (!$info) { return FALSE; }
+    return new TxEntry($info);
+  }
+
+  /**
+   * Read all of the transaction entry records associated with a particular transaction.
+   * This should only be called in the context of a database transaction.
+   * @param integer $xid: the transaction id of the transaction the entries belon to.
+   * @return an array containing the new instances of Entry (FALSE on failure)
+   */
+  static function readAll($xid) {
+    $entries = [];
+    $rows = db\rows('*', 'tx_entries', 'xid=:xid', ['xid' => $xid]);
+    if (!$rows) { return FALSE; }
+    foreach ($rows as $rowO) {
+      $row = (array)$rowO;
+      if (array_key_exists('deleted', $row)) unset($row['deleted']);
+      $entries[] = new TxEntry($row);
+    }
+    return $entries;
+  }
+
+  /**
+   * Save this transaction entry in the database
+   * This should only be called in the context of a database transaction.
+   * @param integer $xid: the xid of the transaction this entry belongs to
+   * @return the id of the entry (FALSE on failure)
+   */
+  function insert($xid) {
+    $e = $this;
+    $id = db\insert('tx_entries', just(TxEntry::INSERT_FIELDS, (array)$e) + ['xid'=>$xid], 'id');
+    return $id;
+  }
+}
+?>

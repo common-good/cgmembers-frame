@@ -1,0 +1,45 @@
+<?php
+namespace CG\Web;
+use CG\Web as w;
+use CG as r;
+use CG\DB as db;
+use CG\Backend as be;
+use CG\Util as u;
+
+/* require_once __DIR__ . '/txentry.class'; */
+
+/**
+ * @file
+ * Class to generate transaction history reports; extends 
+ *
+ */
+
+interface TxProcessor {
+  /**
+   * Called before the first transaction.
+   */
+  public function hdr();
+
+  /**
+   * Called before each transaction.
+   * @param assoc $info: all of the data for this entry (includes transaction data)
+   */
+  public function txnHdr($info);
+
+  /**
+   * Called for each entry of a transaction.
+   * @param assoc $info: all of the data for this entry (includes transaction data)
+   */
+  public function processEntry($info);
+
+  /**
+   * Called after each transaction.
+   * @param assoc $info: all of the data for this entry (includes transaction data)
+   */
+  public function txnFtr($info);
+
+  /**
+   * Called after the last transaction.
+   */
+  public function ftr();
+}

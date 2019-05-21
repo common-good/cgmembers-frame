@@ -7,7 +7,7 @@ namespace :deploy do
   task :phinx_migrations do
     on roles(:app) do
       within release_path do
-        execute 'php', 'vendor/bin/phinx', 'migrate', '-c', 'config/phinx.json', raise_on_non_zero_exit: false
+        execute 'vendor/bin/phinx', 'migrate', '-c', 'config/phinx.json', raise_on_non_zero_exit: false
       end
     end
   end

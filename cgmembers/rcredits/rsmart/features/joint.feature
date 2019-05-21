@@ -6,8 +6,8 @@ SO I can make purchases as a financial unit with my account partner.
 Setup:
   Given members:
   | uid  | fullName   | email | cc  | cc2  | floor | flags                | jid  |*
-  | .ZZA | Abe One    | a@    | ccA | ccA2 |  -200 | ok,confirmed,debt    | .ZZB |
-  | .ZZB | Bea Two    | b@    | ccB | ccB2 |  -200 | ok,confirmed,debt    | .ZZA |
+  | .ZZA | Abe One    | a@    | ccA | ccA2 |  -250 | ok,confirmed,debt    | .ZZB |
+  | .ZZB | Bea Two    | b@    | ccB | ccB2 |  -250 | ok,confirmed,debt    | .ZZA |
   | .ZZC | Corner Pub | c@    | ccC |      |  -200 | ok,confirmed,co,debt |    0 |
   | .ZZD | Dee Four   | d@    | ccD | ccD2 |     0 | ok,confirmed         |    0 |
   | .ZZE | Eve Five   | e@    | ccE | ccE2 |     0 | ok,confirmed,secret  |    0 |
@@ -42,7 +42,7 @@ Setup:
   
 Scenario: A cashier asks to charge someone
   When agent "C:E" asks device "devC" to charge ".ZZB,ccB" $400 for "goods": "food" at %now
-  Then we respond ok txid 5 created %now balance -400 rewards 440 saying:
+  Then we respond ok txid 5 created %now balance -400 saying:
   | did     | otherName | amount | why   |*
   | charged | Bea Two   | $400   | goods |
   And with did
@@ -57,7 +57,7 @@ Scenario: A cashier asks to charge someone
   And balances:
   | uid  | balance |*
   | ctty |    -200 |
-  | .ZZA |       0 |
+  | .ZZA |    -400 |
   | .ZZB |    -400 |
   | .ZZC |     400 |
   | .ZZF |     200 |

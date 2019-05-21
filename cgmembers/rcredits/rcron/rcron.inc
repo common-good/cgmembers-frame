@@ -27,7 +27,6 @@ TODO:
 
 DAILY (every 5 mins for 5 mins, starting at 2am)
 - * usdTxsThere() rollback lost USD transactions, mark completed deposits/withdrawals
-- ** recache() check / recalc cached r, rewards, and usd
 - checkAccts() check for consistency, security, scams
 - ** stats(): calculate daily statistics and record in r_stats and in the stats field of user records
 - ** paySuppliers(): automatic payment exchanges to suppliers
@@ -69,7 +68,7 @@ NOTES:
   where <star> means * (not the same as for the production site) 
  */
 
-define('R_DAILY_TASKS', 'START recache checkAccts requests setNear acctStats cttyStats trust acctRisk acctRiskFinish txRisk achRisk tickle lessOften recurs invoices getFunds invest notices END'); // had homogenize, pool 
+define('R_DAILY_TASKS', 'START checkAccts requests setNear acctStats cttyStats trust acctRisk acctRiskFinish txRisk achRisk tickle lessOften recurs invoices getFunds invest notices END'); // had homogenize, pool 
 //define ('R_DAILY_TASKS', 'START redistribute END');
 include_once __DIR__ . '/rcron-subs.inc';
 
@@ -213,7 +212,7 @@ X;
 //  db\del('users', 'uid', $where); // abandoned new joint acct (must postcede setting jids)
 
   // Notice which bank accounts have been verified
-	$where = 'amount=0 AND deposit<>0 AND deposit<:NOW-:DAY_SECS';
+	$where = 'amount=0 AND deposit<>0 AND deposit<UNIX_TIMESTAMP()-:DAY_SECS';
 	$q = db\q("SELECT payee FROM r_usd WHERE $where");
 	$DBTX = db_transaction();
 	while ($row = $q->fetchAssoc()) r\acct($row['payee'])->setBit(B_BANKOK);
@@ -261,9 +260,9 @@ X;
     SELECT uid, GREATEST(inVol, outVol) AS monthly, $sinceActivated/30 AS months
     FROM (
       SELECT uid, u.flags, activated,
-      SUM(IF(payee=uid, amount, 0))/6 AS inVol,
-      SUM(IF(payer=uid, amount, 0))/6 AS outVol
-      FROM users u LEFT JOIN r_txs t ON uid IN (payer, payee) 
+      SUM(IF(amount > 0, amount, 0))/6 AS inVol,
+      SUM(IF(amount < 0, -amount, 0))/6 AS outVol
+      FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid)
       WHERE t.created>=$start AND $sinceActivated % 30 = 0 GROUP BY uid
     ) t 
     WHERE $sinceActivated>0 AND uid > 1 AND :IS_OK
@@ -272,11 +271,14 @@ X;
   
   queueEach('activeWeekly', "SELECT uid, $sinceActivated/7 AS weeks FROM users");
 	
-	$when = ':NOW+:WEEK_SECS';
+	$when = 'UNIX_TIMESTAMP()+:WEEK_SECS';
 	$sql = <<< X
 	  SELECT u.uid,r.amount,$when AS `when`,r.created,r.period,
 		  (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced,
-  	  (SELECT MAX(t.created) FROM r_txs t WHERE t.payer=r.payer AND t.payee=r.payee AND t.:IS_RECURS AND NOT t.:IS_UNDONE AND NOT t.:IS_UNDOES) AS lastTx
+      (SELECT MAX(t.created) FROM tx_entries payer JOIN tx_hdrs t USING(xid) JOIN tx_entries payee USING(xid)
+             LEFT JOIN tx_hdrs tRev ON tRev.reversesXid=t.xid
+       WHERE payer.uid=r.payer AND payee.uid=r.payee AND t.:IS_RECURS AND
+             tRev.xid IS NULL AND t.reversesXid IS NULL) AS lastTx
 		FROM users u LEFT JOIN r_recurs r ON r.payer=u.uid AND r.payee=:CGID AND r.ended=0
 		WHERE u.:IS_OK AND (r.period='Y' OR (r.id IS NULL AND FLOOR(($when-u.activated) / :DAY_SECS) MOD 365 = 0))
 X;
@@ -364,14 +366,14 @@ function activeWeekly($item) {
  * This is called at the right time for members with no recurring donation OR for any member with an annual donation (whether it's time or not).
  */
 function warnAnnualGift($item) {
+  /// debug('warnAnnualGift(' . print_r($item, true) .')');
 	extract(just('uid amount when created period invoiced lastTx', $item));
-	
+  
 	$a = r\acct($uid);
-///   debug($item);
-///   debug(giveNow($period, $lastTx, $created, $when));
-///   debug(giveNow($period, $lastTx, $created, $when - DAY_SECS));
-	if (@$amount) if ($invoiced or !giveNow($period, $lastTx, $created, $when) or giveNow($period, $lastTx, $created, $when - DAY_SECS)) return; // not time yet for annual (or it was also time yesterday)
-	
+
+	if (!empty($amount)) {
+    if (!empty($invoiced) or !giveNow($period, $lastTx, $created, $when) or giveNow($period, $lastTx, $created, $when - DAY_SECS)) { return; } // not time yet for annual (or it was also time yesterday)
+  }
 	$aDonate = w\atag("/do/doDonate~$a->mainQid~$a->emailCode");
   r\notify($uid, 'annual-gift', $ray = ray('amount when aDonate', u\fmtAmt($amount), u\fmtDate($when, TRUE), $aDonate), TRUE);
 //	r\tellAdmin('annual gift warning', $ray + ray('who', $a->fullName));
@@ -429,26 +431,28 @@ function everyMonth() {
   $server = r\serverUid();
   $bene = u\test() ? CGID : db\get('uid', 'users', "name='bene' AND uid<0");
   $start = u\monthDay1($end = u\monthDay1() - 1); // mark start and end of preceding month
-  if (u\test()) $start = strtotime('-30 days', $end = today() - 1) + 1; // test: the past 30 days
-  queueEach('whatsup', "SELECT uid, u.:IS_CO as co, MAX(t.created) AS lastTx from users u LEFT JOIN r_txs t ON uid IN (payer, payee) WHERE uid>:CANONIC_ACCTS AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $start");
-  queueEach('inflationAdjust', "SELECT uid, $start AS start, $end AS end FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS");  
+          if (u\test()) $start = strtotime('-30 days', $end = today() - 1) + 1; // test: the past 30 days
+  queueEach('whatsup', "SELECT uid, u.:IS_CO as co, MAX(t.created) AS lastTx FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid) WHERE uid>:CANONIC_ACCTS AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $start");
+  /* queueEach('inflationAdjust', "SELECT uid, $start AS start, $end AS end FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS");   */
 //  queueEach('shareCommitted', 'SELECT uid, committed, share FROM users WHERE :IS_OK AND committed>0');
-  queueEach('roundup', "SELECT payer as uid, SUM(1-MOD(amount, 1)) AS donate FROM r_txs WHERE :IS_ROUNDUP AND amount>0 AND MOD(amount, 1)>0 AND created BETWEEN $start AND $end GROUP BY payer");
   
   $sql = <<< X
-    SELECT u.uid, SUM(t.amount)*u.crumbs AS donate FROM r_txs t LEFT JOIN users u ON u.uid=t.payee 
-    WHERE t.payer>0 AND u.crumbs>0 AND t.created BETWEEN $start AND $end GROUP BY t.payee
+    SELECT u.uid, SUM(IF(payer.amount<0,0-payer.amount,0))*u.crumbs AS donate
+    FROM users u LEFT JOIN tx_entries payer USING(uid) JOIN tx_hdrs t USING(xid)
+    WHERE payer.entryType=:ENTRY_PAYER AND u.crumbs>0 AND t.created BETWEEN $start AND $end
+    GROUP BY uid
 X;
   queueEach('crumbs', $sql); // no crumbs on rewards
 
 	// figure amount to share with each official Common Good Community
   $sql = <<< X
-      SELECT $end AS `end`, u.community AS ctty, SUM(IF(t.payee=:CGID, t.amount, 0)) AS `in`,
-        SUM(IF(t.payer=:CGID AND t.created<=$end, t.amount, 0)) AS `out`,
-        (SELECT COUNT(1) FROM r_usd d LEFT JOIN users du ON du.uid=d.payee 
-         WHERE d.txid<0 AND d.amount<0 AND du.community=u.community AND d.created<=$end) AS bounces
-      FROM r_txs t LEFT JOIN users u ON u.uid=IF(t.payer=:CGID, t.payee, t.payer)
-      WHERE ((payer=:CGID AND payee<0) OR payee=:CGID) AND t.:IS_GIFT AND community NOT IN($server, $bene) GROUP BY community
+    SELECT $end AS `end`, u.community AS ctty, SUM(MAX(cg.amount, 0)) AS `in`, SUM(MIN(cg.amount, 0)) AS `out`,
+           ( SELECT COUNT(1)
+             FROM r_usd d LEFT JOIN users du ON du.uid=d.payee 
+             WHERE d.txid<0 AND d.amount<0 AND du.community=u.community AND d.created<=$end ) AS bounces
+    FROM tx_hdrs t JOIN tx_entries cg USING(xid) JOIN tx_entries other USING(xid) LEFT JOIN users u ON u.uid=other.uid
+    WHERE cg.uid=ctty AND t.:IS_GIFT AND community NOT IN($server, $bene) AND t.created <= $end
+    GROUP BY community
 X;
 // Not until cgc means signed the CG/CGC agreement (and then not retroactive) queueEach('cgc', $sql);
   
@@ -492,23 +496,14 @@ function inflationAdjust($item) {
 }
 
 /**
- * Donate rounded change to the community. Date the transaction in the preceding month (in which the roundups originate).
- * Allow this even if account is inactive (donation has already been made, from member's point of view).
- */
-function roundup($item) {
-  extract(just('uid donate', $item));
-  $a = r\acct($uid);
-  if ($donate > 0 and $a->ok) $a->payApproved(CGID, $donate, t('roundups desc'), ray('created roundups gift', u\monthDay1() - 1, TRUE, TRUE));
-}
-
-/**
  * Donate percentage of funds received to the community.
  * Allow this even if account is inactive (donation has already been made, from member's point of view).
  */
 function crumbs($item) {
+  ///  debug($item);
   extract(just('uid donate', $item));
   $a = r\acct($uid);
-  if ($donate > 0 and $a->ok) $a->payApproved(CGID, $donate, t('crumbs desc'), ray('created crumbs gift', u\monthDay1() - 1, TRUE, TRUE));
+  if ($donate > 0 and $a->ok) $a->payApproved(CG_CRUMBS_UID, $donate, t('crumbs desc'), FOR_NONGOODS, ray('created crumbs gift', u\monthDay1() - 1, TRUE, TRUE));
 }
 
 /**
@@ -520,7 +515,7 @@ function cgc($item) {
   if ($kickBack > 0) {
     list ($a, $cgfA) = [r\acct($ctty), r\cgA()];
     $desc = t('50% share of local donations through %dt', 'dt', u\fmtDate($end));
-    if ($a->ok) $cgfA->pay($a, $kickBack, $desc, ray('goods created gift', FOR_NONGOODS, u\monthDay1() - 1, TRUE));
+    if ($a->ok) be\transfer('payment', $cgfA, $a, $kickBack, $desc, FOR_NONGOODS, ray('created gift', u\monthDay1() - 1, TRUE));
   }
 }  
   
@@ -575,24 +570,6 @@ X;
 }
 
 /**
- * Recalculate and update cached financial balances for each account.
- * Also give signup bonus, if appropriate.
- */
-function recache() {
-  $fields = 'uid, minimum, floor'; // this isn't actually used
-  queueEach('recache1', "SELECT $fields FROM users WHERE :IS_OK"); // make this IS_MEMBER if early gift
-  queueNext();
-}
-
-function recache1($item) {
-  extract($item);
-//  if (u\test() and realId($uid)) return; // ignore real accounts in tests
-  $a = r\acct($uid);
-  $a->cacheOk();
-  //$a->update(compact(array_keys($item)));
-}
-
-/**
  * Check accounts for consistency, scams, whatever.
  */
 function checkAccts() {
@@ -620,7 +597,7 @@ function setNear() {
   $queries = join(' UNION ', [
     'SELECT DISTINCT inviter AS id1, invitee AS id2, 1 AS w FROM r_invites WHERE invitee',
     'SELECT DISTINCT person AS id1, proxy AS id2, 1 AS w FROM r_proxies',
-    'SELECT DISTINCT payer AS id1, payee AS id2, 1 AS w FROM r_txs WHERE payer>0 AND payee>0',
+    'SELECT DISTINCT payer.uid AS id1, payee.uid AS id2, 1 AS w FROM tx_hdrs JOIN tx_entries payer USING(xid) JOIN tx_entries payee USING(xid) WHERE payer.uid>0 AND payee.uid>0 AND payer.id < payee.id',
     'SELECT DISTINCT main AS id1, other AS id2, 1 AS w FROM r_relations',
     'SELECT DISTINCT u1.uid AS id1, u2.uid AS id2, 0.5 AS w FROM users u1 INNER JOIN users u2 ON (u2.city=u1.city OR u2.zip=u1.zip) WHERE u1.uid<>u2.uid',
   ]); // each type of relationship counts as one point
@@ -666,8 +643,9 @@ function acctStats1($item, $asof = NULL) {
   $subs = compact('uid', 'monthAgo', 'asof');
   
   $sql = <<< X
-    SELECT SUM(amount) AS giftsEver, SUM(IF(created<:monthAgo, 0, amount)) AS giftsPastMo
-    FROM r_txs WHERE payer=:uid AND payee=:CGID AND :IS_GIFT AND created<:asof
+    SELECT SUM(payee.amount) AS giftsEver, SUM(IF(created<:monthAgo, 0, payee.amount)) AS giftsPastMo
+    FROM tx_hdrs JOIN tx_entries payer USING(xid) JOIN tx_entries payee USING(xid)
+    WHERE payer.uid=:uid AND payee.uid=:CGID AND :IS_GIFT AND created<:asof
 X;
   $row1 = db\q($sql, $subs)->fetchAssoc() ?: []; // giftsEver, giftsPastMo
   $row2 = [];  
@@ -811,13 +789,20 @@ function acctRiskFinish() {
  * Include any substantial payments from the community (over $100).
  */
 function txRisk() {
-  queueEach('txRisk1', 'SELECT * FROM r_txs WHERE risk IS NULL AND ABS(amount)>0 AND (payer>0 OR ABS(amount)>:K_CTTY_THRESHOLD) ORDER BY created');
+  $sql = <<<EOF
+    SELECT DISTINCT xid FROM tx_hdrs JOIN tx_entries e USING(xid)
+    WHERE risk IS NULL AND ABS(amount)>0 AND (e.uid>0 OR ABS(amount)>:K_CTTY_THRESHOLD)
+    ORDER BY created
+EOF;
+  queueEach('txRisk1', $sql);
   queueNext();
 }
 
-function txRisk1($item) {
+function txRisk1($xid) {
   include_once __DIR__ . '/../cg-risk.inc';
-  k\txRisk1($item);
+  if (is_array($xid)) $xid = $xid['xid'];
+  u\EXPECT(!is_array($xid), "xid is array");
+  k\txRisk1($xid);
 }
 
 /**
@@ -837,21 +822,22 @@ function achRisk1($item) {
  * Handle recurring transactions that it's time to handle.
  */
 function recurs() {
-  $sql = <<< X
-    SELECT DISTINCT r.payer,r.payee,r.period,r.amount,r.created,u2.fullName AS payeeName,
-		  (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced,
-  		MAX(t.created) AS lastTxDt, MIN(t.xid) AS firstXid
-		FROM r_recurs r	
-    INNER JOIN users u1 ON u1.uid=r.payer INNER JOIN users u2 ON u2.uid=r.payee
-    LEFT JOIN (
-      SELECT t0.xid, t0.created, t0.payer, t0.payee, t0.flags
-      FROM r_txs t0 
-      ORDER BY t0.created
-    ) t ON t.payer=r.payer AND t.payee=r.payee AND t.:IS_RECURS AND NOT t.:IS_UNDONE AND NOT t.:IS_UNDOES AND t.created>=r.created-:HOUR_SECS
-		WHERE u1.:IS_OK AND u2.:IS_OK AND r.ended=0
-    GROUP BY r.id
-X;
-
+  // want period, created, amount, payerId, payeeId, payeeName, invoiced, lastTxDt, firstXid for each recur
+  $sql = <<< EOF
+    SELECT DISTINCT r.period, r.created, r.amount, r.payer AS payerId, r.payee AS payeeId,
+    uPayee.fullName AS payeeName,
+    (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced,
+    (SELECT MAX(t.created)
+     FROM tx_hdrs t JOIN tx_entries payerE USING(xid) JOIN tx_entries payeeE USING(xid)
+     WHERE payerE.uid=r.payer AND payeeE.uid=r.payee AND payerE.entryType=:ENTRY_PAYER AND payeeE.entryType=:ENTRY_PAYEE
+     AND t.:IS_RECURS) AS lastTxDt,
+    (SELECT MIN(t.xid)
+     FROM tx_hdrs t JOIN tx_entries payerE USING(xid) JOIN tx_entries payeeE USING(xid)
+     WHERE payerE.uid=r.payer AND payeeE.uid=r.payee AND payerE.entryType=:ENTRY_PAYER AND payeeE.entryType=:ENTRY_PAYEE
+     AND t.:IS_RECURS
+     AND t.reversesXid IS NULL AND NOT EXISTS(SELECT xid FROM tx_hdrs tr WHERE tr.reversesXid = t.xid)) AS firstXid
+    FROM r_recurs r INNER JOIN users uPayee ON uPayee.uid=r.payee
+EOF;
   queueEach('recurs1', $sql);
   queueNext();
 }
@@ -870,15 +856,17 @@ X;
  * If funds are insufficient, an approved invoice is created instead (which tries to get money as a next step).
  */
 function recurs1($item) {
-	extract(just('period lastTxDt created invoiced amount payer payee payeeName firstXid', $item));
+	extract(just('period lastTxDt created invoiced amount payerId payeeId payeeName firstXid', $item));
 	if (!$invoiced and giveNow($period, $lastTxDt, $created)) {
-    list ($payerFor, $data) = r\setupGift($period);
-    if ($firstXid and $res = db\get('flags, payerFor', 'r_txs', 'xid=:firstXid', compact('firstXid'))) {
+    if (!empty($firstXid) and $res = db\get('description AS payerFor, goods, flags AS oldFlags', 'tx_hdrs JOIN tx_entries payer USING(xid)', 'xid=:firstXid AND payer.uid=:payerId', compact(ray('firstXid payerId')))) {
       extract($res);
-      if (!u\getBit($flags, 'gift')) unset($data['gift']);
+      $data = (u\getBit($oldFlags, B_GIFT)) ? ['gift'=>1, 'recurs'=>1] : ['recurs'=>1];
+    } else {
+      list ($payerFor, $data) = r\setupGift($period);
     }
-    if (r\acct($payer)->payApproved($payee, $amount, $payerFor, $data)) {
-      r\notify($payer, 'recur pay', ray('amount purpose to', u\fmtAmt($amount), $payerFor, $payeeName));
+    if (!isset($goods)) $goods = FOR_NONGOODS;
+    if (r\acct($payerId)->payApproved($payeeId, $amount, $payerFor, $goods, $data)) {
+      r\notify($payerId, 'recur pay', ray('amount purpose to', u\fmtAmt($amount), $payerFor, $payeeName));
     }
   }
 }
@@ -891,9 +879,9 @@ function recurs1($item) {
  * @param int $now: is it time as of what "now" (if not now(), don't return true for first gift)
  */
 function giveNow($period, $lastGift, $start, $now = NULL) {
-	if (is_null($now) and !$lastGift) return TRUE; // never given, so now's the time
+	if (is_null($now) and empty($lastGift)) return TRUE; // never given, so now's the time
   // the isnull($now) check above is because we ask in advance about an annual gift even when the member didn't make one
-  u\setDft($now, now());
+  if (empty($now)) $now = now();
 
   if (strpos('MQY', $period) !== FALSE) {
     $m = $period == 'M' ? 1 : ($period == 'Q' ? 3 : 12);
@@ -948,14 +936,14 @@ function completeUsdTx($item) {
   extract(just('txid payee amount channel', $item));
   $realAmt = db\get('amount', 'r_usd', 'txid=:txid', compact('txid'));
   if ($amount != $realAmt) r\tellAdmin('bad completeUsdTx amount', $item + compact('realAmt'));
-  r\acct($payee)->completeUsdTx($txid, $amount, @$channel == TX_CRON);
+  be\completeUsdTx(r\acct($payee), $txid, $amount, @$channel == TX_CRON);
 }
 
 function getFunds1($item) {
   extract(just('uid jid', $item));
   $a = r\acct($uid);
-	$amount = $a->minimum - $a->balance;
-	if ($a->hasBank) $amount += db\sum('amount', 'r_invoices', 'status=:TX_APPROVED AND :IS_FUNDING AND payer IN (:uid,:jid)', $item) - $a->waitingFromBank(); // subtract out other non-invoice-related transfers
+	$amount = ($a->minimum - $a->balance) - $a->getPendingDeposits();
+	if ($a->hasBank) $amount += db\sum('amount', 'r_invoices', 'status=:TX_APPROVED AND :IS_FUNDING AND payer IN (:uid,:jid)', $item) /*- $a->waitingFromBank()*/; // subtract out other non-invoice-related transfers
 	$a->getFunds($amount, t('to target'));
 }
 
@@ -965,7 +953,7 @@ function getFunds1($item) {
 function invoices() {
   $sql = <<< X
     SELECT i.*,i.:IS_FUNDING AS funding 
-    FROM r_invoices i LEFT JOIN users u1 ON u1.uid=i.payer LEFT JOIN users u2 ON u2.uid=i.payee
+    FROM r_invoices i JOIN users u1 ON u1.uid=i.payer JOIN users u2 ON u2.uid=i.payee
     WHERE i.status IN (:TX_PENDING,:TX_APPROVED) AND u1.:IS_OK AND u2.:IS_OK
     ORDER BY i.nvid
 X;
@@ -981,12 +969,12 @@ function invoice($item) {
   
   if ($status == TX_APPROVED) {
 		if (!$a->ok) return; // don't try to pay from an inactive account (we can delay collection by temporarily deactivating)
-		if ($a->roundup) $amount = ceil($amount);
-		$amtFld = $a->roundup ? 'CEILING(amount)' : 'amount';
+		$amtFld = 'amount';
     $short = round($a->advances() + $amount - $a->avail(), 2); //	consider credit already used for advances from the bank
 
     if ($short <= 0) { // pay the invoice if we have enough funds
-      if (!$ok = be\payInvoice($nvid, $msg)) r\tellAdmin(t('invoice payment failed in cron'), compact('msg') + $item);
+      list($ok, $msg) = be\payInvoice($nvid);
+      if (!$ok) r\tellAdmin(t('invoice payment failed in cron'), compact('msg') + $item);
     } else $ok = FALSE;
 		
 		if ((!$ok or $a->balance < 0) and !$funding) {

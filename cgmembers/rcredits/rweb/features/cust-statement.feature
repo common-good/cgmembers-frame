@@ -16,22 +16,22 @@ Setup:
   | txid | payee | amount | created   | completed |*
   | 1001 |  .ZZA |   1000 | %today-3m | %today-3m |
   | 1003 |  .ZZC |   3000 | %today-3m | %today-3m |
-  Given invoices:
-  | nvid | created   | amount | from | to   | purpose  | status |*
-  |    1 | %today-3m |    240 | .ZZA | .ZZB | what G   |      2 |
-  |    2 | %today-2m |    120 | .ZZA | .ZZC | this Q   |      4 |
-  |    3 | %today-1m |     80 | .ZZA | .ZZC | this CF  |      7 |
-  |    4 | %today-5d |     90 | .ZZA | .ZZC | wrongly  | %TX_DENIED |
+  And invoices:
+  | nvid | created   | amount | from | to   | purpose  | status       |*
+  |    1 | %today-3m |    240 | .ZZA | .ZZB | what G   |  5           |
+  |    2 | %today-2m |    120 | .ZZA | .ZZC | this Q   | 17           |
+  |    3 | %today-1m |     80 | .ZZA | .ZZC | this CF  | 19           |
+  |    4 | %today-5d |     90 | .ZZA | .ZZC | wrongly  | %TX_DENIED   |
   |    5 | %today-2d |   2000 | .ZZA | .ZZC | realist  | %TX_APPROVED |
   And transactions: 
-  | xid | created   | amount | from | to   | purpose  |*
-  |   1 | %today-4m |    100 | .ZZC | .ZZA | that F   |
-  |   2 | %today-2w |     50 | .ZZA | .ZZC | cacao P  |
-  |   3 | %today-9d |    240 | .ZZA | .ZZC | what G   |
-  |   4 | %today-8d |    120 | .ZZA | .ZZC | this Q   |
-  |   5 | %today-4d |    100 | .ZZA | .ZZB | thug V   |
-  |   6 | %today-3d |     80 | .ZZA | .ZZC | this CF  |
-  |   7 | %today-1d |    100 | .ZZC | .ZZA | pool CJ  |
+  | xid | created   | amount | from | to   | purpose  | payerTid | payeeTid |*
+  |  14 | %today-4m |    100 | .ZZC | .ZZA | that F   |       23 |       13 |
+  |  15 | %today-2w |     50 | .ZZA | .ZZC | cacao P  |       24 |       14 |
+  |  16 | %today-9d |    240 | .ZZA | .ZZC | what G   |       25 |       15 |
+  |  17 | %today-8d |    120 | .ZZA | .ZZC | this Q   |       26 |       16 |
+  |  18 | %today-4d |    100 | .ZZA | .ZZB | thug V   |       27 |       17 |
+  |  19 | %today-3d |     80 | .ZZA | .ZZC | this CF  |       28 |       18 |
+  |  20 | %today-1d |    100 | .ZZC | .ZZA | pool CJ  |       29 |       19 |
 
 Scenario: A company looks at a customer statement
   When agent "C:B" views "customer" statement for member ".ZZA"
@@ -41,18 +41,16 @@ Scenario: A company looks at a customer statement
   || 1 A St. |
   || STATEMENT |
   And with:
-  | Date    |        | Description     | Invoice | Paid | Balance  |
-  |         |        | Opening balance |         |      |     0.00 |
-  | %mdY-4m |  tx #1 | that F          |         | -100 |   100.00 |
-  | %mdY-2m | inv #2 | this Q          |     120 |      |   220.00 |
-  | %mdY-1m | inv #3 | this CF         |      80 |      |   300.00 |
-  | %mdY-2w |  tx #2 | cacao P         |         |   50 |   250.00 |
-  | %mdY-9d |  tx #3 | what G          |         |  240 |    10.00 |
-  | %mdY-8d |  tx #4 | this Q          |         |  120 |  -110.00 |
-  | %mdY-5d | inv #4 | wrongly         |      90 |      |   -20.00 |
-  | %mdY-3d |  tx #6 | this CF         |         |   80 |  -100.00 |
-  | %mdY-2d | inv #5 | realist         |   2,000 |      | 1,900.00 |
-  | %mdY-1d |  tx #7 | pool CJ         |         | -100 | 2,000.00 |
+  | Date    |        | Description     | Invoiced | Paid    |  Balance |
+  |         |        | Opening balance |          |         |     0.00 |
+  | %mdY-4m | tx #23 | that F          |          | -100.00 |   100.00 |
+  | %mdY-2m | inv #2 | this Q          |   120.00 |         |   220.00 |
+  | %mdY-1m | inv #3 | this CF         |    80.00 |         |   300.00 |
+  | %mdY-2w | tx #14 | cacao P         |          |   50.00 |   250.00 |
+  | %mdY-9d | tx #15 | what G          |          |  240.00 |    10.00 |
+  | %mdY-8d | tx #16 | this Q          |          |  120.00 |  -110.00 |
+  | %mdY-3d | tx #18 | this CF         |          |   80.00 |  -190.00 |
+  | %mdY-2d | inv #5 | realist         | 2,000.00 |         | 1,810.00 |
+  | %mdY-1d | tx #29 | pool CJ         |          | -100.00 | 1,910.00 |
   And with:
-  || Total due: $2,000.00 |
-
+  || Total due: $1,910.00 |

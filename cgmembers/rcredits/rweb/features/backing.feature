@@ -8,16 +8,12 @@ Setup:
   | uid  | legalName | crumbs | minimum | savingsAdd | saveWeekly | achMin | backing | floor | flags   |*
   | .ZZA | Abe One   |    .01 |     100 |          0 |          1 |     20 |       0 |    10 | ok,confirmed,nosearch,paper |
   | .ZZB | Bea Two   |    .02 |     -10 |         10 |          0 |     50 |      10 |     0 | ok,co,confirmed,weekly,secret |
-  And transactions: 
-  | xid | created   | amount | from | to   | purpose | taking |*
-  |   1 | %today-6m |    250 | ctty | .ZZA | signup  | 0      |
-  |   2 | %today-6m |    250 | ctty | .ZZB | signup  | 0      |
   
 Scenario: A member visits the backing page
   When member ".ZZA" visits page "community/backing"
   Then we show "Backing Promise" with:
   | Amount | $1 |
-  | Signed |  |
+  | Signed |    |
 
 Scenario: A member changes backing amount
   Given transactions: 

@@ -1265,7 +1265,7 @@ function t($string, $subs0 = []) {
       }
     }
   }
-  return @$subs ? strtr($string, $subs) : $string;
+  return !empty($subs) ? strtr($string, $subs) : $string;
 }
 function tr($s) {return t($s, rayy(func_get_args(), 1));}
 

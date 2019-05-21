@@ -542,8 +542,10 @@ define('FMT_INT', 'trust count');
 //define('FMT_2D', 'negativeBalanceTotal positiveBalanceTotal');
  
 function showRecords($ray, $formatFunc = 'CG\\Web\\formatField', $flagsField = B_LIST) {
-  if (!$ray or empty($ray)) return 'data set is empty';
-  $lines[] = '<tr><th>' . join('</th><th>', array_keys((array) $ray[0])) . "</th></tr>\n";
+  ///  debug("showRecords(" . print_r($ray, true) . ", $formatFunc, $flagsField)");
+  if (!$ray or empty($ray) or count($ray)==0) return 'data set is empty';
+  $first = (array)reset($ray);
+  $lines[] = '<tr><th>' . join('</th><th>', array_keys($first)) . "</th></tr>\n";
   foreach ($ray as $row) {
     $line = '';
     foreach ($row as $k => $v) {
@@ -798,6 +800,7 @@ function whoFldSubmit($field, $question, $extra = []) {
  * Also sets up $formArray and $formSta, for testing.
  */
 function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
+  ///  debug("showForm('$function', $arg1, $arg2, $arg3, $arg4)");
   global $formArray, $formSta, $rUrl;
   setAcct(); // in case it's an anonymous form, so webAccess doesn't have a chance to set up
   if (!@$formSta['confirm'] and !in($function, R_NOLOG_FORMS)) {
@@ -2090,7 +2093,7 @@ function showCharts($ctty = 0, $period = 'months', $download = FALSE) {
   }
 
   if ($download) return $downData;
-  
+
   $success = number_format($success0, 2);
   $accts = "$pAccts members + $bAccts companies";
   $funds = $usd;
@@ -2122,7 +2125,6 @@ function fundStats($stats, $round = FALSE, $stats30 = NULL) {
   extract($stats);
 //  if ($stats30) extract($stats30, EXTR_PREFIX_ALL, 'o');
 //  list ($r0, $usd0) = array($r, $usd);
-
   if ($ctty) { // a community
     $cttyA = r\acct($ctty);
     $res['cttyName'] = $ctty == r\serverUid() ? t('Seedpack (Outliers)') : trim(strtr($cttyA->fullName, [t('Region')=>'', PROJECT=>'']));
@@ -2136,7 +2138,6 @@ function fundStats($stats, $round = FALSE, $stats30 = NULL) {
     $stats["{$z}Rate"] = ($stats[$z] - $stats30[$z]) / (($balsPos + 0) ?: 1);
     $stats30["{$z}Rate"] = 0; // just to make d_ not die
   }
-    
   foreach (array_keys($stats) as $k) {
     if (!in($k, 'id ctty created')) {
       if ($stats30) $stats["d_$k"] = $stats[$k] - $stats30[$k];

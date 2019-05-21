@@ -49,7 +49,7 @@ function formSignup($form, &$sta, $args = '') {
   $title = $personal 
   ? (@$joint ? t('Create a Partner Account Joined to Yours') : t('Open a Personal %PROJECT Account'))
   : t('Open a Company Account');
-  
+
   if (!@$helper) { // no need to clarify if user clicked the "Open a Company Account" button
     $helper = @$partner ?: 0;
     $clarify = $personal ? t('To open a company account, use the "Open a Company Account" button after your personal account is approved.') : t('To open another personal account, send an Invitation (click the Invite tab).');
@@ -57,7 +57,7 @@ function formSignup($form, &$sta, $args = '') {
     $forother = $personal ? t('open a company account instead') : t('open a personal account instead');
     $forother = item("[<a class=\"nospin\">$forother</a>]");
   }
-    
+
   if (!@$code) $code = 'self ()'; // can't actually tell whether this is allowable, because we don't yet know which community
 
   if ($i = strpos(@$code, '(')) { // self-invitation with friend's name and zipcode
@@ -65,7 +65,7 @@ function formSignup($form, &$sta, $args = '') {
     if (!@$partner) $notes = hidFld("knows: $code");
     $code = r\acct(1)->iCardCode(IBY_SELF); // inviter is admin for now; invitation() will set $iCode=IBY_SELF
   }
-    
+
   $inviteOk = w\invitation(@$code, '', $inviter, $iCode, $err);
   if (@$inviter and $iCode != IBY_SELF) {
     $ia = r\acct($inviter);
@@ -96,7 +96,7 @@ EOF
   , '_bSteps _aHelp _proxyInfo', 'b class="loud"', w\emailtag(CGF_EMAIL, t('signup help')), $proxyInfo);
 
 //Opening a %PROJECT Account is very much like opening an online bank account. After this long signup page there are <%b>some short steps</b> we will guide you through. If you need help, please don't hesitate to ask (<%a>click here to send us an email</a>).
-  
+
   if ($personal) {
     $acctType = hidFld(CO_PERSONAL);
 //    $pin = passFld(t('PIN:'), [t('Choose a PIN (any 4 digits)'), t('Your security code for online purchases.')]); // first time logging in, get PIN
@@ -202,9 +202,7 @@ function formSignup_submit($form, &$sta) {
   global $mya;
   $dbFields = 'fullName legalName email flags phone federalId dob pin country zip address city state postalAddr helper iCode notes wants calling signupCo tenure source';
   extract(just('myid confirmed acctType args ats owns partner customer source2 ' . $dbFields, $sta['input']));
-
   if (u\test() and !@$args) $args = basename($_SERVER['REQUEST_URI']);
-
   u\EXPECT((bool) $args, 'no args');
   extract(just('code food', $args));
   if (isDEV) $helper = $helper + 0; // don't let lack of helper stop us
@@ -217,7 +215,7 @@ function formSignup_submit($form, &$sta) {
   if ($acctType != CO_PERSONAL) $info += ray('coType', $acctType);
   
 //  $DBTX = \db_transaction();
-
+  
   if (@$myid) {
     $a = r\acct($myid);
     if ($a->jid) $info['name'] = r\uniqueName($fullName, $info); // make sure name reflects partner name
