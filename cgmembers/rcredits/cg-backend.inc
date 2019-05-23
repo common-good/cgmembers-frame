@@ -37,17 +37,17 @@ function getTxs($uids, $starting=null, $ending=null) {
   // tReversedBy and eReversedBy refer to the transaction that reverses this transaction.
   $sql = <<< EOF
     SELECT t.*, e.*, u.fullName AS name,
-           (SELECT MAX(GREATEST(acctTid,0)) FROM tx_entries re WHERE re.xid = t.xid AND uid in (:uids)) AS tid,
-           (EXISTS (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=t.xid)) AS isReversed,
-    (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=t.xid AND d.status=:DS_OPEN)) AS isDisputed,
-    (SELECT MAX(GREATEST(acctTid,0)) FROM tx_entries eReversed WHERE eReversed.xid=tReversed.xid AND eReversed.uid IN (:uids) AND eReversed.xid=tReversed.xid) AS reversedTid,
-    (SELECT MAX(GREATEST(acctTid,0)) FROM tx_entries eReversedBy WHERE tReversedBy.reversesXid=t.xid AND eReversedBy.uid IN (:uids) AND eReversedBy.xid=tReversedBy.xid) AS reversedByTid
+      (EXISTS (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=t.xid)) AS isReversed,
+      (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=t.xid AND d.status=:DS_OPEN)) AS isDisputed,
+      (SELECT MAX(GREATEST(acctTid,0)) FROM tx_entries eReversed WHERE eReversed.xid=tReversed.xid AND eReversed.uid IN (:uids) AND eReversed.xid=tReversed.xid) AS reversedTid,
+      (SELECT MAX(GREATEST(acctTid,0)) FROM tx_entries eReversedBy WHERE tReversedBy.reversesXid=t.xid AND eReversedBy.uid IN (:uids) AND eReversedBy.xid=tReversedBy.xid) AS reversedByTid
     FROM tx_entries e LEFT JOIN tx_hdrs t USING (xid) LEFT JOIN users u USING (uid)
          LEFT JOIN tx_hdrs tReversed ON (t.reversesXid=tReversed.xid)
          LEFT JOIN tx_hdrs tReversedBy ON (t.xid=tReversedBy.reversesXid)
+         LEFT JOIN r_usd ON (r_usd.xid=t.xid)
     WHERE (t.xid IN (SELECT DISTINCT xid FROM tx_entries WHERE (uid IN (:uids))))
           $where
-    ORDER BY created, tid, e.xid, name
+    ORDER BY created, e.xid, name
 EOF;
   $results = db\q($sql, ['uids' => $uids]);
   u\EXPECT($results, "Failure reading transactions for user " . print_r($uids, true));
@@ -74,9 +74,15 @@ EOF;
     $myTxAmount = 0;
     $byMe = FALSE;
     $banking = FALSE;
+    $tid = null;
+    $myAgentUid = null;
     foreach ($entries as $entry) {
-      if (in_array($entry['uid'], $uids)) $myTxAmount += $entry['amount'];
-      if (in_array($entry['uid'], $uids) and in_array($entry['actorId'], $uids)) $byMe = TRUE;
+      if (in_array($entry['uid'], $uids)) {
+        $myTxAmount += $entry['amount'];
+        if (!empty($entry['acctTid'])) $tid = $entry['acctTid'];
+        $myAgentUid = $entry['agentUid'];
+      }
+      if (in_array($entry['actorId'], $uids)) $byMe = TRUE;
       if (in_array($entry['uid'], [CG_INCOMING_BANK_UID, CG_OUTGOING_BANK_UID])) $banking = TRUE;
     }
     $myBalance += $myTxAmount;
@@ -85,6 +91,8 @@ EOF;
       $entry['balance'] = $myBalance;
       $entry['byMe'] = $byMe;
       $entry['banking'] = $banking;
+      $entry['tid'] = $tid;
+      $entry['myAgentUid'] = $myAgentUid;
       if (!empty($entry['reversedTid'])) $entry['description'] .= t(" (reverses #" . $entry['reversedTid'] . ")");
       if (!empty($entry['reversedByTid'])) $entry['description'] .= t(" (reversed by #" . $entry['reversedByTid'] . ")");
       $entries[$j] = $entry;
@@ -124,7 +132,6 @@ X;
   $results = db\q($sql, ['aUids' => $aUids, 'bUids' => $bUids]);
   u\EXPECT($results, "Failure reading transactions between users " . print_r($aUids, true) . " and " . print_r($bUids, true));
 
-  $lastTid = null;  // no tid should ever be null
   $txs = [];  // an array of arrays of entries
   $entries = [];
   $myBalance = 0.00; //balanceAsOf($aUids[0], $starting);
@@ -354,11 +361,8 @@ function reverse($xid) {
     $newEntry->id = null;
     $newEntry->xid = null;  // new entry belongs to reversing transaction
     $newEntry->amount = 0-$oldEntry->amount;
-    /* $newEntry->description .= ' (' . t('reverses #') . $oldEntry->acctTid . ')'; */
     $newEntry->acctTid = r\acct($newEntry->uid)->nextTid();
     $newTx->entries[] = $newEntry;
-    /* $oldEntry->description .= ' (' . t('reversed by #') . $newEntry->acctTid . ')'; */
-    /* u\EXPECT(db\update('tx_entries', just('id description', $oldEntry), 'id'), 'failure updating tx_entries'); */
   }
   $xid = $newTx->insert();
   if (!$xid) {

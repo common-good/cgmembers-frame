@@ -241,7 +241,7 @@ function noticeCountIs($count) {
 function memberChargesMemberFor($payee, $payer, $amount, $for) {
   global $testOnly; if ($testOnly) return FALSE;
   global $scanned; $scanned = TRUE;
-  be\transfer('charge', acct(t\uid($payee)), acct(t\uid($payer)), $amount, $for);
+  be\transfer('charge', acct(t\uid($payee)), acct(t\uid($payer)), $amount, $for, FOR_GOODS);
   return TRUE;
 }
 

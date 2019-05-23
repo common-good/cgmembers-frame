@@ -87,7 +87,7 @@ class ReformatTransactions extends AbstractMigration {
     $undoneBy = [];
     $undoes = [];
     
-    $flagsMask = (1 << self::B_OFFLINE | 1 << self::B_SHORT | 1 << self::B_RECURS | 1 << self::B_GIFT | 1 << self::B_FUNDING | 1 << self::B_CRUMBS);
+    $flagsMask = (1 << self::B_OFFLINE | 1 << self::B_SHORT | 1 << self::B_RECURS | 1 << self::B_GIFT | 1 << self::B_FUNDING | 1 << self::B_CRUMBS | 1 << self::B_STAKE);
 
     $txsTable = $this->table('r_txs');
     $txHdrsTable = $this->table('tx_hdrs');
@@ -478,10 +478,10 @@ class ReformatTransactions extends AbstractMigration {
       $bankUid = $amount >= 0 ? self::CG_INCOMING_BANK_UID : self::CG_OUTGOING_BANK_UID;
       $e1 = ray('xid entryType amount uid agentUid description acctTid relType relatedId',
                 $nextXid, self::ENTRY_PAYER, -$amount, $bankUid, $bankUid, ($amount > 0) ? 'from bank' : 'to bank',
-                $bankTxId, null, null);
+                null, null, null);
       
       $e2 = ray('xid entryType amount uid agentUid description acctTid relType relatedId',
-                $nextXid, self::ENTRY_PAYEE, $amount, $payee, $payee, ($amount > 0) ? 'from bank' : 'to bank', $txid, null, null);
+                $nextXid, self::ENTRY_PAYEE, $amount, $payee, $payee, ($amount > 0) ? 'from bank' : 'to bank', null, null, null);
 
       $txHdrsTable->insert($hdr)->save();
       $entriesTable->insert($e1)->insert($e2)->save();
@@ -529,9 +529,9 @@ class ReformatTransactions extends AbstractMigration {
       $hdr = ray('xid actorId actorAgentId flags channel boxId goods risk risks reversesXid created',
                  $nextXid, $actorId, $actorAgentId, 0, self::TX_SYS, null, self::FOR_USD, null, 0, null, $completed);
       $e1 = ray('xid entryType amount uid agentUid description acctTid relType relatedId',
-                $nextXid, self::ENTRY_PAYER, -$amount, self::CG_INCOMING_BANK_UID, self::CG_INCOMING_BANK_UID, $memo, $bankTxId, null, null);
+                $nextXid, self::ENTRY_PAYER, -$amount, self::CG_INCOMING_BANK_UID, self::CG_INCOMING_BANK_UID, $memo, null, null, null);
       $e2 = ray('xid entryType amount uid agentUid description acctTid relType relatedId',
-                $nextXid, self::ENTRY_PAYEE, $amount, self::CG_SERVICE_CHARGES_UID, self::CG_INCOMING_BANK_UID, $memo, $bankTxId, null, null);
+                $nextXid, self::ENTRY_PAYEE, $amount, self::CG_SERVICE_CHARGES_UID, self::CG_INCOMING_BANK_UID, $memo, null, null, null);
 
       $txHdrsTable->insert($hdr)->save();
       $entriesTable->insert($e1)->insert($e2)->save();

@@ -17,7 +17,6 @@ require_once __DIR__ . '/txprocessor.interface';
 class TxHistoryDownload implements TxProcessor {
   private $body = '';
   private $uids = [];
-  private $tidValue = '';
   private $dateValue = '';
   private $count = 0;
   private $runBalance = 0;
@@ -51,7 +50,7 @@ class TxHistoryDownload implements TxProcessor {
    */
   public function processEntry($info) {
     if (in_array($info['uid'], $this->uids)) return;
-    extract(u\exactly('tid created name description amount balance agentUid banking', $info, null));
+    extract(u\exactly('tid created name description amount balance myAgentUid banking', $info, null));
     $frombank = $banking ? round(-$amount, 2) : 0;
     $fromyou = round($amount > 0 ? $amount : 0, 2);
     $toyou = round($amount < 0 ? -$amount : 0, 2);
@@ -59,7 +58,7 @@ class TxHistoryDownload implements TxProcessor {
     $net = round($amount, 2);
     $csvRow = [$tid, strftime('%Y-%m-%d', $created), $name, $description,
                $frombank, $fromyou, $toyou, $balance, $net,
-               r\qo($agentUid)->mainQid];
+               r\qo($myAgentUid)->mainQid];
     u\csv($csvRow);
     foreach (ray(TX_DOWNLOAD_MONEY_FLDS) as $k => $fld) {
       $this->totals[$fld] += $$fld;
