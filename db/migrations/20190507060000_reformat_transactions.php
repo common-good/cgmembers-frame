@@ -333,9 +333,9 @@ class ReformatTransactions extends AbstractMigration {
         }
         /* $payeeEntry['amount'] += $couponValue[$xid]; */
         $otherEntries[] = ray('xid entryType amount uid agentUid description acctTid relType relatedId',
-                              $xid, self::ENTRY_OTHER, -$couponValue[$xid], $payee, $payeeAgent, $payeeFor, $payeeTid, 'D', $coupatedId);
+                              $xid, self::ENTRY_OTHER, -$couponValue[$xid], $payee, $payeeAgent, 'discount rebate', $payeeTid, 'D', $coupatedId);
         $otherEntries[] = ray('xid entryType amount uid agentUid description acctTid relType relatedId',
-                              $xid, self::ENTRY_OTHER, $couponValue[$xid], $payer, $payerAgent, $payerFor, $payerTid, 'D', $coupatedId);
+                              $xid, self::ENTRY_OTHER, $couponValue[$xid], $payer, $payerAgent, 'discount rebate', $payerTid, 'D', $coupatedId);
         unset($data['coupon']);
         unset($data['coupid']);
       }

@@ -764,12 +764,10 @@ EOF;
   return [ $rebate,
            [ new r\TxEntry(ray('amount entryType uid agentUid description acctTid relType relatedId',
                                $rebate, ENTRY_OTHER, $buyer->id, $buyer->agentId,
-                               t('discount rebate (on #%tid)', ['tid' => $buyerTid]),
-                               $buyerTid, 'D', $id)),
+                               t('discount rebate)'), $buyerTid, 'D', $id)),
              new r\TxEntry(ray('amount entryType uid agentUid description acctTid relType relatedId',
                                0-$rebate, ENTRY_OTHER, $seller->id, $seller->agentId,
-                               t('discount rebate (on #%tid)', ['tid' => $sellerTid]),
-                               $sellerTid, 'D', $id)) ] ];
+                               t('discount rebate'), $sellerTid, 'D', $id)) ] ];
 }
 
 /**
