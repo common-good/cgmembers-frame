@@ -46,7 +46,7 @@ X
       <p>Sign in to your %PROJECT account and click <%aFood>Food Fund</a> or <%aSignup>click here</a> to open your free %PROJECT account now.</p>
       
       <h4>Financially Challenged?</h4>
-      <p>If you are eligible for SNAP, please consider participating in our Food Fund pilot and get $20 off each month on healthy local food at Simple Gifts Farm in Amherst. Participation is limited to 10 families. There are still a few slots available. <%aSignup>Click here</a> to open a free %PROJECT account.</p>
+      <p>If you struggle to buy healthy food, please consider participating in our Food Fund pilot and get $20 off each month on healthy local food at Simple Gifts Farm in Amherst. Participation is limited to 10 families. There are still a few slots available. <%aSignup>Click here</a> to open a free %PROJECT account.</p>
       <p>The discount happens automatically when you pay with your %PROJECT card.</p>
 X
     , '_payExtra _orRegular _aSignup _aFood', $_payExtra, $_orRegular, atag('/signup/food=1'), atagB('', 'warning'));
@@ -118,7 +118,7 @@ function formFood_submit($form, &$sta) {
   if (@$recurs) {
     extract(just('id period amount', unserialize($recurs)), EXTR_PREFIX_ALL, 'x');
     if ($x_period != $period or $x_amount != $amount) {
-      db\update('r_recurs', ray('id ended', $x_id, NOW), 'id');
+      db\update('r_recurs', ray('id ended', $x_id, now()), 'id');
       say(t('Your previous recurring contribution has been canceled.'));
     } else {
       $amount = 0;
@@ -131,7 +131,7 @@ function formFood_submit($form, &$sta) {
     db\insert('r_recurs', ray('payer payee amount period', $mya->id, $payee, $amount, $period));
     list ($desc, $data) = r\setupGift($period);
     $msg = 'gift successful';
-    if ($mya->payApproved($payee, $amount, $desc, $data)) {
+    if ($mya->payApproved($payee, $amount, $desc, FOR_GOODS, $data)) {
       r\notify($mya->id, 'recur pay', ray('amount to purpose', u\fmtAmt($amount), t('the Food Fund'), $desc));
     } else $msg .= '|gift transfer later';
     say($msg);

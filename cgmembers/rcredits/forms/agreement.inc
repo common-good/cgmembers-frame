@@ -52,15 +52,21 @@ function formAgreement($form, &$sta) {
 X
   , $args);  
 
-  $agreement = ($mya and $mya->co)
-  ? t('<p>I commit %coName to the terms of the <%a>%PROJECT Agreement</a> (the same agreement I signed as an individual).</p>', 'coName _a', $mya->fullName, 'a id="show-agreement"') . '<div id="wrap-agreement">' . $agreement0 . '</div>'
-  : t(<<< X
-<div id="instructions" class="well">
-<p><b>Instructions:</b> Put a check mark by each section to indicate you have read and understand it. %addendum</p>
-</div>
-X
-  , compact('_addendum')) . $agreement0;
-
+  if ($mya and $mya->co) {
+    $agreement = t('<p>I commit %coName to the terms of the <%a>%PROJECT Agreement</a>'
+                   . ' (the same agreement I signed as an individual).</p>',
+                   'coName _a', $mya->fullName, 'a id="show-agreement"') .
+      '<div id="wrap-agreement">' . $agreement0 . '</div>';
+  } elseif ($mya and !empty($mya->signed)) {
+    $agreement = t('<div id="instructions" class="well">'
+                   . '<p><b>Instructions:</b> Put a check mark by each section'
+                   . ' to indicate you have read and understand it. %addendum</p></div>',
+                   compact('_addendum'))
+      . $agreement0;
+  } else {
+    $agreement = $agreement0;
+  }
+      
   for ($i = R_AGREE_0; $i <= R_AGREE_9; $i++) {
     $box = str_replace('checkNUMBER', "check$i", $model);
     $agreement = str_replace("[$i]", (!$mya or $mya->co or !$mya->can(B_MANAGE) or @$date) ? '' : $box, $agreement);
@@ -81,7 +87,7 @@ function formAgreement_validate($form, &$sta) {
 
 function formAgreement_submit($form, &$sta) {
   global $mya;
-  $signed = r\rTime();
+  $signed = now();
   extract(just('signedBy', $sta['input']));
   $mya->update($info = compact('signed', 'signedBy'));
   return w\goNextStep('sign');

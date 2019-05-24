@@ -41,7 +41,7 @@ X
   
     $amount = textFld(t('Discount:'), [t('Amount or Percentage'), t('For example $20 or 10%')], required());
     $minimum = textFld(t('Minimum:'), [t('Minimum purchase'), t('Minimum purchase amount, to get the discount. If this amount equals the discount amount, your coupons will be labeled "Gift Certificate".')], required(0));
-    $start = textFld(t('Valid from:'), [t('Start date')], required(u\fmtDate(time(), TRUE)));
+    $start = textFld(t('Valid from:'), [t('Start date')], required(u\fmtDate(now(), TRUE)));
     $end = textFld(t('Valid until:'), [t('End date'), t('An end date is strongly encouraged.')]);
     $ulimit = textFld(t('Limit:'), t('Leave this blank for unlimited uses.'), suffix(t(' uses per member')));
     $automatic = w\boolFld(t('Automatic?'), t('If the discount is not automatic, you will need to do the math each time.'), TRUE);
@@ -66,7 +66,7 @@ X
 
 function formCoupons_validate($form, &$sta) {
   global $mya;
-  $today = strtotime('today');
+  $today = today();
   extract(just($fields = 'type code amount count minimum start end ulimit', $sta['input']));
 
   if ($type == 'gift') {
@@ -106,8 +106,8 @@ function formCoupons_submit($form, &$sta) {
     $res = db\get('fromId,amount', 'r_coupons', 'coupid=:coupid', compact('coupid'));
     extract($res);
     $fromA = r\acct($fromId);
-    $fromA->pay($mya, $amount, t('gift'), ray('force', 1));
-    db\insert('r_coupated', ray('uid coupid uses when', $myid, $coupid, $iCode, time()));
+    be\transfer('payment', $fromA, $mya, $amount, t('gift'), FOR_GOODS, ray('force', 1));
+    db\insert('r_coupated', ray('uid coupid uses when', $myid, $coupid, $iCode, now()));
     $mya->update('giftPot', $mya->giftPot + $amount);
     return say(t('coupon redeemed', 'amount giver', u\fmtAmt($amount), $fromA->fullName));
   }

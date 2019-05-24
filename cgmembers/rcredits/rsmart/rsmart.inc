@@ -79,9 +79,10 @@ $GLOBALS['tStrings'] += array(
  *   message: an error message or help message to display on the device; or not set
  */
 function pos($args = FALSE) {
+  ///  debug("pos(" . print_r($args, true) . ")");
   global $channel; $channel = TX_POS;
   global $scanned; $scanned = true;
-  global $mya;
+  global $mya, $boxUser;
   
   if (!r\up()) exit('system down'); // app does not (and should not) distinguish this from system failure
   if (is_object($args)) $args = (array) $args; // this helps with debugging when passing json_decoded args
@@ -100,11 +101,10 @@ function pos($args = FALSE) {
   
   $mya = getAgent(@$agent ?: @$member, $agentErr);
 ///     print_r(compact(ray('mya agent member agentErr')));
-
   if (@$device) { // device was specified, substitute its record id, herein
     if (!$mya) return posErr($agentErr);
-    if ($deviceId = getDevice($device, $mya->id)) {
-      $edit = ray('id access', $deviceId, r\rTime());
+    if ($boxUser = getDevice($device, $mya->id)) {
+      $edit = ray('id access', $boxUser, now());
       db\update('r_boxes', $edit, 'id'); // remember time last accessed so we can drop the deadwood
     } elseif ($op != 'identify') return posErr('unknown device');
   } elseif (@$agent or $op != 'identify') return posErr('missing device');
@@ -186,7 +186,7 @@ function getTime($args) {
   global $mya;
   if ($err = missingArg($keys = 'version', $args)) return posErr($err); 
   extract(just($keys . ' data', $args));
-  $time = r\rTime();
+  $time = now();
   
   if ($version < RPOS_VERSION) $message = $version < 218 
   ? t("IMPORTANT: Your app needs updating.\n\nSearch for \"CG Pay\" in the Google Play Store, to download the latest version.")
@@ -250,7 +250,7 @@ function identify($args) {
     $signin = ($logon == 1); // ditto
     if (@$signin and $a->proSe and !$a->co) return posErr('scan in first', [], $companyInfo);
   }
-  
+
   if (@$device) $deviceId = getDevice($device, $mya->id);
 
   if (@$signin) { //  identifying agent
@@ -269,7 +269,7 @@ function identify($args) {
     }
     $default = $mya->mainQid;
     $company = $mya->fullName;
-    $time = r\rTime();
+    $time = now();
     
   } else { // identifying customer
     if (!@$deviceId) return posErr('unknown device'); // tried to scan a customer card before very first agent scan-in
@@ -346,12 +346,21 @@ function photoReturn($pic) {
  * @return: json (ok, message, txid, created, balance, undo)
  */
 function charge($args, $type = 'charge') {
+  ///  debug("r\Smart\charge(" . print_r($args, true) . ", $type)");
   global $mya;
+  global $boxUser;
   
   $keys = 'agent member amount goods description created';
   if ($err = missingArg($keys, $args)) return posErr($err);
   extract(just($keys . ' proof force version', $args));
+  $boxId = $boxUser;
+  
+  /* extract(u\exactly('description device', $args, ['', null])); */
+  /* $boxId = $device; */
 
+  /* $goods = $args['goods']; */
+  /* unset($args['goods']); */
+   
   if (!@$member) return posErr('missing member'); // handle empty string (versus missing param)
   if ($version > 216 and !@$proof) return posErr(missingArg('proof', []));
   if (@$description === '') return posErr('missing description');
@@ -368,8 +377,16 @@ function charge($args, $type = 'charge') {
   $selfhelp = ($goods == '2');
   $goods = $goods == "3" ? FOR_NONGOODS : ($goods == "0" ? FOR_USD : FOR_GOODS); // selfhelp is FOR_GOODS
   if (@$force) {
+    $sql = <<<EOF
+      SELECT xid
+      FROM tx_hdrs t JOIN tx_entries payer USING(xid) JOIN tx_entries payee USING(xid)
+      WHERE t.created=:created AND payer.uid=:payer AND payee.uid=:payee
+            AND (payer.amount=:amount OR payee.amount=:amount) AND t.goods=:goods AND payee.description=:payeeFor
+EOF;
     $subs = ray('created payer payee amount goods payeeFor', $created, $a->id, $mya->id, $amount, $goods, $description);
-    if ($q = db\get('xid,data', 'r_txs', $subs)) extract($q);
+    $q = db\q($sql, $subs);
+    $x = $q->fetch(\PDO::FETCH_ASSOC);
+    if ($x) extract($x);
   }
   
   $amount = str_replace(',', '', number_format($amount, 2)); // make sure both cents digits are included
@@ -390,17 +407,20 @@ function charge($args, $type = 'charge') {
   } elseif (@$force == "-1" and @$xid) { // does exists and shouldn't
     $did = '';
     $undo = $xid;
-    $data = unserialize($data);
-    if ($txid = @$data['undoneBy']) { // already got reversed
-      $created = db\get('created', 'r_txs', 'xid=:txid', compact('txid'));
+
+    $revRes = db\get('xid AS `undo`, created', 'tx_hdrs', 'reversesXid=:xid', ['xid'=>$xid]);
+    if ($revRes) { // already got reversed
+      extract(just('undo created', $revRes));
       $message = "Transaction has been reversed.";
     } else {
-      list ($msg, $subs) = be\undoTx($xid, (@$amount < 0 and !$mya->co) ? 'payer=:myid' : 'payee=:myid', ['myid' => $mya->id], $force);
+      list ($msg, $subs) = be\undoTx($xid, (@$amount < 0 and !$mya->co) ? 'e.amount > 0' : "e.amount='$amount'", [], $force);
       if (is_array($msg)) list ($msg, $subs) = [$msg[0], $msg[1] + $subs];
       if (!@$subs['success']) return badTx($args, $name, $msg, $subs);
       $txid = $subs['xid'];
       $created = $subs['created0'];
-      $message = t($msg, $subs);
+      $subsNoTx = $subs;
+      unset($subsNoTx['newTx']);
+      $message = t($msg, $subsNoTx);
       r\tellAdmin('reversing tx', ray('xid uid created message subs', $xid, $mya->id, u\fmtDate($created), $message, $subs));
     }
   } elseif (@$force == "-1" and !@$xid) { // doesn't exist and shouldn't
@@ -410,7 +430,9 @@ function charge($args, $type = 'charge') {
   } else { // doesn't exist and should (forcing or not)
     if (@$amount < 0 and $a->co and $a->proSe) return badTx($args, $name, $msg, $subs);
     if (@$amount < 0 and !$mya->co) list ($type, $amount) = ['payment', -$amount];
-    list ($msg, $subs) = be\transfer($type, $mya, $a, @$amount, @$description, compact(ray('goods created force')));
+    $bal = $a->balance;
+    list ($msg, $subs) = be\transfer($type, $mya, $a, @$amount, @$description, $goods, compact(ray('created force boxId')));
+    $bal = $a->balance;
     if (!@$subs['success']) return badTx($args, $name, $msg, $subs);
 
     if (!@$force and $aa = $a->agentA and $mya->co and !$aa->ided) $aa->setBit(B_IDED);
@@ -427,7 +449,6 @@ function charge($args, $type = 'charge') {
   }
 
   extract(balrew($a));
-
   return ok(compact(ray('message txid created balance rewards did undo')));
 }
 
@@ -515,7 +536,7 @@ function getMember($qid, $code, &$err = '', $requireCode = TRUE) {
     if (!$inviter = r\iCardAcct($code, $seq)) return !$err = 'bad member';
     if (!$uid = db\get('uid', 'users', 'helper=:inviter AND seq=:seq', compact('inviter', 'seq'))) return !$err = 'bad icard';
     $a = r\acct($uid);
-    if (time() - $a->activated > ICARD_EXPIRES * DAY_SECS) return !$err = 'expired icard';
+    if (now() - $a->activated > ICARD_EXPIRES * DAY_SECS) return !$err = 'expired icard';
     $code = $a->cardCode; // no need for function here
   } else { */
 //    $customer = preg_match('/[\\.:]/', $customer0) ? $customer0 : r\qo::qr2($customer0);
@@ -534,7 +555,7 @@ function getMember($qid, $code, &$err = '', $requireCode = TRUE) {
 
 /*    if ($account_id != $q_account_id) { // this is a transient id scanned from the other party's smart device
       $transientId = basename(dirname($q_account_id));
-      $recent = r\rTime() - R_TRANSIENCE;
+      $recent = now() - R_TRANSIENCE;
       if (db\get('transientId', 'r_boxes', 'code=:code AND access>=:recent') != $transientId) return be\error('bad transient id');
     } */
 }
@@ -547,10 +568,9 @@ function getMember($qid, $code, &$err = '', $requireCode = TRUE) {
 function balrew($a) {
   global $mya;
   if (!$mya->co) $a = $mya;
-  $balance = (($a->can(B_SECRET) and $mya->co) ? '*' : '') . round($a->balance - $a->partRounds, 2);
-//  $rewards = $a->rewards;
-  $rewards = -$a->floor;
-  return compact('balance', 'rewards');
+  $balance = (($a->can(B_SECRET) and $mya->co) ? '*' : '') . round($a->balance, 2);
+  $rewards = 0;
+  return compact(ray('balance rewards'));
 }
 
 /**
@@ -561,7 +581,7 @@ function balrew($a) {
 function getDescriptions($a) {
   $ray = [];
   //if ($default = $a->description) $ray[] = $default;
-  $sql = 'SELECT payeeFor, COUNT( payeeFor )  FROM r_txs WHERE payee=:id GROUP BY payeeFor ORDER BY COUNT(payeeFor) DESC';
+  $sql = 'SELECT description AS payeeFor, COUNT(description) FROM tx_entries WHERE uid=:id AND amount > 0 GROUP BY payeeFor ORDER BY COUNT(description) DESC';
   return $ray + (db\q($sql, ray('id', $a->id))->fetchCol() ?: []);
 }
 

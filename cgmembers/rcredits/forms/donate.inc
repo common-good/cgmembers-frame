@@ -65,9 +65,9 @@ function formDonate_submit($form, &$sta) {
   $mya = w\eLinkAcct($sta); 
 
   extract(just('amount period honor honored roundup recurId', $sta['input']));
-  $info = ray('payer payee amount period created lastTx invoiced', $mya->id, CGID, $amount, $period, NOW, 0, 0);
+  $info = ray('payer payee amount period created lastTx invoiced', $mya->id, CGID, $amount, $period, now(), 0, 0);
   if ($period != 'X' and @$recurId) {
-		db\update('r_recurs', ray('id ended', $recurId, NOW), 'id');
+		db\update('r_recurs', ray('id ended', $recurId, now()), 'id');
 		say(t('Your previous recurring gift has been canceled.'));
 	}
 
@@ -77,7 +77,7 @@ function formDonate_submit($form, &$sta) {
 //    $count = db\count('r_txs', 'payer=:payer AND payee=:payee AND :IS_RECURS AND created>=:created', compact(ray('payer payee created')));
     list ($desc, $data) = r\setupGift($period);
     $msg = 'gift successful';
-    if ($mya->payApproved(CGID, $amount, $desc, $data)) {
+    if ($mya->payApproved(CGID, $amount, $desc, FOR_NONGOODS, $data)) {
       r\notify($mya->id, 'gift sent', ray('amount', u\fmtAmt($amount)));
     } else $msg .= '|gift transfer later';
     say($msg);

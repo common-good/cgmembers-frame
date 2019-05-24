@@ -13,5 +13,9 @@
 define('DRUPAL_ROOT', getcwd());
 require_once __DIR__ . '/rcredits/bootstrap.inc';
 drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+if (R_VERSION != getv('version')) {
+  \menu_rebuild();
+  setv('version', R_VERSION);
+}
 //\setV('up', 1);
 menu_execute_active_handler();

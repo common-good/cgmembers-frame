@@ -19,12 +19,12 @@ timer_start('page');
 if (NOT_PRODUCTION) {
   error_reporting(E_ALL);
   ini_set('display_errors', 'On');
+  ini_set('display_startup_errors', TRUE);
 }
 
 $uri = 'I' . $_SERVER['REQUEST_URI']; // handle scanned rCard URIs
 $_SERVER['REQUEST_URI'] = $_GET['q'] = preg_match('~^I/[A-Z]+[\.-]~', $uri) ? $uri : \request_path();
     
-
 ini_set('magic_quotes_runtime', '0'); // Don't escape quotes when reading files from the database, disk, etc.
 ini_set('session.use_cookies', '1'); // Use session cookies, not transparent sessions with the session id in the query string.
 ini_set('session.use_only_cookies', '1');
@@ -39,12 +39,6 @@ ini_set('session.gc_divisor', 100); // (denominator)
 define('SESSION_LIFE', (@$_COOKIE['pkv'] or @$_POST['pkv']) ? 12 * HOUR_SECS : 24 * MIN_SECS); // standard 24 mins (more for admin)
 ini_set('session.gc_maxlifetime', SESSION_LIFE); // session timeout (and garbage collection happens)
 ini_set('session.cookie_lifetime', 0); // SESSION_LIFE); // (drupal doesn't refresh the cookie)
-
-if (isDEV or NOT_PRODUCTION) {
-  error_reporting(E_ALL);
-  ini_set('display_errors', TRUE);
-  ini_set('display_startup_errors', TRUE);
-}
 
 setlocale(LC_ALL, 'C'); // Set sane locale settings, to ensure consistent string, dates, times and numbers handling.
 
@@ -87,10 +81,6 @@ if (count(explode('.', $cookie_domain)) > 2 && !is_numeric(str_replace('.', '', 
 $agt = $_SERVER['HTTP_USER_AGENT'];
 define('isSAFARI', stripos($agt, 'Chrome') === FALSE and stripos($agt, 'Safari') !== FALSE);
 
-// one-time database changes, if any
-$sqlOnce = <<< X
-X;
-
 /**
  * Remove any (potentially hazardous) HTML from input.
  * Specifically, remove <, followed by ! or any letter, through the closing > or end of string.
@@ -113,7 +103,7 @@ define('FRAME_SOURCES', "https://cg4.us/chart.php $base_url/rcredits/misc/chart.
  * nonces are for spin.min.js on iPhone (but it doesn't work)
  */
 function setCSP() {
-  $styleNonce = base64_encode(substr(hash('sha256', PROJECT . time(), TRUE), 0, 32));
+  $styleNonce = base64_encode(substr(hash('sha256', PROJECT . now(), TRUE), 0, 32));
   $sid = session_id();
 
   \drupal_add_http_header('Content-Security-Policy', 

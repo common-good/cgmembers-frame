@@ -10,21 +10,26 @@ use CG\Db as db;
  * Present a choice of data queries
  */
 function formData($form, &$sta, $args = '', $isco = FALSE) {
+  ///  debug("formData(..., ..., '$args', $isco)");
   $isco = ($isco == 'co');
   require_once queryFile($isco);
   extract(just('qName', $args));
   
-  if ($qName0 = urldecode(@$qName) and $sql = @$queries[$qName0] and $qName = w\queryPermitted($qName0, $sql, $subtext)) {
-    $title = $qName;
-    $subtext = $subtext ?: '&nbsp;';
-    $report = strpos($sql, ' ') ? item(w\showRecords(db\q($sql)->fetchAll())) : getReport($sql);
-    $form = compact(ray('title subtext report'));
+  $qName0 = urldecode(@$qName);
+  if (!empty($qName0)) {
+    $sql = @$queries[$qName0];
+    if (!empty($sql)) {
+      $title = w\queryPermitted($qName0, $sql, $subtext);
+      $subtext = $subtext ?: '&nbsp;';
+      $report = strpos($sql, ' ') ? item(w\showRecords(db\q($sql)->fetchAll())) : getReport($sql);
+      $form = compact(ray('title subtext report'));
+    }
   } else {
     $title = $isco ? t('Company Reports') : t('Community and Money Data');
     $subtext = item(t('Click the query of your choice. If you need information not provided here, <%a1>request it</a>!', ['_a1' => u\emailTag(CGF_EMAIL, t('data request'))]), '&nbsp;');
     $isco = hidFld($isco ?: 0);
     $form = compact(ray('title subtext isco'));
-    
+
     foreach ($queries as $k0 => $v) {
       if ($k = w\queryPermitted($k0)) $form[$k0] = submit($k, 'default', 'xs');
     }
@@ -56,13 +61,15 @@ function getReport($nm) {
     $heads = ray(t('Account,Name,Phone,Email,Net Ever'));
     $colClasses = ray(',,,,num');
     list ($us, $them) = $nm == 'customers' ? ['payee', 'payer'] : ['payer', 'payee'];
-    $where = "$us=:myid AND amount<>0 GROUP BY $them";
+    $whereInv = "$us=:myid AND amount<>0 GROUP BY $them";
+    $whereTx = "$us.uid=:myid AND $us.amount<>0 AND $them.uid NOT BETWEEN 0 AND (:CANONIC_ACCTS-1) GROUP BY $them.uid";
     $sql = <<< X
       SELECT u.uid,SUM(net0) AS net, SUM(invs0) AS invs FROM (
-        SELECT $them AS uid, SUM(amount) AS net0, 0 AS invs0
-        FROM r_txs WHERE $where
+        SELECT $them.uid AS uid, SUM($them.amount) AS net0, 0 AS invs0
+        FROM tx_hdrs JOIN tx_entries payer USING(xid) JOIN tx_entries payee USING(xid)
+        WHERE $whereTx
         UNION SELECT $them AS uid,0 AS net0, SUM(amount) AS invs0
-        FROM r_invoices WHERE $where AND status<:TX_PAID
+        FROM r_invoices WHERE $whereInv AND status<:TX_PAID
       ) x LEFT JOIN users u ON u.uid=x.uid GROUP BY u.uid ORDER BY fullName
 X;
     $q = db\q($sql, compact('myid'));

@@ -22,21 +22,22 @@ Setup:
   | .ZZB | .ZZD  | joint      |
   | .ZZD | .ZZB  | joint      |
   And usd transfers:
-  | txid | payee | amount | completed |*
-  |  100 | .ZZA  |   1000 | %today-3d |
-  |  101 | .ZZB  |   2000 | %today-4d |
-  |  102 | .ZZC  |   3050 | %today-5d |
-  |  103 | .ZZC  |    -50 | %today-2d |
+  | txid | payee | amount | created    | completed | xid |*
+  |  100 | .ZZA  |   1000 | %today-20d | %today-13d |   1 |
+  |  101 | .ZZB  |   2000 | %today-21d | %today-14d |   2 |
+  |  102 | .ZZC  |   3050 | %today-22d | %today-15d |   3 |
+  |  103 | .ZZC  |    -50 | %today-12d | %today-12d |   4 |
   Then balances:
   | uid  | balance |*
+  | ctty |       0 |
   | .ZZA |    1000 |
   | .ZZB |    2000 |
   | .ZZC |    3000 |
   Given transactions: 
   | xid | created   | amount | from | to   | purpose | goods      |*
-  |   4 | %today-3m |     10 | .ZZB | .ZZA | cash E  | %FOR_USD |
-  |   5 | %today-3m |    100 | .ZZC | .ZZA | usd F   | %FOR_USD |
-  |   6 | %today-3m |    240 | .ZZA | .ZZB | what G  | %FOR_GOODS |
+  |   6 | %today-3m |     10 | .ZZB | .ZZA | cash E  | %FOR_USD   |
+  |   7 | %today-3m |    100 | .ZZC | .ZZA | usd F   | %FOR_USD   |
+  |   8 | %today-3m |    240 | .ZZA | .ZZB | what G  | %FOR_GOODS |
 #  And statistics get set "%tomorrow-1m"
   And transactions: 
   | xid | created   | amount | from | to   | purpose | goods      | channel  | flags  |*
@@ -50,19 +51,22 @@ Setup:
   |  33 | %today-1d |      1 | .ZZC | .AAB | gift    | %FOR_GOODS | %TX_CRON | recurs |
   Then balances:
   | uid  | balance |*
+  | ctty |   -3.00 |
   | .ZZA |  754.00 |
   | .ZZB | 2285.00 |
   | .ZZC | 2963.00 |
   | .AAB |    1.00 |
   # total rewards < total r, because we made a grant, a loan, and a fine.
-  
+
 Scenario: cron calculates the statistics
+# Many of the following statistics exclude the community itself, so balance may differ from usd
 #  When cron runs "acctStats"
-  Given statistics get set "%today-30d"
+  Given statistics get set "%daystart-30d"
   When cron runs "cttyStats"
   And member ".ZZA" visits page "community/graphs"
   Then we show "Statistics" with:
 #  | Community: | Seedpack |
+# was 2 co, but that included the community, which is not activated
   |~Success: | 0.04 |
   |~CG Growth: | 3 members + 2 co |
   |~Dollar Pool: | $6,000 |

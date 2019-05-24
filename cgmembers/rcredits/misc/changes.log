@@ -1,3 +1,30 @@
+2019-05-05 feature/misc-todos
+. fixed bug that doubled and mislabeled first recurring donation (not to CG)
+. changed SNAP question to "Do you qualify for any of the following"
+. show banktxid(s) on deposits screen
+. deposits screen: filterable by start date (earliest to show) and limit to 42 checks
+. fixed bug: box was not recorded for smartphone transactions
+. overhauled dates, using new function now() to replace r\rTime(), allowing tests to set hypothetical times
+. moved account activation function from acct class to forms\summary.inc (where it is called). no changes made.
+. added option to several db functions (in cg-db.inc) to present parameters as an associative array, without a "where" parameter.
+. added tables and variable table variables to _clear() in cg-testing.inc
+. changed tenure field to ask for years and months instead of just months
+. made format on preferences page more consistent
+. simplified summary page for communities, now that there is a balance sheet page
+. consolidated last cron variable in variables table
+
+2019-05-02 feature/show-autopays
+. fixed bug in setLocus that chose first possible match rather than the one with highest confidence
+. removed emails from bottom of Member List page
+. general account search for admins
+. also show autopays on recurring transactions page
+
+2019-04-29 feature/balance-sheet
+. stopped logging attempted hacks of wp-admin
+. community balance sheet (on Community menu)
+. recreate menus automatically on version change
+. added variables viewer back into Handy menu
+
 2019-04-20 feature/food-fund-better
 . improvements to food fund page
 . users record uid=0 is created by testing, if it doesn't exist
@@ -37,7 +64,7 @@
 . added an option to download graph data
 . fixed wrong param count bug in be\memberRay
 . removed references to transaction type
-. revised debug() function to show even duplicate output
+. revised debug function to show even duplicate output
 . changed u\nn() function to nn() in bootstrap (no namespace) and added check for !isset
 . change in address triggers redo of geolocation
 . moved formGraphs from rweb.inc to forms/graphs.inc

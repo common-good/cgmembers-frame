@@ -88,7 +88,8 @@ Setup:
 
 Scenario: Inflation adjustments, round up donations, and crumb donations are made
   When cron runs "everyMonth"
-  Skip no inflation at present
+
+Skip no inflation at present
 # inflation  
   Then transactions: 
   | xid| created| type      | amount | bonus                               | from | to   | purpose |*
@@ -102,17 +103,18 @@ Scenario: Inflation adjustments, round up donations, and crumb donations are mad
   # 23.0?
 #  | 17 | %today | inflation |      0 | %(round(%R_INFLATION_RATE *8.6, 2)) | ctty | .ZZC | %IAOY credit reserve  |
 Resume
-  Then member ".ZZA" cache is ok
-  And member ".ZZB" cache is ok
-  And member ".ZZC" cache is ok
-  
-# roundups (creation date is last second of previous month)
-  And transactions:
-  | xid | created | amount | from | to  | purpose       | flags         |*
-  | 12  |       ? |   1.00 | .ZZA | cgf | roundups desc | gift,roundups |
- 
+
+# Skip roundups - they're handled as they occur now
+# # roundups (creation date is last second of previous month)
+#   And transactions:
+#   | xid | created | amount | from | to  | purpose       | flags         |*
+#   | 12  |       ? |   1.00 | .ZZA | cgf | roundups desc | gift,roundups |
+# Resume
+
 # crumbs (creation date is last second of previous month)
-  | 13  |       ? |   3.40 | .ZZC | cgf | crumbs desc   | gift,crumbs   |
+  Then transactions: 
+  | xid | created | amount | from | to             | purpose                                             | flags       |*
+  | 12  |       ? |   4.00 | .ZZC | %CG_CRUMBS_UID | crumbs donations: percentage of past month receipts | gift,crumbs |
 
 # alerting admin about paper statements
   And we tell admin "Send paper statements" with subs:

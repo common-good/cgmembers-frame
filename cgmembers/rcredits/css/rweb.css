@@ -222,19 +222,26 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 .not-logged-in #extras {display:none;}
 
 /* nav */
-#edit-acct-account {display:none; position:absolute; z-index:5; top:49px; width:100%;}
-#edit-acct-account.collapse.in {display:block;}
-#edit-acct-account .index-detail {display:none; position:fixed; left:0; top:80px; width:100%; height:315px; background-color:lightgray; border:2px solid darkred; font-size:11px;}
-#edit-acct-account .index-detail div {display:inline-block; width:185px; margin-bottom:15px;}
-#edit-acct-account .index-detail a {background-color:white; padding:2px 0 2px 5px; margin:1px 3px; width:173px; height:19px; overflow:hidden; display:inline-block; white-space:nowrap;}
-#edit-acct-account .index-detail a small {font-size:70%;}
-#edit-acct-account ul {float:right; background-color:green; color:silver; list-style-type:none; padding:0 5px;}
-#edit-acct-account ul a {color:white;}
-#edit-acct-account ul a:hover {text-decoration:none; color:lightblue;}
-#edit-acct-account a {color:silver;}
-#edit-acct-account a.ok {background-color:lightgreen; color:black;}
-#edit-acct-account a.co {background-color:yellow;}
-#edit-acct-account a.closed {background-color:black; color:silver;}
+#edit-accounts {display:none; position:absolute; z-index:5; top:49px; width:100%;}
+#edit-accounts.collapse.in {display:block;}
+#edit-accounts .index-detail {display:none; position:fixed; left:0; top:80px; width:100%; height:315px; background-color:lightgray; border:2px solid darkred; font-size:11px;}
+#edit-accounts .index-detail div {display:inline-block; width:185px; margin-bottom:15px;}
+#edit-accounts .index-detail a {background-color:white; padding:2px 0 2px 5px; margin:1px 3px; width:173px; height:19px; overflow:hidden; display:inline-block; white-space:nowrap;}
+#edit-accounts .index-detail a small {font-size:70%;}
+#edit-accounts ul {float:right; background-color:green; color:silver; list-style-type:none; padding:0 5px;}
+#edit-accounts ul a {color:white;}
+#edit-accounts ul a:hover {text-decoration:none; color:lightblue;}
+#edit-accounts a {color:silver;}
+#edit-accounts a.ok {background-color:lightgreen; color:black;}
+#edit-accounts a.co {background-color:yellow;}
+#edit-accounts a.closed {background-color:black; color:silver;}
+
+fieldset#edit-accounts .form-item-submit {visibility:hidden;}
+fieldset#edit-accounts {width:520px; right:15px;}
+fieldset#edit-accounts input,
+fieldset#edit-accounts .twitter-typeahead {width:335px;}
+fieldset#edit-accounts label {padding-right:8px;}
+
 #index a {color:black;}
 #index {position:fixed; right:0px; z-index:6; background-color:silver; padding:3px 0;}
 #index a {display:inline-block; color:darkred; padding:0px 7px 0px 7px;}
@@ -256,7 +263,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
   -webkit-animation: puff .5s linear; /* Chrome, Safari, Opera */
   animation: puff .5s linear;  
 }
-.page-sadmin #messages {margin:0;}
+.page-sadmin #messages {margin:50px 0 0 0;}
 #messages .messages {display:inline-block; max-width:800px; text-align:left; margin:28px auto 10px 0; background-position:8px; background-repeat:no-repeat; border:1px solid; padding:10px 10px 10px 40px;
   border-radius:8px; -moz-border-
   :8px; -webkit-border-radius:8px;
@@ -306,7 +313,7 @@ body.logged-in.one-sidebar #content {width:100%;}
 /* Accounts Selector */
 #accounts {position:absolute; left:0; top:0; width:100%;}
 #accounts .region-accounts {float:right; margin-right:0px; width:100%;}
-/* #accounts .content, #accounts .form-item-acct-account {margin:0; padding:0;} */
+/* #accounts .content, #accounts .form-item-accounts {margin:0; padding:0;} */
 #accounts .form-type-textfield, #accounts .form-type-select,
 #accounts #edit-signin {float:right; margin-right:20px;}
 #accounts #edit-signin a {color:white;}
@@ -315,7 +322,7 @@ body.logged-in.one-sidebar #content {width:100%;}
 #accounts #edit-acct-settings div {width:20px; height:20px; background-image:url(../images/icons/gear-white.png); background-size:20px 20px; margin:3px 5px 0 5px;}
 #accounts #edit-acct-icon {float:right; margin:0 5px 0 0;} 
 #accounts #edit-acct-icon img {height:24px; border:1px solid white;}
-/*#accounts #edit-acct-account {float:right; padding:0 2px; width:auto; height:27px; margin:0; font-size:100%; border:0; background-color:white;} */
+/*#accounts #edit-accounts {float:right; padding:0 2px; width:auto; height:27px; margin:0; font-size:100%; border:0; background-color:white;} */
 #frm-accounts #edit-acct-submit {display:none;} /* Drupal requires unused button to be there, so make it invisible */
 #edit-acct-showmenu, #edit-acct-showhelp {display:none;}
 
@@ -440,6 +447,9 @@ body.logged-in.one-sidebar #content {width:100%;}
 #frm-followup #memberlist th.hd-name {width:170px;}
 #frm-followup #memberlist th.hd-ctty,
 #frm-followup #memberlist th.hd-phone {width:95px;}
+
+/* Admin Variables */
+#frm-variables td {max-width:700px;}
 
 /* Member List */
 #memberlist .name a {font-weight:bold;}
@@ -812,6 +822,9 @@ div.password-confirm .error {font-weight:bold; color:red;}
 .form-item-physical, .form-item-sameAddr2, #frm-signup .form-item-other {margin-top:30px;}
 .form-item-physical>label, .form-item-sameAddr2>label, #frm-signup .form-item-other>label {color:darkgreen; font-size:130%;}
 #frm-signup .form-item-sponsor {display:none;}
+#frm-signup #tenure2 input {width:75px; display:inline-block;}
+#frm-signup #edit-months {margin-left:10px;}
+
 
 /* Contact Info (labeled) */
 #frm-contact .form-item-pin {display:none; margin-left:180px;}
@@ -876,28 +889,40 @@ div.password-confirm .error {font-weight:bold; color:red;}
 #txlist {border:1px solid silver; padding:10px; width:100%; max-width:1024px; margin:10px auto; font-size:85%;}
 #txlist-title {width:100%; margin-top:0px;}
 #txlist div.row {margin-left:0; margin-right:0;}
-#txlist .row >div {border-top:1px solid #d9d9d9; margin:0 auto;}
-#txlist .row>div>div {padding-top:10px; padding-bottom:8px; min-height:35px;}
+#txlist .row >div {margin:0 auto;}
+/* #txlist .row >div {border-top:1px solid #d9d9d9; margin:0 auto;} */
+#txlist .row>div>div {padding-top:5px; padding-bottom:4px; min-height:2ex;}
+/* #txlist div.row {margin-left:0; margin-right:0;} */
+/* #txlist .txRow {border:0; margin:0 auto; padding-top:5px; padding-bottom:5px;} */
+/* #txlist .txRow {border-top:1px solid #d9d9d9; margin:0 auto; padding-top:5px; padding-bottom:5px;} */
+/* #txlist .txEntry {padding-top:1px; padding-bottom:1px; min-height:12px;} */
 
 #txlist .tid-date, 
 #txlist .name-purpose, 
-#txlist .amount-reward {padding:0;}
+#txlist .amount-reward {padding: 0;}
+/* #txlist .amount-reward {border-top: 1px solid #d9d9d9; border-left:0; border-right: 0; border-bottom: 0;} */
 #txlist .tid, #txlist .date {text-align:center;}
 #txlist .tid {font-weight:bold;}
-#txlist .amount, #txlist .reward {text-align:right;}
-
-#txlist .row .buttons {padding:0 0 0 5px; border:0; min-width:30px; max-width:50px;}
+#txlist .amount, #txlist .reward, #txlist .runBalance {text-align:right;}
+    
+#txlist .row .buttons {padding:5px 0 4px 0; border:0; min-width:30px; max-width:50px;}
 #txlist .row .buttons div {max-width:50%;}
 #txlist .buttons a.btn-xs {font-size:9px; margin:0;}
 #txlist .buttons div {padding:0;}
 #txlist .row div .reward {font-size:85%;}
+
+#txlist .sepRow {display:inline-block; width: 100%; height: 1px;}
+#txlist .separator {border-top: 1px solid #d9d9d9; height: 1px; width: 91.6667%; padding:0; margin:0;}
+#txlist .sepBlank {width:8.3333%; border:0; height:1px; padding:0;margin:0;}
 
 #txlist .txRow {display:none;}
 #txlist .txRow.head,
 #txlist .txRow.page-0 {display:block;}
 
 #txlist .row.head >div {border-bottom:0;}
+/* #txlist .row.head >div {border-bottom:0; padding-bottom:0; padding-top:5px; padding-bottom:5px;} */
 #txlist .row.head>div>div {background:#757575; color:white; font-weight:bold; border-right:1px solid white;}
+/* #txlist .row.head>div>div {background:#757575; color:white; font-weight:bold; border-right:1px solid white; padding-bottom: 5px; padding-top: 5px;} */
 #txlist .row.head .buttons {color:white; background-color:white; border:0;}
 #txlist .row.head .reward {font-size:100%;}
 #txlist tr:hover {background-color:#aaffaa;}
@@ -906,6 +931,9 @@ div.password-confirm .error {font-weight:bold; color:red;}
 #txs-links.row >div {border:0; padding:0;}
 #txs-links span {padding-right:3px;}
 #txs-links .nav, #txs-links .nav span {padding:0; text-align:right;}
+
+fieldset#dateRange #simple {}
+fieldset#dateRange #advanced {display:none;}
 
 /* Transaction Summary Table */
 #txsum {padding-bottom:10px;}
@@ -954,10 +982,12 @@ div.password-confirm .error {font-weight:bold; color:red;}
 /* #frm-deposits {margin-left:50px;} */
 #frm-deposits fieldset {width:290px; display:inline-block;}
 #frm-deposits .form-item-reprint label {text-align:right;}
-#frm-deposits  #deposits {width:auto; display:inline-block;}
-#frm-deposits  #deposits td {text-align:right;}
-#frm-deposits  #deposits td:first-child {text-align:left;}
-#frm-deposits  #edit-count {margin-bottom:3px;}
+#deposits {width:auto; display:inline-block;}
+#deposits td {text-align:right;}
+#deposits td:first-child {text-align:left;}
+#deposits td:first-child +td +td +td +td {min-width:120px;}
+#deposits td:first-child +td +td +td +td +td {text-align:left;}
+#frm-deposits #edit-count {margin-bottom:3px;}
 
 /* Donate */
 #frm-donate .form-item-wait {margin-top:30px;}
@@ -978,6 +1008,26 @@ div.password-confirm .error {font-weight:bold; color:red;}
 #frm-backing #edit-amtchoice,
 #frm-backing #edit-amount,
 #frm-backing #edit-signedby {max-width:200px; display:inline-block;}
+
+/* Balance Sheet */
+#frm-balancesheet .control-label {text-align:left; padding:0 0 0 35px; width:300px; font-weight:normal;}
+#frm-balancesheet .form-group {margin-bottom:0;}
+#frm-balancesheet .control-data {width:100px; text-align:right; padding:0;}
+#frm-balancesheet #edit-title .control-data,
+#frm-balancesheet #edit-subtext .control-data {width:auto; text-align:left;}
+#frm-balancesheet #edit-title .control-label,
+#frm-balancesheet #edit-subtext .control-label {width:0; min-width:0;}
+#frm-balancesheet .form-item-assetLabel label,
+#frm-balancesheet .form-item-liabilityLabel label,
+#frm-balancesheet #edit-netAssets {font-size:110%; margin-top:20px; font-weight:bold;}
+#frm-balancesheet #edit-netAssets,
+#frm-balancesheet #edit-assetTotal,
+#frm-balancesheet #edit-liabilityTotal,
+#frm-balancesheet #edit-assetTotal label,
+#frm-balancesheet #edit-liabilityTotal label,
+#frm-balancesheet #edit-netAssets label {font-size:100%; font-weight:bold;}
+#frm-balancesheet #edit-assetTotal .control-data,
+#frm-balancesheet #edit-liabilityTotal .control-data {border-top:solid black 1px;}
 
 /* Community Funds */
 #cttyFunds {width:100%;}

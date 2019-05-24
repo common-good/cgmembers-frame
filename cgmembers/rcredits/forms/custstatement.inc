@@ -15,18 +15,23 @@ include_once __DIR__ . '/../statement.class';
  * Call with /history/customer-statement/cust=QID?way=WAY
  * where WAY is either IN or OUT
  */
-function custStatement($args = '') {
+function custStatement($args = []) {
   $purposeLenMax = 60; // maximum number of characters in purpose field, not including added "..."
 
   if (!$mya = r\acct()) return w\go('', t('You must first sign in.'), 'ERR');
-  extract(just('cust period way', $args));
-  if (!@$cust or !$a = r\acct($cust)) return w\softErr(t('No customer was specified.'));
+  $cust = u\arrayGet($args, 'cust', null);
+  $period = u\arrayGet($args, 'period', null);
+  $way = u\arrayGet($args, 'way', 'OUT');
+
+  $a = is_null($cust) ? null : r\acct($cust);
+  if (is_null($a)) return w\softErr(t('No customer was specified.'));
 //  if (!@$period) return w\softErr(t('No period was specified.'));
 
 //  list ($start, $end, $period) = statementMonth($period, $mya->fyEnd ?: '12/31'); // not used yet
-
-  $q = @$way == 'IN' ? be\myCustTxs(0, time(), $mya, $a) : be\myCustTxs(0, time(), $a, $mya);
-  if (!$q->rowCount()) return w\softErr(t('That is not a %thing of yours.', 'thing', $way == 'IN' ? t('customer') : t('vendor')));
+  $custUids = empty($a->jid) ? [ $a->id ] : [ $a->id, $a->jid ];
+  $q = ($way == 'IN') ? be\getCustTxs([$mya->id], $custUids, 0, now())
+                      : be\getCustTxs($custUids, [$mya->id], 0, now());
+  if (count($q) == 0) return w\softErr(t('That is not a %thing of yours.', 'thing', $way == 'IN' ? t('customer') : t('vendor')));
 
   $pdf = new r\Statement($mya);
 
@@ -50,7 +55,7 @@ function custStatement($args = '') {
   $pdf->setFontSize($size);
   $pdf->barHead('STATEMENT');
   $lastHead = 'Balance';
-  $fields = ray("Date//25/ /space/1/ /tid/20/C Description/purpose/83/ /space/1/ Invoiced//20/R /space/1/ Paid//20/R /space/10/ Balance//20/R");
+  $fields = ray("Date//25/ /space/1/ /tid/20/C Description/purpose/83/ /space/1/ Invoiced//20/R /space/1/ Paid//20/R /space/10/ Balance/balance/20/R");
   $pdf->colHeads($fields);
   $pdf->setFontSize(.6 * $size); // a bit of space below field headers
   $pdf->newLine();
@@ -60,7 +65,7 @@ function custStatement($args = '') {
   $row0 = ['purpose' => t('Opening balance')];
   $space = '';
 
-  while ($row = isset($row) ? $q->fetchAssoc() : $row0) {
+  foreach ($q as $row) {
     if (!@$classes) $classes = array_keys($row);
 //    extract(just('tid date name amount purpose reward', array_combine($classes, $row)));
     extract(just('tid created purpose invoiced paid', $row));
@@ -99,5 +104,5 @@ function custStatement($args = '') {
 
   $pdf->SetFillColorArray([255, 255, 0]); // yellow
   $pdf->Cell($pageWidth - 2 * $m, 0, "$closing", '', 1 , 'L', TRUE);
-  $pdf->finish(t('Statement-%acct-%date.pdf', 'acct date', $a->mainQid, strftime('%m-%d-%Y', time()))); //Close and output PDF document
+  $pdf->finish(t('Statement-%acct-%date.pdf', 'acct date', $a->mainQid, strftime('%m-%d-%Y', now()))); //Close and output PDF document
 }

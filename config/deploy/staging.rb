@@ -32,6 +32,7 @@ server "ws.rcredits.org", roles: %w{app db web}
 # Feel free to add new variables to customise your setup.
 set :deploy_to, "/home/ws/cgmembers-frame"
 set :branch, "develop"
+# ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp
 
 
 

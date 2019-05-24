@@ -49,7 +49,7 @@ function formSignup($form, &$sta, $args = '') {
   $title = $personal 
   ? (@$joint ? t('Create a Partner Account Joined to Yours') : t('Open a Personal %PROJECT Account'))
   : t('Open a Company Account');
-  
+
   if (!@$helper) { // no need to clarify if user clicked the "Open a Company Account" button
     $helper = @$partner ?: 0;
     $clarify = $personal ? t('To open a company account, use the "Open a Company Account" button after your personal account is approved.') : t('To open another personal account, send an Invitation (click the Invite tab).');
@@ -57,7 +57,7 @@ function formSignup($form, &$sta, $args = '') {
     $forother = $personal ? t('open a company account instead') : t('open a personal account instead');
     $forother = item("[<a class=\"nospin\">$forother</a>]");
   }
-    
+
   if (!@$code) $code = 'self ()'; // can't actually tell whether this is allowable, because we don't yet know which community
 
   if ($i = strpos(@$code, '(')) { // self-invitation with friend's name and zipcode
@@ -65,7 +65,7 @@ function formSignup($form, &$sta, $args = '') {
     if (!@$partner) $notes = hidFld("knows: $code");
     $code = r\acct(1)->iCardCode(IBY_SELF); // inviter is admin for now; invitation() will set $iCode=IBY_SELF
   }
-    
+
   $inviteOk = w\invitation(@$code, '', $inviter, $iCode, $err);
   if (@$inviter and $iCode != IBY_SELF) {
     $ia = r\acct($inviter);
@@ -96,7 +96,7 @@ EOF
   , '_bSteps _aHelp _proxyInfo', 'b class="loud"', w\emailtag(CGF_EMAIL, t('signup help')), $proxyInfo);
 
 //Opening a %PROJECT Account is very much like opening an online bank account. After this long signup page there are <%b>some short steps</b> we will guide you through. If you need help, please don't hesitate to ask (<%a>click here to send us an email</a>).
-  
+
   if ($personal) {
     $acctType = hidFld(CO_PERSONAL);
 //    $pin = passFld(t('PIN:'), [t('Choose a PIN (any 4 digits)'), t('Your security code for online purchases.')]); // first time logging in, get PIN
@@ -150,17 +150,24 @@ EOF
 
 function formSignup_validate($form, &$sta) {
   if (!isset($sta['buttons'])) $sta['buttons'] = []; // for testing (keep Drupal from griping)
-  extract(just('myid confirmed acctType email phone country tenure pin company companyPhon companyOptions fullName legalName zip address city state postalAddr', $sta['input']));
+  extract(just('myid confirmed acctType email phone country years months pin company companyPhon companyOptions fullName legalName zip address city state postalAddr', $sta['input']));
 //  if (!$inviteOk) return w\go('signup'); // in case user resubmits
   //and @$code != bin2hex(R_WORD)
 
-  setV('signupData', ray('time phone state companyOptions', time(), @$phone, @$state, @$companyOptions));
+///  setV('signupData', ray('time phone state companyOptions', now(), @$phone, @$state, @$companyOptions));
   if (!emailOkay($email, $acctType != CO_PERSONAL, @$myid ? r\acct($myid) : '')) return;
   if (!phoneOk($phone, @$country)) return;
   if ($err = u\badZip($zip)) return say($err, 'zip');
   if (!@$state) return say('bad state', 'state');
   if (!formBasic_validate($form, $sta, $acctType != CO_PERSONAL)) return;
-  if ($err = u\badAmount($tenure, '>=0')) return say(t('How-long: ') . t($err), 'tenure');
+  
+  if (!isset($years) and !isset($months)) return say(t('You must say how long you\'ve been there.'), 'years');
+  foreach (ray('years months') as $k) {
+    if (!nn($$k)) $$k = 0;
+    if ($err = u\badAmount($$k, '>=0')) return say(t('How-long: ') . t($err), $k);
+  }
+  $tenure = $years * 12 + $months;
+  
 //  if (@$pin === '') return say('pin required', 'pin');
 //  if (@$pin and strlen($pin) != 4) return say('wrong pin len', 'pin');
   
@@ -188,16 +195,14 @@ function formSignup_validate($form, &$sta) {
   if (@$confirmed) $flags |= u\bit(B_CONFIRMED); // companies are always pre-confirmed, because the company account is opened by a member
 //  $administer_users = FALSE; // for testing (keep Drupal from griping)
   $status = 1;
-  u\preray(@compact(ray('fullName legalName phone address city zip postalAddr email flags signupCo status')), $sta['input']);
+  u\preray(@compact(ray('fullName legalName phone address city zip postalAddr email tenure flags signupCo status')), $sta['input']);
 }
 
 function formSignup_submit($form, &$sta) {
   global $mya;
   $dbFields = 'fullName legalName email flags phone federalId dob pin country zip address city state postalAddr helper iCode notes wants calling signupCo tenure source';
   extract(just('myid confirmed acctType args ats owns partner customer source2 ' . $dbFields, $sta['input']));
-
   if (u\test() and !@$args) $args = basename($_SERVER['REQUEST_URI']);
-
   u\EXPECT((bool) $args, 'no args');
   extract(just('code food', $args));
   if (isDEV) $helper = $helper + 0; // don't let lack of helper stop us
@@ -210,7 +215,7 @@ function formSignup_submit($form, &$sta) {
   if ($acctType != CO_PERSONAL) $info += ray('coType', $acctType);
   
 //  $DBTX = \db_transaction();
-
+  
   if (@$myid) {
     $a = r\acct($myid);
     if ($a->jid) $info['name'] = r\uniqueName($fullName, $info); // make sure name reflects partner name

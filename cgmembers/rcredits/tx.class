@@ -1,0 +1,325 @@
+<?php
+namespace CG;
+use CG as r;
+use CG\DB as db;
+use CG\Backend as be;
+use CG\Util as u;
+
+require_once __DIR__ . '/txentry.class';
+
+/**
+ * @file
+ * CG credit Transaction class
+ *
+ * Note that a transaction has at least two entries, which this class refers to
+ */
+
+class Tx {
+  const TX_HDR_FIELDS = ['xid', 'goods', 'actorId', 'actorAgentId', 'flags',
+                         'channel', 'boxId', 'goods', 'risk', 'risks', 'reversesXid', 'created'];
+  const INSERT_FIELDS = ['goods', 'actorId', 'actorAgentId', 'flags',
+                         'channel', 'boxId', 'goods', 'risk', 'risks', 'reversesXid', 'created'];
+  const REQUIRED_FIELDS = ['goods', 'actorId', 'flags'];
+
+  public $xid;
+  public $type;
+  public $goods;
+  public $actorId;
+  public $actorAgentId;
+  public $flags;
+  public $channel;
+  public $boxId;
+  public $risk;
+  public $risks;
+  public $reversesXid;
+  public $created;
+  public $entries;
+  
+  /**
+   * Instantiate (construct) a transaction record.
+   * @param assoc $info: array of field values for new transaction, must include REQUIRED_FIELD entries,
+   *                     but must only include ALLOWED_FIELD entries.
+   */
+  function __construct($info) {
+    $missing = array_diff(Tx::REQUIRED_FIELDS, array_keys($info));
+    u\EXPECT($missing == [], "missing fields in Tx::createNew: " . print_r($missing, true));
+
+    $this->xid = u\arrayGet($info, 'xid', 0);
+    $this->goods = u\arrayGet($info, 'goods', null);
+    $this->actorId = u\arrayGet($info, 'actorId', null);
+    $this->actorAgentId = u\arrayGet($info, 'actorAgentId', null);
+    $this->flags = u\arrayGet($info, 'flags', null);
+    $this->channel = u\arrayGet($info, 'channel', null);
+    $this->boxId = u\arrayGet($info, 'boxId', null);
+    $this->risk = u\arrayGet($info, 'risk', null);
+    $this->risks = u\arrayGet($info, 'risks', 0);
+    $this->reversesXid = u\arrayGet($info, 'reversesXid', null);
+    $this->created = u\arrayGet($info, 'created', now());
+    $this->entries = u\arrayGet($info, 'entries', []);
+  }
+
+  /**
+   * Return the value of the specified field that is not a simple property of the class.
+   * @param string $field: name of field value to get
+   * @return the value if it exists, else NULL
+   */
+  public function __get($f) {
+    $tx = $this;
+    switch ($f) {
+    case 'actorEntry': return $this->getActorEntry();
+    case 'otherEntry': return ($this->payerEntry->uid == $this->actorId) ? $this->payeeEntry : $this->payerEntry;
+    case 'payerEntry': return $this->getPayerEntry();
+    case 'payeeEntry': return $this->getPayeeEntry();
+    case 'payerId': return $this->payerEntry->uid;
+    case 'payeeId': return $this->payeeEntry->uid;
+    case 'otherUid':
+    case 'otherId': return $this->otherEntry->uid;
+    case 'actor': return r\acct($this->actorId);
+    case 'actorAmount': return $this->getActorAmount();
+    case 'payerAmount': return $this->payerEntry->amount;
+    case 'other': return r\acct($this->otherId);
+    case 'toMe': return $this->payeeEntry->uid==r\acct()->uid;
+    default:
+      u\EXPECT(FALSE, "unexpected field '$f' requested");
+    }
+  }
+
+  public function __set($name, $value) {
+    u\EXPECT(FALSE, "Cannot set $name");
+  }
+  
+
+  private function getPayerEntry() {
+    foreach ($this->entries as $entry) {
+      if ($entry->entryType == ENTRY_PAYER) return $entry;
+    }
+    return null;
+  }
+
+  private function getPayeeEntry() {
+    foreach ($this->entries as $entry) {
+      if ($entry->entryType == ENTRY_PAYEE) return $entry;
+    }
+    return null;
+  }
+
+  private function getActorEntry() {
+    foreach ($this->entries as $entry) {
+      if ($entry->uid == $this->actorId) return $entry;
+    }
+    return null;
+  }
+
+  public function getAmount($a) {
+    $total = 0;
+    foreach ($this->entries as $entry) {
+      if ($entry->uid == $a->id or $entry->uid == $a->jid) $total += $entry->amount;
+    }
+    return $total;
+  }
+
+  public function getActorAmount() {
+    $total = 0;
+    foreach ($this->entries as $entry) {
+      if ($entry->uid == $this->actorId) $total += $entry->amount;
+    }
+    return $total;
+  }
+
+  public function getMyTid($me) {
+    $myTid = 0;
+    foreach ($this->entries as $entry) {
+      if ($entry->uid == $me->uid or $entry->uid == $me->jid) {
+        $myTid = max($myTid, $entry->acctTid);
+      }
+    }
+    return $myTid;
+  }
+
+  /**
+   * Add some entries to this transaction.
+   */
+  public function addEntries($entries) {
+    $this->entries += array_merge($this->entries, $entries);
+  }
+
+  /**
+   * Add an entry to this transaction.
+   */
+  public function addEntry($entry) {
+    $this->entries[] = $entry;
+  }
+
+  /**
+   * Read an existing transaction record, with its entries.
+   * @param xid $xid: transaction record id
+   * @return the new instance of Tx
+   */
+  static function read($xid, $where = '1', $subs = []) {
+    /* u\EXPECT(is_integer($xid)); */
+    
+    $DBTX = db_transaction();
+    $info = db\get('*', 'tx_hdrs', "(xid=:xid) AND $where", $subs + ['xid' => $xid]);
+    if (!$info) return FALSE;
+    $entries = r\TxEntry::readAll($xid);
+    if (!$entries) return FALSE;
+    unset($DBTX);
+    return new Tx($info + ['entries' => $entries]);
+  }
+  
+  /**
+   * Save this transaction in the database (header record plus all entries).
+   * @return the xid of the transaction
+   */
+  function insert($allowModification = FALSE) {
+    $tx = $this;
+    $DBTX = db_transaction();
+    if ($allowModification and $tx->xid != 0) {
+      $xid = $tx->xid;
+      u\EXPECT(db\updateOrInsert('tx_hdrs', just(Tx::TX_HDR_FIELDS, (array)$tx), 'xid'), "failure inserting tx");
+    } else {
+      u\EXPECT($tx->xid == 0, "We're not allowing modification of transactions.");
+      $xid = db\insert('tx_hdrs', just(Tx::INSERT_FIELDS, (array)$tx), 'xid');
+    }
+    u\EXPECT($xid, "Failed to insert transaction header record");
+    foreach ($tx->entries as $entry) {
+      if (empty($entry->acctTid)) {
+        $entry->acctTid = r\acct($entry->uid)->nextTid();
+      }
+    }
+    foreach ($tx->entries as $entry) {
+      $eid = $entry->insert($xid);
+      u\EXPECT($eid, "Failed to insert transaction entry");
+    }
+    $this->xid = $xid;
+    unset($DBTX);
+    return $xid;
+  }
+
+  static public function readAll($uids, $starting=null, $ending=null) {
+    u\EXPECT([$uids, $starting, $ending], 'array integer integer');
+    $restrict = '';
+    if ($starting != null) { $restrict .= " AND (t.created >= '$starting')"; }
+    if ($ending != null) { $restrict .= " AND (t.created <= '$ending')"; }
+    $DBTX = db_transaction();
+    $sql = <<< EOF
+      SELECT t.*, e.*
+      FROM tx_hdrs t LEFT JOIN tx_entries e USING (xid)
+      WHERE (t.xid IN (SELECT DISTINCT xid FROM tx_entries WHERE $users)) $restrict
+      ORDER BY e.xid
+EOF;
+    $result = db\q($sql, []);
+    u\EXPECT($result, "Failure reading transactions for user(s) " . print_r($uids, true));
+    $lastXid = 0;  // no xid should ever be 0
+    $txs = [];
+    $entries = [];
+    foreach ($result as $row) {
+      $row = (array)$row;
+      if ($row['xid'] != $lastXid) { // start of new transaction
+        $lastXid = $row['xid'];
+        if ($entries != []) { // there was a transaction in progress
+          $txs[] = new Tx(just(Tx::TX_HDR_FIELDS, $row) + ['entries' => $entries]);
+          $entries = [];
+        }
+      }
+      $entry = new TxEntry(just(r\TxEntry::ENTRY_FIELDS, $row));
+      $entries[] = $entry;
+    }
+    if ($entries != []) { // last one
+      $txs[] = new Tx(just(Tx::TX_HDR_FIELDS, $row) + ['entries' => $entries]);
+    }
+    unset($DBTX);
+    return $txs;
+  }
+
+  /**
+   * Return the last transaction meeting the given criteria, for the given user.
+   * Rebates, bonuses, and deleted transactions are ignored
+   * @param array $uids: an array of uids to consider
+   * @param string $where: additional criteria (defaults to 1 = any)
+   * @param array $subs: optional substitutions (will be prefixed with colons)
+   * @return associative array: the old transaction record (FALSE if none)
+   */
+  static function lastTx($uids, $where = 1, $subs = []) {
+    /// debug("lastTx(" . print_r($uids, true) . ", '$where', " . print_r($subs, true) . ")");
+    $xid = db\get('t.xid', 'tx_hdrs t JOIN tx_entries e USING(xid)',
+                  "e.uid IN (:uids) AND $where ORDER BY t.created DESC LIMIT 1",
+                  ['uids' => $uids] + $subs);
+    if (empty($xid)) return FALSE;
+    $tx = Tx::read($xid);
+    if (empty($tx)) return FALSE;
+    return $tx;
+  }
+
+  /**
+   * Format and return args for reporting a transaction (old or new) to the current account.
+   * Not all returned args are used for any particular type of transaction.
+   * Note that templates and tests depend on the names of some of these fields
+   * @param acct $a: the account to report for (usually the current account)
+   * @param int $getBalance: 0=don't get any balances, 1=get my balance and tid, 2=get other party's balance and tid also
+   * @param float $shortfall: how much short my balance is, for a transaction (if any)
+   * @return assoc array of args
+   */
+  public function reportArgs($me, $getMyBalance = FALSE, $shortfall = 0) {
+    ///    debug("reportArgs($me->id, $getMyBalance, $shortfall)");
+    global $channel;
+    $tx = $this;
+
+    $payerE = $this->payerEntry;
+    $payeeE = $this->payeeEntry;
+
+    $amount = ($tx->actorId == $payerE->uid) ? $payerE->amount : $payeeE->amount;
+      
+    $other = r\acct(($me->isMe($payerE->uid)) ? $payeeE->uid : $payerE->uid);
+    
+    $banking = be\isBankUid($other->id);
+    $toMe = $banking ? ($amount < 0 xor $xid < 0) : $me->isMe($payeeE->uid);
+    
+    $reverses = !empty($tx->reverses);
+    $role = $toMe ? 'payee' : 'payer';
+    $purpose = $toMe ? $payeeE->description : $payerE->description;
+    $tid = $toMe ? $payeeE->acctTid : $payerE->acctTid;
+    $tofrom = $toMe ? t('from') : t('to'); 
+    $why = ray(R_WHYS)[$tx->goods];
+    if ($getMyBalance and ($me->can(B_BUY))) { $balance = u\fmtAmt($me->avail(FOR_GOODS)); }
+    else { $balance = null; }
+
+    if ($amount < 0) {
+      $amount = 0-$amount;
+      $tofrom = t('to');
+      /* $did = $toMe ? (($this->goods == FOR_GOODS) ? t('refunded') : t('credited')) : t('charged'); */
+    } else {
+      /* $did = $toMe ? ($reverses ? t('re-charged') : t('charged')) */
+      /*   : (($this->channel == TX_POS and $me->co) ? t('credited') : t('paid')); */
+    }
+
+    $balance = ($getMyBalance and $me->can(B_BUY)) ? $me->avail(FOR_GOODS) : 0;
+    
+    return ray('created created0 xid role why payerPurpose payeePurpose toMe amount tofrom balance otherUid myName otherName short success',  // . ' role'
+               u\fmtDate($tx->created), $tx->created, $tx->xid, $role, $why, $payerE->description,
+               $payeeE->description, $toMe, u\fmtAmt($amount), $tofrom, $balance, $other->id, $me->fullName,
+               $other->fullName, u\fmtAmt($shortfall), TRUE);
+  }
+
+  /**
+   * Determine whether the record can be undone
+   * @param assoc $subs: (RETURNED) necessary substitutions, if any, including whatever was already there
+   * @return string: the error message (FALSE if the current agent CAN undo it on behalf of the current account)
+   */
+  function nonoUndo(&$subs = []) {
+    //    global $mya;
+    //    extract(just('amount toMe data payer payee payerTid payeeTid taking', $oldRecord));
+    //    $data = unserialize($data);
+    if (db\exists('tx_hdrs', 'reversesXid=:xid', ['xid' => $this->xid])) {
+      return 'already undone';
+    }
+
+    $a1 = r\acct($this->toMe ? $this->payeeId : $this->payerId, $this->actor->agentUid);
+    $a2 = r\acct($this->toMe ? $this->payerId : $this->payeeId); // second account's permissions are irrelevant
+    $err = r\txPermErr($a1, $a2, $this->toMe, $this->toMe xor $this->actorEntry->amount < 0);
+    if ($err) return $err;
+
+    return FALSE;
+  }
+} // end of class tx
+

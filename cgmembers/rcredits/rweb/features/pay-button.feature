@@ -39,8 +39,8 @@ Scenario: A member submits a Pay With Common Good button payment with account ID
   | pay |
   Then we say "status": "You paid Our Pub $23."
   And invoices:
-  | nvid | created | status |*
-  |    1 | %today  |      1 |
+  | nvid | created | status | purpose |*
+  |    1 | %today  |      1 | food    |
   And transactions:
   | xid | created | amount | from | to   | for                      |*
   |   1 | %today  |     23 | .ZZA | .ZZC | food (Common Good inv#1) |

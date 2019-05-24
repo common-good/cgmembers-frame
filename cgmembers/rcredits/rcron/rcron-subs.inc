@@ -73,5 +73,5 @@ function queue($op, $item = []) {
   $item = compact('op') + $item;
   if (@$cronOp or u\test()) {
     cr\doTask($item);
-  } else db\insert('queue', ray('item created', serialize($item), time()));
+  } else db\insert('queue', ray('item created', serialize($item), now()));
 }

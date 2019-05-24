@@ -35,9 +35,9 @@ $queries = [
 
   t('Daily Totals') =>
   "SELECT CONCAT_WS(' ', FROM_UNIXTIME(created, '%m/%d'), LEFT(FROM_UNIXTIME(created, '%W'), 3)) AS `day`,
-  SUM(IF(payee=:myid, amount, 0)) AS `total in`,
-  SUM(IF(payer=:myid, amount, 0)) AS `total out`
-  FROM r_txs WHERE :myid IN (payer, payee) AND created>:REQUEST_TIME-190*:DAY_SECS
+  SUM(IF(amount>0, amount, 0)) AS `total in`,
+  SUM(IF(amount<0, -amount, 0)) AS `total out`
+  FROM tx_entries JOIN tx_hdrs USING(xid) WHERE uid=:myid AND created>:REQUEST_TIME-190*:DAY_SECS
   GROUP BY FROM_UNIXTIME(created, '%Y-%m-%d')
   ORDER BY created DESC",
 ];

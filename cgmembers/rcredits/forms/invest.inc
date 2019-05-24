@@ -100,7 +100,7 @@ function formInvest_submit($form, &$sta) {
   
   if (@$signedBy) {
     extract(just('clubid', unserialize($old)));
-    db\insert('r_stakes', ray('uid clubid joined', $mya->id, $clubid, time()), 'stakeid');
+    db\insert('r_stakes', ray('uid clubid joined', $mya->id, $clubid, now()), 'stakeid');
     return say(t('You are now a member of the club!'));
   }
 
@@ -114,7 +114,7 @@ function formInvest_submit($form, &$sta) {
   extract(just('stakeid clubid stake request requestedOut', unserialize($old)));
   $buy = (op($sta) == 'buy');
   $request = round($request + ($buy ? $amount : -$amount), 2);
-	if (!$buy) $requestedOut = NOW;
+	if (!$buy) $requestedOut = now();
   db\update('r_stakes', compact(ray('stakeid request requestedOut')), 'stakeid');
   
   if ($buy and $request > 0) {
@@ -129,7 +129,7 @@ function formInvest_submit($form, &$sta) {
   say($msg);
 }
 
-//		list ($msg, $subs) = $mya->invoice(r\acct($mya->iclubid), $amount, t('redeem investment'), ray('goods stakeid', FOR_STAKE, $stakeid));
+//		list ($msg, $subs) = be\invoice($mya, r\acct($mya->iclubid), $amount, t('redeem investment'), ray('goods stakeid', FOR_STAKE, $stakeid));
 //		say($msg, $subs);
 
 /**
@@ -153,19 +153,15 @@ function clubVal(&$investments = 0, &$liquid = 0, &$reserve = 0) {
  * @param numeric $icVal: club's total current value
  */
 function myClubVal($clubVal) {
-	global $mya;
-	$stake = 'IF(payer=:clubid,-amount,amount)';
+  global $mya;
+	$stake = 'amount'; // 'IF(payer.uid=:clubid,-amount,amount)';
 	$share = "(:NOW-created)*$stake";
-	$isMe = ':myid IN (payer, payee)';
 	$sql = <<<X
 	  SELECT SUM($stake) AS totalStake,
-		       SUM($share) AS totalShare,
-		       SUM(IF($isMe, $stake, 0)) AS myStake,
-					 SUM(IF($isMe, $share, 0)) AS myShare
-	  FROM r_txs WHERE :clubid IN (payer, payee) AND :IS_STAKE
+           SUM(IF(e.uid=:myid, $stake, 0)) AS myStake
+	  FROM tx_hdrs t JOIN tx_entries e USING(xid)
+    WHERE e.uid=:clubid AND :IS_STAKE
 X;
   extract(db\q($sql, ray('myid clubid', $mya->id, $mya->iclubid))->fetchAssoc());
-	$share = ($totalShare + 0) ? $myShare / $totalShare : 0;
-	if ($clubVal > $totalStake) $share *= (1 - ICLUB_TITHE); // reserve some profit for community and CG
-	return round($myStake + $share * ($clubVal - $totalStake), 2);
+	return round($myStake, 2);
 }

@@ -45,7 +45,7 @@ Scenario: A second recurring donation can be completed
   | created   | payer | payee | amount | period |*
   | %today-3m | .ZZA  | cgf   |     10 |      M |
   And transactions:
-  | xid | created    | amount | from | to  | purpose                            | flags          |*
+  | xid | created    | amount | from | to  | purpose                    | flags       |*
   |   1 | %today-32d |     10 | .ZZA | cgf | regular donation (Monthly) | gift,recurs |
   When cron runs "recurs"
   Then transactions:
@@ -83,7 +83,7 @@ Scenario: A recurring donation cannot be completed
   And count "usd" is 1
   And count "invoices" is 1
   And	invoices:
-  | nvid | created   | status       | amount | from | to  | for                                | flags                  |*
+  | nvid | created   | status       | amount | from | to  | for                        | flags               |*
   |    1 | %today    | %TX_APPROVED |    200 | .ZZA | cgf | regular donation (Monthly) | gift,recurs,funding |	
 
 	When cron runs "recurs"
@@ -107,15 +107,15 @@ Scenario: A non-member chooses a donation
 	
 Scenario: It's time to warn about an upcoming annual donation
   Given members:
-  | uid  | fullName | flags  | risks   | activated               |*
-  | .ZZD | Dee Four | ok     | hasBank | %today-1y               |
-  | .ZZE | Eve Five | ok     | hasBank | %(%today-1y+7*DAY_SECS) |
+  | uid  | fullName | flags  | risks   | activated             |*
+  | .ZZD | Dee Four | ok     | hasBank | %now-1y               |
+  | .ZZE | Eve Five | ok     | hasBank | %(%now-1y+7*DAY_SECS) |
   And these "recurs":
-  | created                 | payer | payee | amount | period |*
-  | %(%today-1y+7*DAY_SECS) | .ZZD  | cgf   |      1 |      Y |
+  | created               | payer | payee | amount | period |*
+  | %(%now-1y+6*DAY_SECS) | .ZZD  | cgf   |      1 |      Y |
 	And transactions:
-  | xid | created                 | amount | from | to  | purpose                            | flags          |*
-  |   1 | %(%today-1y+7*DAY_SECS) |     10 | .ZZD | cgf | regular donation (Monthly) | gift,recurs |
+  | xid | created               | amount | from | to  | purpose                    | flags       |*
+  |   1 | %(%now-1y+6*DAY_SECS) |     10 | .ZZD | cgf | regular donation (Monthly) | gift,recurs |
   When cron runs "tickle"
 	Then we email "annual-gift" to member "d@example.com" with subs:
 	| amount | when    | aDonate |*

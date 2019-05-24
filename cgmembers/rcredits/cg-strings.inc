@@ -153,7 +153,9 @@ EOF
   'backing in effect' => t('Your previous backing promise will remain in effect through its end date. Then it will be replaced by this new promise.'),
   'pay button success' => t('<h3>Success!</h3>An email has been sent to you, with a link to confirm this payment.'),
   'recur stopped' => t('Success: The recurring transaction is ended.'),
-  
+  'recur already ended' => t('That recurring transaction is already ended.'),
+  'recur not yours' => 'invalid recur id', // don't let on that these are different
+
   // questions
   "what's your name?" => t("To set up your %PROJECT Account, we need your full name and email address. First, what's your name?"),
   "what's your name really?" => t("Hmm. I don't know if I believe that. What's your name really?"),
@@ -187,7 +189,7 @@ EOF
 //  'get r/usd' => t('You can get only "r" or "usd" (rCredits or US Dollars).'), // not yet used (maybe used when there is a third option)
   'not a feature' => t('"%feature" is not a feature.'),
   'wrong nonce' => t('That is not the expected confirmation response. Try again (start over).'),
-  'no self-trading' => t("You can't exchange credit with yourself."),
+  'no self-trading' => t("You can't do that with yourself."), // also includes relations, switching accounts, etc.
   'no self-relation' => t("You can't relate yourself to your own account."),
   'funding error' => t("You do not have permission to fund that person."),
 //  'no company relations' => t("Only individuals can be related to this account."),

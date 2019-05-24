@@ -27,6 +27,6 @@ function notice($month = '') {
     extract(just('messages', $noticeArgs));
   } else $messages = '';
   $title = t('Notices for ') . strftime('%B %Y', $start);
-  $list = "<table>$messages</table>";
+  $list = item("<table>$messages</table>");
   return cgform(compact('title', 'list'), '', FALSE);
 }

@@ -405,8 +405,8 @@ EOF;
   $priority = 1; // start with first choice
   $failsInARow = 0;
   if (!$noProxies) do {
-    $justCreated = ($priority == 1) ? time() + 999 : $now; // "now" is time of previous query
-    $now = time();
+    $justCreated = ($priority == 1) ? now() + 999 : $now; // "now" is time of previous query
+    $now = now();
     $q = db\q($sql, $subs = compact(ray('question now justCreated priority ctty')));
     $priority = 3 - $priority; // toggle 1 or 2
     if ($failsInARow = $q->rowCount() ? 0 : ($failsInARow + 1)) sleep(1); // let the creation time progress

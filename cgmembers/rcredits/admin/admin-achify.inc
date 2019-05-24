@@ -52,7 +52,7 @@ function achify($where = 'deposit=0') {
     $recs[] = achRecord(compact(array_keys($ray = ray(F_PPD))), $ray);
 
     $hash += substr($routing, 0, 8);
-    if (!$deposit) db\update('r_usd', ray('deposit txid', strtotime('today'), $txid), 'txid');
+    if (!$deposit) db\update('r_usd', ray('deposit txid', today(), $txid), 'txid');
   }
   
   if (!$count) return 0;

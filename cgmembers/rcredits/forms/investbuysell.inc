@@ -61,19 +61,19 @@ function formInvestBuySell_submit($form, &$sta) {
   
   $DBTX = \db_transaction();
   if (op($sta) == 'buy') {
-    list ($index, $subs) = $clubA->pay($coA, $total, $type, ray('investment goods', 1, FOR_USD));
+    list ($index, $subs) = be\transfer('payment', $clubA, $coA, $total, $type, FOR_USD, ray('investment', 1));
     $success = @$subs['success'];
     if ($equity) {
       $extraMsg = $success ? t('You successfully purchased %amt shares of %co at %price.', 'amt co price', $sharesDpy, $coA->fullName, $priceDpy) : t('No shares were purchased.');
     } else $extraMsg = $success ? t('You loaned %amt to %co.', 'amt co', u\fmtAmt($shares), $coA->fullName) : t('Nothing was loaned.');
-    if ($success) db\insert('r_shares', ray('vestid shares when', $vestid, $shares, NOW), 'shid');
+    if ($success) db\insert('r_shares', ray('vestid shares when', $vestid, $shares, now()), 'shid');
   } else { // sell
 //    $shid = db\min('shid', 'r_shares', compact('vestid'));
-    $shid = db\insert('r_shares', ray('vestid shares pending when', $vestid, 0, -$shares, NOW), 'shid');
+    $shid = db\insert('r_shares', ray('vestid shares pending when', $vestid, 0, -$shares, now()), 'shid');
     if ($equity) {    
       $for = t('redeeming investment: %amt shares at %price', 'amt price', $sharesDpy, $priceDpy);
     } else $for = t('redeeming loan');
-    list ($index, $subs) = $clubA->invoice($coA, $total, $for, ray('investment goods shid', 1, FOR_USD, $shid));
+    list ($index, $subs) = be\invoice($clubA, $coA, $total, $for, ray('investment goods shid', 1, FOR_USD, $shid));
 //    if (@$count + 0 == 1) { // the usual case -- one shares record
     $extraMsg = '';
   }

@@ -50,7 +50,7 @@ Setup:
 
 Scenario: A cashier asks to charge someone for cash
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $100 for "cash": "cash out" at %now
-  Then we respond ok txid 7 created %now balance 0 rewards 150
+  Then we respond ok txid 7 created %now balance 0
   And with message "report tx" with subs:
   | did     | otherName | amount |*
   | charged | Bea Two   | $100   |
@@ -62,17 +62,18 @@ Scenario: A cashier asks to charge someone for cash
   | %dmy    | $100   | from   | Bea Two   |
   And we notice "new charge" to member ".ZZB" with subs:
   | created | fullName | otherName  | amount | payerPurpose |*
-  | %today  | Bea Two  | Corner Pub | $100   | cash out     |
+  | %now    | Bea Two  | Corner Pub | $100   | cash out     |
   And balances:
   | uid  | balance |*
   | ctty |    -250 |
   | .ZZA |    -200 |
   | .ZZB |       0 |
   | .ZZC |     200 |
+  | .ZZF |     250 |
 
 Scenario: A cashier asks to refund someone
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $-100 for "cash": "cash in" at %now
-  Then we respond ok txid 7 created %now balance 200 rewards 150
+  Then we respond ok txid 7 created %now balance 200
   And with message "report tx" with subs:
   | did      | otherName | amount |*
   | credited | Bea Two   | $100   |
@@ -84,7 +85,7 @@ Scenario: A cashier asks to refund someone
   | %dmy    | $100   | to     | Bea Two   |
   And we notice "new payment linked" to member ".ZZB" with subs:
   | created | fullName | otherName  | amount | payeePurpose | aPayLink |*
-  | %today  | Bea Two  | Corner Pub | $100   | cash in      | ?        |
+  | %now    | Bea Two  | Corner Pub | $100   | cash in      | ?        |
   And balances:
   | uid  | balance |*
   | ctty |    -250 |

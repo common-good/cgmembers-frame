@@ -17,7 +17,7 @@ use CG\Web as w;
 global $base_path;
 define('BASE_PATH', $base_path);
 define('T_BALANCE_FLDS', 'uid balance floor savingsAdd saveWeekly minimum');
-define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account');
+define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId');
 
 /**
  * Allow mnemonic and abbreviated data in test scenario columns.
@@ -26,7 +26,7 @@ define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer pa
  */
 function fixData(&$info, $direct = FALSE) {
   global $rUrl, $testVars;
-  $fields = 'email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state';
+  $fields = 'email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId';
   if (@$testVars) foreach ($info as $k => $v) if (strpos($v, '@') !== FALSE) {
     foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", $var, $v);
   }
@@ -53,9 +53,12 @@ function fixData(&$info, $direct = FALSE) {
     if (@$federalId) u\digits($federalId);
     if (@$dob) $dob = strtotime(str_replace('/', '-', $dob));
   }
+  if (!empty($boxId)) {
+    $boxId = db\get('id', 'r_boxes', '`code`=:boxId', ['boxId'=>$boxId]);
+  }
 
   foreach (just(T_ID_FLDS, $info) as $k => $v) {
-    if (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, 'ctty cgf')) $info[$k] = t\uid($v) ?: 0;
+    if (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, 'ctty cgf')) { $info[$k] = t\uid($v) ?: 0; }
   }
 	foreach (ray('from:payer,to:payee,fromAgent:payerAgent,toAgent:payeeAgent') as $k => $k2) if (isset($info[$k])) {
 		$info[$k2] = $info[$k];
@@ -64,6 +67,13 @@ function fixData(&$info, $direct = FALSE) {
   $info = @compact(ray($fields)) + $info;
 }
 
+/**
+ * Say whether the given variable is set correctly OR set it.
+ */
+function varIs($k, $v) {
+  global $testOnly;
+  return ($v == ($testOnly ? getv($k) : setv($k, $v)));
+}
 /**
  * Interpret flag names
  */
@@ -106,9 +116,25 @@ function doRecords($list, $thing) {
  */
 function doThing($info, $thing, $key = 'id') {
   global $testOnly;
-  $table = 'r_' . strtolower($thing) . 's';
+  if ($thing == 'Entrie') {
+    $table = 'tx_entries';
+  } elseif (in_array(strtolower($thing), ['tx_hdrs', 'tx_entries', 'tx_disputes'])) {
+    $table = strtolower($thing);
+  } elseif (in_array(strtolower($thing), ['tx_hdr', 'tx_entrie', 'tx_dispute'])) {
+    $table = strtolower($thing) . 's';
+  } else {
+    $table = 'r_' . strtolower($thing) . 's';
+  }
+  if ($thing == 'Coupated') $table = 'r_coupated';
+  if ($table == 'tx_hdrs') {
+    $key = 'xid';
+  }
 // NO!  if (@$info['id']) {$info['uid'] = $info['id']; unset($info['id']);}
-  return $testOnly ? verifyRecord($table, $info) : db\insert($table, $info, $key);
+  if ($testOnly) {
+    return verifyRecord($table, $info);
+  } else {
+    return db\insert($table, $info, $key);
+  }
 }
 
 function these($thing, $list) {return doRecords($list, ucwords(substr($thing, 0, strlen($thing) - 1)));}
@@ -127,7 +153,11 @@ function selling($list) {return doRecords($list, 'Selling');}
 function companyFlags($list) {return doRecords($list, 'CompanyFlags');}
 function coupons($list) {return doRecords($list, 'Coupon');}
 function stats($list) {return doRecords($list, 'Stat');}
+function txHdrs($list) {return doRecords($list, 'Tx_Hdr');}
+function txEntries($list) {return doRecords($list, 'Entrie');}
+function coupatedRecords($list) {return doRecords($list, 'Coupated');}
 function recurs($list) {return doRecords($list, 'Recur');}
+
 /**
  * Create device (box) records.
  */
@@ -231,17 +261,8 @@ function doAccount($info = []) {
 }
 
 /**
- * Fabricate a bogus invoice.
- * Minimum parameters: amount, from, to
- * @return:
- *   if $testOnly return TRUE if the data is as expected
- *   otherwise return the record ID of the created invoices (treated as TRUE in test steps)
- */
-function doInvoice($info, $type) {return doTx($info, $type);}
-
-/**
- * Fabricate transactions or invoices OR test them.
- * @param assoc $info: transaction or invoice data to create or test
+ * Fabricate transactions OR test them.
+ * @param assoc $info: transaction data to create or test
  *   Minimum parameters: amount, from, to
  * @return:
  *   if $testOnly return TRUE if the data is as expected
@@ -249,82 +270,108 @@ function doInvoice($info, $type) {return doTx($info, $type);}
  */
 function doTx($info, $thing) {
   global $testOnly, $channel;
-  $inv = ($thing == 'Invoice');
-  extract($info);
+  u\EXPECT($thing != 'Invoice', 'use doInvoice for invoices, not doTx');
+  extract(u\exactly('xid serial amount payer payee payerAgent payeeAgent payerFor payeeFor payerTid payeeTid data flags boxId risk purpose for', $info, null));  // These are what appear in r_txs
+  extract(u\exactly('created type channel risks goods', $info, [now(), 'transfer', TX_SYS, 0, FOR_GOODS]));  // These are what appear in r_txs
+  extract(u\exactly('taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding', $info, FALSE));  // These are flags that might appear
+  extract(u\exactly('purpose', $info, FALSE));
 
-  u\setDft($created, r\rTime());
-	foreach (ray('payer payee') as $k) if (@$$k) txUid($$k, $$k, ${$k . 'Agent'});
-//  if (@$payer) txUid($from, $payer, $fromAgent);
-//  if (@$payee) txUid($to, $payee, $toAgent);
+  if (empty($payerAgent)) $payerAgent = $payer;
+  if (empty($payeeAgent)) $payeeAgent = $payee;
   
-//  u\setDft($r, $amount);
-//  if ($amount != $r) u\setDft($usdXid, 10000 + $xid);
-  if (@$purpose) $for = $purpose; // ?: 'cash';
-  if (strpos(@$for, ',')) $for = explode(',', $for); // specifying both payerFor and payeeFor
-  
+  $payer = t\uid($payer);
+  $payerAgent = t\uid($payerAgent);
+  $payee = t\uid($payee);
+  $payeeAgent = t\uid($payeeAgent);
+
+  if ($purpose) $for = $purpose; // ?: 'cash';
+  if (strpos($for, ',')) $for = explode(',', $for); // specifying both payerFor and payeeFor
+  if ($for and empty($payerFor) and empty($payeeFor)) list ($payerFor, $payeeFor) = is_array($for) ? $for : array($for, $for);
+  if (!$payerFor) $payerFor = t('payerFor');
+  if (!$payeeFor) $payeeFor = t('payeeFor');
   if (isset($risks)) $risks = getRisks($risks, K_TX_RISKS);
 
-  if ($inv) {
-    if (!$testOnly) u\setDft($goods, u\forCash(@$for) ? FOR_USD : FOR_GOODS);
+  if (!is_numeric($type)) $type = u\consta('TX', $type);
+  
+  if (in($purpose, 'offline')) $offline = true;
+  if (in($purpose, 'undoes:')) {
+    list ($k, $v) = explode(':', $purpose);
+    $reverses = $v;
   } else {
-    $data = [];
-    if (!$testOnly) u\setDft($risk, NULL); // indicates that risk has not been calculated yet
-//    if (@$xid and !is_numeric($xid)) $xid = u\a2n(substr(strpbrk($xid, R_MEMBER_MARK . R_AGENT_MARK), 1));
-//    if (@$xid and !is_numeric($xid)) $xid = u\a2n($xid);
-    u\setDft($type, TX_TRANSFER);
-    foreach (ray('type') as $one) if (!is_numeric($$one)) $$one = u\consta('tx', $$one);
-/*    if (r\isReward($type) and $amount) list ($payerReward, $payeeReward, $amount) = [0, $amount, 0];
-    if (isset($rebate)) $payerReward = $rebate;
-    if (isset($bonus)) $payeeReward = $bonus;
-  */  
-    if (is_array(@$for) or @$for != 'roundups desc') if (@$payer) $roundup = r\acct($payer)->roundup;
-    
-    if (!$testOnly) {
-      u\setDft($goods, ($type != TX_TRANSFER or u\forCash(@$for)) ? FOR_USD : FOR_GOODS);
-      if ($goods == FOR_GOODS) {
-//        u\setDft($payerReward, r\reward($payer, $payee, $amount, TRUE));
-//        u\setDft($payeeReward, r\reward($payer, $payee, $amount, FALSE));
-      }
-    }
-    if (in(@$purpose, 'offline')) $data['force'] = 1;
-    if (in(@$purpose, 'undoneBy:') or in(@$purpose, 'undoes:')) {
-      list ($k, $v) = explode(':', @$purpose);
-      $data += array($k => $v);
-    }
-//    if (@$fromAgent or @$from) $payerAgent = t\agent(@$fromAgent ?: ($type == TX_TRANSFER ? $from : r\communityUid()));
-//    if (@$toAgent or @$to) $payeeAgent = t\agent(@$toAgent ?: $to );
-    unset($info['purpose']);
-    u\setDft($taking, 0);
-    if (!$flags0 = @$flags) $flags = 0;
-    foreach (ray(TX_FLAGS) as $k) if (@$$k or $$k = in($k, $flags0)) u\setBit($flags, $k, $$k);
+    $reverses = null;
   }
   
 //  $fields = 'xid payer payee amount payerReward payeeReward type goods flags data risk risks';
-  $fields = 'xid payer payee amount type goods flags data risk risks';
-  if (!$testOnly) $fields .= $inv ? ' created' : ' created channel'; // when creating, add these if not already explicit
-  if (!$inv) $fields .= ' payerAgent payeeAgent';
+  $fields = 'xid payer payee amount status type goods flags data risk risks';
+  if (!$testOnly) $fields .= ' created channel'; // when creating, add these if not already explicit
+  $fields .= ' payerAgent payeeAgent';
   
   $info = @compact(ray($fields)) + $info; // apply modifications
 
-  foreach (ray('from to for rebate bonus ' . TX_FLAGS) as $one) unset($info[$one]);
+  if (empty($payerAgent)) $payerAgent = $payer;
+  if (empty($payeeAgent)) $payeeAgent = $payee;
+  
+  /* $flagString = $flags; */
+  $flags = is_null($flags) ? 0 : $flags;
+  $hdrInfo = ray('xid goods actorId actorAgentId flags channel boxId risk risks reversesXid created',
+                 $xid, $goods, ($taking ? $payee : $payer), ($taking ? $payeeAgent : $payerAgent), $flags,
+                 $channel, $boxId, $risk, $risks, null/* $reversesXid */, $created);
+  /* $hdrInfo = array_filter($hdrInfo); */
+  $payerEntry = ray('xid entryType amount uid agentUid description acctTid relType relatedId',
+                    $xid, ENTRY_PAYER, 0-$amount, $payer, $payerAgent, $payerFor, $payerTid, null, null);
+  /* $payerEntry = array_filter($payerEntry); */
+  $payeeEntry = ray('xid entryType amount uid agentUid description acctTid relType relatedId',
+                    $xid, ENTRY_PAYEE, $amount, $payee, $payeeAgent, $payeeFor, $payeeTid, null, null);
+  /* $payeeEntry = array_filter($payeeEntry); */
 
-  if (!@$inv) {
-    if (@$for and !@$payerFor and !@$payeeFor) list ($payerFor, $payeeFor) = is_array($for) ? $for : array($for, $for);
-    foreach (['payerFor', 'payeeFor'] as $k) if (@$$k) $info[$k] = t($$k);
-  } elseif (@$for and !@$purpose) $info['purpose'] = t($for);
   
 //  if ($testOnly or @$type == TX_REBATE or @$type == TX_BONUS) {
   if ($testOnly) {
-    if ($inv) return verifyRecord('r_invoices', $info);
-    return verifyRecord('r_txs', $info);
+    return verifyRecord('tx_hdrs', array_filter($hdrInfo)) and verifyRecord('tx_entries', array_filter($payerEntry)) and verifyRecord('tx_entries', array_filter($payeeEntry));
   }
-  
-  if ($inv) {
-    return db\insert('r_invoices', $info, 'nvid');
-  } else {
-    $x = new r\X($info);
-    return $x->xid;
+
+  $hdrInfo['entries'] = [new r\TxEntry($payerEntry), new r\TxEntry($payeeEntry)];
+  $tx = new r\Tx($hdrInfo);
+  return $tx->insert(TRUE);
+}
+
+/**
+ * Fabricate a bogus invoice.
+ * Minimum parameters: amount, payer, payee
+ * @return:
+ *   if $testOnly return TRUE if the data is as expected
+ *   otherwise return the record ID of the created invoices (treated as TRUE in test steps)
+ */
+function doInvoice($info) {
+  global $testOnly, $channel;
+  ///debug("doInvoice(" . print_r($info, true) . "), testOnly=$testOnly");
+  extract($info);
+  $info['for'] = u\arrayGet($info, 'for', 'this or that');
+  $info['purpose'] = u\arrayGet($info, 'purpose', $info['for']);
+  unset($info['for']);
+  $xx = $info['purpose'];
+  if ($testOnly) return verifyRecord('r_invoices', $info);
+
+  $missing = array_diff_key(['amount'=>1, 'payer'=>1, 'payee'=>1, 'purpose'=>1], $info);
+  u\EXPECT($missing == [], "missing fields " . print_r($missing, true));
+
+  $invInfo = u\exactly('status goods created', $info, [TX_PENDING, u\forCash($info['purpose']) ? FOR_USD : FOR_GOODS, now()]);
+  switch ($invInfo['status']) {
+  case 'denied': $invInfo['status'] = TX_DENIED; break;
+  case 'pending': $invInfo['status'] = TX_PENDING; break;
+  case 'approved': $invInfo['status'] = TX_APPROVED; break;
   }
+  $invInfo = array_merge($invInfo, just('nvid amount flags data payer payee purpose', $info));  // extract directly, and might not be present
+  $nvid = db\updateOrInsert('r_invoices', $invInfo, 'nvid');
+  u\EXPECT(!empty($nvid));
+  $xid = $invInfo['status'];
+  if ($xid > 0) {  // it was paid, and the status refers to the transaction
+    // No -- don't do this, because there is insufficient information
+    /* $txInfo = just('created amount payer payee purpose for', $invInfo); */
+    /* $txInfo['xid'] = $xid; */
+    /* doTx($txInfo, 'invoice-payment'); */
+  }
+  return $nvid;
 }
 
 /**
@@ -449,10 +496,20 @@ function notice($notice, $id, $subs = []) {
  * Say whether the record count in a table is correct.
  */
 function count($what, $count) {
-	global $testOnly; if (!$testOnly) return FALSE;
-	
-	$what = $what == 'accounts' ? 'users' : "r_$what";
-	return (db\count($what) == $count);
+	global $testOnly;
+  if (!$testOnly) return FALSE;
+
+  switch ($what) {
+  case 'accounts':
+    return db\count('users') == $count;
+  /* case 'r_txs': */
+  /* case 'tx_hdrs': */
+  case 'tx_hdrs':
+  case 'txs':
+    return db\count('tx_hdrs', "xid > 0") == $count;
+  default:
+    return db\count('r_' . $what) == $count;
+  }
 }
 
 /**
@@ -476,7 +533,8 @@ function doneStep($id, $step) {
  */
 function doMembersHave($info) {
   global $testOnly;
-  if ($balFields = just(T_BALANCE_FLDS, $info) and !doBalance($balFields, TRUE)) return FALSE;
+  $balFields = just(T_BALANCE_FLDS, $info);
+  if (!empty($balFields) and !doBalance($balFields, TRUE)) return FALSE;
 
   $a = r\acct($id = t\uid($info['uid']));
   $info = justNOT(T_BALANCE_FLDS, $info); // don't rehandle balance fields, and already got id
@@ -507,11 +565,13 @@ function memberFieldValues($list) {
 }
 
 /**
- * Make the cached balances and other numeric fields be thus and such.
+ * Make the balance and other numeric fields be thus and such.
+ * Balance is set by creating dummy transactions (with negative xids)
  * "?" in a field means ignore its value when testing
  */
 function doBalance($info) {
   global $testOnly;
+  static $testXid = 0;
 
 /**/  if ($info != just(T_BALANCE_FLDS, $info)) return t\output("spurious field in balances: " . print_r($info, 1));
   $uid = $uid0 = $info['uid'];
@@ -519,25 +579,29 @@ function doBalance($info) {
   if (!$a = r\acct($uid)) return t\output("account $uid0 does not exist");
   $a->reread(TRUE); // otherwise db updates are invisible
 
-//  if (isset($info['r']) and !isset($info['balance'])) $info['balance'] = $info['r'] - @$info['rewards']; // 20170515
-//  t\fixData($info);
-/// print_r(compact('a','id','id0'));
-  if (!$testOnly) { // setting the values
-    unset($info['uid']);
-    return ($info ? $a->update($info) : TRUE); // handle only id being passed
+  if ($testOnly) {
+    foreach ($info as $k => $v) if ($v != '?') {
+      if (t\badEq("db $k", $a->o($k), $v, $uid)) return FALSE;
+    }
+    return TRUE;
   }
-
-  // verify
-  if (!$calc = t\uidCredit($uid)) return FALSE;
-  foreach (ray($cashies = 'balance rewards') as $k) {
-    $v = @$info[$k];
-    if (isset($v) and $v != '?') if ($uid > 0 or $k != 'rewards') {
-      $cachedVal = $a->o($k);
-      if (t\badEq("cached $k", $cachedVal, $v, $uid)) return FALSE;
-      if (!$a->jid and t\badEq("calc $k", $calc->$k, $v, $uid)) return FALSE;
+    
+  if (array_key_exists('balance', $info)) {
+    $testXid -= 1;
+    if (abs($info['balance']-$a->balance) >= 0.005) {
+      $res = be\transfer('charge', r\acct(CGID), $a, -($info['balance']-$a->balance), 'set balance for testing', FOR_NONGOODS,
+                         ['force'=>1, 'xid'=>$testXid]);
+      u\EXPECT($res[0], "trouble creating transfer to set balance");
     }
   }
-  foreach ($not = justNOT($cashies, $info) as $k => $v) {
+
+  foreach ($info as $k => $v) {
+    if ($k == 'balance' or $k == 'uid') continue;
+    $a->update($k, $v);
+  }
+  
+  // verify
+  foreach ($info as $k => $v) {
     if ($v != '?' and $k != 'committed' and $uid > 0) if (t\badEq("db $k", $a->o($k), $v, $uid)) return FALSE;
   }
   return TRUE;
@@ -564,22 +628,35 @@ function usdTransferCount($where = '1') {
 
 function usdTransfers($txs) {
   global $testOnly, $channel; $channel0 = $channel;
-
   foreach ($txs as $tx) { // do not extract $tx, because setDft will fail after the first unless we unset vars
-    if (@$tx['payee']) $payee = $tx['payee'] = t\uid($tx['payee']);
-
+    if (array_key_exists('payee', $tx)) $tx['payee'] = t\uid($tx['payee']);
     if ($testOnly) {
       if (isset($tx['risks'])) $tx['risks'] = getRisks($tx['risks'], K_TX_RISKS);
       if (!verifyRecord('r_usd', $tx)) return FALSE;
-    } else {
-      if (!$a = r\acct(@$payee)) return t\output('Bad payee: ' . @$payee);
-      $tx['bankAccount'] = @$a->vsecure['bankAccount'];
-      u\setDft($tx['txid'], t\seq());
-      u\setDft($tx['risk'], NULL);
-      u\setDft($tx['created'], @$tx['completed']);
-      if (!db\insert('r_usd', $tx, 'txid')) return FALSE;
-//      if (@$tx['completed']) $a->update('r', $a->o_r - $tx['amount']);
-      if (@$tx['completed']) $a->update('balance', $a->o_balance + $tx['amount']);
+      return TRUE;
+    }
+    extract(u\exactly('amount completed', $tx, null));
+
+    $amount = u\arrayGet($tx, 'amount', null);
+    $err = u\badAmount($amount);
+    if ($err) {
+      t\output($err);
+      return false;
+    }
+    $a = r\acct($tx['payee']);
+    if (empty($a)) return t\output('Bad payee: ' . @$payee);
+    $txid = be\createUsdTransfer($a, $amount, u\arrayGet($tx, 'created', now()), u\arrayGet($tx, 'txid', null));
+    if (!$txid) {
+      t\output('failure creating usd xfr: ' . $txid);
+      return FALSE;
+    }
+    if (!empty($tx['deposit'])) {
+      $xde=$tx['deposit'];
+      u\EXPECT(db\update('r_usd', just('txid deposit', $tx), 'txid'), 'failure depositing usd');
+    }
+    if (!empty($tx['completed'])) {
+      u\EXPECT(be\completeUsdTx($a, $txid, $tx['amount'], u\arrayGet($tx, 'automatic', false), $completed),
+               'failure completing usd transfer');
     }
   }
   return TRUE;
@@ -595,7 +672,7 @@ function cronRuns($op) {
   global $cronOp; $cronOp = $op;
   include_once __DIR__ . '/rcron/rcron.inc';
   
-  $now = r\rTime();
+  $now = now();
   \setV('r_last_cron', ray('day week month', $now, $now, $now)); // normally don't run periodics
 
   if ($op == 'ALL') { //  or strpos(R_DAILY_TASKS, " $op ")
@@ -615,14 +692,15 @@ function cronRuns($op) {
  * @param bool $ignoreCalc: <ignore errors when comparing with calculated values>
  */
 function uidCredit($uid, $ignoreCalc = TRUE) {
-  $info = be\creditInfo(ray('uid noj', $uid, TRUE));
+  $info = be\creditInfo([$uid]);
   $a = r\acct($uid);
   if ($uid > 0 and !$a->jid) foreach (ray('balance') as $k) { // (community amounts don't get cached)
-    if (!t\eq($v1 = $info->$k, $v2 = $a->o($k) + 0)) {
-      output("$uid Calculated $k different from cache: $v1 <> $v2");
-      if (!$ignoreCalc) return FALSE;
+      $v1 = u\arrayGet($info, $k, null);
+      if (!t\eq($v1, $v2 = $a->o($k) + 0)) {
+        output("$uid Calculated $k different from cache: $v1 <> $v2");
+        if (!$ignoreCalc) return FALSE;
+      }
     }
-  }
   return $info;
 }
 
@@ -645,9 +723,9 @@ function fullQid($q) {
  */
 function uid($id, $field = 'id') {
 //  u\EXPECT($id, 'empty id'); // otherwise site loops (?)
-  if (is_numeric($id) or empty($id)) return $id;
-  if (in($id, 'community ctty')) return r\serverUid();
-  if ($id == 'cgf') return CGID;
+  if (is_numeric($id) or empty($id)) { return $id; }
+  if (in($id, 'community ctty')) { return r\serverUid(); }
+  if ($id == 'cgf') { return CGID; }
 //  return r\qo($id)->$field; FAILS
   return r\qo(t\fullQid2($id))->$field;
 }
@@ -686,7 +764,6 @@ function noSuchEmail($index, $email) {
   return !findEmail($index, $email, []);
 //  $subject = strtr($GLOBALS['emailSubjects'][$index], $esubs);
 //  $pattern = strtr('%"index":"INDEX","email":"EMAIL"%', ray('INDEX EMAIL', $index, $email));
-//  return !db\exists('r_log', 'info LIKE :pattern', compact('pattern'));
 }
 
 /** 
@@ -839,6 +916,7 @@ function makePicture($photo, $a) {return $a->update(compact('photo'));}
  * @todo: after everyone is up to version 217, add penultimate param: $proof = 'calc'
  */
 function hitServer($op, $extra = [], $agent, $device = '', $version = 221) {
+  /// debug("hitServer($op, " . print_r($extra, true) . ", $agent, $device, $version)");
   global $rposResult;
   if ($agent) $agent = t\fullQid2($agent);
   extract(just('amount member code created proof goods', $extra));
@@ -864,7 +942,7 @@ function hitServer($op, $extra = [], $agent, $device = '', $version = 221) {
 
 function txCountIs($n) {
   global $testOnly; if (!$testOnly) return FALSE;
-  return (db\count('r_txs') == $n);
+  return (db\count('tx_hdrs') == $n);
 }
 
 /**
@@ -944,7 +1022,7 @@ function verifyRecord($table, $info) {
     : ((in($key, R_DATE_FLDS) or stripos($key, 'date') !== FALSE) ? 
       "DATE(FROM_UNIXTIME($key))<=>DATE(FROM_UNIXTIME(:$key))" 
     : (in($key, 'trust risk') ? "CAST(ROUND($key, 2) AS CHAR)<=>:$key"
-    : "$key<=>:$key")); // null-safe ==
+    : "`$key`<=>:$key")); // null-safe ==
   }
 
   $crit = join(' AND ', $crit);
@@ -1119,13 +1197,13 @@ function postLogout($function) {
 }
 
 /**
- * Assign a name to a variable that can be used in tests using the "%varable" pseudo-Gherkin syntax.
+ * Assign a name to a test variable that can be used in tests using the "%varable" pseudo-Gherkin syntax.
  * @param string $varName: variable name
  * @param string $index: a string or a message index
  * @param assoc $subs: substitutions (if any)
  * @return TRUE
  */
-function varIs($varName, $index, $subs = []) {
+function tvarIs($varName, $index, $subs = []) {
   global $testOnly; if ($testOnly) return FALSE;
   global $testVars;
   $testVars[$varName] = t($index, $subs[0]);
@@ -1234,9 +1312,11 @@ function output($msg, $color = 'error') {
 function clear($ch = 0) {
 /**/  if (!isDEV or isPRODUCTION) die('clear ' . DEV_ONLY_MSG);
   include_once __DIR__ . '/admin/admin.inc';
+  global $tTime; $tTime = time(); // all events happen simultaneously during a test (conceptually)
   global $lastGo, $formOut, $formArray, $formSta, $testOp, $testConfirmation, $tChecked, $tRadios, $testEmails;
   global $nextCode; $nextCode = NULL;
   global $sms_devel; $sms_devel = TRUE;
+  global $newThresholds; unset($newThresholds);
   global $testRewardStep; $testRewardStep = 500;
 //  global $testRewarding; $testRewarding = TRUE; // normally set this true in tests only if testing this feature
   global $T_POST; $T_POST = $_POST = [];
@@ -1252,12 +1332,14 @@ function clear($ch = 0) {
 /**/ if (u\test() and !strpos($sceneTest->sceneName, 'Statement')) echo "scene: $sceneTest->sceneName<br>\n"; // helpful when test dies
 ///   file_put_contents(flog(), ''); // clear log file on disk
 
-  $tables = 'r_bad r_ballots r_boxes r_stakes r_coupons r_coupated r_do r_events r_honors r_investments r_invites r_invoices r_changes r_near r_notices r_options r_pairs r_proposals r_questions r_proxies r_ratings r_recurs r_request r_relations r_shares r_stats r_tous r_txs r_usd r_usd2 r_user_industries r_votes x_users x_relations x_invoices x_txs x_usd x_photos queue sessions cache';
+  $tables = 'r_bad r_ballots r_boxes r_changes r_company r_coupated r_coupons r_do r_events r_honors r_investments r_invites r_invoices r_ips r_near r_notices r_options r_pairs r_photos r_proposals r_proxies r_questions r_ratings r_recurs r_relations r_request r_shares r_stakes r_stats r_tous r_usd r_usd2 r_user_industries r_votes tx_disputes_all tx_entries_all tx_hdrs_all x_invoices x_photos x_relations x_usd x_users queue sessions cache';
   foreach (ray('bootstrap form menu') as $k) $tables .= " cache_$k";
   foreach (ray($tables) as $table) if (db\exists($table)) db\q("TRUNCATE $table");
 
   db\q('DELETE FROM users WHERE uid<>0');
   db\q('DELETE FROM r_criteria WHERE ctty<>0');
+  $varKeys = ray('backingReserve code companies newThresholds negReserve r_last_cron riskThresholds version');
+  db\q("DELETE FROM variable WHERE name IN ('" . join("','", $varKeys) . "')");
   a\setupBasicAccounts();
 
   db\q('UPDATE users SET floor=0,balance=0,minimum=NULL,rewards=0,committed=0');
@@ -1346,7 +1428,8 @@ function badEq($type, $v1, $v2, $id) {
 function shownWith($content, $type = 'text', $mustBePresent = TRUE) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $formOut;
-
+  /// debug("shownWith(" . print_r($content, true) . ", $type, $mustBePresent)");
+  
   $model = t\strip($formOut[$type]);
 //  if (!$model and $type == 'text') $model = file_get_contents(TEST_PDF_FLNM);
 

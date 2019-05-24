@@ -77,7 +77,7 @@ function update($table, $info, $key) {
   logSql(compact(ray('table info key')));
 
   if (!isset($info['modified']) and hasField($table, 'modified')) {
-    $info['modified'] = NOW;
+    $info['modified'] = now();
   }
 	
   $sql = '';
@@ -104,13 +104,13 @@ function insert($table, $info, $key = 'id') {
   logSql(compact(ray('table info')));
 
   foreach (ray('created modified') as $k) if (!isset($info[$k]) and hasField($table, $k)) {
-    $info[$k] = NOW; // set these automatically
+    $info[$k] = now(); // set these automatically
   }
 	
   $sql = '';
   foreach ($info as $field => $v) {
     /* if ($field == $key) u\EXPECT(FALSE, 'key value specified in database insert'); // may actually be needed */
-    if (is_array($v)) u\EXPECT(FALSE, 'array in insert param'); // exception fails if called in $DBTX
+    if (is_array($v)) u\EXPECT(FALSE, "array in insert param for field $field"); // exception fails if called in $DBTX
     $sql .= ",`$field`=:$field";
   }
   $sql = "INSERT INTO $table SET " . substr($sql, 1);  // get rid of leading comma
@@ -144,6 +144,7 @@ function updateOrInsert($table, $info, $key) {
  * @param string $fields: comma-separated list of fields (actual or calculated) -- use * for all
  */
 function rows($fields, $table, $where = '1', $subs = [], $labeled = TRUE) {
+  if (is_array($where)) list ($where, $subs) = [u\where($where), $where];
   $res = db\q("SELECT $fields FROM $table WHERE $where", $subs)->fetchAll(); // fetchAll means fetchAllObject
   if (!$labeled) foreach ($res as $i => $one) $res[$i] = array_values((array) $one);
   return $res;
@@ -153,12 +154,14 @@ function rows($fields, $table, $where = '1', $subs = [], $labeled = TRUE) {
  * Return an array of matching data.
  */
 function col($field, $table, $where = '1', $subs = []) {
+  if (is_array($where)) list ($where, $subs) = [u\where($where), $where];
   return db\q("SELECT $field FROM $table WHERE $where", $subs)->fetchCol();
 }
 function lst($field, $table, $where = '1', $subs = []) { // lst because "list" is a reserved word
   return join(', ', db\col($field, $table, $where, $subs));
 }
 function keyed($table, $where = '1', $subs = []) {
+  if (is_array($where)) list ($where, $subs) = [u\where($where), $where];
   return db\q("SELECT * FROM $table WHERE $where", $subs)->fetchAllKeyed();
 }
 
@@ -182,7 +185,7 @@ function logSql($args) {
  * @param assoc $values: values to add to the data field in that record
  */
 function setData($table, $id, $values) {
-  $keys = ray('users r_txs r_invoices', 'uid', 'xid', 'nvid');
+  $keys = ray('users r_invoices tx_hdrs', 'uid', 'nvid', 'xid');
   $key = $keys[$table];
   u\EXPECT($key, 'bad table');
   $data = db\get('data', $table, "$key=:id", compact('id'));
@@ -205,7 +208,7 @@ function setData($table, $id, $values) {
 function setFlag($table, $id, $bit, $bool = TRUE) {
   if ($table == 'users') return r\acct($id)->setBit($bit, $bool);
 
-  $keys = ray('users r_txs r_invoices', 'uid', 'xid', 'nvid');
+  $keys = ray('users_txs r_invoices tx_hdrs', 'uid', 'nvid', 'xid');
   $key = $keys[$table];
   u\EXPECT($key, 'bad table');
   $flags = db\get('flags', $table, "$key=:id", compact('id'));
@@ -222,7 +225,12 @@ function setFlag($table, $id, $bit, $bool = TRUE) {
  */
 function del($table, $idnm, $id, $subs = []) {
   $where = is_numeric($id) ? "$idnm=$id" : $id;
-  if (in($table, TRACK_DELETED)) {
+  if (in($table, DELETED_BY_VIEW)) {
+    $all_table = $table . '_all';
+    $q = db\q("UPDATE $all_table SET deleted=:NOW WHERE (deleted IS NULL OR deleted=0) AND $where");
+    $ok = ($q->rowCount() > 0);
+    return;
+  } elseif (in($table, TRACK_DELETED)) {
     $xtable = $table == 'users' ? 'x_users' : str_replace('r_', 'x_', $table);
     $q = db\q("INSERT INTO $xtable SELECT :NOW AS deleted,a.* FROM $table a WHERE $where", $subs);
     $ok = ($q->rowCount() > 0);
