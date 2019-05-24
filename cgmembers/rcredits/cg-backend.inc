@@ -76,11 +76,14 @@ EOF;
     $banking = FALSE;
     $tid = null;
     $myAgentUid = null;
+    $suppressRoundupEntries = TRUE;
+    $newEntries = [];
     foreach ($entries as $entry) {
       if (in_array($entry['uid'], $uids)) {
         $myTxAmount += $entry['amount'];
         if (!empty($entry['acctTid'])) $tid = $entry['acctTid'];
         $myAgentUid = $entry['agentUid'];
+        if ($entry['entryType'] == ENTRY_DONATION) $suppressRoundupEntries = FALSE;
       }
       if (in_array($entry['actorId'], $uids)) $byMe = TRUE;
       if (in_array($entry['uid'], [CG_INCOMING_BANK_UID, CG_OUTGOING_BANK_UID])) $banking = TRUE;
@@ -95,9 +98,11 @@ EOF;
       $entry['myAgentUid'] = $myAgentUid;
       if (!empty($entry['reversedTid'])) $entry['description'] .= t(" (reverses #" . $entry['reversedTid'] . ")");
       if (!empty($entry['reversedByTid'])) $entry['description'] .= t(" (reversed by #" . $entry['reversedByTid'] . ")");
-      $entries[$j] = $entry;
+      if (! ($suppressRoundupEntries and ($entry['entryType'] == ENTRY_DONATION))) {
+        $newEntries[] = $entry;
+      }
     }
-    $txs[$i] = $entries;
+    $txs[$i] = $newEntries;
   }
   return $txs;
 }

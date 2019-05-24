@@ -62,7 +62,7 @@ function getReport($nm) {
     $colClasses = ray(',,,,num');
     list ($us, $them) = $nm == 'customers' ? ['payee', 'payer'] : ['payer', 'payee'];
     $whereInv = "$us=:myid AND amount<>0 GROUP BY $them";
-    $whereTx = "$us.uid=:myid AND $us.amount<>0 GROUP BY $them.uid";
+    $whereTx = "$us.uid=:myid AND $us.amount<>0 AND $them.uid NOT BETWEEN 0 AND (:CANONIC_ACCTS-1) GROUP BY $them.uid";
     $sql = <<< X
       SELECT u.uid,SUM(net0) AS net, SUM(invs0) AS invs FROM (
         SELECT $them.uid AS uid, SUM($them.amount) AS net0, 0 AS invs0
