@@ -6,7 +6,9 @@
 # server "example.com", user: "deploy", roles: %w{app db web}, my_property: :my_value
 # server "example.com", user: "deploy", roles: %w{app web}, other_property: :other_value
 # server "db.example.com", user: "deploy", roles: %w{db}
-server "ws.rcredits.org", roles: %w{app db web}
+server "ws.rcredits.org", roles: %w{app db web}, user: "ws"
+
+set :local_user, "ws"
 
 
 # role-based syntax
@@ -33,7 +35,7 @@ server "ws.rcredits.org", roles: %w{app db web}
 set :deploy_to, "/home/ws/cgmembers-frame"
 set :branch, "develop"
 # ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp
-
+set :tmp_dir, "/home/ws/tmp"
 
 
 # Custom SSH Options
@@ -44,11 +46,12 @@ set :branch, "develop"
 #
 # Global options
 # --------------
-#  set :ssh_options, {
-#    keys: %w(/home/rlisowski/.ssh/id_rsa),
-#    forward_agent: false,
-#    auth_methods: %w(password)
-#  }
+set :ssh_options, {
+  # keys: %w(/home/rlisowski/.ssh/id_rsa),
+  forward_agent: false,
+  auth_methods: %w(publickey),
+  user: "ws"
+}
 #
 # The server-based syntax can be used to override options:
 # ------------------------------------
