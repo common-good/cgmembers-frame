@@ -6,7 +6,9 @@
 # server "example.com", user: "deploy", roles: %w{app db web}, my_property: :my_value
 # server "example.com", user: "deploy", roles: %w{app web}, other_property: :other_value
 # server "db.example.com", user: "deploy", roles: %w{db}
-server "new.commongood.earth", roles: %w{app db web}
+server "new.commongood.earth", roles: %w{app db web}, user: "new"
+
+set :local_user, "new"
 
 
 # role-based syntax
@@ -30,8 +32,9 @@ server "new.commongood.earth", roles: %w{app db web}
 # For available Capistrano configuration variables see the documentation page.
 # http://capistranorb.com/documentation/getting-started/configuration/
 # Feel free to add new variables to customise your setup.
-set :branch, 'master'
-
+set :deploy_to, "/home/new/cgmembers-frame"
+set :branch, "master"
+set :tmp_dir, "home/newtest/tmp"
 
 # Custom SSH Options
 # ==================
@@ -41,11 +44,12 @@ set :branch, 'master'
 #
 # Global options
 # --------------
-#  set :ssh_options, {
-#    keys: %w(/home/rlisowski/.ssh/id_rsa),
-#    forward_agent: false,
-#    auth_methods: %w(password)
-#  }
+set :ssh_options, {
+  # keys: %w(/home/rlisowski/.ssh/id_rsa),
+  forward_agent: false,
+  auth_methods: %w(publickey),
+  user: "new"
+}
 #
 # The server-based syntax can be used to override options:
 # ------------------------------------
