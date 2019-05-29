@@ -98,23 +98,23 @@ Scenario: We calculate risks
   When cron runs "acctRisk"
   Then members have:
   | uid  | risks |*
-  | .ZZA | adminOk,trusted,geography,badConx,moreOut,big7Week |
-  | .ZZB | trusted,moves,rents,moreIn,moreOut |
+  | .ZZE | new,shady,poBox,moreIn |
+  | .ZZI | new,moves,fishy |
+  | .ZZH | moves,ssnOff |
   | .ZZC | cashCo,homeCo,miser,bigDay,bigWeek,big7Week |
 #  | .ZZC | cashCo,homeCo,miser,bigDay | (this happens sometimes but is WRONG: 1270>1200 and 660>600)
-  | .ZZD | trusted,hasBank,miser |
-  | .ZZE | new,shady,poBox,moreIn |
-  | .ZZF | bigDay,bigWeek |
   | .ZZG | new,moves,badConx,addrOff |
-  | .ZZH | moves,ssnOff |
-  | .ZZI | new,moves,fishy |
+  | .ZZF | bigDay,bigWeek |
+  | .ZZB | trusted,moves,rents,moreIn,moreOut |
+  | .ZZA | adminOk,trusted,geography,badConx,moreOut,big7Week |
+  | .ZZD | trusted,hasBank,miser |
 # Do not specify exact risk because minor tweaks in the calculations cause major changes
 
   Given riskThresholdPercent is "10"
   When cron runs "acctRiskFinish"
   Then riskThresholds:
   | Day | Week | 7Week | Year |*
-  | 621 |  621 |  1270 | 1570 |
+  | 660 |  660 |  1270 | 1570 |
 #  | 330 |  340 |   635 |  785 |
 
   When cron runs "txRisk"

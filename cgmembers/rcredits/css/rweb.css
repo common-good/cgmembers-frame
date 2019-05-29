@@ -604,7 +604,7 @@ body.logged-in.one-sidebar #content {width:100%;}
 /* Agreement */
 #frm-agreement #instructions {background:lightyellow;}
 #frm-agreement .checkbox {display:inline-block; width:0; position:relative; left:-37px; top:5px; z-index:1;}
-#frm-agreement #edit-agreement .control-label {max-width:8.3%; min-width:0; margin:0; padding:0;} 
+#frm-agreement #edit-agreement .control-label {min-width:0; margin:0; padding:0;} 
 #frm-agreement #edit-agreement .control-data {max-width:900px; width:80%;}
 #frm-agreement #agreement ul,
 #frm-agreement #agreement ol {margin-left:25px;}

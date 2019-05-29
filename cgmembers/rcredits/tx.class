@@ -42,7 +42,7 @@ class Tx {
    */
   function __construct($info) {
     $missing = array_diff(Tx::REQUIRED_FIELDS, array_keys($info));
-    u\EXPECT($missing == [], "missing fields in Tx::createNew: " . print_r($missing, true));
+/**/    u\EXPECT($missing == [], "missing fields in Tx::createNew: " . print_r($missing, true));
 
     $this->xid = u\arrayGet($info, 'xid', 0);
     $this->goods = u\arrayGet($info, 'goods', null);
@@ -65,20 +65,25 @@ class Tx {
    */
   public function __get($f) {
     $tx = $this;
+    global $mya;
+    $myid = $mya ? $mya->id : NULL;
+    
     switch ($f) {
-    case 'actorEntry': return $this->getActorEntry();
-    case 'otherEntry': return ($this->payerEntry->uid == $this->actorId) ? $this->payeeEntry : $this->payerEntry;
-    case 'payerEntry': return $this->getPayerEntry();
-    case 'payeeEntry': return $this->getPayeeEntry();
-    case 'payerId': return $this->payerEntry->uid;
-    case 'payeeId': return $this->payeeEntry->uid;
+    case 'actorEntry': return $tx->getActorEntry();
+    case 'otherEntry': return ($tx->payerEntry->uid == $tx->actorId) ? $tx->payeeEntry : $tx->payerEntry;
+    case 'payerEntry': return $tx->getPayerEntry();
+    case 'payeeEntry': return $tx->getPayeeEntry();
+    case 'payerId': return $tx->payerEntry->uid;
+    case 'payeeId': return $tx->payeeEntry->uid;
     case 'otherUid':
-    case 'otherId': return $this->otherEntry->uid;
-    case 'actor': return r\acct($this->actorId);
-    case 'actorAmount': return $this->getActorAmount();
-    case 'payerAmount': return $this->payerEntry->amount;
-    case 'other': return r\acct($this->otherId);
-    case 'toMe': return $this->payeeEntry->uid==r\acct()->uid;
+    case 'otherId': return $tx->otherEntry->uid;
+    case 'actor': return r\acct($tx->actorId);
+    case 'actorAmount': return $tx->getActorAmount();
+    case 'payerAmount': return $tx->payerEntry->amount;
+    case 'other': return r\acct($tx->otherId);
+    case 'toMe': return ($tx->payeeId == $myid);
+    case 'byMe': return ($tx->actorId == $myid);
+    case 'reversedByXid': return db\get('xid', 'tx_hdrs_all', 'reversesXid=:xid', ['xid' => $this->xid]);
     default:
       u\EXPECT(FALSE, "unexpected field '$f' requested");
     }
@@ -88,6 +93,7 @@ class Tx {
     u\EXPECT(FALSE, "Cannot set $name");
   }
   
+  public function is($bit) {return (bool) u\getBit($this->flags, $bit);}
 
   private function getPayerEntry() {
     foreach ($this->entries as $entry) {
@@ -155,7 +161,7 @@ class Tx {
    * @param xid $xid: transaction record id
    * @return the new instance of Tx
    */
-  static function read($xid, $where = '1', $subs = []) {
+  public static function read($xid, $where = '1', $subs = []) {
     /* u\EXPECT(is_integer($xid)); */
     
     $DBTX = db_transaction();
@@ -209,7 +215,7 @@ class Tx {
       ORDER BY e.xid
 EOF;
     $result = db\q($sql, []);
-    u\EXPECT($result, "Failure reading transactions for user(s) " . print_r($uids, true));
+/**/    u\EXPECT($result, "Failure reading transactions for user(s) " . print_r($uids, true));
     $lastXid = 0;  // no xid should ever be 0
     $txs = [];
     $entries = [];
@@ -241,7 +247,7 @@ EOF;
    * @return associative array: the old transaction record (FALSE if none)
    */
   static function lastTx($uids, $where = 1, $subs = []) {
-    /// debug("lastTx(" . print_r($uids, true) . ", '$where', " . print_r($subs, true) . ")");
+///   debug("lastTx(" . print_r($uids, true) . ", '$where', " . print_r($subs, true) . ")");
     $xid = db\get('t.xid', 'tx_hdrs t JOIN tx_entries e USING(xid)',
                   "e.uid IN (:uids) AND $where ORDER BY t.created DESC LIMIT 1",
                   ['uids' => $uids] + $subs);

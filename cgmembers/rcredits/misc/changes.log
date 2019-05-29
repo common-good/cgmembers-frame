@@ -1,3 +1,16 @@
+2019-05-29 feature post-split-fixes
+. fixed cron bug that paid closed recurring payments
+. reinstated instructions in agreement form and cleaned it up
+. removed spurious ")" in discount rebate description and corrected coupon tests
+. fixed bug in nonmember.html (lowercased "code")
+. fixed some (but not all) bugs in transaction risk calculations (in cg-risk.inc)
+. created views for payer and payee entries
+. temporarily disabled repeating transactions
+. fixed txInfo form
+. repaired risk calculations
+. repaired risk tests somewhat
+. fixed bug that prevented cross-community account changes
+
 2019-05-05 feature/misc-todos
 . fixed bug that doubled and mislabeled first recurring donation (not to CG)
 . changed SNAP question to "Do you qualify for any of the following"

@@ -27,7 +27,7 @@ function setupBasicAccounts() {
   
   if (!db\exists('users', 'uid=0')) db\insert('users', ['uid' => 0], 'uid'); // required for signed-out messages (w\say())
   
-  $q = db\q('SELECT :R_REGION_FLDS FROM r_regions');
+  $q = db\q('SELECT region,fullName,st,zip,federalId,hasServer FROM r_regions');
   while ($row = $q->fetchAssoc()) { // create or update all regions
     extract($row);
     if (!$hasServer) continue;
@@ -61,13 +61,13 @@ function setupBasicAccounts() {
     new r\Acct($info);
   }  
 
+  $server = r\serverUid();
   $x1=new r\Acct(array_combine($keys, array(CG_ROUNDUPS_UID, 0, t('roundup'), t('Roundup Donations'), 'cg@commongood.earth', '', 0, 0, 6)));
   new r\Acct(array_combine($keys, array(CG_CRUMBS_UID, 0, t('crumbs'), t('Crumb Donations'), 'cg@commongood.earth', '', 0, 0, 6))); 
   new r\Acct(array_combine($keys, array(CG_SERVICE_CHARGES_UID, 0, t('bank fees'), t('Bank service charges'), 'cg@commongood.earth', '', 0, 0, 6))); 
   new r\Acct(array_combine($keys, array(CG_INCOMING_BANK_UID, 0, t('bank-in'), t('--'), 'cg@commongood.earth', '', 0, 0, 6))); 
   new r\Acct(array_combine($keys, array(CG_OUTGOING_BANK_UID, 0, t('bank-out'), t('--'), 'cg@commongood.earth', '', 0, 0, 6)));
   
-  $server = r\serverUid();
   if ($server == r\serverUid('NEW')) { // no need to set up CGF unless in Western Mass (or testing)
     r\acct($server)->update('created', R_LAUNCH); // a date in the past makes tests work better
     if (db\exists('users', 'uid=' . CGID)) return; // already done
@@ -95,7 +95,7 @@ define('R_COS', 'CAAAAA RMCAAA MIWAAA INAAAA NEWAAD NEWAIG NEWAKH NENAAB NEWALJ 
  
 function makeTestAccounts() {
   if (isPRODUCTION) return; // protects us even if the constant is not set
-  /// print_r("makeTestAccounts()<br>");
+///   print_r("makeTestAccounts()<br>");
 
   $a = a('aab', '', true);
   $selling = "groceries\ngifts\nsundries\ndeli\nbaked goods";
@@ -160,7 +160,7 @@ function showActivity($a) {
                              'uid=:uid AND created>:when', compact('uid', 'when'))
     : db\count('tx_entries payer JOIN tx_hdrs USING(xid) JOIN tx_entries payee USING (xid)',
                'payer.uid=:uid AND payer.amount < 0 AND payee.uid<>:CGID AND payee.amount > 0 AND created>:when',
-               compact(ray('uid cgf when')));
+               compact(ray('uid when')));
   $ret = t('%count %what', 'count what', $count, $a->co ? t('sales') : t('purchases'));
   foreach (ray('created activated signed') as $k) $subs[$k] = $a->$k ? u\fmtDate($a->$k) : t('NO');
   $subs['use'] = u\fmtDate($a->ok ? $a->access : $a->login);
@@ -1033,7 +1033,6 @@ function anonymize() {
   }
   db\q('UPDATE r_usd SET bankAccount=:ba', ['ba' => 'USkk' . randDigits(19)]);
   db\q('DELETE FROM r_changes WHERE created>=:NOW');
-  flog('zot'); unlink(flog());
 }
 
 /*

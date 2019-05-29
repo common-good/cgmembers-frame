@@ -33,7 +33,7 @@ Setup:
   Then transactions: 
   | xid | created | amount | from | to   | purpose                         | taking |*
   |   1 | %today  |    100 | .ZZA | .ZZC | one (%PROJECT inv#1)            |        |
-  |   2 | %today  |    100 |  256 | .ZZA | transfer to CG,transfer to bank |      1 |
+  |   2 | %today  |    100 |  256 | .ZZA | from bank,to bank |      1 |
 	Then count "txs" is 2
 	And count "usd" is 2
 	And count "invoices" is 4

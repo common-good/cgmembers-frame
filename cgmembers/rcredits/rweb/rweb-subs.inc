@@ -542,7 +542,7 @@ define('FMT_INT', 'trust count');
 //define('FMT_2D', 'negativeBalanceTotal positiveBalanceTotal');
  
 function showRecords($ray, $formatFunc = 'CG\\Web\\formatField', $flagsField = B_LIST) {
-  ///  debug("showRecords(" . print_r($ray, true) . ", $formatFunc, $flagsField)");
+///    debug("showRecords(" . print_r($ray, true) . ", $formatFunc, $flagsField)");
   if (!$ray or empty($ray) or count($ray)==0) return 'data set is empty';
   $first = (array)reset($ray);
   $lines[] = '<tr><th>' . join('</th><th>', array_keys($first)) . "</th></tr>\n";
@@ -768,7 +768,7 @@ function signedBy() {
   $signerA = $mya->cAdmin 
   ? (($mya->co and $mya->helper) ? $mya->helperA : $mya) 
   : $mya->agentA;
-  return textFld(t('Signed:'), $behalf . t('Type your full name here ') . "($signerA->legalName)", required($mya->cAdmin ? $signerA->legalNameDpy : ''));
+  return textFld(t('Signed:'), $behalf . t('Type your full legal name here ') . "($signerA->legalName)", required($mya->cAdmin ? $signerA->legalNameDpy : ''));
 }
 
 /**

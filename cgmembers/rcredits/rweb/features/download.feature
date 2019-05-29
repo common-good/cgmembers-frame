@@ -57,7 +57,7 @@ Scenario: A member downloads transactions for the past year
   | 27  | %ymd-6d | Bea Two       | cash V         |           |      100 |        |    650 | -100 |
   | 12  | %ymd-1w | Our Pub       | this Q         |           |      120 |        |    750 | -120 |
   | 11  | %ymd-3m | Bea Two       | what G         |           |      240 |        |    870 | -240 |
-  | 1   | %ymd-4m | Incoming bank | transfer to CG |      1000 |          |        |   1110 | 1000 |
+  | 1   | %ymd-4m | Incoming bank | from bank      |      1000 |          |        |   1110 | 1000 |
   | 25  | %ymd-4m | Our Pub       | usd F          |           |          |    100 |    110 |  100 |
   | 24  | %ymd-5m | Bea Two       | cash E         |           |          |     10 |     10 |   10 |
   |     |         | TOTALS        |                |      1000 |      540 |    210 |        |  670 |

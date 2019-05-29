@@ -50,7 +50,7 @@ function getTxs($uids, $starting=null, $ending=null) {
     ORDER BY created, e.xid, name
 EOF;
   $results = db\q($sql, ['uids' => $uids]);
-  u\EXPECT($results, "Failure reading transactions for user " . print_r($uids, true));
+/**/  u\EXPECT($results, "Failure reading transactions for user " . print_r($uids, true));
   $lastXid = 0;  // no xid should ever be 0
   $txs = [];  // an array of arrays of entries
   $entries = [];
@@ -110,7 +110,7 @@ EOF;
  * @param unixtime $ending: the ending date/time for the period, e.g., $starting plus one day
  */
 function getCustTxs($aUids, $bUids, $starting, $ending) {
-  ///  debug("getCustTxs(" . print_r($aUids, true) . ", " . print_r($bUids, true) . ", $starting, $ending)");
+///     debug("getCustTxs(" . print_r($aUids, true) . ", " . print_r($bUids, true) . ", $starting, $ending)");
                                                               
   u\EXPECT('array array int int', $aUids, $bUids, $starting, $ending);
   $sql = <<< X
@@ -130,7 +130,7 @@ function getCustTxs($aUids, $bUids, $starting, $ending) {
 X;
 
   $results = db\q($sql, ['aUids' => $aUids, 'bUids' => $bUids]);
-  u\EXPECT($results, "Failure reading transactions between users " . print_r($aUids, true) . " and " . print_r($bUids, true));
+/**/  u\EXPECT($results, "Failure reading transactions between users " . print_r($aUids, true) . " and " . print_r($bUids, true));
 
   $txs = [];  // an array of arrays of entries
   $entries = [];
@@ -247,7 +247,7 @@ EOF;
  * @return string: a report of what got updated
  */
 function updateRelations($updates) {
-  ///  debug("updateRelations(" . print_r($updates, true) . ")");
+///     debug("updateRelations(" . print_r($updates, true) . ")");
   $myid = r\acct()->id;
   $report = '';
   foreach ($updates as $reid => $data) {
@@ -291,7 +291,7 @@ function updateRelations($updates) {
 function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
   global $mya;
 
-  ///  debug("undoTx($xid, $where, , $force)" . print_r($subs, true));
+///     debug("undoTx($xid, $where, , $force)" . print_r($subs, true));
   
   u\EXPECT('int string assoc bool', $xid, $where, $subs, $force);
 
@@ -332,7 +332,7 @@ function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
 function reverse($xid) {
   global $mya, $channel;
 
-  /// debug("reverse($xid)");
+///    debug("reverse($xid)");
 
   $DBTX = \db_transaction();
   if (db\exists('tx_hdrs', 'reversesXid=:xid', ['xid' => $xid])) {
@@ -389,7 +389,7 @@ function reverse($xid) {
  *         [FALSE, explanation] if the payment failed
  */
 function payInvoice($nvid) {
-  /// debug("payInvoice($nvid)");
+///    debug("payInvoice($nvid)");
   
   u\EXPECT('int', $nvid);
   $msg = r\badUnpaidInv($nvid, $inv);
@@ -476,7 +476,7 @@ function payInvoice($nvid) {
  */
 function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
   global $scanned, $channel;
-  ///  debug("transfer($type, $actor->id, $other->id, $amount, " . print_r($for, true) . ", $goods, )" . print_r($data, true));
+///     debug("transfer($type, $actor->id, $other->id, $amount, " . print_r($for, true) . ", $goods, )" . print_r($data, true));
   
   u\EXPECT('string acct acct number string|array int assoc', $type, $actor, $other, $amount, $for, $goods, $data);
   if (is_null($goods)) $goods = FOR_GOODS;
@@ -502,9 +502,8 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
   $short = FALSE;
   
   if (is_null($for)) $for = ray(R_WHYS)[$goods];
-  list($actorFor, $otherFor) = (is_array($for)) ? $for : [$for, $for];
-
-  list ($actorId, $otherId) = array($actor->id, $other->id);
+  list ($actorFor, $otherFor) = is_array($for) ? $for : [$for, $for];
+  list ($actorId, $otherId) = [$actor->id, $other->id];
 
   if ($force != 0) $offline = TRUE; // temporary until app handles this right
 
@@ -591,14 +590,6 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
       $avail = u\fmtAmt($needed - $shortfall);
       $otherName = $other->fullName;
       $msg = $reallyTaking ? ($other->can(B_SECRET) ? 'short from vague' : 'short from') : 'short to';
-      if ($channel == TX_WEB) {
-// too complex        if ($msg == 'short to' and $channel == TX_WEB and r\signedIn()) $msg .= '|increase min';
-/*        if ($goods == FOR_GOODS) {
-          if (!$loser->can(B_DEBT) and $loser->floor < 0 and $channel == TX_WEB) $msg .= '|try debt';
-          $_aDebt = w\atag('/settings/preferences');
-        } //elseif ($actor->cttyRewardy) $msg .= '|short cash help|maybe not cash';
-				*/
-      }
       $loser->suggestAuto();
       $details = t('|%loser was short by %short trying to pay %gainer %amount (available balance is %avail)', 'loser short gainer amount avail', $loser->fullName, $short, $gainer->fullName, u\fmtAmt($needed), $avail);
       $DBTX->rollback();
@@ -643,7 +634,7 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
 // $byme = true; $tome = false
 function sendNotifications($type, $tx, $shortfall) {
   u\EXPECT(compact(ray('type tx shortfall')), 'string tx int|float');
-  ///  debug("sendNotifications($type, " . print_r($tx,true) . ", $shortfall");
+///     debug("sendNotifications($type, " . print_r($tx,true) . ", $shortfall");
   
   /* global $mya; */
   /* $mya = r\acct(); */
@@ -738,7 +729,7 @@ function isBankUid($uid) {
  * @return [ rebate, entries ] where entries is an array of entries
  */
 function handleCoupon($buyer, $seller, $price, $buyerTid, $sellerTid, $when=null) {
-  /// debug("handleCoupon($buyer->id, $seller->id, $price, $buyerTid, $sellerTid, $when)");
+///    debug("handleCoupon($buyer->id, $seller->id, $price, $buyerTid, $sellerTid, $when)");
   if (is_null($when)) $when = now();
   $sql = <<<EOF
     SELECT `on`, c.coupid, amount, ulimit, id, uses
@@ -764,7 +755,7 @@ EOF;
   return [ $rebate,
            [ new r\TxEntry(ray('amount entryType uid agentUid description acctTid relType relatedId',
                                $rebate, ENTRY_OTHER, $buyer->id, $buyer->agentId,
-                               t('discount rebate)'), $buyerTid, 'D', $id)),
+                               t('discount rebate'), $buyerTid, 'D', $id)),
              new r\TxEntry(ray('amount entryType uid agentUid description acctTid relType relatedId',
                                0-$rebate, ENTRY_OTHER, $seller->id, $seller->agentId,
                                t('discount rebate'), $sellerTid, 'D', $id)) ] ];
@@ -781,7 +772,7 @@ EOF;
  * @return FALSE if there is no shortfall, otherwise a message (created by txRet)
  */
 function checkForShortfall($goods, $payer, $payee, $actor, $other, $needed, $force = FALSE) {
-  /// debug("checkForShortfall($goods, $payer->id, $payee->id, $actor->id, $other->id, $needed, $force)");
+///    debug("checkForShortfall($goods, $payer->id, $payee->id, $actor->id, $other->id, $needed, $force)");
   if ($payer->uid < 0) return FALSE;  // it's a community; they don't have shortfalls?
   
   $shortfall = $payer->shortfall($goods, $needed, TRUE, $payee);
@@ -836,13 +827,14 @@ function maxTid($uids) {
  *    subs: replacement parameters, specific to the message (in particular, success=TRUE or FALSE)
  */
 function invoice($actor, $other, $amount, $purpose, $goods, $extra = []) {
-  ///  debug("invoice($actor->id, $other->id, " . print_r($amount, true) . ", " . print_r($purpose, true) . ", " . print_r($goods, true) . ", " . print_r($extra, true) . ")");
+///     debug("invoice($actor->id, $other->id, " . print_r($amount, true) . ", " . print_r($purpose, true) . ", " . print_r($goods, true) . ", " . print_r($extra, true) . ")");
   global $channel;
   
   u\EXPECT(compact(ray('actor other amount purpose')), 'acct acct float string');
   $ks = 'status';
   extract(just($ks, $extra));
   extract(u\exactly('goods created', $extra, [FOR_GOODS, now()]));
+  $flags = 0;
 	foreach (justNOT("status shid coupon coupid force inv api request created", $extra) as $k => $v) {
     u\setBit($flags, $k, $v);
     unset($extra[$k]); // don't leave bits in extras (data field)
@@ -996,7 +988,7 @@ function exception_error_handler($severity, $message, $file, $line) {
  * @return an assoc of results (see $resultKeys, below)
  */
 function creditInfo($uids, $asof = null) {
-  ///  debug("creditInfo(" . print_r($uids, true) . ", $asof)");
+///     debug("creditInfo(" . print_r($uids, true) . ", $asof)");
   u\EXPECT(is_array($uids), 'bad call to creditInfo');
   global $mya;
   
@@ -1039,7 +1031,7 @@ EOF;
   $outProper = $out;
   $inProper = $in;
   
-  $resultKeys = 'in out refunds fees xfees xin inProper outProper balance fromBank toBank pendingBank';
+  $resultKeys = 'in out inProper outProper balance fromBank toBank pendingBank';
   $result = compact(ray($resultKeys));
   
   foreach ($result as $k => $v) $result[$k] = $v = round($v, 2);
@@ -1118,7 +1110,7 @@ function todo($number, $todo = 'nothing', $nonce = 'whatever') {
 function createUsdTransfer($payee, $amount, $created=null, $txid=null) {
   u\EXPECT(compact(ray('payee amount created txid')), 'acct int|float int|empty string|int|empty');
   global $channel;
-  ///  debug("createUsdTransfer($payee->id, $amount, $created, $txid)");
+///     debug("createUsdTransfer($payee->id, $amount, $created, $txid)");
   
   $created = empty($created) ? now() : $created;
   if (empty($txid)) $txid = 1 + db\max('txid', 'r_usd');
@@ -1150,7 +1142,7 @@ function createUsdTransfer($payee, $amount, $created=null, $txid=null) {
  */
 function combineUsdTx($a, $amount, $completed) {
   u\EXPECT([$a, $amount, $completed], 'acct int|float int');
-  ///  debug("combineUsdTx($a->id, $amount, $completed)");
+///     debug("combineUsdTx($a->id, $amount, $completed)");
 
   $DBTX = \db_transaction();
   if (!$a->bankOk) return [FALSE, $amount, $completed];
@@ -1181,7 +1173,7 @@ function combineUsdTx($a, $amount, $completed) {
  * @return bool <success>
  */
 function completeUsdTx($a, $txid, $amount, $automatic, $completed = null) {
-  ///  debug("completeUsdTx($a->id, $txid, $amount, $automatic, $completed)");
+///     debug("completeUsdTx($a->id, $txid, $amount, $automatic, $completed)");
   u\EXPECT([$a, $txid, $automatic], 'acct int|string|empty bool');
   if (empty($completed)) $completed = now();
   $err = u\badAmount($amount);
@@ -1206,9 +1198,9 @@ function completeUsdTx($a, $txid, $amount, $automatic, $completed = null) {
     $tx = new r\Tx(['goods' => FOR_USD, 'actorId' => $payeeId, 'actorAgentId' => $payeeId, 'flags' => 0, 'channel' => $channel,
                     'risk' => $risk, 'risks' => $risks, 'created' => $completed]);
     $tx->addEntry(new r\TxEntry(['entryType' => ENTRY_PAYER, 'amount' => 0-$amount, 'uid' => $bankId, 'agentUid' => $bankId,
-                                 'description' => ($amount > 0) ? t('transfer to CG') : t('transfer to bank')]));
+                                 'description' => ($amount > 0) ? t('from bank') : t('to bank')]));
     $tx->addEntry(new r\TxEntry(['entryType' => ENTRY_PAYEE, 'amount' => $amount, 'uid' => $payeeId, 'agentUid' => $payeeId,
-                                 'description' => $amount > 0 ? t('transfer to bank') : t('transfer to CG')]));
+                                 'description' => $amount > 0 ? t('to bank') : t('from bank')]));
     $xid = $tx->insert();
     if (!$xid) {
       $DBTX.rollback();
