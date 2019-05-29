@@ -38,8 +38,8 @@ class TxEntry {
    *                     but must only include ALLOWED_FIELD entries.
    */
   function __construct($info) {
-    u\EXPECT(array_diff(TxEntry::REQUIRED_FIELDS, array_keys($info)) == [], 'missing fields in Entry:' . print_r(array_diff_key(TxEntry::REQUIRED_FIELDS, $info), true) . 'passed: ' . print_r($info, true));
-    u\EXPECT(array_diff(array_keys($info), TxEntry::ALLOWED_FIELDS) == [], 'extra fields in Entry:' . print_r(array_diff(array_keys($info), TxEntry::ALLOWED_FIELDS), true));
+/**/    u\EXPECT(array_diff(TxEntry::REQUIRED_FIELDS, array_keys($info)) == [], 'missing fields in Entry:' . print_r(array_diff_key(TxEntry::REQUIRED_FIELDS, $info), true) . 'passed: ' . print_r($info, true));
+/**/    u\EXPECT(array_diff(array_keys($info), TxEntry::ALLOWED_FIELDS) == [], 'extra fields in Entry:' . print_r(array_diff(array_keys($info), TxEntry::ALLOWED_FIELDS), true));
     $this->id = u\arrayGet($info, 'id', null);
     $this->xid = u\arrayGet($info, 'xid', null);
     $this->entryType = u\arrayGet($info, 'entryType', 0);
