@@ -1017,7 +1017,9 @@ fieldset#dateRange #advanced {display:none;}
 #frm-balancesheet #edit-subtext .control-data {width:auto; text-align:left;}
 #frm-balancesheet #edit-title .control-label,
 #frm-balancesheet #edit-subtext .control-label {width:0; min-width:0;}
-#frm-balancesheet .form-item-assetLabel label,
+#frm-balancesheet #edit-posttext .control-data {text-align:left; width:450px; margin:30px 0 0 35px;}
+#frm-balancesheet #edit-posttext label {display:none;}
+ #frm-balancesheet .form-item-assetLabel label,
 #frm-balancesheet .form-item-liabilityLabel label,
 #frm-balancesheet #edit-netAssets {font-size:110%; margin-top:20px; font-weight:bold;}
 #frm-balancesheet #edit-netAssets,

@@ -1,3 +1,6 @@
+2019-05-
+. fixed bug that kept r\deleteAccount from deleting tx_hdrs field
+
 2019-05-29 feature post-split-fixes
 . fixed cron bug that paid closed recurring payments
 . reinstated instructions in agreement form and cleaned it up

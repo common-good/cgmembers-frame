@@ -18,7 +18,7 @@ use CG\Backend as be;
  * Basic request params (always sent):
  * op       the requested operation
  * device   the device ID (supplied once by the server) -- empty if none
- * agent    the already-scanned agent's ID (eg NEW:AAB) or company ID (eg NEW.AAB) -- empty if none yet
+ * agent    the already-scanned agent's ID (eg NEWAAB-A) or company ID (eg NEWAAB) -- empty if none yet
  * version  the version number of the running app
  *
  * REQUESTS:
@@ -33,12 +33,12 @@ use CG\Backend as be;
  * undo:  [txid, force] => [ok, message, balance]
  *
  * To create json for app demo, do this from PHP window on STAGE server:
-   include_once __DIR__ . '/../rcredits/rsmart/rsmart.inc';
-   $args = CG\Util\ray('op device agent version member code', 'identify', '3i2ifsapEjwev3CwBCV7', 'NEW.AAB', RPOS_VERSION, 'NEW.ABB', 'ZzhWMCq0zcBowqw'); // cust
-   //$args = CG\Util\ray('op device agent version member code', 'identify', '3i2ifsapEjwev3CwBCV7', '', RPOS_VERSION, 'NEW:AAB', 'WeHlioM5JZv1O9G'); // agent login
-   //$args = CG\Util\ray('op device agent version member amount goods description', 'charge', '3i2ifsapEjwev3CwBCV7', 'NEW:AAB', RPOS_VERSION, 'NEW.ABB', AMOUNT, 1, 'zot');
-   //$args = CG\Util\ray('op device agent version txid', 'undo', '3i2ifsapEjwev3CwBCV7', 'NEW:AAB', RPOS_VERSION, '4069');
-///     debug(CG\Smart\pos($args));
+  include_once R_ROOT . '/rsmart/rsmart.inc';
+    $args = CG\Util\ray('op device agent version member code', 'identify', '3i2ifsapEjwev3CwBCV7', 'NEWAAB', RPOS_VERSION, 'NEWABB', 'ZzhWMCq0zcBowqw'); // cust
+    $args = CG\Util\ray('op device agent version member code', 'identify', '3i2ifsapEjwev3CwBCV7', '', RPOS_VERSION, 'NEWAAB-A', 'WeHlioM5JZv1O9G'); // agent login
+    $args = CG\Util\ray('op device agent version member amount goods description', 'charge', '3i2ifsapEjwev3CwBCV7', 'NEWAAB-A', RPOS_VERSION, 'NEWABB', AMOUNT, 1, 'zot');
+    $args = CG\Util\ray('op device agent version txid', 'undo', '3i2ifsapEjwev3CwBCV7', 'NEWAAB-A', RPOS_VERSION, '4069');
+///   echo CG\Smart\pos($args));
  */
 
 define('RPOS_VERSION', 221); // lastest POS app version available for download (this should match the versionCode in the app's manifest. upload and test the app first (and make sure it is available in Google Play Store), before bumping the number up here.)

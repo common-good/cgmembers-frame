@@ -13,7 +13,6 @@ use CG\Db as db;
  */
 
 function formBalanceSheet($form, &$sta, $args = '') {
-
   global $mya;
   $serverId = r\serverUid();
 
@@ -42,7 +41,6 @@ function formBalanceSheet($form, &$sta, $args = '') {
     $otherAssets = $cttyA->otherAssets;
     $otherLiabilities = $cttyA->otherLiabilities;
   } else {
-
     $title = t('%PROJECT Balance Sheet');
     $subtext = t('for all participating communities (totals)');
     $cgBalance = db\sum('balance', 'users', 'uid<0');
@@ -94,7 +92,8 @@ function formBalanceSheet($form, &$sta, $args = '') {
 
   $assetLabel = item('', t('ASSETS'));
   $liabilityLabel = item('', t('LIABILITIES'));
+  $posttext = t('* Common Good Earth is backing this shortfall (but no new grants or investments) until the recently-instituted Backing Promises have a chance to catch up.');
   ///  print_r(compact(ray("title subtext $assetKeys $liabilityKeys")));
   
-  return cgform(compact(ray("title subtext $assetKeys $liabilityKeys")));
+  return cgform(compact(ray("title subtext $assetKeys $liabilityKeys posttext")));
 }

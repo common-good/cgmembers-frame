@@ -69,18 +69,18 @@ Scenario: A member looks at the balance sheet
   | Community Common Good Account | $-300.00 |
   | Dollar Pool | $6,000.00 |
   | Investments | $4,500.00 |
-  | Investment Loss Reserve (-19.4%) | $-875.00 |
   | Negative Balance Promises | $200.00 |
-  | Negative Balance Loss Reserve (12.0%) | $-24.00 |
   | Backing Promises | $100.00 |
-  | Backing Promise Loss Reserve (60.0%) | $-60.00 |
   | Accounts Receivable | $20.00 |
-  | Total Assets | $11,031.00 |
+  | Total Assets | $10,520.00 |
   | LIABILITIES | |
   | Common Good Account Balances | $6,500.00 |
+  | Investment Loss Reserve (-19.4%) | $875.00 |
+  | Negative Balance Loss Reserve (12.0%) | $24.00 |
+  | Backing Promise Loss Reserve (60.0%) | $60.00 |
   | Accounts Payable | $10.00 |
-  | Total Liabilities | $6,510.00 |
-  | Net Assets | $4,521.00 |
+  | Total Liabilities | $7,469.00 |
+  | Net Assets | $3,051.00 |
 
 Scenario: A non-member looks at the balance sheet
   Given variable "negReserve" is ".12"
@@ -91,16 +91,15 @@ Scenario: A non-member looks at the balance sheet
   | ASSETS  | |
   | Dollar Pool | $6,000.00 |
   | Investments | $4,500.00 |
-  | Investment Loss Reserve (19.4%) | $-875.00 |
-  | Negative Balance Promises | $200.00 |
-  | Negative Balance Loss Reserve (12.0%) | $-24.00 |
+  | Negative Balance Promises | $500.00 |
   | Backing Promises | $100.00 |
-  | Backing Promise Loss Reserve (60.0%) | $60.00 |
   | Accounts Receivable | $20.00 |
-  | Total Assets | $11,031.00 |
+  | Total Assets | $10,520.00 |
   | LIABILITIES | |
-  | Community Common Good Account | $-300.00 |
   | Common Good Account Balances | $6,500.00 |
+  | Investment Loss Reserve (-19.4%) | $875.00 |
+  | Negative Balance Loss Reserve (12.0%) | $60.00 |
+  | Backing Promise Loss Reserve (60.0%) | $60.00 |
   | Accounts Payable | $10.00 |
-  | Total Liabilities | $6,510.00 |
-  | Net Assets | $4,521.00 |
+  | Total Liabilities | $7,505.00 |
+  | Net Assets | $3,015.00 |

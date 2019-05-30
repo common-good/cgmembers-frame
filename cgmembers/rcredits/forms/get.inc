@@ -27,7 +27,7 @@ function formGet($form, &$sta, $args = '') {
   
   $title = t('Transfer Funds');
   $subtext = t('<p>When you transfer funds FROM your bank account to your Common Good account, you are buying Common Good credit. Your Common Good credit is backed partly by Dollars in your Common Good Community’s Dollar Pool and partly by collateral, including promises of members and member organizations [<%aBacking>more about backing</a>]. It may take several business days for your bank to send the funds.</p>
-  <p>Funds going TO your bank account generally arrive within one business day.</p><p>To refill your %PROJECT Account automatically (or not), as needed, adjust your "refills" setting on the <%aSettings>Banking Settings</a> page.</p>', '_aBacking _aSettings', atag('/help/backing-common-good-credits'), atag('/settings/connect')) . t('note|ach warning');
+  <p>Funds going TO your bank account also may take several days to arrive. If you have an emergency and need funds immediately, talk to us.</p><p>To refill your %PROJECT Account automatically (or not), as needed, adjust your "refills" setting on the <%aSettings>Banking Settings</a> page.</p>', '_aBacking _aSettings', atag('/help/backing-common-good-credits'), atag('/settings/connect')) . t('note|ach warning');
 
 //  $minimum = textFld(t('Minimum:'), t('prompt min'), dft(u\fmtAmt(!$mya->prefsSet ? $mya->minimum : R_MINR_DEFAULT, 's')));
 //  $toSpend = u\fmtAmt($mya->avail(FOR_GOODS));
