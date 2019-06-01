@@ -1,2 +1,0 @@
-$this->execute('CREATE VIEW tx_entries_payer AS SELECT * FROM tx_entries_all WHERE entryType=1 AND deleted IS NULL');
-$this->execute('CREATE VIEW tx_entries_payee AS SELECT * FROM tx_entries_all WHERE entryType=2 AND deleted IS NULL');
