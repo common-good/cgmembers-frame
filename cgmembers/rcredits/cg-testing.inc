@@ -1316,7 +1316,7 @@ function clear($ch = 0) {
 
   db\q('DELETE FROM users WHERE uid<>0');
   db\q('DELETE FROM r_criteria WHERE ctty<>0');
-  $varKeys = ray('backingReserve code companies newThresholds negReserve r_last_cron riskThresholds version');
+  $varKeys = ray('backingReserve companies newThresholds negReserve r_last_cron riskThresholds version');
   db\q("DELETE FROM variable WHERE name IN ('" . join("','", $varKeys) . "')");
   a\setupBasicAccounts();
 

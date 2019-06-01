@@ -1,5 +1,6 @@
-2019-05-
+2019-06-01 feature/fix-balance-sheet
 . fixed bug that kept r\deleteAccount from deleting tx_hdrs field
+. completed balance sheet
 
 2019-05-29 feature post-split-fixes
 . fixed cron bug that paid closed recurring payments
