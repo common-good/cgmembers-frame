@@ -1,3 +1,9 @@
+2019-06-03 tweaks to feature/fix-balance-sheet
+. changed TM to &reg; on CG cards
+. signup now records source2 sent from promo site as advertisement ID
+. community is no longer automatically updated to/from seedpack for ever-activate members
+. email now goes through google's SMTP
+
 2019-06-01 feature/fix-balance-sheet
 . fixed bug that kept r\deleteAccount from deleting tx_hdrs field
 . completed balance sheet

@@ -925,7 +925,7 @@ function memberId($id, $agent = '', $retroactive = FALSE) {
   $pdf->Rect($xPhoto, $yPhoto, $wPhoto, $hPhoto, 'D'); // x, y, w, h, style, border, fill
   $pdf->say(PROJECT, $xProj, $yProj, '', '', "18;Arial MT Medium;color:white;", 'L');
   
-  $pdf->say('TM', $m+3, $m+.1, 1, '', "3;color:white", 'L');
+  $pdf->say('&reg;', $m+3.01, $m+.08, 1, '', "4;color:white", 'L');
   $sp = '<span style="font-size:50%;"> </span>';
   $url = str_replace('.', $sp . '<b style="display:inline; font-stretch:expanded; font-size:120%;">.</b>' . $sp, CG_DOMAIN);
   $pdf->say($url,  $xSite, $ySite, '', '', "7;color:white;font-stretch:normal;", 'L');

@@ -37,7 +37,8 @@ function formSignup($form, &$sta, $args = '') {
     $myid = w\partnerSignup($args); // info passed from partner signup
   } elseif (@$joint and $a = r\acct() and $a->canManage) {
     if (!$a->co) $myid = w\jointSignup(); else return w\go('', t('A company cannot have a joint account.'), 'err');
-  }
+  } 
+  
   if (u\test() and is_array(@$myid)) return; // array means returned r\go
     
   $myid = hidFld($myid0 = @$myid);
@@ -204,7 +205,7 @@ function formSignup_submit($form, &$sta) {
   extract(just('myid confirmed acctType args ats owns partner customer source2 ' . $dbFields, $sta['input']));
   if (u\test() and !@$args) $args = basename($_SERVER['REQUEST_URI']);
   u\EXPECT((bool) $args, 'no args');
-  extract(just('code food', $args));
+  extract(just('code source2', $args)); // source2 may come from either partner or an add (through our promo site)
   if (isDEV) $helper = $helper + 0; // don't let lack of helper stop us
 
   $wants = wants(@$ats);
@@ -228,7 +229,7 @@ function formSignup_submit($form, &$sta) {
   $mya = w\setAcct($myid); // this works for both an individual account (proSe) and a company account (with agent)
   $qid = $mya->mainQid;
   
-  if (nn($food)) $mya->stepDone('food', FALSE); // signed up through Food Fund promo (cg4.us/food), so add this special step
+  if (nn($source2) == 'food') $mya->stepDone('food', FALSE); // signed up through Food Fund promo (cg4.us/food), so add this special step
   
   if (@$iCode < 0) w\invitation($code, $myid); // mark the invitation used
   $email = u\cry('P', $email);

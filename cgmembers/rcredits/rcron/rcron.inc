@@ -194,13 +194,13 @@ function everyDay() {
   
   $sql = <<< X
   SELECT u.uid, c.uid AS ctty, u.fullName AS person, c.fullName AS cttyName FROM users u LEFT JOIN users c ON u.zip RLIKE c.zip
-  WHERE u.community=:seedpack AND c.uid<1 AND c.uid<>:seedpack
+  WHERE u.community=:seedpack AND c.uid<1 AND c.uid<>:seedpack AND !u.activated
 X;
   $q = db\q($sql, ['seedpack' => r\serverUid()]);
   while ($row = $q->fetchAssoc()) {
     extract($row);
     db\update('users', ray('uid community', $uid, $ctty), 'uid');
-    r\tellAdmin(t('%person was in Seedpack; should be (now is) in %cttyName', $row));
+    r\tellAdmin(t('Not-yet-member %person was in Seedpack; should be (now is) in %cttyName', $row));
   }
 
 //  $where = "RIGHT(fullName, 8)=' PARTNER' COLLATE utf8_bin AND pass='' AND NOT :IS_CO AND activated=0";
