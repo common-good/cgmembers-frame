@@ -35,9 +35,9 @@ class Acct {
    *   (2) a flat array of user table IDs: [uid, agent] where uid is the main account and agent is the agent's id
    */
   function __construct($info = []) {
-    ///    print_r("Acct::__construct(");
-    ///    print_r($info);
-    ///    print_r(")<br>");
+///       print_r("Acct::__construct(");
+///       print_r($info);
+///       print_r(")<br>");
     $a = $this;
     if (!is_numeric(key($info))) { // u\isAssoc($info)) { // specifying field values
       $a->createNew($info); // create new db record
@@ -50,9 +50,9 @@ class Acct {
    * @param assoc $info: array of field values for new account (only fullName is required)
    */
   private function createNew($info) {
-    ///    print_r("Acct::createNew(");
-    ///    print_r($info);
-    ///    print_r(")<br>");
+///       print_r("Acct::createNew(");
+///       print_r($info);
+///       print_r(")<br>");
     $a = $this;
     extract($info);
 
@@ -111,7 +111,7 @@ class Acct {
    * @return [$id, $agent] where id and agent are actual record IDs
    */
   public static function viable($id00, $agent0='', &$error='', $test = TRUE) {
-    ///    print_r("Acct::viable($id00, $agent0, $error, $test)<br>");
+///       print_r("Acct::viable($id00, $agent0, $error, $test)<br>");
     if (is_numeric($id00) and is_numeric($agent0)) return [$id00, $agent0];
     $id0 = $id00;
     if (strpos($id0, AGT_MARK)) list ($id0, $agentCode) = explode(AGT_MARK, $id0); // new company qid format
@@ -136,7 +136,7 @@ class Acct {
   }
   
   private static function getRecord($uid, $reread = FALSE) {
-    ///    print_r("getRecord($uid, $reread)");
+///       print_r("getRecord($uid, $reread)");
     if (@self::$rs[$uid] and !$reread) return self::$rs[$uid];
     if (!$row = db\get('*', 'users', compact('uid'))) { // no such record here
       if (TRUE) return FALSE; // not foreign either
@@ -289,7 +289,7 @@ class Acct {
     $a = $this;
     foreach (ray('data secure vsecure') as $k) {
       if ($a->special($field, strtoupper($k))) {
-        ///        u\EXPECT(is_array($a->$k) or !$a->$k, 'special field not ray: ' . print_r($a->$k, 1) . ' isarray:' . is_array($a->$k));
+///        u\EXPECT(is_array($a->$k) or !$a->$k, 'special field not ray: ' . print_r($a->$k, 1) . ' isarray:' . is_array($a->$k));
         //        if ($set = $a->$k ?: []) u\preray($set, self::$rs[$a->id]); // cache the special field
         $set = $a->$k ?: []; // special field $k gets cached by call to $a->$k
         $result = @$set[$field];
@@ -443,15 +443,15 @@ class Acct {
     list ($region, $tail) = $a->qo->parse();
 
     $b = u\lpad(decbin(u\a2n($region)), ILEN_REGION);
-    ///  debug("b=$b region=$region tail=$tail security=$a->lowSecurity iCode=$iCode");
+///     debug("b=$b region=$region tail=$tail security=$a->lowSecurity iCode=$iCode");
     $b .= u\lpad(decbin(u\a2n($tail)), ILEN_TAIL);
-    ///  debug("b=$b region=$region tail=$tail security=$a->lowSecurity iCode=$iCode");
+///     debug("b=$b region=$region tail=$tail security=$a->lowSecurity iCode=$iCode");
     $b .= u\lpad(decbin(u\ai2n($a->lowSecurity)), ILEN_SECURITY);
-    ///  debug("b=$b region=$region tail=$tail security=$a->lowSecurity iCode=$iCode");
+///     debug("b=$b region=$region tail=$tail security=$a->lowSecurity iCode=$iCode");
     $b = u\rotateBits($b, ($iCode + 1) * (bindec(substr(R_INVITE_KEY, 0, 31)) % strlen($b)));
-    ///  debug("b=$b region=$region tail=$tail security=$a->lowSecurity iCode=$iCode");
+///     debug("b=$b region=$region tail=$tail security=$a->lowSecurity iCode=$iCode");
     $b = u\xorBits($b, substr(R_INVITE_KEY, -strlen($b)));
-    ///  debug("b=$b region=$region tail=$tail security=$a->lowSecurity iCode=$iCode");
+///     debug("b=$b region=$region tail=$tail security=$a->lowSecurity iCode=$iCode");
     return u\n2ai(bindec(substr($b, 0, ILEN_DIV)), 5) . u\n2ai(bindec(substr($b, ILEN_DIV)), 5) . u\n2ai($iCode, -1);
   }
 
@@ -852,12 +852,12 @@ X;
     if (!$a->can(B_DRAWS)) return 0;
     list ($from, $to, $auto) = array(t(' from '), t(' to '), t('automatic transfer'));
     $left = $need; // how much left to be drawn
-    ///   debug(compact(ray('type need from to auto left id fields sql')));
+///      debug(compact(ray('type need from to auto left id fields sql')));
     $q = $a->drawSources();
     foreach ($q as $row) {
       extract(u\exactly('uid avail', $row, 0));
       $amount = round(min($left, $avail), 2);
-      ///      debug(compact('row','avail','amount','left','need','id'));
+  ///         debug(compact('row','avail','amount','left','need','id'));
       if ($amount > 0) {
         list ($fromQid, $toQid) = [r\qid($uid), $a->mainQid];
         list ($payerId, $payeeId) = [$uid, $a->id];
@@ -1131,7 +1131,7 @@ EOF;
     //  $pass = strtolower(u\nonce()); // not a hash, easy to remember and type
     $verifying = !$a->stepDone['verify'];
     $pass = u\randomString($verifying ? 3 : R_CODE_LEN, $verifying ? 'upper' : 'word'); // use
-    ///  /**/ if (isDEV or (NOT_PRODUCTION and now() - $a->created < HOUR_SECS)) \drupal_set_message('Link: ' . "<a href='$base_url/reset/id=$name&code=$pass'>reset</a>");
+///     /**/ if (isDEV or (NOT_PRODUCTION and now() - $a->created < HOUR_SECS)) \drupal_set_message('Link: ' . "<a href='$base_url/reset/id=$name&code=$pass'>reset</a>");
     $expires = now() + HOUR_SECS * R_SIGNIN_HOURS;
     $a->update('oneTimePass', compact('pass', 'expires'));
     return $pass;
@@ -1211,7 +1211,7 @@ EOF;
       number_format(100 * @$extraEver / $avgBalEver / $years, 1)
       : (@$extraEver > 0 ? '&infin;' : number_format(100 * R_INFLATION_RATE, 1));
     $cttyBeneMo = u\fmtAmt(@$giftsPastMo + max(0, @$bankedPastMo) + @$benePastMo * (1 + R_CC_RATE / 100));
-    ///    debug(compact(ray('giftsEver bankedEver beneEver')));
+///       debug(compact(ray('giftsEver bankedEver beneEver')));
     $cttyBene = u\fmtAmt(@$giftsEver + max(0, @$bankedEver) + @$beneEver * (1 + R_CC_RATE / 100) + r\cttyPaidEver($a->community) / (@$pAccts ?: 1));
 
     return compact(ray($fields));
@@ -1257,7 +1257,7 @@ EOF;
     $a = $this;
     $ids = empty($a->jid) ? $a->id : [$a->id, $a->jid];
     $res = db\sum('amount', 'r_usd', "payee IN (:ids) AND amount>0 and completed=0", ['ids'=>$ids]);
-    ///    debug("$a->id getPendingDeposits() => $res");
+///       debug("$a->id getPendingDeposits() => $res");
     return $res;
   }
 
@@ -1282,7 +1282,7 @@ EOF;
    */
   public function getFunds($amount, $why) {
     $a = $this;
-    ///    debug($a->id . "getFunds($amount, '$why')");
+///       debug($a->id . "getFunds($amount, '$why')");
     if ($amount <= 0) return FALSE;
     if ($a->hasBank) {
       $waiting = $a->waitingFromBank($combinable);
@@ -1302,7 +1302,7 @@ EOF;
    * @return the transaction number (FALSE if failure)
    */
   public function bank($amount, &$why = '', $tx = []) {
-    ///    debug("->bank($amount, $why, " . print_r($tx, true) . ")");
+///    debug("->bank($amount, $why, " . print_r($tx, true) . ")");
     global $channel;
     $amount0 = $amount; // remember original amount requested
 		
@@ -1798,7 +1798,7 @@ EOF;
     $json = json_encode($xml);
     $ssnData = json_decode($json, TRUE);
     if (!is_array($d = $ssnData['searchResults']) or $ssnData['ResultCount'] + 0 <= 0) { // 0 for tests, <=0 for failure
-      /**/    return $a->ssnErr(t('No SSN data available: ') . print_r($ssnData0, 1));
+/**/    return $a->ssnErr(t('No SSN data available: ') . print_r($ssnData0, 1));
     }
     unset($ssnData['searchResults']['ssn']); // has first 5 digits of SSN -- don't store it
     $a->update(compact('ssnData'));
@@ -1901,7 +1901,7 @@ EOF;
   public function nextTid() {
     $a = $this;
     $maxTid = db\get('MAX(GREATEST(acctTid,0))', 'tx_entries join tx_hdrs using(xid)', 'uid in (:uids)', ['uids' => [$a->id, $a->jid]]);
-    /// debug("maxTid is $maxTid");
+///    debug("maxTid is $maxTid");
     if (empty($maxTid)) $maxTid = 0;
     return 1 + $maxTid;
   }
@@ -1923,7 +1923,7 @@ EOF;
  * @return the appropriate account object (FALSE if none)
  */
 function acct($uid = '', $agent = '', &$error = '') {
-  ///  print_r("acct($uid, $agent, $error)<br>");
+///    print_r("acct($uid, $agent, $error)<br>");
   u\EXPECT(!is_array($uid), 'array uid'); // otherwise hangs (at least for a drupal field array)
   global $mya; // use this ONLY in this class file
   if (!$uid) return $mya ?: (!$error = 'There is no current account.');

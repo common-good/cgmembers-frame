@@ -148,7 +148,6 @@ define('COMPANY_FREEZE', FALSE); // companies cannot spend rewards yet
 define('R', '<span class="r">r</span>');
 define('US', '<span class="us">us</span>');
 define('GAME_COMPANIES', '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital');
-define('R_REGION_FLDS', 'region,fullName,st,zip,federalId,hasServer');
 define('R_DATE_FLDS', 'created completed deposit sent invited giftDate signed login access yesterday'); // date field names for testing
 define('CO_FLDS', 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd'); // account fields stored in r_company
 define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone achMin pinThreshold lastiCode tenure moves mediaConx source getAppData appData snap'); // fields stored in the account's "data" array field (serialized)
@@ -180,7 +179,7 @@ define('BY_CASH', '(cash)'); // app includes this in description, for a purchase
 define('BY_CHECK', '(check)'); // app includes this in description, for a purchase of CG credit by check
 define('BY_CARD', '(card)'); // app includes this in description, for a purchase of CG credit by credit card
 define('R_ON_FILE', t('(on file)'));
-define('DEPOSIT_SQL', '(amount>0 XOR txid<0)'); // SQL fragment for "transfer is from bank to CG"
+// (NO) define('DEPOSIT_SQL', '(amount>0 XOR txid<0)'); // SQL fragment for "transfer is from bank to CG"
 
 define('DOLLAR_POOL', 1); // uid of dollar pool account
 define('CANONIC_ACCTS', 512); // number of canonic accounts (admin/dollar pool, placeholders,...)

@@ -1,0 +1,1 @@
+phinx migrate -e development

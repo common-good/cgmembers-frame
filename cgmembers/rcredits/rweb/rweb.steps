@@ -661,7 +661,8 @@ function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
 /**
  * member is logged out
  *
- * in: MAKE membership AMemberSignsInForTheFirstTime
+ * in: MAKE balancesheet ANonmemberLooksAtTheBalanceSheet
+ *     MAKE membership AMemberSignsInForTheFirstTime
  *     MAKE partnersignup Setup
  *     MAKE paybutton Setup
  *     MAKE signin Setup

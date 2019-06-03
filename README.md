@@ -1,5 +1,5 @@
 Common Good™ Democratic Economics System
-Copyright (c) 2018 Society to Benefit Everyone, Inc., dba Common Good
+Copyright (c) 2019 Society to Benefit Everyone, Inc., dba Common Good
 =====================================================================
 
 This community-centered payment system is designed to provide greater local control of economics, so we can make our communities everything we want them to be.

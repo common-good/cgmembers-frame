@@ -266,73 +266,51 @@ function doAccount($info = []) {
  *   Minimum parameters: amount, from, to
  * @return:
  *   if $testOnly return TRUE if the data is as expected
- *   otherwise return the serial of the created transaction(s) (treated as TRUE in test steps)
+ *   otherwise return the xid of the created transaction(s) (treated as TRUE in test steps)
  */
 function doTx($info, $thing) {
-  global $testOnly, $channel;
+  global $testOnly;
   u\EXPECT($thing != 'Invoice', 'use doInvoice for invoices, not doTx');
-  extract(u\exactly('xid serial amount payer payee payerAgent payeeAgent payerFor payeeFor payerTid payeeTid data flags boxId risk purpose for', $info, null));  // These are what appear in r_txs
-  extract(u\exactly('created type channel risks goods', $info, [now(), 'transfer', TX_SYS, 0, FOR_GOODS]));  // These are what appear in r_txs
-  extract(u\exactly('taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding', $info, FALSE));  // These are flags that might appear
-  extract(u\exactly('purpose', $info, FALSE));
+  $filter = function ($ray) {return array_filter($ray, function ($v) {return $v !== FALSE;});}; // bypass array_filter's conversion of 0 to boolean
+  $channel0 = call_user_func(function () {global $channel; return $channel;}); // protect value of current channel
 
-  if (empty($payerAgent)) $payerAgent = $payer;
-  if (empty($payeeAgent)) $payeeAgent = $payee;
+  $hdrFlds = 'xid goods actorId actorAgentId flags channel boxId risk risks reversesXid created';
+  $entryFlds = 'xid entryType amount uid agentUid description acctTid relType relatedId';
+  $uidFlds = 'payer payee payerAgent payeeAgent';
+  $testFlds = $uidFlds . ' for purpose payerFor payeeFor payerTid payeeTid risks type amount taking';
+//  $flags = 'taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding'; // These are flags that might appear
   
-  $payer = t\uid($payer);
-  $payerAgent = t\uid($payerAgent);
-  $payee = t\uid($payee);
-  $payeeAgent = t\uid($payeeAgent);
+  extract(u\exactly($hdrFlds . ' ' . $testFlds, $info, FALSE));
+  $for = $for ?: $purpose;
+  if (strpos($for, ',')) $for = explode(',', $for); // specifying both
+  if ($for) list ($payerFor, $payeeFor) = is_array($for) ? $for : [$for, $for];
+  if (u\starts($payeeFor, 'undoes:')) $reversesXid = substr($payeeFor, strpos($payeeFor, ':') + 1);
 
-  if ($purpose) $for = $purpose; // ?: 'cash';
-  if (strpos($for, ',')) $for = explode(',', $for); // specifying both payerFor and payeeFor
-  if ($for and empty($payerFor) and empty($payeeFor)) list ($payerFor, $payeeFor) = is_array($for) ? $for : array($for, $for);
-  if (!$payerFor) $payerFor = t('payerFor');
-  if (!$payeeFor) $payeeFor = t('payeeFor');
-  if (isset($risks)) $risks = getRisks($risks, K_TX_RISKS);
+  $risks = $risks ? getRisks($risks, K_TX_RISKS) : 0;
+  $type = ($type and !is_numeric($type)) ? u\consta('TX', $type) : FALSE;
+  foreach (ray($uidFlds) as $k) if (isset($$k)) $$k = t\uid($$k);
+  list ($actorId, $actorAgentId) = $taking ? [$payee, $payeeAgent] : [$payer, $payerAgent];
+  if ($flags and !is_numeric($flags)) $flags = u\bit($flags); // works for '' and arrays too
 
-  if (!is_numeric($type)) $type = u\consta('TX', $type);
-  
-  if (in($purpose, 'offline')) $offline = true;
-  if (in($purpose, 'undoes:')) {
-    list ($k, $v) = explode(':', $purpose);
-    $reverses = $v;
-  } else {
-    $reverses = null;
+  if (!$testOnly) { // set up everything needed for record creation (array_filter then should have no effect or new r\Tx dies)
+    $goods = strpos($payeeFor, 'cash') !== FALSE ? FOR_USD : FOR_GOODS;
+    $dfts = ray('created type channel risks goods flags payerFor payeeFor channel',
+      now(), TX_TRANSFER, TX_SYS, 0, $goods, 0, t('payerFor'), t('payeeFor'), $channel0);
+    foreach ($dfts as $k => $v) if ($$k === FALSE) $$k = $v;
+    foreach (ray('payerAgent payeeAgent', $payer, $payee) as $k => $v) if (!$$k) $$k = $v;
   }
   
-//  $fields = 'xid payer payee amount payerReward payeeReward type goods flags data risk risks';
-  $fields = 'xid payer payee amount status type goods flags data risk risks';
-  if (!$testOnly) $fields .= ' created channel'; // when creating, add these if not already explicit
-  $fields .= ' payerAgent payeeAgent';
-  
-  $info = @compact(ray($fields)) + $info; // apply modifications
+  $hdr = $filter(compact(ray($hdrFlds)));
+  $e1 = $filter(ray($entryFlds, $xid, ENTRY_PAYER, 0-$amount, $payer, $payerAgent, $payerFor, $payerTid, NULL, NULL));
+  $e2 = $filter(ray($entryFlds, $xid, ENTRY_PAYEE, $amount, $payee, $payeeAgent, $payeeFor, $payeeTid, NULL, NULL));
 
-  if (empty($payerAgent)) $payerAgent = $payer;
-  if (empty($payeeAgent)) $payeeAgent = $payee;
-  
-  /* $flagString = $flags; */
-  $flags = is_null($flags) ? 0 : $flags;
-  $hdrInfo = ray('xid goods actorId actorAgentId flags channel boxId risk risks reversesXid created',
-                 $xid, $goods, ($taking ? $payee : $payer), ($taking ? $payeeAgent : $payerAgent), $flags,
-                 $channel, $boxId, $risk, $risks, null/* $reversesXid */, $created);
-  /* $hdrInfo = array_filter($hdrInfo); */
-  $payerEntry = ray('xid entryType amount uid agentUid description acctTid relType relatedId',
-                    $xid, ENTRY_PAYER, 0-$amount, $payer, $payerAgent, $payerFor, $payerTid, null, null);
-  /* $payerEntry = array_filter($payerEntry); */
-  $payeeEntry = ray('xid entryType amount uid agentUid description acctTid relType relatedId',
-                    $xid, ENTRY_PAYEE, $amount, $payee, $payeeAgent, $payeeFor, $payeeTid, null, null);
-  /* $payeeEntry = array_filter($payeeEntry); */
-
-  
-//  if ($testOnly or @$type == TX_REBATE or @$type == TX_BONUS) {
   if ($testOnly) {
-    return verifyRecord('tx_hdrs', array_filter($hdrInfo)) and verifyRecord('tx_entries', array_filter($payerEntry)) and verifyRecord('tx_entries', array_filter($payeeEntry));
+    return (verifyRecord('tx_hdrs', $hdr) and verifyRecord('tx_entries', $e1) and verifyRecord('tx_entries', $e2));
+  } else {
+    $hdr['entries'] = [new r\TxEntry($e1), new r\TxEntry($e2)];
+    $x = new r\Tx($hdr);
+    return $x->insert(TRUE);
   }
-
-  $hdrInfo['entries'] = [new r\TxEntry($payerEntry), new r\TxEntry($payeeEntry)];
-  $tx = new r\Tx($hdrInfo);
-  return $tx->insert(TRUE);
 }
 
 /**
@@ -344,7 +322,7 @@ function doTx($info, $thing) {
  */
 function doInvoice($info) {
   global $testOnly, $channel;
-  ///debug("doInvoice(" . print_r($info, true) . "), testOnly=$testOnly");
+///   debug("doInvoice(" . print_r($info, true) . "), testOnly=$testOnly");
   extract($info);
   $info['for'] = u\arrayGet($info, 'for', 'this or that');
   $info['purpose'] = u\arrayGet($info, 'purpose', $info['for']);
@@ -353,7 +331,7 @@ function doInvoice($info) {
   if ($testOnly) return verifyRecord('r_invoices', $info);
 
   $missing = array_diff_key(['amount'=>1, 'payer'=>1, 'payee'=>1, 'purpose'=>1], $info);
-  u\EXPECT($missing == [], "missing fields " . print_r($missing, true));
+/**/  u\EXPECT($missing == [], "missing fields " . print_r($missing, true));
 
   $invInfo = u\exactly('status goods created', $info, [TX_PENDING, u\forCash($info['purpose']) ? FOR_USD : FOR_GOODS, now()]);
   switch ($invInfo['status']) {
@@ -916,7 +894,7 @@ function makePicture($photo, $a) {return $a->update(compact('photo'));}
  * @todo: after everyone is up to version 217, add penultimate param: $proof = 'calc'
  */
 function hitServer($op, $extra = [], $agent, $device = '', $version = 221) {
-  /// debug("hitServer($op, " . print_r($extra, true) . ", $agent, $device, $version)");
+///   debug("hitServer($op, " . print_r($extra, true) . ", $agent, $device, $version)");
   global $rposResult;
   if ($agent) $agent = t\fullQid2($agent);
   extract(just('amount member code created proof goods', $extra));
@@ -1338,7 +1316,7 @@ function clear($ch = 0) {
 
   db\q('DELETE FROM users WHERE uid<>0');
   db\q('DELETE FROM r_criteria WHERE ctty<>0');
-  $varKeys = ray('backingReserve code companies newThresholds negReserve r_last_cron riskThresholds version');
+  $varKeys = ray('backingReserve companies newThresholds negReserve r_last_cron riskThresholds version');
   db\q("DELETE FROM variable WHERE name IN ('" . join("','", $varKeys) . "')");
   a\setupBasicAccounts();
 
@@ -1428,7 +1406,7 @@ function badEq($type, $v1, $v2, $id) {
 function shownWith($content, $type = 'text', $mustBePresent = TRUE) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $formOut;
-  /// debug("shownWith(" . print_r($content, true) . ", $type, $mustBePresent)");
+///   debug("shownWith(" . print_r($content, true) . ", $type, $mustBePresent)");
   
   $model = t\strip($formOut[$type]);
 //  if (!$model and $type == 'text') $model = file_get_contents(TEST_PDF_FLNM);

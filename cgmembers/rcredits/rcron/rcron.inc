@@ -194,13 +194,13 @@ function everyDay() {
   
   $sql = <<< X
   SELECT u.uid, c.uid AS ctty, u.fullName AS person, c.fullName AS cttyName FROM users u LEFT JOIN users c ON u.zip RLIKE c.zip
-  WHERE u.community=:seedpack AND c.uid<1 AND c.uid<>:seedpack
+  WHERE u.community=:seedpack AND c.uid<1 AND c.uid<>:seedpack AND !u.activated
 X;
   $q = db\q($sql, ['seedpack' => r\serverUid()]);
   while ($row = $q->fetchAssoc()) {
     extract($row);
     db\update('users', ray('uid community', $uid, $ctty), 'uid');
-    r\tellAdmin(t('%person was in Seedpack; should be (now is) in %cttyName', $row));
+    r\tellAdmin(t('Not-yet-member %person was in Seedpack; should be (now is) in %cttyName', $row));
   }
 
 //  $where = "RIGHT(fullName, 8)=' PARTNER' COLLATE utf8_bin AND pass='' AND NOT :IS_CO AND activated=0";
@@ -753,7 +753,7 @@ function acctRisk() {
 
   db\q('UPDATE users SET risk=NULL'); // avoid unnecessary badConx. don't touch risks though!
   for ($i=0; $i<2; $i++) { // do it twice (for good and bad Conx)
-    queueEach('acctRisk1', 'SELECT uid FROM users WHERE uid>1 and :IS_OK ORDER BY :IS_CO DESC');
+    queueEach('acctRisk1', 'SELECT uid FROM users WHERE uid>:CANONIC_ACCTS and :IS_OK ORDER BY :IS_CO DESC');
   }
   queueNext();
 }
@@ -790,8 +790,13 @@ function acctRiskFinish() {
  */
 function txRisk() {
   $sql = <<<EOF
-    SELECT DISTINCT xid FROM tx_hdrs JOIN tx_entries e USING(xid)
-    WHERE risk IS NULL AND ABS(amount)>0 AND (e.uid>0 OR ABS(amount)>:K_CTTY_THRESHOLD)
+    SELECT DISTINCT xid FROM tx_hdrs 
+    JOIN tx_entries_payer e1 USING(xid) 
+    JOIN tx_entries_payee e2 USING(xid)
+    WHERE risk IS NULL AND ABS(e2.amount)>0 AND (
+      (e1.uid>:CANONIC_ACCTS AND e2.uid>:CANONIC_ACCTS) 
+      OR ((e1.uid<0 OR e2.uid<0) AND ABS(e2.amount)>:K_CTTY_THRESHOLD)
+    )
     ORDER BY created
 EOF;
   queueEach('txRisk1', $sql);
@@ -800,9 +805,7 @@ EOF;
 
 function txRisk1($xid) {
   include_once __DIR__ . '/../cg-risk.inc';
-  if (is_array($xid)) $xid = $xid['xid'];
-  u\EXPECT(!is_array($xid), "xid is array");
-  k\txRisk1($xid);
+  k\txRisk1(is_array($xid) ? $xid['xid'] : $xid);
 }
 
 /**
@@ -825,18 +828,21 @@ function recurs() {
   // want period, created, amount, payerId, payeeId, payeeName, invoiced, lastTxDt, firstXid for each recur
   $sql = <<< EOF
     SELECT DISTINCT r.period, r.created, r.amount, r.payer AS payerId, r.payee AS payeeId,
-    uPayee.fullName AS payeeName,
+    u2.fullName AS payeeName,
     (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced,
     (SELECT MAX(t.created)
-     FROM tx_hdrs t JOIN tx_entries payerE USING(xid) JOIN tx_entries payeeE USING(xid)
-     WHERE payerE.uid=r.payer AND payeeE.uid=r.payee AND payerE.entryType=:ENTRY_PAYER AND payeeE.entryType=:ENTRY_PAYEE
-     AND t.:IS_RECURS) AS lastTxDt,
+      FROM tx_hdrs t JOIN tx_entries_payer payerE USING(xid) JOIN tx_entries_payee payeeE USING(xid)
+      WHERE payerE.uid=r.payer AND payeeE.uid=r.payee
+      AND t.:IS_RECURS
+    ) AS lastTxDt,
     (SELECT MIN(t.xid)
-     FROM tx_hdrs t JOIN tx_entries payerE USING(xid) JOIN tx_entries payeeE USING(xid)
-     WHERE payerE.uid=r.payer AND payeeE.uid=r.payee AND payerE.entryType=:ENTRY_PAYER AND payeeE.entryType=:ENTRY_PAYEE
-     AND t.:IS_RECURS
-     AND t.reversesXid IS NULL AND NOT EXISTS(SELECT xid FROM tx_hdrs tr WHERE tr.reversesXid = t.xid)) AS firstXid
-    FROM r_recurs r INNER JOIN users uPayee ON uPayee.uid=r.payee
+      FROM tx_hdrs t JOIN tx_entries_payer payerE USING(xid) JOIN tx_entries_payee payeeE USING(xid)
+      WHERE payerE.uid=r.payer AND payeeE.uid=r.payee
+      AND t.:IS_RECURS
+      AND t.reversesXid IS NULL AND NOT EXISTS(SELECT xid FROM tx_hdrs tr WHERE tr.reversesXid = t.xid)
+    ) AS firstXid
+    FROM r_recurs r JOIN users u1 ON u1.uid=r.payer INNER JOIN users u2 ON u2.uid=r.payee
+    WHERE ended=0 AND u1.:IS_OK AND u2.:IS_OK
 EOF;
   queueEach('recurs1', $sql);
   queueNext();

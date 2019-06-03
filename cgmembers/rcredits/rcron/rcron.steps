@@ -171,7 +171,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST gifts ABrandNewRecurringDonationCanBeCompleted
  *     TEST invoices UnpaidInvoicesGetHandled
  *     TEST joint AJointAccountNeedsRefilling
- *     TEST tickle ANewbieHasNotTakenTheFirstStep
+ *     TEST tickle ANewbieHasTakenOnlyTheFirstStep
  *     TEST tickle ANonmemberHasNotAcceptedTheInvitation
  *     TEST weekly AMemberCashesOutAutomatically
  */
@@ -180,7 +180,7 @@ function weNoticeToMemberWithSubs($notice, $id, $subs) {return t\notice($notice,
 /**
  * we notice (ARG) to member (ARG)
  *
- * in: TEST tickle ANewbieHasNotTakenTheFirstStep
+ * in: TEST tickle ANewbieHasTakenOnlyTheFirstStep
  *     TEST tickle ANewbieHasTakenSomeStepsButNotAll
  */
 function weNoticeToMember($notice, $id) {return t\notice($notice, $id);}
@@ -330,7 +330,7 @@ function thatHasLinkResults($thing, $info) {return t\hasLinkResults($thing, $inf
 /**
  * member (ARG) has done step (ARG)
  *
- * in: MAKE tickle ANewbieHasNotTakenTheFirstStep
+ * in: MAKE tickle ANewbieHasTakenOnlyTheFirstStep
  *     MAKE tickle ANewbieHasTakenSomeStepsButNotAll
  */
 function memberHasDoneStep($id, $step) {return t\doneStep($id, $step);}
@@ -339,7 +339,7 @@ function memberHasDoneStep($id, $step) {return t\doneStep($id, $step);}
  * invites: (ARG)
  *
  * in: MAKE risk Setup
- *     MAKE tickle ANewbieHasNotTakenTheFirstStep
+ *     MAKE tickle ANewbieHasTakenOnlyTheFirstStep
  *     MAKE tickle ANonmemberHasNotAcceptedTheInvitation
  *     MAKE tickle ANonmemberHasNotAcceptedTheInvitationFromANotyetactiveMember
  *     MAKE tickle ANonmemberHasAcceptedTheInvitation
@@ -573,7 +573,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE recurs ARecurringDonationHappenedLongEnoughAgoToRepeat
  *     MAKE risk Setup
  *     MAKE risk WeCalculateRisks
- *     MAKE tickle ANewbieHasNotTakenTheFirstStep
+ *     MAKE tickle ANewbieHasTakenOnlyTheFirstStep
  *     MAKE tickle ANewbieHasTakenSomeStepsButNotAll
  *     MAKE tickle ANonmemberHasNotAcceptedTheInvitation
  *     MAKE tickle ANonmemberHasNotAcceptedTheInvitationFromANotyetactiveMember
