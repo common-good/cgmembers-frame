@@ -17,10 +17,10 @@ class Capistrano::SCM::Git::FullSubmodules < Capistrano::Plugin
 
   # returns a list of submodule names
   def submodule_names 
-    x = ''
-    on :local do
-      x = capture :git, :submodule, :foreach, '--quiet', '\'echo "$displaypath"\''
-    end
+    # x = ''
+    # on :local do
+      x = %x|git submodule foreach --quiet 'echo "$displaypath"'|
+    # end
     names = x.split("\n")
   end
   
@@ -30,12 +30,12 @@ class Capistrano::SCM::Git::FullSubmodules < Capistrano::Plugin
 
   def submodule_repo_url(name)
     url = ''
-    on :local do
-      within name do
-        url = capture :git, :remote, 'get-url', :origin
-      end
-    end
-    url
+    # on :local do
+      # within name do
+        url = %x|(cd #{name.to_s} && git remote get-url origin)|
+      # end
+    # end
+    url.strip
   end
 
   def check_submodule_repo_is_reachable(name)
@@ -72,9 +72,9 @@ class Capistrano::SCM::Git::FullSubmodules < Capistrano::Plugin
 
   def submodule_branch(name)
     x = ''
-    on :local do
-      x = capture :git, :submodule, :foreach, '--quiet', '\'echo "$displaypath => $sha1"\''
-    end
+    # on :local do
+      x = %x|git submodule foreach --quiet 'echo "$displaypath => $sha1"'|
+    # end
     nameBranches = x.split("\n")
     for nameBranch in nameBranches do
       (modName, branch) = nameBranch.split(' => ');
