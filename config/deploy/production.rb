@@ -34,7 +34,7 @@ set :local_user, "new"
 # Feel free to add new variables to customise your setup.
 set :deploy_to, "/home/new/cgmembers-frame"
 set :branch, "master"
-set :tmp_dir, "home/new/tmp"
+set :tmp_dir, "/home/new/tmp"
 
 # Custom SSH Options
 # ==================
