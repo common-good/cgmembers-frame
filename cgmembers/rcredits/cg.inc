@@ -286,7 +286,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
   u\loga('email', $erInfo + ['toUid' => @$toA->id]);
 
   if (isPRODUCTION !== TRUE) { // make sure we never send rogue emails from test server even if constant isn't set
-    /**/  if (!u\test() and $mya and $mya->cAdmin) debug(compact(ray('subject to body')));
+/**/  if (!u\test() and $mya and $mya->cAdmin) debug(compact(ray('subject to body')));
     return; // no emails unless real!!
     if ($toEmail != r\regionField('email') and $toEmail != R_ADMIN_EMAIL) return TRUE;
     if (isDEV) return TRUE; // otherwise cURL error 60: SSL certificate problem: unable to get local issuer certificate
@@ -294,15 +294,15 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
   }
   
   require_once DRUPAL_ROOT . '/vendor/swiftmailer/lib/swift_required.php';
-  $transport = \Swift_SendmailTransport::newInstance('/usr/sbin/sendmail -bs');
-/*
+//  $transport = \Swift_SendmailTransport::newInstance('/usr/sbin/sendmail -bs');
+
   $transport = \Swift_SmtpTransport::newInstance()
     ->setHost(CG_SMTP_SERVER)
     ->setPort(CG_SMTP_PORT)
     ->setEncryption(CG_SMTP_TLS)
     ->setUsername(CG_SMTP_USER)
     ->setPassword(CG_SMTP_PASS);
-    */
+
   $mailer = \Swift_Mailer::newInstance($transport);
 
   $privateKey = "-----BEGIN RSA PRIVATE KEY-----\n" . str_replace(' ', "\n", DKIM_PRIVATE) . "\n-----END RSA PRIVATE KEY-----";
@@ -868,11 +868,12 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
                 'r_user_industries:uid:D',
                 // r_votes
                 'sessions:uid:D',
-                // 'tx_disputes',
+                'tx_disputes:uid',
+                'tx_disputes:agentUid',
                 'tx_entries:uid',
                 'tx_entries:agentUid',
-                'tx_hdrs:actor',
-                'tx_hdrs:actorAgent',
+                'tx_hdrs:actorId',
+                'tx_hdrs:actorAgentId',
                 'users:jid',
                 'users:uid:D',
                 'users:helper',

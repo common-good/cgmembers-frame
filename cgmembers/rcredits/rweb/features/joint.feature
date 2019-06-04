@@ -115,13 +115,13 @@ Scenario: A joined account member looks at transaction history and summary
 #  | 602 | %mdy-2w |            | from bank | 400.00 | --         | ZZA  | X |
 #  | 601 | %mdy-2w |            | from bank | 600.00 | --         | ZZB  | X |
 
-  | Tx# | Date    | Name       | Purpose          |  Amount |  Balance | Action |
-  |   4 | %mdy    | --         | transfer to bank | -100.00 | 1,850.00 |        |
-  |   8 | %mdy-1d | Corner Pub | labor            |  100.00 | 1,950.00 |        |
-  |   7 | %mdy-2d | Dee Four   | cash             |   50.00 | 1,850.00 |        |
-#  | 3   | %mdy-1w | Abe One    | usd              | 500.00  |   500.00 |  +0    |
-  |   3 | %mdy-2w | --         | transfer to CG   |  400.00 | 1,800.00 |        |
-  |   2 | %mdy-2w | --         | transfer to CG   |  600.00 | 1,400.00 |        |
+  | Tx# | Date    | Name       | Purpose   |  Amount |  Balance | Action |
+  |   4 | %mdy    | --         | to bank   | -100.00 | 1,850.00 |        |
+  |   8 | %mdy-1d | Corner Pub | labor     |  100.00 | 1,950.00 |        |
+  |   7 | %mdy-2d | Dee Four   | cash      |   50.00 | 1,850.00 |        |
+#  | 3   | %mdy-1w | Abe One    | usd      | 500.00  |   500.00 |  +0    |
+  |   3 | %mdy-2w | --         | from bank |  400.00 | 1,800.00 |        |
+  |   2 | %mdy-2w | --         | from bank |  600.00 | 1,400.00 |        |
   Given cron runs "acctStats"
   When member ".ZZB" visits page "summary"
   Then we show "Account Summary" with:

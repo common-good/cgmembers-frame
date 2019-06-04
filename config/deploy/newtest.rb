@@ -6,7 +6,9 @@
 # server "example.com", user: "deploy", roles: %w{app db web}, my_property: :my_value
 # server "example.com", user: "deploy", roles: %w{app web}, other_property: :other_value
 # server "db.example.com", user: "deploy", roles: %w{db}
-server "newtest.commongood.earth", roles: %w{app db web}
+server "newtest.commongood.earth", roles: %w{app db web}, user: "newtest"
+
+set :local_user, "newtest"
 
 
 # role-based syntax
@@ -31,9 +33,11 @@ server "newtest.commongood.earth", roles: %w{app db web}
 # http://capistranorb.com/documentation/getting-started/configuration/
 # Feel free to add new variables to customise your setup.
 set :deploy_to, "/home/newtest/cgmembers-frame"
+# set :repo_url, "git@github.com:common-good/cgmembers-frame.git"
 # set :branch, "develop"
 ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp
 
+set :tmp_dir, "/home/newtest/tmp"
 
 
 # Custom SSH Options
@@ -44,11 +48,12 @@ ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp
 #
 # Global options
 # --------------
-#  set :ssh_options, {
-#    keys: %w(/home/rlisowski/.ssh/id_rsa),
-#    forward_agent: false,
-#    auth_methods: %w(password)
-#  }
+set :ssh_options, {
+#   keys: %w(/home/rlisowski/.ssh/id_rsa),
+  forward_agent: false,
+  auth_methods: %w(publickey),
+  user: "newtest"
+}
 #
 # The server-based syntax can be used to override options:
 # ------------------------------------

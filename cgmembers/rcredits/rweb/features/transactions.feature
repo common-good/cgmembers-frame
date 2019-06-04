@@ -55,14 +55,14 @@ Scenario: A member looks at transactions for the past year
 #  | Credit Line+ |   |          |          |
   | End          |   | 1,595.00 | %dmy     |
   And with:
-  |~tid | Date    | Name          | Purpose          | Amount   |  Balance | Action |
-  |  3  | %mdy-5d | --            | transfer to bank |   -33.00 | 1,595.00 |        |
-  |  2  | %mdy-5d | --            | transfer to bank |   -22.00 | 1,628.00 |        |
-  | 29  | %mdy-6d | Bea Two       | cash V           |  -100.00 | 1,650.00 |        |
-  | 28  | %mdy-1w | Corner Pub    | this Q           |  -120.00 | 1,750.00 |        |
-  | 26  | %mdy-3m | Bea Two       | what G           |  -240.00 | 1,870.00 |        |
-  | 35  | %mdy-4m | Corner Pub    | usd F            | 1,100.00 | 2,110.00 |        |
-  | 34  | %mdy-5m | Bea Two       | cash E           |    10.00 | 1,010.00 |        |
+  |~tid | Date    | Name          | Purpose | Amount   |  Balance | Action |
+  |  3  | %mdy-5d | --            | to bank |   -33.00 | 1,595.00 |        |
+  |  2  | %mdy-5d | --            | to bank |   -22.00 | 1,628.00 |        |
+  | 29  | %mdy-6d | Bea Two       | cash V  |  -100.00 | 1,650.00 |        |
+  | 28  | %mdy-1w | Corner Pub    | this Q  |  -120.00 | 1,750.00 |        |
+  | 26  | %mdy-3m | Bea Two       | what G  |  -240.00 | 1,870.00 |        |
+  | 35  | %mdy-4m | Corner Pub    | usd F   | 1,100.00 | 2,110.00 |        |
+  | 34  | %mdy-5m | Bea Two       | cash E  |    10.00 | 1,010.00 |        |
 #  | 1   | %mdy-7m | ZZrCred       | signup           |     0.00 |      .00 |        |
   And without:
   | rebate  |
@@ -78,11 +78,11 @@ Scenario: A member looks at transactions for the past few days
 #  | Credit Line+ | + |          |          |
   | End          |   | 1,595.00 | %dmy     |
   And with:
-  |~tid | Date    | Name          | Purpose          | Amount  |  Balance |
-  |  3  | %mdy-5d | --            | transfer to bank |  -33.00 | 1,595.00 |
-  |  2  | %mdy-5d | --            | transfer to bank |  -22.00 | 1,628.00 |
-  | 29  | %mdy-6d | Bea Two       | cash V           | -100.00 | 1,650.00 |
-  | 28  | %mdy-1w | Corner Pub    | this Q           | -120.00 | 1,750.00 |
+  |~tid | Date    | Name          | Purpose | Amount  |  Balance |
+  |  3  | %mdy-5d | --            | to bank |  -33.00 | 1,595.00 |
+  |  2  | %mdy-5d | --            | to bank |  -22.00 | 1,628.00 |
+  | 29  | %mdy-6d | Bea Two       | cash V  | -100.00 | 1,650.00 |
+  | 28  | %mdy-1w | Corner Pub    | this Q  | -120.00 | 1,750.00 |
   And without:
   | pie N    |
   | whatever |
@@ -118,8 +118,8 @@ Scenario: A member looks at transactions with roundups
   |~tid | Date    | Name              | Purpose          | Amount  |  Balance |~do |
   | 51  | %mdy    | Corner Pub        | sundries         |  -49.95 | 1,545.00 |    |
   |     |         | Roundup Donations | roundup donation |   -0.05 |          |    | 
-  |  3  | %mdy-5d | --                | transfer to bank |  -33.00 | 1,595.00 |    |
-  |  2  | %mdy-5d | --                | transfer to bank |  -22.00 | 1,628.00 |    |
+  |  3  | %mdy-5d | --                | to bank          |  -33.00 | 1,595.00 |    |
+  |  2  | %mdy-5d | --                | to bank          |  -22.00 | 1,628.00 |    |
   | 29  | %mdy-6d | Bea Two           | cash V           | -100.00 | 1,650.00 |    |
   | 28  | %mdy-1w | Corner Pub        | this Q           | -120.00 | 1,750.00 |    |
   

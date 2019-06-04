@@ -12,14 +12,9 @@ use CG\Db as db;
 function formAgreement($form, &$sta) {
   global $mya;
   $title = t('%PROJECT Agreement');
-  $name = 'checkNUMBER';
-//  $id = "edit-$name";
-//  $check = boxFld('checkNUMBER', '', '', attrib(compact('id')));
-  $model = @\render(boxFld('checkNUMBER'));
-  $_addendum = '';
 
   if (!$mya) {
-    // nothing to be done if signed out
+    $signedBy = NULL;
   } elseif ($date = $mya->signed) {
     $date = u\fmtDate($date);
     say('signed agreement', compact('date'));
@@ -29,13 +24,12 @@ function formAgreement($form, &$sta) {
   } else {
     $signedBy = w\signedBy();
     $setupFoot = w\setupFoot();
-    $_addendum = $mya->cAdmin ? t('ADMINISTRATORS need not put checkmarks in the boxes.') : '';
   }    
   $topics = ray('Members Member-Organizations CGC Dollar-Pool Backing Without-Limit Disputes Participation');
   foreach ($topics as $k) $args["_a$k"] = atag("/help/agreement#$k");
   $args['_aDetails'] = atag('/help/agreement');
 
-  $agreement0 = t(<<< X
+  $agreement = t(<<< X
 <div id="agreement">
 <ol>
   <li>[1] <b>Who.</b> I make this agreement with all %PROJECT <%aMembers>Members</a> and <%aMember-Organizations>Member Organizations</a> everywhere &mdash; especially with Members and Member Organizations in my <%aCGC>%PROJECT Community</a>.</li>
@@ -52,30 +46,29 @@ function formAgreement($form, &$sta) {
 X
   , $args);  
 
-  if ($mya and $mya->co) {
-    $agreement = t('<p>I commit %coName to the terms of the <%a>%PROJECT Agreement</a>'
-                   . ' (the same agreement I signed as an individual).</p>',
-                   'coName _a', $mya->fullName, 'a id="show-agreement"') .
-      '<div id="wrap-agreement">' . $agreement0 . '</div>';
-  } elseif ($mya and !empty($mya->signed)) {
-    $agreement = t('<div id="instructions" class="well">'
-                   . '<p><b>Instructions:</b> Put a check mark by each section'
-                   . ' to indicate you have read and understand it. %addendum</p></div>',
-                   compact('_addendum'))
-      . $agreement0;
-  } else {
-    $agreement = $agreement0;
+  if (!$mya) {
+    $subtext = t('If you haven\'t finished opening your account yet, <%aSignin>sign in</a> to sign this agreement and complete your account.', '_aSignin', atag('/signin'));
+  } elseif ($mya->signed) {
+    $subtext = NULL;
+  } elseif ($mya->co) { // company
+    $subtext = t('<p>I commit %coName to the terms of the <%a>%PROJECT Agreement</a> (the same agreement I signed as an individual).</p>', 'coName _a', $mya->fullName, 'a id="show-agreement"');
+    $agreement = "<div id=\"wrap-agreement\">$agreement</div>";
+  } else { // individual
+    $subtext = t('<h4>Instructions</h4><p>Please <b>READ THIS AGREEMENT</b>. Put a check mark by each section to indicate you have read and understand it. Then sign your full legal name at the bottom.</p>');
+    if ($mya->cAdmin) $subtext .= t('<p><b>ADMINISTRATORS</b> need not put check marks in the boxes.</p>');
   }
+  if ($subtext) $subtext = '<div id="instructions" class="well">' . $subtext . '</div>';
       
+  $model = @\render(boxFld('checkNUMBER'));
+  $hasBoxes = ($mya and !$mya->co and $mya->can(B_MANAGE) and !$mya->signed);
   for ($i = R_AGREE_0; $i <= R_AGREE_9; $i++) {
-    $box = str_replace('checkNUMBER', "check$i", $model);
-    $agreement = str_replace("[$i]", (!$mya or $mya->co or !$mya->can(B_MANAGE) or @$date) ? '' : $box, $agreement);
+    $agreement = str_replace("[$i]", $hasBoxes ? str_replace('checkNUMBER', "check$i", $model) : '', $agreement);
   }
-//  $agreement = fld('item', '', '', $agreement);
+
   $agreement = w\item($agreement);
   jsx('agree');
   
-  return cgform(compact(ray('title agreement signedBy')) + (@$setupFoot ?: []));
+  return cgform(compact(ray('title subtext agreement signedBy')) + (@$setupFoot ?: []));
 }
 
 function formAgreement_validate($form, &$sta) {

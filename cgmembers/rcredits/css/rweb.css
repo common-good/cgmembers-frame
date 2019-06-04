@@ -604,7 +604,7 @@ body.logged-in.one-sidebar #content {width:100%;}
 /* Agreement */
 #frm-agreement #instructions {background:lightyellow;}
 #frm-agreement .checkbox {display:inline-block; width:0; position:relative; left:-37px; top:5px; z-index:1;}
-#frm-agreement #edit-agreement .control-label {max-width:8.3%; min-width:0; margin:0; padding:0;} 
+#frm-agreement #edit-agreement .control-label {min-width:0; margin:0; padding:0;} 
 #frm-agreement #edit-agreement .control-data {max-width:900px; width:80%;}
 #frm-agreement #agreement ul,
 #frm-agreement #agreement ol {margin-left:25px;}
@@ -1017,7 +1017,9 @@ fieldset#dateRange #advanced {display:none;}
 #frm-balancesheet #edit-subtext .control-data {width:auto; text-align:left;}
 #frm-balancesheet #edit-title .control-label,
 #frm-balancesheet #edit-subtext .control-label {width:0; min-width:0;}
-#frm-balancesheet .form-item-assetLabel label,
+#frm-balancesheet #edit-posttext .control-data {text-align:left; width:450px; margin:30px 0 0 35px;}
+#frm-balancesheet #edit-posttext label {display:none;}
+ #frm-balancesheet .form-item-assetLabel label,
 #frm-balancesheet .form-item-liabilityLabel label,
 #frm-balancesheet #edit-netAssets {font-size:110%; margin-top:20px; font-weight:bold;}
 #frm-balancesheet #edit-netAssets,

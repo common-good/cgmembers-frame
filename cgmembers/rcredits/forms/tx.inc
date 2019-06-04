@@ -45,7 +45,7 @@ function formTx($form, &$sta, $args = '') {
   $purpose = textFld(t('For:'), [t('purpose or description of goods and services')], required(@$purpose));
   $oftens = ['' => t('No repeat')] + ray(OFTENS);
   unset($oftens['X']);  
-  if ($paying) $repeat = selectFld(t('&nbsp;'), '', dft(''), $oftens);
+// temporarily disable (doesn't work right!) if ($paying) $repeat = selectFld(t('&nbsp;'), '', dft(''), $oftens);
   
   $scanClass = 'not-scanned';
   $$type = submit($opDesc);
@@ -93,7 +93,7 @@ function formTx_submit($form, &$sta) {
     db\updateOrInsert('r_recurs', $info, 'id');
     $repeats = ray(OFTENS);
 //      $often = strstr($repeats[$repeat], ' ', TRUE);
-    $often = $repeats[$repeat];
+    $often = $repeats[@$repeat];
     $msg .= '|repeats';
   }
   unset($DBTX);

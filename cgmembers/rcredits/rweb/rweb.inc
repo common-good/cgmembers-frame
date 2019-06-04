@@ -301,17 +301,17 @@ function changeWho($args = '') {
   global $mya;
   extract(just('acct page', $args));
 
+  $page = $mya->cAdmin ? str_replace(',', '/', @$page) : 'summary'; // go to summary, unless admin
+
   if (nn($acct) == 'signout') return signout();
-  if (!$mya and !isDEV) return say(t('No previous account. Try again.')); // get old current account
+  if (!$mya and !isDEV) return w\go($page, t('No previous account. Try again.')); // get old current account
   if (!$mya->cAdmin2 and !$mya->isAdmin2 and !$mya->can()) return hack('accts');
-  $mya = r\acct($acct, @$mya->agentId); // tentative new account
-  if (!$mya->admin and !$mya->isAdmin2 and $mya->community != $mya->agentA->community) return say(t('You can switch only to accounts in your community.'));
+  $mya = r\acct($acct, @$mya->agentId); // tentative new account (agent is the same, so adminishness is the same)
+  if ($mya->cAdmin and !$mya->admin and !$mya->isAdmin2 and $mya->community != $mya->agentA->community) return w\go($page, t('You can switch only to accounts in your community.')); // cAdmin check is a bug fix
   
   w\setAcct($mya->id); // get new current account
-
-  $page = str_replace(',', '/', @$page);
   
-  w\go($mya->cAdmin ? $page : 'summary'); // go to summary, unless admin
+  return w\go($page);
 }
 
 /**

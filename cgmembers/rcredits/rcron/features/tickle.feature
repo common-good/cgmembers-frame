@@ -12,7 +12,7 @@ Setup:
   | .ZZE | Eve Five | e@    | ok      | %today-3m |     0 |
   | .ZZF | Flo Six  | f@    | ok      | %today-3m |     0 |
 
-Scenario: A newbie has not taken the first step
+Scenario: A newbie has taken only the first step
   Given invites:
   | email | inviter | code   | invited    | invitee |*
   | d@    | .ZZE    | codeD1 | %today-11d | .ZZD    |

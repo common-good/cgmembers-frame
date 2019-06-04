@@ -44,19 +44,20 @@ EOF;
   $txHeader = "<tr>$txHeader</tr>";
   $subs = compact('starting', 'ending');
   $sql = <<<EOF
-    SELECT t.risk AS score, xid, t.created, payer.amount, payer.uid AS payer, payee.uid AS payee,
-           payee.description AS description, t.risks 
-    FROM tx_hdrs t JOIN tx_entries payer USING(xid) JOIN tx_entries payee USING(xid)
-    LEFT JOIN users u1 ON u1.uid=payer.uid LEFT JOIN users u2 ON u2.uid=payee.uid 
-    WHERE payer.entryType=:ENTRY_PAYER AND payee.entryType=:ENTRY_PAYEE
-      AND (payer.uid>0 OR ABS(payer.amount)>:K_CTTY_THRESHOLD) 
+    SELECT t.risk AS score, xid, t.created, e1.amount, e1.uid AS payer, e2.uid AS payee,
+      e2.description AS description, t.risks 
+    FROM tx_hdrs t 
+    JOIN (tx_entries_payer e1 JOIN users u1 USING(uid)) USING(xid)
+    JOIN (tx_entries_payee e2 JOIN users u2 USING(uid)) USING(xid)
+    WHERE ((e1.uid>:CANONIC_ACCTS AND e2.uid>:CANONIC_ACCTS) 
+      OR ((e1.uid<0 OR e2.uid<0) AND ABS(e2.amount)>:K_CTTY_THRESHOLD))
       AND $cttysCrit AND t.created BETWEEN :starting AND :ending 
     ORDER BY t.risk DESC LIMIT :K_LINES
 EOF;
   $q = db\q($sql, $subs);
-  for ($i = 0; $line = riskLine($q, K_TX_RISKS, $red) and ($i < K_LINES or $red); $i++) {
-    $txs .= $line;
-  }
+
+  for ($i = 0; $line = riskLine($q, K_TX_RISKS, $red) and ($i < K_LINES or $red); $i++) $txs .= $line;
+
   $headers = ray(t('Score Tx# Date Amount Account Description Risks'));
   foreach ($headers as $v) {$vLow = strtolower($v); $achHeader .= "<th class=\"k-$vLow\">$v</th>";}
   $achHeader = "<tr>$achHeader</tr>";
@@ -152,10 +153,9 @@ function riskLine($q, $descs, &$red = '') {
   if ($extra and isset($xid)) $row['xid'] = "<a href=\"$base_url/sadmin/tx-info/$xid\">$xid</a>";
   if (isset($created)) $row['created'] = strftime(@$uid ? '%d-%b-%Y' : '%d-%b', $created);
   if (isset($description)) foreach ($abridgable as $k) if (u\starts($description, $k)) $row['description'] = $k;
+
   $row['risks'] = r\riskList($risks, $descs);
-  
   $line = '';
   foreach ($row as $k => $v) $line .= "<td class=\"k-$k\">$v</td>";
-
   return "<tr>$line</tr>\n";
 }

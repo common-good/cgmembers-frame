@@ -185,7 +185,7 @@ X
   if ($i == 'backing-common-good-credits') return t(<<< X
     <h4>What is "backing"?</h4>
 
-    <p>Backing [a %PROJECT Community] is a promise, made by supportive members and member organizations one year at a time, to buy additional %PROJECT credit in the event of a cash crunch or termination of the %PROJECT Community. These promises give you the security of knowing your %PROJECT credit is backed by Dollars held in the Dollar Pool and/or by promises, helping prevent the sort of panic that can lead to a cash crunch. Backing Promises are a key component of taking responsibility and control of our own local economy.</p>
+    <p>Backing [a %PROJECT Community] is a promise, made by supportive members and member organizations one year at a time, to buy additional %PROJECT credit in the event of a cash crunch or termination of the %PROJECT Community. These promises give you the security of knowing your %PROJECT credit is backed by Dollars held in the Dollar Pool and/or by plenty of credible promises, helping prevent the sort of panic that can lead to a cash crunch. Backing Promises are a key component of taking responsibility and control of our own local economy.</p>
 
     <p>The promise you make in the %PROJECT Agreement is also a sort of Backing Promise. When you pay someone more than is in your %PROJECT account balance, that extra %PROJECT credit is backed by your promise to bring your balance back up to zero or more within 30 days.</p>
 

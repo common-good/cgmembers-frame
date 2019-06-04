@@ -112,3 +112,14 @@ $queries = [
 //    IFNULL(u.fullName, REPLACE(SUBSTRING(r.data, 27, LOCATE('\"', SUBSTRING(r.data, 28))), '\"', '')) AS name,
 //    SUBSTRING_INDEX(SUBSTRING_INDEX(r.data, '\"', 12), '\"', -1) AS phone,
 
+/**
+ * Ideas for other queries
+
+// when people signed up recently
+eachA(function ($a) {
+  $dt = u\fmtDate($a->created, TRUE);
+  $status = $a->ok ? '' : ' (in process)';
+  echo "$dt $a->fullName$status\n";
+}, 'created > :NOW - 3 * :MONTH_SECS ORDER BY created DESC');
+
+*/

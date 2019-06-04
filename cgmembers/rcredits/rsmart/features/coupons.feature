@@ -34,11 +34,11 @@ Scenario: A member redeems a gift coupon
   | xid | goods | actorId | actorAgentId | flags  | channel | boxId  | risks | reversesXid | created |*
   | 1   | 0     | .ZZC  | .ZZA       | 0      | 3       | devC   |     0 |          | %today  |
   And transaction entries: 
-  | xid | amount |  uid | agentUid | acctTid | description             | relType | relatedId |*
-  | 1   |    100 | .ZZC | .ZZA     | 1       | food                    |         |         |
-  | 1   |   -100 | .ZZB | .ZZB     | 1       | food                    |         |         |
-  | 1   |     10 | .ZZB | .ZZB     | 1       | discount rebate (on #1) | D       | 1       |
-  | 1   |    -10 | .ZZC | .ZZA     | 1       | discount rebate (on #1) | D       | 1       |
+  | xid | amount |  uid | agentUid | acctTid | description     | relType | relatedId |*
+  | 1   |    100 | .ZZC | .ZZA     | 1       | food            |         |         |
+  | 1   |   -100 | .ZZB | .ZZB     | 1       | food            |         |         |
+  | 1   |     10 | .ZZB | .ZZB     | 1       | discount rebate | D       | 1       |
+  | 1   |    -10 | .ZZC | .ZZA     | 1       | discount rebate | D       | 1       |
   And coupated:
   | id | uid  | coupid | uses |*
   |  1 | .ZZB | 1      | 1    |
@@ -50,11 +50,11 @@ Scenario: A member redeems a gift coupon
   | xid | goods | actorId | actorAgentId | flags  | channel | boxId | risks | reversesXid | created |*
   | 2   | 0     | .ZZC  | .ZZA       | 0      | 3       | devC  |     0 | 1        | %today  |
   And transaction entries: 
-  | xid | amount |  uid | agentUid | acctTid | description             | relType | relatedId |*
-  | 2   |   -100 | .ZZC | .ZZA     | 2       | food                    |         |         |
-  | 2   |    100 | .ZZB | .ZZB     | 2       | food                    |         |         |
-  | 2   |    -10 | .ZZB | .ZZB     | 2       | discount rebate (on #1) | D       | 1       |
-  | 2   |     10 | .ZZC | .ZZA     | 2       | discount rebate (on #1) | D       | 1       |
+  | xid | amount |  uid | agentUid | acctTid | description     | relType | relatedId |*
+  | 2   |   -100 | .ZZC | .ZZA     | 2       | food            |         |         |
+  | 2   |    100 | .ZZB | .ZZB     | 2       | food            |         |         |
+  | 2   |    -10 | .ZZB | .ZZB     | 2       | discount rebate | D       | 1       |
+  | 2   |     10 | .ZZC | .ZZA     | 2       | discount rebate | D       | 1       |
   And coupated:
   | id | uid  | coupid | uses |*
   |  1 | .ZZB | 1      | 0    |
@@ -64,11 +64,11 @@ Scenario: A member redeems a gift coupon
   | xid | goods | actorId | actorAgentId | flags  | channel | boxId | risks | reversesXid | created |*
   | 3   | 0     | .ZZC  | .ZZA       | 0      | 3       | devC  |     0 |          | %today  |
   And transaction entries: 
-  | xid | amount |  uid | agentUid | acctTid | description             | relType | relatedId |*
-  | 3   |     50 | .ZZC | .ZZA     | 3       | sundries                |         |         |
-  | 3   |    -50 | .ZZB | .ZZB     | 3       | sundries                |         |         |
-  | 3   |    -10 | .ZZC | .ZZA     | 3       | discount rebate (on #3) | D       | 1       |
-  | 3   |     10 | .ZZB | .ZZB     | 3       | discount rebate (on #3) | D       | 1       |
+  | xid | amount |  uid | agentUid | acctTid | description     | relType | relatedId |*
+  | 3   |     50 | .ZZC | .ZZA     | 3       | sundries        |         |         |
+  | 3   |    -50 | .ZZB | .ZZB     | 3       | sundries        |         |         |
+  | 3   |    -10 | .ZZC | .ZZA     | 3       | discount rebate | D       | 1       |
+  | 3   |     10 | .ZZB | .ZZB     | 3       | discount rebate | D       | 1       |
   And coupated:
   | id | uid  | coupid | uses |*
   |  1 | .ZZB | 1      | 1    |
