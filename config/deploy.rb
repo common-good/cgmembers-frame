@@ -46,5 +46,5 @@ append :linked_dirs, "cgLogs", "cgPhotoTemp", "cgmembers/.well-known"
 set :tmp_dir, "/home/#{fetch(:local_user)}/tmp"
 
 # Locals - this one sets the umask for the deployment
-SSHKit.config.umask = '002'
+# SSHKit.config.umask = '002'
 set :pty, true
