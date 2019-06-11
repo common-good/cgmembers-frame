@@ -202,8 +202,8 @@ function balanceAsOf($uids, $date=null) {
 function memberRay($myid, $aid, $coOnly = FALSE) {
   if (!$a = r\acct($myid, $aid)) return [];
 //  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : "state=$a->state OR community=$a->community OR :IS_CO");
-  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : "(:NEIGHBOR_QUERY<:NEIGHBOR_RMAX OR community=$a->community OR :IS_CO)");
-  if (isDEV) $where = str_replace(':NEIGHBOR_QUERY', '0', $where); // no lat/lon on dev machines yet
+  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : u\SUBS("(:NEIGHBOR_QUERY<:NEIGHBOR_RMAX OR community=$a->community OR :IS_CO)")); // :NEIGHBOR_QUERY must be preprocessed by u\SUBS()
+  if (isDEV) $where = str_replace(NEIGHBOR_QUERY, '0', $where); // no lat/lon on dev machines yet
   $subs = compact('myid');
   if (!$coOnly and !$a->admin and !isDEV) $subs += ray('lat lon', $a->latitude, $a->longitude);
 ///   flog(db\col('fullName', 'users', ":IS_OK AND uid<>:myid AND $where ORDER BY fullName", $subs));
@@ -394,25 +394,21 @@ function reverse($xid) {
  *         [FALSE, explanation] if the payment failed
  */
 function payInvoice($nvid) {
-///    debug("payInvoice($nvid)");
-  
   u\EXPECT('int', $nvid);
   $msg = r\badUnpaidInv($nvid, $inv);
   if ($msg) return [FALSE, $msg];
-  extract(u\exactly('payer payee amount goods purpose data flags', $inv, [null, null, 0.0, FOR_GOODS, null, '', 0]));
-  $payerId = $payer;
-  $payeeId = $payee;
-  $payer = r\acct($payer);
-  $payee = r\acct($payee);
+  extract(u\exactly('payer payee amount goods purpose data flags recursId', $inv, [NULL, NULL, 0.0, FOR_GOODS, NULL, '', 0, 0]));
+  $payerA = r\acct($payer);
+  $payeeA = r\acct($payee);
   $data = unserialize($data);
-  extract(u\exactly('api request shid', $data, null));
+  extract(u\exactly('api request shid', $data, NULL, NULL));
   
   $DBTX = \db_transaction();
   $purpose .= ' (' . PROJECT . " inv#$nvid)";
 	$extra = ray('inv', $nvid);
 	if ($flags) foreach (ray('gift recurs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
 
-  list ($index, $subs) = be\transfer('invoice payment', $payer, $payee, $amount, $purpose, $goods, $extra);
+  list ($index, $subs) = be\transfer('invoice payment', $payerA, $payeeA, $amount, $purpose, $goods, $extra, $recursId);
   $ok = u\arrayGet($subs, 'success', FALSE);
   if ($ok) {
     db\update('r_invoices', ray('status nvid', $subs['xid'], $nvid), 'nvid');
@@ -421,13 +417,13 @@ function payInvoice($nvid) {
 
 	if (u\getBit(@$flags, B_INVESTMENT)) { // club reclaiming an investment
 /*
-    $res = db\get('shid,vestid', 'r_shares s LEFT JOIN r_investments i ON i.vestid=s.vestid', 'coid=:coid AND clubid=:clubid AND pending<0', ray('coid clubid', $payerId, $payeeId));
+    $res = db\get('shid,vestid', 'r_shares s LEFT JOIN r_investments i ON i.vestid=s.vestid', 'coid=:coid AND clubid=:clubid AND pending<0', ray('coid clubid', $payer, $payee));
     if ($res) {
       extract($res); // shid vestid
       */
     if ($shid) { // record the sale
       db\update('r_shares', ray('shid shares pending when', $shid, -$amount, 0, now()), 'shid');
-    } else r\tellCo(t('Invoice payment marked as "for investment (repayment)" has no corresponding SELL request in shares table.'), $inv, $payee);
+    } else r\tellCo(t('Invoice payment marked as "for investment (repayment)" has no corresponding SELL request in shares table.'), $inv, $payeeA);
   }
   unset($DBTX);
   
@@ -458,13 +454,13 @@ function payInvoice($nvid) {
  *   'noask'
  *   'funding'
  *   'crumbs', 'recurs', 'gift': gift info
+ * @param int $recursId: record ID of related record in r_recurs (if any)
  * @return simple array: 
  *    index: index to result message string (if success, the index begins with "report ")
  *    subs: replacement parameters, specific to the message (in particular, success=TRUE or FALSE)
  *
  * The following used to be possible keys for $data, but not any more:
  *   'inv': record number of the invoice for which this is payment
- *   'isGift': UNUSED <the payment is a gift to a community or nonprofit>
  *   'roundups'
  *   'roundups': the payment is change being donated to the community
  *   'rebate': the rebate amount for this request (should be negative the original bonus amount)
@@ -479,7 +475,7 @@ function payInvoice($nvid) {
  *   $oked UNUSED (user confirmed the transaction request),
  *   $shortfall (how inadequate the payer's balance is)
  */
-function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
+function transfer($type, $actor, $other, $amount, $for, $goods, $data = [], $recursId = 0) {
   global $scanned, $channel;
 ///     debug("transfer($type, $actor->id, $other->id, $amount, " . print_r($for, true) . ", $goods, )" . print_r($data, true));
   
@@ -567,8 +563,8 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = []) {
     | ($recurs ? 1 << B_RECURS : 0) | ($gift ? 1 << B_GIFT : 0) | ($loan ? 1 << B_LOAN : 0)
     | ($investment ? 1 << B_INVESTMENT : 0) | ($stake ? 1 << B_STAKE : 0) | ($fine ? 1 << B_FINE : 0)
     | ($noask ? 1 << B_NOASK : 0) | ($funding ? 1 << B_FUNDING : 0);
-  $info = ray('actorId actorAgentId flags channel boxId goods created',
-              $actor->id, $actor->agentId, $flags, $channel, $boxId, $goods, $created); //amount created payer payee payerAgent payeeAgent for data taking roundup goods force offline investment short'));
+  $info = ray('actorId actorAgentId',$actor->id, $actor->agentId) + compact(ray('flags channel boxId goods created recursId'));
+  //amount created payer payee payerAgent payeeAgent for data taking roundup goods force offline investment short'));
   $tx = new r\Tx($info);
   if (!$tx) {
     $DBTX->rollback();
@@ -827,11 +823,12 @@ function maxTid($uids) {
  *    shid: record id of related record in r_shares
  *    status: ?
  *    created: UNIXtime
+ * @param int $recursId: record ID of related record in r_recurs (if any)
  * @return simple array: 
  *    index: index to result message string (if success, the index begins with "report ")
  *    subs: replacement parameters, specific to the message (in particular, success=TRUE or FALSE)
  */
-function invoice($actor, $other, $amount, $purpose, $goods, $extra = []) {
+function invoice($actor, $other, $amount, $purpose, $goods, $extra = [], $recursId = 0) {
 ///     debug("invoice($actor->id, $other->id, " . print_r($amount, true) . ", " . print_r($purpose, true) . ", " . print_r($goods, true) . ", " . print_r($extra, true) . ")");
   global $channel;
   
@@ -844,24 +841,24 @@ function invoice($actor, $other, $amount, $purpose, $goods, $extra = []) {
     u\setBit($flags, $k, $v);
     unset($extra[$k]); // don't leave bits in extras (data field)
   }
-  list ($payeeId, $payerId) = array($actor->id, $other->id);
+  list ($payee, $payer) = array($actor->id, $other->id);
   u\setDft($purpose, $why = ray(R_WHYS)[$goods]);
   $subs = ray('myName otherName otherEmail otherPhone amount why purpose did op', $actor->fullName, $other->fullName, $other->email, u\fmtPhone($other->phone), u\fmtAmt($amount), $why, $purpose, t('charged'), t('charged'));
   if ($err = u\badAmount($amount, '>0')) return r\txRet($err, $subs);
   if ($err = r\txPermErr($actor, $other, TRUE)) return r\txRet($err, $subs);
-  if (r\dupTx($payeeId, $payerId, -$amount)) return r\txRet('duplicate transaction', $subs);
+  if (r\dupTx($payee, $payer, -$amount)) return r\txRet('duplicate transaction', $subs);
   
-  u\setDft($status, ($channel != TX_FOREIGN and r\relation(':IS_AUTOPAY', $payeeId, $payerId)) ? TX_APPROVED : TX_PENDING);
+  u\setDft($status, ($channel != TX_FOREIGN and r\relation(':IS_AUTOPAY', $payee, $payer)) ? TX_APPROVED : TX_PENDING);
   $data = serialize($extra);
-  $info = compact(ray('amount status purpose created flags data')) + ['payer'=>$payerId, 'payee'=>$payeeId];
+  $info = compact(ray('amount payer payee status purpose created flags data recursId'));
   $nvid = db\insert('r_invoices', $info, 'nvid');
-  /* $actor->update('lastTx', [$nvid, $payerId - $payeeId, round(-$amount, 2), $created, 'inv']); */
+  /* $actor->update('lastTx', [$nvid, $payer - $payee, round(-$amount, 2), $created, 'inv']); */
 
   if ($status == TX_PENDING) {
     $link = $actor->makeDo('inv', $nvid); // link to pay/deny
-    //$other->update(ray('lastTx', array($nvid, $payeeId - $payerId, round($amount, 2), $created, 'inv')));
-    $subs += ray('_a1 reply email phone', $link, $payeeId, $actor->email, u\fmtPhone($actor->phone));
-    r\message($payerId, 'new invoice', $subs); // tell other party by email about this invoice
+    //$other->update(ray('lastTx', array($nvid, $payee - $payer, round($amount, 2), $created, 'inv')));
+    $subs += ray('_a1 reply email phone', $link, $payee, $actor->email, u\fmtPhone($actor->phone));
+    r\message($payer, 'new invoice', $subs); // tell other party by email about this invoice
   } else { // pre-approved!
     if (!$other->shortfall(TX_TRANSFER, $amount)) { // don't try to pay yet if short
       list($ok, $msg) = be\payInvoice($nvid);
@@ -955,7 +952,7 @@ function identify($who, $mya, $paying, $self_message = 'no self-trading') {
   }
   if ($paying) $where .= ' AND :IS_OK';
   if (!$mya->admin and !$mya->isAdmin2) {
-    $where .= " AND (:IS_CO OR :NEIGHBOR_QUERY<:NEIGHBOR_RMAX)"; // restrict to nearby
+    $where .= u\SUBS(' AND (:IS_CO OR :NEIGHBOR_QUERY<:NEIGHBOR_RMAX)'); // restrict to nearby: must be preprocessed by u\SUBS()
     list ($lat, $lon) = $mya ? [$mya->latitude ?: 0, $mya->longitude ?: 0] : [0, 0]; // avoid NULL (PHP bug?)
     $subs += compact(ray('lat lon'));
   }

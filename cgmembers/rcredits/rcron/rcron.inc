@@ -366,7 +366,7 @@ function activeWeekly($item) {
  * This is called at the right time for members with no recurring donation OR for any member with an annual donation (whether it's time or not).
  */
 function warnAnnualGift($item) {
-  /// debug('warnAnnualGift(' . print_r($item, true) .')');
+/// debug('warnAnnualGift(' . print_r($item, true) .')');
 	extract(just('uid amount when created period invoiced lastTx', $item));
   
 	$a = r\acct($uid);
@@ -500,7 +500,7 @@ function inflationAdjust($item) {
  * Allow this even if account is inactive (donation has already been made, from member's point of view).
  */
 function crumbs($item) {
-  ///  debug($item);
+///  debug($item);
   extract(just('uid donate', $item));
   $a = r\acct($uid);
   if ($donate > 0 and $a->ok) $a->payApproved(CG_CRUMBS_UID, $donate, t('crumbs desc'), FOR_NONGOODS, ray('created crumbs gift', u\monthDay1() - 1, TRUE, TRUE));
@@ -825,23 +825,11 @@ function achRisk1($item) {
  * Handle recurring transactions that it's time to handle.
  */
 function recurs() {
-  // want period, created, amount, payerId, payeeId, payeeName, invoiced, lastTxDt, firstXid for each recur
   $sql = <<< EOF
-    SELECT DISTINCT r.period, r.created, r.amount, r.payer AS payerId, r.payee AS payeeId,
-    u2.fullName AS payeeName,
-    (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced,
-    (SELECT MAX(t.created)
-      FROM tx_hdrs t JOIN tx_entries_payer payerE USING(xid) JOIN tx_entries_payee payeeE USING(xid)
-      WHERE payerE.uid=r.payer AND payeeE.uid=r.payee
-      AND t.:IS_RECURS
-    ) AS lastTxDt,
-    (SELECT MIN(t.xid)
-      FROM tx_hdrs t JOIN tx_entries_payer payerE USING(xid) JOIN tx_entries_payee payeeE USING(xid)
-      WHERE payerE.uid=r.payer AND payeeE.uid=r.payee
-      AND t.:IS_RECURS
-      AND t.reversesXid IS NULL AND NOT EXISTS(SELECT xid FROM tx_hdrs tr WHERE tr.reversesXid = t.xid)
-    ) AS firstXid
-    FROM r_recurs r JOIN users u1 ON u1.uid=r.payer INNER JOIN users u2 ON u2.uid=r.payee
+    SELECT DISTINCT r.id, r.period, r.created, r.amount, r.payer, r.payee, u2.fullName AS payeeName, purpose,
+    (SELECT 1 FROM r_invoices i WHERE i.recursId=r.id AND status<:TX_PAID LIMIT 1) AS invoiced,
+    (SELECT MAX(created) FROM txs_noreverse WHERE recursId=r.id) AS lastTxDt
+    FROM r_recurs r JOIN users u1 ON u1.uid=r.payer JOIN users u2 ON u2.uid=r.payee
     WHERE ended=0 AND u1.:IS_OK AND u2.:IS_OK
 EOF;
   queueEach('recurs1', $sql);
@@ -862,18 +850,16 @@ X;
  * If funds are insufficient, an approved invoice is created instead (which tries to get money as a next step).
  */
 function recurs1($item) {
-	extract(just('period lastTxDt created invoiced amount payerId payeeId payeeName firstXid', $item));
-	if (!$invoiced and giveNow($period, $lastTxDt, $created)) {
-    if (!empty($firstXid) and $res = db\get('description AS payerFor, goods, flags AS oldFlags', 'tx_hdrs JOIN tx_entries payer USING(xid)', 'xid=:firstXid AND payer.uid=:payerId', compact(ray('firstXid payerId')))) {
-      extract($res);
-      $data = (u\getBit($oldFlags, B_GIFT)) ? ['gift'=>1, 'recurs'=>1] : ['recurs'=>1];
-    } else {
-      list ($payerFor, $data) = r\setupGift($period);
-    }
-    if (!isset($goods)) $goods = FOR_NONGOODS;
-    if (r\acct($payerId)->payApproved($payeeId, $amount, $payerFor, $goods, $data)) {
-      r\notify($payerId, 'recur pay', ray('amount purpose to', u\fmtAmt($amount), $payerFor, $payeeName));
-    }
+	extract(just('id period lastTxDt created invoiced amount payer payee payeeName purpose', $item));
+	if ($invoiced or !giveNow($period, $lastTxDt, $created)) return;
+
+  $data = ['recurs' => 1];
+//  if (nn($firstXid) and $flags = db\get('flags', 'txs', 'xid=:firstXid', compact('firstXid')) and u\getBit($flags, B_GIFT))
+  if ($payee == CGID) $data['gift'] = 1;
+  $period = r\periodDesc($period);
+
+  if (r\acct($payer)->payApproved($payee, $amount, "$purpose ($period)", FOR_GOODS, $data, $id)) {
+    r\notify($payer, 'recur pay', ray('amount period purpose to', u\fmtAmt($amount), $period, $purpose, $payeeName));
   }
 }
 

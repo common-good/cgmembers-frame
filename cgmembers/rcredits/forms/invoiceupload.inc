@@ -72,7 +72,7 @@ function formInvoiceUpload_submit($form, &$sta, $args = NULL) {
     list ($uid, $email, $amt, $desc) = $one;
     $a2 = r\acct($uid);
     list ($msg, $subs) = $inv 
-      ? be\invoice($mya, $a2, $amt, $desc)
+      ? be\invoice($mya, $a2, $amt, $desc, FOR_GOODS)
       : be\transfer('payment', $mya, $a2, $amt, $desc, FOR_GOODS);
     if (!@$subs['success']) $err = TRUE;
     if ($inv) {

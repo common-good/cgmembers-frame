@@ -16,7 +16,7 @@ use CG\Cron as cr;
 
 function queueEach($op, $sql, $subs = []) {
   $result = db\q($sql, $subs);
-  $sql = u\SUBS($sql);
+//  $sql = u\SUBS($sql);
 
   while ($row = $result->fetchAssoc()) {
     cr\queue($op, $row);

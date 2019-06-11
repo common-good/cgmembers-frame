@@ -83,9 +83,9 @@ Scenario: A cashier asks to refund someone
   And with undo
   | created | amount | tofrom | otherName |*
   | %dmy    | $100   | to     | Bea Two   |
-  And we notice "new payment linked" to member ".ZZB" with subs:
-  | created | fullName | otherName  | amount | payeePurpose | aPayLink |*
-  | %now    | Bea Two  | Corner Pub | $100   | cash in      | ?        |
+  And we notice "new payment" to member ".ZZB" with subs:
+  | created | fullName | otherName  | amount | payeePurpose |*
+  | %now    | Bea Two  | Corner Pub | $100   | cash in      |
   And balances:
   | uid  | balance |*
   | ctty |    -250 |

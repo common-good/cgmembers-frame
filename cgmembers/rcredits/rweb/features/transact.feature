@@ -164,7 +164,7 @@ Scenario: A member confirms request to pay a member company
 #  | field |*
 #  | "For" |
 
-Skip this is now allowed, so the other member can confirm someone they invited
+Skip this is now allowed, as an implicit invitation
 Scenario: A member asks to charge another member before making an rCard purchase
   Given member ".ZZA" has no photo ID recorded
   When member ".ZZA" completes form "charge" with values:
@@ -181,7 +181,7 @@ Scenario: A member asks to charge another member before the other has made an rC
   | who     |*
   | Bea Two |
   
-Scenario: A member confirms request to pay before making a Common Good Card purchase
+Scenario: A member confirms payment of an invoice before making a Common Good Card purchase
   Given member ".ZZA" confirms form "pay" with values:
   | op  | who     | amount | goods      | purpose |*
   | pay | Bea Two | 100    | %FOR_GOODS | labor   |  
@@ -189,16 +189,8 @@ Scenario: A member confirms request to pay before making a Common Good Card purc
   | whose |*
   | Your  |
   
-Resume
 Skip (not sure about this feature)
-Scenario: A member asks to pay another member before making an rCard purchase
-  Given member ".ZZA" has no photo ID recorded
-  When member ".ZZA" completes form "pay" with values:
-  | op  | who     | amount | goods | purpose |*
-  | pay | Bea Two | 100    | %FOR_GOODS     | labor   |
-  Then we say "error": "no photoid"
-  
-Scenario: A member asks to pay another member before the other has made an rCard purchase
+Scenario: A member asks to pay another member before the other has made a Common Good Card purchase
   Given member ".ZZB" has no photo ID recorded
   When member ".ZZA" completes form "pay" with values:
   | op  | who     | amount | goods | purpose |*
@@ -207,6 +199,15 @@ Scenario: A member asks to pay another member before the other has made an rCard
   | who     |*
   | Bea Two |
 Resume
+
+Scenario: A new member asks to pay another member before making a Common Good Card purchase
+  Given member ".ZZA" is unconfirmed
+  When member ".ZZA" completes form "pay" with values:
+  | op  | who     | amount | goods | purpose |*
+  | pay | Bea Two | 100    | %FOR_GOODS     | labor   |
+  Then we say "error": "first at home" with subs:
+  | whose |*
+  | Your  |
 
 Scenario: A member pays another member repeatedly
   When member ".ZZA" confirms form "pay" with values:
@@ -223,7 +224,7 @@ Scenario: A member pays another member repeatedly
   |   1 | %today  |    100 | .ZZA  | .ZZB | labor        | 0      |
   And date field "created" rounded "no" in "tx_hdrs" record "1" (id field "xid")
   And these "recurs":
-  | id | payer | payee | amount | period | created | ended |*
-  |  1 | .ZZA  | .ZZB  |    100 |      W | %today  |     0 |
+  | id | payer | payee | amount | period | purpose | created | ended |*
+  |  1 | .ZZA  | .ZZB  |    100 |      W | labor   | %today  |     0 |
   And date field "created" rounded "yes" in "recurs" record "1" (id field "id")
   And field "tx_hdrs/xid/1/created" is ">=" field "recurs/id/1/created"

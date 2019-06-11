@@ -53,7 +53,8 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberRedeemsADiscountCouponForADollarAmount
  *     MAKE flow AMemberOverdrawsWithNotEnoughToDrawOn
- *     MAKE food AMemberVisitsTheFoodPage
+ *     MAKE food AMemberMakesAFoodDonation
+ *     MAKE food AMemberMakesAFoodDonationWithoutAdequateFunds
  *     MAKE gift AMemberDonates
  *     MAKE gift AMemberMakesARecurringDonation
  *     MAKE gift AMemberMakesANewRecurringDonation
@@ -75,6 +76,7 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE transact AMemberAsksToChargeAnotherMemberForGoods
  *     MAKE transact AMemberAsksToPayAnotherMemberForGoods
  *     MAKE transact AMemberAsksToPayAnotherMemberForLoanreimbursement
+ *     MAKE transact ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
  */
 function memberCompletesFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values);}
 
@@ -275,6 +277,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST transact AMemberConfirmsRequestToChargeAnotherMember
  *     TEST transact AMemberConfirmsRequestToPayAnotherMember
  *     TEST transact AMemberConfirmsRequestToPayAMemberCompany
+ *     TEST transact ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
  *     TEST transact AMemberPaysAnotherMemberRepeatedly
  */
 function weSayWithSubs($type, $index, $subs) {
@@ -322,7 +325,8 @@ function weSayWithSubs($type, $index, $subs) {
  *     TEST contact AMemberUpdatesToADifferentState
  *     TEST contact AMemberUpdatesToADifferentName
  *     TEST coupons AMemberRedeemsAGiftCoupon
- *     TEST food AMemberVisitsTheFoodPage
+ *     TEST food AMemberMakesAFoodDonation
+ *     TEST food AMemberMakesAFoodDonationWithoutAdequateFunds
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
  *     TEST gift AMemberMakesANewRecurringDonation
@@ -380,7 +384,8 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *
  * in: TEST food ANonmemberVisitsTheFoodPage
  *     TEST food AMemberSignsInAndSeesLink
- *     TEST food AMemberVisitsTheFoodPage
+ *     TEST food AMemberMakesAFoodDonation
+ *     TEST food AMemberMakesAFoodDonationWithoutAdequateFunds
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     TEST membership AMemberSignsInForTheFirstTime
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
@@ -611,7 +616,8 @@ function usd($list) {return t\usd($list);}
  *     MAKE download AMemberDownloadsIncomingInvoicesForThePastYear
  *     MAKE food ANonmemberVisitsTheFoodPage
  *     MAKE food AMemberSignsInAndSeesLink
- *     MAKE food AMemberVisitsTheFoodPage
+ *     MAKE food AMemberMakesAFoodDonation
+ *     MAKE food AMemberMakesAFoodDonationWithoutAdequateFunds
  *     MAKE gift AMemberDonates
  *     MAKE gift AMemberMakesANewRecurringDonation
  *     MAKE invest AMemberJoinsTheInvestmentClub
@@ -802,7 +808,8 @@ function memberOnetimePasswordIs($id, $pass) {
 /**
  * we notice (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST gift AMemberDonates
+ * in: TEST food AMemberMakesAFoodDonation
+ *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
  *     TEST invoice AMemberDeniesAnInvoice
  *     TEST transact AMemberConfirmsRequestToPayAnotherMember
@@ -953,7 +960,8 @@ function statisticsGetSet($time) {
  *
  * in: BOTH coupons AMemberRedeemsAGiftCoupon
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
- *     TEST food AMemberVisitsTheFoodPage
+ *     TEST food AMemberMakesAFoodDonation
+ *     TEST food AMemberMakesAFoodDonationWithoutAdequateFunds
  *     MAKE invoice AMemberApprovesInvoicesForevermore
  *     TEST joint AMemberRequestsAJointAccount
  *     BOTH joint AJoinedAccountSlaveMemberRequestsANewMinimum
@@ -1422,7 +1430,8 @@ function weScripWithSubs($script, $args = []) {
  * these (ARG): (ARG)
  *
  * in: MAKE balancesheet Setup
- *     TEST food AMemberVisitsTheFoodPage
+ *     TEST food AMemberMakesAFoodDonation
+ *     TEST food AMemberMakesAFoodDonationWithoutAdequateFunds
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
  *     BOTH gift AMemberMakesANewRecurringDonation
@@ -1539,4 +1548,15 @@ function dateFieldRoundedInRecordidField($dateFnm, $round, $tnm, $id, $idFnm) {
 
 function strStarts($haystack, $needle) {
   return strpos($haystack, $needle) === 0;
+}
+
+/**
+ * member (ARG) is unconfirmed
+ *
+ * in: MAKE transact ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
+ */
+function memberIsUnconfirmed($id) {
+  global $testOnly;
+  $a = r\acct(t\uid($id));
+  return $testOnly ? !$a->confirmed : $a->setBit('confirmed', FALSE);
 }

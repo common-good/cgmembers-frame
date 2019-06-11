@@ -116,19 +116,12 @@ function doRecords($list, $thing) {
  */
 function doThing($info, $thing, $key = 'id') {
   global $testOnly;
-  if ($thing == 'Entrie') {
-    $table = 'tx_entries';
-  } elseif (in_array(strtolower($thing), ['tx_hdrs', 'tx_entries', 'tx_disputes'])) {
-    $table = strtolower($thing);
-  } elseif (in_array(strtolower($thing), ['tx_hdr', 'tx_entrie', 'tx_dispute'])) {
-    $table = strtolower($thing) . 's';
-  } else {
-    $table = 'r_' . strtolower($thing) . 's';
-  }
-  if ($thing == 'Coupated') $table = 'r_coupated';
-  if ($table == 'tx_hdrs') {
-    $key = 'xid';
-  }
+
+  $table = $thing = strtolower($thing);
+  if (!u\starts($thing, 'tx_')) $table = 'r_' . $table;
+  if (!in($thing, 'usd coupated') and substr($thing, -1, 1) != 's') $table .= 's';
+  if ($table == 'tx_hdrs') $key = 'xid';
+
 // NO!  if (@$info['id']) {$info['uid'] = $info['id']; unset($info['id']);}
   if ($testOnly) {
     return verifyRecord($table, $info);
@@ -137,31 +130,31 @@ function doThing($info, $thing, $key = 'id') {
   }
 }
 
-function these($thing, $list) {return doRecords($list, ucwords(substr($thing, 0, strlen($thing) - 1)));}
-function invites($list) {return doRecords($list, 'Invite');}
-function gifts($list) {return doRecords($list, 'Gift');}
-function notices($list) {return doRecords($list, 'Notice');}
-function proxies($list) {return doRecords($list, 'Proxie');}
-function members($list) {return doRecords($list, 'Account');}
-function invoices($list) {return doRecords($list, 'Invoice');}
-function devices($list) {return doRecords($list, 'Boxe');}
-function relations($list) {return doRecords($list, 'Relation');}
-function transactions($list) {return doRecords($list, 'Tx');}
-function balances($list) {return doRecords($list, 'Balance');}
+function these($thing, $list) {return doRecords($list, ucwords($thing));}
+function invites($list) {return doRecords($list, 'Invites');}
+function gifts($list) {return doRecords($list, 'Gifts');}
+function notices($list) {return doRecords($list, 'Notices');}
+function proxies($list) {return doRecords($list, 'Proxies');}
+function members($list) {return doRecords($list, 'Accounts');}
+function invoices($list) {return doRecords($list, 'Invoices');}
+function devices($list) {return doRecords($list, 'Boxes');}
+function relations($list) {return doRecords($list, 'Relations');}
+function transactions($list) {return doRecords($list, 'Txs');}
+function balances($list) {return doRecords($list, 'Balances');}
 function membersHave($list) {return doRecords($list, 'MembersHave');}
 function selling($list) {return doRecords($list, 'Selling');}
 function companyFlags($list) {return doRecords($list, 'CompanyFlags');}
-function coupons($list) {return doRecords($list, 'Coupon');}
-function stats($list) {return doRecords($list, 'Stat');}
-function txHdrs($list) {return doRecords($list, 'Tx_Hdr');}
-function txEntries($list) {return doRecords($list, 'Entrie');}
+function coupons($list) {return doRecords($list, 'Coupons');}
+function stats($list) {return doRecords($list, 'Stats');}
+function txHdrs($list) {return doRecords($list, 'Tx_Hdrs');}
+function txEntries($list) {return doRecords($list, 'Tx_Entries');}
 function coupatedRecords($list) {return doRecords($list, 'Coupated');}
-function recurs($list) {return doRecords($list, 'Recur');}
+function recurs($list) {return doRecords($list, 'Recurs');}
 
 /**
  * Create device (box) records.
  */
-function doBoxe($info = []) {
+function doBoxes($info = []) {
   global $testOnly, $channel; // be careful not to overwrite channel with a local variable
   //$boxName = $info['boxName'];
   $info['channel'] = @strtr(@$info['channel'], ray('sms pos web', TX_SMS, TX_POS, TX_WEB)) ?: $channel;
@@ -179,7 +172,7 @@ function doBoxe($info = []) {
  * Minimum parameters: none
  * @return uid
  */
-function doAccount($info = []) {
+function doAccounts($info = []) {
   global $testOnly; if ($testOnly) return doMembersHave($info);
 
   if (is_object($info)) $info = (array) $info;
@@ -268,13 +261,13 @@ function doAccount($info = []) {
  *   if $testOnly return TRUE if the data is as expected
  *   otherwise return the xid of the created transaction(s) (treated as TRUE in test steps)
  */
-function doTx($info, $thing) {
+function doTxs($info, $thing) {
   global $testOnly;
   u\EXPECT($thing != 'Invoice', 'use doInvoice for invoices, not doTx');
   $filter = function ($ray) {return array_filter($ray, function ($v) {return $v !== FALSE;});}; // bypass array_filter's conversion of 0 to boolean
   $channel0 = call_user_func(function () {global $channel; return $channel;}); // protect value of current channel
 
-  $hdrFlds = 'xid goods actorId actorAgentId flags channel boxId risk risks reversesXid created';
+  $hdrFlds = 'xid goods actorId actorAgentId flags channel boxId risk risks recursId reversesXid created';
   $entryFlds = 'xid entryType amount uid agentUid description acctTid relType relatedId';
   $uidFlds = 'payer payee payerAgent payeeAgent';
   $testFlds = $uidFlds . ' for purpose payerFor payeeFor payerTid payeeTid risks type amount taking';
@@ -308,8 +301,8 @@ function doTx($info, $thing) {
     return (verifyRecord('tx_hdrs', $hdr) and verifyRecord('tx_entries', $e1) and verifyRecord('tx_entries', $e2));
   } else {
     $hdr['entries'] = [new r\TxEntry($e1), new r\TxEntry($e2)];
-    $x = new r\Tx($hdr);
-    return $x->insert(TRUE);
+    $tx = new r\Tx($hdr);
+    return $tx->insert(TRUE);
   }
 }
 
@@ -320,7 +313,7 @@ function doTx($info, $thing) {
  *   if $testOnly return TRUE if the data is as expected
  *   otherwise return the record ID of the created invoices (treated as TRUE in test steps)
  */
-function doInvoice($info) {
+function doInvoices($info) {
   global $testOnly, $channel;
 ///   debug("doInvoice(" . print_r($info, true) . "), testOnly=$testOnly");
   extract($info);
@@ -339,7 +332,7 @@ function doInvoice($info) {
   case 'pending': $invInfo['status'] = TX_PENDING; break;
   case 'approved': $invInfo['status'] = TX_APPROVED; break;
   }
-  $invInfo = array_merge($invInfo, just('nvid amount flags data payer payee purpose', $info));  // extract directly, and might not be present
+  $invInfo = array_merge($invInfo, just('nvid amount flags data payer payee purpose recursId', $info));  // extract directly, and might not be present
   $nvid = db\updateOrInsert('r_invoices', $invInfo, 'nvid');
   u\EXPECT(!empty($nvid));
   $xid = $invInfo['status'];
@@ -366,7 +359,7 @@ function txUid($id, &$main, &$other) {
  * Fabricate bogus relations.
  * Minimum parameters: main, agent (both are qids -- at least one must be local)
  */
-function doRelation($info) {
+function doRelations($info) {
   include_once __DIR__ . '/admin/admin-forms.inc';
   global $testOnly, $memberIdCalled;
 
@@ -478,15 +471,10 @@ function count($what, $count) {
   if (!$testOnly) return FALSE;
 
   switch ($what) {
-  case 'accounts':
-    return db\count('users') == $count;
-  /* case 'r_txs': */
-  /* case 'tx_hdrs': */
-  case 'tx_hdrs':
-  case 'txs':
-    return db\count('tx_hdrs', "xid > 0") == $count;
-  default:
-    return db\count('r_' . $what) == $count;
+    case 'accounts': return db\count('users') == $count;
+    case 'tx_hdrs': // fall through
+    case 'txs': return db\count('tx_hdrs', "xid > 0") == $count;
+    default: return db\count('r_' . $what) == $count;
   }
 }
 
@@ -512,7 +500,7 @@ function doneStep($id, $step) {
 function doMembersHave($info) {
   global $testOnly;
   $balFields = just(T_BALANCE_FLDS, $info);
-  if (!empty($balFields) and !doBalance($balFields, TRUE)) return FALSE;
+  if (!empty($balFields) and !doBalances($balFields, TRUE)) return FALSE;
 
   $a = r\acct($id = t\uid($info['uid']));
   $info = justNOT(T_BALANCE_FLDS, $info); // don't rehandle balance fields, and already got id
@@ -547,7 +535,7 @@ function memberFieldValues($list) {
  * Balance is set by creating dummy transactions (with negative xids)
  * "?" in a field means ignore its value when testing
  */
-function doBalance($info) {
+function doBalances($info) {
   global $testOnly;
   static $testXid = 0;
 
@@ -691,9 +679,11 @@ function uidCredit($uid, $ignoreCalc = TRUE) {
 function fullQid($q) {
   global $channel;
   if (is_numeric($q) or !$q) return $q;
+  if (strlen($q) == 1 and !is_numeric($q)) $q = '.ZZ' . $q;
   if (substr($q, 0, 1) == '.') $q = r\qo($q)->qid;
-
-  return ($channel == TX_POS and !strpos($q, '.')) ? substr($q, 0, 3) . substr($q, 3) : $q;
+  u\EXPECT(substr($q, -1, 1) != '-', "relational qid requested with no record in r_relations: $q");
+  return $q;
+//  return ($channel == TX_POS and !strpos($q, '.')) ? substr($q, 0, 3) . substr($q, 3) : $q;
 }
 
 /**
@@ -931,8 +921,8 @@ function fullQid2($agent) {
 // FAILS if (strlen($agent) > 7) return $agent;
   if (strpos($agent, ':')) { // company:agent
     list ($cpy, $agt) = explode(':', $agent);
-    $cpy = t\fullQid('.ZZ' . $cpy);
-    $agt = is_numeric($agt) ? '' : t\fullQid('.ZZ' . $agt); // numeric agt actually fails anyway (fudge for superAdmin login -- agt=1)
+    $cpy = t\fullQid($cpy);
+    $agt = is_numeric($agt) ? $agt : t\fullQid($agt); // numeric agt actually fails anyway (fudge for superAdmin login -- agt=1)
 //    return t\fullQid(r\qid($cpy, $agt));
     return r\qid($cpy, $agt);
   } elseif (strpos($agent, '#')) { // company#agentNum (deprecated)
@@ -975,9 +965,10 @@ function addAttribs(&$thing) {
 function logIn($id) {
   global $boxUser;
   if ($id != '?') {
-		$agent = substr($id, -2) == ':1' ? 1 : ''; // fudge for logging in as superAdmin
-    r\Acct::setDefault($a = r\acct(t\fullQid2($id), $agent)); // fullQid2 not uid
-    if (!u\isAcct($a)) return t\output("id not account: $id (" . t\fullQid2($id) . ')');
+    list ($qid, $agt, $zot) = explode(':', "$id::"); // in case company:agent
+    $a = r\acct(t\fullQid($qid), $agt ? t\fullQid($agt) : '');
+    r\Acct::setDefault($a); // fullQid2 not uid
+    if (!u\isAcct($a)) return t\output("id not account: $id");
     $boxUser = r\Web\boxUser(r\Web\box(), $a->id);
   }
   return TRUE;
