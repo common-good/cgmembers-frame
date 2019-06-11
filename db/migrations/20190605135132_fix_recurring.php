@@ -84,5 +84,10 @@ X;
     public function down() {
       $this->execute('DROP VIEW txs_noreverse');
       $this->execute('DROP VIEW txs');
+      $this->execute('ALTER TABLE r_invoices DROP COLUMN recursId');
+      $this->execute('ALTER TABLE tx_hdrs_all DROP COLUMN recursId');
+      $this->execute('ALTER TABLE r_recurs DROP COLUMN purpose');
+      $this->execute('DROP VIEW tx_hdrs');
+      $this->execute('CREATE VIEW tx_hdrs AS SELECT * FROM tx_hdrs_all WHERE deleted IS NULL');
     }
 }
