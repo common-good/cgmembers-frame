@@ -96,7 +96,7 @@ function insert($table, $idField, $record) {
  * @return the error message (FALSE if no error)
  */
 function badUnpaidInv($nvid, &$inv = '') {
-  $fields = 'nvid,status,amount,payer,payee,goods,purpose,flags,data,created';
+  $fields = 'nvid,status,amount,payer,payee,goods,purpose,flags,data,recursId,created';
   if (is_array($nvid)) $nvid = $nvid['nvid'];  // really shouldn't happen -- but apparently did at some point
   if (!$inv = db\get($fields, 'r_invoices', 'nvid=:nvid', compact('nvid'))) return 'no matching invoice';
   if ($inv['status'] >= TX_PAID) return 'already paid';
@@ -282,7 +282,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
   $logSubs = u\noSecrets($resubs) + ["\r\n" => '', ' style=' => ' stylish=']; // easier reading for log and tests & evade CSP
   $message = strtr($body, $logSubs);
   $erInfo = compact(ray('index toEmail subject message'));
-  /**/ f('t.output', 'Actual (in rMail) ' . print_r($erInfo, 1), 'email');
+/**/ f('t.output', 'Actual (in rMail) ' . print_r($erInfo, 1), 'email');
   u\loga('email', $erInfo + ['toUid' => @$toA->id]);
 
   if (isPRODUCTION !== TRUE) { // make sure we never send rogue emails from test server even if constant isn't set
@@ -294,15 +294,15 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
   }
   
   require_once DRUPAL_ROOT . '/vendor/swiftmailer/lib/swift_required.php';
-//  $transport = \Swift_SendmailTransport::newInstance('/usr/sbin/sendmail -bs');
-
+  $transport = \Swift_SendmailTransport::newInstance('/usr/sbin/sendmail -bs');
+/*
   $transport = \Swift_SmtpTransport::newInstance()
     ->setHost(CG_SMTP_SERVER)
     ->setPort(CG_SMTP_PORT)
     ->setEncryption(CG_SMTP_TLS)
     ->setUsername(CG_SMTP_USER)
     ->setPassword(CG_SMTP_PASS);
-
+*/
   $mailer = \Swift_Mailer::newInstance($transport);
 
   $privateKey = "-----BEGIN RSA PRIVATE KEY-----\n" . str_replace(' ', "\n", DKIM_PRIVATE) . "\n-----END RSA PRIVATE KEY-----";
@@ -361,7 +361,6 @@ function message($uid, $index, $subs = [], $topic = '') {
   $message = t($index, $subs);
   $topic = $topic ?: (t(@$GLOBALS['topics'][$index], $subs) ?: $index); // index should never be used literally (wrong language) but more importantly never fail
   $testMessages[] = compact(ray('uid index subs topic'));
-  ///  debug(compact('uid','index','subs','message','topic'));
   r\notify($uid, 'message', compact(ray('message topic reply')), TRUE);
 }
 
@@ -373,7 +372,6 @@ function message($uid, $index, $subs = [], $topic = '') {
  * @param bool $force: send by email NOW
  */
 function notify($uid, $index, $subs = [], $force = FALSE) {
-  ///  debug("notify($uid, '$index', " . print_r($subs, true) . ", $force)");
   global $channel;
   if (isGAME) return;
   $a = r\acct($uid);
@@ -454,7 +452,7 @@ function notifyEntries($a, $index, $entries, $force = FALSE) {
  * @return FALSE;
  */
 function tellAdmin($index, $subs = [], $uid = NULL) {
-  /**/  if (isDEV and !u\test()) return debug(['tellingStaff' => $index] + $subs + compact('uid'));
+/**/  if (isDEV and !u\test()) return debug(['tellingStaff' => $index] + $subs + compact('uid'));
   foreach (ray(R_NOLOG) as $k) unset($subs[$k]); // secret stuff
   ksort($subs); // put the keys in a predictable order, for testing and easy reading
 
@@ -531,19 +529,13 @@ function iCardAcct($code0, &$iCode = NULL) {
   $code = str_replace(' ', '', $code0); // ignore spaces
   if (!preg_match('/[A-Z0-9]{' . ICARD_CODELEN_MIN . ',}/i', $code)) return FALSE;
   $iCode = u\ai2n(substr($code, ICARD_CODELEN_MIN)) + 0;
-  ///  debug("code=$code iCode=$iCode");
   $code = substr($code, 0, ICARD_CODELEN_MIN); // chop off sequence number
   $b = u\lpad(decbin(u\ai2n(substr($code, 0, 5))), ILEN_DIV). u\lpad(decbin(u\ai2n(substr($code, 5))), ILEN - ILEN_DIV);
-  ///  debug("code=$code iCode=$iCode b=$b");
   $b = u\xorBits($b, substr(R_INVITE_KEY, -strlen($b)), TRUE);
-  ///  debug("code=$code iCode=$iCode b=$b");
   $b = u\rotateBits($b, -($iCode + 1) * (bindec(substr(R_INVITE_KEY, 0, 31)) % strlen($b)));
-  ///  debug("code=$code iCode=$iCode b=$b");
   $region = u\n2a(bindec(substr($b, 0, ILEN_REGION)), 3);
   $tail = u\n2a(bindec(substr($b, ILEN_REGION, ILEN_TAIL)), -3);
   $security = u\n2ai(bindec(substr($b, -ILEN_SECURITY)), 3);
-  ///  debug("code=$code iCode=$iCode b=$b region=$region tail=$tail security=$security");
-  ///  debug(r\acct("$region$tail")->lowSecurity);
 
   return ($a = r\acct("$region$tail") and $security == $a->lowSecurity) ? $a : FALSE;
 }
@@ -1081,7 +1073,7 @@ function stats($ctty = 0, $when = NULL, $redo = '') {
  * Called ONLY from stats()
  */
 function getStats($ctty, $created, $cttyCrit, $do = NULL) {
-  ///  debug("getStats('$ctty', '$created', '$cttyCrit', '$do')");
+///  debug("getStats('$ctty', '$created', '$cttyCrit', '$do')");
   u\EXPECT($created >= R_LAUNCH, 'getStats old date');
   $created0 = $created;
   $creCrit = 'created<=:created';
@@ -1379,9 +1371,6 @@ function riskList($risks, $descs) {
  * @return [message, subs, confirmed] on error, else false
  */
 function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
-
-  ///  debug("txPermErr($a1->id, $a2->id, $taking, $neg");
-  
   global $scanned, $channel;
   
   $invoicing = ($taking and $channel == TX_WEB);
@@ -1389,27 +1378,22 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
 
   // Check a1
   u\EXPECT($a1->ok, 'main account inactive tx');
-  if (!$a1->isCanonical) {
-    //    if (!$a1->confirmed and !($a1->iCode == IBY_ICARD and $a1->helper == $a2->id)) { 
-    //    if (!$a1->confirmed and $a1->helper != $a2->id) { 
-    if (!$a1->confirmed and !$a2->isCanonical) { // communities and CG can transact with anyone
-      if ($a1->community != $a2->community or $channel != TX_POS) { // first tx must be in-person at home
-        return FALSE ? ['not confirmed', ray('youName inviterName', $a1->fullName, $a1->helperA->fullName), FALSE]
-          : ['first at home', ray('whose', $a1 == $a1 ? t('Your') : "$a1->fullName's"), FALSE]; // "FALSE ?" should be $a1->cttyA->invites ?
+  
+  if (!$a1->confirmed and !$a1->isCanonical and !$a2->isCanonical) { // communities and CG can transact with newbs
+    if ($a1->community != $a2->community or $channel != TX_POS) { // first tx must be in-person at home
+      if ($a1->helper != $a2->id) {
+///          return $a1->cttyA->invites ? ['not confirmed', ray('youName inviterName', $a1->fullName, $a1->helperA->fullName), FALSE] : // invitations are required in this community. Say so.
+        return ['first at home', ray('whose', $a1 == $a1 ? t('Your') : "$a1->fullName's"), FALSE];
       }
     }
   }
   list ($myAccess, $otherAccess) = u\order($taking xor $neg, B_SELL, B_BUY);
-  //list ($myAccessErr, $otherAccessErr) = u\order($taking, 'sell', 'buy');
   list ($myWhat, $otherWhat) = u\order($taking xor $neg, t('sales'), t('purchases'));
   if ($scanned and $taking) list ($myAccess, $myWhat) = $neg ? array(B_REFUND, t('refunds')) : array(B_SCAN, t('sales'));
-  ///  debug(compact(ray('taking neg scanned myAccess otherAccess myWhat otherWhat')));
   if (!$a1->can($myAccess)) return array("no perm", ray('what', $myWhat), FALSE);
   if ((!$a2->can($otherAccess)) and (!($invoicing and $a2->proSe))) {
     return array("other no perm", ray('otherName what', $a2->agentA->fullName, $otherWhat), FALSE);
   }
-  //  if (!$a1->can($myAccess)) return array("no $myAccessErr", [], FALSE);
-  //  if (!$a2->can($otherAccess)) return array("other no $otherAccessErr", ray('otherName', $a2->agentA->fullName), FALSE);
 
   if (!$a1->cttyUp and !$a1->isCanonical) return array('your community down', ray('contact', $a1->cAdminContact()), FALSE);
   if (!$a2->cttyUp and !$a2->isCanonical) return array('other community down', [], FALSE);
@@ -1492,6 +1476,7 @@ function up($up = NULL) {
  *   
  */
 function reward($from, $to, $amount = 1, $isPayer = TRUE) {
+/**/ die('reward function is archaic');
   global $testRewardStep;
   if (relation(1, $to, $from, ':IS_OWNER OR :IS_DRAW')) return 0;
   if (relation(1, $from, $to, ':IS_OWNER OR :IS_DRAW')) return 0;
@@ -1505,9 +1490,8 @@ function reward($from, $to, $amount = 1, $isPayer = TRUE) {
     $pct = -max($a->rebate, R_REBATE); // reduce rewards
   } else $pct = max(R_MIN_REWARD_PCT, $a->rebate * (1 - floor($a->o_rewards / $step) / R_REBATE)); // increase rewards
   if (!$isPayer) $pct *= R_BONUS_FACTOR;
-  ///   debug(compact(ray('from to amount pct step over res')) + ['new bal' => $a->balance + $a->rewards + ($isPayer ? -$amount : $amount)]);
+///   debug(compact(ray('from to amount pct step over res')) + ['new bal' => $a->balance + $a->rewards + ($isPayer ? -$amount : $amount)]);
   return round(min(R_MAX_REBATE, $pct * $amount / 100), 2);
-  //  return '' . round(min(R_MAX_REBATE, $amount * $a->rebate / 100), 2); // ''. to avoid serializing a long float
 }
 
 /**
@@ -1526,7 +1510,7 @@ function handleInvestmentRequest($stakeid, &$msg) {
   $stake += $request;
   
   $DBTX = \db_transaction();
-  list ($index, $subs) = be\transfer('payment', $a, $clubA, $request, t('investment'), ray('stake goods', 1, FOR_USD));
+  list ($index, $subs) = be\transfer('payment', $a, $clubA, $request, t('investment'), FOR_USD, ray('stake', 1));
   $msg = t($index, $subs);
   if ($ok = $subs['success']) {
     db\update('r_stakes', ray('stakeid stake request', $stakeid, $stake, 0), 'stakeid');
@@ -1534,21 +1518,6 @@ function handleInvestmentRequest($stakeid, &$msg) {
   }
   unset($DBTX);
   return $ok;
-}
-
-/**
- * Set purpose and flags for the gift
- * @param char $period: how often to recur
- * @return [purpose, data], where data is extra parameters for a transaction or invoice (marking it as a gift)
- */
-function setupGift($period) {
-  $oftens = ray(OFTENS);
-  $purpose = $period == 'X' 
-    ? t('donation') 
-    : t('regular donation (%often)', 'often', $oftens[$period]);
-  $extra['gift'] = 1;
-  if ($period != 'X') $extra['recurs'] = 1;
-  return [$purpose, $extra];
 }
 
 /**
@@ -1602,3 +1571,4 @@ function cttyList() {return db\q("SELECT uid,fullname FROM users WHERE uid<0 ORD
 function allKnowing() {global $mya; return ($mya->superAdmin and $mya->agentA->vKeyPw);}
 function clubid() {return r\serverUid();} // temporarily use the region as the club
 function pic($flnm) {if (!is_dir(R_PICTURE_DIR)) mkdir(R_PICTURE_DIR); return R_PICTURE_DIR . $flnm;}
+function periodDesc($period) {return $period == 'X' ? '' : ray(OFTENS)[$period];}

@@ -73,11 +73,15 @@ function formDonate_submit($form, &$sta) {
 
   if ($amount > 0) {
     if ($honored) db\insert('r_honors', ray('uid honor honored', $mya->id, $honor, $honored));
-    if ($period != 'X') db\insert('r_recurs', ray('payer payee amount period', $mya->id, CGID, $amount, $period));
+    $purpose = t('donation');
+    list ($recursId, $periodDesc) = $period == 'X' 
+    ? [0, '']
+    : [db\insert('r_recurs', ray('payer payee amount period purpose', $mya->id, CGID, $amount, $period, $purpose))
+       , ' (' . r\periodDesc($period) . ')'];
 //    $count = db\count('r_txs', 'payer=:payer AND payee=:payee AND :IS_RECURS AND created>=:created', compact(ray('payer payee created')));
-    list ($desc, $data) = r\setupGift($period);
     $msg = 'gift successful';
-    if ($mya->payApproved(CGID, $amount, $desc, FOR_NONGOODS, $data)) {
+    $data = ray('gift recurs', 1, (bool) $recursId);
+    if ($mya->payApproved(CGID, $amount, $purpose . $periodDesc, FOR_NONGOODS, $data, $recursId)) {
       r\notify($mya->id, 'gift sent', ray('amount', u\fmtAmt($amount)));
     } else $msg .= '|gift transfer later';
     say($msg);

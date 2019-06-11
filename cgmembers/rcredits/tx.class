@@ -16,9 +16,9 @@ require_once __DIR__ . '/txentry.class';
 
 class Tx {
   const TX_HDR_FIELDS = ['xid', 'goods', 'actorId', 'actorAgentId', 'flags',
-                         'channel', 'boxId', 'goods', 'risk', 'risks', 'reversesXid', 'created'];
+                         'channel', 'boxId', 'goods', 'risk', 'risks', 'recursId', 'reversesXid', 'created'];
   const INSERT_FIELDS = ['goods', 'actorId', 'actorAgentId', 'flags',
-                         'channel', 'boxId', 'goods', 'risk', 'risks', 'reversesXid', 'created'];
+                         'channel', 'boxId', 'goods', 'risk', 'risks', 'recursId', 'reversesXid', 'created'];
   const REQUIRED_FIELDS = ['goods', 'actorId', 'flags'];
 
   public $xid;
@@ -31,6 +31,7 @@ class Tx {
   public $boxId;
   public $risk;
   public $risks;
+  public $recursId;
   public $reversesXid;
   public $created;
   public $entries;
@@ -41,9 +42,15 @@ class Tx {
    *                     but must only include ALLOWED_FIELD entries.
    */
   function __construct($info) {
+    $tx = $this;
     $missing = array_diff(Tx::REQUIRED_FIELDS, array_keys($info));
 /**/    u\EXPECT($missing == [], "missing fields in Tx::createNew: " . print_r($missing, true));
 
+    foreach (ray('goods actorId actorAgentId flags channel boxId risk reversesXid') as $k) $tx->$k = u\setDft($info[$k], NULL);
+    foreach (ray('xid risks recursId') as $k) $tx->$k = u\setDft($info[$k], 0);
+    $tx->created = u\setDft($info['created'], now());
+    $tx->entries = u\setDft($info['entries'], []);
+/*    
     $this->xid = u\arrayGet($info, 'xid', 0);
     $this->goods = u\arrayGet($info, 'goods', null);
     $this->actorId = u\arrayGet($info, 'actorId', null);
@@ -53,9 +60,11 @@ class Tx {
     $this->boxId = u\arrayGet($info, 'boxId', null);
     $this->risk = u\arrayGet($info, 'risk', null);
     $this->risks = u\arrayGet($info, 'risks', 0);
+    $this->recursId = u\arrayGet($info, 'recursId', 0);
     $this->reversesXid = u\arrayGet($info, 'reversesXid', null);
     $this->created = u\arrayGet($info, 'created', now());
     $this->entries = u\arrayGet($info, 'entries', []);
+    */
   }
 
   /**
@@ -267,7 +276,6 @@ EOF;
    * @return assoc array of args
    */
   public function reportArgs($me, $getMyBalance = FALSE, $shortfall = 0) {
-    ///    debug("reportArgs($me->id, $getMyBalance, $shortfall)");
     global $channel;
     $tx = $this;
 

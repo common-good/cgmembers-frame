@@ -30,7 +30,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   global $mya;
   if (!$mya->cAdmin) hack('panel');
 
-  $tables = 'users txs usd gifts proxies relations invites'; // tables to show
+  $tables = 'users txs usd recurs proxies relations invites'; // tables to show
   $queries = [
               '' => '',
               ];
@@ -185,7 +185,7 @@ EOF;
     return say(a\showQuery('tx_hdrs LEFT JOIN tx_entries USING (xid)', 1, 'xid DESC', $fields, ['uid']));
   }
 
-  if ($op == 'gifts') return say(a\showQuery('r_recurs', 1, 'id DESC', 'id,created,payer,payee,amount,period,ended', ray('payer payee')));
+  if ($op == 'recurs') return say(a\showQuery('r_recurs', 1, 'id DESC', 'id,created,payer,payee,amount,purpose,period,ended', ray('payer payee')));
   if ($op == 'invites') return say(a\showQuery('r_invites', 1, 'invited DESC', 'invited, inviter, invitee, email', 'inviter'));
   if ($op == 'notices') return say(a\showQuery('r_notices', 1, 'msgid DESC'));
   if ($op == 'proxies') return say(a\showQuery('r_proxies', 1, 'id DESC', 'person, proxy, priority', 'person'));
@@ -388,7 +388,7 @@ function formFollowup($form, &$sta, $args = []) {
   $by = !empty($recent)
     ? "notes IS NULL OR notes='' OR MID(notes,1,6)='knows ', (MID(notes,6,4)*37+LOCATE(MID(notes,3,3),'JanFebMarAprMayJunJulAugSepOctNovDec'))*32+MID(notes,1,2) DESC"
     : "($todayEnd - IF(tickle>0, tickle, u.created)) * IF(tickle>$todayEnd, -5 * 366 * :DAY_SECS, 1)"; // today's calls first, then yesterday, 2 days ago etc., then tomorrow, the next day, etc.
-  if ($mya->superAdmin) $by = "(notes LIKE '%ZAP%' AND BINARY notes LIKE '%ZAP%') OR (!activated AND u.:IS_MEMBER) DESC, " . $by;
+  if ($mya->superAdmin) $by = "(:IS_OK AND NOT :IS_CARDED) DESC, (!activated AND u.:IS_MEMBER) DESC, (notes LIKE '%ZAP%' AND BINARY notes LIKE '%ZAP%') DESC, " . $by;
   
   $sql = <<<EOF
     SELECT DISTINCT u.uid, community, tickle, fullName, phone, u.data, u.created, activated, notes, :IS_CO AS co, t.created AS lastTxTime, :IS_MEMBER AS member, :IS_OK AS ok, :IS_CARDED AS carded

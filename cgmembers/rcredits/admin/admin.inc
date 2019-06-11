@@ -671,7 +671,7 @@ function adminSignin() {
   $data = $secure = [];
   foreach (ray(DATA_FLDS) as $k) if (!is_null($a->$k)) $data[$k] = $a->$k;
   foreach (ray(SECURE_FLDS) as $k) if (!is_null($a->$k)) $secure[$k] = $a->$k;
-  ///    debug($row + compact($dataFields, $secureFields, 'data', 'secure'));
+///    debug($row + compact($dataFields, $secureFields, 'data', 'secure'));
   $a->update(compact($dataFields, $secureFields, 'data', 'secure'));
   }
   }
@@ -701,7 +701,7 @@ function adminSignin() {
   $a = a($uid);
   if ($a->ok) {
   $ray = [$a->fullName, f('u.fmtPhone', $a->phone), $a->email, @$lastUse ? f('u.fmtDate', $lastUse) : t('never'), '(' . f('u.fmtDate', @$activated) . ')'];
-  /** /    echo join("\t", $ray) . "\n";
+/** /    echo join("\t", $ray) . "\n";
   }
   }
   }
@@ -751,7 +751,7 @@ function showInactive() {
     if ($a->slave) continue;
     $dt = f('u.fmtDate', $a->access);
     $ok = $a->ok ? '(member)' : '';
-    /**/ echo "$a->phone\t$a->fullName\t$dt\t$ok\n";
+/**/ echo "$a->phone\t$a->fullName\t$dt\t$ok\n";
   }
 }
 
@@ -1040,6 +1040,6 @@ function anonymize() {
 
   eachA(function ($a) {
   $name = str_replace("'", "\\'", $a->fullName);
-  ///  if ($reid = f('db.lookup', 'reid', 'r_relations', "other=0 AND data LIKE '%$name%' AND reid NOT IN(26742000000222, 26742000000216)")) debug("$reid $name $a->id");
+///  if ($reid = f('db.lookup', 'reid', 'r_relations', "other=0 AND data LIKE '%$name%' AND reid NOT IN(26742000000222, 26742000000216)")) debug("$reid $name $a->id");
   });
 */

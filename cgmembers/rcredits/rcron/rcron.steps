@@ -48,8 +48,8 @@ function extraSetup($feature) {
  *     MAKE bank ANonmemberHasATargetAndRefills
  *     MAKE communitybits Setup
  *     MAKE gifts Setup
- *     MAKE gifts ANonmemberChoosesADonation
- *     MAKE gifts ItsTimeToWarnAboutAnUpcomingAnnualDonation
+ *     MAKE gifts ANonmemberChoosesADonationToCG
+ *     MAKE gifts ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
  *     MAKE invoices Setup
  *     MAKE joint Setup
  *     MAKE monthly Setup
@@ -79,7 +79,6 @@ function members($list) {return t\members($list);}
  *     MAKE bank AMemberHasADepositedButNotCompletedTransfer
  *     MAKE bank AnAccountHasATargetButNoRefills
  *     MAKE communitybits Setup
- *     MAKE gifts Setup
  *     TEST invoices Setup
  *     BOTH invoices UnpaidInvoicesGetHandled
  *     TEST invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
@@ -87,7 +86,6 @@ function members($list) {return t\members($list);}
  *     TEST joint AJointAccountNeedsRefilling
  *     MAKE joint AJointAccountDoesNotNeedRefilling
  *     TEST monthly Setup
- *     MAKE recurs Setup
  *     TEST weekly AMemberCrawlsOutOfDebt
  *     TEST weekly AMemberBuildsUpSavings
  *     TEST weekly AMemberCashesOutAutomatically
@@ -144,16 +142,20 @@ function relations($relations) {return t\relations($relations);}
  * transactions: (ARG)
  *
  * in: TEST bank AnUnbankedMemberBarelyBelowTargetDrawsOnAnotherAccount
- *     TEST gifts ABrandNewRecurringDonationCanBeCompleted
- *     BOTH gifts ASecondRecurringDonationCanBeCompleted
- *     TEST gifts ADonationInvoiceCanBeCompleted
- *     MAKE gifts ItsTimeToWarnAboutAnUpcomingAnnualDonation
+ *     MAKE gifts Setup
+ *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
+ *     BOTH gifts ASecondRecurringDonationToCGCanBeCompleted
+ *     TEST gifts ADonationInvoicetoCGCanBeCompleted
+ *     MAKE gifts ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
  *     TEST invoices UnpaidInvoicesGetHandled
  *     MAKE joint AJointAccountNeedsRefilling
  *     MAKE monthly Setup
  *     TEST monthly InflationAdjustmentsRoundUpDonationsAndCrumbDonationsAreMade
- *     MAKE recurs ARecurringDonationHappenedYesterday
- *     BOTH recurs ARecurringDonationHappenedLongEnoughAgoToRepeat
+ *     MAKE recurs Setup
+ *     TEST recurs ABrandNewRecurringPaymentCanBeCompleted
+ *     BOTH recurs ASecondRecurringPaymentCanBeCompleted
+ *     MAKE recurs ARecurringPaymentHappenedYesterday
+ *     BOTH recurs ARecurringPaymentHappenedLongEnoughAgoToRepeat
  *     MAKE risk Setup
  *     TEST risk WeCalculateRisks
  *     MAKE weekly AMemberCashesOutAutomatically
@@ -168,9 +170,10 @@ function transactions($list) {return t\transactions($list);}
  *     TEST bank AnUnbankedMemberBarelyBelowTargetDrawsOnAnotherAccount
  *     TEST bank AnUnbankedMemberBarelyBelowTargetCannotDrawOnAnotherAccount
  *     TEST bank AMemberIsWellBelowTarget
- *     TEST gifts ABrandNewRecurringDonationCanBeCompleted
+ *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     TEST invoices UnpaidInvoicesGetHandled
  *     TEST joint AJointAccountNeedsRefilling
+ *     TEST recurs ABrandNewRecurringPaymentCanBeCompleted
  *     TEST tickle ANewbieHasTakenOnlyTheFirstStep
  *     TEST tickle ANonmemberHasNotAcceptedTheInvitation
  *     TEST weekly AMemberCashesOutAutomatically
@@ -217,7 +220,7 @@ function notices($list) {return t\notices($list);}
 /**
  * we email (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST gifts ItsTimeToWarnAboutAnUpcomingAnnualDonation
+ * in: TEST gifts ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
  *     TEST notices AMemberGetsSomeNotices
  *     TEST notices AMemberGetsSomeWeeklyNotices
  *     TEST tickle ANonmemberHasNotAcceptedTheInvitation
@@ -323,7 +326,7 @@ function membersHave($list) {return t\membersHave($list);}
 /**
  * that (ARG) has link results: (ARG)
  *
- * in: TEST gifts ABrandNewRecurringDonationCanBeCompleted
+ * in: TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
  */
 function thatHasLinkResults($thing, $info) {return t\hasLinkResults($thing, $info);}
 
@@ -382,7 +385,7 @@ function memberFieldValues($list) {return t\memberFieldValues($list);}
 /**
  * member (ARG) has no photo ID recorded
  *
- * in: MAKE gifts ADonationInvoiceCanBeCompleted
+ * in: MAKE gifts ADonationInvoicetoCGCanBeCompleted
  */
 function memberHasNoPhotoIDRecorded($id) {return t\noPhotoId($id);}
 
@@ -454,11 +457,12 @@ function weDoNotEmail($email) {return t\noEmailTo($email);}
 /**
  * invoices: (ARG)
  *
- * in: BOTH gifts ADonationInvoiceCanBeCompleted
- *     TEST gifts ARecurringDonationCannotBeCompleted
+ * in: BOTH gifts ADonationInvoicetoCGCanBeCompleted
+ *     TEST gifts ARecurringDonationToCGCannotBeCompleted
  *     MAKE invoices Setup
  *     TEST invoices UnpaidInvoicesGetHandled
  *     MAKE invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
+ *     TEST recurs ARecurringPaymentCannotBeCompleted
  */
 function invoices($list) {return t\invoices($list);}
 
@@ -479,13 +483,18 @@ function stats($list) {return t\stats($list);}
 /**
  * these (ARG): (ARG)
  *
- * in: MAKE gifts ABrandNewRecurringDonationCanBeCompleted
- *     MAKE gifts ASecondRecurringDonationCanBeCompleted
- *     MAKE gifts ARecurringDonationCannotBeCompleted
- *     MAKE gifts ANonmemberChoosesADonation
- *     MAKE gifts ItsTimeToWarnAboutAnUpcomingAnnualDonation
- *     MAKE recurs ARecurringDonationHappenedYesterday
- *     MAKE recurs ARecurringDonationHappenedLongEnoughAgoToRepeat
+ * in: MAKE gifts ADonationToCGIsVisibleToAdmin
+ *     MAKE gifts ABrandNewRecurringDonationToCGCanBeCompleted
+ *     MAKE gifts ASecondRecurringDonationToCGCanBeCompleted
+ *     MAKE gifts ADonationInvoicetoCGCanBeCompleted
+ *     MAKE gifts ARecurringDonationToCGCannotBeCompleted
+ *     MAKE gifts ANonmemberChoosesADonationToCG
+ *     MAKE gifts ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
+ *     MAKE recurs ABrandNewRecurringPaymentCanBeCompleted
+ *     MAKE recurs ASecondRecurringPaymentCanBeCompleted
+ *     MAKE recurs ARecurringPaymentHappenedYesterday
+ *     MAKE recurs ARecurringPaymentHappenedLongEnoughAgoToRepeat
+ *     BOTH recurs ARecurringPaymentCannotBeCompleted
  *     MAKE risk Setup
  */
 function these($thing, $list) {return t\these($thing, $list);}
@@ -495,13 +504,15 @@ function these($thing, $list) {return t\these($thing, $list);}
  *
  * in: TEST bank ANonmemberHasATargetAndRefills
  *     TEST bank AMembersBankAccountGetsVerified
- *     TEST gifts ABrandNewRecurringDonationCanBeCompleted
- *     TEST gifts ARecurringDonationCannotBeCompleted
- *     TEST gifts ANonmemberChoosesADonation
+ *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
+ *     TEST gifts ARecurringDonationToCGCannotBeCompleted
+ *     TEST gifts ANonmemberChoosesADonationToCG
  *     TEST invoices UnpaidInvoicesGetHandled
  *     TEST invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
- *     TEST recurs ARecurringDonationHappenedYesterday
- *     TEST recurs ARecurringDonationHappenedLongEnoughAgoToRepeat
+ *     TEST recurs ABrandNewRecurringPaymentCanBeCompleted
+ *     TEST recurs ARecurringPaymentHappenedYesterday
+ *     TEST recurs ARecurringPaymentHappenedLongEnoughAgoToRepeat
+ *     TEST recurs ARecurringPaymentCannotBeCompleted
  */
 function countIs($what, $count) {return t\count($what, $count);}
 
@@ -556,12 +567,12 @@ function riskThresholdPercentIs($pct) {
  *     MAKE bank MembersBankAccountHasNotBeenVerified
  *     MAKE bank AMembersBankAccountGetsVerified
  *     MAKE communitybits CommunityBansSpendingBelowZero
- *     MAKE gifts ABrandNewRecurringDonationCanBeCompleted
- *     MAKE gifts ASecondRecurringDonationCanBeCompleted
- *     MAKE gifts ADonationInvoiceCanBeCompleted
- *     MAKE gifts ARecurringDonationCannotBeCompleted
- *     MAKE gifts ANonmemberChoosesADonation
- *     MAKE gifts ItsTimeToWarnAboutAnUpcomingAnnualDonation
+ *     MAKE gifts ABrandNewRecurringDonationToCGCanBeCompleted
+ *     MAKE gifts ASecondRecurringDonationToCGCanBeCompleted
+ *     MAKE gifts ADonationInvoicetoCGCanBeCompleted
+ *     MAKE gifts ARecurringDonationToCGCannotBeCompleted
+ *     MAKE gifts ANonmemberChoosesADonationToCG
+ *     MAKE gifts ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
  *     MAKE invoices UnpaidInvoicesGetHandled
  *     MAKE invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
  *     MAKE joint AJointAccountNeedsRefilling
@@ -569,8 +580,11 @@ function riskThresholdPercentIs($pct) {
  *     MAKE monthly InflationAdjustmentsRoundUpDonationsAndCrumbDonationsAreMade
  *     MAKE notices AMemberGetsSomeNotices
  *     MAKE notices AMemberGetsSomeWeeklyNotices
- *     MAKE recurs ARecurringDonationHappenedYesterday
- *     MAKE recurs ARecurringDonationHappenedLongEnoughAgoToRepeat
+ *     MAKE recurs ABrandNewRecurringPaymentCanBeCompleted
+ *     MAKE recurs ASecondRecurringPaymentCanBeCompleted
+ *     MAKE recurs ARecurringPaymentHappenedYesterday
+ *     MAKE recurs ARecurringPaymentHappenedLongEnoughAgoToRepeat
+ *     MAKE recurs ARecurringPaymentCannotBeCompleted
  *     MAKE risk Setup
  *     MAKE risk WeCalculateRisks
  *     MAKE tickle ANewbieHasTakenOnlyTheFirstStep
@@ -585,3 +599,17 @@ function riskThresholdPercentIs($pct) {
  *     MAKE weekly AMemberCashesOutAutomatically
  */
 function cronRuns($op) {return t\cronRuns($op);}
+
+/**
+ * member (ARG) visits page (ARG)
+ *
+ * in: MAKE gifts ADonationToCGIsVisibleToAdmin
+ */
+function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
+
+/**
+ * we show (ARG) with: (ARG)
+ *
+ * in: TEST gifts ADonationToCGIsVisibleToAdmin
+ */
+function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWith($title, $content, $debug);}

@@ -45,7 +45,7 @@ function formTx($form, &$sta, $args = '') {
   $purpose = textFld(t('For:'), [t('purpose or description of goods and services')], required(@$purpose));
   $oftens = ['' => t('No repeat')] + ray(OFTENS);
   unset($oftens['X']);  
-// temporarily disable (doesn't work right!) if ($paying) $repeat = selectFld(t('&nbsp;'), '', dft(''), $oftens);
+  if ($paying) $repeat = selectFld(t('&nbsp;'), '', dft(''), $oftens);
   
   $scanClass = 'not-scanned';
   $$type = submit($opDesc);
@@ -87,13 +87,14 @@ function formTx_submit($form, &$sta) {
 
   if ($ok and $period = @$repeat) {
     $created = today();
-    $subs = ray('payer payee created ended', $mya->id, $uid, $created, 0);
-    $info = $subs + compact(ray('amount period'));
-    if ($id = db\get('id', 'r_recurs', 'payer=:payer AND payee=:payee AND created=:created AND ended=:ended', $subs)) $info += compact('id');
+    $subs = ray('payer payee ended', $mya->id, $uid, 0);
+    $info = $subs + compact(ray('amount purpose period created'));
+    if ($id = db\get('id', 'r_recurs', $subs)) {
+      $info += compact('id');
+      say(t('Your recurring payment has been updated.'));
+    }
     db\updateOrInsert('r_recurs', $info, 'id');
-    $repeats = ray(OFTENS);
-//      $often = strstr($repeats[$repeat], ' ', TRUE);
-    $often = $repeats[@$repeat];
+    $often = ray(OFTENS)[@$repeat];
     $msg .= '|repeats';
   }
   unset($DBTX);

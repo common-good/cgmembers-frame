@@ -60,7 +60,7 @@ class Qo {
 
     if (!$qo->mainQid) $qo->mainQid = qid($qo->main); // these next fields require mainQid
     if ($field == 'mainQid') return $qo->mainQid;
-    if ($field == 'qid') return @$qo->mainQid . ($qo->rel ? AGT_MARK . $qo->agentCode() : '');
+    if ($field == 'qid') return $qo->mainQid . ($qo->rel ? AGT_MARK . $qo->agentCode() : '');
     if ($field == 'region') return substr($qo->mainQid, 0, strlen($qo->mainQid) > 7 ? 4 : 3);
     if ($field == 'tail') return substr($qo->mainQid, strlen($qo->mainQid) > 7 ? 4 : 3);
     
@@ -135,7 +135,7 @@ class Qo {
       $region = r\uidRegion($uid);
       $regionNum = (-$region - 1) / R_REGION_MAX;
       return u\n2a($regionNum, -3) . u\n2a($uid - -$region, -3);
-    } else return qo($uid, $agent)->qid; // more complicated
+    } else {return qo($uid, $agent)->qid;} // more complicated
   }
 
   /**

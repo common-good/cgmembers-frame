@@ -40,64 +40,72 @@ function formFindCo_submit($form, &$sta) {
 /**
  * Return a formatted, categorized list of businesses
  * @param string $which: word search for business name or industry
- * @param mixed $region: community (the default), zip (maybe partial), or country (maybe partial)
- * @param bool $withButtons: include "Pay" and "Chg" buttons
+ * @param mixed $region: community (the default), zip (maybe partial), state abbrev, or country (maybe partial)
  */
-function directoryList($which, $region, $withButtons = FALSE) {
-  global $base_url, $mya;
+function directoryList($which, $region) {
+  global $mya;
 
-  if ($withButtons and $mya) {
-    $canBuy = $mya->can(B_BUY);
-    $canSell = $mya->can(B_SELL);
-  } else $canBuy = $canSell = FALSE;
-
-  list ($symbolMember, $symbolRTrader, $symbolNonMember) = array('m', 'R', '-');
-
-  if (!$region) {
-    $region = r\serverUid();
-    $regionCrit= ($mya and $mya->state) ? "state=:$mya->state" : 1;
-  } else if (is_numeric($region) and $region < 0) {
-    $regionCrit = 'community=:region';
-  } else {
-    $region = \db_like($region) . '%';
-    $regionCrit = '(zip LIKE :region OR country LIKE :region)';
-  }
+  $region0 = $region;
+  $stateCrit = '(s.abbreviation=:region OR c.name=:region)';
+  
+  list ($region, $crit) =
+    !$region ? [$mya ? $mya->community : r\serverUid(), 'u.uid=:region'] // blank: show user's community or the region
+  : (preg_match('/[A-Z]{3}/', $region) ? [$region . '.', 'u.name=:region'] // eg NEW or MIW
+  : (preg_match('/[0-9]{1,5}/', $region) ? [$region . '%', 'u.zip LIKE :region'] // eg 013 or 01002
+  : [$region, $stateCrit] // eg MA or Germany
+  ));
+  
+  $table = 'users u LEFT JOIN r_states s ON s.id=u.state LEFT JOIN r_countries c ON c.id=u.country';
+  $res = db\get('latitude AS lat,longitude AS lon', $table, $crit, compact('region'));
+  if (!$res) return participatingCompanies(''); // nothing in that area
+  
+  extract($res); // get lat,lon
+  $regionCrit = u\SUBS(':NEIGHBOR_QUERY<:NEIGHBOR_RMAX OR ') . $stateCrit; // expose :lat and :lon
 
   $which = u\ignoreSuffix($which, 'ants ant ian es ers ing er or ion s');
   $which = str_replace(' ', '%', \db_like(" $which ")); // allow abbreviations of each word
 
   $sql = <<<EOF
-    SELECT DISTINCT u.uid, i.iid, if (ISNULL(parent.industry), i.industry, parent.industry) as selIndustry, parent.iid as selIid
+    SELECT DISTINCT u.uid, i.iid, parent.iid as selIid, IFNULL(parent.industry, i.industry) as selIndustry, abbreviation AS st
     FROM users u 
-    LEFT OUTER JOIN r_user_industries ui ON ui.uid=u.uid
-    LEFT OUTER JOIN r_industries i ON i.iid=ui.iid
-    LEFT OUTER JOIN r_industries parent on i.parent = parent.iid
-    WHERE :IS_CO AND u.uid>:CANONIC_ACCTS AND :IS_OK AND $regionCrit AND (u.fullName LIKE :which OR i.industry LIKE :which)
+    LEFT JOIN r_user_industries ui ON ui.uid=u.uid
+    LEFT JOIN r_industries i ON i.iid=ui.iid
+    LEFT JOIN r_industries parent on i.parent = parent.iid
+    LEFT JOIN r_states s ON s.id=u.state
+    LEFT JOIN r_countries c ON c.id=u.country
+    WHERE :IS_CO AND u.uid>:CANONIC_ACCTS AND :IS_OK AND ($regionCrit) AND (u.fullName LIKE :which OR i.industry LIKE :which)
     ORDER BY selIndustry, u.fullName
 EOF;
-  $result = db\q($sql, compact(ray('region which')));
+
+  $result = db\q($sql, compact(ray('region which lat lon')));
   $rows = [];
   foreach ($result as $row) $rows[] = $row;
 //    if (!nn($xrow) or $xrow->uid != $row->uid) $rows[] = $row; // eliminate dups within class (DISTINCT fails)
 //    $xrow = $row;
 //  }
-  return participatingCompanies((array) $rows, FALSE);
+  return participatingCompanies((array) $rows);
 }
 
 /**
  * Return a list of participating companies for the given community.
- * @param assoc $rows: information to display
- * @param bool $email: <format for use in emails and show just new companies> (else format for promo site or Find Co page)
+ * @param assoc $rows: information to display (either on members site or on promo site)
  */
-function participatingCompanies($rows, $email = FALSE) {
-  $model = $email 
-  ? '<tr><td width="200">%name</td><td style="margin-left:10px;">%desc</td></tr>'
-  : '<div class="row"><div class="cmpy-img"><img src="%img" alt="profile picture" /></div><div class="cmpy-name-does"><div class="cmpy-name">%name</div><div class="cmpy-does">%desc</div></div></div>';
+function participatingCompanies($rows) {
+  $model = <<< X
+<div class="row">
+  <div class="cmpy-img"><img src="%img" alt="profile picture" /></div>
+  <div class="cmpy-name-does">
+    <div class="cmpy-name">%name</div>
+    <div class="cmpy-does">%desc</div>
+  </div>
+  <div class="cmpy-contact">%contact</div>
+</div>
+X;
   $iModel = '<div class="cmpy-ind-wrapper"><div class="cmpy-ind">%industry</div>';
 
-  if (!$rows) return $email ? t('no new companies this month') : t('No companies there yet. Invite them!');
+  if (!$rows) return t('No companies there yet. Invite them!');
   $res = '';
-  $_newClass = $email ? 'style="color:red; font-weight:bold;"' : 'class="company-listing"';
+  $_newClass = 'class="company-listing"';
   $NEW = t(' <small %newClass> NEW!</small>', compact('_newClass'));
 
   $lastSelIid = -1;  // negative record ids are, we hope, unlikely
@@ -117,10 +125,12 @@ function participatingCompanies($rows, $email = FALSE) {
         $res .= tr($iModel, 'industry', $industry) . "\n";
         $lastSelIid = $selIid;
       }
-      $name = $a->website ? w\lnk("http://$a->website", $a->bestName) : $a->bestName;
+      $website = $a->website ? "http://$a->website" : "/member/$a->name";
+      $name = w\lnk($website, $a->bestName);
+      $contact = "$a->city, $a->st<br>$a->phoneDash";
       $new = ($a->activated > REQUEST_TIME - 9 * WEEK_SECS) ? $NEW : '';
       $img = $a->photoSrc(true) ?: 'images/no-photo-available.jpg';
-      $res .= tr($model, '_name desc img', "$name$new", $a->shortDesc, $img) . "\n";
+      $res .= tr($model, '_name desc _contact img', "$name$new", $a->shortDesc, $contact, $img) . "\n";
     }
   }
   if (! $firstTime) $res .= '</div>';

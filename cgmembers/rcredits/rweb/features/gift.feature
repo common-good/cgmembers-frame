@@ -59,13 +59,13 @@ Scenario: A member makes a recurring donation
   When member ".ZZA" completes form "community/donate" with values:
   | amtChoice | amount | period | honor  | honored |*
   |        -1 |     10 |      M | memory | Jane Do |
-  Then transactions:
-  | xid | created | amount | from | to   | purpose                    |*
-  |   1 | %today  |     10 | .ZZA | cgf  | regular donation (Monthly) |
+	Then these "recurs":
+	| id | created | from | to  | amount | period | purpose  |*
+	|  1 | %today  | .ZZA | cgf |     10 |      M | donation |
+  And transactions:
+  | xid | created | amount | from | to   | purpose            | recursId |*
+  |   1 | %today  |     10 | .ZZA | cgf  | donation (Monthly) |        1 |
   And we say "status": "gift successful"
-	And these "recurs":
-	| created | from | to  | amount | period |*
-	| %today  | .ZZA | cgf |     10 |      M |
   And these "honors":
   | created | uid  | honor  | honored |*
   | %today  | .ZZA | memory | Jane Do |
@@ -86,8 +86,8 @@ Scenario: A member makes a new recurring donation
   | amtChoice | amount | period | honor  | honored | share |*
   |        -1 |     10 |      M | memory | Jane Do |    10 |
   Then transactions:
-  | xid | created | amount | from | to   | purpose                    |*
-  |   1 | %today  |     10 | .ZZA | cgf  | regular donation (Monthly) |
+  | xid | created | amount | from | to   | purpose            |*
+  |   1 | %today  |     10 | .ZZA | cgf  | donation (Monthly) |
   And we say "status": "gift successful"
 	And these "recurs":
 	| created | from | to  | amount | period |*
@@ -98,8 +98,8 @@ Scenario: A company makes a recurring donation
   | amtChoice | amount | period | honor  | honored |*
   |        -1 |     10 |      M | memory | Jane Do |
   Then transactions:
-  | xid | created | amount | from | to   | purpose                            |*
-  |   1 | %today  |     10 | .ZZC | cgf  | regular donation (Monthly) |
+  | xid | created | amount | from | to   | purpose            |*
+  |   1 | %today  |     10 | .ZZC | cgf  | donation (Monthly) |
   And we say "status": "gift successful"
 	
 Scenario: A member donates with insufficient funds
