@@ -29,7 +29,7 @@ function formFood($form, &$sta, $args = '') {
   ];
 
   $welcomeText = t(<<< X
-  <p>Probably you came to this page because you see the wealth of healthy local food we have in the Pioneer Valley (or wherever you live) and it troubles you that 1 out of every 8 families can't afford to buy that good food. %PROJECT offers you an easy way to support families that need help the most.</p>
+  <p>Probably you came to this page because you see the wealth of healthy local food we have in the Pioneer Valley (or wherever you live) and it troubles you that 1 out of every 8 people is still at risk of hunger &mdash; and many families struggle to afford good food. %PROJECT offers you an easy way to support families that need help the most.</p>
 X
   );
 
@@ -37,19 +37,23 @@ X
   $food = $amtChoice = $amount = $period = $recurId = $or = $submit = $recurs = NULL;
   $_payExtra = t('Pay a little extra every time you pay for food or meals with %PROJECT, to help provide reliable access to healthy local food to people who can\'t afford it otherwise.');
   $_orRegular = t('<b>OR</b> donate to the %PROJECT Food Fund directly &mdash; weekly, monthly, quarterly, or yearly.');
+  $img = NULL;
 
   if (isset($welcome) and !$mya) { // came here signed out (or non-member)
     $title = '<small>' . t('Welcome to the') . '<br></small>' . $title;
     $subtext = $welcomeText . t(<<< X
       <p>%payExtra %orRegular Your contributions are tax-deductible.
 
-      <p>Sign in to your %PROJECT account and click <%aFood>Food Fund</a> or <%aSignup>click here</a> to open your free %PROJECT account now.</p>
+      <p>Sign in to your %PROJECT account and look for the <%aFood>Food Fund</a> button or click the button below to open your free %PROJECT account now.</p>
+      
+      <br><p><center><%aSignup>Sign Up</a></center></p>
       
       <h4>Financially Challenged?</h4>
-      <p>If you struggle to buy healthy food, please consider participating in our Food Fund pilot and get $20 off each month on healthy local food at Simple Gifts Farm in Amherst. Participation is limited to 10 families. There are still a few slots available. <%aSignup>Click here</a> to open a free %PROJECT account.</p>
+      <p>If you struggle to buy healthy food, please consider participating in our Food Fund pilot and get $20 off each month on healthy local food at Simple Gifts Farm in Amherst (just one location during this pilot). Participation is limited to 10 families. There are still a few slots available. Click the button above to open a free %PROJECT account.</p>
       <p>The discount happens automatically when you pay with your %PROJECT card.</p>
 X
-    , '_payExtra _orRegular _aSignup _aFood', $_payExtra, $_orRegular, atag('/signup/food=1'), atagB('', 'warning'));
+    , '_payExtra _orRegular _aSignup _aFood', $_payExtra, $_orRegular, atagB('/signup/source2=food', 'primary', 'md'), atagB('', 'warning'));
+    $img = item(tr('<img src="%BASE_URL/rcredits/images/pages/simple-gifts-purchase.jpg" />'));
   } elseif ($mya and $mya->canManage) {
     $foodId = db\get('uid', 'users', "name='foodfund'");
     if ($recurs = db\get('id,period,amount', 'r_recurs', 'payer=:payer AND payee=:foodId AND ended=0', ray('payer foodId', $mya->id, $foodId))) {
@@ -92,7 +96,7 @@ X
   } else {$subtext = t('You do not have permission to use this page.');}
   
   jsx('amtChoice');
-  return cgform(@compact(ray('title subtext food or amtChoice amount period accountId pass submit recurs')));
+  return cgform(@compact(ray('title img subtext food or amtChoice amount period accountId pass submit recurs')));
 }
 
 function formFood_validate($form, &$sta) {
@@ -128,11 +132,12 @@ function formFood_submit($form, &$sta) {
 
   if ($amount > 0) {
     $payee = db\get('uid', 'users', "name='foodfund'");
-    db\insert('r_recurs', ray('payer payee amount period', $mya->id, $payee, $amount, $period));
-    list ($desc, $data) = r\setupGift($period);
+    $purpose = t('food donation');
+    $recursId = db\insert('r_recurs', ray('payer payee amount period purpose', $mya->id, $payee, $amount, $period, $purpose));
     $msg = 'gift successful';
-    if ($mya->payApproved($payee, $amount, $desc, FOR_GOODS, $data)) {
-      r\notify($mya->id, 'recur pay', ray('amount to purpose', u\fmtAmt($amount), t('the Food Fund'), $desc));
+    $period = r\periodDesc($period);
+    if ($mya->payApproved($payee, $amount, "$purpose ($period)", FOR_GOODS, ['recurs' => 1], $recursId)) {
+      r\notify($mya->id, 'recur pay', ray('amount period to purpose', u\fmtAmt($amount), $period, t('the Food Fund'), $purpose));
     } else $msg .= '|gift transfer later';
     say($msg);
   }

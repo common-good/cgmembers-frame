@@ -73,7 +73,7 @@ function formInvestBuySell_submit($form, &$sta) {
     if ($equity) {    
       $for = t('redeeming investment: %amt shares at %price', 'amt price', $sharesDpy, $priceDpy);
     } else $for = t('redeeming loan');
-    list ($index, $subs) = be\invoice($clubA, $coA, $total, $for, ray('investment goods shid', 1, FOR_USD, $shid));
+    list ($index, $subs) = be\invoice($clubA, $coA, $total, $for, FOR_USD, ray('investment shid', 1, $shid));
 //    if (@$count + 0 == 1) { // the usual case -- one shares record
     $extraMsg = '';
   }

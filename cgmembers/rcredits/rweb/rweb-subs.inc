@@ -800,7 +800,6 @@ function whoFldSubmit($field, $question, $extra = []) {
  * Also sets up $formArray and $formSta, for testing.
  */
 function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
-  ///  debug("showForm('$function', $arg1, $arg2, $arg3, $arg4)");
   global $formArray, $formSta, $rUrl;
   setAcct(); // in case it's an anonymous form, so webAccess doesn't have a chance to set up
   if (!@$formSta['confirm'] and !in($function, R_NOLOG_FORMS)) {

@@ -22,7 +22,7 @@ function formRecurring($form, &$sta, $args = '') {
     if (isset($reid)) $result = stopAutoPay($reid);
   }
 
-  $classes = ray('arrow:arrows, fWho:name, fAmount:amount, fPeriod:period, fCreated:date, fNext:date, fEnded:date, button:buttons');
+  $classes = ray('arrow:arrows, fWho:name, fAmount:amount, fPurpose:purpose, fPeriod:period, fCreated:date, fNext:date, fEnded:date, button:buttons');
   $fields = array_keys($classes);
   $url0 = BASE_URL . '/history/recurring';
   $to = "<img src=\"$rUrl/images/rvote/arrow-right.gif\" border=0 />";
@@ -33,6 +33,7 @@ function formRecurring($form, &$sta, $args = '') {
     <th></th>
     <th>Who</th>
     <th>Amount</th>
+    <th>Purpose</th>
     <th>How often?</th>
     <th>Starting</th>
     <th>Next</th>
@@ -40,7 +41,7 @@ function formRecurring($form, &$sta, $args = '') {
     <th></th>
 EOF;
 
-  $sql = 'SELECT id as recId, payee AS fWho, amount, period, created, ended FROM r_recurs WHERE payer=:myid';
+  $sql = 'SELECT id as recId, payee AS fWho, amount, purpose AS fPurpose, period, created, ended FROM r_recurs WHERE payer=:myid';
   $q = db\q($sql, compact('myid'));
   
   foreach ($q as $row) {
@@ -63,7 +64,7 @@ EOF;
   foreach ($q as $row) {
     extract((array)$row);
     list ($fPeriod, $fCreated) = ray(t('AutoPay Invoice'));
-    $fAmount = $fNext = $fEnded = '';
+    $fAmount = $fPurpose = $fNext = $fEnded = '';
     $button = t('Stop automatic payment');
     $arrow = $paying ? $to : $from;
     $html .= addLine(compact($fields), $classes, "$url0/reid=$reid");

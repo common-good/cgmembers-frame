@@ -5,10 +5,10 @@ SO I can help people who are struggling to afford healthy food.
 
 Setup:
   Given members:
-  | uid  | fullName  | floor | flags   |*
-  | .ZZA | Abe One   |  -250 | ok,confirmed,nosearch,paper,debt |
-  | .ZZB | Bea Two   |  -250 | ok,co,confirmed,weekly,secret |
-  | .ZZF | Food Fund |     0 | ok,co,confirmed |
+  | uid  | fullName  | floor | flags                       |*
+  | .ZZA | Abe One   |     0 | ok,confirmed,nosearch,paper |
+  | .ZZB | Bea Two   |  -250 | ok,co,confirmed,weekly,debt |
+  | .ZZF | Food Fund |     0 | ok,co,confirmed             |
   
 Scenario: A non-member visits the food page
   When member "?" visits page "settings/food/welcome=1"
@@ -18,7 +18,28 @@ Scenario: A member signs in and sees link
   When member ".ZZA" visits page "summary"
   Then we show "Food Fund"
 
-Scenario: A member visits the food page
+Scenario: A member makes a food donation
+  When member ".ZZB" visits page "settings/food"
+  Then we show "Food Fund"
+
+  When member ".ZZB" completes form "settings/food" with values:
+  | food | amtChoice | amount | period |*
+  |    3 |       100 |        |      M |
+  Then members have:
+  | uid  | food |*
+  | .ZZB |  .03 |
+  And these "recurs":
+  | id | payer | payee | amount | period | purpose       | ended |*
+  |  1 | .ZZB  |  .ZZF |    100 |      M | food donation |     0 |
+  And we say "status": "gift successful"
+  And we notice "recur pay" to member ".ZZB" with subs:
+  | amount | period  | to            | purpose       |*
+  |   $100 | Monthly | the Food Fund | food donation |
+  And these "txs":
+  | xid | created   | amount | from | to   | for                     | flags  | recursId |*
+  |   1 | %today    |    100 | .ZZB | .ZZF | food donation (Monthly) | recurs |	      1 |
+  
+Scenario: A member makes a food donation without adequate funds
   When member ".ZZA" visits page "settings/food"
   Then we show "Food Fund"
 
@@ -29,6 +50,10 @@ Scenario: A member visits the food page
   | uid  | food |*
   | .ZZA |  .03 |
   And these "recurs":
-  | payer | payee | amount | period | ended |*
-  | .ZZA  |  .ZZF |    100 |      M |     0 |
-  And we say "status": "gift successful"
+  | id | payer | payee | amount | period | purpose       | ended |*
+  |  1 | .ZZA  |  .ZZF |    100 |      M | food donation |     0 |
+  And we say "status": "gift successful|gift transfer later"
+  And these "invoices":
+  | nvid | created   | status       | amount | from | to   | for                     | flags  | recursId |*
+  |    1 | %today    | %TX_APPROVED |    100 | .ZZA | .ZZF | food donation (Monthly) | recurs |	       1 |
+  

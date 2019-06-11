@@ -119,7 +119,7 @@ $queries = [
 eachA(function ($a) {
   $dt = u\fmtDate($a->created, TRUE);
   $status = $a->ok ? '' : ' (in process)';
-  echo "$dt $a->fullName$status\n";
+///  echo "$dt $a->fullName$status\n";
 }, 'created > :NOW - 3 * :MONTH_SECS ORDER BY created DESC');
 
 */

@@ -1,3 +1,13 @@
+2019-06-11 feature/fix-recurring
+. created new views for txs (including payer and payee fields) and txs_noreverse (txs without reversed transactions)
+. moved "print card" to top of admin action
+. fixed r\qid() in class qo to handle compound qids
+. fixed too-few-arguments bug in invoiceUpload and elsewhere that be\invoice() or be\transfer() is called
+. fixed acct::giftsDesc() (wasn't showing recurring gifts)
+. added purpose field to r_recurs (to assure proper description of recurring transactions)
+. added recursId field to tx_hdrs_all and r_invoices (to assure proper correspondence of recurring transactions with r_recurs record)
+. removed parenthetical remarks from all recurring transactions
+
 2019-06-03 tweaks to feature/fix-balance-sheet
 . changed TM to &reg; on CG cards
 . signup now records source2 sent from promo site as advertisement ID
