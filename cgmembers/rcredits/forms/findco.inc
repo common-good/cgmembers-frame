@@ -79,10 +79,10 @@ EOF;
 
   $result = db\q($sql, compact(ray('region which lat lon')));
   $rows = [];
-  foreach ($result as $row) $rows[] = $row;
-//    if (!nn($xrow) or $xrow->uid != $row->uid) $rows[] = $row; // eliminate dups within class (DISTINCT fails)
-//    $xrow = $row;
-//  }
+  foreach ($result as $row) {
+    if (!nn($xrow) or $xrow->uid != $row->uid) $rows[] = $row; // eliminate dups within class (DISTINCT fails)
+    $xrow = $row;
+  }
   return participatingCompanies((array) $rows);
 }
 

@@ -938,7 +938,7 @@ function identify($who, $mya, $paying, $self_message = 'no self-trading') {
     $who = $phone; $cphone = u\cry('P', $phone);
   } else $cphone = '-';
   
-  if (!$short = u\shortName(" $who ", '%')) $short = '-'; // abbreviations must not be null or zeroes
+  $short = u\shortName(" $who ", '%') ?: '-'; // abbreviations must not be null or zeroes
   $cmail = strpos($who, '@') ? u\cry('P', strtolower($who)) : '-';
   $subs = compact(ray('who short cphone cmail'));
   $anyAdmin = ($mya->cAdmin2 or $mya->isAdmin2);
@@ -960,7 +960,7 @@ function identify($who, $mya, $paying, $self_message = 'no self-trading') {
   $sql = <<<EOF
     SELECT DISTINCT uid,fullName
     FROM users 
-    WHERE $where AND uid<>0
+    WHERE $where AND (uid<0 OR uid>:CANONIC_ACCTS)
     ORDER BY fullName
 EOF;
 

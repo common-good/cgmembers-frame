@@ -10,33 +10,6 @@ Setup:
   | .ZZZ | Zeta Zot | personal    | ok         | 99654321 |
   And member is logged out
 
-Skip because this error should happen after saying what zipcode
-Scenario: A newbie visits the registration page with no invite
-  Given community "invites" is "on"
-  And invitation to email "a@" from member ".ZZZ" is ""
-  When member "?" visits page "signup"
-  Then we show "Open a Personal %PROJECT Account" with:
-  |~errorPhrase         |
-  | you must be invited |
-
-Scenario: A newbie visits the registration page with bad invite
-  Given community "invites" is "on"
-  And invitation to email "a@" from member ".ZZZ" is "c0D3"
-  When member "?" visits page "signup/code=WhAtEvEr"
-  Then we show "Open a Personal %PROJECT Account" with:
-  |~errorPhrase         |
-  | you must be invited |
-Resume
-
-#Scenario: A newbie visits the invitation acceptance page with no invite
-#  Given community "invites" is "on"
-#  When member "?" confirms form "accept/self" with values:
-#  | friend | zip |*
-#  | self   | 01001      |
-#  Then we say "error": "invitation required" with subs:
-#  | a1 |*
-#  | a href=''%PROMO_URL/signup'' |
-
 Scenario: A newbie visits the registration page with expired invite
   Given invitation to email "a@" from member ".ZZZ" is "c0D3"
   And invitation "c0D3" was sent on "%today-5w"
@@ -63,8 +36,11 @@ Scenario: A newbie registers in Western Massachusetts
   | fullName | email | phone     | country | zip   | federalId   | dob      | acctType     | address | city       | state | postalAddr                | years | months | owns | helper |*
   | Abe One  | a@ | 413-253-0000 | US      | 01002 | 111-22-3333 | 1/2/1990 | %CO_PERSONAL  | 1 A St. | Agawam | MA    | 1 A St. Agawam MA 01001 |     1 |    6 |    1 | .ZZZ   |
   Then members:
-  | uid  | fullName | legalName | email | phone     | zip | country | state | city   | flags     | floor | address | postalAddr                | tenure | owns | helper |*
-  | .AAA | Abe One  | Abe One   | a@ | +14132530000 | 01002 | US      | MA    | Agawam | confirmed | 0     |    1 A St. | 1 A St. Agawam MA 01001 |     18 |    1 | .ZZZ  |
+  | uid  | fullName | legalName | email | phone     | zip | country | state | city   | flags     | floor | address | postalAddr                | tenure | owns | helper | preid |*
+  | .AAA | Abe One  | Abe One   | a@ | +14132530000 | 01002 | US      | MA    | Agawam | confirmed | 0     |    1 A St. | 1 A St. Agawam MA 01001 |     18 |    1 | .ZZZ  | ?    |
+  And these "signup":
+  | preid | source | created |*
+  | ?     | ?      | %now    |
   And we email "verify" to member "a@" with subs:
   | fullName | name   | quid    | site      | code      |*
   | Abe One  | abeone | NEW.AAA | %BASE_URL | WHATEVER |

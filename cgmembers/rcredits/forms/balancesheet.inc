@@ -85,6 +85,7 @@ function formBalanceSheet($form, &$sta, $args = '') {
     ${$k . 'Keys'} = ($k . 'Label') . ' ' . join(' ', $keys);
   }
   $netAssets = $assetTotal - $liabilityTotal;
+  $posttext = $netAssets < 0 ? t('* Common Good Earth is backing this shortfall (but no new grants or investments) until the Backing Promises have a chance to catch up.') : NULL;
   
   foreach($assetFlds + $liabilityFlds as $k => $v) {
     list ($label, $help) = explode('~', $v);
@@ -93,7 +94,6 @@ function formBalanceSheet($form, &$sta, $args = '') {
 
   $assetLabel = item('', t('ASSETS'));
   $liabilityLabel = item('', t('LIABILITIES'));
-  $posttext = t('* Common Good Earth is backing this shortfall (but no new grants or investments) until the Backing Promises have a chance to catch up.');
 ///  print_r(compact(ray("title subtext $assetKeys $liabilityKeys")));
 //debug(compact(ray("title subtext $assetKeys $liabilityKeys posttext")));
   

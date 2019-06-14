@@ -860,6 +860,7 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
                 'r_user_industries:uid:D',
                 // r_votes
                 'sessions:uid:D',
+                // signup
                 'tx_disputes:uid',
                 'tx_disputes:agentUid',
                 'tx_entries:uid',
@@ -870,6 +871,7 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
                 'users:uid:D',
                 'users:helper',
                 'users:community',
+                // variable
                  );
 
   $DBTX = \db_transaction();

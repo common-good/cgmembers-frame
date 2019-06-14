@@ -117,7 +117,10 @@ RewriteCond %{REQUEST_URI} !^/\.well-known/pki-validation/[A-F0-9]{32}\.txt(?:\ 
   # (http://www.example.com/... will be redirected to http://example.com/...)
   # uncomment the following:
   # RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
-  # RewriteRule ^ http%{ENV:protossl}://%1%{REQUEST_URI} [L,R=301]
+  # Use this for redirecting all regions to new.
+#RewriteCond %{HTTP_HOST} !^new\..+$ [NC]
+#RewriteCond %{HTTP_HOST} ^...\.(.+)$ [NC]
+#RewriteRule ^ http%{ENV:protossl}://%1%{REQUEST_URI} [L,R=301]
 
   # Modify the RewriteBase if you are using Drupal in a subdirectory or in a
   # VirtualDocumentRoot and the rewrite rules are not working properly.

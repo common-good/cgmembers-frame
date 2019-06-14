@@ -44,7 +44,7 @@ X
     $subtext = $welcomeText . t(<<< X
       <p>%payExtra %orRegular Your contributions are tax-deductible.
 
-      <p>Sign in to your %PROJECT account and look for the <%aFood>Food Fund</a> button or click the button below to open your free %PROJECT account now.</p>
+      <p><%aSignin>Sign in</a> to your %PROJECT account and look for the <%aFood>Food Fund</a> button or click the button below to open your free %PROJECT account now.</p>
       
       <br><p><center><%aSignup>Sign Up</a></center></p>
       
@@ -52,7 +52,7 @@ X
       <p>If you struggle to buy healthy food, please consider participating in our Food Fund pilot and get $20 off each month on healthy local food at Simple Gifts Farm in Amherst (just one location during this pilot). Participation is limited to 10 families. There are still a few slots available. Click the button above to open a free %PROJECT account.</p>
       <p>The discount happens automatically when you pay with your %PROJECT card.</p>
 X
-    , '_payExtra _orRegular _aSignup _aFood', $_payExtra, $_orRegular, atagB('/signup/source2=food', 'primary', 'md'), atagB('', 'warning'));
+    , '_payExtra _orRegular _aSignin _aSignup _aFood', $_payExtra, $_orRegular, atag('/signin'), atagB('/signup/source2=food', 'primary', 'md'), atagB('', 'warning'));
     $img = item(tr('<img src="%BASE_URL/rcredits/images/pages/simple-gifts-purchase.jpg" />'));
   } elseif ($mya and $mya->canManage) {
     $foodId = db\get('uid', 'users', "name='foodfund'");
