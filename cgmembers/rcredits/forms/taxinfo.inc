@@ -93,7 +93,7 @@ EOF
   
   $ending = textFld(t('For year ending:'), [t('Fiscal Year End')], required($endDesc) + w\suffix('&nbsp;' . \render($go)));
   $posttext = item(t('<p>This report is provided by %regName (EIN #%R_REGION_EIN). Address: %regAddr (%regPhone, %regEmail).</p><p>If you would rather receive reports by US Mail, you can change that setting in your <%aPrefs>Preferences</a>.', 'regName regAddr regPhone regEmail thisYear _aPrefs', $regName, r\regionfield('postalAddr'), $regPhone, r\regionfield('email'), date('Y'), atag('/settings/preferences')));
-  return cgform(compact(ray('title ending subtext table summary list posttext submit')));
+  return cgform(compact(ray('title ending subtext summary list posttext submit')));
 }
 
 function formTaxInfo_validate($form, &$sta) {

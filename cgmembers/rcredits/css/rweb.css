@@ -124,6 +124,7 @@ nav.navbar.navbar-inverse .container {max-height:50px;}
   #edit-title h3 {margin:10px 0 10px 0;}
   .breadcrumb {display:none;}
   #main {margin-top:50px !important;}
+  #main .section {margin:0 !important;}
 }
 
 #page-wrapper {width:100%; max-width:100; background-color:white;} /* not max-width:961px */
@@ -159,6 +160,7 @@ textarea.form-control {height:100px;}
   #frm-buy .control-label {display:none;}
   #frm-buy .control-data {text-align:center;}
   #frm-buy #edit-account {margin:0 auto;}
+  #frm-accounts .control-label {width:auto; visibility:hidden;}
   
   .page-pay-with-cg {background-color:white !important;}
   .page-pay-with-cg #page-wrapper {margin-top:0 !important; max-width:100% !important; max-height:200% !important; border:0 !important; box-shadow:none !important;}
@@ -499,13 +501,27 @@ body.logged-in.one-sidebar #content {width:100%;}
 #frm-help #special-flag {font-size:100%; margin-bottom:20px;}
 
 /* Honors */
-#frm-honors .well {display:inline-block; width:200px; margin:3px 10px;}
+#frm-honors .well {
+  display:inline-block; width:200px; margin:4px 10px; color:#001a00;
+  box-shadow: 3px 3px 7px #888888; background-color:#f3ffff; -webkit-border-radius: 15px; border-radius: 15px;}
+}
 #frm-honors #edit-list {width:100%;}
-#frm-honors .honor-type {width:300px; text-align:center; font-weight:bold; font-size:30px; color:darkgreen; margin:35px auto 20px auto; padding-right:100px;}
+#frm-honors .honor-type {width:300px; text-align:center; font-weight:bold; font-size:30px; color:darkgreen; margin:35px auto 20px auto;}
+#frm-honors .control-label {display:none;}
+#frm-honors .control-data {max-width:100%; width:100%;}
+#frm-honors #edit-subtext, 
+#frm-honors #edit-title {margin:auto; text-align:center; max-width:500px;}
+#frm-honors #edit-list {margin:auto; text-align:center;}
+@media (max-width:520px) {
+  #frm-honors .well {width:100%; box-shadow: 2px 2px 3px #888888;}
+}
 
 /* Summary / Member Info / Account Info */
 #frm-summary .form-item-left {float:left; width:50%;}
 #frm-summary .form-item-right {float:right; width:50%;}
+@media (max-width:768px) {
+  #frm-summary div.form-item-left, #frm-summary div.form-item-right {width:100%; float:right;}
+}
 #frm-summary .form-item-right>label,
 #frm-summary .form-item-left>label {display:none;}
 #frm-summary .form-item-right .control-data,
@@ -559,16 +575,18 @@ body.logged-in.one-sidebar #content {width:100%;}
 #coupons span[data-toggle="popover"] {color:#2fa4e7;}
 
 /* Find Company */
-#frm-findco .row {display:table-row; max-width:700px;}
+#frm-findco .cmpy-list {display:table;}
+#frm-findco .row {display:table-row;}
 #frm-findco .well {padding:10px 35px;}
+#frm-findco .cmpy-img, #frm-findco .cmpy-name-does, #frm-findco .cmpy-contact {padding:10px 0; border-bottom:1px solid silver;}
 #frm-findco .cmpy-img {display:table-cell; overflow:hidden; vertical-align: middle; height:48px; margin:5px 5px 5px 20px; width:64px; text-align:center;}
 #frm-findco .cmpy-img img {overflow:hidden; height:48px; width: 64px; object-fit:cover;}
-#frm-findco .cmpy-name-does {display:table-cell; vertical-align: middle; padding-left:10px;}
-#frm-findco .cmpy-name {width:auto; max-width:300px; overflow:hidden; color:darkblue; padding-left:10px;}
-#frm-findco .cmpy-does {width:auto; max-width:400px; overflow:hidden; padding-left:10px;}
-#frm-findco .cmpy-contact {width:auto; max-width:300px; overflow:hidden; padding-left:20px; vertical-align: middle; display:table-cell;}
-#frm-findco .cmpy-ind-wrapper {border-top: 1px solid black; margin-top: 5px;}
-#frm-findco .cmpy-ind {font-weight:bold; margin: 10px 5px;}
+#frm-findco .cmpy-name-does {width:300px; overflow:hidden; display:table-cell; vertical-align: middle; padding-left:10px;}
+#frm-findco .cmpy-name {color:darkblue; padding-left:10px;}
+#frm-findco .cmpy-does {padding-left:10px;}
+#frm-findco .cmpy-contact {width:150px; overflow:hidden; padding-left:5px; vertical-align: middle; display:table-cell;}
+#frm-findco .cmpy-ind-wrapper {margin-top:10px;}
+#frm-findco .cmpy-ind {font-weight:bold; color:#004d00; font-size:150%; margin:30px 0 5px 0;}
 .company-listing {color:red; font-weight:bold;}
 
 /* Pay/Charge/Tx */

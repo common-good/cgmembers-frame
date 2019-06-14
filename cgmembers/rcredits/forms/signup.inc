@@ -27,9 +27,18 @@ function formSignup($form, &$sta, $args = '') {
   if (!$args) $args = @$_POST ?: basename($_SERVER['REQUEST_URI']); // because menu_execute_active_handler fails
 
   $contactDefaults = 'phone address city zip address2 city2 zip2 state2 postalAddr partner partnerCode customer source';
-  extract(just('joint reid inviter code personal fullName state email helper ' . $contactDefaults, $args));
+  extract(just('preid source2 joint reid inviter code personal fullName state email helper ' . $contactDefaults, $args));
   extract(just('hidCountry hidState', $sta['input']));
 
+  if (!$preid = nn($_COOKIE['preid'])) {
+    $preid = time() . u\randomString(9, 'digits');
+    setcookie('preid', $preid, time() + 100 * YEAR_SECS, '/', $_SERVER['HTTP_HOST']);
+  }
+  u\setDft($source2, nn($_COOKIE['ad']));
+  if ($oldPreid = db\get('preid', 'signup', compact('preid'))) {
+    $preid = $oldPreid;
+  } else {db\insert('signup', ray('preid source ip', $preid, substr($source2, 0, 255), $_SERVER['REMOTE_ADDR']), 'preid');}
+  
   if (@$reid) { // continuing signup of a partner's customer
     if (u\test()) $reid = f('t.uid', $reid);
     if ($args2 = w\continuePartnerSignup($reid, @$customer)) extract($args = $args2);
@@ -57,7 +66,7 @@ function formSignup($form, &$sta, $args = '') {
 //    $onclick = $onmouseover = 
     $forother = $personal ? t('open a company account instead') : t('open a personal account instead');
     $forother = item("[<a class=\"nospin\">$forother</a>]");
-  }
+  } else {$clarify = '';}
 
   if (!@$code) $code = 'self ()'; // can't actually tell whether this is allowable, because we don't yet know which community
 
@@ -118,6 +127,7 @@ EOF
     );
     $companyInfo = fieldSet('companyInfo', $companyInfo, BARE);
   } else { // company
+    $preid = 0;
     $coTypes = ray(CO_TYPES);
     unset($coTypes[CO_PERSONAL]);
     $acctType = radiosFld(t('Account type:'), '', required(), $coTypes);
@@ -128,8 +138,10 @@ EOF
 //  $ats = boxOpt('ats', $buysAts, $sta);
 //  $buysAt = boxesFld(t('<br>Over 60 Greenfield businesses have already signed up. Which of these <b>Not-Yet-Member Businesses</b> do you frequent?'), '', @$ats, $buysAts);
 
+  jsx('signup', ray('clarify preid', $clarify, nn($preid))); // must be before $preid = hidFld()
   $submit = t('Next');
   $args = hidFld(@$args);
+  $preid = hidFld($preid);
   $confirmed = hidFld(@$iCode == IBY_FORM); // iff inviter used form (or opening a company account), invitation is already confirmed
   $iCode = hidFld(@$iCode + 0);
   $helperA = nn($helper) ? r\acct($helper) : NULL;
@@ -142,10 +154,9 @@ EOF
 
   $form = @compact(ray('title forother subtext acctType'))
     + $nameAndEmail + $contactFlds + w\ssnFields($personal)
-    + @compact(ray('calling companyInfo buysAt submit myid args confirmed helper iCode notes'));
+    + @compact(ray('calling companyInfo buysAt submit myid args confirmed helper iCode notes preid'));
 //  keep_values($form);
 //  $sponsorConfirmation = w\whoFldSubmit('sponsor', t('Your sponsoring organization is %name, yes?'));
-  jsx('signup', @compact('clarify'));
   return cgform($form);
 }
 
@@ -202,7 +213,7 @@ function formSignup_validate($form, &$sta) {
 function formSignup_submit($form, &$sta) {
   global $mya;
   $dbFields = 'fullName legalName email flags phone federalId dob pin country zip address city state postalAddr helper iCode notes wants calling signupCo tenure source';
-  extract(just('myid confirmed acctType args ats owns partner customer source2 ' . $dbFields, $sta['input']));
+  extract(just('myid preid confirmed acctType args ats owns partner customer source2 ' . $dbFields, $sta['input']));
   if (u\test() and !@$args) $args = basename($_SERVER['REQUEST_URI']);
   u\EXPECT((bool) $args, 'no args');
   extract(just('code source2', $args)); // source2 may come from either partner or an add (through our promo site)
@@ -213,7 +224,7 @@ function formSignup_submit($form, &$sta) {
   if (@$source2) $source = trim(strtoupper($source2) . "-$source");
 
   $info = @compact(ray($dbFields));
-  if ($acctType != CO_PERSONAL) $info += ray('coType', $acctType);
+  $info += $acctType == CO_PERSONAL ? ['preid' => $preid] : ['coType' => $acctType];
   
 //  $DBTX = \db_transaction();
   

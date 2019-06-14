@@ -18,10 +18,11 @@ function formHonors($form, &$sta) {
   while ($row = $q->fetchAssoc()) {
     extract($row);
     if ($honor != $type) {
-      $list .= '<div class="honor-type">' . (trim(u\honorDesc($honor)) ?: t('other')) . "</div>\n";
+      $list .= '<div class="honor-type">' . (ucwords(trim(u\honorDesc($honor))) ?: t('other')) . "</div>\n";
       $type = $honor;
     }
     $list .= "<div class=\"well\">$honored</div>\n";
   }
+  if (!$list) $list = t('(none yet)');
   return cgform(compact(ray('title subtext list')));
 }

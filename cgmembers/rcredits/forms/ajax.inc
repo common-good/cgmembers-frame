@@ -19,9 +19,10 @@ function ajax() {
   extract(just('op sid data', $_POST ?: $_GET)); // don't sanitize this, it only comes from us!
   header('Content-Type: application/json');
 
-  lug($_GET);
-  if (!@$sid or !$vars = w\sessionVars($sid)) ajaxErr('bad sid');
-  if (!$aid = $vars['uid'] or !$myid = $vars['myid']) ajaxErr('not signed in');
+  if ($op != 'presignup') { // no sid if not signed in
+    if (!@$sid or !$vars = w\sessionVars($sid)) return ajaxErr('bad sid');
+    if (!$aid = $vars['uid'] or !$myid = $vars['myid']) return ajaxErr('not signed in');
+  }
 //  $mya = r\acct($myid, $aid);
 /**/  lug(compact(ray('op data myid aid')));
   $data = json_decode($data); // must be passed encoded or jQuery post() passes null
@@ -34,28 +35,32 @@ function ajax() {
     exit(json_encode(be\memberRay($myid, $aid, $data))); // data=1 means companies only
   } elseif ($op == 'changeCtty') { // change member's community
     extract(just('newCtty retro', $data));
-    if (!$mya or !$mya->changeCtty($newCtty, $retro, $err)) ajaxErr(t('Community change failed.|') . $err);
+    if (!$mya or !$mya->changeCtty($newCtty, $retro, $err)) return ajaxErr(t('Community change failed.|') . $err);
 //    ajaxRet(['msg' => "uid is $uid, newCtty is $newCtty"]);
   } elseif ($op == 'setBit') {
     extract(just('uid bit on', $data));
     if ($a = r\acct($uid) and $b = u\consta('b', $bit) and $b < B_ADMIN2) {
       $a->setBit($b, $on);
-    } else ajaxErr(t('nope'));
+    } else return ajaxErr(t('nope'));
+  } elseif ($op == 'presignup') {
+    $info = just('preid fullName legalName email phone', $data);
+    flog($info);
+    db\update('signup', $info, 'preid');
   } elseif ($op == 'dpOffset') {
-    if (!$mya->superAdmin) ajaxErr(t('You do not have permission.'));
+    if (!$mya->superAdmin) return ajaxErr(t('You do not have permission.'));
     extract(just('amount', $data));
-    if (!is_numeric($amount) or $amount <= 0) ajaxErr('bad dollar pool offset transfer amount: ' . $amount);
+    if (!is_numeric($amount) or $amount <= 0) return ajaxErr('bad dollar pool offset transfer amount: ' . $amount);
     r\acct(1)->bank(-amount, $msg);
     ajaxMsg($msg);
   } elseif ($op == 'who') {
     extract(just('who question amount', $data));
     $amtDpy = u\fmtAmt($amount);
     if (!is_array($whoA = be\identify($who, $mya, stripos(" $question", t(' pay ')) !== FALSE, 'no self-trading'))) {
-      ajaxRet(ray('who confirm', $whoA->mainQid, t($question, 'name amount', $whoA->fullName, $amtDpy)));
+      ajaxRet(ray('who confirm', $whoA->mainQid, $question ? tr($question, 'name amount', $whoA->fullName, $amtDpy) : ''));
     }
     list ($msg, $args, $choices) = $whoA;
     $message = t($msg, $args);
-    if (empty($choices)) ajaxErr($message);
+    if (empty($choices)) return ajaxErr($message);
     foreach ($choices as $uid => $fullName) {
       $choices[$qid = r\qid($uid)] = "$qid $fullName";
       unset($choices[$uid]);
@@ -64,17 +69,17 @@ function ajax() {
     // create modal selection form
     $choice = selectFld('', '', attrib(['size' => 12]), $choices);
     $which = render($choice);
-    $title = t($question, ray('name amount', t('whom'), $amtDpy));
+    $title = t($question ?: t('Which account?'), ray('name amount', t('whom'), $amtDpy));
     ajaxRet(compact('which', 'title', 'message'));
   } elseif ($op == 'whoami') { // return one or more data fields
 //    $data = just('fullName', ray($data)); // limit what we can get to what we need
     ajaxRet(ray('whoami', "$mya->fullName ($mya->mainQid)"));
-  } else ajaxErr(t('Invalid op'));
-  ajaxMsg(t('Done!'));
+  } else return ajaxErr(t('Invalid op'));
+  return ajaxMsg(t('Done!'));
 }
 
-function ajaxErr($msg) {ajaxMsg($msg, 0);}
-function ajaxMsg($message = '', $ok = 1) {ajaxRet(compact('message'), $ok);}
+function ajaxErr($msg) {return ajaxMsg($msg, 0);}
+function ajaxMsg($message = '', $ok = 1) {return ajaxRet(compact('message'), $ok);}
 function ajaxRet($data, $ok = 1) {
   $data = json_encode($data + compact('ok'));
   u\loga('ajax', $data);

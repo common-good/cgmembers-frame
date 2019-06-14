@@ -229,6 +229,7 @@ class Acct {
     if ($field == 'jA') return $a->jid ? r\acct($a->jid) : NULL;
     if ($field == 'masterA') return $a->slave ? $a->jA : $a;
     if ($field == 'helperA') return $a->helper ? r\acct($a->helper) : '';
+    if ($field == 'foody') return db\get(':FOODY', 'users u', ['uid' => $a->id]);
     if ($field == 'iclubid') return $a->state == 1020 ? db\get('uid', 'users', ':IS_CO AND (community=:ctty OR 1) AND :IS_ICADMIN', ray('ctty', $a->community)) : NULL; // investment club uid
     if ($field == 'isIClub') return ($a->iclubid == $a->id);
     if ($field == 'prefsSet') return !is_null($a->o_minimum); // preferences have been set at least once

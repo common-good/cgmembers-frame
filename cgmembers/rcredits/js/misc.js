@@ -147,9 +147,11 @@ function who(form, fid, question, amount, allowNonmember, coOnly) {
     if (j.ok) {
       if (j.who) {
         $(fid).val(j.who);
-        yesno(j.confirm, function() {
-          yesSubmit = true; jForm.submit();
-        }, noSubmit);
+        if (j.confirm != '') {
+          yesno(j.confirm, function() {
+            yesSubmit = true; jForm.submit();
+          }, noSubmit);
+        } else {yesSubmit = true; jForm.submit();}
       } else which(jForm, fid, j.title, j.which);
     } else if (allowNonmember && who.includes('@') && fid != '#edit-newacct') {
       yesno('The email address (' + who + ') is for a non-member (or for a member with a non-public email address). Do [' + question.replace('?', '') + '] anyway, with an invitation to join?', function() {
@@ -234,14 +236,8 @@ function SelectText(element) { // from http://stackoverflow.com/questions/985272
     selection.addRange(range);
   }
 }
-/*
-var _gaq = _gaq || [];
-_gaq.push(['_setAccount', 'UA-30262912-1']);
-_gaq.push(['_trackPageview']);
 
-(function() {
-  var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-  ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-  var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-})();
-*/
+function getCookie(name) {
+  var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+  return v ? v[2] : null;
+}
