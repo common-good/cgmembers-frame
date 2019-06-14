@@ -213,7 +213,7 @@ function formAccounts($form, &$sta) {
     $accounts = fieldSet('edit-accounts', compact(ray('newAcct submit')));
     // can't use w\whoFldSubmit here because it fights with some pages (Pay, Charge, etc.)
     js('x/typeahead.bundle.min');
-    jsx('new-acct', ray('switchQuestion', t('Switch to %name?')));
+    jsx('new-acct');
     
     return compact('accounts');
   }

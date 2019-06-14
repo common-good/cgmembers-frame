@@ -160,7 +160,7 @@ function doit(what, vs) {
     var form = $('#frm-accounts');
     suggestWho(fid, '');
     form.submit(function (e) {
-      return who(form, fid, vs['switchQuestion'], false, true, false);
+      return who(form, fid, '', false, true, false);
     });
     break;
 
@@ -223,6 +223,16 @@ function doit(what, vs) {
     var form = $('#frm-signup');
     if (vs['clarify'] !== 'undefined') $('#edit-forother a').click(function () {alert(vs['clarify']);});
     form.submit(function (e) {return setPostalAddr(false);});
+    if (vs['preid']) $('#edit-phone').change(function () {
+      data = {
+        preid: vs['preid'],
+        fullName: $('#edit-fullname').val(),
+        legalName: $('#edit-legalname').val(),
+        email: $('#edit-email').val(),
+        phone: $('#edit-phone').val()
+      };
+      post('presignup', data, null);
+    });
     break;
 
   case 'prejoint': $('#edit-old-0').click(function() {this.form.submit();}); break;

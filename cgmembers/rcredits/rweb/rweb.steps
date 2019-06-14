@@ -1439,6 +1439,7 @@ function weScripWithSubs($script, $args = []) {
  *     MAKE preferences Setup
  *     MAKE showrecurs Setup
  *     TEST showrecurs AMemberStopsAnAutopayment
+ *     TEST signup ANewbieRegistersInWesternMassachusetts
  *     TEST transact AMemberPaysAnotherMemberRepeatedly
  */
 function these($thing, $list) {return t\these($thing, $list);}
