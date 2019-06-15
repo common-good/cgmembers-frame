@@ -242,12 +242,19 @@ function doit(what, vs) {
   case 'amtChoice':
     var other = jQuery('.form-item-amount'); 
     var amtChoice = jQuery('#edit-amtchoice');
-    if (amtChoice.val() == -1) other.show(); else other.hide();
+    var amtChoiceWrap = jQuery('.form-item-amtChoice');
+    if (amtChoice.val() == -1) {
+      amtChoiceWrap.hide();
+      other.show(); 
+    } else {
+      amtChoiceWrap.show();
+      other.hide();
+    }
     
     amtChoice.change(function () {
       if(amtChoice.val() == -1) {
         other.show(); 
-        jQuery('.form-item-amtChoice').hide();
+        amtChoiceWrap.hide();
         jQuery('#edit-amount').focus();
       } else other.hide();
     });

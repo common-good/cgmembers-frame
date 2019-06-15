@@ -168,6 +168,16 @@ X
     <p>Issuing %RCREDITS is a community responsibility. This is the key to creating a %PROJECT Economy. We must issue as much credit as we need, to fund our priorities -- but no more than the value we as a community are capable of producing.</p>
 X
   ) . $back;
+
+  if ($i == 'why-no-single-donation-option') return t(<<< X
+    <p>We are very grateful for any donation you choose to make.</p>
+    <p>So why don't we offer a one-time donation option during the sign-up process? We're in a bit of a Catch-22. We are funded entirely by individual donations. Foundations typically do not understand the importance of community-level <i>participatory</i> economic democracy. So our viability as an organization depends on a reliable stream of donations from individuals and local businesses. Almost all such donations come from our members.</p>
+    <p>We were fortunate to receive some substantial initial donations to carry us through several years. But we need to scale up to about 4,500 members in the next dozen months or so, to reach financial sustainability.</p>
+    <p>Of course, if you make a one-time donation, we could call you in about a year, to ask for another donation. But times have changed. People are overwhelmed with funding appeals, emails, and phone calls. So fund appeals cost a huge amount of staff time. That feels wasteful to us and actually costs too much. So, alas, with regret, we force you to make the choice far in advance &mdash; during the short time we have your attention.</p>
+    <p><span class="loud">Please do not let this keep you from signing up though!</span> You can choose a zero donation by selecting "Other" and typing a "0" in the box. Then, once you are a member, if you wish to make a one-time donation (or a different recurring donation), you can sign in and click the "Donate" button at the bottom of any page.</p>
+    <p>As always, we welcome your comments and suggestions. If you can think of a better way to handle this, please let us know! And thank you for participating in %PROJECT.</p>
+X
+  ) . $back;
   
   if ($i == 'common-good-community') return t(<<< X
     <p>The purpose of the %PROJECT system is to create and fund community-centered participatory democracy. In a %PROJECT Community* you decide together how much %RCREDITS to issue (within safe limits) and what to fund with it.</p>

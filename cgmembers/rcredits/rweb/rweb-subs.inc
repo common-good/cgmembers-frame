@@ -2305,7 +2305,7 @@ function setupFoot($label = '', $extra = []) {
   global $mya, $base_url;
   if ($mya and !$mya->member) {
     if ($remains = $mya->stepsRemaining() - 1) { // don't count current step
-      $skip = button(t('Skip for now'), "$base_url/settings/skip", t('Leave this step for last'), 'warning', 'xs', ['class' => 'skip']);
+      $skip = skipButton();
       $nextStep = submit($label ?: (t('Next ') . '&raquo;'), '', '', w\suffix($skip));
       $steps = $remains == 1 ? t('step') : t('steps');
       $progress = item(t('Just <b>%n</b> more %steps to go', 'n steps', $remains, $steps));
@@ -2498,3 +2498,4 @@ function js($script, $args = '') {global $pageScripts; $pageScripts[$script] = h
 function jsx($script, $args = '') {global $scriptScraps; $scriptScraps[$script] = http_build_query(rayy(func_get_args(), 1));} // see html.tpl
 function softErr($msg) {return w\go('empty', $msg, 'ERR');}
 function clearHeaders() {if (!headers_sent()) header_remove();}
+function skipButton() {return button(t('Skip for now'), BASE_URL . '/settings/skip', t('Leave this step for last'), 'warning', 'xs', ['class' => 'skip']);}

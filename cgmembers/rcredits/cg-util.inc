@@ -831,8 +831,9 @@ function csv($line, $delimiter = ',') {
   global $csvFile, $testCSV;
 ///  echo join($delimiter, $line) . "\n"; return; // debug(
   if (u\test()) {$testCSV[] = $line; return;}
-  fputcsv($csvFile, $line, $delimiter);
-//  if ($delimiter == ',') fputcsv($csvFile, $line, $delimiter); else fputs($csvFile, join($delimiter, $line) . "\n");
+//  fputcsv($csvFile, $line, $delimiter); 
+  // No need to surround values with quotes when delim is not a comma (the quotes confuse MailChimp)
+  if ($delimiter == ',') fputcsv($csvFile, $line, $delimiter); else fputs($csvFile, join($delimiter, $line) . "\n");
 }
 
 /**
