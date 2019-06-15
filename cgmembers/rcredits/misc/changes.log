@@ -1,3 +1,11 @@
+2019-06-15 feature/show-incoming-recurs
+. fixed (again) u\csv to avoid sending quoted names to MailChimp
+. added payments-to-me and purpose to list of recurring transactions
+. improved function of amt-choice pages (donations, backing, food fund)
+. added help message for why no one-time-donation options
+. added image interpretation to testing
+. added Skip to photo page
+
 2019-06-14 feature/signup-tracking
 . improved format of company list (findco.inc)
 . widened honors form and improved format

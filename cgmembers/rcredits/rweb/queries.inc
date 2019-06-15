@@ -122,4 +122,7 @@ eachA(function ($a) {
 ///  echo "$dt $a->fullName$status\n";
 }, 'created > :NOW - 3 * :MONTH_SECS ORDER BY created DESC');
 
+// show food fund percentages and estimated monthly donations
+$rows = db\rows('fullName', 'users u', ':U_FOODY=1');
+$sum = db\sum('amt2', 'txs', ':T_FOODY AND (SELECT food FROM users WHERE uid=uid1)>0 AND created>:NOW-:MONTH_SECS');
 */

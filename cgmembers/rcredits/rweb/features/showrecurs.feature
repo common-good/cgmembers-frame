@@ -10,13 +10,13 @@ Setup:
   | .ZZB | Bea Two    | -200  | personal    | ok,co      | %now-15m |
   | .ZZC | Corner Pub | -300  | corporation | ok,co      | %now-15m |
   And recurs:
-  | id    | payer | payee | amount | period | created       | ended      |*
-  | 99900 | .ZZA  | .ZZC  | 37.00  | Q      | %daystart-13m | 0          |
-  | 99901 | .ZZA  | .ZZB  | 43.00  | W      | %daystart-13m | %now-11m   |
-  | 99902 | .ZZA  | .ZZB  | 59.59  | Y      | %daystart-16m | 0          |
-  | 99903 | .ZZB  | .ZZA  | 22.00  | Q      | %daystart-13m | 0          |
-  | 99904 | .ZZB  | .ZZC  | 37.37  | Q      | %daystart-13m | 0          |
-  | 99905 | .ZZC  | .ZZA  | 37.43  | W      | %daystart-13m | 0          |
+  | id    | payer | payee | amount | purpose    | period | created       | ended      |*
+  | 99900 | .ZZA  | .ZZC  | 37.00  | this       | Q      | %daystart-13m | 0          |
+  | 99901 | .ZZA  | .ZZB  | 43.00  | that       | W      | %daystart-13m | %now-11m   |
+  | 99902 | .ZZA  | .ZZB  | 59.59  | something  | Y      | %daystart-16m | 0          |
+  | 99903 | .ZZB  | .ZZA  | 22.00  | nothing    | Q      | %daystart-13m | 0          |
+  | 99904 | .ZZB  | .ZZC  | 37.37  | everything | Q      | %daystart-13m | 0          |
+  | 99905 | .ZZC  | .ZZA  | 37.43  | whatever   | W      | %daystart-13d | 0          |
   And these "relations":
   | reid | main | other | flags   |*
   | 7773 | .ZZC | .ZZA  | autopay |
@@ -24,11 +24,13 @@ Setup:
 Scenario: A member looks at their recurring transactions
   When member ".ZZA" visits page "history/recurring"
   Then we show "Recurring Transactions" with:
-  | Who        | Amount | How often? | Starting | Next     | Ending   |
-  | Corner Pub | 37.00  | Quarterly  | %mdY-13m | ~%mdY+2m |          |
-  | Bea Two    | 43.00  | Weekly     | %mdY-13m |          | %mdY-11m |
-  | Bea Two    | 59.59  | Yearly     | %mdY-16m | %mdY+8m  |          |
-  | Corner Pub |        | AutoPay    | Invoice  |          |          |
+  |~Way | Who        | Amount | Purpose   | How often? | Starting | Next     | Ending   |~Close   |
+  | [R] | Corner Pub | 37.00  | this      | Quarterly  | %mdY-13m |~%mdY+2m  |          | [close] |
+  | [R] | Bea Two    | 43.00  | that      | Weekly     | %mdY-13m |          | %mdY-11m |         |
+  | [R] | Bea Two    | 59.59  | something | Yearly     | %mdY-16m | %mdY+8m  |          | [close] |
+  | [L] | Bea Two    | 22.00  | nothing   | Quarterly  | %mdY-13m |~%mdY+2m  |          | [close] |
+  | [L] | Corner Pub | 37.43  | whatever  | Weekly     | %mdY-13d | %mdY+1d  |          | [close] |
+  | [R] | Corner Pub |        | Invoice   | AutoPay    |          |          |          |         |
 
 Scenario: A member stops a recurring transaction
   When member ".ZZA" visits page "history/recurring/recId=99900&do=stop"
@@ -38,7 +40,7 @@ Scenario: A member stops a recurring transaction
   | Corner Pub | 37.00  | Quarterly  | %mdY-13m |          | %mdY     |
   | Bea Two    | 43.00  | Weekly     | %mdY-13m |          | %mdY-11m |
   | Bea Two    | 59.59  | Yearly     | %mdY-16m | %mdY+8m  |          |
-  | Corner Pub |        | AutoPay    | Invoice  |          |          |
+  | Corner Pub |        | AutoPay    |          |          |          |
 
 Scenario: A member stops a stopped recurring transaction
   When member ".ZZA" visits page "history/recurring/recId=99901&do=stop"
@@ -48,7 +50,7 @@ Scenario: A member stops a stopped recurring transaction
   | Corner Pub | 37.00  | Quarterly  | %mdY-13m | ~%mdY+2m |          |
   | Bea Two    | 43.00  | Weekly     | %mdY-13m |          | %mdY-11m |
   | Bea Two    | 59.59  | Yearly     | %mdY-16m | %mdY+8m  |          |
-  | Corner Pub |        | AutoPay    | Invoice  |          |          |
+  | Corner Pub |        | AutoPay    |          |          |          |
 
 Scenario: A member attempts to stop a non-existent recurring transaction
   When member ".ZZA" visits page "history/recurring/recId=99999&do=stop"
@@ -58,7 +60,7 @@ Scenario: A member attempts to stop a non-existent recurring transaction
   | Corner Pub | $37.00 | Quarterly  | %mdY-13m | ~%mdY+2m |          |
   | Bea Two    | $43.00 | Weekly     | %mdY-13m |          | %mdY-11m |
   | Bea Two    | $59.59 | Yearly     | %mdY-16m | %mdY+8m  |          |
-  | Corner Pub |        | AutoPay    | Invoice  |          |          |
+  | Corner Pub |        | AutoPay    |          |          |          |
 
 Scenario: A member attempts to stop another member's recurring transaction
   When member ".ZZA" visits page "history/recurring/recId=99904&do=stop"
@@ -68,7 +70,7 @@ Scenario: A member attempts to stop another member's recurring transaction
   | Corner Pub | 37.00  | Quarterly  | %mdY-13m | ~%mdY+2m |          |
   | Bea Two    | 43.00  | Weekly     | %mdY-13m |          | %mdY-11m |
   | Bea Two    | 59.59  | Yearly     | %mdY-16m | %mdY+8m  |          |
-  | Corner Pub |        | AutoPay    | Invoice  |          |          |
+  | Corner Pub |        | AutoPay    |          |          |          |
 
 Scenario: A member stops an autopayment
   When member ".ZZA" visits page "history/recurring/reid=7773&do=stop"

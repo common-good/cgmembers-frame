@@ -1011,16 +1011,18 @@ fieldset#dateRange #advanced {display:none;}
 /* Donate */
 #frm-donate .form-item-wait {margin-top:30px;}
 #frm-donate #edit-amtchoice {font-family:"Lucida Console",Menlo,Monaco,"Courier New",monospace;}
-#frm-donate .form-item-share .control-data {max-width:650px;}
-#frm-donate .form-item-share input {max-width:100px;}
+/*#frm-donate .form-item-share .control-data {max-width:650px;}
+#frm-donate .form-item-share input {max-width:100px;} */
 /*#frm-donate #edit-period {display:block; float:left;}*/
 #frm-donate .form-item-period {display:block;}
+#frm-donate .form-item-amount {display:none;}
 
 /* Food Fund */
 #frm-food #edit-food {display:inline-block; width:200px;}
 #frm-food #edit-amtchoice {display:inline-block; width:200px;}
 #frm-food #edit-amtchoice {font-family:"Lucida Console",Menlo,Monaco,"Courier New",monospace;}
 #frm-food .form-item-period {display:block;}
+#frm-food .form-item-amount {display:none;}
 #frm-food #edit-img img {max-width:100%;}
 
 /* Backing */
@@ -1028,6 +1030,7 @@ fieldset#dateRange #advanced {display:none;}
 #frm-backing #edit-amtchoice,
 #frm-backing #edit-amount,
 #frm-backing #edit-signedby {max-width:200px; display:inline-block;}
+#frm-backing .form-item-amount {display:none;}
 
 /* Balance Sheet */
 #frm-balancesheet .control-label {text-align:left; padding:0 0 0 35px; width:300px; font-weight:normal;}

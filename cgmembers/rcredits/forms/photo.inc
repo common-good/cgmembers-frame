@@ -32,7 +32,9 @@ function formPhoto($form, &$sta, $arg = '') {
     $desc = t('If you like this photo, %allSet. Otherwise:', compact('allSet'));
   } else {
 //    if ($err) say($err, 'err');
-    if ($mya->hasPhoto) extract(w\setupFoot()); // be sure new member has a chance to continue
+    if ($mya->hasPhoto) {
+      extract(w\setupFoot()); // be sure new member has a chance to continue
+    } else {$nextStep = item(w\skipButton());}
     $desc = $mya->co
     ? t('<p>1. Choose a picture to represent your company in %PROJECT promotions.</p>')
     : t('<p>1. Choose a recent color picture of yourself for your photo-ID %PROJECT card. Your photo will be encrypted and will not be visible to other members (unless you show it to them).<%b>Requirements</b>:
