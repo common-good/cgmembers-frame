@@ -33,7 +33,7 @@ function formSignup($form, &$sta, $args = '') {
   if (!$preid = nn($_COOKIE['preid'])) {
     $preid = time() . u\randomString(9, 'digits');
     setcookie('preid', $preid, time() + 100 * YEAR_SECS, '/', $_SERVER['HTTP_HOST']);
-  }
+  } else {$preid = substr(preg_replace('/\\D*/', '', $preid), 0, 20);} // ignore all but the digits
   u\setDft($source2, nn($_COOKIE['ad']));
   if ($oldPreid = db\get('preid', 'signup', compact('preid'))) {
     $preid = $oldPreid;

@@ -19,6 +19,7 @@ function formBalanceSheet($form, &$sta, $args = '') {
   $backingReservePct = getv('backingReserve', .50);
 
   if  ($mya and $mya->id != 1) {
+    // NOTE: uid>jid is normal accounts (in the community) that are independent or half a joint account
     $cttyA = $mya->cttyA;
     $ctty = $mya->community;
     $subs = compact('ctty');
@@ -29,30 +30,31 @@ function formBalanceSheet($form, &$sta, $args = '') {
     $pool = db\sum('amount', 'r_usd t JOIN users u ON u.uid=t.payee', 'completed<>0 AND u.community=:ctty', $subs);
     $investments = db\sum('shares*price', 'r_investments i JOIN r_shares s USING (vestid)', 'clubid=:ctty', $subs);
     $invReserve = db\sum('shares*price*reserve', 'r_investments i JOIN r_shares s USING (vestid)', 'clubid=:ctty', $subs);
-    $negatives = -db\sum('balance', 'users', 'balance<0 AND jid=0 AND community=:ctty AND uid<>:ctty', $subs);
+    $negatives = -db\sum('balance', 'users', 'balance<0 AND uid>jid AND community=:ctty AND uid<>:ctty', $subs);
     $negReserve = $negatives * $negReservePct;
     $backing = db\sum('backing', 'users', 'community=:ctty', $subs);
     $backingReserve = $backing * $backingReservePct;
     $invoicesFromUs = db\sum('amount', 'r_invoices', 'payee=:ctty AND status IN (:TX_PENDING,:TX_APPROVED)', $subs);
     
-    $balances = db\sum('balance', 'users', 'balance>0 AND jid=0 AND community=:ctty AND uid<>:ctty', $subs);
+    $balances = db\sum('balance', 'users', 'balance>0 AND uid>jid AND community=:ctty AND uid<>:ctty', $subs);
     $invoicesToUs = db\sum('amount', 'r_invoices', 'payer=:ctty AND status IN (:TX_PENDING,:TX_APPROVED)', $subs);
     $otherAssets = $cttyA->otherAssets;
     $otherLiabilities = $cttyA->otherLiabilities;
   } else {
+    // NOTE: (uid>jid OR uid<0) AND community<0 is accounts that are independent or half a joint account or roundups or crumbs
     $title = t('%PROJECT Balance Sheet');
     $subtext = t('for all participating communities (totals)');
     $cgBalance = NULL;
     $pool = db\sum('amount', 'r_usd', 'completed<>0');
     $investments = db\sum('shares*price', 'r_investments i JOIN r_shares s USING (vestid)', 'clubid<0');
     $invReserve = db\sum('shares*price*reserve', 'r_investments i JOIN r_shares s USING (vestid)', 'clubid<0');
-    $negatives = -db\sum('balance', 'users', 'balance<0 AND jid=0 AND community<>0');
+    $negatives = -db\sum('balance', 'users', 'balance<0 AND (uid>jid OR uid<0) AND community<0');
     $negReserve = $negatives * getv('negReserve', .05);
     $backing = db\sum('backing', 'users');
     $backingReserve = $backing * getv('backingReserve', .50);
     $invoicesFromUs = db\sum('amount', 'r_invoices', 'payee<0 AND status IN (:TX_PENDING,:TX_APPROVED)');
 
-    $balances = db\sum('balance', 'users', 'balance>0 AND jid=0 AND community<>0');
+    $balances = db\sum('balance', 'users', 'balance>0 AND (uid>jid OR uid<0) AND community<0');
     $invoicesToUs = db\sum('amount', 'r_invoices', 'payer<0 AND payee>0 AND status IN (:TX_PENDING,:TX_APPROVED)');
 
     $otherAssets = $otherLiabilities = 0;
@@ -95,7 +97,7 @@ function formBalanceSheet($form, &$sta, $args = '') {
   $assetLabel = item('', t('ASSETS'));
   $liabilityLabel = item('', t('LIABILITIES'));
 ///  print_r(compact(ray("title subtext $assetKeys $liabilityKeys")));
-//debug(compact(ray("title subtext $assetKeys $liabilityKeys posttext")));
+///  debug(compact(ray("title subtext $assetKeys $liabilityKeys posttext")));
   
   return cgform(compact(ray("title subtext $assetKeys $liabilityKeys posttext")));
 }

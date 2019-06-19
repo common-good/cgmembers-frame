@@ -163,8 +163,6 @@ EOF
   'insufficient relation' => t('You cannot open an account unless you have a close relationship to it. <%a>Invite someone</a> instead.', '_a', atag('/community/invite')),
   'bad spoof check' => t('You must confirm (<i>every time</i>) that you are on the real %PROJECT site.'),
   'not an image' => t('That is not an acceptable image format. You might try converting it to a JPG or PNG image.'),
-  'bad commercial aspect' => t('Your company profile picture must be in landscape orientation, with a width-to-height ratio of about %R_COMMERCIAL_ASPECT.'),
-  'bad personal aspect' => t('Your profile picture must be in portrait orientation, with a width-to-height ratio of about %R_PERSONAL_ASPECT.'),
   'need a manager' => t('A company account must have at least one person to manage it.'),
   'self must sign' => t('You cannot sign this agreement on behalf of another person.'),
   'bad zip' => t('US zipcodes must be 5 digits, possibly followed by a hyphen and 4 more digits.'),
@@ -280,7 +278,6 @@ function go($page, $msg = '', $field = '') {
   }
   */
   \drupal_session_commit();
-
   header("Location: $page", TRUE, 302); 
   exit();
 //  session_write_close();
@@ -1692,14 +1689,14 @@ function hack($message, $info = []) {
 
 /**
  * Let there be no current user.
- * @param bool $goPromo: <go to Promo site after signout>
+ * @param bool $continue: <don't go to Promo site after signout> (can't be a "go there" parameter, because it defaults wrong)
  */
-function signout($goPromo = TRUE) {
+function signout($continue = FALSE) {
   if (isDEV and u\test()) setAcct(NULL); else
   @\session_destroy();
 
   if (isDEV and !u\test()) w\go('signin');
-  if ($goPromo) return w\go(PROMO_URL . '?region=x');
+  if (!$continue) return w\go(PROMO_URL . '?region=x');
 }
 
 function fundRpt($now, $then, $type = '') {

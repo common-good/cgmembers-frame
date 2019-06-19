@@ -46,6 +46,7 @@ function extraSetup($feature) {
  *     MAKE bank AMemberWithZeroTargetHasBalanceBelowTarget
  *     MAKE bank AnUnbankedMemberWithZeroTargetHasBalanceBelowTarget
  *     MAKE bank ANonmemberHasATargetAndRefills
+ *     MAKE cashout Setup
  *     MAKE communitybits Setup
  *     MAKE gifts Setup
  *     MAKE gifts ANonmemberChoosesADonationToCG
@@ -78,6 +79,7 @@ function members($list) {return t\members($list);}
  *     MAKE bank AnUnbankedMemberWithZeroTargetHasBalanceBelowTarget
  *     MAKE bank AMemberHasADepositedButNotCompletedTransfer
  *     MAKE bank AnAccountHasATargetButNoRefills
+ *     TEST cashout AMemberCompanyCashesOutWeekly
  *     MAKE communitybits Setup
  *     TEST invoices Setup
  *     BOTH invoices UnpaidInvoicesGetHandled
@@ -142,6 +144,7 @@ function relations($relations) {return t\relations($relations);}
  * transactions: (ARG)
  *
  * in: TEST bank AnUnbankedMemberBarelyBelowTargetDrawsOnAnotherAccount
+ *     MAKE cashout Setup
  *     MAKE gifts Setup
  *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     BOTH gifts ASecondRecurringDonationToCGCanBeCompleted
@@ -314,6 +317,8 @@ function weMessageMemberWithTopicAndSubs($id, $topic, $subs) {
  * in: MAKE bank AnAccountHasATargetButNoRefills
  *     MAKE bank MembersBankAccountHasNotBeenVerified
  *     BOTH bank AMembersBankAccountGetsVerified
+ *     MAKE cashout AMemberCompanyCashesOutMonthly
+ *     MAKE cashout AMemberCompanyCashesOutWeekly
  *     MAKE communitybits CommunityBansSpendingBelowZero
  *     TEST risk Setup
  *     TEST risk WeCalculateRisks
@@ -483,7 +488,9 @@ function stats($list) {return t\stats($list);}
 /**
  * these (ARG): (ARG)
  *
- * in: MAKE gifts ADonationToCGIsVisibleToAdmin
+ * in: TEST cashout AMemberCompanyCashesOutMonthly
+ *     TEST cashout AMemberCompanyCashesOutWeekly
+ *     MAKE gifts ADonationToCGIsVisibleToAdmin
  *     MAKE gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     MAKE gifts ASecondRecurringDonationToCGCanBeCompleted
  *     MAKE gifts ADonationInvoicetoCGCanBeCompleted
@@ -566,6 +573,8 @@ function riskThresholdPercentIs($pct) {
  *     MAKE bank ANonmemberHasATargetAndRefills
  *     MAKE bank MembersBankAccountHasNotBeenVerified
  *     MAKE bank AMembersBankAccountGetsVerified
+ *     MAKE cashout AMemberCompanyCashesOutMonthly
+ *     MAKE cashout AMemberCompanyCashesOutWeekly
  *     MAKE communitybits CommunityBansSpendingBelowZero
  *     MAKE gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     MAKE gifts ASecondRecurringDonationToCGCanBeCompleted

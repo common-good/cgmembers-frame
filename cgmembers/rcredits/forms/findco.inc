@@ -16,7 +16,7 @@ function formFindCo($form, &$sta, $args = '') {
   global $mya;
   extract(just('where cos', $args));
 
-  $list = w\directoryList(@$cos, @$where ?: @$mya->community);
+  $list = w\directoryList(nn($cos), nn($where));
   $list = "<div class=\"cmpy-list\">$list</div>";
   
   $title = t('Companies in Your Region');
@@ -45,16 +45,15 @@ function formFindCo_submit($form, &$sta) {
 function directoryList($which, $region) {
   global $mya;
 
-  $region0 = $region;
   $stateCrit = '(s.abbreviation=:region OR c.name=:region)';
   
   list ($region, $crit) =
-    !$region ? [$mya ? $mya->community : r\serverUid(), 'u.uid=:region'] // blank: show user's community or the region
+    !$region ? [($mya and $mya->id != 1) ? $mya->community : r\serverUid(), 'u.uid=:region'] // blank: show ctty or region
   : (preg_match('/[A-Z]{3}/', $region) ? [$region . '.', 'u.name=:region'] // eg NEW or MIW
   : (preg_match('/[0-9]{1,5}/', $region) ? [$region . '%', 'u.zip LIKE :region'] // eg 013 or 01002
   : [$region, $stateCrit] // eg MA or Germany
   ));
-  
+
   $table = 'users u LEFT JOIN r_states s ON s.id=u.state LEFT JOIN r_countries c ON c.id=u.country';
   $res = db\get('latitude AS lat,longitude AS lon', $table, $crit, compact('region'));
   if (!$res) return participatingCompanies(''); // nothing in that area
@@ -109,7 +108,7 @@ X;
   $NEW = t(' <small %newClass> NEW!</small>', compact('_newClass'));
 
   $lastSelIid = -1;  // negative record ids are, we hope, unlikely
-  $firstTime = true;
+  $firstTime = TRUE;
   foreach ($rows as $rowObject) {
     $row = (array)$rowObject;
     $uid = $row['uid'];
@@ -129,7 +128,7 @@ X;
       $name = w\lnk($website, $a->bestName);
       $contact = "$a->city, $a->st<br>$a->phoneDash";
       $new = ($a->activated > REQUEST_TIME - 9 * WEEK_SECS) ? $NEW : '';
-      $img = $a->photoSrc(true) ?: 'images/no-photo-available.jpg';
+      $img = $a->photoSrc(TRUE) ?: 'images/no-photo-available.jpg';
       $res .= tr($model, '_name desc _contact img', "$name$new", $a->shortDesc, $contact, $img) . "\n";
     }
   }

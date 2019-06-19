@@ -122,24 +122,24 @@ EOF;
 }
 
 /**
- * Output an account photo if the caller is authorized.
- * @param string $qid: account letter-code
- * @param bool $small: output a small version instead
- * @param bool $orig: show the original photo before it was cropped
- * @return the photo if the account is a company or the cardCode is valid. Otherwise a generic picture.
+ * Output an account photo or thumbnail if the caller is authorized.
+ * @param string $page: account-photo or account-thumb
+ * @param string $args: other parameters, including:
+ *   $qid: account letter-code
+ *   $orig: show the original photo before it was cropped
+ * @return the photo or thumb if the account is a company or the cardCode is valid. Otherwise a generic picture.
  */
-function formAccountPhoto($form, &$sta, $args = '') {
+function formAccountPhoto($form, &$sta, $page = '', $args = '') {
   global $mya;
-  extract(just('qid small orig', $args));
+  extract(just('qid orig', $args));
+  list($zot, $type) = explode('-', $page);
 
   header("Content-type: image/jpeg");
 
-  if ($a = @$qid ? r\
-      acct($qid, $mya->agentId) : $mya) {
-    if ($a->co or $a->can(B_READ)) $photo = @$orig ? @file_get_contents($a->tempPhotoFilename) : $a->photo;
+  if ($a = @$qid ? r\acct($qid, $mya->agentId) : $mya) {
+    if ($a->co or $a->can(B_READ)) $photo = @$orig ? @file_get_contents($a->tempPhotoFilename) : $a->$type;
   }
-//      if ($a->co ?: ($a->cardCode == $cardCode)) $photo = $a->photo; // was photo()
-/**/  echo @$photo ?: \file_get_contents(DRUPAL_ROOT . R_PATH . '/images/icons/account.png');
+/**/  echo nn($photo) ?: \file_get_contents(DRUPAL_ROOT . R_PATH . '/images/icons/account.png');
   return exit();
 }
 
@@ -186,9 +186,7 @@ function photoUpload($uid = '', $sid = '') {
   $img = u\alterImg($img0, $w, $h, $x1, $y1, $cropW, $cropH, $angle);
 
   try {
-      ob_start();
-      imagejpeg($img, NULL, $quality);
-      $photo = ob_get_clean();
+      $photo = u\img2string($img, $quality);
       $mya->update(compact('photo')); // do not combine this with line above
   } catch (Exception $e) {
     return w\photoRet(t('Your photo could not be uploaded (%err). Try a smaller version or <%a>email it</a> to us?', ray('_err _a', $e->getMessage(), w\emailtag(NULL, t('Here is a photo for my %PROJECT card')))));

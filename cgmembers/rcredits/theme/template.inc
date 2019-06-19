@@ -220,7 +220,7 @@ EOF;
   <div class="nav2-inner">
     <div id="extras" class="">
       <button type="button" class="accounts-toggle photo$co" data-toggle="collapse" data-target="#edit-accounts" aria-expanded="false" aria-controls="edit-accounts">
-        <a title="$acctName" data-toggle="popover" data-placement="left"><img src="$base_url/account-icon"/></a>
+        <a title="$acctName" data-toggle="popover" data-placement="left"><img src="$base_url/account-thumb"/></a>
       </button>
     </div>
   </div>

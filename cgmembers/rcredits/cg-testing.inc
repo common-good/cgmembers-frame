@@ -1209,6 +1209,7 @@ function strip($form) {
   $form = preg_replace('/<input[^>]* data-off="([^"]*)"[^>]*>/sm', '$1', $form); // bootstrap toggle off
   $form = preg_replace_callback('~<img src="([^"]+)"[^>]*>~sm', function ($m) {
     $s = strtr(basename($m[1]), ray('.gif .png .jpg', '', '', ''));
+    $s = strtr($s, ray('-red -blue -green', '', '', ''));
     return '[' . strtr($s, ray('arrow-left arrow-right', 'L', 'R')) . ']';
   }, $form);
   $form = preg_replace('/> *</sm', '> <', $form); // make sure there's exactly one space between things

@@ -224,13 +224,13 @@ function rweb_menu($submenu = '') {
     'sadmin/show-deposits' => ['call', t('Show Deposits'), 'ShowDeposits', 'read'],
     'sadmin/show-reconciled' => ['call', t('Show Reconciled'), 'ShowReconciled', 'read'],
 
-    'signout' => ['norm', t('Sign out'), '1', 'signedIn', 'signout'],
+    'signout' => ['norm', t('Sign out'), '', 'signedIn', 'signout'],
     'signin' => ['norm', t('Sign in'), 'Signin', '-signedIn'],
 //    'signin' => ['call', 'Sign in', 'Signin', ANY],
 //    'sinx' => ['call', 'Sign in from elsewhere', 'Sinx', ANY],
     
-    'account-photo' => ['call', 'Account Photo', 'AccountPhoto 1', ANY],
-    'account-icon' => ['call', 'Icon', 'AccountPhoto small=1', ANY],
+    'account-photo' => ['call', 'Account Photo', 'AccountPhoto 0 1', ANY],
+    'account-thumb' => ['call', 'Account Photo Thumbnail', 'AccountPhoto 0 1', ANY],
     'help' => ['call', t('Help'), 'Help 1 2', ANY],
     'cgbiz' => ['call', t('Common Good Business'), 'CgBiz 1', ANY],
     'change-account' => ['call', t('Change Who'), '1', ANY, 'changeWho'],

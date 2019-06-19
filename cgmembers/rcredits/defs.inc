@@ -158,7 +158,7 @@ define('JOINT_FLDS', R_MONEY_FLDS . ' savings'); // add these together for joint
 define('PSECURE_FLDS', 'phone email'); // personal fields that get encrypted in a searchable way (P)
 define('VSECURE_FLDS', 'federalId dob bankAccount'); // very secure fields (pgp-encrypted)
 define('SECURE_FLDS', 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode cardCode cardCode2 pin question answer idProof oneTimePass last4bank'); // non-personal encrypted fields (must be complete list)
-define('R_HIDE_CHANGES', R_MONEY_FLDS . ' pw2 vKeyPw ssnData hasBank changes init login access activated data secure vsecure stepsDone lastiCode pass oneTimePass notes picture photo trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd'); // do not record changes to these fields: anything often-changed (automatically or not)
+define('R_HIDE_CHANGES', R_MONEY_FLDS . ' pw2 vKeyPw ssnData hasBank changes init login access activated data secure vsecure stepsDone lastiCode pass oneTimePass notes picture photo thumb trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd'); // do not record changes to these fields: anything often-changed (automatically or not)
 define('R_APP_DATA_GETS', '!log !device !members !txs '); // data requests from the rPOS app
 //  define('R_AVAIL_BUY', '(balance-IF(u.:IS_DEBT, floor, GREATEST(floor, 0)))'); // balance available to spend
 define('R_SHARE_MAX', 50); // minimum sharing percentage
@@ -268,11 +268,12 @@ define('R_ACHMIN_DEFAULT', 50); // suggested achMin
 define('CASHOUT_MIN', 100); // minimum dollar amount to cash out automatically
 
 define('R_SUGGEST_BUMP', 1.25); // suggested minimum multiplier, so as not to overdraw
-define('R_COMMERCIAL_ASPECT', '4:3'); // width-to-height ratio for commercial profile picture
-define('R_PERSONAL_ASPECT', '3:4'); // width-to-height ratio for personal profile picture
+define('CO_ASPECT', [4, 3]); // width-to-height ratio for commercial profile picture
+define('FACE_ASPECT', [3, 4]); // width-to-height ratio for personal profile picture
 define('R_PHOTO_WIDTH', 300); // rCard photo width, in pixels
 define('R_PHOTO_HEIGHT', 400);
 define('R_PIXEL_FACTOR', 200); // what to multiply the aspect ratio components by, to get pixel dimensions
+define('THUMB_FACTOR', 12); // what to multiply the aspect ratio by, for thumbnail photo
 define('R_INDIVIDUAL_GIFT', 50); // suggested donation for individuals
 define('R_COMPANY_GIFT', 250); // suggested donation for companies
 define('R_BUYS_BEFORE_BONUS', 1); // number of purchases required before signup bonus (should probably be 3)

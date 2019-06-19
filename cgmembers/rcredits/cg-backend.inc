@@ -523,6 +523,7 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = [], $rec
   
   $erInfo += ['loserId' => $loser->id];
   list ($payer, $payee) = u\order($taking, $otherId, $actorId); // Analyze who's buying or selling
+  list ($payerA, $payeeA) = [r\acct($payer), r\acct($payee)];
   list ($payerAgent, $payeeAgent) = u\order($taking, $other->agentId, $actor->agentId);
 
   $lastTx = $actor->lastTx();
@@ -570,16 +571,16 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = [], $rec
     $DBTX->rollback();
     return r\txRet('tx create err', $erInfo+['success'=>false]);
   }
+  /*
   $entries = [new r\TxEntry(['entryType' => $gainerType, 'amount' => abs($amount), 'uid' => $gainer->id, 'agentUid' => $gainer->agentId, 'description' => $gainerFor, 'acctTid' => $gainerTid]),
               new r\TxEntry(['entryType' => $loserType, 'amount' => 0-abs($amount), 'uid' => $loser->id, 'agentUid' => $loser->agentId, 'description' => $loserFor, 'acctTid' => $loserTid])];
+              */
+  txEntryPair($entries, abs($amount), [$loser, $gainer], [$loserFor, $gainerFor], [$loserType, $gainerType], [$loserTid, $gainerTid]);
 
   // Apply coupon
   if ($amount > 0 AND ($goods != FOR_USD)) {
-    list($rebate, $couponEntries) = handleCoupon($loser, $gainer, $amount, $loserTid, $gainerTid);
-    $entries = array_merge($entries, $couponEntries);
-  } else {
-    $rebate = 0;
-  }
+    $rebate = handleCoupon($entries, $loser, $gainer, $amount, $loserTid, $gainerTid);
+  } else {$rebate = 0;}
   
   // Calculate any balance shortfall
   $needed = abs($amount)-$rebate;
@@ -599,17 +600,24 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = [], $rec
   }
 
   // Apply any roundup
-  $roundup = (r\acct($payer)->roundup and $needed > 0 and !($payee == CGID and $recurs and $needed < 1)); // payer roundups, not actor or loser (don't round up reversals, cashouts, roundups, or recurring gifts under $1)
-  if ($roundup) { // do some stuff
+  if ($payerA->roundup and $needed > 0 and !($payee == CGID and $recurs and $needed < 1)) { // payer roundups, not actor or loser (don't round up reversals, cashouts, roundups, or recurring gifts under $1)
     $cents = fmod($needed, 1.0);
-    if ($cents != 0) {
+    if ($cents != 0) txEntryPair($entries, 1 - $cents, [$loser, CG_ROUNDUPS_UID], t('roundup donation'), ENTRY_DONATION);
+/*
       $donation = 1 - $cents;
       $entries[] = new r\TxEntry(['amount' => $donation, 'uid' => CG_ROUNDUPS_UID, 'agentUid' => CG_ROUNDUPS_UID, 'description' => t('roundup donation'), 'entryType' => ENTRY_DONATION]);
       $entries[] = new r\TxEntry(['amount' => 0-$donation, 'uid' => $loser->id, 'agentUid' => $loser->agentId, 'description' => t('roundup donation (on %tid)', ['tid' => $loser->nextTid]), 'entryType' => ENTRY_DONATION]);
     }
+      */    
   }
-  $rbal = r\acct($payer)->balance;
-  $ebal = r\acct($payee)->balance;
+  
+  if ($needed * $payerA->food > .005 and $payeeA->foody) { // apply percentage donation to food fund
+    $foodUid = db\get('uid', 'users', "name='foodfund'");
+    if ($foodUid) txEntryPair($entries, round($needed * $payerA->food, 2), [$payerA, $foodUid], t('donation to Food Fund (pct%)', 'pct', u\fmtAmt($payerA->food, '%')), ENTRY_DONATION);
+  }
+  
+  $rbal = $payerA->balance;
+  $ebal = $payeeA->balance;
 
   $tx->addEntries($entries);
   if (array_key_exists('xid', $data)) {
@@ -631,6 +639,25 @@ function transfer($type, $actor, $other, $amount, $for, $goods, $data = [], $rec
   return sendNotifications($type, $tx, $shortfall);
 }
 
+/**
+ * Add a pair of related entries to the transaction: one losing, one gaining.
+ * Any ...0 parameter but $amount0 can be a 2-element array (one element for each party)
+ * @param $txes array: flat array of entry objects to which to add 2 entries
+ * @param numeric $amount0: the amount paid/received (amount to add to the first party's balance)
+ * @param mixed $a0: account object(s) and/or uid(s)
+ * @param string $description0: transaction purpose(s)
+ * @param int $entryType0: entry type(s)
+ * @param int $acctTid0: description transaction ID (deprecated)
+ */
+function txEntryPair(&$txes, $amount0, $a0, $description0, $entryType0, $acctTid0 = 0, $relType = NULL, $relatedId = NULL) {
+  foreach ([1, 0] as $i) { // payee first, to agree with tests
+    foreach (ray('a description entryType acctTid') as $k) $$k = is_array(${$k . 0}) ? ${$k . 0}[$i] : ${$k . 0};
+    $amount = $i == 0 ? -$amount0 : $amount0;
+    list ($uid, $agentUid) = is_object($a) ? [$a->id, $a->agentId] : [$a, $a];
+    $txes[] = new r\TxEntry(compact(ray('entryType amount uid agentUid description acctTid relType relatedId')));
+  }
+}
+  
 // $reversing=1, actor is 553, $tx = $80 from 553 to 551
 // $byme = true; $tome = false
 function sendNotifications($type, $tx, $shortfall) {
@@ -721,15 +748,16 @@ function isBankUid($uid) {
 
 /**
  * Generate transaction entries for a coupon, and update the coupated table as appropriate.
+ * @param assoc $entries: (MODIFIED) an array of entries to add to, if appropriate
  * @param acct $buyer:
  * @param acct $seller:
  * @param number $price: pre-discount amount
  * @param string|number $buyerTid: buyer's transaction id
  * @param string|number $sellerTid: seller's transaction id
  * @param unixtime $when: when was the transaction (defaults to now)
- * @return [ rebate, entries ] where entries is an array of entries
+ * @return the rebate amount
  */
-function handleCoupon($buyer, $seller, $price, $buyerTid, $sellerTid, $when=null) {
+function handleCoupon(&$entries, $buyer, $seller, $price, $buyerTid, $sellerTid, $when = NULL) {
 ///    debug("handleCoupon($buyer->id, $seller->id, $price, $buyerTid, $sellerTid, $when)");
   if (is_null($when)) $when = now();
   $sql = <<<EOF
@@ -741,25 +769,29 @@ function handleCoupon($buyer, $seller, $price, $buyerTid, $sellerTid, $when=null
 EOF;
   $subs = ray('buyerId sellerId now price', $buyer->id, $seller->id, $when, $price);
   $res = db\q($sql, $subs);
-  if (empty($res)) return [0, []];
+  if (empty($res)) return 0;
   $res = $res->fetchAssoc();
-  if (empty($res)) return [0, []];
+  if (empty($res)) return 0;
   extract($res);
+  
   $rebate = ($amount < 0) ? $price * (0-$amount) * .01 : $amount;
-  if ($rebate <= 0) return [0, []];
+  if ($rebate <= 0) return 0;
+  
   if (empty($id)) {
-    $id = db\insert('r_coupated', ['coupid' => $coupid, 'uid' => $buyer->id, 'uses' => 1, 'when' => now()], 'id');
+    $id = db\insert('r_coupated', ray('coupid uid when uses', $coupid, $buyer->id, now(), 1), 'id');
   } else {
-    db\update('r_coupated', ['id' => $id, 'coupid' => $coupid, 'uid' => $buyer->id, 'uses' => $uses + 1,
-                             'when' => now()], 'id');
+    db\update('r_coupated', ray('coupid uid when uses id', $coupid, $buyer->id, now(), $uses + 1, $id), 'id');
   }
-  return [ $rebate,
+  txEntryPair($entries, $rebate, [$seller, $buyer], t('discount rebate'), ENTRY_OTHER, [$sellerTid, $buyerTid], 'D', $id);
+  return $rebate;
+  /*
            [ new r\TxEntry(ray('amount entryType uid agentUid description acctTid relType relatedId',
                                $rebate, ENTRY_OTHER, $buyer->id, $buyer->agentId,
                                t('discount rebate'), $buyerTid, 'D', $id)),
              new r\TxEntry(ray('amount entryType uid agentUid description acctTid relType relatedId',
                                0-$rebate, ENTRY_OTHER, $seller->id, $seller->agentId,
                                t('discount rebate'), $sellerTid, 'D', $id)) ] ];
+                               */
 }
 
 /**
@@ -1188,21 +1220,27 @@ function completeUsdTx($a, $txid, $amount, $automatic, $completed = null) {
   if ($txid) { // unless transfer is already marked complete
     $values = db\get('amount as realAmt, payee AS payeeId, risk, risks, channel, xid', 'r_usd', 'txid=:txid', compact('txid'));
     extract(u\exactly('realAmt payeeId risk risks channel xid', array_filter($values), [0, 0, null, 0, TX_SYS, null]));
-      
     if ($amount != $realAmt) {
       r\tellAdmin(t('bad completeUsdTx amt'), compact(ray('txid amount realAmt automatic')));
       return FALSE;  // ??
     }
-    if (!empty($xid)) {
-      return TRUE;  // already completed
-    }
+    if (!empty($xid)) return TRUE;  // already completed
+
     $bankId =  ($amount > 0) ? CG_INCOMING_BANK_UID : CG_OUTGOING_BANK_UID;
+/*
     $tx = new r\Tx(['goods' => FOR_USD, 'actorId' => $payeeId, 'actorAgentId' => $payeeId, 'flags' => 0, 'channel' => $channel,
                     'risk' => $risk, 'risks' => $risks, 'created' => $completed]);
+                    */
+    $tx = new r\Tx(ray('goods actorId actorAgentId flags channel risk risks created', 
+      FOR_USD, $payeeId, $payeeId, 0, $channel, $risk, $risks, $completed));
+/*
     $tx->addEntry(new r\TxEntry(['entryType' => ENTRY_PAYER, 'amount' => 0-$amount, 'uid' => $bankId, 'agentUid' => $bankId,
                                  'description' => ($amount > 0) ? t('from bank') : t('to bank')]));
     $tx->addEntry(new r\TxEntry(['entryType' => ENTRY_PAYEE, 'amount' => $amount, 'uid' => $payeeId, 'agentUid' => $payeeId,
                                  'description' => $amount > 0 ? t('to bank') : t('from bank')]));
+                                 */
+    txEntryPair($txes, $amount, [$bankId, $payeeId], $amount > 0 ? t('from bank') : t('to bank'), [ENTRY_PAYER, ENTRY_PAYEE]);
+    $tx->addEntries($txes);
     $xid = $tx->insert();
     if (!$xid) {
       $DBTX.rollback();

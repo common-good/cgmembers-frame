@@ -1,0 +1,1 @@
+git branch -m feature/%1

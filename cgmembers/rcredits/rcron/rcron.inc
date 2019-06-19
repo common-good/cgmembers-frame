@@ -202,6 +202,8 @@ X;
     db\update('users', ray('uid community', $uid, $ctty), 'uid');
     r\tellAdmin(t('Not-yet-member %person was in Seedpack; should be (now is) in %cttyName', $row));
   }
+  
+  if ($xid = db\get('xid', '(SELECT xid,SUM(amount) AS amt FROM tx_entries GROUP BY xid) t', 'amt<>0')) tellAdmin(t('Not all transactions have entries totaling zero (eg xid=%xid).', compact('xid')));
 
 //  $where = "RIGHT(fullName, 8)=' PARTNER' COLLATE utf8_bin AND pass='' AND NOT :IS_CO AND activated=0";
   $where = "BINARY RIGHT(fullName, 8)=' PARTNER' AND pass IS NULL AND NOT :IS_CO AND activated=0";
@@ -209,6 +211,7 @@ X;
     if ($jA = $a->jA and $jA->jid == $a->id) $jA->update('jid', 0);
     r\deleteAccount($a);
   } , $where);
+  if ($uid = db\get('u1.uid', 'users u1 JOIN users u2 ON u2.uid=u1.jid', 'u2.jid<>u1.uid')) r\tellAdmin('Orphaned joint account: ' . r\acct($uid)->fullName, [], $uid);
 //  db\del('users', 'uid', $where); // abandoned new joint acct (must postcede setting jids)
 
   // Notice which bank accounts have been verified
@@ -262,14 +265,17 @@ X;
       SELECT uid, u.flags, activated,
       SUM(IF(amount > 0, amount, 0))/6 AS inVol,
       SUM(IF(amount < 0, -amount, 0))/6 AS outVol
-      FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid)
-      WHERE t.created>=$start AND $sinceActivated % 30 = 0 GROUP BY uid
-    ) t 
-    WHERE $sinceActivated>0 AND uid > 1 AND :IS_OK
+      FROM users u LEFT JOIN (
+        SELECT amount,uid FROM tx_entries LEFT JOIN tx_hdrs t0 USING(xid) WHERE t0.created>=$start
+      ) t USING(uid)
+      WHERE u.:IS_OK AND u.uid>:CANONIC_ACCTS
+      AND $sinceActivated>0 AND $sinceActivated % 30 = 0 
+      GROUP BY uid
+    ) x 
 X;
   queueEach('activeMonthly', $sql); // no need for jid here (floors get summed)
   
-  queueEach('activeWeekly', "SELECT uid, $sinceActivated/7 AS weeks FROM users");
+  queueEach('activeWeekly', "SELECT uid FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS AND $sinceActivated>0 AND $sinceActivated % 7 = 0");
 	
 	$when = 'UNIX_TIMESTAMP()+:WEEK_SECS';
 	$sql = <<< X

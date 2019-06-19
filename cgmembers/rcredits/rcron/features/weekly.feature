@@ -52,10 +52,10 @@ Scenario: A member cashes out automatically
   When cron runs "tickle"
   Then usd transfers:
   | txid | payee | amount |*
-  |    1 | .ZZB  |   -680 |
+  |    1 | .ZZB  |   -670 |
 #  And we notice "banked|bank tx number" to member ".ZZB" with subs:
 #  | action     | amount | checkNum |*
-#  | deposit to | $680   |        1 |
+#  | deposit to | $670   |        1 |
   And we notice "banked" to member ".ZZB" with subs:
   | action     | amount | why |*
-  | deposit to | $680   |     |
+  | deposit to | $670   |     |

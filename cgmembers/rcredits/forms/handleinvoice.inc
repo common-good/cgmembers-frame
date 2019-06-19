@@ -28,7 +28,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
   if (@$code) {
     if ($code == 'TESTDOCODE') $code = w\svar($code); // most recently created doCode
     if (!$info = r\doCode($code)) return hack(t('fake doCode in handleInvoice'));
-    if (@$mya and $payer != $mya->id) w\signout(FALSE); // make sure we're signed out of any possibly different acct
+    if (@$mya and $payer != $mya->id) w\signout(TRUE); // make sure we're signed out of any possibly different acct
   } elseif (!$mya) {
     return hack(t('attempt to handle invoice not signed in'));
   } else if (!in($mya->id, [$payer, $payee]) or ($mya->id == $payer xor $toMe)) return hack(t('bad person in invoice payment'));

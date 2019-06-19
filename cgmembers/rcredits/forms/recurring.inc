@@ -25,8 +25,8 @@ function formRecurring($form, &$sta, $args = '') {
   $classes = ray('arrow:arrows, fWho:name, fAmount:amount, fPurpose:purpose, fPeriod:period, fCreated:date, fNext:date, fEnded:date, button:buttons');
   $fields = array_keys($classes);
   $url0 = BASE_URL . '/history/recurring';
-  $to = "<img src=\"$rUrl/images/rvote/arrow-right.gif\" border=0 />";
-  $from = "<img src=\"$rUrl/images/rvote/arrow-left.gif\" border=0 />";
+  $to = "<img src=\"$rUrl/images/icons/arrow-right-red.png\" border=0 />";
+  $from = "<img src=\"$rUrl/images/icons/arrow-left-green.png\" border=0 />";
   
   $html = <<<EOF
   <table>
@@ -83,7 +83,7 @@ function addLine($info, $classes, $url) {
 
   extract($info);
   $fWho = r\acct($fWho)->bestName;
-  $button = $button ? "<a href=\"$url&do=stop\" title=\"Stop recurring transaction\"><img src=\"$rUrl/images/icons/close.png\" border=0 /></a>" : '';
+  $button = $button ? "<a href=\"$url&do=stop\" title=\"Stop recurring transaction\"><img src=\"$rUrl/images/icons/close-blue.png\" border=0 /></a>" : '';
   $res = "<tr>\n";
   
   foreach (compact(array_keys($info)) as $k => $v) {

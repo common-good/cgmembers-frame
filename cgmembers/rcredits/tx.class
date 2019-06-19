@@ -281,7 +281,8 @@ EOF;
 
     $payerE = $this->payerEntry;
     $payeeE = $this->payeeEntry;
-
+/**/    u\EXPECT(is_object($payerE) and is_object($payeeE), 'party not an object in tx entry:' . print_r($tx, 1));
+    
     $amount = ($tx->actorId == $payerE->uid) ? $payerE->amount : $payeeE->amount;
       
     $other = r\acct(($me->isMe($payerE->uid)) ? $payeeE->uid : $payerE->uid);
