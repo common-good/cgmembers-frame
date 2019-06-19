@@ -1,3 +1,21 @@
+2019-06-19 feature/food-percents
+. food fund donations now happen automatically at the time of the transaction
+. fixed bug in cashoutW
+. added thumbs field to r_photos, followed by this code in PHP window:
+  $q = db\q('SELECT uid FROM r_photos');
+  while ($row = $q->fetchAssoc()) {
+    $a = r\acct($row['uid']);
+    $factor = ($a->co ? 2 : 1) * THUMB_FACTOR;
+    list ($w, $h) = $a->co ? CO_ASPECT : FACE_ASPECT;
+    $img = u\alterImg(imagecreatefromstring($a->photo), $w * $factor, $h * $factor);
+    $thumbInfo['thumb'] = u\img2string($img, $a->co ? 100 : 50);
+    $a->updatePhoto($thumbInfo, 'thumb');
+  }
+. added recursId field to x_invoices (bug fix)
+. fixed bug in balancesheet
+. added a check in rcron.inc for orphaned joint account
+. fixed white screen of death bug on signout
+
 2019-06-15 feature/show-incoming-recurs
 . fixed (again) u\csv to avoid sending quoted names to MailChimp
 . added payments-to-me and purpose to list of recurring transactions

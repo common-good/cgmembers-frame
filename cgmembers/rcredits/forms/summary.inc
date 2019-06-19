@@ -67,6 +67,7 @@ function formSummary($form, &$sta) {
 //    if (!$mya->jid and !$mya->co) $makeJoint = w\btn('/signup/joint=1', t('Make this a joint account'), 'primary', 'xs');
     $makeJoint = ($mya->member and !$mya->jid and !$mya->co) ? w\btn('/prejoin', t('Make this a joint account'), 'primary', 'xs') : '';
     $goFood = $mya->food > 0 ? lnk('/settings/food', t('Food Fund')) : btn('/settings/food', t('Food Fund'), 'warning');
+    if ($mya->cAdmin) $goFood = '<br><br>' . $goFood; // make sure it doesn't hide behind the photo
     if (!$mya->co and $hasMultipleAccounts) $clickPhoto = item(t('Click your photo%where to manage your other account(s).', 'where', $mya->cAdmin ? t(' in the upper right corner') : ''));
   } else $makeCo = $makeJoint = $goFood = $reports = '';
 

@@ -229,7 +229,7 @@ class Acct {
     if ($field == 'jA') return $a->jid ? r\acct($a->jid) : NULL;
     if ($field == 'masterA') return $a->slave ? $a->jA : $a;
     if ($field == 'helperA') return $a->helper ? r\acct($a->helper) : '';
-    if ($field == 'foody') return db\get(':FOODY', 'users u', ['uid' => $a->id]);
+    if ($field == 'foody') return db\get(':U_FOODY', 'users u', ['uid' => $a->id]);
     if ($field == 'iclubid') return $a->state == 1020 ? db\get('uid', 'users', ':IS_CO AND (community=:ctty OR 1) AND :IS_ICADMIN', ray('ctty', $a->community)) : NULL; // investment club uid
     if ($field == 'isIClub') return ($a->iclubid == $a->id);
     if ($field == 'prefsSet') return !is_null($a->o_minimum); // preferences have been set at least once
@@ -246,6 +246,7 @@ class Acct {
     if ($nick == 'raw') return $result;
     if ($field == 'hasPhoto') return db\exists('r_photos', 'uid=:id', ['id' => $a->id]);
     if ($field == 'photo') return ($result = db\get('photo', 'r_photos', 'uid=:id', ['id' => $a->id])) ? u\decry('H', $result) : '';
+    if ($field == 'thumb') return db\get('thumb', 'r_photos', 'uid=:id', ['id' => $a->id]) ?: '';
     if ($field == 'changes') {
       $rows = db\rows('*', 'r_changes', 'uid=:id', ['id' => $a->id]);
       foreach ($rows as $i => $row) {
@@ -544,14 +545,7 @@ class Acct {
     if ($a->activated) $a->recordChanges(justNOT(B_LIST, $info)); // record changes if member is (or was) active
     foreach (just('hasBank', $info) as $k => $v) {$a->setRisk($k, $v); unset($info[$k]);}
 
-    if (isset($info['photo'])) {
-      if ($info['photo']) { // setting photo
-        db\updateOrInsert('r_photos', ['uid' => $a->id, 'photo' => u\cry('H', $info['photo'])], 'uid');
-      } else {
-        db\del('r_photos', 'uid', $a->id);
-      }
-      unset($info['photo']);
-    }
+    foreach (ray('photo thumb') as $k) if (isset($info[$k])) $a->updatePhoto($info, $k);
     foreach (ray(PSECURE_FLDS) as $k) if (isset($info[$k])) $info[$k] = u\cry('P', $info[$k]);
     //    if (isset($info['phone'])) $info['phone'] = u\cry('P', $info['phone']);
     if (isset($info['pass']) and $info['pass'] !== '') $info['pass'] = r\passHash($info['pass']);
@@ -590,6 +584,26 @@ class Acct {
 
     $info = justNOT(SECURE_FLDS . ' ' . VSECURE_FLDS . ' ' . DATA_FLDS, $info); // don't pass these
     return $info ? db\update('users', $info + ['uid' => $a->id], 'uid') : TRUE;
+  }
+
+  /**
+   * Set photo or thumb.
+   */
+  public function updatePhoto(&$info, $k) {
+    $a = $this;
+    $data = $info[$k];
+    $isThumb = ($k == 'thumb');
+    if ($data or $isThumb) { // setting
+      db\updateOrInsert('r_photos', ['uid' => $a->id, $k => $isThumb ? $data : u\cry('H', $data)], 'uid');
+      if (!$isThumb and !u\test()) { // always create a new thumb when we create or change the photo
+        $factor = ($a->co ? 2 : 1) * THUMB_FACTOR;
+        list ($w, $h) = $a->co ? CO_ASPECT : FACE_ASPECT;
+        $img = u\alterImg(imagecreatefromstring($data), $w * $factor, $h * $factor);
+        $thumbInfo['thumb'] = u\img2string($img, $a->co ? 100 : 50);
+        $a->updatePhoto($thumbInfo, 'thumb');
+      }
+    } else {db\del('r_photos', 'uid', $a->id);} // delete record if deleting photo
+    unset($info[$k]);
   }
 
   /**
@@ -1306,9 +1320,9 @@ EOF;
     $amount0 = $amount; // remember original amount requested
 		
     $a = $this;
+    if (!$a->hasBank) return FALSE;
     $payee = $a->id;
     if ($tx) extract($tx);
-    //    u\setDft($tid, r\getUsdTid($payee));
     $okNow = ($amount < 0 or $a->bankOk); // "okay to create the request NOW"
     if (!$okNow) $a->verifyBank();
     u\setDft($created, $okNow ? now() : now() + DAY_SECS);
@@ -1316,7 +1330,6 @@ EOF;
 
     list($txid, $amount, $completed) = be\combineUsdTx($a, $amount, $completed);
     if (!$txid) { // no existing tx, so create one
-      //      if (isGAME) $tx += ['members' => $a->members];
       $txid = be\createUsdTransfer($a, $amount, $created);
       u\EXPECT((bool) $txid, 'saving usd record');
     }
@@ -1358,9 +1371,8 @@ EOF;
   public function cashout() {
     $a = $this;
     
-    $waiting = $a->waitingFromBank($combinable); // net amount already requested from bank (if any)
-    if ($waiting > 0) return; // no cashout if waiting to bring some in
-    $cashout = round($a->balance - -$a->floor * 6 / 26 + $waiting, -1); // (waiting is negative)
+    if ($a->waitingFromBank($combinable) > 0) return; // no cashout if waiting to bring some in
+    $cashout = 10 * floor(($a->balance - -$a->floor * 6 / 26) / 10);
     if ($cashout < R_ACHMIN) return;
     if (!$a->bank(-$cashout, $zot)) return;
   }
@@ -1770,10 +1782,10 @@ X;
     $a = $this;
     global $base_url;
     if ($unique) $unique = '&t=' . now();
-    $thing = $small ? 'icon' : 'photo';
+    $thing = $small ? 'thumb' : 'photo';
     $qid = $a->co ? "qid=$a->mainQid" : '';
     //    if (!$a->co) $qid .= "/$a->cardCode";
-    return "$base_url/account-photo/$qid$unique";
+    return "$base_url/account-$thing/$qid$unique";
   }
   
   /**

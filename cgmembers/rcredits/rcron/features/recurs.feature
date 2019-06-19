@@ -1,4 +1,4 @@
-Feature: Gifts
+Feature: Recurs
 AS a member
 I WANT to make recurring payments (typically gifts) to other members
 SO I can save on memory and labor.

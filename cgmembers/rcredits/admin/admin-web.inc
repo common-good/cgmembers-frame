@@ -90,7 +90,7 @@ function adminSummary() {
     }
 
     if ($mya->cAdmin and !$mya->proSe) {
-      $html = $mya->photoHtml(TRUE, TRUE);
+      $html = $mya->photoHtml(FALSE, TRUE);
       $photo = item("<a href=\"$base_url/settings/photo\">$html</a>");
 
       $donations = item($mya->giftsDesc() ?: t('none'), t('Donations:'));

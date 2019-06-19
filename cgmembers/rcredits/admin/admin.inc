@@ -368,7 +368,7 @@ function photoFromFile($a, $filename = '', &$err = '') {
   ob_start();
   imagejpeg($img, NULL, 50);
   $photo = ob_get_clean();
-  //if (!$photo = u\fixPicture($photoPath, R_PERSONAL_ASPECT, R_PIXEL_FACTOR / 2, FALSE, $err)) return FALSE;
+  //if (!$photo = u\fixPicture($photoPath, FACE_ASPECT, R_PIXEL_FACTOR / 2, FALSE, $err)) return FALSE;
   return $a->update(compact('photo'));
 }
 

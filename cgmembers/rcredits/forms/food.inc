@@ -77,7 +77,7 @@ X
 
     $subtext = isset($welcome) ? $welcomeText : '';
     $subtext .= t('<p>Make a tax-deductible gift of any size to the Food Fund.</p>
-    <p>%payExtra For example, 5% here means when you buy a $10 pizza, you contribute 50 cents to the fund.</p>
+    <p>%payExtra For example, 15% here means when you buy a $10 pizza, you contribute $1.50 to the fund.</p>
     
     <p>%orRegular %replaces</p>
     

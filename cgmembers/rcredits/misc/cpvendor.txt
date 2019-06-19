@@ -1,0 +1,5 @@
+cp -r one/cgmembers/vendor/swiftmailer two/cgmembers/vendor/
+cp -r one/cgmembers/vendor/tcpdf two/cgmembers/vendor/
+cp -r one/cgmembers/vendor/parsedown two/cgmembers/vendor/
+
+

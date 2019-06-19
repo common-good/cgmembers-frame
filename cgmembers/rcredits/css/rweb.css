@@ -217,8 +217,8 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 /* #header {height:50px;} */
 .region-content {margin-top:0px;}
 #extras {margin:3px 8px 0 0;}
-#extras .photo {width:34px; height:44px; padding:0;}
-#extras .photo.co {width:57px;}
+#extras .photo {width:33px; height:44px; padding:0; border:1px;}
+#extras .photo.co {width:60px;}
 #extras button {-webkit-appearance:none; border:1px solid silver;} /* keep Safari from making it oval & squeezed */
 #extras img {height:100%; width:100%;}
 .not-logged-in #extras {display:none;}
@@ -322,8 +322,8 @@ body.logged-in.one-sidebar #content {width:100%;}
 #accounts #edit-acct-settings {float:right;}
 #accounts img {height:24px;}
 #accounts #edit-acct-settings div {width:20px; height:20px; background-image:url(../images/icons/gear-white.png); background-size:20px 20px; margin:3px 5px 0 5px;}
-#accounts #edit-acct-icon {float:right; margin:0 5px 0 0;} 
-#accounts #edit-acct-icon img {height:24px; border:1px solid white;}
+#accounts #edit-acct-thumb {float:right; margin:0 5px 0 0;} 
+#accounts #edit-acct-thumb img {height:24px; border:1px solid white;}
 /*#accounts #edit-accounts {float:right; padding:0 2px; width:auto; height:27px; margin:0; font-size:100%; border:0; background-color:white;} */
 #frm-accounts #edit-acct-submit {display:none;} /* Drupal requires unused button to be there, so make it invisible */
 #edit-acct-showmenu, #edit-acct-showhelp {display:none;}
@@ -432,6 +432,10 @@ body.logged-in.one-sidebar #content {width:100%;}
 #frm-flags .k-risks {text-align:left;}
 #frm-flags .k-amount, #frm-flags .k-score {text-align:right;}
 #frm-flags .k-created {min-width:60px;}
+
+/* Show Recurring */
+#frm-recurring .arrows img,
+#frm-recurring .buttons img {width:25px;}
 
 /* Notifications */
 #frm-notifications .header .vertical {font-weight:bold; margin:35px 0 20px -10px;}
@@ -542,7 +546,7 @@ body.logged-in.one-sidebar #content {width:100%;}
 #frm-summary .admin .form-checkboxes {width:500px; max-width:500px;}
 #frm-summary #edit-notes .control-data {width:450px; max-height:150px; overflow-x:hidden; overflow-y:scroll; overflow-wrap:break-word}
 #frm-summary #edit-tickle {max-width:120px; display:inline-block;}
-#frm-summary #edit-photo img {max-width:100px; margin-top:-20px;}
+#frm-summary #edit-photo img {width:100px; margin-top:20px;}
 #frm-summary #edit-creditlimit .help-block,
 #frm-summary #edit-committed .help-block,
 #frm-summary #edit-balance .help-block,
@@ -677,6 +681,7 @@ body.logged-in.one-sidebar #content {width:100%;}
 /* Login (Signin) */
 #frm-signin #edit-tip label {font-weight:normal; width:100%; text-align:left;}
 #frm-signin #edit-subtext em {font-style:normal; color:red;}
+body.page-signin #menu-signin {display:none;}
 
 /* Company Info */
 #frm-company fieldset#edit-help-block-format {background-color:lightblue; max-width:45em;}
