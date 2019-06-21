@@ -411,7 +411,7 @@ EOF;
     $revRes = db\get('xid AS `undo`, created', 'tx_hdrs', 'reversesXid=:xid', ['xid'=>$xid]);
     if ($revRes) { // already got reversed
       extract(just('undo created', $revRes));
-      $message = "Transaction has been reversed.";
+      $message = t('Transaction has been reversed.');
     } else {
       list ($msg, $subs) = be\undoTx($xid, (@$amount < 0 and !$mya->co) ? 'e.amount > 0' : "e.amount='$amount'", [], $force);
       if (is_array($msg)) list ($msg, $subs) = [$msg[0], $msg[1] + $subs];

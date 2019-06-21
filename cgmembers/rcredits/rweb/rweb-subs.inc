@@ -1403,16 +1403,21 @@ function findCompany($company, $companyPhone) {
  * @return the relevant form fields
  */
 function nameAndEmail($co, $fullName = '', $email = '', $hideEmail = FALSE, $myid = 0) {
-  list ($what, $who) = $co 
-  ? ($co < 0 ? [t('Community'), t('The community\'s')] : [t('Company'), t('The company\'s')])
-  : [t('Full name'), t('Your')];
-//  $onchange = w\onchange("var legal=jQuery('#edit-legalname'); if (legal.val()=='') legal.val(this.value);");
-//  $fullName = textFld("$what:", ["$who " . t('full name'), t('usename desc')], required(@$fullName) + $onchange);
-  $fullName = textFld("$what:", ["$who " . t('full name'), $co ? t('dba desc') : t('usename desc')], required(@$fullName));
+  if ($co) {
+    list ($what, $who) = $co < 0 ? [t('Community'), t('The community\'s')] : [t('Company'), t('The company\'s')];
+  } else {
+    $_proxyInfo = w\lnk('/help/proxies', t('more about proxies'), w\away());
+    $_proxyInfo = "[$_proxyInfo]";
+  //  $_proxyInfo = w\btn('/help/proxies', t('more about proxies'), 'default', 'xs', w\away());
+    $personalMsg = $myid ? '' : t(' Your name and city will be visible to other members in your region who may wish to select you as their <b>proxy</b> in your community\'s democratic process. %proxyInfo', compact('_proxyInfo'));
+    list ($what, $who) = [t('Full name'), t('Your')];
+  }
+
+  $fullName = textFld("$what:", ["$who " . t('full name'), $co ? t('dba desc') : (t('usename desc') . $personalMsg)], required(@$fullName));
   $legalName = textFld(t('Legal name:'), ["$who " . t('full legal name (if different)'), $who . t('legalname desc')]);
   if ($email and !emailOkay($email, FALSE, $myid ? r\acct($myid) : '')) $hideEmail = FALSE; // make sure they can fix it
   if (strpos($email, '@' . EMAILX) and !u\test()) $hideEmail = FALSE; // handle placeholder for making joint accounts
-  $email = $hideEmail ? hidFld(@$email) : textFld(t('Email:'), [t('Email'), t('<b>Type carefully.</b> All emails from the system will be sent to this address. It will not be made public, but will be viewable by accounts you transact with (you can choose greater privacy by clicking "Advanced" on the Settings/Preferences page).')], required(@$email));
+  $email = $hideEmail ? hidFld(@$email) : textFld(t('Email:'), [t('Email'), t('<b>Type carefully.</b> All emails from the system will be sent to this address. It will not be made public, but will be viewable by accounts you transact with (you can choose greater privacy by clicking "Advanced" on the Preferences step).')], required(@$email));
   jsx('legal-name');
   return compact(ray('fullName legalName email'));
 }
@@ -1534,8 +1539,8 @@ function ssnFields($personal = TRUE) {
   $ssTitle = t($personal ? 'ssTitle' : 'einTitle');
   if ($personal) {
     $dob = textFld(t('Birthdate:'), [t('Birth date'), t('Your date of birth (mm/dd/yyyy)')], required() + autofill('off'));
-// NOT YET    $ssReason = t('As a registered Money Services Business, we are required by law to ask for your social security number, even though it makes some people nervous. Fortunately, we have <%aSecure>top notch security</a>. If you do not have a social security number <%aUndoc>click here</a>.', '_aSecure _aUndoc', atag(r\promoLink('security.html')), atag("$$('.form-item-sponsor').show(); $('.form-item-federalId').hide();"));
-    $ssReason = t('As a registered Money Services Business, we are required by law to ask for your social security number, even though it makes some people nervous. Fortunately, we have <%aSecure>top notch security</a>.', '_aSecure', atag(r\promoLink('security.html')));
+// NOT YET    $ssReason = t('As a registered Money Services Business, we are required by law to ask for your social security number, even though it makes some people nervous. Fortunately, we have <%aSecure>top notch security</a>. If you do not have a social security number <%aUndoc>click here</a>.', '_aSecure _aUndoc', atag(r\promoLink('about-us/privacy-and-security')), atag("$$('.form-item-sponsor').show(); $('.form-item-federalId').hide();"));
+    $ssReason = t('As a registered Money Services Business, we are required by law to ask for your social security number. Fortunately, we have <%aSecure>top notch security</a>.', '_aSecure', atag(r\promoLink('about-us/privacy-and-security')));
 // NOT YET    $sponsor = textFld(t('Sponsor:'), [t('Sponsor code'), t('Your sponsoring organization\'s Common Good account ID (required if you have no social security number).')]);
   } else {
     $dob = textFld(t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)')], required());

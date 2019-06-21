@@ -1,10 +1,10 @@
-Feature: Get rCredits/USD
+Feature: Get cgCredits/USD
 AS a member
 I WANT to transfer credit to my bank account
 SO I can pay it to non-members
 OR
 I WANT to transfer credit from my bank account
-SO I can spend it through the rCredits system or hold it in the rCredits system as savings.
+SO I can (eventually) spend it through the Common Good system.
 
 Setup:
   Given members:
@@ -27,7 +27,9 @@ Setup:
   | 5004 |  .ZZB |     -4 | %today-2d | %today-2d | %today-1d |
   | 5005 |  .ZZC |     30 | %today-2d | %today-2d | %today-1d |
   | 5006 |  .ZZD |    140 | %today-2d | %today-2d | %today-1d |
-  Then balances:
+  # usd transfer creation also creates corresponding transactions, if the transfer is complete
+  Then count "txs" is 6
+  And balances:
   | uid  | balance |*
   | .ZZA |      86 |
   | .ZZB |      96 |
@@ -118,3 +120,23 @@ Scenario: a member asks to do two transfers out in one day
   And we say "error": "short put" with subs:
   | max |*
   | $0  |
+
+Scenario: a member draws credit from the bank then cancels
+  When member "C:B" completes form "get" with values:
+  | op  | amount |*
+  | get |     10 |
+  Then usd transfers:
+  | txid | payee | amount | created | completed | channel |*
+  | 5007 |  .ZZC |     10 | %today  |    %today | %TX_WEB |
+  And balances:
+  | uid  | balance |*
+  | .ZZC |      40 |
+  And count "txs" is 7
+
+  When member "C:B" visits page "get/cancel=5007"
+  Then balances:
+  | uid  | balance |*
+  | .ZZC |      30 |
+  And count "usd" is 6
+  And count "txs" is 8
+  And we redirect to "/get"

@@ -287,8 +287,7 @@ EOF;
       
     $other = r\acct(($me->isMe($payerE->uid)) ? $payeeE->uid : $payerE->uid);
     
-    $banking = be\isBankUid($other->id);
-    $toMe = $banking ? ($amount < 0 xor $xid < 0) : $me->isMe($payeeE->uid);
+    $toMe = $other->isBank() ? ($amount < 0 xor $xid < 0) : $me->isMe($payeeE->uid);
     
     $reverses = !empty($tx->reverses);
     $role = $toMe ? 'payee' : 'payer';
@@ -322,12 +321,7 @@ EOF;
    * @return string: the error message (FALSE if the current agent CAN undo it on behalf of the current account)
    */
   function nonoUndo(&$subs = []) {
-    //    global $mya;
-    //    extract(just('amount toMe data payer payee payerTid payeeTid taking', $oldRecord));
-    //    $data = unserialize($data);
-    if (db\exists('tx_hdrs', 'reversesXid=:xid', ['xid' => $this->xid])) {
-      return 'already undone';
-    }
+    if (db\exists('tx_hdrs', 'reversesXid=:xid', ['xid' => $this->xid])) return 'already undone';
 
     $a1 = r\acct($this->toMe ? $this->payeeId : $this->payerId, $this->actor->agentUid);
     $a2 = r\acct($this->toMe ? $this->payerId : $this->payeeId); // second account's permissions are irrelevant

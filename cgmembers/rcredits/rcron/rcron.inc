@@ -211,7 +211,7 @@ X;
     if ($jA = $a->jA and $jA->jid == $a->id) $jA->update('jid', 0);
     r\deleteAccount($a);
   } , $where);
-  if ($uid = db\get('u1.uid', 'users u1 JOIN users u2 ON u2.uid=u1.jid', 'u2.jid<>u1.uid')) r\tellAdmin('Orphaned joint account: ' . r\acct($uid)->fullName, [], $uid);
+  if ($uid = db\get('u1.uid', 'users u1 JOIN users u2 ON u2.uid=u1.jid', 'u1.jid<>0 AND u2.jid<>u1.uid')) r\tellAdmin('Orphaned joint account: ' . r\acct($uid)->fullName, [], $uid);
 //  db\del('users', 'uid', $where); // abandoned new joint acct (must postcede setting jids)
 
   // Notice which bank accounts have been verified
@@ -443,12 +443,12 @@ function everyMonth() {
 //  queueEach('shareCommitted', 'SELECT uid, committed, share FROM users WHERE :IS_OK AND committed>0');
   
   $sql = <<< X
-    SELECT u.uid, SUM(IF(payer.amount<0,0-payer.amount,0))*u.crumbs AS donate
-    FROM users u LEFT JOIN tx_entries payer USING(uid) JOIN tx_hdrs t USING(xid)
-    WHERE payer.entryType=:ENTRY_PAYER AND u.crumbs>0 AND t.created BETWEEN $start AND $end
+    SELECT uid, SUM(amt2)*crumbs AS donate
+    FROM users u LEFT JOIN txs_noreverse t ON t.uid2=u.uid
+    WHERE crumbs>0 AND amt2>0 AND goods=:FOR_GOODS AND t.created BETWEEN $start AND $end
     GROUP BY uid
 X;
-  queueEach('crumbs', $sql); // no crumbs on rewards
+  queueEach('crumbs', $sql);
 
 	// figure amount to share with each official Common Good Community
   $sql = <<< X

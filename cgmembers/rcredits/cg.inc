@@ -1381,7 +1381,7 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   // Check a1
   u\EXPECT($a1->ok, 'main account inactive tx');
   
-  if (!$a1->confirmed and !$a1->isCanonical and !$a2->isCanonical) { // communities and CG can transact with newbs
+  if (!$a1->confirmed and !$a1->isCanonic and !$a2->isCanonic and $a1->id != CGID and $a2->id != CGID) { // communities and CG can transact with newbs
     if ($a1->community != $a2->community or $channel != TX_POS) { // first tx must be in-person at home
       if ($a1->helper != $a2->id) {
 ///          return $a1->cttyA->invites ? ['not confirmed', ray('youName inviterName', $a1->fullName, $a1->helperA->fullName), FALSE] : // invitations are required in this community. Say so.
@@ -1397,8 +1397,8 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
     return array("other no perm", ray('otherName what', $a2->agentA->fullName, $otherWhat), FALSE);
   }
 
-  if (!$a1->cttyUp and !$a1->isCanonical) return array('your community down', ray('contact', $a1->cAdminContact()), FALSE);
-  if (!$a2->cttyUp and !$a2->isCanonical) return array('other community down', [], FALSE);
+  if (!$a1->cttyUp and !$a1->isCanonic) return array('your community down', ray('contact', $a1->cAdminContact()), FALSE);
+  if (!$a2->cttyUp and !$a2->isCanonic) return array('other community down', [], FALSE);
   if ($a1->id == $a2->id) return array('no self-trading', [], FALSE);
   return FALSE;
 }

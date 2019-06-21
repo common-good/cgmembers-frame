@@ -58,7 +58,7 @@ function fixData(&$info, $direct = FALSE) {
   }
 
   foreach (just(T_ID_FLDS, $info) as $k => $v) {
-    if (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, 'ctty cgf')) { $info[$k] = t\uid($v) ?: 0; }
+    if (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, 'ctty cgf bank-in bank-out')) { $info[$k] = t\uid($v) ?: 0; }
   }
 	foreach (ray('from:payer,to:payee,fromAgent:payerAgent,toAgent:payeeAgent') as $k => $k2) if (isset($info[$k])) {
 		$info[$k2] = $info[$k];
@@ -594,7 +594,8 @@ function usdTransferCount($where = '1') {
 
 function usdTransfers($txs) {
   global $testOnly, $channel; $channel0 = $channel;
-  foreach ($txs as $tx) { // do not extract $tx, because setDft will fail after the first unless we unset vars
+
+  foreach ($txs as $tx) {
     if (array_key_exists('payee', $tx)) $tx['payee'] = t\uid($tx['payee']);
     if ($testOnly) {
       if (isset($tx['risks'])) $tx['risks'] = getRisks($tx['risks'], K_TX_RISKS);
@@ -603,7 +604,7 @@ function usdTransfers($txs) {
     }
     extract(u\exactly('amount completed', $tx, null));
 
-    $amount = u\arrayGet($tx, 'amount', null);
+    $amount = nn($tx['amount'], null);
     $err = u\badAmount($amount);
     if ($err) {
       t\output($err);
@@ -611,7 +612,7 @@ function usdTransfers($txs) {
     }
     $a = r\acct($tx['payee']);
     if (empty($a)) return t\output('Bad payee: ' . @$payee);
-    $txid = be\createUsdTransfer($a, $amount, u\arrayGet($tx, 'created', now()), u\arrayGet($tx, 'txid', null));
+    $txid = be\createUsdTransfer($a, $amount, u\arrayGet($tx, 'created', now()), nn($tx['txid'], null));
     if (!$txid) {
       t\output('failure creating usd xfr: ' . $txid);
       return FALSE;
@@ -620,8 +621,8 @@ function usdTransfers($txs) {
       $xde=$tx['deposit'];
       u\EXPECT(db\update('r_usd', just('txid deposit', $tx), 'txid'), 'failure depositing usd');
     }
-    if (!empty($tx['completed'])) {
-      u\EXPECT(be\completeUsdTx($a, $txid, $tx['amount'], u\arrayGet($tx, 'automatic', false), $completed),
+    if (nn($tx['completed']) and ($txid > 0 xor $tx['amount'] < 0)) {
+      u\EXPECT(be\completeUsdTx($a, $txid, $tx['amount'], nn($tx['automatic']), $completed),
                'failure completing usd transfer');
     }
   }
@@ -692,9 +693,10 @@ function fullQid($q) {
 function uid($id, $field = 'id') {
 //  u\EXPECT($id, 'empty id'); // otherwise site loops (?)
   if (is_numeric($id) or empty($id)) { return $id; }
-  if (in($id, 'community ctty')) { return r\serverUid(); }
-  if ($id == 'cgf') { return CGID; }
-//  return r\qo($id)->$field; FAILS
+  $map = ray('community ctty cgf bank-in bank-out', r\serverUid(), r\serverUid(), CGID, BANK_IN_ID, BANK_OUT_ID);
+  if ($res = nn($map[$id])) return $res;
+
+  //  return r\qo($id)->$field; FAILS
   return r\qo(t\fullQid2($id))->$field;
 }
 function agent($id) {return t\uid($id, 'agent');}
