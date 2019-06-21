@@ -40,7 +40,7 @@ Scenario: A newbie visits the registration page sent by a partner
   | Our Pub     |
   
   When member "?" visits page "signup/reid=.AAA&customer=Abc-12345"
-  Then we show "Open a Personal %PROJECT Account" with:
+  Then we show "Open a Personal Account" with:
   | Full name |
   | Legal name |
   | How long |

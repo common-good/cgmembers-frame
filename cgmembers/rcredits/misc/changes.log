@@ -1,3 +1,12 @@
+2019-06-20 feature/fix-usd-cancels
+. CG can always transact with people, even if they have not used their card yet.
+. fixed bug that failed to create an r_usd record when canceling a pending transaction
+. fixed bug that failed to create an r_usd record when admin reverses a bank transfer
+. no notices are now sent to canonic accounts
+. fixed links to promo site (now that we have a new promo site)
+. removed most of the overview at the top of the signup page (to make it easier to dive in)
+. corrected calculation of crumbs in rcron.inc
+
 2019-06-19 feature/food-percents
 . food fund donations now happen automatically at the time of the transaction
 . fixed bug in cashoutW

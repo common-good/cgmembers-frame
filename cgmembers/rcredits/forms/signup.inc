@@ -57,7 +57,7 @@ function formSignup($form, &$sta, $args = '') {
   u\setDft($personal, TRUE);
 
   $title = $personal 
-  ? (@$joint ? t('Create a Partner Account Joined to Yours') : t('Open a Personal %PROJECT Account'))
+  ? (@$joint ? t('Create a Partner Account<br><small>(joined to yours)</small>') : t('Open a Personal Account'))
   : t('Open a Company Account');
 
   if (!@$helper) { // no need to clarify if user clicked the "Open a Company Account" button
@@ -84,16 +84,18 @@ function formSignup($form, &$sta, $args = '') {
     // email inviter?
   }
 
-  $proxyInfo = w\lnk('help/proxies', t('more about proxies'), w\away());
-  $proxyInfo = "<small>[$proxyInfo]</small>";
-  $proxyInfo = w\btn('/help/proxies', t('more about proxies'), 'default', 'xs', w\away());
-  
   $subtext = @$joint 
-  ? t('From here on, "you" means the person for whom you are creating a new account, which will be joined to an existing account (creating a joint account).') 
+  ? t('<%b>NOTE:</b> From here on, "you" means the person for whom you are creating a new account, which will be joined to an existing account (creating a joint account).') 
   : t(<<<EOF
-<p>Opening a %PROJECT Account takes 10-15 minutes and is very much like opening an online bank account. For example, you will be asked for your social security number or tax ID.</p>
+<p>Opening a %PROJECT Account takes 10-15 minutes and is very much like opening an online bank account, plus a couple extra steps for security and democracy. After this page we will guide you through <%b>several short steps</b>.</p>
+<p>If you need help, please <%aHelp>ask</a> (our contact information is at the bottom of every page).</p>
+EOF
+  , '_b _aHelp', 'b class="loud"', w\emailtag(CGF_EMAIL, t('signup help')));
 
-<p>After this page we will guide you through <%bSteps>several short steps</b>. Here are some highlights:</p>
+/*
+For example, you will be asked for your social security number or tax ID.</p>
+
+<p>After this page we will guide you through <%b>several short steps</b>. Here are some highlights:</p>
 <ul>
   <li>You will be asked to <b>sign</b> the short but ESSENTIAL %PROJECT Agreement.</li>
   <li>You will need to upload a <b>photo</b> for your %PROJECT card. Your photo will be encrypted and will not be visible to other members (unless you show it to them).</li>
@@ -102,10 +104,7 @@ function formSignup($form, &$sta, $args = '') {
   <li>You will need your <b>bank</b> account information if you choose to connect it. Connecting a bank account makes it easier to transfer funds into and out of your %PROJECT account.</li>
 </ul>
 <p>If you need help, please <%aHelp>ask</a> (our contact information is at the bottom of every page).</p>
-EOF
-  , '_bSteps _aHelp _proxyInfo', 'b class="loud"', w\emailtag(CGF_EMAIL, t('signup help')), $proxyInfo);
-
-//Opening a %PROJECT Account is very much like opening an online bank account. After this long signup page there are <%b>some short steps</b> we will guide you through. If you need help, please don't hesitate to ask (<%a>click here to send us an email</a>).
+*/
 
   if ($personal) {
     $acctType = hidFld(CO_PERSONAL);

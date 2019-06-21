@@ -48,7 +48,6 @@ Scenario: A member submits a Pay With Common Good button payment with account ID
   When member "?" visits page "handle-invoice/nvid=1&toMe=1&code=TESTDOCODE"
   Then we say "error": "already paid"
   
-  Skip
 Scenario: A member signs in with username on the member site
   When member "?" confirms form "signin" with values:
   | name   | pass |*
@@ -118,9 +117,6 @@ Scenario: A member asks for a new password for an unknown account
   Then we say "error": "bad account id"
   
 Scenario: A member asks for a new password for a company
-  Given members:
-  | uid  | fullName | pass | email | flags |*
-  | .ZZC | Our Pub  | c1   | c@    | co    |
   When member "?" completes form "settings/password" with values:
   | name    |*
   | newzzc |

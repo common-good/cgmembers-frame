@@ -26,7 +26,7 @@ define('REAL', @$_SERVER['SystemRoot'] != 'C:\\Windows'); // used?
  * @param integer $ending: the ending unix time
  * @return an array of transactions each element of which is a single entry associated with the transaction.  Note that tx_hdrs data is in each of the entries.  If there's a failure it will return FALSE.
  */
-function getTxs($uids, $starting=null, $ending=null) {
+function getTxs($uids, $starting=NULL, $ending=NULL) {
   if (is_integer($uids)) { $uids = [ $uids ]; }
 
   $where = '';
@@ -74,8 +74,8 @@ EOF;
     $myTxAmount = 0;
     $byMe = FALSE;
     $banking = FALSE;
-    $tid = null;
-    $myAgentUid = null;
+    $tid = NULL;
+    $myAgentUid = NULL;
     $suppressRoundupEntries = TRUE;
     $newEntries = [];
     foreach ($entries as $entry) {
@@ -86,7 +86,7 @@ EOF;
         if ($entry['entryType'] == ENTRY_DONATION) $suppressRoundupEntries = FALSE;
       }
       if (in_array($entry['actorId'], $uids)) $byMe = TRUE;
-      if (in_array($entry['uid'], [CG_INCOMING_BANK_UID, CG_OUTGOING_BANK_UID])) $banking = TRUE;
+      if (in_array($entry['uid'], [BANK_IN_ID, BANK_OUT_ID])) $banking = TRUE;
     }
     $myBalance += $myTxAmount;
     foreach ($entries as $j => $entry) {
@@ -162,7 +162,7 @@ X;
  * @param integer $jid: the joint account holder (if any)
  * @return TRUE on success, FALSE otherwise.
  */
-function processTxs($processor, $uids, $starting=null, $ending=null, $descending=FALSE) {
+function processTxs($processor, $uids, $starting=NULL, $ending=NULL, $descending=FALSE) {
   $txs = getTxs($uids, $starting, $ending);
 
   if ($descending) { $txs = array_reverse($txs); }
@@ -184,7 +184,7 @@ function processTxs($processor, $uids, $starting=null, $ending=null, $descending
  * @param integer $uid: the user id of the account
  * @param integer $date: the unix time to consider
  */
-function balanceAsOf($uids, $date=null) {
+function balanceAsOf($uids, $date=NULL) {
   if (is_null($date)) return 0;
   if (is_integer($uids)) {
     $a = r\acct($uids);
@@ -234,7 +234,7 @@ function get1099b($payee, $year = NULL) {
              AND t.created BETWEEN $start AND $end
              AND payeeE.entryType=:ENTRY_PAYEE AND payerE.entryType=:ENTRY_PAYER
              AND payeeE.amount > 0 AND payerE.amount < 0
-             AND payerE.uid IN (:CG_INCOMING_BANK_UID, :CG_OUTGOING_BANK_UID)
+             AND payerE.uid IN (:BANK_IN_ID, :BANK_OUT_ID)
       ORDER BY created
 EOF;
 //      AND (goods=:FOR_GOODS OR type<>:TX_TRANSFER)
@@ -350,7 +350,7 @@ function reverse($xid) {
 
   // It seems OK to reverse it
   $newTx = clone $tx;  // this is a shallow copy, entries points to the same entries
-  $newTx->xid = null;
+  $newTx->xid = NULL;
   $newTx->reversesXid = $xid;
   $newTx->entries = [];
   $newTx->created = now();
@@ -363,8 +363,8 @@ function reverse($xid) {
         return r\txRet('tx create err', $entry);
       }
     }
-    $newEntry->id = null;
-    $newEntry->xid = null;  // new entry belongs to reversing transaction
+    $newEntry->id = NULL;
+    $newEntry->xid = NULL;  // new entry belongs to reversing transaction
     $newEntry->amount = 0-$oldEntry->amount;
     $newEntry->acctTid = r\acct($newEntry->uid)->nextTid();
     $newTx->entries[] = $newEntry;
@@ -375,16 +375,17 @@ function reverse($xid) {
     return r\txRet('tx save err', $newTx);
   }
 
-  $DBTX = null;
+  $DBTX = NULL;
 
-  $message = 'report undo|report tx';
+  $message = 'report undo' . ($tx->other->isCanonic ? '' : '|report tx');
   $did = ($tx->actorEntry->amount > 0) ? ($tx->goods==FOR_GOODS ? 'refunded' : 'credited') : 're-charged';
+  $info = ['ok' => 1, 'txid' => $xid, 'created' => $newTx->created, // txid is xid in transaction reports
+    'balance' => $mya->can(B_SECRET) ? '*0' : $mya->balance,
+    'success' => true, 'xid' => $xid, 'created0' => $newTx->created, 'newTx' => $newTx,
+    'solution' => 'reversed', 'did' => $did, 'otherName' => $tx->other->fullName,
+    'amount' => u\fmtAmt(abs($newTx->otherEntry->amount)), 'why'  =>  $tx->otherEntry->description];
   
-  return r\txRet($message, ['ok'=>1, 'txid'=>$xid, 'created'=>$newTx->created,
-                            'balance'=>$mya->can(B_SECRET) ? '*0' : $mya->balance,
-                            'success'=>true, 'xid'=>$xid, 'created0'=>$newTx->created, 'newTx'=>$newTx,
-                            'solution'=>'reversed', 'did'=>$did, 'otherName'=>$tx->other->fullName,
-                            'amount'=>u\fmtAmt(abs($newTx->otherEntry->amount)), 'why' => $tx->otherEntry->description]);
+  return r\txRet($message, $info);
 }
 
 /**
@@ -667,6 +668,8 @@ function sendNotifications($type, $tx, $shortfall) {
   /* global $mya; */
   /* $mya = r\acct(); */
   /* $byMe = $mya->isMe($tx->actorId); */
+  $other = $tx->other;
+  if ($other->id > 0 and $other->id <= CANONIC_ACCTS) return ['', []]; // no notifications to canonic accounts
   $toMe = $tx->actorAmount > 0;
 
   switch ($type) {
@@ -725,7 +728,6 @@ function sendNotifications($type, $tx, $shortfall) {
   }
   if ($notice == 'charge' and $tx->goods == FOR_USD) $notice = 'cash out';
 
-  $other = $tx->other;
   $args = $tx->reportArgs($tx->actor, TRUE, $shortfall);
   if ($notice == 'new payment' and $other->co) { // not "new charge" (the most common); payment at payer's initiative
     $notice = 'new payment linked';
@@ -735,16 +737,6 @@ function sendNotifications($type, $tx, $shortfall) {
   $msg = 'report tx';
   return r\txRet($msg, $tx->reportArgs($tx->actor, TRUE, $shortfall) + compact(ray('msg did')));
 }
-
-/**
- * Is the given account id a bank account?
- * @param int $uid;
- * @return boolean
- */
-function isBankUid($uid) {
-  return $uid == CG_INCOMING_BANK_UID or $uid == CG_OUTGOING_BANK_UID;
-}
-    
 
 /**
  * Generate transaction entries for a coupon, and update the coupated table as appropriate.
@@ -1198,7 +1190,7 @@ function combineUsdTx($a, $amount, $completed) {
 
 
 /**
- * Mark an incoming USD transfer complete and report.
+ * Mark a USD transfer complete, create a corresponding transaction, and report.
  * @param acct $a: the account
  * @param int $txid: the transfer record ID (if empty, no need to mark it complete)
  * @param numeric $amount: transfer amount from bank to CG (positive)
@@ -1206,7 +1198,7 @@ function combineUsdTx($a, $amount, $completed) {
  * @param datetime $completed: when the transaction was completed, defaults to the current time
  * @return bool <success>
  */
-function completeUsdTx($a, $txid, $amount, $automatic, $completed = null) {
+function completeUsdTx($a, $txid, $amount, $automatic, $completed = NULL) {
 ///     debug("completeUsdTx($a->id, $txid, $amount, $automatic, $completed)");
   u\EXPECT([$a, $txid, $automatic], 'acct int|string|empty bool');
   if (empty($completed)) $completed = now();
@@ -1218,28 +1210,20 @@ function completeUsdTx($a, $txid, $amount, $automatic, $completed = null) {
   $DBTX = \db_transaction();
 
   if ($txid) { // unless transfer is already marked complete
-    $values = db\get('amount as realAmt, payee AS payeeId, risk, risks, channel, xid', 'r_usd', 'txid=:txid', compact('txid'));
-    extract(u\exactly('realAmt payeeId risk risks channel xid', array_filter($values), [0, 0, null, 0, TX_SYS, null]));
+    $values = db\get('amount as realAmt, payee AS uid, risk, risks, channel, xid', 'r_usd', 'txid=:txid', compact('txid'));
+    extract(u\exactly('realAmt uid risk risks channel xid', array_filter($values), [0, 0, NULL, 0, TX_SYS, NULL]));
     if ($amount != $realAmt) {
       r\tellAdmin(t('bad completeUsdTx amt'), compact(ray('txid amount realAmt automatic')));
       return FALSE;  // ??
     }
     if (!empty($xid)) return TRUE;  // already completed
 
-    $bankId =  ($amount > 0) ? CG_INCOMING_BANK_UID : CG_OUTGOING_BANK_UID;
-/*
-    $tx = new r\Tx(['goods' => FOR_USD, 'actorId' => $payeeId, 'actorAgentId' => $payeeId, 'flags' => 0, 'channel' => $channel,
-                    'risk' => $risk, 'risks' => $risks, 'created' => $completed]);
-                    */
     $tx = new r\Tx(ray('goods actorId actorAgentId flags channel risk risks created', 
-      FOR_USD, $payeeId, $payeeId, 0, $channel, $risk, $risks, $completed));
-/*
-    $tx->addEntry(new r\TxEntry(['entryType' => ENTRY_PAYER, 'amount' => 0-$amount, 'uid' => $bankId, 'agentUid' => $bankId,
-                                 'description' => ($amount > 0) ? t('from bank') : t('to bank')]));
-    $tx->addEntry(new r\TxEntry(['entryType' => ENTRY_PAYEE, 'amount' => $amount, 'uid' => $payeeId, 'agentUid' => $payeeId,
-                                 'description' => $amount > 0 ? t('to bank') : t('from bank')]));
-                                 */
-    txEntryPair($txes, $amount, [$bankId, $payeeId], $amount > 0 ? t('from bank') : t('to bank'), [ENTRY_PAYER, ENTRY_PAYEE]);
+      FOR_USD, $uid, $uid, 0, $channel, $risk, $risks, $completed));
+
+    $bankId =  ($amount > 0) ? BANK_IN_ID : BANK_OUT_ID;
+    
+    txEntryPair($txes, $amount, [$bankId, $uid], $amount > 0 ? t('from bank') : t('to bank'), [ENTRY_PAYER, ENTRY_PAYEE]);
     $tx->addEntries($txes);
     $xid = $tx->insert();
     if (!$xid) {
@@ -1248,7 +1232,7 @@ function completeUsdTx($a, $txid, $amount, $automatic, $completed = null) {
       return FALSE;
     }
     
-    if (!db\update('r_usd', ['txid'=>$txid, 'xid'=>$xid, 'completed'=>$completed], 'txid')) {
+    if (!db\update('r_usd', compact(ray('txid xid completed')), 'txid')) {
       r\tellAdmin(t('usd update failed'), compact($txid, $amount, $automatic));
       $DBTX.rollback();
       return FALSE;
@@ -1256,10 +1240,12 @@ function completeUsdTx($a, $txid, $amount, $automatic, $completed = null) {
   }
     
   unset($DBTX);
-    
-  $transfer = $automatic ? t('automatic transfer') : t('transfer');
-  $amount = u\fmtAmt($amount);
-  r\notify($a->id, 'transfer complete', compact('transfer', 'amount'));
+  
+  if ($amount > 0) {  
+    $transfer = $automatic ? t('automatic transfer') : t('transfer');
+    $amount = u\fmtAmt($amount);
+    r\notify($a->id, 'transfer-in complete', compact('transfer', 'amount'));
+  }
   return TRUE;
 }
                            
@@ -1394,3 +1380,4 @@ function foreignKeyCheck($prefix, $ref, $field, $table, $keyFld, $keyVal) {
 function sanityError($s) {
   say("Sanity error: " . $s, 'err');
 }
+

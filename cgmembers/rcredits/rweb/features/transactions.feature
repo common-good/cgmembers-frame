@@ -5,10 +5,10 @@ SO I can see what happened, accept or refuse offers, adjust descriptions, and co
 
 Setup:
   Given members:
-  | uid  | fullName   | floor | acctType    | flags                | created    |*
-  | .ZZA | Abe One    | -100  | personal    | ok,roundup,confirmed | %today-15m |
-  | .ZZB | Bea Two    | -200  | personal    | ok,co                | %today-15m |
-  | .ZZC | Corner Pub | -300  | corporation | ok,co                | %today-15m |
+  | uid  | fullName   | floor | acctType    | flags                | created    | risks   |*
+  | .ZZA | Abe One    | -100  | personal    | ok,roundup,confirmed | %today-15m | hasBank |
+  | .ZZB | Bea Two    | -200  | personal    | ok,co                | %today-15m |         |
+  | .ZZC | Corner Pub | -300  | corporation | ok,co                | %today-15m |         |
   And relations:
   | main | agent | permission |*
   | .ZZA | .ZZB  | buy        |
@@ -16,14 +16,15 @@ Setup:
   | .ZZC | .ZZB  | buy        |
   | .ZZC | .ZZA  | sell       |
   And usd transfers:
-  | payee | amount | created    | completed  |*
-  |  .ZZA |   1000 | %today-13m | %today-13m |
-  |  .ZZB |   2000 | %today-13m | %today-13m |
-  |  .ZZC |   3000 | %today-13m | %today-13m |
-  |  .ZZA |     11 | %today-3d  |         0  |
-  |  .ZZA |    -22 | %today-5d  | %today-5d  |
-  |  .ZZA |    -33 | %today-5d  | %today-5d  |
-  Then balances:
+  | txid | payee | amount | created    | completed  | deposit    |*
+  |    1 |  .ZZA |   1000 | %today-13m | %today-13m | %today-13m |
+  |    2 |  .ZZB |   2000 | %today-13m | %today-13m | %today-13m |
+  |    3 |  .ZZC |   3000 | %today-13m | %today-13m | %today-13m |
+  |    4 |  .ZZA |     11 | %today-3d  |         0  | %today-13m |
+  |    5 |  .ZZA |    -22 | %today-5d  | %today-5d  |          0 |
+  |    6 |  .ZZA |    -33 | %today-5d  | %today-5d  |          0 |
+  # The usd transfers create same-numbered transactions
+  And balances:
   | uid  | balance |*
   | .ZZA |     945 |
   | .ZZB |    2000 |
@@ -122,46 +123,13 @@ Scenario: A member looks at transactions with roundups
   |  2  | %mdy-5d | --                | to bank          |  -22.00 | 1,628.00 |    |
   | 29  | %mdy-6d | Bea Two           | cash V           | -100.00 | 1,650.00 |    |
   | 28  | %mdy-1w | Corner Pub        | this Q           | -120.00 | 1,750.00 |    |
-  
-#Scenario: Transactions with other states show up properly
-#  Given transactions:
-#  | xid   | created   | state    | amount | from | to   | purpose  | taking |*
-#  | .AACA | %today-5d | denied   |    100 | .ZZC | .ZZA | labor CA | 0      |
-#  | .AACB | %today-5d | denied   |      5 | ctty | .ZZC | 0      |
-#  | .AACC | %today-5d | denied   |     10 | ctty | .ZZA | 0      |
-#  | .AACD | %today-5d | denied   |      5 | .ZZA | .ZZC | cash CE  | 1      |
-#  | .AACE | %today-5d | disputed |     80 | .ZZA | .ZZC | this CF  | 1      |
-#  | .AACF | %today-5d | disputed |      4 | ctty | .ZZA | 0      |
-#  | .AACG | %today-5d | disputed |      8 | ctty | .ZZC | 0      |
-#  | .AACH | %today-5d | deleted  |    200 | .ZZA | .ZZC | never    | 1      |
-#  | .AACK | %today-5d | disputed |    100 | .ZZC | .ZZA | cash CL  | 1      |
-#  Then balances:
-#  | uid  |    r |*
-#  | .ZZA | 1942 |
-#  | .ZZB | 2554 |
-#  | .ZZC | 2320 |
-#  When member ".ZZA" visits page "history/transactions/period=5"
-#  Then we show "Transaction History" with:
-#  |~tid | Date   | Name       | From you | To you | Status   | ~  | Purpose    | Reward/Fee |
-#  | 15  | %dm-5d | Corner Pub | --       | 100.00 | disputed | X  | cash CL    | --     |
-#  | 13  | %dm-5d | Corner Pub | 80.00    | --     | disputed | OK | this CF    | 4.00   |
-#  | 11  | %dm-5d | Corner Pub | --       | 100.00 | denied   | X  | labor CA   | 10.00  |
-#  | b4  | %dm-5d |            |  22.00   | --     | pending  |    | to bank    | --     |
-#  | b3  | %dm-5d |            |  33.00   | --     | pending  |    | to bank    | --     |
-#  # 12 is missing because ZZA denied it
-#  And without:
-#  | cash CE |
-#  | never   |
-#  | rebate  |
-#  | bonus   |
-#  When member ".ZZC" visits page "history/transactions/period=5"
-#  Then we show "Transaction History" with:
-#  |~tid | Date   | Name       | From you | To you | Status   | ~  | Purpose    | Reward/Fee |
-#  | 10  | %dm-5d | Abe One    | 100.00   | --     | disputed | OK | cash CL    | --     |
-#  | 8   | %dm-5d | Abe One    | --       | 80.00  | disputed | X  | this CF    | 8.00   |
-#  | 7   | %dm-5d | Abe One    | --       | 5.00   | denied   | X  | cash CE    | --     |
-#  And without:
-#  | labor CA|
-#  | never   |
-#  | rebate  |
-#  | bonus   |
+
+Scenario: Admin reverses a bank transfer
+  When member "A:1" visits page "history/transactions/period=5"
+  And member "A:1" clicks "X" on transaction 1
+  Then usd transfers:
+  | txid | payee | amount | created  | completed  | deposit | xid |*
+  |   -1 |  .ZZA |  -1000 | %now-13m | %now-13m   | %now    |  20 |
+  And these "txs":
+  | xid | created | amt2  | uid1    | uid2 | description |*
+  |  20 | %now    | -1000 | bank-in | .ZZA | to bank     |

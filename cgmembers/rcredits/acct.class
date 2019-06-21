@@ -175,7 +175,7 @@ class Acct {
                                                                        $a->getPendingDeposits() - $a->getApprovedInvoices()*/;
     case 'lastTx':
       return $a->lastTx();
-    case 'isCanonical':
+    case 'isCanonic':
       return $a->id > 0 and $a->id < CANONIC_ACCTS;
     default:
       break;  // fall through
@@ -794,7 +794,7 @@ class Acct {
     global $channel;
     $a = $this;
     // don't allow companies to spend rewards unless they have ATM permission and are exchanging r for USD
-    if ($a->isCanonical) return 0;
+    if ($a->isCanonic) return 0;
     if ($a->co and COMPANY_FREEZE and $a == $actor and $a->coCan(CO_ATM) and $goods == FOR_USD) { $goods = FOR_GOODS; }
     $avail = $a->avail($goods);
     if ($avail >= $need) return 0; // plenty without drawing from other accounts
@@ -1310,15 +1310,14 @@ EOF;
    * Transfer funds to or from a connected bank account.
    * @param numeric $amount0: the amount to transfer FROM or (if negative) TO the bank
    * @param string $why: purpose of transfer
-   *                     (RETURNED) message about transfer
    * @param assoc $tx: forced field values, if any (when reversing an unsuccessful request)
+   * @param string $newwhy: (RETURNED) actual message to tell account-owner about the transfer
    * @return the transaction number (FALSE if failure)
    */
-  public function bank($amount, &$why = '', $tx = []) {
+  public function bank($amount, $why = '', $tx = [], &$newwhy = '') {
 ///    debug("->bank($amount, $why, " . print_r($tx, true) . ")");
     global $channel;
     $amount0 = $amount; // remember original amount requested
-		
     $a = $this;
     if (!$a->hasBank) return FALSE;
     $payee = $a->id;
@@ -1327,26 +1326,21 @@ EOF;
     if (!$okNow) $a->verifyBank();
     u\setDft($created, $okNow ? now() : now() + DAY_SECS);
     u\setDft($completed, ($amount < 0 or $a->bankOk) ? $created : 0);
-
-    list($txid, $amount, $completed) = be\combineUsdTx($a, $amount, $completed);
+    if (!$tx) list($txid, $amount, $completed) = be\combineUsdTx($a, $amount, $completed);
     if (!$txid) { // no existing tx, so create one
       $txid = be\createUsdTransfer($a, $amount, $created);
       u\EXPECT((bool) $txid, 'saving usd record');
     }
 
-    if ($amount0 < 0) { // outgoing - tell staff to transfer the funds using ACH or check
-      if ($txid > 0) r\tellAdmin(t('outgoing bank transfer'), ['amount' => -$amount0]);
-    }
-    if (!empty($completed)) {
-      be\completeUsdTx($a, $txid, $amount0, TRUE, $completed);
-    }
+    if ($amount0 < 0 and $txid > 0) r\tellAdmin(t('outgoing bank transfer'), ['amount' => -$amount0]);
+    if (nn($completed)) be\completeUsdTx($a, $txid, $amount0, TRUE, $completed);
 
     $msg = 'banked';
     if ($amount0 > 0) $msg .= '|bank tx number' . ($completed ? '|available now' : '');
     $action = $amount0 < 0 ? t('deposit to') : t('draw from');
     $msg = tr($msg, ray('action amount checkNum', $action, u\fmtAmt(abs(@$amount0)), $txid));
-    if (empty($why)) $why = '';
-    r\notify($a->id, $why = tr($msg, compact('why')));
+    if (empty($why)) $newwhy = $why = '';
+    r\notify($a->id, $newwhy = tr($msg, compact('why')));
 
     return $txid;
   }
@@ -1374,7 +1368,7 @@ EOF;
     if ($a->waitingFromBank($combinable) > 0) return; // no cashout if waiting to bring some in
     $cashout = 10 * floor(($a->balance - -$a->floor * 6 / 26) / 10);
     if ($cashout < R_ACHMIN) return;
-    if (!$a->bank(-$cashout, $zot)) return;
+    if (!$a->bank(-$cashout)) return;
   }
   
   /**
@@ -1676,7 +1670,7 @@ X;
   public function can($bit = B_READ) {
     $a = $this;
     
-    if ($a->isCanonical and in($bit, B_MEMBER, B_CONFIRMED, B_OK, B_NONUDGE, B_DEBT)) return true;
+    if ($a->isCanonic and in($bit, B_MEMBER, B_CONFIRMED, B_OK, B_NONUDGE, B_DEBT)) return true;
 
     if ($bit <= B_MAX) { // ordinary bits
       $can = (bool) ($a->flags & (1 << $bit)); // these are easy. be efficient.
@@ -1873,7 +1867,7 @@ X;
 
     if ($a->ok) {
       list ($msg, $args) = be\transfer('payment', $a, $payee, $amount, $desc, $goods, $data, $recursId);
-      if (u\arrayGet($args, 'success', FALSE)) return TRUE;
+      if (nn($args['success'])) return TRUE;
     }
     $data['status'] = TX_APPROVED;
     list ($msg, $args) = be\invoice($payee, $this, $amount, $desc, $goods, $data, $recursId);
@@ -1905,6 +1899,8 @@ X;
   public function api($etc = '') {return $this->website ? tr(CO_API_URL, 'website etc', $this->website, $etc) : '';}
   public function lastTx($where = 1, $subs = []) { return r\Tx::lastTx([$this->id, $this->jid], $where, $subs); }
   public function lastTxDesc() {return ($tx = $this->lastTx) ? t(' (Last tx: %dt)', 'dt', u\fmtDate($tx->created, TRUE)) : '';}
+  public function isBank() {return ($this->id == BANK_IN_ID or $this->id == BANK_OUT_ID);}
+
   public function firstCo() {return db\get('fullName', 'r_relations r INNER JOIN users u ON r.main=u.uid', 'r.permission>0 AND r.other=:id AND u.:IS_CO ORDER BY r.created LIMIT 1', ['id' => $this->id]);}
   public function adminables() {
     $res = ray(B_ADMINABLE . ($this->admin ? ' admin2' : '') . ($this->superAdmin ? ' admin' : ''));

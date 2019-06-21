@@ -20,9 +20,15 @@ function formGet($form, &$sta, $args = '') {
   $jid = $mya->jid ?: 0;
   extract(just('cancel', $args));
   if ($txid = @$cancel) {
-    db\del('r_usd', 'txid', $txid);
-    say('transfer canceled', compact('txid'));
-    r\tellAdmin("canceled exchange #$txid");
+    if ($xid = db\get('xid', 'r_usd', 'txid=:txid AND payee=:myid and deposit=0', compact('txid', 'myid'))) {
+      $DBTX = db_transaction();
+      be\reverse($xid); // create an offsetting tx
+      db\del('r_usd', 'txid', $txid); // and cancel the transfer request
+      unset($DBTX);
+      say('transfer canceled', compact('txid'));
+      r\tellAdmin("canceled exchange #$txid");
+      return w\go('/get'); // don't leave the cancelation on the URL (submitting like that cancels the future)
+    } else say('That transfer does not exist.');
   }
   
   $title = t('Transfer Funds');
@@ -121,8 +127,7 @@ function formGet_submit($form, &$sta) {
   //  $us = new r\usd($mya = r\acct());
   extract(just('amount', $sta['input']));
 
-	$why = t('at your request');
-  $mya->bank(op($sta) == 'get' ? $amount : -$amount, $why);
+  $mya->bank(op($sta) == 'get' ? $amount : -$amount, t('at your request'), [], $why);
   say($why); // expanded message
 //  r\tellAdmin('banked' . $extra, $subs);
 }

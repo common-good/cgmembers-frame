@@ -44,7 +44,7 @@ function formConnect($form, &$sta, $args = '') {
     $fields = 'title bankAccount cashout autopay autoboxes refills targetFields';
   } else { // no connected account yet
 //    $doConnect = (int) !@$mya->stepsDone['connect'];
-    $securityLink = r\promoLink('security.html');
+    $securityLink = r\promoLink('about-us/privacy-and-security');
     $reassurance = $mya->minimum ? '' : t('<p><b>NOTE:</b> Funds will be taken from your bank account ONLY when you explicitly request a transfer or when you choose automatic refills.</p>');
     $subtext = t('<p>Choose how you want to get money in and out of your %PROJECT Account. Most people find it convenient to connect a checking account. Connecting lets you trade US Dollars for %RCREDITS easily. Otherwise you can trade cash for %RCREDITS at a participating business.</p><p>Complete this form to connect your checking account and authorize funds to be taken from your checking account in exchange for any %RCREDITS you request. Funds may be transferred either by Remotely-Created Check (RCC) or by Automated Clearing House (ACH) direct debit. See our <%a>Privacy and Security Policy</a> for details on how your information is protected.</p>', '_a', atag($securityLink)) . $reassurance . t('<p>Do you want to connect your checking account at this time?</p>');
     $connect = boolFld(t('Connect:'), '', 0);

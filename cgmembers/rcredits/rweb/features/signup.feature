@@ -14,7 +14,7 @@ Scenario: A newbie visits the registration page with expired invite
   Given invitation to email "a@" from member ".ZZZ" is "c0D3"
   And invitation "c0D3" was sent on "%today-5w"
   When member "?" visits page "signup/code=c0D3"
-  Then we show "Open a Personal %PROJECT Account"
+  Then we show "Open a Personal Account"
 # lateness no longer makes a big difference
 #  And we say "error": "expired invite" with subs:
 #  | a | inviterName |*
@@ -26,7 +26,7 @@ Scenario: A newbie visits the registration page with a used invite
   | fullName | email | phone     | country | zip | federalId   | dob      | acctType     | address | city       | state | postalAddr                | years | months | owns | helper |*
   | Abe One  | a@ | 413-253-0000 | US      | 01001      | 111-22-3333 | 1/2/1990 | %CO_PERSONAL  | 1 A St. | Agawam | MA    | 1 A St., Agawam, MA 01001 |     1 |    6 |    1 | .ZZZ   |
   When member "?" visits page "signup/code=c0D3"
-  Then we show "Open a Personal %PROJECT Account"
+  Then we show "Open a Personal Account"
 #  And we say "error": "used invite"
 
 Scenario: A newbie registers in Western Massachusetts

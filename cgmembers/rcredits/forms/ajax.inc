@@ -44,13 +44,12 @@ function ajax() {
     } else return ajaxErr(t('nope'));
   } elseif ($op == 'presignup') {
     $info = just('preid fullName legalName email phone', $data);
-    flog($info);
     db\update('signup', $info, 'preid');
   } elseif ($op == 'dpOffset') {
     if (!$mya->superAdmin) return ajaxErr(t('You do not have permission.'));
     extract(just('amount', $data));
     if (!is_numeric($amount) or $amount <= 0) return ajaxErr('bad dollar pool offset transfer amount: ' . $amount);
-    r\acct(1)->bank(-amount, $msg);
+    r\acct(1)->bank(-amount, '', [], $why);
     ajaxMsg($msg);
   } elseif ($op == 'who') {
     extract(just('who question amount', $data));

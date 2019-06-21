@@ -104,17 +104,10 @@ Skip no inflation at present
 #  | 17 | %today | inflation |      0 | %(round(%R_INFLATION_RATE *8.6, 2)) | ctty | .ZZC | %IAOY credit reserve  |
 Resume
 
-# Skip roundups - they're handled as they occur now
-# # roundups (creation date is last second of previous month)
-#   And transactions:
-#   | xid | created | amount | from | to  | purpose       | flags         |*
-#   | 12  |       ? |   1.00 | .ZZA | cgf | roundups desc | gift,roundups |
-# Resume
-
 # crumbs (creation date is last second of previous month)
   Then transactions: 
   | xid | created | amount | from | to             | purpose                                             | flags       |*
-  | 12  |       ? |   4.00 | .ZZC | %CG_CRUMBS_UID | crumbs donations: percentage of past month receipts | gift,crumbs |
+  | 12  |       ? |   2.40 | .ZZC | %CG_CRUMBS_UID | crumbs donations: percentage of past month receipts | gift,crumbs |
 
 # alerting admin about paper statements
   And we tell admin "Send paper statements" with subs:

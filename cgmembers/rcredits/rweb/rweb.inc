@@ -530,7 +530,7 @@ copyright &copy; %year <%aSite>%PROJECT<sup> &reg;</sup></a><span id="footer-det
 IP: %ip</span>
 <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>&nbsp;
 EOF
-  , '_aSite _aAgree _aSecurity _aHelp year _aEmail ip', atag(r\promoLink('about.html')), atag('/community/agreement'), atag(r\promoLink('security.html')), atag("/help/$helpType"), $year, u\emailTag(CGF_EMAIL), $_SERVER['REMOTE_ADDR']);
+  , '_aSite _aAgree _aSecurity _aHelp year _aEmail ip', atag(r\promoLink('about-us')), atag('/community/agreement'), atag(r\promoLink('about-us/privacy-and-security')), atag("/help/$helpType"), $year, u\emailTag(CGF_EMAIL), $_SERVER['REMOTE_ADDR']);
 //    <%aCttys>Communities</a> |
 
   $footerText = item($markup); // unique name for this page

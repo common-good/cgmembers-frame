@@ -181,23 +181,28 @@ function formTxs_submit($form, &$sta) {
 /* } */
 
 function handleTx($do, $xid, &$sta, $args) {
+  global $mya;
   $url = str_replace('&do=', '&did=', "history/transactions/$args"); // don't do it again
 
-  if (substr($xid, 0, 1) == 'b') { // reversing bank transfer
-    global $mya;
-    if (!$mya->superAdmin) return FALSE; // only top admin can do this currently
+  if ($mya->superAdmin and $tx = db\get('*', 'r_usd', compact('xid'))) { // superAdmin reversing bank transfer
     u\EXPECT($do == 'no', 'trying to edit bank transfer');
-		$txid = substr($xid, 1);
-    $tx = db\get('*', 'r_usd', 'txid=:txid', compact('txid'));
-    foreach (just('txid amount tid', $tx) as $k => $v) $tx[$k] = -$v; // reverse transfer
-    extract($tx);
-    if (!$deposit) { // transfer request has not been processed yet
-		  u\EXPECT($completed, 'incomplete bank tx should not be on list');
-      $deposit = $tx['deposit'] = now(); // mark both done
-      db\update('r_usd', compact(ray('txid deposit')), 'txid');
+    foreach (just('txid amount tid', $tx) as $k => $v) $tx[$k] = -$v; // reverse transfer info
+    extract(just('txid amount deposit completed', $tx));
+    u\EXPECT($completed, 'incomplete bank tx should not be on list: ' . $xid);
+
+    $DBTX = db_transaction();
+    list ($msg, $info) = be\reverse($xid); // create an offsetting tx
+    if ($deposit) {
+      $tx['deposit'] = now();
+      $tx['xid'] = $info['xid'];
+      db\insert('r_usd', $tx, 'txid'); // bypass acct::bank() -- nothing fancy wanted
+    } else {
+      u\EXPECT(-$amount < 0, 'undeposited incoming transfers should not appear in txs list: ' . (-$txid));
+      db\del('r_usd', 'txid', -$txid); // transfer request has not been processed yet, so delete it (unnegate $txid)
     }
-    $mya->bank($amount, t('to reverse failed transfer #%txid', compact('txid')), $tx);
-    w\go($url, t('Reversed %amount bank transfer for %who.', 'amount who', u\fmtAmt(-$amount), $mya->fullName));
+    unset($DBTX);
+    
+    return w\go($url, t('Reversed %amount bank transfer for %who.', 'amount who', u\fmtAmt(-$amount), $mya->fullName));
   }
   
   if (!$xid = (int) @$xid) return FALSE;
