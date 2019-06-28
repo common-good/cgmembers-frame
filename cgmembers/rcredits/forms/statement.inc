@@ -15,17 +15,19 @@ include_once __DIR__ . '/../statement.class';
  * @param string $period: mmmyyyy (month) or CYyyyy (calendar year) or FYyyyy (fiscal year)
  */
 function statement($period = '') {
+  global $mya;
   $purposeLenMax = 60; // maximum number of characters in purpose field, not including added "..."
 
-  if (!$mya = r\acct()) return w\go('', t('You must first sign in.'), 'ERR');
+  if (!$mya) return w\go('', t('You must first sign in.'), 'ERR');
 
   list ($start, $end, $period) = statementMonth($period, $mya->fyEnd ?: '12/31');
 
-  $uids = ($mya->jid != 0) ? [ $mya->id, $mya->jid ] : [ $mya->id ];
+  $uids = $mya->uids;
   /* list ($header, $classes, $rows, $tot) = x\getTxRows($start, $end, ray('descending', FALSE)); // get the transaction data */
-  $startBals = be\creditInfo($uids, $start);
   $endBals = be\creditInfo($uids, $end);
+  $startBals = be\creditInfo($uids, $start);
   $roundups = be\roundupDonations($uids, $start, $end);
+  
   /* extract(just('frombank fromyou toyou', $tot)); */
   $bal0 = $startBals['balance']; // balance BEFORE start of this period
   $bal9 = $endBals['balance'];
@@ -39,7 +41,7 @@ function statement($period = '') {
   $tobank = $endBals['toBank'] - $startBals['toBank'];
   $bank = $frombank - $tobank;
 
-  $fromyou -= $tobank;
+//  $fromyou -= $tobank;
   /* $toyou -= $frombank; */
   
   $committed = $mya->committed;
@@ -169,7 +171,7 @@ function statement($period = '') {
  *   end is one second beyond the end of the current period, so use should be exclusive not inclusive
  */
 function statementMonth($period, $fiscalYearEnd = '12/31') {
-  ///  debug("statementMonth($period, $fiscalYearEnd)");
+///    debug("statementMonth($period, $fiscalYearEnd)");
   $type = substr($period, 0, 2); // CY, FY, Q<n>, or other
 
   $year = substr($period, 2);

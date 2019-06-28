@@ -16,9 +16,6 @@ Setup:
 	And relations:
 	| main | other | permission |*
 	| .ZZC | .ZZB  |     manage |
-  And transactions:
-  | xid | created    | amount | from | to   | purpose |*
-  | 4   | %today-10d |    100 | ctty | .ZZB | grant   |
   And usd transfers:
   | txid | payee | amount | created   | completed | deposit   |*
   | 5001 |  .ZZA |     99 | %today-7d | %today-5d | %today-1d |
@@ -28,7 +25,10 @@ Setup:
   | 5005 |  .ZZC |     30 | %today-2d | %today-2d | %today-1d |
   | 5006 |  .ZZD |    140 | %today-2d | %today-2d | %today-1d |
   # usd transfer creation also creates corresponding transactions, if the transfer is complete
-  Then count "txs" is 6
+  And transactions:
+  | xid | created    | amount | from | to   | purpose |*
+  | 7   | %today-10d |    100 | ctty | .ZZB | grant   |
+  Then count "txs" is 7
   And balances:
   | uid  | balance |*
   | .ZZA |      86 |
@@ -41,8 +41,8 @@ Scenario: a member moves credit to the bank
   | op  | amount |*
   | put |     86 |
   Then usd transfers:
-  | payee | amount | created   | completed | channel |*
-  |  .ZZA |    -86 | %today    | %today    | %TX_WEB |
+  | payee | amount | created   | completed | channel | xid |*
+  |  .ZZA |    -86 | %today    | %today    | %TX_WEB |   8 |
   And we say "status": "banked" with subs:
   | action     | amount | why             |*
   | deposit to | $86    | at your request |
@@ -55,22 +55,26 @@ Scenario: a member draws credit from the bank with zero floor
   | op  | amount    |*
   | get | %R_ACHMIN |
   Then usd transfers:
-  | txid | payee | amount    | created   | completed | channel |*
-  | 5007 |  .ZZB | %R_ACHMIN | %tomorrow |         0 | %TX_WEB |
+  | txid | payee | amount    | created | completed | channel | xid | deposit |*
+  | 5007 |  .ZZB |         0 | %now    |         0 |       0 |   0 |       0 |
+  | 5008 |  .ZZB | %R_ACHMIN | %now+3d |         0 | %TX_WEB |   8 |       0 |
+  And transactions:
+  | xid | created | amount | from | to   | purpose   | taking |*
+  |   8 | %todayd |      0 | 256  | .ZZB | from bank |      1 |
   And balances:
   | uid  | balance |*
   | .ZZA |      86 |
   And we say "status": "banked|bank tx number" with subs:
   | action     | amount     | checkNum | why             |*
-  | draw from  | $%R_ACHMIN |     5007 | at your request |
+  | draw from  | $%R_ACHMIN |     5008 | at your request |
 
 Scenario: a member draws credit from the bank with adequate floor
   When member "C:B" completes form "get" with values:
   | op  | amount |*
   | get |     10 |
   Then usd transfers:
-  | txid | payee | amount | created | completed | channel |*
-  | 5007 |  .ZZC |     10 | %today  |    %today | %TX_WEB |
+  | txid | payee | amount | created | completed | channel | xid |*
+  | 5007 |  .ZZC |     10 | %today  |    %today | %TX_WEB |   8 |
   And balances:
   | uid  | balance |*
   | .ZZC | 40      |
@@ -126,17 +130,19 @@ Scenario: a member draws credit from the bank then cancels
   | op  | amount |*
   | get |     10 |
   Then usd transfers:
-  | txid | payee | amount | created | completed | channel |*
-  | 5007 |  .ZZC |     10 | %today  |    %today | %TX_WEB |
+  | txid | payee | amount | created | completed | deposit | channel | xid |*
+  | 5007 |  .ZZC |     10 | %today  |    %today |       0 | %TX_WEB |   8 |
+  And transactions:
+  | xid | created | amount | from | to   | purpose   | taking |*
+  | 8   | %today  |     10 |  256 | .ZZC | from bank |      1 |
   And balances:
   | uid  | balance |*
   | .ZZC |      40 |
-  And count "txs" is 7
-
+  And count "txs" is 8
   When member "C:B" visits page "get/cancel=5007"
   Then balances:
   | uid  | balance |*
   | .ZZC |      30 |
   And count "usd" is 6
-  And count "txs" is 8
+  And count "txs" is 7
   And we redirect to "/get"

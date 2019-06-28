@@ -458,7 +458,7 @@ abstract class DrupalCacheArray implements ArrayAccess {
       $this->set($data);
     }
   }
-}
+} // end of class
 
 /**
  * Starts the timer with the specified name.
@@ -1305,7 +1305,8 @@ function rayy($args, $n = 0) {
  * @param string $keys: delimited list of identifier names
  * @param mixed $value1,...: arbitrary values
  */
-function ray($s, $value1 = NULL) {
+function ray($s = '', $value1 = NULL) {
+  if ($s === '') return [];
   if (func_num_args() > 1) { // multi-argument call -- return an associative array
     $args = func_get_args();
     $keys = ray(array_shift($args));
@@ -1314,6 +1315,7 @@ function ray($s, $value1 = NULL) {
   }
 
 // this func is called too often for the overhead u\EXPECT(compact('s'), 'string');
+/**/  if (is_array($s)) die('bad ray argument (array) ' . trace()); // can't use u\EXPECT here
   $pattern = strpos($s, "\n") !== FALSE ? '/\R/' 
     : (strpos($s, '|') !== FALSE ? ' *\| *' 
     : (strpos($s, ',') !== FALSE ? '\, *' 
@@ -1394,6 +1396,8 @@ function in($what, $list) {
 
 function between($what, $low, $high) {return ($low <= $what and $what <= $high);}
 function nn(&$a, $else = '') {return (!isset($a) or is_null($a)) ? $else : $a;} // "not null"
+/**/  function pr($whatever) {return print_r($whatever, TRUE);}
+function trace() {return pr(debug_backtrace());}
 
 /**
  * Formats a string for HTML display by replacing variable placeholders.

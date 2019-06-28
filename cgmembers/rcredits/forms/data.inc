@@ -19,7 +19,7 @@ function formData($form, &$sta, $args = '', $isco = FALSE) {
   if (!empty($qName0)) {
     $sql = @$queries[$qName0];
     if (!empty($sql)) {
-      $title = w\queryPermitted($qName0, $sql, $subtext);
+      $title = w\queryPermitted($qName0, $sql, $subtext); // alters $sql
       $subtext = $subtext ?: '&nbsp;';
       $report = strpos($sql, ' ') ? item(w\showRecords(db\q($sql)->fetchAll())) : getReport($sql);
       $form = compact(ray('title subtext report'));
@@ -60,15 +60,14 @@ function getReport($nm) {
   if ($nm == 'customers' or $nm == 'vendors') {
     $heads = ray(t('Account,Name,Phone,Email,Net Ever'));
     $colClasses = ray(',,,,num');
-    list ($us, $them) = $nm == 'customers' ? ['payee', 'payer'] : ['payer', 'payee'];
-    $whereInv = "$us=:myid AND amount<>0 GROUP BY $them";
-    $whereTx = "$us.uid=:myid AND $us.amount<>0 AND $them.uid NOT BETWEEN 0 AND (:CANONIC_ACCTS-1) GROUP BY $them.uid";
+    list ($us, $them, $invUs, $invThem) = $nm == 'customers' ? [2, 1, 'payee', 'payer'] : [1, 2, 'payer', 'payee'];
+    $whereInv = "$invUs=:myid AND amount<>0 GROUP BY $invThem";
+    $whereTx = "uid$us=:myid AND amt<>0 AND uid$them NOT :CANONIC GROUP BY uid$them";
     $sql = <<< X
       SELECT u.uid,SUM(net0) AS net, SUM(invs0) AS invs FROM (
-        SELECT $them.uid AS uid, SUM($them.amount) AS net0, 0 AS invs0
-        FROM tx_hdrs JOIN tx_entries payer USING(xid) JOIN tx_entries payee USING(xid)
-        WHERE $whereTx
-        UNION SELECT $them AS uid,0 AS net0, SUM(amount) AS invs0
+        SELECT uid$them AS uid, SUM(amt) AS net0, 0 AS invs0
+        FROM txs_prime WHERE $whereTx
+        UNION SELECT $invThem AS uid,0 AS net0, SUM(amount) AS invs0
         FROM r_invoices WHERE $whereInv AND status<:TX_PAID
       ) x LEFT JOIN users u ON u.uid=x.uid GROUP BY u.uid ORDER BY fullName
 X;

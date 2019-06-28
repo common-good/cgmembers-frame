@@ -145,8 +145,6 @@ function g($k, $v = NULL) {
   return $$k;
 }
 
-/**/ function trace() {return print_r(debug_backtrace(), 1);}
-
 /** Miscellaneous functions for debugging
  *
  */

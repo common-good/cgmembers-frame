@@ -225,15 +225,13 @@ function formSignup_submit($form, &$sta) {
   $info = @compact(ray($dbFields));
   $info += $acctType == CO_PERSONAL ? ['preid' => $preid] : ['coType' => $acctType];
   
-//  $DBTX = \db_transaction();
-  
   if (@$myid) {
     $a = r\acct($myid);
     if ($a->jid) $info['name'] = r\uniqueName($fullName, $info); // make sure name reflects partner name
     $a->update($info);
     $name = $a->name;
   } else {
-    if (!$a = new r\Acct($info)) {unset($DBTX); return say('cannot create account', 'zot');}
+    if (!$a = new r\Acct($info)) return say('cannot create account', 'zot');
     list ($myid, $name) = [$a->id, $a->name];
   }
   $mya = w\setAcct($myid); // this works for both an individual account (proSe) and a company account (with agent)

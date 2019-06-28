@@ -936,8 +936,9 @@ div.password-confirm .error {font-weight:bold; color:red;}
 #txlist .row div .reward {font-size:85%;}
 
 #txlist .sepRow {display:inline-block; width: 100%; height: 1px;}
-#txlist .separator {border-top: 1px solid #d9d9d9; height: 1px; width: 91.6667%; padding:0; margin:0;}
-#txlist .sepBlank {width:8.3333%; border:0; height:1px; padding:0;margin:0;}
+#txlist .separator {border-top: 1px solid #d9d9d9; height: 1px; width: 100%; padding:0; margin:0;}
+#txlist .separator.none {border-top: 1px solid white;}
+/* #txlist .sepBlank {width:8.3333%; border:0; height:1px; padding:0;margin:0;} */
 
 #txlist .txRow {display:none;}
 #txlist .txRow.head,

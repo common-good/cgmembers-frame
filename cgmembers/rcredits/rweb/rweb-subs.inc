@@ -515,7 +515,8 @@ function queryPermitted($qName, &$sql = '', &$subtext = '') {
   $cttyName = $mya->community ? $mya->cttyA->fullName : t('All Communities');
   list ($sql, $text2) = explode('~', "$sql~");
   $map[':myid'] = $mya->id;
-  $map['=:ctty'] = $mya->community ? "=$mya->community" : '<>0'; // alternative is for superAdmin
+  $map['=:ctty'] = $mya->community ? "=$mya->community" : '<>0'; // alternative is for superAdmin and signed out
+  $map[':ctty IN'] = $mya->community ? "$mya->community IN" : '1 NOT IN';
   $sql = strtr($sql0 = $sql, $map);
   $subtext = strpos($sql0, ':ctty') ? "<h4>$cttyName</h4><br>$text2" : $text2;
   
@@ -547,7 +548,7 @@ function showRecords($ray, $formatFunc = 'CG\\Web\\formatField', $flagsField = B
     $line = '';
     foreach ($row as $k => $v) {
       $v = $formatFunc($k, plain($v), $flagsField);
-      if ($k == 'for2' and $v == $row->for1) $v = 'same'; // admin uses this for conciseness
+//      if ($k == 'for2' and $v == $row->for1) $v = 'same'; // admin uses this for conciseness
       $align = in($k, ALIGN_RIGHT) ? 'R' : (in($k, ALIGN_CENTER) ? 'C' : 'L');
       foreach (ray('balance credit trust count total $ pct') as $w) if (stripos($k, $w) !== FALSE) {
         $align = 'R';
@@ -751,7 +752,7 @@ function bitsFld($label, $bitRay, $prefix, $bits, $aliases = [], $desc = '') {
     if ($prefix) $bit = u\consta($prefix, $bitName);
     $bitNames[$bit] = $bitName;
     $bitAliases[$bit] = @$aliases ? strtr($bitName, $aliases) : $bitName;
-    if (u\getBit($bitRay, $bit)) $defaults[] = $bit;
+    if ($bitRay and u\getBit($bitRay, $bit)) $defaults[] = $bit;
   }
   return boxesFld($label, $desc, $defaults, $bitNames, $bitAliases);
 }

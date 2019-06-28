@@ -1,5 +1,6 @@
 Common Good Democratic Economics System
-Copyright (c) 2017 Society to Benefit Everyone, Inc., dba Common Good
+Copyright (c) 2019 Society to Benefit Everyone, Inc., dba Common Good
+info@CommonGood.earth, +1 413 628 1723, PO Box 21, Ashfield, MA 01330 US
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

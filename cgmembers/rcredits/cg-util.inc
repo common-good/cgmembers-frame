@@ -519,7 +519,7 @@ function EXPECT($assertion, $message = '', $ret = FALSE) {
 ///    EXPECT(compact(ray('args types')), 'assoc string'); // can't do this because infinite recursion
 ///    EXPECT(count($args) != count($types = explode(' ', $types)), 'wrong number of types expected'); // infinite recursion
     $vs = explode(' ', $types);
-/**/ if (isDEV and count($args) != count($vs)) die(print_r(debug_backtrace(), 1));
+/**/ if (isDEV and count($args) != count($vs)) die(trace());
     $types = array_combine(array_keys($args), $vs); // not ray() here, $types may have '|'
     foreach ($args as $key => $value) if ($error = expect1($key, $value, $types[$key], $ret)) return $error;
   } elseif (!$assertion) {
@@ -566,9 +566,6 @@ function expect1($arg, $value, $type, $ret) {
   }
   throw new \Exception("bad type \"$type\" ($msg)");
 }
-
-//function gripe($msg) {throw new \Exception($msg);}
-//function gripe($msg) {throw new \Exception(serialize(debug_backtrace()));}
 
 /** 
  * Log the info in both the log file and database.
@@ -872,7 +869,7 @@ function randomString($len = 16, $choices = '') {
 function badName(&$name) {
   $name = trim(preg_replace('/ +/', ' ', $name));
   if ($name and !ctype_print($name)) {
-/**/  r\tellAdmin('bad char', ray('name trace', bin2hex($name), trace()));
+    r\tellAdmin('bad char', ray('name trace', bin2hex($name), trace()));
     return 'illegal char';
   }
   if (strlen(u\shortName($name)) > USERNAME_MAX_LENGTH) return 'too long';
@@ -1353,6 +1350,19 @@ function unSerialFix($s) {
 */
 
 /**
+ * Check new object constructor info for the proper fields.
+ * @param assoc $info: initial information for the object
+ * @param string $fields: space-list of allowed field names
+ * @param string $reqFields: space-list of required field names
+ */
+function vetObjectInfo($info, $fields, $reqFields, $objectName) {
+  list ($reqKeys, $allowedKeys, $infoKeys) = [ray($reqFields), ray($fields), array_keys($info)];
+  list ($missing, $extra) = [array_diff($reqKeys, $infoKeys), array_diff($infoKeys, $allowedKeys)];
+  u\EXPECT($missing == [], "missing fields in $objectName:" . pr($missing) . "\npassed: " . pr($infoKeys));
+  u\EXPECT($extra == [], "extra fields in $objectName:" . pr($extra));
+}
+
+/**
  * Return the value of the constant formed by the prefix and the var.
  */
 function consta($prefix, $var) {
@@ -1371,7 +1381,7 @@ function consta($prefix, $var) {
 function bit($b) {return is_array($b) ? (bit(array_shift($b)) | ($b ? bit($b) : 0)) : (1 << (is_numeric($b) ? $b : u\consta('b', $b)));}
 
 function getBit($n, $b = NULL) {return is_null($b) ? $n : (bool) ($n & u\bit($b));}
-function setBit(&$n, $b, $on = TRUE) {return $n = $on ? (@$n | u\bit($b)) : (@$n & ~u\bit($b));}
+function setBit(&$n, $b, $on = TRUE) {return $n = $on ? (@$n | u\bit($b)) : (nn($n, 0) & ~u\bit($b));}
 
 // Single line functions that need little or no explanation
 function test() {return (@TESTING == 1);} // set in test.php (when running an acceptance test)
@@ -1383,7 +1393,7 @@ function small($n) {return (abs($n) < .001);}
 function equy($a, $b) {return small($a - $b);} // sort of equal
 function valid_url($url) {return (\valid_url($url) and preg_match('/^[A-Z0-9\-_]+\.[A-Z0-9\-_]+/i', $url) and strpos($url, '@') === FALSE);}
 /**/ function prlog($log = PROJECT) {print_r(loga($log));} // keep this
-function order($one1st, $one, $two) {return $one1st ? array($one, $two) : array($two, $one);}
+function order($one1st, $one, $two) {return $one1st ? [$one, $two] : [$two, $one];}
 function both(&$vars, $k, $one1st, $one, $two) {list ($vars[$k], $vars['other' . ucwords($k)]) = u\order($one1st, $one, $two);}
 function wargs($s, $args, $prefix = '') {return strtr($s, prefixKeys($prefix, $args));} // for debugging
 function myInt($n) {return (is_numeric($n) and $n == (int) $n);}
@@ -1447,6 +1457,7 @@ function validEmail($email) {return filter_var($email, FILTER_VALIDATE_EMAIL);}
 //function bitCount(int $n) {return $n ? (($n % 2) ? 1 : 0) + bitCount($n / 2) : 0;}
 function stndrdth($n) {return date('S', mktime(1,1,1,1,( (($n>=10)+($n>=20)+($n==0))*10 + $n%10) ));}
 function img2string($img, $quality) {ob_start(); imagejpeg($img, NULL, $quality); return ob_get_clean();}
+function showq($sql, $subs = []) {return strtr(u\SUBS($sql), u\prefixKeys(':', $subs));}
 
 function arrayGet($arr, $key, $dft) {
   if (is_string($arr)) $arr = urlq2ray($arr);

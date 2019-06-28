@@ -24,22 +24,22 @@ Scenario: A member draws
   | op  | who  | amount | goods        | purpose |*
   | pay | .ZZB |     30 | %FOR_GOODS   | food    |
   Then tx entries:
-  | xid | entryType    | amount | uid  | description                    |*
-  |   1 | %ENTRY_PAYEE |     20 | .ZZA | automatic transfer from NEWZZC |
-  |   1 | %ENTRY_PAYER |    -20 | .ZZC | automatic transfer to NEWZZA   |
-  |   2 | %ENTRY_PAYEE |     30 | .ZZB | food                           |
-  |   2 | %ENTRY_PAYER |    -30 | .ZZA | food                           |
+  | xid | entryType | amount | uid  | description                    |*
+  |   1 | %E_PRIME  |     20 | .ZZA | automatic transfer from NEWZZC |
+  |   1 | %E_PRIME  |    -20 | .ZZC | automatic transfer to NEWZZA   |
+  |   2 | %E_PRIME  |     30 | .ZZB | food                           |
+  |   2 | %E_PRIME  |    -30 | .ZZA | food                           |
   
 Scenario: A member draws again
   When member ".ZZA" confirms form "pay" with values:
   | op  | who  | amount | goods        | purpose |*
   | pay | .ZZB |    130 | %FOR_GOODS | food    |
   Then tx entries:
-  | xid | entryType    | amount | uid  | description      |*
-  |   1 | %ENTRY_PAYEE |    120 | .ZZA | automatic transfer from NEWZZC |
-  |   1 | %ENTRY_PAYER |   -120 | .ZZC | automatic transfer to NEWZZA   |
-  |   2 | %ENTRY_PAYEE |    130 | .ZZB | food                           |
-  |   2 | %ENTRY_PAYER |   -130 | .ZZA | food                           |
+  | xid | entryType | amount | uid  | description      |*
+  |   1 | %E_PRIME  |    120 | .ZZA | automatic transfer from NEWZZC |
+  |   1 | %E_PRIME  |   -120 | .ZZC | automatic transfer to NEWZZA   |
+  |   2 | %E_PRIME  |    130 | .ZZB | food                           |
+  |   2 | %E_PRIME  |   -130 | .ZZA | food                           |
 
 Scenario: A member overdraws with not enough to draw on
   When member ".ZZA" completes form "pay" with values:

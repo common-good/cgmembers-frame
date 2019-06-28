@@ -22,8 +22,12 @@ function formGet($form, &$sta, $args = '') {
   if ($txid = @$cancel) {
     if ($xid = db\get('xid', 'r_usd', 'txid=:txid AND payee=:myid and deposit=0', compact('txid', 'myid'))) {
       $DBTX = db_transaction();
-      be\reverse($xid); // create an offsetting tx
-      db\del('r_usd', 'txid', $txid); // and cancel the transfer request
+      list ($msg, $info) = be\reverse($xid); // create an offsetting tx (to fix all balances)
+      if (!$xid2 = nn($info['xid'])) return say($msg, 'err');
+      $subs = compact('xid', 'xid2');
+      db\del('tx_entries', '', 'xid IN (:xid, :xid2)', $subs);
+      db\del('tx_hdrs', '', 'xid IN (:xid, :xid2)', $subs); // remove the unwanted tx
+      db\del('r_usd', 'txid', $txid); // and the transfer request
       unset($DBTX);
       say('transfer canceled', compact('txid'));
       r\tellAdmin("canceled exchange #$txid");

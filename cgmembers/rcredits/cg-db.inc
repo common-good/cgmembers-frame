@@ -160,9 +160,9 @@ function col($field, $table, $where = '1', $subs = []) {
 function lst($field, $table, $where = '1', $subs = []) { // lst because "list" is a reserved word
   return join(', ', db\col($field, $table, $where, $subs));
 }
-function keyed($table, $where = '1', $subs = []) {
+function keyed($fields, $table, $where = '1', $subs = []) {
   if (is_array($where)) list ($where, $subs) = [u\where($where), $where];
-  return db\q("SELECT * FROM $table WHERE $where", $subs)->fetchAllKeyed();
+  return db\q("SELECT $fields FROM $table WHERE $where", $subs)->fetchAllKeyed();
 }
 
 /**
@@ -227,7 +227,7 @@ function del($table, $idnm, $id, $subs = []) {
   $where = is_numeric($id) ? "$idnm=$id" : $id;
   if (in($table, DELETED_BY_VIEW)) {
     $all_table = $table . '_all';
-    $q = db\q("UPDATE $all_table SET deleted=:NOW WHERE (deleted IS NULL OR deleted=0) AND $where");
+    $q = db\q("UPDATE $all_table SET deleted=:NOW WHERE (deleted IS NULL OR deleted=0) AND $where", $subs);
     $ok = ($q->rowCount() > 0);
     return;
   } elseif (in($table, TRACK_DELETED)) {

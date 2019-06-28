@@ -100,7 +100,7 @@ function rweb_menu($submenu = '') {
     'history/invoices-from' => ['sub', t('Invoices FROM You'), 'Invoices from', 'read', '', t(''), 'log-out'],
     'history/statements' => ['sub', t('Statements'), 'Statements 2', 'read', '', t(''), 'list-alt'],
     'history/notices' => ['sub', t('Notices'), 'Notices 2', 'read', '', t(''), 'envelope'],
-    'history/tax-info' => ['sub', t('Tax Info'), 'TaxInfo 2', 'read', '', t(''), 'pawn'],
+// (temporarily disabled)    'history/tax-info' => ['sub', t('Tax Info'), 'TaxInfo 2', 'read', '', t(''), 'pawn'],
     'history/changes' => ['sub', t('See Changes'), 'SeeChanges', 'cadmin', '', t(''), 'refresh'],
     'history/zot' => ['sub', 'zot', '', ANY], // Drupal bug: last choice is omitted
     'history/statement' => ['call', t('Statement'), '2', 'read', 'statement'],
@@ -202,7 +202,7 @@ function rweb_menu($submenu = '') {
     'sadmin/deposits' => ['sub', t('Deposits'), 'Deposits', 'superadmin'],
     'sadmin/new-member' => ['sub', t('New Member'), 'Signup code=.(admin)', 'cadmin'],
     'sadmin/make-community' => ['sub', t('Make Ctty'), 'MakeCtty', 'superadmin'],
-    'sadmin/check-sanity' => ['sub', 'Check database consistency', '0', 'admin', 'checkSanity'],
+    'sadmin/check-sanity' => ['call', 'Check database consistency', '0', 'admin', 'checkSanity'],
 //    'sadmin/sms' => ['sub', t('Test SMS'), 'SMS', 'superadmin'],
     'sadmin/handy' => ['sub', t('Handy'), '', 'superadminORdev', 'handyLinks'],
     'sadmin/php' => ['sub', t('PHP'), 'Php 2', 'superadminORdev'],

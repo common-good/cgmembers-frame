@@ -5,10 +5,10 @@ SO we can keep things straight between us.
 
 Setup:
   Given members:
-  | uid  | fullName   | floor | acctType    | flags | created    | address |*
-  | .ZZA | Abe One    | -100  | personal    | ok    | %today-15m | 1 A St. |
-  | .ZZB | Bea Two    | -200  | personal    | ok    | %today-15m | 2 B St. |
-  | .ZZC | Corner Pub | -300  | corporation | ok,co | %today-15m | 3 C St. |
+  | uid  | fullName   | floor | acctType    | flags | created    | address | activated |*
+  | .ZZA | Abe One    | -100  | personal    | ok    | %today-15m | 1 A St. | %now-3m   |
+  | .ZZB | Bea Two    | -200  | personal    | ok    | %today-15m | 2 B St. | %now-3m   |
+  | .ZZC | Corner Pub | -300  | corporation | ok,co | %today-15m | 3 C St. | %now-3m   |
   And relations:
   | main | agent | permission |*
   | .ZZC | .ZZB  | buy        |
@@ -43,14 +43,14 @@ Scenario: A company looks at a customer statement
   And with:
   | Date    |        | Description     | Invoiced | Paid    |  Balance |
   |         |        | Opening balance |          |         |     0.00 |
-  | %mdY-4m | tx #23 | that F          |          | -100.00 |   100.00 |
+  | %mdY-4m | tx #13 | that F          |          | -100.00 |   100.00 |
   | %mdY-2m | inv #2 | this Q          |   120.00 |         |   220.00 |
   | %mdY-1m | inv #3 | this CF         |    80.00 |         |   300.00 |
-  | %mdY-2w | tx #14 | cacao P         |          |   50.00 |   250.00 |
-  | %mdY-9d | tx #15 | what G          |          |  240.00 |    10.00 |
-  | %mdY-8d | tx #16 | this Q          |          |  120.00 |  -110.00 |
-  | %mdY-3d | tx #18 | this CF         |          |   80.00 |  -190.00 |
+  | %mdY-2w | tx #24 | cacao P         |          |   50.00 |   250.00 |
+  | %mdY-9d | tx #25 | what G          |          |  240.00 |    10.00 |
+  | %mdY-8d | tx #26 | this Q          |          |  120.00 |  -110.00 |
+  | %mdY-3d | tx #28 | this CF         |          |   80.00 |  -190.00 |
   | %mdY-2d | inv #5 | realist         | 2,000.00 |         | 1,810.00 |
-  | %mdY-1d | tx #29 | pool CJ         |          | -100.00 | 1,910.00 |
+  | %mdY-1d | tx #19 | pool CJ         |          | -100.00 | 1,910.00 |
   And with:
   || Total due: $1,910.00 |

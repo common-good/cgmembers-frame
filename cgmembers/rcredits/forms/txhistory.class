@@ -103,7 +103,7 @@ EOF;
    * Called before each transaction.
    * @param assoc $info: all of the data for this entry (includes transaction data)
    */
-  public function txnHdr($info) {
+  public function txnHdr($info, $extraClass = '') {
     global $mya;
     
     $this->tidValue = $info['tid'];
@@ -130,11 +130,12 @@ EOF;
     $this->body .= <<<EOF
       <div class="row txRow $pageClasses$disputedClass">
         <div class="sepRow">
-          <div class="separator"></div>
-          <div class="sepBlank"></div>
+          <div class="separator$extraClass"></div>
         </div>
 EOF;
   }
+//            <div class="sepBlank"></div>
+
 
   /**
    * Called for each entry of a transaction.

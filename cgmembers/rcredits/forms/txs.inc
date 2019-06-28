@@ -192,14 +192,10 @@ function handleTx($do, $xid, &$sta, $args) {
 
     $DBTX = db_transaction();
     list ($msg, $info) = be\reverse($xid); // create an offsetting tx
-    if ($deposit) {
-      $tx['deposit'] = now();
-      $tx['xid'] = $info['xid'];
-      db\insert('r_usd', $tx, 'txid'); // bypass acct::bank() -- nothing fancy wanted
-    } else {
-      u\EXPECT(-$amount < 0, 'undeposited incoming transfers should not appear in txs list: ' . (-$txid));
-      db\del('r_usd', 'txid', -$txid); // transfer request has not been processed yet, so delete it (unnegate $txid)
-    }
+    $tx['deposit'] = now();
+    $tx['xid'] = $info['xid'];
+    db\insert('r_usd', $tx, 'txid'); // bypass acct::bank() -- nothing fancy wanted
+    if (!$deposit) db\update('r_usd', ray('deposit txid', now(), $txid), 'txid'); // mark original as done too (from bank's view)
     unset($DBTX);
     
     return w\go($url, t('Reversed %amount bank transfer for %who.', 'amount who', u\fmtAmt(-$amount), $mya->fullName));
@@ -238,17 +234,17 @@ function txSummary($starting, $ending, &$endBalance = '') {
   $startBalance = round($o_balance, 2);
 
   $dif = [];
-  foreach (ray('inProper outProper fromBank') as $key) $dif[$key] = $nowInfo[$key] - $oldInfo[$key];
+  foreach (ray('in out fromBank toBank') as $key) $dif[$key] = $nowInfo[$key] - $oldInfo[$key];
   extract($dif, EXTR_PREFIX_ALL, 'd');
   /* $p_committed = $mya->committed; // this will include all pending commitments */
   
   /* $fields = 'old bank in out new'; */
-  /* $values = array($startBalance, $d_bank, $d_inProper, $d_outProper, $endBalance); // both */
+  /* $values = array($startBalance, $d_bank, $d_in, $d_out, $endBalance); // both */
   /* $values = array_combine(ray($fields), $values); */
 
-  /* $p_inProper = $p_outProper = 0; // temporary until we include unpaid invoice data here */
+  /* $p_in = $p_out = 0; // temporary until we include unpaid invoice data here */
   /* $p_balance = $p_bank - $p_committed; */
-  /* $values += compact(ray('p_inProper p_bank p_outProper p_committed p_balance d_roundups')); */
+  /* $values += compact(ray('p_in p_bank p_out p_committed p_balance d_roundups')); */
 
   /* foreach ($values as $key => $value) $$key = number_format($value, 2); */
 
@@ -259,7 +255,8 @@ function txSummary($starting, $ending, &$endBalance = '') {
   
   $PRIMARY = w\popHelp(t('Balance'), t('Your balance is what you use for spending and for receiving payments.'));
   $STARTING = w\popHelp(t('Starting Balance'), t('Your %PROJECT Account balance at the start of this time period'));
-  $BANK = w\popHelp(t('From Bank'), t('How much was transferred from your bank account to your %PROJECT Account'));
+  $BANKIN = w\popHelp(t('From Bank'), t('How much was transferred from your bank account to your %PROJECT Account'));
+  $BANKOUT = w\popHelp(t('To Bank'), t('How much was transferred from your %PROJECT Account to your bank account'));
   $IN = w\popHelp(t('Funds Received'), t('How much %RCREDITS you received, in this period'));
   $OUT = w\popHelp(t('Funds Paid Out*'), t('How much %RCREDITS you paid out, in this period'));
   $CREDIT_LINE = w\popHelp(t('Credit Line+'), (t('Credit line increases you received in this period')));
@@ -269,14 +266,11 @@ function txSummary($starting, $ending, &$endBalance = '') {
   /* if ($p_bank) $p_bank = str_replace('+ -', '- ', $endingNow ? "+ $p_bank $PENDING" : ''); */
   
   /* $p_balance = u\starts($p_balance, '-') ? '- ' . substr($p_balance, 1) : "+ $p_balance"; */
-  $o_balance = u\fmtAmt($o_balance, '$');
-  $d_fromBank = u\fmtAmt($d_fromBank, '$');
-  /* $n_pendingBank = $n_pendingBank == 0 ? '' : u\fmtAmt($n_pendingBank, '$') . t(' Pending'); */
-  $d_inProper = u\fmtAmt($d_inProper, '$');
-  $d_outProper = u\fmtAmt($d_outProper, '$');
-  $n_balance = u\fmtAmt($n_balance, '$');
+  foreach (ray('o_balance d_fromBank d_toBank d_in d_out n_balance') as $k) $$k = u\fmtAmt($$k, '$');
 
-  if (!$endingNow) {
+  $n_pendingBank = $endingNow ? (($n_pendingBank < 0 ? '- ' : '+ ') . u\fmtAmt($n_pendingBank, '') . " $PENDING") : '';
+
+/*  if (!$endingNow) {
     $n_pendingBank = '';
   } elseif ($n_pendingBank > 0) {
     $n_pendingBank = '+ ' . u\fmtAmt($n_pendingBank, '') . " $PENDING";
@@ -285,15 +279,17 @@ function txSummary($starting, $ending, &$endBalance = '') {
   } else {  // $n_pendingBank < 0
     $n_pendingBank = '- ' . u\fmtAmt(-$n_pendingBank, '') . " $PENDING";
   }
+  */
   
   $rows = [
            ray("||$PRIMARY|"),
            ray("$STARTING||$o_balance|$starting"),
-           ray("$BANK|+|$d_fromBank|$n_pendingBank"),
-           ray("$IN|+|$d_inProper|"),
-           ray("$OUT|-|$d_outProper|"),
+           ray("$BANKIN|+|$d_fromBank|$n_pendingBank"),
+           ray("$BANKOUT|-|$d_toBank|"),
+           ray("$IN|+|$d_in|"),
+           ray("$OUT|-|$d_out|"),
            ray("$ENDING||$n_balance|$ending"),
-           ];  
+  ];  
   
   $attributes = ['id' => 'txsum'];
   $header = $cols = [];

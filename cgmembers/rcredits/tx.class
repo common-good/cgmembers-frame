@@ -15,11 +15,10 @@ require_once __DIR__ . '/txentry.class';
  */
 
 class Tx {
-  const TX_HDR_FIELDS = ['xid', 'goods', 'actorId', 'actorAgentId', 'flags',
-                         'channel', 'boxId', 'goods', 'risk', 'risks', 'recursId', 'reversesXid', 'created'];
-  const INSERT_FIELDS = ['goods', 'actorId', 'actorAgentId', 'flags',
-                         'channel', 'boxId', 'goods', 'risk', 'risks', 'recursId', 'reversesXid', 'created'];
-  const REQUIRED_FIELDS = ['goods', 'actorId', 'flags'];
+  const REQUIRED_FIELDS = 'goods actorId flags';
+  const INSERT_FIELDS = self::REQUIRED_FIELDS . ' actorAgentId channel boxId goods risk risks recursId reversesXid created';
+  const ALLOWED_FIELDS = self::INSERT_FIELDS . ' entries xid';
+  const TX_FIELDS = self::INSERT_FIELDS . ' xid';
 
   public $xid;
   public $type;
@@ -43,28 +42,12 @@ class Tx {
    */
   function __construct($info) {
     $tx = $this;
-    $missing = array_diff(Tx::REQUIRED_FIELDS, array_keys($info));
-/**/    u\EXPECT($missing == [], "missing fields in Tx::createNew: " . print_r($missing, true));
+    u\vetObjectInfo($info, self::ALLOWED_FIELDS, self::REQUIRED_FIELDS, 'Tx');
 
     foreach (ray('goods actorId actorAgentId flags channel boxId risk reversesXid') as $k) $tx->$k = u\setDft($info[$k], NULL);
     foreach (ray('xid risks recursId') as $k) $tx->$k = u\setDft($info[$k], 0);
     $tx->created = u\setDft($info['created'], now());
     $tx->entries = u\setDft($info['entries'], []);
-/*    
-    $this->xid = u\arrayGet($info, 'xid', 0);
-    $this->goods = u\arrayGet($info, 'goods', null);
-    $this->actorId = u\arrayGet($info, 'actorId', null);
-    $this->actorAgentId = u\arrayGet($info, 'actorAgentId', null);
-    $this->flags = u\arrayGet($info, 'flags', null);
-    $this->channel = u\arrayGet($info, 'channel', null);
-    $this->boxId = u\arrayGet($info, 'boxId', null);
-    $this->risk = u\arrayGet($info, 'risk', null);
-    $this->risks = u\arrayGet($info, 'risks', 0);
-    $this->recursId = u\arrayGet($info, 'recursId', 0);
-    $this->reversesXid = u\arrayGet($info, 'reversesXid', null);
-    $this->created = u\arrayGet($info, 'created', now());
-    $this->entries = u\arrayGet($info, 'entries', []);
-    */
   }
 
   /**
@@ -79,17 +62,21 @@ class Tx {
     
     switch ($f) {
     case 'actorEntry': return $tx->getActorEntry();
-    case 'otherEntry': return ($tx->payerEntry->uid == $tx->actorId) ? $tx->payeeEntry : $tx->payerEntry;
+    case 'otherEntry': 
+      return $tx->primeEntry1->uid == $tx->actorId ? $tx->primeEntry2 
+      : ($tx->primeEntry2->uid == $tx->actorId ? $tx->primeEntry1 : NULL);
     case 'payerEntry': return $tx->getPayerEntry();
     case 'payeeEntry': return $tx->getPayeeEntry();
+    case 'primeEntry1': return $tx->getE(0); // primary payer
+    case 'primeEntry2': return $tx->getE(1); // primary payee
     case 'payerId': return $tx->payerEntry->uid;
     case 'payeeId': return $tx->payeeEntry->uid;
     case 'otherUid':
     case 'otherId': return $tx->otherEntry->uid;
-    case 'actor': return r\acct($tx->actorId);
+    case 'actorA': return r\acct($tx->actorId);
     case 'actorAmount': return $tx->getActorAmount();
     case 'payerAmount': return $tx->payerEntry->amount;
-    case 'other': return r\acct($tx->otherId);
+    case 'otherA': return r\acct($tx->otherId);
     case 'toMe': return ($tx->payeeId == $myid);
     case 'byMe': return ($tx->actorId == $myid);
     case 'reversedByXid': return db\get('xid', 'tx_hdrs_all', 'reversesXid=:xid', ['xid' => $this->xid]);
@@ -104,25 +91,27 @@ class Tx {
   
   public function is($bit) {return (bool) u\getBit($this->flags, $bit);}
 
+  private function getE($e) {return nn($this->entries[$e], NULL);}
+
   private function getPayerEntry() {
-    foreach ($this->entries as $entry) {
-      if ($entry->entryType == ENTRY_PAYER) return $entry;
+    foreach ($this->entries as $i => $entry) {
+      if ($entry->entryType == E_PRIME and $i % 2 != 0) return $entry;
     }
-    return null;
+    return NULL;
   }
 
   private function getPayeeEntry() {
-    foreach ($this->entries as $entry) {
-      if ($entry->entryType == ENTRY_PAYEE) return $entry;
+    foreach ($this->entries as $i => $entry) {
+      if ($entry->entryType == E_PRIME and $i % 2 == 0) return $entry;
     }
-    return null;
+    return NULL;
   }
 
   private function getActorEntry() {
-    foreach ($this->entries as $entry) {
+    foreach ($this->entries as $i => $entry) {
       if ($entry->uid == $this->actorId) return $entry;
     }
-    return null;
+    return NULL;
   }
 
   public function getAmount($a) {
@@ -152,35 +141,23 @@ class Tx {
   }
 
   /**
-   * Add some entries to this transaction.
+   * Add some entries to this transaction (always in pairs or collections of pairs).
    */
   public function addEntries($entries) {
     $this->entries += array_merge($this->entries, $entries);
   }
 
   /**
-   * Add an entry to this transaction.
-   */
-  public function addEntry($entry) {
-    $this->entries[] = $entry;
-  }
-
-  /**
    * Read an existing transaction record, with its entries.
    * @param xid $xid: transaction record id
    * @return the new instance of Tx
-   */
+   *//*
   public static function read($xid, $where = '1', $subs = []) {
-    /* u\EXPECT(is_integer($xid)); */
-    
-    $DBTX = db_transaction();
-    $info = db\get('*', 'tx_hdrs', "(xid=:xid) AND $where", $subs + ['xid' => $xid]);
+    $info = db\get('*', 'tx_hdrs', "xid=:xid AND $where", $subs + compact('xid'));
     if (!$info) return FALSE;
-    $entries = r\TxEntry::readAll($xid);
-    if (!$entries) return FALSE;
-    unset($DBTX);
-    return new Tx($info + ['entries' => $entries]);
-  }
+    if (!$info = self::readAll($xid)) return FALSE;
+    return new Tx($info);
+  }*/
   
   /**
    * Save this transaction in the database (header record plus all entries).
@@ -191,10 +168,10 @@ class Tx {
     $DBTX = db_transaction();
     if ($allowModification and $tx->xid != 0) {
       $xid = $tx->xid;
-      u\EXPECT(db\updateOrInsert('tx_hdrs', just(Tx::TX_HDR_FIELDS, (array)$tx), 'xid'), "failure inserting tx");
+      u\EXPECT(db\updateOrInsert('tx_hdrs', just(self::TX_FIELDS, (array)$tx), 'xid'), "failure inserting tx");
     } else {
       u\EXPECT($tx->xid == 0, "We're not allowing modification of transactions.");
-      $xid = db\insert('tx_hdrs', just(Tx::INSERT_FIELDS, (array)$tx), 'xid');
+      $xid = db\insert('tx_hdrs', just(self::INSERT_FIELDS, (array)$tx), 'xid');
     }
     u\EXPECT($xid, "Failed to insert transaction header record");
     foreach ($tx->entries as $entry) {
@@ -202,8 +179,8 @@ class Tx {
         $entry->acctTid = r\acct($entry->uid)->nextTid();
       }
     }
-    foreach ($tx->entries as $entry) {
-      $eid = $entry->insert($xid);
+    foreach ($tx->entries as $i => $entry) {
+      $eid = $entry->insert($xid, ($i % 2) ? -$eid : 0); // eid of second entry in each pair is the inverse of its companion
       u\EXPECT($eid, "Failed to insert transaction entry");
     }
     $this->xid = $xid;
@@ -211,20 +188,35 @@ class Tx {
     return $xid;
   }
 
-  static public function readAll($uids, $starting=null, $ending=null) {
-    u\EXPECT([$uids, $starting, $ending], 'array integer integer');
+  /**
+   * Return a Tx object for the given xid OR (NYI quite yet) an array of Tx objects for the given criteria.
+   * @param int $xid: ID of the tx record to return an object for
+   * return a Tx object, an array of such, or FALSE
+   */
+  public static function read($xid = '', $uids = '', $starting=NULL, $ending=NULL) {
+///  public static function read($xid, $where = '1', $subs = []) {
+//    u\EXPECT([$xid, $uids, $starting, $ending], 'array|int integer|empty integer|empty');
+
+    if ($uids) {
+      if (is_array($uids)) $uids = join(',', $uids);
+      $users = 'uid IN ($uids)';
+    } else $users = '1';
+    
     $restrict = '';
-    if ($starting != null) { $restrict .= " AND (t.created >= '$starting')"; }
-    if ($ending != null) { $restrict .= " AND (t.created <= '$ending')"; }
-    $DBTX = db_transaction();
+    if ($xid) $restrict .= " AND xid=$xid";
+    if (nn($starting)) $restrict .= " AND t.created>=$starting";
+    if (nn($ending)) $restrict .= " AND t.created<=$ending";
+    
     $sql = <<< EOF
       SELECT t.*, e.*
       FROM tx_hdrs t LEFT JOIN tx_entries e USING (xid)
       WHERE (t.xid IN (SELECT DISTINCT xid FROM tx_entries WHERE $users)) $restrict
-      ORDER BY e.xid
+      ORDER BY e.xid, e.entryType, ABS(e.id), (e.id < 0)
 EOF;
+
     $result = db\q($sql, []);
-/**/    u\EXPECT($result, "Failure reading transactions for user(s) " . print_r($uids, true));
+
+    u\EXPECT($result, "Failure reading transactions for user(s) " . pr($uids));
     $lastXid = 0;  // no xid should ever be 0
     $txs = [];
     $entries = [];
@@ -233,18 +225,16 @@ EOF;
       if ($row['xid'] != $lastXid) { // start of new transaction
         $lastXid = $row['xid'];
         if ($entries != []) { // there was a transaction in progress
-          $txs[] = new Tx(just(Tx::TX_HDR_FIELDS, $row) + ['entries' => $entries]);
+          $txs[] = new Tx(just(self::TX_FIELDS, $row) + compact('entries'));
           $entries = [];
         }
       }
-      $entry = new TxEntry(just(r\TxEntry::ENTRY_FIELDS, $row));
+      $entry = new TxEntry(just(r\TxEntry::E_FIELDS, $row));
       $entries[] = $entry;
     }
-    if ($entries != []) { // last one
-      $txs[] = new Tx(just(Tx::TX_HDR_FIELDS, $row) + ['entries' => $entries]);
-    }
-    unset($DBTX);
-    return $txs;
+    if ($entries != []) $txs[] = new Tx(just(self::TX_FIELDS, $row) + compact('entries')); // last one
+
+    return count($txs) ? ($xid ? $txs[0] : $txs) : FALSE;
   }
 
   /**
@@ -261,7 +251,7 @@ EOF;
                   "e.uid IN (:uids) AND $where ORDER BY t.created DESC LIMIT 1",
                   ['uids' => $uids] + $subs);
     if (empty($xid)) return FALSE;
-    $tx = Tx::read($xid);
+    $tx = self::read($xid);
     if (empty($tx)) return FALSE;
     return $tx;
   }
@@ -281,7 +271,8 @@ EOF;
 
     $payerE = $this->payerEntry;
     $payeeE = $this->payeeEntry;
-/**/    u\EXPECT(is_object($payerE) and is_object($payeeE), 'party not an object in tx entry:' . print_r($tx, 1));
+
+    u\EXPECT(is_object($payerE) and is_object($payeeE), 'party not an object in tx entry:' . pr($tx));
     
     $amount = ($tx->actorId == $payerE->uid) ? $payerE->amount : $payeeE->amount;
       
@@ -296,7 +287,7 @@ EOF;
     $tofrom = $toMe ? t('from') : t('to'); 
     $why = ray(R_WHYS)[$tx->goods];
     if ($getMyBalance and ($me->can(B_BUY))) { $balance = u\fmtAmt($me->avail(FOR_GOODS)); }
-    else { $balance = null; }
+    else { $balance = NULL; }
 
     if ($amount < 0) {
       $amount = 0-$amount;
@@ -323,7 +314,7 @@ EOF;
   function nonoUndo(&$subs = []) {
     if (db\exists('tx_hdrs', 'reversesXid=:xid', ['xid' => $this->xid])) return 'already undone';
 
-    $a1 = r\acct($this->toMe ? $this->payeeId : $this->payerId, $this->actor->agentUid);
+    $a1 = r\acct($this->toMe ? $this->payeeId : $this->payerId, $this->actorA->agentUid);
     $a2 = r\acct($this->toMe ? $this->payerId : $this->payeeId); // second account's permissions are irrelevant
     $err = r\txPermErr($a1, $a2, $this->toMe, $this->toMe xor $this->actorEntry->amount < 0);
     if ($err) return $err;

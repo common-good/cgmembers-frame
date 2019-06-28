@@ -85,19 +85,9 @@ function txRisk1($xid, &$risk = 0, &$calc = 0) {
   global $_risk; $_risk = ''; // reset risk calculation
   global $_xid; $_xid = $xid; // for debugging
 
-  $fields = <<<EOF
-    xid, e1.uid AS uid1, e2.uid AS uid2, 
-    e2.amount AS amount, t.risks,
-    u1.:IS_CO AS isCo1, u2.:IS_CO AS isCo2, 
-    e1.description AS desc1, e2.description AS desc2,
-    t.:IS_OFFLINE AS offline, t.goods, t.created, t.channel
-EOF;
-  $table = <<<EOF
-    tx_hdrs t 
-    JOIN (tx_entries_payer e1 JOIN users u1 USING(uid)) USING(xid)
-    JOIN (tx_entries_payee e2 JOIN users u2 USING(uid)) USING(xid)
-EOF;
-  $row = db\get($fields, $table, compact('xid'));
+  $fields = 'xid, uid1, uid2, amt AS amount, risks, :IS_OFFLINE AS offline, goods, created, channel';
+
+  $row = db\get($fields, 'txs_proper', compact('xid'));
   extract($row);
   if ($risks & u\bit(K_ADMINOK)) setRisk('txAdminOk'); // administrator blessed this transaction, perpetuate it
 
@@ -109,35 +99,32 @@ EOF;
   $payeeA = r\acct($uid2);
 
   if ($goods != FOR_GOODS) {
-    if ($amount < 0 ? $isCo1 : $isCo2) {
+    if ($amount < 0 ? $payerA->co : $payeeA->co) {
       setRisk(($amount < 0 and $channel == TX_POS and r\usdin($desc2)) ? 'cashIn' : 'cashOut');
     } else {
       setRisk('exchange');
     }
     if ($payerA->risk >= K_RED) setRisk('suspectOut');
   } else {
-    if ($isCo1 and !$isCo2 and !r\isEmployee($uid2, $uid1)) setRisk('b2p'); // company payment to non-employee individual
+    if ($payerA->co and !$payeeA->co and !r\isEmployee($uid2, $uid1)) setRisk('b2p'); // company payment to non-employee individual
   }
 
   $samePostal = ($payerA->postalAddr == $payeeA->postalAddr);
-  $withCo = ($isCo1 or $isCo2); // at least one party is a company
+  $withCo = ($payerA->co or $payeeA->co); // at least one party is a company
   if (!$withCo and !$samePostal) setRisk('p2p'); // transaction between individuals at different postal addresses
   if ($withCo and (r\owning($uid1, $uid2) or $samePostal or r\isEmployee($uid1, $uid2))) setRisk('inhouse'); // transaction with owner or family member same address or payment by employee
 
   if ($amount > 0) { // never flag reversals
     $since = $created - WEEK7_SECS; // just recent activity by customers, in case many are new
-    $count = db\count('tx_hdrs JOIN tx_entries_payer e1 USING(xid) JOIN tx_entries_payee e2 USING(xid)',
-                      'e1.uid=:uid1 AND e2.uid=:uid2 AND created BETWEEN :since AND :created', compact(ray('uid1 uid2 since created')));
-    setBigToFrom('From', 'payer', $uid1, $amount, $created, $count);
-    setBigToFrom('To', 'payee', $uid2, $amount, $created, $count);
+    $count = db\count('txs_proper', 'uid1=:uid1 AND uid2=:uid2 AND created BETWEEN :since AND :created', compact(ray('uid1 uid2 since created')));
+    setBigToFrom('From', 'uid1', $uid1, $amount, $created, $count);
+    setBigToFrom('To', 'uid2', $uid2, $amount, $created, $count);
   }
   setOriginRisk($uid1, $created, $amount);
-
+    
   if ($channel == TX_WEB or $channel == TX_SMS) {
     setRisk('absent'); // transaction by web or SMS (no in person)
-    if (!db\exists('r_invoices', 'status=:xid', ['xid'=>$xid])) {
-      setRisk('invoiceless'); // payment to non-employee without an invoice
-    }
+    if (!db\exists('r_invoices', 'status=:xid', compact('xid'))) setRisk('invoiceless'); // paid non-employee without an invoice
   }
 
   setRisk('fromSuspect', $payerA->risk / K_RED, $payerA->risk >= K_RED); // payment from suspicious account
@@ -145,11 +132,7 @@ EOF;
 
   if ($offline) { // offline
     setRisk('offline');
-    if (!db\exists('tx_hdrs t JOIN tx_entries_payer e1 USING(xid) JOIN tx_entries_payee e2 USING(xid)',
-                   'e1.uid=:uid1 AND e2.uid=:uid2 AND xid<>:xid AND e2.amount>0',
-                   compact(ray('uid1 uid2 xid')))) {
-      setRisk('firstOffline'); // offline for first payment to this company
-    }
+    if (!db\exists('txs', compact(ray('uid1 uid2 xid')))) setRisk('firstOffline'); // offline for first payment to this company
   }
   
   extract(setRisk());
@@ -257,11 +240,10 @@ function setBigRisk($uid, $ago, $thresholds, $bitName) {
   $since = $now - $ago - 2 * HOUR_SECS; // an extra couple hours to handle daylight time changes and cron timing
   $mySql = <<<EOF
     SELECT COUNT(*) AS count0, 
-      SUM(IF(amount>0,amount,0)) AS `in`, 
-      SUM(IF(amount>0,0,-amount)) AS `out`
-    FROM tx_entries e JOIN tx_hdrs t USING(xid) 
-    WHERE e.uid=:uid AND e.entryType IN (:ENTRY_PAYER, :ENTRY_PAYEE)
-    AND created BETWEEN :since AND :now
+      SUM(IF(:uid=uid2 XOR amt<0, ABS(amt), 0)) AS `in`, 
+      SUM(IF(:uid=uid1 XOR amt<0, ABS(amt), 0)) AS `out`
+    FROM txs 
+    WHERE :uid IN (uid1, uid2) AND created BETWEEN :since AND :now
 EOF;
   if (!$res = db\q($mySql, compact(ray('uid since now')))->fetchAssoc()) return;
   extract($res);
@@ -272,8 +254,7 @@ EOF;
 //  if (max($in, $out) > $threshold * max(1, $a->employees)) setRisk($bitName);
   if ($ago == YEAR_SECS) list ($bigYearIn, $bigYearOut) = [$in, $out];
   if ($ago == WEEK7_SECS) {
-    $firstTxDate = db\get('MIN(created)', 'tx_hdrs JOIN tx_entries e USING(xid)', 'e.uid=:uid',
-                          compact('uid')) ?: $now;
+    $firstTxDate = db\get('MIN(created)', 'txs', ':uid IN (uid1, uid2)', compact('uid')) ?: $now;
     $yearLen = min(YEAR_SECS, $now - $firstTxDate);
     if ($yearLen) {
       if ($in > (1 + K_UNUSUAL_BUMP / 100) * $bigYearIn * $ago / $yearLen) setRisk('moreIn');
@@ -304,28 +285,26 @@ function setBigRisks($uid, $thresholds) {
  */
 function setBigToFrom($way, $field, $uid, $amount, $created, $count) {
   $since = $created - WEEK7_SECS; // just recent activity by customers, in case many are new
-  $to = ($field == 'payee');
-  list ($other, $amt) = $to ? ['payer', "$field.amount"] : ['payee', "-$field.amount"];
+  $other = $field == 'uid1' ? 'uid2' : 'uid1';
   
   $subtotals =<<<EOF
-    SELECT AVG($amt) as avg0, MAX($amt) AS max0, COUNT(*) AS count0 
-    FROM tx_hdrs t JOIN tx_entries_payer payer USING(xid) JOIN tx_entries_payee payee USING(xid)
-    WHERE IF($amt<0, $other.uid, $field.uid)=:uid AND t.created BETWEEN :since AND :created
-    GROUP BY IF($amt<0, $field.uid, $other.uid)
+    SELECT AVG(ABS(amt)) AS avg0, MAX(ABS(amt)) AS max0, COUNT(*) AS count0 
+    FROM txs_proper
+    WHERE IF(amt<0,$other,$field)=:uid AND created>:since 
+    GROUP BY IF(amt<0,$field,$other)
 EOF;
   $sql = <<< EOF
-    SELECT SUM(IF(:amount<avg0, 1, 0)) AS countLess, 
+    SELECT SUM(IF(:amount<avg0, 1, 0)) AS lessCount, 
     MAX(max0) AS maxAmt, 
-    SUM(IF(count0<:count, 1, 0)) AS countFewer,
-    COUNT(*) AS countAll 
+    SUM(IF(count0<:count, 1, 0)) AS fewerCount, COUNT(*) AS othersCount 
     FROM ($subtotals) s
 EOF;
-  if ($res = db\q($sql, compact(ray('amount count since created uid')))->fetchAssoc()) {
-    extract($res); // average amount and number of purchases per other
-///    debug($res + compact(ray('way field other uid amount count')));
-    if ($countLess > $countAll * .90) setRisk("big$way"); // unusually big for this payer/payee (top decile)
-    if ($amount >= $maxAmt) setRisk("biggest$way"); // biggest ever for this payer/payee
-    if ($countFewer > $countAll * .90) setRisk("often$way"); // unusually frequent for this payer/payee
+
+  if ($res = db\q($sql, compact(ray('amount count since uid')))->fetchAssoc()) {
+    extract($res); // average amt and number of purchases per other
+    if ($lessCount / $othersCount > .90) setRisk("big$way"); // unusually big for this payer/payee (top decile)
+    if (abs($amount) >= $maxAmt) setRisk("biggest$way"); // biggest ever for this payer/payee
+    if ($fewerCount / $othersCount > .90) setRisk("often$way"); // unusually frequent for this payer/payee
   }
 }
 
@@ -333,14 +312,13 @@ EOF;
  * Set the "origins" risk bit in the current transaction or outgoing ACH, if appropriate.
  * @param int $uid: the account record ID
  * @param int $created: transaction date
- * @param currency $amount: transaction amount
+ * @param currency $amount: (UNUSED) transaction amount
  */
 function setOriginRisk($uid, $created, $amount) {
   $since = $created - YEAR_SECS;
-  $table = 'tx_entries JOIN tx_hdrs USING(xid)';
+  $table = 'SELECT IF(amt<0,uid1,uid2) AS uid,risk,created,amt FROM txs_proper';
   $where = 'uid=:uid AND risk IS NOT NULL AND created BETWEEN :since AND :created';
-
-  $avgRisk = db\get('AVG(risk/ABS(amount))', "$table", $where, compact(ray('uid since created'))) / (K_RED / K_THRESHOLD);
+  $avgRisk = db\get('AVG(risk/ABS(amt))', "($table) t", $where, compact(ray('uid since created'))) / (K_RED / K_THRESHOLD);
 ///  debug(compact('uid','amount','since','table','where','avgRisk'));
   if ($avgRisk > 0) setRisk('origins', $multiplier = $avgRisk, $multiplier > 1/2);
 }

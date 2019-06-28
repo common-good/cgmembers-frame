@@ -62,8 +62,8 @@ function setupBasicAccounts() {
   }  
 
   $server = r\serverUid();
-  $x1=new r\Acct(array_combine($keys, array(CG_ROUNDUPS_UID, 0, t('roundup'), t('Roundup Donations'), 'cg@commongood.earth', '', 0, 0, 6)));
-  new r\Acct(array_combine($keys, array(CG_CRUMBS_UID, 0, t('crumbs'), t('Crumb Donations'), 'cg@commongood.earth', '', 0, 0, 6))); 
+  $x1=new r\Acct(array_combine($keys, array(CG_ROUNDUPS_UID, 0, t('roundup'), t('%PROJECT Region'), 'cg@commongood.earth', '', 0, 0, 6)));
+  new r\Acct(array_combine($keys, array(CG_CRUMBS_UID, 0, t('crumbs'), t('%PROJECT Region'), 'cg@commongood.earth', '', 0, 0, 6))); 
   new r\Acct(array_combine($keys, array(CG_SERVICE_CHARGES_UID, 0, t('bank fees'), t('Bank service charges'), 'cg@commongood.earth', '', 0, 0, 6))); 
   new r\Acct(array_combine($keys, array(BANK_IN_ID, 0, t('bank-in'), t('--'), 'cg@commongood.earth', '', 0, 0, 6))); 
   new r\Acct(array_combine($keys, array(BANK_OUT_ID, 0, t('bank-out'), t('--'), 'cg@commongood.earth', '', 0, 0, 6)));
@@ -82,6 +82,7 @@ function setupBasicAccounts() {
     \setV('cgf_uid', $cgf->id);
     $cgf->update('emailCode website activated created', '1495kJHm0h145PHh2345h', 'cg4.us', R_LAUNCH, R_LAUNCH);
 //    $cgf->newRelation($wws->id, r\perm(B_MANAGE));
+    $cgf->reread(); // keeps tests from dying when using CGF as a funder for doBalance immediately after recreating the db
   }
 }
 
@@ -100,7 +101,7 @@ function makeTestAccounts() {
   $a = a('aab', '', true);
   $selling = "groceries\ngifts\nsundries\ndeli\nbaked goods";
   $a->update('name fullName selling', 'cornerstore', 'Corner Store', $selling);
-  //  $a->setBitx(CO_REQUIRE_CASHIER, FALSE, 'coFlags');
+  //  $a->setBit(CO_REQUIRE_CASHIER, FALSE, 'coFlags');
 
   $a = a('aaa', '', true);
   $a->update('name fullName cardCode2', 'mariamanager', 'Maria Manager', 'WeHlioM5JZv1O9G');
@@ -112,7 +113,7 @@ function makeTestAccounts() {
   
   $a = a('aaq', '', true);
   $a->update('name fullName', 'helgas', 'Helga\'s Hardware');
-  //  $a->setBitx(CO_REQUIRE_CASHIER, TRUE, 'coFlags');
+  //  $a->setBit(CO_REQUIRE_CASHIER, TRUE, 'coFlags');
   a\photoFromFile($a);
   
   $a = a('aak', '', true);
@@ -156,11 +157,8 @@ function showSteps($a) {
 function showActivity($a) {
   $uid = $a->id;
   $when = u\plusMonths(-3);
-  $count = $a->co ? db\count('tx_entries JOIN tx_hdrs USING (xid)',
-                             'uid=:uid AND created>:when', compact('uid', 'when'))
-    : db\count('tx_entries payer JOIN tx_hdrs USING(xid) JOIN tx_entries payee USING (xid)',
-               'payer.uid=:uid AND payer.amount < 0 AND payee.uid<>:CGID AND payee.amount > 0 AND created>:when',
-               compact(ray('uid when')));
+  $count = $a->co ? db\count('txs_prime','uid2=:uid AND created>:when', compact('uid', 'when'))
+  : db\count('txs', 'uid1=:uid AND uid2<>:CGID AND created>:when', compact(ray('uid when')));
   $ret = t('%count %what', 'count what', $count, $a->co ? t('sales') : t('purchases'));
   foreach (ray('created activated signed') as $k) $subs[$k] = $a->$k ? u\fmtDate($a->$k) : t('NO');
   $subs['use'] = u\fmtDate($a->ok ? $a->access : $a->login);
@@ -241,14 +239,14 @@ function formatField($k, $v, $flagsField = B_LIST) {
  * @param string $fields: list of fields to display
  * @param array $joinFields: list of fields joining to users table (limit by community if called by Ctty Admin)
  */
-function showQuery($table, $where = '1', $order = '', $fields = '*', $joinFields = []) {
+function showQuery($table, $where = '1', $order = '', $fields = '*', $joinFields = '') {
   $limit = 500; // max records to show
   global $mya;
   
   $flagsField = ($table == 'tx_hdrs') ? TX_FLAGS : B_LIST;
   if (!$mya->admin and $joinFields) {
     if ($table != 'users') {
-      if (!is_array($joinFields)) $joinFields = array($joinFields);
+      if (!is_array($joinFields)) $joinFields = ray($joinFields);
       $fieldCount = count($joinFields);
       $table .= ' t';
       $crit = null;
@@ -787,11 +785,9 @@ function callDetails($type = '', $when = '') {
     //    return "<div class=\"well\"><h3>$head$body</h3></div>";
   }
 
-  $table = "tx_entries payer join tx_hdrs t using(xid) join tx_entries payee using(xid)";
   $subs = ray('id', $mya->id);
-  $gifts = $mya->giftsDesc() 
-    ?: (db\sum('payee.amount', $table, 'payer.uid=:id AND payer.amount < 0 AND payee.uid=:CGID AND payee.amount > 0 AND :IS_GIFT', $subs)
-	?: db\get('amount', 'r_recurs', 'payer=:id AND payee=:CGID AND ended=0', $subs)); // a promised gift counts here, if none yet
+  $gifts = ($mya->giftsDesc() ?: $mya->totalGifts())
+	?: db\get('amount', 'r_recurs', 'payer=:id AND payee=:CGID AND ended=0', $subs); // a promised gift counts here, if none yet
   
   /*        $help = $gifts ? 'thanks' : 'ask';
             $msg = t('<span class="loud">%when <b>Welcome</b></span> to %PROJECT, How\'s it going%lastTx? %help donation(s), %signupCo volunteer? [<%a>details</a>]', 'when lastTx help signupCo _a', u\fmtDate($when, TRUE), $a->lastTxDesc(), ucfirst($help), @$signupCo, w\atag("/help/welcome/gifts=$gifts"));
@@ -892,6 +888,7 @@ function callDetails($type = '', $when = '') {
 
 /**
  * Return statistics about member donations for members signed up after a certain date.
+ * This function is currently called only from a PHP window.
  */
 function donationTrend($co = FALSE, $since = NULL) {
 	u\setDft($since, now() - YEAR_SECS);
@@ -899,7 +896,7 @@ function donationTrend($co = FALSE, $since = NULL) {
 	$where = "$co AND u.:IS_OK AND u.created>:since";
 	
 	$sql =<<< X
-	  SELECT AVG(g.amount*IF(often='M', 12, IF(often='Q', 4, IF(often='Y', 1, 0)))) AS regular
+	  SELECT AVG(g.amount*IF(often='M', 12, IF(often='Q', 4, IF(often='Y', 1, IF(often='W', 52, 0))))) AS regular
 		FROM r_recurs g LEFT JOIN users u ON u.uid=g.payer
 		WHERE g.payee=:CGID AND $where
 X;
@@ -911,9 +908,8 @@ X;
 	
   $accts = db\count('users u', $where, $subs);
 	
-  $sql = "SELECT COUNT(*) AS txCount, AVG(amount%1) AS cents FROM tx_entries e JOIN users USING(uid) WHERE $where";
+  $sql = "SELECT SUM(amt) AS txTotal, COUNT(*) AS txCount, AVG(amt%1) AS cents FROM txs_prime t JOIN users u ON u.uid=uid1 WHERE $where";
   $res += db\q($sql, $subs)->fetchAssoc();
-  $txTotal = db\q("SELECT SUM(e.amount) FROM tx_entries e JOIN tx_hdrs t USING(xid) JOIN users u USING(uid) JOIN tx_entries e2 USING(xid) WHERE $where", $subs)->fetchField();
 
   return $res + compact(ray('accts txCount txTotal'));
 }

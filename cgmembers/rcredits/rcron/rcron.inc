@@ -68,7 +68,7 @@ NOTES:
   where <star> means * (not the same as for the production site) 
  */
 
-define('R_DAILY_TASKS', 'START checkAccts requests setNear acctStats cttyStats trust acctRisk acctRiskFinish txRisk achRisk tickle lessOften recurs invoices getFunds invest notices END'); // had homogenize, pool 
+define('R_DAILY_TASKS', 'START checkAccts requests setNear acctStats cttyStats trust acctRisk acctRiskFinish txRisk achRisk tickle lessOften recurs getFunds invoices invest notices END'); // had homogenize, pool 
 //define ('R_DAILY_TASKS', 'START redistribute END');
 include_once __DIR__ . '/rcron-subs.inc';
 
@@ -148,7 +148,7 @@ function periodic() {
   foreach ($cttys as $ctty) { // should never happen, but it does. figure out where.
     $a = r\acct($ctty);
     foreach ([B_UP, B_CGC] as $bit) if (!$a->can($bit)) {
-/**/  r\tellAdmin(t('Community bits got unset!'), ray('ctty bit time trace', $ctty, $bit, now(), trace()));
+      r\tellAdmin(t('Community bits got unset!'), ray('ctty bit time trace', $ctty, $bit, now(), trace()));
       $a->setBit($bit);
     }
   }
@@ -266,13 +266,14 @@ X;
       SUM(IF(amount > 0, amount, 0))/6 AS inVol,
       SUM(IF(amount < 0, -amount, 0))/6 AS outVol
       FROM users u LEFT JOIN (
-        SELECT amount,uid FROM tx_entries LEFT JOIN tx_hdrs t0 USING(xid) WHERE t0.created>=$start
+        SELECT e.amount,e.uid FROM tx_entries e JOIN txs_noreverse tnr USING(xid) WHERE tnr.created>=$start
       ) t USING(uid)
       WHERE u.:IS_OK AND u.uid>:CANONIC_ACCTS
       AND $sinceActivated>0 AND $sinceActivated % 30 = 0 
       GROUP BY uid
     ) x 
 X;
+
   queueEach('activeMonthly', $sql); // no need for jid here (floors get summed)
   
   queueEach('activeWeekly', "SELECT uid FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS AND $sinceActivated>0 AND $sinceActivated % 7 = 0");
@@ -280,11 +281,8 @@ X;
 	$when = 'UNIX_TIMESTAMP()+:WEEK_SECS';
 	$sql = <<< X
 	  SELECT u.uid,r.amount,$when AS `when`,r.created,r.period,
-		  (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced,
-      (SELECT MAX(t.created) FROM tx_entries payer JOIN tx_hdrs t USING(xid) JOIN tx_entries payee USING(xid)
-             LEFT JOIN tx_hdrs tRev ON tRev.reversesXid=t.xid
-       WHERE payer.uid=r.payer AND payee.uid=r.payee AND t.:IS_RECURS AND
-             tRev.xid IS NULL AND t.reversesXid IS NULL) AS lastTx
+		(SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced,
+    (SELECT MAX(created) FROM txs_noreverse WHERE uid1=r.payer AND uid2=r.payee AND :IS_RECURS) AS lastTx
 		FROM users u LEFT JOIN r_recurs r ON r.payer=u.uid AND r.payee=:CGID AND r.ended=0
 		WHERE u.:IS_OK AND (r.period='Y' OR (r.id IS NULL AND FLOOR(($when-u.activated) / :DAY_SECS) MOD 365 = 0))
 X;
@@ -437,30 +435,23 @@ function everyMonth() {
   $server = r\serverUid();
   $bene = u\test() ? CGID : db\get('uid', 'users', "name='bene' AND uid<0");
   $start = u\monthDay1($end = u\monthDay1() - 1); // mark start and end of preceding month
-          if (u\test()) $start = strtotime('-30 days', $end = today() - 1) + 1; // test: the past 30 days
+  if (u\test()) $start = strtotime('-30 days', $end = today() - 1) + 1; // test: the past 30 days
+  
   queueEach('whatsup', "SELECT uid, u.:IS_CO as co, MAX(t.created) AS lastTx FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid) WHERE uid>:CANONIC_ACCTS AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $start");
   /* queueEach('inflationAdjust', "SELECT uid, $start AS start, $end AS end FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS");   */
 //  queueEach('shareCommitted', 'SELECT uid, committed, share FROM users WHERE :IS_OK AND committed>0');
   
   $sql = <<< X
-    SELECT uid, SUM(amt2)*crumbs AS donate
+    SELECT uid, SUM(amt)*crumbs AS donate
     FROM users u LEFT JOIN txs_noreverse t ON t.uid2=u.uid
-    WHERE crumbs>0 AND amt2>0 AND goods=:FOR_GOODS AND t.created BETWEEN $start AND $end
+    WHERE crumbs>0 AND amt>0 AND goods=:FOR_GOODS AND t.created BETWEEN $start AND $end
     GROUP BY uid
 X;
   queueEach('crumbs', $sql);
 
 	// figure amount to share with each official Common Good Community
-  $sql = <<< X
-    SELECT $end AS `end`, u.community AS ctty, SUM(MAX(cg.amount, 0)) AS `in`, SUM(MIN(cg.amount, 0)) AS `out`,
-           ( SELECT COUNT(1)
-             FROM r_usd d LEFT JOIN users du ON du.uid=d.payee 
-             WHERE d.txid<0 AND d.amount<0 AND du.community=u.community AND d.created<=$end ) AS bounces
-    FROM tx_hdrs t JOIN tx_entries cg USING(xid) JOIN tx_entries other USING(xid) LEFT JOIN users u ON u.uid=other.uid
-    WHERE cg.uid=ctty AND t.:IS_GIFT AND community NOT IN($server, $bene) AND t.created <= $end
-    GROUP BY community
-X;
-// Not until cgc means signed the CG/CGC agreement (and then not retroactive) queueEach('cgc', $sql);
+
+// Not until cgc means signed the CG/CGC agreement (and then not retroactive) queueEach('cgc', $cttyGiftsSql($end));
   
   $list = db\lst("CONCAT(fullName,' (',city,')')", 'users', ':IS_OK AND :IS_PAPER');
   r\tellAdmin(t('Send paper statements'), compact('list'));
@@ -519,9 +510,9 @@ function cgc($item) {
   extract(just('ctty in out end bounces', $item));
   $kickBack = round($in / 2 - $out - R_DEPOSIT_RETURN_FEE * $bounces, 2);
   if ($kickBack > 0) {
-    list ($a, $cgfA) = [r\acct($ctty), r\cgA()];
+    list ($a, $cgA) = [r\acct($ctty), r\cgA()];
     $desc = t('50% share of local donations through %dt', 'dt', u\fmtDate($end));
-    if ($a->ok) be\transfer('payment', $cgfA, $a, $kickBack, $desc, FOR_NONGOODS, ray('created gift', u\monthDay1() - 1, TRUE));
+    if ($a->ok) be\transfer('payment', $cgA, $a, $kickBack, $desc, FOR_NONGOODS, ray('created gift', u\monthDay1() - 1, TRUE));
   }
 }  
   
@@ -603,7 +594,7 @@ function setNear() {
   $queries = join(' UNION ', [
     'SELECT DISTINCT inviter AS id1, invitee AS id2, 1 AS w FROM r_invites WHERE invitee',
     'SELECT DISTINCT person AS id1, proxy AS id2, 1 AS w FROM r_proxies',
-    'SELECT DISTINCT payer.uid AS id1, payee.uid AS id2, 1 AS w FROM tx_hdrs JOIN tx_entries payer USING(xid) JOIN tx_entries payee USING(xid) WHERE payer.uid>0 AND payee.uid>0 AND payer.id < payee.id',
+    'SELECT DISTINCT uid1 AS id1, uid2 AS id2, 1 AS w FROM txs WHERE uid1>:CANONIC_ACCTS AND uid2>:CANONIC_ACCTS AND uid1<uid2',
     'SELECT DISTINCT main AS id1, other AS id2, 1 AS w FROM r_relations',
     'SELECT DISTINCT u1.uid AS id1, u2.uid AS id2, 0.5 AS w FROM users u1 INNER JOIN users u2 ON (u2.city=u1.city OR u2.zip=u1.zip) WHERE u1.uid<>u2.uid',
   ]); // each type of relationship counts as one point
@@ -649,9 +640,8 @@ function acctStats1($item, $asof = NULL) {
   $subs = compact('uid', 'monthAgo', 'asof');
   
   $sql = <<< X
-    SELECT SUM(payee.amount) AS giftsEver, SUM(IF(created<:monthAgo, 0, payee.amount)) AS giftsPastMo
-    FROM tx_hdrs JOIN tx_entries payer USING(xid) JOIN tx_entries payee USING(xid)
-    WHERE payer.uid=:uid AND payee.uid=:CGID AND :IS_GIFT AND created<:asof
+    SELECT SUM(amt) AS giftsEver, SUM(IF(created<:monthAgo, 0, amt)) AS giftsPastMo
+    FROM txs WHERE uid1=:uid AND uid2=:CGID AND :IS_GIFT AND created<:asof
 X;
   $row1 = db\q($sql, $subs)->fetchAssoc() ?: []; // giftsEver, giftsPastMo
   $row2 = [];  
@@ -792,17 +782,12 @@ function acctRiskFinish() {
 
 /**
  * Calculate risks of financial misbehavior for each recent transaction.
- * Include any substantial payments from the community (over $100).
+ * Include payments from the community.
  */
 function txRisk() {
   $sql = <<<EOF
-    SELECT DISTINCT xid FROM tx_hdrs 
-    JOIN tx_entries_payer e1 USING(xid) 
-    JOIN tx_entries_payee e2 USING(xid)
-    WHERE risk IS NULL AND ABS(e2.amount)>0 AND (
-      (e1.uid>:CANONIC_ACCTS AND e2.uid>:CANONIC_ACCTS) 
-      OR ((e1.uid<0 OR e2.uid<0) AND ABS(e2.amount)>:K_CTTY_THRESHOLD)
-    )
+    SELECT DISTINCT xid FROM txs
+    WHERE risk IS NULL AND uid1 NOT :CANONIC AND uid2 NOT :CANONIC
     ORDER BY created
 EOF;
   queueEach('txRisk1', $sql);
@@ -896,17 +881,18 @@ function giveNow($period, $lastGift, $start, $now = NULL) {
 /**
  * 1. Mark deposited transfers complete R_USDTX_DAYS business days after deposit (if not already marked complete)
  * 2. Get funds from a connected bank account or drawable CG account, as needed
+ * This (in particular getFunds) should be called before invoices and investments, so those ADD to the minimum balance
  */
 function getFunds() {
 //  $excess = 'LEAST(usd, :R_EXCESS)';
   $weekday = strftime('%w'); // 0-6 Sun-Sat (use %w because %u fails on Windows and maybe linux)
   if (u\test() or in($weekday, [2, 3, 4, 5])) { // no completions on Saturday, Sunday, or Monday
-    $sql = 'SELECT * FROM r_usd WHERE amount>0 AND NOT completed AND :NOW-created>=:HOUR_SECS AND (amount<=:R_USDTX_QUICK OR :NOW-created>=:R_USDTX_DAYS*:DAY_SECS)'; // this allows us to wait arbitrarily long to deposit chks
-//    $sql = 'SELECT * FROM r_usd WHERE amount<0 AND NOT completed AND deposit AND :REQUEST_TIME>=deposit+:R_USDTX_DAYS*:DAY_SECS'; // this depends on deposits almost every day
+    $sql = 'SELECT txid,channel FROM r_usd WHERE amount>0 AND NOT completed AND :NOW-created>=:HOUR_SECS AND (amount<=:R_USDTX_QUICK OR :NOW-created>=:R_USDTX_DAYS*:DAY_SECS)'; // this allows us to wait arbitrarily long to deposit chks
+
     queueEach('completeUsdTx', $sql);
   }
   
-	queueEach('getFunds1', 'SELECT uid,jid FROM users WHERE IF(jid,:MASTER,balance<minimum) AND uid>:CANONIC_ACCTS AND :IS_OK AND :IS_REFILL');
+	queueEach('getFunds1', 'SELECT uid FROM users WHERE :MASTER AND balance < minimum AND uid > :CANONIC_ACCTS AND :IS_OK AND :IS_REFILL');
 	/*
 //  $where = ':IS_REFILL AND (:IS_JOINED OR r-rewards-savingsAdd<minimum) AND uid>1 AND :IS_OK';
   $where = 'u.:IS_REFILL AND (jid OR balance<minimum) AND uid>:CANONIC_ACCTS AND u.:IS_OK';
@@ -931,18 +917,17 @@ X;
 }
 
 function completeUsdTx($item) {
-  extract(just('txid payee amount channel', $item));
-  $realAmt = db\get('amount', 'r_usd', 'txid=:txid', compact('txid'));
-  if ($amount != $realAmt) r\tellAdmin('bad completeUsdTx amount', $item + compact('realAmt'));
-  be\completeUsdTx(r\acct($payee), $txid, $amount, @$channel == TX_CRON);
+  extract(just('txid channel', $item));
+  be\completeUsdTx($txid, $channel == TX_CRON);
 }
 
 function getFunds1($item) {
   extract(just('uid jid', $item));
   $a = r\acct($uid);
 	$amount = ($a->minimum - $a->balance) - $a->getPendingDeposits();
-	if ($a->hasBank) $amount += db\sum('amount', 'r_invoices', 'status=:TX_APPROVED AND :IS_FUNDING AND payer IN (:uid,:jid)', $item) /*- $a->waitingFromBank()*/; // subtract out other non-invoice-related transfers
-	$a->getFunds($amount, t('to target'));
+///     debug("uid=$uid amount=$amount min=$a->minimum bal=$a->balance pend=" . $a->getPendingDeposits());
+//	if ($a->hasBank) $amount += db\sum('amount', 'r_invoices', 'status=:TX_APPROVED AND :IS_FUNDING AND payer IN (:uid,:jid)', $item) /*- $a->waitingFromBank()*/; // subtract out other non-invoice-related transfers
+	if ($amount > 0) $a->getFunds($amount, t('to target'));
 }
 
 /**

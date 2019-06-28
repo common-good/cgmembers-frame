@@ -97,11 +97,10 @@ function fixEmail(&$email) {
 
 function doRecords($list, $thing) {
   global $testOnly;
-//  $list = array_values((array) json_decode($list));
-//  foreach ($list as $k => $v) if (is_object($v)) $list[$k] = (array) $v;
-/**/    if ($testOnly) t\output("Expect $thing: " . print_r($list, 1), 'expect');
+
+  if ($testOnly) t\output("Expect $thing: " . pr($list), 'expect');
   if (is_object($list)) $list = (array) $list;
-/**/  u\EXPECT(is_array(@$list) and !is_numeric(@key(@$list[0])), 'doThing object should be an assoc: ' . print_r($list, 1));
+  u\EXPECT(is_array(@$list) and !is_numeric(@key(@$list[0])), 'doThing object should be an assoc: ' . pr($list));
   $func = 'CG\\Testing\\do';
   $func .= function_exists($func . $thing) ? $thing : 'Thing';
   foreach ($list as $one) {
@@ -125,9 +124,8 @@ function doThing($info, $thing, $key = 'id') {
 // NO!  if (@$info['id']) {$info['uid'] = $info['id']; unset($info['id']);}
   if ($testOnly) {
     return verifyRecord($table, $info);
-  } else {
-    return db\insert($table, $info, $key);
-  }
+  } else {return db\insert($table, $info, $key);}
+
 }
 
 function these($thing, $list) {return doRecords($list, ucwords($thing));}
@@ -176,7 +174,7 @@ function doAccounts($info = []) {
   global $testOnly; if ($testOnly) return doMembersHave($info);
 
   if (is_object($info)) $info = (array) $info;
-/**/  if (!is_array($info)) {echo 'not array'; print_r($info); die(trace()); } // keep for now
+/**/  if (!is_array($info)) {die('not array: ' . pr($info) . trace());} // keep for now
 //  unset($info['rebate']);
   extract($info); // any user table fields
   $uid0 = @$uid;
@@ -263,8 +261,8 @@ function doAccounts($info = []) {
  */
 function doTxs($info, $thing) {
   global $testOnly;
-  u\EXPECT($thing != 'Invoice', 'use doInvoice for invoices, not doTx');
-  $filter = function ($ray) {return array_filter($ray, function ($v) {return $v !== FALSE;});}; // bypass array_filter's conversion of 0 to boolean
+  u\EXPECT($thing != 'Invoices', 'use doInvoices for invoices, not doTx');
+  $filter = function ($ray) {return array_filter($ray, function ($v) {return ($v !== FALSE and !is_null($v));});}; // bypass array_filter's conversion of 0 to boolean
   $channel0 = call_user_func(function () {global $channel; return $channel;}); // protect value of current channel
 
   $hdrFlds = 'xid goods actorId actorAgentId flags channel boxId risk risks recursId reversesXid created';
@@ -280,7 +278,7 @@ function doTxs($info, $thing) {
   if (u\starts($payeeFor, 'undoes:')) $reversesXid = substr($payeeFor, strpos($payeeFor, ':') + 1);
 
   $risks = $risks ? getRisks($risks, K_TX_RISKS) : 0;
-  $type = ($type and !is_numeric($type)) ? u\consta('TX', $type) : FALSE;
+  if ($type or !$testOnly) $type = $type ? (is_numeric($type) ? $type : (u\consta('E', $type) ?: -1)) : E_PRIME;
   foreach (ray($uidFlds) as $k) if (isset($$k)) $$k = t\uid($$k);
   list ($actorId, $actorAgentId) = $taking ? [$payee, $payeeAgent] : [$payer, $payerAgent];
   if ($flags and !is_numeric($flags)) $flags = u\bit($flags); // works for '' and arrays too
@@ -294,13 +292,18 @@ function doTxs($info, $thing) {
   }
   
   $hdr = $filter(compact(ray($hdrFlds)));
-  $e1 = $filter(ray($entryFlds, $xid, ENTRY_PAYER, 0-$amount, $payer, $payerAgent, $payerFor, $payerTid, NULL, NULL));
-  $e2 = $filter(ray($entryFlds, $xid, ENTRY_PAYEE, $amount, $payee, $payeeAgent, $payeeFor, $payeeTid, NULL, NULL));
+  $type = $type ?: ((r\isBank($payer) or r\isBank($payee)) ? E_BANK : E_PRIME);
+  $e1 = $filter(ray($entryFlds, $xid, $type, 0-$amount, $payer, $payerAgent, $payerFor, $payerTid, NULL, NULL));
+  $e2 = $filter(ray($entryFlds, $xid, $type, $amount, $payee, $payeeAgent, $payeeFor, $payeeTid, NULL, NULL));
 
   if ($testOnly) {
-    return (verifyRecord('tx_hdrs', $hdr) and verifyRecord('tx_entries', $e1) and verifyRecord('tx_entries', $e2));
+//    return (verifyRecord('tx_hdrs', $hdr) and verifyRecord('tx_entries', $e1) and verifyRecord('tx_entries', $e2));
+    $e1 = $filter(ray('for1 uid1 agt1 tid1 relType1 rel1', $payerFor, $payer, $payerAgent, $payerTid, NULL, NULL));
+    $e2 = $filter(ray('for2 uid2 agt2 tid2 relType2 rel2', $payeeFor, $payee, $payeeAgent, $payeeTid, NULL, NULL));
+    $ray = $hdr + $filter(ray('type amt', $type, $amount)) + $e1 + $e2;
+    return verifyRecord('txs', $ray);
   } else {
-    $hdr['entries'] = [new r\TxEntry($e1), new r\TxEntry($e2)];
+    $hdr['entries'] = [new r\TxEntry($e2), new r\TxEntry($e1)];
     $tx = new r\Tx($hdr);
     return $tx->insert(TRUE);
   }
@@ -315,16 +318,17 @@ function doTxs($info, $thing) {
  */
 function doInvoices($info) {
   global $testOnly, $channel;
-///   debug("doInvoice(" . print_r($info, true) . "), testOnly=$testOnly");
+///   debug("doInvoice(" . pr($info, true) . "), testOnly=$testOnly");
   extract($info);
   $info['for'] = u\arrayGet($info, 'for', 'this or that');
   $info['purpose'] = u\arrayGet($info, 'purpose', $info['for']);
   unset($info['for']);
   $xx = $info['purpose'];
+
   if ($testOnly) return verifyRecord('r_invoices', $info);
 
-  $missing = array_diff_key(['amount'=>1, 'payer'=>1, 'payee'=>1, 'purpose'=>1], $info);
-/**/  u\EXPECT($missing == [], "missing fields " . print_r($missing, true));
+  $missing = array_diff_key(ray('amount:1, payer:1, payee:1, purpose:1'), $info);
+  u\EXPECT($missing == [], "missing fields " . pr($missing));
 
   $invInfo = u\exactly('status goods created', $info, [TX_PENDING, u\forCash($info['purpose']) ? FOR_USD : FOR_GOODS, now()]);
   switch ($invInfo['status']) {
@@ -473,8 +477,8 @@ function count($what, $count) {
   switch ($what) {
     case 'accounts': return db\count('users') == $count;
     case 'tx_hdrs': // fall through
-    case 'txs': return db\count('tx_hdrs', "xid > 0") == $count;
-    default: return db\count('r_' . $what) == $count;
+    case 'txs': return (db\count('tx_hdrs', "xid > 0") == $count);
+    default: return (db\count('r_' . $what) == $count);
   }
 }
 
@@ -552,10 +556,12 @@ function doBalances($info) {
     return TRUE;
   }
     
-  if (array_key_exists('balance', $info)) {
+  if (isset($info['balance'])) {
     $testXid -= 1;
     if (abs($info['balance']-$a->balance) >= 0.005) {
-      $res = be\transfer('charge', r\acct(CGID), $a, -($info['balance']-$a->balance), 'set balance for testing', FOR_NONGOODS,
+      $cgA = r\acct(CGID);
+      u\EXPECT((bool) $cgA, 'no cgA!');  // when running the rCron Joint test first after recreating, r\acct(CGID) fails here because the CG account was just created (shouldn't fail -- reflects some coding error in acct object maybe?). Creating with $cgA = new r\Acct([CGID, CGID]) here did not help. SOLUTION: First run some other test that doesn't create balances like this, just to get the CG account created.
+      $res = be\transfer('charge', $cgA, $a, -($info['balance']-$a->balance), 'set balance for testing', FOR_NONGOODS,
                          ['force'=>1, 'xid'=>$testXid]);
       u\EXPECT($res[0], "trouble creating transfer to set balance");
     }
@@ -612,18 +618,19 @@ function usdTransfers($txs) {
     }
     $a = r\acct($tx['payee']);
     if (empty($a)) return t\output('Bad payee: ' . @$payee);
-    $txid = be\createUsdTransfer($a, $amount, u\arrayGet($tx, 'created', now()), nn($tx['txid'], null));
+    $txid = be\createUsdTransfer($a, $amount, nn($tx['created'], now()), nn($tx['txid'], NULL));
     if (!$txid) {
       t\output('failure creating usd xfr: ' . $txid);
       return FALSE;
     }
     if (!empty($tx['deposit'])) {
       $xde=$tx['deposit'];
-      u\EXPECT(db\update('r_usd', just('txid deposit', $tx), 'txid'), 'failure depositing usd');
+      $res = db\update('r_usd', just('txid deposit', $tx), 'txid');
+      u\EXPECT($res, 'failure depositing usd');
     }
     if (nn($tx['completed']) and ($txid > 0 xor $tx['amount'] < 0)) {
-      u\EXPECT(be\completeUsdTx($a, $txid, $tx['amount'], nn($tx['automatic']), $completed),
-               'failure completing usd transfer');
+      $res = be\completeUsdTx($txid, nn($tx['automatic']), $completed);
+      u\EXPECT($res, 'failure completing usd transfer');
     }
   }
   return TRUE;
@@ -862,7 +869,7 @@ function weShowWithSubs($page, $subs) {
     $wanted = t($page, $subs);
     t\output("<b>WANTED: </b>$wanted", 'screen');
     $res = ($wanted == $testConfirmation);
-/**/ if (!$res) debug(compact('wanted', 'subs', 'testConfirmation'));
+    if (!$res) t\output(compact('wanted', 'subs', 'testConfirmation'));
     return $res;
   }
   
@@ -886,7 +893,6 @@ function makePicture($photo, $a) {return $a->update(compact('photo'));}
  * @todo: after everyone is up to version 217, add penultimate param: $proof = 'calc'
  */
 function hitServer($op, $extra = [], $agent, $device = '', $version = 221) {
-///   debug("hitServer($op, " . print_r($extra, true) . ", $agent, $device, $version)");
   global $rposResult;
   if ($agent) $agent = t\fullQid2($agent);
   extract(just('amount member code created proof goods', $extra));
@@ -903,10 +909,10 @@ function hitServer($op, $extra = [], $agent, $device = '', $version = 221) {
   if (@$goods and !is_numeric($goods)) $goods = t\goodsBit($goods);
 
   $input = @compact(ray('op agent device version amount member proof goods')) + $extra;
-/**/ t\output('request: ' . print_r($input, 1), 'input'); // keep this
+  t\output('request: ' . pr($input), 'input'); // keep this
   $rposResult = r\Smart\pos($input);
   if ($op != 'photo') $rposResult = (array) json_decode($rposResult);
-/**/ t\output('answer: ' . print_r($rposResult, 1), 'output');
+  t\output('answer: ' . pr($rposResult), 'output');
   return TRUE;
 }
 
@@ -985,7 +991,7 @@ function logIn($id) {
  *   return verifyRecord('r_relations', $info);
  */
 function verifyRecord($table, $info) {
-/**/  if (!is_array($info)) die('in verifyRecord: ' . trace()); // keep
+  u\EXPECT(is_array($info), 'in verifyRecord');
   unset($info['data']);
   foreach ($info as $key => $value) {
     if ($value == '?') {unset($info[$key]); continue;}
@@ -1000,7 +1006,10 @@ function verifyRecord($table, $info) {
   if (!$result = db\exists($table, $crit, $info)) {
     foreach ($info as $k => $value) $subs[$k] = "'$value'";
     $sql = "SELECT * FROM $table WHERE " . strtr(u\SUBS($crit), u\prefixKeys(':', $subs));
-/**/ output("verifyRecord failed. sql=$sql<br>table=$table crit=$crit EXPECTED info=" . print_r($info, 1));
+    output("verifyRecord failed. sql=$sql<br>table=$table crit=$crit EXPECTED info=" . pr($info));
+    list ($k, $v) = [key($info), array_shift($info)];
+///    die(pr(compact(ray('k v subs info'))));
+    output("Actual $table record at $k=$v: " . pr(db\get('*', $table, [$k => $v])));
   }
   return $result;
 }
@@ -1415,6 +1424,7 @@ function shownWith($content, $type = 'text', $mustBePresent = TRUE) {
 
   $xi = $i = 0;
   foreach ($ray as $one) {
+///    debug($one);
     if ($one === '' or substr($one, 0, 1) == '~') continue; // ignore ~labels
 //    if (in($one, '%')) $one = t\lastMinuteSubs(htmlspecialchars($one));
     $one = t($one); // translate constants in member

@@ -246,6 +246,8 @@ function members($list) {return t\members($list);}
  * in: MAKE backing AMemberChangesBackingAmount
  *     MAKE balancesheet Setup
  *     MAKE bank Setup
+ *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
+ *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     MAKE community Setup
  *     MAKE custstatement Setup
  *     MAKE download Setup
@@ -267,6 +269,7 @@ function members($list) {return t\members($list);}
  *     TEST transact AMemberConfirmsRequestToPayAMemberCompany
  *     TEST transact AMemberPaysAnotherMemberRepeatedly
  *     MAKE transactions Setup
+ *     MAKE transactions AMemberLooksAtTransactionsWithRoundups
  */
 function transactions($list) {return t\transactions($list);}
 
@@ -1538,7 +1541,7 @@ function recurs($list) {return t\recurs($list);}
 /**
  * tx headers: (ARG)
  *
- * in: MAKE transactions AMemberLooksAtTransactionsWithRoundups
+ * in: 
  */
 function txHeaders($list) {
   return t\txHdrs($list);
@@ -1549,7 +1552,6 @@ function txHeaders($list) {
  *
  * in: TEST flow AMemberDraws
  *     TEST flow AMemberDrawsAgain
- *     MAKE transactions AMemberLooksAtTransactionsWithRoundups
  */
 function txEntries($list) {
   return t\txEntries($list);

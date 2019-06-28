@@ -172,28 +172,20 @@ function adminSummary() {
 
     if (!$mya->co) {
       $moves = item($mya->moves === '' ? '?' : $mya->moves, t('Moves:'), t('(How many times has this person changed counties in the past decade?)'));
+    }      
 
-//    $who = textFld(t('Be who:'), t('Type a name, id, email, or phone of a (different) member account to manage.'), autocomplete($admin ? '' : 'ctty')); // keep this for when we need it (just add to returned fields)
-  }      
-
-  if ($mya->id == CGID) {
-    $sql = <<<EOF
-      SELECT u.community AS ctty, SUM(IF(amount > 0, amount, 0)) AS `in`,
-        SUM(IF(amount < 0, - amount, 0)) AS `out`
-      FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING (xid)
-      WHERE (u.uid=:uid) AND t.:IS_GIFT GROUP BY community
-EOF;
-    $q = db\q($sql, compact('uid'));
-    $lines = '<tr><th>Community</th><th>Donations</th><th>Paid</th><th>Due</th></tr>';
-    while ($row = $q->fetchAssoc()) {
-      extract($row);
-      $row['due'] = round($in / 2 - $out, 2);
-      foreach (['in', 'out', 'due'] as $k) $$k = number_format($row[$k], 2);
-      $ctty = r\acct($ctty)->fullName;
-      $lines .= "<tr><td>$ctty</td><td>$in</td><td>$out</td><td>$due</td></tr>\n";
+    if ($mya->id == CGID) {
+      $lines = '<tr><th>Community</th><th>Donations</th><th>Paid</th><th>Due</th></tr>';
+      foreach (r\cttyGifts(time()) as $row) {
+        extract($row);
+        $bounces = R_DEPOSIT_RETURN_FEE * $bounces;
+        $due = round($in / 2 - $out, 2);
+        foreach (ray('in out bounces due') as $k) $$k = number_format($$k, 2);
+        $ctty = r\acct($ctty)->fullName;
+        $lines .= "<tr><td>$ctty</td><td>$in</td><td>$out</td><td>$bounces</td><td>$due</td></tr>\n";
+      }
+      $cgfDonations = item("<table id=\"cgf-donations\">$lines</table>");
     }
-    $cgfDonations = item("<table id=\"cgf-donations\">$lines</table>");
-  }
 //    $mediaConx = textFld(t('Media Conx:'), t('(How many 1st or 2nd-degree connections do you have with this person on FaceBook or LinkedIn?)'), dft($mya->mediaConx ?: 0));
   }
 

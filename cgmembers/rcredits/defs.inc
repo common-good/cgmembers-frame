@@ -5,7 +5,7 @@
  * (SMS, web, smartphone, etc.)
  */
 
-define('R_VERSION', '3.50f'); // software version
+define('R_VERSION', '3.50g'); // software version
 
 // definitions used in settings file
 define('US_COUNTRY_ID', 1228); // United States
@@ -183,6 +183,7 @@ define('R_ON_FILE', t('(on file)'));
 
 define('DOLLAR_POOL', 1); // uid of dollar pool account
 define('CANONIC_ACCTS', 512); // number of canonic accounts (admin/dollar pool, placeholders,...)
+define('CANONIC', 'BETWEEN 0 AND ' . (CANONIC_ACCTS - 1));
 define('AGGREGATE_MIN', 1); // minimum number of members to show aggregate data
 
 define('CG_ADMIN_UID', 1);  // uid of administrator account
@@ -382,7 +383,7 @@ define('B_ADMIN2', 27); // is an overall admin assistant or bank partner or gove
 define('B_CADMIN2', 28); // is a community sub-administrator (read-only except notes)
 define('B_CADMIN', 29); // is a community administrator
 define('B_ADMIN', 30); // is a system administrator -- can manage server, including assigning ctty admins, but cannot manage communities or individual accounts (except temporarily)
-define('B_MAX', 30); // maximum bit number on testing machine
+define('B_MAX', 62); // maximum bit number
 define('B_ADMINABLE', 'member confirmed carded beta icAdmin cAdmin cAdmin2 nonudge cgc invites rewardy noneg'); // for cAdmin to set
 define('B_LIST', 'member confirmed ok carded ided refill co draws roundup nonudge nosearch u11 bankOk weekly monthly u15 bysms paper secret u19 debt u21 savings cashoutW cashoutM beta icAdmin admin2 cAdmin2 cAdmin admin');
 
@@ -466,7 +467,7 @@ define('K_ADMINOK', 0); // community admin blessed the account or transaction
 define('K_HASBANK', 3); // account has a connected bank account
 define('K_ADDROFF', 14); // account's physical address is wonky (can't be geolocated or whatever)
 define('HAS_BANK', 'risks&(1<<' . K_HASBANK . ')'); // mysql criterion (not surrounding parens, so we can do u.:HAS_BANK)
-define('MASTER', '(uid<jid)'); // account is the master in a joint account
+define('MASTER', '(jid=0 OR uid < jid)'); // account is the master in a joint account
 define('U_FOODY', '(SELECT 1 FROM r_industries i JOIN r_user_industries ui USING (iid) WHERE ui.uid=u.uid AND i.parent=2 LIMIT 1)'); // MySQL for "the account with record ID u.uid is a food-related business"
 define('T_FOODY', '(SELECT ' . U_FOODY . " FROM users u WHERE u.uid=uid2 AND u.name<>'foodfund')"); // MySQL involving txs VIEW: "payee is FOODY"
 
@@ -534,25 +535,19 @@ define('DS_OPEN', 1);  // dispute not resolved
 define('DS_ACCEPTED', 2);  // dispute accepted and transaction reversed
 define('DS_DENIED', 3);  // dispute denied
 
-
-define('ENTRY_OTHER', 0);
-define('ENTRY_PAYER', 1);  // the uid in this entry is for the payer
-define('ENTRY_PAYEE', 2);  // the uid in this entry is for the payee
-define('ENTRY_DONATION', 3);  // this is a transaction-related donation (e.g., roundup donations)
-                              // the precise nature can be determined from the uid
+define('E_BANK_ONLY', 0); // bank charges and transfers between bank accounts that have no effect on CG account balances
+define('E_PRIME', 1);  // the main pair in the transaction (payer and payee)
+define('E_PAYER', 'UNUSED');  // the uid in this entry is for the payer
+define('E_PAYEE', 'UNUSED');  // the uid in this entry is for the payee (this type is not used in txs_prime or txs)
+define('E_DONATION', 2);  // this is a transaction-related donation (e.g., roundup and Food Fund donations)
+                          // the precise nature can be determined from uid2
+define('E_REBATE', 3); // discount rebate to customer
+define('E_USD_FEE', 4); // fee from customer to merchant for buying (or selling?) Common Good credit
+define('E_BANK', 5); // CG account transfers to or from the member's bank
+define('E_XFEE', 6); // transfer fee to merchant (UNUSED)
+define('E_TYPES', 'bank_only prime donation rebate usd_fee bank');
 
 $GLOBALS['emailSubjects'] = array(
-/*  'new-payment' => t('%PROJECT PAYMENT from {otherName}'),
-  'new-charge' => t('%PROJECT CHARGE from {otherName}'),
-  'charge-disputed' => t('%PROJECT Charge DISPUTED by {otherName}'),
-
-  'invoice-denied' => t('%PROJECT Invoice DENIED by {otherName}'),
-  'invoice-canceled' => t('%PROJECT Invoice CANCELED by {otherName}'),
-
-  'new-offer' => t('%PROJECT PAYMENT OFFER from {otherName}'),
-  'offer-refused' => t('%PROJECT Payment REJECTED by {otherName}'),
-  'offer-canceled' => t('%PROJECT Invoice CANCELED by {otherName}'),
-*/
   'nonmember' => t('%PROJECT invitation followup'),
   'partner-signup' => t('Continue your %PROJECT sign-up'),
   'verify' => t('%PROJECT NEXT STEP: Verify your email address.'),

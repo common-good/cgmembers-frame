@@ -91,7 +91,7 @@ function formCompany_submit($form, &$sta) {
 
   $mya->setCoCans(@$can);
   //$mya->setBits(APP_CAN_BITS, $can, 'co');
-//  $mya->setBitx(CO_REQUIRE_CASHIER, @$requireCashier, 'coFlags');
+//  $mya->setBit(CO_REQUIRE_CASHIER, @$requireCashier, 'coFlags');
   $mya->setCoBit(CO_PRIVATE, @$private);
   $mya->setCoBit(CO_TIP, $tips);
   if ($mya->cAdmin) $mya->setCoBit(CO_FAST, @$fast);

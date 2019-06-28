@@ -805,74 +805,74 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     $newUid = r\Acct::nextId($region);
   }
   $subs = array( // all cg tables are listed, to be sure we don't leave any out (D=deletable)
-                // r_areas
-                // r_bad
-                'r_ballots:voter',
-                'r_ballots:proxy',
-                // r_banks
-                'r_boxes:uid:D',
-                'r_changes:uid:D',
-                'r_changes:changedBy',
-                'r_company:uid:D',
-                // r_countries
-                'r_coupated:uid',
-                'r_coupons:fromId',
-                'r_criteria:ctty:D',
-                'r_do:uid:D',
-                'r_events:ctty',
-                'r_gifts:uid:D',
-                'r_honors:uid:D', // honors are deletable if donation never completed
-                // r_industries
-                'r_investments:coid',
-                'r_investments:clubid',
-                'r_invites:inviter',
-                'r_invites:invitee:D',
-                'r_invoices:payer:D',
-                'r_invoices:payee:D',
-                'r_ips:uid:D',
-                'r_near:uid1:D',
-                'r_near:uid2:D',
-                // r_nonces
-                // r_nonmembers
-                'r_notices:uid:D',
-                // r_options
-                // r_pairs
-                'r_proposals:ctty',
-                'r_proxies:person:D',
-                'r_proxies:proxy:D',
-                // r_questions
-                'r_ratings:uid',
-                'r_recurs:payer:D',
-                'r_recurs:payee:D',
-                // r_regions
-                'r_relations:main:D',
-                'r_relations:other:D',
-                // r_request
-                // r_states
-                // r_shares',
-                'r_stakes:uid',
-                'r_stakes:clubid',
-                'r_stats:ctty:D',
-                'r_tous:uid:D',
-                // r_transit
-                'r_usd:payee',
-                // r_usd2
-                'r_user_industries:uid:D',
-                // r_votes
-                'sessions:uid:D',
-                // signup
-                'tx_disputes:uid',
-                'tx_disputes:agentUid',
-                'tx_entries:uid',
-                'tx_entries:agentUid',
-                'tx_hdrs:actorId',
-                'tx_hdrs:actorAgentId',
-                'users:jid',
-                'users:uid:D',
-                'users:helper',
-                'users:community',
-                // variable
-                 );
+    // r_areas
+    // r_bad
+    'r_ballots:voter',
+    'r_ballots:proxy',
+    // r_banks
+    'r_boxes:uid:D',
+    'r_changes:uid:D',
+    'r_changes:changedBy',
+    'r_company:uid:D',
+    // r_countries
+    'r_coupated:uid',
+    'r_coupons:fromId',
+    'r_criteria:ctty:D',
+    'r_do:uid:D',
+    'r_events:ctty',
+    'r_gifts:uid:D',
+    'r_honors:uid:D', // honors are deletable if donation never completed
+    // r_industries
+    'r_investments:coid',
+    'r_investments:clubid',
+    'r_invites:inviter',
+    'r_invites:invitee:D',
+    'r_invoices:payer:D',
+    'r_invoices:payee:D',
+    'r_ips:uid:D',
+    'r_near:uid1:D',
+    'r_near:uid2:D',
+    // r_nonces
+    // r_nonmembers
+    'r_notices:uid:D',
+    // r_options
+    // r_pairs
+    'r_proposals:ctty',
+    'r_proxies:person:D',
+    'r_proxies:proxy:D',
+    // r_questions
+    'r_ratings:uid',
+    'r_recurs:payer:D',
+    'r_recurs:payee:D',
+    // r_regions
+    'r_relations:main:D',
+    'r_relations:other:D',
+    // r_request
+    // r_states
+    // r_shares',
+    'r_stakes:uid',
+    'r_stakes:clubid',
+    'r_stats:ctty:D',
+    'r_tous:uid:D',
+    // r_transit
+    'r_usd:payee',
+    // r_usd2
+    'r_user_industries:uid:D',
+    // r_votes
+    'sessions:uid:D',
+    // signup
+    'tx_disputes:uid',
+    'tx_disputes:agentUid',
+    'tx_entries:uid',
+    'tx_entries:agentUid',
+    'tx_hdrs:actorId',
+    'tx_hdrs:actorAgentId',
+    'users:jid',
+    'users:uid:D',
+    'users:helper',
+    'users:community',
+    // variable
+  );
 
   $DBTX = \db_transaction();
   foreach ($subs as $one) {
@@ -1122,60 +1122,58 @@ X;
     WHERE $cttyCrit AND t.completed IS NOT NULL AND t.completed<=:created AND t.amount<>0
 X;
 
-  // get transaction table data
+// get transaction table data
   $sql = '';
   list ($cgIn, $cgOut) = $ctty == 0 // make cgIn and cgOut selectors
-    ? ['SUM(IF(u.community=u2.community, payeeE.amount, 0))',             //!! I think this is wrong
-       'SUM(IF(u.community=u2.community, 0, payeeE.amount))']
-    : ["SUM(IF(NOT (u.$cttyCrit) AND u2.$cttyCrit, payeeE.amount, 0))\n",
-       "SUM(IF(u.$cttyCrit AND NOT (u2.$cttyCrit), -payeeE.amount, 0))\n"];
+  ? ['SUM(IF(u.community=u2.community, amt, 0))',
+     'SUM(IF(u.community=u2.community, 0, amt))']
+  : ["SUM(IF(NOT (u.$cttyCrit) AND u2.$cttyCrit, amt, 0))\n",
+     "SUM(IF(u.$cttyCrit AND NOT (u2.$cttyCrit), -amt, 0))\n"];
   foreach (ray('cgIn cgOut') as $k) $sql .= "${$k} AS $k,\n";
   
   foreach (ray('p2b:01,b2b:11,b2p:10,p2p:00') as $k => $v) { // make x2x selectors
     foreach ([0, 1] as $i) ${'not' . $i} = $v[$i] ? '' : 'NOT';
-    $sql .= "SUM(IF(goods<>:FOR_USD AND $not0 u.:IS_CO AND $not1 u2.:IS_CO, payeeE.amount, 0)) AS $k,\n";
+    $sql .= "SUM(IF(goods<>:FOR_USD AND $not0 u.:IS_CO AND $not1 u2.:IS_CO, amt, 0)) AS $k,\n";
   }
-  $sql .= "SUM(IF((payerE.uid>:CANONIC_ACCTS OR payerE.uid < 0) AND goods=:FOR_USD, ABS(payeeE.amount), 0)) AS cashs,\n";
-  $sql .= strtr($sql, ['payeeE.amount' => '1', 'payerE.amount' => '1', ",\n" => "Count,\n"]); // add counts
+  $sql .= "SUM(IF(goods=:FOR_USD, ABS(amt), 0)) AS cashs,\n";
+  $sql .= strtr($sql, ['-amt' => '1', 'amt' => '1', ",\n" => "Count,\n"]); // add counts
   $sql = str_replace(",\n!", '', $sql . '!'); // remove final comma in field list
 
   $sqls['txs'] = <<< X
     SELECT $sql
-    FROM tx_hdrs t JOIN tx_entries payerE USING (xid) JOIN tx_entries payeeE USING(xid)
-    LEFT JOIN $accounts u ON u.uid=payerE.uid 
-    LEFT JOIN $accounts u2 ON u2.uid=payeeE.uid
-    WHERE payerE.entryType=:ENTRY_PAYER AND payeeE.entryType=:ENTRY_PAYEE > 0 AND $cttysCrit AND $creCrit
+    FROM txs_proper t 
+    LEFT JOIN $accounts u ON u.uid=uid1 
+    LEFT JOIN $accounts u2 ON u2.uid=uid2
+    WHERE $cttysCrit AND $creCrit
 X;
   
   // get aAccts
   $recent = 'created BETWEEN :created-' . (RECENT_SECS-1) . ' AND :created'; // not n months (keep length of time consistent)
 
   $sqls['aAccts'] = <<< X
-    SELECT COUNT(DISTINCT payerE.uid) as aAccts
-          FROM tx_entries payerE JOIN $accounts u USING (uid) JOIN tx_hdrs t USING (xid)
-    WHERE payerE.entryType = :ENTRY_PAYER AND $cttyCrit AND t.$recent
+    SELECT COUNT(DISTINCT uid1) as aAccts FROM txs_prime  t
+    JOIN $accounts u ON u.uid=uid1
+    WHERE $cttyCrit AND t.$recent
 X;
+
 //    WHERE NOT u.:IS_CO AND $cttyCrit AND $creCrit AND $recent
 
   // get conx, conxLocal
   foreach (ray('conx conxLocal', 1, "u2.$cttyCrit") as $k => $crit) {
     if (!$ctty) $crit = 1; // avoid local query when doing stats for ALL cttys
     $sqls[$k] = <<< X
-      SELECT AVG(conx) as $k
-      FROM ( SELECT me, COUNT(DISTINCT other) AS conx, SUM(isRecentPayer) AS recentPays, u2.community
-             FROM ( SELECT u0.uid AS me,
-                    IF (e0.entryType = :ENTRY_PAYER AND t0.$recent, 1, 0) as isRecentPayer,
-                           e2.uid AS other 
-                    FROM users u0
-                         JOIN tx_entries e0 USING (uid)
-                         JOIN tx_hdrs t0 USING (xid)
-                         JOIN tx_entries e2 USING (xid)
-                    WHERE (e2.id != e0.id) AND t0.$recent AND u0.$nonCtty and NOT u0.:IS_CO AND u0.$cttyCrit
-                  ) t
-                  LEFT JOIN users u2 ON u2.uid=other
-             WHERE $crit AND u2.$nonCtty GROUP BY t.me
-           ) u3
-      WHERE recentPays>0        
+      SELECT AVG(conx) as $k FROM (
+        SELECT me, COUNT(DISTINCT other) AS conx, SUM(isRecentPayer) AS recentPays, u2.community
+        FROM (
+          SELECT u0.uid AS me, 
+            IF(u0.uid=uid1, 1, 0) as isRecentPayer,
+            IF(u0.uid=uid1, uid2, uid1) AS other 
+          FROM users u0
+          JOIN txs_proper t0 ON u0.uid IN (uid1, uid2) 
+          WHERE t0.$recent AND u0.$nonCtty AND NOT u0.:IS_CO AND u0.$cttyCrit
+        ) t LEFT JOIN users u2 ON u2.uid=other WHERE $crit AND u2.$nonCtty
+        GROUP BY t.me
+      ) u3 WHERE recentPays>0        
 X;
   }
   
@@ -1183,26 +1181,26 @@ X;
 
   // get recent payees (median payees per "active" account), roundups, and crumbs (total per month)
   $monthFactor = MONTH_SECS / RECENT_SECS;
+
   $sqls['payees'] = <<< X
     SELECT AVG(payees0) AS payees,
       SUM(roundups0) * $monthFactor AS roundups,
       SUM(crumbs0) * $monthFactor AS crumbs
     FROM (
-          SELECT u.uid, COUNT(DISTINCT payee.uid) AS payees0,
-          IF (payee.uid=:CG_ROUNDUPS_UID, payee.amount, 0) AS roundups0,
-          IF (payee.uid=:CG_CRUMBS_UID, payee.amount, 0) AS crumbs0
-      FROM users u LEFT OUTER JOIN tx_entries payer USING(uid) JOIN tx_hdrs t USING(xid) JOIN tx_entries payee USING(xid)
-      WHERE payer.entryType=:ENTRY_PAYER AND u.:IS_OK AND t.$recent AND u.$nonCtty AND u.$cttyCrit
+      SELECT uid, COUNT(DISTINCT uid2) AS payees0,
+        SUM(IF(uid2=:CG_ROUNDUPS_UID, amt, 0)) AS roundups0,
+        SUM(IF(uid2=:CG_CRUMBS_UID, amt, 0)) AS crumbs0
+      FROM txs_proper t JOIN users u ON uid=uid2
+      WHERE t.$recent AND $nonCtty AND $cttyCrit
+      GROUP BY uid
     ) x LIMIT 1
 X;
     
   // get basket (median transaction size recently) -- this should omit structural transactions (roundups, etc.)
   $sqls['basket']  = <<< X
-    SELECT AVG(ABS(payee.amount)) AS basket
-    FROM tx_hdrs t JOIN tx_entries payer USING(xid) JOIN tx_entries payee USING(xid)
-         JOIN users u ON u.uid=payer.uid JOIN users u2 ON u2.uid=payee.uid
-    WHERE payer.entryType = :ENTRY_PAYER AND payee.entryType = :ENTRY_PAYEE AND t.$recent AND $cttysCrit
-          AND NOT t.:IS_CRUMBS AND NOT t.:IS_FOOD
+    SELECT AVG(amt) AS basket
+    FROM txs_prime t JOIN users u ON u.uid=uid1 JOIN users u2 ON u2.uid=uid2
+    WHERE t.$recent AND $cttysCrit
 X;
     
   // get patronage (total recurring gifts expected per month)
@@ -1221,16 +1219,16 @@ X;
   
   if (@$created0 and $created < today()) { // redoing stats for the past, so figure bals, floors, and topN the hard way
     $recently = strtotime(-FLOOR_DAYS . ' days', $created); // six months ago
-    $isPayer = '(payer IN (uid, jid) AND payer<>0 AND e.entryType=:ENTRY_PAYER)';
-    $isPayee = '(payee IN (uid, jid) AND e.entryType=:ENTRY_PAYEE)';
-
+    $isPayer = '(uid1 IN (uid, jid))';
+    $isPayee = '(uid2 IN (uid, jid))';
+    
     $pastTxs = <<< X
       (SELECT uid,
-         SUM(amount) AS amts,
-         SUM(IF(amount > 0, amount, 0)) AS amtsIn,
-         SUM(IF(amount < 0, -amount, 0)) AS amtsOut
-       FROM $accounts u LEFT OUTER JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid)
-       WHERE amount IS NOT NULL AND $isMaster AND $cttyCrit AND t.$creCrit
+         SUM(amt) AS amts,
+         SUM(IF($isPayee AND created>$recently, amt, 0)) AS amtsIn,
+         SUM(IF($isPayer AND created>$recently, amt, 0)) AS amtsOut
+       FROM $accounts u LEFT JOIN txs_proper t ON ($isPayer OR $isPayee)
+       WHERE amt IS NOT NULL AND $isMaster AND $cttyCrit AND t.$creCrit
        GROUP BY uid)
 X;
 
@@ -1523,6 +1521,29 @@ function handleInvestmentRequest($stakeid, &$msg) {
 }
 
 /**
+ * Calculate community gifts ever paid and ever due as of a certain date/time.
+ * @param int $end: ending date/time
+ * @return the rows
+ */
+function cttyGifts($end) {
+  $sql = <<< o
+    SELECT :end AS `end`, u.community AS ctty, 
+      SUM(IF(uid2=:CGID, amt, 0)) AS `in`, 
+      SUM(IF(uid1=:CGID AND uid2=u.community, amt, 0)) AS `out`,
+     (SELECT COUNT(1)
+       FROM r_usd d LEFT JOIN users du ON du.uid=d.payee 
+       WHERE d.txid<0 AND d.amount<0 AND du.community=u.community AND d.created<=:end 
+     ) AS bounces
+    FROM txs_noreverse t LEFT JOIN users u ON u.uid=IF(uid1=:CGID,uid2,uid1)
+    WHERE (
+      (uid2=:CGID AND t.:IS_GIFT) OR (uid1=:CGID AND uid2=u.community)
+    ) AND u.community<>:server AND t.created<=:end
+    GROUP BY community
+o;
+  return db\rows('*', "($sql) x", '1', ray('end server', $end, r\serverUid()));
+}
+
+/**
  * Return the appropriate exchange fee for the given transaction description and amount.
  */
 function xfee($for, $amount) {
@@ -1574,3 +1595,4 @@ function allKnowing() {global $mya; return ($mya->superAdmin and $mya->agentA->v
 function clubid() {return r\serverUid();} // temporarily use the region as the club
 function pic($flnm) {if (!is_dir(R_PICTURE_DIR)) mkdir(R_PICTURE_DIR); return R_PICTURE_DIR . $flnm;}
 function periodDesc($period) {return $period == 'X' ? '' : ray(OFTENS)[$period];}
+function isBank($uid) {return ($uid == BANK_IN_ID or $uid == BANK_OUT_ID);}

@@ -90,7 +90,7 @@ Scenario: A recurring donation to CG cannot be completed
 	And count "invoices" is 1
 
   When cron runs "invoices"
-	Then count "txs" is 1
+	Then count "txs" is 2
   And count "usd" is 1
   And count "invoices" is 1
   And	invoices:
@@ -98,7 +98,7 @@ Scenario: A recurring donation to CG cannot be completed
   |    1 | %today    | %TX_APPROVED |    200 | .ZZA | cgf | gift! (Monthly) | gift,recurs,funding |	
 
 	When cron runs "recurs"
-	Then count "txs" is 1
+	Then count "txs" is 2
   And count "usd" is 1
   And count "invoices" is 1
 

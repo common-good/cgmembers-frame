@@ -41,7 +41,7 @@ class TxHistoryDownload implements TxProcessor {
    * Called before each transaction.
    * @param assoc $info: all of the data for this entry (includes transaction data)
    */
-  public function txnHdr($info) {
+  public function txnHdr($info, $extraClass = '') {
   }
 
   /**

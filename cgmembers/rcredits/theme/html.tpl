@@ -51,7 +51,7 @@ $styles = preg_replace('~<style.*</style>~ms', '', $styles); // zap all the drup
 if (@$scriptScraps) w\js('scraps', 'args', urlencode(json_encode($scriptScraps))); // fragments
 $s = array_flip(ray(SCRIPTS_TOP)); // standard (included first on every page)
 $s += just(array_keys($pageScripts), array_merge(array_flip(ray(SCRIPTS)), $pageScripts)); // select and reorder ad hoc scripts
-/**/ if (count($s) < count(ray(SCRIPTS_TOP)) + count($pageScripts)) die('scripts! ' . print_r(justNOT(ray(SCRIPTS_TOP . ' ' . SCRIPTS), ray($pageScripts)), 1) . print_r($pageScripts, 1));
+  u\EXPECT(count($s) >= count(ray(SCRIPTS_TOP)) + count($pageScripts), 'scripts! ' . pr(justNOT(ray(SCRIPTS_TOP . ' ' . SCRIPTS), $pageScripts)) . pr($pageScripts));
 $scripts = '';
 $tm = now();
 
