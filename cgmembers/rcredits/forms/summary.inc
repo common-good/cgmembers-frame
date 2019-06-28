@@ -134,16 +134,13 @@ function formSummary($form, &$sta) {
 }
 
 function formSummary_validate($form, &$sta) {
-//  if (!r\acct()->cAdmin2) return hack('non-admin submitted summary form');
-  if (in(op($sta), 'openCompany openJoint')) return;
-
-  extract(just('uid legalName federalId creditLimit rTrader helper mediaConx moves tickle adminable', $sta['input']));
-//  $a = r\acct(@$uid);
   global $mya;
+
+  if (in(op($sta), 'openCompany openJoint')) return;
+  extract(just('uid legalName federalId creditLimit rTrader helper mediaConx moves tickle adminable', $sta['input']));
+  if (nn($tickle, NULL) !== '' and $err = u\badDate($tickle)) return say($err, 'tickle');
   
-  if (@$tickle !== '' and $err = u\badDate($tickle)) return say($err, 'tickle');
-  
-  if (@$federalId == R_ON_FILE or @$federalId == t('SSN')) {
+  if (in(nn($federalId), [R_ON_FILE, t('SSN')])) {
     unset($sta['input']['federalId']);
   } elseif (@$federalId and $err = u\badSsn($federalId, $mya->dob)) return say($err, ['what' => 'federalId'], 'federalId');
 
@@ -155,7 +152,7 @@ function formSummary_validate($form, &$sta) {
   if (@$rTrader and !$mya->ok and !$mya->isCtty) {
     if (!@$helper) return say(t('You must specify who gets the helper reward.'), 'helper');
 //    if (!@$helper or $helper == 1) return say(t('You must specify who gets the helper reward.'), 'helper');
-    if (is_null(@$adminable[B_MEMBER])) return say(t('That account is not READY (not a member).'), 'adminable'); // test "is_null" because 0 is the value when set
+    if (!$mya->member and is_null(nn($adminable[B_MEMBER], NULL))) return say(t('That account is not READY (not a member).'), 'adminable'); // test "is_null" because 0 is the value when set
     if (!$mya->confirmed) say(t('NOTE: Member %helperName has not yet confirmed this invitation.', 'helperName', $h->fullName));
   }
 
@@ -179,8 +176,7 @@ function formSummary_submit($form, &$sta) {
   if ($op == 'secureMsgs') return w\go('', showSecureMessages());
 
   extract($args = just('uid who legalName federalId creditLimit tickle note notes helper mediaConx moves rTrader risks adminable', $sta['input']));
-/**/  if (!$mya->cAdmin) u\EXPECT(!array_diff(array_keys($args), ray('uid tickle note')), 'too many unpermitted changing fields in ' . print_r($args, 1));
-//  $a = r\acct(@$uid); // same as $mya if no uid passed
+  if (!$mya->cAdmin) u\EXPECT(!array_diff(array_keys($args), ray('uid tickle note')), 'too many unpermitted changing fields in ' . pr($args));
 
   if (!@$tickle) {
     $tickleDone = $mya->ok ? ($note and !$tickle and $mya->tickle) : 'activate';
@@ -245,9 +241,11 @@ function activate($helper) {
 
   $DBTX = \db_transaction();
   u\EXPECT($helper, 'no helper!');
+///  debug("helper=$mya->helper ok=$mya->ok");
   $mya->update(compact('helper')); // must precede welcome message
-  $mya->setBit(B_OK, TRUE, TRUE); // must precede welcome message
-  $mya->setBit(B_NONUDGE, FALSE, TRUE);
+  $mya->setBit(B_OK, TRUE); // must precede welcome message
+  $mya->setBit(B_NONUDGE, FALSE);
+///  debug("helper=$mya->helper ok=$mya->ok");
   
   if ($firstTime = !$mya->activated) { // first time activation
 //      u\EXPECT($mya->superAdmin, 'initial activation is only for superadmin');

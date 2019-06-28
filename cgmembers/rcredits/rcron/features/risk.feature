@@ -114,7 +114,7 @@ Scenario: We calculate risks
   When cron runs "acctRiskFinish"
   Then riskThresholds:
   | Day | Week | 7Week | Year |*
-  | 660 |  660 |  1270 | 1570 |
+  | 621 |  621 |  1270 | 1570 |
 #  | 330 |  340 |   635 |  785 |
 
   When cron runs "txRisk"

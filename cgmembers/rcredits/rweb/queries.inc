@@ -24,26 +24,20 @@ $queries = [
     "SELECT DISTINCT main.fullName AS company, other.fullName AS pays, 
             IF(r.:IS_EMPLOYEE, 'employee', IF(r.:IS_OWNER, 'owner', 
                                               IF(r.:IS_CUSTOMER, 'customer', ''))) AS relation
-     FROM r_relations r 
-          JOIN tx_entries payer ON r.main=payer.uid
-          JOIN tx_hdrs t USING (xid)
-          JOIN tx_entries payee USING (xid)
-          JOIN users main ON payer.uid=main.uid JOIN users other ON payee.uid=main.uid
-          LEFT OUTER JOIN tx_hdrs tRev ON tRev.reversesXid=t.xid
-     WHERE payer.entryType=':ENTRY_PAYER' AND payee.entryType=':ENTRY_PAYEE'
-           AND IFNULL(t.reversesXid,0)=0 AND IFNULL(tRev.xid,0)=0
-           AND NOT other.:IS_CO AND other.:IS_OK 
+     FROM r_relations r
+       JOIN txs_noreverse t ON t.uid1=r.main
+       JOIN users main ON main.uid=r.main 
+       JOIN users other ON other.uid=r.other
+     WHERE NOT other.:IS_CO AND other.:IS_OK 
            AND main.community=:ctty AND main.:IS_CO AND main.:IS_OK
      ORDER BY main.community,main.fullName,relation DESC,other.fullName",
   
   2 . 'Transaction Totals to Date' =>
-    "SELECT COUNT(*) AS txCount, SUM(ABS(payer.amount)) AS txDollars, 
-            SUM(IF(u2.:IS_CO AND (NOT u1.:IS_CO OR channel=:TX_POS), payee.amount, 0)) AS inPersonDollars,
-            SUM(IF(u2.:IS_CO AND (NOT u1.:IS_CO OR channel=:TX_POS), .85*.02*payee.amount, 0)) AS ccFeesSaved
-    FROM tx_entries payer JOIN tx_hdrs t USING (xid) JOIN tx_entries payee USING (xid)
-         JOIN users u1 ON u1.uid=payer.uid JOIN users u2 ON u2.uid=payee.uid
-    WHERE payer.entryType=':ENTRY_PAYER' AND payee.entryType=':ENTRY_PAYEE'
-          AND (u1.community=:ctty OR u2.community=:ctty)",
+    "SELECT COUNT(*) AS txCount, SUM(ABS(amt)) AS txDollars, 
+            SUM(IF(u2.:IS_CO AND (NOT u1.:IS_CO OR channel=:TX_POS), amt, 0)) AS inPersonDollars,
+            SUM(IF(u2.:IS_CO AND (NOT u1.:IS_CO OR channel=:TX_POS), .85*.02*amt, 0)) AS ccFeesSaved
+    FROM txs t JOIN users u1 ON u1.uid=uid1 JOIN users u2 ON u2.uid=uid2
+    WHERE :ctty IN (u1.community, u2.community)",
     
 
   B_CO . 'Monthly Business Income (30 day totals)' => 
@@ -81,14 +75,12 @@ $queries = [
 //     SUM(IF(t.:IS_GIFT OR t.:IS_ROUNDUPS OR t.:IS_CRUMBS OR t.:IS_RECURS,0,amount)) AS `payments to CG`
   'Actual Donations to Common Good and Community' =>
     "SELECT CONCAT_WS(' ', YEAR(FROM_UNIXTIME(t.created)), MONTHNAME(FROM_UNIXTIME(t.created))) AS month,
-    SUM(IF(t.:IS_RECURS,payee.amount,0)) AS recurring,
-    SUM(IF(payee.uid=:CG_ROUNDUPS_UID,payee.amount,0)) AS roundups,
-    SUM(IF(payee.uid=:CG_CRUMBS_UID,payee.amount,0)) AS crumbs,
-    SUM(IF(t.:IS_GIFT AND payee.uid NOT IN (:CG_ROUNDUPS_UID, :CG_CRUMBS_UID) AND NOT t.:IS_RECURS,payee.amount,0)) AS other
-    FROM tx_hdrs t JOIN tx_entries payer USING (xid) JOIN users u USING (uid) 
-         JOIN tx_entries payee USING(xid)
-    WHERE payer.entryTYPE=':ENTRY_PAYER' AND payee.entryType=':ENTRY_PAYEE' 
-          AND u.community=:ctty AND (t.:IS_GIFT OR payee.uid IN (:CG_ROUNDUPS_UID, :CG_CRUMBS_UID) OR t.:IS_RECURS)
+    SUM(IF(t.:IS_RECURS,amt,0)) AS recurring,
+    SUM(IF(uid2=:CG_ROUNDUPS_UID,amt,0)) AS roundups,
+    SUM(IF(uid2=:CG_CRUMBS_UID,amt,0)) AS crumbs,
+    SUM(IF(t.:IS_GIFT AND uid2 NOT IN (:CG_ROUNDUPS_UID, :CG_CRUMBS_UID) AND NOT t.:IS_RECURS,amt,0)) AS other
+    FROM txs t JOIN users u ON u.uid=t.uid1
+    WHERE u.community=:ctty AND (t.:IS_GIFT OR uid2 IN (:CG_ROUNDUPS_UID, :CG_CRUMBS_UID) OR t.:IS_RECURS)
     GROUP BY YEAR(FROM_UNIXTIME(t.created)) DESC, MONTH(FROM_UNIXTIME(t.created)) DESC",
 
   'Expected Member Donations to CG and Community' =>
@@ -100,7 +92,7 @@ $queries = [
             SUM(IF(u.crumbs>0, 1, 0)) AS crumby,
             AVG(IF(u.crumbs>0, u.crumbs, NULL)) AS avgCrumbs
     FROM users u LEFT JOIN r_recurs r ON (r.payer=u.uid AND r.ended<>0 AND r.payee=:CGID) LEFT JOIN users c ON c.uid=u.community
-    WHERE u.:IS_OK AND NOT u.:IS_CO AND u.uid NOT BETWEEN 0 AND (:CANONIC_ACCTS-1)
+    WHERE u.:IS_OK AND NOT u.:IS_CO AND u.uid NOT :CANONIC
     GROUP BY u.community
     ~roundupy = number who do Roundups, crumby = number who do Crumb donations",
 
@@ -124,5 +116,5 @@ eachA(function ($a) {
 
 // show food fund percentages and estimated monthly donations
 $rows = db\rows('fullName', 'users u', ':U_FOODY=1');
-$sum = db\sum('amt2', 'txs', ':T_FOODY AND (SELECT food FROM users WHERE uid=uid1)>0 AND created>:NOW-:MONTH_SECS');
+$sum = db\sum('amt', 'txs', ':T_FOODY AND (SELECT food FROM users WHERE uid=uid1)>0 AND created>:NOW-:MONTH_SECS');
 */

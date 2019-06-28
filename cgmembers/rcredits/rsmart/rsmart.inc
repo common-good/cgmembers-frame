@@ -346,7 +346,6 @@ function photoReturn($pic) {
  * @return: json (ok, message, txid, created, balance, undo)
  */
 function charge($args, $type = 'charge') {
-  ///  debug("r\Smart\charge(" . print_r($args, true) . ", $type)");
   global $mya;
   global $boxUser;
   
@@ -376,17 +375,15 @@ function charge($args, $type = 'charge') {
 
   $selfhelp = ($goods == '2');
   $goods = $goods == "3" ? FOR_NONGOODS : ($goods == "0" ? FOR_USD : FOR_GOODS); // selfhelp is FOR_GOODS
-  if (@$force) {
+
+  if (nn($force)) {
     $sql = <<<EOF
-      SELECT xid
-      FROM tx_hdrs t JOIN tx_entries payer USING(xid) JOIN tx_entries payee USING(xid)
-      WHERE t.created=:created AND payer.uid=:payer AND payee.uid=:payee
-            AND (payer.amount=:amount OR payee.amount=:amount) AND t.goods=:goods AND payee.description=:payeeFor
+      SELECT xid FROM txs 
+      WHERE created=:created AND uid1=:payer AND uid2=:payee
+      AND amt=:amount AND goods=:goods AND for2=:payeeFor
 EOF;
-    $subs = ray('created payer payee amount goods payeeFor', $created, $a->id, $mya->id, $amount, $goods, $description);
-    $q = db\q($sql, $subs);
-    $x = $q->fetch(\PDO::FETCH_ASSOC);
-    if ($x) extract($x);
+    $info = ray('created uid1 uid2 amt goods for2', $created, $a->id, $mya->id, $amount, $goods, $description);
+    $xid = db\get('xid', 'txs', $info);
   }
   
   $amount = str_replace(',', '', number_format($amount, 2)); // make sure both cents digits are included
@@ -401,10 +398,10 @@ EOF;
     }
   }
 
-  if (@$force == "1" and @$xid) { // does exist and should (always background)
+  if (@$force == "1" and nn($xid)) { // does exist and should (always background)
     $message = $did = $undo = '';
     $txid = $xid;
-  } elseif (@$force == "-1" and @$xid) { // does exists and shouldn't
+  } elseif (@$force == "-1" and nn($xid)) { // does exists and shouldn't
     $did = '';
     $undo = $xid;
 

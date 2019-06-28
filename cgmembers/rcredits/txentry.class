@@ -12,44 +12,31 @@ use CG\Util as u;
  * Note that a transaction has at least two entries, which this class also contains
  */
 
-/* define('TX_FLDS', 'serial type amount goods payer payee payerAgent payeeAgent for flags created'); */
+/* define('TX_FIELDS', 'serial type amount goods payer payee payerAgent payeeAgent for flags created'); */
 
 class TxEntry {
-  const REQUIRED_FIELDS = ['amount', 'uid', 'agentUid'];
-  const INSERT_FIELDS = ['entryType', 'amount', 'uid', 'agentUid', 'description', 'acctTid', 'relType', 'relatedId'];
-  const ENTRY_FIELDS = ['id', 'xid', 'entryType', 'amount', 'uid', 'agentUid', 'description', 'acctTid', 'relType', 'relatedId'];
-  const ALLOWED_FIELDS = TxEntry::ENTRY_FIELDS;
+  const REQUIRED_FIELDS = 'amount uid agentUid';
+  const INSERT_FIELDS = self::REQUIRED_FIELDS . ' entryType description acctTid relType relatedId';
+  const E_FIELDS = self::INSERT_FIELDS . ' id xid';
 
-  public $id;
+  public $id; // second entry in a pair should have a positive ID, first is the inverse
   public $xid;
-  public $entryType;
-  public $amount;
+  public $entryType; // always identical for the two entries in a pair
+  public $amount; // amount of paired entry is the inverse of this
   public $uid;
-  public $agentUid;
+  public $agentUid; // should really be NULL if irrelevant or same as uid
   public $description;
-  public $acctTid;
+  public $acctTid; // this should go away
   public $relType;
-  public $relatedId;
-  private $agentId;
+  public $relatedId; // this and relType should move to header (each tx has at most one related ID?)
   
   /**
    * Instantiate (construct) a transaction entry record.
-   * @param assoc $info: array of field values for new transaction, must include REQUIRED_FIELD entries,
-   *                     but must only include ALLOWED_FIELD entries.
+   * @param assoc $info: array of field values for new transaction
    */
   function __construct($info) {
-/**/    u\EXPECT(array_diff(TxEntry::REQUIRED_FIELDS, array_keys($info)) == [], 'missing fields in Entry:' . print_r(array_diff_key(TxEntry::REQUIRED_FIELDS, $info), true) . 'passed: ' . print_r($info, true));
-/**/    u\EXPECT(array_diff(array_keys($info), TxEntry::ALLOWED_FIELDS) == [], 'extra fields in Entry:' . print_r(array_diff(array_keys($info), TxEntry::ALLOWED_FIELDS), true));
-    $this->id = u\arrayGet($info, 'id', null);
-    $this->xid = u\arrayGet($info, 'xid', null);
-    $this->entryType = u\arrayGet($info, 'entryType', 0);
-    $this->amount = u\arrayGet($info, 'amount', null);
-    $this->uid = u\arrayGet($info, 'uid', null);
-    $this->agentUid = u\arrayGet($info, 'agentUid', null);
-    $this->description = u\arrayGet($info, 'description', null);
-    $this->acctTid = u\arrayGet($info, 'acctTid', null);
-    $this->relType = u\arrayGet($info, 'relType', null);
-    $this->relatedId = u\arrayGet($info, 'relatedId', null);
+    u\vetObjectInfo($info, self::E_FIELDS, self::REQUIRED_FIELDS, 'TxEntry');
+    foreach (ray(self::E_FIELDS) as $k) $this->$k = nn($info[$k], $k == 'entryType' ? -1 : NULL); // -1 is tentative
   }
 
   /**
@@ -102,11 +89,14 @@ class TxEntry {
    * Save this transaction entry in the database
    * This should only be called in the context of a database transaction.
    * @param integer $xid: the xid of the transaction this entry belongs to
+   * @param int $id: record ID to use (chosen automatically if zero) -- to insert the 2nd entry of a pair as the first's inverse.
    * @return the id of the entry (FALSE on failure)
    */
-  function insert($xid) {
+  function insert($xid, $id = 0) {
     $e = $this;
-    $id = db\insert('tx_entries', just(TxEntry::INSERT_FIELDS, (array)$e) + ['xid'=>$xid], 'id');
+    $info = just(self::INSERT_FIELDS, (array)$e) + compact('xid');
+    if ($id) $info += compact('id');
+    $id = db\insert('tx_entries', $info, 'id');
     return $id;
   }
 }

@@ -122,8 +122,15 @@ Scenario: A cashier canceled offline a supposedly offline charge that actually w
   Given transactions: 
   | xid | created | amount | from | to   | purpose |*
   | 5   | %today  |    500 | ctty | .ZZC | growth  |
-  And agent "C:A" asks device "devC" to charge ".ZZB,ccB" $-100 for "goods": "refund" at "%now-1h"
-  And transactions: 
+  Then count "txs" is 2
+
+  When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $-100 for "goods": "refund" at "%now-1h"
+  Then transactions: 
+  | xid | created | amount | from | to   | purpose | taking |*
+  | 6   | %today  |   -100 | .ZZB | .ZZC | refund  |      1 |
+  And count "txs" is 3
+
+  Given transactions: 
   | xid | created | amount | from | to   | purpose |*
   | 7   | %today  |    300 | .ZZB | .ZZA | cash    |
   When reconciling "C:A" on "devC" charging ".ZZB,ccB" $-100 for "goods": "refund" at "%now-1h" force -1

@@ -79,10 +79,12 @@ EOF;
   }
 
   foreach (ray($tables) as $one) $do[$one] = submi($one);
-  $do += compact(ray('inviteeStatus organizerList signupCos do1099btest do1099b reconcile special stop start stopCtty startCtty'));
+  $funcs = ray('inviteeStatus organizerList signupCos do1099btest do1099b reconcile special stop start stopCtty startCtty');
+//  foreach ($funcs as $func) if (isset($$func)) $do[$func] = $$func;
+  $do += @compact($funcs);
   $do = fieldSet('do', $do);
   
-  $acctSet = fieldSet('acctSet', compact(ray('account make2 printId seeData seeChanges ssnLink seeSecure resetSSN askForAppData seeAppData')));
+  $acctSet = fieldSet('acctSet', @compact(ray('account make2 printId seeData seeChanges ssnLink seeSecure resetSSN askForAppData seeAppData')));
 
   return cgform(compact(ray('title do acctSet')));
 }
@@ -177,15 +179,11 @@ function formAdminPanel_submit($form, &$sta) {
   $logFields = "channel,type,myid,IF(agent=myid,':R_NONE',agent) AS agent, REPLACE(info, ',', ', ') AS info";
 
   if ($op == 'txs') {
-    $fields = <<<EOF
-      xid, t.created, t.flags, t.goods AS gd, t.actorId AS init,
-      uid, amount, description AS `for`, acctTid AS tid
-EOF;
-    if ($mya->admin) $fields = str_replace('u1.', '', $fields);
-    return say(a\showQuery('tx_hdrs LEFT JOIN tx_entries USING (xid)', 1, 'xid DESC', $fields, ['uid']));
+    $fields = 'xid, t.created, type as ty, amt, for2 AS `for`, uid1, uid2, t.flags, t.goods AS gd, t.actorId AS init, tid1, tid2';
+    return say(a\showQuery('txs', 1, 'xid DESC, type', $fields, 'uid1 uid2'));
   }
 
-  if ($op == 'recurs') return say(a\showQuery('r_recurs', 1, 'id DESC', 'id,created,payer,payee,amount,purpose,period,ended', ray('payer payee')));
+  if ($op == 'recurs') return say(a\showQuery('r_recurs', 1, 'id DESC', 'id,created,payer,payee,amount,purpose,period,ended', 'payer payee'));
   if ($op == 'invites') return say(a\showQuery('r_invites', 1, 'invited DESC', 'invited, inviter, invitee, email', 'inviter'));
   if ($op == 'notices') return say(a\showQuery('r_notices', 1, 'msgid DESC'));
   if ($op == 'proxies') return say(a\showQuery('r_proxies', 1, 'id DESC', 'person, proxy, priority', 'person'));
@@ -392,15 +390,15 @@ function formFollowup($form, &$sta, $args = []) {
   
   $sql = <<<EOF
     SELECT DISTINCT u.uid, community, tickle, fullName, phone, u.data, u.created, activated, notes, :IS_CO AS co, t.created AS lastTxTime, :IS_MEMBER AS member, :IS_OK AS ok, :IS_CARDED AS carded
-    FROM users u LEFT JOIN (SELECT t0.created,e0.uid FROM tx_hdrs t0 JOIN tx_entries e0 USING(xid) ORDER BY created DESC LIMIT 1) t USING(uid)
+    FROM users u LEFT JOIN (SELECT created,uid1,uid2 FROM txs ORDER BY created DESC LIMIT 1) t ON u.uid IN (t.uid1,t.uid2)
     WHERE u.uid>:CANONIC_ACCTS AND NOT :IS_NONUDGE AND NOT (activated and NOT :IS_OK) AND $where2 AND (tickle>0 OR NOT :IS_MEMBER
-      OR t.created<$now-60*:DAY_SECS OR t.created IS NULL)
+      OR t.created<$now-60*:DAY_SECS OR t.created IS NULL OR :isDEV)
     ORDER BY $by
 EOF;
   
   $fields = ray('ctty type call name phone notes');
   if (!empty($one)) array_shift($fields);
-  $q = db\q($sql);
+  $q = db\q($sql, ['isDEV' => isDEV]);
   $guts = $heads = '';
   foreach ($fields as $k) {
     $heads .= "<th class=\"hd-$k\">" . ucfirst($k) . '</th>';
@@ -538,7 +536,7 @@ $requests2 = boxFld('requests', t('Include requests:'), t('Include non-members w
 $status = w\radiosFld(t('Status:'), '', dft(2), ray('active not-yet-active both'));
 $types = w\radiosfld(t('Types:'), '', dft(2), ray('individuals companies both'));
 $anonymous = boxFld('anonymous', t('Anonymous:'), t('Export only non-identifying information (for data-mapping and analysis)'), FALSE);
-$chimpSet = w\fieldSet('fields', compact(ray('allCttys2 requests2 status types anonymous')));
+$chimpSet = w\fieldSet('fields', @compact(ray('allCttys2 requests2 status types anonymous')));
   
 $submit = t('Download');
   
@@ -1041,12 +1039,13 @@ function util($arg) {
 function handyLinks() {
   global $base_path, $base_url, $base_root;
 
-  $links = array(
-                 'rcredits/util/reset-menu|Rebuild menu based on hook_menu() and revert any custom changes. All menu items return to their default settings.|Redo MENUS|menu-hamburger',
-                 'rcredits/util/remove-test-data|Remove test data|REMOVE test data|fast-backward',
-                 'rcredits/util/clear|Empty the cache and sessions tables|Clear Cache & Sessions|unchecked',
-                 'sadmin/variables|Edit and delete site variables.|Variables|copy',
-                 );
+  $links = [
+    'sadmin/check-sanity|Check database integrity|Sanity Check|ok',
+    'rcredits/util/reset-menu|Rebuild menu based on hook_menu() and revert any custom changes. All menu items return to their default settings.|Redo MENUS|menu-hamburger',
+    'rcredits/util/remove-test-data|Remove test data|REMOVE test data|fast-backward',
+    'rcredits/util/clear|Empty the cache and sessions tables|Clear Cache & Sessions|unchecked',
+    'sadmin/variables|Edit and delete site variables.|Variables|copy',
+  ];
 
   /*    'devel/settings|Helper functions, pages, and blocks to assist Drupal developers. The devel blocks can be managed via the block administration page.|Devel settings|cog',
         'devel/cache/clear?destination=sadmin|Clear the CSS cache and all database cache tables which store page, node, theme and variable caches.|Empty cache|new-window',

@@ -6,7 +6,7 @@ SO I can see what happened, accept or refuse offers, adjust descriptions, and co
 Setup:
   Given members:
   | uid  | fullName   | floor | acctType    | flags                | created    | risks   |*
-  | .ZZA | Abe One    | -100  | personal    | ok,roundup,confirmed | %today-15m | hasBank |
+  | .ZZA | Abe One    | -100  | personal    | ok,roundup,confirmed,bankOk | %today-15m | hasBank |
   | .ZZB | Bea Two    | -200  | personal    | ok,co                | %today-15m |         |
   | .ZZC | Corner Pub | -300  | corporation | ok,co                | %today-15m |         |
   And relations:
@@ -51,14 +51,14 @@ Scenario: A member looks at transactions for the past year
   Then we show "Transaction History" with:
   | Start        |   | 1,000.00 | %dmy-12m |
   | From Bank    | + |     0.00 | + 11.00 Pending |
+  | To Bank      | - |    55.00 |          |
   | Received     | + | 1,110.00 |          |
-  | Out          | - |   515.00 |          |
-#  | Credit Line+ |   |          |          |
+  | Out          | - |   460.00 |          |
   | End          |   | 1,595.00 | %dmy     |
   And with:
   |~tid | Date    | Name          | Purpose | Amount   |  Balance | Action |
-  |  3  | %mdy-5d | --            | to bank |   -33.00 | 1,595.00 |        |
-  |  2  | %mdy-5d | --            | to bank |   -22.00 | 1,628.00 |        |
+  |  4  | %mdy-5d | --            | to bank |   -33.00 | 1,595.00 |        |
+  |  3  | %mdy-5d | --            | to bank |   -22.00 | 1,628.00 |        |
   | 29  | %mdy-6d | Bea Two       | cash V  |  -100.00 | 1,650.00 |        |
   | 28  | %mdy-1w | Corner Pub    | this Q  |  -120.00 | 1,750.00 |        |
   | 26  | %mdy-3m | Bea Two       | what G  |  -240.00 | 1,870.00 |        |
@@ -74,14 +74,14 @@ Scenario: A member looks at transactions for the past few days
   Then we show "Transaction History" with:
   | Start        |   | 1,870.00 | %dmy-15d |
   | From Bank    | + |     0.00 | + 11.00 Pending |
+  | To Bank      | - |    55.00 |          |
   | Received     | + |     0.00 |          |
-  | Out          | - |   275.00 |          |
-#  | Credit Line+ | + |          |          |
+  | Out          | - |   220.00 |          |
   | End          |   | 1,595.00 | %dmy     |
   And with:
   |~tid | Date    | Name          | Purpose | Amount  |  Balance |
-  |  3  | %mdy-5d | --            | to bank |  -33.00 | 1,595.00 |
-  |  2  | %mdy-5d | --            | to bank |  -22.00 | 1,628.00 |
+  |  4  | %mdy-5d | --            | to bank |  -33.00 | 1,595.00 |
+  |  3  | %mdy-5d | --            | to bank |  -22.00 | 1,628.00 |
   | 29  | %mdy-6d | Bea Two       | cash V  | -100.00 | 1,650.00 |
   | 28  | %mdy-1w | Corner Pub    | this Q  | -120.00 | 1,750.00 |
   And without:
@@ -94,16 +94,10 @@ Scenario: A member looks at transactions for the past few days
   | bonus    |
 
 Scenario: A member looks at transactions with roundups
-  Given tx headers:
-  | xid | actorId | actorAgentId | flags | channel | goods      | created |*
-  |  21 |    .ZZC | .ZZC         |       | %TX_POS | %FOR_GOODS | %today  |
-  And tx entries:
-  | xid | entryType | amount | uid              | agentUid | description      | acctTid |*
-  |  21 |         1 | -50.00 | .ZZA             | .ZZA     | sundries         |      51 |
-  |  21 |         2 |  49.95 | .ZZC             | .ZZC     | sundries         |      61 |
-  |  21 |         0 |   0.05 | %CG_ROUNDUPS_UID | .ZZA     | roundup donation |      71 |
-  # | xid | created | type     | amount | from | to   | purpose  | payerTid | payeeTid |*
-  # |  10 | %today  | transfer |  49.95 | .ZZA | .ZZC | sundries |       40 |       50 |
+  Given transactions:
+  | xid | amount | from | to               | purpose          | taking | goods      | channel | type     |*
+  |  21 |  49.95 | .ZZA | .ZZC             | sundries         | 1      | %FOR_GOODS | %TX_POS | prime    |
+  |  21 |   0.05 | .ZZA | %CG_ROUNDUPS_UID | roundup donation | 0      | %FOR_GOODS | %TX_POS | donation |
   Then balances:
   | uid  | balance |*
   | .ZZA | 1545.00 |
@@ -111,18 +105,18 @@ Scenario: A member looks at transactions with roundups
   Then we show "Transaction History" with:
   | Start        |   | 1,870.00 | %dmy-15d |
   | From Bank    | + |     0.00 | + 11.00 Pending |
+  | To Bank      | - |    55.00 |          |
   | Received     | + |     0.00 |          |
-  | Out          | - |   325.00 |          |
-#  | Credit Line+ | + |          |          |
+  | Out          | - |   270.00 |          |
   | End          |   | 1,545.00 | %dmy     |
   And with:
-  |~tid | Date    | Name              | Purpose          | Amount  |  Balance |~do |
-  | 51  | %mdy    | Corner Pub        | sundries         |  -49.95 | 1,545.00 |    |
-  |     |         | Roundup Donations | roundup donation |   -0.05 |          |    | 
-  |  3  | %mdy-5d | --                | to bank          |  -33.00 | 1,595.00 |    |
-  |  2  | %mdy-5d | --                | to bank          |  -22.00 | 1,628.00 |    |
-  | 29  | %mdy-6d | Bea Two           | cash V           | -100.00 | 1,650.00 |    |
-  | 28  | %mdy-1w | Corner Pub        | this Q           | -120.00 | 1,750.00 |    |
+  |~tid | Date    | Name            | Purpose          | Amount  |  Balance |~do |
+  |     | %mdy    | Corner Pub      | sundries         |  -49.95 | 1,545.00 |    |
+  |     |         | %PROJECT Region | roundup donation |   -0.05 |          |    | 
+  |  4  | %mdy-5d | --              | to bank          |  -33.00 | 1,595.00 |    |
+  |  3  | %mdy-5d | --              | to bank          |  -22.00 | 1,628.00 |    |
+  | 29  | %mdy-6d | Bea Two         | cash V           | -100.00 | 1,650.00 |    |
+  | 28  | %mdy-1w | Corner Pub      | this Q           | -120.00 | 1,750.00 |    |
 
 Scenario: Admin reverses a bank transfer
   When member "A:1" visits page "history/transactions/period=5"
@@ -131,5 +125,5 @@ Scenario: Admin reverses a bank transfer
   | txid | payee | amount | created  | completed  | deposit | xid |*
   |   -1 |  .ZZA |  -1000 | %now-13m | %now-13m   | %now    |  20 |
   And these "txs":
-  | xid | created | amt2  | uid1    | uid2 | description |*
-  |  20 | %now    | -1000 | bank-in | .ZZA | to bank     |
+  | xid | created | amt2  | uid1    | uid2 | description | type |*
+  |  20 | %now    | -1000 | bank-in | .ZZA | to bank     | bank |

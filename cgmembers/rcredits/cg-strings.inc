@@ -117,6 +117,7 @@ $GLOBALS['tStrings'] = array(
 	'for invoice' => t('to pay invoice #%nvid'),
 	'for investment' => t('for an increased stake in the investment club'),
   'banked' => t('A request has been made to %action your bank a total of %amount %why. This transfer may take up to 5 business days to go through.'),
+  'combined' => t('The transfer has been combined with an earlier request.'),
 	'as needed' => t('Funds will be transferred from your bank account as needed.'),
   'bank tx number' => t('The transaction will appear on your bank statement as check #%checkNum.'),
   'drew' => t('A total of %amount has been drawn from your connected account(s) %why.'),

@@ -88,7 +88,7 @@ Scenario: A recurring payment cannot be completed
   Then these "usd":
   | txid | amount | payee | completed | deposit |*
   |    1 |    200 | .ZZA  |         0 |       0 |
-	Then count "txs" is 1
+	Then count "txs" is 2
   And count "usd" is 1
   And count "invoices" is 1
   And	invoices:
@@ -96,7 +96,7 @@ Scenario: A recurring payment cannot be completed
   |    1 | %today    | %TX_APPROVED |    200 | .ZZA | .ZZB | pmt (Weekly) | recurs,funding |	       8 |
 
 	When cron runs "recurs"
-	Then count "txs" is 1
+	Then count "txs" is 2
   And count "usd" is 1
   And count "invoices" is 1
 

@@ -74,7 +74,7 @@ function relations($relations) {return t\relations($relations);}
  *     MAKE joint Setup
  *     MAKE offline Setup
  *     MAKE offline ACashierChargedSomeoneOfflineAndTheyHaveInsufficientBalance
- *     MAKE offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThroughButCustomerIsBroke
+ *     BOTH offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThroughButCustomerIsBroke
  *     MAKE transact Setup
  *     MAKE undo AnAgentAsksToUndoACharge
  *     MAKE undo AnAgentAsksToUndoAChargeWhenBalanceIsSecret
@@ -256,16 +256,14 @@ function balances($list) {return t\balances($list);}
  *     MAKE undo AnAgentAsksToUndoAChargeWithoutPermission
  *     MAKE undo AnAgentAsksToUndoARefundWithoutPermission
  */
-function agentAsksDeviceToUndoTransactionCode($agent, $device, $txid, $code) {
+function agentAsksDeviceToUndoTransactionCode($agent, $device, $xid, $code) {
   global $testOnly; if ($testOnly) return FALSE;
 
   $fields = 'member amount goods description created force code proof';
-  $q = db\get('e.uid AS payer, e.agentUid AS payerAgent, 0-amount AS amount, goods, description, t.created',
-              "tx_hdrs t JOIN tx_entries e USING(xid)", "t.xid=:txid AND e.entryType=:entryType",
-              ['txid'=>$txid, 'entryType'=>ENTRY_PAYER]);
+  $q = db\get('uid1, agt1, amt AS amount, goods, for1 AS description, created', 'txs', compact('xid'));
   if ($q) {
     extract($q);
-    $member = r\qid($payer, $payerAgent);
+    $member = r\qid($uid1, $agt1);
     list ($goods, $force, $proof) = [(int) ($goods == FOR_GOODS), -1, 'calc'];
     $args = compact(ray($fields));
   } else {
@@ -691,8 +689,8 @@ function weRespondOkTxidCreatedBalanceSaying($txid, $created, $balance, $msg = N
   global $testOnly; if (!$testOnly) return FALSE;
   global $rposResult;
 
-  ///  debug("weRespond...($txid, $created, $balance, " . print_r($msg, true));
-  ///  debug($rposResult);
+///  debug("weRespond...($txid, $created, $balance, " . print_r($msg, true));
+///  debug($rposResult);
   
   extract($rposResult, EXTR_PREFIX_ALL, 'a'); // actual results
   $ok = '1';
@@ -778,3 +776,10 @@ function transactionEntryCountIs($n) { return t\count('entries', $n); }
  */
 function coupated($list) { return t\coupatedRecords($list); }
 
+
+/**
+ * count (ARG) is (ARG)
+ *
+ * in: TEST offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThroughButCustomerIsBroke
+ */
+function countIs($what, $count) {return t\count($what, $count);}

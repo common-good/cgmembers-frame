@@ -44,5 +44,10 @@ class SignupTracking extends AbstractMigration
       $this->table('users')
       ->addColumn('preid', 'integer', ['length' => MysqlAdapter::INT_BIG, 'null' => FALSE, 'default' => 0, 'after' => 'lastip', 'comment' => 'signup record ID'])
       ->update();
+      
+      // added retroactively (also added conditionally in later migration "SimplifyTxs"
+      $this->table('x_users')
+      ->addColumn('preid', 'integer', ['length' => MysqlAdapter::INT_BIG, 'null' => FALSE, 'default' => 0, 'after' => 'lastip', 'comment' => 'signup record ID'])
+      ->update();      
     }
 }

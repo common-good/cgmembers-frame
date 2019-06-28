@@ -103,8 +103,9 @@ Scenario: A joined account member looks at transaction history and summary
   Then we show "Transaction History" with:
   | Start        |   |   800.00 | %dmy-2w |
   | From Bank    | + | 1,000.00 |         |
+  | To Bank      | - |   100.00 |         |
   | Received     | + |   150.00 |         |
-  | Out          | - |   100.00 |         |
+  | Out          | - |     0.00 |         |
 #  | Credit Line+ |   |          |         |
   | End          |   | 1,850.00 | %dmy    |
   And with:

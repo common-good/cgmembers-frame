@@ -7,7 +7,7 @@ Setup:
   Given members:
   | uid  | fullName | floor | minimum | flags            | achMin | risks   | jid  |*
   | .ZZA | Abe One  |     0 |     100 | ok,refill,bankOk | 30     | hasBank | .ZZB |
-  | .ZZB | Bea Two  |     0 |       0 | ok               | 10     |         | .ZZA |
+  | .ZZB | Bea Two  |   -40 |       0 | ok               | 10     |         | .ZZA |
   And relations:
   | main | agent | permission |*
   | .ZZA | .ZZB  | joint      |
@@ -34,7 +34,7 @@ Scenario: a joint account needs refilling
   And we notice "banked|bank tx number|available now" to member ".ZZA" with subs:
   | action    | amount | checkNum | why       |*
   | draw from | $30    |        1 | to bring your balance up to the target you set |
-
+Resume
 Scenario: a joint account does not need refilling
   Given balances:
   | uid  | balance |*

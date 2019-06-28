@@ -11,17 +11,31 @@ Setup:
   | .ZZC | Our Pub  |   -50 |     100 | ok,co                         | 50     | hasBank |
   And relations:
   | main | agent | draw |*
-  |.ZZA | .ZZB  | 1    |
+  |.ZZA  | .ZZB  | 1    |
   
 Scenario: a member is barely below target
+  And transactions:
+  | xid | created    | amount | from | to   | purpose |*
+  | 7   | %today-10d |  99.99 | ctty | .ZZA | grant   |
+
+  When cron runs "getFunds"
+  Then usd transfers:
+  | txid | payee | amount | channel  | xid |*
+  |    1 | .ZZA  |     30 | %TX_CRON |   8 |
+  And bank transfer count is 1
+  And we notice "banked|bank tx number" to member ".ZZA" with subs:
+  | action    | amount | checkNum | why       |*
+  | draw from | $30    |        1 | to bring your balance up to the target you set |
+
+Scenario: a member gets credit for the bank transfer immediately
   Given balances:
-  | uid  | savingsAdd | balance |*
-  | .ZZA |          0 |   99.99 |
+  | uid  | balance | floor |*
+  | .ZZA |   99.99 |   -50 |
   When cron runs "getFunds"
   Then usd transfers:
   | txid | payee | amount | channel  |*
   |    1 | .ZZA  |     30 | %TX_CRON |
-  Then bank transfer count is 1
+  And bank transfer count is 1
   And we notice "banked|bank tx number|available now" to member ".ZZA" with subs:
   | action    | amount | checkNum | why       |*
   | draw from | $30    |        1 | to bring your balance up to the target you set |
@@ -103,8 +117,8 @@ Scenario: a member is under target and has requested insufficient funds from the
   | uid  | fullName | floor | minimum | flags            | achMin | risks   |*
   | .ZZD | Dee Four |   -50 |     300 | ok,refill,bankOk | 30     | hasBank |
   And balances:
-  | uid  | savingsAdd | balance |*
-  | .ZZD |          0 |      20 |
+  | uid  | balance |*
+  | .ZZD |      20 |
   When cron runs "getFunds"
   Then usd transfers:
   | payee | amount | deposit | completed |*
@@ -114,8 +128,8 @@ Scenario: a member is under target and has requested insufficient funds from the
   | .ZZD |          0 |   19.99 |
   When cron runs "getFunds"
   Then usd transfers:
-  | payee | amount          |*
-  | .ZZD  | %(280+R_ACHMIN) |
+  | payee | amount          | xid |*
+  | .ZZD  | %(280+R_ACHMIN) |   2 |
 
 Scenario: a member with zero target has balance below target
   Given members:
@@ -171,7 +185,7 @@ Scenario: a non-member has a target and refills
   Then usd transfers:
   | txid | payee | amount | channel  |*
   |    1 | .ZZA  |    100 | %TX_CRON |
-	And count "txs" is 0
+	And count "txs" is 1
 	And count "usd" is 1
 	And count "invoices" is 0
 	

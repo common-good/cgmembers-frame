@@ -26,14 +26,16 @@ Scenario: A member changes some settings
   |       1 |     211870281 |         123 |          123 |       0 |       1 |    100 |     11 |          0 |
   When member ".ZZD" visits page "sadmin/changes/NEWZZA"
   Then we show "Account Changes for Abe One" with:
-  | Date | Field       | Old Value            | New Value                   | Changed by |
   | %dmy | flags       | ok ided              | ok ided weekly              | abeone     |
+  And with:
   | %dmy | flags       | ok ided weekly       | ok ided weekly paper        | abeone     |
+  And with:
   | %dmy | flags       | ok ided weekly paper | ok ided refill weekly paper | abeone     |
   And with:
   | %dmy | crumbs      |                 0.02 |                        0.01 | abeone     |
   And with:
   | %dmy | achMin      |                   10 |                          11 | abeone     |
+  And with:
   | %dmy | bankAccount | (secret)             | (secret)                    | abeone     |
 # sometimes this happens out of order (dunno why)
 

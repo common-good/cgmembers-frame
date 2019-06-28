@@ -92,7 +92,7 @@ Scenario: A member gets a credit line
   Then members have:
   | uid  | floor |*
   | .ZZE |   -50 |
-
+Resume
 #  And we notice "new floor|no floor effect" to member ".ZZE" with subs:
 #  | limit |*
 #  |  $50 |
@@ -145,4 +145,3 @@ Scenario: A member gets no new credit line because the change would be minimal
   Then members have:
   | uid  | floor |*
   | .ZZE |    49 |
-  

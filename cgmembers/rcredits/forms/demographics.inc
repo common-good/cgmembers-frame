@@ -13,10 +13,7 @@ function formDemographics($form, &$sta) {
   $statStart = strtotime('10/23/2014'); // earliest 
   $title = t('Customer Demographics');
   
-  $field = 'DISTINCT payer.uid AS uid';
-  $table = 'tx_entries payee JOIN tx_hdrs t USING(xid) JOIN tx_entries payer USING(xid)';
-  $where = 'payee.uid=:myid AND payee.entryType=:ENTRY_PAYEE AND payer.entryType=:ENTRY_PAYER';
-  $uids = db\col($field, $table, $where, compact('myid'));
+  $uids = db\col('DISTINCT uid1', 'txs', 'uid2=:myid', compact('myid'));
   $count = count($uids);
   if ($count < AGGREGATE_MIN) return w\go('/company-reports', t('There are not enough customers (%count) to show demographics (minimum %AGGREGATE_MIN).', compact('count')));
   
@@ -30,35 +27,38 @@ function formDemographics($form, &$sta) {
   }
   
   $tnm = <<< X
-    (SELECT ucust.city, COUNT(DISTINCT ucust.uid) count
-     FROM tx_entries payee
-          JOIN tx_entries payer USING(xid)
-          JOIN users ucust ON ucust.uid=payer.uid
-     WHERE payee.uid=:myid AND payee.entryType=:ENTRY_PAYEE AND payer.entryType=:ENTRY_PAYER
-           AND NOT ucust.:IS_CO
-     GROUP BY ucust.state, ucust.city
+    (SELECT uCust.city, COUNT(DISTINCT uCust.uid) count
+     FROM txs t JOIN users uCust ON uCust.uid=t.uid1
+     GROUP BY uCust.state, uCust.city
      ORDER BY count DESC LIMIT 10
     ) x
 X;
+// (used to limit this to individual customers, not businesses, with: WHERE NOT uCust.:IS_CO
   $cities = db\rows('*', $tnm, 1, compact('myid'), FALSE);
 
-
-  // us is "us", common is common customer, them is the other company
+/*  // us is "us", them is the other company
   $sql = <<<X
-    SELECT them.fullName AS company, COUNT(DISTINCT payerEntry.uid) AS count
-    FROM tx_entries payerEntry
-    JOIN tx_entries theirEntry ON (theirEntry.xid=payerEntry.xid AND theirEntry.entryType=:ENTRY_PAYEE)
-    JOIN users them ON (them.uid=theirEntry.uid)
-    WHERE payerEntry.entryType=:ENTRY_PAYER
-    AND payerEntry.uid IN (SELECT DISTINCT commonEntry.uid AS uid
-                           FROM users us
-                           JOIN tx_entries ourEntry ON (us.uid=ourEntry.uid AND ourEntry.entryType=:ENTRY_PAYEE)
-                           JOIN tx_entries commonEntry ON (ourEntry.xid=commonEntry.xid AND commonEntry.entryType=:ENTRY_PAYER)
-                           WHERE us.uid=:myid)
-    AND them.:IS_CO AND them.uid NOT IN (:myid,:CGID)
+    SELECT them.fullName AS company, COUNT(DISTINCT toThem.uid1) AS count
+    FROM txs toThem JOIN users them ON (them.uid=toThem.uid2)
+    WHERE toThem.uid1 IN (
+      SELECT DISTINCT toUs.uid1 FROM users us JOIN txs toUs ON toUs.uid2=us.uid WHERE us.uid=:myid
+    ) AND them.:IS_CO AND them.uid NOT IN (:myid,:CGID)
     GROUP BY them.fullName
     ORDER BY count DESC, company ASC
     LIMIT 10
+X;
+*/
+
+  // uCo is another company, tToUs is payments to this company, tToOther is payments to uCo by this company's customers (uCust)
+  $tnm = <<< X
+    (SELECT uCo.fullName AS company, COUNT(DISTINCT tToOther.uid1) AS count
+     FROM txs_prime tToUs LEFT JOIN txs_prime tToOther ON tToOther.uid1=tToUs.uid1 AND tToOther.uid2 NOT IN (:myid,:CGID)
+     LEFT JOIN users uCust ON uCust.uid=tToUs.uid1
+     LEFT JOIN users uCo ON uCo.uid=tToOther.uid2
+     WHERE tToUs.uid2=:myid AND uCo.:IS_CO AND NOT uCust.:IS_CO
+     GROUP BY tToOther.uid2
+     ORDER BY count DESC, company ASC LIMIT 10
+    ) x
 X;
   
   $pays = db\q($sql, compact('myid'));

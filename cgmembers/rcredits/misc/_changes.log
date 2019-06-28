@@ -1,3 +1,17 @@
+2019-06-28 feature/simplify-txs
+. added several new views for transactions (including their entries), to simplify selection queries and tests
+. renumbered transaction entries so the ID of the entry for the payer is negative the payee's entry ID
+. gave separate entryTypes to rebates, bank charges, bank transfers, and transaction fees
+. changed bank transfers to consolidate incoming transfers when possible and fix some bugs
+. miscellaneous bug fixes
+. prepared for doing away with Tids, by giving even tentative bank transfers an xid (with a zero amount in the tx record)
+. simplified many queries
+. moved sanity check to Handy menu
+. simplified be\transfer function by standardizing variable names and setting them systematically
+. fixed bugs in user cancelation of transfer request AND admin reversal of transfer request
+. combined setBit with setBitx in acct class
+. created utility and batch files to facilitate migration testing especially on Windows
+
 2019-06-20 feature/fix-usd-cancels
 . CG can always transact with people, even if they have not used their card yet.
 . fixed bug that failed to create an r_usd record when canceling a pending transaction
@@ -6,6 +20,13 @@
 . fixed links to promo site (now that we have a new promo site)
 . removed most of the overview at the top of the signup page (to make it easier to dive in)
 . corrected calculation of crumbs in rcron.inc
+. fixed data related to r_usd bugs, in USD window:
+    $q = db\q('SELECT xid,amount,uid2 AS payee,created,created AS completed,:TX_WEB AS channel FROM txs where xid IN (121730,122551,122552,122841)');
+    while ($info = $q->fetchAssoc());
+      $a = r\acct($info['payee']);
+      $info['bankAccount'] = $a->vsecure['bankAccount'];
+      db\insert('r_usd', $info, 'txid');
+    }
 
 2019-06-19 feature/food-percents
 . food fund donations now happen automatically at the time of the transaction

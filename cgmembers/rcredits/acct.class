@@ -50,9 +50,6 @@ class Acct {
    * @param assoc $info: array of field values for new account (only fullName is required)
    */
   private function createNew($info) {
-///       print_r("Acct::createNew(");
-///       print_r($info);
-///       print_r(")<br>");
     $a = $this;
     extract($info);
 
@@ -163,7 +160,6 @@ class Acct {
    * @return the value if it exists, else NULL
    */
   public function __get($field) {
-    global $mya, $pwV;
     $a = $this;
     $a->reread(); // make sure record has been read in
 
@@ -209,6 +205,7 @@ class Acct {
     if ($field == 'agentA') return r\acct($a->agentId);
     if ($field == 'proSe') return ($a->id == $a->agentId);
     if ($field == 'qid') return $a->qo->qid;
+    if ($field == 'uids') return $a->jid != 0 ? [$a->id, $a->jid] : [$a->id];
     if ($field == 'bestName') return $a->shortName ?: $a->fullName;
     if ($field == 'isCtty') return ($a->id < 0); // or ($a->id == $a->community); (regions are communities too)
     if ($field == 'isRegion') return (substr($a->name, -1, 1) == '.');
@@ -535,14 +532,19 @@ class Acct {
   public function update1($info) { // public only for testing
     global $mya;
     $a = $this;
-    if (!is_array($info)) $info = rayy(func_get_args());
 
-    foreach ($bits = just(B_LIST, $info) as $k => $v) {$a->setBit($k, $v); unset($info[$k]);}
+    //    foreach ($bits = just(B_LIST, $info) as $k => $v) {$a->setBit($k, $v); unset($info[$k]);}
+    if (!is_array($info)) $info = rayy(func_get_args());
+    if ($bits = just(B_LIST, $info)) {
+      $a->setBit($bits);
+      $info = justNOT(B_LIST, $info);
+    }
+    
     foreach (just(REL_FLDS . ' ' . REL_FLAGS, $info) as $k => $v) {$a->setRel($k, $v); unset($info[$k]);}
     if ($coFlds = just(CO_FLDS, $info)) {$a->setCo($coFlds); $info = justNOT(CO_FLDS, $info);}
 
     //    if ($a->ok) $info += $a->recordChanges(justNOT(B_LIST, $info)); // record changes if member is active
-    if ($a->activated) $a->recordChanges(justNOT(B_LIST, $info)); // record changes if member is (or was) active
+    if ($a->ok or $a->activated) $a->recordChanges($info); // record changes if member is (or was) active
     foreach (just('hasBank', $info) as $k => $v) {$a->setRisk($k, $v); unset($info[$k]);}
 
     foreach (ray('photo thumb') as $k) if (isset($info[$k])) $a->updatePhoto($info, $k);
@@ -613,6 +615,7 @@ class Acct {
   private function recordChanges($info) {
     global $mya;
     $a = $this;
+
     $newChanges = justNOT(R_HIDE_CHANGES, $info); // see if there are any changes to remember
     foreach ($newChanges as $field => $v) {
       $ak = $a->$field;
@@ -728,21 +731,50 @@ class Acct {
   }
   
   /**
-   * Set the bit in the flags field to the given value.
-   * @param int $bit: number of bit to set (0 - 31)
+   * Set the bit in the given integer bit collection field to the given value.
+   * If the requested bit is too high, "2" (or more) gets appended to the collection name
+   * @param int $bit: number of bit to set (0 - 62)
    * @param bool $on: whether to set it ON or OFF
    * @return <successful>
    * @see also self::can()
    */
-  public function setBit($bit, $on = TRUE) {
+  public function setBit($bit, $on = TRUE, $field = 'flags') {
     $a = $this;
-    if (!is_numeric($bit)) $bit = u\consta('b', $bit);
-    $res = $a->setBitx($bit, $on, 'flags'); 
-    if (@self::$perms[$id][$a->agentId]) {
-      self::$perms[$id][$a->agentId][$bit] = $on;
-    } // else can gets refreshed automatically next time can() is called
-    return $res;
+    
+    list ($bits, $ons) = is_array($bit) ? [array_keys($bit), array_values($bit)] : [[$bit], [$on]];
+
+    $n = $a->$field ?: 0;
+    foreach ($bits as $i => $bit) {
+      if ($field == 'flags' and !is_numeric($bit)) $bit = u\consta('b', $bit);
+      $on = $ons[$i];
+      if ($bit > B_MAX) $field .= 1 + floor($bit / (B_MAX + 1));
+      u\setBit($n, $bit, $on);
+      if ($field == 'flags' and @self::$perms[$id][$a->agentId]) {
+        self::$perms[$id][$a->agentId][$bit] = $on;
+      } // else can gets refreshed automatically next time can() is called
+    }
+    return $a->update($field, $n);
+    
+//    $res = $a->setBitx($bit, $on, 'flags'); 
+//    $a->refreshCan(); // ?
+//    return $res;
   }
+
+//  public function setBitx($bit, $on = TRUE, $field = 'flags') {return $this->setBit($bit,$on,$field);}
+  
+  /*
+   * @param boot $now: whether to write to the database (DEFAULT TRUE) or just to the cache (awaiting write)
+   *//*
+  public function setBit($bit, $on = TRUE, $now = TRUE) {
+    $this->reread();
+// gets caught anyway    u\EXPECT(compact('int', 'on'), 'int bool');
+    u\EXPECT($bit <= B_MAX, 'setting too big a bit');
+    $bit = u\bit($bit0 = $bit);
+    $flags = $on ? ($this->flags | $bit) : ($this->flags & ~$bit);
+    self::$records[$this->id]->flags = $flags;
+    $this->refreshCan();
+    return $now ? $this->update(compact('flags')) : TRUE;
+  } */ 
   
   // public function refreshCan() {self::$perms[$this->id] = NULL;} // UNUSED force redo in can()
 
@@ -951,11 +983,11 @@ EOF;
     unset($DBTX);
   }
 
-  private function recomputeBalance() {
+  public function recomputeBalance() {
     $a = $this;
     $balance = db\sum('amount', 'tx_entries', 'uid=:uid', ['uid'=>$a->id]);
     if (empty($balance)) $balance = 0;
-    $result = db\update('users', ['uid'=>$a->id, 'balance'=>$balance], 'uid');
+    $result = db\update('users', ray('uid balance', $a->id, $balance), 'uid');
     u\EXPECT($result == 1, "trouble updating balance");
     $a->reread();
   }
@@ -1250,10 +1282,17 @@ EOF;
   /**
    * Return the total waiting to be credited as a transfer FROM (or if negative result, TO) the member's bank.
    * @param numeric $combinable: (RETURNED) how much is waiting and checks haven't been printed yet (incoming only)
+   * @param int $combineTxid: (RETURNED) record id of USD transfer request in r_usd that can be combined (if none, zero)
    */
-  public function waitingFromBank(&$combinable = 0) {
-    $id = ($jid = $this->jid) ? "$this->id,$jid" : $this->id;
-    extract(db\q("SELECT SUM(amount) AS amt, SUM(IF(deposit OR amount<0, 0, amount)) AS combinable FROM r_usd WHERE payee IN ($id) AND NOT completed")->fetchAssoc());
+  public function waitingFromBank(&$combinable = 0, &$combineTxid = 0) {
+    $a = $this;
+    $sql = <<< o
+      SELECT SUM(amount) AS amt, SUM(IF(deposit, 0, amount)) AS combinable,
+        MIN(IF(deposit, NULL, txid)) AS combineTxid
+      FROM r_usd WHERE payee IN (:uids) AND NOT completed
+o;
+    extract(db\q($sql, ray('uids', $a->uids))->fetchAssoc());
+    if ($combinable <=0) $combinable = $combineTxid = 0;
     return $amt;
   }
 	
@@ -1287,60 +1326,73 @@ EOF;
 
   /**
    * Transfer funds to an account from a connected bank account or drawable Common Good account.
-   * Always bring the balance up to balance up to zero or (if autorefill is yes) the target balance PLUS the requested amount.
+   * Always bring the balance up to zero or (if autorefill is yes) the target balance PLUS the requested amount.
    * Called for investments, gifts, invoice payment, and autorefills. So the only way to stay negative is not to do any of these.
    * @param numeric $amount: the amount needed
    * @param string $why: purpose of transfer
-   * @return the transaction number (FALSE if failure)
+   * @return the transaction number (FALSE if no funds gotten)
    */
   public function getFunds($amount, $why) {
     $a = $this;
-///       debug($a->id . "getFunds($amount, '$why')");
-    if ($amount <= 0) return FALSE;
-    if ($a->hasBank) {
-      $waiting = $a->waitingFromBank($combinable);
-      //			$target = $a->refill ? $a->minimum : 0;
-      //			$amount += max(0, $target - $waiting);
-      if ($a->refill) $amount = max($a->achMin - $combinable, round(R_ACHMIN * ceil($amount / R_ACHMIN)));
-      return $a->bank($amount, $why);
-    } else return $a->draw($amount, $why);
-  }
 
+    if ($amount <= 0) return FALSE;
+    return $a->hasBank ? $a->bank($amount, $why) : $a->draw($amount, $why);
+  }
+  
   /**
    * Transfer funds to or from a connected bank account.
-   * @param numeric $amount0: the amount to transfer FROM or (if negative) TO the bank
+   * @param numeric $amount: the amount to transfer FROM or (if negative) TO the bank
    * @param string $why: purpose of transfer
    * @param assoc $tx: forced field values, if any (when reversing an unsuccessful request)
    * @param string $newwhy: (RETURNED) actual message to tell account-owner about the transfer
    * @return the transaction number (FALSE if failure)
    */
   public function bank($amount, $why = '', $tx = [], &$newwhy = '') {
-///    debug("->bank($amount, $why, " . print_r($tx, true) . ")");
-    global $channel;
-    $amount0 = $amount; // remember original amount requested
     $a = $this;
+    global $channel;
+
+    $amount0 = $amount;
+    $automatic = ($channel == TX_CRON);
     if (!$a->hasBank) return FALSE;
     $payee = $a->id;
     if ($tx) extract($tx);
     $okNow = ($amount < 0 or $a->bankOk); // "okay to create the request NOW"
     if (!$okNow) $a->verifyBank();
-    u\setDft($created, $okNow ? now() : now() + DAY_SECS);
-    u\setDft($completed, ($amount < 0 or $a->bankOk) ? $created : 0);
-    if (!$tx) list($txid, $amount, $completed) = be\combineUsdTx($a, $amount, $completed);
-    if (!$txid) { // no existing tx, so create one
-      $txid = be\createUsdTransfer($a, $amount, $created);
-      u\EXPECT((bool) $txid, 'saving usd record');
+    $target = $a->refill ? $a->minimum : 0;
+    $msg = 'banked';
+    $done = FALSE;
+  
+    if ($amount > 0) {
+      $waiting = $a->waitingFromBank($combinable, $txid);
+      $refillTo = $a->refill ? max($a->achMin, R_ACHMIN, $combinable + max($amount, $target - $a->balance - $waiting)) : 0;
+  	  $amount = max($amount, $refillTo);
+      if ($automatic or $a->refill) $amount = round(R_ACHMIN * ceil($amount / R_ACHMIN)); // round, if automatic now or later
+
+      if ($combinable) {
+        if ($done = db\update('r_usd', compact(ray('txid amount')), 'txid')) $msg .= '|combined';
+      }
     }
 
-    if ($amount0 < 0 and $txid > 0) r\tellAdmin(t('outgoing bank transfer'), ['amount' => -$amount0]);
-    if (nn($completed)) be\completeUsdTx($a, $txid, $amount0, TRUE, $completed);
+    if (!$done) {
+      u\setDft($created, $okNow ? now() : now() + 3 * DAY_SECS);
+      u\setDft($completed, ($amount < 0 or ($okNow and $amount + $waiting <= -$a->floor)) ? $created : 0);
+///    debug(compact(ray('done created okNow completed amount waiting')) + ['floor' => $a->floor]);
 
-    $msg = 'banked';
-    if ($amount0 > 0) $msg .= '|bank tx number' . ($completed ? '|available now' : '');
-    $action = $amount0 < 0 ? t('deposit to') : t('draw from');
-    $msg = tr($msg, ray('action amount checkNum', $action, u\fmtAmt(abs(@$amount0)), $txid));
+      $DBTX = \db_transaction();
+      $txid = be\createUsdTransfer($a, $amount, $created);
+      u\EXPECT((bool) $txid, 'saving usd record');
+      if (nn($completed)) $completed = be\completeUsdTx($txid, $automatic, $completed); // completed is then boolean
+      unset($DBTX);
+    }
+
+    if ($amount < 0 and $txid > 0) r\tellAdmin(t('outgoing bank transfer'), ['amount' => -$amount]);
+    
+    if ($amount > 0) $msg .= '|bank tx number' . (nn($completed) ? '|available now' : '');
+    $action = $amount < 0 ? t('deposit to') : t('draw from');
+    $msg = tr($msg, ray('action amount checkNum', $action, u\fmtAmt(abs(@$amount)), $txid));
     if (empty($why)) $newwhy = $why = '';
     r\notify($a->id, $newwhy = tr($msg, compact('why')));
+    if ($amount > $amount0 and !$automatic) w\say(t('Your request has been increased to meet your chosen auto-refill target. If this is more than you wanted, cancel or reverse this request, then turn off auto-refills in your Preference Settings before trying again.'));
 
     return $txid;
   }
@@ -1352,7 +1404,8 @@ EOF;
     $a = $this;
     list ($bankAccount, $payee) = [@$a->vsecure['bankAccount'], $a->id];
     if (db\exists('r_usd', compact(ray('amount payee bankAccount')))) return; // already being verified
-    for ($txid = 1; $txid < 999999; $txid++) { // actual transfers start sometime after 999,999
+    $txid0 = db\max('txid', 'r_usd', 'txid<999999');
+    for ($txid = $txid0; $txid < 999999; $txid++) { // actual transfers start sometime after 999,999
       if (db\exists('r_usd', 'txid=:txid', compact('txid'))) continue;
       if ($txid = db\insert('r_usd', compact(ray('txid amount payee bankAccount channel')), 'txid')) break;
     }
@@ -1471,14 +1524,10 @@ X;
     } else $period = $recurAmt = $recurStart = $gift = '';
 
     $sql = <<< X
-      SELECT t.created AS lastGiftDate, e2.amount AS lastGift 
-      FROM tx_hdrs t
-      JOIN tx_entries_payer e1 USING(xid)
-      JOIN tx_entries_payee e2 USING(xid)
-      LEFT JOIN tx_hdrs tRev ON tRev.reversesXid=t.xid
-      WHERE e1.uid=:id AND e2.uid=:CGID
-      AND t.:IS_GIFT AND tRev.xid IS NULL AND t.reversesXid IS NULL 
-      ORDER BY t.created DESC LIMIT 1
+      SELECT created AS lastGiftDate, amt AS lastGift 
+      FROM txs_noreverse
+      WHERE uid1=:id AND uid2=:CGID AND :IS_GIFT
+      ORDER BY created DESC LIMIT 1
 X;
     $res = db\q($sql, $subs)->fetchAssoc();
     if ($res) {
@@ -1529,27 +1578,13 @@ X;
   }
   
   /**
-   * Set the bit in the given integer bit collection field to the given value.
-   * If the requested bit is too high, "2" (or more) gets appended to the collection name
-   * @param int $bit: number of bit to set (0 - 30)
-   * @param bool $on: whether to set it ON or OFF
-   * @return <successful>
-   */
-  public function setBitx($bit, $on = TRUE, $field = 'flags') {
-    if ($bit > B_MAX) $field .= 1 + floor($bit / (B_MAX + 1));
-    $n = $this->$field;
-    u\setBit($n, $bit, $on);
-    return $this->update($field, $n);
-  }
-
-  /**
    * Set the bit (identified by number or name) in the "risks" integer bit collection field.
    * @param mixed $bit: number of bit to set (0 - 31) or name of bit
    * @param bool $on: whether to set it ON or OFF
    */
-  public function setRisk($bit, $on = TRUE) {$this->setBitx($this::riskBit($bit), $on, 'risks');}
+  public function setRisk($bit, $on = TRUE) {$this->setBit($this::riskBit($bit), $on, 'risks');}
     
-  public function risk($bit) {return u\getBit($this->risks, $this::riskBit($bit));}
+  public function risk($bit) {return u\getBit($this->risks ?: 0, $this::riskBit($bit));}
   
   /**
    * Return the bit number for risk bit name.
@@ -1565,7 +1600,7 @@ X;
   
   //  private static function flagBit($bit) {return is_numeric($bit) ? $bit : u\consta('b', $bit);}
   public function coCan($bit = NULL) {return u\getBit($bit <= B_MAX ? $this->coFlags : $this->coFlags2, $bit);}
-  public function setCoBit($bit, $on = TRUE) {$this->setBitx($bit, $on, 'coFlags');}
+  public function setCoBit($bit, $on = TRUE) {$this->setBit($bit, $on, 'coFlags');}
   
   public function setCoCans($cans) {
     $coFlags = $this->coFlags;
@@ -1581,6 +1616,7 @@ X;
    * @param array $values: numeric array of bit values (eg [3 => 3, 5 => 5])
    */
   public function setRisks($values) {
+    if (!is_array($values)) return; // this happens in testing
     $risks = $this->risks;
     $riskBits = array_values(just(K_ACCT_RISKS_EDITABLE, array_flip(array_keys(ray(K_ACCT_RISKS))))); // editable risk bits
     foreach ($riskBits as $bit) u\setBit($risks, $bit, isset($values[$bit]));
@@ -1878,9 +1914,7 @@ X;
    * Return the account's total gifts to the Common Good.
    */
   function totalGifts() {
-    return db\sum('e1.amount', 'tx_hdrs t JOIN tx_entries e1 USING(xid) JOIN tx_entries e2 USING(xid) JOIN tx_hdrs tRev ON t.xid=tRev.reversesXid',
-                  'e1.uid=:payerId AND e2.uid=:CGID AND t.:IS_GIFT AND tRev.xid IS NULL AND t.reversesXid IS NULL',
-                  [ 'payerId' => $this->id ]);
+    return db\sum('amt', 'txs_noreverse', 'uid1=:id AND uid2=:CGID AND :IS_GIFT', ['id' => $this->id ]);
   }
   
   /**
@@ -1899,7 +1933,7 @@ X;
   public function api($etc = '') {return $this->website ? tr(CO_API_URL, 'website etc', $this->website, $etc) : '';}
   public function lastTx($where = 1, $subs = []) { return r\Tx::lastTx([$this->id, $this->jid], $where, $subs); }
   public function lastTxDesc() {return ($tx = $this->lastTx) ? t(' (Last tx: %dt)', 'dt', u\fmtDate($tx->created, TRUE)) : '';}
-  public function isBank() {return ($this->id == BANK_IN_ID or $this->id == BANK_OUT_ID);}
+  public function isBank() {return r\isBank($this->id);}
 
   public function firstCo() {return db\get('fullName', 'r_relations r INNER JOIN users u ON r.main=u.uid', 'r.permission>0 AND r.other=:id AND u.:IS_CO ORDER BY r.created LIMIT 1', ['id' => $this->id]);}
   public function adminables() {
