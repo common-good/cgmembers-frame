@@ -1523,7 +1523,7 @@ function handleInvestmentRequest($stakeid, &$msg) {
 /**
  * Calculate community gifts ever paid and ever due as of a certain date/time.
  * @param int $end: ending date/time
- * @return the rows
+ * @return the rows (an array of objects)
  */
 function cttyGifts($end) {
   $sql = <<< o

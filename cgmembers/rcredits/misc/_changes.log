@@ -1,3 +1,9 @@
+2019-07-01 feature/fix-cron
+. fixed donation sharing table on CG's Summary page
+. did away with requests function in cron
+. fixed bug in cron that prevented logging
+. added a failsafe in cron to keep any part of it from getting run twice at once
+
 2019-06-28 feature/simplify-txs
 . added several new views for transactions (including their entries), to simplify selection queries and tests
 . renumbered transaction entries so the ID of the entry for the payer is negative the payee's entry ID

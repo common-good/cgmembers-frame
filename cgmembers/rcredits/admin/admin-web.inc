@@ -175,9 +175,9 @@ function adminSummary() {
     }      
 
     if ($mya->id == CGID) {
-      $lines = '<tr><th>Community</th><th>Donations</th><th>Paid</th><th>Due</th></tr>';
+      $lines = '<tr><th>Community</th><th>Donations</th><th>Paid</th><th>Bounce Fees</th><th>Due</th></tr>';
       foreach (r\cttyGifts(time()) as $row) {
-        extract($row);
+        extract((array) $row);
         $bounces = R_DEPOSIT_RETURN_FEE * $bounces;
         $due = round($in / 2 - $out, 2);
         foreach (ray('in out bounces due') as $k) $$k = number_format($$k, 2);

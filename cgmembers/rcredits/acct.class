@@ -1240,7 +1240,7 @@ EOF;
       $j = r\acct($jid);
       $jstats = ($jstats = $j->stats) ? unserialize($jstats) : [];
       foreach ($stats as $k => $v) {
-        $jv = $jstats[$k];
+        $jv = nn($jstats[$k], 0);
         $stats[$k] = u\abbreviates('avg', $k) ? ($v + $jv) / 2 : ($v + $jv);
       }
       $created = round(($a->created + $j->created) / 2);

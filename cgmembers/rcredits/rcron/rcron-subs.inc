@@ -30,19 +30,15 @@ function queueNext($task = NULL) {
   global $cronOp; 
 
   if ($cronOp) {
-    if ($cronOp != 'ALL') cr\queue('END');
-    if (u\test()) while (db\exists('queue')) cr\run();
+    cr\queue('END');
+    while (db\exists('queue')) cr\run();
     return; // doing just one, so do nothing more
-  }
-
+  } 
+    
   u\setDft($task, str_replace(__NAMESPACE__ . '\\', '', u\caller()));
-  u\loga('queueNext', compact('task'));
-
-//  if (u\test() and @$cronOp and $cronOp != 'ALL') {
-//    cr\queue($task == $cronOp ? 'END' : $cronOp);
-  //} else 
-  cr\queue(u\nextAfter($task, ray(R_DAILY_TASKS)));
-//  } else cr\queue($tasks[array_search($task, $tasks) + 1]);
+  u\loga('queueNext', json_encode(compact('task')));
+  cr\queue(u\nextAfter($task, ray(DAILY_TASKS)));
+//  if (isDEV) while (db\exists('queue')) cr\run();
 }
 
 /**
@@ -73,5 +69,9 @@ function queue($op, $item = []) {
   $item = compact('op') + $item;
   if (@$cronOp or u\test()) {
     cr\doTask($item);
-  } else db\insert('queue', ray('item created', serialize($item), now()));
+  } else {
+    $item = serialize($item0 = $item);
+    u\EXPECT(!db\exists('queue', compact('item')), 'item already in queue: ' . json_encode($item0));
+    db\insert('queue', ray('item created', $item, now()));
+  }
 }

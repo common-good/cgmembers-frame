@@ -18,6 +18,10 @@ use CG\Cron as cr;
  To run all the daily functions starting with a particular function "zot", use:
  CG\Cron\zot(arg1,...); // to run all daily functions, zot=everyDay
  
+  On development machines:
+  include __DIR__ . '/../rcron/rcron.inc';
+  //cr\everyDay(); while (db\exists('queue')) cr\run(); debug('done'); 
+ 
  * = written
  ** = tested
 
@@ -68,8 +72,8 @@ NOTES:
   where <star> means * (not the same as for the production site) 
  */
 
-define('R_DAILY_TASKS', 'START checkAccts requests setNear acctStats cttyStats trust acctRisk acctRiskFinish txRisk achRisk tickle lessOften recurs getFunds invoices invest notices END'); // had homogenize, pool 
-//define ('R_DAILY_TASKS', 'START redistribute END');
+define('DAILY_TASKS', 'START checkAccts setNear acctStats cttyStats trust acctRiskA acctRiskB acctRiskFinish txRisk achRisk tickle lessOften recurs getFunds invoices invest notices END');
+
 include_once __DIR__ . '/rcron-subs.inc';
 
 /**
@@ -121,12 +125,12 @@ function run() {
 function doTask($item) {
   global $channel; $channel = TX_CRON;
   global $mya;
-  
+
   $op = array_shift($item);
   $func = 'CG\\Cron\\' . $op;
 
   if ($uid = @$item['uid']) $mya = r\acct($uid); // fudge current account
-  if (!in($op, 'acctHourly checkAcct acctStats acctRisk') and substr($op, -1, 1) != '1') u\log($op, 'cr', justNOT('uid', $item));
+  if (!in($op, 'acctHourly checkAcct acctStats acctRisk whatsUp tickleStep activeWeekly activeMonthly') and substr($op, -1, 1) != '1') u\log($op, 'cr', $item);
     
   $func($item);
 }
@@ -442,10 +446,10 @@ function everyMonth() {
 //  queueEach('shareCommitted', 'SELECT uid, committed, share FROM users WHERE :IS_OK AND committed>0');
   
   $sql = <<< X
-    SELECT uid, SUM(amt)*crumbs AS donate
+    SELECT uid, ROUND(SUM(amt)*crumbs, 2) AS donate
     FROM users u LEFT JOIN txs_noreverse t ON t.uid2=u.uid
-    WHERE crumbs>0 AND amt>0 AND goods=:FOR_GOODS AND t.created BETWEEN $start AND $end
-    GROUP BY uid
+    WHERE goods=:FOR_GOODS AND t.created BETWEEN $start AND $end AND u.:IS_OK
+    GROUP BY uid HAVING donate>0
 X;
   queueEach('crumbs', $sql);
 
@@ -528,8 +532,9 @@ function bankFollowup($tx) {
 
 /**
  * Gather requests for invitations
- */
+ *//*
 function requests() {
+  debug('requests');
   $dlm = db\max('created', 'r_request') + 0;
   $secret = urlencode(db\get('last', 'r_request', 'listid=3894'));
 
@@ -564,7 +569,7 @@ X;
   db\q($sql);
   
   queueNext();
-}
+} */
 
 /**
  * Check accounts for consistency, scams, whatever.
@@ -669,7 +674,7 @@ function cttyStats($dt1 = 0, $redo = '') {
     cttyStats1(['ctty' => 1]); // for all communities in the server's region
     queueEach('cttyStats1', 'SELECT DISTINCT uid AS ctty FROM users WHERE uid<0'); // and one at a time
     queueNext();
-  } else { // recreate stats data from the beginning of time
+  } else { // recreate stats data from the beginning of time (called only manually)
 /*      SELECT community AS ctty, MIN(t.created) AS start
       FROM users u LEFT JOIN r_txs t ON t.payee=u.uid 
       WHERE uid>:CANONIC_ACCTS AND (t.created>=:R_LAUNCH OR t.created IS NULL) GROUP BY community ORDER BY -community
@@ -742,17 +747,17 @@ X;
 /**
  * Calculate risks of financial misbehavior for each account.
  * Do companies first, so their risk can be used to help assess individual risk.
- * Do the whole thing twice, to take into account relations with suspicious individuals.
+ * Do the whole thing twice (see DAILY_TASKS), to take into account relations with suspicious individuals.
  */
 function acctRisk() {
   setv('newThresholds', ray('bigDay bigWeek big7Week bigYear', [], [], [], []));
 
   db\q('UPDATE users SET risk=NULL'); // avoid unnecessary badConx. don't touch risks though!
-  for ($i=0; $i<2; $i++) { // do it twice (for good and bad Conx)
-    queueEach('acctRisk1', 'SELECT uid FROM users WHERE uid>:CANONIC_ACCTS and :IS_OK ORDER BY :IS_CO DESC');
-  }
-  queueNext();
+  queueEach('acctRisk1', 'SELECT uid FROM users WHERE uid>:CANONIC_ACCTS and :IS_OK ORDER BY :IS_CO DESC');
 }
+
+function acctRiskA() {acctRisk(); queueNext();}
+function acctRiskB() {acctRisk(); queueNext();}
 
 function acctRisk1($item) {
   include_once __DIR__ . '/../cg-risk.inc';
@@ -817,7 +822,7 @@ function achRisk1($item) {
  */
 function recurs() {
   $sql = <<< EOF
-    SELECT DISTINCT r.id, r.period, r.created, r.amount, r.payer, r.payee, u2.fullName AS payeeName, purpose,
+    SELECT DISTINCT r.id AS recursId, r.period, r.created, r.amount, r.payer, r.payee, u2.fullName AS payeeName, purpose,
     (SELECT 1 FROM r_invoices i WHERE i.recursId=r.id AND status<:TX_PAID LIMIT 1) AS invoiced,
     (SELECT MAX(created) FROM txs_noreverse WHERE recursId=r.id) AS lastTxDt
     FROM r_recurs r JOIN users u1 ON u1.uid=r.payer JOIN users u2 ON u2.uid=r.payee
@@ -841,7 +846,7 @@ X;
  * If funds are insufficient, an approved invoice is created instead (which tries to get money as a next step).
  */
 function recurs1($item) {
-	extract(just('id period lastTxDt created invoiced amount payer payee payeeName purpose', $item));
+	extract(just('recursId period lastTxDt created invoiced amount payer payee payeeName purpose', $item));
 	if ($invoiced or !giveNow($period, $lastTxDt, $created)) return;
 
   $data = ['recurs' => 1];
@@ -849,20 +854,21 @@ function recurs1($item) {
   if ($payee == CGID) $data['gift'] = 1;
   $period = r\periodDesc($period);
 
-  if (r\acct($payer)->payApproved($payee, $amount, "$purpose ($period)", FOR_GOODS, $data, $id)) {
+  if (r\acct($payer)->payApproved($payee, $amount, "$purpose ($period)", FOR_GOODS, $data, $recursId)) {
     r\notify($payer, 'recur pay', ray('amount period purpose to', u\fmtAmt($amount), $period, $purpose, $payeeName));
   }
 }
 
 /**
- * Say whether it's time to make a recurring gift.
+ * Say whether it's time to make a recurring payment, based on how long ago the last one was and when they're supposed to happen
+ * -- letting go of any totally missed payments (automation does not guarantee squareness).
  * @param char $period: how often (W, M, Q, Y)
- * @param int $lastGift: Unixtime of last relevant gift
- * @param int $start: Unixtime of first relevant gift
+ * @param int $lastPmt: Unixtime of last relevant payment
+ * @param int $firstPmt: Unixtime of first relevant payment
  * @param int $now: is it time as of what "now" (if not now(), don't return true for first gift)
  */
-function giveNow($period, $lastGift, $start, $now = NULL) {
-	if (is_null($now) and empty($lastGift)) return TRUE; // never given, so now's the time
+function giveNow($period, $lastPmt, $firstPmt, $now = NULL) {
+	if (is_null($now) and empty($lastPmt)) return TRUE; // never given, so now's the time
   // the isnull($now) check above is because we ask in advance about an annual gift even when the member didn't make one
   if (empty($now)) $now = now();
 
@@ -870,12 +876,12 @@ function giveNow($period, $lastGift, $start, $now = NULL) {
     $m = $period == 'M' ? 1 : ($period == 'Q' ? 3 : 12);
 	  $windowSize = MONTH_SECS * $m; // should be at least a third of a period since the last gift
   } else $windowSize = $period == 'W' ? WEEK_SECS : DAY_SECS;
-///  debug(compact(ray('period lastGift now windowSize start m')));
-	if (($now - $lastGift) < ($windowSize / 3)) return FALSE; // should be at least a third of a period since the last gift
-	$lastTrigger = $start + $windowSize * floor(($now - $start) / $windowSize); // most recent time to give
-///  debug(compact(ray('lastGift now windowSize lastTrigger m')));
-///  debug($lastTrigger > $lastGift);
-	return ($lastTrigger > $lastGift); // last Trigger must be after last gift
+///  debug(compact(ray('period lastPmt now windowSize firstPmt m')));
+	if (($now - $lastPmt) < ($windowSize / 3)) return FALSE; // should be at least a third of a period since the last gift
+	$lastTrigger = $firstPmt + $windowSize * floor(($now - $firstPmt) / $windowSize); // most recent time to give
+///  debug(compact(ray('lastPmt now windowSize lastTrigger m')));
+///  debug($lastTrigger > $lastPmt);
+	return ($lastTrigger > $lastPmt); // last Trigger must be after last gift
 }
 
 /**
@@ -1012,11 +1018,11 @@ function notices() {
   if ($monthly) $where .= ' OR :IS_MONTHLY';
   $sql = "SELECT DISTINCT u.uid, :IS_WEEKLY AS weekly, :IS_MONTHLY AS monthly FROM r_notices n JOIN users u ON u.uid=n.uid WHERE IF(activated, u.:IS_OK, NOT u.:IS_NONUDGE) AND NOT sent AND ($where)";
 
-  queueEach('notice', $sql);
+  queueEach('notice1', $sql);
   queueNext();
 }
 
-function notice($item) {
+function notice1($item) {
   extract(just('uid daily weekly monthly', $item));
 
   $now = now();
