@@ -649,7 +649,7 @@ function cronRuns($op) {
   $now = now();
   \setV('r_last_cron', ray('day week month', $now, $now, $now)); // normally don't run periodics
 
-  if ($op == 'ALL') { //  or strpos(R_DAILY_TASKS, " $op ")
+  if ($op == 'ALL') { //  or strpos(DAILY_TASKS, " $op ")
 /**/  if (strftime('%H') < R_DAILY_HOUR) die('Developer: For testing between midnight and :R_DAILY_HOUR:00, you need to temporarily change R_DAILY_HOUR in -settings.');
     db\q('TRUNCATE queue');
     \setV('r_last_cron', ray('day week month', $now - DAY_SECS, 0, 0));

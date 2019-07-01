@@ -578,12 +578,10 @@ function expect1($arg, $value, $type, $ret) {
  */  
 function loga($type, $info = [], $adhocChannel = FALSE) {
   global $mya;
-/**/  if (strlen($type) >= 60) die('in loga: ' . $type); // (KEEP) don't use EXPECT here
-//  if ($type == 'FATAL' and strpos($info, 'calling db_query() ')) return '';
-
   global $channel;
-  $channels = ray(TX_CHANNELS);
-  $ch = @$channel ? $channels[$channel] : t('hack');
+/**/  if (strlen($type) >= 60) die("in loga: $type " . trace()); // don't use EXPECT here
+
+  $ch = @$channel ? ray(TX_CHANNELS)[$channel] : t('hack');
 //  $useTextLogToo = FALSE; // isDEV;
 
   $qid = @$mya ? $mya->qid . (($mya->cAdmin2 and !$mya->proSe) ? strtolower($mya->agentA->mainQid) : '') : t('nobody');
@@ -595,8 +593,6 @@ function loga($type, $info = [], $adhocChannel = FALSE) {
     if (@$info['form_id']) {$type .= str_replace('CG\\Web\\form', '', $info['form_id']);}
     if (@$info['toEmail']) $info = just('index subject', $info); // don't show whole email
     foreach (ray('form_id form_build_id form_token orig') as $k) unset($info[$k]);
-//    foreach (ray(R_NOLOG) as $k) if ($k != 'email' and @$info[$k]) $info[$k] = '(?)';
-  //  $record = compact(ray('time channel type myid agent info'));
     $info = json_encode(u\noSecrets($info), JSON_UNESCAPED_SLASHES);
   }
 /**/ flog("$qid/$time/$ch/$type/$info");
