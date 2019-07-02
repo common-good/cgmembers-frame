@@ -578,7 +578,7 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
   
   if ($needed * $e1A->food > .005 and $e2A->foody) { // apply percentage donation to food fund
     $foodUid = db\get('uid', 'users', "name='foodfund'");
-    if ($foodUid) txEntryPair($entries, round($needed * $e1A->food, 2), [$e1A, $foodUid], t('donation to Food Fund (pct%)', 'pct', u\fmtAmt($e1A->food, '%')), E_DONATION);
+    if ($foodUid) txEntryPair($entries, round($needed * $e1A->food, 2), [$e1A, $foodUid], t('donation to Food Fund (%pct%)', 'pct', u\fmtAmt($e1A->food, '%')), E_DONATION);
   }
   
   $rbal = $e1A->balance;

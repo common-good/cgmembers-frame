@@ -1,3 +1,23 @@
+2019-07-02 feature/cron-once-daily
+. fixed cron bug that let everyday run several times at once
+. Identified and deleted extraneous invoices since 6/2/2019 (1559448000) with:
+SELECT DISTINCT r.id AS recursId,fullName,i.payee,i.nvid AS nvid1,i2.nvid AS nvid2,
+  txid,t.xid AS xid1,t2.xid AS xid2,i.amount AS iAmt,d.amount AS dAmt,t.amt AS tAmt 
+FROM r_recurs r 
+  LEFT JOIN r_invoices i ON (i.recursId=r.id)
+  LEFT JOIN users u ON u.uid=r.payer
+  LEFT JOIN r_usd d ON (d.payee=r.payer AND deposit=0)
+  LEFT JOIN txs t ON (t.recursId=r.id AND t.created>1559448000)
+  LEFT JOIN r_invoices i2 ON (i2.recursId=i.recursId AND i2.status<1 AND i2.nvid<>i.nvid)
+  LEFT JOIN txs t2 ON (t2.recursId=t.recursId AND t2.created>1559448000 AND t2.xid<>t.xid)
+WHERE (i2.nvid IS NOT NULL OR t2.xid IS NOT NULL)
+. Identified and deleted invoices not connected to a recur record, that got duplicated on 6/13:
+SELECT i.nvid,i2.nvid, fullname,i.amount,i.status,i.purpose,from_unixtime(i.created) AS dt1,from_unixtime(i2.created) AS dt2 from r_invoices i join users u on u.uid=i.payer left join r_invoices i2 ON i2.payer=i.payer AND i2.payee=i.payee AND i2.status<1 and i2.nvid<i.nvid WHERE i2.payee=26742000000002 AND i2.nvid IS NOT NULL AND i2.recursId=0 ORDER BY i.nvid DESC,i2.nvid DESC
+
+$xids = '123299, 123300, 123301, 123302, 123203, 123157, 123158, 123065, 122935, 122603, 122604, 122605, 122658, 123272, 123273, 123274, 123275, 122732, 122608, 123085, 123271, 123340, 123338, 123385, 123381, 123383, 123348, 123393, 123350, 123395, 123352, 123397, 123354, 123399, 123360, 123404, 123368, 123279, 123371, 123373, 123377, 123380, 123382, 123384, 123386, 123388, 123390, 123392, 123394, 123396, 123398, 123281, 123164, 123403, 123208, 123405, 123311, 123312';
+db\del('tx_entries', '', "xid IN ($xids)");
+db\del('tx_hdrs', '', "xid IN ($xids)");
+
 2019-07-01 feature/fix-cron
 . fixed donation sharing table on CG's Summary page
 . did away with requests function in cron

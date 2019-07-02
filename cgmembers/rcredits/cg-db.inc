@@ -224,6 +224,7 @@ function setFlag($table, $id, $bit, $bool = TRUE) {
  * @param assoc $subs: parameters for selection criteria
  */
 function del($table, $idnm, $id, $subs = []) {
+  u\EXPECT(!strpos($table, '_all') and !u\starts($table, 'txs'), 'you must delete only from tx_hdrs and tx_entries');
   $where = is_numeric($id) ? "$idnm=$id" : $id;
   if (in($table, DELETED_BY_VIEW)) {
     $all_table = $table . '_all';

@@ -205,7 +205,7 @@ Scenario: a member's bank account gets verified
   | .ZZA |       0 | ok,refill |
   And usd transfers:
   | txid | payee | amount | created   | completed | deposit   |*
-  |    1 | .ZZA  |      0 | %today-2d |         0 | %today-1d |
+  |    1 | .ZZA  |      0 | %today-4d |         0 | %today-3d |
 	When cron runs "everyDay"
   Then count "usd" is 0
 	And members have:

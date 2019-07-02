@@ -189,6 +189,11 @@ function acctHourly($item) {
  * Do miscellaneous stuff that needs doing every day
  */
 function everyDay() {
+  if (db\exists('queue')) { // daily tasks already in progress
+    if (date('j') + 0 < 5) r\tellAdmin('Daily cron already in process!'); // not unexpected throughout the hour
+    return;
+  }
+  
   queueNext('START'); // eachA seems to interfere with this and processing the queue is vital, so launch it first
   db\q('DELETE FROM r_do WHERE completed<0 AND :NOW>-completed'); // completed<0 is -expiry time
 
@@ -219,11 +224,11 @@ X;
 //  db\del('users', 'uid', $where); // abandoned new joint acct (must postcede setting jids)
 
   // Notice which bank accounts have been verified
-	$where = 'amount=0 AND deposit<>0 AND deposit<UNIX_TIMESTAMP()-:DAY_SECS';
-	$q = db\q("SELECT payee FROM r_usd WHERE $where");
+	$where = 'deposit<>0 AND deposit<UNIX_TIMESTAMP()-:VERIFICATION_DELAY*:DAY_SECS AND (SELECT 1 FROM r_usd d2 WHERE d2.txid=-d.txid) IS NULL';
+	$uids = db\col('payee', 'r_usd d', $where);
 	$DBTX = db_transaction();
-	while ($row = $q->fetchAssoc()) r\acct($row['payee'])->setBit(B_BANKOK);
-	db\del('r_usd', 'txid', $where);
+	foreach ($uids as $uid) r\acct($uid)->setBit(B_BANKOK);
+	if ($uids) db\del('r_usd', 'txid', 'amount=0 AND payee IN (:uids)', compact('uids'));
 	unset($DBTX);
 	db\q('DELETE FROM x_usd WHERE amount=0'); // no need to track these
 }
@@ -534,7 +539,6 @@ function bankFollowup($tx) {
  * Gather requests for invitations
  *//*
 function requests() {
-  debug('requests');
   $dlm = db\max('created', 'r_request') + 0;
   $secret = urlencode(db\get('last', 'r_request', 'listid=3894'));
 

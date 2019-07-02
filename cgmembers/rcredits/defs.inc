@@ -267,6 +267,7 @@ define('R_ACHMIN', 10); // minimum granularity of withdrawals from bank account
 define('R_ACHMIN_DEFAULT', 50); // suggested achMin
 //define('R_ACH_TRIES', 3); // how many times to retry an ACH
 define('CASHOUT_MIN', 100); // minimum dollar amount to cash out automatically
+define('VERIFICATION_DELAY', 3); // number of days to wait after requesting a zero transfer, before requesting a real transfer
 
 define('R_SUGGEST_BUMP', 1.25); // suggested minimum multiplier, so as not to overdraw
 define('CO_ASPECT', [4, 3]); // width-to-height ratio for commercial profile picture
