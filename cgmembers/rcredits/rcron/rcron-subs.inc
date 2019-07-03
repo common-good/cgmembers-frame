@@ -71,7 +71,7 @@ function queue($op, $item = []) {
     cr\doTask($item);
   } else {
     $item = serialize($item0 = $item);
-    u\EXPECT(!db\exists('queue', compact('item')), 'item already in queue: ' . json_encode($item0));
+    if ($op != 'acctRisk1') u\EXPECT(!db\exists('queue', compact('item')), 'item already in queue: ' . json_encode($item0));
     db\insert('queue', ray('item created', $item, now()));
   }
 }

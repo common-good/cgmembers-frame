@@ -579,6 +579,7 @@ function expect1($arg, $value, $type, $ret) {
 function loga($type, $info = [], $adhocChannel = FALSE) {
   global $mya;
   global $channel;
+  
 /**/  if (strlen($type) >= 60) die("in loga: $type " . trace()); // don't use EXPECT here
 
   $ch = @$channel ? ray(TX_CHANNELS)[$channel] : t('hack');
@@ -595,7 +596,9 @@ function loga($type, $info = [], $adhocChannel = FALSE) {
     foreach (ray('form_id form_build_id form_token orig') as $k) unset($info[$k]);
     $info = json_encode(u\noSecrets($info), JSON_UNESCAPED_SLASHES);
   }
-/**/ flog("$qid/$time/$ch/$type/$info");
+/**/ flog($s = "$qid/$time/$ch/$type/$info");
+//  if (!u\test())
+//  if ($channel == TX_CRON) mail(R_ADMIN_EMAIL, 'cron log', $s); // temporary until we figure out what's going wrong with flog in cron
 }  
 
 /**

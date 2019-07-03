@@ -31,7 +31,9 @@ function formHandleInvoice($form, &$sta, $args = '') {
     if (@$mya and $payer != $mya->id) w\signout(TRUE); // make sure we're signed out of any possibly different acct
   } elseif (!$mya) {
     return hack(t('attempt to handle invoice not signed in'));
-  } else if (!in($mya->id, [$payer, $payee]) or ($mya->id == $payer xor $toMe)) return hack(t('bad person in invoice payment'));
+  } else if (!in($mya->id, [$payer, $payee]) or ($mya->id == $payer xor $toMe)) {
+    return hack(t('bad person in invoice payment'));
+  }
 
   $subs = ray('amount what date', u\fmtAmt($amount), $purpose, u\fmtDate($created, TRUE));
   

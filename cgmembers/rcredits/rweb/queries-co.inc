@@ -37,7 +37,7 @@ $queries = [
   "SELECT CONCAT_WS(' ', FROM_UNIXTIME(created, '%m/%d'), LEFT(FROM_UNIXTIME(created, '%W'), 3)) AS `day`,
   SUM(IF(amount>0, amount, 0)) AS `total in`,
   SUM(IF(amount<0, -amount, 0)) AS `total out`
-  FROM tx_entries JOIN tx_hdrs USING(xid) JOIN (SELECT 1 FROM txs_noreverse) tnr USING(xid)
+  FROM tx_entries JOIN tx_hdrs USING(xid) JOIN (SELECT xid FROM txs_noreverse) tnr USING(xid)
   WHERE uid=:myid AND created>:REQUEST_TIME-190*:DAY_SECS
   GROUP BY FROM_UNIXTIME(created, '%Y-%m-%d')
   ORDER BY created DESC",

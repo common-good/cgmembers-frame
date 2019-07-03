@@ -42,7 +42,7 @@ function formGet($form, &$sta, $args = '') {
 //  $minimum = textFld(t('Minimum:'), t('prompt min'), dft(u\fmtAmt(!$mya->prefsSet ? $mya->minimum : R_MINR_DEFAULT, 's')));
 //  $toSpend = u\fmtAmt($mya->avail(FOR_GOODS));
 //  $toSpend = u\fmtAmt($mya->r - $mya->committed);
-  $balance = u\fmtAmt($mya->balDpy);
+  $balance = u\fmtAmt($mya->balance);
   $credit = u\fmtAmt(-$mya->floor);
   $fromBank = $mya->waitingFromBank();
 
@@ -59,7 +59,7 @@ function formGet($form, &$sta, $args = '') {
 
   $toBankFmt = u\fmtAmt(-$toBank);
   $fromBankFmt = u\fmtAmt($fromBank);
-  $cashoutable = u\fmtAmt(max(0, min($mya->balDpy, $avail)));
+  $cashoutable = u\fmtAmt(max(0, min($mya->balance, $avail)));
   if ($fromBank != 0) {
     $where = 'payee IN (:myid, :jid) AND completed=0 AND deposit=0 ORDER BY txid DESC';
     if ($rec = db\get('amount, txid', 'r_usd', $where, compact('myid', 'jid'))) {

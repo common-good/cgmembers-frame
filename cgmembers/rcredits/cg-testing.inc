@@ -58,7 +58,7 @@ function fixData(&$info, $direct = FALSE) {
   }
 
   foreach (just(T_ID_FLDS, $info) as $k => $v) {
-    if (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, 'ctty cgf bank-in bank-out')) { $info[$k] = t\uid($v) ?: 0; }
+    if (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, 'ctty crumb round cgf bank-in bank-out')) { $info[$k] = t\uid($v) ?: 0; }
   }
 	foreach (ray('from:payer,to:payee,fromAgent:payerAgent,toAgent:payeeAgent') as $k => $k2) if (isset($info[$k])) {
 		$info[$k2] = $info[$k];
@@ -700,7 +700,8 @@ function fullQid($q) {
 function uid($id, $field = 'id') {
 //  u\EXPECT($id, 'empty id'); // otherwise site loops (?)
   if (is_numeric($id) or empty($id)) { return $id; }
-  $map = ray('community ctty cgf bank-in bank-out', r\serverUid(), r\serverUid(), CGID, BANK_IN_ID, BANK_OUT_ID);
+  $map = ray('community ctty cgf bank-in bank-out crumb round', 
+    r\serverUid(), r\serverUid(), CGID, BANK_IN_ID, BANK_OUT_ID, CG_CRUMBS_UID, CG_ROUNDUPS_UID);
   if ($res = nn($map[$id])) return $res;
 
   //  return r\qo($id)->$field; FAILS

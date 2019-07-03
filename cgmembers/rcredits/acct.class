@@ -219,7 +219,6 @@ class Acct {
     if ($field == 'creditLine') return -$a->floor;
     if ($field == 'closed') return ($a->activated and !$a->ok); // data[newAccount] has new qid, if any
     if ($field == 'hasBank') return $a->risk('hasBank');
-    if ($field == 'balDpy') return $a->balance - $a->partRounds; // always display balance without partial roundups
     if ($field == 'lowSecurity') return u\n2ai(substr($a->created, -5, 5), 3); // result is 3 chars long
     if ($field == 'inviteCode') return $a->mainQid . $a->lowSecurity;
     if ($field == 'slave') return ($jid = $a->jid and $jid < $a->id); // slave in a joint account
@@ -985,7 +984,7 @@ EOF;
 
   public function recomputeBalance() {
     $a = $this;
-    $balance = db\sum('amount', 'tx_entries', 'uid=:uid', ['uid'=>$a->id]);
+    $balance = db\sum('amount', 'tx_entries', 'uid IN (:uids)', ['uids'=>$a->uids]);
     if (empty($balance)) $balance = 0;
     $result = db\update('users', ray('uid balance', $a->id, $balance), 'uid');
     u\EXPECT($result == 1, "trouble updating balance");
@@ -1009,9 +1008,11 @@ EOF;
         $ai->update1('jid minimum', 0, max($a->o_minimum, $b->o_minimum));
         //        $ai->setBit(B_JOINED, FALSE);
       }
+
+      $a->recomputeBalance();
+      $b->recomputeBalance();
+
       if ($a->ok and $b->ok) { // no need to settle with closed or not-yet-open account
-        $a->recomputeBalance();
-        $b->recomputeBalance();
         $diff = $a->balance - $b->balance;
         $xfr = round($diff / 2, 2);
         be\transfer('payment', $a, $b, $xfr, t('joint account settlement'), FOR_USD, ['force'=>1]);
@@ -1296,9 +1297,11 @@ o;
     return $amt;
   }
 	
+  /**
+   * Return the amount of pending bank transfers the member has already been credited with, against their credit line.
+   */
   public function advances() {
-    $id = ($jid = $this->jid) ? "$this->id,$jid" : $this->id;
-    return db\sum('amount', 'r_usd', "payee IN ($id) AND amount>0 AND :NOW-created<:DAY_SECS*:R_USDTX_DAYS");
+    return db\sum('amount', 'r_usd', "payee IN (:uids) AND amount>0 AND completed AND :NOW-created<:DAY_SECS*:R_USDTX_DAYS", ['uids' => $this->uids]);
   }
 
   /**
@@ -1330,13 +1333,13 @@ o;
    * Called for investments, gifts, invoice payment, and autorefills. So the only way to stay negative is not to do any of these.
    * @param numeric $amount: the amount needed
    * @param string $why: purpose of transfer
-   * @return the transaction number (FALSE if no funds gotten)
+   * @return <success> (the funds were requested or drawn)
    */
   public function getFunds($amount, $why) {
     $a = $this;
 
     if ($amount <= 0) return FALSE;
-    return $a->hasBank ? $a->bank($amount, $why) : $a->draw($amount, $why);
+    return $a->hasBank ? $a->bank($amount, $why) : ($a->draw($amount, $why) >= $amount);
   }
   
   /**
@@ -1345,11 +1348,13 @@ o;
    * @param string $why: purpose of transfer
    * @param assoc $tx: forced field values, if any (when reversing an unsuccessful request)
    * @param string $newwhy: (RETURNED) actual message to tell account-owner about the transfer
-   * @return the transaction number (FALSE if failure)
+   * @return <success> (a transfer request was made)
    */
   public function bank($amount, $why = '', $tx = [], &$newwhy = '') {
     $a = $this;
     global $channel;
+    
+    u\EXPECT($a->hasBank and (u\test() or $a->vsecure['bankAccount']), 'banking with no bank');
 
     $amount0 = $amount;
     $automatic = ($channel == TX_CRON);
@@ -1366,7 +1371,7 @@ o;
       $waiting = $a->waitingFromBank($combinable, $txid);
       $refillTo = $a->refill ? max($a->achMin, R_ACHMIN, $combinable + max($amount, $target - $a->balance - $waiting)) : 0;
   	  $amount = max($amount, $refillTo);
-      if ($automatic or $a->refill) $amount = round(R_ACHMIN * ceil($amount / R_ACHMIN)); // round, if automatic now or later
+      if ($a->refill) $amount = round(R_ACHMIN * ceil($amount / R_ACHMIN)); // round, if member has agreed to that deal
 
       if ($combinable) {
         if ($done = db\update('r_usd', compact(ray('txid amount')), 'txid')) $msg .= '|combined';
@@ -1394,7 +1399,7 @@ o;
     r\notify($a->id, $newwhy = tr($msg, compact('why')));
     if ($amount > $amount0 and !$automatic) w\say(t('Your request has been increased to meet your chosen auto-refill target. If this is more than you wanted, cancel or reverse this request, then turn off auto-refills in your Preference Settings before trying again.'));
 
-    return $txid;
+    return TRUE;
   }
 	
   /**
@@ -1418,6 +1423,7 @@ o;
   public function cashout() {
     $a = $this;
     
+    if (!$a->hasBank) return;
     if ($a->waitingFromBank($combinable) > 0) return; // no cashout if waiting to bring some in
     $cashout = 10 * floor(($a->balance - -$a->floor * 6 / 26) / 10);
     if ($cashout < R_ACHMIN) return;

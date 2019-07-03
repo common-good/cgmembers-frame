@@ -106,7 +106,7 @@ EOF;
   public function txnHdr($info, $extraClass = '') {
     global $mya;
     
-    $this->tidValue = $info['tid'];
+    $this->tidValue = $mya->superAdmin ? $info['xid'] : $info['tid'];
     $this->dateValue = strftime('%m/%d/%y', $info['created']);
     $this->runBalance = u\fmtAmt($info['balance'], '');
 

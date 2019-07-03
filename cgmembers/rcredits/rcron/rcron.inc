@@ -20,7 +20,7 @@ use CG\Cron as cr;
  
   On development machines:
   include __DIR__ . '/../rcron/rcron.inc';
-  //cr\everyDay(); while (db\exists('queue')) cr\run(); debug('done'); 
+  cr\everyDay(); while (db\exists('queue')) cr\run(); debug ('done'); 
  
  * = written
  ** = tested
@@ -72,7 +72,7 @@ NOTES:
   where <star> means * (not the same as for the production site) 
  */
 
-define('DAILY_TASKS', 'START checkAccts setNear acctStats cttyStats trust acctRiskA acctRiskB acctRiskFinish txRisk achRisk tickle lessOften recurs getFunds invoices invest notices END');
+define('DAILY_TASKS', 'START checkAccts setNear acctStats cttyStats trust acctRisk acctRiskFinish txRisk achRisk tickle lessOften recurs getFunds invoices invest notices END');
 
 include_once __DIR__ . '/rcron-subs.inc';
 
@@ -130,7 +130,7 @@ function doTask($item) {
   $func = 'CG\\Cron\\' . $op;
 
   if ($uid = @$item['uid']) $mya = r\acct($uid); // fudge current account
-  if (!in($op, 'acctHourly checkAcct acctStats acctRisk whatsUp tickleStep activeWeekly activeMonthly') and substr($op, -1, 1) != '1') u\log($op, 'cr', $item);
+  if (!in($op, 'acctHourly checkAcct whatsUp tickleStep activeWeekly activeMonthly') and substr($op, -1, 1) != '1') u\log($op, 'cr', $item);
     
   $func($item);
 }
@@ -189,6 +189,11 @@ function acctHourly($item) {
  * Do miscellaneous stuff that needs doing every day
  */
 function everyDay() {
+  if (db\exists('queue')) { // daily tasks already in progress
+    if (date('j') + 0 < 5) r\tellAdmin('Daily cron already in process!'); // not unexpected throughout the hour
+    return;
+  }
+  
   queueNext('START'); // eachA seems to interfere with this and processing the queue is vital, so launch it first
   db\q('DELETE FROM r_do WHERE completed<0 AND :NOW>-completed'); // completed<0 is -expiry time
 
@@ -219,11 +224,11 @@ X;
 //  db\del('users', 'uid', $where); // abandoned new joint acct (must postcede setting jids)
 
   // Notice which bank accounts have been verified
-	$where = 'amount=0 AND deposit<>0 AND deposit<UNIX_TIMESTAMP()-:DAY_SECS';
-	$q = db\q("SELECT payee FROM r_usd WHERE $where");
+	$where = 'deposit<>0 AND deposit<UNIX_TIMESTAMP()-:VERIFICATION_DELAY*:DAY_SECS AND (SELECT 1 FROM r_usd d2 WHERE d2.txid=-d.txid) IS NULL';
+	$uids = db\col('payee', 'r_usd d', $where);
 	$DBTX = db_transaction();
-	while ($row = $q->fetchAssoc()) r\acct($row['payee'])->setBit(B_BANKOK);
-	db\del('r_usd', 'txid', $where);
+	foreach ($uids as $uid) r\acct($uid)->setBit(B_BANKOK);
+	if ($uids) db\del('r_usd', 'txid', 'amount=0 AND payee IN (:uids)', compact('uids'));
 	unset($DBTX);
 	db\q('DELETE FROM x_usd WHERE amount=0'); // no need to track these
 }
@@ -446,9 +451,11 @@ function everyMonth() {
 //  queueEach('shareCommitted', 'SELECT uid, committed, share FROM users WHERE :IS_OK AND committed>0');
   
   $sql = <<< X
-    SELECT uid, ROUND(SUM(amt)*crumbs, 2) AS donate
+    SELECT u.uid, ROUND(SUM(t.amt)*u.crumbs, 2) AS donate, $end AS date
     FROM users u LEFT JOIN txs_noreverse t ON t.uid2=u.uid
-    WHERE goods=:FOR_GOODS AND t.created BETWEEN $start AND $end AND u.:IS_OK
+    WHERE t.goods=:FOR_GOODS AND t.created BETWEEN $start AND $end AND u.:IS_OK
+    AND (SELECT 1 FROM txs_noreverse WHERE :IS_CRUMBS AND created>=$end AND uid1=u.uid) IS NULL
+    AND (SELECT 1 FROM r_invoices WHERE :IS_CRUMBS AND created>=$end AND payer=u.uid) IS NULL
     GROUP BY uid HAVING donate>0
 X;
   queueEach('crumbs', $sql);
@@ -501,10 +508,9 @@ function inflationAdjust($item) {
  * Allow this even if account is inactive (donation has already been made, from member's point of view).
  */
 function crumbs($item) {
-///  debug($item);
-  extract(just('uid donate', $item));
+  extract(just('uid donate date', $item));
   $a = r\acct($uid);
-  if ($donate > 0 and $a->ok) $a->payApproved(CG_CRUMBS_UID, $donate, t('crumbs desc'), FOR_NONGOODS, ray('created crumbs gift', u\monthDay1() - 1, TRUE, TRUE));
+  if ($donate > 0 and $a->ok) $a->payApproved(CG_CRUMBS_UID, $donate, t('crumbs desc', 'pct', u\fmtAmt($a->crumbs, '%')), FOR_NONGOODS, ray('created crumbs gift', $date, TRUE, TRUE));
 }
 
 /**
@@ -534,7 +540,6 @@ function bankFollowup($tx) {
  * Gather requests for invitations
  *//*
 function requests() {
-  debug('requests');
   $dlm = db\max('created', 'r_request') + 0;
   $secret = urlencode(db\get('last', 'r_request', 'listid=3894'));
 
@@ -581,11 +586,11 @@ LEFT JOIN r_relations r ON r.main=u.uid
 LEFT JOIN users u2 ON u2.uid=u.jid
 WHERE u.uid<>0 AND u.jid AND r.permission=:B_JOINT-:B_RELATED
 X;
-  queueEach('checkAcct', $sql);
+  queueEach('checkAcct1', $sql);
   queueNext();
 }
 
-function checkAcct($item) {
+function checkAcct1($item) {
   extract($item);
   if (!$reid or !$partnerJid or $partnerJid != $uid or $relatedId != $jid) r\tellAdmin('bad relation', $item);
   //look at agreement date and first transaction date and last transaction date. queue appropriate funcs
@@ -753,11 +758,9 @@ function acctRisk() {
   setv('newThresholds', ray('bigDay bigWeek big7Week bigYear', [], [], [], []));
 
   db\q('UPDATE users SET risk=NULL'); // avoid unnecessary badConx. don't touch risks though!
-  queueEach('acctRisk1', 'SELECT uid FROM users WHERE uid>:CANONIC_ACCTS and :IS_OK ORDER BY :IS_CO DESC');
+  foreach ([1, 2] as $zot) queueEach('acctRisk1', 'SELECT uid FROM users WHERE uid>:CANONIC_ACCTS and :IS_OK ORDER BY :IS_CO DESC'); // do this twice, to take into account connections with scoundrels
+  queueNext();
 }
-
-function acctRiskA() {acctRisk(); queueNext();}
-function acctRiskB() {acctRisk(); queueNext();}
 
 function acctRisk1($item) {
   include_once __DIR__ . '/../cg-risk.inc';
@@ -946,11 +949,11 @@ function invoices() {
     WHERE i.status IN (:TX_PENDING,:TX_APPROVED) AND u1.:IS_OK AND u2.:IS_OK
     ORDER BY i.nvid
 X;
-  queueEach('invoice', $sql);
+  queueEach('invoice1', $sql);
   queueNext();
 }
 
-function invoice($item) {
+function invoice1($item) {
   extract(just('nvid payer payee amount purpose status created funding', $item));
   $a = r\acct($payer);
   $a2 = r\acct($payee);
@@ -959,7 +962,7 @@ function invoice($item) {
   if ($status == TX_APPROVED) {
 		if (!$a->ok) return; // don't try to pay from an inactive account (we can delay collection by temporarily deactivating)
 		$amtFld = 'amount';
-    $short = round($a->advances() + $amount - $a->avail(), 2); //	consider credit already used for advances from the bank
+    $short = $a->balance > $amount ? 0 : round($a->advances() + $amount - $a->avail(), 2); //	consider credit already used for advances from the bank
 
     if ($short <= 0) { // pay the invoice if we have enough funds
       list($ok, $msg) = be\payInvoice($nvid);

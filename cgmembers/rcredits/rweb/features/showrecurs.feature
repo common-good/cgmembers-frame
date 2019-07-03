@@ -27,10 +27,11 @@ Scenario: A member looks at their recurring transactions
   |~Way | Who        | Amount | Purpose   | How often? | Starting | Next     | Ending   |~Close   |
   | [R] | Corner Pub | 37.00  | this      | Quarterly  | %mdY-13m |~%mdY+2m  |          | [close] |
   | [R] | Bea Two    | 43.00  | that      | Weekly     | %mdY-13m |          | %mdY-11m |         |
-  | [R] | Bea Two    | 59.59  | something | Yearly     | %mdY-16m | %mdY+8m  |          | [close] |
+  | [R] | Bea Two    | 59.59  | something | Yearly     | %mdY-16m |~%mdY+8m  |          | [close] |
   | [L] | Bea Two    | 22.00  | nothing   | Quarterly  | %mdY-13m |~%mdY+2m  |          | [close] |
-  | [L] | Corner Pub | 37.43  | whatever  | Weekly     | %mdY-13d | %mdY+1d  |          | [close] |
+  | [L] | Corner Pub | 37.43  | whatever  | Weekly     | %mdY-13d |~%mdY+1d  |          | [close] |
   | [R] | Corner Pub |        | Invoice   | AutoPay    |          |          |          |         |
+# The "Next" column is tricky, because we calculate quarters and years wonkily
 
 Scenario: A member stops a recurring transaction
   When member ".ZZA" visits page "history/recurring/recId=99900&do=stop"
@@ -39,7 +40,7 @@ Scenario: A member stops a recurring transaction
   | Who        | Amount | How often? | Starting | Next     | Ending   |
   | Corner Pub | 37.00  | Quarterly  | %mdY-13m |          | %mdY     |
   | Bea Two    | 43.00  | Weekly     | %mdY-13m |          | %mdY-11m |
-  | Bea Two    | 59.59  | Yearly     | %mdY-16m | %mdY+8m  |          |
+  | Bea Two    | 59.59  | Yearly     | %mdY-16m |~%mdY+8m  |          |
   | Corner Pub |        | AutoPay    |          |          |          |
 
 Scenario: A member stops a stopped recurring transaction
@@ -49,7 +50,7 @@ Scenario: A member stops a stopped recurring transaction
   | Who        | Amount | How often? | Starting | Next     | Ending   |
   | Corner Pub | 37.00  | Quarterly  | %mdY-13m | ~%mdY+2m |          |
   | Bea Two    | 43.00  | Weekly     | %mdY-13m |          | %mdY-11m |
-  | Bea Two    | 59.59  | Yearly     | %mdY-16m | %mdY+8m  |          |
+  | Bea Two    | 59.59  | Yearly     | %mdY-16m |~%mdY+8m  |          |
   | Corner Pub |        | AutoPay    |          |          |          |
 
 Scenario: A member attempts to stop a non-existent recurring transaction
@@ -59,7 +60,7 @@ Scenario: A member attempts to stop a non-existent recurring transaction
   | Who        | Amount | How often? | Starting | Next     | Ending   |
   | Corner Pub | $37.00 | Quarterly  | %mdY-13m | ~%mdY+2m |          |
   | Bea Two    | $43.00 | Weekly     | %mdY-13m |          | %mdY-11m |
-  | Bea Two    | $59.59 | Yearly     | %mdY-16m | %mdY+8m  |          |
+  | Bea Two    | $59.59 | Yearly     | %mdY-16m |~%mdY+8m  |          |
   | Corner Pub |        | AutoPay    |          |          |          |
 
 Scenario: A member attempts to stop another member's recurring transaction
@@ -69,7 +70,7 @@ Scenario: A member attempts to stop another member's recurring transaction
   | Who        | Amount | How often? | Starting | Next     | Ending   |
   | Corner Pub | 37.00  | Quarterly  | %mdY-13m | ~%mdY+2m |          |
   | Bea Two    | 43.00  | Weekly     | %mdY-13m |          | %mdY-11m |
-  | Bea Two    | 59.59  | Yearly     | %mdY-16m | %mdY+8m  |          |
+  | Bea Two    | 59.59  | Yearly     | %mdY-16m |~%mdY+8m  |          |
   | Corner Pub |        | AutoPay    |          |          |          |
 
 Scenario: A member stops an autopayment
@@ -78,7 +79,7 @@ Scenario: A member stops an autopayment
   And we show "Recurring Transactions" with:
   | Corner Pub | 37.00  | Quarterly  | %mdY-13m | ~%mdY+2m |          |
   | Bea Two    | 43.00  | Weekly     | %mdY-13m |          | %mdY-11m |
-  | Bea Two    | 59.59  | Yearly     | %mdY-16m | %mdY+8m  |          |
+  | Bea Two    | 59.59  | Yearly     | %mdY-16m |~%mdY+8m  |          |
   And without:
   | AutoPay | 
   And these "relations":  
