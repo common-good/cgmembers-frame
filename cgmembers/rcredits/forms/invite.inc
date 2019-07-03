@@ -10,17 +10,19 @@ use CG\Db as db;
  * Invite someone to sign up for rCredits (on behalf of the account, not the agent).
  * NOTE: We allow agents to send invitations on behalf of a company, but be aware that companies are not people and there is a danger in giving companies permission to act like people. On this invitation form, the company is "trusting" whoever it invites -- something usually reserved for humans.
  */
-function formInvite($form, &$sta) {
+function formInvite($form, &$sta, $args = '') {
+  if (!$mya = w\eLinkAcct($sta, $args, 'acct')) return;
   global $base_url;
 //  if ($agent = r\agent()) {
-  global $mya;
   if ($mya->cAdmin and !$mya->proSe) say(t('Note: Admins cannot invite on behalf of someone.'), 'err');
   $stepsDone = (object) $mya->stepsDone;
   $nearly = ($mya->admin or $mya->can(B_MEMBER)) ?: (@$stepsDone->sign and @$stepsDone->donate);
   
   $title = t('Invite Someone to %PROJECT');
   $_a1 = w\atagB('/community/invite/waiting');
+  $_a1 = r\acct() ? t('<%a1>People waiting to be invited</a>', compact('_a1')) : '';
   $_a2 = w\atagB('/community/invite/invited-whom');
+  $_a2 = r\acct() ? t('<%a2>Who you have invited</a>', compact('_a2')) : '';
   $where = r\location($mya->cttyA); // currently UNUSED
   $inviteCode = $mya->iCardCode(IBY_EMAIL);
   $_inviteLink = PROMO_URL . "/signup/code=$inviteCode";
@@ -31,8 +33,8 @@ function formInvite($form, &$sta) {
   //      <li>Order %orderCount sheets of 10 invitation cards by mail (free!). %orderSubmit</li>
 //      <li><b>OR</b> Print %printCount sheets of 10 invitation cards. %printFront %printBack</li>
 
-  $_aFront = atag('/community/invite/print', w\away());
-  $_aBack = atag($mya->invitationBack());
+//  $_aFront = atag('/community/invite/print', w\away());
+//  $_aBack = atag($mya->invitationBack());
 //  list ($region, $zot) = explode(R_MEMBER_MARK, $mya->mainQid);
   $_aMailInvites = atag('mailto:' . CGF_EMAIL . '?subject=' . t('%PROJECT Invitation Card request') . '&body=' . t('Please send me some more %PROJECT invitation cards. Thanks!') . " -- $mya->fullName (account #$mya->mainQid)");
   $region = $mya->qo->region;
@@ -45,16 +47,16 @@ function formInvite($form, &$sta) {
   
   $subtext2 = $mya->cttyRewardy ? t('<p>Get a $%R_HELPER_BONUS reward for each %friend you invite, who signs up!</p>', compact('friend')) : '';
   $subtext2 .= t(<<<EOF
-<p>Invite <b>only people you trust</b> who live, shop, or work in your community. You may need to help or nudge the people you invite. <%a2>Who you have invited</a> <%a1>People waiting to be invited</a></p>
+<p>Invite <b>only people you trust</b> who live, shop, or work in your community. You may need to help or nudge the people you invite. %a2 %a1</p>
   <br>
   <p>Here are three different ways to invite someone:</p>
     <ul>
-      <li><b>BEST: Print a sheet</b> of invitation cards, %size, on card stock: <%aFront>front</a>, <%aBack>back</a>.<br>(or <%aMailInvites>ask to have some mailed to you</a> at no charge)</li>
-      <li><b>Tell your %friend</b> to sign in at %CG_DOMAIN with invitation #&nbsp;%inviteCode or send them this link: <div id=inviteLink>%inviteLink</div></li>
-      <li><b>Complete the form below</b> to send an invitation now():</li>
+      <li><b>Best: Complete the form below</b> to send an invitation now():</li>
+      <li><b>Tell your %friend</b> to sign up at %CG_DOMAIN or send them this link: <div id=inviteLink>%inviteLink</div></li>
+      <li><b><%aMailInvites>Ask us</a></b> to mail you some promo cards at no charge.</li>
     </ul>
 EOF
-  , compact(ray('_a1 _a2 _size where _aFront _aBack _aMailInvites _inviteLink inviteCode friend')));
+  , compact(ray('_a1 _a2 _size where _aMailInvites _inviteLink inviteCode friend')));
 //  (Later, you will need to confirm you know and trust them.)
   $subtext = !@$nearly ? $subtext1 : ($subtext2 . $warning);
 //  $contact = textFld(t('Email or Cell:'), t('An email address or cell number for the person you want to invite'), required());
@@ -87,9 +89,9 @@ function formInvite_validate($form, &$sta) {
 }
 
 function formInvite_submit($form, &$sta) {
+  $mya = w\eLinkAcct($sta); 
   global $base_url;
   extract(just('email emails subject message dupsOk', $sta['input']));
-  global $mya;
 
   if (op($sta) == 'submitN') {
 //    foreach (ray($email) as $one) sendInvite($one, $subject, $message, @$dupsOk);
@@ -102,8 +104,9 @@ function formInvite_submit($form, &$sta) {
     say('invite links', compact('links'));
   } else {
     $email = strtolower($email); // otherwise constantSubs breaks on cap after @
-    sendInvite($email, $subject, $message, @$dupsOk);
+    sendInvite($mya, $email, $subject, $message, @$dupsOk);
     $data = ray('inviteBody', substr($message, 0, 10000)) + $mya->data;
     $mya->update(compact('data'));
   }
+  if (!r\acct()) return w\doSay();
 }

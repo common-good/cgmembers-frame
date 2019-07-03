@@ -31,13 +31,13 @@ use CG\Db as db;
  * @see also r\makeDo()
  */
 function rdo($code, $args = '') {
-/**/	u\log(print_r(compact(ray('code args')), 1));
+	flog(pr(compact(ray('code args'))));
   global $channel;
   if (isDEV) foreach (['error', 'status'] as $k) @unlink(f('t.dosayFilename', $k)); // clear tests (no way to see if testing)
   if (strpos($code, ' ')) return doSay(plain($code), 'err');
   if ($i = strpos($code, '~') and $i < 15) { // mailChimp-type action
     @list ($op, $qid, $ecode, $mo, $v) = explode('~', $code . '~~~~~~');
-/**/		u\log(print_r(compact(ray('op qid ecode mo v code')), 1));
+/// 		flog($lug = pr(compact(ray('op qid ecode mo v code'))));
     if (!@$op or !@$qid or !@$a = r\acct($qid) or @$ecode != $a->emailCode) return doSay(t('That is not a valid link.'), 'err');
   } else {
     if (!$info = r\doCode($code)) return doSay(t('That link is archaic.'), 'err');
