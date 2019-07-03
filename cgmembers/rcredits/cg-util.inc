@@ -580,8 +580,6 @@ function loga($type, $info = [], $adhocChannel = FALSE) {
   global $mya;
   global $channel;
   
-  if ($channel == TX_CRON) mail(R_ADMIN_EMAIL, 'cron log', pr(compact('type info'))); // temporary until we figure out what's going wrong with flog in cron
-
 /**/  if (strlen($type) >= 60) die("in loga: $type " . trace()); // don't use EXPECT here
 
   $ch = @$channel ? ray(TX_CHANNELS)[$channel] : t('hack');
@@ -599,7 +597,8 @@ function loga($type, $info = [], $adhocChannel = FALSE) {
     $info = json_encode(u\noSecrets($info), JSON_UNESCAPED_SLASHES);
   }
 /**/ flog($s = "$qid/$time/$ch/$type/$info");
-  if ($channel == TX_CRON) mail(R_ADMIN_EMAIL, 'cron log2', $s); // temporary until we figure out what's going wrong with flog in cron
+//  if (!u\test())
+//  if ($channel == TX_CRON) mail(R_ADMIN_EMAIL, 'cron log', $s); // temporary until we figure out what's going wrong with flog in cron
 }  
 
 /**

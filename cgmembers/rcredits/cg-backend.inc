@@ -354,7 +354,7 @@ function payInvoice($nvid) {
   $DBTX = \db_transaction();
   $purpose .= ' (' . PROJECT . " inv#$nvid)";
 	$extra = ray('inv', $nvid);
-	if ($flags) foreach (ray('gift recurs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
+	if ($flags) foreach (ray('gift crumbs recurs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
 
   list ($index, $subs) = be\transfer('invoice payment', $payerA, $payeeA, $amount, $purpose, $goods, $extra, $recursId);
   $ok = u\arrayGet($subs, 'success', FALSE);
@@ -578,7 +578,7 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
   
   if ($needed * $e1A->food > .005 and $e2A->foody) { // apply percentage donation to food fund
     $foodUid = db\get('uid', 'users', "name='foodfund'");
-    if ($foodUid) txEntryPair($entries, round($needed * $e1A->food, 2), [$e1A, $foodUid], t('donation to Food Fund (%pct%)', 'pct', u\fmtAmt($e1A->food, '%')), E_DONATION);
+    if ($foodUid) txEntryPair($entries, round($needed * $e1A->food, 2), [$e1A, $foodUid], t('donation to Food Fund (%pct)', 'pct', u\fmtAmt($e1A->food, '%')), E_DONATION);
   }
   
   $rbal = $e1A->balance;
@@ -633,7 +633,6 @@ function sendNotifications($type, $tx, $shortfall) {
   /* $mya = r\acct(); */
   /* $byMe = $mya->isMe($tx->actorId); */
   $otherA = $tx->otherA;
-  if ($otherA->id > 0 and $otherA->id <= CANONIC_ACCTS) return ['', []]; // no notifications to canonic accounts
   $toMe = $tx->actorAmount > 0;
 
   switch ($type) {
@@ -697,7 +696,8 @@ function sendNotifications($type, $tx, $shortfall) {
     $notice = 'new payment linked';
     $args['_aPayLink'] = $otherA->makeDo('addr', $tx->actorId, 0); // link to address, so merchant can ship or nonprofit can thank
   }
-  r\notify($tx->otherId, $notice, $args);
+
+  if ($otherA->id < 0 or $otherA->id > CANONIC_ACCTS) r\notify($tx->otherId, $notice, $args);  // no notifications to canonic accounts
   $msg = 'report tx';
 //  return r\txRet($msg, $tx->reportArgs($tx->actorA, TRUE, $shortfall) + compact(ray('msg did')));
   return r\txRet($msg, $args + compact(ray('msg did')));

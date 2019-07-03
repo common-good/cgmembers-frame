@@ -155,7 +155,8 @@ function relations($relations) {return t\relations($relations);}
  *     BOTH invoices UnpaidInvoicesGetHandled
  *     MAKE joint AJointAccountNeedsRefilling
  *     MAKE monthly Setup
- *     TEST monthly InflationAdjustmentsRoundUpDonationsAndCrumbDonationsAreMade
+ *     TEST monthly CrumbDonationsAreMade
+ *     BOTH monthly CrumbsAreInvoiced
  *     MAKE recurs Setup
  *     TEST recurs ABrandNewRecurringPaymentCanBeCompleted
  *     BOTH recurs ASecondRecurringPaymentCanBeCompleted
@@ -204,7 +205,7 @@ function gifts($gifts) {return t\gifts($gifts);}
 /**
  * we tell admin (ARG) with subs: (ARG)
  *
- * in: TEST monthly InflationAdjustmentsRoundUpDonationsAndCrumbDonationsAreMade
+ * in: TEST monthly PaperStatementWarningsAreSent
  */
 function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs);}
 
@@ -469,6 +470,7 @@ function weDoNotEmail($email) {return t\noEmailTo($email);}
  *     TEST gifts ARecurringDonationToCGCannotBeCompleted
  *     BOTH invoices UnpaidInvoicesGetHandled
  *     MAKE invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
+ *     TEST monthly CrumbsAreInvoiced
  *     TEST recurs ARecurringPaymentCannotBeCompleted
  */
 function invoices($list) {return t\invoices($list);}
@@ -518,6 +520,8 @@ function these($thing, $list) {return t\these($thing, $list);}
  *     TEST gifts ANonmemberChoosesADonationToCG
  *     TEST invoices UnpaidInvoicesGetHandled
  *     TEST invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
+ *     TEST monthly CrumbDonationsAreMade
+ *     TEST monthly CrumbsAreInvoiced
  *     TEST recurs ABrandNewRecurringPaymentCanBeCompleted
  *     TEST recurs ARecurringPaymentHappenedYesterday
  *     TEST recurs ARecurringPaymentHappenedLongEnoughAgoToRepeat
@@ -589,7 +593,9 @@ function riskThresholdPercentIs($pct) {
  *     MAKE invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
  *     MAKE joint AJointAccountNeedsRefilling
  *     MAKE joint AJointAccountDoesNotNeedRefilling
- *     MAKE monthly InflationAdjustmentsRoundUpDonationsAndCrumbDonationsAreMade
+ *     MAKE monthly PaperStatementWarningsAreSent
+ *     MAKE monthly CrumbDonationsAreMade
+ *     MAKE monthly CrumbsAreInvoiced
  *     MAKE notices AMemberGetsSomeNotices
  *     MAKE notices AMemberGetsSomeWeeklyNotices
  *     MAKE recurs ABrandNewRecurringPaymentCanBeCompleted

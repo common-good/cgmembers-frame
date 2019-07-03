@@ -86,10 +86,10 @@ Setup:
   | .ZZB |     480 |
   | .ZZC |     270 |
 
-Scenario: Inflation adjustments, round up donations, and crumb donations are made
+Skip no inflation at present
+Scenario: Inflation adjustments are made
   When cron runs "everyMonth"
 
-Skip no inflation at present
 # inflation  
   Then transactions: 
   | xid| created| type      | amount | bonus                               | from | to   | purpose |*
@@ -104,16 +104,59 @@ Skip no inflation at present
 #  | 17 | %today | inflation |      0 | %(round(%R_INFLATION_RATE *8.6, 2)) | ctty | .ZZC | %IAOY credit reserve  |
 Resume
 
-# crumbs (creation date is last second of previous month)
-  Then transactions: 
-  | xid | created | amount | from | to             | purpose                                             | flags       |*
-  | 12  |       ? |   2.40 | .ZZC | %CG_CRUMBS_UID | crumbs donations: percentage of past month receipts | gift,crumbs |
-
-# alerting admin about paper statements
-  And we tell admin "Send paper statements" with subs:
+Scenario: Paper statement warnings are sent
+  When cron runs "everyMonth"
+  # alerting admin about paper statements
+  Then we tell admin "Send paper statements" with subs:
   | list |*
   | Corner Pub (Cvil) |
 
+Scenario: Crumb donations are made
+  When cron runs "everyMonth"
+  Then transactions: 
+  | xid | created        | amount | from | to    | purpose                                      | flags       |*
+  | 12  | %(%daystart-1) |   2.40 | .ZZC | crumb | crumbs donation: 2.0% of past month receipts | gift,crumbs |
+  # Note that tests simulate the previous month as the previous 30 days (created field is mdt1-1 when not testing)
+  And count "txs" is 12
+
+  When cron runs "everyMonth"
+  Then count "txs" is 12
+  # still
+  
+Scenario: Crumbs are invoiced
+  Given transactions:
+  | xid | created   | amount | from | to   | purpose |*
+  |  12 | %today-4d |    770 | .ZZC | .ZZB | loan    |
+  Then count "txs" is 12
+  When cron runs "everyMonth"
+  Then invoices:
+  | nvid | created        | payer | payee | amount | flags       | purpose                                      | status       |*
+  |    1 | %(%daystart-1) | .ZZC  | crumb |   2.40 | gift,crumbs | crumbs donation: 2.0% of past month receipts | %TX_APPROVED |
+  And count "txs" is 12
+  And count "invoices" is 1
+
+  When cron runs "everyMonth"
+  Then count "txs" is 12
+  And count "invoices" is 1
+  
+  Given transactions:
+  | xid | created   | amount | from | to   | purpose |*
+  |  13 | %today-4d |    770 | .ZZB | .ZZC | repay   |
+  Then count "txs" is 13
+
+  When cron runs "everyMonth"
+  Then count "txs" is 13
+  And count "invoices" is 1  
+
+  When cron runs "invoices"
+  Then transactions:
+  | xid | created | amount | from | to    | purpose                                                       | flags       |*
+  | 14  | %now    |   2.40 | .ZZC | crumb | crumbs donation: 2.0% of past month receipts (%PROJECT inv#1) | gift,crumbs |
+  And count "txs" is 14
+
+  When cron runs "invoices"
+  Then count "txs" is 14
+  
 # NO (Seedpack gets no distribution) distribution of shares to CGCs
 #  And transactions:
 #  | xid | created | amount | from | to   | flags |*

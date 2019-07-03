@@ -100,6 +100,7 @@ function badUnpaidInv($nvid, &$inv = '') {
   if (is_array($nvid)) $nvid = $nvid['nvid'];  // really shouldn't happen -- but apparently did at some point
   if (!$inv = db\get($fields, 'r_invoices', 'nvid=:nvid', compact('nvid'))) return 'no matching invoice';
   if ($inv['status'] >= TX_PAID) return 'already paid';
+  return FALSE;
 }
 
 /**

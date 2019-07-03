@@ -79,7 +79,7 @@ function formSummary($form, &$sta) {
   $title = t('Account Summary');
   $accountName = item($mya->j_fullName . ($mya->jid ? '<br>' : ' ') . "($mya->j_name)", t('Name:'));
   $address = item($mya->postalAddr . @$extras, t('Postal Addr:'));
-  $balance = u\fmtAmt($mya->balDpy);
+  $balance = u\fmtAmt($mya->balance);
 //    $totalDesc = u\fmtAmt($mya->r);
 //    $balanceDesc = $mya->savings ? t(' plus your savings, for a total of @total', ['@total' => $totalDesc]) : '';
 //    $balanceDesc = '';
