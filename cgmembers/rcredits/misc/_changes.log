@@ -1,3 +1,20 @@
+2019-07-03 feature/remote-invite
+. enabled invite button in MailChimp emails
+. completed early June food fund donations by hand:
+eachA(function ($a) {
+  $foodUid = db\get('uid', 'users', "name='foodfund'");
+  $foodA = r\acct($foodUid);
+  $start = u\monthDay1($end = u\monthDay1() - 1); // mark start and end of preceding month
+  $target = round($a->food * db\sum('amt', 'txs', "uid1=$a->id AND :T_FOODY AND created between $start AND $end"), 2);
+  $actual = round(db\sum('amt', 'txs_donation', "uid1=$a->id AND uid2=$foodUid AND created between $start AND $end"), 2);
+  $dif = $target - $actual;
+  if ($dif > 0) {
+/**/ debug("$a->fullName: $dif");
+    be\transfer('payment', $a, $foodA, $dif, t('food fund donations for early June'), NULL);
+  }
+}, 'food>0');
+. fixed bug that took food donations on straight payments to Food Fund
+
 2019-07-02 feature/cron-once-daily continued
 . changed acct::recomputeBalance() to include joint account
 . fixed cron crumbs so they don't happen twice

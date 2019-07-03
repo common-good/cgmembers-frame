@@ -2220,10 +2220,9 @@ function hidFlds($ray) {return is_array($ray) ? hidFld(plain(serialize($ray))) :
 
 /**
  * Send an invitation to the email and optionally report it.
+ * $mya must be passed as a parameter in case called from an email link.
  */
-function sendInvite($email, $subject, $message, $dupsOk = TRUE) {
-  global $mya;
-  
+function sendInvite($mya, $email, $subject, $message, $dupsOk = TRUE) {
   if (!$dupsOk) { // applies only to community admins
     $cemail = u\cry('P', $email);
     $now = now();
