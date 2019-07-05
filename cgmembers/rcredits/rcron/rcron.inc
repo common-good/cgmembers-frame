@@ -202,7 +202,8 @@ function everyDay() {
   \setV('companies', @$companies ?: []);
   
   $sql = <<< X
-  SELECT u.uid, c.uid AS ctty, u.fullName AS person, c.fullName AS cttyName FROM users u LEFT JOIN users c ON u.zip RLIKE c.zip
+  SELECT DISTINCT u.uid, c.uid AS ctty, u.fullName AS person, c.fullName AS cttyName 
+  FROM users u LEFT JOIN users c ON u.zip RLIKE c.zip
   WHERE u.community=:seedpack AND c.uid<1 AND c.uid<>:seedpack AND !u.activated
 X;
   $q = db\q($sql, ['seedpack' => r\serverUid()]);
@@ -244,7 +245,7 @@ function tickle() {
   $delays = '8';
   $elapsed = str_replace('@DATE', 'invited', $timeSince);
   $sql = <<< X
-    SELECT i.email, i.inviter, i.code, $elapsed AS elapsed FROM r_invites i
+    SELECT DISTINCT i.email, i.inviter, i.code, $elapsed AS elapsed FROM r_invites i
     LEFT JOIN users u ON u.uid=i.inviter
     WHERE $elapsed IN ($delays) AND i.invitee=0 AND u.:IS_OK
 X;
@@ -259,7 +260,7 @@ X;
   $delays = '1,4,9'; // delays proposed by staff (ultimately every week)
   $elapsed = str_replace('@DATE', 'access', $timeSince);
   $sql = <<< X
-    SELECT uid, $elapsed AS elapsed FROM users 
+    SELECT DISTINCT uid, $elapsed AS elapsed FROM users 
     WHERE ($elapsed IN ($delays) OR ($elapsed>8 AND $elapsed%7=0))
     AND uid>:CANONIC_ACCTS AND NOT activated AND NOT :IS_NONUDGE
 X;
@@ -269,7 +270,7 @@ X;
   // Do every 30 days after activation date
   $start = strtotime(-FLOOR_DAYS . ' days', now());
   $sql = <<< X
-    SELECT uid, GREATEST(inVol, outVol) AS monthly, $sinceActivated/30 AS months
+    SELECT DISTINCT uid, GREATEST(inVol, outVol) AS monthly, $sinceActivated/30 AS months
     FROM (
       SELECT uid, u.flags, activated,
       SUM(IF(amount > 0, amount, 0))/6 AS inVol,
@@ -285,11 +286,11 @@ X;
 
   queueEach('activeMonthly', $sql); // no need for jid here (floors get summed)
   
-  queueEach('activeWeekly', "SELECT uid FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS AND $sinceActivated>0 AND $sinceActivated % 7 = 0");
+  queueEach('activeWeekly', "SELECT DISTINCT uid FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS AND $sinceActivated>0 AND $sinceActivated % 7 = 0");
 	
 	$when = 'UNIX_TIMESTAMP()+:WEEK_SECS';
 	$sql = <<< X
-	  SELECT u.uid,r.amount,$when AS `when`,r.created,r.period,
+	  SELECT DISTINCT u.uid,r.amount,$when AS `when`,r.created,r.period,
 		(SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced,
     (SELECT MAX(created) FROM txs_noreverse WHERE uid1=r.payer AND uid2=r.payee AND :IS_RECURS) AS lastTx
 		FROM users u LEFT JOIN r_recurs r ON r.payer=u.uid AND r.payee=:CGID AND r.ended=0
@@ -446,12 +447,12 @@ function everyMonth() {
   $start = u\monthDay1($end = u\monthDay1() - 1); // mark start and end of preceding month
   if (u\test()) $start = strtotime('-30 days', $end = today() - 1) + 1; // test: the past 30 days
   
-  queueEach('whatsup', "SELECT uid, u.:IS_CO as co, MAX(t.created) AS lastTx FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid) WHERE uid>:CANONIC_ACCTS AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $start");
+  queueEach('whatsup', "SELECT DISTINCT uid, u.:IS_CO as co, MAX(t.created) AS lastTx FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid) WHERE uid>:CANONIC_ACCTS AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $start");
   /* queueEach('inflationAdjust', "SELECT uid, $start AS start, $end AS end FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS");   */
 //  queueEach('shareCommitted', 'SELECT uid, committed, share FROM users WHERE :IS_OK AND committed>0');
   
   $sql = <<< X
-    SELECT u.uid, ROUND(SUM(t.amt)*u.crumbs, 2) AS donate, $end AS date
+    SELECT DISTINCT u.uid, ROUND(SUM(t.amt)*u.crumbs, 2) AS donate, $end AS date
     FROM users u LEFT JOIN txs_noreverse t ON t.uid2=u.uid
     WHERE t.goods=:FOR_GOODS AND t.created BETWEEN $start AND $end AND u.:IS_OK
     AND (SELECT 1 FROM txs_noreverse WHERE :IS_CRUMBS AND created>=$end AND uid1=u.uid) IS NULL
@@ -581,7 +582,7 @@ X;
  */
 function checkAccts() {
   $sql = <<< X
-SELECT u.uid,u.fullName,u.jid,u2.jid AS partnerJid,r.reid,r.other AS relatedId FROM users u
+SELECT DISTINCT u.uid,u.fullName,u.jid,u2.jid AS partnerJid,r.reid,r.other AS relatedId FROM users u
 LEFT JOIN r_relations r ON r.main=u.uid
 LEFT JOIN users u2 ON u2.uid=u.jid
 WHERE u.uid<>0 AND u.jid AND r.permission=:B_JOINT-:B_RELATED
@@ -610,7 +611,7 @@ function setNear() {
   ]); // each type of relationship counts as one point
   $sql = <<< X
     INSERT INTO r_near
-    SELECT LEAST(q.id1, q.id2) AS uid1, GREATEST(q.id1, q.id2) AS uid2, SUM(w) AS weight 
+    SELECT DISTINCT LEAST(q.id1, q.id2) AS uid1, GREATEST(q.id1, q.id2) AS uid2, SUM(w) AS weight 
     FROM ($queries) q 
     LEFT JOIN users u ON u.uid=q.id1
     LEFT JOIN users v ON v.uid=q.id2
@@ -735,7 +736,7 @@ function trust() {
   $sql = <<< X
     UPDATE users u 
     INNER JOIN
-      (SELECT proxy AS uid,SUM(straw) AS bale
+      (SELECT DISTINCT proxy AS uid,SUM(straw) AS bale
        FROM 
          (SELECT proxy,IFNULL(up.trust,0)/p.priority AS straw
           FROM r_proxies p 
@@ -758,7 +759,7 @@ function acctRisk() {
   setv('newThresholds', ray('bigDay bigWeek big7Week bigYear', [], [], [], []));
 
   db\q('UPDATE users SET risk=NULL'); // avoid unnecessary badConx. don't touch risks though!
-  foreach ([1, 2] as $zot) queueEach('acctRisk1', 'SELECT uid FROM users WHERE uid>:CANONIC_ACCTS and :IS_OK ORDER BY :IS_CO DESC'); // do this twice, to take into account connections with scoundrels
+  foreach ([1, 2] as $zot) queueEach('acctRisk1', 'SELECT DISTINCT uid FROM users WHERE uid>:CANONIC_ACCTS and :IS_OK ORDER BY :IS_CO DESC'); // do this twice, to take into account connections with scoundrels
   queueNext();
 }
 
@@ -896,7 +897,7 @@ function getFunds() {
 //  $excess = 'LEAST(usd, :R_EXCESS)';
   $weekday = strftime('%w'); // 0-6 Sun-Sat (use %w because %u fails on Windows and maybe linux)
   if (u\test() or in($weekday, [2, 3, 4, 5])) { // no completions on Saturday, Sunday, or Monday
-    $sql = 'SELECT txid,channel FROM r_usd WHERE amount>0 AND NOT completed AND :NOW-created>=:HOUR_SECS AND (amount<=:R_USDTX_QUICK OR :NOW-created>=:R_USDTX_DAYS*:DAY_SECS)'; // this allows us to wait arbitrarily long to deposit chks
+    $sql = 'SELECT DISTINCT txid,channel FROM r_usd WHERE amount>0 AND NOT completed AND :NOW-created>=:HOUR_SECS AND (amount<=:R_USDTX_QUICK OR :NOW-created>=:R_USDTX_DAYS*:DAY_SECS)'; // this allows us to wait arbitrarily long to deposit chks
 
     queueEach('completeUsdTx', $sql);
   }
@@ -944,7 +945,7 @@ function getFunds1($item) {
  */
 function invoices() {
   $sql = <<< X
-    SELECT i.*,i.:IS_FUNDING AS funding 
+    SELECT DISTINCT i.*,i.:IS_FUNDING AS funding 
     FROM r_invoices i JOIN users u1 ON u1.uid=i.payer JOIN users u2 ON u2.uid=i.payee
     WHERE i.status IN (:TX_PENDING,:TX_APPROVED) AND u1.:IS_OK AND u2.:IS_OK
     ORDER BY i.nvid
