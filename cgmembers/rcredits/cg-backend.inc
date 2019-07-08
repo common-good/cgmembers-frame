@@ -1086,7 +1086,7 @@ function createUsdTransfer($a, $amount, $created=NULL, $txid=NULL) {
   u\setDft($created, now());
   $vsecure = $a->vsecure; // must be separate from the line below. Can't use $a->bankAccount here because it requires superAdmin
   $bankAccount = nn($vsecure['bankAccount'], NULL); // was   isDEV ? 'xxxxy' :
-  $bankId =  ($amount > 0) ? BANK_IN_ID : BANK_OUT_ID;
+  $bankId = $amount >= 0 ? BANK_IN_ID : BANK_OUT_ID;
 
   $tx = new r\Tx(ray('goods flags actorId actorAgentId channel created', FOR_USD, 0, $payee, $payee, $channel, NULL));
   txEntryPair($txes, 0, [$bankId, $payee], $amount > 0 ? t('from bank') : t('to bank'), E_BANK); // tentative amount is 0
@@ -1152,9 +1152,10 @@ function combineUsdTx($a, $amount, $completed) {
  * @param int $txid: the transfer record ID
  * @param bool $automatic: <transfer was created automatically>
  * @param datetime $completed: when the transaction was completed, defaults to the current time
+ * @param datetime $deposit: when the request was sent to the bank (for tests only)
  * @return bool <success>
  */
-function completeUsdTx($txid, $automatic, $completed = NULL) {
+function completeUsdTx($txid, $automatic, $completed = NULL, $deposit = 0) {
   u\EXPECT([$txid, $automatic], 'int|string|empty bool');
   u\setDft($completed, now());
   
@@ -1251,21 +1252,15 @@ function checkSanity() {
   $txids = db\rows('txid', 'r_usd');
   foreach ($txids as $txidO) {
     $txid = $txidO->txid;
-    $info = db\get('*', 'r_usd', ['txid'=>$txid]);
-    if (!empty($info['xid'])) {
-      if (!empty($info['completed'])) {
-        if ((!db\exists('tx_entries', ['xid'=>$info['xid'], 'uid'=>$info['payee'], 'amount'=>$info['amount']]))
-            or (!db\exists('tx_hdrs', ['xid'=>$info['xid']]))) { // tx creation date need not match completion date of request
-          sanityErr("r_usd $txid is completed, but the xid doesn't match a transaction");
-        }
-      } else {
-        sanityErr("r_usd is not marked completed, but has an associated tx_hdr");
+    $info = db\get('*', 'r_usd', compact('txid'));
+    if ($info['xid']) {
+      $amount = $info['completed'] ? $info['amount'] : 0;
+      if ((!db\exists('tx_entries', ['xid'=>$info['xid'], 'uid'=>$info['payee'], 'amount'=>$amount]))
+        or (!db\exists('tx_hdrs', ['xid'=>$info['xid']]))) { // tx date need not match usd dates
+        sanityErr("r_usd $txid has an xid, but has no corresponding transaction or the transaction doesn't match");
       }
-    } else {
-      if (!empty($info['completed'])) {
-        sanityErr("r_usd is marked completed, but has no associated tx_hdr");
-      }
-    }
+      if (!$info['amount']) sanityErr("r_usd $txid has an associated transaction, but a zero amount");
+    } elseif ($info['amount']) sanityErr("r_usd has an amount but has no associated tx_hdr");
   }
 
   // Check r_usd2

@@ -527,7 +527,9 @@ function EXPECT($assertion, $message = '', $ret = FALSE) {
 //    EXPECT(compact(ray('assertion message')), 'bool string&notempty'); // can't do this because infinite recursion
   }
   return ''; // no error
-}  
+}
+
+function DYE($message) {EXPECT(FALSE, $message);}
 
 function expect1($arg, $value, $type, $ret) {
 //  static $ecnt; $ecnt = @$ecnt + 1; u\EXPECT($ecnt < 10000, 'loop');

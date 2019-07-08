@@ -602,33 +602,32 @@ function usdTransfers($txs) {
   global $testOnly, $channel; $channel0 = $channel;
 
   foreach ($txs as $tx) {
-    if (array_key_exists('payee', $tx)) $tx['payee'] = t\uid($tx['payee']);
-    if ($testOnly) {
-      if (isset($tx['risks'])) $tx['risks'] = getRisks($tx['risks'], K_TX_RISKS);
-      if (!verifyRecord('r_usd', $tx)) return FALSE;
-      return TRUE;
-    }
-    extract(u\exactly('amount completed', $tx, null));
+    extract($tx);
+    if (isset($tx['payee'])) $tx['payee'] = $payee = t\uid($payee);
+    if (isset($tx['risks'])) $tx['risks'] = getRisks($risks, K_TX_RISKS);
 
-    $amount = nn($tx['amount'], null);
-    $err = u\badAmount($amount);
-    if ($err) {
-      t\output($err);
-      return false;
+    if ($testOnly) {
+      if (!verifyRecord('r_usd', $tx)) return FALSE;
+      continue;
     }
-    $a = r\acct($tx['payee']);
-    if (empty($a)) return t\output('Bad payee: ' . @$payee);
-    $txid = be\createUsdTransfer($a, $amount, nn($tx['created'], now()), nn($tx['txid'], NULL));
-    if (!$txid) {
-      t\output('failure creating usd xfr: ' . $txid);
-      return FALSE;
+    
+    u\setDft($tx['channel'], $channel0);
+    if ($err = u\badAmount($amount)) return t\output($err); // tested amount should not have commas or $ sign
+    if (!$a = r\acct($payee)) return t\output('Bad payee: ' . @$payee);
+
+    if (isset($xid) xor !$amount) { // specifying an xid means the test will list the txs explicitly. amount=0 needs no tx.
+      $txid = db\insert('r_usd', $tx, 'txid');
+    } else {
+      $txid = be\createUsdTransfer($a, $amount, nn($created, now()), nn($tx['txid'], NULL));
+      if (!$txid) return t\output('failure creating usd record: ' . $tx['txid']);
+
+      if (nn($deposit)) {
+        $res = db\update('r_usd', just('txid deposit', $tx), 'txid');
+        u\EXPECT($res, 'failure depositing usd');
+      }
     }
-    if (!empty($tx['deposit'])) {
-      $xde=$tx['deposit'];
-      $res = db\update('r_usd', just('txid deposit', $tx), 'txid');
-      u\EXPECT($res, 'failure depositing usd');
-    }
-    if (nn($tx['completed']) and ($txid > 0 xor $tx['amount'] < 0)) {
+
+    if (nn($completed) and ($txid > 0 xor $amount < 0)) {
       $res = be\completeUsdTx($txid, nn($tx['automatic']), $completed);
       u\EXPECT($res, 'failure completing usd transfer');
     }
@@ -1059,6 +1058,7 @@ function completeForm($id, $page, $values = '', $confirmed = FALSE) {
   foreach ($form as $key => $field) if (substr($key, 0, 1) != '#') {
     if (@$field['#type'] == 'hidden') $dfts[$key] = $field['#value'];
   }
+
   $sta['values'] = $sta['input'] = $values + $dfts; // add to whatever status the form left off in
   $fieldErr = FALSE; // no field errors yet
   if (!@$lastGo or @$lastGo == $xlastGo) foreach (t\postProcess($form, $page, 'validate') as $one) $one($form, $sta);

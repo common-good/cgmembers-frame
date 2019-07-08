@@ -107,6 +107,7 @@ function balances($list) {return t\balances($list);}
  *     TEST bank ANonmemberHasATargetAndRefills
  *     TEST bank MembersBankAccountHasNotBeenVerified
  *     MAKE bank AMembersBankAccountGetsVerified
+ *     BOTH bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
  *     TEST invoices UnpaidInvoicesGetHandled
  *     TEST joint AJointAccountNeedsRefilling
  *     MAKE monthly Setup
@@ -146,6 +147,8 @@ function relations($relations) {return t\relations($relations);}
  *
  * in: MAKE bank AMemberIsBarelyBelowTarget
  *     TEST bank AnUnbankedMemberBarelyBelowTargetDrawsOnAnotherAccount
+ *     TEST bank MembersBankAccountHasNotBeenVerified
+ *     TEST bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
  *     MAKE cashout Setup
  *     MAKE gifts Setup
  *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
@@ -321,6 +324,7 @@ function weMessageMemberWithTopicAndSubs($id, $topic, $subs) {
  * in: MAKE bank AnAccountHasATargetButNoRefills
  *     MAKE bank MembersBankAccountHasNotBeenVerified
  *     BOTH bank AMembersBankAccountGetsVerified
+ *     MAKE bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
  *     MAKE cashout AMemberCompanyCashesOutMonthly
  *     MAKE cashout AMemberCompanyCashesOutWeekly
  *     MAKE communitybits CommunityBansSpendingBelowZero
@@ -515,6 +519,7 @@ function these($thing, $list) {return t\these($thing, $list);}
  *
  * in: TEST bank ANonmemberHasATargetAndRefills
  *     TEST bank AMembersBankAccountGetsVerified
+ *     TEST bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
  *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     TEST gifts ARecurringDonationToCGCannotBeCompleted
  *     TEST gifts ANonmemberChoosesADonationToCG
@@ -580,6 +585,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE bank ANonmemberHasATargetAndRefills
  *     MAKE bank MembersBankAccountHasNotBeenVerified
  *     MAKE bank AMembersBankAccountGetsVerified
+ *     MAKE bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
  *     MAKE cashout AMemberCompanyCashesOutMonthly
  *     MAKE cashout AMemberCompanyCashesOutWeekly
  *     MAKE communitybits CommunityBansSpendingBelowZero

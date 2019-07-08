@@ -147,15 +147,6 @@ function periodic() {
 
   often('hour', '00');
   often('day', R_DAILY_HOUR); // longer periods get queued in lessOften(), so notices are last
-
-  $cttys = db\q('SELECT uid FROM users WHERE uid<0')->fetchCol();
-  foreach ($cttys as $ctty) { // should never happen, but it does. figure out where.
-    $a = r\acct($ctty);
-    foreach ([B_UP, B_CGC] as $bit) if (!$a->can($bit)) {
-      r\tellAdmin(t('Community bits got unset!'), ray('ctty bit time trace', $ctty, $bit, now(), trace()));
-      $a->setBit($bit);
-    }
-  }
 }
 
 function everyHour() { // stuff to do every hour
@@ -408,7 +399,7 @@ function lessOften() {
  * That is, if the chosen point in the period has been reached AND
  *   (it has been at least a whole period since the last run OR
  *   (it has been at least half a period and we're at no later a point than last time)
- * @param string $period: the period
+ * @param string $period: the period (hour, day, week, month, year)
  * @param string $code: the strftime code for the smaller period to match or exceed
  * @param string $chosen: the chosen value to match or exceed
  */
@@ -536,46 +527,6 @@ function bankFollowup($tx) {
   r\usdTransferDone($tx);
 }
 */
-
-/**
- * Gather requests for invitations
- *//*
-function requests() {
-  $dlm = db\max('created', 'r_request') + 0;
-  $secret = urlencode(db\get('last', 'r_request', 'listid=3894'));
-
-  if ($s = file_get_contents(PROMO_URL . "/inc/requests.php?dlm=$dlm&secret=$secret")) {
-    foreach ($rows = explode("\n", $s) as $row) {
-      $row = explode("\t", $row);
-      if (@$header) {
-        $row = array_combine($header, $row);
-        extract($row);
-        $z2 = substr($zip, 0, 2);
-        $row['ctty'] = $zip ? (r\communityUid($zip, TRUE) ?: ($z2 == '05' ? r\serverUid() : 0)) : 0;
-        if (!$created) $row['created'] = strtotime('9/1/2011');
-        $row['phone'] = u\fmtPhone($phone, '+n');
-        foreach (['first', 'last'] as $k) $row[$k] = u\normalizeCase($$k);
-        r\tellAdmin('invitation request', $row);
-        foreach (['email', 'phone'] as $k) $row[$k] = u\cry('P', $row[$k]);
-        db\updateOrInsert('r_request', $row, 'listid');
-      } else $header = $row + ['ctty'];
-    }
-  }
-
-  $sql = <<< X
-  UPDATE r_request r LEFT JOIN users u 
-  ON (
-    (r.email<>'' AND u.email=r.email) OR
-    (r.phone<>'' AND u.phone=r.phone) OR
-    (INSTR(u.fullName, r.first)>0 AND INSTR(u.fullName, r.last)>0 AND MID(u.zip, 1, 5)=MID(r.zip, 1, 5))
-  )
-  LEFT JOIN r_invites AS i ON (i.email=r.email AND i.invited>r.created)
-  SET done=1 WHERE NOT done AND (u.uid IS NOT NULL OR i.id IS NOT NULL)
-X;
-  db\q($sql);
-  
-  queueNext();
-} */
 
 /**
  * Check accounts for consistency, scams, whatever.

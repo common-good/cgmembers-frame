@@ -1,3 +1,8 @@
+2019-07-08 feature/verification-fix
+. fixed bug the combined some new bank transfer requests into a verification request
+. fixed bug that assigned outgoing bank code to all not-yet-completed incoming transfer requests
+. fixed white screen of death on timeout
+
 2019-07-03 feature/remote-invite
 . enabled invite button in MailChimp emails
 . completed early June food fund donations by hand:

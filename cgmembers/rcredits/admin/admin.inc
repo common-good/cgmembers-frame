@@ -73,7 +73,7 @@ function setupBasicAccounts() {
     if (db\exists('users', 'uid=' . CGID)) return; // already done
     if (NOT_PRODUCTION and db\exists('users', "name='cornerstore'")) return; // already done
 
-    $values = array(r\qo('NEWAAB')->id, $server, u\shortName(PROJECT), PROJECT, CGF_EMAIL, '01330', US_COUNTRY_ID, 0, u\bit([B_MEMBER, B_CONFIRMED, B_OK, B_CO, B_ICADMIN]));
+    $values = array(r\qo('NEWAAB')->id, $server, u\shortName(PROJECT), PROJECT, CGF_EMAIL, '01330', US_COUNTRY_ID, 0, u\bit([B_MEMBER, B_CONFIRMED, B_OK, B_CO]));
     $info = array_combine($keys, $values);
     list ($phone, $address, $city, $state) = array(u\fmtPhone(CGF_PHONE, '+n'), CGF_ADDRESS, CGF_CITY, R_STATE_ID);
     $helper = 1; //$wws->id;
