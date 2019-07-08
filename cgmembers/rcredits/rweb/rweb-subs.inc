@@ -1693,18 +1693,6 @@ function hack($message, $info = []) {
   return r\signedIn() ? signout() : w\go('');
 }
 
-/**
- * Let there be no current user.
- * @param bool $continue: <don't go to Promo site after signout> (can't be a "go there" parameter, because it defaults wrong)
- */
-function signout($continue = FALSE) {
-  if (isDEV and u\test()) setAcct(NULL); else
-  @\session_destroy();
-
-  if (isDEV and !u\test()) w\go('signin');
-  if (!$continue) return w\go(PROMO_URL . '?region=x');
-}
-
 function fundRpt($now, $then, $type = '') {
   //$up = $then ? number_format(abs($now / $then - 1) * 100, 1) : '100';
   $RUS = strpos($type, 'r') === FALSE ? '' : '@R';

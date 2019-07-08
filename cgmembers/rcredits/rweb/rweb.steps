@@ -62,6 +62,8 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE gift ACompanyMakesARecurringDonation
  *     MAKE gift AMemberDonatesWithInsufficientFunds
  *     MAKE invest AMemberJoinsTheInvestmentClub
+ *     MAKE invest AMemberCompanyJoinsTheInvestmentClub
+ *     MAKE invest AMemberBuysAStakeInTheClub
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
  *     MAKE membership AMemberSignsInForTheFirstTime
@@ -222,6 +224,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE showrecurs Setup
  *     MAKE signin Setup
  *     MAKE signin AMemberAsksForANewPasswordForACompany
+ *     MAKE signout Setup
  *     MAKE signupco Setup
  *     TEST signupco AMemberRegistersACompany
  *     MAKE signup Setup
@@ -255,6 +258,7 @@ function members($list) {return t\members($list);}
  *     TEST gift AMemberMakesARecurringDonation
  *     TEST gift AMemberMakesANewRecurringDonation
  *     TEST gift ACompanyMakesARecurringDonation
+ *     MAKE invest AMemberBuysAStakeInTheClub
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberApprovesAnInvoiceToATrustingCustomer
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
@@ -282,6 +286,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST bank AMemberMovesTooMuchToTheBank
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST flow AMemberOverdrawsWithNotEnoughToDrawOn
+ *     TEST invest AMemberBuysAStakeInTheClub
  *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
  *     TEST joint AMemberRequestsAJointAccount
  *     TEST joint AMemberRequestsTwoJoinsAtOnce
@@ -351,6 +356,8 @@ function weSayWithSubs($type, $index, $subs) {
  *     TEST gift AMemberMakesANewRecurringDonation
  *     TEST gift ACompanyMakesARecurringDonation
  *     TEST gift AMemberDonatesWithInsufficientFunds
+ *     TEST invest AMemberJoinsTheInvestmentClub
+ *     TEST invest AMemberCompanyJoinsTheInvestmentClub
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
  *     TEST membership AMemberSignsInForTheFirstTime
@@ -414,6 +421,7 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST food AMemberMakesAFoodDonation
  *     TEST food AMemberMakesAFoodDonationWithoutAdequateFunds
  *     TEST invest AMemberJoinsTheInvestmentClub
+ *     TEST invest AMemberCompanyJoinsTheInvestmentClub
  *     TEST membership AMemberSignsInForTheFirstTime
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     TEST paybutton AMemberSignsInWithUsernameOnTheMemberSite
@@ -458,6 +466,7 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesANewRecurringDonation
  *     TEST invest AMemberJoinsTheInvestmentClub
+ *     TEST invest AMemberCompanyJoinsTheInvestmentClub
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST joint AMemberRequestsAJointAccount
@@ -561,6 +570,7 @@ function withoutOptions($options) {
  *     MAKE custstatement Setup
  *     MAKE download Setup
  *     MAKE flow Setup
+ *     MAKE invest Setup
  *     MAKE invoice Setup
  *     TEST invoice AMemberApprovesInvoicesForevermore
  *     MAKE invoice AMemberApprovesAnInvoiceToATrustingCustomer
@@ -608,6 +618,7 @@ function relations($relations) {return t\relations($relations);}
  *     TEST download Setup
  *     MAKE flow Setup
  *     MAKE gift Setup
+ *     TEST invest AMemberBuysAStakeInTheClub
  *     TEST invoice Setup
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberDeniesAnInvoice
@@ -656,6 +667,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE gift AMemberDonates
  *     MAKE gift AMemberMakesANewRecurringDonation
  *     MAKE invest AMemberJoinsTheInvestmentClub
+ *     MAKE invest AMemberCompanyJoinsTheInvestmentClub
  *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMember
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
@@ -689,6 +701,8 @@ function usd($list) {return t\usd($list);}
  *     MAKE signin AMemberClicksALinkToResetPassword
  *     MAKE signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     MAKE signin AMemberClicksALinkToResetPasswordForUnknownAccount
+ *     MAKE signout AMemberSignsOut
+ *     MAKE signout AMemberTimesOutAndSignsOutAutomatically
  *     MAKE signup ANewbieVisitsTheRegistrationPageWithExpiredInvite
  *     MAKE signup ANewbieVisitsTheRegistrationPageWithAUsedInvite
  *     MAKE summary AMemberClicksTheSummaryTab
@@ -713,6 +727,7 @@ function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
  *     MAKE paybutton AMemberClicksALinkToResetPassword
  *     MAKE signin Setup
  *     MAKE signin AMemberClicksALinkToResetPassword
+ *     MAKE signout Setup
  *     MAKE signup Setup
  */
 function memberIsLoggedOut() {
@@ -1022,6 +1037,8 @@ function membersHave($list) {return t\membersHave($list);}
  *
  * in: TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST scancard SomeoneScansAMemberCard
+ *     TEST signout AMemberSignsOut
+ *     TEST signout AMemberTimesOutAndSignsOutAutomatically
  */
 function weRedirectTo($page) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -1489,6 +1506,8 @@ function weScripWithSubs($script, $args = []) {
  *     TEST gift AMemberMakesARecurringDonation
  *     BOTH gift AMemberMakesANewRecurringDonation
  *     TEST gift AMemberDonatesWithInsufficientFunds
+ *     TEST invest AMemberJoinsTheInvestmentClub
+ *     BOTH invest AMemberBuysAStakeInTheClub
  *     MAKE preferences Setup
  *     MAKE showrecurs Setup
  *     TEST showrecurs AMemberStopsAnAutopayment

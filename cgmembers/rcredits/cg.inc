@@ -1444,7 +1444,7 @@ function suggest($a, $index, $subs, $page = 'Preferences') {
  * @return the full url
  */
 function promoLink($page = '') {
-  if (r\signedIn()) $page .= '?region=' . R_SERVER_ID . '&tm=' . now();
+  if (r\signedIn()) $page .= '?region=' . R_SERVER_ID;
   return PROMO_URL . "/$page";
 }
 
@@ -1515,7 +1515,7 @@ function handleInvestmentRequest($stakeid, &$msg) {
   $msg = t($index, $subs);
   if ($ok = $subs['success']) {
     db\update('r_stakes', ray('stakeid stake request', $stakeid, $stake, 0), 'stakeid');
-    $msg .= t('Your investment in %clubName has been successfully increased by %request.', 'clubName request', $clubA->fullName, u\fmtAmt($request));
+    $msg .= ' ' . t('investment increase', 'amount', u\fmtAmt($request));
   }
   unset($DBTX);
   return $ok;

@@ -195,9 +195,12 @@ Scenario: member's bank account has not been verified
   | .ZZA |      10 | ok,refill |
   When cron runs "getFunds"
   Then usd transfers:
-  | txid | payee | amount | created           | completed | deposit |*
-  |    1 | .ZZA  |      0 | %today            |         0 |       0 |
-	|    2 | .ZZA  |     90 | %(%NOW+%DAY_SECS) |         0 |       0 |
+  | txid | payee | amount | created | completed | deposit | xid |*
+  |    1 | .ZZA  |      0 | %today  |         0 |       0 |   0 |
+	|    2 | .ZZA  |     90 | %now+3d |         0 |       0 |   1 |
+  And transactions:
+  | xid | amount | from    | to   | taking |*
+  |   1 |      0 | bank-in | .ZZA |      1 |
 
 Scenario: a member's bank account gets verified
   Given members have:
@@ -211,3 +214,22 @@ Scenario: a member's bank account gets verified
 	And members have:
   | uid  | balance | flags            |*
   | .ZZA |       0 | ok,refill,bankOk |
+
+Scenario: a member account needs more funding while not yet verified and something is combinable
+  Given members have:
+  | uid  | balance | flags     |*
+  | .ZZA |      10 | ok,refill |
+  | .ZZB |     200 |           |
+  And usd transfers:
+  | txid | payee | amount | created | completed | deposit |*
+  |    1 | .ZZA  |      0 | %today  |         0 |       0 |
+  |    2 | .ZZA  |     10 | %now+2d |         0 |       0 |
+  When cron runs "getFunds"
+  Then usd transfers:
+  | txid | payee | amount | created | completed | deposit | xid |*
+	|    2 | .ZZA  |     90 | %now+2d |         0 |       0 |   1 |
+  And transactions:
+  | xid | amount | from    | to   | taking |*
+  |   1 |      0 | bank-in | .ZZA |      1 |
+  And count "usd" is 2
+  And count "txs" is 1

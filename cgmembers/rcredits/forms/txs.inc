@@ -180,6 +180,9 @@ function formTxs_submit($form, &$sta) {
 /*   return w\go('history', 'info saved'); */
 /* } */
 
+/**
+ * Handle deletion of the given transaction, when the user clicks the delete button by it.
+ */
 function handleTx($do, $xid, &$sta, $args) {
   global $mya;
   $url = str_replace('&do=', '&did=', "history/transactions/$args"); // don't do it again

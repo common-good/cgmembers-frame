@@ -226,7 +226,7 @@ class Acct {
     if ($field == 'masterA') return $a->slave ? $a->jA : $a;
     if ($field == 'helperA') return $a->helper ? r\acct($a->helper) : '';
     if ($field == 'foody') return db\get(':U_FOODY', 'users u', ['uid' => $a->id]);
-    if ($field == 'iclubid') return $a->state == 1020 ? db\get('uid', 'users', ':IS_CO AND (community=:ctty OR 1) AND :IS_ICADMIN', ray('ctty', $a->community)) : NULL; // investment club uid
+    if ($field == 'iclubid') return $a->state == 1020 ? db\get('uid', 'users', ':IS_CO AND (community=:ctty OR 1) AND :IS_ICADMIN', ['ctty' => $a->community]) : NULL; // investment club uid
     if ($field == 'isIClub') return ($a->iclubid == $a->id);
     if ($field == 'prefsSet') return !is_null($a->o_minimum); // preferences have been set at least once
     if ($field == 'hasCustomers') return db\exists('r_relations', 'main=:id AND :IS_CUSTOMER', ['id' => $a->id]);
@@ -620,8 +620,8 @@ class Acct {
       $ak = $a->$field;
       if ($v == $ak or (is_numeric($v) and is_numeric($ak) and $v + 0 == $ak + 0)) continue; // don't record if no change
 
-      $oldValue = $a->cryIf($field, '' . $a->$field, TRUE);
-      $newValue = $a->cryIf($field, '' . $v);
+      $oldValue = $a->cryIf($field, is_array($a->$field) ? serialize($a->$field) : ('' . $a->$field), TRUE);
+      $newValue = $a->cryIf($field, is_array($v) ? serialize($v) : '' . $v);
       $record = ray('uid created field oldValue newValue changedBy', $a->uid, now(), $field, $oldValue, $newValue, $mya ? $mya->agentId : 0);
       db\insert('r_changes', $record); // add a r_changes record for each changed field
     }
@@ -829,7 +829,6 @@ class Acct {
     if ($a->co and COMPANY_FREEZE and $a == $actor and $a->coCan(CO_ATM) and $goods == FOR_USD) { $goods = FOR_GOODS; }
     $avail = $a->avail($goods);
     if ($avail >= $need) return 0; // plenty without drawing from other accounts
-
     if ($get) { $avail += $a->draw(($a->refill ? $a->minimum : 0) + $need - $a->balance); }
     else { $avail += $a->canDraw(); }
     return max(0, $need - $avail); 
@@ -1289,11 +1288,11 @@ EOF;
     $a = $this;
     $sql = <<< o
       SELECT SUM(amount) AS amt, SUM(IF(deposit, 0, amount)) AS combinable,
-        MIN(IF(deposit, NULL, txid)) AS combineTxid
+        MIN(IF(deposit OR amount=0, NULL, txid)) AS combineTxid
       FROM r_usd WHERE payee IN (:uids) AND NOT completed
 o;
     extract(db\q($sql, ray('uids', $a->uids))->fetchAssoc());
-    if ($combinable <=0) $combinable = $combineTxid = 0;
+    if ($combinable <= 0) $combinable = $combineTxid = 0;
     return $amt;
   }
 	
@@ -1405,10 +1404,12 @@ o;
   /**
    * Create a zero USD transfer record to verify the bank account.
    */
-  public function verifyBank($channel = TX_SYS, $amount = 0) {
+  public function verifyBank($channel = TX_SYS) {
     $a = $this;
-    list ($bankAccount, $payee) = [@$a->vsecure['bankAccount'], $a->id];
-    if (db\exists('r_usd', compact(ray('amount payee bankAccount')))) return; // already being verified
+    $info = ray('amount bankAccount payee', 0, @$a->vsecure['bankAccount'] ?: NULL, $a->id);
+    extract($info);
+    if (u\test() and is_null($bankAccount)) unset($info['bankAccount']); // otherwise t\verifyRecord fails
+    if (db\exists('r_usd', $info)) return; // already being verified
     $txid0 = db\max('txid', 'r_usd', 'txid<999999');
     for ($txid = $txid0; $txid < 999999; $txid++) { // actual transfers start sometime after 999,999
       if (db\exists('r_usd', 'txid=:txid', compact('txid'))) continue;

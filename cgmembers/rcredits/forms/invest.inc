@@ -41,7 +41,7 @@ function formInvest($form, &$sta, $args) {
     $request += 0; // enable if($request)
     $stake += 0;
     $buttons = $buttons0;
-    $amount = textFld($stake ? t('Buy or sell:') : t('Invest:'), [t('Amount'), t('If you reduce your investment amount, it will take effect when funds become available.') . $request ? t('  Whatever amount you request here will be in addition to your current request.') : ''], required()); // must be before request item
+    $amount = textFld($stake ? t('Buy or sell:') : t('Invest:'), [t('Amount'), t('If you reduce your investment amount, that request will take effect when funds become available.') . $request ? t('  Whatever amount you request here will be in addition to your current request.') : ''], required()); // must be before request item
     $myRequest = $request ? item(u\fmtAmt($request, ''), t('Change request:'), t('Your pending request to %change your investment', 'change', $request < 0 ? t('reclaim part of') : t('increase'))) : NULL;
 //    $togAttrs = ray('on off offstyle', t('Sell'), t('Buy'), 'warning');
 //    $buyorsell = togFld('buysell', t('Buy or Sell:'), '', 1, $togAttrs);
@@ -101,7 +101,7 @@ function formInvest_submit($form, &$sta) {
   if (@$signedBy) {
     extract(just('clubid', unserialize($old)));
     db\insert('r_stakes', ray('uid clubid joined', $mya->id, $clubid, now()), 'stakeid');
-    return say(t('You are now a member of the club!'));
+    return say(t('now a member'));
   }
 
   if (isset($reserve)) {
