@@ -86,7 +86,7 @@ function rweb_menu($submenu = '') {
 
     'get' => ['norm', t('Bank'), 'Get 1', 'manage ok'],
     
-    'invest' => ['norm', t('Invest'), 'Invest 1', 'manage ok icadmin'], // icadmin is temporary
+// NOT YET    'invest' => ['norm', t('Invest'), 'Invest 1', 'manage ok'],
     'invest/list' => ['call', t('List Investments'), 'InvestList 2', 'manage ok investor'],
     'invest/cashout' => ['call', t('Handle Requests to Cash Out Investments'), 'InvestCashout 2', 'manage ok co icadmin'],
     'invest/propose' => ['call', t('Propose an Investment'), 'InvestPropose 2', 'ok co icadmin'],
@@ -243,7 +243,7 @@ function rweb_menu($submenu = '') {
     'coup' => ['call', t('Disable account'), '1', ANY, 'coup'],
 
 //    'savings' => ['call', t('Savings'), 'ChooseSavings', ANY], // temporary until 12/15/2015 or so
-    'accept' => ['call', 'Accept Invitation', 'Accept 1', ANY], // called from promo site
+//    'accept' => ['call', 'Accept Invitation', 'Accept 1', ANY], // called from promo site
     'pos' => ['call', 'POS', '1', ANY, 'pos'], // called from the rPOS app
     'ajax' => ['call', 'AJAX', '1', ANY, 'ajax'], // called from the rPOS app
     'whosin' => ['call', t('Who\'s in?'), '1', ANY, 'whosin'], // called from promo site

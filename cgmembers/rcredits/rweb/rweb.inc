@@ -313,6 +313,18 @@ function changeWho($args = '') {
 }
 
 /**
+ * Let there be no current user.
+ * @param bool $continue: <don't go to Promo site after signout> (can't be a "go there" parameter, because it defaults wrong)
+ */
+function signout($continue = FALSE) {
+  if (isDEV and u\test()) setAcct(NULL); else
+  @\session_destroy();
+  if (isDEV and !u\test()) w\go('signin');
+  if ($continue == 'timedout') list ($continue, $timeout) = [FALSE, '&timedout=1']; else $timeout = '';
+  if (!$continue) return w\go(PROMO_URL . '?region=' . R_SERVER_ID . $timeout);
+}
+
+/**
  * Say the site is down
  */
 function formSystemDown($form, &$sta) {return array('zot' => item(t('system down')));}

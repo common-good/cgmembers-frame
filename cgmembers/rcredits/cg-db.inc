@@ -83,13 +83,13 @@ function update($table, $info, $key) {
   $sql = '';
   foreach ($info as $field => $v) {
     if ($field != $key) $sql .= ",`$field`=:$field";
-    if (is_array($v)) u\EXPECT(FALSE, 'array in update param'); // exception fails if called in $DBTX
+    if (is_array($v)) u\DYE('array in update param'); // exception fails if called in $DBTX
   }
   $sql = "UPDATE $table SET " . substr($sql, 1) . " WHERE `$key`=:$key";
   try {
     $result = db\q($sql, $info, !$key);
     return TRUE;
-  } catch (PDOException $e) {u\EXPECT(FALSE, "PDOException: $e->message");} 
+  } catch (PDOException $e) {u\DYE("PDOException: $e->message");} 
 }
 
 /**
@@ -109,8 +109,8 @@ function insert($table, $info, $key = 'id') {
 	
   $sql = '';
   foreach ($info as $field => $v) {
-    /* if ($field == $key) u\EXPECT(FALSE, 'key value specified in database insert'); // may actually be needed */
-    if (is_array($v)) u\EXPECT(FALSE, "array in insert param for field $field"); // exception fails if called in $DBTX
+    /* if ($field == $key) u\DYE('key value specified in database insert'); // may actually be needed */
+    if (is_array($v)) u\DYE("array in insert param for field $field"); // exception fails if called in $DBTX
     $sql .= ",`$field`=:$field";
   }
   $sql = "INSERT INTO $table SET " . substr($sql, 1);  // get rid of leading comma
@@ -121,7 +121,7 @@ function insert($table, $info, $key = 'id') {
     u\EXPECT($key and isset($info[$key]), 'no primary key ' . $key);
     return db\get($key, $table, "`$key`=:key", ray('key', $info[$key])); // return the supplied id if success
 
-  } catch (PDOException $e) {u\EXPECT(FALSE, "PDOException: $e->message");} 
+  } catch (PDOException $e) {u\DYE("PDOException: $e->message");} 
 }
 
 /**

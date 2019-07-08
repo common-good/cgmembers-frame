@@ -22,11 +22,12 @@ Setup:
   | .ZZB | .ZZD  | joint      |
   | .ZZD | .ZZB  | joint      |
   And usd transfers:
-  | txid | payee | amount | created    | completed | xid |*
-  |  100 | .ZZA  |   1000 | %today-20d | %today-13d |   1 |
-  |  101 | .ZZB  |   2000 | %today-21d | %today-14d |   2 |
-  |  102 | .ZZC  |   3050 | %today-22d | %today-15d |   3 |
-  |  103 | .ZZC  |    -50 | %today-12d | %today-12d |   4 |
+  | txid | payee | amount | created    | completed  |*
+  |  100 | .ZZA  |   1000 | %today-20d | %today-13d |
+  |  101 | .ZZB  |   2000 | %today-21d | %today-14d |
+  |  102 | .ZZC  |   3050 | %today-22d | %today-15d |
+  |  103 | .ZZC  |    -50 | %today-12d | %today-12d |
+  # txs #1,2,3,4
   Then balances:
   | uid  | balance |*
   | ctty |       0 |
