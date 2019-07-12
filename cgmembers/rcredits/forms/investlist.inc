@@ -11,17 +11,20 @@ use CG\Db as db;
  */
 function formInvestList($form, &$sta, $args = '') {
   global $mya;
-  extract(just('actual clubid', $args));
+  extract(just('actual clubqid', $args));
+  
+  if (!$clubqid or !$clubA = r\acct($clubqid) or !$clubA->iclub) return w\go('/invest', t('not a club'));;
+  $clubid = $clubA->id;
 
   list ($actualInv, $proposedInv) = [t('Actual Investments'), t('Proposed Investments')];
   list ($title, $params, $lnkText, $staked) = @$actual
   ? [$actualInv, '', $proposedInv, 'NOT NULL']
   : [$proposedInv, 'actual=1', $actualInv, 'NULL'];
-  $lnk = lnk("/invest/list/clubid=$clubid&$params", $lnkText);
+  $lnk = lnk("/invest/list/clubqid=$clubqid&$params", $lnkText);
   $subtext = t('(click to see %lnk instead)<br>Choose an investment to see details%ratable.', '_lnk ratable', $lnk, @$actual ? '' : t(' or to rate it'));
   
   $sql = <<< X
-    SELECT i.vestid, u.fullName, i.investment, i.types, i.return, i.soundness AS sound, 
+    SELECT i.vestid, u.fullName, i.investment, i.types, i.return * 100 AS `return`, i.soundness AS sound, 
       AVG(r.good) AS good, SUM(s.shares*i.price) AS value
     FROM r_investments i 
     LEFT JOIN users u ON u.uid=i.coid 
@@ -41,7 +44,7 @@ X;
     $return = number_format($return, 1) . '%';
     $investment = substr("$fullName: $investment", 0, 80);
     $type = (strpos($types, 'I') === FALSE or strpos($types, 'D') !== FALSE) ? t('equity') : t('loan');
-    $href = BASE_URL . "/invest/rate/vestid=$vestid&clubid=$clubid";
+    $href = BASE_URL . "/invest/rate/vestid=$vestid&clubqid=$clubqid";
     $investment = tags('a', $investment, compact('href'));
     $good = $good ? number_format($good, 1) : '?';
     $value = $value ? number_format($value, 0) : '&mdash;';
@@ -59,7 +62,7 @@ X;
   } else $list = t('There are no investments at this time.');
 
   $buttons = backButton();
-  if ($mya->isIClub) $buttons .= btn("/invest/propose/clubid=$clubid", t('Propose'));
+  if ($mya->iclub) $buttons .= btn("/invest/propose", t('Propose'));
   
   return cgform(compact(ray('title subtext buttons list')));
 }

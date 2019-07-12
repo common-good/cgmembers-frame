@@ -14,18 +14,23 @@ function formInvest($form, &$sta, $args) {
 
   $title = t('Investment Club');
   
-  if (!$clubid = $mya->iclubid) {
-    $subtext = t('There is no investment club in your community at this time. Consider starting one! Your %PROJECT community administrator can set it up for you.');
+  //    if ($field == 'iclubid') return $a->state == 1020 ? db\get('uid', 'users', ':IS_CO AND (community=:ctty OR 1) AND :IS_ICADMIN', ['ctty' => $a->community]) : NULL; // investment club uid
+
+  $clubid = $mya->iclub? $uid : db\get('uid', 'users', 'fullName LIKE :club AND :zip REGEXP zip AND :IS_OK', ray('club zip', t('%Investment Club%'), $mya->zip));
+  
+  if (!$clubid) {
+    $subtext = t('There is no active investment club in your community at this time. Consider starting one! Your %PROJECT community administrator can set it up for you.');
     return cgform(compact(ray('title subtext')));
   }
 
-  $clubVal0 = clubVal($investments0, $liquid0, $reserve0);
-  $buttons0 = btn("/invest/list/clubid=$clubid", t('List Investments'), 'success');
+  $clubqid = r\qid($clubid);
+  $clubVal0 = clubVal($clubid, $investments0, $liquid0, $reserve0);
+  $buttons0 = btn("/invest/list/clubqid=$clubqid", t('List Investments'), 'success');
   
-  if ($mya->isIClub) { // the club itself
+  if ($mya->iclub) { // the club itself
     $buttons = $buttons0
-      . btn("/invest/propose/clubid=$clubid", t('Propose'))
-		  . btn("/invest/cashout/clubid=$clubid", t('Requests to Cash Out'));
+      . btn("/invest/propose", t('Propose'))
+		  . btn("/invest/cashout", t('Requests to Cash Out'));
     $count0 = db\get('COUNT(DISTINCT uid)', 'r_stakes', compact('clubid'));
     $count = item(number_format($count0), t('Member Count:'));
 		$investments = item(u\fmtAmt($investments0), t('Investments:'));
@@ -48,7 +53,7 @@ function formInvest($form, &$sta, $args) {
     $buy = submi(t('Invest MORE'), '', 'md');
     if ($stake or $request) $sell = submi(t('Invest LESS'), '', 'md');
     //$myStake = item(u\fmtAmt($stake, ''), t('Your investment:'));
-		$myVal0 = myClubVal($clubVal0);
+		$myVal0 = myClubVal($clubid, $clubVal0);
 		$pct = $clubVal0 ? $myVal0 / $clubVal0 : 0;
 		$clubVal = item(t('%val (%liquid liquid)', 'val liquid', u\fmtAmt($clubVal0), u\fmtAmt($liquid0)), t('Club Value:'));
 		$myShare = item(tr('%amt (%pct)', 'amt pct', u\fmtAmt($myVal0), u\fmtAmt($pct, '%')), t('Your Share:'));
@@ -134,13 +139,12 @@ function formInvest_submit($form, &$sta) {
 
 /**
  * Return the investment club's total current value.
+ * @param int $clubid: the club's record ID
  * @param numeric $investments: (RETURNED) value of club's investments
  * @param numeric $liquid: (RETURNED) club's cash assets (including reserve)
  * @param numeric $reserve: (RETURNED) club's cash reserve
  */
-function clubVal(&$investments = 0, &$liquid = 0, &$reserve = 0) {
-	global $mya;
-	$clubid = $mya->iclubid;
+function clubVal($clubid, &$investments = 0, &$liquid = 0, &$reserve = 0) {
 	$icA = r\acct($clubid);
 	$investments = db\sum('shares*price', 'r_shares s JOIN r_investments i ON i.vestid=s.vestid', ray('clubid', $clubid));
 	list ($liquid, $reserve) = [$icA->balance, $icA->minimum];
@@ -150,10 +154,12 @@ function clubVal(&$investments = 0, &$liquid = 0, &$reserve = 0) {
 /**
  * Return the value of the current account's investment in the club.
  * A CG member who is not a club member can represent their spouse at a club meeting, but there is no joint investment account.
+ * @param int $clubid: the club's record ID
  * @param numeric $icVal: club's total current value
  */
-function myClubVal($clubVal) {
-  global $mya;
+function myClubVal($clubid, $clubVal) {
+  global $mya; $myid = $mya->id;
+  
 	$stake = 'IF(uid1=:clubid,-amt,amt)';
 	$share = "(:NOW-created)*$stake";
 	$isMe = ':myid IN (uid1,uid2)';
@@ -165,6 +171,6 @@ function myClubVal($clubVal) {
 					 SUM(IF($isMe, $share, 0)) AS myShare
 	  FROM txs WHERE :clubid IN (uid1,uid2) AND :IS_STAKE
 X;
-  extract(db\q($sql, ray('myid clubid', $mya->id, $mya->iclubid))->fetchAssoc());
+  extract(db\q($sql, compact(ray('myid clubid')))->fetchAssoc());
 	return round($myStake, 2);
 }

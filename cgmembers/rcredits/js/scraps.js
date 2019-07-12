@@ -172,11 +172,11 @@ function doit(what, vs) {
       require('#edit-company', false);
       $('#edit-fullname').focus();
     });
-    $('#edit-equity-0, #edit-equity-1').click(function() {
+    
+    $('#edit-equity-0, #edit-equity-1').click(function () {setInvestFields();});
+    
+//    setInvestFields($('#edit-equity').val() == 1);
       setInvestFields($('input[name="equity"]:checked').val() == 1);
-      //        var equity = $('input[name="equity"]:checked').val();
-    });
-    setInvestFields($('#edit-equity').val() == 1);
     //      $('.form-item-equitySet').toggle($('#edit-equity').val());
     //      $('.form-item-loanSet').toggle(!$('#edit-equity').val());
     break;
@@ -201,17 +201,18 @@ function doit(what, vs) {
       $('#edit-submit, #edit-nextStep').val(text);
       $('#edit-submit .ladda-label, #edit-nextStep .ladda-label').html(text);
     }
-    if ($('#edit-connect-1')[0]) {
-      showBank($('#edit-connect-1').attr('checked') == 'checked');
-      $('#edit-connect-0').click(function() {showBank(false);});
-      $('#edit-connect-1').click(function() {showBank(true);});
-    }
+
+    showBank($('#edit-connect-1').attr('checked') == 'checked');
+
+    $('#edit-connect-0').click(function() {showBank(false);});
+    $('#edit-connect-1').click(function() {showBank(true);});
 
     function showTarget(show) {
       $('#targetFields2').toggle(show);
       require('#edit-target, #edit-achmin', show);
     }
     showTarget($('#edit-refills-1').attr('checked') == 'checked');
+
     $('#edit-refills-0').click(function() {showTarget(false);});
     $('#edit-refills-1').click(function() {
       showTarget(true); 
@@ -344,13 +345,24 @@ function doit(what, vs) {
   }
 }
 
-function setInvestFields(equity) {        
+function setInvestFields() {
+  var equity = ($('input[name="equity"]:checked').val() == 1);
   $('.form-item-equitySet').toggle(equity);
   $('.form-item-loanSet').toggle(!equity);
   require('#edit-offering, #edit-price, #edit-return', equity);
-  require('#edit-offering--2, #edit-return--2', !equity);
+  require('#edit-offering--2, #edit-price--2, #edit-return--2', !equity);
 }
 
 function require(items, yesno) {
-  if (yesno) $(items).prop('required', true); else $(items).removeAttr('required');
+  if (yesno) {
+    $(items).prop('required', true);
+    $(items).each(function (i) {
+      $(this).attr('name', $(this).attr('name').replace('xx-', ''));
+    });
+  } else {
+    $(items).removeAttr('required');
+    $(items).each(function (i) {
+      $(this).attr('name', 'xx-' + $(this).attr('name'));
+    });    
+  }
 }

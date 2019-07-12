@@ -401,14 +401,15 @@ function lessOften() {
  *   (it has been at least half a period and we're at no later a point than last time)
  * @param string $period: the period (hour, day, week, month, year)
  * @param string $code: the strftime code for the smaller period to match or exceed
- * @param string $chosen: the chosen value to match or exceed
+ * @param string $chosen: the chosen value to match or exceed (if omitted, assume it's the current period)
  */
-function often($period, $chosen) {
+function often($period, $chosen = '') {
   if (!timeFor(now(), $period, $chosen)) return;
 
   $lastCron = getV('r_last_cron');
   $lastCron[$period] = now();
-  \setV('r_last_cron', $lastCron); // remember that this periodic activity has been done
+  setV('r_last_cron', $lastCron); // remember that this periodic activity has been done
+  
   $function = 'CG\\Cron\\every' . ucwords($period);
   $topic = t('cron period', compact('period'));
   $time = strftime('%I:%M%P', now());

@@ -17,6 +17,15 @@ $bizQ = 'SELECT uid as payee, goods, SUM(amount) AS tot, COUNT(*) AS cnt FROM tx
 $gifts = "r.amount * IF(period='M', 12, IF(period='Q', 4, 1))";
 
 $queries = [
+  1 . 'Food Fund Percentage Contributions' =>
+    "SELECT COUNT(uid) AS participants, SUM(amt) AS monthly FROM (
+      SELECT uid, SUM(food*amt) AS amt, IF(SUM(amt)=0, 0, 1) AS active  
+      FROM (SELECT uid,food FROM users WHERE food>0) u 
+      LEFT JOIN (SELECT uid1 AS uid, amt FROM txs_noreverse WHERE :T_FOODY AND created>:NOW-:MONTH_SECS) t USING(uid)
+      GROUP BY uid
+    ) x",
+// SUM(active) AS active, 
+
   2 . 'Most Trusted Members' => 
     "SELECT fullName, email AS email, phone, COUNT(b.voter) AS proxiedFor, trust FROM users u LEFT JOIN r_ballots b ON b.proxy=u.uid AND b.created>:REQUEST_TIME-:YEAR_SECS WHERE u.community=:ctty AND u.:IS_OK AND NOT u.:IS_CO GROUP BY IFNULL(b.proxy, u.uid) ORDER BY COUNT(b.voter) DESC, u.trust DESC",
     
@@ -117,4 +126,12 @@ eachA(function ($a) {
 // show food fund percentages and estimated monthly donations
 $rows = db\rows('fullName', 'users u', ':U_FOODY=1');
 $sum = db\sum('amt', 'txs', ':T_FOODY AND (SELECT food FROM users WHERE uid=uid1)>0 AND created>:NOW-:MONTH_SECS');
+
+// Who still owes CG a phone deposit
+SELECT fullName, nvid AS invoice, i.purpose FROM users u 
+LEFT JOIN (SELECT uid1 AS uid FROM txs_prime t0 WHERE t0.uid2=:CGID AND amt>=20) t USING(uid)
+LEFT JOIN (SELECT nvid,payer AS uid,purpose FROM r_invoices i0 
+  WHERE i0.payee=:CGID AND amount>=20 AND status<:TX_PAID) i USING(uid)
+WHERE u.:IS_CO AND t.uid IS NULL ORDER BY community
+
 */

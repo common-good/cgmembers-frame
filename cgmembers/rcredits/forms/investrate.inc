@@ -11,8 +11,9 @@ use CG\Db as db;
  */
 function formInvestRate($form, &$sta, $args = '') {
   global $mya;
-  extract(just('vestid clubid', $args));
-  if (!@$vestid or !@$clubid) return w\go('/page-not-found');
+  extract(just('vestid clubqid', $args));
+  if (!nn($vestid) or !nn($clubqid) or !$clubid = r\acct($clubqid)) return w\go('/page-not-found');
+  
   $title = t('View or Rate Investment #%vestid', compact('vestid'));
   $subtext = t('Numeric ratings are on a scale of 0-100');
 
@@ -47,16 +48,16 @@ function formInvestRate($form, &$sta, $args = '') {
   } else { // not rated yet
     $good = textFld(t('Common Goodness:'), [t('Common Goodness'), t('Rate this investment\'s benefit to the community and the common good (0-100)')], required());
     $patronage = textFld(t('Your patronage:'), [t('Monthly spending'), t('How much you will probably spend monthly, paying this company for its new or expanded services (estimate)')], required());
-    $comments = areaFld(t('Comments:'), [t('Comments')]);
+    $comment = areaFld(t('Comments:'), [t('Comments')]);
     $submit = t('Rate it');
   }
 
   $buttons = backButton();
-  if ($mya->icAdmin or $mya->cAdmin) $buttons .= btn("/invest/buy-or-sell/vestid=$vestid", t('Buy or Sell This'), 'warning');
+  if ($mya->iclub) $buttons .= btn("/invest/buy-or-sell/vestid=$vestid", t('Buy or Sell This'), 'warning');
   $vestid = hidFld($vestid);
-  $clubid = hidFld($clubid);
+  $clubqid = hidFld($clubqid);
   
-  return cgform(compact(ray('title subtext buttons vestid')) + $ds + compact(ray('stake value good patronage comments submit clubid')));
+  return cgform(compact(ray('title subtext buttons vestid')) + $ds + @compact(ray('stake value good patronage comment submit clubqid')));
 }
 
 function formInvestRate_validate($form, &$sta) {
@@ -69,8 +70,8 @@ function formInvestRate_validate($form, &$sta) {
 function formInvestRate_submit($form, &$sta) {
   global $mya;
   
-  $vs = just('vestid good patronage comments', $sta['input']);
+  $vs = just('vestid good patronage comment', $sta['input']);
   db\insert('r_ratings', $vs + ray('uid', $mya->id), 'ratingid');
-  $clubid = $sta['input']['clubid'];
-  return w\go("/invest/list/clubid=$clubid", t('You have successfully rated investment #%vestid', just('vestid', $vs)));
+  $clubqid = $sta['input']['clubqid'];
+  return w\go("/invest/list/clubqid=$clubqid", t('rating successful', 'num', $vs['vestid']));
 }

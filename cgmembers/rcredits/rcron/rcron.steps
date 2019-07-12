@@ -88,6 +88,7 @@ function members($list) {return t\members($list);}
  *     MAKE joint AJointAccountDoesNotNeedRefilling
  *     TEST monthly Setup
  *     TEST weekly AMemberCrawlsOutOfDebt
+ *     BOTH weekly CronTriesToRunTheWeeklyStuffTwiceInOneDay
  *     TEST weekly AMemberBuildsUpSavings
  *     TEST weekly AMemberCashesOutAutomatically
  */
@@ -619,6 +620,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE tickle ANonmemberHasAcceptedAnInvitationFromSomeoneElseInstead
  *     MAKE trust WeCalculateTrust
  *     MAKE weekly AMemberCrawlsOutOfDebt
+ *     MAKE weekly CronTriesToRunTheWeeklyStuffTwiceInOneDay
  *     MAKE weekly AMemberBuildsUpSavings
  *     MAKE weekly AMemberCashesOutAutomatically
  */

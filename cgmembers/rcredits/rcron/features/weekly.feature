@@ -15,6 +15,20 @@ Scenario: A member crawls out of debt
   | uid  | minimum |*
   | .ZZA |     -80 |
 
+Scenario: Cron tries to run the weekly stuff twice in one day
+  Given cron runs "everyWeek"
+  Then balances:
+  | uid  | minimum |*
+  | .ZZA |     -80 |
+  
+  Given balances:
+  | uid  | minimum |*
+  | .ZZA |       0 |
+  When cron runs "everyWeek"
+  Then balances:
+  | uid  | minimum |*
+  | .ZZA |       0 |
+
 Scenario: A member builds up savings
   Given members have:
   | uid  | minimum |*

@@ -389,8 +389,7 @@ function payInvoice($nvid) {
  * @param number $amount: the transaction amount
  * @param string|array $for: description of the transaction's purpose (user input) (or [actorFor, otherFor])
  * @param int $goods: FOR_GOODS, FOR_USD, others?
- * @param array $data: associative array of info about the transaction this request is reversing (if any), 
- *   indexed by any of:
+ * @param array $data: associative array of extra info about the transaction (if any), indexed by any of:
  *   'created': time of transaction (defaults to current time)
  *   'force': <do the transaction despite any shortfall (1 for original tx, -1 for forced reversal)>
  *   'boxId': the id of the device on which the transaction was initiated

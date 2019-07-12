@@ -982,7 +982,7 @@ function test($arg = '') {
               );
   }
   if (session_id() and $_SESSION) session_destroy();
-  db\del('sessions', '(sid, ssid)', '1=1');  // Yeah, this is a little funky...
+  db\del('sessions', '(sid, ssid)', '1 = 1');  // Yeah, this is a little funky...
   \drupal_goto('sadmin/recover'); // has to be a form available when logged out
 }
 

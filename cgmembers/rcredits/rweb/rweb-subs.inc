@@ -1899,7 +1899,7 @@ function menu($path, $title, $type, $function, $args, $perms = '') {
 
   foreach ($args = ray($args) as $k => $v) if (is_numeric($v)) $args[$k] = (int) $v;
   
-  $adminPerms = (stripos($perms, 'admin') !== FALSE and stripos($perms, 'icadmin') === FALSE);
+  $adminPerms = (stripos($perms, 'admin') !== FALSE);
   $admin = (u\starts($path, 'sadmin') or $perms == 'dev' or $adminPerms);
   $smart = ($path == 'pos');
 
@@ -2256,7 +2256,7 @@ function webAccess($perms = NULL) {
     : ($perm == 'superadmin' ? ($mya and $mya->superAdmin)
     : ($perm == 'superadminORdev' ? (($mya and $mya->superAdmin) or isDEV)
     : ($perm == 'prose' ? ($mya and $mya->proSe)
-    : ($perm == 'investor' ? ($mya and ($mya->isIClub or db\exists('r_stakes', 'uid=:id', ray('id', $mya->id))))
+    : ($perm == 'investor' ? ($mya and ($mya->iclub or db\exists('r_stakes', 'uid=:id', ['id'=>$mya->id])))
     : ($mya and $mya->can(u\consta('b', $perm))) ))))));
 
     if ($not ? $pass : !$pass) return FALSE;

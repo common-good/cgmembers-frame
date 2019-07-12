@@ -379,14 +379,14 @@ define('B_SAVINGS', 22); // the connected bank account is a savings or money mar
 define('B_CASHOUTW', 23); // cash out automatically every 7 days
 define('B_CASHOUTM', 24); // cash out automatically every 30 days
 define('B_BETA', 25); // beta tester
-define('B_ICADMIN', 26); // investment club admin
+define('B_u26', 26); //
 define('B_ADMIN2', 27); // is an overall admin assistant or bank partner or government regulator (read-only except notes)
 define('B_CADMIN2', 28); // is a community sub-administrator (read-only except notes)
 define('B_CADMIN', 29); // is a community administrator
 define('B_ADMIN', 30); // is a system administrator -- can manage server, including assigning ctty admins, but cannot manage communities or individual accounts (except temporarily)
 define('B_MAX', 62); // maximum bit number
-define('B_ADMINABLE', 'member confirmed carded beta icAdmin cAdmin cAdmin2 nonudge cgc invites rewardy noneg'); // for cAdmin to set
-define('B_LIST', 'member confirmed ok carded ided refill co draws roundup nonudge nosearch u11 bankOk weekly monthly u15 bysms paper secret u19 debt u21 savings cashoutW cashoutM beta icAdmin admin2 cAdmin2 cAdmin admin');
+define('B_ADMINABLE', 'member confirmed carded beta cAdmin cAdmin2 nonudge cgc invites rewardy noneg'); // for cAdmin to set
+define('B_LIST', 'member confirmed ok carded ided refill co draws roundup nonudge nosearch u11 bankOk weekly monthly u15 bysms paper secret u19 debt u21 savings cashoutW cashoutM beta u26 admin2 cAdmin2 cAdmin admin');
 
 // community-specific flags
 define('B_CGC', 0); // ctty: is an official CGC (currently has no effect)

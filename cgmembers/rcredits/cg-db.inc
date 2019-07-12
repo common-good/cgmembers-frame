@@ -39,6 +39,16 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
 }
 
 /**
+ * Simplified interactive admin version.
+ * Call this in a "try" block, if you want to catch errors.
+ */
+function adminQ($sql) {
+  $word1 = strtolower(strstr($sql, ' ', TRUE));
+  u\EXPECT(in($word1, 'select show'), 'bad admin query');
+  return \db_query(u\SUBS($sql));
+}
+
+/**
  * Look the field up in the table, returning the first record matching the criteria.
  * @param string $fieldName: field name, function, or list of field names (* for all)
  *   A list of field names cannot contain a function or a left paren
@@ -220,12 +230,12 @@ function setFlag($table, $id, $bit, $bool = TRUE) {
  * Make a backup copy of the record before deleting it if appropriate (then delete it).
  * @param string $table: delete a record from this table
  * @param string $idnm: name of key field of table
- * @param mixed $id: integer id of record to delete OR criteria
+ * @param mixed $id: id of record to delete (integer or spaceless string) OR criteria
  * @param assoc $subs: parameters for selection criteria
  */
 function del($table, $idnm, $id, $subs = []) {
   u\EXPECT(!strpos($table, '_all') and !u\starts($table, 'txs'), 'you must delete only from tx_hdrs and tx_entries');
-  $where = is_numeric($id) ? "$idnm=$id" : $id;
+  $where = strpos($id, ' ') ? $id : "$idnm='$id'";
   if (in($table, DELETED_BY_VIEW)) {
     $all_table = $table . '_all';
     $q = db\q("UPDATE $all_table SET deleted=:NOW WHERE (deleted IS NULL OR deleted=0) AND $where", $subs);

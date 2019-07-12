@@ -17,7 +17,7 @@ use CG\Web as w;
 global $base_path;
 define('BASE_PATH', $base_path);
 define('T_BALANCE_FLDS', 'uid balance floor savingsAdd saveWeekly minimum');
-define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId');
+define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company');
 
 /**
  * Allow mnemonic and abbreviated data in test scenario columns.
@@ -646,13 +646,19 @@ function cronRuns($op) {
   include_once __DIR__ . '/rcron/rcron.inc';
   
   $now = now();
-  \setV('r_last_cron', ray('day week month', $now, $now, $now)); // normally don't run periodics
+  
+  if (u\starts($op, 'every')) {
+    $period = strtolower(str_replace('every', '', $op));
+    cr\often($period);
+  } else cr\doTask(compact('op'));
+//  $periods = 'hour day week month year';
+//  \setV('r_last_cron', ray($periods, $now, $now, $now)); // normally don't run periodics
 
-  if ($op == 'ALL') { //  or strpos(DAILY_TASKS, " $op ")
-/**/  if (strftime('%H') < R_DAILY_HOUR) die('Developer: For testing between midnight and :R_DAILY_HOUR:00, you need to temporarily change R_DAILY_HOUR in -settings.');
-    db\q('TRUNCATE queue');
-    \setV('r_last_cron', ray('day week month', $now - DAY_SECS, 0, 0));
-  } elseif ($op) cr\doTask(compact('op'));
+//  if ($op == 'ALL') { //  or strpos(DAILY_TASKS, " $op ")
+///  if (strftime('%H') < R_DAILY_HOUR) die('Developer: For testing between midnight and :R_DAILY_HOUR:00, you need to temporarily change R_DAILY_HOUR in -settings.');
+//    db\q('TRUNCATE queue');
+//    \setV('r_last_cron', ray('day week month', $now - DAY_SECS, 0, 0));
+//  } elseif ($op) 
   cr\run();
   
   return TRUE;
@@ -1004,12 +1010,24 @@ function verifyRecord($table, $info) {
 
   $crit = join(' AND ', $crit);
   if (!$result = db\exists($table, $crit, $info)) {
-    foreach ($info as $k => $value) $subs[$k] = "'$value'";
+    $info2 = $info; list ($infoK, $infoV) = [key($info2), array_shift($info2)]; // must be before ksort
+    ksort($info);
+    foreach ($info as $k => $v) $subs[$k] = "'$v'";
     $sql = "SELECT * FROM $table WHERE " . strtr(u\SUBS($crit), u\prefixKeys(':', $subs));
-    output("verifyRecord failed. sql=$sql<br>table=$table crit=$crit EXPECTED info=" . pr($info));
-    list ($k, $v) = [key($info), array_shift($info)];
-///    die(pr(compact(ray('k v subs info'))));
-    output("Actual $table record at $k=$v: " . pr(db\get('*', $table, [$k => $v])));
+//    output("verifyRecord failed. sql=$sql<br>table=$table crit=$crit EXPECTED info=" . pr($info));
+    output("verifyRecord failed. sql=$sql<br>table=$table crit=$crit");
+
+    if ($actualRow = db\get('*', $table, [$infoK => $infoV])) {
+//      ksort($actualRow);
+//      output("Actual $table record at $infoK=$infoV: " . pr($actualRow));
+      $difs = '';
+      foreach ($info as $k => $v) {
+        $v2 = $actualRow[$k];
+        if ($v2 != $v) $difs .= "<tr><td>$k</td><td>$v</td><td>$v2</td></tr>\n";
+      }
+      $hdrs = t('<th>field</th><th>want</th><th>got</th>');
+      output("Discrepancies: <br><table>$hdrs$difs</table>");
+    }
   }
   return $result;
 }
@@ -1324,8 +1342,8 @@ function clear($ch = 0) {
 
   db\q('DELETE FROM users WHERE uid<>0');
   db\q('DELETE FROM r_criteria WHERE ctty<>0');
-  $varKeys = ray('backingReserve companies newThresholds negReserve r_last_cron riskThresholds version');
-  db\q("DELETE FROM variable WHERE name IN ('" . join("','", $varKeys) . "')");
+  $varKeys = ray('backingReserve companies newThresholds negReserve r_last_cron last_cron_start riskThresholds version');
+  db\q('DELETE FROM variable WHERE name IN (:varKeys)', compact('varKeys'));
   a\setupBasicAccounts();
 
   db\q('UPDATE users SET floor=0,balance=0,minimum=NULL,rewards=0,committed=0');
