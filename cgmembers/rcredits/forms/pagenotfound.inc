@@ -10,15 +10,16 @@ use CG\Db as db;
  * Handle page not found error (404).
  */
 function formPageNotFound($form, &$sta, $arg = '') {
-  $page = $_SERVER['REQUEST_URI'];
 
-  if ($page[0] == '/') $page = substr($page, 1); // ignore leading slash
-//  if ($page == 'timedout') return w\go(PROMO_URL); // something weird went wrong (only on DEV?)
-  header_remove(); // prevent 404 circle (doesn't help)
+  $page = $_SERVER['REQUEST_URI'];
+  if ($page and $page[0] == '/') $page = substr($page, 1); // ignore leading slash
   
-  if ($page[0] == '-') {
+  if ($page and $page[0] == '-') {
     include_once __DIR__ . '/../forms/signup.inc';
     return formSignup('', $sta, 'code=' . substr($page, 1)); // invitation!
   }
-  return formEmpty(t('The page you requested (%page) does not exist.', compact('page')));
+  
+  $title = t('Page Not Found');
+  $subtext = t('The page you requested does not exist.');
+  return cgform(compact(ray('title subtext')));
 }

@@ -367,7 +367,7 @@ function prefixKeys($prefix, $ray, $noArray = FALSE, $suffix = '') {
 //  EXPECT(compact('prefix', 'ray'), 'string array');
   if ($prefix == '') return $ray;
   $newRay = [];
-/**/ foreach ($ray as $k => $v) $newRay[$prefix.$k.$suffix] = ($noArray and is_array($v)) ? print_r($v, 1) : $v;
+  foreach ($ray as $k => $v) $newRay[$prefix.$k.$suffix] = ($noArray and is_array($v)) ? pr($v) : $v;
   return $newRay;
 }
 
@@ -535,7 +535,7 @@ function expect1($arg, $value, $type, $ret) {
 //  static $ecnt; $ecnt = @$ecnt + 1; u\EXPECT($ecnt < 10000, 'loop');
 //  EXPECT(compact(ray('arg type')), 'var string'); // can't do this because infinite recursion
 
-/**/ $msg = "Expected \$$arg ('" . print_r($value, 1) . "') to be type '$type'."; // standard err message (keep this)
+  $msg = "Expected \$$arg ('" . pr($value) . "') to be type '$type'."; // standard err message (keep this)
   if (strpos($type, '|')) {
     foreach (explode('|', $type) as $one) if (expect1($arg, $value, $one, TRUE) == '') return '';
     EXPECT(FALSE, $msg, $ret);
@@ -617,7 +617,7 @@ function emailTag($email = NULL, $subject = '', $body = '', $name = '', $extra =
 
 function seeAssoc($info) {
   $result = '';
-/**/ foreach ($info as $key => $value) $result .= "<b>$key</b>: " . print_r($value, 1) . "<br>\n"; // keep
+  foreach ($info as $key => $value) $result .= "<b>$key</b>: " . pr($value) . "<br>\n"; // keep
   return "\n<br>$result";
 }
 
@@ -844,7 +844,7 @@ function csv($line, $delimiter = ',') {
  */
 function randomString($len = 16, $choices = '') {
   global $nextCode;
-  if (u\test() and @$nextCode) return $nextCode;
+  if (u\test() and @$nextCode and in($choices, ' lower upper word')) return $nextCode;
 
   $lower = 'abcdefghijklmnopqrstuvwxyz';
   $upper = strtoupper($lower);
@@ -1018,7 +1018,7 @@ function trimAll(&$ray) {
 function deb($arg = '') {
   global $counterI;
   $msgCount = count(@$_SESSION['messages']['status'] ?: []);
-/**/ log(($counterI = @$counterI + 1) . " ($msgCount messages): " . print_r($arg, 1), 'debug'); // keep
+  log(($counterI = @$counterI + 1) . " ($msgCount messages): " . pr($arg), 'debug');
 }
 
 /**
@@ -1102,8 +1102,8 @@ function showCaller($skip = 0) {
   for ($i = 0; $i <= $skip; $i++) array_shift($trace); // discard THIS call
   $caller = (object) array_shift($trace); $file = basename(@$caller->file);
   $precaller = (object) array_shift($trace); $prefile = basename(@$precaller->file);
-/**/ $args = print_r(@$caller->args, 1);
-/**/ $preargs = print_r(@$precaller->args, 1);
+  $args = pr(@$caller->args);
+  $preargs = pr(@$precaller->args);
   return " called $caller->function($args) ($caller->line in $file), from $precaller->function($preargs) ($precaller->line in $file)\n";
 }
 

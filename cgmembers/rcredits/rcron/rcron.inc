@@ -371,7 +371,7 @@ function activeWeekly($item) {
  * This is called at the right time for members with no recurring donation OR for any member with an annual donation (whether it's time or not).
  */
 function warnAnnualGift($item) {
-/// debug('warnAnnualGift(' . print_r($item, true) .')');
+/// debug('warnAnnualGift(' . pr($item) .')');
 	extract(just('uid amount when created period invoiced lastTx', $item));
   
 	$a = r\acct($uid);
@@ -452,13 +452,15 @@ function everyMonth() {
     GROUP BY uid HAVING donate>0
 X;
   queueEach('crumbs', $sql);
+  queueEach('sweep', "SELECT $start AS start,$end AS end"); // must come after all crumbs
 
 	// figure amount to share with each official Common Good Community
 
 // Not until cgc means signed the CG/CGC agreement (and then not retroactive) queueEach('cgc', $cttyGiftsSql($end));
   
   $list = db\lst("CONCAT(fullName,' (',city,')')", 'users', ':IS_OK AND :IS_PAPER');
-  r\tellAdmin(t('Send paper statements'), compact('list'));
+  r\tellAdmin(t('Send paper statements'), compact('list'), 0); // 0 = suppress report of current account
+
 }
 
 /**
@@ -505,6 +507,20 @@ function crumbs($item) {
   $a = r\acct($uid);
   if ($donate > 0 and $a->ok) $a->payApproved(CG_CRUMBS_UID, $donate, t('crumbs desc', 'pct', u\fmtAmt($a->crumbs, '%')), FOR_NONGOODS, ray('created crumbs gift', $date, TRUE, TRUE));
 }
+
+/**
+ * Sweep roundups and crumbs contributions into Common Good's account.
+ */
+function sweep($item) {
+  extract(just('end', $item));
+  
+  $cgA = r\acct(CGID);
+  foreach (ray('roundup crumb', CG_ROUNDUPS_UID, CG_CRUMBS_UID) as $type => $uid) {
+    $a = r\acct($uid);
+    $amt = $a->balance - db\sum('amt', 'txs', 'uid2=:uid AND created>:end', compact(ray('uid end'))); // all but what's too new
+    if ($amt > 0) be\transfer('payment', $a, $cgA, $amt, $type . t(' donations'), FOR_GOODS, ray('created gift', $end, TRUE));
+  }
+}  
 
 /**
  * Kick half the donations originating in an organized CGC back to that community.

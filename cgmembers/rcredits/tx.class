@@ -246,7 +246,7 @@ EOF;
    * @return associative array: the old transaction record (FALSE if none)
    */
   static function lastTx($uids, $where = 1, $subs = []) {
-///   debug("lastTx(" . print_r($uids, true) . ", '$where', " . print_r($subs, true) . ")");
+///   debug("lastTx(" . pr($uids) . ", '$where', " . pr($subs) . ")");
     $xid = db\get('t.xid', 'tx_hdrs t JOIN tx_entries e USING(xid)',
                   "e.uid IN (:uids) AND $where ORDER BY t.created DESC LIMIT 1",
                   ['uids' => $uids] + $subs);

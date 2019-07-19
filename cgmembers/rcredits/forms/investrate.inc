@@ -40,11 +40,21 @@ function formInvestRate($form, &$sta, $args = '') {
   $vs['return'] = number_format($vs['return'], 2) . '%';
   foreach ($vs as $k => $v) $ds[$k] = item($vs[$k], $ds[$k] . ':');
 
-  if ($shares = db\get('shares', 'r_shares', compact('vestid'))) { // already invested
-    $value = item(u\fmtAmt($shares * $price), t('Value:'));
-    $shares = item(u\fmtAmt($shares), t('Club\'s stake:'));
-  } elseif ($good = db\get('good', 'r_ratings', ray('vestid uid', $vestid, $mya->id))) { // rated
+  if ($mya->iclub or $shares = db\get('shares', 'r_shares', compact('vestid'))) { // is the club or already invested
+    $value = item(u\fmtAmt(@$shares * $price), t('Value:'));
+    $shares = item(u\fmtAmt(@$shares), t('Club\'s stake:'));
+    if ($mya->iclub) {
+      foreach (ray('good patronage') as $k) ${$k . 's'} = number_format(db\avg($k, 'r_ratings', compact('vestid')));
+      $goods = item($goods, t('Common Goodness:'));
+      $patronages = item($patronages, t('Patronage:'));
+      $comment = '<ul><li>' . db\lst('comment', 'r_ratings', compact('vestid'), NULL, "</li>\n<li>") . '</li></ul>';
+      $comment = item($comment, t('Comments:'));
+    }
+  } elseif ($res = db\get('good,patronage,comment', 'r_ratings', ray('vestid uid', $vestid, $mya->id))) { // rated
+    extract($res);
     $good = item($good, t('Your rating:'));
+    $patronage = item($patronage, t('Your patronage:'));
+    $comment = item($comment, t('Your comment'));
   } else { // not rated yet
     $good = textFld(t('Common Goodness:'), [t('Common Goodness'), t('Rate this investment\'s benefit to the community and the common good (0-100)')], required());
     $patronage = textFld(t('Your patronage:'), [t('Monthly spending'), t('How much you will probably spend monthly, paying this company for its new or expanded services (estimate)')], required());
@@ -57,7 +67,7 @@ function formInvestRate($form, &$sta, $args = '') {
   $vestid = hidFld($vestid);
   $clubqid = hidFld($clubqid);
   
-  return cgform(compact(ray('title subtext buttons vestid')) + $ds + @compact(ray('stake value good patronage comment submit clubqid')));
+  return cgform(@compact(ray('title subtext buttons vestid goods patronages')) + $ds + @compact(ray('stake value good patronage comment submit clubqid')));
 }
 
 function formInvestRate_validate($form, &$sta) {

@@ -374,8 +374,9 @@ body.logged-in.one-sidebar #content {width:100%;}
 #critChart .row div:first-child {width:50px; font-weight:bold; text-align:center;}
 
 /* Invest */
-#frm-invest .btn {margin-right:10px;}
+#frm-invest .btn {margin:0 0 0 20px;}
 #frm-invest #edit-buy {margin-right:100px;}
+#frm-invest #edit-expensereserve {width: 100px; display:inline-block;}
 
 /* Invest List */
 #frm-investlist th,

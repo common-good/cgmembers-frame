@@ -23,6 +23,7 @@ $flagHelp = array(
   'paper' => t('Will not accept electronic statements.'),
   'secret' => t('Don\'t let merchants tell the member their balance on request.'),
   'debt' => t('Member chose to permit sub-zero balances.'),
+  'reinvest' => t('Member chose to automatically reinvest investment club dividends and inflation adjustments.'),
   'draws' => t('This account automatically draws funds from one or more others.'),
   'savings' => t('NYI The connected bank account is a savings or money market account.'),
   'cashoutW' => t('Cash this account out weekly, leaving only its average weekly gross in the account.'),

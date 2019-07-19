@@ -15,10 +15,9 @@
 function drupal_path_initialize() {
   // Ensure $_GET['q'] is set before calling drupal_normal_path(), to support
   // path caching with hook_url_inbound_alter().
-  if (empty($_GET['q'])) {
-    $_GET['q'] = variable_get('site_frontpage', 'node');
-  }
-  $_GET['q'] = drupal_get_normal_path($_GET['q']);
+  if (empty($_GET['q'])) $_GET['q'] = 'summary';
+  return $_GET['q'];
+//  $_GET['q'] = drupal_get_normal_path($_GET['q']);
 }
 
 /**
@@ -63,13 +62,13 @@ function drupal_lookup_path($action, $path = '', $path_language = NULL) {
   }
 
   // Retrieve the path alias whitelist.
-  if (!isset($cache['whitelist'])) {
+/*  if (!isset($cache['whitelist'])) {
     $cache['whitelist'] = variable_get('path_alias_whitelist', NULL);
     if (!isset($cache['whitelist'])) {
       $cache['whitelist'] = drupal_path_alias_whitelist_rebuild();
     }
   }
-
+*/
   // If no language is explicitly specified we default to the current URL
   // language. If we used a language different from the one conveyed by the
   // requested URL, we might end up being unable to check if there is a path
@@ -260,10 +259,10 @@ function drupal_get_normal_path($path, $path_language = NULL) {
   $original_path = $path;
 
   // Lookup the path alias first.
-  if ($source = drupal_lookup_path('source', $path, $path_language)) {
+/*  if ($source = drupal_lookup_path('source', $path, $path_language)) {
     $path = $source;
   }
-
+*/
   // Allow other modules to alter the inbound URL. We cannot use drupal_alter()
   // here because we need to run hook_url_inbound_alter() in the reverse order
   // of hook_url_outbound_alter().
@@ -352,7 +351,7 @@ function drupal_match_path($path, $patterns) {
  * @see request_path()
  */
 function current_path() {
-  return $_GET['q'];
+  return drupal_path_initialize();
 }
 
 /**

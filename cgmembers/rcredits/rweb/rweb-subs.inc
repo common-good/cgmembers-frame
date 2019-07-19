@@ -540,7 +540,7 @@ define('FMT_INT', 'trust count');
 //define('FMT_2D', 'negativeBalanceTotal positiveBalanceTotal');
  
 function showRecords($ray, $formatFunc = 'CG\\Web\\formatField', $flagsField = B_LIST) {
-///    debug("showRecords(" . print_r($ray, true) . ", $formatFunc, $flagsField)");
+///    debug("showRecords(" . pr($ray) . ", $formatFunc, $flagsField)");
   if (!$ray or empty($ray) or count($ray)==0) return 'data set is empty';
   $first = (array)reset($ray);
   $lines[] = '<tr><th>' . join('</th><th>', array_keys($first)) . "</th></tr>\n";
@@ -806,7 +806,7 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
     foreach(ray('sadmin/ account- /wp-admin') as $k) if (strpos($formName, $k) !== FALSE) $logit = FALSE;
     if ($logit) {
       if ($logs = $_POST) {
-/**/    u\loga('in', $formName . substr(print_r(u\noSecrets($logs), 1), 5)); // without "Array"
+        u\loga('in', $formName . substr(pr(u\noSecrets($logs)), 5)); // without "Array"
       } else {u\loga('form', [$formName]);}
     }
   }
@@ -870,10 +870,10 @@ function sanitizePage($page) {
                        ]);
 
   $page = preg_replace("~$except~", '', $page);
-//  return;
+
   if ($tags = preg_match(FORBID_TAGS, $page, $matches) or preg_match(FORBID_ATTRS, $page, $matches)) {
-/**/ $msg = t('Page has a forbidden HTML %thing: %what', 'thing what', $tags ? t('tag') : t('attribute'), print_r($matches, 1));
-     if (isPRODUCTION) w\hack($msg);
+  $msg = t('Page has a forbidden HTML %thing: %what', 'thing what', $tags ? t('tag') : t('attribute'), pr($matches));
+  if (isPRODUCTION) w\hack($msg);
 /**/ die($msg);
   }
 }
@@ -1270,15 +1270,6 @@ function goButtonIf($perms, $label, $goto, $title) {
   return goButton($label, $goto, $title);
 }
 
-function wants($ats) {  
-  $wants = 0; // store a bit for each bought-at company
-  if ($ats) foreach ($ats as $one) if (@$one) {
-    db\q('UPDATE r_nonmembers SET potential = potential+1 WHERE id=:one', compact('one'));
-    $wants |= u\bit($one);
-  }
-  return $wants;
-}
-
 /**
  * Return an array of flags and coFlags, appropriate to the given account type.
  UNUSED, but keep for migrating data to r_company
@@ -1448,13 +1439,13 @@ function contactFields($defaults = [], $step0, $myid = 0) {
   }
   js('countries'); // required for setPostalAddr, whether or not the fields are shown
 
-  if ($step0 and @$address and @$city and @$state and !u\badZip($zip) and !u\poAddress($address)
+  if ($step0 and @$address and @$city and @$state and !u\badZip($zip) and !u\poAddress($address) and u\fmtPhone($phone)
     and @$address2 and @$city2 and @$state2 and !u\badZip($zip2)) { // already got a bunch of data
 
     $postalAddr = ''; // get it from the separate fields
     $hidCountry = $country;
     $hidState = $state + 0;
-    $hidState2 = $state2 + 0;
+    $hidState2 = $state2 ?: $hidState;
     if (@$partner and @$partnerCode and @$customer // customer signup 
       and ($partnerA = r\acct($partner) and $partnerA->emailCode == $partnerCode)) { // using valid data from partner org
       $fields .= $partnerExtras;
@@ -1689,7 +1680,7 @@ function eLinkAcct(&$sta, &$eLink = '', $allow = 'individual') {
 function hack($message, $info = []) {
   u\loga('hack', $_SERVER + compact('message'));
   r\tellAdmin($message, $info);
-/**/	if (isDEV) debug("$message: " . print_r($info, 1));
+/**/	if (isDEV) debug("$message: " . pr($info));
   return r\signedIn() ? signout() : w\go('');
 }
 
@@ -2244,6 +2235,7 @@ function focusOn($focusFieldName) {
  */
 function webAccess($perms = NULL) {
   global $mya;
+
   setAcct(); // recall who we are (DO THIS FIRST!)
   
   foreach (ray($perms) as $perm) {
@@ -2253,11 +2245,12 @@ function webAccess($perms = NULL) {
       $perm == ANY ? TRUE // needed for submenus (see w\subMenu())
     : ($perm == 'dev' ? isDEV
     : ($perm == 'signedIn' ? (bool) $mya
+    : ($perm == 'iclub' ? ($mya and $mya->iclub)
     : ($perm == 'superadmin' ? ($mya and $mya->superAdmin)
     : ($perm == 'superadminORdev' ? (($mya and $mya->superAdmin) or isDEV)
     : ($perm == 'prose' ? ($mya and $mya->proSe)
     : ($perm == 'investor' ? ($mya and ($mya->iclub or db\exists('r_stakes', 'uid=:id', ['id'=>$mya->id])))
-    : ($mya and $mya->can(u\consta('b', $perm))) ))))));
+    : ($mya and $mya->can(u\consta('b', $perm))) )))))));
 
     if ($not ? $pass : !$pass) return FALSE;
   }
@@ -2457,6 +2450,20 @@ function opText($sta) {
   return '';
 }
 
+/**
+ * If signing up, go to the next step. Otherwise just display the message, if any.
+ * @param string $step: current step
+ * @param string $msg: message to display, if any
+ * @param assoc $info: info to report to admin, if any
+ */
+function goNextStep($step, $msg = NULL, $info = []) {
+  global $mya;
+
+  if ($mya and $step = $mya->nextStepUrl($step, $msg, $info)) {
+    return w\go($step, $msg);
+  } elseif (@$msg) say($msg);
+}
+
 function backButton() {
   jsx('back-button'); 
   return '<button class="btn btn-back btn-xs btn-primary"><div>&laquo;</div><div>&nbsp;Go Back</div></button>';
@@ -2482,7 +2489,6 @@ function verifyBy($byVoice) {return $byVoice ? t('Voice') : t('SMS');}
 function sayFieldErr($err, $field) {return say(strtoupper($field) . ': ' . t($err), $field);}
 function err($msg) {return say($msg, 'err');}
 function rent($element) {return \render($element);} // Drupal makes render hard, requires pass by reference
-function goNextStep($step, $msg = NULL, $info = []) {if ($step = r\acct()->nextStepUrl($step, $msg, $info)) w\go($step, $msg); elseif (@$msg) say($msg);}
 function away() {return ['target' => '_blank'];}
 function js($script, $args = '') {global $pageScripts; $pageScripts[$script] = http_build_query(rayy(func_get_args(), 1));} // see html.tpl
 function jsx($script, $args = '') {global $scriptScraps; $scriptScraps[$script] = http_build_query(rayy(func_get_args(), 1));} // see html.tpl

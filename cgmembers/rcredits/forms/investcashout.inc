@@ -12,10 +12,9 @@ include_once __DIR__ . '/invest.inc';
  * Let Investment Club administrators accommodate member requests to reclaim all or part of their investment.
  */
 function formInvestCashout($form, &$sta, $args = '') {
-	global $mya;
-	$clubid = $mya->iclubid;
+	global $mya; $clubid = $mya->id;
 	
-  $clubVal = clubVal($investments, $liquid, $reserve);
+  $clubVal = investmentsVal($clubid, $investments, $liquid, $reserve);
 	$avail = $liquid - $reserve;
 	$sql = 'SELECT SUM(request) AS total, COUNT(request) AS count FROM r_stakes WHERE clubid=:clubid AND request<0';
 	extract(db\q($sql, compact('clubid'))->fetchAssoc());
@@ -23,7 +22,7 @@ function formInvestCashout($form, &$sta, $args = '') {
   $title = t('Handle Requests to Cash Out Investments');
   $available = item(u\fmtAmt($avail), t('Available Funds:'));
 	$requests = item(tr('%total (%count)', 'total count', u\fmtAmt(-$total), number_format($count)), t('Total Requests:'));
-	if ($avail < $total) $method = w\radiosFld(t('Method:'), '', ray('inline', TRUE), [t('Oldest Request First'), t('Partial Cashout for All')]);
+	$method = $avail < $total ? w\radiosFld(t('Method:'), '', ray('inline', TRUE), [t('Oldest Request First'), t('Partial Cashout for All')]) : NULL;
 	$submit = t('Cash Them Out');
   $back = backButton();
 	$hid = hidFld(serialize(compact(ray('clubid avail total'))));
@@ -40,14 +39,17 @@ function formInvestCashout_submit($form, &$sta) {
 	$pct = ($partial = @$method) ? min(1, $avail / $total) : 1;
 	$count = $sum = 0;
 	
-	$q = db\q('SELECT stakeid,uid,request FROM r_stakes WHERE clubid=:clubid AND request<0 ORDER BY requestedOut', compact('clubid'));
+	$q = db\q('SELECT stakeid,stake,uid,request FROM r_stakes WHERE clubid=:clubid AND request<0 ORDER BY requestedOut', compact('clubid'));
   while ($row = $q->fetchAssoc()) {
 		extract($row);
 		$amount = round($pct * -$request, 2);
 		if ($amount > 0 and ($partial or $sum + $amount <= $avail)) {
 			$DBTX = db_transaction();
 			be\transfer('payment', $icA, r\acct($uid), $amount, t('redeem investment'), FOR_USD, ray('stake', 1));
-			db\update('r_stakes', ray('stakeid request', $stakeid, round($request + $amount, 2)), 'stakeid');
+      $stake = round($stake - $amount, 2);
+      $request = round($request + $amount, 2);
+      u\EXPECT($stake >= 0, 'negative stake');
+			db\update('r_stakes', compact(ray('stakeid stake request')), 'stakeid');
 			$count++;
 			$sum += $amount;
 		  unset($DBTX);

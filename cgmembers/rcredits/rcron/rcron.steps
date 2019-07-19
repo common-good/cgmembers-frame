@@ -159,7 +159,7 @@ function relations($relations) {return t\relations($relations);}
  *     BOTH invoices UnpaidInvoicesGetHandled
  *     MAKE joint AJointAccountNeedsRefilling
  *     MAKE monthly Setup
- *     TEST monthly CrumbDonationsAreMade
+ *     TEST monthly CrumbAndRoundupDonationsAreMade
  *     BOTH monthly CrumbsAreInvoiced
  *     MAKE recurs Setup
  *     TEST recurs ABrandNewRecurringPaymentCanBeCompleted
@@ -526,7 +526,7 @@ function these($thing, $list) {return t\these($thing, $list);}
  *     TEST gifts ANonmemberChoosesADonationToCG
  *     TEST invoices UnpaidInvoicesGetHandled
  *     TEST invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
- *     TEST monthly CrumbDonationsAreMade
+ *     TEST monthly CrumbAndRoundupDonationsAreMade
  *     TEST monthly CrumbsAreInvoiced
  *     TEST recurs ABrandNewRecurringPaymentCanBeCompleted
  *     TEST recurs ARecurringPaymentHappenedYesterday
@@ -601,7 +601,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE joint AJointAccountNeedsRefilling
  *     MAKE joint AJointAccountDoesNotNeedRefilling
  *     MAKE monthly PaperStatementWarningsAreSent
- *     MAKE monthly CrumbDonationsAreMade
+ *     MAKE monthly CrumbAndRoundupDonationsAreMade
  *     MAKE monthly CrumbsAreInvoiced
  *     MAKE notices AMemberGetsSomeNotices
  *     MAKE notices AMemberGetsSomeWeeklyNotices

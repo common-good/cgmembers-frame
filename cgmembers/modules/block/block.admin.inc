@@ -294,7 +294,6 @@ function block_admin_configure($form, &$form_state, $module, $delta) {
     '#tree' => TRUE,
   );
 
-  $theme_default = variable_get('theme_default', 'bartik');
   $admin_theme = variable_get('admin_theme');
   foreach (list_themes() as $key => $theme) {
     // Only display enabled themes
@@ -308,7 +307,7 @@ function block_admin_configure($form, &$form_state, $module, $delta) {
       // Use a meaningful title for the main site theme and administrative
       // theme.
       $theme_title = $theme->info['name'];
-      if ($key == $theme_default) {
+      if ($key == THEME) {
         $theme_title = t('!theme (default theme)', array('!theme' => $theme_title));
       }
       elseif ($admin_theme && $key == $admin_theme) {
@@ -320,7 +319,7 @@ function block_admin_configure($form, &$form_state, $module, $delta) {
         '#default_value' => !empty($region) && $region != -1 ? $region : NULL,
         '#empty_value' => BLOCK_REGION_NONE,
         '#options' => system_region_list($key, REGIONS_VISIBLE),
-        '#weight' => ($key == $theme_default ? 9 : 10),
+        '#weight' => ($key == THEME ? 9 : 10),
       );
     }
   }

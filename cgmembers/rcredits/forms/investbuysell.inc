@@ -11,31 +11,44 @@ use CG\Db as db;
  */
 function formInvestBuySell($form, &$sta, $args = '') {
   global $mya;
-  extract(just('vestid', $args));
-  if (!@$vestid) return w\go('/page-not-found');
-  $q = db\q('SELECT i.coid, i.clubid, i.types, COUNT(shid) AS `count`, SUM(shares) AS shares, SUM(pending) AS pending FROM r_investments i LEFT JOIN r_shares s ON s.vestid=i.vestid WHERE i.vestid=:vestid', compact('vestid'));
-  if ($res = $q->fetchAssoc()) {
-    extract($res);
-    $pending += 0; $shares += 0; // convert to numeric
-  } else $pending = $shares = 0; // no shares yet (but we do have coid)
   
-  $title = t('Change Club Investment #%vestid', compact('vestid'));
+  extract(just('vestid', $args));
+  
+  $q = db\q('SELECT i.coid, i.clubid, i.types, i.price, COUNT(shid) AS `count`, SUM(shares) AS shares, SUM(pending) AS pending FROM r_investments i LEFT JOIN r_shares s ON s.vestid=i.vestid WHERE i.vestid=:vestid', compact('vestid'));
+  if (!$res = $q->fetchAssoc()) return w\go('/page-not-found');
+
+  extract($res);
+
+  $equity = ($types[0] == 'D');
+  $pending += 0; $shares += 0; // convert to numeric
+  $clubqid = r\qid($clubid);
+  list ($what, $pendingLabel, $buyLabel, $sellLabel, $buyOrSell, $amtToBuy) = $equity // equity investment?
+  ? ray(t('shares in, Pending Sales, Buy Shares, Sell Shares, Buy or Sell, Shares to Buy'))
+  : ray(t('loan to, Pending Repayment Request, Lend More, Request Repayment, Lend or Reclaim, Amount to Lend'));
+  
+  $title = t('Buy or Sell Investment #%vestid', compact('vestid'));
   
   $subtext = t(<<< X
-  <p>Complete this form to increase or decrease the club's investment shares in %coName.</p>
+  <p>Complete this form to increase or decrease the club's %what %coName.</p>
   <p>Once you have finished all your club's planned selling and buying for this cycle, click <%a>Distribute Profits</a> here or on the main Investment page, to share the club's profits with club members and %PROJECT.</p>
 X
-    , 'coName _a', r\acct($coid)->fullName, atag('/invest/distribute'));
+    , 'what coName _a', $what, r\acct($coid)->fullName, atag('/invest/distribute'));
 
-  $ifSelling = $shares ? t('If you reduce your shares, it will take effect when the company pays for them.') : '';
-  $ifSellingMore = $pending ? t('  Whatever amount you sell here will be in addition to your current pending sales.') : '';
-  if ($shares) $selling = item(-$pending, t('Pending sales:'));
-  $buy = submi(t('Buy'), '', 'md');
-  $sell = $shares ? submi(t('Sell'), '', 'md') : NULL;
+  $ifSelling = $shares ? t('If you reduce your investment, it will take effect when the company pays the invoice.') : '';
+  $ifSellingMore = $pending ? t('  Whatever reduction you request here will be added to your current pending requests.') : '';
+  $amtTip = $equity ? [t('Number of Shares'), $ifSelling . $ifSellingMore] : [t('Amount')];
+
+  $selling = $shares 
+  ? item($equity ? -$pending : u\fmtAmt(-$pending), "$pendingLabel:") 
+  : NULL;
+  $buy = submi($buyLabel, '', 'md');
+  $sell = $shares ? submi($sellLabel, '', 'md') : NULL;
   $submit = fieldSet('submit2', compact('buy', 'sell'), ' ');
-  $ourShares = item($shares, t('Current shares:'));
-  $shares = textFld($shares ? t('Buy or sell:') : t('Shares to buy:'), [t('Number of shares'), $ifSelling . $ifSellingMore], required());
-  $old = hidFld(serialize(compact(ray('vestid coid clubid types count'))));
+  if ($equity) {
+    $ourShares = item(t('%shares (at %price)', 'shares price', number_format($shares), u\fmtAmt($price)), t('Current Shares:'));
+  } else $ourShares = item(u\fmtAmt($shares), t('Current Loan'));
+  $shares = textFld($shares ? "$buyOrSell:" : "$amtToBuy:", $amtTip, required());
+  $old = hidFld(serialize(compact(ray('vestid coid clubqid types count'))));
 
   return cgform(compact(ray('title subtext ourShares selling shares submit old')));
 }
@@ -48,15 +61,15 @@ function formInvestBuySell_validate($form, &$sta) {
 
 function formInvestBuySell_submit($form, &$sta) {
   extract(just('shares old', $sta['input']));
-  extract(just('vestid coid clubid types count', unserialize($old)));
+  extract(just('vestid coid clubqid types count', unserialize($old)));
   
-  $equity = (strpos($types, 'I') === FALSE);
+  $equity = ($types[0] == 'D');
   $type = $equity ? t('investment') : t('loan');
   $price = db\get('price', 'r_investments', compact('vestid'));
   $total = round($shares * $price, 2);
   $sharesDpy = number_format($shares, 0);
   $priceDpy = u\fmtAmt($price);
-  $clubA = r\acct($clubid);
+  $clubA = r\acct($clubqid);
   $coA = r\acct($coid);
   
   $DBTX = \db_transaction();
@@ -64,21 +77,21 @@ function formInvestBuySell_submit($form, &$sta) {
     list ($index, $subs) = be\transfer('payment', $clubA, $coA, $total, $type, FOR_USD, ray('investment', 1));
     $success = @$subs['success'];
     if ($equity) {
-      $extraMsg = $success ? t('You successfully purchased %amt shares of %co at %price.', 'amt co price', $sharesDpy, $coA->fullName, $priceDpy) : t('No shares were purchased.');
-    } else $extraMsg = $success ? t('You loaned %amt to %co.', 'amt co', u\fmtAmt($shares), $coA->fullName) : t('Nothing was loaned.');
+      $extraMsg = $success ? t('purchased shares', 'amt co price', $sharesDpy, $coA->fullName, $priceDpy) : t('No shares were purchased.');
+    } else $extraMsg = $success ? t('loaned', 'amount co', u\fmtAmt($shares), $coA->fullName) : t('Nothing was loaned.');
     if ($success) db\insert('r_shares', ray('vestid shares when', $vestid, $shares, now()), 'shid');
   } else { // sell
-//    $shid = db\min('shid', 'r_shares', compact('vestid'));
     $shid = db\insert('r_shares', ray('vestid shares pending when', $vestid, 0, -$shares, now()), 'shid');
     if ($equity) {    
       $for = t('redeeming investment: %amt shares at %price', 'amt price', $sharesDpy, $priceDpy);
-    } else $for = t('redeeming loan');
+    } else $for = t('loan repayment');
     list ($index, $subs) = be\invoice($clubA, $coA, $total, $for, FOR_USD, ray('investment shid', 1, $shid));
 //    if (@$count + 0 == 1) { // the usual case -- one shares record
-    $extraMsg = '';
+    $extraMsg = $equity ? t('investment sale pending') : t('repayment request pending');
+    $extraMsg = nn($subs['success']) ? tr($extraMsg, 'co', $coA->fullName) : '';
   }
   unset($DBTX);
 
   say("$index|$extraMsg", $subs, @$subs['success'] ? NULL : 'err');
-  return w\go("/invest/list/actual=1&clubid=$clubid");
+  return w\go("/invest/list/actual=1&clubqid=$clubqid");
 }

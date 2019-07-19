@@ -61,7 +61,20 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE gift AMemberMakesANewRecurringDonation
  *     MAKE gift ACompanyMakesARecurringDonation
  *     MAKE gift AMemberDonatesWithInsufficientFunds
+ *     MAKE invest AMemberJoinsTheInvestmentClub
+ *     MAKE invest AMemberCompanyJoinsTheInvestmentClub
+ *     MAKE invest AMemberBuysAStakeInTheClub
+ *     MAKE invest TheClubAddsAProposedInvestment
  *     MAKE invest MembersRateAProposedInvestment
+ *     MAKE invest TheClubBuysShares
+ *     MAKE invest TheClubSellsShares
+ *     MAKE invest TheClubSellsItsRemainingSharesInAnInvestment
+ *     MAKE invest MembersIncreaseAndDecreaseTheirStakes
+ *     MAKE invest AMemberTriesToDecreaseStakeBelowZero
+ *     MAKE invest AClubAdministratorHandlesRequestsToCashOut
+ *     MAKE invest TheInvestmentClubIssuesDividends
+ *     MAKE invest MembersRateAProposedLoan
+ *     MAKE invest TheClubMakesALoan
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
  *     MAKE membership AMemberSignsInForTheFirstTime
@@ -134,6 +147,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
  *     MAKE signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
  *     MAKE signup ANewbieRegistersWithADifferentLegalName
+ *     MAKE signup ANewbieRegistersFromElsewhere
  *     MAKE signup ANewbieRegistersWithNoCase
  *     MAKE signup AMemberRegistersBadEmail
  *     MAKE signup AMemberRegistersBadName
@@ -230,6 +244,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     TEST signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
  *     TEST signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
  *     TEST signup ANewbieRegistersWithADifferentLegalName
+ *     TEST signup ANewbieRegistersFromElsewhere
  *     TEST signup ANewbieRegistersWithNoCase
  *     MAKE signup AMemberRegistersAgain
  *     BOTH signup AMemberRegistersWithAnExistingCompany
@@ -256,6 +271,10 @@ function members($list) {return t\members($list);}
  *     TEST gift AMemberMakesARecurringDonation
  *     TEST gift AMemberMakesANewRecurringDonation
  *     TEST gift ACompanyMakesARecurringDonation
+ *     TEST invest AMemberBuysAStakeInTheClub
+ *     MAKE invest MembersIncreaseAndDecreaseTheirStakes
+ *     BOTH invest AClubAdministratorHandlesRequestsToCashOut
+ *     BOTH invest TheInvestmentClubIssuesDividends
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberApprovesAnInvoiceToATrustingCustomer
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
@@ -283,7 +302,15 @@ function transactions($list) {return t\transactions($list);}
  *     TEST bank AMemberMovesTooMuchToTheBank
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST flow AMemberOverdrawsWithNotEnoughToDrawOn
+ *     TEST invest AMemberBuysAStakeInTheClub
  *     TEST invest MembersRateAProposedInvestment
+ *     TEST invest TheClubBuysShares
+ *     TEST invest TheClubSellsShares
+ *     TEST invest TheClubSellsItsRemainingSharesInAnInvestment
+ *     TEST invest MembersIncreaseAndDecreaseTheirStakes
+ *     TEST invest TheInvestmentClubIssuesDividends
+ *     TEST invest MembersRateAProposedLoan
+ *     TEST invest TheClubMakesALoan
  *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
  *     TEST joint AMemberRequestsAJointAccount
  *     TEST joint AMemberRequestsTwoJoinsAtOnce
@@ -328,7 +355,7 @@ function weSayWithSubs($type, $index, $subs) {
     }
     //  $res = (@$msgs[$type] and array_search($wantMsg, $msgs[$type]) !== FALSE);
   }
-  ///  if (!@$res) debug(compact('wantMsg', 'msgs')); // + ['dmsgs'=>\drupal_get_messages(NULL, FALSE)]);
+///  if (!@$res) debug(compact('wantMsg', 'msgs')); // + ['dmsgs'=>\drupal_get_messages(NULL, FALSE)]);
   t\output("EXPECT: $wantMsg", 'output'); // this must come after array_search!
   return @$res;
 }
@@ -353,6 +380,11 @@ function weSayWithSubs($type, $index, $subs) {
  *     TEST gift AMemberMakesANewRecurringDonation
  *     TEST gift ACompanyMakesARecurringDonation
  *     TEST gift AMemberDonatesWithInsufficientFunds
+ *     TEST invest AMemberJoinsTheInvestmentClub
+ *     TEST invest AMemberCompanyJoinsTheInvestmentClub
+ *     TEST invest TheClubAddsAProposedInvestment
+ *     TEST invest AMemberTriesToDecreaseStakeBelowZero
+ *     TEST invest AClubAdministratorHandlesRequestsToCashOut
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
  *     TEST membership AMemberSignsInForTheFirstTime
@@ -378,6 +410,7 @@ function weSayWithSubs($type, $index, $subs) {
  *     TEST signup ANewbieRegistersInWesternMassachusetts
  *     TEST signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
  *     TEST signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
+ *     TEST signup ANewbieRegistersFromElsewhere
  *     TEST signup AMemberRegistersBadEmail
  *     TEST signup AMemberRegistersBadZip
  *     TEST signup AMemberRegistersWithACompanyWithNoRelation
@@ -398,6 +431,7 @@ function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
  *     TEST signup ANewbieRegistersInWesternMassachusetts
  *     TEST signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
  *     TEST signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
+ *     TEST signup ANewbieRegistersFromElsewhere
  */
 function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, $email, $subs);}
 
@@ -415,6 +449,8 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST food AMemberSignsInAndSeesLink
  *     TEST food AMemberMakesAFoodDonation
  *     TEST food AMemberMakesAFoodDonationWithoutAdequateFunds
+ *     TEST invest AMemberJoinsTheInvestmentClub
+ *     TEST invest AMemberCompanyJoinsTheInvestmentClub
  *     TEST membership AMemberSignsInForTheFirstTime
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     TEST paybutton AMemberSignsInWithUsernameOnTheMemberSite
@@ -434,6 +470,7 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST signup ANewbieRegistersInWesternMassachusetts
  *     TEST signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
  *     TEST signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
+ *     TEST signup ANewbieRegistersFromElsewhere
  *     TEST summary MembersAccountIsNotActive
  */
 function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
@@ -458,7 +495,18 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
  *     TEST custstatement ACompanyLooksAtACustomerStatement
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesANewRecurringDonation
+ *     TEST invest AMemberJoinsTheInvestmentClub
+ *     TEST invest AMemberCompanyJoinsTheInvestmentClub
+ *     TEST invest AnAdministratorViewsTheInvestmentPage
+ *     TEST invest TheClubAddsAProposedInvestment
  *     TEST invest MembersRateAProposedInvestment
+ *     TEST invest TheClubBuysShares
+ *     TEST invest TheClubSellsShares
+ *     TEST invest MembersIncreaseAndDecreaseTheirStakes
+ *     TEST invest AClubAdministratorHandlesRequestsToCashOut
+ *     TEST invest TheInvestmentClubIssuesDividends
+ *     TEST invest MembersRateAProposedLoan
+ *     TEST invest TheClubMakesALoan
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST joint AMemberRequestsAJointAccount
@@ -518,7 +566,13 @@ function with($content) {return weShow($content);}
 /**
  * without: (ARG)
  *
- * in: TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
+ * in: TEST invest MembersRateAProposedInvestment
+ *     TEST invest TheClubBuysShares
+ *     TEST invest AClubAdministratorHandlesRequestsToCashOut
+ *     TEST invest TheInvestmentClubIssuesDividends
+ *     TEST invest MembersRateAProposedLoan
+ *     TEST invest TheClubMakesALoan
+ *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     TEST relations MemberHasAnEmployer
  *     TEST relations MemberCompanyHasRelations
  *     TEST showrecurs AMemberStopsAnAutopayment
@@ -610,6 +664,10 @@ function relations($relations) {return t\relations($relations);}
  *     TEST download Setup
  *     MAKE flow Setup
  *     MAKE gift Setup
+ *     MAKE invest Setup
+ *     MAKE invest MembersIncreaseAndDecreaseTheirStakes
+ *     MAKE invest AClubAdministratorHandlesRequestsToCashOut
+ *     BOTH invest TheInvestmentClubIssuesDividends
  *     TEST invoice Setup
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberDeniesAnInvoice
@@ -657,7 +715,18 @@ function usd($list) {return t\usd($list);}
  *     MAKE food AMemberMakesAFoodDonationWithoutAdequateFunds
  *     MAKE gift AMemberDonates
  *     MAKE gift AMemberMakesANewRecurringDonation
+ *     MAKE invest AMemberJoinsTheInvestmentClub
+ *     MAKE invest AMemberCompanyJoinsTheInvestmentClub
+ *     MAKE invest AnAdministratorViewsTheInvestmentPage
+ *     MAKE invest TheClubAddsAProposedInvestment
  *     MAKE invest MembersRateAProposedInvestment
+ *     MAKE invest TheClubBuysShares
+ *     MAKE invest TheClubSellsShares
+ *     MAKE invest MembersIncreaseAndDecreaseTheirStakes
+ *     MAKE invest AClubAdministratorHandlesRequestsToCashOut
+ *     MAKE invest TheInvestmentClubIssuesDividends
+ *     MAKE invest MembersRateAProposedLoan
+ *     MAKE invest TheClubMakesALoan
  *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMember
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
@@ -738,6 +807,7 @@ function memberIsLoggedOut() {
  *     MAKE signup ANewbieVisitsTheRegistrationPageWithAUsedInvite
  *     MAKE signup ANewbieRegistersInWesternMassachusetts
  *     MAKE signup ANewbieRegistersWithADifferentLegalName
+ *     MAKE signup ANewbieRegistersFromElsewhere
  *     MAKE signup ANewbieRegistersWithNoCase
  *     MAKE signup AMemberRegistersBadEmail
  *     MAKE signup AMemberRegistersBadName
@@ -879,7 +949,7 @@ function gifts($gifts) {return t\gifts($gifts);}
 function weDownloadWith($name, $rows) {
   global $testOnly;
   global $testCSV, $testCSVname;
-  /// debug("weDownloadWith($name, rows) where rows=" . print_r($rows, true));
+
   $testCSVname = $name;
   $testCSV = [['test line']];
   if (@$testCSVname != $name) return t\output("$testCSVname <> $name");
@@ -888,14 +958,12 @@ function weDownloadWith($name, $rows) {
   $headers = array_values(array_shift($csv2));
   if (@$headers[0] == '#') $headers[0] = 't#';
   foreach ($csv2 as $csvRow) {
-    ///    debug(compact('headers', 'csvRow'));
     $csvRow = array_combine($headers, $csvRow); // add keys
-    /// if (!$row = array_shift($rows)) return t\output('extra row in CSV: ' . print_r($csvRow, 1));
+    if (!$row = array_shift($rows)) return t\output('extra row in CSV: ' . pr($csvRow));
     foreach ($row as $key => $value) {
-      ///    debug(compact('row','csvRow'));
       if (strpos($value, '%') !== FALSE) $value = t\lastMinuteSubs($value);
-      ///      if (!isset($csvRow[$key])) debug(compact('key', 'csvRow', 'value'));
-      /**/  if (!t\eq($csvValue = @$csvRow[$key], $value)) return t\output("key=$key csvValue<>expected value ($csvValue<>$value) csvRow:" . print_r($csvRow, 1));
+///      if (!isset($csvRow[$key])) debug(compact('key', 'csvRow', 'value'));
+      if (!t\eq($csvValue = @$csvRow[$key], $value)) return t\output("key=$key csvValue<>expected value ($csvValue<>$value) csvRow:" . pr($csvRow));
     }
   }
   return TRUE;
@@ -913,7 +981,7 @@ function withDownloadColumns($columns) {
   if (!is_array($testCSV) or empty($testCSV)) return FALSE;
   $csv2 = $testCSV; // don't alter this (just in case)
   $headers = array_values(array_shift($csv2));
-  /// debug(compact('headers','testCSV','columns'));
+///   debug(compact('headers','testCSV','columns'));
   foreach ($columns as $one) if (array_search($one['column'], $headers) === FALSE) return FALSE;
   return TRUE;
 }
@@ -1034,7 +1102,7 @@ function weRedirectTo($page) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $lastGo;
   $lastGo = preg_replace('/&tm=[0-9]+/', '', $lastGo); // ignore time, when redirecting to promo site
-  if (!$res = ($lastGo == $page)) t\output(compact('lastGo', 'page'));
+  if (!$res = ($lastGo == $page)) t\output('redirect mismatch: ' . pr(compact('lastGo', 'page')));
   return $res;
 }
 
@@ -1101,6 +1169,8 @@ function devices($list) {return t\devices($list);}
  *     MAKE custstatement Setup
  *     MAKE download Setup
  *     TEST gift AMemberDonatesWithInsufficientFunds
+ *     TEST invest TheClubSellsShares
+ *     TEST invest TheClubSellsItsRemainingSharesInAnInvestment
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
@@ -1194,6 +1264,7 @@ function memberIsLoggedIn($id) {
  *     MAKE signup ANewbieRegistersInWesternMassachusetts
  *     MAKE signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
  *     MAKE signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
+ *     MAKE signup ANewbieRegistersFromElsewhere
  */
 function nextRandomCodeIs($code) {global $nextCode; return $nextCode = $code;}
 
@@ -1496,7 +1567,19 @@ function weScripWithSubs($script, $args = []) {
  *     TEST gift AMemberMakesARecurringDonation
  *     BOTH gift AMemberMakesANewRecurringDonation
  *     TEST gift AMemberDonatesWithInsufficientFunds
+ *     TEST invest AMemberJoinsTheInvestmentClub
+ *     BOTH invest AMemberBuysAStakeInTheClub
+ *     TEST invest TheClubAddsAProposedInvestment
  *     BOTH invest MembersRateAProposedInvestment
+ *     BOTH invest TheClubBuysShares
+ *     BOTH invest TheClubSellsShares
+ *     BOTH invest TheClubSellsItsRemainingSharesInAnInvestment
+ *     BOTH invest MembersIncreaseAndDecreaseTheirStakes
+ *     BOTH invest AMemberTriesToDecreaseStakeBelowZero
+ *     BOTH invest AClubAdministratorHandlesRequestsToCashOut
+ *     BOTH invest TheInvestmentClubIssuesDividends
+ *     BOTH invest MembersRateAProposedLoan
+ *     BOTH invest TheClubMakesALoan
  *     MAKE preferences Setup
  *     MAKE showrecurs Setup
  *     TEST showrecurs AMemberStopsAnAutopayment
@@ -1630,3 +1713,13 @@ function memberIsUnconfirmed($id) {
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  */
 function countIs($what, $count) {return t\count($what, $count);}
+
+/**
+ * transaction:
+ *
+ * in: 
+ */
+function transaction() {
+  global $testOnly;
+  todo;
+}

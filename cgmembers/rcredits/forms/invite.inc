@@ -19,8 +19,6 @@ function formInvite($form, &$sta, $args = '') {
   $nearly = ($mya->admin or $mya->can(B_MEMBER)) ?: (@$stepsDone->sign and @$stepsDone->donate);
   
   $title = t('Invite Someone to %PROJECT');
-  $_a1 = w\atagB('/community/invite/waiting');
-  $_a1 = r\acct() ? t('<%a1>People waiting to be invited</a>', compact('_a1')) : '';
   $_a2 = w\atagB('/community/invite/invited-whom');
   $_a2 = r\acct() ? t('<%a2>Who you have invited</a>', compact('_a2')) : '';
   $where = r\location($mya->cttyA); // currently UNUSED
@@ -47,7 +45,7 @@ function formInvite($form, &$sta, $args = '') {
   
   $subtext2 = $mya->cttyRewardy ? t('<p>Get a $%R_HELPER_BONUS reward for each %friend you invite, who signs up!</p>', compact('friend')) : '';
   $subtext2 .= t(<<<EOF
-<p>Invite <b>only people you trust</b> who live, shop, or work in your community. You may need to help or nudge the people you invite. %a2 %a1</p>
+<p>Invite <b>only people you trust</b> who live, shop, or work in your community. You may need to help or nudge the people you invite. %a2</p>
   <br>
   <p>Here are three different ways to invite someone:</p>
     <ul>
@@ -56,7 +54,7 @@ function formInvite($form, &$sta, $args = '') {
       <li><b><%aMailInvites>Ask us</a></b> to mail you some promo cards at no charge.</li>
     </ul>
 EOF
-  , compact(ray('_a1 _a2 _size where _aMailInvites _inviteLink inviteCode friend')));
+  , compact(ray('_a2 _size where _aMailInvites _inviteLink inviteCode friend')));
 //  (Later, you will need to confirm you know and trust them.)
   $subtext = !@$nearly ? $subtext1 : ($subtext2 . $warning);
 //  $contact = textFld(t('Email or Cell:'), t('An email address or cell number for the person you want to invite'), required());

@@ -73,7 +73,7 @@ class Acct {
     foreach (ray($co ? 'proxies connect ssn' : 'company relations') as $k) unset($stepsDone[$k]);
     $stepsDone['food'] = TRUE; // omit this step unless signing up through Food Fund promo (set FALSE in signup.inc)
 
-    if (empty($uid) and empty($region)) $region = empty($zip) ? -r\region($country, $state, $zip) : -r\uidRegion($community);
+    if (empty($region)) $region = empty($zip) ? -r\region($country, $state, $zip) : -r\uidRegion($community);
     if (empty($uid)) {
       $record = compact('name');
     } else {
@@ -165,16 +165,11 @@ class Acct {
 
     // The following fields are always only for the current user
     switch ($field) {
-    case 'balance':  // special case, it's the same in both
-    case 'o_balance':
-      return db\get('balance', 'users', 'uid=:id', ['id' => $a->id]) /*+
-                                                                       $a->getPendingDeposits() - $a->getApprovedInvoices()*/;
-    case 'lastTx':
-      return $a->lastTx();
-    case 'isCanonic':
-      return $a->id > 0 and $a->id < CANONIC_ACCTS;
-    default:
-      break;  // fall through
+      case 'balance':  // special case, it's the same in both
+      case 'o_balance': return db\get('balance', 'users', 'uid=:id', ['id' => $a->id]);
+      case 'lastTx': return $a->lastTx();
+      case 'isCanonic': return ($a->id > 0 and $a->id < CANONIC_ACCTS);
+      default: break;  // fall through
     }
       
     if (u\starts($field, 'o_')) { // ignore joinedness of the account, if it is joint ("own" account)
@@ -188,7 +183,7 @@ class Acct {
     }
 
     // From here down, everything should be for "own" account
-    $nick = $a->getNick($field);
+    $nick = $a->getNick($field); // modifies $field and sets nick to 'can' for flag bits
     if ($nick == 'can') return $a->can(u\consta('b', $field));
     if ($nick == 'rel') return $a->proSe ? NULL : $a->relFld($field);
     if ($nick == 'coy') return $a->co ? $a->coFld($field) : NULL;
@@ -196,8 +191,6 @@ class Acct {
     
     if ($field == 'mainQid') return $a->qo->mainQid;
     if ($field == 'isAdmin2') return (bool) ($a->agentA->flags & u\bit(B_ADMIN2)); // not ->can() included by cAdmin etc. (see note in can())
-    //    if ($field == 'email') return strpos($a->mail, '@') ? $a->mail : u\decry('P', $a->mail);
-    //    if ($field == 'phone') return u\starts($ph = @self::$rs[$a->id]->phone, '+') ? $ph : u\decry('P', $ph);
     if ($field == 'email') return u\decryIf('P', @self::$rs[$a->id]->email);
     if ($field == 'phone') return u\decryIf('P', @self::$rs[$a->id]->phone);
     if ($field == 'phoneDash') return u\fmtPhone($a->phone, '-');
@@ -287,7 +280,7 @@ class Acct {
     $a = $this;
     foreach (ray('data secure vsecure') as $k) {
       if ($a->special($field, strtoupper($k))) {
-///        u\EXPECT(is_array($a->$k) or !$a->$k, 'special field not ray: ' . print_r($a->$k, 1) . ' isarray:' . is_array($a->$k));
+///        u\EXPECT(is_array($a->$k) or !$a->$k, 'special field not ray: ' . pr($a->$k) . ' isarray:' . is_array($a->$k));
         //        if ($set = $a->$k ?: []) u\preray($set, self::$rs[$a->id]); // cache the special field
         $set = $a->$k ?: []; // special field $k gets cached by call to $a->$k
         $result = @$set[$field];
@@ -1196,6 +1189,7 @@ EOF;
       if ($password == @$pass) return ($a->admin or now() < @$expires) ?: !($err = 'pass expired');
     }
 
+    if (empty(strlen($a->$passFieldName))) return !$err = 'password required';
     require_once DRUPAL_ROOT . '/includes/password.inc';
     $hash = \_password_crypt('sha512', $password, $a->$passFieldName);
     return ($hash and $a->$passFieldName == $hash) ?: (!$err = 'bad login');
@@ -1853,7 +1847,7 @@ X;
     $json = json_encode($xml);
     $ssnData = json_decode($json, TRUE);
     if (!is_array($d = $ssnData['searchResults']) or $ssnData['ResultCount'] + 0 <= 0) { // 0 for tests, <=0 for failure
-/**/    return $a->ssnErr(t('No SSN data available: ') . print_r($ssnData0, 1));
+      return $a->ssnErr(t('No SSN data available: ') . pr($ssnData0));
     }
     unset($ssnData['searchResults']['ssn']); // has first 5 digits of SSN -- don't store it
     $a->update(compact('ssnData'));

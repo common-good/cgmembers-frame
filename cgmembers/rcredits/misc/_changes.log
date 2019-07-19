@@ -1,3 +1,25 @@
+2019-07-19 feature/invest
+. added sweep function to cron, to credit CG with roundups and crumbs
+. finished investment club software (first pass), with extensive tests
+. replaced many calls to print_r with pr(), to avoid having to ignore those lines when updating
+. added some helpful debugging tools, including identification of non-array field in forms.inc
+. minor simplifications to menu.inc and path.inc
+. bug fix: sometime SSNs were getting emailed to admin and recorded in logs
+. expanded db\get functionality to handle multiple calculated fields
+. crucial bug fix: bad phone number on first signup page was preventing user from signing up
+
+2019-07-12
+. many bug fixes and tests toward solidifying the investment club software
+. adapted db\del to handle non-numeric keys
+. adapted testing to handle periodic cron calls better
+. adapted t\verifyRecord to show specific differences between expected and actual record (yay!)
+. adapted u\SUBS to handle users table identifiers with mixed case
+. created an SQL query box on community data page, for admins
+. investment club admins are now identified by the relationship, not by a flag bit
+. fixed display bugs on bank connection page
+. fixed bug in demographics report
+. cron is now prevented from running a periodic routine twice in an hour (other than the 5-minute one)
+
 2019-07-08 feature/verification-fix
 . fixed bug the combined some new bank transfer requests into a verification request
 . fixed bug that assigned outgoing bank code to all not-yet-completed incoming transfer requests

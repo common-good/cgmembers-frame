@@ -13,7 +13,7 @@ function formInvestList($form, &$sta, $args = '') {
   global $mya;
   extract(just('actual clubqid', $args));
   
-  if (!$clubqid or !$clubA = r\acct($clubqid) or !$clubA->iclub) return w\go('/invest', t('not a club'));;
+  if (!@$clubqid or !$clubA = r\acct($clubqid) or !$clubA->iclub) return w\go('/invest', t('not a club'));;
   $clubid = $clubA->id;
 
   list ($actualInv, $proposedInv) = [t('Actual Investments'), t('Proposed Investments')];
@@ -24,12 +24,12 @@ function formInvestList($form, &$sta, $args = '') {
   $subtext = t('(click to see %lnk instead)<br>Choose an investment to see details%ratable.', '_lnk ratable', $lnk, @$actual ? '' : t(' or to rate it'));
   
   $sql = <<< X
-    SELECT i.vestid, u.fullName, i.investment, i.types, i.return * 100 AS `return`, i.soundness AS sound, 
+    SELECT DISTINCT i.vestid, u.fullName, i.investment, i.types, i.return * 100 AS `return`, i.soundness AS sound, 
       AVG(r.good) AS good, SUM(s.shares*i.price) AS value
     FROM r_investments i 
     LEFT JOIN users u ON u.uid=i.coid 
-    LEFT JOIN r_ratings r ON r.vestid=i.vestid 
-    LEFT JOIN r_shares s ON s.vestid=i.vestid
+    LEFT JOIN r_ratings r USING(vestid)
+    LEFT JOIN r_shares s USING(vestid)
     WHERE s.shid IS $staked AND i.clubid=:clubid
     GROUP BY i.vestid
     ORDER BY u.fullName

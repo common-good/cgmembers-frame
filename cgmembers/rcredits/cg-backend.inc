@@ -50,7 +50,7 @@ function getTxs($uids, $starting=NULL, $ending=NULL) {
     ORDER BY t.created, t.xid, ABS(e.id), name
 EOF;
   $results = db\q($sql, compact('uids'));
-/**/  u\EXPECT($results, "Failure reading transactions for user " . print_r($uids, true));
+  u\EXPECT($results, "Failure reading transactions for user " . pr($uids));
   $lastXid = 0;  // no xid should ever be 0
   $txs = [];  // an array of arrays of entries
   $entries = [];
@@ -369,8 +369,10 @@ function payInvoice($nvid) {
     if ($res) {
       extract($res); // shid vestid
       */
-    if ($shid) { // record the sale
-      db\update('r_shares', ray('shid shares pending when', $shid, -$amount, 0, now()), 'shid');
+    if ($shid and $res = db\get('vestid,price', 'r_shares JOIN r_investments USING(vestid)', compact('shid'))) { // record sale
+      extract($res);
+      db\update('r_shares', ray('shid shares pending when', $shid, -round($amount / $price), 0, now()), 'shid');
+      if (db\sum('shares', 'r_shares', compact('vestid')) <= 0) db\q('UPDATE r_shares SET sold=:NOW WHERE vestid=:vestid', compact('vestid'));
     } else r\tellCo(t('Invoice payment marked as "for investment (repayment)" has no corresponding SELL request in shares table.'), $inv, $payeeA);
   }
   unset($DBTX);

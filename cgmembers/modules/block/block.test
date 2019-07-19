@@ -422,7 +422,7 @@ class NewDefaultThemeBlocks extends DrupalWebTestCase {
 
     // Ensure no other theme's blocks are in the block table yet.
     $themes = array();
-    $themes['default'] = variable_get('theme_default', 'bartik');
+    $themes['default'] = THEME;
     if ($admin_theme = variable_get('admin_theme')) {
       $themes['admin'] = $admin_theme;
     }
@@ -862,7 +862,7 @@ class BlockInvalidRegionTestCase extends DrupalWebTestCase {
       ->key(array(
         'module' => 'block_test',
         'delta' => 'test_html_id',
-        'theme' => variable_get('theme_default', 'stark'),
+        'theme' => THEME,
       ))
       ->fields(array(
         'status' => 1,
@@ -886,7 +886,7 @@ class BlockInvalidRegionTestCase extends DrupalWebTestCase {
       ->key(array(
         'module' => 'block_test',
         'delta' => 'test_html_id',
-        'theme' => variable_get('theme_default', 'stark'),
+        'theme' => THEME,
       ))
       ->fields(array(
         'region' => 'invalid_region',
