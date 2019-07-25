@@ -26,8 +26,8 @@ Scenario: A member signs in for the first time
   | uid  | fullName | email   | country | zip | state | city    | flags     | tenure | risks | helper |*
   | .AAA | Dee Four | d@      | US      | 01002      | MA    | Amherst | confirmed |     25 | rents | .ZZA   |
   And we email "verify" to member "d@" with subs:
-  | fullName | name    | quid    | site      | code      |*
-  | Dee Four | deefour | NEW.AAA | %BASE_URL | WHATEVER |
+  | fullName | name    | quid   | site      | code      |*
+  | Dee Four | deefour | NEWAAA | %BASE_URL | WHATEVER |
   And member ".AAA" one-time password is set to "WHATEVER"
   And member ".AAA" is logged in
   And we show "Verify Your Email Address"
@@ -88,10 +88,11 @@ Scenario: A member signs in for the first time
   When member ".AAA" completes form "community/backing" with values:
   | amtChoice | signedBy |*
   |       100 | Dee Four |
+
   Then we say "status": "setup complete|individual approval|join thanks"
   And we tell ".AAA" CO "New Member (Dee Four)" with subs:
-  | fullName | quid | status |*
-  | Dee Four | .AAA | member |
+  | quid | status |*
+  | .AAA | member |
 
   When member ".AAA" visits page "summary"
   Then we show "Account Summary"

@@ -446,12 +446,10 @@ function menu_set_item($path, $router_item) {
  */
 function menu_get_item($path = NULL, $router_item = NULL) {
   $router_items = &drupal_static(__FUNCTION__);
-  if (!isset($path)) {
-    $path = $_GET['q'];
-  }
-  if (isset($router_item)) {
-    $router_items[$path] = $router_item;
-  }
+  if (!isset($path)) $path = drupal_path_initialize();
+
+  if (isset($router_item)) $router_items[$path] = $router_item;
+
   if (!isset($router_items[$path])) {
     // Rebuild if we know it's needed, or if the menu masks are missing which
     // occurs rarely, likely due to a race condition of multiple rebuilds.
@@ -505,25 +503,17 @@ function menu_execute_active_handler($path = NULL, $deliver = TRUE) {
   // Allow other modules to change the site status but not the path because that
   // would not change the global variable. hook_url_inbound_alter() can be used
   // to change the path. Code later will not use the $read_only_path variable.
-  $read_only_path = !empty($path) ? $path : $_GET['q'];
+  $read_only_path = !empty($path) ? $path : drupal_path_initialize();
   drupal_alter('menu_site_status', $page_callback_result, $read_only_path);
 
   // Only continue if the site status is not set.
   if ($page_callback_result == MENU_SITE_ONLINE) {
     if ($router_item = menu_get_item($path)) {
       if ($router_item['access']) {
-        if ($router_item['include_file']) {
-          require_once DRUPAL_ROOT . '/' . $router_item['include_file'];
-        }
+        if ($router_item['include_file']) require_once DRUPAL_ROOT . '/' . $router_item['include_file'];
         $page_callback_result = call_user_func_array($router_item['page_callback'], $router_item['page_arguments']);
-      }
-      else {
-        $page_callback_result = MENU_ACCESS_DENIED;
-      }
-    }
-    else {
-      $page_callback_result = MENU_NOT_FOUND;
-    }
+      } else $page_callback_result = MENU_ACCESS_DENIED;
+    } else $page_callback_result = MENU_NOT_FOUND;
   }
 
   // Deliver the result of the page callback to the browser, or if requested,
@@ -531,10 +521,8 @@ function menu_execute_active_handler($path = NULL, $deliver = TRUE) {
   if ($deliver) {
     $default_delivery_callback = (isset($router_item) && $router_item) ? $router_item['delivery_callback'] : NULL;
     drupal_deliver_page($page_callback_result, $default_delivery_callback);
-  }
-  else {
-    return $page_callback_result;
-  }
+  } else  return $page_callback_result;
+
 }
 
 /**
@@ -626,17 +614,14 @@ function _menu_check_access(&$item, $map) {
   // Check for a TRUE or FALSE value.
   if (is_numeric($callback)) {
     $item['access'] = (bool) $callback;
-  }
-  else {
+  } else {
     $arguments = menu_unserialize($item['access_arguments'], $map);
     // As call_user_func_array is quite slow and user_access is a very common
     // callback, it is worth making a special case for it.
     if ($callback == 'user_access') {
       $item['access'] = TRUE; // CG 2018-02-22 (count($arguments) == 1) ? user_access($arguments[0]) : user_access($arguments[0], $arguments[1]);
-    }
-    elseif (function_exists($callback)) {
-      $item['access'] = call_user_func_array($callback, $arguments);
-    }
+    } elseif (function_exists($callback)) $item['access'] = call_user_func_array($callback, $arguments);
+
   }
 }
 
@@ -2729,14 +2714,11 @@ function menu_rebuild() {
 
     if (defined('MAINTENANCE_MODE')) {
       setV('menu_rebuild_needed', TRUE);
-    }
-    else {
-      delV('menu_rebuild_needed');
-    }
-  }
-  catch (Exception $e) {
-/**/ echo 'menu error: '; debug($e);    
+    } else delV('menu_rebuild_needed');
+
+  } catch (Exception $e) {
     $transaction->rollback();
+/**/ debug('menu error: ' . pr($e));
     watchdog_exception('menu', $e);
   }
 

@@ -72,14 +72,14 @@ function rcredits_exception_handler($e) {
     $line = @$line ?: '';
     $file = basename(@$file);
     $function = basename(@$function);
-/**/ $args = preg_replace('/Array\s+\(/sm', 'Array', print_r(@$args, 1)); // keep
+    $args = preg_replace('/Array\s+\(/sm', 'Array', pr(@$args));
     $args = substr($args, 6); // discard the gratuitous "Array" at the start
     $args = preg_replace('/$\s*\)$\s$/sm', '', $args);
     $args = '    ' . str_replace("\n", "<br>\n    ", $args);
     $args = str_replace('  ', ' &nbsp;', $args);
     $trace_msg .= "<br>\n- $line in $file, calling $function() with:<br>\n$args";
   }
-///    $trace = str_replace('<!--', '<! --', print_r($trace, 1));
+///    $trace = str_replace('<!--', '<! --', pr($trace));
 //    $trace_msg .= "<!--$trace-->"; // source will contain the whole trace
   $msg = '<b>Exception:</b>' . R_SYS_ERR. "<br>\n($msg)<br>\n- $line0 ($file0)" . $trace_msg;
   if (isPRODUCTION) {
@@ -185,7 +185,7 @@ function x($xid, $mya = '') {f('r.x', $xid, $mya);} // return a transaction obje
 /**/ function ctty($id) {if (!$id or !a($id)) die(trace()); return a(a($id)->community);}
 /**/ function flog($s = '') { // log to file and return log file name
   $fileName = LOG_DIR . date('Ym') . '.log'; // new log file every month
-/**/ if (func_num_args()) file_put_contents($fileName, print_r($s, 1) . "\n", FILE_APPEND);
+  if (func_num_args()) file_put_contents($fileName, pr($s) . "\n", FILE_APPEND);
   return $fileName;
 }
 /**/ function lug($s) {u\loga('debug', $s);}

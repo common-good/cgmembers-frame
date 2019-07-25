@@ -79,7 +79,7 @@ $GLOBALS['tStrings'] += array(
  *   message: an error message or help message to display on the device; or not set
  */
 function pos($args = FALSE) {
-  ///  debug("pos(" . print_r($args, true) . ")");
+///  debug("pos(" . pr($args) . ")");
   global $channel; $channel = TX_POS;
   global $scanned; $scanned = true;
   global $mya, $boxUser;
@@ -89,9 +89,9 @@ function pos($args = FALSE) {
   if (is_string($args)) $args = urlq2ray($args); // convert from query string to array
 //  if (!$args) $args = t\POST(); else t\POST($args);
   if ($args) f('t.POST', $args); else $args = $_POST;
+  $args0 = $args;
   u\loga('in', $args);
 //  $args = u\sanitizeInput($args0 = $args);
-  $args = $args0 = $args;
   extract(just('op device agent member version', $args));
   $args['version'] = (int) @$version;
   
@@ -623,7 +623,7 @@ function handleAppMsg($data0) {
           foreach ($data as $k => $v) if (u\starts($v, '{') and $ray = json_decode($v)) $data[$v] = $ray;
         } */
       } else $data = $data0;
-/**/    $dpy = print_r($data, 1);
+        $dpy = pr($data);
     } else list ($data, $dpy) = [$data0, str_replace("'", "\\'", str_replace('\\"', '"', $data0))];
     r\tellAdmin(t('got App Data'), ray('who get zdata', $mya->fullName, $get, $dpy));
     $appData[$get ?: '!report'] = $data;

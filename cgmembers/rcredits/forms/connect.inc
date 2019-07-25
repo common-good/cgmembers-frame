@@ -69,7 +69,7 @@ function formConnect_validate($form, &$sta) {
 
   foreach (ray('target:,achMin:,saveWeekly:>=0') as $k => $v) { // and savingsAdd someday 
     if (u\test() and !isset($sta['input'][$k])) $sta['input'][$k] = 0; // empty makes tests fail
-    if ($err = amtErr($k, $sta, $v)) return sayFieldErr($err, $k);
+    if ($err = amtErr($k, $sta, $v) and @$refills) return sayFieldErr($err, $k); // fix the data even if invisible and irrelevant
     $$k = $sta['input'][$k];
   } // must be before return because params are always present and must have "$" removed by amtErr()
 

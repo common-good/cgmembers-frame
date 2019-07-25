@@ -367,7 +367,7 @@ function prefixKeys($prefix, $ray, $noArray = FALSE, $suffix = '') {
 //  EXPECT(compact('prefix', 'ray'), 'string array');
   if ($prefix == '') return $ray;
   $newRay = [];
-/**/ foreach ($ray as $k => $v) $newRay[$prefix.$k.$suffix] = ($noArray and is_array($v)) ? print_r($v, 1) : $v;
+  foreach ($ray as $k => $v) $newRay[$prefix.$k.$suffix] = ($noArray and is_array($v)) ? pr($v) : $v;
   return $newRay;
 }
 
@@ -488,7 +488,7 @@ function randomInt($len = NULL) {
  * @return string: the string with constant names replaced by their values
  */
 function SUBS($string, $prefix = ':', $flagField = 'flags') {
-  if ($prefix == ':') $string = preg_replace("/([a-z]+[0-9]?\.)?{$prefix}IS_([A-Z0-9_]*)/ms", "($1$flagField&(1<<:B_$2)<>0)", $string); // only for queries
+  if ($prefix == ':') $string = preg_replace("/([A-za-z]+[0-9]?\.)?{$prefix}IS_([A-Z0-9_]*)/ms", "($1$flagField&(1<<:B_$2)<>0)", $string); // only for queries
 //  $string = preg_replace("/\\{$prefix}IS_([A-Z0-9_]*)/ms", "($flagField&(1<<:B_$1))", $string);
   $subs = constantSubs($string, $prefix);
   $subs[':NOW'] = now(); // use current time (hypothetical time when testing)
@@ -535,7 +535,7 @@ function expect1($arg, $value, $type, $ret) {
 //  static $ecnt; $ecnt = @$ecnt + 1; u\EXPECT($ecnt < 10000, 'loop');
 //  EXPECT(compact(ray('arg type')), 'var string'); // can't do this because infinite recursion
 
-/**/ $msg = "Expected \$$arg ('" . print_r($value, 1) . "') to be type '$type'."; // standard err message (keep this)
+  $msg = "Expected \$$arg ('" . pr($value) . "') to be type '$type'."; // standard err message (keep this)
   if (strpos($type, '|')) {
     foreach (explode('|', $type) as $one) if (expect1($arg, $value, $one, TRUE) == '') return '';
     EXPECT(FALSE, $msg, $ret);
@@ -617,7 +617,7 @@ function emailTag($email = NULL, $subject = '', $body = '', $name = '', $extra =
 
 function seeAssoc($info) {
   $result = '';
-/**/ foreach ($info as $key => $value) $result .= "<b>$key</b>: " . print_r($value, 1) . "<br>\n"; // keep
+  foreach ($info as $key => $value) $result .= "<b>$key</b>: " . pr($value) . "<br>\n"; // keep
   return "\n<br>$result";
 }
 
@@ -844,7 +844,7 @@ function csv($line, $delimiter = ',') {
  */
 function randomString($len = 16, $choices = '') {
   global $nextCode;
-  if (u\test() and @$nextCode) return $nextCode;
+  if (u\test() and @$nextCode and in($choices, ' lower upper word')) return $nextCode;
 
   $lower = 'abcdefghijklmnopqrstuvwxyz';
   $upper = strtoupper($lower);
@@ -869,6 +869,7 @@ function randomString($len = 16, $choices = '') {
  */
 function badName(&$name) {
   $name = trim(preg_replace('/ +/', ' ', $name));
+//  $name = preg_replace('/[\x00-\x1F\x7F-\xA0\xAD]/u', '', $name);
   if ($name and !ctype_print($name)) {
     r\tellAdmin('bad char', ray('name trace', bin2hex($name), trace()));
     return 'illegal char';
@@ -1018,7 +1019,7 @@ function trimAll(&$ray) {
 function deb($arg = '') {
   global $counterI;
   $msgCount = count(@$_SESSION['messages']['status'] ?: []);
-/**/ log(($counterI = @$counterI + 1) . " ($msgCount messages): " . print_r($arg, 1), 'debug'); // keep
+  log(($counterI = @$counterI + 1) . " ($msgCount messages): " . pr($arg), 'debug');
 }
 
 /**
@@ -1102,8 +1103,8 @@ function showCaller($skip = 0) {
   for ($i = 0; $i <= $skip; $i++) array_shift($trace); // discard THIS call
   $caller = (object) array_shift($trace); $file = basename(@$caller->file);
   $precaller = (object) array_shift($trace); $prefile = basename(@$precaller->file);
-/**/ $args = print_r(@$caller->args, 1);
-/**/ $preargs = print_r(@$precaller->args, 1);
+  $args = pr(@$caller->args);
+  $preargs = pr(@$precaller->args);
   return " called $caller->function($args) ($caller->line in $file), from $precaller->function($preargs) ($precaller->line in $file)\n";
 }
 
@@ -1415,6 +1416,7 @@ function fmtTime($time = NULL) {return strtolower(strftime('%I:%M%p', nn($time, 
 function lastCall($far = 4) {$back = debug_backtrace(); return array_slice($back, 1, $far);}
 function digits(&$n) {return $n = preg_replace('/\D/', '', @$n);}
 function monthDay1($time = NULL) {return strtotime(strftime('1%b%Y', nn($time, now())));}
+  function mdt1($time = NULL) {return monthDay1($time);}
 function monthDif($dt2, $dt1) {return (date('Y', $dt2) - date('Y', $dt1)) * 12 + (date('m', $dt2) - date('m', $dt1));}
 function prefix($prefix, &$var) {$var = $prefix . $var;}
 function preray($prefix, &$r0) {u\EXPECT(is_array($prefix) and (is_array($r0) or is_object($r0)), 'badray');$r = $prefix + (array) $r0; $r0 = is_object($r0) ? (object) $r : $r;}

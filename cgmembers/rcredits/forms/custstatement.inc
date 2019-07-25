@@ -138,7 +138,7 @@ function getCustTxs($aUids, $bUids, $starting, $ending) {
 X;
 
   $results = db\q($sql, ['aUids' => $aUids, 'bUids' => $bUids]);
-/**/  u\EXPECT($results, "Failure reading transactions between users " . print_r($aUids, true) . " and " . print_r($bUids, true));
+  u\EXPECT($results, "Failure reading transactions between users " . pr($aUids) . " and " . pr($bUids));
 
   $txs = [];  // an array of arrays of entries
   $entries = [];

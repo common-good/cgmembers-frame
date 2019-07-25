@@ -1,4 +1,7 @@
 <?php
+use CG as r;
+use CG\Util as u;
+use CG\Db as db;
 
 /**/ if (preg_match('/msie [1-7][^0]/i', @$_SERVER["HTTP_USER_AGENT"])) die("\n\n\n" . t('<h2>We apologize</h2><p>The %PROJECT site does not work with your (very old) browser.</p>')); // avoid some nasty XSS holes in MSIE < 8
 
@@ -7,52 +10,16 @@
  * Functions that need to be loaded on every request.
  */
 
-/**
- * The current system version.
- */
-define('VERSION', '7.34');
-
-/**
- * Core API compatibility.
- */
-define('DRUPAL_CORE_COMPATIBILITY', '7.x');
-
-/**
- * Minimum supported version of PHP.
- */
-define('DRUPAL_MINIMUM_PHP', '5.2.4');
-
-/**
- * Minimum recommended value of PHP memory_limit.
- */
-define('DRUPAL_MINIMUM_PHP_MEMORY_LIMIT', '32M');
-
-/**
- * Error reporting level: display no errors.
- */
-define('ERROR_REPORTING_HIDE', 0);
-
-/**
- * Error reporting level: display errors and warnings.
- */
-define('ERROR_REPORTING_DISPLAY_SOME', 1);
-
-/**
- * Error reporting level: display all messages.
- */
-define('ERROR_REPORTING_DISPLAY_ALL', 2);
-
-/**
- * Indicates that the item should never be removed unless explicitly selected.
- *
- * The item may be removed using cache_clear_all() with a cache ID.
- */
-define('CACHE_PERMANENT', 0);
-
-/**
- * Indicates that the item should be removed at the next general cache wipe.
- */
-define('CACHE_TEMPORARY', -1);
+define('VERSION', '7.34'); // The current system version.
+define('THEME', 'rcredits'); // The only theme we use.
+define('DRUPAL_CORE_COMPATIBILITY', '7.x'); // Core API compatibility.
+define('DRUPAL_MINIMUM_PHP', '5.2.4'); // Minimum supported version of PHP.
+define('DRUPAL_MINIMUM_PHP_MEMORY_LIMIT', '32M'); // Minimum recommended value of PHP memory_limit.
+define('ERROR_REPORTING_HIDE', 0); // Error reporting level: display no errors.
+define('ERROR_REPORTING_DISPLAY_SOME', 1); // Error reporting level: display errors and warnings.
+define('ERROR_REPORTING_DISPLAY_ALL', 2); // Error reporting level: display all messages.
+define('CACHE_PERMANENT', 0); // Indicates that the item should never be removed unless explicitly selected. The item may be removed using cache_clear_all() with a cache ID.
+define('CACHE_TEMPORARY', -1); // Indicates that the item should be removed at the next general cache wipe.
 
 /**
  * @defgroup logging_severity_levels Logging severity levels
@@ -795,8 +762,10 @@ function variable_get($nm, $dft = NULL) {return getV($nm, $dft);} // for legacy 
  */
 function setV($name, $value) {
   global $conf;
+  require_once __DIR__ . '/cg-db.inc';
 
-  db_merge('variable')->key(array('name' => $name))->fields(array('value' => serialize($value)))->execute();
+  db\updateOrInsert('variable', ray('name value', $name, serialize($value)), 'name');
+//  db_merge('variable')->key(array('name' => $name))->fields(array('value' => serialize($value)))->execute();
 
   cache_clear_all('variables', 'cache_bootstrap');
 
@@ -1256,7 +1225,7 @@ function t($string, $subs0 = []) {
   if (preg_match('/[%@!]/', $string)) {
     $subs = constantSubs($string);
     foreach ($subs0 as $k => $v) {
-/**/  if (is_array($v)) $v = print_r($v, 1);
+      if (is_array($v)) $v = pr($v);
       if ($k[0] == '!' or $k[0] == '@') { // old Drupal-style arg
         $subs[$k] = $v;
       } else {
@@ -1852,7 +1821,7 @@ function drupal_random_bytes($count)  {
       // Initialize on the first call. The contents of $_SERVER includes a mix of
       // user-specific and system information that varies a little with each page.
       if (!isset($random_state)) {
-/**/    $random_state = print_r($_SERVER, TRUE);
+        $random_state = pr($_SERVER);
         if (function_exists('getmypid')) {
           // Further initialize with the somewhat random PHP process ID.
           $random_state .= getmypid();
@@ -2534,9 +2503,8 @@ function arg($index = NULL, $path = NULL) {
   }
   $arguments = &$drupal_static_fast['arguments'];
 
-  if (!isset($path)) {
-    $path = $_GET['q'];
-  }
+  if (!isset($path)) $path = drupal_path_initialize();
+
   if (!isset($arguments[$path])) {
     $arguments[$path] = explode('/', $path);
   }

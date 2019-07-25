@@ -283,8 +283,8 @@ function ssnShow($a) {
   if (@$addresses['lastname']) $addresses = [$addresses];
   foreach($addresses as $rec) {
     $rec = (object) $rec;
-/**/ $rows[] = array($rec->datereported ? u\fmtDate(strtotime($rec->datereported)) : '', u\ssnName($rec), $rec->dob ? u\fmtDate(strtotime($rec->dob)) : '', u\ssnAddr($rec), ucwords(@strtolower(print_r($rec->county, 1)))); // county was an array once
-/**/ if (now() - @strtotime($rec->datereported) < 10 * YEAR_SECS) $counties[print_r($rec->county, 1)] = 1;
+    $rows[] = array($rec->datereported ? u\fmtDate(strtotime($rec->datereported)) : '', u\ssnName($rec), $rec->dob ? u\fmtDate(strtotime($rec->dob)) : '', u\ssnAddr($rec), ucwords(@strtolower(pr($rec->county)))); // county was an array once
+    if (now() - @strtotime($rec->datereported) < 10 * YEAR_SECS) $counties[pr($rec->county)] = 1;
   }
   if (!@$a->moves) $a->update('moves', max(0, count($counties) - 1));
   
@@ -728,18 +728,6 @@ function adminSignin() {
 /*       if ($flags & u\bit(B_GIFT)) $x->update(compact(ray('flags payee'))); */
 /*     }); */
 /* } */
-
-function showRequests() {
-  $cutoff = strtotime('-1 year');
-  $q = f('db.q','SELECT * FROM r_request WHERE created>:cutoff ORDER BY listid DESC', compact('cutoff'));
-  $list[] = "id\tfirst name\tlast name\tphone\temail\tcreated";
-  while ($row = $q->fetchAssoc()) {
-    extract($row); // listid created first last phone email
-    foreach (['phone', 'email'] as $k) $$k = f('u.decryptN',$$k);
-    $list[] = "req$listid\t$first\t$last\t$phone\t$email\t$created";
-  }
-  w\say(plain(join("\n", $list)));
-}
 
 function showInactive() {
   $ctty = a('aaa')->community;

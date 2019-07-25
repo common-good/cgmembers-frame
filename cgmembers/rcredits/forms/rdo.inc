@@ -31,7 +31,7 @@ use CG\Db as db;
  * @see also r\makeDo()
  */
 function rdo($code, $args = '') {
-	flog(pr(compact(ray('code args'))));
+/**/	flog(pr(compact(ray('code args'))));
   global $channel;
   if (isDEV) foreach (['error', 'status'] as $k) @unlink(f('t.dosayFilename', $k)); // clear tests (no way to see if testing)
   if (strpos($code, ' ')) return doSay(plain($code), 'err');

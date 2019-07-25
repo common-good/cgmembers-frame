@@ -10,13 +10,33 @@ use CG\Db as db;
  * Present a choice of data queries
  */
 function formData($form, &$sta, $args = '', $isco = FALSE) {
-  ///  debug("formData(..., ..., '$args', $isco)");
+  global $mya;
+
   $isco = ($isco == 'co');
   require_once queryFile($isco);
-  extract(just('qName', $args));
+  extract(just('qName sql', $args));
   
-  $qName0 = urldecode(@$qName);
-  if (!empty($qName0)) {
+  $sql0 = urldecode(nn($sql));
+  $qName0 = urldecode(nn($qName));
+
+  $btn = w\submi('Go', 'success', 'xs', ['parents' => ['go']]);
+  $sql = $mya->admin ? areaFld(t('SQL:'), [t('MySQL Select Query')], dft($sql0) + w\suffix(\render($btn))) : NULL;
+
+  if ($mya->admin and $sql0) {
+    $title = t('MySQL Query');
+    try {
+      $q = db\adminQ($sql0);
+      if ($q and $rows = $q->fetchAll()) {
+        $hdrs = array_keys((array) $rows[0]);
+        foreach ($rows as $i => $row) $rows[$i] = array_values((array) $row);
+        $list = w\makeTable($rows, $hdrs);
+      } else $list = t('Zero matching rows found.');
+      $form = compact(ray('title list'));
+    } catch (Exception $e) {
+      say($e->getMessage(), 'sql');
+      $form = compact(ray('title sql'));
+    }
+  } elseif (!empty($qName0)) {
     $sql = @$queries[$qName0];
     if (!empty($sql)) {
       $title = w\queryPermitted($qName0, $sql, $subtext); // alters $sql
@@ -26,9 +46,9 @@ function formData($form, &$sta, $args = '', $isco = FALSE) {
     }
   } else {
     $title = $isco ? t('Company Reports') : t('Community and Money Data');
-    $subtext = item(t('Click the query of your choice. If you need information not provided here, <%a1>request it</a>!', ['_a1' => u\emailTag(CGF_EMAIL, t('data request'))]), '&nbsp;');
+    $subtext = item(t('Click the query of your choice. If you need information not provided here, <%a1>request it</a>!', '_a1', u\emailTag(CGF_EMAIL, t('data request'))), '&nbsp;');
     $isco = hidFld($isco ?: 0);
-    $form = compact(ray('title subtext isco'));
+    $form = compact(ray('title subtext sql isco'));
 
     foreach ($queries as $k0 => $v) {
       if ($k = w\queryPermitted($k0)) $form[$k0] = submit($k, 'default', 'xs');
@@ -37,10 +57,20 @@ function formData($form, &$sta, $args = '', $isco = FALSE) {
   return cgform($form);
 }
 
+function formData_validate($form, &$sta) {
+  if (op($sta) != 'go') return;
+  extract(just('sql', $sta['input']));
+  $word1 = strtolower(strstr($sql, ' ', TRUE));
+  if (!in($word1, 'select show')) return say(t('Only SELECT and SHOW queries are permitted.'), 'sql');
+}
+
 function formData_submit($form, &$sta) {
-  extract(just('isco', $sta['input']));
+  extract(just('isco sql', $sta['input']));
   require_once queryFile($isco);
+
+  if (op($sta) == 'go') return w\go('/community/data/sql=' . urlencode($sql));
   $op = w\opText($sta);
+
   $d = substr(op($sta), 0, 1);
   if (strpos('0123456789', $d) !== FALSE) $op = $d . $op; // leading digit, if any
   $url = $isco ? '/company-reports' : '/community/data';

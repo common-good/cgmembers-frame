@@ -19,7 +19,8 @@ Setup:
 
 Scenario: Someone scans a member card
   When member "?" visits page "I/NEWZZB"
-  Then we redirect to "%PROMO_URL/?region=NEW"
+  Then we redirect to "%PROMO_URL/"
+#  Then we redirect to "%PROMO_URL/?region=NEW"
 
 Scenario: Someone scans a company agent card
   When member "?" visits page "I/NEWZZC"
