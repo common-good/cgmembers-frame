@@ -1,3 +1,37 @@
+2019-07-24
+. php form no longer has to be refreshed on dev after running a test
+. <. is a workaround for HTML in PHP box
+. added 'args' to NO_LOG (relevant in failed signups)
+. Save button on invest form now sets reserve with ajax
+
+. fixed data: added monthly transfers from roundups account to CG:
+  $cgA = r\acct(CGID);
+  for ($year = 2013; TRUE; $year++) for ($month = ($year == 2013 ? 6 : 1); $month < 13; $month++) {
+    $start = strtotime("$month/1/$year");
+    $end = u\monthday1($start + 1.5 * MONTH_SECS) - 1;
+    $subs = compact(ray('start end'));
+    $where = 'created BETWEEN :start AND :end';
+    $new = db\sum('IF(:CGID=uid1,-amt,amt)', 'txs', ":CGID IN (uid1,uid2) AND IF(uid1=:CGID,uid2,uid1) NOT IN (256,257) AND $where", $subs);
+    $old = db\sum('IF(payer=:CGID, -amount, amount)', 'legacy_r_txs', ":CGID IN (payer,payee) AND $where", $subs);
+    $oldRoundups = db\sum('amount', 'legacy_r_txs', "(flags&(1<<:OLD_B_ROUNDUPS)) AND $where", $subs);
+    if ($oldRoundups > 0 and !($year == 2019 and $month == 6)) be\transfer('payment', r\acct(CG_ROUNDUPS_UID), $cgA, $oldRoundups, t('roundup donations'), FOR_GOODS, ray('created gift', $end, TRUE));
+    if (!$new and !$old) break 2;
+  }
+. reinstated CG Noho transactions as transactions with the seedpack (both in legacy and current txs):
+  INSERT INTO `legacy_r_txs` (`xid`, `serial`, `type`, `flags`, `goods`, `amount`, `payer`, `payee`, `payerAgent`, `payeeAgent`, `payerFor`, `payeeFor`, `payerTid`, `payeeTid`, `data`, `channel`, `created`, `box`, `risk`, `risks`) VALUES
+  (86568, 86568, 0, 1024, 2, '562.34', 26742000000002, -26742000000001, 26742000000002, -26742000000001, '50% share of local donations through 30Sep2017', '50% share of local donations through 30Sep2017', 5261, 0, '', 5, 1506830399, 0, 172.138, 262160),
+  (90228, 90228, 0, 1024, 2, '285.73', 26742000000002, -26742000000001, 26742000000002, -26742000000001, '50% share of local donations through 30Nov2017', '50% share of local donations through 30Nov2017', 5374, 0, '', 5, 1512104399, 0, 135.077, 263184),
+  (92114, 92114, 0, 1024, 2, '186.15', 26742000000002, -26742000000001, 26742000000002, -26742000000001, '50% share of local donations through 31Dec2017', '50% share of local donations through 31Dec2017', 5458, 0, '', 5, 1514782799, 0, 165.561, 8520720),
+  (108553, 108553, 0, 1024, 2, '-1034.22', 26742000000002, -26742000000001, 26742000000002, -26742000000001, 'reverse all grants to Noho CG Community', 'reverse all grants to Noho CG Community', 5458, 0, '', 5, 1551848400, 0, 165.561, 8520720);
+
+  $cgA = r\acct(CGID);
+  $seed = r\acct(-26742000000001);
+  be\transfer('payment', $cgA, $seed, 562.34, '50% share of local donations through 30Sep2017 (originally to Noho CGC)', FOR_GOODS, ray('created', strtotime('9/30/2017')));
+  be\transfer('payment', $cgA, $seed, 285.73, '50% share of local donations through 30Nov2017 (originally to Noho CGC)', FOR_GOODS, ray('created', strtotime('11/30/2017')));
+  be\transfer('payment', $cgA, $seed, 186.15, '50% share of local donations through 31Dec2017 (originally to Noho CGC)', FOR_GOODS, ray('created', strtotime('12/31/2017')));
+  be\transfer('payment', $cgA, $seed, -1034.22, 'reverse all grants to Noho CG Community', FOR_GOODS, ray('created', strtotime('3/6/2019')));
+  be\transfer('payment', r\acct(CG_ROUNDUPS_UID), $cgA, 131.64, t('roundup donations'), FOR_GOODS, ray('created gift', $dt61-1, TRUE));
+
 2019-07-19 feature/invest
 . added sweep function to cron, to credit CG with roundups and crumbs
 . finished investment club software (first pass), with extensive tests

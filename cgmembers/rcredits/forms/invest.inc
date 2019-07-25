@@ -47,6 +47,7 @@ function formInvest($form, &$sta, $args) {
 		$clubVal = item(u\fmtAmt($clubVal), t('Club Net Value:'));
     $stakes = item(u\fmtAmt($stakes), t('Total Member Stakes (%members):', compact('members')));
     $fields = 'title liquid requests investments lossReserve expenseReserve clubVal stakes avail';
+    jsx('invest');
   } elseif ($isMember = $res = db\get('request,requestedOut,stake,stakeid', 'r_stakes', compact(ray('uid clubid')))) { // member!
     extract($res);
     $old = hidFld(serialize(compact(ray('stakeid clubid stake request requestedOut'))));

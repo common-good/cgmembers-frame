@@ -66,7 +66,6 @@ EOF
   'join thanks' => t('Thank you for joining us!'),
   'use temporary card' => t('<p>While you wait for your %PROJECT card to arrive, you can use your invitation card to make purchases at any member business (beginning with your inviter).</p>'),
   'must be confirmed' => t('An email has been sent to %inviterName, who will need to confirm the invitation before you can use your %PROJECT Account. Or you can do your first rCard transaction with %inviterName as confirmation.'),
-  //  Meanwhile, click the "<a href="%BASE_URL/community/invite">Invite</a>" tab to invite anyone you know and trust &mdash; you get a $%R_HELPER_BONUSr reward when they make their first purchase.<br><br>
   'ready to charge' => t('<p>You successfully scanned in as "%agentName" to charge customers on behalf of %companyName.</p><p>Now go back to your scanning app, to scan a customer\'s card. Sign out only when your shift ends.</p>'),
   'transaction list truncated' => t('There are too many transactions to show all at once, so only the first %TX_MAX_ROWS are shown (choose a different date range to see the rest).'),
   'address info' => t('<a1>Click here</a> for address information.'),

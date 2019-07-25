@@ -25,7 +25,6 @@ function formInvite($form, &$sta, $args = '') {
   $inviteCode = $mya->iCardCode(IBY_EMAIL);
   $_inviteLink = PROMO_URL . "/signup/code=$inviteCode";
   $warning = $mya->co ? t('<p>Note you are sending an invitation on behalf of a company. The company is "trusting" whoever you invite. We at %PROJECT recognize that companies are not people, and that it\'s a bit odd to allow them a sentiment usually reserved for humans.</p>') : '';
-  //Plus $@R_COUNTED_BONUSr for each employee, if they open a company account. 
   $subtext1 = t('We\'re sorry, you cannot invite someone to sign up until you have signed the <%aSign>Agreement</a> and made a <%aDonate>donation</a>.', '_aSign _aDonate', atag('/community/agreement'), atag('/community/donate'));
   //<br><br>Return to the <a href=\"%BASE_URL/status\">Membership Steps</a> page to see where you stand.
   //      <li>Order %orderCount sheets of 10 invitation cards by mail (free!). %orderSubmit</li>
@@ -43,8 +42,8 @@ function formInvite($form, &$sta, $args = '') {
   $friend = $mya->co ? t('customer, employee, or supplier') : t('friend');
   $_size = $mya->co ? '4.25" &times; 2.75"' : '3.5" &times; 2"';
   
-  $subtext2 = $mya->cttyRewardy ? t('<p>Get a $%R_HELPER_BONUS reward for each %friend you invite, who signs up!</p>', compact('friend')) : '';
-  $subtext2 .= t(<<<EOF
+//  $subtext2 = $mya->cttyRewardy ? t('<p>Get a $%R_HELPER_BONUS reward for each %friend you invite, who signs up!</p>', compact('friend')) : '';
+  $subtext2 = t(<<<EOF
 <p>Invite <b>only people you trust</b> who live, shop, or work in your community. You may need to help or nudge the people you invite. %a2</p>
   <br>
   <p>Here are three different ways to invite someone:</p>

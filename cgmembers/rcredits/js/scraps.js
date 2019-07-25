@@ -42,6 +42,14 @@ function doit(what, vs) {
     $('#activate-credit').click(function () {post('setBit', {bit:'debt', on:1}, report);});
     break;
     
+  case 'invest':
+    $('.form-item-expenseReserve a').click(function () {
+      var reserve = parseFloat($('#edit-expensereserve').val().replace('$', ''));
+      $('#edit-expensereserve').val(('$' + reserve).replace('NaN', '0'));
+      post('set', {k:'minimum', v:reserve}, report);
+    });
+    break;
+    
   case 'dollar-pool-offset':
     $('#dp-offset').click(function () {post('dpOffset', {amount:vs['amount']}, report);});
     break;

@@ -24,9 +24,9 @@ define('R_REWARD_STEP', 100); // how much rewards can the member get before thei
 define('R_XFEE_CARD', .03); // percentage fee for exchanges of USD for Common Good Credits using a credit/debit card
 define('R_XFEE_CHECK', 0); // flat fee for exchanges of USD for Common Good Credits with a check (was 3.00)
 define('R_MAX_AMOUNT', 100000); // transaction request size limit (some smaller limits also apply)
-define('R_SIGNUP_BONUS', 20); // UNUSED how much people start with at this time
-define('R_HELPER_BONUS', 20); // UNUSED how much you get for inviting and assisting someone with account opening
-define('R_COUNTED_BONUS', 10); // UNUSED how much you get for each member employee of a company you invite/assist
+//define('R_SIGNUP_BONUS', 20); // UNUSED how much people start with at this time
+//define('R_HELPER_BONUS', 20); // UNUSED how much you get for inviting and assisting someone with account opening
+//define('R_COUNTED_BONUS', 10); // UNUSED how much you get for each member employee of a company you invite/assist
 define('R_FLOOR', 0); // how low can user's combined balance go, by default
 define('MIN_WEEKLY_BUMP', 1); // automatic weekly increase in negative minimum balance
 define('R_DAILY_HOUR', isDEV ? '00' : '01'); // what time (2-digit 24-hour clock hour) to start intensive daily maintenance tasks

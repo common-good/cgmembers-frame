@@ -86,7 +86,7 @@ function rweb_menu($submenu = '') {
 
     'get' => ['norm', t('Bank'), 'Get 1', 'manage ok'],
     
-    'invest' => ['norm', t('Invest'), 'Invest 1', 'manage ok'],
+//    'invest' => ['norm', t('Invest'), 'Invest 1', 'manage ok'],
     'invest/list' => ['call', t('List Investments'), 'InvestList 2', 'manage ok investor'],
     'invest/cashout' => ['call', t('Handle Requests to Cash Out Investments'), 'InvestCashout 2', 'manage ok iclub'],
     'invest/dividends' => ['call', t('Issue Dividends'), 'InvestDividends 2', 'manage ok iclub'],

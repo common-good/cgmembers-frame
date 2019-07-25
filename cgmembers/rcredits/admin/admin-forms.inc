@@ -220,11 +220,9 @@ function formSeeChanges($form, &$sta, $qid = '') {
 function decryChange($type, $v) {return ($type == 'V' and !r\allKnowing()) ? t('(secret)') : u\decry($type, $v);}
 
 /**
- * Log back in to admin automatically.
+ * Log back in to admin automatically (called after testing, in case session got destroyed).
  */
 function formTestRecovery($form, &$sta, $doSay = FALSE) {
-//  global $mya; debug($mya); return;
-  //  if (isDEV and !r\acct()) { // called after testing, in case session got destroyed
   if (!isDEV) return;
   //$uid = \user_authenticate('admin', DEV_ADMIN_PASS);
   $mya = r\acct(1);
@@ -528,6 +526,7 @@ function formPhp($form, &$sta, $res = '') {
 function formPhp_submit($form, &$sta) {
   extract(just('code', $sta['input']));
   \setV('code', $code); // remember for next time
+  $code = str_replace('<.', '<', $code); // fudge around drupal's sanitizing of all HTML
   $code = <<<EOF
     use CG as r;
   use CG\DB as db;

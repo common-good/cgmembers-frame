@@ -1170,7 +1170,7 @@ function drupal_validate_form($form_id, &$form, &$form_state) {
       $url = url($path, array('query' => $query));
 
       // Setting this error will cause the form to fail validation.
-      form_set_error('form_token', t('The form has become outdated. Copy any unsaved work in the form below and then <a href="@link">reload this page</a>.', array('@link' => $url)));
+      if (!(isDEV and basename($_SERVER['REQUEST_URI']) == 'php')) form_set_error('form_token', t('The form has become outdated. Copy any unsaved work in the form below and then <a href="@link">reload this page</a>.', array('@link' => $url)));
 
       // Stop here and don't run any further validation handlers, because they
       // could invoke non-safe operations which opens the door for CSRF

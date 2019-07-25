@@ -869,6 +869,7 @@ function randomString($len = 16, $choices = '') {
  */
 function badName(&$name) {
   $name = trim(preg_replace('/ +/', ' ', $name));
+//  $name = preg_replace('/[\x00-\x1F\x7F-\xA0\xAD]/u', '', $name);
   if ($name and !ctype_print($name)) {
     r\tellAdmin('bad char', ray('name trace', bin2hex($name), trace()));
     return 'illegal char';
@@ -1415,6 +1416,7 @@ function fmtTime($time = NULL) {return strtolower(strftime('%I:%M%p', nn($time, 
 function lastCall($far = 4) {$back = debug_backtrace(); return array_slice($back, 1, $far);}
 function digits(&$n) {return $n = preg_replace('/\D/', '', @$n);}
 function monthDay1($time = NULL) {return strtotime(strftime('1%b%Y', nn($time, now())));}
+  function mdt1($time = NULL) {return monthDay1($time);}
 function monthDif($dt2, $dt1) {return (date('Y', $dt2) - date('Y', $dt1)) * 12 + (date('m', $dt2) - date('m', $dt1));}
 function prefix($prefix, &$var) {$var = $prefix . $var;}
 function preray($prefix, &$r0) {u\EXPECT(is_array($prefix) and (is_array($r0) or is_object($r0)), 'badray');$r = $prefix + (array) $r0; $r0 = is_object($r0) ? (object) $r : $r;}

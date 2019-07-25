@@ -14,7 +14,6 @@ $GLOBALS['tStrings'] = array(
   'other community down' => t('That %PROJECT community is temporarily on hold.'),
   'account info' => t('Your balance for account %qid is %balance, including %rewards of incentive rewards. Total demand for %RCREDITS is %totalDemand.'),
   'invite reward' => t('inviting and/or assisting new member %fullName'),
-//  'employee invite reward' => t('inviting and/or assisting a member\'s manager (at %fullName -- $%R_COUNTED_BONUSr per employee)'),
 //  'account info2' => t("More account info"), // not used yet
 //  'your account is ready' => t('Your starting balance is %balance. Pretend to buy and sell as you would in a typical month (we need that info). Have fun! Type "helpme" to get started.'), // separate out the last sentence
 //  'the reward' => t('(reward: %rewardAmountr)'), // %rewardType
