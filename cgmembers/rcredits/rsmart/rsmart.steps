@@ -133,7 +133,7 @@ function weRespondWith($args) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $rposResult;
 
-/**/ t\output('expecting: ' . print_r($args[0], 1));
+  t\output('expecting: ' . pr($args[0]));
   foreach ($args[0] as $k => $v) {
     if ($k == 'descriptions' or $k == 'bad') $v = empty($v) ? [] : ray($v);
     if ($k == 'can') { // currently tests only signed-out permissions
@@ -146,8 +146,8 @@ function weRespondWith($args) {
     if ($k == 'time' and t\approxTime($v, $rposResult["time"])) continue; // %now time is approximate
     
     if ($v != @$rposResult[$k]) {
-/**/  $v = print_r(@$v, 1);
-/**/  t\output("Expected $k=$v, got:" . print_r(@$rposResult[$k], 1));
+      $v = pr(@$v);
+      t\output("Expected $k=$v, got:" . pr(@$rposResult[$k]));
       return FALSE;
     }
   }
@@ -689,9 +689,6 @@ function weRespondOkTxidCreatedBalanceSaying($txid, $created, $balance, $msg = N
   global $testOnly; if (!$testOnly) return FALSE;
   global $rposResult;
 
-///  debug("weRespond...($txid, $created, $balance, " . print_r($msg, true));
-///  debug($rposResult);
-  
   extract($rposResult, EXTR_PREFIX_ALL, 'a'); // actual results
   $ok = '1';
   foreach (ray('ok txid balance') as $k) if (@$rposResult[$k] != $$k) $error = 1;
@@ -708,8 +705,8 @@ function weRespondOkTxidCreatedBalanceSaying($txid, $created, $balance, $msg = N
 
   if (@$error) {
     if (@$msg) u\preray(compact('wantMsg'), $msg);
-/**/ t\output('Expecting (but did not get): ' . print_r(compact(ray('ok txid created balance msg')), 1), 'expect');
-/**/ t\output('Got: ' . print_r($rposResult + compact('error'), 1));
+    t\output('Expecting (but did not get): ' . pr(compact(ray('ok txid created balance msg'))), 'expect');
+    t\output('Got: ' . pr($rposResult + compact('error')));
     return FALSE;
   } else return TRUE;
 }

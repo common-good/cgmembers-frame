@@ -103,7 +103,7 @@ Scenario: A newbie registers with a different legal name
   | uid  | fullName | legalName | email | phone     | zip | country | state | city   | flags     | name    | helper |*
   | .AAA | Abey One | Abe One   | a@ | +14132530000 | 01001      | US      | MA    | Agawam | confirmed | abeyone | .ZZZ   |
 
-Skip this doesn't work, and I don't understand how it ever did...JVER
+#Skip this doesn't work, and I don't understand how it ever did...JVER
 Scenario: A newbie registers from elsewhere
   Given invitation to email "a@" from member ".ZZZ" is "c0D3"
   And next random code is "WHATEVER"
@@ -116,10 +116,9 @@ Scenario: A newbie registers from elsewhere
   And we show "Verify Your Email Address"
   And we say "status": "info saved|step completed"
   And we email "verify" to member "a@" with subs:
-  | fullName | name   | quid    | site        | code  |*
-  | Abe One  | abeone | NEN.AAA | %BASE_URL | WHATEVER |
+  | fullName | name   | quid   | site        | code  |*
+  | Abe One  | abeone | NENAAA | %BASE_URL | WHATEVER |
   # And we show "Empty"
-Resume
 
 Scenario: A newbie registers with no case
   Given invitation to email "a@" from member ".ZZZ" is "c0D3"
@@ -141,7 +140,7 @@ Scenario: A member registers bad name
   Given invitation to email "a@" from member ".ZZZ" is "c0D3"
   When member "?" confirms form "signup/code=c0D3" with values:
   | fullName  | email | phone     | zip | state     | federalId   | dob      | acctType     | years | months |*
-  | ™ %random | a@ | 413-253-0000 | 01001-3829 | MA | 111-22-3333 | 1/2/1990 | %CO_PERSONAL  |     1 |    6 |
+  | ™ %random | a@ | 413-253-0000 | 01001-3829 | MA | 111-22-3333 | 1/2/1990 | %CO_PERSONAL |     1 |    6 |
   Then we say "error": "illegal char" with subs:
   | field    |*
   | fullName |
@@ -152,7 +151,19 @@ Scenario: A member registers bad zip
   | fullName | email     | phone | zip | federalId   | dob      | acctType    |*
   | Abe One  | a@ | 413-253-0001 | %random    | 111-22-3333 | 1/2/1990 | %CO_PERSONAL |
   Then we say "error": "bad zip"
-  
+ 
+# TEST FAILS (tentative data does not get filled in, on error) Scenario: A member registers bad phone twice
+#  Given invitation to email "a@" from member ".ZZZ" is "c0D3"
+#  When member "?" confirms form "signup/code=c0D3" with values:
+#  | fullName | email | phone     | zip | state     | federalId   | dob      | acctType     | years | months | country |*
+#  | Abe One  | a@ | 413-253-000  | 01001-3829 | MA | 111-22-3333 | 1/2/1990 | %CO_PERSONAL |     1 |    6 | %US_COUNTRY_ID |
+#  Then we say "error": "bad phone"
+#  And we show "Open a Personal Account" with:
+#  | Phone: | 413-253-000 |
+#  When member "?" confirms form "signup/code=c0D3" with values:
+#  | fullName | email | phone     | zip | state     | federalId   | dob      | acctType     | years | months |*
+#  | Abe One  | a@ | 413-253-000  | 01001-3829 | MA | 111-22-3333 | 1/2/1990 | %CO_PERSONAL |     1 |    6 |
+ 
 Scenario: A member registers again
   Given invitation to email "a@" from member ".ZZZ" is "c0D3"
   Given members:

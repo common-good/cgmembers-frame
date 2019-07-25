@@ -51,7 +51,7 @@ X;
 
   // uCo is another company, tToUs is payments to this company, tToOther is payments to uCo by this company's customers (uCust)
   $tnm = <<< X
-    (SELECT uCo.fullName AS company, COUNT(DISTINCT tToOther.uid1) AS count
+    (SELECT DISTINCT uCo.fullName AS company, COUNT(DISTINCT tToOther.uid1) AS count
      FROM txs_prime tToUs LEFT JOIN txs_prime tToOther ON tToOther.uid1=tToUs.uid1 AND tToOther.uid2 NOT IN (:myid,:CGID)
      LEFT JOIN users uCust ON uCust.uid=tToUs.uid1
      LEFT JOIN users uCo ON uCo.uid=tToOther.uid2
@@ -61,8 +61,7 @@ X;
     ) x
 X;
   
-  $pays = db\q($sql, compact('myid'));
-  if (!empty($pays)) $pays=$pays->fetchAll();
+  $pays = db\rows('company, count', $tnm, 1, compact('myid'));
   foreach ($pays as $i => $one) $pays[$i] = array_values((array) $one);
 
   // calculate medians and avgs

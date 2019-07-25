@@ -42,6 +42,12 @@ function ajax() {
     if ($a = r\acct($uid) and $b = u\consta('b', $bit) and $b < B_ADMIN2) {
       $a->setBit($b, $on);
     } else return ajaxErr(t('nope'));
+  } elseif ($op == 'set') {
+    extract(just('uid k v', $data));
+    if ($a = r\acct($uid)) {
+      if (in($k, 'minimum') and $err = u\badAmount($v)) return ajaxErr($err);
+      $a->update($k, $v);
+    } else return ajaxErr(t('nope'));
   } elseif ($op == 'presignup') {
     $info = just('preid fullName legalName email phone', $data);
     db\update('signup', $info, 'preid');

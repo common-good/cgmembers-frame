@@ -283,7 +283,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
   $logSubs = u\noSecrets($resubs) + ["\r\n" => '', ' style=' => ' stylish=']; // easier reading for log and tests & evade CSP
   $message = strtr($body, $logSubs);
   $erInfo = compact(ray('index toEmail subject message'));
-/**/ f('t.output', 'Actual (in rMail) ' . print_r($erInfo, 1), 'email');
+  f('t.output', 'Actual (in rMail) ' . pr($erInfo), 'email');
   u\loga('email', $erInfo + ['toUid' => @$toA->id]);
 
   if (isPRODUCTION !== TRUE) { // make sure we never send rogue emails from test server even if constant isn't set
@@ -449,27 +449,34 @@ function notifyEntries($a, $index, $entries, $force = FALSE) {
  * Notify rCredits staff (Community Admin, if uid is specified and in their area)
  * @param string $index: the message or message index
  * @param assoc $subs: optional substitutions for the message and/or data to show (show both)
- * @param bool/int $uid: related account record id (TRUE means current account), defaults to none
+ * @param bool/int $uid: related account record id (TRUE means current account), defaults to none (NULL), 
+ *    0 = suppress report of current account (to avoid confusion)
  * @return FALSE;
  */
 function tellAdmin($index, $subs = [], $uid = NULL) {
 /**/  if (isDEV and !u\test()) return debug(['tellingStaff' => $index] + $subs + compact('uid'));
-  foreach (ray(R_NOLOG) as $k) unset($subs[$k]); // secret stuff
-  ksort($subs); // put the keys in a predictable order, for testing and easy reading
 
-  if (!$tellCO = isset($uid)) $uid = @$subs['uid'];
-  if ($mya = r\acct(@$uid)) $who = "$mya->fullName ($mya->mainQid)"; // (default to current account)
-  $message = t($index, $subs) . u\seeAssoc($subs + @compact('who'));
+  $message = t($index, $subs);
+  
+  if (!$tellCO = (@$uid != 0)) $uid = @$subs['uid'];
+
+  if ($uid and $a = r\acct(@$uid)) {
+    $who = "$a->fullName ($a->mainQid)"; // (default to current account)
+    foreach (ray(R_NOLOG) as $k) unset($subs[$k]); // secret stuff
+    ksort($subs); // put the keys in a predictable order, for testing and easy reading
+    $message .= u\seeAssoc($subs + @compact('who'));
+  }
     
   if ($tellCO) { // account specified, so tell Community Admin
-    $email = $mya->cttyA->email;
-  } else list ($email, $uid) = [R_ADMIN_EMAIL, $uid ?: ($mya ? $mya->id : NULL)]; // no account specified so tell SysAdmin
+    $email = $a->cttyA->email;
+  } else list ($email, $uid) = [R_ADMIN_EMAIL, $uid ?: (@$a ? $a->id : NULL)]; // no account specified so tell SysAdmin
 
   $noFrame = TRUE;
   $topic = strlen($index) < 50 ? strip_tags($index) : '';
   $subs = @compact(ray('who email message topic noFrame uid')) + $subs;
-  $replyTo = (@$uid and $a = r\acct($uid) and $a->email) ? [$a->email => $a->fullName] : NULL;
+  $replyTo = (!$tellCO and @$uid and $a = r\acct($uid) and $a->email) ? [$a->email => $a->fullName] : NULL;
   r\rMail('tell-staff', $email, $subs, $replyTo);
+  $subs['topic'] .= t(' (to cAdmin)');
   if ($email != R_ADMIN_EMAIL) r\rMail('tell-staff', SYS_EMAIL, $subs, $replyTo); // always tell one or more staff (for now)
   return FALSE;
 }
@@ -834,7 +841,6 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     'r_near:uid1:D',
     'r_near:uid2:D',
     // r_nonces
-    // r_nonmembers
     'r_notices:uid:D',
     // r_options
     // r_pairs
@@ -848,7 +854,6 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     // r_regions
     'r_relations:main:D',
     'r_relations:other:D',
-    // r_request
     // r_states
     // r_shares',
     'r_stakes:uid',

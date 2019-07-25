@@ -151,9 +151,8 @@ function _password_enforce_log2_boundaries($count_log2) {
  */
 function _password_crypt($algo, $password, $setting) {
   // Prevent DoS attacks by refusing to hash large passwords.
-  if (strlen($password) > 512) {
-    return FALSE;
-  }
+  if (strlen($password) > 512) return FALSE;
+  if (strlen($setting) < 12) die('pass hash ' . pr(trace()));
   // The first 12 characters of an existing hash are its setting string.
   $setting = substr($setting, 0, 12);
 

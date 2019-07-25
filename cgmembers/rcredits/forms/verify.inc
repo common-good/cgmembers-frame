@@ -31,7 +31,7 @@ function formVerify($form, &$sta, $arg = '') {
 function formVerify_validate($form, &$sta) {
   global $mya;
   extract(just('verify', $sta['input']));
-  if (!$mya->passwordOkay(strtoupper($verify))) return say(t('That is not the right code.'), 'verify');
+  if (!$mya->passwordOkay(strtoupper($verify), 'pass')) return say(t('That is not the right code.'), 'verify');
   if (!$mya->co) formChangePassword_validate($form, $sta);
 }
 

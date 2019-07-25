@@ -33,7 +33,8 @@ function formSignup($form, &$sta, $args = '') {
   if (!$preid = nn($_COOKIE['preid'])) {
     $preid = time() . u\randomString(9, 'digits');
     setcookie('preid', $preid, time() + 100 * YEAR_SECS, '/', $_SERVER['HTTP_HOST']);
-  } else {$preid = substr(preg_replace('/\\D*/', '', $preid), 0, 20);} // ignore all but the digits
+  } else $preid = substr(preg_replace('/\\D*/', '', $preid), 0, 20); // ignore all but the digits
+
   u\setDft($source2, nn($_COOKIE['ad']));
   if ($oldPreid = db\get('preid', 'signup', compact('preid'))) {
     $preid = $oldPreid;
@@ -133,10 +134,6 @@ For example, you will be asked for your social security number or tax ID.</p>
     // if custodian, subtype field should appear with all these same choices: $custodianFor = ...
   }
 
-//  $buysAts = db\q('SELECT id, company FROM r_nonmembers')->fetchAllKeyed();
-//  $ats = boxOpt('ats', $buysAts, $sta);
-//  $buysAt = boxesFld(t('<br>Over 60 Greenfield businesses have already signed up. Which of these <b>Not-Yet-Member Businesses</b> do you frequent?'), '', @$ats, $buysAts);
-
   jsx('signup', ray('clarify preid', $clarify, nn($preid))); // must be before $preid = hidFld()
   $submit = t('Next');
   $args = hidFld(@$args);
@@ -211,14 +208,13 @@ function formSignup_validate($form, &$sta) {
 
 function formSignup_submit($form, &$sta) {
   global $mya;
-  $dbFields = 'fullName legalName email flags phone federalId dob pin country zip address city state postalAddr helper iCode notes wants calling signupCo tenure source';
+  $dbFields = 'fullName legalName email flags phone federalId dob pin country zip address city state postalAddr helper iCode notes calling signupCo tenure source';
   extract(just('myid preid confirmed acctType args ats owns partner customer source2 ' . $dbFields, $sta['input']));
   if (u\test() and !@$args) $args = basename($_SERVER['REQUEST_URI']);
   u\EXPECT((bool) $args, 'no args');
   extract(just('code source2', $args)); // source2 may come from either partner or an add (through our promo site)
   if (isDEV) $helper = $helper + 0; // don't let lack of helper stop us
 
-  $wants = wants(@$ats);
   if (@$notes) list ($source, $notes) = [trim("$notes $source"), ''];
   if (@$source2) $source = trim(strtoupper($source2) . "-$source");
 

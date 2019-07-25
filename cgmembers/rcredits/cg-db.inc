@@ -11,7 +11,7 @@ use CG\Util as u;
 
 require_once __DIR__ . '/cg-util.inc';
 
-define('NO_LOGSQL_TABLES', 'r_do queue sessions r_invites r_near r_nonmembers r_request cache_form r_stats'); // don't log deletions from these files
+define('NO_LOGSQL_TABLES', 'r_do queue sessions r_invites r_near cache_form r_stats'); // don't log deletions from these files
 define('CGID', getV('cgf_uid')); // Common Good's account ID (has to be here rather than in defs.inc)
 
 /**
@@ -39,6 +39,16 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
 }
 
 /**
+ * Simplified interactive admin version.
+ * Call this in a "try" block, if you want to catch errors.
+ */
+function adminQ($sql) {
+  $word1 = strtolower(strstr($sql, ' ', TRUE));
+  u\EXPECT(in($word1, 'select show'), 'bad admin query');
+  return \db_query(u\SUBS($sql));
+}
+
+/**
  * Look the field up in the table, returning the first record matching the criteria.
  * @param string $fieldName: field name, function, or list of field names (* for all)
  *   A list of field names cannot contain a function or a left paren
@@ -57,10 +67,16 @@ function get($fieldName, $table, $where = '1', $subs = []) {
   $sql = "SELECT $fieldName FROM $table WHERE $where";
   /// debug(compact('sql','subs'));
   $result = db\q($sql, $subs);
-  $fieldCount = strpos($fieldName, '(') ? 1 : substr_count($fieldName, ',') + 1; // function or array, not both
-  if (substr($fieldName, -1, 1) == '*') $many = TRUE; elseif ($fieldCount > 1) $several = TRUE;
-  $result = (@$several or @$many) ? $result->fetchAssoc() : $result->fetchField();
-  if (@$several and $result) u\EXPECT(\count($result) == $fieldCount, 'field count is off'); // eg, if $fieldName == 'a,a' (\count because this class has a count function!)
+
+  list ($cnt, $f) = [1, $fieldName];
+  while ($cnt) $f = preg_replace('/\\([^\\(\\)]+\\)/', '', $f, -1, $cnt); // ignore commas in functions
+  $fieldCount = substr_count($f, ',') + 1;
+
+//  $fieldCount = strpos($fieldName, '(') ? 1 : substr_count($fieldName, ',') + 1; // function or array, not both
+  $many = (substr($fieldName, -1, 1) == '*');
+  $several = (!$many and $fieldCount > 1);
+  $result = ($several or $many) ? $result->fetchAssoc() : $result->fetchField();
+  if ($several and $result) u\EXPECT(\count($result) == $fieldCount, 'field count is off'); // eg, if $fieldName == 'a,a' (\count because this class has a count function!)
   return $result;
 }
 function exists($table, $where = '1', $subs = []) {return db\get(1, $table, $where, $subs);}
@@ -157,8 +173,8 @@ function col($field, $table, $where = '1', $subs = []) {
   if (is_array($where)) list ($where, $subs) = [u\where($where), $where];
   return db\q("SELECT $field FROM $table WHERE $where", $subs)->fetchCol();
 }
-function lst($field, $table, $where = '1', $subs = []) { // lst because "list" is a reserved word
-  return join(', ', db\col($field, $table, $where, $subs));
+function lst($field, $table, $where = '1', $subs = [], $joint = ', ') { // lst because "list" is a reserved word
+  return join($joint, db\col($field, $table, $where, $subs));
 }
 function keyed($fields, $table, $where = '1', $subs = []) {
   if (is_array($where)) list ($where, $subs) = [u\where($where), $where];
@@ -220,12 +236,12 @@ function setFlag($table, $id, $bit, $bool = TRUE) {
  * Make a backup copy of the record before deleting it if appropriate (then delete it).
  * @param string $table: delete a record from this table
  * @param string $idnm: name of key field of table
- * @param mixed $id: integer id of record to delete OR criteria
+ * @param mixed $id: id of record to delete (integer or spaceless string) OR criteria
  * @param assoc $subs: parameters for selection criteria
  */
 function del($table, $idnm, $id, $subs = []) {
   u\EXPECT(!strpos($table, '_all') and !u\starts($table, 'txs'), 'you must delete only from tx_hdrs and tx_entries');
-  $where = is_numeric($id) ? "$idnm=$id" : $id;
+  $where = strpos($id, ' ') ? $id : "$idnm='$id'";
   if (in($table, DELETED_BY_VIEW)) {
     $all_table = $table . '_all';
     $q = db\q("UPDATE $all_table SET deleted=:NOW WHERE (deleted IS NULL OR deleted=0) AND $where", $subs);
@@ -247,3 +263,4 @@ function count($table, $where = '1', $subs = []) {return db\get('COUNT(1)', $tab
 function max($field, $table, $where = '1', $subs = []) {return db\get("MAX($field)", $table, $where, $subs);}
 function min($field, $table, $where = '1', $subs = []) {return db\get("MIN($field)", $table, $where, $subs);}
 function sum($field, $table, $where = '1', $subs = []) {return db\get("SUM($field)", $table, $where, $subs);}
+function avg($field, $table, $where = '1', $subs = []) {return db\get("AVG($field)", $table, $where, $subs);}

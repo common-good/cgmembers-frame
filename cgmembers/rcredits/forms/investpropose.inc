@@ -15,10 +15,10 @@ define('INVEST_ALLFLDS', 'company ' . INVEST_COFLDS . ' bizCats ' . INVEST_FLDS)
  */
 function formInvestPropose($form, &$sta, $args = '') {
   global $mya;
-  extract(just('clubid', $args));
-  if (!@$clubid or !$mya->isIClub) return w\go('/invest', t('bad clubid'));
+///  extract(just('clubqid', $args));
+  if (!$mya->iclub) return w\go('/invest', t('not a club'));
   
-  $title = t('Propose a new Investment');
+  $title = t('Propose a New Investment');
   $subtext = t('Complete this form if you have been assigned by your Investment Club steering committee to research the soundness of a proposed investment. <%a>Here is a printable worksheet</a> you can use to gather the necessary information.', '_a', atag('http://cg4.us/docs/investment-worksheet.pdf'));
   $company = textFld(t('Company:'), [t('Company to invest in'), t('Choose a %PROJECT member company (or type its account ID) or <%a>click here</a> to add them.', '_a', 'a id="add-co"')], required());
   $fullName = textFld(t('Company:'), [t('The company\'s full name')]);
@@ -30,14 +30,16 @@ function formInvestPropose($form, &$sta, $args = '') {
 
   $investment = areaFld(t('Investment:'), [t('Description of investment/loan')], required());
   
-  $equity = boolFld(t('Equity:'), t('Is this an equity investment (as opposed to a loan)? Answer Yes if the interest rate depends on the business\'s success (regardless of whether the club will own part of the company).'));
+  $equity = boolFld(t('Equity:'), t('Is this an equity investment (as opposed to a loan)? Answer Yes if the interest rate depends on the business\'s success (regardless of whether the club will own part of the company).'), TRUE);
   
+  // equity set
   $offering = textFld(t('Offering size:'), [t('Offering size'), t('Total size of offering, in dollars')], required());
   $price = textFld(t('Share price:'), [t('Price per share')], required());
   $return = textFld(t('Return:'), [t('Predicted APR')], required() + suffix('%'));
 //  $types = textFld(t('Types:'), [t('Type codes'), t('D=dividends I=interest T=tax-exempt interest')], required());
   $equitySet = fieldSet('equitySet', compact(ray('offering price return')));
 
+  // loan set
   $offering = textFld(t('Target:'), [t('To be borrowed'), t('How much is the company borrowing from all lenders, in dollars')], required());
   $price = hidFld(1);
   $return = textFld(t('Interest Rate:'), [t('Interest rate')], required() + suffix('%'));
@@ -52,7 +54,6 @@ function formInvestPropose($form, &$sta, $args = '') {
   $web = textFld(t('Web presence:'), [t('Web presence'), t('How impressive does the company look on Internet buzz (0 to 100)')], required());
   $history = textFld(t('History:'), [t('Repayment history'), t('Rate the company\'s past success repaying loans and investments (0 to 100, where 50 means no history)')], required());
   $soundness = textFld(t('Soundness:'), [t('Overall soundness'), t('Overall, how sound is this investment (0-100)')], required());
-  $clubid = hidFld($clubid);
 
   $submit = t('Propose');
 
@@ -60,10 +61,11 @@ function formInvestPropose($form, &$sta, $args = '') {
   
   jsx('invest-proposal');
   
-  return cgform(compact(ray('title subtext company fullName city serviceArea dob gross bizCats clubid investment equity equitySet loanSet terms assets character strength web history soundness submit clubid')));
+  return cgform(compact(ray('title subtext company fullName city serviceArea dob gross bizCats investment equity equitySet loanSet terms assets character strength web history soundness submit')));
 }
 
 function formInvestPropose_validate($form, &$sta) {
+  global $mya; $clubid = $mya->id;
   extract($info = just(INVEST_ALLFLDS, $sta['input']));
 
   if (@$company) {
@@ -78,11 +80,15 @@ function formInvestPropose_validate($form, &$sta) {
     $max = in($$k, $toRate) ? 100 : ''; // '' not NULL (no limit)
     if ($err = u\badAmount($$k, '>=0', 2, $max)) return sayFieldErr($err, $k);
   }
-  u\preray(compact(ray(INVEST_ALLFLDS)), $sta['input']); // update changed fields
+  $types = ''; // not actually used until submit
+  
+  u\preray(@compact(ray(INVEST_ALLFLDS)), $sta['input']); // update changed fields
 }
 
 function formInvestPropose_submit($form, &$sta) {
-  global $mya;
+  global $mya; 
+  list ($clubid, $clubqid) = [$mya->id, $mya->mainQid];
+  
   extract(just(INVEST_ALLFLDS . ' equity exempt', $sta['input']));
   
   $types = @$equity ? 'D' : 'I';
@@ -93,7 +99,9 @@ function formInvestPropose_submit($form, &$sta) {
     $a->setCategories($bizCats);
   } else $a = r\acct($company);
 
-  list ($coid, $proposedBy) = [$a->id, $mya->id];
+  list ($coid, $proposedBy) = [$a->id, $mya->agentId];
+  $return /= 100; // convert % to fraction
+  
   db\insert('r_investments', compact(ray('coid proposedBy ' . INVEST_FLDS)), 'vestid');
-  w\go("/invest/list/clubid=$clubid", t('Your proposed investment has been saved.'));
+  w\go("/invest/list/clubqid=$clubqid", t('investment proposal saved'));
 }

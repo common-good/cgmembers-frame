@@ -13,46 +13,60 @@ function formInvest($form, &$sta, $args) {
   global $mya; $uid = $mya->id;
 
   $title = t('Investment Club');
+
+  $clubid = $mya->iclub? $uid : db\get('uid', 'users', 'fullName LIKE :club AND :zip REGEXP zip AND :IS_OK', ray('club zip', t('%Investment Club%'), $mya->zip));
   
-  if (!$clubid = $mya->iclubid) {
-    $subtext = t('There is no investment club in your community at this time. Consider starting one! Your %PROJECT community administrator can set it up for you.');
+  if (!$clubid) {
+    $subtext = t('There is no active investment club in your community at this time. Consider starting one! Your %PROJECT community administrator can set it up for you.');
     return cgform(compact(ray('title subtext')));
   }
 
-  $clubVal0 = clubVal($investments0, $liquid0, $reserve0);
-  $buttons0 = btn("/invest/list/clubid=$clubid", t('List Investments'), 'success');
+  $clubA = r\acct($clubid);
+  $clubqid = $clubA->mainQid;
+  $clubVal = investmentsVal($clubid, $investments, $liquid, $reserve, $invCount);
   
-  if ($mya->isIClub) { // the club itself
-    $buttons = $buttons0
-      . btn("/invest/propose/clubid=$clubid", t('Propose'))
-		  . btn("/invest/cashout/clubid=$clubid", t('Requests to Cash Out'));
-    $count0 = db\get('COUNT(DISTINCT uid)', 'r_stakes', compact('clubid'));
-    $count = item(number_format($count0), t('Member Count:'));
-		$investments = item(u\fmtAmt($investments0), t('Investments:'));
-		$liquid = item(u\fmtAmt($liquid0), t('Liquid:'));
-		$reserve = textFld(t('Loss/Expense Reserve:'), '', required(u\fmtAmt($reserve0)));
-		$clubVal = item(u\fmtAmt($clubVal0), t('Club Net Value:'));
-    $submit = t('Save');
-  } elseif ($isMember = $res = db\get('*', 'r_stakes', compact(ray('uid clubid')))) { // member!
-    extract(just('request stake', $res));
-//    extract(just('stake', $res));
-//		$request = db\sum('amount', 'r_invoices', 'status=:TX_PENDING AND payer=:clubid AND payee=:uid', compact('clubid', 'uid'));
-    $old = hidFld(serialize(just('stakeid clubid stake request requestedOut', $res)));
+  if ($mya->iclub) { // the club itself
+    if ($res = db\get('-SUM(request) AS reqTot, SUM(IF(request<0, 1, 0)) AS reqCount, SUM(stake) AS stakes', 'r_stakes', compact('clubid'))) {
+      extract($res);
+      $reqCount = number_format($reqCount);
+    } else $reqTot = $reqCount = $stakes = 0;
+    
+    $btnList = btn("/invest/list/clubqid=$clubqid", t('List'), 'success');
+    $btnPropose = btn('/invest/propose', t('Propose'));
+    $btnCashout = btn('/invest/cashout', t('Cash Out'));
+    $btnDividends = btn('/invest/dividends', t('Issue Dividends'));
+    $btnSave = btn('', t('Save'));
+    $members = number_format(db\get('COUNT(DISTINCT uid)', 'r_stakes', compact('clubid')));
+
+		$liquid = item(u\fmtAmt($liquid), t('Liquid:'));
+    $requests = item(u\fmtAmt($reqTot), t('Requests to Cash Out (%reqCount):', compact('reqCount')), '', suffix($btnCashout));
+		$investments = item(u\fmtAmt($investments), t('Investments (%invCount):', compact('invCount')), '', suffix($btnList . $btnPropose));
+		$lossReserve = item(u\fmtAmt($reserve - $clubA->minimum), t('Loss Reserve:'));
+		$expenseReserve = textFld(t('Expense Reserve:'), '', required(u\fmtAmt($clubA->minimum)) + suffix($btnSave));
+    $avail = item(u\fmtAmt($clubVal - $stakes), t('Available for Dividends:'), '', suffix($btnDividends));
+		$clubVal = item(u\fmtAmt($clubVal), t('Club Net Value:'));
+    $stakes = item(u\fmtAmt($stakes), t('Total Member Stakes (%members):', compact('members')));
+    $fields = 'title liquid requests investments lossReserve expenseReserve clubVal stakes avail';
+    jsx('invest');
+  } elseif ($isMember = $res = db\get('request,requestedOut,stake,stakeid', 'r_stakes', compact(ray('uid clubid')))) { // member!
+    extract($res);
+    $old = hidFld(serialize(compact(ray('stakeid clubid stake request requestedOut'))));
     $request += 0; // enable if($request)
     $stake += 0;
-    $buttons = $buttons0;
+    $buttons = btn("/invest/list/clubqid=$clubqid", t('List Investments'), 'success');
     $amount = textFld($stake ? t('Buy or sell:') : t('Invest:'), [t('Amount'), t('If you reduce your investment amount, that request will take effect when funds become available.') . $request ? t('  Whatever amount you request here will be in addition to your current request.') : ''], required()); // must be before request item
-    $myRequest = $request ? item(u\fmtAmt($request, ''), t('Change request:'), t('Your pending request to %change your investment', 'change', $request < 0 ? t('reclaim part of') : t('increase'))) : NULL;
+    $myRequest = $request ? item(u\fmtAmt($request), t('Change request:'), t('Your pending request to %change your investment', 'change', $request < 0 ? t('reclaim part of') : t('increase'))) : NULL;
 //    $togAttrs = ray('on off offstyle', t('Sell'), t('Buy'), 'warning');
 //    $buyorsell = togFld('buysell', t('Buy or Sell:'), '', 1, $togAttrs);
     $buy = submi(t('Invest MORE'), '', 'md');
     if ($stake or $request) $sell = submi(t('Invest LESS'), '', 'md');
     //$myStake = item(u\fmtAmt($stake, ''), t('Your investment:'));
-		$myVal0 = myClubVal($clubVal0);
-		$pct = $clubVal0 ? $myVal0 / $clubVal0 : 0;
-		$clubVal = item(t('%val (%liquid liquid)', 'val liquid', u\fmtAmt($clubVal0), u\fmtAmt($liquid0)), t('Club Value:'));
-		$myShare = item(tr('%amt (%pct)', 'amt pct', u\fmtAmt($myVal0), u\fmtAmt($pct, '%')), t('Your Share:'));
+		$pct = myShareOfClub($uid, $clubid);
+		$myVal = $pct * $clubVal;
+		$clubVal = item(t('%val (%liquid liquid)', 'val liquid', u\fmtAmt($clubVal), u\fmtAmt($liquid)), t('Club Value:'));
+		$myShare = item(tr('%amt (%pct)', 'amt pct', u\fmtAmt($myVal), u\fmtAmt($pct, '%')), t('Your Share:'));
     $submit = fieldSet('submit2', @compact('buy', 'sell'), ' ');
+    $fields = 'title buttons old clubVal myShare myRequest amount submit';
   } else { // not a member yet
     $old = hidFld(serialize(compact('clubid')));
     $title = t('Join Your Local Investment Club');
@@ -65,20 +79,22 @@ X
     , 'cttyName _a', $mya->cttyA->fullName, atag('http://partnershipLink'));
     $signedBy = w\signedBy();
     $submit = t('Join');
+    $fields = 'title subtext signedBy old submit';
   }
 
-  return cgform(@compact(ray('title subtext buttons signedBy old count investments liquid reserve clubVal myShare myRequest amount submit')));
+  return cgform(compact(ray($fields)));
 }
 
 function formInvest_validate($form, &$sta) {
   global $mya;
 
-  extract(just('signedBy amount old reserve', $sta['input']));
+  extract(just('signedBy amount old expenseReserve', $sta['input']));
 
   if (isset($signedBy)) return !w\badSignature($sta);
   
-  if (isset($reserve)) {
-    if ($err = u\badAmount($reserve)) return say($err, 'reserve');
+  if (isset($expenseReserve)) {
+    if ($err = u\badAmount($expenseReserve)) return say($err, 'expenseReserve');
+    $sta['input']['expenseReserve'] = $expenseReserve;
     return;
   }
   
@@ -91,7 +107,8 @@ function formInvest_validate($form, &$sta) {
       if (!$mya->hasBank) return say(t('You are %short short for that investment.', 'short', u\fmtAmt($short)), 'amount');
       $sta['input']['short'] = $short;
     }
-  } elseif ($stake + @$request - $amount < 0) return say(t('That is more than you have invested!'), 'amount');
+  } elseif ($stake + @$request - $amount < 0) return say(t('investment oversell'), 'amount');
+  $sta['input']['amount'] = $amount;
 }
 
 function formInvest_submit($form, &$sta) {
@@ -115,7 +132,7 @@ function formInvest_submit($form, &$sta) {
   $buy = (op($sta) == 'buy');
   $request = round($request + ($buy ? $amount : -$amount), 2);
 	if (!$buy) $requestedOut = now();
-  db\update('r_stakes', compact(ray('stakeid request requestedOut')), 'stakeid');
+  db\update('r_stakes', @compact(ray('stakeid request requestedOut')), 'stakeid');
   
   if ($buy and $request > 0) {
     if (@$short) {
@@ -123,48 +140,53 @@ function formInvest_submit($form, &$sta) {
       $mya->getFunds($short, t('for investment'));
     } else r\handleInvestmentRequest($stakeid, $msg);
   } elseif (!$buy and $request < 0) { // sell
-		$msg = t('Your request to redeem %request of your investment will be handled by a club administrator when funds become available.', 'request', u\fmtAmt(-$request));
+		$msg = t('redemption request', 'request', u\fmtAmt(-$request));
 	} else $msg = t('Your request has been adjusted accordingly.');
 
   say($msg);
 }
 
-//		list ($msg, $subs) = be\invoice($mya, r\acct($mya->iclubid), $amount, t('redeem investment'), ray('goods stakeid', FOR_STAKE, $stakeid));
-//		say($msg, $subs);
-
 /**
  * Return the investment club's total current value.
- * @param numeric $investments: (RETURNED) value of club's investments
+ * @param int $clubid: the club's record ID
+ * @param numeric $val: (RETURNED) value of club's investments
  * @param numeric $liquid: (RETURNED) club's cash assets (including reserve)
- * @param numeric $reserve: (RETURNED) club's cash reserve
+ * @param numeric $reserve: (RETURNED) club's cash reserve (loss reserve plus expense reserve)
+ * @param int $cnt: (RETURNED) number of (actual) club investments
  */
-function clubVal(&$investments = 0, &$liquid = 0, &$reserve = 0) {
-	global $mya;
-	$clubid = $mya->iclubid;
+function investmentsVal($clubid, &$val = 0, &$liquid = 0, &$reserve = 0, &$cnt = 0) {
 	$icA = r\acct($clubid);
-	$investments = db\sum('shares*price', 'r_shares s JOIN r_investments i ON i.vestid=s.vestid', ray('clubid', $clubid));
-	list ($liquid, $reserve) = [$icA->balance, $icA->minimum];
-	return round($liquid - $reserve + $investments, 2); // cash less reserve plus investments
+  if ($val = db\sum('shares*price', 'r_investments JOIN r_shares USING(vestid)', compact('clubid'))) {
+	  $res = db\get('SUM(1) AS cnt, SUM(reserve) AS lossReserves', 'r_investments i', 'clubid=:clubid AND (SELECT 1 FROM r_shares s WHERE s.vestid=i.vestid LIMIT 1)', compact('clubid'));
+    extract($res);
+  } else $val = $cnt = $lossReserves = 0;
+  
+	list ($liquid, $reserve) = [$icA->balance, $icA->minimum + $lossReserves];
+	return round($liquid + $val - $reserve, 2); // cash plus investments less reserve
 }
 
 /**
- * Return the value of the current account's investment in the club.
+ * Return the fraction of the club owned by the current account.
  * A CG member who is not a club member can represent their spouse at a club meeting, but there is no joint investment account.
+ * The member's fair share is calculated as the sum of products of stakes held by the member times number of seconds held,
+ * as compared to the total of all such sums of products (for all club members)
+ * @param int $clubid: the club's record ID
  * @param numeric $icVal: club's total current value
+ *
  */
-function myClubVal($clubVal) {
-  global $mya;
-	$stake = 'IF(uid1=:clubid,-amt,amt)';
-	$share = "(:NOW-created)*$stake";
+function myShareOfClub($myid, $clubid, &$myStake = '', &$totalStakes = '', $totalFairShares = '') {
+	$memberAmt = 'IF(uid1=:clubid,-amt,amt)';
+	$memberFairShare = "(:NOW-created)*$memberAmt";
 	$isMe = ':myid IN (uid1,uid2)';
   
 	$sql = <<<X
-	  SELECT SUM($stake) AS totalStake,
-		       SUM($share) AS totalShare,
-		       SUM(IF($isMe, $stake, 0)) AS myStake,
-					 SUM(IF($isMe, $share, 0)) AS myShare
+	  SELECT SUM($memberAmt) AS totalStakes,
+		       SUM($memberFairShare) AS totalFairShares,
+		       SUM(IF($isMe, $memberAmt, 0)) AS myStake,
+					 SUM(IF($isMe, $memberFairShare, 0)) AS memberFairShare
 	  FROM txs WHERE :clubid IN (uid1,uid2) AND :IS_STAKE
 X;
-  extract(db\q($sql, ray('myid clubid', $mya->id, $mya->iclubid))->fetchAssoc());
-	return round($myStake, 2);
+  if (!$res = db\q($sql, compact(ray('myid clubid')))->fetchAssoc()) return 0;
+  extract($res);
+	return abs($totalFairShares) > .005 ? round($memberFairShare / $totalFairShares, 2) : 0;
 }

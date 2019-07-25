@@ -58,7 +58,7 @@ class TxHistoryDownload implements TxProcessor {
     $net = round($amount, 2);
     $csvRow = [$tid, strftime('%Y-%m-%d', $created), $name, $description,
                $frombank, $fromyou, $toyou, $balance, $net,
-               r\qo($myAgentUid)->mainQid];
+               r\qid($myAgentUid)];
     u\csv($csvRow);
     foreach (ray(TX_DOWNLOAD_MONEY_FLDS) as $k => $fld) {
       $this->totals[$fld] += $$fld;

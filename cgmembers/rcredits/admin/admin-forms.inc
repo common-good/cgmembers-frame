@@ -38,7 +38,6 @@ function formAdminPanel($form, &$sta, $args = '') {
   $title = t('System Administration');
   
   $inviteeStatus = submi(t('Invitee Status'));
-  $organizerList = submi(t('Local Requests'));
   $signupCos = submi(t('Connections to Companies'));
   $queries = selectFld(t('Query:'), '', '', $queries);
   $account = textFld(t('Account:'), t('Account to do something to'), dft(@$qid ?: svar('adminingAcct')));
@@ -79,7 +78,7 @@ EOF;
   }
 
   foreach (ray($tables) as $one) $do[$one] = submi($one);
-  $funcs = ray('inviteeStatus organizerList signupCos do1099btest do1099b reconcile special stop start stopCtty startCtty');
+  $funcs = ray('inviteeStatus signupCos do1099btest do1099b reconcile special stop start stopCtty startCtty');
 //  foreach ($funcs as $func) if (isset($$func)) $do[$func] = $$func;
   $do += @compact($funcs);
   $do = fieldSet('do', $do);
@@ -152,8 +151,6 @@ function formAdminPanel_submit($form, &$sta) {
 		w\go('sadmin/reconcile-ctty-fund');
   } elseif ($op == 'inviteeStatus') {
     return w\go('community/invite/invited-whom');
-  } elseif ($op == 'organizerList') {
-    return w\go('sadmin/organizer-list');
   } elseif ($op == 'signupCos') {
     global $signupCos; $signupCos = [];
     $crit = $mya->admin ? '1' : 'community=' . $mya->community;
@@ -193,43 +190,6 @@ function formAdminPanel_submit($form, &$sta) {
 }
 
 /**
- * Show people interested in CG in particular zipcodes.
- */
-function formOrganizerList($form, &$sta, $where = '') {
-  $title = t('Organizer List');
-  if ($where) {
-    $where = preg_replace('/[^[0-9 ]/', '', $where); // prevent SQL injection, in case admin is evil
-    $where = "zip LIKE '" . str_replace(' ', "%' or zip LIKE '", $where) . "%'";
-    $q = db\q("SELECT * FROM r_request WHERE $where");
-    $list = [];
-    while ($row = $q->fetchAssoc()) {
-      extract(just('first last phone email zip', $row));
-      $phone = u\fmtPhone(u\decry('P', $phone));
-      $email = u\decry('P', $email);
-      $list[] = "<tr><td>$first $last</td><td>$phone</td><td>$email</td><td>$zip</td></tr>\n";
-    }
-    $list = join("\n", $list);
-    $list = item(<<<EOF
-                 <table id="organizer-list">
-                 <tr><th>Name</th><th>phone</th><th>email</th><th>zip</th></tr>
-                 $list
-                 </table>
-EOF
-                 );
-    $subtext = $zips = $submit = NULL;
-  } else {
-    $subtext = t('Enter a list of zipcodes (or partial zipcodes), separated by spaces.');
-    $zips = textFld(t('Zips:'));
-    $submit = t('Go');
-  }
-  return cgform(compact(ray('title subtext zips submit list')));
-}
-
-function formOrganizerList_submit($form, &$sta) {
-  w\go('sadmin/organizer-list/' . $sta['input']['zips']);
-}
-
-/**
  * Display dated changes made to an account.
  * @param string $qid: the account QID (default to current account)
  */
@@ -260,10 +220,9 @@ function formSeeChanges($form, &$sta, $qid = '') {
 function decryChange($type, $v) {return ($type == 'V' and !r\allKnowing()) ? t('(secret)') : u\decry($type, $v);}
 
 /**
- * Log back in to admin automatically.
+ * Log back in to admin automatically (called after testing, in case session got destroyed).
  */
 function formTestRecovery($form, &$sta, $doSay = FALSE) {
-  //  if (isDEV and !r\acct()) { // called after testing, in case session got destroyed
   if (!isDEV) return;
   //$uid = \user_authenticate('admin', DEV_ADMIN_PASS);
   $mya = r\acct(1);
@@ -567,6 +526,7 @@ function formPhp($form, &$sta, $res = '') {
 function formPhp_submit($form, &$sta) {
   extract(just('code', $sta['input']));
   \setV('code', $code); // remember for next time
+  $code = str_replace('<.', '<', $code); // fudge around drupal's sanitizing of all HTML
   $code = <<<EOF
     use CG as r;
   use CG\DB as db;
@@ -584,7 +544,7 @@ EOF;
   ob_start();
   eval($code);
   $res = ob_get_clean();
-  /**/  \drupal_set_message(print_r($res, 1));
+  \drupal_set_message(pr($res));
   //  w\go('sadmin/php/');
 }
 
@@ -982,7 +942,7 @@ function test($arg = '') {
               );
   }
   if (session_id() and $_SESSION) session_destroy();
-  db\del('sessions', '(sid, ssid)', '1=1');  // Yeah, this is a little funky...
+  db\del('sessions', '(sid, ssid)', '1 = 1');  // Yeah, this is a little funky...
   \drupal_goto('sadmin/recover'); // has to be a form available when logged out
 }
 
@@ -1103,7 +1063,7 @@ function formVariables() {
     $value = getv($row->name);
     $complex = (is_array($value) or is_object($value));
     if ($complex) {
-/**/  $value = str_replace("\n", "<br>\n", print_r($value, 1));
+      $value = str_replace("\n", "<br>\n", pr($value));
     } else {$value = check_plain($value);}
 
     $options[$row->name]['value'] = $value;
@@ -1139,7 +1099,7 @@ function formVariableEdit($form, &$form_state, $name) {
     $value = item(t('Sorry, complex variable types may not be edited yet.'), t('New value'));
     $name = $new = $submit = NULL;
   } else {
-/**/  $value = print_r($value, 1);
+    $value = pr($value);
     $name = hidFld($name);
     $new = areaFld(t('New Value:'), '', dft($value . ''));
     $value = item($value . '', t('Old value:'));

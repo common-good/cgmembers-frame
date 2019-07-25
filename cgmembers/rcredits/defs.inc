@@ -5,7 +5,7 @@
  * (SMS, web, smartphone, etc.)
  */
 
-define('R_VERSION', '3.50k'); // software version
+define('R_VERSION', '3.50l'); // software version
 
 // definitions used in settings file
 define('US_COUNTRY_ID', 1228); // United States
@@ -148,7 +148,7 @@ define('COMPANY_FREEZE', FALSE); // companies cannot spend rewards yet
 define('R', '<span class="r">r</span>');
 define('US', '<span class="us">us</span>');
 define('GAME_COMPANIES', '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital');
-define('R_DATE_FLDS', 'created completed deposit sent invited giftDate signed login access joined yesterday'); // date field names for testing and administrative display
+define('R_DATE_FLDS', 'created completed deposit sent invited giftDate signed login access joined yesterday dob when sold'); // date field names for testing and administrative display
 define('CO_FLDS', 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd'); // account fields stored in r_company
 define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone achMin pinThreshold lastiCode tenure moves mediaConx source getAppData appData snap'); // fields stored in the account's "data" array field (serialized)
 define('MASTER_NUMERIC_FLDS', 'minimum achMin savingsAdd saveWeekly');
@@ -171,7 +171,7 @@ define('R_ADMIN_CAN_MANAGE_CTTYS', TRUE); // should be false once communities ca
 define('R_CRON_PERIOD', 5*60); // how many seconds between cron runs (must divide an hour evenly)
 define('R_MAX_TASK_TIME', 1*60); // what's the longest a queued cron task might take
 define('R_STEPS', 'signup:signup, verify, ssn, sign:community/agreement, donate:community/donate, proxies, prefs:settings/preferences, connect, company, relations, photo, food, backing:community/backing'); // membership steps
-define('R_NOLOG', SECURE_FLDS . ' ' . VSECURE_FLDS . ' data secure vsecure secret oneTimeLoginUrl password pass pass1 pass2 vKeyE newPass external_input form_build_id'); // don't log these (external_input may contain passwords and is duplicated as individual fields)
+define('R_NOLOG', SECURE_FLDS . ' ' . VSECURE_FLDS . ' data secure vsecure secret oneTimeLoginUrl password pass pass1 pass2 vKeyE newPass external_input form_build_id bad args'); // don't log these (external_input may contain passwords and is duplicated as individual fields)
 define('R_NOLOG_FORMS', 'Admin Test Handy footer accounts history settings settings/icon community Summary Php'); // don't log visits to these forms
 define('R_ANON_FORMS', R_NOLOG_FORMS . ' Signup Signin PageNotFound Sinx Pass Empty TestRecovery ChangePassword Help Community Democracy Agreement CttyFunds Reports Flags Game Menu I ResetPassword Profile Accept Buy HandleInvoice FindCo'); // no login required
 define('SSN_ERR_INDEX', 'CGerror'); // where to put/find error messages in ssnData
@@ -374,19 +374,19 @@ define('B_PAPER', 17); // will not accept electronic statements
 define('B_SECRET', 18); // don't let merchants tell me my balance on request
 define('B_u19', 19); //
 define('B_DEBT', 20); // member chose to permit sub-zero balances
-define('B_u21', 21); // 
+define('B_REINVEST', 21); // member chose to automatically reinvest investment club dividends and inflation adjustments
 define('B_SAVINGS', 22); // the connected bank account is a savings or money market account
 define('B_CASHOUTW', 23); // cash out automatically every 7 days
 define('B_CASHOUTM', 24); // cash out automatically every 30 days
 define('B_BETA', 25); // beta tester
-define('B_ICADMIN', 26); // investment club admin
+define('B_u26', 26); //
 define('B_ADMIN2', 27); // is an overall admin assistant or bank partner or government regulator (read-only except notes)
 define('B_CADMIN2', 28); // is a community sub-administrator (read-only except notes)
 define('B_CADMIN', 29); // is a community administrator
 define('B_ADMIN', 30); // is a system administrator -- can manage server, including assigning ctty admins, but cannot manage communities or individual accounts (except temporarily)
 define('B_MAX', 62); // maximum bit number
-define('B_ADMINABLE', 'member confirmed carded beta icAdmin cAdmin cAdmin2 nonudge cgc invites rewardy noneg'); // for cAdmin to set
-define('B_LIST', 'member confirmed ok carded ided refill co draws roundup nonudge nosearch u11 bankOk weekly monthly u15 bysms paper secret u19 debt u21 savings cashoutW cashoutM beta icAdmin admin2 cAdmin2 cAdmin admin');
+define('B_ADMINABLE', 'member confirmed carded beta cAdmin cAdmin2 nonudge cgc invites rewardy noneg'); // for cAdmin to set
+define('B_LIST', 'member confirmed ok carded ided refill co draws roundup nonudge nosearch u11 bankOk weekly monthly u15 bysms paper secret u19 debt reinvest savings cashoutW cashoutM beta u26 admin2 cAdmin2 cAdmin admin');
 
 // community-specific flags
 define('B_CGC', 0); // ctty: is an official CGC (currently has no effect)

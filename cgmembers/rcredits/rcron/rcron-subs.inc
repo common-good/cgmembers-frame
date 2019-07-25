@@ -45,14 +45,20 @@ function queueNext($task = NULL) {
  * Say whether it's time to run a periodic function.
  * @param int $time: current time (or time to test)
  * @param string $period: name of period type (day, hour, etc.)
- * @param int $chosen: at which point should we do the function
+ * @param int $chosen: at which point should we do the function ('' means now)
  * @return <it's now a different period than when the function was last run AND we're at or past the chosen point>
  */
 define('TIME_CODES', 'year:Ym,month:md,week:Ua,day:dH,hour:HM');
 
 function timeFor($time, $period, $chosen) {
   global $timeFor; if (u\test() and isset($timefor)) return @$timefor[$period];
-  
+
+  $lastStart = getV('last_cron_start', []);
+  if ($lastStart and now() - nn($lastStart[$period], 0) < HOUR_SECS) {
+    r\tellAdmin(t('Tried to run cron twice in an hour for period ') . $period);
+    return FALSE;
+  }
+
   $lastCron = \variable_get('r_last_cron') ?: [];
   $lastTime = @$lastCron[$period];
   $codes = ray(TIME_CODES);
@@ -60,7 +66,13 @@ function timeFor($time, $period, $chosen) {
   $point = strftime("%$withinCode", $time);
   if ($withinCode == 'a') $point = u\day2n($point); // %u and %w fail on dev machine (among others)
   list ($periodNum, $lastPeriodNum) = [strftime("%$periodCode", $time), strftime("%$periodCode", $lastTime)];
-  return ($periodNum != $lastPeriodNum and $point >= $chosen);
+  $isTime = ($periodNum != $lastPeriodNum and ($chosen === '' or $point >= $chosen));
+  if ($isTime) {
+    $lastStart[$period] = now();
+    setV('last_cron_start', $lastStart); // remember that this periodic activity has been done
+  }
+  
+  return $isTime;
 }
 
 function queue($op, $item = []) {

@@ -365,7 +365,7 @@ function formEmpty($form, &$sta = '', $args = '') {
   $title = t('Miscellaneous'); // this is suppressed with CSS
   if (@$msg) say(plain($msg), @$field);
   if (@$say) $subtext = t('<p>To protect your account, <%span>no sign-in was required</span> for this action. To sign in safely, always go to %CG_DOMAIN.</p><p>You may now close this browser page.</p>', '_span', 'span class="loud"');
-///   FAILS :(  if ($doSay == 'test') $testMessages = item(print_r(\drupal_get_messages(), 1));
+///   FAILS :(  if ($doSay == 'test') $testMessages = item(pr(\drupal_get_messages()));
   return cgform(@compact(ray('title testMessages subtext')));
 }
 
@@ -385,33 +385,6 @@ function authcode() {
 function formCgBiz($form, &$sta, $id) {
   if (!@$id or !$a = r\acct(strtoupper($id)) or !$a->ok) return w\go('', t('That is not a %PROJECT Business.'));
   w\go('member/' . $a->name, t('<big><b>%fullName</b> is a %PROJECT Business since %activated.</big> For more information about Common Good, <%a>click here</a>.', 'fullName activated _a', $a->fullName, u\fmtDate($a->activated), atag(r\promoLink(''))));
-}
-
-//function toggler($sel) {return w\attrib(['onclick' => "$('$sel').toggle(this.checked)"]);}
-
-/**
- * Display a list of people nearby, waiting for an invitation.
- */
-function formWaiting($form, &$sta) {
-  global $mya;
-  
-  $title = t('People You Might Know, Waiting to Be Invited');
-//  $subtext = item(t('<p>If the status of someone you invited is "<span style="color:orange;">Not Complete</span>", they have not finished setting up an account and may need your help.</p><p>If the status is "<span style="color:red;">expired</span>", you may want to call them and send another invitation.</p>'));
-  $table = "(SELECT CONCAT_WS(' ', first, last) AS name, MID(zip,1,5) AS zip FROM r_request WHERE NOT done AND ctty=:ctty ORDER BY created DESC,listid DESC LIMIT 50) r";
-  $q = db\q("SELECT name, zip FROM $table ORDER BY zip,name", ['ctty' => $mya->community]);
-  while ($row = $q->fetchAssoc()) {
-    extract($row);
-    $lines[$zip] = (@$lines[$zip] ? $lines[$zip] . ', ' : '') . $name;
-  }
-  if ($mya->community == r\serverUid()) $lines['01301'] = (@$lines['01301'] ? $lines['01301'] . ', ' : '') . 'Caitlin Sullivan';
-  if (@$lines) {
-    foreach ($lines as $zip => $zipList) {
-      if ($city = db\get('city', 'users', 'MID(zip, 1, 5)=:zip', compact('zip'))) $zip = $city;
-      $list[] = "<tr><th>$zip</th><td>$zipList</td></tr>\n";
-    }
-  } else $list = [t('No one in your area is currently waiting to be invited.')];
-  $list = item('<table>' . join('', $list) . '</table>');
-  return cgform(compact('title', 'list'));
 }
 
 /**

@@ -36,20 +36,23 @@ Setup:
   | .ZZB |      90 |
   | .ZZC |     200 |
   When transactions: 
-  | xid | created   | amount | from | to   | purpose |*
-  |   6 | %today-7d | 240.01 | .ZZA | .ZZB | what G  |
+  | xid | created   | amount | from | to    | purpose |*
+  |   6 | %today-7d | 240.01 | .ZZA | .ZZB  | what G  |
+  |   6 | %today-7d |    .99 | .ZZA | round | roundup donation |
   # pennies here and below, to trigger roundup contribution
   Then balances:
-  | uid  | balance |*
-  | .ZZA |  269.99 |
-  | .ZZB |  330.01 |
-  | .ZZC |  200.00 |
+  | uid   | balance |*
+  | round |    0.99 |
+  | .ZZA  |  269.00 |
+  | .ZZB  |  330.01 |
+  | .ZZC  |  200.00 |
   When transactions: 
-  | xid | created   | amount | from | to   | purpose |*
-  |   7 | %today-6d |  99.99 | .ZZA | .ZZB | pie N   |
+  | xid | created   | amount | from | to    | purpose |*
+  |   7 | %today-6d |  99.99 | .ZZA | .ZZB  | pie N   |
+  |   7 | %today-6d |   0.01 | .ZZA | round | roundup donation |
   Then balances:
   | uid  | balance |*
-  | .ZZA |     170 |
+  | .ZZA |     169 |
   | .ZZB |     430 |
   | .ZZC |     200 |
   When transactions: 
@@ -57,7 +60,7 @@ Setup:
   |   8 | %today-5d |    100 | .ZZC | .ZZA | labor M |
   Then balances:
   | uid  | balance |*
-  | .ZZA |     270 |
+  | .ZZA |     269 |
   | .ZZB |     430 |
   | .ZZC |     100 |
   When transactions: 
@@ -65,7 +68,7 @@ Setup:
   |   9 | %today-4d |     50 | .ZZB | .ZZC | cash P  |
   Then balances:
   | uid  | balance |*
-  | .ZZA |     270 |
+  | .ZZA |     269 |
   | .ZZB |     380 |
   | .ZZC |     150 |
   # A: (21*(100+400) + 110+400 + 130+480 + 92+280 + -3+280 + 2*(107+280) + 3*(31+140))/30 * R/12 = 
@@ -74,7 +77,7 @@ Setup:
   |  10 | %today-3d |    120 | .ZZA | .ZZC | this Q  |
   Then balances:
   | uid  | balance |*
-  | .ZZA |     150 |
+  | .ZZA |     149 |
   | .ZZB |     380 |
   | .ZZC |     270 |
   When transactions: 
@@ -82,7 +85,7 @@ Setup:
   |  11 | %today-1d |    100 |  .ZZA | .ZZB | cash V  |
   Then balances:
   | uid  | balance |*
-  | .ZZA |      50 |
+  | .ZZA |      49 |
   | .ZZB |     480 |
   | .ZZC |     270 |
 
@@ -111,16 +114,20 @@ Scenario: Paper statement warnings are sent
   | list |*
   | Corner Pub (Cvil) |
 
-Scenario: Crumb donations are made
+Scenario: Crumb and roundup donations are made
   When cron runs "everyMonth"
   Then transactions: 
-  | xid | created        | amount | from | to    | purpose                                      | flags       |*
-  | 12  | %(%daystart-1) |   2.40 | .ZZC | crumb | crumbs donation: 2.0% of past month receipts | gift,crumbs |
+  | xid | created        | amount | from  | to    | purpose                                      | flags       |*
+  | 12  | %(%daystart-1) |   2.40 | .ZZC  | crumb | crumbs donation: 2.0% of past month receipts | gift,crumbs |
+  | 13  | %(%daystart-1) |   1.00 | round | cgf   | roundup donations                            | gift        |
+  | 14  | %(%daystart-1) |   2.40 | crumb | cgf   | crumb donations                              | gift        |
   # Note that tests simulate the previous month as the previous 30 days (created field is mdt1-1 when not testing)
-  And count "txs" is 12
+  And count "txs" is 14
+  And count "invoices" is 0
 
   When cron runs "everyMonth"
-  Then count "txs" is 12
+  Then count "txs" is 14
+  And count "invoices" is 0
   # still
   
 Scenario: Crumbs are invoiced
@@ -132,30 +139,33 @@ Scenario: Crumbs are invoiced
   Then invoices:
   | nvid | created        | payer | payee | amount | flags       | purpose                                      | status       |*
   |    1 | %(%daystart-1) | .ZZC  | crumb |   2.40 | gift,crumbs | crumbs donation: 2.0% of past month receipts | %TX_APPROVED |
-  And count "txs" is 12
+  And transactions:
+  | xid | created        | amount | from  | to  | purpose           | flags |*
+  | 13  | %(%daystart-1) |   1.00 | round | cgf | roundup donations | gift  |
+  And count "txs" is 13
   And count "invoices" is 1
 
   When cron runs "everyMonth"
-  Then count "txs" is 12
+  Then count "txs" is 13
   And count "invoices" is 1
   
   Given transactions:
   | xid | created   | amount | from | to   | purpose |*
-  |  13 | %today-4d |    770 | .ZZB | .ZZC | repay   |
-  Then count "txs" is 13
+  |  14 | %today-4d |    770 | .ZZB | .ZZC | repay   |
+  Then count "txs" is 14
 
   When cron runs "everyMonth"
-  Then count "txs" is 13
+  Then count "txs" is 14
   And count "invoices" is 1  
 
   When cron runs "invoices"
   Then transactions:
   | xid | created | amount | from | to    | purpose                                                       | flags       |*
-  | 14  | %now    |   2.40 | .ZZC | crumb | crumbs donation: 2.0% of past month receipts (%PROJECT inv#1) | gift,crumbs |
-  And count "txs" is 14
+  | 15  | %now    |   2.40 | .ZZC | crumb | crumbs donation: 2.0% of past month receipts (%PROJECT inv#1) | gift,crumbs |
+  And count "txs" is 15
 
   When cron runs "invoices"
-  Then count "txs" is 14
+  Then count "txs" is 15
   
 # NO (Seedpack gets no distribution) distribution of shares to CGCs
 #  And transactions:

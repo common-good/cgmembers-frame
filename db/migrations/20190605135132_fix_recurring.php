@@ -29,7 +29,7 @@ class FixRecurring extends AbstractMigration
      */
     public function up() { // not change() for anything, because order matters
       $this->table('r_recurs')
-      ->addColumn('purpose', 'string', ['length' => 255, 'default' => 'NULL', 'comment' => 'purpose of the recurring payment', 'after' => 'amount'])
+      ->addColumn('purpose', 'string', ['length' => 255, 'null' => true, 'comment' => 'purpose of the recurring payment', 'after' => 'amount'])
       ->update();
 
       $this->table('tx_hdrs_all')
