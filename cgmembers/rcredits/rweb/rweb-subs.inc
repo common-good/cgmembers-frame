@@ -1393,7 +1393,7 @@ function findCompany($company, $companyPhone) {
  * @param int $myid: current account record ID, if any
  * @return the relevant form fields
  */
-function nameAndEmail($co, $fullName = '', $email = '', $hideEmail = FALSE, $myid = 0) {
+function nameAndEmailFlds($co, $fullName = '', $email = '', $hideEmail = FALSE, $myid = 0) {
   if ($co) {
     list ($what, $who) = $co < 0 ? [t('Community'), t('The community\'s')] : [t('Company'), t('The company\'s')];
   } else {

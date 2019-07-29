@@ -183,6 +183,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST bank AMemberIsWellBelowTarget
  *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     TEST invoices UnpaidInvoicesGetHandled
+ *     TEST invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
  *     TEST joint AJointAccountNeedsRefilling
  *     TEST recurs ABrandNewRecurringPaymentCanBeCompleted
  *     TEST tickle ANewbieHasTakenOnlyTheFirstStep
@@ -329,6 +330,8 @@ function weMessageMemberWithTopicAndSubs($id, $topic, $subs) {
  *     MAKE cashout AMemberCompanyCashesOutMonthly
  *     MAKE cashout AMemberCompanyCashesOutWeekly
  *     MAKE communitybits CommunityBansSpendingBelowZero
+ *     MAKE invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
+ *     MAKE invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalance
  *     TEST risk Setup
  *     TEST risk WeCalculateRisks
  *     TEST trust WeCalculateTrust
@@ -448,7 +451,7 @@ function oftennessWorks() {
   foreach (ray($oftenttests) as $one) {
     if (!$one) break;
     list ($period, $chosen, $last, $time, $want) = ray($one);
-    \variable_set('r_last_cron', [$period => strtotime($last)]);
+    \variable_set('last_cron_end', [$period => strtotime($last)]);
     if (cr\timeFor(strtotime($time), $period, $chosen) != $want) $ok = t\output("test failed: $one");
   }
   return $ok;
@@ -475,6 +478,9 @@ function weDoNotEmail($email) {return t\noEmailTo($email);}
  *     TEST gifts ARecurringDonationToCGCannotBeCompleted
  *     BOTH invoices UnpaidInvoicesGetHandled
  *     MAKE invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
+ *     BOTH invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
+ *     MAKE invoices ALanguishingInvoiceGetsFundedAgain
+ *     MAKE invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalance
  *     TEST monthly CrumbsAreInvoiced
  *     TEST recurs ARecurringPaymentCannotBeCompleted
  */
@@ -506,6 +512,9 @@ function stats($list) {return t\stats($list);}
  *     MAKE gifts ARecurringDonationToCGCannotBeCompleted
  *     MAKE gifts ANonmemberChoosesADonationToCG
  *     MAKE gifts ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
+ *     BOTH invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
+ *     TEST invoices ALanguishingInvoiceGetsFundedAgain
+ *     TEST invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalance
  *     MAKE recurs ABrandNewRecurringPaymentCanBeCompleted
  *     MAKE recurs ASecondRecurringPaymentCanBeCompleted
  *     MAKE recurs ARecurringPaymentHappenedYesterday
@@ -598,6 +607,9 @@ function riskThresholdPercentIs($pct) {
  *     MAKE gifts ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
  *     MAKE invoices UnpaidInvoicesGetHandled
  *     MAKE invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
+ *     MAKE invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
+ *     MAKE invoices ALanguishingInvoiceGetsFundedAgain
+ *     MAKE invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalance
  *     MAKE joint AJointAccountNeedsRefilling
  *     MAKE joint AJointAccountDoesNotNeedRefilling
  *     MAKE monthly PaperStatementWarningsAreSent

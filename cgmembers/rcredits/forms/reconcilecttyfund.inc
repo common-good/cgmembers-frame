@@ -13,7 +13,7 @@ use CG\Db as db;
 function formReconcileCttyFund($form, &$sta) {
   $title = t('Reconcile Community Fund');
 	$subtext = t('Upload a Community Fund bank statement file (in OFX format). Or two files, if the Community Fund is split.');
-  if ($reconciledAsOf = getv('$reconciledAsOf') and !$txs = getv('ofxTxs')) $buttons = offerOffsetTransfer($reconciledAsOf);
+  if ($reconciledAsOf = getv('reconciledAsOf') and !$txs = getv('ofxTxs')) $buttons = offerOffsetTransfer($reconciledAsOf);
   $file1 = fileFld();
   $file2 = fileFld();
   $submit = t('Upload and Reconcile');
@@ -150,7 +150,7 @@ function formReconcileCttyFund_submit($form, &$sta) {
   }
 	
   $asOf = strtotime($dtAsOf);
-  setv('$reconciledAsOf', $asOf);
+  setv('reconciledAsOf', $asOf);
   setv('batches', $batches);
   setv('ofxTxs', $txs);
 	if (@$errs) say(join('<br>', $errs));

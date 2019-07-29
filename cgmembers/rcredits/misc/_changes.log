@@ -1,3 +1,14 @@
+2019-07-29 feature/restricted-coupons
+. discount coupons can now be restricted to certain accounts
+. discounts are now called "discounts" rather than coupons
+. fixed bugs in acct::bank() that combined too little into previous deposits and reported the new request unclearly
+. fixed bug in tellAdmin that omitted all details
+. coupons now only show up for nearby accounts
+. sanity check now detects transactioins with no entries (happened once when there was a lock error)
+. fixed bug in tests that sometimes kept verifyRecord from identifying correctly the record key
+. deleted many records in table "variable" and renamed a couple
+. fixed bug that stranded some invoices that were marked "funding"
+
 2019-07-24
 . php form no longer has to be refreshed on dev after running a test
 . <. is a workaround for HTML in PHP box

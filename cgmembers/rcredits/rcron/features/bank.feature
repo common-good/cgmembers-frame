@@ -24,8 +24,8 @@ Scenario: a member is barely below target
   |    1 | .ZZA  |     30 | %TX_CRON |   8 |
   And bank transfer count is 1
   And we notice "banked|bank tx number" to member ".ZZA" with subs:
-  | action    | amount | checkNum | why       |*
-  | draw from | $30    |        1 | to bring your balance up to the target you set |
+  | action | tofrom    | amount | checkNum | why       |*
+  | draw   | from   | $30    |        1 | to bring your balance up to the target you set |
 
 Scenario: a member gets credit for the bank transfer immediately
   Given balances:
@@ -37,8 +37,8 @@ Scenario: a member gets credit for the bank transfer immediately
   |    1 | .ZZA  |     30 | %TX_CRON |
   And bank transfer count is 1
   And we notice "banked|bank tx number|available now" to member ".ZZA" with subs:
-  | action    | amount | checkNum | why       |*
-  | draw from | $30    |        1 | to bring your balance up to the target you set |
+  | action | tofrom    | amount | checkNum | why       |*
+  | draw   | from   | $30    |        1 | to bring your balance up to the target you set |
 
 Scenario: a member has a negative balance
   Given balances:
@@ -49,8 +49,8 @@ Scenario: a member has a negative balance
   | txid | payee | amount | channel  |*
   |    1 | .ZZA  |  150   | %TX_CRON |
   And we notice "banked|bank tx number" to member ".ZZA" with subs:
-  | action    | amount | checkNum | why       |*
-  | draw from | $150   |        1 | to bring your balance up to the target you set |
+  | action | tofrom    | amount | checkNum | why       |*
+  | draw   | from   | $150   |        1 | to bring your balance up to the target you set |
 
 Scenario: an unbanked member barely below target draws on another account
   Given balances:
@@ -95,8 +95,8 @@ Scenario: a member is well below target
   | txid | payee | amount              | channel  |*
   |    1 | .ZZF  | %(100 + %R_ACHMIN) | %TX_CRON |
   And we notice "banked|bank tx number" to member ".ZZF" with subs:
-  | action    | amount              | checkNum | why       |*
-  | draw from | $%(100 + %R_ACHMIN) |        1 | to bring your balance up to the target you set |
+  | action | tofrom    | amount              | checkNum | why       |*
+  | draw   | from   | $%(100 + %R_ACHMIN) |        1 | to bring your balance up to the target you set |
 
 Scenario: a member is under target but already requested barely enough funds from the bank
   Given balances:

@@ -1,4 +1,4 @@
-Feature: Recurring transactions
+Feature: Recurring Payments
 AS a member
 I WANT to review my recurring (and autopay) transactions
 SO I can see what they are and terminate them.
@@ -21,9 +21,9 @@ Setup:
   | reid | main | other | flags   |*
   | 7773 | .ZZC | .ZZA  | autopay |
 
-Scenario: A member looks at their recurring transactions
+Scenario: A member looks at their Recurring Payments
   When member ".ZZA" visits page "history/recurring"
-  Then we show "Recurring Transactions" with:
+  Then we show "Recurring Payments" with:
   |~Way | Who        | Amount | Purpose   | How often? | Starting | Next     | Ending   |~Close   |
   | [R] | Corner Pub | 37.00  | this      | Quarterly  | %mdY-13m |~%mdY+2m  |          | [close] |
   | [R] | Bea Two    | 43.00  | that      | Weekly     | %mdY-13m |          | %mdY-11m |         |
@@ -36,7 +36,7 @@ Scenario: A member looks at their recurring transactions
 Scenario: A member stops a recurring transaction
   When member ".ZZA" visits page "history/recurring/recId=99900&do=stop"
   Then we say "status": "recur stopped"
-  And we show "Recurring Transactions" with:
+  And we show "Recurring Payments" with:
   | Who        | Amount | How often? | Starting | Next     | Ending   |
   | Corner Pub | 37.00  | Quarterly  | %mdY-13m |          | %mdY     |
   | Bea Two    | 43.00  | Weekly     | %mdY-13m |          | %mdY-11m |
@@ -46,7 +46,7 @@ Scenario: A member stops a recurring transaction
 Scenario: A member stops a stopped recurring transaction
   When member ".ZZA" visits page "history/recurring/recId=99901&do=stop"
   Then we say "error": "recur already ended"
-  And we show "Recurring Transactions" with:
+  And we show "Recurring Payments" with:
   | Who        | Amount | How often? | Starting | Next     | Ending   |
   | Corner Pub | 37.00  | Quarterly  | %mdY-13m | ~%mdY+2m |          |
   | Bea Two    | 43.00  | Weekly     | %mdY-13m |          | %mdY-11m |
@@ -56,7 +56,7 @@ Scenario: A member stops a stopped recurring transaction
 Scenario: A member attempts to stop a non-existent recurring transaction
   When member ".ZZA" visits page "history/recurring/recId=99999&do=stop"
   Then we say "error": "invalid recur id"
-  And we show "Recurring Transactions" with:
+  And we show "Recurring Payments" with:
   | Who        | Amount | How often? | Starting | Next     | Ending   |
   | Corner Pub | $37.00 | Quarterly  | %mdY-13m | ~%mdY+2m |          |
   | Bea Two    | $43.00 | Weekly     | %mdY-13m |          | %mdY-11m |
@@ -66,7 +66,7 @@ Scenario: A member attempts to stop a non-existent recurring transaction
 Scenario: A member attempts to stop another member's recurring transaction
   When member ".ZZA" visits page "history/recurring/recId=99904&do=stop"
   Then we say "error": "recur not yours"
-  And we show "Recurring Transactions" with:
+  And we show "Recurring Payments" with:
   | Who        | Amount | How often? | Starting | Next     | Ending   |
   | Corner Pub | 37.00  | Quarterly  | %mdY-13m | ~%mdY+2m |          |
   | Bea Two    | 43.00  | Weekly     | %mdY-13m |          | %mdY-11m |
@@ -76,7 +76,7 @@ Scenario: A member attempts to stop another member's recurring transaction
 Scenario: A member stops an autopayment
   When member ".ZZA" visits page "history/recurring/reid=7773&do=stop"
   Then we say "status": "recur stopped"
-  And we show "Recurring Transactions" with:
+  And we show "Recurring Payments" with:
   | Corner Pub | 37.00  | Quarterly  | %mdY-13m | ~%mdY+2m |          |
   | Bea Two    | 43.00  | Weekly     | %mdY-13m |          | %mdY-11m |
   | Bea Two    | 59.59  | Yearly     | %mdY-16m |~%mdY+8m  |          |

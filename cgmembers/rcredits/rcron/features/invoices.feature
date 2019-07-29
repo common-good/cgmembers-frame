@@ -50,8 +50,8 @@ Setup:
   |    4 | %today-1w | %TX_PENDING  |    400 | .ZZA | .ZZC | four  |         |
 
   And we notice "banked|bank tx number" to member ".ZZA" with subs:
-  | action    | amount | checkNum | why               |*
-  | draw from | $700   |        1 | to pay invoice #2 |
+  | action | tofrom | amount | checkNum | why               |*
+  | draw   | from   | $700   |        1 | to pay invoice #2 |
   And we notice "short invoice|when funded|how to fund" to member ".ZZB" with subs:
   | short | payeeName | nvid |*
   | $50   | Our Pub   |    3 |
@@ -85,3 +85,48 @@ Scenario: Non-member unpaid invoice does not generate a transfer request
 	Then count "txs" is 0
 	And count "usd" is 0
 	And count "invoices" is 1
+  
+Scenario: Second invoice gets funded too for a non-refilling account
+  Given members have:
+  | uid  | flags               |*
+  | .ZZA | ok,confirmed,bankOk |
+  And these "usd":
+  | txid | payee | amount | created   | completed | deposit |*
+  |    1 | .ZZA  |    100 | %today-1d |         0 |       0 |
+  And invoices:
+  | nvid | created   | status       | amount | from | to   | for   | flags   |*
+  |    1 | %today-1d | %TX_APPROVED |    100 | .ZZA | .ZZC | one   | funding |
+  |    2 | %today    | %TX_APPROVED |    200 | .ZZA | .ZZC | two   |         |
+  When cron runs "invoices"
+	Then these "usd":
+  | txid | payee | amount | created   | completed | deposit |*
+  |    1 | .ZZA  |    300 | %today-1d |         0 |       0 |
+  # still dated yesterday, so it doesn't lose its place in the queue
+  And invoices:
+  | nvid | created   | status       | amount | from | to   | for   | flags   |*
+  |    1 | %today-1d | %TX_APPROVED |    100 | .ZZA | .ZZC | one   | funding |
+  |    2 | %today    | %TX_APPROVED |    200 | .ZZA | .ZZC | two   | funding |
+  And we notice "banked|combined|bank tx number" to member ".ZZA" with subs:
+  | action | tofrom | amount | previous | total | checkNum | why               |*
+  | draw   | from   | $200   |     $100 |  $300 |        1 | to pay invoice #2 |
+
+Scenario: A languishing invoice gets funded again
+  Given invoices:
+  | nvid | created   | status       | amount | from | to   | for   | flags   |*
+  |    1 | %today-1m | %TX_APPROVED |    900 | .ZZA | .ZZC | one   | funding |
+  When cron runs "invoices"
+	Then these "usd":
+  | txid | payee | amount | created | completed | deposit |*
+  |    1 | .ZZA  |    900 | %today  |         0 |       0 |
+
+Scenario: An invoice is approved from an account with a negative balance
+  Given members have:
+  | uid  | flags               | balance |*
+  | .ZZA | ok,confirmed,bankOk |    -500 |
+  And invoices:
+  | nvid | created   | status       | amount | from | to   | for   | flags   |*
+  |    1 | %today-1m | %TX_APPROVED |    400 | .ZZA | .ZZC | one   | funding |
+  When cron runs "invoices"
+	Then these "usd":
+  | txid | payee | amount | created | completed | deposit |*
+  |    1 | .ZZA  |    900 | %today  |         0 |       0 |

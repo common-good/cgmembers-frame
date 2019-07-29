@@ -51,8 +51,11 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE bank AMemberTriesToGoBelowTheirMinimum
  *     MAKE bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     MAKE bank AMemberDrawsCreditFromTheBankThenCancels
+ *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     MAKE coupons AMemberRedeemsAGiftCoupon
- *     MAKE coupons AMemberRedeemsADiscountCouponForADollarAmount
+ *     MAKE coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
+ *     MAKE coupons AMemberRedeemsAPercentageDiscountCoupon
+ *     MAKE coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
  *     MAKE flow AMemberOverdrawsWithNotEnoughToDrawOn
  *     MAKE food AMemberMakesAFoodDonation
  *     MAKE food AMemberMakesAFoodDonationWithoutAdequateFunds
@@ -113,7 +116,9 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE contact AMemberGivesABadEmail
  *     MAKE contact AMemberUpdatesToADifferentState
  *     MAKE contact AMemberUpdatesToADifferentName
- *     MAKE coupons AMemberRedeemsADiscountCouponForADollarAmount
+ *     MAKE coupons AMemberRedeemsADollarAmountDiscountCoupon
+ *     MAKE coupons AMemberRedeemsAPercentageDiscountCoupon
+ *     MAKE coupons AMemberRedeemsARestrictedDiscountCoupon
  *     MAKE flow AMemberDraws
  *     MAKE flow AMemberDrawsAgain
  *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMember
@@ -301,6 +306,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
  *     TEST bank AMemberMovesTooMuchToTheBank
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
+ *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     TEST flow AMemberOverdrawsWithNotEnoughToDrawOn
  *     TEST invest AMemberBuysAStakeInTheClub
  *     TEST invest MembersRateAProposedInvestment
@@ -492,6 +498,9 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
  *     TEST community CronCalculatesTheStatistics
  *     TEST company AMemberVisitsTheCompanyInfoPage
  *     TEST contact AMemberVisitsTheContactInfoPage
+ *     TEST coupons AMemberCompanyCreatesAGiftCoupon
+ *     TEST coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
+ *     TEST coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
  *     TEST custstatement ACompanyLooksAtACustomerStatement
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesANewRecurringDonation
@@ -528,7 +537,7 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
  *     TEST relations ItsComplicated
  *     TEST relations AMemberAddsARelation
  *     TEST scancard SomeoneScansACompanyAgentCard
- *     TEST showrecurs AMemberLooksAtTheirRecurringTransactions
+ *     TEST showrecurs AMemberLooksAtTheirRecurringPayments
  *     TEST showrecurs AMemberStopsARecurringTransaction
  *     TEST showrecurs AMemberStopsAStoppedRecurringTransaction
  *     TEST showrecurs AMemberAttemptsToStopANonexistentRecurringTransaction
@@ -660,7 +669,9 @@ function relations($relations) {return t\relations($relations);}
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST community Setup
  *     TEST coupons AMemberRedeemsAGiftCoupon
- *     TEST coupons AMemberRedeemsADiscountCouponForADollarAmount
+ *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
+ *     TEST coupons AMemberRedeemsAPercentageDiscountCoupon
+ *     TEST coupons AMemberRedeemsARestrictedDiscountCoupon
  *     TEST download Setup
  *     MAKE flow Setup
  *     MAKE gift Setup
@@ -707,6 +718,9 @@ function usd($list) {return t\usd($list);}
  *     MAKE community CronCalculatesTheStatistics
  *     MAKE company AMemberVisitsTheCompanyInfoPage
  *     MAKE contact AMemberVisitsTheContactInfoPage
+ *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
+ *     MAKE coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
+ *     MAKE coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
  *     MAKE download AMemberDownloadsIncomingInvoicesForThePastYear
  *     MAKE food ANonmemberVisitsTheFoodPage
@@ -750,7 +764,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE relations ItsComplicated
  *     MAKE scancard SomeoneScansAMemberCard
  *     MAKE scancard SomeoneScansACompanyAgentCard
- *     MAKE showrecurs AMemberLooksAtTheirRecurringTransactions
+ *     MAKE showrecurs AMemberLooksAtTheirRecurringPayments
  *     MAKE showrecurs AMemberStopsARecurringTransaction
  *     MAKE showrecurs AMemberStopsAStoppedRecurringTransaction
  *     MAKE showrecurs AMemberAttemptsToStopANonexistentRecurringTransaction
@@ -1073,7 +1087,8 @@ function statisticsGetSet($time) {
 /**
  * members have: (ARG)
  *
- * in: BOTH coupons AMemberRedeemsAGiftCoupon
+ * in: BOTH coupons AMemberCompanyCreatesAGiftCoupon
+ *     BOTH coupons AMemberRedeemsAGiftCoupon
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
  *     TEST food AMemberMakesAFoodDonation
  *     TEST food AMemberMakesAFoodDonationWithoutAdequateFunds
@@ -1535,8 +1550,13 @@ function someonePostsToPageWith($page, $args) {return t\postToPage($page, $args)
 /**
  * coupons: (ARG)
  *
- * in: TEST coupons AMemberRedeemsAGiftCoupon
- *     TEST coupons AMemberRedeemsADiscountCouponForADollarAmount
+ * in: TEST coupons AMemberCompanyCreatesAGiftCoupon
+ *     MAKE coupons AMemberRedeemsAGiftCoupon
+ *     TEST coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
+ *     MAKE coupons AMemberRedeemsADollarAmountDiscountCoupon
+ *     TEST coupons AMemberRedeemsAPercentageDiscountCoupon
+ *     TEST coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
+ *     MAKE coupons AMemberRedeemsARestrictedDiscountCoupon
  */
 function coupons($list) {return t\coupons($list);}
 
@@ -1561,6 +1581,9 @@ function weScripWithSubs($script, $args = []) {
  * these (ARG): (ARG)
  *
  * in: MAKE balancesheet Setup
+ *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
+ *     TEST coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
+ *     BOTH coupons AMemberRedeemsARestrictedDiscountCoupon
  *     TEST food AMemberMakesAFoodDonation
  *     TEST food AMemberMakesAFoodDonationWithoutAdequateFunds
  *     TEST gift AMemberDonates

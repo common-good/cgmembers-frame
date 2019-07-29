@@ -51,9 +51,10 @@ function cleanAmount($amount) {
  * @return: FALSE if not a bad amount, else error message
  */
 function badAmount(&$amount, $restriction = '', $fractionLimit = 2, $max = NULL) {
-  if (!is_numeric($new = cleanAmount($amount))) return 'bad amount';
+  $new = cleanAmount($amount);
+  if (!is_numeric($new)) return 'bad amount';
 
-  $amount = $new;
+  $amount = nn($new, 0);
   $dotPos = strpos($amount, '.');
   if ($dotPos !== FALSE and strlen($amount) > $dotPos + 1 + $fractionLimit) return 'too fractional';
   if (is_null($max)) $max = isGAME ? PHP_INT_MAX : R_MAX_AMOUNT;

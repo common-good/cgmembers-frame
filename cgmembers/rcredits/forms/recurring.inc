@@ -73,7 +73,7 @@ EOF;
   $html .= "</table>\n";
 
   $transactions = item('<div>' . $html . '</div>');
-  $title = t('Recurring Transactions'); // . $mya->bestName;
+  $title = t('Recurring Payments'); // . $mya->bestName;
 
   return cgform(compact(ray('title transactions')));
 }

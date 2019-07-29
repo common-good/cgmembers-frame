@@ -253,7 +253,7 @@ function formMakeCtty($form, &$sta) {
 
   $submit = submit();
   
-  $form = compact('title', 'subtext') + nameAndEmail(-1) + ssnFields(FALSE)
+  $form = compact('title', 'subtext') + nameAndEmailFlds(-1) + ssnFields(FALSE)
     + compact(ray('phone postalAddr region zips submit'));
   //         + ssnFields(FALSE) + contactFields(['zot'=>0], FALSE) // prevent contact fields from defaulting
   //  foreach (ray('tenure owns') as $k) unset($form[$k]);
