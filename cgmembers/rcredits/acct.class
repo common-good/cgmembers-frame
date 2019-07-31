@@ -1356,18 +1356,21 @@ o;
     if ($tx) extract($tx);
     $okNow = ($amount < 0 or $a->bankOk); // "okay to create the request NOW"
     if (!$okNow) $a->verifyBank();
-    $target = $a->refill ? $a->minimum : 0;
     $msg = 'banked';
     $done = FALSE;
+    $previous = $total = NULL;
   
     if ($amount > 0) {
       $waiting = $a->waitingFromBank($combinable, $txid);
-      $refillTo = $a->refill ? max($a->achMin, R_ACHMIN, $combinable + max($amount, $target - $a->balance - $waiting)) : 0;
-  	  $amount = max($amount, $refillTo);
-      if ($a->refill) $amount = round(R_ACHMIN * ceil($amount / R_ACHMIN)); // round, if member has agreed to that deal
+      $amount += $combinable;
+      if ($a->refill) {
+        $amount = max($amount, $a->achMin, R_ACHMIN, $a->minimum - $a->balance - $waiting);
+        $amount = round(R_ACHMIN * ceil($amount / R_ACHMIN)); // round, if member has agreed to that deal
+      } else $amount = max($amount, $amount - $a->balance - $waiting);
 
-      if ($combinable) {
-        if ($done = db\update('r_usd', compact(ray('txid amount')), 'txid')) $msg .= '|combined';
+      if ($combinable and $done = db\update('r_usd', compact(ray('txid amount')), 'txid')) {
+        $msg .= '|combined';
+        list ($previous, $total) = [u\fmtAmt($combinable), u\fmtAmt($amount)];
       }
     }
 
@@ -1383,11 +1386,12 @@ o;
       unset($DBTX);
     }
 
-    if ($amount < 0 and $txid > 0) r\tellAdmin(t('outgoing bank transfer'), ['amount' => -$amount]);
+    if ($amount < 0 and $txid > 0) r\tellAdmin(t('outgoing bank transfer'), ray('who amount', $a->fullName, -$amount));
     
+    if ($previous) $amount -= $combinable; // don't include previous amount in notice to member
     if ($amount > 0) $msg .= '|bank tx number' . (nn($completed) ? '|available now' : '');
-    $action = $amount < 0 ? t('deposit to') : t('draw from');
-    $msg = tr($msg, ray('action amount checkNum', $action, u\fmtAmt(abs(@$amount)), $txid));
+    list ($action, $tofrom) = $amount < 0 ? [t('deposit'), t('to')] : [t('draw'), t('from')];
+    $msg = tr($msg, ray('action tofrom amount checkNum previous total', $action, $tofrom, u\fmtAmt(abs(@$amount)), $txid, $previous, $total));
     if (empty($why)) $newwhy = $why = '';
     r\notify($a->id, $newwhy = tr($msg, compact('why')));
     if ($amount > $amount0 and !$automatic) w\say(t('Your request has been increased to meet your chosen auto-refill target. If this is more than you wanted, cancel or reverse this request, then turn off auto-refills in your Preference Settings before trying again.'));
@@ -1935,6 +1939,8 @@ X;
   public function lastTx($where = 1, $subs = []) { return r\Tx::lastTx([$this->id, $this->jid], $where, $subs); }
   public function lastTxDesc() {return ($tx = $this->lastTx) ? t(' (Last tx: %dt)', 'dt', u\fmtDate($tx->created, TRUE)) : '';}
   public function isBank() {return r\isBank($this->id);}
+  public function nameAndEmail() {return [$this->fullName => $this->email];}
+  public function nameAndQid() {return "$this->fullName ($this->mainQid)";}
 
   public function firstCo() {return db\get('fullName', 'r_relations r INNER JOIN users u ON r.main=u.uid', 'r.permission>0 AND r.other=:id AND u.:IS_CO ORDER BY r.created LIMIT 1', ['id' => $this->id]);}
   public function adminables() {

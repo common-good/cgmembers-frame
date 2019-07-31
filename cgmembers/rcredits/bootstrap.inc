@@ -1279,7 +1279,7 @@ function ray($s = '', $value1 = NULL) {
   if (func_num_args() > 1) { // multi-argument call -- return an associative array
     $args = func_get_args();
     $keys = ray(array_shift($args));
-///    if (count($keys) != count($args)) die('assoc arg count mismatch ' . trace());
+    if (count($keys) != count($args)) die('assoc arg count mismatch ' . trace());
     return array_combine($keys, $args);
   }
 
@@ -2037,18 +2037,7 @@ function drupal_bootstrap() {
 /**
  * Returns the time zone of the current user.
  */
-function drupal_get_user_timezone() {
-  return @date_default_timezone_get(); // cg 20171119
-  global $user;
-  if (getV('configurable_timezones', 1) && $user->uid && $user->timezone) {
-    return $user->timezone;
-  }
-  else {
-    // Ignore PHP strict notice if time zone has not yet been set in the php.ini
-    // configuration.
-    return getV('date_default_timezone', @date_default_timezone_get());
-  }
-}
+function drupal_get_user_timezone() {return @date_default_timezone_get();} // cg 20171119
 
 /**
  * Gets a salt useful for hardening against SQL injection.

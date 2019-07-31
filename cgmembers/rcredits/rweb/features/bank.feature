@@ -44,8 +44,8 @@ Scenario: a member moves credit to the bank
   | payee | amount | created   | completed | channel | xid |*
   |  .ZZA |    -86 | %today    | %today    | %TX_WEB |   8 |
   And we say "status": "banked" with subs:
-  | action     | amount | why             |*
-  | deposit to | $86    | at your request |
+  | action  | tofrom  | amount | why             |*
+  | deposit | to      | $86    | at your request |
   And balances:
   | uid  | balance |*
   | .ZZA |       0 |
@@ -65,8 +65,8 @@ Scenario: a member draws credit from the bank with zero floor
   | uid  | balance |*
   | .ZZA |      86 |
   And we say "status": "banked|bank tx number" with subs:
-  | action     | amount     | checkNum | why             |*
-  | draw from  | $%R_ACHMIN |     5008 | at your request |
+  | action | tofrom  | amount     | checkNum | why             |*
+  | draw   | from    | $%R_ACHMIN |     5008 | at your request |
 
 Scenario: a member draws credit from the bank with adequate floor
   When member "C:B" completes form "get" with values:
@@ -79,8 +79,8 @@ Scenario: a member draws credit from the bank with adequate floor
   | uid  | balance |*
   | .ZZC | 40      |
   And we say "status": "banked|bank tx number|available now" with subs:
-  | action     | amount | checkNum | why             |*
-  | draw from  |    $10 |     5007 | at your request |
+  | action | tofrom  | amount | checkNum | why             |*
+  | draw   | from    |    $10 |     5007 | at your request |
   
 Scenario: a member moves too little to the bank
   When member ".ZZA" completes form "get" with values:

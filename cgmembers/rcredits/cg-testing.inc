@@ -60,12 +60,15 @@ function fixData(&$info, $direct = FALSE) {
   }
 
   foreach (just(T_ID_FLDS, $info) as $k => $v) {
-    if (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, SPECIAL_IDS)) { $info[$k] = t\uid($v) ?: 0; }
+    if (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, SPECIAL_IDS)) {
+      u\preray([$k => t\uid($v) ?: 0], $info); // maintain first position of ID, for verifyRecord
+    }
   }
 	foreach (ray('from:payer,to:payee,fromAgent:payerAgent,toAgent:payeeAgent') as $k => $k2) if (isset($info[$k])) {
 		$info[$k2] = $info[$k];
 		unset($info[$k]);
 	}
+  
   $info = @compact(ray($fields)) + $info;
 }
 
@@ -295,16 +298,17 @@ function doTxs($info, $thing) {
   
   $hdr = $filter(compact(ray($hdrFlds)));
   $type = $type ?: ((r\isBank($payer) or r\isBank($payee)) ? E_BANK : E_PRIME);
-  $e1 = $filter(ray($entryFlds, $xid, $type, 0-$amount, $payer, $payerAgent, $payerFor, $payerTid, NULL, NULL));
-  $e2 = $filter(ray($entryFlds, $xid, $type, $amount, $payee, $payeeAgent, $payeeFor, $payeeTid, NULL, NULL));
 
   if ($testOnly) {
 //    return (verifyRecord('tx_hdrs', $hdr) and verifyRecord('tx_entries', $e1) and verifyRecord('tx_entries', $e2));
     $e1 = $filter(ray('for1 uid1 agt1 tid1 relType1 rel1', $payerFor, $payer, $payerAgent, $payerTid, NULL, NULL));
     $e2 = $filter(ray('for2 uid2 agt2 tid2 relType2 rel2', $payeeFor, $payee, $payeeAgent, $payeeTid, NULL, NULL));
+    u\preray(just('eid', $info), $hdr);
     $ray = $hdr + $filter(ray('type amt', $type, $amount)) + $e1 + $e2;
     return verifyRecord('txs', $ray);
   } else {
+    $e1 = $filter(ray($entryFlds, $xid, $type, 0-$amount, $payer, $payerAgent, $payerFor, $payerTid, NULL, NULL));
+    $e2 = $filter(ray($entryFlds, $xid, $type, $amount, $payee, $payeeAgent, $payeeFor, $payeeTid, NULL, NULL));
     $hdr['entries'] = [new r\TxEntry($e2), new r\TxEntry($e1)];
     $tx = new r\Tx($hdr);
     return $tx->insert(TRUE);
@@ -655,12 +659,12 @@ function cronRuns($op) {
     cr\often($period);
   } else cr\doTask(compact('op'));
 //  $periods = 'hour day week month year';
-//  \setV('r_last_cron', ray($periods, $now, $now, $now)); // normally don't run periodics
+//  setV('last_cron_end', ray($periods, $now, $now, $now)); // normally don't run periodics
 
 //  if ($op == 'ALL') { //  or strpos(DAILY_TASKS, " $op ")
 ///  if (strftime('%H') < R_DAILY_HOUR) die('Developer: For testing between midnight and :R_DAILY_HOUR:00, you need to temporarily change R_DAILY_HOUR in -settings.');
 //    db\q('TRUNCATE queue');
-//    \setV('r_last_cron', ray('day week month', $now - DAY_SECS, 0, 0));
+//    setV('last_cron_end', ray('day week month', $now - DAY_SECS, 0, 0));
 //  } elseif ($op) 
 //  cr\run();
   
@@ -1338,8 +1342,8 @@ function clear($ch = 0) {
 
   db\q('DELETE FROM users WHERE uid<>0');
   db\q('DELETE FROM r_criteria WHERE ctty<>0');
-//  $varKeys = ray('backingReserve companies newThresholds negReserve r_last_cron last_cron_start riskThresholds version');
-  $varKeys = ray('code iv up');
+
+  $varKeys = ray('cgf_uid code drupal_private_key iv menu_expanded menu_masks up version');
   db\q('DELETE FROM variable WHERE name NOT IN (:varKeys)', compact('varKeys'));
   a\setupBasicAccounts();
 

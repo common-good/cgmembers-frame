@@ -54,12 +54,9 @@ function timeFor($time, $period, $chosen) {
   global $timeFor; if (u\test() and isset($timefor)) return @$timefor[$period];
 
   $lastStart = getV('last_cron_start', []);
-  if ($lastStart and now() - nn($lastStart[$period], 0) < HOUR_SECS) {
-    r\tellAdmin(t('Tried to run cron twice in an hour for period ') . $period);
-    return FALSE;
-  }
+  if ($lastStart and now() - nn($lastStart[$period], 0) < HOUR_SECS) return FALSE;
 
-  $lastCron = \variable_get('r_last_cron') ?: [];
+  $lastCron = \variable_get('last_cron_end') ?: [];
   $lastTime = @$lastCron[$period];
   $codes = ray(TIME_CODES);
   list ($periodCode, $withinCode) = str_split($codes[$period]);

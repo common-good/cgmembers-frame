@@ -454,30 +454,31 @@ function notifyEntries($a, $index, $entries, $force = FALSE) {
  * @return FALSE;
  */
 function tellAdmin($index, $subs = [], $uid = NULL) {
+  global $mya, $channel;
 /**/  if (isDEV and !u\test()) return debug(['tellingStaff' => $index] + $subs + compact('uid'));
 
   $message = t($index, $subs);
+  foreach (ray(R_NOLOG) as $k) unset($subs[$k]); // secret stuff
+  ksort($subs); // put the keys in a predictable order, for testing and easy reading
+
+  $tellCOA = $uid == 1 ? $mya : ($uid == 0 ? NULL : r\acct($uid));
+  $keyUid = nn($subs['uid']);
+  $keyA = $tellCOA ?: ($keyUid ? r\acct($keyUid) : NULL);
   
-  if (!$tellCO = (@$uid != 0)) $uid = @$subs['uid'];
-
-  if ($uid and $a = r\acct(@$uid)) {
-    $who = "$a->fullName ($a->mainQid)"; // (default to current account)
-    foreach (ray(R_NOLOG) as $k) unset($subs[$k]); // secret stuff
-    ksort($subs); // put the keys in a predictable order, for testing and easy reading
-    $message .= u\seeAssoc($subs + @compact('who'));
-  }
-    
-  if ($tellCO) { // account specified, so tell Community Admin
-    $email = $a->cttyA->email;
-  } else list ($email, $uid) = [R_ADMIN_EMAIL, $uid ?: (@$a ? $a->id : NULL)]; // no account specified so tell SysAdmin
-
-  $noFrame = TRUE;
+  $currentAcct = $mya ? $mya->nameAndQid : NULL;
+  $keyAcct = $keyA ? $keyA->nameAndQid : NULL;
+  $email = $tellCOA ? $tellCOA->cttyA->email : R_ADMIN_EMAIL; // tell cAdmin if appropriate, else superAdmin
+  $replyTo = ($keyA or $mya) ? ($keyA ?: $mya)->nameAndEmail : NULL;
+  
   $topic = strlen($index) < 50 ? strip_tags($index) : '';
-  $subs = @compact(ray('who email message topic noFrame uid')) + $subs;
-  $replyTo = (!$tellCO and @$uid and $a = r\acct($uid) and $a->email) ? [$a->email => $a->fullName] : NULL;
-  r\rMail('tell-staff', $email, $subs, $replyTo);
-  $subs['topic'] .= t(' (to cAdmin)');
-  if ($email != R_ADMIN_EMAIL) r\rMail('tell-staff', SYS_EMAIL, $subs, $replyTo); // always tell one or more staff (for now)
+  $message .= u\seeAssoc($subs);
+  $noFrame = TRUE;
+  $chan = ray(TX_CHANNELS)[$channel];
+  $info = @compact(ray('cAdmin email topic message keyAcct currentAcct chan noFrame')) + $subs;
+
+  r\rMail('tell-staff', $email, $info, $replyTo);
+  $info['topic'] .= t(' (to admin)');
+  if ($email != R_ADMIN_EMAIL) r\rMail('tell-staff', SYS_EMAIL, $info, $replyTo); // always tell one or more staff (for now)
   return FALSE;
 }
 
@@ -828,7 +829,6 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     'r_criteria:ctty:D',
     'r_do:uid:D',
     'r_events:ctty',
-    'r_gifts:uid:D',
     'r_honors:uid:D', // honors are deletable if donation never completed
     // r_industries
     'r_investments:coid',

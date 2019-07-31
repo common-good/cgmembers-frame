@@ -152,7 +152,7 @@ function periodic() {
 function everyHour() { // stuff to do every hour
 //  queueEach('acctHourly', "SELECT uid FROM users WHERE uid<>0");
   if (strftime('%H') + 0 == (R_DAILY_HOUR + 6) % 24) {
-    $lastCron = getV('r_last_cron', []);
+    $lastCron = getV('last_cron_end', []);
     if (now() - nn($lastCron['end'], 0) > DAY_SECS) r\tellAdmin('daily cron FAILED');
   }
   
@@ -406,9 +406,9 @@ function lessOften() {
 function often($period, $chosen = '') {
   if (!timeFor(now(), $period, $chosen)) return;
 
-  $lastCron = getV('r_last_cron');
+  $lastCron = getV('last_cron_end');
   $lastCron[$period] = now();
-  setV('r_last_cron', $lastCron); // remember that this periodic activity has been done
+  setV('last_cron_end', $lastCron); // remember that this periodic activity has been done
   
   $function = 'CG\\Cron\\every' . ucwords($period);
   $topic = t('cron period', compact('period'));
@@ -934,19 +934,22 @@ function invoice1($item) {
     $short = $a->balance > $amount ? 0 : round($a->advances() + $amount - $a->avail(), 2); //	consider credit already used for advances from the bank
 
     if ($short <= 0) { // pay the invoice if we have enough funds
-      list($ok, $msg) = be\payInvoice($nvid);
-      if (!$ok) r\tellAdmin(t('invoice payment failed in cron'), compact('msg') + $item);
-    } else $ok = FALSE;
+      list($paid, $msg) = be\payInvoice($nvid);
+      if (!$paid) r\tellAdmin(t('invoice payment failed in cron'), compact('msg') + $item);
+    } else $paid = FALSE;
 		
-		if ((!$ok or $a->balance < 0) and !$funding) {
-			$DBTX = db_transaction();
-			if ($a->getFunds($amount, t('for invoice', compact('nvid')))) {
-			  db\setFlag('r_invoices', $nvid, B_FUNDING, TRUE);
-			} else { // almost always because no bank account is connected
-				$msg = 'short invoice' . ($a->hasBank ? '|expect a transfer' : '|when funded|how to fund');
-				r\notify($payer, $msg, ray('short payeeName nvid', u\fmtAmt($short), $payeeName, $nvid));
-			}
-			unset($DBTX);
+		if (!$paid or $a->balance < 0) {
+      if ($funding) $funding = ($created >= now() - R_USDTX_DAYS * DAY_SECS or db\exists('r_usd', 'amount>=:amount AND payee=:payer', compact(ray('amount payer')))); // fund it again, if necessary
+      if (!$funding) {
+        $DBTX = db_transaction();
+        if ($a->getFunds($amount, t('for invoice', compact('nvid')))) {
+          db\setFlag('r_invoices', $nvid, B_FUNDING, TRUE);
+        } else { // almost always because no bank account is connected
+          $msg = 'short invoice' . ($a->hasBank ? '|expect a transfer' : '|when funded|how to fund');
+          r\notify($payer, $msg, ray('short payeeName nvid', u\fmtAmt($short), $payeeName, $nvid));
+        }
+        unset($DBTX);
+      }
 		}
   } elseif ($status == TX_PENDING) {
     $daysAgo = max(1, round((now() - $created) / DAY_SECS));
@@ -1011,9 +1014,9 @@ function notice1($item) {
 function END() {
   global $mya; $mya = NULL; // don't tell Admin the last current member
   if (db\exists('queue')) r\tellAdmin('queue has dingleberries'); else db\q('TRUNCATE queue'); // reset serial field
-  $lastCron = getV('r_last_cron', []);
+  $lastCron = getV('last_cron_end', []);
   $lastCron['end'] = now();
-  setV('r_last_cron', $lastCron);
+  setV('last_cron_end', $lastCron);
   $elapsed = now() - @$lastCron['day'];
   $time = strftime('%I:%M%P');
   $msg = t('At %time, after %elapsed secs, daily cron ended successfully.', compact(ray('time elapsed')));

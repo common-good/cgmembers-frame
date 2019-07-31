@@ -68,8 +68,8 @@ Scenario: A member cashes out automatically
   | txid | payee | amount |*
   |    1 | .ZZB  |   -670 |
 #  And we notice "banked|bank tx number" to member ".ZZB" with subs:
-#  | action     | amount | checkNum |*
-#  | deposit to | $670   |        1 |
+#  | action  | tofrom  | amount | checkNum |*
+#  | deposit | to      | $670   |        1 |
   And we notice "banked" to member ".ZZB" with subs:
-  | action     | amount | why |*
-  | deposit to | $670   |     |
+  | action  | tofrom  | amount | why |*
+  | deposit | to      | $670   |     |

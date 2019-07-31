@@ -721,8 +721,9 @@ function handleCoupon(&$entries, $buyer, $seller, $price, $buyerTid, $sellerTid,
   $sql = <<<EOF
     SELECT `on`, c.coupid, amount, ulimit, id, uses
     FROM r_coupons c LEFT JOIN r_coupated d ON (c.coupid=d.coupid AND d.uid=:buyerId)
-    WHERE fromId=:sellerId AND :now BETWEEN start AND end AND :price>=minimum AND NOT flags
-          AND (ulimit=0 OR uses IS NULL OR uses<ulimit)
+    WHERE fromId=:sellerId AND :now BETWEEN start AND end AND :price>=minimum 
+      AND NOT :IS_GIFT AND (NOT :IS_SOME OR uses IS NOT NULL)
+      AND (ulimit=0 OR uses IS NULL OR uses<ulimit)
     ORDER BY end ASC
 EOF;
   $subs = ray('buyerId sellerId now price', $buyer->id, $seller->id, $when, $price);
@@ -1215,11 +1216,13 @@ function checkSanity() {
     if (($tx->flags & ~u\bit(ray(TX_FLAGS))) != 0) { sanityErr("Tx $xid flags has extraneous bits set"); }
     if (!in_array($tx->goods, [FOR_GOODS, FOR_USD, FOR_NONGOODS])) { sanityErr("Tx $xid goods is bad: $tx->goods"); }
 
-    $total = 0;
-    foreach ($tx->entries as $entry) {
-      $total += $entry->amount;
-    }
-    if ($total != 0) { sanityErr("Tx $xid entries do not sum to 0"); }
+    if ($tx->entries) {
+      $total = 0;
+      foreach ($tx->entries as $entry) {
+        $total += $entry->amount;
+      }
+      if ($total != 0) { sanityErr("Tx $xid entries do not sum to 0"); }
+    } else sanityErr("Tx $xid has no entries");
   }
 
   // Check all entries
@@ -1261,7 +1264,7 @@ function checkSanity() {
         sanityErr("r_usd $txid has an xid, but has no corresponding transaction or the transaction doesn't match");
       }
       if (!$info['amount']) sanityErr("r_usd $txid has an associated transaction, but a zero amount");
-    } elseif ($info['amount']) sanityErr("r_usd has an amount but has no associated tx_hdr");
+    } elseif ($info['amount'] + 0) sanityErr("r_usd $txid has an amount but has no associated tx_hdr");
   }
 
   // Check r_usd2

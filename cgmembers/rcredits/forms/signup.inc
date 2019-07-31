@@ -146,7 +146,7 @@ For example, you will be asked for your social security number or tax ID.</p>
   $contactDefaults = @compact(ray($contactDefaults));
   if (!$personal and !nn($source)) $contactDefaults['source'] = $helperA ? $helperA->fullName : '';
   $contactFlds = w\contactFields($contactDefaults + ray('country state state2', @$country ?: @$hidCountry, @$state ?: @$hidState, @$state2 ?: @$hidState2), TRUE, @$myid0);
-  $nameAndEmail = w\nameAndEmail(!$personal, @$fullName, @$email, isset($contactFlds['partner']), @$myid0);
+  $nameAndEmail = w\nameAndEmailFlds(!$personal, @$fullName, @$email, isset($contactFlds['partner']), @$myid0);
 
   $form = @compact(ray('title forother subtext acctType'))
     + $nameAndEmail + $contactFlds + w\ssnFields($personal)
@@ -162,7 +162,6 @@ function formSignup_validate($form, &$sta) {
 //  if (!$inviteOk) return w\go('signup'); // in case user resubmits
   //and @$code != bin2hex(R_WORD)
 
-///  setV('signupData', ray('time phone state companyOptions', now(), @$phone, @$state, @$companyOptions));
   if (!emailOkay($email, $acctType != CO_PERSONAL, @$myid ? r\acct($myid) : '')) return;
   if (!phoneOk($phone, @$country)) return;
   if ($err = u\badZip($zip)) return say($err, 'zip');

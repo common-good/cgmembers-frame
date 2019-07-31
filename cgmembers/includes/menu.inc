@@ -2703,7 +2703,6 @@ function menu_rebuild() {
   }
 
   $transaction = db_transaction();
-
   try {
     list($menu, $masks) = menu_router_build();
     _menu_router_save($menu, $masks);
@@ -2711,7 +2710,6 @@ function menu_rebuild() {
     // Clear the menu, page and block caches.
     menu_cache_clear_all();
     _menu_clear_page_cache();
-
     if (defined('MAINTENANCE_MODE')) {
       setV('menu_rebuild_needed', TRUE);
     } else delV('menu_rebuild_needed');

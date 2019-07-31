@@ -477,6 +477,10 @@ define('FLOW_TO', 1);
 define('FLOW_FROM', 2);
 define('FLOW_BOTH', 3);
 
+// Coupon flags
+define('B_SOME', 1); // coupon is only for some accounts (those in r_coupated)
+// define('B_GIFT', 10); // gift coupon (defined for transactions below)
+
 // Transaction flags (for flags field in transaction records)
 define('B_TAKING', 0); // payee initiated the transaction
 define('B_DISPUTED', 1); // non-originator disputes the transaction -- signaled by existence of tx_disputes (NOT LEGAL FOR TRANSACTIONS, BUT STILL USED BY INVOICES

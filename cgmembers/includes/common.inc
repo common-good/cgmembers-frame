@@ -2641,7 +2641,7 @@ function drupal_deliver_html_page($page_callback_result) {
           $_GET['destination'] = $_GET['q'];
         }
 
-        $path = drupal_get_normal_path(variable_get('site_404', ''));
+        $path = drupal_get_normal_path('page-not-found');
         if ($path && $path != $_GET['q']) {
           // Custom 404 handler. Set the active item in case there are tabs to
           // display, or other dependencies on the path.
