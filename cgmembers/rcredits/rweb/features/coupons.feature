@@ -57,6 +57,17 @@ Scenario: A member redeems a gift coupon
   Then we say "error": "already redeemed"
 
 Scenario: A member company creates a dollar amount discount coupon
+  When member ".ZZC" visits page "community/coupons/type=discount"
+  Then we show "Create a Discount" with:
+ | Discount: |||
+ | Minimum: |||
+ | Valid from: |||
+ | Valid until: |||
+ | Limit:  |||
+ | For only: |||
+ | Automatic? | No | Yes |
+ 
+  
   When member ".ZZC" completes form "community/coupons/type=discount" with values:
   | type     | amount | minimum | start | end     | ulimit | automatic |*
   | discount |     12 |      20 | %mdY  | %mdY+9d |      1 |         1 |

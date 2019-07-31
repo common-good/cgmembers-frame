@@ -21,6 +21,9 @@ Setup:
   | .ZZC | .ZZA  | sell       |
   | .ZZB | .ZZD  | joint      |
   | .ZZD | .ZZB  | joint      |
+  And recurs:
+  | id | created   | ended | amount | payer | payee | period | purpose |*
+  |  1 | %today-8m |     0 |     12 | .ZZC  | .AAB  |      Y | gift    |
   And usd transfers:
   | txid | payee | amount | created    | completed  |*
   |  100 | .ZZA  |   1000 | %today-20d | %today-13d |
@@ -34,6 +37,7 @@ Setup:
   | .ZZA |    1000 |
   | .ZZB |    2000 |
   | .ZZC |    3000 |
+  | .ZZD |    2000 |
   Given transactions: 
   | xid | created   | amount | from | to   | purpose | goods      |*
   |   6 | %today-3m |     10 | .ZZB | .ZZA | cash E  | %FOR_USD   |
@@ -44,32 +48,74 @@ Setup:
   | xid | created   | amount | from | to   | purpose | goods      | channel  | flags  |*
   |  15 | %today-2w |     50 | .ZZB | .ZZC | p2b     | %FOR_GOODS | %TX_WEB  |        |
   |  18 | %today-1w |    120 | .ZZA | .ZZC | this Q  | %FOR_GOODS | %TX_WEB  |        |
-  |  23 | %today-6d |    100 | .ZZA | .ZZB | cash V  | %FOR_USD   | %TX_WEB  |        |
-  |  27 | %today-2d |      4 | ctty | .ZZA | grant   | %FOR_USD   | %TX_WEB  |        |
-  |  28 | %today-2d |      5 | ctty | .ZZB | loan    | %FOR_USD   | %TX_WEB  |        |
-  |  29 | %today-2d |     -6 | ctty | .ZZC | fine    | %FOR_USD   | %TX_WEB  |        |
+  |  23 | %today-6d |    100 | .ZZA | .ZZB | real V  | %FOR_GOODS | %TX_WEB  |        |
+  |  27 | %today-2d |      4 | ctty | .ZZA | grant   | %FOR_GOODS | %TX_WEB  |        |
+  |  28 | %today-2d |      5 | ctty | .ZZD | loan    | %FOR_USD   | %TX_WEB  |        |
+  |  29 | %today-2d |     -6 | ctty | .ZZC | fine    | %FOR_GOODS | %TX_WEB  |        |
   |  30 | %today-1d |    100 | .ZZC | .ZZA | payroll | %FOR_GOODS | %TX_WEB  |        |
-  |  33 | %today-1d |      1 | .ZZC | .AAB | gift    | %FOR_GOODS | %TX_CRON | recurs |
+  |  33 | %today-1d |      1 | .ZZC | .AAB | gift    | %FOR_GOODS | %TX_CRON | recurs,gift |
   Then balances:
   | uid  | balance |*
   | ctty |   -3.00 |
   | .ZZA |  754.00 |
   | .ZZB | 2285.00 |
   | .ZZC | 2963.00 |
+  | .ZZD | 2285.00 |
   | .AAB |    1.00 |
-  # total rewards < total r, because we made a grant, a loan, and a fine.
 
 Scenario: cron calculates the statistics
 # Many of the following statistics exclude the community itself, so balance may differ from usd
 #  When cron runs "acctStats"
   Given statistics get set "%daystart-30d"
   When cron runs "cttyStats"
-  And member ".ZZA" visits page "community/graphs"
+  Then these "stats":
+  | id           |         7 |**
+  | ctty         |      ctty |
+  | created      | %daystart |
+  | pAccts       |         3 |
+  | bAccts       |         3 |
+  | newbs        |         0 |
+  | aAccts       |         4 |
+  | conx         |         3 |
+  | conxLocal    |         3 |
+  | balsPos      |   6003.00 |
+  | balsNeg      |      0.00 |
+  | balsPosCount |         4 |
+  | balsNegCount |         0 |
+  | topN         |   6002.00 |
+  | botN         |   3040.00 |
+  | floors       |    -10.00 |
+  | p2b          |    170.00 |
+  | b2b          |      7.00 |
+  | b2p          |    104.00 |
+  | p2p          |    340.00 |
+  | p2bCount     |         2 |
+  | b2bCount     |         2 |
+  | b2pCount     |         2 |
+  | p2pCount     |         2 |
+  | cashs        |    115.00 |
+  | cashsCount   |         3 |
+  | cgIn         |      0.00 |
+  | cgOut        |      0.00 |
+  | cgInCount    |         0 |
+  | cgOutCount   |         0 |
+  | usdIn        |   6050.00 |
+  | usdOut       |    -50.00 |
+  | usdInCount   |         3 |
+  | usdOutCount  |         1 |
+  | payees       |      1.25 |
+  | basket       |     48.25 |
+  | patronage    |      1.00 |
+  | roundups     |      0.00 |
+  | crumbs       |      0.00 |
+  | invites      |         0 |
+ 
+  When member ".ZZA" visits page "community/graphs"
   Then we show "Statistics" with:
 #  | Community: | Seedpack |
 # was 2 co, but that included the community, which is not activated
   |~Success: | 0.04 |
-  |~CG Growth: | 3 members + 2 co |
+  |~CG Growth: | 3 members + 3 co |
   |~Dollar Pool: | $6,000 |
 #  |~CG | $6,002 |
   |~Circulation Velocity: | 6.4% per mo. |

@@ -40,7 +40,8 @@ function extraSetup() {
 /**
  * members: (ARG)
  *
- * in: MAKE coupons Setup
+ * in: MAKE aaPayTwice Setup
+ *     MAKE coupons Setup
  *     MAKE exchange Setup
  *     MAKE identify Setup
  *     MAKE joint Setup
@@ -55,7 +56,8 @@ function members($list) {return t\members($list);}
 /**
  * relations: (ARG)
  *
- * in: MAKE coupons Setup
+ * in: MAKE aaPayTwice Setup
+ *     MAKE coupons Setup
  *     MAKE exchange Setup
  *     MAKE identify Setup
  *     MAKE joint Setup
@@ -70,7 +72,8 @@ function relations($relations) {return t\relations($relations);}
 /**
  * transactions: (ARG)
  *
- * in: MAKE exchange Setup
+ * in: MAKE aaPayTwice Setup
+ *     MAKE exchange Setup
  *     MAKE joint Setup
  *     MAKE offline Setup
  *     MAKE offline ACashierChargedSomeoneOfflineAndTheyHaveInsufficientBalance
@@ -207,7 +210,8 @@ function memberHasNoPicture($id) {
 /**
  * devices: (ARG)
  *
- * in: MAKE coupons Setup
+ * in: MAKE aaPayTwice Setup
+ *     MAKE coupons Setup
  *     MAKE exchange Setup
  *     MAKE identify Setup
  *     MAKE joint Setup
@@ -222,7 +226,8 @@ function devices($list) {return t\devices($list);}
 /**
  * balances: (ARG)
  *
- * in: TEST exchange Setup
+ * in: TEST aaPayTwice Setup
+ *     TEST exchange Setup
  *     TEST exchange ACashierAsksToChargeSomeoneForCash
  *     TEST exchange ACashierAsksToRefundSomeone
  *     TEST joint Setup
@@ -344,7 +349,8 @@ function withUndo($subs) {
 /**
  * we return error (ARG) with subs: (ARG)
  *
- * in: TEST exchange ACashierAsksToChargeAnotherMemberWithInsufficientBalance
+ * in: TEST aaPayTwice SellerTriesToChargeTheCustomerTwice
+ *     TEST exchange ACashierAsksToChargeAnotherMemberWithInsufficientBalance
  *     TEST exchange ACashierAsksToRefundAnotherMemberWithInsufficientBalance
  *     TEST exchange DeviceGivesTooBigAnAmount
  *     TEST exchange SellerAgentLacksPermissionToBuy
@@ -357,7 +363,6 @@ function withUndo($subs) {
  *     TEST transact SellerAgentLacksPermissionToBuy
  *     TEST transact SellerAgentLacksPermissionToScanAndSell
  *     TEST transact BuyerAgentLacksPermissionToBuy
- *     TEST transact SellerTriesToChargeTheCustomerTwice
  */
 function weReturnErrorWithSubs($msg, $subs) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -403,7 +408,8 @@ function weReturnError($msg) {return weReturnErrorWithSubs($msg, array());}
 /**
  * selling: (ARG)
  *
- * in: MAKE coupons Setup
+ * in: MAKE aaPayTwice Setup
+ *     MAKE coupons Setup
  *     MAKE exchange Setup
  *     MAKE identify Setup
  *     MAKE joint Setup
@@ -417,7 +423,8 @@ function selling($selling) {return t\selling($selling);}
 /**
  * company flags: (ARG)
  *
- * in: MAKE coupons Setup
+ * in: MAKE aaPayTwice Setup
+ *     MAKE coupons Setup
  *     MAKE exchange Setup
  *     MAKE identify Setup
  *     MAKE joint Setup
@@ -468,7 +475,8 @@ function weNoticeToMemberWithSubs($notice, $id, $subs) {return t\notice($notice,
 /**
  * agent (ARG) asks device (ARG) to charge (ARG) $(ARG) for (ARG): (ARG) at (ARG)
  *
- * in: MAKE coupons AMemberRedeemsAGiftCoupon
+ * in: MAKE aaPayTwice SellerTriesToChargeTheCustomerTwice
+ *     MAKE coupons AMemberRedeemsAGiftCoupon
  *     MAKE exchange ACashierAsksToChargeSomeoneForCash
  *     MAKE exchange ACashierAsksToRefundSomeone
  *     MAKE exchange ACashierAsksToChargeAnotherMemberWithInsufficientBalance
@@ -502,7 +510,6 @@ function weNoticeToMemberWithSubs($notice, $id, $subs) {return t\notice($notice,
  *     MAKE transact SellerAgentLacksPermissionToBuy
  *     MAKE transact SellerAgentLacksPermissionToScanAndSell
  *     MAKE transact BuyerAgentLacksPermissionToBuy
- *     MAKE transact SellerTriesToChargeTheCustomerTwice
  *     MAKE transact DeviceSendsWrongProof
  *     MAKE transact ACashierInTheSameCommunityAsksToChargeSomeoneUnconfirmed
  */

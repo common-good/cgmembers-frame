@@ -51,6 +51,7 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE bank AMemberTriesToGoBelowTheirMinimum
  *     MAKE bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     MAKE bank AMemberDrawsCreditFromTheBankThenCancels
+ *     MAKE connect AMemberConnectsABankAccount
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     MAKE coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
@@ -215,6 +216,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE community Setup
  *     MAKE company Setup
  *     TEST company AMemberUpdatesCompanyInfo
+ *     MAKE connect Setup
  *     MAKE contact Setup
  *     TEST contact AMemberUpdatesContactInfo
  *     TEST contact AMemberUpdatesToADifferentState
@@ -497,6 +499,7 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST community CronCalculatesTheStatistics
  *     TEST company AMemberVisitsTheCompanyInfoPage
+ *     TEST connect AMemberConnectsABankAccount
  *     TEST contact AMemberVisitsTheContactInfoPage
  *     TEST coupons AMemberCompanyCreatesAGiftCoupon
  *     TEST coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
@@ -717,6 +720,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE bank AMemberDrawsCreditFromTheBankThenCancels
  *     MAKE community CronCalculatesTheStatistics
  *     MAKE company AMemberVisitsTheCompanyInfoPage
+ *     MAKE connect AMemberConnectsABankAccount
  *     MAKE contact AMemberVisitsTheContactInfoPage
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     MAKE coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
@@ -1581,6 +1585,7 @@ function weScripWithSubs($script, $args = []) {
  * these (ARG): (ARG)
  *
  * in: MAKE balancesheet Setup
+ *     TEST community CronCalculatesTheStatistics
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     TEST coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
  *     BOTH coupons AMemberRedeemsARestrictedDiscountCoupon
@@ -1648,7 +1653,8 @@ function withChoices($choices) {
 /**
  * recurs: (ARG)
  *
- * in: MAKE showrecurs Setup
+ * in: MAKE community Setup
+ *     MAKE showrecurs Setup
  */
 function recurs($list) {return t\recurs($list);}
 
