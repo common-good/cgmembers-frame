@@ -968,22 +968,20 @@ function weDownloadWith($name, $rows) {
   global $testOnly;
   global $testCSV, $testCSVname;
 
-  $testCSVname = $name;
-  $testCSV = [['test line']];
   if (@$testCSVname != $name) return t\output("$testCSVname <> $name");
   if (!is_array($testCSV) or empty($testCSV)) return t\output('testCSV empty');
   $csv2 = $testCSV; // don't change this
   $headers = array_values(array_shift($csv2));
-  if (@$headers[0] == '#') $headers[0] = 't#';
-  foreach ($csv2 as $csvRow) {
+
+  foreach ($rows as $row) {
+    if (!$csvRow = array_shift($csv2)) return t\output('missing row in CSV: ' . pr($row));
     $csvRow = array_combine($headers, $csvRow); // add keys
-    if (!$row = array_shift($rows)) return t\output('extra row in CSV: ' . pr($csvRow));
-    foreach ($row as $key => $value) {
-      if (strpos($value, '%') !== FALSE) $value = t\lastMinuteSubs($value);
-///      if (!isset($csvRow[$key])) debug(compact('key', 'csvRow', 'value'));
-      if (!t\eq($csvValue = @$csvRow[$key], $value)) return t\output("key=$key csvValue<>expected value ($csvValue<>$value) csvRow:" . pr($csvRow));
+    foreach ($row as $k => $v) {
+      if (strpos($v, '%') !== FALSE) $v = t\lastMinuteSubs($v);
+      if (!t\eq($csvValue = @$csvRow[$k], $v)) return t\output("key=$k csvValue<>expected value ($csvValue<>$v) csvRow:" . pr($csvRow));
     }
   }
+  if (count($testCSV) != count($rows) + 1) return t\output('There are extra rows in testCSV: '. pr($testCSV) . ' rows: ' . pr($rows));
   return TRUE;
 }
 

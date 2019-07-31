@@ -400,7 +400,6 @@ function lessOften() {
  *   (it has been at least a whole period since the last run OR
  *   (it has been at least half a period and we're at no later a point than last time)
  * @param string $period: the period (hour, day, week, month, year)
- * @param string $code: the strftime code for the smaller period to match or exceed
  * @param string $chosen: the chosen value to match or exceed (if omitted, assume it's the current period)
  */
 function often($period, $chosen = '') {

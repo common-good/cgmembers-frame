@@ -1,3 +1,7 @@
+2019-07-31 feature/xids-only
+. did away with tids (now xids are used everywhere, including on checks)
+. fixed rweb Download tests, which were not doing anything, and the corresponding functionality
+
 2019-07-30 feature/restricted-coupons
 . fixed bug -- forOnly field was not showing up on coupon form
 . got rWeb:Community test to run!

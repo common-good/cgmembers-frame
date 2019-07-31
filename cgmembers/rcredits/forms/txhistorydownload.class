@@ -32,9 +32,9 @@ class TxHistoryDownload implements TxProcessor {
    * Called before the first transaction.
    */
   public function hdr() {
-    $csvRow = [t('Tx#'), t('Date'),t('Name'),t('Purpose'), t('From Bank'), t('From You'), t('To You'), t('Balance'), t('Net'), t('Agent')];
+    $csvRow = ray(t('Tx#, Date, Name, Purpose, From You, To You, Balance, Agent'));
     u\csv($csvRow);
-    foreach (ray(TX_DOWNLOAD_MONEY_FLDS) as $k => $fld) $this->totals[$fld] = 0;
+    foreach (ray('fromyou toyou') as $k => $fld) $this->totals[$fld] = 0;
   }
 
   /**
@@ -50,19 +50,14 @@ class TxHistoryDownload implements TxProcessor {
    */
   public function processEntry($info) {
     if (in_array($info['uid'], $this->uids)) return;
-    extract(u\exactly('tid created name description amount balance myAgentUid banking', $info, null));
-    $frombank = $banking ? round(-$amount, 2) : 0;
+    extract(u\exactly('xid created name description amount balance myAgentUid banking', $info, null));
+//    $frombank = $banking ? round(-$amount, 2) : 0;
     $fromyou = round($amount > 0 ? $amount : 0, 2);
     $toyou = round($amount < 0 ? -$amount : 0, 2);
     $balance = round($balance, 2);
-    $net = round($amount, 2);
-    $csvRow = [$tid, strftime('%Y-%m-%d', $created), $name, $description,
-               $frombank, $fromyou, $toyou, $balance, $net,
-               r\qid($myAgentUid)];
-    u\csv($csvRow);
-    foreach (ray(TX_DOWNLOAD_MONEY_FLDS) as $k => $fld) {
-      $this->totals[$fld] += $$fld;
-    }
+//    $net = round($amount, 2);
+    u\csv([$xid, strftime('%Y-%m-%d', $created), $name, $description, $fromyou, $toyou, $balance, r\qid($myAgentUid)]);
+    foreach (ray('fromyou toyou') as $k => $fld) $this->totals[$fld] += $$fld;
   }
 
   /**
@@ -76,11 +71,7 @@ class TxHistoryDownload implements TxProcessor {
    * Called after the last transaction.
    */
   public function ftr() {
-    $csvRow = ['', '', 'TOTALS', '', $this->totals['frombank'], $this->totals['fromyou'], $this->totals['toyou'], $this->totals['net']];
+    $csvRow = ['', '', 'TOTALS', '', $this->totals['fromyou'], $this->totals['toyou'], '', ''];
     u\csv($csvRow);
-    /* if ($this->count < 1) { */
-    /*   $this->body .= '<div><div colspan=6>' . t('no txs') . '</div></div>'; */
-    /* } */
-    /* $this->body .= "</div>\n</div>\n"; */
   }
 }
