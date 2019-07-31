@@ -210,10 +210,11 @@ function doit(what, vs) {
       $('#edit-submit .ladda-label, #edit-nextStep .ladda-label').html(text);
     }
 
-    showBank($('#edit-connect-1').attr('checked') == 'checked');
-
-    $('#edit-connect-0').click(function() {showBank(false);});
-    $('#edit-connect-1').click(function() {showBank(true);});
+    if ($('#edit-connect-1')[0]) {
+      showBank($('#edit-connect-1').attr('checked') == 'checked');
+      $('#edit-connect-0').click(function() {showBank(false);});
+      $('#edit-connect-1').click(function() {showBank(true);});
+    }
 
     function showTarget(show) {
       $('#targetFields2').toggle(show);
