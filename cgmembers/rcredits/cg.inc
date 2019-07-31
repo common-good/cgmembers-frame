@@ -1071,7 +1071,8 @@ function stats($ctty = 0, $when = NULL, $redo = '') {
 }
 
 /**
- * Calculate and record statistics for the given community.
+ * Calculate and record statistics for the given community. The following fields omit the community itself:
+ *   balsPos, balsNeg (and corresponding counts), floors, topN, botN
  * @param int $ctty: uid of community or region -- 0 means ALL, 1 means the server's region (for example, qids starting "NEW")
  * @param int $created: date for which to create (or update) and return statistics
  * @param string $cttyCrit: MySQO criteria to select records for the given community
@@ -1081,17 +1082,14 @@ function stats($ctty = 0, $when = NULL, $redo = '') {
  * Called ONLY from stats()
  */
 function getStats($ctty, $created, $cttyCrit, $do = NULL) {
-///  debug("getStats('$ctty', '$created', '$cttyCrit', '$do')");
   u\EXPECT($created >= R_LAUNCH, 'getStats old date');
   $created0 = $created;
   $creCrit = 'created<=:created';
   $subs = compact('created');
   $cttysCrit = $ctty ? "(u.$cttyCrit OR u2.$cttyCrit)" : '1';
-  $nonCtty = 'uid>:CANONIC_ACCTS';
-  $accounts = "(SELECT uid,jid,community,flags FROM users WHERE $nonCtty)";
+  $nonCtty = $ctty < 0 ? 'uid>:CANONIC_ACCTS' : 'uid=0'; // nonCtty does not apply to overall, nor to the region
+  $accounts = "(SELECT uid,jid,community,flags FROM users)";
   $isMaster = '(jid=0 OR uid<jid)';
-  $masterBal = '(balance+IFNULL(balance2, 0))';
-  $slave = "(SELECT uid AS uid2, balance AS balance2 FROM users WHERE $nonCtty) u2 ON u2.uid2=u.jid";
   
   // get account counts (can't be combined with financial data query because of joint accounts
   $sqls['accts'] = <<< X
@@ -1099,7 +1097,7 @@ function getStats($ctty, $created, $cttyCrit, $do = NULL) {
       SUM(IF(:IS_OK AND activated<=:created AND activated<>0 AND :IS_CO, 1, 0)) AS bAccts,
       SUM(IF(NOT activated OR activated>:created, 1, 0)) AS newbs
     FROM users u
-    WHERE $nonCtty AND $cttyCrit AND $creCrit	
+    WHERE $cttyCrit AND $creCrit	
 X;
 
   // get users table financial data (must happen before topN/botN)
@@ -1110,7 +1108,7 @@ X;
     SUM(IF(balance>0, 1, 0)) AS balsPosCount,
     SUM(IF(balance<0, 1, 0)) AS balsNegCount,
     SUM(IF(:IS_OK, floor, 0)) AS floors
-    FROM users u /*LEFT JOIN $slave*/
+    FROM users u
     WHERE $nonCtty AND $isMaster AND $cttyCrit AND $creCrit
 X;
 
@@ -1139,7 +1137,7 @@ X;
   
   foreach (ray('p2b:01,b2b:11,b2p:10,p2p:00') as $k => $v) { // make x2x selectors
     foreach ([0, 1] as $i) ${'not' . $i} = $v[$i] ? '' : 'NOT';
-    $sql .= "SUM(IF(goods<>:FOR_USD AND $not0 u.:IS_CO AND $not1 u2.:IS_CO, amt, 0)) AS $k,\n";
+    $sql .= "SUM(IF(goods<>:FOR_USD AND $not0 u.:IS_CO AND $not1 u2.:IS_CO, ABS(amt), 0)) AS $k,\n";
   }
   $sql .= "SUM(IF(goods=:FOR_USD, ABS(amt), 0)) AS cashs,\n";
   $sql .= strtr($sql, ['-amt' => '1', 'amt' => '1', ",\n" => "Count,\n"]); // add counts
@@ -1147,12 +1145,12 @@ X;
 
   $sqls['txs'] = <<< X
     SELECT $sql
-    FROM txs_proper t 
+    FROM txs_prime t 
     LEFT JOIN $accounts u ON u.uid=uid1 
     LEFT JOIN $accounts u2 ON u2.uid=uid2
     WHERE $cttysCrit AND $creCrit
 X;
-  
+
   // get aAccts
   $recent = 'created BETWEEN :created-' . (RECENT_SECS-1) . ' AND :created'; // not n months (keep length of time consistent)
 
@@ -1172,20 +1170,20 @@ X;
         SELECT me, COUNT(DISTINCT other) AS conx, SUM(isRecentPayer) AS recentPays, u2.community
         FROM (
           SELECT u0.uid AS me, 
-            IF(u0.uid=uid1, 1, 0) as isRecentPayer,
-            IF(u0.uid=uid1, uid2, uid1) AS other 
-          FROM users u0
-          JOIN txs_proper t0 ON u0.uid IN (uid1, uid2) 
-          WHERE t0.$recent AND u0.$nonCtty AND NOT u0.:IS_CO AND u0.$cttyCrit
-        ) t LEFT JOIN users u2 ON u2.uid=other WHERE $crit AND u2.$nonCtty
+            IF(u0.uid=uid1 OR u0.jid=uid1, 1, 0) as isRecentPayer,
+            IF(u0.uid=uid1 OR u0.jid=uid1, uid2, uid1) AS other 
+          FROM txs_prime t0
+          JOIN users u0 ON u0.uid IN (t0.uid1, t0.uid2) OR u0.jid IN (t0.uid1, t0.uid2) AND $isMaster
+          WHERE t0.$recent AND NOT u0.:IS_CO AND u0.$cttyCrit
+        ) t LEFT JOIN users u2 ON u2.uid=other WHERE $crit
         GROUP BY t.me
       ) u3 WHERE recentPays>0        
 X;
   }
   
-//    SELECT MEDIAN(payees0) OVER () AS payees,
+//    for median: SELECT MEDIAN(payees0) OVER () AS payees,
 
-  // get recent payees (median payees per "active" account), roundups, and crumbs (total per month)
+  // get recent payees (avg payees per "active" account), roundups, and crumbs (total per month)
   $monthFactor = MONTH_SECS / RECENT_SECS;
 
   $sqls['payees'] = <<< X
@@ -1196,19 +1194,19 @@ X;
       SELECT uid, COUNT(DISTINCT uid2) AS payees0,
         SUM(IF(uid2=:CG_ROUNDUPS_UID, amt, 0)) AS roundups0,
         SUM(IF(uid2=:CG_CRUMBS_UID, amt, 0)) AS crumbs0
-      FROM txs_proper t JOIN users u ON uid=uid2
-      WHERE t.$recent AND $nonCtty AND $cttyCrit
+      FROM txs_prime t JOIN users u ON uid2 IN (u.uid, u.jid)
+      WHERE t.$recent AND $cttyCrit AND $isMaster
       GROUP BY uid
     ) x LIMIT 1
 X;
     
-  // get basket (median transaction size recently) -- this should omit structural transactions (roundups, etc.)
+  // get basket (avg transaction size recently) -- this omits structural transactions (roundups, etc.)
   $sqls['basket']  = <<< X
-    SELECT AVG(amt) AS basket
+    SELECT AVG(ABS(amt)) AS basket
     FROM txs_prime t JOIN users u ON u.uid=uid1 JOIN users u2 ON u2.uid=uid2
     WHERE t.$recent AND $cttysCrit
 X;
-    
+
   // get patronage (total recurring gifts expected per month)
   $sqls['patronage'] = <<< X
     SELECT SUM(amount * IF(period='Y', 1/12, IF(period='Q', 1/3, IF(period='W', :MONTH_SECS/:WEEK_SECS, 1)))) AS patronage
@@ -1246,7 +1244,7 @@ X;
       SUM(IF(amts>0, 1, 0)) AS balsPosCount,
       SUM(IF(amts<0, 1, 0)) AS balsNegCount,
       -SUM(GREATEST(amtsOut,amtsIn))/6 AS floors
-      FROM $pastTxs t
+      FROM $pastTxs t WHERE $nonCtty
 X;
    
     // get OLD topN
@@ -1255,16 +1253,6 @@ X;
       (SELECT DISTINCT uid, amts FROM $pastTxs u1 
        WHERE $nonCtty AND amts IS NOT NULL ORDER BY amts DESC LIMIT %topnSQL) u
 X;
-/*     $res += db\q($sql, $subs)->fetchAssoc() ?: []; */
-
-/*     // get OLD botN */
-/*     $sql = strtr($sql, ray('topN DESC', 'botN', '')); */
-/*     $res += db\q($sql, $subs)->fetchAssoc() ?: []; */
-
-/* /\*     $txs = <<< X *\/ */
-/* /\*       ((SELECT txid AS xid, 0 AS payer, payee, amount, completed AS created FROM r_usd WHERE amount<>0) *\/ */
-/* /\*        UNION (SELECT xid, payer, payee, amount, created FROM r_txs)) *\/ */
-/* /\* X; *\/ */
 
   } else {
     // get regular topN

@@ -150,13 +150,6 @@ Scenario: Buyer agent lacks permission to buy
   | otherName | what      |*
   | Eve Five  | purchases |
 
-Scenario: Seller tries to charge the customer twice
-  Given agent "C:A" asks device "devC" to charge ".ZZB,ccB" $100 for "goods": "food" at "%now-1min"
-  When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $100 for "goods": "food" at %now
-  Then we return error "duplicate transaction" with subs:
-  | op      |*
-  | charged |
-
 Scenario: Device sends wrong proof
   When agent "C:A" asks device "devC" to charge ".ZZB,whatever" $100 for "goods": "food" at %now
   Then we return error "bad proof"  

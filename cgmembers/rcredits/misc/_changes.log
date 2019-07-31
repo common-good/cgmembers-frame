@@ -1,3 +1,9 @@
+2019-07-30 feature/restricted-coupons
+. fixed bug -- forOnly field was not showing up on coupon form
+. got rWeb:Community test to run!
+. used a cool new feature in gherkin that lets you turn your associative array sideways (using ** instead of *)
+. added a stub connect feature test
+
 2019-07-29 feature/restricted-coupons
 . discount coupons can now be restricted to certain accounts
 . discounts are now called "discounts" rather than coupons

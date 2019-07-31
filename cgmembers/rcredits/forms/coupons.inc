@@ -46,7 +46,7 @@ X
     $ulimit = textFld(t('Limit:'), t('Leave this blank for unlimited uses.'), suffix(t(' uses per member')));
     $automatic = w\boolFld(t('Automatic?'), t('If the discount is not automatic, you will need to do the math each time.'), TRUE);
     $on = textFld(t('Description:'), [t('Discount on what')]);
-    $forOnly = textFld(t('For Only:'), [t('List of account IDs'), t('If you want to restrict this discount to certain %PROJECT members, type their account IDs here, separated by commas.')]);
+    $forOnly = textFld(t('For only:'), [t('List of account IDs'), t('If you want to restrict this discount to certain %PROJECT members, type their account IDs here, separated by commas.')]);
     $submit = t('Create');
   } else {
     $title = t('Discounts and Gift Certificates');
@@ -62,7 +62,7 @@ X
   $type = hidFld(@$type);
   jsx('coupons');
   
-  return cgform(@compact(ray('title buttons subtext code amount count minimum start end ulimit automatic on submit type')));
+  return cgform(@compact(ray('title buttons subtext code amount count minimum start end ulimit forOnly automatic on submit type')));
 }
 
 function formCoupons_validate($form, &$sta) {
@@ -144,5 +144,6 @@ function formCoupons_submit($form, &$sta) {
 	r\tellCo(t('New Coupons!'), $ray);
   if (u\test()) $args = u\deurlify($args);
 	$url = "/community/coupons/print/$args";
-  return u\test() ? w\go($url) : w\go2('', $url);
+  w\say(t('Your %thing was created successfully.', 'thing', $gift ? t('gift certificate') : t('discount')));
+  return u\test() ? w\go($url) : w\go2('/community/coupons/list', $url);
 }

@@ -17,7 +17,7 @@ use CG\Web as w;
 global $base_path;
 define('BASE_PATH', $base_path);
 define('T_BALANCE_FLDS', 'uid balance floor savingsAdd saveWeekly minimum');
-define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company');
+define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty');
 define('SPECIAL_IDS', 'ctty crumb round cgf bank-in bank-out');
 // see R_DATE_FLDS in defs.inc
 
@@ -28,7 +28,9 @@ define('SPECIAL_IDS', 'ctty crumb round cgf bank-in bank-out');
  */
 function fixData(&$info, $direct = FALSE) {
   global $rUrl, $testVars;
-  $fields = 'email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId';
+
+  $fields = key($info) . ' email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId'; // first key is probably an ID field, so keep it at the front
+  
   if (@$testVars) foreach ($info as $k => $v) if (strpos($v, '@') !== FALSE) {
     foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", $var, $v);
   }
@@ -59,16 +61,17 @@ function fixData(&$info, $direct = FALSE) {
     $boxId = db\get('id', 'r_boxes', '`code`=:boxId', ['boxId'=>$boxId]);
   }
 
-  foreach (just(T_ID_FLDS, $info) as $k => $v) {
-    if (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, SPECIAL_IDS)) {
-      u\preray([$k => t\uid($v) ?: 0], $info); // maintain first position of ID, for verifyRecord
-    }
-  }
 	foreach (ray('from:payer,to:payee,fromAgent:payerAgent,toAgent:payeeAgent') as $k => $k2) if (isset($info[$k])) {
 		$info[$k2] = $info[$k];
 		unset($info[$k]);
 	}
-  
+
+  foreach (just(T_ID_FLDS, $info) as $k => $v) {
+    if (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, SPECIAL_IDS)) {
+      $fields .= ' ' . $k;
+      $$k = t\uid($v);
+    }
+  }  
   $info = @compact(ray($fields)) + $info;
 }
 
@@ -103,7 +106,7 @@ function fixEmail(&$email) {
 function doRecords($list, $thing) {
   global $testOnly;
 
-  if ($testOnly) t\output("Expect $thing: " . pr($list), 'expect');
+//  if ($testOnly) t\output("Expect $thing: " . pr($list), 'expect');
   if (is_object($list)) $list = (array) $list;
   u\EXPECT(is_array(@$list) and !is_numeric(@key(@$list[0])), 'doThing object should be an assoc: ' . pr($list));
   $func = 'CG\\Testing\\do';
@@ -289,7 +292,7 @@ function doTxs($info, $thing) {
   if ($flags and !is_numeric($flags)) $flags = u\bit($flags); // works for '' and arrays too
 
   if (!$testOnly) { // set up everything needed for record creation (array_filter then should have no effect or new r\Tx dies)
-    $goods = strpos($payeeFor, 'cash') !== FALSE ? FOR_USD : FOR_GOODS;
+    if (!isset($info['goods'])) $goods = strpos($payeeFor, 'cash') !== FALSE ? FOR_USD : FOR_GOODS;
     $dfts = ray('created type channel risks goods flags payerFor payeeFor channel',
       now(), TX_TRANSFER, TX_SYS, 0, $goods, 0, t('payerFor'), t('payeeFor'), $channel0);
     foreach ($dfts as $k => $v) if ($$k === FALSE) $$k = $v;
@@ -1017,7 +1020,8 @@ function verifyRecord($table, $info) {
 
   $crit = join(' AND ', $crit);
   if (!$result = db\exists($table, $crit, $info)) {
-    $info2 = $info; list ($infoK, $infoV) = [key($info2), array_shift($info2)]; // must be before ksort
+    $info2 = $info; 
+    list ($infoK, $infoV) = [key($info2), array_shift($info2)]; // must be before ksort
     ksort($info);
     foreach ($info as $k => $v) $subs[$k] = "'$v'";
     $sql = "SELECT * FROM $table WHERE " . strtr(u\SUBS($crit), u\prefixKeys(':', $subs));
