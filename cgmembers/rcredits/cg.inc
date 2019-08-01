@@ -179,7 +179,7 @@ function setJoin($reid, $join) {
       $msg = t('join success');
     } else { // requesting join
       $_atag = $a2->makeDo('join', $main); // seek agreement
-      r\message($other, 'join accounts', ray('_atag name', $_atag, $a2->fullName));
+      r\message($other, 'join accounts', ray('_atag name', $_atag, $a1->fullName));
       $msg = t('join request success');
     }
   } else {

@@ -1443,7 +1443,6 @@ function shownWith($content, $type = 'text', $mustBePresent = TRUE) {
 
   $xi = $i = 0;
   foreach ($ray as $one) {
-///    debug($one);
     if ($one === '' or substr($one, 0, 1) == '~') continue; // ignore ~labels
 //    if (in($one, '%')) $one = t\lastMinuteSubs(htmlspecialchars($one));
     $one = t($one); // translate constants in member
