@@ -120,6 +120,9 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsAPercentageDiscountCoupon
  *     MAKE coupons AMemberRedeemsARestrictedDiscountCoupon
+ *     MAKE coupons AMemberRedeemsADiscountCouponInDribsAndDrabs
+ *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
+ *     MAKE coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  *     MAKE flow AMemberDraws
  *     MAKE flow AMemberDrawsAgain
  *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMember
@@ -381,6 +384,9 @@ function weSayWithSubs($type, $index, $subs) {
  *     TEST contact AMemberUpdatesToADifferentState
  *     TEST contact AMemberUpdatesToADifferentName
  *     TEST coupons AMemberRedeemsAGiftCoupon
+ *     TEST coupons AMemberRedeemsADiscountCouponInDribsAndDrabs
+ *     TEST coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
+ *     TEST coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  *     TEST food AMemberMakesAFoodDonation
  *     TEST food AMemberMakesAFoodDonationWithoutAdequateFunds
  *     TEST gift AMemberDonates
@@ -675,6 +681,9 @@ function relations($relations) {return t\relations($relations);}
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     TEST coupons AMemberRedeemsAPercentageDiscountCoupon
  *     TEST coupons AMemberRedeemsARestrictedDiscountCoupon
+ *     TEST coupons AMemberRedeemsADiscountCouponInDribsAndDrabs
+ *     TEST coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
+ *     TEST coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  *     TEST download Setup
  *     MAKE flow Setup
  *     MAKE gift Setup
@@ -1091,6 +1100,7 @@ function statisticsGetSet($time) {
  *
  * in: BOTH coupons AMemberCompanyCreatesAGiftCoupon
  *     BOTH coupons AMemberRedeemsAGiftCoupon
+ *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
  *     TEST food AMemberMakesAFoodDonation
  *     TEST food AMemberMakesAFoodDonationWithoutAdequateFunds
@@ -1559,6 +1569,9 @@ function someonePostsToPageWith($page, $args) {return t\postToPage($page, $args)
  *     TEST coupons AMemberRedeemsAPercentageDiscountCoupon
  *     TEST coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsARestrictedDiscountCoupon
+ *     MAKE coupons AMemberRedeemsADiscountCouponInDribsAndDrabs
+ *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
+ *     MAKE coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  */
 function coupons($list) {return t\coupons($list);}
 

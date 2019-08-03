@@ -1,7 +1,7 @@
 Feature: Activate
 AS a regional administrator
-I WANT to activate an rCredits account
-SO the new member can participate
+I WANT to activate (or deactivate) a Common Good account
+SO the new member can participate (or stop participating)
 
 Setup:
   Given members:
@@ -23,3 +23,14 @@ Scenario: Admin activates an account
   | uid  | flags               | helper |*
   | .ZZD | member,confirmed,ok |   .ZZB |
 
+Scenario: Admin deactivates an account
+  Then members:
+  | uid  | flags          |*
+  | .ZZB | ok,member,ided |
+  # (tests add the ided bit by default when creating an active account)
+  When member "B:A" completes form "summary" with values:
+  | rTrader | federalId  | adminable | tickle |*
+  |         | %R_ON_FILE | member    |        |
+  Then members:
+  | uid  | flags       |*
+  | .ZZB | member,ided |

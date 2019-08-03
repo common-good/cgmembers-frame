@@ -1,3 +1,16 @@
+2019-08-03 feature/piecemeal-discounts
+. discounts with a zero minimum can now be redeemed in dribs and drabs
+. fixed bug that kept first repeating transaction from getting marked as such
+. fixed bug that kept admin from being able to deactivate an account
+. changed checks test so it creates confirmed accounts, making it an easy way to set up standard test accounts
+. added a sponsor field to coupons so a third party can pay the rebates (used initially by Food Fund and for Garlic & Arts)
+. changed coupon handling to count or add actual coupon rebate transactions, rather then a "uses" field
+. tx history, download history, and statements will show old check numbers rather than xids for old bank transfers
+. statements now use xids not tids (omitted from previous updates)
+. invoices in cron now request enough funds to cover the roundup, if any
+. moved internal procedures in db\migrations\recreate-views.inc to ...\util.inc to circumvent a bug in phinx
+. changed txs definitions to consolidate rel1, relType1, rel2, and relType2 into just rel and relType (using only rel2 / relType2)
+
 2019-08-01 feature/xids-only
 . touch ups to the xids-only feature
 . fixed bug that showed the wrong name in joint account email

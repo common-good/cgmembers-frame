@@ -32,10 +32,10 @@ Setup:
   
   When cron runs "invoices"
   Then transactions: 
-  | xid | created | amount | from | to   | purpose              | taking | type  |*
-  |   2 | %today  |    100 | .ZZA | .ZZC | one (%PROJECT inv#1) |        | prime |
-  |   3 | %today  |    200 | .ZZA | .ZZC | two (%PROJECT inv#2) |        | prime |
-  |   4 | %today  |      0 |  256 | .ZZA | from bank            |      1 | bank  |
+  | xid | created | amount | from    | to   | purpose              | taking | type  |*
+  |   2 | %today  |    100 | .ZZA    | .ZZC | one (%PROJECT inv#1) |        | prime |
+  |   3 | %today  |    200 | .ZZA    | .ZZC | two (%PROJECT inv#2) |        | prime |
+  |   4 | %today  |      0 | bank-in | .ZZA | from bank            |      1 | bank  |
 	Then count "txs" is 4
 	And count "usd" is 1
 	And count "invoices" is 4
@@ -130,3 +130,18 @@ Scenario: An invoice is approved from an account with a negative balance
 	Then these "usd":
   | txid | payee | amount | created | completed | deposit |*
   |    1 | .ZZA  |    900 | %today  |         0 |       0 |
+  
+Scenario: An invoice gets handled for an account that rounds up
+  Given members have:
+  | uid  | flags                       |*
+  | .ZZA | ok,confirmed,bankOk,roundup |
+  And invoices:
+  | nvid | created   | status       | amount | from | to   | for   |*
+  |    1 | %today    | %TX_APPROVED |  99.60 | .ZZA | .ZZC | one   |
+  When cron runs "invoices"
+  Then transactions: 
+  | xid | created | amount | from    | to   | purpose              | taking | type  |*
+  |   1 | %today  |    100 | bank-in | .ZZA | from bank            |      1 | bank  |
+	And usd transfers:
+  | txid | payee | amount | created | completed | deposit |*
+  |    1 | .ZZA  |    100 | %today  |    %today |       0 |  

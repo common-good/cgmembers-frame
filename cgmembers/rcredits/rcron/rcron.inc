@@ -940,6 +940,7 @@ function invoice1($item) {
 		if (!$paid or $a->balance < 0) {
       if ($funding) $funding = ($created >= now() - R_USDTX_DAYS * DAY_SECS or db\exists('r_usd', 'amount>=:amount AND payee=:payer', compact(ray('amount payer')))); // fund it again, if necessary
       if (!$funding) {
+        if ($a->roundup) $amount = ceil($amount); // take enough for the roundup
         $DBTX = db_transaction();
         if ($a->getFunds($amount, t('for invoice', compact('nvid')))) {
           db\setFlag('r_invoices', $nvid, B_FUNDING, TRUE);

@@ -17,7 +17,7 @@ use CG\Web as w;
 global $base_path;
 define('BASE_PATH', $base_path);
 define('T_BALANCE_FLDS', 'uid balance floor savingsAdd saveWeekly minimum');
-define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty');
+define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor');
 define('SPECIAL_IDS', 'ctty crumb round cgf bank-in bank-out');
 // see R_DATE_FLDS in defs.inc
 
@@ -304,10 +304,10 @@ function doTxs($info, $thing) {
 
   if ($testOnly) {
 //    return (verifyRecord('tx_hdrs', $hdr) and verifyRecord('tx_entries', $e1) and verifyRecord('tx_entries', $e2));
-    $e1 = $filter(ray('for1 uid1 agt1 tid1 relType1 rel1', $payerFor, $payer, $payerAgent, $payerTid, NULL, NULL));
-    $e2 = $filter(ray('for2 uid2 agt2 tid2 relType2 rel2', $payeeFor, $payee, $payeeAgent, $payeeTid, NULL, NULL));
+    $e1 = $filter(ray('for1 uid1 agt1 tid1', $payerFor, $payer, $payerAgent, $payerTid));
+    $e2 = $filter(ray('for2 uid2 agt2 tid2', $payeeFor, $payee, $payeeAgent, $payeeTid));
     u\preray(just('eid', $info), $hdr);
-    $ray = $hdr + $filter(ray('type amt', $type, $amount)) + $e1 + $e2;
+    $ray = $hdr + $filter(ray('type amt relType rel', $type, $amount, NULL, NULL)) + $e1 + $e2;
     return verifyRecord('txs', $ray);
   } else {
     $e1 = $filter(ray($entryFlds, $xid, $type, 0-$amount, $payer, $payerAgent, $payerFor, $payerTid, NULL, NULL));

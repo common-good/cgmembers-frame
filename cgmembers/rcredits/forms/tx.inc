@@ -82,6 +82,7 @@ function formTx_submit($form, &$sta) {
   } else {
     list ($msg, $args) = be\invoice($mya, r\acct($uid), $amount, $purpose, $goods, @$repeat ? ['recurs' => 1] : []);
   }
+
   $ok = @$args['success'];
   if ($func == 'pay' and $mya->snap) r\tellAdmin(t('SNAP member %who %did something', 'who did', $mya->fullName, $ok ? t('bought') : t('tried to buy')), ['topic' => t('SNAP purchase') . ($ok ? '' : t(' failed'))]);
 
@@ -93,7 +94,10 @@ function formTx_submit($form, &$sta) {
       $info += compact('id');
       say(t('Your recurring payment has been updated.'));
     }
-    db\updateOrInsert('r_recurs', $info, 'id');
+    $newId = db\updateOrInsert('r_recurs', $info, 'id');
+    list ($tnm, $idFnm) = $func == 'pay' ? ['tx_hdrs', 'xid'] : ['r_invoices', 'nvid'];
+    db\update($tnm, ray("$idFnm recursId", $args[$idFnm], $id ?: $newId), $idFnm);
+    
     $often = ray(OFTENS)[@$repeat];
     $msg .= '|repeats';
   }

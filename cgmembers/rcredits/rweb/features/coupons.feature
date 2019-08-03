@@ -39,8 +39,8 @@ Scenario: A member redeems a gift coupon
   | .ZZC |           8 | 0039200 |
 # created determines 3-letter lowSecurity code (7AA), which is used in coupon code
   And coupons:
-  | coupid | fromId | amount | ulimit | flags | start | end |*
-  |      1 |   .ZZC |     10 |      1 | gift  |     8 |  28 |
+  | coupid | fromId | amount | ulimit | flags | start | end | sponsor |*
+  |      1 |   .ZZC |     10 |      1 | gift  |     8 |  28 | .ZZC    |
   When member ".ZZA" completes form "community/coupons/type=gift" with values:
   | type   | code          |*
   | redeem | DD7K CLJW EAI |
@@ -72,8 +72,8 @@ Scenario: A member company creates a dollar amount discount coupon
   | type     | amount | minimum | start | end     | ulimit | automatic |*
   | discount |     12 |      20 | %mdY  | %mdY+9d |      1 |         1 |
   Then coupons:
-  | coupid | amount | fromId | minimum | ulimit | flags | start     | end                |*
-  |      1 |     12 |   .ZZC |      20 |      1 |       | %daystart | %(%daystart+10d-1) |
+  | coupid | amount | fromId | minimum | ulimit | flags | start     | end                | sponsor |*
+  |      1 |     12 |   .ZZC |      20 |      1 |       | %daystart | %(%daystart+10d-1) | .ZZC    |
   When member ".ZZC" visits page "community/coupons/list"
   Then we show "Your Discounts and Gift Certificates" with:
   | Type     | Amount | On                              | Starting | Ending  | Min Purchase | Max Uses |~Action  |
@@ -81,8 +81,8 @@ Scenario: A member company creates a dollar amount discount coupon
   
 Scenario: A member redeems a dollar amount discount coupon
   Given coupons:
-  | coupid | amount | fromId | minimum | ulimit | flags | start     | end                |*
-  |      1 |     12 |   .ZZC |      20 |      1 |       | %daystart | %(%daystart+10d-1) |
+  | coupid | amount | fromId | minimum | ulimit | flags | start     | end                | sponsor |*
+  |      1 |     12 |   .ZZC |      20 |      1 |       | %daystart | %(%daystart+10d-1) | .ZZC    |
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 100    | fun     |
@@ -164,11 +164,11 @@ Scenario: A member company creates a restricted dollar amount discount coupon
   
 Scenario: A member redeems a restricted discount coupon
   Given coupons:
-  | coupid | amount | minimum | fromId | ulimit | flags | start     | end                |*
-  |      1 |    -12 |      20 |   .ZZC |      1 | some  | %daystart | %(%daystart+10d-1) |
+  | coupid | amount | minimum | fromId | ulimit | flags | start     | end                | sponsor |*
+  |      1 |    -12 |      20 |   .ZZC |      1 | some  | %daystart | %(%daystart+10d-1) | .ZZC    |
   And these "coupated":
-  | id | uid  | coupid | uses | when |*
-  |  1 | .ZZA |      1 |    0 |    0 |
+  | id | uid  | coupid | when |*
+  |  1 | .ZZA |      1 |    0 |
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 50     | fun     |
@@ -178,8 +178,8 @@ Scenario: A member redeems a restricted discount coupon
   | .ZZB |       0 |
   | .ZZC |      44 |
   And these "coupated":
-  | id | uid  | coupid | uses | when   |*
-  |  1 | .ZZA |      1 |    1 | %today |
+  | id | uid  | coupid | when   |*
+  |  1 | .ZZA |      1 | %today |
   When member ".ZZB" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 50     | fun     |
@@ -189,3 +189,65 @@ Scenario: A member redeems a restricted discount coupon
   | .ZZB |     -50 |
   | .ZZC |      94 |
   
+Scenario: A member redeems a discount coupon in dribs and drabs
+  Given coupons:
+  | coupid | amount | minimum | fromId | ulimit | flags | start     | end                | sponsor |*
+  |      1 |     20 |       0 |   .ZZC |      0 |       | %daystart | %(%daystart+10d-1) | .ZZC    |
+  When member ".ZZA" confirms form "pay" with values:
+  | op  | who        | amount | purpose |*
+  | pay | Corner Pub |     12 | fun     |
+  Then we say "status": "You paid Corner Pub $12."
+  And balances:
+  | uid  | balance |*
+  | .ZZA |       0 |
+  | .ZZB |       0 |
+  | .ZZC |       0 |
+  When member ".ZZA" confirms form "pay" with values:
+  | op  | who        | amount | purpose |*
+  | pay | Corner Pub |     12 | fun     |
+  Then we say "status": "You paid Corner Pub $12."
+  And balances:
+  | uid  | balance |*
+  | .ZZA |      -4 |
+  | .ZZB |       0 |
+  | .ZZC |       4 |
+  When member ".ZZA" confirms form "pay" with values:
+  | op  | who        | amount | purpose |*
+  | pay | Corner Pub |     12 | fun     |
+  Then we say "status": "You paid Corner Pub $12."
+  And balances:
+  | uid  | balance |*
+  | .ZZA |     -16 |
+  | .ZZB |       0 |
+  | .ZZC |      16 |  
+
+Scenario: A member with nothing redeems a zero minimum discount coupon
+  Given members have:
+  | uid  | flags        |*
+  | .ZZA | ok,confirmed |
+  And coupons:
+  | coupid | amount | minimum | fromId | ulimit | flags | start     | end                | sponsor |*
+  |      1 |     20 |       0 |   .ZZC |      0 |       | %daystart | %(%daystart+10d-1) | .ZZC    |
+  When member ".ZZA" confirms form "pay" with values:
+  | op  | who        | amount | purpose |*
+  | pay | Corner Pub |     12 | fun     |
+  Then we say "status": "You paid Corner Pub $12."
+  And balances:
+  | uid  | balance |*
+  | .ZZA |       0 |
+  | .ZZB |       0 |
+  | .ZZC |       0 |
+
+Scenario: A member redeems a discount coupon sponsored by a third party
+  Given coupons:
+  | coupid | amount | minimum | fromId | ulimit | flags | start     | end                | sponsor |*
+  |      1 |     12 |       0 |   .ZZC |      0 |       | %daystart | %(%daystart+10d-1) | .ZZB    |
+  When member ".ZZA" confirms form "pay" with values:
+  | op  | who        | amount | purpose |*
+  | pay | Corner Pub |     20 | fun     |
+  Then we say "status": "You paid Corner Pub $20."
+  And balances:
+  | uid  | balance |*
+  | .ZZA |      -8 |
+  | .ZZB |     -12 |
+  | .ZZC |      20 |
