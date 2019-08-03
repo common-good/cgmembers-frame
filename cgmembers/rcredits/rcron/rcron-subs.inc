@@ -55,15 +55,13 @@ function timeFor($time, $period, $chosen) {
 
   $lastStart = getV('last_cron_start', []);
   if ($lastStart and now() - nn($lastStart[$period], 0) < HOUR_SECS) return FALSE;
-
   $lastCron = \variable_get('last_cron_end') ?: [];
   $lastTime = @$lastCron[$period];
-  $codes = ray(TIME_CODES);
-  list ($periodCode, $withinCode) = str_split($codes[$period]);
+  list ($periodCode, $withinCode) = str_split(ray(TIME_CODES)[$period]);
   $point = strftime("%$withinCode", $time);
   if ($withinCode == 'a') $point = u\day2n($point); // %u and %w fail on dev machine (among others)
   list ($periodNum, $lastPeriodNum) = [strftime("%$periodCode", $time), strftime("%$periodCode", $lastTime)];
-  $isTime = ($periodNum != $lastPeriodNum and ($chosen === '' or $point >= $chosen));
+  $isTime = !nn($lastTime) or ($periodNum != $lastPeriodNum and ($chosen === '' or $point >= $chosen));
   if ($isTime) {
     $lastStart[$period] = now();
     setV('last_cron_start', $lastStart); // remember that this periodic activity has been done

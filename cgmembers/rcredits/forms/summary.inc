@@ -179,7 +179,7 @@ function formSummary_submit($form, &$sta) {
   if (!$mya->cAdmin) u\EXPECT(!array_diff(array_keys($args), ray('uid tickle note')), 'too many unpermitted changing fields in ' . pr($args));
 
   if (!@$tickle) {
-    $tickleDone = $mya->ok ? ($note and !$tickle and $mya->tickle) : 'activate';
+    $tickleDone = $mya->ok ? (nn($note) and !$tickle and $mya->tickle) : 'activate';
     list ($zot, $tickle) = $mya->nextTickle($tickleDone);
 //    if ($tickleDone) $note = trim(t('(%typeDone) ', 'type', @$note ? '': "$tickleType ") . @$note);
 //    if ($tickleDone === TRUE) $note = trim(t('Done ') . @$note);
@@ -211,11 +211,11 @@ function formSummary_submit($form, &$sta) {
     } elseif (@$federalId and $federalId != $mya->federalId) $mya->update('ssnData', '');
   }
 
-  if (isset($rTrader)) $mya->setBit(B_OK, @$rTrader, TRUE);
+  if (isset($rTrader)) $mya->setBit(B_OK, @$rTrader);
   if (!nn($helper)) unset($helper); // don't overwrite if too late or empty
 //  $floor = -$creditLimit; // floor is calculated automatically
   $mya->update(@compact(ray('legalName federalId tickle notes helper mediaConx moves')));
-  
+ 
   unset($DBTX);
   
   say('info saved');

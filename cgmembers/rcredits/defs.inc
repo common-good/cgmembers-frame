@@ -5,7 +5,7 @@
  * (SMS, web, smartphone, etc.)
  */
 
-define('R_VERSION', '3.50m'); // software version
+define('R_VERSION', '3.50n'); // software version
 
 // definitions used in settings file
 define('US_COUNTRY_ID', 1228); // United States
@@ -533,7 +533,6 @@ define('NORMAL_TX_ROWS', 30); // normal number of transaction lines to show
 define('TX_MAX_ROWS', 500); // (unused) maximum number of transactions to load at once
 define('TX_MAX_MOS', 18); // maximum transaction months, for display
 define('TX_MAX_DAYS', 30.5 * TX_MAX_MOS + 2); // maximum days in a transaction query (18 months) -- 2 for leap day & daylight
-define('TX_DOWNLOAD_MONEY_FLDS', 'frombank fromyou toyou net');
 define('TX_DATA_FLDS', 'undoneBy undoes force changes'); // serialized pseudo-fields in the data field of a transaction record
 
 define('DS_OPEN', 1);  // dispute not resolved

@@ -283,7 +283,7 @@ function agentAsksDeviceToUndoTransactionCode($agent, $device, $xid, $code) {
 /**
  * agent (ARG) asks device (ARG) to undo transaction with subs: (ARG)
  *
- * in: MAKE coupons AMemberRedeemsAGiftCoupon
+ * in: MAKE coupons AMemberRedeemsADiscountCoupon
  *     MAKE undo AnAgentAsksToUndoACharge
  *     MAKE undo AnAgentAsksToUndoANonexistentTransaction
  */
@@ -476,7 +476,7 @@ function weNoticeToMemberWithSubs($notice, $id, $subs) {return t\notice($notice,
  * agent (ARG) asks device (ARG) to charge (ARG) $(ARG) for (ARG): (ARG) at (ARG)
  *
  * in: MAKE aaPayTwice SellerTriesToChargeTheCustomerTwice
- *     MAKE coupons AMemberRedeemsAGiftCoupon
+ *     MAKE coupons AMemberRedeemsADiscountCoupon
  *     MAKE exchange ACashierAsksToChargeSomeoneForCash
  *     MAKE exchange ACashierAsksToRefundSomeone
  *     MAKE exchange ACashierAsksToChargeAnotherMemberWithInsufficientBalance
@@ -732,7 +732,7 @@ function weChangeMemberCardCode($id) {
 /**
  * coupons: (ARG)
  *
- * in: MAKE coupons AMemberRedeemsAGiftCoupon
+ * in: MAKE coupons AMemberRedeemsADiscountCoupon
  */
 function coupons($list) {return t\coupons($list);}
 
@@ -746,7 +746,7 @@ function transactionCountIs($n) {return t\txCountIs($n);}
 /**
  * transaction headers: (ARG)
  *
- * in: TEST coupons AMemberRedeemsAGiftCoupon
+ * in: TEST coupons AMemberRedeemsADiscountCoupon
  *     TEST undo ACashierReversesATransactionWithInsufficientFunds
  */
 function transactionHeaders($list) { return t\txHdrs($list); }
@@ -754,7 +754,7 @@ function transactionHeaders($list) { return t\txHdrs($list); }
 /**
  * transaction entries: (ARG)
  *
- * in: TEST coupons AMemberRedeemsAGiftCoupon
+ * in: TEST coupons AMemberRedeemsADiscountCoupon
  *     TEST undo ACashierReversesATransactionWithInsufficientFunds
  */
 function transactionEntries($list) { return t\txEntries($list); }
@@ -762,7 +762,7 @@ function transactionEntries($list) { return t\txEntries($list); }
 /**
  * transaction header count is (ARG)
  *
- * in: TEST coupons AMemberRedeemsAGiftCoupon
+ * in: TEST coupons AMemberRedeemsADiscountCoupon
  */
 function transactionHeaderCountIs($n) { return t\count('tx_hdrs', $n); }
 
@@ -776,7 +776,7 @@ function transactionEntryCountIs($n) { return t\count('entries', $n); }
 /**
  * coupated: (ARG)
  *
- * in: TEST coupons AMemberRedeemsAGiftCoupon
+ * in: TEST coupons AMemberRedeemsADiscountCoupon
  */
 function coupated($list) { return t\coupatedRecords($list); }
 

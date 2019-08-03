@@ -6,7 +6,7 @@ define('E_TYPES', 'bank_only prime donation rebate usd_fee bank'); // these cons
 define('BANK_IDS', ['bankIn' => 256, 'bankOut' => 257, 'bankCharges' => 192]);
 define('TX_FLDS', 'xid actorId actorAgentId flags channel boxId goods risk risks recursId reversesXid created');
 define('TXE_FLDS', 'id entryType amount description uid agentUid acctTid relType relatedId xid');
-define('TXES_FLDS', 'description AS for, uid AS uid, agentUid AS agt, acctTid AS tid, relType AS relType, relatedId AS rel');
+define('TXES_FLDS', 'description AS for, uid AS uid, agentUid AS agt, acctTid AS tid');
   
 /**
  * Create (or recreate) all VIEWS, starting from scratch. This makes it easier to add/change/delete fields.
@@ -14,19 +14,6 @@ define('TXES_FLDS', 'description AS for, uid AS uid, agentUid AS agt, acctTid AS
  * @param int $stopAt: migration date to stop at (0 = none, used for rolling back a migration)
  */
 function createViews($m, $stopAt = 0) {
-  
-  function allSoFar($w) {return '(' . join(') OR (', $w) . ')';}
-  
-  function makeTxsView(&$z, $_view, $_where1 = '', $_where2 = '') {
-    pr("making $_view");
-    $m = $z['m'];
-    foreach ([1, 2] as $i) {
-      if (${"_where$i"}) $z["w$i"][] = ${"_where$i"}; else ${"_where$i"} = allSoFar($z["w$i"]);
-    }
-    $subs = compact(ray('_view _where1 _where2'));
-    $m->doSql(strtr($z['sql'], $subs));
-  }
-  
   pr('clearing views');
   $q = $m->query('SELECT table_name FROM information_schema.views');
   while ($table = $q->fetchColumn()) $m->doSql('  DROP VIEW IF EXISTS ' . $table);
@@ -57,7 +44,8 @@ function createViews($m, $stopAt = 0) {
   $select0 = 'SELECT e.* FROM tx_entries_all e JOIN tx_entries_all e2 USING(xid)'; // e2 mostly helps identify related prime records)
   $sql = <<< X
     CREATE VIEW _view AS 
-    SELECT DISTINCT $txFlds0, e1.entryType AS type, e2.amount AS amt, $txFlds2, $txFlds1, e2.id AS eid
+    SELECT DISTINCT $txFlds0, e1.entryType AS type, e2.amount AS amt, $txFlds2, $txFlds1, 
+      e2.relType, e2.relatedId AS rel, e2.id AS eid
     FROM tx_hdrs t
     JOIN ($select0 WHERE _where1) e1 USING (xid)
     JOIN ($select0 WHERE _where2) e2 USING (xid)

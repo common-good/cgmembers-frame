@@ -220,8 +220,8 @@ Scenario: A member pays another member repeatedly
   | created | fullName | otherName | amount | payeePurpose |*
   | %today  | Bea Two  | Abe One    | $100   | labor        |
   And transactions:
-  | xid | created | amount | from  | to   | purpose      | taking |*
-  |   1 | %today  |    100 | .ZZA  | .ZZB | labor        | 0      |
+  | xid | created | amount | from  | to   | purpose      | taking | recursId |*
+  |   1 | %today  |    100 | .ZZA  | .ZZB | labor        | 0      |        1 |
   And date field "created" rounded "no" in "tx_hdrs" record "1" (id field "xid")
   And these "recurs":
   | id | payer | payee | amount | period | purpose | created | ended |*

@@ -89,10 +89,10 @@ Scenario: A joined account member looks at transaction history and summary
   # txid 603 used to have completed 0, but that's wrong -- we always immediately complete transfers out
   And transactions: 
   | xid | created   | amount | from | to   | purpose |*
-  |   5 | %today-1m |    200 | .ZZA | .ZZD | favors  |
-  |   6 | %today-1w |    500 | .ZZA | .ZZB | usd     |
-  |   7 | %today-2d |     50 | .ZZD | .ZZB | cash    |
-  |   8 | %today-1d |    100 | .ZZC | .ZZA | labor   |  
+  |  15 | %today-1m |    200 | .ZZA | .ZZD | favors  |
+  |  16 | %today-1w |    500 | .ZZA | .ZZB | usd     |
+  |  17 | %today-2d |     50 | .ZZD | .ZZB | cash    |
+  |  18 | %today-1d |    100 | .ZZC | .ZZA | labor   |  
   Then balances:
   | uid  | balance |*
   | .ZZA |    1850 |
@@ -106,21 +106,13 @@ Scenario: A joined account member looks at transaction history and summary
   | To Bank      | - |   100.00 |         |
   | Received     | + |   150.00 |         |
   | Out          | - |     0.00 |         |
-#  | Credit Line+ |   |          |         |
   | End          |   | 1,850.00 | %dmy    |
   And with:
-#  |~tid | Date    | Name       | Purpose   | Amount | Reward | Agent | ~ |
-#  | 5   | %mdy-1d | Corner Pub | labor     | 100.00 | 10.00      | ZZA  | X |
-#  | 4   | %mdy-2d | Dee Four   | cash      |  50.00 | --         | ZZB  | X |
-##  | 3   | %mdy-1w | Abe One    | usd       | 500.00   | 500.00 | --         | ZZB  | X |
-#  | 602 | %mdy-2w |            | from bank | 400.00 | --         | ZZA  | X |
-#  | 601 | %mdy-2w |            | from bank | 600.00 | --         | ZZB  | X |
-
   | Tx# | Date    | Name       | Purpose   |  Amount |  Balance | Action |
   |   4 | %mdy    | --         | to bank   | -100.00 | 1,850.00 |        |
-  |   8 | %mdy-1d | Corner Pub | labor     |  100.00 | 1,950.00 |        |
-  |   7 | %mdy-2d | Dee Four   | cash      |   50.00 | 1,850.00 |        |
-#  | 3   | %mdy-1w | Abe One    | usd      | 500.00  |   500.00 |  +0    |
+  |  18 | %mdy-1d | Corner Pub | labor     |  100.00 | 1,950.00 |        |
+  |  17 | %mdy-2d | Dee Four   | cash      |   50.00 | 1,850.00 |        |
+#  | 16  | %mdy-1w | Abe One    | usd      | 500.00  |   500.00 |  +0    |
   |   3 | %mdy-2w | --         | from bank |  400.00 | 1,800.00 |        |
   |   2 | %mdy-2w | --         | from bank |  600.00 | 1,400.00 |        |
   Given cron runs "acctStats"

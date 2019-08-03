@@ -40,6 +40,7 @@ function extraSetup() {
  *
  * in: MAKE activate Setup
  *     TEST activate AdminActivatesAnAccount
+ *     TEST activate AdminDeactivatesAnAccount
  *     MAKE changes Setup
  *     MAKE checks Setup
  */
@@ -81,6 +82,7 @@ function weShowWith($title, $content = FALSE, $showDebugs = TRUE) {
  * member (ARG) completes form (ARG) with values: (ARG)
  *
  * in: MAKE activate AdminActivatesAnAccount
+ *     MAKE activate AdminDeactivatesAnAccount
  *     MAKE changes AMemberChangesSomeSettings
  */
 function memberCompletesFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values);}
