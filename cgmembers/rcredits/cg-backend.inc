@@ -302,14 +302,6 @@ function reverse($xid) {
   $newTx->created = now();
   foreach ($tx->entries as $oldEntry) {
     $newEntry = clone $oldEntry;
-
-    if ($newEntry->relType == 'D' and $newEntry->amount > 0) { // related to a coupated record
-      if (!db\q('UPDATE r_coupated SET uses=uses-1 WHERE id=:coupatedId AND uid=:uid',
-                ['coupatedId' => $newEntry->relatedId, 'uid' => $newEntry->uid])) {
-        $DBTX->rollback();
-        return r\txRet('tx create err', $entry);
-      }
-    }
     $newEntry->id = NULL;
     $newEntry->xid = NULL;  // new entry belongs to reversing transaction
     $newEntry->amount = -$oldEntry->amount;
@@ -546,7 +538,7 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
 
   // Apply coupon
   if ($amount > 0 AND ($goods != FOR_USD)) {
-    $rebate = handleCoupon($entries, $loserA, $gainerA, $amount, $loserTid, $gainerTid);
+    $rebate = handleCoupon($entries, $loserA, $gainerA, $amount);
   } else {$rebate = 0;}
   
   // Calculate any balance shortfall
@@ -710,38 +702,41 @@ function sendNotifications($type, $tx, $shortfall) {
  * @param acct $buyer:
  * @param acct $seller:
  * @param number $price: pre-discount amount
- * @param string|number $buyerTid: buyer's transaction id
- * @param string|number $sellerTid: seller's transaction id
  * @param unixtime $when: when was the transaction (defaults to now)
  * @return the rebate amount
  */
-function handleCoupon(&$entries, $buyer, $seller, $price, $buyerTid, $sellerTid, $when = NULL) {
+function handleCoupon(&$entries, $buyer, $seller, $price) {
 ///    debug("handleCoupon($buyer->id, $seller->id, $price, $buyerTid, $sellerTid, $when)");
-  if (is_null($when)) $when = now();
+  u\EXPECT($price > 0, 'non-positive price handling coupon');
+  
   $sql = <<<EOF
-    SELECT `on`, c.coupid, amount, ulimit, id, uses
-    FROM r_coupons c LEFT JOIN r_coupated d ON (c.coupid=d.coupid AND d.uid=:buyerId)
+    SELECT `on`, c.coupid, amount, ulimit, id, t.got, t.gotCount, c.sponsor
+    FROM r_coupons c 
+    LEFT JOIN r_coupated d ON (c.coupid=d.coupid AND d.uid=:buyerId)
+    LEFT JOIN (
+      SELECT rel, SUM(amt) AS got, SUM(IF(amt<0, -1, 1)) AS gotCount
+      FROM txs 
+      WHERE relType='D' AND uid2=:buyerId
+    ) t ON t.rel=c.coupid
     WHERE fromId=:sellerId AND :now BETWEEN start AND end AND :price>=minimum 
-      AND NOT :IS_GIFT AND (NOT :IS_SOME OR uses IS NOT NULL)
-      AND (ulimit=0 OR uses IS NULL OR uses<ulimit)
+      AND NOT :IS_GIFT AND IF(:IS_SOME, d.id IS NOT NULL, TRUE)
+      AND (c.ulimit=0 OR IFNULL(t.gotCount,0)<c.ulimit)
+      AND (c.amount<0 OR IFNULL(t.got,0)<c.amount)
     ORDER BY end ASC
 EOF;
-  $subs = ray('buyerId sellerId now price', $buyer->id, $seller->id, $when, $price);
-  $res = db\q($sql, $subs);
-  if (empty($res)) return 0;
-  $res = $res->fetchAssoc();
-  if (empty($res)) return 0;
+  $subs = ray('buyerId sellerId now price', $buyer->id, $seller->id, now(), $price);
+  if (!$q = db\q($sql, $subs)) return 0;
+  if (!$res = $q->fetchAssoc()) return 0;
   extract($res);
   
-  $rebate = ($amount < 0) ? $price * (0-$amount) * .01 : $amount;
-  if ($rebate <= 0) return 0;
+  $rebate = ($amount < 0) ? $price * (0-$amount) * .01 : min($price, $amount - $got);
   
   if (empty($id)) {
-    $id = db\insert('r_coupated', ray('coupid uid when uses', $coupid, $buyer->id, now(), 1), 'id');
+    $id = db\insert('r_coupated', ray('coupid uid when', $coupid, $buyer->id, now()), 'id');
   } else {
-    db\update('r_coupated', ray('coupid uid when uses id', $coupid, $buyer->id, now(), $uses + 1, $id), 'id');
+    db\update('r_coupated', ray('when id', now(), $id), 'id');
   }
-  txEntryPair($entries, $rebate, [$seller, $buyer], t('discount rebate'), E_REBATE, [$sellerTid, $buyerTid], 'D', $id);
+  txEntryPair($entries, $rebate, [r\acct($sponsor), $buyer], t('discount rebate'), E_REBATE, 0, 'D', $id);
   return $rebate;
 }
 
@@ -851,7 +846,7 @@ function invoice($actorA, $otherA, $amount, $purpose, $goods, $extra = [], $recu
   $msg = 'report tx';
 //  if ($actorA->cttyRewardy) $msg .= '|for why';
   if ($amount > 0) $msg .= '|balance unchanged';
-  return array($msg, $subs + ['success'=>TRUE]);
+  return array($msg, $subs + ray('success nvid', TRUE, $nvid));
 }
 
 /* /\** */

@@ -62,3 +62,15 @@ function pr($s) {
   echo "\n$s\n";
   file_put_contents(__DIR__ . '/migrate.log', print_r($s, 1) . "\n", FILE_APPEND);
 }
+
+function allSoFar($w) {return '(' . join(') OR (', $w) . ')';}
+
+function makeTxsView(&$z, $_view, $_where1 = '', $_where2 = '') {
+  pr("making $_view");
+  $m = $z['m'];
+  foreach ([1, 2] as $i) {
+    if (${"_where$i"}) $z["w$i"][] = ${"_where$i"}; else ${"_where$i"} = allSoFar($z["w$i"]);
+  }
+  $subs = compact(ray('_view _where1 _where2'));
+  $m->doSql(strtr($z['sql'], $subs));
+}

@@ -179,7 +179,7 @@ function setJoin($reid, $join) {
       $msg = t('join success');
     } else { // requesting join
       $_atag = $a2->makeDo('join', $main); // seek agreement
-      r\message($other, 'join accounts', ray('_atag name', $_atag, $a2->fullName));
+      r\message($other, 'join accounts', ray('_atag name', $_atag, $a1->fullName));
       $msg = t('join request success');
     }
   } else {
@@ -826,6 +826,7 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     // r_countries
     'r_coupated:uid',
     'r_coupons:fromId',
+    'r_coupons:sponsor',
     'r_criteria:ctty:D',
     'r_do:uid:D',
     'r_events:ctty',

@@ -400,7 +400,6 @@ function lessOften() {
  *   (it has been at least a whole period since the last run OR
  *   (it has been at least half a period and we're at no later a point than last time)
  * @param string $period: the period (hour, day, week, month, year)
- * @param string $code: the strftime code for the smaller period to match or exceed
  * @param string $chosen: the chosen value to match or exceed (if omitted, assume it's the current period)
  */
 function often($period, $chosen = '') {
@@ -941,6 +940,7 @@ function invoice1($item) {
 		if (!$paid or $a->balance < 0) {
       if ($funding) $funding = ($created >= now() - R_USDTX_DAYS * DAY_SECS or db\exists('r_usd', 'amount>=:amount AND payee=:payer', compact(ray('amount payer')))); // fund it again, if necessary
       if (!$funding) {
+        if ($a->roundup) $amount = ceil($amount); // take enough for the roundup
         $DBTX = db_transaction();
         if ($a->getFunds($amount, t('for invoice', compact('nvid')))) {
           db\setFlag('r_invoices', $nvid, B_FUNDING, TRUE);

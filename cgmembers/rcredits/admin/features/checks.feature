@@ -11,10 +11,10 @@ SO I can make deposits easily and review past deposits as necessary
 
 Setup:
   Given members:
-  | uid  | fullName | floor | flags    | postalAddr          | phone | bankAccount     |*
-  | .ZZA | Abe One  | -500  | ok,admin | 1 A, Aton, MA 01001 |     1 | USkk21187028101 |
-  | .ZZB | Bea Two  | -500  | ok,co    | 2 B, Bton, MA 01002 |     2 | USkk21187028102 |
-  | .ZZC | Cor Pub  |    0  | ok,co    | 3 C, Cton, MA 01003 |     3 | USkk21187028103 |
+  | uid  | fullName | floor | flags              | postalAddr          | phone | bankAccount     |*
+  | .ZZA | Abe One  | -500  | ok,confirmed,admin | 1 A, Aton, MA 01001 |     1 | USkk21187028101 |
+  | .ZZB | Bea Two  | -500  | ok,confirmed,co    | 2 B, Bton, MA 01002 |     2 | USkk21187028102 |
+  | .ZZC | Cor Pub  |    0  | ok,confirmed,co    | 3 C, Cton, MA 01003 |     3 | USkk21187028103 |
   
 Scenario: admin prints checks
   Given usd transfers:
@@ -29,15 +29,15 @@ Scenario: admin prints checks
 
   When member ".ZZA" visits page "sadmin/checks/way=IN&date=0&mark=1"
   Then we show pdf with:
-  |~name    |~postalAddr          |~phone        |~transit      |~acct |~txid |~date |~amt   |~amount |~bank |*
-  | Abe One | 1 A, Aton, MA 01001 | 413 772 0001 | 53-7028/2118 |   01 | 5002 | %dmy | $ 400 | Four Hundred and NO/100 | Greenfield Co-op Bank |
-  | Bea Two | 2 B, Bton, MA 01002 | 413 772 0002 | 53-7028/2118 |   02 | 5003 | %dmy | $ 100 | One Hundred and NO/100 | Greenfield Co-op Bank |
-  | Cor Pub | 3 C, Cton, MA 01003 | 413 772 0003 | 53-7028/2118 |   03 | 5004 | %dmy | $ 300 | Three Hundred and NO/100 | Greenfield Co-op Bank |  
+  |~name    |~postalAddr          |~phone        |~transit      |~acct |~xid |~date |~amt   |~amount |~bank |*
+  | Abe One | 1 A, Aton, MA 01001 | 413 772 0001 | 53-7028/2118 |   01 |   2 | %dmy | $ 400 | Four Hundred and NO/100 | Greenfield Co-op Bank |
+  | Bea Two | 2 B, Bton, MA 01002 | 413 772 0002 | 53-7028/2118 |   02 |   3 | %dmy | $ 100 | One Hundred and NO/100 | Greenfield Co-op Bank |
+  | Cor Pub | 3 C, Cton, MA 01003 | 413 772 0003 | 53-7028/2118 |   03 |   4 | %dmy | $ 300 | Three Hundred and NO/100 | Greenfield Co-op Bank |  
   And usd transfers:
-  | txid | deposit   |*
-  | 5002 | %today    |
-  | 5003 | %today    |
-  | 5004 | %today    |
+  | txid | deposit   | xid |*
+  | 5002 | %today    |   2 |
+  | 5003 | %today    |   3 |
+  | 5004 | %today    |   4 |
   And balances:
   | uid  | balance |*
   | .ZZA |     500 |
