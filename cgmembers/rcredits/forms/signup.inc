@@ -252,7 +252,7 @@ function formSignup_submit($form, &$sta) {
   $pw1 = $mya->oneTimePass($name, TRUE);
   
   if ($mya->co) {
-    say('company is ready', compact('qid'));
+    say('company is ready');
     //if (@$helper) $qid = r\qid($helper); // "if" for dev faked code HUH?
     if (!@$h) hack('company no helper');
     if ($mya->email == $h->email) {

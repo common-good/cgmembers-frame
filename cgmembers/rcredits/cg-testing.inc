@@ -280,6 +280,7 @@ function doTxs($info, $thing) {
 //  $flags = 'taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding'; // These are flags that might appear
   
   extract(u\exactly($hdrFlds . ' ' . $testFlds, $info, FALSE));
+  if (!$reversesXid) $reversesXid = NULL;
   $for = $for ?: $purpose;
   if (strpos($for, ',')) $for = explode(',', $for); // specifying both
   if ($for) list ($payerFor, $payeeFor) = is_array($for) ? $for : [$for, $for];
@@ -1437,6 +1438,7 @@ function weSayWithSubs($type, $index, $subs) {
   $test = \sceneId();
   $msgs = db\col('value', 'test', compact('type', 'test')); // don't look at things added by test.php or by other tests
 
+  $res = FALSE;
   if (isset($wild)) {
     $i = strpos($wantMsg, $wild);
     $tailLen = strlen($wantMsg) - $i - strlen($wild);
@@ -1452,7 +1454,7 @@ function weSayWithSubs($type, $index, $subs) {
     }
   }
   if (!$res) t\output("EXPECT: $wantMsg", 'output'); // this must come after array_search!
-  return @$res;
+  return $res;
 }
 
 /**

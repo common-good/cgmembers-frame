@@ -25,7 +25,7 @@ class Whence extends AbstractMigration {
     $this->table('test', ['comment' => 'transient data while testing offline'])
       ->addColumn('test', 'string', ['length' => 255, 'null' => true, 'comment' => 'name of the current test'])
       ->addColumn('type', 'string', ['length' => 255, 'null' => false, 'comment' => 'type of data stored here'])
-      ->addColumn('value', 'text', ['limit' => MysqlAdapter::TEXT_LONG, 'null' => true, 'comment' => 'the data'])
+      ->addColumn('value', 'blob', ['limit' => MysqlAdapter::BLOB_LONG, 'null' => true, 'comment' => 'the data'])
       ->addIndex(['test'])
       ->addIndex(['type'])
       ->create();    

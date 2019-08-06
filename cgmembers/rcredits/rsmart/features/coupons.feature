@@ -48,7 +48,7 @@ Scenario: A member redeems a discount coupon
   | .ZZB   | ccB  | 100.00 |     1 | food        | %today  |
   Then transaction headers:
   | xid | goods | actorId | actorAgentId | flags  | channel | boxId | risks | reversesXid | created |*
-  | 2   | 0     | .ZZC  | .ZZA       | 0      | 3       | devC  |     0 | 1        | %today  |
+  | 2   | 0     | .ZZC    | .ZZA         | 0      | 3       | devC  |     0 | 1           | %today  |
   And transaction entries: 
   | xid | amount |  uid | agentUid | acctTid | description     | relType | relatedId |*
   | 2   |   -100 | .ZZC | .ZZA     | 2       | food            |         |         |

@@ -1511,7 +1511,6 @@ function watchdog() {return;}
 function drupal_set_message($message = NULL, $type = 'status', $repeat = TRUE) {
   if ($message) {
     $message = (is_array($message) or is_object($message)) ? pr($message) : trim($message);
-    $message = u\noUnprintable($message);
     if (!isset($_SESSION['messages'][$type])) $_SESSION['messages'][$type] = [];
     if ($repeat or !in($message, $_SESSION['messages'][$type])) $_SESSION['messages'][$type][] = $message;
     if (test()) db\insert('test', ray('type value test', $type, $message, \sceneId()), 'id');

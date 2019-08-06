@@ -38,14 +38,10 @@ function getTxs($uids, $starting=NULL, $ending=NULL) {
   // !(e.amount=0 AND e.entryType=:E_BANK) hides not-yet-completed bank transfers
   $sql = <<< EOF
     SELECT t.*, e.*, u.fullName AS name,
-      (EXISTS (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=t.xid)) AS isReversed,
-      (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=t.xid AND d.status=:DS_OPEN)) AS isDisputed,
-      (SELECT MAX(GREATEST(acctTid,0)) FROM tx_entries eReversed WHERE eReversed.xid=tReversed.xid AND eReversed.uid IN (:uids) AND eReversed.xid=tReversed.xid) AS reversedTid,
-      (SELECT MAX(GREATEST(acctTid,0)) FROM tx_entries eReversedBy WHERE tReversedBy.reversesXid=t.xid AND eReversedBy.uid IN (:uids) AND eReversedBy.xid=tReversedBy.xid) AS reversedByTid
+      (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=t.xid) AS reversedBy,
+      (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=t.xid AND d.status=:DS_OPEN)) AS isDisputed
     FROM tx_entries e LEFT JOIN tx_hdrs t USING (xid) LEFT JOIN users u USING (uid)
-         LEFT JOIN tx_hdrs tReversed ON (t.reversesXid=tReversed.xid)
-         LEFT JOIN tx_hdrs tReversedBy ON (t.xid=tReversedBy.reversesXid)
-         LEFT JOIN r_usd ON (r_usd.xid=t.xid)
+       LEFT JOIN r_usd ON (r_usd.xid=t.xid)
     WHERE (!(e.amount=0 AND e.entryType=:E_BANK) AND t.xid IN (SELECT DISTINCT xid FROM tx_entries WHERE (uid IN (:uids)))) $where
     ORDER BY t.created, t.xid, ABS(e.id), name
 EOF;
@@ -95,8 +91,8 @@ EOF;
       $entry['banking'] = $banking;
       $entry['tid'] = $tid;
       $entry['myAgentUid'] = $myAgentUid;
-      if (!empty($entry['reversedTid'])) $entry['description'] .= t(" (reverses #" . $entry['reversedTid'] . ")");
-      if (!empty($entry['reversedByTid'])) $entry['description'] .= t(" (reversed by #" . $entry['reversedByTid'] . ")");
+      if (!empty($entry['reversesXid'])) $entry['description'] .= t(" (reverses #" . $entry['reversesXid'] . ")");
+      if (!empty($entry['reversedBy'])) $entry['description'] .= t(" (reversed by #" . $entry['reversedBy'] . ")");
       if (! ($suppressRoundupEntries and ($entry['entryType'] == E_DONATION))) {
         $newEntries[] = $entry;
       }
