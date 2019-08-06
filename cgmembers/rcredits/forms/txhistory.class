@@ -145,7 +145,7 @@ EOF;
     if (in_array($info['uid'], $this->uids)) return;
     extract(just('name description amount xid banking', $info));
     $amount = u\fmtAmt(- $amount, '');
-    if ($xid < 124873 and $banking and !u\test()) $xid = db\get('txid', 'r_usd', compact('xid')) ?: $xid; // old checks
+    if ($xid < 124873 and $banking and !test()) $xid = db\get('txid', 'r_usd', compact('xid')) ?: $xid; // old checks
 
     $this->body .= <<<EOF
 <div class="txentry">

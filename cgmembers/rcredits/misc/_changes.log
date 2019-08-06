@@ -1,3 +1,12 @@
+2019-08-05 feature/whence
+. moved the source field out of the data field, into an actual field
+. created a "where do our members come from" query
+. changed testing to use a new test table in the database instead of drupal's session variable
+. improved test formatting
+. fixed bug in acct::newAcct that put everyone in the Western Mass (NEW) region
+. started a new queries test feature
+. started a new demographics test feature and fixed a couple bugs
+
 2019-08-03 feature/piecemeal-discounts
 . discounts with a zero minimum can now be redeemed in dribs and drabs
 . fixed bug that kept first repeating transaction from getting marked as such

@@ -53,13 +53,14 @@ class Acct {
     $a = $this;
     extract($info);
 
-    extract(u\exactly('email fullName legalName flags state zip created country number uid region', $info,
-                      [ strtolower(u\randomString(10, 'word')) . '@' . EMAILX, null, null, 0, null, null, now(), US_COUNTRY_ID, null, null, null ]));
-    extract(u\exactly('community', $info, r\communityUid($zip)));
-    extract(u\exactly('login', $info, $created));
-    extract(u\exactly('access', $info, $login));
-    extract(u\exactly('phone', $info, $number));
-    extract(u\exactly('name', $info, r\uniqueName($fullName, $info)));
+    extract(u\exactly('fullName legalName flags state zip created country number uid region', $info,
+      [NULL, NULL, 0, NULL, NULL, now(), US_COUNTRY_ID, NULL, NULL, NULL]));
+    u\setDft($email, strtolower(u\randomString(10, 'word')) . '@' . EMAILX);
+    u\setDft($community, r\communityUid($zip));
+    u\setDft($login, $created);
+    u\setDft($access, $login);
+    u\setDft($phone, $number);
+    u\setDft($name, r\uniqueName($fullName, $info));
 
     if (!empty($phone)) $phone = u\fmtPhone($phone, '+n');
     
@@ -73,19 +74,15 @@ class Acct {
     foreach (ray($co ? 'proxies connect ssn' : 'company relations') as $k) unset($stepsDone[$k]);
     $stepsDone['food'] = TRUE; // omit this step unless signing up through Food Fund promo (set FALSE in signup.inc)
 
-    if (empty($region)) $region = empty($zip) ? -r\region($country, $state, $zip) : -r\uidRegion($community);
-    if (empty($uid)) {
-      $record = compact('name');
-    } else {
-      $record = compact('uid', 'name');
-    }
+    if (empty($region)) $region = empty($zip) ? -r\uidRegion($community) : -r\region($country, $state, $zip);
+    $record = empty($uid) ? compact('name') : compact('uid', 'name');
+
     $DBTX = db_transaction();
     $uid = r\regionalInsert('users', 'uid', $record, $region);
     u\EXPECT($uid != 0, 'zero regionalinsert');
-    if (!$co) {
-      extract(u\exactly('cardCode', $info, r\cardCode(r\qid($uid))));
-    }
-    extract(u\exactly('emailCode', $info, r\cardCode(r\qid($uid))));
+    if (!$co) u\setDft($cardCode, r\cardCode(r\qid($uid)));
+
+    u\setDft($emailCode, r\cardCode(r\qid($uid)));
     
     //    if (isset($number)) $success = SMS\create($number, $uid);
 
@@ -223,7 +220,7 @@ class Acct {
 ///    if ($field == 'iclubId') return db\get('uid', 'users', 'fullName LIKE :club AND :zip REGEXP zip AND :IS_OK', ray('club zip', t('%Investment Club%'), $mya->zip));
     if ($field == 'prefsSet') return !is_null($a->o_minimum); // preferences have been set at least once
     if ($field == 'hasCustomers') return db\exists('r_relations', 'main=:id AND :IS_CUSTOMER', ['id' => $a->id]);
-    if ($field == 'superAdmin') return ($a->agentId == 1) ?: (u\test() and $a->admin and $a->agentA->name == 'abeone');
+    if ($field == 'superAdmin') return ($a->agentId == 1) ?: (test() and $a->admin and $a->agentA->name == 'abeone');
     if ($field == 'bankInfo') return (!$routing = substr($a->bankAccount, 4, 9)) ? NULL
                                 : db\get('*', 'r_banks', 'route=:routing', compact('routing'));
     if ($field == 'tempPhotoFilename') return r\pic("$a->mainQid.jpg");
@@ -589,7 +586,7 @@ class Acct {
     $isThumb = ($k == 'thumb');
     if ($data or $isThumb) { // setting
       db\updateOrInsert('r_photos', ['uid' => $a->id, $k => $isThumb ? $data : u\cry('H', $data)], 'uid');
-      if (!$isThumb and !u\test()) { // always create a new thumb when we create or change the photo
+      if (!$isThumb and !test()) { // always create a new thumb when we create or change the photo
         $factor = ($a->co ? 2 : 1) * THUMB_FACTOR;
         list ($w, $h) = $a->co ? CO_ASPECT : FACE_ASPECT;
         $img = u\alterImg(imagecreatefromstring($data), $w * $factor, $h * $factor);
@@ -1347,7 +1344,7 @@ o;
     $a = $this;
     global $channel;
     
-    u\EXPECT($a->hasBank and (u\test() or $a->vsecure['bankAccount']), 'banking with no bank');
+    u\EXPECT($a->hasBank and (test() or $a->vsecure['bankAccount']), 'banking with no bank');
 
     $amount0 = $amount;
     $automatic = ($channel == TX_CRON);
@@ -1406,7 +1403,7 @@ o;
     $a = $this;
     $info = ray('amount bankAccount payee', 0, @$a->vsecure['bankAccount'] ?: NULL, $a->id);
     extract($info);
-    if (u\test() and is_null($bankAccount)) unset($info['bankAccount']); // otherwise t\verifyRecord fails
+    if (test() and is_null($bankAccount)) unset($info['bankAccount']); // otherwise t\verifyRecord fails
     if (db\exists('r_usd', $info)) return; // already being verified
     $txid0 = db\max('txid', 'r_usd', 'txid<999999');
     for ($txid = $txid0; $txid < 999999; $txid++) { // actual transfers start sometime after 999,999
@@ -1681,7 +1678,7 @@ X;
    * https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?format=json&benchmark=Public_AR_Current&address=ADDRESS (no API_KEY needed, but fails 7% of the time and no way to approximate the address)
    */
   public function setLocus($lat = NULL, $lon = NULL) {
-    if (u\test()) return; // doesn't work on DEV machine yet
+    if (test()) return; // doesn't work on DEV machine yet
     $a = $this;
     if (!is_null($lat)) return $a->update('latitude longitude', $lat, $lon);
     

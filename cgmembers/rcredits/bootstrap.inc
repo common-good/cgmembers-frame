@@ -21,109 +21,23 @@ define('ERROR_REPORTING_DISPLAY_ALL', 2); // Error reporting level: display all 
 define('CACHE_PERMANENT', 0); // Indicates that the item should never be removed unless explicitly selected. The item may be removed using cache_clear_all() with a cache ID.
 define('CACHE_TEMPORARY', -1); // Indicates that the item should be removed at the next general cache wipe.
 
-/**
- * @defgroup logging_severity_levels Logging severity levels
- * @{
- * Logging severity levels as defined in RFC 3164.
- *
- * The WATCHDOG_* constant definitions correspond to the logging severity levels
- * defined in RFC 3164, section 4.1.1. PHP supplies predefined LOG_* constants
- * for use in the syslog() function, but their values on Windows builds do not
- * correspond to RFC 3164. The associated PHP bug report was closed with the
- * comment, "And it's also not a bug, as Windows just have less log levels,"
- * and "So the behavior you're seeing is perfectly normal."
- *
- * @see http://www.faqs.org/rfcs/rfc3164.html
- * @see http://bugs.php.net/bug.php?id=18090
- * @see http://php.net/manual/function.syslog.php
- * @see http://php.net/manual/network.constants.php
- * @see watchdog()
- * @see watchdog_severity_levels()
- */
-
-/**
- * Log message severity -- Emergency: system is unusable.
- */
 define('WATCHDOG_EMERGENCY', 0);
+define('WATCHDOG_ALERT', 1); // Alert: action must be taken immediately.
+define('WATCHDOG_CRITICAL', 2); // Critical conditions.
+define('WATCHDOG_ERROR', 3); // Error conditions.
+define('WATCHDOG_WARNING', 4); // Warning conditions.
+define('WATCHDOG_NOTICE', 5); // Normal but significant conditions.
+define('WATCHDOG_INFO', 6); // Informational messages.
+define('WATCHDOG_DEBUG', 7); // Debug-level messages.
 
-/**
- * Log message severity -- Alert: action must be taken immediately.
- */
-define('WATCHDOG_ALERT', 1);
-
-/**
- * Log message severity -- Critical conditions.
- */
-define('WATCHDOG_CRITICAL', 2);
-
-/**
- * Log message severity -- Error conditions.
- */
-define('WATCHDOG_ERROR', 3);
-
-/**
- * Log message severity -- Warning conditions.
- */
-define('WATCHDOG_WARNING', 4);
-
-/**
- * Log message severity -- Normal but significant conditions.
- */
-define('WATCHDOG_NOTICE', 5);
-
-/**
- * Log message severity -- Informational messages.
- */
-define('WATCHDOG_INFO', 6);
-
-/**
- * Log message severity -- Debug-level messages.
- */
-define('WATCHDOG_DEBUG', 7);
-
-/**
- * @} End of "defgroup logging_severity_levels".
- */
-
-/**
- * First bootstrap phase: initialize configuration.
- */
-define('DRUPAL_BOOTSTRAP_CONFIGURATION', 0);
-
-/**
- * Second bootstrap phase: try to serve a cached page.
- */
-define('DRUPAL_BOOTSTRAP_PAGE_CACHE', 1);
-
-/**
- * Third bootstrap phase: initialize database layer.
- */
-define('DRUPAL_BOOTSTRAP_DATABASE', 2);
-
-/**
- * Fourth bootstrap phase: initialize the variable system.
- */
-define('DRUPAL_BOOTSTRAP_VARIABLES', 3);
-
-/**
- * Fifth bootstrap phase: initialize session handling.
- */
-define('DRUPAL_BOOTSTRAP_SESSION', 4);
-
-/**
- * Sixth bootstrap phase: set up the page header.
- */
-define('DRUPAL_BOOTSTRAP_PAGE_HEADER', 5);
-
-/**
- * Seventh bootstrap phase: find out language of the page.
- */
-define('DRUPAL_BOOTSTRAP_LANGUAGE', 6);
-
-/**
- * Final bootstrap phase: Drupal is fully loaded; validate and fix input data.
- */
-define('DRUPAL_BOOTSTRAP_FULL', 7);
+define('DRUPAL_BOOTSTRAP_CONFIGURATION', 0); // First bootstrap phase: initialize configuration.
+define('DRUPAL_BOOTSTRAP_PAGE_CACHE', 1); // Second bootstrap phase: try to serve a cached page.
+define('DRUPAL_BOOTSTRAP_DATABASE', 2); // Third bootstrap phase: initialize database layer.
+define('DRUPAL_BOOTSTRAP_VARIABLES', 3); // Fourth bootstrap phase: initialize the variable system.
+define('DRUPAL_BOOTSTRAP_SESSION', 4); // Fifth bootstrap phase: initialize session handling.
+define('DRUPAL_BOOTSTRAP_PAGE_HEADER', 5); // Sixth bootstrap phase: set up the page header.
+define('DRUPAL_BOOTSTRAP_LANGUAGE', 6); // Seventh bootstrap phase: find out language of the page.
+define('DRUPAL_BOOTSTRAP_FULL', 7); // Final bootstrap phase: Drupal is fully loaded; validate and fix input data.
 
 /**
  * Role ID for anonymous users; should match what's in the "role" table.
@@ -1191,6 +1105,19 @@ function drupal_unpack($obj, $field = 'data') {
 }
 
 /**
+ * Say whether we are currently running a test (set only in a\tests() and a\formTestRecovery()
+ * @param bool $testing: if set, set the testing mode accordingly
+ * @return <we are running a test>
+ */
+function test($testing = NULL) {
+  global $TESTING;
+  if (isset($testing)) setv('testing', $TESTING = $testing);
+  return isset($TESTING) ? $TESTING : getv('testing');
+}
+
+function sceneId() {global $sceneTest; return $sceneTest ? "$sceneTest->module/$sceneTest->feature/$sceneTest->name" : '';}
+
+/**
  * Translates a string to the current language, with replacements. 
  * tr() replaces parameters without translation -- until transaction is implemented, t() and tr() do the same thing.
  * @param string $string: string to translate (or index thereof)
@@ -1279,7 +1206,7 @@ function ray($s = '', $value1 = NULL) {
   if (func_num_args() > 1) { // multi-argument call -- return an associative array
     $args = func_get_args();
     $keys = ray(array_shift($args));
-    if (count($keys) != count($args)) die('assoc arg count mismatch ' . trace());
+/**/   if (count($keys) != count($args)) die('assoc arg count mismatch ' . trace());
     return array_combine($keys, $args);
   }
 
@@ -1583,21 +1510,16 @@ function watchdog() {return;}
  */
 function drupal_set_message($message = NULL, $type = 'status', $repeat = TRUE) {
   if ($message) {
-    if (!isset($_SESSION['messages'][$type])) {
-      $_SESSION['messages'][$type] = [];
-    }
-
-//    if ($repeat || !in_array($message, $_SESSION['messages'][$type])) {
-    if (!in($message, $_SESSION['messages'][$type])) { // cg 7/15/2017
-      $_SESSION['messages'][$type][] = $message;
-    }
-
-    // Mark this page as being uncacheable.
-    drupal_page_is_cacheable(FALSE);
+    $message = (is_array($message) or is_object($message)) ? pr($message) : trim($message);
+    $message = u\noUnprintable($message);
+    if (!isset($_SESSION['messages'][$type])) $_SESSION['messages'][$type] = [];
+    if ($repeat or !in($message, $_SESSION['messages'][$type])) $_SESSION['messages'][$type][] = $message;
+    if (test()) db\insert('test', ray('type value test', $type, $message, \sceneId()), 'id');
+    
+    drupal_page_is_cacheable(FALSE); // Mark this page as being uncacheable.
   }
 
-  // Messages not set when DB connection fails.
-  return isset($_SESSION['messages']) ? $_SESSION['messages'] : NULL;
+  return isset($_SESSION['messages']) ? $_SESSION['messages'] : NULL; // Messages not set when DB connection fails.
 }
 
 /**

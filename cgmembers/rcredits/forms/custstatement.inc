@@ -86,7 +86,7 @@ function custStatement($args = []) {
         $purposeX = $pdf->GetX();
         $purposeWidth = $width;
       } else {
-        if ($i == 0) $y = $pdf->GetY(); else $pdf->SetXY($x, $y, FALSE);
+        $pdf->setX($x);
         $pdf->Cell($width, 0, nn($$fldName), '', 0, $align, '', '', 1);
       }
       $x += $width;

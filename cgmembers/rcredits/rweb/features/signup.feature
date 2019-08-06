@@ -103,16 +103,28 @@ Scenario: A newbie registers with a different legal name
   | uid  | fullName | legalName | email | phone     | zip | country | state | city   | flags     | name    | helper |*
   | .AAA | Abey One | Abe One   | a@ | +14132530000 | 01001      | US      | MA    | Agawam | confirmed | abeyone | .ZZZ   |
 
-#Skip this doesn't work, and I don't understand how it ever did...JVER
 Scenario: A newbie registers from elsewhere
   Given invitation to email "a@" from member ".ZZZ" is "c0D3"
   And next random code is "WHATEVER"
   When member "?" confirms form "signup/code=c0D3" with values:
-  | fullName | email | phone       | zip | federalId   | dob      | acctType    | address | city | state | postalAddr                   | years | months | owns | helper |*
-  | Abe One  | a@ | (333) 253-0000 | 03768-2345 | 111-22-3333 | 1/2/1990 | %CO_PERSONAL | 1 A ST. | Lyme | NH    | 1 A ST., Lyme, NH 03768-2345 |     1 |    6 |    1 | .ZZZ   |
+  | fullName   | Abe One        |**
+  | email      | a@             |
+  | phone      | (333) 253-0000 |
+  | zip        | 03768-2345     |
+  | federalId  | 111-22-3333    |
+  | dob        | 1/2/1990       |
+  | acctType   | %CO_PERSONAL   |
+  | address    | 1 A ST.        |
+  | city       | Lyme           |
+  | state      | NH             |
+  | postalAddr | 1 A ST., Lyme, NH 03768-2345 |
+  | years      | 1              |
+  | months     | 6              |
+  | owns       | 1              |
+  | helper     | .ZZZ           |
  Then members:
-  | uid    | fullName | email | phone     | zip | state | city | flags     | helper |*
-  | NENAAA | Abe One  | a@ | +13332530000 | 03768-2345 | NH    | Lyme | confirmed | .ZZZ   |
+  | uid    | fullName | email | phone        | zip        | state | city | flags     | helper | address |*
+  | NENAAA | Abe One  | a@    | +13332530000 | 03768-2345 | NH    | Lyme | confirmed | .ZZZ   | 1 A St. |
   And we show "Verify Your Email Address"
   And we say "status": "info saved|step completed"
   And we email "verify" to member "a@" with subs:

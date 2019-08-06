@@ -5,6 +5,7 @@ use CG\DB as db;
 use CG\Backend as be;
 use CG\Util as u;
 use CG\Web as w;
+use CG\Testing as t;
 
 /**
  * @file
@@ -254,28 +255,17 @@ function go($page, $msg = '', $field = '') {
   global $base_url;
   global $lastGo, $xlastGo; list ($xlastGo, $lastGo) = [@$lastGo, $page]; // for testing
 
-  if ($msg) {
-/*    if (u\starts($page, 'empty')) {
-      list ($page, $msg) = strpos($page, '/') ? ["$page&msg=$msg", ''] : ["$page/msg=$msg", '']; 
-    } else */
-    r\Web\say(strip_tags($msg), $field);
-  }
-//  else $page .= "/field=$field&msg=" . urlencode($msg); // say() fails if signed out
+  if ($msg) r\Web\say(strip_tags($msg), $field);
   if (substr($page, 0, 1) == '/') $page = substr($page, 1); // supplying the slash is preferred, to agree with w\atag()
     
-  if (u\test()) {
+  if (test()) {
     $_POST = []; // make sure it doesn't act like we submitted the target page
-    f('t.output', "Going to page $page (page0=$lastGo msg=$msg field=$field)");
+    t\output("Going to page $page (page0=$lastGo msg=$msg field=$field)");
     return strpos($page, 'http://') === FALSE ? f('t.pageForm', $page, $msg, $field) : '';
   }
 
   if (!u\starts($page, 'http')) $page = "$base_url/$page";
 
-  /*
-  foreach (ray('login signup password reset') as $one) if (strpos($page, "user/$one") !== FALSE) {
-    if (\drupal_session_started()) session_destroy();
-  }
-  */
   \drupal_session_commit();
   header("Location: $page", TRUE, 302); 
   exit();
@@ -579,18 +569,18 @@ function formatField($k, $v) {
 }
 
 // old
-function fld($type, $title = '', $help = '', $other = [], $options = NULL) {
-  $label = $title;
+function fld($type, $label = '', $help = '', $other = [], $options = NULL) {
   if (@$label[0] == REQ) list ($required, $label) = ['yes', substr($label, 1)];
   if ($bare = (@$label[0] == BARE)) $label = substr($label, 1); // bare? (no div wrapper)
-  if (@$other['wrap']) $bare = FALSE;
-  $title = @$other['title'] ?: $label;
-
   if (!is_array($other)) $other = [$type == 'item' ? 'markup' : 'value' => $other];
+  if (nn($other['wrap'])) $bare = FALSE;
+  $title = nn($other['title']) ?: $label;
+  unset($other['title']);
+  
   if ($type == 'select' and !isset($other['default_value'])) $other['default_value'] = $options ? key($options) : ''; // Drupal's select fails without a default
   $title_display = 'before';
-//  if (isset($other['value']) and !isset($other['default_value'])) $other['default_value'] = $other['value'];
   $field = u\prefixKeys('#', $other + @compact(ray('type title title_display required bare help options')));
+
   return $field;
 }
 
@@ -835,7 +825,7 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
     $req = basename($_SERVER['REQUEST_URI']);
     if (!$mya and in($req, 'login logout')) return w\go(PROMO_URL); // nothing else works
     if ($req == 'user' and $mya) return w\go('summary'); // summary not ''
-    foreach ($form as $k => $v) if (@$v['#type'] == 'submit') {$submit1 = @$v['#id'] ?: "edit-$k"; break;}
+    foreach ($form as $k => $v) if (is_array($v) and @$v['#type'] == 'submit') {$submit1 = @$v['#id'] ?: "edit-$k"; break;}
     $form['opid'] = hidFld(@$submit1 ?: 'none', ['name' => 'opid']); // default to first, in case submitted programmatically
   
     if (!@$form['confirm']) $form += which(); // add the choices popup form, if any
@@ -946,7 +936,7 @@ function box() {
  * @param int $code: machine identifier
  */
 function boxUser($code, $uid) {
-  if ($id = @$_COOKIE[$cookid = 'boxnum' . $uid] and !u\test()) return $id; // we only get this if last set today
+  if ($id = @$_COOKIE[$cookid = 'boxnum' . $uid] and !test()) return $id; // we only get this if last set today
   if ($id = db\get('id', 'r_boxes', 'code=:code AND uid=:uid', compact(ray('code uid')))) {
     db\update('r_boxes', ray('id access', $id, now()), 'id');
   } else $id = r\makeDevice($uid, $code, TX_WEB);
@@ -961,7 +951,7 @@ function uploadrows($filename) {
   $fp = fopen($filename, "r");  
   while ($row = fgetcsv($fp)) $rows[] = $row; // get all rows, so we can look ahead
   fclose($fp);
-  unlink($filename);
+  u\deleteFile($filename);
   return $rows;
 }
 
@@ -976,7 +966,7 @@ define('MAX_PW_FAILS', 10);
 define('MAX_IP_FAILS', 50);
 
 function flooding($uid, &$sta, &$err) {
-  if (u\test()) return !$uid;
+  if (test()) return !$uid;
   $trigger = 'flood_control_triggered';
   $window = HOUR_SECS; 
   if (!\flood_is_allowed('failed_login_attempt_ip', MAX_IP_FAILS, $window)) {
@@ -1361,7 +1351,7 @@ function tellStaffNewMember($params) {
   $acctType = $coTypes[$acctType];
   $helper = @$helper ? r\acct($helper)->fullName : 'unknown';
   $copts = u\jsonEncode(@$copts);
-  $ats = @join(',', array_values($ats));
+  $ats = (isset($ats) and is_array($ats)) ? join(',', array_values($ats)) : '';
   $params = compact(ray('phone country state acctType helper copts ats')) + $params;
   unset($params['code']); // don't need to see this
   $message = '<h2>NEW SIGNUP</h2>';
@@ -1407,7 +1397,7 @@ function nameAndEmailFlds($co, $fullName = '', $email = '', $hideEmail = FALSE, 
   $fullName = textFld("$what:", ["$who " . t('full name'), $co ? t('dba desc') : (t('usename desc') . $personalMsg)], required(@$fullName));
   $legalName = textFld(t('Legal name:'), ["$who " . t('full legal name (if different)'), $who . t('legalname desc')]);
   if ($email and !emailOkay($email, FALSE, $myid ? r\acct($myid) : '')) $hideEmail = FALSE; // make sure they can fix it
-  if (strpos($email, '@' . EMAILX) and !u\test()) $hideEmail = FALSE; // handle placeholder for making joint accounts
+  if (strpos($email, '@' . EMAILX) and !test()) $hideEmail = FALSE; // handle placeholder for making joint accounts
   $email = $hideEmail ? hidFld(@$email) : textFld(t('Email:'), [t('Email'), t('<b>Type carefully.</b> All emails from the system will be sent to this address. It will not be made public, but will be viewable by accounts you transact with (you can choose greater privacy by clicking "Advanced" on the Preferences step).')], required(@$email));
   jsx('legal-name');
   return compact(ray('fullName legalName email'));
@@ -2037,7 +2027,7 @@ function showCharts($ctty = 0, $period = 'months', $download = FALSE) {
     $gifts0 =  max(0, ($patronage0 + $d_roundups0 + $d_crumbs0)) / 5; // normalize (/)
     $payees0 *= 50; // normalize (*)
     $success0 = $aAccts0 * $payees0 * $basket0 / 8000; // normalize (/)
-    if (u\test()) $success0 *= 8000; // invisible when normalized, so don't
+    if (test()) $success0 *= 8000; // invisible when normalized, so don't
     
     if ($download) {
       $pctActive = $aAccts0 / (($bAccts0 + $pAccts0) ?: 1);
@@ -2419,9 +2409,11 @@ function makeTable($rows, $heads, $colClasses = [], $rowClasses = [], $tableTrib
   $heads = makeRow('th', $heads, $colClasses);
   if (@$rows) {
     foreach ($rows as $i => $row) $lines[] = makeRow('td', $row, $colClasses, @$rowClasses[$i]);
-    $rows = join('', @$lines ?: []);
     $after = '';
   } else $after = t('There are no such records.');
+  
+  $rows = join('', @$lines ?: []); // this works even if $rows is []
+
   return <<< X
 <table $tableTribs>
 $heads
@@ -2482,7 +2474,7 @@ function prefix($prefix) {return compact('prefix');}
 function autofill($settings = 'on') {return attrib(['autocomplete' => $settings]);}
 function required($dft = NULL) {return ['required' => TRUE] + (isset($dft) ? dft($dft) : []);}
 // UNUSED function check($array, $type = 'plain') {return array_map("check_$type", $array);} // Check an array for plain or markup.
-function op($sta) {global $testOp; return u\test() ? $testOp : substr(@$sta['input']['opid'], 5);} // without edit-
+function op($sta) {global $testOp; return test() ? $testOp : substr(@$sta['input']['opid'], 5);} // without edit-
 function verifyBy($byVoice) {return $byVoice ? t('Voice') : t('SMS');}
 //function blurbLink() {global $rUrl; return "<a href=\"$rUrl/templates/invite.html\" target=\"_blank\">" . t('description of %PROJECT') . '</a>';}
 function sayFieldErr($err, $field) {return say(strtoupper($field) . ': ' . t($err), $field);}

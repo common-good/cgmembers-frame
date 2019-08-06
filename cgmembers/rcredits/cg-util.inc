@@ -340,7 +340,7 @@ function fmtPhone($phone, $how = '+') {
     $phone = substr($phone, 1);
   } elseif (substr($phone, 0, 1) == '+') $foreign = $phone = substr($phone, 1);
 
-  if (!is_numeric($phone) or (!u\test() and strlen($phone) < MIN_PHONE_DIGITS) or strlen($phone) > MAX_PHONE_DIGITS) return FALSE;
+  if (!is_numeric($phone) or (!test() and strlen($phone) < MIN_PHONE_DIGITS) or strlen($phone) > MAX_PHONE_DIGITS) return FALSE;
   if (!$foreign and substr($phone, 0, 1) < 2) return FALSE; // US phone numbers cannot start with 0 or 1
   if (!$foreign and strlen($phone) != 10) return FALSE;
 
@@ -455,15 +455,18 @@ function post($url, $content = FALSE, $responseFormat = 'raw', $extra_headers = 
   }
 
   $context = stream_context_create(compact('http'));
-  $response = FALSE;
   if ($fp = @fopen($url, 'rb', FALSE, $context)) {
-    // If you're troubleshooting, uncomment the next line to see the HTTP response headers across all redirects:
-    // $meta = stream_get_meta_data($fp); var_dump($meta['wrapper_data']);
+      // If you're troubleshooting, uncomment the next line to see the HTTP response headers across all redirects:
+      // $meta = stream_get_meta_data($fp); var_dump($meta['wrapper_data']);
     $response = stream_get_contents($fp);
-  } elseif (u\test()) return FALSE;
+  } else $response = FALSE;
 
-//  EXPECT($response !== FALSE, "$method $url failed");
-  if ($response === FALSE) r\tellAdmin("$method $url failed");
+  if ($response === FALSE) {
+    if (test()) 
+    r\tellAdmin("$method $url failed");
+    return FALSE;
+  }
+  
   $result = $responseFormat == 'xml' ? simplexml_load_string($response)
     : ($responseFormat == 'json' ? json_decode(utf8_encode($response))
     : ($response) );
@@ -600,7 +603,7 @@ function loga($type, $info = [], $adhocChannel = FALSE) {
     $info = json_encode(u\noSecrets($info), JSON_UNESCAPED_SLASHES);
   }
 /**/ flog($s = "$qid/$time/$ch/$type/$info");
-//  if (!u\test())
+//  if (!test())
 //  if ($channel == TX_CRON) mail(R_ADMIN_EMAIL, 'cron log', $s); // temporary until we figure out what's going wrong with flog in cron
 }  
 
@@ -628,8 +631,8 @@ function seeAssoc($info) {
 function ssnLookup($ssn) {
   $xml = file_get_contents(dirname($_SERVER['DOCUMENT_ROOT']) . '/.ssncheck');
   $xml = strtr($xml, ray('[ssnUser] [ssnPass] [ssn]', R_SSN_USER, R_SSN_PASS, $ssn));
-  if (NOT_PRODUCTION) return @file_get_contents('ssnresult.txt'); // testing
-  return @file_get_contents("https://www.nationalpublicdata.com/feeds/FDSFeed.cfm?xml=" . urlencode($xml));
+  if (NOT_PRODUCTION) return u\getFile('ssnresult.txt'); // testing
+  return u\getFile("https://www.nationalpublicdata.com/feeds/FDSFeed.cfm?xml=" . urlencode($xml));
 }
 
 /**
@@ -814,7 +817,7 @@ function csvStart($filename) {
   global $testCSVname; $testCSVname = $filename;
   global $testCSV; $testCSV = [];
   
-  if (u\test()) return;  
+  if (test()) return;  
   header('Content-type: text/plain');
   header("Content-Disposition: attachment; filename=\"$filename\";");
   header('Content-Type: application/csv; charset=UTF-8'); // tell the browser it's going to be a csv file
@@ -829,7 +832,7 @@ function csvStart($filename) {
 function csv($line, $delimiter = ',') {
   global $csvFile, $testCSV;
 ///  echo join($delimiter, $line) . "\n"; return; // debug(
-  if (u\test()) {$testCSV[] = $line; return;}
+  if (test()) {$testCSV[] = $line; return;}
 //  fputcsv($csvFile, $line, $delimiter); 
   // No need to surround values with quotes when delim is not a comma (the quotes confuse MailChimp)
   if ($delimiter == ',') fputcsv($csvFile, $line, $delimiter); else fputs($csvFile, join($delimiter, $line) . "\n");
@@ -845,7 +848,7 @@ function csv($line, $delimiter = ',') {
  */
 function randomString($len = 16, $choices = '') {
   global $nextCode;
-  if (u\test() and @$nextCode and in($choices, ' lower upper word')) return $nextCode;
+  if (test() and @$nextCode and in($choices, ' lower upper word')) return $nextCode;
 
   $lower = 'abcdefghijklmnopqrstuvwxyz';
   $upper = strtoupper($lower);
@@ -982,7 +985,7 @@ function gzdecode($data){
     ob_start();
     readgzfile($g);
     $d=ob_get_clean();
-    unlink($g);
+    u\deleteFile($g);
     return $d;
 }
 
@@ -1094,7 +1097,7 @@ EOF;
  */
 function code($upper = FALSE, $len = R_CODE_LEN) {
   global $nextCode;
-  if (u\test() and @$nextCode) return $nextCode;
+  if (test() and @$nextCode) return $nextCode;
   $res = u\randomString($len, 'word');
   return $upper ? strtoupper($res) : $res;
 }
@@ -1159,7 +1162,7 @@ function where($ray) {
  * @return the common speech term for the next business day starting then.
  */
 function nextBusDay($start = 0) {
-  return (strftime('%u', now() + $start) > 5 and !u\test()) ? t('Monday')
+  return (strftime('%u', now() + $start) > 5 and !test()) ? t('Monday')
   : ($start == 0 ? t('today') : ($start == 1 ? t('tomorrow') : strftime('%A', now() + $start)));
 }
 
@@ -1387,7 +1390,6 @@ function getBit($n, $b = NULL) {return is_null($b) ? $n : (bool) ($n & u\bit($b)
 function setBit(&$n, $b, $on = TRUE) {return $n = $on ? (@$n | u\bit($b)) : (nn($n, 0) & ~u\bit($b));}
 
 // Single line functions that need little or no explanation
-function test() {return (@TESTING == 1);} // set in test.php (when running an acceptance test)
 function num($a, $else = 0) {return is_numeric($a) ? $a : $else;}
 function eq($a, $b, $else = FALSE) {return $a == $b ? $a : $else;}
 function neq($a, $b, $else = FALSE) {return $a != $b ? $a : $else;}
@@ -1462,6 +1464,9 @@ function validEmail($email) {return filter_var($email, FILTER_VALIDATE_EMAIL);}
 function stndrdth($n) {return date('S', mktime(1,1,1,1,( (($n>=10)+($n>=20)+($n==0))*10 + $n%10) ));}
 function img2string($img, $quality) {ob_start(); imagejpeg($img, NULL, $quality); return ob_get_clean();}
 function showq($sql, $subs = []) {return strtr(u\SUBS($sql), u\prefixKeys(':', $subs));}
+function deleteFile($flnm) {if (file_exists($flnm)) unlink($flnm);}
+function getFile($flnm) {return file_exists($flnm) ? file_get_contents($flnm) : '';}
+function noUnprintable($s) {return preg_replace('/[\000-\031\200-\377]/', '', $s);}
 
 function arrayGet($arr, $key, $dft) {
   if (is_string($arr)) $arr = urlq2ray($arr);

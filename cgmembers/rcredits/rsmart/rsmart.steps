@@ -203,7 +203,7 @@ function memberHasNoPicture($id) {
   global $testOnly; if ($testOnly) return FALSE;
   if (!$a = r\acct(t\uid($id))) return FALSE;
   $a->update('photo', '');
-  @unlink($a->photoFilename(TRUE));
+  u\deleteFile($a->photoFilename(TRUE));
   return !$a->hasPhoto;
 }
 

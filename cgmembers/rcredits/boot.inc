@@ -78,7 +78,7 @@ if (count(explode('.', $cookie_domain)) > 2 && !is_numeric(str_replace('.', '', 
   ini_set('session.cookie_domain', $cookie_domain);
 }
 
-$agt = $_SERVER['HTTP_USER_AGENT'];
+$agt = nn($_SERVER['HTTP_USER_AGENT']);
 define('isSAFARI', stripos($agt, 'Chrome') === FALSE and stripos($agt, 'Safari') !== FALSE);
 
 /**

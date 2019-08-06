@@ -284,7 +284,7 @@ function getProposals($mya, $order = '') {
     $plus = date('i', $mya->created);
     $mod = date('s', $mya->created);
     $order = "(id*$plus)%$mod, id"; // randomize but stay the same for this member
-    if (u\test()) $order = 'id'; // be consistent so we can test
+    if (test()) $order = 'id'; // be consistent so we can test
   }
   
   return db\col('id', 'r_proposals', 'ctty IN (:ctty, 0) ORDER BY ' . $order, compact('ctty')); 

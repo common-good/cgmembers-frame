@@ -226,6 +226,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     TEST contact AMemberUpdatesToADifferentName
  *     MAKE coupons Setup
  *     MAKE custstatement Setup
+ *     MAKE demographics Setup
  *     MAKE download Setup
  *     MAKE flow Setup
  *     MAKE food Setup
@@ -241,6 +242,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE paybutton Setup
  *     MAKE preferences Setup
  *     TEST preferences AMemberChangesPreferences
+ *     MAKE queries Setup
  *     MAKE relations Setup
  *     MAKE scancard Setup
  *     MAKE showrecurs Setup
@@ -276,6 +278,7 @@ function members($list) {return t\members($list);}
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     MAKE community Setup
  *     MAKE custstatement Setup
+ *     MAKE demographics Setup
  *     MAKE download Setup
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
@@ -291,6 +294,7 @@ function members($list) {return t\members($list);}
  *     MAKE joint AJoinedAccountMemberUnjoinsTheAccount
  *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     MAKE preferences AMemberChangesPreferences
+ *     MAKE queries Setup
  *     MAKE statement Setup
  *     MAKE summary Setup
  *     MAKE summary AMemberClicksTheSummaryTabWithRoundups
@@ -339,37 +343,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST transact ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
  *     TEST transact AMemberPaysAnotherMemberRepeatedly
  */
-function weSayWithSubs($type, $index, $subs) {
-  global $testOnly, $testJSMsgs;
-
-  $subs = @$subs[0] ?: array();
-  if (isset($subs['email'])) t\fixEmail($subs['email']);
-  $msg0 = t($index);
-  foreach ($subs as $key => $value) {
-    if ($value == '?') $wild = $subs[$key] = u\randomString(20, 'word'); // mark the wildcard spot
-    if (strpos($msg0, "%$key") === FALSE) return t\output("missing sub '$key' in message '$index'");
-  }
-  $wantMsg = t($index, $subs);
-  $msgs = array_merge(\drupal_get_messages($type ?: NULL, FALSE), $testJSMsgs ?: []);
-  if (isset($wild)) {
-    $i = strpos($wantMsg, $wild);
-    $tailLen = strlen($wantMsg) - $i - strlen($wild);
-    foreach (@$msgs[$type] ?: [] as $actual) {
-      if (substr($actual, 0, $i) == substr($wantMsg, 0, $i) and substr($actual, -$tailLen) == substr($wantMsg, -$tailLen)) {$res = TRUE; break;}
-    }
-  } else {
-    $tmsg = strip_tags($wantMsg);
-    foreach (@$msgs[$type] ?: [] as $actual) {
-      $actual = strip_tags($actual);
-      $actual = strtr($actual, ["ACTUAL: \r\n"=>'', "Confirm\r\n"=>'', "\r\nOkay\r\n"=>'', "Cancel\r\n\r\n"=>'']);
-      if ($actual == $tmsg) {$res = TRUE; break;}
-    }
-    //  $res = (@$msgs[$type] and array_search($wantMsg, $msgs[$type]) !== FALSE);
-  }
-///  if (!@$res) debug(compact('wantMsg', 'msgs')); // + ['dmsgs'=>\drupal_get_messages(NULL, FALSE)]);
-  t\output("EXPECT: $wantMsg", 'output'); // this must come after array_search!
-  return @$res;
-}
+function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $index, $subs);}
 
 /**
  * we say (ARG): (ARG)
@@ -511,6 +485,7 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
  *     TEST coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
  *     TEST coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
  *     TEST custstatement ACompanyLooksAtACustomerStatement
+ *     TEST demographics ACompanyAgentRunsTheDemographicsQuery
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesANewRecurringDonation
  *     TEST invest AMemberJoinsTheInvestmentClub
@@ -535,6 +510,19 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
  *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     TEST preferences AMemberVisitsThePreferencesPage
  *     TEST preferences ACompanyAgentVisitsThePreferencesPage
+ *     TEST queries AMemberVisitsTheCommunityDataPage
+ *     TEST queries AnAdminVisitsTheCommunityDataPage
+ *     TEST queries AnAdminRunsAQueryAboutFoodFund
+ *     TEST queries AnAdminRunsAQueryAboutTrustedMembers
+ *     TEST queries AMemberRunsAQueryAboutEmployees
+ *     TEST queries AMemberRunsAQueryAboutTransactionTotals
+ *     TEST queries AMemberRunsAQueryAboutBusinessIncome
+ *     TEST queries AMemberRunsAQueryAboutPositiveAndNegative
+ *     TEST queries AMemberRunsAQueryAboutBalances
+ *     TEST queries AMemberRunsAQueryAboutActualDonations
+ *     TEST queries AMemberRunsAQueryAboutExpectedMemberDonations
+ *     TEST queries AMemberRunsAQueryAboutExpectedCompanyDonations
+ *     TEST queries AMemberRunsAQueryAboutWhence
  *     TEST relations MemberHasAnEmployeeConfirmed
  *     TEST relations MemberHasAnEmployeeUnconfirmed
  *     TEST relations MemberHasARelationWithAContractor
@@ -591,6 +579,7 @@ function with($content) {return weShow($content);}
  *     TEST invest MembersRateAProposedLoan
  *     TEST invest TheClubMakesALoan
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
+ *     TEST queries AMemberVisitsTheCommunityDataPage
  *     TEST relations MemberHasAnEmployer
  *     TEST relations MemberCompanyHasRelations
  *     TEST showrecurs AMemberStopsAnAutopayment
@@ -632,6 +621,7 @@ function withoutOptions($options) {
  *     MAKE community Setup
  *     MAKE company Setup
  *     MAKE custstatement Setup
+ *     MAKE demographics Setup
  *     MAKE download Setup
  *     MAKE flow Setup
  *     MAKE invest Setup
@@ -646,6 +636,7 @@ function withoutOptions($options) {
  *     MAKE membership Setup
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartner
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
+ *     MAKE queries Setup
  *     MAKE relations MemberHasAnEmployeeConfirmed
  *     MAKE relations MemberHasAnEmployeeUnconfirmed
  *     MAKE relations MemberHasARelationWithAContractor
@@ -699,6 +690,7 @@ function relations($relations) {return t\relations($relations);}
  *     TEST joint Setup
  *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     TEST joint AJoinedAccountMemberUnjoinsTheAccount
+ *     BOTH queries Setup
  *     TEST signupco AMemberRegistersACompany
  *     TEST statement Setup
  *     TEST summary Setup
@@ -734,6 +726,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     MAKE coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
  *     MAKE coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
+ *     MAKE demographics ACompanyAgentRunsTheDemographicsQuery
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
  *     MAKE download AMemberDownloadsIncomingInvoicesForThePastYear
  *     MAKE food ANonmemberVisitsTheFoodPage
@@ -766,6 +759,8 @@ function usd($list) {return t\usd($list);}
  *     MAKE paybutton AMemberClicksALinkToResetPasswordForUnknownAccount
  *     MAKE preferences AMemberVisitsThePreferencesPage
  *     MAKE preferences ACompanyAgentVisitsThePreferencesPage
+ *     MAKE queries AMemberVisitsTheCommunityDataPage
+ *     MAKE queries AnAdminVisitsTheCommunityDataPage
  *     MAKE relations MemberHasAnEmployeeConfirmed
  *     MAKE relations MemberHasAnEmployeeUnconfirmed
  *     MAKE relations MemberHasARelationWithAContractor
@@ -1023,8 +1018,10 @@ function withDownloadColumns($columns) {
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     MAKE community Setup
  *     MAKE custstatement Setup
+ *     MAKE demographics Setup
  *     MAKE download Setup
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
+ *     MAKE queries Setup
  *     MAKE statement Setup
  *     MAKE summary Setup
  *     MAKE transactions Setup
@@ -1502,7 +1499,8 @@ function memberCompletesFormWithNameAndAllCheckboxes($id, $page, $signedBy) {
 /**
  * proxies: (ARG)
  *
- * in: MAKE membership AMemberSignsInForTheFirstTime
+ * in: MAKE demographics Setup
+ *     MAKE membership AMemberSignsInForTheFirstTime
  */
 function proxies($list) {return t\proxies($list);}
 
@@ -1600,6 +1598,8 @@ function weScripWithSubs($script, $args = []) {
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     TEST coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
  *     BOTH coupons AMemberRedeemsARestrictedDiscountCoupon
+ *     MAKE custstatement AStatementGoesOntoMultiplePages
+ *     MAKE demographics Setup
  *     TEST food AMemberMakesAFoodDonation
  *     TEST food AMemberMakesAFoodDonationWithoutAdequateFunds
  *     TEST gift AMemberDonates
@@ -1755,11 +1755,23 @@ function memberIsUnconfirmed($id) {
 function countIs($what, $count) {return t\count($what, $count);}
 
 /**
- * transaction:
+ * member (ARG) runs query (ARG)
  *
- * in: 
+ * in: MAKE queries AnAdminRunsAQueryAboutFoodFund
+ *     MAKE queries AnAdminRunsAQueryAboutTrustedMembers
+ *     MAKE queries AMemberRunsAQueryAboutEmployees
+ *     MAKE queries AMemberRunsAQueryAboutTransactionTotals
+ *     MAKE queries AMemberRunsAQueryAboutBusinessIncome
+ *     MAKE queries AMemberRunsAQueryAboutPositiveAndNegative
+ *     MAKE queries AMemberRunsAQueryAboutBalances
+ *     MAKE queries AMemberRunsAQueryAboutActualDonations
+ *     MAKE queries AMemberRunsAQueryAboutExpectedMemberDonations
+ *     MAKE queries AMemberRunsAQueryAboutExpectedCompanyDonations
+ *     MAKE queries AMemberRunsAQueryAboutWhence
  */
-function transaction() {
-  global $testOnly;
-  todo;
+function memberRunsQuery($id, $query) {
+  global $testOnly; if ($testOnly) return FALSE;
+  require R_ROOT . '/rweb/queries.inc';
+  foreach ($queries as $k => $zot) if (substr($k, 1) == $query) $query = $k; // get leading digit
+  return t\memberVisitsPage($id, "community/data/qName=$query");
 }

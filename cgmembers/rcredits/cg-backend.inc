@@ -1093,7 +1093,7 @@ function createUsdTransfer($a, $amount, $created=NULL, $txid=NULL) {
   $xid = $tx->insert();
     
   $info = compact(ray('amount payee created bankAccount channel xid'));
-  if (u\test() and nn($txid)) $info += compact('txid');
+  if (test() and nn($txid)) $info += compact('txid');
   if ($xid) $txid = db\insert('r_usd', $info, 'txid'); else $txid = FALSE;
   
   if (!$xid or !$txid) {

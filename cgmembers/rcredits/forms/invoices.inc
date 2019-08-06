@@ -119,7 +119,7 @@ EOF;
 
   if (@$download) {
     foreach ($rows as $row) u\csv($row);
-    if (u\test()) return; else exit();
+    if (test()) return; else exit();
   }
 
   // prepare screen display

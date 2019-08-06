@@ -38,7 +38,7 @@ X;
 			$count = $end - $start;
 		} else {
       $args = http_build_query(@compact($fields, 'automatic'));
-      if (!u\test()) $args = u\urlify($args);
+      if (!test()) $args = u\urlify($args);
       $args = 'print/' . $args;
   		$start = u\fmtDate($start, TRUE);
   		$end = $end ? u\fmtDate($end, TRUE) : t('indefinite');
