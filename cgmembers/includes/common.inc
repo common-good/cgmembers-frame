@@ -7564,24 +7564,19 @@ function _drupal_flush_css_js() {
  *   as var_export() will generate an error.
  */
 /**/ function debug($data, $label = NULL, $print_r = FALSE) {
-  global $debugCounter;
-  $debugCounter = nn($debugCounter, 0) + 1;
   $string = check_plain($print_r ? print_r($data, TRUE) : var_export($data, TRUE)); // Print $data contents to string.
-//  $string = ($label ?: $debugCounter) . '<pre>' . $string . '</pre>'; // "pre" to increase readability.
   $string = "$label<pre>$string</pre>"; // "pre" to increase readability.
-  if (isDEV) {
-    extract(just('function class object', debug_backtrace()[1]));
-    extract(just('line file', debug_backtrace()[0]));
-    $file = basename($file);
-    $map = ray('r\\Web r\Util r\DB r\Testing r\Backend r\Admin', 'w', 'u', 'db', 't', 'be', 'a');
-    foreach (ray('object class function') as $k) {
-      $$k = str_replace('CG', 'r', pr(nn($$k)));
-      $$k = strtr($$k, $map);
-    }
-    if ($class) $function = "$class::$function";
-    $string = "<div class=\"debug\">{$string}&nbsp; at line $line in $function ($file) $object</div>\n";
-    drupal_set_message($string, 'warning');
-  } else trigger_error($string);
+  extract(just('function class object', debug_backtrace()[1]));
+  extract(just('line file', debug_backtrace()[0]));
+  $file = basename($file);
+  $map = ray('r\\Web r\Util r\DB r\Testing r\Backend r\Admin', 'w', 'u', 'db', 't', 'be', 'a');
+  foreach (ray('object class function') as $k) {
+    $$k = str_replace('CG', 'r', pr(nn($$k)));
+    $$k = strtr($$k, $map);
+  }
+  if ($class) $function = "$class::$function";
+  $string = "<div class=\"debug\">{$string}&nbsp; at line $line in $function ($file) $object</div>\n";
+  drupal_set_message($string, 'warning');
 }
 
 /**

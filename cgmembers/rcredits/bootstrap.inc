@@ -1280,8 +1280,10 @@ function justNot($these, $info) {
 
 /**
  * Say whether something is in a given list.
- * Call with: in(what, list) or in(what, a, b, ...) where list is an assoc, array, or delimited string
+ * Call with: in(what, list) or in(what, a, b, ...)
  * @param mixed $what: what to find in the list
+ * @param mixed $list: an assoc, array, or delimited string
+ * @return <yes, $what is in $list>
  */
 function in($what, $list) {
   if (func_num_args() == 2) {
@@ -1290,6 +1292,7 @@ function in($what, $list) {
   return in_array($what, $list);
 }
 
+function strhas($string, $what) {return (strpos($string, $what) !== FALSE);}
 function between($what, $low, $high) {return ($low <= $what and $what <= $high);}
 function nn(&$a, $else = '') {return (!isset($a) or is_null($a)) ? $else : $a;} // "not null"
 /**/  function pr($whatever) {return print_r($whatever, TRUE);}

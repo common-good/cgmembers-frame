@@ -1466,7 +1466,6 @@ function img2string($img, $quality) {ob_start(); imagejpeg($img, NULL, $quality)
 function showq($sql, $subs = []) {return strtr(u\SUBS($sql), u\prefixKeys(':', $subs));}
 function deleteFile($flnm) {if (file_exists($flnm)) unlink($flnm);}
 function getFile($flnm) {return file_exists($flnm) ? file_get_contents($flnm) : '';}
-function noUnprintable($s) {return preg_replace('/[\000-\031\200-\377]/', '', $s);}
 
 function arrayGet($arr, $key, $dft) {
   if (is_string($arr)) $arr = urlq2ray($arr);

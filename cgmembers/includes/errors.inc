@@ -53,9 +53,9 @@ function drupal_error_levels() {
  *   occurred.
  */
 function _drupal_error_handler_real($error_level, $message, $filename, $line, $context) {
-  if (isDEV and $error_level < 8) {
+  if (isDEV and $error_level < WATCHDOG_DEBUG) {
 //    die(pr(compact(ray('error_level message filename line context'))));
-    if ($error_level == 2 and substr($message, 0, 6) == 'fopen(') return; // no easy way to avoid an fopen error on not found
+    if ($error_level == WATCHDOG_CRITICAL and substr($message, 0, 6) == 'fopen(') return; // no easy way to avoid an fopen error on not found
     throw new \Exception($message . ' ' . pr(compact(ray('error_level line filename'))));
   }
 

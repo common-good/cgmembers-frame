@@ -41,7 +41,7 @@ function formData($form, &$sta, $args = '', $isco = FALSE) {
     if (!empty($sql)) {
       $title = w\queryPermitted($qName0, $sql, $subtext); // alters $sql
       $subtext = $subtext ?: '&nbsp;';
-      $report = strpos($sql, ' ') !== FALSE ? item(w\showRecords(db\q($sql)->fetchAll())) : getReport($sql);
+      $report = strhas($sql, ' ') ? item(w\showRecords(db\q($sql)->fetchAll())) : getReport($sql);
       $form = compact(ray('title subtext report'));
     }
   } else {
