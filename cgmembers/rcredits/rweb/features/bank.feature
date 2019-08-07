@@ -66,7 +66,7 @@ Scenario: a member draws credit from the bank with zero floor
   | .ZZA |      86 |
   And we say "status": "banked|bank tx number" with subs:
   | action | tofrom  | amount     | checkNum | why             |*
-  | draw   | from    | $%R_ACHMIN |     5008 | at your request |
+  | draw   | from    | $%R_ACHMIN |        8 | at your request |
 
 Scenario: a member draws credit from the bank with adequate floor
   When member "C:B" completes form "get" with values:
@@ -80,7 +80,7 @@ Scenario: a member draws credit from the bank with adequate floor
   | .ZZC | 40      |
   And we say "status": "banked|bank tx number|available now" with subs:
   | action | tofrom  | amount | checkNum | why             |*
-  | draw   | from    |    $10 |     5007 | at your request |
+  | draw   | from    |    $10 |        8 | at your request |
   
 Scenario: a member moves too little to the bank
   When member ".ZZA" completes form "get" with values:

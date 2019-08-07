@@ -1368,6 +1368,7 @@ o;
       if ($combinable and $done = db\update('r_usd', compact(ray('txid amount')), 'txid')) {
         $msg .= '|combined';
         list ($previous, $total) = [u\fmtAmt($combinable), u\fmtAmt($amount)];
+        $xid = db\get('xid', 'r_usd', compact('txid'));
       }
     }
 
@@ -1377,18 +1378,19 @@ o;
 ///    debug(compact(ray('done created okNow completed amount waiting')) + ['floor' => $a->floor]);
 
       $DBTX = \db_transaction();
-      $txid = be\createUsdTransfer($a, $amount, $created);
+      $txid = be\createUsdTransfer($a, $amount, $created, NULL, $xid);
       u\EXPECT((bool) $txid, 'saving usd record');
       if (nn($completed)) $completed = be\completeUsdTx($txid, $automatic, $completed); // completed is then boolean
       unset($DBTX);
     }
 
+    u\EXPECT(!empty($xid), 'empty xid in acct::bank txid=' . $txid);
     if ($amount < 0 and $txid > 0) r\tellAdmin(t('outgoing bank transfer'), ray('who amount', $a->fullName, -$amount));
     
     if ($previous) $amount -= $combinable; // don't include previous amount in notice to member
     if ($amount > 0) $msg .= '|bank tx number' . (nn($completed) ? '|available now' : '');
     list ($action, $tofrom) = $amount < 0 ? [t('deposit'), t('to')] : [t('draw'), t('from')];
-    $msg = tr($msg, ray('action tofrom amount checkNum previous total', $action, $tofrom, u\fmtAmt(abs(@$amount)), $txid, $previous, $total));
+    $msg = tr($msg, ray('action tofrom amount checkNum previous total', $action, $tofrom, u\fmtAmt(abs(@$amount)), $xid, $previous, $total));
     if (empty($why)) $newwhy = $why = '';
     r\notify($a->id, $newwhy = tr($msg, compact('why')));
     if ($amount > $amount0 and !$automatic) w\say(t('Your request has been increased to meet your chosen auto-refill target. If this is more than you wanted, cancel or reverse this request, then turn off auto-refills in your Preference Settings before trying again.'));

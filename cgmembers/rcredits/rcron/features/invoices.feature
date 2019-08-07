@@ -51,7 +51,7 @@ Setup:
 
   And we notice "banked|bank tx number" to member ".ZZA" with subs:
   | action | tofrom | amount | checkNum | why               |*
-  | draw   | from   | $700   |        1 | to pay invoice #2 |
+  | draw   | from   | $700   |        4 | to pay invoice #2 |
   And we notice "short invoice|when funded|how to fund" to member ".ZZB" with subs:
   | short | payeeName | nvid |*
   | $50   | Our Pub   |    3 |
@@ -90,9 +90,12 @@ Scenario: Second invoice gets funded too for a non-refilling account
   Given members have:
   | uid  | flags               |*
   | .ZZA | ok,confirmed,bankOk |
+  And these "txs":
+  | xid | created   | amount | from    | to   | purpose   | taking |*
+  |   2 | %today-1d |      0 | bank-in | .ZZA | from bank |      1 |
   And these "usd":
-  | txid | payee | amount | created   | completed | deposit |*
-  |    1 | .ZZA  |    100 | %today-1d |         0 |       0 |
+  | txid | payee | amount | created   | completed | deposit | xid |*
+  |    1 | .ZZA  |    100 | %today-1d |         0 |       0 |   2 |
   And invoices:
   | nvid | created   | status       | amount | from | to   | for   | flags   |*
   |    1 | %today-1d | %TX_APPROVED |    100 | .ZZA | .ZZC | one   | funding |
@@ -108,7 +111,7 @@ Scenario: Second invoice gets funded too for a non-refilling account
   |    2 | %today    | %TX_APPROVED |    200 | .ZZA | .ZZC | two   | funding |
   And we notice "banked|combined|bank tx number" to member ".ZZA" with subs:
   | action | tofrom | amount | previous | total | checkNum | why               |*
-  | draw   | from   | $200   |     $100 |  $300 |        1 | to pay invoice #2 |
+  | draw   | from   | $200   |     $100 |  $300 |        2 | to pay invoice #2 |
 
 Scenario: A languishing invoice gets funded again
   Given invoices:

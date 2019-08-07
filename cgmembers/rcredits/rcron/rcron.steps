@@ -507,7 +507,8 @@ function stats($list) {return t\stats($list);}
 /**
  * these (ARG): (ARG)
  *
- * in: TEST cashout AMemberCompanyCashesOutMonthly
+ * in: TEST bank AMemberIsWellBelowTarget
+ *     TEST cashout AMemberCompanyCashesOutMonthly
  *     TEST cashout AMemberCompanyCashesOutWeekly
  *     MAKE gifts ADonationToCGIsVisibleToAdmin
  *     MAKE gifts ABrandNewRecurringDonationToCGCanBeCompleted

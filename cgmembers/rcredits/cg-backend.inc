@@ -1069,9 +1069,10 @@ function todo($number, $todo = 'nothing', $nonce = 'whatever') {
  * @param int $created: the UNIX time at which the transfer is deemed to be created.
  * @param string $txid: the internal transaction id for the transfer; normally NULL (assign a new id) but
  *                      can be specified (used during testing)
+ * @param int $xid (RETURNED): the transaction ID associated with the transfer request
  * @return string $txid: the actual txid or FALSE on failure
  */
-function createUsdTransfer($a, $amount, $created=NULL, $txid=NULL) {
+function createUsdTransfer($a, $amount, $created=NULL, $txid=NULL, &$xid = NULL) {
   u\EXPECT(compact(ray('a amount created txid')), 'acct int|float int|empty string|int|empty');
   global $channel;
   $automatic = ($channel == TX_CRON);
