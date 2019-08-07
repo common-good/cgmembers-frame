@@ -51,7 +51,7 @@ function queueNext($task = NULL) {
 define('TIME_CODES', 'year:Ym,month:md,week:Ua,day:dH,hour:HM');
 
 function timeFor($time, $period, $chosen) {
-  global $timeFor; if (u\test() and isset($timefor)) return @$timefor[$period];
+  global $timeFor; if (test() and isset($timefor)) return @$timefor[$period];
 
   $lastStart = getV('last_cron_start', []);
   if ($lastStart and now() - nn($lastStart[$period], 0) < HOUR_SECS) return FALSE;
@@ -74,7 +74,7 @@ function queue($op, $item = []) {
   global $cronOp; // this is set when calling cron() from PHP window on test server
 
   $item = compact('op') + $item;
-  if (@$cronOp or u\test()) {
+  if (@$cronOp or test()) {
     cr\doTask($item);
   } else {
     $item = serialize($item0 = $item);

@@ -137,7 +137,7 @@ function formAccountPhoto($form, &$sta, $page = '', $args = '') {
   header("Content-type: image/jpeg");
 
   if ($a = @$qid ? r\acct($qid, $mya->agentId) : $mya) {
-    if ($a->co or $a->can(B_READ)) $photo = @$orig ? @file_get_contents($a->tempPhotoFilename) : $a->$type;
+    if ($a->co or $a->can(B_READ)) $photo = @$orig ? u\getFile($a->tempPhotoFilename) : $a->$type;
   }
 /**/  echo nn($photo) ?: \file_get_contents(DRUPAL_ROOT . R_PATH . '/images/icons/account.png');
   return exit();
@@ -317,9 +317,9 @@ function changeWho($args = '') {
  * @param bool $continue: <don't go to Promo site after signout> (can't be a "go there" parameter, because it defaults wrong)
  */
 function signout($continue = FALSE) {
-  if (isDEV and u\test()) setAcct(NULL); else
+  if (isDEV and test()) setAcct(NULL); else
   @\session_destroy();
-  if (isDEV and !u\test()) w\go('signin');
+  if (isDEV and !test()) w\go('signin');
   if ($continue == 'timedout') list ($continue, $timeout) = [FALSE, '&timedout=1']; else $timeout = '';
   if (!$continue) return w\go(PROMO_URL . '?region=' . R_SERVER_ID . $timeout);
 }

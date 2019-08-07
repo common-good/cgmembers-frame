@@ -41,7 +41,7 @@ function formSignup($form, &$sta, $args = '') {
   } else {db\insert('signup', ray('preid source ip', $preid, substr($source2, 0, 255), $_SERVER['REMOTE_ADDR']), 'preid');}
   
   if (@$reid) { // continuing signup of a partner's customer
-    if (u\test()) $reid = f('t.uid', $reid);
+    if (test()) $reid = f('t.uid', $reid);
     if ($args2 = w\continuePartnerSignup($reid, @$customer)) extract($args = $args2);
   } elseif (@$customer and @$partner and @$partnerCode) {
     $myid = w\partnerSignup($args); // info passed from partner signup
@@ -49,7 +49,7 @@ function formSignup($form, &$sta, $args = '') {
     if (!$a->co) $myid = w\jointSignup(); else return w\go('', t('A company cannot have a joint account.'), 'err');
   } 
   
-  if (u\test() and is_array(@$myid)) return; // array means returned r\go
+  if (test() and is_array(@$myid)) return; // array means returned r\go
     
   $myid = hidFld($myid0 = @$myid);
   
@@ -209,7 +209,7 @@ function formSignup_submit($form, &$sta) {
   global $mya;
   $dbFields = 'fullName legalName email flags phone federalId dob pin country zip address city state postalAddr helper iCode notes calling signupCo tenure source';
   extract(just('myid preid confirmed acctType args ats owns partner customer source2 ' . $dbFields, $sta['input']));
-  if (u\test() and !@$args) $args = basename($_SERVER['REQUEST_URI']);
+  if (test() and !@$args) $args = basename($_SERVER['REQUEST_URI']);
   u\EXPECT((bool) $args, 'no args');
   extract(just('code source2', $args)); // source2 may come from either partner or an add (through our promo site)
   if (isDEV) $helper = $helper + 0; // don't let lack of helper stop us
@@ -252,7 +252,7 @@ function formSignup_submit($form, &$sta) {
   $pw1 = $mya->oneTimePass($name, TRUE);
   
   if ($mya->co) {
-    say('company is ready', compact('qid'));
+    say('company is ready');
     //if (@$helper) $qid = r\qid($helper); // "if" for dev faked code HUH?
     if (!@$h) hack('company no helper');
     if ($mya->email == $h->email) {

@@ -13,7 +13,7 @@ function formData($form, &$sta, $args = '', $isco = FALSE) {
   global $mya;
 
   $isco = ($isco == 'co');
-  require_once queryFile($isco);
+  require queryFile($isco);
   extract(just('qName sql', $args));
   
   $sql0 = urldecode(nn($sql));
@@ -41,7 +41,7 @@ function formData($form, &$sta, $args = '', $isco = FALSE) {
     if (!empty($sql)) {
       $title = w\queryPermitted($qName0, $sql, $subtext); // alters $sql
       $subtext = $subtext ?: '&nbsp;';
-      $report = strpos($sql, ' ') ? item(w\showRecords(db\q($sql)->fetchAll())) : getReport($sql);
+      $report = strhas($sql, ' ') ? item(w\showRecords(db\q($sql)->fetchAll())) : getReport($sql);
       $form = compact(ray('title subtext report'));
     }
   } else {
@@ -66,7 +66,7 @@ function formData_validate($form, &$sta) {
 
 function formData_submit($form, &$sta) {
   extract(just('isco sql', $sta['input']));
-  require_once queryFile($isco);
+  require queryFile($isco);
 
   if (op($sta) == 'go') return w\go('/community/data/sql=' . urlencode($sql));
   $op = w\opText($sta);

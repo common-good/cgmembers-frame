@@ -21,8 +21,8 @@ Setup:
   |   12 |  .ZZB |   2000 | %today-13m | %today-13m | %today-13m |
   |   13 |  .ZZC |   3000 | %today-13m | %today-13m | %today-13m |
   |   14 |  .ZZA |     11 | %today-3d  |         0  | %today-13m |
-  |   15 |  .ZZA |    -22 | %today-5d  | %today-5d  |          0 |
-  |   16 |  .ZZA |    -33 | %today-5d  | %today-5d  |          0 |
+  |   15 |  .ZZA |    -22 | %today-4d  | %today-4d  |          0 |
+  |   16 |  .ZZA |    -33 | %today-4d  | %today-4d  |          0 |
   # The usd transfers create same-numbered transactions
   And balances:
   | uid  | balance |*
@@ -30,17 +30,18 @@ Setup:
   | .ZZB |    2000 |
   | .ZZC |    3000 |
   Given transactions: 
-  | xid | created   | amount | from | to   | purpose | taking | payerTid | payeeTid |*
-  |  44 | %today-5m |     10 | .ZZB | .ZZA | cash E  | 0      |       24 |       34 |
-  |  45 | %today-4m |   1100 | .ZZC | .ZZA | usd F   | 1      |       25 |       35 |
-  |  46 | %today-3m |    240 | .ZZA | .ZZB | what G  | 0      |       26 |       36 |
-  |  47 | %today-2w |     50 | .ZZB | .ZZC | cash P  | 0      |       27 |       37 |
-  |  48 | %today-1w |    120 | .ZZA | .ZZC | this Q  | 1      |       28 |       38 |
-  |  49 | %today-6d |    100 | .ZZA | .ZZB | cash V  | 0      |       29 |       39 |
+  | xid | created   | amount | from | to   | purpose | taking | payerTid | payeeTid | reversesXid |*
+  |  44 | %today-5m |     10 | .ZZB | .ZZA | cash E  | 0      |       24 |       34 |             |
+  |  45 | %today-4m |   1100 | .ZZC | .ZZA | usd F   | 1      |       25 |       35 |             |
+  |  46 | %today-3m |    240 | .ZZA | .ZZB | what G  | 0      |       26 |       36 |             |
+  |  47 | %today-2w |     50 | .ZZB | .ZZC | cash P  | 0      |       27 |       37 |             |
+  |  48 | %today-1w |    120 | .ZZA | .ZZC | this Q  | 1      |       28 |       38 |             |
+  |  49 | %today-6d |    100 | .ZZA | .ZZB | cash V  | 0      |       29 |       39 |             |
+  |  50 | %today-5d |    -10 | .ZZB | .ZZA | cash E  | 0      |       29 |       39 |          44 |
   Then balances:
   | uid  | balance |*
-  | .ZZA |    1595 |
-  | .ZZB |    2280 |
+  | .ZZA |    1585 |
+  | .ZZB |    2290 |
   | .ZZC |    2070 |
 
 Scenario: A member looks at transactions for the past year
@@ -52,19 +53,19 @@ Scenario: A member looks at transactions for the past year
   | Start        |   | 1,000.00 | %dmy-12m |
   | From Bank    | + |     0.00 | + 11.00 Pending |
   | To Bank      | - |    55.00 |          |
-  | Received     | + | 1,110.00 |          |
+  | Received     | + | 1,100.00 |          |
   | Out          | - |   460.00 |          |
-  | End          |   | 1,595.00 | %dmy     |
+  | End          |   | 1,585.00 | %dmy     |
   And with:
-  | Tx# | Date    | Name          | Purpose | Amount   |  Balance | Action |
-  |  6  | %mdy-5d | --            | to bank |   -33.00 | 1,595.00 |        |
-  |  5  | %mdy-5d | --            | to bank |   -22.00 | 1,628.00 |        |
-  | 49  | %mdy-6d | Bea Two       | cash V  |  -100.00 | 1,650.00 |        |
-  | 48  | %mdy-1w | Corner Pub    | this Q  |  -120.00 | 1,750.00 |        |
-  | 46  | %mdy-3m | Bea Two       | what G  |  -240.00 | 1,870.00 |        |
-  | 45  | %mdy-4m | Corner Pub    | usd F   | 1,100.00 | 2,110.00 |        |
-  | 44  | %mdy-5m | Bea Two       | cash E  |    10.00 | 1,010.00 |        |
-#  | 1   | %mdy-7m | ZZrCred       | signup           |     0.00 |      .00 |        |
+  | Tx# | Date    | Name          | Purpose                  | Amount   |  Balance | Action |
+  |  6  | %mdy-4d | --            | to bank                  |   -33.00 | 1,585.00 |        |
+  |  5  | %mdy-4d | --            | to bank                  |   -22.00 | 1,618.00 |        |
+  | 50  | %mdy-5d | Bea Two       | cash E (reverses #44)    |   -10.00 | 1,640.00 |        |
+  | 49  | %mdy-6d | Bea Two       | cash V                   |  -100.00 | 1,650.00 |        |
+  | 48  | %mdy-1w | Corner Pub    | this Q                   |  -120.00 | 1,750.00 |        |
+  | 46  | %mdy-3m | Bea Two       | what G                   |  -240.00 | 1,870.00 |        |
+  | 45  | %mdy-4m | Corner Pub    | usd F                    | 1,100.00 | 2,110.00 |        |
+  | 44  | %mdy-5m | Bea Two       | cash E (reversed by #50) |    10.00 | 1,010.00 |        |
   And without:
   | rebate  |
   | bonus   |
@@ -75,20 +76,20 @@ Scenario: A member looks at transactions for the past few days
   | Start        |   | 1,870.00 | %dmy-15d |
   | From Bank    | + |     0.00 | + 11.00 Pending |
   | To Bank      | - |    55.00 |          |
-  | Received     | + |     0.00 |          |
+  | Received     | + |   -10.00 |          |
   | Out          | - |   220.00 |          |
-  | End          |   | 1,595.00 | %dmy     |
+  | End          |   | 1,585.00 | %dmy     |
   And with:
-  | Tx# | Date    | Name          | Purpose | Amount  |  Balance |
-  |  6  | %mdy-5d | --            | to bank |  -33.00 | 1,595.00 |
-  |  5  | %mdy-5d | --            | to bank |  -22.00 | 1,628.00 |
-  | 49  | %mdy-6d | Bea Two       | cash V  | -100.00 | 1,650.00 |
-  | 48  | %mdy-1w | Corner Pub    | this Q  | -120.00 | 1,750.00 |
+  | Tx# | Date    | Name          | Purpose               | Amount  |  Balance |
+  |  6  | %mdy-4d | --            | to bank               |  -33.00 | 1,585.00 |
+  |  5  | %mdy-4d | --            | to bank               |  -22.00 | 1,618.00 |
+  | 50  | %mdy-5d | Bea Two       | cash E (reverses #44) |  -10.00 | 1,640.00 |
+  | 49  | %mdy-6d | Bea Two       | cash V                | -100.00 | 1,650.00 |
+  | 48  | %mdy-1w | Corner Pub    | this Q                | -120.00 | 1,750.00 |
   And without:
   | pie N    |
   | whatever |
   | usd F    |
-  | cash E   |
   | signup   |
   | rebate   |
   | bonus    |
@@ -100,30 +101,31 @@ Scenario: A member looks at transactions with roundups
   |  41 |   0.05 | .ZZA | %CG_ROUNDUPS_UID | roundup donation | 0      | %FOR_GOODS | %TX_POS | donation |
   Then balances:
   | uid  | balance |*
-  | .ZZA | 1545.00 |
+  | .ZZA | 1535.00 |
   When member ".ZZA" visits page "history/transactions/period=15"
   Then we show "Transaction History" with:
   | Start        |   | 1,870.00 | %dmy-15d |
   | From Bank    | + |     0.00 | + 11.00 Pending |
   | To Bank      | - |    55.00 |          |
-  | Received     | + |     0.00 |          |
+  | Received     | + |   -10.00 |          |
   | Out          | - |   270.00 |          |
-  | End          |   | 1,545.00 | %dmy     |
+  | End          |   | 1,535.00 | %dmy     |
   And with:
-  | Tx# | Date    | Name            | Purpose          | Amount  |  Balance |~do |
-  |     | %mdy    | Corner Pub      | sundries         |  -49.95 | 1,545.00 |    |
-  |     |         | %PROJECT Region | roundup donation |   -0.05 |          |    | 
-  |  6  | %mdy-5d | --              | to bank          |  -33.00 | 1,595.00 |    |
-  |  5  | %mdy-5d | --              | to bank          |  -22.00 | 1,628.00 |    |
-  | 49  | %mdy-6d | Bea Two         | cash V           | -100.00 | 1,650.00 |    |
-  | 48  | %mdy-1w | Corner Pub      | this Q           | -120.00 | 1,750.00 |    |
+  | Tx# | Date    | Name            | Purpose                  | Amount  |  Balance |~do |
+  |     | %mdy    | Corner Pub      | sundries                 |  -49.95 | 1,535.00 |    |
+  |     |         | %PROJECT Region | roundup donation         |   -0.05 |          |    | 
+  |  6  | %mdy-4d | --              | to bank                  |  -33.00 | 1,585.00 |    |
+  |  5  | %mdy-4d | --              | to bank                  |  -22.00 | 1,618.00 |    |
+  | 50  | %mdy-5d | Bea Two         | cash E (reverses #44)    |  -10.00 | 1,640.00 |    |
+  | 49  | %mdy-6d | Bea Two         | cash V                   | -100.00 | 1,650.00 |    |
+  | 48  | %mdy-1w | Corner Pub      | this Q                   | -120.00 | 1,750.00 |    |
 
 Scenario: Admin reverses a bank transfer
   When member "A:1" visits page "history/transactions/period=5"
   And member "A:1" clicks "X" on transaction 1
   Then usd transfers:
   | txid | payee | amount | created  | completed  | deposit | xid |*
-  |  -11 |  .ZZA |  -1000 | %now-13m | %now-13m   | %now    |  50 |
+  |  -11 |  .ZZA |  -1000 | %now-13m | %now-13m   | %now    |  51 |
   And these "txs":
   | xid | created | amt2  | uid1    | uid2 | description | type |*
-  |  50 | %now    | -1000 | bank-in | .ZZA | to bank     | bank |
+  |  51 | %now    | -1000 | bank-in | .ZZA | to bank     | bank |

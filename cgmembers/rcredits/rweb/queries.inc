@@ -15,9 +15,10 @@ use CG\Util as u;
 
 $bizQ = 'SELECT uid as payee, goods, SUM(amount) AS tot, COUNT(*) AS cnt FROM tx_entries JOIN tx_hdrs USING (xid) WHERE goods=:FOR_GOODS AND created BETWEEN';
 $gifts = "r.amount * IF(period='M', 12, IF(period='Q', 4, 1))";
+$source = "TRIM(REPLACE(REPLACE(source,'knows: self ()', ''), '-', ' '))";
 
 $queries = [
-  1 . 'Food Fund Percentage Contributions' =>
+  1 . t('Food Fund Percentage Contributions') =>
     "SELECT COUNT(uid) AS participants, SUM(amt) AS monthly FROM (
       SELECT uid, SUM(food*amt) AS amt, IF(SUM(amt)=0, 0, 1) AS active  
       FROM (SELECT uid,food FROM users WHERE food>0) u 
@@ -26,7 +27,7 @@ $queries = [
     ) x",
 // SUM(active) AS active, 
 
-  2 . 'Most Trusted Members' => 
+  2 . t('Most Trusted Members') => 
     "SELECT fullName, email AS email, phone, COUNT(b.voter) AS proxiedFor, trust FROM users u LEFT JOIN r_ballots b ON b.proxy=u.uid AND b.created>:REQUEST_TIME-:YEAR_SECS WHERE u.community=:ctty AND u.:IS_OK AND NOT u.:IS_CO GROUP BY IFNULL(b.proxy, u.uid) ORDER BY COUNT(b.voter) DESC, u.trust DESC",
     
   2 . 'Individuals Paid By A Company' =>
@@ -49,7 +50,7 @@ $queries = [
     WHERE :ctty IN (u1.community, u2.community)",
     
 
-  B_CO . 'Monthly Business Income (30 day totals)' => 
+  B_CO . t('Monthly Business Income (30 day totals)') => 
     "SELECT LEFT(u.fullName, 42) AS company,
             t0.tot AS `total $`, t0.cnt AS `count`,
             t6.tot AS `total $ 6mos ago`, t6.cnt AS `count6`,
@@ -60,7 +61,7 @@ $queries = [
      LEFT JOIN ($bizQ :NOW-:YEAR_SECS-30*:DAY_SECS AND :NOW-:YEAR_SECS GROUP BY payee) t12 ON t12.payee=u.uid
      WHERE u.community=:ctty AND :IS_CO AND :IS_OK AND t0.cnt>0 AND fullName NOT LIKE '%457%' ORDER BY u.fullName",
 
-  'Positive and Negative Balance Totals' => 
+  t('Positive and Negative Balance Totals') => 
     "SELECT c.fullName AS community, 
      SUM(IF(u.balance<0, 1, 0)) AS negativeBalanceCount,
      SUM(IF(u.balance<0, u.balance, 0)) AS negativeBalanceTotal,
@@ -70,7 +71,7 @@ $queries = [
      WHERE IFNULL(u.jid,0)=0 AND u.:IS_OK AND u.uid NOT BETWEEN 0 AND (:CANONIC_ACCTS-1)
      GROUP BY c.fullName",
   
-  'Company and Member Balances and Credit Lines' =>
+  t('Company and Member Balances and Credit Lines') =>
     "SELECT c.fullName AS community,
             SUM(IF(u.:IS_CO, 0, u.balance)) AS memBalances,
             SUM(IF(u.:IS_CO, 0, -u.floor)) AS memCredit, 
@@ -82,7 +83,7 @@ $queries = [
      WHERE IFNULL(u.jid,0)=0 AND c.uid<0 GROUP BY c.fullName",
 
 //     SUM(IF(t.:IS_GIFT OR t.:IS_ROUNDUPS OR t.:IS_CRUMBS OR t.:IS_RECURS,0,amount)) AS `payments to CG`
-  'Actual Donations to Common Good and Community' =>
+  t('Actual Donations to Common Good and Community') =>
     "SELECT CONCAT_WS(' ', YEAR(FROM_UNIXTIME(t.created)), MONTHNAME(FROM_UNIXTIME(t.created))) AS month,
     SUM(IF(t.:IS_RECURS,amt,0)) AS recurring,
     SUM(IF(uid2=:CG_ROUNDUPS_UID,amt,0)) AS roundups,
@@ -92,7 +93,7 @@ $queries = [
     WHERE u.community=:ctty AND (t.:IS_GIFT OR uid2 IN (:CG_ROUNDUPS_UID, :CG_CRUMBS_UID) OR t.:IS_RECURS)
     GROUP BY YEAR(FROM_UNIXTIME(t.created)) DESC, MONTH(FROM_UNIXTIME(t.created)) DESC",
 
-  'Expected Member Donations to CG and Community' =>
+  t('Expected Member Donations to CG and Community') =>
     $mGifts =
     "SELECT c.fullName AS community, 
             COUNT(*) AS members,
@@ -105,8 +106,44 @@ $queries = [
     GROUP BY u.community
     ~roundupy = number who do Roundups, crumby = number who do Crumb donations",
 
-  'Expected Company Donations to CG and Community' =>
+  t('Expected Company Donations to CG and Community') =>
     strtr($mGifts, ['AS members' => 'AS companies', 'NOT u.:IS_CO' => 'u.:IS_CO']),
+    
+  2 . t('Where Do Our Members Hear About %PROJECT') => <<< X
+    SELECT 
+      IF(helper=1 OR helper IS NULL, 
+        IF(source LIKE '%presentation%' OR source LIKE '%talk%', '* Presentation',
+        IF(source LIKE '%internet%' OR source LIKE '%web%' OR source LIKE '%google%', '* Web',
+        IF(source LIKE '%friend%' OR source LIKE '%mouth%', '* Word of Mouth',
+        IF(source LIKE '%facebook%', '* Facebook',
+        IF(source LIKE '%twitter%', '* Twitter',
+        IF(source LIKE '%ujima%', '* Ujima Project',
+        IF(source LIKE '%various%' OR source LIKE '%multiple%', '* Various',
+        IF(source LIKE '%article%' OR source LIKE '%gazette%' OR source LIKE '%recorder%' OR source LIKE '%news%', '* News',
+        IF(1, '* Other', LEFT($source, LOCATE(' ', CONCAT($source, ' ')) - 1))
+        )))))))),
+        IF((SELECT SUM(1) FROM users h WHERE h.helper=u.helper) > 4, helperName, '* Invited')
+      ) AS origin,
+      SUM(IF(:IS_OK, 1, 0)) AS member,
+      SUM(IF(:IS_OK OR uid IS NULL, 0, 1)) AS stuck,
+      SUM(IF(uid IS NULL, 1, 0)) AS canceled,
+      SUM(IFNULL(r.amount, 0) * IF(r.period='Y', 1, IF(r.period='Q', 4, IF(r.period='M', 12, IF(r.period='W', 52, 0)))))
+        / SUM(IF(:IS_OK OR data LIKE '%"donate";b:1%', 1, 0)) AS avgYearlyGift$,
+      SUM(IF(:IS_ROUNDUP, 1, 0))
+        / SUM(IF(:IS_OK OR data LIKE '%"prefs";b:1%', 1, 0)) AS avgRoundup,
+      SUM((SELECT SUM(1) FROM r_invites i WHERE i.inviter=u.uid))
+        / SUM(IF(:IS_OK, 1, 0)) AS invited
+    FROM (
+      SELECT uid,helper,source,flags,data,created FROM users
+      UNION SELECT NULL AS uid, NULL AS helper, source, 0 aS flags, '' AS data, created FROM signup s0 
+        WHERE (SELECT 1 FROM users u0 WHERE u0.fullName=s0.fullName) IS NULL
+    ) u
+    LEFT JOIN r_recurs r ON r.payer=u.uid AND r.payee=:CGID AND r.ended=0
+    LEFT JOIN (SELECT uid AS helper,fullName AS helperName FROM users) h USING(helper)
+    GROUP BY origin
+    ORDER BY origin
+X
+  . '~',
   
 ];
 

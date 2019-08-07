@@ -65,10 +65,12 @@ function rcredits_exception_handler($e) {
   
   list ($msg, $line0, $file0, $trace) = array($e->getMessage(), $e->getLine(), $e->getFile(), $e->getTrace());
   $file0 = basename($file0);
-  $trace_msg = '';
-  for ($i = 0; $i < 11; $i++) {
+  $traceMsg = [];
+
+  foreach ($trace as $one) {
+    if (count($traceMsg) > 10) break; // don't overflow memory
     $line = $file = '';
-    @extract($trace[$i]); // (file, line, function, args) OR just (function, args)
+    @extract($one); // (file, line, function, args) OR just (function, args)
     $line = @$line ?: '';
     $file = basename(@$file);
     $function = basename(@$function);
@@ -77,11 +79,10 @@ function rcredits_exception_handler($e) {
     $args = preg_replace('/$\s*\)$\s$/sm', '', $args);
     $args = '    ' . str_replace("\n", "<br>\n    ", $args);
     $args = str_replace('  ', ' &nbsp;', $args);
-    $trace_msg .= "<br>\n- $line in $file, calling $function() with:<br>\n$args";
+    $traceMsg[] = "- $line in $file, calling $function() with:<br>\n$args";
   }
-///    $trace = str_replace('<!--', '<! --', pr($trace));
-//    $trace_msg .= "<!--$trace-->"; // source will contain the whole trace
-  $msg = '<b>Exception:</b>' . R_SYS_ERR. "<br>\n($msg)<br>\n- $line0 ($file0)" . $trace_msg;
+
+  $msg = '<b>Exception:</b>' . R_SYS_ERR. "<br>\n($msg)<br>\n- $line0 ($file0)" . join("<br>\n", $traceMsg);
   if (isPRODUCTION) {
     $message = str_replace('&nbsp;', '', str_replace('<br>', '', $msg));
     mail(R_ADMIN_EMAIL, t('%PROJECT FATAL ERROR'), $message);

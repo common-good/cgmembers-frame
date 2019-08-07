@@ -33,7 +33,7 @@ use CG\Db as db;
 function rdo($code, $args = '') {
 /**/	flog(pr(compact(ray('code args'))));
   global $channel;
-  if (isDEV) foreach (['error', 'status'] as $k) @unlink(f('t.dosayFilename', $k)); // clear tests (no way to see if testing)
+  if (test()) foreach (['error', 'status'] as $k) u\deleteFile(f('t.dosayFilename', $k));
   if (strpos($code, ' ')) return doSay(plain($code), 'err');
   if ($i = strpos($code, '~') and $i < 15) { // mailChimp-type action
     @list ($op, $qid, $ecode, $mo, $v) = explode('~', $code . '~~~~~~');

@@ -59,7 +59,7 @@ function just($these, $info, $ordered = FALSE) {
 }
 
 function pr($s) {
-  echo "\n$s\n";
+  echo "$s\n";
   file_put_contents(__DIR__ . '/migrate.log', print_r($s, 1) . "\n", FILE_APPEND);
 }
 

@@ -142,8 +142,8 @@ function formCoupons_submit($form, &$sta) {
 
   $args = u\urlify(http_build_query($ray = @compact(ray('type amount minimum ulimit count on start end automatic'))));
 	r\tellCo(t('New Coupons!'), $ray);
-  if (u\test()) $args = u\deurlify($args);
+  if (test()) $args = u\deurlify($args);
 	$url = "/community/coupons/print/$args";
   w\say(t('Your %thing was created successfully.', 'thing', $gift ? t('gift certificate') : t('discount')));
-  return u\test() ? w\go($url) : w\go2('/community/coupons/list', $url);
+  return test() ? w\go($url) : w\go2('/community/coupons/list', $url);
 }

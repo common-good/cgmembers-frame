@@ -56,3 +56,27 @@ Scenario: A company looks at a customer statement
   | %mdY-1d | tx #20 |          | -100.00 | 1,910.00 | pool CJ         |
   And with:
   || Total due: $1,910.00 |
+
+Scenario: A statement goes onto multiple pages
+  Given these "txs":
+  | xid | created   | amount | from | to   | purpose  |*
+  |  21 | %today-1d |    100 | .ZZA | .ZZC | This is a very long statement of the purpose of the transaction. Once upon a time a long long time ago in a faraway land there lived a young peasant named Abe One. Abe bought something from the Corner Pub. |
+  |  22 | %today-1d |    100 | .ZZA | .ZZC | This is a very long statement of the purpose of the transaction. Once upon a time a long long time ago in a faraway land there lived a young peasant named Abe One. Abe bought something from the Corner Pub. |
+  |  23 | %today-1d |    100 | .ZZA | .ZZC | This is a very long statement of the purpose of the transaction. Once upon a time a long long time ago in a faraway land there lived a young peasant named Abe One. Abe bought something from the Corner Pub. |
+  |  24 | %today-1d |    100 | .ZZA | .ZZC | This is a very long statement of the purpose of the transaction. Once upon a time a long long time ago in a faraway land there lived a young peasant named Abe One. Abe bought something from the Corner Pub. |
+  |  25 | %today-1d |    100 | .ZZA | .ZZC | This is a very long statement of the purpose of the transaction. Once upon a time a long long time ago in a faraway land there lived a young peasant named Abe One. Abe bought something from the Corner Pub. |
+  |  26 | %today-1d |    100 | .ZZA | .ZZC | This is a very long statement of the purpose of the transaction. Once upon a time a long long time ago in a faraway land there lived a young peasant named Abe One. Abe bought something from the Corner Pub. |
+  |  27 | %today-1d |    100 | .ZZA | .ZZC | This is a very long statement of the purpose of the transaction. Once upon a time a long long time ago in a faraway land there lived a young peasant named Abe One. Abe bought something from the Corner Pub. |
+  |  28 | %today-1d |    100 | .ZZA | .ZZC | This is a very long statement of the purpose of the transaction. Once upon a time a long long time ago in a faraway land there lived a young peasant named Abe One. Abe bought something from the Corner Pub. |
+  |  29 | %today-1d |    100 | .ZZA | .ZZC | This is a very long statement of the purpose of the transaction. Once upon a time a long long time ago in a faraway land there lived a young peasant named Abe One. Abe bought something from the Corner Pub. |
+  |  30 | %today-1d |    100 | .ZZA | .ZZC | This is a very long statement of the purpose of the transaction. Once upon a time a long long time ago in a faraway land there lived a young peasant named Abe One. Abe bought something from the Corner Pub. |
+  |  31 | %today-1d |    100 | .ZZA | .ZZC | This is a very long statement of the purpose of the transaction. Once upon a time a long long time ago in a faraway land there lived a young peasant named Abe One. Abe bought something from the Corner Pub. |
+  |  32 | %today-1d |    100 | .ZZA | .ZZC | This is a very long statement of the purpose of the transaction. Once upon a time a long long time ago in a faraway land there lived a young peasant named Abe One. Abe bought something from the Corner Pub. |
+  |  33 | %today-1d |    100 | .ZZA | .ZZC | This is a very long statement of the purpose of the transaction. Once upon a time a long long time ago in a faraway land there lived a young peasant named Abe One. Abe bought something from the Corner Pub. |
+  |  34 | %today-1d |    100 | .ZZA | .ZZC | This is a very long statement of the purpose of the transaction. Once upon a time a long long time ago in a faraway land there lived a young peasant named Abe One. Abe bought something from the Corner Pub. |
+  |  35 | %today-1d |    100 | .ZZA | .ZZC | This is a very long statement of the purpose of the transaction. Once upon a time a long long time ago in a faraway land there lived a young peasant named Abe One. Abe bought something from the Corner Pub. |
+  |  36 | %today-1d |    100 | .ZZA | .ZZC | This is a very long statement of the purpose of the transaction. Once upon a time a long long time ago in a faraway land there lived a young peasant named Abe One. Abe bought something from the Corner Pub. |
+  |  37 | %today-1d |    100 | .ZZA | .ZZC | This is a very long statement of the purpose of the transaction. Once upon a time a long long time ago in a faraway land there lived a young peasant named Abe One. Abe bought something from the Corner Pub. |
+  |  38 | %today-1d |    100 | .ZZA | .ZZC | This is a very long statement of the purpose of the transaction. Once upon a time a long long time ago in a faraway land there lived a young peasant named Abe One. Abe bought something from the Corner Pub. |
+  |  39 | %today-1d |    100 | .ZZA | .ZZC | This is a very long statement of the purpose of the transaction. Once upon a time a long long time ago in a faraway land there lived a young peasant named Abe One. Abe bought something from the Corner Pub. |
+  |  40 | %today-1d |    100 | .ZZA | .ZZC | This is a very long statement of the purpose of the transaction. Once upon a time a long long time ago in a faraway land there lived a young peasant named Abe One. Abe bought something from the Corner Pub. |

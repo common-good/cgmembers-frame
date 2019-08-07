@@ -132,7 +132,7 @@ function formInvest_submit($form, &$sta) {
   $buy = (op($sta) == 'buy');
   $request = round($request + ($buy ? $amount : -$amount), 2);
 	if (!$buy) $requestedOut = now();
-  if (u\test() and !@$stakeid) return say('no stakeid -- invest module may be disabled', 'err'); // keep tests from dying
+  if (test() and !@$stakeid) return say('no stakeid -- invest module may be disabled', 'err'); // keep tests from dying
   db\update('r_stakes', @compact(ray('stakeid request requestedOut')), 'stakeid');
   
   if ($buy and $request > 0) {

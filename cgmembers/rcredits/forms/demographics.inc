@@ -13,7 +13,7 @@ function formDemographics($form, &$sta) {
   $statStart = strtotime('10/23/2014'); // earliest 
   $title = t('Customer Demographics');
   
-  $uids = db\col('DISTINCT uid1', 'txs', 'uid2=:myid', compact('myid'));
+  $uids = db\col('DISTINCT uid1', 'txs_prime', 'uid2=:myid', compact('myid'));
   $count = count($uids);
   if ($count < AGGREGATE_MIN) return w\go('/company-reports', t('There are not enough customers (%count) to show demographics (minimum %AGGREGATE_MIN).', compact('count')));
   
@@ -28,9 +28,10 @@ function formDemographics($form, &$sta) {
   
   $tnm = <<< X
     (SELECT uCust.city, COUNT(DISTINCT uCust.uid) count
-     FROM txs t JOIN users uCust ON uCust.uid=t.uid1
+     FROM txs_prime t JOIN users uCust ON uCust.uid=t.uid1
+     WHERE t.uid2=:myid
      GROUP BY uCust.state, uCust.city
-     ORDER BY count DESC LIMIT 10
+     ORDER BY count DESC, uCust.state, uCust.city LIMIT 10
     ) x
 X;
 // (used to limit this to individual customers, not businesses, with: WHERE NOT uCust.:IS_CO
@@ -50,18 +51,17 @@ X;
 */
 
   // uCo is another company, tToUs is payments to this company, tToOther is payments to uCo by this company's customers (uCust)
-  $tnm = <<< X
-    (SELECT DISTINCT uCo.fullName AS company, COUNT(DISTINCT tToOther.uid1) AS count
+  $sql = <<< X
+    SELECT DISTINCT uCo.fullName AS company, COUNT(DISTINCT tToOther.uid1) AS count
      FROM txs_prime tToUs LEFT JOIN txs_prime tToOther ON tToOther.uid1=tToUs.uid1 AND tToOther.uid2 NOT IN (:myid,:CGID)
      LEFT JOIN users uCust ON uCust.uid=tToUs.uid1
      LEFT JOIN users uCo ON uCo.uid=tToOther.uid2
      WHERE tToUs.uid2=:myid AND uCo.:IS_CO AND NOT uCust.:IS_CO
      GROUP BY tToOther.uid2
      ORDER BY count DESC, company ASC LIMIT 10
-    ) x
 X;
   
-  $pays = db\rows('company, count', $tnm, 1, compact('myid'));
+  $pays = db\rows('company, count', "($sql) x", 1, compact('myid'));
   foreach ($pays as $i => $one) $pays[$i] = array_values((array) $one);
 
   // calculate medians and avgs

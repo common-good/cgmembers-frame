@@ -220,25 +220,6 @@ function formSeeChanges($form, &$sta, $qid = '') {
 function decryChange($type, $v) {return ($type == 'V' and !r\allKnowing()) ? t('(secret)') : u\decry($type, $v);}
 
 /**
- * Log back in to admin automatically (called after testing, in case session got destroyed).
- */
-function formTestRecovery($form, &$sta, $doSay = FALSE) {
-  if (!isDEV) return;
-  //$uid = \user_authenticate('admin', DEV_ADMIN_PASS);
-  $mya = r\acct(1);
-  global $user; $user = $mya->account('uid pass timezone'); // timezone keeps Drupal happy in bootstrap.inc
-  \drupal_session_regenerate();
-  w\setAcct($mya->id);
-  if (file_exists(T_MSG_FILE)) {
-    $msgs = @unserialize(@file_get_contents(T_MSG_FILE));
-    unlink(T_MSG_FILE);
-    \drupal_get_messages(); // throw out any existing messages
-    $_SESSION['messages'] = $msgs;
-  }
-  return w\go('sadmin');
-}
-
-/**
  * Create a new community or region.
  */
 function formMakeCtty($form, &$sta) {
@@ -729,7 +710,7 @@ EOF;
   $pdf->Cell(($pdf->pageW - $x) - $colW, 0, t('TOTAL'), '', 1);
 
   $date = strftime('%Y%m%d', $date);
-  if (u\test()) $pdf->Close(); else 
+  if (test()) $pdf->Close(); else 
     //  $pdf->Output(PROJECT . "-deposit-$way-$date.pdf", 'I'); //Close and output
     $pdf->Output(PROJECT . "-deposit-$date.pdf", 'I'); //Close and output
 }
@@ -742,7 +723,7 @@ function achBatch($args) {
   extract(just('way date mark', $args));
   //  achify("deposit=$date");
   w\achify("deposit=$date AND amount<=0 AND created<=:NOW"); // temporarily only money going OUT or verifying bank account
-  if (u\test()) return;
+  if (test()) return;
 }
 /*
   extract(just('way date mark', $args));
@@ -768,7 +749,7 @@ function achBatch($args) {
   if (!$deposit and $mark) db\update('r_usd', ray('deposit txid', today(), $txid), 'txid');
   }
   
-  if (u\test()) return;
+  if (test()) return;
   exit();
   }
 */
@@ -809,7 +790,7 @@ function printChecks($args) {
     $count++;
   }
   $date = strftime('%Y-%m-%d', $date);
-  if (u\test()) $ck->Close(); else $ck->Output(PROJECT . "-deposit-checks-$way-$date.pdf", 'I'); //Close and output 
+  if (test()) $ck->Close(); else $ck->Output(PROJECT . "-deposit-checks-$way-$date.pdf", 'I'); //Close and output 
   //  say($count . t(' checks printed'));
 }
 
@@ -900,7 +881,7 @@ function memberId($id, $agent = '', $retroactive = FALSE) {
     $pdf->Output(strtolower("$qid.cgcard.pd"), 'D'); // Close and output PDF document ('I')
   } else */
   if ($mya and $mya->superAdmin) $a->setBit(B_CARDED);
-  if (u\test()) $pdf->Close(); else $pdf->Output(strtolower("$qid.cgcard.pd"), 'I'); // Close and output PDF document ('I')
+  if (test()) $pdf->Close(); else $pdf->Output(strtolower("$qid.cgcard.pd"), 'I'); // Close and output PDF document ('I')
 //  if (now() < strtotime('6/20/2017') and $next = nextMember($id)) w\go("print-rcard/$next");
 }
 
@@ -927,12 +908,16 @@ function formSMS_submit($form, $sta) {
 /**
  * Run acceptance tests.
  */
-function test($arg = '') {
+function tests($arg = '') {
+  if (!isDEV) return;
   \drupal_get_messages(); // clear messages
+  db\q('TRUNCATE test'); // clear in advance, rather than after, so we can inspect results when tests fail
+  
   $modules = u\prefixValues('rcredits/', ray('admin rvote rweb rcron rsmart'));
   jsx('test');
+  test(TRUE);
+  
   include_once DRUPAL_ROOT . '/vendor/gherkin/test.php';
-  file_put_contents(T_MSG_FILE, serialize(\drupal_get_messages()));
   //  $_SESSION = [];
   if (ini_get("session.use_cookies")) { // from PHP's session_destroy page
     $params = session_get_cookie_params();
@@ -941,9 +926,32 @@ function test($arg = '') {
               $params["secure"], $params["httponly"]
               );
   }
-  if (session_id() and $_SESSION) session_destroy();
-  db\del('sessions', '(sid, ssid)', '1 = 1');  // Yeah, this is a little funky...
-  \drupal_goto('sadmin/recover'); // has to be a form available when logged out
+  if (session_id() and $_SESSION and session_status() == PHP_SESSION_ACTIVE) session_destroy();
+  db\q('TRUNCATE sessions');
+  \drupal_goto('sadmin/test-results'); // has to be a form available when logged out
+}
+
+/**
+ * Log back in to admin automatically (called after testing, in case session got destroyed).
+ */
+function formTestResults($form, &$sta) {
+  if (!isDEV) return;
+  
+  $mya = r\acct(1);
+  global $user; $user = $mya->account('uid pass timezone'); // timezone keeps Drupal happy in bootstrap.inc
+  \drupal_session_regenerate();
+  w\setAcct($mya->id);
+  test(FALSE);
+
+  $q = db\q('SELECT * FROM test WHERE type IN (:types) ORDER BY id', ['types' => ray('status error warning')]);
+  while ($row = $q->fetchAssoc()) {
+    extract($row);
+    $list[] = "<div class=\"$type messages\">$value</div>\n";
+  }
+  $list = item(join('', @$list ?: []));
+  \drupal_get_messages(); // throw out any existing messages
+
+  return cgForm(compact(ray('list')));
 }
 
 /**

@@ -115,7 +115,7 @@ function statement($period = '') {
     foreach ($entries as $entry) {
       if (in_array($entry['uid'], $uids)) continue;
       extract(just('xid created name description amount banking', $entry));
-      if ($xid < 124873 and $banking and !u\test()) $xid = db\get('txid', 'r_usd', compact('xid')) ?: $xid; // old checks
+      if ($xid < 124873 and $banking and !test()) $xid = db\get('txid', 'r_usd', compact('xid')) ?: $xid; // old checks
       $date = strftime('%b %d', $created); // reformat for single month
       if (strlen($description) > $purposeLenMax + 3) $description = substr($description, 0, $purposeLenMax) . '...';
       $amount = -$amount;  // since we're looking at it from the other party's view
