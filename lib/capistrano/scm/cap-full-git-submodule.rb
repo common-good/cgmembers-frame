@@ -19,9 +19,10 @@ class Capistrano::SCM::Git::FullSubmodules < Capistrano::Plugin
   def submodule_names 
     # x = ''
     # on :local do
-      x = %x|git submodule foreach --quiet 'echo "$displaypath"'|
+    # on Windows, inner delimiter on next line must be "
+      x = %x|git submodule foreach --quiet "echo $displaypath"|
     # end
-    names = x.split("\n")
+    names = x.gsub(/\r/, '').split("\n")
   end
   
   def submodule_mirror_exists?(name)
@@ -71,13 +72,13 @@ class Capistrano::SCM::Git::FullSubmodules < Capistrano::Plugin
   end
 
   def submodule_branch(name)
-    x = ''
+    # x = ''
     # on :local do
-      x = %x|git submodule foreach --quiet 'echo "$displaypath => $sha1"'|
+      x = %x|git submodule foreach --quiet "echo $displaypath~$sha1"|
     # end
-    nameBranches = x.split("\n")
+    nameBranches = x.gsub(/\r/, '').split("\n")
     for nameBranch in nameBranches do
-      (modName, branch) = nameBranch.split(' => ');
+      (modName, branch) = nameBranch.split('~');
       if (modName == name)
         return branch
       end

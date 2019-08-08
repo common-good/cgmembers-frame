@@ -156,7 +156,7 @@ X;
   }
 
   public function doSql($sql) {
-    pr("$sql\n");
+//    pr("$sql\n");
     $this->execute($sql);
   }
 }

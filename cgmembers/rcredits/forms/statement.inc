@@ -104,7 +104,7 @@ function statement($period = '') {
   $pdf->setFontSize($size);
   $pdf->barHead('DETAILS');
   $lastHead = 'Amount';
-  $fields = ray("Tx#/tid/15/C /space/1/ Date//17/ Name//55/ /space/1/ Purpose/description/90/ /space/1/ Amount//20/R");
+  $fields = ray("Tx#/xid/15/C /space/1/ Date//17/ Name//55/ /space/1/ Purpose/description/90/ /space/1/ Amount//20/R");
   $pdf->colHeads($fields);
   $pdf->setFontSize(.9 * $size);
   $none = strip_tags(R_NONE);
@@ -114,7 +114,8 @@ function statement($period = '') {
   foreach ($txs as $entries) {
     foreach ($entries as $entry) {
       if (in_array($entry['uid'], $uids)) continue;
-      extract(just('tid created name description amount', $entry));
+      extract(just('xid created name description amount banking', $entry));
+      if ($xid < 124873 and $banking and !test()) $xid = db\get('txid', 'r_usd', compact('xid')) ?: $xid; // old checks
       $date = strftime('%b %d', $created); // reformat for single month
       if (strlen($description) > $purposeLenMax + 3) $description = substr($description, 0, $purposeLenMax) . '...';
       $amount = -$amount;  // since we're looking at it from the other party's view

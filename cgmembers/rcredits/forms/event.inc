@@ -43,7 +43,7 @@ function formEvent($form, &$sta, $args='') {
     if ($vote or $grading) {
       $results = v\showResults($eid);
     } else {
-      if ($results = @file_get_contents(DRUPAL_ROOT . "/reports/$eid")) {
+      if ($results = u\getFile(DRUPAL_ROOT . "/reports/$eid")) {
         require_once DRUPAL_ROOT . '/vendor/htmlpurifier/library/HTMLPurifier.auto.php';
         $purifier = new HTMLPurifier();
         $results = $purifier->purify($results);    

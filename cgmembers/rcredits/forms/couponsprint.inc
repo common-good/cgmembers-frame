@@ -111,6 +111,6 @@ function couponsPrint($args = '') {
 
   if ($gift) $mya->update('giftCoupons', $mya->giftCoupons + $count);
 
-  if (!u\test())
+  if (!test())
   $pdf->output('cgCoupons.pdf', 'I'); //Close and output PDF document
 }

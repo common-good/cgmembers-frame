@@ -1,4 +1,7 @@
-/* CSS specific to rCredits members site */
+/* CSS specific to Common Good members site */
+
+.debug {margin-bottom:8px;}
+.debug pre {margin:0; background-color:#fde8ec;}
 
 @keyframes puff {
     from {opacity:0; font-size:0%;}
@@ -1118,6 +1121,11 @@ fieldset#dateRange #advanced {display:none;}
 #frm-relations .rel-link {width:auto;}
 #frm-relations .highlight input {background-image:url(../images/icons/buttons-highlight.png);}
 
+/* Test Results form */
+#frm-testresults {margin-top:-80px;}
+#frm-testresults #edit-list .control-label {width:20px; min-width:0;}
+#frm-testresults #edit-list .control-data {width:auto; max-width:100%;}
+
 /* typeahead */
 .twitter-typeahead {width:100%;}
 .tt-query {
@@ -1178,8 +1186,8 @@ fieldset#dateRange #advanced {display:none;}
 .test-doublesize {font-size:200%;}
 .test-success {background-color:lightgreen;}
 .test-fail {background-color:yellow;}
-.test-report-ok {color:lightgreen; font-size:250%;}
-.test-report-no {color:red; font-size:250%;}
+.test-report-ok {color:lightgreen; font-size:150%;}
+.test-report-no {color:red; font-size:150%;}
 .test-next {font-size:20px;}
 .test-pass {background-color:darkkhaki;}
 .test-divlink {font-size:120%; margin:0 0 0 0;}

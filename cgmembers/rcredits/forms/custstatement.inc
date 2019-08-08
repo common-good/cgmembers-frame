@@ -82,16 +82,22 @@ function custStatement($args = []) {
       if (in($fldName, $numFields) and isset($$fldName)) {
         $$fldName = ($$fldName == '0' and $fldName != 'balance') ? '' : number_format($$fldName ?: 0, 2);
       }
-      if ($fldName == 'purpose') {
-        $pdf->MultiCell($width, 0, $purpose, 0, 'L', '', 1);
-        $nextY = $pdf->GetY();
+      if ($fldName == 'purpose') { // handle this field separately, last (see below)
+        $purposeX = $pdf->GetX();
+        $purposeWidth = $width;
       } else {
-        if ($i == 0) $y = $pdf->GetY(); else $pdf->SetXY($x, $y, FALSE);
+        $pdf->setX($x);
         $pdf->Cell($width, 0, nn($$fldName), '', 0, $align, '', '', 1);
       }
       $x += $width;
     }
-    $pdf->SetY($nextY);
+
+    // do the (potentially multiline) purpose last, so we don't mess up the pagination
+    $pdf->SetTextColor();
+    $pdf->SetX($purposeX);
+    $pdf->MultiCell($purposeWidth, 0, $purpose, 0, 'L', '', 1);
+    
+//    $pdf->SetY($nextY);
 
     if ($row == $row0) $pdf->newLine(); // space after opening balance
   }
@@ -119,7 +125,7 @@ function getCustTxs($aUids, $bUids, $starting, $ending) {
   // Note that we show the company's tx description, not the customer's  
   
   $sql = <<< X
-    SELECT DISTINCT CONCAT('tx #', IF(uid1 IN (:aUids), tid2, tid1)) AS tid,
+    SELECT DISTINCT CONCAT('tx #', xid) AS tid,
       IF(uid1 IN (:aUids), -amt, amt) AS paid,
       '' AS invoiced, created, 
       (d.status=:DS_OPEN) AS disputed, IF(uid1 IN (:aUids), for1, for2) AS purpose

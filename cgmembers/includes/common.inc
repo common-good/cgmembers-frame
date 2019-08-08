@@ -1,4 +1,5 @@
 <?php
+use CG\DB as db;
 
 /**
  * @file
@@ -3714,7 +3715,7 @@ function drupal_load_stylesheet($file, $optimize = NULL, $reset_basepath = TRUE)
   // stylesheets in their .info file that don't exist in the theme's path,
   // but are merely there to disable certain module CSS files.
   $content = '';
-  if ($contents = @file_get_contents($file)) {
+  if ($contents = u\getFile($file)) {
     // Return the processed stylesheet.
     $content = drupal_load_stylesheet_content($contents, $_optimize);
   }
@@ -7563,11 +7564,19 @@ function _drupal_flush_css_js() {
  *   as var_export() will generate an error.
  */
 /**/ function debug($data, $label = NULL, $print_r = FALSE) {
-  global $debugCounter;
-  $debugCounter = nn($debugCounter, 0) + 1;
   $string = check_plain($print_r ? print_r($data, TRUE) : var_export($data, TRUE)); // Print $data contents to string.
-  $string = ($label ?: $debugCounter) . '<pre>' . $string . '</pre>'; // "pre" to increase readability.
-  trigger_error($string);
+  $string = "$label<pre>$string</pre>"; // "pre" to increase readability.
+  extract(just('function class object', debug_backtrace()[1]));
+  extract(just('line file', debug_backtrace()[0]));
+  $file = basename($file);
+  $map = ray('r\\Web r\Util r\DB r\Testing r\Backend r\Admin', 'w', 'u', 'db', 't', 'be', 'a');
+  foreach (ray('object class function') as $k) {
+    $$k = str_replace('CG', 'r', pr(nn($$k)));
+    $$k = strtr($$k, $map);
+  }
+  if ($class) $function = "$class::$function";
+  $string = "<div class=\"debug\">{$string}&nbsp; at line $line in $function ($file) $object</div>\n";
+  drupal_set_message($string, 'warning');
 }
 
 /**

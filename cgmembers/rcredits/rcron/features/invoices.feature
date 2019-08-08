@@ -32,10 +32,10 @@ Setup:
   
   When cron runs "invoices"
   Then transactions: 
-  | xid | created | amount | from | to   | purpose              | taking | type  |*
-  |   2 | %today  |    100 | .ZZA | .ZZC | one (%PROJECT inv#1) |        | prime |
-  |   3 | %today  |    200 | .ZZA | .ZZC | two (%PROJECT inv#2) |        | prime |
-  |   4 | %today  |      0 |  256 | .ZZA | from bank            |      1 | bank  |
+  | xid | created | amount | from    | to   | purpose              | taking | type  |*
+  |   2 | %today  |    100 | .ZZA    | .ZZC | one (%PROJECT inv#1) |        | prime |
+  |   3 | %today  |    200 | .ZZA    | .ZZC | two (%PROJECT inv#2) |        | prime |
+  |   4 | %today  |      0 | bank-in | .ZZA | from bank            |      1 | bank  |
 	Then count "txs" is 4
 	And count "usd" is 1
 	And count "invoices" is 4
@@ -51,7 +51,7 @@ Setup:
 
   And we notice "banked|bank tx number" to member ".ZZA" with subs:
   | action | tofrom | amount | checkNum | why               |*
-  | draw   | from   | $700   |        1 | to pay invoice #2 |
+  | draw   | from   | $700   |        4 | to pay invoice #2 |
   And we notice "short invoice|when funded|how to fund" to member ".ZZB" with subs:
   | short | payeeName | nvid |*
   | $50   | Our Pub   |    3 |
@@ -90,9 +90,12 @@ Scenario: Second invoice gets funded too for a non-refilling account
   Given members have:
   | uid  | flags               |*
   | .ZZA | ok,confirmed,bankOk |
+  And these "txs":
+  | xid | created   | amount | from    | to   | purpose   | taking |*
+  |   2 | %today-1d |      0 | bank-in | .ZZA | from bank |      1 |
   And these "usd":
-  | txid | payee | amount | created   | completed | deposit |*
-  |    1 | .ZZA  |    100 | %today-1d |         0 |       0 |
+  | txid | payee | amount | created   | completed | deposit | xid |*
+  |    1 | .ZZA  |    100 | %today-1d |         0 |       0 |   2 |
   And invoices:
   | nvid | created   | status       | amount | from | to   | for   | flags   |*
   |    1 | %today-1d | %TX_APPROVED |    100 | .ZZA | .ZZC | one   | funding |
@@ -108,7 +111,7 @@ Scenario: Second invoice gets funded too for a non-refilling account
   |    2 | %today    | %TX_APPROVED |    200 | .ZZA | .ZZC | two   | funding |
   And we notice "banked|combined|bank tx number" to member ".ZZA" with subs:
   | action | tofrom | amount | previous | total | checkNum | why               |*
-  | draw   | from   | $200   |     $100 |  $300 |        1 | to pay invoice #2 |
+  | draw   | from   | $200   |     $100 |  $300 |        2 | to pay invoice #2 |
 
 Scenario: A languishing invoice gets funded again
   Given invoices:
@@ -130,3 +133,18 @@ Scenario: An invoice is approved from an account with a negative balance
 	Then these "usd":
   | txid | payee | amount | created | completed | deposit |*
   |    1 | .ZZA  |    900 | %today  |         0 |       0 |
+  
+Scenario: An invoice gets handled for an account that rounds up
+  Given members have:
+  | uid  | flags                       |*
+  | .ZZA | ok,confirmed,bankOk,roundup |
+  And invoices:
+  | nvid | created   | status       | amount | from | to   | for   |*
+  |    1 | %today    | %TX_APPROVED |  99.60 | .ZZA | .ZZC | one   |
+  When cron runs "invoices"
+  Then transactions: 
+  | xid | created | amount | from    | to   | purpose              | taking | type  |*
+  |   1 | %today  |    100 | bank-in | .ZZA | from bank            |      1 | bank  |
+	And usd transfers:
+  | txid | payee | amount | created | completed | deposit |*
+  |    1 | .ZZA  |    100 | %today  |    %today |       0 |  

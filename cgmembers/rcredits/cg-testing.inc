@@ -17,7 +17,7 @@ use CG\Web as w;
 global $base_path;
 define('BASE_PATH', $base_path);
 define('T_BALANCE_FLDS', 'uid balance floor savingsAdd saveWeekly minimum');
-define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty');
+define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor');
 define('SPECIAL_IDS', 'ctty crumb round cgf bank-in bank-out');
 // see R_DATE_FLDS in defs.inc
 
@@ -280,6 +280,7 @@ function doTxs($info, $thing) {
 //  $flags = 'taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding'; // These are flags that might appear
   
   extract(u\exactly($hdrFlds . ' ' . $testFlds, $info, FALSE));
+  if (!$reversesXid) $reversesXid = NULL;
   $for = $for ?: $purpose;
   if (strpos($for, ',')) $for = explode(',', $for); // specifying both
   if ($for) list ($payerFor, $payeeFor) = is_array($for) ? $for : [$for, $for];
@@ -304,10 +305,10 @@ function doTxs($info, $thing) {
 
   if ($testOnly) {
 //    return (verifyRecord('tx_hdrs', $hdr) and verifyRecord('tx_entries', $e1) and verifyRecord('tx_entries', $e2));
-    $e1 = $filter(ray('for1 uid1 agt1 tid1 relType1 rel1', $payerFor, $payer, $payerAgent, $payerTid, NULL, NULL));
-    $e2 = $filter(ray('for2 uid2 agt2 tid2 relType2 rel2', $payeeFor, $payee, $payeeAgent, $payeeTid, NULL, NULL));
+    $e1 = $filter(ray('for1 uid1 agt1 tid1', $payerFor, $payer, $payerAgent, $payerTid));
+    $e2 = $filter(ray('for2 uid2 agt2 tid2', $payeeFor, $payee, $payeeAgent, $payeeTid));
     u\preray(just('eid', $info), $hdr);
-    $ray = $hdr + $filter(ray('type amt', $type, $amount)) + $e1 + $e2;
+    $ray = $hdr + $filter(ray('type amt relType rel', $type, $amount, NULL, NULL)) + $e1 + $e2;
     return verifyRecord('txs', $ray);
   } else {
     $e1 = $filter(ray($entryFlds, $xid, $type, 0-$amount, $payer, $payerAgent, $payerFor, $payerTid, NULL, NULL));
@@ -890,7 +891,7 @@ function weShowWithSubs($page, $subs) {
   }
   
   if (strpos($page, '/statement')) {
-    $form = @file_get_contents(TEST_PDF_FLNM);
+    $form = u\getFile(TEST_PDF_FLNM);
   } else {
     $form = strtr(t\strip(r\Web\showForm($page, @$subs['arg1'], @$subs['arg2'])), $subs);
     t\output("<b>WANTED: </b>$form", 'screen');
@@ -1268,7 +1269,7 @@ function eq($a, $b, $offBy = .0001) {
  * Fake $_SERVER params for testing
  */
 function SERVER($key, $value = NULL) {
-  if (!u\test()) return $_SERVER[$key];
+  if (!test()) return $_SERVER[$key];
   global $T_SERVER;
   if (isset($value)) $_SERVER[$key] = $T_SERVER[$key] = $value; else return $T_SERVER[$key];
 }
@@ -1277,7 +1278,7 @@ function SERVER($key, $value = NULL) {
  * Fake $_POST params for testing
  */
 function POST($values = NULL) {
-  if (!u\test()) return $_POST;
+  if (!test()) return $_POST;
   global $T_POST;
   if (isset($values)) {
     t\fixData($values);
@@ -1301,7 +1302,7 @@ function color($msg, $color = 'normal') {
  */
 function output($msg, $color = 'error') {
   global $wholeModule;
-  if (u\test() and !@$wholeModule) \drupal_set_message(color($msg, $color));
+  if (test() and !@$wholeModule) \drupal_set_message(color($msg, $color));
   return $color == 'error' ? FALSE : TRUE;
 }
 
@@ -1331,7 +1332,7 @@ function clear($ch = 0) {
   global $sceneTest; 
   global $conf; $conf = [];
 
-  if (u\test() and !strpos($sceneTest->name, 'Statement')) {
+  if (test() and !strpos($sceneTest->name, 'Statement')) {
 /**/  echo "scene: $sceneTest->module / $sceneTest->feature / $sceneTest->name<br>\n"; // VERY helpful when test dies
   }
 
@@ -1421,6 +1422,42 @@ function badEq($type, $v1, $v2, $id) {
 }
 
 /**
+ * Did we say it or not?
+ */
+function weSayWithSubs($type, $index, $subs) {
+  global $testOnly;
+
+  $subs = @$subs[0] ?: array();
+  if (isset($subs['email'])) t\fixEmail($subs['email']);
+  $msg0 = t($index);
+  foreach ($subs as $key => $value) {
+    if ($value == '?') $wild = $subs[$key] = u\randomString(20, 'word'); // mark the wildcard spot
+    if (strpos($msg0, "%$key") === FALSE) return t\output("missing sub '$key' in message '$index'");
+  }
+  $wantMsg = trim(t($index, $subs));
+  $test = \sceneId();
+  $msgs = db\col('value', 'test', compact('type', 'test')); // don't look at things added by test.php or by other tests
+
+  $res = FALSE;
+  if (isset($wild)) {
+    $i = strpos($wantMsg, $wild);
+    $tailLen = strlen($wantMsg) - $i - strlen($wild);
+    foreach (@$msgs ?: [] as $actual) {
+      if (substr($actual, 0, $i) == substr($wantMsg, 0, $i) and substr($actual, -$tailLen) == substr($wantMsg, -$tailLen)) {$res = TRUE; break;}
+    }
+  } else {
+    $tmsg = strip_tags($wantMsg);
+    foreach (@$msgs ?: [] as $actual) {
+      $actual = strip_tags($actual);
+      $actual = strtr($actual, ["ACTUAL: \r\n"=>'', "Confirm\r\n"=>'', "\r\nOkay\r\n"=>'', "Cancel\r\n\r\n"=>'']);
+      if ($actual == $tmsg) {$res = TRUE; break;}
+    }
+  }
+  if (!$res) t\output("EXPECT: $wantMsg", 'output'); // this must come after array_search!
+  return $res;
+}
+
+/**
  * Say whether the most recent page included the given text or options.
  * @param array $content: array of assocs -- named values to check for
  *   The names (labels) will be sought once also, unless preceded by underscore (_).
@@ -1443,7 +1480,6 @@ function shownWith($content, $type = 'text', $mustBePresent = TRUE) {
 
   $xi = $i = 0;
   foreach ($ray as $one) {
-///    debug($one);
     if ($one === '' or substr($one, 0, 1) == '~') continue; // ignore ~labels
 //    if (in($one, '%')) $one = t\lastMinuteSubs(htmlspecialchars($one));
     $one = t($one); // translate constants in member
@@ -1523,7 +1559,7 @@ function hasLinkResults($thing, $info) {
     $arrContextOptions = [ "ssl" => [ 'verify_peer' => false, 'verify_peer_name' => false ] ];
     $s = file_get_contents(preg_replace('@' . preg_quote(BASE_URL, '@') . '@', LOCAL_URL, $matches[1]), false, stream_context_create($arrContextOptions));
   } else { $s = file_get_contents(preg_replace('@' . preg_quote(BASE_URL, '@') . '@', LOCAL_URL, $matches[1])); }
-  foreach (ray('error status') as $one) $$one = @file_get_contents(t\dosayFilename($one));
+  foreach (ray('error status') as $one) $$one = u\getFile(t\dosayFilename($one));
   $formOut['text'] = str_replace($was = '#header -->', "$was$error$status", $s);
   return t\shownWith($info, 'text', TRUE);
 }
@@ -1552,7 +1588,7 @@ function fixState($state, $country) {
 	return compact(ray('state country'));
 }
 
-function log($msg) {if (u\test()) u\log($msg, 'debug');}
+function log($msg) {if (test()) u\log($msg, 'debug');}
 function that($thing) {global $thatThing; return $thatThing[$thing];}
 function dosayFilename($type) {return DRUPAL_ROOT . R_PATH . "/dosay-$type.txt";}
 function goodsBit($s) {return $s == 'goods' ? "1" : ($s == 'cash' ? "0" : "ERROR");} // no 3rd why for rSmart

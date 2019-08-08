@@ -97,7 +97,7 @@ function pos($args = FALSE) {
   
   if (!@$op or !in($op, 'time identify photo charge test')) return posErr('bad op');
   
-  if (isDEV and $op == 'test') return test($args0);
+  if (isDEV and $op == 'test') return smartTest($args0);
   
   $mya = getAgent(@$agent ?: @$member, $agentErr);
 ///     print_r(compact(ray('mya agent member agentErr')));
@@ -130,7 +130,7 @@ function ok($args, $ok = "1") {
   $result = u\jsonEncode(compact('ok') + $args);
   if (@$args['op'] != 'time') u\loga('out', $args); // avoid filling the log with time requests
   //{t\output($args, 'output'); 
-  if (u\test()) return $result;
+  if (test()) return $result;
   header('Access-Control-Allow-Origin: *'); // allow access from web browsers
   exit($result);
 }
@@ -150,7 +150,7 @@ function posErr($message, $subs = [], $extra = []) {
 /**
  * Return information from a test function.
  */
-function test($args) {
+function smartTest($args) {
   global $testOnly;
 
   if ($err = missingArg($keys = 'function testOnly args', $args)) return posErr($err); 
@@ -231,7 +231,7 @@ function identify($args) {
     if (!$a = getMember(@$member, $code, $err, $version > 217)) return posErr($err, [], $companyInfo);
   } else $a = $mya; // get agent
 
-  if ($version > 217 and !u\test()) {
+  if ($version > 217 and !test()) {
     if (@$signin) {
       if (@$agent) {
         if ($a == $mya) return posErr('already scanned in', [], $companyInfo);
@@ -256,7 +256,7 @@ function identify($args) {
   if (@$signin) { //  identifying agent
 //    if ($a->proSe and (!$a->co or $a->coCan(CO_REQUIRE_CASHIER))) return posErr('scan in first');
     if ($code != $a->cardCode() and $code != $a->codeHash()) {
-      if (u\test() or $version >= 300) return posErr('bad agent', [], $companyInfo); // . substr(bin2hex($code), 0, 20) . ' <> ' . substr(bin2hex($a->codeHash()), 0, 20) . ' <> ' . substr($code, 0, 20)); // . "=$agent (cardCode) id=$a->id myid=$mya->id agentId=$a->agentId qid=$a->qid code=$code acode=" . $a->cardCode());
+      if (test() or $version >= 300) return posErr('bad agent', [], $companyInfo); // . substr(bin2hex($code), 0, 20) . ' <> ' . substr(bin2hex($a->codeHash()), 0, 20) . ' <> ' . substr($code, 0, 20)); // . "=$agent (cardCode) id=$a->id myid=$mya->id agentId=$a->agentId qid=$a->qid code=$code acode=" . $a->cardCode());
       r\tellAdmin('bad code in identify op: ' . $err, compact(ray('member code')));
     }
     if (!$a->can(B_SCAN)) return posErr('agent cannot scan', [], $companyInfo);
@@ -303,7 +303,7 @@ function photo($args) {
 // FAILS in background in version 217  if (!@$code) return posErr(missingArg('code', []));
 // FAILS in background in version 217    if (!$a = getMember($member, $code, $err)) return photoReturn($err);
   if (!@$code) r\tellAdmin('missing code in photo op', compact(ray('member code')));
-  if (!$a = getMember($member, $code, $err, u\test() or $version > 217)) return photoReturn($err);
+  if (!$a = getMember($member, $code, $err, test() or $version > 217)) return photoReturn($err);
 
 	$signingIn = (bool) strpos($member, '-'); // allow agents with no photo by faking a photo (>= 100 chars)
   return photoReturn($a->agentA->photo ?: ($signingIn ? file_get_contents(R_ROOT . '/images/idcard/no-photo.jpg') : ''));
@@ -317,7 +317,7 @@ function photoReturn($pic) {
   $message = strlen($pic) <= $max ? $pic : bin2hex(substr($pic, 0, $max)); // identifies pic in log w/out a big storage hit
   u\loga('out', compact('message'));
 
-  if (u\test()) {
+  if (test()) {
     $picNone = file_get_contents(R_DFT_PICTURE); // never a company photo
     if (u\starts(bin2hex(substr($picNone, 0, $max)), $message)) $message = 'no photo';
     f('t.output', $message); 
@@ -391,9 +391,9 @@ EOF;
   $hashOfTx = u\hash($wanted = "$mya->mainQid$amount$member$code$created");
   if ($version > 216) if ($proof != $hashOfTx) if (!$force or $a->badOldProof($proof, $wanted, $created)) {
     r\tellAdmin('bad proof', compact(ray('version proof hashOfTx agent amount member code created force')));
-    if (u\test() or $version > 218 ) {
-      if (u\test()) f('t.output', "Should be proof of $wanted");
-      $err = u\test() ? t('bad proof') : t('bad proof (wanted %hashOfTx as hash of %wanted', compact('hashOfTx', 'wanted'));
+    if (test() or $version > 218 ) {
+      if (test()) f('t.output', "Should be proof of $wanted");
+      $err = test() ? t('bad proof') : t('bad proof (wanted %hashOfTx as hash of %wanted', compact('hashOfTx', 'wanted'));
       return badTx($args, $name, $err);
     }
   }

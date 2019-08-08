@@ -37,7 +37,7 @@ function formGraphs($form, &$sta, $args) {
     $subtext = t('This page helps us keep an eye on our economy so we can manage it effectively together. Choose a chart. <%b>Hover</b> over a graph for the numbers.', '_b', 'class="loud"');
     
     $charts = item(w\chartFrame('success', TRUE, $ctty));
-    if (u\test()) $charts = item(w\showAllCharts($ctty));
+    if (test()) $charts = item(w\showAllCharts($ctty));
     
     return cgform(compact(ray('title subtext charts')));
   }

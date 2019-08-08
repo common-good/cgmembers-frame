@@ -77,7 +77,7 @@ function invoiceList($toMe, $starting, $ending, $states, $url, $download, $toFro
   if (strpos($states, '2') === FALSE) $where .= ' AND i.status<>:TX_DENIED';
   */
   $sql = <<<EOF
-    SELECT nvid, i.created, u.fullName AS other, i.purpose, i.amount, i.status AS status0, i.data, e.acctTid AS tid
+    SELECT nvid, i.created, u.fullName AS other, i.purpose, i.amount, i.status AS status0, i.data, t.xid
     FROM r_invoices i 
     LEFT JOIN users u ON u.uid=i.$yu
     LEFT JOIN tx_hdrs t ON t.xid=i.status
@@ -93,13 +93,13 @@ EOF;
   while (count($rows) < $maxRows and $tx = $q->fetchAssoc()) {
     extract($tx);
     if (!@$download) $amount = number_format($amount, 2);
-    $row = array($nvid, u\fmtDate($created), $other, $purpose, $amount);
+    $row = array($nvid, strftime(@$download ? '%Y-%m-%d' : '%m/%d/%Y', $created), $other, $purpose, $amount);
     
     $do = @"$url&nvid=$nvid&do";
 
     if ($status0 > 1) {
 //      $button1 = $button2 = $button3 = '';
-      $status = t('paid') . " (Tx#$tid)";
+      $status = t('paid') . " (Tx#$xid)";
     } else {
       $statuses = ray(TX_STATUSES);
       $data = unserialize($data);
@@ -119,7 +119,7 @@ EOF;
 
   if (@$download) {
     foreach ($rows as $row) u\csv($row);
-    if (u\test()) return; else exit();
+    if (test()) return; else exit();
   }
 
   // prepare screen display

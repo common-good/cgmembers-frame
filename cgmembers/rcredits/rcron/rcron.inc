@@ -400,7 +400,6 @@ function lessOften() {
  *   (it has been at least a whole period since the last run OR
  *   (it has been at least half a period and we're at no later a point than last time)
  * @param string $period: the period (hour, day, week, month, year)
- * @param string $code: the strftime code for the smaller period to match or exceed
  * @param string $chosen: the chosen value to match or exceed (if omitted, assume it's the current period)
  */
 function often($period, $chosen = '') {
@@ -435,9 +434,9 @@ function everyWeek() {
  */
 function everyMonth() {
   $server = r\serverUid();
-  $bene = u\test() ? CGID : db\get('uid', 'users', "name='bene' AND uid<0");
+  $bene = test() ? CGID : db\get('uid', 'users', "name='bene' AND uid<0");
   $start = u\monthDay1($end = u\monthDay1() - 1); // mark start and end of preceding month
-  if (u\test()) $start = strtotime('-30 days', $end = today() - 1) + 1; // test: the past 30 days
+  if (test()) $start = strtotime('-30 days', $end = today() - 1) + 1; // test: the past 30 days
   
   queueEach('whatsup', "SELECT DISTINCT uid, u.:IS_CO as co, MAX(t.created) AS lastTx FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid) WHERE uid>:CANONIC_ACCTS AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $start");
   /* queueEach('inflationAdjust', "SELECT uid, $start AS start, $end AS end FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS");   */
@@ -714,7 +713,7 @@ function trust() {
     SET u.trust=u.trust+:weight*b.bale WHERE NOT :IS_CO
 X;
   for ($i = 0, $weight = 1; $i < 32; $i++, $weight /= 2) db\q($sql, compact('weight'));
-  if (u\test()) db\q('UPDATE users SET trust=ROUND(trust, 2)'); // make the results easily testable
+  if (test()) db\q('UPDATE users SET trust=ROUND(trust, 2)'); // make the results easily testable
   queueNext();
 }
 
@@ -747,7 +746,7 @@ function acctRiskFinish() {
   global $testThresholdPct;
   $newThresholds = getv('newThresholds');
   $pct = K_THRESHOLD_PCT;
-  if (u\test()) $pct = $testThresholdPct;
+  if (test()) $pct = $testThresholdPct;
   $index = ceil(count($newThresholds[key($newThresholds)]) * $pct / 100); // pointer to threshold value
   foreach ($newThresholds as $k => $ray) {
     rsort($ray);
@@ -864,7 +863,7 @@ function giveNow($period, $lastPmt, $firstPmt, $now = NULL) {
 function getFunds() {
 //  $excess = 'LEAST(usd, :R_EXCESS)';
   $weekday = strftime('%w'); // 0-6 Sun-Sat (use %w because %u fails on Windows and maybe linux)
-  if (u\test() or in($weekday, [2, 3, 4, 5])) { // no completions on Saturday, Sunday, or Monday
+  if (test() or in($weekday, [2, 3, 4, 5])) { // no completions on Saturday, Sunday, or Monday
     $sql = 'SELECT DISTINCT txid,channel FROM r_usd WHERE amount>0 AND NOT completed AND :NOW-created>=:HOUR_SECS AND (amount<=:R_USDTX_QUICK OR :NOW-created>=:R_USDTX_DAYS*:DAY_SECS)'; // this allows us to wait arbitrarily long to deposit chks
 
     queueEach('completeUsdTx', $sql);
@@ -941,6 +940,7 @@ function invoice1($item) {
 		if (!$paid or $a->balance < 0) {
       if ($funding) $funding = ($created >= now() - R_USDTX_DAYS * DAY_SECS or db\exists('r_usd', 'amount>=:amount AND payee=:payer', compact(ray('amount payer')))); // fund it again, if necessary
       if (!$funding) {
+        if ($a->roundup) $amount = ceil($amount); // take enough for the roundup
         $DBTX = db_transaction();
         if ($a->getFunds($amount, t('for invoice', compact('nvid')))) {
           db\setFlag('r_invoices', $nvid, B_FUNDING, TRUE);

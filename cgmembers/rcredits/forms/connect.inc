@@ -68,7 +68,8 @@ function formConnect_validate($form, &$sta) {
   extract(just('connect routingNumber bankAccount bankAccount2 bankAccountType refills target achMin saveWeekly', $sta['input']));
 
   foreach (ray('target:,achMin:,saveWeekly:>=0') as $k => $v) { // and savingsAdd someday 
-    if (u\test() and !isset($sta['input'][$k])) $sta['input'][$k] = 0; // empty makes tests fail?
+//    if (test() and !isset($sta['input'][$k])) $sta['input'][$k] = 0; // empty makes tests fail?
+    if (empty($sta['input'][$k])) $sta['input'][$k] = 0; // empty makes tests fail?
     if ($err = amtErr($k, $sta, $v) and @$refills) return sayFieldErr($err, $k); // fix the data even if invisible and irrelevant
     $$k = $sta['input'][$k];
   } // must be before return because params are always present and must have "$" removed by amtErr()
@@ -121,13 +122,13 @@ function formConnect_submit($form, &$sta) {
 
   list ($hasBank, $refill) = [$connect, $connect and $refills];
   list ($cashoutW, $cashoutM) = [$connect and @$cashout == 1, $connect and @$cashout == 2];
-  $fields = ray('hasBank last4bank refill cashoutW cashoutM minimum achMin saveWeekly');
+  $fields = 'hasBank refill cashoutW cashoutM minimum achMin saveWeekly';
   if ($bankAccount != 'no change') { // bank account changed. update and reverify.
-    $fields[] = 'bankAccount'; // avoid overwriting v-encrypted value
+    $fields .= ' bankAccount last4bank'; // avoid overwriting v-encrypted value
     $mya->setBit(B_BANKOK, FALSE);
     if (!$connect) db\del('r_usd', 'id', 'deposit=0 AND payee=:id', ray('id', $mya->id)); // no transfers for a deleted bank connection
   }
-  $mya->update(compact($fields));
+  $mya->update(compact(ray($fields)));
   
   if (@$autoboxes and $orig = unserialize($autoboxes)) foreach ($orig as $uid => $wasSet) {
     $setNow = isset($autopay[$uid]);

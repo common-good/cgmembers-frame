@@ -78,7 +78,7 @@ function rweb_menu($submenu = '') {
 
     'get' => ['norm', t('Bank'), 'Get 1', 'manage ok'],
     
-//    'invest' => ['norm', t('Invest'), 'Invest 1', 'manage ok'],
+    'invest' => ['norm', t('Invest'), 'Invest 1', 'manage ok'],
     'invest/list' => ['call', t('List Investments'), 'InvestList 2', 'manage ok investor'],
     'invest/cashout' => ['call', t('Handle Requests to Cash Out Investments'), 'InvestCashout 2', 'manage ok iclub'],
     'invest/dividends' => ['call', t('Issue Dividends'), 'InvestDividends 2', 'manage ok iclub'],
@@ -170,7 +170,7 @@ function rweb_menu($submenu = '') {
     'settings/food' => ['call', 'Food Fund', 'Food 2', ANY],
 
 //    'handy' => isDEV ? ['norm', t('Handy'), '', 'dev', 'handyLinks'] : NULL,
-    'tests' => isDEV ? ['norm', t('Test'), '1', isDEV ? 'dev' : NULL, 'test'] : NULL,
+    'tests' => isDEV ? ['norm', t('Test'), '1', 'dev', 'tests'] : NULL,
 //    'php' => isDEV ? ['norm', t('PHP'), 'Php', 'dev'] : NULL,
     
     'menu' => ['call', t('Menu'), 'Menu', ANY],
@@ -207,13 +207,13 @@ function rweb_menu($submenu = '') {
 		'sadmin/reconcile-ctty-fund' => ['call', t('Reconcile Community Fund'), 'ReconcileCttyFund', 'superadmin'],
     'sadmin/reconcile-ctty-fund/manually' => ['call', t('Reconcile Manually'), 'ReconcileManually 3', 'superadmin'],
     'rcredits/util' => ['call', 'Util', '2', 'superadmin', 'util'],
-    'sadmin/recover' => ['call', t('Empty'), 'TestRecovery 1', 'dev'], // also go here manually, if needed
     'sadmin/delete-account' => ['call', t('Delete Account'), '2', 'superadmin', 'deleteAccount'],
     'sadmin/variables' => ['call', t('List/Edit Variables'), 'Variables', 'superadmin'],
     'sadmin/variables/edit' => ['call', t('Edit Variable'), 'VariableEdit', 'superadmin'],
     'print-rcard' => ['call', t('Print ID Card'), '1 2', 'cadmin', 'memberID'],
     'sadmin/show-deposits' => ['call', t('Show Deposits'), 'ShowDeposits', 'read'],
     'sadmin/show-reconciled' => ['call', t('Show Reconciled'), 'ShowReconciled', 'read'],
+    'sadmin/test-results' => ['call', t('Test Results'), 'TestResults', 'dev'], // also go here manually, if needed
 
     'signout' => ['norm', t('Sign out'), '', 'signedIn', 'signout'],
     'signin' => ['norm', t('Sign in'), 'Signin', '-signedIn'],

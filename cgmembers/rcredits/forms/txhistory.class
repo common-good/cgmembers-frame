@@ -17,7 +17,7 @@ require_once __DIR__ . '/txprocessor.interface';
 class TxHistory implements TxProcessor {
   private $body = '';
   private $uids = [];
-  private $tidValue = '';
+//  private $tidValue = '';
   private $dateValue = '';
   private $count = 0;
   private $runBalance = 0;
@@ -106,7 +106,7 @@ EOF;
   public function txnHdr($info, $extraClass = '') {
     global $mya;
     
-    $this->tidValue = $mya->superAdmin ? $info['xid'] : $info['tid'];
+//    $this->tidValue = $mya->superAdmin ? $info['xid'] : $info['tid'];
     $this->dateValue = strftime('%m/%d/%y', $info['created']);
     $this->runBalance = u\fmtAmt($info['balance'], '');
 
@@ -120,7 +120,7 @@ EOF;
     // I am payee and amount > 0 or I am payer and amount < 0
     $reallyToMe = $info['myAmount'] > 0;
 
-    if ((($mya->can($reallyToMe ? B_BUY : B_SELL) and !$info['banking']) or $mya->superAdmin) and !$info['isReversed'] and !$info['isDisputed']) {
+    if ((($mya->can($reallyToMe ? B_BUY : B_SELL) and !$info['banking']) or $mya->superAdmin) and !$info['reversedBy'] and !$info['isDisputed']) {
       $this->buttons = w\btn("$this->baseUrl&xid=$xid&do=no", ' X ', 'primary', 'xs', ['title'=>t('Reverse')]);
     } else {
       $this->buttons = '';
@@ -143,13 +143,14 @@ EOF;
    */
   public function processEntry($info) {
     if (in_array($info['uid'], $this->uids)) return;
-    extract(just('name description amount', $info));
+    extract(just('name description amount xid banking', $info));
     $amount = u\fmtAmt(- $amount, '');
+    if ($xid < 124873 and $banking and !test()) $xid = db\get('txid', 'r_usd', compact('xid')) ?: $xid; // old checks
 
     $this->body .= <<<EOF
 <div class="txentry">
   <div class="tid-date col-xs-2">
-    <div class="tid col-sm-5">$this->tidValue</div>
+    <div class="tid col-sm-5">$xid</div>
     <div class="date col-sm-7">$this->dateValue</div>
   </div>
   <div class="name-purpose col-xs-6">
@@ -163,19 +164,8 @@ EOF;
   <div class="buttons col-xs-1">$this->buttons</div>
 </div>
 EOF;
-/*     $this->body .= <<<EOF */
-/* <tr> */
-/*   <div class="tid col-sm-5">$this->tidValue</div> */
-/*   <div class="date col-sm-7">$this->dateValue</div> */
-/*   <div class="name col-sm-6">$name</div> */
-/*   <div class="purpose col-sm-6">$description</div> */
-/*   <div class="amount col-sm-5">$amount</div> */
-/*   <div class="runBalance col-sm-7">$this->runBalance</div> */
-/*   <div class="buttons col-xs-1">$buttons</div> */
-/* </tr> */
-/* EOF; */
 
-    $this->tidValue = '';
+//    $this->tidValue = '';
     $this->dateValue = '';
     $this->runBalance = '';
     $this->buttons = '';

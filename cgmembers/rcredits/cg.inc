@@ -179,7 +179,7 @@ function setJoin($reid, $join) {
       $msg = t('join success');
     } else { // requesting join
       $_atag = $a2->makeDo('join', $main); // seek agreement
-      r\message($other, 'join accounts', ray('_atag name', $_atag, $a2->fullName));
+      r\message($other, 'join accounts', ray('_atag name', $_atag, $a1->fullName));
       $msg = t('join request success');
     }
   } else {
@@ -287,7 +287,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
   u\loga('email', $erInfo + ['toUid' => @$toA->id]);
 
   if (isPRODUCTION !== TRUE) { // make sure we never send rogue emails from test server even if constant isn't set
-/**/  if (!u\test() and $mya and $mya->cAdmin) debug(compact(ray('subject to body')));
+/**/  if (!test() and $mya and $mya->cAdmin) debug(compact(ray('subject to body')));
     return; // no emails unless real!!
     if ($toEmail != r\regionField('email') and $toEmail != R_ADMIN_EMAIL) return TRUE;
     if (isDEV) return TRUE; // otherwise cURL error 60: SSL certificate problem: unable to get local issuer certificate
@@ -455,7 +455,7 @@ function notifyEntries($a, $index, $entries, $force = FALSE) {
  */
 function tellAdmin($index, $subs = [], $uid = NULL) {
   global $mya, $channel;
-/**/  if (isDEV and !u\test()) return debug(['tellingStaff' => $index] + $subs + compact('uid'));
+/**/  if (isDEV and !test()) return debug(['tellingStaff' => $index] + $subs + compact('uid'));
 
   $message = t($index, $subs);
   foreach (ray(R_NOLOG) as $k) unset($subs[$k]); // secret stuff
@@ -603,7 +603,8 @@ function region($country = '', $state = '', $zip = '', &$raw = '') {
   if (!$region = db\get('region', $table, $where, compact(ray('state zip country')))) {
     $region = db\get("CONCAT(iso_code, 'A')", 'r_countries', 'id=:country', compact('country'));
   }
-  return r\qo('!' . ($raw = $region ?: 'ZZZ') . 'AAA')->id;
+  $raw = $region ?: 'ZZZ';
+  return r\qo("!{$raw}AAA")->id;
 }
 
 /**
@@ -826,6 +827,7 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     // r_countries
     'r_coupated:uid',
     'r_coupons:fromId',
+    'r_coupons:sponsor',
     'r_criteria:ctty:D',
     'r_do:uid:D',
     'r_events:ctty',
@@ -972,7 +974,7 @@ function noticeArgs($uid, $where = '0', $weekly = FALSE, $monthly = FALSE, $at =
   $creditLine = u\fmtAmt(-$a->floor);
   list ($rewards, $ourEmail) = array(u\fmtAmt($a->rewards), $a->cttyA->email);
   $companies = getV('companies');
-  $companies = $companies[u\test() ? r\serverUid() : (int) $a->community];
+  $companies = $companies[test() ? r\serverUid() : (int) $a->community];
   return compact(ray('messages unit range yestertime balance creditLine return ourEmail companies'));
 }
 
@@ -1475,7 +1477,7 @@ function reward($from, $to, $amount = 1, $isPayer = TRUE) {
   if (relation(1, $to, $from, ':IS_OWNER OR :IS_DRAW')) return 0;
   if (relation(1, $from, $to, ':IS_OWNER OR :IS_DRAW')) return 0;
   $a = r\acct($isPayer ? $from : $to);
-  //  $pct = u\test() ? $a->rebate : max(R_MIN_REWARD_PCT, R_REBATE - floor($a->rewards / R_REWARD_STEP));
+  //  $pct = test() ? $a->rebate : max(R_MIN_REWARD_PCT, R_REBATE - floor($a->rewards / R_REWARD_STEP));
   $step = @$testRewardStep ?: R_REWARD_STEP;
 
   $over = (($isPayer xor $amount < 0) and $a->balance + $a->rewards - abs($amount) < max(0, $a->floor)); // ignore floor<0
