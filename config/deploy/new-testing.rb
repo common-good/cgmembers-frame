@@ -6,7 +6,7 @@
 # server "example.com", user: "deploy", roles: %w{app db web}, my_property: :my_value
 # server "example.com", user: "deploy", roles: %w{app web}, other_property: :other_value
 # server "db.example.com", user: "deploy", roles: %w{db}
-server "new-testing.commongood.earth", roles: %w{app db web}, user: "new-testing"
+server "new-testing.commongood.earth", roles: %w{app db web}, user: "new-testing", port: 7822
 
 set :local_user, "new-testing"
 
