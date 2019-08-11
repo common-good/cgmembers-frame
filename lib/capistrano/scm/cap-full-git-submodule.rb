@@ -18,12 +18,12 @@ class Capistrano::SCM::Git::FullSubmodules < Capistrano::Plugin
   # returns a list of submodule names
   def submodule_names
     x = ''
-    # on roles(:app).first do
-      # run_locally do
-      #   x = capture(:git, :config, '--blob', 'HEAD:.gitmodules', '--list')
-      # end
-    # end
     x = %x(git config --blob HEAD:.gitmodules --list)
+    # on roles(:app).first do
+    #   within repo_path do
+    #     x = capture(:git, :config, '--blob', 'HEAD:.gitmodules', '--list')
+    #   end
+    # end
     names = x.split("\n").map { |entry|
       md = %r{^submodule\.([-_a-zA-Z0-9/]*)\.(path|url)=(.*)$}.match(entry)
       if md[2] == 'path' then md[1] else nil end
