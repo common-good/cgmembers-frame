@@ -129,7 +129,8 @@ class Capistrano::SCM::Git::FullSubmodules < Capistrano::Plugin
         
         desc "Get list of submodules"
         task get_list: :'git:wrapper' do
-          git_plugin.submodule_names
+          puts("Getting list")
+          puts(git_plugin.submodule_names)
         end
         
         desc "Check that all submodule repositories are reachable"
