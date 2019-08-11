@@ -189,6 +189,8 @@ function logSql($args) {
   $args = date('d') . ' ' . @$mya->mainQid . ': ' . u\jsonEncode($args);
   $args = strtr($args, ['\\"' => '', '"' => '', '\\n' => '|', ';}' => '}', ';' => '; ', ',' => ', ']);
   if (!is_dir($logdir = LOG_DIR)) mkdir($logdir);
+  $xxx = posix_getpwuid(posix_geteuid());
+  die($xxx);
   $fileName = $logdir . date('Ym') . '.logsql'; // new log file every month
   file_put_contents($fileName, "$args\n", FILE_APPEND);
   return $fileName;
