@@ -843,39 +843,15 @@ function giveNow($period, $lastPmt, $firstPmt, $now = NULL) {
 }
 
 /**
- * 1. Mark deposited transfers complete R_USDTX_DAYS business days after deposit (if not already marked complete)
+ * 1. Mark deposited transfers complete USDTX_DAYS business days after deposit (if not already marked complete)
  * 2. Get funds from a connected bank account or drawable CG account, as needed
  * This (in particular getFunds) should be called before invoices and investments, so those ADD to the minimum balance
  */
 function getFunds() {
-//  $excess = 'LEAST(usd, :R_EXCESS)';
-  $weekday = strftime('%w'); // 0-6 Sun-Sat (use %w because %u fails on Windows and maybe linux)
-  if (test() or in($weekday, [2, 3, 4, 5])) { // no completions on Saturday, Sunday, or Monday
-    $sql = 'SELECT DISTINCT txid,channel FROM r_usd WHERE amount>0 AND NOT completed AND :NOW-created>=:HOUR_SECS AND (amount<=:R_USDTX_QUICK OR :NOW-created>=:R_USDTX_DAYS*:DAY_SECS)'; // this allows us to wait arbitrarily long to deposit chks
-
-    queueEach('completeUsdTx', $sql);
-  }
+  $sql = 'SELECT DISTINCT txid,channel FROM r_usd WHERE amount>0 AND NOT completed AND :NOW-created>=:HOUR_SECS AND (amount<=:USDTX_FAST OR :NOW-created>=:USDTX_DAYS*:DAY_SECS)'; // this allows us to wait arbitrarily long to deposit chks
+  queueEach('completeUsdTx', $sql);
   
 	queueEach('getFunds1', 'SELECT uid FROM users WHERE :MASTER AND balance < minimum AND uid > :CANONIC_ACCTS AND :IS_OK AND :IS_REFILL');
-	/*
-//  $where = ':IS_REFILL AND (:IS_JOINED OR r-rewards-savingsAdd<minimum) AND uid>1 AND :IS_OK';
-  $where = 'u.:IS_REFILL AND (jid OR balance<minimum) AND uid>:CANONIC_ACCTS AND u.:IS_OK';
-  $sql = <<< X
-  SELECT uid
-  FROM users u
-  WHERE $where AND :HAS_BANK
-X;
-
-  queueEach('bank1', $sql); // Note: joint slave r values cannot be negative unless both are (see r\cache)
-  
-  $sql = <<< X
-  SELECT uid, r.main as ma
-  FROM users u INNER JOIN r_relations r ON r.other=u.uid
-  WHERE $where AND NOT :HAS_BANK AND r.:IS_DRAW 
-  AND r.permission<>:B_JOINT-:B_RELATED
-X;
-  queueEach('draw1', $sql);
-	*/
 
   queueNext();
 }

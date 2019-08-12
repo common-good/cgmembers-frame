@@ -1291,7 +1291,7 @@ o;
    * Return the amount of pending bank transfers the member has already been credited with, against their credit line.
    */
   public function advances() {
-    return db\sum('amount', 'r_usd', "payee IN (:uids) AND amount>0 AND completed AND :NOW-created<:DAY_SECS*:R_USDTX_DAYS", ['uids' => $this->uids]);
+    return db\sum('amount', 'r_usd', "payee IN (:uids) AND amount>0 AND completed AND :NOW-created<:DAY_SECS*:USDTX_DAYS", ['uids' => $this->uids]);
   }
 
   /**

@@ -10,6 +10,7 @@
 . improved handling of languishing funded invoices (now they get refunded, if necessary, the next day)
 . replaced crop symbol with a checkmark
 . many corrections in calculation and display of risk flags including consolidation of txs with bank transfers
+. fixed bug that displayed "Drupal" in page title
 
 2019-08-06 feature/whence
 . fixed bug in getTxs that set description using tid instead of xid

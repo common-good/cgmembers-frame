@@ -68,6 +68,7 @@ function members($list) {return t\members($list);}
  * balances: (ARG)
  *
  * in: MAKE bank AMemberGetsCreditForTheBankTransferImmediately
+ *     TEST bank AMemberWithLowCreditLineGetsCreditForTheBankTransferAfterEnoughTime
  *     MAKE bank AMemberHasANegativeBalance
  *     MAKE bank AnUnbankedMemberBarelyBelowTargetDrawsOnAnotherAccount
  *     MAKE bank AnUnbankedMemberBarelyBelowTargetCannotDrawOnAnotherAccount
@@ -99,6 +100,7 @@ function balances($list) {return t\balances($list);}
  *
  * in: TEST bank AMemberIsBarelyBelowTarget
  *     TEST bank AMemberGetsCreditForTheBankTransferImmediately
+ *     BOTH bank AMemberWithLowCreditLineGetsCreditForTheBankTransferAfterEnoughTime
  *     TEST bank AMemberHasANegativeBalance
  *     TEST bank AMemberIsWellBelowTarget
  *     TEST bank AMemberIsUnderTargetButAlreadyRequestedBarelyEnoughFundsFromTheBank
@@ -324,7 +326,8 @@ function weMessageMemberWithTopicAndSubs($id, $topic, $subs) {
 /**
  * members have: (ARG)
  *
- * in: MAKE bank AnAccountHasATargetButNoRefills
+ * in: MAKE bank AMemberWithLowCreditLineGetsCreditForTheBankTransferAfterEnoughTime
+ *     MAKE bank AnAccountHasATargetButNoRefills
  *     MAKE bank MembersBankAccountHasNotBeenVerified
  *     BOTH bank AMembersBankAccountGetsVerified
  *     MAKE bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
@@ -585,6 +588,7 @@ function riskThresholdPercentIs($pct) {
  *
  * in: MAKE bank AMemberIsBarelyBelowTarget
  *     MAKE bank AMemberGetsCreditForTheBankTransferImmediately
+ *     MAKE bank AMemberWithLowCreditLineGetsCreditForTheBankTransferAfterEnoughTime
  *     MAKE bank AMemberHasANegativeBalance
  *     MAKE bank AnUnbankedMemberBarelyBelowTargetDrawsOnAnotherAccount
  *     MAKE bank AnUnbankedMemberBarelyBelowTargetCannotDrawOnAnotherAccount

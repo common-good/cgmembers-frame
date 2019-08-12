@@ -784,7 +784,8 @@ function whoFldSubmit($field, $question, $extra = []) {
 
 /**
  * Retrieve the specified form, called with the args, and return it rendered.
- * Also sets up $formArray and $formSta, for testing.
+ * Sets: $formArray and $formSta, for testing.
+ * Sets: $pageTitle
  */
 function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
   global $formArray, $formSta, $rUrl;
@@ -804,21 +805,19 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
     global $mya;
     $args = 'arg1' . ($arg2 !== '' ? ' arg2' : '') . ($arg3 !== '' ? ' arg3' : '') . ($arg4 !== '' ? ' arg4' : '');
     $formName = substr($function, 0, 1) == '/' ? substr($function, 1) : "CG\\Web\\form$function";
-    $specialForm = in($function, 'Help Empty footer accounts Login');
+    $specialForm = in($function, 'Empty footer accounts Login');
     $adminForm = in($function, 'Admin MemberList MemberInfo');
     $args = func_get_args(); // this and next few lines are from \drupal_get_form()
     array_shift($args); // Remove $function from the arguments.
     $formSta['build_info'] = compact('args');
     $formSta['cache'] = TRUE;
 //    $formSta['method'] = 'post';
-    if (!r\up() and !$specialForm and !$adminForm) {
+    if (!r\up() and !$adminForm and (!$specialForm or $function == 'Help')) {
       if ($mya and $mya->superAdmin) {
         say(t('The system is DOWN.'));
         //if (!$mya->cttyUp) say(t('The community is DOWN.'));
       } else $formName = 'CG\\Web\\formSystemDown';
     }
-    
-//    if (strpos($formName, 'Event') !== FALSE) require_once DRUPAL_ROOT . R_PATH . '/rvote/rvote-web.inc';                       
     
     $form = \drupal_build_form($formName, $formSta);
 
@@ -830,16 +829,34 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
   
     if (!@$form['confirm']) $form += which(); // add the choices popup form, if any
     if (!$specialForm) {
-      $tree = explode('/', $_SERVER['REQUEST_URI']);
-      $crumbs = [];
-      foreach ($tree as $k) if (preg_match('/^[a-z\-]+(\?|$)/', $k)) $crumbs[ucwords($k)] = $kk = isset($kk) ? "$kk/$k" : '';
-      \drupal_set_breadcrumb($crumbs);
+      \drupal_set_breadcrumb(makeBread());
+      setPageTitle($form);
     }
-
     $formArray = $form2 = $form; 
     return \render($form2);
     
   } catch(Exception $e) {r\Web\exception_handler($e);}
+}
+
+/**
+ * Construct and return the breadcrumb list.
+ */ 
+function makeBread() {
+  $tree = explode('/', $_SERVER['REQUEST_URI']);
+  $bread = [];
+  foreach ($tree as $k) if (preg_match('/^[a-z\-]+(\?|$)/', $k)) $bread[ucwords($k)] = $kk = isset($kk) ? "$kk/$k" : '';
+  return $bread;
+}
+
+/**
+ * Set the page title, usually based on the form title.
+ */
+function setPageTitle($form) {
+  global $pageTitle;
+  $pageTitle = ($pageTitle = nn($form['title']))
+  ? strip_tags($pageTitle['#markup'])
+  : ucwords(str_replace('/', ' | ', $_SERVER['REQUEST_URI']));
+  $pageTitle = PROJECT . ' | ' . $pageTitle;
 }
 
 define('FORBID_TAGS', '/.{0,40}<(script|style|frame|object|embed|applet|audio|video).{0,40}/i'); // forbidden html tags
