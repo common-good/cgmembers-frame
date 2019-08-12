@@ -78,9 +78,9 @@ Scenario: A member redeems a discount coupon
   | xid | goods | actorId | actorAgentId | flags  | channel | boxId  | risks | reversesXid | created |*
   | 4   | 0     | .ZZC    | .ZZA         | 0      | 3       | devC   |     0 |             | %today  |
   And transaction entries: 
-  | xid | amount |  uid | agentUid | acctTid | description             | relType | relatedId |*
-  | 4   |     60 | .ZZC | .ZZA     | 4       | stuff                   |         |         |
-  | 4   |    -60 | .ZZB | .ZZB     | 4       | stuff                   |         |         |
+  | xid | amount |  uid | agentUid | acctTid | description | relType | relatedId |*
+  | 4   |     60 | .ZZC | .ZZA     | 4       | stuff       |         |         |
+  | 4   |    -60 | .ZZB | .ZZB     | 4       | stuff       |         |         |
   And coupated:
   | id | uid  | coupid |*
   |  1 | .ZZB | 1      |

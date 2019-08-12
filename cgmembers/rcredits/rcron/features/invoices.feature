@@ -116,7 +116,7 @@ Scenario: Second invoice gets funded too for a non-refilling account
 Scenario: A languishing invoice gets funded again
   Given invoices:
   | nvid | created   | status       | amount | from | to   | for   | flags   |*
-  |    1 | %today-1m | %TX_APPROVED |    900 | .ZZA | .ZZC | one   | funding |
+  |    1 | %today-1d | %TX_APPROVED |    900 | .ZZA | .ZZC | one   | funding |
   When cron runs "invoices"
 	Then these "usd":
   | txid | payee | amount | created | completed | deposit |*

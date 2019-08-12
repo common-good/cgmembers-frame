@@ -55,7 +55,6 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     MAKE coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
- *     MAKE coupons AMemberRedeemsAPercentageDiscountCoupon
  *     MAKE coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
  *     MAKE flow AMemberOverdrawsWithNotEnoughToDrawOn
  *     MAKE food AMemberMakesAFoodDonation
@@ -483,7 +482,10 @@ function weShowWithSubs($page, $subs) {return t\weShowWithSubs($page, $subs);}
  *     TEST contact AMemberVisitsTheContactInfoPage
  *     TEST coupons AMemberCompanyCreatesAGiftCoupon
  *     TEST coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
+ *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
+ *     TEST coupons AMemberRedeemsAPercentageDiscountCoupon
  *     TEST coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
+ *     TEST coupons AMemberRedeemsARestrictedDiscountCoupon
  *     TEST custstatement ACompanyLooksAtACustomerStatement
  *     TEST demographics ACompanyAgentRunsTheDemographicsQuery
  *     TEST gift AMemberDonates
@@ -725,7 +727,10 @@ function usd($list) {return t\usd($list);}
  *     MAKE contact AMemberVisitsTheContactInfoPage
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     MAKE coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
+ *     MAKE coupons AMemberRedeemsADollarAmountDiscountCoupon
+ *     MAKE coupons AMemberRedeemsAPercentageDiscountCoupon
  *     MAKE coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
+ *     MAKE coupons AMemberRedeemsARestrictedDiscountCoupon
  *     MAKE demographics ACompanyAgentRunsTheDemographicsQuery
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
  *     MAKE download AMemberDownloadsIncomingInvoicesForThePastYear
@@ -1564,7 +1569,7 @@ function someonePostsToPageWith($page, $args) {return t\postToPage($page, $args)
  *     MAKE coupons AMemberRedeemsAGiftCoupon
  *     TEST coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsADollarAmountDiscountCoupon
- *     TEST coupons AMemberRedeemsAPercentageDiscountCoupon
+ *     MAKE coupons AMemberRedeemsAPercentageDiscountCoupon
  *     TEST coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsARestrictedDiscountCoupon
  *     MAKE coupons AMemberRedeemsADiscountCouponInDribsAndDrabs

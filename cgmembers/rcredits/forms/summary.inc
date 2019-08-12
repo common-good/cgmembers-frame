@@ -71,7 +71,7 @@ function formSummary($form, &$sta) {
     if (!$mya->co and $hasMultipleAccounts) $clickPhoto = item(t('Click your photo%where to manage your other account(s).', 'where', $mya->cAdmin ? t(' in the upper right corner') : ''));
   } else $makeCo = $makeJoint = $goFood = $reports = '';
 
-  $reports = $mya->co ? w\btn('/company-reports', t('Reports')) : '';
+  $reports = $mya->co ? w\btn('/history/company-reports', t('Reports')) : '';
 //  if ($mya->id == CGID) $deposits = w\btn('/sadmin/show-deposits', t('Deposits'));
   $deposits = $mya->id == CGID ? w\btn('/sadmin/show-reconciled', t('Dollar Pool Transactions')) : '';
   $topButtons = item($makeCo . $makeJoint . $goFood . $reports . $deposits);

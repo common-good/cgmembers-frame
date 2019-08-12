@@ -73,7 +73,7 @@ Setup:
   |    6 | .ZZC  |   -500 | %today    |
 
 Scenario: A company agent runs the demographics query
-  When member "C:B" visits page "company-reports/demographics"
+  When member "C:B" visits page "history/company-reports/demographics"
   Then we show "Customer Demographics" with:
   | Customer Count: |     7 |
   | Median Age:     |    29 |

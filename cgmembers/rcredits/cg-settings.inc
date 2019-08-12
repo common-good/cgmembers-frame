@@ -38,8 +38,8 @@ define('R_DEBT_DAYS', 30); // how long to pay back reserve credit
 define('R_STATEMENT_COST', 10); // how much member must pay (in rCredits dollars) for monthly and annual statements by mail
 define('R_INFLATION_RATE', .05); // annual USD inflation rate (but never less than zero) (extra big is okay)
 //define('R_ADMIN_QID', 'NEW.AAA'); // William's account code
-define('R_USDTX_DAYS', 5); // how many days it takes for a transfer to clear from bank to Common Good account
-define('R_USDTX_QUICK', 200); // maximum amount a member can transfer overnight (instead of waiting USDTX days)
+define('USDTX_DAYS', 5); // how many days it takes for a transfer to clear from bank to Common Good account
+define('USDTX_FAST', 200); // maximum amount a member can transfer overnight (instead of waiting USDTX days)
 
 define('BANK_NAME', 'Citizens Bank');
 define('BANK_ADDR', 'Greenfield Branch<br>89 French King Highway<br>Greenfield, MA 01301<br>+1 413 774 2135');

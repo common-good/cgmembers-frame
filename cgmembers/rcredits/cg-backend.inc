@@ -732,7 +732,7 @@ EOF;
   } else {
     db\update('r_coupated', ray('when id', now(), $id), 'id');
   }
-  txEntryPair($entries, $rebate, [r\acct($sponsor), $buyer], t('discount rebate'), E_REBATE, 0, 'D', $id);
+  txEntryPair($entries, $rebate, [r\acct($sponsor), $buyer], t('discount rebate'), E_REBATE, 0, 'D', $coupid);
   return $rebate;
 }
 

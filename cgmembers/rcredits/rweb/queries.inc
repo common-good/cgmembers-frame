@@ -111,7 +111,7 @@ $queries = [
     
   2 . t('Where Do Our Members Hear About %PROJECT') => <<< X
     SELECT 
-      IF(helper=1 OR helper IS NULL, 
+      IF(helper in (0,1), 
         IF(source LIKE '%presentation%' OR source LIKE '%talk%', '* Presentation',
         IF(source LIKE '%internet%' OR source LIKE '%web%' OR source LIKE '%google%', '* Web',
         IF(source LIKE '%friend%' OR source LIKE '%mouth%', '* Word of Mouth',
