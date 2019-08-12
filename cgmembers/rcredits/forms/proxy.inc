@@ -33,7 +33,7 @@ function formProxy($form, &$sta, $args = '') {
   }
   
   $limitedChoice = $mya->cttyA->isRegion ? t('<p>You are outside any organized %PROJECT Community, so your choices will be very limited until more people sign up in your area. But no worries. You will have the opportunity to revise your proxy choices before your community votes on anything.</p>') : '';
-  $subtext = item(t('<p>Choose and click someone you know and trust. Top suggestions for you are <%b1>green</b>, <%b2>blue</b>, and <%b3>peach</b> (in that order).</p>', $b) . (($dft or $dftOther) ? t('<p>Your current selection(s), if any, is/are <%b0>orange</b>.</p>', $b) : '') . $limitedChoice, BARE);
+  $subtext = item(t('<p>Choose and click someone you know and trust. OR, if you prefer to have the system assign you a proxy for now, choose Placeholder One or Placeholder Two. You can change your choices at any time.</p><p>Top suggestions for you are <%b1>green</b>, <%b2>blue</b>, and <%b3>peach</b> (in that order).</p>', $b) . (($dft or $dftOther) ? t('<p>Your current selection(s), if any, is/are <%b0>orange</b>.</p>', $b) : '') . $limitedChoice, BARE);
   $list = $choices;
   $priority = hidFld($priority);
   return cgform(compact(ray('title subtext list priority')), '', FALSE);
@@ -84,7 +84,7 @@ function proxyChoices($a, $dfts, &$choiceList) {
 EOF;
 
   $cttyCrit = $a->cttyA->isRegion  // must have same params either way (hence :ctty=:ctty)
-  ? "((:ctty=:ctty AND city='$a->city' AND state=$a->state AND :IS_OK) OR u.uid IN (:DEFAULT_PROXIES))"
+  ? "(:ctty=:ctty AND city='$a->city' AND state=$a->state AND :IS_OK)"
   : '(community=:ctty AND :IS_OK)';
   
   if (!$friends = db\lst('uid', $table, 1, compact('uid'))) $friends = '0'; // list of account's friends
@@ -101,7 +101,7 @@ EOF;
       UNION
       SELECT uid, 0 AS w FROM users
     ) n LEFT JOIN users u ON u.uid=n.uid
-    WHERE $cttyCrit AND u.uid>1 AND u.uid<>:uid AND NOT :IS_CO
+    WHERE ($cttyCrit OR u.uid IN (:DEFAULT_PROXIES)) AND u.uid>1 AND u.uid<>:uid AND NOT :IS_CO
     GROUP BY u.uid, u.state, u.city 
     ORDER BY state, city, fullName
 EOF;

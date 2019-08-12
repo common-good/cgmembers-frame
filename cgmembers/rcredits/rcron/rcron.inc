@@ -549,7 +549,7 @@ function bankFollowup($tx) {
  */
 function checkAccts() {
   $sql = <<< X
-SELECT DISTINCT u.uid,u.fullName,u.jid,u2.jid AS partnerJid,r.reid,r.other AS relatedId FROM users u
+SELECT DISTINCT u.uid,u.fullName,u.jid,u2.jid AS partnerJid,r.reid,r.other AS relatedUid FROM users u
 LEFT JOIN r_relations r ON r.main=u.uid
 LEFT JOIN users u2 ON u2.uid=u.jid
 WHERE u.uid<>0 AND u.jid AND r.permission=:B_JOINT-:B_RELATED
@@ -560,7 +560,7 @@ X;
 
 function checkAcct1($item) {
   extract($item);
-  if (!$reid or !$partnerJid or $partnerJid != $uid or $relatedId != $jid) r\tellAdmin('bad relation', $item);
+  if (!$reid or !$partnerJid or $partnerJid != $uid or $relatedUid != $jid) r\tellAdmin('bad relation', $item);
   //look at agreement date and first transaction date and last transaction date. queue appropriate funcs
 }
 
@@ -699,13 +699,13 @@ function cttyStats1($item) {
  * Calculate how much each member is trusted by the others.
  */
 function trust() {
-  db\q('UPDATE users SET trust=IF(:IS_CO,NULL,1)');
+  db\q('UPDATE users SET trust=IF(:IS_CO,0,1)');
   $sql = <<< X
     UPDATE users u 
     INNER JOIN
       (SELECT DISTINCT proxy AS uid,SUM(straw) AS bale
        FROM 
-         (SELECT proxy,IFNULL(up.trust,0)/p.priority AS straw
+         (SELECT proxy,up.trust/p.priority AS straw
           FROM r_proxies p 
           LEFT JOIN users up ON up.uid=p.person) s
        GROUP BY proxy) b
@@ -757,13 +757,13 @@ function acctRiskFinish() {
 }
 
 /**
- * Calculate risks of financial misbehavior for each recent transaction.
+ * Calculate risks of financial misbehavior for each recent transaction, including bank transfers.
  * Include payments from the community.
  */
 function txRisk() {
   $sql = <<<EOF
     SELECT DISTINCT xid FROM txs
-    WHERE risk IS NULL AND uid1 NOT :CANONIC AND uid2 NOT :CANONIC
+    WHERE risk IS NULL AND uid2 NOT :CANONIC AND amt<>0
     ORDER BY created
 EOF;
   queueEach('txRisk1', $sql);
@@ -773,19 +773,6 @@ EOF;
 function txRisk1($xid) {
   include_once __DIR__ . '/../cg-risk.inc';
   k\txRisk1(is_array($xid) ? $xid['xid'] : $xid);
-}
-
-/**
- * Calculate risks of financial misbehavior for each recent ACH.
- */
-function achRisk() {
-  queueEach('achRisk1', 'SELECT * FROM r_usd WHERE risk IS NULL AND amount<>0 ORDER BY created');
-  queueNext();
-}
-
-function achRisk1($item) {
-  include_once __DIR__ . '/../cg-risk.inc';
-  k\achRisk1($item);
 }
 
 /**
@@ -938,7 +925,9 @@ function invoice1($item) {
     } else $paid = FALSE;
 		
 		if (!$paid or $a->balance < 0) {
-      if ($funding) $funding = ($created >= now() - R_USDTX_DAYS * DAY_SECS or db\exists('r_usd', 'amount>=:amount AND payee=:payer', compact(ray('amount payer')))); // fund it again, if necessary
+      if ($funding and $a->balance + db\sum('amount', 'r_usd', 'payee=:payer AND NOT completed', compact('payer')) < $amount) {
+        $funding = FALSE; // fund it again, if necessary
+      }
       if (!$funding) {
         if ($a->roundup) $amount = ceil($amount); // take enough for the roundup
         $DBTX = db_transaction();

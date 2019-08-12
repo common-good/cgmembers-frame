@@ -164,7 +164,7 @@ Scenario: A member confirms request to pay a member company
 #  | field |*
 #  | "For" |
 
-Skip this is now allowed, as an implicit invitation
+Skip this is now allowed, as an implicit invitation (3 scenarios)
 Scenario: A member asks to charge another member before making an rCard purchase
   Given member ".ZZA" has no photo ID recorded
   When member ".ZZA" completes form "charge" with values:

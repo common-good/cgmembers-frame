@@ -65,7 +65,7 @@ function get($fieldName, $table, $where = '1', $subs = []) {
   if (is_array($where)) list ($where, $subs) = [u\where($where), $where];
   if (!strpos($where, ' LIMIT ')) $where .= ' LIMIT 1';
   $sql = "SELECT $fieldName FROM $table WHERE $where";
-  /// debug(compact('sql','subs'));
+///   debug(compact('sql','subs'));
   $result = db\q($sql, $subs);
 
   list ($cnt, $f) = [1, $fieldName];

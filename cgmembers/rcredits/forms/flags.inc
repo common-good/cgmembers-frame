@@ -11,7 +11,6 @@ use CG\Db as db;
  */
 function formFlags($form, &$sta, $args = '') {
   global $mya;
-  $MAXLINES = 20; // max number of lines to show in each section
   include R_ROOT . '/rweb/risk-descs.inc';
 
 // fails  u\setDft($args['period'], 1);
@@ -21,7 +20,7 @@ function formFlags($form, &$sta, $args = '') {
   $url = hidFld($url);
   
   $title = t('Suspicious Activity Report'); //  . strftime('%A, %m/%d/%y')
-  $subtext = t('<p>Any potentially suspicious accounts, transactions, and bank transfers (ACHs) are listed here, so all members can keep an eye on things. System administrators will investigate any transaction with a suspiciousness score of %K_RED or more (shown in red). If you don\'t see any red, that means nothing even remotely suspicious happened. But for the sake of transparency, we show the %MAXLINES top scores in each category anyway.</p><p>Green risks are "good" (they mitigate other risk factors). Hover over any risk for a brief description or click it for details. To see a company\'s name, hover over its account ID.</p>', compact('MAXLINES'));
+  $subtext = t('<p>Any potentially suspicious accounts, transactions, and bank transfers (ACHs) are listed here, so all members can keep an eye on things. System administrators will investigate any transaction with a suspiciousness score of %K_RED or more (shown in red). If you don\'t see any red, that means nothing even remotely suspicious happened. But for the sake of transparency, we show the %K_LINES top scores in each category anyway.</p><p>Green risks are "good" (they mitigate other risk factors). Hover over any risk for a brief description or click it for details. To see a company\'s name, hover over its account ID.</p>');
 
   $achHeader = $txHeader = $acctHeader = '';
   $accts = $txs = $achs = '';
@@ -32,7 +31,7 @@ function formFlags($form, &$sta, $args = '') {
     : ["community=$mya->community", "$mya->community IN (u1.community, u2.community)"];
   $sql = <<<EOF
     SELECT risk AS score,uid,IF(:IS_CO,'Co','Indiv') as type,created,risks FROM users 
-    WHERE uid>0 AND :IS_OK AND $cttyCrit
+    WHERE uid>:CANONIC_ACCTS AND :IS_OK AND $cttyCrit
     ORDER BY risk DESC LIMIT :K_LINES
 EOF;
   $q = db\q($sql);
@@ -47,7 +46,7 @@ EOF;
     SELECT t.risk AS score, xid, t.created, amt AS amount, uid1 AS payer, uid2 AS payee,
       for2 AS description, t.risks 
     FROM txs t JOIN users u1 ON u1.uid=uid1 JOIN users u2 ON u2.uid=uid2
-    WHERE uid1 NOT :CANONIC AND uid2 NOT :CANONIC
+    WHERE uid2 NOT :CANONIC
       AND $cttysCrit AND t.created BETWEEN :starting AND :ending 
     ORDER BY t.risk DESC LIMIT :K_LINES
 EOF;
@@ -56,18 +55,6 @@ EOF;
 
   for ($i = 0; $line = riskLine($q, K_TX_RISKS, $red) and ($i < K_LINES or $red); $i++) $txs .= $line;
 
-  $headers = ray(t('Score Tx# Date Amount Account Description Risks'));
-  foreach ($headers as $v) {$vLow = strtolower($v); $achHeader .= "<th class=\"k-$vLow\">$v</th>";}
-  $achHeader = "<tr>$achHeader</tr>";
-  $sql = <<<EOF
-    SELECT t.risk AS score,txid,t.created,ABS(t.amount) AS amount,payee,IF(t.amount>0,'in','out') AS way,t.risks 
-    FROM r_usd t LEFT JOIN users u ON u.uid=payee
-    WHERE t.created BETWEEN :starting AND :ending AND amount<>0 AND $cttyCrit
-    ORDER BY t.risk DESC LIMIT :K_LINES
-EOF;
-  $q = db\q($sql, $subs);
-  for ($i = 0; $line = riskLine($q, K_TX_RISKS, $red) and ($i < K_LINES or $red); $i++) $achs .= $line;
-  
   $table = item(<<<EOF
   <center>
   <h3>ACCOUNTS</h3>
@@ -79,11 +66,6 @@ EOF;
   <table id="txs">
   $txHeader
   $txs
-  </table>
-  <h3>ACHs</h3>
-  <table id="achs">
-  $achHeader
-  $achs
   </table>
   </center>
 EOF
@@ -133,11 +115,10 @@ function riskLine($q, $descs, &$red = '') {
     $qo = r\qo($v);
     $qid = $qo->qid;
     $a = r\acct($v);
+    if ($v <= CANONIC_ACCTS) $v = $v < 0 ? t('ctty') : strtr($a->name, ray('bank-in bank-out', 'bank', 'bank'));
     if ($extra) {
       list ($region, $local) = $qo->parse();
-      $v = w\popHelp($v < 0 ? t('ctty') : $local, $a->fullName, "$base_url/summary/$qid");
-    } else if ($v < 0) {
-      $v = t('ctty');
+      $v = w\popHelp(is_numeric($v) ? $local : $v, $a->fullName, "$base_url/summary/$qid");
     } else {
       $i = array_search($qid, $riskUids);
       if ($i === FALSE) {$i = count($riskUids); $riskUids[] = $qid;}

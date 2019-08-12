@@ -114,7 +114,6 @@ function balances($list) {return t\balances($list);}
  *     TEST joint AJointAccountNeedsRefilling
  *     MAKE monthly Setup
  *     MAKE risk Setup
- *     TEST risk WeCalculateRisks
  *     TEST weekly AMemberCashesOutAutomatically
  */
 function usdTransfers($tx) {return t\usdTransfers($tx);}
