@@ -85,7 +85,7 @@ function showDiscounts() {
   $hdrs = u\tableRow(ray('Company,Discount,On,Ending,For,Uses&nbsp;Left'));
 	
   $sql = <<< X
-  	SELECT u.uid,amount,`on`,end,ulimit,c.:IS_SOME AS some,
+  	SELECT DISTINCT u.uid,amount,`on`,end,ulimit,c.:IS_SOME AS some,
       (SELECT SUM(1) FROM txs t WHERE t.relType='D' AND t.rel=c.coupid AND t.uid2=:myid) AS used
     FROM r_coupons c JOIN users u ON u.uid=c.fromId 
     LEFT JOIN r_coupated d USING(coupid)

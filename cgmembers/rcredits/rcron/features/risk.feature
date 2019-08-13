@@ -134,7 +134,7 @@ Scenario: We calculate risks
   |  12 | b2p,fromSuspect,toSuspect,absent,invoiceless,biggestTo,origins |
   |  13 | exchange,p2p,fromSuspect,toSuspect,absent,invoiceless,bigFrom,bigTo,suspectOut |
   |  14 | exchange,p2p,fromSuspect,toSuspect,absent,invoiceless,biggestFrom,suspectOut |
-Skip
+Skip (below is just a comment for later)
 708	3	11-Feb	250.00	Ctty	ZZE	signup	B2p, ToSuspect
 220	17	11-Jun	300.00	Bank	ZZC	from bank	CashIn, ToSuspect
 208	15	11-Jun	400.00	Bank	ZZA	from bank	Exchange, P2p
