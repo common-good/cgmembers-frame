@@ -14,7 +14,9 @@ function formBacking($form, &$sta, $args = '') {
   
   $title = t('Backing Promise');
   $subtext = t(<<< X
-  <p>Backing makes it possible for your community to make grants. Please choose a dollar amount you will back, for 12 months. This limited promise we all make to each other assures that any <i>other</i> credit in your account is 100% backed &mdash; by Dollars and/or collateral and/or Backing Promises. This promise comes into play only if there is a <%aCrunch>cash crunch</a>.</p>
+  <p>Backing makes it possible for your community to make investments and grants. Whereas bank investments are backed (partially) by the FDIC, Common Good investments and grants are backed by the members.</p>
+  
+  <p>Please choose a dollar amount you will back, for 12 months. This limited promise we all make to each other assures that any <i>other</i> credit in your account is 100% backed &mdash; by Dollars and/or collateral and/or Backing Promises. This promise comes into play only if there is a <%aCrunch>cash crunch</a>.</p>
 
   <p>In the event of a cash crunch within one year of today, you agree to increase your balance, within 7 days, by the backing amount you chose and to bring your balance up to that new target at least once a week until the cash crunch ends. If your %PROJECT Community <i>ends</i> instead of recovering, the amount you chose to back becomes a donation (from you to your %PROJECT Community, for all the great things it funded) [<%aExample>example</a>].
 

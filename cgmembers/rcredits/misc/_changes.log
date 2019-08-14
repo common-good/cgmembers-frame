@@ -1,3 +1,17 @@
+2019-08-10 feature/coupon-fixes
+. fixed bug in coupon transaction creation that recorded coupated id instead of coupon id (also corrected past data)
+. backing text now compares it to FDIC
+. expanded couponslist page to show the customer how much of the coupon/discount they have remaining
+. proxy choices now ALWAYS include the placeholders
+. fixed bug in development that kept account lookup from working
+. changed most numeric fields in users table to NOT NULL, defaulting to 0
+. fixed bug in community balance sheets that omitted inter-community trade from Dollar Pool balance
+. fixed bug in acct::bank() that gave wrong message for bringing balance up to zero
+. improved handling of languishing funded invoices (now they get refunded, if necessary, the next day)
+. replaced crop symbol with a checkmark
+. many corrections in calculation and display of risk flags including consolidation of txs with bank transfers
+. fixed bug that displayed "Drupal" in page title
+
 2019-08-06 feature/whence
 . fixed bug in getTxs that set description using tid instead of xid
 . changed capistrano submodule configuration file to accommodate MS Windows quirks

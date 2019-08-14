@@ -33,6 +33,6 @@ Scenario: A member connects a bank account
   | Account: | xxxxxx1234 | |
   | Refills: | No | Yes |
   | Save     | | |
-Skip
+Skip (not finished below here)
  
    | Connect | connect | routingNumber | bankAccount | bankAccount2 | refills | target | achMin | saveWeekly |*

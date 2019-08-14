@@ -40,6 +40,22 @@ Scenario: a member gets credit for the bank transfer immediately
   | action | tofrom | amount | checkNum | why       |*
   | draw   | from   | $30    |        1 | to bring your balance up to the target you set |
 
+Scenario: a member with low credit line gets credit for the bank transfer after enough time
+  Given members have:
+  | uid  | flags |*
+  | .ZZB | ok    |
+  (remove refill bit to prevent B from drawing automatically)
+  And usd transfers:
+  | txid | payee | amount             | channel  | created                        | completed |*
+  |    1 | .ZZA  | %(%USDTX_FAST + 1) | %TX_CRON | %(%now - %DAY_SECS*USDTX_DAYS) |         0 |
+  When cron runs "getFunds"
+  Then balances:
+  | uid  | balance            |*
+  | .ZZA | %(%USDTX_FAST + 1) |
+  And usd transfers:
+  | txid | payee | amount             | channel  | completed |*
+  |    1 | .ZZA  | %(%USDTX_FAST + 1) | %TX_CRON | %now      |
+  
 Scenario: a member has a negative balance
   Given balances:
   | uid  | savingsAdd | balance |*
@@ -115,7 +131,7 @@ Scenario: a member is under target but already requested barely enough funds fro
   Then bank transfer count is 1
   
 Scenario: a member is under target and has requested insufficient funds from the bank
-# This works only if member requests more than R_USDTX_QUICK the first time (hence ZZD, whose target is 300)
+# This works only if member requests more than USDTX_FAST the first time (hence ZZD, whose target is 300)
   Given members:
   | uid  | fullName | floor | minimum | flags            | achMin | risks   |*
   | .ZZD | Dee Four |   -50 |     300 | ok,refill,bankOk | 30     | hasBank |
@@ -164,8 +180,8 @@ Scenario: a member has a deposited but not completed transfer
   | .ZZB | 100 |
   And usd transfers:
   | txid | payee | amount | created   | completed | deposit    |*
-  | 5001 | .ZZA  |     50 | %today-4d |         0 | %(%today-%R_USDTX_DAYS*%DAY_SECS-9) |
-  # -9 in case the test takes a while (elapsed time is slightly more than R_USDTX_DAYS days)
+  | 5001 | .ZZA  |     50 | %today-4d |         0 | %(%today-%USDTX_DAYS*%DAY_SECS-9) |
+  # -9 in case the test takes a while (elapsed time is slightly more than USDTX_DAYS days)
   When cron runs "getFunds"
   Then bank transfer count is 1
 

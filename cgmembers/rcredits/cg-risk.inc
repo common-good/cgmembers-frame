@@ -30,20 +30,22 @@ function acctRisk1($uid, $thresholds, &$risk = 0, &$calc = 0) {
   // criminal
   setRisk('cashCo', $a); // high-risk company type according to regs
   $tenure = $a->tenure / 12 + (now() - $a->created) / YEAR_SECS; // years of residence ($a->tenure is in months)
-  setRisk('new', $tenure ? .5 / ($tenure * $tenure) : 99999, $tenure < 1); // half a year is the standard
-  setRisk('moves', $a->moves, $a->moves > 0); // moves over past decade
+  setRisk('new', $tenure ? .5 / ($tenure * $tenure) : 99999); // half a year is the standard
+  setRisk('moves', $a->moves); // moves over past decade
   setRisk('rents', $a);
   
-  $trusted = $a->trust - 1; // how well trusted (trust is always >=1)
-  $inviteTrust = db\get('SUM(trust - 1)', 'users u INNER JOIN r_invites i ON i.inviter=u.uid', 'i.invitee=:id OR i.email=:email', ray('id email', $a->id, u\cry('P', $a->email))); // trustedness of accounts that invited this one
-  $trusted += $inviteTrust; // invited by trusted people
-  $relations = db\count('r_relations r LEFT JOIN users u ON u.uid=r.main', 'r.permission>0 AND NOT r.:IS_OWNER AND r.other=:id AND u.risk<:K_GREEN', $idSub);
-  $trusted += $relations; // access to (trusted by) non-suspect businesses
-  setRisk('trusted', $trusted, $trusted > 1.5);
+  if (!$a->co) { // never trust a company
+    $trusted = $a->trust - 1; // how well trusted (trust is always >=1)
+    $inviteTrust = db\get('SUM(trust - 1)', 'users u INNER JOIN r_invites i ON i.inviter=u.uid', 'i.invitee=:id OR i.email=:email', ray('id email', $a->id, u\cry('P', $a->email))); // trustedness of accounts that invited this one
+    $trusted += $inviteTrust; // invited by trusted people
+    $relations = db\count('r_relations r LEFT JOIN users u ON u.uid=r.main', 'r.permission>0 AND NOT r.:IS_OWNER AND r.other=:id AND u.risk<:K_GREEN', $idSub);
+    $trusted += $relations; // access to (trusted by) non-suspect businesses
+    setRisk('trusted', $trusted);
+  }
   
   $conxRisk = db\count('users u INNER JOIN r_invites i ON i.invitee=u.uid', "i.inviter=:id AND u.risk>=:K_RED", $idSub); // invited by this account
   $relationsRisk = db\count('r_relations r LEFT JOIN users u ON u.uid=r.main', 'r.permission>0 AND r.other=:id AND u.risk>=:K_RED', $idSub); // access to (trusted by) suspect businesses
-  setRisk('badConx', $conxRisk + $relationsRisk, 'ifany'); // invited suspicious accounts
+  setRisk('badConx', $conxRisk + $relationsRisk); // invited suspicious accounts
 
 // UNUSED  setRisk('socialConx', $a->mediaConx, 'ifany'); // 1st or 2nd-degree social media connections to administrator
 
@@ -52,7 +54,7 @@ function acctRisk1($uid, $thresholds, &$risk = 0, &$calc = 0) {
   setRisk('shady', $a); // no substantial internet search results and/or no SSN history
 //  if ($a->can(B_BANK)) setRisk('hasBank'); // has a connected bank account
   setRisk('hasBank', $a); // has a connected bank account
-  if ($uid != CGID and db\get("SUM(amount*IF(period='M',12,IF(period='Q',4,1)))", 'r_recurs', 'payer=:id AND payee=:CGID AND ended=0', $idSub) + 0 < K_MISER_DONATION and !$a->roundup and !$a->crumbs) setRisk('miser'); // unusually small donation to CGF
+  if ($uid != CGID and db\get("SUM(amount*IF(period='W',52,IF(period='M',12,IF(period='Q',4,1))))", 'r_recurs', 'payer=:id AND payee=:CGID AND ended=0', $idSub) + 0 < K_MISER_DONATION and !$a->roundup and $a->crumbs == 0) setRisk('miser'); // unusually small donation to CGF
 ///  	debug(ray('uid roundup crumbs sum', $uid, $a->roundup, $a->crumbs, db\get("SUM(amount*IF(period='M',12,IF(period='Q',4,1)))", 'r_recurs', 'payer=:id AND payee=:cg', $idSub + ray('cg', CGID)) + 0));
   //  and $a->share < K_MISER_SHARE
   
@@ -85,38 +87,36 @@ function txRisk1($xid, &$risk = 0, &$calc = 0) {
   global $_risk; $_risk = ''; // reset risk calculation
   global $_xid; $_xid = $xid; // for debugging
 
-  $fields = 'xid, uid1, uid2, amt AS amount, risks, :IS_OFFLINE AS offline, goods, created, channel';
+  $fields = 'xid, uid1, uid2, amt AS amount, risks, :IS_OFFLINE AS offline, goods, created, channel, reversesXid';
 
-  $row = db\get($fields, 'txs_proper', compact('xid'));
+  $row = db\get($fields, 'txs', compact('xid'));
   extract($row);
   if ($risks & u\bit(K_ADMINOK)) setRisk('txAdminOk'); // administrator blessed this transaction, perpetuate it
 
-  $reverser = db\get('r.xid AS reverser', 'tx_hdrs t LEFT JOIN tx_hdrs r ON r.reversesXid=t.xid', 't.xid=:xid', ['xid'=>$xid]);
-  if (!is_null($reverser)) setRisk('redo');
+  if ($reversesXid AND db\get('reversesXid', 'tx_hdrs', 'xid=:reversesXid', compact('reversesXid'))) setRisk('redo');
 
-  $cttyPayer = ($uid1 < 0);
-  $payerA = r\acct($uid1);
-  $payeeA = r\acct($uid2);
+  if ($amount < 0) list ($amount, $uid1, $uid2) = [-$amount, $uid2, $uid1];
+  $a1 = r\acct($uid1);
+  $a2 = r\acct($uid2);
 
   if ($goods != FOR_GOODS) {
-    if ($amount < 0 ? $payerA->co : $payeeA->co) {
-      setRisk(($amount < 0 and $channel == TX_POS and r\usdin($desc2)) ? 'cashIn' : 'cashOut');
-    } else {
-      setRisk('exchange');
-    }
-    if ($payerA->risk >= K_RED) setRisk('suspectOut');
+    if ($a1->co xor $a2->co) {
+      setRisk($a1->co ? 'cashOut' : 'cashIn');
+    } else setRisk('exchange');
+
+    if ($a1->risk >= K_RED) setRisk('suspectOut');
   } else {
-    if ($payerA->co and !$payeeA->co and !r\isEmployee($uid2, $uid1)) setRisk('b2p'); // company payment to non-employee individual
+    if ($a1->co and !$a2->co and !r\isEmployee($uid2, $uid1)) setRisk('b2p'); // company payment to non-employee individual
   }
 
-  $samePostal = ($payerA->postalAddr == $payeeA->postalAddr);
-  $withCo = ($payerA->co or $payeeA->co); // at least one party is a company
+  $samePostal = ($a1->postalAddr == $a2->postalAddr);
+  $withCo = ($a1->co or $a2->co); // at least one party is a company
   if (!$withCo and !$samePostal) setRisk('p2p'); // transaction between individuals at different postal addresses
   if ($withCo and (r\owning($uid1, $uid2) or $samePostal or r\isEmployee($uid1, $uid2))) setRisk('inhouse'); // transaction with owner or family member same address or payment by employee
 
   if ($amount > 0) { // never flag reversals
     $since = $created - WEEK7_SECS; // just recent activity by customers, in case many are new
-    $count = db\count('txs_proper', 'uid1=:uid1 AND uid2=:uid2 AND created BETWEEN :since AND :created', compact(ray('uid1 uid2 since created')));
+    $count = db\count('txs', 'uid1=:uid1 AND uid2=:uid2 AND created BETWEEN :since AND :created', compact(ray('uid1 uid2 since created')));
     setBigToFrom('From', 'uid1', $uid1, $amount, $created, $count);
     setBigToFrom('To', 'uid2', $uid2, $amount, $created, $count);
   }
@@ -127,12 +127,12 @@ function txRisk1($xid, &$risk = 0, &$calc = 0) {
     if (!db\exists('r_invoices', 'status=:xid', compact('xid'))) setRisk('invoiceless'); // paid non-employee without an invoice
   }
 
-  setRisk('fromSuspect', $payerA->risk / K_RED, $payerA->risk >= K_RED); // payment from suspicious account
-  setRisk('toSuspect', $payeeA->risk / K_RED, $payeeA->risk >= K_RED); // payment to suspicious account
+  if ($a1->risk+0 >= K_RED) setRisk('fromSuspect', $a1->risk / K_RED); // payment from suspicious account
+  if ($a2->risk+0 >= K_RED) setRisk('toSuspect', $a2->risk / K_RED); // payment to suspicious account
 
   if ($offline) { // offline
     setRisk('offline');
-    if (!db\exists('txs', compact(ray('uid1 uid2 xid')))) setRisk('firstOffline'); // offline for first payment to this company
+    if (!db\exists('txs', 'uid2=:uid2 and created<:created', compact(ray('uid2 created')))) setRisk('firstOffline'); // offline for first payment to this account
   }
   
   extract(setRisk());
@@ -142,49 +142,20 @@ function txRisk1($xid, &$risk = 0, &$calc = 0) {
   db\update('tx_hdrs', compact('xid', 'risk', 'risks'), 'xid');
 }
 
-/*
- * Calculate a risk score for the given ACH.
- * @param assoc $tx: the ACH transaction array
- * @param numeric $risk: (RETURNED) the normalized risk score
- * @param numeric $calc: (RETURNED) the original calculated risk
- */ 
-function achRisk1($tx, &$risk = 0, &$calc = 0) {
-  global $_risk; $_risk = '';
-
-  extract($tx); // all tx fields
-  global $_txid; $_txid = $txid; // for debugging
-  
-  $a = r\acct($payee);
-  if ($amount < 0) setRisk($amount < 0 ? 'toBank' : 'fromBank'); // mark only transfers OUT
-  setRisk($amount < 0 ? 'suspectOut' : 'toSuspect', $a->risk / K_RED, $a->risk >= K_RED);
-  
-  if ($amount < 0) setOriginRisk($payee, $created, $amount);
-  
-  extract(setRisk());
-  $calc = $risk;
-  if ($risk > 0) $risk *= abs($amount); // (don't exaggerate negative risk)
-  $risk *= K_RED / K_THRESHOLD; // normalize
-  db\update('r_usd', compact('txid', 'risk', 'risks'), 'txid');
-}
-
-
 /**
  * Update the risk variables.
  * call by:
- *   setrisk(bitName, multiplier, setBit); OR
+ *   setrisk(bitName, multiplier); OR
  *   setrisk(bitName, $a);
  * @param string $bitName: what risk type -- allows lookup of risk weight and bit number. 
- *   UNUSED: (if risk weight is non-numeric, it does not contribute to the risk score)
- * @param float $multiplier: what to multiply inverted weight by, before adding to risk score
- * @param bool $setBit: UNUSED <set the named bit in $_risks> ("ifany" means set the bit if $multiplier nonzero
+ * @param float $multiplier: (>0) what to multiply inverted weight by, before adding to risk score
  * @param acct $a: add the standard risk score for this risk type, if the bit is already set in this acct
  * @return assoc [risk, risks] if called with no params
  */
-function setRisk($bitName = NULL, $multiplier = 1, $zot = '') {
+function setRisk($bitName = NULL, $multiplier = 1) {
   global $showRiskCalc;
   global $_risk, $_risks; // use _ to distinguish from extracted risk and risks fields (not needed, but clearer)
   global $_acctRisks, $_txRisks, $_acctRiskBits, $_txRiskBits;
-/// log("bitName=$bitName multiplier=$multiplier _risk=$_risk _risks=$_risks"); // debug()
   if (!$multiplier) $multiplier = 0;
   
   if (@$_risk === '') {
@@ -196,19 +167,19 @@ function setRisk($bitName = NULL, $multiplier = 1, $zot = '') {
   }
   if (is_null($bitName)) return ray('risk risks', $_risk, $_risks); // must come after $_risks=0
   
-  if (is_numeric($bit = @$_acctRiskBits[$bitName])) {
+  if (is_numeric($bit = @$_acctRiskBits[$bitName])) { // look up bit and weight in proper table (K_ACCT_RISKS or K_TX_RISKS)
     $weight = $_acctRisks[$bitName];
-  } else {$bit = $_txRiskBits[$bitName]; $weight = $_txRisks[$bitName];}
+  } else list ($bit, $weight) = [$_txRiskBits[$bitName], $_txRisks[$bitName]];
 
-//  if (is_object($a = $multiplier)) list ($multiplier, $setBit) = array($a->risk($bit) ? 1 : 0, 'ifany');
   if (is_object($a = $multiplier)) $multiplier = $a->risk($bit) ? 1 : 0;
-//  if (is_numeric($weight) and $weight) {
-  $_risk += ($risk = $multiplier / $weight);
-//  if ($setBit == 'ifany' ? ($multiplier != 0) : $setBit) u\setBit($_risks, $bit);
-  $setBit = (abs($risk) >= K_BIT_MIN and $multiplier > 0) ? t('yes') : ''; // don't show bit if risk is reversed
-  if ($setBit or (is_object($a) and $multiplier > 0)) u\setBit($_risks, $bit);
-//  }
+  $risk = $multiplier / $weight;
+  $_risk += $risk;
 
+  if (abs($risk) >= K_BIT_MIN) {
+    u\setBit($_risks, $bit);
+    $setBit = t('yes');
+  } else $setBit = ''; // don't show bit if risk is reversed
+ 
   if (isset($showRiskCalc) and $risk) {
     $class = $weight < 0 ? 'goodRisk' : 'badRisk';
     $showRiskCalc .= <<< EOF
@@ -221,8 +192,6 @@ function setRisk($bitName = NULL, $multiplier = 1, $zot = '') {
 </tr>
 EOF;
   }
-
-///  global $_xid;  if ($_xid==1) debug(compact(ray('_xid bitName multiplier setBit bit weight _risk _risks')));
 }
 
 /**
@@ -277,9 +246,9 @@ function setBigRisks($uid, $thresholds) {
 /**
  * Set risks according to an account's standard transaction size.
  * @param string $way: To or From (for risk names)
- * @param string $field: name of field to examine (payer or payee)
+ * @param string $field: name of field to examine (uid1 or uid2)
  * @param string $uid: value of that field
- * @param numeric $amount: transaction amount
+ * @param numeric $amount: (>0) transaction amount
  * @param int $created: transaction creation date
  * @param int $count: number of transactions between payer and payee in the past 7 weeks
  */
@@ -287,38 +256,44 @@ function setBigToFrom($way, $field, $uid, $amount, $created, $count) {
   $since = $created - WEEK7_SECS; // just recent activity by customers, in case many are new
   $other = $field == 'uid1' ? 'uid2' : 'uid1';
   
+  // look at all this account's recent txs with each other acct (avg0=how much on average, max0=biggest, count0=how many)
   $subtotals =<<<EOF
     SELECT AVG(ABS(amt)) AS avg0, MAX(ABS(amt)) AS max0, COUNT(*) AS count0 
-    FROM txs_proper
-    WHERE IF(amt<0,$other,$field)=:uid AND created>:since 
+    FROM txs
+    WHERE IF(amt<0,$other,$field)=:uid AND created BETWEEN :since AND :created-1
     GROUP BY IF(amt<0,$field,$other)
 EOF;
+
+  // get lessCount=how many of those averages were less than this amount, maxAmt=biggest amount, 
+  // fewerCount=how many of those others did less business with this account, othersCount=how many other accts
   $sql = <<< EOF
-    SELECT SUM(IF(:amount<avg0, 1, 0)) AS lessCount, 
+    SELECT SUM(IF(avg0<:amount, 1, 0)) AS lessCount, 
     MAX(max0) AS maxAmt, 
     SUM(IF(count0<:count, 1, 0)) AS fewerCount, COUNT(*) AS othersCount 
     FROM ($subtotals) s
 EOF;
 
-  if ($res = db\q($sql, compact(ray('amount count since uid')))->fetchAssoc()) {
+  if ($res = db\q($sql, compact(ray('amount count since created uid')))->fetchAssoc()) {
     extract($res); // average amt and number of purchases per other
-    if ($lessCount / $othersCount > .90) setRisk("big$way"); // unusually big for this payer/payee (top decile)
-    if (abs($amount) >= $maxAmt) setRisk("biggest$way"); // biggest ever for this payer/payee
-    if ($fewerCount / $othersCount > .90) setRisk("often$way"); // unusually frequent for this payer/payee
+    if ($maxAmt > 0) {
+      if ($lessCount / $othersCount > .90) setRisk("big$way"); // unusually big for this payer/payee (top decile)
+      $over = abs($amount) - $maxAmt;
+      if ($over >= 0) setRisk("biggest$way", $over / $maxAmt); // biggest ever for this payer/payee
+      if ($fewerCount / $othersCount > .90) setRisk("often$way"); // unusually frequent for this payer/payee
+    }
   }
 }
 
 /**
- * Set the "origins" risk bit in the current transaction or outgoing ACH, if appropriate.
+ * Set the "origins" risk bit in the current transaction or outgoing ACH, 
+ *   if the paying account's transactions were sketchy most of the time over the past year.
  * @param int $uid: the account record ID
  * @param int $created: transaction date
  * @param currency $amount: (UNUSED) transaction amount
  */
 function setOriginRisk($uid, $created, $amount) {
   $since = $created - YEAR_SECS;
-  $table = 'SELECT IF(amt<0,uid1,uid2) AS uid,risk,created,amt FROM txs_proper';
-  $where = 'uid=:uid AND risk IS NOT NULL AND created BETWEEN :since AND :created';
-  $avgRisk = db\get('AVG(risk/ABS(amt))', "($table) t", $where, compact(ray('uid since created'))) / (K_RED / K_THRESHOLD);
-///  debug(compact('uid','amount','since','table','where','avgRisk'));
-  if ($avgRisk > 0) setRisk('origins', $multiplier = $avgRisk, $multiplier > 1/2);
+  $where = ':uid IN (uid1,uid2) AND risk IS NOT NULL AND created BETWEEN :since AND :created';
+  $avgRisk = db\get('AVG(risk/ABS(amt))', 'txs', $where, compact(ray('uid since created')));
+  if ($avgRisk > 0) setRisk('origins', $avgRisk);
 }

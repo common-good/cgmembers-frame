@@ -54,7 +54,6 @@ function drupal_error_levels() {
  */
 function _drupal_error_handler_real($error_level, $message, $filename, $line, $context) {
   if (isDEV and $error_level < WATCHDOG_DEBUG) {
-//    die(pr(compact(ray('error_level message filename line context'))));
     if ($error_level == WATCHDOG_CRITICAL and substr($message, 0, 6) == 'fopen(') return; // no easy way to avoid an fopen error on not found
     throw new \Exception($message . ' ' . pr(compact(ray('error_level line filename'))));
   }
@@ -112,7 +111,7 @@ function _drupal_decode_exception($exception) {
       array_shift($backtrace);
     }
     if (isset($exception->query_string, $exception->args)) {
-      $message .= ": " . $exception->query_string . "; " . print_r($exception->args, TRUE);
+/**/  $message .= ": " . $exception->query_string . "; " . print_r($exception->args, TRUE);
     }
   }
   $caller = _drupal_get_last_caller($backtrace);
@@ -248,7 +247,7 @@ function _drupal_log_error($error, $fatal = FALSE) {
       drupal_set_title(t('Error'));
       // We fallback to a maintenance page at this point, because the page generation
       // itself can generate errors.
-      print_r(debug_backtrace());
+/**/  print_r(debug_backtrace());
       print theme('maintenance_page', array('content' => t('The website encountered an unexpected error. Please try again later.')));
       exit;
     }

@@ -91,6 +91,8 @@ function rweb_menu($submenu = '') {
     'history/recurring' => ['sub', t('Recurring Payments'), 'Recurring', 'read', '', t(''), 'list'],
     'history/invoices-to' => ['sub', t('Invoices TO You'), 'Invoices to', 'read', '', t(''), 'log-in'],
     'history/invoices-from' => ['sub', t('Invoices FROM You'), 'Invoices from', 'read', '', t(''), 'log-out'],
+    'history/company-reports' => ['norm', t('Company Reports'), 'Data 2 co', 'read co', '', t(''), 'signal'],
+    'history/company-reports/demographics' => ['call', t('Customer Demographics'), 'Demographics', 'read co'],
     'history/statements' => ['sub', t('Statements'), 'Statements 2', 'read', '', t(''), 'list-alt'],
     'history/notices' => ['sub', t('Notices'), 'Notices 2', 'read', '', t(''), 'envelope'],
 // (temporarily disabled)    'history/tax-info' => ['sub', t('Tax Info'), 'TaxInfo 2', 'read', '', t(''), 'pawn'],
@@ -99,8 +101,6 @@ function rweb_menu($submenu = '') {
     'history/statement' => ['call', t('Statement'), '2', 'read', 'statement'],
     'history/customer-statement' => ['call', t('Customer Statement'), '2', 'read', 'custStatement'],
 
-    'company-reports' => ['call', t('Company Reports'), 'Data 1 co', 'read co'],
-    'company-reports/demographics' => ['call', t('Customer Demographics'), 'Demographics', 'read co'],
 //    'history/notice' => ['call', t('Notice'), 'Notice 2', 'read'],
     
 //    'community' => ['norm', t('Community'), 'FindCo', ANY],
