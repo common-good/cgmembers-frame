@@ -239,8 +239,6 @@ function ipok($uid, $device) {
  * NOTE: from is always SYS_EMAIL
  */
 function rMail($index, $to0, $subs, $reply0 = NULL) {
-  //  require_once __DIR__ . '/dkim.php';
-  //  if (isGAME) return; // no emails from game site
   global $testEmails, $mya;
 
   foreach (ray('secure vsecure') as $k) unset($subs[$k]); // show not even in error messages
@@ -257,6 +255,9 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
     $subs['shortName'] = $toA->name;
     $subs['zip3'] = substr($toA->zip, 0, 2); // temporarily show a wider region than zip3
     if ($toA->closed) return r\tellAdmin(t('attempt to email closed account'), compact(ray('index subs reply0')));
+    if ($jid = $toA->jid) $jA = r\acct($jid);
+    if ($toA->depends) $jA = r\acct($toA->helper); // sponsored accounts are never joint
+    if ($jA and u\test()) $testEmails[] = compact(ray('index toEmail subs', $index, $jA->email, $subs));
   } else $to = $toEmail = $to0;
   
   $testEmails[] = compact(ray('index toEmail subs'));
@@ -268,11 +269,9 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
   
   if (is_object($replyA = $reply)) $reply = [$replyA->email => $replyA->fullName];
 
-  //  $nolog = ray(R_NOLOG); // subs not to log (sensitive data)
   foreach ($subs as $k0 => $v) if (!is_object($v) and !is_array($v)) {
-    $k = "%$k0"; // '{' . $k0 . '}';
+    $k = "%$k0";
     $resubs[$k] = $v;
-    //    $logSubs[$k] = in($k0, R_NOLOG) ? '(?)' : $v; // hide personal info and secrets
   }
 
   //  $index = str_replace('_', '-', $index); // correct Drupal template names to rCredits standard
@@ -283,15 +282,12 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
   $logSubs = u\noSecrets($resubs) + ["\r\n" => '', ' style=' => ' stylish=']; // easier reading for log and tests & evade CSP
   $message = strtr($body, $logSubs);
   $erInfo = compact(ray('index toEmail subject message'));
-  f('t.output', 'Actual (in rMail) ' . pr($erInfo), 'email');
   u\loga('email', $erInfo + ['toUid' => @$toA->id]);
+  f('t.output', 'Actual (in rMail) ' . pr($erInfo), 'email');
 
   if (isPRODUCTION !== TRUE) { // make sure we never send rogue emails from test server even if constant isn't set
 /**/  if (!test() and $mya and $mya->cAdmin) debug(compact(ray('subject to body')));
     return; // no emails unless real!!
-    if ($toEmail != r\regionField('email') and $toEmail != R_ADMIN_EMAIL) return TRUE;
-    if (isDEV) return TRUE; // otherwise cURL error 60: SSL certificate problem: unable to get local issuer certificate
-    $subject = '(test) ' . $subject;
   }
   
   require_once DRUPAL_ROOT . '/vendor/swiftmailer/lib/swift_required.php';
@@ -321,7 +317,11 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
   if ($reply) $m->setReplyTo($reply);
   if (@$sms) $m->setSubject('')->setTo($toEmail); // send as text message
   try {
-    $success = $mailer->send($m);
+    $mailer->send($m);
+    if (nn($jA)) { // also send to partner in joint account
+      $m->setTo([$jA->email => $jA->fullName]);
+      $mailer->send($m);
+    }
   } catch (Exception $e) {
     u\EXPECT($toEmail != R_ADMIN_EMAIL, 'cannot send admin email');
     r\tellAdmin(t('cannot send email'), $erInfo);
@@ -374,7 +374,6 @@ function message($uid, $index, $subs = [], $topic = '') {
  */
 function notify($uid, $index, $subs = [], $force = FALSE) {
   global $channel;
-  if (isGAME) return;
   $a = r\acct($uid);
   u\EXPECT($a, 'no account');
   $subs['uid'] = $uid;
@@ -414,7 +413,6 @@ function notify($uid, $index, $subs = [], $force = FALSE) {
  */
 function notifyEntries($a, $index, $entries, $force = FALSE) {
   global $channel;
-  if (isGAME) return;
   u\EXPECT($a, 'no account');
   $subs= [];
   $subs['uid'] = $a->uid;
@@ -911,16 +909,12 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
 
 /**
  * Package the return arguments and alert staff on certain errors.
- * @param mixed $message: the success or error message OR an array containing the two params
+ * @param mixed $message: the error message
  * @param assoc $info: (optional) message substitutions and other info about transaction
- *   includes success=TRUE if the transaction was successful
- * @param bool $confirm: UNUSED <to be confirmed> (default FALSE)
  */
-function txRet($message, $info = []) {
-  $info0 = $info;
-  if (is_array($message)) {list ($message, $info, $confirm) = $message; $info += $info0;}
-  if (!@$info['success']) r\tellCO('failed transaction', $info + @compact('message', 'confirm'));
-  return [$message, $info];
+function txErr($message, $info = []) {
+  r\tellCO('failed transaction', $info + @compact('message'));
+  return [$message, $info + ['success' => FALSE]];
 }
 
 /**

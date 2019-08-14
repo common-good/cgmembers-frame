@@ -231,7 +231,7 @@ function doit(what, vs) {
 
   case 'signup':
     var form = $('#frm-signup');
-    if (vs['clarify'] !== 'undefined') $('#edit-forother a').click(function () {alert(vs['clarify']);});
+//    if (vs['clarify'] !== 'undefined') $('#edit-forother a').click(function () {alert(vs['clarify']);});
     form.submit(function (e) {return setPostalAddr(false);});
     if (vs['preid']) $('#edit-phone').change(function () {
       data = {

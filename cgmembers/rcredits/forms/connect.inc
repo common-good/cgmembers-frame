@@ -58,6 +58,11 @@ function formConnect($form, &$sta, $args = '') {
     $fields = 'title subtext connect connectFields';
   }
 
+  if ($mya->depends) {
+    $subtext .= t('<p><b class="loud">Note: </b>This feature is not permitted for trial and sponsored accounts.</p>');
+    return cgform(compact(ray('title subtext connect')));
+  }
+  
   jsx('bank-prefs', $vs = ray('connectLabel saveLabel mindft', t('Connect'), t('Save'), R_MIN_DEFAULT));
   return cgform(@compact(ray($fields)) + w\setupFoot($hasBank ? $vs['saveLabel'] : $vs['connectLabel']));
 }

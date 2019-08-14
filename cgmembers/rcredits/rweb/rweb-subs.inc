@@ -1487,8 +1487,8 @@ function contactFields($defaults = [], $step0, $myid = 0) {
     $address = textFld(t('Street Address:'), [t('Physical address'), t('Where is your building located (physical address)?')], required(@$address) + $addressAttrib);
     $city = textFld(t('City:'), [t('City where you live')], required(@$city) + $cityAttrib);
     $state = selectFld(t('State:'), t(''), dft(@$state) + $stateAttrib); // can't use required() here
-    $zip = textFld(t('Postal Code:'), [t('Physical location postal code'), t('Postal code for your <em>physical location</em>')], required(@$zip) + $zipAttrib);
-
+    $zip = zipFld($zip);
+    
     $sameAddr2 = ($step0 ? @$state2 : !(@$mya and $mya->cAdmin)) // show box on signup (until mailing addr filled) & to admin
     ? item('', t('Mailing Address')) 
     : w\boxFld('sameAddr', t('Mailing Address'), t('same as above'), 0);
@@ -1518,6 +1518,8 @@ function contactFields($defaults = [], $step0, $myid = 0) {
 
   return compact(ray($fields));
 }  
+
+function zipFld($zip = NULL) {return textFld(t('Postal Code:'), [t('Physical location postal code'), t('Postal code for your <em>physical location</em>')], required(@$zip));}
 
 /**
  * Return a list of company categories.
@@ -2256,7 +2258,8 @@ function webAccess($perms = NULL) {
     : ($perm == 'superadminORdev' ? (($mya and $mya->superAdmin) or isDEV)
     : ($perm == 'prose' ? ($mya and $mya->proSe)
     : ($perm == 'investor' ? ($mya and ($mya->iclub or db\exists('r_stakes', 'uid=:id', ['id'=>$mya->id])))
-    : ($mya and $mya->can(u\consta('b', $perm))) )))))));
+    : ($perm == 'depends' ? ($mya and $mya->depends and $mya->proSe)
+    : ($mya and $mya->can(u\consta('b', $perm))) ))))))));
 
     if ($not ? $pass : !$pass) return FALSE;
   }

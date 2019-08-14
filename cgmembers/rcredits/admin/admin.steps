@@ -43,6 +43,7 @@ function extraSetup() {
  *     TEST activate AdminDeactivatesAnAccount
  *     MAKE changes Setup
  *     MAKE checks Setup
+ *     MAKE other Setup
  */
 function members($list) {return t\members($list);}
 
@@ -84,6 +85,7 @@ function weShowWith($title, $content = FALSE, $showDebugs = TRUE) {
  * in: MAKE activate AdminActivatesAnAccount
  *     MAKE activate AdminDeactivatesAnAccount
  *     MAKE changes AMemberChangesSomeSettings
+ *     MAKE other AdminDeletesAnAccount
  */
 function memberCompletesFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values);}
 
@@ -141,3 +143,10 @@ function memberHasNoPhotoIDRecorded($id) {return t\noPhotoId($id);}
  * in: TEST changes AMemberChangesSomeSettings
  */
 function with($content) {return t\weShow($content);}
+
+/**
+ * these (ARG): (ARG)
+ *
+ * in: TEST other AdminDeletesAnAccount
+ */
+function these($thing, $list) {return t\these($thing, $list);}

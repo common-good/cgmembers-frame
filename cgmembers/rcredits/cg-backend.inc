@@ -287,8 +287,8 @@ function reverse($xid) {
   $subs = compact('xid');
 
   $DBTX = \db_transaction();
-  if (db\exists('tx_hdrs', 'reversesXid=:xid', $subs)) return r\txRet('already reversed', $subs);
-  if (!$tx = r\Tx::read($xid)) return r\txRet('no transaction', $subs);
+  if (db\exists('tx_hdrs', 'reversesXid=:xid', $subs)) return r\txErr(t('already reversed'), $subs);
+  if (!$tx = r\Tx::read($xid)) return r\txErr(t('no transaction'), $subs);
 
   // It seems OK to reverse it
   $newTx = clone $tx;  // this is a shallow copy, entries points to the same entries
@@ -307,7 +307,7 @@ function reverse($xid) {
   $xid = $newTx->insert();
   if (!$xid) {
     $DBTX->rollback();
-    return r\txRet('tx save err', $newTx);
+    return r\txErr(t('tx save err'), $newTx);
   }
 
   unset($DBTX);
@@ -316,11 +316,11 @@ function reverse($xid) {
   $did = ($tx->actorEntry->amount > 0) ? ($tx->goods==FOR_GOODS ? 'refunded' : 'credited') : 're-charged';
   $info = ['ok' => 1, 'txid' => $xid, 'created' => $newTx->created, // txid is xid in transaction reports
     'balance' => $mya->can(B_SECRET) ? '*0' : $mya->balance,
-    'success' => true, 'xid' => $xid, 'created0' => $newTx->created, 'newTx' => $newTx,
+    'success' => TRUE, 'xid' => $xid, 'created0' => $newTx->created, 'newTx' => $newTx,
     'solution' => 'reversed', 'did' => $did, 'otherName' => $tx->otherA->fullName,
     'amount' => u\fmtAmt(abs($newTx->otherEntry->amount)), 'why'  =>  $tx->otherEntry->description];
   
-  return r\txRet($message, $info);
+  return [$message, $info];
 }
 
 /**
@@ -418,23 +418,9 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
   global $scanned, $channel;
   
   if (is_null($goods)) $goods = FOR_GOODS;
-  switch ($type) {
-  case 'charge':
-  case 'draw':
-    $taking = true;
-    break;
-  case 'payment':
-  case 'invoice payment':
-    $taking = false;
-    break;
-  case 'transfer': // until we figure out what it should be
-    $taking = $amount < 0;
-    break;
-  default:
-    u\EXPECT(false, "type must not be '$type'.");
-  }
+  $taking = ($type == 'charge' or $type == 'draw' or ($type == 'transfer' and $amount < 0));
   
-  extract(u\exactly('created force boxId', $data, [now(), 0, null]));
+  extract(u\exactly('created force boxId', $data, [now(), 0, NULL]));
   extract(u\exactly('offline loan investment stake fine noask funding crumbs recurs gift', $data, FALSE));
 
   $short = FALSE;
@@ -447,7 +433,7 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
   $amount = round($amount, 2); // ignore fractions of cents
   if ($amount == 0) {
     r\tellAdmin('zero transaction', $erInfo + ['stack' => trace()]);
-    return r\txRet('zero transaction', $erInfo + ['success' => false]);
+    return r\txErr(t('zero transaction'), $erInfo);
   }
   $reallyTaking = ($taking xor $amount < 0); // not taking if charging a negative amount
 
@@ -462,24 +448,13 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
     ${$k . 'For'} = is_array($for) ? $for[${$k . 'Id'} == $actorId ? 0 : 1] : $for;
   }
     
-/*  list ($loser, $gainer) = u\order($reallyTaking, $otherA, $actorA);
-  list ($loserFor, $gainerFor) = u\order($reallyTaking, $otherFor, $actorFor);
-  $loserTid = $loser->nextTid();
-  $gainerTid = $gainer->nextTid();
-  */
-  
   $erInfo += compact('loserId');
-  
-  /*
-  list ($payer, $payee) = u\order($taking, $otherId, $actorId); // Analyze who's buying or selling
-  list ($payerA, $payeeA) = [r\acct($payer), r\acct($payee)];
-  list ($payerAgent, $payeeAgent) = u\order($taking, $otherA->agentId, $actorA->agentId);
-*/
+
   $lastTx = $actorA->lastTx();
   if (!empty($lastTx) and !$force and $channel != TX_WEB and $lastTx->actorId == $actorId
       and $lastTx->otherId == $otherId and $lastTx->goods == $goods and $lastTx->getAmount($actorA) == $amount
       and ((now() - $lastTx->created) < R_DUPTX_MINS * MIN_SECS)) {
-    return r\txRet('duplicate transaction', $erInfo + ['success' => false]);
+    return r\txErr(t('duplicate transaction'), $erInfo);
   }
 
   if ($err = r\txPermErr($actorA, $otherA, $taking, $amount < 0)) { // Check permissions
@@ -490,7 +465,7 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
       foreach (['agent1'=>$actorA, 'agent2'=>$otherA] as $k => $a) $erInfo += [$k => $a->proSe ? t('self') : $a->fullName];
       foreach ([$actorA, $otherA] as $a) if (!$a->proSe) r\message($a->id, $msg, $erInfo);
       r\tellAdmin($msg . ' ' . t($erMsg, $erSubs), $erInfo + $erSubs);
-    } else return r\txRet($erMsg, $erInfo + $erSubs + ['success'=>false]);
+    } else return r\txErr($erMsg, $erInfo + $erSubs + ['success'=>false]);
   }
 
   foreach ([$actorA, $otherA] as $a) if (!$a->co and !($channel == TX_POS ? $a->agentA->ided : $a->ided)) {
@@ -498,15 +473,11 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
       r\tellAdmin('forced without photoId', $erInfo); 
     } elseif ($gainerId != CGID) { // and !$gainer->coCan(CO_FAST)
 //      r\tellAdmin('tx without photoId', $erInfo); 
-//      return r\txRet($a == $actorA ? 'no photoid' : 'other no photoid', $erInfo + ['who' => $otherA->fullName]);
+//      return r\txErr($a == $actorA ? 'no photoid' : 'other no photoid', $erInfo + ['who' => $otherA->fullName]);
     }
   }
-  // Check the amount
-  if ($error = u\badAmount($amount)) return r\txRet($error, $erInfo+['success'=>false]);
-//  $need = $amount - @$payerReward; // leave room for reversing rewards (minus a negative)
 
-//  list ($loserType, $gainerType) = u\order($loser->isMe($payer), E_PAYER, E_PAYEE);
-
+  if ($error = u\badAmount($amount)) return r\txErr($error, $erInfo);
   $flagNames = 'offline short crumbs recurs gift loan investment stake fine noask funding';
   $flags = 0;
   foreach (ray($flagNames) as $k) if ($$k) u\setBit($flags, $k);
@@ -514,31 +485,40 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
   txEntryPair($entries, $amount, [$e1A, $e2A], [$e1For, $e2For], E_PRIME, [$e1Tid, $e2Tid]);
   
   $DBTX = db_transaction();
+
   // Create the transaction
-/*  $flags = ($offline ? 1 << B_OFFLINE : 0) | ($short ? 1 << B_SHORT : 0) | ($crumbs ? 1 << B_CRUMBS : 0)
-    | ($recurs ? 1 << B_RECURS : 0) | ($gift ? 1 << B_GIFT : 0) | ($loan ? 1 << B_LOAN : 0)
-    | ($investment ? 1 << B_INVESTMENT : 0) | ($stake ? 1 << B_STAKE : 0) | ($fine ? 1 << B_FINE : 0)
-    | ($noask ? 1 << B_NOASK : 0) | ($funding ? 1 << B_FUNDING : 0);
-    */
   $info = ray('actorId actorAgentId',$actorA->id, $actorA->agentId) + compact(ray('flags channel boxId goods created recursId'));
-  //amount created payer payee payerAgent payeeAgent for data taking roundup goods force offline investment short'));
   $tx = new r\Tx($info);
   if (!$tx) {
     $DBTX->rollback();
-    return r\txRet('tx create err', $erInfo+['success'=>false]);
+    return r\txErr(t('tx create err'), $erInfo);
   }
-  /*
-  $entries = [new r\TxEntry(['entryType' => $gainerType, 'amount' => abs($amount), 'uid' => $gainer->id, 'agentUid' => $gainer->agentId, 'description' => $gainerFor, 'acctTid' => $gainerTid]),
-              new r\TxEntry(['entryType' => $loserType, 'amount' => 0-abs($amount), 'uid' => $loser->id, 'agentUid' => $loser->agentId, 'description' => $loserFor, 'acctTid' => $loserTid])];
-              */
+
+  $needed = abs($amount);
 
   // Apply coupon
   if ($amount > 0 AND ($goods != FOR_USD)) {
     $rebate = handleCoupon($entries, $loserA, $gainerA, $amount);
-  } else {$rebate = 0;}
-  
+    $needed -= $rebate;
+  }
+
+  // Apply food fund (or other special) donation
+  if ($needed * $e1A->food > .005 and $e2A->foody) { // apply percentage donation to food fund
+    $foodUid = db\get('uid', 'users', "name='foodfund'");
+    $foodAmt = round($needed * $e1A->food, 2);
+    if ($foodUid) txEntryPair($entries, $foodAmt, [$e1A, $foodUid], t('donation to Food Fund (%pct)', 'pct', u\fmtAmt($e1A->food, '%')), E_DONATION);
+    $needed -= $foodAmt;
+  }
+
+  // Apply any roundup
+  if ($e1A->roundup and $needed > 0 and !($e2Id == CGID and $recurs and $needed < 1)) { // payer roundups, not actor or loser (don't round up reversals, cashouts, roundups, or recurring gifts under $1)
+    if ($cents = fmod($needed, 1.0)) {
+      txEntryPair($entries, 1 - $cents, [$loserId, CG_ROUNDUPS_UID], t('roundup donation'), E_DONATION);  
+      $needed = ceil($needed); // == 1-$cents
+    }
+  }
+
   // Calculate any balance shortfall
-  $needed = abs($amount)-$rebate;
   if ($shortfall = ($loserA->id < 0 ? 0 : $loserA->shortfall($goods, $needed, TRUE, $actorA))) {
     if ($force) {
       $short = TRUE; // flag overdraft
@@ -549,30 +529,15 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
       $loserA->suggestAuto();
       $details = t('|%loser was short by %short trying to pay %gainer %amount (available balance is %avail)', 'loser short gainer amount avail', $loserName, $short, $gainerName, u\fmtAmt($needed), $avail);
       $DBTX->rollback();
-      return r\txRet($msg, compact(ray('otherName short details avail')) + ['success'=>false]);
+      return r\txErr($msg, compact(ray('otherName short details avail')) + ['success'=>false]);
     }
   }
 
-  // Apply any roundup
-  if ($e1A->roundup and $needed > 0 and !($e2Id == CGID and $recurs and $needed < 1)) { // payer roundups, not actor or loser (don't round up reversals, cashouts, roundups, or recurring gifts under $1)
-    $cents = fmod($needed, 1.0);
-    if ($cents != 0) txEntryPair($entries, 1 - $cents, [$loserId, CG_ROUNDUPS_UID], t('roundup donation'), E_DONATION);
-/*
-      $donation = 1 - $cents;
-      $entries[] = new r\TxEntry(['amount' => $donation, 'uid' => CG_ROUNDUPS_UID, 'agentUid' => CG_ROUNDUPS_UID, 'description' => t('roundup donation'), 'entryType' => E_DONATION]);
-      $entries[] = new r\TxEntry(['amount' => 0-$donation, 'uid' => $loser->id, 'agentUid' => $loser->agentId, 'description' => t('roundup donation (on %tid)', ['tid' => $loser->nextTid]), 'entryType' => E_DONATION]);
-    }
-      */    
+  if ($gainerA->co and $gainerA->depends and db\sum('amt', 'txs_noreverse', 'uid2=:gainerId') + needed > TRIALCO_LIMIT) {
+    $DBTX->rollback();
+    return r\txErr(t('trial co over', 'limit', u\fmtAmt(TRIALCO_LIMIT)), $erInfo);
   }
-  
-  if ($needed * $e1A->food > .005 and $e2A->foody) { // apply percentage donation to food fund
-    $foodUid = db\get('uid', 'users', "name='foodfund'");
-    if ($foodUid) txEntryPair($entries, round($needed * $e1A->food, 2), [$e1A, $foodUid], t('donation to Food Fund (%pct)', 'pct', u\fmtAmt($e1A->food, '%')), E_DONATION);
-  }
-  
-  $rbal = $e1A->balance;
-  $ebal = $e2A->balance;
-
+    
   $tx->addEntries($entries);
   if (array_key_exists('xid', $data)) {
     $tx->xid = $data['xid'];
@@ -582,7 +547,7 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
   }
   if (!$xid) {
     $DBTX->rollback();
-    return r\txRet('tx save error', ['success'=>false]);
+    return r\txErr(t('tx save error'), $erInfo);
   }
   unset($DBTX);
   
@@ -612,15 +577,10 @@ function txEntryPair(&$txes, $amount0, $a0, $description0, $entryType0, $acctTid
   }
 }
   
-// $reversing=1, actor is 553, $tx = $80 from 553 to 551
-// $byme = true; $tome = false
+
 function sendNotifications($type, $tx, $shortfall) {
   u\EXPECT(compact(ray('type tx shortfall')), 'string tx int|float');
-///     debug("sendNotifications($type, " . print_r($tx,true) . ", $shortfall");
-  
-  /* global $mya; */
-  /* $mya = r\acct(); */
-  /* $byMe = $mya->isMe($tx->actorId); */
+
   $otherA = $tx->otherA;
   $toMe = $tx->actorAmount > 0;
 
@@ -688,8 +648,8 @@ function sendNotifications($type, $tx, $shortfall) {
 
   if ($otherA->id < 0 or $otherA->id > CANONIC_ACCTS) r\notify($tx->otherId, $notice, $args);  // no notifications to canonic accounts
   $msg = 'report tx';
-//  return r\txRet($msg, $tx->reportArgs($tx->actorA, TRUE, $shortfall) + compact(ray('msg did')));
-  return r\txRet($msg, $args + compact(ray('msg did')));
+//  return r\txErr($msg, $tx->reportArgs($tx->actorA, TRUE, $shortfall) + compact(ray('msg did')));
+  return [$msg, $args + compact(ray('msg did'))];
 }
 
 /**
@@ -744,7 +704,7 @@ EOF;
  * @param acct $actorA: account that initiated transaction, probably the same as $payer or $payee
  * @param acct $otherA: the other account, probably the same as $payee or $payer
  * @param acct $needed: amount needed to pay, should be positive; (e.g., price less rebates)
- * @return FALSE if there is no shortfall, otherwise a message (created by txRet)
+ * @return FALSE if there is no shortfall, otherwise a message (created by txErr)
  */
 function checkForShortfall($goods, $payer, $payee, $actorA, $otherA, $needed, $force = FALSE) {
 ///    debug("checkForShortfall($goods, $payer->id, $payee->id, $actorA->id, $otherA->id, $needed, $force)");
@@ -767,7 +727,7 @@ function checkForShortfall($goods, $payer, $payee, $actorA, $otherA, $needed, $f
                'payer short payee amount avail',
                $payer->fullName, u\fmtAmt($shortfall), $payee->fullName, u\fmtAmt($needed),
                u\fmtAmt($needed - $shortfall));
-  return r\txRet($msg, ray('otherName short details avail',
+  return r\txErr($msg, ray('otherName short details avail',
                            $otherA->fullName, u\fmtAmt($shortfall), $details, u\fmtAmt($needed-$shortfall)));
 }
   
@@ -817,9 +777,9 @@ function invoice($actorA, $otherA, $amount, $purpose, $goods, $extra = [], $recu
   list ($payee, $payer) = array($actorA->id, $otherA->id);
   u\setDft($purpose, $why = ray(R_WHYS)[$goods]);
   $subs = ray('myName otherName otherEmail otherPhone amount why purpose did op', $actorA->fullName, $otherA->fullName, $otherA->email, u\fmtPhone($otherA->phone), u\fmtAmt($amount), $why, $purpose, t('charged'), t('charged'));
-  if ($err = u\badAmount($amount, '>0')) return r\txRet($err, $subs);
-  if ($err = r\txPermErr($actorA, $otherA, TRUE)) return r\txRet($err, $subs);
-  if (r\dupTx($payee, $payer, -$amount)) return r\txRet('duplicate transaction', $subs);
+  if ($err = u\badAmount($amount, '>0')) return r\txErr($err, $subs);
+  if ($err = r\txPermErr($actorA, $otherA, TRUE)) return r\txErr($err, $subs);
+  if (r\dupTx($payee, $payer, -$amount)) return r\txErr(t('duplicate transaction'), $subs);
   
   u\setDft($status, ($channel != TX_FOREIGN and r\relation(':IS_AUTOPAY', $payee, $payer)) ? TX_APPROVED : TX_PENDING);
   $data = serialize($extra);

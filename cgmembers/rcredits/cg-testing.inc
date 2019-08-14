@@ -125,7 +125,7 @@ function doThing($info, $thing, $key = 'id') {
   global $testOnly;
 
   $table = $thing = strtolower($thing);
-  if (!u\starts($thing, 'tx_') and $thing != 'signup') $table = 'r_' . $table;
+  if (!u\starts($thing, 'tx_') and !u\starts($thing, 'x_') and $thing != 'signup') $table = 'r_' . $table;
   if (!in($thing, 'usd coupated signup') and substr($thing, -1, 1) != 's') $table .= 's';
   if ($table == 'tx_hdrs') $key = 'xid';
 

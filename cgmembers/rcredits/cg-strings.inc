@@ -288,6 +288,7 @@ EOF
   'bad coupon' => t('That is not a valid coupon type.'),
   'invalid gift card' => t('That is not a valid gift card code. Try again.'),
   'already redeemed' => t('That coupon has already been redeemed.'),
+  'trial co over' => t('Temporary "trial" company accounts are limited to a total of %limit in payments received. This payment cannot go through, because it would put the account over that limit.'),
   
 //  'savings too low' => t('Until your %PROJECT community declares itself a stable Common Good Community, your savings amount must be at least as much as the incentive rewards you have received (%rewards to date)'),
   'savings too low' => t('Your additional savings amount cannot be less than zero.'),

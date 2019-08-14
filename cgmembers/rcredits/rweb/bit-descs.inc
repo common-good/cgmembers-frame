@@ -16,6 +16,7 @@ $flagHelp = array(
   'roundup' => t('Round payments up to nearest dollar, donate the cents to the community fund and the common good.'),
   'nonudge' => t('Don\'t send reminder emails.'),
   'nosearch' => t('Member wants to be not findable by other members, by phone or email.'),
+  'depends' => t('Account is a dependent account (individual or business). Can\'t change settings. FederalId is sponsor\'s.'),
   'bankOk' => t('The member\'s connected bank account has been verified.'),
   'weekly' => t('Send notices only weekly.'),
   'monthly' => t('Send notices only monthly.'),

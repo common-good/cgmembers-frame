@@ -63,9 +63,9 @@ function formSummary($form, &$sta) {
   if ($mya->canManage and $mya->member) {
     $hasMultipleAccounts = ($mya->co or db\exists('r_relations r LEFT JOIN users u ON u.uid=r.main', 'other=:id AND permission>0 AND u.:IS_CO', ['id' => $mya->agentId]));
     $another = $hasMultipleAccounts ? t('Another') : t('a');
-    $makeCo = w\btn('/signup-company', t('Open %another Company Account', compact('another')), 'primary', 'xs');
+    $makeCo = $mya->depends ? '' : w\btn('/signup-company', t('Open %another Company Account', compact('another')), 'primary', 'xs');
 //    if (!$mya->jid and !$mya->co) $makeJoint = w\btn('/signup/joint=1', t('Make this a joint account'), 'primary', 'xs');
-    $makeJoint = ($mya->member and !$mya->jid and !$mya->co) ? w\btn('/prejoin', t('Make this a joint account'), 'primary', 'xs') : '';
+    $makeJoint = ($mya->member and !$mya->jid and !$mya->co and $mya->depends) ? w\btn('/prejoin', t('Make this a joint account'), 'primary', 'xs') : '';
     $goFood = $mya->food > 0 ? lnk('/settings/food', t('Food Fund')) : btn('/settings/food', t('Food Fund'), 'warning');
     if ($mya->cAdmin) $goFood = '<br><br>' . $goFood; // make sure it doesn't hide behind the photo
     if (!$mya->co and $hasMultipleAccounts) $clickPhoto = item(t('Click your photo%where to manage your other account(s).', 'where', $mya->cAdmin ? t(' in the upper right corner') : ''));
@@ -91,8 +91,9 @@ function formSummary($form, &$sta) {
 //    $savings = item(u\fmtAmt($mya->savings) . t('<small> (your total incentive rewards to date)</small>', [
 //    list ($rewardNote, $rewardDesc) = $mya->cttyRewardy ? [t('<small> (your total incentive rewards to date)</small>'), t('This amount will be yours to keep, once your community reaches a certain size.')] : ['', t('Some of this amount may be yours to keep, at your %PROJECT community\'s decision, once membership reaches a certain size.')];
 //    $savings = item(u\fmtAmt($mya->rewards) . $rewardNote, t('Credit Line:'), $rewardDesc);
-    $suffix = $mya->debt ? '' : t(' (<%a>Click here</a> to let your balance go negative.)', '_a', 'a id="activate-credit"');
-    $creditLine = item(u\fmtAmt(-$mya->floor), t('Credit Line:'), t('Based on your account\'s average monthly activity over the past 6 months.'), w\suffix($suffix));
+    $suffix = ($mya->debt or $mya->depends) ? '' : t(' (<%a>Click here</a> to let your balance go negative.)', '_a', 'a id="activate-credit"');
+    list ($credit, $normally) = $mya->depends ? ['$0', t(' (normally)')] : [u\fmtAmt(-$mya->floor), ''];
+    $creditLine = item($credit, t('Credit Line:'), t('Based%normally on your account\'s average monthly activity over the past 6 months.', compact('normally')), w\suffix($suffix));
 //    $committed = item(u\fmtAmt(max(0, $mya->committed)), t('Committed:'), t('reserved for donation to Common Good Finance'));
 
     $successes = db\count('users', 'helper=:myid AND activated<>0', compact('myid'));
