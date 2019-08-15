@@ -1,3 +1,6 @@
+2019-08-15 hotix/reports-link
+. fixed links to company reports
+
 2019-08-10 feature/coupon-fixes
 . fixed bug in coupon transaction creation that recorded coupated id instead of coupon id (also corrected past data)
 . backing text now compares it to FDIC
