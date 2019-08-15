@@ -1487,7 +1487,7 @@ function contactFields($defaults = [], $step0, $myid = 0) {
     $address = textFld(t('Street Address:'), [t('Physical address'), t('Where is your building located (physical address)?')], required(@$address) + $addressAttrib);
     $city = textFld(t('City:'), [t('City where you live')], required(@$city) + $cityAttrib);
     $state = selectFld(t('State:'), t(''), dft(@$state) + $stateAttrib); // can't use required() here
-    $zip = zipFld($zip);
+    $zip = zipFld(nn($zip));
     
     $sameAddr2 = ($step0 ? @$state2 : !(@$mya and $mya->cAdmin)) // show box on signup (until mailing addr filled) & to admin
     ? item('', t('Mailing Address')) 
@@ -1521,6 +1521,21 @@ function contactFields($defaults = [], $step0, $myid = 0) {
 
 function zipFld($zip = NULL) {return textFld(t('Postal Code:'), [t('Physical location postal code'), t('Postal code for your <em>physical location</em>')], required(@$zip));}
 
+/**
+ * Interpret cookie to get source of new member and record it in the signup table.
+ * @param string $source2: where the partner or cookie says the new member came to us from, if known
+ */
+function getPreId($source2 = NULL) {
+  if (!$preid = nn($_COOKIE['preid'])) {
+    $preid = time() . u\randomString(9, 'digits');
+    setcookie('preid', $preid, time() + 100 * YEAR_SECS, '/', $_SERVER['HTTP_HOST']);
+  } else $preid = substr(preg_replace('/\\D*/', '', $preid), 0, 20); // ignore all but the digits
+
+  if ($oldPreid = db\get('preid', 'signup', compact('preid'))) {
+    $preid = $oldPreid;
+  } else {db\insert('signup', ray('preid source ip', $preid, substr($source2, 0, 255), $_SERVER['REMOTE_ADDR']), 'preid');}  
+}
+  
 /**
  * Return a list of company categories.
  */

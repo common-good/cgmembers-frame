@@ -69,10 +69,12 @@ class Acct {
     if (!empty($state) and !is_numeric($state)) { // allow state abbrevs within US
       $state = db\get('id', 'r_states', 'abbreviation=:state and country_id=:US_COUNTRY_ID', compact('state'));
     }
-                                     
-    $stepsDone = $uid == 1 ? [] : r\stepsDone0();
-    foreach (ray($co ? 'proxies connect ssn' : 'company relations') as $k) unset($stepsDone[$k]);
-    $stepsDone['food'] = TRUE; // omit this step unless signing up through Food Fund promo (set FALSE in signup.inc)
+
+    if (!isset($stepsDone)) {                                 
+      $stepsDone = $uid == 1 ? [] : r\stepsDone0();
+      foreach (ray($co ? 'proxies connect ssn' : 'company relations') as $k) unset($stepsDone[$k]);
+      $stepsDone['food'] = TRUE; // omit this step unless signing up through Food Fund promo (set FALSE in signup.inc)
+    } else $stepsDone = ray($stepsDone);
 
     if (empty($region)) $region = empty($zip) ? -r\uidRegion($community) : -r\region($country, $state, $zip);
     $record = empty($uid) ? compact('name') : compact('uid', 'name');

@@ -84,6 +84,7 @@ function run() {
 // NO (happens too often)  u\log('running cron');
   // Allow execution to continue even if the request gets canceled.
   @ignore_user_abort(TRUE);
+  flog('running cron at ' . time());
 
   // Prevent session information from being saved while cron is running.
   $original_session_saving = \drupal_save_session();

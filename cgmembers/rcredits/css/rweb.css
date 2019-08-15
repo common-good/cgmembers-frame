@@ -849,8 +849,9 @@ div.password-confirm .error {font-weight:bold; color:red;}
 #frm-signin #edit-forgot {display:inline-block; margin:5px 0 0 15px;}
 
 /* Signup (New account) */
-#frm-signup  #edit-title {margin-bottom:0;}
-#frm-signup  #edit-forother .control-data {padding-top:0; font-size:80%;}
+#frm-signup  #edit-title,
+#frm-trial #edit-title {margin-bottom:0;}
+#edit-forother .control-data {padding-top:0; font-size:80%;} /* for both Signup and Trial */
 #frm-signup  #companyInfo {top:0; margin:0 0 10px 0; padding:0 15px; border:1px solid darkgreen; background-color:lightyellow;}
 #frm-signup .form-item-companyPhon label span {display:none;}
 /* #frm-signup #edit-buysat .checkbox {width:150px;} */
