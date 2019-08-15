@@ -73,7 +73,7 @@ function formData_submit($form, &$sta) {
 
   $d = substr(op($sta), 0, 1);
   if (strpos('0123456789', $d) !== FALSE) $op = $d . $op; // leading digit, if any
-  $url = $isco ? '/company-reports' : '/community/data';
+  $url = $isco ? '/history/company-reports' : '/community/data';
   w\go("$url/qName=" . urlencode($op));
 }
 
@@ -112,6 +112,6 @@ X;
     }
     return w\item(w\makeTable(@$res, $heads, $colClasses, @$rowClasses));
   } elseif ($nm == 'demographics') {
-    w\go('/company-reports/demographics');
+    w\go('/history/company-reports/demographics');
   }
 }

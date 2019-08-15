@@ -15,7 +15,7 @@ function formDemographics($form, &$sta) {
   
   $uids = db\col('DISTINCT uid1', 'txs_prime', 'uid2=:myid', compact('myid'));
   $count = count($uids);
-  if ($count < AGGREGATE_MIN) return w\go('/company-reports', t('There are not enough customers (%count) to show demographics (minimum %AGGREGATE_MIN).', compact('count')));
+  if ($count < AGGREGATE_MIN) return w\go('/history/company-reports', t('There are not enough customers (%count) to show demographics (minimum %AGGREGATE_MIN).', compact('count')));
   
   foreach ($uids as $id) {
     $a = r\acct($id);
