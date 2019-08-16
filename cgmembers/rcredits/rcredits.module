@@ -185,6 +185,8 @@ function x($xid, $mya = '') {f('r.x', $xid, $mya);} // return a transaction obje
 /**/ function step($a) {debug(a($a)->step());}
 /**/ function ctty($id) {if (!$id or !a($id)) die(trace()); return a(a($id)->community);}
 /**/ function flog($s = '') { // log to file and return log file name
+  global $channel;
+  if ($channel == TX_CRON) syslog(LOG_DEBUG, pr($s) . "\n"); // because file_put_contents fails in cron
   $fileName = LOG_DIR . date('Ym') . '.log'; // new log file every month
   if (func_num_args()) file_put_contents($fileName, pr($s) . "\n", FILE_APPEND);
   return $fileName;
