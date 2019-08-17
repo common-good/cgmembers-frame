@@ -29,8 +29,9 @@ X
   $zip = zipFld();
   $yourName = textFld(t('Your Name:'), [t('Your full name')], required());
   $ownPhone = boolFld(t('Own Phone:'), t('Will you be running the CGPay app on your own Android phone? (%PROJECT is happy to supply one, with a $%EQUIP_DEPOSIT refundable equipment deposit).'), FALSE);
+  $qid = textFld(t('Account ID:'), [t('Your personal account ID'), t('If you are already a member of %PROJECT, type the account ID of your personal account. Otherwise leave this <b class="loud">BLANK</b>.')]);
   $submit = t('Submit');
-  return cgform(compact(ray('title forother subtext source preid yourName fullName zip phone email ownPhone submit')));
+  return cgform(compact(ray('title forother subtext source preid yourName fullName zip phone email ownPhone qid submit')));
 }
   
 function formTrial_validate($form, &$sta) {
@@ -42,18 +43,20 @@ function formTrial_validate($form, &$sta) {
     if ($err = u\badName($$field)) return say($err, compact('field'), $field);
   }
 
+  if ($qid = trim(strtoupper($qid)) and !$r\acct($qid)) return say(t('That is not an account ID. Please check again (look in the lower right on your %PROJECT Card).'));
   if ($err = u\badZip($zip)) return say($err, 'zip');
   if (!phoneOk($phone, US_COUNTRY_ID)) return;
   if (!emailOkay($email, TRUE, NULL)) return;
   
-  u\preray(@compact(ray('yourName fullName zip phone email')), $sta['input']); // fix formatting and add name
+  u\preray(@compact(ray('yourName fullName qid zip phone email')), $sta['input']); // fix formatting and add name
 }
   
 function formTrial_submit($form, &$sta) {
   global $mya;
   $dbFields = 'preid source fullName legalName email flags phone federalId country zip address city state helper notes';
-  extract(just($dbFields + ' ownPhone yourName', $sta['input']));
+  extract(just($dbFields + ' ownPhone yourName qid', $sta['input']));
   list ($legalName, $federalId, $country, $helper, $notes) = [CGF_LEGALNAME, CGF_EIN, US_COUNTRY_ID, CGID, $yourname];
+  if ($qid) $notes .= " ($qid)";
 //  list ($address, $city, $state) =
   $flags = u\bit(B_CO) | u\bit(B_DEPENDS) | u\bit(B_CONFIRMED);
   $stepsDone = 'verify'; // just one step
