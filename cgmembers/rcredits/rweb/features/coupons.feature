@@ -78,11 +78,15 @@ Scenario: A member company creates a dollar amount discount coupon
   Then we show "Your Discounts and Gift Certificates" with:
   | Type     | Amount | On                              | Starting | Ending  | Min Purchase | Max Uses |~Action  |
   | discount | $12    | on your purchase of $20 or more | %mdY     | %mdY+9d |          $20 |        1 | reprint |
+  When member ".ZZA" visits page "community/coupons/list/ALL"
+  Then we show "Automatic Discounts in Your Region" with:
+  | Company    | Discount | On                              | Ending  | For    | Uses Left |
+  | Corner Pub | $12      | on your purchase of $20 or more | %mdY+9d | anyone | 1 of 1    |
   
 Scenario: A member redeems a dollar amount discount coupon
   Given coupons:
-  | coupid | amount | fromId | minimum | ulimit | flags | start     | end                | sponsor |*
-  |      1 |     12 |   .ZZC |      20 |      1 |       | %daystart | %(%daystart+10d-1) | .ZZC    |
+  | coupid | amount | fromId | minimum | ulimit | flags | start     | end                | sponsor | on |*
+  |      1 |     12 |   .ZZC |      20 |      1 |       | %daystart | %(%daystart+10d-1) |.ZZC| on your purchase of $20 or more |
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 100    | fun     |
@@ -98,6 +102,11 @@ Scenario: A member redeems a dollar amount discount coupon
   | .ZZA |     -88 |
   | .ZZB |       0 |
   | .ZZC |      88 |
+  When member ".ZZA" visits page "community/coupons/list/ALL"
+  Then we show "Automatic Discounts in Your Region" with:
+  | Company    | Discount | On                              | Ending  | For    | Uses Left |
+  | Corner Pub | $12      | on your purchase of $20 or more | %mdY+9d | anyone | 0 of 1    |
+  
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 40     | fun     |
@@ -107,12 +116,9 @@ Scenario: A member redeems a dollar amount discount coupon
   | .ZZC |     128 |
 
 Scenario: A member redeems a percentage discount coupon
-  When member ".ZZC" completes form "community/coupons/type=discount" with values:
-  | type     | amount | minimum | start | end     | ulimit | automatic |*
-  | discount |    12% |      20 | %mdY  | %mdY+9d |      2 |         1 |
-  Then coupons:
-  | coupid | amount | minimum | ulimit | flags | start     | end                |*
-  |      1 |    -12 |      20 |      2 |       | %daystart | %(%daystart+10d-1) |
+  Given coupons:
+  | coupid | fromId | amount | minimum | ulimit | flags | start     | end                | sponsor | on                        |*
+  |      7 |   .ZZC |    -12 |      20 |      2 |       | %daystart | %(%daystart+10d-1) |.ZZC| on your purchase of $20 or more |
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 50     | fun     |
@@ -121,6 +127,11 @@ Scenario: A member redeems a percentage discount coupon
   | .ZZA |     -44 |
   | .ZZB |       0 |
   | .ZZC |      44 |
+  When member ".ZZA" visits page "community/coupons/list/ALL"
+  Then we show "Automatic Discounts in Your Region" with:
+  | Company    | Discount | On                              | Ending  | For    | Uses Left |
+  | Corner Pub | 12.0%    | on your purchase of $20 or more | %mdY+9d | anyone | 1 of 2    |
+
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 50     | fun     |
@@ -161,33 +172,47 @@ Scenario: A member company creates a restricted dollar amount discount coupon
   | Type     | Amount | On                              | Starting | Ending  | Min Purchase | Max Uses |~Action  |
   | discount | $12    | on your purchase of $20 or more | %mdY     | %mdY+9d |          $20 |        1 | reprint |
   | for only: NEWZZA ||||||||
+  When member ".ZZA" visits page "community/coupons/list/ALL"
+  Then we show "Automatic Discounts in Your Region" with:
+  | Company    | Discount | On                              | Ending  | For    | Uses Left |
+  | Corner Pub | $12      | on your purchase of $20 or more | %mdY+9d | you+   | 1         |
   
 Scenario: A member redeems a restricted discount coupon
   Given coupons:
-  | coupid | amount | minimum | fromId | ulimit | flags | start     | end                | sponsor |*
-  |      1 |    -12 |      20 |   .ZZC |      1 | some  | %daystart | %(%daystart+10d-1) | .ZZC    |
+  | coupid | amount | minimum | fromId | ulimit | flags | start     | end                | sponsor | on           |*
+  |      1 |     20 |       0 |   .ZZC |      0 | some  | %daystart | %(%daystart+10d-1) | .ZZC    | any purchase |
   And these "coupated":
   | id | uid  | coupid | when |*
   |  1 | .ZZA |      1 |    0 |
+  When member ".ZZA" visits page "community/coupons/list/ALL"
+  Then we show "Automatic Discounts in Your Region" with:
+  | Company    | Discount | On           | Ending  | For    | Uses Left |
+  | Corner Pub | $20      | any purchase | %mdY+9d | you+   | $20       |
+
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
-  | pay | Corner Pub | 50     | fun     |
+  | pay | Corner Pub | 6      | fun     |
   Then balances:
   | uid  | balance |*
-  | .ZZA |     -44 |
+  | .ZZA |       0 |
   | .ZZB |       0 |
-  | .ZZC |      44 |
+  | .ZZC |       0 |
   And these "coupated":
   | id | uid  | coupid | when   |*
   |  1 | .ZZA |      1 | %today |
+  When member ".ZZA" visits page "community/coupons/list/ALL"
+  Then we show "Automatic Discounts in Your Region" with:
+  | Company    | Discount | On           | Ending  | For    | Uses Left |
+  | Corner Pub | $20      | any purchase | %mdY+9d | you+   | $14       |
+  
   When member ".ZZB" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 50     | fun     |
   Then balances:
   | uid  | balance |*
-  | .ZZA |     -44 |
+  | .ZZA |       0 |
   | .ZZB |     -50 |
-  | .ZZC |      94 |
+  | .ZZC |      50 |
   
 Scenario: A member redeems a discount coupon in dribs and drabs
   Given coupons:

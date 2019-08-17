@@ -84,8 +84,8 @@ Scenario: An admin runs a query about Trusted Members
   When member ".ZZB" runs query "Most Trusted Members"
   Then we show "" with:
   | fullName | email         | phone | proxiedFor | trust |
-  | Abe One  | a@example.com |       |          0 |       |
-  | Bea Two  | b@example.com |       |          0 |       |
+  | Abe One  | a@example.com |       |          0 |     0 |
+  | Bea Two  | b@example.com |       |          0 |     0 |
 
 Scenario: A member runs a query about Employees
   When member ".ZZB" runs query "Individuals Paid By A Company"

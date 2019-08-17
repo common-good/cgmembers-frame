@@ -28,7 +28,7 @@ $queries = [
 // SUM(active) AS active, 
 
   2 . t('Most Trusted Members') => 
-    "SELECT fullName, email AS email, phone, COUNT(b.voter) AS proxiedFor, trust FROM users u LEFT JOIN r_ballots b ON b.proxy=u.uid AND b.created>:REQUEST_TIME-:YEAR_SECS WHERE u.community=:ctty AND u.:IS_OK AND NOT u.:IS_CO GROUP BY IFNULL(b.proxy, u.uid) ORDER BY COUNT(b.voter) DESC, u.trust DESC",
+    "SELECT fullName, email AS email, phone, COUNT(b.voter) AS proxiedFor, trust FROM users u LEFT JOIN r_ballots b ON b.proxy=u.uid AND b.created>:REQUEST_TIME-:YEAR_SECS WHERE u.community=:ctty AND u.:IS_OK AND NOT u.:IS_CO GROUP BY IFNULL(b.proxy, u.uid) ORDER BY COUNT(b.voter) DESC, u.trust DESC, fullName",
     
   2 . 'Individuals Paid By A Company' =>
     "SELECT DISTINCT main.fullName AS company, other.fullName AS pays, 
@@ -111,7 +111,7 @@ $queries = [
     
   2 . t('Where Do Our Members Hear About %PROJECT') => <<< X
     SELECT 
-      IF(helper=1 OR helper IS NULL, 
+      IF(helper in (0,1), 
         IF(source LIKE '%presentation%' OR source LIKE '%talk%', '* Presentation',
         IF(source LIKE '%internet%' OR source LIKE '%web%' OR source LIKE '%google%', '* Web',
         IF(source LIKE '%friend%' OR source LIKE '%mouth%', '* Word of Mouth',

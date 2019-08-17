@@ -1233,7 +1233,7 @@ X;
          SUM(amt) AS amts,
          SUM(IF($isPayee AND created>$recently, amt, 0)) AS amtsIn,
          SUM(IF($isPayer AND created>$recently, amt, 0)) AS amtsOut
-       FROM $accounts u LEFT JOIN txs_proper t ON ($isPayer OR $isPayee)
+       FROM $accounts u LEFT JOIN txs t ON ($isPayer OR $isPayee)
        WHERE amt IS NOT NULL AND $isMaster AND $cttyCrit AND t.$creCrit
        GROUP BY uid)
 X;

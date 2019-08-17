@@ -52,7 +52,7 @@ Setup:
   |   2 | %today-6m |    250 | ctty | .ZZB | signup  | %TX_SYS |
   |   3 | %today-6m |    250 | ctty | .ZZE | signup  | %TX_SYS |
   |   4 | %today-5m |     10 | .ZZB | .ZZA | cash E  | %TX_POS |
-  |   5 | %today-1m |   1100 | .ZZA | .ZZC | USD in (cash) | %TX_POS |
+  |   5 | %today-1m |   1100 | .ZZA | .ZZC | cash    | %TX_POS |
   # (cash) is required else a transaction fee transaction is created
   |   6 | %today-3w |    240 | .ZZA | .ZZB | what G  | %TX_POS |
 
@@ -124,22 +124,28 @@ Scenario: We calculate risks
   |   2 | |
   |   3 | |
   |   4 | exchange,p2p |
-  |   5 | cashIn,inhouse,toSuspect,biggestFrom,biggestTo |
-  |   6 | p2p,biggestTo |
-  |   7 | cashOut,toSuspect,biggestFrom |
-  |   8 | p2p,toSuspect,biggestTo,offline,firstOffline |
+  |   5 | cashIn,inhouse,toSuspect,bigTo,biggestTo |
+  |   6 | p2p,bigTo,biggestTo |
+  |   7 | cashIn,toSuspect |
+  |   8 | p2p,toSuspect,offline,firstOffline |
   |   9 | exchange,p2p,absent,invoiceless,bigFrom,bigTo |
   |  10 | inhouse,toSuspect,oftenFrom,oftenTo |
   |  11 | fromSuspect,biggestFrom,biggestTo,origins |
   |  12 | b2p,fromSuspect,toSuspect,absent,invoiceless,biggestTo,origins |
   |  13 | exchange,p2p,fromSuspect,toSuspect,absent,invoiceless,bigFrom,bigTo,suspectOut |
   |  14 | exchange,p2p,fromSuspect,toSuspect,absent,invoiceless,biggestFrom,suspectOut |
-  When cron runs "achRisk"
-  Then usd transfers:
-  | txid | payee | risks |*
-  |    1 |  .ZZA | |
-  |    2 |  .ZZB | |
-  |    3 |  .ZZC | |
-  |    4 |  .ZZE | toSuspect |
-  |    5 |  .ZZF | toBank,suspectOut |
-  |    6 |  .ZZC | toBank,origins,suspectOut |
+Skip (below is just a comment for later)
+708	3	11-Feb	250.00	Ctty	ZZE	signup	B2p, ToSuspect
+220	17	11-Jun	300.00	Bank	ZZC	from bank	CashIn, ToSuspect
+208	15	11-Jun	400.00	Bank	ZZA	from bank	Exchange, P2p
+149	12	10-Aug	40.00	ZZC	ZZE	labor	B2p, FromSuspect, ToSuspect, Absent, Invoiceless, Origins
+149	10	10-Aug	120.00	ZZA	ZZC	undoneBy:17	Inhouse, ToSuspect, OftenFrom, OftenTo
+119	8	04-Aug	120.00	ZZA	ZZH	offline	P2p, ToSuspect
+111	9	05-Aug	100.00	ZZA	ZZB	cash V	Exchange, P2p, Absent, Invoiceless, OftenFrom, OftenTo
+82	11	10-Aug	120.00	ZZC	ZZA	undoes:14	FromSuspect, Origins
+75	2	11-Feb	250.00	Ctty	ZZB	signup	B2p, Origins
+63	1	11-Jan	250.00	Ctty	ZZA	signup	B2p
+52	16	11-Jun	100.00	Bank	ZZB	from bank	Exchange, P2p
+43	14	10-Aug	11.00	ZZF	ZZE	cash	Exchange, P2p, FromSuspect, ToSuspect, Absent, Invoiceless, SuspectOut
+40	13	10-Aug	10.00	ZZF	ZZE	cash	Exchange, P2p, FromSuspect, ToSuspect, Absent, Invoiceless, Origins, SuspectOut
+5	4	11-Mar	10.00	ZZB	ZZA	cash E	Exchange, P2p

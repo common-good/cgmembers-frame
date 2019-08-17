@@ -2,6 +2,8 @@
 use CG\Web as w;
 use CG\Util as u;
 
+global $pageTitle;
+
 /**
  * @file
  * Default theme implementation to display the basic html structure of a single Drupal page.
@@ -104,7 +106,7 @@ $favicon
   <meta name="HandheldFriendly" content="true" />
   <meta name="apple-mobile-web-app-capable" content="no"><!-- (not yet) -->
   <meta http-equiv="cleartype" content="on" />
-  <title>$head_title</title>
+  <title>$pageTitle</title>
   <meta name="description" content="">
   <meta name="author" content="William Spademan -- for Society to Benefit Everyone, Inc.">
   <link rel="stylesheet" href="$rUrl/css/x/bootstrap.min.css?$version" />

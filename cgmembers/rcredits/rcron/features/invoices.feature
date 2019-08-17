@@ -5,11 +5,11 @@ SO I can buy and sell stuff.
 
 Setup:
   Given members:
-  | uid  | fullName | risks   | floor | minimum | flags                           |*
-  | .ZZA | Abe One  | hasBank |  -250 |     500 | ok,confirmed,refill,debt,bankOk |
-  | .ZZB | Bea Two  |         |  -250 |     100 | ok,confirmed,debt               |
-  | .ZZC | Our Pub  |         |  -250 |       0 | ok,confirmed,co,debt            |
-  | .ZZE | Eve Five | hasBank |  -250 |     200 | bankOk                          |
+  | uid  | fullName | risks   | floor | minimum | flags                           | staleNudge |*
+  | .ZZA | Abe One  | hasBank |  -250 |     500 | ok,confirmed,refill,debt,bankOk |            |
+  | .ZZB | Bea Two  |         |  -250 |     100 | ok,confirmed,debt               |            |
+  | .ZZC | Our Pub  |         |  -250 |       0 | ok,confirmed,co,debt            |          4 |
+  | .ZZE | Eve Five | hasBank |  -250 |     200 | bankOk                          |            |
   And relations:
   | main | agent | permission |*
   | .ZZC | .ZZB  | buy        |
@@ -23,7 +23,8 @@ Setup:
   |    1 | %today    | %TX_APPROVED |    100 | .ZZA | .ZZC | one   |
   |    2 | %today    | %TX_APPROVED |    200 | .ZZA | .ZZC | two   |
   |    3 | %today    | %TX_APPROVED |    300 | .ZZB | .ZZC | three |
-  |    4 | %today-1w | %TX_PENDING  |    400 | .ZZA | .ZZC | four  |
+  |    4 | %today-8d | %TX_PENDING  |    400 | .ZZA | .ZZC | four  |
+  |    5 | %today-7d | %TX_PENDING  |    500 | .ZZA | .ZZC | five  |
   Then balances:
   | uid  | balance |*
   | .ZZA |     100 |
@@ -38,7 +39,7 @@ Setup:
   |   4 | %today  |      0 | bank-in | .ZZA | from bank            |      1 | bank  |
 	Then count "txs" is 4
 	And count "usd" is 1
-	And count "invoices" is 4
+	And count "invoices" is 5
 	And usd transfers:
   | txid | payee | amount | created | completed | deposit |*
   |    1 | .ZZA  |    700 | %today  |         0 |       0 |
@@ -47,7 +48,8 @@ Setup:
   |    1 | %today    | 2            |    100 | .ZZA | .ZZC | one   |         |
   |    2 | %today    | 3            |    200 | .ZZA | .ZZC | two   | funding |
   |    3 | %today    | %TX_APPROVED |    300 | .ZZB | .ZZC | three |         |
-  |    4 | %today-1w | %TX_PENDING  |    400 | .ZZA | .ZZC | four  |         |
+  |    4 | %today-8d | %TX_PENDING  |    400 | .ZZA | .ZZC | four  |         |
+  |    5 | %today-7d | %TX_PENDING  |    500 | .ZZA | .ZZC | five  |         |
 
   And we notice "banked|bank tx number" to member ".ZZA" with subs:
   | action | tofrom | amount | checkNum | why               |*
@@ -57,10 +59,13 @@ Setup:
   | $50   | Our Pub   |    3 |
   And we message "stale invoice" to member ".ZZA" with subs:
   | daysAgo | amount | purpose | nvid | payeeName |*
-  |       7 | $400   | four    |    4 | Our Pub   |
+  |       8 | $400   | four    |    4 | Our Pub   |
   And we message "stale invoice report" to member ".ZZC" with subs:
   | daysAgo | amount | purpose | nvid | payerName | created |*
-  |       7 | $400   | four    |    4 | Abe One   | %mdY-1w |
+  |       8 | $400   | four    |    4 | Abe One   | %mdY-8d |
+  And we do not message "stale invoice" to member ".ZZA" with subs:
+  | purpose |*
+  | five    |
   Then balances:
   | uid  | balance |*
   | .ZZA |    -200 |
@@ -116,7 +121,7 @@ Scenario: Second invoice gets funded too for a non-refilling account
 Scenario: A languishing invoice gets funded again
   Given invoices:
   | nvid | created   | status       | amount | from | to   | for   | flags   |*
-  |    1 | %today-1m | %TX_APPROVED |    900 | .ZZA | .ZZC | one   | funding |
+  |    1 | %today-1d | %TX_APPROVED |    900 | .ZZA | .ZZC | one   | funding |
   When cron runs "invoices"
 	Then these "usd":
   | txid | payee | amount | created | completed | deposit |*

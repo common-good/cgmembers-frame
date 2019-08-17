@@ -89,23 +89,16 @@ Setup:
   | .ZZB |     480 |
   | .ZZC |     270 |
 
-Skip no inflation at present
-Scenario: Inflation adjustments are made
-  When cron runs "everyMonth"
+# no inflation at present
+#Scenario: Inflation adjustments are made
+#  When cron runs "everyMonth"
 
 # inflation  
-  Then transactions: 
-  | xid| created| type      | amount | bonus                               | from | to   | purpose |*
-  | 12 | %today | inflation |      0 | %(round(%R_INFLATION_RATE*29.2, 2)) | ctty | .ZZA | %IAOY average balance |
-  # 29.6?
-#  | 13 | %today | inflation |      0 | %(round(%R_INFLATION_RATE *8.8, 2)) | ctty | .ZZA | %IAOY credit reserve  |
-  | 13 | %today | inflation |      0 | %(round(%R_INFLATION_RATE*13.6, 2)) | ctty | .ZZB | %IAOY average balance |
-  # 14.2?
-#  | 15 | %today | inflation |      0 | %(round(%R_INFLATION_RATE *9.0, 2)) | ctty | .ZZB | %IAOY credit reserve  |
-  | 14 | %today | inflation |      0 | %(round(%R_INFLATION_RATE*22.8, 2)) | ctty | .ZZC | %IAOY average balance |
-  # 23.0?
-#  | 17 | %today | inflation |      0 | %(round(%R_INFLATION_RATE *8.6, 2)) | ctty | .ZZC | %IAOY credit reserve  |
-Resume
+#  Then transactions: 
+#  | xid| created| type      | amount | bonus                               | from | to   | purpose |*
+#  | 12 | %today | inflation |      0 | %(round(%R_INFLATION_RATE*29.2, 2)) | ctty | .ZZA | %IAOY average balance |
+#  | 13 | %today | inflation |      0 | %(round(%R_INFLATION_RATE*13.6, 2)) | ctty | .ZZB | %IAOY average balance |
+#  | 14 | %today | inflation |      0 | %(round(%R_INFLATION_RATE*22.8, 2)) | ctty | .ZZC | %IAOY average balance |
 
 Scenario: Paper statement warnings are sent
   When cron runs "everyMonth"
