@@ -72,7 +72,7 @@ NOTES:
   where <star> means * (not the same as for the production site) 
  */
 
-define('DAILY_TASKS', 'START checkAccts setNear acctStats cttyStats trust acctRisk acctRiskFinish txRisk achRisk tickle lessOften recurs getFunds invoices invest notices END');
+define('DAILY_TASKS', 'START checkAccts setNear acctStats cttyStats trust acctRisk acctRiskFinish txRisk tickle lessOften recurs getFunds invoices invest notices END');
 
 include_once __DIR__ . '/rcron-subs.inc';
 
@@ -919,7 +919,8 @@ function invoice1($item) {
 		}
   } elseif ($status == TX_PENDING) {
     $daysAgo = max(1, round((now() - $created) / DAY_SECS));
-    if ($daysAgo % 7 == 0) {
+    $nudge = $a2->staleNudge ?: 7;
+    if ($nudge !== 0 and $daysAgo % $nudge == 0) {
       $subs = ray('daysAgo created amount purpose nvid _a1 payerName payeeName email phone', $daysAgo, u\fmtDate($created, TRUE), u\fmtAmt($amount), $purpose, $nvid, $a->makeDo('inv', $nvid), $a->fullName, $payeeName, $a2->email, $a2->phone);
       r\message($payer, 'stale invoice', $subs + ['reply' => $payee]); // tell other party by email about this invoice
       r\message($payee, 'stale invoice report', $subs); // tell the payee we're following up on it
