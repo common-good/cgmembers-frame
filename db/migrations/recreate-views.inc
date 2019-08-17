@@ -70,7 +70,7 @@ X;
   makeTxsView($z, 'txs_usd_fee', "e.$usd_feey AND e2.$primey AND e2.id<0", "e.$usd_feey AND e2.$primey AND e2.id>0");
   makeTxsView($z, 'txs_proper');  // all transactions between CG accounts
   makeTxsView($z, 'txs_bank', "e.$banky AND e.$isBank AND NOT e2.$isBank", "e.$banky AND NOT e.$isBank AND e2.$isBank");
-  makeTxsView($z, 'txs'); // add bank transfers to and from CG accounts, omit bank charges and transfers betwen CG's banks
+  makeTxsView($z, 'txs'); // add bank transfers to and from CG accounts, omit bank charges and transfers between CG's banks
   makeTxsView($z, 'txs_bank_only', "e.$bank_onlyy AND IF(e.$isBank AND e2.$isBank, e.amount<0, e.$isBank)",
                                    "e.$bank_onlyy AND IF(e.$isBank AND e2.$isBank, e.amount>0, e2.$isBank)");
   makeTxsView($z, 'txs_all'); 
