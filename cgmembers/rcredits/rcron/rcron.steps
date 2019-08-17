@@ -660,3 +660,11 @@ function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
  * in: TEST gifts ADonationToCGIsVisibleToAdmin
  */
 function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWith($title, $content, $debug);}
+
+
+/**
+ * we do not message (ARG) to member (ARG) with subs: (ARG)
+ *
+ * in: TEST invoices UnpaidInvoicesGetHandled
+ */
+function weDoNotMessageToMemberWithSubs($index, $id, $subs) {return !t\weMessage($index, $id, $subs);}

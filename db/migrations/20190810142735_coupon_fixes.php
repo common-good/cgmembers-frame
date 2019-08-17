@@ -6,8 +6,10 @@ define ('U_SQL', "CHANGE `community` `community` BIGINT(20) NOT NULL DEFAULT '0'
 class CouponFixes extends AbstractMigration {
   
   public function up() {
-    foreach (explode(' ', 'community state country helper iCode crumbs trust') as $k) $this->execute("UPDATE users SET $k=0 WHERE $k IS NULL");
-    foreach (['users', 'x_users'] as $table) $this->execute("ALTER TABLE $table " . U_SQL);      
+    foreach (['users', 'x_users'] as $table) {
+      foreach (explode(' ', 'community state country helper iCode crumbs trust') as $k) $this->execute("UPDATE $table SET $k=0 WHERE $k IS NULL");
+      $this->execute("ALTER TABLE $table " . U_SQL);
+    }
   }
 
   public function down() {

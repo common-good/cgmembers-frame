@@ -43,7 +43,7 @@ Scenario: A member changes preferences
   And member ".ZZA" has no photo ID recorded
   When member ".ZZA" completes form "settings/preferences" with values:
   | roundup | crumbs | notices | statements | nosearch | secretBal | food | snap |*
-  |       1 |      3 | monthly | electronic |        0 |         1 |    5 | 04-293-38-A2837 |
+  |       1 |      3 | monthly | electronic |        0 |         1 |    5 |    1 |
   Then members:
-  | uid  | crumbs | food | snap         | flags   |*
-  | .ZZA |    .03 | 0.05 | 0429338A2837 | ok,member,confirmed,monthly,secret,roundup |
+  | uid  | crumbs | food | snap | flags   |*
+  | .ZZA |    .03 | 0.05 |    1 | ok,member,confirmed,monthly,secret,roundup |
