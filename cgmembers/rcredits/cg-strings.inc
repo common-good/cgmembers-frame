@@ -166,7 +166,8 @@ EOF
   'recur stopped' => t('Success: The recurring transaction is ended.'),
   'recur already ended' => t('That recurring transaction is already ended.'),
   'recur not yours' => 'invalid recur id', // don't let on that these are different
-
+  'refundable deposit' => t('%PROJECT will supply a smartphone running the CGPay app. Your account has been invoiced $%EQUIP_DEPOSIT as a refundable deposit.'),
+  
   // questions
   "what's your name?" => t("To set up your %PROJECT Account, we need your full name and email address. First, what's your name?"),
   "what's your name really?" => t("Hmm. I don't know if I believe that. What's your name really?"),

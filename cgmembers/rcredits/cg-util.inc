@@ -533,7 +533,7 @@ function EXPECT($assertion, $message = '', $ret = FALSE) {
   return ''; // no error
 }
 
-function DYE($message) {EXPECT(FALSE, $message);}
+function FAIL($message) {throw new \Exception($message);}
 
 function expect1($arg, $value, $type, $ret) {
 //  static $ecnt; $ecnt = @$ecnt + 1; u\EXPECT($ecnt < 10000, 'loop');

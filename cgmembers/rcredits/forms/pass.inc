@@ -22,7 +22,7 @@ function formPass_validate($form, &$sta) {
   if (!@$name) return say('missing field', ['field' => 'account'], 'name');
   if (!@$uid = r\loginString($name)) return say('bad account id', 'name');
   $a = r\acct($uid);
-  if ($a->co) return say('no co pass', ['company' => $a->fullName], 'name');
+  if ($a->co and !$a->trialco) return say('no co pass', ['company' => $a->fullName], 'name');
   $sta['input']['uid'] = $uid;
 }
 

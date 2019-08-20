@@ -48,20 +48,10 @@ Setup:
 Scenario: A member clicks the summary tab
   When member ".ZZA" visits page "summary"
   Then we show "Account Summary" with:
-  | ID            | ZZA (personal account) |
-  | Name          | Abe One (abeone) |
-  | Postal Addr   | 1 A St., Atown, AK 01000 |
-  | Balance       | $10 |
-#  | Savings       | $256 |
-#  | ~rewards      | $256 |
-#  | Credit limit  | $100 |
-#  | Committed     | $0.60 |
-# (including savings in balance)  | Your return   | 20.6% |
-#  | Your return   | 72.1% |
-#  | ~ever         | 544.1% |
-#  or 541.4% (depends on daylight time?) or 280.9%?!
-#  | Social return | $27 |
-#  | including     | $0 |
+  | ID        | ZZA (personal account) |
+  | Name      | Abe One (abeone) |
+  | Contact   | 1 A St., Atown, AK 01000 |
+  | Balance   | $10 |
   
 Scenario: A member clicks the summary tab with roundups
   Given transactions:
@@ -86,9 +76,9 @@ Scenario: An agent clicks the summary tab without permission to manage
 Scenario: A company agent clicks the summary tab
   When member "C:A" visits page "summary"
   Then we show "Account Summary" with:
-  | ID           | ZZC (company account) |
-  | Name         | Corner Pub (cornerpub) |
-  | Postal Addr  | 3 C St., Ctown, Cher, FRANCE |
+  | ID       | ZZC (company account) |
+  | Name     | Corner Pub (cornerpub) |
+  | Contact  | 3 C St., Ctown, Cher, FRANCE |
   
 Scenario: Member's account is not active
   Given members have:

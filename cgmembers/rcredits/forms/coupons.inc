@@ -105,7 +105,11 @@ function formCoupons_validate($form, &$sta) {
   u\preray(@compact(ray($fields)), $sta['input']); // remember fixed numeric values
 }
 
-function formCoupons_submit($form, &$sta) {
+/**
+ * Finish creating the discount or coupon.
+ * @param bool $trial: <called from discount.inc in trial company signup>
+ */
+function formCoupons_submit($form, &$sta, $trial = FALSE) {
   global $mya; $myid = $mya->id;
   extract(just('type amount coupid iCode count minimum start end ulimit automatic on forOnly', $sta['input']));
     
@@ -145,5 +149,7 @@ function formCoupons_submit($form, &$sta) {
   if (test()) $args = u\deurlify($args);
 	$url = "/community/coupons/print/$args";
   w\say(t('Your %thing was created successfully.', 'thing', $gift ? t('gift certificate') : t('discount')));
+
+  if ($trial) return w\goNextStep('discount');
   return test() ? w\go($url) : w\go2('/community/coupons/list', $url);
 }

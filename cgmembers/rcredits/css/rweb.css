@@ -571,10 +571,11 @@ body.logged-in.one-sidebar #content {width:100%;}
 #frm-summary .noEdit {margin-left:-7px; padding-left:7px; background-color:#e0e0ff;}
 #frm-summary #edit-clickPhoto .control-data {font-size:78%; background-color:lightcyan; width:auto; border-radius:15px;}
 
-/* Coupons */
+/* Coupons and Discounts */
 #frm-coupons #edit-buttons a.btn {margin:0 100% 10px 0;}
 #frm-coupons #edit-subtext li {margin-bottom:2px;}
-#frm-coupons #edit-limit {max-width:50px; display:inline-block;}
+#frm-coupons #edit-ulimit,
+#frm-discount #edit-ulimit {max-width:50px; display:inline-block;}
 #frm-coupons .form-item-on {display:none;}
 
 /* Coupons List */

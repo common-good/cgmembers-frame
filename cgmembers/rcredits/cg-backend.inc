@@ -243,8 +243,6 @@ function updateRelations($updates) {
 function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
   global $mya;
 
-///     debug("undoTx($xid, $where, , $force)" . print_r($subs, true));
-  
   u\EXPECT('int string assoc bool', $xid, $where, $subs, $force);
 
   $tx = r\Tx::lastTx([$mya->id], "xid=:xid AND $where", compact('xid') + $subs);
@@ -533,7 +531,7 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
     }
   }
 
-  if ($gainerA->co and $gainerA->depends and db\sum('amt', 'txs_noreverse', 'uid2=:gainerId') + needed > TRIALCO_LIMIT) {
+  if ($gainerA->co and $gainerA->depends and db\sum('amt', 'txs_noreverse', 'uid2=:gainerId', compact('gainerId')) + $needed > TRIALCO_LIMIT) {
     $DBTX->rollback();
     return r\txErr(t('trial co over', 'limit', u\fmtAmt(TRIALCO_LIMIT)), $erInfo);
   }
@@ -692,7 +690,7 @@ EOF;
   } else {
     db\update('r_coupated', ray('when id', now(), $id), 'id');
   }
-  txEntryPair($entries, $rebate, [r\acct($sponsor), $buyer], t('discount rebate'), E_REBATE, 0, 'D', $coupid);
+  txEntryPair($entries, $rebate, [r\acct($sponsor), $buyer], t('discount (rebate)'), E_REBATE, 0, 'D', $coupid);
   return $rebate;
 }
 
@@ -762,7 +760,7 @@ function maxTid($uids) {
  *    index: index to result message string (if success, the index begins with "report ")
  *    subs: replacement parameters, specific to the message (in particular, success=TRUE or FALSE)
  */
-function invoice($actorA, $otherA, $amount, $purpose, $goods, $extra = [], $recursId = 0) {
+function invoice($actorA, $otherA, $amount, $purpose, $goods = FOR_GOODS, $extra = [], $recursId = 0) {
   global $channel;
   
   u\EXPECT(compact(ray('actorA otherA amount purpose')), 'acct acct float string');

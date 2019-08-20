@@ -50,6 +50,7 @@ class Acct {
    * @param assoc $info: array of field values for new account (only fullName is required)
    */
   private function createNew($info) {
+    global $mya;
     $a = $this;
     extract($info);
 
@@ -59,22 +60,12 @@ class Acct {
     u\setDft($community, r\communityUid($zip));
     u\setDft($login, $created);
     u\setDft($access, $login);
-    u\setDft($phone, $number);
     u\setDft($name, r\uniqueName($fullName, $info));
 
-    if (!empty($phone)) $phone = u\fmtPhone($phone, '+n');
-    
+    if (isset($phone)) $phone = u\fmtPhone($phone, '+n');
+    if (!is_numeric($state)) $state = r\stateNum($state); // allow US state abbreviations
     $co = ($flags & u\bit(B_CO));
-
-    if (!empty($state) and !is_numeric($state)) { // allow state abbrevs within US
-      $state = db\get('id', 'r_states', 'abbreviation=:state and country_id=:US_COUNTRY_ID', compact('state'));
-    }
-
-    if (!isset($stepsDone)) {                                 
-      $stepsDone = $uid == 1 ? [] : r\stepsDone0();
-      foreach (ray($co ? 'proxies connect ssn' : 'company relations') as $k) unset($stepsDone[$k]);
-      $stepsDone['food'] = TRUE; // omit this step unless signing up through Food Fund promo (set FALSE in signup.inc)
-    } else $stepsDone = ray($stepsDone);
+    u\setDft($stepsDone, $uid == 1 ? [] : $a->stepsDone0($co));
 
     if (empty($region)) $region = empty($zip) ? -r\uidRegion($community) : -r\region($country, $state, $zip);
     $record = empty($uid) ? compact('name') : compact('uid', 'name');
@@ -82,22 +73,31 @@ class Acct {
     $DBTX = db_transaction();
     $uid = r\regionalInsert('users', 'uid', $record, $region);
     u\EXPECT($uid != 0, 'zero regionalinsert');
+
     if (!$co) u\setDft($cardCode, r\cardCode(r\qid($uid)));
-
     u\setDft($emailCode, r\cardCode(r\qid($uid)));
-    
-    //    if (isset($number)) $success = SMS\create($number, $uid);
 
-    list ($a->id, $a->agentId) = array($uid, $uid); // finish creating the object
-
+    list ($a->id, $a->agentId) = array($uid, nn($mya) ? $mya->agentId : $uid); // finish creating the object
     self::$rs[$a->id] = (object) $record;
 
+    $fix = @compact(ray('phone email pass fullName legalName flags state community created login access emailCode cardCode stepsDone')); // things we may have added or changed
     foreach (ray('number region') as $k) unset($info[$k]);
-    u\preray(@compact(ray('phone email pass fullName legalName flags state community created login access emailCode cardCode stepsDone')), $info); // things we may have added or changed
-    $a->update($info); // this is a lot easier to do after saving the record
+
+    $a->update($fix + $info); // this is a lot easier to do after saving the record
     unset($DBTX); // commit
   }
 
+  /**
+   * Return an assoc of the signup steps as keys and their completedness as the values
+   * @param bool $co: account is a company
+   */ 
+  private function stepsDone0($co) {
+    $stepsDone = array_fill_keys(array_keys(ray(R_STEPS)), FALSE);
+    foreach (ray($co ? 'proxies connect ssn' : 'company relations discount') as $k) unset($stepsDone[$k]);
+    $stepsDone['food'] = TRUE; // omit this step unless signing up through Food Fund promo (set FALSE in signup.inc)
+    return $stepsDone;
+  }
+  
   /**
    * Setup acct variables, returning FALSE on error.
    * @param id/qid $id: the account's record id or qid (DEFAULT to myid)
@@ -220,6 +220,7 @@ class Acct {
     if ($field == 'foody') return db\get(':U_FOODY', 'users u', ['uid' => $a->id]);
     if ($field == 'iclub') return ($a->id < 0 or strpos($a->fullName, t('Investment Club')) !== FALSE);
 ///    if ($field == 'iclubId') return db\get('uid', 'users', 'fullName LIKE :club AND :zip REGEXP zip AND :IS_OK', ray('club zip', t('%Investment Club%'), $mya->zip));
+    if ($field == 'trialco') return ($a->co and $a->depends);
     if ($field == 'prefsSet') return !is_null($a->o_minimum); // preferences have been set at least once
     if ($field == 'hasCustomers') return db\exists('r_relations', 'main=:id AND :IS_CUSTOMER', ['id' => $a->id]);
     if ($field == 'superAdmin') return ($a->agentId == 1) ?: (test() and $a->admin and $a->agentA->name == 'abeone');
@@ -662,9 +663,6 @@ class Acct {
     return $v;
   }
 		
-  
-//  public function isNonprofit() {return (bool) ($a->coFlags & u\bit(CO_NONPROFIT));}
-  
   /**
    * Create a new relationship record for the current account (as "main") relating to some agent.
    * NOTE: Assume no other company agent for this company is trying to create a relation at the same time.
@@ -1254,14 +1252,6 @@ EOF;
 
     return compact(ray($fields));
   }
-
-  /**
-   * Return the rough business structure of a company, as required by Dwolla.
-   */
-  function businessStructure() {
-    u\EXPECT($this->co, 'not a company');
-    return $this->coCan(CO_CORPORATION) ? 'Corporation' : ($this->coCan(CO_PARTNERSHIP) ? 'Partnership' : 'SoleProprietorship');
-  }
    
   /**
    * Return an SMS number for the account.
@@ -1689,7 +1679,9 @@ X;
     $a = $this;
     if (!is_null($lat)) return $a->update('latitude longitude', $lat, $lon);
     
-    $params = ray('q key', "$a->address, $a->city, " . r\realState($a->state), GEOCODE_KEY);
+    $q = "$a->address, $a->city, " . r\realState($a->state);
+//    if (TRUE or test() and !$a->city) $q = $a->zip;
+    $params = ray('q key', $q, GEOCODE_KEY);
 /*
     $params = ray('street city state', $a->address, $a->city, r\realState($a->state)); // US Census
     if (!$matches = (array) @$res->result->addressMatches) return r\tellAdmin(t('setLocus <%a>returned</a> no matches', 'a', w\atag($url))); // US Census

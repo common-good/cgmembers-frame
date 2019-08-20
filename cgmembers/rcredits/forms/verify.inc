@@ -31,12 +31,12 @@ function formVerify($form, &$sta, $arg = '') {
 function formVerify_validate($form, &$sta) {
   global $mya;
   extract(just('verify', $sta['input']));
-  if (!$mya->passwordOkay(strtoupper($verify), 'pass')) return say(t('That is not the right code.'), 'verify');
-  if (!$mya->co) formChangePassword_validate($form, $sta);
+  if (!$mya->passwordOkay(strtoupper(trim($verify)), 'pass')) return say(t('That is not the right code.'), 'verify');
+  if (!$mya->co or $mya->trialco) formChangePassword_validate($form, $sta);
 }
 
 function formVerify_submit($form, &$sta) {
   global $mya;
-  if (!$mya->co) formResetPassword_submit($form, $sta);
+  if (!$mya->co or $mya->trialco) formResetPassword_submit($form, $sta);
   return w\goNextStep('verify');
 }

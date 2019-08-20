@@ -71,7 +71,10 @@ function doit(what, vs) {
 
   case 'focus-on': $('#edit-' + vs['field']).focus(); break;
 
-  case 'agree': $('#show-agreement').click(function () {$('#wrap-agreement').show();}); break;
+  case 'agree':
+    if (vs['show']) $('#wrap-agreement').show();
+    $('#show-agreement').click(function () {$('#wrap-agreement').show();}); 
+    break;
     
   case 'advanced-dates':
     if (!vs['showingAdv']) showAdv();

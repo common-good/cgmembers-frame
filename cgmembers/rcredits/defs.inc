@@ -130,10 +130,10 @@ define('INFLATION_DESC', t('inflation adjustment'));
 define('COMPANY_FREEZE', FALSE); // companies cannot spend rewards yet
 define('R', '<span class="r">r</span>');
 define('US', '<span class="us">us</span>');
-define('GAME_COMPANIES', '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital');
+/// define('GAME_COMPANIES', '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital');
 define('R_DATE_FLDS', 'created completed deposit sent invited giftDate signed login access joined yesterday dob when sold'); // date field names for testing and administrative display
-define('CO_FLDS', 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd'); // account fields stored in r_company
-define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap staleNudge'); // fields stored in the account's "data" array field (serialized)
+define('CO_FLDS', 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd staleNudge contact'); // account fields stored in r_company
+define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap'); // fields stored in the account's "data" array field (serialized)
 define('MASTER_NUMERIC_FLDS', 'minimum achMin savingsAdd saveWeekly');
 define('MASTER_FLDS', MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank refill'); // only in master, for joint accounts
 define('R_MONEY_FLDS', 'balance rewards floor giftPot committed'); // financial amount fields in account record
@@ -153,7 +153,7 @@ define('USERNAME_MAX_LENGTH', '100'); // max length of "name" field
 define('R_ADMIN_CAN_MANAGE_CTTYS', TRUE); // should be false once communities can manage themselves
 define('R_CRON_PERIOD', 5*60); // how many seconds between cron runs (must divide an hour evenly)
 define('R_MAX_TASK_TIME', 1*60); // what's the longest a queued cron task might take
-define('R_STEPS', 'signup:signup, verify, ssn, sign:community/agreement, donate:community/donate, proxies, prefs:settings/preferences, connect, company, relations, photo, food, backing:community/backing'); // membership steps
+define('R_STEPS', 'signup:signup, verify, ssn, sign:community/agreement, donate:community/donate, proxies, prefs:settings/preferences, connect, company, relations, photo, food, discount:community/discount, backing:community/backing'); // membership steps
 define('R_NOLOG', SECURE_FLDS . ' ' . VSECURE_FLDS . ' data secure vsecure secret oneTimeLoginUrl password pass pass1 pass2 vKeyE newPass external_input form_build_id bad args'); // don't log these (external_input may contain passwords and is duplicated as individual fields)
 define('R_NOLOG_FORMS', 'Admin Test Handy footer accounts history settings settings/icon community Summary Php'); // don't log visits to these forms
 define('R_ANON_FORMS', R_NOLOG_FORMS . ' Signup Signin PageNotFound Sinx Pass Empty TestRecovery ChangePassword Help Community Democracy Agreement CttyFunds Reports Flags Game Menu I ResetPassword Profile Accept Buy HandleInvoice FindCo'); // no login required
@@ -191,6 +191,7 @@ define('NEIGHBOR_QUERY', '(POW(latitude-:lat, 2) + POW((longitude-:lon) * (.71 +
 
 define('R_URL_SLASH', '%_%'); // Drupal gets confused by slashes in a url, even if urlencoded
 define('R_EXCHANGE_LIMITS', '1:5000,7:20000,52:80000,365:500000'); // per day, week, 7-week, year
+define('STALE_NUDGE', 7); // default number of days to wait before reminding a customer to pay an invoice
 define('R_INVITE_DAYS', 30); // number of days to accept invitation to membership
 //define('R_MAXR_DEFAULT', -1); // suggested maximum amount to hold in CG credit (-1 = no limit)
 define('R_CARDCODE_LEN', 14); // length of rCard security code (long to deter easy copying, max 14 for small QR)
@@ -295,23 +296,15 @@ define('R_NOT_VALID', R_ROOT . '/images/not-valid.png'); // says rcard is not va
 define('LOG_DIR', ROOT . '/cgLogs/'); // where to store log files
 
 // account type bits
-//$GLOBALS['account types']
 define('CO_TYPES', t('personal, sole proprietor, partnership, LLC, private corporation, publicly-traded corporation, tax-exempt nonprofit, government, co-operative, unincorporated association or club, estate, trust, custodian'));
 
-// Company Account flags (bits)
 define('CO_PERSONAL', 0); // phase out (use type field in r_company instead)
-define('CO_SOLE_PROPRIETOR', 1); // phase out (use type field in r_company instead)
-define('CO_PARTNERSHIP', 2); // phase out (use type field in r_company instead)
-define('CO_CORPORATION', 3); // phase out (use type field in r_company instead)
-define('CO_NONPROFIT', 4); // phase out (use type field in r_company instead)
-define('CO_CUSTODIAN', 5); // keep
-define('CO_u6', 6); //
-define('CO_u7', 7); //
-define('CO_PUBLICLY_TRADED', 8); // phase out (use type field in r_company instead)
-define('CO_u9', 9); //
-define('CO_u10', 10); //
-define('CO_u11', 11); //
-define('CO_u12', 12); //
+define('CO_SOLE_PROPRIETOR', 1);
+define('CO_PARTNERSHIP', 2);
+define('CO_LLC', 3); // used in testing
+define('CO_CUSTODIAN', 12);
+
+// Company Account flags (bits)
 define('CO_PRIVATE', 13); // company is not to be listed publicly (on promo site, etc.)
 define('CO_ATM', 14); // can trade cg credit for cash, even if balance is less than floor
 
@@ -541,6 +534,7 @@ $GLOBALS['emailSubjects'] = array(
   'partner-signup' => t('Continue your %PROJECT sign-up'),
   'verify' => t('%PROJECT NEXT STEP: Verify your email address.'),
   'verify-co' => t('%PROJECT NEXT STEP: Verify your company email address.'),
+  'verify-trial' => t('%PROJECT NEXT STEP: Verify your company email address.'),
   'password-reset' => t('New %PROJECT PASSWORD'),
   'tell-staff' => t('%PROJECT STAFF ALERT: %topic'),
   'notices' => t('%PROJECT Notices for %qid for %range'),

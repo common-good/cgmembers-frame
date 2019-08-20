@@ -257,7 +257,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
     if ($toA->closed) return r\tellAdmin(t('attempt to email closed account'), compact(ray('index subs reply0')));
     if ($jid = $toA->jid) $jA = r\acct($jid);
     if ($toA->depends) $jA = r\acct($toA->helper); // sponsored accounts are never joint
-    if ($jA and u\test()) $testEmails[] = compact(ray('index toEmail subs', $index, $jA->email, $subs));
+    if (nn($jA) and test()) $testEmails[] = ray('index toEmail subs', $index, $jA->email, $subs);
   } else $to = $toEmail = $to0;
   
   $testEmails[] = compact(ray('index toEmail subs'));
@@ -384,24 +384,17 @@ function notify($uid, $index, $subs = [], $force = FALSE) {
   
   if ($force) {
     $mailed = r\rMail($index, $a, $subs, @$subs['reply'] ?: 'ctty');
-  } else { //if ($a->can(B_NOTIFY_EMAIL)) {
+  } else {
     list ($message, $created) = array(t($index, $subs), now());
     f('t.output', "Actual Notice to $fullName: $message");
     db\insert('r_notices', compact(ray('uid message created')), 'msgid');
   }
   
   if ($a->can(B_BYSMS)) {
-    if ($num = $a->smsNumber) $smsed = SMS\send($num, t($index, $subs));
+    $ok = SMS\send($a->phone, t($index, $subs));
+    if (!$ok) r\tellAdmin(t('failed sending SMS to %nm @ %phone', 'nm phone', $a->fullName, $a->phone));
   }
-  if (FALSE and !@$mailed and !@$smsed and array_search($index, $warnIndexes) !== FALSE) {
-    $notification = str_replace('-', ' ', $index);
-    $warning = t('cannot contact', compact('fullName', 'notification'));
-  }
-  if (@$warning) {
-    if ($channel == TX_WEB) Web\say($warning);
-    if ($channel == TX_SMS) SMS\send($a->smsNumber, $warning);
-    if ($channel == TX_POS) { } // dunno how to handle this
-  }
+
 }
 
 /**
@@ -1544,16 +1537,14 @@ function xfee($for, $amount) {
 }
 
 function disputeTx($xid, $reason = '') {
-  $a = r\acct();
-  if (empty($a)) return FALSE;
-  $DBTX = db_transaction();
-  if (db\exists('tx_disputes', "xid=:xid", ['xid'=>$xid])) {
-    u\EXPECT(FALSE, "transaction $xid is already disputed");
-  } else {
-    $result = db\insert('tx_disputes', ['xid'=>$xid, 'reason'=>$reason, 'status'=>DS_OPEN, 'uid'=>$a->uid], 'id');
-    u\EXPECT($result, "error inserting dispute record");
-  }
-  unset($DBTX);
+  global $mya;
+  
+  if (empty($mya)) return FALSE;
+  if (db\exists('tx_disputes', compact('xid'))) u\FAIL("transaction $xid is already disputed");
+
+  $result = db\insert('tx_disputes', ['xid'=>$xid, 'reason'=>$reason, 'status'=>DS_OPEN, 'uid'=>$mya->uid], 'id');
+  u\EXPECT($result, "error inserting dispute record");
+
   return TRUE;
 }
   
@@ -1574,7 +1565,6 @@ function foreignServer($uid) {return (r\uidRegion($uid) != serverUid());}
 function doCode($code) {return @unserialize(@u\decry('P', CRYPT_FLAG . $code));} // this is how it should be (see forms/rdo.inc)
 function cgA() {return r\acct(CGID);}
 function denyInv($nvid) {return db\setData('r_invoices', $nvid, ['denied' => TRUE]);}
-function stepsDone0() {return array_fill_keys(array_keys(ray(R_STEPS)), FALSE);}
 //function usdin($for) {return u\abbreviates('usd in (', strtolower(is_array($for) ? $for[1] : $for));}
 function usdin($for) {return u\abbreviates(S_USD_IN, is_array($for) ? $for[1] : $for, TRUE);}
 function regionField($fld) {return ($a = r\acct(serverUid())) ? $a->$fld : NULL;}
@@ -1586,3 +1576,4 @@ function clubid() {return r\serverUid();} // temporarily use the region as the c
 function pic($flnm) {if (!is_dir(R_PICTURE_DIR)) mkdir(R_PICTURE_DIR); return R_PICTURE_DIR . $flnm;}
 function periodDesc($period) {return $period == 'X' ? '' : ray(OFTENS)[$period];}
 function isBank($uid) {return ($uid == BANK_IN_ID or $uid == BANK_OUT_ID);}
+function stateNum($st) {return db\get('id', 'r_states', 'abbreviation=:st and country_id=:US_COUNTRY_ID', compact('st'));}

@@ -84,7 +84,6 @@ function run() {
 // NO (happens too often)  u\log('running cron');
   // Allow execution to continue even if the request gets canceled.
   @ignore_user_abort(TRUE);
-  flog('running cron at ' . time());
 
   // Prevent session information from being saved while cron is running.
   $original_session_saving = \drupal_save_session();
@@ -920,8 +919,8 @@ function invoice1($item) {
 		}
   } elseif ($status == TX_PENDING) {
     $daysAgo = max(1, round((now() - $created) / DAY_SECS));
-    $nudge = $a2->staleNudge ?: 7;
-    if ($nudge !== 0 and $daysAgo % $nudge == 0) {
+    $nudge = $a2->staleNudge;
+    if ($nudge !== 0 and $daysAgo % ($nudge ?: STALE_NUDGE) == 0) {
       $subs = ray('daysAgo created amount purpose nvid _a1 payerName payeeName email phone', $daysAgo, u\fmtDate($created, TRUE), u\fmtAmt($amount), $purpose, $nvid, $a->makeDo('inv', $nvid), $a->fullName, $payeeName, $a2->email, $a2->phone);
       r\message($payer, 'stale invoice', $subs + ['reply' => $payee]); // tell other party by email about this invoice
       r\message($payee, 'stale invoice report', $subs); // tell the payee we're following up on it

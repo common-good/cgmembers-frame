@@ -44,12 +44,7 @@ function formSummary($form, &$sta) {
   } else { // normal
     if ($stepUrl and $stepUrl != 'summary') return w\go($stepUrl);
     if (@$msg) say($msg);
-    
-    if ($mya->legalName != $mya->fullName) $legalName = item($mya->legalName, t('Legal Name:'));    
-    //extract(just('r usd pAccts', r\stats($mya->community)));
-// Don't show return because that's not the point of rCredits
-//    $returnMo = item("$returnMo% APR " . t('over the past month'), t('Your return:'));
-//    $return = item("$return% APR " . t('overall (ever)'), ' ', t('Your effective rate of return on your average balance [<@a>details</a>]', ray('@a', 'a href=help/your-return')));
+    if ($mya->legalName != $mya->fullName and !$mya->depends) $legalName = item($mya->legalName, t('Legal Name:'));    
   }
 
   extract(just('returnMo return cttyBeneMo cttyBene', $mya->j_stats()));
@@ -65,7 +60,7 @@ function formSummary($form, &$sta) {
     $another = $hasMultipleAccounts ? t('Another') : t('a');
     $makeCo = $mya->depends ? '' : w\btn('/signup-company', t('Open %another Company Account', compact('another')), 'primary', 'xs');
 //    if (!$mya->jid and !$mya->co) $makeJoint = w\btn('/signup/joint=1', t('Make this a joint account'), 'primary', 'xs');
-    $makeJoint = ($mya->member and !$mya->jid and !$mya->co and $mya->depends) ? w\btn('/prejoin', t('Make this a joint account'), 'primary', 'xs') : '';
+    $makeJoint = ($mya->member and !$mya->jid and !$mya->co and !$mya->depends) ? w\btn('/prejoin', t('Make this a joint account'), 'primary', 'xs') : '';
     $goFood = $mya->food > 0 ? lnk('/settings/food', t('Food Fund')) : btn('/settings/food', t('Food Fund'), 'warning');
     if ($mya->cAdmin) $goFood = '<br><br>' . $goFood; // make sure it doesn't hide behind the photo
     if (!$mya->co and $hasMultipleAccounts) $clickPhoto = item(t('Click your photo%where to manage your other account(s).', 'where', $mya->cAdmin ? t(' in the upper right corner') : ''));
@@ -78,7 +73,7 @@ function formSummary($form, &$sta) {
 
   $title = t('Account Summary');
   $accountName = item($mya->j_fullName . ($mya->jid ? '<br>' : ' ') . "($mya->j_name)", t('Name:'));
-  $address = item($mya->postalAddr . @$extras, t('Postal Addr:'));
+  $address = item(($mya->trialco ? $mya->contact : $mya->postalAddr) . $extras, t('Contact:'));
   $balance = u\fmtAmt($mya->balance);
 //    $totalDesc = u\fmtAmt($mya->r);
 //    $balanceDesc = $mya->savings ? t(' plus your savings, for a total of @total', ['@total' => $totalDesc]) : '';

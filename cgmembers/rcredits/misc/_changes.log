@@ -1,3 +1,6 @@
+2019-08-20 feature/ezbiz
+. easy business signup (trial company)
+
 2019-08-17 feature/stale-nudge
 . added a virtual staleNudge field to users data field, allowing a company's stale invoice reminders to go out with a non-standard period (the standard is 7 days) or not at all. There is as of yet no way for the company to set this field.
 

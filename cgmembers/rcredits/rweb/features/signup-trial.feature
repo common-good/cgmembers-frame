@@ -2,235 +2,138 @@ Feature: A company signs up to try Common Good using a short form
 AS an owner or manager of a company
 I WANT to open a Common Good account
 SO I can be part of the Common Good Economy
-# Note that "member" in the scenarios below means new member (newbie).
 
 Setup:
   Given members:
-  | uid  | fullName | acctType    | flags      | created  |*
-  | .ZZZ | Zeta Zot | personal    | ok         | 99654321 |
+  | uid  | fullName | acctType    | flags      | created  | federalId | postalAddr          |*
+  | .ZZZ | Zeta Zot | personal    | ok         | 99654321 | 123456789 | 26Z, Zton, CA 98765 |
   And member is logged out
-
-Scenario: A newbie visits the registration page with expired invite
-  Given invitation to email "a@" from member ".ZZZ" is "c0D3"
-  And invitation "c0D3" was sent on "%today-5w"
-  When member "?" visits page "signup/code=c0D3"
-  Then we show "Open a Personal Account"
-# lateness no longer makes a big difference
-#  And we say "error": "expired invite" with subs:
-#  | a | inviterName |*
-#  | ? | Zeta Zot    |
-
-Scenario: A newbie visits the registration page with a used invite
-  Given invitation to email "a@" from member ".ZZZ" is "c0D3"
-  And member "?" confirms form "signup/code=c0D3" with values:
-  | fullName | email | phone     | country | zip | federalId   | dob      | acctType     | address | city       | state | postalAddr                | years | months | owns | helper |*
-  | Abe One  | a@ | 413-253-0000 | US      | 01001      | 111-22-3333 | 1/2/1990 | %CO_PERSONAL  | 1 A St. | Agawam | MA    | 1 A St., Agawam, MA 01001 |     1 |    6 |    1 | .ZZZ   |
-  When member "?" visits page "signup/code=c0D3"
-  Then we show "Open a Personal Account"
-#  And we say "error": "used invite"
-
-Scenario: A newbie registers in Western Massachusetts
-  Given invitation to email "a@" from member ".ZZZ" is "c0D3"
-  And next random code is "WHATEVER"
-  When member "?" confirms form "signup/code=c0D3" with values:
-  | fullName | email | phone     | country | zip   | federalId   | dob      | acctType     | address | city       | state | postalAddr                | years | months | owns | helper |*
-  | Abe One  | a@ | 413-253-0000 | US      | 01002 | 111-22-3333 | 1/2/1990 | %CO_PERSONAL  | 1 A St. | Agawam | MA    | 1 A St. Agawam MA 01001 |     1 |    6 |    1 | .ZZZ   |
+Skip
+Scenario: Someone opens a trial company account
+  Given next random code is "WHATEVER"
+  When member "?" confirms form "trial" with values:
+  | contact | fullName | email | phone        | zip   | ownPhone | qid    |*
+  | Abe One | Coco Co  | a@    | 413-253-0000 | 01002 |        1 |        |
   Then members:
-  | uid  | fullName | legalName | email | phone     | zip | country | state | city   | flags     | floor | address | postalAddr                | tenure | owns | helper | preid |*
-  | .AAA | Abe One  | Abe One   | a@ | +14132530000 | 01002 | US      | MA    | Agawam | confirmed | 0     |    1 A St. | 1 A St. Agawam MA 01001 |     18 |    1 | .ZZZ  | ?    |
-  And these "signup":
-  | preid | source | created |*
-  | ?     | ?      | %now    |
-  And we email "verify" to member "a@" with subs:
-  | fullName | name   | quid    | site      | code      |*
-  | Abe One  | abeone | NEW.AAA | %BASE_URL | WHATEVER |
+  | uid       | .AAA           |**
+  | fullName  | Coco Co        |
+  | legalName | %CGF_LEGALNAME |
+  | federalId | %CGF_EIN       |
+  | email     | a@             |
+  | phone     | +14132530000   |
+  | zip       | 01002          |
+  | country   | US             |
+  | state     | MA             |
+  | city      | Amherst        |
+  | flags     | confirmed co depends |
+  | helper    | cgf            |
+  | contact   | Abe One        |
+  And we email "verify-trial" to member "a@" with subs:
+  | fullName | name   | quid   | site      | code     |*
+  | Coco Co  | cococo | NEWAAA | %BASE_URL | WHATEVER |
   And member ".AAA" one-time password is set to "WHATEVER"
-  And we show "Verify Your Email Address"
   And we say "status": "info saved|step completed"
-  #And we show "Empty"
+  And we show "Get Your Customers Signed Up" with:
+  | Discount: | Amount or Percentage |
+Skip
+For example $20 or 10%
+Minimum:
+0
+Minimum purchase amount, to get the discount.
+Valid until:
+02/20/2020
+Leave blank for no end.
+Limit:
+5
+uses per member
+Leave blank for unlimited uses.
 
-Scenario: A newbie registers with an unconfirmed icard invitation
-  And next random code is "WHATEVER"
-  When member "?" confirms form "signup/code=SCMZDDI26QF" with values:
-  | fullName | email | phone     | country | zip | federalId   | dob      | acctType     | address | city       | state | postalAddr                | years | months | owns | helper |*
-  | Abe One  | a@ | 413-253-0000 | US      | 01001      | 111-22-3333 | 1/2/1990 | %CO_PERSONAL  | 1 A St. | Agawam | MA    | 1 A St. Agawam MA 01001 |     1 |    6 |    1 | .ZZZ |
+  And steps "discount verify" remain for member ".AAA"
+
+Scenario: A member opens a trial company account
+  Given next random code is "WHATEVER"
+  When member "?" confirms form "trial" with values:
+  | contact | fullName | email | phone        | zip   | ownPhone | qid  |*
+  | Abe One | Coco Co  | a@    | 413-253-0000 | 01002 |        1 | .ZZZ |
   Then members:
-  | uid  | fullName | legalName | email | phone     | zip | country | state | city   | flags | floor | address | postalAddr              | tenure | owns | iCode | helper |*
-  | .AAA | Abe One  | Abe One   | a@ | +14132530000 | 01001      | US      | MA    | Agawam |       | 0     |   1 A St. | 1 A St. Agawam MA 01001 |     18 |    1 |     5 | .ZZZ   |
-  And we show "Verify Your Email Address"
-  And we say "status": "info saved|step completed"
-# LATER  And we say "status": "must be confirmed" with subs:
-#  | inviterName |*
-#  | Zeta Zot    |
-  And we email "verify" to member "a@" with subs:
-  | fullName | name   | quid    | site        | code  |*
-  | Abe One  | abeone | NEW.AAA | %BASE_URL | WHATEVER |
-  And member ".AAA" one-time password is set to "WHATEVER"
-  And we message "confirm invite" to member ".ZZZ" with subs:
-  | fullName | a1 |*
-  | Abe One  | ?  |
-  #And we show "Empty"
-  
-Scenario: A newbie registers with an unconfirmed self-invitation
-  Given member ".ZZZ" email invitation code is "VDYQGBRQO7A"
-  And next random code is "WHATEVER"
-  When member "?" confirms form "signup/code=VDYQGBRQO7A" with values:
-  | fullName | email | phone     | country | zip | federalId   | dob      | acctType     | address | city       | state | postalAddr                | years | months | owns | helper |*
-  | Abe One  | a@ | 413-253-0000 | US      | 01001      | 111-22-3333 | 1/2/1990 | %CO_PERSONAL  | 1 A St. | Agawam | MA    | 1 A St. Agawam MA 01001 |     1 |    6 |    1 | .ZZZ   |
-  Then members:
-  | uid  | fullName | legalName | email | phone     | zip | country | state | city   | flags | floor | address | postalAddr              | tenure | owns | iCode      | helper |*
-  | .AAA | Abe One  | Abe One   | a@ | +14132530000 | 01001      | US      | MA    | Agawam |       | 0     |   1 A St. | 1 A St. Agawam MA 01001 |     18 |    1 | %IBY_SELF | .ZZZ   |
-  And we show "Verify Your Email Address"
-  And we say "status": "info saved|step completed"
-# LATER  And we say "status": "must be confirmed" with subs:
-#  | inviterName |*
-#  | Zeta Zot    |
-  And we email "verify" to member "a@" with subs:
-  | fullName | name   | quid    | site        | code  |*
-  | Abe One  | abeone | NEW.AAA | %BASE_URL | WHATEVER |
-  And member ".AAA" one-time password is set to "WHATEVER"
-  And we message "confirm invite" to member ".ZZZ" with subs:
-  | fullName | a1 |*
-  | Abe One  | ?  |
-  #And we show "Empty"
-  
-Scenario: A newbie registers with a different legal name
-  Given invitation to email "a@" from member ".ZZZ" is "c0D3"
-  When member "?" confirms form "signup/code=c0D3" with values:
-  | legalName | fullName | email | phone     | country | zip | federalId   | dob      | acctType     | address | city       | state | postalAddr                | years | months | owns | helper |*
-  | Abe One   | Abey One | a@ | 413-253-0000 | US      | 01001      | 111-22-3333 | 1/2/1990 | %CO_PERSONAL  | 1 A St. | Agawam | MA    | 1 A St., Agawam, MA 01001 |     1 |    6 |    1 | .ZZZ   |
-  Then members:
-  | uid  | fullName | legalName | email | phone     | zip | country | state | city   | flags     | name    | helper |*
-  | .AAA | Abey One | Abe One   | a@ | +14132530000 | 01001      | US      | MA    | Agawam | confirmed | abeyone | .ZZZ   |
-
-Scenario: A newbie registers from elsewhere
-  Given invitation to email "a@" from member ".ZZZ" is "c0D3"
-  And next random code is "WHATEVER"
-  When member "?" confirms form "signup/code=c0D3" with values:
-  | fullName   | Abe One        |**
-  | email      | a@             |
-  | phone      | (333) 253-0000 |
-  | zip        | 03768-2345     |
-  | federalId  | 111-22-3333    |
-  | dob        | 1/2/1990       |
-  | acctType   | %CO_PERSONAL   |
-  | address    | 1 A ST.        |
-  | city       | Lyme           |
-  | state      | NH             |
-  | postalAddr | 1 A ST., Lyme, NH 03768-2345 |
-  | years      | 1              |
-  | months     | 6              |
-  | owns       | 1              |
-  | helper     | .ZZZ           |
- Then members:
-  | uid    | fullName | email | phone        | zip        | state | city | flags     | helper | address |*
-  | NENAAA | Abe One  | a@    | +13332530000 | 03768-2345 | NH    | Lyme | confirmed | .ZZZ   | 1 A St. |
-  And we show "Verify Your Email Address"
-  And we say "status": "info saved|step completed"
-  And we email "verify" to member "a@" with subs:
-  | fullName | name   | quid   | site        | code  |*
-  | Abe One  | abeone | NENAAA | %BASE_URL | WHATEVER |
-  # And we show "Empty"
-
-Scenario: A newbie registers with no case
-  Given invitation to email "a@" from member ".ZZZ" is "c0D3"
-  When member "?" confirms form "signup/code=c0D3" with values:
-  | fullName | email | phone     | zip | federalId   | dob      | acctType     | address | city    | state | postalAddr                | years | months | owns | helper |*
-  | abe one  | a@ | 413-253-0000 | 01002      | 111-22-3333 | 1/2/1990 | %CO_PERSONAL  | 1 A ST. | amherst | MA    | 1 A ST., Amherst, MA 01001 |     1 |    6 |    1 | .ZZZ   |
-  Then members:
-  | uid  | fullName | email | phone     | zip | state | city    | flags     | floor | postalAddr | helper |*
-  | .AAA | Abe One  | a@ | +14132530000 | 01002      | MA    | Amherst | confirmed | 0     | 1 A ST., Amherst, MA 01001 | .ZZZ   |
-
-Scenario: A member registers bad email
-  Given invitation to email "a@" from member ".ZZZ" is "c0D3"
-  When member "?" confirms form "signup/code=c0D3" with values:
-  | fullName | email     | zip | state | acctType    |*
-  | Abe One  | %whatever | 01001 |  MA | %CO_PERSONAL |
-  Then we say "error": "bad email"
-
-Scenario: A member registers bad name
-  Given invitation to email "a@" from member ".ZZZ" is "c0D3"
-  When member "?" confirms form "signup/code=c0D3" with values:
-  | fullName  | email | phone     | zip | state     | federalId   | dob      | acctType     | years | months |*
-  | ™ %random | a@ | 413-253-0000 | 01001-3829 | MA | 111-22-3333 | 1/2/1990 | %CO_PERSONAL |     1 |    6 |
-  Then we say "error": "illegal char" with subs:
-  | field    |*
-  | fullName |
-
-Scenario: A member registers bad zip
-  Given invitation to email "a@" from member ".ZZZ" is "c0D3"
-  When member "?" confirms form "signup/code=c0D3" with values:
-  | fullName | email     | phone | zip | federalId   | dob      | acctType    |*
-  | Abe One  | a@ | 413-253-0001 | %random    | 111-22-3333 | 1/2/1990 | %CO_PERSONAL |
-  Then we say "error": "bad zip"
+  | uid       | .AAA           |**
+  | fullName  | Coco Co        |
+  | legalName | %CGF_LEGALNAME |
+  | federalId | %CGF_EIN       |
+  | email     | a@             |
+  | phone     | +14132530000   |
+  | zip       | 01002          |
+  | country   | US             |
+  | state     | MA             |
+  | city      | Amherst        |
+  | flags     | confirmed co depends |
+  | helper    | .ZZZ           |
+  | contact   | Abe One~NEWZZZ |
  
-# TEST FAILS (tentative data does not get filled in, on error) Scenario: A member registers bad phone twice
-#  Given invitation to email "a@" from member ".ZZZ" is "c0D3"
-#  When member "?" confirms form "signup/code=c0D3" with values:
-#  | fullName | email | phone     | zip | state     | federalId   | dob      | acctType     | years | months | country |*
-#  | Abe One  | a@ | 413-253-000  | 01001-3829 | MA | 111-22-3333 | 1/2/1990 | %CO_PERSONAL |     1 |    6 | %US_COUNTRY_ID |
-#  Then we say "error": "bad phone"
-#  And we show "Open a Personal Account" with:
-#  | Phone: | 413-253-000 |
-#  When member "?" confirms form "signup/code=c0D3" with values:
-#  | fullName | email | phone     | zip | state     | federalId   | dob      | acctType     | years | months |*
-#  | Abe One  | a@ | 413-253-000  | 01001-3829 | MA | 111-22-3333 | 1/2/1990 | %CO_PERSONAL |     1 |    6 |
- 
-Scenario: A member registers again
-  Given invitation to email "a@" from member ".ZZZ" is "c0D3"
+Scenario: A member opens a trial company account without a phone
+  Given next random code is "WHATEVER"
+  When member "?" confirms form "trial" with values:
+  | contact | fullName | email | phone        | zip   | ownPhone | qid  |*
+  | Abe One | Coco Co  | a@    | 413-253-0000 | 01002 |        0 | .ZZZ |
+  Then these "invoices":
+  | nvid | created | status      | amount         | from | to  | for               |*
+  |    1 | %today  | %TX_PENDING | %EQUIP_DEPOSIT | .AAA | cgf | equipment deposit |
+  And we say "status": "refundable deposit"
+Resume
+Scenario: A new trial company account manager verifies the email
+  And members:
+  | uid       | .AAA           |**
+  | fullName  | Coco Co        |
+  | email     | a@             |
+  | flags       | confirmed co depends |
+  And member ".AAA" one-time-password is "WHATEVER" expires "%now+7d"
+  And steps "discount verify" remain for member ".AAA"
+  When member ".AAA" completes form "settings/verify" with values:
+  | verify   | pass1      | pass2      | strong |*
+  | WHATEVER | %whatever3 | %whatever3 |      1 |
+  Then we show "Get Your Customers Signed Up"
+  And we say "status": "pass saved|step completed"
+
+Scenario: A trial company account manager creates a discount
   Given members:
-  | uid  | fullName  | phone  | email | city  | state |*
-  | .ZZA | Abe One    | +20001 | a@   | Atown | AK    |
-  When member "?" confirms form "signup/code=c0D3" with values:
-  | fullName | email | phone      | zip | federalId   | dob      | acctType    |*
-  | Bea Two  | a@ | 413-253-0002 | 01001      | 111-22-3333 | 1/2/1990 | %CO_PERSONAL |
-  Then we say "error": "duplicate email|forgot password" with subs:
-  | who     | a                                          |*
-  | Abe One | a href="settings/password/a%40example.com" |
-#  Then we say "error": "duplicate email|forgot password" with subs:
-#  | who     | emailTagged            | a                                       |*
-#  | Abe One | a+whatever@example.com | a href=settings/password/a%40example.com |
-#  And member is logged out
-# That email is taken. Click here to get a new password.
-
-Scenario: A member registers with an existing company
+  | uid       | .AAA           |**
+  | fullName  | Coco Co        |
+  | email     | a@             |
+  | flags     | confirmed co depends |
+  And steps "discount verify" remain for member ".AAA"
+  When member ".AAA" completes form "community/discount" with values:
+  | amount | minimum | end     | ulimit |*
+  |     20 |     120 | %mdY+3m |      3 |
+  Then these "coupons":
+  | coupid | fromId | amount | ulimit | flags | start      | end                         |*
+  |      1 |   .AAA |     20 |      3 |       | %daystart  | %(%daystart+3m+%DAY_SECS-1) |
+  And we say "status": "Your discount was created successfully."
+  And we show "Verify Your Email Address"
+  And steps "verify" remain for member ".AAA"
+  
+Skip
+Scenario: A member makes a payment from a trial comppany account
   Given members:
-  | uid  | fullName | email | zip | phone        | city     | flags        |*
-  | .AAD | AAAme Co | myco@ | 01330      | +14136280000 | Ashfield | co,confirmed |
-  And invitation to email "a@" from member ".ZZZ" is "c0D3"
-  When member "?" confirms form "signup/code=c0D3" with values:
-  | fullName | email | phone   | zip | federalId   | dob      | acctType    | company  | companyPhon  | companyOptions           | address | city    | state | postalAddr                 | years | months | owns | helper |*
-  | Abe One  | a@    | 413-253-0002 | 01002 | 111-22-3333 | 1/2/1990 | %CO_PERSONAL | AAAme Co | (413)628-0000 | owner=>1,contractor=>1 | 1 A ST. | amherst | MA    | 1 A ST., Amherst, MA 01001 |     1 |    6 |    1 | .ZZZ   |
-  Then members:
-  | uid  | fullName | email | zip | state | city    | flags     | helper |*
-  | .AAA | Abe One  | a@    | 01002      | MA    | Amherst | confirmed | .ZZZ   |
-  And relations:
-  | main | agent | permission | employee | owner | draw |*
-  | .AAD | .AAA  |            |        0 |       1 |    0 |
-
-Scenario: A member registers with an unknown company
-  Given invitation to email "a@" from member ".ZZZ" is "c0D3"
-  When member "?" confirms form "signup/code=c0D3" with values:
-  | fullName | email | phone   | zip | federalId   | dob      | acctType    | company  | companyPhon  | companyOptions | address | city    | state | postalAddr                 | years | months | owns | helper |*
-  | Abe One  | a@    | 413-253-9876 | 01002 | 111-22-3333 | 1/2/1990 | %CO_PERSONAL | AAAme Co | (413)628-0000 | employee=>1  | 1 A ST. | amherst | MA    | 1 A ST., Amherst, MA 01001 |     1 |    6 |    1 | .ZZZ   |
-  Then members:
-  | uid  | legalName | email | zip | phone        | city    | flags     | helper |*
-  | .AAA | Abe One   | a@    | 01002      | +14132539876 | Amherst | confirmed | .ZZZ   |
-  And no relation:
-  | main | agent |*
-  | .AAD | .AAA  |
-  And signup company info for account ".AAA" is remembered
-
-Scenario: A member registers with a company with no relation
-  Given invitation to email "a@" from member ".ZZZ" is "c0D3"
-  When member "?" confirms form "signup/code=c0D3" with values:
-  | fullName | email | phone        | zip | state | federalId  | dob  | acctType    | company  | companyPhon  | companyOptions | years | months | owns | helper |*
-  | Abe One  | a@    | 413-253-0002 | 01002 | MA  | 111-22-3333 | 1/2/1990 | %CO_PERSONAL | AAAme Co | (413)628-0000 |               |     1 |    6 |    1 | .ZZZ   |
-  Then we say "error": "what relation"
-
-Scenario: A member registers with a bad company phone
-  Given invitation to email "a@" from member ".ZZZ" is "c0D3"
-  When member "?" confirms form "signup/code=c0D3" with values:
-  | fullName | email  | phone    | zip | state | federalId   | dob      | acctType    | company  | companyPhon | companyOptions | years | months | owns | helper |*
-  | Abe One  | a@ | 413-253-9876 | 01001 | MA  | 111-22-3333 | 1/2/1990 | %CO_PERSONAL | AAAme Co | %random      | owner=>1    |     1 |    6 |    1 | .ZZZ   |
-  Then we say "error": "bad company phone" with subs: ""
+  | uid       | .AAA           |**
+  | fullName  | Coco Co        |
+  | email     | a@             |
+  | flags     | confirmed co depends ok |
+  And balances:
+  | uid  | balance |*
+  | .AAA | 100     |
+  When member ".AAA" confirms form "pay" with values:
+  | op  | who      | amount | goods | purpose |*
+  | pay | Zeta Zot | 100    | %FOR_GOODS     | labor   |
+  Then we say "status": "report tx" with subs:
+  | did    | otherName | amount |*
+  | paid   | Zeta Zot  | $100   |
+  And we notice "new payment" to member ".ZZZ" with subs:
+  | created | fullName | otherName | amount | payeePurpose |*
+  | %today  | Zeta Zot | Coco Co   | $100   | labor        |
+  And transactions:
+  | xid | created | amount | from  | to   | purpose      | taking |*
+  |   1 | %today  |    100 | .AAA  | .ZZZ | labor        | 0      |
+  And balances:
+  | uid  | balance |*
+  | .AAA |       0 |
+  | .ZZZ |     100 |
