@@ -247,9 +247,8 @@ EOF;
    */
   static function lastTx($uids, $where = 1, $subs = []) {
 ///   debug("lastTx(" . pr($uids) . ", '$where', " . pr($subs) . ")");
-    $xid = db\get('t.xid', 'tx_hdrs t JOIN tx_entries e USING(xid)',
-                  "e.uid IN (:uids) AND $where ORDER BY t.created DESC LIMIT 1",
-                  ['uids' => $uids] + $subs);
+    $where = "e.uid IN (:uids) AND $where ORDER BY t.created DESC LIMIT 1";
+    $xid = db\get('t.xid', 'tx_hdrs t JOIN tx_entries e USING(xid)', $where, compact('uids') + $subs);
     if (empty($xid)) return FALSE;
     $tx = self::read($xid);
     if (empty($tx)) return FALSE;
@@ -309,15 +308,14 @@ EOF;
   /**
    * Determine whether the record can be undone
    * @param assoc $subs: (RETURNED) necessary substitutions, if any, including whatever was already there
-   * @return string: the error message (FALSE if the current agent CAN undo it on behalf of the current account)
+   * @return the error assoc or FALSE if the current agent CAN undo it on behalf of the current account
    */
-  function nonoUndo(&$subs = []) {
+  function noUndo(&$subs = []) {
     if (db\exists('tx_hdrs', 'reversesXid=:xid', ['xid' => $this->xid])) return 'already undone';
 
     $a1 = r\acct($this->toMe ? $this->payeeId : $this->payerId, $this->actorA->agentUid);
     $a2 = r\acct($this->toMe ? $this->payerId : $this->payeeId); // second account's permissions are irrelevant
-    $err = r\txPermErr($a1, $a2, $this->toMe, $this->toMe xor $this->actorEntry->amount < 0);
-    if ($err) return $err;
+    if ($err = r\txPermErr($a1, $a2, $this->toMe, $this->toMe xor $this->actorEntry->amount < 0)) return $err;
 
     return FALSE;
   }

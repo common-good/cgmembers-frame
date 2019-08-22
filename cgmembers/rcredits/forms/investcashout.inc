@@ -44,14 +44,17 @@ function formInvestCashout_submit($form, &$sta) {
 		extract($row);
 		$amount = round($pct * -$request, 2);
 		if ($amount > 0 and ($partial or $sum + $amount <= $avail)) {
-			$DBTX = db_transaction();
-			be\transfer('payment', $icA, r\acct($uid), $amount, t('redeem investment'), FOR_USD, ray('stake', 1));
+      $a = r\acct($uid);
       $stake = round($stake - $amount, 2);
-      $request = round($request + $amount, 2);
       u\EXPECT($stake >= 0, 'negative stake');
-			db\update('r_stakes', compact(ray('stakeid stake request')), 'stakeid');
-			$count++;
-			$sum += $amount;
+			$DBTX = db_transaction();
+			list ($ok, $index, $subs) = be\transfer('payment', $icA, $a, $amount, t('redeem investment'), FOR_USD, ray('stake', 1));
+      if ($ok) {
+        $request = round($request + $amount, 2);
+			  db\update('r_stakes', compact(ray('stakeid stake request')), 'stakeid');
+			  $count++;
+			  $sum += $amount;
+      } else say(t('Payment to %whom failed, redeeming investment', 'whom', "$a->fullName ($a->mainQid)"), 'err');
 		  unset($DBTX);
 		}
 	}

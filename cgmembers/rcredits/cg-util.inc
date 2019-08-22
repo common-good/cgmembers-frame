@@ -57,7 +57,7 @@ function badAmount(&$amount, $restriction = '', $fractionLimit = 2, $max = NULL)
   $amount = nn($new, 0);
   $dotPos = strpos($amount, '.');
   if ($dotPos !== FALSE and strlen($amount) > $dotPos + 1 + $fractionLimit) return 'too fractional';
-  if (is_null($max)) $max = isGAME ? PHP_INT_MAX : R_MAX_AMOUNT;
+  if (is_null($max)) $max = R_MAX_AMOUNT;
   if ($max !== '' and abs($amount) > $max) return t('amount too big', compact('max'));
   if ($restriction == '>0' and $amount <= 0) return 'nonpositive amount';
   if ($restriction == '>=0' and $amount < 0) return 'negative amount';
@@ -181,7 +181,7 @@ function shortName($fullName, $filler = '') {
   $fullName = str_replace('&', 'and', $fullName);
 
   ini_set('mbstring.substitute_character', 'none'); 
-  if (!isGAME) $fullName = mb_convert_encoding($fullName, 'UTF-8', 'UTF-8'); // avoid iconv failure (bug in PHP 5.4.3)
+  $fullName = mb_convert_encoding($fullName, 'UTF-8', 'UTF-8'); // avoid iconv failure (bug in PHP 5.4.3)
 
   $result = preg_replace('/\W/', $filler, iconv('UTF-8', 'ASCII//TRANSLIT', $fullName));
   return strtolower($result === '' ? u\code() : $result);
@@ -533,7 +533,7 @@ function EXPECT($assertion, $message = '', $ret = FALSE) {
   return ''; // no error
 }
 
-function DYE($message) {EXPECT(FALSE, $message);}
+function FAIL($message) {throw new \Exception($message);}
 
 function expect1($arg, $value, $type, $ret) {
 //  static $ecnt; $ecnt = @$ecnt + 1; u\EXPECT($ecnt < 10000, 'loop');

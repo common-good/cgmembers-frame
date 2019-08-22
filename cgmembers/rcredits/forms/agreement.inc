@@ -21,10 +21,10 @@ function formAgreement($form, &$sta) {
     $signedBy = item("Signed by <b>$mya->signedBy</b>, $date");
   } elseif (!$mya->co and !$mya->proSe and !$mya->cAdmin) { // can't sign for someone else!
     say('self must sign', 'signedBy');
-  } else {
+  } elseif (!$mya->trialco) {
     $signedBy = w\signedBy();
     $setupFoot = w\setupFoot();
-  }    
+  } else $signedBy = NULL;
   $topics = ray('Members Member-Organizations CGC Dollar-Pool Backing Without-Limit Disputes Participation');
   foreach ($topics as $k) $args["_a$k"] = atag("/help/agreement#$k");
   $args['_aDetails'] = atag('/help/agreement');
@@ -51,7 +51,7 @@ X
   } elseif ($mya->signed) {
     $subtext = NULL;
   } elseif ($mya->co) { // company
-    $subtext = t('<p>I commit %coName to the terms of the <%a>%PROJECT Agreement</a> (the same agreement I signed as an individual).</p>', 'coName _a', $mya->fullName, 'a id="show-agreement"');
+    $subtext = t('<p>I commit %coName to the terms of the <%a>%PROJECT Agreement</a>%same.</p>', 'coName _a same', $mya->fullName, 'a id="show-agreement"', $mya->trialco ? '' : t(' (the same agreement I signed as an individual)'));
     $agreement = "<div id=\"wrap-agreement\">$agreement</div>";
   } else { // individual
     $subtext = t('<h4>Instructions</h4><p>Please <b>READ THIS AGREEMENT</b>. Put a check mark by each section to indicate you have read and understand it. Then sign your full legal name at the bottom.</p>');
@@ -66,7 +66,7 @@ X
   }
 
   $agreement = w\item($agreement);
-  jsx('agree');
+  jsx('agree', ['show' => $mya->trialco]);
   
   return cgform(compact(ray('title subtext agreement signedBy')) + (@$setupFoot ?: []));
 }

@@ -1,80 +1,63 @@
 <?php
 /**
  * @file
- * Definitions common to the various CG interfaces
- * (SMS, web, smartphone, etc.)
+ * Definitions required for any part of the Common Good system, including app testing
  */
 
-define('R_VERSION', '3.50s'); // software version
+define('R_VERSION', '3.50t'); // software version
 
-// definitions used in settings file
-define('US_COUNTRY_ID', 1228); // United States
-
-global $db_name;
+global $db_name, $cryHows;
+global $configRay; // the configuration array currently being examined -- used only in this file
 
 $configFlnm = __DIR__ . '/../../config/config.json';
-$config = (array) json_decode(utf8_encode(file_get_contents($configFlnm)));
-/**/ if (!array_key_exists('stage', $config)) die('There is no valid config file ' . $configFlnm);
-define('isDEV', $config['stage'] == 'development');
-define('isSTAGE', $config['stage'] == 'staging');
-define('isPRODUCTION', $config['stage'] == 'production');
-define('isGAME', $config['stage'] == 'game'); // UNUSED but straggling in code
+$configRay = (array) json_decode(utf8_encode(file_get_contents($configFlnm)));
+/**/ if (!$stage = config('stage')) die('There is no valid config file ' . $configFlnm);
+
+define('isDEV', $stage == 'development'); // (used in settings file and elsewhere)
+define('isSTAGE', $stage == 'staging');
+define('isPRODUCTION', $stage == 'production');
 /**/  if (!isDEV and !isSTAGE and !isPRODUCTION) die('Invalid value for stage in configuration file.');
 
-$base_url = setFromConfig('baseUrl', $config);
-define('GEOCODE_KEY', setFromConfig('geocodeKey', $config));
-define('BASE_URL', $base_url);
-define('LOCAL_URL', setFromConfigWithDefault('localUrl', $config, $base_url));
-define('PROMO_URL', setFromConfig('promoUrl', $config));
-define('CO_API_URL', setFromConfig('coApiUrl', $config));
-define('CGF_EMAIL', setFromConfig('cgfEmail', $config));
-define('CG_SMTP_SERVER', setFromConfigWithDefault('cgSmtpServer', $config, 'smtp.gmail.com'));
-define('CG_SMTP_TLS', setFromConfigWithDefault('cgSmtpTls', $config, 'tls'));
-define('CG_SMTP_PORT', setFromConfigWithDefault('cgSmtpPort', $config, 587));
-define('CG_SMTP_USER', setFromConfigWithDefault('cgSmtpUser', $config, CGF_EMAIL));
-define('CG_SMTP_PASS', setFromConfig('cgSmtpPass', $config));
-define('DKIM_PRIVATE', setFromConfig('dkimPrivate', $config));
-/* define('DKIM_PUBLIC', setFromConfig('dkimPublic', $config)); */
-define('R_INVITE_KEY', setFromConfig('inviteKey', $config));
-define('R_SSN_USER', setFromConfig('ssnUser', $config));
-define('R_SSN_PASS', setFromConfig('ssnPass', $config));
-/**/ if (!array_key_exists('db', $config)) die('the configuration file does not contain a db entry');
-/**/ if (!is_array((array) $config['db'])) die('the configuration file db entry is not an array');
-
-$db_config = (array) $config['db'];
-$db_name = setFromConfig('name', $db_config);
-$db_driver = setFromConfig('driver', $db_config);
-$db_host = setFromConfig('host', $db_config);
-$db_port = setFromConfig('port', $db_config);
-$db_user = setFromConfig('user', $db_config);
-$db_pass = setFromConfig('pass', $db_config);
-define('R_SALTY_PASSWORD', $db_pass);
-$db_salt = setFromConfig('salt', $db_config);
-define('R_WORD', hex2bin(setFromConfig('word', $db_config)));
-
-global $cryHows;
-$cryHows = (array) setFromConfig('encryption', $db_config);
-
-$databases = array (
-  'default' => 
-  array (
-    'default' => 
-    array (
-      'database' => $db_name,
-      'username' => $db_user,
-      'password' => $db_pass,
-      'collation' => 'utf8_general_ci', // or utf8mb4_general_ci
-      'host' => $db_host,
-      'port' => $db_port,
-      'driver' => $db_driver,
-      'prefix' => '',
-      'pdo' => [PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'], // or utf8mb4
-    ),
-  ),
-);
-
+define('US_COUNTRY_ID', 1228); // United States (used in settings file and elsewhere)
 require_once __DIR__ . '/cg-settings.inc'; // custom settings for this community's CG server
-// require .module and -util.inc at bottom
+
+$base_url = config('baseUrl');
+define('GEOCODE_KEY', config('geocodeKey'));
+define('BASE_URL', $base_url);
+define('LOCAL_URL', config('localUrl', $base_url));
+define('PROMO_URL', config('promoUrl'));
+define('CO_API_URL', config('coApiUrl'));
+define('CGF_EMAIL', config('cgfEmail'));
+define('CG_SMTP_SERVER', config('cgSmtpServer', 'smtp.gmail.com'));
+define('CG_SMTP_TLS', config('cgSmtpTls', 'tls'));
+define('CG_SMTP_PORT', config('cgSmtpPort', 587));
+define('CG_SMTP_USER', config('cgSmtpUser', CGF_EMAIL));
+define('CG_SMTP_PASS', config('cgSmtpPass'));
+define('DKIM_PRIVATE', config('dkimPrivate'));
+define('R_INVITE_KEY', config('inviteKey'));
+define('R_SSN_USER', config('ssnUser'));
+define('R_SSN_PASS', config('ssnPass'));
+
+$configRay = (array) config('db'); // now look at just the database config array
+foreach (explode(' ', 'name driver host port user pass salt word encryption') as $k) ${"db_$k"} = config($k);
+
+define('R_SALTY_PASSWORD', $db_pass);
+define('R_WORD', hex2bin($db_word));
+$cryHows = (array) $db_encryption;
+
+unset($configRay); // don't leave this hanging around
+
+$databases['default']['default'] = [ 
+  'database' => $db_name,
+  'username' => $db_user,
+  'password' => $db_pass,
+  'collation' => 'utf8_general_ci', // or utf8mb4_general_ci
+  'host' => $db_host,
+  'port' => $db_port,
+  'driver' => $db_driver,
+  'prefix' => '',
+  'pdo' => [PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'], // or utf8mb4
+];
 
 define('PROJECT', t('Common Good')); // project name
 define('CG_DOMAIN', 'CommonGood.earth');
@@ -147,10 +130,10 @@ define('INFLATION_DESC', t('inflation adjustment'));
 define('COMPANY_FREEZE', FALSE); // companies cannot spend rewards yet
 define('R', '<span class="r">r</span>');
 define('US', '<span class="us">us</span>');
-define('GAME_COMPANIES', '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital');
+/// define('GAME_COMPANIES', '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital');
 define('R_DATE_FLDS', 'created completed deposit sent invited giftDate signed login access joined yesterday dob when sold'); // date field names for testing and administrative display
-define('CO_FLDS', 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd'); // account fields stored in r_company
-define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap staleNudge'); // fields stored in the account's "data" array field (serialized)
+define('CO_FLDS', 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd staleNudge contact'); // account fields stored in r_company
+define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap'); // fields stored in the account's "data" array field (serialized)
 define('MASTER_NUMERIC_FLDS', 'minimum achMin savingsAdd saveWeekly');
 define('MASTER_FLDS', MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank refill'); // only in master, for joint accounts
 define('R_MONEY_FLDS', 'balance rewards floor giftPot committed'); // financial amount fields in account record
@@ -170,7 +153,7 @@ define('USERNAME_MAX_LENGTH', '100'); // max length of "name" field
 define('R_ADMIN_CAN_MANAGE_CTTYS', TRUE); // should be false once communities can manage themselves
 define('R_CRON_PERIOD', 5*60); // how many seconds between cron runs (must divide an hour evenly)
 define('R_MAX_TASK_TIME', 1*60); // what's the longest a queued cron task might take
-define('R_STEPS', 'signup:signup, verify, ssn, sign:community/agreement, donate:community/donate, proxies, prefs:settings/preferences, connect, company, relations, photo, food, backing:community/backing'); // membership steps
+define('R_STEPS', 'signup:signup, verify, ssn, sign:community/agreement, donate:community/donate, proxies, prefs:settings/preferences, connect, company, relations, photo, food, discount:community/discount, backing:community/backing'); // membership steps
 define('R_NOLOG', SECURE_FLDS . ' ' . VSECURE_FLDS . ' data secure vsecure secret oneTimeLoginUrl password pass pass1 pass2 vKeyE newPass external_input form_build_id bad args'); // don't log these (external_input may contain passwords and is duplicated as individual fields)
 define('R_NOLOG_FORMS', 'Admin Test Handy footer accounts history settings settings/icon community Summary Php'); // don't log visits to these forms
 define('R_ANON_FORMS', R_NOLOG_FORMS . ' Signup Signin PageNotFound Sinx Pass Empty TestRecovery ChangePassword Help Community Democracy Agreement CttyFunds Reports Flags Game Menu I ResetPassword Profile Accept Buy HandleInvoice FindCo'); // no login required
@@ -208,6 +191,7 @@ define('NEIGHBOR_QUERY', '(POW(latitude-:lat, 2) + POW((longitude-:lon) * (.71 +
 
 define('R_URL_SLASH', '%_%'); // Drupal gets confused by slashes in a url, even if urlencoded
 define('R_EXCHANGE_LIMITS', '1:5000,7:20000,52:80000,365:500000'); // per day, week, 7-week, year
+define('STALE_NUDGE', 7); // default number of days to wait before reminding a customer to pay an invoice
 define('R_INVITE_DAYS', 30); // number of days to accept invitation to membership
 //define('R_MAXR_DEFAULT', -1); // suggested maximum amount to hold in CG credit (-1 = no limit)
 define('R_CARDCODE_LEN', 14); // length of rCard security code (long to deter easy copying, max 14 for small QR)
@@ -295,6 +279,8 @@ define('R_DUPTX_MINS', 4); // number of minutes before a duplicate transaction i
 define('HAS_XFEE', "data LIKE '%s:4:\"xfee\";%'"); // sql to recognize a transaction that has an exchange fee
 define('R_DEPOSIT_RETURN_FEE', 20); // what we charge members for a second bounced transfer
 define('HAS_REVERSER', "(EXISTS (SELECT tRev FROM tx_hdrs WHERE tRev.reverses=t.xid))");
+define('TRIALCO_LIMIT', 1000); // maximum payments received by a trial (dependent company) account
+define('EQUIP_DEPOSIT', 50); // dollar cost of equipment deposit
 
 define('R_USPS_WEB_TOOLS_ID', '921COMMO5331'); // USPS API credentials
 
@@ -310,23 +296,15 @@ define('R_NOT_VALID', R_ROOT . '/images/not-valid.png'); // says rcard is not va
 define('LOG_DIR', ROOT . '/cgLogs/'); // where to store log files
 
 // account type bits
-//$GLOBALS['account types']
 define('CO_TYPES', t('personal, sole proprietor, partnership, LLC, private corporation, publicly-traded corporation, tax-exempt nonprofit, government, co-operative, unincorporated association or club, estate, trust, custodian'));
 
-// Company Account flags (bits)
 define('CO_PERSONAL', 0); // phase out (use type field in r_company instead)
-define('CO_SOLE_PROPRIETOR', 1); // phase out (use type field in r_company instead)
-define('CO_PARTNERSHIP', 2); // phase out (use type field in r_company instead)
-define('CO_CORPORATION', 3); // phase out (use type field in r_company instead)
-define('CO_NONPROFIT', 4); // phase out (use type field in r_company instead)
-define('CO_CUSTODIAN', 5); // keep
-define('CO_u6', 6); //
-define('CO_u7', 7); //
-define('CO_PUBLICLY_TRADED', 8); // phase out (use type field in r_company instead)
-define('CO_u9', 9); //
-define('CO_u10', 10); //
-define('CO_u11', 11); //
-define('CO_u12', 12); //
+define('CO_SOLE_PROPRIETOR', 1);
+define('CO_PARTNERSHIP', 2);
+define('CO_LLC', 3); // used in testing
+define('CO_CUSTODIAN', 12);
+
+// Company Account flags (bits)
 define('CO_PRIVATE', 13); // company is not to be listed publicly (on promo site, etc.)
 define('CO_ATM', 14); // can trade cg credit for cash, even if balance is less than floor
 
@@ -364,7 +342,7 @@ define('B_DRAWS', 7); // this account draws on one or more others
 define('B_ROUNDUP', 8); // round payments up to nearest dollar, donate the cents to the community fund
 define('B_NONUDGE', 9); // don't send reminders
 define('B_NOSEARCH', 10); // user wants to be not findable by other members, by phone or email
-define('B_u11', 11); // 
+define('B_DEPENDS', 11); // dependent account (can't change settings, federalId is sponsor's)
 define('B_BANKOK', 12); // connected bank account has been verified
 define('B_WEEKLY', 13); // send notices only weekly
 define('B_MONTHLY', 14); // send notices only monthly
@@ -386,7 +364,7 @@ define('B_CADMIN', 29); // is a community administrator
 define('B_ADMIN', 30); // is a system administrator -- can manage server, including assigning ctty admins, but cannot manage communities or individual accounts (except temporarily)
 define('B_MAX', 62); // maximum bit number
 define('B_ADMINABLE', 'member confirmed carded beta cAdmin cAdmin2 nonudge cgc invites rewardy noneg'); // for cAdmin to set
-define('B_LIST', 'member confirmed ok carded ided refill co draws roundup nonudge nosearch u11 bankOk weekly monthly u15 bysms paper secret u19 debt reinvest savings cashoutW cashoutM beta u26 admin2 cAdmin2 cAdmin admin');
+define('B_LIST', 'member confirmed ok carded ided refill co draws roundup nonudge nosearch depends bankOk weekly monthly u15 bysms paper secret u19 debt reinvest savings cashoutW cashoutM beta u26 admin2 cAdmin2 cAdmin admin');
 
 // community-specific flags
 define('B_CGC', 0); // ctty: is an official CGC (currently has no effect)
@@ -556,6 +534,7 @@ $GLOBALS['emailSubjects'] = array(
   'partner-signup' => t('Continue your %PROJECT sign-up'),
   'verify' => t('%PROJECT NEXT STEP: Verify your email address.'),
   'verify-co' => t('%PROJECT NEXT STEP: Verify your company email address.'),
+  'verify-trial' => t('%PROJECT NEXT STEP: Verify your company email address.'),
   'password-reset' => t('New %PROJECT PASSWORD'),
   'tell-staff' => t('%PROJECT STAFF ALERT: %topic'),
   'notices' => t('%PROJECT Notices for %qid for %range'),
@@ -574,7 +553,7 @@ $GLOBALS['topics'] = array( // topics for 'message' email
   'force without perm' => t('Unauthorized transaction'),
 );
 
-if (@TESTING == 1) {
+if (TRUE) { // can't use if(u\test()) here (this block should be moved somewhere)
   global $specialSubs;
   foreach (explode(' ', B_PERMISSIONS) as $k) {
     $perm = constant('B_' . strtoupper($k));
@@ -585,24 +564,14 @@ if (@TESTING == 1) {
 }
 
 /**
- * Extract a value from the given configuration array (probably read in from
- * a configuration file), dying if the key is not present.
- * $key - the key in the configuration array, e.g., dkimPrivate
- * $config - the configuration array itself
+ * Extract a value from the $configRay array (read in from a configuration file or from the database part of it).
+ * @param string $k: the key in the configuration array, eg 'db'
+ * @param mixed $default: (OPTIONAL) the value to return if the key is not in the array
  */
-function setFromConfig($key, $config) {
-/**/ if (!array_key_exists($key, $config)) die("The config file does not contain an entry for $key.");
-  return $config[$key];
-}
-
-/**
- * Extract a value from the given configuration array (probably read in from
- * a configuration file), returning a default if the key is not present.
- * $key - the key in the configuration array, e.g., dkimPrivate
- * $config - the configuration array itself
- * $default - the value to return if the key is not in the array
- */
-function setFromConfigWithDefault($key, $config, $default) {
-  if (!array_key_exists($key, $config)) return $default;
-  return $config[$key];
+function config($k, $default = NULL) {
+  global $configRay;
+  if (isset($configRay[$k])) return $configRay[$k];
+  if (isset($default)) return $default;
+  if ($k != 'db' and empty($configRay['db'])) $k .= ' in the database definition';
+/**/  die("The config file is missing an entry for $k.");
 }

@@ -141,7 +141,7 @@ EOF
   'nothing selected' => t('You did not select anything'),
   'undo incomplete' => t('The undo operation is not yet complete.'),
   'unknown member' => t('"%who" has not yet signed up for %PROJECT.'),
-  'unknown ctty member' => t('"%who" does not have an active %PROJECT account in your community.'),
+  'unknown ctty member' => t('"%who" does not have an active %PROJECT account in your community. If the person or company has a %PROJECT account elsewhere, you need to type their %PROJECT account ID.'),
 //  'ambiguous other' => t('"%who" might mean any of these %PROJECT Accounts. Click the one you want or, if you don\'t see them listed, <a href="%draftLink">Click here to add them</a> to the list or <a id="which-cancel">here to cancel</a>.'),
 //  'similar found' => t('If you mean %otherName (%phone), <a href="%draftLink">click here for YES</a>. Otherwise, <a href="%cancelLink">click here to cancel</a>.'),
   'get app' => t('To scan Account ID cards with a smartphone, you need the app! You can download the Android app from Google\'s Play Store.'),
@@ -419,6 +419,7 @@ function cgform($form, $onSubmit = '', $labeled = TRUE, $level = 0) {
   foreach (ray('title subtext posttext buttons list back submit') as $k) if ($v = @$form[$k] and !is_array($v)) $form[$k] = $k == 'submit' ? submit($v) : item($v); // let these common items be created simply
   
   foreach ($form as $k => $v) if (substr($k, 0, 1) != '#') {
+    u\EXPECT(empty($v) or is_array($v), "field $k is not an array: " . pr($v));
     $type = @$v['#type'];
     if ($type == 'hidden') f('t.POST', [$k => @$v['#value']]); // fake post for tests
     if ($type == 'fieldset') $form[$k] = cgform($form[$k], '', $labeled, $level + 1);
@@ -1277,25 +1278,6 @@ function goButtonIf($perms, $label, $goto, $title) {
 }
 
 /**
- * Return an array of flags and coFlags, appropriate to the given account type.
- UNUSED, but keep for migrating data to r_company
- */
-function acctType($acctType) {  
-  $flags = ($acctType == CO_PERSONAL ? 0 : u\bit(B_CO));
-    
-  if ($acctType != CO_PERSONAL) { // company
-    $type = $GLOBALS['account types'][$acctType];
-    $coFlags =
-        ($acctType == CO_SOLE_PROPRIETOR ? u\bit(CO_SOLE_PROPRIETOR)
-      : ($acctType == CO_PARTNERSHIP ? u\bit(CO_PARTNERSHIP)
-      : (strpos($type, 'nonprofit') !== FALSE ? u\bit(CO_NONPROFIT)
-      : (u\bit(CO_CORPORATION) | (strpos($type, 'publicly') !== FALSE ? u\bit(CO_PUBLICLY_TRADED) : 0)
-    ))));
-  }
-  return compact(ray('flags coFlags'));
-}
-
-/**
  * Create relation for company relationship specified in registration form (if any)  
  * @return TRUE if there is a formal relationship
  */
@@ -1364,8 +1346,7 @@ function tellStaffNewMember($params) {
   $phone = u\fmtPhone(@$phone);
   $state = @$state ? r\realState($state, $country) : 'state lookup failed';
   $country = r\realCountry($country);
-  $coTypes = ray(CO_TYPES);
-  $acctType = $coTypes[$acctType];
+  $acctType = ray(CO_TYPES)[$acctType];
   $helper = @$helper ? r\acct($helper)->fullName : 'unknown';
   $copts = u\jsonEncode(@$copts);
   $ats = (isset($ats) and is_array($ats)) ? join(',', array_values($ats)) : '';
@@ -1487,8 +1468,8 @@ function contactFields($defaults = [], $step0, $myid = 0) {
     $address = textFld(t('Street Address:'), [t('Physical address'), t('Where is your building located (physical address)?')], required(@$address) + $addressAttrib);
     $city = textFld(t('City:'), [t('City where you live')], required(@$city) + $cityAttrib);
     $state = selectFld(t('State:'), t(''), dft(@$state) + $stateAttrib); // can't use required() here
-    $zip = textFld(t('Postal Code:'), [t('Physical location postal code'), t('Postal code for your <em>physical location</em>')], required(@$zip) + $zipAttrib);
-
+    $zip = zipFld(nn($zip));
+    
     $sameAddr2 = ($step0 ? @$state2 : !(@$mya and $mya->cAdmin)) // show box on signup (until mailing addr filled) & to admin
     ? item('', t('Mailing Address')) 
     : w\boxFld('sameAddr', t('Mailing Address'), t('same as above'), 0);
@@ -1519,6 +1500,24 @@ function contactFields($defaults = [], $step0, $myid = 0) {
   return compact(ray($fields));
 }  
 
+function zipFld($zip = NULL) {return textFld(t('Postal Code:'), [t('Physical location postal code'), t('Postal code for your <em>physical location</em>')], required(@$zip));}
+
+/**
+ * Interpret cookie to get source of new member and record it in the signup table.
+ * @param string $source2: where the partner or cookie says the new member came to us from, if known
+ */
+function getPreId($source2 = NULL) {
+  if (!$preid = nn($_COOKIE['preid'])) {
+    $preid = time() . u\randomString(9, 'digits');
+    setcookie('preid', $preid, time() + 100 * YEAR_SECS, '/', $_SERVER['HTTP_HOST']);
+  } else $preid = substr(preg_replace('/\\D*/', '', $preid), 0, 20); // ignore all but the digits
+
+  if ($oldPreid = db\get('preid', 'signup', compact('preid'))) {
+    $preid = $oldPreid;
+  } else {db\insert('signup', ray('preid source ip', $preid, substr($source2, 0, 255), $_SERVER['REMOTE_ADDR']), 'preid');}  
+  return $preid;
+}
+  
 /**
  * Return a list of company categories.
  */
@@ -2256,7 +2255,8 @@ function webAccess($perms = NULL) {
     : ($perm == 'superadminORdev' ? (($mya and $mya->superAdmin) or isDEV)
     : ($perm == 'prose' ? ($mya and $mya->proSe)
     : ($perm == 'investor' ? ($mya and ($mya->iclub or db\exists('r_stakes', 'uid=:id', ['id'=>$mya->id])))
-    : ($mya and $mya->can(u\consta('b', $perm))) )))))));
+    : ($perm == 'depends' ? ($mya and $mya->depends and $mya->proSe)
+    : ($mya and $mya->can(u\consta('b', $perm))) ))))))));
 
     if ($not ? $pass : !$pass) return FALSE;
   }
@@ -2386,7 +2386,7 @@ function skipStep($step0 = '') {
   $stepsDone = $mya->stepsDone;
   if ($stepsDone[$step]) return; // nothing to do
   unset($stepsDone[$step]);
-  $stepsDone[$step] = FALSE; // put this step at the end
+  if ($step != 'discount') $stepsDone[$step] = FALSE; // put this step at the end (except discount, which can be done later)
   $mya->update(compact('stepsDone'));
   if (!$step0) return w\go($mya->nextStepUrl());
 }

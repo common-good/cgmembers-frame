@@ -77,13 +77,10 @@ function formTx_submit($form, &$sta) {
   u\setDft($goods, FOR_GOODS);
   $DBTX = \db_transaction();
   $func = op($sta);
-  if ($func == 'pay') {
-    list ($msg, $args) = be\transfer('payment', $mya, r\acct($uid), $amount, $purpose, $goods, @$repeat ? ['recurs' => 1] : []);
-  } else {
-    list ($msg, $args) = be\invoice($mya, r\acct($uid), $amount, $purpose, $goods, @$repeat ? ['recurs' => 1] : []);
-  }
+  list ($ok, $msg, $args) = $func == 'pay'
+  ? be\transfer('payment', $mya, r\acct($uid), $amount, $purpose, $goods, @$repeat ? ['recurs' => 1] : [])
+  : be\invoice($mya, r\acct($uid), $amount, $purpose, $goods, @$repeat ? ['recurs' => 1] : []);
 
-  $ok = @$args['success'];
   if ($func == 'pay' and $mya->snap) r\tellAdmin(t('SNAP member %who %did something', 'who did', $mya->fullName, $ok ? t('bought') : t('tried to buy')), ['topic' => t('SNAP purchase') . ($ok ? '' : t(' failed'))]);
 
   if ($ok and $period = @$repeat) {

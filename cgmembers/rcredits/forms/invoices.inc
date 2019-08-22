@@ -77,7 +77,7 @@ function invoiceList($toMe, $starting, $ending, $states, $url, $download, $toFro
   if (strpos($states, '2') === FALSE) $where .= ' AND i.status<>:TX_DENIED';
   */
   $sql = <<<EOF
-    SELECT nvid, i.created, u.fullName AS other, i.purpose, i.amount, i.status AS status0, i.data, t.xid
+    SELECT DISTINCT nvid, i.created, u.fullName AS other, i.purpose, i.amount, i.status AS status0, i.data, t.xid
     FROM r_invoices i 
     LEFT JOIN users u ON u.uid=i.$yu
     LEFT JOIN tx_hdrs t ON t.xid=i.status

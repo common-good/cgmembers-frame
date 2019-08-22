@@ -22,7 +22,7 @@ function formGet($form, &$sta, $args = '') {
   if ($txid = @$cancel) {
     if ($xid = db\get('xid', 'r_usd', 'txid=:txid AND payee=:myid and deposit=0', compact('txid', 'myid'))) {
       $DBTX = db_transaction();
-      list ($msg, $info) = be\reverse($xid); // create an offsetting tx (to fix all balances)
+      list ($ok, $msg, $info) = be\reverse($xid); // create an offsetting tx (to fix all balances)
       if (!$xid2 = nn($info['xid'])) return say($msg, 'err');
       $subs = compact('xid', 'xid2');
       db\del('tx_entries', '', 'xid IN (:xid, :xid2)', $subs);

@@ -98,6 +98,8 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE signin AMemberClicksALinkToResetPassword
  *     MAKE signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     MAKE signin AMemberClicksALinkToResetPasswordForUnknownAccount
+ *     MAKE signuptrial ANewTrialCompanyAccountManagerVerifiesTheEmail
+ *     MAKE signuptrial ATrialCompanyAccountManagerCreatesADiscount
  *     MAKE transact AMemberAsksToChargeAnotherMemberForGoods
  *     MAKE transact AMemberAsksToPayAnotherMemberForGoods
  *     MAKE transact AMemberAsksToPayAnotherMemberForLoanreimbursement
@@ -250,6 +252,9 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE signout Setup
  *     MAKE signupco Setup
  *     TEST signupco AMemberRegistersACompany
+ *     MAKE signuptrial Setup
+ *     MAKE signuptrial ANewTrialCompanyAccountManagerVerifiesTheEmail
+ *     MAKE signuptrial ATrialCompanyAccountManagerCreatesADiscount
  *     MAKE signup Setup
  *     TEST signup ANewbieRegistersInWesternMassachusetts
  *     TEST signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
@@ -394,6 +399,8 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     TEST signin AMemberClicksALinkToResetPasswordForUnknownAccount
  *     TEST signupco AMemberRegistersACompany
+ *     TEST signuptrial ANewTrialCompanyAccountManagerVerifiesTheEmail
+ *     TEST signuptrial ATrialCompanyAccountManagerCreatesADiscount
  *     TEST signup ANewbieRegistersInWesternMassachusetts
  *     TEST signup ANewbieRegistersWithAnUnconfirmedIcardInvitation
  *     TEST signup ANewbieRegistersWithAnUnconfirmedSelfinvitation
@@ -452,6 +459,8 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST signin AMemberClicksALinkToResetPassword
  *     TEST signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     TEST signin AMemberClicksALinkToResetPasswordForUnknownAccount
+ *     TEST signuptrial ANewTrialCompanyAccountManagerVerifiesTheEmail
+ *     TEST signuptrial ATrialCompanyAccountManagerCreatesADiscount
  *     TEST signup ANewbieVisitsTheRegistrationPageWithExpiredInvite
  *     TEST signup ANewbieVisitsTheRegistrationPageWithAUsedInvite
  *     TEST signup ANewbieRegistersInWesternMassachusetts
@@ -814,6 +823,7 @@ function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
  *     MAKE signin Setup
  *     MAKE signin AMemberClicksALinkToResetPassword
  *     MAKE signout Setup
+ *     MAKE signuptrial Setup
  *     MAKE signup Setup
  */
 function memberIsLoggedOut() {
@@ -1627,6 +1637,8 @@ function weScripWithSubs($script, $args = []) {
  *     MAKE preferences Setup
  *     MAKE showrecurs Setup
  *     TEST showrecurs AMemberStopsAnAutopayment
+ *     TEST signupco AMemberRegistersACompany
+ *     TEST signuptrial ATrialCompanyAccountManagerCreatesADiscount
  *     TEST signup ANewbieRegistersInWesternMassachusetts
  *     TEST transact AMemberPaysAnotherMemberRepeatedly
  *     TEST transactions AdminReversesABankTransfer
@@ -1779,4 +1791,57 @@ function memberRunsQuery($id, $query) {
   require R_ROOT . '/rweb/queries.inc';
   foreach ($queries as $k => $zot) if (substr($k, 1) == $query) $query = $k; // get leading digit
   return t\memberVisitsPage($id, "community/data/qName=$query");
+}
+
+/**
+ * steps (ARG) remain
+ *
+ * in: 
+ */
+function stepsRemain($steps) {
+  global $testOnly, $mya;
+  if (!$testOnly) return $mya->update('stepsDone', array_fill_keys(ray($steps), FALSE));
+  
+  $steps = ray($steps);
+  sort($steps);
+  $actual = $mya->stepsDone;
+  ksort($actual);
+  $left = []; foreach ($actual as $step => $done) if (!$done) $left[] = $step;
+  return $steps == $left ? TRUE
+  : t\output(t('Steps remaining (%left) are not what is wanted (%steps)', 'left steps', join(' ', $left), join(' ', $steps)));
+}
+
+/**
+ * steps (ARG) remain for member (ARG)
+ *
+ * in: MAKE signuptrial ANewTrialCompanyAccountManagerVerifiesTheEmail
+ *     BOTH signuptrial ATrialCompanyAccountManagerCreatesADiscount
+ */
+function stepsRemainForMember($steps, $id) {
+  global $testOnly;
+  
+  if (!$a = t\a($id)) return FALSE;
+  if (!$testOnly) return $a->update('stepsDone', array_fill_keys(ray($steps), FALSE));
+
+  $steps = ray($steps);
+  sort($steps);
+  $actual = $a->stepsDone;
+  ksort($actual);
+  $left = []; foreach ($actual as $step => $done) if (!$done) $left[] = $step;
+  return $steps == $left ? TRUE
+  : t\output(t('Steps remaining (%left) are not what is wanted (%steps)', 'left steps', join(' ', $left), join(' ', $steps)));
+}
+
+/**
+ * member (ARG) one-time-password is (ARG) expires (ARG)
+ *
+ * in: MAKE signuptrial ANewTrialCompanyAccountManagerVerifiesTheEmail
+ */
+function memberOnetimepasswordIsExpires($id, $pass, $expires) {
+  global $testOnly;
+
+  if (!$a = t\a($id)) return FALSE;
+  $want = compact(ray('pass expires'));
+  if (!$testOnly) return $a->update('oneTimePass', $want);
+  return $a->oneTimePass == $want ?: t\output(tr('Wrong oneTimePass. Got %got, wanted %wanted.', 'got wanted', pr($a->oneTimepass), pr($wanted)));
 }

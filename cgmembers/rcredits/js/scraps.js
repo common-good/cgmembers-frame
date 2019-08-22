@@ -71,7 +71,10 @@ function doit(what, vs) {
 
   case 'focus-on': $('#edit-' + vs['field']).focus(); break;
 
-  case 'agree': $('#show-agreement').click(function () {$('#wrap-agreement').show();}); break;
+  case 'agree':
+    if (vs['show']) $('#wrap-agreement').show();
+    $('#show-agreement').click(function () {$('#wrap-agreement').show();}); 
+    break;
     
   case 'advanced-dates':
     if (!vs['showingAdv']) showAdv();
@@ -231,7 +234,7 @@ function doit(what, vs) {
 
   case 'signup':
     var form = $('#frm-signup');
-    if (vs['clarify'] !== 'undefined') $('#edit-forother a').click(function () {alert(vs['clarify']);});
+//    if (vs['clarify'] !== 'undefined') $('#edit-forother a').click(function () {alert(vs['clarify']);});
     form.submit(function (e) {return setPostalAddr(false);});
     if (vs['preid']) $('#edit-phone').change(function () {
       data = {

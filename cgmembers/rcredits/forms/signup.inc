@@ -30,16 +30,9 @@ function formSignup($form, &$sta, $args = '') {
   extract(just('preid source2 joint reid inviter code personal fullName state email helper ' . $contactDefaults, $args));
   extract(just('hidCountry hidState', $sta['input']));
 
-  if (!$preid = nn($_COOKIE['preid'])) {
-    $preid = time() . u\randomString(9, 'digits');
-    setcookie('preid', $preid, time() + 100 * YEAR_SECS, '/', $_SERVER['HTTP_HOST']);
-  } else $preid = substr(preg_replace('/\\D*/', '', $preid), 0, 20); // ignore all but the digits
-
   u\setDft($source2, nn($_COOKIE['ad']));
-  if ($oldPreid = db\get('preid', 'signup', compact('preid'))) {
-    $preid = $oldPreid;
-  } else {db\insert('signup', ray('preid source ip', $preid, substr($source2, 0, 255), $_SERVER['REMOTE_ADDR']), 'preid');}
-  
+  $preid = getPreId($source2);
+
   if (@$reid) { // continuing signup of a partner's customer
     if (test()) $reid = f('t.uid', $reid);
     if ($args2 = w\continuePartnerSignup($reid, @$customer)) extract($args = $args2);
@@ -61,13 +54,10 @@ function formSignup($form, &$sta, $args = '') {
   ? (@$joint ? t('Create a Partner Account<br><small>(joined to yours)</small>') : t('Open a Personal Account'))
   : t('Open a Company Account');
 
-  if (!@$helper) { // no need to clarify if user clicked the "Open a Company Account" button
+  if (!@$helper) {
     $helper = @$partner ?: 0;
-    $clarify = $personal ? t('To open a company account, use the "Open a Company Account" button after your personal account is approved.') : t('To open another personal account, send an Invitation (click the Invite tab).');
-//    $onclick = $onmouseover = 
-    $forother = $personal ? t('open a company account instead') : t('open a personal account instead');
-    $forother = item("[<a class=\"nospin\">$forother</a>]");
-  } else {$clarify = '';}
+    $forother = item(w\lnk('/trial', t('open a trial account for your company instead')));
+  } else $forother = NULL;
 
   if (!@$code) $code = 'self ()'; // can't actually tell whether this is allowable, because we don't yet know which community
 
@@ -134,7 +124,7 @@ For example, you will be asked for your social security number or tax ID.</p>
     // if custodian, subtype field should appear with all these same choices: $custodianFor = ...
   }
 
-  jsx('signup', ray('clarify preid', $clarify, nn($preid))); // must be before $preid = hidFld()
+  jsx('signup', ray('preid', nn($preid))); // must be before $preid = hidFld()
   $submit = t('Next');
   $args = hidFld(@$args);
   $preid = hidFld($preid);
@@ -148,7 +138,7 @@ For example, you will be asked for your social security number or tax ID.</p>
   $contactFlds = w\contactFields($contactDefaults + ray('country state state2', @$country ?: @$hidCountry, @$state ?: @$hidState, @$state2 ?: @$hidState2), TRUE, @$myid0);
   $nameAndEmail = w\nameAndEmailFlds(!$personal, @$fullName, @$email, isset($contactFlds['partner']), @$myid0);
 
-  $form = @compact(ray('title forother subtext acctType'))
+  $form = compact(ray('title forother subtext acctType'))
     + $nameAndEmail + $contactFlds + w\ssnFields($personal)
     + @compact(ray('calling companyInfo buysAt submit myid args confirmed helper iCode notes preid'));
 //  keep_values($form);
@@ -246,8 +236,7 @@ function formSignup_submit($form, &$sta) {
   if ($h = $mya->helperA and @$args and !$h->cAdmin) suCreatorRelation($helper, $args, $myid);
 //  unset($DBTX); // commit    
   
-  // report to staff and user
-  tellStaffNewMember($info + compact(ray('acctType qid name')));
+  tellStaffNewMember($info + compact(ray('acctType qid name'))); // report to staff and user
 
   $pw1 = $mya->oneTimePass($name, TRUE);
   
