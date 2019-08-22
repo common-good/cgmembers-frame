@@ -80,7 +80,7 @@ function custStatement($args = []) {
       $debit = ($align == 'R' and is_numeric($n = @$$fldName) and $n < 0);
       if ($debit) $pdf->SetTextColor(128, 0, 0); else $pdf->SetTextColor();
       if (in($fldName, $numFields) and isset($$fldName)) {
-        $$fldName = ($$fldName == '0' and $fldName != 'balance') ? '' : number_format($$fldName ?: 0, 2);
+        $$fldName = ($$fldName == 0 and $fldName != 'balance') ? '' : number_format($$fldName ?: 0, 2);
       }
       if ($fldName == 'purpose') { // handle this field separately, last (see below)
         $purposeX = $pdf->GetX();
@@ -140,7 +140,7 @@ function getCustTxs($aUids, $bUids, $starting, $ending) {
       (payer IN (:aUids) AND payee IN (:bUids)) 
         OR (payee IN (:aUids) AND payer IN (:bUids))
        ) AND status>:TX_DENIED
-    ORDER BY created
+    ORDER BY created, paid<>0
 X;
 
   $results = db\q($sql, ['aUids' => $aUids, 'bUids' => $bUids]);

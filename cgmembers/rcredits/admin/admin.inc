@@ -550,11 +550,10 @@ EOF;
  * @param bool $mark: whether to set the deposit date for each relevant transfer, in r_usd
  */
 function printCheck(&$ck, $pos, $tx, $mark) {
-  extract(just('txid created payee amount deposit bankAccount', $tx));
+  extract(just('xid txid created payee amount deposit bankAccount', $tx));
   $escrow = 'USkk' . ESCROW_ROUTING . ($amount > 0 ? ESCROW_IN : ESCROW_OUT);
   $bankAccount = u\decry('V', $bankAccount);
   $a = r\acct($payee);
-  //  $a->fixTxBankAccount($bankAccount, $txid);
   
   list ($fromName, $addr, $phone, $fromAcct, $toName, $toAcct) = $amount > 0 // which way
     //    ? [$a->legalNameDpy, $a->postalAddr, $a->phone, $bankAccount, PROJECT, $escrow] // from bank to escrow
@@ -576,7 +575,7 @@ function printCheck(&$ck, $pos, $tx, $mark) {
   $account = substr($fromAcct, 4 + 9);
 
   $bankInfo = db\get('*', 'r_banks', 'route=:routing', compact('routing'));
-  if (!$bankInfo) {w\say("Skipped transaction #$txid for $a->fullName (no bank info)"); return;}
+  if (!$bankInfo) {w\say("Skipped transaction #$xid for $a->fullName (no bank info)"); return;}
   //u\EXPECT((bool) $bankInfo, 'no bank info');
   extract($bankInfo, EXTR_PREFIX_ALL, 'b');
   if (strlen($b_zip) > 5) $b_zip = substr($b_zip, 0, 5) . '-' . substr($b_zip, 5);
@@ -592,7 +591,7 @@ function printCheck(&$ck, $pos, $tx, $mark) {
 
   $ck->say("<b>$fromName</b><br><small>$addr<br>$phone</small>", $m, $y = $mt, $W - $m);
   $ck->say("$transit<br>$account", $W / 2, '', $W / 4, '', '8', 'C');
-  $ck->say("<b>$txid</b>", -$W / 4, '', -$W / 4 - $m, '', '', 'R');
+  $ck->say("<b>$xid</b>", -$W / 4, '', -$W / 4 - $m, '', '', 'R');
 
   $ck->say('DATE:', 6.7, $y += .4, '', .25, '8');
   $ck->say(u\fmtDate($deposit ?: now()), 7.1, '', '', .25);
@@ -616,10 +615,10 @@ function printCheck(&$ck, $pos, $tx, $mark) {
 
   // clear band must be at least .625" high, at least 0.1875" from bottom (so leave more). Micr should be 12pt
   //  if ($a->id != 26742000000042) {
-  //    $ck->say("A{$routing}A {$account}C $txid", $m, $mt - $m + CHECK_HEIGHT - .25 - $lineH * (12 / PDF_FONT_SIZE), '', '', 'GnuMICR 12');
+  //    $ck->say("A{$routing}A {$account}C $xid", $m, $mt - $m + CHECK_HEIGHT - .25 - $lineH * (12 / PDF_FONT_SIZE), '', '', 'GnuMICR 12');
   //  } else 
   $account = str_replace('-', 'D', $account); // show dashes properly
-  $ck->say("C000{$txid}C A{$routing}A {$account}C", $m, $mt - $m + CHECK_HEIGHT - .25 - $lineH * (12 / PDF_FONT_SIZE), '', '', 'GnuMICR;12');
+  $ck->say("C000{$xid}C A{$routing}A {$account}C", $m, $mt - $m + CHECK_HEIGHT - .25 - $lineH * (12 / PDF_FONT_SIZE), '', '', 'GnuMICR;12');
   //  $ck->say('', 0, $mt - $m + CHECK_HEIGHT, $W, 1, '', '', 'T'); // comment this out
   
   if (!$deposit and $mark) db\update('r_usd', ray('deposit txid', today(), $txid), 'txid');
@@ -822,17 +821,17 @@ function callDetails($type = '', $when = '') {
     $options .= t('If you have questions about our "Pay With %PROJECT" button for your website, our invoicing system, or accounting statements, we can help you with any of those.');
   } else { // individual
     $_volunteer = join("</li>\n<li>", explode('~', t(
-                                                     'Hand out promo cards and schedule appointments with local businesses.'
-                                                     . '~Help new members open their %PROJECT account.'
-                                                     . '~Call new members to welcome them and see if they have questions.'
-                                                     . '~Assemble promotional materials (at home or with other volunteers).'
-                                                     . '~Deliver things.'
-                                                     . '~Print and mail things.'
-                                                     . '~Take photographs.'
-                                                     . '~Help set up for meetings.'
-                                                     . '~Help add new features to the software.'
-                                                     . '~Serve on the board of directors.'
-                                                     )));
+      'Hand out promo cards and schedule appointments with local businesses.'
+      . '~Help new members open their %PROJECT account.'
+      . '~Call new members to welcome them and see if they have questions.'
+      . '~Assemble promotional materials (at home or with other volunteers).'
+      . '~Deliver things.'
+      . '~Print and mail things.'
+      . '~Take photographs.'
+      . '~Help set up for meetings.'
+      . '~Help add new features to the software.'
+      . '~Serve on the board of directors.'
+    )));
     $_volunteerLink = t('<%a>volunteer</a>', '_a', 'a href="#volunteer" data-toggle="collapse"');
     $volunteer = t('<li><b>Volunteer</b>. (if supportive) Would you like to %volunteerLink with %PROJECT?<ul id="volunteer" class="collapse"><li>%volunteer</li></ul></li>', compact(ray('_volunteerLink _volunteer')));
     $coAsk = '';
@@ -916,33 +915,6 @@ function giftsToDate() {
   if ($x = u\unite(trim($x1), $x2)) $x = t('for choosing %x', '_x', $x);
   if ($total) $total = t('for your contributions, totaling ') . $total;
   return u\unite($total, $x, ', ');
-}
-
-function makeCriteria() {
-  db\q('TRUNCATE r_criteria');
-  $criteria = [
-               t('How well does the project support our %PROJECT community investment priorities?') => 15,
-               t('How well does the project promote systemic change?') => 15,
-               t('Overall, how clearly doable is the project?') => 15,
-               t('How competent is the project team to manage the project and funds effectively?') => 10,
-               t('How able is the project team to implement the project with less funding than requested?') => 5,
-               t('How useful is the project\'s evaluation plan?') => 5,
-               t('How quickly, surely, and voluminously will the project bring funds back into our %PROJECT Community Dollar Pool?') => 10,
-               t('How close is the request to the ideal amount (%idealAmt)?') => 5,
-               t('What fraction of the total project budget is this funding request? (50% is ideal)') => 5,
-               t('How much of the total project budget has been raised/committed so far? (half is ideal)?') => 5,
-               t('How soon does the project begin? (soon after funding is best)') => 2.5,
-               t('How soon does the project end? (soon after funding is best)') => 2.5,
-               t('How local is the project?') => 2.5,
-               t('%PROJECT member sponsorship of the project.') => 2.5,
-               ];
-  
-  $id = 1;
-  foreach($criteria as $text => $points) {
-    $auto = $id < 8 ? 0 : 1;
-    db\insert('r_criteria', compact(ray('text points auto id')));
-    $id++;
-  }
 }
 
 /**

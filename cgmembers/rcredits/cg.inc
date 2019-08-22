@@ -239,8 +239,6 @@ function ipok($uid, $device) {
  * NOTE: from is always SYS_EMAIL
  */
 function rMail($index, $to0, $subs, $reply0 = NULL) {
-  //  require_once __DIR__ . '/dkim.php';
-  //  if (isGAME) return; // no emails from game site
   global $testEmails, $mya;
 
   foreach (ray('secure vsecure') as $k) unset($subs[$k]); // show not even in error messages
@@ -257,6 +255,9 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
     $subs['shortName'] = $toA->name;
     $subs['zip3'] = substr($toA->zip, 0, 2); // temporarily show a wider region than zip3
     if ($toA->closed) return r\tellAdmin(t('attempt to email closed account'), compact(ray('index subs reply0')));
+    if ($jid = $toA->jid) $jA = r\acct($jid);
+    if ($toA->depends) $jA = r\acct($toA->helper); // sponsored accounts are never joint
+    if (nn($jA) and test()) $testEmails[] = ray('index toEmail subs', $index, $jA->email, $subs);
   } else $to = $toEmail = $to0;
   
   $testEmails[] = compact(ray('index toEmail subs'));
@@ -268,11 +269,9 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
   
   if (is_object($replyA = $reply)) $reply = [$replyA->email => $replyA->fullName];
 
-  //  $nolog = ray(R_NOLOG); // subs not to log (sensitive data)
   foreach ($subs as $k0 => $v) if (!is_object($v) and !is_array($v)) {
-    $k = "%$k0"; // '{' . $k0 . '}';
+    $k = "%$k0";
     $resubs[$k] = $v;
-    //    $logSubs[$k] = in($k0, R_NOLOG) ? '(?)' : $v; // hide personal info and secrets
   }
 
   //  $index = str_replace('_', '-', $index); // correct Drupal template names to rCredits standard
@@ -283,15 +282,12 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
   $logSubs = u\noSecrets($resubs) + ["\r\n" => '', ' style=' => ' stylish=']; // easier reading for log and tests & evade CSP
   $message = strtr($body, $logSubs);
   $erInfo = compact(ray('index toEmail subject message'));
-  f('t.output', 'Actual (in rMail) ' . pr($erInfo), 'email');
   u\loga('email', $erInfo + ['toUid' => @$toA->id]);
+  f('t.output', 'Actual (in rMail) ' . pr($erInfo), 'email');
 
   if (isPRODUCTION !== TRUE) { // make sure we never send rogue emails from test server even if constant isn't set
 /**/  if (!test() and $mya and $mya->cAdmin) debug(compact(ray('subject to body')));
     return; // no emails unless real!!
-    if ($toEmail != r\regionField('email') and $toEmail != R_ADMIN_EMAIL) return TRUE;
-    if (isDEV) return TRUE; // otherwise cURL error 60: SSL certificate problem: unable to get local issuer certificate
-    $subject = '(test) ' . $subject;
   }
   
   require_once DRUPAL_ROOT . '/vendor/swiftmailer/lib/swift_required.php';
@@ -321,7 +317,11 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
   if ($reply) $m->setReplyTo($reply);
   if (@$sms) $m->setSubject('')->setTo($toEmail); // send as text message
   try {
-    $success = $mailer->send($m);
+    $mailer->send($m);
+    if (nn($jA)) { // also send to partner in joint account
+      $m->setTo([$jA->email => $jA->fullName]);
+      $mailer->send($m);
+    }
   } catch (Exception $e) {
     u\EXPECT($toEmail != R_ADMIN_EMAIL, 'cannot send admin email');
     r\tellAdmin(t('cannot send email'), $erInfo);
@@ -374,7 +374,6 @@ function message($uid, $index, $subs = [], $topic = '') {
  */
 function notify($uid, $index, $subs = [], $force = FALSE) {
   global $channel;
-  if (isGAME) return;
   $a = r\acct($uid);
   u\EXPECT($a, 'no account');
   $subs['uid'] = $uid;
@@ -385,24 +384,17 @@ function notify($uid, $index, $subs = [], $force = FALSE) {
   
   if ($force) {
     $mailed = r\rMail($index, $a, $subs, @$subs['reply'] ?: 'ctty');
-  } else { //if ($a->can(B_NOTIFY_EMAIL)) {
+  } else {
     list ($message, $created) = array(t($index, $subs), now());
     f('t.output', "Actual Notice to $fullName: $message");
     db\insert('r_notices', compact(ray('uid message created')), 'msgid');
   }
   
   if ($a->can(B_BYSMS)) {
-    if ($num = $a->smsNumber) $smsed = SMS\send($num, t($index, $subs));
+    $ok = SMS\send($a->phone, t($index, $subs));
+    if (!$ok) r\tellAdmin(t('failed sending SMS to %nm @ %phone', 'nm phone', $a->fullName, $a->phone));
   }
-  if (FALSE and !@$mailed and !@$smsed and array_search($index, $warnIndexes) !== FALSE) {
-    $notification = str_replace('-', ' ', $index);
-    $warning = t('cannot contact', compact('fullName', 'notification'));
-  }
-  if (@$warning) {
-    if ($channel == TX_WEB) Web\say($warning);
-    if ($channel == TX_SMS) SMS\send($a->smsNumber, $warning);
-    if ($channel == TX_POS) { } // dunno how to handle this
-  }
+
 }
 
 /**
@@ -414,7 +406,6 @@ function notify($uid, $index, $subs = [], $force = FALSE) {
  */
 function notifyEntries($a, $index, $entries, $force = FALSE) {
   global $channel;
-  if (isGAME) return;
   u\EXPECT($a, 'no account');
   $subs= [];
   $subs['uid'] = $a->uid;
@@ -911,16 +902,12 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
 
 /**
  * Package the return arguments and alert staff on certain errors.
- * @param mixed $message: the success or error message OR an array containing the two params
+ * @param mixed $message: the error message or an assoc of parameters
  * @param assoc $info: (optional) message substitutions and other info about transaction
- *   includes success=TRUE if the transaction was successful
- * @param bool $confirm: UNUSED <to be confirmed> (default FALSE)
  */
-function txRet($message, $info = []) {
-  $info0 = $info;
-  if (is_array($message)) {list ($message, $info, $confirm) = $message; $info += $info0;}
-  if (!@$info['success']) r\tellCO('failed transaction', $info + @compact('message', 'confirm'));
-  return [$message, $info];
+function txErr($message, $info = []) {
+  r\tellCO('failed transaction', $info + compact('message'));
+  return is_array($message) ? $message : [FALSE, $message, $info];
 }
 
 /**
@@ -1360,11 +1347,11 @@ function riskList($risks, $descs) {
 
 /**
  * Check account permissions for a transaction or invoice. Note that invoicing a not-yet-complete account is permitted.
- * @param acct $a1: the account paying or requesting payment
+ * @param acct $a1: the account paying or requesting payment (the actor)
  * @param acct $a2: the other account
  * @param bool $taking: the first account is taking money from the second (charging or invoicing)
  * @param bool $neg: the amount is negative (refunding or undoing)
- * @return [message, subs, confirmed] on error, else false
+ * @return [FALSE, message, subs] on error (FALSE meaning not ok), else FALSE
  */
 function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   global $scanned, $channel;
@@ -1378,22 +1365,21 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   if (!$a1->confirmed and !$a1->isCanonic and !$a2->isCanonic and $a1->id != CGID and $a2->id != CGID) { // communities and CG can transact with newbs
     if ($a1->community != $a2->community or $channel != TX_POS) { // first tx must be in-person at home
       if ($a1->helper != $a2->id) {
-///          return $a1->cttyA->invites ? ['not confirmed', ray('youName inviterName', $a1->fullName, $a1->helperA->fullName), FALSE] : // invitations are required in this community. Say so.
-        return ['first at home', ray('whose', $a1 == $a1 ? t('Your') : "$a1->fullName's"), FALSE];
+        return [FALSE, 'first at home', ray('whose', $a1 == $a1 ? t('Your') : "$a1->fullName's")];
       }
     }
   }
   list ($myAccess, $otherAccess) = u\order($taking xor $neg, B_SELL, B_BUY);
   list ($myWhat, $otherWhat) = u\order($taking xor $neg, t('sales'), t('purchases'));
   if ($scanned and $taking) list ($myAccess, $myWhat) = $neg ? array(B_REFUND, t('refunds')) : array(B_SCAN, t('sales'));
-  if (!$a1->can($myAccess)) return array("no perm", ray('what', $myWhat), FALSE);
+  if (!$a1->can($myAccess)) return [FALSE, "no perm", ray('what', $myWhat)];
   if ((!$a2->can($otherAccess)) and (!($invoicing and $a2->proSe))) {
-    return array("other no perm", ray('otherName what', $a2->agentA->fullName, $otherWhat), FALSE);
+    return [FALSE, 'other no perm', ray('otherName what', $a2->agentA->fullName, $otherWhat)];
   }
 
-  if (!$a1->cttyUp and !$a1->isCanonic) return array('your community down', ray('contact', $a1->cAdminContact()), FALSE);
-  if (!$a2->cttyUp and !$a2->isCanonic) return array('other community down', [], FALSE);
-  if ($a1->id == $a2->id) return array('no self-trading', [], FALSE);
+  if (!$a1->cttyUp and !$a1->isCanonic) return [FALSE, 'your community down', ray('contact', $a1->cAdminContact())];
+  if (!$a2->cttyUp and !$a2->isCanonic) return [FALSE, 'other community down', []];
+  if ($a1->id == $a2->id) return [FALSE, 'no self-trading', []];
   return FALSE;
 }
 
@@ -1506,9 +1492,9 @@ function handleInvestmentRequest($stakeid, &$msg) {
   $stake += $request;
   
   $DBTX = \db_transaction();
-  list ($index, $subs) = be\transfer('payment', $a, $clubA, $request, t('investment'), FOR_USD, ray('stake', 1));
+  list ($ok, $index, $subs) = be\transfer('payment', $a, $clubA, $request, t('investment'), FOR_USD, ray('stake', 1));
   $msg = t($index, $subs);
-  if ($ok = $subs['success']) {
+  if ($ok) {
     db\update('r_stakes', ray('stakeid stake request', $stakeid, $stake, 0), 'stakeid');
     $msg .= ' ' . t('investment increase', 'amount', u\fmtAmt($request));
   }
@@ -1550,16 +1536,14 @@ function xfee($for, $amount) {
 }
 
 function disputeTx($xid, $reason = '') {
-  $a = r\acct();
-  if (empty($a)) return FALSE;
-  $DBTX = db_transaction();
-  if (db\exists('tx_disputes', "xid=:xid", ['xid'=>$xid])) {
-    u\EXPECT(FALSE, "transaction $xid is already disputed");
-  } else {
-    $result = db\insert('tx_disputes', ['xid'=>$xid, 'reason'=>$reason, 'status'=>DS_OPEN, 'uid'=>$a->uid], 'id');
-    u\EXPECT($result, "error inserting dispute record");
-  }
-  unset($DBTX);
+  global $mya;
+  
+  if (empty($mya)) return FALSE;
+  if (db\exists('tx_disputes', compact('xid'))) u\FAIL("transaction $xid is already disputed");
+
+  $result = db\insert('tx_disputes', ['xid'=>$xid, 'reason'=>$reason, 'status'=>DS_OPEN, 'uid'=>$mya->uid], 'id');
+  u\EXPECT($result, "error inserting dispute record");
+
   return TRUE;
 }
   
@@ -1580,7 +1564,6 @@ function foreignServer($uid) {return (r\uidRegion($uid) != serverUid());}
 function doCode($code) {return @unserialize(@u\decry('P', CRYPT_FLAG . $code));} // this is how it should be (see forms/rdo.inc)
 function cgA() {return r\acct(CGID);}
 function denyInv($nvid) {return db\setData('r_invoices', $nvid, ['denied' => TRUE]);}
-function stepsDone0() {return array_fill_keys(array_keys(ray(R_STEPS)), FALSE);}
 //function usdin($for) {return u\abbreviates('usd in (', strtolower(is_array($for) ? $for[1] : $for));}
 function usdin($for) {return u\abbreviates(S_USD_IN, is_array($for) ? $for[1] : $for, TRUE);}
 function regionField($fld) {return ($a = r\acct(serverUid())) ? $a->$fld : NULL;}
@@ -1592,3 +1575,4 @@ function clubid() {return r\serverUid();} // temporarily use the region as the c
 function pic($flnm) {if (!is_dir(R_PICTURE_DIR)) mkdir(R_PICTURE_DIR); return R_PICTURE_DIR . $flnm;}
 function periodDesc($period) {return $period == 'X' ? '' : ray(OFTENS)[$period];}
 function isBank($uid) {return ($uid == BANK_IN_ID or $uid == BANK_OUT_ID);}
+function stateNum($st) {return db\get('id', 'r_states', 'abbreviation=:st and country_id=:US_COUNTRY_ID', compact('st'));}

@@ -94,9 +94,9 @@ Scenario: A member redeems a dollar amount discount coupon
   | did    | otherName  | amount |*
   | paid   | Corner Pub | $100   |
   And these "txs":
-  | eid | xid | type   | created | amount | from  | to   | purpose         | taking |*
-  |   1 |   1 | prime  | %today  |    100 | .ZZA  | .ZZC | fun             |      0 |
-  |   2 |   1 | rebate | %today  |     12 | .ZZC  | .ZZA | discount rebate |      1 |
+  | eid | xid | type   | created | amount | from  | to   | purpose           | taking |*
+  |   1 |   1 | prime  | %today  |    100 | .ZZA  | .ZZC | fun               |      0 |
+  |   2 |   1 | rebate | %today  |     12 | .ZZC  | .ZZA | discount (rebate) |      1 |
   And balances:
   | uid  | balance |*
   | .ZZA |     -88 |

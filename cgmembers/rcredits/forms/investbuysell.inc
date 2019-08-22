@@ -74,24 +74,23 @@ function formInvestBuySell_submit($form, &$sta) {
   
   $DBTX = \db_transaction();
   if (op($sta) == 'buy') {
-    list ($index, $subs) = be\transfer('payment', $clubA, $coA, $total, $type, FOR_USD, ray('investment', 1));
-    $success = @$subs['success'];
+    list ($ok, $index, $subs) = be\transfer('payment', $clubA, $coA, $total, $type, FOR_USD, ray('investment', 1));
     if ($equity) {
-      $extraMsg = $success ? t('purchased shares', 'amt co price', $sharesDpy, $coA->fullName, $priceDpy) : t('No shares were purchased.');
-    } else $extraMsg = $success ? t('loaned', 'amount co', u\fmtAmt($shares), $coA->fullName) : t('Nothing was loaned.');
-    if ($success) db\insert('r_shares', ray('vestid shares when', $vestid, $shares, now()), 'shid');
+      $extraMsg = $ok ? t('purchased shares', 'amt co price', $sharesDpy, $coA->fullName, $priceDpy) : t('No shares were purchased.');
+    } else $extraMsg = $ok ? t('loaned', 'amount co', u\fmtAmt($shares), $coA->fullName) : t('Nothing was loaned.');
+    if ($ok) db\insert('r_shares', ray('vestid shares when', $vestid, $shares, now()), 'shid');
   } else { // sell
     $shid = db\insert('r_shares', ray('vestid shares pending when', $vestid, 0, -$shares, now()), 'shid');
     if ($equity) {    
       $for = t('redeeming investment: %amt shares at %price', 'amt price', $sharesDpy, $priceDpy);
     } else $for = t('loan repayment');
-    list ($index, $subs) = be\invoice($clubA, $coA, $total, $for, FOR_USD, ray('investment shid', 1, $shid));
+    list ($ok, $index, $subs) = be\invoice($clubA, $coA, $total, $for, FOR_USD, ray('investment shid', 1, $shid));
 //    if (@$count + 0 == 1) { // the usual case -- one shares record
     $extraMsg = $equity ? t('investment sale pending') : t('repayment request pending');
-    $extraMsg = nn($subs['success']) ? tr($extraMsg, 'co', $coA->fullName) : '';
+    $extraMsg = $ok ? tr($extraMsg, 'co', $coA->fullName) : '';
   }
   unset($DBTX);
 
-  say("$index|$extraMsg", $subs, @$subs['success'] ? NULL : 'err');
+  say("$index|$extraMsg", $subs, $ok ? NULL : 'err');
   return w\go("/invest/list/actual=1&clubqid=$clubqid");
 }

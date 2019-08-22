@@ -105,7 +105,11 @@ function formCoupons_validate($form, &$sta) {
   u\preray(@compact(ray($fields)), $sta['input']); // remember fixed numeric values
 }
 
-function formCoupons_submit($form, &$sta) {
+/**
+ * Finish creating the discount or coupon.
+ * @param bool $trial: <called from discount.inc in trial company signup>
+ */
+function formCoupons_submit($form, &$sta, $trial = FALSE) {
   global $mya; $myid = $mya->id;
   extract(just('type amount coupid iCode count minimum start end ulimit automatic on forOnly', $sta['input']));
     
@@ -113,7 +117,8 @@ function formCoupons_submit($form, &$sta) {
     $res = db\get('fromId,amount', 'r_coupons', 'coupid=:coupid', compact('coupid'));
     extract($res);
     $fromA = r\acct($fromId);
-    be\transfer('payment', $fromA, $mya, $amount, t('gift'), FOR_GOODS, ray('force', 1));
+    list ($ok, $index, $subs) = be\transfer('payment', $fromA, $mya, $amount, t('gift'), FOR_GOODS, ray('force', 1));
+    u\EXPECT($ok, t('failed forced gift redemption by %who for coupon %coupid', 'who coupid', $mya->fullName, $coupid));
     db\insert('r_coupated', ray('uid coupid uses when', $myid, $coupid, $iCode, now()));
     $mya->update('giftPot', $mya->giftPot + $amount);
     return say(t('coupon redeemed', 'amount giver', u\fmtAmt($amount), $fromA->fullName));
@@ -145,5 +150,7 @@ function formCoupons_submit($form, &$sta) {
   if (test()) $args = u\deurlify($args);
 	$url = "/community/coupons/print/$args";
   w\say(t('Your %thing was created successfully.', 'thing', $gift ? t('gift certificate') : t('discount')));
+
+  if ($trial) return w\goNextStep('discount');
   return test() ? w\go($url) : w\go2('/community/coupons/list', $url);
 }

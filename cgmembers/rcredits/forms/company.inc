@@ -59,17 +59,18 @@ EOF;
   $shortDesc = textFld(t('Short Desc:'), [t('Short description'), t('Short description of your company\'s products and services. Maximum 35 characters.')], attrib(['maxlength'=>35]) + required($mya->shortDesc));
   $employees = textFld(t('Employees:'), [t('Employee count'), t('How many employees do you have?')], required($mya->employees));
   $gross = textFld(t('Annual Gross:'), [t('Approximate annual gross income')], required($mya->gross));
+  $staleNudge = textFld(t('Nudge Every:'), [t('Number of days between nudges'), t('Wait this many days before nudging a customer to pay an invoice you sent them (zero means never send a reminder).')], required($mya->staleNudge ?: STALE_NUDGE));
   $tips = boolFld(t('Tips:'), t('After each %PROJECT card sale, ask the customer to choose a tip percentage (or no tip)'), $mya->coCan(CO_TIP) ?: 0);
   if ($mya->cAdmin) {
     if (FALSE) $fast = boolFld(t('No ID Chk:'), t('Never ask customer for photo ID (set by admin)'), $mya->coCan(CO_FAST) ?: 0); // no exemptions
     $atm = boolFld(t('ATM service:'), t('Allow company to trade %RCREDITS for cash even if their balance is less than their rewards (in-person only).'), $mya->coCan(CO_ATM) ?: 0);
   }
 //  $submit = submit();
-  return cgform(@compact(ray('title links photo name private categories selling shortDesc employees gross website code descPreface description can2 tips fast atm')) + w\setupFoot(''));
+  return cgform(@compact(ray('title links photo name private categories selling shortDesc employees gross website code descPreface description can2 staleNudge tips fast atm')) + w\setupFoot(''));
 }
 
 function formCompany_validate($form, &$sta) {
-  extract(just($fields = 'selling employees gross', $sta['input']));
+  extract(just($fields = 'selling employees gross staleNudge', $sta['input']));
   $selling = explode("\n", $selling);
   foreach ($selling as $one) {
     $one = trim($one); // don't allow empty or reserved values
@@ -77,26 +78,28 @@ function formCompany_validate($form, &$sta) {
   }
   if (!@$new) return say('missing field', ray('field', 'selling'), 'selling');
   $selling = join("\n", $new);
-  if ($err = u\badAmount($employees, '>=0')) return sayFieldErr($err, 'employees');
+  if ($err = u\badAmount($employees, '>=0', 0)) return sayFieldErr($err, 'employees');
   if ($err = u\badAmount($gross, '', 2, '')) return sayFieldErr($err, 'gross');
+  if ($err = u\badAmount($staleNudge, '>=0', 0, 365)) return sayFieldErr($err, 'staleNudge');
+
   u\preray(compact(ray($fields)), $sta['input']);
 }
 
 function formCompany_submit($form, &$sta) {
   global $mya;
 
-  extract($info = just('private description shortDesc website selling categories can requireCashier employees gross tips fast atm', $sta['input']));
+  extract($info = just('private description shortDesc website selling categories can requireCashier employees gross staleNudge tips fast atm', $sta['input']));
   
   $website = preg_replace('~https?://~i', '', @$website);
 
   $mya->setCoCans(@$can);
   //$mya->setBits(APP_CAN_BITS, $can, 'co');
-//  $mya->setBit(CO_REQUIRE_CASHIER, @$requireCashier, 'coFlags');
+// (keep this) $mya->setBit(CO_REQUIRE_CASHIER, @$requireCashier, 'coFlags');
   $mya->setCoBit(CO_PRIVATE, @$private);
   $mya->setCoBit(CO_TIP, $tips);
   if ($mya->cAdmin) $mya->setCoBit(CO_FAST, @$fast);
   if ($mya->cAdmin) $mya->setCoBit(CO_ATM, $atm);
-  $mya->update(@compact(ray('description shortDesc website selling employees gross')));
+  $mya->update(@compact(ray('description shortDesc website selling employees gross staleNudge')));
   
   if (@$categories) $mya->setCategories($categories);
 

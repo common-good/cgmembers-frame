@@ -334,6 +334,7 @@ function weMessageMemberWithTopicAndSubs($id, $topic, $subs) {
  *     MAKE cashout AMemberCompanyCashesOutMonthly
  *     MAKE cashout AMemberCompanyCashesOutWeekly
  *     MAKE communitybits CommunityBansSpendingBelowZero
+ *     MAKE invoices Setup
  *     MAKE invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
  *     MAKE invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalance
  *     MAKE invoices AnInvoiceGetsHandledForAnAccountThatRoundsUp

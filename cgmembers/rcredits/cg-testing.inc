@@ -17,7 +17,7 @@ use CG\Web as w;
 global $base_path;
 define('BASE_PATH', $base_path);
 define('T_BALANCE_FLDS', 'uid balance floor savingsAdd saveWeekly minimum');
-define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community');
+define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid');
 define('SPECIAL_IDS', 'ctty crumb round cgf bank-in bank-out');
 // see R_DATE_FLDS in defs.inc
 
@@ -70,6 +70,7 @@ function fixData(&$info, $direct = FALSE) {
     if (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, SPECIAL_IDS)) {
       $fields .= ' ' . $k;
       $$k = t\uid($v);
+      if ($k == 'qid') $$k = r\qid($$k); // simply convert .ABC to NEWABC for qid field
     }
   }  
   $info = @compact(ray($fields)) + $info;
@@ -125,8 +126,8 @@ function doThing($info, $thing, $key = 'id') {
   global $testOnly;
 
   $table = $thing = strtolower($thing);
-  if (!u\starts($thing, 'tx_') and $thing != 'signup') $table = 'r_' . $table;
-  if (!in($thing, 'usd coupated signup') and substr($thing, -1, 1) != 's') $table .= 's';
+  if (!u\starts($thing, 'tx_') and !u\starts($thing, 'x_') and $thing != 'signup') $table = 'r_' . $table;
+  if (!in($thing, 'usd coupated signup company') and substr($thing, -1, 1) != 's') $table .= 's';
   if ($table == 'tx_hdrs') $key = 'xid';
 
 // NO!  if (@$info['id']) {$info['uid'] = $info['id']; unset($info['id']);}
@@ -725,6 +726,15 @@ function uid($id, $field = 'id') {
 }
 function agent($id) {return t\uid($id, 'agent');}
 
+/**
+ * Return an account for the (probably abbreviated) account ID, doing error checking.
+ * @param string $id: the ID
+ * @return the account object (NULL if there is no account for that ID)
+ */
+function a($id) {
+  return ($uid = t\uid($id) and $a = r\acct($uid)) ? $a : output(t('"%id" is not an account id', compact('id')));
+}
+
 function getErrors() {
   $errors = \drupal_get_messages('error', FALSE);
   $errors = @$errors['error'] ?: [];
@@ -1313,6 +1323,7 @@ function output($msg, $color = 'error') {
 function clear($ch = 0) {
 /**/  if (!isDEV or isPRODUCTION) die('clear ' . DEV_ONLY_MSG);
   include_once __DIR__ . '/admin/admin.inc';
+  global $mya; $mya = NULL;
   global $tTime; $tTime = time(); // all events happen simultaneously during a test (conceptually)
   global $lastGo, $formOut, $formArray, $formSta, $testOp, $testConfirmation, $tChecked, $tRadios, $testEmails;
   global $nextCode; $nextCode = NULL;
@@ -1426,6 +1437,8 @@ function badEq($type, $v1, $v2, $id) {
  */
 function weSayWithSubs($type, $index, $subs) {
   global $testOnly;
+  
+  if (!in($type, $choices = 'status warning error')) return output(t('"%type" is not a proper type (%choices)', compact(ray('type choices'))));
 
   $subs = @$subs[0] ?: array();
   if (isset($subs['email'])) t\fixEmail($subs['email']);
