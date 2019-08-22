@@ -194,7 +194,7 @@ function handleTx($do, $xid, &$sta, $args) {
     u\EXPECT($completed, 'incomplete bank tx should not be on list: ' . $xid);
 
     $DBTX = db_transaction();
-    list ($msg, $info) = be\reverse($xid); // create an offsetting tx
+    list ($ok, $msg, $info) = be\reverse($xid); // create an offsetting tx
     $tx['deposit'] = now();
     $tx['xid'] = $info['xid'];
     db\insert('r_usd', $tx, 'txid'); // bypass acct::bank() -- nothing fancy wanted
@@ -311,6 +311,6 @@ function txOKorNO($task, $xid) {
   $uids = empty($a->jid) ? [$a->uid] : [$a->uid, $a->jid];
   $result = r\Tx::lastTx($uids, 'xid=:xid', compact('xid'));
   if (empty($result)) return FALSE;
-  list ($message, $args) = be\undoTx($xid); // X (reverse it)
+  list ($ok, $message, $args) = be\undoTx($xid); // X (reverse it)
   say($message, $args);
 }

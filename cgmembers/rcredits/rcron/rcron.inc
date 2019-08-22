@@ -517,7 +517,10 @@ function sweep($item) {
   foreach (ray('roundup crumb', CG_ROUNDUPS_UID, CG_CRUMBS_UID) as $type => $uid) {
     $a = r\acct($uid);
     $amt = $a->balance - db\sum('amt', 'txs', 'uid2=:uid AND created>:end', compact(ray('uid end'))); // all but what's too new
-    if ($amt > 0) be\transfer('payment', $a, $cgA, $amt, $type . t(' donations'), FOR_GOODS, ray('created gift', $end, TRUE));
+    if ($amt > 0) {
+      list ($ok, $index, $subs) = be\transfer('payment', $a, $cgA, $amt, $type . t(' donations'), FOR_GOODS, ray('created gift', $end, TRUE));
+      if (!$ok) r\tellAdmin($type . t(' sweep failed: ') . t($index, $subs));
+    }
   }
 }  
 
@@ -530,7 +533,10 @@ function cgc($item) {
   if ($kickBack > 0) {
     list ($a, $cgA) = [r\acct($ctty), r\cgA()];
     $desc = t('50% share of local donations through %dt', 'dt', u\fmtDate($end));
-    if ($a->ok) be\transfer('payment', $cgA, $a, $kickBack, $desc, FOR_NONGOODS, ray('created gift', u\monthDay1() - 1, TRUE));
+    if ($a->ok) {
+      list ($ok, $msg, $subs) = be\transfer('payment', $cgA, $a, $kickBack, $desc, FOR_NONGOODS, ray('created gift', u\monthDay1() - 1, TRUE));
+      if (!$ok) r\tellAdmin(t('Failed sharing 50% with community ') . $a->fullName . ': ' . t($msg, $subs));
+    }
   }
 }  
   

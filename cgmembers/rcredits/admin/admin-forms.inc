@@ -777,7 +777,7 @@ function printChecks($args) {
 
   $ways = ['IN'=>'(amount>0 AND txid>0)', 'OUT'=>'(amount<0 AND txid>0)', 'BAD'=>'txid<0', 'VERIFY'=>'amount=0'];
   $where = $ways[strtoupper($way)];
-  $sql = "SELECT txid,created,payee,amount,deposit,bankAccount FROM r_usd WHERE deposit=:date AND created<=:NOW AND $where ORDER BY txid";
+  $sql = "SELECT xid,txid,created,payee,amount,deposit,bankAccount FROM r_usd WHERE deposit=:date AND created<=:NOW AND $where ORDER BY xid";
   $subs = compact('date');
   u\setDft($limit, CHECK_LIMIT);
   if (is_numeric($limit)) $sql .= " LIMIT $limit"; // ' LIMIT :limit' fails

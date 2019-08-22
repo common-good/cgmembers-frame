@@ -902,12 +902,12 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
 
 /**
  * Package the return arguments and alert staff on certain errors.
- * @param mixed $message: the error message
+ * @param mixed $message: the error message or an assoc of parameters
  * @param assoc $info: (optional) message substitutions and other info about transaction
  */
 function txErr($message, $info = []) {
-  r\tellCO('failed transaction', $info + @compact('message'));
-  return [$message, $info + ['success' => FALSE]];
+  r\tellCO('failed transaction', $info + compact('message'));
+  return is_array($message) ? $message : [FALSE, $message, $info];
 }
 
 /**
@@ -1347,11 +1347,11 @@ function riskList($risks, $descs) {
 
 /**
  * Check account permissions for a transaction or invoice. Note that invoicing a not-yet-complete account is permitted.
- * @param acct $a1: the account paying or requesting payment
+ * @param acct $a1: the account paying or requesting payment (the actor)
  * @param acct $a2: the other account
  * @param bool $taking: the first account is taking money from the second (charging or invoicing)
  * @param bool $neg: the amount is negative (refunding or undoing)
- * @return [message, subs, confirmed] on error, else false
+ * @return [FALSE, message, subs] on error (FALSE meaning not ok), else FALSE
  */
 function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   global $scanned, $channel;
@@ -1365,22 +1365,21 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   if (!$a1->confirmed and !$a1->isCanonic and !$a2->isCanonic and $a1->id != CGID and $a2->id != CGID) { // communities and CG can transact with newbs
     if ($a1->community != $a2->community or $channel != TX_POS) { // first tx must be in-person at home
       if ($a1->helper != $a2->id) {
-///          return $a1->cttyA->invites ? ['not confirmed', ray('youName inviterName', $a1->fullName, $a1->helperA->fullName), FALSE] : // invitations are required in this community. Say so.
-        return ['first at home', ray('whose', $a1 == $a1 ? t('Your') : "$a1->fullName's"), FALSE];
+        return [FALSE, 'first at home', ray('whose', $a1 == $a1 ? t('Your') : "$a1->fullName's")];
       }
     }
   }
   list ($myAccess, $otherAccess) = u\order($taking xor $neg, B_SELL, B_BUY);
   list ($myWhat, $otherWhat) = u\order($taking xor $neg, t('sales'), t('purchases'));
   if ($scanned and $taking) list ($myAccess, $myWhat) = $neg ? array(B_REFUND, t('refunds')) : array(B_SCAN, t('sales'));
-  if (!$a1->can($myAccess)) return array("no perm", ray('what', $myWhat), FALSE);
+  if (!$a1->can($myAccess)) return [FALSE, "no perm", ray('what', $myWhat)];
   if ((!$a2->can($otherAccess)) and (!($invoicing and $a2->proSe))) {
-    return array("other no perm", ray('otherName what', $a2->agentA->fullName, $otherWhat), FALSE);
+    return [FALSE, 'other no perm', ray('otherName what', $a2->agentA->fullName, $otherWhat)];
   }
 
-  if (!$a1->cttyUp and !$a1->isCanonic) return array('your community down', ray('contact', $a1->cAdminContact()), FALSE);
-  if (!$a2->cttyUp and !$a2->isCanonic) return array('other community down', [], FALSE);
-  if ($a1->id == $a2->id) return array('no self-trading', [], FALSE);
+  if (!$a1->cttyUp and !$a1->isCanonic) return [FALSE, 'your community down', ray('contact', $a1->cAdminContact())];
+  if (!$a2->cttyUp and !$a2->isCanonic) return [FALSE, 'other community down', []];
+  if ($a1->id == $a2->id) return [FALSE, 'no self-trading', []];
   return FALSE;
 }
 
@@ -1493,9 +1492,9 @@ function handleInvestmentRequest($stakeid, &$msg) {
   $stake += $request;
   
   $DBTX = \db_transaction();
-  list ($index, $subs) = be\transfer('payment', $a, $clubA, $request, t('investment'), FOR_USD, ray('stake', 1));
+  list ($ok, $index, $subs) = be\transfer('payment', $a, $clubA, $request, t('investment'), FOR_USD, ray('stake', 1));
   $msg = t($index, $subs);
-  if ($ok = $subs['success']) {
+  if ($ok) {
     db\update('r_stakes', ray('stakeid stake request', $stakeid, $stake, 0), 'stakeid');
     $msg .= ' ' . t('investment increase', 'amount', u\fmtAmt($request));
   }

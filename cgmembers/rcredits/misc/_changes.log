@@ -1,5 +1,12 @@
+2019-08-21 feature/ezbiz
+. fixed check numbers to be xid instead of txid
+. suppressed 0.00 in customer statements
+. invoices now preceded same-date transactions on customer statements
+. refactored be\transact() and other functions to return "success" explicitly
+
 2019-08-20 feature/ezbiz
 . easy business signup (trial company)
+. added new discount step for companies
 
 2019-08-17 feature/stale-nudge
 . added a virtual staleNudge field to users data field, allowing a company's stale invoice reminders to go out with a non-standard period (the standard is 7 days) or not at all. There is as of yet no way for the company to set this field.

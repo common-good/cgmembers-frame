@@ -893,10 +893,9 @@ X;
       $amount = round(min($left, $avail), 2);
       if ($amount > 0) {
         list ($fromQid, $toQid) = [r\qid($uid), $a->mainQid];
-        list ($payerId, $payeeId) = [$uid, $a->id];
         $for = [$auto . $from . $fromQid, $auto . $to . $toQid];
-        list($message, $subs) = be\transfer('draw', $this, r\acct($uid), $amount, $for, FOR_NONGOODS);
-        if ($subs['success']) $left -= $amount;
+        list($ok, $message, $subs) = be\transfer('draw', $this, r\acct($uid), $amount, $for, FOR_NONGOODS);
+        if ($ok) $left -= $amount;
         if ($left <= 0) break;
       }
     }
@@ -1004,7 +1003,8 @@ EOF;
       if ($a->ok and $b->ok) { // no need to settle with closed or not-yet-open account
         $diff = $a->balance - $b->balance;
         $xfr = round($diff / 2, 2);
-        be\transfer('payment', $a, $b, $xfr, t('joint account settlement'), FOR_USD, ['force'=>1]);
+        list ($ok, $index, $args) = be\transfer('payment', $a, $b, $xfr, t('joint account settlement'), FOR_USD, ['force'=>1]);
+        u\EXPECT($ok, t('Join account settlement failed for %p1 and %p2', 'p1 p2', $a->fullName, $b->fullName));
       }
     } elseif ($except) {
       $sql .= ' AND other<>:except';
@@ -1896,18 +1896,19 @@ X;
    * @param int $recursId: record ID of related record in r_recurs (if any)
    * @return TRUE if the funds were successfully transferred (otherwise the payer is invoiced).
    */
-  public function payApproved($payeeId, $amount, $desc, $goods, $data = [], $recursId = 0) {
+  public function payApproved($payee, $amount, $desc, $goods, $data = [], $recursId = 0) {
     $a = $this;
-    $payee = r\acct($payeeId);
-    u\EXPECT($payee->ok, 'inactive recipient');
-    if ($payeeId != CGID /*or $a->activated*/) u\EXPECT($a->ok, 'inactive payer'); // not-yet-active accounts can be invoiced for gifts to CG
+    $payeeA = r\acct($payee);
+    u\EXPECT($payeeA->ok, 'inactive recipient');
+    if ($payee != CGID /*or $a->activated*/) u\EXPECT($a->ok, 'inactive payer'); // not-yet-active accounts can be invoiced for gifts to CG
 
     if ($a->ok) {
-      list ($msg, $args) = be\transfer('payment', $a, $payee, $amount, $desc, $goods, $data, $recursId);
-      if (nn($args['success'])) return TRUE;
+      list ($ok, $msg, $args) = be\transfer('payment', $a, $payeeA, $amount, $desc, $goods, $data, $recursId);
+      if ($ok) return TRUE;
     }
     $data['status'] = TX_APPROVED;
-    list ($msg, $args) = be\invoice($payee, $this, $amount, $desc, $goods, $data, $recursId);
+    list ($ok, $msg, $args) = be\invoice($payeeA, $this, $amount, $desc, $goods, $data, $recursId);
+    u\EXPECT($ok, t('invoice failed in payApproved invoicing account %payee: ', compact('payee')) . t($msg, $args));
     return FALSE;
   }
 

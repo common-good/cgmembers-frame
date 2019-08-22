@@ -117,7 +117,8 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
     $res = db\get('fromId,amount', 'r_coupons', 'coupid=:coupid', compact('coupid'));
     extract($res);
     $fromA = r\acct($fromId);
-    be\transfer('payment', $fromA, $mya, $amount, t('gift'), FOR_GOODS, ray('force', 1));
+    list ($ok, $index, $subs) = be\transfer('payment', $fromA, $mya, $amount, t('gift'), FOR_GOODS, ray('force', 1));
+    u\EXPECT($ok, t('failed forced gift redemption by %who for coupon %coupid', 'who coupid', $mya->fullName, $coupid));
     db\insert('r_coupated', ray('uid coupid uses when', $myid, $coupid, $iCode, now()));
     $mya->update('giftPot', $mya->giftPot + $amount);
     return say(t('coupon redeemed', 'amount giver', u\fmtAmt($amount), $fromA->fullName));

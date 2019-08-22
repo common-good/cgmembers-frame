@@ -238,7 +238,7 @@ function updateRelations($updates) {
  * @param string $where: additional (security check) criteria, if any
  * @param assoc $subs: additional substitutions for $where
  * @param bool $force: <reverse despite any shortfall or lack of permission>
- * @return array [message, subs] where subs is an assoc of [
+ * @return array [success?, message, subs] where subs is an assoc of [
  */
 function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
   global $mya;
@@ -246,10 +246,8 @@ function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
   u\EXPECT('int string assoc bool', $xid, $where, $subs, $force);
 
   $tx = r\Tx::lastTx([$mya->id], "xid=:xid AND $where", compact('xid') + $subs);
-  if (empty($tx)) {
-    return ['undo no match', $subs];
-  }
-  if (!$force and $error = $tx->nonoUndo($subs)) return array($error, $subs); // check nono before confirm AND here
+  if (empty($tx)) return [FALSE, 'undo no match', $subs];
+  if (!$force and $err = $tx->noUndo($subs)) return [FALSE, $err, $subs];
 
   $byMe = $mya->isMe($tx->actorId);
   $toMe = $tx->getAmount($mya) > 0;
@@ -261,24 +259,19 @@ function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
     $tofrom = !$tx->toMe ? t('to') : t('from');
     $otherUid = $tx->otherUid;
     $other = $tx->otherA->fullName;
-    $success = TRUE;
-    return ['report undo', compact(ray('success amount other tofrom solution otherUid'))];
+    return [TRUE, 'report undo', compact(ray('amount other tofrom solution otherUid'))];
   } else {
-    $res = reverse($xid); // create an offsetting transaction
-    list($message, $info) = $res;
-    $newTx = $info['newTx'];
+    list ($ok, $message, $info) = reverse($xid); // create an offsetting transaction
+    sendNotifications('undo', $info['newTx'], 0);
     unset($info['newTx']);
-    
-    $message = t($message, $info);
-    
-    sendNotifications('undo', $newTx, 0);
-    return [$message, $info];
+    return [$ok, $message, $info];
   }
 }
 
 /**
  * Create an offsetting transaction (nearly the same as the original but with the entries negated).
  * @param int $xid: record ID of the transaction to reverse
+ * @return [ok?, $msg, $subs]
  */
 function reverse($xid) {
   global $mya, $channel;
@@ -314,11 +307,11 @@ function reverse($xid) {
   $did = ($tx->actorEntry->amount > 0) ? ($tx->goods==FOR_GOODS ? 'refunded' : 'credited') : 're-charged';
   $info = ['ok' => 1, 'txid' => $xid, 'created' => $newTx->created, // txid is xid in transaction reports
     'balance' => $mya->can(B_SECRET) ? '*0' : $mya->balance,
-    'success' => TRUE, 'xid' => $xid, 'created0' => $newTx->created, 'newTx' => $newTx,
+    'xid' => $xid, 'created0' => $newTx->created, 'newTx' => $newTx,
     'solution' => 'reversed', 'did' => $did, 'otherName' => $tx->otherA->fullName,
     'amount' => u\fmtAmt(abs($newTx->otherEntry->amount)), 'why'  =>  $tx->otherEntry->description];
   
-  return [$message, $info];
+  return [TRUE, $message, $info];
 }
 
 /**
@@ -342,34 +335,27 @@ function payInvoice($nvid) {
 	$extra = ray('inv', $nvid);
 	if ($flags) foreach (ray('gift crumbs recurs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
 
-  list ($index, $subs) = be\transfer('invoice payment', $payerA, $payeeA, $amount, $purpose, $goods, $extra, $recursId);
-  $ok = u\arrayGet($subs, 'success', FALSE);
+  list ($ok, $index, $subs) = be\transfer('invoice payment', $payerA, $payeeA, $amount, $purpose, $goods, $extra, $recursId);
   if ($ok) {
     db\update('r_invoices', ray('status nvid', $subs['xid'], $nvid), 'nvid');
     if (!empty($api)) u\post($api, ray('request ok msg', $request, (int) $ok, tr($index, $subs)));
-  }
 
-	if (u\getBit(@$flags, B_INVESTMENT)) { // club reclaiming an investment
-/*
-    $res = db\get('shid,vestid', 'r_shares s LEFT JOIN r_investments i ON i.vestid=s.vestid', 'coid=:coid AND clubid=:clubid AND pending<0', ray('coid clubid', $payer, $payee));
-    if ($res) {
-      extract($res); // shid vestid
-      */
-    if ($shid and $res = db\get('vestid,price', 'r_shares JOIN r_investments USING(vestid)', compact('shid'))) { // record sale
-      extract($res);
-      db\update('r_shares', ray('shid shares pending when', $shid, -round($amount / $price), 0, now()), 'shid');
-      if (db\sum('shares', 'r_shares', compact('vestid')) <= 0) db\q('UPDATE r_shares SET sold=:NOW WHERE vestid=:vestid', compact('vestid'));
-    } else r\tellCo(t('Invoice payment marked as "for investment (repayment)" has no corresponding SELL request in shares table.'), $inv, $payeeA);
+    if (u\getBit(@$flags, B_INVESTMENT)) { // club reclaiming an investment
+      if ($shid and $res = db\get('vestid,price', 'r_shares JOIN r_investments USING(vestid)', compact('shid'))) { // record sale
+        extract($res);
+        db\update('r_shares', ray('shid shares pending when', $shid, -round($amount / $price), 0, now()), 'shid');
+        if (db\sum('shares', 'r_shares', compact('vestid')) <= 0) db\q('UPDATE r_shares SET sold=:NOW WHERE vestid=:vestid', compact('vestid'));
+      } else r\tellCo(t('Invoice payment marked as "for investment (repayment)" has no corresponding SELL request in shares table.'), $inv, $payeeA);
+    }
   }
   unset($DBTX);
   
-  $msg = t($index, $subs);
-  return [$ok, $msg];
+  return [$ok, t($index, $subs)];
 }
 
 /**
  * Create a transaction
- * call by: list ($msg, $args) = be\transfer(...);
+ * call by: list ($ok, $msg, $args) = be\transfer(...);
  * @param string $type: payment, charge, invoice payment, draw
  * @param acct $actorA: acct object for the initiating party (usually the current user)
  * @param acct $otherA: acct object for the other party
@@ -391,8 +377,9 @@ function payInvoice($nvid) {
  *   'crumbs', 'recurs', 'gift': gift info
  * @param int $recursId: record ID of related record in r_recurs (if any)
  * @return simple array: 
+ *    ok: success?
  *    index: index to result message string (if success, the index begins with "report ")
- *    subs: replacement parameters, specific to the message (in particular, success=TRUE or FALSE)
+ *    subs: replacement parameters, specific to the message
  *
  * The following used to be possible keys for $data, but not any more:
  *   'inv': record number of the invoice for which this is payment
@@ -456,14 +443,14 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
   }
 
   if ($err = r\txPermErr($actorA, $otherA, $taking, $amount < 0)) { // Check permissions
-    list ($erMsg, $erSubs) = $err;
+    list ($ok, $erMsg, $erSubs) = $err;
     if ($force) {
       $msg = 'forced without perm';
       $erInfo += ['date' => u\fmtDate($created)];
       foreach (['agent1'=>$actorA, 'agent2'=>$otherA] as $k => $a) $erInfo += [$k => $a->proSe ? t('self') : $a->fullName];
       foreach ([$actorA, $otherA] as $a) if (!$a->proSe) r\message($a->id, $msg, $erInfo);
       r\tellAdmin($msg . ' ' . t($erMsg, $erSubs), $erInfo + $erSubs);
-    } else return r\txErr($erMsg, $erInfo + $erSubs + ['success'=>false]);
+    } else return r\txErr($erMsg, $erInfo + $erSubs);
   }
 
   foreach ([$actorA, $otherA] as $a) if (!$a->co and !($channel == TX_POS ? $a->agentA->ided : $a->ided)) {
@@ -576,6 +563,10 @@ function txEntryPair(&$txes, $amount0, $a0, $description0, $entryType0, $acctTid
 }
   
 
+/**
+ * Send appropriate notifications and return a success message array
+ * @return [TRUE, msg, subs]
+ */
 function sendNotifications($type, $tx, $shortfall) {
   u\EXPECT(compact(ray('type tx shortfall')), 'string tx int|float');
 
@@ -647,7 +638,7 @@ function sendNotifications($type, $tx, $shortfall) {
   if ($otherA->id < 0 or $otherA->id > CANONIC_ACCTS) r\notify($tx->otherId, $notice, $args);  // no notifications to canonic accounts
   $msg = 'report tx';
 //  return r\txErr($msg, $tx->reportArgs($tx->actorA, TRUE, $shortfall) + compact(ray('msg did')));
-  return [$msg, $args + compact(ray('msg did'))];
+  return [TRUE, $msg, $args + compact(ray('msg did'))];
 }
 
 /**
@@ -745,7 +736,7 @@ function maxTid($uids) {
 
 /**
  * Create an invoice
- * call by: list ($msg, $args) = be\invoice(...);
+ * call by: list ($ok, $msg, $args) = be\invoice(...);
  * @param acct $actorA: acct object for payee (usually current user)
  * @param acct $otherA: acct object for payer
  * @param numeric $amount: the invoiced amount
@@ -757,8 +748,9 @@ function maxTid($uids) {
  *    created: UNIXtime
  * @param int $recursId: record ID of related record in r_recurs (if any)
  * @return simple array: 
+ *    ok: success?
  *    index: index to result message string (if success, the index begins with "report ")
- *    subs: replacement parameters, specific to the message (in particular, success=TRUE or FALSE)
+ *    subs: replacement parameters, specific to the message
  */
 function invoice($actorA, $otherA, $amount, $purpose, $goods = FOR_GOODS, $extra = [], $recursId = 0) {
   global $channel;
@@ -800,7 +792,7 @@ function invoice($actorA, $otherA, $amount, $purpose, $goods = FOR_GOODS, $extra
   $msg = 'report tx';
 //  if ($actorA->cttyRewardy) $msg .= '|for why';
   if ($amount > 0) $msg .= '|balance unchanged';
-  return array($msg, $subs + ray('success nvid', TRUE, $nvid));
+  return [TRUE, $msg, $subs + ray('success nvid', TRUE, $nvid)];
 }
 
 /* /\** */

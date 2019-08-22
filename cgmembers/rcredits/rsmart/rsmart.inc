@@ -410,9 +410,8 @@ EOF;
       extract(just('undo created', $revRes));
       $message = t('Transaction has been reversed.');
     } else {
-      list ($msg, $subs) = be\undoTx($xid, (@$amount < 0 and !$mya->co) ? 'e.amount > 0' : "e.amount='$amount'", [], $force);
-      if (is_array($msg)) list ($msg, $subs) = [$msg[0], $msg[1] + $subs];
-      if (!@$subs['success']) return badTx($args, $name, $msg, $subs);
+      list ($ok, $msg, $subs) = be\undoTx($xid, (@$amount < 0 and !$mya->co) ? 'amount>0' : "amount='$amount'", [], $force);
+      if (!$ok) return badTx($args, $name, $msg, $subs);
       $txid = $subs['xid'];
       $created = $subs['created0'];
       $subsNoTx = $subs;
@@ -427,10 +426,8 @@ EOF;
   } else { // doesn't exist and should (forcing or not)
     if (@$amount < 0 and $a->co and $a->proSe) return badTx($args, $name, $msg, $subs);
     if (@$amount < 0 and !$mya->co) list ($type, $amount) = ['payment', -$amount];
-    $bal = $a->balance;
-    list ($msg, $subs) = be\transfer($type, $mya, $a, @$amount, @$description, $goods, compact(ray('created force boxId')));
-    $bal = $a->balance;
-    if (!@$subs['success']) return badTx($args, $name, $msg, $subs);
+    list ($ok, $msg, $subs) = be\transfer($type, $mya, $a, @$amount, @$description, $goods, compact(ray('created force boxId')));
+    if (!$ok) return badTx($args, $name, $msg, $subs);
 
     if (!@$force and $aa = $a->agentA and $mya->co and !$aa->ided) $aa->setBit(B_IDED);
     $txid = $subs['xid'];
