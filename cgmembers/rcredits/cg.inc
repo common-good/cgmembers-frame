@@ -248,7 +248,6 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
   
   if ($toA = is_object($to0) ? $to0 : r\acct($to0)) {
     $toEmail = $toA->email;
-    //    $to = "\"$toA->fullName\" <$toEmail>";
     $to = [$toEmail => $toA->fullName];
     $subs += (array) $toA->account(); // this omits any special fields or special formatting
     $subs['qid'] = $toA->mainQid;
@@ -256,7 +255,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
     $subs['zip3'] = substr($toA->zip, 0, 2); // temporarily show a wider region than zip3
     if ($toA->closed) return r\tellAdmin(t('attempt to email closed account'), compact(ray('index subs reply0')));
     if ($jid = $toA->jid) $jA = r\acct($jid);
-    if ($toA->depends) $jA = r\acct($toA->helper); // sponsored accounts are never joint
+    if ($toA->depends and !$toA->co) $jA = r\acct($toA->helper); // sponsored accounts are never joint
     if (nn($jA) and test()) $testEmails[] = ray('index toEmail subs', $index, $jA->email, $subs);
   } else $to = $toEmail = $to0;
   
@@ -274,7 +273,6 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
     $resubs[$k] = $v;
   }
 
-  //  $index = str_replace('_', '-', $index); // correct Drupal template names to rCredits standard
   $subject = u\SUBS(strtr(@$subject ?: $GLOBALS['emailSubjects'][$index], $resubs), '%');
   $body = u\SUBS(strtr(@$body ?: (@$noFrame ? r\emailTemplate($index) : r\emailBody($index)), $resubs), '%');
 
@@ -318,8 +316,9 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
   if (@$sms) $m->setSubject('')->setTo($toEmail); // send as text message
   try {
     $mailer->send($m);
-    if (nn($jA)) { // also send to partner in joint account
+    if (nn($jA) and $index != 'tell-staff') { // also send to partner in joint account unless it's an admin notice
       $m->setTo([$jA->email => $jA->fullName]);
+      $m->setSubject($subject . t(' (for %acct)', 'acct', $jA->fullName));
       $mailer->send($m);
     }
   } catch (Exception $e) {
@@ -391,8 +390,8 @@ function notify($uid, $index, $subs = [], $force = FALSE) {
   }
   
   if ($a->can(B_BYSMS)) {
-    $ok = SMS\send($a->phone, t($index, $subs));
-    if (!$ok) r\tellAdmin(t('failed sending SMS to %nm @ %phone', 'nm phone', $a->fullName, $a->phone));
+///    $ok = SMS\send($a->phone, t($index, $subs));
+///    if (!$ok) r\tellAdmin(t('failed sending SMS to %nm @ %phone', 'nm phone', $a->fullName, $a->phone));
   }
 
 }

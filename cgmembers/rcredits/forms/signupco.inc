@@ -6,53 +6,126 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
+include_once __DIR__ . '/signin.inc';
+
 /**
- * Prepare to open a company account.
- * This form creates an invite and redirects to signup, using that code.
- * @see also: formAgent
+ * Open a trial company account
  */
-function formSignupCo($form, &$sta) {
-  $a = r\agent();
-  if (!$a->cAdmin and !$a->can(B_MEMBER)) return w\go('', 'members only', 'ERR');
-  
-  w\focusOn('fullname');
-  //t('an additional personal account that I will manage'), 
-  $title = t('Open a Company Account');
-  $relations = array(t('a company and I own at least 10% of it'), t('a company or organization whose accounts I manage,<br>but I am not a 10%-or-more owner'), t('neither of the above') . ($a->cAdmin ? '' : t(' (send an <%a>invitation</a> instead!)', '_a', atag('/community/invite'))));
-  $relationPrompt = item(t('What is the new account for?'));
-  $relation = radiosFld(t(''), '', dft(2), $relations);
-//  $flows = array(t('neither way (recommended in most cases)'), t('Your personal account can cover the new account\'s debts and overdrafts.'), t('The new account can cover your personal account\'s debts and overdrafts.'), t('both ways'));
-//  $flowPrompt = item(t('Which way can the credit flow, when you need it to?'));
-//  $flow = radiosFld(t(''), '', required(0), $flows);
-  $flow = hidFld(0);
-  $submit = t('Open Account');
-  return cgform(@compact(ray('title relationPrompt relation flowPrompt flow submit')));
-}
-
-function formSignupCo_validate($form, &$sta) {
-  extract(just('relation flow', $sta['input']));
-  if ($relation == 2) say('insufficient relation', 'relation');
-}
-
-function formSignupCo_submit($form, &$sta) {
+function formSignupCo($form, &$sta, $args = '') {
   global $mya;
   global $signupArgs; // for testing
+  
+  $qid = $fullName = $phone = ''; // defaults
+  
+  if ($mya and !$mya->trialco) {
+    $a = ($mya->cAdmin and !$mya->co) ? $mya : $mya->agentA; // let admins open company accounts on behalf of others
+    if ($coInfo = $a->signupCo) {
+      extract(just('company companyPhone', $coInfo)); // predict co name
+      if (!findCompany($company, $companyPhone)) list ($fullName, $phone) = [$company, u\fmtPhone($companyPhone, '-')];
+    }
+    $qid = $a->mainQid;
+  }
 
-  $a = $mya->cAdmin ? $mya : $mya->agentA; // let admins open company accounts on behalf of others
+  $title = t('Open a Trial Company Account');
+  $subtext = t(<<< X
+  <p>Fill out this short form to get your company started accepting %PROJECT payments quickly. You can accept up to %limit in payments before you need to convert to a regular company account (and open a personal account for signing in). There is no charge for a trial account or for a regular company account or a personal account.</p>
+X
+  , 'limit', u\fmtAmt(TRIALCO_LIMIT));
+  
+  $params = $args ? http_build_query($args) : '';
+  $forother = item(w\lnk('/signup/' . $params, t('open an individual account instead')));
+  
+  u\setDft($source, nn($_COOKIE['ad']));
+  $source2 = hidFld($source);
+  $args = hidFld($args);
 
-  extract(just('relation flow', $sta['input']));
+  extract(just('fullName legalName email', w\nameAndEmailFlds(TRUE, $fullName)));
+  $email['#help'][1] = preg_replace('/ \\(.*\\)/', '', $email['#help'][1]); // don't talk about settings
+  $phone = textFld(t('Company Phone:'), [t('Company phone number')], required($phone));
+  $zip = zipFld();
+  $contact = $qid ? NULL : textFld(t('Your Name:'), [t('Your full name')], required());
+  $selling = sellingFld();
+  $source = $qid ? NULL : sourceFld();
+  $ownPhone = boolFld(t('Own Phone:'), t('Will you be running the CGPay app on your own Android phone? (%PROJECT is happy to supply one, with a $%EQUIP_DEPOSIT refundable equipment deposit).'), FALSE);
+  $qid = $qid ? NULL : textFld(t('Account ID:'), [t('Your personal account ID'), t('If you are already a member of %PROJECT, type the account ID of your personal account. Otherwise leave this <b class="loud">BLANK</b>.')]);
+  $submit = t('Submit');
+  return cgform(compact(ray('title forother subtext source2 contact fullName zip phone email selling source ownPhone qid submit args')));
+}
+  
+function formSignupCo_validate($form, &$sta) {
+  extract(u\normalizeCase(just('contact fullName qid', $sta['input'])));
+  extract(just('zip phone email selling', $sta['input']));
 
-  $personal = FALSE;
-  $employee = TRUE; // let signupCo info override this
-  extract(just('company companyPhone owner employee', $a->signupCo)); // predict co name
-  if (!findCompany(@$company, @$companyPhone)) list ($fullName, $phone) = [@$company, @$companyPhone];
-  $owner = $relation == 0; // don't let signupCo info influence this
+  foreach (ray('contact fullName') as $field) {
+    $$field = trim(str_replace('  ', ' ', u\normalizeCase(@$$field))); // @ for testing
+    if ($err = u\badName($$field)) return say($err, compact('field'), $field);
+  }
 
-  $helper = $a->mainQid;
-  $code = r\invite($a->email, $a->id);
-  $flow += 0;
+  if ($qid = trim(strtoupper($qid)) and !r\acct($qid)) return say(t('That is not an account ID. Please check again (look in the lower left on your %PROJECT Card).'), 'qid');
 
-  $signupArgs = compact(ray('personal code owner employee flow helper fullName phone'));
+  if ($err = u\badZip($zip)) return say($err, 'zip');
+  if (!phoneOk($phone, US_COUNTRY_ID)) return;
+  if (!emailOkay($email, TRUE, NULL)) return;
+  if ($err = zBadSelling($selling)) return say($err, 'selling');
+  
+  u\preray(@compact(ray('contact fullName qid zip phone email selling')), $sta['input']); // fix formatting and add name
+}
+  
+function formSignupCo_submit($form, &$sta) {
+  global $mya;
+  $dbFields = 'coType contact source selling fullName legalName email flags phone federalId country zip address city state helper stepsDone preid';
+  extract(just($dbFields . ' source2 ownPhone qid args', $sta['input']));
+  extract(just('code', nn($args)));
 
-  w\go('signup/' . http_build_query($signupArgs));
+//    $a = r\acct($qid);
+//    $postalAddr = $a->postalAddr;
+//    list ($legalName, $federalId) = [$a->legalName, $a->federalId];
+  if ($qid) {
+    $contact .= '~' . $qid; 
+    $helper = r\acct($qid)->id;
+    unset($qid);
+  } else $helper = CGID;
+  
+  list ($legalName, $federalId) = [CGF_LEGALNAME, CGF_EIN];
+  
+  $country = US_COUNTRY_ID;
+  list ($city, $state, $latitude, $longitude) = zipCity($zip, $country);
+  $preid = getPreId($source);
+  if (@$source2) $source = trim(strtoupper($source2) . "-$source");  
+  $flags = u\bit(B_CO) | u\bit(B_DEPENDS) | u\bit(B_CONFIRMED);
+  $stepsDone = array_fill_keys(ray('signup discount verify'), FALSE);
+  $coType = $acctType = CO_CUSTODIAN;
+  if (!$a = new r\Acct($info = @compact(ray($dbFields)))) return say('cannot create account', 'zot');
+
+  list ($myid, $name) = [$a->id, $a->name];  
+  $mya = w\setAcct($myid); // this works for both an individual account (proSe) and a company account (with agent)
+  $qid = $mya->mainQid;
+  tellStaffNewMember($info + compact(ray('acctType qid name'))); // report to staff and user
+  $pw1 = $mya->oneTimePass($name, TRUE); 
+  r\notify($myid, 'verify-trial', ray('name qid code', $name, $qid, $pw1), TRUE); 
+  if (nn($code)) w\invitation($code, $myid); // mark invitation used
+  
+  say('info saved');
+  
+  if (!$ownPhone) {
+    be\invoice(r\acct(CGID), $mya, EQUIP_DEPOSIT, t('equipment deposit'), FOR_NONGOODS);
+    say('refundable deposit');
+  }
+    
+  $sta2['uid'] = $myid; // tell Drupal we're signed in
+  $nextStepUrl = $mya->nextStepUrl('signup');
+  formSignin_submit($form, $sta2, $nextStepUrl); // lead user to next step   
+}
+
+/**
+ * Return city, state, and coordinates from zip and country
+  {"post code": "01002", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Amherst", "longitude": "-72.4646", "state": "Massachusetts", "state abbreviation": "MA", "latitude": "42.3671"}]}
+  */
+function zipCity($zip, $country) {
+  if ($info = @file_get_contents('http://api.zippopotam.us/us/' . $zip)) {
+    if ($info = json_decode($info)) $info = (array) nn($info->places)[0];
+  }
+
+  if (!$info) return [NULL, 0, 0, 0];
+  return [$info['place name'], $info['state abbreviation'], $info['latitude'], $info['longitude']];
 }

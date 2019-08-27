@@ -1483,7 +1483,7 @@ function contactFields($defaults = [], $step0, $myid = 0) {
     
     $other = $step0 ? item('', t('Other Information')) : NULL;
     if ((!@$mya or !$mya->co) and !nn($source)) {
-      $source = $step0 ? textFld(t('Referred by:'), [t('How you heard about %PROJECT'), t('Where did you hear about %PROJECT? (name of company or person, web address, publication name, radio station name, or whatever)')]) : NULL;
+      $source = $step0 ? sourceFld() : NULL;
 //      $source2 = $step0 ? textFld(t('Code:'), [t('Invitation or card code'), t('If you have an invitation or card code, type it here ("B" for brochure). Otherwise leave blank.')]) : NULL;
     } else $source = hidFld(nn($source));
   }
@@ -1500,7 +1500,25 @@ function contactFields($defaults = [], $step0, $myid = 0) {
   return compact(ray($fields));
 }  
 
+function sourceFld() {return textFld(t('Referred by:'), [t('How you heard about %PROJECT'), t('Where did you hear about %PROJECT? (name of company or person, web address, publication name, radio station name, or whatever)')]);}
 function zipFld($zip = NULL) {return textFld(t('Postal Code:'), [t('Physical location postal code'), t('Postal code for your <em>physical location</em>')], required(@$zip));}
+function sellingFld($selling = NULL) {return areaFld(t('Selling:'), [t('Products'),t('Enter one or more <b>VERY SHORT</b> transaction descriptions (for example "food") for when you make a sale &mdash; one line for each. Put the most common one first. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', u\fmtDate(now(), TRUE))], required($selling));}
+
+/**
+ * Standardize the "selling" field input.
+ * @param string $selling: (MODIFIED) EOL-delimited list of short descriptions of what the company sells
+ * @return and error message or FALSE if there is no error
+ */
+function zBadSelling(&$selling) {  
+  $selling = explode("\n", $selling);
+  foreach ($selling as $one) {
+    $one = trim($one); // don't allow empty or reserved values
+    if (!u\nonish($one) and !in($one, ['', S_REFUND, S_USD_OUT, t('cash')]) and !r\usdin($one)) $new[] = strtolower($one);
+  }
+  if (!nn($new)) return t('missing field', 'field', 'selling');
+  $selling = join("\n", $new);
+  return FALSE;
+}
 
 /**
  * Interpret cookie to get source of new member and record it in the signup table.

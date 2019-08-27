@@ -186,7 +186,7 @@ function formAdminPanel_submit($form, &$sta) {
   if ($op == 'proxies') return say(a\showQuery('r_proxies', 1, 'id DESC', 'person, proxy, priority', 'person'));
   if ($op == 'relations') return say(a\showQuery('r_relations', 1, 'main DESC, reid', 'reid,main,other,otherNum,:IS_DRAW AS draw,permission,:IS_EMPLOYEE AS employee,:IS_OWNER AS owner,:IS_CUSTOMER AS customer,:IS_AUTOPAY AS autopay,code', 'main'));
   if ($op == 'usd') return say(a\showQuery('r_usd', 1, 'created DESC'));
-  foreach (ray('boxes do stats nonmembers') as $one) if ($op == $one) return say(a\showQuery("r_$one"));
+  foreach (ray('boxes do stats') as $one) if ($op == $one) return say(a\showQuery("r_$one", '1 ORDER BY created DESC'));
 }
 
 /**
@@ -926,7 +926,7 @@ function tests($arg = '') {
               $params["secure"], $params["httponly"]
               );
   }
-  if (session_id() and $_SESSION and session_status() == PHP_SESSION_ACTIVE) session_destroy();
+  if (session_id() and session_status() == PHP_SESSION_ACTIVE and @$_SESSION) session_destroy();
   db\q('TRUNCATE sessions');
   \drupal_goto('sadmin/test-results'); // has to be a form available when logged out
 }

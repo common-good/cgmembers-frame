@@ -18,13 +18,13 @@ include_once R_ROOT . '/forms/signin.inc';
  *   personal: opening a personal account (default TRUE)
  *   fullName: the likely name of the account to create
  *   phone: the account's likely phone number
- *   owner: is the inviter an owner (these last four params are processed by suCreatorRelation())
+ *   owner: is the inviter an owner (this and employee are processed by suCreatorRelation())
  *   employee: is the inviter an employee
- *   flow: which way credit can flow (be drawn)
  *   helper: uid of account creating this one -- non null (same as $inviter) means created with formSignupCo
  */
 function formSignup($form, &$sta, $args = '') {
   if (!$args) $args = @$_POST ?: basename($_SERVER['REQUEST_URI']); // because menu_execute_active_handler fails
+  if (is_string($args)) $args = urlq2ray($args);
 
   $contactDefaults = 'phone address city zip address2 city2 zip2 state2 postalAddr partner partnerCode customer source';
   extract(just('preid source2 joint reid inviter code personal fullName state email helper ' . $contactDefaults, $args));
@@ -56,7 +56,7 @@ function formSignup($form, &$sta, $args = '') {
 
   if (!@$helper) {
     $helper = @$partner ?: 0;
-    $forother = item(w\lnk('/trial', t('open a trial account for your company instead')));
+    $forother = item(w\lnk('/signup-co/' . http_build_query($args), t('open an account for your company instead')));
   } else $forother = NULL;
 
   if (!@$code) $code = 'self ()'; // can't actually tell whether this is allowable, because we don't yet know which community
