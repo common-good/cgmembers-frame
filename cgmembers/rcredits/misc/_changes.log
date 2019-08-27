@@ -1,3 +1,14 @@
+2019-08-27 feature/ezbiz-tweaks
+. fixed bug that listed tables in chron order (rather than backwards) in Admin Panel
+. fixed bug that sent admin messages to admin's joint-account partner also
+. fixed bug that tried to send SMS to some accounts (and died)
+. now when a trialco account visits the Agreement page, it shows the agreement
+. source and selling fields added to ezbiz form, and factored them up to rweb-subs.inc, for sharing elsewhere
+. improved Food Fund staff alert
+. renamed ezbiz signup from "trial" to "signup-co", in preparation for personal trial accounts and both trials being the standard way to sign up
+. added defaults to signup-co form when a member is signed in
+. renamed signup-co feature "signup-co2" in preparation for using it for biz account completion
+
 2019-08-21 feature/ezbiz
 . fixed check numbers to be xid instead of txid
 . suppressed 0.00 in customer statements

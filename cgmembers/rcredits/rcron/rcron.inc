@@ -72,7 +72,7 @@ NOTES:
   where <star> means * (not the same as for the production site) 
  */
 
-define('DAILY_TASKS', 'START checkAccts setNear acctStats cttyStats trust acctRisk acctRiskFinish txRisk tickle lessOften recurs getFunds invoices invest notices END');
+define('DAILY_TASKS', 'START checkAccts setNear cttyStats trust acctRisk acctRiskFinish txRisk tickle lessOften recurs getFunds invoices invest notices END');
 
 include_once __DIR__ . '/rcron-subs.inc';
 

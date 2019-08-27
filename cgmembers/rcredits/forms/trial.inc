@@ -10,35 +10,51 @@ include_once __DIR__ . '/signin.inc';
 
 /**
  * Open a trial company account
- */
-function formTrial($form, &$sta, $args = '') {
+ * (signup-co is identical, except for this line and two other comment lines, and will replace this file)
+function formSignupCo($form, &$sta, $args = '') {
   global $mya;
+  global $signupArgs; // for testing
   
-  $title = t('Open a Trial Account');
+  $qid = $fullName = $phone = ''; // defaults
+  
+  if ($mya and !$mya->trialco) {
+    $a = ($mya->cAdmin and !$mya->co) ? $mya : $mya->agentA; // let admins open company accounts on behalf of others
+    if ($coInfo = $a->signupCo) {
+      extract(just('company companyPhone', $coInfo)); // predict co name
+      if (!findCompany($company, $companyPhone)) list ($fullName, $phone) = [$company, u\fmtPhone($companyPhone, '-')];
+    }
+    $qid = $a->mainQid;
+  }
+
+  $title = t('Open a Trial Company Account');
   $subtext = t(<<< X
-  <p>Fill out this short form to get your company started accepting %PROJECT payments quickly. You can accept up to %limit in payments before you need to convert to a regular company account (and open a personal account for signing in). There is no charge for a trial account and no charge for a regular account (personal and/or company).</p>
+  <p>Fill out this short form to get your company started accepting %PROJECT payments quickly. You can accept up to %limit in payments before you need to convert to a regular company account (and open a personal account for signing in). There is no charge for a trial account or for a regular company account or a personal account.</p>
 X
   , 'limit', u\fmtAmt(TRIALCO_LIMIT));
   
-  $forother = item(w\lnk('/signup', t('open a regular account instead')));
+  $params = $args ? http_build_query($args) : '';
+  $forother = item(w\lnk('/signup/' . $params, t('open an individual account instead')));
   
   u\setDft($source, nn($_COOKIE['ad']));
-  $source = hidFld($source);
+  $source2 = hidFld($source);
+  $args = hidFld($args);
 
-  extract(just('fullName legalName email', w\nameAndEmailFlds(TRUE)));
+  extract(just('fullName legalName email', w\nameAndEmailFlds(TRUE, $fullName)));
   $email['#help'][1] = preg_replace('/ \\(.*\\)/', '', $email['#help'][1]); // don't talk about settings
-  $phone = textFld(t('Company Phone:'), [t('Company phone number')], required());
+  $phone = textFld(t('Company Phone:'), [t('Company phone number')], required($phone));
   $zip = zipFld();
-  $contact = textFld(t('Your Name:'), [t('Your full name')], required());
+  $contact = $qid ? NULL : textFld(t('Your Name:'), [t('Your full name')], required());
+  $selling = sellingFld();
+  $source = $qid ? NULL : sourceFld();
   $ownPhone = boolFld(t('Own Phone:'), t('Will you be running the CGPay app on your own Android phone? (%PROJECT is happy to supply one, with a $%EQUIP_DEPOSIT refundable equipment deposit).'), FALSE);
-  $qid = textFld(t('Account ID:'), [t('Your personal account ID'), t('If you are already a member of %PROJECT, type the account ID of your personal account. Otherwise leave this <b class="loud">BLANK</b>.')]);
+  $qid = $qid ? NULL : textFld(t('Account ID:'), [t('Your personal account ID'), t('If you are already a member of %PROJECT, type the account ID of your personal account. Otherwise leave this <b class="loud">BLANK</b>.')]);
   $submit = t('Submit');
-  return cgform(compact(ray('title forother subtext source contact fullName zip phone email ownPhone qid submit')));
+  return cgform(compact(ray('title forother subtext source2 contact fullName zip phone email selling source ownPhone qid submit args')));
 }
   
-function formTrial_validate($form, &$sta) {
+function formSignupCo_validate($form, &$sta) {
   extract(u\normalizeCase(just('contact fullName qid', $sta['input'])));
-  extract(just('zip phone email', $sta['input']));
+  extract(just('zip phone email selling', $sta['input']));
 
   foreach (ray('contact fullName') as $field) {
     $$field = trim(str_replace('  ', ' ', u\normalizeCase(@$$field))); // @ for testing
@@ -50,14 +66,16 @@ function formTrial_validate($form, &$sta) {
   if ($err = u\badZip($zip)) return say($err, 'zip');
   if (!phoneOk($phone, US_COUNTRY_ID)) return;
   if (!emailOkay($email, TRUE, NULL)) return;
+  if ($err = zBadSelling($selling)) return say($err, 'selling');
   
-  u\preray(@compact(ray('contact fullName qid zip phone email')), $sta['input']); // fix formatting and add name
+  u\preray(@compact(ray('contact fullName qid zip phone email selling')), $sta['input']); // fix formatting and add name
 }
   
-function formTrial_submit($form, &$sta) {
+function formSignupCo_submit($form, &$sta) {
   global $mya;
-  $dbFields = 'coType contact source fullName legalName email flags phone federalId country zip address city state helper stepsDone';
-  extract(just($dbFields . ' ownPhone qid', $sta['input']));
+  $dbFields = 'coType contact source selling fullName legalName email flags phone federalId country zip address city state helper stepsDone preid';
+  extract(just($dbFields . ' source2 ownPhone qid args', $sta['input']));
+  extract(just('code', nn($args)));
 
 //    $a = r\acct($qid);
 //    $postalAddr = $a->postalAddr;
@@ -73,6 +91,7 @@ function formTrial_submit($form, &$sta) {
   $country = US_COUNTRY_ID;
   list ($city, $state, $latitude, $longitude) = zipCity($zip, $country);
   $preid = getPreId($source);
+  if (@$source2) $source = trim(strtoupper($source2) . "-$source");  
   $flags = u\bit(B_CO) | u\bit(B_DEPENDS) | u\bit(B_CONFIRMED);
   $stepsDone = array_fill_keys(ray('signup discount verify'), FALSE);
   $coType = $acctType = CO_CUSTODIAN;
@@ -84,6 +103,7 @@ function formTrial_submit($form, &$sta) {
   tellStaffNewMember($info + compact(ray('acctType qid name'))); // report to staff and user
   $pw1 = $mya->oneTimePass($name, TRUE); 
   r\notify($myid, 'verify-trial', ray('name qid code', $name, $qid, $pw1), TRUE); 
+  if (nn($code)) w\invitation($code, $myid); // mark invitation used
   
   say('info saved');
   
@@ -100,12 +120,13 @@ function formTrial_submit($form, &$sta) {
 /**
  * Return city, state, and coordinates from zip and country
   {"post code": "01002", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Amherst", "longitude": "-72.4646", "state": "Massachusetts", "state abbreviation": "MA", "latitude": "42.3671"}]}
-  */
+  *//*
 function zipCity($zip, $country) {
-  if ($info = file_get_contents('http://api.zippopotam.us/us/' . $zip)) {
+  if ($info = @file_get_contents('http://api.zippopotam.us/us/' . $zip)) {
     if ($info = json_decode($info)) $info = (array) nn($info->places)[0];
   }
 
   if (!$info) return [NULL, 0, 0, 0];
   return [$info['place name'], $info['state abbreviation'], $info['latitude'], $info['longitude']];
 }
+*/

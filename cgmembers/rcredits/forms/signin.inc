@@ -27,7 +27,7 @@ function formSignin($form, &$sta) {
   focusOn((@$name == 'admin' or strlen(@$name) > 4) ? 'pass' : 'name');
 
   $title = t('Welcome to %PROJECT!');
-  $signup = isDEV ? "<a href=\"$base_url/signup\">Signup</a> <a href=\"$base_url/trial\">Trial</a>" : '';
+  $signup = isDEV ? "<a href=\"$base_url/signup\">Signup</a> <a href=\"$base_url/signup-co\">SignupCo</a>" : '';
   $subtext = t('<p>Not yet a member? <%a>Check it out</a>!</p>', '_a', atag(r\promoLink(''))) . $signup . t('<p><b>TIP</b>: Try not to sign in to your financial accounts on a public computer. Or if you do, be careful! Check the address bar at the top of the screen to make sure you have the right website (<b><em>%BASE_URL/</em>...</b>). And be sure to sign OUT when you\'re done!</p>');
 
   $_a = atag('/settings/password/' . @$name, ['tabindex' => 3]); // uses $name, so must precede $name = textField
