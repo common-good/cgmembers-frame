@@ -61,13 +61,7 @@ function timeFor($time, $period, $chosen) {
   $point = strftime("%$withinCode", $time);
   if ($withinCode == 'a') $point = u\day2n($point); // %u and %w fail on dev machine (among others)
   list ($periodNum, $lastPeriodNum) = [strftime("%$periodCode", $time), strftime("%$periodCode", $lastTime)];
-  $isTime = !nn($lastTime) or ($periodNum != $lastPeriodNum and ($chosen === '' or $point >= $chosen));
-  if ($isTime) {
-    $lastStart[$period] = now();
-    setV('last_cron_start', $lastStart); // remember that this periodic activity has been done
-  }
-  
-  return $isTime;
+  return (!nn($lastTime) or ($periodNum != $lastPeriodNum and ($chosen === '' or $point >= $chosen)));
 }
 
 function queue($op, $item = []) {

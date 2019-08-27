@@ -413,7 +413,12 @@ function often($period, $chosen = '') {
   $topic = t('cron period', compact('period'));
   $time = strftime('%I:%M%P', now());
   $msg = t('Running cron for the %period, at %time', compact('period', 'time'));
-  if ($period != 'hour' and $period != 'day') r\tellAdmin($msg, compact('topic'));
+  if ($period != 'hour') r\tellAdmin($msg, compact('topic'));
+
+  $lastStart = getV('last_cron_start');
+  $lastStart[$period] = now();
+  setV('last_cron_start', $lastStart); // remember that this periodic activity has been done
+
   $function(); // do it
 }
 
@@ -957,9 +962,12 @@ function invest1($item) {
  * Send daily, weekly, or monthly message digests. (Newbies are always daily)
  */
 function notices() {
-  global $timeFor;
-  $weekly = (strftime('%A') == R_WEEKLY_DAY or @$timeFor['weekly']);
-  $monthly = (strftime('%d') == R_MONTHLY_DAY or @$timeFor['monthly']);
+  global $timeFor; // for testing
+  
+  $lastStart = getV('last_cron_start', []);
+  $weekly = (strftime('%A', @$lastStart['week']) == R_WEEKLY_DAY);
+  $monthly = (strftime('%d', @$lastStart['month']) == R_MONTHLY_DAY);
+  if (test() and isset($timeFor)) extract(just('weekly monthly', $timeFor));
 
   $where = $dailySql = '((NOT :IS_WEEKLY AND NOT :IS_MONTHLY) OR NOT :IS_MEMBER)'; // daily
   if ($weekly) $where .= ' OR :IS_WEEKLY';
