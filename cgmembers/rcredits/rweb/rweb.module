@@ -181,7 +181,6 @@ function rweb_menu($submenu = '') {
     
     'I' => ['call', 'Scanned QR', 'I', ANY],
     
-    'signup-company' => ['call', t('Open a Company Account'), 'SignupCo', 'manage'],
     'prejoin' => ['call', t('Open a Joint Account'), 'Prejoin', 'manage'],
     'handle-invoice' => ['call', t('Handle Invoice'), 'HandleInvoice 1', ANY],
     'rerisk' => ['call', t('Recalculate Risk'), 'Rerisk 1 2 3', 'cadmin2'],
@@ -227,7 +226,7 @@ function rweb_menu($submenu = '') {
     'change-account' => ['call', t('Change Who'), '1', ANY, 'changeWho'],
     'status' => ['call', 'Status', 'Membership 1', 'manage'],
     'signup' => ['call', t('Sign Up For %PROJECT'), 'Signup', ANY],
-    'trial' => ['call', t('Open a Trial Account'), 'Trial', '-signedIn'],
+    'signup-co' => ['call', t('Open a Company Account'), 'SignupCo', ANY],
     'menu' => ['call', 'Main Menu', 'Menu', ANY],
     'member' => ['call', 'Company Profile', 'Profile', ANY],
     'do' => ['call', 'Do', '1 2', ANY, 'rdo'],

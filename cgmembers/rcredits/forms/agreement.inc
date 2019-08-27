@@ -66,7 +66,7 @@ X
   }
 
   $agreement = w\item($agreement);
-  jsx('agree', ['show' => $mya->trialco]);
+  jsx('agree', ['show' => !$mya ?: $mya->trialco]);
   
   return cgform(compact(ray('title subtext agreement signedBy')) + (@$setupFoot ?: []));
 }

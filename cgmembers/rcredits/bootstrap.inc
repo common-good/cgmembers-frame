@@ -678,8 +678,8 @@ function setV($name, $value) {
   global $conf;
   require_once __DIR__ . '/cg-db.inc';
 
-  db\updateOrInsert('variable', ray('name value', $name, serialize($value)), 'name');
-//  db_merge('variable')->key(array('name' => $name))->fields(array('value' => serialize($value)))->execute();
+  $res = db\updateOrInsert('variable', ray('name value', $name, serialize($value)), 'name');
+  u\EXPECT($res, 'cannot setV: ' . pr(compact(ray('name value'))));
 
   cache_clear_all('variables', 'cache_bootstrap');
 

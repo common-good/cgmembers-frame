@@ -48,7 +48,7 @@ EOF;
   $photo = item(t('<%a>Change your company photo</a>', '_a', atag('/settings/photo?' . rand())), t('Photo:'));
   $private = boxFld('private', t('Private:'), t('Hide this company from the public (omit from public listings)'), $mya->coCan(CO_PRIVATE) ?: 0);
   $categories = selectFld(t('Categories:'), t('Hold down the Ctrl key to select more than one'), ['multiple' => TRUE] + dft($myCats), coCats());
-  $selling = areaFld(t('Selling:'), [t('Products'),t('Enter one or more <b>VERY SHORT</b> transaction descriptions (for example "food") for when you make a sale &mdash; one line for each. Put the most common one first. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on 1/23/2014")')], required($mya->selling));
+  $selling = w\sellingFld($mya->selling);
   $can2 = item($permissions, t('App permissions:'), t('Download the CGPay app from Google Play Store. Limit app permissions here, or go to <%aRel>Relations</a> settings to limit them for each agent.', '_aRel', atag('/settings/relations')));
 //    $shareRpos = boolFld(t('Share rPOS:'), t('Allow other companies to use our POS device(s).'), $mya->coCan(CO_SHARE_RPOS) ?: 0);
 //    $requireCashier = boolFld(t('Must scan in:'), t('Require a cashier to sign in before using rPOS (this also allows you to share the device with another company).'), $mya->coCan(CO_REQUIRE_CASHIER) ?: 0);
@@ -71,13 +71,7 @@ EOF;
 
 function formCompany_validate($form, &$sta) {
   extract(just($fields = 'selling employees gross staleNudge', $sta['input']));
-  $selling = explode("\n", $selling);
-  foreach ($selling as $one) {
-    $one = trim($one); // don't allow empty or reserved values
-    if (!u\nonish($one) and !in($one, ['', S_REFUND, S_USD_OUT]) and !r\usdin($one)) $new[] = strtolower($one);
-  }
-  if (!@$new) return say('missing field', ray('field', 'selling'), 'selling');
-  $selling = join("\n", $new);
+  if ($err = zBadSelling($selling)) return say($err, 'selling');
   if ($err = u\badAmount($employees, '>=0', 0)) return sayFieldErr($err, 'employees');
   if ($err = u\badAmount($gross, '', 2, '')) return sayFieldErr($err, 'gross');
   if ($err = u\badAmount($staleNudge, '>=0', 0, 365)) return sayFieldErr($err, 'staleNudge');

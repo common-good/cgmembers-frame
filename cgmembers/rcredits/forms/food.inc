@@ -141,7 +141,7 @@ function formFood_submit($form, &$sta) {
     } else $msg .= '|gift transfer later';
     say($msg);
   }
-  if ($mya->ok) r\tellCo(t('Food Fund gift'), $info);
+  r\tellCo(t('Food Fund gift from %nm: %%food, $%amount/%period', 'nm food amount period', $mya->fullName, $food, $amount, $period));
 
   say(t('Thank you for supporting the Food Fund.'));
   return r\acct() ? ($mya->member ? w\go('') : w\goNextStep('food', '')) : w\doSay();
