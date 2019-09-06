@@ -32,7 +32,7 @@ function formSignupCo($form, &$sta, $args = '') {
 X
   , 'limit', u\fmtAmt(TRIALCO_LIMIT));
   
-  $params = $args ? http_build_query($args) : '';
+  $params = ''; // ($args isn't an array!) $args ? http_build_query($args) : '';
   $forother = item(w\lnk('/signup/' . $params, t('open an individual account instead')));
   
   u\setDft($source, nn($_COOKIE['ad']));
