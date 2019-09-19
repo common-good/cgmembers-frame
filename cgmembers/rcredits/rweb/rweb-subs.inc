@@ -540,7 +540,7 @@ function showRecords($ray, $formatFunc = 'CG\\Web\\formatField', $flagsField = B
       $v = $formatFunc($k, plain($v), $flagsField);
 //      if ($k == 'for2' and $v == $row->for1) $v = 'same'; // admin uses this for conciseness
       $align = in($k, ALIGN_RIGHT) ? 'R' : (in($k, ALIGN_CENTER) ? 'C' : 'L');
-      foreach (ray('balance credit trust count total $ pct') as $w) if (stripos($k, $w) !== FALSE) {
+      foreach (ray('balance credit trust count total $ pct dollars') as $w) if (stripos($k, $w) !== FALSE) {
         $align = 'R';
         if ($v !== '' and is_numeric($v)) $v = in($w, 'pct') ? u\fmtAmt($v, '%') : number_format($v, in($w, FMT_INT) ? 0 : 2);
       }

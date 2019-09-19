@@ -97,7 +97,7 @@ function rweb_menu($submenu = '') {
     'history/notices' => ['sub', t('Notices'), 'Notices 2', 'read', '', t(''), 'envelope'],
 // (temporarily disabled)    'history/tax-info' => ['sub', t('Tax Info'), 'TaxInfo 2', 'read', '', t(''), 'pawn'],
     'history/changes' => ['sub', t('See Changes'), 'SeeChanges', 'cadmin', '', t(''), 'refresh'],
-    'history/zot' => ['sub', 'zot', '', ANY], // Drupal bug: last choice is omitted
+    'history/zot' => ['sub', 'zot', 'Zot', ANY], // Drupal bug: last choice is omitted
     'history/statement' => ['call', t('Statement'), '2', 'read', 'statement'],
     'history/customer-statement' => ['call', t('Customer Statement'), '2', 'read', 'custStatement'],
 
@@ -243,10 +243,12 @@ function rweb_menu($submenu = '') {
     'authcode' => ['call', t('Supply a one-use auth code'), '', ANY, 'authcode'],
   );
 
-  if ($submenu) {
-    foreach ($items as $k => $v) if (@$v and u\starts($k, "$submenu/")) $menu[$k] = $v;
-  } else foreach ($items as $k => $v) if (@$v) $menu[$k] = makeMenuItem($k, $v);
-
+  foreach ($items as $k => $v) {
+    if ($submenu) {
+      if (u\starts($k, "$submenu/")) $menu[$k] = $v;
+    } else $menu[$k] = makeMenuItem($k, $v);
+  }
+  
   return $menu;
 }
 

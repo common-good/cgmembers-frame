@@ -200,7 +200,6 @@ function formSignup_submit($form, &$sta) {
   $dbFields = 'fullName legalName email flags phone federalId dob pin country zip address city state postalAddr helper iCode notes calling signupCo tenure source';
   extract(just('myid preid confirmed acctType args ats owns partner customer source2 ' . $dbFields, $sta['input']));
   if (test() and !@$args) $args = basename($_SERVER['REQUEST_URI']);
-  u\EXPECT((bool) $args, 'no args');
   extract(just('code source2', $args)); // source2 may come from either partner or an add (through our promo site)
   if (isDEV) $helper = $helper + 0; // don't let lack of helper stop us
 

@@ -1355,7 +1355,7 @@ o;
       if ($a->refill) {
         $amount = max($amount, $a->achMin, R_ACHMIN, $a->minimum - $a->balance - $waiting);
         $amount = round(R_ACHMIN * ceil($amount / R_ACHMIN)); // round, if member has agreed to that deal
-      } else $amount = max($amount, $amount - $a->balance - $waiting);
+      } elseif ($automatic and $a->balance < 0) $amount = max($amount, $amount - $a->balance - $waiting);
 
       if ($combinable and $done = db\update('r_usd', compact(ray('txid amount')), 'txid')) {
         $msg .= '|combined';
