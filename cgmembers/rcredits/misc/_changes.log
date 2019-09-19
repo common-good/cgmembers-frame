@@ -1,3 +1,9 @@
+2019-09-06 feature/banking-fix
+. requesting a transfer into CG with a negative balance now transfers exactly the amount requested
+. fixed bug that lost photo when changing uid
+. fixed overzealous EXPECT that crashed signups
+. fixed bug that crashed company trial signups
+
 2019-08-27 feature/ezbiz-tweaks
 . fixed bug that listed tables in chron order (rather than backwards) in Admin Panel
 . fixed bug that sent admin messages to admin's joint-account partner also

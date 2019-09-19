@@ -1049,7 +1049,7 @@ function verifyRecord($table, $info) {
       }
       $hdrs = t('<tr><th>field</th><th>want</th><th>got</th></tr>');
       $hdrs .= "\n<tr><td>$infoK</td><td>$infoV</td><td>$infoV</td></tr>\n";
-      output("Discrepancies: <br><table>$hdrs$difs</table>");
+      output("Discrepancies ($table): <br><table>$hdrs$difs</table>");
     }
   }
   return $result;

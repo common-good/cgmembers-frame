@@ -2141,8 +2141,9 @@ function menu_local_tasks($level = 0) {
  *
  * @see contextual_links_preprocess()
  * @see hook_menu()
- */
+ *//* UNUSED
 function menu_contextual_links($module, $parent_path, $args) {
+  die('context');
   static $path_empty = array();
 
   $links = array();
@@ -2205,7 +2206,7 @@ function menu_contextual_links($module, $parent_path, $args) {
   }
 
   return $links;
-}
+} */
 
 /**
  * Returns the rendered local tasks at the top level.

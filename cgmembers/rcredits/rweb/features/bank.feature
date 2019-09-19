@@ -146,3 +146,18 @@ Scenario: a member draws credit from the bank then cancels
   And count "usd" is 6
   And count "txs" is 7
   And we redirect to "/get"
+
+Scenario: a member with a negative balance requests a transfer from the bank
+  Given balances:
+  | uid  | balance |*
+  | .ZZA | -26     |
+  When member ".ZZA" completes form "get" with values:
+  | op  | amount |*
+  | get |     30 |
+  Then usd transfers:
+  | txid | payee | amount | created | completed | deposit | channel | xid |*
+  | 5007 |  .ZZA |     30 | %today  |         0 |       0 | %TX_WEB |   8 |
+  And transactions:
+  | xid | created | amount | from | to   | purpose   | taking |*
+  | 8   | %today  |      0 |  256 | .ZZA | from bank |      1 |
+  

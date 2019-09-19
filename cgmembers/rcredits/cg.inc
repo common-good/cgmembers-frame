@@ -787,6 +787,8 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
   if (!$a or !$a = is_object($a) ? $a : r\acct($a)) return w\say(t('nope'), 'err');
   $oldUid = $a->id;
   $nm = $a->fullName;
+  $photoFlnm = $a->tempPhotoFilename;
+  $oldQid = r\qid($oldUid);
 
   if ($delCtty = ($delete and $a->isCtty)) { // deleting a community (merge into Seedpack)
     db\del('users', 'uid', $oldUid);
@@ -836,6 +838,7 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     'r_notices:uid:D',
     // r_options
     // r_pairs
+    'r_photos:uid:D',
     'r_proposals:ctty',
     'r_proxies:person:D',
     'r_proxies:proxy:D',
@@ -890,12 +893,13 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
   }
 
   if ($unusable and !$delete) {
-    $oldQid = r\qid($oldUid);
     list ($uid, $name, $email) = array($oldUid, "unusable-$oldQid", "unusable$oldQid@" . CG_DOMAIN);
     db\insert('users', compact(ray('uid name email')), 'uid'); // mark old uid unusable
   }
-
+  
   unset($DBTX); // commit
+  if (!$delete) rename($photoFlnm, str_replace($oldQid, r\qid($newUid), $photoFlnm));
+  
   w\say(t('Success. Account %nm has been %what.', 'nm what', $nm, $newUid ? t('changed to ') . $newUid : t('deleted')));
 }
 

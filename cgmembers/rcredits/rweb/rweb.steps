@@ -51,6 +51,7 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE bank AMemberTriesToGoBelowTheirMinimum
  *     MAKE bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     MAKE bank AMemberDrawsCreditFromTheBankThenCancels
+ *     MAKE bank AMemberWithANegativeBalanceRequestsATransferFromTheBank
  *     MAKE connect AMemberConnectsABankAccount
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     MAKE coupons AMemberRedeemsAGiftCoupon
@@ -285,6 +286,7 @@ function members($list) {return t\members($list);}
  *     MAKE bank Setup
  *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
+ *     TEST bank AMemberWithANegativeBalanceRequestsATransferFromTheBank
  *     MAKE community Setup
  *     MAKE custstatement Setup
  *     MAKE demographics Setup
@@ -692,6 +694,7 @@ function relations($relations) {return t\relations($relations);}
  *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
  *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
+ *     MAKE bank AMemberWithANegativeBalanceRequestsATransferFromTheBank
  *     TEST community Setup
  *     TEST coupons AMemberRedeemsAGiftCoupon
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
@@ -1050,6 +1053,7 @@ function withDownloadColumns($columns) {
  *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
  *     MAKE bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
+ *     TEST bank AMemberWithANegativeBalanceRequestsATransferFromTheBank
  *     MAKE community Setup
  *     MAKE custstatement Setup
  *     MAKE demographics Setup
