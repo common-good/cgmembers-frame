@@ -55,8 +55,8 @@ X
       w\btn('/community/coupons/type=discount', t('Create a Discount'))
     . w\btn('/community/coupons/type=gift', t('Create a General Gift Certificate'))
     . w\btn('/community/coupons/type=redeem', t('Redeem a General Gift Certificate'))
-    . w\btn('/community/coupons/list', t('List Your Coupons'))
-    . w\btn('/community/coupons/list/ALL', t('Show All Discounts'));
+    . w\btn('/community/coupons/list', t('List Discounts You Offer'))
+    . w\btn('/community/coupons/list/ALL', t('Show All Discounts Available to You'));
   }
   
   $type = hidFld(@$type);
