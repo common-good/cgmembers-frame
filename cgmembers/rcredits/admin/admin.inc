@@ -140,17 +140,7 @@ function makeTestAdmins() {
   if (isSTAGE) foreach (ray(R_COS . ' ' . DEV_ACCTS) as $k) if ($k and $a = a($k)) $a->setBit(B_CADMIN);
 }
 
-/**
- * Return a display of steps done and steps remaining (to open an account).
- */
-function showSteps($a) {
-  $steps = '';
-  if (!$a->ok and $a->id != 1) foreach (($a->stepsDone ?: []) as $k => $done) {
-      $color = $done ? 'done' : 'not-done';
-      if (!in($k, $a->co ? 'proxies' : 'company relations')) $steps .= "<b class=\"step-$color\">$k </b>";
-    }
-  return $steps;
-}
+function showSteps($a) {return '<b class=\"step-not-done\">' . $a->stepSet . ': ' . join(' ', $a->stepsLeft()) . '</b>';}
 
 /**
  * Return a description of the account's recent purchase activity (sales activity for companies).

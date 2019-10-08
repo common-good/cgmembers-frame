@@ -402,8 +402,7 @@ function diff($a, $b) {
 /**
  * Return random uppercase dictionary word of 3-6 chars
  * The word will not be a valid command or command abbreviation.
- * @todo: get these r\'s out of here.
- */
+ */ /* UNUSED
 function nonce($minLen = 1) {
   list ($where, $subs) = array('LENGTH(nonce)>=:minLen', compact('minLen'));
   $offset = db\get('FLOOR(RAND() * COUNT(1))', 'r_nonces', $where, $subs);
@@ -413,6 +412,18 @@ function nonce($minLen = 1) {
   if (strpos(". $impossible ", " $nonce ")) return nonce(); // reserved word? try again
   if (strlen($nonce) > 6) return nonce(); // too long (currently never happens because all are <= 6)
   return $nonce;
+}*/
+
+/**
+ * Return a memorable random password.
+ * @param int $len: number of words in password
+ */
+function randPass($len = 4) {
+  global $nextPass; if (test() and nn($nextPass)) return $nextPass;
+  $list = explode("\r\n", file_get_contents(R_ROOT . '/../../config/words.txt'));
+  $listLen = count($list);
+  for ($i = 0; $i < $len; $i++) $res[] = $list[rand(0, $listLen - 1)];
+  return join(' ', $res);
 }
 
 function ignoreSuffix($s, $suffixes) {
@@ -897,6 +908,18 @@ function badDate(&$s, $min = '', $max = PHP_INT_MAX) {
     return $err;
   }
   $s = $dt;
+  return FALSE;
+}
+
+/**
+ * Say whether the phone number is acceptable.
+ * @param string $phone: phone number in any format
+ * @param int $country: country code
+ * @return the error message or FALSE if the phone number is acceptable
+ */
+function badPhone(&$phone, $country = US_COUNTRY_ID) {
+  if (!$phone = u\fmtPhone($phone, '+n')) return 'bad phone';
+  if ($country == US_COUNTRY_ID and strlen($phone) != 12) return 'bad phone';
   return FALSE;
 }
 

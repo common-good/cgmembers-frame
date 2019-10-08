@@ -314,8 +314,9 @@ function tickleSignup($item) {
 function tickleStep($item) {
   extract(just('uid elapsed', $item));
   $a = r\acct($uid);
+
   if (!$a->member and $step = $a->nextStep()) {
-    $msg = ($step == 'signup' or $step == 'verify') ? 'do step one' : 'take another step';
+    $msg = ($a->stepCount() == count(ray($a->taskSteps($a->co ? 'co' : 'person'))) - 1) ? 'do step one' : 'take another step';
     r\notify($uid, "$msg|sign in|daily messages");
     if ($elapsed >= 9 and $elapsed < 30) {
       $sql = 'SELECT DISTINCT inviter FROM r_invites i LEFT JOIN users u ON u.uid=i.inviter WHERE invitee=:uid AND u.:IS_OK';

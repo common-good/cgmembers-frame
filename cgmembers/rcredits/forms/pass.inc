@@ -37,9 +37,11 @@ function formPass_submit($form, &$sta, $goto = '') {
   $myid = @$uid ?: $a->id;
   $name = $a->name;
   $code = $a->oneTimePass($name);
+  $verify = (bool) $goto;
 //  list ($region, $code) = [strtolower(R_SERVER_ID), $pw];
-  r\notify($myid, $goto ? 'verify' : 'password-reset', @compact(ray('name qid code')), TRUE);
-/**/  if (isDEV or (NOT_PRODUCTION and $a->cAdmin)) say(t('Attention admin: code=%code Link: <a href="%BASE_URL/reset/id=%name&code=%code">reset</a>', compact(ray('name code'))));
+  r\notify($myid, $verify ? 'verify' : 'password-reset', @compact(ray('name qid code')), TRUE);
+/**/  if (isDEV or (NOT_PRODUCTION and $a->cAdmin)) say(t('Attention admin: code=%code Link: <a href="%BASE_URL/reset/id=%name&code=%code&verify=%verify">reset</a>', compact(ray('name code verify'))));
 //  r\tellAdmin('password reset', compact(ray('name myid code')));
+//  say($goto ? t('Email sent') : 'password reset');
   return w\go($goto ?: '/empty', $goto ? t('Email sent') : 'password reset');
 }

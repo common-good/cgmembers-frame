@@ -13,10 +13,10 @@ use CG\Db as db;
 function formChangePassword($form, &$sta) {
   global $mya;
   $title = t('Choose a New Password');
-  $subtext = t('Mixed-case, digits, punctuation, and plain old length make your password strong.');
+  $subtext = t('Mixed-case, digits, punctuation, and plain old length make your password strong. We recommend 4 random words.');
   if (!$mya->cAdmin) $pass = passFld(t('Current (old) Password:'), '', required());
   $submit = t('Save');
-  return cgform(compact('title', 'subtext') + w\pickPassword() + compact('pass', 'submit'));
+  return cgform(compact('title', 'subtext') + w\pickPassword(TRUE, REQ) + compact('pass', 'submit'));
 }
 
 /**

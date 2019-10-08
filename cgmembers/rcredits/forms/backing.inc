@@ -32,16 +32,16 @@ X
   $minDesc = t(' (minimum $1)');
   $amtChoice = selectFld(t('Amount:'), '', required($dft) + suffix($minDesc), $choices);
   $amount = textFld(t('Amount $'), '', suffix($minDesc));
-  $signedBy = w\signedBy();
+//  $signedBy = w\signedBy();
   $date = item(u\fmtDate(NULL, TRUE), t('Date:'));
   $posttext = t('<b>Note:</b> Every year you will be invited to make another backing promise for the next 12 months.');
 
   jsx('amtChoice');
-  return cgform(compact(ray('title subtext amtChoice amount signedBy date')) + w\setupFoot(t('Promise')) + compact('posttext'));
+  return cgform(compact(ray('title subtext amtChoice amount date')) + w\setupFoot(t('Promise')) + compact('posttext'));
 }
   
 function formBacking_validate($form, &$sta) {
-  if (w\badSignature($sta)) return;
+//  if (w\badSignature($sta)) return;
   if (!w\checkAmtChoice($sta, 1)) return;
   extract(just('amount', $sta['input'])); // this must come AFTER checkAmtChoice
   if (strpos($amount, '.')) return say('too fractional', 'amount');

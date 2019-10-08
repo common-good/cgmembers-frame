@@ -17,11 +17,10 @@ Setup:
 
 Scenario: A member changes some settings
   Given member ".ZZA" completes form "settings/preferences" with values:
-#  | minimum | achMin | savingsAdd | smsNotices | notices | statements | debtOk | secretBal | share |*
-#  |     100 |     11 |          0 |          0 |       1 |          0 |      1 |         0 |    25 |
   | roundup | notices | statements | secretBal | crumbs |*
   |       0 |  weekly |      paper |         0 |      1 |
-  And member ".ZZA" completes form "settings/connect" with values:
+  And member ".ZZA" has done step "fund"
+  And member ".ZZA" completes form "settings/fund" with values:
   | connect | routingNumber | bankAccount | bankAccount2 | cashout | refills | target | achMin | saveWeekly |*
   |       1 |     211870281 |         123 |          123 |       0 |       1 |    100 |     11 |          0 |
   When member ".ZZD" visits page "sadmin/changes/NEWZZA"

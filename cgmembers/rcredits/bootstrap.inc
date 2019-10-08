@@ -1110,6 +1110,7 @@ function drupal_unpack($obj, $field = 'data') {
  * @return <we are running a test>
  */
 function test($testing = NULL) {
+  if (!isDEV) return FALSE;
   global $TESTING;
   if (isset($testing)) setv('testing', $TESTING = $testing);
   return isset($TESTING) ? $TESTING : getv('testing');

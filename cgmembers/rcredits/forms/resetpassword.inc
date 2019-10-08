@@ -14,7 +14,8 @@ include_once __DIR__ . '/signin.inc';
  * Reset password by choosing a new one from an official email link.
  */
 function formResetPassword($form, &$sta, $args = '') {
-  extract(just('id code', $args)); // linked from an email
+  global $mya;
+  extract(just('id code verify', $args)); // linked from an email
 
   if (flooding($uid = r\loginString(@$id), $sta, $err)) return w\softErr($err); // getting hammered
   $mya = r\acct($uid);
@@ -22,27 +23,47 @@ function formResetPassword($form, &$sta, $args = '') {
   if (!$mya->passwordOkay(@$code, 'pass', $err)) return w\softErr($err);
   noFlood($sta);
   
-  $title = t('Choose a New Password');
-  $subtext = t('Your password must have at least 8 characters, including one uppercase, one lowercase, one digit, and one punctuation mark.');
+  w\setAcct($uid);
+  u\setDft($verify, FALSE);
+  
+  if ($verify) {
+    $mya->stepDone('verifyemail'); // this step is unique in that it is complete by visiting the page
+    
+    $title = t('Verified!');
+    $subtext = t('<p>You have successfully verified your email address.</p><p>If you want a different password than the one we emailed you, you can change it here.</p>');
+    $showPass = boolFld(t('Change Password?'), t('Do you want to change your assigned password?'));
+    $passFlds = compact('showPass') + w\pickPassword(FALSE);
+    $buttons = setupFoot();
+  } else {
+    $title = t('Choose a New Password');
+    $subtext = '';
+    $passFlds = w\pickPassword(TRUE, REQ);
+    $submit = t('Submit');
+    $buttons = compact('submit');
+  }
+  
+  $subtext .= t('<p>Your password must be very long OR it must have at least 8 characters, including uppercase, lowercase, digit, and punctuation.</p><p>Consider choosing 4 random words &mdash; hard to guess, but easy for you to remember.');
   $uid = hidFld($uid);
-  $submit = t('Save');
-  return cgform(compact('title', 'subtext') + w\pickPassword() + compact(ray('submit uid')));
+  jsx('verifyemail', compact('verify'));
+  $verify = hidFld($verify);
+
+  return cgform(compact(ray('title subtext uid verify')) + $passFlds + $buttons);
 }
 
-function formResetPassword_validate($form, &$sta) {return formChangePassword_validate($form, $sta);}
+function formResetPassword_validate($form, &$sta) {if (!$sta['input']['verify']) return formChangePassword_validate($form, $sta);}
 
 function formResetPassword_submit($form, &$sta) {
-  extract(just('pass1 uid', $sta['input']));
-  $mya = r\acct(@$uid); // defaults to current account (called from formVerify_submit)
-  $mya->update('pass oneTimePass', $pass1, '');
-  $msg = 'pass saved';
-  if (!$mya->stepsDone['verify']) {
-    $msg .= '|step completed';
-    $mya->stepDone('verify');
+  global $mya;
+  extract(just('pass1 uid verify', $sta['input']));
+
+  $sta['uid'] = $uid;
+  $sta['status'] = 1;
+
+  $mya->update('oneTimePass', '');
+  if ($pass1) {
+    say('pass saved');
+    $mya->update('pass', $pass1);
   }
-  if (@$uid) { // no uid and no signin if coming from formVerify_submit
-    $sta += compact('uid'); // _submit requires call by reference
-    formSignin_submit('', $sta); // lead user to next step
-  }
-  say($msg); // must postcede formSignin_submit
+
+  return $verify ? w\goNextStep('verifyemail') : w\go($mya->admin2 ? 'sadmin/followup' : 'summary');
 }

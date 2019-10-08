@@ -54,7 +54,9 @@ Scenario: A joined account slave member requests a new minimum
   | uid  | jid  | achMin | minimum |*
   | .ZZA | .ZZB |     50 |     150 |
   | .ZZB | .ZZA |     50 |       0 |
-  When member ".ZZB" completes form "settings/connect" with values:
+  And member ".ZZB" visits page "settings/fund"
+  And step done "fund"
+  When member ".ZZB" completes form "settings/fund" with values:
   | connect | routingNumber | bankAccount | bankAccount2 | refills | target | achMin | saveWeekly |*
   |       1 |     053000196 |         123 |          123 |       1 |    300 |    100 |          2 |
   Then members have:

@@ -70,7 +70,7 @@ Scenario: Someone opens a trial company account
   | Minimum              |
   | Valid until          |
   | Limit                |
-  And steps "discount verify" remain for member ".AAA"
+  And member ".AAA" steps left "discount verifyemail"
 
 Scenario: A member opens a trial company account not signed in
   Given next random code is "WHATEVER"
@@ -103,28 +103,26 @@ Scenario: A member opens a trial company account without a phone
   | nvid | created | status      | amount         | from | to  | for               |*
   |    1 | %today  | %TX_PENDING | %EQUIP_DEPOSIT | .AAA | cgf | equipment deposit |
   And we say "status": "refundable deposit"
-
+Skip see membership feature instead
 Scenario: A new trial company account manager verifies the email
   And members:
   | uid       | .AAA           |**
   | fullName  | Coco Co        |
   | email     | a@             |
-  | flags       | confirmed co depends |
+  | flags     | confirmed co depends |
   And member ".AAA" one-time-password is "WHATEVER" expires "%now+7d"
-  And steps "discount verify" remain for member ".AAA"
-  When member ".AAA" completes form "settings/verify" with values:
+  When member ".AAA" completes form "settings/verifyemail" with values:
   | verify   | pass1      | pass2      | strong |*
   | WHATEVER | %whatever3 | %whatever3 |      1 |
   Then we show "Get Your Customers Signed Up"
-  And we say "status": "pass saved|step completed"
-
+  And we say "status": "pass saved|step completed"  
+Resume
 Scenario: A trial company account manager creates a discount
   Given members:
   | uid       | .AAA           |**
   | fullName  | Coco Co        |
   | email     | a@             |
   | flags     | confirmed co depends |
-  And steps "discount verify" remain for member ".AAA"
   When member ".AAA" completes form "community/discount" with values:
   | amount | minimum | end     | ulimit |*
   |     20 |     120 | %mdY+3m |      3 |
@@ -133,7 +131,7 @@ Scenario: A trial company account manager creates a discount
   |      1 |   .AAA |     20 |      3 |       | %daystart  | %(%daystart+3m+%DAY_SECS-1) |
   And we say "status": "Your discount was created successfully."
   And we show "Verify Your Email Address"
-  And steps "verify" remain for member ".AAA"
+  And member ".AAA" steps left "verifyemail"
   
 Scenario: A member makes a payment from a trial company account
   Given members:

@@ -235,10 +235,11 @@ function ipok($uid, $device) {
  * ... the following special substitions are always available:
  *   site, qid, zip3, shortName, and every cached field for the account
  * @param mixed $reply: uid, account, or email address to reply to OR 'ctty' (of $to) or NULL (CGF_EMAIL) OR [email => name]
+ * @param string $attachment: path to file to attach, if any
  * @return TRUE if the message got sent (or on dev machine pretending it got sent) else FALSE
  * NOTE: from is always SYS_EMAIL
  */
-function rMail($index, $to0, $subs, $reply0 = NULL) {
+function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
   global $testEmails, $mya;
 
   foreach (ray('secure vsecure') as $k) unset($subs[$k]); // show not even in error messages
@@ -312,6 +313,12 @@ function rMail($index, $to0, $subs, $reply0 = NULL) {
     ->setBody($body, 'text/html')
     ->addPart(strip_tags($body), 'text/plain'); // don't bother making the plain text pretty
 
+  if ($attachment) {
+    $attach = Swift_Attachment::fromPath($attachment);
+    $attach->setFilename(basename($attachment));
+    $m->attach($attach);
+  }
+  
   if ($reply) $m->setReplyTo($reply);
   if (@$sms) $m->setSubject('')->setTo($toEmail); // send as text message
   try {
@@ -441,9 +448,10 @@ function notifyEntries($a, $index, $entries, $force = FALSE) {
  * @param assoc $subs: optional substitutions for the message and/or data to show (show both)
  * @param bool/int $uid: related account record id (TRUE means current account), defaults to none (NULL), 
  *    0 = suppress report of current account (to avoid confusion)
+ * @param string $attachment: path to file to attach, if any
  * @return FALSE;
  */
-function tellAdmin($index, $subs = [], $uid = NULL) {
+function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
   global $mya, $channel;
 /**/  if (isDEV and !test()) return debug(['tellingStaff' => $index] + $subs + compact('uid'));
 
@@ -466,7 +474,7 @@ function tellAdmin($index, $subs = [], $uid = NULL) {
   $chan = ray(TX_CHANNELS)[$channel];
   $info = @compact(ray('cAdmin email topic message keyAcct currentAcct chan noFrame')) + $subs;
 
-  r\rMail('tell-staff', $email, $info, $replyTo);
+  r\rMail('tell-staff', $email, $info, $replyTo, $attachment);
   $info['topic'] .= t(' (to admin)');
   if ($email != R_ADMIN_EMAIL) r\rMail('tell-staff', SYS_EMAIL, $info, $replyTo); // always tell one or more staff (for now)
   return FALSE;
@@ -519,10 +527,11 @@ function cardCode($qid) {
 }
 
 /**
- * Return the account for the given invitation card code.
+ * Return the account for the given gift card code.
  * @param string $code: the code to interpret
  * @param int $iCode: (RETURNED) the code sequence number
  * @return: the account or FALSE if error
+ * @see acct::iCardCode()
  */
 function iCardAcct($code0, &$iCode = NULL) {
   $code = str_replace(' ', '', $code0); // ignore spaces
@@ -919,15 +928,16 @@ function txErr($message, $info = []) {
  * @param int $inviter: the inviter's account uid
  * @param string $code: proof of the invitation (that invitee must have, in order to sign up) (DEFAULT random)
  * @param string $subject, $message: temporary params (can be eliminated from the table at some point)
+ * @param string $zip: alleged zipcode of the recipient
  *
  * @return string: the code
  * @see also r\Web\invitation()
  */
-function invite($email, $inviter, $code = '', $subject = '', $message = '') {
+function invite($email, $inviter, $code = '', $subject = '', $message = '', $zip = NULL) {
   $code = $code ?: u\code();
   $invited = now();
   $email = u\cry('P', $email);
-  $info = compact(ray('code invited email inviter subject message'));
+  $info = compact(ray('code invited email inviter subject message zip'));
   db\insert('r_invites', $info);
   return $code;
 }

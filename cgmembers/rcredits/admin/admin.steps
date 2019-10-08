@@ -150,3 +150,10 @@ function with($content) {return t\weShow($content);}
  * in: TEST other AdminDeletesAnAccount
  */
 function these($thing, $list) {return t\these($thing, $list);}
+
+/**
+ * member (ARG) has done step (ARG)
+ *
+ * in: MAKE changes AMemberChangesSomeSettings
+ */
+function memberHasDoneStep($id, $step) {return t\doneStep($id, $step);}

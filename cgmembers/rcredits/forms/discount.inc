@@ -32,6 +32,7 @@ X
   $start = hidFld(u\fmtDate(now(), TRUE));
   $automatic = hidFld(TRUE);
   $type = hidFld('discount');
+  $on = NULL;
   
   return cgform(@compact(ray('title subtext amount minimum start end ulimit automatic on type'))) + w\setupFoot(t('Create'));
 }

@@ -2,7 +2,6 @@ Feature: A user opens a Common Good company account
 AS a member
 I WANT to open a Common Good company account
 SO my company can accept Common Good payments
-# Note that "member" in the scenarios below means new member (newbie).
 
 Setup:
   Given members:

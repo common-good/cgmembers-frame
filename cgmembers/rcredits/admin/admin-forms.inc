@@ -134,7 +134,7 @@ function formAdminPanel_submit($form, &$sta) {
     seeSecure($a);
   } elseif ($op == 'resetSSN' and @$a) {
     $a->setBit(B_MEMBER, FALSE);
-    $a->stepDone('ssn', FALSE);
+    $a->stepDone('verifyid', FALSE);
     $a->update('ssnData', '');    
   } elseif ($op == 'seeData') {
     if (@$a and $a->proSe) say(u\rayTable($a->data, FALSE, TRUE));
@@ -255,7 +255,7 @@ function formMakeCtty_validate($form, &$sta) {
     if ($err = u\badName($$field)) return say($err, compact('field'), $field);
   }
   if (!emailOkay($email, $mya->co, $mya)) return; 
-  if (!phoneOk($phone)) return;
+  if ($err = u\badPhone($phone)) return say($err, 'phone');
   //  $name = strtolower(substr($email, 0, strpos($email, '@')));
   $name = u\shortName($fullName);
   if ($otherName = db\get('fullName', 'users', 'name=:name', compact('name'))) return say('shortname taken', compact('otherName'), 'fullName');

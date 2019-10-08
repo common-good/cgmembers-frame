@@ -28,9 +28,9 @@ function couponsPrint($args = '') {
     $dates = @$start ? u\fmtDate($start, TRUE) . t(' to ') . $end : (t('expires ') . $end);
   } else {
     $dates = @$start ? t('beginning ') . u\fmtDate($start, TRUE) : '';
-    $dates .= t(' (offer does not expire)');
+    $dates .= t(' (does not expire)');
   }
-  if (@$ulimit) $dates .= t(' &mdash; Limit: %ulimit %uses per member', 'ulimit uses', $ulimit, $ulimit > 1 ? t('uses') : t('use'));
+  if (@$ulimit) $dates .= t(' &mdash; %ulimit %uses per member', 'ulimit uses', $ulimit, $ulimit > 1 ? t('uses') : t('use'));
   
   $pdf = new r\Pdf();
 //  $pdf->addTTFfont(__DIR__ . '/../../tcpdf/fonts/verdana.ttf'); // do just once on DEV, then upload font
@@ -62,7 +62,8 @@ function couponsPrint($args = '') {
   $gLen = .1; // cutting guide length from card corner (for pluses in each corner of each card)
   $gStyle = ['color' => [192,192,192]];
   $wCode = $wCard; // code is centered on card
-  $slogan = t('the payment card for community power');
+  $withCG = t('when you pay with <b>%PROJECT</b>') . '<sup style="font-size:50%;">&reg;</sup>';
+  $slogan = t('the payment card for community power&trade;');
   
   $sAt = 'normal';
   if (strlen($name) > 20) $sAt = strlen($name) > 29 ? 'condensed' : 'semi-condensed';
@@ -89,7 +90,7 @@ function couponsPrint($args = '') {
       
       if ($gift) { // gift coupon
         $pdf->say(t('at any member business', compact('name')), $x+$dxCoup, $y+$dyAt, $wCoup, '', "$ptCoup;font-stretch:semi-expanded;color:darkred", 'L');
-        $pdf->say(t('when you pay with <b>%PROJECT</b>') . '<sup style="font-size:50%;">&reg;</sup>', $x, $y+$dyDetails, $wCard, '', $ptDetails, 'C'); // text, x, y, w, h, format, align, borders
+        $pdf->say($withCG, $x, $y+$dyDetails, $wCard, '', $ptDetails, 'C'); // text, x, y, w, h, format, align, borders
         $pdf->say($slogan, $x, $y+$dyDetails+$dy, $wCard, '', "$ptSlogan;I;Verdana;font-stretch:normal;color:darkgray", 'C'); // text, x, y, w, h, fmt, align, borders
   //      $pdf->Image(__DIR__ . '/../images/heart+$70.png', $x+$dxHeart, $y+$dyHeart, $wHeart, $hHeart, '', '', '', true); // file, x, y, w, h, type, link, align, resize
 
@@ -100,7 +101,7 @@ function couponsPrint($args = '') {
         $pdf->say($auto, $x+$wLogo, $y+$dyOff+.14, $wCoup-.3, '', '9;color:darkgray', 'R'); // .24 for baseline
         $pdf->say(t('at <b>%name</b>', compact('name')), $x+$dxCoup, $y+$dyAt, $wCoup, '', "$ptCoup;font-stretch:semi-condensed;color:black", 'L');
         if (!$goodFor) $pdf->say($on, $x, $y+$dyDetails, $wCard, '', $ptDetails, 'C'); // text, x, y, w, h, format, align, borders
-        $pdf->say(t('when you pay with <b>%PROJECT</b>'), $x, $y+$dyDetails+$dy, $wCard, '', $ptDetails, 'C'); // text, x, y, w, h, format, align, borders
+        $pdf->say($withCG, $x, $y+$dyDetails+$dy, $wCard, '', $ptDetails, 'C'); // text, x, y, w, h, format, align, borders
         $pdf->say($slogan, $x, $y+$dyDetails+$dy*2, $wCard, '', "$ptSlogan;I;Verdana;font-stretch:normal;color:darkgray", 'C'); // text, x, y, w, h, fmt, align, borders
         $pdf->say($dates, $x, $y+$dyDetails+$dy*3, $wCard, '', "10;color:darkgray", 'C'); // text, x, y, w, h, format, align, borders
       }

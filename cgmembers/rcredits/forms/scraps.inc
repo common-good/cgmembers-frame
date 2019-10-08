@@ -1,0 +1,35 @@
+<?php
+namespace CG\Web;
+use CG\Web as w;
+use CG as r;
+use CG\Backend as be;
+use CG\Util as u;
+use CG\Db as db;
+
+/**
+ * Handle a url for a small task.
+ */
+function formScraps($form, &$sta, $arg = '') {
+  global $mya;
+
+  if (in($arg, S_PSETS . ' co2')) {
+    $DBTX = db_transaction();
+    $mya->stepDone('wants' . ucfirst($arg));
+    $mya->update('stepsLeft', ray($mya->taskSteps($arg)));
+    unset($DBTX);
+    
+    $nextStep = $mya->nextStep();
+    w\go($nextStep ? (ray(S_ALL)[$nextStep] ?: "settings/$nextStep") : '');
+  }
+  
+  $title = t('');
+  $subtext = t('');
+}
+
+function formScraps_validate($form, &$sta) {
+  global $mya;
+}
+
+function formScraps_submit($form, &$sta) {
+  global $mya;
+}

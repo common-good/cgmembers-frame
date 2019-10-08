@@ -50,7 +50,7 @@ Scenario: A member clicks the summary tab
   Then we show "Account Summary" with:
   | ID        | ZZA (personal account) |
   | Name      | Abe One (abeone) |
-  | Contact   | 1 A St., Atown, AK 01000 |
+#  | Contact   | 1 A St., Atown, AK 01000 |
   | Balance   | $10 |
   
 Scenario: A member clicks the summary tab with roundups
@@ -78,11 +78,11 @@ Scenario: A company agent clicks the summary tab
   Then we show "Account Summary" with:
   | ID       | ZZC (company account) |
   | Name     | Corner Pub (cornerpub) |
-  | Contact  | 3 C St., Ctown, Cher, FRANCE |
+#  | Contact  | 3 C St., Ctown, Cher, FRANCE |
   
 Scenario: Member's account is not active
   Given members have:
   | uid  | flags |*
   | .ZZA |       |
   When member ".ZZA" visits page "summary"
-  Then we show "Verify Your Email Address"
+  Then we show "Identity Verification"

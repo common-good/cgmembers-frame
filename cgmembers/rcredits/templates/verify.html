@@ -1,12 +1,11 @@
 <h3>%PROJECT NEXT STEP</h3>
 
-<p>Hello from the %PROJECT System! Please make a note of your account ID. Then click the link below to choose a password and finish opening your %PROJECT account. Or type the verification code in the window where you left off.</p>
+<p>Hello from the %PROJECT System! Please make a note of your account ID and password. Then click the link below to verify your email address and finish opening your %PROJECT account.</p>
 
-<blockquote><a href="%PROMO_URL/reset/id=%qid&code=%code">%PROMO_URL/reset/id=%qid&code=%code</a><br>
+<blockquote><a href="%PROMO_URL/reset/id=%qid&code=%code">%PROMO_URL/reset/id=%qid&code=%code&verify=1</a><br>
 <br>
-account ID: %qid<br>
-<br>
-verification code: <b style="color:red">%code</b><br>
+<table>
+  <tr><td>Account ID:</td><td>%qid</td></tr>
+  <tr><td>Password:</td><td>%pass</td></tr>
+</table>  
 </blockquote>
-
-<p>Once you finish opening your account, you will receive your %PROJECT Card in the mail.</p>

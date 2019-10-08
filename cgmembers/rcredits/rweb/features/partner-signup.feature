@@ -12,6 +12,7 @@ Setup:
   And member is logged out
 
 Scenario: A newbie visits the registration page sent by a partner
+  Given next random code is "WHATEVER"
   When someone posts to page "signup" with:
   | partner | .ZZC |
   | partnerCode | Ccode |
@@ -35,37 +36,15 @@ Scenario: A newbie visits the registration page sent by a partner
   And relations:
   | reid | main | agent | flags    |*
   | .AAA | .ZZC | .AAA  | customer |
-  And we say "status": "new customer welcome" with subs:
-  | partnerName |*
-  | Our Pub     |
+  And we say "status": "partner welcome" with subs:
+  | partner |*
+  | Our Pub |
+  And member ".AAA" one-time password is set to "WHATEVER"
+  And we show "%PROJECT Agreement"
+  And member ".AAA" steps left "agree preferences fund verifyemail"
   
   When member "?" visits page "signup/reid=.AAA&customer=Abc-12345"
-  Then we show "Open a Personal Account" with:
-  | Full name |
-  | Legal name |
-  | How long |
-  | Birthdate |
-  | Soc Sec # |
-  And without:
-  | Email |
-  | Phone |
-  | Address |
-  | City |
-  | State |
-  | Postal |
-  
-  Given next random code is "WHATEVER"
-  When member "?" confirms form "signup/reid=.AAA&customer=Abc-12345" with values:
-  | fullName | email | phone     | country | zip   | federalId   | dob      | acctType     | address | city   | state | postalAddr          | years | months | owns | helper |*
-  | Abe One  | a@ | 413-253-0000 | US      | 01001 | 111-22-3333 | 1/2/1990 | %CO_PERSONAL  | 1 A St. | Agawam | MA    | POB 1, Agawam, MA 01001 |     1 |    6  |    1 | .ZZC |
-  Then members:
-  | uid  | fullName | legalName | email | phone        | zip   | country | state | city   | flags     | floor | address | postalAddr               | tenure | owns | helper |*
-  | .AAA | Abe One  | Abe One   | a@    | +14132530000 | 01001 | US      | MA    | Agawam |           | 0     |    1 A St. | POB 1, Agawam, MA 01001 |     18 |    1 | .ZZC   |
-  And we email "verify" to member "a@" with subs:
-  | fullName | name   | quid | site      | code      |*
-  | Abe One  | abeone | .AAA | %BASE_URL | WHATEVER |
-  And member ".AAA" one-time password is set to "WHATEVER"
-  And we show "Verify Your Email Address"
+  Then we say "error": "old partner link"
 
 Scenario: A member visits the registration page sent by a partner
   Given members:

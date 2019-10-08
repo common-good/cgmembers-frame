@@ -1,3 +1,47 @@
+2019-10-02 feature/simple-signup
+. changed canonical accounts migration to create a zero account
+. password now defaults
+. changed SSN to be verified by POST instead of AJAX
+. eliminated partner welcome email
+. moved debtOk to advanced preferences and changed the order of the non-advanced options
+. improved language on donate page
+. shortened text on coupons (so it fits)
+. moved ownership and tenure questions to contact form
+. removed problematic javascript dropdowns for state and country
+. converted connect form to handle decision about how to fund the account
+. when removing a bank account, all related pending bank transfers are deleted
+. removed checkboxes and signature from agreement page
+. removed signature from backing page
+. created a model form in forms/
+. added a list of important next steps to Summary page
+. added steps for company to complete a trial account
+. added a multi-word password generator
+. account passwords now default
+. added attachment capability to r\rMail function
+. added zip field to r_inviites table, to track invitations within a community (for $2 rewards)
+. separated individual signup into several phases and many steps
+. added steps field to users table, to track signup steps
+. after deploying:
+    eachA(function ($a) {
+      extract($a->stepsDone ?: []);
+      if (@$signup) $a->stepDone('signup');
+      if (@$verify) $a->stepDone('verifyemail');
+      if ($a->federalId) {
+        $a->stepDone('verifyid');
+        if (@$ssn) $a->stepDone('ssn');
+      }
+      if (@$connect or $a->bankAccount or db\exists('txs', 'uid2=' . $a->id)) $a->stepDone('fund');
+      if ($a->signed) $a->stepDone('agree');
+      if (db\exists('r_recurs', 'payer=' . $a->id) or ($a->created > $strtotime('08/27/2017') and $a->member)) $a->stepDone('donate');
+      if (db\exists('r_proxies', 'person=' . $a->id)) $a->stepDone('proxies');
+      if ($a->member or $a->ok or @$prefs) $a->stepDone('preferences');
+      if ($a->mainQid = 'NEWBFN') $a->stepDone('discount');
+      if (@$backing) $a->stepDone('backing');
+      if (@$company) $a->stepDone('company');
+      if ($a->address and $a->postalAddr) $a->stepDone('contact');
+      if ($a->hasPhoto) $a->stepDone('photo');
+    }
+
 2019-09-06 feature/banking-fix
 . requesting a transfer into CG with a negative balance now transfers exactly the amount requested
 . fixed bug that lost photo when changing uid

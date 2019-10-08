@@ -494,18 +494,20 @@ function count($what, $count) {
 }
 
 /**
- * Pretend the account has complete the given steps.
+ * Pretend the account has completed the given steps or see if it has.
  */ 
 function doneStep($id, $step) {
-  global $testOnly; if ($testOnly) return FALSE;
+  global $testOnly;
   if (strpos($step, ' ')) {
     foreach (ray($step) as $one) if (!doneStep($id, $one)) return FALSE;
     return TRUE;
   }
 
-  if (!$a = r\acct(t\uid($id))) return t\output("Not an account: $id");
-  @$a->stepDone($step); // might have to do the steps below also
-  return TRUE;
+  if (!$a = t\a($id)) return t\output("Not an account: $id");
+  if (!$a->stepsLeft and !$a->steps) $a->update('stepsLeft', $a->taskSteps($a->co ? S_CO : S_PERSON));
+
+  if (!$testOnly) $a->stepDone($step);
+  return $a->stepIsDone($step);  
 }
 
 /**
@@ -1597,10 +1599,27 @@ function fixState($state, $country) {
 
 	if (!$country or !is_numeric($country)) $country = db\get('id', 'r_countries', ':country IN (name, iso_code)', compact('country'));
 	if (!$state or !is_numeric($state)) $state = db\get('id', 'r_states', ':state IN (name, abbreviation) AND country_id=:country', compact('state', 'country'));
-	u\EXPECT($state and $country, 'no state or no country');
 	return compact(ray('state country'));
 }
 
+/*
+function fixStateAndCountry(&$state, &$country) {
+  global $testOnly;
+  if (!$testOnly) {
+    fixCountry($country);
+    if ($country == US_COUNTRY_ID) u\setDft($state, 'MA');
+  }
+
+	if (isset($state) and !is_numeric($state)) $state = db\get('id', 'r_states', ':state IN (name, abbreviation) AND country_id=:country', compact('state', 'country'));
+}
+
+function fixCountry(&$country) {
+  global $testOnly;
+  if (!$testOnly) u\setDft($country, R_COUNTRY_ID);
+	if (isset($country) and !is_numeric($country)) $country = db\get('id', 'r_countries', ':country IN (name, iso_code)', compact('country'));
+}
+
+*/
 function log($msg) {if (test()) u\log($msg, 'debug');}
 function that($thing) {global $thatThing; return $thatThing[$thing];}
 function dosayFilename($type) {return DRUPAL_ROOT . R_PATH . "/dosay-$type.txt";}

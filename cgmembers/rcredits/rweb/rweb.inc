@@ -438,8 +438,8 @@ function formBasic_validate($form, &$sta, $co = 'mya', $fields = R_BASIC_FLDS) {
   if (isset($fullName) and $err = u\badName($fullName)) return say($err, ['field' => 'fullName'], 'fullName');
 
   $what = $co ? t('federal ID') : t('social security number');
-  if (!$co and isset($dob) and $err = u\badDob($dob)) return say($err, 'dob');
   if (isset($federalId) and $err = u\badSsn($federalId, @$dob)) return say($err, compact('what'), 'federalId');
+  if (!$co and isset($dob) and $err = u\badDob($dob)) return say($err, 'dob');
 
   u\preray(@compact(ray($fields)), $sta['input']);
   return TRUE;

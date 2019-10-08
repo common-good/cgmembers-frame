@@ -40,7 +40,7 @@ EOF
   ),
   'verify cell' => t('We sent a verification code to your mobile phone (%number).<br>Please type that code in the box below.'),
   'options saved' => t('Your options have been saved'),
-  'step completed' => ' ', // (confusing) t('<span id="completed"> Step completed!</span>'), // space intended
+  'step completed' => 'Step completed!', // (confusing) t('<span id="completed"> Step completed!</span>'), // space intended
   'after emailing' => t('After you have sent us an email: '),
 //  'return to membership' => t('<a href="%BASE_URL/status">Click here to return to the checklist</a>.'),
   'ok to continue' => t('You may now continue what you were originally doing.'),
@@ -62,9 +62,14 @@ EOF
   'repeat gift' => t('If you wish to make a donation again sometime, click "Membership" in the upper right corner, then on "Donate".'),
 //  'setup complete' => t('<p>Your account setup is complete. Expect an email within the next 24 hours, saying your account is activated. Your %PROJECT card will arrive by US Mail within a few days. Thank you for joining!</p>'),
   'setup complete' => t('<h2>Your Account Setup Is Complete</h2>You have done everything you need to do.'),
-  'individual approval' => t('Once a staff member has approved your account, you can expect to receive your %PROJECT card in the mail soon.'),
+  'card member' => t('Once a staff member has approved your account, you can expect to receive your %PROJECT card in the mail soon.'),
+  'sell member' => t('Hurray! You can now receive payments through %PROJECT.'),
+  'voice member' => t('Congratulations! You are now a full participating member of %PROJECT and the %PROJECT Democratic Economy.'),
+  'co2 member' => t('Contratulations! Your company account is complete.'),
+  'individual approval' => t('Once a staff member has approved your account, you will be able to make payments online.'),
   'company approval' => t('Once a staff member has approved your account, you can begin accepting %PROJECT payments.'),
   'join thanks' => t('Thank you for joining us!'),
+  'next steps' => t('<span class="loud">See some important next steps below.</span>'),
   'use temporary card' => t('<p>While you wait for your %PROJECT card to arrive, you can use your invitation card to make purchases at any member business (beginning with your inviter).</p>'),
   'must be confirmed' => t('An email has been sent to %inviterName, who will need to confirm the invitation before you can use your %PROJECT Account. Or you can do your first rCard transaction with %inviterName as confirmation.'),
   'ready to charge' => t('<p>You successfully scanned in as "%agentName" to charge customers on behalf of %companyName.</p><p>Now go back to your scanning app, to scan a customer\'s card. Sign out only when your shift ends.</p>'),
@@ -92,15 +97,16 @@ EOF
   'usename desc' => t('The <%b>full name</b> you use most of the time, properly capitalized!', 'b', 'b class="loud"'),
   'ssTitle' => t('Soc Sec #:'),
   'einTitle' => t('Federal ID:'),
-  'ssDesc' => t('Your social security number (for tax reporting)'),
+  'ssDesc' => t('Your social security number'),
   'einDesc' => t('The company\'s Employer ID Number (EIN)'),
   'to scan another' => t('To scan another card, run the QR Scanner app again.'),
   'invite links' => t('<p>Here are your links, to include in your own email messages to your friends. Be sure to mention they can visit %CG_DOMAIN for more information.</p><p>%links</p>'),
   'timed out' => t('You were automatically signed out, to protect your account(s).'),
   'msg to admin' => t('%who sent you a message.'),
   'secure attach' => t('[<_%aAttach>Attachment</a>: %name type=%type size=%size bytes]'),
-  'new customer welcome' => t('<h2>Congratulations!</h2><p>You have successfully completed your sign-up with %partnerName.</p><p><b class="loud">But wait!</b> You still need to sign up with %PROJECT, in order to be able to PAY %partnerName for their services.</p><p>%PROJECT is also worthwhile on its own merits. Fill out this form to get started.</p>'),
-  
+
+  'partner welcome' => t('<p><b>Congratulations!</b> You have successfully completed your sign-up with %partner.</p><p><span class="loud">But wait!</span> You still need to sign up with %PROJECT, in order to be able to PAY %partner for their services.</p><p>%PROJECT is also great on its own merits. We sent you an email with your account ID and password. Now we will lead you through a few short steps.</p>'),
+    
   // confirm
   'yes or no' =>  '%yesNo', // to replace with yesNo(url)
   'confirm accept' => '%who %did you %amount for %for on %date. Okay to %do', // used in EditTx test
@@ -187,7 +193,7 @@ EOF
   'missing currency' => t('You must choose %RCREDITS, USD, or both.'),
   'download always both' => t('Note: Downloads always include both %RCREDITS and USD amounts.'),
 //  'sign in to scan' => t('You must <a href="/user/login">sign in</a> (or scan yourself in) BEFORE scanning a customer card.'),
-  'change min first' => t('That request would leave you with less than your target balance. <%a>Lower your target balance</a> first.','_a', atag('/settings/connect')),
+  'change min first' => t('That request would leave you with less than your target balance. <%a>Lower your target balance</a> first.','_a', atag('/settings/fund')),
   'bad member id' => t('That is not a valid member ID!'),
   'bad card' => t('That is not a valid member ID.'),
   'bad card code' => t('This %PROJECT card is not valid.'),
@@ -238,6 +244,7 @@ EOF
   'requires signin' => t('You must be signed in, to use that page.'),
   'too many days' => t('You cannot view more than 18 months at a time on screen (but you can download any period).'),
   'co code timeout' => t('That form has expired. Refresh your page and try again.'),
+  'old partner link' => t('Sign in with your account ID and password to continue your account set-up.'),
   
 //  'saveWeekly too low' => t('With a negative "target balance", your weekly savings addition must be at least %min.'),
 );
@@ -255,7 +262,7 @@ function go($page, $msg = '', $field = '') {
   global $base_url;
   global $lastGo, $xlastGo; list ($xlastGo, $lastGo) = [@$lastGo, $page]; // for testing
 
-  if ($msg) r\Web\say(strip_tags($msg), $field);
+  if ($msg) say(strip_tags($msg), $field);
   if (substr($page, 0, 1) == '/') $page = substr($page, 1); // supplying the slash is preferred, to agree with w\atag()
     
   if (test()) {
@@ -269,9 +276,6 @@ function go($page, $msg = '', $field = '') {
   \drupal_session_commit();
   header("Location: $page", TRUE, 302); 
   exit();
-//  session_write_close();
-//  exit();
-//  \drupal_goto(substr($page, 0, 1) == '/' ? substr($page, 1) : $page);
 }
 
 /**
@@ -900,11 +904,12 @@ function photoRet($msg, $status = 'error') {
 /**
  * Provide the crucial fields and scripts for choosing or changing a password.
  * @param bool $reset: <changing, rather than choosing>
+ * @param string $req: REQ for field is required, else ''
  */
-function pickPassword($reset = TRUE) {
+function pickPassword($reset = TRUE, $req = '') {
   global $mya;
-  $pass1 = passFld(REQ . ($reset ? t('New password:') : t('Choose a Password:')), '', clas('password-field') + autofill('off'));
-  $pass2 = passFld(REQ . ($reset ? t('Confirm new password:') : t('Confirm password:')), '', clas('password-confirm') + autofill('off'));
+  $pass1 = passFld($req . ($reset ? t('New password:') : t('Choose a Password:')), '', clas('password-field') + autofill('off'));
+  $pass2 = passFld($req . ($reset ? t('Confirm new password:') : t('Confirm password:')), '', clas('password-confirm') + autofill('off'));
   $strong = hidFld(0, attrib(['id' => 'edit-strong']));
   focusOn('pass1');
   
@@ -1344,13 +1349,12 @@ function emailDup($email, $uid, $suppressErr = FALSE) {
 function tellStaffNewMember($params) {
   extract($params);
   $phone = u\fmtPhone(@$phone);
-  $state = @$state ? r\realState($state, $country) : 'state lookup failed';
-  $country = r\realCountry($country);
+  $state = @$state ? r\realState($state) : 'state unknown';
   $acctType = ray(CO_TYPES)[$acctType];
   $helper = @$helper ? r\acct($helper)->fullName : 'unknown';
   $copts = u\jsonEncode(@$copts);
   $ats = (isset($ats) and is_array($ats)) ? join(',', array_values($ats)) : '';
-  $params = compact(ray('phone country state acctType helper copts ats')) + $params;
+  $params = compact(ray('phone state acctType helper copts ats')) + $params;
   unset($params['code']); // don't need to see this
   $message = '<h2>NEW SIGNUP</h2>';
   r\tellCO($message, $params);
@@ -1404,33 +1408,29 @@ function nameAndEmailFlds($co, $fullName = '', $email = '', $hideEmail = FALSE, 
 /**
  * Return the part of the form that is (mostly) common to formContact and formSignup
  * @param assoc $defaults: initial field values (defaults to current values) - see list at "$fields ="...
- * @param bool $step0: <called from signup form>
  *   plus {partner, partnerCode, customer} for signup from partner site
- * @param int $myid: account record ID of account for which to show existing contact field values, if any
  */
-function contactFields($defaults = [], $step0, $myid = 0) {
+function contactFields($defaults = []) {
   global $mya;
-//  $country = $state = ''; // make sure these are not NULL
+
+  $step0 = !$mya->stepIsDone('contact');
   $partnerExtras = ' partner customer partnerCode'; // add-on fields passed through only for partner signup (start with space) (even partnerCode is necessary, in case form is redrawn on error)
-  $fields = 'phone country physical address city state zip tenure owns sameAddr2 address2 city2 state2 zip2 postalAddr hidCountry hidState hidState2 other source';
-  $a = $myid ? r\acct($myid) : FALSE;
+  $fields = 'phone physical address city state zip tenure owns sameAddr2 address2 city2 state2 zip2 postalAddr hidCountry hidState hidState2 other source';
   foreach ($defaults as $k => $v) if (is_null($v)) unset($defaults[$k]); // needed for joint account setup
-  extract($defaults + ($a ? (array) $a->account($fields) : []));
+  extract($defaults + (array) $mya->account($fields));
 
   if (@$postalAddr) list ($address2, $city2, $state2, $zip2) = u\parseAddr(@$postalAddr);
   if (!@$state2) $state2 = 0; // otherwise default fails in countrys.js
-  if (!@$country) $country = US_COUNTRY_ID;
 
   foreach (['state', 'state2'] as $k) {
-    if (@$$k) $$k = db\get('id', 'r_states', ":$k IN (id, name, abbreviation) and country_id=:country", compact($k, 'country'));
+    if (@$$k) $$k = db\get('id', 'r_states', ":$k IN (id, name, abbreviation) and country_id=:R_COUNTRY_ID", compact($k));
   }
-  js('countries'); // required for setPostalAddr, whether or not the fields are shown
+  js('states'); // required for setPostalAddr, whether or not the fields are shown
 
   if ($step0 and @$address and @$city and @$state and !u\badZip($zip) and !u\poAddress($address) and u\fmtPhone($phone)
     and @$address2 and @$city2 and @$state2 and !u\badZip($zip2)) { // already got a bunch of data
 
     $postalAddr = ''; // get it from the separate fields
-    $hidCountry = $country;
     $hidState = $state + 0;
     $hidState2 = $state2 ?: $hidState;
     if (@$partner and @$partnerCode and @$customer // customer signup 
@@ -1444,15 +1444,13 @@ function contactFields($defaults = [], $step0, $myid = 0) {
     
   } else {
     $fieldsToHide = [];
-    $country = @$country + 0;
     $state = @$state + 0;
-    $hidCountry = hidFld($country + 0); // remember this when Drupal forgets it on error
     $hidState = hidFld($state + 0); // remember this when Drupal forgets it on error
     $hidState2 = hidFld(@$state2 + 0);
 
   //  js('http://ziplookup.googlecode.com/git/public/ziplookup/zipLookup.min.js', 'file', 'header');
 //    js('zipLookup.js', 'file', 'footer');
-    jsx('addr', compact(ray('country state state2')));
+    jsx('addr');
 
 /*    $countryAttrib = w\onchange("
       print_state(this.options[this.selectedIndex].value,'','state');
@@ -1463,11 +1461,11 @@ function contactFields($defaults = [], $step0, $myid = 0) {
     $phone = textFld(t('Phone:'), [t('Your phone number')], required(@$phone ? u\fmtPhone($phone): ''));
 //    $faxetc = @$faxetc ? textFld(t('Fax etc:'), [t('Other contact info'),t('List other ways to contact you: fax, mobile, IM, etc. This field is NOT public.')], dft(@$faxetc)) : NULL;
 //    $country = selectFld(t('Country:'), t(''), dft(@$country) + $countryAttrib); // can't use required() here
-    $country = selectFld(t('Country:'), t(''), dft(@$country)); // can't use required() here
+//    $country = selectFld(t('Country:'), t(''), dft(@$country)); // can't use required() here
     $physical = item('', t('Physical Address'));
     $address = textFld(t('Street Address:'), [t('Physical address'), t('Where is your building located (physical address)?')], required(@$address) + $addressAttrib);
     $city = textFld(t('City:'), [t('City where you live')], required(@$city) + $cityAttrib);
-    $state = selectFld(t('State:'), t(''), dft(@$state) + $stateAttrib); // can't use required() here
+    $state = stateFld(nn($state)); // can't use required() here
     $zip = zipFld(nn($zip));
     
     $sameAddr2 = ($step0 ? @$state2 : !(@$mya and $mya->cAdmin)) // show box on signup (until mailing addr filled) & to admin
@@ -1478,28 +1476,28 @@ function contactFields($defaults = [], $step0, $myid = 0) {
     $postalAddr = hidFld();
     $address2 = textFld(t('Street Address:'), [t('Postal street address')], required(@$address2) + $addressAttrib);
     $city2 = textFld(t('City:'), [t('Postal city')], required(@$city2) + $cityAttrib);
-    $state2 = selectFld(t('State:'), t(''), dft(@$state2) + $stateAttrib); // can't use required() here
+    $state2 = stateFld(nn($state2));
     $zip2 = textFld(t('Postal Code:'), [t('Postal code'), ''], required(@$zip2) + $zipAttrib);
     
     $other = $step0 ? item('', t('Other Information')) : NULL;
     if ((!@$mya or !$mya->co) and !nn($source)) {
       $source = $step0 ? sourceFld() : NULL;
-//      $source2 = $step0 ? textFld(t('Code:'), [t('Invitation or card code'), t('If you have an invitation or card code, type it here ("B" for brochure). Otherwise leave blank.')]) : NULL;
     } else $source = hidFld(nn($source));
   }
 
 //  $tenure = (in('tenure', $fieldsToHide) or !$step0) ? NULL : textFld(t('How long:'), [t('MONTHS at current address.'), t('How long have you been at your current address, in months (roughly)')], required(@$tenure));
   if (!in('tenure', $fieldsToHide) and $step0) {
     $years = textFld(BARE, [t('Years')], suffix(t('&nbsp years + ')));
-    $months = textFld(BARE, [t('Months')], suffix(t('&nbsp months')));
+    $months = textFld(BARE, [t('Months')], dft(nn($tenure)) + suffix(t('&nbsp months')));
     $tenure = fieldSet('tenure2', compact('years', 'months'), t('How long:'), t('How long have you been at your current address (roughly)'));
   } else {$tenure = NULL;}
 
-  $owns = in('owns', $fieldsToHide) ? NULL : boolFld('', '', $step0 ? @$owns : $a->owns, [t('Rent'), t('Own')]); // default fails
+  $owns = in('owns', $fieldsToHide) ? NULL : boolFld('', '', $step0 ? @$owns : $mya->owns, [t('Rent'), t('Own')]); // default fails
 
   return compact(ray($fields));
 }  
 
+function stateFld($dft) {return selectFld(t('State:'), t(''), required($dft), ['' => '--'] + db\keyed('id,name', 'r_states', 'country_id=:R_COUNTRY_ID'));}
 function sourceFld() {return textFld(t('Referred by:'), [t('How you heard about %PROJECT'), t('Where did you hear about %PROJECT? (name of company or person, web address, publication name, radio station name, or whatever)')]);}
 function zipFld($zip = NULL) {return textFld(t('Postal Code:'), [t('Physical location postal code'), t('Postal code for your <em>physical location</em>')], required(@$zip));}
 function sellingFld($selling = NULL) {return areaFld(t('Selling:'), [t('Products'),t('Enter one or more <b>VERY SHORT</b> transaction descriptions (for example "food") for when you make a sale &mdash; one line for each. Put the most common one first. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', u\fmtDate(now(), TRUE))], required($selling));}
@@ -1548,38 +1546,19 @@ EOF;
 }
   
 /**
- * Return the fields used to verify an individual's SSN (also asked for in signup).
+ * Return the fields used to verify an individual's SSN or company's EIN (also asked for in signup).
  */
-function ssnFields($personal = TRUE) {
-  $ssTitle = t($personal ? 'ssTitle' : 'einTitle');
+function ssnFields($personal = TRUE, $required = []) {
   if ($personal) {
-    $dob = textFld(t('Birthdate:'), [t('Birth date'), t('Your date of birth (mm/dd/yyyy)')], required() + autofill('off'));
-// NOT YET    $ssReason = t('As a registered Money Services Business, we are required by law to ask for your social security number, even though it makes some people nervous. Fortunately, we have <%aSecure>top notch security</a>. If you do not have a social security number <%aUndoc>click here</a>.', '_aSecure _aUndoc', atag(r\promoLink('about-us/privacy-and-security')), atag("$$('.form-item-sponsor').show(); $('.form-item-federalId').hide();"));
-    $ssReason = t('As a registered Money Services Business, we are required by law to ask for your social security number. Fortunately, we have <%aSecure>top notch security</a>.', '_aSecure', atag(r\promoLink('about-us/privacy-and-security')));
-// NOT YET    $sponsor = textFld(t('Sponsor:'), [t('Sponsor code'), t('Your sponsoring organization\'s Common Good account ID (required if you have no social security number).')]);
+    $ssReason = $required ? t('Required by the IRS if you accept payments through %PROJECT.') : '';
+    $federalId = passFld(t('ssTitle'), [t('ssDesc'), $ssReason], $required + autofill('off'));
+    $dob = textFld(t('Birth Date:'), [t('Your birth date'), t('Your date of birth (mm/dd/yyyy)')], $required + autofill('off'));
   } else {
-    $dob = textFld(t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)')], required());
+    $federalId = passFld(t(einTitle), [t('einDesc')], $required + autofill('off'));
+    $dob = textFld(t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)')], $required);
   }
   
-  $federalId = passFld($ssTitle, [t($personal ? 'ssDesc' : 'einDesc'), @$ssReason], required() + autofill('off')); // textfield so user doesn't have to retype on error
-  
-  return @compact(ray('dob federalId sponsor'));
-}
-
-/**
- * Say whether the phone number is acceptable.
- * @param string $phone: phone number in any format
- * @param int $country: country code
- * @return TRUE if the phone number is acceptable
- */
-function phoneOk(&$phone, $country = US_COUNTRY_ID) {
-  if (!$phone = u\fmtPhone($phone, '+n')) return say('bad phone', 'phone');
-  if ($country == US_COUNTRY_ID and strlen($phone) != 12) return say('bad phone', 'phone');
-//  global $mya;
-//  $myid = $mya ? $mya->id : 0;
-  //$dup = db\exists('users', 'phone=:phone and uid<>:myid', compact('phone', 'myid'));
-  // NO! this makes contact form fail. if (!$dup and $dupOk) return say('not a duplicate phone', 'phone');
-  return TRUE;
+  return compact(ray('federalId dob'));
 }
 
 function no_selection($list) {
@@ -2224,7 +2203,7 @@ function hidFlds($ray) {return is_array($ray) ? hidFld(plain(serialize($ray))) :
  * Send an invitation to the email and optionally report it.
  * $mya must be passed as a parameter in case called from an email link.
  */
-function sendInvite($mya, $email, $subject, $message, $dupsOk = TRUE) {
+function sendInvite($mya, $email, $subject, $message, $dupsOk = TRUE, $zip = NULL) {
   if (!$dupsOk) { // applies only to community admins
     $cemail = u\cry('P', $email);
     $now = now();
@@ -2240,7 +2219,7 @@ function sendInvite($mya, $email, $subject, $message, $dupsOk = TRUE) {
     'fullName' => $mya->fullName, 
     'phone' => u\fmtPhone($mya->phone),
     'signed' => u\fmtDate($mya->signed),
-    'CODE' => r\invite($email, $mya->id, '', $subject, $message),
+    'CODE' => r\invite($email, $mya->id, '', $subject, $message, $zip),
   );
   r\rMail('invite', $email, $info, $mya);
   say(!$dupsOk ? 'Sent to %email' : 'invite sent|repeat invite', compact('email'));
@@ -2308,15 +2287,16 @@ function checkAmtChoice(&$sta, $min = 0) {
  * Return standard fields for the bottom of any form used during account setup.
  * 
  */
-function setupFoot($label = '', $extra = []) {
+function setupFoot($label = '', $extra = [], $noSkip = FALSE) {
   global $mya, $base_url;
-  if ($mya and !$mya->member) {
-    if ($remains = $mya->stepsRemaining() - 1) { // don't count current step
-      $skip = skipButton();
+  if ($mya and $remains = $mya->stepCount()) {
+    if ($remains > 1) { // more than just this step
+      $remains--; // don't count current step
+      $skip = $noSkip ? '' : skipButton();
       $nextStep = submit($label ?: (t('Next ') . '&raquo;'), '', '', w\suffix($skip));
       $steps = $remains == 1 ? t('step') : t('steps');
       $progress = item(t('Just <b>%n</b> more %steps to go', 'n steps', $remains, $steps));
-    } else $nextStep = submit($label ?: t('Finish'));
+    } else $nextStep = submit(t('Finish'));
   } else $submit = submit($label, '', '', $extra);
   return @compact(ray('submit nextStep progress'));
 }
@@ -2395,18 +2375,18 @@ function doBtn($class, $text, $data = '') {return w\btn('', $text, 'primary', 'x
 
 /**
  * Skip a setup step and save it for last. Has no effect if step is already done.
- * @param string $step0: the step to skip (defaults to current step)
  * If defaulting to the current step, redirect to the next step.
+ * @param string $substitute: step to do instead (later)
  */
-function skipStep($step0 = '') {
+function skipStep($substitute = NULL) {
   global $mya;
-  $step = $step0 ?: $mya->nextStep();
-  $stepsDone = $mya->stepsDone;
-  if ($stepsDone[$step]) return; // nothing to do
-  unset($stepsDone[$step]);
-  if ($step != 'discount') $stepsDone[$step] = FALSE; // put this step at the end (except discount, which can be done later)
-  $mya->update(compact('stepsDone'));
-  if (!$step0) return w\go($mya->nextStepUrl());
+
+  if (!@$mya or !$stepsLeft = $mya->stepsLeft()) return; // nothing to do
+  $step = $stepsLeft[0];
+  unset($stepsLeft[0]);
+  if ($step != 'discount') $stepsLeft[] = $substitute ?: $step; // put this step at the end (except discount, which can be done later)
+  $mya->update('stepsLeft', array_values($stepsLeft)); // renumber and update
+  return w\go($mya->nextStepUrl());
 }
 
 /**
@@ -2484,10 +2464,8 @@ function opText($sta) {
  */
 function goNextStep($step, $msg = NULL, $info = []) {
   global $mya;
-
-  if ($mya and $step = $mya->nextStepUrl($step, $msg, $info)) {
-    return w\go($step, $msg);
-  } elseif (@$msg) say($msg);
+  $url = $mya ? $mya->nextStepUrl($step, $msg, $info) : 'summary';
+  return w\go($url, $msg);
 }
 
 function backButton() {

@@ -22,18 +22,11 @@ function formPrefs($form, &$sta) {
   $food = textFld(t('Food Fund:'), [t('Contribution Percentage'), t('Pay a little extra every time you pay for food or meals with %PROJECT, to lower the cost of healthy local food for people who can\'t afford it otherwise. For example, 5% here means when you buy a $10 pizza, you contribute 50 cents to the %PROJECT Food Fund. To donate to the %PROJECT Food Fund directly, use the "Pay" button and type "Food Fund".')], dft($food0 ?: '') + suffix(' %'));
   
   if (!$mya->co) {
-/*    $bits = ray(SNAP_BITS);
-    $bitNames = array_keys($bits);
-    foreach ($bitNames as $i => $k) {
-      $dpy = w\popHelp($k, $bits[$k], '#');
-      $aliases[$k] = "<div\">$dpy</div>";
-    }
-    $snap = bitsFld(t('Eligibilities:'), $mya->snap, 'b', $bitNames, $bits, t(''));*/
     $list = 'CHIP, CNP, EAEDC, EITC, Fuel Assistance, Medicaid, LIHEAP, Section 8, SNAP, SSP, TAFDC, TANF, WIC';
     $st = r\realState($mya->state);
     if ($st == 'MA') $list .= ', HIP';
 //    if ($st == 'VT') $list .= ', XXX';
-    $snap = boolFld(t('Food Assistance?'), t('If you struggle to afford healthy food, consider answering "Yes" here. This is a request for financial assistance from other %PROJECT members in your community. Your answer is private &mdash; only program administrators can tell who is receiving this assistance. Typically answer "Yes" if you are eligible for any of the following (whether or not you have actually applied): %list.', compact('list')), $mya->snap);
+    $snap = boolFld(t('Food Assistance?'), t('If you struggle to afford healthy food, consider answering "Yes" here. This is a request for financial assistance from other %PROJECT members in your community. Your answer is private &mdash; only program administrators can tell who is receiving this assistance. Typically answer "Yes" if you are eligible for any of the following (whether or not you have actually applied): %list. (Food assistance may not yet be available in your area.)', compact('list')), $mya->snap);
   } else $snap = NULL;
   
   $backing0 = u\fmtAmt(($mya->backing + 0) ?: 1);
@@ -67,13 +60,13 @@ function formPrefs($form, &$sta) {
 EOF
   , ray('regName regAddr', r\regionfield('legalName'), r\regionfield('postalAddr'))));
 
-  $advancedFields = 'achMin smsNotices2 notices secretBal nosearch food backing';
+  $advancedFields = 'achMin smsNotices2 notices secretBal debtOk nosearch food backing';
   
 //  $submit = submit(t('Update Preferences'));
   
 
   jsx('advanced-prefs', compact('advancedFields'));
-  $form = @compact(ray('title subtext snap roundup crumbs debtOk statements showAdvancet ' . $advancedFields)) + w\setupFoot() + compact('posttext');
+  $form = @compact(ray('title subtext roundup crumbs snap statements showAdvancet ' . $advancedFields)) + w\setupFoot() + compact('posttext');
   return cgform($form);
 }
 
@@ -108,7 +101,7 @@ function formPrefs_submit($form, $sta) {
   if (@$snap) r\tellAdmin(t('%who has SNAP', 'who', $mya->fullName), ['topic' => t('SNAP')]);
   
   $mya->update($info);
-  return w\goNextStep('prefs');
+  return w\goNextStep('preferences');
 }
 
 /**

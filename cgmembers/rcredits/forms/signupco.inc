@@ -6,8 +6,6 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
-include_once __DIR__ . '/signin.inc';
-
 /**
  * Open a trial company account
  */
@@ -63,7 +61,7 @@ function formSignupCo_validate($form, &$sta) {
   if ($qid = trim(strtoupper($qid)) and !r\acct($qid)) return say(t('That is not an account ID. Please check again (look in the lower left on your %PROJECT Card).'), 'qid');
 
   if ($err = u\badZip($zip)) return say($err, 'zip');
-  if (!phoneOk($phone, US_COUNTRY_ID)) return;
+  if ($err = u\badPhone($phone)) return say($err, 'phone');
   if (!emailOkay($email, TRUE, NULL)) return;
   if ($err = zBadSelling($selling)) return say($err, 'selling');
   
@@ -72,7 +70,7 @@ function formSignupCo_validate($form, &$sta) {
   
 function formSignupCo_submit($form, &$sta) {
   global $mya;
-  $dbFields = 'coType contact source selling fullName legalName email flags phone federalId country zip address city state helper stepsDone preid';
+  $dbFields = 'coType contact source selling fullName legalName email flags phone federalId country zip address city state helper preid';
   extract(just($dbFields . ' source2 ownPhone qid args', $sta['input']));
   extract(just('code', nn($args)));
 
@@ -92,7 +90,7 @@ function formSignupCo_submit($form, &$sta) {
   $preid = getPreId($source);
   if (@$source2) $source = trim(strtoupper($source2) . "-$source");  
   $flags = u\bit(B_CO) | u\bit(B_DEPENDS) | u\bit(B_CONFIRMED);
-  $stepsDone = array_fill_keys(ray('signup discount verify'), FALSE);
+//  $stepsDone = array_fill_keys(ray('signup discount verify'), FALSE);
   $coType = $acctType = CO_CUSTODIAN;
   if (!$a = new r\Acct($info = @compact(ray($dbFields)))) return say('cannot create account', 'zot');
 
@@ -111,9 +109,9 @@ function formSignupCo_submit($form, &$sta) {
     say('refundable deposit');
   }
     
-  $sta2['uid'] = $myid; // tell Drupal we're signed in
-  $nextStepUrl = $mya->nextStepUrl('signup');
-  formSignin_submit($form, $sta2, $nextStepUrl); // lead user to next step   
+  $sta['uid'] = $myid; // tell Drupal we're signed in
+  
+  return w\goNextStep('signup'); 
 }
 
 /**

@@ -122,7 +122,7 @@ function adminSummary() {
     }
   
     $activity = item(a\showActivity($mya), t('Activity:'));
-    if (!$mya->ok) $steps = item(a\showSteps($mya), t('To do (red):'), t('|sign=agreement | prefs=preferences | connect=connect bank (or not) | company=company info'));
+    if (!$mya->ok) $steps = item(a\showSteps($mya), t('To do:'), t('|sign=agreement | prefs=preferences | connect=connect bank (or not) | company=company info'));
     if ($rels = a\showRelations($mya)) $relations = item($rels, t('Relations:'));  
   }
   

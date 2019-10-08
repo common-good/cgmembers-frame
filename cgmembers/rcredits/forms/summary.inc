@@ -42,12 +42,12 @@ function formSummary($form, &$sta) {
     } elseif ($stepUrl) say(t('New member will be sent <a href="%stepUrl">there</a> upon signing in.', 'stepUrl', "$base_url/$stepUrl"));
     
   } else { // normal
-    if ($stepUrl and $stepUrl != 'summary') return w\go($stepUrl);
+    if ($stepUrl and $stepUrl != 'summary') return w\go($stepUrl, $msg);
     if (@$msg) say($msg);
     if ($mya->legalName != $mya->fullName and !$mya->depends) $legalName = item($mya->legalName, t('Legal Name:'));    
   }
 
-  extract(just('returnMo return cttyBeneMo cttyBene', $mya->j_stats()));
+//  extract(just('returnMo return cttyBeneMo cttyBene', $mya->j_stats()));
   $gifts = u\fmtAmt($mya->totalGifts());
 //  $cttyBene = item("$cttyBeneMo " . t('over the past month') . "<br>$cttyBene " . t('overall (ever), including %gifts in contributions', compact('gifts')), t('Social return:'), t('Financial benefit to your community to date, from your participation together with other members, empowering economic democracy! [<%a>details</a>]', '_a', atag('/help/social-return')));  
   $cttyBene = NULL;
@@ -61,8 +61,9 @@ function formSummary($form, &$sta) {
     $makeCo = $mya->depends ? '' : w\btn('/signup-co', t('Open %another Company Account', compact('another')), 'primary', 'xs');
 //    if (!$mya->jid and !$mya->co) $makeJoint = w\btn('/signup/joint=1', t('Make this a joint account'), 'primary', 'xs');
     $makeJoint = ($mya->member and !$mya->jid and !$mya->co and !$mya->depends) ? w\btn('/prejoin', t('Make this a joint account'), 'primary', 'xs') : '';
-    $goFood = $mya->food > 0 ? lnk('/settings/food', t('Food Fund')) : btn('/settings/food', t('Food Fund'), 'warning');
-    if ($mya->cAdmin) $goFood = '<br><br>' . $goFood; // make sure it doesn't hide behind the photo
+//    $goFood = $mya->food > 0 ? lnk('/settings/food', t('Food Fund')) : btn('/settings/food', t('Food Fund'), 'warning');
+//    if ($mya->cAdmin) $goFood = '<br><br>' . $goFood; // make sure it doesn't hide behind the photo
+    $goFood = '';
     if (!$mya->co and $hasMultipleAccounts) $clickPhoto = item(t('Click your photo%where to manage your other account(s).', 'where', $mya->cAdmin ? t(' in the upper right corner') : ''));
   } else $makeCo = $makeJoint = $goFood = $reports = '';
 
@@ -73,7 +74,7 @@ function formSummary($form, &$sta) {
 
   $title = t('Account Summary');
   $accountName = item($mya->j_fullName . ($mya->jid ? '<br>' : ' ') . "($mya->j_name)", t('Name:'));
-  $address = item(($mya->trialco ? $mya->contact : $mya->postalAddr) . $extras, t('Contact:'));
+  $address = $mya->cAdmin ? item(($mya->trialco ? $mya->contact : $mya->postalAddr) . $extras, t('Contact:')) : NULL;
   $balance = u\fmtAmt($mya->balance);
 //    $totalDesc = u\fmtAmt($mya->r);
 //    $balanceDesc = $mya->savings ? t(' plus your savings, for a total of @total', ['@total' => $totalDesc]) : '';
@@ -81,7 +82,7 @@ function formSummary($form, &$sta) {
   $balanceDesc = $mya->activated ? t(' <small>(see <%a>History</a>)</small>', '_a', atag('/history')) : '';
   $balance = item($balance . $balanceDesc, t('Balance:'));
 
-    if (!$mya->isCtty) { // unless this is a community or region account
+  if (!$mya->isCtty) { // unless this is a community or region account
     $acctType = $mya->co ? t('company account') : ($mya->jid ? t('joint account') : t('personal account'));
 //    $savings = item(u\fmtAmt($mya->savings) . t('<small> (your total incentive rewards to date)</small>', [
 //    list ($rewardNote, $rewardDesc) = $mya->cttyRewardy ? [t('<small> (your total incentive rewards to date)</small>'), t('This amount will be yours to keep, once your community reaches a certain size.')] : ['', t('Some of this amount may be yours to keep, at your %PROJECT community\'s decision, once membership reaches a certain size.')];
@@ -91,12 +92,16 @@ function formSummary($form, &$sta) {
     $creditLine = item($credit, t('Credit Line:'), t('Based%normally on your account\'s average monthly activity over the past 6 months.', compact('normally')), w\suffix($suffix));
 //    $committed = item(u\fmtAmt(max(0, $mya->committed)), t('Committed:'), t('reserved for donation to Common Good Finance'));
 
-    $successes = db\count('users', 'helper=:myid AND activated<>0', compact('myid'));
+/*    $successes = db\count('users', 'helper=:myid AND activated<>0', compact('myid'));
     $invites = max($successes, db\count('r_invites', 'inviter=:myid', compact('myid')));
     $doInvite = $mya->cAdmin 
     ? w\btn('/community/invite/print', t('front')) . ' ' . w\btn($mya->invitationBack(), t('back'))
     : t('<small>[<%a>invite someone</a>]</small>', '_a', atag('/community/invite'));
     $invites = item(t('You have invited at least %invites people (%successes are now members). ', compact('invites', 'successes')) . $doInvite, t('Invitations:'));
+  */
+  
+    $choiceList = choiceListFld();
+    
   } else $acctType = t('community account');
 
   if ($mya->cAdmin) {
@@ -109,7 +114,7 @@ function formSummary($form, &$sta) {
   } else $extra = '';
   $accountId = item(($mya->mainQid ?: 'N/A') . ' (' . $acctType . ')' . $extra, t('ID:'));
 
-  $fields = 'photo title clickPhoto showCustomers topButtons accountId accountName details address legalName shortName federalId community balance newBalance creditLine creditLimit committed invites cttyBene';
+  $fields = 'photo title clickPhoto showCustomers topButtons accountId accountName details address legalName shortName federalId community balance newBalance creditLine creditLimit committed choiceList';
   foreach (ray('details') as $k) $$k = @$form[$k]; unset($form[$k]); // put these on the left if admin
   $fields = @compact(ray($fields));
   
@@ -273,3 +278,37 @@ function activate($helper) {
   
   unset($DBTX); 
 }
+
+/**
+ * Return a list of important next steps for the account.
+ * @todo: add comment as an option?
+ */
+function choiceListFld() {
+  global $mya;
+  if ($mya->cAdmin) return NULL;
+  
+  $chInvite = ['community/invite' => t('<div>Invite</div><div>Invite a friend or company to join.<br><small>Your local Community Fund gets $2 for every invitation you send!</small></div>')];
+  $chDonate = ['community/donate' => t('<div>Give</div><div>Make a donation to %PROJECT.</div>')];
+  $chComment = ['community/comment' => t('<div>Comment</div><div>Send a comment, question, or suggestion.</div>')];
+  
+  if ($mya->co) { // company account
+    $co2Steps = $mya->stepCount($mya->taskSteps('co2'));
+    $choices = [
+      'scraps/co2' => $co2Steps ? t('<div>Finish</div><div>Finish opening your complete company account &mdash; required before you receive a total of $1,000 or within six months, whichever is first ($co2Steps steps).', compact('co2Steps')) : NULL,
+    ];
+  } else { // personal account
+    foreach (ray('card sell voice') as $k) ${$k . 'Steps'} = $mya->stepCount($mya->taskSteps($k));
+    $choices = [
+      'scraps/card' => $cardSteps 
+        ? t('<div>Card</div><div>Get a %PROJECT payment card (%cardSteps steps).</div>', compact('cardSteps')) : NULL,
+      'scraps/sell' => $sellSteps
+        ? t('<div>Sell</div><div>Accept payments through %PROJECT (%sellSteps steps).</div>', compact('sellSteps')) : NULL,
+      'scraps/voice' => $voiceSteps
+        ? t('<div>Voice</div><div>Participate in %PROJECT economic democracy (%voiceSteps steps).</div>', compact('voiceSteps')) : NULL,
+    ];
+  }
+  $choices = $chInvite + $choices + $chDonate;
+  $choiceList = t('<h3>Next Steps</h3>') . "\n";
+  foreach ($choices as $url => $desc) if (!empty($desc)) $choiceList .= w\lnk("/$url", $desc) . "\n";
+  return item($choiceList . "\n");
+}  

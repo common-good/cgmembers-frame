@@ -14,9 +14,9 @@ Scenario: A non-member visits the food page
   When member "?" visits page "settings/food/welcome=1"
   Then we show "Food Fund"
 
-Scenario: A member signs in and sees link
-  When member ".ZZA" visits page "summary"
-  Then we show "Food Fund"
+#Scenario: A member signs in and sees link
+#  When member ".ZZA" visits page "summary"
+#  Then we show "Food Fund"
 
 Scenario: A member makes a food donation
   When member ".ZZB" visits page "settings/food"
