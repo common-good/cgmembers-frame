@@ -363,7 +363,7 @@ function charge($args, $type = 'charge') {
   if (!@$member) return posErr('missing member'); // handle empty string (versus missing param)
   if ($version > 216 and !@$proof) return posErr(missingArg('proof', []));
   if (@$description === '') return posErr('missing description');
-  if (strpos($description, ' ') !== FALSE) {
+  if (mb_strpos($description, ' ') !== FALSE) {
     r\tellAdmin(t('POS tx description not urlencoded'), $args);
   } else $description = urldecode($description);
   if ($err = u\badAmount($amount, '')) return posErr($err); // allow negatives! (for refund)
@@ -587,7 +587,7 @@ function getDescriptions($a) {
  * @return the message, rephrased (if appropriate) without negative amounts
  */
 function fixNegative(&$msg, $phrase, $rephrase) {
-  if ((strpos($msg, $phrase) === FALSE) or !strpos($msg, '$-')) return $msg;
+  if ((mb_strpos($msg, $phrase) === FALSE) or !mb_strpos($msg, '$-')) return $msg;
   $msg = preg_replace('/\$-/', '$', $msg, 1); // just one replacement (leave negative rewards alone)
   return $msg = str_replace($phrase, $rephrase, $msg);
 }

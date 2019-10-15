@@ -16,7 +16,6 @@ class AddCanonicalAccounts extends AbstractMigration {
   public function up() {
     $this->execute("DELETE FROM users where uid IN (" . self::CG_ROUNDUPS_UID . ", " . self::CG_CRUMBS_UID . ", " . self::CG_SERVICE_CHARGES_UID . ", " . self::CG_INCOMING_BANK_UID . ", " . self::CG_OUTGOING_BANK_UID . ")");
     $this->table('users')
-      ->insert(['uid'=>0])
       ->insert(['uid'=>self::CG_ROUNDUPS_UID, 'community'=>0, 'name'=>'roundups', 'fullName'=>'Roundup Donations',
                 'email'=>'cg@commongood.earth', 'zip'=>'', 'country'=>0, 'minimum'=>0, 'flags'=>6])
       ->insert(['uid'=>self::CG_CRUMBS_UID, 'community'=>0, 'name'=>'crumbs', 'fullName'=>'Crumb Donations',

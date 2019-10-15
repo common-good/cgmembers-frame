@@ -14,12 +14,12 @@ function formModel($form, &$sta, $args = '') {
   extract(just('nothing', $args));
 
   $title = t('Whatever');
-  $subtext = t('Details.'));
+  $subtext = t('Details.');
 
   $choices = ray('this that theOther');
-  $radio = radiosFld(t('Radios:', t('Details here'), required(2), $choices);  
+  $radio = radiosFld(t('Radios:'), t('Details here'), required(2), $choices);
   $text = textFld(t('Text:'), [t('Your text'), t('Details here')], dft('value'));
-  jsx('model', compact('modelArg'));
+  jsx('model', compact('choices'));
 
   $submit = t('Save');
   

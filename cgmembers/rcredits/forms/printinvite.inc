@@ -58,7 +58,7 @@ function printInvite1($a, &$pdf) {
   $wCode = $wCard; // code is centered on card
 
   $sInvite = 'normal';
-  if (strlen($name) > 20) $sInvite = strlen($name) > 29 ? 'condensed' : 'semi-condensed';
+  if (mb_strlen($name) > 20) $sInvite = mb_strlen($name) > 29 ? 'condensed' : 'semi-condensed';
 //  $invite = str_replace(t(' to:'), ':', $invite);
   $pdf->AddPage();
   
@@ -74,7 +74,7 @@ function printInvite1($a, &$pdf) {
     $pdf->Image(__DIR__ . '/../images/' . PROJECT_LOGO, $x+$x0, $y+$y0, $hLogo, $hLogo, '', '', '', true); // file, x, y, w, h, type, link, align, resize
     $pdf->say($invite, $x+$dxInvite, $y+$y0+$dyInvite, $wInvite, '', "$ptInvite;font-stretch:$sInvite", 'L');
     $pdf->say(PROJECT . '<sup style="font-size:50%;">&reg;</sup>', $x+$dxProject, $y+$y0+$dyProject, $wInvite, '', "$ptProject;B;color:darkblue;font-stretch:$sProject", 'L');
-    $scardi = strlen($slogans[$cardi]) > $sloganMax ? $sSloganTight : $sSlogan;
+    $scardi = mb_strlen($slogans[$cardi]) > $sloganMax ? $sSloganTight : $sSlogan;
     $pdf->say(t('the payment card ' . $slogans[$cardi]), $x+$dxInvite, $y+$y0+$dySlogan, $wInvite, '', "$ptInvite;font-stretch:$scardi;color:darkgray", 'L');
 //    $pdf->Line($x+$dxLine, $y+$dyLine, $x+$wCard-$dxLine, $y+$dyLine, $gStyle); // x1, y1, x2, y2, style
 

@@ -76,7 +76,7 @@ function custStatement($args = []) {
 
     foreach ($fields as $i => $one) {
       list ($head, $fldName, $width, $align) = explode('/', $one);
-      if (!$fldName) $fldName = strtolower($head);
+      if (!$fldName) $fldName = mb_strtolower($head);
       $debit = ($align == 'R' and is_numeric($n = @$$fldName) and $n < 0);
       if ($debit) $pdf->SetTextColor(128, 0, 0); else $pdf->SetTextColor();
       if (in($fldName, $numFields) and isset($$fldName)) {

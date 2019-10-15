@@ -169,9 +169,11 @@ function rweb_menu($submenu = '') {
     'settings/verifyemail' => ['call', 'Verify Email', 'VerifyEmail 2', 'manage'],
     'settings/tithein' => ['call', 'Share When You Receive', 'TitheIn 2', 'manage'],
     'settings/titheout' => ['call', 'Share When You Spend', 'TitheOut 2', 'manage'],
+    'settings/work' => ['call', 'Work Life', 'Work 2', 'manage'],
     'settings/agent' => ['call', 'Choose an Agent', 'Agent 2', 'manage'],
     'settings/resend' => ['call', 'Resend Email', 'Resend', 'manage'],
     'settings/food' => ['call', 'Food Fund', 'Food 2', ANY],
+    'settings/partnerend' => ['call', 'Finish Partner Signup', 'PartnerEnd 2', 'manage'],
 
 //    'handy' => isDEV ? ['norm', t('Handy'), '', 'dev', 'handyLinks'] : NULL,
     'tests' => isDEV ? ['norm', t('Test'), '1', 'dev', 'tests'] : NULL,
@@ -246,6 +248,7 @@ function rweb_menu($submenu = '') {
     'pay-with-cg' => ['call', t('Pay With %RCREDITS'), 'Buy 1', ANY],
     'authcode' => ['call', t('Supply a one-use auth code'), '', ANY, 'authcode'],
     'scraps' => ['call', 'Scraps', 'Scraps 1', ANY],   
+    'partner' => ['call', 'Signup Through Partner', 'PartnerSignup 1', ANY],
   );
 
   foreach ($items as $k => $v) {

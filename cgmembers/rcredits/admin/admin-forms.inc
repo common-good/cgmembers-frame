@@ -160,7 +160,7 @@ function formAdminPanel_submit($form, &$sta) {
         u\EXPECT([$a], 'Acct');
         if ($signupCo = $a->signupCo) {
           extract($signupCo);
-          $signupCos[strtolower("$a->community$company$a->id")] = ray('acct fullName relation company', $a->mainQid, $a->fullName, @$isOwner ? t('owner') : ((@$employee or @$employeeOk) ? t('employee') : (@$contractor ? t('contractor') : '')), $company);
+          $signupCos[mb_strtolower("$a->community$company$a->id")] = ray('acct fullName relation company', $a->mainQid, $a->fullName, @$isOwner ? t('owner') : ((@$employee or @$employeeOk) ? t('employee') : (@$contractor ? t('contractor') : '')), $company);
         }
       }, '(uid<0 OR uid>:CANONIC_ACCTS) AND ' . $crit . ' ORDER BY community');
     ksort($signupCos);
@@ -256,7 +256,7 @@ function formMakeCtty_validate($form, &$sta) {
   }
   if (!emailOkay($email, $mya->co, $mya)) return; 
   if ($err = u\badPhone($phone)) return say($err, 'phone');
-  //  $name = strtolower(substr($email, 0, strpos($email, '@')));
+  //  $name = mb_strtolower(substr($email, 0, mb_strpos($email, '@')));
   $name = u\shortName($fullName);
   if ($otherName = db\get('fullName', 'users', 'name=:name', compact('name'))) return say('shortname taken', compact('otherName'), 'fullName');
   //  $name = r\uniqueName($fullName);
@@ -265,7 +265,7 @@ function formMakeCtty_validate($form, &$sta) {
   
   list ($address, $city, $state) = u\parseAddr($postalAddr); // zip doesn't apply, since it is used for defining the territory
   if (!$address) return say('Bad postal address', 'postalAddr');
-  if (!$state = db\get('id', 'r_states', 'abbreviation=:state', compact('state'))) return say('Bad state', 'postalAddr');
+  if (!$state = r\stateNum($state)) return say('Bad state', 'postalAddr');
 
   $region = strtoupper($region);
   if (!db\exists('r_regions', 'region=:region', compact('region'))) return say(t('That region does not exist.'), 'region');
@@ -353,13 +353,13 @@ EOF;
     foreach (['tickle', 'activated'] as $k) if ($$k) $$k = strtotime('today', $$k); // round down to nearest day
     $days = round(($tickle - $activated) / DAY_SECS); // tickle: days since activation
     list ($type, $color) = !$activated 
-      ? (strpos($notes, 'ZAP') 
+      ? (mb_strpos($notes, 'ZAP') 
          ? [t('DELETE'), 'zap']
-         : ($member ? [t('activate'), 'zap'] : (strpos($data, '"signup";b:0') ? [t('pre'), 'pre'] : [t('setup'), 'setup']))
+         : ($member ? [t('activate'), 'zap'] : (mb_strpos($data, '"signup";b:0') ? [t('pre'), 'pre'] : [t('setup'), 'setup']))
          )
       //    : (round(($activated + TICKLE_WELCOME - $tickle) / DAY_SECS) == 0 ? [t('welcome2'), 'welcome']
       //    : (round(($activated + TICKLE_DELAYED - $tickle) / DAY_SECS) == 0 ? [t('welcome6'), 'welcome']
-      : (strpos($notes, 'ZAP') ? [t('DEACTIVATE'), 'zap']
+      : (mb_strpos($notes, 'ZAP') ? [t('DEACTIVATE'), 'zap']
          : (!$carded ? [t('print card'), 'print-card']
             : (between($days, TICKLE_WELCOME - 1, TICKLE_WELCOME + 14) ? [t('welcome2'), 'welcome']
                : (between($days, TICKLE_DELAYED - 1, TICKLE_DELAYED + 14) ? [t('welcome6'), 'welcome']
@@ -379,7 +379,7 @@ EOF;
     $phone = u\fmtPhone(u\decry('P', $phone), '-');
     $notes = strtr($notes, ["\n" => '|| ', date('Y') => '']);
     if ($type == t('pre')) $notes = db\get('code', 'r_relations', 'other=:uid AND :IS_CUSTOMER', compact('uid')) . " $notes";
-    $notes = substr($notes, 0, 200) . (strlen($notes) > 200 ? '...' : '');
+    $notes = substr($notes, 0, 200) . (mb_strlen($notes) > 200 ? '...' : '');
     $ctty = $cttys[$community];
     $list .= strtr("<tr>$guts</tr>\n", compact($fields));
   }
@@ -725,34 +725,6 @@ function achBatch($args) {
   w\achify("deposit=$date AND amount<=0 AND created<=:NOW"); // temporarily only money going OUT or verifying bank account
   if (test()) return;
 }
-/*
-  extract(just('way date mark', $args));
-  $ways = ['IN'=>'(amount>0 AND txid>0)', 'OUT'=>'(amount<0 AND txid>0)', 'BAD'=>'txid<0'];
-  $where = $ways[strtoupper($way)];
-  $q = db\q("SELECT txid,created,payee,amount,deposit,bankAccount FROM r_usd WHERE deposit=:date AND $where ORDER BY created, txid", compact('date'));
-  if (!$q->rowCount()) return w\go('sadmin/deposits', t('There are no transactions for that ACH batch.'));
-
-  $date = strftime('%Y%m%d', $date ?: now());
-  u\csvStart("CGach$way-$date.csv");
-  while ($tx = $q->fetchAssoc()) {
-  extract($tx);
-  $a = r\acct($payee);
-  //    $a->fixTxBankAccount($bankAccount, $txid);
-  $bankAccount = u\decry('V', $bankAccount); // 2018-03-16
-  $routing = substr($bankAccount, 4, 9);
-  $account = substr($bankAccount, 4 + 9);
-  $fullName = substr($a->fullName, 0, 22); // Citizens Bank limits this field to 22 chars
-  $amount = number_format(abs($amount), 2);
-  $addenda = substr(PROJECT . " tx#$txid", 0, 79); // Citizens Bank limits this field to 79 chars
-  $row = [$payee, $fullName, $routing, $account, $amount, $addenda];
-  u\csv($row);
-  if (!$deposit and $mark) db\update('r_usd', ray('deposit txid', today(), $txid), 'txid');
-  }
-  
-  if (test()) return;
-  exit();
-  }
-*/
 
 /**
  * Create a PDF of all relevant checks.
@@ -815,8 +787,8 @@ function memberId($id, $agent = '', $retroactive = FALSE) {
   $tail = $fmt . $tail . $agentCode;
   
   $acctName = $a->bestName;
-  $nameFont = strlen($acctName) > 38 ? 'font-stretch:condensed;'
-    : (strlen($acctName) > 33 ? 'font-stretch:semi-condensed;' : '');
+  $nameFont = mb_strlen($acctName) > 38 ? 'font-stretch:condensed;'
+    : (mb_strlen($acctName) > 33 ? 'font-stretch:semi-condensed;' : '');
   
   if (!$proSe = $a->proSe) {
     if (!@$a->agentA->cardCode2) $a->makeCardCode(); // NOT r\cardCode($a->qid);

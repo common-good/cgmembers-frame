@@ -862,14 +862,14 @@ function identify($who, $mya, $paying, $self_message = 'no self-trading') {
   } else $cphone = '-';
   
   $short = u\shortName(" $who ", '%') ?: '-'; // abbreviations must not be null or zeroes
-  $cmail = strpos($who, '@') ? u\cry('P', strtolower($who)) : '-';
+  $cmail = mb_strpos($who, '@') ? u\cry('P', mb_strtolower($who)) : '-';
   $subs = compact(ray('who short cphone cmail'));
   $anyAdmin = ($mya->cAdmin2 or $mya->isAdmin2);
 
   $searchable = $anyAdmin ? '1' : '!:IS_NOSEARCH';
   $where = "(name LIKE :short OR :who=fullName OR ($searchable AND (:cphone=phone OR :cmail=email)))";
   if ($anyAdmin) {
-    $qid = strtoupper(strlen($who) == 3 ? R_SERVER_ID . $who : $who);
+    $qid = mb_strtoupper(mb_strlen($who) == 3 ? R_SERVER_ID . $who : $who);
     if (u\isQid($qid) and $a = r\acct($qid)) $where .= " OR uid=$a->id";
     $where = "($where OR uid=:who)";
   }
@@ -890,7 +890,7 @@ EOF;
   $result = db\q($sql, $subs)->fetchAllKeyed(0, 1);
   
   // QID? if not, maybe first word is a QID if this is from a list showing QID and fullName
-  $qid = trim(($i = strpos($who, ':')) ? substr($who, 0, $i) : strtoupper($who));
+  $qid = trim(($i = mb_strpos($who, ':')) ? mb_substr($who, 0, $i) : mb_strtoupper($who));
   if ($a = r\acct($qid)) $result[$a->id] = $a->fullName; // explicit QID is a result, regardless of community
   if (count($result) == 1 and @$result[$myid]) return [$self_message, [], []];
   unset($result[$myid]); // self is one of many results, so ignore it

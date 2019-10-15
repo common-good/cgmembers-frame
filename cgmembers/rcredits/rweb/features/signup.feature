@@ -23,7 +23,7 @@ Scenario: A newbie registers in Western Massachusetts
   | Abe One  | a@    | 413-253-0000 | 01002 | %CO_PERSONAL |
   Then members:
   | uid  | fullName | legalName | email | phone     | zip   | state | country |*
-  | .AAA | Abe One  | Abe One   | a@ | +14132530000 | 01002 |     0 | US      |
+  | .AAA | Abe One  | Abe One   | a@ | +14132530000 | 01002 |    MA | US      |
   And these "signup":
   | preid | source | created |*
   | ?     | ?      | %now    |
@@ -43,7 +43,7 @@ Scenario: A newbie registers with no case
   | abe one  | a@    | 413-253-0000 | 01002 | %CO_PERSONAL |
   Then members:
   | uid  | fullName | legalName | email | phone     | zip   | country | state |*
-  | .AAA | Abe One  | Abe One   | a@ | +14132530000 | 01002 | US      | 0     |
+  | .AAA | Abe One  | Abe One   | a@ | +14132530000 | 01002 | US      | MA    |
 
 Scenario: A member registers bad email
   When member "?" confirms form "signup" with values:
@@ -55,9 +55,9 @@ Scenario: A member registers bad name
   When member "?" confirms form "signup" with values:
   | fullName  | email     | phone        |  zip  | acctType     |*
   | ™ %random | a@        | 413-253-0000 | 01002 | %CO_PERSONAL |
-  Then we say "error": "illegal char" with subs:
-  | field    |*
-  | fullName |
+# NO  Then we say "error": "illegal char" with subs:
+#  | field    |*
+#  | fullName |
 
 Scenario: A member registers bad zip
   When member "?" confirms form "signup" with values:

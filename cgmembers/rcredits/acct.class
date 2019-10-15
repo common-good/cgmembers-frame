@@ -57,7 +57,7 @@ class Acct {
     extract(u\exactly('fullName flags state zip created number uid region', $info,
       [NULL, 0, 0, NULL, now(), NULL, NULL, NULL]));
     u\setDft($legalName, $fullName);
-    u\setDft($email, strtolower(u\randomString(10, 'word')) . '@' . EMAILX);
+    u\setDft($email, mb_strtolower(u\randomString(10, 'word')) . '@' . EMAILX);
     u\setDft($community, r\communityUid($zip));
     u\setDft($login, $created);
     u\setDft($access, $login);
@@ -67,8 +67,7 @@ class Acct {
     if (isset($phone)) $phone = u\fmtPhone($phone, '+n');
     if (!is_numeric($state)) $state = r\stateNum($state); // allow US state abbreviations
     $co = ($flags & u\bit(B_CO));
-    $stepsLeft = ray($co ? S_CO : S_PERSON);
-
+    
     if (empty($region)) $region = empty($zip) ? -r\uidRegion($community) : -r\region($country, $state, $zip);
     $record = empty($uid) ? compact('name') : compact('uid', 'name');
 
@@ -82,10 +81,12 @@ class Acct {
     list ($a->id, $a->agentId) = array($uid, nn($mya) ? $mya->agentId : $uid); // finish creating the object
     self::$rs[$a->id] = (object) $record;
 
-    $fix = @compact(ray('phone email pass fullName legalName flags state country community created login access stepsLeft emailCode cardCode')); // things we may have added or changed
+    $fix = @compact(ray('phone email pass fullName legalName flags state country community created login access emailCode cardCode')); // things we may have added or changed
     foreach (ray('number region') as $k) unset($info[$k]);
 
     $a->update($fix + $info); // this is a lot easier to do after saving the record
+    if (!$a->member) $a->setTask($co ? 'co' : 'person');
+    
     unset($DBTX); // commit
   }
 
@@ -209,7 +210,7 @@ class Acct {
     if ($field == 'masterA') return $a->slave ? $a->jA : $a;
     if ($field == 'helperA') return $a->helper ? r\acct($a->helper) : '';
     if ($field == 'foody') return db\get(':U_FOODY', 'users u', ['uid' => $a->id]);
-    if ($field == 'iclub') return ($a->id < 0 or strpos($a->fullName, t('Investment Club')) !== FALSE);
+    if ($field == 'iclub') return ($a->id < 0 or mb_strpos($a->fullName, t('Investment Club')) !== FALSE);
 ///    if ($field == 'iclubId') return db\get('uid', 'users', 'fullName LIKE :club AND :zip REGEXP zip AND :IS_OK', ray('club zip', t('%Investment Club%'), $mya->zip));
     if ($field == 'trialco') return ($a->co and $a->depends);
     if ($field == 'prefsSet') return !is_null($a->o_minimum); // preferences have been set at least once
@@ -1038,12 +1039,12 @@ EOF;
    * Add a date stamp and agent's initials to the given note (before updating the notes field with it).
    */
   public function stampNote($note) {
-    $rep = strtolower(u\initials(r\agent()->legalName) ?: 'WS');
+    $rep = mb_strtolower(u\initials(r\agent()->legalName) ?: 'WS');
     //    $date = str_replace('-', '', u\fmtDate());
     $date = u\fmtDate();
     return "$date  $rep: $note\n";
   }
-
+    
   /**
    * Mark a membership step as completed.
    * @param string $step: a named step (see S_ALL, etc)
@@ -1066,10 +1067,14 @@ EOF;
     $a->update('stepsLeft', array_values($stepsLeft)); // renumber and update
     
     $nextStep = $a->nextStep();
-    if ($done and !$a->member and empty($nextStep)) {
-      r\tellCO(t('New Member (%name)', ['name' => $a->fullName]));
-      $a->setBit(B_MEMBER);
-      $a->update('tickle', now());
+    if ($done and empty($nextStep)) {
+      $a->update('task', '');
+      if (!$a->member) {
+        r\tellCO(t('New Member (%name)', ['name' => $a->fullName]));
+        $a->setBit(B_MEMBER);
+        $a->update('tickle', now());
+        $a->eachPartner(function ($coA, $a, $code) {$a->setTask('partner');}); // if this is a partner-signup, complete it
+      }
     }
     return $nextStep;
   }
@@ -1087,20 +1092,7 @@ EOF;
     if (!isset($steps0)) $a->update('stepsLeft', $res);
     return $res;
   }
-  
-  /**
-   * Return the name of the current set of setup steps (eg person, co, voice, etc.)
-   */
-  function stepSet() {
-    $a = $this;
-    if (!$left = $a->stepsLeft) return FALSE;
-    if (!$a->member) return $a->co ? 'co' : 'person';
-    foreach (ray($a->co ? 'co2' : S_PSETS) as $k) {
-      if ($a->stepIsDone('wants' . ucfirst($k)) and in($left[0], $a->taskSteps($k))) return $k;
-    }
-    return FALSE;
-  }
-  
+    
   /**
    * Go to the next step
    * @param string $stepDone: the step just completed, if any
@@ -1110,15 +1102,14 @@ EOF;
    */
   public function nextStepUrl($stepDone = '', &$msg = NULL, $info = []) {
     $a = $this;
-    $task = $a->stepSet(); // notice what task we're on before possibly completing it (via a call to stepDone)
 
     u\setDft($msg, $stepDone ? 'info saved' : '');
     if ($a->closed) return 'summary';
 
     if ($stepDone) $a->stepDone($stepDone, TRUE, $info);
     
-    if ($nextStep = ($task ? $a->nextStep() : FALSE)) {
-      if ($stepDone and in($stepDone, $a->taskSteps($task))) $msg .= '|step completed'; // say completed only when relevant
+    if ($nextStep = ($a->task ? $a->nextStep() : FALSE)) {
+      if ($stepDone and in($stepDone, $a->taskSteps($a->task))) $msg .= '|step completed'; // say completed only when relevant
       return ray(S_ALL)[$nextStep] ?: "settings/$nextStep";
     }
 
@@ -1129,6 +1120,7 @@ EOF;
           $set = $a->taskSteps($k);
           if (in($stepDone, $set) and $a->stepsDone($set)) $msg .= "|$k member"; // ack
         }
+        $a->update('stepsLeft task', '', '');
       } else {
         $approval = $a->co ? 'company approval' : 'individual approval';
         $msg .= "setup complete|$approval|join thanks|next steps"; // show on display, not on done
@@ -1137,6 +1129,7 @@ EOF;
     return 'summary';
   }
 
+  public function setTask($task) {$this->update('task stepsLeft', $task, $this->stepsLeft($this->taskSteps($task)));}
   public function taskSteps($task) {return u\consta('s', $task);}
   public function stepIsDone($step) {return (bool) u\getBit($this->steps, $this->allSteps()[$step]);}
   public function stepsDone($steps) {foreach(ray($steps) as $step) if (!$this->stepIsDone($step)) return FALSE; return TRUE;}
@@ -1185,7 +1178,7 @@ EOF;
       if ($password == @$pass) return ($a->admin or now() < @$expires) ?: !($err = 'pass expired');
     }
 
-    if (empty(strlen($a->$passFieldName))) return !$err = 'password required';
+    if (!strlen($a->$passFieldName)) return !$err = 'password required';
     require_once DRUPAL_ROOT . '/includes/password.inc';
     $hash = \_password_crypt('sha512', $password, $a->$passFieldName);
     return ($hash and $a->$passFieldName == $hash) ?: (!$err = 'bad login');
@@ -1831,7 +1824,7 @@ X;
     
     $max = 5;
     for ($i = 0; $i < $max; $i++) {
-      if ($ssnData0 = u\ssnLookup($a->federalId) and !strpos($ssnData0, 'RequestTimedOutException')) break;
+      if ($ssnData0 = u\ssnLookup($a->federalId) and !mb_strpos($ssnData0, 'RequestTimedOutException')) break;
     }
     if ($i == $max) return $a->ssnErr(SSN_TIMEOUT_MSG . t(' on %max tries.', compact('max')));
 
@@ -1847,7 +1840,7 @@ X;
     
     list ($first1, $last1, $mid1) = u\parseName($a->fullName, TRUE);
     list ($first2, $last2, $mid2) = u\parseName($a->legalName, TRUE);
-    foreach (ray('first1 last1 first2 last2') as $k) $$k = strtolower($$k);
+    foreach (ray('first1 last1 first2 last2') as $k) $$k = mb_strtolower($$k);
     
     $Ls = $Fs = $DOBs = [];
     $names = @$d['ssnnames']['ssnname'];
@@ -1856,10 +1849,10 @@ X;
     foreach ($names as $one) {
       $one = (object) $one;
       $name = u\ssnName($one, $F, $M, $L);
-      $Ls[] = strtolower($L);
-      if (strlen($F) > 1) $Fs[] = strtolower($F);
-      if ($M) foreach (explode(' ', strtolower($M)) as $F) {
-          if (strlen($F) > 1) $Fs[] = $F;
+      $Ls[] = mb_strtolower($L);
+      if (mb_strlen($F) > 1) $Fs[] = mb_strtolower($F);
+      if ($M) foreach (explode(' ', mb_strtolower($M)) as $F) {
+          if (mb_strlen($F) > 1) $Fs[] = $F;
         }
       if (@$one->dob) $DOBs[] = strtotime($one->dob);
     }
@@ -1973,7 +1966,7 @@ function acct($uid = '', $agent = '', &$error = '') {
   u\EXPECT(!is_array($uid), 'array uid'); // otherwise hangs (at least for a drupal field array)
   global $mya; // use this ONLY in this class file
   if (!$uid) return $mya ?: (!$error = 'There is no current account.');
-  if (strpos($uid, '@')) {
+  if (mb_strpos($uid, '@')) {
     $uid = db\get('uid', 'users', 'email=:email ORDER BY :IS_CO', ['email' => u\cry('P', $uid)]);
   } elseif (FALSE and preg_match('/[0-9]( |-|\\)) ?[0-9]{4}/', $uid)) {
     $uid = db\get('uid', 'users', 'phone=:phone ORDER BY :IS_CO', ['phone' => u\cry('P', u\fmtPhone($uid, '+n'))]);

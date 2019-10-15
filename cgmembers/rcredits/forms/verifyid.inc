@@ -43,6 +43,7 @@ function formVerifyId_validate($form, &$sta) {
   if ($size > MAX_ID_SIZE * 1024 * 1024) return say(t('That file is too big. It must be under %MAX_ID_SIZE MB'), 'err');
   $path = dirname($tmp_name) . "/$name";
   rename($tmp_name, $path);
+
   $mimetype = mime_content_type($path);
   $sta['input']['filedata'] = serialize(compact(ray('name path mimetype type error size idtype')));
 }
@@ -59,6 +60,6 @@ function formVerifyId_submit($form, &$sta) {
     $mya->verifySsnInBackground();
   }
   
-  say(t('info saved|setup complete'));
+  say(t('info saved'));
   return (!nn($filedata) and $mya->stepCount() > 1) ? w\skipStep('ssn') : w\goNextStep('verifyid');
 }

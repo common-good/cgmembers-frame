@@ -6,8 +6,6 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
-include_once R_ROOT . '/forms/signin.inc';
-
 /**
  * The user signs up for a Common Good account (an individual or company account)
  * @param string $args: if not empty, 
@@ -29,13 +27,8 @@ function formSignup($form, &$sta, $args = '') {
   u\setDft($preid, getPreId($source2));
 
   if (@$reid) return softErr('old partner link');
-    /*
-    if (test()) $reid = f('t.uid', $reid);
-    if ($args2 = w\continuePartnerSignup($reid, @$customer)) extract($args = $args2);
-  } else*/
-  if (@$customer and @$partner and @$partnerCode) {
-    $myid = w\partnerSignup($args); // info passed from partner signup
-  } elseif (@$joint and $a = r\acct() and $a->canManage) {
+
+  if (@$joint and $a = r\acct() and $a->canManage) {
     if (!$a->co) $myid = w\jointSignup(); else return w\go('', t('A company cannot have a joint account.'), 'err');
   } 
   
@@ -52,7 +45,7 @@ function formSignup($form, &$sta, $args = '') {
   if (!@$code) $code = 'self ()';
 
   $notes = '';
-  if ($i = strpos(@$code, '(')) { // self-invitation with friend's name and zipcode
+  if ($i = mb_strpos(@$code, '(')) { // self-invitation with friend's name and zipcode
     $inviterName = substr($code, 0, $i);
     if (!@$partner) $notes = "knows: $code";
     $code = r\acct(1)->iCardCode(IBY_SELF); // inviter is admin for now; invitation() will set $iCode=IBY_SELF
@@ -70,22 +63,6 @@ EOF
 
   $acctType = hidFld(CO_PERSONAL);
 //    $pin = passFld(t('PIN:'), [t('Choose a PIN (any 4 digits)'), t('Your security code for online purchases.')]); // first time logging in, get PIN
-  $calling = textFld(t('Life Calling:'), [t('Your calling in life (optional)'), t('One of the main purposes of %PROJECT is to provide you the opportunity to do what you feel called to do in life. What would bring you joy to do, to earn %RCREDITS (maybe something you\'re not doing yet)? What might you have to offer?')]);
-  $companyOptions = array(
-    'owner' => t('owner'),
-    'employee' => t('employee'),
-    'contractor' => t('other worker (contractor, supplier, etc.)'),
-  );
-  $copts = boxOpt('companyOptions', $companyOptions, $sta);
-
-  $companyInfo = array(
-    'company_text' => item(t('Are you an owner and/or employee of a local company, or of any %PROJECT member company? Otherwise leave this part blank.')),
-//      'company' => textFld(t('Company: '), [t('Your company')], autocomplete('company')),
-    'company' => textFld(t('Company: '), [t('Your company')]),
-    'companyPhon' => textFld(t('Company Ph<span>&nbsp;</span>one:'), [t('Company phone number')]), // Google Chrome bug require obfuscation of "phone"
-    'companyOptions' => boxesFld('', '', @$copts, $companyOptions), 
-  );
-  $companyInfo = fieldSet('companyInfo', $companyInfo, BARE);
 
   jsx('signup', ray('preid', nn($preid))); // must be before $preid = hidFld()
   $submit = t('Next');
@@ -116,44 +93,11 @@ function formSignup_validate($form, &$sta) {
   if ($err = u\badPhone($phone)) return say($err, 'phone');
   if (!emailOkay($email, FALSE, @$myid ? r\acct($myid) : '')) return;
   if ($err = u\badZip($zip)) return say($err, 'zip');
-
-  u\preray(compact(ray('fullName phone email zip')), $sta['input']);
-}
-
-/**
- * Handle optional extra fields
- */
-function validateExtras($sta) {
-   extract(just('myid years months pin company companyPhon companyOptions legalName address city state postalAddr', $sta['input']));
-   return [];
-  if (!nn($state)) return say('bad state', 'state');
-  if (!isset($years) and !isset($months)) return say(t('You must say how long you\'ve been there.'), 'years');
-  foreach (ray('years months') as $k) {
-    if (!nn($$k)) $$k = 0;
-    if ($err = u\badAmount($$k, '>=0')) return say(t('How-long: ') . t($err), $k);
-  }
-  $tenure = $years * 12 + $months;
-//  if (@$pin === '') return say('pin required', 'pin');
-//  if (@$pin and strlen($pin) != 4) return say('wrong pin len', 'pin');
+  
   if (@$companyOptions) extract(just('owner employee contractor', $companyOptions));
   $gotrelation = (@$employee or @$owner or @$contractor);
-  if (@$company or @$companyPhon) { // NOT or $gotrelation (let user get by without)
-    foreach (ray('company companyPhon') as $one) {
-      if (u\nonish(@$$one)) $$one = '';
-      // (no) return say('missing field', array('field' => $one), $one);
-    }
-    if (@$company and $err = u\badName($company)) return say($err, array('field' => 'Company'), 'company');
-    if (@$companyPhon and !$companyPhone = u\fmtPhone($companyPhon, '+n')) return say('bad company phone', compact('companyPhone'), 'companyPhone');
-    if (!$gotrelation) return say('what relation', 'company');
-    $signupCo = @compact(ray('company companyPhone employee owner contractor'));
-  }
-  if (u\poAddress($address)) return say('po in location', 'address');
-  if (!@$legalName) $legalName = $fullName;
-  foreach (ray('fullName legalName address city postalAddr') as $field) {
-    if (nn($$field)) $$field = trim(str_replace('  ', ' ', u\normalizeCase($$field)));
-    if ($err = u\badName($$field)) zExtraErr($notes, $err, $field, $$field);
-  }
-  return $extras ?: [];
+
+  u\preray(compact(ray('fullName phone email zip')), $sta['input']);
 }
 
 /**
@@ -165,15 +109,18 @@ function zExtraErr(&$notes, $msg, $field, $value = '') {
 
 function formSignup_submit($form, &$sta) {
   global $mya;
-  $dbFields = 'fullName legalName email flags phone federalId dob pin zip address city state postalAddr helper iCode notes calling signupCo tenure source';
+  $dbFields = 'fullName legalName email flags phone federalId dob pin zip address city state postalAddr helper iCode notes tenure source';
   extract(just('myid preid confirmed acctType args ats owns partner customer source2 ' . $dbFields, $sta['input']));
   if (test() and !@$args) $args = basename($_SERVER['REQUEST_URI']);
   extract(just('code source2', $args)); // source2 may come from either partner or an ad (through our promo site)
   $helper = $helper + 0; // don't let lack of helper stop us (on DEV)
 
   if (@$notes) list ($source, $notes) = [trim("$notes $source"), ''];
-  if (@$source2) $source = trim(strtoupper($source2) . "-$source");
+  if (@$source2) $source = trim(mb_strtoupper($source2) . "-$source");
   $flags = nn($confirmed) ? u\bit(B_CONFIRMED) : 0;
+  
+  list ($city, $state, $latitude, $longitude) = zipCity($zip);
+
 
   $info = @compact(ray($dbFields));
   $info += $acctType == CO_PERSONAL ? ['preid' => $preid] : ['coType' => $acctType];
@@ -187,6 +134,7 @@ function formSignup_submit($form, &$sta) {
     if (!$a = new r\Acct($info)) return say('cannot create account', 'zot');
     list ($myid, $name) = [$a->id, $a->name];
   }
+  
   $mya = w\setAcct($myid); // this works for both an individual account (proSe) and a company account (with agent)
   $qid = $mya->mainQid;
   
@@ -197,10 +145,6 @@ function formSignup_submit($form, &$sta) {
   db\q('UPDATE r_invites SET invitee=:myid WHERE email=:email', compact('myid', 'email')); // and all such
   if (!@$owns) $mya->setRisk('rents');
   
-  if (@$signupCo) {
-    suCompanyRelation($myid, $signupCo);
-    $mya->update(compact('signupCo'));
-  }
   if ($h = $mya->helperA and @$args and !$h->cAdmin) suCreatorRelation($helper, $args, $myid);
   return finishSignup($info + compact(ray('acctType qid name')), nn($confirmed));    
 }
@@ -222,24 +166,21 @@ function finishSignup($info, $confirmed) {
     if ($mya->email == $h->email) {
       $mya->stepDone('verifyemail');
     } else r\notify($myid, 'verify-co', ['code' => $pw1], TRUE); 
-    return w\goNextStep('signup');  
-  } 
+  } else { // personal account
+    $mya->update('pass', $pass = u\randPass());
 
-  // personal account
-  $mya->update('pass', $pass = u\randPass());
+    r\notify($myid, 'verify', ray('name qid code pass', $mya->name, $mya->mainQid, $pw1, $pass), TRUE); 
 
-  r\notify($myid, 'verify', ray('name qid code pass', $mya->name, $mya->mainQid, $pw1, $pass), TRUE); 
-
-  if (!$confirmed) {
-    u\EXPECT((bool) $h, 'unconfirmed with no helper');
-    if ($h->id != 1) { // sysadmin helper means the potential inviter is named in the notes field
-      $_a1 = $h->makeDo('confirmInvite', $myid); // link to confirm invitedness
-      r\message($h->id, 'confirm invite', ray('_a1 fullName', $_a1, $mya->fullName)); // ask inviter to confirm
+    if (!$confirmed) {
+      u\EXPECT((bool) $h, 'unconfirmed with no helper');
+      if ($h->id != 1) { // sysadmin helper means the potential inviter is named in the notes field
+        $_a1 = $h->makeDo('confirmInvite', $myid); // link to confirm invitedness
+        r\message($h->id, 'confirm invite', ray('_a1 fullName', $_a1, $mya->fullName)); // ask inviter to confirm
+      }
     }
   }
-  
-  $sta['uid'] = $myid; // tell Drupal we're signed in
-  
+
+  regen($mya);  
   return w\goNextStep('signup');
 }
 
@@ -268,86 +209,6 @@ function jointSignup($a = NULL) {
 }
 
 /**
- * Handle info passed from partner signup, for use in CG signup
- * @param assoc $args: what the partner passed (includes non-empty customer, partner and partnerCode)
- * @return string $myid: account record ID for the newly-created account
- *   but if person already has an account, we redirect to continue signup
- *   we also redirect if all that needs to be done is to display a message (including if the person is already a member)
- */
-function partnerSignup($args) {
-  foreach ($args as $k => $v) u\badName($args[$k]); // fix double spaces and leading or trailing
-  extract(just('partner partnerCode customer qid phone fullName email', $args));
-  if (!$partnerA = r\acct($partner) or $partnerA->emailCode != $partnerCode) return NULL;
-  $partnerName = $partnerA->fullName;
-  
-  $reid = r\relation('reid', 'main=:main AND code=:customer', ray('main customer', $partnerA->id, $customer));
-  
-  if (!@$qid) { // person is not a member yet
-    if ($reid and $uid = r\relation('other', $reid)) return $uid;
-    return newCustomer($reid, $args); // mark new or old member as a customer of the partner
-  }
-    
-  // partner sent an already-member
-  $valid = ($a = r\acct($qid) and ($a->phone == u\fmtPhone(@$phone, '+n') or (u\similar($a->fullName, @$fullName, 5, .5))));
-  r\tellAdmin(t('new customer of %partner: %fullName', compact('partner', 'fullName')) . (@$valid ? '' : t('(invalid)')), $args);
-
-  if (!$valid) return w\softErr(t('That does not appear to be your correct %PROJECT member ID. But no worries. We will try to figure out who you are and match up your %PROJECT account with your account at %partnerName. If you have not yet finished opening your %PROJECT account, <%a>sign in</a> (if you have not yet begun, go to %CG_DOMAIN and click "Sign up").', 'partnerName _a', $partnerName, atag('/signin'))); // member mistyped their qid (a royal pain in the butt)
-
-  r\acct($partnerA->id, $a->id)->setRel('customer code', TRUE, $customer);
-  tellPartner($partnerA, $a, 'complete', $customer);
-  return w\go($a->member ? 'empty' : "signin?name=$qid"); // finish account setup or report success
-}
-
-/**
- * Tell the partner about this signup.
- */
-function tellPartner($pA, $a, $op, $customer = NULL) {
-  if (!$pA->website) return w\softErr(t('Partner has no website. Fix it on the Company Info settings page.')); // partner should always have a website
-
-  if ($a->member) w\say('new customer done', ray('partnerName', $pA->fullName));
-  $fields = ray('op partnerCode qid name email customer', $op, $pA->emailCode, $a->mainQid, $a->fullName, $a->email, $customer);
-  u\post($pA->api(), $fields); // tell partner we're starting or done
-}
-
-/**
- * Create a new account and a customer relation with a company, if it doesn't already exist.
- */
-function newCustomer($reid, $args) {
-  foreach (ray('address2 city2 state2 zip2 idVerifiedBy') as $k) $$k = @$args[$k] ?: '?';
-  $args += ['postalAddr' => "$address2, $city2, $state2 $zip2"];
-  $a = new r\Acct(just('fullName phone email address city state zip postalAddr source idVerifiedBy', $args));
-  u\EXPECT($a, 'cannot create account');
-
-  w\setAcct($a->id);
-
-  if (nn($idVerifiedBy)) $a->stepDone('verifyid');
-  if (allContactsGiven($args)) $a->stepDone('contact');
-  
-  if (!$reid) {
-    extract(just('partner customer email autopay', $args));
-    $partnerA = r\acct($partner);
-    $reid = $partnerA->newRelation(ray('other customer code autopay data', $a->id, TRUE, $customer, (bool) @$autopay, serialize($args))); // (bool) is required to avoid NULL
-    w\say('partner welcome', ['partner' => $partnerA->fullName]);
-/*    try { // give them a way to continue, even if they haven't completed the first page
-      $noFrame = TRUE;
-      r\rMail('partner-signup', $email, @compact(ray('fullName reid customer noFrame'))); // so customer can continue
-    } catch (Exception $e) {r\tellAdmin('bad email addr from partner', $args);} // bad email gets caught in signup submit also
-    */
-    tellPartner($partnerA, $a, 'start', $customer);
-  } 
-
-  return finishSignup($args + ray('acctType', CO_PERSONAL), TRUE);
-}
-
-/**
- * Say whether all contact fields are supplied
- */
-function allContactsGiven($args) {
-  foreach (ray(CONTACT_FLDS) as $k) if (empty($args[$k])) return FALSE;
-  return TRUE;
-}
-
-/**
  * Customer clicked on link to begin or continue CG signup after completing partner signup.
  * @param int $reid: r_relations record ID linking customer to partner
  * @param int $reid: (RETURNED) set to NULL if not a valid r_relations ID
@@ -364,14 +225,26 @@ function continuePartnerSignup(&$reid, $customer) {
 }*/
 
 /**
- * Gather the just-submitted checkbox values as which-boxes-to-check for boxesFld.
- * @param string $field: name of boxesFld field
- * @param assoc $opts: display names of the boxes, keyed by their index
- * @param assoc $sta: form status
- * @return flat array of values (not display names) of checked boxes
+ * Regenerate the session for the given account.
  */
-function boxOpt($field, $opts, $sta) {
-///   debug(compact('field','opts','sta'));
-  foreach ((@$sta['input'][$field] ?: []) as $k => $v) $res[] = $k; // $opts[$k]; // note that k==v
-  return @$res ?: [];
+function regen($mya) {
+  global $user; $user = $mya->account('pass timezone'); // timezone keeps Drupal happy in bootstrap.inc
+  $user->uid = $mya->id; // uid is not returned by ->account() (not sure why)
+  \drupal_session_regenerate(); // otherwise another user signing might sign this one out
+}
+
+/**
+ * Return city, state, and coordinates from zip and country
+  {"post code": "01002", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Amherst", "longitude": "-72.4646", "state": "Massachusetts", "state abbreviation": "MA", "latitude": "42.3671"}]}
+  */
+function zipCity($zip, $country = R_COUNTRY_ID) {
+  /*
+  if ($info = @file_get_contents('http://api.zippopotam.us/us/' . $zip)) {
+    if ($info = json_decode($info)) $info = (array) nn($info->places)[0];
+    if ($info) return [$info['place name'], r\stateNum($info['state abbreviation']), $info['latitude'], $info['longitude']];
+  }
+  */
+
+  if ($res = db\get('region,state', 'zip3', 'id=:zip3', ['zip3' => substr($zip, 0, 3)])) extract($res);
+  return $res ? [$region, r\stateNum($state), 0, 0] : [NULL, 0, 0, 0];
 }

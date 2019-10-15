@@ -70,7 +70,7 @@ function getResult($qi, $quText, $quDetail, $quType, $budget, $tot, $votesDirect
 	$optCount = count($tot);
 
 	for($i=0, $optTextMaxLen=0; $i < $optCount; $i++) {
-		$otxlen = strlen($tot[$i]->opttext);
+		$otxlen = mb_strlen($tot[$i]->opttext);
 		if($otxlen > $optTextMaxLen) $optTextMaxLen = $otxlen;
 	}
 //	$separateOptTexts = ($optTextMaxLen + $optCount * 7 > 100); // keep lines short by separating out the descriptions

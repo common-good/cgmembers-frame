@@ -40,7 +40,7 @@ function achify($where = 'deposit=0') {
     $bankAccountType = 'checking'; // we handle only checking accounts at this time
     if ($a->mainQid == 'NEWAFX') $bankAccountType = 'savings';
     $count++;
-    list ($recType, $id, $name, $addendaFlag) = [6, $a->mainQid, $a->legalName, 0];
+    list ($recType, $id, $name, $addendaFlag) = [6, $a->mainQid, u\asciiOnly($a->legalName), 0];
     list ($routing, $account) = u\parseBankAccount($a->bankAccount);
 		
 		$amount *= 100;

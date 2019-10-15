@@ -13,11 +13,7 @@ function formScraps($form, &$sta, $arg = '') {
   global $mya;
 
   if (in($arg, S_PSETS . ' co2')) {
-    $DBTX = db_transaction();
-    $mya->stepDone('wants' . ucfirst($arg));
-    $mya->update('stepsLeft', ray($mya->taskSteps($arg)));
-    unset($DBTX);
-    
+    $mya->setTask($arg);
     $nextStep = $mya->nextStep();
     w\go($nextStep ? (ray(S_ALL)[$nextStep] ?: "settings/$nextStep") : '');
   }

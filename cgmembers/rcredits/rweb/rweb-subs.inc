@@ -268,7 +268,7 @@ function go($page, $msg = '', $field = '') {
   if (test()) {
     $_POST = []; // make sure it doesn't act like we submitted the target page
     t\output("Going to page $page (page0=$lastGo msg=$msg field=$field)");
-    return strpos($page, 'http://') === FALSE ? f('t.pageForm', $page, $msg, $field) : '';
+    return mb_strpos($page, 'http://') === FALSE ? f('t.pageForm', $page, $msg, $field) : '';
   }
 
   if (!u\starts($page, 'http')) $page = "$base_url/$page";
@@ -305,7 +305,7 @@ X;
  * @param string $url: URL to go to
  */
 function goFar($url, $params = '') {
-  $mark = strpos($url, '?') ? '&' : '?';
+  $mark = mb_strpos($url, '?') ? '&' : '?';
   $url = urlencode("$url$mark$params");
   return w\go(BASE_URL . '/rcredits/relay.php?goto=' . $url);
 }
@@ -360,7 +360,7 @@ EOF;
 function htmlButton($name, $id, $value, $class, $other = []) {
   extract(just('tribs href class', $other));
   
-  u\EXPECT(!@$href or strpos($href, 'http') !== FALSE, 'no http in html button'); // $onclick = $href;
+  u\EXPECT(!@$href or mb_strpos($href, 'http') !== FALSE, 'no http in html button'); // $onclick = $href;
   if (@$href) list ($tag, $role) = ['a', 'button']; else $tag = 'button';
   return w\tag($tag, $value, (@$tribs ?: []) + compact(@$onclick ? 'onclick' : 'href', 'class', 'role'));
 }
@@ -512,13 +512,13 @@ function queryPermitted($qName, &$sql = '', &$subtext = '') {
   $map['=:ctty'] = $mya->community ? "=$mya->community" : '<>0'; // alternative is for superAdmin and signed out
   $map[':ctty IN'] = $mya->community ? "$mya->community IN" : '1 NOT IN';
   $sql = strtr($sql0 = $sql, $map);
-  $subtext = strpos($sql0, ':ctty') ? "<h4>$cttyName</h4><br>$text2" : $text2;
+  $subtext = mb_strpos($sql0, ':ctty') ? "<h4>$cttyName</h4><br>$text2" : $text2;
   
   if (!preg_match('/^([0-9])(.*)/', $qName, $m)) {
     return $qName; // no restrictions
   } else {
     list ($zot, $d, $qName) = $m;
-    if (strpos($sql0, ':myid')) $subtext = "<div><h4>for $mya->fullName</h4>$text2</div>";
+    if (mb_strpos($sql0, ':myid')) $subtext = "<div><h4>for $mya->fullName</h4>$text2</div>";
     return $d >= ($mya->superAdmin ? 0 : ($mya->admin ? 1 : ($mya->cAdmin2 ? 2 : ($mya->co ? B_CO : 9))))
     ? $qName
     : FALSE;
@@ -1220,7 +1220,7 @@ function memberStep($step, $done, $text, $links = '', $newWindow = FALSE) {
   if ($links) {
     if (!is_array($links)) $links = array($links);
     foreach ($links as $href) {
-      if (strpos($href, 'http') === FALSE) $href = BASE_URL . "/$href";
+      if (mb_strpos($href, 'http') === FALSE) $href = BASE_URL . "/$href";
       $link = "<a href=\"$href\"$target>";
       $linkx = '</a>';
       $text = preg_replace('/<a>/', $link, $text, 1);
@@ -1237,7 +1237,7 @@ EOF;
 
 // NOT USED
 function divButton($href, $title) {
-  if (strpos($href, 'http') === FALSE) $href = BASE_URL . "/$href";
+  if (mb_strpos($href, 'http') === FALSE) $href = BASE_URL . "/$href";
   return w\popHelp('', $title, $href);
   /*
   return  <<<EOF
@@ -1249,8 +1249,8 @@ EOF;
 // NOT USED
 function imageButton($href, $title, $src) {
   global $rUrl;
-  if (strpos($href, 'http') === FALSE) $href = BASE_URL . "/$href";
-  if (strpos($src, 'http') === FALSE) $src = "$rUrl/images/icons/$src";
+  if (mb_strpos($href, 'http') === FALSE) $href = BASE_URL . "/$href";
+  if (mb_strpos($src, 'http') === FALSE) $src = "$rUrl/images/icons/$src";
   return w\popHelp("<img src=\"$src\" />", $title, $href);
 /*  return  <<<EOF
 <a href="$href" title="$title"><img src="$src" border="0" /></a>
@@ -1314,7 +1314,7 @@ function suCreatorRelation($helper, $args, $myid) {
  * @return: TRUE if email is okay to use, else FALSE
  */
 function emailOkay(&$email, $dupsOk, $a = FALSE, $suppressErr = FALSE) {
-  $email = strtolower($email);
+  $email = mb_strtolower($email);
   if (!u\validEmail($email)) return $suppressErr ? FALSE : say('bad email', compact('email'), 'email');
   if (!$dupsOk and emailDup($email, $a ? $a->id : 0, $suppressErr)) return FALSE;
   return TRUE;
@@ -1329,14 +1329,14 @@ function emailOkay(&$email, $dupsOk, $a = FALSE, $suppressErr = FALSE) {
  */
 function emailDup($email, $uid, $suppressErr = FALSE) {
   global $base_url;
-  $email = strtolower($email);
+  $email = mb_strtolower($email);
   $crypt = u\cry('P', $email);
   if (!$who = db\get('fullName', 'users', 'email=:crypt and uid<>:uid AND NOT :IS_CO', compact('crypt', 'uid'))) return FALSE;
   if (!$suppressErr) {
     $_a = atag("/settings/password/$email");
     $emailTagged = str_replace('@', '+whatever@', $email);
     $dupMsg = 'duplicate email';
-    if (stripos($email, '@gmail.com')) $dupMsg .= '|email plus';
+    if (mb_stripos($email, '@gmail.com')) $dupMsg .= '|email plus';
     if (!$uid) $forgot = '|forgot password';
     say($dupMsg . @$forgot, compact(ray('emailTagged who _a')), 'email');
   }
@@ -1369,7 +1369,7 @@ function findCompany($company, $companyPhone) {
   $companyShortName = u\shortName($company);
   $companyUid = db\get('uid', 'users', ':IS_CO AND phone=:companyPhone', compact('companyPhone'));
   if (!$companyUid) $companyUid = db\get('uid', 'users', ':IS_CO AND name=:companyShortName', compact('companyShortName'));
-  if (!$companyUid and strlen($companyShortName) > 8 ) {
+  if (!$companyUid and mb_strlen($companyShortName) > 8 ) {
     $companyShortName .= '%';
     $companyUid = db\get('uid', 'users', ':IS_CO AND name LIKE :companyShortName', compact('companyShortName'));
   }
@@ -1399,7 +1399,7 @@ function nameAndEmailFlds($co, $fullName = '', $email = '', $hideEmail = FALSE, 
   $fullName = textFld("$what:", ["$who " . t('full name'), $co ? t('dba desc') : (t('usename desc') . $personalMsg)], required(@$fullName));
   $legalName = textFld(t('Legal name:'), ["$who " . t('full legal name (if different)'), $who . t('legalname desc')]);
   if ($email and !emailOkay($email, FALSE, $myid ? r\acct($myid) : '')) $hideEmail = FALSE; // make sure they can fix it
-  if (strpos($email, '@' . EMAILX) and !test()) $hideEmail = FALSE; // handle placeholder for making joint accounts
+  if (mb_strpos($email, '@' . EMAILX) and !test()) $hideEmail = FALSE; // handle placeholder for making joint accounts
   $email = $hideEmail ? hidFld(@$email) : textFld(t('Email:'), [t('Email'), t('<b>Type carefully.</b> All emails from the system will be sent to this address. It will not be made public, but will be viewable by accounts you transact with (you can choose greater privacy by clicking "Advanced" on the Preferences step).')], required(@$email));
   jsx('legal-name');
   return compact(ray('fullName legalName email'));
@@ -1498,7 +1498,7 @@ function contactFields($defaults = []) {
 }  
 
 function stateFld($dft) {return selectFld(t('State:'), t(''), required($dft), ['' => '--'] + db\keyed('id,name', 'r_states', 'country_id=:R_COUNTRY_ID'));}
-function sourceFld() {return textFld(t('Referred by:'), [t('How you heard about %PROJECT'), t('Where did you hear about %PROJECT? (name of company or person, web address, publication name, radio station name, or whatever)')]);}
+function sourceFld($dft = NULL) {return textFld(t('Referred By:'), [t('How you heard about %PROJECT'), t('Where did you hear about %PROJECT? (name of company or person, web address, publication name, radio station name, or whatever)')], dft(@$dft));}
 function zipFld($zip = NULL) {return textFld(t('Postal Code:'), [t('Physical location postal code'), t('Postal code for your <em>physical location</em>')], required(@$zip));}
 function sellingFld($selling = NULL) {return areaFld(t('Selling:'), [t('Products'),t('Enter one or more <b>VERY SHORT</b> transaction descriptions (for example "food") for when you make a sale &mdash; one line for each. Put the most common one first. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', u\fmtDate(now(), TRUE))], required($selling));}
 
@@ -1511,7 +1511,7 @@ function zBadSelling(&$selling) {
   $selling = explode("\n", $selling);
   foreach ($selling as $one) {
     $one = trim($one); // don't allow empty or reserved values
-    if (!u\nonish($one) and !in($one, ['', S_REFUND, S_USD_OUT, t('cash')]) and !r\usdin($one)) $new[] = strtolower($one);
+    if (!u\nonish($one) and !in($one, ['', S_REFUND, S_USD_OUT, t('cash')]) and !r\usdin($one)) $new[] = mb_strtolower($one);
   }
   if (!nn($new)) return t('missing field', 'field', 'selling');
   $selling = join("\n", $new);
@@ -1965,11 +1965,11 @@ function say($index, $args = [], $errField = '') {
 ///  if (is_array($index) and !isset($index[0])) debug($index);
   if (is_array($index)) list ($index, $args, $errField) = array($index[0], $index[1], $args); // error returned from a function
   if (!is_array($args)) list ($args, $errField) = array($errField, $args); // allow either order, for easy 2-param calls
-  $noTable = (strpos($index, '<table') === FALSE);
+  $noTable = (mb_strpos($index, '<table') === FALSE);
   $message = $noTable ? t($index, $args) : $index; 
   $fieldErr = ($errField and $errField != 'ERR');
   if ($fieldErr) \form_set_error($errField, $message); else \drupal_set_message($message, @$errField == 'ERR' ? 'error' : 'status', FALSE);
-  $adminReport = ($mya and $mya->admin2 and strlen($message) > 200);
+  $adminReport = ($mya and $mya->admin2 and mb_strlen($message) > 200);
   if ($noTable and !$adminReport) u\loga($fieldErr ? 'sayerr' : 'say', compact('message'));
   return FALSE;
 }
@@ -2171,7 +2171,7 @@ function monthChoices($title, $things, $subtext = '', $end = -1, $target = '_bla
       $data .= "<td>$v</td>";
     }
     $list = "<table id=\"$things\">\n<tr>$headers</tr>\n<tr>$data</tr>\n</table>";
-  } else $list = t('There are no %things available yet for this account.', 'things', strtolower($title));
+  } else $list = t('There are no %things available yet for this account.', 'things', mb_strtolower($title));
   
   $title = item($title);
   $subtext = nn($subtext) ? item($subtext) : NULL;

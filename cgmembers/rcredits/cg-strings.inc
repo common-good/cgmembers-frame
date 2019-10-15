@@ -87,7 +87,7 @@ $GLOBALS['tStrings'] = array(
   'stale invoice' => t('<b>Invoice Reminder:</b> %daysAgo days ago we emailed you an invoice from %payeeName for %amount. <%a1>Click here to pay or deny this invoice</a>. Or sign in at %CG_DOMAIN and click "Invoices TO You" on the History menu. If you have any questions or concerns about this invoice, please contact %payeeName at %email or %phone.'),
   'stale invoice report' => t('<b>Invoice Update:</b> %daysAgo days ago you invoiced %payerName %amount for %purpose (invoice #%nvid, %created). That invoice is still marked "pending", so we sent %payerName a reminder. If this invoice is no longer valid, sign in at %CG_DOMAIN and choose "Invoices FROM You" on the History menu to cancel it.'),
   //  'new invoice' => t('<b>Invoice:</b> %otherName invoiced you %amount for "%purpose". To pay (or deny) this invoice, <%a>click here</a>.'),
-  'new customer done' => t('<h2>Congratulations!</h2>Your sign-up with %partnerName is complete. Expect a confirmation note from them by email.'),
+//  'new customer done' => t('<h2>Congratulations!</h2>Your sign-up with %partnerName is complete. Expect a confirmation note from them by email.'),
 
   'short invoice' => t('Your balance is %short short, to pay your invoice from %payeeName (#%nvid).'),
   'expect a transfer' => t('Funds will be transferred from your connected bank account to cover this payment.'),

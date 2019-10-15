@@ -1142,14 +1142,14 @@ function t($string, $subs0 = []) {
 
   foreach ($messages as $i => $message) {
     if (!$model = @$GLOBALS['tStrings'][$message] ?: $message) continue;
-//    if ($p = strpos($model, '. Type ') and @$channel != @TX_SMS) $model = substr($model, 0, $p + 1); // don't tell the user to type something unless it's SMS
+//    if ($p = mb_strpos($model, '. Type ') and @$channel != @TX_SMS) $model = substr($model, 0, $p + 1); // don't tell the user to type something unless it's SMS
     
     if ($i > 0 and $model[0] != '.') $model = ' ' . $model; // separate the messages, unless adding a period
     $messages[$i] = $model;
   }
   $string = str_replace('\\', "\n", join('', $messages));
 
-//  if (strpos($string, '%') !== FALSE) {
+//  if (mb_strpos($string, '%') !== FALSE) {
   if (preg_match('/[%@!]/', $string)) {
     $subs = constantSubs($string);
     foreach ($subs0 as $k => $v) {
@@ -1213,15 +1213,15 @@ function ray($s = '', $value1 = NULL) {
 
 // this func is called too often for the overhead u\EXPECT(compact('s'), 'string');
 /**/  if (is_array($s)) die('bad ray argument (array) ' . trace()); // can't use u\EXPECT here
-  $pattern = strpos($s, "\n") !== FALSE ? '/\R/' 
-    : (strpos($s, '|') !== FALSE ? ' *\| *' 
-    : (strpos($s, ',') !== FALSE ? '\, *' 
-    : (strpos($s, ';') !== FALSE ? '; *' 
-    : (strpos($s, ' ') !== FALSE ? '  *' // strangely ' +' fails but '  *' works
+  $pattern = mb_strpos($s, "\n") !== FALSE ? '/\R/' 
+    : (mb_strpos($s, '|') !== FALSE ? ' *\| *' 
+    : (mb_strpos($s, ',') !== FALSE ? '\, *' 
+    : (mb_strpos($s, ';') !== FALSE ? '; *' 
+    : (mb_strpos($s, ' ') !== FALSE ? '  *' // strangely ' +' fails but '  *' works
     : FALSE))));
 
   $simple = $pattern ? mb_split($pattern, $s) : array($s);
-  if (!preg_match('/[\,\|]/', $pattern) or !strpos($s, ':')) return $simple; // no subargs
+  if (!preg_match('/[\,\|]/', $pattern) or !mb_strpos($s, ':')) return $simple; // no subargs
 
   $ray = [];
   foreach ($simple as $one) {
@@ -1257,7 +1257,7 @@ function just($these, $info, $ordered = FALSE) {
  * @return an associative array of "GET" parameters.
  */
 function urlq2ray($q) {
-  parse_str(strpos($q, urlencode('=')) ? urldecode($q) : $q, $ray);
+  mb_parse_str(mb_strpos($q, urlencode('=')) ? urldecode($q) : $q, $ray);
   return $ray;
 }
 
@@ -1293,7 +1293,7 @@ function in($what, $list) {
   return in_array($what, $list);
 }
 
-function strhas($string, $what) {return (strpos($string, $what) !== FALSE);}
+function strhas($string, $what) {return (mb_strpos($string, $what) !== FALSE);}
 function between($what, $low, $high) {return ($low <= $what and $what <= $high);}
 function nn(&$a, $else = '') {return (!isset($a) or is_null($a)) ? $else : $a;} // "not null"
 /**/  function pr($whatever) {return print_r($whatever, TRUE);}

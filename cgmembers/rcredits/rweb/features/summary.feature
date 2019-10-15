@@ -79,10 +79,3 @@ Scenario: A company agent clicks the summary tab
   | ID       | ZZC (company account) |
   | Name     | Corner Pub (cornerpub) |
 #  | Contact  | 3 C St., Ctown, Cher, FRANCE |
-  
-Scenario: Member's account is not active
-  Given members have:
-  | uid  | flags |*
-  | .ZZA |       |
-  When member ".ZZA" visits page "summary"
-  Then we show "Identity Verification"

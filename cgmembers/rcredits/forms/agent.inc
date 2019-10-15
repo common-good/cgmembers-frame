@@ -18,7 +18,11 @@ function formAgent($form, &$sta, $args = '') {
   $agent = textFld(REQ . t('Personal Account:'), [t('Account ID')]);
   $phone = textFld(REQ . t('Phone:'), [t('Phone number'), t('Type the phone number on your personal account, for verification.')]);
 
-  return cgform(compact(ray('title subtext agent phone')) + setupFoot());
+  $coTypes = ray(CO_TYPES);
+  unset($coTypes[CO_PERSONAL]);
+  $coType = radiosFld(t('Account type:'), '', required(), $coTypes);
+  
+  return cgform(compact(ray('title subtext agent phone coType')) + setupFoot());
 }
 
 function formAgent_validate($form, &$sta) {
@@ -32,11 +36,12 @@ function formAgent_validate($form, &$sta) {
 
 function formAgent_submit($form, &$sta) {
   global $mya;
-  extract(just('agent', $sta['input']));
+  extract(just('agent coType', $sta['input']));
 
   $a = r\acct($agent);
   $mya->newRelation(ray('other permission', $a->id, r\perm(B_MANAGE)));
-  $a->setBit('depends', FALSE);
+  $mya->setBit('depends', FALSE);
+  $mya->update(compact('coType'));
 
   return w\goNextStep('agent');
 }

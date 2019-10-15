@@ -80,7 +80,7 @@ define('DELETED_BY_VIEW', 'tx_hdrs tx_entries tx_disputes'); // these tables are
 define('DEV_ONLY_MSG', 'only on development machine');
 
 $host = strtolower(@$_SERVER['HTTP_HOST']);
-if (!isDEV) if (strlen($host) > 30 or !preg_match('/^\[?([a-zA-Z0-9-:\]_]+\.?)+$/', $host)) {header('HTTP 400 Bad Request'); exit();}
+if (!isDEV) if (mb_strlen($host) > 30 or !preg_match('/^\[?([a-zA-Z0-9-:\]_]+\.?)+$/', $host)) {header('HTTP 400 Bad Request'); exit();}
 //define('R_PATH', '/sites/all/modules/rcredits');
 define('R_PATH', '/rcredits');
 global $rUrl; $rUrl = BASE_URL . R_PATH;
@@ -88,7 +88,7 @@ define('R_ROOT', __DIR__);
 define('ROOT', getcwd() . '/..'); // avoid using DRUPAL_ROOT here (else gives confusing warning when tests fail)
 $parts = parse_url($base_url);
 $base_path = @$parts['path'] . '/';
-$base_root = substr($base_url, 0, strlen($base_url) - strlen(@$parts['path'])); // everything until first slash after "scheme://"
+$base_root = mb_substr($base_url, 0, mb_strlen($base_url) - mb_strlen(@$parts['path'])); // everything until first slash after "scheme://"
 
 define('NOT_PRODUCTION', !isPRODUCTION); // safer to use than !isPRODUCTION (in case of typo)
 
@@ -132,9 +132,8 @@ define('R', '<span class="r">r</span>');
 define('US', '<span class="us">us</span>');
 /// define('GAME_COMPANIES', '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital');
 define('R_DATE_FLDS', 'created completed deposit sent invited giftDate signed login access joined yesterday dob when sold'); // date field names for testing and administrative display
-define('CONTACT_FLDS', 'fullName email phone address city state zip address2 city2 state2 zip2 tenure owns'); // used in partner signup
 define('CO_FLDS', 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd staleNudge contact'); // account fields stored in r_company
-define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy idVerifiedBy'); // fields stored in the account's "data" array field (serialized)
+define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy idVerifiedBy'); // fields stored in the account's "data" array field (serialized)
 define('MASTER_NUMERIC_FLDS', 'minimum achMin savingsAdd saveWeekly');
 define('MASTER_FLDS', MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank refill'); // only in master, for joint accounts
 define('R_MONEY_FLDS', 'balance rewards floor giftPot committed'); // financial amount fields in account record
@@ -332,13 +331,14 @@ define('APP_CAN_BIT_DESCS', t('charge customers,undo last transaction,give %RCRE
 // Membership steps
 define('R_STEPS_OLD', 'signup:signup, verify, ssn, sign:community/agreement, donate:community/donate, proxies, prefs:settings/preferences, connect, company, relations, photo, food, discount:community/discount, backing:community/backing');
 
-define('S_ALL', 'signup, verifyemail, verifyid, ssn, agent, wantsCard:scraps/card, wantsVoice:scraps/voice, wantsSell:scraps/sell, wantsPrint, printed, wantsCo2:scraps/co2, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, food, discount:community/discount, backing:community/backing, titheout, tithein'); // where to go to complete each step (unordered) -- add new steps to the end
+define('S_ALL', 'signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, titheout, tithein, work, partnerend, food, wantsPrint, printed'); // where to go to complete each step (unordered) -- add new steps to the end
 define('S_PERSON', 'signup verifyid agree preferences fund verifyemail'); // soon replace "preferences" with titheOut
 define('S_CO', 'signup discount verifyemail');
 define('S_CO2', 'agent agree backing company donate photo preferences tithein');
 define('S_CARD', 'photo contact donate');
 define('S_SELL', 'ssn contact tithein');
-define('S_VOICE', 'contact donate proxies backing invite'); // add comment
+define('S_VOICE', 'contact donate proxies work backing invite'); // add comment
+define('S_PARTNER', 'partnerend'); // finalize partner-signup process
 
 define('S_PSETS', 'card sell voice');
 
@@ -554,6 +554,7 @@ $GLOBALS['emailSubjects'] = array(
   'notices' => t('%PROJECT Notices for %qid for %range'),
   'message' => t('%PROJECT %topic'),
 	'annual-gift' => t('your chosen annual gift to %PROJECT'),
+  'cooppower-signup' => t('Community Solar Signup'),
 );
 
 $GLOBALS['topics'] = array( // topics for 'message' email

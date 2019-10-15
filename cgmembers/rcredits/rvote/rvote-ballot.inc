@@ -148,7 +148,7 @@ EOF;
 
 //  $types = ray('Investment Loan Incentive Grant Other');
 
-  if (is_numeric(trim(substr($sponsor, 0, 3)))) $sponsor = substr($sponsor, 3);
+  if (is_numeric(trim(mb_substr($sponsor, 0, 3)))) $sponsor = mb_substr($sponsor, 3);
   foreach (ray(RECOVERY_OPTS) as $i => $v) if (u\getBit($recovery, $i)) $ways[] = $v;
   
   $rows = [

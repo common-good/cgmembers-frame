@@ -233,8 +233,8 @@ function formAccounts($form, &$sta) {
       } else {
         $pos = substr($choice, 1, 2) == '. ' ? 3 
         : (substr($choice, 1, 1) == ' ' ? 2
-        : (strtoupper(substr($choice, 0, 4)) == 'THE ' ? 4 : 0));
-        $ltr = strtoupper(substr($choice, $pos, 1));
+        : (mb_strtoupper(substr($choice, 0, 4)) == 'THE ' ? 4 : 0));
+        $ltr = mb_strtoupper(substr($choice, $pos, 1));
         $ltrs[$ltr][$uid] = "<small>$qid</small> $choice";
         $choice =  "$qid $choice";
       }
@@ -280,7 +280,7 @@ function formAccounts($form, &$sta) {
 function formAccounts_validate($form, &$sta) {
   extract(just('newAcct accounts', $sta['input']));
 //  t('Type part of name, phone, email, record ID, or qid.')
-  if (strpos($newAcct, '@') and !u\validEmail($email = $newAcct)) return say('bad email', compact('email'), 'newAcct');
+  if (mb_strpos($newAcct, '@') and !u\validEmail($email = $newAcct)) return say('bad email', compact('email'), 'newAcct');
   if (!$a = w\whois($newAcct, 'newAcct', [], t('You are already in that account.'), FALSE)) return FALSE;
   u\preray(compact('a'), $sta['input']); // ['uid' => $a->id]
 }
@@ -317,10 +317,12 @@ function changeWho($args = '') {
  * @param bool $continue: <don't go to Promo site after signout> (can't be a "go there" parameter, because it defaults wrong)
  */
 function signout($continue = FALSE) {
-  if (isDEV and test()) setAcct(NULL); else
-  @\session_destroy();
-  if (isDEV and !test()) w\go('signin');
+  if (!empty($continue) and !is_numeric($continue)) $continue = (string) $continue;
+  if ($sid = session_id()) db\del('sessions', '', ':sid IN (sid, ssid)', compact('sid'));
+  session_unset();
+  setAcct(NULL);
   if ($continue == 'timedout') list ($continue, $timeout) = [FALSE, '&timedout=1']; else $timeout = '';
+  if (isDEV and !test() and !$continue) return w\go('signin');
   if (!$continue) return w\go(PROMO_URL . '?region=' . R_SERVER_ID . $timeout);
 }
 
@@ -409,7 +411,7 @@ EOF;
   while ($row = $q->fetchAssoc()) {
     extract($row);
     $invited = u\fmtDate($invited);
-    if (!$started = strpos($who, ' ') and u\starts($who, CRYPT_FLAG . 'P')) $who = u\decry('P', $who); // decrypt email
+    if (!$started = mb_strpos($who, ' ') and u\starts($who, CRYPT_FLAG . 'P')) $who = u\decry('P', $who); // decrypt email
     $status = ($member or $ok) ? t('is a Member!') : ($started ? t('account Not Complete') : ($expired ? t('expired') : '(no response yet)'));
     $color = $member ? 'member' : ($started ? 'incomplete' : ($expired ? 'expired' : 'other'));
     $nameClass = $co ? 'name co' : 'name';

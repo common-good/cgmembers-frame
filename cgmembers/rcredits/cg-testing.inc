@@ -31,7 +31,7 @@ function fixData(&$info, $direct = FALSE) {
 
   $fields = key($info) . ' email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId'; // first key is probably an ID field, so keep it at the front
   
-  if (@$testVars) foreach ($info as $k => $v) if (strpos($v, '@') !== FALSE) {
+  if (@$testVars) foreach ($info as $k => $v) if (mb_strpos($v, '@') !== FALSE) {
     foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", $var, $v);
   }
   extract(just($fields, $info));
@@ -283,9 +283,9 @@ function doTxs($info, $thing) {
   extract(u\exactly($hdrFlds . ' ' . $testFlds, $info, FALSE));
   if (!$reversesXid) $reversesXid = NULL;
   $for = $for ?: $purpose;
-  if (strpos($for, ',')) $for = explode(',', $for); // specifying both
+  if (mb_strpos($for, ',')) $for = explode(',', $for); // specifying both
   if ($for) list ($payerFor, $payeeFor) = is_array($for) ? $for : [$for, $for];
-  if (u\starts($payeeFor, 'undoes:')) $reversesXid = substr($payeeFor, strpos($payeeFor, ':') + 1);
+  if (u\starts($payeeFor, 'undoes:')) $reversesXid = substr($payeeFor, mb_strpos($payeeFor, ':') + 1);
 
   $risks = $risks ? getRisks($risks, K_TX_RISKS) : 0;
   if ($type or !$testOnly) $type = $type ? (is_numeric($type) ? $type : (u\consta('E', $type) ?: -1)) : E_PRIME;
@@ -294,7 +294,7 @@ function doTxs($info, $thing) {
   if ($flags and !is_numeric($flags)) $flags = u\bit($flags); // works for '' and arrays too
 
   if (!$testOnly) { // set up everything needed for record creation (array_filter then should have no effect or new r\Tx dies)
-    if (!isset($info['goods'])) $goods = strpos($payeeFor, 'cash') !== FALSE ? FOR_USD : FOR_GOODS;
+    if (!isset($info['goods'])) $goods = mb_strpos($payeeFor, 'cash') !== FALSE ? FOR_USD : FOR_GOODS;
     $dfts = ray('created type channel risks goods flags payerFor payeeFor channel',
       now(), TX_TRANSFER, TX_SYS, 0, $goods, 0, t('payerFor'), t('payeeFor'), $channel0);
     foreach ($dfts as $k => $v) if ($$k === FALSE) $$k = $v;
@@ -447,7 +447,7 @@ function notice($notice, $id, $subs = []) {
   global $base_url, $thatThing;
 
   $subs = @$subs[0];
-  if (strpos($nm = @$subs['otherName'], 'href="do/')) {
+  if (mb_strpos($nm = @$subs['otherName'], 'href="do/')) {
     $subs['otherName'] = str_replace('href="do/', "href=\"$base_url/do/", $nm);
   }
 
@@ -504,7 +504,7 @@ function doneStep($id, $step) {
   }
 
   if (!$a = t\a($id)) return t\output("Not an account: $id");
-  if (!$a->stepsLeft and !$a->steps) $a->update('stepsLeft', $a->taskSteps($a->co ? S_CO : S_PERSON));
+  if (!$a->stepsLeft and !$a->steps) $a->setTask($a->co ? 'co' : 'person');
 
   if (!$testOnly) $a->stepDone($step);
   return $a->stepIsDone($step);  
@@ -741,7 +741,7 @@ function getErrors() {
   $errors = \drupal_get_messages('error', FALSE);
   $errors = @$errors['error'] ?: [];
   foreach ($errors as $key => $value) {
-    if (u\abbreviates('Unable to send e-mail', $value) or strpos(strip_tags($value), 'expected to be a reference, value given in drupal_retrieve_form()')) unset($errors[$key]); // ignore these when testing
+    if (u\abbreviates('Unable to send e-mail', $value) or mb_strpos(strip_tags($value), 'expected to be a reference, value given in drupal_retrieve_form()')) unset($errors[$key]); // ignore these when testing
   }
   return $errors;
 }
@@ -784,8 +784,9 @@ function findEmail($index, $email, $subs) {
   $subs = is_array(@$subs[0]) ? $subs[0] : @$subs;
   t\fixEmail($email);
   t\fixData($subs);
-  if ($a = r\acct($email)) $subs['qid'] = $a->mainQid;
+//  if ($a = r\acct($email)) $subs['qid'] = $a->mainQid;
   
+  $esubs = [];
   foreach ($subs as $k => $v) {
     if ($k == 'nudge') $subs[$k] = $v = t($v);
     $esubs['{' . $k . '}'] = $v;
@@ -886,35 +887,6 @@ function weShowWith($title0, $content = FALSE, $mustBePresent = TRUE) {
   return $title == $title0 ? weShow($content, $mustBePresent) : TRUE;
 }
 
-function weShowWithSubs($page, $subs) {
-  global $testOnly;
-  global $testConfirmation; // confirmation message output, if any
-  global $formOut;
-
-  $subs = @$subs[0] ?: []; // comes in as "" if no subs
-
-  if (strpos($page, 'confirm ') !== FALSE) {
-    foreach (just(R_DATE_FLDS, $subs) as $k => $v) if (is_numeric($v)) $subs[$k] = u\fmtDate($v);
-    $wanted = t($page, $subs);
-    t\output("<b>WANTED: </b>$wanted", 'screen');
-    $res = ($wanted == $testConfirmation);
-    if (!$res) t\output(compact('wanted', 'subs', 'testConfirmation'));
-    return $res;
-  }
-  
-  if (strpos($page, '/statement')) {
-    $form = u\getFile(TEST_PDF_FLNM);
-  } else {
-    $form = strtr(t\strip(r\Web\showForm($page, @$subs['arg1'], @$subs['arg2'])), $subs);
-    t\output("<b>WANTED: </b>$form", 'screen');
-    if ($form != $formOut['text']) return FALSE;
-  }
-  unset($subs['arg1']);
-  unset($subs['arg2']);
-  foreach ($subs as $one) if (strpos($form, $one) === FALSE) return FALSE; // sometimes we dunno what to sub for
-  return TRUE;
-}
-
 function makePicture($photo, $a) {return $a->update(compact('photo'));}
 
 /**
@@ -973,7 +945,7 @@ function fullQid2($agent) {
 function parseQr($qr) {
   list ($member, $code) = explode(',', $qr . ',');
   return [t\fullQid2($member), $code];
-//  list ($member, $m, $code) = preg_split('/([\.-])/', $qr, 0, PREG_SPLIT_DELIM_CAPTURE);
+//  list ($member, $m, $code) = mb_split('/([\.-])/', $qr, 0, PREG_SPLIT_DELIM_CAPTURE);
 //  $member = R_SERVER_ID . ($m == '-' ? ':' : $m) . $member;
 }
 
@@ -1025,7 +997,7 @@ function verifyRecord($table, $info) {
   foreach ($info as $key => $value) {
     if ($value == '?') {unset($info[$key]); continue;}
     $crit[] = $value === '' ? "($key IS NULL or $key=:$key)"
-    : ((in($key, R_DATE_FLDS) or stripos($key, 'date') !== FALSE) ? 
+    : ((in($key, R_DATE_FLDS) or mb_stripos($key, 'date') !== FALSE) ? 
       "DATE(FROM_UNIXTIME(`$key`))<=>DATE(FROM_UNIXTIME(:$key))" 
     : (in($key, 'trust risk') ? "CAST(ROUND($key, 2) AS CHAR)<=>:$key"
     : "`$key`<=>:$key")); // null-safe ==
@@ -1416,11 +1388,11 @@ function parseAmt($var, $a) {
 ///  debug(compact('a','bal','var'));
 
   if (($i = strpos($var, '+')) or ($i = strpos($var, '-'))) {
-    $op = substr($var, $i, 1);
+    $op = mb_substr($var, $i, 1);
     list ($var, $value) = explode($op, $var);
     if ($op == '-') $value = -$value;
   } else $value = 0;
-  if (substr($var, 0, 1) == '+') list ($set, $var) = array(TRUE, substr($var, 1));
+  if (mb_substr($var, 0, 1) == '+') list ($set, $var) = array(TRUE, mb_substr($var, 1));
   global $$var;
   if (@$set) $$var = $bal; // not defined yet, set the var to actual USD balance
 ///  debug(compact(ray('var a bal i op value')));
@@ -1447,7 +1419,7 @@ function weSayWithSubs($type, $index, $subs) {
   $msg0 = t($index);
   foreach ($subs as $key => $value) {
     if ($value == '?') $wild = $subs[$key] = u\randomString(20, 'word'); // mark the wildcard spot
-    if (strpos($msg0, "%$key") === FALSE) return t\output("missing sub '$key' in message '$index'");
+    if (mb_strpos($msg0, "%$key") === FALSE) return t\output("missing sub '$key' in message '$index'");
   }
   $wantMsg = trim(t($index, $subs));
   $test = \sceneId();
@@ -1455,10 +1427,10 @@ function weSayWithSubs($type, $index, $subs) {
 
   $res = FALSE;
   if (isset($wild)) {
-    $i = strpos($wantMsg, $wild);
+    $i = mb_strpos($wantMsg, $wild);
     $tailLen = strlen($wantMsg) - $i - strlen($wild);
     foreach (@$msgs ?: [] as $actual) {
-      if (substr($actual, 0, $i) == substr($wantMsg, 0, $i) and substr($actual, -$tailLen) == substr($wantMsg, -$tailLen)) {$res = TRUE; break;}
+      if (mb_substr($actual, 0, $i) == mb_substr($wantMsg, 0, $i) and mb_substr($actual, -$tailLen) == mb_substr($wantMsg, -$tailLen)) {$res = TRUE; break;}
     }
   } else {
     $tmsg = strip_tags($wantMsg);
@@ -1495,20 +1467,20 @@ function shownWith($content, $type = 'text', $mustBePresent = TRUE) {
 
   $xi = $i = 0;
   foreach ($ray as $one) {
-    if ($one === '' or substr($one, 0, 1) == '~') continue; // ignore ~labels
+    if ($one === '' or mb_substr($one, 0, 1) == '~') continue; // ignore ~labels
 //    if (in($one, '%')) $one = t\lastMinuteSubs(htmlspecialchars($one));
     $one = t($one); // translate constants in member
     if (($one = u\redash($one)) === '') continue;
-    $i = strpos($model, $one, $xi = $i);
+    $i = mb_strpos($model, $one, $xi = $i);
 ///    debug(compact(ray('model one xi i')));
-    if ($i === FALSE) $i = strpos($model, plain($one), $xi);
+    if ($i === FALSE) $i = mb_strpos($model, plain($one), $xi);
     if ($i === FALSE xor !$mustBePresent) {
       t\output(t('EXPECT page %with %this', 'with this', $mustBePresent ? t('with') : t('without'), u\purify($one, '')));
       t\output(compact('xi','i','one'));
       if (!$mustBePresent) $xi = $i; // show what's found if it's not supposed to be there
-      t\output(substr($model, 0, $xi) . ' <b class="test-doublesize">[OK until here]</b> ' . substr($model, $xi));
+      t\output(mb_substr($model, 0, $xi) . ' <b class="test-doublesize">[OK until here]</b> ' . mb_substr($model, $xi));
       return !$mustBePresent;
-    } else $i += strlen($one);
+    } else $i += mb_strlen($one);
   }
   return $mustBePresent;
 }

@@ -182,13 +182,13 @@ Scenario: A member wants to sell
 Scenario: A member wants to have a voice in the Common Good democracy
   When member ".ZZB" visits page "scraps/voice"
   Then we show "Contact Information"
-  And steps left "contact donate proxies backing invite"
+  And steps left "contact donate proxies work backing invite"
   
   Given step done "contact"
   And step done "donate"
   When member ".ZZB" visits page "scraps/voice"
   Then we show "Proxies"
-  And steps left "proxies backing invite"
+  And steps left "proxies work backing invite"
   
   Given proxies:
   | person | proxy | priority |*
@@ -197,10 +197,17 @@ Scenario: A member wants to have a voice in the Common Good democracy
   When member ".ZZB" completes form "settings/proxies" with values:
   | op       |*
   | nextStep |
+  Then we show "Your Work"
+  And we say "status": "info saved|step completed"
+  And steps left "work backing invite"
+
+  When member ".ZZB" completes form "settings/work" with values:
+  | calling  |*
+  | whatever |
   Then we show "Backing Promise"
   And we say "status": "info saved|step completed"
   And steps left "backing invite"
-
+  
   When member ".ZZB" completes form "community/backing" with values:
   | amtChoice |*
   |       100 |
@@ -267,7 +274,7 @@ Scenario: A company signs up
   | .AAA | member |
 
 Scenario: A member company wants to complete the account
-  Givan members have:
+  Given members have:
   | uid  | flags                       |*
   | .ZZC | member,confirmed,co,depends |
   When member ".ZZC" visits page "scraps/co2"
@@ -278,9 +285,15 @@ Scenario: A member company wants to complete the account
   | uid  | phone        |*
   | .ZZB | 413-253-0002 |
   When member ".ZZC" completes form "settings/agent" with values:
-  | agent  | phone        |*
-  | NEWZZB | 413-253-0002 |
-  Then we show "%PROJECT Agreement"
+  | agent  | phone        | coType  |*
+  | NEWZZB | 413-253-0002 | %CO_LLC |
+  Then members:
+  | uid  | coType  |*
+  | .ZZC | %CO_LLC |
+  And relations:
+  | main | other | permission |*
+  | .ZZC | .ZZB  | manage     |
+  And we show "%PROJECT Agreement"
   And we say "status": "info saved|step completed"
   And steps left "agree backing company donate photo preferences tithein"
 
@@ -294,7 +307,7 @@ Scenario: A member company wants to complete the account
   | crumbs | 1.5 |**
   Then members have:
   | uid  | crumbs | flags               | legalName |*
-  | .ZZC | .015   | member,confirmed,co | New Co    |
+  | .ZZC | .015   | member,confirmed,co | Our Pub   |
   And we show "Account Summary" with:
   | Next Steps |
   | Invite |

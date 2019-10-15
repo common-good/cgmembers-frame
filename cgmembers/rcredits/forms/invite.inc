@@ -95,9 +95,9 @@ function formInvite_submit($form, &$sta) {
     $links = join('<br>', $links);
     say('invite links', compact('links'));
   } else {
-    $email = strtolower($email); // otherwise constantSubs breaks on cap after @
+    $email = mb_strtolower($email); // otherwise constantSubs breaks on cap after @
     sendInvite($mya, $email, $subject, $message, @$dupsOk, $zip);
-    $data = ray('inviteBody', substr($message, 0, 10000)) + $mya->data;
+    $data = ray('inviteBody', mb_substr($message, 0, 10000)) + $mya->data;
     $mya->update(compact('data'));
   }
   if (!r\acct()) return w\doSay();

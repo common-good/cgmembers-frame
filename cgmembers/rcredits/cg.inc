@@ -131,8 +131,8 @@ function dupTx($aId, $otherId, $amount) {
 function worksForUs($name, $us = NULL, $loose = TRUE) {
   u\setDft($us, r\acct()->id);
   $words = explode(' ', u\roughName($name)); // abbreviate middle names
-  if (strlen($words[0]) > 1) { // unless first name is already abbreviated
-    for ($i = 1; $i < count($words) - 1; $i++) $words[$i] = substr($words[$i], 0, 1) . '%';
+  if (mb_strlen($words[0]) > 1) { // unless first name is already abbreviated
+    for ($i = 1; $i < count($words) - 1; $i++) $words[$i] = mb_substr($words[$i], 0, 1) . '%';
   }
   $pattern = join(' ', $words);
   $where = 'r.main=:us' . ($loose ? '' : ' AND r.:IS_EMPLOYEE');
@@ -235,7 +235,7 @@ function ipok($uid, $device) {
  * ... the following special substitions are always available:
  *   site, qid, zip3, shortName, and every cached field for the account
  * @param mixed $reply: uid, account, or email address to reply to OR 'ctty' (of $to) or NULL (CGF_EMAIL) OR [email => name]
- * @param string $attachment: path to file to attach, if any
+ * @param mixed $attachment: path(s) to file(s) to attach, if any (string if just one, else array)
  * @return TRUE if the message got sent (or on dev machine pretending it got sent) else FALSE
  * NOTE: from is always SYS_EMAIL
  */
@@ -284,7 +284,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
   u\loga('email', $erInfo + ['toUid' => @$toA->id]);
   f('t.output', 'Actual (in rMail) ' . pr($erInfo), 'email');
 
-  if (isPRODUCTION !== TRUE) { // make sure we never send rogue emails from test server even if constant isn't set
+  if (!isPRODUCTION and (isDEV or db\count('users') > 200)) { // make sure we never send rogue emails from test server with real data
 /**/  if (!test() and $mya and $mya->cAdmin) debug(compact(ray('subject to body')));
     return; // no emails unless real!!
   }
@@ -314,9 +314,12 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
     ->addPart(strip_tags($body), 'text/plain'); // don't bother making the plain text pretty
 
   if ($attachment) {
-    $attach = Swift_Attachment::fromPath($attachment);
-    $attach->setFilename(basename($attachment));
-    $m->attach($attach);
+    if (!is_array($attachment)) $attachment = [$attachment];
+    foreach (is_array($attachment) ? $attachment : [$attachment] as $flnm) {
+      $attach = Swift_Attachment::fromPath($flnm);
+      $attach->setFilename(basename($attachment));
+      $m->attach($attach);
+    }
   }
   
   if ($reply) $m->setReplyTo($reply);
@@ -468,7 +471,7 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
   $email = $tellCOA ? $tellCOA->cttyA->email : R_ADMIN_EMAIL; // tell cAdmin if appropriate, else superAdmin
   $replyTo = ($keyA or $mya) ? ($keyA ?: $mya)->nameAndEmail : NULL;
   
-  $topic = strlen($index) < 50 ? strip_tags($index) : '';
+  $topic = mb_strlen($index) < 50 ? strip_tags($index) : '';
   $message .= u\seeAssoc($subs);
   $noFrame = TRUE;
   $chan = ray(TX_CHANNELS)[$channel];
@@ -503,7 +506,7 @@ function location($a, $complete = FALSE) {
   if ($complete) $result[] = (string) $a->address; // (string) in case address is NULL
   $result[] = $a->city;
   $result[] = $a->st . (($complete and $a->zip) ? ' ' . $a->zip : '');
-  if ($a->country != R_COUNTRY_ID) $result[] = strtoupper($country);
+  if ($a->country != R_COUNTRY_ID) $result[] = mb_strtoupper($country);
   foreach ($result as $key => $value) if ($value === '') unset($result[$key]);
   return join(', ', $result);
 }
@@ -557,7 +560,7 @@ function iCardAcct($code0, &$iCode = NULL) {
  * @return: the value
  */
 function setCook($key, $value, $expires = NULL, $raw = FALSE) {
-	u\EXPECT(($len = strlen(rawurlencode("$key=$value"))) <= 4096, "cookie too long len=$len"); // 4094 not 4096 (browser bug?)
+	u\EXPECT(($len = mb_strlen(rawurlencode("$key=$value"))) <= 4096, "cookie too long len=$len"); // 4094 not 4096 (browser bug?)
   u\setDft($expires, now() + 365250 * DAY_SECS);
 	$func = $raw ? 'setcookie' : 'setrawcookie';
   $res = $func($key, $value, (int) $expires, '/'); // make it easy (fails without '/')
@@ -668,8 +671,8 @@ function uniqueName($fullName, $info = []) {
  * @return the uid (FALSE if unsuccessful)
  */
 function loginString($id) {
-  if (u\isQid($id = trim(strtoupper($id))) and $acct = r\acct($id)) return $acct->id; // try to interpret as a qid
-  $email = u\cry('P', strtolower($id));
+  if (u\isQid($id = trim(mb_strtoupper($id))) and $acct = r\acct($id)) return $acct->id; // try to interpret as a qid
+  $email = u\cry('P', mb_strtolower($id));
   return db\get('uid', 'users', 'name=:id OR email=:email ORDER BY :IS_CO', compact('id', 'email'));
 }
   
@@ -1544,8 +1547,8 @@ o;
 function xfee($for, $amount) {
   if (is_array($for)) $for = $for[1];
   if (!r\usdin($for)) return '';
-  if (strpos($for, BY_CASH)) return 0;
-  return '' . round(strpos($for, BY_CARD) ? -R_XFEE_CARD * $amount : R_XFEE_CHECK, 2);
+  if (mb_strpos($for, BY_CASH)) return 0;
+  return '' . round(mb_strpos($for, BY_CARD) ? -R_XFEE_CARD * $amount : R_XFEE_CHECK, 2);
 }
 
 function disputeTx($xid, $reason = '') {
@@ -1561,7 +1564,7 @@ function disputeTx($xid, $reason = '') {
 }
   
 function makeDoCode($ray) {
-  $code = substr(u\cry('P', serialize($ray)), strlen(CRYPT_FLAG));
+  $code = mb_substr(u\cry('P', serialize($ray)), strlen(CRYPT_FLAG));
   w\svar('TESTDOCODE', $code); // must be on separate line (PHP bug)
   return $code; // must be on separate line (PHP bug)
 }
@@ -1572,6 +1575,7 @@ function emailTemplate($key) {return file_get_contents(__DIR__ . R_TEMPLATE_DIR 
 function emailBody($key) {return str_replace('%body', emailTemplate($key), emailTemplate(R_EMAIL_FRAME));}
 function realCountry($country) {return db\get('name', 'r_countries', 'id=:country', compact('country'));}
 function realState($state, $country = R_COUNTRY_ID) {return db\get($country == US_COUNTRY_ID ? 'abbreviation' : 'name', 'r_states', 'id=:state and country_id=:country', compact('state', 'country'));}
+function stateNum($st) {return $st ? db\get('id', 'r_states', 'abbreviation=:st and country_id=:US_COUNTRY_ID', compact('st')) : $st;}
 function perm($bit) {return $bit - B_RELATED;}
 function foreignServer($uid) {return (r\uidRegion($uid) != serverUid());}
 function doCode($code) {return @unserialize(@u\decry('P', CRYPT_FLAG . $code));} // this is how it should be (see forms/rdo.inc)
@@ -1588,4 +1592,3 @@ function clubid() {return r\serverUid();} // temporarily use the region as the c
 function pic($flnm) {if (!is_dir(R_PICTURE_DIR)) mkdir(R_PICTURE_DIR); return R_PICTURE_DIR . $flnm;}
 function periodDesc($period) {return $period == 'X' ? '' : ray(OFTENS)[$period];}
 function isBank($uid) {return ($uid == BANK_IN_ID or $uid == BANK_OUT_ID);}
-function stateNum($st) {return db\get('id', 'r_states', 'abbreviation=:st and country_id=:US_COUNTRY_ID', compact('st'));}

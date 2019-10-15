@@ -88,7 +88,7 @@ function formCoupons_validate($form, &$sta) {
     if ($end and $end < $start) return w\sayFieldErr(t('Ending date cannot be before starting date.'), 'end');
     if ($start == u\fmtDate($today, TRUE)) $start = ''; // empty means now
     foreach (ray('ulimit end') as $k) $$k = (int) $$k;
-    if ($list = strtoupper(str_replace(' ', '', nn($forOnly)))) {
+    if ($list = mb_strtoupper(str_replace(' ', '', nn($forOnly)))) {
       $forOnly = [];
       foreach (explode(',', $list) as $qid) if ($qid and $a = r\acct($qid) and $uid = $a->id) {
         $forOnly[] = $uid;
@@ -151,6 +151,8 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
 	$url = "/community/coupons/print/$args";
   w\say(t('Your %thing was created successfully.', 'thing', $gift ? t('gift certificate') : t('discount')));
 
-  if ($trial) return w\goNextStep('discount');
+  if ($trial) {
+    return w\goNextStep('discount');
+  } elseif ($mya->co and !$gift) $mya->stepDone('discount');
   return test() ? w\go($url) : w\go2('/community/coupons/list', $url);
 }

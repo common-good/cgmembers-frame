@@ -16,7 +16,7 @@ function formTx($form, &$sta, $args = '') {
   global $mya;
 
   if (!$mya->can(B_SELL)) return w\go('/summary');
-  $type = strtolower($_SERVER['REQUEST_URI']);
+  $type = mb_strtolower($_SERVER['REQUEST_URI']);
   $paying = ($type == 'pay');
   
   list ($opDesc, $role) = $paying
@@ -37,7 +37,7 @@ function formTx($form, &$sta, $args = '') {
   if (!$buttons) unset($buttons);
   $who = textFld($opDesc . t(' whom:'), [t('name, id, email, or phone')], required(@$who));
 
-  $amount = textFld(t('Amount:'), [t('amount to ') . strtolower($opDesc)], required(@$amount));
+  $amount = textFld(t('Amount:'), [t('amount to ') . mb_strtolower($opDesc)], required(@$amount));
 /*  $goodsOpts = ray(R_WHYS);
   unset($goodsOpts[FOR_SHARE]); // this gets set only automatically
   */
@@ -61,7 +61,7 @@ function formTx($form, &$sta, $args = '') {
 function formTx_validate($form, &$sta) {
   $info = just('who amount purpose repeat', $sta['input']);
   extract($info);
-  if (strpos($who, '@') and !u\validEmail($email = $who)) return say('bad email', compact('email'), 'who');
+  if (mb_strpos($who, '@') and !u\validEmail($email = $who)) return say('bad email', compact('email'), 'who');
   if (!$a = w\whois($who, 'who', $info, 'no self-trading', op($sta) == 'pay')) return FALSE;
   $uid = $a->id;
   if ($err = u\badAmount($amount, '>0')) return say($err, 'amount');
@@ -72,7 +72,7 @@ function formTx_submit($form, &$sta) {
   global $mya;
   $myid = $mya->id;
   extract($info = just('who amount purpose repeat uid goods', $sta['input']));
-//  if (strpos($who, '@')) return w\go('/charge/nonmember/' . u\urlify(serialize($info)));
+//  if (mb_strpos($who, '@')) return w\go('/charge/nonmember/' . u\urlify(serialize($info)));
 
   u\setDft($goods, FOR_GOODS);
   $DBTX = \db_transaction();

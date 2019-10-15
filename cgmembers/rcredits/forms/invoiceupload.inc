@@ -39,7 +39,7 @@ function formInvoiceUpload_submit($form, &$sta, $args = NULL) {
   $total = 0;
 
   if ($rows = @$sta['rows']) foreach ($rows as $i => $row) {
-    if ($i == 0 and !strpos(@$row[0], '@')) {say(t('The header row (line 1) will be ignored.')); continue;}
+    if ($i == 0 and !mb_strpos(@$row[0], '@')) {say(t('The header row (line 1) will be ignored.')); continue;}
 
     $e = ray('did line row', $did, $i + 1, join(' | ', $row)); // params for error message(s)
     if (count($row) < 3) return say('csv error', $e + ray('msg', t('Incomplete row')), 'file');
@@ -51,9 +51,9 @@ function formInvoiceUpload_submit($form, &$sta, $args = NULL) {
 	  if (!$account or !$a = r\acct($account)) {iuErr(t('Bad account ID'), $e); continue;} // not 'bad account'
     if (!$a->ok) {iuErr(t('This account is not yet activated'), $e); continue;}
     $a->setBit(B_CONFIRMED); // count this as equivalent to an invitation to the person
-    if (!$email = trim(strtolower($email)) or $a->email != $email) { // not the right email
+    if (!$email = trim(mb_strtolower($email)) or $a->email != $email) { // not the right email
       if ($a->phone != u\fmtPhone($email, '+n')) { // not the right phone number
-        if (strtolower(r\acct($mya->id, $a->id)->relCode) != $email) {iuErr(t('Wrong email, phone, or account ID'), $e); continue;} // not the right customer ID
+        if (mb_strtolower(r\acct($mya->id, $a->id)->relCode) != $email) {iuErr(t('Wrong email, phone, or account ID'), $e); continue;} // not the right customer ID
       }
     }
     $txs[] = [$a->id, $email, $amt, $desc ? strtr($desc, $map) : $dftDesc]; // someday we wlll allow paying and invoicing non-members by email and name

@@ -199,7 +199,7 @@ function phaseDpy1($ltr, $href, $class, $title) {
   
 	if($href) {
 //		if (is_numeric($href)) $href = "javascript:$('#qdetails' + $href).toggle();";
-    $target = strpos($href, '?') ? "target=\"_blank\"" : '';
+    $target = mb_strpos($href, '?') ? "target=\"_blank\"" : '';
 		return "<a href=\"$href\" $target>$ans</a>";
 	} else return "<div class=\"$class\"$index title=\"$title\">$ltr</div>";
 }

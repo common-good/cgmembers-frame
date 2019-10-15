@@ -6,6 +6,8 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
+require_once R_ROOT . '/forms/signup.inc'; // for validation
+
 /**
  * Open a trial company account
  */
@@ -13,16 +15,23 @@ function formSignupCo($form, &$sta, $args = '') {
   global $mya;
   global $signupArgs; // for testing
   
-  $qid = $fullName = $phone = ''; // defaults
+  $dftFlds = ray('fullName phone contact email zip source');
+  foreach ($dftFlds as $k) $$k = '';
   
-  if ($mya and !$mya->trialco) {
-    $a = ($mya->cAdmin and !$mya->co) ? $mya : $mya->agentA; // let admins open company accounts on behalf of others
-    if ($coInfo = $a->signupCo) {
-      extract(just('company companyPhone', $coInfo)); // predict co name
-      if (!findCompany($company, $companyPhone)) list ($fullName, $phone) = [$company, u\fmtPhone($companyPhone, '-')];
+  if ($mya) {
+    if ($mya->trialco) {
+      foreach ($dftFlds as $k) $$k = $mya->$k; // pick up where we left off
+      $source = $mya->helperA->fullName;
+      $qid = '';
+    } else {
+      $a = ($mya->cAdmin and !$mya->co) ? $mya : $mya->agentA; // let admins open company accounts on behalf of others
+      if ($coInfo = $a->signupCo) {
+        extract(just('company companyPhone', $coInfo)); // predict co name
+        if (!findCompany($company, $companyPhone)) list ($fullName, $phone) = [$company, $companyPhone];
+      }
+      $qid = $a->mainQid;
     }
-    $qid = $a->mainQid;
-  }
+  } else $qid = '';
 
   $title = t('Open a Trial Company Account');
   $subtext = t(<<< X
@@ -36,13 +45,13 @@ X
   $source2 = hidFld($source);
   $args = hidFld($args);
 
-  extract(just('fullName legalName email', w\nameAndEmailFlds(TRUE, $fullName)));
+  extract(just('fullName legalName email', w\nameAndEmailFlds(TRUE, $fullName, $email)));
   $email['#help'][1] = preg_replace('/ \\(.*\\)/', '', $email['#help'][1]); // don't talk about settings
-  $phone = textFld(t('Company Phone:'), [t('Company phone number')], required($phone));
-  $zip = zipFld();
-  $contact = $qid ? NULL : textFld(t('Your Name:'), [t('Your full name')], required());
+  $phone = textFld(t('Company Phone:'), [t('Company phone number')], required($phone ? u\fmtPhone($phone, '-') : ''));
+  $zip = zipFld($zip);
+  $contact = $qid ? NULL : textFld(t('Your Name:'), [t('Your full name')], required($contact));
   $selling = sellingFld();
-  $source = $qid ? NULL : sourceFld();
+  $source = ($qid or $source) ? NULL : sourceFld('');
   $ownPhone = boolFld(t('Own Phone:'), t('Will you be running the CGPay app on your own Android phone? (%PROJECT is happy to supply one, with a $%EQUIP_DEPOSIT refundable equipment deposit).'), FALSE);
   $qid = $qid ? NULL : textFld(t('Account ID:'), [t('Your personal account ID'), t('If you are already a member of %PROJECT, type the account ID of your personal account. Otherwise leave this <b class="loud">BLANK</b>.')]);
   $submit = t('Submit');
@@ -70,7 +79,7 @@ function formSignupCo_validate($form, &$sta) {
   
 function formSignupCo_submit($form, &$sta) {
   global $mya;
-  $dbFields = 'coType contact source selling fullName legalName email flags phone federalId country zip address city state helper preid';
+  $dbFields = 'coType contact source selling fullName legalName email flags phone federalId zip state helper';
   extract(just($dbFields . ' source2 ownPhone qid args', $sta['input']));
   extract(just('code', nn($args)));
 
@@ -85,17 +94,22 @@ function formSignupCo_submit($form, &$sta) {
   
   list ($legalName, $federalId) = [CGF_LEGALNAME, CGF_EIN];
   
-  $country = US_COUNTRY_ID;
-  list ($city, $state, $latitude, $longitude) = zipCity($zip, $country);
+  list ($city, $state, $latitude, $longitude) = zipCity($zip);
   $preid = getPreId($source);
-  if (@$source2) $source = trim(strtoupper($source2) . "-$source");  
+  if (@$source2) $source = trim(mb_strtoupper($source2) . "-$source");  
   $flags = u\bit(B_CO) | u\bit(B_DEPENDS) | u\bit(B_CONFIRMED);
 //  $stepsDone = array_fill_keys(ray('signup discount verify'), FALSE);
-  $coType = $acctType = CO_CUSTODIAN;
-  if (!$a = new r\Acct($info = @compact(ray($dbFields)))) return say('cannot create account', 'zot');
+  $coType = $coType = CO_CUSTODIAN;
+  $info = @compact(ray($dbFields));
+  
+  if ($mya) {
+    $mya->update($info);
+  } else {
+    if (!$mya = new r\Acct($info)) return say('cannot create account', 'zot');
+    w\setAcct($mya->id); // this works for both an individual account (proSe) and a company account (with agent)
+  }
 
-  list ($myid, $name) = [$a->id, $a->name];  
-  $mya = w\setAcct($myid); // this works for both an individual account (proSe) and a company account (with agent)
+  list ($myid, $name) = [$mya->id, $mya->name];  
   $qid = $mya->mainQid;
   tellStaffNewMember($info + compact(ray('acctType qid name'))); // report to staff and user
   $pw1 = $mya->oneTimePass($name, TRUE); 
@@ -112,17 +126,4 @@ function formSignupCo_submit($form, &$sta) {
   $sta['uid'] = $myid; // tell Drupal we're signed in
   
   return w\goNextStep('signup'); 
-}
-
-/**
- * Return city, state, and coordinates from zip and country
-  {"post code": "01002", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Amherst", "longitude": "-72.4646", "state": "Massachusetts", "state abbreviation": "MA", "latitude": "42.3671"}]}
-  */
-function zipCity($zip, $country) {
-  if ($info = @file_get_contents('http://api.zippopotam.us/us/' . $zip)) {
-    if ($info = json_decode($info)) $info = (array) nn($info->places)[0];
-  }
-
-  if (!$info) return [NULL, 0, 0, 0];
-  return [$info['place name'], $info['state abbreviation'], $info['latitude'], $info['longitude']];
 }

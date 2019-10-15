@@ -42,7 +42,7 @@ X;
   while ($row = $q->fetchAssoc()) {
     extract($row);
     $return = number_format($return, 1) . '%';
-    $investment = substr("$fullName: $investment", 0, 80);
+    $investment = mb_substr("$fullName: $investment", 0, 80);
     $type = (strpos($types, 'I') === FALSE or strpos($types, 'D') !== FALSE) ? t('equity') : t('loan');
     $href = BASE_URL . "/invest/rate/vestid=$vestid&clubqid=$clubqid";
     $investment = tags('a', $investment, compact('href'));

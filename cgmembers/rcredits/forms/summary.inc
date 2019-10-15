@@ -287,27 +287,30 @@ function choiceListFld() {
   global $mya;
   if ($mya->cAdmin) return NULL;
   
-  $chInvite = ['community/invite' => t('<div>Invite</div><div>Invite a friend or company to join.<br><small>Your local Community Fund gets $2 for every invitation you send!</small></div>')];
-  $chDonate = ['community/donate' => t('<div>Give</div><div>Make a donation to %PROJECT.</div>')];
-  $chComment = ['community/comment' => t('<div>Comment</div><div>Send a comment, question, or suggestion.</div>')];
-  
-  if ($mya->co) { // company account
-    $co2Steps = $mya->stepCount($mya->taskSteps('co2'));
-    $choices = [
-      'scraps/co2' => $co2Steps ? t('<div>Finish</div><div>Finish opening your complete company account &mdash; required before you receive a total of $1,000 or within six months, whichever is first ($co2Steps steps).', compact('co2Steps')) : NULL,
-    ];
-  } else { // personal account
-    foreach (ray('card sell voice') as $k) ${$k . 'Steps'} = $mya->stepCount($mya->taskSteps($k));
-    $choices = [
-      'scraps/card' => $cardSteps 
-        ? t('<div>Card</div><div>Get a %PROJECT payment card (%cardSteps steps).</div>', compact('cardSteps')) : NULL,
-      'scraps/sell' => $sellSteps
-        ? t('<div>Sell</div><div>Accept payments through %PROJECT (%sellSteps steps).</div>', compact('sellSteps')) : NULL,
-      'scraps/voice' => $voiceSteps
-        ? t('<div>Voice</div><div>Participate in %PROJECT economic democracy (%voiceSteps steps).</div>', compact('voiceSteps')) : NULL,
-    ];
+  $choices0 = explode("\n", t(<<< X
+    community:invite:Invite:Invite a friend or company to join.<br><small>Your local Community Fund gets $2 for every invitation you send!</small>
+    community:donate:Give:Make a donation to %PROJECT.
+    community:comment:Comment:Send a comment, question, or suggestion.
+    scraps:card:Card:Get a %PROJECT payment card
+    scraps:sell:Sell:Accept payments through %PROJECT
+    scraps:voice:Voice:Participate in %PROJECT economic democracy
+    scraps:co2:Finish:Finish opening your complete company account &mdash; required before you receive a total of $1,000 or within six months, whichever is first
+X
+  ));
+  foreach($choices0 as $one) {
+    list ($dir, $k, $title, $text) = explode(':', trim($one));
+
+    if ($dir == 'community') {
+      $kch = "<div>$title</div><div>$text</div>";
+    } else {
+      $steps = $mya->stepCount($mya->taskSteps($k));
+      $kch = $steps ? tr("<div>$title</div><div>$text (%steps)</div>", 'steps', $steps . t(' steps')) : NULL;
+    }
+    ${$k . 'Ch'} = $kch ? ["$dir/$k" => $kch] : [];
   }
-  $choices = $chInvite + $choices + $chDonate;
+    
+  $choices = $mya->co ? $co2Ch : ($cardCh + $sellCh + $voiceCh);
+  $choices = $inviteCh + $choices + $donateCh;
   $choiceList = t('<h3>Next Steps</h3>') . "\n";
   foreach ($choices as $url => $desc) if (!empty($desc)) $choiceList .= w\lnk("/$url", $desc) . "\n";
   return item($choiceList . "\n");

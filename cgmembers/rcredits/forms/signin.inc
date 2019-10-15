@@ -17,14 +17,14 @@ function formSignin($form, &$sta) {
   extract(just('name pw2 vKeyE', @$sta['input']));
   if (!isset($name)) $name = @$_GET['name']; // allow links to signin (for example from app)
   //$name = 'L5MA LLDC 3MBG';
-  if (strlen(str_replace(' ', '', @$name)) >= ICARD_CODELEN_MIN and !strpos($name, '.') and !db\exists('users', 'name=:name', compact('name'))) {
+  if (mb_strlen(str_replace(' ', '', @$name)) >= ICARD_CODELEN_MIN and !mb_strpos($name, '.') and !db\exists('users', 'name=:name', compact('name'))) {
     \drupal_get_messages(); // drop previous errors
     if (r\iCardAcct($name)) return w\go("signup/code=$name"); // invitation card manual signup!
     return w\go('accept', 'bad invite num', 'err');
   }
   unset($form['actions']);
   unset($form['pass']);
-  focusOn((@$name == 'admin' or strlen(@$name) > 4) ? 'pass' : 'name');
+  focusOn((@$name == 'admin' or mb_strlen(@$name) > 4) ? 'pass' : 'name');
 
   $title = t('Welcome to %PROJECT!');
   $signup = isDEV ? "<a href=\"$base_url/signup\">Signup</a> <a href=\"$base_url/signup-co\">SignupCo</a>" : '';

@@ -100,9 +100,9 @@ function weShowPdfWith($list) {
   $px = 0;
   foreach ($list as $k => $v) {
     foreach ($v as $one) {
-      $p = strpos($in, $one, $px);
+      $p = mb_strpos($in, $one, $px);
       if ($p === FALSE) return t\output("Can't find \"$one\" in \"$in\" starting at $px.");
-      $px = $p + strlen($one);
+      $px = $p + mb_strlen($one);
     }
   }
   return TRUE;

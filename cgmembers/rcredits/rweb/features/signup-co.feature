@@ -18,7 +18,7 @@ Scenario: Someone wants to open a company account
   | Company Phone | |
   | Email         | |
   | Selling       | |
-  | Referred by   | |
+  | Referred By   | |
   | Own Phone     | |
   | Account ID    | |
 
@@ -36,7 +36,7 @@ Scenario: A member wants to open a company account while signed in
   | Own Phone     | |
   And without:
   | Your Name     |
-  | Referred by   |
+  | Referred By   |
   | Account ID    |
   
 Scenario: Someone opens a trial company account
@@ -54,7 +54,7 @@ Scenario: Someone opens a trial company account
   | zip       | 01002          |
   | country   | US             |
   | state     | MA             |
-  | city      | Amherst        |
+#  | city      | Amherst        |
   | flags     | confirmed co depends |
   | helper    | cgf            |
   | source    | Jo             |
@@ -87,7 +87,7 @@ Scenario: A member opens a trial company account not signed in
   | zip       | 01002          |
   | country   | US             |
   | state     | MA             |
-  | city      | Amherst        |
+#  | city      | Amherst        |
   | flags     | confirmed co depends |
   | helper    | .ZZZ           |
   | source    | friend         |

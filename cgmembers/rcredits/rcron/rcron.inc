@@ -869,7 +869,7 @@ function getFunds() {
 }
 
 function completeUsdTx($item) {
-  r\tellAdmin('cron\\completeUsdTx: ', $item);
+//  r\tellAdmin('cron\\completeUsdTx: ', $item);
   extract(just('txid channel', $item));
   be\completeUsdTx($txid, $channel == TX_CRON);
 }

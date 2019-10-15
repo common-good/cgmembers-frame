@@ -66,7 +66,7 @@ function couponsPrint($args = '') {
   $slogan = t('the payment card for community power&trade;');
   
   $sAt = 'normal';
-  if (strlen($name) > 20) $sAt = strlen($name) > 29 ? 'condensed' : 'semi-condensed';
+  if (mb_strlen($name) > 20) $sAt = mb_strlen($name) > 29 ? 'condensed' : 'semi-condensed';
 
   $pdf->AddPage();
   
