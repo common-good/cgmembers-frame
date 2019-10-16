@@ -147,7 +147,7 @@ $GLOBALS['tStrings'] = array(
   'invite default' => t("%PROJECT is great. I signed up. Check it out!\n\n%name"),
   'roundups desc' => t('roundup donations'),
   'crumbs desc' => t('crumbs donation: %pct of past month receipts'),
-  'sent email' => t('<p>We sent a confirmation link to <b>%email</b>. Click it to continue.</p>'),
+  'sent email' => t('<p>We sent a confirmation link to <b>%email</b>.</p><p>Click it to continue (if it doesn\'t show up right away, check your Spam folder).</p>'),
   'proxy help' => t(<<<EOF
     <p><b>Direct democracy</b> is at the heart of the %PROJECT design. In each community, members meet to discuss and decide on funding priorities for incentives, grants, loans, and investments of %RCREDITS for the greater good.</p>
     <p>You assign a person in your community as your ongoing Representative (Proxy). This should be a member you know and trust and generally agree with. Whenever you don't vote, your Representative votes for you. The Representative's vote simply counts double (one vote for them and one vote for you). If your Representative also fails to vote, then your Representative's Proxy votes for all three of you.<br><br>Everyone's voice is counted, whether or not they vote directly &mdash; one person one vote.</p>

@@ -136,6 +136,7 @@ function formSignup_submit($form, &$sta) {
   }
   
   $mya = w\setAcct($myid); // this works for both an individual account (proSe) and a company account (with agent)
+  $sta['uid'] = $myid; // tell Drupal we exist (essential so that messages show up on next page shown)
   $qid = $mya->mainQid;
   
   if (nn($source2) == 'food') $mya->stepDone('food', FALSE); // signed up through Food Fund promo (cg4.us/food), so add this special step
@@ -180,7 +181,6 @@ function finishSignup($info, $confirmed) {
     }
   }
 
-  regen($mya);  
   return w\goNextStep('signup');
 }
 
@@ -225,7 +225,7 @@ function continuePartnerSignup(&$reid, $customer) {
 }*/
 
 /**
- * Regenerate the session for the given account.
+ * Regenerate the session for the given account. UNUSED.
  */
 function regen($mya) {
   global $user; $user = $mya->account('pass timezone'); // timezone keeps Drupal happy in bootstrap.inc

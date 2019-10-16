@@ -555,6 +555,7 @@ $GLOBALS['emailSubjects'] = array(
   'message' => t('%PROJECT %topic'),
 	'annual-gift' => t('your chosen annual gift to %PROJECT'),
   'cooppower-signup' => t('Community Solar Signup'),
+  'cooppower-end' => t('Coop Power contract'),
 );
 
 $GLOBALS['topics'] = array( // topics for 'message' email

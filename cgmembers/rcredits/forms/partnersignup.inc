@@ -112,16 +112,16 @@ function doCoopPower($pA) {
   if (isset($owns)) $mya->setRisk('rents', !$owns);
 
   w\setAcct($mya->id);
+  $sta['uid'] = $mya->id; // tell Drupal we exist (essential so that messages show up on next page shown)
   
   if (!$co) {
     $mya->stepDone('signup');
     if ($mya->idVerifiedBy) $mya->stepDone('verifyid');
-    regen($mya);
   }
   $mya->stepDone('contact');
 
   $reid = $pA->newRelation(ray('other customer code autopay', $mya->id, TRUE, $customer, $autopay));
-  w\say('partner welcome', ['partner' => $pA->fullName]);
+  w\say(t('partner welcome', ['partner' => $pA->fullName])); // this should appear on the Agreement page
   tellPartner($pA, $mya, $customer);
 
   $sfData['cgAccount'] = $mya->mainQid; // we waited until now, to be able to report the qid
@@ -132,15 +132,15 @@ function doCoopPower($pA) {
 
 /**
  * Tell the partner about this signup and forward any attached files.
+ * @return error message, if any.
  */
-function tellPartner($pA, $a, $customer = NULL) {
+function tellPartner($pA, $a, $customer) {
   if (!$pA->website) r\tellAdmin(t('Partner %partner has no website. Fix it on the Company Info settings page.', 'partner', $pA->fullName)); // partner should always have a website
   
   foreach ($_FILES as $f => $one) {
     extract(just('name type tmp_name error size', $one));
-    $$k[$i] = $one[$k];
     if ($size > 10 * MAX_ID_SIZE * 1024 * 1024) {
-      w\say(t('That file is too big. You will need to send the photos of your electric bill to Coop Power by postal mail or as attachments to an email (info@cooppower.coop).'), 'err');
+      w\say(t('<p>That file is too big. You will need to send the photos of your electric bill to Coop Power by postal mail or as attachments to an email (info@cooppower.coop).</p>'), 'err');
       $flnms = NULL;
       break;
     }
@@ -162,8 +162,9 @@ function tellPartner($pA, $a, $customer = NULL) {
  * Cancel the signup and alert an admin (should never happen).
  */
 function partnerErr($msg, $k) {
-  r\tellAdmin(t('partner signup: %msg (field %k)', compact('msg', 'k')), $_POST);
-  return w\softErr(t('There was a problem with the data you submitted. %PROJECT is looking into the problem and we will contact you with instructions for continuing. We apologize for the delay.')); // fix double spaces and leading or trailing
+  $subs = compact('msg', 'k');
+  r\tellAdmin(t('partner signup: %msg (field %k)', $subs), $_POST);
+  return w\softErr(t('<h2>Drat.</h2><p>There was a problem with the data you submitted (field %k) -- %msg</p><p>%PROJECT is looking into the problem and we will contact you with instructions for continuing.</p><p>We apologize for the delay.</p>', $subs)); // fix double spaces and leading or trailing
 }
 
 function setStepsDone($a) {

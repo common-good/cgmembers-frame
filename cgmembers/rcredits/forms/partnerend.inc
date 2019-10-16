@@ -16,10 +16,12 @@ function formPartnerEnd($form, &$sta, $args = '') {
   $title = t('%PROJECT Account Completed');
   $subtext = t('<p>Your %PROJECT account is complete.</p><p>Click the button below to sign a contract with Coop Power, to complete your Community Shared Solar sign-up.</p>');
 
-  $href = 'https://powerforms.docusign.net/23cb08a4-5669-44d1-9341-76f18575fc12?env=na3-eu1';
-  $button = item(btn($href, t('Go to Contract'), 'primary', 'md'));
+  $link = 'https://powerforms.docusign.net/23cb08a4-5669-44d1-9341-76f18575fc12?env=na3-eu1';
+  $button = item(btn($link, t('Go to Contract'), 'primary', 'md'));
+  
+  r\notify($mya->id, 'cooppower-end', compact('link'));
 
-  if ($mya->nextStep() != 'partnerend') return w\go($href);
+  if ($mya->nextStep() != 'partnerend') return w\go($link);
   $mya->stepDone('partnerend');
   return cgform(compact(ray('title subtext button')));
 }

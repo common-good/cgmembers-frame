@@ -105,7 +105,7 @@ EOF
   'msg to admin' => t('%who sent you a message.'),
   'secure attach' => t('[<_%aAttach>Attachment</a>: %name type=%type size=%size bytes]'),
 
-  'partner welcome' => t('<p><b>Congratulations!</b> You have successfully completed your sign-up with %partner.</p><p><span class="loud">But wait!</span> You still need to sign up with %PROJECT, in order to be able to PAY %partner for their services.</p><p>%PROJECT is also great on its own merits. We sent you an email with your account ID and password. Now we will lead you through a few short steps.</p>'),
+  'partner welcome' => t('<h2>Congratulations!</h2><p>You have successfully completed your sign-up with %partner.</p><p><span class="loud">But wait!</span> You still need to sign up with %PROJECT, in order to be able to PAY %partner for their services.</p><p>%PROJECT is also great on its own merits. We sent you an email with your account ID and password. Now we will lead you through a few short steps.</p>'),
     
   // confirm
   'yes or no' =>  '%yesNo', // to replace with yesNo(url)
@@ -2496,6 +2496,6 @@ function rent($element) {return \render($element);} // Drupal makes render hard,
 function away() {return ['target' => '_blank'];}
 function js($script, $args = '') {global $pageScripts; $pageScripts[$script] = http_build_query(rayy(func_get_args(), 1));} // see html.tpl
 function jsx($script, $args = '') {global $scriptScraps; $scriptScraps[$script] = http_build_query(rayy(func_get_args(), 1));} // see html.tpl
-function softErr($msg) {return w\go('empty', $msg, 'ERR');}
+function softErr($msg) {w\say($msg, 'err'); return w\go('empty');}
 function clearHeaders() {if (!headers_sent()) header_remove();}
 function skipButton() {return button(t('Skip for now'), BASE_URL . '/settings/skip', t('Leave this step for last'), 'warning', 'xs', ['class' => 'skip']);}

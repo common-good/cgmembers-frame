@@ -1,3 +1,8 @@
+2019-10-16 feature/simple-tweaks
+. session creation on signup using $sta['uid'] = $uid;
+. fixed softErr to enable html
+. added final email to co-op power signup
+
 2019-10-15 feature/simple-signup continued
 . we now handle UTF-8 characters
 . added "task" field in users, to track what multi-step process they're in
