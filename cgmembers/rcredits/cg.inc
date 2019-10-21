@@ -232,6 +232,8 @@ function ipok($uid, $device) {
  *   noFrame:  don't show salutation and closing and footer
  *   subject:  specific subject
  *   body:     specific message
+ *   cc:       email or [email => name] to CC
+ *   pseudo:   who to send the mail from (name only -- source email is still us)
  * ... the following special substitions are always available:
  *   site, qid, zip3, shortName, and every cached field for the account
  * @param mixed $reply: uid, account, or email address to reply to OR 'ctty' (of $to) or NULL (CGF_EMAIL) OR [email => name]
@@ -245,7 +247,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
   foreach (ray('secure vsecure') as $k) unset($subs[$k]); // show not even in error messages
   $subs['site'] = BASE_URL;
   $subs['orgPhone'] = CGF_PHONE;
-  extract(just('subject body noFrame sms', $subs));
+  extract(just('subject body noFrame sms cc pseudo', $subs));
   
   if (!is_array($to0) and $toA = is_object($to0) ? $to0 : r\acct($to0)) {
     $toEmail = $toA->email;
@@ -307,12 +309,14 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
   $m = \Swift_SignedMessage::newInstance()
     ->attachSigner($signer)
     ->setSubject($subject)
-    ->setFrom([SYS_EMAIL => t('%PROJECT system')])
+    ->setFrom([SYS_EMAIL => nn($pseudo) ?: t('%PROJECT system')])
     ->setTo($to)
     ->setReturnPath(BOUNCE_EMAIL)
     ->setBody($body, 'text/html')
     ->addPart(strip_tags($body), 'text/plain'); // don't bother making the plain text pretty
 
+  if (nn($cc)) $m->setCc($cc);
+  
   if ($attachment) {
     if (!is_array($attachment)) $attachment = [$attachment];
     foreach (is_array($attachment) ? $attachment : [$attachment] as $flnm) {
@@ -336,7 +340,6 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
     r\tellAdmin(t('cannot send email'), $erInfo);
   }
   return TRUE;
-  //  ->attach(Swift_Attachment::fromPath('my-document.pdf'))  
 }
 
 /**

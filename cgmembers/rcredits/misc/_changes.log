@@ -1,3 +1,11 @@
+2019-10-21 feature/easy-tweaks (continued)
+. fixed handling of uploaded files
+. added CC to partner and white-labeling email ("pseudo" argument to rMail())
+. we now use better filenames for attached files emailed to customer and partner
+. created r_contracts table to track when customers signed a contract with partner
+. contract link can be used to sign in only the same day it is first used (making it easy to go further with Common Good)
+. no debt link on summary page unless you choose auto-refills
+
 2019-10-20 feature/easy-tweaks
 . reworked step management, adding a stepDoneForNow function
 . fixed a couple bugs in rMail function (to can be an array, attachments work) and improved reporting for when isDEV

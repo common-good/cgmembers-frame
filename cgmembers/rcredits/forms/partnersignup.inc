@@ -38,7 +38,7 @@ function formPartnerSignup($form, &$sta, $args = '') {
   $retURL = ''; // return from salesForce -- maybe report start of CG signup to CP
   list ($first_name, $last_name) = u\parseName($fullName);
   $m_wholeAddress = "$m_address\n$m_city, $m_state $m_zip";
-  $customer = @$m_number;
+  $customer = $m_number = substr($m_company, 0, 1) . $m_number; // begin meter/customer number with the company letter (ENC)
 
   // validate data
   $co = ($type == '1');
@@ -72,14 +72,16 @@ function formPartnerSignup($form, &$sta, $args = '') {
     return softErr(t('You are already signed up with %partnerName', compact('partnerName')));
   }
   
+  $flnms = renameUploads($_FILES, $customer);
+  
   if ($cgAccount) { // person already has an account, according to them (be careful not to trust that), so no need for this form
     global $mya; // set this for emailContract()
     if (!$mya = r\acct($cgAccount) or !$similar = u\similar($mya->fullName, $fullName, 5, .5) or !($mya->phone == u\fmtPhone(@$phone, '+n') or $mya->email == $email)) {
       if ($mya and !$similar) w\say(t('The name on that account is different.'), 'alert');
-      return w\softErr(t('That does not appear to be your correct %PROJECT member ID. Use your browser\'s Back button to go back to the previous page and be sure to use the same name, phone number, and email address that you use in your %PROJECT account. If you are not yet a %PROJECT member, leave that field blank!").', '_a', atag('/signin')), 'cgAccount'); // member mistyped their qid (a royal pain in the butt)
+      return w\softErr(t('That does not appear to be your correct %PROJECT member ID. Use your browser\'s Back button to go back to the previous page and be sure to use the same name, phone number, and email address that you use in your %PROJECT account. If you are not yet a %PROJECT member, leave that field blank!', '_a', atag('/signin')), 'cgAccount'); // member mistyped their qid (a royal pain in the butt)
     }
     r\acct($pA->id, $mya->id)->setRel('customer code', TRUE, $customer); // mark old member as a customer of pA (NOT autopay)
-    tellPartner($pA, $mya, $customer, $_FILES);
+    tellPartner($pA, $info, $flnms);
     
     sendToCRM($pA, $sfData);
     emailContract($pA, 'oldMember', $info);
@@ -112,7 +114,7 @@ X
 
   $processor = radiosFld(t('Payment Processor:'), '', required(0), [PROJECT, t('Arizona Bank & Trust')]);
   
-  $data = hidFld(serialize(compact(ray('info sfData _FILES pid'))));
+  $data = hidFld(serialize(compact(ray('info sfData flnms pid'))));
   $submit = t('Submit');
   
   return cgForm(compact(ray('title subtext routingNumber bankAccount midtext processor submit data')));
@@ -136,11 +138,12 @@ function formPartnerSignup_submit($form, &$sta) {
   global $mya;
   
   extract(just('routingNumber bankAccount processor data', $sta['input']));
-  extract(just('info sfData _FILES pid', unserialize($data)));
+  extract(just('info sfData flnms pid', unserialize($data)));
   extract(just('years referrer fullName orgName owns co customer', $info));
   $pA = r\acct($pid);
   
   if ($processor == 1) { // AZ B&T
+    tellPartner($pA, $info, $flnms);
     sendToCRM($pA, $sfData);
     emailContract($pA, 'noCG', $info);
     svar('partnerData', $info); // needed, since there is no CG account
@@ -180,7 +183,7 @@ function formPartnerSignup_submit($form, &$sta) {
 
   $reid = $pA->newRelation(ray('other customer code autopay', $mya->id, TRUE, $customer, $autopay));
 //  w\say(t('partner welcome', ['partner' => $pA->fullName])); // this should appear on the Agreement page
-  tellPartner($pA, $mya, $customer, $_FILES);
+  tellPartner($pA, $info, $flnms);
 
   $sfData['cgAccount'] = $info['cgAccount'] = $mya->mainQid; // we waited until now, to be able to report the qid
   sendToCRM($pA, $sfData);
@@ -190,25 +193,34 @@ function formPartnerSignup_submit($form, &$sta) {
 }
 
 /**
- * Tell the partner about this signup and forward any attached files.
- * @return error message, if any.
+ * Rename the uploaded files ASAP so PHP doesn't delete them
+ * @return an array of new pathnames (NULL if none)
  */
-function tellPartner($pA, $a, $customer, $files) {
-  if (!$pA->website) r\tellAdmin(t('Partner %partner has no website. Fix it on the Company Info settings page.', 'partner', $pA->fullName)); // partner should always have a website
-  
+function renameUploads($files, $meter) {
   if ($files) foreach ($files as $f => $one) {
-  if (!$one['name']) {if (isDEV) break; else u\FAIL('missing file');}
+    if (!$one['name']) {if (isDEV) break; else u\FAIL('missing file');}
     extract(just('name type tmp_name error size', $one));
     if ($size > 10 * MAX_ID_SIZE * 1024 * 1024) {
-      w\say(t('<p>That file is too big. You will need to send the photos of your electric bill to Coop Power by postal mail or as attachments to an email (info@cooppower.coop).</p>'), 'err');
+      w\say(t('<p>That file is too big. You will need to send the photos of your electric bill to %partner by postal mail or as attachments to an email (%partnerEmail).</p>', 'partner partnerEmail', $pA->fullName, $pA->email), 'err');
       $flnms = NULL;
       break;
     }
-    $flnms[] = $flnm = dirname($tmp_name) . '/' . u\code(FALSE, 5) . '-' . $name;
+    $flnms[] = $flnm = dirname($tmp_name) . "/$meter-$f." . pathinfo($name)['extension']; // like E12345-page1.png
+    u\deleteFile($flnm);
     rename($tmp_name, $flnm);
   }
+  return nn($flnms, NULL);
+}
+
+/**
+ * Tell the partner about this signup and forward any attached files.
+ * @return error message, if any.
+ */
+function tellPartner($pA, $info, $flnms) {
+  if (!$pA->website) r\tellAdmin(t('Partner %partner has no website. Fix it on the Company Info settings page.', 'partner', $pA->fullName)); // partner should always have a website
+  extract(just('customer fullName cgAccount email', $info));
   
-  $fields = ray('partnerName accountId name email customer noFrame', $pA->fullName, $a->mainQid, $a->fullName, $a->email, $customer, TRUE);
+  $fields = ray('partnerName cgAccount name email customer noFrame', $pA->fullName, nn($cgAccount) ?: t('none'), $fullName, $email, $customer, TRUE);
 
   r\rMail('partner-signup', $pA, $fields, NULL, @$flnms);
 }
@@ -256,19 +268,19 @@ function emailContract($pA, $type, $info) {
 
   extract(just('fullName email', $info));
   $partnerName = $pA->fullName;
-  $partnerReply = [$pA->email, $pA->fullName];
-  $subs = ray('fullName partnerName partnerAddress partnerPhone partnerEmail noFrame', $fullName, $partnerName, $pA->postalAddr, u\fmtPhone($pA->phone, '-'), $pA->email, TRUE);
+  $partnerReply = [$pA->email => $pA->fullName];
+  $subs = ray('fullName partnerName partnerAddress partnerPhone partnerEmail pseudo noFrame', $fullName, $partnerName, $pA->postalAddr, u\fmtPhone($pA->phone, '-'), $pA->email, $partnerName, TRUE); // white label from partner name (but our email)
   $contractFlnm = fillContract($pA->name, $info, [], $type == 'signed'); // get populated contract
   $qid = $mya ? $mya->mainQid : '';
   $extraMsg = '';
 
   if ($type == 'signed') {
-    r\rMail('partner-end', [$email => $fullName], $subs, $partnerReply, $contractFlnm);
+    r\rMail('partner-end', [$email => $fullName], $subs + ['cc' => $partnerReply], $partnerReply, $contractFlnm);
     return;
   }
 
   if ($type == 'noCG') {
-    r\tellAdmin(t('New nonCG customer of ') . $pA->name);
+    r\tellAdmin(t('New nonCG customer of ') . $pA->name, $info);
   } elseif ($type == 'oldMember') {
     r\tellAdmin(t('new customer of %partnerName: %fullName', compact('partnerName', 'fullName')), $info);
   } elseif ($type == 'newMember') {
@@ -297,7 +309,7 @@ function fillContract($name, $data, $map, $sign = FALSE) {
   $dir = R_ROOT . "/images/contracts/$name/";
   $pages = array_slice(scandir($dir), 2); // ignore . and ..
   
-  extract(just('fullName address city state zip email phone m_company m_number m_address m_city m_state m_zip date', $data));
+  extract(just('fullName address city state zip email phone m_company m_number m_address m_city m_state m_zip created', $data));
   $phone = u\fmtPhone($phone, '-');
   $buyer = "$fullName<br>$address<br>$city, $state, $zip<br>$phone<br>$email<br>";
   $meter = "Electric Company: $m_company<br>Electric Meter Account #$m_number<br>$m_address<br>$m_city, $m_state $m_zip<br>";
@@ -319,14 +331,15 @@ function fillContract($name, $data, $map, $sign = FALSE) {
     $pdf->Image($dir . $page, 0, 0, $W, $H, '', '', 'L', true); // file, x, y, w, h, type, link, align, resize
     if ($pi == 0) $pdf->say("$buyer<br><br><br><br><br>$meter", .71, 3.5, 5, 1.75, '11;Times', 'L'); // text, x, y, w, h, sizesEtc, align
     if ($sign and $pi == 9) {
-      $pdf->say(u\fmtDate($date, TRUE), 6.25, 9.25, 5, 1.75, '11;Times', 'L');
+      $pdf->say(u\fmtDate($created, TRUE), 6.25, 9.25, 5, 1.75, '11;Times', 'L');
       $pdf->setTextColor(0, 0, 128);
       $pdf->say($fullName, .71, 9.25, 5, 1.75, '22;B;DSGabriele', 'L');
     }
   }
   
   $code = $mya ? $mya->mainQid : u\code(FALSE, 10);
-  $flnm = sys_get_temp_dir() . "/contract-$code.pdf";
+  $flnm = sys_get_temp_dir() . "/$m_number-contract.pdf";
+  u\deleteFile($flnm);
   $pdf->Output($flnm, 'F');
   return $flnm;
 }
