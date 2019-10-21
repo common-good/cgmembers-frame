@@ -1048,8 +1048,8 @@ EOF;
   /**
    * Mark a membership step as completed.
    * @param string $step: a named step (see S_ALL, etc)
-   * @param assoc $details: any details to report to the staff
    * @param bool $done: whether to set the step done or not done
+   * @param assoc $details: any details to report to the staff
    * @return the next step (FALSE if none)
    */
   function stepDone($step, $done = TRUE, $details = []) {
@@ -1057,26 +1057,38 @@ EOF;
     
     $i = nn($a->allSteps()[$step], FALSE);
     u\EXPECT($i !== FALSE, 'bad step: ' . $step);
-    $a->setBit($i, $done, 'steps');
+    $a->stepDoneForNow($step, $done);
+    $a->setBit($i, $done, 'steps'); // done forever
+    
+    $nextStep = $a->nextStep();
+    if ($done and empty($nextStep)) {
+      $a->update('task', '');
+      if (!$a->member) {
+        r\tellCO(t('New Member (%name)', ['name' => $a->fullName] + $details));
+        $a->setBit(B_MEMBER);
+        $a->update('tickle', now());
+        $a->eachPartner(function ($coA, $a, $code) {$a->setTask('partner');}); // if this is a partner-signup, complete it
+      }
+    } elseif ($nextStep == 'partnerend' and count($a->stepsLeft) > 1) { // parnerend step should always be last
+      $stepsLeft = $a->stepsLeft;
+      unset($stepsLeft['partnerend']);
+      $stepsLeft[] = 'partnerend';
+      $update(compact('stepsLeft'));
+    }
+    return $nextStep;
+  }
 
+  /**
+   * Remove the specified step from the current task (but don't mark it complete).
+   */
+  public function stepDoneForNow($step, $done = TRUE) {
+    $a = $this;
     $stepsLeft = $a->stepsLeft();
     $p = array_search($step, $stepsLeft);
     $hasStep = ($p !== FALSE);
     if ($done and $hasStep) unset($stepsLeft[$p]);
     if (!$done and !$hasStep) $stepsLeft[] = $step;
     $a->update('stepsLeft', array_values($stepsLeft)); // renumber and update
-    
-    $nextStep = $a->nextStep();
-    if ($done and empty($nextStep)) {
-      $a->update('task', '');
-      if (!$a->member) {
-        r\tellCO(t('New Member (%name)', ['name' => $a->fullName]));
-        $a->setBit(B_MEMBER);
-        $a->update('tickle', now());
-        $a->eachPartner(function ($coA, $a, $code) {$a->setTask('partner');}); // if this is a partner-signup, complete it
-      }
-    }
-    return $nextStep;
   }
 
   /**
@@ -1133,7 +1145,7 @@ EOF;
   public function taskSteps($task) {return u\consta('s', $task);}
   public function stepIsDone($step) {return (bool) u\getBit($this->steps, $this->allSteps()[$step]);}
   public function stepsDone($steps) {foreach(ray($steps) as $step) if (!$this->stepIsDone($step)) return FALSE; return TRUE;}
-  public function nextStep() {return ($steps = $this->stepsLeft()) ? $steps[0] : FALSE;}
+  public function nextStep() {return ($steps = $this->stepsLeft) ? $steps[0] : FALSE;}
   public function stepCount($steps = NULL) {return count($this->stepsLeft($steps));}
   private function allSteps() {return array_flip(array_keys(ray(S_ALL)));} // point step bit names to bit numbers
 

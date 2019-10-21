@@ -279,7 +279,7 @@ Scenario: A member company wants to complete the account
   | .ZZC | member,confirmed,co,depends |
   When member ".ZZC" visits page "scraps/co2"
   Then we show "Connect a Manager Account"
-  And steps left "agent agree backing company donate photo preferences tithein"
+  And steps left "agent agree contact backing company donate photo preferences tithein discount"
 
   Given members have:
   | uid  | phone        |*
@@ -295,9 +295,10 @@ Scenario: A member company wants to complete the account
   | .ZZC | .ZZB  | manage     |
   And we show "%PROJECT Agreement"
   And we say "status": "info saved|step completed"
-  And steps left "agree backing company donate photo preferences tithein"
+  And steps left "agree contact backing company donate photo preferences tithein discount"
 
   Given step done "agree"
+  And step done "contact"
   And step done "backing"
   And step done "company"
   And step done "donate"
@@ -308,7 +309,13 @@ Scenario: A member company wants to complete the account
   Then members have:
   | uid  | crumbs | flags               | legalName |*
   | .ZZC | .015   | member,confirmed,co | Our Pub   |
-  And we show "Account Summary" with:
+  And we show "Get Your Customers Signed Up"
+  And we say "status": "info saved|step completed"
+  And steps left "discount"
+
+  When member ".ZZC" completes form "settings/discount" with values:
+  | amount | 0 |**
+  Then we show "Account Summary" with:
   | Next Steps |
   | Invite |
   | Give   |

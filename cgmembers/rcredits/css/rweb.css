@@ -341,6 +341,14 @@ body.logged-in.one-sidebar #content {width:100%;}
 .page-empty div.status  {margin:20px; padding:10px; background-image:none;} 
 .page-empty div.error {margin:20px;} 
 
+/* Partner Signup */
+body.page-partner #partner-logo, body.page-settings-partnerend #partner-logo {height:100px; margin:10px 0 0 230px;}
+body.page-partner #messages, body.page-settings-partnerend #messages {margin-top:40px;}
+@media (max-width:768px) {
+  body.page-partner #partner-logo, body.page-settings-partnerend #partner-logo {height:60px; margin:5px 10px;}
+  body.page-partner #messages, body.page-settings-partnerend #messages {top:70px;}
+}
+  
 /* Security */
 #frm-security #edit-change a {margin-right:10px;}
 

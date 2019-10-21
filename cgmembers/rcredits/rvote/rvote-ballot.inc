@@ -778,7 +778,7 @@ EOF
     $agree = w\boxFld('agree', '', t('I agree.'), '', w\required());
     $agree = w\item(str_replace('<input ', '<input required="required" ', w\rendA('agree', $agree)));
   }
-  $submit = w\submit(t('Vote Now'), 'success', 'lg', w\suffix(' &nbsp; ' . t('Polls close at midnight on %date.', 'date', $endDate)));
+  $submit = w\submit(t('Vote Now'), 'success', 'lg', w\suffix(' &nbsp; ' . t('Polls close at midnight on the night of %date.', 'date', $endDate)));
   return compact(ray('title showVotes noVote noDirect results resultsNoProx subtext agree submit args'));
 } 
 

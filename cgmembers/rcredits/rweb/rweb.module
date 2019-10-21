@@ -106,8 +106,8 @@ function rweb_menu($submenu = '') {
 //    'community' => ['norm', t('Community'), 'FindCo', ANY],
     'community' => ['norm', t('Community'), 'Community', ANY],
     'community/data' => ['sub', t('Community & Money Data'), 'Data 2', 'read', '', t(''), 'list-alt'],
-    
     'community/events' => ['sub', t('Democracy Events'), 'Events 2', 'ok manage', '', t(''), 'bell'],
+    
     'community/events/event' => ['call', t('Add/Edit Event'), 'Event 3 4', 'ok'],
     'community/events/question' => ['call', t('Add/Edit Question'), 'Question 3', 'cadmin'],
     'community/events/option' => ['call', t('Add/Edit Option'), 'Option 3', 'cadmin'],
@@ -144,6 +144,7 @@ function rweb_menu($submenu = '') {
     'settings/preferences' => ['sub', t('Preferences'), 'Prefs', 'manage -depends', '', t(''), 'cog'],
     'settings/security' => ['sub', t('Security'), 'Security 2', 'manage -co -depends', '', t(''), 'link'],
     'settings/fund' => ['sub', t('Banking'), 'Connect 2', 'manage -depends', '', t(''), 'piggy-bank'],
+    'settings/partner-fund' => ['call', t('Funding Source'), 'Connect 2', ANY],
     'settings/company' => ['sub', t('Company Info'), 'Company 2', 'manage co -depends', '', t(''), 'calendar'],
     'settings/relations' => ['sub', t('Relations'), 'Relations 2', 'manage -depends', '', t(''), 'magnet'],
 // DISABLE FOR now()    'settings/boxes' => ['sub', t('Devices'), 'Boxes', 'manage -depends', '', t(''), 'phone'],
@@ -173,7 +174,7 @@ function rweb_menu($submenu = '') {
     'settings/agent' => ['call', 'Choose an Agent', 'Agent 2', 'manage'],
     'settings/resend' => ['call', 'Resend Email', 'Resend', 'manage'],
     'settings/food' => ['call', 'Food Fund', 'Food 2', ANY],
-    'settings/partnerend' => ['call', 'Finish Partner Signup', 'PartnerEnd 2', 'manage'],
+    'settings/partnerend' => ['call', 'Finish Partner Signup', 'PartnerEnd 2', ANY],
 
 //    'handy' => isDEV ? ['norm', t('Handy'), '', 'dev', 'handyLinks'] : NULL,
     'tests' => isDEV ? ['norm', t('Test'), '1', 'dev', 'tests'] : NULL,

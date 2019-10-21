@@ -426,9 +426,9 @@ function nonce($minLen = 1) {
  */
 function randPass($len = 4) {
   global $nextPass; if (test() and nn($nextPass)) return $nextPass;
-  $list = explode("\r\n", file_get_contents(R_ROOT . '/../../config/words.txt'));
+  $list = explode("\n", file_get_contents(R_ROOT . '/../../config/words.txt'));
   $listLen = count($list);
-  for ($i = 0; $i < $len; $i++) $res[] = $list[rand(0, $listLen - 1)];
+  for ($i = 0; $i < $len; $i++) $res[] = str_replace("\r", '', $list[rand(0, $listLen - 1)]); // \r only in Windows
   return join(' ', $res);
 }
 
@@ -995,14 +995,14 @@ function parseAddr($address) {
  */
 function normalizeCase($what, $proper = 'ucwords') {
   if (is_array($what)) {
-    foreach ($what as $key => $value) $what[$key] = normalizeCase($what[$key], $proper);
+    foreach ($what as $key => $value) $what[$key] = normalizeCase($value, $proper);
     return $what;
   }
   if ($proper = 'ucwords') {
-    if ($what != mb_strtolower($what) and $what != mb_strtoupper($what)) return utf8_encode($what); // already mixedcase
+    if ($what != mb_strtolower($what) and $what != mb_strtoupper($what)) return $what; // already mixedcase
     if (mb_substr($what, 0, 4) == 'POB ') return $what; // special case for PO boxes
   }
-  return utf8_encode($proper(mb_strtolower($what)));
+  return $proper(mb_strtolower($what));
 }
 
 define('R_SMALL_WORDS', 'of|a|the|and|an|or|nor|but|is|if|then|else|when|at|from|by|on|off|for|in|out|over|to|into|with');

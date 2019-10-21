@@ -12,7 +12,8 @@ use CG\Db as db;
 function formConnect($form, &$sta, $args = '') {
   global $rUrl;
   global $mya;
-//  $mya->stepDone('connect', compact('connect')); // just visiting this page is enough
+  
+  if (!$mya) if ($ret = doPartner()) return r\go($ret);
 
   $usa = ($mya->country == US_COUNTRY_ID);
   $usa = TRUE; // always true for now
@@ -48,8 +49,8 @@ function formConnect($form, &$sta, $args = '') {
       $chox = 2;
     } else { // during account setup
       $title = t('Getting Money In or Out');
-      $subtext = t('<p>Choose how you want to get money into (or out of) your %PROJECT Account.</p>');
-      $methodChoices = ray(t('My employer will pay me through %PROJECT or I will sell goods and services through %PROJECT.,I live near a store that will put money on my card in exchange for cash.,I want to transfer funds to or from my bank account.'));
+      $subtext = t('<p>Choose how you want to get money into (or out of) your %PROJECT Account. The first two options are available through %PROJECT only in </p>');
+      $methodChoices = ray('My employer will pay me through %PROJECT or I will sell goods and services through %PROJECT.,I live near a store that will put money on my card in exchange for cash.,I want to transfer funds to or from my bank account.');
       $connect = radiosFld(t('Connect How:'), '', required(-1), $methodChoices);
       $chox = 3; // number of choices
     }
@@ -61,10 +62,10 @@ function formConnect($form, &$sta, $args = '') {
     
     if ($usa) $routingNumber = textFld(t('Routing:'), t('Type carefully your bank\'s routing number.'));
     //$bankAccount = textFld(t('Account:'), t('Type carefully your checking account number.'));
-    $bankAccount = passFld(t('Account:'), t('Type <b class="loud">carefully</b> your <b>checking</b> account number. The bank charges us $20 if you get this wrong. <span>Savings accounts will not work, at this time.</span>'));
-    $bankAccount2 = passFld(t('Again:'), t('Type your account number again.<br>(we need to be REALLY SURE we don\'t connect to the wrong account)'));
+    $bankAccount = textFld(t('Account:'), t('Type <b class="loud">carefully</b> your <b>checking</b> account number. <span>Savings accounts will not work, at this time.</span>'));
+//    $bankAccount2 = textFld(t('Again:'), t('Type your account number again.<br>(we need to be REALLY SURE we don\'t connect to the wrong account)'));
   
-    $connectFields = fieldSet('connectFields2', @compact(ray('connectText routingNumber bankAccount bankAccount2 cashout autopay autoboxes refills targetFields')), BARE);
+    $connectFields = fieldSet('connectFields2', @compact(ray('connectText routingNumber bankAccount cashout autopay autoboxes refills targetFields')), BARE);
 //    $submit = submit(t('Connect'));
     $fields = 'title subtext connect connectFields chox';
   }
@@ -81,7 +82,7 @@ function formConnect($form, &$sta, $args = '') {
 function formConnect_validate($form, &$sta) {
   global $mya;
 
-  extract(just('connect routingNumber bankAccount bankAccount2 bankAccountType refills target achMin saveWeekly chox', $sta['input']));
+  extract(just('connect routingNumber bankAccount bankAccountType refills target achMin saveWeekly chox', $sta['input']));
 
   foreach (ray('target:,achMin:,saveWeekly:>=0') as $k => $v) { // and savingsAdd someday 
 //    if (test() and !isset($sta['input'][$k])) $sta['input'][$k] = 0; // empty makes tests fail?
@@ -97,12 +98,12 @@ function formConnect_validate($form, &$sta) {
 
     if ($connect < $chox - 1) return; // nothing more to do
 
-    foreach (ray($accts = 'routingNumber bankAccount bankAccount2') as $one) $$one = preg_replace('/[\.\- ]/', '', @$$one);
+    foreach (ray($accts = 'routingNumber bankAccount') as $one) $$one = preg_replace('/[\.\- ]/', '', @$$one);
     u\preray(compact(ray($accts)), $sta['input']);
     if (!preg_match('/^(|[0-9]{9})$/', $routingNumber)) return say('bad routing number', 'routingNumber');
     if (!db\exists('r_banks', 'route=:routingNumber', compact('routingNumber'))) return say('bad routing number', 'routingNumber');
     if (!preg_match('/^[0-9]{3,17}$/', $bankAccount)) say('bad account number', 'bankAccount'); // {3,20} ? Dwolla says 3-17
-    if ($bankAccount != $bankAccount2) say('mismatch', ['thing' => t('account number')], 'bankAccount2');
+//    if ($bankAccount != $bankAccount2) say('mismatch', ['thing' => t('account number')], 'bankAccount2');
   }
 
   if (@$refills) {
@@ -175,6 +176,6 @@ function autopays(&$orig = '') {
     if ($orig[$uid] = $auto) $dfts[] = $uid;
   }
   if (!@$dfts) return NULL; // no autopays, so don't show choices
-  $help = t('When you choose automatic invoice payment for a particular company, funds will be drawn from your bank account as needed. Leave the box(es) unchecked if you tend to bounce checks or live close to the wire.');
+  $help = t('When you choose automatic invoice payment for a particular company, funds will be drawn from your bank account as needed. Leave the box(es) unchecked if you want to request transfers explicitly.');
   return boxesFld(t('Invoices:'), $help, @$dfts ?: [], $nms);
 }

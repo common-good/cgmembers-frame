@@ -420,7 +420,7 @@ function cgform($form, $onSubmit = '', $labeled = TRUE, $level = 0) {
   }
   $form['#attributes']['class'][] = $labeled ? 'form-horizontal' : 'form-vertical';
  
-  foreach (ray('title subtext posttext buttons list back submit') as $k) if ($v = @$form[$k] and !is_array($v)) $form[$k] = $k == 'submit' ? submit($v) : item($v); // let these common items be created simply
+  foreach (ray('title subtext midtext posttext buttons list back submit') as $k) if ($v = @$form[$k] and !is_array($v)) $form[$k] = $k == 'submit' ? submit($v) : item($v); // let these common items be created simply
   
   foreach ($form as $k => $v) if (substr($k, 0, 1) != '#') {
     u\EXPECT(empty($v) or is_array($v), "field $k is not an array: " . pr($v));
@@ -1048,6 +1048,8 @@ function setAcct($myid = '') {
   $agentId = svar('agentId');
   
   if ($myid) {
+    $sid = session_id();
+//      db\update('sessions', ray('uid acct sid ssid', $agentId ?: $myid, $myid, $sid, $sid), 'ssid');
     if (!$agentId) $agentId = svar('agentId', $myid);
     svar('myid', $myid);
     db\update('sessions', ray('uid acct', $agentId, $myid), 'uid');
@@ -2254,7 +2256,6 @@ function webAccess($perms = NULL) {
     : ($perm == 'investor' ? ($mya and ($mya->iclub or db\exists('r_stakes', 'uid=:id', ['id'=>$mya->id])))
     : ($perm == 'depends' ? ($mya and $mya->depends and $mya->proSe)
     : ($mya and $mya->can(u\consta('b', $perm))) ))))))));
-
     if ($not ? $pass : !$pass) return FALSE;
   }
   return TRUE;
@@ -2347,13 +2348,14 @@ function tagN($tag, $html = '', $tribs = []) {return str_replace('#', '', tag($t
 function atagB($href, $style = 'primary', $size = 'xs', $extras = []) {
   $class = @$extras['class'];
   $extras['class'] =  ($class ? "$class " : '') . "btn btn-$size btn-$style";
-  return atag($href, $extras + ray('role', 'button'));
+  return atag($href, $extras + ['role' => 'button']);
 }
 
 /**
  * Return an a tag.
  */
 function atag($href, $extras = []) {
+  if (nn($extras['role']) != 'button') $extras += ['tabindex' => '-1'];
   if (@$href[0] == '/') $href = BASE_URL . $href;
 // NO  if ($href[0] == '$') $href = 'javascript:' . substr($href, 1);
   if ($href and !u\starts($href, BASE_URL)) {

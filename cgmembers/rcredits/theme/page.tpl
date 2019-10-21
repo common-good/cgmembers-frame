@@ -106,6 +106,13 @@ foreach (ray('header accounts help action_links content footer highlighted') as 
 	$$k = @$page[$k];
 	$$k = @$$k ? \render($$k) : '';
 }
+
+$title = strtolower(str_replace(PROJECT, '', $title)); // used only by partner signup
+if ($title == 'partner' or $title == 'partnerend') if ($partner = \CG\Web\svar('partner')) { // branding for partner signups
+  $menu1 = $footer = '';
+  $header = tr('<img src="%BASE_URL/rcredits/images/partner-logos/%partner.png" id="partner-logo" />', compact('partner'));
+}
+
 /**/ echo <<<EOF
 <div id="page-wrapper"><div id="page">
 

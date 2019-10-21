@@ -296,6 +296,7 @@ EOF
   'savings too high' => t('You can increase your savings amount only by what you have in your primary account. Your maximum additional savings amount at this time is %max.'),
   'organizer grant' => t('You have recruited %ORGANIZER_GRANT_MIN new %PROJECT members. You are probably eligible for a %PROJECT organizer grant of up to %ORGANIZER_GRANT_MAX! <%a>Click here</a> to apply.'),
   'bad forced tx' => t('You accepted a transaction (offline) that cannot be completed: customer %account, for %amount, on %created%by.'),  
+  'bad partner' => t('That is not a %PROJECT signup-partner organization.'),
 
   // notices to staff
   'cache mismatch' => 'Cron cache mismatch: %k=%is (cache) <> %shouldBe (calc) OR joint %k=%jIs (cache) <> %jShouldBe (calc)',

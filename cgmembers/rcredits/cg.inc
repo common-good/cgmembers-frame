@@ -247,7 +247,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
   $subs['orgPhone'] = CGF_PHONE;
   extract(just('subject body noFrame sms', $subs));
   
-  if ($toA = is_object($to0) ? $to0 : r\acct($to0)) {
+  if (!is_array($to0) and $toA = is_object($to0) ? $to0 : r\acct($to0)) {
     $toEmail = $toA->email;
     $to = [$toEmail => $toA->fullName];
     $subs += (array) $toA->account(); // this omits any special fields or special formatting
@@ -285,7 +285,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
   f('t.output', 'Actual (in rMail) ' . pr($erInfo), 'email');
 
   if (!isPRODUCTION and (isDEV or db\count('users') > 200)) { // make sure we never send rogue emails from test server with real data
-/**/  if (!test() and $mya and $mya->cAdmin) debug(compact(ray('subject to body')));
+/**/  if (!test() and (isDEV or ($mya and $mya->cAdmin))) debug(compact(ray('subject to body')));
     return; // no emails unless real!!
   }
   
@@ -316,8 +316,8 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
   if ($attachment) {
     if (!is_array($attachment)) $attachment = [$attachment];
     foreach (is_array($attachment) ? $attachment : [$attachment] as $flnm) {
-      $attach = Swift_Attachment::fromPath($flnm);
-      $attach->setFilename(basename($attachment));
+      $attach = \Swift_Attachment::fromPath($flnm);
+      $attach->setFilename(basename($flnm));
       $m->attach($attach);
     }
   }
@@ -1578,7 +1578,7 @@ function realState($state, $country = R_COUNTRY_ID) {return db\get($country == U
 function stateNum($st) {return $st ? db\get('id', 'r_states', 'abbreviation=:st and country_id=:US_COUNTRY_ID', compact('st')) : $st;}
 function perm($bit) {return $bit - B_RELATED;}
 function foreignServer($uid) {return (r\uidRegion($uid) != serverUid());}
-function doCode($code) {return @unserialize(@u\decry('P', CRYPT_FLAG . $code));} // this is how it should be (see forms/rdo.inc)
+function doCode($code) {return @unserialize(@u\decry('P', CRYPT_FLAG . $code));} // (see forms/rdo.inc)
 function cgA() {return r\acct(CGID);}
 function denyInv($nvid) {return db\setData('r_invoices', $nvid, ['denied' => TRUE]);}
 //function usdin($for) {return u\abbreviates('usd in (', strtolower(is_array($for) ? $for[1] : $for));}

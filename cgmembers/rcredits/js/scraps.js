@@ -255,6 +255,16 @@ function doit(what, vs) {
     });
     break;
 
+  case 'discount':
+    $('.form-item-submit a').click(function () {
+      $('#edit-amount').val(0);
+      $('#edit-minimum').val(0);
+      $('#edit-end').val('');
+      $('#edit-ulimit').val('');
+      $('#frm-discount').submit();
+    });
+    break;
+    
   case 'prejoint': $('#edit-old-0').click(function() {this.form.submit();}); break;
 
   case 'invite-link': $('#inviteLink').click(function () {SelectText(this.id);}); break;

@@ -188,6 +188,7 @@ define('GEOCODE_URL', 'https://api.opencagedata.com/geocode/v1/json?'); // use i
 define('NEIGHBOR_RADIUS', 40); // how far away (in miles) can a member see names of other individual members?
 define('NEIGHBOR_RMAX', NEIGHBOR_RADIUS * NEIGHBOR_RADIUS / 69 / 69); // squared and adjusted for degrees, not miles
 define('NEIGHBOR_QUERY', '(POW(latitude-:lat, 2) + POW((longitude-:lon) * (.71 + .0116*(latitude+:lat)/2), 2))');
+define('SIGNUP_PARTNERS', 'cooppower nyccec'); // these organizations sign people up for Common Good
 
 define('R_URL_SLASH', '%_%'); // Drupal gets confused by slashes in a url, even if urlencoded
 define('R_EXCHANGE_LIMITS', '1:5000,7:20000,52:80000,365:500000'); // per day, week, 7-week, year
@@ -334,11 +335,12 @@ define('R_STEPS_OLD', 'signup:signup, verify, ssn, sign:community/agreement, don
 define('S_ALL', 'signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, titheout, tithein, work, partnerend, food, wantsPrint, printed'); // where to go to complete each step (unordered) -- add new steps to the end
 define('S_PERSON', 'signup verifyid agree preferences fund verifyemail'); // soon replace "preferences" with titheOut
 define('S_CO', 'signup discount verifyemail');
-define('S_CO2', 'agent agree backing company donate photo preferences tithein');
+define('S_CO2', 'agent agree contact backing company donate photo preferences tithein discount');
 define('S_CARD', 'photo contact donate');
 define('S_SELL', 'ssn contact tithein');
 define('S_VOICE', 'contact donate proxies work backing invite'); // add comment
-define('S_PARTNER', 'partnerend'); // finalize partner-signup process
+define('S_PARTNER', 'verifyid agree preferences partnerend');
+define('S_PARTNERCO', 'signup verifyemail agent agree contact backing company donate photo preferences tithein discount');
 
 define('S_PSETS', 'card sell voice');
 
@@ -545,17 +547,17 @@ define('E_TYPES', 'bank_only prime donation rebate usd_fee bank');
 
 $GLOBALS['emailSubjects'] = array(
   'nonmember' => t('%PROJECT invitation followup'),
-  'partner-signup' => t('Continue your %PROJECT sign-up'),
+  'partner-signup' => t('new solar subscription'),
+  'partner-end' => t('Solar Contract - Final'),
   'verify' => t('%PROJECT NEXT STEP: Verify your email address.'),
   'verify-co' => t('%PROJECT NEXT STEP: Verify your company email address.'),
   'verify-trial' => t('%PROJECT NEXT STEP: Verify your company email address.'),
+  'verify-partner' => t('Continue your Community Solar sign-up'),
   'password-reset' => t('New %PROJECT PASSWORD'),
   'tell-staff' => t('%PROJECT STAFF ALERT: %topic'),
   'notices' => t('%PROJECT Notices for %qid for %range'),
   'message' => t('%PROJECT %topic'),
 	'annual-gift' => t('your chosen annual gift to %PROJECT'),
-  'cooppower-signup' => t('Community Solar Signup'),
-  'cooppower-end' => t('Coop Power contract'),
 );
 
 $GLOBALS['topics'] = array( // topics for 'message' email

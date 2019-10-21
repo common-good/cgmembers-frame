@@ -1,3 +1,23 @@
+2019-10-20 feature/easy-tweaks
+. reworked step management, adding a stepDoneForNow function
+. fixed a couple bugs in rMail function (to can be an array, attachments work) and improved reporting for when isDEV
+. changed calls to u\DYE to u\FAIL (bug fix)
+. fixed eol bug in u\randPass() on windows machines
+. branded partner signup and ending pages as the partner (see page.tpl)
+. added contact and discount steps to co2 task
+. disabled display of voting results at the request of Ann Arbor organizers
+. generalized co-op power partnering to other organizations
+. changed partner signup to allow choosing NOT to use CG, to generate and email contracts, and combine that with email verification
+. partner signup tests no longer work (they need work)
+. added tabindex="-1" to links
+. changed reset links to go straight to member site (not through promo site)
+. fixed bug in startup.sql for creating uid 0 in users table
+. did this on production server, to remove test events/questions/ballots/votes and orphaned old data:
+  DELETE FROM `r_events` WHERE id IN (8,12);
+  DELETE q FROM r_questions q LEFT JOIN r_events e ON e.id=q.event WHERE e.id IS NULL;
+  DELETE b FROM r_ballots b LEFT JOIN r_questions q ON q.id=b.question WHERE question>0 AND q.id IS NULL;
+  DELETE v FROM r_votes v LEFT JOIN r_ballots b ON b.id=v.ballot WHERE b.id IS NULL; 
+
 2019-10-16 feature/simple-tweaks
 . session creation on signup using $sta['uid'] = $uid;
 . fixed softErr to enable html

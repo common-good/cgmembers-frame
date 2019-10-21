@@ -89,7 +89,8 @@ function formEvents($form, &$sta, $args = '') {
   } elseif (@$do == 'proposals') {
 		
   } elseif (@$do == 'results') {
-		$middle = $type == 'G' ? v\showProposalGrades($eid, @$noProxies) : v\showResults($eid, @$noProxies);
+//		$middle = $type == 'G' ? v\showProposalGrades($eid, @$noProxies) : v\showResults($eid, @$noProxies);
+		$middle = $type == 'G' ? v\showProposalGrades($eid, @$noProxies) : t('The results of the recent vote are being tabulated and will be reported soon.');
   } elseif (@$do == 'options') { // UNUSED
     list($middle, $phase, $endDate) = v\questionList($eid, @$question, @$do);
   } elseif (@$do == 'ballot') {

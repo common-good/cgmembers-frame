@@ -6,9 +6,9 @@ SO I can pay a partner company
 
 Setup:
   Given members:
-  | uid  | fullName   | flags  | emailCode | website | email |*
-  | .AIL | Coop Power | ok,co  | Ccode     | z.ot    | c@    |
-  | .ZZZ | Zeta Zot   | ok     | Zcode     |         | z@    |
+  | uid  | fullName   | flags  | emailCode | website | email | phone        | postalAddr               |*
+  | .AIL | Coop Power | ok,co  | Ccode     | z.ot    | c@    | 413-253-0014 | 14 L St., Lton, MA 01014 |
+  | .ZZZ | Zeta Zot   | ok     | Zcode     |         | z@    | 413-253-0026 | 26 Z St., Zton, MA 01026 |
   And member is logged out
 
 Scenario: A newbie visits the registration page sent by a partner
@@ -47,16 +47,16 @@ Scenario: A newbie visits the registration page sent by a partner
   And we say "status": "partner welcome" with subs:
   | partner |*
   | Coop Power |
-  And we email "cooppower-signup" to member "c@" with subs:
-  | accountId | name    | email | customer | noFrame |*
-  | NEWAAA    | Abe One | a@    | E123456  |       1 |
+  And we email "partner-signup" to member "c@" with subs:
+  | partnerName | partnerAddress          | partnerPhone | partnerEmail | accountId | name    | email | customer | noFrame |*
+  | Coop Power  | 1 L St., Lton, MA 01014 | +14132530014 | c@           | NEWAAA    | Abe One | a@    | E123456  |       1 |
   And member ".AAA" one-time password is set to "WHATEVER"
-  And we show "%PROJECT Agreement"
-  And member ".AAA" steps left "agree preferences fund verifyemail"
+  And we show "Source of Funds"
+  And member ".AAA" steps left "fund agree preferences verifyemail"
   
-  Given step done "agree"
+  Given step done "fund"
+  And step done "agree"
   And step done "preferences"
-  And step done "fund"
   
   Given member is logged out
   When member "?" visits page "reset/id=abeone&code=WHATEVER&verify=1"
@@ -150,9 +150,9 @@ Scenario: A company visits the registration page sent by a partner
   And we say "status": "partner welcome" with subs:
   | partner |*
   | Coop Power |
-  And we email "cooppower-signup" to member "c@" with subs:
-  | accountId | name    | email | customer | noFrame |*
-  | NEWAAA    | Go Co   | g@    | E123456  |       1 |
+  And we email "partner-signup" to member "c@" with subs:
+  | partnerName | partnerAddress          | partnerPhone | partnerEmail | accountId | name    | email | customer | noFrame |*
+  | Coop Power  | 1 L St., Lton, MA 01014 | +14132530014 | c@           | NEWAAA    | Go Co   | g@    | E123456  |       1 |
   And we show "Open a Trial Company Account" with:
   | Your Name     | Al Aargh     |
   | Company       | Go Co        |
@@ -161,17 +161,15 @@ Scenario: A company visits the registration page sent by a partner
   | Email         | g@           |
   And without:
   | Referred By   |  |
-  And member ".AAA" steps left "signup discount verifyemail"
+  And member ".AAA" steps left "fund signup verifyemail"
 
   When member ".AAA" completes form "signup-co" with values:
   | source2 | contact  | fullName | zip   | phone        | email | selling | source | ownPhone | qid    |*
   | radio   | Al Aargh | Go Co    | 01004 | 413-253-0004 | g@    | fish    | TV     |        1 |        |  
   Then we show "Get Your Customers Signed Up"
   And we say "status": "info saved|step completed"
-  And member ".AAA" steps left "discount verifyemail"
+  And member ".AAA" steps left "verifyemail"
   And member ".AAA" one-time password is set to "WHATEVER"
-  
-  Given step done "discount"
   
   Given member is logged out
   When member "?" visits page "reset/id=goco&code=WHATEVER&verify=1"
