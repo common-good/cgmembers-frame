@@ -15,6 +15,7 @@ use CG\DB as db;
 use CG\Util as u;
 use CG\Backend as be;
 use CG\Web as w; // use sparingly
+use CG\Testing as t;
 
 require_once __DIR__ . '/cg-strings.inc';
 require_once __DIR__ . '/cg-db.inc';
@@ -390,7 +391,7 @@ function notify($uid, $index, $subs = [], $force = FALSE) {
   u\EXPECT($a, 'no account');
   $subs['uid'] = $uid;
   $subs['qid'] = $a->qid;
-  $subs['otherName'] = u\arrayGet($subs, 'myName', null); // notifying someone else about US, if anyone
+  $subs['otherName'] = nn($subs['myName'], NULL); // notifying someone else about US, if anyone
   $fullName = $a->fullName;
   $warnIndexes = ray('new invoice,new offer,charge disputed');
   
@@ -1568,7 +1569,7 @@ function disputeTx($xid, $reason = '') {
   
 function makeDoCode($ray) {
   $code = mb_substr(u\cry('P', serialize($ray)), strlen(CRYPT_FLAG));
-  w\svar('TESTDOCODE', $code); // must be on separate line (PHP bug)
+  if (test()) t\doCode($code); // must be on separate line (PHP bug)
   return $code; // must be on separate line (PHP bug)
 }
 
@@ -1581,7 +1582,7 @@ function realState($state, $country = R_COUNTRY_ID) {return db\get($country == U
 function stateNum($st) {return $st ? db\get('id', 'r_states', 'abbreviation=:st and country_id=:US_COUNTRY_ID', compact('st')) : $st;}
 function perm($bit) {return $bit - B_RELATED;}
 function foreignServer($uid) {return (r\uidRegion($uid) != serverUid());}
-function doCode($code) {return @unserialize(@u\decry('P', CRYPT_FLAG . $code));} // (see forms/rdo.inc)
+function doCode($code) {return @unserialize(@u\decry('P', CRYPT_FLAG . ($code == 'TESTDOCODE' ? t\doCode() : $code)));} // (see forms/rdo.inc)
 function cgA() {return r\acct(CGID);}
 function denyInv($nvid) {return db\setData('r_invoices', $nvid, ['denied' => TRUE]);}
 //function usdin($for) {return u\abbreviates('usd in (', strtolower(is_array($for) ? $for[1] : $for));}

@@ -306,7 +306,7 @@ function formFollowup($form, &$sta, $args = []) {
   global $mya;
   
 	if (!$mya or (!$mya->cAdmin2 and !$mya->admin2)) return w\go('');
-  extract(u\exactly('uid one recent', $args, null));
+  extract(just('uid one recent', $args, null));
   
   if (!empty($uid)) {
     w\setAcct($uid); // switch to that user

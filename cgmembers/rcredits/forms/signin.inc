@@ -12,11 +12,11 @@ use CG\Db as db;
 function formSignin($form, &$sta) {
   global $base_url;
 	
+  signout(TRUE); // make sure we're signed out
 	if (isDEV) db\q('TRUNCATE sessions'); // this saves a lot of manual truncates when tests mess up
 
   extract(just('name pw2 vKeyE', @$sta['input']));
   if (!isset($name)) $name = @$_GET['name']; // allow links to signin (for example from app)
-  //$name = 'L5MA LLDC 3MBG';
   if (mb_strlen(str_replace(' ', '', @$name)) >= ICARD_CODELEN_MIN and !mb_strpos($name, '.') and !db\exists('users', 'name=:name', compact('name'))) {
     \drupal_get_messages(); // drop previous errors
     if (r\iCardAcct($name)) return w\go("signup/code=$name"); // invitation card manual signup!
@@ -42,8 +42,6 @@ function formSignin($form, &$sta) {
   $form['external_input'] = hidFld(serialize(@$sta['input'])); // pass this to rweb_user_login
 
   $form['#attributes']['class'][] = 'rweb labeled';
-//  if (TRUE) js('e:\\rCredits-admin.js', 'external', 'footer'); // get extra admin password
-//  js('radiocheck.js', 'file', 'footer'); // this normally gets called in showForm()
   return cgform($form);
 }
 
@@ -95,20 +93,11 @@ function formSignin_submit($form, &$sta, $goto = 'summary') {
   extract(just('uid input external_input vKeyE', $sta));
   if (!@$uid) return hack('sign-in is not authorized');
   $mya = r\acct($uid);
-  global $user; $user = $mya->account('pass timezone'); // timezone keeps Drupal happy in bootstrap.inc
-  $user->uid = $uid; // uid is not returned by ->account() (not sure why)
-  \drupal_session_regenerate();
-  
-//  foreach ($_SESSION as $key => $value) if (u\abbreviates('rcredits_', $key)) unset($_SESSION[$key]);
-//  svar('external_input', @unserialize($sta['external_input'])); // save params from external online merchant
 
-//  svar('myid', $uid);
-//  svar('scanned_in', FALSE);
   setAcct($uid); // , TRUE);
+  $sta['uid'] = $uid;
 
-//  r\setCook('loginto', '', now()-1); // no more default login
   u\loga('signin', ['name' => $mya->name]);
-//  if ($mya->superAdmin) f('a.adminSignin');
   if (isSTAGE and !$mya->cAdmin) f('a.makeTestAdmins'); // make sure rCOs can test stuff
   return w\go($mya->admin2 ? 'sadmin/followup' : $goto);
 }

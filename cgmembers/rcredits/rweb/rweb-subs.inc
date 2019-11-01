@@ -105,8 +105,6 @@ EOF
   'msg to admin' => t('%who sent you a message.'),
   'secure attach' => t('[<_%aAttach>Attachment</a>: %name type=%type size=%size bytes]'),
 
-  'partner welcome' => t('<h2>Congratulations!</h2><p>You have successfully completed your sign-up with %partner.</p><p><span class="loud">But wait!</span> You still need to sign up with %PROJECT, in order to be able to PAY %partner for their services.</p><p>%PROJECT is also great on its own merits. We sent you an email with your account ID and password. Now we will lead you through a few short steps.</p>'),
-    
   // confirm
   'yes or no' =>  '%yesNo', // to replace with yesNo(url)
   'confirm accept' => '%who %did you %amount for %for on %date. Okay to %do', // used in EditTx test
@@ -1352,7 +1350,7 @@ function tellStaffNewMember($params) {
   extract($params);
   $phone = u\fmtPhone(@$phone);
   $state = @$state ? r\realState($state) : 'state unknown';
-  $acctType = ray(CO_TYPES)[$acctType];
+  $acctType = isset($acctype) ? ray(CO_TYPES)[$acctType] : NULL;
   $helper = @$helper ? r\acct($helper)->fullName : 'unknown';
   $copts = u\jsonEncode(@$copts);
   $ats = (isset($ats) and is_array($ats)) ? join(',', array_values($ats)) : '';

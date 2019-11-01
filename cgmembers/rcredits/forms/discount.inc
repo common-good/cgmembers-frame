@@ -30,7 +30,7 @@ X
   $ulimit = textFld(t('Limit:'), t('Leave blank for unlimited uses.'), dft(5) + suffix(t(' uses per member')));
   
   $submit = submit(t('Create'), '', '', suffix(' ' . lnk('', t('skip')))); // allow user to skip this step forever
-  $foot = ($mya->task == 'co2') ? compact('submit') : w\setupFoot(t('Create'));
+  $foot = in($mya->task, 'co co2') ? compact('submit') : w\setupFoot(t('Create'));
   
   $start = hidFld(u\fmtDate(now(), TRUE));
   $automatic = hidFld(TRUE);

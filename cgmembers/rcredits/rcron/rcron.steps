@@ -229,6 +229,7 @@ function weTellCOWithSubs($id, $topic, $subs) {return t\weTellAdmin($topic, $sub
  *
  * in: BOTH notices AMemberGetsSomeNotices
  *     BOTH notices AMemberGetsSomeWeeklyNotices
+ *     MAKE notices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
  */
 function notices($list) {return t\notices($list);}
 
@@ -295,8 +296,8 @@ function usdTransferCountIs($count) {return (t\usdTransferCount() == $count);}
  */
 function nextDOCodeIs($code) {
   global $testOnly; if ($testOnly) return FALSE;
-  global $testDoCode;
-  return $testDoCode = $code;
+  t\doCode($code);
+  return TRUE;
 }
 
 /**
@@ -385,10 +386,11 @@ function weDoNotEmailToMember($index, $email) {return t\noSuchEmail($index, $ema
  * it's time for (ARG)
  *
  * in: MAKE notices AMemberGetsSomeWeeklyNotices
+ *     MAKE notices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
  */
 function itsTimeFor($what) {
   global $testOnly, $timeFor;
-  return $testOnly ? $timeFor[$what] : ($timeFor[$what] = TRUE);
+  return $testOnly ? nn($timeFor[$what]) : ($timeFor[$what] = TRUE);
 }
 
 /**
@@ -627,6 +629,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE monthly CrumbsAreInvoiced
  *     MAKE notices AMemberGetsSomeNotices
  *     MAKE notices AMemberGetsSomeWeeklyNotices
+ *     MAKE notices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
  *     MAKE recurs ABrandNewRecurringPaymentCanBeCompleted
  *     MAKE recurs ASecondRecurringPaymentCanBeCompleted
  *     MAKE recurs ARecurringPaymentHappenedYesterday
@@ -669,3 +672,10 @@ function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWit
  * in: TEST invoices UnpaidInvoicesGetHandled
  */
 function weDoNotMessageToMemberWithSubs($index, $id, $subs) {return !t\weMessage($index, $id, $subs);}
+
+/**
+ * not these (ARG): (ARG)
+ *
+ * in: TEST notices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
+ */
+function notThese($things, $list) {return !t\these($things, $list);}

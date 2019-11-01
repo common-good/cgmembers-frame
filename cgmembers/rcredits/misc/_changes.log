@@ -1,3 +1,16 @@
+2019-11-01 feature/easy-tweaks (continued)
+. integrated functionality of u\exactly() into just() and removed "keep order" parameter
+. fixed bug that left everyone but admin signed in for a long time
+. improved DOCODE handling in tests
+. fixed weekly reports (which were coming out daily whenever there was a transaction)
+. fixed formatting of white-labeled partner page on mobile
+. changed order of steps in partner signup so contract is first
+. simplified steps for company in partner signup
+. moved all partner signup steps to a single file (forms/partnersignup.inc)
+. added daily check for bank accounts without risk hasBank and vice versa
+. added a test for slave transfer
+. removed r_contracts table
+
 2019-10-21 feature/easy-tweaks (continued)
 . fixed handling of uploaded files
 . added CC to partner and white-labeling email ("pseudo" argument to rMail())
@@ -5,6 +18,7 @@
 . created r_contracts table to track when customers signed a contract with partner
 . contract link can be used to sign in only the same day it is first used (making it easy to go further with Common Good)
 . no debt link on summary page unless you choose auto-refills
+. fixed signin so it always signs out first and doesn't make you sign in twice
 
 2019-10-20 feature/easy-tweaks
 . reworked step management, adding a stepDoneForNow function
@@ -25,6 +39,7 @@
   DELETE q FROM r_questions q LEFT JOIN r_events e ON e.id=q.event WHERE e.id IS NULL;
   DELETE b FROM r_ballots b LEFT JOIN r_questions q ON q.id=b.question WHERE question>0 AND q.id IS NULL;
   DELETE v FROM r_votes v LEFT JOIN r_ballots b ON b.id=v.ballot WHERE b.id IS NULL; 
+  DELETE o FROM r_options o LEFT JOIN r_questions q ON q.id=o.question WHERE q.id is NULL AND o.question>0
 
 2019-10-16 feature/simple-tweaks
 . session creation on signup using $sta['uid'] = $uid;

@@ -24,7 +24,7 @@ Setup:
   | .ZZA |     200 |
   | .ZZB |     200 |
   |  cgf |    -400 |
-  
+
 Scenario: A member joins the investment club
   When member ".ZZA" visits page "invest"
 	Then we show "Join Your"
@@ -287,6 +287,7 @@ Scenario: The club sells shares
   | shid | vestid | shares | pending | when | sold |*
   |    1 |      1 |     10 |       0 | %now |      |
   |    2 |      1 |     -4 |       0 | %now |      |
+
   When member ".ZZA" visits page "invest/list/clubqid=NEWZZI&actual=1"
   Then we show "Actual Investments" with:
   | Investment          | Type   | Return | Value |

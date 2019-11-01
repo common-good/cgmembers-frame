@@ -54,7 +54,7 @@ class Acct {
     $a = $this;
     extract($info);
 
-    extract(u\exactly('fullName flags state zip created number uid region', $info,
+    extract(just('fullName flags state zip created number uid region', $info,
       [NULL, 0, 0, NULL, now(), NULL, NULL, NULL]));
     u\setDft($legalName, $fullName);
     u\setDft($email, mb_strtolower(u\randomString(10, 'word')) . '@' . EMAILX);
@@ -348,52 +348,6 @@ class Acct {
   }      
   
   /**
-   * Activate the account.
-   * @param int $helper: account record ID of account that invited this one
-   */
-  /*  public function activate($helper) {
-    $a = $this;
-    u\EXPECT($mya = r\acct() and $mya->cAdmin, 'should be ctty admin'); // only ctty admin can approve an account
-
-    $DBTX = \db_transaction();
-    u\EXPECT($helper, 'no helper!');
-    $a->update(compact('helper')); // must precede welcome message
-    $a->setBit(B_OK, TRUE, TRUE); // must precede welcome message
-    $a->setBit(B_NONUDGE, FALSE, TRUE);
-    
-    if ($firstTime = !$a->activated) { // first time activation
-      //      u\EXPECT($a->superAdmin, 'initial activation is only for superadmin');
-      $a->update('activated', now() - 1); // must precede update of vsecure, so it gets V-encrypted
-      $a->update('vsecure', $a->vsecure); // hyper-encrypt
-      $a->eachPartner(function($coA, $zot, $custCode) { // tell partner: account is activated
-          if ($api = $coA->api()) u\post($api, ray('partnerCode qid op name', $coA->emailCode, $a->mainQid, 'complete', $a->fullName));
-        });
-      $inviterName = @$a->helperA->fullName;
-      $subs = compact('inviterName');
-      $msg = 'approved';
-      if (!$a->confirmed) $msg .= ($helper > 1 ? '|must confirm' : '|in person');
-      r\message($a->id, $msg, $subs + ['youName' => $a->fullName]);
-    }
-
-    if ($firstTime and !$a->co) { // no bonus or helper bonus for a company signing up
-      if ($a->ssnData['CGerror'] and !$a->risk('ssnOff') and !$a->risk('dobOff')) $a->setRisk('ssnOff'); // make SURE this bit gets set (might not if admin signs the person up
-
-      if (!$a->helperA->co and !$a->helperA->superAdmin) { // no helper bonus for company referral or help by superAdmin (cAdmin is okay) [don't require $a->confirmed]
-        $fullName = $a->fullName;
-        $helped = db\count('users', ':IS_OK AND NOT :IS_CO AND helper=:hId', ray('hId', $a->helper)) + 0;
-        if ($helped == ORGANIZER_GRANT_MIN) {
-          //            r\message($a->helper, 'organizer grant', ['_a' => w\atag('/community/grant')]);
-          list ($name, $topic) = [$a->helperA->fullName, t('eligible')];
-          r\tellAdmin('eligible for grant', compact(ray('name topic')));
-        }
-      }
-    }
-    
-    unset($DBTX); 
-  }
-  */
-
-  /**
    * Set the company categories.
    */
   function setCategories($cats) {
@@ -533,23 +487,6 @@ class Acct {
       $sFlds = serialize($sFlds);
       $info[$special] = ($special == 'data' or !$sFlds) ? $sFlds : u\cry('S', $sFlds);
     }
-    /*    
-          if (isset($info['data'])) {
-          $info['data'] = serialize($info['data']);
-          } elseif ($data = just(DATA_FLDS, $info)) $info['data'] = serialize($data += $a->data);
-
-          if (($set = isset($info['secure'])) or $sFlds = just(SECURE_FLDS, $info)) { // serialize and encrypt
-          //  			if ($v = @$sFlds['ssnData']) $sFlds['ssnData'] = serialize($v);
-          $sec = $set ? ($info['secure'] ?: []) : ($sFlds + ($a->secure ?: []));
-          $info['secure'] = u\cry('S', serialize($sec));
-          }
-
-          if (($set = isset($info['vsecure'])) or $sFlds = just(VSECURE_FLDS, $info)) { // serialize and encrypt
-          $vsec = $set ? ($info['vsecure'] ?: []) : ($sFlds + ($a->vsecure ?: []));
-          if ($a->activated) foreach ($sFlds as $k => $v) $vsec[$k] = u\cry('V', $v); // hyper-encrypt when activated 
-          $info['vsecure'] = u\cry('S', serialize($vsec));
-          }
-    */	
 
     $info = justNOT(SECURE_FLDS . ' ' . VSECURE_FLDS . ' ' . DATA_FLDS, $info); // don't pass these
     return $info ? db\update('users', $info + ['uid' => $a->id], 'uid') : TRUE;
@@ -864,7 +801,7 @@ X;
     $left = $need; // how much left to be drawn
     $q = $a->drawSources();
     foreach ($q as $row) {
-      extract(u\exactly('uid avail', $row, 0));
+      extract(just('uid avail', $row, 0));
       $amount = round(min($left, $avail), 2);
       if ($amount > 0) {
         list ($fromQid, $toQid) = [r\qid($uid), $a->mainQid];
@@ -1067,7 +1004,6 @@ EOF;
         r\tellCO(t('New Member (%name)', ['name' => $a->fullName] + $details));
         $a->setBit(B_MEMBER);
         $a->update('tickle', now());
-        $a->eachPartner(function ($coA, $a, $code) {$a->setTask('partner');}); // if this is a partner-signup, complete it
       }
     } elseif ($nextStep == 'partnerend' and count($a->stepsLeft) > 1) { // parnerend step should always be last
       $stepsLeft = $a->stepsLeft;
@@ -1114,7 +1050,6 @@ EOF;
    */
   public function nextStepUrl($stepDone = '', &$msg = NULL, $info = []) {
     $a = $this;
-
     u\setDft($msg, $stepDone ? 'info saved' : '');
     if ($a->closed) return 'summary';
 
@@ -1333,11 +1268,10 @@ o;
     $a = $this;
     global $channel;
     
-    u\EXPECT($a->hasBank and (test() or $a->vsecure['bankAccount']), 'banking with no bank');
+    u\EXPECT($a->hasBank, 'banking with no bank');
 
     $amount0 = $amount;
     $automatic = ($channel == TX_CRON);
-    if (!$a->hasBank) return FALSE;
     $payee = $a->id;
     if ($tx) extract($tx);
     $okNow = ($amount < 0 or $a->bankOk); // "okay to create the request NOW"

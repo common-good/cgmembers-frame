@@ -38,12 +38,12 @@ function extraSetup() {
 /**
  * members: (ARG)
  *
- * in: MAKE activate Setup
+ * in: MAKE aaOther Setup
+ *     MAKE activate Setup
  *     TEST activate AdminActivatesAnAccount
  *     TEST activate AdminDeactivatesAnAccount
  *     MAKE changes Setup
  *     MAKE checks Setup
- *     MAKE other Setup
  */
 function members($list) {return t\members($list);}
 
@@ -82,10 +82,10 @@ function weShowWith($title, $content = FALSE, $showDebugs = TRUE) {
 /**
  * member (ARG) completes form (ARG) with values: (ARG)
  *
- * in: MAKE activate AdminActivatesAnAccount
+ * in: MAKE aaOther AdminDeletesAnAccount
+ *     MAKE activate AdminActivatesAnAccount
  *     MAKE activate AdminDeactivatesAnAccount
  *     MAKE changes AMemberChangesSomeSettings
- *     MAKE other AdminDeletesAnAccount
  */
 function memberCompletesFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values);}
 
@@ -147,7 +147,7 @@ function with($content) {return t\weShow($content);}
 /**
  * these (ARG): (ARG)
  *
- * in: TEST other AdminDeletesAnAccount
+ * in: TEST aaOther AdminDeletesAnAccount
  */
 function these($thing, $list) {return t\these($thing, $list);}
 

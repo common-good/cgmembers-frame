@@ -572,7 +572,15 @@ X;
 
 function checkAcct1($item) {
   extract($item);
+  $a = r\acct($uid);
   if (!$reid or !$partnerJid or $partnerJid != $uid or $relatedUid != $jid) r\tellAdmin('bad relation', $item);
+  if ($a->hasBank and !$a->masterA->vsecure['bankAccount']) {
+    $a->setRisk('hasBank', FALSE);
+    r\tellAdmin('hasBank(had) wo bank account', $item);
+  } elseif ($a->masterA->vsecure['bankAccount'] and !$a->hasBank) {
+    $a->setRisk('hasBank');
+    r\tellAdmin('bank account wo (until now) hasBank', $item);
+  }
   //look at agreement date and first transaction date and last transaction date. queue appropriate funcs
 }
 
@@ -966,13 +974,13 @@ function notices() {
   global $timeFor; // for testing
   
   $lastStart = getV('last_cron_start', []);
-  $weekly = (strftime('%A', @$lastStart['week']) == R_WEEKLY_DAY);
-  $monthly = (strftime('%d', @$lastStart['month']) == R_MONTHLY_DAY);
-  if (test() and isset($timeFor)) extract(just('weekly monthly', $timeFor));
+  $timeFor_weekly = (strftime('%w', @$lastStart['week']) == R_WEEKLY_DAY);
+  $timeFor_monthly = (strftime('%d', @$lastStart['month']) == R_MONTHLY_DAY);
+  if (test() and isset($timeFor)) extract(just('weekly monthly', $timeFor), EXTR_PREFIX_ALL, 'timeFor');
 
   $where = $dailySql = '((NOT :IS_WEEKLY AND NOT :IS_MONTHLY) OR NOT :IS_MEMBER)'; // daily
-  if ($weekly) $where .= ' OR :IS_WEEKLY';
-  if ($monthly) $where .= ' OR :IS_MONTHLY';
+  if ($timeFor_weekly) $where .= ' OR :IS_WEEKLY';
+  if ($timeFor_monthly) $where .= ' OR :IS_MONTHLY';
   $sql = "SELECT DISTINCT u.uid, :IS_WEEKLY AS weekly, :IS_MONTHLY AS monthly FROM r_notices n JOIN users u ON u.uid=n.uid WHERE IF(activated, u.:IS_OK, NOT u.:IS_NONUDGE) AND NOT sent AND ($where)";
 
   queueEach('notice1', $sql);
@@ -981,7 +989,6 @@ function notices() {
 
 function notice1($item) {
   extract(just('uid daily weekly monthly', $item));
-
   $now = now();
   if ($args = r\noticeArgs($uid, 'NOT sent', $weekly, $monthly)) {
     $args['messages'] = str_replace('stule=', 'style=', $args['messages']); // revert in emails (but CSP forbids inline online)

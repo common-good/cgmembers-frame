@@ -30,7 +30,7 @@ define('R_MAX_AMOUNT', 100000); // transaction request size limit (some smaller 
 define('R_FLOOR', 0); // how low can user's combined balance go, by default
 define('MIN_WEEKLY_BUMP', 1); // automatic weekly increase in negative minimum balance
 define('R_DAILY_HOUR', isDEV ? '00' : '01'); // what time (2-digit 24-hour clock hour) to start intensive daily maintenance tasks
-define('R_WEEKLY_DAY', 'Sunday'); // what day of the week to do weekly tasks
+define('R_WEEKLY_DAY', '0'); // what day of the week to do weekly tasks
 define('R_MONTHLY_DAY', '01'); // what day of the month to do monthly tasks (2-digits)
 define('R_DEBT_FEE', 25); // fee for overdue reserve credit
 define('R_DEBT_PERCENT', 1.5); // percentage fee for overdue reserve credit

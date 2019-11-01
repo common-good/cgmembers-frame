@@ -42,6 +42,9 @@ SELECT fullName, Count(b.id) AS votes FROM `users` u INNER JOIN r_ballots b ON b
 
 SELECT fullName, b.id, COUNT(v.id) as votes FROM `users` u INNER JOIN r_ballots b ON b.voter=u.uid LEFT JOIN r_votes v ON v.ballot=b.id GROUP BY b.id ORDER BY COUNT(v.id)
   
+Anonymous (originally for Ann Arbor):
+SELECT q.text AS question,COUNT(b2.voter) AS votes,o.text AS opt,grade,grademax,v.text AS comment,isVeto FROM r_votes v JOIN r_options o ON o.id=v.option JOIN r_questions q ON q.id=o.question JOIN r_ballots b ON b.id=v.ballot LEFT JOIN r_ballots b2 ON b2.proxy=b.voter WHERE q.event=11 GROUP BY q.id,o.id,b.voter
+
  */
 function formEvents($form, &$sta, $args = '') {
   global $base_url, $mya;

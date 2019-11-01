@@ -354,7 +354,7 @@ function charge($args, $type = 'charge') {
   extract(just($keys . ' proof force version', $args));
   $boxId = $boxUser;
   
-  /* extract(u\exactly('description device', $args, ['', null])); */
+  /* extract(just('description device', $args, ['', null])); */
   /* $boxId = $device; */
 
   /* $goods = $args['goods']; */

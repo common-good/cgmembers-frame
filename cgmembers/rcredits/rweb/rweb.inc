@@ -491,10 +491,8 @@ function showAllCharts($ctty = 0) {
 
 function formFooter() {
   global $base_url, $rUrl;
-//  $layout = (svar('layout') == 'Mobile') ? 'Desktop' : 'Mobile';
   $year = date('Y');
 
-  //<a href="?layout=$layout">$layout layout</a> |
   global $mya;
   $extraLinks = ($mya and $mya->can(B_MANAGE)) 
   ? t('|<%aDonate>Donate</a> | <%aInvite>Invite Someone</a> | ',

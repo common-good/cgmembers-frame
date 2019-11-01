@@ -324,11 +324,11 @@ function payInvoice($nvid) {
   u\EXPECT('int', $nvid);
   $msg = r\badUnpaidInv($nvid, $inv);
   if ($msg) return [FALSE, $msg];
-  extract(u\exactly('payer payee amount goods purpose data flags recursId', $inv, [NULL, NULL, 0.0, FOR_GOODS, NULL, '', 0, 0]));
+  extract(just('payer payee amount goods purpose data flags recursId', $inv, [NULL, NULL, 0.0, FOR_GOODS, NULL, '', 0, 0]));
   $payerA = r\acct($payer);
   $payeeA = r\acct($payee);
   $data = unserialize($data);
-  extract(u\exactly('api request shid', $data, NULL, NULL));
+  extract(just('api request shid', $data, NULL, NULL));
   
   $DBTX = \db_transaction();
   $purpose .= ' (' . PROJECT . " inv#$nvid)";
@@ -405,8 +405,8 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
   if (is_null($goods)) $goods = FOR_GOODS;
   $taking = ($type == 'charge' or $type == 'draw' or ($type == 'transfer' and $amount < 0));
   
-  extract(u\exactly('created force boxId', $data, [now(), 0, NULL]));
-  extract(u\exactly('offline loan investment stake fine noask funding crumbs recurs gift', $data, FALSE));
+  extract(just('created force boxId', $data, [now(), 0, NULL]));
+  extract(just('offline loan investment stake fine noask funding crumbs recurs gift', $data, FALSE));
 
   $short = FALSE;
   
@@ -758,7 +758,7 @@ function invoice($actorA, $otherA, $amount, $purpose, $goods = FOR_GOODS, $extra
   u\EXPECT(compact(ray('actorA otherA amount purpose')), 'acct acct float string');
   $ks = 'status';
   extract(just($ks, $extra));
-  extract(u\exactly('goods created', $extra, [FOR_GOODS, now()]));
+  extract(just('goods created', $extra, [FOR_GOODS, now()]));
   $flags = 0;
 	foreach (justNOT("status shid coupon coupid force inv api request created", $extra) as $k => $v) {
     u\setBit($flags, $k, $v);

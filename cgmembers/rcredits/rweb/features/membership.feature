@@ -313,8 +313,9 @@ Scenario: A member company wants to complete the account
   And we say "status": "info saved|step completed"
   And steps left "discount"
 
-  When member ".ZZC" completes form "settings/discount" with values:
-  | amount | 0 |**
+  When member ".ZZC" completes form "community/discount" with values:
+  | amount  | 0 |**
+  | minimum | 0 |
   Then we show "Account Summary" with:
   | Next Steps |
   | Invite |
