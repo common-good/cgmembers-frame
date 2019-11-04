@@ -201,7 +201,7 @@ EOF
 //  'get r/usd' => t('You can get only "r" or "usd" (rCredits or US Dollars).'), // not yet used (maybe used when there is a third option)
   'not a feature' => t('"%feature" is not a feature.'),
   'wrong nonce' => t('That is not the expected confirmation response. Try again (start over).'),
-  'no self-trading' => t("You can't do that with yourself."), // also includes relations, switching accounts, etc.
+  'no self-trading' => t("You can't do a transaction with yourself."), // also includes relations, switching accounts, etc.
   'no self-relation' => t("You can't relate yourself to your own account."),
   'funding error' => t("You do not have permission to fund that person."),
 //  'no company relations' => t("Only individuals can be related to this account."),

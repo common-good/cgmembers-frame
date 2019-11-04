@@ -1689,6 +1689,7 @@ X;
     $cans[B_DEV] = (isDEV or $aa->can(B_ADMIN)); // used in menu system for tests page, etc.
     //    if ($cans[B_MANAGING_CTTY] = ($aa->can(B_CADMIN) and $id == $a->community)) $cans[B_BUY] = TRUE;
     $cans[B_MANAGING_CTTY] = ($aa->can(B_CADMIN) and $id == $a->community);
+    if (empty($a->federalId) and !test()) $cans[B_SELL] = FALSE; // no selling without an EIN
     
     ksort($cans); // easier to debog
     return self::$perms[$id][$a->agentId] = $cans;
@@ -1870,6 +1871,18 @@ X;
   public function isBank() {return r\isBank($this->id);}
   public function nameAndEmail() {return [$this->fullName => $this->email];}
   public function nameAndQid() {return "$this->fullName ($this->mainQid)";}
+
+  /**
+   * Sign this account in.
+   * NOTE: This works only before displaying a page, not before redirecting.
+   */
+  public function regen(&$sta) {
+/*    global $user; 
+    $user = $this->account('uid pass timezone'); // timezone keeps Drupal happy in bootstrap.inc
+    \drupal_session_regenerate(); */
+    $sta['uid'] = $this->id;
+    w\setAcct($this->id);
+  }
 
   public function firstCo() {return db\get('fullName', 'r_relations r INNER JOIN users u ON r.main=u.uid', 'r.permission>0 AND r.other=:id AND u.:IS_CO ORDER BY r.created LIMIT 1', ['id' => $this->id]);}
   public function adminables() {

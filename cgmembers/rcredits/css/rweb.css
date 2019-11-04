@@ -655,6 +655,8 @@ body.page-partner h3 {color: #a9a9a9;}
 #frm-agreement.form-horizontal .checkbox {min-height:0;}
 #frm-agreement #wrap-agreement {display:none;}
 
+/* Partner Step Two */
+
 /* Verify ID */
 #frm-verifyid .form-item-federalId,
 #frm-verifyid .form-item-dob,

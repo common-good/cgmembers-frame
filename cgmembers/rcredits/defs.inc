@@ -332,15 +332,15 @@ define('APP_CAN_BIT_DESCS', t('charge customers,undo last transaction,give %RCRE
 // Membership steps
 define('R_STEPS_OLD', 'signup:signup, verify, ssn, sign:community/agreement, donate:community/donate, proxies, prefs:settings/preferences, connect, company, relations, photo, food, discount:community/discount, backing:community/backing');
 
-define('S_ALL', 'signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, titheout, tithein, work, partnerend, food, wantsPrint, printed'); // where to go to complete each step (unordered) -- add new steps to the end
+define('S_ALL', 'signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, titheout, tithein, work, partnersteptwo, partnerend, food, wantsPrint, printed'); // where to go to complete each step (unordered) -- add new steps to the end
 define('S_PERSON', 'signup verifyid agree preferences fund verifyemail'); // soon replace "preferences" with titheOut
 define('S_CO', 'signup discount verifyemail');
 define('S_CO2', 'agent agree contact backing company donate photo preferences tithein discount');
 define('S_CARD', 'photo contact donate');
 define('S_SELL', 'ssn contact tithein');
 define('S_VOICE', 'contact donate proxies work backing invite'); // add comment
-define('S_PARTNER', 'signup fund agree preferences partnerend');
-define('S_PARTNERCO', 'signup fund agree partnerend');
+define('S_PARTNER', 'signup fund partnersteptwo partnerend');
+//define('S_PARTNERCO', 'signup fund agree partnerend');
 
 define('S_PSETS', 'card sell voice');
 

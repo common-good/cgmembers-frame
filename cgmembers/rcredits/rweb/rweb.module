@@ -144,7 +144,6 @@ function rweb_menu($submenu = '') {
     'settings/preferences' => ['sub', t('Preferences'), 'Prefs', 'manage -depends', '', t(''), 'cog'],
     'settings/security' => ['sub', t('Security'), 'Security 2', 'manage -co -depends', '', t(''), 'link'],
     'settings/fund' => ['sub', t('Banking'), 'Connect 2', 'manage -depends', '', t(''), 'piggy-bank'],
-    'settings/partner-fund' => ['call', t('Funding Source'), 'Connect 2', ANY],
     'settings/company' => ['sub', t('Company Info'), 'Company 2', 'manage co -depends', '', t(''), 'calendar'],
     'settings/relations' => ['sub', t('Relations'), 'Relations 2', 'manage -depends', '', t(''), 'magnet'],
 // DISABLE FOR now()    'settings/boxes' => ['sub', t('Devices'), 'Boxes', 'manage -depends', '', t(''), 'phone'],
@@ -174,6 +173,7 @@ function rweb_menu($submenu = '') {
     'settings/agent' => ['call', 'Choose an Agent', 'Agent 2', 'manage'],
     'settings/resend' => ['call', 'Resend Email', 'Resend', 'manage'],
     'settings/food' => ['call', 'Food Fund', 'Food 2', ANY],
+    'settings/partnersteptwo' => ['call', 'Partner Signup Agreement Etc.', 'PartnerStepTwo', 'manage'],
     'settings/partnerend' => ['call', 'Finish Partner Signup', 'PartnerSignup end=1', ANY],
 
 //    'handy' => isDEV ? ['norm', t('Handy'), '', 'dev', 'handyLinks'] : NULL,

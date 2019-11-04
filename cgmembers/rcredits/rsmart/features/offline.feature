@@ -127,7 +127,7 @@ Scenario: A cashier canceled offline a supposedly offline charge that actually w
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $-100 for "goods": "refund" at "%now-1h"
   Then transactions: 
   | xid | created | amount | from | to   | purpose | taking |*
-  | 6   | %now    |   -100 | .ZZB | .ZZC | refund  |      1 |
+  | 6   | %now-1h |   -100 | .ZZB | .ZZC | refund  |      1 |
   And count "txs" is 3
 
   Given transactions: 

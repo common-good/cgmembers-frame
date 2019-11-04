@@ -19,7 +19,8 @@ define('BASE_PATH', $base_path);
 define('T_BALANCE_FLDS', 'uid balance floor savingsAdd saveWeekly minimum');
 define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid');
 define('SPECIAL_IDS', 'ctty crumb round cgf bank-in bank-out');
-define('DOCODE_FLNM', 'docode.txt');
+define('DOCODE_FLNM', LOG_DIR . 'docode.txt');
+define('SAME_TIME', 60 * 20); // number of seconds that make no difference in "same time"
 // see R_DATE_FLDS in defs.inc
 
 /**
@@ -525,6 +526,7 @@ function doMembersHave($info) {
 //  fixData($info, TRUE);
   if ($testOnly) {
     foreach ($info as $k => $v) if ($v != '?') {
+      if (in($k, R_DATE_FLDS) and abs($a->o($k)-$v) < SAME_TIME) continue;
       if (t\badEq("db $k", $a->o($k), $v, $id)) return FALSE;
     }
     return TRUE;
@@ -1001,7 +1003,8 @@ function verifyRecord($table, $info) {
     if ($value == '?') {unset($info[$key]); continue;}
     $crit[] = $value === '' ? "($key IS NULL or $key=:$key)"
     : ((in($key, R_DATE_FLDS) or mb_stripos($key, 'date') !== FALSE) ? 
-      "DATE(FROM_UNIXTIME(`$key`))<=>DATE(FROM_UNIXTIME(:$key))" 
+//      "DATE(FROM_UNIXTIME(`$key`))<=>DATE(FROM_UNIXTIME(:$key))" 
+      "ABS(`$key`-:$key)<" . SAME_TIME
     : (in($key, 'trust risk') ? "CAST(ROUND($key, 2) AS CHAR)<=>:$key"
     : "`$key`<=>:$key")); // null-safe ==
   }
@@ -1597,7 +1600,7 @@ function fixCountry(&$country) {
 */
 function log($msg) {if (test()) u\log($msg, 'debug');}
 function that($thing) {global $thatThing; return $thatThing[$thing];}
-function dosayFilename($type) {return DRUPAL_ROOT . R_PATH . "/dosay-$type.txt";}
+function dosayFilename($type) {return LOG_DIR . "dosay-$type.txt";}
 function goodsBit($s) {return $s == 'goods' ? "1" : ($s == 'cash' ? "0" : "ERROR");} // no 3rd why for rSmart
 function approxTime($a, $b) {return t\eq($a, $b, 10000);}
 function rewarding() {return ctty('aab')->cttyRewardy;}

@@ -910,9 +910,7 @@ function formTestResults($form, &$sta) {
   if (!isDEV) return;
   
   $mya = r\acct(1);
-  global $user; $user = $mya->account('uid pass timezone'); // timezone keeps Drupal happy in bootstrap.inc
-  \drupal_session_regenerate();
-  w\setAcct($mya->id);
+  $mya->regen($sta);
   test(FALSE);
 
   $q = db\q('SELECT * FROM test WHERE type IN (:types) ORDER BY id', ['types' => ray('status error warning')]);

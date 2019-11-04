@@ -357,8 +357,9 @@ EOF;
 
 function htmlButton($name, $id, $value, $class, $other = []) {
   extract(just('tribs href class', $other));
-  
-  u\EXPECT(!@$href or mb_strpos($href, 'http') !== FALSE, 'no http in html button'); // $onclick = $href;
+
+  if (nn($href) and !mb_strpos($href, 'http')) $href = BASE_URL . '/' . $href;
+//  u\EXPECT(!@$href or mb_strpos($href, 'http') !== FALSE, 'no http in html button'); // $onclick = $href;
   if (@$href) list ($tag, $role) = ['a', 'button']; else $tag = 'button';
   return w\tag($tag, $value, (@$tribs ?: []) + compact(@$onclick ? 'onclick' : 'href', 'class', 'role'));
 }
@@ -440,7 +441,8 @@ function rendA($name, $field) {
 //    $rent .= preg_replace('/name="(.*)"/', "name=\"$k\"", rent($field));
   return preg_replace('/<(input|textarea|select|button) /', "<$1 id=\"edit-$name\" name=\"$name\" ", rent($field));
 }
-    
+
+// NYI
 function rend($fields) {
   $html = '';
   foreach ($fields as $name => $ray) {
@@ -681,7 +683,7 @@ function fieldSet($id, $flds, $label = '', $desc = '', $other = []) {return fld(
  * Return a form field for donating fractional dollars.
  */
 function roundupFld($a) {
-  return w\boolFld(t('Round Up!'), t('Fund the common good! Round all your payments up to a whole dollar amount and donate the cents to local nonprofits, community investments, and the common good.'), $a ? $a->roundup : FALSE);
+  return w\boolFld(t('Round Up!'), t('Round all your payments up to a whole dollar amount and donate the cents toward building the %PROJECT Economy in your area.'), $a ? $a->roundup : FALSE);
 }
 
 /**
