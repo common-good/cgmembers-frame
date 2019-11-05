@@ -70,6 +70,10 @@ function formCoupons_validate($form, &$sta) {
   $today = today();
   extract(just($fields = 'type code amount count minimum start end ulimit forOnly', $sta['input']));
 
+  if (empty($amount) and in($mya->task, 'co co2')) {
+    return $mya->task == 'co' ? w\go($mya->nextStepUrl()) : w\goNextStep('discount'); // new member pressed skip on discount form
+  }
+    
   if ($type == 'gift') {
     if ($err = u\badAmount($amount, '>0')) return w\sayFieldErr($err, 'amount');
     if ($err = u\badAmount($count, '>0')) return w\sayFieldErr($err, 'count');

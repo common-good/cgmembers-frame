@@ -13,7 +13,7 @@ function formVerifyId($form, &$sta, $args = '') {
   global $mya;
   
   if ($mya->stepIsDone('ssn') and !$mya->admin) return w\goNextStep(''); // don't allow DIY redo after SSN is verified
-  extract(u\exactly('method', $args, -1));
+  extract(just('method', $args, -1));
 
   $title = t('Identity Verification');
   $subtext = t('As a registered Money Services Business, we are required by law to verify your identity. Fortunately, we have <%aSecure>top notch security</a>. How do you want to do it?', '_aSecure', atag(r\promoLink('about-us/privacy-and-security')));

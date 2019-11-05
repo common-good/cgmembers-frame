@@ -27,7 +27,8 @@ function formInvestRate($form, &$sta, $args = '') {
   $ds = array_combine(array_merge($ks, $fields), $ds);
 
   $vs = [$coA->fullName, $coA->city, $coA->serviceArea, u\fmtDate($coA->dob, TRUE), $coA->gross, $coA->coDesc()];
-  $vs = array_combine($ks, $vs) + just($fields, $res, TRUE); 
+  $vs = array_combine($ks, $vs); 
+  foreach ($fields as $k) $vs[$k] = $res[$k]; // add investment record fields to $vs in the order of $fields (don't use just())
 
   if (strpos($types, 'I') !== FALSE) {
     $ds['offering'] = t('Target');

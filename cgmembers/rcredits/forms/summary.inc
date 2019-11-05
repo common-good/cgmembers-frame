@@ -87,7 +87,7 @@ function formSummary($form, &$sta) {
 //    $savings = item(u\fmtAmt($mya->savings) . t('<small> (your total incentive rewards to date)</small>', [
 //    list ($rewardNote, $rewardDesc) = $mya->cttyRewardy ? [t('<small> (your total incentive rewards to date)</small>'), t('This amount will be yours to keep, once your community reaches a certain size.')] : ['', t('Some of this amount may be yours to keep, at your %PROJECT community\'s decision, once membership reaches a certain size.')];
 //    $savings = item(u\fmtAmt($mya->rewards) . $rewardNote, t('Credit Line:'), $rewardDesc);
-    $suffix = ($mya->debt or $mya->depends) ? '' : t(' (<%a>Click here</a> to let your balance go negative.)', '_a', 'a id="activate-credit"');
+    $suffix = ($mya->debt or $mya->depends or !$mya->refill) ? '' : t(' (<%a>Click here</a> to let your balance go negative.)', '_a', 'a id="activate-credit"');
     list ($credit, $normally) = $mya->depends ? ['$0', t(' (normally)')] : [u\fmtAmt(-$mya->floor), ''];
     $creditLine = item($credit, t('Credit Line:'), t('Based%normally on your account\'s average monthly activity over the past 6 months.', compact('normally')), w\suffix($suffix));
 //    $committed = item(u\fmtAmt(max(0, $mya->committed)), t('Committed:'), t('reserved for donation to Common Good Finance'));
@@ -292,7 +292,7 @@ function choiceListFld() {
     community:donate:Give:Make a donation to %PROJECT.
     community:comment:Comment:Send a comment, question, or suggestion.
     scraps:card:Card:Get a %PROJECT payment card
-    scraps:sell:Sell:Accept payments through %PROJECT
+    scraps:sell:Sell:Accept payments (including discount rebates) through %PROJECT
     scraps:voice:Voice:Participate in %PROJECT economic democracy
     scraps:co2:Finish:Finish opening your complete company account &mdash; required before you receive a total of $1,000 or within six months, whichever is first
 X

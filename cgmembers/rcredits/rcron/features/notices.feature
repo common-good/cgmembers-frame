@@ -46,3 +46,13 @@ Scenario: a member gets some weekly notices
   | uid  | created | sent   | message    |*
   | .ZZB | %today  | %today | You rock.  |
   | .ZZB | %today  | %today | You stone. |
+  
+Scenario: a weekly notice member doesn't get notices on other days
+  Given notices:
+  | uid  | created | sent | message    |*
+  | .ZZB | %today  |    0 | You stone. |
+  And it's time for ""
+  When cron runs "notices"
+  Then not these "notices":
+  | uid  | created | sent   | message    |*
+  | .ZZB | %today  | %today | You stone. |

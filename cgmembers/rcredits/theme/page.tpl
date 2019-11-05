@@ -106,6 +106,13 @@ foreach (ray('header accounts help action_links content footer highlighted') as 
 	$$k = @$page[$k];
 	$$k = @$$k ? \render($$k) : '';
 }
+
+global $pagePartner; // branding for partner signups
+if (nn($pagePartner)) {
+  $menu1 = $footer = '';
+  $header = tr('<img src="%BASE_URL/rcredits/images/partner-logos/%pagePartner.png" id="partner-logo" />', compact('pagePartner'));
+}
+
 /**/ echo <<<EOF
 <div id="page-wrapper"><div id="page">
 

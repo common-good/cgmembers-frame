@@ -147,7 +147,7 @@ $GLOBALS['tStrings'] = array(
   'invite default' => t("%PROJECT is great. I signed up. Check it out!\n\n%name"),
   'roundups desc' => t('roundup donations'),
   'crumbs desc' => t('crumbs donation: %pct of past month receipts'),
-  'sent email' => t('<p>We sent a confirmation link to <b>%email</b>. Click it to continue.</p>'),
+  'sent email' => t('<p>We sent a confirmation link to <b>%email</b>.</p><p>Click it to continue (if it doesn\'t show up right away, check your Spam folder).</p>'),
   'proxy help' => t(<<<EOF
     <p><b>Direct democracy</b> is at the heart of the %PROJECT design. In each community, members meet to discuss and decide on funding priorities for incentives, grants, loans, and investments of %RCREDITS for the greater good.</p>
     <p>You assign a person in your community as your ongoing Representative (Proxy). This should be a member you know and trust and generally agree with. Whenever you don't vote, your Representative votes for you. The Representative's vote simply counts double (one vote for them and one vote for you). If your Representative also fails to vote, then your Representative's Proxy votes for all three of you.<br><br>Everyone's voice is counted, whether or not they vote directly &mdash; one person one vote.</p>
@@ -201,7 +201,7 @@ EOF
 //  'get r/usd' => t('You can get only "r" or "usd" (rCredits or US Dollars).'), // not yet used (maybe used when there is a third option)
   'not a feature' => t('"%feature" is not a feature.'),
   'wrong nonce' => t('That is not the expected confirmation response. Try again (start over).'),
-  'no self-trading' => t("You can't do that with yourself."), // also includes relations, switching accounts, etc.
+  'no self-trading' => t("You can't do a transaction with yourself."), // also includes relations, switching accounts, etc.
   'no self-relation' => t("You can't relate yourself to your own account."),
   'funding error' => t("You do not have permission to fund that person."),
 //  'no company relations' => t("Only individuals can be related to this account."),
@@ -296,6 +296,7 @@ EOF
   'savings too high' => t('You can increase your savings amount only by what you have in your primary account. Your maximum additional savings amount at this time is %max.'),
   'organizer grant' => t('You have recruited %ORGANIZER_GRANT_MIN new %PROJECT members. You are probably eligible for a %PROJECT organizer grant of up to %ORGANIZER_GRANT_MAX! <%a>Click here</a> to apply.'),
   'bad forced tx' => t('You accepted a transaction (offline) that cannot be completed: customer %account, for %amount, on %created%by.'),  
+  'bad partner' => t('That is not a %PROJECT signup-partner organization.'),
 
   // notices to staff
   'cache mismatch' => 'Cron cache mismatch: %k=%is (cache) <> %shouldBe (calc) OR joint %k=%jIs (cache) <> %jShouldBe (calc)',

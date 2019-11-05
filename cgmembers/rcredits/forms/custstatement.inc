@@ -19,9 +19,7 @@ function custStatement($args = []) {
   $purposeLenMax = 60; // maximum number of characters in purpose field, not including added "..."
 
   if (!$mya = r\acct()) return w\go('', t('You must first sign in.'), 'ERR');
-  $cust = u\arrayGet($args, 'cust', null);
-  $period = u\arrayGet($args, 'period', null);
-  $way = u\arrayGet($args, 'way', 'OUT');
+  extract(just('cust period way', $args, [NULL, NULL, 'OUT']));
 
   $a = is_null($cust) ? null : r\acct($cust);
   if (is_null($a)) return w\softErr(t('No customer was specified.'));

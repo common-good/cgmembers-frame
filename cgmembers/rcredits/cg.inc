@@ -15,6 +15,7 @@ use CG\DB as db;
 use CG\Util as u;
 use CG\Backend as be;
 use CG\Web as w; // use sparingly
+use CG\Testing as t;
 
 require_once __DIR__ . '/cg-strings.inc';
 require_once __DIR__ . '/cg-db.inc';
@@ -232,6 +233,8 @@ function ipok($uid, $device) {
  *   noFrame:  don't show salutation and closing and footer
  *   subject:  specific subject
  *   body:     specific message
+ *   cc:       email or [email => name] to CC
+ *   pseudo:   who to send the mail from (name only -- source email is still us)
  * ... the following special substitions are always available:
  *   site, qid, zip3, shortName, and every cached field for the account
  * @param mixed $reply: uid, account, or email address to reply to OR 'ctty' (of $to) or NULL (CGF_EMAIL) OR [email => name]
@@ -245,9 +248,9 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
   foreach (ray('secure vsecure') as $k) unset($subs[$k]); // show not even in error messages
   $subs['site'] = BASE_URL;
   $subs['orgPhone'] = CGF_PHONE;
-  extract(just('subject body noFrame sms', $subs));
+  extract(just('subject body noFrame sms cc pseudo', $subs));
   
-  if ($toA = is_object($to0) ? $to0 : r\acct($to0)) {
+  if (!is_array($to0) and $toA = is_object($to0) ? $to0 : r\acct($to0)) {
     $toEmail = $toA->email;
     $to = [$toEmail => $toA->fullName];
     $subs += (array) $toA->account(); // this omits any special fields or special formatting
@@ -285,7 +288,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
   f('t.output', 'Actual (in rMail) ' . pr($erInfo), 'email');
 
   if (!isPRODUCTION and (isDEV or db\count('users') > 200)) { // make sure we never send rogue emails from test server with real data
-/**/  if (!test() and $mya and $mya->cAdmin) debug(compact(ray('subject to body')));
+/**/  if (!test() and (isDEV or ($mya and $mya->cAdmin))) debug(compact(ray('subject to body')));
     return; // no emails unless real!!
   }
   
@@ -307,17 +310,19 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
   $m = \Swift_SignedMessage::newInstance()
     ->attachSigner($signer)
     ->setSubject($subject)
-    ->setFrom([SYS_EMAIL => t('%PROJECT system')])
+    ->setFrom([SYS_EMAIL => nn($pseudo) ?: t('%PROJECT system')])
     ->setTo($to)
     ->setReturnPath(BOUNCE_EMAIL)
     ->setBody($body, 'text/html')
     ->addPart(strip_tags($body), 'text/plain'); // don't bother making the plain text pretty
 
+  if (nn($cc)) $m->setCc($cc);
+  
   if ($attachment) {
     if (!is_array($attachment)) $attachment = [$attachment];
     foreach (is_array($attachment) ? $attachment : [$attachment] as $flnm) {
-      $attach = Swift_Attachment::fromPath($flnm);
-      $attach->setFilename(basename($attachment));
+      $attach = \Swift_Attachment::fromPath($flnm);
+      $attach->setFilename(basename($flnm));
       $m->attach($attach);
     }
   }
@@ -336,7 +341,6 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
     r\tellAdmin(t('cannot send email'), $erInfo);
   }
   return TRUE;
-  //  ->attach(Swift_Attachment::fromPath('my-document.pdf'))  
 }
 
 /**
@@ -387,7 +391,7 @@ function notify($uid, $index, $subs = [], $force = FALSE) {
   u\EXPECT($a, 'no account');
   $subs['uid'] = $uid;
   $subs['qid'] = $a->qid;
-  $subs['otherName'] = u\arrayGet($subs, 'myName', null); // notifying someone else about US, if anyone
+  $subs['otherName'] = nn($subs['myName'], NULL); // notifying someone else about US, if anyone
   $fullName = $a->fullName;
   $warnIndexes = ray('new invoice,new offer,charge disputed');
   
@@ -1399,6 +1403,23 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   return FALSE;
 }
 
+/**
+ * Return a unique short, lowercase version of a name.
+ */
+function shortName($fullName) {
+  global $mya;
+  
+  $myid = $mya ? $mya->id : 0;
+  $name = $name0 = u\shortName($fullName);
+  $len = strlen($name);
+  $suffix = 1; // first suffix to add is "2"
+  while (db\exists('users', 'name=:name AND uid<>:myid', compact('name', 'myid'))) {
+    $suffix++;
+    $name = $name0 . $suffix;
+  }
+  return $name;
+}
+
 function passHash($pass) {
   u\EXPECT(is_string($pass) and $pass !== '', 'bad pass to hash');
   require_once DRUPAL_ROOT . '/includes/password.inc';
@@ -1565,7 +1586,7 @@ function disputeTx($xid, $reason = '') {
   
 function makeDoCode($ray) {
   $code = mb_substr(u\cry('P', serialize($ray)), strlen(CRYPT_FLAG));
-  w\svar('TESTDOCODE', $code); // must be on separate line (PHP bug)
+  if (test()) t\doCode($code); // must be on separate line (PHP bug)
   return $code; // must be on separate line (PHP bug)
 }
 
@@ -1578,7 +1599,7 @@ function realState($state, $country = R_COUNTRY_ID) {return db\get($country == U
 function stateNum($st) {return $st ? db\get('id', 'r_states', 'abbreviation=:st and country_id=:US_COUNTRY_ID', compact('st')) : $st;}
 function perm($bit) {return $bit - B_RELATED;}
 function foreignServer($uid) {return (r\uidRegion($uid) != serverUid());}
-function doCode($code) {return @unserialize(@u\decry('P', CRYPT_FLAG . $code));} // this is how it should be (see forms/rdo.inc)
+function doCode($code) {return @unserialize(@u\decry('P', CRYPT_FLAG . ($code == 'TESTDOCODE' ? t\doCode() : $code)));} // (see forms/rdo.inc)
 function cgA() {return r\acct(CGID);}
 function denyInv($nvid) {return db\setData('r_invoices', $nvid, ['denied' => TRUE]);}
 //function usdin($for) {return u\abbreviates('usd in (', strtolower(is_array($for) ? $for[1] : $for));}

@@ -10,6 +10,7 @@ require_once R_ROOT . '/forms/signup.inc'; // for validation
 
 /**
  * Open a trial company account
+ * If called from a partner signup, suppress the fields we already have.
  */
 function formSignupCo($form, &$sta, $args = '') {
   global $mya;
@@ -22,7 +23,7 @@ function formSignupCo($form, &$sta, $args = '') {
     if ($mya->trialco) {
       foreach ($dftFlds as $k) $$k = $mya->$k; // pick up where we left off
       $source = $mya->helperA->fullName;
-      $qid = '';
+      $qid = $mya->helperA->mainQid;
     } else {
       $a = ($mya->cAdmin and !$mya->co) ? $mya : $mya->agentA; // let admins open company accounts on behalf of others
       if ($coInfo = $a->signupCo) {
@@ -45,15 +46,19 @@ X
   $source2 = hidFld($source);
   $args = hidFld($args);
 
-  extract(just('fullName legalName email', w\nameAndEmailFlds(TRUE, $fullName, $email)));
-  $email['#help'][1] = preg_replace('/ \\(.*\\)/', '', $email['#help'][1]); // don't talk about settings
-  $phone = textFld(t('Company Phone:'), [t('Company phone number')], required($phone ? u\fmtPhone($phone, '-') : ''));
-  $zip = zipFld($zip);
-  $contact = $qid ? NULL : textFld(t('Your Name:'), [t('Your full name')], required($contact));
+  if ($fullName and $email and $phone and $zip and $contact) { // called from partner signup
+    foreach (ray('fullName email phone zip contact') as $k) $$k = hidFld($$k);
+  } else {
+    extract(just('fullName email', w\nameAndEmailFlds(TRUE, $fullName, $email)));
+    $email['#help'][1] = preg_replace('/ \\(.*\\)/', '', $email['#help'][1]); // don't talk about settings
+    $phone = textFld(t('Company Phone:'), [t('Company phone number')], required($phone ? u\fmtPhone($phone, '-') : ''));
+    $zip = zipFld($zip);
+    $contact = $qid ? NULL : textFld(t('Your Name:'), [t('Your full name')], required($contact));
+  }
   $selling = sellingFld();
   $source = ($qid or $source) ? NULL : sourceFld('');
   $ownPhone = boolFld(t('Own Phone:'), t('Will you be running the CGPay app on your own Android phone? (%PROJECT is happy to supply one, with a $%EQUIP_DEPOSIT refundable equipment deposit).'), FALSE);
-  $qid = $qid ? NULL : textFld(t('Account ID:'), [t('Your personal account ID'), t('If you are already a member of %PROJECT, type the account ID of your personal account. Otherwise leave this <b class="loud">BLANK</b>.')]);
+  $qid = $qid ? hidFld($qid) : textFld(t('Account ID:'), [t('Your personal account ID'), t('If you are already a member of %PROJECT, type the account ID of your personal account. Otherwise leave this <b class="loud">BLANK</b>.')]);
   $submit = t('Submit');
   return cgform(compact(ray('title forother subtext source2 contact fullName zip phone email selling source ownPhone qid submit args')));
 }
@@ -67,7 +72,7 @@ function formSignupCo_validate($form, &$sta) {
     if ($err = u\badName($$field)) return say($err, compact('field'), $field);
   }
 
-  if ($qid = trim(strtoupper($qid)) and !r\acct($qid)) return say(t('That is not an account ID. Please check again (look in the lower left on your %PROJECT Card).'), 'qid');
+  if ($qid = trim(strtoupper(nn($qid))) and !r\acct($qid)) return say(t('That is not an account ID. Please check again (look in the lower left on your %PROJECT Card).'), 'qid');
 
   if ($err = u\badZip($zip)) return say($err, 'zip');
   if ($err = u\badPhone($phone)) return say($err, 'phone');
@@ -97,7 +102,7 @@ function formSignupCo_submit($form, &$sta) {
   list ($city, $state, $latitude, $longitude) = zipCity($zip);
   $preid = getPreId($source);
   if (@$source2) $source = trim(mb_strtoupper($source2) . "-$source");  
-  $flags = u\bit(B_CO) | u\bit(B_DEPENDS) | u\bit(B_CONFIRMED);
+  $flags = ($mya ? $mya->flags : 0) | u\bit(B_CO) | u\bit(B_DEPENDS) | u\bit(B_CONFIRMED);
 //  $stepsDone = array_fill_keys(ray('signup discount verify'), FALSE);
   $coType = $coType = CO_CUSTODIAN;
   $info = @compact(ray($dbFields));
@@ -111,7 +116,7 @@ function formSignupCo_submit($form, &$sta) {
 
   list ($myid, $name) = [$mya->id, $mya->name];  
   $qid = $mya->mainQid;
-  tellStaffNewMember($info + compact(ray('acctType qid name'))); // report to staff and user
+  tellStaffNewMember($info + compact(ray('qid name'))); // report to staff and user
   $pw1 = $mya->oneTimePass($name, TRUE); 
   r\notify($myid, 'verify-trial', ray('name qid code', $name, $qid, $pw1), TRUE); 
   if (nn($code)) w\invitation($code, $myid); // mark invitation used

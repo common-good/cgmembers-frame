@@ -306,7 +306,7 @@ function formFollowup($form, &$sta, $args = []) {
   global $mya;
   
 	if (!$mya or (!$mya->cAdmin2 and !$mya->admin2)) return w\go('');
-  extract(u\exactly('uid one recent', $args, null));
+  extract(just('uid one recent', $args, null));
   
   if (!empty($uid)) {
     w\setAcct($uid); // switch to that user
@@ -910,9 +910,7 @@ function formTestResults($form, &$sta) {
   if (!isDEV) return;
   
   $mya = r\acct(1);
-  global $user; $user = $mya->account('uid pass timezone'); // timezone keeps Drupal happy in bootstrap.inc
-  \drupal_session_regenerate();
-  w\setAcct($mya->id);
+  $mya->regen($sta);
   test(FALSE);
 
   $q = db\q('SELECT * FROM test WHERE type IN (:types) ORDER BY id', ['types' => ray('status error warning')]);

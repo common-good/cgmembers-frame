@@ -161,3 +161,27 @@ Scenario: a member with a negative balance requests a transfer from the bank
   | xid | created | amount | from | to   | purpose   | taking |*
   | 8   | %today  |      0 |  256 | .ZZA | from bank |      1 |
   
+Scenario: a slave member requests a transfer
+  Given members:
+  | uid  | fullName | floor | flags  | risks   | jid  | balance |*
+  | .ZZE | Eve Five |     0 | ok     | hasBank | .ZZD |     140 |
+  And members have:
+  | uid  | jid  | flags |*
+  | .ZZD | .ZZE | ok    |
+	And relations:
+	| main | other | permission |*
+	| .ZZD | .ZZE  |      joint |
+	| .ZZE | .ZZD  |      joint |
+  When member ".ZZE" completes form "get" with values:
+  | op  | amount |*
+  | put |     16 |
+  Then usd transfers:
+  | payee | amount | created   | completed | channel | xid |*
+  |  .ZZE |    -16 | %today    | %today    | %TX_WEB |   8 |
+  And we say "status": "banked" with subs:
+  | action  | tofrom  | amount | why             |*
+  | deposit | to      | $16    | at your request |
+  And balances:
+  | uid  | balance |*
+  | .ZZD |     124 |
+  | .ZZE |     124 |

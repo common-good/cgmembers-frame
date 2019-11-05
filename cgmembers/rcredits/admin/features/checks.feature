@@ -35,9 +35,9 @@ Scenario: admin prints checks
   | Cor Pub | 3 C, Cton, MA 01003 | 413 772 0003 | 53-7028/2118 |   03 |   4 | %dmy | $ 300 | Three Hundred and NO/100 | Greenfield Co-op Bank |  
   And usd transfers:
   | txid | deposit   | xid |*
-  | 5002 | %today    |   2 |
-  | 5003 | %today    |   3 |
-  | 5004 | %today    |   4 |
+  | 5002 | %daystart |   2 |
+  | 5003 | %daystart |   3 |
+  | 5004 | %daystart |   4 |
   And balances:
   | uid  | balance |*
   | .ZZA |     500 |

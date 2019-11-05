@@ -133,7 +133,7 @@ define('US', '<span class="us">us</span>');
 /// define('GAME_COMPANIES', '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital');
 define('R_DATE_FLDS', 'created completed deposit sent invited giftDate signed login access joined yesterday dob when sold'); // date field names for testing and administrative display
 define('CO_FLDS', 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd staleNudge contact'); // account fields stored in r_company
-define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy idVerifiedBy'); // fields stored in the account's "data" array field (serialized)
+define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy idVerifiedBy partnerInfo'); // fields stored in the account's "data" array field (serialized)
 define('MASTER_NUMERIC_FLDS', 'minimum achMin savingsAdd saveWeekly');
 define('MASTER_FLDS', MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank refill'); // only in master, for joint accounts
 define('R_MONEY_FLDS', 'balance rewards floor giftPot committed'); // financial amount fields in account record
@@ -188,6 +188,7 @@ define('GEOCODE_URL', 'https://api.opencagedata.com/geocode/v1/json?'); // use i
 define('NEIGHBOR_RADIUS', 40); // how far away (in miles) can a member see names of other individual members?
 define('NEIGHBOR_RMAX', NEIGHBOR_RADIUS * NEIGHBOR_RADIUS / 69 / 69); // squared and adjusted for degrees, not miles
 define('NEIGHBOR_QUERY', '(POW(latitude-:lat, 2) + POW((longitude-:lon) * (.71 + .0116*(latitude+:lat)/2), 2))');
+define('SIGNUP_PARTNERS', 'cooppower nyccec'); // these organizations sign people up for Common Good
 
 define('R_URL_SLASH', '%_%'); // Drupal gets confused by slashes in a url, even if urlencoded
 define('R_EXCHANGE_LIMITS', '1:5000,7:20000,52:80000,365:500000'); // per day, week, 7-week, year
@@ -331,14 +332,15 @@ define('APP_CAN_BIT_DESCS', t('charge customers,undo last transaction,give %RCRE
 // Membership steps
 define('R_STEPS_OLD', 'signup:signup, verify, ssn, sign:community/agreement, donate:community/donate, proxies, prefs:settings/preferences, connect, company, relations, photo, food, discount:community/discount, backing:community/backing');
 
-define('S_ALL', 'signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, titheout, tithein, work, partnerend, food, wantsPrint, printed'); // where to go to complete each step (unordered) -- add new steps to the end
+define('S_ALL', 'signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, titheout, tithein, work, partnersteptwo, partnerend, food, wantsPrint, printed'); // where to go to complete each step (unordered) -- add new steps to the end
 define('S_PERSON', 'signup verifyid agree preferences fund verifyemail'); // soon replace "preferences" with titheOut
 define('S_CO', 'signup discount verifyemail');
-define('S_CO2', 'agent agree backing company donate photo preferences tithein');
+define('S_CO2', 'agent agree contact backing company donate photo preferences tithein discount');
 define('S_CARD', 'photo contact donate');
 define('S_SELL', 'ssn contact tithein');
 define('S_VOICE', 'contact donate proxies work backing invite'); // add comment
-define('S_PARTNER', 'partnerend'); // finalize partner-signup process
+define('S_PARTNER', 'signup fund partnersteptwo partnerend');
+//define('S_PARTNERCO', 'signup fund agree partnerend');
 
 define('S_PSETS', 'card sell voice');
 
@@ -545,7 +547,12 @@ define('E_TYPES', 'bank_only prime donation rebate usd_fee bank');
 
 $GLOBALS['emailSubjects'] = array(
   'nonmember' => t('%PROJECT invitation followup'),
-  'partner-signup' => t('Continue your %PROJECT sign-up'),
+  'partner-signup' => t('new solar subscription'),
+  'partner-contract' => t('Continue your Community Solar sign-up'),
+  'partner-end' => t('Your Community Solar sign-up is complete'),
+  'partner-solar1end' => t('Your Community Solar sign-up is complete'),
+  'partner-report' => t('Solar Signup COMPLETE'),
+  'partner-solar1report' => t('Solar Signup COMPLETE'),
   'verify' => t('%PROJECT NEXT STEP: Verify your email address.'),
   'verify-co' => t('%PROJECT NEXT STEP: Verify your company email address.'),
   'verify-trial' => t('%PROJECT NEXT STEP: Verify your company email address.'),
@@ -554,7 +561,6 @@ $GLOBALS['emailSubjects'] = array(
   'notices' => t('%PROJECT Notices for %qid for %range'),
   'message' => t('%PROJECT %topic'),
 	'annual-gift' => t('your chosen annual gift to %PROJECT'),
-  'cooppower-signup' => t('Community Solar Signup'),
 );
 
 $GLOBALS['topics'] = array( // topics for 'message' email

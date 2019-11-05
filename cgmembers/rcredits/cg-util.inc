@@ -426,9 +426,9 @@ function nonce($minLen = 1) {
  */
 function randPass($len = 4) {
   global $nextPass; if (test() and nn($nextPass)) return $nextPass;
-  $list = explode("\r\n", file_get_contents(R_ROOT . '/../../config/words.txt'));
+  $list = explode("\n", file_get_contents(R_ROOT . '/../../config/words.txt'));
   $listLen = count($list);
-  for ($i = 0; $i < $len; $i++) $res[] = $list[rand(0, $listLen - 1)];
+  for ($i = 0; $i < $len; $i++) $res[] = str_replace("\r", '', $list[rand(0, $listLen - 1)]); // \r only in Windows
   return join(' ', $res);
 }
 
@@ -995,14 +995,14 @@ function parseAddr($address) {
  */
 function normalizeCase($what, $proper = 'ucwords') {
   if (is_array($what)) {
-    foreach ($what as $key => $value) $what[$key] = normalizeCase($what[$key], $proper);
+    foreach ($what as $key => $value) $what[$key] = normalizeCase($value, $proper);
     return $what;
   }
   if ($proper = 'ucwords') {
-    if ($what != mb_strtolower($what) and $what != mb_strtoupper($what)) return utf8_encode($what); // already mixedcase
+    if ($what != mb_strtolower($what) and $what != mb_strtoupper($what)) return $what; // already mixedcase
     if (mb_substr($what, 0, 4) == 'POB ') return $what; // special case for PO boxes
   }
-  return utf8_encode($proper(mb_strtolower($what)));
+  return $proper(mb_strtolower($what));
 }
 
 define('R_SMALL_WORDS', 'of|a|the|and|an|or|nor|but|is|if|then|else|when|at|from|by|on|off|for|in|out|over|to|into|with');
@@ -1491,30 +1491,6 @@ function img2string($img, $quality) {ob_start(); imagejpeg($img, NULL, $quality)
 function showq($sql, $subs = []) {return strtr(u\SUBS($sql), u\prefixKeys(':', $subs));}
 function deleteFile($flnm) {if (file_exists($flnm)) unlink($flnm);}
 function getFile($flnm) {return file_exists($flnm) ? file_get_contents($flnm) : '';}
-
-function arrayGet($arr, $key, $dft) {
-  if (is_string($arr)) $arr = urlq2ray($arr);
-  u\EXPECT(is_array($arr), 'non-array');
-  return array_key_exists($key, $arr) ? $arr[$key] : $dft;
-}
-
-/**
- * Return exactly the specified key/value pairs from the given array.  If a particular 
- * key is not in the array then use the associated default value.
- * Typical use: extract(exactly('key2 key4 key 7', $info, [default2, default4, default7]));
- * @param string/array $these: flat array or space-delimited array of field names
- * @param array/object/string $info: possible key/value pairs to return (passed as array, object, or UrlArgString)
- * @param mixed $defaults: if an array there must be one entry for each key, otherwise the single value is used
- *                         for every key
- * @return array of the results [NOT trimmed, because values might be encrypted!]
- */
-function exactly($these, $info, $defaults) {
-  $ray = is_string($info) ? urlq2ray($info) : (array) $info;
-  if (!is_array($these)) $these = ray($these);
-  $result = just($these, $ray);
-  foreach ($these as $i => $k) {
-    if (!array_key_exists($k, $result)) $result[$k] = (is_array($defaults) ? $defaults[$i] : $defaults);
-  }
-  return $result;
-}
 function prob($p, $yes = TRUE, $no = FALSE) {return (mt_rand() / mt_getrandmax()) < $p ? $yes : $no;}
+function routingOk($r) {return (preg_match('/^(|[0-9]{9})$/', $r) and db\exists('r_banks', 'route=:r', compact('r')));}
+function bankAcctOk($ba) {return preg_match('/^[0-9]{3,17}$/', $ba);}  // {3,20} ? Dwolla says 3-17

@@ -151,6 +151,10 @@ class Pdf extends \TCPDF {
     $this->newLine();
     $this->SetTextColor();
   }
+  
+  function color($color) {
+    // to do
+  }
 
   function newLine() {$this->Cell(0, 0, '', '', 1);}
 

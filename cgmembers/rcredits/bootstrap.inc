@@ -1239,16 +1239,17 @@ function obj() {return (object) call_user_func_array('ray', func_get_args());}
  * If a key did not exist in the original array, it will not be in the returned array either.
  * @param string/array $these: flat array or space-delimited array of field names
  * @param array/object/string $info: possible key/value pairs to return (passed as array, object, or UrlArgString)
- * @param bool $ordered: <order the returned keys as in $these>
+ * @param mixed $default: a default for each key OR a single default to use for every key OR omitted (no default)
  * @return array of the results [NOT trimmed, because values might be encrypted!]
  */
-function just($these, $info, $ordered = FALSE) {
+function just($these, $info, $default = NULL) {
   $ray = is_string($info) ? urlq2ray($info) : (array) $info;
   if (!is_array($these)) $these = ray($these);
-  if ($ordered) {
-    foreach ($these as $k) if (isset($info[$k])) $res[$k] = $info[$k];
-    return $res;
-  } else return array_intersect_key($ray, array_flip($these));
+  $res = array_intersect_key($ray, array_flip($these));
+  if (func_num_args() > 2) foreach ($these as $i => $k) {
+    if (!array_key_exists($k, $res)) $res[$k] = (is_array($default) ? $default[$i] : $default);
+  }
+  return $res;
 }
 
 /**

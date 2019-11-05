@@ -15,6 +15,7 @@ use CG\Db as db;
 function formVerifyEmail($form, &$sta, $arg = '') {
   global $mya;
 
+  if ($mya->trialco) $mya->stepDoneForNow('discount'); // skipping the discount step puts it off to the co2 (completion) phase
   $title = t('Verify Your Email Address');
   $subtext = t('sent email', 'email', $mya->email) . t('<p><%a>Resend or change email</a></p>', '_a', atag('/settings/resend'));
   return cgform(compact(ray('title subtext')));

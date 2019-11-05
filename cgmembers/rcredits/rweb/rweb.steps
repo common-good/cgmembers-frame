@@ -52,10 +52,9 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     MAKE bank AMemberDrawsCreditFromTheBankThenCancels
  *     MAKE bank AMemberWithANegativeBalanceRequestsATransferFromTheBank
+ *     MAKE bank ASlaveMemberRequestsATransfer
  *     MAKE connect AMemberConnectsABankAccountDuringSignup
  *     MAKE connect AMemberConnectsABankAccountLater
- *     MAKE cooppowersignup ANewbieVisitsTheRegistrationPageSentByAPartner
- *     MAKE cooppowersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     MAKE coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
@@ -90,6 +89,9 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE membership AMemberWantsToHaveAVoiceInTheCommonGoodDemocracy
  *     MAKE membership ACompanySignsUp
  *     MAKE membership AMemberCompanyWantsToCompleteTheAccount
+ *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
+ *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
+ *     MAKE partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     MAKE paybutton AMemberAsksForANewPasswordForUsername
  *     MAKE paybutton AMemberAsksForANewPasswordForAccountID
  *     MAKE paybutton AMemberAsksForANewPasswordForEmail
@@ -215,6 +217,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     TEST backing AMemberChangesBackingAmount
  *     MAKE balancesheet Setup
  *     MAKE bank Setup
+ *     MAKE bank ASlaveMemberRequestsATransfer
  *     MAKE community Setup
  *     MAKE company Setup
  *     TEST company AMemberUpdatesCompanyInfo
@@ -223,10 +226,6 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     TEST contact AMemberUpdatesContactInfo
  *     TEST contact AMemberUpdatesToADifferentState
  *     TEST contact AMemberUpdatesToADifferentName
- *     MAKE cooppowersignup Setup
- *     TEST cooppowersignup ANewbieVisitsTheRegistrationPageSentByAPartner
- *     MAKE cooppowersignup AMemberVisitsTheRegistrationPageSentByAPartner
- *     TEST cooppowersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     MAKE coupons Setup
  *     MAKE custstatement Setup
  *     MAKE demographics Setup
@@ -240,6 +239,11 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE membership Setup
  *     TEST membership AMemberWantsACard
  *     TEST membership AMemberCompanyWantsToCompleteTheAccount
+ *     MAKE partnersignup Setup
+ *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
+ *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
+ *     MAKE partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
+ *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     MAKE paybutton Setup
  *     MAKE preferences Setup
  *     TEST preferences AMemberChangesPreferences
@@ -315,8 +319,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
  *     TEST bank AMemberMovesTooMuchToTheBank
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
- *     TEST cooppowersignup ANewbieVisitsTheRegistrationPageSentByAPartner
- *     TEST cooppowersignup ACompanyVisitsTheRegistrationPageSentByAPartner
+ *     TEST bank ASlaveMemberRequestsATransfer
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     TEST flow AMemberOverdrawsWithNotEnoughToDrawOn
  *     TEST invest AMemberBuysAStakeInTheClub
@@ -356,7 +359,6 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST contact AMemberGivesABadEmail
  *     TEST contact AMemberUpdatesToADifferentState
  *     TEST contact AMemberUpdatesToADifferentName
- *     TEST cooppowersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST coupons AMemberRedeemsAGiftCoupon
  *     TEST coupons AMemberRedeemsADiscountCouponInDribsAndDrabs
  *     TEST coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
@@ -381,6 +383,8 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST membership AMemberWantsToHaveAVoiceInTheCommonGoodDemocracy
  *     TEST membership ACompanySignsUp
  *     TEST membership AMemberCompanyWantsToCompleteTheAccount
+ *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
+ *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     TEST paybutton AMemberTypesTheWrongPassword
  *     TEST paybutton AMemberTypesAnUnknownUsernameID
@@ -411,8 +415,10 @@ function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
 /**
  * we email (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST cooppowersignup ANewbieVisitsTheRegistrationPageSentByAPartner
- *     TEST cooppowersignup ACompanyVisitsTheRegistrationPageSentByAPartner
+ * in: TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
+ *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
+ *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
+ *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST paybutton AMemberAsksForANewPasswordForUsername
  *     TEST paybutton AMemberAsksForANewPasswordForAccountID
  *     TEST paybutton AMemberAsksForANewPasswordForEmail
@@ -434,9 +440,7 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
 /**
  * we show (ARG)
  *
- * in: TEST cooppowersignup ANewbieVisitsTheRegistrationPageSentByAPartner
- *     TEST cooppowersignup ACompanyVisitsTheRegistrationPageSentByAPartner
- *     TEST food ANonmemberVisitsTheFoodPage
+ * in: TEST food ANonmemberVisitsTheFoodPage
  *     TEST food AMemberMakesAFoodDonation
  *     TEST food AMemberMakesAFoodDonationWithoutAdequateFunds
  *     TEST invest AMemberJoinsTheInvestmentClub
@@ -447,6 +451,10 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST membership AMemberWantsToHaveAVoiceInTheCommonGoodDemocracy
  *     TEST membership ACompanySignsUp
  *     TEST membership AMemberCompanyWantsToCompleteTheAccount
+ *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
+ *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
+ *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
+ *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST paybutton AMemberSignsInWithUsernameOnTheMemberSite
  *     TEST paybutton AMemberSignsInWithAccountIDOnTheMemberSite
  *     TEST paybutton AMemberSignsInWithEmailOnTheMemberSite
@@ -477,7 +485,6 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST connect AMemberConnectsABankAccountDuringSignup
  *     TEST connect AMemberConnectsABankAccountLater
  *     TEST contact AMemberVisitsTheContactInfoPage
- *     TEST cooppowersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST coupons AMemberCompanyCreatesAGiftCoupon
  *     TEST coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
@@ -511,6 +518,8 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST membership AMemberWantsToHaveAVoiceInTheCommonGoodDemocracy
  *     TEST membership ACompanySignsUp
  *     TEST membership AMemberCompanyWantsToCompleteTheAccount
+ *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
+ *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST paybutton AMemberClicksAPayWithCommonGoodButton
  *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     TEST preferences AMemberVisitsThePreferencesPage
@@ -578,8 +587,7 @@ function with($content) {return weShow($content);}
 /**
  * without: (ARG)
  *
- * in: TEST cooppowersignup ACompanyVisitsTheRegistrationPageSentByAPartner
- *     TEST invest MembersRateAProposedInvestment
+ * in: TEST invest MembersRateAProposedInvestment
  *     TEST invest TheClubBuysShares
  *     TEST invest AClubAdministratorHandlesRequestsToCashOut
  *     TEST invest TheInvestmentClubIssuesDividends
@@ -589,6 +597,8 @@ function with($content) {return weShow($content);}
  *     TEST membership AMemberWantsToSell
  *     TEST membership AMemberWantsToHaveAVoiceInTheCommonGoodDemocracy
  *     TEST membership AMemberCompanyWantsToCompleteTheAccount
+ *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
+ *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     TEST queries AMemberVisitsTheCommunityDataPage
  *     TEST relations MemberHasAnEmployer
  *     TEST relations MemberCompanyHasRelations
@@ -629,11 +639,9 @@ function withoutOptions($options) {
  *
  * in: MAKE balancesheet Setup
  *     MAKE bank Setup
+ *     MAKE bank ASlaveMemberRequestsATransfer
  *     MAKE community Setup
  *     MAKE company Setup
- *     TEST cooppowersignup ANewbieVisitsTheRegistrationPageSentByAPartner
- *     TEST cooppowersignup AMemberVisitsTheRegistrationPageSentByAPartner
- *     TEST cooppowersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     MAKE custstatement Setup
  *     MAKE demographics Setup
  *     MAKE download Setup
@@ -648,6 +656,9 @@ function withoutOptions($options) {
  *     MAKE joint AMemberRequestsTwoJoinsAtOnce
  *     TEST joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
  *     TEST membership AMemberCompanyWantsToCompleteTheAccount
+ *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
+ *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
+ *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     MAKE queries Setup
  *     MAKE relations MemberHasAnEmployeeConfirmed
  *     MAKE relations MemberHasAnEmployeeUnconfirmed
@@ -677,6 +688,7 @@ function relations($relations) {return t\relations($relations);}
  *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     MAKE bank AMemberWithANegativeBalanceRequestsATransferFromTheBank
+ *     TEST bank ASlaveMemberRequestsATransfer
  *     TEST community Setup
  *     TEST coupons AMemberRedeemsAGiftCoupon
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
@@ -734,8 +746,6 @@ function usd($list) {return t\usd($list);}
  *     MAKE connect AMemberConnectsABankAccountDuringSignup
  *     MAKE connect AMemberConnectsABankAccountLater
  *     MAKE contact AMemberVisitsTheContactInfoPage
- *     MAKE cooppowersignup ANewbieVisitsTheRegistrationPageSentByAPartner
- *     MAKE cooppowersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     MAKE coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsADollarAmountDiscountCoupon
@@ -772,6 +782,10 @@ function usd($list) {return t\usd($list);}
  *     MAKE membership AMemberWantsToHaveAVoiceInTheCommonGoodDemocracy
  *     MAKE membership ACompanySignsUp
  *     MAKE membership AMemberCompanyWantsToCompleteTheAccount
+ *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
+ *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
+ *     MAKE partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
+ *     MAKE partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     MAKE paybutton AMemberClicksAPayWithCommonGoodButton
  *     MAKE paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     MAKE paybutton AMemberClicksALinkToResetPassword
@@ -822,11 +836,11 @@ function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
  * member is logged out
  *
  * in: MAKE balancesheet ANonmemberLooksAtTheBalanceSheet
- *     MAKE cooppowersignup Setup
- *     MAKE cooppowersignup ANewbieVisitsTheRegistrationPageSentByAPartner
- *     MAKE cooppowersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     MAKE membership AnIndividualMemberSignsUp
  *     MAKE membership ACompanySignsUp
+ *     MAKE partnersignup Setup
+ *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
+ *     MAKE partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     MAKE paybutton Setup
  *     MAKE paybutton AMemberClicksALinkToResetPassword
  *     MAKE signin Setup
@@ -910,7 +924,7 @@ function withDone($steps) {
 /**
  * member (ARG) has done step (ARG)
  *
- * in: 
+ * in: MAKE partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  */
 function memberHasDoneStep($uid, $step) {return t\doneStep($uid, $step);}
 
@@ -1028,6 +1042,7 @@ function withDownloadColumns($columns) {
  *     MAKE bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST bank AMemberWithANegativeBalanceRequestsATransferFromTheBank
+ *     TEST bank ASlaveMemberRequestsATransfer
  *     MAKE community Setup
  *     MAKE custstatement Setup
  *     MAKE demographics Setup
@@ -1107,7 +1122,8 @@ function statisticsGetSet($time) {
 /**
  * members have: (ARG)
  *
- * in: BOTH coupons AMemberCompanyCreatesAGiftCoupon
+ * in: MAKE bank ASlaveMemberRequestsATransfer
+ *     BOTH coupons AMemberCompanyCreatesAGiftCoupon
  *     BOTH coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
@@ -1122,6 +1138,9 @@ function statisticsGetSet($time) {
  *     TEST membership AMemberWantsToSell
  *     TEST membership ACompanySignsUp
  *     BOTH membership AMemberCompanyWantsToCompleteTheAccount
+ *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
+ *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
+ *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     MAKE statement Setup
  *     MAKE summary Setup
  *     MAKE transactions AMemberLooksAtTransactionsForThePastYear
@@ -1179,8 +1198,8 @@ function accountWasSetUpByMember($coId, $id) {
  */
 function nextDOCodeIs($code) {
   global $testOnly; if ($testOnly) return FALSE;
-  global $testDoCode;
-  return $testDoCode = $code;
+  t\doCode($code);
+  return TRUE;
 }
 
 /**
@@ -1285,10 +1304,9 @@ function memberIsLoggedIn($id) {
 /**
  * next random code is (ARG)
  *
- * in: MAKE cooppowersignup ANewbieVisitsTheRegistrationPageSentByAPartner
- *     MAKE cooppowersignup ACompanyVisitsTheRegistrationPageSentByAPartner
- *     MAKE membership AnIndividualMemberSignsUp
+ * in: MAKE membership AnIndividualMemberSignsUp
  *     MAKE membership ACompanySignsUp
+ *     MAKE partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     MAKE paybutton AMemberAsksForANewPasswordForUsername
  *     MAKE paybutton AMemberAsksForANewPasswordForAccountID
  *     MAKE paybutton AMemberAsksForANewPasswordForEmail
@@ -1485,9 +1503,7 @@ function rewardStepIs($step) {
 /**
  * member (ARG) one-time password is set to (ARG)
  *
- * in: TEST cooppowersignup ANewbieVisitsTheRegistrationPageSentByAPartner
- *     TEST cooppowersignup ACompanyVisitsTheRegistrationPageSentByAPartner
- *     TEST signupco SomeoneOpensATrialCompanyAccount
+ * in: TEST signupco SomeoneOpensATrialCompanyAccount
  *     TEST signup ANewbieRegistersInWesternMassachusetts
  */
 function memberOnetimePasswordIsSetTo($id, $pass) {
@@ -1564,9 +1580,10 @@ function weTellCO($arg1, $arg2) {
 /**
  * someone posts to page (ARG) with: (ARG)
  *
- * in: MAKE cooppowersignup ANewbieVisitsTheRegistrationPageSentByAPartner
- *     MAKE cooppowersignup AMemberVisitsTheRegistrationPageSentByAPartner
- *     MAKE cooppowersignup ACompanyVisitsTheRegistrationPageSentByAPartner
+ * in: MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
+ *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
+ *     MAKE partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
+ *     MAKE partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  */
 function someonePostsToPageWith($page, $args) {return t\postToPage($page, $args);}
 
@@ -1841,10 +1858,12 @@ function stepsLeft($left) {global $mya; return memberStepsLeft($mya->id, $left);
 /**
  * member (ARG) steps left (ARG)
  *
- * in: TEST cooppowersignup ANewbieVisitsTheRegistrationPageSentByAPartner
- *     TEST cooppowersignup ACompanyVisitsTheRegistrationPageSentByAPartner
- *     TEST membership AnIndividualMemberSignsUp
+ * in: TEST membership AnIndividualMemberSignsUp
  *     TEST membership ACompanySignsUp
+ *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
+ *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
+ *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
+ *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST signupco SomeoneOpensATrialCompanyAccount
  *     TEST signupco ATrialCompanyAccountManagerCreatesADiscount
  */
@@ -1891,8 +1910,6 @@ function memberHasStepsDone($id, $task, $steps) {
  *
  * in: MAKE connect AMemberConnectsABankAccountLater
  *     MAKE contact AMemberVisitsTheContactInfoPage
- *     MAKE cooppowersignup ANewbieVisitsTheRegistrationPageSentByAPartner
- *     MAKE cooppowersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE membership AMemberWantsToSell
  *     MAKE membership AMemberWantsToHaveAVoiceInTheCommonGoodDemocracy
@@ -1903,7 +1920,7 @@ function stepDone($step) {global $mya; return t\doneStep($mya->id, $step);}
 /**
  * we redirect offsite to (ARG)
  *
- * in: TEST cooppowersignup AMemberVisitsTheRegistrationPageSentByAPartner
+ * in: 
  */
 function weRedirectOffsiteTo($content) {
   global $testOnly, $lastGo; if (!$testOnly) return FALSE;

@@ -105,8 +105,6 @@ EOF
   'msg to admin' => t('%who sent you a message.'),
   'secure attach' => t('[<_%aAttach>Attachment</a>: %name type=%type size=%size bytes]'),
 
-  'partner welcome' => t('<p><b>Congratulations!</b> You have successfully completed your sign-up with %partner.</p><p><span class="loud">But wait!</span> You still need to sign up with %PROJECT, in order to be able to PAY %partner for their services.</p><p>%PROJECT is also great on its own merits. We sent you an email with your account ID and password. Now we will lead you through a few short steps.</p>'),
-    
   // confirm
   'yes or no' =>  '%yesNo', // to replace with yesNo(url)
   'confirm accept' => '%who %did you %amount for %for on %date. Okay to %do', // used in EditTx test
@@ -359,8 +357,9 @@ EOF;
 
 function htmlButton($name, $id, $value, $class, $other = []) {
   extract(just('tribs href class', $other));
-  
-  u\EXPECT(!@$href or mb_strpos($href, 'http') !== FALSE, 'no http in html button'); // $onclick = $href;
+
+  if (nn($href) and mb_strpos($href, 'http') === FALSE) $href = BASE_URL . '/' . $href;
+//  u\EXPECT(!@$href or mb_strpos($href, 'http') !== FALSE, 'no http in html button'); // $onclick = $href;
   if (@$href) list ($tag, $role) = ['a', 'button']; else $tag = 'button';
   return w\tag($tag, $value, (@$tribs ?: []) + compact(@$onclick ? 'onclick' : 'href', 'class', 'role'));
 }
@@ -420,7 +419,7 @@ function cgform($form, $onSubmit = '', $labeled = TRUE, $level = 0) {
   }
   $form['#attributes']['class'][] = $labeled ? 'form-horizontal' : 'form-vertical';
  
-  foreach (ray('title subtext posttext buttons list back submit') as $k) if ($v = @$form[$k] and !is_array($v)) $form[$k] = $k == 'submit' ? submit($v) : item($v); // let these common items be created simply
+  foreach (ray('title subtext midtext posttext buttons list back submit') as $k) if ($v = @$form[$k] and !is_array($v)) $form[$k] = $k == 'submit' ? submit($v) : item($v); // let these common items be created simply
   
   foreach ($form as $k => $v) if (substr($k, 0, 1) != '#') {
     u\EXPECT(empty($v) or is_array($v), "field $k is not an array: " . pr($v));
@@ -442,7 +441,8 @@ function rendA($name, $field) {
 //    $rent .= preg_replace('/name="(.*)"/', "name=\"$k\"", rent($field));
   return preg_replace('/<(input|textarea|select|button) /', "<$1 id=\"edit-$name\" name=\"$name\" ", rent($field));
 }
-    
+
+// NYI
 function rend($fields) {
   $html = '';
   foreach ($fields as $name => $ray) {
@@ -683,7 +683,7 @@ function fieldSet($id, $flds, $label = '', $desc = '', $other = []) {return fld(
  * Return a form field for donating fractional dollars.
  */
 function roundupFld($a) {
-  return w\boolFld(t('Round Up!'), t('Fund the common good! Round all your payments up to a whole dollar amount and donate the cents to local nonprofits, community investments, and the common good.'), $a ? $a->roundup : FALSE);
+  return w\boolFld(t('Round Up!'), t('Round all your payments up to a whole dollar amount and donate the cents toward building the %PROJECT Economy in your area.'), $a ? $a->roundup : FALSE);
 }
 
 /**
@@ -1048,6 +1048,8 @@ function setAcct($myid = '') {
   $agentId = svar('agentId');
   
   if ($myid) {
+    $sid = session_id();
+//      db\update('sessions', ray('uid acct sid ssid', $agentId ?: $myid, $myid, $sid, $sid), 'ssid');
     if (!$agentId) $agentId = svar('agentId', $myid);
     svar('myid', $myid);
     db\update('sessions', ray('uid acct', $agentId, $myid), 'uid');
@@ -1350,7 +1352,7 @@ function tellStaffNewMember($params) {
   extract($params);
   $phone = u\fmtPhone(@$phone);
   $state = @$state ? r\realState($state) : 'state unknown';
-  $acctType = ray(CO_TYPES)[$acctType];
+  $acctType = isset($acctype) ? ray(CO_TYPES)[$acctType] : NULL;
   $helper = @$helper ? r\acct($helper)->fullName : 'unknown';
   $copts = u\jsonEncode(@$copts);
   $ats = (isset($ats) and is_array($ats)) ? join(',', array_values($ats)) : '';
@@ -1375,6 +1377,25 @@ function findCompany($company, $companyPhone) {
   }
   return $companyUid;
 }
+
+/**
+ * Validate and return tenure data
+ * @param int $years: number of years at present address
+ * @param int $months: number of additional months at present address
+ * @param string $err: (RETURNED) error message, if any
+ * @return the number of months the member lived at their current address as of their joining date (NULL if error)
+ */
+function tenure($years, $months, &$err = '') {
+  global $mya;
+  if (!$years and !$months) {$err = t('You must say how long you\'ve been there.'); return NULL;}
+  foreach (ray('years months') as $k) {
+    if (empty($$k)) $$k = 0;
+    if ($err = u\badAmount($$k, '>=0')) {$err = t('How-long: ') . tr($err); return NULL;}
+  }
+  $tenure = $years * 12 + $months ;
+  if ($mya and $mya->activated) $tenure -= (time() - $mya->activated) / MONTH_SECS; // tenure is at time of joining
+  return $tenure;
+} 
 
 /**
  * Return form fields for name and email.
@@ -2254,7 +2275,6 @@ function webAccess($perms = NULL) {
     : ($perm == 'investor' ? ($mya and ($mya->iclub or db\exists('r_stakes', 'uid=:id', ['id'=>$mya->id])))
     : ($perm == 'depends' ? ($mya and $mya->depends and $mya->proSe)
     : ($mya and $mya->can(u\consta('b', $perm))) ))))))));
-
     if ($not ? $pass : !$pass) return FALSE;
   }
   return TRUE;
@@ -2347,13 +2367,14 @@ function tagN($tag, $html = '', $tribs = []) {return str_replace('#', '', tag($t
 function atagB($href, $style = 'primary', $size = 'xs', $extras = []) {
   $class = @$extras['class'];
   $extras['class'] =  ($class ? "$class " : '') . "btn btn-$size btn-$style";
-  return atag($href, $extras + ray('role', 'button'));
+  return atag($href, $extras + ['role' => 'button']);
 }
 
 /**
  * Return an a tag.
  */
 function atag($href, $extras = []) {
+  if (nn($extras['role']) != 'button') $extras += ['tabindex' => '-1'];
   if (@$href[0] == '/') $href = BASE_URL . $href;
 // NO  if ($href[0] == '$') $href = 'javascript:' . substr($href, 1);
   if ($href and !u\starts($href, BASE_URL)) {
@@ -2496,6 +2517,6 @@ function rent($element) {return \render($element);} // Drupal makes render hard,
 function away() {return ['target' => '_blank'];}
 function js($script, $args = '') {global $pageScripts; $pageScripts[$script] = http_build_query(rayy(func_get_args(), 1));} // see html.tpl
 function jsx($script, $args = '') {global $scriptScraps; $scriptScraps[$script] = http_build_query(rayy(func_get_args(), 1));} // see html.tpl
-function softErr($msg) {return w\go('empty', $msg, 'ERR');}
+function softErr($msg) {w\say($msg, 'err'); return w\go('empty');}
 function clearHeaders() {if (!headers_sent()) header_remove();}
-function skipButton() {return button(t('Skip for now'), BASE_URL . '/settings/skip', t('Leave this step for last'), 'warning', 'xs', ['class' => 'skip']);}
+function skipButton() {return button(t('Skip for now'), '/settings/skip', t('Leave this step for last'), 'default', 'xs', ['class' => 'skip']);}

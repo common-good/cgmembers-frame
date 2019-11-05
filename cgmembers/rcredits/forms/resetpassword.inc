@@ -23,7 +23,7 @@ function formResetPassword($form, &$sta, $args = '') {
   if (!$mya->passwordOkay(@$code, 'pass', $err)) return w\softErr($err);
   noFlood($sta);
   
-  w\setAcct($uid);
+// NO! do this in _submit instead! (otherwise get stale form message) w\setAcct($uid);
   u\setDft($verify, FALSE);
   
   if ($verify) {
@@ -46,6 +46,7 @@ function formResetPassword($form, &$sta, $args = '') {
   $uid = hidFld($uid);
   jsx('verifyemail', compact('verify'));
   $verify = hidFld($verify);
+// doesn't work!  $sta['no_cache'] = TRUE; // keep it from complaining when user is still signed in
 
   return cgform(compact(ray('title subtext uid verify')) + $passFlds + $buttons);
 }

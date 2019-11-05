@@ -19,6 +19,8 @@ define('BASE_PATH', $base_path);
 define('T_BALANCE_FLDS', 'uid balance floor savingsAdd saveWeekly minimum');
 define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid');
 define('SPECIAL_IDS', 'ctty crumb round cgf bank-in bank-out');
+define('DOCODE_FLNM', LOG_DIR . 'docode.txt');
+define('SAME_TIME', 60 * 20); // number of seconds that make no difference in "same time"
 // see R_DATE_FLDS in defs.inc
 
 /**
@@ -280,7 +282,7 @@ function doTxs($info, $thing) {
   $testFlds = $uidFlds . ' for purpose payerFor payeeFor payerTid payeeTid risks type amount taking';
 //  $flags = 'taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding'; // These are flags that might appear
   
-  extract(u\exactly($hdrFlds . ' ' . $testFlds, $info, FALSE));
+  extract(just($hdrFlds . ' ' . $testFlds, $info, FALSE));
   if (!$reversesXid) $reversesXid = NULL;
   $for = $for ?: $purpose;
   if (mb_strpos($for, ',')) $for = explode(',', $for); // specifying both
@@ -330,18 +332,17 @@ function doTxs($info, $thing) {
 function doInvoices($info) {
   global $testOnly, $channel;
 ///   debug("doInvoice(" . pr($info, true) . "), testOnly=$testOnly");
-  extract($info);
-  $info['for'] = u\arrayGet($info, 'for', 'this or that');
-  $info['purpose'] = u\arrayGet($info, 'purpose', $info['for']);
+  u\setDft($info['purpose'], nn($info['for'], 'this or that'));
   unset($info['for']);
-  $xx = $info['purpose'];
+
+  extract($info);
 
   if ($testOnly) return verifyRecord('r_invoices', $info);
 
   $missing = array_diff_key(ray('amount:1, payer:1, payee:1, purpose:1'), $info);
   u\EXPECT($missing == [], "missing fields " . pr($missing));
 
-  $invInfo = u\exactly('status goods created', $info, [TX_PENDING, u\forCash($info['purpose']) ? FOR_USD : FOR_GOODS, now()]);
+  $invInfo = just('status goods created', $info, [TX_PENDING, u\forCash($purpose) ? FOR_USD : FOR_GOODS, now()]);
   switch ($invInfo['status']) {
   case 'denied': $invInfo['status'] = TX_DENIED; break;
   case 'pending': $invInfo['status'] = TX_PENDING; break;
@@ -525,6 +526,7 @@ function doMembersHave($info) {
 //  fixData($info, TRUE);
   if ($testOnly) {
     foreach ($info as $k => $v) if ($v != '?') {
+      if (in($k, R_DATE_FLDS) and abs($a->o($k)-$v) < SAME_TIME) continue;
       if (t\badEq("db $k", $a->o($k), $v, $id)) return FALSE;
     }
     return TRUE;
@@ -688,7 +690,7 @@ function uidCredit($uid, $ignoreCalc = TRUE) {
   $info = be\creditInfo([$uid]);
   $a = r\acct($uid);
   if ($uid > 0 and !$a->jid) foreach (ray('balance') as $k) { // (community amounts don't get cached)
-      $v1 = u\arrayGet($info, $k, null);
+      $v1 = nn($info[$k], NULL);
       if (!t\eq($v1, $v2 = $a->o($k) + 0)) {
         output("$uid Calculated $k different from cache: $v1 <> $v2");
         if (!$ignoreCalc) return FALSE;
@@ -811,12 +813,15 @@ function findEmail($index, $email, $subs) {
       if ($v == '?') {
         $ignore[] = $k;
         unset($subs[$k]);
+      } elseif ($v == 'TESTDOCODE') {
+        $subs[$k] = t\doCode();
       } else $subs[$k] = strtr(strip_tags($v), $map);
     }
     ksort($subs);
     
     foreach ($testEmails as $one) {
       extract($one, EXTR_PREFIX_ALL, 't'); // t_ means actual values
+      if (is_array($t_toEmail)) $t_toEmail = key($t_toEmail);
       if ($t_index == $index and $t_toEmail == $email) {
         foreach ($t_subs as $k => $v) if (!is_array($v)) $t_subs[$k] = strtr(strip_tags($v), $map);
         if (isset($t_subs['site'])) {
@@ -998,7 +1003,8 @@ function verifyRecord($table, $info) {
     if ($value == '?') {unset($info[$key]); continue;}
     $crit[] = $value === '' ? "($key IS NULL or $key=:$key)"
     : ((in($key, R_DATE_FLDS) or mb_stripos($key, 'date') !== FALSE) ? 
-      "DATE(FROM_UNIXTIME(`$key`))<=>DATE(FROM_UNIXTIME(:$key))" 
+//      "DATE(FROM_UNIXTIME(`$key`))<=>DATE(FROM_UNIXTIME(:$key))" 
+      "ABS(`$key`-:$key)<" . SAME_TIME
     : (in($key, 'trust risk') ? "CAST(ROUND($key, 2) AS CHAR)<=>:$key"
     : "`$key`<=>:$key")); // null-safe ==
   }
@@ -1011,7 +1017,7 @@ function verifyRecord($table, $info) {
     foreach ($info as $k => $v) $subs[$k] = "'$v'";
     $sql = "SELECT * FROM $table WHERE " . strtr(u\SUBS($crit), u\prefixKeys(':', $subs));
 //    output("verifyRecord failed. sql=$sql<br>table=$table crit=$crit EXPECTED info=" . pr($info));
-    output("verifyRecord failed. sql=$sql<br>table=$table crit=$crit");
+    output("verifyRecord failed. " . pr(compact(ray('table infoK infoV sql crit'))));
 
     if ($actualRow = db\get('*', $table, [$infoK => $infoV])) {
 //      ksort($actualRow);
@@ -1594,8 +1600,9 @@ function fixCountry(&$country) {
 */
 function log($msg) {if (test()) u\log($msg, 'debug');}
 function that($thing) {global $thatThing; return $thatThing[$thing];}
-function dosayFilename($type) {return DRUPAL_ROOT . R_PATH . "/dosay-$type.txt";}
+function dosayFilename($type) {return LOG_DIR . "dosay-$type.txt";}
 function goodsBit($s) {return $s == 'goods' ? "1" : ($s == 'cash' ? "0" : "ERROR");} // no 3rd why for rSmart
 function approxTime($a, $b) {return t\eq($a, $b, 10000);}
 function rewarding() {return ctty('aab')->cttyRewardy;}
 function ray2assoc($ray) {foreach ($ray as $one) $res[$one[0]] = $one[1]; return @$res ?: [];}
+function doCode($code = '') {if ($code) file_put_contents(DOCODE_FLNM, $code); else return file_get_contents(DOCODE_FLNM);}

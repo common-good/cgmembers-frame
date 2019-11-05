@@ -1,3 +1,71 @@
+2019-11-04 feature/easy-tweaks (continued)
+. shortnames created in contact form get a digit added now, if necessary (rather than generating an error message)
+. refactored bank account and routing formatting checks
+. refactored tenure validation
+. added templates for Solar One signup and tested it
+. we actually store bank account information on partner signup now!
+. individuals cannot sell without completing the S_SELL steps
+. fixed skip button on discount page
+
+2019-11-04 feature/easy-tweaks (continued)
+. improved how account regeneration is handled in tests
+. imported Co-op Power's contract for automatic signing
+. partner signups now have just one CG account setup step
+. companies that do partner signup no longer can sell and have just one CG step (handled like individual accounts)
+. dates in tests are now just tested for approximate equality
+. added first stab at handling solar one signups (still needs validation and handling of extra fields, plus tests)
+. backing no longer defaults to $1 invisibly on preferences page (never was in effect)
+. empty EIN means no SELL permission
+. moved contracts folder to system temp folder and don't send a URL to salesforce
+
+2019-11-01 feature/easy-tweaks (continued)
+. integrated functionality of u\exactly() into just() and removed "keep order" parameter
+. fixed bug that left everyone but admin signed in for a long time
+. improved DOCODE handling in tests
+. fixed weekly reports (which were coming out daily whenever there was a transaction)
+. fixed formatting of white-labeled partner page on mobile
+. changed order of steps in partner signup so contract is first
+. simplified steps for company in partner signup
+. moved all partner signup steps to a single file (forms/partnersignup.inc)
+. added daily check for bank accounts without risk hasBank and vice versa
+. added a test for slave transfer
+. removed r_contracts table
+
+2019-10-21 feature/easy-tweaks (continued)
+. fixed handling of uploaded files
+. added CC to partner and white-labeling email ("pseudo" argument to rMail())
+. we now use better filenames for attached files emailed to customer and partner
+. created r_contracts table to track when customers signed a contract with partner
+. contract link can be used to sign in only the same day it is first used (making it easy to go further with Common Good)
+. no debt link on summary page unless you choose auto-refills
+. fixed signin so it always signs out first and doesn't make you sign in twice
+
+2019-10-20 feature/easy-tweaks
+. reworked step management, adding a stepDoneForNow function
+. fixed a couple bugs in rMail function (to can be an array, attachments work) and improved reporting for when isDEV
+. changed calls to u\DYE to u\FAIL (bug fix)
+. fixed eol bug in u\randPass() on windows machines
+. branded partner signup and ending pages as the partner (see page.tpl)
+. added contact and discount steps to co2 task
+. disabled display of voting results at the request of Ann Arbor organizers
+. generalized co-op power partnering to other organizations
+. changed partner signup to allow choosing NOT to use CG, to generate and email contracts, and combine that with email verification
+. partner signup tests no longer work (they need work)
+. added tabindex="-1" to links
+. changed reset links to go straight to member site (not through promo site)
+. fixed bug in startup.sql for creating uid 0 in users table
+. did this on production server, to remove test events/questions/ballots/votes and orphaned old data:
+  DELETE FROM `r_events` WHERE id IN (8,12);
+  DELETE q FROM r_questions q LEFT JOIN r_events e ON e.id=q.event WHERE e.id IS NULL;
+  DELETE b FROM r_ballots b LEFT JOIN r_questions q ON q.id=b.question WHERE question>0 AND q.id IS NULL;
+  DELETE v FROM r_votes v LEFT JOIN r_ballots b ON b.id=v.ballot WHERE b.id IS NULL; 
+  DELETE o FROM r_options o LEFT JOIN r_questions q ON q.id=o.question WHERE q.id is NULL AND o.question>0
+
+2019-10-16 feature/simple-tweaks
+. session creation on signup using $sta['uid'] = $uid;
+. fixed softErr to enable html
+. added final email to co-op power signup
+
 2019-10-15 feature/simple-signup continued
 . we now handle UTF-8 characters
 . added "task" field in users, to track what multi-step process they're in
@@ -39,32 +107,39 @@
       if (@$verify) $a->stepDone('verifyemail');
       if ($a->federalId) {
         $a->stepDone('verifyid');
-        if (@$ssn) $a->stepDone('ssn');
+        $a->stepDone('ssn');
+        if ($a->co) $a->stepDone('agent');
       }
       if (@$connect or $a->bankAccount or db\exists('txs', 'uid2=' . $a->id)) $a->stepDone('fund');
       if ($a->signed) $a->stepDone('agree');
-      if (db\exists('r_recurs', 'payer=' . $a->id) or ($a->created > $strtotime('08/27/2017') and $a->member)) $a->stepDone('donate');
+      if (db\exists('r_recurs', 'payer=' . $a->id) or ($a->created > strtotime('08/27/2017') and $a->member)) $a->stepDone('donate');
       if (db\exists('r_proxies', 'person=' . $a->id)) $a->stepDone('proxies');
       if ($a->member or $a->ok or @$prefs) $a->stepDone('preferences');
-      if ($a->co and db\exists('r_coupons', 'fromId'=$a->id)) $a->stepDone('discount');
-      if (@$backing) $a->stepDone('backing');
+      if ($a->co and db\exists('r_coupons', ['fromId' => $a->id])) $a->stepDone('discount');
+      if (@$backing or $a->backing) $a->stepDone('backing');
       if (@$company) $a->stepDone('company');
       if ($a->address and $a->postalAddr) $a->stepDone('contact');
       if ($a->hasPhoto) $a->stepDone('photo');
+      if (db\exists('r_invites', 'inviter=:id', ['id' => $a->id])) $a->stepDone('invite');
+      if ($a->calling or $a->signupCo) $a->stepDone('work');
+      if (@$food) $a->stepDone('food');
+      if (!$a->co and $a->member) $a->stepDone('tithein');
       
       if (!$a->member) {
-        $task0 = $a->co ? S_CO : S_PERSON;
+        $task0 = $a->co ? 'co' : 'person';
         if (!$task = ($a->stepsDone($task0) ? '' : $task0)) $a->setBit('member');
       }
-      if ($a->member) {
-        $task = $a->co ? S_CO2
-        : (db\exists('r_relations', "main=26742000000220 AND other=$a->id AND flags&4") ? '' : ($a->stepsDone(S_CARD) ? '' : S_CARD));
-      }
-      if ($task) {
+    /*  if ($a->member) {
+        $task = $a->co ? 'co2'
+        : (db\exists('r_relations', "main=26742000000220 AND other=$a->id AND flags&4") ? '' : ($a->stepsDone(S_CARD) ? '' : 'card'));
+      } */
+      if (@$task) {
         if ($stepsLeft = $a->stepsLeft($task)) $a->update(compact('stepsLeft')); else $task = '';
         $a->update(compact('task'));
       }
-    }
+      $left = join('|', $a->stepsLeft);
+/**/  if (!$a->ok or $a->co) debug("$a->fullName: task=$task left=$left stepsDone=" . pr($a->stepsDone ?: []) . " stepsLeft=" . pr($a->stepsLeft ?: []));
+    });
 
 2019-09-06 feature/banking-fix
 . requesting a transfer into CG with a negative balance now transfers exactly the amount requested

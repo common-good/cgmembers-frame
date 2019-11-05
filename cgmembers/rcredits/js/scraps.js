@@ -254,7 +254,7 @@ function doit(what, vs) {
       post('presignup', data, null);
     });
     break;
-
+    
   case 'prejoint': $('#edit-old-0').click(function() {this.form.submit();}); break;
 
   case 'invite-link': $('#inviteLink').click(function () {SelectText(this.id);}); break;

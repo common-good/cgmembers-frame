@@ -54,7 +54,7 @@ class Acct {
     $a = $this;
     extract($info);
 
-    extract(u\exactly('fullName flags state zip created number uid region', $info,
+    extract(just('fullName flags state zip created number uid region', $info,
       [NULL, 0, 0, NULL, now(), NULL, NULL, NULL]));
     u\setDft($legalName, $fullName);
     u\setDft($email, mb_strtolower(u\randomString(10, 'word')) . '@' . EMAILX);
@@ -348,52 +348,6 @@ class Acct {
   }      
   
   /**
-   * Activate the account.
-   * @param int $helper: account record ID of account that invited this one
-   */
-  /*  public function activate($helper) {
-    $a = $this;
-    u\EXPECT($mya = r\acct() and $mya->cAdmin, 'should be ctty admin'); // only ctty admin can approve an account
-
-    $DBTX = \db_transaction();
-    u\EXPECT($helper, 'no helper!');
-    $a->update(compact('helper')); // must precede welcome message
-    $a->setBit(B_OK, TRUE, TRUE); // must precede welcome message
-    $a->setBit(B_NONUDGE, FALSE, TRUE);
-    
-    if ($firstTime = !$a->activated) { // first time activation
-      //      u\EXPECT($a->superAdmin, 'initial activation is only for superadmin');
-      $a->update('activated', now() - 1); // must precede update of vsecure, so it gets V-encrypted
-      $a->update('vsecure', $a->vsecure); // hyper-encrypt
-      $a->eachPartner(function($coA, $zot, $custCode) { // tell partner: account is activated
-          if ($api = $coA->api()) u\post($api, ray('partnerCode qid op name', $coA->emailCode, $a->mainQid, 'complete', $a->fullName));
-        });
-      $inviterName = @$a->helperA->fullName;
-      $subs = compact('inviterName');
-      $msg = 'approved';
-      if (!$a->confirmed) $msg .= ($helper > 1 ? '|must confirm' : '|in person');
-      r\message($a->id, $msg, $subs + ['youName' => $a->fullName]);
-    }
-
-    if ($firstTime and !$a->co) { // no bonus or helper bonus for a company signing up
-      if ($a->ssnData['CGerror'] and !$a->risk('ssnOff') and !$a->risk('dobOff')) $a->setRisk('ssnOff'); // make SURE this bit gets set (might not if admin signs the person up
-
-      if (!$a->helperA->co and !$a->helperA->superAdmin) { // no helper bonus for company referral or help by superAdmin (cAdmin is okay) [don't require $a->confirmed]
-        $fullName = $a->fullName;
-        $helped = db\count('users', ':IS_OK AND NOT :IS_CO AND helper=:hId', ray('hId', $a->helper)) + 0;
-        if ($helped == ORGANIZER_GRANT_MIN) {
-          //            r\message($a->helper, 'organizer grant', ['_a' => w\atag('/community/grant')]);
-          list ($name, $topic) = [$a->helperA->fullName, t('eligible')];
-          r\tellAdmin('eligible for grant', compact(ray('name topic')));
-        }
-      }
-    }
-    
-    unset($DBTX); 
-  }
-  */
-
-  /**
    * Set the company categories.
    */
   function setCategories($cats) {
@@ -533,23 +487,6 @@ class Acct {
       $sFlds = serialize($sFlds);
       $info[$special] = ($special == 'data' or !$sFlds) ? $sFlds : u\cry('S', $sFlds);
     }
-    /*    
-          if (isset($info['data'])) {
-          $info['data'] = serialize($info['data']);
-          } elseif ($data = just(DATA_FLDS, $info)) $info['data'] = serialize($data += $a->data);
-
-          if (($set = isset($info['secure'])) or $sFlds = just(SECURE_FLDS, $info)) { // serialize and encrypt
-          //  			if ($v = @$sFlds['ssnData']) $sFlds['ssnData'] = serialize($v);
-          $sec = $set ? ($info['secure'] ?: []) : ($sFlds + ($a->secure ?: []));
-          $info['secure'] = u\cry('S', serialize($sec));
-          }
-
-          if (($set = isset($info['vsecure'])) or $sFlds = just(VSECURE_FLDS, $info)) { // serialize and encrypt
-          $vsec = $set ? ($info['vsecure'] ?: []) : ($sFlds + ($a->vsecure ?: []));
-          if ($a->activated) foreach ($sFlds as $k => $v) $vsec[$k] = u\cry('V', $v); // hyper-encrypt when activated 
-          $info['vsecure'] = u\cry('S', serialize($vsec));
-          }
-    */	
 
     $info = justNOT(SECURE_FLDS . ' ' . VSECURE_FLDS . ' ' . DATA_FLDS, $info); // don't pass these
     return $info ? db\update('users', $info + ['uid' => $a->id], 'uid') : TRUE;
@@ -864,7 +801,7 @@ X;
     $left = $need; // how much left to be drawn
     $q = $a->drawSources();
     foreach ($q as $row) {
-      extract(u\exactly('uid avail', $row, 0));
+      extract(just('uid avail', $row, 0));
       $amount = round(min($left, $avail), 2);
       if ($amount > 0) {
         list ($fromQid, $toQid) = [r\qid($uid), $a->mainQid];
@@ -1048,8 +985,8 @@ EOF;
   /**
    * Mark a membership step as completed.
    * @param string $step: a named step (see S_ALL, etc)
-   * @param assoc $details: any details to report to the staff
    * @param bool $done: whether to set the step done or not done
+   * @param assoc $details: any details to report to the staff
    * @return the next step (FALSE if none)
    */
   function stepDone($step, $done = TRUE, $details = []) {
@@ -1057,26 +994,37 @@ EOF;
     
     $i = nn($a->allSteps()[$step], FALSE);
     u\EXPECT($i !== FALSE, 'bad step: ' . $step);
-    $a->setBit($i, $done, 'steps');
+    $a->stepDoneForNow($step, $done);
+    $a->setBit($i, $done, 'steps'); // done forever
+    
+    $nextStep = $a->nextStep();
+    if ($done and empty($nextStep)) {
+      $a->update('task', '');
+      if (!$a->member) {
+        r\tellCO(t('New Member (%name)', ['name' => $a->fullName] + $details));
+        $a->setBit(B_MEMBER);
+        $a->update('tickle', now());
+      }
+    } elseif ($nextStep == 'partnerend' and count($a->stepsLeft) > 1) { // parnerend step should always be last
+      $stepsLeft = $a->stepsLeft;
+      unset($stepsLeft['partnerend']);
+      $stepsLeft[] = 'partnerend';
+      $update(compact('stepsLeft'));
+    }
+    return $nextStep;
+  }
 
+  /**
+   * Remove the specified step from the current task (but don't mark it complete).
+   */
+  public function stepDoneForNow($step, $done = TRUE) {
+    $a = $this;
     $stepsLeft = $a->stepsLeft();
     $p = array_search($step, $stepsLeft);
     $hasStep = ($p !== FALSE);
     if ($done and $hasStep) unset($stepsLeft[$p]);
     if (!$done and !$hasStep) $stepsLeft[] = $step;
     $a->update('stepsLeft', array_values($stepsLeft)); // renumber and update
-    
-    $nextStep = $a->nextStep();
-    if ($done and empty($nextStep)) {
-      $a->update('task', '');
-      if (!$a->member) {
-        r\tellCO(t('New Member (%name)', ['name' => $a->fullName]));
-        $a->setBit(B_MEMBER);
-        $a->update('tickle', now());
-        $a->eachPartner(function ($coA, $a, $code) {$a->setTask('partner');}); // if this is a partner-signup, complete it
-      }
-    }
-    return $nextStep;
   }
 
   /**
@@ -1102,7 +1050,6 @@ EOF;
    */
   public function nextStepUrl($stepDone = '', &$msg = NULL, $info = []) {
     $a = $this;
-
     u\setDft($msg, $stepDone ? 'info saved' : '');
     if ($a->closed) return 'summary';
 
@@ -1133,7 +1080,7 @@ EOF;
   public function taskSteps($task) {return u\consta('s', $task);}
   public function stepIsDone($step) {return (bool) u\getBit($this->steps, $this->allSteps()[$step]);}
   public function stepsDone($steps) {foreach(ray($steps) as $step) if (!$this->stepIsDone($step)) return FALSE; return TRUE;}
-  public function nextStep() {return ($steps = $this->stepsLeft()) ? $steps[0] : FALSE;}
+  public function nextStep() {return ($steps = $this->stepsLeft) ? $steps[0] : FALSE;}
   public function stepCount($steps = NULL) {return count($this->stepsLeft($steps));}
   private function allSteps() {return array_flip(array_keys(ray(S_ALL)));} // point step bit names to bit numbers
 
@@ -1321,11 +1268,10 @@ o;
     $a = $this;
     global $channel;
     
-    u\EXPECT($a->hasBank and (test() or $a->vsecure['bankAccount']), 'banking with no bank');
+    u\EXPECT($a->hasBank, 'banking with no bank');
 
     $amount0 = $amount;
     $automatic = ($channel == TX_CRON);
-    if (!$a->hasBank) return FALSE;
     $payee = $a->id;
     if ($tx) extract($tx);
     $okNow = ($amount < 0 or $a->bankOk); // "okay to create the request NOW"
@@ -1743,6 +1689,8 @@ X;
     $cans[B_DEV] = (isDEV or $aa->can(B_ADMIN)); // used in menu system for tests page, etc.
     //    if ($cans[B_MANAGING_CTTY] = ($aa->can(B_CADMIN) and $id == $a->community)) $cans[B_BUY] = TRUE;
     $cans[B_MANAGING_CTTY] = ($aa->can(B_CADMIN) and $id == $a->community);
+    if (empty($a->federalId) and !test()) $cans[B_SELL] = FALSE; // no selling without an EIN
+    if (!$a->co and !$a->stepsDone(S_SELL) and !test()) $cans[B_SELL] = FALSE;
     
     ksort($cans); // easier to debog
     return self::$perms[$id][$a->agentId] = $cans;
@@ -1924,6 +1872,18 @@ X;
   public function isBank() {return r\isBank($this->id);}
   public function nameAndEmail() {return [$this->fullName => $this->email];}
   public function nameAndQid() {return "$this->fullName ($this->mainQid)";}
+
+  /**
+   * Sign this account in.
+   * NOTE: This works only before displaying a page, not before redirecting.
+   */
+  public function regen(&$sta) {
+/*    global $user; 
+    $user = $this->account('uid pass timezone'); // timezone keeps Drupal happy in bootstrap.inc
+    \drupal_session_regenerate(); */
+    $sta['uid'] = $this->id;
+    w\setAcct($this->id);
+  }
 
   public function firstCo() {return db\get('fullName', 'r_relations r INNER JOIN users u ON r.main=u.uid', 'r.permission>0 AND r.other=:id AND u.:IS_CO ORDER BY r.created LIMIT 1', ['id' => $this->id]);}
   public function adminables() {
