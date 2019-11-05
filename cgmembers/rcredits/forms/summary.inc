@@ -292,7 +292,7 @@ function choiceListFld() {
     community:donate:Give:Make a donation to %PROJECT.
     community:comment:Comment:Send a comment, question, or suggestion.
     scraps:card:Card:Get a %PROJECT payment card
-    scraps:sell:Sell:Accept payments through %PROJECT
+    scraps:sell:Sell:Accept payments (including discount rebates) through %PROJECT
     scraps:voice:Voice:Participate in %PROJECT economic democracy
     scraps:co2:Finish:Finish opening your complete company account &mdash; required before you receive a total of $1,000 or within six months, whichever is first
 X

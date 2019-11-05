@@ -482,7 +482,7 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
   $needed = abs($amount);
 
   // Apply coupon
-  if ($amount > 0 AND ($goods != FOR_USD)) {
+  if ($amount > 0 and ($goods != FOR_USD) and $loserA->can(B_SELL)) { // no rebates unless buyer has permission to sell
     $rebate = handleCoupon($entries, $loserA, $gainerA, $amount);
     $needed -= $rebate;
   }

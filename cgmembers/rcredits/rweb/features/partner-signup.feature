@@ -53,8 +53,11 @@ Scenario: A newbie visits the registration page sent by a partner and opts out o
   
   When member ".AAA" completes form "partner/signed=TESTDOCODE" with values:
   | routingNumber | bankAccount | processor |*
-  | 211870281     | 1234        |         1 |
-  Then we show "Congratulations!"
+  | 211870281     | 12345       |         1 |
+  Then members have:
+  | uid  | bankAccount        | last4bank |*
+  | .AAA | USkk21187028112345 |      2345 |
+  And we show "Congratulations!"
   And without:
   | "Continue to %PROJECT" |
   And we email "partner-report" to member "c@" with subs:

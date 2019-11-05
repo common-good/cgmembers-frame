@@ -1138,6 +1138,7 @@ function statisticsGetSet($time) {
  *     TEST membership AMemberWantsToSell
  *     TEST membership ACompanySignsUp
  *     BOTH membership AMemberCompanyWantsToCompleteTheAccount
+ *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     MAKE statement Setup

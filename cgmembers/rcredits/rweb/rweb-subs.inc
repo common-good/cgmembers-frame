@@ -1379,6 +1379,25 @@ function findCompany($company, $companyPhone) {
 }
 
 /**
+ * Validate and return tenure data
+ * @param int $years: number of years at present address
+ * @param int $months: number of additional months at present address
+ * @param string $err: (RETURNED) error message, if any
+ * @return the number of months the member lived at their current address as of their joining date (NULL if error)
+ */
+function tenure($years, $months, &$err = '') {
+  global $mya;
+  if (!$years and !$months) {$err = t('You must say how long you\'ve been there.'); return NULL;}
+  foreach (ray('years months') as $k) {
+    if (empty($$k)) $$k = 0;
+    if ($err = u\badAmount($$k, '>=0')) {$err = t('How-long: ') . tr($err); return NULL;}
+  }
+  $tenure = $years * 12 + $months ;
+  if ($mya and $mya->activated) $tenure -= (time() - $mya->activated) / MONTH_SECS; // tenure is at time of joining
+  return $tenure;
+} 
+
+/**
  * Return form fields for name and email.
  * @param int $co: 1=company, 0 (or '') = personal, -1=community
  * @param string $fullName: default full name

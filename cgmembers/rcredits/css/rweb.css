@@ -888,8 +888,10 @@ div.password-confirm .error {font-weight:bold; color:red;}
 .form-item-physical>label, .form-item-sameAddr2>label, #frm-signup .form-item-other>label {color:darkgreen; font-size:130%;}
 #frm-signup .form-item-sponsor {display:none;}
 #frm-signup #tenure2 input,
+#frm-partnersignup #tenure2 input,
 #frm-contact #tenure2 input {width:75px; display:inline-block;}
-#frm-signup #edit-months
+#frm-signup #edit-months,
+#frm-partnersignup #edit-months,
 #frm-contact #edit-months {margin-left:10px;}
 
 

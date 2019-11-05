@@ -42,7 +42,7 @@ function formConnect($form, &$sta, $args = '') {
     $bankAccount = item("xxxxxx$mya->last4bank &nbsp; &nbsp;", t('Account:'), '', w\suffix(\render($remove)));
 //    $submit = submit();
     $fields = 'title bankAccount cashout autopay autoboxes refills targetFields';
-    $subtext = NULL;
+    $subtext = $chox = NULL;
   } else { // no connected account yet
     if ($mya->stepIsDone('fund')) {
       $connect = boolFld(t('Connect:'), '', 0);
@@ -100,10 +100,8 @@ function formConnect_validate($form, &$sta) {
 
     foreach (ray($accts = 'routingNumber bankAccount') as $one) $$one = preg_replace('/[\.\- ]/', '', @$$one);
     u\preray(compact(ray($accts)), $sta['input']);
-    if (!preg_match('/^(|[0-9]{9})$/', $routingNumber)) return say('bad routing number', 'routingNumber');
-    if (!db\exists('r_banks', 'route=:routingNumber', compact('routingNumber'))) return say('bad routing number', 'routingNumber');
-    if (!preg_match('/^[0-9]{3,17}$/', $bankAccount)) say('bad account number', 'bankAccount'); // {3,20} ? Dwolla says 3-17
-//    if ($bankAccount != $bankAccount2) say('mismatch', ['thing' => t('account number')], 'bankAccount2');
+    if (!u\routingOk($routingNumber)) return say('bad routing number', 'routingNumber');
+    if (!u\bankAcctOk($bankAccount)) return say('bad account number', 'bankAccount');
   }
 
   if (@$refills) {

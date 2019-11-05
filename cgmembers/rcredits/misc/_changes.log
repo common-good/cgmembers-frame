@@ -1,4 +1,12 @@
 2019-11-04 feature/easy-tweaks (continued)
+. shortnames created in contact form get a digit added now, if necessary (rather than generating an error message)
+. refactored bank account and routing formatting checks
+. refactored tenure validation
+. added templates for Solar One signup and tested it
+. we actually store bank account information on partner signup now!
+. individuals cannot sell without completing the S_SELL steps
+
+2019-11-04 feature/easy-tweaks (continued)
 . improved how account regeneration is handled in tests
 . imported Co-op Power's contract for automatic signing
 . partner signups now have just one CG account setup step
@@ -98,7 +106,7 @@
       if (@$verify) $a->stepDone('verifyemail');
       if ($a->federalId) {
         $a->stepDone('verifyid');
-        if (@$ssn) $a->stepDone('ssn');
+        $a->stepDone('ssn');
         if ($a->co) $a->stepDone('agent');
       }
       if (@$connect or $a->bankAccount or db\exists('txs', 'uid2=' . $a->id)) $a->stepDone('fund');
@@ -114,6 +122,7 @@
       if (db\exists('r_invites', 'inviter=:id', ['id' => $a->id])) $a->stepDone('invite');
       if ($a->calling or $a->signupCo) $a->stepDone('work');
       if (@$food) $a->stepDone('food');
+      if (!$a->co and $a->member) $a->stepDone('tithein');
       
       if (!$a->member) {
         $task0 = $a->co ? S_CO : S_PERSON;

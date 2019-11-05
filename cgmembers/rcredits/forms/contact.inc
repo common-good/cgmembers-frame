@@ -41,9 +41,7 @@ function formContact_validate($form, &$sta) {
 
   if ($fullName != $mya->fullName) {
     if ($err = u\badName($fullName)) return say($err, ['field' => 'fullName'], 'fullName');
-    $name = u\shortName($fullName);
-    $otherName = db\get('fullName', 'users', 'name=:name AND uid<>:myid', compact('name', 'myid'));
-    if ($otherName) return say('shortname taken', compact('otherName'), 'fullName');
+    $name = r\shortName($fullName); // get a unique short version
   }
 
   if ($err = u\badZip($zip)) return say($err, 'zip');
@@ -54,12 +52,7 @@ function formContact_validate($form, &$sta) {
   if (u\poAddress($address)) return say('po in location', 'address');
 
   if (isset($years)) { // showing tenure field
-    if (!$years and !$months) return say(t('You must say how long you\'ve been there.'), 'years');
-    foreach (ray('years months') as $k) {
-      if (empty($$k)) $$k = 0;
-      if ($err = u\badAmount($$k, '>=0')) return say(t('How-long: ') . t($err), $k);
-    }
-    $tenure = $years * 12 + $months - $mya->activated * MONTH_SECS / DAY_SECS;
+    if (is_null($tenure = w\tenure($years, $months, $err))) return say($err, 'years');
     $extras = ' tenure';
   } else $extras = '';
   

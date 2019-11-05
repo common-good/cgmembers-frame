@@ -1403,6 +1403,23 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   return FALSE;
 }
 
+/**
+ * Return a unique short, lowercase version of a name.
+ */
+function shortName($fullName) {
+  global $mya;
+  
+  $myid = $mya ? $mya->id : 0;
+  $name = $name0 = u\shortName($fullName);
+  $len = strlen($name);
+  $suffix = 1; // first suffix to add is "2"
+  while (db\exists('users', 'name=:name AND uid<>:myid', compact('name', 'myid'))) {
+    $suffix++;
+    $name = $name0 . $suffix;
+  }
+  return $name;
+}
+
 function passHash($pass) {
   u\EXPECT(is_string($pass) and $pass !== '', 'bad pass to hash');
   require_once DRUPAL_ROOT . '/includes/password.inc';

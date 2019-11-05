@@ -1492,3 +1492,5 @@ function showq($sql, $subs = []) {return strtr(u\SUBS($sql), u\prefixKeys(':', $
 function deleteFile($flnm) {if (file_exists($flnm)) unlink($flnm);}
 function getFile($flnm) {return file_exists($flnm) ? file_get_contents($flnm) : '';}
 function prob($p, $yes = TRUE, $no = FALSE) {return (mt_rand() / mt_getrandmax()) < $p ? $yes : $no;}
+function routingOk($r) {return (preg_match('/^(|[0-9]{9})$/', $r) and db\exists('r_banks', 'route=:r', compact('r')));}
+function bankAcctOk($ba) {return preg_match('/^[0-9]{3,17}$/', $ba);}  // {3,20} ? Dwolla says 3-17
