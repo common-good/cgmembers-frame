@@ -5,6 +5,7 @@
 . added templates for Solar One signup and tested it
 . we actually store bank account information on partner signup now!
 . individuals cannot sell without completing the S_SELL steps
+. fixed skip button on discount page
 
 2019-11-04 feature/easy-tweaks (continued)
 . improved how account regeneration is handled in tests
@@ -111,10 +112,10 @@
       }
       if (@$connect or $a->bankAccount or db\exists('txs', 'uid2=' . $a->id)) $a->stepDone('fund');
       if ($a->signed) $a->stepDone('agree');
-      if (db\exists('r_recurs', 'payer=' . $a->id) or ($a->created > $strtotime('08/27/2017') and $a->member)) $a->stepDone('donate');
+      if (db\exists('r_recurs', 'payer=' . $a->id) or ($a->created > strtotime('08/27/2017') and $a->member)) $a->stepDone('donate');
       if (db\exists('r_proxies', 'person=' . $a->id)) $a->stepDone('proxies');
       if ($a->member or $a->ok or @$prefs) $a->stepDone('preferences');
-      if ($a->co and db\exists('r_coupons', 'fromId'=$a->id)) $a->stepDone('discount');
+      if ($a->co and db\exists('r_coupons', ['fromId' => $a->id])) $a->stepDone('discount');
       if (@$backing or $a->backing) $a->stepDone('backing');
       if (@$company) $a->stepDone('company');
       if ($a->address and $a->postalAddr) $a->stepDone('contact');
@@ -125,18 +126,20 @@
       if (!$a->co and $a->member) $a->stepDone('tithein');
       
       if (!$a->member) {
-        $task0 = $a->co ? S_CO : S_PERSON;
+        $task0 = $a->co ? 'co' : 'person';
         if (!$task = ($a->stepsDone($task0) ? '' : $task0)) $a->setBit('member');
       }
-      if ($a->member) {
-        $task = $a->co ? S_CO2
-        : (db\exists('r_relations', "main=26742000000220 AND other=$a->id AND flags&4") ? '' : ($a->stepsDone(S_CARD) ? '' : S_CARD));
-      }
-      if ($task) {
+    /*  if ($a->member) {
+        $task = $a->co ? 'co2'
+        : (db\exists('r_relations', "main=26742000000220 AND other=$a->id AND flags&4") ? '' : ($a->stepsDone(S_CARD) ? '' : 'card'));
+      } */
+      if (@$task) {
         if ($stepsLeft = $a->stepsLeft($task)) $a->update(compact('stepsLeft')); else $task = '';
         $a->update(compact('task'));
       }
-    }
+      $left = join('|', $a->stepsLeft);
+/**/  if (!$a->ok or $a->co) debug("$a->fullName: task=$task left=$left stepsDone=" . pr($a->stepsDone ?: []) . " stepsLeft=" . pr($a->stepsLeft ?: []));
+    });
 
 2019-09-06 feature/banking-fix
 . requesting a transfer into CG with a negative balance now transfers exactly the amount requested

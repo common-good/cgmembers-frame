@@ -324,7 +324,7 @@ function gotSolarOne($info) {
   $noContract = TRUE;
   $m_company = 'Con Ed';
   $customer = substr($m_company, 0, 1) . $m_number; // begin meter/customer number with the company letter (ENC)
-  $pA = pA($pid = 'NEWAIL');
+  $pA = pA($pid = 'NEWBHS');
   $partnerName = $pA->fullName;
   $pagePartner = $pA->name; // tell page.html to use the partner's branding
 

@@ -358,7 +358,7 @@ EOF;
 function htmlButton($name, $id, $value, $class, $other = []) {
   extract(just('tribs href class', $other));
 
-  if (nn($href) and !mb_strpos($href, 'http')) $href = BASE_URL . '/' . $href;
+  if (nn($href) and mb_strpos($href, 'http') === FALSE) $href = BASE_URL . '/' . $href;
 //  u\EXPECT(!@$href or mb_strpos($href, 'http') !== FALSE, 'no http in html button'); // $onclick = $href;
   if (@$href) list ($tag, $role) = ['a', 'button']; else $tag = 'button';
   return w\tag($tag, $value, (@$tribs ?: []) + compact(@$onclick ? 'onclick' : 'href', 'class', 'role'));
@@ -2519,4 +2519,4 @@ function js($script, $args = '') {global $pageScripts; $pageScripts[$script] = h
 function jsx($script, $args = '') {global $scriptScraps; $scriptScraps[$script] = http_build_query(rayy(func_get_args(), 1));} // see html.tpl
 function softErr($msg) {w\say($msg, 'err'); return w\go('empty');}
 function clearHeaders() {if (!headers_sent()) header_remove();}
-function skipButton() {return button(t('Skip for now'), BASE_URL . '/settings/skip', t('Leave this step for last'), 'warning', 'xs', ['class' => 'skip']);}
+function skipButton() {return button(t('Skip for now'), '/settings/skip', t('Leave this step for last'), 'default', 'xs', ['class' => 'skip']);}

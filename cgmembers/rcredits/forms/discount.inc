@@ -29,16 +29,14 @@ X
   $end = textFld(t('Valid until:'), [t('End date'), t('Leave blank for no end.')], dft(u\fmtDate(strtotime('+6 months'), TRUE)));
   $ulimit = textFld(t('Limit:'), t('Leave blank for unlimited uses.'), dft(5) + suffix(t(' uses per member')));
   
-  $submit = submit(t('Create'), '', '', suffix(' ' . lnk('', t('skip')))); // allow user to skip this step forever
-  $foot = in($mya->task, 'co co2') ? compact('submit') : w\setupFoot(t('Create'));
+  $submit = submit(t('Create'), '', '', suffix(' ' . skipButton())); // allow user to skip this step forever
   
   $start = hidFld(u\fmtDate(now(), TRUE));
   $automatic = hidFld(TRUE);
   $type = hidFld('discount');
   $on = NULL;
   
-  jsx('discount');
-  return cgform(@compact(ray('title subtext amount minimum start end ulimit automatic on type'))) + $foot;
+  return cgform(compact(ray('title subtext amount minimum start end ulimit automatic on type submit')));
 }
 
 function formDiscount_validate($form, &$sta) {return formCoupons_validate($form, $sta);}
