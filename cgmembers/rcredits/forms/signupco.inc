@@ -114,6 +114,8 @@ function formSignupCo_submit($form, &$sta) {
     w\setAcct($mya->id); // this works for both an individual account (proSe) and a company account (with agent)
   }
 
+  foreach (ray(CO_DFTS) as $i) $mya->setCoBit(APP_CANS + $i);
+
   list ($myid, $name) = [$mya->id, $mya->name];  
   $qid = $mya->mainQid;
   tellStaffNewMember($info + compact(ray('qid name'))); // report to staff and user

@@ -35,7 +35,10 @@ function formSummary($form, &$sta) {
       unset($form[$k]);
     }
 
-    if (!$mya->isCtty and $mya->cAdmin and !$mya->co) $extras .= a\cardLink($mya->id) . ' ' . a\recropLink();
+    if (!$mya->isCtty and $mya->cAdmin) {
+      if ($mya->trialco or !$mya->co) $extras .= ' ' . a\cardLink($mya->id);
+      $extras .= ' ' . a\recropLink();
+    }
     
     if ($stepUrl == 'summary') {
       if (@$msg) say(t('New member is told: ') . t($msg));

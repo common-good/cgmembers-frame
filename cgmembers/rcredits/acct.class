@@ -75,7 +75,7 @@ class Acct {
     $uid = r\regionalInsert('users', 'uid', $record, $region);
     u\EXPECT($uid != 0, 'zero regionalinsert');
 
-    if (!$co) u\setDft($cardCode, r\cardCode(r\qid($uid)));
+    u\setDft($cardCode, r\cardCode(r\qid($uid)));
     u\setDft($emailCode, r\cardCode(r\qid($uid)));
 
     list ($a->id, $a->agentId) = array($uid, nn($mya) ? $mya->agentId : $uid); // finish creating the object
@@ -1077,7 +1077,7 @@ EOF;
   }
 
   public function setTask($task) {$this->update('task stepsLeft', $task, $this->stepsLeft($this->taskSteps($task)));}
-  public function taskSteps($task) {return u\consta('s', $task);}
+  public function taskSteps($task) {return $task ? u\consta('s', $task) : '';}
   public function stepIsDone($step) {return (bool) u\getBit($this->steps, $this->allSteps()[$step]);}
   public function stepsDone($steps) {foreach(ray($steps) as $step) if (!$this->stepIsDone($step)) return FALSE; return TRUE;}
   public function nextStep() {return ($steps = $this->stepsLeft) ? $steps[0] : FALSE;}
