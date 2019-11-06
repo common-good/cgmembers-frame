@@ -646,10 +646,9 @@ function seeAssoc($info) {
  * Look up the given SSN and return xml data.
  */
 function ssnLookup($ssn) {
-  $xml = file_get_contents(dirname($_SERVER['DOCUMENT_ROOT']) . '/.ssncheck');
-  $xml = strtr($xml, ray('[ssnUser] [ssnPass] [ssn]', R_SSN_USER, R_SSN_PASS, $ssn));
+  $xml = tr(R_SSN_REQUEST, 'username password ssn', R_SSN_USER, R_SSN_PASS, $ssn);
   if (NOT_PRODUCTION) return u\getFile('ssnresult.txt'); // testing
-  return u\getFile("https://www.nationalpublicdata.com/feeds/FDSFeed.cfm?xml=" . urlencode($xml));
+  return file_get_contents("https://www.nationalpublicdata.com/feeds/FDSFeed.cfm?xml=" . urlencode($xml));
 }
 
 /**

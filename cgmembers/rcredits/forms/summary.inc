@@ -258,11 +258,11 @@ function activate($helper) {
     $mya->eachPartner(function($coA, $zot, $custCode) { // tell partner: account is activated
       if ($api = $coA->api()) u\post($api, ray('partnerCode qid op name', $coA->emailCode, $mya->mainQid, 'complete', $mya->fullName));
     });
-    $inviterName = @$mya->helperA->fullName;
-    $subs = compact('inviterName');
     $msg = 'approved';
     if (!$mya->confirmed) $msg .= ($helper > 1 ? '|must confirm' : '|in person');
-    r\message($mya->id, $msg, $subs + ['youName' => $mya->fullName]);
+    $subs = ray('inviterName youName specifics', @$mya->helperA->fullName, $mya->fullName, getSpecifics($mya));
+    
+    r\message($mya->id, $msg, $subs);
   }
 
   if ($firstTime and !$mya->co) { // no bonus or helper bonus for a company signing up
@@ -280,6 +280,26 @@ function activate($helper) {
   }
   
   unset($DBTX); 
+}
+
+/**
+ * Return the right specifics to include in the welcome email.
+ */
+function getSpecifics($mya) {
+  $forOver1000 = t('This is a trial account. You will need to complete some additional steps to accept more than $1,000 through %PROJECT.');
+  $onlineOnly = t('Your account is limited to payments online. ');
+  $acceptPayments = $onlineOnly . t('To accept payments through %PROJECT you will need to complete some additional steps.');
+  $finishCo = t(' <%a>Click here</a> to get started on that, by opening a personal account. Then sign back in to your company account and click "Finish" under Next Steps.', '_a', w\atag(BASE_URL . '/signup'));
+  $cardComing = t('You may now make purchases through the Common Good system, including using your Common Good card at member businesses. Expect your Common Good card to arrive in the mail within a few days.');
+  $getCard = t('To request a free %PROJECT card,');
+  $getSell = t(' accept payments through %PROJECT,');
+  $otherSteps = t(' or participate in the %PROJECT democracy, sign back in to your account and choose from the Next Steps listed there.');
+  
+  list ($cardWorthy, $canSell) = [$mya->stepsDone('card'), $mya->stepsDone('sell')];
+  
+  return str_replace(t('To or '), t('To '), $mya->co
+  ? ($mya->trialco ? $forOver1000 . $finishCo : ($mya->stepsDone('co2') ? '' : ($acceptPayments . $finishCo)))
+  : (($cardWorthy ? $cardComing . t(' To') : ($onlineOnly . $getCard)) . ($canSell ? '' : $getSell) . $otherSteps));
 }
 
 /**

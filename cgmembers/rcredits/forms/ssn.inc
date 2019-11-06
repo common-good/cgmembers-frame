@@ -17,7 +17,7 @@ function formSsn($form, &$sta, $args = '') {
   extract(ssnFields(!$mya->co, required()));
   
   $ssnData = $mya->ssnData;
-  $retry = (!empty($ssnData) or (isDEV and !$mya->member));
+  $retry = (!empty($ssnData) or (isDEV and !$mya->member) or $mya->task == 'person');
   
   if ($retry) {
     if ($badBday = (nn($ssnData[SSN_ERR_INDEX]) == t('bad birthdate'))) {

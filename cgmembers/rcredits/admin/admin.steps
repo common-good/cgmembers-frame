@@ -157,3 +157,10 @@ function these($thing, $list) {return t\these($thing, $list);}
  * in: MAKE changes AMemberChangesSomeSettings
  */
 function memberHasDoneStep($id, $step) {return t\doneStep($id, $step);}
+
+/**
+ * we message (ARG) to member (ARG) with subs: (ARG)
+ *
+ * in: TEST activate AdminActivatesAnAccount
+ */
+function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($index, $id, $subs);}

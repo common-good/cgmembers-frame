@@ -37,6 +37,7 @@ define('DKIM_PRIVATE', config('dkimPrivate'));
 define('R_INVITE_KEY', config('inviteKey'));
 define('R_SSN_USER', config('ssnUser'));
 define('R_SSN_PASS', config('ssnPass'));
+define('R_SSN_REQUEST', config('ssnRequest'));
 
 $configRay = (array) config('db'); // now look at just the database config array
 foreach (explode(' ', 'name driver host port user pass salt word encryption') as $k) ${"db_$k"} = config($k);
@@ -555,7 +556,7 @@ $GLOBALS['emailSubjects'] = array(
   'partner-solar1report' => t('Solar Signup COMPLETE'),
   'verify' => t('%PROJECT NEXT STEP: Verify your email address.'),
   'verify-co' => t('%PROJECT NEXT STEP: Verify your company email address.'),
-  'verify-trial' => t('%PROJECT NEXT STEP: Verify your company email address.'),
+//  'verify-trial' => t('%PROJECT NEXT STEP: Verify your company email address.'),
   'password-reset' => t('New %PROJECT PASSWORD'),
   'tell-staff' => t('%PROJECT STAFF ALERT: %topic'),
   'notices' => t('%PROJECT Notices for %qid for %range'),

@@ -2,6 +2,11 @@
 . added cardCode to trialco accounts and a link on Summary page to show a QR
 . set default app permissions upon account creation, so trialcos can use app easily
 . updated rSmart Identify feature to test current version of app
+. fixed broken constants in text on fund step
+. changed company verification to be identical to individual
+. fixed bug in ssn step that didn't know it was retrying in short signup
+. fixed u\ssnLookup by replacing missing .ssnCheck file with a new config.json parameter: R_SSN_REQUEST
+. fixed broken link to agreement in invite template
 
 2019-11-04 feature/easy-tweaks (continued)
 . shortnames created in contact form get a digit added now, if necessary (rather than generating an error message)
