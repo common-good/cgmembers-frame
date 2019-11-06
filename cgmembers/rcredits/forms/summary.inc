@@ -19,12 +19,13 @@ function formSummary($form, &$sta) {
 
   if ($mya->closed) say(t('Your account is closed, but you can still see your account history.'));
 
-  $stepUrl = $mya->nextStepUrl('', $msg);
+  $stepUrl = $mya->ok ? 'summary' : $mya->nextStepUrl('', $msg);
+/*
   if ($stepUrl == 'signup' and $info = r\relation('reid,code', "other=:myid AND :IS_CUSTOMER AND code<>''", compact('myid'))) {
     extract($info);
     $stepUrl .= "/reid=$reid&customer=$code";
   }
-  
+  */
   $extras = '<br>' . u\fmtPhone($mya->phone) . " ($mya->faxetc)<br>$mya->email ";
 
   if ($mya->admin2 and !$mya->proSe) { // some kind of admin (but not self)
