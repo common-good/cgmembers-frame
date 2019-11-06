@@ -59,6 +59,7 @@ function formResetPassword_submit($form, &$sta) {
 
   $sta['uid'] = $uid;
   $sta['status'] = 1;
+  $mya = r\acct($uid);
 
   $mya->update('oneTimePass', '');
   if ($pass1) {
