@@ -1,3 +1,6 @@
+2019-11-06 feature/no-redirect
+. bugfix: active members were getting redirected if they hadn't completed all steps
+
 2019-11-05 feature/easy-signup2
 . added cardCode to trialco accounts and a link on Summary page to show a QR
 . set default app permissions upon account creation, so trialcos can use app easily
