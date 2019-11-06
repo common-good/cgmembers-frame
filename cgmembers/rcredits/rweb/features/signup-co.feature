@@ -60,7 +60,7 @@ Scenario: Someone opens a trial company account
   | source    | Jo             |
   | contact   | Abe One        |
   | selling   | food           |
-  And we email "verify-trial" to member "a@" with subs:
+  And we email "verify" to member "a@" with subs:
   | fullName | name   | quid   | site      | code     |*
   | Coco Co  | cococo | NEWAAA | %BASE_URL | WHATEVER |
   And member ".AAA" one-time password is set to "WHATEVER"

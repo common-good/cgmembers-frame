@@ -147,37 +147,19 @@ function formSignup_submit($form, &$sta) {
   if (!@$owns) $mya->setRisk('rents');
   
   if ($h = $mya->helperA and @$args and !$h->cAdmin) suCreatorRelation($helper, $args, $myid);
-  return finishSignup($info + compact(ray('acctType qid name')), nn($confirmed));    
-}
+  $info += compact(ray('acctType qid name'));
 
-/**
- * Finish signup -- used also by new(partner)Customer
- * @param assoc $info: info to report to admin
- */
-function finishSignup($info, $confirmed) {
-  global $mya; $myid = $mya->id;
   tellStaffNewMember($info); // report to admin
 
   $pw1 = $mya->oneTimePass($mya->name, TRUE);
-  $h = $mya->helperA;
-  
-  if ($mya->co) { // company account
-    say('company is ready');
-    if (!@$h) hack('company no helper');
-    if ($mya->email == $h->email) {
-      $mya->stepDone('verifyemail');
-    } else r\notify($myid, 'verify-co', ['code' => $pw1], TRUE); 
-  } else { // personal account
-    $mya->update('pass', $pass = u\randPass());
+  $mya->update('pass', $pass = u\randPass());
+  r\notify($myid, 'verify', ray('name qid code pass', $mya->name, $mya->mainQid, $pw1, $pass), TRUE); 
 
-    r\notify($myid, 'verify', ray('name qid code pass', $mya->name, $mya->mainQid, $pw1, $pass), TRUE); 
-
-    if (!$confirmed) {
-      u\EXPECT((bool) $h, 'unconfirmed with no helper');
-      if ($h->id != 1) { // sysadmin helper means the potential inviter is named in the notes field
-        $_a1 = $h->makeDo('confirmInvite', $myid); // link to confirm invitedness
-        r\message($h->id, 'confirm invite', ray('_a1 fullName', $_a1, $mya->fullName)); // ask inviter to confirm
-      }
+  if (!nn($confirmed)) {
+    u\EXPECT((bool) $h, 'unconfirmed with no helper');
+    if ($h->id != 1) { // sysadmin helper means the potential inviter is named in the notes field
+      $_a1 = $h->makeDo('confirmInvite', $myid); // link to confirm invitedness
+      r\message($h->id, 'confirm invite', ray('_a1 fullName', $_a1, $mya->fullName)); // ask inviter to confirm
     }
   }
 

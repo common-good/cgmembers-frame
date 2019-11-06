@@ -95,22 +95,15 @@ function transactions($list) {return t\transactions($list);}
 /**
  * agent (ARG) asks device (ARG) to identify (ARG)
  *
- * in: MAKE identify ACashierSignsIn
- *     MAKE identify DeviceHasNoIdentifierYet
- *     MAKE identify DeviceShouldHaveAnIdentifier
- *     MAKE identify ACashierSignsInSigningAnotherCashierOut
- *     MAKE identify AManagerSignsIn
+ * in: MAKE identify DeviceShouldHaveAnIdentifier
  *     MAKE identify ACashierScansACustomerCard
  *     MAKE identify TheDefaultCashierScansACustomerCard
  *     MAKE identify TheDefaultCashierScansADeactivatedCard
- *     MAKE identify AnUnauthorizedCashierScansIn
  *     MAKE identify ACashierScansACustomerCardBeforeSigningIn
- *     MAKE identify ACashierAsksUsToIdentifyTheCashiersOwnCard
  *     MAKE identify ACashierScansACustomerCardWhoseBalanceIsSecret
  *     MAKE identify ACashierScansACompanyCustomerCard
  *     MAKE identify ANonyetactiveMemberCardIsScanned
  *     MAKE identify AMemberMakesAPurchaseForTheFirstTime
- *     MAKE time ACashierSignsIn
  */
 function agentAsksDeviceToIdentify($agent, $device, $qr) {
   return agentAsksDeviceToIdentifyWithPIN($agent, $device, $qr);
@@ -121,8 +114,11 @@ function agentAsksDeviceToIdentify($agent, $device, $qr) {
  *
  * in: TEST identify ACashierSignsIn
  *     TEST identify DeviceHasNoIdentifierYet
+ *     TEST identify DeviceHasNoIdentifierYetForAnIndividual
+ *     TEST identify DeviceHasNoIdentifierYetForTrialCompany
  *     TEST identify ACashierSignsInSigningAnotherCashierOut
  *     TEST identify AManagerSignsIn
+ *     TEST identify AManagerAsksUsToIdentifyTheManagersOwnCard
  *     TEST identify ACashierScansACustomerCard
  *     TEST identify TheDefaultCashierScansACustomerCard
  *     TEST identify ACustomerScansTheirOwnCardForSelfservice
@@ -138,7 +134,8 @@ function weRespondWith($args) {
 
   t\output('expecting: ' . pr($args[0]));
   foreach ($args[0] as $k => $v) {
-    if ($k == 'descriptions' or $k == 'bad') $v = empty($v) ? [] : ray($v);
+    if ($k == 'descriptions') $v = empty($v) ? [0 => ''] : ray($v);
+    if ($k == 'bad') $v = empty($v) ? [] : ray($v);
     if ($k == 'can') { // currently tests only signed-out permissions
       $flags = 0;
       if ($v) foreach (ray($v) as $one) $flags |= u\bit(u\consta('co', $one));
@@ -388,7 +385,6 @@ function weReturnErrorWithSubs($msg, $subs) {
  *     TEST identify TheDefaultCashierScansADeactivatedCard
  *     TEST identify AnUnauthorizedCashierScansIn
  *     TEST identify ACashierScansACustomerCardBeforeSigningIn
- *     TEST identify ACashierAsksUsToIdentifyTheCashiersOwnCard
  *     TEST offline DeviceSendsCorrectOldProofForLegitTxAfterMemberLosesCardWithAppOnline
  *     TEST offline DeviceSendsCorrectOldProofForLegitTxAfterMemberLosesCardWithTxDateAfterTheChange
  *     TEST startup DeviceRequestsABadOp
@@ -636,10 +632,10 @@ function membersHave($list) {return t\membersHave($list);}
  * in: MAKE identify ACustomerScansTheirOwnCardForSelfservice
  *     MAKE identify ACustomerScansTheirOwnCardForSelfserviceWithWrongPIN
  */
-function agentAsksDeviceToIdentifyWithPIN($agent, $device, $qr, $pin = NULL) {
+function agentAsksDeviceToIdentifyWithPIN($agent, $device, $qr, $pin = NULL, $signin = 0) {
   global $testOnly; if ($testOnly) return FALSE;
   list ($member, $code) = t\parseQr($qr);
-  return t\hitServer('identify', compact(ray('member code pin')), $agent, $device);
+  return t\hitServer('identify', compact(ray('member code pin signin')), $agent, $device);
 }
 
 /**
@@ -787,3 +783,18 @@ function coupated($list) { return t\coupatedRecords($list); }
  * in: TEST offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThroughButCustomerIsBroke
  */
 function countIs($what, $count) {return t\count($what, $count);}
+
+/**
+ * agent (ARG) asks device (ARG) to sign in (ARG)
+ *
+ * in: MAKE identify ACashierSignsIn
+ *     MAKE identify DeviceHasNoIdentifierYet
+ *     MAKE identify DeviceHasNoIdentifierYetForAnIndividual
+ *     MAKE identify DeviceHasNoIdentifierYetForTrialCompany
+ *     MAKE identify ACashierSignsInSigningAnotherCashierOut
+ *     MAKE identify AManagerSignsIn
+ *     MAKE identify AManagerAsksUsToIdentifyTheManagersOwnCard
+ *     MAKE identify AnUnauthorizedCashierScansIn
+ *     MAKE time ACashierSignsIn
+ */
+function agentAsksDeviceToSignIn($agent, $device, $qr) {return agentAsksDeviceToIdentifyWithPIN($agent, $device, $qr, NULL, 1);}

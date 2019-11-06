@@ -114,11 +114,16 @@ function formSignupCo_submit($form, &$sta) {
     w\setAcct($mya->id); // this works for both an individual account (proSe) and a company account (with agent)
   }
 
+  foreach (ray(CO_DFTS) as $i) $mya->setCoBit(APP_CANS + $i);
+
   list ($myid, $name) = [$mya->id, $mya->name];  
   $qid = $mya->mainQid;
   tellStaffNewMember($info + compact(ray('qid name'))); // report to staff and user
-  $pw1 = $mya->oneTimePass($name, TRUE); 
-  r\notify($myid, 'verify-trial', ray('name qid code', $name, $qid, $pw1), TRUE); 
+  
+  $pw1 = $mya->oneTimePass($name, TRUE);
+  $mya->update('pass', $pass = u\randPass());
+  r\notify($myid, 'verify', ray('name qid code pass', $mya->name, $mya->mainQid, $pw1, $pass), TRUE); 
+
   if (nn($code)) w\invitation($code, $myid); // mark invitation used
   
   say('info saved');

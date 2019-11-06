@@ -1,15 +1,15 @@
 Feature: Start up
 AS a member
-I WANT to run the rCredits POS app on my device
-SO I can use it to charge customers through the rCredits system.
+I WANT to run the Common Good POS app on my device
+SO I can use it to charge customers through the Common Good system.
 
 Setup:
   Given members:
-  | uid  | fullName   | phone  | email | cc  | cc2  | flags      |*
-  | .ZZA | Abe One    | +20001 | a@    | ccA | ccA2 | ok         |
-  | .ZZB | Bea Two    | +20002 | b@    | ccB |      | ok         |
-  | .ZZC | Corner Pub | +20003 | c@    | ccC |      | ok,co      |
-  | .ZZF | For Co     | +20006 | f@    | ccF |      | co         |
+  | uid  | fullName | phone  | email | cc  | cc2  | flags         |*
+  | .ZZA | Abe One  | +20001 | a@    | ccA | ccA2 | ok            |
+  | .ZZB | Bea Two  | +20002 | b@    | ccB |      | ok            |
+  | .ZZC | Coco Co  | +20003 | c@    | ccC |      | ok,co         |
+  | .ZZF | For Co   | +20006 | f@    | ccF |      | co            |
   And devices:
   | uid  | code |*
   | .ZZC | devC |
@@ -19,6 +19,7 @@ Setup:
   | .ZZC | .ZZB  |   2 | scan       |
   | .ZZF | .ZZA  |   1 | scan       |
 
+Scenario: 
 Scenario: Device requests a bad op
   When agent "C:A" asks device "devC" for op %random with: ""
   Then we return error "bad op"

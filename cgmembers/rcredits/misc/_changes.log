@@ -1,3 +1,13 @@
+2019-11-05 feature/easy-signup2
+. added cardCode to trialco accounts and a link on Summary page to show a QR
+. set default app permissions upon account creation, so trialcos can use app easily
+. updated rSmart Identify feature to test current version of app
+. fixed broken constants in text on fund step
+. changed company verification to be identical to individual
+. fixed bug in ssn step that didn't know it was retrying in short signup
+. fixed u\ssnLookup by replacing missing .ssnCheck file with a new config.json parameter: R_SSN_REQUEST
+. fixed broken link to agreement in invite template
+
 2019-11-04 feature/easy-tweaks (continued)
 . shortnames created in contact form get a digit added now, if necessary (rather than generating an error message)
 . refactored bank account and routing formatting checks
@@ -101,45 +111,54 @@
 . separated individual signup into several phases and many steps
 . added steps field to users table, to track signup steps
 . after deploying:
-    eachA(function ($a) {
-      extract($a->stepsDone ?: []);
-      if (@$signup) $a->stepDone('signup');
-      if (@$verify) $a->stepDone('verifyemail');
-      if ($a->federalId) {
-        $a->stepDone('verifyid');
-        $a->stepDone('ssn');
-        if ($a->co) $a->stepDone('agent');
-      }
-      if (@$connect or $a->bankAccount or db\exists('txs', 'uid2=' . $a->id)) $a->stepDone('fund');
-      if ($a->signed) $a->stepDone('agree');
-      if (db\exists('r_recurs', 'payer=' . $a->id) or ($a->created > strtotime('08/27/2017') and $a->member)) $a->stepDone('donate');
-      if (db\exists('r_proxies', 'person=' . $a->id)) $a->stepDone('proxies');
-      if ($a->member or $a->ok or @$prefs) $a->stepDone('preferences');
-      if ($a->co and db\exists('r_coupons', ['fromId' => $a->id])) $a->stepDone('discount');
-      if (@$backing or $a->backing) $a->stepDone('backing');
-      if (@$company) $a->stepDone('company');
-      if ($a->address and $a->postalAddr) $a->stepDone('contact');
-      if ($a->hasPhoto) $a->stepDone('photo');
-      if (db\exists('r_invites', 'inviter=:id', ['id' => $a->id])) $a->stepDone('invite');
-      if ($a->calling or $a->signupCo) $a->stepDone('work');
-      if (@$food) $a->stepDone('food');
-      if (!$a->co and $a->member) $a->stepDone('tithein');
-      
-      if (!$a->member) {
-        $task0 = $a->co ? 'co' : 'person';
-        if (!$task = ($a->stepsDone($task0) ? '' : $task0)) $a->setBit('member');
-      }
-    /*  if ($a->member) {
-        $task = $a->co ? 'co2'
-        : (db\exists('r_relations', "main=26742000000220 AND other=$a->id AND flags&4") ? '' : ($a->stepsDone(S_CARD) ? '' : 'card'));
-      } */
-      if (@$task) {
-        if ($stepsLeft = $a->stepsLeft($task)) $a->update(compact('stepsLeft')); else $task = '';
-        $a->update(compact('task'));
-      }
-      $left = join('|', $a->stepsLeft);
-/**/  if (!$a->ok or $a->co) debug("$a->fullName: task=$task left=$left stepsDone=" . pr($a->stepsDone ?: []) . " stepsLeft=" . pr($a->stepsLeft ?: []));
-    });
+  global $newMembers;
+  eachA(function ($a) {
+    global $newMembers;
+    if (!$a->ok) $a->setBit('member', FALSE);
+    $a->update('task steps stepsLeft', '', 0, '');
+
+    extract($a->stepsDone ?: []);
+    $trial = ($a->federalId == CGF_EIN);
+    if ($a->co) {
+      if ($trial) $a->update('cardCode', r\cardCode($a->mainQid));
+      $co2Done = (@$agree and @$backing and @$company and @$donate and @$photo and @$preferences);
+      $task = $a->member 
+      ? (($trial or !$co2Done) ? 'co2' : '')
+      : 'co';
+    } else $task = $a->member ? '' : 'person';
+    $a->setTask($task);
+    if (@$signup) $a->stepDone('signup');
+    if (@$verify) $a->stepDone('verifyemail');
+    if ($a->federalId and !$trial) {
+      $a->stepDone('signup');
+      $a->stepDone('verifyid');
+      $a->stepDone('ssn');
+      if ($a->co) $a->stepDone('agent');
+    }
+    if ($a->bankAccount or db\exists('txs', 'uid2=' . $a->id)) $a->stepDone('fund');
+    if ($a->signed) $a->stepDone('agree');
+    if (db\exists('r_recurs', 'payer=' . $a->id) or ($a->created > strtotime('08/27/2017') and $a->member)) $a->stepDone('donate');
+    if (db\exists('r_proxies', 'person=' . $a->id)) $a->stepDone('proxies');
+
+    if ($a->member or $a->ok or @$prefs) $a->stepDone('preferences');
+    if ($a->co and db\exists('r_coupons', ['fromId' => $a->id])) $a->stepDone('discount');
+    if (@$backing or $a->backing + 0) $a->stepDone('backing');
+    if (@$company) $a->stepDone('company');
+    if ($a->address and $a->postalAddr) $a->stepDone('contact');
+    if ($a->hasPhoto) $a->stepDone('photo');
+    if (db\exists('r_invites', 'inviter=:id', ['id' => $a->id])) $a->stepDone('invite');
+    if ($a->calling or $a->signupCo) $a->stepDone('work');
+    if (@$food) $a->stepDone('food');
+    if ($a->co ? (@$prefs or ($a->crumbs + 0)) : $a->member) $a->stepDone('tithein');
+    
+    $left = join('|', $a->stepsLeft);
+    $stepsLeft = join('|', $a->stepsLeft());
+    $left .= $stepsLeft == $left ? '' : " LEFT()=$stepsLeft";
+    $stepsDone = ''; foreach ($a->stepsDone ?: [] as $k => $v) if ($v) $stepsDone .= ($stepsDone ? '|' : '') . $k;
+/**/  if (!$a->ok or $a->co) debug("$a->fullName: DONE0=$stepsDone DONE=" . str_replace(' ', '|', trim(u\bits($a->steps, S_ALL))) . " TASK=$task LEFT=$left");
+    if (!$a->co and $a->member and !$a->ok) $newMembers[] = $a->mainQid;
+  });
+/**/  debug($newMembers);
 
 2019-09-06 feature/banking-fix
 . requesting a transfer into CG with a negative balance now transfers exactly the amount requested

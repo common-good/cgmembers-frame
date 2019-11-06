@@ -19,7 +19,7 @@ function formCompany($form, &$sta, $arg = '') {
 
   $canDescs = ray(APP_CAN_BIT_DESCS);
   $permissions = '';
-  if (!$mya->member and !$mya->stepDone['company'] and !$mya->coCan(APP_CANS + APP_CAN_BITS)) foreach (ray(CO_DFTS) as $i) $mya->setCoBit(APP_CANS + $i); // set defaults if doing initial account setup AND manager has no permission to charge custs yet
+  if (!$mya->stepDone['company'] and !$mya->coCan(APP_CANS + APP_CAN_BITS)) foreach (ray(CO_DFTS) as $i) $mya->setCoBit(APP_CANS + $i); // set defaults if doing initial account setup AND manager has no permission to charge custs yet
   
   foreach ($canDescs as $i => $desc) {
     $outbox = <<<EOF
