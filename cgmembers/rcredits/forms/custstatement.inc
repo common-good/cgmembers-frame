@@ -19,9 +19,7 @@ function custStatement($args = []) {
   $purposeLenMax = 60; // maximum number of characters in purpose field, not including added "..."
 
   if (!$mya = r\acct()) return w\go('', t('You must first sign in.'), 'ERR');
-  $cust = u\arrayGet($args, 'cust', null);
-  $period = u\arrayGet($args, 'period', null);
-  $way = u\arrayGet($args, 'way', 'OUT');
+  extract(just('cust period way', $args, [NULL, NULL, 'OUT']));
 
   $a = is_null($cust) ? null : r\acct($cust);
   if (is_null($a)) return w\softErr(t('No customer was specified.'));
@@ -76,7 +74,7 @@ function custStatement($args = []) {
 
     foreach ($fields as $i => $one) {
       list ($head, $fldName, $width, $align) = explode('/', $one);
-      if (!$fldName) $fldName = strtolower($head);
+      if (!$fldName) $fldName = mb_strtolower($head);
       $debit = ($align == 'R' and is_numeric($n = @$$fldName) and $n < 0);
       if ($debit) $pdf->SetTextColor(128, 0, 0); else $pdf->SetTextColor();
       if (in($fldName, $numFields) and isset($$fldName)) {

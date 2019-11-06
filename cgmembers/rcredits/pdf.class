@@ -61,14 +61,14 @@ class Pdf extends \TCPDF {
       if (strpos($fmt, ':')) {$formats[] = "$fmt;"; continue;}
       if ($fmt == 'B') {$formats[] = 'font-weight:bold;'; continue;}
       if ($fmt == 'I') {$formats[] = 'font-style:italic;'; continue;}
-      if ($fmt == 'CAPS') {$text = str_replace('<BR>', '<br>', strtoupper($text)); continue;}
+      if ($fmt == 'CAPS') {$text = str_replace('<BR>', '<br>', mb_strtoupper($text)); continue;}
       if (is_numeric($fmt)) {$size = $fmt; continue;}
       $font = $fmt;
     }
     $formats[] = "font-family:$font;";
     $formats[] = "font-size:{$size}pt;";
     $format = join(' ', $formats);
-    $offset = $h0 ? ((PDF_FONT_SIZE - $size) / 72) * (substr_count($text, '<br>') + 1) : 0;
+    $offset = $h0 ? ((PDF_FONT_SIZE - $size) / 72) * (mb_substr_count($text, '<br>') + 1) : 0;
     $text = "<div style=\"$format\">$text</div>";
     $this->writeHTMLCell($w, $h, $x, $y + $offset, $text, $borders, 0, FALSE, TRUE, $align);
     list ($this->lastX, $this->lastY) = [$x, $y];
@@ -150,6 +150,10 @@ class Pdf extends \TCPDF {
     }
     $this->newLine();
     $this->SetTextColor();
+  }
+  
+  function color($color) {
+    // to do
   }
 
   function newLine() {$this->Cell(0, 0, '', '', 1);}

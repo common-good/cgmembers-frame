@@ -14,6 +14,7 @@ use CG\Db as db;
 function formPhoto($form, &$sta, $arg = '') {
   global $base_url, $rUrl;
   global $mya;
+
   $chooserStyle = 'btn-md btn-primary';
 	extract(just('ok err recrop', $arg));
 	$recrop = @$recrop ? "$base_url/account-photo/orig=1/" . now() : '';
@@ -27,7 +28,7 @@ function formPhoto($form, &$sta, $arg = '') {
     $chooserStyle = 'btn-xs btn-secondary';
 // No! wait for user to be happy with the photo   $mya->stepDone('photo');
     extract(w\setupFoot()); // get nextStep and progress fields
-    $buttonName = $mya->stepsRemaining() > 1 ? t('Next') : t('Finish');
+    $buttonName = count($mya->stepsLeft()) > 1 ? t('Next') : t('Finish');
     $allSet = $mya->member ? t('you\'re all set') : t('click "%buttonName" above', compact('buttonName'));
     $desc = t('If you like this photo, %allSet. Otherwise:', compact('allSet'));
   } else {
@@ -47,8 +48,6 @@ function formPhoto($form, &$sta, $arg = '') {
   
   $title = t('Photo ID Picture');
 
-  $rnd = u\code();
-  
   if ($mya->hasPhoto) {
     $choose = t('Choose a New Photo');
     if (!$mya->co and $mya->ok) $desc .= '<p>' . t('triggers new card', ['field' => t('photo')]) . '</p>';

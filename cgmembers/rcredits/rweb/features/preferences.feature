@@ -15,8 +15,8 @@ Setup:
 Scenario: A member visits the preferences page
   When member ".ZZA" visits page "settings/preferences"
   Then we show "Account Preferences" with:
-  | Food Assistance? |  |
   | Round Up         |  |
+  | Food Assistance? |  |
   And radio "statements" is "printed statements"
   And radio "notices" is "daily"
   And radio "secretBal" is "No"

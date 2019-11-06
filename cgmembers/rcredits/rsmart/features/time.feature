@@ -33,7 +33,7 @@ Scenario: The device asks for the time
   | 1  | %now |
 
 Scenario: a cashier signs in
-  When agent "" asks device "devC" to identify "C:B,ccB2"
+  When agent "" asks device "devC" to sign in "C:B,ccB2"
   Then we respond with:
-  | ok | name    | logon | descriptions    | can          | default | company    | time |*
-  | 1  | Bea Two | 1     | this,that,other | refund,r4usd | NEWZZC  | Corner Pub | %now |
+  | ok | name    | descriptions    | can          | default | company    | time |*
+  | 1  | Bea Two | this,that,other | refund,r4usd | NEWZZC  | Corner Pub | %now |

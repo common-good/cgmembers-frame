@@ -88,7 +88,7 @@ function statement($period = '') {
       foreach (ray('fromyou', 1) as $k => $v) {
         if ($fldName == $k) $$k .= str_repeat(' ', $v); // footnote alignment
       }
-      $pdf->Cell($width, 0, @$fldName ? @$$fldName : '', '', @$fldName[strlen(@$fldName) - 1] == '9' ? 1 : 0, $align);
+      $pdf->Cell($width, 0, @$fldName ? @$$fldName : '', '', @$fldName[mb_strlen(@$fldName) - 1] == '9' ? 1 : 0, $align);
     }
   }
   
@@ -117,12 +117,12 @@ function statement($period = '') {
       extract(just('xid created name description amount banking', $entry));
       if ($xid < 124873 and $banking and !test()) $xid = db\get('txid', 'r_usd', compact('xid')) ?: $xid; // old checks
       $date = strftime('%b %d', $created); // reformat for single month
-      if (strlen($description) > $purposeLenMax + 3) $description = substr($description, 0, $purposeLenMax) . '...';
+      if (mb_strlen($description) > $purposeLenMax + 3) $description = mb_substr($description, 0, $purposeLenMax) . '...';
       $amount = -$amount;  // since we're looking at it from the other party's view
       
       foreach ($fields as $field) {
         list ($head, $fldName, $width, $align) = explode('/', $field);
-        if (!$fldName) $fldName = strtolower($head);
+        if (!$fldName) $fldName = mb_strtolower($head);
         $n = str_replace(',', '', $$fldName);
         $debit = ($align == 'R' and is_numeric($n) and $n < 0);
         if ($debit) { $pdf->SetTextColor(128, 0, 0); }

@@ -119,7 +119,7 @@ function do1099b($year, $payee, &$total, $mod = '', $badNames = [], $badTINs = [
 //    $amts99[] = $amount;
     $bCount++;
     $a = r\acct($payee); $id = $a->id;
-    $acctFields = ray('nm qid co addr ein', $a->legalNameDpy, $a->mainQid, $a->co, $a->postalAddr, $a->federalId);
+    $acctFields = ray('nm qid co addr ein', u\asciiOnly($a->legalNameDpy), $a->mainQid, $a->co, u\asciiOnly($a->postalAddr), $a->federalId);
     putRec(recB($year, $acctFields, $created, $amount, $for, $mod, @$badNames[$id], @$badTINs[$id]));
   }
   return $bCount;
@@ -185,11 +185,11 @@ function recB($year, $acctFields, $amount, $completed = '', $for = '', $mod = ''
   $payerOffice = pad('', 4);
   $amt = u\lpad(fmtAmt($amount), 12);
   $foreignPayee = pad('', 1);
-  $payeeName = pad(noBreakAt(preg_replace('/[^A-Z &\-]/i', '', isset($badName) ? $badName : $nm), 40), 2 * 40);
+  $payeeName = pad(noBreakAt(preg_replace('/[^A-Z &\-]/i', '', u\asciiOnly(isset($badName) ? $badName : $nm)), 40), 2 * 40);
   list ($payeeFirst, $payeeLast) = u\parseName($payeeName);
   $nameControl = pad(preg_replace('/[^A-Z]/i', '', $co ? $payeeName : ($payeeLast . $payeeFirst)), 4);
 //  $nameControl = pad(preg_replace('/[^A-Z]/i', '', ($co and $mod != 'G') ? $payeeName : $payeeLast), 4); // temporary for TY2014,2015
-  list ($address, $city, $st, $zip) = u\parseAddr($addr);
+  list ($address, $city, $st, $zip) = u\parseAddr(u\asciiOnly($addr));
   if ($st == 'ER' or !$zip or !$city) return err1099(t('Bad postalAddr for ') . $who);
   $payeeAddr = pad($address, 40) . sp(40) . pad($city, 40) . pad($st, 2) . pad(u\digits($zip), 9);
   $date = pad($completed ? strftime('%Y%m%d', $completed) : '', 8);

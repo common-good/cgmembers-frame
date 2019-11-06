@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * The page that serves all page requests (slightly modified from Drupal).

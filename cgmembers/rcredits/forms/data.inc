@@ -60,7 +60,7 @@ function formData($form, &$sta, $args = '', $isco = FALSE) {
 function formData_validate($form, &$sta) {
   if (op($sta) != 'go') return;
   extract(just('sql', $sta['input']));
-  $word1 = strtolower(strstr($sql, ' ', TRUE));
+  $word1 = mb_strtolower(mb_strstr($sql, ' ', TRUE));
   if (!in($word1, 'select show')) return say(t('Only SELECT and SHOW queries are permitted.'), 'sql');
 }
 

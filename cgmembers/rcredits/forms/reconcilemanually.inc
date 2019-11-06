@@ -27,7 +27,7 @@ function formReconcileManually($form, &$sta, $args = '') {
     $amt = ' ' . u\fmtAmt($trnAmt, ''); // negative numbers disappear without the leading space (bug?)
     $id = 'tx-' . $t;
     $fitId = strpos($fitId, ESCROW_IN) !== FALSE ? t('IN') : t('OUT');
-    $trnType = strtolower($trnType);
+    $trnType = mb_strtolower($trnType);
     $form[$id] = boxFld($id, $amt, tr('ofx %dtPosted: <b>%fitId</b> (%trnType) %name - %memo', compact(ray(OFX_TX_FLDS))), 0, clas('ofxTx'));
   }
   

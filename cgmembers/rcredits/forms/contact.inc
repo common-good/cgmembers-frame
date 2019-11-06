@@ -8,8 +8,6 @@ use CG\Db as db;
 
 /**
  * Display, for editing, contact info for the current account.
- * This function uses jQuery code defined in misc.js, for the country and state dropdowns
- * @NOTE: The country and state drop down require a change in form.inc (see patch/form.inc.patch)
  */
 function formContact($form, &$sta) {
   global $mya;
@@ -26,8 +24,8 @@ function formContact($form, &$sta) {
   $sta['no_cache'] = TRUE; // otherwise the javascript-populated dropdowns get lost
 
   $form = compact(ray('title fullName email pass')) 
-        + contactFields([], FALSE, $mya->id)
-        + compact('submit');
+        + contactFields([], $mya->id)
+        + w\setupFoot();
 
         
   jsx('contact');
@@ -39,32 +37,31 @@ function formContact_validate($form, &$sta) {
   global $mya;
   $myid = $mya->id;
   extract(u\normalizeCase(just($normals = 'fullName city address postalAddr', $sta['input'])));
-  extract(just('email pass phone country state zip', $sta['input']));
-
-  // what's this doing in validate?!
-//  js('countries.js', 'file', 'header'); // country and state dropdowns
-//  js("print_country(\"$country\", \"$state\");", 'inline', 'footer'); // initialize dropdowns
+  extract(just('email pass phone state zip years months', $sta['input']));
 
   if ($fullName != $mya->fullName) {
     if ($err = u\badName($fullName)) return say($err, ['field' => 'fullName'], 'fullName');
-    $name = u\shortName($fullName);
-    $otherName = db\get('fullName', 'users', 'name=:name AND uid<>:myid', compact('name', 'myid'));
-    if ($otherName) return say('shortname taken', compact('otherName'), 'fullName');
+    $name = r\shortName($fullName); // get a unique short version
   }
 
   if ($err = u\badZip($zip)) return say($err, 'zip');
   if (!emailOkay($email, $mya->co, $mya)) return; // say('bad email', ray('email', $email), 'email');
   if (!$mya->cAdmin and $email != $mya->email and !$mya->agentA->passwordOkay($pass, 'pass', $err)) return say($err, 'pass');
 //$pin != $mya->agentA->pin) return say('bad pin', 'pin');
-  if (!phoneOk($phone, $country)) return;
+  if ($err = u\badPhone($phone)) return say($err, 'phone');
   if (u\poAddress($address)) return say('po in location', 'address');
+
+  if (isset($years)) { // showing tenure field
+    if (is_null($tenure = w\tenure($years, $months, $err))) return say($err, 'years');
+    $extras = ' tenure';
+  } else $extras = '';
   
-  u\preray(@compact(ray($normals . ' email phone name')), $sta['input']); // fix formatting and add name
+  u\preray(@compact(ray($normals . ' email phone name' . $extras)), $sta['input']); // fix formatting and add name
 }
 
 function formContact_submit($form, &$sta) {
   global $partnerInfo; // information used within eachPartner function argument (so must be global)
-  extract($info = just('fullName name email phone faxetc country zip state city address postalAddr owns', $sta['input']));
+  extract($info = just('fullName name email phone faxetc zip state city address postalAddr tenure owns', $sta['input']));
   unset($info['owns']);
   
   global $mya;
@@ -81,8 +78,7 @@ function formContact_submit($form, &$sta) {
     if ($partnerInfo and $api = $coA->api()) u\post($api, ray('partnerCode qid op name', $coA->emailCode, $mya->mainQid, 'change', $custA->fullName) + $partnerInfo);
   });
   
-  $mya->setRisk('rents', !@$owns); // @ for tests
+  if (isset($owns)) $mya->setRisk('rents', !$owns);
   $mya->update($info);
-  say('info saved');
-  //  return w\goNextStep('contact', NULL, $info);
+  return w\goNextStep('contact', 'info saved', $info);
 }

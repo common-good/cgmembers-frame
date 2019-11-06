@@ -30,7 +30,7 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   u\EXPECT(compact(ray('sql subs')), 'notempty assoc');
   if ($retId) $return = \Database::RETURN_INSERT_ID;
   if (preg_match('/^DELETE FROM ([^ ]+)( |$)/', $sql, $match) and !in(NO_LOGSQL_TABLES, @$match)) logSql(compact(ray('sql subs retId')));
-  if ($log and strpos($sql, 'SELECT ') === FALSE) u\loga('db', $subs + compact('sql'));
+  if ($log and mb_strpos($sql, 'SELECT ') === FALSE) u\loga('db', $subs + compact('sql'));
   try {
     return \db_query(u\SUBS($sql), u\prefixKeys(':', $subs), @compact('return'));
   } catch (Exception $e) {
@@ -43,7 +43,7 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
  * Call this in a "try" block, if you want to catch errors.
  */
 function adminQ($sql) {
-  $word1 = strtolower(strstr($sql, ' ', TRUE));
+  $word1 = mb_strtolower(mb_strstr($sql, ' ', TRUE));
   u\EXPECT(in($word1, 'select show'), 'bad admin query');
   return \db_query(u\SUBS($sql));
 }
@@ -63,7 +63,7 @@ function get($fieldName, $table, $where = '1', $subs = []) {
   u\EXPECT(compact(ray('fieldName table where subs')), 'notempty notempty notempty assoc');
   
   if (is_array($where)) list ($where, $subs) = [u\where($where), $where];
-  if (!strpos($where, ' LIMIT ')) $where .= ' LIMIT 1';
+  if (!mb_strpos($where, ' LIMIT ')) $where .= ' LIMIT 1';
   $sql = "SELECT $fieldName FROM $table WHERE $where";
 ///   debug(compact('sql','subs'));
   $result = db\q($sql, $subs);
@@ -99,13 +99,13 @@ function update($table, $info, $key) {
   $sql = '';
   foreach ($info as $field => $v) {
     if ($field != $key) $sql .= ",`$field`=:$field";
-    if (is_array($v)) u\DYE('array in update param'); // exception fails if called in $DBTX
+    if (is_array($v)) u\FAIL('array in update param'); // exception fails if called in $DBTX
   }
   $sql = "UPDATE $table SET " . substr($sql, 1) . " WHERE `$key`=:$key";
   try {
     $result = db\q($sql, $info, !$key);
     return TRUE;
-  } catch (PDOException $e) {u\DYE("PDOException: $e->message");} 
+  } catch (PDOException $e) {u\FAIL("PDOException: $e->message");} 
 }
 
 /**
@@ -125,8 +125,8 @@ function insert($table, $info, $key = 'id') {
 	
   $sql = '';
   foreach ($info as $field => $v) {
-    /* if ($field == $key) u\DYE('key value specified in database insert'); // may actually be needed */
-    if (is_array($v)) u\DYE("array in insert param for field $field"); // exception fails if called in $DBTX
+    /* if ($field == $key) u\FAIL('key value specified in database insert'); // may actually be needed */
+    if (is_array($v)) u\FAIL("array in insert param for field $field"); // exception fails if called in $DBTX
     $sql .= ",`$field`=:$field";
   }
   $sql = "INSERT INTO $table SET " . substr($sql, 1);  // get rid of leading comma
@@ -137,7 +137,7 @@ function insert($table, $info, $key = 'id') {
     u\EXPECT($key and isset($info[$key]), 'no primary key ' . $key);
     return db\get($key, $table, "`$key`=:key", ray('key', $info[$key])); // return the supplied id if success
 
-  } catch (PDOException $e) {u\DYE("PDOException: $e->message");} 
+  } catch (PDOException $e) {u\FAIL("PDOException: $e->message");} 
 }
 
 /**

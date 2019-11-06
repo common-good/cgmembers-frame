@@ -171,4 +171,13 @@ LEFT JOIN (SELECT nvid,payer AS uid,purpose FROM r_invoices i0
   WHERE i0.payee=:CGID AND amount>=20 AND status<:TX_PAID) i USING(uid)
 WHERE u.:IS_CO AND t.uid IS NULL ORDER BY community
 
+// Individual Cards to Print
+  eachA(function ($a) {
+    $gift = $a->giftsDesc();
+    $bank = $a->hasBank ? '' : t('(NO BANK)');
+    echo "$a->mainQid $a->fullName: $gift -- $a->postalAddr $bank<" . 'br><' . 'br>';
+
+//    list ($address, $city, $state, $zip) = u\parseAddr($a->postalAddr);
+//    echo "$a->fullName;$address;$city, $state $zip<" . 'br>';
+  }, 'NOT :IS_CO AND NOT :IS_CARDED AND :IS_MEMBER ORDER BY fullName');
 */

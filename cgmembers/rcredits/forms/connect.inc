@@ -12,12 +12,11 @@ use CG\Db as db;
 function formConnect($form, &$sta, $args = '') {
   global $rUrl;
   global $mya;
-//  $mya->stepDone('connect', compact('connect')); // just visiting this page is enough
+  
+  if (!$mya) if ($ret = doPartner()) return r\go($ret);
 
   $usa = ($mya->country == US_COUNTRY_ID);
   $usa = TRUE; // always true for now
-
-  $title = t('Banking Settings');
 
   $refills = boolFld(t('Refills:'), t('Refill your %PROJECT Account automatically when it goes below a chosen "Target Balance"? Say no if you tend to bounce checks or live close to the wire.'), $mya->refill);
   if ($mya->co) $cashout = radiosFld(t('Cashout:'), t('If you choose weekly or monthly automatic transfers to your bank account, the system will leave a balance in your %PROJECT account equal to your average weekly payments received, over the past six months.'), required($mya->cashoutW ? 1 : ($mya->cashoutM ? 2 : 0)), ray('0 1 2', t('no automatic cashout'), t('weekly (automatic)'), t('monthly (automatic)')));
@@ -35,6 +34,7 @@ function formConnect($form, &$sta, $args = '') {
   
   $targetFields = fieldSet('targetFields2', compact(ray('target achMin saveWeekly')), BARE);
   //$bankAccountType = radiosFld(t('Type:'), '', required($mya->can(B_SAVINGS)), $typeOptions);
+  $title = t('Banking Settings');
     
   if ($hasBank = $mya->hasBank) {
 //    if ($usa) list ($route, $bankAccount) = u\parseBankAccount(@$bankAccount);
@@ -42,20 +42,32 @@ function formConnect($form, &$sta, $args = '') {
     $bankAccount = item("xxxxxx$mya->last4bank &nbsp; &nbsp;", t('Account:'), '', w\suffix(\render($remove)));
 //    $submit = submit();
     $fields = 'title bankAccount cashout autopay autoboxes refills targetFields';
+    $subtext = $chox = NULL;
   } else { // no connected account yet
-//    $doConnect = (int) !@$mya->stepsDone['connect'];
+    if ($mya->stepIsDone('fund')) {
+      $connect = boolFld(t('Connect:'), '', 0);
+      $chox = 2;
+    } else { // during account setup
+      $title = t('Getting Money In or Out');
+      $subtext = t('<p>Choose how you want to get money into (or out of) your %PROJECT Account. The first two options are available through %PROJECT only in Western Massachusetts, Ann Arbor Michigan, and Goshen Indiana.</p>');
+      $methodChoices = ray(t('My employer will pay me through %PROJECT or I will sell goods and services through %PROJECT.,I live near a store that will put money on my card in exchange for cash.,I want to transfer funds to or from my bank account.'));
+      $connect = radiosFld(t('Connect How:'), '', required(-1), $methodChoices);
+      $chox = 3; // number of choices
+    }
+    $chox = hidFld($chox);
+
     $securityLink = r\promoLink('about-us/privacy-and-security');
     $reassurance = $mya->minimum ? '' : t('<p><b>NOTE:</b> Funds will be taken from your bank account ONLY when you explicitly request a transfer or when you choose automatic refills.</p>');
-    $subtext = t('<p>Choose how you want to get money in and out of your %PROJECT Account. Most people find it convenient to connect a checking account. Connecting lets you trade US Dollars for %RCREDITS easily. Otherwise you can trade cash for %RCREDITS at a participating business.</p><p>Complete this form to connect your checking account and authorize funds to be taken from your checking account in exchange for any %RCREDITS you request. Funds may be transferred either by Remotely-Created Check (RCC) or by Automated Clearing House (ACH) direct debit. See our <%a>Privacy and Security Policy</a> for details on how your information is protected.</p>', '_a', atag($securityLink)) . $reassurance . t('<p>Do you want to connect your checking account at this time?</p>');
-    $connect = boolFld(t('Connect:'), '', 0);
+    $connectText = item(t('<p>Complete this form to authorize funds to be transferred to or from your checking account at your request, by Remotely-Created Check (RCC) or by Automated Clearing House (ACH). See our <%a>Privacy and Security Policy</a> for details on how your information is protected.</p>', '_a', atag($securityLink)) . $reassurance);
+    
     if ($usa) $routingNumber = textFld(t('Routing:'), t('Type carefully your bank\'s routing number.'));
     //$bankAccount = textFld(t('Account:'), t('Type carefully your checking account number.'));
-    $bankAccount = passFld(t('Account:'), t('Type <b class="loud">carefully</b> your <b>checking</b> account number. The bank charges us $20 if you get this wrong. <span>Savings accounts will not work, at this time.</span>'));
-    $bankAccount2 = passFld(t('Again:'), t('Type your account number again.<br>(we need to be REALLY SURE we don\'t connect to the wrong account)'));
+    $bankAccount = textFld(t('Account:'), t('Type <b class="loud">carefully</b> your <b>checking</b> account number. <span>Savings accounts will not work, at this time.</span>'));
+//    $bankAccount2 = textFld(t('Again:'), t('Type your account number again.<br>(we need to be REALLY SURE we don\'t connect to the wrong account)'));
   
-    $connectFields = fieldSet('connectFields2', @compact(ray('checkHint routingNumber bankAccount bankAccount2 cashout autopay autoboxes refills targetFields')), BARE);
+    $connectFields = fieldSet('connectFields2', @compact(ray('connectText routingNumber bankAccount cashout autopay autoboxes refills targetFields')), BARE);
 //    $submit = submit(t('Connect'));
-    $fields = 'title subtext connect connectFields';
+    $fields = 'title subtext connect connectFields chox';
   }
 
   if ($mya->depends) {
@@ -63,14 +75,14 @@ function formConnect($form, &$sta, $args = '') {
     return cgform(compact(ray('title subtext connect')));
   }
   
-  jsx('bank-prefs', $vs = ray('connectLabel saveLabel mindft', t('Connect'), t('Save'), R_MIN_DEFAULT));
+  jsx('bank-prefs', $vs = ray('connectLabel saveLabel mindft chox', t('Connect'), t('Save'), R_MIN_DEFAULT, $chox));
   return cgform(@compact(ray($fields)) + w\setupFoot($hasBank ? $vs['saveLabel'] : $vs['connectLabel']));
 }
 
 function formConnect_validate($form, &$sta) {
   global $mya;
 
-  extract(just('connect routingNumber bankAccount bankAccount2 bankAccountType refills target achMin saveWeekly', $sta['input']));
+  extract(just('connect routingNumber bankAccount bankAccountType refills target achMin saveWeekly chox', $sta['input']));
 
   foreach (ray('target:,achMin:,saveWeekly:>=0') as $k => $v) { // and savingsAdd someday 
 //    if (test() and !isset($sta['input'][$k])) $sta['input'][$k] = 0; // empty makes tests fail?
@@ -82,16 +94,14 @@ function formConnect_validate($form, &$sta) {
   if (op($sta) == 'remove') return;
 
   if (!$mya->hasBank) {
-    if (is_null(@$connect)) return say('yes or no', 'connect');
+    if ($chox == 3 and is_null(@$connect)) return say(t('You must choose a funding method'), 'connect');
 
-    if (!@$connect) return; // nothing more to do
+    if ($connect < $chox - 1) return; // nothing more to do
 
-    foreach (ray($accts = 'routingNumber bankAccount bankAccount2') as $one) $$one = preg_replace('/[\.\- ]/', '', @$$one);
+    foreach (ray($accts = 'routingNumber bankAccount') as $one) $$one = preg_replace('/[\.\- ]/', '', @$$one);
     u\preray(compact(ray($accts)), $sta['input']);
-    if (!preg_match('/^(|[0-9]{9})$/', $routingNumber)) return say('bad routing number', 'routingNumber');
-    if (!db\exists('r_banks', 'route=:routingNumber', compact('routingNumber'))) return say('bad routing number', 'routingNumber');
-    if (!preg_match('/^[0-9]{3,17}$/', $bankAccount)) say('bad account number', 'bankAccount'); // {3,20} ? Dwolla says 3-17
-    if ($bankAccount != $bankAccount2) say('mismatch', ['thing' => t('account number')], 'bankAccount2');
+    if (!u\routingOk($routingNumber)) return say('bad routing number', 'routingNumber');
+    if (!u\bankAcctOk($bankAccount)) return say('bad account number', 'bankAccount');
   }
 
   if (@$refills) {
@@ -99,26 +109,22 @@ function formConnect_validate($form, &$sta) {
     if ($target < $floor) return say('min sub floor', ['floor' => u\fmtAmt($floor)], 'target');
     if ($achMin < R_ACHMIN) return say('bad achmin', 'achMin');
   }
-  
-//  if ($savingsAdd < 0) return say('savings too low', 'savingsAdd');
-//  $savingsMax = max($mya->savings, $mya->balance);
-//  if ($savingsAdd > $savingsMax) return say('savings too high', ['max' => u\fmtAmt($savingsMax)], 'savingsAdd');
-// NO! if ($minimum < 0 and $saveWeekly < MIN_WEEKLY_BUMP) return say('saveWeekly too low', ['min' => u\fmtAmt(MIN_WEEKLY_BUMP)], 'saveWeekly');
-//  if ($saveWeekly < 0 and $mya->savingsAdd == 0) return say('negative saveWeekly', 'saveWeekly');
+
 }
 
 function formConnect_submit($form, &$sta) {
   global $mya;
 
-  extract(just('connect routingNumber bankAccount cashout autopay autoboxes refills target achMin saveWeekly', $sta['input']));
-  if (op($sta) == 'remove') $connect = FALSE;
+  extract(just('connect routingNumber bankAccount cashout autopay autoboxes refills target achMin saveWeekly chox', $sta['input']));
+  if ($chox == 3 and $connect < 2) $mya->update('fundBy', $connect == 1 ? 'cash' : 'pay');
+  $connect = (op($sta) != 'remove' and nn($connect) !== 0 and nn($connect) != $chox - 2);
   $minimum = $mya->minimum;
 
-  if (@$connect or !isset($connect)) { // wants bank or has bank, not removing
-    if (@$connect) { // wants bank
+  if ($connect) { // wants bank or has bank, not removing
+    if (!$mya->hasBank) { // wants bank
       if ($mya->country == US_COUNTRY_ID) $bankAccount = "USkk$routingNumber$bankAccount";
       $last4bank = substr($bankAccount, -4, 4);
-    } else list ($connect, $bankAccount) = [TRUE, 'no change']; // has bank
+    } else $bankAccount = 'no change'; // has bank
     if ($refills) $minimum = $target; // change minimum only explicitly
   } else { // removing or choosing not to connect
     $bankAccount = $last4bank = '';
@@ -131,7 +137,13 @@ function formConnect_submit($form, &$sta) {
   if ($bankAccount != 'no change') { // bank account changed. update and reverify.
     $fields .= ' bankAccount last4bank'; // avoid overwriting v-encrypted value
     $mya->setBit(B_BANKOK, FALSE);
-    if (!$connect) db\del('r_usd', 'id', 'deposit=0 AND payee=:id', ray('id', $mya->id)); // no transfers for a deleted bank connection
+    if (!$connect) while ($xid = db\get('xid', 'r_usd', 'deposit=0 AND payee=:id', ray('id', $mya->id))) {
+      $DBTX = \db_transaction();
+      foreach (ray('tx_entries tx_hdrs r_usd') as $table) {
+        db\del($table, '', 'xid = :xid', compact('xid')); // no transfers for a deleted bank connection
+      }
+      unset($DBTX);
+    }
   }
   $mya->update(compact(ray($fields)));
   
@@ -141,7 +153,7 @@ function formConnect_submit($form, &$sta) {
   }
   
 //    if ($saveWeekly < 0) say(t('@amount will be moved every week from your Savings Reserve to your Primary Account, until your Savings Reserve reaches its minimum.', ['@amount' => u\fmtAmt($saveWeekly)]));
-  return w\goNextStep('connect');
+  return w\goNextStep('fund');
 //  say('info saved' . ($mya->ok ? '' : '|return to membership'));
 }
 
@@ -162,6 +174,6 @@ function autopays(&$orig = '') {
     if ($orig[$uid] = $auto) $dfts[] = $uid;
   }
   if (!@$dfts) return NULL; // no autopays, so don't show choices
-  $help = t('When you choose automatic invoice payment for a particular company, funds will be drawn from your bank account as needed. Leave the box(es) unchecked if you tend to bounce checks or live close to the wire.');
+  $help = t('When you choose automatic invoice payment for a particular company, funds will be drawn from your bank account as needed. Leave the box(es) unchecked if you want to request transfers explicitly.');
   return boxesFld(t('Invoices:'), $help, @$dfts ?: [], $nms);
 }

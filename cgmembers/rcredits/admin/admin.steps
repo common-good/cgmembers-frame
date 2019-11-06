@@ -38,12 +38,12 @@ function extraSetup() {
 /**
  * members: (ARG)
  *
- * in: MAKE activate Setup
+ * in: MAKE aaOther Setup
+ *     MAKE activate Setup
  *     TEST activate AdminActivatesAnAccount
  *     TEST activate AdminDeactivatesAnAccount
  *     MAKE changes Setup
  *     MAKE checks Setup
- *     MAKE other Setup
  */
 function members($list) {return t\members($list);}
 
@@ -82,10 +82,10 @@ function weShowWith($title, $content = FALSE, $showDebugs = TRUE) {
 /**
  * member (ARG) completes form (ARG) with values: (ARG)
  *
- * in: MAKE activate AdminActivatesAnAccount
+ * in: MAKE aaOther AdminDeletesAnAccount
+ *     MAKE activate AdminActivatesAnAccount
  *     MAKE activate AdminDeactivatesAnAccount
  *     MAKE changes AMemberChangesSomeSettings
- *     MAKE other AdminDeletesAnAccount
  */
 function memberCompletesFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values);}
 
@@ -100,9 +100,9 @@ function weShowPdfWith($list) {
   $px = 0;
   foreach ($list as $k => $v) {
     foreach ($v as $one) {
-      $p = strpos($in, $one, $px);
+      $p = mb_strpos($in, $one, $px);
       if ($p === FALSE) return t\output("Can't find \"$one\" in \"$in\" starting at $px.");
-      $px = $p + strlen($one);
+      $px = $p + mb_strlen($one);
     }
   }
   return TRUE;
@@ -147,6 +147,20 @@ function with($content) {return t\weShow($content);}
 /**
  * these (ARG): (ARG)
  *
- * in: TEST other AdminDeletesAnAccount
+ * in: TEST aaOther AdminDeletesAnAccount
  */
 function these($thing, $list) {return t\these($thing, $list);}
+
+/**
+ * member (ARG) has done step (ARG)
+ *
+ * in: MAKE changes AMemberChangesSomeSettings
+ */
+function memberHasDoneStep($id, $step) {return t\doneStep($id, $step);}
+
+/**
+ * we message (ARG) to member (ARG) with subs: (ARG)
+ *
+ * in: TEST activate AdminActivatesAnAccount
+ */
+function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($index, $id, $subs);}

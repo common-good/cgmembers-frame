@@ -40,7 +40,7 @@ function setupBasicAccounts() {
       $fullName = PROJECT . ' ' . $fullName;
       $uid = r\serverUid($region);
       $activated = R_LAUNCH;
-      $state = db\get('id', 'r_states', 'abbreviation=:st', compact('st'));
+      $state = r\stateNum($st);
       $values = array($uid, $uid, $region . '.', $fullName, $email, $zip, R_COUNTRY_ID, 0, $flags);
       $info = array_combine($keys, $values);
       $info += @compact(ray('postalAddr state federalId activated'));
@@ -56,7 +56,7 @@ function setupBasicAccounts() {
   if (isDEV) $a1->update('pw2 vKeyPw', r\passHash(DEV_PW2), u\b64decode(DEV_VKEYPW));
 
   foreach (ray(t('2:PlaceHolder One,3:PlaceHolder Two')) as $k => $v) {
-    $name = str_replace(' ', '', strtolower($v));
+    $name = str_replace(' ', '', mb_strtolower($v));
     $values = array($k, 0, $name, $v, 'z@o.t', '', 0, 0, 0);
     $info = array_combine($keys, $values);
     new r\Acct($info);
@@ -140,17 +140,7 @@ function makeTestAdmins() {
   if (isSTAGE) foreach (ray(R_COS . ' ' . DEV_ACCTS) as $k) if ($k and $a = a($k)) $a->setBit(B_CADMIN);
 }
 
-/**
- * Return a display of steps done and steps remaining (to open an account).
- */
-function showSteps($a) {
-  $steps = '';
-  if (!$a->ok and $a->id != 1) foreach (($a->stepsDone ?: []) as $k => $done) {
-      $color = $done ? 'done' : 'not-done';
-      if (!in($k, $a->co ? 'proxies' : 'company relations')) $steps .= "<b class=\"step-$color\">$k </b>";
-    }
-  return $steps;
-}
+function showSteps($a) {return '<b class=\"step-not-done\">' . $a->task . ': ' . join(' ', $a->stepsLeft()) . '</b>';}
 
 /**
  * Return a description of the account's recent purchase activity (sales activity for companies).
@@ -284,7 +274,7 @@ function ssnShow($a) {
   if (@$addresses['lastname']) $addresses = [$addresses];
   foreach($addresses as $rec) {
     $rec = (object) $rec;
-    $rows[] = array($rec->datereported ? u\fmtDate(strtotime($rec->datereported)) : '', u\ssnName($rec), $rec->dob ? u\fmtDate(strtotime($rec->dob)) : '', u\ssnAddr($rec), ucwords(@strtolower(pr($rec->county)))); // county was an array once
+    $rows[] = array($rec->datereported ? u\fmtDate(strtotime($rec->datereported)) : '', u\ssnName($rec), $rec->dob ? u\fmtDate(strtotime($rec->dob)) : '', u\ssnAddr($rec), ucwords(@mb_strtolower(pr($rec->county)))); // county was an array once
     if (now() - @strtotime($rec->datereported) < 10 * YEAR_SECS) $counties[pr($rec->county)] = 1;
   }
   if (!@$a->moves) $a->update('moves', max(0, count($counties) - 1));
@@ -341,7 +331,7 @@ function getBanks() {
       $i += $len;
     }
     $branch = $branch == 'B' ? 1 : 0;
-    foreach (ray('name address city') as $field) $$field = ucwords(strtolower(trim($$field)));
+    foreach (ray('name address city') as $field) $$field = ucwords(mb_strtolower(trim($$field)));
     db\insert('r_banks', compact(ray($fieldNames)), 'route');
   }
 }
@@ -968,7 +958,7 @@ function anonymize() {
     if ($a->co) $fullName .= ' Co';
     $legalName = $fullName;
     $name = u\shortName($fullName);
-    $email = strtolower(randomName()) . '@example.com';
+    $email = mb_strtolower(randomName()) . '@example.com';
     $address = mt_rand(1, 9999) . randomName() . ' St.';
     $city = randomName();
     $postalAddr = $a->risk('poBox') ? 'PO Box ' . mt_rand(1, 99999) : $address;

@@ -30,6 +30,6 @@ class AddCanonicalAccounts extends AbstractMigration {
   }
 
   public function down() {
-    $this->execute("DELETE FROM users where uid IN (" . self::CG_ROUNDUPS_UID . ", " . self::CG_CRUMBS_UID . ", " . self::CG_SERVICE_CHARGES_UID . ", " . self::CG_INCOMING_BANK_UID . ", " . self::CG_OUTGOING_BANK_UID . ")");
+    $this->execute("DELETE FROM users where uid IN (0, " . self::CG_ROUNDUPS_UID . ", " . self::CG_CRUMBS_UID . ", " . self::CG_SERVICE_CHARGES_UID . ", " . self::CG_INCOMING_BANK_UID . ", " . self::CG_OUTGOING_BANK_UID . ")");
   }
 }

@@ -19,7 +19,7 @@ foreach ($parms as $k) $$k = @$_GET[$k]; // encode to sanitize output
 $query = http_build_query(compact($parms));
 $data = file_get_contents("$site/community/chart-data/ctty=$ctty");
 
-/**/ if (!strpos($site, 'cgmembers') and strlen($data) < 200) die($data);
+/**/ if (!strpos($site, 'cgmembers') and mb_strlen($data) < 200) die($data);
 $version = time();
 $title = 'Charts | ' . $region;
 

@@ -35,19 +35,22 @@ function formSummary($form, &$sta) {
       unset($form[$k]);
     }
 
-    if (!$mya->isCtty and $mya->cAdmin and !$mya->co) $extras .= a\cardLink($mya->id) . ' ' . a\recropLink();
+    if (!$mya->isCtty and $mya->cAdmin) {
+      if ($mya->trialco or !$mya->co) $extras .= ' ' . a\cardLink($mya->id);
+      $extras .= ' ' . a\recropLink();
+    }
     
     if ($stepUrl == 'summary') {
       if (@$msg) say(t('New member is told: ') . t($msg));
     } elseif ($stepUrl) say(t('New member will be sent <a href="%stepUrl">there</a> upon signing in.', 'stepUrl', "$base_url/$stepUrl"));
     
   } else { // normal
-    if ($stepUrl and $stepUrl != 'summary') return w\go($stepUrl);
+    if ($stepUrl and $stepUrl != 'summary') return w\go($stepUrl, $msg);
     if (@$msg) say($msg);
     if ($mya->legalName != $mya->fullName and !$mya->depends) $legalName = item($mya->legalName, t('Legal Name:'));    
   }
 
-  extract(just('returnMo return cttyBeneMo cttyBene', $mya->j_stats()));
+//  extract(just('returnMo return cttyBeneMo cttyBene', $mya->j_stats()));
   $gifts = u\fmtAmt($mya->totalGifts());
 //  $cttyBene = item("$cttyBeneMo " . t('over the past month') . "<br>$cttyBene " . t('overall (ever), including %gifts in contributions', compact('gifts')), t('Social return:'), t('Financial benefit to your community to date, from your participation together with other members, empowering economic democracy! [<%a>details</a>]', '_a', atag('/help/social-return')));  
   $cttyBene = NULL;
@@ -61,8 +64,9 @@ function formSummary($form, &$sta) {
     $makeCo = $mya->depends ? '' : w\btn('/signup-co', t('Open %another Company Account', compact('another')), 'primary', 'xs');
 //    if (!$mya->jid and !$mya->co) $makeJoint = w\btn('/signup/joint=1', t('Make this a joint account'), 'primary', 'xs');
     $makeJoint = ($mya->member and !$mya->jid and !$mya->co and !$mya->depends) ? w\btn('/prejoin', t('Make this a joint account'), 'primary', 'xs') : '';
-    $goFood = $mya->food > 0 ? lnk('/settings/food', t('Food Fund')) : btn('/settings/food', t('Food Fund'), 'warning');
-    if ($mya->cAdmin) $goFood = '<br><br>' . $goFood; // make sure it doesn't hide behind the photo
+//    $goFood = $mya->food > 0 ? lnk('/settings/food', t('Food Fund')) : btn('/settings/food', t('Food Fund'), 'warning');
+//    if ($mya->cAdmin) $goFood = '<br><br>' . $goFood; // make sure it doesn't hide behind the photo
+    $goFood = '';
     if (!$mya->co and $hasMultipleAccounts) $clickPhoto = item(t('Click your photo%where to manage your other account(s).', 'where', $mya->cAdmin ? t(' in the upper right corner') : ''));
   } else $makeCo = $makeJoint = $goFood = $reports = '';
 
@@ -73,7 +77,7 @@ function formSummary($form, &$sta) {
 
   $title = t('Account Summary');
   $accountName = item($mya->j_fullName . ($mya->jid ? '<br>' : ' ') . "($mya->j_name)", t('Name:'));
-  $address = item(($mya->trialco ? $mya->contact : $mya->postalAddr) . $extras, t('Contact:'));
+  $address = $mya->cAdmin ? item(($mya->trialco ? $mya->contact : $mya->postalAddr) . $extras, t('Contact:')) : NULL;
   $balance = u\fmtAmt($mya->balance);
 //    $totalDesc = u\fmtAmt($mya->r);
 //    $balanceDesc = $mya->savings ? t(' plus your savings, for a total of @total', ['@total' => $totalDesc]) : '';
@@ -81,22 +85,26 @@ function formSummary($form, &$sta) {
   $balanceDesc = $mya->activated ? t(' <small>(see <%a>History</a>)</small>', '_a', atag('/history')) : '';
   $balance = item($balance . $balanceDesc, t('Balance:'));
 
-    if (!$mya->isCtty) { // unless this is a community or region account
+  if (!$mya->isCtty) { // unless this is a community or region account
     $acctType = $mya->co ? t('company account') : ($mya->jid ? t('joint account') : t('personal account'));
 //    $savings = item(u\fmtAmt($mya->savings) . t('<small> (your total incentive rewards to date)</small>', [
 //    list ($rewardNote, $rewardDesc) = $mya->cttyRewardy ? [t('<small> (your total incentive rewards to date)</small>'), t('This amount will be yours to keep, once your community reaches a certain size.')] : ['', t('Some of this amount may be yours to keep, at your %PROJECT community\'s decision, once membership reaches a certain size.')];
 //    $savings = item(u\fmtAmt($mya->rewards) . $rewardNote, t('Credit Line:'), $rewardDesc);
-    $suffix = ($mya->debt or $mya->depends) ? '' : t(' (<%a>Click here</a> to let your balance go negative.)', '_a', 'a id="activate-credit"');
+    $suffix = ($mya->debt or $mya->depends or !$mya->refill) ? '' : t(' (<%a>Click here</a> to let your balance go negative.)', '_a', 'a id="activate-credit"');
     list ($credit, $normally) = $mya->depends ? ['$0', t(' (normally)')] : [u\fmtAmt(-$mya->floor), ''];
     $creditLine = item($credit, t('Credit Line:'), t('Based%normally on your account\'s average monthly activity over the past 6 months.', compact('normally')), w\suffix($suffix));
 //    $committed = item(u\fmtAmt(max(0, $mya->committed)), t('Committed:'), t('reserved for donation to Common Good Finance'));
 
-    $successes = db\count('users', 'helper=:myid AND activated<>0', compact('myid'));
+/*    $successes = db\count('users', 'helper=:myid AND activated<>0', compact('myid'));
     $invites = max($successes, db\count('r_invites', 'inviter=:myid', compact('myid')));
     $doInvite = $mya->cAdmin 
     ? w\btn('/community/invite/print', t('front')) . ' ' . w\btn($mya->invitationBack(), t('back'))
     : t('<small>[<%a>invite someone</a>]</small>', '_a', atag('/community/invite'));
     $invites = item(t('You have invited at least %invites people (%successes are now members). ', compact('invites', 'successes')) . $doInvite, t('Invitations:'));
+  */
+  
+    $choiceList = choiceListFld();
+    
   } else $acctType = t('community account');
 
   if ($mya->cAdmin) {
@@ -109,7 +117,7 @@ function formSummary($form, &$sta) {
   } else $extra = '';
   $accountId = item(($mya->mainQid ?: 'N/A') . ' (' . $acctType . ')' . $extra, t('ID:'));
 
-  $fields = 'photo title clickPhoto showCustomers topButtons accountId accountName details address legalName shortName federalId community balance newBalance creditLine creditLimit committed invites cttyBene';
+  $fields = 'photo title clickPhoto showCustomers topButtons accountId accountName details address legalName shortName federalId community balance newBalance creditLine creditLimit committed choiceList';
   foreach (ray('details') as $k) $$k = @$form[$k]; unset($form[$k]); // put these on the left if admin
   $fields = @compact(ray($fields));
   
@@ -250,11 +258,11 @@ function activate($helper) {
     $mya->eachPartner(function($coA, $zot, $custCode) { // tell partner: account is activated
       if ($api = $coA->api()) u\post($api, ray('partnerCode qid op name', $coA->emailCode, $mya->mainQid, 'complete', $mya->fullName));
     });
-    $inviterName = @$mya->helperA->fullName;
-    $subs = compact('inviterName');
     $msg = 'approved';
     if (!$mya->confirmed) $msg .= ($helper > 1 ? '|must confirm' : '|in person');
-    r\message($mya->id, $msg, $subs + ['youName' => $mya->fullName]);
+    $subs = ray('inviterName youName specifics', @$mya->helperA->fullName, $mya->fullName, getSpecifics($mya));
+    
+    r\message($mya->id, $msg, $subs);
   }
 
   if ($firstTime and !$mya->co) { // no bonus or helper bonus for a company signing up
@@ -273,3 +281,60 @@ function activate($helper) {
   
   unset($DBTX); 
 }
+
+/**
+ * Return the right specifics to include in the welcome email.
+ */
+function getSpecifics($mya) {
+  $forOver1000 = t('This is a trial account. You will need to complete some additional steps to accept more than $1,000 through %PROJECT.');
+  $onlineOnly = t('Your account is limited to payments online. ');
+  $acceptPayments = $onlineOnly . t('To accept payments through %PROJECT you will need to complete some additional steps.');
+  $finishCo = t(' <%a>Click here</a> to get started on that, by opening a personal account. Then sign back in to your company account and click "Finish" under Next Steps.', '_a', w\atag(BASE_URL . '/signup'));
+  $cardComing = t('You may now make purchases through the Common Good system, including using your Common Good card at member businesses. Expect your Common Good card to arrive in the mail within a few days.');
+  $getCard = t('To request a free %PROJECT card,');
+  $getSell = t(' accept payments through %PROJECT,');
+  $otherSteps = t(' or participate in the %PROJECT democracy, sign back in to your account and choose from the Next Steps listed there.');
+  
+  list ($cardWorthy, $canSell) = [$mya->stepsDone('card'), $mya->stepsDone('sell')];
+  
+  return str_replace(t('To or '), t('To '), $mya->co
+  ? ($mya->trialco ? $forOver1000 . $finishCo : ($mya->stepsDone('co2') ? '' : ($acceptPayments . $finishCo)))
+  : (($cardWorthy ? $cardComing . t(' To') : ($onlineOnly . $getCard)) . ($canSell ? '' : $getSell) . $otherSteps));
+}
+
+/**
+ * Return a list of important next steps for the account.
+ * @todo: add comment as an option?
+ */
+function choiceListFld() {
+  global $mya;
+  if ($mya->cAdmin) return NULL;
+  
+  $choices0 = explode("\n", t(<<< X
+    community:invite:Invite:Invite a friend or company to join.<br><small>Your local Community Fund gets $2 for every invitation you send!</small>
+    community:donate:Give:Make a donation to %PROJECT.
+    community:comment:Comment:Send a comment, question, or suggestion.
+    scraps:card:Card:Get a %PROJECT payment card
+    scraps:sell:Sell:Accept payments (including discount rebates) through %PROJECT
+    scraps:voice:Voice:Participate in %PROJECT economic democracy
+    scraps:co2:Finish:Finish opening your complete company account &mdash; required before you receive a total of $1,000 or within six months, whichever is first
+X
+  ));
+  foreach($choices0 as $one) {
+    list ($dir, $k, $title, $text) = explode(':', trim($one));
+
+    if ($dir == 'community') {
+      $kch = "<div>$title</div><div>$text</div>";
+    } else {
+      $steps = $mya->stepCount($mya->taskSteps($k));
+      $kch = $steps ? tr("<div>$title</div><div>$text (%steps)</div>", 'steps', $steps . t(' steps')) : NULL;
+    }
+    ${$k . 'Ch'} = $kch ? ["$dir/$k" => $kch] : [];
+  }
+    
+  $choices = $mya->co ? $co2Ch : ($cardCh + $sellCh + $voiceCh);
+  $choices = $inviteCh + $choices + $donateCh;
+  $choiceList = t('<h3>Next Steps</h3>') . "\n";
+  foreach ($choices as $url => $desc) if (!empty($desc)) $choiceList .= w\lnk("/$url", $desc) . "\n";
+  return item($choiceList . "\n");
+}  

@@ -148,7 +148,7 @@ EOF;
 
 //  $types = ray('Investment Loan Incentive Grant Other');
 
-  if (is_numeric(trim(substr($sponsor, 0, 3)))) $sponsor = substr($sponsor, 3);
+  if (is_numeric(trim(mb_substr($sponsor, 0, 3)))) $sponsor = mb_substr($sponsor, 3);
   foreach (ray(RECOVERY_OPTS) as $i => $v) if (u\getBit($recovery, $i)) $ways[] = $v;
   
   $rows = [
@@ -778,7 +778,7 @@ EOF
     $agree = w\boxFld('agree', '', t('I agree.'), '', w\required());
     $agree = w\item(str_replace('<input ', '<input required="required" ', w\rendA('agree', $agree)));
   }
-  $submit = w\submit(t('Vote Now'), 'success', 'lg', w\suffix(' &nbsp; ' . t('Polls close at midnight on %date.', 'date', $endDate)));
+  $submit = w\submit(t('Vote Now'), 'success', 'lg', w\suffix(' &nbsp; ' . t('Polls close at midnight on the night of %date.', 'date', $endDate)));
   return compact(ray('title showVotes noVote noDirect results resultsNoProx subtext agree submit args'));
 } 
 

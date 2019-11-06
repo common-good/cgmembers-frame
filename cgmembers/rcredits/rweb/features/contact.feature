@@ -7,24 +7,26 @@ SO I can complete my registration and/or make sure I can be contacted by system 
 Setup:
   Given members:
   | uid  | fullName | address | city  | state | zip   | country | postalAddr       | email | phone       | tenure | flags  |*
-  | .ZZA | Abe One  | 1 A St. | Atown | AL    | 99100 | US      | 1 A, T, AK 23456 | a@    | 14132001000 |     19 | member |
+  | .ZZA | Abe One  | 1 A St. | Atown | AK    | 99100 | US      | 1 A, T, AR 23456 | a@    | 14132001000 |     19 | member |
 
 Scenario: A member visits the contact info page
+  Given member ".ZZA" visits page "settings/contact"
+  And step done "contact"
   When member ".ZZA" visits page "settings/contact"
   Then we show "Contact Information" with:
   | Your Name | Abe One   |
   | Email | a@ |
   | Phone | +1 413 200 1000 |
-// fails because it's JS  | Country | United States |
-  | Mailing Address | |
+#  | Country | United States |
+  | Physical Address | |
   | Street Address | 1 A St. |
   | City | Atown |
-// fails because it's JS  | State | Alaska |
+  | State | Alaska |
   | Postal Code | 99100 |
   | Mailing Address | |
   | Street Address | 1 A |
   | City | T |
-// fails because it's JS  | State | Arkansas |
+  | State | Arkansas |
   | Postal Code | 23456 |
 
 Scenario: A member updates contact info

@@ -71,7 +71,7 @@ function formQuestion_validate($form, &$sta) {
   extract(just('type budget optOrder linkDiscussion', $sta['input']));
   if ($type == 'M' or $type == 'B') foreach (['type', 'optOrder'] as $k) if (w\blank_field(compact($k))) return NULL;
   if (!@$budget) $budget = 0;
-  if ($linkDiscussion and !u\starts(strtolower($linkDiscussion), 'http')) $linkDiscussion = 'http://' . $linkDiscussion;
+  if ($linkDiscussion and !u\starts(mb_strtolower($linkDiscussion), 'http')) $linkDiscussion = 'http://' . $linkDiscussion;
   if ($err = u\badAmount($budget)) return say($err, 'budget');
   u\preray(compact(ray('budget linkDiscussion')), $sta['input']);
 }

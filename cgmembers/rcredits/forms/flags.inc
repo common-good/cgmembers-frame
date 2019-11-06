@@ -25,7 +25,7 @@ function formFlags($form, &$sta, $args = '') {
   $achHeader = $txHeader = $acctHeader = '';
   $accts = $txs = $achs = '';
   $headers = ray(t('Score Account Type Created Risks'));
-  foreach ($headers as $v) {$vLow = strtolower($v); $acctHeader .= "<th class=\"k-$vLow\">$v</th>";}
+  foreach ($headers as $v) {$vLow = mb_strtolower($v); $acctHeader .= "<th class=\"k-$vLow\">$v</th>";}
   $acctHeader = "<tr>$acctHeader</tr>";
   list ($cttyCrit, $cttysCrit) = (!$mya or $mya->admin)? [1, 1] 
     : ["community=$mya->community", "$mya->community IN (u1.community, u2.community)"];
@@ -39,7 +39,7 @@ EOF;
   
   $headers = ray(t('Score Tx# Date Amount From To Description Risks'));
   if (!$mya->cAdmin2) unset($headers[6]); // no Description unless admin
-  foreach ($headers as $v) {$vLow = strtolower($v); $txHeader .= "<th class=\"k-$vLow\">$v</th>";}
+  foreach ($headers as $v) {$vLow = mb_strtolower($v); $txHeader .= "<th class=\"k-$vLow\">$v</th>";}
   $txHeader = "<tr>$txHeader</tr>";
   $subs = compact('starting', 'ending');
   $sql = <<<EOF

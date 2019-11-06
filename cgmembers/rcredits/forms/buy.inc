@@ -41,7 +41,7 @@ function formBuy($form, &$sta, $doCode = '') {
   
   if (!@$code) { // no company code -- this type of link requires confirmation by email or SMS
     $confirm = TRUE;
-  } elseif (strtolower($code) != t('demo')) { // not looking at the demo
+  } elseif (mb_strtolower($code) != t('demo')) { // not looking at the demo
     if (strpos($code, ' ') or !$cocodes = substr(u\decry('P', CRYPT_FLAG . $code), 1) or !$cocodes = unserialize($cocodes) or @$cocodes['cocode'] != $co->emailCode) return w\softErr('bad co code'); // space in code is probably "bad company ID or cocode" message
     $t = now() - @$cocodes['now'];
     if ($t < 0 or $t > AUTHCODE_TIMEOUT) return w\softErr('co code timeout');
@@ -54,7 +54,7 @@ function formBuy($form, &$sta, $doCode = '') {
   } else $amount = '$' . w\rendA('amount', textFld('', '', required()));
 
 //  if ($code != @$co->data['cardCode']) return w\go('', 'bad account ID', 'zot');
-  $account = trim(strpos(@$account, '@') ? strtolower($account) : strtoupper(@$account));
+  $account = trim(strpos(@$account, '@') ? mb_strtolower($account) : mb_strtoupper(@$account));
   if ($account and $a = r\acct($account)) {
     if ((@$name and !u\similar($a->fullName, $name)) or (@$zip and !u\starts($zip, $a->zip))) $a = NULL;
   }
@@ -72,7 +72,7 @@ function formBuy($form, &$sta, $doCode = '') {
   }
 
 //  if (($a = r\acct()) ? !u\similarEmail($a->email, $email) : (!$a = r\acct($email))) return w\go('', t('bad buy info', ray('thing', t('email'))), 'err'); // signed in
-//  if (!in_array(strtolower($cust_name), array(strtolower($a->fullName), strtolower($a->legalName)))) return w\go('', t('bad buy info', ray('thing', t('name'))), 'zot');
+//  if (!in_array(mb_strtolower($cust_name), array(mb_strtolower($a->fullName), mb_strtolower($a->legalName)))) return w\go('', t('bad buy info', ray('thing', t('name'))), 'zot');
 
 // NO (return omits domain)  if (!\valid_url($return, TRUE)) return w\go('', 'bad url', 'zot');
 
@@ -98,7 +98,7 @@ function formBuy_validate($form, &$sta) {
   if (isset($amount) and $err = u\badAmount($sta['input']['amount'], '>0')) return say($err, 'amount'); // fix amount
   $hid = unserialize(unplain($hid));
   $confirm = @$hid['confirm']
-  ? (bool) r\acct(strtoupper($name))
+  ? (bool) r\acct(mb_strtoupper($name))
   : formSignin_validate($form, $sta);
   if (!$confirm) return buySay('', $hid + ['account' => $name]);
 }
@@ -106,11 +106,11 @@ function formBuy_validate($form, &$sta) {
 function formBuy_submit($form, &$sta) {
   
   extract(just('hid name amount', $sta['input']));
-//  $account = strpos($name, '@') ? $name : strtoupper($name);
+//  $account = strpos($name, '@') ? $name : mb_strtoupper($name);
   extract(just('amount item company code cancel return api request confirm', $args = unserialize(unplain($hid))));
   u\setDft($request, ''); // or set it to code?
   
-  list ($a, $co) = [$confirm ? r\acct(strtoupper($name)) : r\acct($sta['uid']), r\acct($company)];
+  list ($a, $co) = [$confirm ? r\acct(mb_strtoupper($name)) : r\acct($sta['uid']), r\acct($company)];
   
   // check for op not 'submit' here, to set confirm=TRUE and send an invoice?
   list ($ok, $index, $subs) = $confirm 

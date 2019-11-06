@@ -324,11 +324,11 @@ function payInvoice($nvid) {
   u\EXPECT('int', $nvid);
   $msg = r\badUnpaidInv($nvid, $inv);
   if ($msg) return [FALSE, $msg];
-  extract(u\exactly('payer payee amount goods purpose data flags recursId', $inv, [NULL, NULL, 0.0, FOR_GOODS, NULL, '', 0, 0]));
+  extract(just('payer payee amount goods purpose data flags recursId', $inv, [NULL, NULL, 0.0, FOR_GOODS, NULL, '', 0, 0]));
   $payerA = r\acct($payer);
   $payeeA = r\acct($payee);
   $data = unserialize($data);
-  extract(u\exactly('api request shid', $data, NULL, NULL));
+  extract(just('api request shid', $data, NULL, NULL));
   
   $DBTX = \db_transaction();
   $purpose .= ' (' . PROJECT . " inv#$nvid)";
@@ -405,8 +405,8 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
   if (is_null($goods)) $goods = FOR_GOODS;
   $taking = ($type == 'charge' or $type == 'draw' or ($type == 'transfer' and $amount < 0));
   
-  extract(u\exactly('created force boxId', $data, [now(), 0, NULL]));
-  extract(u\exactly('offline loan investment stake fine noask funding crumbs recurs gift', $data, FALSE));
+  extract(just('created force boxId', $data, [now(), 0, NULL]));
+  extract(just('offline loan investment stake fine noask funding crumbs recurs gift', $data, FALSE));
 
   $short = FALSE;
   
@@ -482,7 +482,7 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
   $needed = abs($amount);
 
   // Apply coupon
-  if ($amount > 0 AND ($goods != FOR_USD)) {
+  if ($amount > 0 and ($goods != FOR_USD) and $loserA->can(B_SELL)) { // no rebates unless buyer has permission to sell
     $rebate = handleCoupon($entries, $loserA, $gainerA, $amount);
     $needed -= $rebate;
   }
@@ -758,7 +758,7 @@ function invoice($actorA, $otherA, $amount, $purpose, $goods = FOR_GOODS, $extra
   u\EXPECT(compact(ray('actorA otherA amount purpose')), 'acct acct float string');
   $ks = 'status';
   extract(just($ks, $extra));
-  extract(u\exactly('goods created', $extra, [FOR_GOODS, now()]));
+  extract(just('goods created', $extra, [FOR_GOODS, now()]));
   $flags = 0;
 	foreach (justNOT("status shid coupon coupid force inv api request created", $extra) as $k => $v) {
     u\setBit($flags, $k, $v);
@@ -862,14 +862,14 @@ function identify($who, $mya, $paying, $self_message = 'no self-trading') {
   } else $cphone = '-';
   
   $short = u\shortName(" $who ", '%') ?: '-'; // abbreviations must not be null or zeroes
-  $cmail = strpos($who, '@') ? u\cry('P', strtolower($who)) : '-';
+  $cmail = mb_strpos($who, '@') ? u\cry('P', mb_strtolower($who)) : '-';
   $subs = compact(ray('who short cphone cmail'));
   $anyAdmin = ($mya->cAdmin2 or $mya->isAdmin2);
 
   $searchable = $anyAdmin ? '1' : '!:IS_NOSEARCH';
   $where = "(name LIKE :short OR :who=fullName OR ($searchable AND (:cphone=phone OR :cmail=email)))";
   if ($anyAdmin) {
-    $qid = strtoupper(strlen($who) == 3 ? R_SERVER_ID . $who : $who);
+    $qid = mb_strtoupper(mb_strlen($who) == 3 ? R_SERVER_ID . $who : $who);
     if (u\isQid($qid) and $a = r\acct($qid)) $where .= " OR uid=$a->id";
     $where = "($where OR uid=:who)";
   }
@@ -890,7 +890,7 @@ EOF;
   $result = db\q($sql, $subs)->fetchAllKeyed(0, 1);
   
   // QID? if not, maybe first word is a QID if this is from a list showing QID and fullName
-  $qid = trim(($i = strpos($who, ':')) ? substr($who, 0, $i) : strtoupper($who));
+  $qid = trim(($i = mb_strpos($who, ':')) ? mb_substr($who, 0, $i) : mb_strtoupper($who));
   if ($a = r\acct($qid)) $result[$a->id] = $a->fullName; // explicit QID is a result, regardless of community
   if (count($result) == 1 and @$result[$myid]) return [$self_message, [], []];
   unset($result[$myid]); // self is one of many results, so ignore it

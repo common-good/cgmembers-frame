@@ -13,7 +13,7 @@ Scenario: A member visits the backing page
   When member ".ZZA" visits page "community/backing"
   Then we show "Backing Promise" with:
   | Amount | $1 |
-  | Signed |    |
+#  | Signed |    |
 
 Scenario: A member changes backing amount
   Given transactions: 
@@ -21,22 +21,24 @@ Scenario: A member changes backing amount
   |   3 | %today-1m |    250 | ctty | .ZZA | grant   |
   And member ".ZZA" has no photo ID recorded
   When member ".ZZA" completes form "community/backing" with values:
-  | amtChoice | signedBy |*
-  |       500 | Abe One  |
+#  | amtChoice | signedBy |*
+#  |       500 | Abe One  |
+  | amtChoice |*
+  |       500 |
   Then members:
   | uid  | backing | backingDate |*
   | .ZZA |     500 | %daystart      |
   
   When member ".ZZA" completes form "community/backing" with values:
-  | amtChoice | signedBy |*
-  |      1000 | Abe One  |
+  | amtChoice |*
+  |      1000 |
   Then members:
   | uid  | backing | backingDate |*
   | .ZZA |    1000 | %daystart      |
 
   When member ".ZZA" completes form "community/backing" with values:
-  | amtChoice | signedBy |*
-  |         1 | Abe One  |
+  | amtChoice |*
+  |         1 |
   Then members:
   | uid  | backing | backingDate |*
   | .ZZA |       1 | %daystart      |

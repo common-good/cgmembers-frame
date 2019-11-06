@@ -121,10 +121,10 @@ nav.navbar.navbar-inverse .container {max-height:50px;}
   .submenu a.list-group-item {background-color:#044687;} /* here, not on #navbar, for android */
   .nav {padding-top:0;}
   .submenu .popover .arrow:after {border-left-color:#044687; border-bottom-color:transparent;}
-  #edit-title .control-label {display:none;}
-  #edit-title {width:100%; background-color:silver; position:fixed; z-index:2; left:0; top:50px; margin:0 !important; text-align:center;}
-  #edit-title .control-data {width:100%; max-width:100% !important; padding:0 2px;}
-  #edit-title h3 {margin:10px 0 10px 0;}
+  body:not(.page-partner) #edit-title .control-label {display:none;}
+  body:not(.page-partner) #edit-title {width:100%; background-color:silver; position:fixed; z-index:2; left:0; top:50px; margin:0 !important; text-align:center;}
+  body:not(.page-partner) #edit-title .control-data {width:100%; max-width:100% !important; padding:0 2px;}
+  body:not(.page-partner) #edit-title h3 {margin:10px 0 10px 0;}
   .breadcrumb {display:none;}
   #main {margin-top:50px !important;}
   #main .section {margin:0 !important;}
@@ -341,9 +341,18 @@ body.logged-in.one-sidebar #content {width:100%;}
 .page-empty div.status  {margin:20px; padding:10px; background-image:none;} 
 .page-empty div.error {margin:20px;} 
 
-/* Verify */
-#frm-verify #edit-verify {display:inline-block;}
-
+/* Partner Signup */
+body.page-partner #partner-logo, body.page-settings-partnerend #partner-logo {height:100px; margin:10px 0 0 230px;}
+body.page-partner #messages, body.page-settings-partnerend #messages {margin-top:40px;}
+@media (max-width:768px) {
+  body.page-partner #partner-logo, body.page-settings-partnerend #partner-logo {height:60px; margin:5px 10px;}
+  body.page-partner #messages, body.page-settings-partnerend #messages {top:70px;}
+}
+body.page-partner #edit-submit {background-image: linear-gradient(#686868, #686868 60%, #686868); border: 1px solid #686868;}
+body.page-partner h3 {color: #686868;}
+body.page-partner #edit-submit:hover {background-image: linear-gradient(#a9a9a9, #a9a9a9 60%, #a9a9a9); border: 1px solid #a9a9a9;}
+body.page-partner h3 {color: #a9a9a9;}
+  
 /* Security */
 #frm-security #edit-change a {margin-right:10px;}
 
@@ -570,6 +579,12 @@ body.logged-in.one-sidebar #content {width:100%;}
 #frm-summary  label[for="edit-adminable"] {display:inline-block;}
 #frm-summary .noEdit {margin-left:-7px; padding-left:7px; background-color:#e0e0ff;}
 #frm-summary #edit-clickPhoto .control-data {font-size:78%; background-color:lightcyan; width:auto; border-radius:15px;}
+/*#frm-summary #edit-choiceList .control-label {width:0; min-width:110px;}*/
+#frm-summary #edit-choiceList a {display:table-row;}
+#frm-summary #edit-choiceList a div {display:table-cell; vertical-align:top; padding:0 4px 2px 4px;}
+#frm-summary #edit-choiceList a div:first-child {font-size:115%; font-weight:bold; width:43px; color:darkgreen; padding-left:0;}
+#frm-summary #edit-choiceList a:hover {text-decoration:none; background-color:aliceblue; max-width:420px;}
+#frm-summary #edit-choiceList a small {color:silver;}
 
 /* Coupons and Discounts */
 #frm-coupons #edit-buttons a.btn {margin:0 100% 10px 0;}
@@ -630,7 +645,7 @@ body.logged-in.one-sidebar #content {width:100%;}
 #frm-buy .form-item-submit button {margin-right:5px;}
 
 /* Agreement */
-#frm-agreement #instructions {background:lightyellow;}
+/* #frm-agreement #instructions {background:lightyellow;} */
 #frm-agreement .checkbox {display:inline-block; width:0; position:relative; left:-37px; top:5px; z-index:1;}
 #frm-agreement #edit-agreement .control-label {min-width:0; margin:0; padding:0;} 
 #frm-agreement #edit-agreement .control-data {max-width:900px; width:80%;}
@@ -639,6 +654,14 @@ body.logged-in.one-sidebar #content {width:100%;}
 #frm-agreement #agreement li {margin-top:10px;}
 #frm-agreement.form-horizontal .checkbox {min-height:0;}
 #frm-agreement #wrap-agreement {display:none;}
+
+/* Partner Step Two */
+
+/* Verify ID */
+#frm-verifyid .form-item-federalId,
+#frm-verifyid .form-item-dob,
+/*#frm-verifyid .form-item-file,*/
+#frm-verifyid .form-item-idtype {display:none;}
 
 /* Bank Info */
 #frm-connect #connectFields2 {margin:20px 0; background:silver; padding:10px;}
@@ -673,6 +696,7 @@ body.logged-in.one-sidebar #content {width:100%;}
 /* #frm-options .form-item-payHow {border-top:1px solid darkgreen; padding-top:5px;} */
 #frm-prefs #edit-posttext .control-data {font-size:80%; border-top:1px solid silver;}
 #frm-prefs #edit-crumbs,
+#frm-tithein #edit-crumbs,
 #frm-prefs #edit-food,
 #frm-prefs #edit-snap {display:inline-block; max-width:200px;}
 
@@ -833,7 +857,6 @@ body.page-signin #menu-signin {display:none;}
 .password-indicator div {height:100%; width:0%; background-color:#47C965;}
 input.password-confirm,
 input.password-field,
-#frm-verify #edit-verify,
 #frm-changepassword #edit-pass {width:200px; margin-bottom:10px;}
 div.password-confirm {float:right; margin-top:12px; visibility:hidden; font-size:11px;}
 div.password-confirm .ok {font-weight:bold; color:green;}
@@ -845,6 +868,11 @@ div.password-confirm .error {font-weight:bold; color:red;}
 /* #edit-tip label {font-weight:normal; width:100%; text-align:left;} */
 .password-suggestions.description {display:none !important; float:right; background-color:lightyellow; width:240px;}
 #frm-changepassword #edit-subtext em {font-style:normal; color:red;}
+
+/* Verify Email */
+#frm-resetpassword .form-item-pass1,
+#frm-resetpassword .form-item-pass2,
+#frm-resetpassword #edit-settings {display:none;}
 
 /* Login (Signin) */
 #frm-signin #edit-forgot {display:inline-block; margin:5px 0 0 15px;}
@@ -859,12 +887,18 @@ div.password-confirm .error {font-weight:bold; color:red;}
 .form-item-physical, .form-item-sameAddr2, #frm-signup .form-item-other {margin-top:30px;}
 .form-item-physical>label, .form-item-sameAddr2>label, #frm-signup .form-item-other>label {color:darkgreen; font-size:130%;}
 #frm-signup .form-item-sponsor {display:none;}
-#frm-signup #tenure2 input {width:75px; display:inline-block;}
-#frm-signup #edit-months {margin-left:10px;}
+#frm-signup #tenure2 input,
+#frm-partnersignup #tenure2 input,
+#frm-contact #tenure2 input {width:75px; display:inline-block;}
+#frm-signup #edit-months,
+#frm-partnersignup #edit-months,
+#frm-contact #edit-months {margin-left:10px;}
 
 
 /* Contact Info (labeled) */
-#frm-contact .form-item-pin {display:none; margin-left:180px;}
+#frm-contact .form-item-pin,
+#frm-contact .form-item-pass {display:none; margin-left:85px;}
+#frm-contact .form-item-pass input {width:250px !important;}
 
 /* Transactions History */
 #frm-txs .virtual {color:LightSteelBlue; font-weight:normal;}

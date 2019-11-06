@@ -15,24 +15,20 @@ function formInvite($form, &$sta, $args = '') {
   global $base_url;
 //  if ($agent = r\agent()) {
   if ($mya->cAdmin and !$mya->proSe) say(t('Note: Admins cannot invite on behalf of someone.'), 'err');
-  $stepsDone = (object) $mya->stepsDone;
-  $nearly = ($mya->admin or $mya->can(B_MEMBER)) ?: (@$stepsDone->sign and @$stepsDone->donate);
   
   $title = t('Invite Someone to %PROJECT');
+  if (!$mya->member) {
+    $subtext = t('We\'re sorry, you must finish opening your account before you can invite someone.');
+    return cgform(compact(ray('title subtext')));
+  }
+  
   $_a2 = w\atagB('/community/invite/invited-whom');
   $_a2 = r\acct() ? t('<%a2>Who you have invited</a>', compact('_a2')) : '';
   $where = r\location($mya->cttyA); // currently UNUSED
   $inviteCode = $mya->iCardCode(IBY_EMAIL);
   $_inviteLink = PROMO_URL . "/signup/code=$inviteCode";
   $warning = $mya->co ? t('<p>Note you are sending an invitation on behalf of a company. The company is "trusting" whoever you invite. We at %PROJECT recognize that companies are not people, and that it\'s a bit odd to allow them a sentiment usually reserved for humans.</p>') : '';
-  $subtext1 = t('We\'re sorry, you cannot invite someone to sign up until you have signed the <%aSign>Agreement</a> and made a <%aDonate>donation</a>.', '_aSign _aDonate', atag('/community/agreement'), atag('/community/donate'));
-  //<br><br>Return to the <a href=\"%BASE_URL/status\">Membership Steps</a> page to see where you stand.
-  //      <li>Order %orderCount sheets of 10 invitation cards by mail (free!). %orderSubmit</li>
-//      <li><b>OR</b> Print %printCount sheets of 10 invitation cards. %printFront %printBack</li>
 
-//  $_aFront = atag('/community/invite/print', w\away());
-//  $_aBack = atag($mya->invitationBack());
-//  list ($region, $zot) = explode(R_MEMBER_MARK, $mya->mainQid);
   $_aMailInvites = atag('mailto:' . CGF_EMAIL . '?subject=' . t('%PROJECT Invitation Card request') . '&body=' . t('Please send me some more %PROJECT invitation cards. Thanks!') . " -- $mya->fullName (account #$mya->mainQid)");
   $region = $mya->qo->region;
   foreach (ray('NEW MIW') as $k) if ($region == $k) {
@@ -48,20 +44,21 @@ function formInvite($form, &$sta, $args = '') {
   <br>
   <p>Here are three different ways to invite someone:</p>
     <ul>
-      <li><b>Best: Complete the form below</b> to send an invitation now():</li>
+      <li><b>Best: Complete the form below</b> to send an invitation now. For each person you invite in your community, an anonymous donor contributes <span class="loud">$2</span> to your Community Fund!</li>
       <li><b>Tell your %friend</b> to sign up at %CG_DOMAIN or send them this link: <div id=inviteLink>%inviteLink</div></li>
       <li><b><%aMailInvites>Ask us</a></b> to mail you some promo cards at no charge.</li>
     </ul>
 EOF
   , compact(ray('_a2 _size where _aMailInvites _inviteLink inviteCode friend')));
 //  (Later, you will need to confirm you know and trust them.)
-  $subtext = !@$nearly ? $subtext1 : ($subtext2 . $warning);
+  $subtext = $subtext2 . $warning;
 //  $contact = textFld(t('Email or Cell:'), t('An email address or cell number for the person you want to invite'), required());
 
   $email = textFld(t('Email:'), [t('Their email address'), t('An email address for the person you want to invite')]);
 //  $emails = areaFld(t('Email(s):'), t('A comma-separated list of email addresses to invite'));
   $dupsOk = $mya->cAdmin ? boolFld(t('Dups Okay?'), '', FALSE) : NULL;
   $trusted = boolFld(t('Trusted?'), t('If you lent this person (or people) $250, would you trust them to pay it back?'), $mya->cAdmin ?: NULL);
+  $zip = textFld(t('Postal Code:'), [t('Physical location postal code'), t('Where does the person live or work?')], required());
   $subject = textFld(t('Subject:'), t('The subject of your message'), required($mya->fullName . t(' invites you to %PROJECT')));
 
   $default = @$mya->data['inviteBody'] ?: t('invite default', 'name', $mya->fullName);
@@ -70,40 +67,39 @@ EOF
   $submit = ($mya->proSe or !$mya->cAdmin) ? t('Send') : NULL; // don't let cAdmins send on behalf of anyone
   jsx('invite-link');
   
-  $form = $nearly ? 
-      cgform(compact(ray('title subtext email dupsOk trusted subject message submit')))
-    : cgform(compact(ray('title subtext')));
-  return $form;
+  return cgform(compact(ray('title subtext email dupsOk trusted zip subject message')) + w\setupFoot($submit));
 }
 
 function formInvite_validate($form, &$sta) {
-  extract(just('email emails trusted', $sta['input']));
+  extract(just('email emails trusted zip', $sta['input']));
   if (op($sta) == 'submitN') {
     if (!$emails) return say('bad email', compact('emails'), 'emails');
     foreach (ray($emails) as $one) if (!u\validEmail($one)) return say(t('bad email: %one', compact('one')), 'emails');
   } elseif (!u\validEmail($email)) return say('bad email', compact('email'), 'email');
   if (!@$trusted) return say('must trust', 'trusted');
+  if ($err = u\badZip($zip)) return say($err, 'zip');
 }
 
 function formInvite_submit($form, &$sta) {
   $mya = w\eLinkAcct($sta); 
   global $base_url;
-  extract(just('email emails subject message dupsOk', $sta['input']));
+  extract(just('email emails subject message dupsOk zip', $sta['input']));
 
   if (op($sta) == 'submitN') {
 //    foreach (ray($email) as $one) sendInvite($one, $subject, $message, @$dupsOk);
     $code = ''; // get a random code just once
     foreach (ray($emails) as $email) {
-      $code = r\invite($email, $mya->id, $code, $subject, $message);
+      $code = r\invite($email, $mya->id, $code, $subject, $message, $zip);
       $links[] = "$base_url/signup/code=$code/e=$email";
     }
     $links = join('<br>', $links);
     say('invite links', compact('links'));
   } else {
-    $email = strtolower($email); // otherwise constantSubs breaks on cap after @
-    sendInvite($mya, $email, $subject, $message, @$dupsOk);
-    $data = ray('inviteBody', substr($message, 0, 10000)) + $mya->data;
+    $email = mb_strtolower($email); // otherwise constantSubs breaks on cap after @
+    sendInvite($mya, $email, $subject, $message, @$dupsOk, $zip);
+    $data = ray('inviteBody', mb_substr($message, 0, 10000)) + $mya->data;
     $mya->update(compact('data'));
   }
   if (!r\acct()) return w\doSay();
+  return w\goNextStep('invite');
 }

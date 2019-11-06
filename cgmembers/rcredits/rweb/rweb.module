@@ -106,8 +106,8 @@ function rweb_menu($submenu = '') {
 //    'community' => ['norm', t('Community'), 'FindCo', ANY],
     'community' => ['norm', t('Community'), 'Community', ANY],
     'community/data' => ['sub', t('Community & Money Data'), 'Data 2', 'read', '', t(''), 'list-alt'],
-    
     'community/events' => ['sub', t('Democracy Events'), 'Events 2', 'ok manage', '', t(''), 'bell'],
+    
     'community/events/event' => ['call', t('Add/Edit Event'), 'Event 3 4', 'ok'],
     'community/events/question' => ['call', t('Add/Edit Question'), 'Question 3', 'cadmin'],
     'community/events/option' => ['call', t('Add/Edit Option'), 'Option 3', 'cadmin'],
@@ -143,7 +143,7 @@ function rweb_menu($submenu = '') {
     'settings/contact' => ['sub', t('Contact Info'), 'Contact', 'manage -depends', '', t(''), 'user'],
     'settings/preferences' => ['sub', t('Preferences'), 'Prefs', 'manage -depends', '', t(''), 'cog'],
     'settings/security' => ['sub', t('Security'), 'Security 2', 'manage -co -depends', '', t(''), 'link'],
-    'settings/connect' => ['sub', t('Banking'), 'Connect 2', 'manage -depends', '', t(''), 'piggy-bank'],
+    'settings/fund' => ['sub', t('Banking'), 'Connect 2', 'manage -depends', '', t(''), 'piggy-bank'],
     'settings/company' => ['sub', t('Company Info'), 'Company 2', 'manage co -depends', '', t(''), 'calendar'],
     'settings/relations' => ['sub', t('Relations'), 'Relations 2', 'manage -depends', '', t(''), 'magnet'],
 // DISABLE FOR now()    'settings/boxes' => ['sub', t('Devices'), 'Boxes', 'manage -depends', '', t(''), 'phone'],
@@ -165,9 +165,16 @@ function rweb_menu($submenu = '') {
 //    'settings/kba' => ['call', 'Kba', 'Kba', 'manage dw'],
 //    'settings/photo-id' => ['call', 'Kba', 'PhotoId', 'manage'],
     'settings/proxy' => ['call', 'Proxy', 'Proxy 2', 'manage -co'],
-    'settings/verify' => ['call', 'Verify Email', 'Verify 1', 'manage'],
+    'settings/verifyid' => ['call', 'Correct SSN', 'VerifyId 2', 'manage'],
+    'settings/verifyemail' => ['call', 'Verify Email', 'VerifyEmail 2', 'manage'],
+    'settings/tithein' => ['call', 'Share When You Receive', 'TitheIn 2', 'manage'],
+    'settings/titheout' => ['call', 'Share When You Spend', 'TitheOut 2', 'manage'],
+    'settings/work' => ['call', 'Work Life', 'Work 2', 'manage'],
+    'settings/agent' => ['call', 'Choose an Agent', 'Agent 2', 'manage'],
     'settings/resend' => ['call', 'Resend Email', 'Resend', 'manage'],
     'settings/food' => ['call', 'Food Fund', 'Food 2', ANY],
+    'settings/partnersteptwo' => ['call', 'Partner Signup Agreement Etc.', 'PartnerStepTwo', 'manage'],
+    'settings/partnerend' => ['call', 'Finish Partner Signup', 'PartnerSignup end=1', ANY],
 
 //    'handy' => isDEV ? ['norm', t('Handy'), '', 'dev', 'handyLinks'] : NULL,
     'tests' => isDEV ? ['norm', t('Test'), '1', 'dev', 'tests'] : NULL,
@@ -181,11 +188,11 @@ function rweb_menu($submenu = '') {
     
     'I' => ['call', 'Scanned QR', 'I', ANY],
     
-    'prejoin' => ['call', t('Open a Joint Account'), 'Prejoin', 'manage'],
-    'handle-invoice' => ['call', t('Handle Invoice'), 'HandleInvoice 1', ANY],
-    'rerisk' => ['call', t('Recalculate Risk'), 'Rerisk 1 2 3', 'cadmin2'],
+    'prejoin' => ['call', 'Open a Joint Account', 'Prejoin', 'manage'],
+    'handle-invoice' => ['call', 'Handle Invoice', 'HandleInvoice 1', ANY],
+    'rerisk' => ['call', 'Recalculate Risk', 'Rerisk 1 2 3', 'cadmin2'],
     
-    'sadmin' => ['norm', t('Admin'), 'Admin', 'admin2'],
+    'sadmin' => ['norm', t('Admin'), 'Admin', isDEV ? ANY : 'admin2'],
     'sadmin/panel' => ['sub', t('Panel'), 'AdminPanel 2', 'cadmin'],
     'sadmin/followup' => ['sub', t('Admin Action Page'), 'Followup', 'admin2'],
     'sadmin/member-list' => ['sub', t('Member List'), 'MemberList', 'cadmin2'],
@@ -205,7 +212,7 @@ function rweb_menu($submenu = '') {
     'sadmin/changes' => ['call', t('See Changes'), 'SeeChanges 2', 'cadmin'],
 		'sadmin/reconcile-ctty-fund' => ['call', t('Reconcile Community Fund'), 'ReconcileCttyFund', 'superadmin'],
     'sadmin/reconcile-ctty-fund/manually' => ['call', t('Reconcile Manually'), 'ReconcileManually 3', 'superadmin'],
-    'rcredits/util' => ['call', 'Util', '2', 'superadmin', 'util'],
+    'rcredits/util' => ['call', 'Util', '2', 'superadminORdev', 'util'],
     'sadmin/delete-account' => ['call', t('Delete Account'), '2', 'superadmin', 'deleteAccount'],
     'sadmin/variables' => ['call', t('List/Edit Variables'), 'Variables', 'superadmin'],
     'sadmin/variables/edit' => ['call', t('Edit Variable'), 'VariableEdit', 'superadmin'],
@@ -241,6 +248,8 @@ function rweb_menu($submenu = '') {
     'go2' => ['call', t('Go to 2 pages'), '1', ANY, 'go2'],
     'pay-with-cg' => ['call', t('Pay With %RCREDITS'), 'Buy 1', ANY],
     'authcode' => ['call', t('Supply a one-use auth code'), '', ANY, 'authcode'],
+    'scraps' => ['call', 'Scraps', 'Scraps 1', ANY],   
+    'partner' => ['call', 'Signup Through Partner', 'PartnerSignup 1', ANY],
   );
 
   foreach ($items as $k => $v) {

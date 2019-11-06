@@ -198,15 +198,15 @@ function getTime($args) {
  
 /**
  * Identify the agent or customer.
- * identify: [member, code] 
- *      => [ok, message, logon=”1”, name, device, default, company, time, descriptions[], bad[], can]
- *   OR => [ok, message, logon, name, place, company, balance, rewards, time, descriptions[], bad[], can]
- *          where logon is 0 or -1
+ * identify: [member, code, pin?, signin, counter?] 
+      => [ok, message, name, device, default, company, time, descriptions[], bad[], can, balance]
+   OR	=> [ok, message, first, name, place, company, balance, rewards, time, descriptions[], bad[], can]
  * @params assoc $args:
- *   agent: agent code of current agent -- empty if none yet
  *   device: a unique device ID
+ *   agent: agent code of current agent -- empty if none yet
  *   member: account ID of customer or new agent
  *   code: rCard security code (possibly encrypted with itself as the key)
+ *   signin: 1 if signing in
  * @return json:
  *   logon: 1 if the app's operator is scanning himself or herself in, else 0 (normal) or -1 (first-time)
  *   device: a unique device identifier (if none passed)
@@ -231,7 +231,7 @@ function identify($args) {
     if (!$a = getMember(@$member, $code, $err, $version > 217)) return posErr($err, [], $companyInfo);
   } else $a = $mya; // get agent
 
-  if ($version > 217 and !test()) {
+  if ($version > 217) {
     if (@$signin) {
       if (@$agent) {
         if ($a == $mya) return posErr('already scanned in', [], $companyInfo);
@@ -240,6 +240,7 @@ function identify($args) {
     } elseif (!@$agent) return posErr('scan in first', [], $companyInfo);
     $first = $a->agentA->ided ? '0' : '1'; // regular or first-time transaction 
   } else {
+    u\FAIL('archaic version of app');
     $logon = '1'; // assume logging in
     if (@$agent) {
       if ($agent == $member) return posErr('already scanned in', [], $companyInfo);
@@ -283,7 +284,7 @@ function identify($args) {
 
   $name = $a->agentA->fullName;
   
-  return ok(@compact(ray('logon first device name place company balance rewards default time')) + $companyInfo);
+  return ok(@compact(ray('first device name place company balance rewards default time')) + $companyInfo);
 }
 
 /**
@@ -354,7 +355,7 @@ function charge($args, $type = 'charge') {
   extract(just($keys . ' proof force version', $args));
   $boxId = $boxUser;
   
-  /* extract(u\exactly('description device', $args, ['', null])); */
+  /* extract(just('description device', $args, ['', null])); */
   /* $boxId = $device; */
 
   /* $goods = $args['goods']; */
@@ -363,7 +364,7 @@ function charge($args, $type = 'charge') {
   if (!@$member) return posErr('missing member'); // handle empty string (versus missing param)
   if ($version > 216 and !@$proof) return posErr(missingArg('proof', []));
   if (@$description === '') return posErr('missing description');
-  if (strpos($description, ' ') !== FALSE) {
+  if (mb_strpos($description, ' ') !== FALSE) {
     r\tellAdmin(t('POS tx description not urlencoded'), $args);
   } else $description = urldecode($description);
   if ($err = u\badAmount($amount, '')) return posErr($err); // allow negatives! (for refund)
@@ -587,7 +588,7 @@ function getDescriptions($a) {
  * @return the message, rephrased (if appropriate) without negative amounts
  */
 function fixNegative(&$msg, $phrase, $rephrase) {
-  if ((strpos($msg, $phrase) === FALSE) or !strpos($msg, '$-')) return $msg;
+  if ((mb_strpos($msg, $phrase) === FALSE) or !mb_strpos($msg, '$-')) return $msg;
   $msg = preg_replace('/\$-/', '$', $msg, 1); // just one replacement (leave negative rewards alone)
   return $msg = str_replace($phrase, $rephrase, $msg);
 }

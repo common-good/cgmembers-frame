@@ -51,10 +51,10 @@ $GLOBALS['tStrings'] = array(
   'nothing done' => t('Nothing was done.'),
   'nothing undone' => t('Nothing undone.'),
   'event' => t('Account %fullName (%qid) is now %status.'),
-  'approved' => t('Your account has been approved! You may now buy and sell through the %PROJECT system, including using your %PROJECT card for purchases at member businesses. Expect your %PROJECT card to arrive in the mail within a few days.'),
+  'approved' => t('<p>Your account has been approved! %specifics</p>'),
   'in person' => t('Your first purchase must be in person, using your %PROJECT card (or the CGPAY app).'),
-  'got funding' => t('You have received a %thing of %amountr from your %PROJECT community for %purpose.'),
-  'got fine' => t('Your %PROJECT community charged you a fee of %amountr for %purpose.'),
+//  'got funding' => t('You have received a %thing of %amountr from your %PROJECT community for %purpose.'),
+//  'got fine' => t('Your %PROJECT community charged you a fee of %amountr for %purpose.'),
   'inflation details' => t('Inflation adjustment is set at 5% APR pending a reliable measure of the true inflation rate.'),
   'gift sent' => t('Your chosen gift of %amount to %PROJECT has gone through.'),
   'recur pay' => t('Your %period payment of %amount to %to for "%purpose" has gone through.'),
@@ -87,7 +87,7 @@ $GLOBALS['tStrings'] = array(
   'stale invoice' => t('<b>Invoice Reminder:</b> %daysAgo days ago we emailed you an invoice from %payeeName for %amount. <%a1>Click here to pay or deny this invoice</a>. Or sign in at %CG_DOMAIN and click "Invoices TO You" on the History menu. If you have any questions or concerns about this invoice, please contact %payeeName at %email or %phone.'),
   'stale invoice report' => t('<b>Invoice Update:</b> %daysAgo days ago you invoiced %payerName %amount for %purpose (invoice #%nvid, %created). That invoice is still marked "pending", so we sent %payerName a reminder. If this invoice is no longer valid, sign in at %CG_DOMAIN and choose "Invoices FROM You" on the History menu to cancel it.'),
   //  'new invoice' => t('<b>Invoice:</b> %otherName invoiced you %amount for "%purpose". To pay (or deny) this invoice, <%a>click here</a>.'),
-  'new customer done' => t('<h2>Congratulations!</h2>Your sign-up with %partnerName is complete. Expect a confirmation note from them by email.'),
+//  'new customer done' => t('<h2>Congratulations!</h2>Your sign-up with %partnerName is complete. Expect a confirmation note from them by email.'),
 
   'short invoice' => t('Your balance is %short short, to pay your invoice from %payeeName (#%nvid).'),
   'expect a transfer' => t('Funds will be transferred from your connected bank account to cover this payment.'),
@@ -147,7 +147,7 @@ $GLOBALS['tStrings'] = array(
   'invite default' => t("%PROJECT is great. I signed up. Check it out!\n\n%name"),
   'roundups desc' => t('roundup donations'),
   'crumbs desc' => t('crumbs donation: %pct of past month receipts'),
-  'sent email' => t('<p>We emailed a Verification Code to you at <b>%email</b> (if you don\'t see it, check your Spam folder). Type the code here, choose a password, and press Next.</p><p>Mixed-case, digits, punctuation, and plain old length make your password strong.</p>'),
+  'sent email' => t('<p>We sent a confirmation link to <b>%email</b>.</p><p>Click it to continue (if it doesn\'t show up right away, check your Spam folder).</p>'),
   'proxy help' => t(<<<EOF
     <p><b>Direct democracy</b> is at the heart of the %PROJECT design. In each community, members meet to discuss and decide on funding priorities for incentives, grants, loans, and investments of %RCREDITS for the greater good.</p>
     <p>You assign a person in your community as your ongoing Representative (Proxy). This should be a member you know and trust and generally agree with. Whenever you don't vote, your Representative votes for you. The Representative's vote simply counts double (one vote for them and one vote for you). If your Representative also fails to vote, then your Representative's Proxy votes for all three of you.<br><br>Everyone's voice is counted, whether or not they vote directly &mdash; one person one vote.</p>
@@ -201,7 +201,7 @@ EOF
 //  'get r/usd' => t('You can get only "r" or "usd" (rCredits or US Dollars).'), // not yet used (maybe used when there is a third option)
   'not a feature' => t('"%feature" is not a feature.'),
   'wrong nonce' => t('That is not the expected confirmation response. Try again (start over).'),
-  'no self-trading' => t("You can't do that with yourself."), // also includes relations, switching accounts, etc.
+  'no self-trading' => t("You can't do a transaction with yourself."), // also includes relations, switching accounts, etc.
   'no self-relation' => t("You can't relate yourself to your own account."),
   'funding error' => t("You do not have permission to fund that person."),
 //  'no company relations' => t("Only individuals can be related to this account."),
@@ -296,6 +296,7 @@ EOF
   'savings too high' => t('You can increase your savings amount only by what you have in your primary account. Your maximum additional savings amount at this time is %max.'),
   'organizer grant' => t('You have recruited %ORGANIZER_GRANT_MIN new %PROJECT members. You are probably eligible for a %PROJECT organizer grant of up to %ORGANIZER_GRANT_MAX! <%a>Click here</a> to apply.'),
   'bad forced tx' => t('You accepted a transaction (offline) that cannot be completed: customer %account, for %amount, on %created%by.'),  
+  'bad partner' => t('That is not a %PROJECT signup-partner organization.'),
 
   // notices to staff
   'cache mismatch' => 'Cron cache mismatch: %k=%is (cache) <> %shouldBe (calc) OR joint %k=%jIs (cache) <> %jShouldBe (calc)',

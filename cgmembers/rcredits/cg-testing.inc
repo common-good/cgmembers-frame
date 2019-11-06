@@ -19,6 +19,8 @@ define('BASE_PATH', $base_path);
 define('T_BALANCE_FLDS', 'uid balance floor savingsAdd saveWeekly minimum');
 define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid');
 define('SPECIAL_IDS', 'ctty crumb round cgf bank-in bank-out');
+define('DOCODE_FLNM', LOG_DIR . 'docode.txt');
+define('SAME_TIME', 60 * 20); // number of seconds that make no difference in "same time"
 // see R_DATE_FLDS in defs.inc
 
 /**
@@ -31,7 +33,7 @@ function fixData(&$info, $direct = FALSE) {
 
   $fields = key($info) . ' email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId'; // first key is probably an ID field, so keep it at the front
   
-  if (@$testVars) foreach ($info as $k => $v) if (strpos($v, '@') !== FALSE) {
+  if (@$testVars) foreach ($info as $k => $v) if (mb_strpos($v, '@') !== FALSE) {
     foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", $var, $v);
   }
   extract(just($fields, $info));
@@ -280,12 +282,12 @@ function doTxs($info, $thing) {
   $testFlds = $uidFlds . ' for purpose payerFor payeeFor payerTid payeeTid risks type amount taking';
 //  $flags = 'taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding'; // These are flags that might appear
   
-  extract(u\exactly($hdrFlds . ' ' . $testFlds, $info, FALSE));
+  extract(just($hdrFlds . ' ' . $testFlds, $info, FALSE));
   if (!$reversesXid) $reversesXid = NULL;
   $for = $for ?: $purpose;
-  if (strpos($for, ',')) $for = explode(',', $for); // specifying both
+  if (mb_strpos($for, ',')) $for = explode(',', $for); // specifying both
   if ($for) list ($payerFor, $payeeFor) = is_array($for) ? $for : [$for, $for];
-  if (u\starts($payeeFor, 'undoes:')) $reversesXid = substr($payeeFor, strpos($payeeFor, ':') + 1);
+  if (u\starts($payeeFor, 'undoes:')) $reversesXid = substr($payeeFor, mb_strpos($payeeFor, ':') + 1);
 
   $risks = $risks ? getRisks($risks, K_TX_RISKS) : 0;
   if ($type or !$testOnly) $type = $type ? (is_numeric($type) ? $type : (u\consta('E', $type) ?: -1)) : E_PRIME;
@@ -294,7 +296,7 @@ function doTxs($info, $thing) {
   if ($flags and !is_numeric($flags)) $flags = u\bit($flags); // works for '' and arrays too
 
   if (!$testOnly) { // set up everything needed for record creation (array_filter then should have no effect or new r\Tx dies)
-    if (!isset($info['goods'])) $goods = strpos($payeeFor, 'cash') !== FALSE ? FOR_USD : FOR_GOODS;
+    if (!isset($info['goods'])) $goods = mb_strpos($payeeFor, 'cash') !== FALSE ? FOR_USD : FOR_GOODS;
     $dfts = ray('created type channel risks goods flags payerFor payeeFor channel',
       now(), TX_TRANSFER, TX_SYS, 0, $goods, 0, t('payerFor'), t('payeeFor'), $channel0);
     foreach ($dfts as $k => $v) if ($$k === FALSE) $$k = $v;
@@ -330,18 +332,17 @@ function doTxs($info, $thing) {
 function doInvoices($info) {
   global $testOnly, $channel;
 ///   debug("doInvoice(" . pr($info, true) . "), testOnly=$testOnly");
-  extract($info);
-  $info['for'] = u\arrayGet($info, 'for', 'this or that');
-  $info['purpose'] = u\arrayGet($info, 'purpose', $info['for']);
+  u\setDft($info['purpose'], nn($info['for'], 'this or that'));
   unset($info['for']);
-  $xx = $info['purpose'];
+
+  extract($info);
 
   if ($testOnly) return verifyRecord('r_invoices', $info);
 
   $missing = array_diff_key(ray('amount:1, payer:1, payee:1, purpose:1'), $info);
   u\EXPECT($missing == [], "missing fields " . pr($missing));
 
-  $invInfo = u\exactly('status goods created', $info, [TX_PENDING, u\forCash($info['purpose']) ? FOR_USD : FOR_GOODS, now()]);
+  $invInfo = just('status goods created', $info, [TX_PENDING, u\forCash($purpose) ? FOR_USD : FOR_GOODS, now()]);
   switch ($invInfo['status']) {
   case 'denied': $invInfo['status'] = TX_DENIED; break;
   case 'pending': $invInfo['status'] = TX_PENDING; break;
@@ -447,7 +448,7 @@ function notice($notice, $id, $subs = []) {
   global $base_url, $thatThing;
 
   $subs = @$subs[0];
-  if (strpos($nm = @$subs['otherName'], 'href="do/')) {
+  if (mb_strpos($nm = @$subs['otherName'], 'href="do/')) {
     $subs['otherName'] = str_replace('href="do/', "href=\"$base_url/do/", $nm);
   }
 
@@ -494,18 +495,20 @@ function count($what, $count) {
 }
 
 /**
- * Pretend the account has complete the given steps.
+ * Pretend the account has completed the given steps or see if it has.
  */ 
 function doneStep($id, $step) {
-  global $testOnly; if ($testOnly) return FALSE;
+  global $testOnly;
   if (strpos($step, ' ')) {
     foreach (ray($step) as $one) if (!doneStep($id, $one)) return FALSE;
     return TRUE;
   }
 
-  if (!$a = r\acct(t\uid($id))) return t\output("Not an account: $id");
-  @$a->stepDone($step); // might have to do the steps below also
-  return TRUE;
+  if (!$a = t\a($id)) return t\output("Not an account: $id");
+  if (!$a->stepsLeft and !$a->steps) $a->setTask($a->co ? 'co' : 'person');
+
+  if (!$testOnly) $a->stepDone($step);
+  return $a->stepIsDone($step);  
 }
 
 /**
@@ -523,6 +526,7 @@ function doMembersHave($info) {
 //  fixData($info, TRUE);
   if ($testOnly) {
     foreach ($info as $k => $v) if ($v != '?') {
+      if (in($k, R_DATE_FLDS) and abs($a->o($k)-$v) < SAME_TIME) continue;
       if (t\badEq("db $k", $a->o($k), $v, $id)) return FALSE;
     }
     return TRUE;
@@ -686,7 +690,7 @@ function uidCredit($uid, $ignoreCalc = TRUE) {
   $info = be\creditInfo([$uid]);
   $a = r\acct($uid);
   if ($uid > 0 and !$a->jid) foreach (ray('balance') as $k) { // (community amounts don't get cached)
-      $v1 = u\arrayGet($info, $k, null);
+      $v1 = nn($info[$k], NULL);
       if (!t\eq($v1, $v2 = $a->o($k) + 0)) {
         output("$uid Calculated $k different from cache: $v1 <> $v2");
         if (!$ignoreCalc) return FALSE;
@@ -739,7 +743,7 @@ function getErrors() {
   $errors = \drupal_get_messages('error', FALSE);
   $errors = @$errors['error'] ?: [];
   foreach ($errors as $key => $value) {
-    if (u\abbreviates('Unable to send e-mail', $value) or strpos(strip_tags($value), 'expected to be a reference, value given in drupal_retrieve_form()')) unset($errors[$key]); // ignore these when testing
+    if (u\abbreviates('Unable to send e-mail', $value) or mb_strpos(strip_tags($value), 'expected to be a reference, value given in drupal_retrieve_form()')) unset($errors[$key]); // ignore these when testing
   }
   return $errors;
 }
@@ -782,8 +786,9 @@ function findEmail($index, $email, $subs) {
   $subs = is_array(@$subs[0]) ? $subs[0] : @$subs;
   t\fixEmail($email);
   t\fixData($subs);
-  if ($a = r\acct($email)) $subs['qid'] = $a->mainQid;
+//  if ($a = r\acct($email)) $subs['qid'] = $a->mainQid;
   
+  $esubs = [];
   foreach ($subs as $k => $v) {
     if ($k == 'nudge') $subs[$k] = $v = t($v);
     $esubs['{' . $k . '}'] = $v;
@@ -808,12 +813,15 @@ function findEmail($index, $email, $subs) {
       if ($v == '?') {
         $ignore[] = $k;
         unset($subs[$k]);
+      } elseif ($v == 'TESTDOCODE') {
+        $subs[$k] = t\doCode();
       } else $subs[$k] = strtr(strip_tags($v), $map);
     }
     ksort($subs);
     
     foreach ($testEmails as $one) {
       extract($one, EXTR_PREFIX_ALL, 't'); // t_ means actual values
+      if (is_array($t_toEmail)) $t_toEmail = key($t_toEmail);
       if ($t_index == $index and $t_toEmail == $email) {
         foreach ($t_subs as $k => $v) if (!is_array($v)) $t_subs[$k] = strtr(strip_tags($v), $map);
         if (isset($t_subs['site'])) {
@@ -884,35 +892,6 @@ function weShowWith($title0, $content = FALSE, $mustBePresent = TRUE) {
   return $title == $title0 ? weShow($content, $mustBePresent) : TRUE;
 }
 
-function weShowWithSubs($page, $subs) {
-  global $testOnly;
-  global $testConfirmation; // confirmation message output, if any
-  global $formOut;
-
-  $subs = @$subs[0] ?: []; // comes in as "" if no subs
-
-  if (strpos($page, 'confirm ') !== FALSE) {
-    foreach (just(R_DATE_FLDS, $subs) as $k => $v) if (is_numeric($v)) $subs[$k] = u\fmtDate($v);
-    $wanted = t($page, $subs);
-    t\output("<b>WANTED: </b>$wanted", 'screen');
-    $res = ($wanted == $testConfirmation);
-    if (!$res) t\output(compact('wanted', 'subs', 'testConfirmation'));
-    return $res;
-  }
-  
-  if (strpos($page, '/statement')) {
-    $form = u\getFile(TEST_PDF_FLNM);
-  } else {
-    $form = strtr(t\strip(r\Web\showForm($page, @$subs['arg1'], @$subs['arg2'])), $subs);
-    t\output("<b>WANTED: </b>$form", 'screen');
-    if ($form != $formOut['text']) return FALSE;
-  }
-  unset($subs['arg1']);
-  unset($subs['arg2']);
-  foreach ($subs as $one) if (strpos($form, $one) === FALSE) return FALSE; // sometimes we dunno what to sub for
-  return TRUE;
-}
-
 function makePicture($photo, $a) {return $a->update(compact('photo'));}
 
 /**
@@ -971,7 +950,7 @@ function fullQid2($agent) {
 function parseQr($qr) {
   list ($member, $code) = explode(',', $qr . ',');
   return [t\fullQid2($member), $code];
-//  list ($member, $m, $code) = preg_split('/([\.-])/', $qr, 0, PREG_SPLIT_DELIM_CAPTURE);
+//  list ($member, $m, $code) = mb_split('/([\.-])/', $qr, 0, PREG_SPLIT_DELIM_CAPTURE);
 //  $member = R_SERVER_ID . ($m == '-' ? ':' : $m) . $member;
 }
 
@@ -1023,8 +1002,9 @@ function verifyRecord($table, $info) {
   foreach ($info as $key => $value) {
     if ($value == '?') {unset($info[$key]); continue;}
     $crit[] = $value === '' ? "($key IS NULL or $key=:$key)"
-    : ((in($key, R_DATE_FLDS) or stripos($key, 'date') !== FALSE) ? 
-      "DATE(FROM_UNIXTIME(`$key`))<=>DATE(FROM_UNIXTIME(:$key))" 
+    : ((in($key, R_DATE_FLDS) or mb_stripos($key, 'date') !== FALSE) ? 
+//      "DATE(FROM_UNIXTIME(`$key`))<=>DATE(FROM_UNIXTIME(:$key))" 
+      "ABS(`$key`-:$key)<" . SAME_TIME
     : (in($key, 'trust risk') ? "CAST(ROUND($key, 2) AS CHAR)<=>:$key"
     : "`$key`<=>:$key")); // null-safe ==
   }
@@ -1037,7 +1017,7 @@ function verifyRecord($table, $info) {
     foreach ($info as $k => $v) $subs[$k] = "'$v'";
     $sql = "SELECT * FROM $table WHERE " . strtr(u\SUBS($crit), u\prefixKeys(':', $subs));
 //    output("verifyRecord failed. sql=$sql<br>table=$table crit=$crit EXPECTED info=" . pr($info));
-    output("verifyRecord failed. sql=$sql<br>table=$table crit=$crit");
+    output("verifyRecord failed. " . pr(compact(ray('table infoK infoV sql crit'))));
 
     if ($actualRow = db\get('*', $table, [$infoK => $infoV])) {
 //      ksort($actualRow);
@@ -1414,11 +1394,11 @@ function parseAmt($var, $a) {
 ///  debug(compact('a','bal','var'));
 
   if (($i = strpos($var, '+')) or ($i = strpos($var, '-'))) {
-    $op = substr($var, $i, 1);
+    $op = mb_substr($var, $i, 1);
     list ($var, $value) = explode($op, $var);
     if ($op == '-') $value = -$value;
   } else $value = 0;
-  if (substr($var, 0, 1) == '+') list ($set, $var) = array(TRUE, substr($var, 1));
+  if (mb_substr($var, 0, 1) == '+') list ($set, $var) = array(TRUE, mb_substr($var, 1));
   global $$var;
   if (@$set) $$var = $bal; // not defined yet, set the var to actual USD balance
 ///  debug(compact(ray('var a bal i op value')));
@@ -1445,7 +1425,7 @@ function weSayWithSubs($type, $index, $subs) {
   $msg0 = t($index);
   foreach ($subs as $key => $value) {
     if ($value == '?') $wild = $subs[$key] = u\randomString(20, 'word'); // mark the wildcard spot
-    if (strpos($msg0, "%$key") === FALSE) return t\output("missing sub '$key' in message '$index'");
+    if (mb_strpos($msg0, "%$key") === FALSE) return t\output("missing sub '$key' in message '$index'");
   }
   $wantMsg = trim(t($index, $subs));
   $test = \sceneId();
@@ -1453,10 +1433,10 @@ function weSayWithSubs($type, $index, $subs) {
 
   $res = FALSE;
   if (isset($wild)) {
-    $i = strpos($wantMsg, $wild);
+    $i = mb_strpos($wantMsg, $wild);
     $tailLen = strlen($wantMsg) - $i - strlen($wild);
     foreach (@$msgs ?: [] as $actual) {
-      if (substr($actual, 0, $i) == substr($wantMsg, 0, $i) and substr($actual, -$tailLen) == substr($wantMsg, -$tailLen)) {$res = TRUE; break;}
+      if (mb_substr($actual, 0, $i) == mb_substr($wantMsg, 0, $i) and mb_substr($actual, -$tailLen) == mb_substr($wantMsg, -$tailLen)) {$res = TRUE; break;}
     }
   } else {
     $tmsg = strip_tags($wantMsg);
@@ -1493,20 +1473,20 @@ function shownWith($content, $type = 'text', $mustBePresent = TRUE) {
 
   $xi = $i = 0;
   foreach ($ray as $one) {
-    if ($one === '' or substr($one, 0, 1) == '~') continue; // ignore ~labels
+    if ($one === '' or mb_substr($one, 0, 1) == '~') continue; // ignore ~labels
 //    if (in($one, '%')) $one = t\lastMinuteSubs(htmlspecialchars($one));
     $one = t($one); // translate constants in member
     if (($one = u\redash($one)) === '') continue;
-    $i = strpos($model, $one, $xi = $i);
+    $i = mb_strpos($model, $one, $xi = $i);
 ///    debug(compact(ray('model one xi i')));
-    if ($i === FALSE) $i = strpos($model, plain($one), $xi);
+    if ($i === FALSE) $i = mb_strpos($model, plain($one), $xi);
     if ($i === FALSE xor !$mustBePresent) {
       t\output(t('EXPECT page %with %this', 'with this', $mustBePresent ? t('with') : t('without'), u\purify($one, '')));
       t\output(compact('xi','i','one'));
       if (!$mustBePresent) $xi = $i; // show what's found if it's not supposed to be there
-      t\output(substr($model, 0, $xi) . ' <b class="test-doublesize">[OK until here]</b> ' . substr($model, $xi));
+      t\output(mb_substr($model, 0, $xi) . ' <b class="test-doublesize">[OK until here]</b> ' . mb_substr($model, $xi));
       return !$mustBePresent;
-    } else $i += strlen($one);
+    } else $i += mb_strlen($one);
   }
   return $mustBePresent;
 }
@@ -1597,14 +1577,32 @@ function fixState($state, $country) {
 
 	if (!$country or !is_numeric($country)) $country = db\get('id', 'r_countries', ':country IN (name, iso_code)', compact('country'));
 	if (!$state or !is_numeric($state)) $state = db\get('id', 'r_states', ':state IN (name, abbreviation) AND country_id=:country', compact('state', 'country'));
-	u\EXPECT($state and $country, 'no state or no country');
 	return compact(ray('state country'));
 }
 
+/*
+function fixStateAndCountry(&$state, &$country) {
+  global $testOnly;
+  if (!$testOnly) {
+    fixCountry($country);
+    if ($country == US_COUNTRY_ID) u\setDft($state, 'MA');
+  }
+
+	if (isset($state) and !is_numeric($state)) $state = db\get('id', 'r_states', ':state IN (name, abbreviation) AND country_id=:country', compact('state', 'country'));
+}
+
+function fixCountry(&$country) {
+  global $testOnly;
+  if (!$testOnly) u\setDft($country, R_COUNTRY_ID);
+	if (isset($country) and !is_numeric($country)) $country = db\get('id', 'r_countries', ':country IN (name, iso_code)', compact('country'));
+}
+
+*/
 function log($msg) {if (test()) u\log($msg, 'debug');}
 function that($thing) {global $thatThing; return $thatThing[$thing];}
-function dosayFilename($type) {return DRUPAL_ROOT . R_PATH . "/dosay-$type.txt";}
+function dosayFilename($type) {return LOG_DIR . "dosay-$type.txt";}
 function goodsBit($s) {return $s == 'goods' ? "1" : ($s == 'cash' ? "0" : "ERROR");} // no 3rd why for rSmart
 function approxTime($a, $b) {return t\eq($a, $b, 10000);}
 function rewarding() {return ctty('aab')->cttyRewardy;}
 function ray2assoc($ray) {foreach ($ray as $one) $res[$one[0]] = $one[1]; return @$res ?: [];}
+function doCode($code = '') {if ($code) file_put_contents(DOCODE_FLNM, $code); else return file_get_contents(DOCODE_FLNM);}

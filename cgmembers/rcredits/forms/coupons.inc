@@ -70,6 +70,10 @@ function formCoupons_validate($form, &$sta) {
   $today = today();
   extract(just($fields = 'type code amount count minimum start end ulimit forOnly', $sta['input']));
 
+  if (empty($amount) and in($mya->task, 'co co2')) {
+    return $mya->task == 'co' ? w\go($mya->nextStepUrl()) : w\goNextStep('discount'); // new member pressed skip on discount form
+  }
+    
   if ($type == 'gift') {
     if ($err = u\badAmount($amount, '>0')) return w\sayFieldErr($err, 'amount');
     if ($err = u\badAmount($count, '>0')) return w\sayFieldErr($err, 'count');
@@ -88,7 +92,7 @@ function formCoupons_validate($form, &$sta) {
     if ($end and $end < $start) return w\sayFieldErr(t('Ending date cannot be before starting date.'), 'end');
     if ($start == u\fmtDate($today, TRUE)) $start = ''; // empty means now
     foreach (ray('ulimit end') as $k) $$k = (int) $$k;
-    if ($list = strtoupper(str_replace(' ', '', nn($forOnly)))) {
+    if ($list = mb_strtoupper(str_replace(' ', '', nn($forOnly)))) {
       $forOnly = [];
       foreach (explode(',', $list) as $qid) if ($qid and $a = r\acct($qid) and $uid = $a->id) {
         $forOnly[] = $uid;
@@ -151,6 +155,8 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
 	$url = "/community/coupons/print/$args";
   w\say(t('Your %thing was created successfully.', 'thing', $gift ? t('gift certificate') : t('discount')));
 
-  if ($trial) return w\goNextStep('discount');
+  if ($trial) {
+    return w\goNextStep('discount');
+  } elseif ($mya->co and !$gift) $mya->stepDone('discount');
   return test() ? w\go($url) : w\go2('/community/coupons/list', $url);
 }

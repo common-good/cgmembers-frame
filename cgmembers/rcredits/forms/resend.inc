@@ -29,5 +29,5 @@ function formResend_submit($form, &$sta) {
   global $mya;
   extract(just('email', $sta['input']));
   $mya->update('email', $email);
-  return formPass_submit($form, $sta, '/settings/verify');
+  return formPass_submit($form, $sta, '/settings/verifyemail');
 }

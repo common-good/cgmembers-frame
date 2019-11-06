@@ -1110,6 +1110,7 @@ function drupal_unpack($obj, $field = 'data') {
  * @return <we are running a test>
  */
 function test($testing = NULL) {
+  if (!isDEV) return FALSE;
   global $TESTING;
   if (isset($testing)) setv('testing', $TESTING = $testing);
   return isset($TESTING) ? $TESTING : getv('testing');
@@ -1141,14 +1142,14 @@ function t($string, $subs0 = []) {
 
   foreach ($messages as $i => $message) {
     if (!$model = @$GLOBALS['tStrings'][$message] ?: $message) continue;
-//    if ($p = strpos($model, '. Type ') and @$channel != @TX_SMS) $model = substr($model, 0, $p + 1); // don't tell the user to type something unless it's SMS
+//    if ($p = mb_strpos($model, '. Type ') and @$channel != @TX_SMS) $model = substr($model, 0, $p + 1); // don't tell the user to type something unless it's SMS
     
     if ($i > 0 and $model[0] != '.') $model = ' ' . $model; // separate the messages, unless adding a period
     $messages[$i] = $model;
   }
   $string = str_replace('\\', "\n", join('', $messages));
 
-//  if (strpos($string, '%') !== FALSE) {
+//  if (mb_strpos($string, '%') !== FALSE) {
   if (preg_match('/[%@!]/', $string)) {
     $subs = constantSubs($string);
     foreach ($subs0 as $k => $v) {
@@ -1212,15 +1213,15 @@ function ray($s = '', $value1 = NULL) {
 
 // this func is called too often for the overhead u\EXPECT(compact('s'), 'string');
 /**/  if (is_array($s)) die('bad ray argument (array) ' . trace()); // can't use u\EXPECT here
-  $pattern = strpos($s, "\n") !== FALSE ? '/\R/' 
-    : (strpos($s, '|') !== FALSE ? ' *\| *' 
-    : (strpos($s, ',') !== FALSE ? '\, *' 
-    : (strpos($s, ';') !== FALSE ? '; *' 
-    : (strpos($s, ' ') !== FALSE ? '  *' // strangely ' +' fails but '  *' works
+  $pattern = mb_strpos($s, "\n") !== FALSE ? '/\R/' 
+    : (mb_strpos($s, '|') !== FALSE ? ' *\| *' 
+    : (mb_strpos($s, ',') !== FALSE ? '\, *' 
+    : (mb_strpos($s, ';') !== FALSE ? '; *' 
+    : (mb_strpos($s, ' ') !== FALSE ? '  *' // strangely ' +' fails but '  *' works
     : FALSE))));
 
   $simple = $pattern ? mb_split($pattern, $s) : array($s);
-  if (!preg_match('/[\,\|]/', $pattern) or !strpos($s, ':')) return $simple; // no subargs
+  if (!preg_match('/[\,\|]/', $pattern) or !mb_strpos($s, ':')) return $simple; // no subargs
 
   $ray = [];
   foreach ($simple as $one) {
@@ -1238,16 +1239,17 @@ function obj() {return (object) call_user_func_array('ray', func_get_args());}
  * If a key did not exist in the original array, it will not be in the returned array either.
  * @param string/array $these: flat array or space-delimited array of field names
  * @param array/object/string $info: possible key/value pairs to return (passed as array, object, or UrlArgString)
- * @param bool $ordered: <order the returned keys as in $these>
+ * @param mixed $default: a default for each key OR a single default to use for every key OR omitted (no default)
  * @return array of the results [NOT trimmed, because values might be encrypted!]
  */
-function just($these, $info, $ordered = FALSE) {
+function just($these, $info, $default = NULL) {
   $ray = is_string($info) ? urlq2ray($info) : (array) $info;
   if (!is_array($these)) $these = ray($these);
-  if ($ordered) {
-    foreach ($these as $k) if (isset($info[$k])) $res[$k] = $info[$k];
-    return $res;
-  } else return array_intersect_key($ray, array_flip($these));
+  $res = array_intersect_key($ray, array_flip($these));
+  if (func_num_args() > 2) foreach ($these as $i => $k) {
+    if (!array_key_exists($k, $res)) $res[$k] = (is_array($default) ? $default[$i] : $default);
+  }
+  return $res;
 }
 
 /**
@@ -1256,7 +1258,7 @@ function just($these, $info, $ordered = FALSE) {
  * @return an associative array of "GET" parameters.
  */
 function urlq2ray($q) {
-  parse_str(strpos($q, urlencode('=')) ? urldecode($q) : $q, $ray);
+  mb_parse_str(mb_strpos($q, urlencode('=')) ? urldecode($q) : $q, $ray);
   return $ray;
 }
 
@@ -1292,7 +1294,7 @@ function in($what, $list) {
   return in_array($what, $list);
 }
 
-function strhas($string, $what) {return (strpos($string, $what) !== FALSE);}
+function strhas($string, $what) {return (mb_strpos($string, $what) !== FALSE);}
 function between($what, $low, $high) {return ($low <= $what and $what <= $high);}
 function nn(&$a, $else = '') {return (!isset($a) or is_null($a)) ? $else : $a;} // "not null"
 /**/  function pr($whatever) {return print_r($whatever, TRUE);}

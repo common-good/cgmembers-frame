@@ -60,7 +60,7 @@ function ajax() {
   } elseif ($op == 'who') {
     extract(just('who question amount', $data));
     $amtDpy = u\fmtAmt(nn($amount) ?: 0);
-    if (!is_array($whoA = be\identify($who, $mya, stripos(" $question", t(' pay ')) !== FALSE, 'no self-trading'))) {
+    if (!is_array($whoA = be\identify($who, $mya, mb_stripos(" $question", t(' pay ')) !== FALSE, 'no self-trading'))) {
       ajaxRet(ray('who confirm', $whoA->mainQid, $question ? tr($question, 'name amount', $whoA->fullName, $amtDpy) : ''));
     }
     list ($msg, $args, $choices) = $whoA;

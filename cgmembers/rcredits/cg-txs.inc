@@ -47,11 +47,11 @@ function txColoredState($disputed) {
  * @param bool $dups: (RETURNED) set TRUE if this category has at least two transactions in it
  */
 function addCat(&$cats, $purpose, $amount, &$dups) {
-  if (strpos($purpose, '(') === 0 and ($i = strpos($purpose, ')')) and $i < strlen($purpose) - 1) {
-    $purpose = trim(substr($purpose, $i + 1)); // remove reversal info, if any
+  if (mb_strpos($purpose, '(') === 0 and ($i = mb_strpos($purpose, ')')) and $i < mb_strlen($purpose) - 1) {
+    $purpose = trim(mb_substr($purpose, $i + 1)); // remove reversal info, if any
   }
-  if ($m = strpbrk($purpose, ':-;(/[{~#*') and $i = strpos($purpose, $m) and $i < strlen($purpose) - 1) {
-    $cat = trim(substr($purpose, 0, $i));
+  if ($m = strpbrk($purpose, ':-;(/[{~#*') and $i = mb_strpos($purpose, $m) and $i < mb_strlen($purpose) - 1) {
+    $cat = trim(mb_substr($purpose, 0, $i));
   } else $cat = $purpose;
   
   if ($one = @$cats[$cat]) $dups = TRUE; else $one = array(0, 0);

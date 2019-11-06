@@ -23,7 +23,7 @@ function formMessage($form, &$sta) {
 
 function formMessage_validate($form, &$sta) {
   extract($info = just('to subject message', $sta['input']));
-  if (strpos($to, '@')) return say(t('If you know the member\'s email address, don\'t use this form -- just send them an email.'), 'to');
+  if (mb_strpos($to, '@')) return say(t('If you know the member\'s email address, don\'t use this form -- just send them an email.'), 'to');
   if (!$a = w\whois($to, 'to', $info)) return FALSE;
   u\preray(ray('to fullName', $a->email, $a->fullName), $sta['input']);
 }

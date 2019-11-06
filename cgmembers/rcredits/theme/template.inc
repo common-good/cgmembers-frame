@@ -499,7 +499,7 @@ function rcredits_breadcrumb($variables) {
   $head = '<h2 class="sr-only">' . t('You are here') . '</h2>';
   foreach ($breadcrumb as $k => $v) {
     $k = ucwords(str_replace('-', ' ', strtr($k, $map)));
-    if ($i = strpos($k, '?')) $k = substr($k, 0, $i);
+    if ($i = mb_strpos($k, '?')) $k = mb_substr($k, 0, $i);
     $crumbs[] = l($k, BASE_URL . $v);
   }
   $crumbs[$cnt - 1] = $k;
@@ -557,7 +557,7 @@ function spinLink($href, $text, $id = '', $style = 'primary', $size = 'md', $oth
     $attrs = 'type name id value';
   } else { // menu (or list) -type link (not a button)
     if ($href[0] == '/') $href = BASE_URL . $href;
-    if (strpos($href, BASE_URL) !== 0 and substr($href, 0, 4) == 'http')  $other += w\away();
+    if (mb_strpos($href, BASE_URL) !== 0 and mb_substr($href, 0, 4) == 'http')  $other += w\away();
     if (!$size) $class = $style;
   }
 

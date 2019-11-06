@@ -5,6 +5,7 @@ use CG as r;
 use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
+use CG\Testing as t;
 
 /**
  * Pay or deny an invoice, possibly by clicking a link without signing in (from rDo).
@@ -26,7 +27,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
 
   extract(just('nvid amount payer payee purpose created data', $inv));
   if (@$code) {
-    if (test() and $code == 'TESTDOCODE') $code = w\svar($code); // most recently created doCode
+    if (test() and $code == 'TESTDOCODE') $code = t\doCode(); // most recently created doCode
     if (!$info = r\doCode($code)) return hack(t('fake doCode in handleInvoice'));
     if (@$mya and $payer != $mya->id) w\signout(TRUE); // make sure we're signed out of any possibly different acct
   } elseif (!$mya) {

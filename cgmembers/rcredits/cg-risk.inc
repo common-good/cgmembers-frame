@@ -61,7 +61,7 @@ function acctRisk1($uid, $thresholds, &$risk = 0, &$calc = 0) {
 //  setRisk('photoOff', $a); // photo mismatches ID or DOB
   setRisk('addrOff', $a); // addr mismatches ID
   if ($a->postalAddr) {
-    if (strpos($a->postalAddr, $a->address) === FALSE or strpos($a->postalAddr, 'box') !== FALSE) setRisk('poBox'); // separate postal address
+    if (mb_strpos($a->postalAddr, $a->address) === FALSE or mb_strpos($a->postalAddr, 'box') !== FALSE) setRisk('poBox'); // separate postal address
   }
   setRisk('ssnOff', $a); // weird, conflicting, or unknown SSN history
   setRisk('dobOff', $a); // birth date unverifiable in SSN check

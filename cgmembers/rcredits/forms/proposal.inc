@@ -139,7 +139,7 @@ function formProposal_validate($form, &$sta) {
   if ($err = u\badDate($when, now() - 30 * DAY_SECS)) return sayFieldErr($err, 'when');
   if ($err = u\badDate($until, max($when, now()))) return sayFieldErr($err, 'until');
   foreach (ray('amount budgetTotal committed') as $k) if ($err = amtErr($k, $sta)) return sayFieldErr($err, $k);
-  if (!phoneOk($phone)) return;
+  if ($err = u\badPhone($phone)) return say($err, 'phone');
   if (!u\validEmail($email)) return say('bad email', compact('email'), 'email');
   u\preray(compact(ray('when until phone')), $sta['input']); // amounts get updated in $sta by amtErr()
 }

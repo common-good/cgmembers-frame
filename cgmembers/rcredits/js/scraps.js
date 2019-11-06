@@ -126,7 +126,7 @@ function doit(what, vs) {
     break;
 
   case 'addr':
-    print_country(vs['country'], vs['state'], vs['state2']);
+/*    print_country(vs['country'], vs['state'], vs['state2']);
     $('#frm-signup, #frm-contact').submit(function() {
       $('#edit-hidcountry').val($('#edit-country').val());
       $('#edit-hidstate').val($('#edit-state').val());
@@ -135,17 +135,23 @@ function doit(what, vs) {
     $('.form-item-country select').change(function() {
       print_state(this.options[this.selectedIndex].value,'','state');
       print_state(this.options[this.selectedIndex].value,'','state2');
-    });
+    });*/
     $('.form-item-sameAddr input[type="checkbox"]').change(function () {setPostalAddr(true);});
     break;
 
-  case 'legal-name':
+  case 'legal-name': // probably not needed with new signup system
     $('edit-fullname').change(function () {
       var legal=jQuery('#edit-legalname'); 
       if (legal.val()=='') legal.val(this.value);
     });
     break;
     
+  case 'verifyid':
+    if (vs['method'] >= 0) verifyid(vs['method']);
+    $('[id^="edit-field-"]').click(function () {verifyid($(this).val());});
+    $('#edit-file').click(function () {if ($(this).val() == '') $('#edit-field-0').prop("checked", true);});
+    break;
+
   case 'which':
     var fid = fid('field');
     //      if ($(fid).val() == '') break; // don't suggest everyone
@@ -214,9 +220,10 @@ function doit(what, vs) {
     }
 
     if ($('#edit-connect-1')[0]) {
-      showBank($('#edit-connect-1').attr('checked') == 'checked');
+      showBank($('#edit-connect-2').attr('checked') == 'checked');
       $('#edit-connect-0').click(function() {showBank(false);});
-      $('#edit-connect-1').click(function() {showBank(true);});
+      $('#edit-connect-1').click(function() {showBank(false);});
+      $('#edit-connect-2').click(function() {showBank(true);});
     }
 
     function showTarget(show) {
@@ -247,7 +254,7 @@ function doit(what, vs) {
       post('presignup', data, null);
     });
     break;
-
+    
   case 'prejoint': $('#edit-old-0').click(function() {this.form.submit();}); break;
 
   case 'invite-link': $('#inviteLink').click(function () {SelectText(this.id);}); break;
@@ -280,10 +287,18 @@ function doit(what, vs) {
   case 'contact':
     var form = $('#frm-contact');
     $('#edit-fullname', form).focus();
-    $('#edit-email', form).change(function () {$('.form-item-pass').show();}); // currently fails because no pw field
+    $('#edit-email', form).change(function () {$('.form-item-pass').show(); $('#edit-pass').focus();});
     form.submit(function (e) {return setPostalAddr(false);});
     break;
 
+  case 'verifyemail': // have to use jQuery here instead of $ because of Drupal conflict
+    if (vs['verify'] == 1) {
+      reqNot(jQuery('.form-item-pass1'));
+      reqNot(jQuery('.form-item-pass2'));
+    } else showPassFlds();
+    jQuery('#edit-showpass-1').click(showPassFlds);
+    break;
+    
   case 'veto':
     $('.veto .checkbox input').change(function () {
       var opti = this.name.substring(4);
@@ -357,6 +372,20 @@ function doit(what, vs) {
   }
 }
 
+/**
+ * Show or hide ID verification fields according to verification method
+ */
+function verifyid(method) {
+  $('#edit-field-' + method).prop('checked', true); // needed after error
+  var ssn = $('.form-item-federalId');
+  var dob = $('.form-item-dob');
+  var idtype = $('.form-item-idtype');
+  var file = $('.form-item-file');
+  if (method == 0) {reqNot(ssn); reqNot(dob); req(file); reqNot(idtype);}
+  if (method == 1) {reqNot(ssn); reqNot(dob); req(file); req(idtype); $('#edit-idtype').focus();}
+  if (method == 2) {req(ssn); req(dob); reqNot(file); reqNot(idtype); $('#edit-federalid').focus();}
+}  
+
 function setInvestFields() {
   var equity = ($('input[name="equity"]:checked').val() == 1);
   $('.form-item-equitySet').toggle(equity);
@@ -378,3 +407,11 @@ function require(items, yesno) {
     });    
   }
 }
+
+function showPassFlds() {
+  jQuery('.form-item-pass1,.form-item-pass2,#edit-settings').show();
+  jQuery('#edit-pass1').focus();
+}
+    
+function req(fld) {fld.show(); fld.find('input').attr('required', 'required');}
+function reqNot(fld) {fld.find('input').removeAttr('required'); fld.hide();}

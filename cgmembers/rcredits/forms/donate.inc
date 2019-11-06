@@ -35,9 +35,10 @@ function formDonate($form, &$sta, $args = '') {
 		extract($recurs);
 		$recurId = hidFld($id);
     $replaces = t('donation replaces', 'period amt', $oftens[$period], u\fmtAmt($amount));
-	}
+	} else $recurId = NULL;
+  
   if (!$mya->activated or !$recurs or !r\acct()) {
-		unset($oftens['X']); // no one-time donation unless the account also has a recurring donation and is signed in
+		unset($oftens['X']); // no one-time donation unless the account is active, has a recurring donation, and is signed in
 		$recurOnly = t(': monthly, quarterly, or yearly');
     $noOneTime = t('<p><small><%aWhy>Why no option for a one-time donation?</a></small></p>', '_aWhy', atag('/help/why-no-single-donation-option'));
 	} else $noOneTime = '';
@@ -46,7 +47,7 @@ function formDonate($form, &$sta, $args = '') {
 //  $inSetup = $mya->ok ? '' : t(' The amount you choose will come from your account once it is activated and has enough funds.</p>');
   $title = t('Donate to %PROJECT');
   $amountTip = $mya->co ? '' : t('The most common amounts chosen are $50 and $25.');
-  $subtext = t('<p>(optional) Make a tax-deductible gift of any size%recurOnly. %replaces</p>', 'recurOnly replaces', @$recurOnly, @$replaces) . t('</p><p>Half of your gift supports whatever projects you decide on together in your community; half supports the operation of the %PROJECT system (to donate zero, choose "Water"). %amountTip</p><p><b class="loud">NOTE: This is a donation, not a deposit.</b> Thank you for your support!</p>', ray('amountTip', $amountTip)) . $noOneTime;
+  $subtext = t('<p>Make a tax-deductible gift of ZERO OR MORE%recurOnly. %replaces %amountTip</p><p>To donate an amount not listed (including ZERO), choose "Water".</p><p><b class="loud">NOTE: This is a donation, not a deposit.</b> Thank you for your support!</p>', 'recurOnly replaces amountTip', @$recurOnly, @$replaces, $amountTip) . $noOneTime;
   $amtChoice = selectFld(t('Donation:'), '', required($mya->co ? R_COMPANY_GIFT : R_INDIVIDUAL_GIFT), $giftLevels);
   $amount = textFld(t('Other amount $'), '');
   $period = selectFld(t('When:'), '', required(0), $oftens);
@@ -55,7 +56,7 @@ function formDonate($form, &$sta, $args = '') {
 //    $roundup = $mya->ok ? '' : w\roundupFld($mya),
 
   jsx('amtChoice');
-  return cgform(@compact(ray('title subtext amtChoice amount period honor honored recurId')) + w\setupFoot(t('Donate')) + @compact('wait'));
+  return cgform(compact(ray('title subtext amtChoice amount period honor honored recurId')) + w\setupFoot(t('Donate')));
 }
 
 function formDonate_validate($form, &$sta) {
@@ -67,7 +68,7 @@ function formDonate_submit($form, &$sta) {
 
   extract(just('amount period honor honored roundup recurId', $sta['input']));
   $info = ray('payer payee amount period created lastTx invoiced', $mya->id, CGID, $amount, $period, now(), 0, 0);
-  if ($period != 'X' and @$recurId) {
+  if ($period != 'X' and nn($recurId)) {
 		db\update('r_recurs', ray('id ended', $recurId, now()), 'id');
 		say(t('Your previous recurring gift has been canceled.'));
 	}

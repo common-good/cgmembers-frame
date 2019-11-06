@@ -54,7 +54,7 @@ function badAmount(&$amount, $restriction = '', $fractionLimit = 2, $max = NULL)
   $new = cleanAmount($amount);
   if (!is_numeric($new)) return 'bad amount';
 
-  $amount = nn($new, 0);
+  $amount = nn($new, 0) + 0;
   $dotPos = strpos($amount, '.');
   if ($dotPos !== FALSE and strlen($amount) > $dotPos + 1 + $fractionLimit) return 'too fractional';
   if (is_null($max)) $max = R_MAX_AMOUNT;
@@ -102,11 +102,11 @@ function badSsn(&$ssn, $dob = '') {
 function ssnName($v, &$firstname = '', &$middlename = '', &$lastname = '') {
   foreach (ray('firstname middlename lastname') as $k) {
     if (is_array($v->$k)) $v->$k = join(' ', $v->$k); // concatenate multiple first, middle, or last names
-    if ($$k = ucWords(strtolower(str_replace('-', '', $v->$k)))) $res[] = $$k;
+    if ($$k = ucWords(mb_strtolower(str_replace('-', '', $v->$k)))) $res[] = $$k;
   }
   return @$res ? join(' ', $res) : '';
 }
-function ssnAddr($v) {return ucWords(strtolower(@"$v->address, $v->city, $v->state $v->zip"));}
+function ssnAddr($v) {return ucWords(mb_strtolower(@"$v->address, $v->city, $v->state $v->zip"));}
 
 /**
  * Say whether the given postal code is bad.
@@ -124,7 +124,7 @@ function badZip(&$z, $country = US_COUNTRY_ID) {
  * Say where the given address contains a PO box.
  */
 function poAddress($address) {
-  return (stripos(@$address, ' box ') or stripos(@$address, 'pob ') !== FALSE);
+  return (mb_stripos(@$address, ' box ') or mb_stripos(@$address, 'pob ') !== FALSE);
 }
 
 /**
@@ -167,7 +167,7 @@ function validName($name, $individual = TRUE, $picky = TRUE) {
   $words = substr_count($name, ' ') + 1;
   $pattern = $individual ? "[^\w\-\.,' ]" : '[^\w~!@#\$%\^&\*\(\)\-=\+\\\\;:\'",<\.>/\? ]';
   if (preg_match("`$pattern`iu", $name)) return FALSE; // allows unicode chars and common punctuation
-  if (isQid(strtoupper($name))) return FALSE; // never allow a QID as a name
+  if (isQid(mb_strtoupper($name))) return FALSE; // never allow a QID as a name
   if ($picky and ($words < 2 or $words > 4)) return FALSE;
   return TRUE;
 }
@@ -179,12 +179,18 @@ function shortName($fullName, $filler = '') {
   $deletions = ray('Inc. LLC Co. P.C. Corp. LLP');
   foreach ($deletions as $one) $fullName = str_replace(" $one", '', $fullName);
   $fullName = str_replace('&', 'and', $fullName);
+  $fullName = asciiOnly($fullName);
+  $result = preg_replace('/\W/', $filler, $fullName);
+  return mb_strtolower($result === '' ? u\code() : $result);
+}
 
+/**
+ * Convert to ascii.
+ */
+function asciiOnly($s) {
   ini_set('mbstring.substitute_character', 'none'); 
-  $fullName = mb_convert_encoding($fullName, 'UTF-8', 'UTF-8'); // avoid iconv failure (bug in PHP 5.4.3)
-
-  $result = preg_replace('/\W/', $filler, iconv('UTF-8', 'ASCII//TRANSLIT', $fullName));
-  return strtolower($result === '' ? u\code() : $result);
+  $s = mb_convert_encoding($s, 'UTF-8', 'UTF-8'); // avoid iconv failure (bug in PHP 5.4.3)
+  return iconv('UTF-8', 'ASCII//TRANSLIT', $s);
 }
 
 /**
@@ -402,8 +408,7 @@ function diff($a, $b) {
 /**
  * Return random uppercase dictionary word of 3-6 chars
  * The word will not be a valid command or command abbreviation.
- * @todo: get these r\'s out of here.
- */
+ */ /* UNUSED
 function nonce($minLen = 1) {
   list ($where, $subs) = array('LENGTH(nonce)>=:minLen', compact('minLen'));
   $offset = db\get('FLOOR(RAND() * COUNT(1))', 'r_nonces', $where, $subs);
@@ -413,6 +418,18 @@ function nonce($minLen = 1) {
   if (strpos(". $impossible ", " $nonce ")) return nonce(); // reserved word? try again
   if (strlen($nonce) > 6) return nonce(); // too long (currently never happens because all are <= 6)
   return $nonce;
+}*/
+
+/**
+ * Return a memorable random password.
+ * @param int $len: number of words in password
+ */
+function randPass($len = 4) {
+  global $nextPass; if (test() and nn($nextPass)) return $nextPass;
+  $list = explode("\n", file_get_contents(R_ROOT . '/../../config/words.txt'));
+  $listLen = count($list);
+  for ($i = 0; $i < $len; $i++) $res[] = str_replace("\r", '', $list[rand(0, $listLen - 1)]); // \r only in Windows
+  return join(' ', $res);
 }
 
 function ignoreSuffix($s, $suffixes) {
@@ -629,10 +646,9 @@ function seeAssoc($info) {
  * Look up the given SSN and return xml data.
  */
 function ssnLookup($ssn) {
-  $xml = file_get_contents(dirname($_SERVER['DOCUMENT_ROOT']) . '/.ssncheck');
-  $xml = strtr($xml, ray('[ssnUser] [ssnPass] [ssn]', R_SSN_USER, R_SSN_PASS, $ssn));
+  $xml = tr(R_SSN_REQUEST, 'username password ssn', R_SSN_USER, R_SSN_PASS, $ssn);
   if (NOT_PRODUCTION) return u\getFile('ssnresult.txt'); // testing
-  return u\getFile("https://www.nationalpublicdata.com/feeds/FDSFeed.cfm?xml=" . urlencode($xml));
+  return file_get_contents("https://www.nationalpublicdata.com/feeds/FDSFeed.cfm?xml=" . urlencode($xml));
 }
 
 /**
@@ -818,7 +834,7 @@ function csvStart($filename) {
   global $testCSV; $testCSV = [];
   
   if (test()) return;  
-  header('Content-type: text/plain');
+  header('Content-Type: text/plain; charset=utf-8');
   header("Content-Disposition: attachment; filename=\"$filename\";");
   header('Content-Type: application/csv; charset=UTF-8'); // tell the browser it's going to be a csv file
   $csvFile = fopen('php://output', 'w');
@@ -872,14 +888,20 @@ function randomString($len = 16, $choices = '') {
  * @return: the error message (FALSE if $name is okay)
  */
 function badName(&$name) {
-  $name = trim(preg_replace('/ +/', ' ', $name));
 //  $name = preg_replace('/[\x00-\x1F\x7F-\xA0\xAD]/u', '', $name);
-  if ($name and !ctype_print($name)) {
+/*if ($name and !ctype_print($name)) {
     r\tellAdmin('bad char', ray('name trace', bin2hex($name), trace()));
     return 'illegal char';
-  }
+  } */
+  $name = preg_replace('/[\x00-\x1F\x7F\xA0]/u', '', $name);
+  $name = trim(preg_replace('/ +/', ' ', $name));
   if (strlen(u\shortName($name)) > USERNAME_MAX_LENGTH) return 'too long';
   return FALSE;
+}
+
+define("CTYPE_PRINT_UNICODE_PATTERN", "~^[\pL\pN\s\"\~". preg_quote("!#$%&'()*+,-./:;<=>?@[\]^_`{|}´") ."]+$~u");
+function ctype_print_unicode($input) {
+    return preg_match(CTYPE_PRINT_UNICODE_PATTERN, $input);
 }
 
 /**
@@ -897,6 +919,18 @@ function badDate(&$s, $min = '', $max = PHP_INT_MAX) {
     return $err;
   }
   $s = $dt;
+  return FALSE;
+}
+
+/**
+ * Say whether the phone number is acceptable.
+ * @param string $phone: phone number in any format
+ * @param int $country: country code
+ * @return the error message or FALSE if the phone number is acceptable
+ */
+function badPhone(&$phone, $country = US_COUNTRY_ID) {
+  if (!$phone = u\fmtPhone($phone, '+n')) return 'bad phone';
+  if ($country == US_COUNTRY_ID and strlen($phone) != 12) return 'bad phone';
   return FALSE;
 }
 
@@ -922,9 +956,9 @@ function tableRow($row) {
  */
 function parseName($name, $withMiddles = FALSE) {
   $name = trim(preg_replace('/  /', ' ', $name));
-  if ($i = strpos($name, ',')) {
-    $suffix = substr($name, $i);
-    $name = substr($name, 0, $i);
+  if ($i = mb_strpos($name, ',')) {
+    $suffix = mb_substr($name, $i);
+    $name = mb_substr($name, 0, $i);
   } elseif (preg_match('/( Jr?)$/', $name, $match)) { // handle common suffixes with no comma
     $suffix = $match[1];
     $name = preg_replace('/( Jr?)$/', '', $name);
@@ -945,7 +979,7 @@ function parseName($name, $withMiddles = FALSE) {
 function parseAddr($address) {
   $parts = explode(',', $address);
   if (!$p = count($parts)) return ['', '', '', ''];
-  list ($state, $zip, $country) = explode(' ', strtoupper(@trim(array_pop($parts))) . '  ');
+  list ($state, $zip, $country) = explode(' ', mb_strtoupper(@trim(array_pop($parts))) . '  ');
   if (!$country and !preg_match('/^[A-Z][A-Z]$/', $state)) $state = 'ER';
   $city = trim(array_pop($parts));
   $address = join(', ', $parts);
@@ -960,14 +994,14 @@ function parseAddr($address) {
  */
 function normalizeCase($what, $proper = 'ucwords') {
   if (is_array($what)) {
-    foreach ($what as $key => $value) $what[$key] = normalizeCase($what[$key], $proper);
+    foreach ($what as $key => $value) $what[$key] = normalizeCase($value, $proper);
     return $what;
   }
   if ($proper = 'ucwords') {
-    if ($what != strtolower($what) and $what != strtoupper($what)) return utf8_encode($what); // already mixedcase
-    if (substr($what, 0, 4) == 'POB ') return $what; // special case for PO boxes
+    if ($what != mb_strtolower($what) and $what != mb_strtoupper($what)) return $what; // already mixedcase
+    if (mb_substr($what, 0, 4) == 'POB ') return $what; // special case for PO boxes
   }
-  return utf8_encode($proper(strtolower($what)));
+  return $proper(mb_strtolower($what));
 }
 
 define('R_SMALL_WORDS', 'of|a|the|and|an|or|nor|but|is|if|then|else|when|at|from|by|on|off|for|in|out|over|to|into|with');
@@ -976,7 +1010,7 @@ define('R_SMALL_WORDS', 'of|a|the|and|an|or|nor|but|is|if|then|else|when|at|from
  * Convert a string to title case.
  */
 function titleCase($s) {
-  return preg_replace_callback('/\b(' . R_SMALL_WORDS . ')\b/i', function ($m) {return strtolower($m[0]);}, ucwords(strtolower($s)));
+  return preg_replace_callback('/\b(' . R_SMALL_WORDS . ')\b/i', function ($m) {return mb_strtolower($m[0]);}, ucwords(mb_strtolower($s)));
 }
 
 function gzdecode($data){
@@ -988,16 +1022,6 @@ function gzdecode($data){
     u\deleteFile($g);
     return $d;
 }
-
-/*
-function weakPass($pass) {  
-  return strlen($pass) < 6 
-    or !preg_match('/[A-Z]/', $pass)
-    or !preg_match('/[a-z]/', $pass)
-    or !preg_match('/\d/', $pass)
-    or !preg_match('/[^A-Za-z\d]/', $pass);
-}
-*/
 
 /**
  * Return query SUM fields for each field in the list.
@@ -1087,7 +1111,7 @@ function parseZip($zip) {
 EOF;
   if (!$result = simplexml_load_file($server . $request)) return FALSE;
   $result = (array) $result->ZipCode;
-  return ray('state city', @$result['State'], ucwords(strtolower(@$result['City'])));
+  return ray('state city', @$result['State'], ucwords(mb_strtolower(@$result['City'])));
 }  
 
 /**
@@ -1242,17 +1266,17 @@ function earthDistanceWithin($lat, $lon, $distance, $unit = 'miles') {
  * @param string $starts: the possible abbreviation
  * @param string $s: the possibly abbreviated string
  * @param bool $noCase: <ignore case>
- * @param int $starting: earliest location the potential match can start (0 for starting, -strlen($starts) for ending)
+ * @param int $starting: earliest location the potential match can start (0 for starting, -mb_strlen($starts) for ending)
  * @return <the first string abbreviates the second>
  */
 function abbreviates($starts, $s, $noCase = FALSE, $starting = 0) {
   if (!@$s or is_numeric($s)) $s = @$s . '';
   u\EXPECT(compact('starts', 's', 'noCase'), 'string string bool');
-  if ($noCase) list ($starts, $s) = array(strtolower($starts), strtolower($s));
-  return (substr($s, $starting, strlen($starts)) == $starts);
+  if ($noCase) list ($starts, $s) = array(mb_strtolower($starts), mb_strtolower($s));
+  return (mb_substr($s, $starting, mb_strlen($starts)) == $starts);
 }
 function starts($s, $starts, $noCase = FALSE) {return abbreviates($starts, $s, $noCase);} // near synonym
-function ends($s, $ends, $noCase = FALSE) {return abbreviates($ends, $s, $noCase, -strlen($ends));}
+function ends($s, $ends, $noCase = FALSE) {return abbreviates($ends, $s, $noCase, -mb_strlen($ends));}
 
 /**
  * Return the time with some number of months added (or subtracted)
@@ -1396,7 +1420,7 @@ function neq($a, $b, $else = FALSE) {return $a != $b ? $a : $else;}
 function nray($a, $else = FALSE) {return !is_array($a) ? $a : $else;}
 function small($n) {return (abs($n) < .001);}
 function equy($a, $b) {return small($a - $b);} // sort of equal
-function valid_url($url) {return (\valid_url($url) and preg_match('/^[A-Z0-9\-_]+\.[A-Z0-9\-_]+/i', $url) and strpos($url, '@') === FALSE);}
+function valid_url($url) {return (\valid_url($url) and preg_match('/^[A-Z0-9\-_]+\.[A-Z0-9\-_]+/i', $url) and mb_strpos($url, '@') === FALSE);}
 /**/ function prlog($log = PROJECT) {print_r(loga($log));} // keep this
 function order($one1st, $one, $two) {return $one1st ? [$one, $two] : [$two, $one];}
 function both(&$vars, $k, $one1st, $one, $two) {list ($vars[$k], $vars['other' . ucwords($k)]) = u\order($one1st, $one, $two);}
@@ -1412,7 +1436,7 @@ function isVarname($value) {return preg_match('/^[a-z_][a-z_\-0-9]*$/i', $value)
 function isName($value) {return preg_match('/^[ \\x{00c0}-\\x{01ff}a-zA-Z0-9\,\.\'\\-]+$/u', $value);}
 ///function isName($value) {return preg_match('/^([ \\p{InCJK_Radicals_Supplement}\\p{InKangxi_Radicals}\\p{InIdeographic_Description_Characters}\\p{InCJK_Symbols_and_Punctuation}\\p{InHiragana}\\p{InKatakana}\\p{InBopomofo}\\p{InHangul_Compatibility_Jamo}\\p{InKanbun}\\p{InBopomofo_Extended}\\p{InKatakana_Phonetic_Extensions}\\p{InEnclosed_CJK_Letters_and_Months}\\p{InCJK_Compatibility}\\p{InCJK_Unified_Ideographs_Extension_A}\\p{InYijing_Hexagram_Symbols}\\p{InCJK_Unified_Ideographs}a-zA-Z\'\\-])+$/', $value);}
 function isAcct($acct) {return (is_object($acct) and get_class($acct) == 'CG\\Acct');}
-function hug($s, $arms = '()') {return substr($arms, 0, 1) . $s . substr($arms, -1, 1);} // deprecated
+function hug($s, $arms = '()') {return mb_substr($arms, 0, 1) . $s . mb_substr($arms, -1, 1);} // deprecated
 function s2t($s) {return strtotime(preg_match('/[A-Z]/i', $s) ? $s : str_replace('-', '/', $s));}
 function fmtDate($time = NULL, $numeric = FALSE) {return strftime($numeric ? '%m/%d/%Y' : '%d%b%Y', nn($time, now()));}
 function fmtTime($time = NULL) {return strtolower(strftime('%I:%M%p', nn($time, now())));}
@@ -1429,16 +1453,16 @@ function log($message, $type = 'state', $info = []) {return u\loga($type, compac
 function isIPhone() {return preg_match('/iPhone/i', $_SERVER['HTTP_USER_AGENT']);}
 function jsonEncode($s) {return json_encode($s) ?: json_encode(u\purify($s));} // , JSON_UNESCAPED_SLASHES
 function redash($s) {return str_replace('—', '&mdash;', $s);}
-function nonish($s) {return in(strtolower($s), 'n/a nothing na none 0.00'); }
+function nonish($s) {return in(mb_strtolower($s), 'n/a nothing na none 0.00'); }
 function padto($s, $n) {return str_pad(substr($s, 0, $n), $n);}
 function lpad($s, $n) {return str_pad(substr($s, 0, $n), $n, '0', STR_PAD_LEFT);}
-function similarEmail($e1, $e2) {return (strtolower(preg_replace('/\+.*@/', '@', $e1)) == strtolower(preg_replace('/\+.*@/', '@', $e1)));}
+function similarEmail($e1, $e2) {return (mb_strtolower(preg_replace('/\+.*@/', '@', $e1)) == mb_strtolower(preg_replace('/\+.*@/', '@', $e1)));}
 function rayv($a, $i) {return $a[$i];} // useful when $a is returned from a function
 function strip($a) {foreach ($a as $i => $v) $a[$i] = strip_tags($v); return $a;}
 function initials($s) {return preg_replace('/[^A-Z]/', '', ucwords(strtr($s, ray('Jr', ''))));}
-function roughName($name) {return preg_replace("/[^A-Z '\-]/", '', strtoupper(trim(str_replace('  ', ' ', $name))));}
+function roughName($name) {return preg_replace("/[^A-Z '\-]/", '', mb_strtoupper(trim(str_replace('  ', ' ', $name))));}
 function urlArgs() {return basename($_SERVER['REQUEST_URI']);}
-function uc1($s) {return ucwords(substr($s, 0, 1)) . substr($s, 1);}
+function uc1($s) {return ucwords(mb_substr($s, 0, 1)) . mb_substr($s, 1);}
 function nextAfter($needle, $hay) {return ($i = array_search($needle, $hay)) === FALSE ? NULL : $hay[$i + 1];}
 function caller($depth = 1) {return debug_backtrace()[$depth + 1]['function'];}
 function rotateBits($b, $i) {return ($i = $i % strlen($b)) ? substr($b, $i) . substr($b, 0, $i) : $b;}
@@ -1452,8 +1476,8 @@ function sqlSerialValue($s, $n) {return "SUBSTRING_INDEX(SUBSTRING_INDEX($s, '\\
 function similar($s1, $s2, $chars = 5, $pct0 = .1) {return (similar_text($s1, $s2, $pct) > $chars and $pct > $pct0);}
 function unite($a, $b, $m = '') {return ($a and $b) ? tr('%a%m%b', '_a _m _b', $a, $m ?: t(' and '), $b) : ($a ?: $b);}
 function honorDesc($honor) {return $honor == 'other' ? ' ' : t(' in %honor of ', compact('honor'));}
-function inList($needle, $hay) {return (strpos(" $hay ", " $needle ") !== FALSE or strpos(",$hay,", ",$needle,") !== FALSE);}
-function weakPass($pw) {return (strlen($pw) < 8 or !preg_match('/\d/', $pw) or !preg_match('/[A-Z]/', $pw) or !preg_match('/[a-z]/', $pw) or !preg_match('/[^0-9A-Za-z]/', $pw));}
+function inList($needle, $hay) {return (mb_strpos(" $hay ", " $needle ") !== FALSE or mb_strpos(",$hay,", ",$needle,") !== FALSE);}
+function weakPass($pw) {return (mb_strlen($pw) < 8 or !preg_match('/\d/', $pw) or !preg_match('/[A-Z]/', $pw) or !preg_match('/[a-z]/', $pw) or !preg_match('/[^0-9A-Za-z]/', $pw));}
 function b64encode($data) {return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');}
 function b64decode($data) {return base64_decode(strtr($data, '-_', '+/'));}
 function fmtKey($k, $f) {$d = '-----'; $k = chunk_split(base64_encode($k), 64); return "{$d}BEGIN $f KEY$d\n$k{$d}END $f KEY$d";}
@@ -1466,30 +1490,6 @@ function img2string($img, $quality) {ob_start(); imagejpeg($img, NULL, $quality)
 function showq($sql, $subs = []) {return strtr(u\SUBS($sql), u\prefixKeys(':', $subs));}
 function deleteFile($flnm) {if (file_exists($flnm)) unlink($flnm);}
 function getFile($flnm) {return file_exists($flnm) ? file_get_contents($flnm) : '';}
-
-function arrayGet($arr, $key, $dft) {
-  if (is_string($arr)) $arr = urlq2ray($arr);
-  u\EXPECT(is_array($arr), 'non-array');
-  return array_key_exists($key, $arr) ? $arr[$key] : $dft;
-}
-
-/**
- * Return exactly the specified key/value pairs from the given array.  If a particular 
- * key is not in the array then use the associated default value.
- * Typical use: extract(exactly('key2 key4 key 7', $info, [default2, default4, default7]));
- * @param string/array $these: flat array or space-delimited array of field names
- * @param array/object/string $info: possible key/value pairs to return (passed as array, object, or UrlArgString)
- * @param mixed $defaults: if an array there must be one entry for each key, otherwise the single value is used
- *                         for every key
- * @return array of the results [NOT trimmed, because values might be encrypted!]
- */
-function exactly($these, $info, $defaults) {
-  $ray = is_string($info) ? urlq2ray($info) : (array) $info;
-  if (!is_array($these)) $these = ray($these);
-  $result = just($these, $ray);
-  foreach ($these as $i => $k) {
-    if (!array_key_exists($k, $result)) $result[$k] = (is_array($defaults) ? $defaults[$i] : $defaults);
-  }
-  return $result;
-}
 function prob($p, $yes = TRUE, $no = FALSE) {return (mt_rand() / mt_getrandmax()) < $p ? $yes : $no;}
+function routingOk($r) {return (preg_match('/^(|[0-9]{9})$/', $r) and db\exists('r_banks', 'route=:r', compact('r')));}
+function bankAcctOk($ba) {return preg_match('/^[0-9]{3,17}$/', $ba);}  // {3,20} ? Dwolla says 3-17
