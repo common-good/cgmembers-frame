@@ -15,6 +15,8 @@ include_once __DIR__ . '/signin.inc';
  */
 function formResetPassword($form, &$sta, $args = '') {
   global $mya; // not yet saved in session
+  
+  w\signout(TRUE);
   extract(just('id code verify', $args)); // linked from an email
 
   if (flooding($uid = r\loginString(@$id), $sta, $err)) return w\softErr($err); // getting hammered
