@@ -928,7 +928,9 @@ function formTestResults($form, &$sta) {
  * @param int $uid: account to delete
  */
 function deleteAccount($uid) {
+  global $mya;
   r\deleteAccount($uid);
+  if ($uid == $mya->id) r\setAcct(1); // don't leave us on a deleted account (switch to superAdmin)
   return w\go('/sadmin/followup');
 }
 

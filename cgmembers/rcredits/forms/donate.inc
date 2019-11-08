@@ -47,11 +47,11 @@ function formDonate($form, &$sta, $args = '') {
 //  $inSetup = $mya->ok ? '' : t(' The amount you choose will come from your account once it is activated and has enough funds.</p>');
   $title = t('Donate to %PROJECT');
   $amountTip = $mya->co ? '' : t('The most common amounts chosen are $50 and $25.');
-  $subtext = t('<p>Make a tax-deductible gift of ZERO OR MORE%recurOnly. %replaces %amountTip</p><p>To donate an amount not listed (including ZERO), choose "Water".</p><p><b class="loud">NOTE: This is a donation, not a deposit.</b> Thank you for your support!</p>', 'recurOnly replaces amountTip', @$recurOnly, @$replaces, $amountTip) . $noOneTime;
+  $subtext = t('<p>Make a tax-deductible gift of ZERO OR MORE%recurOnly. %replaces %amountTip</p><p>To donate an amount not listed (including ZERO), choose "Water" (and fill in the amount).</p><p><b class="loud">NOTE: This is a donation, not a deposit.</b> Thank you for your support!</p>', 'recurOnly replaces amountTip', @$recurOnly, @$replaces, $amountTip) . $noOneTime;
   $amtChoice = selectFld(t('Donation:'), '', required($mya->co ? R_COMPANY_GIFT : R_INDIVIDUAL_GIFT), $giftLevels);
-  $amount = textFld(t('Other amount $'), '');
+  $amount = textFld(t('Donation:'), [t('Amount')]);
   $period = selectFld(t('When:'), '', required(0), $oftens);
-  $honor = selectFld(t('Honoring:'), '', '', $honors);
+  $honor = selectFld(t('Honoring:'), '', suffix(t('(optional)')), $honors);
   $honored = areaFld('', [t('Honoring whom or what')]);
 //    $roundup = $mya->ok ? '' : w\roundupFld($mya),
 

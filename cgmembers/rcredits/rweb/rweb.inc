@@ -291,12 +291,17 @@ function changeWho($zot, $args = '', &$sta = '') {
  * @param bool $continue: <don't go to Promo site after signout> (can't be a "go there" parameter, because it defaults wrong)
  */
 function signout($continue = FALSE) {
-  if (!empty($continue) and !is_numeric($continue)) $continue = (string) $continue;
-  if ($sid = session_id()) db\del('sessions', '', ':sid IN (sid, ssid)', compact('sid'));
-  session_unset();
+  if ((string) $continue == 'timedout') list ($continue, $timeout) = [FALSE, '&timedout=1']; else $timeout = '';
+  
+  $sid = session_id();
+  if ($continue) {
+    db\update('sessions', ray('sid uid acct session', $sid, 0, 0, serialize('')), 'sid');
+  } else {
+    db\del('sessions', 'ssid', $sid);
+    session_unset();
+  }
   global $mya; $mya = NULL;
   r\Acct::_clear(); // empty the acct cache
-  if ($continue == 'timedout') list ($continue, $timeout) = [FALSE, '&timedout=1']; else $timeout = '';
   if (isDEV and !test() and !$continue) return w\go('signin');
   if (!$continue) return w\go(PROMO_URL . '?region=' . R_SERVER_ID . $timeout);
 }
