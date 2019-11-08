@@ -218,6 +218,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE balancesheet Setup
  *     MAKE bank Setup
  *     MAKE bank ASlaveMemberRequestsATransfer
+ *     MAKE changeaccount Setup
  *     MAKE community Setup
  *     MAKE company Setup
  *     TEST company AMemberUpdatesCompanyInfo
@@ -440,7 +441,9 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
 /**
  * we show (ARG)
  *
- * in: TEST food ANonmemberVisitsTheFoodPage
+ * in: TEST changeaccount ACommunityAdminClicksTheProfilePhoto
+ *     TEST changeaccount ASuperadminClicksTheProfilePhoto
+ *     TEST food ANonmemberVisitsTheFoodPage
  *     TEST food AMemberMakesAFoodDonation
  *     TEST food AMemberMakesAFoodDonationWithoutAdequateFunds
  *     TEST invest AMemberJoinsTheInvestmentClub
@@ -480,6 +483,11 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST balancesheet AMemberLooksAtTheBalanceSheet
  *     TEST balancesheet ANonmemberLooksAtTheBalanceSheet
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
+ *     TEST changeaccount AMemberClicksTheProfilePhoto
+ *     TEST changeaccount AMemberChangesAccount
+ *     TEST changeaccount AMemberChangesAccountToGoToADifferentPage
+ *     TEST changeaccount ACommunityAdminChangesAccount
+ *     TEST changeaccount ASuperadminChangesAccount
  *     TEST community CronCalculatesTheStatistics
  *     TEST company AMemberVisitsTheCompanyInfoPage
  *     TEST connect AMemberConnectsABankAccountDuringSignup
@@ -640,6 +648,7 @@ function withoutOptions($options) {
  * in: MAKE balancesheet Setup
  *     MAKE bank Setup
  *     MAKE bank ASlaveMemberRequestsATransfer
+ *     MAKE changeaccount Setup
  *     MAKE community Setup
  *     MAKE company Setup
  *     MAKE custstatement Setup
@@ -741,6 +750,13 @@ function usd($list) {return t\usd($list);}
  *     MAKE balancesheet AMemberLooksAtTheBalanceSheet
  *     MAKE balancesheet ANonmemberLooksAtTheBalanceSheet
  *     MAKE bank AMemberDrawsCreditFromTheBankThenCancels
+ *     MAKE changeaccount AMemberClicksTheProfilePhoto
+ *     MAKE changeaccount AMemberChangesAccount
+ *     MAKE changeaccount AMemberChangesAccountToGoToADifferentPage
+ *     MAKE changeaccount ACommunityAdminClicksTheProfilePhoto
+ *     MAKE changeaccount ACommunityAdminChangesAccount
+ *     MAKE changeaccount ASuperadminClicksTheProfilePhoto
+ *     MAKE changeaccount ASuperadminChangesAccount
  *     MAKE community CronCalculatesTheStatistics
  *     MAKE company AMemberVisitsTheCompanyInfoPage
  *     MAKE connect AMemberConnectsABankAccountDuringSignup
@@ -852,10 +868,8 @@ function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
  */
 function memberIsLoggedOut() {
   global $testOnly, $mya;
-  w\setAcct(); // make sure we notice, if signed in
-  //u\deb('memberIsLoggedOut top loggedin=' . \user_is_logged_in());
   if ($testOnly) return !$mya;
-  w\setAcct(NULL);
+  r\setAcct(NULL);
   return TRUE;
 }
 

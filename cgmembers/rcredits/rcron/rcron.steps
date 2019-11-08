@@ -40,7 +40,8 @@ function extraSetup($feature) {
 /**
  * members: (ARG)
  *
- * in: MAKE bank Setup
+ * in: MAKE aaSeldomNotices Setup
+ *     MAKE bank Setup
  *     MAKE bank AMemberIsWellBelowTarget
  *     MAKE bank AMemberIsUnderTargetAndHasRequestedInsufficientFundsFromTheBank
  *     MAKE bank AMemberWithZeroTargetHasBalanceBelowTarget
@@ -227,7 +228,8 @@ function weTellCOWithSubs($id, $topic, $subs) {return t\weTellAdmin($topic, $sub
 /**
  * notices: (ARG)
  *
- * in: BOTH notices AMemberGetsSomeNotices
+ * in: MAKE aaSeldomNotices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
+ *     BOTH notices AMemberGetsSomeNotices
  *     BOTH notices AMemberGetsSomeWeeklyNotices
  *     MAKE notices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
  */
@@ -385,7 +387,8 @@ function weDoNotEmailToMember($index, $email) {return t\noSuchEmail($index, $ema
 /**
  * it's time for (ARG)
  *
- * in: MAKE notices AMemberGetsSomeWeeklyNotices
+ * in: MAKE aaSeldomNotices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
+ *     MAKE notices AMemberGetsSomeWeeklyNotices
  *     MAKE notices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
  */
 function itsTimeFor($what) {
@@ -424,7 +427,8 @@ function variableIsWithSubs($var, $index, $subs) {return t\tvarIs($var, $index, 
 /**
  * community email for member (ARG) is (ARG)
  *
- * in: MAKE notices Setup
+ * in: MAKE aaSeldomNotices Setup
+ *     MAKE notices Setup
  */
 function communityEmailForMemberIs($id, $email) {
   global $testOnly; if ($testOnly) return FALSE;
@@ -589,7 +593,8 @@ function riskThresholdPercentIs($pct) {
 /**
  * cron runs (ARG)
  *
- * in: MAKE bank AMemberIsBarelyBelowTarget
+ * in: MAKE aaSeldomNotices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
+ *     MAKE bank AMemberIsBarelyBelowTarget
  *     MAKE bank AMemberGetsCreditForTheBankTransferImmediately
  *     MAKE bank AMemberWithLowCreditLineGetsCreditForTheBankTransferAfterEnoughTime
  *     MAKE bank AMemberHasANegativeBalance
@@ -676,6 +681,7 @@ function weDoNotMessageToMemberWithSubs($index, $id, $subs) {return !t\weMessage
 /**
  * not these (ARG): (ARG)
  *
- * in: TEST notices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
+ * in: TEST aaSeldomNotices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
+ *     TEST notices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
  */
 function notThese($things, $list) {return !t\these($things, $list);}

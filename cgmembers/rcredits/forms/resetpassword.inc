@@ -14,7 +14,7 @@ include_once __DIR__ . '/signin.inc';
  * Reset password by choosing a new one from an official email link.
  */
 function formResetPassword($form, &$sta, $args = '') {
-  global $mya;
+  global $mya; // not yet saved in session
   extract(just('id code verify', $args)); // linked from an email
 
   if (flooding($uid = r\loginString(@$id), $sta, $err)) return w\softErr($err); // getting hammered
@@ -22,8 +22,6 @@ function formResetPassword($form, &$sta, $args = '') {
 
   if (!$mya->passwordOkay(@$code, 'pass', $err)) return w\softErr($err);
   noFlood($sta);
-  
-// NO! do this in _submit instead! (otherwise get stale form message) w\setAcct($uid);
   u\setDft($verify, FALSE);
   
   if ($verify) {
@@ -57,8 +55,7 @@ function formResetPassword_submit($form, &$sta) {
   global $mya;
   extract(just('pass1 uid verify', $sta['input']));
 
-  $mya = r\acct($uid);
-  $mya->regen($sta);
+  $mya = r\setAcct($uid, $sta);
 
   $mya->update('oneTimePass', '');
   if ($pass1) {

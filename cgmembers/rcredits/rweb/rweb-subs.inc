@@ -794,7 +794,8 @@ function whoFldSubmit($field, $question, $extra = []) {
  */
 function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
   global $formArray, $formSta, $rUrl;
-  setAcct(); // in case it's an anonymous form, so webAccess doesn't have a chance to set up
+  global $mya;
+
   if (!@$formSta['confirm'] and !in($function, R_NOLOG_FORMS)) {
     $formName = str_replace(base_path(), '', $_SERVER['REQUEST_URI']);
     $logit = TRUE;
@@ -807,7 +808,6 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
   }
 
   try {
-    global $mya;
     $args = 'arg1' . ($arg2 !== '' ? ' arg2' : '') . ($arg3 !== '' ? ' arg3' : '') . ($arg4 !== '' ? ' arg4' : '');
     $formName = substr($function, 0, 1) == '/' ? substr($function, 1) : "CG\\Web\\form$function";
     $specialForm = in($function, 'Empty footer accounts Login');
@@ -1026,43 +1026,6 @@ function updateFlood($sta, $success) {
     $msg = $trigger == 'user' ? t('Sorry, there have been more than :MAX_PW_FAILS failed sign-in attempts for this account. It is temporarily blocked.') : t('Sorry, too many failed login attempts from your IP address. This IP address is temporarily blocked.');
     w\say($msg . t(' Try again later or <%a>request a new password</a>.', '_a', atag('/user/password')), 'name');
   } else return w\say(t('bad login', '_a', atag('/settings/password')), 'name');
-}
-
-
-/**
- * Set session variables and other globals.
- * Call: $a = setAcct($myid) to set the current account (and agent if none yet)
- *    OR $a = setAcct() to remember what account and agent we are signed in to
- *    OR setAcct(NULL) to simulate signing out (for testing)
- * @param int $myid: the new account, if any
- * @return the current or new account
- */
-function setAcct($myid = '') {
-  global $channel, $boxUser, $box, $mya;
-
-  if (is_null($myid)) {
-    svar('myid', NULL); svar('agentId', NULL);
-    return r\Acct::setDefault(NULL);
-  }
-
-  $agentId = svar('agentId');
-  
-  if ($myid) {
-    $sid = session_id();
-//      db\update('sessions', ray('uid acct sid ssid', $agentId ?: $myid, $myid, $sid, $sid), 'ssid');
-    if (!$agentId) $agentId = svar('agentId', $myid);
-    svar('myid', $myid);
-    db\update('sessions', ray('uid acct', $agentId, $myid), 'uid');
-  } else $myid = svar('myid');
-
-  if (!@$channel) { // only once per HTTP request
-    $channel = TX_WEB;
-    if (@$myid) $boxUser = boxUser($box = box(), $myid); // so far used only when recording transactions
-  }
-  
-  $mya = r\acct($myid, $agentId);
-
-  return r\Acct::setDefault($mya);
 }
 
 /**
@@ -2259,8 +2222,6 @@ function focusOn($focusFieldName) {
 function webAccess($perms = NULL) {
   global $mya;
 
-  setAcct(); // recall who we are (DO THIS FIRST!)
-  
   foreach (ray($perms) as $perm) {
     if ($not = (substr($perm, 0, 1) == '-')) $perm = substr($perm, 1);
 

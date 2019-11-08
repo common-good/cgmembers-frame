@@ -92,10 +92,7 @@ function formSignin_validate($form, &$sta, $type = 'both') {
 function formSignin_submit($form, &$sta, $goto = 'summary') {
   extract(just('uid input external_input vKeyE', $sta));
   if (!@$uid) return hack('sign-in is not authorized');
-  $mya = r\acct($uid);
-
-  setAcct($uid); // , TRUE);
-  $sta['uid'] = $uid;
+  $mya = r\setAcct($uid, $sta);
 
   u\loga('signin', ['name' => $mya->name]);
   if (isSTAGE and !$mya->cAdmin) f('a.makeTestAdmins'); // make sure rCOs can test stuff

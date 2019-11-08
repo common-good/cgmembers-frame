@@ -513,9 +513,8 @@ function getAgent($agent, &$err = '') {
   if (!$mya = r\acct($agent)) return !$err = 'bad agent'; // . ": $agent";
 //  if (r\foreignServer(r\uidRegion($mya->agentId))) return !$err = 'wrong server for agent';
   if (!$mya->ok) return !$err = 'company inactive';
-//  if (!$mya->can(B_SELL)) return !$err = 'agent cannot sell';
-  r\Acct::setDefault($mya);
-  return $mya;
+  if (!$mya->proSe) r\setAcct($mya->agentId); // get agent first, if not proSe
+  return r\setAcct($mya);
 }
 
 /**
