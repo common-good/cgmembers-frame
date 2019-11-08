@@ -111,7 +111,7 @@ function formSignupCo_submit($form, &$sta) {
     $mya->update($info);
   } else {
     if (!$mya = new r\Acct($info)) return say('cannot create account', 'zot');
-    w\setAcct($mya->id); // this works for both an individual account (proSe) and a company account (with agent)
+    r\setAcct($mya); // this works for both an individual account (proSe) and a company account (with agent)
   }
 
   foreach (ray(CO_DFTS) as $i) $mya->setCoBit(APP_CANS + $i);

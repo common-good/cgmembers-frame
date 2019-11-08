@@ -201,8 +201,9 @@ function photoUpload($uid = '', $sid = '') {
  * appears above the whole Members Section
  */
 function formAccounts($form, &$sta) {
-  global $base_url, $rUrl;
-  if (!$mya = r\acct()) return []; //['signin' => item('<a href="' . "$base_url/signin" . '">Sign in</a>')];
+  global $base_url, $rUrl, $mya;
+
+  if (!$mya) return []; //['signin' => item('<a href="' . "$base_url/signin" . '">Sign in</a>')];
   $myid = @$mya->id; // may be a non-existent account if tests are run while looking at .ZZA, for example
   
   if ($mya->cAdmin2 or $mya->isAdmin2) { // admin: show a search box instead of a list of choices
@@ -242,37 +243,12 @@ function formAccounts($form, &$sta) {
     $choices[$uid] = $choice;
   }
 
-/*  if ($mya->cAdmin2 or $mya->isAdmin2) {
-    ksort($ltrs);
-    $index = $details = '';
-    foreach ($ltrs as $ltr => $accts) {
-      $index .= "<a id=\"index-$ltr\">$ltr</a>";
-      $detail = $detailDivs = '';
-      $i = 0;
-      foreach ($accts as $uid => $v) {
-        $i++;
-        $a = r\acct($uid);
-        $class = '';
-        foreach (ray('closed ok co') as $k) if ($a->$k) $class .= "$k ";
-        $detail .= r\changeAcctLink($uid, $v, trim($class));
-
-        if ($i == count($accts) or $i % 12 == 0) {
-          $detailDivs .= "<div>$detail</div>\n";
-          $detail = '';
-        }
-      }
-      $details .= "<div id=\"index-$ltr-detail\" class=\"index-detail\">$detailDivs</div>\n";
-    }
-    $account = item("<div id=\"index\">$index</div>$details");
-  } else {
-    */
-    $links = '';
-    foreach ($choices as $k => $v) {
-      $one = $k == $mya->id ? $v : r\changeAcctLink($k, $v);
-      $links .= "<li>$one</li>\n";
-    }
-    $accounts = item("<ul>$links</ul>");
-//  }
+  $links = '';
+  foreach ($choices as $k => $v) {
+    $one = $k == $mya->id ? $v : r\changeAcctLink($k, $v);
+    $links .= "<li>$one</li>\n";
+  }
+  $accounts = item("<ul>$links</ul>");
   
   return compact('accounts');
 }
@@ -287,28 +263,26 @@ function formAccounts_validate($form, &$sta) {
 
 function formAccounts_submit($form, &$sta) {
   extract(just('a', $sta['input']));
-  changeWho('acct=' . $a->id);
-//  $op = op($sta);
-//  if ($op == 'Menu') return w\go('menu'); 
+  changeWho('', 'acct=' . $a->id, $sta);
 }
 
 /**
  * Change the current account.
+ * @param string $zot: gets basename passed from URL
  */
-function changeWho($args = '') {
+function changeWho($zot, $args = '', &$sta = '') {
   global $mya;
   extract(just('acct page', $args));
 
-  $page = $mya->cAdmin ? str_replace(',', '/', @$page) : 'summary'; // go to summary, unless admin
+  $page = str_replace(',', '/', nn($page)) ?: 'summary'; // go to summary, unless admin
 
   if (nn($acct) == 'signout') return signout();
   if (!$mya and !isDEV) return w\go($page, t('No previous account. Try again.')); // get old current account
   if (!$mya->cAdmin2 and !$mya->isAdmin2 and !$mya->can()) return hack('accts');
   $mya = r\acct($acct, @$mya->agentId); // tentative new account (agent is the same, so adminishness is the same)
   if ($mya->cAdmin and !$mya->admin and !$mya->isAdmin2 and $mya->community != $mya->agentA->community) return w\go($page, t('You can switch only to accounts in your community.')); // cAdmin check is a bug fix
-  
-  w\setAcct($mya->id); // get new current account
-  
+  r\setAcct($mya, $sta); // set new current account
+
   return w\go($page);
 }
 
@@ -320,7 +294,8 @@ function signout($continue = FALSE) {
   if (!empty($continue) and !is_numeric($continue)) $continue = (string) $continue;
   if ($sid = session_id()) db\del('sessions', '', ':sid IN (sid, ssid)', compact('sid'));
   session_unset();
-  setAcct(NULL);
+  global $mya; $mya = NULL;
+  r\Acct::_clear(); // empty the acct cache
   if ($continue == 'timedout') list ($continue, $timeout) = [FALSE, '&timedout=1']; else $timeout = '';
   if (isDEV and !test() and !$continue) return w\go('signin');
   if (!$continue) return w\go(PROMO_URL . '?region=' . R_SERVER_ID . $timeout);

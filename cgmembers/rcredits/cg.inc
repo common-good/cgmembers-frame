@@ -220,7 +220,8 @@ function cttys($region, $ctty = FALSE) {
  * @param int $uid: account record ID
  * @param string $device: one device code for this account (not very important, but interesting, especially for POS)
  */
-function ipok($uid, $device) {
+function ipok($uid) {
+  global $box; $device = $box;
   $ip = $_SERVER['REMOTE_ADDR'];
   if (!db\exists('r_ips', 'ip=:ip', compact('ip'))) db\insert('r_ips', compact(ray('ip uid device')), 'ip'); 
 }
@@ -582,7 +583,6 @@ function cryptCook($k) {return ($v = @$_COOKIE[$k]) ? u\decry('C', CRYPT_FLAG . 
 function vKey() {
 	global $mya, $channel;
   u\EXPECT($channel == TX_WEB, 'wrong channel for vKey: ' . $channel);
-  if (!@$mya) w\setAcct(); // make sure we got mya
 	return ($vKeyE = r\cryptCook('vKeyE') and $pw = $mya->agentA->vKeyPw) ? u\decry('R', $vKeyE, $pw) : '';
 }
 
@@ -1380,7 +1380,7 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   if ($invoicing and !$a2->confirmed) $a2->setBit(B_CONFIRMED);
 
   // Check a1
-  u\EXPECT($a1->ok, 'main account inactive tx');
+  if (!$a1->ok) return [FALSE, t('Requesting account is inactive.'), []];
   
   if (!$a1->confirmed and !$a1->isCanonic and !$a2->isCanonic and $a1->id != CGID and $a2->id != CGID) { // communities and CG can transact with newbs
     if ($a1->community != $a2->community or $channel != TX_POS) { // first tx must be in-person at home

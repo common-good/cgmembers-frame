@@ -655,47 +655,6 @@ class Acct {
       } // else can gets refreshed automatically next time can() is called
     }
     return $a->update($field, $n);
-    
-//    $res = $a->setBitx($bit, $on, 'flags'); 
-//    $a->refreshCan(); // ?
-//    return $res;
-  }
-
-//  public function setBitx($bit, $on = TRUE, $field = 'flags') {return $this->setBit($bit,$on,$field);}
-  
-  /*
-   * @param boot $now: whether to write to the database (DEFAULT TRUE) or just to the cache (awaiting write)
-   *//*
-  public function setBit($bit, $on = TRUE, $now = TRUE) {
-    $this->reread();
-// gets caught anyway    u\EXPECT(compact('int', 'on'), 'int bool');
-    u\EXPECT($bit <= B_MAX, 'setting too big a bit');
-    $bit = u\bit($bit0 = $bit);
-    $flags = $on ? ($this->flags | $bit) : ($this->flags & ~$bit);
-    self::$records[$this->id]->flags = $flags;
-    $this->refreshCan();
-    return $now ? $this->update(compact('flags')) : TRUE;
-  } */ 
-  
-  // public function refreshCan() {self::$perms[$this->id] = NULL;} // UNUSED force redo in can()
-
-  /**
-   * Set the current account being managed (must be static so we can set account to empty)
-   * @param acct $a: the account to manage
-   * @return: the account (FALSE if $a is empty)
-   */
-  public static function setDefault($a) {
-    global $mya, $channel, $box; 
-    global $user;
-    if (empty($user)) $user = (object) ['uid' => $a ? $a->id : 0]; // probably needed only for rWeb login form testing
-    if ($a and $a != $mya and !$a->admin2) { // admin access doesn't count
-      $access = now();
-      if ($channel == TX_WEB) $login = $access;
-      $lastip = $_SERVER['REMOTE_ADDR'];
-      $a->update(@compact('login', 'access', 'lastip'));
-    }
-    if (@$a->ok) r\ipok($a->id, $box); // box is not very important
-    return $mya = $a;
   }
 
   /**
@@ -1863,6 +1822,20 @@ X;
     return $res;
   }
   
+  /**
+   * Record latest account access
+   */
+  public function accessed() {
+    global $channel;
+    $a = $this;
+    $info = ray('access lastip', now(), $_SERVER['REMOTE_ADDR']);
+    if ($channel == TX_WEB) {
+      $info['login'] = now();
+      if (@$a->ok) r\ipok($a->id);
+    }
+    $a->update($info);
+  }
+
   public function isMe($uid) {return ($uid == $this->id or $uid == $this->jid);}
   public function codeHash() {return u\hash($this->cardCode());}
   public function o($k) {return $this->{'o_' . $k};}
@@ -1872,19 +1845,6 @@ X;
   public function isBank() {return r\isBank($this->id);}
   public function nameAndEmail() {return [$this->fullName => $this->email];}
   public function nameAndQid() {return "$this->fullName ($this->mainQid)";}
-
-  /**
-   * Sign this account in.
-   * NOTE: This works only before displaying a page, not before redirecting.
-   */
-  public function regen(&$sta) {
-/*    global $user; 
-    $user = $this->account('uid pass timezone'); // timezone keeps Drupal happy in bootstrap.inc
-    \drupal_session_regenerate(); */
-    $sta['uid'] = $this->id;
-    w\setAcct($this->id);
-  }
-
   public function firstCo() {return db\get('fullName', 'r_relations r INNER JOIN users u ON r.main=u.uid', 'r.permission>0 AND r.other=:id AND u.:IS_CO ORDER BY r.created LIMIT 1', ['id' => $this->id]);}
   public function adminables() {
     $res = ray(B_ADMINABLE . ($this->admin ? ' admin2' : '') . ($this->superAdmin ? ' admin' : ''));
@@ -1939,3 +1899,36 @@ function acct($uid = '', $agent = '', &$error = '') {
  * Return an account object for the agent of the given account.
  */
 function agent($uid = '') { $a = r\acct($uid); return $a ? $a->agentA : NULL; }
+
+/**
+ * Set the current account.
+ * If there is no account signed in, set the agent also.
+ * @param mixed $myid: the new account or account ID (if NULL, sign out)
+ * @param assoc $sta: (MODIFIED) if passed, gets ['uid'] set, to sign the account in
+ * NOTE: $sta works only before displaying a page, not before redirecting (\session_regenerate does not appear to work).
+ * @return the new account
+ */
+function setAcct($myid, &$sta = NULL) {
+  global $mya;
+  global $user;
+  global $channel; 
+
+  if (is_object($myid)) $myid = $myid->id;
+  if ($sta) $sta['uid'] = $myid;
+
+  if (is_null($myid)) { // sign out
+    $user = obj('uid', 0);
+    w\svar('myid', NULL); w\svar('agentId', NULL);
+    return $mya = NULL;
+  }
+
+  w\svar('myid', $myid);
+  $agentId = w\svar('agentId') ?: w\svar('agentId', $myid);
+  $sid = session_id();
+  db\update('sessions', ray('uid acct ssid', $agentId, $myid, $sid), 'ssid');
+  if (empty($user)) $user = obj('uid', $myid);
+
+  $a = r\acct($myid, $agentId);
+  if (!$mya or ($a != $mya and !$mya->admin2)) $a->accessed(); // admin access doesn't count
+  return $mya = $a;
+}

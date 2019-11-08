@@ -309,7 +309,7 @@ function formFollowup($form, &$sta, $args = []) {
   extract(just('uid one recent', $args, null));
   
   if (!empty($uid)) {
-    w\setAcct($uid); // switch to that user
+    r\setAcct($uid, $sta); // switch to that user
     return formSummary($form, $sta);
   }
 
@@ -909,8 +909,7 @@ function tests($arg = '') {
 function formTestResults($form, &$sta) {
   if (!isDEV) return;
   
-  $mya = r\acct(1);
-  $mya->regen($sta);
+  r\setAcct(1, $sta);
   test(FALSE);
 
   $q = db\q('SELECT * FROM test WHERE type IN (:types) ORDER BY id', ['types' => ray('status error warning')]);

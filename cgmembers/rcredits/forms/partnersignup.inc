@@ -55,7 +55,7 @@ function signedContract($code, &$sta = '') {
   if (!file_exists(contractFlnm($customer))) fillContract($pA->name, $info, [], TRUE); // only if first time clicking the link
   if ($mya->member) return partnerEnd(); // customer is already set up to pay with Common Good
   if ($mya->stepIsDone('fund')) {
-    $mya->regen($sta); // part way through, so gotta sign back in
+    r\setAcct($mya, $sta); // part way through, so gotta sign back in
     $title = t('Next Step');
     $subtext = t('Click the button below to continue setting up your %PROJECT payment account, as your chosen method of paying for your community solar subscription.');
     $go = item(button(t('Continue'), $mya->nextStepUrl()));
@@ -136,7 +136,7 @@ function formPartnerSignup_submit($form, &$sta) {
   extract(just('cgAccount', $info));
   if (!$pA = r\acct($pid)) u\FAIL('no partner account');
   if (!$mya = cgA($cgAccount)) u\FAIL('no customer account');
-  $mya->regen($sta); // part way through, so gotta sign back in
+  r\setAcct($mya, $sta); // part way through, so gotta sign back in
   
   $bankAccount = "USkk$routingNumber$bankAccount";
   $last4bank = substr($bankAccount, -4, 4);
@@ -384,8 +384,7 @@ function gotSolarOne($info) {
   $mya->stepDone('verifyemail');
   
   if ($mya->stepIsDone('fund')) {
-    $sta['uid'] = $mya->id; // part way through, so gotta sign back in
-    w\setAcct($mya->id);
+    r\setAcct($mya, $sta);
     $title = t('Next Step');
     $subtext = t('Click the button below to continue setting up your %PROJECT payment account, as your chosen method of paying for your community solar subscription.');
     $go = item(button(t('Continue'), $mya->nextStepUrl()));

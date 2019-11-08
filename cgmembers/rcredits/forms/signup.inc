@@ -135,8 +135,7 @@ function formSignup_submit($form, &$sta) {
     list ($myid, $name) = [$a->id, $a->name];
   }
   
-  $mya = w\setAcct($myid); // this works for both an individual account (proSe) and a company account (with agent)
-  $sta['uid'] = $myid; // tell Drupal we exist (essential so that messages show up on next page shown)
+  $mya = r\setAcct($myid, $sta); // this works for both an individual account (proSe) and a company account (with agent)
   $qid = $mya->mainQid;
   
   if (nn($source2) == 'food') $mya->stepDone('food', FALSE); // signed up through Food Fund promo (cg4.us/food), so add this special step
@@ -186,33 +185,8 @@ function jointSignup($a = NULL) {
   }
   $mya->newRelation(ray('other permission', $a->id, r\perm(B_JOINT)));
   $a->join($mya);
-  w\setAcct(NULL); // sign agent out so it looks joint
+  r\setAcct(NULL); // sign agent out so it looks joint
   return $a->id;
-}
-
-/**
- * Customer clicked on link to begin or continue CG signup after completing partner signup.
- * @param int $reid: r_relations record ID linking customer to partner
- * @param int $reid: (RETURNED) set to NULL if not a valid r_relations ID
- * @return assoc of signup args from r_relations record (NULL if none)
- *   redirects to signup step, if already in process
- *//* UNUSED
-function continuePartnerSignup(&$reid, $customer) {
-  if (!$info = r\relation('other,data', 'reid=:reid AND code=:customer', compact('reid', 'customer'))) return $reid = NULL;
-  extract($info);
-  $a = r\acct($other);
-  if ($a->federalId) return w\go("signin?name=$a->mainQid", t('Sign in to continue your account set-up.'));
-
-  return unserialize($data) + ['myid' => @$a ? $a->id : 0];
-}*/
-
-/**
- * Regenerate the session for the given account. UNUSED.
- */
-function regen($mya) {
-  global $user; $user = $mya->account('pass timezone'); // timezone keeps Drupal happy in bootstrap.inc
-  $user->uid = $mya->id; // uid is not returned by ->account() (not sure why)
-  \drupal_session_regenerate(); // otherwise another user signing might sign this one out
 }
 
 /**

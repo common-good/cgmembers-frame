@@ -977,13 +977,17 @@ function addAttribs(&$thing) {
  * @return: successful (always successful for anonymous)
  */
 function logIn($id) {
-  global $boxUser;
+  global $boxUser, $mya;
   if ($id != '?') {
     list ($qid, $agt, $zot) = explode(':', "$id::"); // in case company:agent
     $a = r\acct(t\fullQid($qid), $agt ? t\fullQid($agt) : '');
-    r\Acct::setDefault($a); // fullQid2 not uid
     if (!u\isAcct($a)) return t\output("id not account: $id");
-    $boxUser = r\Web\boxUser(r\Web\box(), $a->id);
+    if ($a != $mya) {
+      w\signout(TRUE);
+      if (!$a->proSe) r\setAcct($a->agentId); // get agent first, if not proSe
+      r\setAcct($a);
+      $boxUser = r\Web\boxUser(r\Web\box(), $a->id);
+    }
   }
   return TRUE;
 }
@@ -1328,8 +1332,7 @@ function clear($ch = 0) {
   }
 
   t\log('clearing');
-  w\setAcct(NULL);
-  r\Acct::_clear(); // empty the acct cache
+  w\signout(TRUE);
   \drupal_static_reset(); // clear out drupal central storage
 
   $tables = 'r_bad r_ballots r_boxes r_changes r_company r_coupated r_coupons r_do r_events r_honors r_investments r_invites r_invoices r_ips r_near r_notices r_options r_pairs r_photos r_proposals r_proxies r_questions r_ratings r_recurs r_relations r_shares r_stakes r_stats r_tous r_usd r_usd2 r_user_industries r_votes signup tx_disputes_all tx_entries_all tx_hdrs_all x_invoices x_photos x_relations x_usd x_users flood queue semaphore sessions cache';

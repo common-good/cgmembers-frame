@@ -2,6 +2,7 @@
 use CG as r;
 use CG\Util as u;
 use CG\Db as db;
+use CG\Web as w;
 
 /**/ if (preg_match('/msie [1-7][^0]/i', @$_SERVER["HTTP_USER_AGENT"])) die("\n\n\n" . t('<h2>We apologize</h2><p>The %PROJECT site does not work with your (very old) browser.</p>')); // avoid some nasty XSS holes in MSIE < 8
 
@@ -1946,10 +1947,10 @@ function drupal_bootstrap() {
   require_once DRUPAL_ROOT . '/includes/common.inc';
   _drupal_bootstrap_full();
 
-	if (@$sqlOnce and \getV('version', '') != R_VERSION) {
-		\db_query($sqlOnce); // make database changes for this update, if any
-		\setV('version', R_VERSION);
-	}		
+  global $channel, $boxUser, $box;
+  if ($myid = w\svar('myid')) r\setAcct($myid); else w\signout(TRUE);
+  $channel = TX_WEB; // assume web unless this gets set otherwise downstream
+  $boxUser = w\boxUser($box = w\box(), $myid); // so far used only when recording transactions
 
   return DRUPAL_BOOTSTRAP_FULL;
 }

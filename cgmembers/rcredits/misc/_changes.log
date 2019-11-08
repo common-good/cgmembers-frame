@@ -1,7 +1,12 @@
-2019-11-06 feature/no-redirect
+2019-11-07 feature/setacct
+. refactored w\setAcct, Acct::setDefault, and Acct::regen as r\setAcct
+. stopped dying on inactive invoiced account
+. made behavioral tests for changing accounts
+
+2019-11-06 hotfix/no-redirect
 . bugfix: active members were getting redirected if they hadn't completed all steps
 
-2019-11-05 feature/easy-signup2
+2019-11-05 hotfix/easy-signup2
 . added cardCode to trialco accounts and a link on Summary page to show a QR
 . set default app permissions upon account creation, so trialcos can use app easily
 . updated rSmart Identify feature to test current version of app
