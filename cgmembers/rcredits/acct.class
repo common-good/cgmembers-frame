@@ -1648,7 +1648,7 @@ X;
     $cans[B_DEV] = (isDEV or $aa->can(B_ADMIN)); // used in menu system for tests page, etc.
     //    if ($cans[B_MANAGING_CTTY] = ($aa->can(B_CADMIN) and $id == $a->community)) $cans[B_BUY] = TRUE;
     $cans[B_MANAGING_CTTY] = ($aa->can(B_CADMIN) and $id == $a->community);
-    if (empty($a->federalId) and !test()) $cans[B_SELL] = FALSE; // no selling without an EIN
+    if (!$a->federalId and !test()) $cans[B_SELL] = FALSE; // no selling without an EIN
     if (!$a->co and !$a->stepsDone(S_SELL) and !test()) $cans[B_SELL] = FALSE;
     
     ksort($cans); // easier to debog
