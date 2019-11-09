@@ -1,3 +1,6 @@
+2019-11-09 hotfix/fix-setlocus
+. we no longer try to setLocus for accounts without both city and state
+
 2019-11-08 feature/setacct-tweaks
 . fixed problem in bootstrap sigining out of anonymous accounts (signout should not destroy session if continuing)
 . fixed donations, backing, food forms so an error when choosing a custom amount doesn't hang the form
