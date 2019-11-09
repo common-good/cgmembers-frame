@@ -2,6 +2,8 @@
 . fixed problem in bootstrap sigining out of anonymous accounts (signout should not destroy session if continuing)
 . fixed donations, backing, food forms so an error when choosing a custom amount doesn't hang the form
 . fixed reference to federalId in Acct::getCans so it doesn't kill cron
+. solar one signup was trying to send contracts (bug fixed)
+. some formatting improvements to solar one signup
 
 2019-11-07 feature/setacct
 . refactored w\setAcct, Acct::setDefault, and Acct::regen as r\setAcct
