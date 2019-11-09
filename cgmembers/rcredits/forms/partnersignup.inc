@@ -50,6 +50,8 @@ function signedContract($code, &$sta = '') {
   $partnerName = $pA->fullName;
   $pagePartner = $pA->name; // tell page.html to use the partner's branding
   if (!$cgAccount or !$mya = cgA($cgAccount)) return softErr(t('You have already completed your signup with ') . $partnerName);
+  
+  $myid = hidFld($mya->id);
   $mya->stepDone('verifyemail');
   
   if (!file_exists(contractFlnm($customer))) fillContract($pA->name, $info, [], TRUE); // only if first time clicking the link
@@ -90,14 +92,14 @@ X
   $data = hidFld(serialize(compact(ray('info pid'))));
   $submit = t('Submit');
   
-  return cgForm(compact(ray('title subtext routingNumber bankAccount midtext processor submit data')));
+  return cgForm(compact(ray('title subtext routingNumber bankAccount midtext processor submit data myid')));
 }
 
 /**
  * Handle submission of payment processor form (/partner/signed=whatever)
  */
 function formPartnerSignup_validate($form, &$sta, $args = '') {
-  
+  global $mya;
   $accts = 'routingNumber bankAccount';
   extract(just($accts, $sta['input']));
   
@@ -108,9 +110,10 @@ function formPartnerSignup_validate($form, &$sta, $args = '') {
   
   if (nn($sta['input']['city2'])) { // solar1, so extra fields
     extract(u\normalizeCase(just($normals = 'fullName address2 city2', $sta['input'])));
-    extract(just('email phone state2 zip2 years months', $sta['input']));
+    extract(just('email phone state2 zip2 years months myid', $sta['input']));
 
     if ($err = u\badName($fullName)) return say($err, ['field' => 'fullName'], 'fullName');
+    $mya = r\acct($myid); // shortname uses this
     $name = r\shortName($fullName);
 
     if ($err = u\badZip($zip2)) return say($err, 'zip');
@@ -131,11 +134,10 @@ function formPartnerSignup_validate($form, &$sta, $args = '') {
 function formPartnerSignup_submit($form, &$sta) {
   global $mya;
   
-  extract(just('routingNumber bankAccount processor data', $sta['input']));
+  extract(just('routingNumber bankAccount processor data myid', $sta['input']));
   extract(just('info pid', unserialize($data)));
-  extract(just('cgAccount', $info));
   if (!$pA = r\acct($pid)) u\FAIL('no partner account');
-  if (!$mya = cgA($cgAccount)) u\FAIL('no customer account');
+  if (!$mya = r\acct($myid)) u\FAIL('no customer account');
   r\setAcct($mya, $sta); // part way through, so gotta sign back in
   
   $bankAccount = "USkk$routingNumber$bankAccount";
@@ -151,7 +153,6 @@ function formPartnerSignup_submit($form, &$sta) {
     $partnerInfo = compact(ray('fullName email phone')) + $info;
     $mya->update(compact(ray('fullName name email phone tenure partnerInfo')));
   }
-  
   if ($processor == 1) return w\go('partner/end=1'); // AZ B&T
   $mya->stepDone('fund'); // otherwise, new CG member (old members get handled without submitting the funding form)
 
@@ -173,7 +174,7 @@ function partnerEnd() {
   $title = t('Congratulations!');
   $subtext = t('<p>You have completed your solar subscription sign-up. %contractAttached</p><p>We will let you know when your array is ready to start delivering credits to your electric account and when we will start billing you for those credits. Let us know if you have any questions!</p><p><b>Learn more</b> about the organizations working together on this community solar program:</p>', 'contractAttached', nn($noContract) ? '' : t('We emailed you the signed contract.')) . getLinks($mya->zip);
 
-  emailContract($pA, $info, TRUE, contractFlnm($customer));
+  emailContract($pA, $info, TRUE, nn($noContract) ? NULL : contractFlnm($customer));
   if ($mya->stepIsDone('fund')) { // CG member (new or old)
     $reid = $pA->newRelation(ray('other customer code autopay', $mya->id, TRUE, $customer, TRUE)); // autopay should maybe be FALSE outside Western MA
   }
@@ -313,7 +314,7 @@ function gotSignup($pA) {
 function gotSolarOne($info) {
   global $mya, $pagePartner;
 
-  /*debug(*/ if (isDEV) $info = bin2hex(http_build_query(ray('smtid co fullName orgName address city state zip email phone m_number source', '654321', 0, 'Jane Dough', '', '10 J St.', 'Jville', 'NY', '10101', 'wspademan+j@gmail.com', '(212) 222-1111', rand(1000, 9999), 'sunset')));
+  /*debug(*/ if (isDEV or (!is_array($info) and $info == 1)) $info = bin2hex(http_build_query(ray('smtid co fullName orgName address city state zip email phone m_number source', '654321', 0, 'Jane Dough', '', '10 J St.', 'Jville', 'NY', '10101', 'wspademan+j@gmail.com', '(212) 222-1111', rand(1000, 9999), 'sunset')));
   
   signout(TRUE); // current account is irrelevant and could be confusing, so sign out
   if (!$info = hex2bin($info)) return solarOneErr('bad solar1 encoding');
@@ -324,7 +325,7 @@ function gotSolarOne($info) {
   $noContract = TRUE;
   $m_company = 'Con Ed';
   $customer = substr($m_company, 0, 1) . $m_number; // begin meter/customer number with the company letter (ENC)
-  $pA = pA($pid = 'NEWBHS');
+  $pA = pA($pid = (isDEV ? 'NEWAIL' : 'NEWBHS'));
   $partnerName = $pA->fullName;
   $pagePartner = $pA->name; // tell page.html to use the partner's branding
 
@@ -346,7 +347,7 @@ function gotSolarOne($info) {
   if (test() and is_numeric($state)) $state = r\realState($state);
   if (!$stateId = r\stateNum($state)) return solarOneErr('bad state', 'state');
 
-  if (r\relation(1, 'main=:main AND :IS_CUSTOMER AND code=:customer', ray('main customer', $pA->id, $customer))) {
+  if (r\acct($email) or r\relation(1, 'main=:main AND :IS_CUSTOMER AND code=:customer', ray('main customer', $pA->id, $customer))) {
     $title = t('Error');
     $subtext = t('You are already signed up with %partnerName.', compact('partnerName'));
     return cgForm(compact(ray('title subtext')));
@@ -431,10 +432,11 @@ X
   $months = textFld(BARE, [t('Months')], suffix(t('&nbsp months')));
   $tenure = fieldSet('tenure2', compact('years', 'months'), t('How long:'), t('How long have you been at your current address (roughly)'));
   $owns = boolFld('', '', -1, [t('Rent'), t('Own')]); // default fails
+  $myid = hidFld($mya->id);
 
   jsx('contact');
 
-  return cgForm(compact(ray('title subtext routingNumber bankAccount midtext processor fullName contact phone emailDpy mailingHdr address2 city2 state2 zip2 tenure owns submit data email')));
+  return cgForm(compact(ray('title subtext routingNumber bankAccount midtext processor fullName contact phone emailDpy mailingHdr address2 city2 state2 zip2 tenure owns submit data email myid')));
 }
 
 /**

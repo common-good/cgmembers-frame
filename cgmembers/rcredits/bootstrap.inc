@@ -1948,9 +1948,9 @@ function drupal_bootstrap() {
   _drupal_bootstrap_full();
 
   global $channel, $boxUser, $box;
-  if ($myid = w\svar('myid')) r\setAcct($myid); else w\signout(TRUE);
+  $mya = r\setAcct();
   $channel = TX_WEB; // assume web unless this gets set otherwise downstream
-  $boxUser = w\boxUser($box = w\box(), $myid); // so far used only when recording transactions
+  if ($mya) $boxUser = w\boxUser($box = w\box(), $mya->id); // so far used only when recording transactions
 
   return DRUPAL_BOOTSTRAP_FULL;
 }

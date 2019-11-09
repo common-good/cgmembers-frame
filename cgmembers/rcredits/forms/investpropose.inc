@@ -98,7 +98,6 @@ function formInvestPropose_submit($form, &$sta) {
     $a = new r\Acct(compact(ray(INVEST_COFLDS)));
     $a->setCategories($bizCats);
   } else $a = r\acct($company);
-
   list ($coid, $proposedBy) = [$a->id, $mya->agentId];
   $return /= 100; // convert % to fraction
   

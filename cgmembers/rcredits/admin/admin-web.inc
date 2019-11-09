@@ -139,11 +139,11 @@ function adminSummary() {
     : boolFld(t('Active?'), t('Is account approved to use %PROJECT?'), $mya->ok);
 
     if ($mya->member and !$mya->co and $mya->superAdmin) $ssnShow = item(a\ssnShow($mya));
-    if ($mya->admin) {
+/*    if ($mya->admin) {
       $dba = ($mya->co and $owner = r\relation('other', 'main=:uid', compact('uid')) and r\acct($owner)->federalId == $mya->federalId);
       $ssnDft = $mya->federalId ? ($dba ? t('SSN') : R_ON_FILE) : '';
       $federalId = $mya->superAdmin ? textFld(t('EIN/SSN:'), '', $ssnDft) : item($ssnDft);
-    }
+    } */
   
     $acctRisks = ray(K_ACCT_RISKS);
     $riskBits = array_keys($acctRisks);

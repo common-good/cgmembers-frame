@@ -201,6 +201,7 @@ class Acct {
     if ($field == 'legalNameDpy') return str_replace('_', ' ', $a->legalName); // for u\parseName of names like Jay di_Fiori
     if ($field == 'owns') return !$a->risk('rents');
     if ($field == 'creditLine') return -$a->floor;
+    if ($field == 'hasFid') return ($vsec = $a->vsecure and nn($vsec['federalId'], '') !== ''); // has to be 2 steps
     if ($field == 'closed') return ($a->activated and !$a->ok); // data[newAccount] has new qid, if any
     if ($field == 'hasBank') return $a->risk('hasBank');
     if ($field == 'lowSecurity') return u\n2ai(substr($a->created, -5, 5), 3); // result is 3 chars long
@@ -1049,7 +1050,7 @@ EOF;
   public function verifySsnInBackground() {
     $a = $this;
     global $base_url;
-    if (!$a->federalId) return;
+    if (!$a->hasFid) return;
     if ($a->ssnData and !nn($a->ssnData[SSN_ERR_INDEX])) return;
 //      w\jsx('get-ssn');
     u\post("$base_url/ajax", ray('op sid data', 'ssn', session_id(), ''));
@@ -1363,7 +1364,7 @@ o;
     } else {
       if (!$a->member) {
         if ($a->nonudge or $now - $a->created < HOUR_SECS) return ['', 0];
-        return [@$a->federalId ? 'setup' : 'pre', max(0, $a->created)];
+        return [$a->task == ($a->co ? 'co' : 'person') ? 'setup' : 'pre', max(0, $a->created)]; // pre's (archaic) should be deleted
       } elseif (!$a->ok) return ['activate', $now];
       $activated = max($a->activated, strtotime('1/1/2013')); // max is for testing
     }
@@ -1648,7 +1649,7 @@ X;
     $cans[B_DEV] = (isDEV or $aa->can(B_ADMIN)); // used in menu system for tests page, etc.
     //    if ($cans[B_MANAGING_CTTY] = ($aa->can(B_CADMIN) and $id == $a->community)) $cans[B_BUY] = TRUE;
     $cans[B_MANAGING_CTTY] = ($aa->can(B_CADMIN) and $id == $a->community);
-    if (!$a->federalId and !test()) $cans[B_SELL] = FALSE; // no selling without an EIN
+    if (!$a->hasFid and !isDEV) $cans[B_SELL] = FALSE; // no selling without an EIN
     if (!$a->co and !$a->stepsDone(S_SELL) and !test()) $cans[B_SELL] = FALSE;
     
     ksort($cans); // easier to debog
@@ -1723,9 +1724,10 @@ X;
    */
   public function ssnCheck($force = FALSE) {
     $a = $this;
-    if ($a->federalId == '000000000') return t('Nonmember SSN.');
-    if (!@$a->federalId) return t('No SSN yet.');
-    if ($a->federalId == '999999999') return t('SSN is a test.');
+    if (!$a->hasFid) return t('No SSN yet.');;
+    $fid = $a->vsecure['federalId'];
+    if ($fid == '000000000') return t('Nonmember SSN.');
+    if ($fid == '999999999') return t('SSN is a test.');
     //    if (u\isEncrypted($a->federalId)) return t('SSN available only to superAdmin');
     if (@$a->ssnData and !u\starts(@$a->ssnData[SSN_ERR_INDEX], SSN_TIMEOUT_MSG) and !$force) return $a->ssnData;
     
@@ -1903,17 +1905,17 @@ function agent($uid = '') { $a = r\acct($uid); return $a ? $a->agentA : NULL; }
 /**
  * Set the current account.
  * If there is no account signed in, set the agent also.
- * @param mixed $myid: the new account or account ID (if NULL, sign out)
+ * @param mixed $myid: the new account or account ID (if NULL, sign out. If '', get from sessions)
  * @param assoc $sta: (MODIFIED) if passed, gets ['uid'] set, to sign the account in
  * NOTE: $sta works only before displaying a page, not before redirecting (\session_regenerate does not appear to work).
  * @return the new account
  */
-function setAcct($myid, &$sta = NULL) {
+function setAcct($myid = '', &$sta = NULL) {
   global $mya;
   global $user;
   global $channel; 
 
-  if (is_object($myid)) $myid = $myid->id;
+  if (is_object($myid)) list ($myid, $agentId) = [$myid->id, $myid->agentId]; else $agentId = FALSE;
   if ($sta) $sta['uid'] = $myid;
 
   if (is_null($myid)) { // sign out
@@ -1922,11 +1924,13 @@ function setAcct($myid, &$sta = NULL) {
     return $mya = NULL;
   }
 
-  w\svar('myid', $myid);
-  $agentId = w\svar('agentId') ?: w\svar('agentId', $myid);
-  $sid = session_id();
-  db\update('sessions', ray('uid acct ssid', $agentId, $myid, $sid), 'ssid');
-  if (empty($user)) $user = obj('uid', $myid);
+  if ($myid) w\svar('myid', $myid); else $myid = w\svar('myid') ?: (w\svar('agentId') ?: 0);
+  if (!$agentId and !$agentId = w\svar('agentId')) w\svar('agentId', $agentId = $myid);
+
+  if ($sid = session_id()) db\update('sessions', ray('uid acct ssid', $agentId, $myid, $sid), 'ssid');
+  w\svar('agentId', $agentId); w\svar('myid', $myid); // redo in case 
+  if (empty($user)) $user = obj('uid', $myid); else $user->uid = $agentId;
+  if (!$myid) return $mya = NULL;
 
   $a = r\acct($myid, $agentId);
   if (!$mya or ($a != $mya and !$mya->admin2)) $a->accessed(); // admin access doesn't count

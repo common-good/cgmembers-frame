@@ -31,7 +31,7 @@ function formSummary($form, &$sta) {
   if ($mya->admin2 and !$mya->proSe) { // some kind of admin (but not self)
     include_once __DIR__ . '/../admin/admin-web.inc';  
     $form = w\adminSummary();
-    foreach (ray('photo legalName shortName federalId community') as $k) if (@$form[$k]) { // move these up (see return line)
+    foreach (ray('photo legalName shortName community') as $k) if (@$form[$k]) { // move these up (see return line)
       $$k = $form[$k];
       unset($form[$k]);
     }
@@ -118,7 +118,7 @@ function formSummary($form, &$sta) {
   } else $extra = '';
   $accountId = item(($mya->mainQid ?: 'N/A') . ' (' . $acctType . ')' . $extra, t('ID:'));
 
-  $fields = 'photo title clickPhoto showCustomers topButtons accountId accountName details address legalName shortName federalId community balance newBalance creditLine creditLimit committed choiceList';
+  $fields = 'photo title clickPhoto showCustomers topButtons accountId accountName details address legalName shortName community balance newBalance creditLine creditLimit committed choiceList';
   foreach (ray('details') as $k) $$k = @$form[$k]; unset($form[$k]); // put these on the left if admin
   $fields = @compact(ray($fields));
   
@@ -142,13 +142,13 @@ function formSummary_validate($form, &$sta) {
   global $mya;
 
   if (in(op($sta), 'openCompany openJoint')) return;
-  extract(just('uid legalName federalId creditLimit rTrader helper mediaConx moves tickle adminable', $sta['input']));
+  extract(just('uid legalName creditLimit rTrader helper mediaConx moves tickle adminable', $sta['input']));
   if (nn($tickle, NULL) !== '' and $err = u\badDate($tickle)) return say($err, 'tickle');
   
-  if (in(nn($federalId), [R_ON_FILE, t('SSN')])) {
+/*  if (in(nn($federalId), [R_ON_FILE, t('SSN')])) {
     unset($sta['input']['federalId']);
   } elseif (@$federalId and $err = u\badSsn($federalId, $mya->dob)) return say($err, ['what' => 'federalId'], 'federalId');
-
+*/
   if (@$helper) {
     if (!$h = whois($helper, 'helper', $sta['input'])) return say(t('I don\'t know what helper account you mean.'), 'helper');
     $helper = $h->id;
@@ -180,7 +180,7 @@ function formSummary_submit($form, &$sta) {
   if (!$mya->admin2) return; // hack attempt
   if ($op == 'secureMsgs') return w\go('', showSecureMessages());
 
-  extract($args = just('uid who legalName federalId creditLimit tickle note notes helper mediaConx moves rTrader risks adminable', $sta['input']));
+  extract($args = just('uid who legalName creditLimit tickle note notes helper mediaConx moves rTrader risks adminable', $sta['input']));
   if (!$mya->cAdmin) u\EXPECT(!array_diff(array_keys($args), ray('uid tickle note')), 'too many unpermitted changing fields in ' . pr($args));
 
   if (!@$tickle) {

@@ -1033,7 +1033,7 @@ function updateFlood($sta, $success) {
  * @param string $sid: the session ID
  */
 function sessionVars($sid) {
-  if (!$both = db\get('uid,session', 'sessions', 'sid=:sid', compact('sid'))) return [];
+  if (!$both = db\get('uid,session', 'sessions', 'ssid=:sid', compact('sid'))) return [];
   extract($both);
   $res['uid'] = $uid;
   
