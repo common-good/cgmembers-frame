@@ -121,9 +121,9 @@ nav.navbar.navbar-inverse .container {max-height:50px;}
   .submenu a.list-group-item {background-color:#044687;} /* here, not on #navbar, for android */
   .nav {padding-top:0;}
   .submenu .popover .arrow:after {border-left-color:#044687; border-bottom-color:transparent;}
-  body:not(.page-partner) #edit-title .control-label {display:none;}
-  body:not(.page-partner) #edit-title {width:100%; background-color:silver; position:fixed; z-index:2; left:0; top:50px; margin:0 !important; text-align:center;}
-  body:not(.page-partner) #edit-title .control-data {width:100%; max-width:100% !important; padding:0 2px;}
+  body:not(.page-partner):not(.page-settings-partnerend) #edit-title .control-label {display:none;}
+  body:not(.page-partner):not(.page-settings-partnerend) #edit-title {width:100%; background-color:silver; position:fixed; z-index:2; left:0; top:50px; margin:0 !important; text-align:center;}
+  body:not(.page-partner) #edit-title .control-data {width:100%; max-width:100% !important; padding:0 12px;}
   body:not(.page-partner) #edit-title h3 {margin:10px 0 10px 0;}
   .breadcrumb {display:none;}
   #main {margin-top:50px !important;}
@@ -352,6 +352,7 @@ body.page-partner #edit-submit {background-image: linear-gradient(#686868, #6868
 body.page-partner h3 {color: #686868;}
 body.page-partner #edit-submit:hover {background-image: linear-gradient(#a9a9a9, #a9a9a9 60%, #a9a9a9); border: 1px solid #a9a9a9;}
 body.page-partner h3 {color: #a9a9a9;}
+body.page-settings-partnerend #messages .messages.status {display:none;}
   
 /* Security */
 #frm-security #edit-change a {margin-right:10px;}
@@ -1063,19 +1064,19 @@ fieldset#dateRange #advanced {display:none;}
 
 /* Donate */
 #frm-donate .form-item-wait {margin-top:30px;}
+.form-item-amtChoice {display:none;} /* this applies to all forms with amtChoice */
 #frm-donate #edit-amtchoice {font-family:"Lucida Console",Menlo,Monaco,"Courier New",monospace;}
 /*#frm-donate .form-item-share .control-data {max-width:650px;}
 #frm-donate .form-item-share input {max-width:100px;} */
 /*#frm-donate #edit-period {display:block; float:left;}*/
 #frm-donate .form-item-period {display:block;}
-#frm-donate .form-item-amount {display:none;}
+#frm-donate #edit-honor {width:150px; display:inline-block; margin-right:10px;}
 
 /* Food Fund */
 #frm-food #edit-food {display:inline-block; width:200px;}
 #frm-food #edit-amtchoice {display:inline-block; width:200px;}
 #frm-food #edit-amtchoice {font-family:"Lucida Console",Menlo,Monaco,"Courier New",monospace;}
 #frm-food .form-item-period {display:block;}
-#frm-food .form-item-amount {display:none;}
 #frm-food #edit-img img {max-width:100%;}
 
 /* Backing */
@@ -1083,7 +1084,6 @@ fieldset#dateRange #advanced {display:none;}
 #frm-backing #edit-amtchoice,
 #frm-backing #edit-amount,
 #frm-backing #edit-signedby {max-width:200px; display:inline-block;}
-#frm-backing .form-item-amount {display:none;}
 
 /* Balance Sheet */
 #frm-balancesheet .control-label {text-align:left; padding:0 0 0 35px; width:300px; font-weight:normal;}

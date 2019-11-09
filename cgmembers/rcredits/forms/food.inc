@@ -90,7 +90,7 @@ X
       
 //    $amtChoice = selectFld(t('Donation:'), '', required($mya->co ? R_COMPANY_GIFT : R_INDIVIDUAL_GIFT), $giftLevels);
     $amtChoice = selectFld(t('Donation:'), '', dft($amtChoice0), $giftLevels);
-    $amount = textFld(t('Other amount $'), '', dft($amount0));
+    $amount = textFld(t('Donation:'), [t('Amount')], dft($amount0));
     $period = selectFld(t('How often:'), '', dft($period0), $oftens);
     $submit = submit();
   } else {$subtext = t('You do not have permission to use this page.');}

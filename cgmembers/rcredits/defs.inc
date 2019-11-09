@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-define('R_VERSION', '3.51d'); // software version
+define('R_VERSION', '3.51e'); // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -140,7 +140,7 @@ define('MASTER_FLDS', MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank refi
 define('R_MONEY_FLDS', 'balance rewards floor giftPot committed'); // financial amount fields in account record
 define('JOINT_FLDS', R_MONEY_FLDS . ' savings'); // add these together for joint accounts
 define('PSECURE_FLDS', 'phone email'); // personal fields that get encrypted in a searchable way (P)
-define('VSECURE_FLDS', 'federalId dob bankAccount'); // very secure fields (pgp-encrypted)
+define('VSECURE_FLDS', 'federalId dob bankAccount'); // very secure fields (always soon pgp-encrypted within Acct::vsecure)
 define('SECURE_FLDS', 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode cardCode cardCode2 pin question answer idProof oneTimePass last4bank'); // non-personal encrypted fields (must be complete list)
 define('R_HIDE_CHANGES', R_MONEY_FLDS . ' pw2 vKeyPw ssnData hasBank changes init login access activated data secure vsecure stepsDone steps stepsLeft lastiCode pass oneTimePass notes picture photo thumb trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd'); // do not record changes to these fields: anything often-changed (automatically or not)
 define('R_APP_DATA_GETS', '!log !device !members !txs '); // data requests from the rPOS app

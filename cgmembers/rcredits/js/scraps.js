@@ -184,9 +184,9 @@ function doit(what, vs) {
   case 'invest-proposal':
     $('#add-co').click(function () {
       $('.form-item-fullName, .form-item-city, .form-item-serviceArea, .form-item-dob, .form-item-gross, .form-item-bizCats').show();
-      require('#edit-fullname, #edit-city, #edit-servicearea, #edit-dob, #edit-gross, #edit-bizcats', true);
+      require('#edit-fullname, #edit-city, #edit-servicearea, #edit-dob, #edit-gross, #edit-bizcats', true, true);
       $('.form-item-company').hide();
-      require('#edit-company', false);
+      require('#edit-company', false, true);
       $('#edit-fullname').focus();
     });
     
@@ -213,7 +213,7 @@ function doit(what, vs) {
   case 'bank-prefs':
     function showBank(show) {
       $('#connectFields2').toggle(show);
-      require('#edit-routingnumber, #edit-bankaccount, #edit-bankaccount2, #edit-refills-0, #edit-refills-1', show);
+      require('#edit-routingnumber, #edit-bankaccount, #edit-bankaccount2, #edit-refills-0, #edit-refills-1', show, false);
       var text = show ? vs['connectLabel'] : vs['saveLabel'];
       $('#edit-submit, #edit-nextStep').val(text);
       $('#edit-submit .ladda-label, #edit-nextStep .ladda-label').html(text);
@@ -228,7 +228,7 @@ function doit(what, vs) {
 
     function showTarget(show) {
       $('#targetFields2').toggle(show);
-      require('#edit-target, #edit-achmin', show);
+      require('#edit-target, #edit-achmin', show, false);
     }
     showTarget($('#edit-refills-1').attr('checked') == 'checked');
 
@@ -271,7 +271,7 @@ function doit(what, vs) {
       other.hide();
     }
     
-    amtChoice.change(function () {
+    amtChoice.click(function () {
       if(amtChoice.val() == -1) {
         other.show(); 
         amtChoiceWrap.hide();
@@ -390,19 +390,25 @@ function setInvestFields() {
   var equity = ($('input[name="equity"]:checked').val() == 1);
   $('.form-item-equitySet').toggle(equity);
   $('.form-item-loanSet').toggle(!equity);
-  require('#edit-offering, #edit-price, #edit-return', equity);
-  require('#edit-offering--2, #edit-price--2, #edit-return--2', !equity);
+  require('#edit-offering, #edit-price, #edit-return', equity, true);
+  require('#edit-offering--2, #edit-price--2, #edit-return--2', !equity, true);
 }
 
-function require(items, yesno) {
+/**
+ * Require or don't the given fields.
+ * @param set items: a jQuery selector
+ * @param bool yesno: set or don't
+ * @param bool xx: change name of non-required fields to xx-name (and remove the xx- for required)
+ */
+function require(items, yesno, xx) {
   if (yesno) {
     $(items).prop('required', true);
-    $(items).each(function (i) {
+    if (xx) $(items).each(function (i) {
       $(this).attr('name', $(this).attr('name').replace('xx-', ''));
     });
   } else {
     $(items).removeAttr('required');
-    $(items).each(function (i) {
+    if (xx) $(items).each(function (i) {
       $(this).attr('name', 'xx-' + $(this).attr('name'));
     });    
   }
