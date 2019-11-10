@@ -414,6 +414,7 @@ class Acct {
   public function update($info) {
     $a = $this;
     if (!is_array($info)) $info = rayy(func_get_args());
+    $a->reread(); // make sure record has been read in
     
     u\EXPECT(!isset($info['savings']), 'archaic savings field');
     //    if ($jid = $a->jid and $jInfo = just(MASTER_FLDS . ' savings', $info)) {
