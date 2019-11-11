@@ -317,6 +317,8 @@ function formFollowup($form, &$sta, $args = []) {
   $subtitle = item(t('<p>Start with today and work backward. Click an account name.</p><ul><li><b>Live Person.</b> If you get a live person, click "live" for a script. Then, if no followup is needed, make a note about your conversation and click "Auto".</li><li><b>Message #1.</b> If you get a machine, click "msg1" for a Phone Message script, type "PM setup" or "PM welcome" or whatever as a note, and click the "2 days" button.</li><li><b>Message #2.</b> If you already left one message, try 3 more times to catch them live. If you still don\'t catch them click "msg2" for a Phone Message script, then click "email" to send them an Email Message. Type "EM setup" or whatever and click the "7" button if this is for a Setup or Annual check-in or the "Auto" button if it is for a Welcome.</li><li><b>After Setup Help Email.</b> If the email gets no response for a setup help call, keep phoning or emailing at 1-, 2-, or 7-day intervals until you reach them or we close the account.</li><li><b>After Annual Check-in Email.</b> If the email gets no response for an Annual check-in, send a US Mail fund appeal/check-in.</li></ul><p>(comments on this standard procedure are welcome)</p>') . w\btn('/sadmin/followup/one=1', t('Show just my community')) . ' &nbsp; ' . w\btn('/sadmin/followup', t('Show ALL')) . ' &nbsp; ' . w\btn('/sadmin/followup/recent=1', t('Recent notes first')));
   
   $now = now();
+  $signupBit = r\allSteps()['signup'];
+  $wantsCard = 0; foreach(ray(S_CARD) as $step) $wantsCard |= u\bit(r\allSteps()[$step]);
   $todayEnd = strtotime('tomorrow') - 1;
   list ($where1, $where2) = (($mya->admin or $mya->isAdmin2) and empty($one)) ? [1, 1] : [0, "community=$mya->community"];
   $cttys = r\cttyList();
@@ -329,7 +331,7 @@ function formFollowup($form, &$sta, $args = []) {
   if ($mya->superAdmin) $by = "(:IS_OK AND NOT :IS_CARDED) DESC, (!activated AND u.:IS_MEMBER) DESC, (notes LIKE '%ZAP%' AND BINARY notes LIKE '%ZAP%') DESC, " . $by;
   
   $sql = <<<EOF
-    SELECT DISTINCT u.uid, community, tickle, fullName, phone, u.data, u.created, activated, notes, :IS_CO AS co, t.created AS lastTxTime, :IS_MEMBER AS member, :IS_OK AS ok, :IS_CARDED AS carded
+    SELECT DISTINCT u.uid, community, tickle, fullName, phone, u.data, u.steps, u.created, activated, notes, :IS_CO AS co, t.created AS lastTxTime, :IS_MEMBER AS member, :IS_OK AS ok, :IS_CARDED AS carded
     FROM users u LEFT JOIN (SELECT created,uid1,uid2 FROM txs ORDER BY created DESC LIMIT 1) t ON u.uid IN (t.uid1,t.uid2)
     WHERE u.uid>:CANONIC_ACCTS AND NOT :IS_NONUDGE AND NOT (activated and NOT :IS_OK) AND $where2 AND (tickle>0 OR NOT :IS_MEMBER
       OR t.created<$now-60*:DAY_SECS OR t.created IS NULL OR :isDEV)
@@ -353,22 +355,23 @@ EOF;
     foreach (['tickle', 'activated'] as $k) if ($$k) $$k = strtotime('today', $$k); // round down to nearest day
     $days = round(($tickle - $activated) / DAY_SECS); // tickle: days since activation
     list ($type, $color) = !$activated 
-      ? (mb_strpos($notes, 'ZAP') 
-         ? [t('DELETE'), 'zap']
-         : ($member ? [t('activate'), 'zap'] : (mb_strpos($data, '"signup";b:0') ? [t('pre'), 'pre'] : [t('setup'), 'setup']))
-         )
-      //    : (round(($activated + TICKLE_WELCOME - $tickle) / DAY_SECS) == 0 ? [t('welcome2'), 'welcome']
-      //    : (round(($activated + TICKLE_DELAYED - $tickle) / DAY_SECS) == 0 ? [t('welcome6'), 'welcome']
-      : (mb_strpos($notes, 'ZAP') ? [t('DEACTIVATE'), 'zap']
-         : (!$carded ? [t('print card'), 'print-card']
-            : (between($days, TICKLE_WELCOME - 1, TICKLE_WELCOME + 14) ? [t('welcome2'), 'welcome']
-               : (between($days, TICKLE_DELAYED - 1, TICKLE_DELAYED + 14) ? [t('welcome6'), 'welcome']
-                  : (($activated < strtotime('9/2/2017') and $tickle < $activated + 90 * DAY_SECS and !$notes) ? [t('welcome'), 'welcome']
-                     : (($tickle and $days % 365 < 30) ? [t('annual'), 'annual'] // +/-:2/29
-                        //    in_array(($tickle - $activated) % DAY_SECS, [0, 1, DAY_SECS - 1])) ? [t('annual'), 'annual'] // +/-:2/29
-                        : (($lastTxTime < $now - 60 * DAY_SECS and $now - $activated > 60 * DAY_SECS) ? [t('dormant'), 'dormant']
-                           : ($tickle ? [t('followup'), 'fu']
-                              : ( [t('other'), 'fu'] )))))))));
+     ? (mb_strpos($notes, 'ZAP') 
+       ? [t('DELETE'), 'zap']
+       : ($member ? [t('activate'), 'zap'] : (u\getBit($steps, $signupBit) ? [t('setup'), 'setup'] : [t('pre'), 'pre']))
+       )
+     //    : (round(($activated + TICKLE_WELCOME - $tickle) / DAY_SECS) == 0 ? [t('welcome2'), 'welcome']
+     //    : (round(($activated + TICKLE_DELAYED - $tickle) / DAY_SECS) == 0 ? [t('welcome6'), 'welcome']
+     : (mb_strpos($notes, 'ZAP') ? [t('DEACTIVATE'), 'zap']
+     : ((($steps & $wantsCard) == $wantsCard and !$carded) ? [t('print card'), 'print-card']
+     : (!$carded ? [t('no card yet'), 'welcome']
+     : (between($days, TICKLE_WELCOME - 1, TICKLE_WELCOME + 14) ? [t('welcome2'), 'welcome']
+     : (between($days, TICKLE_DELAYED - 1, TICKLE_DELAYED + 14) ? [t('welcome6'), 'welcome']
+     : (($activated < strtotime('9/2/2017') and $tickle < $activated + 90 * DAY_SECS and !$notes) ? [t('welcome'), 'welcome']
+     : (($tickle and $days % 365 < 30) ? [t('annual'), 'annual'] // +/-:2/29
+     //    in_array(($tickle - $activated) % DAY_SECS, [0, 1, DAY_SECS - 1])) ? [t('annual'), 'annual'] // +/-:2/29
+     : (($lastTxTime < $now - 60 * DAY_SECS and $now - $activated > 60 * DAY_SECS) ? [t('dormant'), 'dormant']
+     : ($tickle ? [t('followup'), 'fu']
+     : ( [t('other'), 'fu'] ))))))))));
 
     if ($mya->superAdmin and $type == t('DELETE')) $type = w\lnk("$base_url/sadmin/delete-account/$uid", $type);
     if (in($color, $whities)) $color .= ' fu-whitey';
@@ -423,7 +426,7 @@ function formMemberList($form, &$sta) {
       $bits = $bits ? ('<span class="memberlist-bits"> ' . join(' ', $bits) . "</span><br>\n") : '';
     } else $bits = '';
     
-    $one = "<tr><td colspan=4 class=\"memberlist-line2\">$date: $steps$bits$notes</td></tr>\n";
+    $one = "<tr><td colspan=4 class=\"memberlist-line2\">$date &mdash; $steps$bits$notes</td></tr>\n";
     $list .= <<<EOF
       <tr>
       <td class="$nameClass">$fullName</td>

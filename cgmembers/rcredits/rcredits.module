@@ -60,7 +60,7 @@ set_exception_handler('rcredits_exception_handler');
  *   Uninitialized: print the full error information and die
  */
 function rcredits_exception_handler($e) {
-  global $channel, $rsms_number;
+  global $channel;
   global $R_FATAL_ERROR;
   
   list ($msg, $line0, $file0, $trace) = array($e->getMessage(), $e->getLine(), $e->getFile(), $e->getTrace());

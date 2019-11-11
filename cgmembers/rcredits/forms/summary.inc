@@ -327,7 +327,7 @@ X
     if ($dir == 'community') {
       $kch = "<div>$title</div><div>$text</div>";
     } else {
-      $steps = $mya->stepCount($mya->taskSteps($k));
+      $steps = $mya->stepCount(r\taskSteps($k));
       $kch = $steps ? tr("<div>$title</div><div>$text (%steps)</div>", 'steps', $steps . t(' steps')) : NULL;
     }
     ${$k . 'Ch'} = $kch ? ["$dir/$k" => $kch] : [];

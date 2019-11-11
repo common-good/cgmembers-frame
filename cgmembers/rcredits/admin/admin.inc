@@ -140,7 +140,13 @@ function makeTestAdmins() {
   if (isSTAGE) foreach (ray(R_COS . ' ' . DEV_ACCTS) as $k) if ($k and $a = a($k)) $a->setBit(B_CADMIN);
 }
 
-function showSteps($a) {return '<b class=\"step-not-done\">' . $a->task . ': ' . join(' ', $a->stepsLeft()) . '</b>';}
+/**
+ * Return a list of signup steps remaining for the given account.
+ */
+function showSteps($a) {
+  $help = ray(t('person:minimal individual signup,co:minimal company signup,co2:complete company signup,card:qualifying for a %PROJECT card,sell:qualifying to accept %PROJECT payments as an individual,voice:qualifying (as an individual) to participate in %PROJECT Democracy,partner:minimal signup (individual or company) jointly with a partner organization'));
+  $task = $a->task ? w\popHelp($a->task, $help[$a->task]) : t('no task');
+  return "<b>$task:</b> " . join(' ', $a->stepsLeft());}
 
 /**
  * Return a description of the account's recent purchase activity (sales activity for companies).

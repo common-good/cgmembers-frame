@@ -1,3 +1,9 @@
+2019-11-11 feature/admin-followup
+. adjusted admin followup categories to agree with new signup flow
+. moved taskSteps and allSteps to outside account object
+. prevent admin from deleting current account (resulted otherwise in confusing crashes)
+. added popup help to task on Summary page (for admin)
+
 2019-11-09 hotfix/fix-setlocus
 . we no longer try to setLocus for accounts without both city and state
 
