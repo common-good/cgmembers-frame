@@ -56,14 +56,7 @@ function signedContract($code, &$sta = '') {
   
   if (!file_exists(contractFlnm($customer))) fillContract($pA->name, $info, [], TRUE); // only if first time clicking the link
   if ($mya->member) return partnerEnd(); // customer is already set up to pay with Common Good
-  if ($mya->stepIsDone('fund')) {
-    r\setAcct($mya, $sta); // part way through, so gotta sign back in
-    $title = t('Next Step');
-    $subtext = t('Click the button below to continue setting up your %PROJECT payment account, as your chosen method of paying for your community solar subscription.');
-    $go = item(button(t('Continue'), $mya->nextStepUrl()));
-    return cgform(compact(ray('title subtext go')));
-//    return w\goNextStep('signup');
-  }
+  if ($mya->stepIsDone('fund')) return partnerContinue($mya, $sta);
 
   $title = t('Source of Funding');
   $subtext = t(<<< X
@@ -134,7 +127,7 @@ function formPartnerSignup_validate($form, &$sta, $args = '') {
 function formPartnerSignup_submit($form, &$sta) {
   global $mya;
   
-  extract(just('routingNumber bankAccount processor data myid', $sta['input']));
+  extract(just('routingNumber bankAccount sorch processor data myid', $sta['input']));
   extract(just('info pid', unserialize($data)));
   if (!$pA = r\acct($pid)) u\FAIL('no partner account');
   if (!$mya = r\acct($myid)) u\FAIL('no customer account');
@@ -144,7 +137,8 @@ function formPartnerSignup_submit($form, &$sta) {
   $last4bank = substr($bankAccount, -4, 4);
   $bankOk = FALSE;
   $hasBank = TRUE;
-  $mya->update(compact(ray('bankAccount last4bank hasBank bankOk')));
+  $isSavings = (bool) $sorch;
+  $mya->update(compact(ray('bankAccount isSavings last4bank hasBank bankOk')));
   
   if (nn($sta['input']['city2'])) { // solar1, so extra fields
     extract(just('fullName name address2 city2 email phone state2 zip2 tenure', $sta['input']));
@@ -347,11 +341,7 @@ function gotSolarOne($info) {
   if (test() and is_numeric($state)) $state = r\realState($state);
   if (!$stateId = r\stateNum($state)) return solarOneErr('bad state', 'state');
 
-  if (r\acct($email) or r\relation(1, 'main=:main AND :IS_CUSTOMER AND code=:customer', ray('main customer', $pA->id, $customer))) {
-    $title = t('Error');
-    $subtext = t('You are already signed up with %partnerName.', compact('partnerName'));
-    return cgForm(compact(ray('title subtext')));
-  }
+  if ($ta = r\acct($email) and $ta->hasBank) return partnerContinue($ta, $sta);
 
   $info = compact(ray($keys . ' m_company customer pid noContract')); // recreate info with possibly improved values
 
@@ -399,13 +389,14 @@ function gotSolarOne($info) {
     <ul><li>One bill from %m_company as usual that shows how much electricity you used and what %m_company is billing you for it.  That bill will also have a credit that shows how much money you received from your solar subscription.</li>
     <li>The other bill will be from %partnerName. We will bill you for the credits you received, minus your discount, plus any membership fee due.</li></ul>
 
-    <p>Enter the bank account information for the <span class="loud">checking account</span> you will use to pay that bill.</p>
+    <p>Enter the bank account information for the savings or checking account you will use to pay that bill.</p>
 X
   , compact(ray('m_company partnerName')));
 
   $routingNumber = textFld(t('Routing:'), t('Type carefully your bank\'s routing number.'), required());
   //$bankAccount = textFld(t('Account:'), t('Type carefully your checking account number.'));
-  $bankAccount = textFld(t('Account:'), t('Type <b>carefully</b> your <b>checking account</b> number.'), required());
+  $bankAccount = textFld(t('Account:'), t('Type <b>carefully</b> your bank account number.'), required());
+  $sorch = radiosFld(t('Type:'), '', required(-1), [t('Checking'), t('Savings')]);
     
   $midtext = t(<<< X
     <p>Now choose which financial institution will process your payments. We recommend using %PROJECT because it provides a lot of other community benefits and costs us less. %PROJECT is to banking what %partnerName is to energy. Check out their website: <%a>CommonGood.earth</a>.</p>
@@ -436,7 +427,7 @@ X
 
   jsx('contact');
 
-  return cgForm(compact(ray('title subtext routingNumber bankAccount midtext processor fullName contact phone emailDpy mailingHdr address2 city2 state2 zip2 tenure owns submit data email myid')));
+  return cgForm(compact(ray('title subtext routingNumber bankAccount sorch midtext processor fullName contact phone emailDpy mailingHdr address2 city2 state2 zip2 tenure owns submit data email myid')));
 }
 
 /**
@@ -628,6 +619,17 @@ function getLinks($zip) {
   }
   return '<ul><li>' . join("</li><li>\n", $res) . '</li></ul>';
 }
+
+/**
+ * Give the customer a way to continue signing up.
+ */
+function partnerContinue($a, &$sta) {
+  r\setAcct($a, $sta); // part way through, so gotta sign back in
+  $title = t('Next Step');
+  $subtext = t('Click the button below to continue setting up your %PROJECT payment account, as your chosen method of paying for your community solar subscription.');
+  $go = item(button(t('Continue'), $a->nextStepUrl()));
+  return cgform(compact(ray('title subtext go')));
+}  
 
 function contractFlnm($customer) {return sys_get_temp_dir() . "/contracts/$customer.pdf";} // customer-specific flnm
 //function contractUrl($customer) {return str_replace(ROOT, BASE_URL, contractFlnm($customer));}

@@ -52,8 +52,8 @@ Scenario: A newbie visits the registration page sent by a partner and opts out o
   Then we show "Source of Funding"
   
   When member ".AAA" completes form "partner/signed=TESTDOCODE" with values:
-  | routingNumber | bankAccount | processor |*
-  | 211870281     | 12345       |         1 |
+  | routingNumber | bankAccount | sorch | processor |*
+  | 211870281     | 12345       |     1 |         1 |
   Then members have:
   | uid  | bankAccount        | last4bank |*
   | .AAA | USkk21187028112345 |      2345 |
@@ -101,8 +101,8 @@ Scenario: A newbie visits the registration page sent by a partner and chooses Co
   Then we show "Source of Funding"
   
   When member "?" completes form "partner/signed=TESTDOCODE" with values:
-  | routingNumber | bankAccount | processor |*
-  | 211870281     | 1234        |         0 |
+  | routingNumber | bankAccount | sorch | processor |*
+  | 211870281     | 1234        |     1 |         0 |
   Then we show "%PROJECT Account Setup" with:
   | %PROJECT Agreement |
   And members have:
@@ -232,8 +232,8 @@ Scenario: A company visits the registration page sent by a partner
   Then we show "Source of Funding"
 
   When member ".AAA" completes form "partner/signed=TESTDOCODE" with values:
-  | routingNumber | bankAccount | processor |*
-  | 211870281     | 1234        |         0 |
+  | routingNumber | bankAccount | sorch | processor |*
+  | 211870281     | 1234        |     0 |         0 |
   
   Then we show "%PROJECT Account Setup" with:
   | %PROJECT Agreement |
