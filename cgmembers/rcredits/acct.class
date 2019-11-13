@@ -934,15 +934,15 @@ EOF;
 
   /**
    * Return an array of the remaining steps in the given (or current) task.
-   * @param string $steps: a list of the steps of interest, such as S_CARD or S_VOICE (defaults to current task)
+   * @param string $task: the task of interest, such as card or voice (defaults to current task)
    * @see also $this->stepsLeft, which is the steps remaining in the current task, in order (possibly reordered)
    */
-  public function stepsLeft($steps0 = NULL) {
+  public function stepsLeft($task = NULL) {
     $a = $this;
     
-    if (!$steps = isset($steps0) ? ray($steps0) : $a->stepsLeft) return [];
+    if (!$steps = isset($task) ? ray(r\taskSteps($task)) : $a->stepsLeft) return [];
     $res = []; foreach ($steps as $k) if (!$a->stepIsDone($k)) $res[] = $k;
-    if (!isset($steps0)) $a->update('stepsLeft', $res);
+    if (!isset($task)) $a->update('stepsLeft', $res);
     return $res;
   }
     
@@ -968,7 +968,7 @@ EOF;
     // no current task (nothing to be done next)
     if ($a->member) {
       if ($stepDone) {
-        foreach (ray(S_PSETS . ' co2') as $k) {
+        foreach (ray(S_MEM_TASKS) as $k) {
           if (in($stepDone, r\taskSteps($k)) and $a->stepsDone($k)) $msg .= "|$k member"; // ack
         }
         $a->update('stepsLeft task', '', '');
@@ -980,14 +980,14 @@ EOF;
     return 'summary';
   }
 
-  public function setTask($task) {$this->update('task stepsLeft', $task, $this->stepsLeft(r\taskSteps($task)));}
+  public function setTask($task) {$this->update('task stepsLeft', $task, $this->stepsLeft($task));}
   public function stepIsDone($step) {return (bool) u\getBit($this->steps, r\allSteps()[$step]);}
   public function stepsDone($task) {
     foreach(ray(r\taskSteps($task)) as $step) if (!$this->stepIsDone($step)) return FALSE; 
     return TRUE;
   }
   public function nextStep() {return ($steps = $this->stepsLeft) ? $steps[0] : FALSE;}
-  public function stepCount($steps = NULL) {return count($this->stepsLeft($steps));}
+  public function stepCount($task = NULL) {return count($this->stepsLeft($task));}
 
   /**
    * Check SSN during a signup step (normally on the verifyId step as soon as we get federalId, unless already verified)

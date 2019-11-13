@@ -120,7 +120,8 @@ function adminSummary() {
     }
   
     $activity = item(a\showActivity($mya), t('Activity:'));
-    if (!$mya->ok) $steps = item(a\showSteps($mya), t('To do:'), t('|agree=sign agreement | fund=connect bank (or not) | work=identify employer/calling | company=company info | discount=offer a discount'));
+    $tasks = item(a\showTasks($mya), t('Tasks:'));
+    $steps = item(a\showSteps($mya), t('To do:'), t('|agree=sign agreement | fund=connect bank (or not) | work=identify employer/calling | company=company info | discount=offer a discount'));
     if ($rels = a\showRelations($mya)) $relations = item($rels, t('Relations:'));  
   }
   
@@ -208,7 +209,7 @@ function adminSummary() {
   w\jsx('tickle');
   
   $bigFields = $mya->ok ? 'adminable risks ssnShow' : 'ssnShow adminable risks';
-  return @compact(ray("photo details notes note tickle donations rTrader activity relations source helper $bigFields community balance cgfDonations legalName shortName calling signupCo tenure steps dwInfo invited invitedBy proxies proxyFor moves floor minimum achMin risk trust mediaConx count back uid submit"));
+  return @compact(ray("photo details notes note tickle donations rTrader activity relations source helper $bigFields community balance cgfDonations legalName shortName calling signupCo tenure tasks steps dwInfo invited invitedBy proxies proxyFor moves floor minimum achMin risk trust mediaConx count back uid submit"));
 }
 
 /**

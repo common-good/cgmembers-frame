@@ -343,7 +343,9 @@ define('S_VOICE', 'contact donate proxies work backing invite'); // add comment
 define('S_PARTNER', 'signup fund partnersteptwo partnerend');
 //define('S_PARTNERCO', 'signup fund agree partnerend');
 
-define('S_PSETS', 'card sell voice');
+define('S_MEM_TASKS', 'card sell voice co2'); // followup tasks for members
+define('S_PTASKS', 'person card sell voice partner');
+define('S_COTASKS', 'co co2 partner');
 
 // Permissions, options, and flags (flags field in account record)
 // If we need more bits, create a flags2 field and make the B_ defs negative or 32-63 for setBit

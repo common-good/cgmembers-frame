@@ -322,15 +322,15 @@ function choiceListFld() {
 X
   ));
   foreach($choices0 as $one) {
-    list ($dir, $k, $title, $text) = explode(':', trim($one));
+    list ($dir, $task, $title, $text) = explode(':', trim($one));
 
     if ($dir == 'community') {
       $kch = "<div>$title</div><div>$text</div>";
     } else {
-      $steps = $mya->stepCount(r\taskSteps($k));
+      $steps = $mya->stepCount($task);
       $kch = $steps ? tr("<div>$title</div><div>$text (%steps)</div>", 'steps', $steps . t(' steps')) : NULL;
     }
-    ${$k . 'Ch'} = $kch ? ["$dir/$k" => $kch] : [];
+    ${$task . 'Ch'} = $kch ? ["$dir/$task" => $kch] : [];
   }
     
   $choices = $mya->co ? $co2Ch : ($cardCh + $sellCh + $voiceCh);

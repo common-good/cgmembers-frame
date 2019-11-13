@@ -11,7 +11,6 @@ require_once R_ROOT . '/pdf.class';
 
 define('SF_URL', 'https://webto.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8');
 define('CRM_URL', 'SMT solar customer management URL');
-define('OTHER_ACH', 'Arizona Bank & Trust');
 
 /**
  * Accept and process signup data from a partner organization.
@@ -58,9 +57,9 @@ function signedContract($code, &$sta = '') {
   if ($mya->member) return partnerEnd(); // customer is already set up to pay with Common Good
   if ($mya->stepIsDone('fund')) return partnerContinue($mya, $sta);
 
-  $title = t('Source of Funding');
+  $title = t('Enter Your Payment Information');
   $subtext = t(<<< X
-    <p>Thank you for signing the contract! The next step is to tell us how you will pay.</p>
+    <p>Thank you for signing the contract! The next step is to tell us how you will pay for your solar credits.</p>
     <p>You will get two bills for your subscription solar:</p>
     <ul><li>One bill from %m_company as usual that shows how much electricity you used and what %m_company is billing you for it.  That bill will also have a credit that shows how much money you received from your solar subscription.</li>
     <li>The other bill will be from %partnerName. We will bill you for the credits you received, minus your discount, plus any membership fee due.</li></ul>
@@ -80,7 +79,7 @@ X
   
 //  if ($co) $midtext .=  t('<p><b>NOTE:</b> If you choose %PROJECT, as a participating %PROJECT company you will also need to open an individual %PROJECT account and complete several additional steps. You probably will want to do that if you passionately support community economic democracy or despise credit card fees. %PROJECT staff are happy to talk to you about how it all works, by phone (%CGF_PHONE) or email (%CGF_EMAIL).</p>');
 
-  $processor = radiosFld(t('Payment Processor:'), '', required(0), [PROJECT, OTHER_ACH]);
+  $processor = radiosFld(t('Payment Processor:'), '', required(0), [PROJECT, t('Standard ACH')]);
   
   $data = hidFld(serialize(compact(ray('info pid'))));
   $submit = t('Submit');
@@ -127,7 +126,7 @@ function formPartnerSignup_validate($form, &$sta, $args = '') {
 function formPartnerSignup_submit($form, &$sta) {
   global $mya;
   
-  extract(just('routingNumber bankAccount sorch processor data myid', $sta['input']));
+  extract(just('routingNumber bankAccount processor data myid', $sta['input']));
   extract(just('info pid', unserialize($data)));
   if (!$pA = r\acct($pid)) u\FAIL('no partner account');
   if (!$mya = r\acct($myid)) u\FAIL('no customer account');
@@ -137,17 +136,18 @@ function formPartnerSignup_submit($form, &$sta) {
   $last4bank = substr($bankAccount, -4, 4);
   $bankOk = FALSE;
   $hasBank = TRUE;
-  $isSavings = (bool) $sorch;
-  $mya->update(compact(ray('bankAccount isSavings last4bank hasBank bankOk')));
+  $mya->update(compact(ray('bankAccount last4bank hasBank bankOk')));
   
   if (nn($sta['input']['city2'])) { // solar1, so extra fields
-    extract(just('fullName name address2 city2 email phone state2 zip2 tenure', $sta['input']));
+    extract(just('sorch fullName name address2 city2 email phone state2 zip2 tenure owns', $sta['input']));
     $state2 = r\realState($state2);
     $postalAddr = "$address2, $city2, $state2 $zip2";
+    $isSavings = (bool) $sorch;
     $partnerInfo = compact(ray('fullName email phone')) + $info;
-    $mya->update(compact(ray('fullName name email phone tenure partnerInfo')));
+    $mya->update(compact(ray('isSavings fullName name email phone postalAddr tenure partnerInfo')));
+    $mya->setRisk('rents', !$owns);
   }
-  if ($processor == 1) return w\go('partner/end=1'); // AZ B&T
+  if ($processor == 1) return w\go('partner/end=1'); // Standard ACH
   $mya->stepDone('fund'); // otherwise, new CG member (old members get handled without submitting the funding form)
 
   return w\goNextStep('signup');
@@ -382,28 +382,38 @@ function gotSolarOne($info) {
     return cgform(compact(ray('title subtext go')));
   }
 
-  $title = t('Source of Funding');
+  $title = t('Enter Your Payment Information');
   $subtext = t(<<< X
-    <p>The next step in your community solar sign-up is to tell us how you will pay.</p>
-    <p>You will get two bills for your subscription solar:</p>
-    <ul><li>One bill from %m_company as usual that shows how much electricity you used and what %m_company is billing you for it.  That bill will also have a credit that shows how much money you received from your solar subscription.</li>
-    <li>The other bill will be from %partnerName. We will bill you for the credits you received, minus your discount, plus any membership fee due.</li></ul>
+    <p>The next step in your community solar sign-up is to tell us how you will pay for your solar credits.</p>
+    <p>You will continue to get a bill from Con Ed as usual that shows how much electricity you used and what Con Ed is billing you for it. That bill will also have a credit that shows how much money you received from your solar subscription.</p>
+    <p>You will also get a subscription solar bill from %partnerName. We will bill you for the credits you received, minus your discount, plus any membership fee due.</p>
+    <p>For example, you could get a bill from ConEdison that says:<br>
+    <blockquote>You used $110 worth of electricity.<br>
+    You received a credit of $100 from your solar subscription.<br>
+    You need to pay Con Edison $10.</blockquote></p>
 
-    <p>Enter the bank account information for the savings or checking account you will use to pay that bill.</p>
+    <p>The bill from the NYC Community Energy Co-op would then say:<br>
+    <blockquote>You received a $100 subscription solar credit on your ConEdison bill.  <br>
+    You owe the NYC Community Energy Co-op $85 plus your membership fee of $1.50, for a total due of $86.50.</blockquote></p>
 X
   , compact(ray('m_company partnerName')));
 
-  $routingNumber = textFld(t('Routing:'), t('Type carefully your bank\'s routing number.'), required());
-  //$bankAccount = textFld(t('Account:'), t('Type carefully your checking account number.'));
-  $bankAccount = textFld(t('Account:'), t('Type <b>carefully</b> your bank account number.'), required());
-  $sorch = radiosFld(t('Type:'), '', required(-1), [t('Checking'), t('Savings')]);
-    
-  $midtext = t(<<< X
-    <p>Now choose which financial institution will process your payments. We recommend using %PROJECT because it provides a lot of other community benefits and costs us less. %PROJECT is to banking what %partnerName is to energy. Check out their website: <%a>CommonGood.earth</a>.</p>
-X
-  , 'partnerName _a', $partnerName, atag(PROMO_URL));
+  $processorPre = item(t('Now choose which payment option you want to use to process your payments. We have two options for you:'), t('Payment Option:'));
+  
+  $processor = radiosFld('', '', required(0), [t('<b>%PROJECT</b>, a secure payment processing system (recommended<sup>*</sup>)<br><br>OR'), t('<b>Standard ACH</b>')]);
+  
+  $midtext1 = t('<p><sup>*</sup> The Sunset Park Solar Team recommends using %PROJECT because it focuses on community reinvestment (like setting up a lending pool for local projects, for example). Check out their website for more information: <%a>CommonGood.earth</a>.</p>', 'partnerName _a', $partnerName, atag(PROMO_URL));  
+  
+  $checkHint = item(tr('<img src="%src" />', 'src', BASE_URL . '/rcredits/images/check-hint.png'));
+  
+  $midtext2 = t('<p>Enter the bank account information for the savings or checking account you will use to pay your solar subscription bill.</p>');
 
-  $processor = radiosFld(t('Payment Processor:'), '', required(0), [PROJECT, OTHER_ACH]);
+  $routingNumber = textFld(t('Routing:'), t('Type your bank\'s routing number. (Please check to be sure it\'s correct!)'), required());
+  //$bankAccount = textFld(t('Account:'), t('Type carefully your checking account number.'));
+  $bankAccount = textFld(t('Account:'), t('Type your bank account number. (Please check to be sure it\'s correct!)'), required());
+  $sorch = radiosFld(t('Type:'), '', required(-1), [t('Checking'), t('Savings')]);
+
+//  $bankInfo = fieldSet(BARE . 'bankInfo', compact(ray('midtext2 routingNumber bankAccount sorch')));
   
   $data = hidFld(serialize(compact(ray('info pid'))));
   $submit = t('Submit');
@@ -422,12 +432,12 @@ X
   $years = textFld(BARE, [t('Years')], suffix(t('&nbsp years + ')));
   $months = textFld(BARE, [t('Months')], suffix(t('&nbsp months')));
   $tenure = fieldSet('tenure2', compact('years', 'months'), t('How long:'), t('How long have you been at your current address (roughly)'));
-  $owns = boolFld('', '', -1, [t('Rent'), t('Own')]); // default fails
+  $owns = radiosFld('', '', required(-1), [t('Rent'), t('Own')]);
   $myid = hidFld($mya->id);
 
   jsx('contact');
 
-  return cgForm(compact(ray('title subtext routingNumber bankAccount sorch midtext processor fullName contact phone emailDpy mailingHdr address2 city2 state2 zip2 tenure owns submit data email myid')));
+  return cgForm(compact(ray('title subtext fullName contact phone emailDpy mailingHdr address2 city2 state2 zip2 tenure owns processorPre processor midtext1 midtext2 checkHint routingNumber bankAccount sorch submit data email myid')));
 }
 
 /**
@@ -507,7 +517,7 @@ function emailContract($pA, $info, $sign, $contractFlnm) {
   if ($sign) {
     list ($extra, $cgAccount) = $mya->stepIsDone('fund') ? ['', $mya->mainQid]
     : [t('You will need to delete the %PROJECT account ID in your database.'), t('(none)')];
-    $processor = $mya->stepIsDone('fund') ? PROJECT : OTHER_ACH;
+    $processor = $mya->stepIsDone('fund') ? PROJECT : t('Standard ACH');
     $tpl = nn($noContract)? 'partner-solar1report' : 'partner-report';
     r\rMail($tpl, $partnerReply, $subs + compact(ray('extra processor cgAccount')), NULL, $contractFlnm);
     $links = getLinks($mya->zip);

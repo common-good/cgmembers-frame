@@ -1,6 +1,8 @@
 2019-11-11 feature/partner-tweak
 . added checking or savings question to partner signup
 . fixed bug that kept people from using the partner signup link more than once
+. improved admin view of current task and steps
+. ajax "which" is no longer logged
 
 2019-11-11 feature/admin-followup
 . adjusted admin followup categories to agree with new signup flow
