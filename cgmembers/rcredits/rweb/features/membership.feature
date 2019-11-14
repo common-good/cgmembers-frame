@@ -77,7 +77,7 @@ Scenario: An individual member signs up
   | Sell   |
   | Voice  |
   | Give   |
-  And we say "status": "setup complete|individual approval|join thanks|next steps"
+  And we say "status": "setup complete|individual approval|join thanks|next steps|no card member"
   And steps left ""
   And members have:
   | uid  | flags  |*

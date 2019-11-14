@@ -975,6 +975,7 @@ EOF;
       } else {
         $approval = $a->co ? 'company approval' : 'individual approval';
         $msg .= "setup complete|$approval|join thanks|next steps"; // show on display, not on done
+        if (!$a->co and !$a->stepsDone('card')) $msg .= '|no card member'; // suggest the card step
       }
     }
     return 'summary';

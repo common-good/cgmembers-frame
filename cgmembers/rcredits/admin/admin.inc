@@ -145,7 +145,7 @@ function makeTestAdmins() {
  */
 function showSteps($a) {
   if (!$a->task) return '';
-  foreach (ray($a->task) as $step) {
+  foreach (ray(r\taskSteps($a->task)) as $step) {
     $class = $a->stepIsDone($step) ? 'step-done' : 'step-not-done';
     $steps[] = "<span class=\"$class\">$step</span>";
   }
@@ -157,9 +157,10 @@ function showSteps($a) {
  */
 function showTasks($a) {
   $help = ray(t('person:minimal individual signup,co:minimal company signup,co2:complete company signup,card:qualifying for a %PROJECT card,sell:qualifying to accept %PROJECT payments as an individual,voice:qualifying (as an individual) to participate in %PROJECT Democracy,partner:minimal signup (individual or company) jointly with a partner organization'));
-  foreach (ray($a->co ? S_PTASKS : S_COTASKS) as $task) {
+  foreach (ray($a->co ? S_COTASKS : S_PTASKS) as $task) {
     $class = $task == $a->task ? 'task-active' : ($a->stepsDone($task) ? 'task-done' : 'task-not-done');
-    $tasks[] = w\popHelp("<span class=\"$class\">$task</span>", $help[$task]);
+    $task = w\popHelp($task, $help[$task]);
+    $tasks[] = "<span class=\"$class\">$task</span>";
   }
   return join(' ', $tasks);
 }

@@ -1,3 +1,7 @@
+2019-11-13 feature/partner-tweak2
+. clarification of some messages
+. minor bug fixes for admin summary page
+
 2019-11-11 feature/partner-tweak
 . added checking or savings question to partner signup
 . fixed bug that kept people from using the partner signup link more than once
