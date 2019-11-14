@@ -118,8 +118,8 @@ function formSummary($form, &$sta) {
   } else $extra = '';
   $accountId = item(($mya->mainQid ?: 'N/A') . ' (' . $acctType . ')' . $extra, t('ID:'));
 
-  $fields = 'photo title clickPhoto showCustomers topButtons accountId accountName details address legalName shortName community balance newBalance creditLine creditLimit committed choiceList';
-  foreach (ray('details') as $k) $$k = @$form[$k]; unset($form[$k]); // put these on the left if admin
+  $fields = 'photo title clickPhoto showCustomers topButtons accountId accountName address legalName shortName community balance newBalance creditLine creditLimit committed choiceList';
+//  foreach (ray('details') as $k) $$k = @$form[$k]; unset($form[$k]); // put these on the left if admin
   $fields = @compact(ray($fields));
   
 //  if ($mya->superAdmin and !$mya->ok) $onSubmit = w\whoFldSubmit('helper', t('This person was invited by %name, yes?'));
@@ -260,7 +260,9 @@ function activate($helper) {
       if ($api = $coA->api()) u\post($api, ray('partnerCode qid op name', $coA->emailCode, $mya->mainQid, 'complete', $mya->fullName));
     });
     $msg = 'approved';
-    if (!$mya->confirmed) $msg .= ($helper > 1 ? '|must confirm' : '|in person');
+//    if (!$mya->confirmed) $msg .= ($helper > 1 ? '|must confirm' : '|in person');
+    if (!$mya->confirmed) $msg .= '|must confirm';
+    if (!$mya->co and $mya->stepsDone('card')) $msg .= '|suggest card';
     $subs = ray('inviterName youName specifics', @$mya->helperA->fullName, $mya->fullName, getSpecifics($mya));
     
     r\message($mya->id, $msg, $subs);

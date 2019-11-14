@@ -1264,7 +1264,7 @@ fieldset#dateRange #advanced {display:none;}
 
 .step-done, .task-done {color:silver;}
 .step-not-done, .task-not-done {color:red;}
-.task-active {color:goldenrod;}
+.task-active {color:blue;}
 
 .crop-button {color:lightgreen; background-color:darkgray;}
 
