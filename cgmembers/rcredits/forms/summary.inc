@@ -262,7 +262,7 @@ function activate($helper) {
     $msg = 'approved';
 //    if (!$mya->confirmed) $msg .= ($helper > 1 ? '|must confirm' : '|in person');
     if (!$mya->confirmed) $msg .= '|must confirm';
-    if (!$mya->co and $mya->stepsDone('card')) $msg .= '|suggest card';
+    if (!$mya->co and !$mya->stepsDone('card')) $msg .= '|suggest card';
     $subs = ray('inviterName youName specifics', @$mya->helperA->fullName, $mya->fullName, getSpecifics($mya));
     
     r\message($mya->id, $msg, $subs);
