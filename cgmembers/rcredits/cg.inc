@@ -800,7 +800,9 @@ function makeDevice($uid, $code = '', $ch = NULL) {
  */
 function deleteAccount($a) {r\changeUid($a, 0, FALSE, TRUE);}
 function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
+  global $mya;
   if (!$a or !$a = is_object($a) ? $a : r\acct($a)) return w\say(t('nope'), 'err');
+  if ($a->id == $mya->id) return w\say(t('You can\'t delete or change the uid of an acct while it\'s the current acct.'), 'err');
   $oldUid = $a->id;
   $nm = $a->fullName;
   $photoFlnm = $a->tempPhotoFilename;

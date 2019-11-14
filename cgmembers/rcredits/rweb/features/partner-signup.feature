@@ -49,11 +49,11 @@ Scenario: A newbie visits the registration page sent by a partner and opts out o
   And member ".AAA" steps left "fund partnersteptwo partnerend"
 
   When member ".AAA" visits page "partner/signed=TESTDOCODE"
-  Then we show "Source of Funding"
+  Then we show "Enter Your Payment Information"
   
   When member ".AAA" completes form "partner/signed=TESTDOCODE" with values:
-  | routingNumber | bankAccount | processor |*
-  | 211870281     | 12345       |         1 |
+  | routingNumber | bankAccount | sorch | processor |*
+  | 211870281     | 12345       |     1 |         1 |
   Then members have:
   | uid  | bankAccount        | last4bank |*
   | .AAA | USkk21187028112345 |      2345 |
@@ -61,8 +61,8 @@ Scenario: A newbie visits the registration page sent by a partner and opts out o
   And without:
   | "Continue to %PROJECT" |
   And we email "partner-report" to member "c@" with subs:
-  | partnerName | fullName | customer | processor            | email         | cgAccount | extra |*
-  | Coop Power  | Abe One  | E123456  | Arizona Bank & Trust | a@example.com | (none)    | You will need to delete the %PROJECT account ID in your database. |
+  | partnerName | fullName | customer | processor    | email         | cgAccount | extra |*
+  | Coop Power  | Abe One  | E123456  | Standard ACH | a@example.com | (none)    | You will need to delete the %PROJECT account ID in your database. |
   And we email "partner-end" to member "a@" with subs:
   | partnerName | partnerAddress           | partnerPhone | partnerEmail  | noFrame | extra |*
   | Coop Power  | 14 L St., Lton, MA 01014 | 413-253-0014 | c@example.com |       1 |       |
@@ -98,11 +98,11 @@ Scenario: A newbie visits the registration page sent by a partner and chooses Co
   And member ".AAA" steps left "fund partnersteptwo partnerend"
 
   When member "?" visits page "partner/signed=TESTDOCODE"
-  Then we show "Source of Funding"
+  Then we show "Enter Your Payment Information"
   
   When member "?" completes form "partner/signed=TESTDOCODE" with values:
-  | routingNumber | bankAccount | processor |*
-  | 211870281     | 1234        |         0 |
+  | routingNumber | bankAccount | sorch | processor |*
+  | 211870281     | 1234        |     1 |         0 |
   Then we show "%PROJECT Account Setup" with:
   | %PROJECT Agreement |
   And members have:
@@ -229,11 +229,11 @@ Scenario: A company visits the registration page sent by a partner
   And member ".AAA" steps left "fund partnersteptwo partnerend"
 
   When member ".AAA" visits page "partner/signed=TESTDOCODE"
-  Then we show "Source of Funding"
+  Then we show "Enter Your Payment Information"
 
   When member ".AAA" completes form "partner/signed=TESTDOCODE" with values:
-  | routingNumber | bankAccount | processor |*
-  | 211870281     | 1234        |         0 |
+  | routingNumber | bankAccount | sorch | processor |*
+  | 211870281     | 1234        |     0 |         0 |
   
   Then we show "%PROJECT Account Setup" with:
   | %PROJECT Agreement |

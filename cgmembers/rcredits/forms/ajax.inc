@@ -85,8 +85,8 @@ function ajax() {
 
 function ajaxErr($msg) {return ajaxMsg($msg, 0);}
 function ajaxMsg($message = '', $ok = 1) {return ajaxRet(compact('message'), $ok);}
-function ajaxRet($data, $ok = 1) {
-  $data = json_encode($data + compact('ok'));
-  u\loga('ajax', $data);
+function ajaxRet($data0, $ok = 1) {
+  $data = json_encode($data0 + compact('ok'));
+  if (!isset($data0['which'])) u\loga('ajax', $data); // don't log hundreds of choices
   exit($data);
 }

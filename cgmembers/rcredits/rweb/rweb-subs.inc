@@ -419,10 +419,13 @@ function cgform($form, $onSubmit = '', $labeled = TRUE, $level = 0) {
   }
   $form['#attributes']['class'][] = $labeled ? 'form-horizontal' : 'form-vertical';
  
-  foreach (ray('title subtext midtext posttext buttons list back submit') as $k) if ($v = @$form[$k] and !is_array($v)) $form[$k] = $k == 'submit' ? submit($v) : item($v); // let these common items be created simply
-  
   foreach ($form as $k => $v) if (substr($k, 0, 1) != '#') {
-    u\EXPECT(empty($v) or is_array($v), "field $k is not an array: " . pr($v));
+    if (empty($v)) continue;
+    if (!is_array($v)) {
+      if (in($k, 'title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back submit')) {
+        $form[$k] = $v = $k == 'submit' ? submit($v) : item($v); // let these common items be created simply
+      } else u\FAIL("field $k is not an array: " . pr($v));
+    }
     $type = @$v['#type'];
     if ($type == 'hidden') f('t.POST', [$k => @$v['#value']]); // fake post for tests
     if ($type == 'fieldset') $form[$k] = cgform($form[$k], '', $labeled, $level + 1);

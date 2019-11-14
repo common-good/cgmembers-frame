@@ -17,16 +17,15 @@ define('SSN_TIMEOUT_MSG', t('No data returned from ssnLookup'));
 class Acct {
   public $id; // the account's record id
   public $agentId; // record id (in the agent's regional server) of whoever is acting on behalf of the account
-  //  var $mainQid; // nearly alphabetic representation of id, id, and region for external queries
   public $qo; // qid object
   
   private static $perms = []; // permissions for all acct objects, indexed by id and agent
-  public static $rs = []; // account records for all acct objects, indexed by id
+  private static $rs = []; // account records for all acct objects, indexed by id
   
   /**
    * Instantiate (create or retrieve) a member account for transactions and/or contact
    * @param mixed $info (either assoc or array):
-   *   (1) an assoc: initial field values for the account, to be created in the database, including at least one of the following:
+   *   (1) an assoc: initial field values for the account, to be created in the database, including at least one of these:
    *     'uid' the record id
    *     'phone' is contact phone (in standard +ddddddddddd format) OR
    *     'number' is cell phone (in standard +ddddddddddd format -- use for phone also) OR
@@ -35,9 +34,6 @@ class Acct {
    *   (2) a flat array of user table IDs: [uid, agent] where uid is the main account and agent is the agent's id
    */
   function __construct($info = []) {
-///       print_r("Acct::__construct(");
-///       print_r($info);
-///       print_r(")<br>");
     $a = $this;
     if (!is_numeric(key($info))) { // u\isAssoc($info)) { // specifying field values
       $a->createNew($info); // create new db record
@@ -416,38 +412,18 @@ class Acct {
     if (!is_array($info)) $info = rayy(func_get_args());
     
     u\EXPECT(!isset($info['savings']), 'archaic savings field');
-    //    if ($jid = $a->jid and $jInfo = just(MASTER_FLDS . ' savings', $info)) {
     if ($a->jid and $jInfo = just(MASTER_FLDS, $info)) {
       list ($a2, $a1) = u\order($a->slave, $a, $a->jA); // set $a1 master, $a2 slave
 
       $jInfo2 = array_fill_keys(ray(MASTER_FLDS), 0);
       unset($jInfo2['achMin']); // no change to slave achMin
       $a2->update1($jInfo2);
-      
-      //      $a2->update1(MASTER_FLDS, FALSE, '', '', FALSE, @$jInfo['achMin'] ?: $a1->achMin, 0, 0, 0); // not much for slave
-//      $a->updateSavings($jInfo, $a1 == $this ? $a2->rewards : $a1->rewards); // update savings in master
       $a1->update1($jInfo);
-      //      if (!$info = justNOT(MASTER_FLDS . ' savings', $info)) return TRUE; // fall through if something else to update
       if (!$info = justNOT(MASTER_FLDS, $info)) return TRUE; // fall through if something else to update
     }
-    //    } else $a->updateSavings($info, 0); // update savings in proSe account
     return $a->update1($info);
   }
 
-  /**
-   * Interpret requested update of savings as a change to the savingsAdd field (for testing).
-   * @param assoc $info: (MODIFIED) fields and values to update
-   * @param numeric $slaveRewards: rewards in slave account, if any
-   *//*
-       private function updateSavings(&$info, $slaveRewards) {
-       $a = $this;
-       if (isset($info['savings'])) {
-       $rewards = (@$info['rewards'] ?: $a->rewards) + $slaveRewards;
-       $info['savingsAdd'] = $info['savings'] - $rewards; // may be negative in official CGCs
-       unset($info['savings']);
-       }
-       }*/
-  
   /**
    * Update the account record in the database (with no special treatment of joint accounts).
    */
@@ -455,7 +431,6 @@ class Acct {
     global $mya;
     $a = $this;
 
-    //    foreach ($bits = just(B_LIST, $info) as $k => $v) {$a->setBit($k, $v); unset($info[$k]);}
     if (!is_array($info)) $info = rayy(func_get_args());
     if ($bits = just(B_LIST, $info)) {
       $a->setBit($bits);
@@ -465,13 +440,11 @@ class Acct {
     foreach (just(REL_FLDS . ' ' . REL_FLAGS, $info) as $k => $v) {$a->setRel($k, $v); unset($info[$k]);}
     if ($coFlds = just(CO_FLDS, $info)) {$a->setCo($coFlds); $info = justNOT(CO_FLDS, $info);}
 
-    //    if ($a->ok) $info += $a->recordChanges(justNOT(B_LIST, $info)); // record changes if member is active
     if ($a->ok or $a->activated) $a->recordChanges($info); // record changes if member is (or was) active
     foreach (just('hasBank', $info) as $k => $v) {$a->setRisk($k, $v); unset($info[$k]);}
 
     foreach (ray('photo thumb') as $k) if (isset($info[$k])) $a->updatePhoto($info, $k);
     foreach (ray(PSECURE_FLDS) as $k) if (isset($info[$k])) $info[$k] = u\cry('P', $info[$k]);
-    //    if (isset($info['phone'])) $info['phone'] = u\cry('P', $info['phone']);
     if (isset($info['pass']) and $info['pass'] !== '') $info['pass'] = r\passHash($info['pass']);
     u\preray($info, self::$rs[$a->id]); // cache the new field values (before doing special fields)
     
@@ -532,34 +505,6 @@ class Acct {
       db\insert('r_changes', $record); // add a r_changes record for each changed field
     }
   }
-
-    
-  //        unset($newChanges[$k]);
-  //      } // else $newChanges[$k] = $ak; // @self::$rs[$a->id]->$k;
-  //    }
-    
-  //    if (!$newChanges) return [];
-  
-  //     $changes = $a->changes; // must precede ->rawChanges
-  // //    $encrypted = u\starts($a->rawChanges, CRYPT_FLAG);
-  // //    for ($k = now(); isset($changes[$k]); $k++);
-  //     $time = now();
-  //     if (isset($changes[$time])) {
-  //       $changes[$time] += $newChanges;
-  //     } else u\preray([$time => $newChanges], $changes); // put the new changes first
-  //     $changes = serialize($changes);
-  // //    if ($encrypted or just(SECURE_FLDS, $newChanges)) 
-  // 		$changes = u\cry('S', $changes);
-
-  //    foreach ($newChanges as $k => $v) {  // add a r_changes record for each changed field
-  /*      $record = [ 'uid' => $a->uid,
-          'created' => now(),
-          'field' => $k,
-          'oldValue' => u\cry('S', '' . $a->$k),
-          'newValue' => u\cry('S', '' . $v),
-          'changedBy' => $a->agentId ]; */
-    
-  //    return compact('changes');
 	
   /**
    * Encrypt if appropriate
@@ -952,7 +897,7 @@ EOF;
   function stepDone($step, $done = TRUE, $details = []) {
     $a = $this;
     
-    $i = nn($a->allSteps()[$step], FALSE);
+    $i = nn(r\allSteps()[$step], FALSE);
     u\EXPECT($i !== FALSE, 'bad step: ' . $step);
     $a->stepDoneForNow($step, $done);
     $a->setBit($i, $done, 'steps'); // done forever
@@ -989,15 +934,15 @@ EOF;
 
   /**
    * Return an array of the remaining steps in the given (or current) task.
-   * @param string $steps: a list of the steps of interest, such as S_CARD or S_VOICE (defaults to current task)
+   * @param string $task: the task of interest, such as card or voice (defaults to current task)
    * @see also $this->stepsLeft, which is the steps remaining in the current task, in order (possibly reordered)
    */
-  public function stepsLeft($steps0 = NULL) {
+  public function stepsLeft($task = NULL) {
     $a = $this;
     
-    if (!$steps = isset($steps0) ? ray($steps0) : $a->stepsLeft) return [];
+    if (!$steps = isset($task) ? ray(r\taskSteps($task)) : $a->stepsLeft) return [];
     $res = []; foreach ($steps as $k) if (!$a->stepIsDone($k)) $res[] = $k;
-    if (!isset($steps0)) $a->update('stepsLeft', $res);
+    if (!isset($task)) $a->update('stepsLeft', $res);
     return $res;
   }
     
@@ -1016,16 +961,15 @@ EOF;
     if ($stepDone) $a->stepDone($stepDone, TRUE, $info);
     
     if ($nextStep = ($a->task ? $a->nextStep() : FALSE)) {
-      if ($stepDone and in($stepDone, $a->taskSteps($a->task))) $msg .= '|step completed'; // say completed only when relevant
+      if ($stepDone and in($stepDone, r\taskSteps($a->task))) $msg .= '|step completed'; // say completed only when relevant
       return ray(S_ALL)[$nextStep] ?: "settings/$nextStep";
     }
 
     // no current task (nothing to be done next)
     if ($a->member) {
       if ($stepDone) {
-        foreach (ray(S_PSETS . ' co2') as $k) {
-          $set = $a->taskSteps($k);
-          if (in($stepDone, $set) and $a->stepsDone($set)) $msg .= "|$k member"; // ack
+        foreach (ray(S_MEM_TASKS) as $k) {
+          if (in($stepDone, r\taskSteps($k)) and $a->stepsDone($k)) $msg .= "|$k member"; // ack
         }
         $a->update('stepsLeft task', '', '');
       } else {
@@ -1036,13 +980,14 @@ EOF;
     return 'summary';
   }
 
-  public function setTask($task) {$this->update('task stepsLeft', $task, $this->stepsLeft($this->taskSteps($task)));}
-  public function taskSteps($task) {return $task ? u\consta('s', $task) : '';}
-  public function stepIsDone($step) {return (bool) u\getBit($this->steps, $this->allSteps()[$step]);}
-  public function stepsDone($steps) {foreach(ray($steps) as $step) if (!$this->stepIsDone($step)) return FALSE; return TRUE;}
+  public function setTask($task) {$this->update('task stepsLeft', $task, $this->stepsLeft($task));}
+  public function stepIsDone($step) {return (bool) u\getBit($this->steps, r\allSteps()[$step]);}
+  public function stepsDone($task) {
+    foreach(ray(r\taskSteps($task)) as $step) if (!$this->stepIsDone($step)) return FALSE; 
+    return TRUE;
+  }
   public function nextStep() {return ($steps = $this->stepsLeft) ? $steps[0] : FALSE;}
-  public function stepCount($steps = NULL) {return count($this->stepsLeft($steps));}
-  private function allSteps() {return array_flip(array_keys(ray(S_ALL)));} // point step bit names to bit numbers
+  public function stepCount($task = NULL) {return count($this->stepsLeft($task));}
 
   /**
    * Check SSN during a signup step (normally on the verifyId step as soon as we get federalId, unless already verified)
@@ -1650,7 +1595,7 @@ X;
     //    if ($cans[B_MANAGING_CTTY] = ($aa->can(B_CADMIN) and $id == $a->community)) $cans[B_BUY] = TRUE;
     $cans[B_MANAGING_CTTY] = ($aa->can(B_CADMIN) and $id == $a->community);
     if (!$a->hasFid and !isDEV) $cans[B_SELL] = FALSE; // no selling without an EIN
-    if (!$a->co and !$a->stepsDone(S_SELL) and !test()) $cans[B_SELL] = FALSE;
+    if (!$a->co and !$a->stepsDone('sell') and !test()) $cans[B_SELL] = FALSE;
     
     ksort($cans); // easier to debog
     return self::$perms[$id][$a->agentId] = $cans;
@@ -1936,3 +1881,6 @@ function setAcct($myid = '', &$sta = NULL) {
   if (!$mya or ($a != $mya and !$mya->admin2)) $a->accessed(); // admin access doesn't count
   return $mya = $a;
 }
+
+function taskSteps($task) {return $task ? u\consta('s', $task) : '';}
+function allSteps() {return array_flip(array_keys(ray(S_ALL)));} // point step bit names to bit numbers

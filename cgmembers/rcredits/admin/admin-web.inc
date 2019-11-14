@@ -102,8 +102,6 @@ function adminSummary() {
 //      }
       $minimum = item(u\fmtAmt($mya->minimum), t('Target Bal:'));
       $achMin = item(u\fmtAmt($mya->achMin), t('ACH Min:'));
-//      if (!$mya->stepsDone['dw']) { // show info needed to open a Dwolla account
-//      extract((array) $mya->secure, EXTR_PREFIX_ALL, 's'); // dunno why (array) is required (indirect mod error)
       if (!$mya->co) $trust = item($mya->trust, t('Trust:'), t('This person\'s trust rating'));
       $invitedBy = $mya->helper ? ($mya->helperA->fullName . "#$mya->iCode (" . r\iCodeDesc($mya->iCode) . ') + ') : '';
       $invitedBy = item($invitedBy . db\lst('fullName', 'r_invites i LEFT JOIN users u ON u.uid=i.inviter', 'invitee=:uid', compact('uid')), t('Invited by:'));
@@ -122,7 +120,8 @@ function adminSummary() {
     }
   
     $activity = item(a\showActivity($mya), t('Activity:'));
-    if (!$mya->ok) $steps = item(a\showSteps($mya), t('To do:'), t('|sign=agreement | prefs=preferences | connect=connect bank (or not) | company=company info'));
+    $tasks = item(a\showTasks($mya), t('Tasks:'));
+    $steps = item(a\showSteps($mya), t('To do:'), t('|agree=sign agreement | fund=connect bank (or not) | work=identify employer/calling | company=company info | discount=offer a discount'));
     if ($rels = a\showRelations($mya)) $relations = item($rels, t('Relations:'));  
   }
   
@@ -210,7 +209,7 @@ function adminSummary() {
   w\jsx('tickle');
   
   $bigFields = $mya->ok ? 'adminable risks ssnShow' : 'ssnShow adminable risks';
-  return @compact(ray("photo details notes note tickle donations rTrader activity relations source helper $bigFields community balance cgfDonations legalName shortName calling signupCo tenure steps dwInfo invited invitedBy proxies proxyFor moves floor minimum achMin risk trust mediaConx count back uid submit"));
+  return @compact(ray("photo details notes note tickle donations rTrader activity relations source helper $bigFields community balance cgfDonations legalName shortName calling signupCo tenure tasks steps dwInfo invited invitedBy proxies proxyFor moves floor minimum achMin risk trust mediaConx count back uid submit"));
 }
 
 /**

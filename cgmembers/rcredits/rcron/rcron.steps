@@ -231,7 +231,6 @@ function weTellCOWithSubs($id, $topic, $subs) {return t\weTellAdmin($topic, $sub
  * in: MAKE aaSeldomNotices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
  *     BOTH notices AMemberGetsSomeNotices
  *     BOTH notices AMemberGetsSomeWeeklyNotices
- *     MAKE notices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
  */
 function notices($list) {return t\notices($list);}
 
@@ -389,7 +388,6 @@ function weDoNotEmailToMember($index, $email) {return t\noSuchEmail($index, $ema
  *
  * in: MAKE aaSeldomNotices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
  *     MAKE notices AMemberGetsSomeWeeklyNotices
- *     MAKE notices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
  */
 function itsTimeFor($what) {
   global $testOnly, $timeFor;
@@ -634,7 +632,6 @@ function riskThresholdPercentIs($pct) {
  *     MAKE monthly CrumbsAreInvoiced
  *     MAKE notices AMemberGetsSomeNotices
  *     MAKE notices AMemberGetsSomeWeeklyNotices
- *     MAKE notices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
  *     MAKE recurs ABrandNewRecurringPaymentCanBeCompleted
  *     MAKE recurs ASecondRecurringPaymentCanBeCompleted
  *     MAKE recurs ARecurringPaymentHappenedYesterday
@@ -682,6 +679,5 @@ function weDoNotMessageToMemberWithSubs($index, $id, $subs) {return !t\weMessage
  * not these (ARG): (ARG)
  *
  * in: TEST aaSeldomNotices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
- *     TEST notices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
  */
 function notThese($things, $list) {return !t\these($things, $list);}

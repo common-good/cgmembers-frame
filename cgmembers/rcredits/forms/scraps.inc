@@ -12,7 +12,7 @@ use CG\Db as db;
 function formScraps($form, &$sta, $arg = '') {
   global $mya;
 
-  if (in($arg, S_PSETS . ' co2')) {
+  if (in($arg, S_MEM_TASKS)) { // called from Summary page when member clicks to launch a followup task
     $mya->setTask($arg);
     $nextStep = $mya->nextStep();
     w\go($nextStep ? (ray(S_ALL)[$nextStep] ?: "settings/$nextStep") : '');

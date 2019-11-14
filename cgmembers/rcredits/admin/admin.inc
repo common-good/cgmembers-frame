@@ -140,7 +140,30 @@ function makeTestAdmins() {
   if (isSTAGE) foreach (ray(R_COS . ' ' . DEV_ACCTS) as $k) if ($k and $a = a($k)) $a->setBit(B_CADMIN);
 }
 
-function showSteps($a) {return '<b class=\"step-not-done\">' . $a->task . ': ' . join(' ', $a->stepsLeft()) . '</b>';}
+/**
+ * Return a list of signup steps remaining for the given account.
+ */
+function showSteps($a) {
+  if (!$a->task) return '';
+  foreach (ray($a->task) as $step) {
+    $class = $a->stepIsDone($step) ? 'step-done' : 'step-not-done';
+    $steps[] = "<span class=\"$class\">$step</span>";
+  }
+  return join(' ', $steps);
+}
+
+/**
+ * Return a list of possible tasks, highlighting which are active, done, and not done.
+ */
+function showTasks($a) {
+  $help = ray(t('person:minimal individual signup,co:minimal company signup,co2:complete company signup,card:qualifying for a %PROJECT card,sell:qualifying to accept %PROJECT payments as an individual,voice:qualifying (as an individual) to participate in %PROJECT Democracy,partner:minimal signup (individual or company) jointly with a partner organization'));
+  foreach (ray($a->co ? S_PTASKS : S_COTASKS) as $task) {
+    $class = $task == $a->task ? 'task-active' : ($a->stepsDone($task) ? 'task-done' : 'task-not-done');
+    $tasks[] = w\popHelp("<span class=\"$class\">$task</span>", $help[$task]);
+  }
+  return join(' ', $tasks);
+}
+  
 
 /**
  * Return a description of the account's recent purchase activity (sales activity for companies).
@@ -203,20 +226,17 @@ EOF;
   return $ret;
 }
 
-define('ID_KEYS', 'id uid t.uid myid payer payee main other inviter invitee proxy person owner defaultAgent');
+define('ID_KEYS', 'id uid uid1 uid2 t.uid myid payer payee main other inviter invitee proxy person owner defaultAgent');
 
 /**
  * Return the given field, formatted for viewing.
  */
 function formatField($k, $v, $flagsField = B_LIST) {
   $v = $v . ''; // convert to string
-  //  if ($k == 'bankAccount' and u\starts($v, '~')) $v = 'c' . $v; // FUDGE to repair broken crypt flag (?)
-  //  while (u\starts($v, CRYPT_FLAG)) $v = u\decrypt($v);
   if ($v and in($k, ID_KEYS) and strlen($v) >= strlen(CGID)) {
     if ($a = r\acct($v)) $v = $a->name; else $v .= t(' (missing)'); // eg, when uid is changed
   } // member ID. Don't include agent/payerAgent/etc. here
   if ($v and $k == 'channel') $v = u\rayv(ray(TX_CHANNELS), $v);
-  ///  if ($k == 'reid') $v = str_replace(R_MEMBER_MARK, R_AGENT_MARK, r\qid($v));
   if ($v and in($k, R_DATE_FLDS)) $v = '<div class="date-field">' . strftime('%d%b', $v) . '<span class="year-field">\'' . strftime('%y', $v) . '<br>' . strftime(isDEV ? '%I:%M %p' : '%l:%M %P', $v) . '</span></div>';
   if ($k == 'flags') $v = "<div class=\"format-flags\">" . a\flagsDesc($v, $flagsField) . '</div>';
   return $v;

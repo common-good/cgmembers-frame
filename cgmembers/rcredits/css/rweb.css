@@ -353,6 +353,7 @@ body.page-partner h3 {color: #686868;}
 body.page-partner #edit-submit:hover {background-image: linear-gradient(#a9a9a9, #a9a9a9 60%, #a9a9a9); border: 1px solid #a9a9a9;}
 body.page-partner h3 {color: #a9a9a9;}
 body.page-settings-partnerend #messages .messages.status {display:none;}
+body.page-partner blockquote {font-size:14px;}
   
 /* Security */
 #frm-security #edit-change a {margin-right:10px;}
@@ -1261,8 +1262,9 @@ fieldset#dateRange #advanced {display:none;}
 .date-field {line-height:65%;}
 .year-field {font-size:50%;}
 
-.step-done {color:silver;}
-.step-not-done {color:red;}
+.step-done, .task-done {color:silver;}
+.step-not-done, .task-not-done {color:red;}
+.task-active {color:goldenrod;}
 
 .crop-button {color:lightgreen; background-color:darkgray;}
 
