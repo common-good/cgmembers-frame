@@ -387,13 +387,13 @@ function gotSolarOne($info) {
     <p>The next step in your community solar sign-up is to tell us how you will pay for your solar credits.</p>
     <p>You will continue to get a bill from Con Ed as usual that shows how much electricity you used and what Con Ed is billing you for it. That bill will also have a credit that shows how much money you received from your solar subscription.</p>
     <p>You will also get a subscription solar bill from %partnerName. We will bill you for the credits you received, minus your discount, plus any membership fee due.</p>
-    <p>For example, you could get a bill from ConEdison that says:<br>
+    <p>For example, you could get a bill from Con Edison that says:<br>
     <blockquote>You used $110 worth of electricity.<br>
     You received a credit of $100 from your solar subscription.<br>
     You need to pay Con Edison $10.</blockquote></p>
 
     <p>The bill from the NYC Community Energy Co-op would then say:<br>
-    <blockquote>You received a $100 subscription solar credit on your ConEdison bill.  <br>
+    <blockquote>You received a $100 subscription solar credit on your Con Edison bill.  <br>
     You owe the NYC Community Energy Co-op $85 plus your membership fee of $1.50, for a total due of $86.50.</blockquote></p>
 X
   , compact(ray('m_company partnerName')));
@@ -419,16 +419,22 @@ X
   $submit = t('Submit');
 
   // additions for Solar One
-  $fullName = textFld($co ? t('Company Name:') : t('Your Name:'), '', required($fullName));
-  $contact = $co ? textFld(t('Your Name:'), '', required($contact)) : NULL;
-  $phone = textFld(t('Phone:'), [t('Your phone number')], required(u\fmtPhone($phone, '-')));
+//  $fullName = textFld($co ? t('Company Name:') : t('Your Name:'), '', required($fullName));
+  $electricName = item($fullName, t('Name on Electric Account:'));
+  $fullName = textFld(t('Name on Bank Account:'), [t('Name'), t('Please correct, if needed')], required($fullName));
+//  $contact = $co ? textFld(t('Your Name:'), '', required($contact)) : NULL;
+  $contact = $co ? hidFld($contact) : NULL;
+//  $phone = textFld(t('Phone:'), [t('Your phone number')], required(u\fmtPhone($phone, '-')));
+  $phoneDpy = item(u\fmtPhone($phone, '-'), t('Phone:'));
+  $phone = hidFld($phone);
+
   $emailDpy = item($email, t('Email:'));
   $email = hidFld($email);
-  $mailingHdr = item(t('<h3>Mailing Address</h3>'));
-  $address2 = textFld(t('Street Address:'), [t('Postal street address')], required());
-  $city2 = textFld(t('City:'), [t('Postal city')], required());
-  $state2 = stateFld(1031);
-  $zip2 = textFld(t('Postal Code:'), [t('Postal code'), ''], required());
+  $mailingHdr = item(t('<h3>Billing Address</h3>'));
+  $address2 = textFld(t('Street Address:'), [t('Postal street address')], required($address));
+  $city2 = textFld(t('City:'), [t('Postal city')], required($city));
+  $state2 = stateFld($state);
+  $zip2 = textFld(t('Postal Code:'), [t('Postal code')], required($zip));
   $years = textFld(BARE, [t('Years')], suffix(t('&nbsp years + ')));
   $months = textFld(BARE, [t('Months')], suffix(t('&nbsp months')));
   $tenure = fieldSet('tenure2', compact('years', 'months'), t('How long:'), t('How long have you been at your current address (roughly)'));
@@ -437,7 +443,7 @@ X
 
   jsx('contact');
 
-  return cgForm(compact(ray('title subtext fullName contact phone emailDpy mailingHdr address2 city2 state2 zip2 tenure owns processorPre processor midtext1 midtext2 checkHint routingNumber bankAccount sorch submit data email myid')));
+  return cgForm(compact(ray('title subtext electricName fullName contact phoneDpy phone emailDpy mailingHdr address2 city2 state2 zip2 tenure owns processorPre processor midtext1 midtext2 checkHint routingNumber bankAccount sorch submit data email myid')));
 }
 
 /**
