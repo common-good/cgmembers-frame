@@ -72,8 +72,8 @@ Scenario: An individual member signs up
   | 123-45-6789 |
   Then we show "Account Summary" with:
   | Next Steps |
-  | Invite |
   | Card   |
+  | Invite |
   | Sell   |
   | Voice  |
   | Give   |
@@ -170,8 +170,8 @@ Scenario: A member wants to sell
   | .ZZB | .015   |
   And we show "Account Summary" with:
   | Next Steps |
-  | Invite |
   | Card   |
+  | Invite |
   | Voice  |
   | Give   |
   And without:
@@ -223,8 +223,8 @@ Scenario: A member wants to have a voice in the Common Good democracy
   | .ZZB    | %today  | 01002 | test    | hi!     |
   And we show "Account Summary" with:
   | Next Steps |
-  | Invite |
   | Card   |
+  | Invite |
   | Sell   |
   | Give   |
   And without:
@@ -261,8 +261,8 @@ Scenario: A company signs up
   |       |       |
   Then we show "Account Summary" with:
   | Next Steps |
-  | Invite |
   | Finish |
+  | Invite |
   | Give   |
   And we say "status": "setup complete|company approval|join thanks|next steps"
   And steps left ""
@@ -279,23 +279,23 @@ Scenario: A member company wants to complete the account
   | .ZZC | member,confirmed,co,depends |
   When member ".ZZC" visits page "scraps/co2"
   Then we show "Connect a Manager Account"
-  And steps left "agent agree contact backing company donate photo preferences tithein discount"
+  And steps left "agent agree contact backing company donate photo tithein discount"
 
   Given members have:
   | uid  | phone        |*
   | .ZZB | 413-253-0002 |
   When member ".ZZC" completes form "settings/agent" with values:
-  | agent  | phone        | coType  |*
-  | NEWZZB | 413-253-0002 | %CO_LLC |
+  | agent  | phone        | coType  | legalName   | federalId  |*
+  | NEWZZB | 413-253-0002 | %CO_LLC | Our Pub Inc | 20-4333048 |
   Then members:
-  | uid  | coType  |*
-  | .ZZC | %CO_LLC |
+  | uid  | coType  | legalName   | federalId |*
+  | .ZZC | %CO_LLC | Our Pub Inc | 204333048 |
   And relations:
   | main | other | permission |*
   | .ZZC | .ZZB  | manage     |
   And we show "%PROJECT Agreement"
   And we say "status": "info saved|step completed"
-  And steps left "agree contact backing company donate photo preferences tithein discount"
+  And steps left "agree contact backing company donate photo tithein discount"
 
   Given step done "agree"
   And step done "contact"
@@ -303,12 +303,11 @@ Scenario: A member company wants to complete the account
   And step done "company"
   And step done "donate"
   And step done "photo"
-  And step done "preferences"
   When member ".ZZC" completes form "settings/tithein" with values:
   | crumbs | 1.5 |**
   Then members have:
-  | uid  | crumbs | flags               | legalName |*
-  | .ZZC | .015   | member,confirmed,co | Our Pub   |
+  | uid  | crumbs | flags               |*
+  | .ZZC | .015   | member,confirmed,co |
   And we show "Get Your Customers Signed Up"
   And we say "status": "info saved|step completed"
   And steps left "discount"

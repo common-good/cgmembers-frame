@@ -21,27 +21,34 @@ function formAgent($form, &$sta, $args = '') {
   $coTypes = ray(CO_TYPES);
   unset($coTypes[CO_PERSONAL]);
   $coType = radiosFld(t('Account type:'), '', required(), $coTypes);
+  $legalName = textFld(t('Legal name:'), [t('Company legal name'), t('Type the full legal name of the company.')], required($mya->fullName));
+  extract(ssnFields(!$mya->co, required()));
+  $submit = t('Next');
   
-  return cgform(compact(ray('title subtext agent phone coType')) + setupFoot());
+  return cgform(compact(ray('title subtext agent phone coType legalName federalId submit'))); // not setupFoot (don't skip this step)
 }
 
 function formAgent_validate($form, &$sta) {
   global $mya;
-  extract(just('agent phone', $sta['input']));
+  extract(just('agent phone federalId', $sta['input']));
 
+  $agent = strtoupper(trim($agent));
   if (!$a = r\acct($agent) or $a->co or !$a->member) return say(t('That is not an account ID of a completed personal account.'), 'agent');
   if ($err = u\badPhone($phone)) return say($err, 'phone');
-  if (u\fmtPhone($phone, '-') != $a->phone) return say(t('The phone number on that account does not match.'), 'phone');
+  if ($phone != $a->phone) return say(t('The phone number on that account does not match.'), 'phone');
+  if (!formBasic_validate($form, $sta, TRUE, 'federalId')) return;
+  u\preRay(compact(ray('agent phone')), $sta['input']);
 }
 
 function formAgent_submit($form, &$sta) {
   global $mya;
-  extract(just('agent coType', $sta['input']));
+  extract(just('agent coType legalName federalId', $sta['input']));
 
   $a = r\acct($agent);
   $mya->newRelation(ray('other permission', $a->id, r\perm(B_MANAGE)));
   $mya->setBit('depends', FALSE);
-  $mya->update(compact('coType'));
+  $helper = $a->id; // make sure agreement is shown with proper suggested signer
+  $mya->update(compact(ray('coType helper legalName federalId')));
 
   return w\goNextStep('agent');
 }

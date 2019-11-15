@@ -335,8 +335,7 @@ X
     ${$task . 'Ch'} = $kch ? ["$dir/$task" => $kch] : [];
   }
     
-  $choices = $mya->co ? $co2Ch : ($cardCh + $sellCh + $voiceCh);
-  $choices = $inviteCh + $choices + $donateCh;
+  $choices = $mya->co ? $co2Ch + $inviteCh + $donateCh : ($cardCh + $inviteCh + $sellCh + $voiceCh + $donateCh);
   $choiceList = t('<h3>Next Steps</h3>') . "\n";
   foreach ($choices as $url => $desc) if (!empty($desc)) $choiceList .= w\lnk("/$url", $desc) . "\n";
   return item($choiceList . "\n");

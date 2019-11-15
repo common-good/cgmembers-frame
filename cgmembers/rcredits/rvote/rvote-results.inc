@@ -389,7 +389,7 @@ function getVoters($ctty, $question, $noProxies = FALSE) {
   $proxiesTable = <<<EOF
     SELECT p2.person, p2.proxy, u.community FROM r_proxies p2 
     INNER JOIN users u ON u.uid=p2.person 
-    WHERE u.:IS_MEMBER AND p2.priority=:priority
+    WHERE u.:IS_OK AND p2.priority=:priority
 EOF;
 
   $sql = <<<EOF

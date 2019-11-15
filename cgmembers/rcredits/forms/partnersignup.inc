@@ -341,7 +341,7 @@ function gotSolarOne($info) {
   if (test() and is_numeric($state)) $state = r\realState($state);
   if (!$stateId = r\stateNum($state)) return solarOneErr('bad state', 'state');
 
-  if ($ta = r\acct($email) and $ta->hasBank) return partnerContinue($ta, $sta);
+  if ($ta = r\acct($email) and $ta->hasBank and $ta->partnerInfo['customer'] == $customer) return partnerContinue($ta, $sta);
 
   $info = compact(ray($keys . ' m_company customer pid noContract')); // recreate info with possibly improved values
 

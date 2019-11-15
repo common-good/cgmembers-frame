@@ -22,7 +22,7 @@ Scenario: Admin activates an account
   Then members:
   | uid  | flags               | helper |*
   | .ZZD | member,confirmed,ok |   .ZZB |
-  And we message "approved" to member ".ZZD" with subs:
+  And we message "approved|suggest card" to member ".ZZD" with subs:
   | youName  | inviterName | specifics | otherName |*
   | Dee Four | Bea Two     |         ? |           |
 

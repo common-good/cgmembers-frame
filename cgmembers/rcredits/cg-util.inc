@@ -929,7 +929,7 @@ function badDate(&$s, $min = '', $max = PHP_INT_MAX) {
  * @return the error message or FALSE if the phone number is acceptable
  */
 function badPhone(&$phone, $country = US_COUNTRY_ID) {
-  if (!$phone = u\fmtPhone($phone, '+n')) return 'bad phone';
+  if (!$phone = u\fmtPhone(trim($phone), '+n')) return 'bad phone';
   if ($country == US_COUNTRY_ID and strlen($phone) != 12) return 'bad phone';
   return FALSE;
 }

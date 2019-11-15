@@ -1,3 +1,9 @@
+2019-11-14 hotfix/partner-tweak3
+. minor bug fixes
+. legal name and federalId questions added to agent page (company signup)
+. voting requirement changed from member to active account (IS_OK)
+. partner solar one signups with duplicate email are accepted
+
 2019-11-13 feature/partner-tweak2
 . clarification of some messages
 . minor bug fixes for admin summary page

@@ -92,7 +92,7 @@ function formPrefs_submit($form, $sta) {
 
   foreach (ray($fields) as $k) $old["_old $k"] = $mya->$k;
   $old += ['_old flags' => u\bits($mya->flags)];
-  $bits = ray('roundup weekly monthly paper secret debt nosearch', $roundup, @$notices == 1, @$notices == 2, @$statements, @$secretBal, @$debtOk, @$nosearch);
+  $bits = ray('roundup weekly monthly paper secret debt nosearch', @$roundup, @$notices == 1, @$notices == 2, @$statements, @$secretBal, @$debtOk, @$nosearch);
   $crumbs /= 100; // convert percentage to decimal
   $food /= 100;
   $info = compact(ray($fields)) + $bits;

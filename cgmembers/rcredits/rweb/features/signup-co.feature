@@ -124,8 +124,8 @@ Scenario: A trial company account manager creates a discount
   | email     | a@             |
   | flags     | confirmed co depends |
   When member ".AAA" completes form "community/discount" with values:
-  | amount | minimum | end     | ulimit |*
-  |     20 |     120 | %mdY+3m |      3 |
+  | amount | minimum | start | end     | ulimit | type     |*
+  |     20 |     120 | %mdY  | %mdY+3m |      3 | discount |
   Then these "coupons":
   | coupid | fromId | amount | ulimit | flags | start      | end                         |*
   |      1 |   .AAA |     20 |      3 |       | %daystart  | %(%daystart+3m+%DAY_SECS-1) |
