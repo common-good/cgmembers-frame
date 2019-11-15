@@ -1542,7 +1542,7 @@ function ssnFields($personal = TRUE, $required = []) {
     $federalId = passFld(t('ssTitle'), [t('ssDesc'), $ssReason], $required + autofill('off'));
     $dob = textFld(t('Birth Date:'), [t('Your birth date'), t('Your date of birth (mm/dd/yyyy)')], $required + autofill('off'));
   } else {
-    $federalId = passFld(t(einTitle), [t('einDesc')], $required + autofill('off'));
+    $federalId = passFld(t('einTitle'), [t('einDesc')], $required + autofill('off'));
     $dob = textFld(t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)')], $required);
   }
   

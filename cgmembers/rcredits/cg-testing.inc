@@ -53,7 +53,9 @@ function fixData(&$info, $direct = FALSE) {
   if (@$email) $info['email'] = t\fixEmail($email);
 //  if (@$mail) t\fixEmail($mail);
   if (@$email) t\fixEmail($email);
-  if (strlen(@$phone) == 1) u\prefix('+1413772000', $phone);
+  if (!empty($phone)) {
+    if (strlen(@$phone) == 1) u\prefix('+1413772000', $phone); else $phone = u\fmtPhone($phone, 'internal');
+  }
   if (@$idProof) u\prefix("$rUrl/images/", $idProof);
   if ($direct) {
     if (@$federalId) u\digits($federalId);
@@ -523,7 +525,7 @@ function doMembersHave($info) {
   $a = r\acct($id = t\uid($info['uid']));
   $info = justNOT(T_BALANCE_FLDS, $info); // don't rehandle balance fields, and already got id
   if (isset($info['risks'])) $info['risks'] = getRisks($info['risks'], K_ACCT_RISKS);
-//  fixData($info, TRUE);
+  fixData($info, TRUE);
   if ($testOnly) {
     foreach ($info as $k => $v) if ($v != '?') {
       if (in($k, R_DATE_FLDS) and abs($a->o($k)-$v) < SAME_TIME) continue;

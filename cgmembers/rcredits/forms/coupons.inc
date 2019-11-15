@@ -70,9 +70,7 @@ function formCoupons_validate($form, &$sta) {
   $today = today();
   extract(just($fields = 'type code amount count minimum start end ulimit forOnly', $sta['input']));
 
-  if (empty($amount) and in($mya->task, 'co co2')) {
-    return $mya->task == 'co' ? w\go($mya->nextStepUrl()) : w\goNextStep('discount'); // new member pressed skip on discount form
-  }
+  if (empty($amount) and in($mya->task, 'co co2')) return;
     
   if ($type == 'gift') {
     if ($err = u\badAmount($amount, '>0')) return w\sayFieldErr($err, 'amount');
@@ -88,9 +86,9 @@ function formCoupons_validate($form, &$sta) {
 //    if (substr($amt0, -1, 1) == '%' and $amount > 100) return w\sayFieldErr(t('The discount percentage must be no more than 100%.'), 'amount');
     if (strpos($amt0, '%')) $amount = -$amount; // we use negative to mean percentage
     
+    if (!$start) $start = u\fmtDate(NOW);
     foreach (ray('start end') as $k) if ($$k and $err = u\badDate($$k, $today)) return w\sayFieldErr($err, $k);
     if ($end and $end < $start) return w\sayFieldErr(t('Ending date cannot be before starting date.'), 'end');
-    if ($start == u\fmtDate($today, TRUE)) $start = ''; // empty means now
     foreach (ray('ulimit end') as $k) $$k = (int) $$k;
     if ($list = mb_strtoupper(str_replace(' ', '', nn($forOnly)))) {
       $forOnly = [];
@@ -116,6 +114,10 @@ function formCoupons_validate($form, &$sta) {
 function formCoupons_submit($form, &$sta, $trial = FALSE) {
   global $mya; $myid = $mya->id;
   extract(just('type amount coupid iCode count minimum start end ulimit automatic on forOnly', $sta['input']));
+
+  if (empty($amount) and in($mya->task, 'co co2')) {
+    return $mya->task == 'co' ? w\go($mya->nextStepUrl()) : w\goNextStep('discount'); // new member pressed skip on discount form
+  }
     
   if ($type == 'redeem') {
     $res = db\get('fromId,amount', 'r_coupons', 'coupid=:coupid', compact('coupid'));
