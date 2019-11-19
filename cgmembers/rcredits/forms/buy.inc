@@ -61,7 +61,8 @@ function formBuy($form, &$sta, $doCode = '') {
   $subtext = @$a 
 //  ? t('<h4>Hello %name!</h4><small>(Account %acct)</small>', 'name acct', $a->bestName, $a->mainQid) . @$tst
   ? t('<h4>Hello %name!</h4>', 'name acct', $a->bestName, $a->mainQid) . @$tst
-  : (t('<h4>Hello %PROJECT Member</h4>') . (@$tst ?: t('<span class="loud">Make sure this is really %PROJECT!</span>')));
+  : t('<h4>Hello %PROJECT Member</h4>');
+//  : (t('<h4>Hello %PROJECT Member</h4>') . (@$tst ?: t('<span class="loud">Make sure this is really %PROJECT!</span>')));
 
   if (!@$a) $confirm = TRUE;
   
@@ -104,10 +105,10 @@ function formBuy_validate($form, &$sta) {
 }
 
 function formBuy_submit($form, &$sta) {
-  
-  extract(just('hid name amount', $sta['input']));
+  extract(just('hid name', $sta['input']));
 //  $account = strpos($name, '@') ? $name : mb_strtoupper($name);
   extract(just('amount item company code cancel return api request confirm', $args = unserialize(unplain($hid))));
+  if (empty($amount)) extract(just('amount', $sta['input'])); // amount was a field
   u\setDft($request, ''); // or set it to code?
   
   list ($a, $co) = [$confirm ? r\acct(mb_strtoupper($name)) : r\acct($sta['uid']), r\acct($company)];

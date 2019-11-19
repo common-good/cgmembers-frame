@@ -47,6 +47,30 @@ Scenario: A member submits a Pay With Common Good button payment with account ID
   
   When member "?" visits page "handle-invoice/nvid=1&toMe=1&code=TESTDOCODE"
   Then we say "error": "already paid"
+
+Scenario: A member clicks a Pay With Common Good button with variable amount
+  When member "?" visits page "pay-with-cg/company=NEWZZC&item=food&amount="
+  Then we show "Hello %PROJECT Member" with:
+  | Pay        | to Our Pub |
+  |            | for food |
+  | Account ID |  |
+
+Scenario: A member submits a Pay With Common Good button payment with account ID and chosen amount
+  When member "?" confirms form "pay-with-cg/company=NEWZZC&item=food&amount=" with values:
+  | name   | amount |*
+  | NEWZZA |     23 |
+  Then we say "status": "pay button success"
+  And we message "new invoice" to member ".ZZA" with subs:
+  | otherName | amount | purpose |*
+  | Our Pub   | $23    | food    |
+  And invoices:
+  | nvid | created | status      | amount | from | to   | for  |*
+  |    1 | %today  | %TX_PENDING |     23 | .ZZA | .ZZC | food |
+
+  When member "?" visits page "handle-invoice/nvid=1&toMe=1&code=TESTDOCODE"
+  Then we show "Confirm Payment" with:
+  | | Pay $23 to Our Pub for food. |
+  | Pay | Dispute |
   
 Scenario: A member signs in with username on the member site
   When member "?" confirms form "signin" with values:
