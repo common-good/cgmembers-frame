@@ -145,6 +145,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE invoice AMemberApprovesAnInvoiceToATrustingCustomer
  *     MAKE joint AMemberRequestsAJointAccount
  *     MAKE paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
+ *     MAKE paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
  *     MAKE paybutton AMemberSignsInWithUsernameOnTheMemberSite
  *     MAKE paybutton AMemberSignsInWithAccountIDOnTheMemberSite
  *     MAKE paybutton AMemberSignsInWithEmailOnTheMemberSite
@@ -387,6 +388,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
+ *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
  *     TEST paybutton AMemberTypesTheWrongPassword
  *     TEST paybutton AMemberTypesAnUnknownUsernameID
  *     TEST paybutton AMemberAsksForANewPasswordForAnUnknownAccount
@@ -530,6 +532,8 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST paybutton AMemberClicksAPayWithCommonGoodButton
  *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
+ *     TEST paybutton AMemberClicksAPayWithCommonGoodButtonWithVariableAmount
+ *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
  *     TEST preferences AMemberVisitsThePreferencesPage
  *     TEST preferences ACompanyAgentVisitsThePreferencesPage
  *     TEST queries AMemberVisitsTheCommunityDataPage
@@ -804,6 +808,8 @@ function usd($list) {return t\usd($list);}
  *     MAKE partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     MAKE paybutton AMemberClicksAPayWithCommonGoodButton
  *     MAKE paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
+ *     MAKE paybutton AMemberClicksAPayWithCommonGoodButtonWithVariableAmount
+ *     MAKE paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
  *     MAKE paybutton AMemberClicksALinkToResetPassword
  *     MAKE paybutton AMemberClicksALinkToResetPasswordWithWrongCode
  *     MAKE paybutton AMemberClicksALinkToResetPasswordForUnknownAccount
@@ -1250,6 +1256,7 @@ function devices($list) {return t\devices($list);}
  *     TEST invoice AMemberApprovesInvoicesForevermore
  *     TEST invoice AMemberApprovesAnInvoiceToATrustingCustomer
  *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
+ *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
  *     TEST transact AMemberConfirmsRequestToChargeAnotherMember
  */
 function invoices($list) {return t\invoices($list);}
@@ -1448,6 +1455,7 @@ function memberConfirmsOnTransaction($id, $do, $xid) {
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
+ *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
  *     TEST transact AMemberConfirmsRequestToChargeAnotherMember
  */
 function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($index, $id, $subs);}
