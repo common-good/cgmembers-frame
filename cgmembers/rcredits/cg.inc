@@ -982,9 +982,7 @@ function noticeArgs($uid, $where = '0', $weekly = FALSE, $monthly = FALSE, $at =
   //  $savings = u\fmtAmt($a->rewards);
   $creditLine = u\fmtAmt(-$a->floor);
   list ($rewards, $ourEmail) = array(u\fmtAmt($a->rewards), $a->cttyA->email);
-  $companies = getV('companies');
-  $companies = $companies[test() ? r\serverUid() : (int) $a->community];
-  return compact(ray('messages unit range yestertime balance creditLine return ourEmail companies'));
+  return compact(ray('messages unit range yestertime balance creditLine return ourEmail'));
 }
 
 /**

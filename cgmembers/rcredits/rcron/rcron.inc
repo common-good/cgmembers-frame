@@ -189,7 +189,7 @@ function everyDay() {
   db\q('DELETE FROM r_do WHERE completed<0 AND :NOW>-completed'); // completed<0 is -expiry time
 
   $cttys = db\q('SELECT uid AS ctty FROM users WHERE uid<0')->fetchCol();
-  foreach ($cttys as $ctty) $companies[$ctty] = r\companies($ctty, TRUE);  
+  foreach ($cttys as $ctty) $companies[$ctty] = r\companies($ctty, FALSE);  
   \setV('companies', @$companies ?: []);
   
   $sql = <<< X
@@ -974,8 +974,8 @@ function notices() {
   global $timeFor; // for testing
   
   $lastStart = getV('last_cron_start', []);
-  $timeFor_weekly = (strftime('%w', @$lastStart['week']) == R_WEEKLY_DAY);
-  $timeFor_monthly = (strftime('%d', @$lastStart['month']) == R_MONTHLY_DAY);
+  $timeFor_weekly = (strftime('%w', @$lastStart['day']) == R_WEEKLY_DAY);
+  $timeFor_monthly = (strftime('%d', @$lastStart['day']) == R_MONTHLY_DAY);
   if (test() and isset($timeFor)) extract(just('weekly monthly', $timeFor), EXTR_PREFIX_ALL, 'timeFor');
 
   $where = $dailySql = '((NOT :IS_WEEKLY AND NOT :IS_MONTHLY) OR NOT :IS_MEMBER)'; // daily
@@ -991,7 +991,7 @@ function notice1($item) {
   extract(just('uid daily weekly monthly', $item));
   $now = now();
   if ($args = r\noticeArgs($uid, 'NOT sent', $weekly, $monthly)) {
-    $args['messages'] = str_replace('stule=', 'style=', $args['messages']); // revert in emails (but CSP forbids inline online)
+    $args['messages'] = str_replace('stule=', 'style=', $args['messages']); // revert in emails (but CSP forbids inline styles online)
     r\notify($uid, 'notices', $args, TRUE);
     db\q('UPDATE r_notices SET sent=:now WHERE uid=:uid AND NOT sent', compact('uid', 'now'));
   }

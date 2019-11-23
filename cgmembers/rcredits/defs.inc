@@ -186,9 +186,9 @@ define('MAX_UPLOAD_SIZE', 4 * 1024000); // maximum upload size in bytes
 define('MAX_ID_SIZE', 10); // max ID size in MB
 
 define('GEOCODE_URL', 'https://api.opencagedata.com/geocode/v1/json?'); // use in acct::setLocus()
-define('NEIGHBOR_RADIUS', 40); // how far away (in miles) can a member see names of other individual members?
-define('NEIGHBOR_RMAX', NEIGHBOR_RADIUS * NEIGHBOR_RADIUS / 69 / 69); // squared and adjusted for degrees, not miles
-define('NEIGHBOR_QUERY', '(POW(latitude-:lat, 2) + POW((longitude-:lon) * (.71 + .0116*(latitude+:lat)/2), 2))');
+define('MI_PER_DEGREE', 69); // varies from 68.703 at the equator to 69.407 at the poles
+define('NEIGHBOR_MAX', 40); // how far away (in miles) can a member see names of other individual members?
+define('DISTANCE_BETWEEN', 'SQRT(DEGREES(ACOS(LEAST(1.0, COS(RADIANS(latitude)) * COS(RADIANS(:lat)) * COS(RADIANS(longitude - :lon)) + SIN(RADIANS(latitude)) * SIN(RADIANS(:lat)))))) * ' . MI_PER_DEGREE); // distance from other, in miles
 define('SIGNUP_PARTNERS', 'cooppower nyccec'); // these organizations sign people up for Common Good
 
 define('R_URL_SLASH', '%_%'); // Drupal gets confused by slashes in a url, even if urlencoded

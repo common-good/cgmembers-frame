@@ -1223,42 +1223,16 @@ function n2english($num, $tri = 0) {
 }
 
 /**
- * Return the distance (miles) between two points on Earth.
+ * Return the distance (in miles) between two points on Earth.
+ * UNUSED as of 11/23/2019, but may be useful for the new app.
  */
-function earthDistance($lat1, $lon1, $lat2, $lon2, $unit = 'miles') {
+function earthDistance($lat1, $lon1, $lat2, $lon2) {
   if ($lat1 == $lat2 and $lon1 == $lon2) return 0;
   $theta = $lon1 - $lon2;
   $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) +  cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
   $dist = acos($dist);
   $dist = rad2deg($dist);
-  $miles = $dist * 60 * 1.1515;
-
-  return $unit == 'miles' ? $miles : ($miles * 1.609344); // miles or kilometers
-}
-
-/**
- * Return MySQL for nearby locations. 
- * See be\identify, NEIGHBOR_QUERY, and NEIGHBOR_RMAX for current implementation.
- *
- * MySQL:
- $unitFactor = $km? 111.111 : 69;
-   SELECT $unitFactor * DEGREES(ACOS(LEAST(1.0, 
-       COS(RADIANS(latitude))
-     * COS(RADIANS(:lat))
-     * COS(RADIANS(longitude - :lon))
-     + SIN(RADIANS(latitude))
-     * SIN(RADIANS(:lat))
-   ))) AS distance
- 
- * Fast, approximate MySQL (most accurate around 45 degrees latitude, off by 22% for same-latitude points in Northern Alaska)
-   SELECT $unitFactor * SQRT(
-       POW(latitude-:lat, 2)
-     + POW((longitude-:lon) * (.71 + .0116*(latitude+:lat)/2), 2)
-   ) AS distance
-  where .71 is 49/69 and .0116 is .8/69 (approximate change in miles per degree longitude per degree latitude away from 45)
- */
-function earthDistanceWithin($lat, $lon, $distance, $unit = 'miles') {
-
+  return $dist * MI_PER_DEGREE;
 }
 
 /**

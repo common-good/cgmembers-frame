@@ -1,3 +1,8 @@
+2019-11-23 feature/fix-locus
+. fixed Acct::setLocus() so it includes zipcode in search, so it gets more reliable results
+. fixed neighbor query so it is always as exact as possible (since speed does not seem to be an issue)
+. fixed weekly and monthly cron notices so they don't happen daily
+
 2019-11-22 feature/cgpay-form
 . added text button
 . changed CSP to allow text button creation (inline styles are allowed only on the cgbutton page)
