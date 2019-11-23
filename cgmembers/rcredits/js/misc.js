@@ -241,3 +241,17 @@ function getCookie(name) {
   var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
   return v ? v[2] : null;
 }
+
+/**
+ * Allow only digits in a field. Call with keypress="return onlyDigits(event);"
+ */
+function onlyDigits(e) {
+  var c = e.which ? e.which : e.keyCode;
+  return !(c > 31 && (c < 48 || c > 57));
+}
+
+function sprintf(s, args) {
+  var res = s;
+  for (var k in args) res = res.replace('%s', args[k]);
+  return res;
+}

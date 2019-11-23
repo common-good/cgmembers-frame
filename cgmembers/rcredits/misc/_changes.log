@@ -1,3 +1,11 @@
+2019-11-22 feature/cgpay-form
+. new form allows companies to easily create html for a CGPay button
+. changed order of co2 task steps, to put photo earlier than company
+. chaned $pA->id to $pA->uid in partnersignup.inc because ->id was empty once (but it was probably due to a crash and refresh)
+. added cg4.us as an acceptable source for images
+. added keypress and digitsOnly functions for form options
+. we now (re)create contract dir on the fly, because it gets deleted in temp dir on dev machines
+
 2019-11-19 hotfix/pay-button
 . pay-with-cg button with no specific amount works again
 

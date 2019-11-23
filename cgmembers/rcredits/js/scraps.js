@@ -125,6 +125,32 @@ function doit(what, vs) {
     });
     break;
 
+  case 'cgbutton':
+    cgbutton(false);
+    $('.form-item-button input').click(function () {cgbutton($(this).val() == 1);});
+    $('#edit-item, #edit-text, #edit-amount, #edit-size').change(function () {cgbutton($('.form-item-button input:checked').val() == 1);});
+    function  cgbutton(isButton) {
+      $('.form-item-size').toggle(isButton);
+      $('.form-item-text').toggle(!isButton);
+      $('.form-item-example').toggle(!isButton);
+      
+      var url = baseUrl + '/pay-with-cg';
+      var item = $('#edit-item').val();
+      var text = $('#edit-text').val();
+      var size = $('#edit-size').val().replace(/\D/g, '');
+      var amt = $('#edit-amount').val().replace(/\D/g, '');
+      var img = isButton ? '<img src="https://cg4.us/images/buttons/cgpay.png" height="' + size + '" />' : text;
+      var html = sprintf('<a href="%s/company=%s&item=%s&amount=%s">%s</a>', [url, vs['qid'], item, amt, img]);
+      
+      if (item != '' && (isButton ? size : text) != '') {
+        $('#edit-html').text(html);
+        $('#button').html(html);
+        $('.form-item-example .control-data').html(html);
+      }
+      $('.form-item-size img').height(size == '' ? 0 : size);
+    }
+    break;
+    
   case 'addr':
 /*    print_country(vs['country'], vs['state'], vs['state2']);
     $('#frm-signup, #frm-contact').submit(function() {
