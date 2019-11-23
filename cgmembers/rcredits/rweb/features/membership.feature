@@ -279,7 +279,7 @@ Scenario: A member company wants to complete the account
   | .ZZC | member,confirmed,co,depends |
   When member ".ZZC" visits page "scraps/co2"
   Then we show "Connect a Manager Account"
-  And steps left "agent agree contact backing company donate photo tithein discount"
+  And steps left "agent agree contact backing photo donate company tithein discount"
 
   Given members have:
   | uid  | phone        |*
@@ -295,7 +295,7 @@ Scenario: A member company wants to complete the account
   | .ZZC | .ZZB  | manage     |
   And we show "%PROJECT Agreement"
   And we say "status": "info saved|step completed"
-  And steps left "agree contact backing company donate photo tithein discount"
+  And steps left "agree contact backing photo donate company tithein discount"
 
   Given step done "agree"
   And step done "contact"

@@ -878,11 +878,13 @@ define('FORBID_ATTRS', '/(.{0,40}\\s(href|src|style|on[a-z]+)\\s*=.{0,40})/i'); 
  */
 function sanitizePage($page) {
   // preg_quote needed in case URL has a ~ in it
-  $except = join('|', ['<img src="' . preg_quote(BASE_URL, '~'), 
-                       '<iframe src="(' . str_replace(' ', '|', preg_quote(FRAME_SOURCES, '~')) . ')',
-                       'href="(mailto:|http|#|/|"|sadmin)',
-                       '(href|src|style)=(&quot;|&amp;)', // our tests output stuff like this
-                       ]);
+  $except = join('|', 
+    ['<img src="' . preg_quote(BASE_URL, '~'), 
+     '<img src="https://cg4.us/', 
+     '<iframe src="(' . str_replace(' ', '|', preg_quote(FRAME_SOURCES, '~')) . ')',
+     'href="(mailto:|http|#|/|"|sadmin)',
+     '(href|src|style)=(&quot;|&amp;)', // our tests output stuff like this
+    ]);
 
   $page = preg_replace("~$except~", '', $page);
 

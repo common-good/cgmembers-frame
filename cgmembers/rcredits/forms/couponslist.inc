@@ -89,7 +89,7 @@ function showDiscounts() {
       (SELECT SUM(1) FROM txs t WHERE t.relType='D' AND t.rel=c.coupid AND t.uid2=:myid) AS used
     FROM r_coupons c JOIN users u ON u.uid=c.fromId 
     LEFT JOIN r_coupated d USING(coupid)
-		WHERE (u.community=:ctty OR :NEIGHBOR_QUERY<:NEIGHBOR_RMAX) 
+		WHERE (u.community=:ctty OR :DISTANCE_BETWEEN<:NEIGHBOR_MAX) 
     AND NOT c.:IS_GIFT AND (NOT c.:IS_SOME OR d.uid=:myid) AND (end=0 OR end>:NOW) AND start<=:NOW
 		ORDER BY end=0, end
 X;

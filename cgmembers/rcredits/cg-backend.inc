@@ -148,15 +148,15 @@ function balanceAsOf($uids, $date=NULL) {
   
 /**
  * Return an array of member names (called with ajax, so current user is passed as arguments).
- * Restricted to within NEIGHBOR_RMAX miles of the member
+ * Restricted to within NEIGHBOR_MAX miles of the member
  * @param int $myid: account record ID
  * @param int $aid: agent account record ID
  */
 function memberRay($myid, $aid, $coOnly = FALSE) {
   if (!$a = r\acct($myid, $aid)) return [];
 //  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : "state=$a->state OR community=$a->community OR :IS_CO");
-  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : u\SUBS("(:NEIGHBOR_QUERY<:NEIGHBOR_RMAX OR community=$a->community OR :IS_CO)")); // :NEIGHBOR_QUERY must be preprocessed by u\SUBS()
-  if (isDEV) $where = str_replace(NEIGHBOR_QUERY, '0', $where); // no lat/lon on dev machines yet
+  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : "(:DISTANCE_BETWEEN<:NEIGHBOR_MAX OR community=$a->community OR :IS_CO)");
+  if (isDEV) $where = str_replace(DISTANCE_BETWEEN, '0', $where); // no lat/lon on dev machines yet
   $subs = compact('myid');
   if (!$coOnly and !$a->admin and !isDEV) $subs += ray('lat lon', $a->latitude, $a->longitude);
 ///   flog(db\col('fullName', 'users', ":IS_OK AND uid<>:myid AND $where ORDER BY fullName", $subs));
@@ -875,7 +875,7 @@ function identify($who, $mya, $paying, $self_message = 'no self-trading') {
   }
   if ($paying) $where .= ' AND :IS_OK';
   if (!$mya->admin and !$mya->isAdmin2) {
-    $where .= u\SUBS(' AND (:IS_CO OR :NEIGHBOR_QUERY<:NEIGHBOR_RMAX)'); // restrict to nearby: must be preprocessed by u\SUBS()
+    $where .= ' AND (:IS_CO OR :DISTANCE_BETWEEN<:NEIGHBOR_MAX)'; // restrict to nearby: must be preprocessed by u\SUBS()
     list ($lat, $lon) = $mya ? [$mya->latitude ?: 0, $mya->longitude ?: 0] : [0, 0]; // avoid NULL (PHP bug?)
     $subs += compact(ray('lat lon'));
   }

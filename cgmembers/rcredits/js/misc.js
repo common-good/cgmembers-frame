@@ -241,3 +241,22 @@ function getCookie(name) {
   var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
   return v ? v[2] : null;
 }
+
+/**
+ * Allow only digits in a field. Call in jQuery keypress function: "$(selector).keypress(function () {return onlyDigits(event);});".
+ * Better would be a function restrict(ok, notOk) where acceptable and/or unacceptable characters are listed explicitly as patterns.
+ */
+function onlyDigits(e) {
+  var c = e.which ? e.which : e.keyCode;
+  return (c >= 48 && c <= 57);
+}
+
+function vsprintf(s, args) {
+  var res = s;
+  for (var k in args) res = res.replace('%s', args[k]);
+  return res;
+}
+
+function htmlEntities(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}

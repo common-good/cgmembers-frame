@@ -15,7 +15,7 @@ function formCompany($form, &$sta, $arg = '') {
   $myCats = db\q('SELECT iid FROM r_user_industries WHERE uid=:myid', compact('myid'))->fetchCol();
   $links = t('<%a>See your public %PROJECT web page</a> (in a new window)', 
     '_a', atag("/member/$mya->name", ['id' => 'show-webpage'] + w\away()));
-  $code = item($mya->emailCode, t('Secret Code:'), t('Use this code for a <%a>Pay with Common Good</a> button on your website.', '_a', atag('https://docs.google.com/document/d/1QpOW0WU7RiUV900PMekyH7ve3-_9yjCnQn627cWovOQ')));
+  $cgbutton = item(t('Click to create a <%aSimple>simple CGPay button</a> for your website or use this code &mdash; %code &mdash; for an <%aAdvanced>advanced CGPay button</a>.', 'code _aSimple _aAdvanced', $mya->emailCode, atag('/cgbutton'), atag('https://docs.google.com/document/d/1QpOW0WU7RiUV900PMekyH7ve3-_9yjCnQn627cWovOQ')), t('CGPay Button:'));
 
   $canDescs = ray(APP_CAN_BIT_DESCS);
   $permissions = '';
@@ -66,7 +66,7 @@ EOF;
     $atm = boolFld(t('ATM service:'), t('Allow company to trade %RCREDITS for cash even if their balance is less than their rewards (in-person only).'), $mya->coCan(CO_ATM) ?: 0);
   }
 //  $submit = submit();
-  return cgform(@compact(ray('title links photo name private categories selling shortDesc employees gross website code descPreface description can2 staleNudge tips fast atm')) + w\setupFoot(''));
+  return cgform(@compact(ray('title links cgbutton photo name private categories selling shortDesc employees gross website descPreface description can2 staleNudge tips fast atm')) + w\setupFoot(''));
 }
 
 function formCompany_validate($form, &$sta) {

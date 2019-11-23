@@ -1,3 +1,23 @@
+2019-11-23 feature/fix-locus
+. fixed Acct::setLocus() so it includes zipcode in search, so it gets more reliable results
+. fixed neighbor query so it is always as exact as possible (since speed does not seem to be an issue)
+. fixed weekly and monthly cron notices so they don't happen daily
+
+2019-11-22 feature/cgpay-form
+. added text button
+. changed CSP to allow text button creation (inline styles are allowed only on the cgbutton page)
+. fixed the digitsOnly functionality
+. sanitizied cgbutton input
+. simplified cgbutton form language
+
+2019-11-22 feature/cgpay-form
+. new form allows companies to easily create html for a CGPay button
+. changed order of co2 task steps, to put photo earlier than company
+. chaned $pA->id to $pA->uid in partnersignup.inc because ->id was empty once (but it was probably due to a crash and refresh)
+. added cg4.us as an acceptable source for images
+. added keypress and digitsOnly functions for form options
+. we now (re)create contract dir on the fly, because it gets deleted in temp dir on dev machines
+
 2019-11-19 hotfix/pay-button
 . pay-with-cg button with no specific amount works again
 
