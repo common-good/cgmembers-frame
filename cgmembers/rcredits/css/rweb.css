@@ -365,6 +365,10 @@ body.page-partner blockquote {font-size:14px;}
 #frm-grant #edit-getOther {max-width:500px;}
 #frm-grant #edit-sayWhat {max-width:300px;}
 
+/* Create Link/Button */
+#frm-cgbutton #edit-size {width:200px; display:inline-block; margin-right:20px; vertical-align:top;}
+#frm-cgbutton #button {display:inline-block;}
+
 /* Invite */
 #inviteLink {border:1px solid silver; background-color:lightyellow; color:silver;}
 

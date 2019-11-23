@@ -11,6 +11,7 @@ require_once R_ROOT . '/pdf.class';
 
 define('SF_URL', 'https://webto.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8');
 define('CRM_URL', 'SMT solar customer management URL');
+define('CONTRACT_DIR', sys_get_temp_dir() . '/contracts');
 
 /**
  * Accept and process signup data from a partner organization.
@@ -233,7 +234,7 @@ function gotSignup($pA) {
   if ($err = u\badAmount($years, '>=0')) return partnerErr(tr($err) . ' ' . t('The number of years you have been at that address must be a number.'), 'years');
   if (test() and is_numeric($state)) $state = r\realState($state);
   foreach (ray('state m_state') as $k) if (!${$k . 'Id'} = r\stateNum($$k)) return partnerErr('bad state', $k);
-  if (r\relation(1, 'main=:main AND :IS_CUSTOMER AND code=:customer', ray('main customer', $pA->id, $customer))) {
+  if (r\relation(1, 'main=:main AND :IS_CUSTOMER AND code=:customer', ray('main customer', $pA->uid, $customer))) {
     return softErr(t('You are already signed up with %partnerName.', compact('partnerName')));
   }
 
@@ -266,7 +267,7 @@ function gotSignup($pA) {
     $tenure = $years * 12;
     if (@$referrer) $source = @$source . ': ' . $referrer;
     $idVerifiedBy = $pA->fullName;
-    $helper = $pA->id;
+    $helper = $pA->uid;
     $state = $m_stateId;
     $acctInfo = compact(ray('legalName tenure source idVerifiedBy helper flags state'))
     + just('fullName contact phone email address city zip postalAddr source', $info);
@@ -355,7 +356,7 @@ function gotSolarOne($info) {
 
   $legalName = '*';
   $idVerifiedBy = $pA->fullName;
-  $helper = $pA->id;
+  $helper = $pA->uid;
   $state = $stateId;
   $acctInfo = compact(ray('legalName idVerifiedBy helper flags state'))
   + just('fullName contact phone email address city zip source', $info);
@@ -647,7 +648,10 @@ function partnerContinue($a, &$sta) {
   return cgform(compact(ray('title subtext go')));
 }  
 
-function contractFlnm($customer) {return sys_get_temp_dir() . "/contracts/$customer.pdf";} // customer-specific flnm
+function contractFlnm($customer) {
+  if (!is_dir(CONTRACT_DIR)) mkdir(CONTRACT_DIR, 0755) or u\FAIL('cannot create contract directory'); // required for tests
+  return CONTRACT_DIR . "/$customer.pdf"; // customer-specific flnm
+}
 //function contractUrl($customer) {return str_replace(ROOT, BASE_URL, contractFlnm($customer));}
 function pA($pid) {return (@$pid and $pA = r\acct($pid) and in($pA->name, SIGNUP_PARTNERS)) ? $pA : FALSE;}
 function cgA($qid) {return r\acct(str_replace('*', '', $qid));}

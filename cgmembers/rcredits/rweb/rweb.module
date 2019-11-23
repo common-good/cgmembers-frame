@@ -247,6 +247,7 @@ function rweb_menu($submenu = '') {
     'page-not-found' => ['call', t('Page Not Found'), 'PageNotFound', ANY],
     'go2' => ['call', t('Go to 2 pages'), '1', ANY, 'go2'],
     'pay-with-cg' => ['call', t('Pay With %RCREDITS'), 'Buy 1', ANY],
+    'cgbutton' => ['call', t('Create CGPay Button'), 'CGButton 1', 'manage'],
     'authcode' => ['call', t('Supply a one-use auth code'), '', ANY, 'authcode'],
     'scraps' => ['call', 'Scraps', 'Scraps 1', ANY],   
     'partner' => ['call', 'Signup Through Partner', 'PartnerSignup 1', ANY],
