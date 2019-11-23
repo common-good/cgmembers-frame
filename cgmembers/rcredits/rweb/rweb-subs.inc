@@ -2471,8 +2471,6 @@ function weight($weight) {return compact('weight');}
 function clas($class) {return ['class' => [$class]];}
 function attrib($attributes) {return compact('attributes');}
 function suffix($field_suffix = '') {return compact('field_suffix');}
-function keypress($keypress) {return compact('keypress');}
-function digitsOnly() {return keypress('return digitsOnly(event)');}
 function prefix($prefix) {return compact('prefix');}
 function autofill($settings = 'on') {return attrib(['autocomplete' => $settings]);}
 function required($dft = NULL) {return ['required' => TRUE] + (isset($dft) ? dft($dft) : []);}

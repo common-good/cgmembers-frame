@@ -1,4 +1,11 @@
 2019-11-22 feature/cgpay-form
+. added text button
+. changed CSP to allow text button creation (inline styles are allowed only on the cgbutton page)
+. fixed the digitsOnly functionality
+. sanitizied cgbutton input
+. simplified cgbutton form language
+
+2019-11-22 feature/cgpay-form
 . new form allows companies to easily create html for a CGPay button
 . changed order of co2 task steps, to put photo earlier than company
 . chaned $pA->id to $pA->uid in partnersignup.inc because ->id was empty once (but it was probably due to a crash and refresh)

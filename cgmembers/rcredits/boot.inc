@@ -105,6 +105,9 @@ define('FRAME_SOURCES', "https://cg4.us/chart.php $base_url/rcredits/misc/chart.
 function setCSP() {
   $styleNonce = base64_encode(substr(hash('sha256', PROJECT . now(), TRUE), 0, 32));
   $sid = session_id();
+  $styleSource = $_SERVER['REQUEST_URI'] == 'cgbutton' 
+  ? "'unsafe-inline'"  // allow inline styles when creating button
+  : "'nonce-$styleNonce' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=' 'sha256-+t47tgldASBy5zANml11C5vRg3a/7oPrKstKXlzZfkI=' 'sha256-nX7L7GcvxmPKgeYAFQSzFcLplU7F/i/72ytdtLdJYoI=' 'sha256-2EA12+9d+s6rrc0rkdIjfmjbh6p2o0ZSXs4wbZuk/tA='";
 
   \drupal_add_http_header('Content-Security-Policy', 
       "base-uri 'self';"
@@ -118,7 +121,7 @@ function setCSP() {
           . "object-src 'none';"
           . "script-src 'self' 'nonce-$styleNonce' 'report-sample';" // 'report-sample' allows script fragment to be included in CSP reports
           . "img-src 'self' https://cg4.us data:;" // data: is for photo upload
-          . "style-src 'self' 'nonce-$styleNonce' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=' 'sha256-+t47tgldASBy5zANml11C5vRg3a/7oPrKstKXlzZfkI=' 'sha256-nX7L7GcvxmPKgeYAFQSzFcLplU7F/i/72ytdtLdJYoI=' 'sha256-2EA12+9d+s6rrc0rkdIjfmjbh6p2o0ZSXs4wbZuk/tA=';"
+          . "style-src 'self' $styleSource;"
           . "worker-src 'none';"
     . "form-action 'self';"
     . "frame-ancestors 'none';"
