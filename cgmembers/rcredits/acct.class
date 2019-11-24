@@ -1516,7 +1516,7 @@ X;
     $a = $this;
     if (!is_null($lat)) return $a->update('latitude longitude', $lat, $lon);
     
-    $q = "$a->address, $a->city, " . r\realState($a->state);
+    $q = "$a->address, $a->city, " . r\realState($a->state) . " $a->zip";
 //    if (TRUE or test() and !$a->city) $q = $a->zip;
     $params = ray('q key', $q, GEOCODE_KEY);
 /*
@@ -1527,7 +1527,7 @@ X;
     */
     if (!$res = file_get_contents($url = GEOCODE_URL . http_build_query($params))) return r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)));
     $res = json_decode($res);
-    foreach (nn($res->results, []) as $one) $coods[$one->confidence] = $one->geometry;
+    foreach (nn($res->results, []) as $one) u\setDft($coods[$one->confidence], $one->geometry); // don't overwrite with later same confidence
 
     if (!nn($coods)) {
       $a->setRisk('addrOff');

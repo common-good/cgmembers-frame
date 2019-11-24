@@ -507,18 +507,11 @@ EOF
 }
 
 /**
- * Return a display of participating companies (for promo site)
+ * Display of participating companies (for promo site) and exit.
  */
 function whosin($ctty = '') {
-//  if (!$uid = db\get('uid', 'users', 'name=:ctty', ['ctty' => "$ctty."])) return '';
   $ctty = '!' . $ctty; // promo site omits the leading '!' from the community's QID
-  if (!$uid = r\qo($ctty)->id or !$list = r\companies($uid, FALSE)) return '';
-  $map = [
-    '<tr><td width="200">' => '<div class="row"><div class="cmpy-name">',
-    '</td><td style="margin-left:10px;">' => '</div><div class="cmpy-does">',
-    '</td></tr>' => '</div></div>',
-  ];
-  $list = strtr($list, $map); // temporary fudge
+  if (!$uid = r\qo($ctty)->id or !$list = r\companies($uid, FALSE)) exit();
 /**/  echo $list;
   exit();
 }
