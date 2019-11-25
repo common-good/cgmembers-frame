@@ -144,8 +144,11 @@ function makeTestAdmins() {
  * Return a list of signup steps remaining for the given account.
  */
 function showSteps($a) {
-  if (!$a->task) return t('no current task');
-  foreach (ray(r\taskSteps($a->task)) as $step) {
+  if ($a->task) {
+    $steps0 = ray(r\taskSteps($a->task));
+  } else $steps0 = $a->co ? ray(S_CO) + ray(S_CO2) : (ray(S_PERSON) + ray(S_CARD) + ray(S_SELL) + ray(S_VOICE));
+  
+  foreach ($steps0 as $step) {
     $class = $a->stepIsDone($step) ? 'step-done' : 'step-not-done';
     $steps[] = "<span class=\"$class\">$step</span>";
   }

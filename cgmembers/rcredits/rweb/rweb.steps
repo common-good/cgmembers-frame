@@ -501,6 +501,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST coupons AMemberRedeemsAPercentageDiscountCoupon
  *     TEST coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
  *     TEST coupons AMemberRedeemsARestrictedDiscountCoupon
+ *     TEST coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  *     TEST custstatement ACompanyLooksAtACustomerStatement
  *     TEST demographics ACompanyAgentRunsTheDemographicsQuery
  *     TEST gift AMemberDonates
@@ -772,6 +773,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE coupons AMemberRedeemsAPercentageDiscountCoupon
  *     MAKE coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsARestrictedDiscountCoupon
+ *     MAKE coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  *     MAKE demographics ACompanyAgentRunsTheDemographicsQuery
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
  *     MAKE download AMemberDownloadsIncomingInvoicesForThePastYear

@@ -101,7 +101,7 @@ X;
 		$company = $a->bestName;
  		$end = $end ? u\fmtDate($end, TRUE) : t('--');
     $left = $ulimit > 0 ? t('%left of %ulimit', 'left ulimit', $ulimit - $used, $ulimit) : t('no limit');
-    if ($some and $amount > 0 and !$ulimit) $left = u\fmtAmt(be\handleCoupon($zot, $mya, $a, $amount));
+    if ($amount > 0 and !$ulimit) $left = u\fmtAmt(be\handleCoupon($zot, $mya, $a, $amount));
     $for = $some ? t('you+') : t('anyone');
   	$amount = $amount < 0 ? u\fmtAmt(-$amount/100, '%') : u\fmtAmt($amount);
 

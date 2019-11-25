@@ -15,7 +15,6 @@ function formTx($form, &$sta, $args = '') {
   extract(just('who amount goods purpose', $args));
   global $mya;
 
-  if (!$mya->can(B_SELL)) return w\go('/summary');
   $type = mb_strtolower($_SERVER['REQUEST_URI']);
   $paying = ($type == 'pay');
   
