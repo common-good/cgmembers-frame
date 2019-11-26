@@ -1266,9 +1266,9 @@ fieldset#dateRange #advanced {display:none;}
 .date-field {line-height:65%;}
 .year-field {font-size:50%;}
 
-.step-done, .task-done {color:silver;}
-.step-not-done, .task-not-done {color:red;}
-.task-active {color:blue;}
+.step-done, .task-done {color:#138613;}
+.step-not-done, .task-not-done {color:#ff9999;}
+.task-active {color:darkblue; font-weight:bold;}
 
 .crop-button {color:lightgreen; background-color:darkgray;}
 

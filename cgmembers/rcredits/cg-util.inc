@@ -1227,12 +1227,13 @@ function n2english($num, $tri = 0) {
  * UNUSED as of 11/23/2019, but may be useful for the new app.
  */
 function earthDistance($lat1, $lon1, $lat2, $lon2) {
-  if ($lat1 == $lat2 and $lon1 == $lon2) return 0;
-  $theta = $lon1 - $lon2;
-  $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) +  cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
-  $dist = acos($dist);
-  $dist = rad2deg($dist);
-  return $dist * MI_PER_DEGREE;
+  $earthRadius = 3959; // miles
+  $dLat = deg2rad($lat2 - $lat1);
+  $dLon = deg2rad($lon2 - $lon1);
+
+  $a = sin($dLat/2) * sin($dLat/2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon/2) * sin($dLon/2);
+  $c = 2 * asin(sqrt($a));
+  return $earthRadius * $c;
 }
 
 /**

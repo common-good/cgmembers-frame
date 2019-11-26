@@ -16,13 +16,17 @@ class Capistrano::SCM::Git::FullSubmodules < Capistrano::Plugin
   end
 
   # returns a list of submodule names
-  def submodule_names 
-    # x = ''
-    # on :local do
-    # on Windows, inner delimiter on next line must be "
-      x = %x|git submodule foreach --quiet "echo $displaypath"|
-    # end
-    names = x.gsub(/\r/, '').split("\n")
+  def submodule_names
+    x = ''
+    on roles(:app).first do
+      within repo_path do
+        x = capture(:git, :config, '--blob', 'HEAD:.gitmodules', '--list')
+      end
+    end
+    names = x.split("\n").map { |entry|
+      md = %r{^submodule\.([-_a-zA-Z0-9/]*)\.(path|url)=(.*)$}.match(entry)
+      if md[2] == 'path' then md[1] else nil end
+    }.reject &:nil?
   end
   
   def submodule_mirror_exists?(name)
@@ -72,18 +76,13 @@ class Capistrano::SCM::Git::FullSubmodules < Capistrano::Plugin
   end
 
   def submodule_branch(name)
-    # x = ''
-    # on :local do
-      x = %x|git submodule foreach --quiet "echo $displaypath~$sha1"|
-    # end
-    nameBranches = x.gsub(/\r/, '').split("\n")
-    for nameBranch in nameBranches do
-      (modName, branch) = nameBranch.split('~');
-      if (modName == name)
-        return branch
+    x = ''
+    on roles(:app).first do
+      within repo_path do
+        x = capture(:git, 'ls-tree', fetch(:branch), name)
       end
     end
-    return false
+    x.split[2]
   end
     
   def submodule_archive_to_release_path(name)

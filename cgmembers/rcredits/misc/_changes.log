@@ -1,3 +1,10 @@
+2019-11-25 feature/fix-coupons
+. food fund recipients no longer get unlimited rebates
+. coupons with no end date now work
+. improved display of startup steps on Summary page (especially when there is no current task)
+. we now alert members who miss out on a rebate
+. fixed bug that kept buy-only members from using the Pay page
+
 2019-11-23 feature/fix-locus
 . fixed Acct::setLocus() so it includes zipcode in search, so it gets more reliable results
 . fixed neighbor query so it is always as exact as possible (since speed does not seem to be an issue)

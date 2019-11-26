@@ -160,6 +160,7 @@ EOF
   'credit ban on' => t('Maybe spending below a zero balance should be temporarily banned because demand for %RCREDITS has been negative %months months in a row.'),
   'credit ban off' => t('Temporary ban on spending below a zero balance should be lifted because demand for %RCREDITS has been positive %months months in a row.'),
   'coupon redeemed' => t('Success! %amount has been added to your balance, as a gift from %giver.'),
+  'missed coupon' => t('You missed out on a discount rebate from %company. Qualifying for rebates and other payments is easy. Sign in at %CG_DOMAIN and click "Sell" under Next Steps.'),
   'join success' => t('Success! Your accounts have been successfully joined.'),
   'join request success' => t('Success! An email has been sent to the other account owner, to confirm joining with yours.'),  
   'backing in effect' => t('Your previous backing promise will remain in effect through its end date. Then it will be replaced by this new promise.'),

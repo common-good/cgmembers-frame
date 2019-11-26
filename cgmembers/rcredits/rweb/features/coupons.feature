@@ -265,14 +265,34 @@ Scenario: A member with nothing redeems a zero minimum discount coupon
 
 Scenario: A member redeems a discount coupon sponsored by a third party
   Given coupons:
-  | coupid | amount | minimum | fromId | ulimit | flags | start     | end                | sponsor |*
-  |      1 |     12 |       0 |   .ZZC |      0 |       | %daystart | %(%daystart+10d-1) | .ZZB    |
+  | coupid | amount | minimum | fromId | on      | ulimit | flags | start     | end | sponsor |*
+  |      1 |     12 |       0 |   .ZZC | on zots |      0 |       | %daystart |   0 | .ZZB    |
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
-  | pay | Corner Pub |     20 | fun     |
-  Then we say "status": "You paid Corner Pub $20."
+  | pay | Corner Pub |     10 | fun     |
+  Then we say "status": "You paid Corner Pub $10."
+  And balances:
+  | uid  | balance |*
+  | .ZZA |       0 |
+  | .ZZB |     -10 |
+  | .ZZC |      10 |
+
+  When member ".ZZA" visits page "community/coupons/list/ALL"
+  Then we show "Automatic Discounts" with:
+  | Company    | Discount | On      | Ending | For    | Uses Left |
+  | Corner Pub |      $12 | on zots | --     | anyone | $2        |
+  
+  When member ".ZZA" confirms form "pay" with values:
+  | op  | who        | amount | purpose |*
+  | pay | Corner Pub |     10 | fun     |
+  Then we say "status": "You paid Corner Pub $10."
   And balances:
   | uid  | balance |*
   | .ZZA |      -8 |
   | .ZZB |     -12 |
   | .ZZC |      20 |
+
+  When member ".ZZA" visits page "community/coupons/list/ALL"
+  Then we show "Automatic Discounts" with:
+  | Company    | Discount | On      | Ending | For    | Uses Left |
+  | Corner Pub |      $12 | on zots | --     | anyone | $0        |

@@ -482,9 +482,11 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
   $needed = abs($amount);
 
   // Apply coupon
-  if ($amount > 0 and ($goods != FOR_USD) and $loserA->can(B_SELL)) { // no rebates unless buyer has permission to sell
-    $rebate = handleCoupon($entries, $loserA, $gainerA, $amount);
-    $needed -= $rebate;
+  if ($amount > 0 and ($goods != FOR_USD)) {
+    if ($loserA->can(B_SELL)) { // no rebates unless buyer has permission to sell
+      $rebate = handleCoupon($entries, $loserA, $gainerA, $amount);
+      $needed -= $rebate;
+    } else r\notify($loserId, 'missed rebate', ['company' => $gainerA->fullName]);
   }
 
   // Apply food fund (or other special) donation
@@ -642,7 +644,7 @@ function sendNotifications($type, $tx, $shortfall) {
 }
 
 /**
- * Generate transaction entries for a coupon, and update the coupated table as appropriate.
+ * Generate tentative transaction entries for a coupon, and update the coupated table as appropriate.
  * @param assoc $entries: (MODIFIED) an array of entries to add to, if appropriate
  * @param acct $buyer:
  * @param acct $seller:
@@ -651,7 +653,6 @@ function sendNotifications($type, $tx, $shortfall) {
  * @return the rebate amount
  */
 function handleCoupon(&$entries, $buyer, $seller, $price) {
-///    debug("handleCoupon($buyer->id, $seller->id, $price, $buyerTid, $sellerTid, $when)");
   u\EXPECT($price > 0, 'non-positive price handling coupon');
   
   $sql = <<<EOF
@@ -660,10 +661,10 @@ function handleCoupon(&$entries, $buyer, $seller, $price) {
     LEFT JOIN r_coupated d ON (c.coupid=d.coupid AND d.uid=:buyerId)
     LEFT JOIN (
       SELECT rel, SUM(amt) AS got, SUM(IF(amt<0, -1, 1)) AS gotCount
-      FROM txs 
+      FROM txs
       WHERE relType='D' AND uid2=:buyerId
     ) t ON t.rel=c.coupid
-    WHERE fromId=:sellerId AND :now BETWEEN start AND end AND :price>=minimum 
+    WHERE fromId=:sellerId AND :now>=start AND (:now<end OR end=0) AND :price>=minimum 
       AND NOT :IS_GIFT AND IF(:IS_SOME, d.id IS NOT NULL, TRUE)
       AND (c.ulimit=0 OR IFNULL(t.gotCount,0)<c.ulimit)
       AND (c.amount<0 OR IFNULL(t.got,0)<c.amount)
