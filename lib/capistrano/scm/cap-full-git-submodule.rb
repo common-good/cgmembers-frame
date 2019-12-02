@@ -19,7 +19,7 @@ class Capistrano::SCM::Git::FullSubmodules < Capistrano::Plugin
   def submodule_names
     x = ''
     on roles(:app).first do
-      within repo_path do
+      run_locally do
         x = capture(:git, :config, '--blob', 'HEAD:.gitmodules', '--list')
       end
     end
