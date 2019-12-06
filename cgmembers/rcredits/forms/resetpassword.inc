@@ -28,6 +28,7 @@ function formResetPassword($form, &$sta, $args = '') {
   
   if ($verify) {
     $mya->stepDone('verifyemail'); // this step is unique in that it is complete by visiting the page
+    if ($mya->co and r\relation(1, 'main=:main AND permission=:perm', ray('main perm', $mya->id, r\perm(B_MANAGE)))) return doSay(t('Your email address has been successfully verified! To manage your company account, sign in to your <i>personal</i> account at %CG_DOMAIN, then click your photo in the upper right corner to select the company.'));
     
     $title = t('Verified!');
     $subtext = t('<p>You have successfully verified your email address.</p><p>If you want a different password than the one we emailed you, you can change it here.</p>');

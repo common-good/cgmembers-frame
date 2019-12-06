@@ -50,5 +50,7 @@ function formPartnerStepTwo_submit($form, &$sta) {
   $signed = now();
   $signedBy = $mya->contact ?: $mya->agentA->fullName;
   $mya->update(compact(ray('signed signedBy roundup')));
+  $mya->stepDone('agree');
+  $mya->stepDone('preferences');
   return w\goNextStep('partnersteptwo');
 }

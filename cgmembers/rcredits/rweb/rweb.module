@@ -252,6 +252,7 @@ function rweb_menu($submenu = '') {
     'scraps' => ['call', 'Scraps', 'Scraps 1', ANY],   
     'partner' => ['call', 'Signup Through Partner', 'PartnerSignup 1', ANY],
     'accounts' => isDEV ? ['call', 'Account Choices', 'Accounts', 'manage'] : NULL,
+    'redirect' => ['call', 'Redirect', '', ANY, 'redirect'],
   );
 
   foreach ($items as $k => $v) {

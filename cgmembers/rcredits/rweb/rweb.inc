@@ -507,6 +507,16 @@ EOF
 }
 
 /**
+ * Redirect to another page (for signins and changes of account, bypassing menu permissions that might prevent a direct redirect).
+ */
+function redirect() {
+  die('redirect'); // unused
+  $uri = $_SERVER['REQUEST_URI'];
+  $redir = 'redirect/';
+  if (u\starts($uri, $redir)) return w\go(substr($uri, strlen($redir)));
+}
+
+/**
  * Display of participating companies (for promo site) and exit.
  */
 function whosin($ctty = '') {
