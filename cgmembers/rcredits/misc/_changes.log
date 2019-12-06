@@ -1,3 +1,12 @@
+2019-12-05 feature/signupco-tweak
+. minor improvements to admin view of Summary page, including more complete step list and no "DEAD" when no federalId
+. any account can now be invoiced (even if not yet activated) unless closed
+. company signup now asks for signin to personal account if an account ID is given
+. partnership signup now marks agree and preferences steps done
+. companies with an account manager now are not given a (new) password when they verify their email
+. signin form submission cleaned up slightly
+. company signup now handles four distinct cases
+
 2019-11-25 feature/fix-coupons
 . food fund recipients no longer get unlimited rebates
 . coupons with no end date now work

@@ -158,7 +158,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE signin AMemberTypesTheWrongPassword
  *     MAKE signin AMemberTypesAnUnknownUsernameID
  *     MAKE signin AMemberClicksALinkToResetPassword
- *     MAKE signupco SomeoneOpensATrialCompanyAccount
+ *     MAKE signupco SomeoneOpensATrialCompanyAccountWhileSignedIn
  *     MAKE signupco AMemberOpensATrialCompanyAccountNotSignedIn
  *     MAKE signupco AMemberOpensATrialCompanyAccountWithoutAPhone
  *     MAKE signupco AMemberMakesAPaymentFromATrialCompanyAccount
@@ -257,7 +257,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE signin AMemberAsksForANewPasswordForACompany
  *     MAKE signout Setup
  *     MAKE signupco Setup
- *     TEST signupco SomeoneOpensATrialCompanyAccount
+ *     TEST signupco SomeoneOpensATrialCompanyAccountWhileSignedIn
  *     TEST signupco AMemberOpensATrialCompanyAccountNotSignedIn
  *     MAKE signupco ATrialCompanyAccountManagerCreatesADiscount
  *     MAKE signupco AMemberMakesAPaymentFromATrialCompanyAccount
@@ -406,7 +406,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST signin AMemberAsksForANewPasswordForAnUnknownAccount
  *     TEST signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     TEST signin AMemberClicksALinkToResetPasswordForUnknownAccount
- *     TEST signupco SomeoneOpensATrialCompanyAccount
+ *     TEST signupco SomeoneOpensATrialCompanyAccountWhileSignedIn
  *     TEST signupco AMemberOpensATrialCompanyAccountWithoutAPhone
  *     TEST signupco ATrialCompanyAccountManagerCreatesADiscount
  *     TEST signup ANewbieRegistersInWesternMassachusetts
@@ -428,7 +428,7 @@ function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
  *     TEST signin AMemberAsksForANewPasswordForUsername
  *     TEST signin AMemberAsksForANewPasswordForAccountID
  *     TEST signin AMemberAsksForANewPasswordForEmail
- *     TEST signupco SomeoneOpensATrialCompanyAccount
+ *     TEST signupco SomeoneOpensATrialCompanyAccountWhileSignedIn
  *     TEST signup ANewbieRegistersInWesternMassachusetts
  */
 function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, $email, $subs);}
@@ -570,7 +570,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST signin AMemberVisitsTheMemberSite
  *     TEST signupco SomeoneWantsToOpenACompanyAccount
  *     TEST signupco AMemberWantsToOpenACompanyAccountWhileSignedIn
- *     TEST signupco SomeoneOpensATrialCompanyAccount
+ *     TEST signupco SomeoneOpensATrialCompanyAccountWhileSignedIn
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST summary AMemberClicksTheSummaryTab
  *     TEST summary AMemberClicksTheSummaryTabWithRoundups
@@ -1342,7 +1342,7 @@ function memberIsLoggedIn($id) {
  *     MAKE signin AMemberClicksALinkToResetPassword
  *     MAKE signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     MAKE signin AMemberClicksALinkToResetPasswordForUnknownAccount
- *     MAKE signupco SomeoneOpensATrialCompanyAccount
+ *     MAKE signupco SomeoneOpensATrialCompanyAccountWhileSignedIn
  *     MAKE signupco AMemberOpensATrialCompanyAccountNotSignedIn
  *     MAKE signupco AMemberOpensATrialCompanyAccountWithoutAPhone
  *     MAKE signup ANewbieRegistersInWesternMassachusetts
@@ -1527,7 +1527,7 @@ function rewardStepIs($step) {
 /**
  * member (ARG) one-time password is set to (ARG)
  *
- * in: TEST signupco SomeoneOpensATrialCompanyAccount
+ * in: TEST signupco SomeoneOpensATrialCompanyAccountWhileSignedIn
  *     TEST signup ANewbieRegistersInWesternMassachusetts
  */
 function memberOnetimePasswordIsSetTo($id, $pass) {
@@ -1888,7 +1888,7 @@ function stepsLeft($left) {global $mya; return memberStepsLeft($mya->id, $left);
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
- *     TEST signupco SomeoneOpensATrialCompanyAccount
+ *     TEST signupco SomeoneOpensATrialCompanyAccountWhileSignedIn
  *     TEST signupco ATrialCompanyAccountManagerCreatesADiscount
  */
 function memberStepsLeft($id, $left) {

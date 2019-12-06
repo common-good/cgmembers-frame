@@ -125,6 +125,10 @@ function doit(what, vs) {
     });
     break;
 
+  case 'signupco':
+    $('#edit-agentqid').keypress(function () {$('.form-item-pass').show();});
+    break;
+    
   case 'cgbutton':
     cgbutton(2);
     $('.form-item-button input').click(function () {cgbutton($(this).val());});

@@ -146,7 +146,7 @@ function makeTestAdmins() {
 function showSteps($a) {
   if ($a->task) {
     $steps0 = ray(r\taskSteps($a->task));
-  } else $steps0 = $a->co ? ray(S_CO) + ray(S_CO2) : (ray(S_PERSON) + ray(S_CARD) + ray(S_SELL) + ray(S_VOICE));
+  } else $steps0 = array_unique(ray(join(' ', $a->co ? [S_CO, S_CO2] : [S_PERSON, S_CARD, S_SELL, S_VOICE])));
   
   foreach ($steps0 as $step) {
     $class = $a->stepIsDone($step) ? 'step-done' : 'step-not-done';
@@ -285,6 +285,8 @@ function ssnShow($a) {
   if (isDEV) return t('no SSN data');
   
   $ssnData = @$a->ssnCheck();
+  if (!is_array($ssnData)) return "<p class=\"loud\">$ssnData</p>";
+  
   $d = @$ssnData['searchResults'] ?: []; // [] for admin without vKeyE
   if ($err = @$ssnData[SSN_ERR_INDEX]) $rows[] = ["<b class=\"err\">ERROR</b>", $err, '', '', ''];
   $name = $a->fullName . ($a->legalName == $a->fullName ? '' : "<br>$a->legalName");

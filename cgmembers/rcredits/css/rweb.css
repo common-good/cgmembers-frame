@@ -900,6 +900,8 @@ div.password-confirm .error {font-weight:bold; color:red;}
 #frm-partnersignup #edit-months,
 #frm-contact #edit-months {margin-left:10px;}
 
+/* Signup Company */
+#frm-signupco .form-item-pass {display:none;}
 
 /* Contact Info (labeled) */
 #frm-contact .form-item-pin,

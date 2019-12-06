@@ -65,7 +65,6 @@ function formSignin_validate($form, &$sta, $type = 'both') {
   $success = (isDEV and $uid == 1) ?: ($a and $a->passwordOkay($pass, 'pass', $err)); // ignore admin pass on dev machine
   w\updateFlood($sta, $success); // should be before pw2 and vKeyE checks
 	if (!$success) return say('login failed', 'name');
-  $sta['uid'] = $uid;
 
   if ($a->superAdmin) {
     $pw2 = @$pw2 ? u\b64decode($pw2) : (isDEV ? DEV_PW2 : '');
@@ -85,13 +84,11 @@ function formSignin_validate($form, &$sta, $type = 'both') {
 
 /**
  * Finish signing in.
- * @param assoc $sta: intermal input or external input (from a member merchant website), including
- *   $uid: record ID of account signing in
  * @param string $goto: what page to start on for non-admin
  */
 function formSignin_submit($form, &$sta, $goto = 'summary') {
-  extract(just('uid input external_input vKeyE', $sta));
-  if (!@$uid) return hack('sign-in is not authorized');
+  extract(just('name', $sta['input']));
+  $uid = r\loginString($name);
   $mya = r\setAcct($uid, $sta);
 
   u\loga('signin', ['name' => $mya->name]);

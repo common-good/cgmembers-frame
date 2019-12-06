@@ -5,8 +5,8 @@ SO I can be part of the Common Good Economy
 
 Setup:
   Given members:
-  | uid  | fullName | acctType    | flags      | created  | federalId | postalAddr          |*
-  | .ZZZ | Zeta Zot | personal    | ok         | 99654321 | 123456789 | 26Z, Zton, CA 98765 |
+  | uid  | fullName | acctType    | flags      | created  | federalId | postalAddr          | pass  |*
+  | .ZZZ | Zeta Zot | personal    | ok         | 99654321 | 123456789 | 26Z, Zton, CA 98765 | zpass |
   And member is logged out
 
 Scenario: Someone wants to open a company account
@@ -39,16 +39,16 @@ Scenario: A member wants to open a company account while signed in
   | Referred By   |
   | Account ID    |
   
-Scenario: Someone opens a trial company account
+Scenario: Someone opens a trial company account while signed in
   Given next random code is "WHATEVER"
-  When member "?" confirms form "signup-co" with values:
-  | contact | fullName | email | phone        | zip   | selling | source | ownPhone | qid    |*
-  | Abe One | Coco Co  | a@    | 413-253-0000 | 01002 | food    | Jo     |        1 |        |
+  When member ".ZZZ" confirms form "signup-co" with values:
+  | contact | fullName | email | phone        | zip   | selling | source | ownPhone | agentQid |*
+  | Abe One | Coco Co  | a@    | 413-253-0000 | 01002 | food    | Jo     |        1 | .ZZZ     |
   Then members:
   | uid       | .AAA           |**
   | fullName  | Coco Co        |
-  | legalName | %CGF_LEGALNAME |
-  | federalId | %CGF_EIN       |
+  | legalName | Zeta Zot       |
+  | federalId | 123456789      |
   | email     | a@             |
   | phone     | +14132530000   |
   | zip       | 01002          |
@@ -56,12 +56,12 @@ Scenario: Someone opens a trial company account
   | state     | MA             |
 #  | city      | Amherst        |
   | flags     | confirmed co depends |
-  | helper    | cgf            |
+  | helper    | .ZZZ           |
   | source    | Jo             |
   | contact   | Abe One        |
   | selling   | food           |
   And we email "verify" to member "a@" with subs:
-  | fullName | name   | quid   | site      | code     |*
+  | fullName | name   | qid    | site      | code     |*
   | Coco Co  | cococo | NEWAAA | %BASE_URL | WHATEVER |
   And member ".AAA" one-time password is set to "WHATEVER"
   And we say "status": "info saved|step completed"
@@ -75,13 +75,13 @@ Scenario: Someone opens a trial company account
 Scenario: A member opens a trial company account not signed in
   Given next random code is "WHATEVER"
   When member "?" confirms form "signup-co" with values:
-  | contact | fullName | email | phone        | zip   | source | selling | ownPhone | qid  |*
-  | Abe One | Coco Co  | a@    | 413-253-0000 | 01002 | friend | nuts    |        1 | .ZZZ |
+  | contact | fullName | email | phone        | zip   | source | selling | ownPhone | agentQid | pass  |*
+  | Abe One | Coco Co  | a@    | 413-253-0000 | 01002 | friend | nuts    |        1 | .ZZZ     | zpass |
   Then members:
   | uid       | .AAA           |**
   | fullName  | Coco Co        |
-  | legalName | %CGF_LEGALNAME |
-  | federalId | %CGF_EIN       |
+  | legalName | Zeta Zot       |
+  | federalId | 123456789      |
   | email     | a@             |
   | phone     | +14132530000   |
   | zip       | 01002          |
@@ -92,13 +92,13 @@ Scenario: A member opens a trial company account not signed in
   | helper    | .ZZZ           |
   | source    | friend         |
   | selling   | nuts           |
-  | contact   | Abe One~NEWZZZ |
+  | contact   | Abe One        |
  
 Scenario: A member opens a trial company account without a phone
   Given next random code is "WHATEVER"
   When member "?" confirms form "signup-co" with values:
-  | contact | fullName | email | phone        | zip   | source | selling | ownPhone | qid  |*
-  | Abe One | Coco Co  | a@    | 413-253-0000 | 01002 | there  | widgets |        0 | .ZZZ |
+  | contact | fullName | email | phone        | zip   | source | selling | ownPhone | agentQid | pass  |*
+  | Abe One | Coco Co  | a@    | 413-253-0000 | 01002 | there  | widgets |        0 | .ZZZ     | zpass |
   Then these "invoices":
   | nvid | created | status      | amount         | from | to  | for               |*
   |    1 | %today  | %TX_PENDING | %EQUIP_DEPOSIT | .AAA | cgf | equipment deposit |

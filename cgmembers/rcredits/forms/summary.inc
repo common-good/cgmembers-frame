@@ -62,7 +62,7 @@ function formSummary($form, &$sta) {
   if ($mya->canManage and $mya->member) {
     $hasMultipleAccounts = ($mya->co or db\exists('r_relations r LEFT JOIN users u ON u.uid=r.main', 'other=:id AND permission>0 AND u.:IS_CO', ['id' => $mya->agentId]));
     $another = $hasMultipleAccounts ? t('Another') : t('a');
-    $makeCo = $mya->depends ? '' : w\btn('/signup-co', t('Open %another Company Account', compact('another')), 'primary', 'xs');
+    $makeCo = $mya->depends ? '' : w\btn('/signup-co/relate=1', t('Open %another Company Account', compact('another')), 'primary', 'xs');
 //    if (!$mya->jid and !$mya->co) $makeJoint = w\btn('/signup/joint=1', t('Make this a joint account'), 'primary', 'xs');
     $makeJoint = ($mya->member and !$mya->jid and !$mya->co and !$mya->depends) ? w\btn('/prejoin', t('Make this a joint account'), 'primary', 'xs') : '';
 //    $goFood = $mya->food > 0 ? lnk('/settings/food', t('Food Fund')) : btn('/settings/food', t('Food Fund'), 'warning');
