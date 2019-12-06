@@ -1,3 +1,7 @@
+2019-12-06 feature/signupco-tweak2
+. improved showing/requiring ad hoc password field on company signup form
+. dependent company account now uses manager's legalName and federalId only if manager's account has a federalId
+
 2019-12-05 feature/signupco-tweak
 . minor improvements to admin view of Summary page, including more complete step list and no "DEAD" when no federalId
 . any account can now be invoiced (even if not yet activated) unless closed
