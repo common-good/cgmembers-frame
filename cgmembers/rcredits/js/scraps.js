@@ -126,7 +126,7 @@ function doit(what, vs) {
     break;
 
   case 'signupco':
-    $('#edit-agentqid').keypress(function () {$('.form-item-pass').show();});
+    $('#edit-agentqid').keyup(function () {reqQ($('.form-item-pass'), $('#edit-agentqid').val().trim() != '');});
     break;
     
   case 'cgbutton':
@@ -451,6 +451,7 @@ function showPassFlds() {
   jQuery('.form-item-pass1,.form-item-pass2,#edit-settings').show();
   jQuery('#edit-pass1').focus();
 }
-    
+  
 function req(fld) {fld.show(); fld.find('input').attr('required', 'required');}
 function reqNot(fld) {fld.find('input').removeAttr('required'); fld.hide();}
+function reqQ(fld, show) {if(show) req(fld); else reqNot(fld);}

@@ -108,12 +108,13 @@ function formSignupCo_submit($form, &$sta) {
   extract(just($dbFields . ' source2 ownPhone agentQid args', $sta['input']));
   extract(just('code relate', nn($args)));
 
+  list ($helper, $legalName, $federalId) = [CGID, CGF_LEGALNAME, CGF_EIN];
   if ($agentQid) {
-    $agentA = r\acct($agentQid);
     signout(TRUE);
+    $agentA = r\acct($agentQid);
     r\setAcct($agentA); // set agent
-    list ($helper, $legalName, $federalId) = [$agentA->id, $agentA->legalName, $agentA->federalId];
-  } else list ($helper, $legalName, $federalId) = [CGID, CGF_LEGALNAME, CGF_EIN];
+    if ($agentA->hasFid) list ($helper, $legalName, $federalId) = [$agentA->id, $agentA->legalName, $agentA->federalId];
+  }
 
   
   list ($city, $state, $latitude, $longitude) = zipCity($zip);

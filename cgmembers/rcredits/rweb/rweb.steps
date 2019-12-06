@@ -160,6 +160,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE signin AMemberClicksALinkToResetPassword
  *     MAKE signupco SomeoneOpensATrialCompanyAccountWhileSignedIn
  *     MAKE signupco AMemberOpensATrialCompanyAccountNotSignedIn
+ *     MAKE signupco AMinimalMemberOpensATrialCompanyAccount
  *     MAKE signupco AMemberOpensATrialCompanyAccountWithoutAPhone
  *     MAKE signupco AMemberMakesAPaymentFromATrialCompanyAccount
  *     MAKE signup ANewbieRegistersInWesternMassachusetts
@@ -259,6 +260,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE signupco Setup
  *     TEST signupco SomeoneOpensATrialCompanyAccountWhileSignedIn
  *     TEST signupco AMemberOpensATrialCompanyAccountNotSignedIn
+ *     BOTH signupco AMinimalMemberOpensATrialCompanyAccount
  *     MAKE signupco ATrialCompanyAccountManagerCreatesADiscount
  *     MAKE signupco AMemberMakesAPaymentFromATrialCompanyAccount
  *     MAKE signup Setup
@@ -1344,6 +1346,7 @@ function memberIsLoggedIn($id) {
  *     MAKE signin AMemberClicksALinkToResetPasswordForUnknownAccount
  *     MAKE signupco SomeoneOpensATrialCompanyAccountWhileSignedIn
  *     MAKE signupco AMemberOpensATrialCompanyAccountNotSignedIn
+ *     MAKE signupco AMinimalMemberOpensATrialCompanyAccount
  *     MAKE signupco AMemberOpensATrialCompanyAccountWithoutAPhone
  *     MAKE signup ANewbieRegistersInWesternMassachusetts
  */

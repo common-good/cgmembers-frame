@@ -94,6 +94,32 @@ Scenario: A member opens a trial company account not signed in
   | selling   | nuts           |
   | contact   | Abe One        |
  
+Scenario: A minimal member opens a trial company account
+  Given next random code is "WHATEVER"
+  And members:
+  | uid  | fullName | acctType    | flags      | created  | federalId | postalAddr         | pass  |*
+  | .ZZB | Bea Two  | personal    | ok         | 99654321 |           | 2B, Bton, MA 98765 | bpass |
+  
+  When member ".ZZB" confirms form "signup-co" with values:
+  | contact | fullName | email | phone        | zip   | source | selling | ownPhone | agentQid | pass  |*
+  | Abe One | Coco Co  | a@    | 413-253-0000 | 01002 | friend | nuts    |        1 | .ZZB     | bpass |
+  Then members:
+  | uid       | .AAA           |**
+  | fullName  | Coco Co        |
+  | legalName | %CGF_LEGALNAME |
+  | federalId | %CGF_EIN       |
+  | email     | a@             |
+  | phone     | +14132530000   |
+  | zip       | 01002          |
+  | country   | US             |
+  | state     | MA             |
+#  | city      | Amherst        |
+  | flags     | confirmed co depends |
+  | helper    | .AAB           |
+  | source    | friend         |
+  | selling   | nuts           |
+  | contact   | Abe One        |
+  
 Scenario: A member opens a trial company account without a phone
   Given next random code is "WHATEVER"
   When member "?" confirms form "signup-co" with values:
