@@ -19,7 +19,7 @@ function formCGButton($form, &$sta, $args = '') {
 
   $button = radiosFld(t('Type:'), '', required(2), ray(t('Link,Text Button,Image Button')));
   $selling = explode("\n", $mya->selling)[0];
-  $item = textFld(t('Item:'), [t('Item being sold'), t('Short description to appear on confirmation/invoice to the customer.')], required($selling));
+  $item = textFld(t('Item:'), [t('Item being sold'), t('Short description to appear on confirmation/invoice to the customer (leave blank to let customer specify).')], dft($selling));
   $text = textFld(t('Link Text:'), [t('Text')], required(t('Pay with %PROJECT')));
   $amount = textFld(t('Price/Amount:'), [t('Amount'), t('Leave blank to let the customer choose an amount (for donations, for example)')]);
   $size = textFld(t('Size/Button:'), [t('Size'), t('Button height, in pixels')], required(50) + suffix(tr('<div id="button">%img</div>', 'img', t('(Button will appear here)'))));

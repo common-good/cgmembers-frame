@@ -1,3 +1,6 @@
+2019-12-12 feature/cgpay-tweak
+. leaving item blank is now permitted (letting customer fill it in) and suggestedAmount and/or item is permitted
+
 2019-12-12 feature/signupco-tweak3
 . small changes to wording on tithein and discount pages
 . improved order on admin followup page
