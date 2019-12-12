@@ -496,7 +496,8 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
  *    If none, choose something reasonable, reporting to superAdmin as a last resort.
  */
 function tellCO($index, $subs = [], $uid = NULL) {
-  if (!$uid) $uid = ($mya = r\acct()) ? $mya->id : @$subs['loserId'];
+  global $mya;
+  if (!$uid) $uid = $mya ? $mya->id : @$subs['loserId'];
   return tellAdmin($index, $subs, $uid);
 }
 

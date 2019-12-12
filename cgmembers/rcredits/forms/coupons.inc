@@ -152,7 +152,7 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
   if ($gift) {unset($start); unset($end);} // don't pass these to printCoupons()
 
   $args = u\urlify(http_build_query($ray = @compact(ray('type amount minimum ulimit count on start end automatic'))));
-	r\tellCo(t('New Coupons!'), $ray);
+	r\tellCo(t('New Coupons!'), $ray + ray('company gift forOnly', $mya->fullName, $gift, nn($forOnly)));
   if (test()) $args = u\deurlify($args);
 	$url = "/community/coupons/print/$args";
   w\say(t('Your %thing was created successfully.', 'thing', $gift ? t('gift certificate') : t('discount')));

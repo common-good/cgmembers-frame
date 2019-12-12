@@ -318,7 +318,8 @@ function formFollowup($form, &$sta, $args = []) {
   
   $now = now();
   $signupBit = r\allSteps()['signup'];
-  $wantsCard = 0; foreach(ray(S_CARD) as $step) $wantsCard |= u\bit(r\allSteps()[$step]);
+  $wantsCardP = 0; foreach(ray(S_CARD) as $step) $wantsCardP |= u\bit(r\allSteps()[$step]);
+  $wantsCardCo = 0; foreach(ray(S_CO2) as $step) $wantsCardCo |= u\bit(r\allSteps()[$step]);
   $todayEnd = strtotime('tomorrow') - 1;
   list ($where1, $where2) = (($mya->admin or $mya->isAdmin2) and empty($one)) ? [1, 1] : [0, "community=$mya->community"];
   $cttys = r\cttyList();
@@ -328,7 +329,8 @@ function formFollowup($form, &$sta, $args = []) {
   $by = !empty($recent)
     ? "notes IS NULL OR notes='' OR MID(notes,1,6)='knows ', (MID(notes,6,4)*37+LOCATE(MID(notes,3,3),'JanFebMarAprMayJunJulAugSepOctNovDec'))*32+MID(notes,1,2) DESC"
     : "($todayEnd - IF(tickle>0, tickle, u.created)) * IF(tickle>$todayEnd, -5 * 366 * :DAY_SECS, 1)"; // today's calls first, then yesterday, 2 days ago etc., then tomorrow, the next day, etc.
-  if ($mya->superAdmin) $by = "(:IS_OK AND NOT :IS_CARDED) DESC, (!activated AND u.:IS_MEMBER) DESC, (notes LIKE '%ZAP%' AND BINARY notes LIKE '%ZAP%') DESC, " . $by;
+  $wantsCardQ = "IF(:IS_CO, $wantsCardCo, $wantsCardP)";
+  if ($mya->superAdmin) $by = "(:IS_OK AND NOT :IS_CARDED AND (steps & $wantsCardQ)=$wantsCardQ) DESC, (!activated AND u.:IS_MEMBER) DESC, (notes LIKE '%ZAP%' AND BINARY notes LIKE '%ZAP%') DESC, " . $by;
   
   $sql = <<<EOF
     SELECT DISTINCT u.uid, community, tickle, fullName, phone, u.data, u.steps, u.created, activated, notes, :IS_CO AS co, t.created AS lastTxTime, :IS_MEMBER AS member, :IS_OK AS ok, :IS_CARDED AS carded
@@ -354,6 +356,7 @@ EOF;
     extract($row);
     foreach (['tickle', 'activated'] as $k) if ($$k) $$k = strtotime('today', $$k); // round down to nearest day
     $days = round(($tickle - $activated) / DAY_SECS); // tickle: days since activation
+    $wantsCard = $co ? $wantsCardCo : $wantsCardP;
     list ($type, $color) = !$activated 
      ? (mb_strpos($notes, 'ZAP') 
        ? [t('DELETE'), 'zap']

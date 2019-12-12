@@ -14,7 +14,7 @@ Scenario: A member clicks a Pay With Common Good button
   When member "?" visits page "pay-with-cg/company=NEWZZC&item=food&amount=23"
   Then we show "Hello %PROJECT Member" with:
   | Pay        | $23 to Our Pub |
-  |            | for food |
+  | For        | food |
   | Account ID |  |
 
 Scenario: A member submits a Pay With Common Good button payment with account ID
@@ -52,7 +52,7 @@ Scenario: A member clicks a Pay With Common Good button with variable amount
   When member "?" visits page "pay-with-cg/company=NEWZZC&item=food&amount="
   Then we show "Hello %PROJECT Member" with:
   | Pay        | to Our Pub |
-  |            | for food |
+  | For        | food |
   | Account ID |  |
 
 Scenario: A member submits a Pay With Common Good button payment with account ID and chosen amount

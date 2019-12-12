@@ -27,10 +27,10 @@ function formBuy($form, &$sta, $doCode = '') {
   if ($doCode == 'done') return []; // shows result message and nothing else
   
   $required = 'company';
-  $fields = $required . ' code item amount name account zip verb request api return cancel err';
+  $fields = $required . ' code item amount suggestedItem suggestedAmount name account zip verb request api return cancel err';
 //  $_POST = ray($fields, 'Cool Item #1 with a really REALLY long description', '12.34', 'NEWZZC', 'cCode', 'Pay', 'http://google.com', '01330', 'wspademan@gmail.com');
-  $args = strpos($doCode, 'amount=') ? $doCode 
-  : ($doCode ? r\doCode($doCode) 
+  $args = strpos($doCode, '=') ? $doCode 
+  : (($doCode . ' ')[0] == 'P' ? r\doCode($doCode)
   : (@$sta['input'] ?: ($_POST ?: $_GET))
   );
 
@@ -51,7 +51,7 @@ function formBuy($form, &$sta, $doCode = '') {
     if ($err = u\badAmount($amount, '>0')) return w\softErr($err);
     $args['amount'] = $amount; // in case format got fixed
     $amount = u\fmtAmt($amount);
-  } else $amount = '$' . w\rendA('amount', textFld('', '', required()));
+  } else $amount = '$' . w\rendA('amount', textFld('', '', required(nn($suggestedAmount))));
 
 //  if ($code != @$co->data['cardCode']) return w\go('', 'bad account ID', 'zot');
   $account = trim(strpos(@$account, '@') ? mb_strtolower($account) : mb_strtoupper(@$account));
@@ -72,18 +72,15 @@ function formBuy($form, &$sta, $doCode = '') {
     list ($name, $pass) = w\signinFlds(@$a ? $a->mainQid : ''); // keep the $a? here in case we change the logic hereabout
   }
 
-//  if (($a = r\acct()) ? !u\similarEmail($a->email, $email) : (!$a = r\acct($email))) return w\go('', t('bad buy info', ray('thing', t('email'))), 'err'); // signed in
-//  if (!in_array(mb_strtolower($cust_name), array(mb_strtolower($a->fullName), mb_strtolower($a->legalName)))) return w\go('', t('bad buy info', ray('thing', t('name'))), 'zot');
-
-// NO (return omits domain)  if (!\valid_url($return, TRUE)) return w\go('', 'bad url', 'zot');
-
   $verbs = t('Donate, Donate, Pay');
   $verb = in(ucwords(@$verb), $verbs) ? ucwords($verb) : t('Pay');
-  $args['item'] = $item = $item ?: t('donation'); // default to donation
-  if (@$item) $item = t('for ') . $item;
-  $payment = item(t('%amount to %who<br>%what', '_amount who what', $amount, @$co->fullName ?: t('co'), @$item), "$verb:");
-//  if (@$zip and substr($zip, 0, 5) != substr($a->zip, 0, 3)) $answer = textFld(t('Answer:'), $a->question, required());
+  $payment = item(t('%amount to %who', '_amount who', $amount, @$co->fullName ?: t('co')), "$verb:");
 
+  if (nn($item)) {
+    $args['item'] = $item;
+    $item = item($item, t('For:'));
+  } else $item = textFld(t('For:'), [t('What to pay for')], required(nn($suggestedItem)));
+  
   $args['confirm'] = $confirm;
   $hid = hidFld(plain(serialize($args)));
 //  $option = $a ? t('OR <%a>email me an invoice</a>', '_a', 'a') : t('OR <%a>signup</a>', '_a', atag('/signup'));
@@ -91,7 +88,7 @@ function formBuy($form, &$sta, $doCode = '') {
   $submit = submit($verb, '', 'md', w\suffix($option));
   focusOn($amount0 ? 'name' : 'amount');
   
-  return cgform(@compact(ray('title subtext payment name pass hid submit')));
+  return cgform(@compact(ray('title subtext payment item name pass hid submit')));
 }
 
 function formBuy_validate($form, &$sta) {
@@ -105,7 +102,7 @@ function formBuy_validate($form, &$sta) {
 }
 
 function formBuy_submit($form, &$sta) {
-  extract(just('hid name', $sta['input']));
+  extract(just('hid name item', $sta['input']));
 //  $account = strpos($name, '@') ? $name : mb_strtoupper($name);
   extract(just('amount item company code cancel return api request confirm', $args = unserialize(unplain($hid))));
   if (empty($amount)) extract(just('amount', $sta['input'])); // amount was a field
