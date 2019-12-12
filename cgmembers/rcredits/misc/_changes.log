@@ -1,3 +1,7 @@
+2019-12-12 feature/signupco-tweak3
+. small changes to wording on tithein and discount pages
+. improved order on admin followup page
+
 2019-12-06 feature/signupco-tweak2
 . improved showing/requiring ad hoc password field on company signup form
 . dependent company account now uses manager's legalName and federalId only if manager's account has a federalId

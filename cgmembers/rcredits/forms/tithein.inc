@@ -13,7 +13,7 @@ function formTitheIn($form, &$sta, $args = '') {
   global $mya;
 
   $title = t('Share When You Receive');
-  $subtext = t('<p>Contribute a small percentage of every payment you receive. For example, 1% means donate one penny of each dollar you receive, to %PROJECT and your community\'s Community Fund. Smaller amounts such as 0.5% are also very welcome.</p><p>Your gift supports democratic community funding of whatever we decide together is important. PLUS if you accept credit cards, this gift even just in the short term allows %PROJECT to save you (and everyone else) about 2% on credit card fees in the long term.</p>');
+  $subtext = t('<p>Contribute a small percentage of every payment you receive. For example, 1% means donate one penny of each dollar you receive. Smaller amounts such as 0.5% are also very welcome (the average amount people choose is about 1.1%).</p><p>Your gift supports democratic community funding of whatever we decide together is important. PLUS if you accept credit cards, this gift even just in the short term allows %PROJECT to save you (and everyone else) about 2% on credit card fees in the long term.</p>');
 
   $crumbs0 = $mya->crumbs * 100;
   $crumbs = textFld(t('Crumbs:'), [t('Contribution Percentage')], required($crumbs0 ?: '') + suffix(' %'));
