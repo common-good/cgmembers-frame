@@ -1536,12 +1536,13 @@ function weMessage($index, $id, $subs) {
     if ($t_uid == $uid and $t_index == $index) {
       $matching = true;
       foreach ($subs as $k => $v) if ($v != '?' and @$t_subs[$k] != $v) {
+        t\output("Wanted $k=\"$v\". Got " . @$t_subs[$k]);
         $matching = FALSE; break;
       }
       if ($matching and !preg_match('/[@\{]/', @$t_topic)) return TRUE;
     }
   }
-  return t\output('Expected: ' . pr(compact(ray('index id uid subs'))) . '<br>Got: ' . pr($testMessages));;
+  return t\output('Overall wanted: ' . pr(compact(ray('index id uid subs'))) . '<br>Got: ' . pr($testMessages));;
 }
     
 /**

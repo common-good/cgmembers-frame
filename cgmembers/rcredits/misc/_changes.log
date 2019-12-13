@@ -1,3 +1,6 @@
+2019-12-13 feature/uninvited
+. handle messaging to a self-invited new member (don't say they have to be confirmed by System Administrator)
+
 2019-12-12 feature/cgpay-tweak
 . leaving item blank is now permitted (letting customer fill it in) and suggestedAmount and/or item is permitted
 

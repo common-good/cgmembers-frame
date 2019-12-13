@@ -155,7 +155,7 @@ class Acct {
       case 'balance':  // special case, it's the same in both
       case 'o_balance': return db\get('balance', 'users', 'uid=:id', ['id' => $a->id]);
       case 'lastTx': return $a->lastTx();
-      case 'isCanonic': return ($a->id > 0 and $a->id < CANONIC_ACCTS);
+      case 'isCanonic': return ($a->id >= 0 and $a->id < CANONIC_ACCTS);
       default: break;  // fall through
     }
       

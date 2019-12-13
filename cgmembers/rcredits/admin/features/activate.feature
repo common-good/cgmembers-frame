@@ -25,6 +25,21 @@ Scenario: Admin activates an account
   And we message "approved|suggest card" to member ".ZZD" with subs:
   | youName  | inviterName | specifics | otherName |*
   | Dee Four | Bea Two     |         ? |           |
+  
+Scenario: Admin activates an account unconfirmed
+  Given member ".ZZD" has no photo ID recorded
+  And members have:
+  | uid  | flags  |*
+  | .ZZD | member |
+  When member "D:A" completes form "summary" with values:
+  | mediaConx | rTrader | helper | federalId  | adminable | tickle |*
+  |         1 |       1 |      1 | %R_ON_FILE | member    |        |
+  Then members:
+  | uid  | flags     | helper |*
+  | .ZZD | member,ok |      1 |
+  And we message "approved|must confirm uninvited|suggest card" to member ".ZZD" with subs:
+  | youName  | inviterName          | specifics | otherName |*
+  | Dee Four | System Administrator |         ? |           |
 
 Scenario: Admin deactivates an account
   Then members:

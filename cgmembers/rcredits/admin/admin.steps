@@ -41,6 +41,7 @@ function extraSetup() {
  * in: MAKE aaOther Setup
  *     MAKE activate Setup
  *     TEST activate AdminActivatesAnAccount
+ *     TEST activate AdminActivatesAnAccountUnconfirmed
  *     TEST activate AdminDeactivatesAnAccount
  *     MAKE changes Setup
  *     MAKE checks Setup
@@ -84,6 +85,7 @@ function weShowWith($title, $content = FALSE, $showDebugs = TRUE) {
  *
  * in: MAKE aaOther AdminDeletesAnAccount
  *     MAKE activate AdminActivatesAnAccount
+ *     MAKE activate AdminActivatesAnAccountUnconfirmed
  *     MAKE activate AdminDeactivatesAnAccount
  *     MAKE changes AMemberChangesSomeSettings
  */
@@ -133,6 +135,7 @@ function weNoticeToMemberWithSubs($notice, $id, $subs) {return t\notice($notice,
  * member (ARG) has no photo ID recorded
  *
  * in: MAKE activate AdminActivatesAnAccount
+ *     MAKE activate AdminActivatesAnAccountUnconfirmed
  */
 function memberHasNoPhotoIDRecorded($id) {return t\noPhotoId($id);}
 
@@ -162,5 +165,13 @@ function memberHasDoneStep($id, $step) {return t\doneStep($id, $step);}
  * we message (ARG) to member (ARG) with subs: (ARG)
  *
  * in: TEST activate AdminActivatesAnAccount
+ *     TEST activate AdminActivatesAnAccountUnconfirmed
  */
 function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($index, $id, $subs);}
+
+/**
+ * members have: (ARG)
+ *
+ * in: MAKE activate AdminActivatesAnAccountUnconfirmed
+ */
+function membersHave($list) {return t\membersHave($list);}
