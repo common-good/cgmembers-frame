@@ -202,6 +202,7 @@ EOF
   "can't cash incentives" => t("You can SPEND your incentive rewards (%rewards to date), but you can't cash them out. Your %RCREDITS balance available to exchange for US Dollars is %cashable."),
 //  "can't cash incentives" => t("Once you are an active participant, you can spend your incentive rewards (%balance to date), but you can't cash them out. Your rCredits balance available to exchange for US Dollars is $0."),
 //  'get r/usd' => t('You can get only "r" or "usd" (rCredits or US Dollars).'), // not yet used (maybe used when there is a third option)
+  'no receive invest' => t('You do not have permission to receive funds through %PROJECT. If you would like to participate in the Investment Club, click "Sell" under Next Steps to get started.'),
   'not a feature' => t('"%feature" is not a feature.'),
   'wrong nonce' => t('That is not the expected confirmation response. Try again (start over).'),
   'no self-trading' => t("You can't do a transaction with yourself."), // also includes relations, switching accounts, etc.

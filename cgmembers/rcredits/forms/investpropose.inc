@@ -15,8 +15,6 @@ define('INVEST_ALLFLDS', 'company ' . INVEST_COFLDS . ' bizCats ' . INVEST_FLDS)
  */
 function formInvestPropose($form, &$sta, $args = '') {
   global $mya;
-///  extract(just('clubqid', $args));
-  if (!$mya->iclub) return w\go('/invest', t('not a club'));
   
   $title = t('Propose a New Investment');
   $subtext = t('Complete this form if you have been assigned by your Investment Club steering committee to research the soundness of a proposed investment. <%a>Here is a printable worksheet</a> you can use to gather the necessary information.', '_a', atag('http://cg4.us/docs/investment-worksheet.pdf'));

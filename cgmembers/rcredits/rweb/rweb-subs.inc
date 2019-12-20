@@ -1153,11 +1153,12 @@ function subMenu($title, $menu) {
 
 function subMenuHtml($menu) {
   global $base_url;
+
   if (!is_array($menu)) $menu = \rweb_menu($menu);
   $list = '';
   foreach ($menu as $k => $v) {
     @list ($type, $head, $args, $perms, $func, $detail, $icon) = $v;
-    if ($type == 'call' or $head == 'zot' or !w\webAccess($perms)) continue;
+    if ($type == 'call' or !w\webAccess($perms)) continue;
     if (@$detail) $detail = "<p class=\"list-group-item-text\">$detail</p>";
     $text = <<<EOF
     <h4 class="list-group-item-heading">
@@ -2050,7 +2051,7 @@ function showCharts($ctty = 0, $period = 'months', $download = FALSE) {
       foreach ($txTypes as $k => $desc) {
         $v = max(1, ${"d_{$k}0"}); // to make the logarithmic scale look okay
         $cnt = ${"d_{$k}Count"};
-        $cnt .= $cnt ? ' @ ' . u\fmtAmt($v / $cnt) . ' avg' : '';
+        $cnt .= empty($cnt + 0) ? '' : (' @ ' . u\fmtAmt($v / $cnt) . ' avg');
         $f = ${"d_{$k}"} . " ($cnt) $desc"; // eg "$123 (7 @ $6.25 avg)"
         $x2x[] = compact('v', 'f');
       }
@@ -2114,7 +2115,7 @@ function fundStats($stats, $round = FALSE, $stats30 = NULL) {
   foreach (array_keys($stats) as $k) {
     if (!in($k, 'id ctty created')) {
       if ($stats30) $stats["d_$k"] = $stats[$k] - $stats30[$k];
-      $fmt = ($round or strpos($k, 'Count') or in_array($k, $intStatFlds)) ? '1' : 's$';
+      $fmt = ($round or strpos($k, 'Count') or in_array($k, $intStatFlds)) ? '0' : 's$';
       if (strpos($k, 'Rate')) $fmt = '%';
 //      if (strpos($k, 'Per')) $fmt = '';
       foreach ($stats30 ? [$k, "d_$k"] : [$k] as $fnm) {

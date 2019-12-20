@@ -9,7 +9,7 @@ use CG\Db as db;
 /**
  * Join an investment club or manage membership therein.
  */
-function formInvest($form, &$sta, $args) {
+function formInvest($form, &$sta, $args = '') {
   global $mya; $uid = $mya->id;
 
   $title = t('Investment Club');
@@ -19,7 +19,7 @@ function formInvest($form, &$sta, $args) {
   if (!$clubid) {
     $subtext = t('There is no active investment club in your community at this time. Consider starting one! Your %PROJECT community administrator can set it up for you.');
     return cgform(compact(ray('title subtext')));
-  }
+  } elseif (!$mya->can(B_SELL)) return w\go('summary', 'no receive invest');
 
   $clubA = r\acct($clubid);
   $clubqid = $clubA->mainQid;
@@ -31,7 +31,7 @@ function formInvest($form, &$sta, $args) {
       $reqCount = number_format($reqCount);
     } else $reqTot = $reqCount = $stakes = 0;
     
-    $btnList = btn("/invest/list/clubqid=$clubqid", t('List'), 'success');
+    $btnList = btn("/invest/list/clubqid=$clubqid", t('List'));
     $btnPropose = btn('/invest/propose', t('Propose'));
     $btnCashout = btn('/invest/cashout', t('Cash Out'));
     $btnDividends = btn('/invest/dividends', t('Issue Dividends'));
@@ -190,4 +190,20 @@ X;
   if (!$res = db\q($sql, compact(ray('myid clubid')))->fetchAssoc()) return 0;
   extract($res);
 	return abs($totalFairShares) > .005 ? round($memberFairShare / $totalFairShares, 2) : 0;
+}
+
+/**
+ * Return a club account.
+ * @param string $clubqid: (OPTIONAL) the club's qid
+ */
+function clubA($clubqid = NULL) {
+  global $mya;
+  if ($clubqid) {
+    if ($clubA = r\acct($clubqid) and $clubA->iclub) return $clubA;
+  } else {
+    if ($mya->iclub) return $mya;
+    if ($clubid = $mya->iClubId) return r\acct($clubid);
+  }
+  
+  return w\go('/invest/overview', t('You do not have permission to visit that page.'));
 }

@@ -208,7 +208,7 @@ class Acct {
     if ($field == 'helperA') return $a->helper ? r\acct($a->helper) : '';
     if ($field == 'foody') return db\get(':U_FOODY', 'users u', ['uid' => $a->id]);
     if ($field == 'iclub') return ($a->id < 0 or mb_strpos($a->fullName, t('Investment Club')) !== FALSE);
-///    if ($field == 'iclubId') return db\get('uid', 'users', 'fullName LIKE :club AND :zip REGEXP zip AND :IS_OK', ray('club zip', t('%Investment Club%'), $mya->zip));
+    if ($field == 'iclubId') return db\get('clubid', 'r_stakes', 'uid=:uid', ['uid' => $a->id]);
     if ($field == 'trialco') return ($a->co and $a->depends);
     if ($field == 'prefsSet') return !is_null($a->o_minimum); // preferences have been set at least once
     if ($field == 'hasCustomers') return db\exists('r_relations', 'main=:id AND :IS_CUSTOMER', ['id' => $a->id]);

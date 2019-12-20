@@ -1088,11 +1088,11 @@ function completeForm($id, $page, $values = '', $confirmed = FALSE) {
 
   $sta['values'] = $sta['input'] = $values + $dfts; // add to whatever status the form left off in
   $fieldErr = FALSE; // no field errors yet
-  if (!@$lastGo or @$lastGo == $xlastGo) foreach (t\postProcess($form, $page, 'validate') as $one) $one($form, $sta);
+  if (!@$lastGo or @$lastGo == $xlastGo) form_execute_handlers('validate', $form, $sta);
   $lastIdentifierTag = '</div identifiers>';
   if ($i = strpos($testConfirmation, $lastIdentifierTag)) $testConfirmation = substr($testConfirmation, $i + strlen($lastIdentifierTag));
   if ($fieldErr) return TRUE; // no submit if field error
-  if (!@$lastGo or @$lastGo == $xlastGo) foreach (t\postProcess($form, $page, 'submit') as $func) $func($form, $sta);
+  if (!@$lastGo or @$lastGo == $xlastGo) form_execute_handlers('submit', $form, $sta);
 
   return TRUE;
 }

@@ -193,7 +193,7 @@ function rcredits_links($variables) {
     if ($i == $num_links) $class .= ' last';
     if ($m_href == $_GET['q'] or ($m_href == '<front>' && \drupal_is_front_page())) $class .= ' active';
     
-    if (in($m_href, 'history settings community sadmin')) {
+    if (in($m_href, 'community invest history settings sadmin')) {
       $class .= ' submenu';
       $menu = w\subMenuHtml($m_href);
       $link = <<<EOF

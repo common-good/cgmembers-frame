@@ -1915,7 +1915,7 @@ function memberStepsLeft($id, $left) {
 /**
  * member (ARG) has (ARG) steps done: (ARG)
  *
- * in: 
+ * in: MAKE invest Setup
  */
 function memberHasStepsDone($id, $task, $steps) {
   global $testOnly;

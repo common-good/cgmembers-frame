@@ -6,6 +6,8 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
+include_once __DIR__ . '/invest.inc';
+
 /**
  * List potential or actual investments.
  */
@@ -13,37 +15,35 @@ function formInvestList($form, &$sta, $args = '') {
   global $mya;
   extract(just('actual clubqid', $args));
   
-  if (!@$clubqid or !$clubA = r\acct($clubqid) or !$clubA->iclub) return w\go('/invest', t('not a club'));;
-  $clubid = $clubA->id;
-
-  list ($actualInv, $proposedInv) = [t('Actual Investments'), t('Proposed Investments')];
-  list ($title, $params, $lnkText, $staked) = @$actual
-  ? [$actualInv, '', $proposedInv, 'NOT NULL']
-  : [$proposedInv, 'actual=1', $actualInv, 'NULL'];
-  $lnk = lnk("/invest/list/clubqid=$clubqid&$params", $lnkText);
-  $subtext = t('(click to see %lnk instead)<br>Choose an investment to see details%ratable.', '_lnk ratable', $lnk, @$actual ? '' : t(' or to rate it'));
+  if (!$clubA = clubA($clubqid)) return;
+  list ($clubid, $clubqid) = [$clubA->id, $clubA->mainQid];
+  
+  $title = t('Club Investments');
+  $subtext = t('Choose an investment to see details%rate.', 'rate', $clubid == $mya->id ? '' : t(' or to rate it'));
   
   $sql = <<< X
-    SELECT DISTINCT i.vestid, u.fullName, i.investment, i.types, i.return * 100 AS `return`, i.soundness AS sound, 
-      AVG(r.good) AS good, SUM(s.shares*i.price) AS value
+    SELECT DISTINCT i.vestid, u.fullName, i.investment, i.types, i.return, i.soundness AS sound, 
+      IF(s.shid IS NULL, 'proposed', 'actual') AS status, AVG(r.patronage) AS patronage, AVG(r.good) AS good, 
+      SUM(s.shares*i.price) AS value
     FROM r_investments i 
     LEFT JOIN users u ON u.uid=i.coid 
     LEFT JOIN r_ratings r USING(vestid)
     LEFT JOIN r_shares s USING(vestid)
-    WHERE s.shid IS $staked AND i.clubid=:clubid
+    WHERE i.clubid=:clubid
     GROUP BY i.vestid
     ORDER BY u.fullName
 X;
   $q = db\q($sql, compact('clubid'));
 ///  debug(compact(ray('sql clubid')));
-  $fields = ray('investment type return ' . (@$actual ? 'value' : 'sound good'));
-  $hdrs = u\tableRow($fields);
+  $fields = ray('status investment type return value good');
+  $hdrs = ray(ucwords(t('status investment type return value good')));
+  $hdrs = u\tableRow($hdrs);
   
   while ($row = $q->fetchAssoc()) {
     extract($row);
-    $return = number_format($return, 1) . '%';
+    $return = u\fmtAmt($return, '%2');
     $investment = mb_substr("$fullName: $investment", 0, 80);
-    $type = (strpos($types, 'I') === FALSE or strpos($types, 'D') !== FALSE) ? t('equity') : t('loan');
+    $type = (strpos($types, 'I') === FALSE or strpos($types, 'D') !== FALSE) ? t('Equity') : t('Loan');
     $href = BASE_URL . "/invest/rate/vestid=$vestid&clubqid=$clubqid";
     $investment = tags('a', $investment, compact('href'));
     $good = $good ? number_format($good, 1) : '?';

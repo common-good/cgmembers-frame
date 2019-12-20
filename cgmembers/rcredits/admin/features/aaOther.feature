@@ -12,7 +12,7 @@ Setup:
 
 # This scene assures that field changes made to users in migrations get made also to x_users
 Scenario: Admin deletes an account
-  When member "B:1" completes form "PHP" with values:
+  When member "B:1" completes form "sadmin/php" with values:
   | code |*
   | r\deleteAccount('NEWZZD'); |
   Then these "x_users":

@@ -1,3 +1,17 @@
+2019-12-20 feature/invest-fixes
+. investment club pages are now subsidiary entries on the Invest menu
+. lists of investments actual and proposed have been merged
+. invest buttons are now all blue
+. some textual improvements to investment pages
+. percentage return on investment detail page is no longer 1/100th of what it should be
+. median goodness is shown on investment detail page, not must mean
+. trim all textfield input
+. use real words when a\anonymize()ing
+. simplified validate and submit function calls in cg-testing.inc
+. cleaned up fmtAmt (opt '0' now means whole dollar amount)
+. members cannot join investment club without SELL permission, but they can see the menu item
+. tightened up dividends page
+
 2019-12-13 feature/uninvited
 . handle messaging to a self-invited new member (don't say they have to be confirmed by System Administrator)
 
