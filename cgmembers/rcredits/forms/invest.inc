@@ -12,7 +12,7 @@ use CG\Db as db;
 function formInvest($form, &$sta, $args = '') {
   global $mya; $uid = $mya->id;
 
-  $title = t('Investment Club');
+  $title = t('Investment Club Overview');
 
   $clubid = $mya->iclub? $uid : db\get('uid', 'users', 'fullName LIKE :club AND :zip REGEXP zip AND :IS_OK', ray('club zip', t('%Investment Club%'), $mya->zip));
   

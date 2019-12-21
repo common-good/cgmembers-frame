@@ -84,7 +84,7 @@ function rweb_menu($submenu = '') {
     'invest/cashout' => ['sub', t('Handle Cashout Requests'), 'InvestCashout 2', 'manage ok iclub', '', t(), 'new-window'],
     'invest/dividends' => ['sub', t('Issue Dividends'), 'InvestDividends 2', 'manage ok iclub', '', t(), 'cloud-download'],
     'invest/propose' => ['sub', t('Propose Investment'), 'InvestPropose 2', 'ok iclub', '', t(), 'fire'],
-    'invest/buy-or-sell' => ['sub', t('Buy or Sell Investment'), 'InvestBuySell 2', 'manage ok iclub', '', t(), 'refresh'],
+    'invest/buy-or-sell' => ['call', t('Buy or Sell Investment'), 'InvestBuySell 2', 'manage ok iclub', '', t(), 'refresh'],
     'invest/rate' => ['call', t('Rate Investment'), 'InvestRate 2', 'manage ok investor', '', t(), 'search'],
 
     'history' => ['norm', t('History'), 'History', 'read'],

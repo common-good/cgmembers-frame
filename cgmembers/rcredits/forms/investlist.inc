@@ -15,7 +15,7 @@ function formInvestList($form, &$sta, $args = '') {
   global $mya;
   extract(just('actual clubqid', $args));
   
-  if (!$clubA = clubA($clubqid)) return;
+  if (!$clubA = clubA(nn($clubqid))) return;
   list ($clubid, $clubqid) = [$clubA->id, $clubA->mainQid];
   
   $title = t('Club Investments');

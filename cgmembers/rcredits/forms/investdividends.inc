@@ -59,7 +59,6 @@ function formInvestDividends_submit($form, &$sta) {
 		$amt = round($pct * $pool, 2);
 		if ($amt > 0) {
 			list ($ok, $index, $subs) = be\transfer('payment', $icA, $a, $amt, t('dividend'), FOR_USD);
-      print_r(compact(ray('ok index subs amt icA a pct row')));
       u\EXPECT($ok, 'dividend error');
       
       if ($a->reinvest) {

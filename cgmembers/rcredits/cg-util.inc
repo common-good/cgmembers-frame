@@ -132,7 +132,7 @@ function poAddress($address) {
  * Format the given amount as currency.
  *
  * @param float $amount
- * $param string $opt (default s$):
+ * $param string $opt (default s$) (note that a space is added to the start of $opt, to make strpos easier):
  *   0 = round to nearest dollar
  *   s = simplify: Omit the cents for whole dollar amounts
  *   $ = include initial dollar sign
@@ -147,7 +147,7 @@ function fmtAmt($amount, $opt = 's$') {
   $amount0 = $amount = cleanAmount(nn($amount, 0));
   if ($pct = strpos($opt, '%')) $amount *= 100;
   u\EXPECT(compact('amount'), 'float', 'bad num');
-  $decimals = $opt == ' %' ? 1 // default to one digit after decimal, for percents
+  $decimals = $opt == ' %' ? 1 // default to one digit after decimal, for percents (function called with $opt=='%', space added)
   : ($pct ? str_replace('%', '', $opt)
   : (strpos($opt, '0') ? 0 : 2));
 
