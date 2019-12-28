@@ -6,7 +6,7 @@
 # server "example.com", user: "deploy", roles: %w{app db web}, my_property: :my_value
 # server "example.com", user: "deploy", roles: %w{app web}, other_property: :other_value
 # server "db.example.com", user: "deploy", roles: %w{db}
-server "new-staging.commongood.earth", roles: %w{app db web}, user: "new-staging"
+server "new-staging.commongood.earth", roles: %w{app db web}, user: "new-staging", port: 7822
 
 set :local_user, "new-staging"
 
@@ -33,7 +33,7 @@ set :local_user, "new-staging"
 # http://capistranorb.com/documentation/getting-started/configuration/
 # Feel free to add new variables to customise your setup.
 set :deploy_to, "/home/new-staging/cgmembers-frame"
-set :branch, "develop"
+set :branch, "master"
 # ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp
 set :tmp_dir, "/home/new-staging/tmp"
 
