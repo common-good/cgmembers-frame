@@ -58,7 +58,7 @@ $GLOBALS['tStrings'] += array(
   'wrong company' => t('That %PROJECT card is for a different company.'),
   'company inactive' => t('That company is not an active participant.'),
 //  'customer balance' => t("Customer: %name\n\nBalance: %balance%spendable\nTradable for cash: %cashable"),
-  'customer balance' => "Customer: %name\n\nBalance: %balance\nRewards to date: %rewards\n", // (parseable)
+  'customer balance' => "Customer: %name\n\nBalance: %balance\nCredit line: %rewards\n", // (parseable)
   'report exchange' => t("You %did %otherName %amount in exchange for cash."),
   'just did' => t("\n\nWe just %did %amount %forCash."), // "We" not "You" here, in case viewed by manager
   'unknown device' => t('This device is not recognized. You must scan yourself in (at least once) before charging a customer.'),
@@ -90,9 +90,9 @@ function pos($args = FALSE) {
 //  if (!$args) $args = t\POST(); else t\POST($args);
   if ($args) f('t.POST', $args); else $args = $_POST;
   $args0 = $args;
-  u\loga('in', $args);
 //  $args = u\sanitizeInput($args0 = $args);
   extract(just('op device agent member version', $args));
+  if (@$op != 'time') u\loga('in', $args); // avoid filling the log with time requests
   $args['version'] = (int) @$version;
   
   if (!@$op or !in($op, 'time identify photo charge test')) return posErr('bad op');
@@ -128,7 +128,7 @@ function pos($args = FALSE) {
 function ok($args, $ok = "1") {
   if ($msg = @$args['message']) $args['message'] = strip_tags($msg);
   $result = u\jsonEncode(compact('ok') + $args);
-  if (@$args['op'] != 'time') u\loga('out', $args); // avoid filling the log with time requests
+  if (key($args) != 'time') u\loga('out', $args); // avoid filling the log with time requests
   //{t\output($args, 'output'); 
   if (test()) return $result;
   header('Access-Control-Allow-Origin: *'); // allow access from web browsers
@@ -188,8 +188,8 @@ function getTime($args) {
   extract(just($keys . ' data', $args));
   $time = now();
   
-  if ($version < RPOS_VERSION) $message = $version < 218 
-  ? t("IMPORTANT: Your app needs updating.\n\nSearch for \"CG Pay\" in the Google Play Store, to download the latest version.")
+  if ($version < RPOS_VERSION) $message = $version < 230 
+  ? t("IMPORTANT: Your app needs updating.\n\nSearch for \"CGPay\" in the Google Play Store, to download the latest version (uninstall this one after your latest transactions are uploaded).")
   : '!update';
   if (@$data or !@$message) $message = handleAppMsg(@$data);
 
@@ -197,10 +197,15 @@ function getTime($args) {
 }
  
 /**
- * Identify the agent or customer.
+ * Sign in (and set up the device, if necessary) OR identify the customer.
  * identify: [member, code, pin?, signin, counter?] 
+ *   BEFORE version 2.30:
       => [ok, message, name, device, default, company, time, descriptions[], bad[], can, balance]
    OR	=> [ok, message, first, name, place, company, balance, rewards, time, descriptions[], bad[], can]
+ *   NOW:
+      => [ok, message, device, person, company, time, descriptions[], bad[], can, balance, creditLine]
+   OR	=> [ok, message, first, person, company, place, time, descriptions[], bad[], can, balance, creditLine]
+ 
  * @params assoc $args:
  *   device: a unique device ID
  *   agent: agent code of current agent -- empty if none yet
@@ -208,53 +213,36 @@ function getTime($args) {
  *   code: rCard security code (possibly encrypted with itself as the key)
  *   signin: 1 if signing in
  * @return json:
- *   logon: 1 if the app's operator is scanning himself or herself in, else 0 (normal) or -1 (first-time)
- *   device: a unique device identifier (if none passed)
- *   name: the individual's name
- *   place: the location of the company if customer is a company agent, otherwise of the individual
+ *   device: a unique device identifier (if none passed and signin is true)
+ *   person/name: the individual's name (if any)
  *   company: the member's (agent's or customer's) company name (if any)
- *   balance: a message stating the customer's current balance
+ *   place: city and state of the company if customer is a company agent, otherwise of the individual
  *   descriptions: array of the agent's company's most common charge descriptions (most popular first)
+ *   bad: array of invalid qids/cardCodes
  *   can: bit permissions -- what the agent can do
  *   default: the default agent (empty if none allowed)
- * device, descriptions, and can are returned only if scanning in (logon is true)
+ *   balance: the customer's current balance
+ *   creditLine: the customer's current credit line
  */
 function identify($args) {
   global $mya;
 
   $companyInfo = getCompanyInfo();
   if ($err = missingArg($keys = 'device member code version', $args)) return posErr($err, [], $companyInfo);
-  extract(just($keys . ' agent pin signin', $args)); // no agent on scanin
+  extract(just($keys . ' agent pin signin', $args, NULL)); // no agent on scanin
 
-  if (@$agent) { // get other party
+  u\EXPECT($version > 217, 'archaic version of app');
+
+  if ($agent) { // get other party
     if ($info = machine(@$member, $code)) return ok($info + $companyInfo); // purchase from fuel pump or other machine
-    if (!$a = getMember(@$member, $code, $err, $version > 217)) return posErr($err, [], $companyInfo);
+    if (!$a = getMember(@$member, $code, $err, TRUE)) return posErr($err, [], $companyInfo);
   } else $a = $mya; // get agent
-
-  if ($version > 217) {
-    if (@$signin) {
-      if (@$agent) {
-        if ($a == $mya) return posErr('already scanned in', [], $companyInfo);
-        if ($a->id != $mya->id) return posErr('wrong company', [], $companyInfo);
-      }
-    } elseif (!@$agent) return posErr('scan in first', [], $companyInfo);
-    $first = $a->agentA->ided ? '0' : '1'; // regular or first-time transaction 
-  } else {
-    u\FAIL('archaic version of app');
-    $logon = '1'; // assume logging in
-    if (@$agent) {
-      if ($agent == $member) return posErr('already scanned in', [], $companyInfo);
-      if ($a->id != $mya->id) $logon = $a->agentA->ided ? '0' : '-1'; // regular or first-time transaction for customer
-  //    if ($logon == '-1' and $mya->coCan(CO_FAST)) $logon = '0'; // this company exempt from photoId checks
-      $first = $logon == '-1' ? '1' : '0';
-    }
-    $signin = ($logon == 1); // ditto
-    if (@$signin and $a->proSe and !$a->co) return posErr('scan in first', [], $companyInfo);
-  }
 
   if (@$device) $deviceId = getDevice($device, $mya->id);
 
-  if (@$signin) { //  identifying agent
+  if ($signin) { //  identifying agent
+    if ($agent and $a == $mya) return posErr('already scanned in', [], $companyInfo);
+    if ($agent and $a->id != $mya->id) return posErr('wrong company', [], $companyInfo);
 //    if ($a->proSe and (!$a->co or $a->coCan(CO_REQUIRE_CASHIER))) return posErr('scan in first');
     if ($code != $a->cardCode() and $code != $a->codeHash()) {
       if (test() or $version >= 300) return posErr('bad agent', [], $companyInfo); // . substr(bin2hex($code), 0, 20) . ' <> ' . substr(bin2hex($a->codeHash()), 0, 20) . ' <> ' . substr($code, 0, 20)); // . "=$agent (cardCode) id=$a->id myid=$mya->id agentId=$a->agentId qid=$a->qid code=$code acode=" . $a->cardCode());
@@ -262,29 +250,40 @@ function identify($args) {
     }
     if (!$a->can(B_SCAN)) return posErr('agent cannot scan', [], $companyInfo);
     if (!@$deviceId) {
-/*      if ($device) {
-        if ($owner = db\get('uid', 'r_boxes', 'code=:device', compact('device')) and !r\acct($owner)->coCan(CO_REQUIRE_CASHIER)) return posErr('restricted');
-      } else $device = u\code(); */
       if (!$device) $device = u\code();
       r\makeDevice($a->id, $device, TX_POS); // card is legit, so use device's code, if any
     }
-    $default = $mya->mainQid;
-    $company = $mya->fullName;
+    list ($person, $company) = $mya->co 
+    ? [$a->proSe ? '' : $a->agentA->fullName, $mya->fullName] 
+    : [$a->agentA->fullName, ''];
+    if ($version < 230) $name = $person;
+
     $time = now();
     
   } else { // identifying customer
+    if (!$agent) return posErr('scan in first', [], $companyInfo);
     if (!@$deviceId) return posErr('unknown device'); // tried to scan a customer card before very first agent scan-in
     if (isset($pin) and $pin != $a->agentA->pin) return posErr('bad pin', [], $companyInfo); // maybe never use this
     $agentCans = 0;
-    $company = $a->proSe ? "" : $a->fullName;
+
+    list ($person, $company) = $a->co 
+    ? [$a->proSe ? '' : $a->agentA->fullName, $a->fullName] 
+    : [$a->agentA->fullName, ''];
+
+    if ($version < 230) {
+      $name = $a->agentA->fullName;
+      $company = $a->proSe ? "" : $a->fullName;
+    }
     $place = r\location($a);
     unset($device); // don't pass it back
-    extract(balrew($a));
   }
 
-  $name = $a->agentA->fullName;
+  if ($version < 230) $default = $mya->mainQid;
+  $first = (($a->co and $a->proSe) or $a->agentA->ided) ? '0' : '1'; // regular or first-time transaction (proSe co never)
   
-  return ok(@compact(ray('first device name place company balance rewards default time')) + $companyInfo);
+  $fields = $version < 230 ? 'first device name place company default time' : 'device first person company place time';
+  
+  return ok(@compact(ray($fields)) + $companyInfo + balrew($a, $version < 230));
 }
 
 /**
@@ -301,10 +300,8 @@ function photo($args) {
   extract(just($keys . ' code version', $args));
 
   if (!@$member) return photoReturn('missing member');
-// FAILS in background in version 217  if (!@$code) return posErr(missingArg('code', []));
-// FAILS in background in version 217    if (!$a = getMember($member, $code, $err)) return photoReturn($err);
   if (!@$code) r\tellAdmin('missing code in photo op', compact(ray('member code')));
-  if (!$a = getMember($member, $code, $err, test() or $version > 217)) return photoReturn($err);
+  if (!$a = getMember($member, $code, $err, TRUE)) return photoReturn($err);
 
 	$signingIn = (bool) strpos($member, '-'); // allow agents with no photo by faking a photo (>= 100 chars)
   return photoReturn($a->agentA->photo ?: ($signingIn ? file_get_contents(R_ROOT . '/images/idcard/no-photo.jpg') : ''));
@@ -362,7 +359,7 @@ function charge($args, $type = 'charge') {
   /* unset($args['goods']); */
    
   if (!@$member) return posErr('missing member'); // handle empty string (versus missing param)
-  if ($version > 216 and !@$proof) return posErr(missingArg('proof', []));
+  if (!@$proof) return posErr(missingArg('proof', []));
   if (@$description === '') return posErr('missing description');
   if (mb_strpos($description, ' ') !== FALSE) {
     r\tellAdmin(t('POS tx description not urlencoded'), $args);
@@ -390,7 +387,7 @@ EOF;
   $amount = str_replace(',', '', number_format($amount, 2)); // make sure both cents digits are included
   $code = $a->cardCode();
   $hashOfTx = u\hash($wanted = "$mya->mainQid$amount$member$code$created");
-  if ($version > 216) if ($proof != $hashOfTx) if (!$force or $a->badOldProof($proof, $wanted, $created)) {
+  if ($proof != $hashOfTx) if (!$force or $a->badOldProof($proof, $wanted, $created)) {
     r\tellAdmin('bad proof', compact(ray('version proof hashOfTx agent amount member code created force')));
     if (test() or $version > 218 ) {
       if (test()) f('t.output', "Should be proof of $wanted");
@@ -425,7 +422,7 @@ EOF;
     $txid = 0;
     $message = "Transaction has been canceled.";
   } else { // doesn't exist and should (forcing or not)
-    if (@$amount < 0 and $a->co and $a->proSe) return badTx($args, $name, $msg, $subs);
+//    if (@$amount < 0 and $a->co and $a->proSe) return badTx($args, $name, $msg, $subs);
     if (@$amount < 0 and !$mya->co) list ($type, $amount) = ['payment', -$amount];
     list ($ok, $msg, $subs) = be\transfer($type, $mya, $a, @$amount, @$description, $goods, compact(ray('created force boxId')));
     if (!$ok) return badTx($args, $name, $msg, $subs);
@@ -443,8 +440,7 @@ EOF;
     $undo = t('confirm undo', $subs);
   }
 
-  extract(balrew($a));
-  return ok(compact(ray('message txid created balance rewards did undo')));
+  return ok(compact(ray('message txid created balance rewards did undo')) + balrew($a, $version < 230));
 }
 
 /**
@@ -483,11 +479,13 @@ function getCompanyInfo() {
   global $mya; 
   
   $descriptions = explode("\n", $mya->selling) ?: ['?'];
-  $agentCan = ($mya->can(B_SCAN) ? u\bit(CO_CHARGE) | u\bit(CO_R4USD) : 0)
+  $agentCans = ($mya->can(B_SCAN) ? u\bit(CO_CHARGE) | u\bit(CO_R4USD) : 0)
        | ($mya->can(B_REFUND) ? u\bit(CO_UNDO) | u\bit(CO_REFUND) | u\bit(CO_USD4R) : 0)
        | ($mya->can(B_BUY) ? u\bit(CO_BUY) : 0)
        | ($mya->can(B_MANAGE) ? u\bit(CO_MANAGE) : 0);
-  $agentCans = ($mya->coFlags >> APP_AGENT_CANS) & APP_CAN_MASK & $agentCan; // limit standard perms by agent
+
+  if ($mya->co and !$mya->trialco) $agentCans &= ($mya->coFlags >> APP_AGENT_CANS) & APP_CAN_MASK; // limit by agent perms
+  
   $can = ($mya->coFlags >> APP_CANS) & APP_CAN_MASK;
   $can |= $agentCans << (APP_CAN_BITS + 1); // extra bit is for "manage" permission
   $bad = db\q("SELECT CONCAT(qid, ',', code) FROM r_bad")->fetchCol() ?: [];
@@ -557,14 +555,15 @@ function getMember($qid, $code, &$err = '', $requireCode = TRUE) {
 /**
  * Return the balance and rewards.
  * @param acct $a: the customer account
- * @return: assoc [balance, rewards]
+ * @param boot $old: return credit line as "rewards"
+ * @return: assoc [balance, creditLine]
  */
-function balrew($a) {
+function balrew($a, $old = FALSE) {
   global $mya;
   if (!$mya->co) $a = $mya;
   $balance = (($a->can(B_SECRET) and $mya->co) ? '*' : '') . round($a->balance, 2);
-  $rewards = 0;
-  return compact(ray('balance rewards'));
+  $creditLine = $rewards = $mya->debt ? -$mya->floor : ($old ? 0 : '');
+  return compact(ray($old ? 'balance rewards' : 'balance creditLine'));
 }
 
 /**

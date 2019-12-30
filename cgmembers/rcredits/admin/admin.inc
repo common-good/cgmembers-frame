@@ -99,9 +99,10 @@ function makeTestAccounts() {
   if (isPRODUCTION) return; // protects us even if the constant is not set
 ///   print_r("makeTestAccounts()<br>");
 
+  // for Corner Pub, include cardCode so we can test the company proSe as well as with an agent
   $a = a('aab', '', true);
   $selling = "groceries\ngifts\nsundries\ndeli\nbaked goods";
-  $a->update('name fullName selling', 'cornerstore', 'Corner Store', $selling);
+  $a->update('name fullName selling cardCode', 'cornerstore', 'Corner Store', $selling, 'CvRM3AwXJppPmf');
   //  $a->setBit(CO_REQUIRE_CASHIER, FALSE, 'coFlags');
 
   $a = a('aaa', '', true);
