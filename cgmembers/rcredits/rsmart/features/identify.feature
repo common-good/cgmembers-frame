@@ -40,26 +40,26 @@ Setup:
 Scenario: a cashier signs in
   When agent "" asks device "devC" to sign in "C:B,ccB2"
   Then we respond with:
-  | ok | name    | descriptions    | can          | bad | default | company    | time |*
-  | 1  | Bea Two | this,that,other | refund,r4usd |     | NEWZZC  | Corner Pub | %now |
+  | ok | person  | descriptions    | can          | bad | company    | time |*
+  | 1  | Bea Two | this,that,other | refund,r4usd |     | Corner Pub | %now |
 
 Scenario: Device has no identifier yet
   When agent "" asks device "" to sign in "C:B,ccB2"
   Then we respond with:
-  | ok | name    | descriptions    | can          | bad | device | default | company    | time |*
-  | 1  | Bea Two | this,that,other | refund,r4usd |     | ?      | NEWZZC  | Corner Pub | %now |
+  | ok | person  | descriptions    | can          | bad | device | company    | time |*
+  | 1  | Bea Two | this,that,other | refund,r4usd |     | ?      | Corner Pub | %now |
 
 Scenario: Device has no identifier yet for an individual
   When agent "" asks device "" to sign in ".ZZA,ccA"
   Then we respond with:
-  | ok | name    | descriptions | can    | bad | device | default | company | time |*
-  | 1  | Abe One |              |        |     | ?      | NEWZZA  | Abe One | %now |
+  | ok | person  | descriptions | canMgr                                    | bad | device | person  | time |*
+  | 1  | Abe One |              | charge,undo,refund,r4usd,usd4r,buy,manage |     | ?      | Abe One | %now |
   
 Scenario: Device has no identifier yet for trial company
   When agent "" asks device "" to sign in ".ZZH,ccH"
   Then we respond with:
-  | ok | name    | descriptions | can    | bad | device | default | company | time |*
-  | 1  | Hill Co | hills        | refund |     | ?      | NEWZZH  | Hill Co | %now |
+  | ok | person | descriptions | canMgr              | bad | device | company | time |*
+  | 1  |        | hills        | charge,r4usd,manage |     | ?      | Hill Co | %now |
 
 Scenario: Device should have an identifier
   When agent "C:A" asks device "" to identify "C:B,ccB2"
@@ -68,31 +68,31 @@ Scenario: Device should have an identifier
 Scenario: a cashier signs in, signing another cashier out
   When agent "C:A" asks device "devC" to sign in "C:B,ccB2"
   Then we respond with:
-  | ok | name    | descriptions    | can          | bad | default | company    | time |*
-  | 1  | Bea Two | this,that,other | refund,r4usd |     | NEWZZC  | Corner Pub | %now |
+  | ok | person  | descriptions    | can          | bad | company    | time |*
+  | 1  | Bea Two | this,that,other | refund,r4usd |     | Corner Pub | %now |
 
 Scenario: a manager signs in
   When agent "" asks device "devC" to sign in "C:A,ccA2"
   Then we respond with:
-  | ok | name    | descriptions    | can          | bad | default | company    | time |*
-  | 1  | Abe One | this,that,other | refund,r4usd |     | NEWZZC  | Corner Pub | %now |
+  | ok | person  | descriptions    | can          | bad | company    | time |*
+  | 1  | Abe One | this,that,other | refund,r4usd |     | Corner Pub | %now |
 
 Scenario: a manager asks us to identify the manager's own card
   When agent "C:A" asks device "devC" to sign in "C:A,ccA2" 
   Then we respond with:
-  | ok | name    | descriptions    | can          | bad | default | company    | time |*
-  | 1  | Abe One | this,that,other | refund,r4usd |     | NEWZZC  | Corner Pub | %now |
+  | ok | person  | descriptions    | can          | bad | company    | time |*
+  | 1  | Abe One | this,that,other | refund,r4usd |     | Corner Pub | %now |
 
 Scenario: a cashier scans a customer card
   When agent "C:B" asks device "devC" to identify ".ZZD,ccD"
   Then we respond with:
-  | ok | name     | descriptions    | can          | bad | place     | company | first | balance |*
+  | ok | person   | descriptions    | can          | bad | place     | company | first | balance |*
   | 1  | Dee Four | this,that,other | refund,r4usd |     | Dtown, DE |         | 0     | 0       |
 
 Scenario: the default cashier scans a customer card
   When agent ".ZZC" asks device "devC" to identify ".ZZD,ccD"
   Then we respond with:
-  | ok | name     | descriptions    | can          | bad | place     | company | first | balance |*
+  | ok | person   | descriptions    | can          | bad | place     | company | first | balance |*
   | 1  | Dee Four | this,that,other | refund,r4usd |     | Dtown, DE |         | 0     | 0       |
 
 Scenario: a customer scans their own card for self-service
@@ -101,7 +101,7 @@ Scenario: a customer scans their own card for self-service
   | .ZZD | 4444 |
   When agent ".ZZC" asks device "devC" to identify ".ZZD,ccD" with PIN "4444"
   Then we respond with:
-  | ok | name     | descriptions    | can          | bad | place     | company | first | balance |*
+  | ok | person   | descriptions    | can          | bad | place     | company | first | balance |*
   | 1  | Dee Four | this,that,other | refund,r4usd |     | Dtown, DE |         | 0     | 0       |
 
 Scenario: a customer scans their own card for self-service with wrong PIN
@@ -129,13 +129,13 @@ Scenario: a cashier scans a customer card before signing in
 Scenario: a cashier scans a customer card whose balance is secret
   When agent "C:B" asks device "devC" to identify ".ZZE,ccE"
   Then we respond with:
-  | ok | name     | descriptions    | can          | bad | place     | company | first | balance |*
+  | ok | person   | descriptions    | can          | bad | place     | company | first | balance |*
   | 1  | Eve Five | this,that,other | refund,r4usd |     | Etown, IL |         | 0     | *0      |
 
 Scenario: a cashier scans a company customer card
   When agent "C:B" asks device "devC" to identify "F:E,ccE2"
   Then we respond with:
-  | ok | name     | descriptions    | can          | bad | place     | company | first |*
+  | ok | person   | descriptions    | can          | bad | place     | company | first |*
   | 1  | Eve Five | this,that,other | refund,r4usd |     | Ftown, FL | Far Co  | 0     |
 
 Scenario: Device asks for a picture to go with the QR
@@ -156,14 +156,14 @@ Scenario: Device asks for a picture with the wrong card code
 Scenario: A non-yet-active member card is scanned
   When agent "C:B" asks device "devC" to identify ".ZZG,ccG"
   Then we return error "member inactive" with subs:
-  | name      |*
+  | person    |*
   | Gil Seven |
   
 Scenario: A member makes a purchase for the first time
   Given member ".ZZD" has no photo ID recorded
   When agent ".ZZC" asks device "devC" to identify ".ZZD,ccD"
   Then we respond with:
-  | ok | name     | descriptions    | can          | bad | place     | company | first | balance |*
+  | ok | person   | descriptions    | can          | bad | place     | company | first | balance |*
   | 1  | Dee Four | this,that,other | refund,r4usd |     | Dtown, DE |         | 1     | 0       |
 
 # disabled because "fast" bit is no longer used  
@@ -174,5 +174,5 @@ Scenario: A member makes a purchase for the first time
 #  | .ZZC | refund,r4usd,fast |
 #  When agent ".ZZC" asks device "devC" to identify ".ZZD,ccD"
 #  Then we respond with:
-#  | ok | name     | descriptions    | can          | bad | place     | company | first | balance |*
+#  | ok | person   | descriptions    | can          | bad | place     | company | first | balance |*
 #  | 1  | Dee Four | this,that,other | refund,r4usd |     | Dtown, DE |         | 0     | 0       |

@@ -1585,19 +1585,22 @@ X;
       
     for ($i = B_RELATED; $i <= B_MANAGE; $i++) $cans[$i] = ($i <= $perm); // set all, even the false ones
 
-    if (!$a->can(B_OK)) $cans[B_SELL] = $cans[B_BUY] = FALSE; // (read here kills acct dropdown)
-
-    //    if (!$a->can(B_MEMBER)) $cans[B_BUY] = FALSE; // no spending even the SIGNUP GIFT for non-members
-    
-    if ($aa->can(B_ADMIN) and R_ADMIN_CAN_MANAGE_CTTYS) { // temporary extra power, until communities are independent
-      $cans[B_READ] = $cans[B_SCAN] = $cans[B_SELL] = $cans[B_BUY] = $cans[B_MANAGE] = TRUE;
-    }
     $cans[B_DEV] = (isDEV or $aa->can(B_ADMIN)); // used in menu system for tests page, etc.
     //    if ($cans[B_MANAGING_CTTY] = ($aa->can(B_CADMIN) and $id == $a->community)) $cans[B_BUY] = TRUE;
     $cans[B_MANAGING_CTTY] = ($aa->can(B_CADMIN) and $id == $a->community);
-    if (!$a->hasFid and !isDEV) $cans[B_SELL] = FALSE; // no selling without an EIN
-    if (!$a->co and !$a->stepsDone('sell') and !test()) $cans[B_SELL] = FALSE;
-    if (!$cans[B_SELL]) $cans[B_SCAN] = FALSE;
+
+    if ($aa->can(B_ADMIN) and R_ADMIN_CAN_MANAGE_CTTYS) { // temporary extra power, until communities are independent
+      $cans[B_READ] = $cans[B_SCAN] = $cans[B_SELL] = $cans[B_BUY] = $cans[B_MANAGE] = TRUE;
+    }
+    
+    // Lastly, place restrictions on buying and selling
+
+    if (!isDEV) {
+      if (!$a->co and !$a->stepsDone('sell')) $cans[B_SELL] = FALSE; // individuals cannot sell without doing that step
+      if (!$a->hasFid) $cans[B_SELL] = FALSE; // no selling without an EIN
+    }
+    if ($a->trialco) $cans[B_BUY] = FALSE; // trial companies can't buy
+    if (!$a->can(B_OK)) $cans[B_SELL] = $cans[B_BUY] = FALSE; // inactive accounts can't transact
     
     ksort($cans); // easier to debog
     return self::$perms[$id][$a->agentId] = $cans;

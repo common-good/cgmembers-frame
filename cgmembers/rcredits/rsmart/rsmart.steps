@@ -134,20 +134,24 @@ function weRespondWith($args) {
 
   t\output('expecting: ' . pr($args[0]));
   foreach ($args[0] as $k => $v) {
+    $got = @$rposResult[$k];
     if ($k == 'descriptions') $v = empty($v) ? [0 => ''] : ray($v);
     if ($k == 'bad') $v = empty($v) ? [] : ray($v);
-    if ($k == 'can') { // currently tests only signed-out permissions
+    if ($k == 'can' or $k == 'canMgr') { // currently tests only signed-out permissions
+      if ($k == 'canMgr') $got = @$rposResult['can'] >> (APP_CAN_BITS + 1);
       $flags = 0;
       if ($v) foreach (ray($v) as $one) $flags |= u\bit(u\consta('co', $one));
       $v = $flags & APP_CAN_MASK;
-      if (@$rposResult[$k] & (u\bit(CO_MANAGE) << (APP_CAN_BITS + 1))) $v |= (u\bit(CO_MANAGE) << (APP_CAN_BITS + 1)); // make manage bit go away, since it applies to agent
+      if ($k == 'can') {
+        if ($got & (u\bit(CO_MANAGE) << (APP_CAN_BITS + 1))) $v |= (u\bit(CO_MANAGE) << (APP_CAN_BITS + 1)); // make manage bit go away, since it applies to agent
+      }
     }
-    if ($k == 'device' and $v == '?' and $rposResult[$k]) continue; // any value will do for new dev
+    if ($k == 'device' and $v == '?' and $got) continue; // any value will do for new dev
     if ($k == 'time' and t\approxTime($v, $rposResult["time"])) continue; // %now time is approximate
     
-    if ($v != @$rposResult[$k]) {
+    if ($v != $got) {
       $v = pr(@$v);
-      t\output("Expected $k=$v, got:" . pr(@$rposResult[$k]));
+      t\output("Expected $k=$v, got:" . pr($got));
       return FALSE;
     }
   }

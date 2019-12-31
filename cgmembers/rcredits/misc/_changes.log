@@ -6,6 +6,7 @@
 . blog hack attempts now generate staff alert rather than log entry
 . develop OR master branch can be deployed to new-staging
 . bug fix and clarifications to origins query (where did members hear about us)
+. cleaned up and tightened up restrictions on buying and selling
 
 2019-12-20 feature/invest-fixes2
 . bug fixes

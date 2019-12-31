@@ -256,7 +256,7 @@ function identify($args) {
     list ($person, $company) = $mya->co 
     ? [$a->proSe ? '' : $a->agentA->fullName, $mya->fullName] 
     : [$a->agentA->fullName, ''];
-    if ($version < 230) $name = $person;
+    if ($version < 230) $name = $person ?: $company;
 
     $time = now();
     
@@ -282,8 +282,8 @@ function identify($args) {
   $first = (($a->co and $a->proSe) or $a->agentA->ided) ? '0' : '1'; // regular or first-time transaction (proSe co never)
   
   $fields = $version < 230 ? 'first device name place company default time' : 'device first person company place time';
-  
-  return ok(@compact(ray($fields)) + $companyInfo + balrew($a, $version < 230));
+
+  return ok(@compact(ray($fields)) + balrew($a, $version < 230) + $companyInfo); // companyInfo last (don't overwrite bal)
 }
 
 /**
@@ -437,10 +437,10 @@ EOF;
       $did = t('just did', $subs + compact('forCash'));
     }
     $message = t($msg, $subs);
-    $undo = t('confirm undo', $subs);
+    $undo = ($mya->can(B_BUY) and $mya->can(B_SELL)) ? t('confirm undo', $subs) : '';
   }
 
-  return ok(compact(ray('message txid created balance rewards did undo')) + balrew($a, $version < 230));
+  return ok(compact(ray('message txid created did undo')) + balrew($a, $version < 230));
 }
 
 /**
@@ -479,12 +479,20 @@ function getCompanyInfo() {
   global $mya; 
   
   $descriptions = explode("\n", $mya->selling) ?: ['?'];
-  $agentCans = ($mya->can(B_SCAN) ? u\bit(CO_CHARGE) | u\bit(CO_R4USD) : 0)
-       | ($mya->can(B_REFUND) ? u\bit(CO_UNDO) | u\bit(CO_REFUND) | u\bit(CO_USD4R) : 0)
-       | ($mya->can(B_BUY) ? u\bit(CO_BUY) : 0)
-       | ($mya->can(B_MANAGE) ? u\bit(CO_MANAGE) : 0);
+  
+  if ($mya->co and !$mya->trialco) { // normal company with agent
+    $agentCans = ($mya->can(B_SCAN) ? u\bit(CO_CHARGE) | u\bit(CO_R4USD) : 0)
+         | ($mya->can(B_REFUND) ? u\bit(CO_UNDO) | u\bit(CO_REFUND) | u\bit(CO_USD4R) : 0)
+         | ($mya->can(B_BUY) ? u\bit(CO_BUY) : 0)
+         | ($mya->can(B_MANAGE) ? u\bit(CO_MANAGE) : 0);
 
-  if ($mya->co and !$mya->trialco) $agentCans &= ($mya->coFlags >> APP_AGENT_CANS) & APP_CAN_MASK; // limit by agent perms
+    $agentCans &= ($mya->coFlags >> APP_AGENT_CANS) & APP_CAN_MASK; // limit by agent perms
+  } else { // personal account or trialco
+    $agentCans = ($mya->can(B_SELL) ? u\bit(CO_CHARGE) | u\bit(CO_R4USD) : 0)
+         | ($mya->can(B_BUY) ? u\bit(CO_BUY) | u\bit(CO_REFUND) | u\bit(CO_USD4R) : 0)
+         | (($mya->can(B_BUY) and $mya->can(B_SELL)) ? u\bit(CO_UNDO) : 0)
+         | u\bit(CO_MANAGE);
+  }
   
   $can = ($mya->coFlags >> APP_CANS) & APP_CAN_MASK;
   $can |= $agentCans << (APP_CAN_BITS + 1); // extra bit is for "manage" permission
@@ -562,7 +570,8 @@ function balrew($a, $old = FALSE) {
   global $mya;
   if (!$mya->co) $a = $mya;
   $balance = (($a->can(B_SECRET) and $mya->co) ? '*' : '') . round($a->balance, 2);
-  $creditLine = $rewards = $mya->debt ? -$mya->floor : ($old ? 0 : '');
+  $creditLine = $mya->debt ? -$mya->floor : '';
+  if ($old) $rewards = $mya->debt ? $creditLine : 0;
   return compact(ray($old ? 'balance rewards' : 'balance creditLine'));
 }
 
