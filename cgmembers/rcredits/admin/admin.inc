@@ -987,7 +987,7 @@ function anonymize() {
     $legalName = mt_rand(1,100) < 90 ? $fullName : (wordName() . strstr($fullName, ' '));
     $name = u\shortName($fullName);
     $email = mb_strtolower(randomName()) . '@example.com';
-    $address = mt_rand(1, 9999) . wordName() . ' St.';
+    $address = mt_rand(1, 9999) . ' ' . wordName() . ' St.';
     $city = wordName();
     $postalAddr = $a->risk('poBox') ? 'PO Box ' . mt_rand(1, 99999) : $address;
     $postalAddr .= ", $a->st $a->zip";

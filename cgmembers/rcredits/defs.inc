@@ -320,7 +320,7 @@ define('CO_BUY', 5);
 define('CO_u21', 6); // unused
 define('CO_MANAGE', 7); // this bit is not actually stored here, but pass B_MANAGE to the app in this position
 define('APP_CAN_BITS', 7); // number of bits for permissions (each: signed in and out)
-define('APP_AGENT_CANS', APP_CANS + APP_CAN_BITS); // company permission bits when signed IN (limited by agent)
+define('APP_AGENT_CANS', APP_CANS + APP_CAN_BITS); // company permission bits when signed IN (to be limited by agent perms)
 define('APP_CAN_MASK', pow(2, APP_CAN_BITS + 1) - 1); // the CANS bits -- signed-IN permission bits are 22-28
 define('CO_DFTS', '0 1 7 8 9 11 12'); // set these bits by default
 

@@ -35,5 +35,5 @@ Scenario: The device asks for the time
 Scenario: a cashier signs in
   When agent "" asks device "devC" to sign in "C:B,ccB2"
   Then we respond with:
-  | ok | person  | descriptions    | can          | company    | time |*
-  | 1  | Bea Two | this,that,other | refund,r4usd | Corner Pub | %now |
+  | ok | name    | descriptions    | can          | default | company    | time |*
+  | 1  | Bea Two | this,that,other | refund,r4usd | NEWZZC  | Corner Pub | %now |

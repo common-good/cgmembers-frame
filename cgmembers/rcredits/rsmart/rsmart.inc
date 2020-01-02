@@ -60,7 +60,7 @@ $GLOBALS['tStrings'] += array(
 //  'customer balance' => t("Customer: %name\n\nBalance: %balance%spendable\nTradable for cash: %cashable"),
   'customer balance' => "Customer: %name\n\nBalance: %balance\nCredit line: %rewards\n", // (parseable)
   'report exchange' => t("You %did %otherName %amount in exchange for cash."),
-  'just did' => t("\n\nWe just %did %amount %forCash."), // "We" not "You" here, in case viewed by manager
+  'just did' => t("\n\n%we just %did %amount %forCash."), // "We" not "You" here, in case viewed by manager
   'unknown device' => t('This device is not recognized. You must scan yourself in (at least once) before charging a customer.'),
   'confirm undo' => t('Undo transfer of %amount %tofrom %otherName? (Press OK for Yes, Cancel for No.)'), // no creation date, unlike web and SMS
   'member inactive' => t('That account is not yet activated.'),
@@ -434,7 +434,8 @@ EOF;
       if ($mya->cttyRewardy) $msg .= '|for why|reward other';
     } else {
       $forCash = $goods == FOR_USD ? t('for USD') : '';
-      $did = t('just did', $subs + compact('forCash'));
+      $we = $mya->co ? t('We') : t('You');
+      $did = t('just did', $subs + compact('forCash', 'we'));
     }
     $message = t($msg, $subs);
     $undo = ($mya->can(B_BUY) and $mya->can(B_SELL)) ? t('confirm undo', $subs) : '';
@@ -481,21 +482,22 @@ function getCompanyInfo() {
   $descriptions = explode("\n", $mya->selling) ?: ['?'];
   
   if ($mya->co and !$mya->trialco) { // normal company with agent
-    $agentCans = ($mya->can(B_SCAN) ? u\bit(CO_CHARGE) | u\bit(CO_R4USD) : 0)
+    $can = ($mya->can(B_SCAN) ? u\bit(CO_CHARGE) | u\bit(CO_R4USD) : 0)
          | ($mya->can(B_REFUND) ? u\bit(CO_UNDO) | u\bit(CO_REFUND) | u\bit(CO_USD4R) : 0)
          | ($mya->can(B_BUY) ? u\bit(CO_BUY) : 0)
          | ($mya->can(B_MANAGE) ? u\bit(CO_MANAGE) : 0);
 
-    $agentCans &= ($mya->coFlags >> APP_AGENT_CANS) & APP_CAN_MASK; // limit by agent perms
+    $can &= ($mya->coFlags >> APP_AGENT_CANS) & APP_CAN_MASK; // limit by agent perms
+    $can <<= APP_CAN_BITS + 1; // shift to manager position (extra bit is for "manage" permission)
+    $can |= ($mya->coFlags >> APP_CANS) & APP_CAN_MASK; // add in cashier permissions
   } else { // personal account or trialco
-    $agentCans = ($mya->can(B_SELL) ? u\bit(CO_CHARGE) | u\bit(CO_R4USD) : 0)
+    $can = ($mya->can(B_SELL) ? u\bit(CO_CHARGE) | u\bit(CO_R4USD) : 0)
          | ($mya->can(B_BUY) ? u\bit(CO_BUY) | u\bit(CO_REFUND) | u\bit(CO_USD4R) : 0)
          | (($mya->can(B_BUY) and $mya->can(B_SELL)) ? u\bit(CO_UNDO) : 0)
          | u\bit(CO_MANAGE);
+    if (!$mya->co) $can <<= APP_CAN_BITS + 1; // personal accounts are manager (signed-in), trialco is always signed out
   }
   
-  $can = ($mya->coFlags >> APP_CANS) & APP_CAN_MASK;
-  $can |= $agentCans << (APP_CAN_BITS + 1); // extra bit is for "manage" permission
   $bad = db\q("SELECT CONCAT(qid, ',', code) FROM r_bad")->fetchCol() ?: [];
   $balance = $mya->balance;
   return compact(ray('descriptions bad can balance'));

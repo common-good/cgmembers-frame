@@ -139,6 +139,7 @@ function weRespondWith($args) {
     if ($k == 'bad') $v = empty($v) ? [] : ray($v);
     if ($k == 'can' or $k == 'canMgr') { // currently tests only signed-out permissions
       if ($k == 'canMgr') $got = @$rposResult['can'] >> (APP_CAN_BITS + 1);
+      $got &= APP_CAN_MASK;
       $flags = 0;
       if ($v) foreach (ray($v) as $one) $flags |= u\bit(u\consta('co', $one));
       $v = $flags & APP_CAN_MASK;

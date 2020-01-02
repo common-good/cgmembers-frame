@@ -46,8 +46,8 @@ Scenario: A cashier asks to charge someone
   | did     | otherName | amount | why   |*
   | charged | Bea Two   | $400   | goods |
   And with did
-  | did     | amount | forCash |*
-  | charged | $400   |         |
+  | we | did     | amount | forCash |*
+  | We | charged | $400   |         |
   And with undo
   | created | amount | tofrom | otherName |*
   | %dmy    | $400   | from   | Bea Two   |
