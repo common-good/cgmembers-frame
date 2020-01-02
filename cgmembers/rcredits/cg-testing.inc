@@ -436,7 +436,7 @@ function doCompanyFlags($info) {
   $res = 0;
   foreach (ray($coFlags) as $one) {
     $flag = u\bit(u\consta('co', $one));
-    if (in($one, APP_CAN_BIT_NAMES)) $flag <<= APP_CANS;
+    if (in($one, APP_CAN_BIT_NAMES)) $flag <<= APP_CANS; // this probably fails (see rsmart.steps instead)
     $res |= $flag;
   }
   return $a->update('coFlags', $res);
@@ -900,7 +900,7 @@ function makePicture($photo, $a) {return $a->update(compact('photo'));}
  * Send an RPC API request to the server, for rPOS.
  * @todo: after everyone is up to version 217, add penultimate param: $proof = 'calc'
  */
-function hitServer($op, $extra = [], $agent, $device = '', $version = 221) {
+function hitServer($op, $extra = [], $agent, $device = '', $version = 230) {
   global $rposResult;
   if ($agent) $agent = t\fullQid2($agent);
   extract(just('amount member code created proof goods', $extra));

@@ -162,7 +162,6 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE signupco AMemberOpensATrialCompanyAccountNotSignedIn
  *     MAKE signupco AMinimalMemberOpensATrialCompanyAccount
  *     MAKE signupco AMemberOpensATrialCompanyAccountWithoutAPhone
- *     MAKE signupco AMemberMakesAPaymentFromATrialCompanyAccount
  *     MAKE signup ANewbieRegistersInWesternMassachusetts
  *     MAKE signup ANewbieRegistersWithNoCase
  *     MAKE signup AMemberRegistersBadEmail
@@ -262,7 +261,6 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     TEST signupco AMemberOpensATrialCompanyAccountNotSignedIn
  *     BOTH signupco AMinimalMemberOpensATrialCompanyAccount
  *     MAKE signupco ATrialCompanyAccountManagerCreatesADiscount
- *     MAKE signupco AMemberMakesAPaymentFromATrialCompanyAccount
  *     MAKE signup Setup
  *     TEST signup ANewbieRegistersInWesternMassachusetts
  *     TEST signup ANewbieRegistersWithNoCase
@@ -302,7 +300,6 @@ function members($list) {return t\members($list);}
  *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     MAKE preferences AMemberChangesPreferences
  *     MAKE queries Setup
- *     TEST signupco AMemberMakesAPaymentFromATrialCompanyAccount
  *     MAKE statement Setup
  *     MAKE summary Setup
  *     MAKE summary AMemberClicksTheSummaryTabWithRoundups
@@ -341,7 +338,6 @@ function transactions($list) {return t\transactions($list);}
  *     TEST paybutton AMemberAsksForANewPasswordForACompany
  *     TEST relations AMemberAddsARelation
  *     TEST signin AMemberAsksForANewPasswordForACompany
- *     TEST signupco AMemberMakesAPaymentFromATrialCompanyAccount
  *     TEST signup AMemberRegistersAgain
  *     TEST transact AMemberConfirmsRequestToChargeAnotherMember
  *     TEST transact AMemberConfirmsRequestToPayAnotherMember
@@ -729,7 +725,6 @@ function relations($relations) {return t\relations($relations);}
  *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     TEST joint AJoinedAccountMemberUnjoinsTheAccount
  *     BOTH queries Setup
- *     BOTH signupco AMemberMakesAPaymentFromATrialCompanyAccount
  *     TEST statement Setup
  *     TEST summary Setup
  *     TEST summary AMemberClicksTheSummaryTabWithRoundups
@@ -997,7 +992,6 @@ function memberOnetimePasswordIs($id, $pass) {
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
  *     TEST invoice AMemberDeniesAnInvoice
- *     TEST signupco AMemberMakesAPaymentFromATrialCompanyAccount
  *     TEST transact AMemberConfirmsRequestToPayAnotherMember
  *     TEST transact AMemberConfirmsRequestToPayAMemberCompany
  *     TEST transact AMemberPaysAnotherMemberRepeatedly

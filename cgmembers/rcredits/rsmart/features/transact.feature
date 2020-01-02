@@ -54,8 +54,8 @@ Scenario: A cashier asks to charge someone
   | did     | otherName | amount | why   |*
   | charged | Bea Two   | $100   | goods |
   And with did
-  | did     | amount | forCash |*
-  | charged | $100   |         |
+  | we | did     | amount | forCash |*
+  | We | charged | $100   |         |
   And with undo
   | created | amount | tofrom | otherName |*
   | %dmy    | $100   | from   | Bea Two   |
@@ -75,8 +75,8 @@ Scenario: A cashier asks to refund someone
   | did      | otherName | amount | why   |*
   | refunded | Bea Two   | $100   | goods |
   And with did
-  | did      | amount | forCash |*
-  | refunded | $100   |         |
+  | we | did      | amount | forCash |*
+  | We | refunded | $100   |         |
   And with undo
   | created | amount | tofrom | otherName |*
   | %dmy    | $100   | to     | Bea Two   |

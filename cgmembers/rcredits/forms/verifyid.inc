@@ -17,7 +17,7 @@ function formVerifyId($form, &$sta, $args = '') {
 
   $title = t('Identity Verification');
   $subtext = t('As a registered Money Services Business, we are required by law to verify your identity. Fortunately, we have <%aSecure>top notch security</a>. How do you want to do it?', '_aSecure', atag(r\promoLink('about-us/privacy-and-security')));
-  $methodChoices = ray(t('Upload driver\'s license.,Upload other state-issued photo ID.,Type your social security number and birth date. This is required by the IRS if you are going to be <i class="loud">accepting</i> payments through %PROJECT.'));
+  $methodChoices = ray(t('Upload driver\'s license.,Upload other state-issued photo ID.,Type your social security number and birth date. This is required by the IRS if you are going to be <i class="loud">accepting</i> payments through %PROJECT (including receiving rebates).'));
   $field = radiosFld(' ', '', required(-1), $methodChoices);  
   $idtype = textFld(t('ID Type:'), [t('Type of ID')]);
   $file = fileFld(t('ID File:'), t('Take a photo of your ID and upload it here (or email it us at %CGF_EMAIL).'));

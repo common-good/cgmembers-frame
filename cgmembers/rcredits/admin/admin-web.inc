@@ -279,7 +279,9 @@ function export($params) {
       $name = $a->fullName;
       $email = $a->email;
       $phone = $a->phone;
-      list ($address, $city, $state, $zip) = u\parseAddr($a->postalAddr);
+      list ($address, $city, $state, $zip) = $a->postalAddr
+      ? u\parseAddr($a->postalAddr)
+      : [$a->address, $a->city, r\realstate($a->state), $a->zip];
       $phone = u\fmtPhone($phone);
       $id = $a->mainQid;
       $ecode = "$a->emailCode";

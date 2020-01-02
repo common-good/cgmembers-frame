@@ -1,3 +1,18 @@
+2020-01-01 feature/prose-co
+. another adjustment to how permissions are calculated to send to app
+. rsmart tests are now for latest version (version 221 tests are in a subfolder and can be run separately)
+
+2019-12-30 feature/prose-co
+. changes to rsmart.inc to support changes to the CGPay Android app for trial companies and restricted personal accounts
+. CGPay interface updated to replace "rewards" with "creditLine", "person" instead of "name", and other minor adjustments
+. bug fix: source field is now shown on first page of personal signup
+. time requests from app are no longer logged
+. blog hack attempts now generate staff alert rather than log entry
+. develop OR master branch can be deployed to new-staging
+. bug fix and clarifications to origins query (where did members hear about us)
+. cleaned up and tightened up restrictions on buying and selling
+. fixed bug in Mailchimp export (related to partial company and personal accounts)
+
 2019-12-20 feature/invest-fixes2
 . bug fixes
 
