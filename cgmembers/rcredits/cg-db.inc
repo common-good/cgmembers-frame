@@ -264,3 +264,4 @@ function max($field, $table, $where = '1', $subs = []) {return db\get("MAX($fiel
 function min($field, $table, $where = '1', $subs = []) {return db\get("MIN($field)", $table, $where, $subs);}
 function sum($field, $table, $where = '1', $subs = []) {return db\get("SUM($field)", $table, $where, $subs);}
 function avg($field, $table, $where = '1', $subs = []) {return db\get("AVG($field)", $table, $where, $subs);}
+function med($field, $table, $where = '1', $subs = []) {return db\get("MEDIAN($field) OVER ()", $table, $where, $subs);}

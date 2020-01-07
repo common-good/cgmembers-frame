@@ -25,6 +25,7 @@ function formSignup($form, &$sta, $args = '') {
 
   u\setDft($source2, nn($_COOKIE['ad']));
   u\setDft($preid, getPreId($source2));
+  $source2 = hidFld($source2);
 
   if (@$reid) return softErr('old partner link');
 
@@ -72,14 +73,14 @@ EOF
   $iCode = hidFld(@$iCode + 0);
   $helperA = nn($helper) ? r\acct($helper) : NULL;
   $helper = hidFld($helperA ? $helperA->id : @$inviter);
-  $source = hidFld($helperA ? $helperA->fullName : '');
+  $source = $helperA ? hidFld($helperA->fullName) : sourceFld();
   
   $phone = textFld(t('Phone:'), [t('Your phone number')], required(nn($phone) ? u\fmtPhone($phone): ''));
   $zip = zipFld(nn($zip));
   $fullName = textFld(t('Name:'), [t('Your full name'), t('Your full legal name, properly capitalized, as it appears on your social security card, driver\'s license, or other government-issued ID')], required(nn($fullName)));
   $email = textFld(t('Email:'), [t('Email'), t('<b>Type carefully.</b> All emails from the system will be sent to this address. It will not be made public, but will be viewable by accounts you transact with (you can choose greater privacy by clicking "Advanced" on the Preferences Settings page).')], required(nn($email)));
   
-  $form = compact(ray('title forother subtext acctType fullName phone email zip submit myid args confirmed helper iCode notes preid source'));
+  $form = compact(ray('title forother subtext acctType fullName phone email zip source submit myid args confirmed helper iCode notes preid source2'));
 //  $sponsorConfirmation = w\whoFldSubmit('sponsor', t('Your sponsoring organization is %name, yes?'));
   return cgform($form);
 }

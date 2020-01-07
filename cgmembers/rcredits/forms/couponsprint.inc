@@ -96,7 +96,7 @@ function couponsPrint($args = '') {
 
         $iCode = $mya->iCardCode($mya->giftCoupons + $cardi);
         $iCode = substr($iCode, 0, 4) . ' &nbsp;' . substr($iCode, 4, 4) . ' &nbsp;' . substr($iCode, 8);
-        $pdf->say(t('Redeem at Community > Coupons: <b>%iCode</b>', '_iCode', $iCode), $x, $y+$dyDetails+$dy*2.5, $wCard, '', "$ptDetails;Verdana;font-stretch:semi-condensed;color:#404040", 'C'); // text, x, y, w, h, fmt, align, borders
+        $pdf->say(t('Redeem at Community > Discount: <b>%iCode</b>', '_iCode', $iCode), $x, $y+$dyDetails+$dy*2.5, $wCard, '', "$ptDetails;Verdana;font-stretch:semi-condensed;color:#404040", 'C'); // text, x, y, w, h, fmt, align, borders
       } else { // discount coupon
         $pdf->say($auto, $x+$wLogo, $y+$dyOff+.14, $wCoup-.3, '', '9;color:darkgray', 'R'); // .24 for baseline
         $pdf->say(t('at <b>%name</b>', compact('name')), $x+$dxCoup, $y+$dyAt, $wCoup, '', "$ptCoup;font-stretch:semi-condensed;color:black", 'L');

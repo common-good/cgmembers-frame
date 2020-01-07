@@ -57,11 +57,12 @@ function badAmount(&$amount, $restriction = '', $fractionLimit = 2, $max = NULL)
   $amount = nn($new, 0) + 0;
   $dotPos = strpos($amount, '.');
   if ($dotPos !== FALSE and strlen($amount) > $dotPos + 1 + $fractionLimit) return 'too fractional';
-  if (is_null($max)) $max = R_MAX_AMOUNT;
-  if ($max !== '' and abs($amount) > $max) return t('amount too big', compact('max'));
   if ($restriction == '>0' and $amount <= 0) return 'nonpositive amount';
   if ($restriction == '>=0' and $amount < 0) return 'negative amount';
   if ($restriction == '!=0' and $amount == 0) return 'zero amount';
+
+  if (is_null($max)) $max = R_MAX_AMOUNT;
+  if ($max !== '' and abs($amount) > $max) return t('amount too big', compact('max'));
   return FALSE;
 }
 
@@ -131,13 +132,13 @@ function poAddress($address) {
  * Format the given amount as currency.
  *
  * @param float $amount
- * $param string $opt (default s$):
- *   1 = round to nearest dollar
+ * $param string $opt (default s$) (note that a space is added to the start of $opt, to make strpos easier):
+ *   0 = round to nearest dollar
  *   s = simplify: Omit the cents for whole dollar amounts
  *   $ = include initial dollar sign
  *   r = include a trailing cg
  *   u = include a trailing us
- *   % = percentage
+ *   % = percentage (or %0, %1, %2, etc. to show number of digits after decimal)
  * @return
  *   the formatted amount
  */
@@ -145,10 +146,13 @@ function fmtAmt($amount, $opt = 's$') {
   $opt = ' ' . $opt; // simplify strpos check
   $amount0 = $amount = cleanAmount(nn($amount, 0));
   if ($pct = strpos($opt, '%')) $amount *= 100;
-//  if (!is_numeric($amount)) $amount = -999999;
   u\EXPECT(compact('amount'), 'float', 'bad num');
-  $amount = number_format($amount + 0, strpos($opt, '1') ? 0 : ($pct ? 1 : 2));
-  if ($amount == '-0.00') $amount = strpos($opt, '1') ? '0' : '0.00'; // this happens, for small negative amounts
+  $decimals = $opt == ' %' ? 1 // default to one digit after decimal, for percents (function called with $opt=='%', space added)
+  : ($pct ? str_replace('%', '', $opt)
+  : (strpos($opt, '0') ? 0 : 2));
+
+  $amount = number_format($amount + 0, $decimals);
+  if ($amount == '-0.00') $amount = strpos($opt, '0') ? '0' : '0.00'; // this happens, for small negative amounts
   if (strpos($opt, '$')) $amount = '$' . $amount;
   if (strpos($opt, 's')) $amount = preg_replace('/\\.0+$/', '', $amount);
   if (strpos($opt, 'r')) $amount .= 'cg';

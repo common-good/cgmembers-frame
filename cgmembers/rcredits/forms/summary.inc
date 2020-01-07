@@ -158,7 +158,7 @@ function formSummary_validate($form, &$sta) {
     if (!@$helper) return say(t('You must specify who gets the helper reward.'), 'helper');
 //    if (!@$helper or $helper == 1) return say(t('You must specify who gets the helper reward.'), 'helper');
     if (!$mya->member and is_null(nn($adminable[B_MEMBER], NULL))) return say(t('That account is not READY (not a member).'), 'adminable'); // test "is_null" because 0 is the value when set
-    if (!$mya->confirmed) say(t('NOTE: Member %helperName has not yet confirmed this invitation.', 'helperName', $h->fullName));
+    if (!$mya->confirmed and $mya->helper != 1) say(t('NOTE: Member %helperName has not yet confirmed this invitation.', 'helperName', $h->fullName));
   }
 
   foreach (ray('creditLimit') as $k) {
@@ -261,7 +261,7 @@ function activate($helper) {
     });
     $msg = 'approved';
 //    if (!$mya->confirmed) $msg .= ($helper > 1 ? '|must confirm' : '|in person');
-    if (!$mya->confirmed) $msg .= '|must confirm';
+    if (!$mya->confirmed) $msg .= ($mya->helper == 1 ? '|must confirm uninvited' : '|must confirm');
     if (!$mya->co and !$mya->stepsDone('card')) $msg .= '|suggest card';
     $subs = ray('inviterName youName specifics', @$mya->helperA->fullName, $mya->fullName, getSpecifics($mya));
     

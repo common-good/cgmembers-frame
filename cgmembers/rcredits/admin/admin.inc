@@ -99,9 +99,10 @@ function makeTestAccounts() {
   if (isPRODUCTION) return; // protects us even if the constant is not set
 ///   print_r("makeTestAccounts()<br>");
 
+  // for Corner Pub, include cardCode so we can test the company proSe as well as with an agent
   $a = a('aab', '', true);
   $selling = "groceries\ngifts\nsundries\ndeli\nbaked goods";
-  $a->update('name fullName selling', 'cornerstore', 'Corner Store', $selling);
+  $a->update('name fullName selling cardCode', 'cornerstore', 'Corner Store', $selling, 'CvRM3AwXJppPmf');
   //  $a->setBit(CO_REQUIRE_CASHIER, FALSE, 'coFlags');
 
   $a = a('aaa', '', true);
@@ -970,6 +971,7 @@ function randC($s) {return $s[rand(0, strlen($s) - 1)];}
 function getVow2() {$ray = ray(vowels2); return $ray[rand(0, count($ray) - 1)];}
 function randDigits($digits = 10) {return u\randomString($digits, 'digits');}
 function randRouting() {return db\get('route', 'r_banks', 'LENGTH(route)=9');}
+function wordName($len = 1) {return ucwords(u\randPass($len));}
 
 /**
  * Randomize personal data in all accounts (for staging site).
@@ -980,13 +982,13 @@ function anonymize() {
   $uids = db\col('uid', 'users', 'uid>:CANONIC_ACCTS AND uid<>:CGID ORDER BY fullName');
   foreach ($uids as $uid) {
     $a = r\acct($uid);
-    $fullName = randomName() . ' ' . randomName();
-    if ($a->co) $fullName .= ' Co';
-    $legalName = $fullName;
+    $fullName = wordName(3) . ' ' . randomName()[0] . '. ' . wordName();
+    if ($a->co) $fullName = wordName() . ' Co';
+    $legalName = mt_rand(1,100) < 90 ? $fullName : (wordName() . strstr($fullName, ' '));
     $name = u\shortName($fullName);
     $email = mb_strtolower(randomName()) . '@example.com';
-    $address = mt_rand(1, 9999) . randomName() . ' St.';
-    $city = randomName();
+    $address = mt_rand(1, 9999) . ' ' . wordName() . ' St.';
+    $city = wordName();
     $postalAddr = $a->risk('poBox') ? 'PO Box ' . mt_rand(1, 99999) : $address;
     $postalAddr .= ", $a->st $a->zip";
     $signedBy = $a->signedBy ? $fullName : '';
