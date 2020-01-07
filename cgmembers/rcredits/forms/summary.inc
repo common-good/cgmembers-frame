@@ -93,7 +93,7 @@ function formSummary($form, &$sta) {
 //    $savings = item(u\fmtAmt($mya->rewards) . $rewardNote, t('Credit Line:'), $rewardDesc);
     $suffix = ($mya->debt or $mya->depends or !$mya->refill) ? '' : t(' (<%a>Click here</a> to let your balance go negative.)', '_a', 'a id="activate-credit"');
     list ($credit, $normally) = $mya->depends ? ['$0', t(' (normally)')] : [u\fmtAmt(-$mya->floor), ''];
-    $creditLine = item($credit, t('Credit Line:'), t('Based%normally on your account\'s average monthly activity over the past 6 months.', compact('normally')), w\suffix($suffix));
+    $creditLine = $mya->ofAge ? item($credit, t('Credit Line:'), t('Based%normally on your account\'s average monthly activity over the past 6 months.', compact('normally')), w\suffix($suffix)) : NULL;
 //    $committed = item(u\fmtAmt(max(0, $mya->committed)), t('Committed:'), t('reserved for donation to Common Good Finance'));
 
 /*    $successes = db\count('users', 'helper=:myid AND activated<>0', compact('myid'));
@@ -142,8 +142,10 @@ function formSummary_validate($form, &$sta) {
   global $mya;
 
   if (in(op($sta), 'openCompany openJoint')) return;
-  extract(just('uid legalName creditLimit rTrader helper mediaConx moves tickle adminable', $sta['input']));
+  extract(just('uid legalName creditLimit dob rTrader helper moves tickle adminable', $sta['input']));
   if (nn($tickle, NULL) !== '' and $err = u\badDate($tickle)) return say($err, 'tickle');
+
+  if (nn($dob) and !formBasic_validate($form, $sta, FALSE, 'dob')) return;
   
 /*  if (in(nn($federalId), [R_ON_FILE, t('SSN')])) {
     unset($sta['input']['federalId']);
@@ -161,15 +163,17 @@ function formSummary_validate($form, &$sta) {
     if (!$mya->confirmed and $mya->helper != 1) say(t('NOTE: Member %helperName has not yet confirmed this invitation.', 'helperName', $h->fullName));
   }
 
+  if (!@$rTrader and $mya->ok) { // de-activating
+    if ($mya->balance) return say(t('You cannot de-activate an account with a non-zero balance.'), 'err');
+  }
+
   foreach (ray('creditLimit') as $k) {
     if (isset($$k)) {
       if ($err = u\badAmount($$k)) return sayFieldErr($err, $k); 
       $$k = u\cleanAmount($$k);
     }
   }
-  if (@$rTrader and isset($mediaConx) and $err = u\badAmount($mediaConx, '>=0', 0)) return sayFieldErr($err, 'mediaConx');
   if (isset($moves) and $err = u\badAmount($moves, '>=0', 0)) return sayFieldErr($err, 'moves');
-//  if (@$who and !$who = whois($who, 'who', $sta['input'])) return say(t('I don\'t know what account you mean to go to.'), 'who');
   u\preray(@compact(ray('tickle helper who creditLimit')), $sta['input']);
 }
 
@@ -180,7 +184,7 @@ function formSummary_submit($form, &$sta) {
   if (!$mya->admin2) return; // hack attempt
   if ($op == 'secureMsgs') return w\go('', showSecureMessages());
 
-  extract($args = just('uid who legalName creditLimit tickle note notes helper mediaConx moves rTrader risks adminable', $sta['input']));
+  extract($args = just('uid who legalName creditLimit tickle note notes dob helper mediaConx moves rTrader risks adminable', $sta['input']));
   if (!$mya->cAdmin) u\EXPECT(!array_diff(array_keys($args), ray('uid tickle note')), 'too many unpermitted changing fields in ' . pr($args));
 
   if (!@$tickle) {
@@ -219,7 +223,7 @@ function formSummary_submit($form, &$sta) {
   if (isset($rTrader)) $mya->setBit(B_OK, @$rTrader);
   if (!nn($helper)) unset($helper); // don't overwrite if too late or empty
 //  $floor = -$creditLimit; // floor is calculated automatically
-  $mya->update(@compact(ray('legalName federalId tickle notes helper mediaConx moves')));
+  $mya->update(@compact(ray('legalName federalId tickle notes dob helper mediaConx moves')));
  
   unset($DBTX);
   
@@ -266,6 +270,7 @@ function activate($helper) {
     $subs = ray('inviterName youName specifics', @$mya->helperA->fullName, $mya->fullName, getSpecifics($mya));
     
     r\message($mya->id, $msg, $subs);
+    
   }
 
   if ($firstTime and !$mya->co) { // no bonus or helper bonus for a company signing up

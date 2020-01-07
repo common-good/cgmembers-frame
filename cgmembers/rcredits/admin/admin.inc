@@ -1010,6 +1010,38 @@ function anonymize() {
   db\q('DELETE FROM r_changes WHERE created>=:NOW');
 }
 
+/**
+ * Export solar1 data to SMT
+ */
+function toSMT() {
+  $q = db\q("SELECT * FROM users WHERE source='solar1'");
+  $hdrDone = FALSE;
+
+  while ($row = $q->fetchAssoc()) {
+    extract(just('uid', $row));
+    $a = r\acct($uid);
+    list ($routing, $bankAccount) = u\parseBankAccount($a->bankAccount);
+    foreach (ray('isSavings fullName postalAddr tenure owns partnerInfo created notes') as $k) $$k = $a->$k;
+    $notes = strtr($notes, ["\r" => '', "\n" => '']);
+    $nameOnBankAcct = $fullName;
+    list ($billingAddress, $billingCity, $billingState, $billingZip) = u\parseAddr($postalAddr);
+    extract($partnerInfo);
+    $cgAccount = $a->member ? $a->mainQid : '';
+    $phone = u\fmtPhone($phone, '-');
+    $out = compact(ray('smtid fullName orgName m_company m_number cgAccount phone email address city state zip tenure owns routing bankAccount isSavings nameOnBankAcct billingAddress billingCity billingState billingZip noContract created notes'));
+    if (empty($bankAccount)) continue;
+  //  if ($a->member and $bad = db\get('uid', 'users', "fullName='$a->fullName' AND NOT :IS_MEMBER")) debug("maybe delete $bad ($a->uid is good) -- $a->fullName");
+    if (!$hdrDone) {
+      u\csvStart('solar1-export-' . date('Y-m-d') . '.csv');
+      u\csv(array_keys($out), "\t");
+      $hdrDone = TRUE;
+    }
+    u\csv(array_values($out), "\t");
+  }
+
+  exit();
+}
+  
 /*
   to find orphaned customers
 
