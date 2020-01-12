@@ -41,11 +41,14 @@ function formVerifyId_validate($form, &$sta) {
 
   foreach (ray('name type tmp_name error size') as $k) $$k = $_FILES['files'][$k]['file'];
   if ($size > MAX_ID_SIZE * 1024 * 1024) return say(t('That file is too big. It must be under %MAX_ID_SIZE MB'), 'err');
-  $path = dirname($tmp_name) . "/$name";
+  if ($error) return say(t('File upload failed. Maybe try emailing it?'), 'err');
+  $mimetype = mime_content_type($tmp_name);
+  $ext = explode('/', $mimetype )[1];
+  $path = dirname($tmp_name) . "/$mya->mainQid.$ext";
+  u\deleteFile($path);
   rename($tmp_name, $path);
 
-  $mimetype = mime_content_type($path);
-  $sta['input']['filedata'] = serialize(compact(ray('name path mimetype type error size idtype')));
+  $sta['input']['filedata'] = serialize(compact(ray('path mimetype type error size idtype')));
 }
 
 function formVerifyId_submit($form, &$sta) {

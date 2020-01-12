@@ -13,7 +13,7 @@ use CG\Util as u;
  * Note: query names cannot contain any of the following characters: /&? (because they confuse the url).
  */
 
-$bizQ = 'SELECT uid as payee, goods, SUM(amount) AS tot, COUNT(*) AS cnt FROM tx_entries JOIN tx_hdrs USING (xid) WHERE goods=:FOR_GOODS AND created BETWEEN';
+$bizQ = 'SELECT uid as payee, goods, SUM(IF(amount>0,amount,0)) AS sales, SUM(IF(amount<0,amount,0)) AS payments, COUNT(*) AS cnt FROM tx_entries JOIN tx_hdrs USING (xid) WHERE goods=:FOR_GOODS AND created BETWEEN';
 $gifts = "r.amount * IF(period='M', 12, IF(period='Q', 4, 1))";
 $source = "TRIM(REPLACE(REPLACE(source,'knows: self ()', ''), '-', ' '))";
 
@@ -50,16 +50,16 @@ $queries = [
     WHERE :ctty IN (u1.community, u2.community)",
     
 
-  B_CO . t('Monthly Business Income (30 day totals)') => 
+  t('Company Income and Payments - 30 day totals') => 
     "SELECT LEFT(u.fullName, 42) AS company,
-            t0.tot AS `total $`, t0.cnt AS `count`,
-            t6.tot AS `total $ 6mos ago`, t6.cnt AS `count6`,
-            t12.tot AS `total $ 12mos ago`, t12.cnt AS `count12`
+            t0.sales AS `sales $`, t0.payments AS `payments $`, t0.cnt AS `count`,
+            t6.sales AS `sales $ 6mos ago`, t6.payments AS `payments $ 6mos ago`, t6.cnt AS `count6`,
+            t12.sales AS `sales $ 12mos ago`, t12.payments AS `payments $ 12mos ago`, t12.cnt AS `count12`
      FROM users u 
      LEFT JOIN ($bizQ :NOW-30*:DAY_SECS AND :NOW GROUP BY payee) t0 ON t0.payee=u.uid
      LEFT JOIN ($bizQ :NOW-(180+30)*:DAY_SECS AND :NOW-180*:DAY_SECS GROUP BY payee) t6 ON t6.payee=u.uid
      LEFT JOIN ($bizQ :NOW-:YEAR_SECS-30*:DAY_SECS AND :NOW-:YEAR_SECS GROUP BY payee) t12 ON t12.payee=u.uid
-     WHERE u.community=:ctty AND :IS_CO AND :IS_OK AND t0.cnt>0 AND fullName NOT LIKE '%457%' ORDER BY u.fullName",
+     WHERE u.community=:ctty AND :IS_CO AND :IS_OK AND t0.cnt>0 AND fullName NOT LIKE '%457%' ORDER BY t0.sales DESC",
 
   t('Positive and Negative Balance Totals') => 
     "SELECT c.fullName AS community, 
@@ -179,4 +179,14 @@ WHERE u.:IS_CO AND t.uid IS NULL ORDER BY community
 //    list ($address, $city, $state, $zip) = u\parseAddr($a->postalAddr);
 //    echo "$a->fullName;$address;$city, $state $zip<" . 'br>';
   }, 'NOT :IS_CO AND NOT :IS_CARDED AND :IS_MEMBER ORDER BY fullName');
+  
+  // duplicated by Monthly Company Income and Payments
+  $recentSecs = 'GREATEST(1, LEAST(6*:MONTH_SECS, :NOW-u.activated))'; // for company monthly sales and payments (past 6 months)
+  t('Company Monthly Sales and Payments') =>
+    "SELECT fullName AS company, 
+      sum(IF(uid2=uid, amt2, 0))*MONTH_SECS/$recentSecs as sales, 
+      sum(IF(uid1=uid, amt1, 0))*MONTH_SECS/$recentSecs AS payments
+    FROM users u JOIN txs t ON uid IN (uid1, uid2) 
+    WHERE u.IS_CO AND u.activated AND t.created>:NOW-$recentSecs
+    ORDER BY sales DESC",  
 */
