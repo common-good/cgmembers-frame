@@ -1,3 +1,13 @@
+2020-01-07 feature/bugs
+. disable credit line for members under age 21
+. admin function to export solar1 data
+. added dob to summary page for admins, so we can add it explicity from photo ID
+. deactivating an account with a nonzero balance is now disallowed
+. file upload bug fixed in verifyId function
+. "What's up" question is now only after 60 days (but still every month thereafter)
+. Monthly sales query is expanded to include expenses in a separate column
+. Tax Info page reactivated
+
 2020-01-01 feature/prose-co
 . another adjustment to how permissions are calculated to send to app
 . rsmart tests are now for latest version (version 221 tests are in a subfolder and can be run separately)

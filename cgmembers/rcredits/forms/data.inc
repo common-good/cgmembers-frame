@@ -11,13 +11,12 @@ use CG\Db as db;
  */
 function formData($form, &$sta, $args = '', $isco = FALSE) {
   global $mya;
-
   $isco = ($isco == 'co');
   require queryFile($isco);
   extract(just('qName sql', $args));
   
   $sql0 = urldecode(nn($sql));
-  $qName0 = urldecode(nn($qName));
+  $qName0 = nn($qName);
 
   $btn = w\submi('Go', 'success', 'xs', ['parents' => ['go']]);
   $sql = $mya->admin ? areaFld(t('SQL:'), [t('MySQL Select Query')], dft($sql0) + w\suffix(\render($btn))) : NULL;

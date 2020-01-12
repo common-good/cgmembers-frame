@@ -210,6 +210,7 @@ class Acct {
     if ($field == 'iclub') return ($a->id < 0 or mb_strpos($a->fullName, t('Investment Club')) !== FALSE);
     if ($field == 'iclubId') return db\get('clubid', 'r_stakes', 'uid=:uid', ['uid' => $a->id]);
     if ($field == 'trialco') return ($a->co and $a->depends);
+    if ($field == 'ofAge') return ($a->co or ($a->dob and $a->dob < time() - 21 * YEAR_SECS)); // no creditLine if under 21
     if ($field == 'prefsSet') return !is_null($a->o_minimum); // preferences have been set at least once
     if ($field == 'hasCustomers') return db\exists('r_relations', 'main=:id AND :IS_CUSTOMER', ['id' => $a->id]);
     if ($field == 'superAdmin') return ($a->agentId == 1) ?: (test() and $a->admin and $a->agentA->name == 'abeone');
@@ -1601,6 +1602,7 @@ X;
     }
     if ($a->trialco) $cans[B_BUY] = FALSE; // trial companies can't buy
     if (!$a->can(B_OK)) $cans[B_SELL] = $cans[B_BUY] = FALSE; // inactive accounts can't transact
+    if (!$a->ofAge) $cans[B_DEBT] = FALSE; // credit card regulations say no credit line if under age 21
     
     ksort($cans); // easier to debog
     return self::$perms[$id][$a->agentId] = $cans;
