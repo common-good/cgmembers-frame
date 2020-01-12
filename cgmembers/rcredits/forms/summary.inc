@@ -164,7 +164,7 @@ function formSummary_validate($form, &$sta) {
   }
 
   if (!@$rTrader and $mya->ok) { // de-activating
-    if ($mya->balance) return say(t('You cannot de-activate an account with a non-zero balance.'), 'err');
+    if ($mya->balance + 0) return say(t('You cannot de-activate an account with a non-zero balance.'), 'err');
   }
 
   foreach (ray('creditLimit') as $k) {

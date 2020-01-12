@@ -50,7 +50,7 @@ $queries = [
     WHERE :ctty IN (u1.community, u2.community)",
     
 
-  t('Monthly Company Income & Payments (30 day totals)') => 
+  t('Company Income and Payments - 30 day totals') => 
     "SELECT LEFT(u.fullName, 42) AS company,
             t0.sales AS `sales $`, t0.payments AS `payments $`, t0.cnt AS `count`,
             t6.sales AS `sales $ 6mos ago`, t6.payments AS `payments $ 6mos ago`, t6.cnt AS `count6`,
