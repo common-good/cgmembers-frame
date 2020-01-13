@@ -1,3 +1,6 @@
+2020-01-12 feature/dob-fix
+. dob is not available without superAdmin, so we added an underage bit that superAdmin updates automatically
+
 2020-01-07 feature/bugs
 . disable credit line for members under age 21
 . admin function to export solar1 data

@@ -174,7 +174,7 @@ WHERE u.:IS_CO AND t.uid IS NULL ORDER BY community
   eachA(function ($a) {
     $gift = $a->giftsDesc();
     $bank = $a->hasBank ? '' : t('(NO BANK)');
-    echo "$a->mainQid $a->fullName: $gift -- $a->postalAddr $bank<" . 'br><' . 'br>';
+/** / echo "$a->mainQid $a->fullName: $gift -- $a->postalAddr $bank<" . 'br><' . 'br>';
 
 //    list ($address, $city, $state, $zip) = u\parseAddr($a->postalAddr);
 //    echo "$a->fullName;$address;$city, $state $zip<" . 'br>';

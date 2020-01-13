@@ -158,7 +158,6 @@ class Acct {
       case 'isCanonic': return ($a->id >= 0 and $a->id < CANONIC_ACCTS);
       default: break;  // fall through
     }
-      
     if (u\starts($field, 'o_')) { // ignore joinedness of the account, if it is joint ("own" account)
       $field = substr($field, 2);
     } elseif (u\starts($field, 'j_')) { // concatenate joint fields
@@ -198,6 +197,7 @@ class Acct {
     if ($field == 'owns') return !$a->risk('rents');
     if ($field == 'creditLine') return -$a->floor;
     if ($field == 'hasFid') return ($vsec = $a->vsecure and nn($vsec['federalId'], '') !== ''); // has to be 2 steps
+    if ($field == 'hasDob') return ($vsec = $a->vsecure and nn($vsec['dob'], '') !== ''); // has to be 2 steps
     if ($field == 'closed') return ($a->activated and !$a->ok); // data[newAccount] has new qid, if any
     if ($field == 'hasBank') return $a->risk('hasBank');
     if ($field == 'lowSecurity') return u\n2ai(substr($a->created, -5, 5), 3); // result is 3 chars long
@@ -210,14 +210,13 @@ class Acct {
     if ($field == 'iclub') return ($a->id < 0 or mb_strpos($a->fullName, t('Investment Club')) !== FALSE);
     if ($field == 'iclubId') return db\get('clubid', 'r_stakes', 'uid=:uid', ['uid' => $a->id]);
     if ($field == 'trialco') return ($a->co and $a->depends);
-    if ($field == 'ofAge') return ($a->co or ($a->dob and $a->dob < time() - 21 * YEAR_SECS)); // no creditLine if under 21
     if ($field == 'prefsSet') return !is_null($a->o_minimum); // preferences have been set at least once
     if ($field == 'hasCustomers') return db\exists('r_relations', 'main=:id AND :IS_CUSTOMER', ['id' => $a->id]);
     if ($field == 'superAdmin') return ($a->agentId == 1) ?: (test() and $a->admin and $a->agentA->name == 'abeone');
     if ($field == 'bankInfo') return (!$routing = substr($a->bankAccount, 4, 9)) ? NULL
                                 : db\get('*', 'r_banks', 'route=:routing', compact('routing'));
     if ($field == 'tempPhotoFilename') return r\pic("$a->mainQid.jpg");
-      
+
     if (isset(self::$rs[$a->id]->$field)) { // actual database field?
       $result = @self::$rs[$a->id]->$field; // returns NULL if field not set
     } else $result = $a->getSpecial($field); // set up caches for aggregate field and get value
@@ -453,7 +452,7 @@ class Acct {
       if (isset($info[$special])) {
         $sFlds = $info[$special]; // can be '' for no data
       } elseif ($sFlds = just(constant(strtoupper($special) . '_FLDS'), $info)) {
-        $sFlds += $a->$special;
+        $sFlds += $a->$special; // replace existing values with update info
       } else continue;
       if ($special == 'vsecure' and $a->activated and $sFlds) foreach ($sFlds as $k => $v) {
           if (!u\crypted('V', $v)) $sFlds[$k] = u\cry('V', $v); // hyper-encrypt when activated (when auto-access to EIN no longer needed). This and recordChanges are the ONLY places we do u\cry('V', ) !!
@@ -1602,7 +1601,7 @@ X;
     }
     if ($a->trialco) $cans[B_BUY] = FALSE; // trial companies can't buy
     if (!$a->can(B_OK)) $cans[B_SELL] = $cans[B_BUY] = FALSE; // inactive accounts can't transact
-    if (!$a->ofAge) $cans[B_DEBT] = FALSE; // credit card regulations say no credit line if under age 21
+    if ($a->underage) $cans[B_DEBT] = FALSE; // credit card regulations say no credit line if underage
     
     ksort($cans); // easier to debog
     return self::$perms[$id][$a->agentId] = $cans;

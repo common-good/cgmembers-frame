@@ -23,6 +23,7 @@ $flagHelp = array(
   'bysms' => t('NYI Send notifications by SMS.'),
   'paper' => t('Will not accept electronic statements.'),
   'secret' => t('Don\'t let merchants tell the member their balance on request.'),
+  'underage' => t('Has not yet reached the legal age to be allowed a credit line.'),
   'debt' => t('Member chose to permit sub-zero balances.'),
   'reinvest' => t('Member chose to automatically reinvest investment club dividends and inflation adjustments.'),
   'draws' => t('This account automatically draws funds from one or more others.'),
