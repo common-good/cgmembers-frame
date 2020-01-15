@@ -1,3 +1,12 @@
+2020-01-14 feature/co-dob
+. co2 task, agent step, now asks for founding date
+. buying and selling is disallowed during co2 task
+. yob field added, so age is available without superAdmin
+. unused (and insecure) USPS state lookup deleted
+. bug fixed that allowed text in company dob field
+. bug fixed that put wrong signer in description of signedBy field when doing co2 task
+. bug fixed that recorded wrong signer of CG Agreement
+
 2020-01-12 feature/dob-fix
 . dob is not available without superAdmin, so we added an underage bit that superAdmin updates automatically
 

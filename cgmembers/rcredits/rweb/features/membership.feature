@@ -19,7 +19,10 @@ Scenario: An individual member signs up
   When member "?" completes form "signup" with values:
   | fullName | email | phone        | zip   | acctType     |*
   | Al Aargh | z@    | 413-253-0000 | 01002 | %CO_PERSONAL |
-  Then we show "Identity Verification"
+  Then members:
+  | uid  | fullName | legalName | email | phone        | zip   | state |*
+  | .AAA | Al Aargh | Al Aargh  | z@    | +14132530000 | 01002 | MA    |
+  And we show "Identity Verification"
   And we say "status": "info saved|step completed"
   And member ".AAA" steps left "verifyid agree preferences fund verifyemail"
 
@@ -27,7 +30,10 @@ Scenario: An individual member signs up
   | field | federalId   | dob      |*
   |     2 | 123-45-6789 | 2/1/1990 |
   # field 2 is SSN and DOB, as opposed to file upload
-  Then we show "%PROJECT Agreement" with:
+  Then members:
+  | uid  | federalId | dob       |*
+  | .AAA | 123456789 | 633848400 |
+  And we show "%PROJECT Agreement" with:
   | I make this agreement |
   And we say "status": "info saved|step completed"
   And member ".AAA" steps left "agree preferences fund verifyemail ssn"
@@ -293,12 +299,20 @@ Scenario: A member company wants to complete the account
   And relations:
   | main | other | permission |*
   | .ZZC | .ZZB  | manage     |
-  And we show "%PROJECT Agreement"
+  And we show "%PROJECT Agreement" with:
+  | Signed | Our Pub | Bea Two |
   And we say "status": "info saved|step completed"
   And steps left "agree contact backing photo donate company tithein discount"
 
-  Given step done "agree"
-  And step done "contact"
+  When member ".ZZC" completes form "community/agreement" with values:
+  | op      | signedBy |* 
+  | I Agree | Bea Two  |
+  Then members:
+  | uid  | signed | signedBy |*
+  | .ZZC | %now   | Bea Two  |
+  And we show "Contact Information"
+
+  Given step done "contact"
   And step done "backing"
   And step done "company"
   And step done "donate"

@@ -141,7 +141,7 @@ define('R_MONEY_FLDS', 'balance rewards floor giftPot committed'); // financial 
 define('JOINT_FLDS', R_MONEY_FLDS . ' savings'); // add these together for joint accounts
 define('PSECURE_FLDS', 'phone email'); // personal fields that get encrypted in a searchable way (P)
 define('VSECURE_FLDS', 'federalId dob bankAccount'); // very secure fields (always soon pgp-encrypted within Acct::vsecure)
-define('SECURE_FLDS', 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode cardCode cardCode2 pin question answer idProof oneTimePass last4bank'); // non-personal encrypted fields (must be complete list)
+define('SECURE_FLDS', 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode cardCode cardCode2 pin question answer idProof oneTimePass last4bank yob'); // non-personal encrypted fields (must be complete list)
 define('R_HIDE_CHANGES', R_MONEY_FLDS . ' pw2 vKeyPw ssnData hasBank changes init login access activated data secure vsecure stepsDone steps stepsLeft lastiCode pass oneTimePass notes picture photo thumb trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd'); // do not record changes to these fields: anything often-changed (automatically or not)
 define('R_APP_DATA_GETS', '!log !device !members !txs '); // data requests from the rPOS app
 //  define('R_AVAIL_BUY', '(balance-IF(u.:IS_DEBT, floor, GREATEST(floor, 0)))'); // balance available to spend
@@ -284,8 +284,6 @@ define('HAS_REVERSER', "(EXISTS (SELECT tRev FROM tx_hdrs WHERE tRev.reverses=t.
 define('TRIALCO_LIMIT', 1000); // maximum payments received by a trial (dependent company) account
 define('EQUIP_DEPOSIT', 50); // dollar cost of equipment deposit
 define('MATURITY', 21); // minimum age to have a credit limit
-
-define('R_USPS_WEB_TOOLS_ID', '921COMMO5331'); // USPS API credentials
 
 // Filenames
 define('R_TEMPLATE_DIR', '/templates');

@@ -420,8 +420,8 @@ function formBasic_validate($form, &$sta, $co = 'mya', $fields = R_BASIC_FLDS) {
   if (isset($fullName) and $err = u\badName($fullName)) return say($err, ['field' => 'fullName'], 'fullName');
 
   $what = $co ? t('federal ID') : t('social security number');
-  if (isset($federalId) and $err = u\badSsn($federalId, @$dob)) return say($err, compact('what'), 'federalId');
-  if (!$co and isset($dob) and $err = u\badDob($dob)) return say($err, 'dob');
+  if (isset($federalId) and $err = u\badSsn($federalId, nn($dob))) return say($err, compact('what'), 'federalId');
+  if (isset($dob) and $err = u\badDob($dob, $co)) return say($err, 'dob');
 
   u\preray(@compact(ray($fields)), $sta['input']);
   return TRUE;
@@ -504,16 +504,6 @@ EOF
   js('parse-query');
   js('misc', 'baseUrl sid life isSafari', BASE_URL, session_id(), ($mya and !isDEV) ? SESSION_LIFE : 0, isSAFARI);
   return compact('footerText');
-}
-
-/**
- * Redirect to another page (for signins and changes of account, bypassing menu permissions that might prevent a direct redirect).
- */
-function redirect() {
-  die('redirect'); // unused
-  $uri = $_SERVER['REQUEST_URI'];
-  $redir = 'redirect/';
-  if (u\starts($uri, $redir)) return w\go(substr($uri, strlen($redir)));
 }
 
 /**
