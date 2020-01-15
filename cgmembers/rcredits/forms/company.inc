@@ -52,6 +52,8 @@ EOF;
   $can2 = item($permissions, t('App permissions:'), t('Download the CGPay app from Google Play Store. Limit app permissions here, or go to <%aRel>Relations</a> settings to limit them for each agent.', '_aRel', atag('/settings/relations')));
 //    $shareRpos = boolFld(t('Share rPOS:'), t('Allow other companies to use our POS device(s).'), $mya->coCan(CO_SHARE_RPOS) ?: 0);
 //    $requireCashier = boolFld(t('Must scan in:'), t('Require a cashier to sign in before using rPOS (this also allows you to share the device with another company).'), $mya->coCan(CO_REQUIRE_CASHIER) ?: 0);
+
+  $dob = $mya->hasDob ? NULL : ssnFields(FALSE, required())['dob'];
   $website = textFld(t('Website:'), [t('Website address'), t('Especially if you want to accept payments on your website, be sure to list it here.')], dft($mya->website));
   $descPreface = item(t('<br>What does the company do? This description will appear on your %PROJECT web page.')); //, '', ['class'=>'help-block']);
 //  $description = fld('text_format', t('Description:'), [t('Arbitrarily complex description')], ['format' => 'filtered_html'] + dft(strtr($mya->description, ["\r" => '', "\n" => '', '<br>' => PHP_EOL, "\0" => ''])));
@@ -66,15 +68,17 @@ EOF;
     $atm = boolFld(t('ATM service:'), t('Allow company to trade %RCREDITS for cash even if their balance is less than their rewards (in-person only).'), $mya->coCan(CO_ATM) ?: 0);
   }
 //  $submit = submit();
-  return cgform(@compact(ray('title links cgbutton photo name private categories selling shortDesc employees gross website descPreface description can2 staleNudge tips fast atm')) + w\setupFoot(''));
+  return cgform(@compact(ray('title links cgbutton photo name private categories selling shortDesc employees gross dob website descPreface description can2 staleNudge tips fast atm')) + w\setupFoot(''));
 }
 
 function formCompany_validate($form, &$sta) {
-  extract(just($fields = 'selling employees gross staleNudge', $sta['input']));
+  $fields = 'selling employees gross staleNudge';
+  extract(just("$fields dob", $sta['input']));
   if ($err = zBadSelling($selling)) return say($err, 'selling');
   if ($err = u\badAmount($employees, '>=0', 0)) return sayFieldErr($err, 'employees');
   if ($err = u\badAmount($gross, '', 2, '')) return sayFieldErr($err, 'gross');
   if ($err = u\badAmount($staleNudge, '>=0', 0, 365)) return sayFieldErr($err, 'staleNudge');
+  if (nn($dob) and !formBasic_validate($form, $sta, FALSE, 'dob')) return; // validate internalizes dob
 
   u\preray(compact(ray($fields)), $sta['input']);
 }
@@ -82,7 +86,7 @@ function formCompany_validate($form, &$sta) {
 function formCompany_submit($form, &$sta) {
   global $mya;
 
-  extract($info = just('private description shortDesc website selling categories can requireCashier employees gross staleNudge tips fast atm', $sta['input']));
+  extract($info = just('private description shortDesc website selling categories can requireCashier employees gross staleNudge dob tips fast atm', $sta['input']));
   
   $website = preg_replace('~https?://~i', '', @$website);
 
@@ -93,7 +97,7 @@ function formCompany_submit($form, &$sta) {
   $mya->setCoBit(CO_TIP, $tips);
   if ($mya->cAdmin) $mya->setCoBit(CO_FAST, @$fast);
   if ($mya->cAdmin) $mya->setCoBit(CO_ATM, $atm);
-  $mya->update(@compact(ray('description shortDesc website selling employees gross staleNudge')));
+  $mya->update(@compact(ray('description shortDesc website selling employees gross staleNudge dob')));
   
   if (@$categories) $mya->setCategories($categories);
 

@@ -116,6 +116,7 @@ function formSignup_submit($form, &$sta) {
   extract(just('code source2', $args)); // source2 may come from either partner or an ad (through our promo site)
   $helper = $helper + 0; // don't let lack of helper stop us (on DEV)
 
+  u\setDft($source, '');
   if (@$notes) list ($source, $notes) = [trim("$notes $source"), ''];
   if (@$source2) $source = trim(mb_strtoupper($source2) . "-$source");
   $flags = nn($confirmed) ? u\bit(B_CONFIRMED) : 0;

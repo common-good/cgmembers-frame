@@ -22,8 +22,6 @@ function formVerifyId($form, &$sta, $args = '') {
   $idtype = textFld(t('ID Type:'), [t('Type of ID')]);
   $file = fileFld(t('ID File:'), t('Take a photo of your ID and upload it here (or email it us at %CGF_EMAIL).'));
   extract(ssnFields(!$mya->co), FALSE);
-//  $dob = textFld(t('Birth Date:'), [t('Your birth date'), t('Your date of birth (mm/dd/yyyy)')], autofill('off'));
-//  $federalId = passFld(t('Soc Sec #:'), [t('ssDesc')], autofill('off'));    
   jsx('verifyid', compact('method'));
 
   $form = compact(ray('title subtext field idtype file federalId dob')) + w\setupFoot(t('Submit'), [], TRUE);

@@ -446,6 +446,7 @@ class Acct {
     foreach (ray('photo thumb') as $k) if (isset($info[$k])) $a->updatePhoto($info, $k);
     foreach (ray(PSECURE_FLDS) as $k) if (isset($info[$k])) $info[$k] = u\cry('P', $info[$k]);
     if (isset($info['pass']) and $info['pass'] !== '') $info['pass'] = r\passHash($info['pass']);
+    if (isset($info['dob'])) $a->update('yob', $info['dob'] === '' ? '' : date('Y', $info['dob'])); // remember birth year for demographics
     u\preray($info, self::$rs[$a->id]); // cache the new field values (before doing special fields)
     
     foreach (ray('data secure vsecure') as $special) {
@@ -454,9 +455,10 @@ class Acct {
       } elseif ($sFlds = just(constant(strtoupper($special) . '_FLDS'), $info)) {
         $sFlds += $a->$special; // replace existing values with update info
       } else continue;
+
       if ($special == 'vsecure' and $a->activated and $sFlds) foreach ($sFlds as $k => $v) {
-          if (!u\crypted('V', $v)) $sFlds[$k] = u\cry('V', $v); // hyper-encrypt when activated (when auto-access to EIN no longer needed). This and recordChanges are the ONLY places we do u\cry('V', ) !!
-        }
+        if (!u\crypted('V', $v)) $sFlds[$k] = u\cry('V', $v); // hyper-encrypt when activated (when auto-access to EIN no longer needed). This and recordChanges are the ONLY places we do u\cry('V', ) !!
+      }
       self::$rs[$a->id]->$special = $sFlds;
       $sFlds = serialize($sFlds);
       $info[$special] = ($special == 'data' or !$sFlds) ? $sFlds : u\cry('S', $sFlds);
@@ -1600,6 +1602,7 @@ X;
       if (!$a->hasFid) $cans[B_SELL] = FALSE; // no selling without an EIN
     }
     if ($a->trialco) $cans[B_BUY] = FALSE; // trial companies can't buy
+    if ($a->co and $a->task == 'co2') $cans[B_BUY] = $cans[B_SELL] = FALSE; // co working on co2 can't do squat
     if (!$a->can(B_OK)) $cans[B_SELL] = $cans[B_BUY] = FALSE; // inactive accounts can't transact
     if ($a->underage) $cans[B_DEBT] = FALSE; // credit card regulations say no credit line if underage
     

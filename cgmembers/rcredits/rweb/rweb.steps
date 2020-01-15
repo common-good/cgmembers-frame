@@ -239,6 +239,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE invoice Setup
  *     MAKE joint Setup
  *     MAKE membership Setup
+ *     TEST membership AnIndividualMemberSignsUp
  *     TEST membership AMemberWantsACard
  *     TEST membership AMemberCompanyWantsToCompleteTheAccount
  *     MAKE partnersignup Setup

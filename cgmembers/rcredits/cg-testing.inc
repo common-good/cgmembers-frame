@@ -983,7 +983,7 @@ function logIn($id) {
   if ($id != '?') {
     list ($qid, $agt, $zot) = explode(':', "$id::"); // in case company:agent
     $a = r\acct(t\fullQid($qid), $agt ? t\fullQid($agt) : '');
-    if (!u\isAcct($a)) return t\output("id not account: $id");
+    if (!u\isAcct($a)) return t\output("id not account: $id (qid=$qid agt=$agt)");
     if ($a != $mya) {
       w\signout(TRUE);
       if (!$a->proSe) r\setAcct($a->agentId); // get agent first, if not proSe
