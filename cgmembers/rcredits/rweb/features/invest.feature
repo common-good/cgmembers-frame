@@ -24,6 +24,9 @@ Setup:
   | .ZZA |     200 |
   | .ZZB |     200 |
   |  cgf |    -400 |
+  
+  And member ".ZZA" has "person" steps done: "ssn contact tithein"
+  And member ".ZZB" has "person" steps done: "ssn contact tithein"
 
 Scenario: A member joins the investment club
   When member ".ZZA" visits page "invest"
@@ -111,9 +114,18 @@ Scenario: The club adds a proposed investment
 
   |      1 | .ZZC | .ZZI   | .ZZB       | improve it | 0.046  | D     | Terms | 951000 |    10000 |    10 | trusty    |       75 |  60 |      80 |        90 |       0 |
 
-  And we show "Proposed Investments" with:
-  | Investment          | Type   | Return | Sound | Good |
-  | Our Pub: improve it | equity |   4.6% |    90 | ?    |
+  And we show "Club Investments" with:
+  | Status   | Investment          | Type   | Return | Value | Good |
+  | proposed | Our Pub: improve it | Equity |  4.60% |       | ?    |
+  
+  When member "I:B" visits page "invest/rate/vestid=1&clubqid=NEWZZI"
+  Then we show "Investment #1" with:
+  | Goodness  | 0 (med 0) |
+  | Company   | Our Pub |
+  | Project   | improve it |
+  | Type      | Equity |
+  | return    | 4.60% |
+  | soundness | 90 |
 
 Scenario: Members rate a proposed investment
   Given these "stakes":
@@ -134,7 +146,7 @@ Scenario: Members rate a proposed investment
   | Project/Purpose | improve it |
   | Offering size | $10,000 |
   | Share price | 10.00 |
-  | Predicted return | 0.05% |
+  | Predicted return | 4.60% |
   | Terms | Terms |
   | Company assets | $951,000 |
   | Owner character | trusty |
@@ -159,9 +171,9 @@ Scenario: Members rate a proposed investment
   And these "ratings":
   | ratingid | vestid | uid  | good | comment | patronage |*
   |        2 |      1 | .ZZA |   20 | do it!  |        50 |
-  And we show "Proposed Investments" with:
-  | Investment          | Type   | Return | Sound | Good |
-  | Our Pub: improve it | equity |   4.6% |    90 |   30 |
+  And we show "Club Investments" with:
+  | Investment          | Type   | Return | Value | Good |
+  | Our Pub: improve it | Equity |  4.60% |       |   30 |
   
   When member ".ZZA" visits page "invest/rate/vestid=1&clubqid=NEWZZI"
   Then we show "View or Rate Investment #1" with:
@@ -184,7 +196,7 @@ Scenario: The club buys shares
   |      1 | .ZZC | .ZZI   | .ZZB       | improve it | 0.046  | D     | Terms | 951000 |    10000 |    10 | trusty    |       75 |  60 |      80 |        90 |       0 |
 
   When member "I:B" visits page "invest/rate/vestid=1&clubqid=NEWZZI"
-  Then we show "View or Rate Investment #1" with:
+  Then we show "Investment #1" with:
   | Numeric ratings are on a scale of | 0-100 |
   | Common Goodness | |
   | Patronage | |
@@ -197,7 +209,7 @@ Scenario: The club buys shares
   | Project/Purpose | improve it |
   | Offering size | $10,000 |
   | Share price | 10.00 |
-  | Predicted return | 0.05% |
+  | Predicted return | 4.60% |
   | Terms | Terms |
   | Company assets | $951,000 |
   | Owner character | trusty |
@@ -229,11 +241,11 @@ Scenario: The club buys shares
   And these "shares":
   | shid | vestid | shares | pending | when | sold |*
   |    1 |      1 |     10 |       0 | %now |      |
-  And we show "Actual Investments" with:
+  And we show "Club Investments" with:
   | Investment          | Type   | Return | Value |
-  | Our Pub: improve it | equity |   4.6% | 100   |
+  | Our Pub: improve it | Equity |  4.60% | 100   |
   
-  When member "I:B" visits page "invest/buy-or-sell/vestid=1&actual=1"
+  When member "I:B" visits page "invest/buy-or-sell/vestid=1"
   Then we show "Buy or Sell Investment #1" with:
   | increase or decrease the club's shares in Our Pub | |
   | Current Shares | 10 (at $10) |
@@ -270,7 +282,7 @@ Scenario: The club sells shares
   | shid | vestid | shares | pending | when | sold |*
   |    1 |      1 |     10 |       0 | %now |      |
   |    2 |      1 |      0 |      -4 | %now |      |
-  When member "I:B" visits page "invest/buy-or-sell/vestid=1&actual=1"
+  When member "I:B" visits page "invest/buy-or-sell/vestid=1"
   Then we show "Buy or Sell Investment #1" with:
   | increase or decrease the club's shares in Our Pub | |
   | Current Shares | 10 (at $10) |
@@ -288,11 +300,11 @@ Scenario: The club sells shares
   |    1 |      1 |     10 |       0 | %now |      |
   |    2 |      1 |     -4 |       0 | %now |      |
 
-  When member ".ZZA" visits page "invest/list/clubqid=NEWZZI&actual=1"
-  Then we show "Actual Investments" with:
+  When member ".ZZA" visits page "invest/list/clubqid=NEWZZI"
+  Then we show "Club Investments" with:
   | Investment          | Type   | Return | Value |
-  | Our Pub: improve it | equity |   4.6% | 60    |
-  When member "I:B" visits page "invest/buy-or-sell/vestid=1&actual=1"
+  | Our Pub: improve it | Equity |  4.60% | 60    |
+  When member "I:B" visits page "invest/buy-or-sell/vestid=1"
   Then we show "Buy or Sell Investment #1" with:
   | increase or decrease the club's shares in Our Pub | |
   | Current Shares | 6 (at $10) |
@@ -533,7 +545,7 @@ Scenario: Members rate a proposed loan
   | Co description | |
   | Project/Purpose | improve it |
   | Target | $10,000 |
-  | Interest Rate | 0.05% |
+  | Interest Rate | 4.60% |
   | Terms | Terms |
   | Company assets | $951,000 |
   | Owner character | trusty |
@@ -558,9 +570,9 @@ Scenario: Members rate a proposed loan
   And these "ratings":
   | ratingid | vestid | uid  | good | comment | patronage |*
   |        2 |      1 | .ZZA |   20 | do it!  |        50 |
-  And we show "Proposed Investments" with:
-  | Investment          | Type   | Return | Sound | Good |
-  | Our Pub: improve it | loan |   4.6% |    90 |   30 |
+  And we show "Club Investments" with:
+  | Investment          | Type   | Return | Value | Good |
+  | Our Pub: improve it | Loan   |  4.60% |       |   30 |
   
   When member ".ZZA" visits page "invest/rate/vestid=1&clubqid=NEWZZI"
   Then we show "View or Rate Investment #1" with:
@@ -583,7 +595,7 @@ Scenario: The club makes a loan
   |      1 | .ZZC | .ZZI   | .ZZB       | improve it | 0.046  | I     | Terms | 951000 |    10000 |     1 | trusty    |       75 |  60 |      80 |        90 |       0 |
 
   When member "I:B" visits page "invest/rate/vestid=1&clubqid=NEWZZI"
-  Then we show "View or Rate Investment #1" with:
+  Then we show "Investment #1" with:
   | Numeric ratings are on a scale of | 0-100 |
   | Common Goodness | |
   | Patronage | |
@@ -595,7 +607,7 @@ Scenario: The club makes a loan
   | Co description | |
   | Project/Purpose | improve it |
   | Target | $10,000 |
-  | Interest Rate | 0.05% |
+  | Interest Rate | 4.60% |
   | Terms | Terms |
   | Company assets | $951,000 |
   | Owner character | trusty |
@@ -627,11 +639,11 @@ Scenario: The club makes a loan
   And these "shares":
   | shid | vestid | shares | pending | when | sold |*
   |    1 |      1 |    100 |       0 | %now |      |
-  And we show "Actual Investments" with:
+  And we show "Club Investments" with:
   | Investment          | Type | Return | Value |
-  | Our Pub: improve it | loan |   4.6% | 100   |
+  | Our Pub: improve it | Loan |  4.60% | 100   |
   
-  When member "I:B" visits page "invest/buy-or-sell/vestid=1&actual=1"
+  When member "I:B" visits page "invest/buy-or-sell/vestid=1"
   Then we show "Buy or Sell Investment #1" with:
   | increase or decrease the club's loan to Our Pub | |
   | Current Loan | $100 |
@@ -668,7 +680,7 @@ Scenario: The club sells shares
   | shid | vestid | shares | pending | when | sold |*
   |    1 |      1 |    100 |       0 | %now |      |
   |    2 |      1 |      0 |     -40 | %now |      |
-  When member "I:B" visits page "invest/buy-or-sell/vestid=1&actual=1"
+  When member "I:B" visits page "invest/buy-or-sell/vestid=1"
   Then we show "Buy or Sell Investment #1" with:
   | increase or decrease the club's loan to Our Pub | |
   | Current Loan | $100 |
@@ -685,11 +697,11 @@ Scenario: The club sells shares
   | shid | vestid | shares | pending | when | sold |*
   |    1 |      1 |    100 |       0 | %now |      |
   |    2 |      1 |    -40 |       0 | %now |      |
-  When member ".ZZA" visits page "invest/list/clubqid=NEWZZI&actual=1"
-  Then we show "Actual Investments" with:
+  When member ".ZZA" visits page "invest/list/clubqid=NEWZZI"
+  Then we show "Club Investments" with:
   | Investment          | Type | Return | Value |
-  | Our Pub: improve it | loan |   4.6% | 60    |
-  When member "I:B" visits page "invest/buy-or-sell/vestid=1&actual=1"
+  | Our Pub: improve it | Loan |  4.60% | 60    |
+  When member "I:B" visits page "invest/buy-or-sell/vestid=1"
   Then we show "Buy or Sell Investment #1" with:
   | increase or decrease the club's loan to Our Pub | |
   | Current Loan | $60 |

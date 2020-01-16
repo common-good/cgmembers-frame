@@ -52,7 +52,8 @@ $GLOBALS['tStrings'] = array(
   'nothing undone' => t('Nothing undone.'),
   'event' => t('Account %fullName (%qid) is now %status.'),
   'approved' => t('<p>Your account has been approved! %specifics</p>'),
-  'must confirm' => t('%youName: (a) your membership must be approved by %inviterName OR (b) you must buy from or sell to %inviterName as your first transaction OR (c) your first purchase must be in person, using your %PROJECT card (or the CGPAY app).'),
+  'must confirm' => t('<b>NOTE:</b> (a) your membership must be approved by %inviterName OR (b) you must buy from or sell to %inviterName as your first transaction OR (c) your first purchase must be in person, using your %PROJECT card (or the CGPAY app).'),
+  'must confirm uninvited' => t('<b>NOTE:</b> Your first purchase must be in person, using your %PROJECT card (or the CGPAY app).'),
   'suggest card' => t('If you would like to have a %PROJECT card, sign in at %CG_DOMAIN and click the "Card" step on your Summary page.'),
 //  'got funding' => t('You have received a %thing of %amountr from your %PROJECT community for %purpose.'),
 //  'got fine' => t('Your %PROJECT community charged you a fee of %amountr for %purpose.'),
@@ -201,6 +202,7 @@ EOF
   "can't cash incentives" => t("You can SPEND your incentive rewards (%rewards to date), but you can't cash them out. Your %RCREDITS balance available to exchange for US Dollars is %cashable."),
 //  "can't cash incentives" => t("Once you are an active participant, you can spend your incentive rewards (%balance to date), but you can't cash them out. Your rCredits balance available to exchange for US Dollars is $0."),
 //  'get r/usd' => t('You can get only "r" or "usd" (rCredits or US Dollars).'), // not yet used (maybe used when there is a third option)
+  'no receive invest' => t('You do not have permission to receive funds through %PROJECT. If you would like to participate in the Investment Club, click "Sell" under Next Steps to get started.'),
   'not a feature' => t('"%feature" is not a feature.'),
   'wrong nonce' => t('That is not the expected confirmation response. Try again (start over).'),
   'no self-trading' => t("You can't do a transaction with yourself."), // also includes relations, switching accounts, etc.

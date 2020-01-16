@@ -29,6 +29,13 @@ function formAdminPanel($form, &$sta, $args = '') {
   extract(just('qid', $args));
   global $mya;
   if (!$mya->cAdmin) hack('panel');
+  
+  if ($mya->superAdmin) { // do periodic stuff that only superAdmin can do
+    foreach ($kids = db\col('uid', 'users', ':IS_UNDERAGE') as $uid) { // underage bit got set when activating account
+      $a = r\acct($uid);
+      if (time() - $a->dob >= MATURITY * YEAR_SECS) $a->setBit(B_UNDERAGE, FALSE); // unset bit (youngster is now of age)
+    }
+  }
 
   $tables = 'users txs usd recurs proxies relations invites'; // tables to show
   $queries = [

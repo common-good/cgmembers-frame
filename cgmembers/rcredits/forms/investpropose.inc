@@ -15,11 +15,9 @@ define('INVEST_ALLFLDS', 'company ' . INVEST_COFLDS . ' bizCats ' . INVEST_FLDS)
  */
 function formInvestPropose($form, &$sta, $args = '') {
   global $mya;
-///  extract(just('clubqid', $args));
-  if (!$mya->iclub) return w\go('/invest', t('not a club'));
   
   $title = t('Propose a New Investment');
-  $subtext = t('Complete this form if you have been assigned by your Investment Club steering committee to research the soundness of a proposed investment. <%a>Here is a printable worksheet</a> you can use to gather the necessary information.', '_a', atag('http://cg4.us/docs/investment-worksheet.pdf'));
+  $subtext = t('Complete this form if you have been assigned by your Investment Club steering committee to research the soundness of a proposed investment. <%a>Here is a printable worksheet</a> you can use to gather the necessary information.', '_a', atag('http://cg4.us/doc/investment-worksheet.pdf'));
   $company = textFld(t('Company:'), [t('Company to invest in'), t('Choose a %PROJECT member company (or type its account ID) or <%a>click here</a> to add them.', '_a', 'a id="add-co"')], required());
   $fullName = textFld(t('Company:'), [t('The company\'s full name')]);
   $city = textFld(t('City:'), [t('City where company is located')]);

@@ -159,6 +159,7 @@ Scenario: A trial company account manager creates a discount
   And we show "Verify Your Email Address"
   And member ".AAA" steps left "verifyemail"
   
+Skip NO! trial companies can't pay
 Scenario: A member makes a payment from a trial company account
   Given members:
   | uid       | .AAA           |**

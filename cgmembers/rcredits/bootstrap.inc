@@ -1130,7 +1130,7 @@ function sceneId() {global $sceneTest; return $sceneTest ? "$sceneTest->module/$
  *   Multiple message indices are separated by '|'.
  *   But if the string starts with '|', discard it and treat all vertical bars as simple characters.
  */
-function t($string, $subs0 = []) {
+function t($string = '', $subs0 = []) {
   global $language, $channel;
   static $custom_strings;
 

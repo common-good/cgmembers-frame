@@ -1489,12 +1489,9 @@ function form_execute_handlers($type, &$form, &$form_state) {
   // If there was a button pressed, use its handlers.
   if (isset($form_state[$type . '_handlers'])) {
     $handlers = $form_state[$type . '_handlers'];
-  }
-  // Otherwise, check for a form-level handler.
-  elseif (isset($form['#' . $type])) {
+  } elseif (isset($form['#' . $type])) { // Otherwise, check for a form-level handler.
     $handlers = $form['#' . $type];
-  }
-  else {
+  } else {
     $handlers = array();
   }
 
@@ -1508,11 +1505,13 @@ function form_execute_handlers($type, &$form, &$form_state) {
       // See _batch_next_set().
       $batch['sets'][] = array('form_submit' => $function);
       $batch['has_form_submits'] = TRUE;
-    }
-    else {
+    } else {
       $formName = strtr($function, ['CG\\Web\\form' => '', '_validate' => '', '_submit' => '']);
       $file = strtolower(R_ROOT . "/forms/$formName.inc");
       if (file_exists($file)) include_once $file; // cg 2018-05-14
+      foreach ($form_state['input'] as $k => $v) {
+        if (nn($form[$k]['#type']) == 'textfield' and !is_array($form_state['input'][$k])) $form_state['input'][$k] = trim($v);
+      }
       $function($form, $form_state);
     }
     $return = TRUE;

@@ -93,7 +93,7 @@ function formSummary($form, &$sta) {
 //    $savings = item(u\fmtAmt($mya->rewards) . $rewardNote, t('Credit Line:'), $rewardDesc);
     $suffix = ($mya->debt or $mya->depends or !$mya->refill) ? '' : t(' (<%a>Click here</a> to let your balance go negative.)', '_a', 'a id="activate-credit"');
     list ($credit, $normally) = $mya->depends ? ['$0', t(' (normally)')] : [u\fmtAmt(-$mya->floor), ''];
-    $creditLine = item($credit, t('Credit Line:'), t('Based%normally on your account\'s average monthly activity over the past 6 months.', compact('normally')), w\suffix($suffix));
+    $creditLine = $mya->underage ? NULL : item($credit, t('Credit Line:'), t('Based%normally on your account\'s average monthly activity over the past 6 months.', compact('normally')), w\suffix($suffix));
 //    $committed = item(u\fmtAmt(max(0, $mya->committed)), t('Committed:'), t('reserved for donation to Common Good Finance'));
 
 /*    $successes = db\count('users', 'helper=:myid AND activated<>0', compact('myid'));
@@ -142,8 +142,10 @@ function formSummary_validate($form, &$sta) {
   global $mya;
 
   if (in(op($sta), 'openCompany openJoint')) return;
-  extract(just('uid legalName creditLimit rTrader helper mediaConx moves tickle adminable', $sta['input']));
+  extract(just('uid legalName creditLimit dob rTrader helper moves tickle adminable', $sta['input']));
   if (nn($tickle, NULL) !== '' and $err = u\badDate($tickle)) return say($err, 'tickle');
+
+  if (nn($dob) and !formBasic_validate($form, $sta, FALSE, 'dob')) return;
   
 /*  if (in(nn($federalId), [R_ON_FILE, t('SSN')])) {
     unset($sta['input']['federalId']);
@@ -154,11 +156,16 @@ function formSummary_validate($form, &$sta) {
     $helper = $h->id;
   } else {unset($helper); unset($sta['input']['helper']);}
 
-  if (@$rTrader and !$mya->ok and !$mya->isCtty) {
+  if (@$rTrader and !$mya->ok and !$mya->isCtty) { // activating
     if (!@$helper) return say(t('You must specify who gets the helper reward.'), 'helper');
 //    if (!@$helper or $helper == 1) return say(t('You must specify who gets the helper reward.'), 'helper');
     if (!$mya->member and is_null(nn($adminable[B_MEMBER], NULL))) return say(t('That account is not READY (not a member).'), 'adminable'); // test "is_null" because 0 is the value when set
-    if (!$mya->confirmed) say(t('NOTE: Member %helperName has not yet confirmed this invitation.', 'helperName', $h->fullName));
+    if (!$mya->confirmed and $mya->helper != 1) say(t('NOTE: Member %helperName has not yet confirmed this invitation.', 'helperName', $h->fullName));
+    if (!$mya->co and !nn($dob)) return say(t('You cannot activate the account without a date of birth.'), 'dob');
+  }
+
+  if (!@$rTrader and $mya->ok) { // de-activating
+    if ($mya->balance + 0) return say(t('You cannot de-activate an account with a non-zero balance.'), 'err');
   }
 
   foreach (ray('creditLimit') as $k) {
@@ -167,9 +174,7 @@ function formSummary_validate($form, &$sta) {
       $$k = u\cleanAmount($$k);
     }
   }
-  if (@$rTrader and isset($mediaConx) and $err = u\badAmount($mediaConx, '>=0', 0)) return sayFieldErr($err, 'mediaConx');
   if (isset($moves) and $err = u\badAmount($moves, '>=0', 0)) return sayFieldErr($err, 'moves');
-//  if (@$who and !$who = whois($who, 'who', $sta['input'])) return say(t('I don\'t know what account you mean to go to.'), 'who');
   u\preray(@compact(ray('tickle helper who creditLimit')), $sta['input']);
 }
 
@@ -180,7 +185,7 @@ function formSummary_submit($form, &$sta) {
   if (!$mya->admin2) return; // hack attempt
   if ($op == 'secureMsgs') return w\go('', showSecureMessages());
 
-  extract($args = just('uid who legalName creditLimit tickle note notes helper mediaConx moves rTrader risks adminable', $sta['input']));
+  extract($args = just('uid who legalName creditLimit tickle note notes dob helper mediaConx moves rTrader risks adminable', $sta['input']));
   if (!$mya->cAdmin) u\EXPECT(!array_diff(array_keys($args), ray('uid tickle note')), 'too many unpermitted changing fields in ' . pr($args));
 
   if (!@$tickle) {
@@ -191,36 +196,30 @@ function formSummary_submit($form, &$sta) {
   }
   if (@$note) $notes = $mya->stampNote($note) . (isset($notes) ? $notes : $mya->notes);
 
-  $aa = $mya->agentA;
-  /*
-  if (@$who and ($who->community == $aa->community or $aa->id == 1)) {
-    svar('myid', $who->id); // make it the new current account
-    list ($newAcct, $oldAcct) = array($who->fullName, $mya->fullName);
-    return say('changed account|lost old changes', compact('newAcct', 'oldAcct'));
-  } 
-  */
-  
   $DBTX = \db_transaction();
 
+  if (nn($dob)) $mya->update(compact('dob')); // must precede activate()
+  if (nn($federalId) and $federalId != $mya->federalId) {
+    $mya->update(compact('federalId'));
+    $mya->update('ssnData', '');
+  }
+  
   if ($mya->cAdmin or $mya->admin) setRisksAndFlags($mya, @$risks, @$adminable); // don't test for isset (allow turning off all bits); must precede activate() because that function sets ssnOff bit
     
   if (!$mya->isCtty) {
     $fullName = $mya->fullName;
-    if (FALSE and !$mya->confirmed and @$helper and @$helper != $mya->helper) { // helper has not confirmed yet (must be self-signup)
+    if (FALSE and !$mya->confirmed and @$helper and @$helper != $mya->helper) { // self-signup
       $_a1 = r\acct($helper)->makeDo('confirmInvite', $mya->id); // link to confirm invitedness
       r\message($helper, 'confirm invite', compact('_a1', 'fullName')); // ask inviter to confirm
     }
 
-    if (@$rTrader and !$mya->ok) {
-      activate($helper);
-    } elseif (@$federalId and $federalId != $mya->federalId) $mya->update('ssnData', '');
+    if (@$rTrader and !$mya->ok) activate($helper);
   }
 
   if (isset($rTrader)) $mya->setBit(B_OK, @$rTrader);
   if (!nn($helper)) unset($helper); // don't overwrite if too late or empty
-//  $floor = -$creditLimit; // floor is calculated automatically
-  $mya->update(@compact(ray('legalName federalId tickle notes helper mediaConx moves')));
- 
+
+  $mya->update(@compact(ray('legalName tickle notes helper mediaConx moves')));
   unset($DBTX);
   
   say('info saved');
@@ -254,18 +253,22 @@ function activate($helper) {
   
   if ($firstTime = !$mya->activated) { // first time activation
 //      u\EXPECT($mya->superAdmin, 'initial activation is only for superadmin');
-    $mya->update('activated', now() - 1); // must precede update of vsecure, so it gets V-encrypted
-    $mya->update('vsecure', $mya->vsecure); // hyper-encrypt
+    u\EXPECT($mya->co or $mya->dob, 'no dob!');
+    // setting B_UNDERAGE must precede update of vsecure, because dob gets V-encrypted
+    if (!$mya->co and time() - $mya->dob < MATURITY * YEAR_SECS) $mya->setBIT(B_UNDERAGE);
+    $mya->update('activated', now() - 1); // this signals it's time to V-encrypt
+    $mya->update('vsecure', $mya->vsecure); // V-encrypt
     $mya->eachPartner(function($coA, $zot, $custCode) { // tell partner: account is activated
       if ($api = $coA->api()) u\post($api, ray('partnerCode qid op name', $coA->emailCode, $mya->mainQid, 'complete', $mya->fullName));
     });
     $msg = 'approved';
 //    if (!$mya->confirmed) $msg .= ($helper > 1 ? '|must confirm' : '|in person');
-    if (!$mya->confirmed) $msg .= '|must confirm';
+    if (!$mya->confirmed) $msg .= ($mya->helper == 1 ? '|must confirm uninvited' : '|must confirm');
     if (!$mya->co and !$mya->stepsDone('card')) $msg .= '|suggest card';
     $subs = ray('inviterName youName specifics', @$mya->helperA->fullName, $mya->fullName, getSpecifics($mya));
     
     r\message($mya->id, $msg, $subs);
+    
   }
 
   if ($firstTime and !$mya->co) { // no bonus or helper bonus for a company signing up

@@ -37,7 +37,7 @@ function formPhoto($form, &$sta, $arg = '') {
       extract(w\setupFoot()); // be sure new member has a chance to continue
     } else {$nextStep = item(w\skipButton());}
     $desc = $mya->co
-    ? t('<p>1. Choose a picture to represent your company in %PROJECT promotions.</p>')
+    ? t('<p>1. Choose a picture to represent your company in %PROJECT promotions. You will then resize and crop to fit it in the box (%R_PHOTO_WIDTHpx tall by %R_PHOTO_HEIGHTpx wide).</p>')
     : t('<p>1. Choose a recent color picture of yourself for your photo-ID %PROJECT card. Your photo will be encrypted and will not be visible to other members (unless you show it to them).<%b>Requirements</b>:
     <ul>
     <li>It should be a color photo of you and only you (you can crop other people out).</li>
@@ -46,7 +46,7 @@ function formPhoto($form, &$sta, $arg = '') {
     $desc .= t('<p>2. Drag to reposition, use the buttons to adjust size and rotation, then click the <%img>button to upload. Please feel free to %emailIt, if that is easier for you.', '_b _emailIt _img', 'b class="crop-button"', $emailIt, "img src=\"$rUrl/images/icons/green-checkmark.png\" height=\"20\" /");
   }
   
-  $title = t('Photo ID Picture');
+  $title = $mya->co ? t('Company Photo') : t('Photo ID Picture');
 
   if ($mya->hasPhoto) {
     $choose = t('Choose a New Photo');

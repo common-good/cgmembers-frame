@@ -29,7 +29,7 @@ Scenario: A member connects a bank account during signup
 #  | Min Transfer: | | |
 #  | Save Weekly:  | | |
 
-  When member ".ZZA" completes form "connect" with values:
+  When member ".ZZA" completes form "settings/fund" with values:
   | op      | connect | routingNumber | bankAccount | bankAccount2 | refills | chox |*
   | Connect |       2 | 211870281     | 1234        | 1234         |       0 |    3 |
   And member ".ZZA" visits page "settings/fund"

@@ -31,11 +31,12 @@ Scenario: A member visits the contact info page
 
 Scenario: A member updates contact info
   When member ".ZZA" confirms form "settings/contact" with values:
-  | fullName | phone        | country | zip   | state | city    | address   | postalAddr | email | tenure |*
-  | Abe One  | 413-253-0001 | US      | 01002 | MA    | Amherst | 2 Elm St. | PO Box 1   | a@    |     18 |
+  | fullName     | phone        | country | zip   | state | city    | address   | postalAddr | email | tenure |*
+  | %_ Abe One%_ | 413-253-0001 | US      | 01002 | MA    | Amherst | 2 Elm St. | PO Box 1   | a@    |     18 |
+  # %_ is a space (make sure leading and trailing spaces are ignored)
   Then members:
-  | uid  | fullName   | address   | city    | state | zip   | country | postalAddr | phone       | email |*
-  | .ZZA | Abe One    | 2 Elm St. | Amherst | MA    | 01002 | US      | PO Box 1   | 14132530001 | a@    |
+  | uid  | fullName | address   | city    | state | zip   | country | postalAddr | phone       | email |*
+  | .ZZA | Abe One  | 2 Elm St. | Amherst | MA    | 01002 | US      | PO Box 1   | 14132530001 | a@    |
   And we say "status": "info saved"
   
 Scenario: A member gives a bad phone

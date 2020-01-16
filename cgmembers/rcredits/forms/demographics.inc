@@ -17,9 +17,10 @@ function formDemographics($form, &$sta) {
   $count = count($uids);
   if ($count < AGGREGATE_MIN) return w\go('/history/company-reports', t('There are not enough customers (%count) to show demographics (minimum %AGGREGATE_MIN).', compact('count')));
   
+  $ages = [];
   foreach ($uids as $id) {
     $a = r\acct($id);
-    $ages[] = (now() - $a->dob) / YEAR_SECS;
+    if ($a->hasDob) $ages[] = date('Y') - $a->yob;
     if ($a->created >= $statStart) {
       $tenures[] = $a->tenure;
       $owns[] = $a->owns ? 1 : 0;

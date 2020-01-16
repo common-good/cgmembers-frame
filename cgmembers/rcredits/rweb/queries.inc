@@ -13,7 +13,7 @@ use CG\Util as u;
  * Note: query names cannot contain any of the following characters: /&? (because they confuse the url).
  */
 
-$bizQ = 'SELECT uid as payee, goods, SUM(amount) AS tot, COUNT(*) AS cnt FROM tx_entries JOIN tx_hdrs USING (xid) WHERE goods=:FOR_GOODS AND created BETWEEN';
+$bizQ = 'SELECT uid as payee, goods, SUM(IF(amount>0,amount,0)) AS sales, SUM(IF(amount<0,amount,0)) AS payments, COUNT(*) AS cnt FROM tx_entries JOIN tx_hdrs USING (xid) WHERE goods=:FOR_GOODS AND created BETWEEN';
 $gifts = "r.amount * IF(period='M', 12, IF(period='Q', 4, 1))";
 $source = "TRIM(REPLACE(REPLACE(source,'knows: self ()', ''), '-', ' '))";
 
@@ -50,16 +50,16 @@ $queries = [
     WHERE :ctty IN (u1.community, u2.community)",
     
 
-  B_CO . t('Monthly Business Income (30 day totals)') => 
+  t('Company Income and Payments - 30 day totals') => 
     "SELECT LEFT(u.fullName, 42) AS company,
-            t0.tot AS `total $`, t0.cnt AS `count`,
-            t6.tot AS `total $ 6mos ago`, t6.cnt AS `count6`,
-            t12.tot AS `total $ 12mos ago`, t12.cnt AS `count12`
+            t0.sales AS `sales $`, t0.payments AS `payments $`, t0.cnt AS `count`,
+            t6.sales AS `sales $ 6mos ago`, t6.payments AS `payments $ 6mos ago`, t6.cnt AS `count6`,
+            t12.sales AS `sales $ 12mos ago`, t12.payments AS `payments $ 12mos ago`, t12.cnt AS `count12`
      FROM users u 
      LEFT JOIN ($bizQ :NOW-30*:DAY_SECS AND :NOW GROUP BY payee) t0 ON t0.payee=u.uid
      LEFT JOIN ($bizQ :NOW-(180+30)*:DAY_SECS AND :NOW-180*:DAY_SECS GROUP BY payee) t6 ON t6.payee=u.uid
      LEFT JOIN ($bizQ :NOW-:YEAR_SECS-30*:DAY_SECS AND :NOW-:YEAR_SECS GROUP BY payee) t12 ON t12.payee=u.uid
-     WHERE u.community=:ctty AND :IS_CO AND :IS_OK AND t0.cnt>0 AND fullName NOT LIKE '%457%' ORDER BY u.fullName",
+     WHERE u.community=:ctty AND :IS_CO AND :IS_OK AND t0.cnt>0 AND fullName NOT LIKE '%457%' ORDER BY t0.sales DESC",
 
   t('Positive and Negative Balance Totals') => 
     "SELECT c.fullName AS community, 
@@ -112,38 +112,37 @@ $queries = [
   2 . t('Where Do Our Members Hear About %PROJECT') => <<< X
     SELECT 
       IF(helper in (0,1), 
-        IF(source LIKE '%presentation%' OR source LIKE '%talk%', '* Presentation',
-        IF(source LIKE '%internet%' OR source LIKE '%web%' OR source LIKE '%google%', '* Web',
-        IF(source LIKE '%friend%' OR source LIKE '%mouth%', '* Word of Mouth',
-        IF(source LIKE '%facebook%', '* Facebook',
-        IF(source LIKE '%twitter%', '* Twitter',
-        IF(source LIKE '%ujima%', '* Ujima Project',
-        IF(source LIKE '%various%' OR source LIKE '%multiple%', '* Various',
-        IF(source LIKE '%article%' OR source LIKE '%gazette%' OR source LIKE '%recorder%' OR source LIKE '%news%', '* News',
-        IF(1, '* Other', LEFT($source, LOCATE(' ', CONCAT($source, ' ')) - 1))
+        IF(source LIKE '%presentation%' OR source LIKE '%talk%', '"Presentation"',
+        IF(source LIKE '%internet%' OR source LIKE '%web%' OR source LIKE '%google%', '"Web"',
+        IF(source LIKE '%friend%' OR source LIKE '%mouth%', '"Word of Mouth"',
+        IF(source LIKE '%facebook%', '"Facebook"',
+        IF(source LIKE '%twitter%', '"Twitter"',
+        IF(source LIKE '%ujima%', '"Ujima Project"',
+        IF(source LIKE '%various%' OR source LIKE '%multiple%', '"Various"',
+        IF(source LIKE '%article%' OR source LIKE '%gazette%' OR source LIKE '%recorder%' OR source LIKE '%news%', '"News"',
+        IF(1, '"(Other)"', LEFT($source, LOCATE(' ', CONCAT($source, ' ')) - 1))
         )))))))),
-        IF((SELECT SUM(1) FROM users h WHERE h.helper=u.helper) > 4, helperName, '* Invited')
+        IF((SELECT SUM(1) FROM users h WHERE h.helper=u.helper) > 4, helperName, 'Invited by Other')
       ) AS origin,
       SUM(IF(:IS_OK, 1, 0)) AS member,
       SUM(IF(:IS_OK OR uid IS NULL, 0, 1)) AS stuck,
-      SUM(IF(uid IS NULL, 1, 0)) AS canceled,
       SUM(IFNULL(r.amount, 0) * IF(r.period='Y', 1, IF(r.period='Q', 4, IF(r.period='M', 12, IF(r.period='W', 52, 0)))))
-        / SUM(IF(:IS_OK OR data LIKE '%"donate";b:1%', 1, 0)) AS avgYearlyGift$,
+        / SUM(IF(:IS_OK OR data LIKE '%"donate";b:1%', 1, 0)) AS avgYearlyGiftDollars,
       SUM(IF(:IS_ROUNDUP, 1, 0))
         / SUM(IF(:IS_OK OR data LIKE '%"prefs";b:1%', 1, 0)) AS avgRoundup,
       SUM((SELECT SUM(1) FROM r_invites i WHERE i.inviter=u.uid))
-        / SUM(IF(:IS_OK, 1, 0)) AS invited
+        / SUM(IF(:IS_OK, 1, 0)) AS eachInvited
     FROM (
       SELECT uid,helper,source,flags,data,created FROM users
       UNION SELECT NULL AS uid, NULL AS helper, source, 0 aS flags, '' AS data, created FROM signup s0 
-        WHERE (SELECT 1 FROM users u0 WHERE u0.fullName=s0.fullName) IS NULL
+        WHERE (SELECT 1 FROM users u0 WHERE u0.fullName=s0.fullName LIMIT 1) IS NULL
     ) u
     LEFT JOIN r_recurs r ON r.payer=u.uid AND r.payee=:CGID AND r.ended=0
     LEFT JOIN (SELECT uid AS helper,fullName AS helperName FROM users) h USING(helper)
     GROUP BY origin
-    ORDER BY origin
+    ORDER BY member
 X
-  . '~',
+  . '~For each origin, members = the number of members that came from there; stuck = the number of people who started to join but stopped; avgRoundup = the average number who chose roundups; eachInvited = the average number of people members from that origin have invited. Origins in quotes are what the member told us in the "Referred by" field.',
   
 ];
 
@@ -175,9 +174,19 @@ WHERE u.:IS_CO AND t.uid IS NULL ORDER BY community
   eachA(function ($a) {
     $gift = $a->giftsDesc();
     $bank = $a->hasBank ? '' : t('(NO BANK)');
-    echo "$a->mainQid $a->fullName: $gift -- $a->postalAddr $bank<" . 'br><' . 'br>';
+/** / echo "$a->mainQid $a->fullName: $gift -- $a->postalAddr $bank<" . 'br><' . 'br>';
 
 //    list ($address, $city, $state, $zip) = u\parseAddr($a->postalAddr);
 //    echo "$a->fullName;$address;$city, $state $zip<" . 'br>';
   }, 'NOT :IS_CO AND NOT :IS_CARDED AND :IS_MEMBER ORDER BY fullName');
+  
+  // duplicated by Monthly Company Income and Payments
+  $recentSecs = 'GREATEST(1, LEAST(6*:MONTH_SECS, :NOW-u.activated))'; // for company monthly sales and payments (past 6 months)
+  t('Company Monthly Sales and Payments') =>
+    "SELECT fullName AS company, 
+      sum(IF(uid2=uid, amt2, 0))*MONTH_SECS/$recentSecs as sales, 
+      sum(IF(uid1=uid, amt1, 0))*MONTH_SECS/$recentSecs AS payments
+    FROM users u JOIN txs t ON uid IN (uid1, uid2) 
+    WHERE u.IS_CO AND u.activated AND t.created>:NOW-$recentSecs
+    ORDER BY sales DESC",  
 */

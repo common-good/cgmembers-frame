@@ -436,7 +436,7 @@ function doCompanyFlags($info) {
   $res = 0;
   foreach (ray($coFlags) as $one) {
     $flag = u\bit(u\consta('co', $one));
-    if (in($one, APP_CAN_BIT_NAMES)) $flag <<= APP_CANS;
+    if (in($one, APP_CAN_BIT_NAMES)) $flag <<= APP_CANS; // this probably fails (see rsmart.steps instead)
     $res |= $flag;
   }
   return $a->update('coFlags', $res);
@@ -900,7 +900,7 @@ function makePicture($photo, $a) {return $a->update(compact('photo'));}
  * Send an RPC API request to the server, for rPOS.
  * @todo: after everyone is up to version 217, add penultimate param: $proof = 'calc'
  */
-function hitServer($op, $extra = [], $agent, $device = '', $version = 221) {
+function hitServer($op, $extra = [], $agent, $device = '', $version = 230) {
   global $rposResult;
   if ($agent) $agent = t\fullQid2($agent);
   extract(just('amount member code created proof goods', $extra));
@@ -983,7 +983,7 @@ function logIn($id) {
   if ($id != '?') {
     list ($qid, $agt, $zot) = explode(':', "$id::"); // in case company:agent
     $a = r\acct(t\fullQid($qid), $agt ? t\fullQid($agt) : '');
-    if (!u\isAcct($a)) return t\output("id not account: $id");
+    if (!u\isAcct($a)) return t\output("id not account: $id (qid=$qid agt=$agt)");
     if ($a != $mya) {
       w\signout(TRUE);
       if (!$a->proSe) r\setAcct($a->agentId); // get agent first, if not proSe
@@ -1088,11 +1088,11 @@ function completeForm($id, $page, $values = '', $confirmed = FALSE) {
 
   $sta['values'] = $sta['input'] = $values + $dfts; // add to whatever status the form left off in
   $fieldErr = FALSE; // no field errors yet
-  if (!@$lastGo or @$lastGo == $xlastGo) foreach (t\postProcess($form, $page, 'validate') as $one) $one($form, $sta);
+  if (!@$lastGo or @$lastGo == $xlastGo) form_execute_handlers('validate', $form, $sta);
   $lastIdentifierTag = '</div identifiers>';
   if ($i = strpos($testConfirmation, $lastIdentifierTag)) $testConfirmation = substr($testConfirmation, $i + strlen($lastIdentifierTag));
   if ($fieldErr) return TRUE; // no submit if field error
-  if (!@$lastGo or @$lastGo == $xlastGo) foreach (t\postProcess($form, $page, 'submit') as $func) $func($form, $sta);
+  if (!@$lastGo or @$lastGo == $xlastGo) form_execute_handlers('submit', $form, $sta);
 
   return TRUE;
 }
@@ -1536,12 +1536,13 @@ function weMessage($index, $id, $subs) {
     if ($t_uid == $uid and $t_index == $index) {
       $matching = true;
       foreach ($subs as $k => $v) if ($v != '?' and @$t_subs[$k] != $v) {
+        t\output("Wanted $k=\"$v\". Got " . @$t_subs[$k]);
         $matching = FALSE; break;
       }
       if ($matching and !preg_match('/[@\{]/', @$t_topic)) return TRUE;
     }
   }
-  return t\output('Expected: ' . pr(compact(ray('index id uid subs'))) . '<br>Got: ' . pr($testMessages));;
+  return t\output('Overall wanted: ' . pr(compact(ray('index id uid subs'))) . '<br>Got: ' . pr($testMessages));;
 }
     
 /**

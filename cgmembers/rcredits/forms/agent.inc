@@ -25,30 +25,30 @@ function formAgent($form, &$sta, $args = '') {
   extract(ssnFields(!$mya->co, required()));
   $submit = t('Next');
   
-  return cgform(compact(ray('title subtext agent phone coType legalName federalId submit'))); // not setupFoot (don't skip this step)
+  return cgform(compact(ray('title subtext agent phone coType legalName federalId dob submit'))); // not setupFoot (don't skip this step)
 }
 
 function formAgent_validate($form, &$sta) {
   global $mya;
-  extract(just('agent phone federalId', $sta['input']));
+  extract(just('agent phone federalId dob', $sta['input']));
 
   $agent = strtoupper(trim($agent));
   if (!$a = r\acct($agent) or $a->co or !$a->member) return say(t('That is not an account ID of a completed personal account.'), 'agent');
   if ($err = u\badPhone($phone)) return say($err, 'phone');
   if ($phone != $a->phone) return say(t('The phone number on that account does not match.'), 'phone');
-  if (!formBasic_validate($form, $sta, TRUE, 'federalId')) return;
+  if (!formBasic_validate($form, $sta, TRUE, 'federalId dob')) return;
   u\preRay(compact(ray('agent phone')), $sta['input']);
 }
 
 function formAgent_submit($form, &$sta) {
   global $mya;
-  extract(just('agent coType legalName federalId', $sta['input']));
+  extract(just('agent coType legalName federalId dob', $sta['input']));
 
   $a = r\acct($agent);
   $mya->newRelation(ray('other permission', $a->id, r\perm(B_MANAGE)));
   $mya->setBit('depends', FALSE);
   $helper = $a->id; // make sure agreement is shown with proper suggested signer
-  $mya->update(compact(ray('coType helper legalName federalId')));
+  $mya->update(compact(ray('coType helper legalName federalId dob')));
 
   return w\goNextStep('agent');
 }

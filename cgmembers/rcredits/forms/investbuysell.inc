@@ -7,14 +7,14 @@ use CG\Util as u;
 use CG\Db as db;
 
 /**
- * Buy or sell in investment club investment.
+ * Buy or sell an investment club investment.
  */
 function formInvestBuySell($form, &$sta, $args = '') {
-  global $mya;
+  global $mya; $clubid = $mya->id;
   
   extract(just('vestid', $args));
   
-  $q = db\q('SELECT i.coid, i.clubid, i.types, i.price, COUNT(shid) AS `count`, SUM(shares) AS shares, SUM(pending) AS pending FROM r_investments i LEFT JOIN r_shares s ON s.vestid=i.vestid WHERE i.vestid=:vestid', compact('vestid'));
+  $q = db\q('SELECT i.coid, i.types, i.price, COUNT(shid) AS `count`, SUM(shares) AS shares, SUM(pending) AS pending FROM r_investments i LEFT JOIN r_shares s ON s.vestid=i.vestid WHERE i.vestid=:vestid AND i.clubid=:clubid', compact(ray('vestid clubid')));
   if (!$res = $q->fetchAssoc()) return w\go('/page-not-found');
 
   extract($res);
@@ -32,7 +32,7 @@ function formInvestBuySell($form, &$sta, $args = '') {
   <p>Complete this form to increase or decrease the club's %what %coName.</p>
   <p>Once you have finished all your club's planned selling and buying for this cycle, click <%a>Distribute Profits</a> here or on the main Investment page, to share the club's profits with club members and %PROJECT.</p>
 X
-    , 'what coName _a', $what, r\acct($coid)->fullName, atag('/invest/distribute'));
+    , 'what coName _a', $what, r\acct($coid)->fullName, atag('/invest/dividends'));
 
   $ifSelling = $shares ? t('If you reduce your investment, it will take effect when the company pays the invoice.') : '';
   $ifSellingMore = $pending ? t('  Whatever reduction you request here will be added to your current pending requests.') : '';

@@ -17,13 +17,11 @@ function formVerifyId($form, &$sta, $args = '') {
 
   $title = t('Identity Verification');
   $subtext = t('As a registered Money Services Business, we are required by law to verify your identity. Fortunately, we have <%aSecure>top notch security</a>. How do you want to do it?', '_aSecure', atag(r\promoLink('about-us/privacy-and-security')));
-  $methodChoices = ray(t('Upload driver\'s license.,Upload other state-issued photo ID.,Type your social security number and birth date. This is required by the IRS if you are going to be <i class="loud">accepting</i> payments through %PROJECT.'));
+  $methodChoices = ray(t('Upload driver\'s license.,Upload other state-issued photo ID.,Type your social security number and birth date. This is required by the IRS if you are going to be <i class="loud">accepting</i> payments through %PROJECT (including receiving rebates).'));
   $field = radiosFld(' ', '', required(-1), $methodChoices);  
   $idtype = textFld(t('ID Type:'), [t('Type of ID')]);
   $file = fileFld(t('ID File:'), t('Take a photo of your ID and upload it here (or email it us at %CGF_EMAIL).'));
   extract(ssnFields(!$mya->co), FALSE);
-//  $dob = textFld(t('Birth Date:'), [t('Your birth date'), t('Your date of birth (mm/dd/yyyy)')], autofill('off'));
-//  $federalId = passFld(t('Soc Sec #:'), [t('ssDesc')], autofill('off'));    
   jsx('verifyid', compact('method'));
 
   $form = compact(ray('title subtext field idtype file federalId dob')) + w\setupFoot(t('Submit'), [], TRUE);
@@ -41,11 +39,14 @@ function formVerifyId_validate($form, &$sta) {
 
   foreach (ray('name type tmp_name error size') as $k) $$k = $_FILES['files'][$k]['file'];
   if ($size > MAX_ID_SIZE * 1024 * 1024) return say(t('That file is too big. It must be under %MAX_ID_SIZE MB'), 'err');
-  $path = dirname($tmp_name) . "/$name";
+  if ($error) return say(t('File upload failed. Maybe try emailing it?'), 'err');
+  $mimetype = mime_content_type($tmp_name);
+  $ext = explode('/', $mimetype )[1];
+  $path = dirname($tmp_name) . "/$mya->mainQid.$ext";
+  u\deleteFile($path);
   rename($tmp_name, $path);
 
-  $mimetype = mime_content_type($path);
-  $sta['input']['filedata'] = serialize(compact(ray('name path mimetype type error size idtype')));
+  $sta['input']['filedata'] = serialize(compact(ray('path mimetype type error size idtype')));
 }
 
 function formVerifyId_submit($form, &$sta) {

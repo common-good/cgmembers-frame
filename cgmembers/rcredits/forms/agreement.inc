@@ -78,7 +78,8 @@ function formAgreement_submit($form, &$sta) {
   global $mya;
   $signed = now();
 //  extract(just('signedBy', $sta['input']));
-  $signedBy = $mya->agentA->fullName;
+  $aa = ($mya->cAdmin or ($mya->co and $mya->proSe)) ? $mya->helperA : $mya->agentA;
+  $signedBy = $aa->fullName;
   $mya->update($info = compact('signed', 'signedBy'));
   return w\goNextStep('agree');
 }

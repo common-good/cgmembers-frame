@@ -20,9 +20,9 @@ function formCoupons($form, &$sta, $args = '') {
     $submit = t('Redeem');
   } elseif (@$type == 'gift') {
     $title = t('Create a Gift Certificate');
-    $subtext = t('Each gift certificate is assigned a <b class="loud">unique code</b>. Print this sheet only once and do not photocopy it.');
+    $subtext = t('Each gift certificate is assigned a <b class="loud">unique code</b>. The "Count" is the number of gift certificates you want; for example if you want a gift certificate for just one person, type "1". Print the sheet of certificates only once and do not photocopy it.');
     $amount = textFld(t('Amount:'), [t('Gift amount')], required(@$amount ? u\fmtAmt($amount) : ''));
-    $count = textFld(t('Count:'), [t('How many?'), t('Print how many coupons? (8 to a sheet, to be cut in half 3 times)')], required());
+    $count = textFld(t('Count:'), [t('How many?'), t('Print how many coupons/recipients? (8 to a sheet, to be cut in half 3 times)')], required());
     $submit = t('Create');
   } elseif (@$type == 'discount') {
     $title = t('Create a Discount');

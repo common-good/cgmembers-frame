@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-define('R_VERSION', '3.51q'); // software version
+define('R_VERSION', '3.51u'); // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -141,7 +141,7 @@ define('R_MONEY_FLDS', 'balance rewards floor giftPot committed'); // financial 
 define('JOINT_FLDS', R_MONEY_FLDS . ' savings'); // add these together for joint accounts
 define('PSECURE_FLDS', 'phone email'); // personal fields that get encrypted in a searchable way (P)
 define('VSECURE_FLDS', 'federalId dob bankAccount'); // very secure fields (always soon pgp-encrypted within Acct::vsecure)
-define('SECURE_FLDS', 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode cardCode cardCode2 pin question answer idProof oneTimePass last4bank'); // non-personal encrypted fields (must be complete list)
+define('SECURE_FLDS', 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode cardCode cardCode2 pin question answer idProof oneTimePass last4bank yob'); // non-personal encrypted fields (must be complete list)
 define('R_HIDE_CHANGES', R_MONEY_FLDS . ' pw2 vKeyPw ssnData hasBank changes init login access activated data secure vsecure stepsDone steps stepsLeft lastiCode pass oneTimePass notes picture photo thumb trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd'); // do not record changes to these fields: anything often-changed (automatically or not)
 define('R_APP_DATA_GETS', '!log !device !members !txs '); // data requests from the rPOS app
 //  define('R_AVAIL_BUY', '(balance-IF(u.:IS_DEBT, floor, GREATEST(floor, 0)))'); // balance available to spend
@@ -283,8 +283,7 @@ define('R_DEPOSIT_RETURN_FEE', 20); // what we charge members for a second bounc
 define('HAS_REVERSER', "(EXISTS (SELECT tRev FROM tx_hdrs WHERE tRev.reverses=t.xid))");
 define('TRIALCO_LIMIT', 1000); // maximum payments received by a trial (dependent company) account
 define('EQUIP_DEPOSIT', 50); // dollar cost of equipment deposit
-
-define('R_USPS_WEB_TOOLS_ID', '921COMMO5331'); // USPS API credentials
+define('MATURITY', 21); // minimum age to have a credit limit
 
 // Filenames
 define('R_TEMPLATE_DIR', '/templates');
@@ -320,7 +319,7 @@ define('CO_BUY', 5);
 define('CO_u21', 6); // unused
 define('CO_MANAGE', 7); // this bit is not actually stored here, but pass B_MANAGE to the app in this position
 define('APP_CAN_BITS', 7); // number of bits for permissions (each: signed in and out)
-define('APP_AGENT_CANS', APP_CANS + APP_CAN_BITS); // company permission bits when signed IN (limited by agent)
+define('APP_AGENT_CANS', APP_CANS + APP_CAN_BITS); // company permission bits when signed IN (to be limited by agent perms)
 define('APP_CAN_MASK', pow(2, APP_CAN_BITS + 1) - 1); // the CANS bits -- signed-IN permission bits are 22-28
 define('CO_DFTS', '0 1 7 8 9 11 12'); // set these bits by default
 
@@ -369,7 +368,7 @@ define('B_u15', 15); //
 define('B_BYSMS', 16); // NYI notifications by SMS
 define('B_PAPER', 17); // will not accept electronic statements
 define('B_SECRET', 18); // don't let merchants tell me my balance on request
-define('B_u19', 19); //
+define('B_UNDERAGE', 19); // too young to have a credit line (needed because dob is accessible only to superAdmin)
 define('B_DEBT', 20); // member chose to permit sub-zero balances
 define('B_REINVEST', 21); // member chose to automatically reinvest investment club dividends and inflation adjustments
 define('B_SAVINGS', 22); // the connected bank account is a savings or money market account
@@ -383,7 +382,7 @@ define('B_CADMIN', 29); // is a community administrator
 define('B_ADMIN', 30); // is a system administrator -- can manage server, including assigning ctty admins, but cannot manage communities or individual accounts (except temporarily)
 define('B_MAX', 62); // maximum bit number
 define('B_ADMINABLE', 'member confirmed carded beta cAdmin cAdmin2 nonudge cgc invites rewardy noneg'); // for cAdmin to set
-define('B_LIST', 'member confirmed ok carded ided refill co draws roundup nonudge nosearch depends bankOk weekly monthly u15 bysms paper secret u19 debt reinvest savings cashoutW cashoutM beta u26 admin2 cAdmin2 cAdmin admin');
+define('B_LIST', 'member confirmed ok carded ided refill co draws roundup nonudge nosearch depends bankOk weekly monthly u15 bysms paper secret underage debt reinvest savings cashoutW cashoutM beta u26 admin2 cAdmin2 cAdmin admin');
 
 // community-specific flags
 define('B_CGC', 0); // ctty: is an official CGC (currently has no effect)

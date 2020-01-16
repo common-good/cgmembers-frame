@@ -33,7 +33,8 @@ set :local_user, "new-staging"
 # http://capistranorb.com/documentation/getting-started/configuration/
 # Feel free to add new variables to customise your setup.
 set :deploy_to, "/home/new-staging/cgmembers-frame"
-set :branch, "master"
+# set :branch, "master"
+ask :branch, "master"
 # ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp
 set :tmp_dir, "/home/new-staging/tmp"
 

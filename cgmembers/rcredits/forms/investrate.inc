@@ -6,31 +6,35 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
+include_once __DIR__ . '/invest.inc';
+
 /**
  * View or rate an investment.
  */
 function formInvestRate($form, &$sta, $args = '') {
   global $mya;
   extract(just('vestid clubqid', $args));
-  if (!nn($vestid) or !nn($clubqid) or !$clubid = r\acct($clubqid)) return w\go('/page-not-found');
+  if (!nn($vestid) or !$res = db\get('*', 'r_investments', compact('vestid')) or !nn($clubqid) or !$clubA = clubA($clubqid)) return w\go('/page-not-found');
   
-  $title = t('View or Rate Investment #%vestid', compact('vestid'));
+  $title = t('Investment #%vestid', compact('vestid'));
+  if ($mya->id != $clubA->id) $title = t('View or Rate ') . $title;
   $subtext = t('Numeric ratings are on a scale of 0-100');
 
-  $res = db\get('*', 'r_investments', compact('vestid'));
+  $equity = (strpos($res['types'], 'I') === FALSE);
+  $res['type'] = $equity ? t('Equity') : t('Loan');
   extract($res);
   $coA = r\acct($coid);
 
   $ks = ray('company city area dob gross desc');
-  $fields = ray('investment offering price return terms assets character strength web history soundness');
-  $ds = ray(t('Company, City, Service area, Founded, Annual gross, Co description, Project/Purpose, Offering size, Share price, Predicted return, Terms, Company assets, Owner character, Financial strength, Web presence, Repayment history, Overall soundness'));
+  $fields = ray('investment type offering price return terms assets character strength web history soundness');
+  $ds = ray(t('Company, City, Service area, Founded, Annual gross, Co description, Project/Purpose, Type, Offering size, Share price, Predicted return, Terms, Company assets, Owner character, Financial strength, Web presence, Repayment history, Overall soundness'));
   $ds = array_combine(array_merge($ks, $fields), $ds);
 
   $vs = [$coA->fullName, $coA->city, $coA->serviceArea, u\fmtDate($coA->dob, TRUE), $coA->gross, $coA->coDesc()];
   $vs = array_combine($ks, $vs); 
   foreach ($fields as $k) $vs[$k] = $res[$k]; // add investment record fields to $vs in the order of $fields (don't use just())
 
-  if (strpos($types, 'I') !== FALSE) {
+  if (!$equity) {
     $ds['offering'] = t('Target');
     unset($ds['price']);
     unset($vs['price']);
@@ -38,15 +42,17 @@ function formInvestRate($form, &$sta, $args = '') {
   }
   
   foreach (ray('gross assets offering') as $k) $vs[$k] = u\fmtAmt($vs[$k]);
-  $vs['return'] = number_format($vs['return'], 2) . '%';
+  $vs['return'] = u\fmtAmt($vs['return'], '%2');
   foreach ($vs as $k => $v) $ds[$k] = item($vs[$k], $ds[$k] . ':');
+  $goods = NULL;
 
   if ($mya->iclub or $shares = db\get('shares', 'r_shares', compact('vestid'))) { // is the club or already invested
     $value = item(u\fmtAmt(@$shares * $price), t('Value:'));
     $shares = item(u\fmtAmt(@$shares), t('Club\'s stake:'));
     if ($mya->iclub) {
       foreach (ray('good patronage') as $k) ${$k . 's'} = number_format(db\avg($k, 'r_ratings', compact('vestid')));
-      $goods = item($goods, t('Common Goodness:'));
+      $goodsMed = (int) db\med('good', 'r_ratings', compact('vestid'));
+      $goods = item(t('%goods (med %goodsMed)', compact(ray('goods goodsMed'))), t('Common Goodness:'));
       $patronages = item($patronages, t('Patronage:'));
       $comment = '<ul><li>' . db\lst('comment', 'r_ratings', compact('vestid'), NULL, "</li>\n<li>") . '</li></ul>';
       $comment = item($comment, t('Comments:'));

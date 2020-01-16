@@ -57,20 +57,24 @@ function badAmount(&$amount, $restriction = '', $fractionLimit = 2, $max = NULL)
   $amount = nn($new, 0) + 0;
   $dotPos = strpos($amount, '.');
   if ($dotPos !== FALSE and strlen($amount) > $dotPos + 1 + $fractionLimit) return 'too fractional';
-  if (is_null($max)) $max = R_MAX_AMOUNT;
-  if ($max !== '' and abs($amount) > $max) return t('amount too big', compact('max'));
   if ($restriction == '>0' and $amount <= 0) return 'nonpositive amount';
   if ($restriction == '>=0' and $amount < 0) return 'negative amount';
   if ($restriction == '!=0' and $amount == 0) return 'zero amount';
+
+  if (is_null($max)) $max = R_MAX_AMOUNT;
+  if ($max !== '' and abs($amount) > $max) return t('amount too big', compact('max'));
   return FALSE;
 }
 
 /**
  * Say whether a given date of birth is bad. Convert dob to internal format.
+ * @param bool $co: <talkin about a company>
  */
-function badDob(&$dob) {
-  list ($min, $max) = [u\plusMonths(-150 * 12), u\plusMonths(9)]; // 150 years old to just conceived
-  return u\badDate($dob, $min, $max); // badDate makes dob internal
+function badDob(&$dob, $co) {
+  list ($min, $max) = $co ? [-999 * 12, 0] : [-150 * 12, 9]; // 150 years old to just conceived
+  list ($min, $max) = [u\plusMonths($min), u\plusMonths($max)];
+  $res = u\badDate($dob, $min, $max); // badDate makes dob internal (must be separate from return)
+  return $res;
 }
 
 /**
@@ -131,13 +135,13 @@ function poAddress($address) {
  * Format the given amount as currency.
  *
  * @param float $amount
- * $param string $opt (default s$):
- *   1 = round to nearest dollar
+ * $param string $opt (default s$) (note that a space is added to the start of $opt, to make strpos easier):
+ *   0 = round to nearest dollar
  *   s = simplify: Omit the cents for whole dollar amounts
  *   $ = include initial dollar sign
  *   r = include a trailing cg
  *   u = include a trailing us
- *   % = percentage
+ *   % = percentage (or %0, %1, %2, etc. to show number of digits after decimal)
  * @return
  *   the formatted amount
  */
@@ -145,10 +149,13 @@ function fmtAmt($amount, $opt = 's$') {
   $opt = ' ' . $opt; // simplify strpos check
   $amount0 = $amount = cleanAmount(nn($amount, 0));
   if ($pct = strpos($opt, '%')) $amount *= 100;
-//  if (!is_numeric($amount)) $amount = -999999;
   u\EXPECT(compact('amount'), 'float', 'bad num');
-  $amount = number_format($amount + 0, strpos($opt, '1') ? 0 : ($pct ? 1 : 2));
-  if ($amount == '-0.00') $amount = strpos($opt, '1') ? '0' : '0.00'; // this happens, for small negative amounts
+  $decimals = $opt == ' %' ? 1 // default to one digit after decimal, for percents (function called with $opt=='%', space added)
+  : ($pct ? str_replace('%', '', $opt)
+  : (strpos($opt, '0') ? 0 : 2));
+
+  $amount = number_format($amount + 0, $decimals);
+  if ($amount == '-0.00') $amount = strpos($opt, '0') ? '0' : '0.00'; // this happens, for small negative amounts
   if (strpos($opt, '$')) $amount = '$' . $amount;
   if (strpos($opt, 's')) $amount = preg_replace('/\\.0+$/', '', $amount);
   if (strpos($opt, 'r')) $amount .= 'cg';
@@ -1093,27 +1100,6 @@ function rayTable($ray, $across = TRUE, $recurse = FALSE) {
   return "<table>\n$lines</table>\n";
 }
     
-/**
- * Get State and City for a given postal code (using the USPS API)
- * @param string $zip: the US postal code to interpret
- * @return assoc [state->2-letter state code (or NULL), city->city name (or NULL)]
- */
-function parseZip($zip) {
-  $server = 'http://production.shippingapis.com/ShippingAPI.dll';
-  $userId = R_USPS_WEB_TOOLS_ID;
-  $zip = substr($zip, 0, 5);
-  $request = <<<EOF
-?API=CityStateLookup&XML=<CityStateLookupRequest USERID="$userId">
-     <ZipCode ID ="0">
-         <Zip5>$zip</Zip5>
-     </ZipCode>
-</CityStateLookupRequest>
-EOF;
-  if (!$result = simplexml_load_file($server . $request)) return FALSE;
-  $result = (array) $result->ZipCode;
-  return ray('state city', @$result['State'], ucwords(mb_strtolower(@$result['City'])));
-}  
-
 /**
  * Return a random upper/lowercase code.
  * @param bool $upper: use only uppercase

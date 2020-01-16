@@ -46,6 +46,7 @@ Setup:
 Scenario: A member visits the Community Data page
   When member ".ZZA" visits page "community/data"
   Then we show "Community and Money Data" with:
+  | Company Income and Payments - 30 day totals |
   | Positive and Negative Balance Totals |
   | Company and Member Balances and Credit Lines |
   | Actual Donations to Common Good and Community |
@@ -56,7 +57,6 @@ Scenario: A member visits the Community Data page
   | Most Trusted Members |
   | Individuals Paid By A Company |
   | Transaction Totals to Date |
-  | Monthly Business Income (30 day totals) |
   | Where Do Our Members Hear About Common Good |
   
 Scenario: An admin visits the Community Data page
@@ -66,7 +66,7 @@ Scenario: An admin visits the Community Data page
   | Most Trusted Members |
   | Individuals Paid By A Company |
   | Transaction Totals to Date |
-  | Monthly Business Income (30 day totals) |
+  | Company Income and Payments - 30 day totals |
   | Positive and Negative Balance Totals |
   | Company and Member Balances and Credit Lines |
   | Actual Donations to Common Good and Community |
@@ -101,9 +101,9 @@ Scenario: A member runs a query about Transaction Totals
   | 12      |  7,675.00 |        3,170.00 |   53.890000 |
 
 Scenario: A member runs a query about Business Income
-  When member ".ZZB" runs query "Monthly Business Income (30 day totals)"
+  When member ".ZZB" runs query "Company Income and Payments - 30 day totals"
   Then we show "" with:
-  | company    | total $ | count | total $ 6mos ago | count6 | total $ 12mos ago | count12 |
+  | company    | sales $ | count | sales $ 6mos ago | count6 | sales $ 12mos ago | count12 |
   | Corner Pub |  120.00 |     1 |                  |        |                   |         |
 
 Scenario: A member runs a query about Positive and Negative
@@ -138,6 +138,6 @@ Scenario: A member runs a query about Expected Company Donations
 Scenario: A member runs a query about Whence
   When member ".ZZB" runs query "Where Do Our Members Hear About Common Good"
   Then we show "" with:
-  | origin    | member | stuck | canceled | avgYearlyGift$ | avgRoundup | invited |
-  | * Invited |      3 |     0 |        0 |           0.00 |     0.3333 |         |
-  | * Other   |      7 |     4 |        0 |           0.00 |     0.0000 |         |
+  | origin    | member | stuck | avgYearlyGiftDollars | avgRoundup | eachInvited |
+  | Invited   |      3 |     0 |                 0.00 |     0.3333 |             |
+  | "(Other)" |      7 |     4 |                 0.00 |     0.0000 |             |
