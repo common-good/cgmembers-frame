@@ -2361,7 +2361,7 @@ function request_path() {
     // explicitly provided in the URL, or because the server added it to
     // $_SERVER['REQUEST_URI'] even when it wasn't provided in the URL (some
     // versions of Microsoft IIS do this), the front page should be served.
-    if ($path == basename($_SERVER['PHP_SELF'])) {
+    if ($path == 'index.php') {
       $path = '';
     }
   }

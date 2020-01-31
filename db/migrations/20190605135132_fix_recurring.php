@@ -68,7 +68,7 @@ X;
 X;
       $this->execute($sql);
       
-      $sql = 'UPDATE txs SET for1=MID(for1, 1, IF(LOCATE(CHR(40), for1) > 2, LOCATE(CHR(40), for1) - 1, 9999)) WHERE recursId';
+      $sql = 'UPDATE txs SET for1=MID(for1, 1, IF(LOCATE(CHAR(40), for1) > 2, LOCATE(CHAR(40), for1) - 1, 9999)) WHERE recursId';
       $this->execute($sql); // can't SET more than one underlying table at a time
       $this->execute(str_replace('for1', 'for2', $sql));
 
