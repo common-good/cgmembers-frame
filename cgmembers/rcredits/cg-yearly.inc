@@ -36,7 +36,12 @@ define('STATE_CODE', '25'); // Massachusetts code, for combined Federal/State fi
       ray($keys, 'Marilyn Distelberg', '987654321', 0, '179 Hillwinds North, Brattleboro, VT 05301', 'NEVABJ', '18000'),
     ];
     r\Special\do1099s(TRUE, $rows);
-  *
+ *
+ * Get lines on production server with:
+     foreach (ray('aka nevabj etc') as $qid) {
+       $a = a($qid); $co = $a->co ? 1 : 0;
+       echo "ray(\$keys, '$a->legalName', '$a->federalId', '$co', '$a->postalAddr', '$a->mainQid', 'amt'),<" . 'br>';
+     }
  */
 function do1099s($testMode = FALSE, $rows = FALSE, $badNames = [], $badTINs = [], $year = NULL) {
   global $err1099;
@@ -80,7 +85,7 @@ function doPayer($year, $sql, &$totals, $mod = '', $badNames = [], $badTINs = []
     foreach ($rows as $row) {
       extract(just('amount', $row));
       putRec(recB($year, $row, $amount));
-      $total += $amount;
+      $total = round($total + $amount, 2);
       $bCount++;
     }
   } else { // 1099-B
@@ -89,7 +94,10 @@ function doPayer($year, $sql, &$totals, $mod = '', $badNames = [], $badTINs = []
       extract($row); // uid
       $bCount += do1099b($year, $uid, $total, $mod, $badNames, $badTINs);
       $bFactor = ($badNames or $badTINs) ? 2 : 1; // two records for each payee, if correcting
-      if ($seq1099 + 0 != $bCount * $bFactor + 2) return err1099(t('Record count %rc at odds with payee count %pc.', 'rc pc', $seq1099, $bCount));   
+      if ($seq1099 + 0 != $bCount * $bFactor + 2) {
+        err1099(t('Record count %rc at odds with payee count %pc.', 'rc pc', $seq1099, $bCount));
+        return $bCount;
+      }
     }
   }
   
@@ -115,12 +123,12 @@ function do1099b($year, $payee, &$total, $mod = '', $badNames = [], $badTINs = [
     extract(just('created amount for', $row));
     if ($amount <= 0) continue; // IRS says do NOT report non-positive transactions on 1099-B
     if ($mod == 'G') $amount = 0; // IRS says zero out amount when showing the bad old data
-    $total += $amount;
+    $total = round($total + $amount, 2);
 //    $amts99[] = $amount;
     $bCount++;
     $a = r\acct($payee); $id = $a->id;
     $acctFields = ray('nm qid co addr ein', u\asciiOnly($a->legalNameDpy), $a->mainQid, $a->co, u\asciiOnly($a->postalAddr), $a->federalId);
-    putRec(recB($year, $acctFields, $created, $amount, $for, $mod, @$badNames[$id], @$badTINs[$id]));
+    putRec(recB($year, $acctFields, $amount, $created, $for, $mod, @$badNames[$id], @$badTINs[$id]));
   }
   return $bCount;
 }

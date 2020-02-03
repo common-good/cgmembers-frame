@@ -98,7 +98,7 @@ Scenario: A member runs a query about Transaction Totals
   When member ".ZZB" runs query "Transaction Totals to Date"
   Then we show "" with:
   | txCount | txDollars | inPersonDollars | ccFeesSaved |
-  | 12      |  7,675.00 |        3,170.00 |   53.890000 |
+  | 12      |  7,675.00 |          170.00 |    2.890000 |
 
 Scenario: A member runs a query about Business Income
   When member ".ZZB" runs query "Company Income and Payments - 30 day totals"

@@ -153,8 +153,8 @@ function who(form, fid, question, amount, allowNonmember, coOnly) {
           }, noSubmit);
         } else {yesSubmit = true; jForm.submit();}
       } else which(jForm, fid, j.title, j.which);
-    } else if (allowNonmember && who.includes('@') && fid != '#edit-newacct') {
-      yesno('The email address (' + who + ') is for a non-member (or for a member with a non-public email address). Do [' + question.replace('?', '') + '] anyway, with an invitation to join?', function() {
+    } else if (allowNonmember == 1 && who.includes('@') && fid != '#edit-newacct') {
+      yesno('The email address (' + who + ') is for a non-member (or for a member with a non-public email address). ' + question.replace('?', '').replace('%amount', fmtAmt(amount, 2)).replace('%name', who) + ' anyway, with an invitation to join?', function() {
         yesSubmit = true; jForm.submit();
       }, noSubmit);
     } else {
@@ -259,4 +259,9 @@ function vsprintf(s, args) {
 
 function htmlEntities(str) {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function fmtAmt(n, digits) {
+  if(typeof digits == undefined) digits = 2;
+  return n.toLocaleString(undefined, {maximumFractionDigits:digits}); // maximumFractionDigits fails in Safari/Firefox
 }
