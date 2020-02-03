@@ -62,19 +62,21 @@ function setupBasicAccounts() {
     new r\Acct($info);
   }  
 
+  $flagsCo = u\bit([B_MEMBER, B_CONFIRMED, B_OK, B_CO]); // flags for an active company account
+  
   $server = r\serverUid();
-  $x1=new r\Acct(array_combine($keys, array(CG_ROUNDUPS_UID, 0, t('roundup'), t('%PROJECT Region'), 'cg@commongood.earth', '', 0, 0, 6)));
-  new r\Acct(array_combine($keys, array(CG_CRUMBS_UID, 0, t('crumbs'), t('%PROJECT Region'), 'cg@commongood.earth', '', 0, 0, 6))); 
-  new r\Acct(array_combine($keys, array(CG_SERVICE_CHARGES_UID, 0, t('bank fees'), t('Bank service charges'), 'cg@commongood.earth', '', 0, 0, 6))); 
-  new r\Acct(array_combine($keys, array(BANK_IN_ID, 0, t('bank-in'), t('--'), 'cg@commongood.earth', '', 0, 0, 6))); 
-  new r\Acct(array_combine($keys, array(BANK_OUT_ID, 0, t('bank-out'), t('--'), 'cg@commongood.earth', '', 0, 0, 6)));
+  $x1=new r\Acct(array_combine($keys, array(CG_ROUNDUPS_UID, 0, t('roundup'), t('%PROJECT Region'), 'cg@commongood.earth', '', 0, 0, $flagsCo)));
+  new r\Acct(array_combine($keys, array(CG_CRUMBS_UID, 0, t('crumbs'), t('%PROJECT Region'), 'cg@commongood.earth', '', 0, 0, $flagsCo))); 
+  new r\Acct(array_combine($keys, array(CG_SERVICE_CHARGES_UID, 0, t('bank fees'), t('Bank service charges'), 'cg@commongood.earth', '', 0, 0, $flagsCo))); 
+  new r\Acct(array_combine($keys, array(BANK_IN_ID, 0, t('bank-in'), t('--'), 'cg@commongood.earth', '', 0, 0, $flagsCo))); 
+  new r\Acct(array_combine($keys, array(BANK_OUT_ID, 0, t('bank-out'), t('--'), 'cg@commongood.earth', '', 0, 0, $flagsCo)));
   
   if ($server == r\serverUid('NEW')) { // no need to set up CGF unless in Western Mass (or testing)
     r\acct($server)->update('created', R_LAUNCH); // a date in the past makes tests work better
     if (db\exists('users', 'uid=' . CGID)) return; // already done
     if (NOT_PRODUCTION and db\exists('users', "name='cornerstore'")) return; // already done
 
-    $values = array(r\qo('NEWAAB')->id, $server, u\shortName(PROJECT), PROJECT, CGF_EMAIL, '01330', US_COUNTRY_ID, 0, u\bit([B_MEMBER, B_CONFIRMED, B_OK, B_CO]));
+    $values = array(r\qo('NEWAAB')->id, $server, u\shortName(PROJECT), PROJECT, CGF_EMAIL, '01330', US_COUNTRY_ID, 0, $flagsCo);
     $info = array_combine($keys, $values);
     list ($phone, $address, $city, $state) = array(u\fmtPhone(CGF_PHONE, '+n'), CGF_ADDRESS, CGF_CITY, R_STATE_ID);
     $helper = 1; //$wws->id;

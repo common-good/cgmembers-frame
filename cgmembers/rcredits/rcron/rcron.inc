@@ -453,8 +453,8 @@ function everyMonth() {
     SELECT DISTINCT u.uid, ROUND(SUM(t.amt)*u.crumbs, 2) AS donate, $end AS date
     FROM users u LEFT JOIN txs_noreverse t ON t.uid2=u.uid
     WHERE t.goods=:FOR_GOODS AND t.created BETWEEN $start AND $end AND u.:IS_OK
-    AND (SELECT 1 FROM txs_noreverse WHERE :IS_CRUMBS AND created>=$end AND uid1=u.uid) IS NULL
-    AND (SELECT 1 FROM r_invoices WHERE :IS_CRUMBS AND created>=$end AND payer=u.uid) IS NULL
+    AND (SELECT 1 FROM txs_noreverse WHERE :IS_CRUMBS AND created>=$end AND uid1=u.uid LIMIT 1) IS NULL
+    AND (SELECT 1 FROM r_invoices WHERE :IS_CRUMBS AND created>=$end AND payer=u.uid LIMIT 1) IS NULL
     GROUP BY uid HAVING donate>0
 X;
   queueEach('crumbs', $sql);
@@ -484,6 +484,18 @@ function whatsup($item) {
 function everyYear() {
   $topic = t('Annual task list');
   r\tellAdmin(t('Generate 1099-B forms for IRS and states'), compact('topic'));
+  
+  $start = u\plusMonths($end = strtotime(date('Y-01-01') - 1), -12) + 1; // previous year
+  queueEach('taxInfo', "SELECT uid FROM tx_entries JOIN tx_hdrs USING(xid) WHERE created between $start AND $end");
+}
+
+/**
+ * Notify each user about their 1099-B forms.
+ */
+function taxInfo($item) {
+  extract(just('uid', $item));
+  $year = date('Y') - 1;
+  r\notify($uid, 'see tax info', compact('year'));
 }
 
 /**

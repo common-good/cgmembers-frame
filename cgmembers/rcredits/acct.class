@@ -1599,7 +1599,7 @@ X;
 
     if (!isDEV) {
       if (!$a->co and !$a->stepsDone('sell')) $cans[B_SELL] = FALSE; // individuals cannot sell without doing that step
-      if (!$a->hasFid) $cans[B_SELL] = FALSE; // no selling without an EIN
+      if (!$a->hasFid and $a->id != CG_CRUMBS_UID) $cans[B_SELL] = FALSE; // no selling without an EIN
     }
     if ($a->trialco) $cans[B_BUY] = FALSE; // trial companies can't buy
     if ($a->co and $a->task == 'co2') $cans[B_BUY] = $cans[B_SELL] = FALSE; // co working on co2 can't do squat
@@ -1757,7 +1757,7 @@ X;
     }
     $data['status'] = TX_APPROVED;
     list ($ok, $msg, $args) = be\invoice($payeeA, $this, $amount, $desc, $goods, $data, $recursId);
-    u\EXPECT($ok, t('invoice failed in payApproved invoicing account %payee: ', compact('payee')) . t($msg, $args));
+    u\EXPECT($ok, t('approved invoice from account %payee failed in payApproved: ', compact('payee')) . t($msg, $args));
     return FALSE;
   }
 

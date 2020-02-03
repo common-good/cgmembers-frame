@@ -1,3 +1,9 @@
+2020-02-02 feature/tax-info
+. fixed bug that kept crumbs account from invoicing crumb donors
+. send annual notice of 1099-B availability
+. fixed some bugs in cg-yearly.inc (1099-B generation)
+. fixed bugs in misc.js for invoicing a nonmember
+
 2020-01-14 feature/co-dob
 . co2 task, agent step, now asks for founding date
 . buying and selling is disallowed during co2 task
