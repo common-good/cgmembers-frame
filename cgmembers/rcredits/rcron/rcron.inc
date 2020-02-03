@@ -485,16 +485,17 @@ function everyYear() {
   $topic = t('Annual task list');
   r\tellAdmin(t('Generate 1099-B forms for IRS and states'), compact('topic'));
   
-  $start = u\plusMonths($end = strtotime(date('Y-01-01') - 1), -12) + 1; // previous year
-  queueEach('taxInfo', "SELECT uid FROM tx_entries JOIN tx_hdrs USING(xid) WHERE created between $start AND $end");
+  $year = date('Y') - 1;
+  $start = strtotime("$year-01-01"); // previous year
+  $end = u\plusMonths(12, $start) - 1;
+  queueEach('taxInfo', "SELECT DISTINCT uid, $year AS year FROM tx_entries JOIN tx_hdrs USING(xid) WHERE created between $start AND $end AND uid NOT :CANONIC ORDER BY uid");
 }
 
 /**
  * Notify each user about their 1099-B forms.
  */
 function taxInfo($item) {
-  extract(just('uid', $item));
-  $year = date('Y') - 1;
+  extract(just('uid year', $item));
   r\notify($uid, 'see tax info', compact('year'));
 }
 
