@@ -274,7 +274,7 @@ function activate($helper) {
   }
 
   if ($firstTime and !$mya->co) { // no bonus or helper bonus for a company signing up
-    if (nn($mya->ssnData['CGerror']) and !$mya->risk('ssnOff') and !$mya->risk('dobOff')) $mya->setRisk('ssnOff'); // make SURE this bit gets set (might not if admin signs the person up
+    if (@$mya->ssnData['CGerror'] and !$mya->risk('ssnOff') and !$mya->risk('dobOff')) $mya->setRisk('ssnOff'); // make SURE this bit gets set (might not if admin signs the person up
 
     if (!$mya->helperA->co and !$mya->helperA->superAdmin) { // no helper bonus for company referral or help by superAdmin (cAdmin is okay) [don't require $mya->confirmed]
       $fullName = $mya->fullName;
