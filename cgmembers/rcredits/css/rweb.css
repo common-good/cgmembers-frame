@@ -570,7 +570,7 @@ body.page-partner blockquote {font-size:14px;}
 #frm-summary #edit-committed .help-block,
 #frm-summary #edit-balance .help-block,
 #frm-summary #edit-rewards .help-block {display:inline-block; margin:0;}
-#frm-summary #edit-topButtons a {margin-right:10px;}
+#frm-summary #edit-topButtons a {margin:0 10px 3px 0;}
 /*#frm-summary .admin #user-picture {position:fixed; top:80px; right:50%; z-index:99;}*/
 #frm-summary .admin #edit-photo {position:absolute; top:5px; right:15px; z-index:1;}
 #frm-summary .admin #edit-photo .control-label {display:none;}
