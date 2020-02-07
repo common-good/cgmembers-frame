@@ -1,3 +1,7 @@
+2020-02-07 hotfix/no-dob
+. allow activation without dob if individual came from solar1
+. added invite button to summary page
+
 2020-02-02 feature/tax-info
 . fixed bug that kept crumbs account from invoicing crumb donors
 . send annual notice of 1099-B availability
