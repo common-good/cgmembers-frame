@@ -256,7 +256,8 @@ function activate($helper) {
 //      u\EXPECT($mya->superAdmin, 'initial activation is only for superadmin');
 //    u\EXPECT($mya->co or $mya->dob, 'no dob!');
     // setting B_UNDERAGE must precede update of vsecure, because dob gets V-encrypted
-    if (!$mya->co and time() - $mya->dob < MATURITY * YEAR_SECS) $mya->setBIT(B_UNDERAGE);
+    $dob = $mya->dob ?: ($mya->yob ? strtotime("$mya->yob-01-01") : time());
+    if (!$mya->co and time() - $dob < MATURITY * YEAR_SECS) $mya->setBIT(B_UNDERAGE);
     $mya->update('activated', now() - 1); // this signals it's time to V-encrypt
     $mya->update('vsecure', $mya->vsecure); // V-encrypt
     $mya->eachPartner(function($coA, $zot, $custCode) { // tell partner: account is activated
@@ -273,7 +274,7 @@ function activate($helper) {
   }
 
   if ($firstTime and !$mya->co) { // no bonus or helper bonus for a company signing up
-    if ($mya->ssnData['CGerror'] and !$mya->risk('ssnOff') and !$mya->risk('dobOff')) $mya->setRisk('ssnOff'); // make SURE this bit gets set (might not if admin signs the person up
+    if (nn($mya->ssnData['CGerror']) and !$mya->risk('ssnOff') and !$mya->risk('dobOff')) $mya->setRisk('ssnOff'); // make SURE this bit gets set (might not if admin signs the person up
 
     if (!$mya->helperA->co and !$mya->helperA->superAdmin) { // no helper bonus for company referral or help by superAdmin (cAdmin is okay) [don't require $mya->confirmed]
       $fullName = $mya->fullName;
