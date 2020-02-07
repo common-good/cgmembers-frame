@@ -60,21 +60,22 @@ function formSummary($form, &$sta) {
   // $showCustomers = item(w\btn('/community/data/qName=6Customers', t('Customer List')));
 
   if ($mya->canManage and $mya->member) {
+    $invite = w\btn('/community/invite', t('Invite a Friend or Business'), 'primary', 'xs') . '<br>';
     $hasMultipleAccounts = ($mya->co or db\exists('r_relations r LEFT JOIN users u ON u.uid=r.main', 'other=:id AND permission>0 AND u.:IS_CO', ['id' => $mya->agentId]));
     $another = $hasMultipleAccounts ? t('Another') : t('a');
     $makeCo = $mya->depends ? '' : w\btn('/signup-co/relate=1', t('Open %another Company Account', compact('another')), 'primary', 'xs');
 //    if (!$mya->jid and !$mya->co) $makeJoint = w\btn('/signup/joint=1', t('Make this a joint account'), 'primary', 'xs');
-    $makeJoint = ($mya->member and !$mya->jid and !$mya->co and !$mya->depends) ? w\btn('/prejoin', t('Make this a joint account'), 'primary', 'xs') : '';
+    $makeJoint = ($mya->member and !$mya->jid and !$mya->co and !$mya->depends) ? w\btn('/prejoin', t('Make this a Joint Account'), 'primary', 'xs') . '<br>' : '';
 //    $goFood = $mya->food > 0 ? lnk('/settings/food', t('Food Fund')) : btn('/settings/food', t('Food Fund'), 'warning');
 //    if ($mya->cAdmin) $goFood = '<br><br>' . $goFood; // make sure it doesn't hide behind the photo
     $goFood = '';
     if (!$mya->co and $hasMultipleAccounts) $clickPhoto = item(t('Click your photo%where to manage your other account(s).', 'where', $mya->cAdmin ? t(' in the upper right corner') : ''));
-  } else $makeCo = $makeJoint = $goFood = $reports = '';
+  } else $invite = $makeCo = $makeJoint = $goFood = $reports = '';
 
   $reports = $mya->co ? w\btn('/history/company-reports', t('Reports')) : '';
 //  if ($mya->id == CGID) $deposits = w\btn('/sadmin/show-deposits', t('Deposits'));
   $deposits = $mya->id == CGID ? w\btn('/sadmin/show-reconciled', t('Dollar Pool Transactions')) : '';
-  $topButtons = item($makeCo . $makeJoint . $goFood . $reports . $deposits);
+  $topButtons = item($invite . $makeJoint . $makeCo . $goFood . $reports . $deposits);
 
   $title = t('Account Summary');
   $accountName = item($mya->j_fullName . ($mya->jid ? '<br>' : ' ') . "($mya->j_name)", t('Name:'));
@@ -161,7 +162,7 @@ function formSummary_validate($form, &$sta) {
 //    if (!@$helper or $helper == 1) return say(t('You must specify who gets the helper reward.'), 'helper');
     if (!$mya->member and is_null(nn($adminable[B_MEMBER], NULL))) return say(t('That account is not READY (not a member).'), 'adminable'); // test "is_null" because 0 is the value when set
     if (!$mya->confirmed and $mya->helper != 1) say(t('NOTE: Member %helperName has not yet confirmed this invitation.', 'helperName', $h->fullName));
-    if (!$mya->co and !nn($dob)) return say(t('You cannot activate the account without a date of birth.'), 'dob');
+    if (!$mya->co and !nn($dob) and $mya->idVerifiedBy != 'solar1') return say(t('You cannot activate the account without a date of birth (except for solar1 signups).'), 'dob');
   }
 
   if (!@$rTrader and $mya->ok) { // de-activating
@@ -253,7 +254,7 @@ function activate($helper) {
   
   if ($firstTime = !$mya->activated) { // first time activation
 //      u\EXPECT($mya->superAdmin, 'initial activation is only for superadmin');
-    u\EXPECT($mya->co or $mya->dob, 'no dob!');
+//    u\EXPECT($mya->co or $mya->dob, 'no dob!');
     // setting B_UNDERAGE must precede update of vsecure, because dob gets V-encrypted
     if (!$mya->co and time() - $mya->dob < MATURITY * YEAR_SECS) $mya->setBIT(B_UNDERAGE);
     $mya->update('activated', now() - 1); // this signals it's time to V-encrypt
