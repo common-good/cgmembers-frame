@@ -837,8 +837,8 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     'r_company:uid:D',
     // r_countries
     'r_coupated:uid',
-    'r_coupons:fromId',
-    'r_coupons:sponsor',
+    'r_coupons:fromId:D',
+    'r_coupons:sponsor:D',
     'r_criteria:ctty:D',
     'r_do:uid:D',
     'r_events:ctty',
