@@ -6,7 +6,7 @@
 # server "example.com", user: "deploy", roles: %w{app db web}, my_property: :my_value
 # server "example.com", user: "deploy", roles: %w{app web}, other_property: :other_value
 # server "db.example.com", user: "deploy", roles: %w{db}
-#server "new-server.commongood.earth", roles: %w{app db web}, user: "new"
+server "new.commongood.earth", roles: %w{app db web}, user: "new"
 
 set :local_user, "new"
 
@@ -19,9 +19,9 @@ set :local_user, "new"
 # property set. Specify the username and a domain or IP for the server.
 # Don't use `:all`, it's a meta role.
 
-role :app, %w{new-server.commongood.earth new-backup.commongood.earth}, user: 'new'
-role :web, %w{new-server.commongood.earth new-backup.commongood.earth}, user: 'new'
-role :db, %w{new-server.commongood.earth}, user: 'new'
+# role :app, %w{deploy@example.com}, my_property: :my_value
+# role :web, %w{user1@primary.com user2@additional.com}, other_property: :other_value
+# role :db,  %w{deploy@example.com}
 
 
 
@@ -33,7 +33,7 @@ role :db, %w{new-server.commongood.earth}, user: 'new'
 # http://capistranorb.com/documentation/getting-started/configuration/
 # Feel free to add new variables to customise your setup.
 set :deploy_to, "/home/new/cgmembers-frame"
-ask :branch, "master"
+set :branch, "master"
 set :tmp_dir, "/home/new/tmp"
 
 # Custom SSH Options
@@ -45,12 +45,16 @@ set :tmp_dir, "/home/new/tmp"
 # Global options
 # --------------
 set :ssh_options, {
+  # keys: %w(/home/rlisowski/.ssh/id_rsa),
   forward_agent: false,
   auth_methods: %w(publickey),
   user: "new",
+<<<<<<< HEAD
+  port: 7822  
+=======
   port: 7822
+>>>>>>> 260f47541574bb4fdea8363650d8d95f54bfe233
 }
-
 #
 # The server-based syntax can be used to override options:
 # ------------------------------------
