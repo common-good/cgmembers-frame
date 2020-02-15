@@ -1,3 +1,9 @@
+2020-02-15 hotfix/task-nudge
+. whatever task is current, send member to next step
+. final tweak to solar1 activation
+. enable deployment to new server (port change)
+. allow deletion of company account with discount
+
 2020-02-07 hotfix/no-dob
 . allow activation without dob if individual came from solar1
 . added invite button to summary page

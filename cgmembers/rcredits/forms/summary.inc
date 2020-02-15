@@ -19,7 +19,7 @@ function formSummary($form, &$sta) {
 
   if ($mya->closed) say(t('Your account is closed, but you can still see your account history.'));
 
-  $stepUrl = $mya->ok ? 'summary' : $mya->nextStepUrl('', $msg);
+  $stepUrl = $mya->nextStepUrl('', $msg);
 /*
   if ($stepUrl == 'signup' and $info = r\relation('reid,code', "other=:myid AND :IS_CUSTOMER AND code<>''", compact('myid'))) {
     extract($info);
@@ -162,7 +162,7 @@ function formSummary_validate($form, &$sta) {
 //    if (!@$helper or $helper == 1) return say(t('You must specify who gets the helper reward.'), 'helper');
     if (!$mya->member and is_null(nn($adminable[B_MEMBER], NULL))) return say(t('That account is not READY (not a member).'), 'adminable'); // test "is_null" because 0 is the value when set
     if (!$mya->confirmed and $mya->helper != 1) say(t('NOTE: Member %helperName has not yet confirmed this invitation.', 'helperName', $h->fullName));
-    if (!$mya->co and !nn($dob) and $mya->idVerifiedBy != 'solar1') return say(t('You cannot activate the account without a date of birth (except for solar1 signups).'), 'dob');
+    if (!$mya->co and !nn($dob) and !$mya->idVerifiedBy) return say(t('You cannot activate the account without a date of birth (except for solar1 signups).'), 'dob');
   }
 
   if (!@$rTrader and $mya->ok) { // de-activating
