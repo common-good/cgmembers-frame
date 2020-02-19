@@ -81,7 +81,9 @@ Scenario: a member draws credit from the bank with adequate floor
   And we say "status": "banked|bank tx number|available now" with subs:
   | action | tofrom  | amount | checkNum | why             |*
   | draw   | from    |    $10 |        8 | at your request |
-  
+  And we notice "banked|bank tx number|available now" to member ".ZZC" with subs:
+  | action | tofrom | amount | checkNum | why             |*
+  | draw   | from   | $10    |        8 | at your request |
 Scenario: a member moves too little to the bank
   When member ".ZZA" completes form "get" with values:
   | op  | amount           |*
@@ -145,6 +147,8 @@ Scenario: a member draws credit from the bank then cancels
   | .ZZC |      30 |
   And count "usd" is 6
   And count "txs" is 7
+  And we notice "bank tx canceled" to member ".ZZC" with subs:
+  | xid | 8 |**
   And we redirect to "/get"
 
 Scenario: a member with a negative balance requests a transfer from the bank
