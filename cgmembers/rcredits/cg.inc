@@ -1541,6 +1541,16 @@ function handleInvestmentRequest($stakeid, &$msg) {
 }
 
 /**
+ * Say whether the given annual total of payments received and transactions count are below the threshold
+ * required for submitting 1099-K forms in the given state.
+ */
+function no1099k($tot, $cnt, $st) {
+  $minima = ray(MINIMA1099);
+  list ($min, $minCnt) = explode('/', nn($minima[$st]) ?: $minima['X']);
+  return ($tot < $min or $cnt < $minCnt);
+}
+
+/**
  * Calculate community gifts ever paid and ever due as of a certain date/time.
  * @param int $end: ending date/time
  * @return the rows (an array of objects)

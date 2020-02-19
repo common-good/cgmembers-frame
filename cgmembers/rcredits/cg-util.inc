@@ -105,6 +105,7 @@ function badSsn(&$ssn, $dob = '') {
 
 function ssnName($v, &$firstname = '', &$middlename = '', &$lastname = '') {
   foreach (ray('firstname middlename lastname') as $k) {
+    if (!isset($v->$k)) continue;
     if (is_array($v->$k)) $v->$k = join(' ', $v->$k); // concatenate multiple first, middle, or last names
     if ($$k = ucWords(mb_strtolower(str_replace('-', '', $v->$k)))) $res[] = $$k;
   }
@@ -1142,7 +1143,9 @@ function bits($n, $descs = B_LIST) {
  * Tell the browser to download subsequent output. (end with exit())
  * @param string $filename: what to name the downloaded file
  */
-function beginDownload($filename) {  
+function beginDownload($filename) {
+  global $testDownloadFlnm; $testDownloadFlnm = $filename;
+  if (test()) return;
   header("Cache-Control: public");
   header("Content-Description: File Transfer");
   header("Content-Disposition: attachment; filename=$filename");

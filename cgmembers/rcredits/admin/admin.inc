@@ -27,7 +27,7 @@ function setupBasicAccounts() {
   
   if (!db\exists('users', 'uid=0')) db\insert('users', ['uid' => 0], 'uid'); // required for signed-out messages (w\say())
   
-  $q = db\q('SELECT region,fullName,st,zip,federalId,hasServer FROM r_regions');
+  $q = db\q('SELECT region,fullName,st,zip,postalAddr,federalId,hasServer FROM r_regions');
   while ($row = $q->fetchAssoc()) { // create or update all regions
     extract($row);
     if (!$hasServer) continue;
@@ -78,9 +78,9 @@ function setupBasicAccounts() {
 
     $values = array(r\qo('NEWAAB')->id, $server, u\shortName(PROJECT), PROJECT, CGF_EMAIL, '01330', US_COUNTRY_ID, 0, $flagsCo);
     $info = array_combine($keys, $values);
-    list ($phone, $address, $city, $state) = array(u\fmtPhone(CGF_PHONE, '+n'), CGF_ADDRESS, CGF_CITY, R_STATE_ID);
+    list ($phone, $address, $city, $state, $postalAddr) = array(u\fmtPhone(CGF_PHONE, '+n'), CGF_ADDRESS, CGF_CITY, R_STATE_ID, CGF_POSTALADDR);
     $helper = 1; //$wws->id;
-    $info += compact(ray('email phone address city state helper'));
+    $info += compact(ray('email phone address city state postalAddr helper'));
     $cgf = new r\Acct($info);
     \setV('cgf_uid', $cgf->id);
     $cgf->update('emailCode website activated created', '1495kJHm0h145PHh2345h', 'cg4.us', R_LAUNCH, R_LAUNCH);
@@ -1032,7 +1032,7 @@ function toSMT() {
     $phone = u\fmtPhone($phone, '-');
     $out = compact(ray('smtid fullName orgName m_company m_number cgAccount phone email address city state zip tenure owns routing bankAccount isSavings nameOnBankAcct billingAddress billingCity billingState billingZip noContract created notes'));
     if (empty($bankAccount)) continue;
-  //  if ($a->member and $bad = db\get('uid', 'users', "fullName='$a->fullName' AND NOT :IS_MEMBER")) debug("maybe delete $bad ($a->uid is good) -- $a->fullName");
+///  if ($a->member and $bad = db\get('uid', 'users', "fullName='$a->fullName' AND NOT :IS_MEMBER")) debug("maybe delete $bad ($a->uid is good) -- $a->fullName");
     if (!$hdrDone) {
       u\csvStart('solar1-export-' . date('Y-m-d') . '.csv');
       u\csv(array_keys($out), "\t");
