@@ -484,7 +484,7 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
   // Apply coupon
   if ($amount > 0 and ($goods != FOR_USD)) {
     if ($loserA->can(B_SELL)) { // no rebates unless buyer has permission to sell
-      $rebate = handleCoupon($entries, $loserA, $gainerA, $amount);
+      $rebate = handleAuxTxs($entries, $loserA, $gainerA, $amount);
       $needed -= $rebate;
     } else r\notify($loserId, 'missed rebate', ['company' => $gainerA->fullName]);
   }
@@ -555,12 +555,12 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
  * @param int $entryType0: entry type(s)
  * @param int $acctTid0: description transaction ID (deprecated)
  */
-function txEntryPair(&$txes, $amount0, $a0, $description0, $entryType0, $acctTid0 = 0, $relType = NULL, $relatedId = NULL) {
+function txEntryPair(&$txes, $amount0, $a0, $description0, $entryType0, $acctTid0 = 0, $relType = NULL, $relatedId = NULL, $auxtx = NULL) {
   foreach ([1, 0] as $i) { // payee first, to agree with tests and so entry id is postive for e2, negative for e1
     foreach (ray('a description entryType acctTid') as $k) $$k = is_array(${$k . 0}) ? ${$k . 0}[$i] : ${$k . 0};
     $amount = $i == 0 ? -$amount0 : $amount0;
     list ($uid, $agentUid) = is_object($a) ? [$a->id, $a->agentId] : [$a, $a];
-    $txes[] = new r\TxEntry(compact(ray('entryType amount uid agentUid description acctTid relType relatedId')));
+    $txes[] = new r\TxEntry(compact(ray('entryType amount uid agentUid description acctTid relType relatedId auxtx')));
   }
 }
   
@@ -652,37 +652,59 @@ function sendNotifications($type, $tx, $shortfall) {
  * @param unixtime $when: when was the transaction (defaults to now)
  * @return the rebate amount
  */
-function handleCoupon(&$entries, $buyer, $seller, $price) {
+function handleAuxTxs(&$entries, $buyer, $seller, $price) {
   u\EXPECT($price > 0, 'non-positive price handling coupon');
-  
+
+  // Get a list of applicable auxtxs (not rules)
   $sql = <<<EOF
-    SELECT `on`, c.coupid, amount, ulimit, id, t.got, t.gotCount, c.sponsor
-    FROM r_coupons c 
-    LEFT JOIN r_coupated d ON (c.coupid=d.coupid AND d.uid=:buyerId)
-    LEFT JOIN (
-      SELECT rel, SUM(amt) AS got, SUM(IF(amt<0, -1, 1)) AS gotCount
-      FROM txs
-      WHERE relType='D' AND uid2=:buyerId
-    ) t ON t.rel=c.coupid
-    WHERE fromId=:sellerId AND :now>=start AND (:now<end OR end=0) AND :price>=minimum 
-      AND NOT :IS_GIFT AND IF(:IS_SOME, d.id IS NOT NULL, TRUE)
-      AND (c.ulimit=0 OR IFNULL(t.gotCount,0)<c.ulimit)
-      AND (c.amount<0 OR IFNULL(t.got,0)<c.amount)
-    ORDER BY end ASC
+    SELECT a.id AS auxTxId, r.amount AS amount, r.from AS from, r.to AS to, r.`on` AS `on` SUM(e.amount) AS used
+    FROM u_auxtxs a JOIN u_rules r ON a.rule=r.id LEFT OUTER JOIN tx_entries e ON (e.auxtx IS NOT NULL AND e.auxtx = a.id)
+    WHERE
+    ((actorType = :REF_ANYBODY)
+           OR (actorType = :REF_ACCOUNT AND actor = :buyer)
+           OR (actorType = :REF_INDUSTRY AND EXISTS (SELECT 1 FROM r_industries WHERE iid = :buyer))
+           OR (actorType = :REF_GROUP AND EXISTS (SELECT 1 FROM u_groups g JOIN u_groupies u ON (u.group = g.id)
+                                                  WHERE u.uid = :buyer AND u.start <= :now
+                                                  AND IFNULL(:now < u.end, TRUE))))
+    AND ((otherType = :REF_ANYBODY)
+         OR (otherType = :REF_ACCOUNT AND other = :seller)
+         OR (otherType = :REF_INDUSTRY AND EXISTS (SELECT 1 FROM r_industries WHERE iid = :seller))
+         OR (otherType = :REF_GROUP AND EXISTS (SELECT 1 FROM u_groups g JOIN u_groupies u ON (u.group = g.id)
+                                                WHERE u.uid = :seller AND us.start <= :now
+                                                AND IFNULL(:now < u.end, TRUE))))
+    AND (:price >= minimum)
+    AND (r.action = :ACTION_PAYMENT)
+    AND (a.start <= :now AND IFNULL(:now < a.end, TRUE))
+    AND used < :price
+    GROUP BY auxTxId
+    ORDER BY a.start
 EOF;
-  $subs = ray('buyerId sellerId now price', $buyer->id, $seller->id, now(), $price);
+
+  $subs = ray('buyer seller now price', $buyer->id, $seller->id, now(), $price);
   if (!$q = db\q($sql, $subs)) return 0;
-  if (!$res = $q->fetchAssoc()) return 0;
-  extract($res);
+  $res = $q->fetchAllAssoc('auxTxId', PDO::FETCH_ASSOC);
+  if (empty($res)) {
+    return 0;
+  }
+
+  $rebate = 0;
+  foreach ($res as $auxtx => $row) {
+    extract($row);
+    $value = $amount + $portion * $price;
+    $use = min($price - $rebate, $value - $used);
+    $rebate += $use;
+    txEntryPair($entries, $use, [$from, $to], $on, E_RULE, 0, null, null, $auxTxId);
+    if ($rebate >= $price) break;
+  }
   
   $rebate = ($amount < 0) ? $price * (0-$amount) * .01 : min($price, $amount - $got);
   
-  if (empty($id)) {
-    $id = db\insert('r_coupated', ray('coupid uid when', $coupid, $buyer->id, now()), 'id');
-  } else {
-    db\update('r_coupated', ray('when id', now(), $id), 'id');
-  }
-  txEntryPair($entries, $rebate, [r\acct($sponsor), $buyer], t('discount (rebate)'), E_REBATE, 0, 'D', $coupid);
+  /* if (empty($id)) { */
+  /*   $id = db\insert('r_coupated', ray('coupid uid when', $coupid, $buyer->id, now()), 'id'); */
+  /* } else { */
+  /*   db\update('r_coupated', ray('when id', now(), $id), 'id'); */
+  /* } */
+  /* txEntryPair($entries, $rebate, [r\acct($sponsor), $buyer], t('discount (rebate)'), E_REBATE, 0, 'D', $coupid); */
   return $rebate;
 }
 

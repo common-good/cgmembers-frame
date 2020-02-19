@@ -545,7 +545,8 @@ define('E_REBATE', 3); // discount rebate to customer
 define('E_USD_FEE', 4); // fee from customer to merchant for buying (or selling?) Common Good credit
 define('E_BANK', 5); // CG account transfers to or from the member's bank
 define('E_XFEE', 6); // transfer fee to merchant (UNUSED)
-define('E_TYPES', 'bank_only prime donation rebate usd_fee bank');
+define('E_RULE', 7); // rule-based auxiliary pair
+define('E_TYPES', 'bank_only prime donation rebate usd_fee bank rule');
 
 $GLOBALS['emailSubjects'] = array(
   'nonmember' => t('%PROJECT invitation followup'),

@@ -99,9 +99,12 @@ function formCoupons_validate($form, &$sta) {
   } elseif ($type == 'redeem') {
     if (!$a = r\iCardAcct($code, $iCode)) return say('invalid gift card', 'code');
     if ($a->id == $mya->id) return say(t('You cannot redeem your own gift card.'), 'err');
-    $coupid = db\get('coupid', 'r_coupons', 'fromId=:id AND :iCode BETWEEN start AND end-1', ray('id iCode', $a->id, $iCode)) ?: 0;
-    if (db\get('id', 'r_coupated', 'uses=:iCode AND coupid=:coupid', compact(ray('iCode coupid')))) return say('already redeemed', 'err');
-    u\preray(compact(ray('coupid iCode')), $sta['input']); // pass the results to submit function
+    
+    $auxid = db\get('id', 'u_auxtxs a JOIN u_rules r ON a.rule = r.id', 'r.fromId=:uid AND :iCode = a.code',
+                    ray('uid iCode', $a->id, $iCode)) ?: 0;
+    if (db\get('id', 'tx_entries_all', 'auxtx = :auxid', compact(ray('auxid'))))
+      return say('already redeemed', 'err');
+    u\preray(compact(ray('auxid')), $sta['input']); // pass the results to submit function
   } else return say(t('bad coupon'), 'err');
   
   u\preray(@compact(ray($fields)), $sta['input']); // remember fixed numeric values
@@ -120,7 +123,7 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
   }
     
   if ($type == 'redeem') {
-    $res = db\get('fromId,amount', 'r_coupons', 'coupid=:coupid', compact('coupid'));
+    $res = db\get('fromId, amount', 'r_coupons', 'coupid=:coupid', compact('coupid'));
     extract($res);
     $fromA = r\acct($fromId);
     list ($ok, $index, $subs) = be\transfer('payment', $fromA, $mya, $amount, t('gift'), FOR_GOODS, ray('force', 1));
