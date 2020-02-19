@@ -235,13 +235,17 @@ function setFlag($table, $id, $bit, $bool = TRUE) {
 /**
  * Make a backup copy of the record before deleting it if appropriate (then delete it).
  * @param string $table: delete a record from this table
- * @param string $idnm: name of key field of table
+ * @param string $idnm: name of key field of table OR assoc of criteria
  * @param mixed $id: id of record to delete (integer or spaceless string) OR criteria
  * @param assoc $subs: parameters for selection criteria
  */
-function del($table, $idnm, $id, $subs = []) {
+function del($table, $idnm, $id = '', $subs = []) {
   u\EXPECT(!strpos($table, '_all') and !u\starts($table, 'txs'), 'you must delete only from tx_hdrs and tx_entries');
-  $where = strpos($id, ' ') ? $id : "$idnm='$id'";
+  
+  if (is_array($idnm)) {
+    list ($where, $subs) = [u\where($idnm), $idnm];
+  } else $where = strpos($id, ' ') ? $id : "$idnm='$id'";
+  
   if (in($table, DELETED_BY_VIEW)) {
     $all_table = $table . '_all';
     $q = db\q("UPDATE $all_table SET deleted=:NOW WHERE (deleted IS NULL OR deleted=0) AND $where", $subs);

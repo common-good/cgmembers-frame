@@ -1,3 +1,12 @@
+2020-02-18 feature/warn-cancel-bank
+. when a member cancels a bank transaction we now send a notification about that
+. db\del function expanded to allow a criteria assoc as the second of 2 params
+
+2020-02-18 feature/1099k
+. changed from issuing 1099b to 1099k
+. prepared taxInfo page for 2021
+. fixed admin aaOther test by adding "deleted" to the R_DATE_FLDS constant
+
 2020-02-15 hotfix/task-nudge
 . whatever task is current, send member to next step
 . final tweak to solar1 activation

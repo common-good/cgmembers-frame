@@ -294,15 +294,13 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
   }
   
   require_once DRUPAL_ROOT . '/vendor/swiftmailer/lib/swift_required.php';
-  $transport = \Swift_SendmailTransport::newInstance('/usr/sbin/sendmail -bs');
-/*
+  /* $transport = \Swift_SendmailTransport::newInstance('/usr/sbin/sendmail -bs'); */
   $transport = \Swift_SmtpTransport::newInstance()
     ->setHost(CG_SMTP_SERVER)
     ->setPort(CG_SMTP_PORT)
     ->setEncryption(CG_SMTP_TLS)
     ->setUsername(CG_SMTP_USER)
     ->setPassword(CG_SMTP_PASS);
-*/
   $mailer = \Swift_Mailer::newInstance($transport);
 
   $privateKey = "-----BEGIN RSA PRIVATE KEY-----\n" . str_replace(' ', "\n", DKIM_PRIVATE) . "\n-----END RSA PRIVATE KEY-----";
@@ -1538,6 +1536,16 @@ function handleInvestmentRequest($stakeid, &$msg) {
   }
   unset($DBTX);
   return $ok;
+}
+
+/**
+ * Say whether the given annual total of payments received and transactions count are below the threshold
+ * required for submitting 1099-K forms in the given state.
+ */
+function no1099k($tot, $cnt, $st) {
+  $minima = ray(MINIMA1099);
+  list ($min, $minCnt) = explode('/', nn($minima[$st]) ?: $minima['X']);
+  return ($tot < $min or $cnt < $minCnt);
 }
 
 /**

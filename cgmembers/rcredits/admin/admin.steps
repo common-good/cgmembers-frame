@@ -38,7 +38,8 @@ function extraSetup() {
 /**
  * members: (ARG)
  *
- * in: MAKE aaOther Setup
+ * in: MAKE 1099s Setup
+ *     MAKE aaOther Setup
  *     MAKE activate Setup
  *     TEST activate AdminActivatesAnAccount
  *     TEST activate AdminActivatesAnAccountUnconfirmed
@@ -51,14 +52,15 @@ function members($list) {return t\members($list);}
 /**
  * transactions: (ARG)
  *
- * in: 
+ * in: MAKE 1099s Setup
  */
 function transactions($list) {return t\transactions($list);}
 
 /**
  * usd transfers: (ARG)
  *
- * in: BOTH checks AdminPrintsChecks
+ * in: MAKE 1099s Setup
+ *     BOTH checks AdminPrintsChecks
  */
 function usdTransfers($tx) {return t\usdTransfers($tx);}
 
@@ -113,14 +115,16 @@ function weShowPdfWith($list) {
 /**
  * balances: (ARG)
  *
- * in: TEST checks AdminPrintsChecks
+ * in: BOTH 1099s Setup
+ *     TEST checks AdminPrintsChecks
  */
 function balances($list) {return t\balances($list);}
 
 /**
  * relations: (ARG)
  *
- * in: MAKE activate Setup
+ * in: MAKE 1099s Setup
+ *     MAKE activate Setup
  */
 function relations($relations) {return t\relations($relations);}
 
@@ -175,3 +179,57 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
  * in: MAKE activate AdminActivatesAnAccountUnconfirmed
  */
 function membersHave($list) {return t\membersHave($list);}
+
+/**
+ * member (ARG) runs a (ARG) report type (ARG) with testing (ARG)
+ *
+ * in: MAKE 1099s AdminGeneratesAReportForThePastMonths
+ */
+function memberRunsAReportTypeWithTesting($id, $ten99, $type, $testing) {
+  global $testOnly;
+  require R_ROOT . '/cg-yearly.inc';
+  r\Special\do1099s($type, $testing); 
+  return TRUE;  
+}
+
+/**
+ * we download (ARG) with records: (ARG)
+ *
+ * in: TEST 1099s AdminGeneratesAReportForThePastMonths
+ */
+function weDownloadWithRecords($flnm, $rows) {
+  global $testOnly; if (!$testOnly) return FALSE;
+  global $testDownloadFlnm;
+  global $testRecs1099;
+  
+  if ($testDownloadFlnm != $flnm) return t\output(t('Bad download filename: ' . $testDownloadFlnm));
+  
+  if (count($testRecs1099) != count($rows)) return t\output(t('Wrong number of records in 1099: got %got, expected %want.', 'got want', count($testRecs1099), count($rows)));
+  foreach ($rows as $rowNum => $row) {
+    $gotRow = $testRecs1099[$rowNum];
+    $gotSeq = substr($gotRow, 499, 8) + 0;
+    if ($gotSeq != $rowNum + 1) return t\output(t('Wrong sequence number in record #') . $gotSeq);
+
+    extract(just('type who cnt amounts seq', $row));
+    if ($gotRow[0] != $type) return t\output(t('Wrong type in record #') . $gotSeq);
+    if ($type == 'B' or $type == 'K') {
+    if ($type == 'B') {
+      $qid = a(t\uid($who))->mainQid;
+      if (rtrim(substr($gotRow, 20, 20)) != $qid) return t\output(t('Wrong qid in record #') . $gotSeq);
+      $got = substr($gotRow, 548, 13);
+      if ($got + 0 != $cnt) return t\output(t('Wrong cnt in record #%gotSeq: got %got, want %cnt', 'gotSeq got cnt', $gotSeq, $got, $cnt));
+    }
+    list ($amtStart, $amtLen) = $type == 'B' ? [54, 12] : [15, 18];
+    if (strpos('BCK', $type) !== FALSE) {
+      $amounts = explode('/', $amounts);
+      foreach ($amounts as $i => $amt) {
+        echo "gotAmt=" . substr($gotRow, $amtStart + $i * $amtLen, $amtLen) . '!';
+        $gotAmt = substr($gotRow, $amtStart + $i * $amtLen, $amtLen) / 100;
+        if ($gotAmt != $amt) return t\output(t('Wrong amount in record #%gotSeq: amount #%i is %gotAmt, want %amt', 'gotSeq i gotAmt amt', $gotSeq, $i + 1, $gotAmt, $amt));
+      }
+    }
+    }
+  }
+  return TRUE;
+}
+

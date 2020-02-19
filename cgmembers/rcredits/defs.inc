@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-define('R_VERSION', '3.51y'); // software version
+define('R_VERSION', '3.51z'); // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -125,6 +125,11 @@ define('ANY', 'any'); // accessible to anyone (if you change this, rebuild menus
 define('SVAR_HEADER', 'rcredits_'); // session variable header
 define('TEST_PDF_FLNM', 'testOutput.pdf'); // pdf output during testing
 
+define('TEN99MISC', 'A'); // code for 1099-MISC
+define('TEN99B', 'B'); // code for 1099-B
+define('TEN99K', 'MC'); // code for 1099-K
+define('MINIMA1099', 'X:20000/200, MA:600/1, VT:600.01/1'); // no 1099-K for gross/txCount under this amount (by state)
+
 define('R_BULLET', '&#8226;'); // bullet in emails (where CSS is difficult)
 define('STATS_GRAIN', 10); // granularity of statistics, in days
 define('INFLATION_DESC', t('inflation adjustment'));
@@ -132,7 +137,7 @@ define('COMPANY_FREEZE', FALSE); // companies cannot spend rewards yet
 define('R', '<span class="r">r</span>');
 define('US', '<span class="us">us</span>');
 /// define('GAME_COMPANIES', '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital');
-define('R_DATE_FLDS', 'created completed deposit sent invited giftDate signed login access joined yesterday dob when sold'); // date field names for testing and administrative display
+define('R_DATE_FLDS', 'created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted'); // date field names for testing and administrative display
 define('CO_FLDS', 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd staleNudge contact'); // account fields stored in r_company
 define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo'); // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
 define('MASTER_NUMERIC_FLDS', 'minimum achMin savingsAdd saveWeekly');
