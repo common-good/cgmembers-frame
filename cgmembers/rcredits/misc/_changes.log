@@ -1,3 +1,7 @@
+2020-02-21 feature/restrict-activate
+. now only superAdmin can activate an account (but other admins can still deactivate)
+. minor fixes to changepassword.inc
+
 2020-02-18 feature/warn-cancel-bank
 . when a member cancels a bank transaction we now send a notification about that
 . db\del function expanded to allow a criteria assoc as the second of 2 params
