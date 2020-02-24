@@ -160,7 +160,7 @@ eachA(function ($a) {
 }, 'created > :NOW - 3 * :MONTH_SECS ORDER BY created DESC');
 
 // show food fund percentages and estimated monthly donations
-$rows = db\rows('fullName', 'users u', ':U_FOODY=1');
+$rows = db\rows('fullName', 'users u', ':U_FOODY=1', ['iid' => '2']);
 $sum = db\sum('amt', 'txs', ':T_FOODY AND (SELECT food FROM users WHERE uid=uid1)>0 AND created>:NOW-:MONTH_SECS');
 
 // Who still owes CG a phone deposit
