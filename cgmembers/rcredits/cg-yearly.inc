@@ -48,7 +48,7 @@ function do1099s($type, $testMode = FALSE, $rows = FALSE, $badNames = [], $badTI
   global $err1099;
   u\setDft($year, date('Y') - 1);
   $testMode = $testMode ? 'T' : '';
-  u\beginDownload("forms1099$type-FY$year.bin$testMode"); // binary file extension: discourage automatic changes during FTP
+  u\beginDownload("forms1099$type-Y$year.bin$testMode"); // binary file extension: discourage automatic changes during FTP
   putRec(recT($year, $testMode));
   
   $uids = array_keys($badNames + $badTINs);

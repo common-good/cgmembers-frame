@@ -35,7 +35,7 @@ Scenario: A newbie registers in Western Massachusetts
   And member ".AAA" is logged in
   And we show "Identity Verification"
   And we say "status": "info saved|step completed"
-  And steps left "verifyid agree preferences fund verifyemail"
+  And steps left "verifyid agree preferences fund verifyemail photo contact donate ssn tithein proxies work backing invite"
 
 Scenario: A newbie registers with no case
   When member "?" confirms form "signup" with values:

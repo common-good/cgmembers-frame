@@ -129,6 +129,7 @@ define('TEN99MISC', 'A'); // code for 1099-MISC
 define('TEN99B', 'B'); // code for 1099-B
 define('TEN99K', 'MC'); // code for 1099-K
 define('MINIMA1099', 'X:20000/200, MA:600/1, VT:600.01/1'); // no 1099-K for gross/txCount under this amount (by state)
+define('MINIMA1099MAVT', 600); // 1099K minimum in MA and VT (for display)
 
 define('R_BULLET', '&#8226;'); // bullet in emails (where CSS is difficult)
 define('STATS_GRAIN', 10); // granularity of statistics, in days
@@ -285,8 +286,8 @@ define('R_CODE_LEN', 32); // length of most random identifiers
 define('R_DUPTX_MINS', 4); // number of minutes before a duplicate transaction is allowed
 define('HAS_XFEE', "data LIKE '%s:4:\"xfee\";%'"); // sql to recognize a transaction that has an exchange fee
 define('R_DEPOSIT_RETURN_FEE', 20); // what we charge members for a second bounced transfer
-define('HAS_REVERSER', "(EXISTS (SELECT tRev FROM tx_hdrs WHERE tRev.reverses=t.xid))");
-define('TRIALCO_LIMIT', 1000); // maximum payments received by a trial (dependent company) account
+define('TRIALCO_AMT_LIMIT', 100); // maximum payments received by a trial (dependent company) account
+define('TRIALCO_DAY_LIMIT', 14); // maximum number of days for a trial company
 define('EQUIP_DEPOSIT', 50); // dollar cost of equipment deposit
 define('MATURITY', 21); // minimum age to have a credit limit
 
@@ -338,14 +339,13 @@ define('APP_CAN_BIT_DESCS', t('charge customers,undo last transaction,give %RCRE
 define('R_STEPS_OLD', 'signup:signup, verify, ssn, sign:community/agreement, donate:community/donate, proxies, prefs:settings/preferences, connect, company, relations, photo, food, discount:community/discount, backing:community/backing');
 
 define('S_ALL', 'signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, titheout, tithein, work, partnersteptwo, partnerend, food, wantsPrint, printed'); // where to go to complete each step (unordered) -- add new steps to the end
-define('S_PERSON', 'signup verifyid agree preferences fund verifyemail'); // soon replace "preferences" with titheOut
-define('S_CO', 'signup discount verifyemail');
+define('S_PERSON', 'signup verifyemail verifyid agree preferences fund photo contact donate tithein proxies work backing invite'); // soon replace "preferences" with titheOut
+define('S_CO', 'signup verifyemail');
 define('S_CO2', 'agent agree contact backing photo donate company tithein discount');
 define('S_CARD', 'photo contact donate');
 define('S_SELL', 'ssn contact tithein');
 define('S_VOICE', 'contact donate proxies work backing invite'); // add comment
 define('S_PARTNER', 'signup fund partnersteptwo partnerend');
-//define('S_PARTNERCO', 'signup fund agree partnerend');
 
 define('S_MEM_TASKS', 'card sell voice co2'); // followup tasks for members
 define('S_PTASKS', 'person card sell voice partner');
@@ -504,11 +504,12 @@ define('B_FOOD', 17); // contribution to food fund
 define('TX_FLAGS', 'offline short crumbs recurs gift loan investment stake fine noask funding food');
 
 // Invoice status (txid >= TX_PAID if paid)
+define('TX_DELAYED', -3); // waiting for both accounts to qualify
 define('TX_DENIED', -2); // invoice rejected by the non-originator
 define('TX_PENDING', -1); // charged, waiting for confirmation
 define('TX_APPROVED', 0); // invoice is approved but not paid
 define('TX_PAID', 1); // any status this amount or more is a payment transaction record ID (xid)
-define('TX_STATUSES', t('-2:denied,-1:OPEN,0:approved,1:paid'));
+define('TX_STATUSES', t('-3:delayed,-2:denied,-1:OPEN,0:approved,1:paid'));
 
 // Transaction channels (roughly in order of simplicity and generality of messages) (CGF)
 define('TX_SYS', 0);

@@ -116,7 +116,7 @@ function formSummary($form, &$sta) {
       $extra .= ' ' . w\popHelp(t('bank info'), $bankInfo, '#'); //strtr(t(' <@a>bank info</a>'), ['@a'=>$bankInfo]); // strtr circumvents Drupal crap
     }
   } else $extra = '';
-  $accountId = item(($mya->mainQid ?: 'N/A') . ' (' . $acctType . ')' . $extra, t('ID:'));
+  $accountId = item(($mya->mainQid ?: 'N/A') . " . ($acctType)$extra", t('ID:')); // . is for double-click select
 
   $fields = 'photo title clickPhoto showCustomers topButtons accountId accountName address legalName shortName community balance newBalance creditLine creditLimit committed choiceList';
 //  foreach (ray('details') as $k) $$k = @$form[$k]; unset($form[$k]); // put these on the left if admin
@@ -252,7 +252,7 @@ function activate($helper) {
 ///  debug("helper=$mya->helper ok=$mya->ok");
   
   if ($firstTime = !$mya->activated) { // first time activation
-//      u\EXPECT($mya->superAdmin, 'initial activation is only for superadmin');
+      u\EXPECT($mya->superAdmin, 'initial activation is only for superadmin');
 //    u\EXPECT($mya->co or $mya->dob, 'no dob!');
     // setting B_UNDERAGE must precede update of vsecure, because dob gets V-encrypted
     $dob = $mya->dob ?: ($mya->yob ? strtotime("$mya->yob-01-01") : time());
@@ -265,7 +265,7 @@ function activate($helper) {
     $msg = 'approved';
 //    if (!$mya->confirmed) $msg .= ($helper > 1 ? '|must confirm' : '|in person');
     if (!$mya->confirmed) $msg .= ($mya->helper == 1 ? '|must confirm uninvited' : '|must confirm');
-    if (!$mya->co and !$mya->stepsDone('card')) $msg .= '|suggest card';
+    if (!$mya->co and !$mya->stepsDone('person')) $msg .= '|suggest person';
     $subs = ray('inviterName youName specifics', @$mya->helperA->fullName, $mya->fullName, getSpecifics($mya));
     
     r\message($mya->id, $msg, $subs);
@@ -321,12 +321,11 @@ function choiceListFld() {
     community:invite:Invite:Invite a friend or company to join.<br><small>Your local Community Fund gets $2 for every invitation you send!</small>
     community:donate:Give:Make a donation to %PROJECT.
     community:comment:Comment:Send a comment, question, or suggestion.
-    scraps:card:Card:Get a %PROJECT payment card
-    scraps:sell:Sell:Accept payments (including discount rebates) through %PROJECT
-    scraps:voice:Voice:Participate in %PROJECT economic democracy
-    scraps:co2:Finish:Finish opening your complete company account &mdash; required before you receive a total of $1,000 or within six months, whichever is first
+    scraps:person:Finish:Finish opening your account &mdash; get a %PROJECT payment card,accept payments (including discount rebates), and participate in %PROJECT economic democracy.
+    scraps:co2:Finish:Finish opening your complete company account &mdash; required before you receive a total of $100 or within one week, whichever is first.
 X
   ));
+    
   foreach($choices0 as $one) {
     list ($dir, $task, $title, $text) = explode(':', trim($one));
 
@@ -339,7 +338,7 @@ X
     ${$task . 'Ch'} = $kch ? ["$dir/$task" => $kch] : [];
   }
     
-  $choices = $mya->co ? $co2Ch + $inviteCh + $donateCh : ($cardCh + $inviteCh + $sellCh + $voiceCh + $donateCh);
+  $choices = ($mya->co ? $co2Ch : $personCh) + $inviteCh + $donateCh + $commentCh;
   $choiceList = t('<h3>Next Steps</h3>') . "\n";
   foreach ($choices as $url => $desc) if (!empty($desc)) $choiceList .= w\lnk("/$url", $desc) . "\n";
   return item($choiceList . "\n");

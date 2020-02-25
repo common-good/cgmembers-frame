@@ -37,9 +37,9 @@ function formSignupCo($form, &$sta, $args = '') {
 
   $title = t('Open a Trial Company Account');
   $subtext = t(<<< X
-  <p>Fill out this short form to get your company started accepting %PROJECT payments quickly. You can accept up to %limit in payments before you need to convert to a regular company account (and open a personal account for signing in). There is no charge for a trial account or for a regular company account or a personal account.</p>
+  <p>Fill out this short form to get your company started accepting %PROJECT payments quickly. You can accept up to $%TRIALCO_AMT_LIMIT in total payments, for %TRIALCO_DAY_LIMIT days, before you need to convert to a regular company account (and open a personal account for signing in). There is no charge for a trial account or for a regular company account or a personal account.</p>
 X
-  , 'limit', u\fmtAmt(TRIALCO_LIMIT));
+  );
   
   $forother = item(w\lnk('/signup/' . $args, t('open an individual account instead')));
   

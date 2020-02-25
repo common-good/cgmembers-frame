@@ -2370,8 +2370,9 @@ function doBtn($class, $text, $data = '') {return w\btn('', $text, 'primary', 'x
  * Skip a setup step and save it for last. Has no effect if step is already done.
  * If defaulting to the current step, redirect to the next step.
  * @param string $substitute: step to do instead (later)
+ * @param string $justDid: step just completed
  */
-function skipStep($substitute = NULL) {
+function skipStep($substitute = NULL, $justDid = '') {
   global $mya;
 
   if (!@$mya or !$stepsLeft = $mya->stepsLeft()) return; // nothing to do
@@ -2379,7 +2380,9 @@ function skipStep($substitute = NULL) {
   unset($stepsLeft[0]);
   if ($step != 'discount') $stepsLeft[] = $substitute ?: $step; // put this step at the end (except discount, which can be done later)
   $mya->update('stepsLeft', array_values($stepsLeft)); // renumber and update
-  return w\go($mya->nextStepUrl());
+  $nextStep = $mya->nextStepUrl($justDid, $msg);
+  if ($justDid and $msg) w\say($msg);
+  return w\go($nextStep);
 }
 
 /**

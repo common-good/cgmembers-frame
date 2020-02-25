@@ -116,7 +116,7 @@ function formConnect_submit($form, &$sta) {
   global $mya;
 
   extract(just('connect routingNumber bankAccount cashout autopay autoboxes refills target achMin saveWeekly chox', $sta['input']));
-  if ($chox == 3 and $connect < 2) $mya->update('fundBy', $connect == 1 ? 'cash' : 'pay');
+  if (nn($chox) == 3 and $connect < 2) $mya->update('fundBy', $connect == 1 ? 'cash' : 'pay');
   $connect = (op($sta) != 'remove' and nn($connect) !== 0 and nn($connect) != $chox - 2);
   $minimum = $mya->minimum;
 

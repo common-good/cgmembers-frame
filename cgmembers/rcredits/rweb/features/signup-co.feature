@@ -5,8 +5,8 @@ SO I can be part of the Common Good Economy
 
 Setup:
   Given members:
-  | uid  | fullName | acctType    | flags      | created  | federalId | postalAddr          | pass  |*
-  | .ZZZ | Zeta Zot | personal    | ok         | 99654321 | 123456789 | 26Z, Zton, CA 98765 | zpass |
+  | uid  | fullName | acctType    | flags        | created  | federalId | postalAddr          | pass  |*
+  | .ZZZ | Zeta Zot | personal    | ok,confirmed | 99654321 | 123456789 | 26Z, Zton, CA 98765 | zpass |
   And member is logged out
 
 Scenario: Someone wants to open a company account
@@ -65,12 +65,8 @@ Scenario: Someone opens a trial company account while signed in
   | Coco Co  | cococo | NEWAAA | %BASE_URL | WHATEVER |
   And member ".AAA" one-time password is set to "WHATEVER"
   And we say "status": "info saved|step completed"
-  And we show "Get Your Customers Signed Up" with:
-  | Discount             |
-  | Minimum              |
-  | Valid until          |
-  | Limit                |
-  And member ".AAA" steps left "discount verifyemail"
+  And we show "Verify Your Email"
+  And member ".AAA" steps left "verifyemail"
 
 Scenario: A member opens a trial company account not signed in
   Given next random code is "WHATEVER"
@@ -119,6 +115,12 @@ Scenario: A minimal member opens a trial company account
   | source    | friend         |
   | selling   | nuts           |
   | contact   | Abe One        |
+  And member ".AAA" steps left "verifyemail"
+
+  Given step done "verifyemail"
+  Then members have:
+  | uid  | flags                   |*
+  | .AAA | confirmed co depends ok |
   
 Scenario: A member opens a trial company account without a phone
   Given next random code is "WHATEVER"
@@ -159,8 +161,7 @@ Scenario: A trial company account manager creates a discount
   And we show "Verify Your Email Address"
   And member ".AAA" steps left "verifyemail"
   
-Skip NO! trial companies can't pay
-Scenario: A member makes a payment from a trial company account
+Scenario: A trial company account tries to accept too much
   Given members:
   | uid       | .AAA           |**
   | fullName  | Coco Co        |
@@ -168,20 +169,11 @@ Scenario: A member makes a payment from a trial company account
   | flags     | confirmed co depends ok |
   And balances:
   | uid  | balance |*
-  | .AAA | 100     |
-  When member ".AAA" confirms form "pay" with values:
-  | op  | who      | amount | goods | purpose |*
-  | pay | Zeta Zot | 100    | %FOR_GOODS     | labor   |
-  Then we say "status": "report tx" with subs:
-  | did    | otherName | amount |*
-  | paid   | Zeta Zot  | $100   |
-  And we notice "new payment" to member ".ZZZ" with subs:
-  | created | fullName | otherName | amount | payeePurpose |*
-  | %today  | Zeta Zot | Coco Co   | $100   | labor        |
-  And transactions:
-  | xid | created | amount | from  | to   | purpose      | taking |*
-  |   1 | %today  |    100 | .AAA  | .ZZZ | labor        | 0      |
+  | .ZZZ | 1000    |
+  When member ".ZZZ" confirms form "pay" with values:
+  | op  | who     | amount                    | goods      | purpose |*
+  | pay | Coco Co | %(%TRIALCO_AMT_LIMIT + 1) | %FOR_GOODS | labor   |
+  Then we say "error": "trial co over"
   And balances:
   | uid  | balance |*
-  | .AAA |       0 |
-  | .ZZZ |     100 |
+  | .AAA | 0       |

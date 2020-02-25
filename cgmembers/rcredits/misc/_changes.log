@@ -1,3 +1,8 @@
+2020-03-03 feature/fewer-acct-options
+. HAS_REVERSER was unused. Removed.
+. trialco now has just two steps and is limited to 14 days and $100.
+. just two types of personal account: partner and normal (SSN required)
+
 2020-02-21 feature/restrict-activate
 . now only superAdmin can activate an account (but other admins can still deactivate)
 . minor fixes to changepassword.inc

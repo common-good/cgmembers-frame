@@ -9,9 +9,9 @@ Setup:
   Given members:
   | uid | fullName | phone | email | city  | state | zip   | floor | flags     | pass      |*
   | .ZZA | Abe One |     1 | a@    | Atown | AK    | 01000 |     0 |           | %whatever |
-  | .ZZB | Bea Two |     2 | b@    |       | UT    | 02000 |  -200 | member    | |
+  | .ZZB | Bea Two |     2 | b@    |       | UT    | 02000 |  -200 |           | |
   | .ZZC | Our Pub |     3 | c@    | Ctown | CA    | 03000 |     0 | member,co | |
-
+Skip
 # (see also signup feature) 
 Scenario: An individual member signs up
   Given member is logged out
@@ -22,88 +22,75 @@ Scenario: An individual member signs up
   Then members:
   | uid  | fullName | legalName | email | phone        | zip   | state |*
   | .AAA | Al Aargh | Al Aargh  | z@    | +14132530000 | 01002 | MA    |
-  And we show "Identity Verification"
+  And we show "Verify Your Email Address"
   And we say "status": "info saved|step completed"
-  And member ".AAA" steps left "verifyid agree preferences fund verifyemail"
+  And member ".AAA" steps left "verifyemail verifyid agree preferences fund photo contact donate tithein proxies work backing invite"
 
-  When member ".AAA" completes form "settings/verifyid" with values:
+  Given member is logged out
+  When member "?" visits page "reset/id=alaargh&code=WHATEVER&verify=1"
+  Then we show "Verified!"
+  And member ".AAA" steps left "verifyid agree preferences fund photo contact donate tithein proxies work backing invite"
+  
+  When member "?" completes form "reset/id=alaargh&code=WHATEVER&verify=1" with values:
+  | pass1 | pass2 |*
+  |       |       |
+  Then we show "Identity Verification"
+  And member ".AAA" steps left "verifyid agree preferences fund photo contact donate tithein proxies work backing invite"
+
+Scenario: An individual member verifies ID
+  Given member ".ZZB" has "person" steps done: "signup verifyemail"
+  When member ".ZZB" completes form "settings/verifyid" with values:
   | field | federalId   | dob      |*
   |     2 | 123-45-6789 | 2/1/1990 |
   # field 2 is SSN and DOB, as opposed to file upload
   Then members:
   | uid  | federalId | dob       |*
-  | .AAA | 123456789 | 633848400 |
+  | .ZZB | 123456789 | 633848400 |
   And we show "%PROJECT Agreement" with:
   | I make this agreement |
   And we say "status": "info saved|step completed"
-  And member ".AAA" steps left "agree preferences fund verifyemail ssn"
+  And member ".ZZB" steps left "agree preferences fund photo contact donate tithein proxies work backing invite ssn"
 
-  When member ".AAA" completes form "community/agreement" with values:
+Scenario: An individual member signs agreement
+  Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid"
+  When member ".ZZB" completes form "community/agreement" with values:
   | op | I Agree |**
   Then we show "Account Preferences"
   And we say "status": "info saved|step completed"
-  And steps left "preferences fund verifyemail ssn"
+  And steps left "preferences fund photo contact donate tithein proxies work backing invite"
 
-  When member ".AAA" completes form "settings/preferences" with values:
+Scenario: An individual member sets preferences
+  Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree"
+  When member ".ZZB" completes form "settings/preferences" with values:
   | roundup | crumbs | notices | statements | nosearch | secretBal |*
   |       1 |      2 | monthly | electronic |        0 |         1 |
   Then we show "Getting Money In or Out"
   And we say "status": "info saved|step completed"
-  And steps left "fund verifyemail ssn"
+  And steps left "fund photo contact donate tithein proxies work backing invite"
 
-  When member ".AAA" completes form "settings/fund" with values:
+Scenario: An individual member connect bank account
+  Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences"
+  When member ".ZZB" completes form "settings/fund" with values:
   | op     | connect | routingNumber | bankAccount | bankAccount2 | cashout | refills | target | achMin | saveWeekly |*
   | submit |       2 |     053000196 |         123 |          123 |       0 |       1 |     $0 |    $20 |         $0 |  
-  Then we show "Verify Your Email Address"
+  Then we show "Photo ID Picture"
   And we say "status": "info saved|step completed"
 	And members have:
-	| uid  | risks         |*
-	| .AAA | hasBank,rents |
-  And steps left "verifyemail ssn"
-  
-  Given member is logged out
-  When member "?" visits page "reset/id=alaargh&code=WHATEVER&verify=1"
-  Then we show "Verified!"
-  And member ".AAA" steps left "ssn"
-  
-  When member "?" completes form "reset/id=alaargh&code=WHATEVER&verify=1" with values:
-  | pass1 | pass2 |*
-  |       |       |
-  Then we show "Confirm Your Social Security Number"
-  And we say "status": "info saved|step completed"
-  And member ".AAA" steps left "ssn"
-  
-  When member ".AAA" completes form "settings/ssn" with values:
-  | federalId   |*
-  | 123-45-6789 |
-  Then we show "Account Summary" with:
-  | Next Steps |
-  | Card   |
-  | Invite |
-  | Sell   |
-  | Voice  |
-  | Give   |
-  And we say "status": "setup complete|individual approval|join thanks|next steps|no card member"
-  And steps left ""
-  And members have:
-  | uid  | flags  |*
-  | .AAA | member,refill,roundup,monthly,secret |
-  And we tell ".AAA" CO "New Member (Al Aargh)" with subs:
-  | quid | status |*
-  | .AAA | member |
-  
-Scenario: A member wants a card 
-  When member ".ZZB" visits page "scraps/card"
-  Then we show "Photo ID Picture"
-  And steps left "photo contact donate"
+	| uid  | risks   |*
+	| .ZZB | hasBank |
+  And steps left "photo contact donate tithein proxies work backing invite"
 
+Scenario: An individual member uploads a photo
+  Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund"
   When member ".ZZB" completes form "settings/photo" with values:
   | op       |*
   | nextStep |
   Then we show "Contact Information"
   And we say "status": "info saved|step completed"
-  And steps left "contact donate"
+  And steps left "contact donate tithein proxies work backing invite"
 
+Scenario: An individual member gives contact info
+  Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund photo"
   When member ".ZZB" completes form "settings/contact" with values:
   | fullName  | Bea Two        |**
   | email     | b@             |
@@ -135,68 +122,31 @@ Scenario: A member wants a card
   # owns, so no rents risk
   And we show "Donate to %PROJECT"
   And we say "status": "info saved|step completed"
-  And steps left "donate"
-  
+  And steps left "donate tithein proxies work backing invite"
+Resume
+Scenario: An individual member donates
+  Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund photo contact"
   When member ".ZZB" completes form "community/donate" with values:
   | amtChoice | period | honor | honored |*
   |        50 |      M |     - |         |
-  Then we show "Account Summary" with:
-  | Next Steps |
-  | Invite |
-  | Sell   |
-  | Voice  |
-  | Give   |
-  And without:
-  | Get a %PROJECT payment card |
-  And we say "status": "|card member"
-  And steps left ""
-
-Scenario: A member wants to sell
-  # identity was verified, but not by SSN
-  When member ".ZZB" visits page "scraps/sell"
-  Then we show "Verify Your Identity" with:
-  | Soc Sec # |
-  | Birth Date |
-  And steps left "ssn contact tithein"
-
-  Given step done "verifyid"
-  When member ".ZZB" completes form "settings/ssn" with values:
-  | federalId   |*
-  | 123-45-6789 |
-  Then we show "Contact Information"
+  Then we show "Share When You Receive"
   And we say "status": "info saved|step completed"
-  And steps left "contact tithein ssn"
-
-  Given step done "ssn"
-  And step done "contact"
+  And steps left "tithein proxies work backing invite"
+Skip
+Scenario: An individual member chooses tithes
+  Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund photo contact donate"
   When member ".ZZB" completes form "settings/tithein" with values:
   | crumbs | 1.5 |**
   Then members have:
   | uid  | crumbs |*
   | .ZZB | .015   |
-  And we show "Account Summary" with:
-  | Next Steps |
-  | Card   |
-  | Invite |
-  | Voice  |
-  | Give   |
-  And without:
-  | Sell |
-  And we say "status": "info saved|sell member"
-  And steps left ""
-  
-Scenario: A member wants to have a voice in the Common Good democracy
-  When member ".ZZB" visits page "scraps/voice"
-  Then we show "Contact Information"
-  And steps left "contact donate proxies work backing invite"
-  
-  Given step done "contact"
-  And step done "donate"
-  When member ".ZZB" visits page "scraps/voice"
-  Then we show "Proxies"
+  And we show "Proxies"
+  And we say "status": "info saved|step completed"
   And steps left "proxies work backing invite"
-  
-  Given proxies:
+Skip
+Scenario: An individual member chooses proxies
+  Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund photo contact donate tithein"
+  And proxies:
   | person | proxy | priority |*
   | .ZZB   | .ZZA  |        1 |
   | .ZZB   |    2  |        2 |
@@ -238,6 +188,40 @@ Scenario: A member wants to have a voice in the Common Good democracy
   And we say "status": "info saved|voice member"
   And steps left ""
 
+Skip
+  When member ".ZZB" completes form "settings/ssn" with values:
+  | federalId   |*
+  | 123-45-6789 |
+  Then we show "Contact Information"
+  And we say "status": "info saved|step completed"
+  And steps left "contact tithein ssn"
+
+
+Scenario: An individual member confirms social security number
+  Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree"
+  Then we show "Confirm Your Social Security Number"
+  And we say "status": "info saved|step completed"
+  And member ".ZZB" steps left "ssn"
+  
+  When member ".ZZB" completes form "settings/ssn" with values:
+  | federalId   |*
+  | 123-45-6789 |
+  Then we show "Account Summary" with:
+  | Next Steps |
+  | Card   |
+  | Invite |
+  | Sell   |
+  | Voice  |
+  | Give   |
+  And we say "status": "setup complete|individual approval|join thanks|next steps|no card member"
+  And steps left ""
+  And members have:
+  | uid  | flags  |*
+  | .ZZB | member,refill,roundup,monthly,secret |
+  And we tell ".ZZB" CO "New Member (Al Aargh)" with subs:
+  | quid | status |*
+  | .ZZB | member |
+  
 # (see also signup feature) 
 Scenario: A company signs up
   Given member is logged out

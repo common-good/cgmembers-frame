@@ -223,6 +223,20 @@ X;
 	if ($uids) db\del('r_usd', 'txid', 'amount=0 AND payee IN (:uids)', compact('uids'));
 	unset($DBTX);
 	db\q('DELETE FROM x_usd WHERE amount=0'); // no need to track these
+  
+  queueEach('endTrialco', 'SELECT uid FROM users WHERE :IS_CO and :IS_DEPENDS AND :NOW-activated > :TRIALCO_DAY_LIMIT*:DAY_SECS');
+}
+
+/**
+ * Warn company that their trial time is past, account is deactivated, and they must open a full account.
+ */
+function endTrialco($item) {
+  extract(just('uid', $item));
+  r\message($uid, 'trial co end');
+  $a = r\acct($uid);
+  $a->setBit(B_OK, FALSE);
+  $a->setBit(B_DEPENDS, FALSE);
+  $a->update('task', 'co2');
 }
 
 /**

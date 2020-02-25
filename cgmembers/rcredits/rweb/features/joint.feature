@@ -120,7 +120,8 @@ Scenario: A joined account member looks at transaction history and summary
   Given cron runs "acctStats"
   When member ".ZZB" visits page "summary"
   Then we show "Account Summary" with:
-  | ID            | ZZB (joint account) |
+  | ID            | ZZB |
+  | ~...          | (joint account) |
   | Name          | Bea Two & Abe One |
   | ~             | (beatwo & abeone) |
   | Balance       | $1,850 |

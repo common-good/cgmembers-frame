@@ -83,12 +83,7 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE invest TheClubMakesALoan
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
- *     MAKE membership AnIndividualMemberSignsUp
- *     MAKE membership AMemberWantsACard
- *     MAKE membership AMemberWantsToSell
- *     MAKE membership AMemberWantsToHaveAVoiceInTheCommonGoodDemocracy
- *     MAKE membership ACompanySignsUp
- *     MAKE membership AMemberCompanyWantsToCompleteTheAccount
+ *     MAKE membership AnIndividualMemberDonates
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     MAKE partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
@@ -162,6 +157,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE signupco AMemberOpensATrialCompanyAccountNotSignedIn
  *     MAKE signupco AMinimalMemberOpensATrialCompanyAccount
  *     MAKE signupco AMemberOpensATrialCompanyAccountWithoutAPhone
+ *     MAKE signupco ATrialCompanyAccountTriesToAcceptTooMuch
  *     MAKE signup ANewbieRegistersInWesternMassachusetts
  *     MAKE signup ANewbieRegistersWithNoCase
  *     MAKE signup AMemberRegistersBadEmail
@@ -239,9 +235,6 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE invoice Setup
  *     MAKE joint Setup
  *     MAKE membership Setup
- *     TEST membership AnIndividualMemberSignsUp
- *     TEST membership AMemberWantsACard
- *     TEST membership AMemberCompanyWantsToCompleteTheAccount
  *     MAKE partnersignup Setup
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
@@ -262,6 +255,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     TEST signupco AMemberOpensATrialCompanyAccountNotSignedIn
  *     BOTH signupco AMinimalMemberOpensATrialCompanyAccount
  *     MAKE signupco ATrialCompanyAccountManagerCreatesADiscount
+ *     MAKE signupco ATrialCompanyAccountTriesToAcceptTooMuch
  *     MAKE signup Setup
  *     TEST signup ANewbieRegistersInWesternMassachusetts
  *     TEST signup ANewbieRegistersWithNoCase
@@ -378,12 +372,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST invest AClubAdministratorHandlesRequestsToCashOut
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
- *     TEST membership AnIndividualMemberSignsUp
- *     TEST membership AMemberWantsACard
- *     TEST membership AMemberWantsToSell
- *     TEST membership AMemberWantsToHaveAVoiceInTheCommonGoodDemocracy
- *     TEST membership ACompanySignsUp
- *     TEST membership AMemberCompanyWantsToCompleteTheAccount
+ *     TEST membership AnIndividualMemberDonates
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
@@ -408,6 +397,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST signupco SomeoneOpensATrialCompanyAccountWhileSignedIn
  *     TEST signupco AMemberOpensATrialCompanyAccountWithoutAPhone
  *     TEST signupco ATrialCompanyAccountManagerCreatesADiscount
+ *     TEST signupco ATrialCompanyAccountTriesToAcceptTooMuch
  *     TEST signup ANewbieRegistersInWesternMassachusetts
  *     TEST signup AMemberRegistersBadEmail
  *     TEST signup AMemberRegistersBadZip
@@ -449,12 +439,7 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST food AMemberMakesAFoodDonationWithoutAdequateFunds
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     TEST invest AMemberCompanyJoinsTheInvestmentClub
- *     TEST membership AnIndividualMemberSignsUp
- *     TEST membership AMemberWantsACard
- *     TEST membership AMemberWantsToSell
- *     TEST membership AMemberWantsToHaveAVoiceInTheCommonGoodDemocracy
- *     TEST membership ACompanySignsUp
- *     TEST membership AMemberCompanyWantsToCompleteTheAccount
+ *     TEST membership AnIndividualMemberDonates
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
@@ -471,6 +456,7 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST signin AMemberClicksALinkToResetPassword
  *     TEST signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     TEST signin AMemberClicksALinkToResetPasswordForUnknownAccount
+ *     TEST signupco SomeoneOpensATrialCompanyAccountWhileSignedIn
  *     TEST signupco ATrialCompanyAccountManagerCreatesADiscount
  *     TEST signup ANewbieVisitsTheIndividualSignupPage
  *     TEST signup ANewbieRegistersInWesternMassachusetts
@@ -522,12 +508,6 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST joint AMemberRequestsAJointAccount
  *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     TEST joint AMemberRequestsTwoJoinsAtOnce
- *     TEST membership AnIndividualMemberSignsUp
- *     TEST membership AMemberWantsACard
- *     TEST membership AMemberWantsToSell
- *     TEST membership AMemberWantsToHaveAVoiceInTheCommonGoodDemocracy
- *     TEST membership ACompanySignsUp
- *     TEST membership AMemberCompanyWantsToCompleteTheAccount
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST paybutton AMemberClicksAPayWithCommonGoodButton
@@ -569,7 +549,6 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST signin AMemberVisitsTheMemberSite
  *     TEST signupco SomeoneWantsToOpenACompanyAccount
  *     TEST signupco AMemberWantsToOpenACompanyAccountWhileSignedIn
- *     TEST signupco SomeoneOpensATrialCompanyAccountWhileSignedIn
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST summary AMemberClicksTheSummaryTab
  *     TEST summary AMemberClicksTheSummaryTabWithRoundups
@@ -605,10 +584,6 @@ function with($content) {return weShow($content);}
  *     TEST invest TheInvestmentClubIssuesDividends
  *     TEST invest MembersRateAProposedLoan
  *     TEST invest TheClubMakesALoan
- *     TEST membership AMemberWantsACard
- *     TEST membership AMemberWantsToSell
- *     TEST membership AMemberWantsToHaveAVoiceInTheCommonGoodDemocracy
- *     TEST membership AMemberCompanyWantsToCompleteTheAccount
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     TEST queries AMemberVisitsTheCommunityDataPage
@@ -668,7 +643,6 @@ function withoutOptions($options) {
  *     MAKE joint AJoinedAccountMemberUnjoinsTheAccount
  *     MAKE joint AMemberRequestsTwoJoinsAtOnce
  *     TEST joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
- *     TEST membership AMemberCompanyWantsToCompleteTheAccount
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
@@ -726,6 +700,7 @@ function relations($relations) {return t\relations($relations);}
  *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     TEST joint AJoinedAccountMemberUnjoinsTheAccount
  *     BOTH queries Setup
+ *     BOTH signupco ATrialCompanyAccountTriesToAcceptTooMuch
  *     TEST statement Setup
  *     TEST summary Setup
  *     TEST summary AMemberClicksTheSummaryTabWithRoundups
@@ -796,12 +771,6 @@ function usd($list) {return t\usd($list);}
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
- *     MAKE membership AnIndividualMemberSignsUp
- *     MAKE membership AMemberWantsACard
- *     MAKE membership AMemberWantsToSell
- *     MAKE membership AMemberWantsToHaveAVoiceInTheCommonGoodDemocracy
- *     MAKE membership ACompanySignsUp
- *     MAKE membership AMemberCompanyWantsToCompleteTheAccount
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     MAKE partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
@@ -858,8 +827,6 @@ function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
  * member is logged out
  *
  * in: MAKE balancesheet ANonmemberLooksAtTheBalanceSheet
- *     MAKE membership AnIndividualMemberSignsUp
- *     MAKE membership ACompanySignsUp
  *     MAKE partnersignup Setup
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     MAKE partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
@@ -1155,13 +1122,10 @@ function statisticsGetSet($time) {
  *     BOTH joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     BOTH joint AJoinedAccountMemberUnjoinsTheAccount
- *     TEST membership AnIndividualMemberSignsUp
- *     TEST membership AMemberWantsToSell
- *     TEST membership ACompanySignsUp
- *     BOTH membership AMemberCompanyWantsToCompleteTheAccount
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
+ *     TEST signupco AMinimalMemberOpensATrialCompanyAccount
  *     MAKE statement Setup
  *     MAKE summary Setup
  *     MAKE transactions AMemberLooksAtTransactionsForThePastYear
@@ -1326,9 +1290,7 @@ function memberIsLoggedIn($id) {
 /**
  * next random code is (ARG)
  *
- * in: MAKE membership AnIndividualMemberSignsUp
- *     MAKE membership ACompanySignsUp
- *     MAKE partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
+ * in: MAKE partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     MAKE paybutton AMemberAsksForANewPasswordForUsername
  *     MAKE paybutton AMemberAsksForANewPasswordForAccountID
  *     MAKE paybutton AMemberAsksForANewPasswordForEmail
@@ -1551,7 +1513,6 @@ function memberCompletesFormWithNameAndAllCheckboxes($id, $page, $signedBy) {
  * proxies: (ARG)
  *
  * in: MAKE demographics Setup
- *     MAKE membership AMemberWantsToHaveAVoiceInTheCommonGoodDemocracy
  */
 function proxies($list) {return t\proxies($list);}
 
@@ -1573,8 +1534,6 @@ function memberViewsStatementFor($id, $month) {
  * we tell (ARG) CO (ARG) with subs: (ARG)
  *
  * in: TEST gift AMemberDonatesWithInsufficientFunds
- *     TEST membership AnIndividualMemberSignsUp
- *     TEST membership ACompanySignsUp
  */
 function weTellCOWithSubs($id, $topic, $subs) {return t\weTellAdmin($topic, $subs, t\uid($id));}
 
@@ -1673,7 +1632,6 @@ function weScripWithSubs($script, $args = []) {
  *     BOTH invest TheInvestmentClubIssuesDividends
  *     BOTH invest MembersRateAProposedLoan
  *     BOTH invest TheClubMakesALoan
- *     TEST membership AMemberWantsToHaveAVoiceInTheCommonGoodDemocracy
  *     MAKE preferences Setup
  *     MAKE showrecurs Setup
  *     TEST showrecurs AMemberStopsAnAutopayment
@@ -1869,12 +1827,7 @@ function memberPasswordIsSetTo($id, $pass) {
 /**
  * steps left (ARG)
  *
- * in: TEST membership AnIndividualMemberSignsUp
- *     TEST membership AMemberWantsACard
- *     TEST membership AMemberWantsToSell
- *     TEST membership AMemberWantsToHaveAVoiceInTheCommonGoodDemocracy
- *     TEST membership ACompanySignsUp
- *     TEST membership AMemberCompanyWantsToCompleteTheAccount
+ * in: TEST membership AnIndividualMemberDonates
  *     TEST signup ANewbieRegistersInWesternMassachusetts
  */
 function stepsLeft($left) {global $mya; return memberStepsLeft($mya->id, $left);}
@@ -1882,13 +1835,12 @@ function stepsLeft($left) {global $mya; return memberStepsLeft($mya->id, $left);
 /**
  * member (ARG) steps left (ARG)
  *
- * in: TEST membership AnIndividualMemberSignsUp
- *     TEST membership ACompanySignsUp
- *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
+ * in: TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST signupco SomeoneOpensATrialCompanyAccountWhileSignedIn
+ *     TEST signupco AMinimalMemberOpensATrialCompanyAccount
  *     TEST signupco ATrialCompanyAccountManagerCreatesADiscount
  */
 function memberStepsLeft($id, $left) {
@@ -1913,6 +1865,7 @@ function memberStepsLeft($id, $left) {
  * member (ARG) has (ARG) steps done: (ARG)
  *
  * in: MAKE invest Setup
+ *     MAKE membership AnIndividualMemberDonates
  */
 function memberHasStepsDone($id, $task, $steps) {
   global $testOnly;
@@ -1935,9 +1888,7 @@ function memberHasStepsDone($id, $task, $steps) {
  * in: MAKE connect AMemberConnectsABankAccountLater
  *     MAKE contact AMemberVisitsTheContactInfoPage
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
- *     MAKE membership AMemberWantsToSell
- *     MAKE membership AMemberWantsToHaveAVoiceInTheCommonGoodDemocracy
- *     MAKE membership AMemberCompanyWantsToCompleteTheAccount
+ *     MAKE signupco AMinimalMemberOpensATrialCompanyAccount
  */
 function stepDone($step) {global $mya; return t\doneStep($mya->id, $step);}
 
