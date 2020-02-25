@@ -1222,7 +1222,7 @@ o;
     if ($amount > 0) $msg .= '|bank tx number' . (nn($completed) ? '|available now' : '');
     list ($action, $tofrom) = $amount < 0 ? [t('deposit'), t('to')] : [t('draw'), t('from')];
     $msg = tr($msg, ray('action tofrom amount checkNum previous total', $action, $tofrom, u\fmtAmt(abs(@$amount)), $xid, $previous, $total));
-    if (empty($why)) $newwhy = $why = '';
+    if (empty($why)) $why = '';
     r\notify($a->id, $newwhy = tr($msg, compact('why')));
     if ($amount > $amount0 and !$automatic) {
       $whyIncrease = $a->refill ? t('to meet your chosen auto-refill target. If this is more than you wanted, cancel or reverse this request, then turn off auto-refills in your Preference Settings before trying again.') : t('to bring your balance up to zero.');

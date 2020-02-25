@@ -165,26 +165,48 @@ function memberRay($myid, $aid, $coOnly = FALSE) {
 
 /**
  * Return the next relevant transaction for form 1099b, for an account.
+ * @param string $type: TEN99B or TEN99K
  * @param int $payee: the account record ID
  * @param int $year: year or end-of-year date
  * @return the next relevant row (NULL if no more)
- * Note that the IRS prohibits reporting non-positive transactions (but requires all the others). So we compromise by weeding out the transactions with "undoneBy" or "undoes" in the data field. But we return other negative transactions so we can warn the member to report the total negative amount on line 2, Form C.
+ * Note that the IRS prohibits reporting non-positive transactions (but requires all the others).
  * Also note that this report is always for just one account (and for just one SSN or EIN) 
  *   even if the account is joint.
  */
-function get1099b($payee, $year = NULL) {
+function get1099($type, $payee, $year = NULL) {
   global $q1099, $ignore1099;
   
   if (is_null($q1099)) {
     u\setDft($year, strtotime('last day of December last year'));
     $end = strlen($year) < 6 ? strtotime('1/1/' . ($year + 1)) - 1 : strtotime('tomorrow', $year);
     $start = strtotime('1 year ago', $end) + 1;
-    
-    $sql = <<< X
+    if (test()) list ($start, $end) = [NOW - 12 * 30 * DAY_SECS, NOW - 1];
+    $where = "uid2=:payee AND t.created BETWEEN $start AND $end AND type<>:E_BANK";
+
+    if ($type == TEN99B) $sql = <<< X
       SELECT created, amt AS amount, uid1 AS payer, for2 AS `for`
-      FROM txs_noreverse WHERE uid2=:payee AND created BETWEEN $start AND $end AND type<>:E_BANK
-      ORDER BY created
+      FROM txs_noreverse t WHERE $where ORDER BY t.created
 X;
+
+    if ($type == TEN99K ) {
+      for ($m = 1; $m <= 12; $m++) {
+        $dt1 = $m == 1 ? $start : ($dt2 + 1);
+        $dt2 = u\plusMonths(1, $dt1) - 1;
+        if (test()) $dt2 = $dt1 + 30 * DAY_SECS - 1;
+        $moFlds[] = "SUM(IF(t.created BETWEEN $dt1 AND $dt2, amt, 0)) AS amt$m";
+      }
+      $moFlds = join(', ', $moFlds);
+      $sql = <<< X
+        SELECT uid2, SUM(amt) AS gross,
+               SUM(IF(channel=:TX_POS, 0, amt)) AS noCard,
+               SUM(1) AS txCount, $moFlds,
+               s.abbreviation AS st
+        FROM txs_noreverse t
+        LEFT JOIN users u ON u.uid=t.uid2
+        LEFT JOIN r_states s ON s.id=u.state AND s.country_id=u.country
+        WHERE $where
+X;
+    }
     
     $q1099 = db\q($sql, compact('payee'));
   }

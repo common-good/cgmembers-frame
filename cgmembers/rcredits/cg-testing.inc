@@ -214,7 +214,8 @@ function doAccounts($info = []) {
 
   u\setDft($address, '1 My Street');
   u\setDft($city, 'Mytown');
-  u\setDft($postalAddr, @$address2 ? "$address2, $city2, $state2 $zip2" : "$address, $city, $state $zip");
+  $st = r\realState($state);
+  u\setDft($postalAddr, @$address2 ? "$address2, $city2, $state2 $zip2" : "$address, $city, $st $zip");
 
 //    u\setDft($photoId, "$state-{$zip}999");
   u\setDft($helper, t\uid('.AAB')); // everyone but .AAB should have a helper

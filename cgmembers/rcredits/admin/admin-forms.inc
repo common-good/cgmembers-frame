@@ -153,7 +153,7 @@ function formAdminPanel_submit($form, &$sta) {
     w\say($a->fullName. t(' SSN Link:<br><br> &nbsp; %PROMO_URL/do/doSsn~%qid~%code &nbsp; ', 'qid code', $a->mainQid, $a->emailCode));
   } elseif ($op == 'do1099b' or $test1099 = ($op == 'do1099btest')) {
     include_once __DIR__ . '/../cg-yearly.inc';
-    r\Special\do1099s(@$test1099);
+    r\Special\do1099s(TEN99K, @$test1099);
 	} elseif ($op == 'reconcile') {
 		w\go('sadmin/reconcile-ctty-fund');
   } elseif ($op == 'inviteeStatus') {
