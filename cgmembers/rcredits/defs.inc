@@ -470,7 +470,11 @@ define('K_HASBANK', 3); // account has a connected bank account
 define('K_ADDROFF', 14); // account's physical address is wonky (can't be geolocated or whatever)
 define('HAS_BANK', 'risks&(1<<' . K_HASBANK . ')'); // mysql criterion (not surrounding parens, so we can do u.:HAS_BANK)
 define('MASTER', '(jid=0 OR uid < jid)'); // account is the master in a joint account
-define('U_FOODY', '(SELECT 1 FROM r_industries i JOIN r_user_industries ui USING (iid) WHERE ui.uid=u.uid AND u.name<>\'foodfund\' AND i.parent=2 LIMIT 1)'); // MySQL for "the account with record ID u.uid is a food-related business"
+
+/* define('U_FOODY', '(SELECT 1 FROM r_industries i JOIN r_user_industries ui USING (iid) WHERE ui.uid=u.uid AND u.name<>\'foodfund\' AND i.parent=2 LIMIT 1)'); // MySQL for "the account with record ID u.uid is a food-related business" */
+define('FOOD_INDUSTRY', 2); // any industry with this base ancestor is food-related
+define('U_FOODY', '(SELECT 1 FROM r_user_industries ui JOIN ancestors a ON ui.iid=a.base WHERE ui.uid=u.uid AND u.name<>\'foodfund\' AND a.ancestor=' . FOOD_INDUSTRY . ' LIMIT 1)'); // MySQL for "the account u is a food-related business"
+
 define('T_FOODY', '(SELECT ' . U_FOODY . " FROM users u WHERE u.uid=uid2)"); // MySQL involving txs VIEW, meaning "payee is FOODY"
 
 define('FLOW_NONE', 0); // which way can credit flow, with another account
