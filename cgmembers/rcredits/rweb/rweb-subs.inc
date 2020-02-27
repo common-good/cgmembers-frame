@@ -1535,8 +1535,8 @@ function getPreId($source2 = NULL) {
  */
 function coCats() {
   $sql = <<<EOF
-    SELECT iid, IF(parent=iid, UCASE(industry), CONCAT('--', industry)) AS cat, parent 
-    FROM r_industries ORDER BY parent, IF(parent=iid,0,iid)
+    SELECT iid, IF(parent IS NULL, UCASE(industry), CONCAT('--', industry)) AS cat, parent 
+    FROM r_industries ORDER BY IFNULL(parent, 0), iid
 EOF;
   return db\q($sql)->fetchAllKeyed();
 }
