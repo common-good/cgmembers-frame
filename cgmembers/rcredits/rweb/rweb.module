@@ -198,7 +198,6 @@ function rweb_menu($submenu = '') {
     'sadmin/deposits' => ['sub', t('Deposits'), 'Deposits', 'superadmin'],
     'sadmin/new-member' => ['sub', t('New Member'), 'Signup code=.(admin)', 'cadmin'],
     'sadmin/make-community' => ['sub', t('Make Ctty'), 'MakeCtty', 'superadmin'],
-    'sadmin/groups' => ['sub', t('Groups'), 'Groups', 'admin2'],
     'sadmin/check-sanity' => ['call', 'Check database consistency', '0', 'admin', 'checkSanity'],
 //    'sadmin/sms' => ['sub', t('Test SMS'), 'SMS', 'superadmin'],
     'sadmin/handy' => ['sub', t('Handy'), '', 'superadminORdev', 'handyLinks'],

@@ -32,10 +32,10 @@ class AddFieldsToTxEntriesAll extends AbstractMigration
   {
     $table = $this->table('tx_entries_all');
     $table
-      ->addColumn('auxtx', 'integer', ['null' => true, 'default' => null,
-                                       'comment' => 'Auxiliary transaction to which this entry is related.']);
+      ->addColumn('rule', 'integer', ['null' => true, 'default' => null,
+                                      'comment' => 'Auxiliary transaction to which this entry is related.']);
     $table
-      ->addForeignKey('auxtx', 'u_auxtxs', 'id', ['delete' => 'restrict']);
+      ->addForeignKey('rule', 'tx_rules', 'id', ['delete' => 'restrict']);
     $table
       ->update();
     createViews($this);

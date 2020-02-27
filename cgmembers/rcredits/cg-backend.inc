@@ -397,6 +397,7 @@ function payInvoice($nvid) {
  *   'noask'
  *   'funding'
  *   'crumbs', 'recurs', 'gift': gift info
+ *   'ruleId': the id of the rule associated with this transaction
  * @param int $recursId: record ID of related record in r_recurs (if any)
  * @return simple array: 
  *    ok: success?
@@ -427,7 +428,7 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
   if (is_null($goods)) $goods = FOR_GOODS;
   $taking = ($type == 'charge' or $type == 'draw' or ($type == 'transfer' and $amount < 0));
   
-  extract(just('created force boxId', $data, [now(), 0, NULL]));
+  extract(just('created force boxId ruleId', $data, [now(), 0, NULL, NULL]));
   extract(just('offline loan investment stake fine noask funding crumbs recurs gift', $data, FALSE));
 
   $short = FALSE;
@@ -489,7 +490,7 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
   $flags = 0;
   foreach (ray($flagNames) as $k) if ($$k) u\setBit($flags, $k);
 
-  txEntryPair($entries, $amount, [$e1A, $e2A], [$e1For, $e2For], E_PRIME, [$e1Tid, $e2Tid]);
+  txEntryPair($entries, $amount, [$e1A, $e2A], [$e1For, $e2For], E_PRIME, [$e1Tid, $e2Tid], NULL, NULL, $ruleId);
   
   $DBTX = db_transaction();
 
@@ -506,7 +507,7 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
   // Apply coupon
   if ($amount > 0 and ($goods != FOR_USD)) {
     if ($loserA->can(B_SELL)) { // no rebates unless buyer has permission to sell
-      $rebate = handleAuxTxs($entries, $loserA, $gainerA, $amount);
+      $rebate = handleRules($entries, $loserA, $gainerA, $amount);
       $needed -= $rebate;
     } else r\notify($loserId, 'missed rebate', ['company' => $gainerA->fullName]);
   }
@@ -577,12 +578,12 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
  * @param int $entryType0: entry type(s)
  * @param int $acctTid0: description transaction ID (deprecated)
  */
-function txEntryPair(&$txes, $amount0, $a0, $description0, $entryType0, $acctTid0 = 0, $relType = NULL, $relatedId = NULL, $auxtx = NULL) {
+function txEntryPair(&$txes, $amount0, $a0, $description0, $entryType0, $acctTid0 = 0, $relType = NULL, $relatedId = NULL, $rule = NULL) {
   foreach ([1, 0] as $i) { // payee first, to agree with tests and so entry id is postive for e2, negative for e1
     foreach (ray('a description entryType acctTid') as $k) $$k = is_array(${$k . 0}) ? ${$k . 0}[$i] : ${$k . 0};
     $amount = $i == 0 ? -$amount0 : $amount0;
     list ($uid, $agentUid) = is_object($a) ? [$a->id, $a->agentId] : [$a, $a];
-    $txes[] = new r\TxEntry(compact(ray('entryType amount uid agentUid description acctTid relType relatedId auxtx')));
+    $txes[] = new r\TxEntry(compact(ray('entryType amount uid agentUid description acctTid relType relatedId rule')));
   }
 }
   
@@ -674,59 +675,59 @@ function sendNotifications($type, $tx, $shortfall) {
  * @param unixtime $when: when was the transaction (defaults to now)
  * @return the rebate amount
  */
-function handleAuxTxs(&$entries, $buyer, $seller, $price) {
+function handleRules(&$entries, $buyer, $seller, $price) {
   u\EXPECT($price > 0, 'non-positive price handling coupon');
 
-  // Get a list of applicable auxtxs (not rules)
+  // Get a list of applicable rules
   $sql = <<<EOF
-    SELECT a.id AS auxTxId, r.amount AS amount, r.from AS from, r.to AS to, r.`on` AS `on` SUM(e.amount) AS used
-    FROM u_auxtxs a JOIN u_rules r ON a.rule=r.id LEFT OUTER JOIN tx_entries e ON (e.auxtx IS NOT NULL AND e.auxtx = a.id)
+    SELECT r.id AS ruleId, r.amount AS amount, r.from, r.to, r.purpose, SUM(e.amount) AS used
+    FROM tx_rules r LEFT OUTER JOIN tx_entries e ON (e.rule IS NOT NULL AND e.rule = r.id)
     WHERE
-    ((actorType = :REF_ANYBODY)
-           OR (actorType = :REF_ACCOUNT AND actor = :buyer)
-           OR (actorType = :REF_INDUSTRY AND EXISTS (SELECT 1 FROM r_industries WHERE iid = :buyer))
-           OR (actorType = :REF_GROUP AND EXISTS (SELECT 1 FROM u_groups g JOIN u_groupies u ON (u.group = g.id)
-                                                  WHERE u.uid = :buyer AND u.start <= :now
-                                                  AND IFNULL(:now < u.end, TRUE))))
-    AND ((otherType = :REF_ANYBODY)
-         OR (otherType = :REF_ACCOUNT AND other = :seller)
-         OR (otherType = :REF_INDUSTRY AND EXISTS (SELECT 1 FROM r_industries WHERE iid = :seller))
-         OR (otherType = :REF_GROUP AND EXISTS (SELECT 1 FROM u_groups g JOIN u_groupies u ON (u.group = g.id)
-                                                WHERE u.uid = :seller AND us.start <= :now
-                                                AND IFNULL(:now < u.end, TRUE))))
+    (CASE payerType
+     WHEN :REF_ANYBODY THEN TRUE
+     WHEN :REF_ACCOUNT THEN payer = :buyer
+     WHEN :REF_INDUSTRY THEN EXISTS (SELECT 1 FROM ancestors WHERE ancestor = :buyer)
+     WHEN :REF_GROUP THEN EXISTS (SELECT 1 FROM u_groups g JOIN u_groupies u ON (u.group = g.id)
+                                           WHERE u.uid = :buyer AND u.start <= :now
+                                           AND IFNULL(:now < u.end, TRUE))
+     ELSE FALSE
+     END)
+    AND (CASE payeeType
+         WHEN :REF_ANYBODY THEN TRUE
+         WHEN :REF_ACCOUNT THEN payee = :seller
+         WHEN :REF_INDUSTRY THEN EXISTS (SELECT 1 FROM ancestors WHERE ancestor = :seller)
+         WHEN :REF_GROUP THEN EXISTS (SELECT 1 FROM u_groups g JOIN u_groupies u ON (u.group = g.id)
+                                               WHERE u.uid = :seller AND us.start <= :now
+                                               AND IFNULL(:now < u.end, TRUE))
+         ELSE FALSE
+         END)
     AND (:price >= minimum)
     AND (r.action = :ACTION_PAYMENT)
     AND (a.start <= :now AND IFNULL(:now < a.end, TRUE))
     AND used < :price
-    GROUP BY auxTxId
-    ORDER BY a.start
+    GROUP BY ruleId
+    ORDER BY rule.start
 EOF;
 
   $subs = ray('buyer seller now price', $buyer->id, $seller->id, now(), $price);
   if (!$q = db\q($sql, $subs)) return 0;
-  $res = $q->fetchAllAssoc('auxTxId', PDO::FETCH_ASSOC);
+  $res = $q->fetchAllAssoc('ruleId', PDO::FETCH_ASSOC);
   if (empty($res)) {
     return 0;
   }
 
   $rebate = 0;
-  foreach ($res as $auxtx => $row) {
-    extract($row);
+  foreach ($res as $ruleId => $rule) {
+    extract($rule);
     $value = $amount + $portion * $price;
     $use = min($price - $rebate, $value - $used);
     $rebate += $use;
-    txEntryPair($entries, $use, [$from, $to], $on, E_RULE, 0, null, null, $auxTxId);
-    if ($rebate >= $price) break;
+    txEntryPair($entries, $use, [$from, $to], $purpose, E_RULE, 0, null, null, $ruleId);
+    if ($rebate >= $price) {
+      $rebate = $price;
+      break;
+    }
   }
-  
-  $rebate = ($amount < 0) ? $price * (0-$amount) * .01 : min($price, $amount - $got);
-  
-  /* if (empty($id)) { */
-  /*   $id = db\insert('r_coupated', ray('coupid uid when', $coupid, $buyer->id, now()), 'id'); */
-  /* } else { */
-  /*   db\update('r_coupated', ray('when id', now(), $id), 'id'); */
-  /* } */
-  /* txEntryPair($entries, $rebate, [r\acct($sponsor), $buyer], t('discount (rebate)'), E_REBATE, 0, 'D', $coupid); */
   return $rebate;
 }
 
@@ -1225,9 +1226,6 @@ function checkSanity() {
 
     if (!empty($entry->relType)) {
       switch ($entry->relType) {
-      case 'D':
-        foreignKeyCheck('TxEntry', $entryId, 'relatedId', 'r_coupated', 'id', $entry->relatedId);
-        break;
       case 'I':
         foreignKeyCheck('TxEntry', $entryId, 'relatedId', 'r_invoices', 'nvid', $entry->relatedId);
         break;
@@ -1235,6 +1233,11 @@ function checkSanity() {
         sanityErr("TxEntry $entryId relType is illegal: $entry->relType");
       }
     }
+
+    if (!empty($entry->rule)) {
+      foreignKeyCheck('TxEntry', $entryId, 'rule', 'tx_rules', 'id', $entry->rule);
+    }
+    
     $total += $entry->amount;
   }
 // odd: this fails but the individual check above succeeds!  if ($total != 0) { sanityErr("Total of all tx_entries is not 0"); }

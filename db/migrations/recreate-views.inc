@@ -4,8 +4,10 @@ require_once __DIR__ . '/util.inc';
 
 define('E_TYPES', 'bank_only prime donation rebate usd_fee bank'); // these constants are also used in migration files
 define('BANK_IDS', ['bankIn' => 256, 'bankOut' => 257, 'bankCharges' => 192]);
-define('TX_FLDS', 'xid actorId actorAgentId flags channel boxId goods risk risks recursId reversesXid created');
-define('TXE_FLDS', 'id entryType amount description uid agentUid acctTid relType relatedId xid');
+/* define('TX_FLDS', 'xid actorId actorAgentId flags channel boxId goods risk risks recursId reversesXid created'); */
+define('TX_EXCLUDE_FLDS', 'deleted');
+/* define('TXE_FLDS', 'id entryType amount description uid agentUid acctTid relType relatedId xid'); */
+define('TXE_EXCLUDE_FLDS', 'deleted');
 define('TXES_FLDS', 'description AS for, uid AS uid, agentUid AS agt, acctTid AS tid');
   
 /**
@@ -18,9 +20,20 @@ function createViews($m, $stopAt = 0) {
   $q = $m->query('SELECT table_name FROM information_schema.views');
   while ($table = $q->fetchColumn()) $m->doSql('  DROP VIEW IF EXISTS ' . $table);
 
+  // get current list of columns
+  $txFldList = array_map(function($f) { return $f->getName(); },
+                         $m->table('tx_hdrs_all')->getColumns());
+  $tx_flds = array_diff($txFldList, ray(TX_EXCLUDE_FLDS));
+  $txFlds = join(',', $tx_flds);
+  $txeFldList = array_map(function($f) { return $f->getName(); },
+                         $m->table('tx_entries_all')->getColumns());
+  $txe_flds =array_diff($txeFldList, ray(TXE_EXCLUDE_FLDS));
+  $txeFlds = join(',', $txe_flds);
+  
   // set up constants
-  $txFlds = join(',', ray(TX_FLDS));
-  $txeFlds = join(',', ray(TXE_FLDS));
+  /* $txFlds = join(',', ray(TX_FLDS)); */
+  /* $txe_field_list = array_diff(, TXE_EXCLUDE_FLDS); */
+  /* $txeFlds = join(',', ray(TXE_FLDS)); */
   
   extract(BANK_IDS);
   $isBank = "uid IN ($bankIn, $bankOut)";
@@ -37,7 +50,7 @@ function createViews($m, $stopAt = 0) {
 
   // individual views for each type of transaction
 
-  $txFlds0 = 't.' . join(', t.', ray(TX_FLDS));
+  $txFlds0 = 't.' . join(', t.', $tx_flds);
   $txFlds1 = 'e1.' . join('1, e1.', explode(', ', TXES_FLDS)) . '1';
   $txFlds2 = 'e2.' . join('2, e2.', explode(', ', TXES_FLDS)) . '2';
   

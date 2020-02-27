@@ -452,23 +452,25 @@ function doCoupon($info, $thing, $key = 'id') {
   $coupon = just('coupid fromId start   end   amount on  minimum ulimit flags sponsor', $info,
                  [ null, null,  time(), null, 0,     '', 0,      null,  0,    null ]);
   if ($coupon['amount'] < 0) {
-    $amount = 0; $portion = -0.01 * $coupon['amount'];
+    $amount = 0;
+    $portion = -0.01 * $coupon['amount'];
   } else {
-    $amount = $coupon['amount']; $portion = 0;
+    $amount = $coupon['amount'];
+    $portion = 0;
   }
   $rule = [ 'id' => $coupon['coupid'],
-            'actor' => null,
-            'actorType' => REF_ANYBODY,
-            'other' => $coupon['fromId'],
-            'otherType' => REF_ACCOUNT,           
+            'payer' => null,
+            'payerType' => REF_ANYBODY,
+            'payee' => $coupon['fromId'],
+            'payeeType' => REF_ACCOUNT,           
             'from' => $coupon['fromId'],           
-            'to' => SAME_AS_ACTOR,
+            'to' => SAME_AS_PAYER,
             'action' => ACTION_PAYMENT,
             'start' => $coupon['start'],
             'end' => $coupon['end'],
             'amount' => $amount,
             'portion' => $portion,
-            'on' => $coupon['on'],
+            'purpose' => $coupon['on'],
             'minimum' => $coupon['minimum'],
             'ulimit' => $coupon['ulimit'] == 0 ? null : $coupon['ulimit'],
             'amtLimit' => null,
@@ -477,9 +479,9 @@ function doCoupon($info, $thing, $key = 'id') {
             'durUnit' => FOREVER ];
             
   if ($testOnly) {
-    return verifyRecord('u_rules', $rule) && verifyRecord('u_auxtxs', $auxtx);
+    return verifyRecord('tx_rules', $rule);
   } else {
-    return db\insert('u_rules', $rule, 'id') && db\insert('u_auxtxs', $auxtx, 'id');
+    return db\insert('tx_rules', $rule, 'id');
   }
 }
 
@@ -1378,7 +1380,7 @@ function clear($ch = 0) {
   w\signout(TRUE);
   \drupal_static_reset(); // clear out drupal central storage
 
-  $tables = 'r_bad r_ballots r_boxes r_changes r_company r_do r_events r_honors r_investments r_invites r_invoices r_ips r_near r_notices r_options r_pairs r_photos r_proposals r_proxies r_questions r_ratings r_recurs r_relations r_shares r_stakes r_stats r_tous r_usd r_usd2 r_user_industries r_votes signup tx_disputes_all tx_entries_all tx_hdrs_all x_invoices x_photos x_relations x_usd x_users u_groups u_groupies u_rules u_auxtxs flood queue semaphore sessions cache';
+  $tables = 'r_bad r_ballots r_boxes r_changes r_company r_do r_events r_honors r_investments r_invites r_invoices r_ips r_near r_notices r_options r_pairs r_photos r_proposals r_proxies r_questions r_ratings r_recurs r_relations r_shares r_stakes r_stats r_tous r_usd r_usd2 r_user_industries r_votes signup tx_disputes_all tx_entries_all tx_hdrs_all tx_rules tx_templates x_invoices x_photos x_relations x_usd x_users u_groups u_groupies flood queue semaphore sessions cache';
   foreach (ray('bootstrap form') as $k) $tables .= " cache_$k"; // don't empty cache_menu
   foreach (ray($tables) as $table) db\q("TRUNCATE $table");
 

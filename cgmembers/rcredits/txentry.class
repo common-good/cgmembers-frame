@@ -16,7 +16,7 @@ use CG\Util as u;
 
 class TxEntry {
   const REQUIRED_FIELDS = 'amount uid agentUid';
-  const INSERT_FIELDS = self::REQUIRED_FIELDS . ' entryType description acctTid relType relatedId';
+  const INSERT_FIELDS = self::REQUIRED_FIELDS . ' entryType description acctTid relType relatedId rule';
   const E_FIELDS = self::INSERT_FIELDS . ' id xid';
 
   public $id; // second entry in a pair should have a positive ID, first is the inverse
@@ -29,6 +29,7 @@ class TxEntry {
   public $acctTid; // this should go away
   public $relType;
   public $relatedId; // this and relType should move to header (each tx has at most one related ID?)
+  public $rule;
   
   /**
    * Instantiate (construct) a transaction entry record.

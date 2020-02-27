@@ -79,55 +79,53 @@ class MigrateCoupons extends AbstractMigration
      | when   | int(11)    | NO   |     | 0       |                |
      +--------+------------+------+-----+---------+----------------+
   */
-  
+
+  /* Note that to keep the relationships straight we use the same keys for rules
+     as for the original coupons.  This implies that this migration must run 
+     prior to any other data migrations involving the tx_rules table. */
   public function up()
   {
     $coupons = $this->query('select * from r_coupons')->fetchAll();
-    $u_rules = $this->table('u_rules');
-    $u_auxtxs = $this->table('u_auxtxs');
+    $this->execute("DELETE FROM tx_rules");
+    $tx_rules = $this->table('tx_rules');
+    $count = 0;
     foreach ($coupons as $coupon) {
       $coupon_amount = $coupon["amount"];
       $amount = $coupon_amount > 0 ? $coupon_amount : 0;
       $portion = $coupon_amount < 0 ? -$coupon_amount * 0.01 : 0;  // Convert from % to fraction
       $ruleId = $coupon["coupid"];
       $rule = [ "id" => $ruleId,
-                "actor" => null, "actorType" => REF_ANYBODY,
-                "other" => $coupon["fromId"], "otherType" => REF_USER,
+                "payer" => null, "payerType" => REF_ANYBODY,
+                "payee" => $coupon["fromId"], "payeeType" => REF_USER,
                 "from" => $coupon["sponsor"],
-                "to" => SAME_AS_ACTOR,
+                "to" => SAME_AS_PAYER,
                 "action" => ACTION_PAYMENT,
                 "start" => date('Ymd', $coupon["start"]),
                 "end" => date('Ymd', $coupon["end"]),
                 "amount" => $amount,
                 "portion" => $portion,
-                "on" => is_null($coupon["on"]) ? '' : $coupon["on"],
+                "purpose" => is_null($coupon["on"]) ? '' : $coupon["on"],
                 "minimum" => $coupon["minimum"],
                 "ulimit" => $coupon["ulimit"],
-                "amtLimit" => null,
-                "period" => ONLY_ONCE,
-                "duration" => 1,
-                "durUnit" => FOREVER ];
-      $u_rules->insert($rule)->saveData();
-      
-      $occur = [ "id" => $ruleId,
-                 "rule" => $ruleId,
-                 "start" => date('Ymd', $coupon['start']),
-                 "end" => date('Ymd', $coupon['end']) ];
-      $u_auxtxs->insert($occur)->saveData();
+                "amtLimit" => null ];
+      $tx_rules->insert($rule);
+      $count += 1;
     }
-    $coupateds = $this->query("SELECT * FROM r_coupated c JOIN tx_entries e ON (c.coupid = e.relatedId AND e.relType = 'D')")->fetchAll();
-    foreach ($coupateds as $coupated) {
-      $coupid = $coupated['coupid'];
-      $id = $coupated['id'];
-      $count = $this->execute("UPDATE tx_entries_all SET auxtx=$coupid WHERE id = $id");
-      if ($count != 1) throw new Exception("Update failed, count returned is $count");
-    }
+    $tx_rules->saveData();
+
+    echo "Inserted $count tx_rules\n";
+
+    // relatedId was supposed to be the id of the coupated record, but is actually the id of the coupon record
+    // so we can just set rule to relatedId...
+    $count = $this->execute("UPDATE tx_entries_all SET rule=relatedId WHERE relType='D'");
+    echo "Updated $count tx_entries\n";
+    
   }
 
   public function down()
   {
-    $this->execute("UPDATE tx_entries_all SET auxtx=null");
-    $this->execute("DELETE FROM u_auxtxs");
-    $this->execute("DELETE FROM u_rules");
+    $this->execute("UPDATE tx_entries_all SET rule=null");
+    $this->execute("DELETE FROM tx_rules");
+    $this->execute("DELETE FROM tx_templates");
   }
 }

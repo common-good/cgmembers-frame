@@ -3,7 +3,7 @@
 
 use Phinx\Migration\AbstractMigration;
 
-class CreateTableGroups extends AbstractMigration
+class CreateTableUGroups extends AbstractMigration
 {
   /**
    * Change Method.

@@ -553,6 +553,31 @@ define('E_XFEE', 6); // transfer fee to merchant (UNUSED)
 define('E_RULE', 7); // rule-based auxiliary pair
 define('E_TYPES', 'bank_only prime donation rebate usd_fee bank rule');
 
+// New, for the sake of tx_templates and tx_rules
+const REF_ANYBODY = 1;   // Used in rules and templates -- a rule can apply to anybody
+const REF_ACCOUNT = 2;   // Rule only applies to specified user, payer or payee must be set
+const REF_INDUSTRY = 3;  // Rule only applies when user is a company that is listed in the industry specified by payer or payee
+const REF_GROUP = 4;     // Rule only applies when user is a member of the group specified by payer or payee
+const REF_LIST = [REF_ANYBODY, REF_USER, REF_INDUSTRY, REF_GROUP];
+
+const ACTION_PAYMENT = 1;  // This rule is only triggered by a payment
+const ACTION_BY_DATE = 2;  // This rule is triggered by the current data being start
+const ACTION_LIST = [ACTION_PAYMENT, ACTION_BY_DATE];
+
+// Period and duration codesconst ONLY_ONCE = 1;       
+const DAILY = 2;
+const WEEKLY = 3;
+const MONTHLY = 4;
+const QUARTERLY = 5;
+const YEARLY = 6;
+const FOREVER = 7;
+const PERIOD_CODES = [ONLY_ONCE, DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY, FOREVER];
+
+// Special values for from and to (which are normally uids)
+const SAME_AS_PAYER = -1;
+const SAME_AS_PAYEE = -2;
+
+
 $GLOBALS['emailSubjects'] = array(
   'nonmember' => t('%PROJECT invitation followup'),
   'partner-signup' => t('new solar subscription'),
