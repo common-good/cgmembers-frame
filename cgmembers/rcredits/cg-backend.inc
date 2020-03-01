@@ -667,7 +667,7 @@ function sendNotifications($type, $tx, $shortfall) {
 }
 
 /**
- * Generate tentative transaction entries for a coupon, and update the coupated table as appropriate.
+ * Generate tentative transaction entries for a coupon
  * @param assoc $entries: (MODIFIED) an array of entries to add to, if appropriate
  * @param acct $buyer:
  * @param acct $seller:
@@ -675,19 +675,26 @@ function sendNotifications($type, $tx, $shortfall) {
  * @param unixtime $when: when was the transaction (defaults to now)
  * @return the rebate amount
  */
+
+// WARNING WARNING WARNING
+// This is going to get confused if a rule tx_entry is reversed, and then the reversal is reversed...
+// WARNING WARNING WARNING
+
 function handleRules(&$entries, $buyer, $seller, $price) {
   u\EXPECT($price > 0, 'non-positive price handling coupon');
 
   // Get a list of applicable rules
   $sql = <<<EOF
-    SELECT r.id AS ruleId, r.amount AS amount, r.from, r.to, r.purpose, SUM(e.amount) AS used
-    FROM tx_rules r LEFT OUTER JOIN tx_entries e ON (e.rule IS NOT NULL AND e.rule = r.id)
+    SELECT r.id AS ruleId, r.amount, r.portion, r.fromId, r.toId, r.purpose, r.minimum, r.ulimit, r.amtLimit,
+    (SELECT IFNULL(SUM(e.amount), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=ruleId AND e.uid=:buyer) AS `amtUsed`,
+    (SELECT IFNULL(SUM(SIGN(e.amount)), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=ruleId AND e.uid=:buyer) AS `timesUsed`
+    FROM tx_rules r
     WHERE
     (CASE payerType
      WHEN :REF_ANYBODY THEN TRUE
      WHEN :REF_ACCOUNT THEN payer = :buyer
      WHEN :REF_INDUSTRY THEN EXISTS (SELECT 1 FROM ancestors WHERE ancestor = :buyer)
-     WHEN :REF_GROUP THEN EXISTS (SELECT 1 FROM u_groups g JOIN u_groupies u ON (u.group = g.id)
+     WHEN :REF_GROUP THEN EXISTS (SELECT 1 FROM u_groups g JOIN u_groupies u ON (u.grpId = g.id)
                                            WHERE u.uid = :buyer AND u.start <= :now
                                            AND IFNULL(:now < u.end, TRUE))
      ELSE FALSE
@@ -696,33 +703,36 @@ function handleRules(&$entries, $buyer, $seller, $price) {
          WHEN :REF_ANYBODY THEN TRUE
          WHEN :REF_ACCOUNT THEN payee = :seller
          WHEN :REF_INDUSTRY THEN EXISTS (SELECT 1 FROM ancestors WHERE ancestor = :seller)
-         WHEN :REF_GROUP THEN EXISTS (SELECT 1 FROM u_groups g JOIN u_groupies u ON (u.group = g.id)
-                                               WHERE u.uid = :seller AND us.start <= :now
+         WHEN :REF_GROUP THEN EXISTS (SELECT 1 FROM u_groups g JOIN u_groupies u ON (u.grpId = g.id)
+                                               WHERE u.uid = :seller AND u.start <= :now
                                                AND IFNULL(:now < u.end, TRUE))
          ELSE FALSE
          END)
-    AND (:price >= minimum)
     AND (r.action = :ACTION_PAYMENT)
-    AND (a.start <= :now AND IFNULL(:now < a.end, TRUE))
-    AND used < :price
+    AND (r.start <= :now AND IFNULL(:now < r.end, TRUE))
     GROUP BY ruleId
-    ORDER BY rule.start
+    HAVING (:price >= minimum) AND (ulimit IS NULL OR (timesUsed < ulimit)) AND (amtLimit IS NULL OR amtUsed < amtLimit)
+    ORDER BY r.start
 EOF;
 
   $subs = ray('buyer seller now price', $buyer->id, $seller->id, now(), $price);
   if (!$q = db\q($sql, $subs)) return 0;
-  $res = $q->fetchAllAssoc('ruleId', PDO::FETCH_ASSOC);
+  $res = $q->fetchAllAssoc('ruleId', \PDO::FETCH_ASSOC);
   if (empty($res)) {
     return 0;
   }
 
   $rebate = 0;
   foreach ($res as $ruleId => $rule) {
+ debug($rule);
     extract($rule);
     $value = $amount + $portion * $price;
-    $use = min($price - $rebate, $value - $used);
+    if (! is_null($amtLimit)) $value = min($value, $amtLimit - $amtUsed);
+    $use = min($price - $rebate, $value);
     $rebate += $use;
-    txEntryPair($entries, $use, [$from, $to], $purpose, E_RULE, 0, null, null, $ruleId);
+    $fromId = ($fromId == SAME_AS_PAYER) ? $buyer->id : (($fromId == SAME_AS_PAYEE) ? $seller->id : $fromId);
+    $toId = ($toId == SAME_AS_PAYER) ? $buyer->id : (($toId == SAME_AS_PAYEE) ? $seller->id : $toId);
+    txEntryPair($entries, $use, [$fromId, $toId], 'discount (rebate)', E_REBATE, 0, null, null, $ruleId);
     if ($rebate >= $price) {
       $rebate = $price;
       break;

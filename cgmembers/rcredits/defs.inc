@@ -562,13 +562,15 @@ const REF_ANYBODY = 1;   // Used in rules and templates -- a rule can apply to a
 const REF_ACCOUNT = 2;   // Rule only applies to specified user, payer or payee must be set
 const REF_INDUSTRY = 3;  // Rule only applies when user is a company that is listed in the industry specified by payer or payee
 const REF_GROUP = 4;     // Rule only applies when user is a member of the group specified by payer or payee
-const REF_LIST = [REF_ANYBODY, REF_USER, REF_INDUSTRY, REF_GROUP];
+const REF_LIST = [REF_ANYBODY, REF_ACCOUNT, REF_INDUSTRY, REF_GROUP];
 
 const ACTION_PAYMENT = 1;  // This rule is only triggered by a payment
 const ACTION_BY_DATE = 2;  // This rule is triggered by the current data being start
-const ACTION_LIST = [ACTION_PAYMENT, ACTION_BY_DATE];
+const ACTION_GIFT_CARD = 3; 
+const ACTION_LIST = [ACTION_PAYMENT, ACTION_BY_DATE, ACTION_GIFT_CARD];
 
-// Period and duration codesconst ONLY_ONCE = 1;       
+// Period and duration codes
+const ONLY_ONCE = 1;       
 const DAILY = 2;
 const WEEKLY = 3;
 const MONTHLY = 4;

@@ -229,6 +229,8 @@ function devices($list) {return t\devices($list);}
  * balances: (ARG)
  *
  * in: TEST aaPayTwice Setup
+ *     TEST coupons Setup
+ *     TEST coupons AMemberRedeemsADiscountCoupon
  *     TEST exchange Setup
  *     TEST exchange ACashierAsksToChargeSomeoneForCash
  *     TEST exchange ACashierAsksToRefundSomeone
@@ -777,7 +779,7 @@ function transactionEntryCountIs($n) { return t\count('entries', $n); }
 /**
  * coupated: (ARG)
  *
- * in: TEST coupons AMemberRedeemsADiscountCoupon
+ * in: 
  */
 function coupated($list) { return t\coupatedRecords($list); }
 

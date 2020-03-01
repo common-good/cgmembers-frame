@@ -172,6 +172,7 @@ class Tx {
     } else {
       u\EXPECT($tx->xid == 0, "We're not allowing modification of transactions.");
       $xid = db\insert('tx_hdrs', just(self::INSERT_FIELDS, (array)$tx), 'xid');
+      u\EXPECT($xid, 'tx_hdrs insert failed');
     }
     u\EXPECT($xid, "Failed to insert transaction header record");
     foreach ($tx->entries as $entry) {

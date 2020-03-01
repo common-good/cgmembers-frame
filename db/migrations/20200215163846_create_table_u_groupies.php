@@ -30,16 +30,16 @@ class CreateTableUGroupies extends AbstractMigration
   {
     $table = $this->table('u_groupies');
     $table->addColumn('uid', 'biginteger', ['null' => false])
-      ->addColumn('grp_id', 'integer', ['null' => false])
-      ->addColumn('is_member', 'boolean', ['default' => false, 'comment' => 'User is a member of the group'])
-      ->addColumn('can_add', 'boolean', ['default' => false, 'comment' => 'User can add other users to the group'])
-      ->addColumn('can_remove', 'boolean', ['default' => false, 'comment' => 'User can remove other users from the group'])
-      ->addColumn('start', 'timestamp', ['default' => 'CURRENT_TIMESTAMP', 'null' => false])
-      ->addColumn('end', 'timestamp', ['default' => null, 'null' => true])
+      ->addColumn('grpId', 'integer', ['null' => false])
+      ->addColumn('isMember', 'boolean', ['default' => false, 'comment' => 'User is a member of the group'])
+      ->addColumn('canAdd', 'boolean', ['default' => false, 'comment' => 'User can add other users to the group'])
+      ->addColumn('canRemove', 'boolean', ['default' => false, 'comment' => 'User can remove other users from the group'])
+      ->addColumn('start', 'biginteger', ['default' => 'CURRENT_TIMESTAMP', 'null' => false])
+      ->addColumn('end', 'biginteger', ['default' => null, 'null' => true])
       ->addIndex(['uid', 'start'])
-      ->addIndex(['grp_id', 'start'])
-      ->addForeignKey('uid', 'users', 'uid', ['delete' => 'RESTRICT'])
-      ->addForeignKey('grp_id', 'u_groups', 'id', ['delete' => 'RESTRICT'])
+      ->addIndex(['grpId', 'start'])
+//      ->addForeignKey('uid', 'users', 'uid', ['delete' => 'RESTRICT'])
+//      ->addForeignKey('grpId', 'u_groups', 'id', ['delete' => 'RESTRICT'])
       ->create();
   }
 }

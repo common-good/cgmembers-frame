@@ -4,14 +4,15 @@
 use Phinx\Migration\AbstractMigration;
 
 const REF_ANYBODY = 1;
-const REF_ACCOUNT = 2;
+const REF_USER = 2;
 const REF_INDUSTRY = 3;
 const REF_GROUP = 4;
 const REF_LIST = [REF_ANYBODY, REF_USER, REF_INDUSTRY, REF_GROUP];
 
 const ACTION_PAYMENT = 1;
 const ACTION_BY_DATE = 2;
-const ACTION_LIST = [ACTION_PAYMENT, ACTION_BY_DATE];
+const ACTION_GIFT_CARD = 3;
+const ACTION_LIST = [ACTION_PAYMENT, ACTION_BY_DATE, ACTION_GIFT_CARD];
 
 const ONLY_ONCE = 1;
 const DAILY = 2;
@@ -61,20 +62,20 @@ class CreateTableTxTemplates extends AbstractMigration
                                           'comment' => 'Payee party to transaction, null if anybody'])
       ->addColumn('payeeType', 'enum', ['values' => REF_LIST, 'default' => REF_ANYBODY,
                                         'comment' => 'Type of payee'])
-      ->addColumn('from', 'biginteger', ['comment' => 'Who to transfer money from'])
-      ->addColumn('to', 'biginteger', ['comment' => 'Who to transfer money to'])
+      ->addColumn('fromId', 'biginteger', ['comment' => 'Who to transfer money from'])
+      ->addColumn('toId', 'biginteger', ['comment' => 'Who to transfer money to'])
       ->addColumn('action', 'enum', ['values' => ACTION_LIST,
                                      'comment' => 'Action that triggers templates of this type'])
-      ->addColumn('start', 'timestamp', ['default' => 'CURRENT_TIMESTAMP',
-                                    'comment' => 'Start date of first occurrence of this template'])
-      ->addColumn('end', 'timestamp', ['null' => true, 'default' => null,
-                                  'comment' => 'Date after which no more occurrences will be created (NULL if no end)'])
+      ->addColumn('start', 'biginteger', ['default' => 'CURRENT_TIMESTAMP',
+                                          'comment' => 'Start date of first occurrence of this template'])
+      ->addColumn('end', 'biginteger', ['null' => true, 'default' => null,
+                                        'comment' => 'Date after which no more occurrences will be created (NULL if no end)'])
       ->addColumn('amount', 'decimal', ['precision' => 11, 'scale' => 2, 'default' => 0, 'signed' => false,
                                         'comment' => 'Fixed amount to transfer'])
       ->addColumn('portion', 'decimal', ['precision' => 7, 'scale' => 6, 'default' => 0, 'signed' => false,
                                          'comment' => 'Proportional amount, e.g., 5%, to transfer, expressed as a decimal, e.g., 0.05'])
-      ->addColumn('purpose', 'string', ['length' => 255,
-                                   'comment' => 'Text to appear on statements explaining this'])
+      ->addColumn('purpose', 'string', ['length' => 255, 'default' => '',
+                                        'comment' => 'Text to appear on statements explaining this'])
       ->addColumn('minimum', 'decimal', ['precision' => 11, 'scale' => 2, 'default' => 0, 'signed' => false,
                                          'comment' => 'Minimum amount of transaction that this template applies to'])
       ->addColumn('ulimit', 'integer', ['null' => true, 'default' => null, 'signed' => false,

@@ -58,7 +58,6 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     MAKE coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
- *     MAKE coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
  *     MAKE flow AMemberOverdrawsWithNotEnoughToDrawOn
  *     MAKE food AMemberMakesAFoodDonation
  *     MAKE food AMemberMakesAFoodDonationWithoutAdequateFunds
@@ -130,7 +129,6 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE contact AMemberUpdatesToADifferentName
  *     MAKE coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsAPercentageDiscountCoupon
- *     MAKE coupons AMemberRedeemsARestrictedDiscountCoupon
  *     MAKE coupons AMemberRedeemsADiscountCouponInDribsAndDrabs
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
  *     MAKE coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
@@ -494,12 +492,9 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST connect AMemberConnectsABankAccountDuringSignup
  *     TEST connect AMemberConnectsABankAccountLater
  *     TEST contact AMemberVisitsTheContactInfoPage
- *     TEST coupons AMemberCompanyCreatesAGiftCoupon
  *     TEST coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     TEST coupons AMemberRedeemsAPercentageDiscountCoupon
- *     TEST coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
- *     TEST coupons AMemberRedeemsARestrictedDiscountCoupon
  *     TEST coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  *     TEST custstatement ACompanyLooksAtACustomerStatement
  *     TEST demographics ACompanyAgentRunsTheDemographicsQuery
@@ -706,7 +701,6 @@ function relations($relations) {return t\relations($relations);}
  *     TEST coupons AMemberRedeemsAGiftCoupon
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     TEST coupons AMemberRedeemsAPercentageDiscountCoupon
- *     TEST coupons AMemberRedeemsARestrictedDiscountCoupon
  *     TEST coupons AMemberRedeemsADiscountCouponInDribsAndDrabs
  *     TEST coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
  *     TEST coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
@@ -765,12 +759,9 @@ function usd($list) {return t\usd($list);}
  *     MAKE connect AMemberConnectsABankAccountDuringSignup
  *     MAKE connect AMemberConnectsABankAccountLater
  *     MAKE contact AMemberVisitsTheContactInfoPage
- *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     MAKE coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsAPercentageDiscountCoupon
- *     MAKE coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
- *     MAKE coupons AMemberRedeemsARestrictedDiscountCoupon
  *     MAKE coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  *     MAKE demographics ACompanyAgentRunsTheDemographicsQuery
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
@@ -1614,16 +1605,12 @@ function someonePostsToPageWith($page, $args) {return t\postToPage($page, $args)
 /**
  * coupons: (ARG)
  *
- * in: TEST coupons AMemberCompanyCreatesAGiftCoupon
- *     MAKE coupons AMemberRedeemsAGiftCoupon
+ * in: MAKE coupons AMemberRedeemsAGiftCoupon
  *     TEST coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsAPercentageDiscountCoupon
- *     TEST coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
- *     MAKE coupons AMemberRedeemsARestrictedDiscountCoupon
  *     MAKE coupons AMemberRedeemsADiscountCouponInDribsAndDrabs
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
- *     MAKE coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  */
 function coupons($list) {return t\coupons($list);}
 
@@ -1649,9 +1636,8 @@ function weScripWithSubs($script, $args = []) {
  *
  * in: MAKE balancesheet Setup
  *     TEST community CronCalculatesTheStatistics
+ *     TEST coupons AMemberCompanyCreatesAGiftCoupon
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
- *     TEST coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
- *     BOTH coupons AMemberRedeemsARestrictedDiscountCoupon
  *     MAKE custstatement AStatementGoesOntoMultiplePages
  *     MAKE demographics Setup
  *     TEST food AMemberMakesAFoodDonation
@@ -1950,3 +1936,10 @@ function weRedirectOffsiteTo($content) {
   global $testOnly, $lastGo; if (!$testOnly) return FALSE;
   return (strpos($lastGo, 'http') === 0 and strpos($lastGo, $content));
 }
+
+/**
+ * txRules: (ARG)
+ *
+ * in: MAKE coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
+ */
+function txRules($list) {return t\txRules($list);}

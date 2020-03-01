@@ -551,8 +551,10 @@ function iCardAcct($code0, &$iCode = NULL) {
   $region = u\n2a(bindec(substr($b, 0, ILEN_REGION)), 3);
   $tail = u\n2a(bindec(substr($b, ILEN_REGION, ILEN_TAIL)), -3);
   $security = u\n2ai(bindec(substr($b, -ILEN_SECURITY)), 3);
-
-  return ($a = r\acct("$region$tail") and $security == $a->lowSecurity) ? $a : FALSE;
+  $a = r\acct("$region$tail");
+  debug($a);
+  debug($security == $a->lowSecurity);
+  return ($a and ($security == $a->lowSecurity)) ? $a : FALSE;
 }
 
 /**

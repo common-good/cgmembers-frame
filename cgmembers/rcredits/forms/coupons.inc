@@ -11,8 +11,8 @@ use CG\Db as db;
  */
 function formCoupons($form, &$sta, $args = '') {
   global $mya;
-  extract(just('type amount', $args, ['', '0']));
-
+  extract(just('type amount', $args));
+  if (!isset($type)) $type = '';
   switch ($type) {
   case 'redeem':
     $title = t('Redeem a General Gift Certificate');
@@ -61,7 +61,8 @@ X
       . w\btn('/community/coupons/type=redeem', t('Redeem a General Gift Certificate'))
       . w\btn('/community/coupons/list', t('List Discounts You Offer'))
       . w\btn('/community/coupons/list/ALL', t('Show All Discounts Available to You'));
-    break;
+    $type = hidFld($type);
+    return cgform(compact(ray('title buttons subtext type')));
   }
   
   $type = hidFld($type);
@@ -70,7 +71,7 @@ X
   return cgform(@compact(ray('title buttons subtext code amount count minimum start end ulimit forOnly automatic on submit type')));
 }
 
-const COUPON_FIELDS = 'type code amount count minimum start end ulimit forOnly portion';
+const COUPON_FIELDS = 'type code amount count minimum start end ulimit forOnly portion on';
 
 function formCoupons_validate($form, &$sta) {
   global $mya;
@@ -120,9 +121,14 @@ function formCoupons_validate($form, &$sta) {
   case 'redeem':
     if (!$a = r\iCardAcct($code, $iCode)) return say('invalid gift card', 'code');
     if ($a->id == $mya->id) return say(t('You cannot redeem your own gift card.'), 'err');
-    
-    $ruleId = db\get('id', 'tx_rules r', 'r.fromId=:uid AND :iCode = a.code',
-                     ray('uid iCode', $a->id, $iCode)) ?: 0;
+
+    debug($a);
+    debug($iCode);
+    $ruleId = db\get('id', 'tx_rules r', 'r.fromId=:uid AND :iCode = r.code',
+                     ray('uid iCode', $a->id, $iCode));
+    debug($ruleId);
+    if (! $ruleId) return say('invalid gift card', 'err');
+      
     if (db\get('id', 'tx_entries_all', 'rule = :ruleId', compact(ray('ruleId'))))
       return say('already redeemed', 'err');
     u\preray(compact(ray('ruleId')), $sta['input']); // pass the results to submit function
@@ -152,7 +158,7 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
   
   switch ($type) {
   case 'redeem': 
-    $res = db\get('fromId, amount', 'tx_rules', 'id=:ruleId', compact('ruleId'));
+    $res = db\get('`fromId`, amount', 'tx_rules', 'id=:ruleId', ['ruleId' => $ruleId]);
     extract($res);
     $fromA = r\acct($fromId);
     list ($ok, $index, $subs) = be\transfer('payment', $fromA, $mya, $amount, t('gift'), FOR_GOODS, ['force' => 1, 'ruleId' => $ruleId]);
@@ -171,9 +177,12 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
     /* } */
     $start = $mya->giftCoupons + 0;
     $end = $start + $count - 1;
-    foreach (range($start, $end) as $code) {
-      db\insert('tx_rules', compact(ray('from to action purpose', [$myid, $payee, ACTION_GIFT_CARD, $on])
-                                   + ray('amount portion minimum ulimit code')));
+    if (is_null($on)) $on = 'gift certificate';
+    if (is_null($minimum)) $minimum = 0;
+    foreach (range($start, $end) as $num) {
+      $code = $num; // $mya->iCardCode($num);
+      db\insert('tx_rules', ray('fromId toId action purpose', $myid, SAME_AS_PAYER, ACTION_GIFT_CARD, $on)
+                + compact(ray('amount portion minimum ulimit code')));
     }
     unset($DBTX);
 
@@ -192,15 +201,15 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
     $flags = 0;
 
     $DBTX = \db_transaction();
-    if (!$on) $purpose = $minimum ? t('on your purchase of %min or more', 'min', u\fmtAmt($minimum)) : t('on any purchase');
+    if (is_null($on)) $on = $minimum ? t('on your purchase of %min or more', 'min', u\fmtAmt($minimum)) : t('on any purchase');
     if ($end) $end = strtotime('tomorrow', $end) - 1; // last second of the day
 
     if ($automatic) {
       u\EXPECT($forOnly == NULL, 'forOnly not currently handled');
       /* if ($forOnly != NULL)  $flags |= u\bit(B_SOME); */
-      $ruleId = db\insert('tx_rules', compact(ray('payee  payeeType from   to             action          purpose',
-                                                  [$myid, REF_USER, $myid, SAME_AS_PAYER, ACTION_PAYMENT, $on])
-                                              + ray('amount portion minimum ulimit start end')));
+      $ruleId = db\insert('tx_rules', ray('payee payeeType    fromId   toId           action          purpose amtLimit',
+                                          $myid, REF_ACCOUNT, $myid,   SAME_AS_PAYER, ACTION_PAYMENT, $on,    $amount )
+                          + compact(ray('amount portion minimum ulimit start end')));
     }
     unset($DBTX);
   

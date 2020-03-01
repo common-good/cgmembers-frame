@@ -24,25 +24,32 @@ Setup:
   And relations:
   | reid | main | agent | num | permission |*
   | .ZZA | .ZZC | .ZZA  |   1 | scan       |
-  
+  Then balances:
+  | uid  | balance |*
+  | .ZZA |       0 |
+  | .ZZB |       0 |
+  | .ZZC |       0 |
+
 Scenario: A member redeems a discount coupon
   Given  coupons:
-  | coupid | fromId | amount | minimum | ulimit | flags | start  | end       |*
-  |      1 |   .ZZC |     10 |       0 |      1 |     0 | %today | %today+7d |
+  | coupid | fromId | amount | minimum | ulimit | flags | start  | end       | on                |*
+  |      1 |   .ZZC |     10 |       0 |      1 |     0 | %today | %today+7d | discount (rebate) |
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $100 for "goods": "food" at %now
   Then transaction headers:
   | xid | goods | actorId | actorAgentId | flags  | channel | boxId  | risks | reversesXid | created |*
-  | 1   | 0     | .ZZC  | .ZZA       | 0      | 3       | devC   |     0 |          | %today  |
+  | 1   | 0     | .ZZC    | .ZZA         | 0      | 3       | devC   |     0 |             | %today  |
   And transaction entries: 
-  | xid | amount |  uid | agentUid | acctTid | description       | relType | relatedId |*
-  | 1   |    100 | .ZZC | .ZZA     | 1       | food              |         |         |
-  | 1   |   -100 | .ZZB | .ZZB     | 1       | food              |         |         |
-  | 1   |     10 | .ZZB | .ZZB     | 1       | discount (rebate) | D       | 1       |
-  | 1   |    -10 | .ZZC | .ZZA     | 1       | discount (rebate) | D       | 1       |
-  And coupated:
-  | id | uid  | coupid |*
-  |  1 | .ZZB | 1      |
-
+  | xid | amount |  uid | agentUid | acctTid | description       | rule |*
+  | 1   |    100 | .ZZC | .ZZA     | 1       | food              |      |
+  | 1   |   -100 | .ZZB | .ZZB     | 1       | food              |      |
+  | 1   |     10 | .ZZB | .ZZB     | 1       | discount (rebate) | 1    |
+  | 1   |    -10 | .ZZC | .ZZC     | 1       | discount (rebate) | 1    |
+  And balances:
+  | uid  | balance |*
+  | .ZZA |       0 |
+  | .ZZB |     -90 |
+  | .ZZC |      90 |
+  
   When agent "C:A" asks device "devC" to undo transaction with subs:
   | member | code | amount | goods | description | created |*
   | .ZZB   | ccB  | 100.00 |     1 | food        | %today  |
@@ -50,28 +57,32 @@ Scenario: A member redeems a discount coupon
   | xid | goods | actorId | actorAgentId | flags  | channel | boxId | risks | reversesXid | created |*
   | 2   | 0     | .ZZC    | .ZZA         | 0      | 3       | devC  |     0 | 1           | %today  |
   And transaction entries: 
-  | xid | amount |  uid | agentUid | acctTid | description       | relType | relatedId |*
-  | 2   |   -100 | .ZZC | .ZZA     | 2       | food              |         |         |
-  | 2   |    100 | .ZZB | .ZZB     | 2       | food              |         |         |
-  | 2   |    -10 | .ZZB | .ZZB     | 2       | discount (rebate) | D       | 1       |
-  | 2   |     10 | .ZZC | .ZZA     | 2       | discount (rebate) | D       | 1       |
-  And coupated:
-  | id | uid  | coupid |*
-  |  1 | .ZZB | 1      |
+  | xid | amount |  uid | agentUid | acctTid | description       | rule |*
+  | 2   |   -100 | .ZZC | .ZZA     | 2       | food              |      |
+  | 2   |    100 | .ZZB | .ZZB     | 2       | food              |      |
+  | 2   |    -10 | .ZZB | .ZZB     | 2       | discount (rebate) | 1    |
+  | 2   |     10 | .ZZC | .ZZC     | 2       | discount (rebate) | 1    |
+  And balances:
+  | uid  | balance |*
+  | .ZZA |       0 |
+  | .ZZB |       0 |
+  | .ZZC |       0 |
 
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $50 for "goods": "sundries" at %today
   Then transaction headers:
   | xid | goods | actorId | actorAgentId | flags  | channel | boxId | risks | reversesXid | created |*
   | 3   | 0     | .ZZC    | .ZZA         | 0      | 3       | devC  |     0 |             | %today  |
   And transaction entries: 
-  | xid | amount |  uid | agentUid | acctTid | description       | relType | relatedId |*
-  | 3   |     50 | .ZZC | .ZZA     | 3       | sundries          |         |         |
-  | 3   |    -50 | .ZZB | .ZZB     | 3       | sundries          |         |         |
-  | 3   |    -10 | .ZZC | .ZZA     | 3       | discount (rebate) | D       | 1       |
-  | 3   |     10 | .ZZB | .ZZB     | 3       | discount (rebate) | D       | 1       |
-  And coupated:
-  | id | uid  | coupid |*
-  |  1 | .ZZB | 1      |
+  | xid | amount |  uid | agentUid | acctTid | description       | rule |*
+  | 3   |     50 | .ZZC | .ZZA     | 3       | sundries          |      |
+  | 3   |    -50 | .ZZB | .ZZB     | 3       | sundries          |      |
+  | 3   |    -10 | .ZZC | .ZZC     | 3       | discount (rebate) | 1    |
+  | 3   |     10 | .ZZB | .ZZB     | 3       | discount (rebate) | 1    |
+  And balances:
+  | uid  | balance |*
+  | .ZZA |       0 |
+  | .ZZB |     -40 |
+  | .ZZC |      40 |
 
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $60 for "goods": "stuff" at %today
   Then transaction headers:
@@ -81,8 +92,11 @@ Scenario: A member redeems a discount coupon
   | xid | amount |  uid | agentUid | acctTid | description | relType | relatedId |*
   | 4   |     60 | .ZZC | .ZZA     | 4       | stuff       |         |         |
   | 4   |    -60 | .ZZB | .ZZB     | 4       | stuff       |         |         |
-  And coupated:
-  | id | uid  | coupid |*
-  |  1 | .ZZB | 1      |
   And transaction header count is 4
+  And balances:
+  | uid  | balance |*
+  | .ZZA |       0 |
+  | .ZZB |    -100 |
+  | .ZZC |     100 |
+  
 # ulimit has been reached, so no rebate
