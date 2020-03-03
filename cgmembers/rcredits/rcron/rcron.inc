@@ -52,6 +52,7 @@ DAILY (every 5 mins for 5 mins, starting at 2am)
 - [later] statements for those who want daily statements
 - weekly / monthly / quarterly / annual stuff
 - ** notices(): send notices (daily, weekly, or monthly digest)
+- CREATE RULES FROM TEMPLATES
 
 WEEKLY
 - soldOut() and missedOut() tell members what they did that was dumb (sold rC or missed a chance to buy them)
@@ -223,6 +224,26 @@ X;
 	if ($uids) db\del('r_usd', 'txid', 'amount=0 AND payee IN (:uids)', compact('uids'));
 	unset($DBTX);
 	db\q('DELETE FROM x_usd WHERE amount=0'); // no need to track these
+
+  $sql = <<< EOF
+    SELECT t.*, MAX(r.start) AS maxStart FROM tx_templates t LEFT OUTER JOIN tx_rules r ON r.template=t.id GROUP BY t.id
+EOF;
+  queueEach('genRulesFromTemplate', $sql);
+}
+
+function genRulesFromTemplates($template) {
+  // Generate rules from template
+  $DBTX = db_transaction();
+  $rule = justNot(ray('id period duration durUnit start end maxStart'), $template);
+  $rule['template'] = $template['id'];
+  $shouldStart = dateIncr($template['maxStart'], $template['period'], $template['prdUnits']);
+  while ($shouldStart < time()) {
+    $rule['start'] = $shouldStart;
+    $rule['end'] = dateIncr($shouldStart, $template['duration'], $template['durUnits']);
+    db\insert('tx_rules', $rule, 'id');
+    $shouldStart = u\dateIncr($shouldStart, 1, $template['period']);
+  }
+  unset($DBTX);
 }
 
 /**

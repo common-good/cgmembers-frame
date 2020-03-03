@@ -3,8 +3,32 @@
 
 use Phinx\Migration\AbstractMigration;
 
-class CreateTableTxRules extends AbstractMigration
+
+class CreateTableTxTemplates extends AbstractMigration
 {
+  const REF_ANYBODY = 1;
+  const REF_ACCOUNT = 2;
+  const REF_INDUSTRY = 3;
+  const REF_GROUP = 4;
+  const REF_LIST = [self::REF_ANYBODY, self::REF_ACCOUNT, self::REF_INDUSTRY, self::REF_GROUP];
+
+  const ACTION_PAYMENT = 1;
+  const ACTION_BY_DATE = 2;
+  const ACTION_GIFT_CARD = 3;
+  const ACTION_LIST = [self::ACTION_PAYMENT, self::ACTION_BY_DATE, self::ACTION_GIFT_CARD];
+
+  const ONLY_ONCE = 1;
+  const DAILY = 2;
+  const WEEKLY = 3;
+  const MONTHLY = 4;
+  const QUARTERLY = 5;
+  const YEARLY = 6;
+  const FOREVER = 7;
+  const PERIOD_CODES = [self::ONLY_ONCE, self::DAILY, self::WEEKLY, self::MONTHLY, self::QUARTERLY, self::YEARLY, self::FOREVER];
+
+  const SAME_AS_PAYER = -1;
+  const SAME_AS_PAYEE = -2;
+
   /**
    * Change Method.
    *
@@ -26,22 +50,27 @@ class CreateTableTxRules extends AbstractMigration
    * Remember to call "create()" or "update()" and NOT "save()" when working
    * with the Table class.
    */
+
   public function change()
   {
-    $table = $this->table('tx_rules', ['comment' => 'Occurrences of a rule']);
+    $table = $this->table('tx_templates', ['comment' => 'Templates for auxiliary transactions']);
     $table
       ->addColumn('payer', 'biginteger', ['null' => true, 'default' => null,
                                           'comment' => 'Who initiates transaction, null if anybody'])
-      ->addColumn('payerType', 'enum', ['values' => REF_LIST,
+      ->addColumn('payerType', 'enum', ['values' => self::REF_LIST, 'default' => self::REF_ANYBODY,
                                         'comment' => 'Type of payer'])
       ->addColumn('payee', 'biginteger', ['null' => true, 'default' => null,
                                           'comment' => 'Payee party to transaction, null if anybody'])
-      ->addColumn('payeeType', 'enum', ['values' => REF_LIST,
+      ->addColumn('payeeType', 'enum', ['values' => self::REF_LIST, 'default' => self::REF_ANYBODY,
                                         'comment' => 'Type of payee'])
       ->addColumn('fromId', 'biginteger', ['comment' => 'Who to transfer money from'])
       ->addColumn('toId', 'biginteger', ['comment' => 'Who to transfer money to'])
-      ->addColumn('action', 'enum', ['values' => ACTION_LIST,
+      ->addColumn('action', 'enum', ['values' => self::ACTION_LIST,
                                      'comment' => 'Action that triggers templates of this type'])
+      ->addColumn('start', 'biginteger', ['default' => 'CURRENT_TIMESTAMP',
+                                          'comment' => 'Start date of first occurrence of this template'])
+      ->addColumn('end', 'biginteger', ['null' => true, 'default' => null,
+                                        'comment' => 'Date after which no more occurrences will be created (NULL if no end)'])
       ->addColumn('amount', 'decimal', ['precision' => 11, 'scale' => 2, 'default' => 0, 'signed' => false,
                                         'comment' => 'Fixed amount to transfer'])
       ->addColumn('portion', 'decimal', ['precision' => 7, 'scale' => 6, 'default' => 0, 'signed' => false,
@@ -55,15 +84,17 @@ class CreateTableTxRules extends AbstractMigration
       ->addColumn('amtLimit', 'decimal', ['precision' => 11, 'scale' => 2, 'null' => true, 'default' => null,
                                           'signed' => false,
                                           'comment' => 'Maximum amount to transfer, NULL if no limit'])
-      ->addColumn('template', 'integer', ['null' => true, 'default' => null,
-                                          'comment' => 'Template of which this is an occurrence'])
-      ->addColumn('start', 'biginteger', ['default' => 'CURRENT_TIMESTAMP',
-                                          'comment' => 'Start of period for which this occurrence applies'])
-      ->addColumn('end', 'biginteger', ['null' => true,
-                                        'comment' => 'End of period for which this occurrence applies, NULL if it does not end'])
-      ->addColumn('code', 'integer', ['null' => true, 'default' => null,
-                                      'comment' => 'For gift cards the individual code'])
-      /* ->addForeignKey('template', 'tx_templates', 'id', ['delete' => 'restrict']) */
+      ->addColumn('period', 'integer', ['default' => 1, 'signed' => false,
+                                        'comment' => 'How often an occurrence will be generated (in prdUnits)'])
+      ->addColumn('prdUnits', 'enum', ['values' => self::PERIOD_CODES,
+                                       'comment' => 'The units for the period'])
+      ->addColumn('duration', 'integer', ['default' => 1, 'signed' => false,
+                                          'comment' => 'How many duration units an occurrence is valid for'])
+      ->addColumn('durUnits', 'enum', ['values' => self::PERIOD_CODES,
+                                       'comment' => 'The unit of duration'])
+      /* Because of special use of -1 and -2 */
+      /* ->addForeignKey('from', 'users', 'uid', ['delete' => 'restrict']) */
+      /* ->addForeignKey('to', 'users', 'uid', ['delete' => 'restrict']) */
       ->create();
   }
 }

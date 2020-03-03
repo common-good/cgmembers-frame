@@ -676,10 +676,6 @@ function sendNotifications($type, $tx, $shortfall) {
  * @return the rebate amount
  */
 
-// WARNING WARNING WARNING
-// This is going to get confused if a rule tx_entry is reversed, and then the reversal is reversed...
-// WARNING WARNING WARNING
-
 function handleRules(&$entries, $buyer, $seller, $price) {
   u\EXPECT($price > 0, 'non-positive price handling coupon');
 
@@ -724,7 +720,6 @@ EOF;
 
   $rebate = 0;
   foreach ($res as $ruleId => $rule) {
- debug($rule);
     extract($rule);
     $value = $amount + $portion * $price;
     if (! is_null($amtLimit)) $value = min($value, $amtLimit - $amtUsed);

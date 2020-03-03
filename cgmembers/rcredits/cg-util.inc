@@ -1377,6 +1377,22 @@ function bit($b) {return is_array($b) ? (bit(array_shift($b)) | ($b ? bit($b) : 
 function getBit($n, $b = NULL) {return is_null($b) ? $n : (bool) ($n & u\bit($b));}
 function setBit(&$n, $b, $on = TRUE) {return $n = $on ? (@$n | u\bit($b)) : (nn($n, 0) & ~u\bit($b));}
 
+function dateIncr($start, $number, $units) {
+  $startDate = (new \DateTime())->setTimestamp($start);
+  if ($units == FOREVER) {
+    return null;
+  }
+  if ($units == QUARTERLY) {
+    $units = MONTHLY;
+    $number *= 3;
+  }
+  $unitCode = [ DAILY => 'D', WEEKLY => 'W', MONTHLY => 'M', YEARLY => 'Y' ][$units];
+  $interval = new \DateInterval("P$number$unitCode");
+  return $startDate->add($interval)->getTimestamp();
+}
+
+
+
 // Single line functions that need little or no explanation
 function num($a, $else = 0) {return is_numeric($a) ? $a : $else;}
 function eq($a, $b, $else = FALSE) {return $a == $b ? $a : $else;}

@@ -122,11 +122,8 @@ function formCoupons_validate($form, &$sta) {
     if (!$a = r\iCardAcct($code, $iCode)) return say('invalid gift card', 'code');
     if ($a->id == $mya->id) return say(t('You cannot redeem your own gift card.'), 'err');
 
-    debug($a);
-    debug($iCode);
     $ruleId = db\get('id', 'tx_rules r', 'r.fromId=:uid AND :iCode = r.code',
                      ray('uid iCode', $a->id, $iCode));
-    debug($ruleId);
     if (! $ruleId) return say('invalid gift card', 'err');
       
     if (db\get('id', 'tx_entries_all', 'rule = :ruleId', compact(ray('ruleId'))))

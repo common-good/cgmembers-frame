@@ -15,11 +15,21 @@ define('TXES_FLDS', 'description AS for, uid AS uid, agentUid AS agt, acctTid AS
  * @param object $o: phinx AbstractMigration object
  * @param int $stopAt: migration date to stop at (0 = none, used for rolling back a migration)
  */
+const VIEWS_NOT_TO_DROP = ['ancestors', 'descendants'];
 function createViews($m, $stopAt = 0) {
   pr('clearing views');
   $q = $m->query('SELECT table_name FROM information_schema.views');
-  while ($table = $q->fetchColumn()) $m->doSql('  DROP VIEW IF EXISTS ' . $table);
-
+  while ($table = $q->fetchColumn()) {
+    echo "view: $table\n";
+    print_r(VIEWS_NOT_TO_DROP);
+    echo "\n";
+    echo in_array($table, VIEWS_NOT_TO_DROP);
+    echo "\n";
+    if (! in_array($table, VIEWS_NOT_TO_DROP)) { // don't drop
+      $m->doSql('  DROP VIEW IF EXISTS ' . $table);
+    }
+  }
+  
   // get current list of columns
   $txFldList = array_map(function($f) { return $f->getName(); },
                          $m->table('tx_hdrs_all')->getColumns());
