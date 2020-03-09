@@ -6,6 +6,8 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
+define('PHOTOID_DIR', R_PICTURE_DIR . '/photoids');
+
 /**
  * Ask new member to verify their identity.
  */
@@ -32,6 +34,8 @@ function formVerifyId_validate($form, &$sta) {
   global $mya;
   extract(just('field idtype', $sta['input']));
 
+  if (!is_dir(PHOTOID_DIR)) mkdir(PHOTOID_DIR, 0755) or u\FAIL('cannot create photo ID directory'); // required for tests
+
   if ($field == 2) {
     $res = formBasic_validate($form, $sta, FALSE, 'federalId dob');
     return $res ? '' : w\go('/settings/verifyid/method=2');
@@ -42,7 +46,7 @@ function formVerifyId_validate($form, &$sta) {
   if ($error) return say(t('File upload failed. Maybe try emailing it?'), 'err');
   $mimetype = mime_content_type($tmp_name);
   $ext = explode('/', $mimetype )[1];
-  $path = dirname($tmp_name) . "/$mya->mainQid.$ext";
+  $path = PHOTOID_DIR . "/$mya->mainQid.$ext";
   u\deleteFile($path);
   rename($tmp_name, $path);
 
