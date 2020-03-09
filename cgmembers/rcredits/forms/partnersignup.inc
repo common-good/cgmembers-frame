@@ -11,7 +11,8 @@ require_once R_ROOT . '/pdf.class';
 
 define('SF_URL', 'https://webto.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8');
 define('CRM_URL', 'SMT solar customer management URL');
-define('CONTRACT_DIR', sys_get_temp_dir() . '/contracts');
+define('BILL_DIR', R_PICTURE_DIR . 'electric-bills');
+define('CONTRACT_DIR', R_PICTURE_DIR . 'contracts');
 
 /**
  * Accept and process signup data from a partner organization.
@@ -452,6 +453,7 @@ X
  * @return an array of new pathnames (NULL if none)
  */
 function renameUploads($files, $meter) {
+  if (!is_dir(BILL_DIR)) mkdir(BILL_DIR, 0755) or u\FAIL('cannot create electric bill directory'); // required for tests
   if ($files) foreach ($files as $f => $one) {
     if (!$one['name']) {if (isDEV) break; else u\FAIL('missing file');}
     extract(just('name type tmp_name error size', $one));
@@ -460,7 +462,7 @@ function renameUploads($files, $meter) {
       $flnms = NULL;
       break;
     }
-    $flnms[] = $flnm = dirname($tmp_name) . "/$meter-$f." . pathinfo($name)['extension']; // like E12345-page1.png
+    $flnms[] = $flnm = BILL_DIR . "/$meter-$f." . pathinfo($name)['extension']; // like E12345-page1.png
     u\deleteFile($flnm);
     rename($tmp_name, $flnm);
   }
