@@ -41,7 +41,7 @@ define('STATE_CODE', '25'); // Massachusetts code, for combined Federal/State fi
  * Get lines on production server with:
      foreach (ray('aka nevabj etc') as $qid) {
        $a = a($qid); $co = $a->co ? 1 : 0;
-       echo "ray(\$keys, '$a->legalName', '$a->federalId', '$co', '$a->postalAddr', '$a->mainQid', 'amt'),<" . 'br>';
+       e cho "ray(\$keys, '$a->legalName', '$a->federalId', '$co', '$a->postalAddr', '$a->mainQid', 'amt'),<" . 'br>';
      }
  */
 function do1099s($type, $testMode = FALSE, $rows = FALSE, $badNames = [], $badTINs = [], $year = NULL) {

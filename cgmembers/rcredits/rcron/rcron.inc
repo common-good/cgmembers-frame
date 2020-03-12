@@ -224,12 +224,12 @@ X;
 	unset($DBTX);
 	db\q('DELETE FROM x_usd WHERE amount=0'); // no need to track these
   
-  queueEach('endTrialco', 'SELECT uid FROM users WHERE :IS_CO and :IS_DEPENDS AND :NOW-activated > :TRIALCO_DAY_LIMIT*:DAY_SECS');
+//  queueEach('endTrialco', 'SELECT uid FROM users WHERE :IS_CO and :IS_DEPENDS AND :NOW-activated > :TRIALCO_DAY_LIMIT*:DAY_SECS');
 }
 
 /**
  * Warn company that their trial time is past, account is deactivated, and they must open a full account.
- */
+ *//*
 function endTrialco($item) {
   extract(just('uid', $item));
   r\message($uid, 'trial co end');
@@ -237,7 +237,7 @@ function endTrialco($item) {
   $a->setBit(B_OK, FALSE);
   $a->setBit(B_DEPENDS, FALSE);
   $a->update('task', 'co2');
-}
+}*/
 
 /**
  * Do things a certain number of days after the created, signed, invite, firstTx, last login, or last access date.
@@ -293,14 +293,17 @@ X;
   
   queueEach('activeWeekly', "SELECT DISTINCT uid FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS AND $sinceActivated>0 AND $sinceActivated % 7 = 0");
 	
-	$when = 'UNIX_TIMESTAMP()+:WEEK_SECS';
+	$advanceDays = 7;
+  
 	$sql = <<< X
-	  SELECT DISTINCT u.uid,r.amount,$when AS `when`,r.created,r.period,
-		(SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced,
-    (SELECT MAX(created) FROM txs_noreverse WHERE uid1=r.payer AND uid2=r.payee AND :IS_RECURS) AS lastTx
+	  SELECT DISTINCT u.uid, r.amount, r.period, r.created AS base, $advanceDays AS advanceDays,
+      UNIX_TIMESTAMP(ADDDATE(CURDATE(), INTERVAL $advanceDays DAY)) AS `when`,
+		  (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.recursId=r.id AND status<:TX_PAID LIMIT 1) AS invoiced,
+      (SELECT MAX(created) FROM txs_noreverse WHERE uid1=r.payer AND uid2=r.payee AND recursId=r.id) AS lastTx
 		FROM users u LEFT JOIN r_recurs r ON r.payer=u.uid AND r.payee=:CGID AND r.ended=0
-		WHERE u.:IS_OK AND (r.period='Y' OR (r.id IS NULL AND FLOOR(($when-u.activated) / :DAY_SECS) MOD 365 = 0))
+		WHERE u.:IS_OK AND u.activated AND u.uid>0 AND u.uid NOT :CANONIC AND IFNULL(r.period, 'Y')='Y'
 X;
+// activated is for testing, even though redundant with IS_OK
 //		AND FLOOR((:NOW-IFNULL(r.created, u.activated)) / :DAY_SECS) MOD 365 <= 365 - 7
 
   queueEach('warnAnnualGift', $sql); // call at the right time for members with no recurring donation OR for any member with an annual donation
@@ -386,13 +389,19 @@ function activeWeekly($item) {
  * This is called at the right time for members with no recurring donation OR for any member with an annual donation (whether it's time or not).
  */
 function warnAnnualGift($item) {
-/// debug('warnAnnualGift(' . pr($item) .')');
-	extract(just('uid amount when created period invoiced lastTx', $item));
-  
-	$a = r\acct($uid);
+///    debug('warnAnnualGift(' . pr($item) .')');
+	extract(just('uid amount when base period advanceDays invoiced lastTx', $item));
 
-	if (!empty($amount)) {
-    if (!empty($invoiced) or !giveNow($period, $lastTx, $created, $when) or giveNow($period, $lastTx, $created, $when - DAY_SECS)) { return; } // not time yet for annual (or it was also time yesterday)
+	$a = r\acct($uid);
+  if (!$period) { // annual reminder for zero donation
+    $base = strtotime('today', $a->activated);
+    for ($i = 1; ; $i++) {
+      $dt = strtotime("+$i years", $base);
+      if ($dt > NOW) break;
+    }
+    if ($dt != $when) return;
+  } elseif (!empty($amount)) {
+    if (!empty($invoiced) or !giveNow($period, $lastTx, $base, $when) or giveNow($period, $lastTx, $base, strtotime("-1 day", $when))) { return; } // not time yet for annual (or it was also time yesterday)
   }
 	$aDonate = w\atag("/do/doDonate~$a->mainQid~$a->emailCode");
   r\notify($uid, 'annual-gift', $ray = ray('amount when aDonate', u\fmtAmt($amount), u\fmtDate($when, TRUE), $aDonate), TRUE);

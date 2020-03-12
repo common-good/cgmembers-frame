@@ -1,3 +1,16 @@
+2020-03-12 feature/fewer-acct-options (continued)
+. no trial companies
+. expanded initial company signup page to include federalId, etc.
+. completed membership is no longer required for inviting someone
+. verifyid separated out from resetpassword
+. added w\maxlen function
+. selling is now limited to 25 characters
+. initial company relation is now automatically -A
+. resetpassword and verifying email now leave you signed in, if you are, and sign in you in otherwise
+. xid is shown on deposit slip now instead of txid
+. account closing and reopening no longer loses original activation date
+. changed some date handling in cron and cron tests to make leap day and daylight savings problems go away
+
 2020-03-03 feature/fewer-acct-options
 . HAS_REVERSER was unused. Removed.
 . trialco now has just two steps and is limited to 14 days and $100.

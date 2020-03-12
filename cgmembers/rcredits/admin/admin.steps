@@ -177,6 +177,7 @@ function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($inde
  * members have: (ARG)
  *
  * in: MAKE activate AdminActivatesAnAccountUnconfirmed
+ *     MAKE activate AdminDeactivatesAnAccount
  */
 function membersHave($list) {return t\membersHave($list);}
 
@@ -223,7 +224,6 @@ function weDownloadWithRecords($flnm, $rows) {
     if (strpos('BCK', $type) !== FALSE) {
       $amounts = explode('/', $amounts);
       foreach ($amounts as $i => $amt) {
-        echo "gotAmt=" . substr($gotRow, $amtStart + $i * $amtLen, $amtLen) . '!';
         $gotAmt = substr($gotRow, $amtStart + $i * $amtLen, $amtLen) / 100;
         if ($gotAmt != $amt) return t\output(t('Wrong amount in record #%gotSeq: amount #%i is %gotAmt, want %amt', 'gotSeq i gotAmt amt', $gotSeq, $i + 1, $gotAmt, $amt));
       }

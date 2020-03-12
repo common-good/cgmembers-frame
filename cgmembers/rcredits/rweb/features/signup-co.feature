@@ -3,177 +3,162 @@ AS an owner or manager of a company
 I WANT to open a Common Good account
 SO I can be part of the Common Good Economy
 
+# phone 1 means +1 413.772.0001
+
 Setup:
   Given members:
-  | uid  | fullName | acctType    | flags        | created  | federalId | postalAddr          | pass  |*
-  | .ZZZ | Zeta Zot | personal    | ok,confirmed | 99654321 | 123456789 | 26Z, Zton, CA 98765 | zpass |
+  | uid | fullName  | phone | email | city  | state | zip   | floor | flags   | pass      |*
+  | .ZZA | Abe One  |     1 | a@    | Atown | AK    | 01000 |     0 | member  | %whatever |
+  | .ZZC | Our Pub  |     3 | c@    | Ctown | CA    | 03000 |     0 | co      |           |
+  | .ZZZ | Zeta Zot |    26 | z@    | Ztown | MS    | 09000 |     0 | co      | zpass     |
+  And relations:
+  | main | other | permission |*
+  | .ZZC | .ZZA  | manage     |
   And member is logged out
 
-Scenario: Someone wants to open a company account
+Scenario: A company tries to sign up directly
   When member "?" visits page "signup-co"
-  Then we show "Open a Trial Company Account" with:
-  | Your Name     | |
+  Then we show "Open a Company Account" with:
+  | open an individual account |
+
+Scenario: Someone wants to open a company account
+  When member ".ZZA" visits page "signup-co/relate=1"
+  Then we show "Open a Company Account" with:
+  | Account Type  | |
   | Company       | |
+  | Legal Name    | |
+  | Email         | |
   | Postal Code   | |
   | Company Phone | |
-  | Email         | |
   | Selling       | |
+  | Federal ID    | |
+  | Founded       | |
   | Referred By   | |
   | Own Phone     | |
-  | Account ID    | |
-
-Scenario: A member wants to open a company account while signed in
-  Given member ".ZZZ" has company info:
-  | company | companyPhone | owner | employee |*
-  | Acme Co | +14132222222 |     1 |        0 |
-  When member ".ZZZ" visits page "signup-co"
-  Then we show "Open a Trial Company Account" with:
-  | Company       | Acme Co |
-  | Postal Code   | |
-  | Company Phone | 413-222-2222 |
-  | Email         | |
-  | Selling       | |
-  | Own Phone     | |
-  And without:
-  | Your Name     |
-  | Referred By   |
-  | Account ID    |
   
-Scenario: Someone opens a trial company account while signed in
+Scenario: A company signs up
   Given next random code is "WHATEVER"
-  When member ".ZZZ" confirms form "signup-co" with values:
-  | contact | fullName | email | phone        | zip   | selling | source | ownPhone | agentQid |*
-  | Abe One | Coco Co  | a@    | 413-253-0000 | 01002 | food    | Jo     |        1 | .ZZZ     |
+  When member ".ZZA" completes form "signup-co/relate=1" with values:
+  | fullName | legalName | federalId | dob      | zip   | phone        | email | selling | source  | coType  | ownPhone |*
+  | New Co   |           | 04-3849283 | %mdY-3y | 01004 | 413-253-0004 | d@    | fish    | thither | %CO_LLC |        0 |
   Then members:
-  | uid       | .AAA           |**
-  | fullName  | Coco Co        |
-  | legalName | Zeta Zot       |
-  | federalId | 123456789      |
-  | email     | a@             |
-  | phone     | +14132530000   |
-  | zip       | 01002          |
-  | country   | US             |
-  | state     | MA             |
-#  | city      | Amherst        |
-  | flags     | confirmed co depends |
-  | helper    | .ZZZ           |
-  | source    | Jo             |
-  | contact   | Abe One        |
-  | selling   | food           |
-  And we email "verify" to member "a@" with subs:
-  | fullName | name   | qid    | site      | code     |*
-  | Coco Co  | cococo | NEWAAA | %BASE_URL | WHATEVER |
-  And member ".AAA" one-time password is set to "WHATEVER"
+  | uid  | fullName | legalName | federalId | dob          | zip   | phone        | email | coType  | selling |*
+  | .AAA | New Co   | New Co    | 043849283 | %daystart-3y | 01004 | +14132530004 | d@    | %CO_LLC | fish    |
+  And relations:
+  | main | other | permission |*
+  | .AAA | .ZZA  | manage     |
+  And invoices:
+  | payer | payee | amount         | purpose           |*
+  | .AAA  | cgf   | %EQUIP_DEPOSIT | equipment deposit |
+  And we email "verify" to member "d@" with subs:
+  | fullName | qid      | site      | code     | pass       |*
+  | New Co   | NEWAAA-A | %BASE_URL | WHATEVER | co nonpass |
+  And we show "Verify Your Email Address"
   And we say "status": "info saved|step completed"
-  And we show "Verify Your Email"
-  And member ".AAA" steps left "verifyemail"
-
-Scenario: A member opens a trial company account not signed in
-  Given next random code is "WHATEVER"
-  When member "?" confirms form "signup-co" with values:
-  | contact | fullName | email | phone        | zip   | source | selling | ownPhone | agentQid | pass  |*
-  | Abe One | Coco Co  | a@    | 413-253-0000 | 01002 | friend | nuts    |        1 | .ZZZ     | zpass |
-  Then members:
-  | uid       | .AAA           |**
-  | fullName  | Coco Co        |
-  | legalName | Zeta Zot       |
-  | federalId | 123456789      |
-  | email     | a@             |
-  | phone     | +14132530000   |
-  | zip       | 01002          |
-  | country   | US             |
-  | state     | MA             |
-#  | city      | Amherst        |
-  | flags     | confirmed co depends |
-  | helper    | .ZZZ           |
-  | source    | friend         |
-  | selling   | nuts           |
-  | contact   | Abe One        |
- 
-Scenario: A minimal member opens a trial company account
-  Given next random code is "WHATEVER"
-  And members:
-  | uid  | fullName | acctType    | flags      | created  | federalId | postalAddr         | pass  |*
-  | .ZZB | Bea Two  | personal    | ok         | 99654321 |           | 2B, Bton, MA 98765 | bpass |
-  
-  When member ".ZZB" confirms form "signup-co" with values:
-  | contact | fullName | email | phone        | zip   | source | selling | ownPhone | agentQid | pass  |*
-  | Abe One | Coco Co  | a@    | 413-253-0000 | 01002 | friend | nuts    |        1 | .ZZB     | bpass |
-  Then members:
-  | uid       | .AAA           |**
-  | fullName  | Coco Co        |
-  | legalName | %CGF_LEGALNAME |
-  | federalId | %CGF_EIN       |
-  | email     | a@             |
-  | phone     | +14132530000   |
-  | zip       | 01002          |
-  | country   | US             |
-  | state     | MA             |
-#  | city      | Amherst        |
-  | flags     | confirmed co depends |
-  | helper    | .AAB           |
-  | source    | friend         |
-  | selling   | nuts           |
-  | contact   | Abe One        |
-  And member ".AAA" steps left "verifyemail"
-
-  Given step done "verifyemail"
-  Then members have:
-  | uid  | flags                   |*
-  | .AAA | confirmed co depends ok |
-  
-Scenario: A member opens a trial company account without a phone
-  Given next random code is "WHATEVER"
-  When member "?" confirms form "signup-co" with values:
-  | contact | fullName | email | phone        | zip   | source | selling | ownPhone | agentQid | pass  |*
-  | Abe One | Coco Co  | a@    | 413-253-0000 | 01002 | there  | widgets |        0 | .ZZZ     | zpass |
-  Then these "invoices":
-  | nvid | created | status      | amount         | from | to  | for               |*
-  |    1 | %today  | %TX_PENDING | %EQUIP_DEPOSIT | .AAA | cgf | equipment deposit |
   And we say "status": "refundable deposit"
-Skip see membership feature instead
-Scenario: A new trial company account manager verifies the email
-  And members:
-  | uid       | .AAA           |**
-  | fullName  | Coco Co        |
-  | email     | a@             |
-  | flags     | confirmed co depends |
-  And member ".AAA" one-time-password is "WHATEVER" expires "%now+7d"
-  When member ".AAA" completes form "settings/verifyemail" with values:
-  | verify   | pass1      | pass2      | strong |*
-  | WHATEVER | %whatever3 | %whatever3 |      1 |
-  Then we show "Get Your Customers Signed Up"
-  And we say "status": "pass saved|step completed"  
-Resume
-Scenario: A trial company account manager creates a discount
-  Given members:
-  | uid       | .AAA           |**
-  | fullName  | Coco Co        |
-  | email     | a@             |
-  | flags     | confirmed co depends |
-  When member ".AAA" completes form "community/discount" with values:
+  And member ".AAA" steps left "verifyemail agree contact backing photo donate company tithein discount"
+
+  Given member is logged out
+  When member "?" visits page "settings/verifyemail/id=NEWAAA-A&code=WHATEVER&verify=1"
+  Then we show "Verified!"
+  And member ".AAA" steps left "agree contact backing photo donate company tithein discount"
+
+Scenario: A company supplies company information
+  Given member ".ZZC" has "co" steps done: "signup verifyemail agree contact backing photo donate"
+  And members have:
+  | uid  | website   | selling |*
+  | .ZZC | ourpub.co | drinks  |
+  When member "C:A" visits page "settings/company"
+  Then we show "Company Information" with:
+  | CGPay Button    | |
+  | Photo           | |
+  | Company name    | Our Pub |
+  | Private         | |
+  | Categories      | |
+  | Selling         | drinks |
+  | Short Desc      | |
+  | Employees       | |
+  | Annual Gross    | |
+  | Founded         | |
+  | Website         | ourpub.co |
+  | Description     | |
+  | App permissions | |
+  | Nudge Every     | |
+  | Tips            | |
+
+  When member "C:A" completes form "settings/company" with values:
+  | fullName    | Our Pub |**
+  | private     | 1 |
+  | categories  | 0=>%CAT_FOOD, 1=>%CAT_RETAIL |
+  | selling     | ale |
+  | shortDesc   | bar |
+  | employees   | 3 |
+  | gross       | $250,000 |
+  | dob         | %mdY-9y |
+  | website     | Rpub.com |
+  | description | really good ale |
+  | can         | 0=>0, 0=>2 |
+  | staleNudge  | 8 |
+  | tips        | 1 |
+  Then members have:
+  | uid         | .ZZC |**
+  | fullName    | Our Pub  |
+  | selling     | ale |
+  | shortDesc   | bar |
+  | employees   | 3 |
+  | gross       | 250000 |
+  | dob         | %daystart-9y |
+  | website     | Rpub.com |
+  | description | really good ale |
+  | staleNudge  | 8 |
+  And company flags:
+  | uid  | coFlags     |*
+  | .ZZC | private,tip |
+  And we show "Share When You Receive" with:
+  | Crumbs |
+  And we say "status": "info saved|step completed"
+  And member ".ZZC" steps left "tithein discount"
+
+Scenario: A company supplies incoming tithe choices
+  Given member ".ZZC" has "co" steps done: "signup verifyemail agree contact backing photo donate company"
+  When member "C:A" completes form "settings/tithein" with values:
+  | crumbs | 3 |**
+  Then members have:
+  | uid  | crumbs |*
+  | .ZZC | .03    |
+  And we show "Get Your Customers Signed Up"
+  And we say "status": "info saved|step completed"
+  And member ".ZZC" steps left "discount"
+
+Scenario: A company account manager creates a discount
+  Given member ".ZZC" has "co" steps done: "signup verifyemail agree contact backing photo donate company tithein"
+  When member ".ZZC" completes form "community/discount" with values:
   | amount | minimum | start | end     | ulimit | type     |*
   |     20 |     120 | %mdY  | %mdY+3m |      3 | discount |
   Then these "coupons":
   | coupid | fromId | amount | ulimit | flags | start      | end                         |*
-  |      1 |   .AAA |     20 |      3 |       | %daystart  | %(%daystart+3m+%DAY_SECS-1) |
+  |      1 |   .ZZC |     20 |      3 |       | %daystart  | %(%daystart+3m+%DAY_SECS-1) |
   And we say "status": "Your discount was created successfully."
-  And we show "Verify Your Email Address"
-  And member ".AAA" steps left "verifyemail"
-  
-Scenario: A trial company account tries to accept too much
-  Given members:
-  | uid       | .AAA           |**
-  | fullName  | Coco Co        |
-  | email     | a@             |
-  | flags     | confirmed co depends ok |
-  And balances:
-  | uid  | balance |*
-  | .ZZZ | 1000    |
-  When member ".ZZZ" confirms form "pay" with values:
-  | op  | who     | amount                    | goods      | purpose |*
-  | pay | Coco Co | %(%TRIALCO_AMT_LIMIT + 1) | %FOR_GOODS | labor   |
-  Then we say "error": "trial co over"
-  And balances:
-  | uid  | balance |*
-  | .AAA | 0       |
+  And we tell ".ZZC" CO "New Coupons!" with subs:
+  | quid      | .ZZC |**
+  | type      | discount |
+  | amount    | 20 |
+  | minimum   | 120 |
+  | ulimit    | 3 |
+  | on        | on your purchase of $120 or more |
+  | start     | %daystart |
+  | end       | %(%daystart+3m+%DAY_SECS-1) |
+  | automatic | 1 |
+  | company   | Our Pub |
+  | gift      | |
+  | forOnly   | |
+  And we say "status": "info saved"
+  And we show "Account Summary" with:
+  | Next Steps |
+  | Invite |
+  | Give   |
+  And we say "status": "setup complete|company approval|join thanks"
+  And member ".ZZC" steps left ""
+  And we tell ".ZZC" CO "New Member (Our Pub)" with subs:
+  | quid | status |*
+  | .ZZC | member |

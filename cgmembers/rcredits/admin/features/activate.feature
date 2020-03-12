@@ -17,14 +17,14 @@ Setup:
 Scenario: Admin activates an account
   Given member ".ZZD" has no photo ID recorded
   When member "D:A" completes form "summary" with values:
-  | mediaConx | rTrader | helper  | federalId  | adminable        | tickle | dob      |*
-  |         1 |       1 | Bea Two | %R_ON_FILE | member,confirmed |        | %mdy-19y |
+  | mediaConx | active | helper  | federalId  | adminable        | tickle | dob      |*
+  |         1 |      1 | Bea Two | %R_ON_FILE | member,confirmed |        | %mdy-19y |
   Then members:
   | uid  | flags                        | helper |*
   | .ZZD | member,confirmed,ok,underage |   .ZZB |
-  And we message "approved|suggest card" to member ".ZZD" with subs:
-  | youName  | inviterName | specifics | otherName |*
-  | Dee Four | Bea Two     |         ? |           |
+  And we message "approved|suggest completion" to member ".ZZD" with subs:
+  | youName  | inviterName | otherName |*
+  | Dee Four | Bea Two     |           |
   
 Scenario: Admin activates an account unconfirmed
   Given member ".ZZD" has no photo ID recorded
@@ -32,23 +32,23 @@ Scenario: Admin activates an account unconfirmed
   | uid  | flags  |*
   | .ZZD | member |
   When member "D:A" completes form "summary" with values:
-  | mediaConx | rTrader | helper | federalId  | adminable | tickle | dob      |*
-  |         1 |       1 |      1 | %R_ON_FILE | member    |        | %mdy-19y |
+  | mediaConx | active | helper | federalId  | adminable | tickle | dob      |*
+  |         1 |      1 |      1 | %R_ON_FILE | member    |        | %mdy-19y |
   Then members:
   | uid  | flags              | helper |*
   | .ZZD | member,ok,underage |      1 |
-  And we message "approved|must confirm uninvited|suggest card" to member ".ZZD" with subs:
-  | youName  | inviterName          | specifics | otherName |*
-  | Dee Four | System Administrator |         ? |           |
+  And we message "approved|must confirm uninvited|suggest completion" to member ".ZZD" with subs:
+  | youName  | inviterName          | otherName |*
+  | Dee Four | System Administrator |           |
 
 Scenario: Admin deactivates an account
-  Then members:
-  | uid  | flags          |*
-  | .ZZB | ok,member,ided |
+  Given members have:
+  | uid  | flags          | activated |*
+  | .ZZB | ok,member,ided | %now-3m   |
   # (tests add the ided bit by default when creating an active account)
   When member "B:A" completes form "summary" with values:
-  | rTrader | federalId  | adminable | tickle |*
-  |         | %R_ON_FILE | member    |        |
+  | active | federalId  | adminable | tickle |*
+  |        | %R_ON_FILE | member    |        |
   Then members:
-  | uid  | flags       |*
-  | .ZZB | member,ided |
+  | uid  | flags       | activated | activated0 |*
+  | .ZZB | member,ided | 0         | %now-3m    |

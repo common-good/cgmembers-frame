@@ -116,7 +116,7 @@ function formSummary($form, &$sta) {
       $extra .= ' ' . w\popHelp(t('bank info'), $bankInfo, '#'); //strtr(t(' <@a>bank info</a>'), ['@a'=>$bankInfo]); // strtr circumvents Drupal crap
     }
   } else $extra = '';
-  $accountId = item(($mya->mainQid ?: 'N/A') . " . ($acctType)$extra", t('ID:')); // . is for double-click select
+  $accountId = item(($mya->mainQid ?: 'N/A') . '<span class="white">..</span>' . "($acctType)$extra", t('ID:')); // .. is for double-click select
 
   $fields = 'photo title clickPhoto showCustomers topButtons accountId accountName address legalName shortName community balance newBalance creditLine creditLimit committed choiceList';
 //  foreach (ray('details') as $k) $$k = @$form[$k]; unset($form[$k]); // put these on the left if admin
@@ -142,7 +142,7 @@ function formSummary_validate($form, &$sta) {
   global $mya;
 
   if (in(op($sta), 'openCompany openJoint')) return;
-  extract(just('uid legalName creditLimit dob rTrader helper moves tickle adminable', $sta['input']));
+  extract(just('uid legalName creditLimit dob active helper moves tickle adminable', $sta['input']));
   if (nn($tickle, NULL) !== '' and $err = u\badDate($tickle)) return say($err, 'tickle');
 
   if (nn($dob) and !formBasic_validate($form, $sta, FALSE, 'dob')) return;
@@ -156,7 +156,7 @@ function formSummary_validate($form, &$sta) {
     $helper = $h->id;
   } else {unset($helper); unset($sta['input']['helper']);}
 
-  if (@$rTrader and !$mya->ok and !$mya->isCtty) { // activating
+  if (@$active and !$mya->ok and !$mya->isCtty) { // activating
     if (!@$helper) return say(t('You must specify who gets the helper reward.'), 'helper');
 //    if (!@$helper or $helper == 1) return say(t('You must specify who gets the helper reward.'), 'helper');
     if (!$mya->member and is_null(nn($adminable[B_MEMBER], NULL))) return say(t('That account is not READY (not a member).'), 'adminable'); // test "is_null" because 0 is the value when set
@@ -164,7 +164,7 @@ function formSummary_validate($form, &$sta) {
     if (!$mya->co and !nn($dob) and !$mya->idVerifiedBy) return say(t('You cannot activate the account without a date of birth (except for solar1 signups).'), 'dob');
   }
 
-  if (!@$rTrader and $mya->ok) { // de-activating
+  if (!@$active and $mya->ok) { // de-activating
     if ($mya->balance + 0) return say(t('You cannot de-activate an account with a non-zero balance.'), 'err');
   }
 
@@ -185,7 +185,7 @@ function formSummary_submit($form, &$sta) {
   if (!$mya->admin2) return; // hack attempt
   if ($op == 'secureMsgs') return w\go('', showSecureMessages());
 
-  extract($args = just('uid who legalName creditLimit tickle note notes dob helper mediaConx moves rTrader risks adminable', $sta['input']));
+  extract($args = just('uid who legalName creditLimit tickle note notes dob helper mediaConx moves active risks adminable', $sta['input']));
   if (!$mya->cAdmin) u\EXPECT(!array_diff(array_keys($args), ray('uid tickle note')), 'too many unpermitted changing fields in ' . pr($args));
 
   if (!@$tickle) {
@@ -194,7 +194,9 @@ function formSummary_submit($form, &$sta) {
 //    if ($tickleDone) $note = trim(t('(%typeDone) ', 'type', @$note ? '': "$tickleType ") . @$note);
 //    if ($tickleDone === TRUE) $note = trim(t('Done ') . @$note);
   }
-  if (@$note) $notes = $mya->stampNote($note) . (isset($notes) ? $notes : $mya->notes);
+
+  u\setDft($notes, $mya->notes);
+  if (nn($note)) $notes = $mya->stampNote($note) . $notes;
 
   $DBTX = \db_transaction();
 
@@ -212,11 +214,25 @@ function formSummary_submit($form, &$sta) {
       $_a1 = r\acct($helper)->makeDo('confirmInvite', $mya->id); // link to confirm invitedness
       r\message($helper, 'confirm invite', compact('_a1', 'fullName')); // ask inviter to confirm
     }
-
-    if (@$rTrader and !$mya->ok) activate($helper);
   }
 
-  if (isset($rTrader)) $mya->setBit(B_OK, @$rTrader);
+  if (isset($active)) {
+    $active = (bool) $active; // convert from string
+    if ($active xor $mya->ok) { // changing activation status
+      $mya->setBit(B_OK, $active);
+      if ($active) {
+        activate($helper);
+        if ($mya->activated0) {
+          $notes = $mya->stampNote('reactivated') . $notes;
+          $mya->update('activated', $mya->activated0);
+        }
+      } else {
+        $notes = $mya->stampNote('account closed') . $notes;
+        $mya->update('activated0 activated', $mya->activated, 0);
+      }
+    }
+  }
+  
   if (!nn($helper)) unset($helper); // don't overwrite if too late or empty
 
   $mya->update(@compact(ray('legalName tickle notes helper mediaConx moves')));
@@ -265,8 +281,10 @@ function activate($helper) {
     $msg = 'approved';
 //    if (!$mya->confirmed) $msg .= ($helper > 1 ? '|must confirm' : '|in person');
     if (!$mya->confirmed) $msg .= ($mya->helper == 1 ? '|must confirm uninvited' : '|must confirm');
-    if (!$mya->co and !$mya->stepsDone('person')) $msg .= '|suggest person';
-    $subs = ray('inviterName youName specifics', @$mya->helperA->fullName, $mya->fullName, getSpecifics($mya));
+
+    if (!$mya->stepsDone($mya->co ? 'co' : 'person')) $msg .= '|suggest completion';
+    
+    $subs = ray('inviterName youName', @$mya->helperA->fullName, $mya->fullName);
     
     r\message($mya->id, $msg, $subs);
     
@@ -291,7 +309,7 @@ function activate($helper) {
 
 /**
  * Return the right specifics to include in the welcome email.
- */
+ *//*
 function getSpecifics($mya) {
   $forOver1000 = t('This is a trial account. You will need to complete some additional steps to accept more than $1,000 through %PROJECT.');
   $onlineOnly = t('Your account is limited to payments online. ');
@@ -307,7 +325,7 @@ function getSpecifics($mya) {
   return str_replace(t('To or '), t('To '), $mya->co
   ? ($mya->trialco ? $forOver1000 . $finishCo : ($mya->stepsDone('co2') ? '' : ($acceptPayments . $finishCo)))
   : (($cardWorthy ? $cardComing . t(' To') : ($onlineOnly . $getCard)) . ($canSell ? '' : $getSell) . $otherSteps));
-}
+}*/
 
 /**
  * Return a list of important next steps for the account.
@@ -317,12 +335,13 @@ function choiceListFld() {
   global $mya;
   if ($mya->cAdmin) return NULL;
   
+  $warning = t('<b class="loud">NOTE!</b> Once you click this step, your account will be temporarily deactivated and you will need to finish all steps before it can be reactivated.');
   $choices0 = explode("\n", t(<<< X
     community:invite:Invite:Invite a friend or company to join.<br><small>Your local Community Fund gets $2 for every invitation you send!</small>
     community:donate:Give:Make a donation to %PROJECT.
     community:comment:Comment:Send a comment, question, or suggestion.
-    scraps:person:Finish:Finish opening your account &mdash; get a %PROJECT payment card,accept payments (including discount rebates), and participate in %PROJECT economic democracy.
-    scraps:co2:Finish:Finish opening your complete company account &mdash; required before you receive a total of $100 or within one week, whichever is first.
+    scraps:person:Finish:Finish opening your account.<br><small>Get a %PROJECT payment card, accept payments (including discount rebates), and participate in %PROJECT economic democracy. $warning</small>
+    scraps:co:Finish:Finish opening your complete company account.<br><small>Required before you receive a total of $%TRIALCO_AMT_LIMIT. $warning</small>
 X
   ));
     
@@ -338,7 +357,7 @@ X
     ${$task . 'Ch'} = $kch ? ["$dir/$task" => $kch] : [];
   }
     
-  $choices = ($mya->co ? $co2Ch : $personCh) + $inviteCh + $donateCh + $commentCh;
+  $choices = ($mya->co ? $coCh : $personCh) + $inviteCh + $donateCh + $commentCh;
   $choiceList = t('<h3>Next Steps</h3>') . "\n";
   foreach ($choices as $url => $desc) if (!empty($desc)) $choiceList .= w\lnk("/$url", $desc) . "\n";
   return item($choiceList . "\n");
@@ -413,8 +432,8 @@ function adminSummary() {
     $legalName = textFld(t('Legal Name:'), '', required($mya->legalName));    
     $shortName = textFld(t('Short Name:'), t('Shortest usable version of full name.'), dft($mya->shortName));
     
-//    if ($mya->superAdmin or ($mya->cAdmin and $mya->activated)) $rTrader = ($mya->isCtty)
-    $rTrader = ($mya->superAdmin or ($mya->cAdmin and $mya->ok)) // allowing all admins to activate causes a mess
+//    if ($mya->superAdmin or ($mya->cAdmin and $mya->activated)) $active = ($mya->isCtty)
+    $active = ($mya->superAdmin or ($mya->cAdmin and $mya->ok)) // allowing all admins to activate causes a mess
     ? boolFld(t('Active?'), t('Is account approved to use %PROJECT?'), $mya->ok)
     : item($mya->ok ? t('Yes') : t('No'), t('Active:'));
 
@@ -491,7 +510,7 @@ function adminSummary() {
   w\jsx('tickle');
   
   $bigFields = $mya->ok ? 'adminable risks ssnShow' : 'ssnShow adminable risks';
-  return @compact(ray("photo details notes note dob tickle donations rTrader activity relations source helper $bigFields community balance cgfDonations legalName shortName calling signupCo tenure tasks steps dwInfo invited invitedBy proxies proxyFor moves floor minimum achMin risk trust mediaConx count back uid submit"));
+  return @compact(ray("photo details notes note dob tickle donations active activity relations source helper $bigFields community balance cgfDonations legalName shortName calling signupCo tenure tasks steps dwInfo invited invitedBy proxies proxyFor moves floor minimum achMin risk trust mediaConx count back uid submit"));
 }
 
 /**
