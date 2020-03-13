@@ -49,6 +49,7 @@ function extraSetup($feature) {
  *     MAKE bank ANonmemberHasATargetAndRefills
  *     MAKE cashout Setup
  *     MAKE communitybits Setup
+ *     MAKE daily Setup
  *     MAKE gifts Setup
  *     MAKE gifts ANonmemberChoosesADonationToCG
  *     MAKE gifts ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG

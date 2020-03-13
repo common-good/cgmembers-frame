@@ -542,9 +542,9 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
     }
   }
 
-  if ($gainerA->co and $gainerA->depends and db\sum('amt', 'txs_noreverse', 'uid2=:gainerId', compact('gainerId')) + $needed > TRIALCO_LIMIT) {
+  if ($gainerA->co and $gainerA->depends and db\sum('amt', 'txs_noreverse', 'uid2=:gainerId', compact('gainerId')) + $needed > TRIALCO_AMT_LIMIT) {
     $DBTX->rollback();
-    return r\txErr(t('trial co over', 'limit', u\fmtAmt(TRIALCO_LIMIT)), $erInfo);
+    return r\txErr(t('trial co over'), $erInfo);
   }
     
   $tx->addEntries($entries);

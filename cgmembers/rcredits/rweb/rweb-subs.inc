@@ -62,13 +62,14 @@ EOF
   'repeat gift' => t('If you wish to make a donation again sometime, click "Membership" in the upper right corner, then on "Donate".'),
 //  'setup complete' => t('<p>Your account setup is complete. Expect an email within the next 24 hours, saying your account is activated. Your %PROJECT card will arrive by US Mail within a few days. Thank you for joining!</p>'),
   'setup complete' => t('<h2>Your Account Setup Is Complete</h2>You have done everything you need to do.'),
-  'card member' => t('Once a staff member has approved your account, you can expect to receive your %PROJECT card in the mail soon.'),
-  'no card member' => t('Your first transaction must be with someone who invited you OR in person (with a %PROJECT card) at a participating business in your community. If you would like to have a %PROJECT card, click "Card" in the Next Steps.'),
-  'sell member' => t('Hurray! You can now receive payments through %PROJECT.'),
-  'voice member' => t('Congratulations! You are now a full participating member of %PROJECT and the %PROJECT Democratic Economy.'),
-  'co2 member' => t('Contratulations! Your company account is complete.'),
-  'individual approval' => t('Once a staff member has approved your account, you will be able to make payments online.'),
+  'individual approval' => t('Once a staff member has approved your account, you can expect to receive your %PROJECT card in the mail soon.'),
+//  'individual approval' => t('Once a staff member has approved your account, you will be able to make payments online.'),
   'company approval' => t('Once a staff member has approved your account, you can begin accepting %PROJECT payments.'),
+//  'card member' => t('Once a staff member has approved your account, you can expect to receive your %PROJECT card in the mail soon.'),
+//  'no card member' => t('Your first transaction must be with someone who invited you OR in person (with a %PROJECT card) at a participating business in your community. If you would like to have a %PROJECT card, click "Card" in the Next Steps.'),
+//  'sell member' => t('Hurray! You can now receive payments through %PROJECT.'),
+//  'voice member' => t('Congratulations! You are now a full participating member of %PROJECT and the %PROJECT Democratic Economy.'),
+  'co2 member' => t('Contratulations! Your company account is complete.'),
   'join thanks' => t('Thank you for joining us!'),
   'next steps' => t('<span class="loud">See some important Next Steps listed below.</span>'),
   'use temporary card' => t('<p>While you wait for your %PROJECT card to arrive, you can use your invitation card to make purchases at any member business (beginning with your inviter).</p>'),
@@ -261,7 +262,7 @@ function go($page, $msg = '', $field = '') {
   global $base_url;
   global $lastGo, $xlastGo; list ($xlastGo, $lastGo) = [@$lastGo, $page]; // for testing
 
-  if ($msg) say(strip_tags($msg), $field);
+  $msg = strip_tags($msg);
   if (substr($page, 0, 1) == '/') $page = substr($page, 1); // supplying the slash is preferred, to agree with w\atag()
     
   if (test()) {
@@ -270,6 +271,7 @@ function go($page, $msg = '', $field = '') {
     return mb_strpos($page, 'http://') === FALSE ? f('t.pageForm', $page, $msg, $field) : '';
   }
 
+  if ($msg) say($msg, $field);
   if (!u\starts($page, 'http')) $page = "$base_url/$page";
 
   \drupal_session_commit();
@@ -919,8 +921,8 @@ function photoRet($msg, $status = 'error') {
  */
 function pickPassword($reset = TRUE, $req = '') {
   global $mya;
-  $pass1 = passFld($req . ($reset ? t('New password:') : t('Choose a Password:')), '', clas('password-field') + autofill('off'));
-  $pass2 = passFld($req . ($reset ? t('Confirm new password:') : t('Confirm password:')), '', clas('password-confirm') + autofill('off'));
+  $pass1 = textFld($req . ($reset ? t('New password:') : t('Choose a Password:')), '', clas('password-field') + autofill('off'));
+  $pass2 = textFld($req . ($reset ? t('Confirm new password:') : t('Confirm password:')), '', clas('password-confirm') + autofill('off'));
   $strong = hidFld(0, attrib(['id' => 'edit-strong']));
   focusOn('pass1');
   
@@ -1507,6 +1509,7 @@ function zBadSelling(&$selling) {
   $selling = explode("\n", $selling);
   foreach ($selling as $one) {
     $one = trim($one); // don't allow empty or reserved values
+    if (strlen($one) > SELLING_MAXLEN) return t('Each short description of something you are selling is limited to %SELLING_MAXLEN characters.');
     if (!u\nonish($one) and !in($one, ['', S_REFUND, S_USD_OUT, t('cash')]) and !r\usdin($one)) $new[] = mb_strtolower($one);
   }
   if (!nn($new)) return t('missing field', 'field', 'selling');
@@ -1546,7 +1549,7 @@ EOF;
  */
 function ssnFields($personal = TRUE, $required = []) {
   if ($personal) {
-    $ssReason = $required ? t('Required by the IRS if you accept payments through %PROJECT.') : '';
+    $ssReason = $required ? t('Required by the IRS if you accept more than $20,000 a year in payments through %PROJECT ($600 a year in MA and VT).') : '';
     $federalId = passFld(t('ssTitle'), [t('ssDesc'), $ssReason], $required + autofill('off'));
     $dob = textFld(t('Birth Date:'), [t('Your birth date'), t('Your date of birth (mm/dd/yyyy)')], $required + autofill('off'));
   } else {
@@ -2370,8 +2373,9 @@ function doBtn($class, $text, $data = '') {return w\btn('', $text, 'primary', 'x
  * Skip a setup step and save it for last. Has no effect if step is already done.
  * If defaulting to the current step, redirect to the next step.
  * @param string $substitute: step to do instead (later)
+ * @param string $justDid: step just completed
  */
-function skipStep($substitute = NULL) {
+function skipStep($substitute = NULL, $justDid = '') {
   global $mya;
 
   if (!@$mya or !$stepsLeft = $mya->stepsLeft()) return; // nothing to do
@@ -2379,7 +2383,9 @@ function skipStep($substitute = NULL) {
   unset($stepsLeft[0]);
   if ($step != 'discount') $stepsLeft[] = $substitute ?: $step; // put this step at the end (except discount, which can be done later)
   $mya->update('stepsLeft', array_values($stepsLeft)); // renumber and update
-  return w\go($mya->nextStepUrl());
+  $nextStep = $mya->nextStepUrl($justDid, $msg);
+  if ($justDid and $msg) w\say($msg);
+  return w\go($nextStep);
 }
 
 /**
@@ -2477,6 +2483,7 @@ function clas($class) {return ['class' => [$class]];}
 function attrib($attributes) {return compact('attributes');}
 function suffix($field_suffix = '') {return compact('field_suffix');}
 function prefix($prefix) {return compact('prefix');}
+function maxlen($max) {return attrib(['maxlength' => $len]);}
 function autofill($settings = 'on') {return attrib(['autocomplete' => $settings]);}
 function required($dft = NULL) {return ['required' => TRUE] + (isset($dft) ? dft($dft) : []);}
 // UNUSED function check($array, $type = 'plain') {return array_map("check_$type", $array);} // Check an array for plain or markup.

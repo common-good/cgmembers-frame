@@ -255,7 +255,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
     $toEmail = $toA->email;
     $to = [$toEmail => $toA->fullName];
     $subs += (array) $toA->account(); // this omits any special fields or special formatting
-    $subs['qid'] = $toA->mainQid;
+    u\setDft($subs['qid'], $toA->mainQid); // might have an agent, so don't overwrite
     $subs['shortName'] = $toA->name;
     $subs['zip3'] = substr($toA->zip, 0, 2); // temporarily show a wider region than zip3
     if ($toA->closed) return r\tellAdmin(t('attempt to email closed account'), compact(ray('index subs reply0')));
@@ -389,7 +389,7 @@ function notify($uid, $index, $subs = [], $force = FALSE) {
   $a = r\acct($uid);
   u\EXPECT($a, 'no account');
   $subs['uid'] = $uid;
-  $subs['qid'] = $a->qid;
+  u\setDft($subs['qid'], $a->qid); // might have an agent too, so don't overwrite
   $subs['otherName'] = nn($subs['myName'], NULL); // notifying someone else about US, if anyone
   $fullName = $a->fullName;
   $warnIndexes = ray('new invoice,new offer,charge disputed');
@@ -1543,9 +1543,18 @@ function handleInvestmentRequest($stakeid, &$msg) {
  * required for submitting 1099-K forms in the given state.
  */
 function no1099k($tot, $cnt, $st) {
-  $minima = ray(MINIMA1099);
-  list ($min, $minCnt) = explode('/', nn($minima[$st]) ?: $minima['X']);
+  list ($min, $minCnt) = r\minima1099($st);
   return ($tot < $min or $cnt < $minCnt);
+}
+
+/**
+ * Return the thresholds for filing form 1099-K in the given state.
+ * @param string $st: 2-letter state abbreviation
+ * @return [minimum amount, minimum transaction count]
+ */
+function minima1099($st) {
+  $minima = ray(MINIMA1099);
+  return explode('/', nn($minima[$st]) ?: $minima['X']);
 }
 
 /**

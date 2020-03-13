@@ -102,10 +102,10 @@ Scenario: A member clicks a link to reset password
   When member "?" completes form "settings/password" with values:
   | name          |*
   | a@example.com |
-  And member "?" visits page "reset/id=abeone&code=wHatEveR"
+  And member "?" visits page "reset/id=NEWZZA&code=wHatEveR"
   Then we show "Choose a New Password"
 
-  When member "?" confirms form "reset/id=abeone&code=wHatEveR" with values:
+  When member "?" confirms form "reset/id=NEWZZA&code=wHatEveR" with values:
   | pass1      | pass2      | strong |*
   | %whatever  | %whatever  | 1      |
   Then member ".ZZA" is logged in
@@ -123,7 +123,7 @@ Scenario: A member clicks a link to reset password with wrong code
   And member "?" completes form "settings/password" with values:
   | name          |*
   | a@example.com |
-  When member "?" visits page "reset/id=abeone&code=NOTwHatEveR"
+  When member "?" visits page "reset/id=NEWZZA&code=NOTwHatEveR"
   Then we say "error": "bad login"
   And we show "Miscellaneous"
 
@@ -132,6 +132,6 @@ Scenario: A member clicks a link to reset password for unknown account
   And member "?" completes form "settings/password" with values:
   | name          |*
   | a@example.com |
-  When member "?" visits page "reset/id=abeone&code=NOTwHatEveR"
+  When member "?" visits page "reset/id=NEWZZA&code=NOTwHatEveR"
   Then we say "error": "bad login"
   And we show "Miscellaneous"

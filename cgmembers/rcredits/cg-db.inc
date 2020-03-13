@@ -235,7 +235,8 @@ function setFlag($table, $id, $bit, $bool = TRUE) {
 /**
  * Make a backup copy of the record before deleting it if appropriate (then delete it).
  * @param string $table: delete a record from this table
- * @param string $idnm: name of key field of table OR assoc of criteria
+ * @param string $idnm: name of key field of table OR assoc of criteria; for example:
+ *   foreach (ray('tx_entries tx_hdrs r_usd') as $tnm) db\del($tnm, ['xid' => 12345]);
  * @param mixed $id: id of record to delete (integer or spaceless string) OR criteria
  * @param assoc $subs: parameters for selection criteria
  */

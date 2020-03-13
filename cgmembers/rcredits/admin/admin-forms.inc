@@ -61,8 +61,8 @@ EOF;
           }
           $start = item(join('', $list));
           } */
-    $do1099btest = submi(t('1099B TEST'));
-    $do1099b = submi('1099B');
+    $do1099ktest = submi(t('1099-K TEST'));
+    $do1099k = submi('1099-K');
     $reconcile = submi('Reconcile Ctty Fund');
     $tables .= ' notices boxes do stats usd nonmembers';
     $special = submi(t('Special'));
@@ -85,7 +85,7 @@ EOF;
   }
 
   foreach (ray($tables) as $one) $do[$one] = submi($one);
-  $funcs = ray('inviteeStatus signupCos do1099btest do1099b reconcile special stop start stopCtty startCtty');
+  $funcs = ray('inviteeStatus signupCos do1099ktest do1099k reconcile special stop start stopCtty startCtty');
 //  foreach ($funcs as $func) if (isset($$func)) $do[$func] = $$func;
   $do += @compact($funcs);
   $do = fieldSet('do', $do);
@@ -151,7 +151,7 @@ function formAdminPanel_submit($form, &$sta) {
     w\go("sadmin/changes/$a->mainQid");
   } elseif ($op == 'ssnLink') {
     w\say($a->fullName. t(' SSN Link:<br><br> &nbsp; %PROMO_URL/do/doSsn~%qid~%code &nbsp; ', 'qid code', $a->mainQid, $a->emailCode));
-  } elseif ($op == 'do1099b' or $test1099 = ($op == 'do1099btest')) {
+  } elseif ($op == 'do1099k' or $test1099 = ($op == 'do1099ktest')) {
     include_once __DIR__ . '/../cg-yearly.inc';
     r\Special\do1099s(TEN99K, @$test1099);
 	} elseif ($op == 'reconcile') {
@@ -683,8 +683,8 @@ EOF
   //    SELECT ABS(amount) AS amount, txid, uid, u.fullName AS name FROM r_usd t LEFT JOIN users u ON u.uid=t.payee 
 
   $sql = <<<EOF
-    SELECT amount, txid, uid, u.fullName AS name FROM r_usd t LEFT JOIN users u ON u.uid=t.payee 
-    WHERE $where AND deposit=$date AND amount<>0 AND t.created<=:NOW ORDER BY txid
+    SELECT amount, xid, uid, u.fullName AS name FROM r_usd t LEFT JOIN users u ON u.uid=t.payee 
+    WHERE $where AND deposit=$date AND amount<>0 AND t.created<=:NOW ORDER BY xid
 EOF;
   $q = db\q($sql);
   $x = $pdf->pageW / 2 - 1;
@@ -700,7 +700,7 @@ EOF;
     $pdf->Cell(1, 0, u\fmtAmt($amount, ''), '', 0, 'R');
     $pdf->SetTextColor(0);
     $pdf->setX($x + $colW);
-    $pdf->Cell($x - $colW, 0, "(# $txid) $name", '', 1);
+    $pdf->Cell($x - $colW, 0, "(# $xid) $name", '', 1);
     if (FALSE) { // !$in) { // for outgoing checks, show bank address and member's legal name
       $pdf->setX($x + $colW);
       if ($bankInfo = r\acct($uid)->bankInfo) {

@@ -118,15 +118,15 @@ Scenario: A non-member chooses a donation to CG
 
 Scenario: It's time to warn about an upcoming annual donation to CG
   Given members:
-  | uid  | fullName | flags  | risks   | activated             |*
-  | .ZZD | Dee Four | ok     | hasBank | %now-1y               |
-  | .ZZE | Eve Five | ok     | hasBank | %(%now-1y+7*DAY_SECS) |
+  | uid  | fullName | flags  | risks   | activated               |*
+  | .ZZD | Dee Four | ok     | hasBank | %now-1y                 |
+  | .ZZE | Eve Five | ok     | hasBank | %(strtotime('+7 days', strtotime('-1 year', %daystart))) |
   And these "recurs":
-  | created               | payer | payee | amount | period | purpose |*
-  | %(%now-1y+6*DAY_SECS) | .ZZD  | cgf   |      1 |      Y | gift!   |
+  | id | created               | payer | payee | amount | period | purpose |*
+  |  1 | %(strtotime('+7 days', strtotime('-1 year', %daystart))) | .ZZD  | cgf   |      1 |      Y | gift!   |
 	And transactions:
-  | xid | created               | amount | from | to  | purpose                    | flags       |*
-  |   1 | %(%now-1y+6*DAY_SECS) |     10 | .ZZD | cgf | gift! (Monthly) | gift,recurs |
+  | xid | created               | amount | from | to  | purpose                    | flags       | recursId |*
+  |   1 | %(strtotime('+7 days', strtotime('-1 year', %daystart))) | 10 | .ZZD | cgf | gift! (Yearly) | gift,recurs | 1 |
   When cron runs "tickle"
 	Then we email "annual-gift" to member "d@example.com" with subs:
 	| amount | when    | aDonate |*

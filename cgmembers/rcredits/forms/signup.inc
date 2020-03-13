@@ -40,7 +40,7 @@ function formSignup($form, &$sta, $args = '') {
 
   if (!@$helper) {
     $helper = @$partner ?: 0;
-    $forother = item(w\lnk('/signup-co/' . http_build_query($args), t('open an account for your company instead')));
+    $forother = item(w\lnk('/signup-co/' . http_build_query($args), t('Did you want to open a COMPANY account instead?')));
   } else $forother = NULL;
 
   if (!@$code) $code = 'self ()';
@@ -77,7 +77,7 @@ EOF
   
   $phone = textFld(t('Phone:'), [t('Your phone number')], required(nn($phone) ? u\fmtPhone($phone): ''));
   $zip = zipFld(nn($zip));
-  $fullName = textFld(t('Name:'), [t('Your full name'), t('Your full legal name, properly capitalized, as it appears on your social security card, driver\'s license, or other government-issued ID')], required(nn($fullName)));
+  $fullName = textFld(t('Name:'), [t('Your full name'), t('Your full name, properly capitalized, as you would like it to appear on your %PROJECT card.')], required(nn($fullName)));
   $email = textFld(t('Email:'), [t('Email'), t('<b>Type carefully.</b> All emails from the system will be sent to this address. It will not be made public, but will be viewable by accounts you transact with (you can choose greater privacy by clicking "Advanced" on the Preferences Settings page).')], required(nn($email)));
   
   $form = compact(ray('title forother subtext acctType fullName phone email zip source submit myid args confirmed helper iCode notes preid source2'));
@@ -110,7 +110,7 @@ function zExtraErr(&$notes, $msg, $field, $value = '') {
 
 function formSignup_submit($form, &$sta) {
   global $mya;
-  $dbFields = 'fullName legalName email flags phone federalId dob pin zip address city state postalAddr helper iCode notes tenure source';
+  $dbFields = 'fullName email flags phone federalId dob pin zip address city state postalAddr helper iCode notes tenure source';
   extract(just('myid preid confirmed acctType args ats owns partner customer source2 ' . $dbFields, $sta['input']));
   if (test() and !@$args) $args = basename($_SERVER['REQUEST_URI']);
   extract(just('code source2', $args)); // source2 may come from either partner or an ad (through our promo site)
