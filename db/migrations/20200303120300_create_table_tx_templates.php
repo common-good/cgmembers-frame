@@ -14,8 +14,8 @@ class CreateTableTxTemplates extends AbstractMigration
 
   const ACTION_PAYMENT = 1;
   const ACTION_BY_DATE = 2;
-  const ACTION_GIFT_CARD = 3;
-  const ACTION_LIST = [self::ACTION_PAYMENT, self::ACTION_BY_DATE, self::ACTION_GIFT_CARD];
+  const ACTION_REDEEM = 3;
+  const ACTION_LIST = [self::ACTION_PAYMENT, self::ACTION_BY_DATE, self::ACTION_REDEEM];
 
   const ONLY_ONCE = 1;
   const DAILY = 2;
@@ -67,7 +67,7 @@ class CreateTableTxTemplates extends AbstractMigration
       ->addColumn('toId', 'biginteger', ['comment' => 'Who to transfer money to'])
       ->addColumn('action', 'enum', ['values' => self::ACTION_LIST,
                                      'comment' => 'Action that triggers templates of this type'])
-      ->addColumn('start', 'biginteger', ['default' => 'CURRENT_TIMESTAMP',
+      ->addColumn('start', 'biginteger', ['null' => false,
                                           'comment' => 'Start date of first occurrence of this template'])
       ->addColumn('end', 'biginteger', ['null' => true, 'default' => null,
                                         'comment' => 'Date after which no more occurrences will be created (NULL if no end)'])

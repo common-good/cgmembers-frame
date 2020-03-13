@@ -34,12 +34,12 @@ class CreateTableUGroupies extends AbstractMigration
       ->addColumn('isMember', 'boolean', ['default' => false, 'comment' => 'User is a member of the group'])
       ->addColumn('canAdd', 'boolean', ['default' => false, 'comment' => 'User can add other users to the group'])
       ->addColumn('canRemove', 'boolean', ['default' => false, 'comment' => 'User can remove other users from the group'])
-      ->addColumn('start', 'biginteger', ['default' => 'CURRENT_TIMESTAMP', 'null' => false])
+      ->addColumn('start', 'biginteger', ['null' => false])
       ->addColumn('end', 'biginteger', ['default' => null, 'null' => true])
       ->addIndex(['uid', 'start'])
       ->addIndex(['grpId', 'start'])
-//      ->addForeignKey('uid', 'users', 'uid', ['delete' => 'RESTRICT'])
-//      ->addForeignKey('grpId', 'u_groups', 'id', ['delete' => 'RESTRICT'])
+      /* ->addForeignKey('uid', 'users', 'uid', ['delete' => 'RESTRICT']) */
+      /* ->addForeignKey('grpId', 'u_groups', 'id', ['delete' => 'RESTRICT']) */
       ->create();
   }
 }

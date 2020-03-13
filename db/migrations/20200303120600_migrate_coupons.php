@@ -13,8 +13,8 @@ class MigrateCoupons extends AbstractMigration
 
   const ACTION_PAYMENT = 1;
   const ACTION_BY_DATE = 2;
-  const ACTION_GIFT_CARD = 3;
-  const ACTION_LIST = [self::ACTION_PAYMENT, self::ACTION_BY_DATE, self::ACTION_GIFT_CARD];
+  const ACTION_REDEEM = 3;
+  const ACTION_LIST = [self::ACTION_PAYMENT, self::ACTION_BY_DATE, self::ACTION_REDEEM];
 
   const ONLY_ONCE = 1;
   const DAILY = 2;
@@ -105,8 +105,8 @@ class MigrateCoupons extends AbstractMigration
                 "fromId" => $coupon["sponsor"],
                 "toId" => self::SAME_AS_PAYER,
                 "action" => self::ACTION_PAYMENT,
-                "start" => date('Ymd', $coupon["start"]),
-                "end" => date('Ymd', $coupon["end"]),
+                "start" => $coupon["start"],
+                "end" => $coupon["end"],
                 "amount" => $amount,
                 "portion" => $portion,
                 "purpose" => is_null($coupon["on"]) ? '' : $coupon["on"],
@@ -202,7 +202,7 @@ class MigrateCoupons extends AbstractMigration
         $newRule = ['payer' => null, 'payerType' => self::REF_ANYBODY,
                     'payee' => null, 'payeeType' => self::REF_ANYBODY,
                     'fromId' => $giftCard['fromId'], 'toId' => self::SAME_AS_PAYEE,
-                    'action' => self::ACTION_GIFT_CARD,
+                    'action' => self::ACTION_REDEEM,
                     'amount' => $giftCard['amount'],
                     'portion' => 0,
                     'purpose' => $giftCard['on'] ?: 'gift card',

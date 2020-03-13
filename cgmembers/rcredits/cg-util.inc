@@ -1391,6 +1391,28 @@ function dateIncr($start, $number, $units) {
   return $startDate->add($interval)->getTimestamp();
 }
 
+/**
+ * Generates the SQL for determining whether a particular account meets the 
+ * criteria for the payer or payee of a rule.
+ * @param string $role -- must be 'payer' or 'payee'
+ * @param string $uid -- might be an actual uid or a string like :uid
+ * @param string $now -- might be an actual timestamp or a string like :NOW
+ * @return the sql string
+ */
+function genRuleSQL($role, $uid, $now = ':NOW') {
+  $sql = <<< EOF
+    (CASE ${role}Type
+     WHEN :REF_ANYBODY THEN TRUE
+     WHEN :REF_ACCOUNT THEN $role = $uid
+     WHEN :REF_INDUSTRY THEN EXISTS (SELECT 1 FROM r_user_industries ui join ancestors a ON ui.iid=a.base WHERE a.ancestor=r.payee AND ui.uid=$uid)
+     WHEN :REF_GROUP THEN EXISTS (SELECT 1 FROM u_groups g JOIN u_groupies ug ON (ug.grpId = g.id)
+                                  WHERE ug.uid = $uid AND ug.start <= $now
+                                  AND IFNULL($now < ug.end, TRUE))
+     ELSE FALSE
+     END)
+EOF;
+  return $sql;
+}
 
 
 // Single line functions that need little or no explanation

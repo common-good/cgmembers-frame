@@ -30,18 +30,19 @@ X;
   
   while ($row = $q->fetchAssoc()) {
     extract($row);
-		$gift = $action == ACTION_GIFT_CARD;
+		$gift = $action == ACTION_REDEEM;
 		$type = $gift ? t('gift') : t('discount');
 		
 		if ($gift) {
 			$args = "type=gift&amount=$amount";
-			$count = $end - $start;
+  		$start = u\fmtDate($start, TRUE);
+  		$end = empty($end) ? t('indefinite') : u\fmtDate($end, TRUE);
 		} else {
       $args = http_build_query(@compact($fields, 'automatic'));
       if (!test()) $args = u\urlify($args);
       $args = 'print/' . $args;
   		$start = u\fmtDate($start, TRUE);
-  		$end = $end ? u\fmtDate($end, TRUE) : t('indefinite');
+  		$end = empty($end) ? t('indefinite') : u\fmtDate($end, TRUE);
 //  		$on = $on ? w\popHelp(t(' on'), $on) : '';
 		}
 
@@ -50,7 +51,6 @@ X;
 		$amount = $amount < 0 ? u\fmtAmt(-$amount/100, '%') : u\fmtAmt($amount);
 		$minimum = $minimum ? u\fmtAmt($minimum) : t('none');
 		$ulimit = ($ulimit + 0) ? number_format($ulimit) : t('no limit');
-
     $rows[] = u\tableRow(compact($fields));
     /* if ($some) { */
     /*   $uids = db\col('uid', 'r_coupated', compact('coupid')); */
@@ -85,22 +85,14 @@ function showDiscounts() {
 	$subtext = t('as of %today', 'today', u\fmtDate(NOW));
 	$fields = ray('company amount on end for left amtLeft');
   $hdrs = u\tableRow(ray('Company,Discount,On,Ending,For,Uses&nbsp;Left,Amount&nbsp;Left'));
-	
+
+  $payerCheck = u\genRuleSQL('payer', ':myid');
   $sql = <<< X
     SELECT `fromId` AS sponsor, `amount`, `portion`, `purpose` AS `on`, `end`, payerType, payer, ulimit, uid, amtLimit,
     (SELECT IFNULL(SUM(e.amount), 0) FROM tx_entries e WHERE e.uid=:myid AND e.rule IS NOT NULL AND e.rule=r.id) AS `amtUsed`,
     (SELECT IFNULL(SUM(SIGN(e.amount)), 0) FROM tx_entries e WHERE e.uid=:myid AND e.rule IS NOT NULL AND e.rule=r.id) AS `used`
     FROM tx_rules r JOIN users u ON r.`fromId`=u.uid
-    WHERE
-      (CASE payerType
-       WHEN :REF_ANYBODY THEN TRUE
-       WHEN :REF_ACCOUNT THEN payer = :myid
-       WHEN :REF_INDUSTRY THEN EXISTS (SELECT 1 FROM ancestors WHERE ancestor = :myid)
-       WHEN :REF_GROUP THEN EXISTS (SELECT 1 FROM u_groups g JOIN u_groupies u ON (u.grpId = g.id)
-                                    WHERE u.uid = :myid AND u.start <= :NOW
-                                    AND IFNULL(:NOW < u.end, TRUE))
-       ELSE FALSE
-       END)
+    WHERE $payerCheck
     AND (u.community=:ctty OR :DISTANCE_BETWEEN<:NEIGHBOR_MAX)
     AND (r.action = :ACTION_PAYMENT)
     AND (r.start <= :NOW AND IFNULL(:NOW < r.end, TRUE))
@@ -112,7 +104,7 @@ X;
     extract($row);
 		$a = r\acct($uid);
 		$company = $a->bestName;
- 		$end = $end ? u\fmtDate($end, TRUE) : t('--');
+ 		$end = $end ? u\fmtDate($end, TRUE) : '--';
     $left = $ulimit > 0 ? t('%left of %ulimit', 'left ulimit', $ulimit - $used, $ulimit) : t('no limit');
     $for = /* $some ? t('you+') : */ t('anyone');
     if ($amount != 0) {

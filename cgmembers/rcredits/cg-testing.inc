@@ -17,7 +17,7 @@ use CG\Web as w;
 global $base_path;
 define('BASE_PATH', $base_path);
 define('T_BALANCE_FLDS', 'uid balance floor savingsAdd saveWeekly minimum');
-define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid');
+define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid fromId toId');
 define('SPECIAL_IDS', 'ctty crumb round cgf bank-in bank-out');
 define('DOCODE_FLNM', LOG_DIR . 'docode.txt');
 define('SAME_TIME', 60 * 20); // number of seconds that make no difference in "same time"
@@ -130,14 +130,16 @@ function doThing($info, $thing, $key = 'id') {
   global $testOnly;
 
   $table = $thing = strtolower($thing);
-  if (!u\starts($thing, 'tx_') and !u\starts($thing, 'x_') and $thing != 'signup') $table = 'r_' . $table;
+  if (!u\starts($thing, 'tx_') and !u\starts($thing, 'x_') and !u\starts($thing, 'u_') and $thing != 'signup') $table = 'r_' . $table;
   if (!in($thing, 'usd signup company') and substr($thing, -1, 1) != 's') $table .= 's';
   if ($table == 'tx_hdrs') $key = 'xid';
 
 // NO!  if (@$info['id']) {$info['uid'] = $info['id']; unset($info['id']);}
   if ($testOnly) {
     return verifyRecord($table, $info);
-  } else {return db\insert($table, $info, $key);}
+  } else {
+    return db\insert($table, $info, $key);
+  }
 
 }
 
@@ -445,20 +447,15 @@ function doCompanyFlags($info) {
 }
 
 /*
- * Generic record-maker/record-tester.
+ * Temporary (we hope) record-maker for coupons.  It generates rules instead.
  */
 function doCoupons($info, $thing, $key = 'coupid') {
   global $testOnly;
 
   $coupon = just('coupid fromId start   end   amount on  minimum ulimit flags sponsor code  amtLimit', $info,
                  [ null, null,  time(), null, 0,     '', 0,      null,  0,    null,   null, null ]);
-  if ($coupon['amount'] < 0) {
-    $amount = 0;
-    $portion = -0.01 * $coupon['amount'];
-  } else {
-    $amount = $coupon['amount'];
-    $portion = 0;
-  }
+  $amount = $coupon['amount'];
+  list($amount, $portion) = ($amount < 0) ? [0, -0.01 * $amount] : [$amount, 0];
   $rule = array_filter([ 'id' => $coupon['coupid'],
                          'payer' => null,
                          'payerType' => REF_ANYBODY,
@@ -1379,9 +1376,61 @@ function clear($ch = 0) {
   w\signout(TRUE);
   \drupal_static_reset(); // clear out drupal central storage
 
-  $tables = 'r_bad r_ballots r_boxes r_changes r_company r_do r_events r_honors r_investments r_invites r_invoices r_ips r_near r_notices r_options r_pairs r_photos r_proposals r_proxies r_questions r_ratings r_recurs r_relations r_shares r_stakes r_stats r_tous r_usd r_usd2 r_user_industries r_votes signup tx_disputes_all tx_entries_all tx_hdrs_all tx_rules tx_templates x_invoices x_photos x_relations x_usd x_users u_groups u_groupies flood queue semaphore sessions cache';
-  foreach (ray('bootstrap form') as $k) $tables .= " cache_$k"; // don't empty cache_menu
-  foreach (ray($tables) as $table) db\q("TRUNCATE $table");
+  $tables = ['cache',              // standalone
+             'flood',              // standalone
+             'queue',              // standalone
+             'r_bad',              // standalone
+             'r_votes',            // r_ballots, r_options
+             'r_ballots',          // r_questions, users
+             'r_changes',          // users
+             'r_ratings',          // r_investments, users
+             'r_shares',           // r_investments
+             'r_investments',      // users, or is that r_company?, club?
+             'r_company',          // users
+             'r_do',               // users
+             'r_pairs',            // r_options
+             'r_options',          // r_questions
+             'r_questions',        // r_events
+             'r_events',           // standalone
+             'r_honors',           // users
+             'r_invites',          // users
+             'r_invoices',         // users, r_recurs
+             'x_invoices',         // users, r_recurs
+             'r_ips',              // users
+             'r_near',             // users
+             'r_notices',          // users
+             'r_photos',           // users
+             'x_photos',           // users
+             'r_proposals',        // standalone
+             'r_proxies',          // users
+             'r_relations',        // users
+             'x_relations',        // users
+             'r_stakes',           // users, club?
+             'r_stats',            // users
+             'r_tous',             // users
+             'r_usd',              // tx_hdrs, users
+             'x_usd',              // tx_hdrs, users
+             'r_usd2',             // tx_hdrs
+             'r_user_industries',  // r_industries, users
+             'semaphore',          // standalone
+             'sessions',           // users
+             'signup',             // standalone
+             'tx_disputes_all',    // tx_hdrs, users
+             'tx_entries_all',     // tx_hdrs, users, tx_rules
+             'tx_hdrs_all',        // users, r_boxes, r_recurs, self 
+             'tx_rules',           // users, u_groups, r_industries, tx_templates
+             'tx_templates',       // users, u_groups, r_industries
+             'r_boxes',            // users
+             'r_recurs',           // users
+             'u_groupies',         // u_groups, users
+             'u_groups',           // standalone
+             'x_users',            // standaloneish
+             // 'r_industries',       // never truncated
+             // 'users',              // never truncated
+             ];
+  /* $tables = 'r_bad r_ballots r_boxes r_changes r_company r_do r_events r_honors r_investments r_invites r_invoices r_ips r_near r_notices r_options r_pairs r_photos r_proposals r_proxies r_questions r_ratings r_recurs r_relations r_shares r_stakes r_stats r_tous r_usd r_usd2 r_user_industries r_votes signup tx_disputes_all tx_entries_all tx_hdrs_all tx_rules tx_templates x_invoices x_photos x_relations x_usd x_users u_groups u_groupies flood queue semaphore sessions cache'; */
+  foreach (ray('bootstrap form') as $k) $tables[] = "cache_$k"; // don't empty cache_menu
+  foreach ($tables as $table) db\q("TRUNCATE $table");
 
   db\q('DELETE FROM users WHERE uid<>0');
   db\q('DELETE FROM r_criteria WHERE ctty<>0');

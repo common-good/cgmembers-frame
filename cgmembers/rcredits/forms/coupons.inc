@@ -94,7 +94,7 @@ function formCoupons_validate($form, &$sta) {
   case 'discount':
     $amt0 = trim($amount);
     $amount = str_replace('%', '', $amount);
-    $nums = 'amount minimum' . ($ulimit === '' ? '' : ' ulimit');
+    $nums = 'amount minimum' . (empty($ulimit) ? '' : ' ulimit');
     foreach (ray($nums) as $k) if ($err = u\badAmount($$k, $k == 'amount' ? '>0' : '>=0')) return w\sayFieldErr($err, $k);
     //    if ($amt0[0] == '$' and $amount < 1) return w\sayFieldErr(t('The discount amount cannot be less than $1.'), 'amount');
     //    if (substr($amt0, -1, 1) == '%' and $amount > 100) return w\sayFieldErr(t('The discount percentage must be no more than 100%.'), 'amount');
@@ -119,16 +119,35 @@ function formCoupons_validate($form, &$sta) {
     break;
 
   case 'redeem':
-    if (!$a = r\iCardAcct($code, $iCode)) return say('invalid gift card', 'code');
+    $a = r\iCardAcct($code, $iCode);
+    if (empty($a)) return say('invalid gift card', 'code');
     if ($a->id == $mya->id) return say(t('You cannot redeem your own gift card.'), 'err');
 
-    $ruleId = db\get('id', 'tx_rules r', 'r.fromId=:uid AND :iCode = r.code',
-                     ray('uid iCode', $a->id, $iCode));
-    if (! $ruleId) return say('invalid gift card', 'err');
-      
+    $payeeCheck = u\genRuleSQL('payee', ':payee');
+    $sql = <<< EOF
+      SELECT id FROM tx_rules r
+      WHERE r.fromId=:issuer
+      AND :iCode = r.code
+      AND r.action=:ACTION_REDEEM
+      AND start<=:NOW
+      AND IFNULL(:NOW<`end`,TRUE)
+      AND $payeeCheck
+EOF;
+    
+    $stmt = db\q($sql, ray('issuer iCode payee', $a->id, $iCode, $mya->id));
+    switch ($stmt->rowCount()) {
+    case 0: return say('invalid gift card', 'err');
+    case 1: $ruleId = $stmt->fetchField();
+      break;
+    default:
+      u\EXPECT(FALSE, "invalid return from query");
+    }
+
     if (db\get('id', 'tx_entries_all', 'rule = :ruleId', compact(ray('ruleId'))))
       return say('already redeemed', 'err');
-    u\preray(compact(ray('ruleId')), $sta['input']); // pass the results to submit function
+    $payerId = $a->id;
+    $payeeId = $mya->id;
+    u\preray(compact(ray('ruleId payerId payeeId')), $sta['input']); // pass the results to submit function
     break;
 
   default:
@@ -144,42 +163,42 @@ function formCoupons_validate($form, &$sta) {
  */
 function formCoupons_submit($form, &$sta, $trial = FALSE) {
   global $mya; $myid = $mya->id;
-  extract(just('type amount ruleId iCode count minimum start end ulimit automatic on forOnly', $sta['input'], NULL));
+  extract(just('type amount portion ruleId iCode count minimum start end ulimit automatic on forOnly payerId payeeId', $sta['input'], NULL));
 
   if (empty($amount) and in($mya->task, 'co co2')) {
     return $mya->task == 'co' ? w\go($mya->nextStepUrl()) : w\goNextStep('discount'); // new member pressed skip on discount form
   }
 
-  if ($amount < 0) { $amount = 0; $portion = -$amount * 0.01; }
-  else { $portion = 0; }
-  
   switch ($type) {
   case 'redeem': 
-    $res = db\get('`fromId`, amount', 'tx_rules', 'id=:ruleId', ['ruleId' => $ruleId]);
+    $res = db\get('payer, payerType, payee, payeeType, `fromId`, `toId`, amount', 'tx_rules', 'id=:ruleId', ['ruleId' => $ruleId]);
     extract($res);
     $fromA = r\acct($fromId);
-    list ($ok, $index, $subs) = be\transfer('payment', $fromA, $mya, $amount, t('gift'), FOR_GOODS, ['force' => 1, 'ruleId' => $ruleId]);
+    $toId = ($toId == SAME_AS_PAYER) ? $payerId : (($toId == SAME_AS_PAYEE) ? $payeeId : $toId);
+    $fromId = ($fromId == SAME_AS_PAYER) ? $payerId : (($fromId == SAME_AS_PAYEE) ? $payeeId : $fromId);
+
+    list ($ok, $index, $subs) = be\transfer('payment', $fromA, r\acct($toId), $amount, t('gift'), FOR_GOODS, ['force' => 1, 'ruleId' => $ruleId]);
     u\EXPECT($ok, t('failed forced gift redemption by %who for rule %ruleid', 'who ruleId', $mya->fullName, $ruleId));
     $mya->update('giftPot', $mya->giftPot + $amount);
     return say(t('coupon redeemed', 'amount giver', u\fmtAmt($amount), $fromA->fullName));
 
   case 'gift':
-    $flags = u\bit(B_GIFT);
-
-    $DBTX = \db_transaction();
-
     u\EXPECT($forOnly == NULL, 'forOnly not currently handled');
     /* if (@$forOnly) { */
     /*   $flags |= u\bit(B_SOME); */
     /* } */
+
+    $DBTX = \db_transaction();
+
     $start = $mya->giftCoupons + 0;
     $end = $start + $count - 1;
     if (is_null($on)) $on = 'gift certificate';
     if (is_null($minimum)) $minimum = 0;
     foreach (range($start, $end) as $num) {
       $code = $num; // $mya->iCardCode($num);
-      db\insert('tx_rules', ray('fromId toId action purpose', $myid, SAME_AS_PAYER, ACTION_GIFT_CARD, $on)
-                + compact(ray('amount portion minimum ulimit code')));
+      db\insert('tx_rules', ray('payer payerType    payee payeeType    fromId toId           action         purpose start  end   portion',
+                                $myid, REF_ACCOUNT, null, REF_ANYBODY, $myid, SAME_AS_PAYEE, ACTION_REDEEM, $on,    now(), null, 0)
+                + compact(ray('amount minimum ulimit code')));
     }
     unset($DBTX);
 
@@ -204,8 +223,8 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
     if ($automatic) {
       u\EXPECT($forOnly == NULL, 'forOnly not currently handled');
       /* if ($forOnly != NULL)  $flags |= u\bit(B_SOME); */
-      $ruleId = db\insert('tx_rules', ray('payee payeeType    fromId   toId           action          purpose amtLimit',
-                                          $myid, REF_ACCOUNT, $myid,   SAME_AS_PAYER, ACTION_PAYMENT, $on,    $amount )
+      $ruleId = db\insert('tx_rules', ray('payer payerType    payee  payeeType    fromId   toId           action          purpose amtLimit',
+                                          null,  REF_ANYBODY, $myid, REF_ACCOUNT, $myid,   SAME_AS_PAYER, ACTION_PAYMENT, $on,    $amount )
                           + compact(ray('amount portion minimum ulimit start end')));
     }
     unset($DBTX);

@@ -1605,8 +1605,7 @@ function someonePostsToPageWith($page, $args) {return t\postToPage($page, $args)
 /**
  * coupons: (ARG)
  *
- * in: MAKE coupons AMemberRedeemsAGiftCoupon
- *     TEST coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
+ * in: TEST coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsAPercentageDiscountCoupon
  *     MAKE coupons AMemberRedeemsADiscountCouponInDribsAndDrabs

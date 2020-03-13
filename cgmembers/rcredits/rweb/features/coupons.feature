@@ -21,66 +21,67 @@ Scenario: A member company creates a gift coupon
   | type | amount | count |*
   | gift |     10 |    20 |
   Then these "tx_rules":
-  | id | payerType | payeeType | fromId | toId | amount | portion | ulimit | code |*
-  |  1 | 1         | 1         | .ZZC   | -1   |     10 | 0       | 1      |    8 |
-  |  2 | 1         | 1         | .ZZC   | -1   |     10 | 0       | 1      |    9 |
-  |  3 | 1         | 1         | .ZZC   | -1   |     10 | 0       | 1      |   10 |
-  |  4 | 1         | 1         | .ZZC   | -1   |     10 | 0       | 1      |   11 |
-  |  5 | 1         | 1         | .ZZC   | -1   |     10 | 0       | 1      |   12 |
-  |  6 | 1         | 1         | .ZZC   | -1   |     10 | 0       | 1      |   13 |
-  |  7 | 1         | 1         | .ZZC   | -1   |     10 | 0       | 1      |   14 |
-  |  8 | 1         | 1         | .ZZC   | -1   |     10 | 0       | 1      |   15 |
-  |  9 | 1         | 1         | .ZZC   | -1   |     10 | 0       | 1      |   16 |
-  | 10 | 1         | 1         | .ZZC   | -1   |     10 | 0       | 1      |   17 |
-  | 11 | 1         | 1         | .ZZC   | -1   |     10 | 0       | 1      |   18 |
-  | 12 | 1         | 1         | .ZZC   | -1   |     10 | 0       | 1      |   19 |
-  | 13 | 1         | 1         | .ZZC   | -1   |     10 | 0       | 1      |   20 |
-  | 14 | 1         | 1         | .ZZC   | -1   |     10 | 0       | 1      |   21 |
-  | 15 | 1         | 1         | .ZZC   | -1   |     10 | 0       | 1      |   22 |
-  | 16 | 1         | 1         | .ZZC   | -1   |     10 | 0       | 1      |   23 |
-  | 17 | 1         | 1         | .ZZC   | -1   |     10 | 0       | 1      |   24 |
-  | 18 | 1         | 1         | .ZZC   | -1   |     10 | 0       | 1      |   25 |
-  | 19 | 1         | 1         | .ZZC   | -1   |     10 | 0       | 1      |   26 |
-  | 20 | 1         | 1         | .ZZC   | -1   |     10 | 0       | 1      |   27 |
+  | id | payer | payerType    | payeeType    | fromId | toId           | amount | portion | ulimit | code |*
+  |  1 | .ZZC  | %REF_ACCOUNT | %REF_ANYBODY | .ZZC   | %SAME_AS_PAYEE |     10 | 0       | 1      |    8 |
+  |  2 | .ZZC  | %REF_ACCOUNT | %REF_ANYBODY | .ZZC   | %SAME_AS_PAYEE |     10 | 0       | 1      |    9 |
+  |  3 | .ZZC  | %REF_ACCOUNT | %REF_ANYBODY | .ZZC   | %SAME_AS_PAYEE |     10 | 0       | 1      |   10 |
+  |  4 | .ZZC  | %REF_ACCOUNT | %REF_ANYBODY | .ZZC   | %SAME_AS_PAYEE |     10 | 0       | 1      |   11 |
+  |  5 | .ZZC  | %REF_ACCOUNT | %REF_ANYBODY | .ZZC   | %SAME_AS_PAYEE |     10 | 0       | 1      |   12 |
+  |  6 | .ZZC  | %REF_ACCOUNT | %REF_ANYBODY | .ZZC   | %SAME_AS_PAYEE |     10 | 0       | 1      |   13 |
+  |  7 | .ZZC  | %REF_ACCOUNT | %REF_ANYBODY | .ZZC   | %SAME_AS_PAYEE |     10 | 0       | 1      |   14 |
+  |  8 | .ZZC  | %REF_ACCOUNT | %REF_ANYBODY | .ZZC   | %SAME_AS_PAYEE |     10 | 0       | 1      |   15 |
+  |  9 | .ZZC  | %REF_ACCOUNT | %REF_ANYBODY | .ZZC   | %SAME_AS_PAYEE |     10 | 0       | 1      |   16 |
+  | 10 | .ZZC  | %REF_ACCOUNT | %REF_ANYBODY | .ZZC   | %SAME_AS_PAYEE |     10 | 0       | 1      |   17 |
+  | 11 | .ZZC  | %REF_ACCOUNT | %REF_ANYBODY | .ZZC   | %SAME_AS_PAYEE |     10 | 0       | 1      |   18 |
+  | 12 | .ZZC  | %REF_ACCOUNT | %REF_ANYBODY | .ZZC   | %SAME_AS_PAYEE |     10 | 0       | 1      |   19 |
+  | 13 | .ZZC  | %REF_ACCOUNT | %REF_ANYBODY | .ZZC   | %SAME_AS_PAYEE |     10 | 0       | 1      |   20 |
+  | 14 | .ZZC  | %REF_ACCOUNT | %REF_ANYBODY | .ZZC   | %SAME_AS_PAYEE |     10 | 0       | 1      |   21 |
+  | 15 | .ZZC  | %REF_ACCOUNT | %REF_ANYBODY | .ZZC   | %SAME_AS_PAYEE |     10 | 0       | 1      |   22 |
+  | 16 | .ZZC  | %REF_ACCOUNT | %REF_ANYBODY | .ZZC   | %SAME_AS_PAYEE |     10 | 0       | 1      |   23 |
+  | 17 | .ZZC  | %REF_ACCOUNT | %REF_ANYBODY | .ZZC   | %SAME_AS_PAYEE |     10 | 0       | 1      |   24 |
+  | 18 | .ZZC  | %REF_ACCOUNT | %REF_ANYBODY | .ZZC   | %SAME_AS_PAYEE |     10 | 0       | 1      |   25 |
+  | 19 | .ZZC  | %REF_ACCOUNT | %REF_ANYBODY | .ZZC   | %SAME_AS_PAYEE |     10 | 0       | 1      |   26 |
+  | 20 | .ZZC  | %REF_ACCOUNT | %REF_ANYBODY | .ZZC   | %SAME_AS_PAYEE |     10 | 0       | 1      |   27 |
 
 #  And member ".ZZC" visits page "community/coupons/print/type=gift&amount=10&ulimit=1&count=20", which results in:
-#  When member ".ZZC" visits page "community/coupons/print/type=gift&amount=10&count=20"
+  When member ".ZZC" visits page "community/coupons/print/type=gift&amount=10&count=20"
   And members have:
   | uid  | giftCoupons |*
   | .ZZC |          28 |
-  # When member ".ZZC" visits page "community/coupons/list"
-  # Then we show "Your Discounts and Gift Certificates" with:
-  # | Type | Amount | On               | Starting | Ending | Min Purchase | Max Uses |~Action  |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
+  When member ".ZZC" visits page "community/coupons/list"
+  Then we show "Your Discounts and Gift Certificates" with:
+  | Type | Amount | On               | Starting | Ending     | Min Purchase | Max Uses |~Action  |
+  | gift | $10    | gift certificate |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | gift certificate |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | gift certificate |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | gift certificate |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | gift certificate |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | gift certificate |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | gift certificate |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | gift certificate |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | gift certificate |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | gift certificate |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | gift certificate |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | gift certificate |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | gift certificate |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | gift certificate |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | gift certificate |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | gift certificate |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | gift certificate |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | gift certificate |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | gift certificate |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | gift certificate |     %mdY | indefinite |           $0 |        1 | reprint |
   
 Scenario: A member redeems a gift coupon
   Given members have:
   | uid  | giftCoupons | created |*
   | .ZZC |           8 | 0039200 |
 # created determines 3-letter lowSecurity code (7AA), which is used in coupon code
-  And coupons:
-  | coupid | fromId | amount | ulimit | flags | start | end | sponsor | code |*
-  |      1 |   .ZZC |     10 |      1 | gift  |     8 |  28 | .ZZC    | 8    |
-  When member ".ZZA" completes form "community/coupons/type=gift" with values:
+  And txRules:
+  | id | payer | payerType    | payeeType    | fromId | toId             | action         | amount | portion  | code | start |*
+  | 1  | .ZZC  | %REF_ACCOUNT | %REF_ANYBODY | .ZZC   | %SAME_AS_PAYEE   | %ACTION_REDEEM | 10     | 0        | 8    | %now  |
+
+When member ".ZZA" completes form "community/coupons/type=gift" with values:
   | type   | code          |*
   | redeem | DD7K CLJW EAI |
   Then balances:
@@ -111,8 +112,8 @@ Scenario: A member company creates a dollar amount discount coupon
   | type     | amount | minimum | start | end     | ulimit | automatic |*
   | discount |     12 |      20 | %mdY  | %mdY+9d |      1 |         1 |
   Then coupons:
-  | coupid | amount | fromId | minimum | ulimit | flags | start     | end                | sponsor | on                              |*
-  |      1 |     12 |   .ZZC |      20 |      1 |       | %daystart | %(%daystart+10d-1) | .ZZC    | on your purchase of $20 or more |
+  | coupid | amount | fromId | minimum | ulimit | flags | start     | end                | sponsor |*
+  |      1 |     12 |   .ZZC |      20 |      1 |       | %daystart | %(%daystart+10d-1) | .ZZC    |
   When member ".ZZC" visits page "community/coupons/list"
   Then we show "Your Discounts and Gift Certificates" with:
   | Type     | Amount | On                              | Starting | Ending  | Min Purchase | Max Uses |~Action  |
@@ -124,8 +125,8 @@ Scenario: A member company creates a dollar amount discount coupon
   
 Scenario: A member redeems a dollar amount discount coupon
   Given coupons:
-  | coupid | amount | fromId | minimum | ulimit | flags | start     | end                | sponsor | on |*
-  |      1 |     12 |   .ZZC |      20 |      1 |       | %daystart | %(%daystart+10d-1) |.ZZC| on your purchase of $20 or more |
+  | coupid | amount | fromId | minimum | ulimit | flags | start     | end                | sponsor | on                              |*
+  |      1 |     12 |   .ZZC |      20 |      1 |       | %daystart | %(%daystart+10d-1) |.ZZC     | on your purchase of $20 or more |
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 100    | fun     |
@@ -304,8 +305,8 @@ Scenario: A member with nothing redeems a zero minimum discount coupon
 
 Scenario: A member redeems a discount coupon sponsored by a third party
   Given txRules:
-  | id | amount | minimum | fromId | toId | payeeType | payee | purpose | start     | amtLimit |*
-  |  1 |     12 |       0 |   .ZZB | -1   | 1         | .ZZC  | on zots | %daystart | 12       |
+  | id | amount | minimum | fromId | toId             | payeeType    | payee | purpose | start     | amtLimit |*
+  |  1 |     12 |       0 |   .ZZB | %SAME_AS_PAYER   | %REF_ANYBODY | .ZZC  | on zots | %daystart | 12       |
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub |     10 | fun     |

@@ -13,8 +13,8 @@ class CreateTableTxRules extends AbstractMigration
 
   const ACTION_PAYMENT = 1;
   const ACTION_BY_DATE = 2;
-  const ACTION_GIFT_CARD = 3;
-  const ACTION_LIST = [self::ACTION_PAYMENT, self::ACTION_BY_DATE, self::ACTION_GIFT_CARD];
+  const ACTION_REDEEM = 3;
+  const ACTION_LIST = [self::ACTION_PAYMENT, self::ACTION_BY_DATE, self::ACTION_REDEEM];
 
   const ONLY_ONCE = 1;
   const DAILY = 2;
@@ -80,7 +80,7 @@ class CreateTableTxRules extends AbstractMigration
                                           'comment' => 'Maximum amount to transfer, NULL if no limit'])
       ->addColumn('template', 'integer', ['null' => true, 'default' => null,
                                           'comment' => 'Template of which this is an occurrence'])
-      ->addColumn('start', 'biginteger', ['default' => 'CURRENT_TIMESTAMP',
+      ->addColumn('start', 'biginteger', ['null' => false,
                                           'comment' => 'Start of period for which this occurrence applies'])
       ->addColumn('end', 'biginteger', ['null' => true,
                                         'comment' => 'End of period for which this occurrence applies, NULL if it does not end'])

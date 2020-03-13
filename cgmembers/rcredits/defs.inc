@@ -566,8 +566,8 @@ const REF_LIST = [REF_ANYBODY, REF_ACCOUNT, REF_INDUSTRY, REF_GROUP];
 
 const ACTION_PAYMENT = 1;  // This rule is only triggered by a payment
 const ACTION_BY_DATE = 2;  // This rule is triggered by the current data being start
-const ACTION_GIFT_CARD = 3; 
-const ACTION_LIST = [ACTION_PAYMENT, ACTION_BY_DATE, ACTION_GIFT_CARD];
+const ACTION_REDEEM = 3; 
+const ACTION_LIST = [ACTION_PAYMENT, ACTION_BY_DATE, ACTION_REDEEM];
 
 // Period and duration codes
 const ONLY_ONCE = 1;       
