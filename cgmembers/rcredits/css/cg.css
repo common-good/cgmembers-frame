@@ -69,6 +69,8 @@ code {color:#637c36;}
 [data-trigger="hover"] +div.popover .popover-title,
 [data-trigger="click"] +div.popover .popover-title,
 .ui-widget-header {background:darkgreen; color:white;}
+.ui-tabs .ui-widget-header {background:white; border:0; border-bottom:1px solid #ddd;}
+.ui-tabs .ui-widget-header .ui-state-active {background:darkgreen;}
 
 [data-trigger="click"] +div.popover .popover-content,
 [data-trigger="hover"] +div.popover .popover-content {color:black;}

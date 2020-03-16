@@ -22,8 +22,8 @@ function doit(what, vs) {
 
   case 'chimp':
     var imp = $('.form-item-chimpSet');
-    $('#edit-chimp-1').click(function() {imp.hide();});
-    $('#edit-chimp-0').click(function() {imp.show();});
+    $('#edit-chimp-1').click(function () {imp.hide();});
+    $('#edit-chimp-0').click(function () {imp.show();});
     break;
 
   case 'get-ssn': get('ssn', {}, function () {}); break;
@@ -56,7 +56,7 @@ function doit(what, vs) {
     
 
   case 'change-ctty':
-    $('#edit-community').on('change', function() {
+    $('#edit-community').on('change', function () {
       var newCtty = this.value;
       changeCtty(newCtty, false);
     });
@@ -160,12 +160,12 @@ function doit(what, vs) {
     
   case 'addr':
 /*    print_country(vs['country'], vs['state'], vs['state2']);
-    $('#frm-signup, #frm-contact').submit(function() {
+    $('#frm-signup, #frm-contact').submit(function () {
       $('#edit-hidcountry').val($('#edit-country').val());
       $('#edit-hidstate').val($('#edit-state').val());
       $('#edit-hidstate2').val($('#edit-state2').val());
     });
-    $('.form-item-country select').change(function() {
+    $('.form-item-country select').change(function () {
       print_state(this.options[this.selectedIndex].value,'','state');
       print_state(this.options[this.selectedIndex].value,'','state2');
     });*/
@@ -234,13 +234,13 @@ function doit(what, vs) {
   case 'on-submit':
     var formid = '#rcreditsweb' + vs[caller];
     switch (caller) {
-    case '': $(formid).submit(function() {}); break;
+    case '': $(formid).submit(function () {}); break;
     }
     break;
 
   case 'advanced-prefs':
     toggleFields(vs['advancedFields'], false);
-    $('#edit-showAdvancet').click(function() { $(this).hide(); toggleFields(vs['advancedFields'], true); });
+    $('#edit-showAdvancet').click(function () { $(this).hide(); toggleFields(vs['advancedFields'], true); });
     break;
 
   case 'bank-prefs':
@@ -252,12 +252,17 @@ function doit(what, vs) {
       $('#edit-submit .ladda-label, #edit-nextStep .ladda-label').html(text);
     }
 
-    if ($('#edit-connect-1')[0]) {
+    if ($('#edit-connect-2')[0]) {
       showBank($('#edit-connect-2').attr('checked') == 'checked');
-      $('#edit-connect-0').click(function() {showBank(false);});
-      $('#edit-connect-1').click(function() {showBank(false);});
-      $('#edit-connect-2').click(function() {showBank(true);});
+      $('#edit-connect-0').click(function () {showBank(false);});
+      $('#edit-connect-1').click(function () {showBank(false);});
+      $('#edit-connect-2').click(function () {showBank(true);});
+    } else if ($('#edit-connect-1')[0]) {
+      showBank($('#edit-connect-1').attr('checked') == 'checked');
+      $('#edit-connect-0').click(function () {showBank(false);});
+      $('#edit-connect-1').click(function () {showBank(true);});
     }
+
 
     function showTarget(show) {
       $('#targetFields2').toggle(show);
@@ -265,13 +270,34 @@ function doit(what, vs) {
     }
     showTarget($('#edit-refills-1').attr('checked') == 'checked');
 
-    $('#edit-refills-0').click(function() {showTarget(false);});
-    $('#edit-refills-1').click(function() {
+    $('#edit-refills-0').click(function () {showTarget(false);});
+    $('#edit-refills-1').click(function () {
       showTarget(true); 
       if ($('#edit-target').val() == '$0') $('#edit-target').val('$' + vs['mindft']);
     });
     break;
 
+  case 'posts':
+//    $('.form-item-zip .btn').click(function () {$('#edit-submit').click();});
+    $('.form-item-zip .btn').click(function () {
+      location.href = $(this).attr('href') + '/op=gotzip&zip=' + $('#edit-zip.ziptogo').val();
+      return false; // cancel original link click
+    });
+    $('#edit-zip.ziptogo').change(function () {$('#edit-submit').click();});
+/*    if (vs['active']) {
+      $('#' + vs['active']).attr('href', '#tab-' + vs['active']);
+      $('#tabs').tabs({active: vs['active']=='offer' ? 2 : 3});
+    } */
+    $('#tabs').tabs();
+    $('#tabs ul li a[href^="http"]').unbind('click').click(function () {location.href = $(this).attr('href');});
+    $('#cat').selectmenu();
+    $('#edit-cat.limit-list').change(function () {
+      var cat=$(this).find(':selected').text();
+      $('#tabs tr').hide();
+      $('#tabs tr[class="' + cat + '"]').show();
+    });
+    break;
+    
   case 'signup':
     var form = $('#frm-signup');
 //    if (vs['clarify'] !== 'undefined') $('#edit-forother a').click(function () {alert(vs['clarify']);});
@@ -288,7 +314,7 @@ function doit(what, vs) {
     });
     break;
     
-  case 'prejoint': $('#edit-old-0').click(function() {this.form.submit();}); break;
+  case 'prejoint': $('#edit-old-0').click(function () {this.form.submit();}); break;
 
   case 'invite-link': $('#inviteLink').click(function () {SelectText(this.id);}); break;
 
@@ -350,7 +376,7 @@ function doit(what, vs) {
     break;
     
   case 'coupons':
-    $('#edit-automatic-0').click(function() {
+    $('#edit-automatic-0').click(function () {
       $('.form-item-automatic').hide();
       var min = $('#edit-minimum').val();
       $('.form-item-on').show();
@@ -391,7 +417,7 @@ function doit(what, vs) {
     break;
     
     /*    case 'relations':
-          $('div.checkbox').click(function() {
+          $('div.checkbox').click(function () {
           var box = $('input', this);
           alert(box.prop('checked'));
           //box.prop('checked', !box.prop('checked'));
@@ -399,7 +425,7 @@ function doit(what, vs) {
           break;*/
     
   default:
-    alert('ERROR: there is no default script.');
+    alert('ERROR: Unknown script scrap (there is no default script).');
     alert($('#script-scraps').attr('src').replace(/^[^\?]+\??/,''));
     
   }

@@ -76,7 +76,7 @@ function get($fieldName, $table, $where = '1', $subs = []) {
   $many = (substr($fieldName, -1, 1) == '*');
   $several = (!$many and $fieldCount > 1);
   $result = ($several or $many) ? $result->fetchAssoc() : $result->fetchField();
-  if ($several and $result) u\EXPECT(\count($result) == $fieldCount, 'field count is off'); // eg, if $fieldName == 'a,a' (\count because this class has a count function!)
+  if ($several and $result) u\EXPECT(\count($result) == $fieldCount, 'field count is off: result=' . pr($result) . ' count=' . $fieldCount); // eg, if $fieldName == 'a,a' (\count because this class has a count function!)
   return $result;
 }
 function exists($table, $where = '1', $subs = []) {return db\get(1, $table, $where, $subs);}

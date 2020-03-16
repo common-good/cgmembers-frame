@@ -38,7 +38,7 @@ EOF;
   for ($i = 0; $line = riskLine($q, K_ACCT_RISKS, $red) and ($i < K_LINES); $i++) $accts .= $line;
   
   $headers = ray(t('Score Tx# Date Amount From To Description Risks'));
-  if (!$mya->cAdmin2) unset($headers[6]); // no Description unless admin
+  if (!$mya or !$mya->cAdmin2) unset($headers[6]); // no Description unless admin
   foreach ($headers as $v) {$vLow = mb_strtolower($v); $txHeader .= "<th class=\"k-$vLow\">$v</th>";}
   $txHeader = "<tr>$txHeader</tr>";
   $subs = compact('starting', 'ending');
@@ -93,7 +93,7 @@ function riskLine($q, $descs, &$red = '') {
   $abridgable = ray(t('labor,automatic transfer,donation,deferred'));
   if (!$row = $q->fetchAssoc()) return FALSE;
   
-  if (!$mya->cAdmin2) unset($row['description']);
+  if (!$mya or !$mya->cAdmin2) unset($row['description']);
   if (@$row['amount'] + 0 < 0) list ($row['payer'], $row['payee'], $row['amount']) = array(@$row['payee'], @$row['payer'], -$row['amount']); // don't show user negative amounts
   extract(just('uid xid created description score amount risks', $row));
 

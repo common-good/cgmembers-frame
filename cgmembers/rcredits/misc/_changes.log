@@ -1,3 +1,8 @@
+2020-03-16
+. bank connection page failed after disconnect (needed extra code in scraps.js)
+. offers & needs page
+. changed default profile images
+
 2020-03-12 feature/fewer-acct-options (continued)
 . no trial companies
 . expanded initial company signup page to include federalId, etc.

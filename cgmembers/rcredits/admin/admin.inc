@@ -489,9 +489,10 @@ EOF;
         if (!$deposit or $deposit >= $today - 90 * DAY_SECS) {
           $details .= ' ' . w\btn('', t('flnm'), 'default', 'xs', ray('class data-flnm', 'filename', "CGach-$date.csv")) . ' ' . w\lnk("/sadmin/achs/date=$deposit&mark=0", t('download'));
         }
-        if ($count) {
-          $details .= ' ' . w\btn("/sadmin/checks/way=In&date=$deposit&mark=0", t('checks'));
-        }
+        if ($count) $details .= ' ' . ($deposit
+          ? w\btn("/sadmin/checks/way=In&date=$deposit&mark=0", t('checks'))
+          : w\btn('', t('...........'), 'default') // don't show undeposited checks (a recipe for disaster)
+        );
       } else $dateDpy = $details = '';
 
       if ($showTxIds) {
@@ -913,3 +914,62 @@ function toSMT() {
 ///  if ($reid = f('db.lookup', 'reid', 'r_relations', "other=0 AND data LIKE '%$name%' AND reid NOT IN(26742000000222, 26742000000216)")) debug("$reid $name $a->id");
   });
 */
+
+/**
+ * Compensate for checks inadvertently deposited twice (but not recorded): once on 2/26, once on 3/3.
+ * Strategy: create r_usd, tx_hdrs, and tx_entries records for the duplicate checks, but with xids 1000 more than 
+ * originally. Start with the highest xid so new transactions don't get interspersed. Date should be 2/27. Purpose is
+ *  "from bank - duplicate of #xxx (combined human and bank error)".
+ * We need to be careful not to combine these with other deposits.
+ * Reconnect any disconnected bank account first (and undo it afterwards).
+ 
+   $xids = '133819,133820,133831,133832,133833,133834,133835,133846,133847,133848,133849,133875,133876,133904,133905,133906,133907,133908,133909';
+   $q = db\q("SELECT uid2,amt,xid from txs WHERE xid IN($xids)");
+   $DBTX = \db_transaction();
+   while ($row = $q->fetchAssoc()) {
+     extract($row);
+     bank20200312($uid2, $amt, $xid);
+   }
+   unset($DBTX);
+
+  $map = [134573=>133819, 134574=>133820, 134575=>133831, 134576=>133832, 134577=>133833, 134578=>133834, 134579=>133835, 134580=>133846, 134581=>133847, 134582=>133848, 134583=>133849, 134584=>133875, 134585=>133876, 134586=>133904, 134587=>133905, 134588=>133906, 134589=>133907, 134590=>133908, 134591=>133909];
+  
+  foreach ($map as $newxid => $oldxid) {
+    $xid = $oldxid + 1000;
+    foreach (ray('tx_hdrs tx_entries r_usd') as $tnm) {
+/** /      debug("changing xid $newxid to $xid");
+//      db\q("UPDATE $tnm SET xid=$xid WHERE xid=$newxid");
+    }
+  }
+  
+  $q = db\q('SELECT xid, for1 FROM txs WHERE xid BETWEEN 134819 AND 134909');
+  while ($row = $q->fetchAssoc()) {
+    extract($row);
+    if ($for1 != 'from bank') die($xid);
+    $oldxid = $xid - 1000;
+    $description = "from bank - duplicate of #$oldxid (combined human and bank error)";
+    db\update('tx_entries', compact(ray('description xid')), 'xid');
+  }
+   
+ *//*
+function bank20200312($uid, $amount, $xid) {
+  $a = a($uid);
+  
+  if (!$a->hasBank) die($uid . ': banking with no bank');
+
+  $automatic = FALSE;
+  $msg = 'banked';
+
+  $created = $completed = $deposit = strtotime('2/27/2020');
+
+  $txid = be\createUsdTransfer($a, $amount, $created, NULL, $xid0);
+  u\EXPECT((bool) $txid, 'saving usd record');
+  u\EXPECT(!empty($xid0), 'empty xid in acct::bank txid=' . $txid);
+  db\q("UPDATE r_usd SET deposit=$deposit WHERE xid=$xid0");
+
+  be\completeUsdTx($txid, $automatic, $completed);
+/** /  debug("$xid0=>$xid");
+
+  return TRUE;
+}
+  */

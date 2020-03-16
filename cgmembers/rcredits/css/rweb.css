@@ -37,6 +37,8 @@ form ul>li:before {
     color: darkgreen;
 }
 
+.ui-tabs ul>li:before {content: "";}
+
 #orgname {display:none;}
 
 @media (min-width: 768px) { /* same as cg.css, but lower threshold (since no "Common Good" and no signin) */
@@ -523,6 +525,29 @@ body.page-partner blockquote {font-size:14px;}
 #taxes th:first-child,
 #taxes td:first-child {font-weight:bold; text-align:left;}
 #frm-help #special-flag {font-size:100%; margin-bottom:20px;}
+
+/* Posts */
+#frm-posts #edit-title,
+/* #frm-posts #edit-subtext {margin-bottom:0;} */
+#frm-posts #edit-buttons .control-data {text-align:center;}
+#frm-posts #edit-buttons .control-data a {margin:0 5px;}
+#frm-posts input#edit-cat,
+#frm-posts input#edit-end,
+#frm-posts input#edit-city,
+#frm-posts input#edit-state,
+#frm-posts input#edit-zip,
+#frm-posts input#edit-phone,
+#frm-posts input#edit-uid {max-width:250px;}
+#frm-posts #tab-offers table a {color:#2fa4e7;}
+#frm-posts #tab-offers table a:hover {color:silver;} 
+
+#frm-posts #edit-zip {width:250px; display:inline-block;}
+#frm-posts .emergency {font-weight:bold; color:red;}
+
+/* FAILS #frm-posts .form-item-zip.ziptogo .control-data,
+#frm-posts .form-item-cat.limit-list .control-data {text-align:center;} */
+
+/* #frm-posts .ui-widget.ui-widget-content {border-bottom:0;} */
 
 /* Honors */
 #frm-honors .well {

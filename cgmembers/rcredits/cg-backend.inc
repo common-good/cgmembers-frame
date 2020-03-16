@@ -491,7 +491,7 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
 
   txEntryPair($entries, $amount, [$e1A, $e2A], [$e1For, $e2For], E_PRIME, [$e1Tid, $e2Tid]);
   
-  $DBTX = db_transaction();
+  $DBTX = \db_transaction();
 
   // Create the transaction
   $info = ray('actorId actorAgentId',$actorA->id, $actorA->agentId) + compact(ray('flags channel boxId goods created recursId'));

@@ -2483,7 +2483,7 @@ function clas($class) {return ['class' => [$class]];}
 function attrib($attributes) {return compact('attributes');}
 function suffix($field_suffix = '') {return compact('field_suffix');}
 function prefix($prefix) {return compact('prefix');}
-function maxlen($max) {return attrib(['maxlength' => $len]);}
+function maxlen($max) {return attrib(['maxlength' => $max]);}
 function autofill($settings = 'on') {return attrib(['autocomplete' => $settings]);}
 function required($dft = NULL) {return ['required' => TRUE] + (isset($dft) ? dft($dft) : []);}
 // UNUSED function check($array, $type = 'plain') {return array_map("check_$type", $array);} // Check an array for plain or markup.
