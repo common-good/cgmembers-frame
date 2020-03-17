@@ -818,7 +818,7 @@ function findEmail($index, $email, $subs) {
         unset($subs[$k]);
       } elseif ($v == 'TESTDOCODE') {
         $subs[$k] = t\doCode();
-      } else $subs[$k] = strtr(strip_tags($v), $map);
+      } else $subs[$k] = tr(strtr(strip_tags($v), $map));
     }
     ksort($subs);
     
@@ -826,7 +826,7 @@ function findEmail($index, $email, $subs) {
       extract($one, EXTR_PREFIX_ALL, 't'); // t_ means actual values
       if (is_array($t_toEmail)) $t_toEmail = key($t_toEmail);
       if ($t_index == $index and $t_toEmail == $email) {
-        foreach ($t_subs as $k => $v) if (!is_array($v)) $t_subs[$k] = strtr(strip_tags($v), $map);
+        foreach ($t_subs as $k => $v) if (!is_array($v)) $t_subs[$k] = tr(strtr(strip_tags($v), $map));
         if (isset($t_subs['site'])) {
           $subs['site'] = BASE_URL; // site parameter is set in boot.inc so compiler.php can't see it.
           ksort($subs); // reorder
@@ -1428,7 +1428,8 @@ function weSayWithSubs($type, $index, $subs) {
 
   $subs = @$subs[0] ?: array();
   if (isset($subs['email'])) t\fixEmail($subs['email']);
-  $msg0 = t($index);
+  foreach (explode('|', $index) as $one) if (!tr($one)) return t\output('Empty %type message in "%index": "%one"', compact(ray('type index one')));
+  $msg0 = tr($index);
   foreach ($subs as $key => $value) {
     if ($value == '?') $wild = $subs[$key] = u\randomString(20, 'word'); // mark the wildcard spot
     if (mb_strpos($msg0, "%$key") === FALSE) return t\output("missing sub '$key' in message '$index'");

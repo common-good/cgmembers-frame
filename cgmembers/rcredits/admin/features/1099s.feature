@@ -32,11 +32,11 @@ Setup:
   | .ZZC |    30000 |
   Given transactions: 
   | xid | created     | amount  | from | to   | purpose | taking | payerTid | payeeTid | reversesXid |*
-  |  44 | %today-360d |     100 | .ZZB | .ZZA | food E  | 0      |       24 |       34 |             |
-  |  45 | %today-330d |   11000 | .ZZC | .ZZA | box F   | 1      |       25 |       35 |             |
-  |  46 | %today-300d |    2400 | .ZZA | .ZZB | what G  | 0      |       26 |       36 |             |
-  |  47 | %today-270d |     500 | .ZZB | .ZZC | book P  | 0      |       27 |       37 |             |
-  |  48 | %today-270d |    1200 | .ZZA | .ZZC | this Q  | 1      |       28 |       38 |             |
+  |  44 | %today-361d |     100 | .ZZB | .ZZA | food E  | 0      |       24 |       34 |             |
+  |  45 | %today-331d |   11000 | .ZZC | .ZZA | box F   | 1      |       25 |       35 |             |
+  |  46 | %today-301d |    2400 | .ZZA | .ZZB | what G  | 0      |       26 |       36 |             |
+  |  47 | %today-271d |     500 | .ZZB | .ZZC | book P  | 0      |       27 |       37 |             |
+  |  48 | %today-271d |    1200 | .ZZA | .ZZC | this Q  | 1      |       28 |       38 |             |
   |  49 | %today-45d  |    1000 | .ZZA | .ZZB | vibe V  | 0      |       29 |       39 |             |
   |  50 | %today-3d   |    -100 | .ZZB | .ZZA | food E  | 0      |       30 |       40 |          44 |
   |  51 | %today      |    -123 | .ZZB | .ZZA | stuff W | 0      |       31 |       41 |             |
@@ -48,7 +48,7 @@ Setup:
   
 Scenario: admin generates a 1099 report for the past 12 months
   When member ".ZZB" runs a 1099 report type "MC" with testing "0"
-  Then we download "forms1099MC-FY2019.bin" with records:
+  Then we download "forms1099MC-Y2019.bin" with records:
   | type | who  | cnt | amounts                                     | seq |*
   | T    |      |     |                                             |   1 |  
   | A    | .AAB |     |                                             |   2 |

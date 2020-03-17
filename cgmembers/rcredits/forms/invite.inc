@@ -17,10 +17,10 @@ function formInvite($form, &$sta, $args = '') {
   if ($mya->cAdmin and !$mya->proSe) say(t('Note: Admins cannot invite on behalf of someone.'), 'err');
   
   $title = t('Invite Someone to %PROJECT');
-  if (!$mya->member) {
+/*  if (!$mya->member) {
     $subtext = t('We\'re sorry, you must finish opening your account before you can invite someone.');
     return cgform(compact(ray('title subtext')));
-  }
+  } */
   
   $_a2 = w\atagB('/community/invite/invited-whom');
   $_a2 = r\acct() ? t('<%a2>Who you have invited</a>', compact('_a2')) : '';

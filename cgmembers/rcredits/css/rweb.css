@@ -16,6 +16,7 @@
 .smallish {font-size:85%;}
 .skip {margin-left:10px;}
 .positive {color:green;} /* highlights donations and other happy amounts */
+.white {color:white;} /* to make things disappear */
 tr.hiRow {background-color:lightyellow;}
 #edit-none {display:none;} /* for hidden submit button */
 iframe {border:0; float:right; margin-right:-60px;}
@@ -35,6 +36,8 @@ form ul>li:before {
     margin:0 0 0 -25px;
     color: darkgreen;
 }
+
+.ui-tabs ul>li:before {content: "";}
 
 #orgname {display:none;}
 
@@ -523,6 +526,29 @@ body.page-partner blockquote {font-size:14px;}
 #taxes td:first-child {font-weight:bold; text-align:left;}
 #frm-help #special-flag {font-size:100%; margin-bottom:20px;}
 
+/* Posts */
+#frm-posts #edit-title,
+/* #frm-posts #edit-subtext {margin-bottom:0;} */
+#frm-posts #edit-buttons .control-data {text-align:center;}
+#frm-posts #edit-buttons .control-data a {margin:0 5px;}
+#frm-posts select#edit-cat,
+#frm-posts input#edit-end,
+#frm-posts input#edit-city,
+#frm-posts select#edit-state,
+#frm-posts input#edit-zip,
+#frm-posts input#edit-phone,
+#frm-posts input#edit-uid {max-width:250px;}
+#frm-posts #tab-offers table a {color:#2fa4e7;}
+#frm-posts #tab-offers table a:hover {color:silver;} 
+
+#frm-posts #edit-zip {width:250px; display:inline-block;}
+#frm-posts .emergency {font-weight:bold; color:red;}
+
+/* FAILS #frm-posts .form-item-zip.ziptogo .control-data,
+#frm-posts .form-item-cat.limit-list .control-data {text-align:center;} */
+
+/* #frm-posts .ui-widget.ui-widget-content {border-bottom:0;} */
+
 /* Honors */
 #frm-honors .well {
   display:inline-block; width:200px; margin:4px 10px; color:#001a00;
@@ -902,6 +928,11 @@ div.password-confirm .error {font-weight:bold; color:red;}
 
 /* Signup Company */
 #frm-signupco .form-item-pass {display:none;}
+#frm-signupco #edit-selling,
+#frm-signupco #edit-zip,
+#frm-signupco #edit-phone,
+#frm-signupco #edit-federalid,
+#frm-signupco #edit-dob {max-width:300px;}
 
 /* Contact Info (labeled) */
 #frm-contact .form-item-pin,

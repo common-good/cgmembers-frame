@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-define('R_VERSION', '3.52a'); // software version
+define('R_VERSION', '3.52b'); // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -129,6 +129,7 @@ define('TEN99MISC', 'A'); // code for 1099-MISC
 define('TEN99B', 'B'); // code for 1099-B
 define('TEN99K', 'MC'); // code for 1099-K
 define('MINIMA1099', 'X:20000/200, MA:600/1, VT:600.01/1'); // no 1099-K for gross/txCount under this amount (by state)
+define('MINIMA1099MAVT', 600); // 1099K minimum in MA and VT (for display)
 
 define('R_BULLET', '&#8226;'); // bullet in emails (where CSS is difficult)
 define('STATS_GRAIN', 10); // granularity of statistics, in days
@@ -139,7 +140,7 @@ define('US', '<span class="us">us</span>');
 /// define('GAME_COMPANIES', '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital');
 define('R_DATE_FLDS', 'created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted'); // date field names for testing and administrative display
 define('CO_FLDS', 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd staleNudge contact'); // account fields stored in r_company
-define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo'); // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
+define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo activated0'); // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
 define('MASTER_NUMERIC_FLDS', 'minimum achMin savingsAdd saveWeekly');
 define('MASTER_FLDS', MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank refill'); // only in master, for joint accounts
 define('R_MONEY_FLDS', 'balance rewards floor giftPot committed'); // financial amount fields in account record
@@ -285,10 +286,11 @@ define('R_CODE_LEN', 32); // length of most random identifiers
 define('R_DUPTX_MINS', 4); // number of minutes before a duplicate transaction is allowed
 define('HAS_XFEE', "data LIKE '%s:4:\"xfee\";%'"); // sql to recognize a transaction that has an exchange fee
 define('R_DEPOSIT_RETURN_FEE', 20); // what we charge members for a second bounced transfer
-define('HAS_REVERSER', "(EXISTS (SELECT tRev FROM tx_hdrs WHERE tRev.reverses=t.xid))");
-define('TRIALCO_LIMIT', 1000); // maximum payments received by a trial (dependent company) account
+define('TRIALCO_AMT_LIMIT', 1000); // maximum payments received by a trial (dependent company) account
+//define('TRIALCO_DAY_LIMIT', 14); // maximum number of days for a trial company
 define('EQUIP_DEPOSIT', 50); // dollar cost of equipment deposit
 define('MATURITY', 21); // minimum age to have a credit limit
+define('SELLING_MAXLEN', 25); // maximum length of any short description of something being sold
 
 // Filenames
 define('R_TEMPLATE_DIR', '/templates');
@@ -338,16 +340,16 @@ define('APP_CAN_BIT_DESCS', t('charge customers,undo last transaction,give %RCRE
 define('R_STEPS_OLD', 'signup:signup, verify, ssn, sign:community/agreement, donate:community/donate, proxies, prefs:settings/preferences, connect, company, relations, photo, food, discount:community/discount, backing:community/backing');
 
 define('S_ALL', 'signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, titheout, tithein, work, partnersteptwo, partnerend, food, wantsPrint, printed'); // where to go to complete each step (unordered) -- add new steps to the end
-define('S_PERSON', 'signup verifyid agree preferences fund verifyemail'); // soon replace "preferences" with titheOut
-define('S_CO', 'signup discount verifyemail');
+define('S_PERSON', 'signup verifyemail verifyid agree preferences fund photo contact donate tithein proxies work backing invite'); // soon replace "preferences" with titheOut
+//define('S_CO', 'signup verifyemail');
+define('S_CO', 'signup verifyemail agree contact backing photo donate company tithein discount');
 define('S_CO2', 'agent agree contact backing photo donate company tithein discount');
 define('S_CARD', 'photo contact donate');
 define('S_SELL', 'ssn contact tithein');
 define('S_VOICE', 'contact donate proxies work backing invite'); // add comment
 define('S_PARTNER', 'signup fund partnersteptwo partnerend');
-//define('S_PARTNERCO', 'signup fund agree partnerend');
 
-define('S_MEM_TASKS', 'card sell voice co2'); // followup tasks for members
+define('S_MEM_TASKS', 'person co'); // followup tasks for members
 define('S_PTASKS', 'person card sell voice partner');
 define('S_COTASKS', 'co co2 partner');
 
@@ -470,8 +472,14 @@ define('K_HASBANK', 3); // account has a connected bank account
 define('K_ADDROFF', 14); // account's physical address is wonky (can't be geolocated or whatever)
 define('HAS_BANK', 'risks&(1<<' . K_HASBANK . ')'); // mysql criterion (not surrounding parens, so we can do u.:HAS_BANK)
 define('MASTER', '(jid=0 OR uid < jid)'); // account is the master in a joint account
-define('U_FOODY', '(SELECT 1 FROM r_industries i JOIN r_user_industries ui USING (iid) WHERE ui.uid=u.uid AND u.name<>\'foodfund\' AND i.parent=2 LIMIT 1)'); // MySQL for "the account with record ID u.uid is a food-related business"
+
+/* define('U_FOODY', '(SELECT 1 FROM r_industries i JOIN r_user_industries ui USING (iid) WHERE ui.uid=u.uid AND u.name<>\'foodfund\' AND i.parent=2 LIMIT 1)'); // MySQL for "the account with record ID u.uid is a food-related business" */
+define('FOOD_INDUSTRY', 2); // any industry with this base ancestor is food-related
+define('U_FOODY', '(SELECT 1 FROM r_user_industries ui JOIN ancestors a ON ui.iid=a.base WHERE ui.uid=u.uid AND u.name<>\'foodfund\' AND a.ancestor=' . FOOD_INDUSTRY . ' LIMIT 1)'); // MySQL for "the account u is a food-related business"
+
 define('T_FOODY', '(SELECT ' . U_FOODY . " FROM users u WHERE u.uid=uid2)"); // MySQL involving txs VIEW, meaning "payee is FOODY"
+define('CAT_FOOD', 2); // food industry (used in signup-co and/or company feature)
+define('CAT_RETAIL', 14); // retail industry (used in signup-co and/or company feature)
 
 define('FLOW_NONE', 0); // which way can credit flow, with another account
 define('FLOW_TO', 1);
@@ -504,11 +512,12 @@ define('B_FOOD', 17); // contribution to food fund
 define('TX_FLAGS', 'offline short crumbs recurs gift loan investment stake fine noask funding food');
 
 // Invoice status (txid >= TX_PAID if paid)
+define('TX_DELAYED', -3); // waiting for both accounts to qualify
 define('TX_DENIED', -2); // invoice rejected by the non-originator
 define('TX_PENDING', -1); // charged, waiting for confirmation
 define('TX_APPROVED', 0); // invoice is approved but not paid
 define('TX_PAID', 1); // any status this amount or more is a payment transaction record ID (xid)
-define('TX_STATUSES', t('-2:denied,-1:OPEN,0:approved,1:paid'));
+define('TX_STATUSES', t('-3:delayed,-2:denied,-1:OPEN,0:approved,1:paid'));
 
 // Transaction channels (roughly in order of simplicity and generality of messages) (CGF)
 define('TX_SYS', 0);
@@ -568,6 +577,9 @@ $GLOBALS['emailSubjects'] = array(
   'notices' => t('%PROJECT Notices for %qid for %range'),
   'message' => t('%PROJECT %topic'),
 	'annual-gift' => t('your chosen annual gift to %PROJECT'),
+  'confirm-post' => t('Confirm your post to %PROJECT Offers & Needs'),
+  'confirm-message' => t('Confirm your message'),
+  'item-message' => t('Response to your Offers & Needs post'),
 );
 
 $GLOBALS['topics'] = array( // topics for 'message' email

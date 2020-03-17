@@ -970,14 +970,14 @@ EOF;
     // no current task (nothing to be done next)
     if ($a->member) {
       if ($stepDone) {
-        foreach (ray(S_MEM_TASKS) as $k) {
+/*        foreach (ray(S_MEM_TASKS) as $k) {
           if (in($stepDone, r\taskSteps($k)) and $a->stepsDone($k)) $msg .= "|$k member"; // ack
-        }
+        } */
         $a->update('stepsLeft task', '', '');
       } else {
         $approval = $a->co ? 'company approval' : 'individual approval';
-        $msg .= "setup complete|$approval|join thanks|next steps"; // show on display, not on done
-        if (!$a->co and !$a->stepsDone('card')) $msg .= '|no card member'; // suggest the card step
+        $msg .= "setup complete|$approval|join thanks"; // show on display, not on done
+//        if (!$a->co and !$a->stepsDone('card')) $msg .= '|no card member'; // suggest the card step
       }
     }
     return 'summary';
@@ -1599,10 +1599,10 @@ X;
 
     if (!isDEV) {
       if (!$a->co and !$a->stepsDone('sell')) $cans[B_SELL] = FALSE; // individuals cannot sell without doing that step
-      if (!$a->hasFid and $a->id != CG_CRUMBS_UID) $cans[B_SELL] = FALSE; // no selling without an EIN
+//      if (!$a->hasFid and $a->id != CG_CRUMBS_UID) $cans[B_SELL] = FALSE; // no selling without an EIN
     }
     if ($a->trialco) $cans[B_BUY] = FALSE; // trial companies can't buy
-    if ($a->co and $a->task == 'co2') $cans[B_BUY] = $cans[B_SELL] = FALSE; // co working on co2 can't do squat
+//    if ($a->co and $a->task == 'co2') $cans[B_BUY] = $cans[B_SELL] = FALSE; // co working on co2 can't do squat
     if (!$a->can(B_OK)) $cans[B_SELL] = $cans[B_BUY] = FALSE; // inactive accounts can't transact
     if ($a->underage) $cans[B_DEBT] = FALSE; // credit card regulations say no credit line if underage
     
@@ -1842,6 +1842,7 @@ function acct($uid = '', $agent = '', &$error = '') {
   u\EXPECT(!is_array($uid), 'array uid'); // otherwise hangs (at least for a drupal field array)
   global $mya; // use this ONLY in this class file
   if (!$uid) return $mya ?: (!$error = 'There is no current account.');
+  
   if (mb_strpos($uid, '@')) {
     $uid = db\get('uid', 'users', 'email=:email ORDER BY :IS_CO', ['email' => u\cry('P', $uid)]);
   } elseif (FALSE and preg_match('/[0-9]( |-|\\)) ?[0-9]{4}/', $uid)) {

@@ -105,6 +105,7 @@ function rweb_menu($submenu = '') {
     
 //    'community' => ['norm', t('Community'), 'FindCo', ANY],
     'community' => ['norm', t('Community'), 'Community', ANY],
+    'community/posts' => ['sub', t('Offers & Needs'), 'Posts 2', ANY, '', t(), 'heart'],
     'community/data' => ['sub', t('Community & Money Data'), 'Data 2', 'read', '', t(), 'list-alt'],
     'community/events' => ['sub', t('Democracy Events'), 'Events 2', 'ok manage', '', t(), 'bell'],
     
@@ -131,7 +132,7 @@ function rweb_menu($submenu = '') {
     'community/coupons/print' => ['call', t('Print Coupons'), '3', 'ok manage', 'couponsPrint'],
     'community/coupons/list' => ['call', t('List Discounts and Gift Cards'), 'CouponsList 3', 'ok manage'],
     'community/discount' => ['call', t('Simplified Discounts'), 'Discount', 'manage', '', t(), 'usd'],
-    'community/graphs' => ['sub', t('%PROJECT Graphs'), 'Graphs 2', ANY, '', t(), 'stats'],
+    'community/graphs' => ['sub', t('%PROJECT Graphs'), 'Graphs 2', 'cadmin', '', t(), 'stats'],
     'community/balance-sheet' => ['sub', t('Balance Sheet'), 'BalanceSheet 2', ANY, '', t(), 'pause'],
     'community/flags' => ['sub', t('Risk Flags'), 'Flags 2', ANY, '', t(), 'flag'],
     'community/chart-data' => ['call', t('Chart Data'), '2', ANY, 'chartData'],
@@ -164,7 +165,7 @@ function rweb_menu($submenu = '') {
 //    'settings/photo-id' => ['call', 'Kba', 'PhotoId', 'manage'],
     'settings/proxy' => ['call', 'Proxy', 'Proxy 2', 'manage -co'],
     'settings/verifyid' => ['call', 'Correct SSN', 'VerifyId 2', 'manage'],
-    'settings/verifyemail' => ['call', 'Verify Email', 'VerifyEmail 2', 'manage'],
+    'settings/verifyemail' => ['call', 'Verify Email', 'VerifyEmail 2', ANY],
     'settings/tithein' => ['call', 'Share When You Receive', 'TitheIn 2', 'manage'],
     'settings/titheout' => ['call', 'Share When You Spend', 'TitheOut 2', 'manage'],
     'settings/work' => ['call', 'Work Life', 'Work 2', 'manage'],

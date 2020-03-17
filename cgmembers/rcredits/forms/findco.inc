@@ -65,11 +65,10 @@ function directoryList($which, $region) {
   $which = str_replace(' ', '%', \db_like(" $which ")); // allow abbreviations of each word
 
   $sql = <<<EOF
-    SELECT DISTINCT u.uid, i.iid, parent.iid as selIid, IFNULL(parent.industry, i.industry) as selIndustry, abbreviation AS st
+    SELECT DISTINCT u.uid, i.iid, ancestor.iid as selIid, IFNULL(ancestor.industry, i.industry) as selIndustry, abbreviation AS st
     FROM users u 
     LEFT JOIN r_user_industries ui ON ui.uid=u.uid
-    LEFT JOIN r_industries i ON i.iid=ui.iid
-    LEFT JOIN r_industries parent on i.parent = parent.iid
+    LEFT JOIN ancestors a on ui.iid = a.base
     LEFT JOIN r_states s ON s.id=u.state
     LEFT JOIN r_countries c ON c.id=u.country
     WHERE :IS_CO AND u.uid>:CANONIC_ACCTS AND :IS_OK AND ($regionCrit) AND (u.fullName LIKE :which OR i.industry LIKE :which)

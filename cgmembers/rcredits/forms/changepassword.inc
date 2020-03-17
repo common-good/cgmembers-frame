@@ -14,7 +14,7 @@ function formChangePassword($form, &$sta) {
   global $mya;
   $title = t('Choose a New Password');
   $subtext = t('Mixed-case, digits, punctuation, and plain old length make your password strong. We recommend 4 random words.');
-  if (!$mya->cAdmin) $pass = passFld(t('Current (old) Password:'), '', required());
+  $pass = $mya->cAdmin ? NULL : passFld(t('Current (old) Password:'), '', required());
   $submit = t('Save');
   return cgform(compact('title', 'subtext') + w\pickPassword(TRUE, REQ) + compact('pass', 'submit'));
 }
@@ -27,7 +27,7 @@ function formChangePassword_validate($form, &$sta) {
   global $mya;
   extract(just('pass1 pass2 strong pass', $sta['input']));
 
-  if (!$mya or !$mya->admin) {
+  if (!$mya or !$mya->cAdmin) {
     if (!$strong and u\weakPass(@$pass1)) return say('weak pass', 'pass1');
     if (isset($pass) and !$mya->passwordOkay($pass, 'pass', $err)) return say($err, 'pass');
   }

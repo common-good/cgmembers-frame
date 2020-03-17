@@ -41,14 +41,14 @@ define('STATE_CODE', '25'); // Massachusetts code, for combined Federal/State fi
  * Get lines on production server with:
      foreach (ray('aka nevabj etc') as $qid) {
        $a = a($qid); $co = $a->co ? 1 : 0;
-       echo "ray(\$keys, '$a->legalName', '$a->federalId', '$co', '$a->postalAddr', '$a->mainQid', 'amt'),<" . 'br>';
+       e cho "ray(\$keys, '$a->legalName', '$a->federalId', '$co', '$a->postalAddr', '$a->mainQid', 'amt'),<" . 'br>';
      }
  */
 function do1099s($type, $testMode = FALSE, $rows = FALSE, $badNames = [], $badTINs = [], $year = NULL) {
   global $err1099;
   u\setDft($year, date('Y') - 1);
   $testMode = $testMode ? 'T' : '';
-  u\beginDownload("forms1099$type-FY$year.bin$testMode"); // binary file extension: discourage automatic changes during FTP
+  u\beginDownload("forms1099$type-Y$year.bin$testMode"); // binary file extension: discourage automatic changes during FTP
   putRec(recT($year, $testMode));
   
   $uids = array_keys($badNames + $badTINs);

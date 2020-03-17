@@ -1,4 +1,4 @@
-Feature: Preferences
+Feature: Weekly
 AS a member
 I WANT certain adjustments to my account to be made automatically every week
 SO my financial position will be progressively better.

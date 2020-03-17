@@ -489,9 +489,10 @@ EOF;
         if (!$deposit or $deposit >= $today - 90 * DAY_SECS) {
           $details .= ' ' . w\btn('', t('flnm'), 'default', 'xs', ray('class data-flnm', 'filename', "CGach-$date.csv")) . ' ' . w\lnk("/sadmin/achs/date=$deposit&mark=0", t('download'));
         }
-        if ($count) {
-          $details .= ' ' . w\btn("/sadmin/checks/way=In&date=$deposit&mark=0", t('checks'));
-        }
+        if ($count) $details .= ' ' . ($deposit
+          ? w\btn("/sadmin/checks/way=In&date=$deposit&mark=0", t('checks'))
+          : w\btn('', t('...........'), 'default') // don't show undeposited checks (a recipe for disaster)
+        );
       } else $dateDpy = $details = '';
 
       if ($showTxIds) {
@@ -770,130 +771,6 @@ function nextMember($id = 0) {
 }
 
 /**
- * Return a detailed script for calls to account-holders.
- * @param string $type: annual, welcome, setup, pre, 
- * @return a short description and details if suggested date is within a month +/- of standard welcome or annual call
- */
-function callDetails($type = '', $when = '') {
-  global $mya;
-  
-  $now = now();
-  $keys = ray('nocall pre setup activate welcome annual');
-  $heads = ray(t('No call,Just beginning,Setup,Activate,Welcome,Annual'));
-  $heads = array_combine($keys, $heads);
-  $head = $heads[$type ?: 'nocall'];
-  $setup = in($type, 'pre setup');
-  $late = round(($now - $when) / DAY_SECS);
-  $subtext = $now < $when ? t('in %days days', 'days', -$late) : t('%late days overdue', compact('late'));
-  $subtext = !$when ? '' : "<br><span>$subtext</span>";
-  
-  if (!$mya->member) {
-    $head .= $setup ? '<p>Do you need help?</p>' : '';
-    //    return "<div class=\"well\"><h3>$head$body</h3></div>";
-  }
-
-  $subs = ray('id', $mya->id);
-  $gifts = ($mya->giftsDesc() ?: $mya->totalGifts())
-	?: db\get('amount', 'r_recurs', 'payer=:id AND payee=:CGID AND ended=0', $subs); // a promised gift counts here, if none yet
-  
-  /*        $help = $gifts ? 'thanks' : 'ask';
-            $msg = t('<span class="loud">%when <b>Welcome</b></span> to %PROJECT, How\'s it going%lastTx? %help donation(s), %signupCo volunteer? [<%a>details</a>]', 'when lastTx help signupCo _a', u\fmtDate($when, TRUE), $a->lastTxDesc(), ucfirst($help), @$signupCo, w\atag("/help/welcome/gifts=$gifts"));
-            if ($a->paper) $msg .= t(' <span class="loud">Paper statements</span> at $%R_STATEMENT_COST/month &mdash; really?');
-            $gift = $gifts ? t('Thanks for donation(s). Annual gift?') : t('Donate?');
-            $feature = $a->co ? t('cash-out') : t('joint account');
-
-            return [t('Annual'), $when = strtotime("+$yearsIn years", $activated), t('<span class="loud">%when <b>Annual</b></span>: Thanks for participating. How\'s it going%lastTx? %gift Mailing address okay? Volunteer? Consider %feature? [<%a>details</a>]', 'when lastTx gift _a feature', u\fmtDate($when, TRUE), $a->lastTxDesc(), $gift, w\atag("/help/annual/gifts=$gifts&years=$yearsIn"), $feature)];
-  */
-      
-  $welcome = t('<li><b>Welcome</b> to %PROJECT. Thanks for participating!</li>');
-  if (!$mya->co and $myCo = $mya->firstCo()) {
-    list ($signupCo, $myCo) = ['', t(' (personally rather than for company "%myCo")', compact('myCo'))];
-  } else $signupCo = $mya->signupCo ? t('<li><b>Company</b>. How about signing up your company: %coName? (%co)</li>', 'co coName', w\signupCoDisplay($mya->signupCo, $coName), $coName) : '';
-  $notyet = t("<li><b>Want</b>. What's a place you would like to use your %PROJECT card but can't yet?</li>");
-  $how = t("<li><b>How's it going?</b> %myCo %lastTx Do you have any questions, suggestions, or concerns? Are you getting our newsletter? What do you find most valuable about the %PROJECT system? If you could change or improve one thing about the %PROJECT system, what would it be?</li>", '_lastTx myCo', $mya->lastTxDesc(), @$myCo) . $notyet;
-  if ($mya->paper) $how .= t('<li><b>Paper statements</b>. Do you really want paper statements? ($%R_STATEMENT_COST/month)</li>');
-  if ($mya->balance < 0) $how .= t('<li><b>Negative</b>. You have a negative balance of <%b>%bal</b>. Do you need help getting money into your account? That amount is, in effect, borrowed from your local community of %PROJECT members. So it is much better of course, for the community\'s financial health, if you bring your balance back up above zero when you can.</li>', '_b bal', 'b class="outgoing"', u\fmtAmt($mya->balance));
-  
-  $reason = $setup ? t('see if I might help you finish opening your %PROJECT account')
-    : ($type == 'welcome' ? t('welcome you to %PROJECT, check in, make sure you got your card, and ask you some questions')
-       : ($type == 'annual' ? t('thank you for being a member, make sure we have your address right, and ask some questions')
-          : t('ERROR')));
-  $intro = t('Hi, this is %name with %PROJECT. I\'m calling to %reason.', 'name reason', $mya->agentA->fullName, $reason);
-  $live = $intro . t(' Is this a good time?');
-  $callback = t('Please give me a call back when you can at %phone', ['phone' => u\fmtPhone($mya->agentA->phone, '-')]);
-  $msg1 = "$intro $callback" . t(' &mdash; or I\'ll try again in a day or two.');
-  $msg2 = "$intro $callback" . t(' &mdash; I\'ll also send you an email.');
-  $email = t('<p>Dear %name,</p><p>Following up on my phone message, I\'m writing to %reason. %callback &mdash; or reply to this email.</p>', 'name email reason callback', $mya->fullName, $mya->email, $reason, $callback);
-  if ($setup) {
-    if ($info = db\get('reid,code', 'r_relations', 'other=:myid AND :IS_CUSTOMER', ['myid' => $mya->id])) {
-      $_how = t('using <%a>this link</a>', '_a', w\atag(tr('%BASE_URL/signup/reid=%reid&customer=%code', $info)));
-    } else $_how = t('by signing in at %CG_DOMAIN with account ID "%acct" (then click "Forgot password?" if you don\'t remember your password)', 'acct', $mya->mainQid);
-    $email .= t('<p>Or you can complete the account on your own, %how. But please feel free to ask for help if you run into any problems at all.</p>', compact('_how'));
-  } else $email .= t('<p>Here are the questions and information we have for you:</p>');
-  
-  if ($mya->co) { // company
-    $volunteer = '';
-    $coAsk = ($mya->crumbs or TRUE) ? '' : t('<li><b>Crumbs</b>. We particularly encourage businesses to contribute what we call "crumbs" to support the system and the common good. Do you know about this option? It means contributing a small percentage of each payment received, instead of the system charging you credit card fees. What percentage would you like to contribute? [one percent is a common choice, a fraction of a percent is also wonderful]</li>'); // "or TRUE" is temporary 201801
-    $coAsk .= t('<li><b>Coupons</b>. In addition to providing <i>free</i> advertising, %PROJECT can bring new customers to you with coupons. We give each new member a coupon to a %PROJECT business. Would you like to be in that rotation? (yes: we\'ll call you back about that)</li>');
-    $coAsk .= t('<li><b>CC Fees</b>. Since credit card companies typically charge two or three percent plus a per-transaction fee, our board has proposed charging business members a small percentage on each payment received, to make the system sustainable sooner. Do you think this is a good idea and if so what percentage would be reasonable? What rate do you currently pay for credit card transactions? Would you want to <i>donate</i> a small percentage instead? If so, how much? [one percent is a common choice, a fraction of a percent is also wonderful]</li>'); // temporary 201801
-    $options = db\exists('r_usd', 'payee=:myid AND amount<0 AND created>:now-:DAY_SECS*30', ray('myid now', $mya->id, $now)) ? t('Do you know about our automatic cash-out option? If you want your company account to transfer your surplus funds to your bank account automatically every week, we can set that up. ') : '';
-    $options .= t('If you have questions about our "Pay With %PROJECT" button for your website, our invoicing system, or accounting statements, we can help you with any of those.');
-  } else { // individual
-    $_volunteer = join("</li>\n<li>", explode('~', t(
-      'Hand out promo cards and schedule appointments with local businesses.'
-      . '~Help new members open their %PROJECT account.'
-      . '~Call new members to welcome them and see if they have questions.'
-      . '~Assemble promotional materials (at home or with other volunteers).'
-      . '~Deliver things.'
-      . '~Print and mail things.'
-      . '~Take photographs.'
-      . '~Help set up for meetings.'
-      . '~Help add new features to the software.'
-      . '~Serve on the board of directors.'
-    )));
-    $_volunteerLink = t('<%a>volunteer</a>', '_a', 'a href="#volunteer" data-toggle="collapse"');
-    $volunteer = t('<li><b>Volunteer</b>. (if supportive) Would you like to %volunteerLink with %PROJECT?<ul id="volunteer" class="collapse"><li>%volunteer</li></ul></li>', compact(ray('_volunteerLink _volunteer')));
-    $coAsk = '';
-    $options = t('Do you know about our joint account option? Sign in at %CG_DOMAIN and visit the Relations page on the Settings menu, to join an existing account with yours. Or to open a new account joined to yours, click "Make this a Joint Account" on your Summary page.');
-    if (!$mya->roundup) $options .= t(' And do you know about the roundups option? Roundups let you always pay a whole dollar amount and donate the change to the community fund. Choose it on the Preferences page on the Settings menu. Or just ask and we\'ll set it for you.');
-  }
-  $giftDetails = t('(Wait for answer, then ask:) What amount would you like to give and do you prefer yearly, quarterly, or monthly? Suggested amounts are $50 for individuals and $250 for companies, but any amount is wonderful.');
-  $ask = t('<li><b>Offer</b>. The idea of %PROJECT is to empower us to take responsibility for our local economy, so most of our members contribute some small amount periodically and/or choose roundups or crumbs, to support the system. Would you like to contribute at this time? %details</li>', 'details', $giftDetails) . $coAsk;
-  $thx = t('<li><b>Donations</b>. Thank you very much %gifts.</li>', '_gifts', a\giftsToDate());
-  $reask = @$often ? $thx : $thx . t('<li><b>Gift</b>. Would you like to %contribute at this time? %details</li>', 'contribute details', $type == 'annual' ? t('make an annual contribution') : t('contribute'), $giftDetails);
-  if ($options) $options = t('<li><b>Features</b>. %options</li>', compact('options'));
-  $options .= t('<li><b>Tell people!</b> Do you need more handout cards or brochures, to tell %who about %PROJECT?', 'who', $mya->co ? t('your customers and suppliers') : t('your friends or local businesses'));
-  $addressCheck = t('<li><b>Address</b>. Are you still at %addr? (if not, ask about postal address too)</li>', 'addr', r\location($mya, TRUE));
-
-  if ($mya->co) $ask = $reask = $coAsk; // temporary 201801
-  
-  $yearsIn = max(1, round(($now - $mya->activated) / DAY_SECS / 365.25)); // how many years after activation are we
-  $annualAsk = '<ol><li>' . t("<b>Thanks</b>. Thank you for being a pioneer of economic democracy! (member for %yearsIn year/s) Thanks to your participation, along with other members, we were able to issue $10,000 in grants and loans this year. (Were you in on the discussions of what to fund?)", compact('yearsIn')) . "</li>\n$how\n$ask\n$addressCheck\n$signupCo\n$volunteer\n$options\n</ol>";
-  
-  $res = '';
-  if ($type == 'annual') $res = @$gifts ? str_replace($ask, $reask, $annualAsk) : $annualAsk;
-  if ($type == 'welcome') $res = @$gifts ? "<ol>$welcome\n$thx\n$how\n$signupCo\n$volunteer\n</ol>" : "<ol>$welcome\n$how\n$ask\n$volunteer\n</ol>";
-  $email .= $res . t('<p>I look forward to hearing from you!</p><p>Sincerely,</p><p>%name<br>for the %PROJECT Team</p>', 'name', $mya->agentA->shortName);
-  $live .= $res . t('<p>Thank you very much for your time and for being a %PROJECT member. Have a great day.</p>');
-  if (@$_volunteerLink) $email = str_replace($_volunteerLink, t('volunteer'), $email);
-  $email = str_replace('id="volunteer"', '', $email);  // make sure the div isn't duplicated (causing expansion to fail)
-  $email = preg_replace('/\([^)]+\)/', '', $email);
-  
-  $links = $details = '';
-  foreach (ray('msg1 msg2 email live') as $k) {
-    $details .= tr('<div id="%k-details" class="collapse">%detail</div>', 'k _detail', $k, $$k);
-    $links .= tr(' <a id="%k-link" href="#%k-details" data-toggle="collapse" class="btn btn-xs btn-warning">%k</a>', 'k', $k);
-  }
-
-  $email = str_replace('href="#email-details" data-toggle="collapse"', '', $email); // href=\"javascript:followupEmail();\"
-  $email .= '<' . u\emailTag($mya->email, t('your %PROJECT account'), '', $mya->fullName, 'id="email-do" class="collapse"') . '></a>';
-  
-  w\jsx('followup-email');
-
-  return "<div class=\"well scripts\"><h3 class=\"above-details\">$head$subtext</h3><div id=\"intros\"><b class=\"loud\">$mya->phoneDash</b>$links</div>$details</div>";
-}
-
-/**
  * Return statistics about member donations for members signed up after a certain date.
  * This function is currently called only from a PHP window.
  */
@@ -919,21 +796,6 @@ X;
   $res += db\q($sql, $subs)->fetchAssoc();
 
   return $res + compact(ray('accts txCount txTotal'));
-}
-
-/**
- * Return an eloquent statement of the member's gifts to date, to follow "Thank you ".
- */
-function giftsToDate() {
-  global $mya;
-
-  if (!$mya) return '';
-  $mya->giftsDesc($often, $all);
-  if (!$all) return '';
-  list ($total, $x1, $x2) = explode('+', "$all++");
-  if ($x = u\unite(trim($x1), $x2)) $x = t('for choosing %x', '_x', $x);
-  if ($total) $total = t('for your contributions, totaling ') . $total;
-  return u\unite($total, $x, ', ');
 }
 
 /**
@@ -1052,3 +914,62 @@ function toSMT() {
 ///  if ($reid = f('db.lookup', 'reid', 'r_relations', "other=0 AND data LIKE '%$name%' AND reid NOT IN(26742000000222, 26742000000216)")) debug("$reid $name $a->id");
   });
 */
+
+/**
+ * Compensate for checks inadvertently deposited twice (but not recorded): once on 2/26, once on 3/3.
+ * Strategy: create r_usd, tx_hdrs, and tx_entries records for the duplicate checks, but with xids 1000 more than 
+ * originally. Start with the highest xid so new transactions don't get interspersed. Date should be 2/27. Purpose is
+ *  "from bank - duplicate of #xxx (combined human and bank error)".
+ * We need to be careful not to combine these with other deposits.
+ * Reconnect any disconnected bank account first (and undo it afterwards).
+ 
+   $xids = '133819,133820,133831,133832,133833,133834,133835,133846,133847,133848,133849,133875,133876,133904,133905,133906,133907,133908,133909';
+   $q = db\q("SELECT uid2,amt,xid from txs WHERE xid IN($xids)");
+   $DBTX = \db_transaction();
+   while ($row = $q->fetchAssoc()) {
+     extract($row);
+     bank20200312($uid2, $amt, $xid);
+   }
+   unset($DBTX);
+
+  $map = [134573=>133819, 134574=>133820, 134575=>133831, 134576=>133832, 134577=>133833, 134578=>133834, 134579=>133835, 134580=>133846, 134581=>133847, 134582=>133848, 134583=>133849, 134584=>133875, 134585=>133876, 134586=>133904, 134587=>133905, 134588=>133906, 134589=>133907, 134590=>133908, 134591=>133909];
+  
+  foreach ($map as $newxid => $oldxid) {
+    $xid = $oldxid + 1000;
+    foreach (ray('tx_hdrs tx_entries r_usd') as $tnm) {
+/** /      debug("changing xid $newxid to $xid");
+//      db\q("UPDATE $tnm SET xid=$xid WHERE xid=$newxid");
+    }
+  }
+  
+  $q = db\q('SELECT xid, for1 FROM txs WHERE xid BETWEEN 134819 AND 134909');
+  while ($row = $q->fetchAssoc()) {
+    extract($row);
+/** /    if ($for1 != 'from bank') die($xid);
+    $oldxid = $xid - 1000;
+    $description = "from bank - duplicate of #$oldxid (combined human and bank error)";
+    db\update('tx_entries', compact(ray('description xid')), 'xid');
+  }
+   
+ *//*
+function bank20200312($uid, $amount, $xid) {
+  $a = a($uid);
+  
+/** /  if (!$a->hasBank) die($uid . ': banking with no bank');
+
+  $automatic = FALSE;
+  $msg = 'banked';
+
+  $created = $completed = $deposit = strtotime('2/27/2020');
+
+  $txid = be\createUsdTransfer($a, $amount, $created, NULL, $xid0);
+  u\EXPECT((bool) $txid, 'saving usd record');
+  u\EXPECT(!empty($xid0), 'empty xid in acct::bank txid=' . $txid);
+  db\q("UPDATE r_usd SET deposit=$deposit WHERE xid=$xid0");
+
+  be\completeUsdTx($txid, $automatic, $completed);
+/** /  debug("$xid0=>$xid");
+
+  return TRUE;
+}
+  */

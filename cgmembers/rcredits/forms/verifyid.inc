@@ -19,7 +19,8 @@ function formVerifyId($form, &$sta, $args = '') {
 
   $title = t('Identity Verification');
   $subtext = t('As a registered Money Services Business, we are required by law to verify your identity. Fortunately, we have <%aSecure>top notch security</a>. How do you want to do it?', '_aSecure', atag(r\promoLink('about-us/privacy-and-security')));
-  $methodChoices = ray(t('Upload driver\'s license.,Upload other state-issued photo ID.,Type your social security number and birth date. This is required by the IRS if you are going to be <i class="loud">accepting</i> payments through %PROJECT (including receiving rebates).'));
+  $legalName = textFld(t('Your Legal Name:'), [t('Legal name'), t('If your legal name is longer or different from the name on your %PROJECT card ("%fullName"), type it here. Otherwise you can leave it blank.', 'fullName')]);
+  $methodChoices = ray(t('Upload driver\'s license.,Upload other state-issued photo ID.,Type your social security number and birth date. This is simplest and is required by the states of Vermont and Massachusetts if you are going to be <i class="loud">accepting</i> more than $%MINIMA1099MAVT a year in payments through %PROJECT (including receiving rebates).'));
   $field = radiosFld(' ', '', required(-1), $methodChoices);  
   $idtype = textFld(t('ID Type:'), [t('Type of ID')]);
   $file = fileFld(t('ID File:'), t('Take a photo of your ID and upload it here (or email it us at %CGF_EMAIL).'));
@@ -55,16 +56,18 @@ function formVerifyId_validate($form, &$sta) {
 
 function formVerifyId_submit($form, &$sta) {
   global $mya;
-  extract(just('filedata dob federalId', $sta['input']));
+  extract(just('legalName filedata dob federalId', $sta['input']));
 
   if (nn($filedata)) {
     $filedata = unserialize($filedata);
     r\tellAdmin('id to verify', $filedata, TRUE, $filedata['path']);
   } else {
-    $mya->update(compact(ray('dob federalId')));
+    $mya->update(compact(ray('federalId dob'))); // both federalId and dob are needed here
     $mya->verifySsnInBackground();
   }
   
+  $mya->update('dob yob legalName', $dob, date('Y', $dob), $legalName ?: $mya->fullName);
   say(t('info saved'));
-  return (!nn($filedata) and $mya->stepCount() > 1) ? w\skipStep('ssn') : w\goNextStep('verifyid');
+
+  return (!nn($filedata) and $mya->stepCount() > 1) ? w\skipStep('ssn', 'verifyid') : w\goNextStep('verifyid');
 }
