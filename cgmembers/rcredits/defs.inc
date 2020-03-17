@@ -577,6 +577,9 @@ $GLOBALS['emailSubjects'] = array(
   'notices' => t('%PROJECT Notices for %qid for %range'),
   'message' => t('%PROJECT %topic'),
 	'annual-gift' => t('your chosen annual gift to %PROJECT'),
+  'confirm-post' => t('Confirm your post to %PROJECT Offers & Needs'),
+  'confirm-message' => t('Confirm your message'),
+  'item-message' => t('Response to your Offers & Needs post'),
 );
 
 $GLOBALS['topics'] = array( // topics for 'message' email

@@ -22,7 +22,7 @@ function formGet($form, &$sta, $args = '') {
   if ($txid = @$cancel) {
     if ($xid = db\get('xid', 'r_usd', 'txid=:txid AND payee=:myid and deposit=0', compact('txid', 'myid'))) {
       $crit = compact('xid');
-      $DBTX = db_transaction();
+      $DBTX = \db_transaction();
       foreach (ray('tx_entries tx_hdrs r_usd') as $table) db\del($table, $crit);
       unset($DBTX);
       say('transfer canceled', compact('txid'));

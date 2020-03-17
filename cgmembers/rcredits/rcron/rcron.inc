@@ -218,7 +218,7 @@ X;
   // Notice which bank accounts have been verified
 	$where = 'deposit<>0 AND deposit<UNIX_TIMESTAMP()-:VERIFICATION_DELAY*:DAY_SECS AND (SELECT 1 FROM r_usd d2 WHERE d2.txid=-d.txid) IS NULL';
 	$uids = db\col('payee', 'r_usd d', $where);
-	$DBTX = db_transaction();
+	$DBTX = \db_transaction();
 	foreach ($uids as $uid) r\acct($uid)->setBit(B_BANKOK);
 	if ($uids) db\del('r_usd', 'txid', 'amount=0 AND payee IN (:uids)', compact('uids'));
 	unset($DBTX);
@@ -884,7 +884,7 @@ function recurs1($item) {
  */
 function giveNow($period, $lastPmt, $firstPmt, $now = NULL) {
 	if (is_null($now) and empty($lastPmt)) return TRUE; // never given, so now's the time
-  // the isnull($now) check above is because we ask in advance about an annual gift even when the member didn't make one
+  // the is_null($now) check above is because we ask in advance about an annual gift even when the member didn't make one
   if (empty($now)) $now = now();
 
   if (strpos('MQY', $period) !== FALSE) {
@@ -964,7 +964,7 @@ function invoice1($item) {
       }
       if (!$funding) {
         if ($a->roundup) $amount = ceil($amount); // take enough for the roundup
-        $DBTX = db_transaction();
+        $DBTX = \db_transaction();
         if ($a->getFunds($amount, t('for invoice', compact('nvid')))) {
           db\setFlag('r_invoices', $nvid, B_FUNDING, TRUE);
         } else { // almost always because no bank account is connected

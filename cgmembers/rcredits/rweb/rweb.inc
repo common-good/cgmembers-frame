@@ -139,7 +139,8 @@ function formAccountPhoto($form, &$sta, $page = '', $args = '') {
   if ($a = @$qid ? r\acct($qid, $mya->agentId) : $mya) {
     if ($a->co or $a->can(B_READ)) $photo = @$orig ? u\getFile($a->tempPhotoFilename) : $a->$type;
   }
-/**/  echo nn($photo) ?: \file_get_contents(DRUPAL_ROOT . R_PATH . '/images/icons/account.png');
+  $imgFlnm = ($mya and $mya->co) ? 'placeholder-co.png' : 'placeholder.png';
+/**/  echo nn($photo) ?: \file_get_contents(R_ROOT . "/images/icons/$imgFlnm");
   return exit();
 }
 
@@ -208,7 +209,7 @@ function formAccounts($form, &$sta) {
   
   if ($mya->cAdmin2 or $mya->isAdmin2) { // admin: show a search box instead of a list of choices
     $newAcct = textFld(t('Switch to account:'), [t('Type part of name, phone, email, record ID, or qid.')]);
-    $submit = submit('Go');
+    $submit = submit('Go Account!!');
     $accounts = fieldSet('edit-accounts', compact(ray('newAcct submit')));
     // can't use w\whoFldSubmit here because it fights with some pages (Pay, Charge, etc.)
     js('x/typeahead.bundle.min');

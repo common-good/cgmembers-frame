@@ -266,11 +266,11 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
   
   $testEmails[] = compact(ray('index toEmail subs'));
 
-  if (!is_array($reply = $reply0) and !is_object($reply0)) {
+  if (!is_array($reply = $reply0) and !is_object($reply0) and !strpos($reply0, '@')) {
     $reply = (!@$reply0 or $reply0 == 'region') ? [CGF_EMAIL => PROJECT] // standard
       : ($reply0 == 'ctty' ? $toA->cttyA : r\acct($reply0)); // get account object
   }
-  
+
   if (is_object($replyA = $reply)) $reply = [$replyA->email => $replyA->fullName];
 
   foreach ($subs as $k0 => $v) if (!is_object($v) and !is_array($v)) {
@@ -289,7 +289,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
   f('t.output', 'Actual (in rMail) ' . pr($erInfo), 'email');
 
   if (!isPRODUCTION and (isDEV or db\count('users') > 200)) { // make sure we never send rogue emails from test server with real data
-/**/  if (!test() and (isDEV or ($mya and $mya->cAdmin))) debug(compact(ray('subject to body')));
+/**/  if (!test() and (isDEV or ($mya and $mya->cAdmin))) debug(compact(ray('subject to reply body')));
     return; // no emails unless real!!
   }
   

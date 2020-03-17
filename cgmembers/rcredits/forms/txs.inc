@@ -193,7 +193,7 @@ function handleTx($do, $xid, &$sta, $args) {
     extract(just('txid amount deposit completed', $tx));
     u\EXPECT($completed, 'incomplete bank tx should not be on list: ' . $xid);
 
-    $DBTX = db_transaction();
+    $DBTX = \db_transaction();
     list ($ok, $msg, $info) = be\reverse($xid); // create an offsetting tx
     $tx['deposit'] = now();
     $tx['xid'] = $info['xid'];
