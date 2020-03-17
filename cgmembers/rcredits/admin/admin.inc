@@ -945,7 +945,7 @@ function toSMT() {
   $q = db\q('SELECT xid, for1 FROM txs WHERE xid BETWEEN 134819 AND 134909');
   while ($row = $q->fetchAssoc()) {
     extract($row);
-    if ($for1 != 'from bank') die($xid);
+/** /    if ($for1 != 'from bank') die($xid);
     $oldxid = $xid - 1000;
     $description = "from bank - duplicate of #$oldxid (combined human and bank error)";
     db\update('tx_entries', compact(ray('description xid')), 'xid');
@@ -955,7 +955,7 @@ function toSMT() {
 function bank20200312($uid, $amount, $xid) {
   $a = a($uid);
   
-  if (!$a->hasBank) die($uid . ': banking with no bank');
+/** /  if (!$a->hasBank) die($uid . ': banking with no bank');
 
   $automatic = FALSE;
   $msg = 'banked';

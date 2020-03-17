@@ -55,15 +55,14 @@ class FreeOffers extends AbstractMigration {
     $t = $this->table('messages', ['comment' => 'messages responding to offers and needs']);
     $t->addColumn('postid', 'integer', ray('length null comment', phx::INT_BIG, TRUE, 'related post ID'));
     $t->addColumn('message', 'string', ray('length null comment', 255, TRUE, 'the message'));
-    $t->addColumn('from', 'integer', ray('length null comment', phx::INT_BIG, TRUE, 'pid of sender'));
-    $t->addColumn('to', 'integer', ray('length null comment', phx::INT_BIG, TRUE, 'pid of recipient'));
+    $t->addColumn('sender', 'integer', ray('length null comment', phx::INT_BIG, TRUE, 'pid of sender'));
     $t->addColumn('confirmed', 'integer', ray('length default comment', phx::INT_TINY, 0, 'confirmed by email'));
     $t->addColumn('created', 'string', ray('length null comment', 11, TRUE, 'creation date'));
-    $t->addIndex(['from']);
-    $t->addIndex(['to']);
+    $t->addIndex(['sender']);
     $t->create();
 
-    $t = $this->table('posts', ['comment' => 'offers and needs posted by members and non-members']);
+    $t = $this->table('posts', ray('id primary_key comment', FALSE, 'postid', 'offers and needs posted by members and non-members'));
+    $t->addColumn('postid', 'integer', ray('identity length null comment', TRUE, phx::INT_BIG, TRUE, 'record ID'));
     $t->addColumn('type', 'enum', ray('values null comment', ray('need offer'), TRUE, 'item type'));
     $t->addColumn('item', 'string', ray('length null comment', 255, TRUE, 'item offered or needed'));
     $t->addColumn('details', 'string', ray('length null comment', 255, TRUE, 'description of item'));
