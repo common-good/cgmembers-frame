@@ -531,10 +531,10 @@ body.page-partner blockquote {font-size:14px;}
 /* #frm-posts #edit-subtext {margin-bottom:0;} */
 #frm-posts #edit-buttons .control-data {text-align:center;}
 #frm-posts #edit-buttons .control-data a {margin:0 5px;}
-#frm-posts input#edit-cat,
+#frm-posts select#edit-cat,
 #frm-posts input#edit-end,
 #frm-posts input#edit-city,
-#frm-posts input#edit-state,
+#frm-posts select#edit-state,
 #frm-posts input#edit-zip,
 #frm-posts input#edit-phone,
 #frm-posts input#edit-uid {max-width:250px;}

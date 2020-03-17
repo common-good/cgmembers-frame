@@ -31,9 +31,9 @@ function formPosts($form, &$sta, $args = '') {
 
   $title = t('Offers & Needs');
   $subtext = t('<p>%PROJECT Economy doesn\'t have to be about money. Let\'s just make sure everyone in the neighborhood has what they need, with no one left behind, so we can thrive and have fun together as a community. What\'s one thing that would make your life better? How might you help your neighbors?</p>
-    <p>Offer only <i>gifts</i> of assistance (no ads for paid post). If you are interested in free STUFF, try <%a>freecycle.org</a>)</p>
+    <p>Offer only <i>gifts</i> of assistance (no ads for paid help). If you are interested in free STUFF, try <%a>freecycle.org</a>)</p>
     <p>If you know someone in need who has no Internet access, feel free to ask them if they want you to post something for them.</p>
-    <p>This page is a new initiative by %PROJECT. Please email comments and suggestions to us at %CGF_EMAIL.</p>', '_a', atag('http://freecycle.org'));
+    <p>Please email comments and suggestions to us at %CGF_EMAIL.</p>', '_a', atag('http://freecycle.org'));
 
   u\setDft($zip, nn($_COOKIE['vipzip'])); // default to zip from previous time
   $op = hidFld('gotzip');
@@ -94,7 +94,7 @@ function postList($type, $zip) {
     ORDER BY s.type,s.item,s.created DESC
 X;
   $q = db\q($sql, compact(ray('type zip')));
-  $rows[] = u\tableRow(ray(t('category item who details')));;
+  $rows[] = u\tableRow(ray(t('category item details')));;
   
   while ($row = $q->fetchAssoc()) {
     extract($row);
@@ -151,7 +151,7 @@ function showDetails($op, $id) {
   $item = item($item, $need ? ($emergency ? t('Urgent Need:') : t('Need:')) : t('Offer:'));
   $details = item($details, t('Details:'));
   
-  $message = areaFld(t('Message to Send:'));
+  $message = areaFld(t('Message to Send:'), t('max 200 characters'), maxlen(200));
   $uid = uidFld();
 // Keep in mind: the person you are contacting is almost certainly a neighbor, but might be a scoundrel pretending to live nearby.
 
@@ -164,7 +164,8 @@ function showDetails($op, $id) {
  * Input name and contact information.
  */
 function contactInfo($args, $id) {
-  foreach($args as $k => $v) $info[$k] = hidFld($v);
+  parse_str($args, $ray);
+  foreach($ray as $k => $v) $info[$k] = hidFld($v);
   extract(just('op email', $args));
   
   $title = t('Your Information');
