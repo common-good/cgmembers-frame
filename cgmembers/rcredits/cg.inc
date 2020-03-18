@@ -565,11 +565,13 @@ function iCardAcct($code0, &$iCode = NULL) {
  */
 function setCook($key, $value, $expires = NULL, $raw = FALSE) {
 	u\EXPECT(($len = mb_strlen(rawurlencode("$key=$value"))) <= 4096, "cookie too long len=$len"); // 4094 not 4096 (browser bug?)
+  $_COOKIE[$key] = $value; // make it available also before going to a new page
+  if (test()) return $value;
+
   u\setDft($expires, now() + 365250 * DAY_SECS);
 	$func = $raw ? 'setcookie' : 'setrawcookie';
   $res = $func($key, $value, (int) $expires, '/'); // make it easy (fails without '/')
 	u\EXPECT($res, 'cookie failed');
-  $_COOKIE[$key] = $value; // make it available also before going to a new page
   return $value;
 }
 
@@ -824,6 +826,10 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     $newUid = r\Acct::nextId($region);
   }
   $subs = array( // all cg tables are listed, to be sure we don't leave any out (D=deletable)
+    // messages
+    'people:uid',
+    // posts
+    // post_cats
     // r_areas
     // r_bad
     'r_ballots:voter',

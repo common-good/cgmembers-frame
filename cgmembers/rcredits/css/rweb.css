@@ -902,9 +902,9 @@ div.password-confirm .error {font-weight:bold; color:red;}
 #frm-changepassword #edit-subtext em {font-style:normal; color:red;}
 
 /* Verify Email */
-#frm-resetpassword .form-item-pass1,
+/*#frm-resetpassword .form-item-pass1,
 #frm-resetpassword .form-item-pass2,
-#frm-resetpassword #edit-settings {display:none;}
+#frm-resetpassword #edit-settings {display:none;}*/
 
 /* Login (Signin) */
 #frm-signin #edit-forgot {display:inline-block; margin:5px 0 0 15px;}

@@ -29,14 +29,17 @@ define('SAME_TIME', 60 * 20); // number of seconds that make no difference in "s
  * @param bool $direct: directly to or from db, rather than user input (default FALSE)
  */
 function fixData(&$info, $direct = FALSE) {
-  global $rUrl, $testVars;
+  global $testOnly, $rUrl, $testVars;
 
-  $fields = key($info) . ' email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId'; // first key is probably an ID field, so keep it at the front
+  $fields = key($info) . ' email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method'; // first key is probably an ID field, so keep it at the front
   
   if (@$testVars) foreach ($info as $k => $v) if (mb_strpos($v, '@') !== FALSE) {
     foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", $var, $v);
   }
   extract(just($fields, $info));
+  
+  if (isset($cat)) $cat = db\get('id', 'post_cats', compact('cat'));
+  if (isset($method) and !$testOnly) $method = array_search($method, ray('email phone text'));
 
   if (@$who) $who = t\fullQid($who);
   foreach (ray('flags adminable') as $k) if (isset($$k)) $$k = t\fixFlags($$k);
@@ -44,7 +47,7 @@ function fixData(&$info, $direct = FALSE) {
     for ($i = 0; $i < B_MAX; $i++) if (u\getBit($adminable, $i)) $adminable2[$i] = TRUE;
     $adminable = @$adminable2 ?: [];
   }
- 	extract(fixState(@$state, @$country));
+ 	extract(fixState(@$state, @$country ?: US_COUNTRY_ID));
 
 	foreach (ray('why error') as $k) if (isset($$k)) $$k = tr($$k); // convert embedded message references to actual text
   foreach (['rewards'] as $k) if (isset($$k)) $$k += 0; // make sure numeric fields are numeric.
@@ -76,7 +79,8 @@ function fixData(&$info, $direct = FALSE) {
       $$k = t\uid($v);
       if ($k == 'qid') $$k = r\qid($$k); // simply convert .ABC to NEWABC for qid field
     }
-  }  
+  }
+  foreach (ray('state country') as $k) if (!isset($info[$k])) unset($$k);
   $info = @compact(ray($fields)) + $info;
 }
 
@@ -130,8 +134,8 @@ function doThing($info, $thing, $key = 'id') {
   global $testOnly;
 
   $table = $thing = strtolower($thing);
-  if (!u\starts($thing, 'tx_') and !u\starts($thing, 'x_') and $thing != 'signup') $table = 'r_' . $table;
-  if (!in($thing, 'usd coupated signup company') and substr($thing, -1, 1) != 's') $table .= 's';
+  if (!u\starts($thing, 'tx_') and !u\starts($thing, 'x_') and !in($thing, 'signup posts people post_cats messages')) $table = 'r_' . $table;
+  if (!in($thing, 'usd coupated signup company people') and substr($thing, -1, 1) != 's') $table .= 's';
   if ($table == 'tx_hdrs') $key = 'xid';
 
 // NO!  if (@$info['id']) {$info['uid'] = $info['id']; unset($info['id']);}
@@ -1338,7 +1342,7 @@ function clear($ch = 0) {
   w\signout(TRUE);
   \drupal_static_reset(); // clear out drupal central storage
 
-  $tables = 'r_bad r_ballots r_boxes r_changes r_company r_coupated r_coupons r_do r_events r_honors r_investments r_invites r_invoices r_ips r_near r_notices r_options r_pairs r_photos r_proposals r_proxies r_questions r_ratings r_recurs r_relations r_shares r_stakes r_stats r_tous r_usd r_usd2 r_user_industries r_votes signup tx_disputes_all tx_entries_all tx_hdrs_all x_invoices x_photos x_relations x_usd x_users flood queue semaphore sessions cache';
+  $tables = 'messages people posts r_bad r_ballots r_boxes r_changes r_company r_coupated r_coupons r_do r_events r_honors r_investments r_invites r_invoices r_ips r_near r_notices r_options r_pairs r_photos r_proposals r_proxies r_questions r_ratings r_recurs r_relations r_shares r_stakes r_stats r_tous r_usd r_usd2 r_user_industries r_votes signup tx_disputes_all tx_entries_all tx_hdrs_all x_invoices x_photos x_relations x_usd x_users flood queue semaphore sessions cache';
   foreach (ray('bootstrap form') as $k) $tables .= " cache_$k"; // don't empty cache_menu
   foreach (ray($tables) as $table) db\q("TRUNCATE $table");
 

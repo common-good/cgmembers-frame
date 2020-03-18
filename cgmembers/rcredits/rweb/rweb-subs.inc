@@ -415,8 +415,6 @@ function NEWcgform($form, $onSubmit = '', $labeled = TRUE) {
 function cgform($form, $onSubmit = '', $labeled = TRUE, $level = 0) {
   if ($onSubmit) {
     list ($zot1, $zot2, $caller) = explode('\\', u\caller());
-    //$formId = 'rcreditsweb' . strtolower($caller);
-    //w\js('on-submit', "jQuery('#$formId').submit(function() { $onSubmit });"); 
     w\jsx('on-submit', 'caller', strtolower($caller)); // spaces are required around $onSubmit
     // (Drupal kills the quotes) $form['#attributes']['onsubmit'] = $onSubmit; // eg ' return func();'; 
   }
@@ -425,7 +423,7 @@ function cgform($form, $onSubmit = '', $labeled = TRUE, $level = 0) {
   foreach ($form as $k => $v) if (substr($k, 0, 1) != '#') {
     if (empty($v)) continue;
     if (!is_array($v)) {
-      if (in($k, 'title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back submit')) {
+      if (in($k, ITEM_FLDS)) {
         $form[$k] = $v = $k == 'submit' ? submit($v) : item($v); // let these common items be created simply
       } else u\FAIL("field $k is not an array: " . pr($v));
     }

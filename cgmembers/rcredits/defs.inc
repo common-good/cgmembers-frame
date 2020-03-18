@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-define('R_VERSION', '3.52b'); // software version
+define('R_VERSION', '3.52c'); // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -138,6 +138,7 @@ define('COMPANY_FREEZE', FALSE); // companies cannot spend rewards yet
 define('R', '<span class="r">r</span>');
 define('US', '<span class="us">us</span>');
 /// define('GAME_COMPANIES', '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital');
+define('ITEM_FLDS', 'title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back submit'); // names of common fields that are wrapped automatically in w\item()
 define('R_DATE_FLDS', 'created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted'); // date field names for testing and administrative display
 define('CO_FLDS', 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd staleNudge contact'); // account fields stored in r_company
 define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo activated0'); // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone

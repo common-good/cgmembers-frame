@@ -6,7 +6,7 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
-define('POST_FLDS', 'type item details cat exchange emergency end'); // db fields other than contact info
+define('POST_FLDS', 'type item details cat exchange emergency radius end'); // db fields other than contact info
 define('CONTACT_FLDS', 'displayName fullName address city state zip phone email method'); // db contact fields
 define('MESSAGE_FLDS', 'message postid sender'); // db message fields
 define('METHOD_OPTS', 'email phone text'); // contact method options
@@ -20,33 +20,32 @@ define('VIPID', 'vipid'); // name of confirmed-email cookie (the VIP's people re
  */
 function formPosts($form, &$sta, $args = '') {
   global $base_url;
-  extract(just('op code zip id postid thing', $args, NULL));
+  extract(just('op code zip postid thing', $args, NULL));
   if ($zip) r\setCook('postzip', $zip);
 
-  if (in($op, 'confirm cancel')) return confirmThing($op, $thing, $code);
-  if ($op == 'who') return contactInfo($args, $id ?: $postid);
-  if (in($op, 'offer need')) return postForm($op);
-  if ($op == 'detail') return showDetails($op, $postid);
+  if (in($op, 'confirm cancel')) return confirm($op, $thing, $code);
+  if (in($op, 'offer need')) return getPost($op);
+  if ($op == 'show') return showPost($postid);
+  if ($op == 'who') return getWho($args);
 
+  // op = top or nothing
   jsx('posts', 'active', $op);
 
-  $title = t('Offers & Needs');
-  $subtext = t('<p>%PROJECT Economy doesn\'t have to be about money. Let\'s just make sure everyone in the neighborhood has what they need, with no one left behind, so we can thrive and have fun together as a community. What\'s one thing that would make your life better? How might you help your neighbors?</p>
-    <p>Offer only <i>gifts</i> of assistance (no ads for paid help). If you are interested in free STUFF, try <%a>freecycle.org</a>)</p>
-    <p>If you know someone in need who has no Internet access, feel free to ask them if they want you to post something for them.</p>
+  $title = t('Mutual Aid Offers & Needs');
+  $subtext = t('<p>In our %PROJECT Economy we want to make sure everyone has what they need, with no one left behind.  What help do you need? What help can you offer others in these challenging times?</p>
+    <p>Offer only <i>gifts</i> of assistance (no ads for paid help).</p>
+    <p>If you are interested in giving or receiving free STUFF, try <%a>freecycle.org</a></p>
+    <p>If you know someone in need who has no Internet access, feel free to offer to post something for them.</p>
     <p>Please email comments and suggestions to us at %CGF_EMAIL.</p>', '_a', atag('http://freecycle.org'));
 
   u\setDft($zip, nn($_COOKIE['postzip'])); // default to zip from previous time
-  $op = hidFld('gotzip');
   $zip0 = $zip;
   $zip = textFld(REQ, [t('Your Zip Code')], dft($zip) + clas('ziptogo') + suffix(' ' . btn(BASE_URL . '/community/posts', t('Go'))));
+  $submit = submit(t('fake'), '', '', clas('invisible')); // Drupal keeps other solutions from calling _submit function)
+  $frm = hidFld('top');
   
-  if (!$zip0) { // user's first time ever
-    $submit = submit(t('fake'), '', '', clas('invisible')); // Drupal keeps other solutions from calling _submit function)
-    return cgform(compact(ray('title subtext zip submit op')));
-  }
+  if (!$zip0) return cgform(compact(ray('title subtext zip submit frm'))); // user's first time ever (don't show list yet)
 
-  // op = gotzip or whatever
   $cat = selectFld('&nbsp;', '', clas('limit-list'), catFld());
 
   foreach (ray('offer need') as $type) ${$type . 's'} = postList($type, $zip0);
@@ -73,7 +72,7 @@ function formPosts($form, &$sta, $args = '') {
 X
   );
 
-  return cgform(compact(ray('title subtext zip cat tabs op')));
+  return cgform(compact(ray('title subtext zip cat tabs submit frm')));
 }
 
 /**
@@ -92,7 +91,7 @@ function postList($type, $zip) {
       AND s.created <= :NOW
       AND IFNULL(s.end, :NOW) >= :NOW
       AND s.confirmed
-      AND p.zip=:zip
+      AND MID(p.zip,1,3)=MID(:zip,1,3)
     ORDER BY s.type,s.item,s.created DESC
 X;
   $q = db\q($sql, compact(ray('type zip')));
@@ -101,7 +100,7 @@ X;
   while ($row = $q->fetchAssoc()) {
     extract($row);
     if ($emergency) $item = '<span class="emergency">!!</span> ' . $item;
-    $item = lnk('/community/posts/op=detail&postid=' . $postid, $item);
+    $item = lnk('/community/posts/op=show&postid=' . $postid, $item);
     $rows[] = "<tr class=\"$cat\"><td>$cat</td><td>$item</td><td>$details</td></tr>\n";
   }
 
@@ -111,7 +110,7 @@ X;
 /**
  * Input an offer or need.
  */
-function postForm($op) {
+function getPost($op) {
   $need = ($op == 'need');
   $title = $need ? t('Post a Need') : t('Post an Offer');
   $cat = selectFld(REQ . t('Category:'), '', '', catFld());
@@ -120,18 +119,20 @@ function postForm($op) {
   
   $exchange = $need ? boolFld(t('Exchange:'), t('Are you offering something in exchange? (include it in the details too)')) : hidFld(0);
   $emergency = boolFld(t('Emergency:'), $need ? t('This need is a short-term emergency.') : t('This offer is only for emergencies (such as 2 weeks of social distancing).'));
+  $radius = $need ? NULL : textFld(REQ . t('Radius:'), [t('Visibility radius (miles)'), t('Up to how many miles away do you want this seen? 10 usually covers neighboring towns Use zero for "anywhere".')], dft(10));
   $end = textFld(t('End Date:'), [t('mm/dd/yyyy'), t('if any')]);
   $email = emailFld();
   $submit = submit(t('Post'));
-  $op = $type = hidFld($op);
+  $type = hidFld($op);
+  $frm = hidFld('post');
   
-  return cgform(compact(ray('title cat item details exchange emergency end email submit type op')));
+  return cgform(compact(ray('title cat item details exchange emergency radius end email submit type frm')));
 }
 
 /**
  * Show details about a post.
  */
-function showDetails($op, $postid) {
+function showPost($postid) {
   global $mya;
   
   if (!$res = db\get('s.type,c.cat,s.item,s.details,s.emergency,p.displayName,p.fullName,p.phone', 'posts s LEFT JOIN post_cats c ON c.id=s.cat LEFT JOIN people p USING (pid)', compact('postid'))) return softErr(t('That is not a need or offer.'));
@@ -142,7 +143,6 @@ function showDetails($op, $postid) {
   $need = ($type == 'need');
   if (!$need and $emergency) $item = t('(In emergency) ') . $item;
   
-  $op = hidFld($op);
   $postid = hidFld($postid);
 
   $title = t('Details');
@@ -158,14 +158,15 @@ function showDetails($op, $postid) {
 // Keep in mind: the person you are contacting is almost certainly a neighbor, but might be a scoundrel pretending to live nearby.
 
   $submit = t('Send Message');
+  $frm = hidFld('message');
 
-  return cgform(compact(ray('title subtext type cat who item details message email submit postid op')));
+  return cgform(compact(ray('title subtext type cat who item details message email submit postid frm')));
 }
 
 /**
  * Input name and contact information.
  */
-function contactInfo($args, $id) {
+function getWho($args) {
   parse_str($args, $ray);
   foreach(just(POST_FLDS . ' email ' . MESSAGE_FLDS, $ray) as $k => $v) $info[$k] = hidFld($v);
   extract(just('email', $info)); // because it's in CONTACT_FLDS
@@ -181,14 +182,15 @@ function contactInfo($args, $id) {
   $phone = textFld(REQ . t('Phone:'), [t('Phone number'), t('Just in case we need to contact you. This is not shared with other users unless you choose "phone" or "text" as your preferred contact method.')]);
   $method = w\radiosFld(REQ . t('Preferred Contact:'), t('The "phone" and "text" options apply only when a %PROJECT member contacts you (because we have verified the identity only of members). Otherwise you will receive replies by email.'), '', ray(METHOD_OPTS));
   $submit = t('Submit');
+  $frm = hidFld('who');
 
-  return cgform(compact(ray('title subtext ' . CONTACT_FLDS . ' submit')) + $info);
+  return cgform(compact(ray('title subtext ' . CONTACT_FLDS . ' submit frm')) + $info);
 }
 
 /**
  * Respond to user's click of confirmation and cancelation link in email.
  */
-function confirmThing($op, $thing, $code) {
+function confirm($op, $thing, $code) {
   global $mya;
   $code = u\decry('P', CRYPT_FLAG . $code);
   
@@ -211,7 +213,7 @@ function confirmThing($op, $thing, $code) {
         extract(db\get('postid,message,displayName,email', 'messages m JOIN people p ON pid=sender', compact('id')));
         postMsg($message, $displayName, $email, $postid);      
       }
-    } else return u\FAIL('Bad do in confirmThing: ' . pr($code));
+    } else return u\FAIL('Bad do in confirm: ' . pr($code));
     $msg = t('Success! Your %thing is confirmed.', compact('thing'));
   } else $msg = t('That %thing does not exist.', compact('thing'));
   
@@ -220,22 +222,28 @@ function confirmThing($op, $thing, $code) {
 
 function formPosts_validate($form, &$sta) {
   global $mya;
-  extract(just('op type end zip phone address email', $sta['input'], NULL));
-  if ($op == 'gotzip') return;
-  
-  if ($op == 'who') { // contact form
+  extract(just('frm type end zip phone address message email cat radius', $sta['input'], NULL));
+
+  if ($frm == 'top') {
     if ($err = u\badZip($zip)) return say($err, 'zip');
-    if ($op == 'who') {
-      if ($err = u\badPhone($phone)) return say($err, 'phone');
-      if (u\poAddress($address)) return say('po in location', 'address');
-    }
-    u\preray(compact(ray('zip phone')), $sta['input']);
-  } else { // offer/need form
+    $chgFlds = 'zip';
+  } elseif ($frm == 'post') {
+    if (!$cat) return say(t('You must choose a category.'), 'cat');
     if (!emailOkay($email, TRUE)) return;
+    if (isset($radius) and $err = u\badAmount($radius, '>=0', 6)) return say($err, 'radius');
     if ($end and $err = u\badDate($end, NOW)) return say($err, 'end');
-    if (!$end) $end = NULL;
-    u\preray(compact(ray('email end')), $sta['input']);
-  }  
+    $chgFlds = 'email end';
+  } elseif ($frm == 'message') {
+    if (!emailOkay($email, TRUE)) return;
+    $chgFlds = 'email';
+  } elseif ($frm == 'who') {
+    if ($err = u\badZip($zip)) return say($err, 'zip');
+    if ($err = u\badPhone($phone)) return say($err, 'phone');
+    if (u\poAddress($address)) return say('po in location', 'address');
+    $chgFlds = 'zip phone';
+  } else return u\FAIL(t('bad form in validate: ' . $frm));
+  
+  u\preray(compact(ray($chgFlds)), $sta['input']);
 }
 
 /*    } elseif ($uid) { // uid is account ID, vetted in _validate
@@ -249,33 +257,35 @@ function formPosts_validate($form, &$sta) {
       
 /**
  * Process the results of various Offers & Needs forms:
- *   item/post, details/message, or contact info (including item/post or details/message info)
+ *   post, message, or contact info (this last including post or message info)
  */
 function formPosts_submit($form, &$sta) {
   global $mya;
-  $input = just(POST_FLDS . ' op ' . MESSAGE_FLDS . ' ' . CONTACT_FLDS, $sta['input'], NULL);
-  extract(just('op email zip fullName type method', $input), NULL);
-  if ($op == 'gotzip') return go("community/posts/op=gotzip&zip=$zip");
+  $input = just(POST_FLDS . ' frm ' . MESSAGE_FLDS . ' ' . CONTACT_FLDS, $sta['input'], NULL);
+  extract(just('frm email zip fullName type end method', $input), NULL);
 
-  if ($fullName) { // op was "who" -- from contact form (includes info about post or message)
+  if ($frm == 'top') return go("community/posts/op=top&zip=$zip");
+
+  if ($frm == 'post' or $frm == 'message') { // get pid for this post; if none, carry it through to the "who" form
+    $pid = db\get('pid', 'people', compact('email'));
+    if (!$pid) return w\go('/community/posts/op=who&' . http_build_query($input));
+  } elseif ($frm == 'who') {  // carrying info about post or message, as well as contact info
     $contactInfo = just(CONTACT_FLDS, $input, NULL);
     $method = ray(METHOD_OPTS)[$method];
     $pid = db\insert('people', compact('method') + $contactInfo, 'pid');
-    $op = $type ?: 'detail';
-  } else {
-    $pid = db\get('pid', 'people', compact('email'));
-    if (!$pid) return w\go('/community/posts/op=who&' . http_build_query(justNot('op', $input)));
+    $frm = $type ? 'post' : 'message'; // now fall through to process the earlier data passed through by who form
   }
 
+  // got pid, now process post or message
   $confirmed = $email == vip('email') ? 1 : 0; // set confirmation status of record we're about to create
   $created = time();
   
-  if (in($op, 'offer need')) { // from offers/needs
+  if ($frm == 'post') {
     extract($info = just(POST_FLDS, $input, NULL));
-//    if (!$end) $info['end'] = NULL;
+    if (!$end) $info['end'] = NULL; // this has to be here, not in validate
     $postid = db\insert('posts', compact(ray('pid confirmed created')) + $info, 'postid');
     if (!$confirmed) emailLink('post', compact('postid'), $created, $type, $item, $pid);
-  } elseif ($op == 'detail') {
+  } elseif ($frm == 'message') {
     extract($info = just(MESSAGE_FLDS, $input, NULL));
     $sender = $pid;
     $id = db\insert('messages', compact(ray('sender confirmed created')) + $info, 'id');
@@ -286,7 +296,7 @@ function formPosts_submit($form, &$sta) {
       extract(db\get('type,item', 'posts', compact('postid')));
       emailLink('message', compact('id'), $created, $type, $item, $pid);
     }
-  } else return u\FAIL(t('Bad op in posts submit: ') . pr($sta['input']));
+  } else return u\FAIL(t('bad form at bottom of submit: ' . $frm));
      
   w\go('/community/posts', 'info saved');
 }
@@ -297,14 +307,14 @@ function formPosts_submit($form, &$sta) {
  * @param assoc $idSub: thing record ID name and value
  * @param int $created: thing record creation date/time
  * @param string $type: post type
- * @param string $item: post description
+ * @param string $item: brief description of post
  * @param int $pid: people record ID of person to send link to
  */
 function emailLink($thing, $idSub, $created, $type, $item, $pid) {
   $code = str_replace(CRYPT_FLAG, '', u\cry('P', http_build_query($idSub + ray('created word', $created, R_WORD))));
   $index = "confirm-$thing";
   extract(pVal('fullName,email', $pid));
-  $to = "$fullName <$email>";
+  $to = [$email => $fullName];
   $date = u\fmtDate($created, TRUE);
   $what = $type == 'need' ? t('a need') : t('an offer');
   $noFrame = TRUE;
