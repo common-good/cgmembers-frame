@@ -339,6 +339,6 @@ function vip($fld = 'pid') {
   return $fld == 'pid' ? $pid : db\get($fld, 'people', compact('pid'));
 }
 
-function catFld() {return ['' => t('Choose a category')] + db\keyed('id,cat', 'post_cats', '1 ORDER BY id');}
+function catFld() {return ['' => t('Choose a category')] + db\keyed('id,cat', 'post_cats', '1 ORDER BY sort');}
 function emailFld() {return textFld(REQ . t('Your Email:'), [t('Your email address')], dft(vip('email')));}
 function pVal($fld, $pid) {return db\get($fld, 'people', compact('pid'));}
