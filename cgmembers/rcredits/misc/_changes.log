@@ -1,3 +1,11 @@
+2020-03-17
+. fixed bugs in community/posts
+. reworked community/posts validate and submit for clarity and soundness, using a form identifier (frm)
+. moved uid field from posts to people
+. added radius field to posts
+. added some tests for posts
+. added a finance category and sort field to post_cats
+
 2020-03-16
 . bank connection page failed after disconnect (needed extra code in scraps.js)
 . offers & needs page

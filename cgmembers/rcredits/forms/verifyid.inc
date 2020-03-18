@@ -56,7 +56,7 @@ function formVerifyId_validate($form, &$sta) {
 
 function formVerifyId_submit($form, &$sta) {
   global $mya;
-  extract(just('legalName filedata dob federalId', $sta['input']));
+  extract(just('legalName filedata dob federalId', $sta['input'], NULL));
 
   if (nn($filedata)) {
     $filedata = unserialize($filedata);

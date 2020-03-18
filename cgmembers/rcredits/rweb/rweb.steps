@@ -322,6 +322,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
  *     TEST joint AMemberRequestsAJointAccount
  *     TEST joint AMemberRequestsTwoJoinsAtOnce
+ *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
  *     TEST relations AMemberAddsARelation
  *     TEST signin AMemberAsksForANewPasswordForACompany
  *     TEST signup AMemberRegistersAgain
@@ -408,6 +409,7 @@ function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
+ *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
  *     TEST signin AMemberAsksForANewPasswordForUsername
  *     TEST signin AMemberAsksForANewPasswordForAccountID
  *     TEST signin AMemberAsksForANewPasswordForEmail
@@ -512,6 +514,11 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     TEST paybutton AMemberClicksAPayWithCommonGoodButtonWithVariableAmount
  *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
+ *     TEST posts SomeoneVisitsThePostsPage
+ *     TEST posts SomeoneSubmitsAZipcode
+ *     TEST posts SomeonePostsAnOffer
+ *     TEST posts SomeoneViewsTheDetailsOfAnOffer
+ *     TEST posts SomeoneRepliesToAnOffer
  *     TEST preferences AMemberVisitsThePreferencesPage
  *     TEST preferences ACompanyAgentVisitsThePreferencesPage
  *     TEST queries AMemberVisitsTheCommunityDataPage
@@ -588,6 +595,7 @@ function with($content) {return weShow($content);}
  *     TEST invest TheClubMakesALoan
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
+ *     TEST posts SomeoneVisitsThePostsPage
  *     TEST queries AMemberVisitsTheCommunityDataPage
  *     TEST relations MemberHasAnEmployer
  *     TEST relations MemberCompanyHasRelations
@@ -1627,6 +1635,10 @@ function weScripWithSubs($script, $args = []) {
  *     BOTH invest TheInvestmentClubIssuesDividends
  *     BOTH invest MembersRateAProposedLoan
  *     BOTH invest TheClubMakesALoan
+ *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
+ *     MAKE posts SomeoneViewsTheDetailsOfAnOffer
+ *     MAKE posts SomeoneRepliesToAnOffer
+ *     BOTH posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  *     MAKE preferences Setup
  *     MAKE showrecurs Setup
  *     TEST showrecurs AMemberStopsAnAutopayment
@@ -1931,3 +1943,34 @@ function weRedirectOffsiteTo($content) {
  */
 function companyFlags($flags) {return t\companyFlags($flags);}
 
+
+/**
+ * someone visits (ARG)
+ *
+ * in: MAKE posts SomeoneVisitsThePostsPage
+ *     MAKE posts SomeonePostsAnOffer
+ *     MAKE posts SomeoneViewsTheDetailsOfAnOffer
+ */
+function someoneVisits($page) {return t\memberVisitsPage('?', $page);}
+
+/**
+ * someone confirms (ARG) with: (ARG)
+ *
+ * in: MAKE posts SomeoneSubmitsAZipcode
+ *     MAKE posts SomeonePostsAnOffer
+ *     MAKE posts SomeoneEntersPersonalDataAfterPostingAnOffer
+ *     MAKE posts SomeoneRepliesToAnOffer
+ *     MAKE posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
+ */
+function someoneConfirmsWith($page, $values) {return t\completeForm('?', $page, $values, TRUE);}
+
+/**
+ * cookie (ARG) is (ARG)
+ *
+ * in: TEST posts SomeoneSubmitsAZipcode
+ */
+function cookieIs($nm, $v) {
+  global $testOnly;
+  if (!$testOnly) r\setCook($nm, $v);
+  return ($_COOKIE[$nm] == $v);
+}
