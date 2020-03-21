@@ -541,8 +541,14 @@ body.page-partner blockquote {font-size:14px;}
 #frm-posts input#edit-radius,
 #frm-posts input#edit-email {max-width:250px;}
 
-#frm-posts #edit-radius,
-#frm-posts #edit-cat {display:inline-block; margin-right:10px;}
+#frm-posts .k-category {padding:4px 0 4px 9px; width:140px;}
+#frm-posts .k-category select {padding:0; width:140px; box-shadow:none; -webkit-box-shadow:none;}
+#frm-posts .k-category select option {background-color:white; color:#111111; margin-top:-20px;}
+#frm-posts .limit-list {background-color:#757575; color:white; border:0; height:14px;}
+
+
+#frm-posts #edit-radius {display:inline-block; margin-right:5px;}
+#frm-posts .form-item-radius .btn {margin-left:5px;}
 
 #frm-posts .form-item-locus .help-block {margin-bottom:0;}
 

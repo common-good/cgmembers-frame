@@ -48,10 +48,14 @@ function formPosts($form, &$sta, $args = '') {
     <p>Please email comments and suggestions to us at %CGF_EMAIL.</p>', '_a', atag('http://freecycle.org'));
 
   $locus = textFld(REQ . t('Where:'), [t('Full address OR City,ST'), t('Type an address or just City, ST.')], dft($locus));
-  $radius = textFld(REQ . t('Radius:'), [t('Max distance from address')], dft($radius ?: 10) + suffix(t('miles ')));
-  $cat = selectFld(t('Category:'), '', clas('limit-list') + suffix(btn("$base_url/community/posts", t('Go'), '', 'sm')), catFld(FALSE));
+  $radius = textFld(REQ . t('Radius:'), [t('Max distance from address')], dft($radius ?: 10) + suffix(t('miles') . btn("$base_url/community/posts", t('Go'), '', 'sm')));
+  $cat = rendA('cat', selectFld(BARE, '', clas('limit-list'), catChoices(t('Category (filter)'))));
 
-  foreach (ray('offer need') as $type) ${$type . 's'} = postList($type, $latitude0, $longitude0, $zip0, $radius0);
+  foreach (ray('offer need') as $type) {
+    $k = $type . 's';
+    $$k = preg_replace(t('/Category/'), $cat, postList($type, $latitude0, $longitude0, $zip0, $radius0), 1);
+    $$k = preg_replace('/edit-cat/', "\$0-$type", $$k, 1);
+  }
   $tabs = $locus0 ? tabFlds($offers, $needs) : NULL;
 
   $latitude = hidFld($latitude ?: 0); // to be filled in on the fly
@@ -60,7 +64,7 @@ function formPosts($form, &$sta, $args = '') {
   $submit = submit(t('fake'), '', '', clas('invisible')); // Drupal keeps other solutions from calling _submit function)
   $frm = hidFld('top');
   
-  return cgform(compact(ray('title subtext locus radius cat tabs latitude longitude zip submit frm')));
+  return cgform(compact(ray('title subtext locus radius tabs latitude longitude zip submit frm')));
 }
 
 /**
@@ -99,14 +103,14 @@ function postList($type, $lat, $lon, $zip, $radius) {
   $distance = tr('%DISTANCE_BETWEEN');
 
   $sql = <<<X
-    SELECT s.postid, c.cat, s.item, s.details, s.emergency FROM posts s
+    SELECT $distance AS dist, s.postid, c.cat, s.item, s.details, s.emergency FROM posts s
     LEFT JOIN post_cats c ON c.id=s.cat
     LEFT JOIN people p USING (pid)
     WHERE s.type=:type
       AND s.created <= :NOW
       AND IFNULL(s.end, :NOW) >= :NOW
       AND s.confirmed
-      AND IF((latitude=0 AND longitude=0) OR (:lat=0 AND :lon=0), 
+      AND 1 or IF((latitude=0 AND longitude=0) OR (:lat=0 AND :lon=0), 
             MID(p.zip,1,3) = MID(:zip,1,3), 
             $distance < LEAST(IFNULL(s.radius, :radius), :radius)
           )
@@ -119,6 +123,7 @@ X;
   
   while ($row = $q->fetchAssoc()) {
     extract($row);
+///      debug($dist);
     if ($emergency) $item = '<span class="emergency">!!</span> ' . $item;
     $item = lnk('/community/posts/op=show&postid=' . $postid, $item);
     $rows[] = "<tr class=\"$cat\"><td>$cat</td><td>$item</td><td>$details</td></tr>\n";
@@ -136,7 +141,7 @@ function getPost($op) {
   $need = ($op == 'need');
   $title = $need ? t('Post a Need') : t('Post an Offer');
   $subtext = t('<p>Do not put identifying information in the "What" or "Details". People contact you through the system, without knowing your full name or email address. You can be more specific when you reply to them.</p><p>You will also need to confirm your first post by email.</p>');
-  $cat = selectFld(REQ . t('Category:'), '', '', catFld(TRUE));
+  $cat = selectFld(REQ . t('Category:'), '', '', catChoices(t('Choosed a category')));
   $item = textFld(REQ . t('What:'), [$need ? t('What you need') : t('What you\'re offering')], maxlen(40));
   $details = areaFld(REQ . t('Details:'), t('Max 200 characters'), maxlen(200));
   
@@ -370,7 +375,7 @@ function vip($fld = 'pid') {
   return $fld == 'pid' ? $pid : db\get($fld, 'people', compact('pid'));
 }
 
-function catFld($req) {return ['' => t('Choose a category') . ($req ? '' : t(' (optional)'))] + db\keyed('id,cat', 'post_cats', '1 ORDER BY sort');}
+function catChoices($top) {return ['' => $top] + db\keyed('id,cat', 'post_cats', '1 ORDER BY sort');}
 function emailFld() {return textFld(REQ . t('Your Email:'), [t('Your email address')], dft(vip('email')));}
 function pVal($fld, $pid) {return db\get($fld, 'people', compact('pid'));}
 function zipOnlyMsg($specifics, $zip) {return t('We are unable to geolocate that address at this time, so %specifics in the "%zip3" Zip Code area.', 'specifics zip3', $specifics, substr($zip, 0, 3));}

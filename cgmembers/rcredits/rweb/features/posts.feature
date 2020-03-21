@@ -20,11 +20,13 @@ Scenario: Someone submits a locus
   Then we show "Mutual Aid Offers & Needs" with:
   | Where    | Greenfield, MA |    |
   | Radius   | 10    | Go |
-  | Category |       |    |
   And with:
   | Offers   | Needs | Post an Offer | Post a Need |
   And with:
-  | Category | Item | Details | |
+  | Item | Details | |
+  And with:
+  | There are not yet any offers within |
+  | There are not yet any needs within  |
   
   And cookie "locus" is "Greenfield, MA"
   And cookie "radius" is "10"
@@ -136,11 +138,10 @@ Scenario: Someone replies to an offer
   Then we show "Mutual Aid Offers & Needs" with:
   | Where    | Greenfield, MA |    |
   | Radius   | 100   | Go |
-  | Category |       |    |
   And with:
   | Offers   | Needs | Post an Offer | Post a Need |
   And with:
-  | Category | Item    | Details | |
+  |          | Item    | Details | |
   | food     | !! fish | big one | |
 
   When someone confirms "community/posts/op=show&postid=1" with:

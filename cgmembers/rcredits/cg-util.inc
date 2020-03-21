@@ -989,11 +989,22 @@ function getLocus($addr, $city, $st, $zip) {
   */
   if (!$res = file_get_contents($url = GEOCODE_URL . http_build_query($params))) return r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)));
   $res = json_decode($res);
-  foreach (nn($res->results, []) as $one) {
-    $i = $one->confidence;
-    if (!isset($coods[$i])) { // don't overwrite with later same confidence
-      $coods[$i] = $one->geometry;
-      $zips[$i] = nn($one->components->postcode);
+
+  foreach (nn($res->results, []) as $one) if ($one->components->country_code == 'us') {
+    if ($addr) {
+      $i = $one->confidence; // confidence is actually specificity. Be as specific as possible.
+      if (!isset($coods[$i])) { // don't overwrite with later same confidence
+        $coods[$i] = $one->geometry;
+        $zips[$i] = nn($one->components->postcode);
+        debug("$one->components->postcode i=$i");
+      }
+    } else {
+      if (in($one->components->_category, 'place transportation') and nn($one->components->postcode)) {
+        $coods[0] = $one->geometry;
+        $zips[0] = $one->components->postcode;
+        debug($one->components->postcode);
+        break;
+      }
     }
   }
 

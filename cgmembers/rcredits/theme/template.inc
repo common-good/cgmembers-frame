@@ -469,10 +469,10 @@ function rcredits_checkboxes($variables) {
 
 function rcredits_select($variables) {
   \element_set_attributes($variables['element'], array('id', 'name', 'size'));
-  extract(rcElement($variables, 'attributes class required'), NULL);
+  extract(rcElement($variables, 'attributes class required'));
   $class[] = 'form-control';
-  if ($required) $attributes['required'] = 'yes'; // don't add this in unless it is yes
-  return w\tag('select', \form_select_options($variables['element']), ($attributes ?: []) + compact('class'));
+  if (nn($required)) $attributes['required'] = 'yes'; // don't add this in unless it is yes
+  return w\tag('select', \form_select_options($variables['element']), (nn($attributes, []) + compact('class')));
 }
 
 function rcredits_fieldset($variables) {
