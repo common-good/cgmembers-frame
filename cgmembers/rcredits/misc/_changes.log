@@ -1,3 +1,9 @@
+2020-03-21 feature/async-geosearch
+. time limit on syncronous geosearch
+. disabled async geosearch
+. better handling of geosearch failure
+. zip required in locus for post viewing
+
 2020-03-21 feature/geo-tweaks
 . fixed mysql calculation of distance between two points
 . improved formatting of posts list

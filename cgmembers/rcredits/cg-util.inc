@@ -957,60 +957,90 @@ function tableRow($row) {
 }
 
 /**
- * Return latitude, longitude, and zip, calculated from user-supplied location string.
- * @param string $loc: location string (full address or city,st)
- * @return [lat, lon, zip]
- */
-function parseLoc($loc) {
-  list ($address, $city, $state, $zip) = $res = u\parseAddr($loc); // zip = state abbrev works, but doesn't need to
-//  if (preg_match(LOCPAT_CITYST, $loc, $m)) 
-//  if (preg_match(LOCPAT_PARTZIP, $loc, $m))
-  return u\getLocus($address, $city, $state, $zip) ?: [LOCUS_BAD, 0, 0];
-}
-
-/**
  * Return the latitude and longitude for the given address. Also the postal code at that spot.
- * @return [lat, lon, zip]
+ * call with either getLocus(location) or getLocus(addr, city, statecode, zip)
+ * @param string $q: either the whole address or just number and street
+ * @param string $city
+ * @param int $st: state code
+ * @param string $zip
+ * @return [lat, lon, zip] -- [0, 0, ''] if none found
  */
-function getLocus($addr, $city, $st, $zip) {
-  if (!$state = is_numeric($st) ? r\realState($st) : $st) {
-    if (!$zip) return FALSE;
-    $q = $zip;
-  } else $q = "$addr, $city, $state $zip";
-
+function getLocus($q, $city = '', $st = '', $zip = '') {
+  global $channel;
+  
+  if ($channel == TX_WEB) ini_set('default_socket_timeout', 8);
   if (test()) return f('t.getLocus', $q);
 
+  if ("$city$st$zip") $q .= tr(", $a->city, " . r\realState($state) . " $a->zip");
+  $none = [0, 0, ''];
   $params = ray('q key', $q, GEOCODE_KEY);
+  
 /*
   $params = ray('street city state', $address, $city, r\realState($state)); // US Census
   if (!$matches = (array) @$res->result->addressMatches) return r\tellAdmin(t('setLocus <%a>returned</a> no matches', 'a', w\atag($url))); // US Census
   $coods = @$matches[0]->coordinates;
   $coods = [$coods->y, $coods->x];
   */
-  if (!$res = file_get_contents($url = GEOCODE_URL . http_build_query($params))) return r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)));
+  if (!$res = file_get_contents($url = GEOCODE_URL . http_build_query($params))) {
+    r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)));
+    return $none;
+  }
   $res = json_decode($res);
 
   foreach (nn($res->results, []) as $one) if ($one->components->country_code == 'us') {
-    if ($addr) {
-      $i = $one->confidence; // confidence is actually specificity. Be as specific as possible.
-      if (!isset($coods[$i])) { // don't overwrite with later same confidence
-        $coods[$i] = $one->geometry;
-        $zips[$i] = nn($one->components->postcode);
-      }
-    } else {
-      if (in($one->components->_category, 'place transportation') and nn($one->components->postcode)) {
-        $coods[0] = $one->geometry;
-        $zips[0] = $one->components->postcode;
-        break;
-      }
+    $i = $one->confidence; // confidence is actually specificity. Be as specific as possible.
+    if (in($one->components->_category, 'place transportation') 
+      and nn($one->components->postcode)
+      and !isset($coods[$i])) { // don't overwrite with later same confidence
+      $coods[$i] = $one->geometry;
+      $zips[$i] = nn($one->components->postcode);
     }
   }
 
-  if (!nn($coods)) return $zip ? [0, 0, $zip] : FALSE;
+  if (!nn($coods)) return $none;
 
   $best = max(array_keys($coods));
 
-  return [$coods[$best]->lat, $coods[$best]->lng, $zips[$best] ?: $zip];
+  return [$coods[$best]->lat, $coods[$best]->lng, $zips[$best]];
+}
+
+/**
+ * Parse the mailing address into its constituent parts.
+ * @param string $addr: the address to parse
+ * @param bool $separateNum: return street number and address separately
+ * @return [addr, city, state, zip, $country, $num] (one or more will be empty or ER, if error)
+ */
+function parseAddr($addr, $separateNum = FALSE) {
+  if (substr_count($addr, '/') > 1) $addr = str_replace('/', ',', $addr);
+
+  $parts = explode(',', trim($addr));
+  $p = count($parts);
+  if (!$p) return ['','','',''];
+//  if ($p == 1) return is_numeric($addr) ? ['', '', '', $addr] : ['', '', $addr, '']; // zip or st
+  if ($p == 1) return ['', '', '', $addr]; // zip
+  
+  list ($state, $zip, $country) = explode(' ', mb_strtoupper(@trim(array_pop($parts))) . '  ');
+  if (is_numeric($state) and !$zip and !$country) {
+    $zip = $state;
+    $state = array_pop($parts);
+  } else {
+    if (!$country and !preg_match('/^[A-Z][A-Z]$/', $state)) $state = 'ER';
+  }
+  $city = trim(array_pop($parts));
+  $addr = join(', ', $parts);
+  $num = '';
+  
+  if ($separateNum and strpos($addr, ' ')) {
+    $parts = explode(' ', $addr);
+    while (is_numeric(($p = array_shift($parts))[0])) $num .= ($num ? ' ' : '') . $p;
+    if ($num !== '') $addr = $p . ' ' . join(' ', $parts);
+  }
+  return [$addr, $city, $state, $zip, $country, $num];
+}
+
+function parseOutZip($locus) {
+  list ($a, $b, $c, $zip) = parseAddr($locus);
+  return $zip;
 }
 
 /**
@@ -1034,33 +1064,6 @@ function parseName($name, $withMiddles = FALSE) {
     $first = array_shift($names);
     return [$first, $last, join(' ', $names)];
   } else return [join(' ', $names), $last];
-}
-
-/**
- * Parse the mailing address into its constituent parts.
- * @param string $addr: the address to parse
- * @param bool $separateNum: return street number and address separately
- * @return [addr, city, state, zip, $country, $num] (one or more will be empty or ER, if error)
- */
-function parseAddr($addr, $separateNum = FALSE) {
-  $parts = explode(',', $addr);
-  $p = count($parts);
-  if (!$p) return ['','','',''];
-//  if ($p == 1) return is_numeric($addr) ? ['', '', '', $addr] : ['', '', $addr, '']; // zip or st
-  if ($p == 1) return ['', '', '', $addr]; // zip
-  
-  list ($state, $zip, $country) = explode(' ', mb_strtoupper(@trim(array_pop($parts))) . '  ');
-  if (!$country and !preg_match('/^[A-Z][A-Z]$/', $state)) $state = 'ER';
-  $city = trim(array_pop($parts));
-  $addr = join(', ', $parts);
-  $num = '';
-  
-  if ($separateNum and strpos($addr, ' ')) {
-    $parts = explode(' ', $addr);
-    while (is_numeric(($p = array_shift($parts))[0])) $num .= ($num ? ' ' : '') . $p;
-    if ($num !== '') $addr = $p . ' ' . join(' ', $parts);
-  }
-  return [$addr, $city, $state, $zip, $country, $num];
 }
 
 /**

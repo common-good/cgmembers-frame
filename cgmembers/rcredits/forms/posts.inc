@@ -47,7 +47,7 @@ function formPosts($form, &$sta, $args = '') {
     <p>If you know someone in need who has no Internet access, offer to post something for them. And tell your neighbors about this board!</p>
     <p>For an example of how this works in practice, try "Greenfield, MA" with a radius of 10. Please email comments and suggestions to us at %CGF_EMAIL.</p>', '_a', atag('http://freecycle.org'));
 
-  $locus = textFld(REQ . t('Where:'), [t('Full address OR City,ST'), t('Type an address or just City, ST.')], dft($locus));
+  $locus = textFld(REQ . t('Where:'), [t('Full address OR city/state/zip'), t('Your address (including zip) or just city, state, and zip.')], dft($locus));
   $radius = textFld(REQ . t('Radius:'), [t('Max distance from address')], dft($radius ?: 10) + suffix(t('miles') . btn("$base_url/community/posts", t('Go'), '', 'sm')));
   $cat = rendA('cat', selectFld(BARE, '', clas('limit-list'), catChoices(t('Category (filter)'))));
 
@@ -256,12 +256,11 @@ function formPosts_validate($form, &$sta) {
   if ($frm == 'top') {
     extract(just(TOP_FLDS, $sta['input'], NULL));
     if ($err = u\badAmount($radius, '>=0', 6)) return say($err, 'radius');
-    if (!$latitude and !$longitude) list ($latitude, $longitude, $zip) = u\parseLoc($locus);
-    if ($latitude == LOCUS_ZIP) {
-      $latitude = $longitude = 0;
+    if (!$latitude and !$longitude) list ($latitude, $longitude, $zip) = u\getLocus($locus);
+    if ($latitude == 0 and $longitude == 0) {
+      if (!$zip = u\parseOutZip($locus)) return say('bad locus', 'locus');
       say(zipOnlyMsg(t('you will see posts only'), $zip));
     }
-    if ($latitude == LOCUS_BAD) return say(t('That is not a recognizable full address or city,st. Try again.'), 'locus');
     $chgFlds = 'latitude longitude zip';
   } elseif ($frm == 'post') {
     extract(just('end email cat', $sta['input'], NULL));
@@ -279,9 +278,8 @@ function formPosts_validate($form, &$sta) {
     if ($err = u\badZip($zip)) return say($err, 'zip');
     if ($err = u\badPhone($phone)) return say($err, 'phone');
     if (u\poAddress($address)) return say('po in location', 'address');
-    list ($latitude, $longitude, $zot) = u\getLocus($address, $city, $state, $zip);
-    if (in($latitude, [LOCUS_ZIP, LOCUS_BAD])) {
-      $latitude = $longitude = 0;
+    list ($latitude, $longitude, $zot) = u\getLocus($locus);
+    if ($latitude == 0 and $longitude == 0) {
       if ($type == 'post') say(zipOnlyMsg(t('your post will be shown to anyone'), $zip));
     }
     $chgFlds = 'zip phone latitude longitude';

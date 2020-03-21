@@ -279,24 +279,26 @@ function doit(what, vs) {
 
   case 'posts':
     $('.form-item-radius .btn').click(function () { // click the Go button
-      var q = {};
-      'locus radius latitude longitude zip'.split(' ').forEach(function (item, i) {q[item] = $('#edit-' + item).val();});
+//      var q = {};
+//      'locus radius latitude longitude zip'.split(' ').forEach(function (item, i) {q[item] = $('#edit-' + item).val();});
       $('#edit-submit').click();
 //      location.href = $(this).attr('href') + '/op=top&' + $.param(q);
       return false; // cancel original link click
     });
 
+/*
     $('#edit-locus').change(function () {
       $('#edit-latitude').val(0);
       $('#edit-longitude').val(0);
       $('#edit-zip').val('');
-      get('getLocus', {address:v['address'], city:v['city'], state:v['state'], zip:v['zip']}, function (j) {
+      get('getLocus', {locus:v['locus']}, function (j) {
         $('#edit-latitude').val(j.latitude);
         $('#edit-longitude').val(j.longitude);
         $('#edit-zip').val(j.zip);
 //        $('#edit-submit').click();
       });
     });
+    */
     
     $('#tabs').tabs();
     $('#tabs ul li a[href^="http"]').unbind('click').click(function () {location.href = $(this).attr('href');});
@@ -304,6 +306,7 @@ function doit(what, vs) {
     $('.limit-list').change(function () {
       var cat = $(this).find(':selected').text();
       $(this).parents('table').find('tr').hide();
+      $('tr.none').show();
       $(this).parents('table').find('tr').first().show();
       $(this).parents('table').find('tr.' + cat).show();
     });
