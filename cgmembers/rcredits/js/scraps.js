@@ -278,7 +278,7 @@ function doit(what, vs) {
     break;
 
   case 'posts':
-    $('.form-item-cat .btn').click(function () { // click the Go button
+    $('.form-item-radius .btn').click(function () { // click the Go button
       var q = {};
       'locus radius latitude longitude zip'.split(' ').forEach(function (item, i) {q[item] = $('#edit-' + item).val();});
       $('#edit-submit').click();
@@ -301,10 +301,10 @@ function doit(what, vs) {
     $('#tabs').tabs();
     $('#tabs ul li a[href^="http"]').unbind('click').click(function () {location.href = $(this).attr('href');});
     $('#cat').selectmenu();
-    $('#edit-cat.limit-list').change(function () {
-      var cat=$(this).find(':selected').text();
-      $('#tabs tr').hide();
-      $('#tabs tr[class="' + cat + '"]').show();
+    $('.limit-list').change(function () {
+      var cat = $(this).find(':selected').text();
+      $(this).find('#tabs tr[class]').hide();
+      $(this).find('#tabs tr[class="' + cat + '"]').show();
     });
     break;
     

@@ -6,6 +6,8 @@
 . message now when there are no posts to show
 . improved posts messaging
 . select can now be required
+. modified geosearch to get a better result
+. moved category selector to header of list
 
 2020-03-20 feature/post-geosearch
 . fixed a problem with message on company account page
