@@ -162,6 +162,6 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
   $listUrl = '/community/coupons/list';
 
   return $mya->ok 
-  ? ($test() ? go($printUrl) : go2($listUrl, $printUrl))
+  ? (test() ? go($printUrl) : go2($listUrl, $printUrl))
   : goNextStep('discount');
 }

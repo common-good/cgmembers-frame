@@ -278,7 +278,7 @@ function doit(what, vs) {
     break;
 
   case 'posts':
-    $('.form-item-radius .btn').click(function () { // click the Go button
+    $('.form-item-cat .btn').click(function () { // click the Go button
       var q = {};
       'locus radius latitude longitude zip'.split(' ').forEach(function (item, i) {q[item] = $('#edit-' + item).val();});
       $('#edit-submit').click();

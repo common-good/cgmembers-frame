@@ -1,4 +1,13 @@
-2020-03-20
+2020-03-21 feature/geo-tweaks
+. fixed mysql calculation of distance between two points
+. improved formatting of posts list
+. fixed handling of radius limits in posts selection
+. a couple other little bugs in posts
+. message now when there are no posts to show
+. improved posts messaging
+. select can now be required
+
+2020-03-20 feature/post-geosearch
 . fixed a problem with message on company account page
 . reworked setlocus
 . fixed bug in setCook

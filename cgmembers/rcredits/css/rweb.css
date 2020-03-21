@@ -541,10 +541,14 @@ body.page-partner blockquote {font-size:14px;}
 #frm-posts input#edit-radius,
 #frm-posts input#edit-email {max-width:250px;}
 
-#frm-posts #edit-radius {display:inline-block;}
+#frm-posts #edit-radius,
+#frm-posts #edit-cat {display:inline-block; margin-right:10px;}
 
-#frm-posts #tab-offers table a {color:#2fa4e7;}
-#frm-posts #tab-offers table a:hover {color:silver;} 
+#frm-posts .form-item-locus .help-block {margin-bottom:0;}
+
+#frm-posts .ui-tabs-panel {padding:10px 2px;}
+#frm-posts .ui-tabs-panel table a {color:#2fa4e7;}
+#frm-posts .ui-tabs-panel table a:hover {color:silver;} 
 
 #frm-posts .emergency {font-weight:bold; color:red;}
 

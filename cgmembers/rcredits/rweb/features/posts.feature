@@ -11,9 +11,7 @@ Scenario: Someone visits the posts page
   | Where  |    |    |
   | Radius | 10 | Go |
   And without:
-  | Choose a |
   | Post a   |
-  | Category |
 
 Scenario: Someone submits a locus
   When someone confirms "community/posts" with:
@@ -107,13 +105,13 @@ Scenario: Someone views the details of an offer
   | Who             | Abe |
   | Offer           | (In emergency) fish |
   | Details         | big one |
-  | Message to Send | max 200 characters |
+  | Message to Send | Max 200 characters |
   | Your Email      | |
   
 Scenario: Someone replies to an offer
   Given these "posts":
   | postid | type  | item | details | cat  | exchange | emergency | radius | confirmed | pid | created | end     |* 
-  | 1      | offer | fish | big one | food | 0        | 1         | 3      | 1         | 1   | %now    | %now+3d |
+  | 1      | offer | fish | big one | food | 0        | 1         | 26     | 1         | 1   | %now    | %now+3d |
   And these "people":
   | pid         | 1 |**
   | displayName | Abe |

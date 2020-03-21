@@ -2360,8 +2360,8 @@ function emailtag($email = NULL, $subject = '', $body = '') {
   foreach (['subject', 'body'] as $k) if ($$k) $$k = "$k=" . urlencode($$k) . '&';
   return "a href=\"mailto:$email?$subject$body\" target=\"_blank\"";
 }
-function btn($href, $text, $style = 'primary', $size = 'xs', $extras = []) {
-  return '<' . atagB($href, $style, $size, $extras) . ">$text</a>";
+function btn($href, $text, $style = '', $size = '', $extras = []) {
+  return '<' . atagB($href, $style ?: 'primary', $size ?: 'xs', $extras) . ">$text</a>";
 }
 function lnk($href, $text, $extras = []) {return '<' . atag($href, $extras) . ">$text</a>";}
 function doLnk($class, $text, $data = NULL, $extras = []) {return w\lnk('', $text, compact('class', 'data') + $extras);}
