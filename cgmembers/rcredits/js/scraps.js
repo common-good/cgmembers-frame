@@ -303,8 +303,9 @@ function doit(what, vs) {
     $('#cat').selectmenu();
     $('.limit-list').change(function () {
       var cat = $(this).find(':selected').text();
-      $(this).find('#tabs tr[class]').hide();
-      $(this).find('#tabs tr[class="' + cat + '"]').show();
+      $(this).parents('table').find('tr').hide();
+      $(this).parents('table').find('tr').first().show();
+      $(this).parents('table').find('tr.' + cat).show();
     });
     break;
     

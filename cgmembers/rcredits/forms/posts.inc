@@ -110,7 +110,7 @@ function postList($type, $lat, $lon, $zip, $radius) {
       AND s.created <= :NOW
       AND IFNULL(s.end, :NOW) >= :NOW
       AND s.confirmed
-      AND 1 or IF((latitude=0 AND longitude=0) OR (:lat=0 AND :lon=0), 
+      AND IF((latitude=0 AND longitude=0) OR (:lat=0 AND :lon=0), 
             MID(p.zip,1,3) = MID(:zip,1,3), 
             $distance < LEAST(IFNULL(s.radius, :radius), :radius)
           )
@@ -130,7 +130,7 @@ X;
   }
   
   if (count($rows) == 1) $rows[] = tr('<tr class="none"><td colspan="3">%none</td></tr>', 'none', t('There are not yet any %types within %radius miles of that address.', compact(ray('type radius'))));
-
+  
   return join("\n", $rows);
 }
 
