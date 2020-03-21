@@ -97,9 +97,10 @@ function varIs($k, $v) {
 function fixFlags($flags) {
   global $testOnly;
 
-  if (!@$flags) return 0; elseif (is_numeric($flags)) return $flags + 0;  
+  if (empty($flags)) return 0; elseif (is_numeric($flags)) return $flags + 0;  
   $res = 0;
-  foreach (ray($flags) as $one) $res |= u\bit(u\consta('b', $one));
+
+  foreach (ray($flags) as $one) if ($one) $res |= u\bit(u\consta('b', $one));
 // NO! fails for r_txs and r_relations flags  if ($res & u\bit(B_OK)) $res |= u\bit(B_MEMBER);
   return $res;
 }    
@@ -533,7 +534,7 @@ function doMembersHave($info) {
   fixData($info, TRUE);
   if ($testOnly) {
     foreach ($info as $k => $v) if ($v != '?') {
-      if (in($k, R_DATE_FLDS) and abs($a->o($k)-$v) < SAME_TIME) continue;
+      if (in($k, R_DATE_FLDS) and sameTime($a->o($k), $v)) continue;
       if (t\badEq("db $k", $a->o($k), $v, $id)) return FALSE;
     }
     return TRUE;
@@ -1592,6 +1593,10 @@ function fixState($state, $country) {
 	return compact(ray('state country'));
 }
 
+function getLocus($q) {
+  return $q == ', Greenfield, MA ' ? [42.3791167, -73.2819463, '01301'] : FALSE;
+}
+
 /*
 function fixStateAndCountry(&$state, &$country) {
   global $testOnly;
@@ -1614,7 +1619,7 @@ function log($msg) {if (test()) u\log($msg, 'debug');}
 function that($thing) {global $thatThing; return $thatThing[$thing];}
 function dosayFilename($type) {return LOG_DIR . "dosay-$type.txt";}
 function goodsBit($s) {return $s == 'goods' ? "1" : ($s == 'cash' ? "0" : "ERROR");} // no 3rd why for rSmart
-function approxTime($a, $b) {return t\eq($a, $b, 10000);}
+function sameTime($a, $b) {return t\eq($a, $b, SAME_TIME);}
 function rewarding() {return ctty('aab')->cttyRewardy;}
 function ray2assoc($ray) {foreach ($ray as $one) $res[$one[0]] = $one[1]; return @$res ?: [];}
 function doCode($code = '') {if ($code) file_put_contents(DOCODE_FLNM, $code); else return file_get_contents(DOCODE_FLNM);}

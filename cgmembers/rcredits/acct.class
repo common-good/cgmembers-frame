@@ -968,17 +968,10 @@ EOF;
     }
 
     // no current task (nothing to be done next)
-    if ($a->member) {
-      if ($stepDone) {
-/*        foreach (ray(S_MEM_TASKS) as $k) {
-          if (in($stepDone, r\taskSteps($k)) and $a->stepsDone($k)) $msg .= "|$k member"; // ack
-        } */
-        $a->update('stepsLeft task', '', '');
-      } else {
-        $approval = $a->co ? 'company approval' : 'individual approval';
-        $msg .= "setup complete|$approval|join thanks"; // show on display, not on done
-//        if (!$a->co and !$a->stepsDone('card')) $msg .= '|no card member'; // suggest the card step
-      }
+    if ($a->member and !$a->ok) {
+      $a->update('stepsLeft task', '', '');
+      $approval = $a->co ? 'company approval' : 'individual approval';
+      $msg .= "|setup complete|$approval|join thanks"; // show on display, not on done
     }
     return 'summary';
   }
@@ -1518,25 +1511,11 @@ X;
     $a = $this;
     if (!is_null($lat)) return $a->update('latitude longitude', $lat, $lon);
     
-    $q = "$a->address, $a->city, " . r\realState($a->state) . " $a->zip";
-//    if (TRUE or test() and !$a->city) $q = $a->zip;
-    $params = ray('q key', $q, GEOCODE_KEY);
-/*
-    $params = ray('street city state', $a->address, $a->city, r\realState($a->state)); // US Census
-    if (!$matches = (array) @$res->result->addressMatches) return r\tellAdmin(t('setLocus <%a>returned</a> no matches', 'a', w\atag($url))); // US Census
-    $coods = @$matches[0]->coordinates;
-    $coods = [$coods->y, $coods->x];
-    */
-    if (!$res = file_get_contents($url = GEOCODE_URL . http_build_query($params))) return r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)));
-    $res = json_decode($res);
-    foreach (nn($res->results, []) as $one) u\setDft($coods[$one->confidence], $one->geometry); // don't overwrite with later same confidence
-
-    if (!nn($coods)) {
+    if (!$latlon = u\getLocus($a->address, $a->city, $a->state, $a->zip)) {
       $a->setRisk('addrOff');
-      return r\tellAdmin(t('setLocus <%a>returned</a> no match', 'a', w\atag($url)));
+      return r\tellAdmin(t('setLocus <%a>returned</a> no match', '_a', w\atag($url)));
     }
-    $best = max(array_keys($coods));
-    $a->update('latitude longitude', $coods[$best]->lat, $coods[$best]->lng);    
+    $a->setLocus($latlon[0], $latlon[1]);
   }    
    
   /**

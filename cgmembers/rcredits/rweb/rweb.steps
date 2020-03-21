@@ -323,6 +323,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST joint AMemberRequestsAJointAccount
  *     TEST joint AMemberRequestsTwoJoinsAtOnce
  *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
+ *     TEST posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  *     TEST relations AMemberAddsARelation
  *     TEST signin AMemberAsksForANewPasswordForACompany
  *     TEST signup AMemberRegistersAgain
@@ -368,6 +369,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
+ *     TEST posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  *     TEST relations AMemberTriesToAddARelationWithSelf
  *     TEST relations AMemberTriesToAddARelationAgain
  *     TEST showrecurs AMemberStopsARecurringTransaction
@@ -410,6 +412,7 @@ function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
+ *     TEST posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  *     TEST signin AMemberAsksForANewPasswordForUsername
  *     TEST signin AMemberAsksForANewPasswordForAccountID
  *     TEST signin AMemberAsksForANewPasswordForEmail
@@ -515,7 +518,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST paybutton AMemberClicksAPayWithCommonGoodButtonWithVariableAmount
  *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
  *     TEST posts SomeoneVisitsThePostsPage
- *     TEST posts SomeoneSubmitsAZipcode
+ *     TEST posts SomeoneSubmitsALocus
  *     TEST posts SomeonePostsAnOffer
  *     TEST posts SomeoneViewsTheDetailsOfAnOffer
  *     TEST posts SomeoneRepliesToAnOffer
@@ -574,6 +577,8 @@ function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWit
  *
  * in: TEST custstatement ACompanyLooksAtACustomerStatement
  *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
+ *     TEST posts SomeoneSubmitsALocus
+ *     TEST posts SomeoneRepliesToAnOffer
  *     TEST preferences AMemberVisitsThePreferencesPage
  *     TEST preferences ACompanyAgentVisitsThePreferencesPage
  *     TEST relations ItsComplicated
@@ -1950,13 +1955,14 @@ function companyFlags($flags) {return t\companyFlags($flags);}
  * in: MAKE posts SomeoneVisitsThePostsPage
  *     MAKE posts SomeonePostsAnOffer
  *     MAKE posts SomeoneViewsTheDetailsOfAnOffer
+ *     MAKE posts SomeoneRepliesToAnOffer
  */
 function someoneVisits($page) {return t\memberVisitsPage('?', $page);}
 
 /**
  * someone confirms (ARG) with: (ARG)
  *
- * in: MAKE posts SomeoneSubmitsAZipcode
+ * in: MAKE posts SomeoneSubmitsALocus
  *     MAKE posts SomeonePostsAnOffer
  *     MAKE posts SomeoneEntersPersonalDataAfterPostingAnOffer
  *     MAKE posts SomeoneRepliesToAnOffer
@@ -1967,10 +1973,30 @@ function someoneConfirmsWith($page, $values) {return t\completeForm('?', $page, 
 /**
  * cookie (ARG) is (ARG)
  *
- * in: TEST posts SomeoneSubmitsAZipcode
+ * in: TEST posts SomeoneSubmitsALocus
+ *     TEST posts SomeonePostsAnOffer
+ *     BOTH posts SomeoneRepliesToAnOffer
  */
 function cookieIs($nm, $v) {
   global $testOnly;
+
   if (!$testOnly) r\setCook($nm, $v);
   return ($_COOKIE[$nm] == $v);
+}
+
+/**
+ * someone visits (ARG) where code is: (ARG)
+ *
+ * in: MAKE posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
+ */
+function someoneVisitsWhereCodeIs($page, $code) {
+  global $testOnly; if ($testOnly) return FALSE;
+
+  extract($code = $code[0]);
+  foreach (ray('posts:postid, messages:id') as $tnm => $idnm) if (nn($code[$idnm])) {
+    $dt = db\get('created', $tnm, "$idnm=" . $code[$idnm]);
+    if (t\sameTime($dt, $created)) $code['created'] = $dt;
+  }
+  $code = str_replace(CRYPT_FLAG, '', u\cry('P', http_build_query($code + ['word' => R_WORD])));
+  return t\memberVisitsPage('?', tr($page, compact('code')));
 }

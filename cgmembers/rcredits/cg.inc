@@ -569,7 +569,7 @@ function setCook($key, $value, $expires = NULL, $raw = FALSE) {
   if (test()) return $value;
 
   u\setDft($expires, now() + 365250 * DAY_SECS);
-	$func = $raw ? 'setcookie' : 'setrawcookie';
+	$func = $raw ? 'setrawcookie' : 'setcookie';
   $res = $func($key, $value, (int) $expires, '/'); // make it easy (fails without '/')
 	u\EXPECT($res, 'cookie failed');
   return $value;

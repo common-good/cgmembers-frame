@@ -83,13 +83,14 @@ function showDiscounts() {
 	$subtext = t('as of %today', 'today', u\fmtDate(NOW));
 	$fields = ray('company amount on end for left');
   $hdrs = u\tableRow(ray('Company,Discount,On,Ending,For,Uses&nbsp;Left'));
+  $nearby = tr('%DISTANCE_BETWEEN<%NEIGHBOR_MAX');
 	
   $sql = <<< X
   	SELECT DISTINCT u.uid,amount,`on`,end,ulimit,c.:IS_SOME AS some,
       (SELECT SUM(1) FROM txs t WHERE t.relType='D' AND t.rel=c.coupid AND t.uid2=:myid) AS used
     FROM r_coupons c JOIN users u ON u.uid=c.fromId 
     LEFT JOIN r_coupated d USING(coupid)
-		WHERE (u.community=:ctty OR :DISTANCE_BETWEEN<:NEIGHBOR_MAX) 
+		WHERE (u.community=:ctty OR $nearby) 
     AND NOT c.:IS_GIFT AND (NOT c.:IS_SOME OR d.uid=:myid) AND (end=0 OR end>:NOW) AND start<=:NOW
 		ORDER BY end=0, end
 X;

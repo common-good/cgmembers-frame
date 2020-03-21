@@ -59,7 +59,7 @@ function directoryList($which, $region) {
   if (!$res) return participatingCompanies(''); // nothing in that area
   
   extract($res); // get lat,lon
-  $regionCrit = ':DISTANCE_BETWEEN<:NEIGHBOR_MAX OR ' . $stateCrit;
+  $regionCrit = tr('%DISTANCE_BETWEEN<%NEIGHBOR_MAX OR ') . $stateCrit;
 
   $which = u\ignoreSuffix($which, 'ants ant ian es ers ing er or ion s');
   $which = str_replace(' ', '%', \db_like(" $which ")); // allow abbreviations of each word

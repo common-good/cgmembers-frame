@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-define('R_VERSION', '3.52d'); // software version
+define('R_VERSION', '3.52e'); // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -158,6 +158,14 @@ define('R_SHARING_MSG', t('sharing rewards with CGF'));
 define('ICLUB_TITHE', .1); // fraction of profits that go to the community and the common good
 define('USERNAME_MAX_LENGTH', '100'); // max length of "name" field
 
+define('LOCUS_CITYST', -1); // means locus is city/st (so don't use lat/lon)
+define('LOCUS_PARTZIP', -2); // means locus is partial or whole zipcode (so don't use lat/lon)
+define('LOCUS_BAD', -3); // means locus is bad format
+define('LOCUS_ZIP', -4); // means locus cannot be found so just zip is returned
+//    $zippat = "(?:$st,?\\s?)?(\\d{5})(-\\d{4})?";
+define('LOCPAT_PARTZIP', '|^\\d{1,5}$|');
+define('LOCPAT_CITYST', '|^([^,/\\s]+[^,/]+)\\s*[,/]?([a-zA-Z]{2})$|');
+
 define('R_ADMIN_CAN_MANAGE_CTTYS', TRUE); // should be false once communities can manage themselves
 define('R_CRON_PERIOD', 5*60); // how many seconds between cron runs (must divide an hour evenly)
 define('R_MAX_TASK_TIME', 1*60); // what's the longest a queued cron task might take
@@ -195,7 +203,11 @@ define('MAX_ID_SIZE', 10); // max ID size in MB
 define('GEOCODE_URL', 'https://api.opencagedata.com/geocode/v1/json?'); // use in acct::setLocus()
 define('MI_PER_DEGREE', 69); // varies from 68.703 at the equator to 69.407 at the poles
 define('NEIGHBOR_MAX', 40); // how far away (in miles) can a member see names of other individual members?
-define('DISTANCE_BETWEEN', 'SQRT(DEGREES(ACOS(LEAST(1.0, COS(RADIANS(latitude)) * COS(RADIANS(:lat)) * COS(RADIANS(longitude - :lon)) + SIN(RADIANS(latitude)) * SIN(RADIANS(:lat)))))) * ' . MI_PER_DEGREE); // distance from other, in miles
+define('DISTANCE_BETWEEN', 'DEGREES(ACOS(LEAST(1.0, COS(RADIANS(latitude))
+  * COS(RADIANS(:lat))
+  * COS(RADIANS(longitude - :lon))
+  + SIN(RADIANS(latitude))
+  * SIN(RADIANS(:lat))))) * ' . MI_PER_DEGREE); // distance from other, in miles (requires pre-processing)
 define('SIGNUP_PARTNERS', 'cooppower nyccec'); // these organizations sign people up for Common Good
 
 define('R_URL_SLASH', '%_%'); // Drupal gets confused by slashes in a url, even if urlencoded
@@ -580,7 +592,7 @@ $GLOBALS['emailSubjects'] = array(
 	'annual-gift' => t('your chosen annual gift to %PROJECT'),
   'confirm-post' => t('Confirm your post to %PROJECT Offers & Needs'),
   'confirm-message' => t('Confirm your message'),
-  'item-message' => t('Response to your Offers & Needs post'),
+  'post-message' => t('Response to your Offers & Needs post'),
 );
 
 $GLOBALS['topics'] = array( // topics for 'message' email
