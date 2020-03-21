@@ -155,7 +155,7 @@ function balanceAsOf($uids, $date=NULL) {
 function memberRay($myid, $aid, $coOnly = FALSE) {
   if (!$a = r\acct($myid, $aid)) return [];
 //  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : "state=$a->state OR community=$a->community OR :IS_CO");
-  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : "(:DISTANCE_BETWEEN<:NEIGHBOR_MAX OR community=$a->community OR :IS_CO)");
+  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : tr("(%DISTANCE_BETWEEN<%NEIGHBOR_MAX OR community=$a->community OR :IS_CO)"));
   if (isDEV) $where = str_replace(DISTANCE_BETWEEN, '0', $where); // no lat/lon on dev machines yet
   $subs = compact('myid');
   if (!$coOnly and !$a->admin and !isDEV) $subs += ray('lat lon', $a->latitude, $a->longitude);
@@ -898,7 +898,7 @@ function identify($who, $mya, $paying, $self_message = 'no self-trading') {
   }
   if ($paying) $where .= ' AND :IS_OK';
   if (!$mya->admin and !$mya->isAdmin2) {
-    $where .= ' AND (:IS_CO OR :DISTANCE_BETWEEN<:NEIGHBOR_MAX)'; // restrict to nearby: must be preprocessed by u\SUBS()
+    $where .= tr(' AND (:IS_CO OR %DISTANCE_BETWEEN<%NEIGHBOR_MAX)'); // restrict to nearby
     list ($lat, $lon) = $mya ? [$mya->latitude ?: 0, $mya->longitude ?: 0] : [0, 0]; // avoid NULL (PHP bug?)
     $subs += compact(ray('lat lon'));
   }

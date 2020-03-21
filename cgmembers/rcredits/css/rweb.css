@@ -133,7 +133,7 @@ nav.navbar.navbar-inverse .container {max-height:50px;}
   #main .section {margin:0 !important;}
 }
 
-#page-wrapper {width:100%; max-width:100; background-color:white;} /* not max-width:961px */
+#page-wrapper {width:100%; max-width:100%; background-color:white;} /* not max-width:961px */
 #header {height:60px;}
 #main #content {width:100%; float:none; margin:0;}
 #edit-all {margin:0; padding:0;}
@@ -537,11 +537,15 @@ body.page-partner blockquote {font-size:14px;}
 #frm-posts select#edit-state,
 #frm-posts input#edit-zip,
 #frm-posts input#edit-phone,
-#frm-posts input#edit-uid {max-width:250px;}
+#frm-posts input#edit-locus,
+#frm-posts input#edit-radius,
+#frm-posts input#edit-email {max-width:250px;}
+
+#frm-posts #edit-radius {display:inline-block;}
+
 #frm-posts #tab-offers table a {color:#2fa4e7;}
 #frm-posts #tab-offers table a:hover {color:silver;} 
 
-#frm-posts #edit-zip {width:250px; display:inline-block;}
 #frm-posts .emergency {font-weight:bold; color:red;}
 
 /* FAILS #frm-posts .form-item-zip.ziptogo .control-data,

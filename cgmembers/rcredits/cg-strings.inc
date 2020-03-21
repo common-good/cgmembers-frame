@@ -46,6 +46,7 @@ $GLOBALS['tStrings'] = array(
   'not saved' => t('No change has been made to your information.'),
 //  'payment accepted' => t('%RCREDITS payment accepted. In exchange, us%amount will be refunded to the payer, from your account.'), // UNUSED
   'confirm by email' => t('We sent you an email with a link to click to confirm this %thing.'),
+  'message sent' => t('Your message has been sent.'),
 	'donation replaces' => t('If you choose a new recurring donation, it will replace your existing %period donation of %amt.'),
   'charge accepted' => t('Your charge to %who\'s account has been approved (it is no longer in dispute). No action is necessary.'),
   'gift successful' => t('Thank you for your donation!'),

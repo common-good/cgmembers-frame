@@ -278,16 +278,26 @@ function doit(what, vs) {
     break;
 
   case 'posts':
-//    $('.form-item-zip .btn').click(function () {$('#edit-submit').click();});
-    $('.form-item-zip .btn').click(function () {
-      location.href = $(this).attr('href') + '/op=gotzip&zip=' + $('#edit-zip.ziptogo').val();
+    $('.form-item-radius .btn').click(function () { // click the Go button
+      var q = {};
+      'locus radius latitude longitude zip'.split(' ').forEach(function (item, i) {q[item] = $('#edit-' + item).val();});
+      $('#edit-submit').click();
+//      location.href = $(this).attr('href') + '/op=top&' + $.param(q);
       return false; // cancel original link click
     });
-    $('#edit-zip.ziptogo').change(function () {$('#edit-submit').click();});
-/*    if (vs['active']) {
-      $('#' + vs['active']).attr('href', '#tab-' + vs['active']);
-      $('#tabs').tabs({active: vs['active']=='offer' ? 2 : 3});
-    } */
+
+    $('#edit-locus').change(function () {
+      $('#edit-latitude').val(0);
+      $('#edit-longitude').val(0);
+      $('#edit-zip').val('');
+      get('getLocus', {address:v['address'], city:v['city'], state:v['state'], zip:v['zip']}, function (j) {
+        $('#edit-latitude').val(j.latitude);
+        $('#edit-longitude').val(j.longitude);
+        $('#edit-zip').val(j.zip);
+//        $('#edit-submit').click();
+      });
+    });
+    
     $('#tabs').tabs();
     $('#tabs ul li a[href^="http"]').unbind('click').click(function () {location.href = $(this).attr('href');});
     $('#cat').selectmenu();

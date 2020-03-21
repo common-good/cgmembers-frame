@@ -152,12 +152,11 @@ Scenario: A company account manager creates a discount
   | company   | Our Pub |
   | gift      | |
   | forOnly   | |
-  And we say "status": "info saved"
   And we show "Account Summary" with:
   | Next Steps |
   | Invite |
   | Give   |
-  And we say "status": "setup complete|company approval|join thanks"
+  And we say "status": "info saved|setup complete|company approval|join thanks"
   And member ".ZZC" steps left ""
   And we tell ".ZZC" CO "New Member (Our Pub)" with subs:
   | quid | status |*

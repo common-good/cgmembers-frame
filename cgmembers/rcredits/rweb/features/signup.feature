@@ -203,7 +203,7 @@ Scenario: A member invites
   | Next Steps |
   | Invite |
   | Give   |
-  And we say "status": "setup complete|individual approval|join thanks"
+  And we say "status": "info saved|setup complete|individual approval|join thanks"
   And member ".ZZB" steps left ""
   And we tell ".ZZB" CO "New Member (Bea Two)" with subs:
   | quid | status |*
