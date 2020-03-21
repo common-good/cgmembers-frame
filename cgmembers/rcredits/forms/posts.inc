@@ -45,7 +45,7 @@ function formPosts($form, &$sta, $args = '') {
   $subtext = t('<p>In our %PROJECT Economy we want to make sure everyone has what they need, with no one left behind.  What help do <i>you</i> need? What can you offer others (free! no ads for paid help)?</p>
     <!--p>If you are interested in giving or receiving free STUFF, try <%a>freecycle.org</a></p-->
     <p>If you know someone in need who has no Internet access, offer to post something for them. And tell your neighbors about this board!</p>
-    <p>Please email comments and suggestions to us at %CGF_EMAIL.</p>', '_a', atag('http://freecycle.org'));
+    <p>For an example of how this works in practice, try "Greenfield, MA" with a radius of 10. Please email comments and suggestions to us at %CGF_EMAIL.</p>', '_a', atag('http://freecycle.org'));
 
   $locus = textFld(REQ . t('Where:'), [t('Full address OR City,ST'), t('Type an address or just City, ST.')], dft($locus));
   $radius = textFld(REQ . t('Radius:'), [t('Max distance from address')], dft($radius ?: 10) + suffix(t('miles') . btn("$base_url/community/posts", t('Go'), '', 'sm')));
