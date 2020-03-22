@@ -279,30 +279,14 @@ function doit(what, vs) {
 
   case 'posts':
     $('.form-item-radius .btn').click(function () { // click the Go button
-//      var q = {};
-//      'locus radius latitude longitude zip'.split(' ').forEach(function (item, i) {q[item] = $('#edit-' + item).val();});
       $('#edit-submit').click();
-//      location.href = $(this).attr('href') + '/op=top&' + $.param(q);
       return false; // cancel original link click
     });
-
-/*
-    $('#edit-locus').change(function () {
-      $('#edit-latitude').val(0);
-      $('#edit-longitude').val(0);
-      $('#edit-zip').val('');
-      get('getLocus', {locus:v['locus']}, function (j) {
-        $('#edit-latitude').val(j.latitude);
-        $('#edit-longitude').val(j.longitude);
-        $('#edit-zip').val(j.zip);
-//        $('#edit-submit').click();
-      });
-    });
-    */
     
     $('#tabs').tabs();
     $('#tabs ul li a[href^="http"]').unbind('click').click(function () {location.href = $(this).attr('href');});
     $('#cat').selectmenu();
+    
     $('.limit-list').change(function () {
       var cat = $(this).find(':selected').text();
       $(this).parents('table').find('tr').hide();
@@ -311,6 +295,19 @@ function doit(what, vs) {
       $(this).parents('table').find('tr.' + cat).show();
     });
     break;
+    
+  case 'post-post':
+    $('#edit-cat').change(function () {setCookie(vs['type'] + 'cat', $(this).val());});
+    break;
+
+  case 'post-who':
+/* Oops, people record does not exist yet   $('#frm-posts').submit(function () {
+      var params = {}; // build arguments to getLocus
+      'pid address city state zip'.split(' ').forEach(function (item, i) {params[item] = $('#edit-' + item).val();});
+      post('getLocus', params, null);
+      return true; // also really submit the form
+    });
+    break; */
     
   case 'signup':
     var form = $('#frm-signup');

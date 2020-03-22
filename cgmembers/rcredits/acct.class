@@ -1511,11 +1511,12 @@ X;
     $a = $this;
     if (!is_null($lat)) return $a->update('latitude longitude', $lat, $lon);
     
-    if (!$latlon = u\getLocus($a->address, $a->city, $a->state, $a->zip)) {
+    list ($lat, $lon, $zip) = u\getLocus($a->address, $a->city, $a->state, $a->zip);
+    
+    if (!$lat and !$lon) {
       $a->setRisk('addrOff');
       return r\tellAdmin(t('setLocus <%a>returned</a> no match', '_a', w\atag($url)));
-    }
-    $a->setLocus($latlon[0], $latlon[1]);
+    } else $a->setLocus($lat, $lon);
   }    
    
   /**

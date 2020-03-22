@@ -1,3 +1,8 @@
+2020-03-22 feature/async-geo
+. cron now fills in missing lat/lon in people records
+. cookies track last offer/need category
+. textual improvements
+
 2020-03-21 feature/async-geosearch
 . time limit on syncronous geosearch
 . disabled async geosearch

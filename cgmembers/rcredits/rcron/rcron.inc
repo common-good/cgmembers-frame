@@ -147,6 +147,16 @@ function periodic() {
 
   often('hour', '00');
   often('day', R_DAILY_HOUR); // longer periods get queued in lessOften(), so notices are last
+  
+  $sql = <<< X
+    SELECT * FROM (
+      SELECT 'users' AS tnm, uid, address, city, state, zip AS id 
+        FROM users WHERE risks&(1<<:K_ADDROFF)=0 AND uid NOT :CANONIC
+      UNION SELECT 'people' AS tnm, pid AS id, address, city, state, zip
+    ) p
+    WHERE latitude=0 AND longitude=0 AND city IS NOT NULL AND state<>0
+X;
+  queueEach('geocode', $sql);  
 }
 
 function everyHour() { // stuff to do every hour
@@ -158,13 +168,23 @@ function everyHour() { // stuff to do every hour
   
   db\q('DELETE FROM cache_form WHERE created<:REQUEST_TIME-:HOUR_SECS'); // clean up form cache (is this needed?)
 
-//  $uids = db\col('uid', 'users', 'latitude=0 AND longitude=0 AND (uid<0 OR uid>:CANONIC_ACCTS)') ?: [];
-  $sql = 'SELECT uid FROM users WHERE latitude=0 AND longitude=0 AND city IS NOT NULL AND state<>0 AND risks&(1<<:K_ADDROFF)=0 AND uid NOT :CANONIC';
-  queueEach('geocode', $sql);  
   // r\tellAdmin('hourly cron');
 }
 
-function geocode($item) {r\acct($item['uid'])->setLocus();}
+function geocode($item) {
+  extract(just('tnm id address city state zip', $item));
+  
+  if ($tnm == 'users') return r\acct($id)->setLocus();
+  
+  if ($tnm == 'people') {
+    list ($lat, $lon, $zot) = u\getLocus($address, $city, $state, $zip);
+    
+    if (!$lat or !$lon) {
+      $a->setRisk('addrOff');
+      return r\tellAdmin(t('setLocus <%a>returned</a> no match', '_a', w\atag($url)));
+    } else $a->setLocus($lat, $lon);
+  }
+}
 
 /**
  * Account checks to do every hour.
