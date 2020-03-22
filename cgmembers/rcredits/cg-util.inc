@@ -961,17 +961,17 @@ function tableRow($row) {
  * call with either getLocus(location) or getLocus(addr, city, statecode, zip)
  * @param string $q: either the whole address or just number and street
  * @param string $city
- * @param int $st: state code
+ * @param int $state: state code
  * @param string $zip
  * @return [lat, lon, zip] -- [0, 0, ''] if none found
  */
-function getLocus($q, $city = '', $st = '', $zip = '') {
+function getLocus($q, $city = '', $state = '', $zip = '') {
   global $channel;
   
   if ($channel == TX_WEB) ini_set('default_socket_timeout', 8);
   if (test()) return f('t.getLocus', $q);
 
-  if ("$city$st$zip") $q .= tr(", $a->city, " . r\realState($state) . " $a->zip");
+  if ("$city$state$zip") $q .= tr(", $city, " . r\realState($state) . " $zip");
   $none = [0, 0, ''];
   $params = ray('q key', $q, GEOCODE_KEY);
   

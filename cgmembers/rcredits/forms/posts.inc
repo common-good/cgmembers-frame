@@ -26,9 +26,9 @@ define('VIPID', 'vipid'); // name of confirmed-email cookie (the VIP's people re
  */
 function formPosts($form, &$sta, $args = '') {
   global $base_url;
-  extract(just(TOP_FLDS . ' op code postid thing email', $args, NULL));
+  extract(just(TOP_FLDS . ' op code postid thing', $args, NULL));
 
-  foreach (ray(TOP_FLDS . ' email') as $k) {
+  foreach (ray(TOP_FLDS) as $k) {
     if ($$k) r\setCook($k, $$k); else $$k = nn($_COOKIE[$k]); // default from previous time (useful also in getWho)
     ${$k . '0'} = $$k; // remember initial values
   }
@@ -39,11 +39,11 @@ function formPosts($form, &$sta, $args = '') {
   if ($op == 'who') return getWho($args);
 
   // op = top or nothing
-  jsx('posts', 'active', $op);
+  jsx('posts');
 
   $title = t('Mutual Aid Offers & Needs');
-  $subtext = t('<p>In our %PROJECT Economy we want to make sure everyone has what they need, with no one left behind.  What help do <i>you</i> need? What can you offer others (free! no ads for paid help)?</p>
-    <p>If you know someone in need who has no Internet access, offer to post something for them. <span class="loud">And tell your neighbors about this board!</span></p>
+  $subtext = t('<p>In our %PROJECT Economy we want to make sure everyone has what they need, with no one left behind.  Enter your address, then <span class="loud">think about what you need and what you want to offer in each category</span>. Then get two neighbors to do the same! You will be delighted by the serendipity that results.</p>
+    <p>If you know someone in need who has no Internet access, offer to post something for them.</p>
     <p>Community organizers and programmers, contact us to collaborate or get administrative access. For an example of how this works in practice, try "Greenfield, MA 01330" with a radius of 10. Email comments and suggestions to %CGF_EMAIL.</p>', '_a', atag('http://freecycle.org'));
 
   $locus = textFld(REQ . t('Where:'), [t('Full address OR city/state/zip'), t('Your address (including zip) or just city, state, and zip.')], dft($locus));
@@ -135,11 +135,20 @@ X;
 
 /**
  * Input an offer or need.
+ * @param string $type: 
  */
-function getPost($op) {
-  $need = ($op == 'need');
+function getPost($type) {
+  extract(just('offercat needcat', $_COOKIE, NULL));
+  
+  jsx('post-post', 'type', $type);
+
+  $need = ($type == 'need');
+  $postCat = ($id = nn($_COOKIE[$type . 'cat'])) ? db\get('cat', 'post_cats', compact('id')) : '';
+  $lastCat = $postCat ? t('Your last %type post was in the "%postCat" category.', compact(ray('type postCat'))) : '';
+  $_confirm = vip('confirmed') ? '' : t('<p>You will also need to confirm your first post by email.</p>');
+  
   $title = $need ? t('Post a Need') : t('Post an Offer');
-  $subtext = t('<p>Do not put identifying information in the "What" or "Details". People contact you through the system, without knowing your full name or email address. You can be more specific when you reply to them.</p><p>You will also need to confirm your first post by email.</p>');
+  $subtext = t('<p>Think about what you %type in each category, one at a time. %lastCat</p><p>Do not put identifying information in the "What" or "Details". People contact you through the system, without knowing your full name or email address. You can be more specific when you reply to them.</p>%confirm', compact(ray('type lastCat _confirm')));
   $cat = selectFld(REQ . t('Category:'), '', '', catChoices(t('Choosed a category')));
   $item = textFld(REQ . t('What:'), [$need ? t('What you need') : t('What you\'re offering')], maxlen(40));
   $details = areaFld(REQ . t('Details:'), t('Max 200 characters'), maxlen(200));
@@ -150,7 +159,7 @@ function getPost($op) {
   $end = textFld(t('End Date:'), [t('mm/dd/yyyy'), t('When to stop listing this (you can also cancel it later)')]);
   $email = emailFld();
   $submit = submit(t('Post'));
-  $type = hidFld($op);
+  $type = hidFld($type);
   $frm = hidFld('post');
   
   return cgform(compact(ray('title subtext cat item details exchange emergency radius end email submit type frm')));
@@ -197,6 +206,8 @@ function getWho($args) {
   mb_parse_str($args, $ray);
   foreach(just(POST_FLDS . ' email ' . MESSAGE_FLDS, $ray) as $k => $v) $info[$k] = hidFld($v);
   extract(just('email', $info)); // because it's in CONTACT_FLDS
+
+  jsx('post-who');
   
   $title = t('Your Information');
   $subtext = t('<p>This information is required only the first time you post or contact someone.</p><p>Only your "display name" (first name or nickname) is shown to others. Your full name, address, email, and phone are not shown to anyone unless you choose "phone" or "text" as your preferred contact method (then just your phone number is displayed when someone asks to contact you about a specific post).</p>');
@@ -275,11 +286,11 @@ function formPosts_validate($form, &$sta) {
     if (!emailOkay($email, TRUE)) return;
     $chgFlds = 'email';
   } elseif ($frm == 'who') {
-    extract(just('zip phone address city state zip', $sta['input'], NULL));
+    extract(just('zip phone address city state zip type', $sta['input'], NULL));
     if ($err = u\badZip($zip)) return say($err, 'zip');
     if ($err = u\badPhone($phone)) return say($err, 'phone');
     if (u\poAddress($address)) return say('po in location', 'address');
-    list ($latitude, $longitude, $zot) = u\getLocus($locus);
+    list ($latitude, $longitude, $zot) = u\getLocus($address, $city, $state, $zip);
     if ($latitude == 0 and $longitude == 0) {
       if ($type == 'post') say(zipOnlyMsg(t('your post will be shown to anyone'), $zip));
     }
@@ -375,6 +386,6 @@ function vip($fld = 'pid') {
 }
 
 function catChoices($top) {return ['' => $top] + db\keyed('id,cat', 'post_cats', '1 ORDER BY sort');}
-function emailFld() {return textFld(REQ . t('Your Email:'), [t('Your email address')], dft(vip('email')));}
+function emailFld() {return textFld(REQ . t('Your Email:'), [t('Your email address')], dft(nn($_COOKIE['email']) ?: vip('email')));}
 function pVal($fld, $pid) {return db\get($fld, 'people', compact('pid'));}
 function zipOnlyMsg($specifics, $zip) {return t('We are unable to geolocate that address at this time, so %specifics in the "%zip3" Zip Code area.', 'specifics zip3', $specifics, substr($zip, 0, 3));}
