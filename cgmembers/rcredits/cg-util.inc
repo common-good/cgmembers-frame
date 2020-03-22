@@ -968,7 +968,7 @@ function tableRow($row) {
 function getLocus($q, $city = '', $state = '', $zip = '') {
   global $channel;
   
-  if ($channel == TX_WEB) ini_set('default_socket_timeout', 8);
+//  if ($channel == TX_WEB) ini_set('default_socket_timeout', 8);
   if (test()) return f('t.getLocus', $q);
 
   if ("$city$state$zip") $q .= tr(", $city, " . r\realState($state) . " $zip");
