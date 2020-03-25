@@ -1594,7 +1594,7 @@ function fixState($state, $country) {
 }
 
 function getLocus($q) {
-  return $q == ', Greenfield, MA ' ? [42.3791167, -73.2819463, '01301'] : FALSE;
+  return $q == 'Greenfield, MA' ? [42.3791167, -73.2819463, '01301'] : FALSE;
 }
 
 /*

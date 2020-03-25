@@ -18,16 +18,12 @@ Scenario: Someone submits a locus
   | locus          | radius | latitude | longitude |*
   | Greenfield, MA | 10     | 0        | 0         |
   Then we show "Mutual Aid Offers & Needs" with:
-  | Where    | Greenfield, MA |    |
-  | Radius   | 10    | Go |
-  And with:
   | Offers   | Needs | Post an Offer | Post a Need |
   And with:
   | Item | Details | |
   And with:
   | There are not yet any offers within |
   | There are not yet any needs within  |
-  
   And cookie "locus" is "Greenfield, MA"
   And cookie "radius" is "10"
   And cookie "latitude" is "42.3791167"
@@ -138,7 +134,11 @@ Scenario: Someone replies to an offer
   Then we show "Mutual Aid Offers & Needs" with:
   | Where    | Greenfield, MA |    |
   | Radius   | 100   | Go |
-  And with:
+
+  When someone confirms "community/posts" with:
+  | locus          | radius | latitude | longitude |*
+  | Greenfield, MA | 100    | 0        | 0         |
+  Then we show "Mutual Aid Offers & Needs" with:
   | Offers   | Needs | Post an Offer | Post a Need |
   And with:
   |          | Item    | Details | |

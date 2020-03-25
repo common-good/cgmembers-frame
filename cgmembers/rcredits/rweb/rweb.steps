@@ -1981,7 +1981,7 @@ function cookieIs($nm, $v) {
   global $testOnly;
 
   if (!$testOnly) r\setCook($nm, $v);
-  return ($_COOKIE[$nm] == $v);
+  return t\eq($_COOKIE[$nm], $v);
 }
 
 /**
