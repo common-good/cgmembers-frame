@@ -282,17 +282,24 @@ function doit(what, vs) {
       $('#edit-submit').click();
       return false; // cancel original link click
     });
+    break;
     
+  case 'post-tabs':
+// NO. use URL instead  $('#edit-back').click(function () {window.history.back(); return false;});
     $('#tabs').tabs();
     $('#tabs ul li a[href^="http"]').unbind('click').click(function () {location.href = $(this).attr('href');});
     $('#cat').selectmenu();
     
     $('.limit-list').change(function () {
       var cat = $(this).find(':selected').text();
-      $(this).parents('table').find('tr').hide();
-      $('tr.none').show();
-      $(this).parents('table').find('tr').first().show();
-      $(this).parents('table').find('tr.' + cat).show();
+      if (cat.startsWith('Category')) {
+        $(this).parents('.container').find('.row').show();
+      } else {
+        $(this).parents('.container').find('.row').hide();
+        $('.row.none').show();
+        $(this).parents('.container').find('.row').first().show();
+        $(this).parents('.container').find('.row.' + cat).show();
+      }
     });
     break;
     

@@ -3,6 +3,15 @@
 .debug {margin-bottom:8px;}
 .debug pre {margin:0; background-color:#fde8ec;}
 
+.container {display:table; width:100%;}
+.thead {display:table-header-group;}
+.tbody {display:table-row-group;}
+.row {display:table-row;}
+.cell {display:table-cell; padding:5px 8px;}
+
+.thead .row {background-color:#04488B; color:white;}
+.thead .cell {border-right:1px solid white;}
+
 @keyframes puff {
     from {opacity:0; font-size:0%;}
     to {opacity:1; font-size:100%;}
@@ -109,7 +118,7 @@ a.list-group-item:hover {background-color:#b4dcfe;} /* for non-dropdown menus */
 .submenu a.list-group-item,
 .submenu .list-group-item-heading {color:white !important; font-weight:normal; background:transparent;}
 /*nav.navbar.navbar-inverse .container {max-height:50px;}*/
-nav.navbar.navbar-inverse .container {max-height:50px;}
+nav.navbar.navbar-inverse .container {display:block; max-height:50px;}
 #navbar, .submenu .popover {
   background-image: linear-gradient(#04519b, #044687 60%, #033769);
   background-repeat: no-repeat;
@@ -527,6 +536,8 @@ body.page-partner blockquote {font-size:14px;}
 #frm-help #special-flag {font-size:100%; margin-bottom:20px;}
 
 /* Posts */
+#frm-posts .container {margin:0; padding:0; font-size:14px;}
+
 #frm-posts #edit-title,
 /* #frm-posts #edit-subtext {margin-bottom:0;} */
 #frm-posts #edit-buttons .control-data {text-align:center;}
@@ -541,11 +552,14 @@ body.page-partner blockquote {font-size:14px;}
 #frm-posts input#edit-radius,
 #frm-posts input#edit-email {max-width:250px;}
 
+#frm-posts #edit-back label {display:none;}
+#frm-posts .thead .cell {padding:0px 8px;}
+/*#frm-posts .row.none {column-span:all;}*/
+
 #frm-posts .k-category {padding:4px 0 4px 9px; width:140px;}
 #frm-posts .k-category select {padding:0; width:140px; box-shadow:none; -webkit-box-shadow:none;}
 #frm-posts .k-category select option {background-color:white; color:#111111; margin-top:-20px;}
-#frm-posts .limit-list {background-color:#757575; color:white; border:0; height:14px;}
-
+#frm-posts .limit-list {background-color:#04488B; color:white; border:0;}
 
 #frm-posts #edit-radius {display:inline-block; margin-right:5px;}
 #frm-posts .form-item-radius .btn {margin-left:5px;}
@@ -553,8 +567,8 @@ body.page-partner blockquote {font-size:14px;}
 #frm-posts .form-item-locus .help-block {margin-bottom:0;}
 
 #frm-posts .ui-tabs-panel {padding:10px 2px;}
-#frm-posts .ui-tabs-panel table a {color:#2fa4e7;}
-#frm-posts .ui-tabs-panel table a:hover {color:silver;} 
+#frm-posts .ui-tabs-panel .container a {color:#2fa4e7;}
+#frm-posts .ui-tabs-panel .container a:hover {color:silver;} 
 
 #frm-posts .emergency {font-weight:bold; color:red;}
 
