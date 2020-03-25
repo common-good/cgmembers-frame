@@ -1,3 +1,9 @@
+2020-03-25 feature post-format
+. formatting improvements in posts
+. improve reliability of geosearch by titlecasing request
+. added hooks for moderation and administration of posts
+. error checks for user modification of URLs
+
 2020-03-22 feature/async-geo
 . cron now fills in missing lat/lon in people records
 . cookies track last offer/need category
