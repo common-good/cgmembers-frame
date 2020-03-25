@@ -44,6 +44,10 @@ New features to do:
  
  */
 function formPosts($form, &$sta, $args = '') {
+  /* $title = t('Offers & Posts');
+  $subtext = t('We\'re sorry. This page is under maintenance for a few minutes. Try again a bit later please.');
+  return cgform(compact(ray('title subtext'))); */
+  
   global $base_url;
   extract(just(TOP_FLDS . ' op code postid thing email', $args, NULL));
 
@@ -157,7 +161,7 @@ X;
 
 ///     debug(u\showq($sql, compact(ray('type lat lon zip radius'))));
   $q = db\q($sql, compact(ray('type lat lon zip radius')));
-  foreach (ray(t('Category Item Details')) as $k) $rows[] = "<div class=\"cell\">$k</div>";
+  foreach (ray(t('category item details')) as $k) $rows[] = "<div class=\"cell k-$k\">" . ucfirst($k) . '</div>';
   $rows = ['<div class="thead"><div class="row">' . join('', $rows) . '</div></div>'];
   $rows[] = '<div class="tbody">';
   
@@ -193,7 +197,7 @@ function getPost($type) {
   $title = $need ? t('Post a Need') : t('Post an Offer');
   $typeThink = $need ? $type : t('want to offer');
   $subtext = t('<p>Think about what you %typeThink in each category, one at a time. %lastCat</p><p>Do not put identifying information in the "What" or "Details". People contact you through the system, without knowing your full name or email address. You can be more specific when you reply to them.</p>%confirm', compact(ray('typeThink lastCat _confirm')));
-  extract(postInputFlds($need));
+  extract(postInputFlds($type));
   $email = emailFld();
   $submit = submit(t('Post'));
   
@@ -203,9 +207,10 @@ function getPost($type) {
 /**
  * Return input fields common to creating or editing a post.
  */
-function postInputFlds($type, $dfts = []) {
+function postInputFlds($type0, $dfts = []) {
 
   extract(just(POST_INPUT_FLDS, $dfts, ''));
+  $type = $type0;
   $need = ($type == 'need');
   $cat = selectFld(REQ . t('Category:'), '', dft($cat), catChoices(t('Choose a category')));
   $item = textFld(REQ . t('What:'), [$need ? t('What you need') : t('What you\'re offering')], dft($item) + maxlen(40));
@@ -217,6 +222,7 @@ function postInputFlds($type, $dfts = []) {
   $emergency = boolFld(t('Emergency:'), $need ? t('This need is a short-term emergency.') : t('This offer is only for emergencies (such as 2 weeks of social distancing).'), dft($emergency));
   $radius = $need ? NULL : textFld(REQ . t('Radius:'), [t('Visibility radius'), t('Up to how many miles away do you want this seen? 10 usually covers neighboring towns. Use zero for "anywhere".')], dft($radius ?: 10) + suffix(t(' miiles')));
   $end = textFld(t('End Date:'), [t('mm/dd/yyyy'), t('When to stop listing this (you can also cancel it later)')], dft($end ? u\fmtDate($end, TRUE) : ''));
+
   $type = hidFld($type);
 
   return compact(ray(POST_INPUT_FLDS));
