@@ -144,7 +144,7 @@ function periodic() {
     r\tellAdmin('task timed out', $row); // shouldn't happen. Drupal's queue processing hangs until we delete.
     db\q('DELETE FROM queue WHERE id=:id', just('id', $row));
   }
-
+    
   often('hour', '00');
   often('day', R_DAILY_HOUR); // longer periods get queued in lessOften(), so notices are last
   
@@ -174,8 +174,8 @@ function everyHour() { // stuff to do every hour
 
 function geocode($item) {
   extract(just('tnm id address city state zip', $item));
-  
-  if ($tnm = 'users') {
+
+  if ($tnm == 'users') {
     $a = r\acct($id);
     $address = $a->address;
   }
@@ -183,7 +183,7 @@ function geocode($item) {
   list ($lat, $lon, $zot) = u\getLocus($address, $city, $state, $zip);
   if ($lat or $lon) {
     if ($tnm == 'people') {
-      return db\update('people', ray('pd latitude longitude', $id, $lat, $lon), 'pid');
+      return db\update('people', ray('pid latitude longitude', $id, $lat, $lon), 'pid');
     } else return $a->setLocus($lat, $lon); // users
   }
   

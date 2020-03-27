@@ -295,7 +295,7 @@ function ssnShow($a) {
   $name = $a->fullName . ($a->legalName == $a->fullName ? '' : "<br>$a->legalName");
   $rows[] = array(t('Data Given'), $name, u\fmtDate(is_numeric($a->dob) ? $a->dob: 0), r\location($a, TRUE), '', ''); // is_numeric check for admin without vKeyE
   $name = u\ssnName($one = (object) @$d['ssnnames']['ssnname']);
-  $dob = $one->dob ? u\fmtDate(strtotime($one->dob)) : ''; // arrives as an empty array if none
+  $dob = @$one->dob ? u\fmtDate(strtotime($one->dob)) : ''; // arrives as an empty array if none
   $rows[] = array(t('Found'), $name, $dob, @$d['deathsearchresults'] ? '<h1 color="red">DEAD</h1>' : '', '', '');
   
   $counties = [];
@@ -490,7 +490,7 @@ EOF;
           $details .= ' ' . w\btn('', t('flnm'), 'default', 'xs', ray('class data-flnm', 'filename', "CGach-$date.csv")) . ' ' . w\lnk("/sadmin/achs/date=$deposit&mark=0", t('download'));
         }
         if ($count) $details .= ' ' . ($deposit
-          ? w\btn("/sadmin/checks/way=In&date=$deposit&mark=0", t('checks'))
+          ? w\btn("/sadmin/checks/way=In&date=$deposit&mark=0&limit=$count", t('checks'))
           : w\btn('', t('...........'), 'default') // don't show undeposited checks (a recipe for disaster)
         );
       } else $dateDpy = $details = '';

@@ -552,8 +552,8 @@ body.page-partner blockquote {font-size:14px;}
 #frm-posts input#edit-radius,
 #frm-posts input#edit-email {max-width:250px;}
 
-/*#frm-posts #edit-back {display:inline-block; margin:0 0 -7px 0;} */
-#frm-posts #edit-search {display:none; margin:0 5px 15px 0; max-width:200px;} /* was display:inline */
+#frm-posts #edit-back {display:inline-block; margin:0 0 -7px 0;}
+#frm-posts #edit-search {display:inline; margin:0 5px 15px 0; max-width:200px;}
 #frm-posts #edit-back label {display:none;}
 #frm-posts #edit-back .control-data {width:auto;}
 
