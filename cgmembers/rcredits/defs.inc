@@ -106,6 +106,9 @@ define('FLOOR_DAYS', 183); // how many days to consider for credit line calculat
 
 define('REGION_DOMAIN', R_SERVER_ID . '.' . CG_DOMAIN);
 define('EMAILX', 'example.com'); // domain for unknown, placeholder, test, or example emails
+define('GFLD_LAT', 42.3791167); // Greenfield, MA latitude (in tests)
+define('GFLD_LON', -73.2819463); // Greenfield, MA latitude
+define('GFLD_ZIP', '01301'); // Greenfield, MA zipcode
 
 // Common Good Finance email and other data
 define('CGF_LEGALNAME', 'Society to Benefit Everyone, Inc.');

@@ -78,6 +78,44 @@ Scenario: Someone enters personal data after posting an offer
   And we say "status": "confirm by email" with subs:
   | thing | post |**
 
+Scenario: Someone confirms an offer once, twice
+  Given these "posts":
+  | postid | type  | item | details | cat  | exchange | emergency | radius | confirmed | pid | created | end     |* 
+  | 1      | offer | fish | big one | food | 0        | 1         | 3      | 0         | 1   | %today  | %now+3d |
+  And these "people":
+  | pid | displayName | fullName | address | city | state | zip   | phone        | email | method | confirmed |*
+  | 1   | Abe         | Abe One  | 1 A St. | Aville | MA  | 01001 | +14132530001 | a@b.c | text   | 0         |
+  When someone visits "community/posts/op=confirm&thing=post&code=%code" where code is:
+  | postid | created |*
+  | 1      | %today  |
+  Then we say "status": "post success"
+  
+  When someone visits "community/posts/op=confirm&thing=post&code=%code" where code is:
+  | postid | created |*
+  | 1      | %today  |
+  Then we redirect to "community/posts/op=show&postid=1"
+  And we show "Edit Post" with:
+  | Category:  | food |
+  | Who:       | Abe |
+  | Posted:    | %mdY |
+  | What:      | fish |
+  | Details:   | big one |
+  |            | Max 500 characters |
+  | Emergency: | |
+  | Radius:    | 10 miles |
+  | End Date:  | %mdY+3d |
+  | Update     | |
+
+  When someone confirms "community/posts/op=show&postid=1" with:
+  | cat   | item   | details | emergency | radius | end     |*
+  | rides | Boston | ASAP    | 1         | 5      | %mdY+5d |
+  Then these "posts":
+  | postid | type  | cat   | item | details | exchange | emergency | radius | confirmed | pid | created | end          |* 
+  | 1      | offer | rides | Boston | ASAP  | 0        | 1         | 5      | 1         | 1   | %now    | %daystart+5d |
+  And we show "Mutual Aid Offers & Needs" with:
+  | Offers   | Needs | Post an Offer | Post a Need |
+  And we say "status": "info saved"
+
 Scenario: Someone views the details of an offer
   Given these "posts":
   | postid | type  | item | details | cat  | exchange | emergency | radius | confirmed | pid | created | end     |* 

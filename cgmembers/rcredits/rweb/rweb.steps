@@ -369,6 +369,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     TEST paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
+ *     TEST posts SomeoneConfirmsAnOfferOnceTwice
  *     TEST posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  *     TEST relations AMemberTriesToAddARelationWithSelf
  *     TEST relations AMemberTriesToAddARelationAgain
@@ -520,6 +521,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST posts SomeoneVisitsThePostsPage
  *     TEST posts SomeoneSubmitsALocus
  *     TEST posts SomeonePostsAnOffer
+ *     TEST posts SomeoneConfirmsAnOfferOnceTwice
  *     TEST posts SomeoneViewsTheDetailsOfAnOffer
  *     TEST posts SomeoneRepliesToAnOffer
  *     TEST preferences AMemberVisitsThePreferencesPage
@@ -1154,6 +1156,7 @@ function membersHave($list) {return t\membersHave($list);}
  * we redirect to (ARG)
  *
  * in: TEST bank AMemberDrawsCreditFromTheBankThenCancels
+ *     TEST posts SomeoneConfirmsAnOfferOnceTwice
  *     TEST scancard SomeoneScansAMemberCard
  *     TEST signout AMemberSignsOut
  *     TEST signout AMemberTimesOutAndSignsOutAutomatically
@@ -1162,7 +1165,7 @@ function weRedirectTo($page) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $lastGo;
   $lastGo = preg_replace('/&tm=[0-9]+/', '', $lastGo); // ignore time, when redirecting to promo site
-  if (!$res = ($lastGo == $page)) t\output('redirect mismatch: ' . pr(compact('lastGo', 'page')));
+  if (!$res = in($lastGo, "$page /$page")) t\output('redirect mismatch: ' . pr(compact('lastGo', 'page')));
   return $res;
 }
 
@@ -1641,6 +1644,7 @@ function weScripWithSubs($script, $args = []) {
  *     BOTH invest MembersRateAProposedLoan
  *     BOTH invest TheClubMakesALoan
  *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
+ *     BOTH posts SomeoneConfirmsAnOfferOnceTwice
  *     MAKE posts SomeoneViewsTheDetailsOfAnOffer
  *     MAKE posts SomeoneRepliesToAnOffer
  *     BOTH posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
@@ -1965,6 +1969,7 @@ function someoneVisits($page) {return t\memberVisitsPage('?', $page);}
  * in: MAKE posts SomeoneSubmitsALocus
  *     MAKE posts SomeonePostsAnOffer
  *     MAKE posts SomeoneEntersPersonalDataAfterPostingAnOffer
+ *     MAKE posts SomeoneConfirmsAnOfferOnceTwice
  *     MAKE posts SomeoneRepliesToAnOffer
  *     MAKE posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  */
@@ -1987,16 +1992,21 @@ function cookieIs($nm, $v) {
 /**
  * someone visits (ARG) where code is: (ARG)
  *
- * in: MAKE posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
+ * in: MAKE posts SomeoneConfirmsAnOfferOnceTwice
+ *     MAKE posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  */
-function someoneVisitsWhereCodeIs($page, $code) {
+function someoneVisitsWhereCodeIs($page, $code, $values = '', $confirmed = FALSE) {
   global $testOnly; if ($testOnly) return FALSE;
+  $code = t\postCode($code[0]);
+  return t\memberVisitsPage('?', tr($page, compact('code')), $values, $confirmed);
+}
 
-  extract($code = $code[0]);
-  foreach (ray('posts:postid, messages:id') as $tnm => $idnm) if (nn($code[$idnm])) {
-    $dt = db\get('created', $tnm, "$idnm=" . $code[$idnm]);
-    if (t\sameTime($dt, $created)) $code['created'] = $dt;
-  }
-  $code = str_replace(CRYPT_FLAG, '', u\cry('P', http_build_query($code + ['word' => R_WORD])));
-  return t\memberVisitsPage('?', tr($page, compact('code')));
+/**
+ * someone confirms (ARG) postid (ARG) created (ARG) with: (ARG)
+ *
+ * in: 
+ */
+function someoneConfirmsPostidCreatedWith($page, $postid, $created, $values) {
+  $code[] = compact(ray('postid created'));
+  someoneVisitsWhereCodeIs($page, $code, $values, TRUE);
 }

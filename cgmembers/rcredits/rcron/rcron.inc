@@ -150,9 +150,9 @@ function periodic() {
   
   $sql = <<< X
     SELECT * FROM (
-      SELECT 'users' AS tnm, uid, address, city, state, zip AS id 
+      SELECT 'users' AS tnm, uid AS id, '' AS address, city, state, zip, latitude, longitude
         FROM users WHERE risks&(1<<:K_ADDROFF)=0 AND uid NOT :CANONIC
-      UNION SELECT 'people' AS tnm, pid AS id, address, city, state, zip
+      UNION SELECT 'people' AS tnm, pid AS id, address, city, state, zip, latitude, longitude
         FROM people
     ) p
     WHERE latitude=0 AND longitude=0 AND city IS NOT NULL AND state<>0
@@ -175,15 +175,20 @@ function everyHour() { // stuff to do every hour
 function geocode($item) {
   extract(just('tnm id address city state zip', $item));
   
+  if ($tnm = 'users') {
+    $a = r\acct($id);
+    $address = $a->address;
+  }
+  
   list ($lat, $lon, $zot) = u\getLocus($address, $city, $state, $zip);
   if ($lat or $lon) {
     if ($tnm == 'people') {
       return db\update('people', ray('pd latitude longitude', $id, $lat, $lon), 'pid');
-    } else return r\acct(id)->setLocus($lat, $lon); // users
+    } else return $a->setLocus($lat, $lon); // users
   }
   
-  if ($tnm == 'users') r\acct(id)->setRisk('addrOff');
-  return r\tellAdmin(t('setLocus <%a>returned</a> no match in %tnm record %id', '_a tnm id', w\atag($url), $tnm, $id));
+  if ($tnm == 'users') $a->setRisk('addrOff');
+  return r\tellAdmin(t('setLocus returned no match in %tnm record %id', 'tnm id', $tnm, $id));
 }
 
 /**

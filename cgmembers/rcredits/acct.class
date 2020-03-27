@@ -1507,7 +1507,6 @@ X;
    * https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?format=json&benchmark=Public_AR_Current&address=ADDRESS (no API_KEY needed, but fails 7% of the time and no way to approximate the address)
    */
   public function setLocus($lat = NULL, $lon = NULL) {
-    if (test()) return; // doesn't work on DEV machine yet
     $a = $this;
     if (!is_null($lat)) return $a->update('latitude longitude', $lat, $lon);
     

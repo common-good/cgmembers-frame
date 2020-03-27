@@ -969,9 +969,9 @@ function getLocus($q, $city = '', $state = '', $zip = '') {
   global $channel;
   
 //  if ($channel == TX_WEB) ini_set('default_socket_timeout', 8);
-  if (test()) return f('t.getLocus', $q);
-
   if ("$city$state$zip") $q .= tr(", $city, " . r\realState($state) . " $zip");
+  if (test() or (strpos($q, 'Greenfield, MA') !== FALSE and isDEV)) return f('t.getLocus', $q);
+
   $none = [0, 0, ''];
   $params = ray('q key', $q, GEOCODE_KEY);
   

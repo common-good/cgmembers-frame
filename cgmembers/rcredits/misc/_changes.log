@@ -1,4 +1,12 @@
-2020-03-25 feature post-format
+2020-03-27 feature/post-crud
+. enabled testing of setlocus
+. fixed bug in periodic geocoding
+. posts can now be edited by user or admin
+. hooks added for a search box
+. added a pseudo-category for "my posts"
+. fixed a couple typos
+
+2020-03-25 feature/post-format
 . formatting improvements in posts
 . improve reliability of geosearch by titlecasing request
 . added hooks for moderation and administration of posts

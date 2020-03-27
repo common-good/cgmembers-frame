@@ -5,9 +5,15 @@ SO things will be as they should be.
 
 Setup:
   Given members:
-  | uid  | fullName | minimum | savingsAdd | saveWeekly | achMin | floor | risks   | flags                 |*
-  | .ZZA | Abe One  |    -100 |          0 |         20 |     20 |    10 | hasBank | ok,confirmed,refill   |
-  | .ZZB | Bea Two  |     100 |          0 |         20 |     20 |    10 | hasBank | ok,confirmed,cashoutW |
+  | uid  | fullName | address | city       | state | zip   | flags                 |*
+  | .ZZA | Abe One  | 1 A St. | Greenfield | MA    | 01301 | ok,confirmed,refill   |
+  | .ZZB | Bea Two  | 2 B St. | Greenfield | MA    | 01301 | ok,confirmed,cashoutW |
+
+Scenario: Geoposition gets calculated
+  When cron runs "periodic"
+  Then members have:
+  | uid  | latitude  | longitude |*
+  | .ZZA | %GFLD_LAT | %GFLD_LON |
 
 #Scenario: A trial company runs out of time
 #  Given members:

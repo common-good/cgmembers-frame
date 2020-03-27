@@ -286,19 +286,42 @@ function doit(what, vs) {
     
   case 'post-tabs':
 // NO. use URL instead  $('#edit-back').click(function () {window.history.back(); return false;});
+/* (disabled because :icontains fails -- see definition at the bottom of misc.js)
+    var frm = $('#edit-search').parents('form:first');
+    frm.submit(function (event) {event.preventDefault();}); // or return false;
+   
+    $('#edit-search').change(function () {
+      var box = $('#tabs .container');
+
+      $('.limit-list').val('');
+      var s = escape($(this).val().trim().replace(/\s+/g, ' ')); //.replace("'", "\\'").replace('"', '\\"');
+      if (s == '') {
+        box.find('.row').show();
+        return;
+      }
+
+      box.find('.row').hide(); // hide all
+      box.find('.row').first().show(); // then show headers
+
+      selector = ".cell:icontains['" + s.split(" ").join("']:icontains['") + "']";
+      box.find(selector).show();
+    });
+  */  
     $('#tabs').tabs();
     $('#tabs ul li a[href^="http"]').unbind('click').click(function () {location.href = $(this).attr('href');});
-    $('#cat').selectmenu();
+    $('[aria-controls="tab-needs"]').click(function () {$('#tab-needs').show();});
     
     $('.limit-list').change(function () {
       var cat = $(this).find(':selected').text();
+      if (cat == 'my posts') cat = 'mine';
+      var box = $(this).parents('.container');
       if (cat.startsWith('Category')) {
-        $(this).parents('.container').find('.row').show();
+        box.find('.row').show(); // show all
       } else {
-        $(this).parents('.container').find('.row').hide();
-        $('.row.none').show();
-        $(this).parents('.container').find('.row').first().show();
-        $(this).parents('.container').find('.row.' + cat).show();
+        box.find('.row').hide(); // hide all
+        box.find('.row').first().show(); // then show headers
+        box.find('.row.' + cat).show(); // and everything in the chosen category
+        $('.row.none').show(); // and the "nothing found in this area" row, if any
       }
     });
     break;
