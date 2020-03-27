@@ -519,6 +519,8 @@ function stats($list) {return t\stats($list);}
  * in: TEST bank AMemberIsWellBelowTarget
  *     TEST cashout AMemberCompanyCashesOutMonthly
  *     TEST cashout AMemberCompanyCashesOutWeekly
+ *     MAKE daily Setup
+ *     TEST daily GeopositionGetsCalculated
  *     MAKE gifts ADonationToCGIsVisibleToAdmin
  *     MAKE gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     MAKE gifts ASecondRecurringDonationToCGCanBeCompleted

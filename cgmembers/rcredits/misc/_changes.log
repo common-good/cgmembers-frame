@@ -1,3 +1,9 @@
+2020-03-27 feature/post-search
+. searching for words in posts
+. fixed bug in rcron geocode
+. fixed bug in deposits list, to make sure ALL checks in the deposit get printed
+. slightly modified agent step text and default, to make it clearer and easier
+
 2020-03-27 feature/post-crud
 . enabled testing of setlocus
 . fixed bug in periodic geocoding
