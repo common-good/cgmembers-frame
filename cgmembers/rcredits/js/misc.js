@@ -275,3 +275,11 @@ function fmtAmt(n, digits) {
   if(typeof digits == undefined) digits = 2;
   return n.toLocaleString(undefined, {maximumFractionDigits:digits}); // maximumFractionDigits fails in Safari/Firefox
 }
+
+/**
+ * Build new jQuery syntax: $(":icontains['Bozo']") selects all elements containing "bozo", case-insensitive.
+ */ /* FAILS
+jQuery.expr[':'].icontains = function(a, i, m) {
+  return jQuery(a).text().toUpperCase()
+      .indexOf(m[3].toUpperCase()) >= 0;
+}; */

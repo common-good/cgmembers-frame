@@ -302,6 +302,8 @@ EOF
   'co nonpass' => t('None. Sign in to your personal account, then click your photo in the upper right corner to select the company account.'),
   'pass advice' => t('<p>Your password must be very long OR it must have at least 8 characters, including uppercase, lowercase, digit, and punctuation.</p><p>Consider choosing 4 random words &mdash; hard to guess, but easy for you to remember.</p>'),
   'bad locus' => t('That is not a recognizable address. Try again with a postal code.'),
+  'post success' => t('Success! Your post is confirmed.'),
+  'message success' => t('Success! Your message is confirmed.'),
   
 //  'savings too low' => t('Until your %PROJECT community declares itself a stable Common Good Community, your savings amount must be at least as much as the incentive rewards you have received (%rewards to date)'),
   'savings too low' => t('Your additional savings amount cannot be less than zero.'),

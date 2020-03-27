@@ -1593,8 +1593,23 @@ function fixState($state, $country) {
 	return compact(ray('state country'));
 }
 
+/**
+ * Create a code to pass in a URL to the posts feature.
+ * @param assoc $code: record id and creation date, either: [postid, created] or [id, created]
+ */
+function postCode($code) {
+  extract($code);
+
+  foreach (ray('posts:postid, messages:id') as $tnm => $idnm) if (nn($code[$idnm])) {
+    $dt = db\get('created', $tnm, "$idnm=" . $code[$idnm]);
+    if (t\sameTime($dt, $created)) $code['created'] = $dt; // wiggle room
+  }
+  return str_replace(CRYPT_FLAG, '', u\cry('P', http_build_query($code + ['word' => R_WORD])));
+}
+
 function getLocus($q) {
-  return $q == 'Greenfield, MA' ? [42.3791167, -73.2819463, '01301'] : FALSE;
+  return strpos($q, 'Greenfield, MA') !== FALSE ? [GFLD_LAT, GFLD_LON, GFLD_ZIP]
+  : FALSE;
 }
 
 /*
