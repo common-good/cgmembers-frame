@@ -8,12 +8,18 @@ Setup:
   | uid  | fullName | address | city       | state | zip   | flags                 |*
   | .ZZA | Abe One  | 1 A St. | Greenfield | MA    | 01301 | ok,confirmed,refill   |
   | .ZZB | Bea Two  | 2 B St. | Greenfield | MA    | 01301 | ok,confirmed,cashoutW |
-
+  And these "people":
+  | pid | fullName | address | city       | state | zip   |*
+  | 1   | Dot Four | 4 D St. | Greenfield | MA    | 01301 |
+  
 Scenario: Geoposition gets calculated
   When cron runs "periodic"
   Then members have:
   | uid  | latitude  | longitude |*
   | .ZZA | %GFLD_LAT | %GFLD_LON |
+  And these "people":
+  | pid  | latitude  | longitude |*
+  | 1    | %GFLD_LAT | %GFLD_LON |
 
 #Scenario: A trial company runs out of time
 #  Given members:

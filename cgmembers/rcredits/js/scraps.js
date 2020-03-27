@@ -286,35 +286,35 @@ function doit(what, vs) {
     
   case 'post-tabs':
 // NO. use URL instead  $('#edit-back').click(function () {window.history.back(); return false;});
-/* (disabled because :icontains fails -- see definition at the bottom of misc.js)
     var frm = $('#edit-search').parents('form:first');
     frm.submit(function (event) {event.preventDefault();}); // or return false;
    
-    $('#edit-search').change(function () {
+    $('#edit-search').change(function () { // search
       var box = $('#tabs .container');
 
-      $('.limit-list').val('');
-      var s = escape($(this).val().trim().replace(/\s+/g, ' ')); //.replace("'", "\\'").replace('"', '\\"');
-      if (s == '') {
-        box.find('.row').show();
-        return;
-      }
+      $('.limit-list').val(-1);
+      
+      var s = $(this).val().trim().replace(/\s+/g, ' ');
+      if (s == '') return box.find('.row').show();
 
-      box.find('.row').hide(); // hide all
-      box.find('.row').first().show(); // then show headers
+      var i, a = s.toUpperCase().split(' '); // array of words
+      box.find('.row').show(); // show all
 
-      selector = ".cell:icontains['" + s.split(" ").join("']:icontains['") + "']";
-      box.find(selector).show();
+      box.find('.tbody .row').each(function () {
+        rowText = ($(this).find('.item').text() + ' ' + $(this).find('.details').text()).toUpperCase();
+        for (i = 0; i < a.length; i++) if (rowText.indexOf(a[i]) < 0) $(this).hide();
+      });
     });
-  */  
+
     $('#tabs').tabs();
     $('#tabs ul li a[href^="http"]').unbind('click').click(function () {location.href = $(this).attr('href');});
     $('[aria-controls="tab-needs"]').click(function () {$('#tab-needs').show();});
-    
-    $('.limit-list').change(function () {
-      var cat = $(this).find(':selected').text();
-      if (cat == 'my posts') cat = 'mine';
+       
+    $('.limit-list').change(function () { // filter
       var box = $(this).parents('.container');
+      var cat = $(this).find(':selected').text();
+      
+      if (cat == 'my posts') cat = 'mine';
       if (cat.startsWith('Category')) {
         box.find('.row').show(); // show all
       } else {

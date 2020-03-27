@@ -279,6 +279,10 @@ function fmtAmt(n, digits) {
 /**
  * Build new jQuery syntax: $(":icontains['Bozo']") selects all elements containing "bozo", case-insensitive.
  */ /* FAILS
+ 
+ //      selector = ".cell:icontains['" + s.split(" ").join("']:icontains['") + "']";
+//      box.find(selector).show();
+
 jQuery.expr[':'].icontains = function(a, i, m) {
   return jQuery(a).text().toUpperCase()
       .indexOf(m[3].toUpperCase()) >= 0;

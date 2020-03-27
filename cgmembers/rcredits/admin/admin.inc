@@ -490,7 +490,7 @@ EOF;
           $details .= ' ' . w\btn('', t('flnm'), 'default', 'xs', ray('class data-flnm', 'filename', "CGach-$date.csv")) . ' ' . w\lnk("/sadmin/achs/date=$deposit&mark=0", t('download'));
         }
         if ($count) $details .= ' ' . ($deposit
-          ? w\btn("/sadmin/checks/way=In&date=$deposit&mark=0", t('checks'))
+          ? w\btn("/sadmin/checks/way=In&date=$deposit&mark=0&limit=$count", t('checks'))
           : w\btn('', t('...........'), 'default') // don't show undeposited checks (a recipe for disaster)
         );
       } else $dateDpy = $details = '';

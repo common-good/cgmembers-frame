@@ -69,7 +69,7 @@ function formPosts($form, &$sta, $args = '') {
     $back = btn('/community/posts', t('<big>&laquo;</big> Back to Top'), 'warning');
     $search = textFld(BARE, [t('Search for words')]);
 
-    $choices = catChoices(t('Category (all)')) + [99 => t('my posts')];
+    $choices = catChoices(t('Category (all)'), [-1 => t('(search)')]) + [99 => t('my posts')];
     $cat = rendA('cat', selectFld(BARE, '', clas('limit-list'), $choices));
 
     foreach (ray('offer need') as $type) {
@@ -535,7 +535,7 @@ function vip($fld = 'pid') {
   return $fld == 'pid' ? $pid : db\get($fld, 'people', compact('pid'));
 }
 
-function catChoices($top) {return ['' => $top] + db\keyed('id,cat', 'post_cats', '1 ORDER BY sort');}
+function catChoices($top, $extra = []) {return ['' => $top] + $extra + db\keyed('id,cat', 'post_cats', '1 ORDER BY sort');}
 function emailFld() {return textFld(REQ . t('Your Email:'), [t('Your email address')], dft(nn($_COOKIE['email']) ?: vip('email')));}
 function pVal($fld, $pid) {return db\get($fld, 'people', compact('pid'));}
 function zipOnlyMsg($specifics, $zip) {return t('We are unable to geolocate that address at this time, so %specifics in the "%zip3" Zip Code area.', 'specifics zip3', $specifics, substr($zip, 0, 3));}
