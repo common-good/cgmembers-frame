@@ -284,9 +284,9 @@ X;
     $title = t('Edit Post');
     $subtext = NULL;
     extract(postInputFlds($type, $res));
-    if (admin()) {
+    if ($a = admin()) {
       $message = msgFld('');
-      $email = hidFld($mya->email); // messages from admin always come from admin
+      $email = hidFld($a->email); // messages from admin always come from admin
     } else $email = $message = NULL;
     
     $pid = hidFld($pid);
@@ -559,4 +559,4 @@ function msgFld($req = REQ) {return areaFld($req . t('Message to Send:'), t('Max
 function postRet($msg) {return r\acct() ? w\go('empty', $msg) : doSay($msg);}
 function moderate($zip) {return in(substr(trim($zip), 0, 3), MODERATE_ZIPS);}
 function frmBools($frm) {foreach(ray(POST_FRMS) as $k) $res['frm' . ucfirst($k)] = ($frm == $k); return $res;}
-function admin() {global $mya; return ($mya and $mya->admin);}
+function admin() {global $mya; return ($mya and $mya->admin) ? $mya : FALSE;}
