@@ -354,6 +354,7 @@ function confirm($op, $thing, $code) {
   list ($tnm, $idnm) = $thing == 'post' ? ['posts', 'postid'] : ['messages', 'id'];
   extract(just($idnm . ' created', $code, NULL));
   $idSub = compact($idnm);
+  $successUrl = POSTPAGE . ($_COOKIE['radius'] ? '/op=top' : '');
 
   if (db\exists($tnm, $idSub + compact('created'))) {
     $pid = db\get($thing == 'post' ? 'pid' : 'sender', $tnm, $idSub);
@@ -361,7 +362,7 @@ function confirm($op, $thing, $code) {
     if ($op == 'cancel') {
       $thing = t('cancelation'); // confirming cancelation not post
       db\update('posts', ray('postid end', $postid, time()), 'postid');
-      return postRet(t('Success! Your post is canceled.', compact('thing')));
+      return go($successUrl, t('Success! Your post is canceled.', compact('thing')));
       
     } elseif ($op == 'confirm') {
       $already = db\get('confirmed', 'people', compact('pid'));
@@ -372,11 +373,11 @@ function confirm($op, $thing, $code) {
       if ($thing == 'message') {
         extract(db\get('postid,message,displayName,email', 'messages m JOIN people p ON pid=sender', compact('id')));
         postMsg($message, $displayName, $email, $postid);      
-        return postRet('message success');
+        return go($successUrl, 'message success');
       } else { // post
         if ($already) {
           return go(POSTPAGE . '/op=show&postid=' . $idSub['postid']); // second confirmation means edit
-        } else return postRet(t('post success'));
+        } else return go($successUrl, 'post success');
       }
       
     } elseif ($op == 'edit') {
@@ -385,7 +386,7 @@ function confirm($op, $thing, $code) {
     } else return u\FAIL('Bad do in confirm: ' . pr($code));
 
 
-  } else return postRet(t('That %thing does not exist.', compact('thing')));
+  } else return go('empty', t('That %thing does not exist.', compact('thing')));
   
 }
 
@@ -445,11 +446,11 @@ function formPosts_submit($form, &$sta) {
   extract(just('frm email type method pid days washes health zip', $input), NULL);
   extract(frmBools($frm)); // make code a little easier to read
 
-  if ($frmTop) return go('community/posts/' . http_build_query(['op'=>'top'] + just(TOP_FLDS, $sta['input'])));
+  if ($frmTop) return go(POSTPAGE . '/' . http_build_query(['op'=>'top'] + just(TOP_FLDS, $sta['input'])));
 
   if ($frmPost or $frmMessage) { // get pid for this post; if none, carry it through to the "who" form
     $pid = db\get('pid', 'people', compact('email'));
-    if (!$pid) return w\go('/community/posts/' . http_build_query(['op'=>'who'] + $input));
+    if (!$pid) return w\go(POSTPAGE . '/' . http_build_query(['op'=>'who'] + $input));
   } elseif ($frmWho) {  // carrying info about post or message, as well as contact info
     $contactInfo = just(CONTACT_FLDS, $input, NULL);
     $method = ray(METHOD_OPTS)[$method];
@@ -499,7 +500,7 @@ function formPosts_submit($form, &$sta) {
     }
   }
      
-  w\go('/community/posts/op=top', 'info saved');
+  w\go(POSTPAGE . '/op=top', 'info saved');
 }
 
 /**
