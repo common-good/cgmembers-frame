@@ -304,6 +304,7 @@ EOF
   'bad locus' => t('That is not a recognizable address. Try again with a postal code.'),
   'post success' => t('Success! Your post is confirmed.'),
   'message success' => t('Success! Your message is confirmed.'),
+  'post will appear' => t('Your post will appear %when. To edit or cancel it, select category "my posts" and click on this post.'),
   
 //  'savings too low' => t('Until your %PROJECT community declares itself a stable Common Good Community, your savings amount must be at least as much as the incentive rewards you have received (%rewards to date)'),
   'savings too low' => t('Your additional savings amount cannot be less than zero.'),

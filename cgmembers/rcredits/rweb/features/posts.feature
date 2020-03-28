@@ -66,12 +66,15 @@ Scenario: Someone enters personal data after posting an offer
   | zip         | 01001 |
   | phone       | 413-253-0001 |
   | method      | text |
+  | days        | 2 |
+  | washes      | 3 |
+  | health      | 2 |
   Then these "posts":
   | postid | type  | item | details | cat  | exchange | emergency | radius | pid | created | end     |* 
   | 1      | offer | fish | big one | food | 0        | 1         | 3      | 1   | %today  | %now+3d |
   And these "people":
-  | pid | displayName | fullName | address | city | state | zip   | phone        | email | method | confirmed |*
-  | 1   | Abe         | Abe One  | 1 A St. | Aville | MA  | 01001 | +14132530001 | a@b.c | text   | 0         |
+  | pid | displayName | fullName | address | city | state | zip   | phone        | email | method | confirmed | health |*
+  | 1   | Abe         | Abe One  | 1 A St. | Aville | MA  | 01001 | +14132530001 | a@b.c | text   | 0         | 2 3 ok |
   And we email "confirm-post" to member "a@b.c" with subs:
   | fullName | item | date | thing | code | noFrame |*
   | Abe One  | fish | %mdY | post  |    ? |       1 |
@@ -215,12 +218,15 @@ Scenario: Someone enters personal data after replying to an offer
   | zip         | 01301 |
   | phone       | 413-253-0002 |
   | method      | email |
+  | days        | 2 |
+  | washes      | 3 |
+  | health      | 2 |
   Then these "messages":
   | id | postid | sender | message      | created |*
   | 1  | 1      | 2      | Hello there! | %now    |
   And these "people":
-  | pid | displayName | fullName | address | city     | state | zip   | phone        | email | method | confirmed |*
-  | 2   | Bea         | Bea Two  | 2 B St. | Greenfield | MA  | 01301 | +14132530002 | b@c.d | email  | 0         |
+  | pid | displayName | fullName | address | city     | state | zip   | phone     | email | method | confirmed | health |*
+  | 2   | Bea         | Bea Two  | 2 B St. | Greenfield | MA  | 01301 | +14132530002 | b@c.d | email  | 0      | 2 3 ok |
   And we email "confirm-message" to member "b@c.d" with subs:
   | fullName | item | date | thing   | code | noFrame |*
   | Bea Two  | fish | %mdY | message |    ? |       1 |
