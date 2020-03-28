@@ -556,6 +556,7 @@ body.page-partner blockquote {font-size:14px;}
 #frm-posts #edit-search {display:inline; margin:0 5px 15px 0; max-width:200px;}
 #frm-posts #edit-back label {display:none;}
 #frm-posts #edit-back .control-data {width:auto;}
+#frm-posts #edit-end {display:inline-block; margin-right:15px;}
 
 #frm-posts #tab-needs {display:none;}
 #frm-posts .thead .cell {padding:0px 8px;}
@@ -576,6 +577,16 @@ body.page-partner blockquote {font-size:14px;}
 #frm-posts .ui-tabs-panel .container a:hover {color:silver;} 
 
 #frm-posts .emergency {font-weight:bold; color:red;}
+
+#frm-posts .form-item-method.radio,
+#frm-posts .form-item-health.radio {display:inline-block;}
+
+#frm-posts #edit-midtext {color:darkred;}
+
+/*#frm-posts .form-item-midtext,
+#frm-posts .form-item-days,
+#frm-posts .form-item-washes,
+#frm-posts .form-item-health {display:none;} */
 
 /* FAILS #frm-posts .form-item-zip.ziptogo .control-data,
 #frm-posts .form-item-cat.limit-list .control-data {text-align:center;} */

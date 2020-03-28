@@ -6,14 +6,17 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
-define('POST_FLDS', 'type item details cat exchange emergency radius end'); // db fields other than contact info
+define('POST_FLDS', 'type item details cat exchange emergency radius end private'); // db fields other than contact info
 define('CONTACT_FLDS', 'displayName fullName address city state zip phone email method'); // db contact fields
 define('MESSAGE_FLDS', 'message postid sender'); // db message fields
 define('TOP_FLDS', 'locus radius latitude longitude zip'); // fields used for filtering list
 define('POST_INPUT_FLDS', 'cat item private details exchange emergency radius end type'); // post input fields
 define('METHOD_OPTS', 'email phone text'); // contact method options
 define('VIPID', 'vipid'); // name of confirmed-email cookie (the VIP's people record ID)
+define('HEALTH_RATINGS', 'excellent good ok indisposed'); // health self-assessment
 define('POSTPAGE', '/community/posts');
+define('MODERATE_ZIPS', ''); // 3-digit zip code areas where moderation is mandatory (eg '010 013')
+define('POST_FRMS', 'top tabs post editpost who message'); // possible values for $frm
 
 /*
 Current features
@@ -28,11 +31,14 @@ Current features
 - Post or Reply to a Post after doing either thing once before
 - Cancel (terminate) a Post (immediately or much later) by clicking a link in the confirmation email.
 
-New features to do:
+New features:
 - Edit your post (or someone else's if you are an administrator)
 - Search for text
 - View just your own posts (or someone else's if you are an administrator)  
 - For administrators, more fields in the summary list
+- Moderation required in 013 zip area
+- COVID 19 risk survey (self-vetting) in 013 zip area
+- Automatic translation (in process)
 */
 
 /**
@@ -141,12 +147,11 @@ X
  * Return a table of confirmed postings for the given type and category.
  */
 function postList($type, $lat, $lon, $zip, $radius) {
-  global $mya; $admin = ($mya and $mya->admin);
   $distance = tr('%DISTANCE_BETWEEN');
   $myPid = vip('pid') ?: '0';
   $isMyPid = 'pid=:myPid';
   
-  $visible = $admin ? 1 : 'NOT s.private';
+  $visible = admin() ? 1 : 'NOT s.private';
 
   $sql = <<<X
     SELECT $distance AS dist, s.postid, c.cat, s.item, s.details, s.emergency, $isMyPid AS mine
@@ -156,7 +161,7 @@ function postList($type, $lat, $lon, $zip, $radius) {
     WHERE s.type=:type
       AND s.created <= :NOW
       AND IFNULL(s.end, :NOW) >= :NOW
-      AND s.confirmed
+      AND p.confirmed
       AND IF((latitude=0 AND longitude=0) OR (:lat=0 AND :lon=0), 
             MID(p.zip,1,3) = MID(:zip,1,3), 
             $distance < LEAST(IFNULL(s.radius, :radius), :radius)
@@ -219,7 +224,6 @@ function getPost($type) {
  * Return input fields common to creating or editing a post.
  */
 function postInputFlds($type0, $dfts = []) {
-
   extract(just(POST_INPUT_FLDS, $dfts, ''));
   $type = $type0;
   $need = ($type == 'need');
@@ -229,14 +233,14 @@ function postInputFlds($type0, $dfts = []) {
   $cat = selectFld(REQ . t('Category:'), '', dft($cat), $choices);
   
   $item = textFld(REQ . t('What:'), [$need ? t('What you need') : t('What you\'re offering')], dft($item) + maxlen(40));
-  $private = NULL;//boolFld(t('Private:'), t('Do you want this post to be seen ONLY by the administrator?') + dft($private));
+  $private = admin() ? boolFld(t('Private:'), t('Seen only by the administrator'), dft((int) $private)) : hidFld(0);
 
   $details = areaFld(REQ . t('Details:'), t('Max 500 characters'), dft($details) + maxlen(500));
   
   $exchange = $need ? boolFld(t('Exchange:'), t('Are you offering something in exchange? (include it in the details too)'), dft($exchange)) : hidFld(0);
   $emergency = boolFld(t('Emergency:'), $need ? t('This need is a short-term emergency.') : t('This offer is only for emergencies (such as 2 weeks of social distancing).'), dft($emergency));
   $radius = $need ? NULL : textFld(REQ . t('Radius:'), [t('Visibility radius'), t('Up to how many miles away do you want this seen? 10 usually covers neighboring towns. Use zero for "anywhere".')], dft($radius ?: 10) + suffix(t(' miles')));
-  $end = textFld(t('End Date:'), [t('mm/dd/yyyy'), t('When to stop listing this (you can also cancel it later)')], dft($end ? u\fmtDate($end, TRUE) : ''));
+  $end = textFld(t('End Date:'), [t('mm/dd/yyyy'), t('When to stop listing this (you can also cancel it later)')], dft($end ? u\fmtDate($end, TRUE) : '') + suffix(lnk('', t('end now'))));
 
   $type = hidFld($type);
 
@@ -247,8 +251,6 @@ function postInputFlds($type0, $dfts = []) {
  * Show details about a post.
  */
 function showPost($postid) {
-  global $mya; $admin = ($mya and $mya->admin);
-  
   if (!$res = db\get('pid,s.type,c.cat,s.item,s.private,s.details,s.exchange,s.emergency,s.created,s.end,p.displayName,p.fullName,p.phone,p.email,p.address,p.city,p.state,p.zip,p.method,p.created AS userSince', 'posts s LEFT JOIN post_cats c ON c.id=s.cat LEFT JOIN people p USING (pid)', compact('postid'))) return softErr(t('That is not a need or offer.'));
   extract($res);
   
@@ -261,8 +263,7 @@ function showPost($postid) {
   // set up display-only fields that are the same for user's own post and someone else's post
   $created = item(u\fmtDate($created, TRUE), t('Posted:'));
 
-  if ($admin) {
-    if ($private) $item = t('(private) ') . $item;
+  if (admin()) {
     list ($userSince, $phone, $state) = [u\fmtDate($userSince, TRUE), u\fmtPhone($phone), r\realState($state)];
     $who = <<< X
       $fullName ("$displayName")<br>
@@ -278,14 +279,14 @@ X;
 
   // set up fields that are the different for user's own post and someone else's post
   
-  if (vip('pid') == $pid or $admin) { // user's own post: allow editing or termination
+  if (vip('pid') == $pid or admin()) { // user's own post: allow editing or termination
     $frm = hidFld('editpost');
     $title = t('Edit Post');
     $subtext = NULL;
     extract(postInputFlds($type, $res));
-    if ($admin) {
+    if (admin()) {
       $message = msgFld('');
-      $email = emailFld();
+      $email = hidFld($mya->email); // messages from admin always come from admin
     } else $email = $message = NULL;
     
     $pid = hidFld($pid);
@@ -302,13 +303,13 @@ X;
     
     $message = msgFld(REQ);
     $email = emailFld();
-    $pid = NULL;
+    $pid = $private = NULL;
   // Keep in mind: the person you are contacting is almost certainly a neighbor, but might be a scoundrel pretending to live nearby.
 
     $submit = t('Send Message');
   }
   
-  return cgform(compact(ray('title subtext type cat who created item details exchange emergency radius end message email submit postid pid frm')));
+  return cgform(compact(ray('title subtext type cat who created private item details exchange emergency radius end message email submit postid pid frm')));
 }
 
 /**
@@ -319,8 +320,9 @@ function getWho($args) {
   foreach(just(POST_FLDS . ' email ' . MESSAGE_FLDS, $ray) as $k => $v) $info[$k] = hidFld($v);
   extract(just('email', $info)); // because it's in CONTACT_FLDS
 
-  jsx('post-who');
+  jsx('post-who', ray('moderateZips', MODERATE_ZIPS));
   
+  $frm = hidFld('who');
   $title = t('Your Information');
   $subtext = t('<p>This information is required only the first time you post or contact someone.</p><p>Only your "display name" (first name or nickname) is shown to others. Your full name, address, email, and phone are not shown to anyone unless you choose "phone" or "text" as your preferred contact method (then just your phone number is displayed when someone asks to contact you about a specific post).</p>');
   $displayName = textFld(REQ . t('Display Name:'), [t('Your first name or nickname'), t('To be shown to publicly with your posts')]);
@@ -332,10 +334,14 @@ function getWho($args) {
   $phone = textFld(REQ . t('Phone:'), [t('Phone number'), t('Just in case we need to contact you. This is not shared with other users unless you choose "phone" or "text" as your preferred contact method.')]);
   $method = w\radiosFld(REQ . t('Preferred Contact:'), t('The "phone" and "text" options apply only when a %PROJECT member contacts you (because we have verified the identity only of members). Otherwise you will receive replies by email.'), '', ray(METHOD_OPTS));
 
-  $submit = t('Submit');
-  $frm = hidFld('who');
+  $midtext = t('And now some COVID-19 self-assessment questions for 2020:');
+  $days = textFld(t('Distancing Days:'), [t('Days practicing social distancing'), t('About how long have you been practicing social distancing consistently (staying at least 6 feet away from all but a handful of people)? Thank you! Your voluntary inconvenience could save thousands of lives &mdash; especially your friends, family, and neighbors.')]);
+  $washes = textFld(t('Hand-washing:'), [t('Hand-washes per day'), t('About how many times a day do you wash your hands for 20 seconds or more? (This data will help us convince other people to do it more.)')]);
+  $health = radiosFld(t('Health:'), t('If you are not feeling completely well, please <%a>take this quiz from the CDC</a> right away, and follow its advice.', '_a', atag('https://www.cdc.gov/coronavirus/2019-ncov/if-you-are-sick/steps-when-sick.html')), dft(2), ray(HEALTH_RATINGS));
 
-  return cgform(compact(ray('title subtext ' . CONTACT_FLDS . ' submit frm')) + $info);
+  $submit = t('Submit');
+
+  return cgform(compact(ray('title subtext ' . CONTACT_FLDS . ' midtext days washes health submit frm')) + $info);
 }
 
 /**
@@ -358,8 +364,7 @@ function confirm($op, $thing, $code) {
       return postRet(t('Success! Your post is canceled.', compact('thing')));
       
     } elseif ($op == 'confirm') {
-      $already = db\get('confirmed', $tnm, $idSub);
-      db\update($tnm, $idSub + ['confirmed' => TRUE], $idnm);
+      $already = db\get('confirmed', 'people', compact('pid'));
       db\update('people', ray('pid confirmed', $pid, TRUE), 'pid');
 
       r\setCook(VIPID, $pid);
@@ -386,10 +391,10 @@ function confirm($op, $thing, $code) {
 
 function formPosts_validate($form, &$sta) {
   $input = $sta['input'];
-  extract(just('frm', $input, NULL));
+  extract(frmBools($frm = $input['frm'])); // make code a little easier to read
 
-  if ($frm == 'top') {
-    extract($topInfo = just(TOP_FLDS, $sta['input'], NULL));
+  if ($frmTop) {
+    extract($topInfo = just(TOP_FLDS, $input, NULL));
     if ($err = u\badAmount($radius, '>=0', 6)) {$radius = 10; say($err);}
     $locus = ucwords($locus);
     list ($latitude, $longitude, $zip) = u\getLocus($locus);
@@ -399,29 +404,32 @@ function formPosts_validate($form, &$sta) {
     }
     $chgFlds = 'locus latitude longitude zip';
     
-  } elseif (in($frm, 'post editpost')) {
+  } elseif ($frmPost or $frmEditpost) {
     extract(just('end email cat radius', $input, NULL));
     if (!$cat) return say(t('You must choose a category.'), 'cat');
     if (isset($radius) and $err = u\badAmount($radius, '>=0', 6)) return say($err, 'radius');
-    if ($end and $err = u\badDate($end, NOW)) return say($err, 'end');
-    if ($frm == 'post' and !emailOkay($email, TRUE)) return;
+    if ($end and $err = u\badDate($end, $frmPost ? strtotime('tomorrow') : today())) return say($err, 'end');
+    if ($frmPost and !emailOkay($email, TRUE)) return;
     $chgFlds = 'email radius end';
     
-  } elseif ($frm == 'message') {
+  } elseif ($frmMessage) {
     extract(just('email', $input, NULL));
     if (!emailOkay($email, TRUE)) return;
     $chgFlds = 'email';
     
-  } elseif ($frm == 'who') {
-    extract(just('zip phone address city state zip type', $input, NULL));
+  } elseif ($frmWho) {
+    extract(just('zip phone address city state zip type days washes', $input, NULL));
     if ($err = u\badZip($zip)) return say($err, 'zip');
     if ($err = u\badPhone($phone)) return say($err, 'phone');
     if (u\poAddress($address)) return say('po in location', 'address');
+    foreach (ray('address city') as $k) if (in($$k, '0 1', strtolower($$k), strtoupper($$k))) $$k = ucwords(strtolower($$k));
+    if (moderate($zip)) foreach (ray('days washes') as $k) if ($err = u\badAmount($$k, '>=0')) return say($err, $k);
+    
     list ($latitude, $longitude, $zot) = u\getLocus($address, $city, $state, $zip);
     if ($latitude == 0 and $longitude == 0) {
       // [better not to confuse user] if ($type == 'post') say(zipOnlyMsg(t('your post will be shown to anyone'), $zip));
     }
-    $chgFlds = 'zip phone latitude longitude';
+    $chgFlds = 'zip phone latitude longitude days washes address city';
     
   } else return u\FAIL(t('bad form in validate: ' . $frm));
   
@@ -433,27 +441,30 @@ function formPosts_validate($form, &$sta) {
  *   post, message, or contact info (this last including post or message info)
  */
 function formPosts_submit($form, &$sta) {
-  $input = just(POST_FLDS . ' frm pid ' . MESSAGE_FLDS . ' ' . CONTACT_FLDS, $sta['input'], NULL);
-  extract(just('frm email type method pid', $input), NULL);
+  $input = just(POST_FLDS . ' frm pid days washes health ' . MESSAGE_FLDS . ' ' . CONTACT_FLDS, $sta['input'], NULL);
+  extract(just('frm email type method pid days washes health zip', $input), NULL);
+  extract(frmBools($frm)); // make code a little easier to read
 
-  if ($frm == 'top') return go('community/posts/' . http_build_query(['op'=>'top'] + just(TOP_FLDS, $sta['input'])));
+  if ($frmTop) return go('community/posts/' . http_build_query(['op'=>'top'] + just(TOP_FLDS, $sta['input'])));
 
-  if (in($frm, 'post message')) { // get pid for this post; if none, carry it through to the "who" form
+  if ($frmPost or $frmMessage) { // get pid for this post; if none, carry it through to the "who" form
     $pid = db\get('pid', 'people', compact('email'));
     if (!$pid) return w\go('/community/posts/' . http_build_query(['op'=>'who'] + $input));
-  } elseif ($frm == 'who') {  // carrying info about post or message, as well as contact info
+  } elseif ($frmWho) {  // carrying info about post or message, as well as contact info
     $contactInfo = just(CONTACT_FLDS, $input, NULL);
     $method = ray(METHOD_OPTS)[$method];
-    $pid = db\insert('people', compact('method') + $contactInfo, 'pid');
-    $frm = $type ? 'post' : 'message'; // now fall through to process the earlier data passed through by who form
+    $health = moderate($zip) ? ($days+0) . ' ' . ($washes+0) . ' ' . ray(HEALTH_RATINGS)[$health] : '';
+
+    $pid = db\insert('people', compact(ray('method health')) + $contactInfo, 'pid');
+    if ($type) $frmPost = TRUE; else $frmMessage = TRUE; // now fall through to process the earlier data passed through by who form
   }
 
   // got pid, now process post or message
-  $confirmed = (int) ($email == vip('email') or $frm == 'editpost'); // set confirmation status of record we're about to create
+  $confirmed = (int) ($email == vip('email') or $frmEditpost); // set confirmation status of record we're about to create
   $created = time();
   $err = FALSE;
   
-  if (in($frm, 'post editpost')) {
+  if ($frmPost or $frmEditpost) {
     extract($info = just(POST_FLDS . ' postid', $input, NULL));
     if (!$end) $info['end'] = NULL; // this has to be here, not in validate
     foreach (ray('type item details cat pid') as $k) if (!$$k) $err = $k;
@@ -461,11 +472,16 @@ function formPosts_submit($form, &$sta) {
       r\tellAdmin('post save error', $info);
       return go(POSTPAGE, t('Apologies. There was an error saving your post. Our tech crew is looking into it.'), 'err');
     }
-    if ($frm == 'post') $info += compact('created'); // don't change creation date or links stop working
-    $postid = db\updateOrInsert('posts', compact(ray('pid confirmed')) + $info, 'postid');
+    if ($frmPost) {
+      u\setDft($private, (int) moderate(db\get('zip', 'people', compact('pid'))));
+      $info += compact('created');
+    } else unset($info['created']); // don't change creation date or links stop working
+    $postid = db\updateOrInsert('posts', compact(ray('pid private')) + $info, 'postid');
     if (!$confirmed) emailLink('post', compact('postid'), $created, $type, $item, $pid);
+    if ($frmEditpost and $input['message']) $frmMessage = TRUE;
+  }
 
-  } elseif ($frm == 'message') {
+  if ($frmMessage) {
     extract($info = just(MESSAGE_FLDS, $input, NULL));
     $sender = $pid;
     foreach (ray(MESSAGE_FLDS) as $k) if (!$$k) $err = $k;
@@ -473,7 +489,7 @@ function formPosts_submit($form, &$sta) {
       r\tellAdmin('msg save error', $info);
       return go(POSTPAGE, t('Apologies. There was an error creating your message. Our tech crew is looking into it.'), 'err');
     }
-    $id = db\insert('messages', compact(ray('sender confirmed created')) + $info, 'id');
+    $id = db\insert('messages', compact(ray('sender created')) + $info, 'id');
     if ($confirmed) {
       $fromName = db\get('displayName', 'people', compact('pid'));
       postMsg($message, $fromName, $email, $postid);
@@ -481,7 +497,7 @@ function formPosts_submit($form, &$sta) {
       extract(db\get('type,item', 'posts', compact('postid')));
       emailLink('message', compact('id'), $created, $type, $item, $pid);
     }
-  } else return u\FAIL(t('bad form at bottom of submit: ' . $frm));
+  }
      
   w\go('/community/posts/op=top', 'info saved');
 }
@@ -541,3 +557,6 @@ function pVal($fld, $pid) {return db\get($fld, 'people', compact('pid'));}
 function zipOnlyMsg($specifics, $zip) {return t('We are unable to geolocate that address at this time, so %specifics in the "%zip3" Zip Code area.', 'specifics zip3', $specifics, substr($zip, 0, 3));}
 function msgFld($req = REQ) {return areaFld($req . t('Message to Send:'), t('Max 200 characters'), maxlen(200));}
 function postRet($msg) {return r\acct() ? w\go('empty', $msg) : doSay($msg);}
+function moderate($zip) {return in(substr(trim($zip), 0, 3), MODERATE_ZIPS);}
+function frmBools($frm) {foreach(ray(POST_FRMS) as $k) $res['frm' . ucfirst($k)] = ($frm == $k); return $res;}
+function admin() {global $mya; return ($mya and $mya->admin);}

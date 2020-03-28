@@ -254,7 +254,7 @@ function formMakeCtty_validate($form, &$sta) {
   extract(u\normalizeCase(just($normals = 'fullName legalName postalAddr', $sta['input'])));
   extract(just('zips region email phone federalId', $sta['input']));
 
-  if (preg_match("~$zips~", null) === false) return say(t('bad Zips REGEX'), 'zips');
+  if (preg_match("~$zips~", null) === FALSE) return say(t('bad Zips REGEX'), 'zips');
   if (!$region or !preg_match('/[A-Z]{3}/i', $region)) return say(t('bad region code'), 'region');
 
   if (!@$fullName) $fullName = $legalName;

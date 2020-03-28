@@ -203,6 +203,7 @@ define('CO_PHOTO_FACTOR', 3); // make company photos this many times as big as i
 define('MAX_UPLOAD_SIZE', 4 * 1024000); // maximum upload size in bytes
 define('MAX_ID_SIZE', 10); // max ID size in MB
 
+define('TRANSLATE_URL', 'https://translation.googleapis.com/language/translate/v2'); // google translate API URL
 define('GEOCODE_URL', 'https://api.opencagedata.com/geocode/v1/json?'); // use in acct::setLocus()
 define('MI_PER_DEGREE', 69); // varies from 68.703 at the equator to 69.407 at the poles
 define('NEIGHBOR_MAX', 40); // how far away (in miles) can a member see names of other individual members?

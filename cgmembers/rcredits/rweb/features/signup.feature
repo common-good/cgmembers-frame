@@ -189,7 +189,8 @@ Scenario: A member sets backing
   |       100 |
   Then we show "Invite Someone"
   And we say "status": "info saved|step completed"
-  And member ".ZZB" steps left "invite"
+  And member ".ZZB" steps left ""
+  # because invite step is completed as soon as user visits the page
 
 Scenario: A member invites
   Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund photo contact donate tithein proxies work backing"

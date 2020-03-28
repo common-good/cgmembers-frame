@@ -67,8 +67,8 @@ Scenario: Someone enters personal data after posting an offer
   | phone       | 413-253-0001 |
   | method      | text |
   Then these "posts":
-  | postid | type  | item | details | cat  | exchange | emergency | radius | confirmed | pid | created | end     |* 
-  | 1      | offer | fish | big one | food | 0        | 1         | 3      | 0         | 1   | %today  | %now+3d |
+  | postid | type  | item | details | cat  | exchange | emergency | radius | pid | created | end     |* 
+  | 1      | offer | fish | big one | food | 0        | 1         | 3      | 1   | %today  | %now+3d |
   And these "people":
   | pid | displayName | fullName | address | city | state | zip   | phone        | email | method | confirmed |*
   | 1   | Abe         | Abe One  | 1 A St. | Aville | MA  | 01001 | +14132530001 | a@b.c | text   | 0         |
@@ -80,15 +80,18 @@ Scenario: Someone enters personal data after posting an offer
 
 Scenario: Someone confirms an offer once, twice
   Given these "posts":
-  | postid | type  | item | details | cat  | exchange | emergency | radius | confirmed | pid | created | end     |* 
-  | 1      | offer | fish | big one | food | 0        | 1         | 3      | 0         | 1   | %today  | %now+3d |
+  | postid | type  | item | details | cat  | exchange | emergency | radius | pid | created | end     |* 
+  | 1      | offer | fish | big one | food | 0        | 1         | 3      | 1   | %today  | %now+3d |
   And these "people":
   | pid | displayName | fullName | address | city | state | zip   | phone        | email | method | confirmed |*
   | 1   | Abe         | Abe One  | 1 A St. | Aville | MA  | 01001 | +14132530001 | a@b.c | text   | 0         |
   When someone visits "community/posts/op=confirm&thing=post&code=%code" where code is:
   | postid | created |*
   | 1      | %today  |
-  Then we say "status": "post success"
+  Then these "people":
+  | pid | confirmed |*
+  | 1   | 1         |
+  And we say "status": "post success"
   
   When someone visits "community/posts/op=confirm&thing=post&code=%code" where code is:
   | postid | created |*
@@ -110,16 +113,16 @@ Scenario: Someone confirms an offer once, twice
   | cat   | item   | details | emergency | radius | end     |*
   | rides | Boston | ASAP    | 1         | 5      | %mdY+5d |
   Then these "posts":
-  | postid | type  | cat   | item | details | exchange | emergency | radius | confirmed | pid | created | end          |* 
-  | 1      | offer | rides | Boston | ASAP  | 0        | 1         | 5      | 1         | 1   | %now    | %daystart+5d |
+  | postid | type  | cat   | item | details | exchange | emergency | radius | pid | created | end          |* 
+  | 1      | offer | rides | Boston | ASAP  | 0        | 1         | 5      | 1   | %now    | %daystart+5d |
   And we show "Mutual Aid Offers & Needs" with:
   | Offers   | Needs | Post an Offer | Post a Need |
   And we say "status": "info saved"
 
 Scenario: Someone views the details of an offer
   Given these "posts":
-  | postid | type  | item | details | cat  | exchange | emergency | radius | confirmed | pid | created | end     |* 
-  | 1      | offer | fish | big one | food | 0        | 1         | 3      | 1         | 1   | %now    | %now+3d |
+  | postid | type  | item | details | cat  | exchange | emergency | radius | pid | created | end     |* 
+  | 1      | offer | fish | big one | food | 0        | 1         | 3      | 1   | %now    | %now+3d |
   And these "people":
   | pid         | 1 |**
   | displayName | Abe |
@@ -131,7 +134,7 @@ Scenario: Someone views the details of an offer
   | phone       | +14132530001 |
   | email       | a@b.c |
   | method      | text |
-  | confirmed   | 0 |
+  | confirmed   | 1 |
   | latitude    | 42.5 |
   | longitude   | -72.8 |
   When someone visits "community/posts/op=show&postid=1"
@@ -146,8 +149,8 @@ Scenario: Someone views the details of an offer
   
 Scenario: Someone replies to an offer
   Given these "posts":
-  | postid | type  | item | details | cat  | exchange | emergency | radius | confirmed | pid | created | end     |* 
-  | 1      | offer | fish | big one | food | 0        | 1         | 26     | 1         | 1   | %now    | %now+3d |
+  | postid | type  | item | details | cat  | exchange | emergency | radius | pid | created | end     |* 
+  | 1      | offer | fish | big one | food | 0        | 1         | 26     | 1   | %now    | %now+3d |
   And these "people":
   | pid         | 1 |**
   | displayName | Abe |
@@ -159,7 +162,7 @@ Scenario: Someone replies to an offer
   | phone       | +14132530001 |
   | email       | a@b.c |
   | method      | text |
-  | confirmed   | 0 |
+  | confirmed   | 1 |
   | latitude    | 42.5 |
   | longitude   | -72.8 |
   And cookie "locus" is "Greenfield, MA"
@@ -198,26 +201,26 @@ Scenario: Someone replies to an offer
 
 Scenario: Someone enters personal data after replying to an offer
   Given these "posts":
-  | postid | type  | item | details | cat  | exchange | emergency | radius | confirmed | pid | created | end     |* 
-  | 1      | offer | fish | big one | food | 0        | 1         | 3      | 1         | 1   | %now    | %now+3d |
+  | postid | type  | item | details | cat  | exchange | emergency | radius | pid | created | end     |* 
+  | 1      | offer | fish | big one | food | 0        | 1         | 3      | 1   | %now    | %now+3d |
   And these "people":
-  | pid | displayName | fullName | address | city | state | zip   | phone        | email | method | confirmed |*
-  | 1   | Abe         | Abe One  | 1 A St. | Aville | MA  | 01001 | +14132530001 | a@b.c | text   | 0         |
+  | pid | displayName | fullName | address | city     | state | zip   | phone        | email | method | confirmed |*
+  | 1   | Abe         | Abe One  | 1 A St. | Greenfield | MA  | 01301 | +14132530001 | a@b.c | text   | 1         |
   When someone confirms "community/posts/op=who&email=b@c.d&message=Hello there!&postid=1" with:
   | displayName | Bea |**
   | fullName    | Bea Two |
   | address     | 2 B St. |
-  | city        | Bville |
+  | city        | Greenfield |
   | state       | MA |
-  | zip         | 01002 |
+  | zip         | 01301 |
   | phone       | 413-253-0002 |
   | method      | email |
   Then these "messages":
   | id | postid | sender | message      | created |*
   | 1  | 1      | 2      | Hello there! | %now    |
   And these "people":
-  | pid | displayName | fullName | address | city | state | zip   | phone        | email | method | confirmed |*
-  | 2   | Bea         | Bea Two  | 2 B St. | Bville | MA  | 01002 | +14132530002 | b@c.d | email  | 0         |
+  | pid | displayName | fullName | address | city     | state | zip   | phone        | email | method | confirmed |*
+  | 2   | Bea         | Bea Two  | 2 B St. | Greenfield | MA  | 01301 | +14132530002 | b@c.d | email  | 0         |
   And we email "confirm-message" to member "b@c.d" with subs:
   | fullName | item | date | thing   | code | noFrame |*
   | Bea Two  | fish | %mdY | message |    ? |       1 |

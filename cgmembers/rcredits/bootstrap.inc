@@ -990,7 +990,7 @@ function drupal_serve_page_from_cache(stdClass $cache) {
   // Negotiate whether to use compression.
 /**/  die('serving cached page'); // cg 7/15/2017 we never do this
   $page_compression = !empty($cache->data['page_compressed']);
-  $return_compressed = $page_compression && isset($_SERVER['HTTP_ACCEPT_ENCODING']) && strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== FALSE;
+  $return_compressed = $page_compression && isset($_SERVER['HTTP_ACCEPT_ENCODING']) && strhas($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip');
 
   // Get headers set in hook_boot(). Keys are lower-case.
   $hook_boot_headers = drupal_get_http_header();
@@ -1150,7 +1150,7 @@ function t($string = '', $subs0 = []) {
   }
   $string = str_replace('\\', "\n", join('', $messages));
 
-//  if (mb_strpos($string, '%') !== FALSE) {
+//  if (strhas($string, '%')) {
   if (preg_match('/[%@!]/', $string)) {
     $subs = constantSubs($string);
     foreach ($subs0 as $k => $v) {
@@ -1186,7 +1186,7 @@ function constantSubs($string, $prefix = '%') {
  * @return u\ray called with those args if viable, else []
  */
 function rayy($args, $n = 0) {
-  for ($i = 0; $i < $n; $i++) array_shift($args); // ignore first n args
+  array_splice($args, 0, $n); // ignore first n args
   if (is_array(@$args[0])) return $args[0];
   return (count($args) >= 2 and is_string($args[0])) ? call_user_func_array('ray', $args) : [];
 }
@@ -1214,11 +1214,11 @@ function ray($s = '', $value1 = NULL) {
 
 // this func is called too often for the overhead u\EXPECT(compact('s'), 'string');
 /**/  if (is_array($s)) die('bad ray argument (array) ' . trace()); // can't use u\EXPECT here
-  $pattern = mb_strpos($s, "\n") !== FALSE ? '/\R/' 
-    : (mb_strpos($s, '|') !== FALSE ? ' *\| *' 
-    : (mb_strpos($s, ',') !== FALSE ? '\, *' 
-    : (mb_strpos($s, ';') !== FALSE ? '; *' 
-    : (mb_strpos($s, ' ') !== FALSE ? '  *' // strangely ' +' fails but '  *' works
+  $pattern = strhas($s, "\n") ? '/\R/' 
+    : (strhas($s, '|') ? ' *\| *' 
+    : (strhas($s, ',') ? '\, *' 
+    : (strhas($s, ';') ? '; *' 
+    : (strhas($s, ' ') ? '  *' // strangely ' +' fails but '  *' works
     : FALSE))));
 
   $simple = $pattern ? mb_split($pattern, $s) : array($s);
@@ -1295,7 +1295,18 @@ function in($what, $list) {
   return in_array($what, $list);
 }
 
-function strhas($string, $what) {return (mb_strpos($string, $what) !== FALSE);}
+/**
+ * Return "this string contains that string"
+ * @param string $string: this string
+ * @param string $what: that string
+ * @param bool $insensitive: ignore case (defaults to no)
+ */
+function strhas($string, $what, $insensitive = FALSE) {
+  $func = $insensitive ? 'mb_stripos' : 'mb_strpos';
+  return ($func($string, $what) !== FALSE);
+}
+function strihas($string, $what) {return strhas($string, $what, TRUE);}
+
 function between($what, $low, $high) {return ($low <= $what and $what <= $high);}
 function nn(&$a, $else = '') {return (!isset($a) or is_null($a)) ? $else : $a;} // "not null"
 /**/  function pr($whatever) {return print_r($whatever, TRUE);}

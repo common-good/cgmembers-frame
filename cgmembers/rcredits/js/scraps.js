@@ -297,12 +297,13 @@ function doit(what, vs) {
       var s = $(this).val().trim().replace(/\s+/g, ' ');
       if (s == '') return box.find('.row').show();
 
-      var i, a = s.toUpperCase().split(' '); // array of words
+      var i, words = s.toUpperCase().split(' '); // array of words
+      var cols = '.cat .item .details'.split(' ');
       box.find('.row').show(); // show all
 
       box.find('.tbody .row').each(function () {
-        rowText = ($(this).find('.item').text() + ' ' + $(this).find('.details').text()).toUpperCase();
-        for (i = 0; i < a.length; i++) if (rowText.indexOf(a[i]) < 0) $(this).hide();
+        colText = ''; for (i in cols) colText += ' ' + $(this).find(cols[i]).text().toUpperCase();
+        for (i in words) if (colText.indexOf(words[i]) < 0) $(this).hide(); // show only if it has all words
       });
     });
 
@@ -328,16 +329,26 @@ function doit(what, vs) {
     
   case 'post-post':
     $('#edit-cat').change(function () {setCookie(vs['type'] + 'cat', $(this).val());});
+    $('.form-item-end a').click(function () {
+      $('#edit-end').val(new Date(Date.now()).toLocaleString().split(',')[0]);
+      $('#edit-submit').focus();
+    });
     break;
 
   case 'post-who':
-/* Oops, people record does not exist yet   $('#frm-posts').submit(function () {
-      var params = {}; // build arguments to getLocus
-      'pid address city state zip'.split(' ').forEach(function (item, i) {params[item] = $('#edit-' + item).val();});
-      post('getLocus', params, null);
-      return true; // also really submit the form
-    });
-    break; */
+  /*
+    $('#edit-zip').change(function () {
+      var moderate = (vs['moderateZips'].indexOf($(this).val().trim().substring(0, 3)) >= 0);
+      var m, a = 'midtext days washes health'.split(' ');
+      for (i in a) {
+        m = $('.form-item-' + a[i]);
+        m.toggle(moderate);
+        if (moderate) {
+          m.find('input').attr('required', 'required');
+        } else m.find('input').removeAttr('required');
+      }
+    }); */
+    break;
     
   case 'signup':
     var form = $('#frm-signup');

@@ -268,7 +268,7 @@ function go($page, $msg = '', $field = '') {
   if (test()) {
     $_POST = []; // make sure it doesn't act like we submitted the target page
     t\output("Going to page $page (page0=$lastGo msg=$msg field=$field)");
-    return mb_strpos($page, 'http://') === FALSE ? f('t.pageForm', $page, $msg, $field) : '';
+    return strhas($page, 'http://') ? '' : f('t.pageForm', $page, $msg, $field);
   }
 
   if ($msg) say($msg, $field);
@@ -361,8 +361,8 @@ EOF;
 function htmlButton($name, $id, $value, $class, $other = []) {
   extract(just('tribs href class', $other));
 
-  if (nn($href) and mb_strpos($href, 'http') === FALSE) $href = BASE_URL . '/' . $href;
-//  u\EXPECT(!@$href or mb_strpos($href, 'http') !== FALSE, 'no http in html button'); // $onclick = $href;
+  if (nn($href) and !strhas($href, 'http')) $href = BASE_URL . '/' . $href;
+//  u\EXPECT(!@$href or strhas($href, 'http'), 'no http in html button'); // $onclick = $href;
   if (@$href) list ($tag, $role) = ['a', 'button']; else $tag = 'button';
   return w\tag($tag, $value, (@$tribs ?: []) + compact(@$onclick ? 'onclick' : 'href', 'class', 'role'));
 }
@@ -548,13 +548,13 @@ function showRecords($ray, $formatFunc = 'CG\\Web\\formatField', $flagsField = B
       $v = $formatFunc($k, plain($v), $flagsField);
 //      if ($k == 'for2' and $v == $row->for1) $v = 'same'; // admin uses this for conciseness
       $align = in($k, ALIGN_RIGHT) ? 'R' : (in($k, ALIGN_CENTER) ? 'C' : 'L');
-      foreach (ray('balance credit trust count total $ pct dollars') as $w) if (stripos($k, $w) !== FALSE) {
+      foreach (ray('balance credit trust count total $ pct dollars') as $w) if (strihas($k, $w)) {
         $align = 'R';
         if ($v !== '' and is_numeric($v)) $v = in($w, 'pct') ? u\fmtAmt($v, '%') : number_format($v, in($w, FMT_INT) ? 0 : 2);
       }
         
 //      if (in_array($k, ray(FMT_INT))) $v = round($v);
-//      if (in_array($k, ray(FMT_2D)) or strpos($k, '$') !== FALSE) if ($v != '') $v = number_format($v, 2);
+//      if (in_array($k, ray(FMT_2D)) or strhas($k, '$')) if ($v != '') $v = number_format($v, 2);
       $line .= "  <td class=\"align$align\">$v</td>\n";
     }
     $lines[] = $line;
@@ -804,7 +804,7 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
   if (!@$formSta['confirm'] and !in($function, R_NOLOG_FORMS)) {
     $formName = str_replace(base_path(), '', $_SERVER['REQUEST_URI']);
     $logit = TRUE;
-    foreach(ray('sadmin/ account- /admin /wp-admin /wp-login /xmlrpc') as $i => $k) if (strpos($formName, $k) !== FALSE) {
+    foreach(ray('sadmin/ account- /admin /wp-admin /wp-login /xmlrpc') as $i => $k) if (strhas($formName, $k)) {
       if ($i >= 2) return hack(t('blog attack'));
       $logit = FALSE;
     }
@@ -1197,7 +1197,7 @@ function memberStep($step, $done, $text, $links = '', $newWindow = FALSE) {
   if ($links) {
     if (!is_array($links)) $links = array($links);
     foreach ($links as $href) {
-      if (mb_strpos($href, 'http') === FALSE) $href = BASE_URL . "/$href";
+      if (!strhas($href, 'http')) $href = BASE_URL . "/$href";
       $link = "<a href=\"$href\"$target>";
       $linkx = '</a>';
       $text = preg_replace('/<a>/', $link, $text, 1);
@@ -1214,7 +1214,7 @@ EOF;
 
 // NOT USED
 function divButton($href, $title) {
-  if (mb_strpos($href, 'http') === FALSE) $href = BASE_URL . "/$href";
+  if (!strhas($href, 'http')) $href = BASE_URL . "/$href";
   return w\popHelp('', $title, $href);
   /*
   return  <<<EOF
@@ -1226,8 +1226,8 @@ EOF;
 // NOT USED
 function imageButton($href, $title, $src) {
   global $rUrl;
-  if (mb_strpos($href, 'http') === FALSE) $href = BASE_URL . "/$href";
-  if (mb_strpos($src, 'http') === FALSE) $src = "$rUrl/images/icons/$src";
+  if (!strhas($href, 'http')) $href = BASE_URL . "/$href";
+  if (!strhas($src, 'http')) $src = "$rUrl/images/icons/$src";
   return w\popHelp("<img src=\"$src\" />", $title, $href);
 /*  return  <<<EOF
 <a href="$href" title="$title"><img src="$src" border="0" /></a>
@@ -1684,12 +1684,12 @@ function hack($message, $info = []) {
 
 function fundRpt($now, $then, $type = '') {
   //$up = $then ? number_format(abs($now / $then - 1) * 100, 1) : '100';
-  $RUS = strpos($type, 'r') === FALSE ? '' : '@R';
+  $RUS = strhas($type, 'r') ? '@R' : '';
   $change = u\fmtAmt(abs($now - $then));
   $way = $now >= $then ? t('up') : t('down');
 //  $s = u\fmtAmt($now) . t("$RUS &mdash; @way @change$RUS from a month ago", compact('way', 'change'));
   $s = u\fmtAmt($now) . t($RUS, compact('way', 'change'));
-  return strpos($type, '$') === FALSE ? str_replace('$', '', $s) : $s;
+  return strhas($type, '$') ? $s : str_replace('$', '', $s);
 }
 
 function txsRpt($amt, $count, $accts, $type) {
@@ -1888,7 +1888,7 @@ function menu($path, $title, $type, $function, $args, $perms = '') {
 
   foreach ($args = ray($args) as $k => $v) if (is_numeric($v)) $args[$k] = (int) $v;
   
-  $adminPerms = (stripos($perms, 'admin') !== FALSE);
+  $adminPerms = (strihas($perms, 'admin'));
   $admin = (u\starts($path, 'sadmin') or $perms == 'dev' or $adminPerms);
   $smart = ($path == 'pos');
 
@@ -1961,7 +1961,7 @@ function say($index, $args = [], $errField = '') {
 ///  if (is_array($index) and !isset($index[0])) debug($index);
   if (is_array($index)) list ($index, $args, $errField) = array($index[0], $index[1], $args); // error returned from a function
   if (!is_array($args)) list ($args, $errField) = array($errField, $args); // allow either order, for easy 2-param calls
-  $noTable = (mb_strpos($index, '<table') === FALSE);
+  $noTable = (!strhas($index, '<table'));
   $message = $noTable ? t($index, $args) : $index; 
   $fieldErr = ($errField and $errField != 'ERR');
   if ($fieldErr) \form_set_error($errField, $message); else \drupal_set_message($message, @$errField == 'ERR' ? 'error' : 'status', FALSE);
