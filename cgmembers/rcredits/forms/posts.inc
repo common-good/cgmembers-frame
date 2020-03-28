@@ -202,8 +202,6 @@ X;
 function getPost($type) {
   extract(just('offercat needcat', $_COOKIE, NULL));
 
-  jsx('post-post', 'type', $type);
-
   $need = ($type == 'need');
   $postCat = ($id = nn($_COOKIE[$type . 'cat'])) ? db\get('cat', 'post_cats', compact('id')) : '';
   $lastCat = $postCat ? t('Your last %type post was in the "%postCat" category.', compact(ray('type postCat'))) : '';
@@ -227,7 +225,9 @@ function postInputFlds($type0, $dfts = []) {
   extract(just(POST_INPUT_FLDS, $dfts, ''));
   $type = $type0;
   $need = ($type == 'need');
-  
+
+  jsx('post-post', 'type', $type);
+
   $choices = catChoices(t('Choose a category'));
   $cat = array_search($cat, $choices);
   $cat = selectFld(REQ . t('Category:'), '', dft($cat), $choices);
@@ -335,8 +335,8 @@ function getWho($args) {
   $method = w\radiosFld(REQ . t('Preferred Contact:'), t('The "phone" and "text" options apply only when a %PROJECT member contacts you (because we have verified the identity only of members). Otherwise you will receive replies by email.'), '', ray(METHOD_OPTS));
 
   $midtext = t('And now some COVID-19 self-assessment questions for 2020:');
-  $days = textFld(t('Distancing Days:'), [t('Days practicing social distancing'), t('About how long have you been practicing social distancing consistently (staying at least 6 feet away from all but a handful of people)? Thank you! Your voluntary inconvenience could save thousands of lives &mdash; especially your friends, family, and neighbors.')]);
-  $washes = textFld(t('Hand-washing:'), [t('Hand-washes per day'), t('About how many times a day do you wash your hands for 20 seconds or more? (This data will help us convince other people to do it more.)')]);
+  $days = textFld(REQ . t('Distancing Days:'), [t('Days practicing social distancing'), t('About how long have you been practicing social distancing consistently (staying at least 6 feet away from all but a handful of people)? Thank you! Your voluntary inconvenience could save thousands of lives &mdash; especially your friends, family, and neighbors.')]);
+  $washes = textFld(REQ . t('Hand-washing:'), [t('Hand-washes per day'), t('About how many times a day do you wash your hands for 20 seconds or more? (This data will help us convince other people to do it more.)')]);
   $health = radiosFld(t('Health:'), t('If you are not feeling completely well, please <%a>take this quiz from the CDC</a> right away, and follow its advice.', '_a', atag('https://www.cdc.gov/coronavirus/2019-ncov/if-you-are-sick/steps-when-sick.html')), dft(2), ray(HEALTH_RATINGS));
 
   $submit = t('Submit');
@@ -424,7 +424,7 @@ function formPosts_validate($form, &$sta) {
     if ($err = u\badPhone($phone)) return say($err, 'phone');
     if (u\poAddress($address)) return say('po in location', 'address');
     foreach (ray('address city') as $k) if (in($$k, '0 1', strtolower($$k), strtoupper($$k))) $$k = ucwords(strtolower($$k));
-    if (moderate($zip)) foreach (ray('days washes') as $k) if ($err = u\badAmount($$k, '>=0')) return say($err, $k);
+    foreach (ray('days washes') as $k) if ($err = u\badAmount($$k, '>=0')) return say($err, $k);
     
     list ($latitude, $longitude, $zot) = u\getLocus($address, $city, $state, $zip);
     if ($latitude == 0 and $longitude == 0) {
@@ -454,14 +454,15 @@ function formPosts_submit($form, &$sta) {
   } elseif ($frmWho) {  // carrying info about post or message, as well as contact info
     $contactInfo = just(CONTACT_FLDS, $input, NULL);
     $method = ray(METHOD_OPTS)[$method];
-    $health = moderate($zip) ? ($days+0) . ' ' . ($washes+0) . ' ' . ray(HEALTH_RATINGS)[$health] : '';
+    $health = ($days+0) . ' ' . ($washes+0) . ' ' . ray(HEALTH_RATINGS)[$health];
 
+    u\EXPECT(!db\get('pid', 'people', compact('email')), 'duplicate people email in post submit');
     $pid = db\insert('people', compact(ray('method health')) + $contactInfo, 'pid');
     if ($type) $frmPost = TRUE; else $frmMessage = TRUE; // now fall through to process the earlier data passed through by who form
   }
 
   // got pid, now process post or message
-  $confirmed = (int) ($email == vip('email') or $frmEditpost); // set confirmation status of record we're about to create
+  $confirmed = (int) (vip('pid') == $pid and vip('confirmed') and (vip('email') == $email or $frmEditpost)); // get confirmation status of person posting, editposting, or messaging -- vip('confirmed') is for DEV and double-check
   $created = time();
   $err = FALSE;
   
@@ -478,7 +479,12 @@ function formPosts_submit($form, &$sta) {
       $info += compact('created');
     } else unset($info['created']); // don't change creation date or links stop working
     $postid = db\updateOrInsert('posts', compact(ray('pid private')) + $info, 'postid');
-    if (!$confirmed) emailLink('post', compact('postid'), $created, $type, $item, $pid);
+
+    if ($confirmed) {
+      if ($frmEditpost and $end <= now()) {
+        say(t('Your post is ended.'));
+      } else say(tr('post will appear', 'when', $private ? t('when it is approved') : t('immediately')));
+    } else emailLink('post', compact('postid'), $created, $type, $item, $pid);
     if ($frmEditpost and $input['message']) $frmMessage = TRUE;
   }
 
