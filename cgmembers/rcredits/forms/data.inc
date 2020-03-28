@@ -71,7 +71,7 @@ function formData_submit($form, &$sta) {
   $op = w\opText($sta);
 
   $d = substr(op($sta), 0, 1);
-  if (strpos('0123456789', $d) !== FALSE) $op = $d . $op; // leading digit, if any
+  if (strhas('0123456789', $d)) $op = $d . $op; // leading digit, if any
   $url = $isco ? '/history/company-reports' : '/community/data';
   w\go("$url/qName=" . urlencode($op));
 }

@@ -129,7 +129,7 @@ function badZip(&$z, $country = US_COUNTRY_ID) {
  * Say where the given address contains a PO box.
  */
 function poAddress($address) {
-  return (mb_stripos(@$address, ' box ') or mb_stripos(@$address, 'pob ') !== FALSE);
+  return (strihas(@$address, ' box ') or strihas(@$address, 'pob '));
 }
 
 /**
@@ -807,7 +807,7 @@ function cry($type, $data, $de = FALSE, $pwInstead = '') {
 function crypted($type, $s = NULL) {
 	if (func_num_args() == 1) {
 	  list ($type, $s) = [@$type[strlen(CRYPT_FLAG)], $type];
-	  if (!$type or strpos('PSV', $type) === FALSE) return FALSE;
+	  if (!$type or !strhas('PSV', $type)) return FALSE;
 		return u\starts($s, CRYPT_FLAG) ? $type : FALSE;
   } else return u\starts($s, CRYPT_FLAG . $type);
 }
@@ -970,7 +970,7 @@ function getLocus($q, $city = '', $state = '', $zip = '') {
   
 //  if ($channel == TX_WEB) ini_set('default_socket_timeout', 8);
   if ("$city$state$zip") $q .= tr(", $city, " . r\realState($state) . " $zip");
-  if (test() or (strpos($q, 'Greenfield, MA') !== FALSE and isDEV)) return f('t.getLocus', $q);
+  if (test() or (strhas($q, 'Greenfield, MA') and isDEV)) return f('t.getLocus', $q);
 
   $none = [0, 0, ''];
   $params = ray('q key', $q, GEOCODE_KEY);
@@ -1512,7 +1512,7 @@ function sqlSerialValue($s, $n) {return "SUBSTRING_INDEX(SUBSTRING_INDEX($s, '\\
 function similar($s1, $s2, $chars = 5, $pct0 = .1) {return (similar_text($s1, $s2, $pct) > $chars and $pct > $pct0);}
 function unite($a, $b, $m = '') {return ($a and $b) ? tr('%a%m%b', '_a _m _b', $a, $m ?: t(' and '), $b) : ($a ?: $b);}
 function honorDesc($honor) {return $honor == 'other' ? ' ' : t(' in %honor of ', compact('honor'));}
-function inList($needle, $hay) {return (mb_strpos(" $hay ", " $needle ") !== FALSE or mb_strpos(",$hay,", ",$needle,") !== FALSE);}
+function inList($needle, $hay) {return (strhas(" $hay ", " $needle ") or strhas(",$hay,", ",$needle,"));}
 function weakPass($pw) {return (mb_strlen($pw) < 8 or !preg_match('/\d/', $pw) or !preg_match('/[A-Z]/', $pw) or !preg_match('/[a-z]/', $pw) or !preg_match('/[^0-9A-Za-z]/', $pw));}
 function b64encode($data) {return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');}
 function b64decode($data) {return base64_decode(strtr($data, '-_', '+/'));}

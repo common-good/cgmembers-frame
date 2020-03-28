@@ -1,3 +1,11 @@
+2020-03-28 feature/post-moderate
+. added optional required-moderation for certain 3-digit zip code areas
+. added link to cancel post on editpost page
+. format improvements
+. added COVID-19 survey questions (self-vetting and for establishing new social norms)
+. more consistent use of strhas (and strihas)
+. invite step is completed just by visiting the page
+
 2020-03-27 feature/post-search
 . searching for words in posts
 . fixed bug in rcron geocode

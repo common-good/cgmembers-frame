@@ -15,6 +15,7 @@ function formInvite($form, &$sta, $args = '') {
   global $base_url;
 //  if ($agent = r\agent()) {
   if ($mya->cAdmin and !$mya->proSe) say(t('Note: Admins cannot invite on behalf of someone.'), 'err');
+  $mya->stepDone('invite'); // not required to actually do the step
   
   $title = t('Invite Someone to %PROJECT');
 /*  if (!$mya->member) {

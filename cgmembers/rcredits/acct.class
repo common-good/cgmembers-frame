@@ -207,7 +207,7 @@ class Acct {
     if ($field == 'masterA') return $a->slave ? $a->jA : $a;
     if ($field == 'helperA') return $a->helper ? r\acct($a->helper) : '';
     if ($field == 'foody') return db\get(':U_FOODY', 'users u', ['uid' => $a->id]);
-    if ($field == 'iclub') return ($a->id < 0 or mb_strpos($a->fullName, t('Investment Club')) !== FALSE);
+    if ($field == 'iclub') return ($a->id < 0 or strhas($a->fullName, t('Investment Club')));
     if ($field == 'iclubId') return db\get('clubid', 'r_stakes', 'uid=:uid', ['uid' => $a->id]);
     if ($field == 'trialco') return ($a->co and $a->depends);
     if ($field == 'prefsSet') return !is_null($a->o_minimum); // preferences have been set at least once
@@ -289,8 +289,8 @@ class Acct {
   private function special($fields, $specialType) {
     $specials = constant("{$specialType}_FLDS");
     return is_array($fields) ? (bool) array_intersect($fields, ray($specials))
-      : (strpos($fields, ' ') === FALSE ? u\inList($fields, $specials) // be efficient, if just one field
-         : (bool) array_intersect(ray($fields), ray($specials)));
+      : (strhas($fields, ' ') ? (bool) array_intersect(ray($fields), ray($specials))
+        : u\inList($fields, $specials)); // be efficient, if just one field
   }
 
   /**
