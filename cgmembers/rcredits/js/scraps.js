@@ -282,24 +282,26 @@ function doit(what, vs) {
       $('#edit-submit').click();
       return false; // cancel original link click
     });
+    $('#menu-signin').hide(); // don't confuse (signin is not required for this feature)
     break;
     
   case 'post-tabs':
 // NO. use URL instead  $('#edit-back').click(function () {window.history.back(); return false;});
     var frm = $('#edit-search').parents('form:first');
+    
     frm.submit(function (event) {event.preventDefault();}); // or return false;
    
     $('#edit-search').change(function () { // search
       var box = $('#tabs .container');
 
-      $('.limit-list').val(-1);
+      $('.filter').val(-1); // show "(search)" on both filter dropdowns
       
-      var s = $(this).val().trim().replace(/\s+/g, ' ');
-      if (s == '') return box.find('.row').show();
+      var s = $(this).val().trim().replace(/\s+/g, ' '); // the search string
+      box.find('.tbody .row').show(); // show all (then eliminate non-matches)
+      if (s == '') return $('.filter').val('');
 
       var i, words = s.toUpperCase().split(' '); // array of words
       var cols = '.cat .item .details'.split(' ');
-      box.find('.row').show(); // show all
 
       box.find('.tbody .row').each(function () {
         colText = ''; for (i in cols) colText += ' ' + $(this).find(cols[i]).text().toUpperCase();
@@ -309,20 +311,33 @@ function doit(what, vs) {
 
     $('#tabs').tabs();
     $('#tabs ul li a[href^="http"]').unbind('click').click(function () {location.href = $(this).attr('href');});
-    $('[aria-controls="tab-needs"]').click(function () {$('#tab-needs').show();});
+/*    $('[aria-controls="tab-needs"]').click(function () {$('#tab-needs').show();}); */
+    $('#tabs .tbody .row').click(function () {location.href = $(this).find('a').attr('href');});
        
-    $('.limit-list').change(function () { // filter
-      var box = $(this).parents('.container');
-      var cat = $(this).find(':selected').text();
-      
-      if (cat == 'my posts') cat = 'mine';
-      if (cat.startsWith('Category')) {
-        box.find('.row').show(); // show all
-      } else {
-        box.find('.row').hide(); // hide all
-        box.find('.row').first().show(); // then show headers
+    $('.filter').mousedown(function () {$(this).parent().click();});
+    
+    $('.filter').change(function () {
+      var box = $($(this).parent().attr('href'));
+      var opt = $(this).find(':selected');
+
+      if (opt.val() == -1) { // search
+        $('#edit-search').change();
+      } else if (opt.val()) { // show some
+        var cat = opt.text().replace(/ /g, '');
+        if (cat == vs['myPosts']) cat = 'mine';
+        box.find('.tbody .row').hide(); // hide all
         box.find('.row.' + cat).show(); // and everything in the chosen category
-        $('.row.none').show(); // and the "nothing found in this area" row, if any
+        box.find('.row.none').show(); // and the "nothing found in this area" row, if any
+      } else box.find('.tbody .row').show(); // show all
+    });
+    
+    $('#edit-view').click(function () {
+      if ($('#tabs.memo').length > 0) { // if memo view, switch to list view
+        $('#tabs').removeClass('memo');
+        $(this).text(vs['memoView']);
+      } else { // list view, switch to memo
+        $('#tabs').addClass('memo');
+        $(this).text(vs['listView']);
       }
     });
     break;

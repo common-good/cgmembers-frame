@@ -17,37 +17,36 @@ define('HEALTH_RATINGS', 'excellent good ok indisposed'); // health self-assessm
 define('POSTPAGE', '/community/posts');
 define('MODERATE_ZIPS', ''); // 3-digit zip code areas where moderation is mandatory (eg '010 013')
 define('POST_FRMS', 'top tabs post editpost who message'); // possible values for $frm
+define('CAT_FLAG', '[CAT]'); // gets replaced programmatically
 
 /*
-Current features
-- View the lists of Posts and Needs for a certain address and radius (say Greenfield, MA 01301 with a 30 mile radius)
-- Select a certain Category to limit the list
-- Click an item to view it in more detail, but without personal identifying information (more detail for administrators )
-- Reply to an item being viewed
-- Post an Offer
-- Post a Need
-- Click the confirmation link in the email you get after posting or replying (just the first time)
-- Receive a reply to something you posted (for example by replying to your own post)
-- Post or Reply to a Post after doing either thing once before
-- Cancel (terminate) a Post (immediately or much later) by clicking a link in the confirmation email.
-
-New features:
-- Edit your post (or someone else's if you are an administrator)
-- Search for text
-- View just your own posts (or someone else's if you are an administrator)  
-- For administrators, more fields in the summary list
-- Moderation required in 013 zip area
-- COVID 19 risk survey (self-vetting) in 013 zip area
-- Automatic translation (in process)
+  Features:
+  - View the lists of Posts and Needs for a certain address and radius
+  - Select a certain Category to limit the list
+  - Click an item to view it in more detail, but without personal identifying information (more detail for administrators )
+  - Reply to an item being viewed
+  - Post an Offer
+  - Post a Need
+  - Click the confirmation link in the email you get after posting or replying (just the first time)
+  - Receive a reply to something you posted
+  - Cancel (terminate) a Post (immediately or much later) by clicking a link in the confirmation email or editing the post
+  - Edit your post (or someone else's if you are an administrator)
+  - Search for text
+  - View just your own posts (or someone else's if you are an administrator)  
+  - Moderation required in certain 3-digit zip areas
+  - COVID 19 risk survey (self-vetting)
+  - Automatic translation (in process)
 */
 
 /**
  * Exchange help with neighbors.
  
- @todo: add a link in every reply that will both cancel the post AND tell the replier thank you and no longer needed or offered.
- - send an email the next day after a reply, asking if the offer/need is still ok (with a link to cancel it). At the same time, change confirmed to a date (NULL is not confirmed, date is most recent confirmation date). Allow ongoing.f
- - say when new things are posted in my area.
- 
+  @todo: 
+  - link in every reply that will both cancel the post AND tell the replier thank you and no longer needed or offered.
+  - send an email the next day after a reply, asking if the offer/need is still ok (with a link to cancel it). At the same time, change confirmed to a date (NULL is not confirmed, date is most recent confirmation date). Allow ongoing.f
+  - say when new things are posted in my area.
+  - For administrators, more fields in the summary list
+
  */
 function formPosts($form, &$sta, $args = '') {
   /* $title = t('Offers & Posts');
@@ -71,26 +70,31 @@ function formPosts($form, &$sta, $args = '') {
   $title = t('Mutual Aid Offers & Needs'); // for top or tabs
   
   if ($op == 'top') {
-    jsx('post-tabs');
-    $back = btn('/community/posts', t('<big>&laquo;</big> Back to Top'), 'warning');
-    $search = textFld(BARE, [t('Search for words')]);
+    jsx('post-tabs', 'listView memoView myPosts', t('List View'), t('Memo View'), t('my posts'));
+    $back = btn('/community/posts', t('<big>&laquo;</big> Back to Top'), 'warning', '', 'edit-back');
+    $view = btn('', t('List View'), 'success', '', 'edit-view');
+    $search = rendA('search', textFld(BARE, [t('Search for words')]));
+    $buttons = item($back . $view . $search);
 
-    $choices = catChoices(t('Category (all)'), [-1 => t('(search)')]) + [99 => t('my posts')];
-    $cat = rendA('cat', selectFld(BARE, '', clas('limit-list'), $choices));
+    $choices = catChoices(CAT_FLAG . t('(all)'), [-1 => CAT_FLAG . ('(search)')]) + [99 => t('my posts')];
+    $cat = rendA('cat', selectFld(BARE, '', clas('filter'), $choices));
 
     foreach (ray('offer need') as $type) {
-      $k = $type . 's';
+      $k = $type . 's'; // offers and needs
       $rows = postList($type, $latitude0, $longitude0, $zip0, $radius0);
       ${$k . 'None'} = count($rows) < 4 ? tr('<div class="none">%none</div>', 'none', t('There are not yet any %types within %radius miles of that address.', compact(ray('type radius')))) : '';
       $$k = join("\n", $rows);
-      $$k = preg_replace(t('/Category/'), $cat, $$k, 1);
+      
+      $k = $type . 'sCat'; // offersCat and needsCat
+      $label = $type == 'need' ? t('Needs') : t('Offers');
+      $$k = str_replace(CAT_FLAG, "$label ", $cat);
       $$k = preg_replace('/edit-cat/', "\$0-$type", $$k, 1);
     }
 
-    $tabs = tabFlds($offers, $needs, $offersNone, $needsNone);
+    $tabs = tabFlds(compact(ray('offersCat needsCat offers needs offersNone needsNone')));
     $frm = hidFld('tabs');
 
-    return cgform(compact(ray('title back search tabs frm')));
+    return cgform(compact(ray('title buttons tabs frm')));
   }
 
   // no op
@@ -115,14 +119,15 @@ function formPosts($form, &$sta, $args = '') {
 /**
  * Return the field with all the information and action choices.
  */
-function tabFlds($offers, $needs, $offersNone, $needsNone) { 
+function tabFlds($params) { 
   global $base_url;
-
+  extract($params);
+  
   return item(<<< X
-<div id="tabs">
+<div id="tabs" class="memo">
   <ul>
-    <li><a href="#tab-offers">Offers</a></li>
-    <li><a href="#tab-needs">Needs</a></li>
+    <li><a href="#tab-offers">$offersCat</a></li>
+    <li><a href="#tab-needs">$needsCat</a></li>
     <li><a id="offer" href="$base_url/community/posts/op=offer">Post an Offer</a></li>
     <li><a id="need" href="$base_url/community/posts/op=need">Post a Need</a></li>
   </ul>
@@ -181,7 +186,7 @@ X;
 ///      debug($dist);
     if ($emergency) $item = '<span class="emergency">!!</span> ' . $item;
     $item = lnk('/community/posts/op=show&postid=' . $postid, $item);
-    $rowClass = "row $cat" . ($mine ? ' mine' : '');
+    $rowClass = 'row ' . str_replace(' ', '', $cat) . ($mine ? ' mine' : '');
     $rows[] = <<< X
     <div class="$rowClass">
       <div class="cell cat">$cat</div>
@@ -481,7 +486,7 @@ function formPosts_submit($form, &$sta) {
     $postid = db\updateOrInsert('posts', compact(ray('pid private')) + $info, 'postid');
 
     if ($confirmed) {
-      if ($frmEditpost and $end <= now()) {
+      if ($frmEditpost and $end and $end <= now()) {
         say(t('Your post is ended.'));
       } else say(tr('post will appear', 'when', $private ? t('when it is approved') : t('immediately')));
     } else emailLink('post', compact('postid'), $created, $type, $item, $pid);
