@@ -45,7 +45,7 @@ $GLOBALS['tStrings'] = array(
   'info saved' => t('Your information has been saved.'),
   'not saved' => t('No change has been made to your information.'),
 //  'payment accepted' => t('%RCREDITS payment accepted. In exchange, us%amount will be refunded to the payer, from your account.'), // UNUSED
-  'confirm by email' => t('We sent you an email with a link to click to confirm this %thing.'),
+  'confirm by email' => t('We sent you an email with a link to click to confirm this %thing. If you do not see it right away, look in your Spam folder.'),
   'message sent' => t('Your message has been sent.'),
 	'donation replaces' => t('If you choose a new recurring donation, it will replace your existing %period donation of %amt.'),
   'charge accepted' => t('Your charge to %who\'s account has been approved (it is no longer in dispute). No action is necessary.'),
@@ -304,7 +304,7 @@ EOF
   'bad locus' => t('That is not a recognizable address. Try again with a postal code.'),
   'post success' => t('Success! Your post is confirmed.'),
   'message success' => t('Success! Your message is confirmed.'),
-  'post will appear' => t('Your post will appear %when. To edit or cancel it, select category "my posts" and click on this post.'),
+  'post will appear' => t('Your post will appear %when. To edit or cancel it, click on it in the list.'),
   
 //  'savings too low' => t('Until your %PROJECT community declares itself a stable Common Good Community, your savings amount must be at least as much as the incentive rewards you have received (%rewards to date)'),
   'savings too low' => t('Your additional savings amount cannot be less than zero.'),

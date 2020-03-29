@@ -2335,9 +2335,14 @@ function tag($tag, $html = '', $tribs = []) {
 function tagN($tag, $html = '', $tribs = []) {return str_replace('#', '', tag($tag, $html, $tribs));}
 
 /**
- * Return an a tag for a non-spinning button to a new page.
+ * Return an a tag for a non-spinning button.
+ * @param string $href: URL to go to on click ('' if the click is handled with JS)
+ * @param string $style: button style (default, primary, success, error, warning)
+ * @param strng $size: xs sm md lg
+ * @param assoc/string $extras: array of attributes or id string
  */
 function atagB($href, $style = 'primary', $size = 'xs', $extras = []) {
+  if (is_string($extras)) $extras = ['id' => $extras];
   $class = @$extras['class'];
   $extras['class'] =  ($class ? "$class " : '') . "btn btn-$size btn-$style";
   return atag($href, $extras + ['role' => 'button']);
@@ -2347,6 +2352,7 @@ function atagB($href, $style = 'primary', $size = 'xs', $extras = []) {
  * Return an a tag.
  */
 function atag($href, $extras = []) {
+  if (is_string($extras)) $extras = ['id' => $extras];
   if (nn($extras['role']) != 'button') $extras += ['tabindex' => '-1'];
   if (@$href[0] == '/') $href = BASE_URL . $href;
 // NO  if ($href[0] == '$') $href = 'javascript:' . substr($href, 1);

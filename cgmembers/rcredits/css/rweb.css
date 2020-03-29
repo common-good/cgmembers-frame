@@ -538,10 +538,16 @@ body.page-partner blockquote {font-size:14px;}
 /* Posts */
 #frm-posts .container {margin:0; padding:0; font-size:14px;}
 
-#frm-posts #edit-title,
+#frm-posts #edit-title {text-align:center;}
 /* #frm-posts #edit-subtext {margin-bottom:0;} */
-#frm-posts #edit-buttons .control-data {text-align:center;}
-#frm-posts #edit-buttons .control-data a {margin:0 5px;}
+/* #frm-posts #edit-buttons .control-data {text-align:center;} */
+#frm-posts #edit-buttons label {display:none;}
+#frm-posts #edit-buttons .btn {margin-right:5px;}
+#frm-posts #edit-back {margin-left:5px;}
+/* #frm-posts #edit-buttons .control-data a {margin:0 5px;} */
+/* #frm-posts #edit-back {display:inline-block; margin:0 0 -7px 0;} */
+/*#frm-posts #edit-back .control-data {width:auto;} */
+
 #frm-posts select#edit-cat,
 #frm-posts input#edit-end,
 #frm-posts input#edit-city,
@@ -552,27 +558,29 @@ body.page-partner blockquote {font-size:14px;}
 #frm-posts input#edit-radius,
 #frm-posts input#edit-email {max-width:250px;}
 
-#frm-posts #edit-back {display:inline-block; margin:0 0 -7px 0;}
-#frm-posts #edit-search {display:inline; margin:0 5px 15px 0; max-width:200px;}
-#frm-posts #edit-back label {display:none;}
-#frm-posts #edit-back .control-data {width:auto;}
+#frm-posts #edit-search {display:inline; margin:0 5px 0 0; max-width:200px;}
 #frm-posts #edit-end {display:inline-block; margin-right:15px;}
 
 #frm-posts #tab-needs {display:none;}
 #frm-posts .thead .cell {padding:0px 8px;}
-/*#frm-posts .row.none {column-span:all;}*/
 
-#frm-posts .k-category {padding:4px 0 4px 9px; width:140px;}
-#frm-posts .k-category select {padding:0; width:140px; box-shadow:none; -webkit-box-shadow:none;}
-#frm-posts .k-category select option {background-color:white; color:#111111; margin-top:-20px;}
-#frm-posts .limit-list {background-color:#04488B; color:white; border:0;}
+#frm-posts .k-category {padding:4px 0 4px 9px; width:150px;}
+
+#frm-posts .filter {height:23px; padding:0px; font-size:14px; border:0; box-shadow:none; -webkit-box-shadow:none;}
+#frm-posts .filter option {background-color:white; color:#111111; margin-top:-20px;}
+#frm-posts .ui-state-active {border:#003200;}
+#frm-posts .ui-state-default .filter {background-color:#f6f6f6; color:black;}
+#frm-posts .ui-state-active .filter {background-color:darkgreen; color:white;}
+
+#frm-posts #ui-id-1,
+#frm-posts #ui-id-2 {padding:5px 0 3px 9px;}
 
 #frm-posts #edit-radius {display:inline-block; margin-right:5px;}
 #frm-posts .form-item-radius .btn {margin-left:5px;}
 
 #frm-posts .form-item-locus .help-block {margin-bottom:0;}
 
-#frm-posts .ui-tabs-panel {padding:10px 2px;}
+#frm-posts .ui-tabs-panel {padding:0;}
 #frm-posts .ui-tabs-panel .container a {color:#2fa4e7;}
 #frm-posts .ui-tabs-panel .container a:hover {color:silver;} 
 
@@ -583,15 +591,22 @@ body.page-partner blockquote {font-size:14px;}
 
 #frm-posts #edit-midtext {color:darkred;}
 
-/*#frm-posts .form-item-midtext,
-#frm-posts .form-item-days,
-#frm-posts .form-item-washes,
-#frm-posts .form-item-health {display:none;} */
+/* memo view */
 
-/* FAILS #frm-posts .form-item-zip.ziptogo .control-data,
-#frm-posts .form-item-cat.limit-list .control-data {text-align:center;} */
+#frm-posts .memo .container {background-color:burlywood;}
+#frm-posts .memo .thead .row {display:none;}
 
-/* #frm-posts .ui-widget.ui-widget-content {border-bottom:0;} */
+#frm-posts .memo .tbody .row {display:inline-block; width:200px; margin:10px 7px; text-align:center; overflow:hidden; border:1px solid silver; border-top:0; box-shadow: 5px 5px 10px #888888; background-color:white; -webkit-border-radius: 5px; border-radius: 5px;}
+#frm-posts .memo .tbody .cell {display:block; width:auto; background-color:white; overflow:hidden;}
+#frm-posts .memo .tbody .cat {background-color:royalblue; color:white;}
+#frm-posts .memo .tbody .item {display:table-cell; width:200px; background-color:azure; font-size:125%; border-bottom:1px solid silver; height:62px; vertical-align:middle;}
+#frm-posts .memo .tbody .item a {color:midnightblue;}
+#frm-posts .memo .tbody .details {height:100px; max-height:100px; margin-bottom:5px;}
+
+/*#frm-posts .memo .form-item-midtext,
+#frm-posts .memo .form-item-days,
+#frm-posts .memo .form-item-washes,
+#frm-posts .memo .form-item-health {display:none;} */
 
 /* Honors */
 #frm-honors .well {

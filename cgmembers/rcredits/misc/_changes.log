@@ -1,3 +1,9 @@
+2020-03-29 feature/post-memos
+. posts are now shown as postit (memo) notes by default
+. category selectors are integrated into tabs
+. fixed bug in findco (ancestors view)
+. simplified calls to lnk, btn, atag, and atagB when passing just id
+
 2020-03-28 feature/post-moderate
 . added optional required-moderation for certain 3-digit zip code areas
 . added link to cancel post on editpost page

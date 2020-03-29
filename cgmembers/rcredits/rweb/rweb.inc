@@ -136,7 +136,7 @@ function formAccountPhoto($form, &$sta, $page = '', $args = '') {
 
   header("Content-type: image/jpeg");
 
-  if ($a = @$qid ? r\acct($qid, $mya->agentId) : $mya) {
+  if ($a = $mya ? (@$qid ? r\acct($qid, $mya->agentId) : $mya) : FALSE) {
     if ($a->co or $a->can(B_READ)) $photo = @$orig ? u\getFile($a->tempPhotoFilename) : $a->$type;
   }
   $imgFlnm = ($mya and $mya->co) ? 'placeholder-co.png' : 'placeholder.png';
