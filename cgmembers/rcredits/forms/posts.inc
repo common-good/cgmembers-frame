@@ -54,15 +54,19 @@ function formPosts($form, &$sta, $args = '') {
   return cgform(compact(ray('title subtext'))); */
   
   global $base_url;
-  extract(just(TOP_FLDS . ' op code postid thing email', $args, NULL));
+  extract(just('op code', $args, NULL));
   if ($code == '%code') u\FAIL('top');
+  
+  $confirming = in($op, 'confirm cancel edit');
+  if ($code and !$confirming) $args = u\deurlify($code);
+  extract(just(TOP_FLDS . ' postid thing email', $args, NULL));
 
   foreach (ray(TOP_FLDS . ' email') as $k) {
     if (nn($$k)) r\setCook($k, $$k); else $$k = nn($_COOKIE[$k]); // default from previous time (useful also in getWho)
     ${$k . '0'} = $$k; // remember initial values
   }
 
-  if (in($op, 'confirm cancel edit')) return confirm($op, $thing, $code);
+  if ($confirming) return confirm($op, $thing, $code);
   if (in($op, 'offer need')) return getPost($op);
   if ($op == 'show') return showPost($postid);
   if ($op == 'who') return getWho($args);
@@ -70,6 +74,7 @@ function formPosts($form, &$sta, $args = '') {
   $title = t('Mutual Aid Offers & Needs'); // for top or tabs
   
   if ($op == 'top') {
+    extract(just(TOP_FLDS, $code));
     jsx('post-tabs', 'listView memoView myPosts', t('List View'), t('Memo View'), t('my posts'));
     $back = btn('/community/posts', t('<big>&laquo;</big> Back to Top'), 'warning', '', 'edit-back');
     $view = btn('', t('List View'), 'success', '', 'edit-view');
@@ -156,7 +161,7 @@ function postList($type, $lat, $lon, $zip, $radius) {
   $myPid = vip('pid') ?: '0';
   $isMyPid = 'pid=:myPid';
   
-  $visible = admin() ? 1 : 'NOT s.private';
+  $visible = admin() ? 1 : 'NOT s.private AND s.confirmed';
 
   $sql = <<<X
     SELECT $distance AS dist, s.postid, c.cat, s.item, s.details, s.emergency, $isMyPid AS mine
@@ -166,7 +171,6 @@ function postList($type, $lat, $lon, $zip, $radius) {
     WHERE s.type=:type
       AND s.created <= :NOW
       AND IFNULL(s.end, :NOW) >= :NOW
-      AND p.confirmed
       AND IF((latitude=0 AND longitude=0) OR (:lat=0 AND :lon=0), 
             MID(p.zip,1,3) = MID(:zip,1,3), 
             $distance < LEAST(IFNULL(s.radius, :radius), :radius)
@@ -256,25 +260,24 @@ function postInputFlds($type0, $dfts = []) {
  * Show details about a post.
  */
 function showPost($postid) {
-  if (!$res = db\get('pid,s.type,c.cat,s.item,s.private,s.details,s.exchange,s.emergency,s.created,s.end,p.displayName,p.fullName,p.phone,p.email,p.address,p.city,p.state,p.zip,p.method,p.created AS userSince', 'posts s LEFT JOIN post_cats c ON c.id=s.cat LEFT JOIN people p USING (pid)', compact('postid'))) return softErr(t('That is not a need or offer.'));
+  if (!$res = db\get('pid,s.type,c.cat,s.item,s.private,s.details,s.exchange,s.emergency,s.created,s.end,s.confirmed AS postOk,p.displayName,p.fullName,p.phone,p.email,p.address,p.city,p.state,p.zip,p.method,p.created AS userSince,p.confirmed AS personOk', 'posts s LEFT JOIN post_cats c ON c.id=s.cat LEFT JOIN people p USING (pid)', compact('postid'))) return softErr(t('That is not a need or offer.'));
   extract($res);
   
   $phone = u\fmtPhone($phone);
   $need = ($type == 'need');
   if (!$need and $emergency) $item = t('(In emergency) ') . $item;
   
-  $postid = hidFld($postid);
-
   // set up display-only fields that are the same for user's own post and someone else's post
   $created = item(u\fmtDate($created, TRUE), t('Posted:'));
 
   if (admin()) {
     list ($userSince, $phone, $state) = [u\fmtDate($userSince, TRUE), u\fmtPhone($phone), r\realState($state)];
+    if ($personOk) $personOk = t(' (confirmed)');
     $who = <<< X
       $fullName ("$displayName")<br>
       $phone<br>
       $city, $state $zip<br>
-      $email<br><br>
+      $email$personOk<br><br>
       Prefers: $method<br>
       User since $userSince
 X;
@@ -287,16 +290,17 @@ X;
   if (vip('pid') == $pid or admin()) { // user's own post: allow editing or termination
     $frm = hidFld('editpost');
     $title = t('Edit Post');
-    $subtext = NULL;
     extract(postInputFlds($type, $res));
     if ($a = admin()) {
       $message = msgFld('');
       $email = hidFld($a->email); // messages from admin always come from admin
-    } else $email = $message = NULL;
+      $subtext = $postOk ? t('Post CONFIRMED') : t('Post NOT confirmed');
+    } else $subtext = $email = $message = NULL;
     
     $pid = hidFld($pid);
     $submit = t('Update');    
   } else { // someone else's post
+    db\q('UPDATE posts SET hits=hits+1 WHERE postid=:postid', compact('postid'));
     $frm = hidFld('message');
     $title = t('Details');
     $subtext = t('Use this form to send a message to the person who posted this %type. Your message will be sent by email with your display name and email address. Your full name and other contact information will not be sent unless you include it in the message.', compact('type'));
@@ -313,6 +317,7 @@ X;
 
     $submit = t('Send Message');
   }
+  $postid = hidFld($postid);
   
   return cgform(compact(ray('title subtext type cat who created private item details exchange emergency radius end message email submit postid pid frm')));
 }
@@ -370,8 +375,9 @@ function confirm($op, $thing, $code) {
       return go($successUrl, t('Success! Your post is canceled.', compact('thing')));
       
     } elseif ($op == 'confirm') {
-      $already = db\get('confirmed', 'people', compact('pid'));
-      db\update('people', ray('pid confirmed', $pid, TRUE), 'pid');
+      $already = db\get('confirmed', $tnm, $idSub);
+      db\update('people', ray('pid confirmed', $pid, 1), 'pid'); // might already be confirmed if this is a new device
+      db\update($tnm, ['confirmed' => 1] + $idSub, $idnm);
 
       r\setCook(VIPID, $pid);
 
@@ -451,11 +457,15 @@ function formPosts_submit($form, &$sta) {
   extract(just('frm email type method pid days washes health zip', $input), NULL);
   extract(frmBools($frm)); // make code a little easier to read
 
-  if ($frmTop) return go(POSTPAGE . '/' . http_build_query(['op'=>'top'] + just(TOP_FLDS, $sta['input'])));
-
+  if ($frmTop) return go(codedUrl('top', just(TOP_FLDS, $sta['input'])));
+  
   if ($frmPost or $frmMessage) { // get pid for this post; if none, carry it through to the "who" form
     $pid = db\get('pid', 'people', compact('email'));
-    if (!$pid) return w\go(POSTPAGE . '/' . http_build_query(['op'=>'who'] + $input));
+    if (!$pid) return w\go(codedUrl('who', $input));
+    if (!db\get('confirmed', 'people', compact('pid'))) { // never confirmed first thing
+      oldEmailLink($pid);
+      return say(t('You must confirm your first post or message before you can complete this one. We are sending you another confirmation email now. Leave this window open, click the link in the email, then come back here and refresh the screen to re-submit this. If you need help, <%a>contact us</a>!', '_a', atag(PROMO_URL . '/about-us/contact-us/')), 'err');
+    }
   } elseif ($frmWho) {  // carrying info about post or message, as well as contact info
     $contactInfo = just(CONTACT_FLDS, $input, NULL);
     $method = ray(METHOD_OPTS)[$method];
@@ -476,14 +486,14 @@ function formPosts_submit($form, &$sta) {
     if (!$end) $info['end'] = NULL; // this has to be here, not in validate
     foreach (ray('type item details cat pid') as $k) if (!$$k) $err = $k;
     if ($err) {
-      r\tellAdmin('post save error', $info);
+      r\tellAdmin('post save error', $input);
       return go(POSTPAGE, t('Apologies. There was an error saving your post. Our tech crew is looking into it.'), 'err');
     }
     if ($frmPost) {
       u\setDft($private, (int) moderate(db\get('zip', 'people', compact('pid'))));
       $info += compact('created');
     } else unset($info['created']); // don't change creation date or links stop working
-    $postid = db\updateOrInsert('posts', compact(ray('pid private')) + $info, 'postid');
+    $postid = db\updateOrInsert('posts', compact(ray('pid private confirmed')) + $info, 'postid');
 
     if ($confirmed) {
       if ($frmEditpost and $end and $end <= now()) {
@@ -498,10 +508,12 @@ function formPosts_submit($form, &$sta) {
     $sender = $pid;
     foreach (ray(MESSAGE_FLDS) as $k) if (!$$k) $err = $k;
     if ($err) {
-      r\tellAdmin('msg save error', $info);
+      r\tellAdmin('msg save error', $input);
       return go(POSTPAGE, t('Apologies. There was an error creating your message. Our tech crew is looking into it.'), 'err');
     }
-    $id = db\insert('messages', compact(ray('sender created')) + $info, 'id');
+    $id = db\insert('messages', compact(ray('sender created confirmed')) + $info, 'id');
+    db\q('UPDATE posts SET contacts=contacts+1 WHERE postid=:postid', compact('postid'));
+
     if ($confirmed) {
       $fromName = db\get('displayName', 'people', compact('pid'));
       postMsg($message, $fromName, $email, $postid);
@@ -532,7 +544,27 @@ function emailLink($thing, $idSub, $created, $type, $item, $pid) {
   $what = $type == 'need' ? t('a need') : t('an offer');
   $noFrame = TRUE;
   r\rMail($index, $to, compact(ray('fullName date code what item noFrame')));
+  $thing = $thing == 'post' ? t('post') : t('message'); // translatable
   say('confirm by email', compact('thing'));
+}
+
+/**
+ * Resend the first confirmation link for the given unconfirmed person.
+ */
+function oldEmailLink($pid) {
+  if ($res = db\get('postid, created, type, item', 'posts', ray('pid confirmed', $pid, 0))) {
+    extract($res);
+    list ($thing, $idSub) = ['post', compact('postid')];
+  } elseif ($res = db\get('id, created, postid', 'messages', ray('sender confirmed', $pid, 0))) {
+    extract($res);
+    list ($thing, $idSub) = ['message', compact('id')];
+    extract(db\get('type, item', 'posts', compact('postid')));
+  } else {
+    r\tellAdmin(t('Cannot send old email about people pid=') . $pid);
+    return softErr(t('There is an unusual problem with your data. An administrator is looking into it. We apologize for the inconvenience. Your post or message did not succeed.'));
+  }
+  extract(just('created type item', $res, NULL));
+  emailLink($thing, $idSub, $created, $type, $item, $pid);
 }
 
 /**
@@ -558,10 +590,20 @@ function postMsg($message, $fromName, $fromEmail, $postid) {
   say('message sent');
 }
 
+/**
+ * Return a specified field from the people record of the last person verified on the current device.
+ */
 function vip($fld = 'pid') {
   if (!$pid = nn($_COOKIE[VIPID])) return FALSE;
   return $fld == 'pid' ? $pid : db\get($fld, 'people', compact('pid'));
 }
+
+/**
+ * Return url query arguments urlify'd
+ * @param string $op: op parameter (doesn't get urlify'd)
+ * @param assoc $params: other parameters
+ */
+function codedUrl($op, $params) {return POSTPAGE . "/op=$op&code=" . u\urlify(http_build_query($params));}
 
 function catChoices($top, $extra = []) {return ['' => $top] + $extra + db\keyed('id,cat', 'post_cats', '1 ORDER BY sort');}
 function emailFld() {return textFld(REQ . t('Your Email:'), [t('Your email address')], dft(nn($_COOKIE['email']) ?: vip('email')));}

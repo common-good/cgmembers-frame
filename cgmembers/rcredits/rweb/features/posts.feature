@@ -94,6 +94,9 @@ Scenario: Someone confirms an offer once, twice
   Then these "people":
   | pid | confirmed |*
   | 1   | 1         |
+  And these "posts":
+  | postid | confirmed |*
+  | 1      | 1         |
   And we say "status": "post success"
   
   When someone visits "community/posts/op=confirm&thing=post&code=%code" where code is:
@@ -152,8 +155,8 @@ Scenario: Someone views the details of an offer
   
 Scenario: Someone replies to an offer
   Given these "posts":
-  | postid | type  | item | details | cat  | exchange | emergency | radius | pid | created | end     |* 
-  | 1      | offer | fish | big one | food | 0        | 1         | 26     | 1   | %now    | %now+3d |
+  | postid | type  | item | details | cat  | exchange | emergency | radius | pid | created | end     | confirmed |* 
+  | 1      | offer | fish | big one | food | 0        | 1         | 26     | 1   | %now    | %now+3d | 1         |
   And these "people":
   | pid         | 1 |**
   | displayName | Abe |
@@ -204,8 +207,8 @@ Scenario: Someone replies to an offer
 
 Scenario: Someone enters personal data after replying to an offer
   Given these "posts":
-  | postid | type  | item | details | cat  | exchange | emergency | radius | pid | created | end     |* 
-  | 1      | offer | fish | big one | food | 0        | 1         | 3      | 1   | %now    | %now+3d |
+  | postid | type  | item | details | cat  | exchange | emergency | radius | pid | created | end     | confirmed |* 
+  | 1      | offer | fish | big one | food | 0        | 1         | 3      | 1   | %now    | %now+3d | 1         |
   And these "people":
   | pid | displayName | fullName | address | city     | state | zip   | phone        | email | method | confirmed |*
   | 1   | Abe         | Abe One  | 1 A St. | Greenfield | MA  | 01301 | +14132530001 | a@b.c | text   | 1         |
@@ -222,8 +225,8 @@ Scenario: Someone enters personal data after replying to an offer
   | washes      | 3 |
   | health      | 2 |
   Then these "messages":
-  | id | postid | sender | message      | created |*
-  | 1  | 1      | 2      | Hello there! | %now    |
+  | id | postid | sender | message      | created | confirmed |*
+  | 1  | 1      | 2      | Hello there! | %now    | 0         |
   And these "people":
   | pid | displayName | fullName | address | city     | state | zip   | phone     | email | method | confirmed | health |*
   | 2   | Bea         | Bea Two  | 2 B St. | Greenfield | MA  | 01301 | +14132530002 | b@c.d | email  | 0      | 2 3 ok |
@@ -240,3 +243,30 @@ Scenario: Someone enters personal data after replying to an offer
   | fullName | item | date | thing | message      | noFrame |*
   | Abe One  | fish | %mdY | post  | Hello there! |       1 |
   And we say "status": "message sent"
+
+Scenario: Someone confirmed sends a message and posts again
+  Given these "people":
+  | pid | displayName | fullName | address | city     | state | zip   | phone        | email | method | confirmed |*
+  | 1   | Abe         | Abe One  | 1 A St. | Greenfield | MA  | 01301 | +14132530001 | a@b.c | text   | 1         |
+  | 2   | Bea         | Bea Two  | 2 B St. | Greenfield | MA  | 01301 | +14132530002 | b@c.d | email  | 1         |
+  And these "posts":
+  | postid | type  | item | details | cat  | exchange | emergency | radius | pid | created | end     | confirmed |* 
+  | 1      | offer | fish | big one | food | 0        | 1         | 3      | 1   | %now    | %now+3d | 1         |
+  And cookie "vipid" is 2
+  And cookie "email" is "b@c.d"
+
+  When someone confirms "community/posts/op=show&postid=1" with:
+  | email | message      |*
+  | b@c.d | Hello there! |
+  
+  Then these "messages":
+  | id | postid | sender | message      | created | confirmed |*
+  | 1  | 1      | 2      | Hello there! | %now    | 1         |
+  
+  When someone confirms "community/posts/op=need" with:
+  | cat   | item | details | emergency | exchange | radius | end     | email |*
+  | stuff | bag  | paper   | 0         | 1        | .25    |         | b@c.d |  
+
+  Then these "posts":
+  | postid | type | item | details | cat   | emergency | exchange | radius | pid | created | end |* 
+  | 2      | need | bag  | paper   | stuff | 0         | 1        | .25    | 2   | %today  |     |

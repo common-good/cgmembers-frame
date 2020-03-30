@@ -1,3 +1,10 @@
+2020-03-30 feature/post-bugs
+. arguments carried from one form to the next are now urlified
+. we now handle same email from different device (and by extension, new email from same device)
+. admins cannot put a semi-colon in the SQL box (security)
+. admins can see unconfirmed posts (but cannot confirm them)
+. hits and contacts are tracked
+
 2020-03-29 feature/post-memos
 . posts are now shown as postit (memo) notes by default
 . category selectors are integrated into tabs
