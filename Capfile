@@ -19,7 +19,9 @@ require_relative 'lib/capistrano/scm/cap-full-git-submodule.rb'
 install_plugin Capistrano::SCM::Git::FullSubmodules
                  
 require_relative 'lib/capistrano/scm/capistrano-for-phinx.rb'
-                 
+
+require_relative 'lib/capistrano/restarter/restarter.rb'
+
 # Include tasks from other gems included in your Gemfile
 #
 # For documentation on these, see for example:
