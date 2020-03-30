@@ -1648,6 +1648,7 @@ function weScripWithSubs($script, $args = []) {
  *     MAKE posts SomeoneViewsTheDetailsOfAnOffer
  *     MAKE posts SomeoneRepliesToAnOffer
  *     BOTH posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
+ *     BOTH posts SomeoneConfirmedSendsAMessageAndPostsAgain
  *     MAKE preferences Setup
  *     MAKE showrecurs Setup
  *     TEST showrecurs AMemberStopsAnAutopayment
@@ -1972,6 +1973,7 @@ function someoneVisits($page) {return t\memberVisitsPage('?', $page);}
  *     MAKE posts SomeoneConfirmsAnOfferOnceTwice
  *     MAKE posts SomeoneRepliesToAnOffer
  *     MAKE posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
+ *     MAKE posts SomeoneConfirmedSendsAMessageAndPostsAgain
  */
 function someoneConfirmsWith($page, $values) {return t\completeForm('?', $page, $values, TRUE);}
 
@@ -1981,6 +1983,7 @@ function someoneConfirmsWith($page, $values) {return t\completeForm('?', $page, 
  * in: TEST posts SomeoneSubmitsALocus
  *     TEST posts SomeonePostsAnOffer
  *     BOTH posts SomeoneRepliesToAnOffer
+ *     MAKE posts SomeoneConfirmedSendsAMessageAndPostsAgain
  */
 function cookieIs($nm, $v) {
   global $testOnly;
