@@ -48,9 +48,3 @@ set :tmp_dir, "/home/#{fetch(:local_user)}/tmp"
 # Locals - this one sets the umask for the deployment
 # SSHKit.config.umask = '002'
 set :pty, true
-
-#
-# To restart nginx and php-fpm automatically
-set :php_fpm_restart_roles, :app
-set :php_fpm_restart_command, 'sudo /bin/systemctl restart php-fpm nginx'
-after 'deploy:published', 'php_fpm:restart'

@@ -68,6 +68,5 @@ set :ssh_options, {
 
 #
 # To restart nginx and php-fpm automatically
-set :php_fpm_restart_roles, :app
-set :php_fpm_restart_command, 'sudo /bin/systemctl restart php-fpm nginx'
-after 'deploy:published', 'php_fpm:restart'
+after 'deploy:published', 'restarter:restart_nginx'
+after 'deploy:published', 'restarter:restart_php_fpm'

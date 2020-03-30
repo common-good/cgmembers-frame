@@ -20,10 +20,7 @@ install_plugin Capistrano::SCM::Git::FullSubmodules
                  
 require_relative 'lib/capistrano/scm/capistrano-for-phinx.rb'
 
-require 'capistrano/php-fpm'
-
-require 'capistrano/nginx'
-install_plugin Capistrano::Nginx
+require_relative 'lib/capistrano/restarter/restarter.rb'
 
 # Include tasks from other gems included in your Gemfile
 #
