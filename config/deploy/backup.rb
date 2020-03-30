@@ -6,7 +6,7 @@
 # server "example.com", user: "deploy", roles: %w{app db web}, my_property: :my_value
 # server "example.com", user: "deploy", roles: %w{app web}, other_property: :other_value
 # server "db.example.com", user: "deploy", roles: %w{db}
-server "new.commongood.earth", roles: %w{app db web}, user: "new"
+server "new-backup.commongood.earth", roles: %w{app db web}, user: "new"
 
 set :local_user, "new"
 
@@ -68,6 +68,8 @@ set :ssh_options, {
 
 #
 # To restart nginx and php-fpm automatically
+# !!!!! Disabled because we don't want to start up nginx and php-fpm
+#
 set :php_fpm_restart_roles, :app
-set :php_fpm_restart_command, 'sudo /bin/systemctl restart php-fpm nginx'
+set :php_fpm_restart_command, 'echo Would do sudo /bin/systemctl restart php-fpm nginx'
 after 'deploy:published', 'php_fpm:restart'
