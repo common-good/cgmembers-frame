@@ -72,6 +72,9 @@ function formPosts($form, &$sta, $args = '') {
   if ($op == 'who') return getWho($args);
 
   $title = t('Mutual Aid Offers & Needs'); // for top or tabs
+  $subtext = t('<p>Think about what you need and what you want to offer in each category. This only works if you also get a couple neighbors to post something, so do that too!</p>');
+  
+  if (in(substr(nn($zip), 0, 3), '010 013')) $subtext .= t('<p>In Western Massachusetts see Community Action\'s excellent <%a>Look4Help.org</a> website for every type of help you can imagine from government, social services, and community organizations.</p>', '_a', atag('http://look4help.org'));
   
   if ($op == 'top') {
     extract(just(TOP_FLDS, $code));
@@ -99,15 +102,14 @@ function formPosts($form, &$sta, $args = '') {
     $tabs = tabFlds(compact(ray('offersCat needsCat offers needs offersNone needsNone')));
     $frm = hidFld('tabs');
 
-    return cgform(compact(ray('title buttons tabs frm')));
+    return cgform(compact(ray('title subtext buttons tabs frm')));
   }
 
   // no op
   jsx('posts');
 
-  $subtext = t('<p>In our %PROJECT Economy we want to make sure everyone has what they need, with no one left behind.  Enter your address, then <span class="loud">think about what you need and what you want to offer in each category</span>. Then get two neighbors to do the same! You will be delighted by the serendipity that results.</p>
-    <p>If you know someone in need who has no Internet access, offer to post something for them.</p>
-    <p>Community organizers and programmers, contact us to collaborate or to get administrative access. For an example of how this works in practice, try "Greenfield, MA 01301" with a radius of 10. Email comments and suggestions to %CGF_EMAIL.</p>');
+  $subtext = t('<p>In our %PROJECT Economy we want to make sure everyone has what they need, with no one left behind.  Enter your address, to get started.</p>
+    <p>Contact us to collaborate or for administrative access. Email comments and suggestions to %CGF_EMAIL.</p>');
 
   $locus = textFld(REQ . t('Where:'), [t('Full address OR city/state/zip'), t('Your address (including zip) or just city, state, and zip.')], dft($locus));
   $radius = textFld(REQ . t('Radius:'), [t('Max distance from address')], dft($radius ?: 10) + suffix(t('miles') . btn("$base_url/community/posts", t('Go'), '', 'sm')));
@@ -443,6 +445,8 @@ function formPosts_validate($form, &$sta) {
     }
     $chgFlds = 'zip phone latitude longitude days washes address city';
     
+  } elseif ($frmTabs) { // nothing to do (happens only when javascript fails)
+    
   } else return u\FAIL(t('bad form in validate: ' . $frm));
   
   u\preray(compact(ray($chgFlds)), $sta['input']);
@@ -456,6 +460,8 @@ function formPosts_submit($form, &$sta) {
   $input = just(POST_FLDS . ' frm pid days washes health ' . MESSAGE_FLDS . ' ' . CONTACT_FLDS, $sta['input'], NULL);
   extract(just('frm email type method pid days washes health zip', $input), NULL);
   extract(frmBools($frm)); // make code a little easier to read
+
+  if ($frmTabs) return; // nothing to do (happens only when javascript fails)
 
   if ($frmTop) return go(codedUrl('top', just(TOP_FLDS, $sta['input'])));
   

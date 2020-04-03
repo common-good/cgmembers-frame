@@ -963,7 +963,7 @@ EOF;
     if ($stepDone) $a->stepDone($stepDone, TRUE, $info);
     
     if ($nextStep = ($a->task ? $a->nextStep() : FALSE)) {
-      if ($stepDone and in($stepDone, r\taskSteps($a->task))) $msg .= '|step completed'; // say completed only when relevant
+      if ($stepDone and in($stepDone, r\taskSteps($a->task))) u\joins($msg, '|', 'step completed'); // say completed only when relevant
       return ray(S_ALL)[$nextStep] ?: "settings/$nextStep";
     }
 
@@ -971,7 +971,7 @@ EOF;
     if ($a->member and !$a->ok) {
       $a->update('stepsLeft task', '', '');
       $approval = $a->co ? 'company approval' : 'individual approval';
-      $msg .= "|setup complete|$approval|join thanks"; // show on display, not on done
+      u\joins($msg, '|', "setup complete|$approval|join thanks"); // show on display, not on done
     }
     return 'summary';
   }

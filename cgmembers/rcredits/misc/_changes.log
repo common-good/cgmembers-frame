@@ -1,3 +1,14 @@
+2020-04-03 feature/bugfixes
+. moved all possible strings to cg-strings.inc
+. cleaned up some test messages and w\go() logic
+. fixed bug that shows "Finish" command for accounts with no steps
+. fixed bug that closed account when user clicks Finish
+. fixed bug that did empty geosearches
+. fixed bug that exposed our geosearch key on error
+. fixed bug that dies on submission of posts form when no JS
+. improved posts messaging
+. fixed bug that disallowed decimal point in cgbutton form
+
 2020-03-30 feature/post-bugs
 . arguments carried from one form to the next are now urlified
 . we now handle same email from different device (and by extension, new email from same device)

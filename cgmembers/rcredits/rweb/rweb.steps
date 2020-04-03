@@ -607,6 +607,8 @@ function with($content) {return weShow($content);}
  *     TEST relations MemberHasAnEmployer
  *     TEST relations MemberCompanyHasRelations
  *     TEST showrecurs AMemberStopsAnAutopayment
+ *     TEST signupco ACompanyAccountManagerCreatesADiscount
+ *     TEST signup AMemberInvites
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST summary AnAgentClicksTheSummaryTabWithoutPermissionToManage
  *     TEST transactions AMemberLooksAtTransactionsForThePastYear

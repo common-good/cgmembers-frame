@@ -9,6 +9,7 @@ namespace CG\Util; // typically abbreviated as "u"
 use CG as r; // get rid of this
 use CG\DB as db;
 use CG\Util as u;
+use CG\Web as w;
 
 define ('URL_CHARS', 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-_~'); // 66 valid URLchars
 define ('HEX_CHARS', '0123456789abcdef');
@@ -973,10 +974,13 @@ function getLocus($q, $city = '', $state = '', $zip = '') {
   global $channel;
   
 //  if ($channel == TX_WEB) ini_set('default_socket_timeout', 8);
-  if ("$city$state$zip") $q .= tr(", $city, " . r\realState($state) . " $zip");
+  $none = [0, 0, ''];
+  if ("$city$state$zip") {
+    $q .= tr(", $city, " . r\realState($state) . " $zip");
+  } elseif (empty($q)) return $none;
+  
   if (test() or (strhas($q, 'Greenfield, MA') and isDEV)) return f('t.getLocus', $q);
 
-  $none = [0, 0, ''];
   $params = ray('q key', $q, GEOCODE_KEY);
   
 /*
@@ -985,7 +989,7 @@ function getLocus($q, $city = '', $state = '', $zip = '') {
   $coods = @$matches[0]->coordinates;
   $coods = [$coods->y, $coods->x];
   */
-  if (!$res = file_get_contents($url = GEOCODE_URL . http_build_query($params))) {
+  if (!$res = @file_get_contents($url = GEOCODE_URL . http_build_query($params))) {
     r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)));
     return $none;
   }
@@ -993,7 +997,7 @@ function getLocus($q, $city = '', $state = '', $zip = '') {
 
   foreach (nn($res->results, []) as $one) if ($one->components->country_code == 'us') {
     $i = $one->confidence; // confidence is actually specificity. Be as specific as possible.
-    if (in($one->components->_category, 'place transportation') 
+    if (in($one->components->_category, 'place transportation postcode') 
       and nn($one->components->postcode)
       and !isset($coods[$i])) { // don't overwrite with later same confidence
       $coods[$i] = $one->geometry;
@@ -1533,3 +1537,4 @@ function getFile($flnm) {return file_exists($flnm) ? file_get_contents($flnm) : 
 function prob($p, $yes = TRUE, $no = FALSE) {return (mt_rand() / mt_getrandmax()) < $p ? $yes : $no;}
 function routingOk($r) {return (preg_match('/^(|[0-9]{9})$/', $r) and db\exists('r_banks', 'route=:r', compact('r')));}
 function bankAcctOk($ba) {return preg_match('/^[0-9]{3,17}$/', $ba);}  // {3,20} ? Dwolla says 3-17
+function joins(&$s, $m, $other = '') {return $s = (empty($s) ? '' : "$s$m") . $other;}

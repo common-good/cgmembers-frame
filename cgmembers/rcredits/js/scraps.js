@@ -133,7 +133,8 @@ function doit(what, vs) {
     cgbutton(2);
     $('.form-item-button input').click(function () {cgbutton($(this).val());});
     $('#edit-item, #edit-text, #edit-amount, #edit-size').change(function () {cgbutton($('.form-item-button input:checked').val());});
-    $('#edit-amount, #edit-size').keypress(function () {return onlyDigits(event);});
+    $('#edit-amount, #edit-size').keypress(function (e) {return '0123456789.'.indexOf(String.fromCharCode(e.which)) >= 0;});
+
     function cgbutton(type) {
       var isButton = (type == 2);
       $('.form-item-size').toggle(isButton);

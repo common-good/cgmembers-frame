@@ -1106,18 +1106,15 @@ function completeForm($id, $page, $values = '', $confirmed = FALSE) {
 /**
  * Simulate a visit to the page, return its form.
  * @param string $page: the Drupal URL to visit
- * @param string $msg: message to output, if any
- * @param string $field: error field, if any
  * @return: the form before rendering
  */
-function pageForm($page, $msg = '', $field = '') {
+function pageForm($page) {
   global $formArray, $formSta, $lastGo, $formOut;
   
 	$page = t\fixPageArgs($page);
   $formArray = $formSta = $formOut = NULL; // start with a clean slate
 
   if (!$page) $page = 'summary';
-  if ($msg) r\Web\say($msg, $field);
   t\SERVER('REQUEST_URI', $page);
   $args = basename($page);
   $xlastGo = @$lastGo; // notice whether a goto happens. ignore all but the deepest (last).

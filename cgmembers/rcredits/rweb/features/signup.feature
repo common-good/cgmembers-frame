@@ -204,6 +204,8 @@ Scenario: A member invites
   | Next Steps |
   | Invite |
   | Give   |
+  And without:
+  | Finish |
   And we say "status": "info saved|setup complete|individual approval|join thanks"
   And member ".ZZB" steps left ""
   And we tell ".ZZB" CO "New Member (Bea Two)" with subs:
