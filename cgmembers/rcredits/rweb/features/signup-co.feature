@@ -156,6 +156,8 @@ Scenario: A company account manager creates a discount
   | Next Steps |
   | Invite |
   | Give   |
+  And without:
+  | Finish |
   And we say "status": "info saved|setup complete|company approval|join thanks"
   And member ".ZZC" steps left ""
   And we tell ".ZZC" CO "New Member (Our Pub)" with subs:

@@ -341,7 +341,7 @@ function choiceListFld() {
     community:donate:Give:Make a donation to %PROJECT.
     community:comment:Comment:Send a comment, question, or suggestion.
     scraps:person:Finish:Finish opening your account.<br><small>Get a %PROJECT payment card, accept payments (including discount rebates), and participate in %PROJECT economic democracy. $warning</small>
-    scraps:co:Finish:Finish opening your complete company account.<br><small>Required before you receive a total of $%TRIALCO_AMT_LIMIT. $warning</small>
+    scraps:co:Finish:Finish opening your complete company account.
 X
   ));
     
@@ -357,7 +357,9 @@ X
     ${$task . 'Ch'} = $kch ? ["$dir/$task" => $kch] : [];
   }
     
-  $choices = ($mya->co ? $coCh : $personCh) + $inviteCh + $donateCh + $commentCh;
+  list ($task, $finishCh) = $mya->co ? ['co', $coCh] : ['person', $personCh];
+  $choices = $mya->stepCount($task) ? $finishCh : [];
+  $choices += $inviteCh + $donateCh + $commentCh;
   $choiceList = t('<h3>Next Steps</h3>') . "\n";
   foreach ($choices as $url => $desc) if (!empty($desc)) $choiceList .= w\lnk("/$url", $desc) . "\n";
   return item($choiceList . "\n");

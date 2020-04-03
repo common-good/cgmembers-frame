@@ -1133,7 +1133,7 @@ function sceneId() {global $sceneTest; return $sceneTest ? "$sceneTest->module/$
 function t($string = '', $subs0 = []) {
   global $language, $channel;
   static $custom_strings;
-
+  
   if (empty($string)) return '';
   $subs0 = rayy(func_get_args(), 1);
   if (is_array($string)) list ($string, $subs) = $string;
