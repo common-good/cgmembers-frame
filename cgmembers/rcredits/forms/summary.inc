@@ -621,7 +621,7 @@ function callDetails($type = '', $when = '') {
   $reask = @$often ? $thx : $thx . t('<li><b>Gift</b>. Would you like to %contribute at this time? %details</li>', 'contribute details', $type == 'annual' ? t('make an annual contribution') : t('contribute'), $giftDetails);
   if ($options) $options = t('<li><b>Features</b>. %options</li>', compact('options'));
   $options .= t('<li><b>Tell people!</b> Do you need more handout cards or brochures, to tell %who about %PROJECT?', 'who', $mya->co ? t('your customers and suppliers') : t('your friends or local businesses'));
-  $addressCheck = t('<li><b>Address</b>. Are you still at %addr? (if not, ask about postal address too)</li>', 'addr', r\location($mya, TRUE));
+  $addressCheck = t('<li><b>Address</b>. Are you still at %addr? (if not, ask about postal address too)</li>', 'addr', $mya->location(TRUE));
 
   if ($mya->co) $ask = $reask = $coAsk; // temporary 201801
   

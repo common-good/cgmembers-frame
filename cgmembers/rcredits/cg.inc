@@ -500,22 +500,6 @@ function tellCO($index, $subs = [], $uid = NULL) {
 }
 
 /**
- * Return the rough (physical) location of the entity with the given account (city, state, non-US country).
- * @param acct $a: the account
- * @param bool $complete: if TRUE, include the street address
- */
-function location($a, $complete = FALSE) {
-  $country = realCountry($a->country);
-  $result = [];
-  if ($complete) $result[] = (string) $a->address; // (string) in case address is NULL
-  $result[] = $a->city;
-  $result[] = $a->st . (($complete and $a->zip) ? ' ' . $a->zip : '');
-  if ($a->country != R_COUNTRY_ID) $result[] = mb_strtoupper($country);
-  foreach ($result as $key => $value) if ($value === '') unset($result[$key]);
-  return join(', ', $result);
-}
-
-/**
  * Return the short qid and full name of the specified account.
  * For example, return ".ZZA Abe One".
  */

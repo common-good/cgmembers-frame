@@ -293,7 +293,7 @@ function ssnShow($a) {
   $d = @$ssnData['searchResults'] ?: []; // [] for admin without vKeyE
   if ($err = @$ssnData[SSN_ERR_INDEX]) $rows[] = ["<b class=\"err\">ERROR</b>", $err, '', '', ''];
   $name = $a->fullName . ($a->legalName == $a->fullName ? '' : "<br>$a->legalName");
-  $rows[] = array(t('Data Given'), $name, u\fmtDate(is_numeric($a->dob) ? $a->dob: 0), r\location($a, TRUE), '', ''); // is_numeric check for admin without vKeyE
+  $rows[] = array(t('Data Given'), $name, u\fmtDate(is_numeric($a->dob) ? $a->dob: 0), $a->location(TRUE), '', ''); // is_numeric check for admin without vKeyE
   $name = u\ssnName($one = (object) @$d['ssnnames']['ssnname']);
   $dob = @$one->dob ? u\fmtDate(strtotime($one->dob)) : ''; // arrives as an empty array if none
   $rows[] = array(t('Found'), $name, $dob, @$d['deathsearchresults'] ? '<h1 color="red">DEAD</h1>' : '', '', '');

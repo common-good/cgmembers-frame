@@ -1,3 +1,12 @@
+2020-04-05 feature/post-tips
+. beginnings of showing selected items in tests
+. added tips to offers & needs
+. fixed bug that showed closed accounts in adminFollowup
+. moved location function to acct class
+. added magnifier button to posts search box
+. added defaults to post input and edit pages (including for members)
+. removed or revised some post categories
+
 2020-04-03 feature/bugfixes
 . moved all possible strings to cg-strings.inc
 . cleaned up some test messages and w\go() logic
