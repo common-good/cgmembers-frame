@@ -25,7 +25,7 @@ function formInvite($form, &$sta, $args = '') {
   
   $_a2 = w\atagB('/community/invite/invited-whom');
   $_a2 = r\acct() ? t('<%a2>Who you have invited</a>', compact('_a2')) : '';
-  $where = r\location($mya->cttyA); // currently UNUSED
+  $where = $mya->cttyA->location(); // currently UNUSED
   $inviteCode = $mya->iCardCode(IBY_EMAIL);
   $_inviteLink = PROMO_URL . "/signup/code=$inviteCode";
   $warning = $mya->co ? t('<p>Note you are sending an invitation on behalf of a company. The company is "trusting" whoever you invite. We at %PROJECT recognize that companies are not people, and that it\'s a bit odd to allow them a sentiment usually reserved for humans.</p>') : '';

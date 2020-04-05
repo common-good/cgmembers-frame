@@ -411,7 +411,6 @@ EOF
 //  'bad pin' => t('Your PIN must be exactly 4 digits'),
   'bad federal id' => t('That is not a correct %what. Try again.'),
   'bad nonce' => t('That is not the right verification code. Try again (start over).'),
-  'short to' => t('You are %short short for that transaction.'),
   'op canceled' => t('Operation Canceled.'),
   'demand not yet' => t('You will be notified when there is some %RCREDITS for you to buy with US Dollars.'),
   'confirm delete cell' => t('Are you sure you want to remove the selected mobile phones from this account?'),

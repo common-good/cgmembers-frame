@@ -1216,6 +1216,41 @@ function dropdownOptions($form) {
   return '';
 }
 
+/**
+ * Return the selected items in <select> elements.
+ */
+function selected($form) {
+  $form = '<select id="edit-cat-need" name="cat" class="filter form-control">
+
+<option value="">Needs (all)</option>
+<option value="1">food</option>
+<option value="2">housing</option>
+<option value="4">health</option>
+<option value="6" selected>delivery</option>
+<option value="7">childcare</option>
+<option value="9" selected>animal care</option>
+<option value="11">legal</option>
+<option value="13">fellowship</option>
+<option value="14">muscle/labor</option>
+<option value="16">technology</option>
+<option value="17">information/skills</option>
+<option value="19">finance/money</option>
+<option value="10">cleaning</option>
+<option value="5">travel/rides</option>
+<option value="21">stuff</option>
+<option value="20">other</option>
+<option value="98">my posts</option>
+<option value="99">Needs (search)</option>
+</select>';
+
+//  $pat = '~ select>([^,]+)</option~';
+  $opt = '<option value="[^"]*"( selected)?>([^<]+)</option>\\s*';
+  debug("~<select [^>]*>\\s*($opt)+</select>~");
+  if (!preg_match_all("~<select [^>]*>\\s*($opt)+</select>~", $form, $m)) return [];
+  debug($m);
+  
+}
+
 function setChecked($name) {global $tChecked; $tChecked[] = $name;}
 function setRadio($name, $title) {global $tRadios; $tRadios[$name] = $title;}
 
@@ -1471,7 +1506,6 @@ function weSayWithSubs($type, $index, $subs) {
 function shownWith($content, $type = 'text', $mustBePresent = TRUE) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $formOut;
-///   debug("shownWith(" . print_r($content, true) . ", $type, $mustBePresent)");
   
   $model = t\strip($formOut[$type]);
 //  if (!$model and $type == 'text') $model = file_get_contents(TEST_PDF_FLNM);

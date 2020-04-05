@@ -70,7 +70,7 @@ function rdo($code, $args = '') {
   if ($op == 'addr') {
     $a = r\acct($v);
     $phone = $a->co ? t('Phone: ') . u\fmtPhone($a->phone) : '';
-    $addr = t('Physical address: ') . r\location($a, TRUE);
+    $addr = t('Physical address: ') . $a->location(TRUE);
     return doSay(tr('%nm<br>%postal<br>%addr<br>%phone<br>', 'nm postal addr phone', $a->fullName, $a->postalAddr, $addr, $phone));
   } 
   

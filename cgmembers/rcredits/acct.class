@@ -198,7 +198,7 @@ class Acct {
     if ($field == 'creditLine') return -$a->floor;
     if ($field == 'hasFid') return ($vsec = $a->vsecure and nn($vsec['federalId'], '') !== ''); // has to be 2 steps
     if ($field == 'hasDob') return ($vsec = $a->vsecure and nn($vsec['dob'], '') !== ''); // has to be 2 steps
-    if ($field == 'closed') return ($a->activated and !$a->ok); // data[newAccount] has new qid, if any
+    if ($field == 'closed') return (($a->activated or $a->activated0) and !$a->ok); // data[newAccount] has new qid, if any
     if ($field == 'hasBank') return $a->risk('hasBank');
     if ($field == 'lowSecurity') return u\n2ai(substr($a->created, -5, 5), 3); // result is 3 chars long
     if ($field == 'inviteCode') return $a->mainQid . $a->lowSecurity;
@@ -1770,6 +1770,23 @@ X;
     }
     $a->update($info);
   }
+  
+  /**
+   * Return the rough (physical) location of the entity with the given account (city, state, non-US country).
+   * @param bool $complete: if TRUE, include the street address
+   */
+  public function location($complete = FALSE) {
+    $a = $this;
+    $country = realCountry($a->country);
+    $result = [];
+    if ($complete) $result[] = (string) $a->address; // (string) in case address is NULL
+    $result[] = $a->city;
+    $result[] = $a->st . (($complete and $a->zip) ? ' ' . $a->zip : '');
+    if ($a->country != R_COUNTRY_ID) $result[] = mb_strtoupper($country);
+    foreach ($result as $key => $value) if ($value === '') unset($result[$key]);
+    return join(', ', $result);
+  }
+  
 
   public function isMe($uid) {return ($uid == $this->id or $uid == $this->jid);}
   public function codeHash() {return u\hash($this->cardCode());}

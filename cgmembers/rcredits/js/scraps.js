@@ -295,7 +295,7 @@ function doit(what, vs) {
     $('#edit-search').change(function () { // search
       var box = $('#tabs .container');
 
-      $('.filter').val(-1); // show "(search)" on both filter dropdowns
+      $('.filter').val(99); // show "(search)" on both filter dropdowns
       
       var s = $(this).val().trim().replace(/\s+/g, ' '); // the search string
       box.find('.tbody .row').show(); // show all (then eliminate non-matches)
@@ -344,7 +344,15 @@ function doit(what, vs) {
     break;
     
   case 'post-post':
-    $('#edit-cat').change(function () {setCookie(vs['type'] + 'cat', $(this).val());});
+//    $('#edit-cat').change(function () {setCookie(vs['type'] + 'cat', $(this).val());});
+    $('input[name="type"]').change(function () {
+      var type = vs['types'].split(' ')[$(this).val()];
+      var need = (type == 'need');
+      $('.form-item-radius').toggle(!need); 
+      $('.form-item-exchange').toggle(need);
+      if (type == 'tip') $('#edit-radius').val(0); // tips default to everywhere
+    });
+    
     $('.form-item-end a').click(function () {
       $('#edit-end').val(new Date(Date.now()).toLocaleString().split(',')[0]);
       $('#edit-submit').focus();

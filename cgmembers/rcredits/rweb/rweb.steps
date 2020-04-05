@@ -523,6 +523,8 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST posts SomeonePostsAnOffer
  *     TEST posts SomeoneConfirmsAnOfferOnceTwice
  *     TEST posts SomeoneViewsTheDetailsOfAnOffer
+ *     TEST posts SomeoneViewsTheDetailsOfAnUrgentNeed
+ *     TEST posts SomeoneViewsTheDetailsOfATip
  *     TEST posts SomeoneRepliesToAnOffer
  *     TEST preferences AMemberVisitsThePreferencesPage
  *     TEST preferences ACompanyAgentVisitsThePreferencesPage
@@ -603,6 +605,7 @@ function with($content) {return weShow($content);}
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     TEST posts SomeoneVisitsThePostsPage
+ *     TEST posts SomeoneViewsTheDetailsOfATip
  *     TEST queries AMemberVisitsTheCommunityDataPage
  *     TEST relations MemberHasAnEmployer
  *     TEST relations MemberCompanyHasRelations
@@ -1648,6 +1651,8 @@ function weScripWithSubs($script, $args = []) {
  *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
  *     BOTH posts SomeoneConfirmsAnOfferOnceTwice
  *     MAKE posts SomeoneViewsTheDetailsOfAnOffer
+ *     MAKE posts SomeoneViewsTheDetailsOfAnUrgentNeed
+ *     MAKE posts SomeoneViewsTheDetailsOfATip
  *     MAKE posts SomeoneRepliesToAnOffer
  *     BOTH posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  *     BOTH posts SomeoneConfirmedSendsAMessageAndPostsAgain
@@ -1962,6 +1967,8 @@ function companyFlags($flags) {return t\companyFlags($flags);}
  * in: MAKE posts SomeoneVisitsThePostsPage
  *     MAKE posts SomeonePostsAnOffer
  *     MAKE posts SomeoneViewsTheDetailsOfAnOffer
+ *     MAKE posts SomeoneViewsTheDetailsOfAnUrgentNeed
+ *     MAKE posts SomeoneViewsTheDetailsOfATip
  *     MAKE posts SomeoneRepliesToAnOffer
  */
 function someoneVisits($page) {return t\memberVisitsPage('?', $page);}

@@ -7,7 +7,7 @@ Setup:
 
 Scenario: Someone visits the posts page
   When someone visits "community/posts"
-  Then we show "Mutual Aid Offers & Needs" with:
+  Then we show "Offers, Needs, & Tips" with:
   | Where  |    |    |
   | Radius | 10 | Go |
   And without:
@@ -17,13 +17,16 @@ Scenario: Someone submits a locus
   When someone confirms "community/posts" with:
   | locus          | radius | latitude | longitude |*
   | Greenfield, MA | 10     | 0        | 0         |
-  Then we show "Mutual Aid Offers & Needs" with:
-  | Offers   | Needs | Post an Offer | Post a Need |
+  Then we show "Offers, Needs, & Tips" with:
+  | List View | Post |
+#  And with:
+#  | Needs | Offers |
   And with:
   | Item | Details | |
   And with:
-  | There are not yet any offers within |
   | There are not yet any needs within  |
+  | There are not yet any offers within |
+  | There are not yet any tips within |
   And cookie "locus" is "Greenfield, MA"
   And cookie "radius" is "10"
   And cookie "latitude" is "42.3791167"
@@ -31,8 +34,9 @@ Scenario: Someone submits a locus
   And cookie "zip" is "01301"
 
 Scenario: Someone posts an offer
-  When someone visits "community/posts/op=offer"
-  Then we show "Post an Offer" with:
+  When someone visits "community/posts/op=post"
+  Then we show "Post Something" with:
+  | Type |
   | Category |
   | What |
   | Details |
@@ -41,9 +45,9 @@ Scenario: Someone posts an offer
   | End |
   | Your Email |
   
-  When someone confirms "community/posts/op=offer" with:
-  | cat  | item | details | emergency | radius | end     | email |*
-  | food | fish | big one | 1         | 3      | %mdY+3d | a@b.c |
+  When someone confirms "community/posts/op=post" with:
+  | type  | cat  | item | details | emergency | radius | end     | email |*
+  | offer | food | fish | big one | 1         | 3      | %mdY+3d | a@b.c |
   Then we show "Your Information" with:
   | Display Name |
   | Name |
@@ -116,13 +120,14 @@ Scenario: Someone confirms an offer once, twice
   | Update     | |
 
   When someone confirms "community/posts/op=show&postid=1" with:
-  | cat   | item   | details | emergency | radius | end     |*
-  | rides | Boston | ASAP    | 1         | 5      | %mdY+5d |
+  | type | cat   | item   | details | emergency | radius | end     |*
+  | tip  | health | Boston | ASAP    | 1         | 5      | %mdY+5d |
   Then these "posts":
-  | postid | type  | cat   | item | details | exchange | emergency | radius | pid | created | end          |* 
-  | 1      | offer | rides | Boston | ASAP  | 0        | 1         | 5      | 1   | %now    | %daystart+5d |
-  And we show "Mutual Aid Offers & Needs" with:
-  | Offers   | Needs | Post an Offer | Post a Need |
+  | postid | type | cat    | item | details | exchange | emergency | radius | pid | created | end          |* 
+  | 1      | tip  | health | Boston | ASAP  | 0        | 1         | 5      | 1   | %now    | %daystart+5d |
+  And we show "Offers, Needs, & Tips" with:
+  | List View | Post |
+#  | Needs | Offers | Tips |
   And we say "status": "info saved"
 
 Scenario: Someone views the details of an offer
@@ -145,13 +150,68 @@ Scenario: Someone views the details of an offer
   | longitude   | -72.8 |
   When someone visits "community/posts/op=show&postid=1"
   Then we show "Details" with:
-  | Type            | offer |
   | Category        | food |
   | Who             | Abe |
   | Offer           | (In emergency) fish |
   | Details         | big one |
   | Message to Send | Max 200 characters |
   | Your Email      | |
+
+Scenario: Someone views the details of an urgent need
+  Given these "posts":
+  | postid | type | item | details | cat  | exchange | emergency | radius | pid | created | end     |* 
+  | 1      | need | fish | big one | food | 0        | 1         | 3      | 1   | %now    | %now+3d |
+  And these "people":
+  | pid         | 1 |**
+  | displayName | Abe |
+  | fullName    | Abe One |
+  | address     | 1 A St. |
+  | city        | Aville |
+  | state       | MA |
+  | zip         | 01001 |
+  | phone       | +14132530001 |
+  | email       | a@b.c |
+  | method      | text |
+  | confirmed   | 1 |
+  | latitude    | 42.5 |
+  | longitude   | -72.8 |
+  When someone visits "community/posts/op=show&postid=1"
+  Then we show "Details" with:
+  | Category        | food |
+  | Who             | Abe |
+  | Urgent Need     | fish |
+  | Details         | big one |
+  | Message to Send | Max 200 characters |
+  | Your Email      | |
+
+Scenario: Someone views the details of a tip
+  Given these "posts":
+  | postid | type | item | details | cat  | exchange | emergency | radius | pid | created | end     |* 
+  | 1      | tip  | fish | big one | food | 0        | 1         | 3      | 1   | %now    | %now+3d |
+  And these "people":
+  | pid         | 1 |**
+  | displayName | Abe |
+  | fullName    | Abe One |
+  | address     | 1 A St. |
+  | city        | Aville |
+  | state       | MA |
+  | zip         | 01001 |
+  | phone       | +14132530001 |
+  | email       | a@b.c |
+  | method      | text |
+  | confirmed   | 1 |
+  | latitude    | 42.5 |
+  | longitude   | -72.8 |
+  When someone visits "community/posts/op=show&postid=1"
+  Then we show "Details" with:
+  | Category        | food |
+  | Who             | Abe |
+  | Tip             | (In emergency) fish |
+  | Details         | big one |
+And without:
+  | Message |
+And without:
+  | Your Email |
   
 Scenario: Someone replies to an offer
   Given these "posts":
@@ -178,15 +238,16 @@ Scenario: Someone replies to an offer
   And cookie "zip" is "01301"
 
   When someone visits "community/posts"
-  Then we show "Mutual Aid Offers & Needs" with:
+  Then we show "Offers, Needs, & Tips" with:
   | Where    | Greenfield, MA |    |
   | Radius   | 100   | Go |
 
   When someone confirms "community/posts" with:
   | locus          | radius | latitude | longitude |*
   | Greenfield, MA | 100    | 0        | 0         |
-  Then we show "Mutual Aid Offers & Needs" with:
-  | Offers   | Needs | Post an Offer | Post a Need |
+  Then we show "Offers, Needs, & Tips" with:
+  | List View | Post |
+#  | Needs | Offers |
   And with:
   |          | Item    | Details | |
   | food     | !! fish | big one | |
@@ -263,9 +324,9 @@ Scenario: Someone confirmed sends a message and posts again
   | id | postid | sender | message      | created | confirmed |*
   | 1  | 1      | 2      | Hello there! | %now    | 1         |
   
-  When someone confirms "community/posts/op=need" with:
-  | cat   | item | details | emergency | exchange | radius | end     | email |*
-  | stuff | bag  | paper   | 0         | 1        | .25    |         | b@c.d |  
+  When someone confirms "community/posts/op=post" with:
+  | type | cat   | item | details | emergency | exchange | radius | end     | email |*
+  | need | stuff | bag  | paper   | 0         | 1        | .25    |         | b@c.d |  
 
   Then these "posts":
   | postid | type | item | details | cat   | emergency | exchange | radius | pid | created | end |* 

@@ -542,8 +542,20 @@ body.page-partner blockquote {font-size:14px;}
 /* #frm-posts #edit-subtext {margin-bottom:0;} */
 /* #frm-posts #edit-buttons .control-data {text-align:center;} */
 #frm-posts #edit-buttons label {display:none;}
-#frm-posts #edit-buttons .btn {margin-right:5px;}
-#frm-posts #edit-back {margin-left:5px;}
+#frm-posts #edit-buttons .btn {margin-right:15px;}
+#frm-posts #edit-back {margin-left:5px; font-weight:bold;}
+#frm-posts #edit-post {margin-left:-25px;}
+#frm-posts #edit-go {
+  background:transparent;
+  border:none;
+  cursor:pointer;
+  display:inline-block;
+  font-size:14px;
+  padding:0px;
+  position:relative;
+  left:-28px;
+  z-index:2;
+}  
 /* #frm-posts #edit-buttons .control-data a {margin:0 5px;} */
 /* #frm-posts #edit-back {display:inline-block; margin:0 0 -7px 0;} */
 /*#frm-posts #edit-back .control-data {width:auto;} */
@@ -558,7 +570,8 @@ body.page-partner blockquote {font-size:14px;}
 #frm-posts input#edit-radius,
 #frm-posts input#edit-email {max-width:250px;}
 
-#frm-posts #edit-search {display:inline; margin:0 5px 0 0; max-width:200px;}
+#frm-posts #edit-search {display:inline-block; margin:0 5px 0 0; max-width:200px; height:30px; font-size:13px; padding:4px 6px;}
+
 #frm-posts #edit-end {display:inline-block; margin-right:15px;}
 
 #frm-posts #tab-needs {display:none;}
@@ -586,8 +599,7 @@ body.page-partner blockquote {font-size:14px;}
 
 #frm-posts .emergency {font-weight:bold; color:red;}
 
-#frm-posts .form-item-method.radio,
-#frm-posts .form-item-health.radio {display:inline-block;}
+#frm-posts .radio {display:inline-block;}
 
 #frm-posts #edit-midtext {color:darkred;}
 
@@ -596,7 +608,7 @@ body.page-partner blockquote {font-size:14px;}
 #frm-posts .memo .container {background-color:burlywood;}
 #frm-posts .memo .thead .row {display:none;}
 
-#frm-posts .memo .tbody .row {display:inline-block; width:200px; margin:10px 7px; text-align:center; overflow:hidden; border:1px solid silver; border-top:0; box-shadow: 5px 5px 10px #888888; background-color:white; -webkit-border-radius: 5px; border-radius: 5px;}
+#frm-posts .memo .tbody .row {display:inline-block; width:200px; margin:10px 7px; text-align:center; overflow:hidden; border:1px solid silver; border-top:0; box-shadow:5px 5px 10px #888888; background-color:white; -webkit-border-radius: 5px; border-radius: 5px;}
 #frm-posts .memo .tbody .cell {display:block; width:auto; background-color:white; overflow:hidden;}
 #frm-posts .memo .tbody .cat {background-color:royalblue; color:white;}
 #frm-posts .memo .tbody .item {display:table-cell; width:200px; background-color:azure; font-size:125%; border-bottom:1px solid silver; height:62px; vertical-align:middle;}
