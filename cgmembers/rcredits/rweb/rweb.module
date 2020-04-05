@@ -105,7 +105,7 @@ function rweb_menu($submenu = '') {
     
 //    'community' => ['norm', t('Community'), 'FindCo', ANY],
     'community' => ['norm', t('Community'), 'Community', ANY],
-    'community/posts' => ['sub', t('Offers & Needs'), 'Posts 2', ANY, '', t(), 'heart'],
+    'community/posts' => ['sub', t('Offers, Needs, & Tips'), 'Posts 2', ANY, '', t(), 'heart'],
     'community/data' => ['sub', t('Community & Money Data'), 'Data 2', 'read', '', t(), 'list-alt'],
     'community/events' => ['sub', t('Democracy Events'), 'Events 2', 'ok manage', '', t(), 'bell'],
     
