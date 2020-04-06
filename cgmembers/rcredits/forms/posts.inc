@@ -167,21 +167,24 @@ function postList($type, $lat, $lon, $zip, $radius) {
   $distance = tr('%DISTANCE_BETWEEN');
   $myPid = vip('pid') ?: '0';
   $isMyPid = 'pid=:myPid';
+  $postRadius = 'IFNULL(s.radius, 0)';
+  $noPosterGeo = '(latitude=0 AND longitude=0)';
   
   $visible = admin() ? 1 : 'NOT s.private AND s.confirmed';
 
   $sql = <<<X
-    SELECT $distance AS dist, s.postid, c.cat, s.item, s.details, s.emergency, $isMyPid AS mine
+    SELECT IF ($noPosterGeo, 0, $distance) AS dist, s.postid, c.cat, s.item, s.details, s.emergency, $isMyPid AS mine
     FROM posts s
     LEFT JOIN post_cats c ON c.id=s.cat
     LEFT JOIN people p USING (pid)
     WHERE s.type=:type
       AND s.created <= :NOW
       AND IFNULL(s.end, :NOW) >= :NOW
-      AND IF((latitude=0 AND longitude=0) OR (:lat=0 AND :lon=0), 
-            MID(p.zip,1,3) = MID(:zip,1,3), 
-            $distance < LEAST(IFNULL(s.radius, :radius), :radius)
-          )
+      AND ((:type='tip' AND $postRadius>0) OR
+        IF($noPosterGeo OR (:lat=0 AND :lon=0), 
+          MID(p.zip,1,3) = MID(:zip,1,3), 
+          $distance < LEAST(IF($postRadius=0, 99999, s.radius), :radius)
+        ))
       AND $visible
     ORDER BY s.cat,s.created DESC
 X;
@@ -194,7 +197,11 @@ X;
   
   while ($row = $q->fetchAssoc()) {
     extract($row);
-///      debug($dist);
+
+    if ($dist) {
+      $dist = $dist < .5 ? '&frac12;' : u\vague($dist); // don't show distances less than 1/2 mile
+      $cat .= " <small>$dist mi</small>";
+    }
     if ($emergency) $item = '<span class="emergency">!!</span> ' . $item;
     $item = lnk('/community/posts/op=show&postid=' . $postid, $item);
     $rowClass = 'row ' . str_replace(' ', '', $cat) . ($mine ? ' mine' : '');
@@ -267,7 +274,6 @@ function showPost($postid) {
   extract($res);
   
   $phone = u\fmtPhone($phone);
-  $typeNum = ($type == 'need');
   if ($emergency and $type != 'need') $item = t('(In emergency) ') . $item;
   
   // set up display-only fields that are the same for user's own post and someone else's post
@@ -306,7 +312,7 @@ X;
     db\q('UPDATE posts SET hits=hits+1 WHERE postid=:postid', compact('postid'));
     $frm = hidFld('message');
     $title = t('Details');
-    $subtext = t('Use this form to send a message to the person who posted this %type. Your message will be sent by email with your display name and email address. Your full name and other contact information will not be sent unless you include it in the message.', compact('type'));
+    $subtext = t('Use this form to send a message to the person who posted this %type. Your message will be sent by email with your display name and email address. Your full name and other contact information will not be sent unless you include it in the message.', ['type' => lcfirst(typeName($type, 1))]);
     $cat = item($cat, t('Category:'));
     if ($emergency) {
       list ($label, $item) = $type == 'need' 
@@ -322,13 +328,14 @@ X;
       $email = emailFld();
       $message = msgFld(REQ);
       $submit = t('Send Message');
-      $type = hidFld($type);
-    } else $email = $message = $submit = $type = NULL;
+    } else $email = $message = $submit = NULL;
+
+    $type = hidFld($type);
     $pid = $private = NULL;
   // Keep in mind: the person you are contacting is almost certainly a neighbor, but might be a scoundrel pretending to live nearby.
   }
   $postid = hidFld($postid);
-  
+
   return cgform(compact(ray('title subtext type cat who created private item details exchange emergency radius end message email submit postid pid frm')));
 }
 
@@ -444,14 +451,13 @@ function formPosts_validate($form, &$sta) {
     $chgFlds = 'locus latitude longitude zip';
     
   } elseif ($frmPost or $frmEditpost) {
-    extract(just('type end email cat radius exchange emergency', $input, NULL));
+    extract(just('end email cat radius exchange emergency', $input, NULL));
     if (!$cat) return say(t('You must choose a category.'), 'cat');
     if (isset($radius) and $err = u\badAmount($radius, '>=0', 6)) return say($err, 'radius');
     if ($end and $err = u\badDate($end, $frmPost ? strtotime('tomorrow') : today())) return say($err, 'end');
     if ($frmPost and !emailOkay($email, TRUE)) return;
     foreach (ray('exchange emergency') as $k) $$k = (int) $$k;
-    $type = ray(POST_TYPES)[$type];
-    $chgFlds = 'email radius end exchange emergency type';
+    $chgFlds = 'email radius end exchange emergency';
     
   } elseif ($frmMessage) {
     extract(just('email', $input, NULL));
@@ -511,18 +517,19 @@ function formPosts_submit($form, &$sta) {
 
   // got pid, now process post or message
   $confirmed = (int) (vip('pid') == $pid and vip('confirmed') and (vip('email') == $email or $frmEditpost)); // get confirmation status of person posting, editposting, or messaging -- vip('confirmed') is for DEV and double-check
+  if (admin()) $confirmed = 1;
   $created = time();
   $err = FALSE;
   
   if ($frmPost or $frmEditpost) {
     extract($info = just(POST_FLDS . ' postid', $input, NULL));
+    if ($frmEditpost and db\get('confirmed', 'posts', compact('postid'))) $confirmed = 1;
     if (!$end) $info['end'] = NULL; // this has to be here, not in validate
     foreach (ray('type item details cat pid') as $k) if (!$$k) $err = $k;
     if ($err) {
       r\tellAdmin('post save error: ' . $err, $input);
       return go(POSTPAGE, t('Apologies. There was an error saving your post. Our tech crew is looking into it.'), 'err');
     }
-    $type = ray(POST_TYPES)[typeNum($type)];
     
     if ($frmPost) {
       u\setDft($private, (int) moderate(db\get('zip', 'people', compact('pid'))));
@@ -667,5 +674,5 @@ function moderate($zip) {return in(substr(trim($zip), 0, 3), MODERATE_ZIPS);}
 function frmBools($frm) {foreach(ray(POST_FRMS) as $k) $res['frm' . ucfirst($k)] = ($frm == $k); return $res;}
 function admin() {global $mya; return ($mya and $mya->admin) ? $mya : FALSE;}
 function myLocus() {global $mya; return ($mya and $mya->agentA->stepIsDone('contact')) ? $mya->location(TRUE) : '';}
-function typeName($type, $n) {return ray(constant("POST_TYPE_NAMES$n"))[is_numeric($type) ? $type : typeNum($type)];}
-function typeNum($type) {return array_search($type, ray(POST_TYPES));}
+function typeName($type, $n) {return ray(constant("POST_TYPE_NAMES$n"))[typeNum($type)];}
+function typeNum($type) {return is_numeric($type) ? $type : array_search($type, ray(POST_TYPES));}
