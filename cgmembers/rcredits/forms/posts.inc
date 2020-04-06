@@ -451,13 +451,14 @@ function formPosts_validate($form, &$sta) {
     $chgFlds = 'locus latitude longitude zip';
     
   } elseif ($frmPost or $frmEditpost) {
-    extract(just('end email cat radius exchange emergency', $input, NULL));
+    extract(just('end email cat radius exchange emergency type', $input, NULL));
+    $type = ray(POST_TYPES)[typeNum($type)]; // convert to text (typeNum() is for tests -- no effect in production)
     if (!$cat) return say(t('You must choose a category.'), 'cat');
     if (isset($radius) and $err = u\badAmount($radius, '>=0', 6)) return say($err, 'radius');
     if ($end and $err = u\badDate($end, $frmPost ? strtotime('tomorrow') : today())) return say($err, 'end');
     if ($frmPost and !emailOkay($email, TRUE)) return;
     foreach (ray('exchange emergency') as $k) $$k = (int) $$k;
-    $chgFlds = 'email radius end exchange emergency';
+    $chgFlds = 'email radius end exchange emergency type';
     
   } elseif ($frmMessage) {
     extract(just('email', $input, NULL));
