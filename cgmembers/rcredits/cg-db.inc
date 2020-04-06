@@ -45,6 +45,7 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
 function adminQ($sql) {
   $word1 = mb_strtolower(mb_strstr($sql, ' ', TRUE));
   u\EXPECT(in($word1, 'select show'), 'bad admin query');
+  $sql = str_replace(';', '', $sql); // don't allow concatenation of queries
   return \db_query(u\SUBS($sql));
 }
 
@@ -76,7 +77,7 @@ function get($fieldName, $table, $where = '1', $subs = []) {
   $many = (substr($fieldName, -1, 1) == '*');
   $several = (!$many and $fieldCount > 1);
   $result = ($several or $many) ? $result->fetchAssoc() : $result->fetchField();
-  if ($several and $result) u\EXPECT(\count($result) == $fieldCount, 'field count is off'); // eg, if $fieldName == 'a,a' (\count because this class has a count function!)
+  if ($several and $result) u\EXPECT(\count($result) == $fieldCount, 'field count is off: result=' . pr($result) . ' count=' . $fieldCount); // eg, if $fieldName == 'a,a' (\count because this class has a count function!)
   return $result;
 }
 function exists($table, $where = '1', $subs = []) {return db\get(1, $table, $where, $subs);}
@@ -235,7 +236,8 @@ function setFlag($table, $id, $bit, $bool = TRUE) {
 /**
  * Make a backup copy of the record before deleting it if appropriate (then delete it).
  * @param string $table: delete a record from this table
- * @param string $idnm: name of key field of table OR assoc of criteria
+ * @param string $idnm: name of key field of table OR assoc of criteria; for example:
+ *   foreach (ray('tx_entries tx_hdrs r_usd') as $tnm) db\del($tnm, ['xid' => 12345]);
  * @param mixed $id: id of record to delete (integer or spaceless string) OR criteria
  * @param assoc $subs: parameters for selection criteria
  */

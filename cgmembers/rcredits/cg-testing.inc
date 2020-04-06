@@ -29,14 +29,17 @@ define('SAME_TIME', 60 * 20); // number of seconds that make no difference in "s
  * @param bool $direct: directly to or from db, rather than user input (default FALSE)
  */
 function fixData(&$info, $direct = FALSE) {
-  global $rUrl, $testVars;
+  global $testOnly, $rUrl, $testVars;
 
-  $fields = key($info) . ' email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId'; // first key is probably an ID field, so keep it at the front
+  $fields = key($info) . ' email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method'; // first key is probably an ID field, so keep it at the front
 
   if (@$testVars) foreach ($info as $k => $v) if (mb_strpos($v, '@') !== FALSE) {
     foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", $var, $v);
   }
   extract(just($fields, $info));
+  
+  if (isset($cat)) $cat = db\get('id', 'post_cats', compact('cat'));
+  if (isset($method) and !$testOnly) $method = array_search($method, ray('email phone text'));
 
   if (@$who) $who = t\fullQid($who);
   foreach (ray('flags adminable') as $k) if (isset($$k)) $$k = t\fixFlags($$k);
@@ -44,7 +47,7 @@ function fixData(&$info, $direct = FALSE) {
     for ($i = 0; $i < B_MAX; $i++) if (u\getBit($adminable, $i)) $adminable2[$i] = TRUE;
     $adminable = @$adminable2 ?: [];
   }
- 	extract(fixState(@$state, @$country));
+ 	extract(fixState(@$state, @$country ?: US_COUNTRY_ID));
 
 	foreach (ray('why error') as $k) if (isset($$k)) $$k = tr($$k); // convert embedded message references to actual text
   foreach (['rewards'] as $k) if (isset($$k)) $$k += 0; // make sure numeric fields are numeric.
@@ -77,6 +80,7 @@ function fixData(&$info, $direct = FALSE) {
       if ($k == 'qid') $$k = r\qid($$k); // simply convert .ABC to NEWABC for qid field
     }
   }
+  foreach (ray('state country') as $k) if (!isset($info[$k])) unset($$k);
   $info = @compact(ray($fields)) + $info;
 }
 
@@ -93,9 +97,10 @@ function varIs($k, $v) {
 function fixFlags($flags) {
   global $testOnly;
 
-  if (!@$flags) return 0; elseif (is_numeric($flags)) return $flags + 0;
+  if (empty($flags)) return 0; elseif (is_numeric($flags)) return $flags + 0;  
   $res = 0;
-  foreach (ray($flags) as $one) $res |= u\bit(u\consta('b', $one));
+
+  foreach (ray($flags) as $one) if ($one) $res |= u\bit(u\consta('b', $one));
 // NO! fails for r_txs and r_relations flags  if ($res & u\bit(B_OK)) $res |= u\bit(B_MEMBER);
   return $res;
 }
@@ -130,8 +135,8 @@ function doThing($info, $thing, $key = 'id') {
   global $testOnly;
 
   $table = $thing = strtolower($thing);
-  if (!u\starts($thing, 'tx_') and !u\starts($thing, 'x_') and $thing != 'signup') $table = 'r_' . $table;
-  if (!in($thing, 'usd signup company') and substr($thing, -1, 1) != 's') $table .= 's';
+  if (!u\starts($thing, 'tx_') and !u\starts($thing, 'x_') and !in($thing, 'signup posts people post_cats messages')) $table = 'r_' . $table;
+  if (!in($thing, 'usd coupated signup company people') and substr($thing, -1, 1) != 's') $table .= 's';
   if ($table == 'tx_hdrs') $key = 'xid';
 
 // NO!  if (@$info['id']) {$info['uid'] = $info['id']; unset($info['id']);}
@@ -570,7 +575,7 @@ function doMembersHave($info) {
   fixData($info, TRUE);
   if ($testOnly) {
     foreach ($info as $k => $v) if ($v != '?') {
-      if (in($k, R_DATE_FLDS) and abs($a->o($k)-$v) < SAME_TIME) continue;
+      if (in($k, R_DATE_FLDS) and sameTime($a->o($k), $v)) continue;
       if (t\badEq("db $k", $a->o($k), $v, $id)) return FALSE;
     }
     return TRUE;
@@ -859,7 +864,7 @@ function findEmail($index, $email, $subs) {
         unset($subs[$k]);
       } elseif ($v == 'TESTDOCODE') {
         $subs[$k] = t\doCode();
-      } else $subs[$k] = strtr(strip_tags($v), $map);
+      } else $subs[$k] = tr(strtr(strip_tags($v), $map));
     }
     ksort($subs);
 
@@ -867,7 +872,7 @@ function findEmail($index, $email, $subs) {
       extract($one, EXTR_PREFIX_ALL, 't'); // t_ means actual values
       if (is_array($t_toEmail)) $t_toEmail = key($t_toEmail);
       if ($t_index == $index and $t_toEmail == $email) {
-        foreach ($t_subs as $k => $v) if (!is_array($v)) $t_subs[$k] = strtr(strip_tags($v), $map);
+        foreach ($t_subs as $k => $v) if (!is_array($v)) $t_subs[$k] = tr(strtr(strip_tags($v), $map));
         if (isset($t_subs['site'])) {
           $subs['site'] = BASE_URL; // site parameter is set in boot.inc so compiler.php can't see it.
           ksort($subs); // reorder
@@ -1142,18 +1147,15 @@ function completeForm($id, $page, $values = '', $confirmed = FALSE) {
 /**
  * Simulate a visit to the page, return its form.
  * @param string $page: the Drupal URL to visit
- * @param string $msg: message to output, if any
- * @param string $field: error field, if any
  * @return: the form before rendering
  */
-function pageForm($page, $msg = '', $field = '') {
+function pageForm($page) {
   global $formArray, $formSta, $lastGo, $formOut;
 
 	$page = t\fixPageArgs($page);
   $formArray = $formSta = $formOut = NULL; // start with a clean slate
 
   if (!$page) $page = 'summary';
-  if ($msg) r\Web\say($msg, $field);
   t\SERVER('REQUEST_URI', $page);
   $args = basename($page);
   $xlastGo = @$lastGo; // notice whether a goto happens. ignore all but the deepest (last).
@@ -1253,6 +1255,41 @@ function dropdownOptions($form) {
 //    return join(PHP_EOL
   if (preg_match_all('~<option [^>]*>.*?</option>~sm', $form, $m)) return strip_tags(join(PHP_EOL, $m[0]));
   return '';
+}
+
+/**
+ * Return the selected items in <select> elements.
+ */
+function selected($form) {
+  $form = '<select id="edit-cat-need" name="cat" class="filter form-control">
+
+<option value="">Needs (all)</option>
+<option value="1">food</option>
+<option value="2">housing</option>
+<option value="4">health</option>
+<option value="6" selected>delivery</option>
+<option value="7">childcare</option>
+<option value="9" selected>animal care</option>
+<option value="11">legal</option>
+<option value="13">fellowship</option>
+<option value="14">muscle/labor</option>
+<option value="16">technology</option>
+<option value="17">information/skills</option>
+<option value="19">finance/money</option>
+<option value="10">cleaning</option>
+<option value="5">travel/rides</option>
+<option value="21">stuff</option>
+<option value="20">other</option>
+<option value="98">my posts</option>
+<option value="99">Needs (search)</option>
+</select>';
+
+//  $pat = '~ select>([^,]+)</option~';
+  $opt = '<option value="[^"]*"( selected)?>([^<]+)</option>\\s*';
+  debug("~<select [^>]*>\\s*($opt)+</select>~");
+  if (!preg_match_all("~<select [^>]*>\\s*($opt)+</select>~", $form, $m)) return [];
+  debug($m);
+  
 }
 
 function setChecked($name) {global $tChecked; $tChecked[] = $name;}
@@ -1379,7 +1416,7 @@ function clear($ch = 0) {
   w\signout(TRUE);
   \drupal_static_reset(); // clear out drupal central storage
 
-  $tables = 'r_bad r_ballots r_boxes r_changes r_company r_do r_events r_honors r_investments r_invites r_invoices r_ips r_near r_notices r_options r_pairs r_photos r_proposals r_proxies r_questions r_ratings r_recurs r_relations r_shares r_stakes r_stats r_tous r_usd r_usd2 r_user_industries r_votes signup tx_disputes_all tx_entries_all tx_hdrs_all tx_rules tx_templates x_invoices x_photos x_relations x_usd x_users u_groups u_groupies flood queue semaphore sessions cache';
+  $tables = 'messages people posts r_bad r_ballots r_boxes r_changes r_company r_coupated r_coupons r_do r_events r_honors r_investments r_invites r_invoices r_ips r_near r_notices r_options r_pairs r_photos r_proposals r_proxies r_questions r_ratings r_recurs r_relations r_shares r_stakes r_stats r_tous r_usd r_usd2 r_user_industries r_votes signup tx_disputes_all tx_entries_all tx_hdrs_all x_invoices x_photos x_relations x_usd x_users flood queue semaphore sessions cache';
   foreach (ray('bootstrap form') as $k) $tables .= " cache_$k"; // don't empty cache_menu
   foreach (ray($tables) as $table) db\q("TRUNCATE $table");
 
@@ -1469,7 +1506,8 @@ function weSayWithSubs($type, $index, $subs) {
 
   $subs = @$subs[0] ?: array();
   if (isset($subs['email'])) t\fixEmail($subs['email']);
-  $msg0 = t($index);
+  foreach (explode('|', $index) as $one) if (!tr($one)) return t\output('Empty %type message in "%index": "%one"', compact(ray('type index one')));
+  $msg0 = tr($index);
   foreach ($subs as $key => $value) {
     if ($value == '?') $wild = $subs[$key] = u\randomString(20, 'word'); // mark the wildcard spot
     if (mb_strpos($msg0, "%$key") === FALSE) return t\output("missing sub '$key' in message '$index'");
@@ -1509,7 +1547,6 @@ function weSayWithSubs($type, $index, $subs) {
 function shownWith($content, $type = 'text', $mustBePresent = TRUE) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $formOut;
-///   debug("shownWith(" . print_r($content, true) . ", $type, $mustBePresent)");
 
   $model = t\strip($formOut[$type]);
 //  if (!$model and $type == 'text') $model = file_get_contents(TEST_PDF_FLNM);
@@ -1628,6 +1665,25 @@ function fixState($state, $country) {
 	return compact(ray('state country'));
 }
 
+/**
+ * Create a code to pass in a URL to the posts feature.
+ * @param assoc $code: record id and creation date, either: [postid, created] or [id, created]
+ */
+function postCode($code) {
+  extract($code);
+
+  foreach (ray('posts:postid, messages:id') as $tnm => $idnm) if (nn($code[$idnm])) {
+    $dt = db\get('created', $tnm, "$idnm=" . $code[$idnm]);
+    if (t\sameTime($dt, $created)) $code['created'] = $dt; // wiggle room
+  }
+  return str_replace(CRYPT_FLAG, '', u\cry('P', http_build_query($code + ['word' => R_WORD])));
+}
+
+function getLocus($q) {
+  return strpos($q, 'Greenfield, MA') !== FALSE ? [GFLD_LAT, GFLD_LON, GFLD_ZIP]
+  : FALSE;
+}
+
 /*
 function fixStateAndCountry(&$state, &$country) {
   global $testOnly;
@@ -1650,7 +1706,7 @@ function log($msg) {if (test()) u\log($msg, 'debug');}
 function that($thing) {global $thatThing; return $thatThing[$thing];}
 function dosayFilename($type) {return LOG_DIR . "dosay-$type.txt";}
 function goodsBit($s) {return $s == 'goods' ? "1" : ($s == 'cash' ? "0" : "ERROR");} // no 3rd why for rSmart
-function approxTime($a, $b) {return t\eq($a, $b, 10000);}
+function sameTime($a, $b) {return t\eq($a, $b, SAME_TIME);}
 function rewarding() {return ctty('aab')->cttyRewardy;}
 function ray2assoc($ray) {foreach ($ray as $one) $res[$one[0]] = $one[1]; return @$res ?: [];}
 function doCode($code = '') {if ($code) file_put_contents(DOCODE_FLNM, $code); else return file_get_contents(DOCODE_FLNM);}

@@ -198,7 +198,7 @@ class Acct {
     if ($field == 'creditLine') return -$a->floor;
     if ($field == 'hasFid') return ($vsec = $a->vsecure and nn($vsec['federalId'], '') !== ''); // has to be 2 steps
     if ($field == 'hasDob') return ($vsec = $a->vsecure and nn($vsec['dob'], '') !== ''); // has to be 2 steps
-    if ($field == 'closed') return ($a->activated and !$a->ok); // data[newAccount] has new qid, if any
+    if ($field == 'closed') return (($a->activated or $a->activated0) and !$a->ok); // data[newAccount] has new qid, if any
     if ($field == 'hasBank') return $a->risk('hasBank');
     if ($field == 'lowSecurity') return u\n2ai(substr($a->created, -5, 5), 3); // result is 3 chars long
     if ($field == 'inviteCode') return $a->mainQid . $a->lowSecurity;
@@ -207,7 +207,7 @@ class Acct {
     if ($field == 'masterA') return $a->slave ? $a->jA : $a;
     if ($field == 'helperA') return $a->helper ? r\acct($a->helper) : '';
     if ($field == 'foody') return db\get(':U_FOODY', 'users u', ['uid' => $a->id]);
-    if ($field == 'iclub') return ($a->id < 0 or mb_strpos($a->fullName, t('Investment Club')) !== FALSE);
+    if ($field == 'iclub') return ($a->id < 0 or strhas($a->fullName, t('Investment Club')));
     if ($field == 'iclubId') return db\get('clubid', 'r_stakes', 'uid=:uid', ['uid' => $a->id]);
     if ($field == 'trialco') return ($a->co and $a->depends);
     if ($field == 'prefsSet') return !is_null($a->o_minimum); // preferences have been set at least once
@@ -289,8 +289,8 @@ class Acct {
   private function special($fields, $specialType) {
     $specials = constant("{$specialType}_FLDS");
     return is_array($fields) ? (bool) array_intersect($fields, ray($specials))
-      : (strpos($fields, ' ') === FALSE ? u\inList($fields, $specials) // be efficient, if just one field
-         : (bool) array_intersect(ray($fields), ray($specials)));
+      : (strhas($fields, ' ') ? (bool) array_intersect(ray($fields), ray($specials))
+        : u\inList($fields, $specials)); // be efficient, if just one field
   }
 
   /**
@@ -963,22 +963,15 @@ EOF;
     if ($stepDone) $a->stepDone($stepDone, TRUE, $info);
     
     if ($nextStep = ($a->task ? $a->nextStep() : FALSE)) {
-      if ($stepDone and in($stepDone, r\taskSteps($a->task))) $msg .= '|step completed'; // say completed only when relevant
+      if ($stepDone and in($stepDone, r\taskSteps($a->task))) u\joins($msg, '|', 'step completed'); // say completed only when relevant
       return ray(S_ALL)[$nextStep] ?: "settings/$nextStep";
     }
 
     // no current task (nothing to be done next)
-    if ($a->member) {
-      if ($stepDone) {
-        foreach (ray(S_MEM_TASKS) as $k) {
-          if (in($stepDone, r\taskSteps($k)) and $a->stepsDone($k)) $msg .= "|$k member"; // ack
-        }
-        $a->update('stepsLeft task', '', '');
-      } else {
-        $approval = $a->co ? 'company approval' : 'individual approval';
-        $msg .= "setup complete|$approval|join thanks|next steps"; // show on display, not on done
-        if (!$a->co and !$a->stepsDone('card')) $msg .= '|no card member'; // suggest the card step
-      }
+    if ($a->member and !$a->ok) {
+      $a->update('stepsLeft task', '', '');
+      $approval = $a->co ? 'company approval' : 'individual approval';
+      u\joins($msg, '|', "setup complete|$approval|join thanks"); // show on display, not on done
     }
     return 'summary';
   }
@@ -1514,29 +1507,15 @@ X;
    * https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?format=json&benchmark=Public_AR_Current&address=ADDRESS (no API_KEY needed, but fails 7% of the time and no way to approximate the address)
    */
   public function setLocus($lat = NULL, $lon = NULL) {
-    if (test()) return; // doesn't work on DEV machine yet
     $a = $this;
     if (!is_null($lat)) return $a->update('latitude longitude', $lat, $lon);
     
-    $q = "$a->address, $a->city, " . r\realState($a->state) . " $a->zip";
-//    if (TRUE or test() and !$a->city) $q = $a->zip;
-    $params = ray('q key', $q, GEOCODE_KEY);
-/*
-    $params = ray('street city state', $a->address, $a->city, r\realState($a->state)); // US Census
-    if (!$matches = (array) @$res->result->addressMatches) return r\tellAdmin(t('setLocus <%a>returned</a> no matches', 'a', w\atag($url))); // US Census
-    $coods = @$matches[0]->coordinates;
-    $coods = [$coods->y, $coods->x];
-    */
-    if (!$res = file_get_contents($url = GEOCODE_URL . http_build_query($params))) return r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)));
-    $res = json_decode($res);
-    foreach (nn($res->results, []) as $one) u\setDft($coods[$one->confidence], $one->geometry); // don't overwrite with later same confidence
-
-    if (!nn($coods)) {
+    list ($lat, $lon, $zip) = u\getLocus($a->address, $a->city, $a->state, $a->zip);
+    
+    if (!$lat and !$lon) {
       $a->setRisk('addrOff');
-      return r\tellAdmin(t('setLocus <%a>returned</a> no match', 'a', w\atag($url)));
-    }
-    $best = max(array_keys($coods));
-    $a->update('latitude longitude', $coods[$best]->lat, $coods[$best]->lng);    
+      return r\tellAdmin(t('setLocus <%a>returned</a> no match', '_a', w\atag($url)));
+    } else $a->setLocus($lat, $lon);
   }    
    
   /**
@@ -1599,10 +1578,10 @@ X;
 
     if (!isDEV) {
       if (!$a->co and !$a->stepsDone('sell')) $cans[B_SELL] = FALSE; // individuals cannot sell without doing that step
-      if (!$a->hasFid and $a->id != CG_CRUMBS_UID) $cans[B_SELL] = FALSE; // no selling without an EIN
+//      if (!$a->hasFid and $a->id != CG_CRUMBS_UID) $cans[B_SELL] = FALSE; // no selling without an EIN
     }
     if ($a->trialco) $cans[B_BUY] = FALSE; // trial companies can't buy
-    if ($a->co and $a->task == 'co2') $cans[B_BUY] = $cans[B_SELL] = FALSE; // co working on co2 can't do squat
+//    if ($a->co and $a->task == 'co2') $cans[B_BUY] = $cans[B_SELL] = FALSE; // co working on co2 can't do squat
     if (!$a->can(B_OK)) $cans[B_SELL] = $cans[B_BUY] = FALSE; // inactive accounts can't transact
     if ($a->underage) $cans[B_DEBT] = FALSE; // credit card regulations say no credit line if underage
     
@@ -1791,6 +1770,23 @@ X;
     }
     $a->update($info);
   }
+  
+  /**
+   * Return the rough (physical) location of the entity with the given account (city, state, non-US country).
+   * @param bool $complete: if TRUE, include the street address
+   */
+  public function location($complete = FALSE) {
+    $a = $this;
+    $country = realCountry($a->country);
+    $result = [];
+    if ($complete) $result[] = (string) $a->address; // (string) in case address is NULL
+    $result[] = $a->city;
+    $result[] = $a->st . (($complete and $a->zip) ? ' ' . $a->zip : '');
+    if ($a->country != R_COUNTRY_ID) $result[] = mb_strtoupper($country);
+    foreach ($result as $key => $value) if ($value === '') unset($result[$key]);
+    return join(', ', $result);
+  }
+  
 
   public function isMe($uid) {return ($uid == $this->id or $uid == $this->jid);}
   public function codeHash() {return u\hash($this->cardCode());}
@@ -1842,6 +1838,7 @@ function acct($uid = '', $agent = '', &$error = '') {
   u\EXPECT(!is_array($uid), 'array uid'); // otherwise hangs (at least for a drupal field array)
   global $mya; // use this ONLY in this class file
   if (!$uid) return $mya ?: (!$error = 'There is no current account.');
+  
   if (mb_strpos($uid, '@')) {
     $uid = db\get('uid', 'users', 'email=:email ORDER BY :IS_CO', ['email' => u\cry('P', $uid)]);
   } elseif (FALSE and preg_match('/[0-9]( |-|\\)) ?[0-9]{4}/', $uid)) {

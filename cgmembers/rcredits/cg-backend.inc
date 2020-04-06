@@ -155,7 +155,7 @@ function balanceAsOf($uids, $date=NULL) {
 function memberRay($myid, $aid, $coOnly = FALSE) {
   if (!$a = r\acct($myid, $aid)) return [];
 //  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : "state=$a->state OR community=$a->community OR :IS_CO");
-  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : "(:DISTANCE_BETWEEN<:NEIGHBOR_MAX OR community=$a->community OR :IS_CO)");
+  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : tr("(%DISTANCE_BETWEEN<%NEIGHBOR_MAX OR community=$a->community OR :IS_CO)"));
   if (isDEV) $where = str_replace(DISTANCE_BETWEEN, '0', $where); // no lat/lon on dev machines yet
   $subs = compact('myid');
   if (!$coOnly and !$a->admin and !isDEV) $subs += ray('lat lon', $a->latitude, $a->longitude);
@@ -492,7 +492,7 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
 
   txEntryPair($entries, $amount, [$e1A, $e2A], [$e1For, $e2For], E_PRIME, [$e1Tid, $e2Tid], NULL, NULL, $ruleId);
   
-  $DBTX = db_transaction();
+  $DBTX = \db_transaction();
 
   // Create the transaction
   $info = ray('actorId actorAgentId',$actorA->id, $actorA->agentId) + compact(ray('flags channel boxId goods created recursId'));
@@ -543,9 +543,9 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
     }
   }
 
-  if ($gainerA->co and $gainerA->depends and db\sum('amt', 'txs_noreverse', 'uid2=:gainerId', compact('gainerId')) + $needed > TRIALCO_LIMIT) {
+  if ($gainerA->co and $gainerA->depends and db\sum('amt', 'txs_noreverse', 'uid2=:gainerId', compact('gainerId')) + $needed > TRIALCO_AMT_LIMIT) {
     $DBTX->rollback();
-    return r\txErr(t('trial co over', 'limit', u\fmtAmt(TRIALCO_LIMIT)), $erInfo);
+    return r\txErr(t('trial co over'), $erInfo);
   }
     
   $tx->addEntries($entries);
@@ -926,7 +926,7 @@ function identify($who, $mya, $paying, $self_message = 'no self-trading') {
   }
   if ($paying) $where .= ' AND :IS_OK';
   if (!$mya->admin and !$mya->isAdmin2) {
-    $where .= ' AND (:IS_CO OR :DISTANCE_BETWEEN<:NEIGHBOR_MAX)'; // restrict to nearby: must be preprocessed by u\SUBS()
+    $where .= tr(' AND (:IS_CO OR %DISTANCE_BETWEEN<%NEIGHBOR_MAX)'); // restrict to nearby
     list ($lat, $lon) = $mya ? [$mya->latitude ?: 0, $mya->longitude ?: 0] : [0, 0]; // avoid NULL (PHP bug?)
     $subs += compact(ray('lat lon'));
   }

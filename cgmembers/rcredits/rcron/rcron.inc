@@ -145,9 +145,20 @@ function periodic() {
     r\tellAdmin('task timed out', $row); // shouldn't happen. Drupal's queue processing hangs until we delete.
     db\q('DELETE FROM queue WHERE id=:id', just('id', $row));
   }
-
+    
   often('hour', '00');
   often('day', R_DAILY_HOUR); // longer periods get queued in lessOften(), so notices are last
+  
+  $sql = <<< X
+    SELECT * FROM (
+      SELECT 'users' AS tnm, uid AS id, '' AS address, city, state, zip, latitude, longitude
+        FROM users WHERE risks&(1<<:K_ADDROFF)=0 AND uid NOT :CANONIC
+      UNION SELECT 'people' AS tnm, pid AS id, address, city, state, zip, latitude, longitude
+        FROM people
+    ) p
+    WHERE latitude=0 AND longitude=0 AND city IS NOT NULL AND state<>0
+X;
+  queueEach('geocode', $sql);  
 }
 
 function everyHour() { // stuff to do every hour
@@ -159,13 +170,27 @@ function everyHour() { // stuff to do every hour
   
   db\q('DELETE FROM cache_form WHERE created<:REQUEST_TIME-:HOUR_SECS'); // clean up form cache (is this needed?)
 
-//  $uids = db\col('uid', 'users', 'latitude=0 AND longitude=0 AND (uid<0 OR uid>:CANONIC_ACCTS)') ?: [];
-  $sql = 'SELECT uid FROM users WHERE latitude=0 AND longitude=0 AND city IS NOT NULL AND state<>0 AND risks&(1<<:K_ADDROFF)=0 AND uid NOT :CANONIC';
-  queueEach('geocode', $sql);  
   // r\tellAdmin('hourly cron');
 }
 
-function geocode($item) {r\acct($item['uid'])->setLocus();}
+function geocode($item) {
+  extract(just('tnm id address city state zip', $item));
+
+  if ($tnm == 'users') {
+    $a = r\acct($id);
+    $address = $a->address;
+  }
+  
+  list ($lat, $lon, $zot) = u\getLocus($address, $city, $state, $zip);
+  if ($lat or $lon) {
+    if ($tnm == 'people') {
+      return db\update('people', ray('pid latitude longitude', $id, $lat, $lon), 'pid');
+    } else return $a->setLocus($lat, $lon); // users
+  }
+  
+  if ($tnm == 'users') $a->setRisk('addrOff');
+  return r\tellAdmin(t('setLocus returned no match in %tnm record %id', 'tnm id', $tnm, $id));
+}
 
 /**
  * Account checks to do every hour.
@@ -219,7 +244,7 @@ X;
   // Notice which bank accounts have been verified
 	$where = 'deposit<>0 AND deposit<UNIX_TIMESTAMP()-:VERIFICATION_DELAY*:DAY_SECS AND (SELECT 1 FROM r_usd d2 WHERE d2.txid=-d.txid) IS NULL';
 	$uids = db\col('payee', 'r_usd d', $where);
-	$DBTX = db_transaction();
+	$DBTX = \db_transaction();
 	foreach ($uids as $uid) r\acct($uid)->setBit(B_BANKOK);
 	if ($uids) db\del('r_usd', 'txid', 'amount=0 AND payee IN (:uids)', compact('uids'));
 	unset($DBTX);
@@ -245,6 +270,18 @@ function genRulesFromTemplates($template) {
   }
   unset($DBTX);
 }
+
+/**
+ * Warn company that their trial time is past, account is deactivated, and they must open a full account.
+ *//*
+function endTrialco($item) {
+  extract(just('uid', $item));
+  r\message($uid, 'trial co end');
+  $a = r\acct($uid);
+  $a->setBit(B_OK, FALSE);
+  $a->setBit(B_DEPENDS, FALSE);
+  $a->update('task', 'co2');
+}*/
 
 /**
  * Do things a certain number of days after the created, signed, invite, firstTx, last login, or last access date.
@@ -300,14 +337,17 @@ X;
   
   queueEach('activeWeekly', "SELECT DISTINCT uid FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS AND $sinceActivated>0 AND $sinceActivated % 7 = 0");
 	
-	$when = 'UNIX_TIMESTAMP()+:WEEK_SECS';
+	$advanceDays = 7;
+  
 	$sql = <<< X
-	  SELECT DISTINCT u.uid,r.amount,$when AS `when`,r.created,r.period,
-		(SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced,
-    (SELECT MAX(created) FROM txs_noreverse WHERE uid1=r.payer AND uid2=r.payee AND :IS_RECURS) AS lastTx
+	  SELECT DISTINCT u.uid, r.amount, r.period, r.created AS base, $advanceDays AS advanceDays,
+      UNIX_TIMESTAMP(ADDDATE(CURDATE(), INTERVAL $advanceDays DAY)) AS `when`,
+		  (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.recursId=r.id AND status<:TX_PAID LIMIT 1) AS invoiced,
+      (SELECT MAX(created) FROM txs_noreverse WHERE uid1=r.payer AND uid2=r.payee AND recursId=r.id) AS lastTx
 		FROM users u LEFT JOIN r_recurs r ON r.payer=u.uid AND r.payee=:CGID AND r.ended=0
-		WHERE u.:IS_OK AND (r.period='Y' OR (r.id IS NULL AND FLOOR(($when-u.activated) / :DAY_SECS) MOD 365 = 0))
+		WHERE u.:IS_OK AND u.activated AND u.uid>0 AND u.uid NOT :CANONIC AND IFNULL(r.period, 'Y')='Y'
 X;
+// activated is for testing, even though redundant with IS_OK
 //		AND FLOOR((:NOW-IFNULL(r.created, u.activated)) / :DAY_SECS) MOD 365 <= 365 - 7
 
   queueEach('warnAnnualGift', $sql); // call at the right time for members with no recurring donation OR for any member with an annual donation
@@ -393,13 +433,19 @@ function activeWeekly($item) {
  * This is called at the right time for members with no recurring donation OR for any member with an annual donation (whether it's time or not).
  */
 function warnAnnualGift($item) {
-/// debug('warnAnnualGift(' . pr($item) .')');
-	extract(just('uid amount when created period invoiced lastTx', $item));
-  
-	$a = r\acct($uid);
+///    debug('warnAnnualGift(' . pr($item) .')');
+	extract(just('uid amount when base period advanceDays invoiced lastTx', $item));
 
-	if (!empty($amount)) {
-    if (!empty($invoiced) or !giveNow($period, $lastTx, $created, $when) or giveNow($period, $lastTx, $created, $when - DAY_SECS)) { return; } // not time yet for annual (or it was also time yesterday)
+	$a = r\acct($uid);
+  if (!$period) { // annual reminder for zero donation
+    $base = strtotime('today', $a->activated);
+    for ($i = 1; ; $i++) {
+      $dt = strtotime("+$i years", $base);
+      if ($dt > NOW) break;
+    }
+    if ($dt != $when) return;
+  } elseif (!empty($amount)) {
+    if (!empty($invoiced) or !giveNow($period, $lastTx, $base, $when) or giveNow($period, $lastTx, $base, strtotime("-1 day", $when))) { return; } // not time yet for annual (or it was also time yesterday)
   }
 	$aDonate = w\atag("/do/doDonate~$a->mainQid~$a->emailCode");
   r\notify($uid, 'annual-gift', $ray = ray('amount when aDonate', u\fmtAmt($amount), u\fmtDate($when, TRUE), $aDonate), TRUE);
@@ -882,7 +928,7 @@ function recurs1($item) {
  */
 function giveNow($period, $lastPmt, $firstPmt, $now = NULL) {
 	if (is_null($now) and empty($lastPmt)) return TRUE; // never given, so now's the time
-  // the isnull($now) check above is because we ask in advance about an annual gift even when the member didn't make one
+  // the is_null($now) check above is because we ask in advance about an annual gift even when the member didn't make one
   if (empty($now)) $now = now();
 
   if (strpos('MQY', $period) !== FALSE) {
@@ -962,7 +1008,7 @@ function invoice1($item) {
       }
       if (!$funding) {
         if ($a->roundup) $amount = ceil($amount); // take enough for the roundup
-        $DBTX = db_transaction();
+        $DBTX = \db_transaction();
         if ($a->getFunds($amount, t('for invoice', compact('nvid')))) {
           db\setFlag('r_invoices', $nvid, B_FUNDING, TRUE);
         } else { // almost always because no bank account is connected

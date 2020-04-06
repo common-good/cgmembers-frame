@@ -12,17 +12,18 @@ use CG\Db as db;
 function formAgent($form, &$sta, $args = '') {
   global $mya;
 
-  $title = t('Connect a Manager Account');
-  $subtext = t('<p>Until now your company account has been a "trial" account and you have been able to sign in to it directly, anonymously. Normally, you need to sign in to a personal account, then select the company account to manage it. A personal account can manage several company accounts and a company account can be managed by several personal accounts. For now, you just need one of each.</p><p>If you haven\'t opened a personal account yet, sign out and click "Sign up" to open one. Otherwise type your personal account ID below (you can find it on your personal %PROJECT card, under your name).</p><p>Once you complete this step, you will no longer be able to sign in to this account directly.</p>');
+  $title = t('Convert from Trial Account');
+  $subtext = t('<p>Until now your company account has been a "trial" account. We have discontinued the trial account program, which caused software nightmares.</p><p>If you haven\'t opened a personal account yet, sign out and click "Sign up" to open one. Otherwise type your personal account ID below (you can find it on your personal %PROJECT card, under your name).</p><p>Once you complete this step, you will sign in to your personal account to manage this one. </p><p>We will lead you now through several additional setup steps.</p>');
   
-  $agent = textFld(REQ . t('Personal Account:'), [t('Account ID')]);
+  $agent = db\get('other', 'r_relations', 'main=:main', ['main' => $mya->id]);
+  $agent = textFld(REQ . t('Personal Account:'), [t('Account ID')], dft($agent ? r\acct($agent)->mainQid : ''));
   $phone = textFld(REQ . t('Phone:'), [t('Phone number'), t('Type the phone number on your personal account, for verification.')]);
 
   $coTypes = ray(CO_TYPES);
   unset($coTypes[CO_PERSONAL]);
   $coType = radiosFld(t('Account type:'), '', required(), $coTypes);
   $legalName = textFld(t('Legal name:'), [t('Company legal name'), t('Type the full legal name of the company.')], required($mya->fullName));
-  extract(ssnFields(!$mya->co, required()));
+  extract(ssnFields(FALSE, required()));
   $submit = t('Next');
   
   return cgform(compact(ray('title subtext agent phone coType legalName federalId dob submit'))); // not setupFoot (don't skip this step)

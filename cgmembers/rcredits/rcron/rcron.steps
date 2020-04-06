@@ -49,6 +49,7 @@ function extraSetup($feature) {
  *     MAKE bank ANonmemberHasATargetAndRefills
  *     MAKE cashout Setup
  *     MAKE communitybits Setup
+ *     MAKE daily Setup
  *     MAKE gifts Setup
  *     MAKE gifts ANonmemberChoosesADonationToCG
  *     MAKE gifts ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
@@ -336,6 +337,7 @@ function weMessageMemberWithTopicAndSubs($id, $topic, $subs) {
  *     MAKE cashout AMemberCompanyCashesOutMonthly
  *     MAKE cashout AMemberCompanyCashesOutWeekly
  *     MAKE communitybits CommunityBansSpendingBelowZero
+ *     TEST daily GeopositionGetsCalculated
  *     MAKE invoices Setup
  *     MAKE invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
  *     MAKE invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalance
@@ -517,6 +519,8 @@ function stats($list) {return t\stats($list);}
  * in: TEST bank AMemberIsWellBelowTarget
  *     TEST cashout AMemberCompanyCashesOutMonthly
  *     TEST cashout AMemberCompanyCashesOutWeekly
+ *     MAKE daily Setup
+ *     TEST daily GeopositionGetsCalculated
  *     MAKE gifts ADonationToCGIsVisibleToAdmin
  *     MAKE gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     MAKE gifts ASecondRecurringDonationToCGCanBeCompleted
@@ -613,6 +617,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE cashout AMemberCompanyCashesOutMonthly
  *     MAKE cashout AMemberCompanyCashesOutWeekly
  *     MAKE communitybits CommunityBansSpendingBelowZero
+ *     MAKE daily GeopositionGetsCalculated
  *     MAKE gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     MAKE gifts ASecondRecurringDonationToCGCanBeCompleted
  *     MAKE gifts ADonationInvoicetoCGCanBeCompleted

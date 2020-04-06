@@ -37,6 +37,10 @@ function ajax() {
     extract(just('newCtty retro', $data));
     if (!$mya or !$mya->changeCtty($newCtty, $retro, $err)) return ajaxErr(t('Community change failed.|') . $err);
 //    ajaxRet(['msg' => "uid is $uid, newCtty is $newCtty"]);
+  } elseif ($op == 'getLocus') {
+    u\FAIL('ajax getLocus unused');
+    extract(just('location', $data));
+    return ajaxRet(array_combine(ray('latitude longitude zip'), u\getLocus($location)));
   } elseif ($op == 'setBit') {
     extract(just('uid bit on', $data));
     if ($a = r\acct($uid) and $b = u\consta('b', $bit) and $b < B_ADMIN2) {
@@ -90,3 +94,4 @@ function ajaxRet($data0, $ok = 1) {
   if (!isset($data0['which'])) u\loga('ajax', $data); // don't log hundreds of choices
   exit($data);
 }
+function latlonRet($latlon) {return ajaxRet(ray('latitude longitude', $latlon));}

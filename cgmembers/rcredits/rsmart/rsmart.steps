@@ -148,7 +148,7 @@ function weRespondWith($args) {
       }
     }
     if ($k == 'device' and $v == '?' and $got) continue; // any value will do for new dev
-    if ($k == 'time' and t\approxTime($v, $rposResult["time"])) continue; // %now time is approximate
+    if ($k == 'time' and t\sameTime($v, $rposResult["time"])) continue; // %now time is approximate
     
     if ($v != $got) {
       $v = pr(@$v);
@@ -702,7 +702,7 @@ function weRespondOkTxidCreatedBalanceSaying($txid, $created, $balance, $msg = N
   extract($rposResult, EXTR_PREFIX_ALL, 'a'); // actual results
   $ok = '1';
   foreach (ray('ok txid balance') as $k) if (@$rposResult[$k] != $$k) $error = 1;
-  if (!t\approxTime(@$a_created, $created)) $error = 2;
+  if (!t\sameTime(@$a_created, $created)) $error = 2;
   
   if (@$msg) {
     $msg = $msg[0];

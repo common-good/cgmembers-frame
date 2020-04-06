@@ -6,9 +6,9 @@
 # server "example.com", user: "deploy", roles: %w{app db web}, my_property: :my_value
 # server "example.com", user: "deploy", roles: %w{app web}, other_property: :other_value
 # server "db.example.com", user: "deploy", roles: %w{db}
-server "ws.rcredits.org", roles: %w{app db web}, user: "ws"
+server "new-staging.commongood.earth", roles: %w{app db web}, user: "new-staging", port: 7822
 
-set :local_user, "ws"
+set :local_user, "new-staging"
 
 
 # role-based syntax
@@ -32,10 +32,11 @@ set :local_user, "ws"
 # For available Capistrano configuration variables see the documentation page.
 # http://capistranorb.com/documentation/getting-started/configuration/
 # Feel free to add new variables to customise your setup.
-set :deploy_to, "/home/ws/cgmembers-frame"
-set :branch, "develop"
+set :deploy_to, "/home/new-staging/cgmembers-frame"
+# set :branch, "master"
+ask :branch, "master"
 # ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp
-set :tmp_dir, "/home/ws/tmp"
+set :tmp_dir, "/home/new-staging/tmp"
 
 
 # Custom SSH Options
@@ -50,7 +51,8 @@ set :ssh_options, {
   # keys: %w(/home/rlisowski/.ssh/id_rsa),
   forward_agent: false,
   auth_methods: %w(publickey),
-  user: "ws"
+  user: "new-staging",
+  port: 7822
 }
 #
 # The server-based syntax can be used to override options:

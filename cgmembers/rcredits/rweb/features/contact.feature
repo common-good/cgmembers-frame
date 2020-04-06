@@ -6,8 +6,8 @@ SO I can complete my registration and/or make sure I can be contacted by system 
 
 Setup:
   Given members:
-  | uid  | fullName | address | city  | state | zip   | country | postalAddr       | email | phone       | tenure | flags  |*
-  | .ZZA | Abe One  | 1 A St. | Atown | AK    | 99100 | US      | 1 A, T, AR 23456 | a@    | 14132001000 |     19 | member |
+  | uid  | fullName | address | city  | state | zip | country | postalAddr       | email | phone       | tenure | flags |*
+  | .ZZA | Abe One  | 1 A St. | Atown | AK    | 99100 | US    | 1 A, T, AR 23456 | a@    | 14132001000 |     19 | ok    |
 
 Scenario: A member visits the contact info page
   Given member ".ZZA" visits page "settings/contact"

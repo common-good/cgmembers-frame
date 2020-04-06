@@ -24,229 +24,18 @@ require_once __DIR__ . '/../cg-strings.inc';
 
 global $txDays; $txDays = array(1 => 'Day', 7 => '7 days', 30 => '30 days', 90 => '90 days', 180 => '6 months', 365 => '12 months', -1 => 'Year to date', -2 => 'Ever');
 
-$GLOBALS['tStrings'] += array(
-  // reports
-  'report new relation' => t('%who is now related to this account. You will need to adjust the permissions or other settings.'),
-  'report new cell' => t('Mobile number %number is now connected to this account.'),
-  'report delete cell' => t('Mobile number %number has been removed from this account.'),
-  'your account is ready' => t('<p></p><p>So far so good. <b class="stopnot">But WAIT!</b> You have a few steps still to go. We sent you an email with your user ID and a link to the next step. If you don\'t see it within 60 seconds, check your spam folder.</p>'),
-  'company is ready' => t(<<<EOF
-    <p></p><p>After you finish setting up this account, to manage it in the future:</p>
-    <ol>
-      <li>Sign in to your personal account at %CG_DOMAIN</li>
-      <li>Click your photo in the upper right corner. Choose your company account from the dropdown there.</li>
-    </ol>
-EOF
-  ),
-  'verify cell' => t('We sent a verification code to your mobile phone (%number).<br>Please type that code in the box below.'),
-  'options saved' => t('Your options have been saved'),
-  'step completed' => 'Step completed!', // (confusing) t('<span id="completed"> Step completed!</span>'), // space intended
-  'after emailing' => t('After you have sent us an email: '),
-//  'return to membership' => t('<a href="%BASE_URL/status">Click here to return to the checklist</a>.'),
-  'ok to continue' => t('You may now continue what you were originally doing.'),
-  'password reset' => t('A link has been emailed to you, to choose a new password.'),
-  'changed agent' => t('You successfully changed the agent to %agentName.'),
-  'changed account' => t('You successfully changed the account to %accountName.'),
-  'signed agreement' => t('You signed the %PROJECT Agreement on %date.'),
-  'downloading' => t('Your download has begun!'),
-  'changed account' => t('You are now managing the account for %newAcct.'),
-  'lost old changes' => t('Any unsaved changes to account %oldAcct have been discarded.'),
-//  'take a step' => t('Your account is <b class="stopnot">not yet activated.</b> <a href="%BASE_URL/status" class="nextstep">Click here for the next step!</a>.'),
-  'got token' => t('Your %RCREDITS and US Dollar accounts have been successfully connected!'),
-  'got photo' => t('Your photo was successfully uploaded.'),
-  'company rcard' => t('Send a <%a>company %PROJECT card</a> for %otherName to %manager at %address.'),
-  'amount rounded' => t('"%amount" was rounded to the nearest integer value.'),
-  'invite sent' => t('Your invitation has been sent.'),
-  'repeat invite' => t('Come back any time, to send more invitations (click "Invite Someone" at the bottom of any page).'),
-  'gift transfer later' => t('<br><br>Funds will be transferred when you have money in your account.'),
-  'repeat gift' => t('If you wish to make a donation again sometime, click "Membership" in the upper right corner, then on "Donate".'),
-//  'setup complete' => t('<p>Your account setup is complete. Expect an email within the next 24 hours, saying your account is activated. Your %PROJECT card will arrive by US Mail within a few days. Thank you for joining!</p>'),
-  'setup complete' => t('<h2>Your Account Setup Is Complete</h2>You have done everything you need to do.'),
-  'card member' => t('Once a staff member has approved your account, you can expect to receive your %PROJECT card in the mail soon.'),
-  'no card member' => t('Your first transaction must be with someone who invited you OR in person (with a %PROJECT card) at a participating business in your community. If you would like to have a %PROJECT card, click "Card" in the Next Steps.'),
-  'sell member' => t('Hurray! You can now receive payments through %PROJECT.'),
-  'voice member' => t('Congratulations! You are now a full participating member of %PROJECT and the %PROJECT Democratic Economy.'),
-  'co2 member' => t('Contratulations! Your company account is complete.'),
-  'individual approval' => t('Once a staff member has approved your account, you will be able to make payments online.'),
-  'company approval' => t('Once a staff member has approved your account, you can begin accepting %PROJECT payments.'),
-  'join thanks' => t('Thank you for joining us!'),
-  'next steps' => t('<span class="loud">See some important Next Steps listed below.</span>'),
-  'use temporary card' => t('<p>While you wait for your %PROJECT card to arrive, you can use your invitation card to make purchases at any member business (beginning with your inviter).</p>'),
-  'must be confirmed' => t('An email has been sent to %inviterName, who will need to confirm the invitation before you can use your %PROJECT Account. Or you can do your first rCard transaction with %inviterName as confirmation.'),
-  'ready to charge' => t('<p>You successfully scanned in as "%agentName" to charge customers on behalf of %companyName.</p><p>Now go back to your scanning app, to scan a customer\'s card. Sign out only when your shift ends.</p>'),
-  'transaction list truncated' => t('There are too many transactions to show all at once, so only the first %TX_MAX_ROWS are shown (choose a different date range to see the rest).'),
-  'address info' => t('<a1>Click here</a> for address information.'),
-  'agent created' => t('The agent account was successfully created.'),
-  'phone verified' => t('Your phone number has been verified.'),
-  'txs upload done' => t('<br>Transaction upload was successful. You %did %count accounts a total of %total.'),
-  'tx edited' => t('Your transaction #%tid was edited by %who.'),
-  'new tx goods' => t('It is now for %what.'),
-  'new tx amount' => t('The new amount is %amount.'),
-  'expired invite converted' => t('Your invitation has expired, so %inviterName will be asked to re-confirm.'),
+$GLOBALS['tStrings'] += [ // these have to be here, not in cg-strings.inc, because of calls to atag
 //  'new savings balance' => t('<p>IMPORTANT! Your %RCREDITS balance has been split to include a Credit Reserve containing your incentive rewards. Read <%a>last week\'s %PROJECT newsletter</a> for details.</p>', '_a', atag('http://us9.campaign-archive1.com/?u=b1d89f860859e1d9b906fa0b0&id=f1f54edd80&e=')),
-//  'minimum zeroed' => t('<p>Your "automatic refills" have been turned off, to prevent any unintended transfer from your bank account. To turn them back on or transfer funds manually, sign in to your account at %CG_DOMAIN OR <%a1>click here</a>.</p>'),
-  'sent message' => t('Your message has been sent to %fullName.'),
-  'pass saved' => t('Your new password has been saved.'),
-    
-  // prompts
-  'note' => '<b class="loud">' . t('NOTE:') . '</b>',
-  'ach warning' => t('If there are insufficient funds in your bank account when you request an exchange of US Dollars for %RCREDITS (either explicitly, or by automatic refills), your bank will charge you a $20-35 fee, just like for a bounced check. If this happens more than once, the %PROJECT system will <i>also</i> charge you $%R_DEPOSIT_RETURN_FEE, to cover <i>its</i> bank fee. So make sure you have enough in your bank account to cover your exchanges.'),
-  // If you don\'t want any automation, type zero (then remember to refill your account explicitly when it gets low).'),
-//  'prompt max' => t('Keep AT MOST this much in my %PROJECT Account. (When your %RCREDITS balance goes above this amount by $%R_CHUNK or more, the system transfers the extra to your bank account. Blank means no automatic transfers &mdash; recommended in most cases).'),
-  'legalname desc' => t(' full legal name, properly capitalized, for tax reporting and banking.'),
-  'dba desc' => t('Your full "doing-business-as" name, properly capitalized!'),
-  'usename desc' => t('The <%b>full name</b> you use most of the time, properly capitalized!', 'b', 'b class="loud"'),
-  'ssTitle' => t('Soc Sec #:'),
-  'einTitle' => t('Federal ID:'),
-  'ssDesc' => t('Your social security number'),
-  'einDesc' => t('The company\'s Employer ID Number (EIN)'),
-  'to scan another' => t('To scan another card, run the QR Scanner app again.'),
-  'invite links' => t('<p>Here are your links, to include in your own email messages to your friends. Be sure to mention they can visit %CG_DOMAIN for more information.</p><p>%links</p>'),
-  'timed out' => t('You were automatically signed out, to protect your account(s).'),
-  'msg to admin' => t('%who sent you a message.'),
-  'secure attach' => t('[<_%aAttach>Attachment</a>: %name type=%type size=%size bytes]'),
-
-  // confirm
-  'yes or no' =>  '%yesNo', // to replace with yesNo(url)
-  'confirm accept' => '%who %did you %amount for %for on %date. Okay to %do', // used in EditTx test
-  
-  // errors
-  'missing purpose' => t('<p>What purpose? For buying or selling actual goods and services, you must include a description. Rebates and bonuses are intended as rewards for productive economic activity in %RCREDITS.</p>
-    <p>For everyone\'s protection, the %PROJECT software automatically detects and penalizes attempts to "game" the system.</p>'),
-  'missing field0' => t('%field field is required.'), // Drupal's standard
-  'missing field' => t('Missing a required field: %field'),
-  'nothing to do' => t('There is nothing to process.'),
-  'csv error' => t('Line %line: %msg (%row)'),
-  'no txs' => t('There are no transactions in that period.'),
-  'no invoices' => t('There are no such invoices in that period.'),
-  'no relations' => t('There are not yet any relations for this account.'),
-  'no devices' => t('Surprisingly, this account has no related devices.'),
-  'required field' => t('%field must not be blank.'),
-  'duplicate email' => t('"%who" is already using that email address.'),
-  'email plus' => t('If you want to use the same email address for this account, add a plus sign (+) and an arbitrary tag to the local part, for example "%emailTagged".'), // used in user.module
-  'forgot password' => t('If you just forgot the password to the other account, <%a>click here</a> to request a new password.'), // used in user.module
-  'bad name' => t('That is not a plausible name.'),
-  'bad phone' => t('That is not a proper phone number.'),
-//  'bad account ID' => t('That is not your account ID.'),
-  'not your account' => t('That is not your account ID.'),
-  'bad account number' => t('Your bank account number must be 3-17 digits long.'),
-//  'bad pin' => t('Your PIN must be exactly 4 digits'),
-  'bad federal id' => t('That is not a correct %what. Try again.'),
-  'bad nonce' => t('That is not the right verification code. Try again (start over).'),
-  'short to' => t('You are %short short for that transaction.'),
   'increase min' => t('<%a>Click here</a> to increase your target balance!', '_a', atag('/settings/preferences')),
   'no such company' => t('There is no such company.'),
-  'op canceled' => t('Operation Canceled.'),
-  'demand not yet' => t('You will be notified when there is some %RCREDITS for you to buy with US Dollars.'),
-  'confirm delete cell' => t('Are you sure you want to remove the selected mobile phones from this account?'),
-  'already related' => t('That person is already related to this account. If you want to change the settings, find this person in the list and change the settings on that row.'),
-  'already cell' => t('That mobile phone (%number) is already connected to this account.'),
-  'cell taken' => t('A mobile phone can be connected to only one account. You are already using that phone (%number) in connection with account "%accountName". If you really want to switch that phone to this account, you must first sign in to the other account and release it.'),
-  'bad routing number' => t('US bank routing numbers are 9 digits. Use the number on the lower left edge of your checks.'),
-  'nothing selected' => t('You did not select anything'),
-  'undo incomplete' => t('The undo operation is not yet complete.'),
-  'unknown member' => t('"%who" has not yet signed up for %PROJECT.'),
-  'unknown ctty member' => t('"%who" does not have an active %PROJECT account in your community. If the person or company has a %PROJECT account elsewhere, you need to type their %PROJECT account ID.'),
-//  'ambiguous other' => t('"%who" might mean any of these %PROJECT Accounts. Click the one you want or, if you don\'t see them listed, <a href="%draftLink">Click here to add them</a> to the list or <a id="which-cancel">here to cancel</a>.'),
-//  'similar found' => t('If you mean %otherName (%phone), <a href="%draftLink">click here for YES</a>. Otherwise, <a href="%cancelLink">click here to cancel</a>.'),
-  'get app' => t('To scan Account ID cards with a smartphone, you need the app! You can download the Android app from Google\'s Play Store.'),
-  'no account permission' => t('You do not have permission to use that account.'),
-  'bad transient id' => t('That QR code is out of date. Try again?'),
-  'bad email' => t('That email address is not valid.'),
-  'bad company phone' => t('You must give a valid phone number for your company.'),
-  'what relation' => t('Are you an owner, employee, or contractor for the company? (please choose one or more)'),
-  'shortr to' => t('You do not have enough %RCREDITS, for that transaction. <a href="%how">Go here</a> to get more %RCREDITS.'),
-  'incomplete agreement' => t('To sign this agreement, you must put a check in each box, meaning that you have read that section and agree to it.'),
-  'bad signature' => t('That signature does not match your full legal name ("%legalName").'),
-  'bad invite' => t('That is not a valid Invitation Number or username.'),
-  'used invite' => t('<p>That invitation has already been used, to open a %PROJECT Account.</p><p>If you already have a %PROJECT Account set up and want to open an additional account for yourself, your business, or a family member, sign in and use the "Open a Company Account" button on the Summary page (for cashier accounts, first click your photo in the upper right corner and select your business from the dropdown).</p><p>Otherwise ask someone you know to send you a new invitation!'),
-//  'expired invite' => t('<p>That invitation has expired.</p><p><%a>Click here</a> to ask %inviterName for another invitation.</p>'),
-  'min sub floor' => t('You cannot choose a Target Balance less than %floor.'),
-  'info not saved' => t('We apologize. Your information could not be saved at this time. Please try again in an hour or so.'),
   'no page permission' => t('You do not have permission to visit this page. Return to your <%a>Summary</a> page.', '_a', atag('/summary')),
-  'specific nonpositive' => t('The amount (%amount) must be a positive integer.'),
   'insufficient relation' => t('You cannot open an account unless you have a close relationship to it. <%a>Invite someone</a> instead.', '_a', atag('/community/invite')),
-  'bad spoof check' => t('You must confirm (<i>every time</i>) that you are on the real %PROJECT site.'),
-  'not an image' => t('That is not an acceptable image format. You might try converting it to a JPG or PNG image.'),
-  'need a manager' => t('A company account must have at least one person to manage it.'),
-  'self must sign' => t('You cannot sign this agreement on behalf of another person.'),
-  'bad zip' => t('US zipcodes must be 5 digits, possibly followed by a hyphen and 4 more digits.'),
-  'bad state' => t('You must say what state.'),
-  'password required' => t('You must supply your current password, to change your email address or password.'),
-  'bad account id' => t('That account does not exist. Check your typing?'),
   'bad login' => t('That account/password combination does not exist. Try again or <%a>ask for a new password</a>.', '_a', atag('/settings/password')),
-  'wrong pass' => t('That is not your correct password.'),
-  'multiple spaces' => t('%field cannot have more than one space in a row.'),
-  'illegal char' => t('%field contains an illegal character. Try retyping it'),
-  'too long' => t('%field is too long: it must be %USERNAME_MAX_LENGTH characters or less.'),
-  'weak pass' => t('You need to choose a password that is harder to guess.'),
-  'mismatch' => t('You must have mistyped your %thing once. Try again.'),
-  'photo upload failed' => t('Your photo upload was not successful.'),
-  'pass expired' => t('Your temporary password has expired.'),
-  'inhuman proxy' => t('%name is a company. Your proxies must be people.'),
-//  'dw mismatch' => t('WARNING: The "%field" of your Dwolla account and your %PROJECT Account are conflicting. Your account permissions will be restricted until you correct this mismatch.'),
-  'proxy to go' => t('You have not yet completed your selection of proxies.'),
-  'no stop draw' => t('The account for %fullName has overspent its %RCREDITS, based on your balance. So you cannot discontinue "draw" permission without first bringing that account back up to even (for example by giving it some funds.'),
-  'doubled proxy' => t('Your alternate proxy cannot be the same person as your first proxy.'),
-  'po in location' => t('Your physical location address cannot be a Post Office box.'),
-  'missing currency' => t('You must choose %RCREDITS, USD, or both.'),
-  'download always both' => t('Note: Downloads always include both %RCREDITS and USD amounts.'),
-//  'sign in to scan' => t('You must <a href="/user/login">sign in</a> (or scan yourself in) BEFORE scanning a customer card.'),
   'change min first' => t('That request would leave you with less than your target balance. <%a>Lower your target balance</a> first.','_a', atag('/settings/fund')),
-  'bad member id' => t('That is not a valid member ID!'),
-  'bad card' => t('That is not a valid member ID.'),
-  'bad card code' => t('This %PROJECT card is not valid.'),
-  'upload required' => t('You must upload a file.'),
-//  'missing contact info' => t("<h2>Missing Contact Information</h2><p>Please complete your <%a1>Contact Information</a> before continuing.</p>"),
-  'correct and retry' => t('Please correct the problem and resubmit this form.'),
-//  'duplicate phone' => t('That phone number is already the primary phone for another account.<br><br>If this is your ONLY phone and you can make do without a connected bank account (that is, if you have some other easy way to get money into and out of your %PROJECT Account): <input type="button" value="Continue With No Bank Connection" onclick="jQuery(\'#edit-dupOk\').val(1); jQuery(\'#frm-%form\').submit();" />'),
-  'not a duplicate phone' => t('That phone number is NOT the primary phone for another account.'),
-  'bad pin' => t('That is not your correct PIN.'),
-  'wrong pin len' => t('Your PIN must be exactly 4 characters long.'),
-  'pin required' => t('You must choose a PIN.'),
-  'only us banks' => t('Unfortunately, at this time, we can handle only U.S. banks.'),
-//  'bad deposit cents' => t('Each deposit is a number less than %DW_VERIFY_ROOF.'),
-  'no can scan' => t('You do not have permission to scan an individual\'s %PROJECT card.'),
   'must opt' => t('You must not create a limited account for this person without giving them the opportunity to open a real %PROJECT Account. <%a>Invite them</a>!', '_a', atag('/community/invite')),
-  'must agree' => t('Accept Terms checkbox field is required.'), // drupal shows this
-  'redo info' => t('We could not verify your personal information. Please try again, carefully.'),
-  'bad ssn or dob' => t('There is a problem verifying your personal information.'),
-  'bad ssn' => t('That is not a valid social security number.'),
-  'bank too little' => t('The amount you asked to transfer is less than the minimum ($%R_ACHMIN).'),
-  'members only' => t('You must be a member, to use this feature.'),
-  'dwolla terms required' => t("Please accept Dwolla's terms before you click Continue."),
-  'no card ordered' => t('No %PROJECT card was ordered.'),
-  'bad buy info' => t('To pay with %RCREDITS, you must use the same %thing for the purchase as you use for your %PROJECT Account.'),
-  'must be signed out' => t('You are already signed in.'),
-  'wrong payroll co' => t('The company name in cell A1 must match your company name exactly (%coName)'),
-  'not payroll csv' => t('This is not a payroll CSV. It must say "Payroll Details" in cell A2.'),
-  'bad csv' => t('Incorrect CSV format'),
-  'empty payroll' => t('There are no employees listed as having received a %PROJECT payroll deduction.'),
-  'bad payroll employee' => t('%employee is mispelled, does not have an active %PROJECT Account, or is not listed as an employee on your Relations page. Click Settings, then Relations.'),
-  'illegal amount change' => t('You cannot %action the original amount (%amount). <%a>Send an invoice</a> instead.'),
-  'bad achmin' => t('The minimum transfer amount must be at least $%R_ACHMIN.'),
-  'say why not' => t('You must say why you are disputing the invoice.'),
-  'no co pass' => t('Company accounts do not have passwords. Sign in to your personal account, then click your photo in the upper right corner and select %company from the dropdown.'),
-  'account number mismatch' => t('You must have mistyped your account number once. Try again.'),
-  'yes or no' => t('You must answer Yes or No.'),
   'no local proxy' => t('There are no other members nearby. <%a>Invite someone</a>!', '_a', atag('/community/invite')),
-  'too many joins' => t('You can join to only one other account.'),
   'short cash help' => t('<%a>Click here</a> for more information about cashing out incentive rewards.', '_a', atag('/help/cashing-out')),
-  'maybe not cash' => t('If you are actually reimbursing someone or paying them for goods or services (for example, employee labor), choose a different button under "For".'),
-  'link expired' => t('That link has expired.'),
-  'login failed' => t('Your attempt to sign in failed. Click the "Password problems" link if you need a new password.'),
-  'bad file type' => t('Bad file type: %filetype'),
-  'file save error' => t('Your file upload did not succeed.'),
-  'forced without perm' => t('<p>An unauthorized transaction was made using a Company %PROJECT card.</p><ul><li>Date: %date</li><li>Customer: %a2 (by %agent2)</li><li>Company: %a1 (by %agent1)</li><li>Amount: %amount</li><li>For: %for</li></ul><p>This transaction was taken offline, so there was no way to know the agent lacked authorization.</p>'),
-  'bad invite num' => t('That is not a valid username or invitation number.'),
-  'negative saveWeekly' => t('Your discretionary savings are already at their minimum, so your weekly savings addition cannot be negative.'),
-  'requires signin' => t('You must be signed in, to use that page.'),
-  'too many days' => t('You cannot view more than 18 months at a time on screen (but you can download any period).'),
-  'co code timeout' => t('That form has expired. Refresh your page and try again.'),
-  'old partner link' => t('Sign in with your account ID and password to continue your account set-up.'),
-  
-//  'saveWeekly too low' => t('With a negative "target balance", your weekly savings addition must be at least %min.'),
-);
+];
 $GLOBALS['tStrings']['flooded'] = $GLOBALS['tStrings']['bad login'];
 
 /**
@@ -254,20 +43,22 @@ $GLOBALS['tStrings']['flooded'] = $GLOBALS['tStrings']['bad login'];
  * Accommodate testing, if that's what's happening.
  * Drupal urlencodes the parameters (= and &), so the target page will have to sort that out.
  * @param string $page: page to go to
- * @param string $msg: message to output, if any
+ * @param string $msg: message or index of message to output, if any
  * @param string $field: error field, if any ('err' is typical, triggering error message rather than status message)
  */
 function go($page, $msg = '', $field = '') {
   global $base_url;
   global $lastGo, $xlastGo; list ($xlastGo, $lastGo) = [@$lastGo, $page]; // for testing
 
-  if ($msg) say(strip_tags($msg), $field);
+  $msg = strip_tags($msg);
   if (substr($page, 0, 1) == '/') $page = substr($page, 1); // supplying the slash is preferred, to agree with w\atag()
-    
+
+  t\output("Going to page $page (page0=$lastGo msg=$msg field=$field)");
+  if ($msg) say($msg, $field);
+ 
   if (test()) {
     $_POST = []; // make sure it doesn't act like we submitted the target page
-    t\output("Going to page $page (page0=$lastGo msg=$msg field=$field)");
-    return mb_strpos($page, 'http://') === FALSE ? f('t.pageForm', $page, $msg, $field) : '';
+    return strhas($page, 'http://') ? '' : f('t.pageForm', $page);
   }
 
   if (!u\starts($page, 'http')) $page = "$base_url/$page";
@@ -359,8 +150,8 @@ EOF;
 function htmlButton($name, $id, $value, $class, $other = []) {
   extract(just('tribs href class', $other));
 
-  if (nn($href) and mb_strpos($href, 'http') === FALSE) $href = BASE_URL . '/' . $href;
-//  u\EXPECT(!@$href or mb_strpos($href, 'http') !== FALSE, 'no http in html button'); // $onclick = $href;
+  if (nn($href) and !strhas($href, 'http')) $href = BASE_URL . '/' . $href;
+//  u\EXPECT(!@$href or strhas($href, 'http'), 'no http in html button'); // $onclick = $href;
   if (@$href) list ($tag, $role) = ['a', 'button']; else $tag = 'button';
   return w\tag($tag, $value, (@$tribs ?: []) + compact(@$onclick ? 'onclick' : 'href', 'class', 'role'));
 }
@@ -413,8 +204,6 @@ function NEWcgform($form, $onSubmit = '', $labeled = TRUE) {
 function cgform($form, $onSubmit = '', $labeled = TRUE, $level = 0) {
   if ($onSubmit) {
     list ($zot1, $zot2, $caller) = explode('\\', u\caller());
-    //$formId = 'rcreditsweb' . strtolower($caller);
-    //w\js('on-submit', "jQuery('#$formId').submit(function() { $onSubmit });"); 
     w\jsx('on-submit', 'caller', strtolower($caller)); // spaces are required around $onSubmit
     // (Drupal kills the quotes) $form['#attributes']['onsubmit'] = $onSubmit; // eg ' return func();'; 
   }
@@ -423,7 +212,7 @@ function cgform($form, $onSubmit = '', $labeled = TRUE, $level = 0) {
   foreach ($form as $k => $v) if (substr($k, 0, 1) != '#') {
     if (empty($v)) continue;
     if (!is_array($v)) {
-      if (in($k, 'title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back submit')) {
+      if (in($k, ITEM_FLDS)) {
         $form[$k] = $v = $k == 'submit' ? submit($v) : item($v); // let these common items be created simply
       } else u\FAIL("field $k is not an array: " . pr($v));
     }
@@ -548,13 +337,13 @@ function showRecords($ray, $formatFunc = 'CG\\Web\\formatField', $flagsField = B
       $v = $formatFunc($k, plain($v), $flagsField);
 //      if ($k == 'for2' and $v == $row->for1) $v = 'same'; // admin uses this for conciseness
       $align = in($k, ALIGN_RIGHT) ? 'R' : (in($k, ALIGN_CENTER) ? 'C' : 'L');
-      foreach (ray('balance credit trust count total $ pct dollars') as $w) if (stripos($k, $w) !== FALSE) {
+      foreach (ray('balance credit trust count total $ pct dollars') as $w) if (strihas($k, $w)) {
         $align = 'R';
         if ($v !== '' and is_numeric($v)) $v = in($w, 'pct') ? u\fmtAmt($v, '%') : number_format($v, in($w, FMT_INT) ? 0 : 2);
       }
         
 //      if (in_array($k, ray(FMT_INT))) $v = round($v);
-//      if (in_array($k, ray(FMT_2D)) or strpos($k, '$') !== FALSE) if ($v != '') $v = number_format($v, 2);
+//      if (in_array($k, ray(FMT_2D)) or strhas($k, '$')) if ($v != '') $v = number_format($v, 2);
       $line .= "  <td class=\"align$align\">$v</td>\n";
     }
     $lines[] = $line;
@@ -804,7 +593,7 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
   if (!@$formSta['confirm'] and !in($function, R_NOLOG_FORMS)) {
     $formName = str_replace(base_path(), '', $_SERVER['REQUEST_URI']);
     $logit = TRUE;
-    foreach(ray('sadmin/ account- /admin /wp-admin /wp-login /xmlrpc') as $i => $k) if (strpos($formName, $k) !== FALSE) {
+    foreach(ray('sadmin/ account- /admin /wp-admin /wp-login /xmlrpc') as $i => $k) if (strhas($formName, $k)) {
       if ($i >= 2) return hack(t('blog attack'));
       $logit = FALSE;
     }
@@ -919,8 +708,8 @@ function photoRet($msg, $status = 'error') {
  */
 function pickPassword($reset = TRUE, $req = '') {
   global $mya;
-  $pass1 = passFld($req . ($reset ? t('New password:') : t('Choose a Password:')), '', clas('password-field') + autofill('off'));
-  $pass2 = passFld($req . ($reset ? t('Confirm new password:') : t('Confirm password:')), '', clas('password-confirm') + autofill('off'));
+  $pass1 = textFld($req . ($reset ? t('New password:') : t('Choose a Password:')), '', clas('password-field') + autofill('off'));
+  $pass2 = textFld($req . ($reset ? t('Confirm new password:') : t('Confirm password:')), '', clas('password-confirm') + autofill('off'));
   $strong = hidFld(0, attrib(['id' => 'edit-strong']));
   focusOn('pass1');
   
@@ -1197,7 +986,7 @@ function memberStep($step, $done, $text, $links = '', $newWindow = FALSE) {
   if ($links) {
     if (!is_array($links)) $links = array($links);
     foreach ($links as $href) {
-      if (mb_strpos($href, 'http') === FALSE) $href = BASE_URL . "/$href";
+      if (!strhas($href, 'http')) $href = BASE_URL . "/$href";
       $link = "<a href=\"$href\"$target>";
       $linkx = '</a>';
       $text = preg_replace('/<a>/', $link, $text, 1);
@@ -1214,7 +1003,7 @@ EOF;
 
 // NOT USED
 function divButton($href, $title) {
-  if (mb_strpos($href, 'http') === FALSE) $href = BASE_URL . "/$href";
+  if (!strhas($href, 'http')) $href = BASE_URL . "/$href";
   return w\popHelp('', $title, $href);
   /*
   return  <<<EOF
@@ -1226,8 +1015,8 @@ EOF;
 // NOT USED
 function imageButton($href, $title, $src) {
   global $rUrl;
-  if (mb_strpos($href, 'http') === FALSE) $href = BASE_URL . "/$href";
-  if (mb_strpos($src, 'http') === FALSE) $src = "$rUrl/images/icons/$src";
+  if (!strhas($href, 'http')) $href = BASE_URL . "/$href";
+  if (!strhas($src, 'http')) $src = "$rUrl/images/icons/$src";
   return w\popHelp("<img src=\"$src\" />", $title, $href);
 /*  return  <<<EOF
 <a href="$href" title="$title"><img src="$src" border="0" /></a>
@@ -1507,6 +1296,7 @@ function zBadSelling(&$selling) {
   $selling = explode("\n", $selling);
   foreach ($selling as $one) {
     $one = trim($one); // don't allow empty or reserved values
+    if (strlen($one) > SELLING_MAXLEN) return t('Each short description of something you are selling is limited to %SELLING_MAXLEN characters.');
     if (!u\nonish($one) and !in($one, ['', S_REFUND, S_USD_OUT, t('cash')]) and !r\usdin($one)) $new[] = mb_strtolower($one);
   }
   if (!nn($new)) return t('missing field', 'field', 'selling');
@@ -1546,7 +1336,7 @@ EOF;
  */
 function ssnFields($personal = TRUE, $required = []) {
   if ($personal) {
-    $ssReason = $required ? t('Required by the IRS if you accept payments through %PROJECT.') : '';
+    $ssReason = $required ? t('Required by the IRS if you accept more than $20,000 a year in payments through %PROJECT ($600 a year in MA and VT).') : '';
     $federalId = passFld(t('ssTitle'), [t('ssDesc'), $ssReason], $required + autofill('off'));
     $dob = textFld(t('Birth Date:'), [t('Your birth date'), t('Your date of birth (mm/dd/yyyy)')], $required + autofill('off'));
   } else {
@@ -1683,12 +1473,12 @@ function hack($message, $info = []) {
 
 function fundRpt($now, $then, $type = '') {
   //$up = $then ? number_format(abs($now / $then - 1) * 100, 1) : '100';
-  $RUS = strpos($type, 'r') === FALSE ? '' : '@R';
+  $RUS = strhas($type, 'r') ? '@R' : '';
   $change = u\fmtAmt(abs($now - $then));
   $way = $now >= $then ? t('up') : t('down');
 //  $s = u\fmtAmt($now) . t("$RUS &mdash; @way @change$RUS from a month ago", compact('way', 'change'));
   $s = u\fmtAmt($now) . t($RUS, compact('way', 'change'));
-  return strpos($type, '$') === FALSE ? str_replace('$', '', $s) : $s;
+  return strhas($type, '$') ? $s : str_replace('$', '', $s);
 }
 
 function txsRpt($amt, $count, $accts, $type) {
@@ -1717,7 +1507,7 @@ function dateRange($args, $url, $choices = [], $settings = '', $downloadable = T
   global $txDays;
   extract(just('period starting ending states', $args));
   u\setDft($states, $settings);
-///  debug($states);
+
   if ($choices) {
     if ($states) $stateDfts[] = ray($states);
     $states2 = boxesFld(t('Show:'), '', @$stateDfts, $choices);
@@ -1887,7 +1677,7 @@ function menu($path, $title, $type, $function, $args, $perms = '') {
 
   foreach ($args = ray($args) as $k => $v) if (is_numeric($v)) $args[$k] = (int) $v;
   
-  $adminPerms = (stripos($perms, 'admin') !== FALSE);
+  $adminPerms = (strihas($perms, 'admin'));
   $admin = (u\starts($path, 'sadmin') or $perms == 'dev' or $adminPerms);
   $smart = ($path == 'pos');
 
@@ -1960,12 +1750,12 @@ function say($index, $args = [], $errField = '') {
 ///  if (is_array($index) and !isset($index[0])) debug($index);
   if (is_array($index)) list ($index, $args, $errField) = array($index[0], $index[1], $args); // error returned from a function
   if (!is_array($args)) list ($args, $errField) = array($errField, $args); // allow either order, for easy 2-param calls
-  $noTable = (mb_strpos($index, '<table') === FALSE);
-  $message = $noTable ? t($index, $args) : $index; 
+  $hasTable = strhas($index, '<table');
+  $message = $hasTable ? $index : tr($index, $args); 
   $fieldErr = ($errField and $errField != 'ERR');
   if ($fieldErr) \form_set_error($errField, $message); else \drupal_set_message($message, @$errField == 'ERR' ? 'error' : 'status', FALSE);
   $adminReport = ($mya and $mya->admin2 and mb_strlen($message) > 200);
-  if ($noTable and !$adminReport) u\loga($fieldErr ? 'sayerr' : 'say', compact('message'));
+  if (!$hasTable and !$adminReport) u\loga($fieldErr ? 'sayerr' : 'say', compact('message'));
   return FALSE;
 }
 
@@ -2334,9 +2124,14 @@ function tag($tag, $html = '', $tribs = []) {
 function tagN($tag, $html = '', $tribs = []) {return str_replace('#', '', tag($tag, $html, $tribs));}
 
 /**
- * Return an a tag for a non-spinning button to a new page.
+ * Return an a tag for a non-spinning button.
+ * @param string $href: URL to go to on click ('' if the click is handled with JS)
+ * @param string $style: button style (default, primary, success, error, warning)
+ * @param strng $size: xs sm md lg
+ * @param assoc/string $extras: array of attributes or id string
  */
 function atagB($href, $style = 'primary', $size = 'xs', $extras = []) {
+  if (is_string($extras)) $extras = ['id' => $extras];
   $class = @$extras['class'];
   $extras['class'] =  ($class ? "$class " : '') . "btn btn-$size btn-$style";
   return atag($href, $extras + ['role' => 'button']);
@@ -2346,6 +2141,7 @@ function atagB($href, $style = 'primary', $size = 'xs', $extras = []) {
  * Return an a tag.
  */
 function atag($href, $extras = []) {
+  if (is_string($extras)) $extras = ['id' => $extras];
   if (nn($extras['role']) != 'button') $extras += ['tabindex' => '-1'];
   if (@$href[0] == '/') $href = BASE_URL . $href;
 // NO  if ($href[0] == '$') $href = 'javascript:' . substr($href, 1);
@@ -2359,8 +2155,8 @@ function emailtag($email = NULL, $subject = '', $body = '') {
   foreach (['subject', 'body'] as $k) if ($$k) $$k = "$k=" . urlencode($$k) . '&';
   return "a href=\"mailto:$email?$subject$body\" target=\"_blank\"";
 }
-function btn($href, $text, $style = 'primary', $size = 'xs', $extras = []) {
-  return '<' . atagB($href, $style, $size, $extras) . ">$text</a>";
+function btn($href, $text, $style = '', $size = '', $extras = []) {
+  return '<' . atagB($href, $style ?: 'primary', $size ?: 'xs', $extras) . ">$text</a>";
 }
 function lnk($href, $text, $extras = []) {return '<' . atag($href, $extras) . ">$text</a>";}
 function doLnk($class, $text, $data = NULL, $extras = []) {return w\lnk('', $text, compact('class', 'data') + $extras);}
@@ -2370,8 +2166,9 @@ function doBtn($class, $text, $data = '') {return w\btn('', $text, 'primary', 'x
  * Skip a setup step and save it for last. Has no effect if step is already done.
  * If defaulting to the current step, redirect to the next step.
  * @param string $substitute: step to do instead (later)
+ * @param string $justDid: step just completed
  */
-function skipStep($substitute = NULL) {
+function skipStep($substitute = NULL, $justDid = '') {
   global $mya;
 
   if (!@$mya or !$stepsLeft = $mya->stepsLeft()) return; // nothing to do
@@ -2379,7 +2176,9 @@ function skipStep($substitute = NULL) {
   unset($stepsLeft[0]);
   if ($step != 'discount') $stepsLeft[] = $substitute ?: $step; // put this step at the end (except discount, which can be done later)
   $mya->update('stepsLeft', array_values($stepsLeft)); // renumber and update
-  return w\go($mya->nextStepUrl());
+  $nextStep = $mya->nextStepUrl($justDid, $msg);
+  if ($justDid and $msg) w\say($msg);
+  return w\go($nextStep);
 }
 
 /**
@@ -2457,7 +2256,7 @@ function opText($sta) {
  */
 function goNextStep($step, $msg = NULL, $info = []) {
   global $mya;
-  $url = $mya ? $mya->nextStepUrl($step, $msg, $info) : 'summary';
+  $url = $mya ? $mya->nextStepUrl($step, $msg, $info) : 'signin';
   return w\go($url, $msg);
 }
 
@@ -2477,6 +2276,7 @@ function clas($class) {return ['class' => [$class]];}
 function attrib($attributes) {return compact('attributes');}
 function suffix($field_suffix = '') {return compact('field_suffix');}
 function prefix($prefix) {return compact('prefix');}
+function maxlen($max) {return attrib(['maxlength' => $max]);}
 function autofill($settings = 'on') {return attrib(['autocomplete' => $settings]);}
 function required($dft = NULL) {return ['required' => TRUE] + (isset($dft) ? dft($dft) : []);}
 // UNUSED function check($array, $type = 'plain') {return array_map("check_$type", $array);} // Check an array for plain or markup.

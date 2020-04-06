@@ -48,7 +48,8 @@ Setup:
 Scenario: A member clicks the summary tab
   When member ".ZZA" visits page "summary"
   Then we show "Account Summary" with:
-  | ID        | ZZA (personal account) |
+  | ID        | ZZA |
+  | ~...      | (personal account) |
   | Name      | Abe One (abeone) |
 #  | Contact   | 1 A St., Atown, AK 01000 |
   | Balance   | $10 |
@@ -68,7 +69,8 @@ Scenario: A member clicks the summary tab with roundups
 Scenario: An agent clicks the summary tab without permission to manage
   When member "A:B" visits page "summary"
   Then we show "Account Summary" with:
-  | ID   | NEWZZA (personal account) |
+  | ID        | ZZA |
+  | ~...      | (personal account) |
   | Name | Abe One (abeone)   |
   And without:
   | Make This a Joint |
@@ -76,6 +78,7 @@ Scenario: An agent clicks the summary tab without permission to manage
 Scenario: A company agent clicks the summary tab
   When member "C:A" visits page "summary"
   Then we show "Account Summary" with:
-  | ID       | ZZC (company account) |
+  | ID       | ZZC |
+  | ~...     | (company account) |
   | Name     | Corner Pub (cornerpub) |
 #  | Contact  | 3 C St., Ctown, Cher, FRANCE |

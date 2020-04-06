@@ -46,7 +46,7 @@ function formInvestDividends_submit($form, &$sta) {
   $pool = $amount * (1 - ICLUB_TITHE);
 	$count = $sum = $got = $reCount = $reSum = 0;
 
-  $DBTX = db_transaction();
+  $DBTX = \db_transaction();
 
   list ($ok, $index, $subs) = be\transfer('payment', $icA, $cgA, $amount - $pool, t('community dividend'), FOR_USD);
   u\EXPECT($ok, 'community dividend error');

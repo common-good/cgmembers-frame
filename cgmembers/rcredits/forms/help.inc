@@ -61,7 +61,8 @@ function formHelp_submit($form, &$sta) {
   }  
 //  $message = u\crypt($message);
 //  db\insert('r_tous', compact('uid', 'time', 'message'));
-  $subs = compact(ray('who aAttach name type size'));
-  r\tellAdmin("$msg|$message", $subs, @$aAttach ? $uid : NULL); // tell CO only if there is no attachment
+  $body = tr("$msg|$message");
+  $subs = compact(ray('who body aAttach name type size'));
+  r\tellAdmin(t('Secure message'), $subs, @$aAttach ? $uid : NULL); // tell CO only if there is no attachment
   say(t('Your message has been sent. An administrator will respond as soon as possible.'));
 }

@@ -59,19 +59,19 @@ function directoryList($which, $region) {
   if (!$res) return participatingCompanies(''); // nothing in that area
   
   extract($res); // get lat,lon
-  $regionCrit = ':DISTANCE_BETWEEN<:NEIGHBOR_MAX OR ' . $stateCrit;
+  $regionCrit = tr('%DISTANCE_BETWEEN<%NEIGHBOR_MAX OR ') . $stateCrit;
 
   $which = u\ignoreSuffix($which, 'ants ant ian es ers ing er or ion s');
   $which = str_replace(' ', '%', \db_like(" $which ")); // allow abbreviations of each word
 
   $sql = <<<EOF
-    SELECT DISTINCT u.uid, i.iid, ancestor.iid as selIid, IFNULL(ancestor.industry, i.industry) as selIndustry, abbreviation AS st
+    SELECT DISTINCT u.uid, a.base, a.ancestor as selIid, a.ancestorIndustry as selIndustry, abbreviation AS st
     FROM users u 
     LEFT JOIN r_user_industries ui ON ui.uid=u.uid
-    LEFT JOIN ancestors a on ui.iid = a.base
+    LEFT JOIN ancestors a on a.base=ui.iid
     LEFT JOIN r_states s ON s.id=u.state
     LEFT JOIN r_countries c ON c.id=u.country
-    WHERE :IS_CO AND u.uid>:CANONIC_ACCTS AND :IS_OK AND ($regionCrit) AND (u.fullName LIKE :which OR i.industry LIKE :which)
+    WHERE :IS_CO AND u.uid>:CANONIC_ACCTS AND :IS_OK AND ($regionCrit) AND (u.fullName LIKE :which OR a.baseIndustry LIKE :which)
     ORDER BY selIndustry, u.fullName
 EOF;
 

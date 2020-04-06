@@ -274,7 +274,7 @@ function identify($args) {
       $name = $a->agentA->fullName;
       $company = $a->proSe ? "" : $a->fullName;
     }
-    $place = r\location($a);
+    $place = $a->location();
     unset($device); // don't pass it back
   }
 

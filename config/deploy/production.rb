@@ -64,3 +64,9 @@ set :ssh_options, {
 #     auth_methods: %w(publickey password)
 #     # password: "please use keys"
 #   }
+
+
+#
+# To restart nginx and php-fpm automatically
+after 'deploy:published', 'restarter:restart_nginx'
+after 'deploy:published', 'restarter:restart_php_fpm'

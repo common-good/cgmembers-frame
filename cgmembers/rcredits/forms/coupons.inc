@@ -213,12 +213,14 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
     $args = u\urlify(http_build_query($ray = @compact(ray('type amount minimum ulimit count on start end automatic'))));
     r\tellCo(t('New Coupons!'), $ray + ray('company gift forOnly', $mya->fullName, false, nn($forOnly)));
     if (test()) $args = u\deurlify($args);
-    $url = "/community/coupons/print/$args";
     w\say(t('Your %thing was created successfully.', 'thing', t('discount')));
 
-    if ($trial) {
-      return w\goNextStep('discount');
-    } elseif ($mya->co) $mya->stepDone('discount');
-    return test() ? w\go($url) : w\go2('/community/coupons/list', $url);
-  }
+  if ($mya->co and !$gift) $mya->stepDone('discount');
+
+	$printUrl = "/community/coupons/print/$args";
+  $listUrl = '/community/coupons/list';
+
+  return $mya->ok 
+  ? (test() ? go($printUrl) : go2($listUrl, $printUrl))
+  : goNextStep('discount');
 }

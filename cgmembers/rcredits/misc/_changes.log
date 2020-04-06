@@ -1,3 +1,133 @@
+2020-04-06 feature/post-touchups
+. added mileage to posts
+. bug fix: admin edits no longer unset confirmed
+. bug fix: distance restriction now works right in post selection
+. fixed bug in post validation
+
+2020-04-05 feature/post-tips
+. beginnings of showing selected items in tests
+. added tips to offers & needs
+. fixed bug that showed closed accounts in adminFollowup
+. moved location function to acct class
+. added magnifier button to posts search box
+. added defaults to post input and edit pages (including for members)
+. removed or revised some post categories
+
+2020-04-03 feature/bugfixes
+. moved all possible strings to cg-strings.inc
+. cleaned up some test messages and w\go() logic
+. fixed bug that shows "Finish" command for accounts with no steps
+. fixed bug that closed account when user clicks Finish
+. fixed bug that did empty geosearches
+. fixed bug that exposed our geosearch key on error
+. fixed bug that dies on submission of posts form when no JS
+. improved posts messaging
+. fixed bug that disallowed decimal point in cgbutton form
+
+2020-03-30 feature/post-bugs
+. arguments carried from one form to the next are now urlified
+. we now handle same email from different device (and by extension, new email from same device)
+. admins cannot put a semi-colon in the SQL box (security)
+. admins can see unconfirmed posts (but cannot confirm them)
+. hits and contacts are tracked
+
+2020-03-29 feature/post-memos
+. posts are now shown as postit (memo) notes by default
+. category selectors are integrated into tabs
+. fixed bug in findco (ancestors view)
+. simplified calls to lnk, btn, atag, and atagB when passing just id
+
+2020-03-28 feature/post-moderate
+. added optional required-moderation for certain 3-digit zip code areas
+. added link to cancel post on editpost page
+. format improvements
+. added COVID-19 survey questions (self-vetting and for establishing new social norms)
+. more consistent use of strhas (and strihas)
+. invite step is completed just by visiting the page
+
+2020-03-27 feature/post-search
+. searching for words in posts
+. fixed bug in rcron geocode
+. fixed bug in deposits list, to make sure ALL checks in the deposit get printed
+. slightly modified agent step text and default, to make it clearer and easier
+
+2020-03-27 feature/post-crud
+. enabled testing of setlocus
+. fixed bug in periodic geocoding
+. posts can now be edited by user or admin
+. hooks added for a search box
+. added a pseudo-category for "my posts"
+. fixed a couple typos
+
+2020-03-25 feature/post-format
+. formatting improvements in posts
+. improve reliability of geosearch by titlecasing request
+. added hooks for moderation and administration of posts
+. error checks for user modification of URLs
+
+2020-03-22 feature/async-geo
+. cron now fills in missing lat/lon in people records
+. cookies track last offer/need category
+. textual improvements
+
+2020-03-21 feature/async-geosearch
+. time limit on syncronous geosearch
+. disabled async geosearch
+. better handling of geosearch failure
+. zip required in locus for post viewing
+
+2020-03-21 feature/geo-tweaks
+. fixed mysql calculation of distance between two points
+. improved formatting of posts list
+. fixed handling of radius limits in posts selection
+. a couple other little bugs in posts
+. message now when there are no posts to show
+. improved posts messaging
+. select can now be required
+. modified geosearch to get a better result
+. moved category selector to header of list
+
+2020-03-20 feature/post-geosearch
+. fixed a problem with message on company account page
+. reworked setlocus
+. fixed bug in setCook
+. fixed uses of DISTANCE_BETWEEN
+. added street number parsing to parseAddr
+. changed mutual aid page to ask for location and radius
+. added tests for mutual aid (posts)
+. added stuff to post_cats
+
+2020-03-17
+. fixed bugs in community/posts
+. reworked community/posts validate and submit for clarity and soundness, using a form identifier (frm)
+. moved uid field from posts to people
+. added radius field to posts
+. added some tests for posts
+. added a finance category and sort field to post_cats
+
+2020-03-16
+. bank connection page failed after disconnect (needed extra code in scraps.js)
+. offers & needs page
+. changed default profile images
+
+2020-03-12 feature/fewer-acct-options (continued)
+. no trial companies
+. expanded initial company signup page to include federalId, etc.
+. completed membership is no longer required for inviting someone
+. verifyid separated out from resetpassword
+. added w\maxlen function
+. selling is now limited to 25 characters
+. initial company relation is now automatically -A
+. resetpassword and verifying email now leave you signed in, if you are, and sign in you in otherwise
+. xid is shown on deposit slip now instead of txid
+. account closing and reopening no longer loses original activation date
+. changed some date handling in cron and cron tests to make leap day and daylight savings problems go away
+
+2020-03-03 feature/fewer-acct-options
+. HAS_REVERSER was unused. Removed.
+. trialco now has just two steps and is limited to 14 days and $100.
+. just two types of personal account: partner and normal (SSN required)
+
 2020-02-21 feature/restrict-activate
 . now only superAdmin can activate an account (but other admins can still deactivate)
 . minor fixes to changepassword.inc
@@ -479,7 +609,7 @@
 2019-07-19 feature/invest
 . added sweep function to cron, to credit CG with roundups and crumbs
 . finished investment club software (first pass), with extensive tests
-. replaced many calls to print_r with pr(), to avoid having to ignore those lines when updating
+. replaced many calls to print_ r with pr(), to avoid having to ignore those lines when updating
 . added some helpful debugging tools, including identification of non-array field in forms.inc
 . minor simplifications to menu.inc and path.inc
 . bug fix: sometime SSNs were getting emailed to admin and recorded in logs

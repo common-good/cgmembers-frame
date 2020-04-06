@@ -15,16 +15,17 @@ function formInvite($form, &$sta, $args = '') {
   global $base_url;
 //  if ($agent = r\agent()) {
   if ($mya->cAdmin and !$mya->proSe) say(t('Note: Admins cannot invite on behalf of someone.'), 'err');
+  $mya->stepDone('invite'); // not required to actually do the step
   
   $title = t('Invite Someone to %PROJECT');
-  if (!$mya->member) {
+/*  if (!$mya->member) {
     $subtext = t('We\'re sorry, you must finish opening your account before you can invite someone.');
     return cgform(compact(ray('title subtext')));
-  }
+  } */
   
   $_a2 = w\atagB('/community/invite/invited-whom');
   $_a2 = r\acct() ? t('<%a2>Who you have invited</a>', compact('_a2')) : '';
-  $where = r\location($mya->cttyA); // currently UNUSED
+  $where = $mya->cttyA->location(); // currently UNUSED
   $inviteCode = $mya->iCardCode(IBY_EMAIL);
   $_inviteLink = PROMO_URL . "/signup/code=$inviteCode";
   $warning = $mya->co ? t('<p>Note you are sending an invitation on behalf of a company. The company is "trusting" whoever you invite. We at %PROJECT recognize that companies are not people, and that it\'s a bit odd to allow them a sentiment usually reserved for humans.</p>') : '';

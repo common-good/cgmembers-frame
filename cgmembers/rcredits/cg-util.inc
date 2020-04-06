@@ -9,6 +9,7 @@ namespace CG\Util; // typically abbreviated as "u"
 use CG as r; // get rid of this
 use CG\DB as db;
 use CG\Util as u;
+use CG\Web as w;
 
 define ('URL_CHARS', 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-_~'); // 66 valid URLchars
 define ('HEX_CHARS', '0123456789abcdef');
@@ -129,7 +130,7 @@ function badZip(&$z, $country = US_COUNTRY_ID) {
  * Say where the given address contains a PO box.
  */
 function poAddress($address) {
-  return (mb_stripos(@$address, ' box ') or mb_stripos(@$address, 'pob ') !== FALSE);
+  return (strihas(@$address, ' box ') or strihas(@$address, 'pob '));
 }
 
 /**
@@ -302,13 +303,15 @@ function tribs($ray) {
 }
 
 /**
- * URL encode an arbitrary non-empty ascii string compactly
+ * URL encode an arbitrary non-empty ascii string compactly.
+ * Note that this uses non-mb functions, to encode bytes rather than characters.
  */
 function urlify($s) {
-  u\EXPECT($s !== '', 'empty string');
-  $len = strlen($s = bin2hex($s));
+  u\EXPECT($s !== '', 'empty string in urlify');
+  $len = strlen($s = bin2hex($s0 = $s));
   for ($i = 0, $result = ''; $i < $len - 2; $i += 3) $result .= x32a2(substr($s, $i, 3));
   if ($taili = $len % 3) $result .= '~' . substr($s, -$taili);
+//  if (test()) return $s0;
   return $result;
 }
 
@@ -318,8 +321,10 @@ function urlify($s) {
  * @return string: the original un-encoded string (FALSE if error)
  */
 function deurlify($s) {
+  $s0 = $s;
   list ($s, $tail) = explode('~', $s . '~');
   for ($i = 0, $result = ''; $i < strlen($s) - 1; $i += 2) $result .= a22x3(substr($s, $i, 2));
+//  if (test()) return $s0;
   return hex2bin($result . $tail);
 }
 
@@ -807,7 +812,7 @@ function cry($type, $data, $de = FALSE, $pwInstead = '') {
 function crypted($type, $s = NULL) {
 	if (func_num_args() == 1) {
 	  list ($type, $s) = [@$type[strlen(CRYPT_FLAG)], $type];
-	  if (!$type or strpos('PSV', $type) === FALSE) return FALSE;
+	  if (!$type or !strhas('PSV', $type)) return FALSE;
 		return u\starts($s, CRYPT_FLAG) ? $type : FALSE;
   } else return u\starts($s, CRYPT_FLAG . $type);
 }
@@ -955,7 +960,97 @@ function tableRow($row) {
   }
   return "<tr>$res</tr>\n";
 }
+
+/**
+ * Return the latitude and longitude for the given address. Also the postal code at that spot.
+ * call with either getLocus(location) or getLocus(addr, city, statecode, zip)
+ * @param string $q: either the whole address or just number and street
+ * @param string $city
+ * @param int $state: state code
+ * @param string $zip
+ * @return [lat, lon, zip] -- [0, 0, ''] if none found
+ */
+function getLocus($q, $city = '', $state = '', $zip = '') {
+  global $channel;
   
+//  if ($channel == TX_WEB) ini_set('default_socket_timeout', 8);
+  $none = [0, 0, ''];
+  if ("$city$state$zip") {
+    $q .= tr(", $city, " . r\realState($state) . " $zip");
+  } elseif (empty($q)) return $none;
+  
+  if (test() or (strhas($q, 'Greenfield, MA') and isDEV)) return f('t.getLocus', $q);
+
+  $params = ray('q key', $q, GEOCODE_KEY);
+  
+/*
+  $params = ray('street city state', $address, $city, r\realState($state)); // US Census
+  if (!$matches = (array) @$res->result->addressMatches) return r\tellAdmin(t('setLocus <%a>returned</a> no matches', 'a', w\atag($url))); // US Census
+  $coods = @$matches[0]->coordinates;
+  $coods = [$coods->y, $coods->x];
+  */
+  if (!$res = @file_get_contents($url = GEOCODE_URL . http_build_query($params))) {
+    r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)));
+    return $none;
+  }
+  $res = json_decode($res);
+
+  foreach (nn($res->results, []) as $one) if ($one->components->country_code == 'us') {
+    $i = $one->confidence; // confidence is actually specificity. Be as specific as possible.
+    if (in($one->components->_category, 'place transportation postcode') 
+      and nn($one->components->postcode)
+      and !isset($coods[$i])) { // don't overwrite with later same confidence
+      $coods[$i] = $one->geometry;
+      $zips[$i] = nn($one->components->postcode);
+    }
+  }
+
+  if (!nn($coods)) return $none;
+
+  $best = max(array_keys($coods));
+
+  return [$coods[$best]->lat, $coods[$best]->lng, $zips[$best]];
+}
+
+/**
+ * Parse the mailing address into its constituent parts.
+ * @param string $addr: the address to parse
+ * @param bool $separateNum: return street number and address separately
+ * @return [addr, city, state, zip, $country, $num] (one or more will be empty or ER, if error)
+ */
+function parseAddr($addr, $separateNum = FALSE) {
+  if (substr_count($addr, '/') > 1) $addr = str_replace('/', ',', $addr);
+
+  $parts = explode(',', trim($addr));
+  $p = count($parts);
+  if (!$p) return ['','','',''];
+//  if ($p == 1) return is_numeric($addr) ? ['', '', '', $addr] : ['', '', $addr, '']; // zip or st
+  if ($p == 1) return ['', '', '', $addr]; // zip
+  
+  list ($state, $zip, $country) = explode(' ', mb_strtoupper(@trim(array_pop($parts))) . '  ');
+  if (is_numeric($state) and !$zip and !$country) {
+    $zip = $state;
+    $state = array_pop($parts);
+  } else {
+    if (!$country and !preg_match('/^[A-Z][A-Z]$/', $state)) $state = 'ER';
+  }
+  $city = trim(array_pop($parts));
+  $addr = join(', ', $parts);
+  $num = '';
+  
+  if ($separateNum and strpos($addr, ' ')) {
+    $parts = explode(' ', $addr);
+    while (is_numeric(($p = array_shift($parts))[0])) $num .= ($num ? ' ' : '') . $p;
+    if ($num !== '') $addr = $p . ' ' . join(' ', $parts);
+  }
+  return [$addr, $city, $state, $zip, $country, $num];
+}
+
+function parseOutZip($locus) {
+  list ($a, $b, $c, $zip) = parseAddr($locus);
+  return $zip;
+}
+
 /**
  * Parse the name, returning the first and last names separately. Underlines in last name are treated as spaces.
  * @param string $name: the name to parse
@@ -977,21 +1072,6 @@ function parseName($name, $withMiddles = FALSE) {
     $first = array_shift($names);
     return [$first, $last, join(' ', $names)];
   } else return [join(' ', $names), $last];
-}
-
-/**
- * Parse the mailing address into its constituent parts.
- * @param string $address: the address to parse
- * @return [address, city, state, zip, $country] (one or more will be empty or ER, if error)
- */
-function parseAddr($address) {
-  $parts = explode(',', $address);
-  if (!$p = count($parts)) return ['', '', '', ''];
-  list ($state, $zip, $country) = explode(' ', mb_strtoupper(@trim(array_pop($parts))) . '  ');
-  if (!$country and !preg_match('/^[A-Z][A-Z]$/', $state)) $state = 'ER';
-  $city = trim(array_pop($parts));
-  $address = join(', ', $parts);
-  return [$address, $city, $state, $zip, $country];
 }
 
 /**
@@ -1364,6 +1444,15 @@ function consta($prefix, $var) {
   u\EXPECT(defined($const), "constant not defined: $const");
   return constant($const);
 }
+
+/**
+ * Return the given number with the given number of digits of precision (not like round())
+ */
+function vague($n, $prec = 1) {
+  $n = sprintf('%.' . ($prec - 1) . 'e', $n);
+  list ($sig, $log10) = explode('e', $n);
+  return number_format($n, ($prec == 1 ? 0 : 1) - $log10);
+}
   
 /**
  * Return the value of the given bit.
@@ -1456,7 +1545,7 @@ function sqlSerialValue($s, $n) {return "SUBSTRING_INDEX(SUBSTRING_INDEX($s, '\\
 function similar($s1, $s2, $chars = 5, $pct0 = .1) {return (similar_text($s1, $s2, $pct) > $chars and $pct > $pct0);}
 function unite($a, $b, $m = '') {return ($a and $b) ? tr('%a%m%b', '_a _m _b', $a, $m ?: t(' and '), $b) : ($a ?: $b);}
 function honorDesc($honor) {return $honor == 'other' ? ' ' : t(' in %honor of ', compact('honor'));}
-function inList($needle, $hay) {return (mb_strpos(" $hay ", " $needle ") !== FALSE or mb_strpos(",$hay,", ",$needle,") !== FALSE);}
+function inList($needle, $hay) {return (strhas(" $hay ", " $needle ") or strhas(",$hay,", ",$needle,"));}
 function weakPass($pw) {return (mb_strlen($pw) < 8 or !preg_match('/\d/', $pw) or !preg_match('/[A-Z]/', $pw) or !preg_match('/[a-z]/', $pw) or !preg_match('/[^0-9A-Za-z]/', $pw));}
 function b64encode($data) {return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');}
 function b64decode($data) {return base64_decode(strtr($data, '-_', '+/'));}
@@ -1473,3 +1562,4 @@ function getFile($flnm) {return file_exists($flnm) ? file_get_contents($flnm) : 
 function prob($p, $yes = TRUE, $no = FALSE) {return (mt_rand() / mt_getrandmax()) < $p ? $yes : $no;}
 function routingOk($r) {return (preg_match('/^(|[0-9]{9})$/', $r) and db\exists('r_banks', 'route=:r', compact('r')));}
 function bankAcctOk($ba) {return preg_match('/^[0-9]{3,17}$/', $ba);}  // {3,20} ? Dwolla says 3-17
+function joins(&$s, $m, $other = '') {return $s = (empty($s) ? '' : "$s$m") . $other;}

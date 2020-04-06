@@ -165,7 +165,7 @@ class Tx {
    */
   function insert($allowModification = FALSE) {
     $tx = $this;
-    $DBTX = db_transaction();
+    $DBTX = \db_transaction();
     if ($allowModification and $tx->xid != 0) {
       $xid = $tx->xid;
       u\EXPECT(db\updateOrInsert('tx_hdrs', just(self::TX_FIELDS, (array)$tx), 'xid'), "failure inserting tx");

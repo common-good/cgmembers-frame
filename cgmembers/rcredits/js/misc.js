@@ -243,12 +243,13 @@ function getCookie(name) {
 }
 
 /**
- * Allow only digits in a field. Call in jQuery keypress function: "$(selector).keypress(function () {return onlyDigits(event);});".
- * Better would be a function restrict(ok, notOk) where acceptable and/or unacceptable characters are listed explicitly as patterns.
+ * Set a cookie. Use exdays=99999 for "never expires"
  */
-function onlyDigits(e) {
-  var c = e.which ? e.which : e.keyCode;
-  return (c >= 48 && c <= 57);
+function setCookie(cname, cvalue, exdays) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exdays*24*60*60*1000));
+    var expires = "expires="+ d.toUTCString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
 }
 
 function vsprintf(s, args) {
@@ -265,3 +266,15 @@ function fmtAmt(n, digits) {
   if(typeof digits == undefined) digits = 2;
   return n.toLocaleString(undefined, {maximumFractionDigits:digits}); // maximumFractionDigits fails in Safari/Firefox
 }
+
+/**
+ * Build new jQuery syntax: $(":icontains['Bozo']") selects all elements containing "bozo", case-insensitive.
+ */ /* FAILS
+ 
+ //      selector = ".cell:icontains['" + s.split(" ").join("']:icontains['") + "']";
+//      box.find(selector).show();
+
+jQuery.expr[':'].icontains = function(a, i, m) {
+  return jQuery(a).text().toUpperCase()
+      .indexOf(m[3].toUpperCase()) >= 0;
+}; */

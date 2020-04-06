@@ -22,8 +22,8 @@ function doit(what, vs) {
 
   case 'chimp':
     var imp = $('.form-item-chimpSet');
-    $('#edit-chimp-1').click(function() {imp.hide();});
-    $('#edit-chimp-0').click(function() {imp.show();});
+    $('#edit-chimp-1').click(function () {imp.hide();});
+    $('#edit-chimp-0').click(function () {imp.show();});
     break;
 
   case 'get-ssn': get('ssn', {}, function () {}); break;
@@ -56,7 +56,7 @@ function doit(what, vs) {
     
 
   case 'change-ctty':
-    $('#edit-community').on('change', function() {
+    $('#edit-community').on('change', function () {
       var newCtty = this.value;
       changeCtty(newCtty, false);
     });
@@ -133,7 +133,8 @@ function doit(what, vs) {
     cgbutton(2);
     $('.form-item-button input').click(function () {cgbutton($(this).val());});
     $('#edit-item, #edit-text, #edit-amount, #edit-size').change(function () {cgbutton($('.form-item-button input:checked').val());});
-    $('#edit-amount, #edit-size').keypress(function () {return onlyDigits(event);});
+    $('#edit-amount, #edit-size').keypress(function (e) {return '0123456789.'.indexOf(String.fromCharCode(e.which)) >= 0;});
+
     function cgbutton(type) {
       var isButton = (type == 2);
       $('.form-item-size').toggle(isButton);
@@ -160,12 +161,12 @@ function doit(what, vs) {
     
   case 'addr':
 /*    print_country(vs['country'], vs['state'], vs['state2']);
-    $('#frm-signup, #frm-contact').submit(function() {
+    $('#frm-signup, #frm-contact').submit(function () {
       $('#edit-hidcountry').val($('#edit-country').val());
       $('#edit-hidstate').val($('#edit-state').val());
       $('#edit-hidstate2').val($('#edit-state2').val());
     });
-    $('.form-item-country select').change(function() {
+    $('.form-item-country select').change(function () {
       print_state(this.options[this.selectedIndex].value,'','state');
       print_state(this.options[this.selectedIndex].value,'','state2');
     });*/
@@ -234,13 +235,13 @@ function doit(what, vs) {
   case 'on-submit':
     var formid = '#rcreditsweb' + vs[caller];
     switch (caller) {
-    case '': $(formid).submit(function() {}); break;
+    case '': $(formid).submit(function () {}); break;
     }
     break;
 
   case 'advanced-prefs':
     toggleFields(vs['advancedFields'], false);
-    $('#edit-showAdvancet').click(function() { $(this).hide(); toggleFields(vs['advancedFields'], true); });
+    $('#edit-showAdvancet').click(function () { $(this).hide(); toggleFields(vs['advancedFields'], true); });
     break;
 
   case 'bank-prefs':
@@ -252,12 +253,17 @@ function doit(what, vs) {
       $('#edit-submit .ladda-label, #edit-nextStep .ladda-label').html(text);
     }
 
-    if ($('#edit-connect-1')[0]) {
+    if ($('#edit-connect-2')[0]) {
       showBank($('#edit-connect-2').attr('checked') == 'checked');
-      $('#edit-connect-0').click(function() {showBank(false);});
-      $('#edit-connect-1').click(function() {showBank(false);});
-      $('#edit-connect-2').click(function() {showBank(true);});
+      $('#edit-connect-0').click(function () {showBank(false);});
+      $('#edit-connect-1').click(function () {showBank(false);});
+      $('#edit-connect-2').click(function () {showBank(true);});
+    } else if ($('#edit-connect-1')[0]) {
+      showBank($('#edit-connect-1').attr('checked') == 'checked');
+      $('#edit-connect-0').click(function () {showBank(false);});
+      $('#edit-connect-1').click(function () {showBank(true);});
     }
+
 
     function showTarget(show) {
       $('#targetFields2').toggle(show);
@@ -265,13 +271,109 @@ function doit(what, vs) {
     }
     showTarget($('#edit-refills-1').attr('checked') == 'checked');
 
-    $('#edit-refills-0').click(function() {showTarget(false);});
-    $('#edit-refills-1').click(function() {
+    $('#edit-refills-0').click(function () {showTarget(false);});
+    $('#edit-refills-1').click(function () {
       showTarget(true); 
       if ($('#edit-target').val() == '$0') $('#edit-target').val('$' + vs['mindft']);
     });
     break;
 
+  case 'posts':
+    $('.form-item-radius .btn').click(function () { // click the Go button
+      $('#edit-submit').click();
+      return false; // cancel original link click
+    });
+    $('#menu-signin').hide(); // don't confuse (signin is not required for this feature)
+    break;
+    
+  case 'post-tabs':
+// NO. use URL instead  $('#edit-back').click(function () {window.history.back(); return false;});
+    var frm = $('#edit-search').parents('form:first');
+    
+    frm.submit(function (event) {event.preventDefault();}); // or return false;
+   
+    $('#edit-search').change(function () { // search
+      var box = $('#tabs .container');
+
+      $('.filter').val(99); // show "(search)" on both filter dropdowns
+      
+      var s = $(this).val().trim().replace(/\s+/g, ' '); // the search string
+      box.find('.tbody .row').show(); // show all (then eliminate non-matches)
+      if (s == '') return $('.filter').val('');
+
+      var i, words = s.toUpperCase().split(' '); // array of words
+      var cols = '.cat .item .details'.split(' ');
+
+      box.find('.tbody .row').each(function () {
+        colText = ''; for (i in cols) colText += ' ' + $(this).find(cols[i]).text().toUpperCase();
+        for (i in words) if (colText.indexOf(words[i]) < 0) $(this).hide(); // show only if it has all words
+      });
+    });
+
+    $('#tabs').tabs();
+    $('#tabs ul li a[href^="http"]').unbind('click').click(function () {location.href = $(this).attr('href');});
+/*    $('[aria-controls="tab-needs"]').click(function () {$('#tab-needs').show();}); */
+    $('#tabs .tbody .row').click(function () {location.href = $(this).find('a').attr('href');});
+       
+    $('.filter').mousedown(function () {$(this).parent().click();});
+    
+    $('.filter').change(function () {
+      var box = $($(this).parent().attr('href'));
+      var opt = $(this).find(':selected');
+
+      if (opt.val() == -1) { // search
+        $('#edit-search').change();
+      } else if (opt.val()) { // show some
+        var cat = opt.text().replace(/ /g, '');
+        if (cat == vs['myPosts']) cat = 'mine';
+        box.find('.tbody .row').hide(); // hide all
+        box.find('.row.' + cat).show(); // and everything in the chosen category
+        box.find('.row.none').show(); // and the "nothing found in this area" row, if any
+      } else box.find('.tbody .row').show(); // show all
+    });
+    
+    $('#edit-view').click(function () {
+      if ($('#tabs.memo').length > 0) { // if memo view, switch to list view
+        $('#tabs').removeClass('memo');
+        $(this).text(vs['memoView']);
+      } else { // list view, switch to memo
+        $('#tabs').addClass('memo');
+        $(this).text(vs['listView']);
+      }
+    });
+    break;
+    
+  case 'post-post':
+//    $('#edit-cat').change(function () {setCookie(vs['type'] + 'cat', $(this).val());});
+    $('input[name="type"]').change(function () {
+      var type = vs['types'].split(' ')[$(this).val()];
+      var need = (type == 'need');
+      $('.form-item-radius').toggle(!need); 
+      $('.form-item-exchange').toggle(need);
+      if (type == 'tip') $('#edit-radius').val(0); // tips default to everywhere
+    });
+    
+    $('.form-item-end a').click(function () {
+      $('#edit-end').val(new Date(Date.now()).toLocaleString().split(',')[0]);
+      $('#edit-submit').focus();
+    });
+    break;
+
+  case 'post-who':
+  /*
+    $('#edit-zip').change(function () {
+      var moderate = (vs['moderateZips'].indexOf($(this).val().trim().substring(0, 3)) >= 0);
+      var m, a = 'midtext days washes health'.split(' ');
+      for (i in a) {
+        m = $('.form-item-' + a[i]);
+        m.toggle(moderate);
+        if (moderate) {
+          m.find('input').attr('required', 'required');
+        } else m.find('input').removeAttr('required');
+      }
+    }); */
+    break;
+    
   case 'signup':
     var form = $('#frm-signup');
 //    if (vs['clarify'] !== 'undefined') $('#edit-forother a').click(function () {alert(vs['clarify']);});
@@ -288,7 +390,7 @@ function doit(what, vs) {
     });
     break;
     
-  case 'prejoint': $('#edit-old-0').click(function() {this.form.submit();}); break;
+  case 'prejoint': $('#edit-old-0').click(function () {this.form.submit();}); break;
 
   case 'invite-link': $('#inviteLink').click(function () {SelectText(this.id);}); break;
 
@@ -350,7 +452,7 @@ function doit(what, vs) {
     break;
     
   case 'coupons':
-    $('#edit-automatic-0').click(function() {
+    $('#edit-automatic-0').click(function () {
       $('.form-item-automatic').hide();
       var min = $('#edit-minimum').val();
       $('.form-item-on').show();
@@ -391,7 +493,7 @@ function doit(what, vs) {
     break;
     
     /*    case 'relations':
-          $('div.checkbox').click(function() {
+          $('div.checkbox').click(function () {
           var box = $('input', this);
           alert(box.prop('checked'));
           //box.prop('checked', !box.prop('checked'));
@@ -399,7 +501,7 @@ function doit(what, vs) {
           break;*/
     
   default:
-    alert('ERROR: there is no default script.');
+    alert('ERROR: Unknown script scrap (there is no default script).');
     alert($('#script-scraps').attr('src').replace(/^[^\?]+\??/,''));
     
   }

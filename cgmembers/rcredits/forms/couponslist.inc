@@ -85,6 +85,7 @@ function showDiscounts() {
 	$subtext = t('as of %today', 'today', u\fmtDate(NOW));
 	$fields = ray('company amount on end for left amtLeft');
   $hdrs = u\tableRow(ray('Company,Discount,On,Ending,For,Uses&nbsp;Left,Amount&nbsp;Left'));
+  $nearby = tr('%DISTANCE_BETWEEN<%NEIGHBOR_MAX');
 	
   $sql = <<< X
     SELECT `fromId` AS sponsor, `amount`, `portion`, `purpose` AS `on`, `end`, payerType, payer, ulimit, uid, amtLimit,
@@ -101,7 +102,7 @@ function showDiscounts() {
                                     AND IFNULL(:NOW < u.end, TRUE))
        ELSE FALSE
        END)
-    AND (u.community=:ctty OR :DISTANCE_BETWEEN<:NEIGHBOR_MAX)
+    AND (u.community=:ctty OR $nearby)
     AND (r.action = :ACTION_PAYMENT)
     AND (r.start <= :NOW AND IFNULL(:NOW < r.end, TRUE))
 		ORDER BY end IS NOT NULL, end
