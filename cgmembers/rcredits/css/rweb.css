@@ -574,7 +574,8 @@ body.page-partner blockquote {font-size:14px;}
 
 #frm-posts #edit-end {display:inline-block; margin-right:15px;}
 
-#frm-posts #tab-needs {display:none;}
+#frm-posts #tab-offers,
+#frm-posts #tab-tips {display:none;}
 #frm-posts .thead .cell {padding:0px 8px;}
 
 #frm-posts .k-category {padding:4px 0 4px 9px; width:150px;}
