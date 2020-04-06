@@ -1,3 +1,9 @@
+2020-04-06 feature/post-touchups
+. added mileage to posts
+. bug fix: admin edits no longer unset confirmed
+. bug fix: distance restriction now works right in post selection
+. fixed bug in post validation
+
 2020-04-05 feature/post-tips
 . beginnings of showing selected items in tests
 . added tips to offers & needs

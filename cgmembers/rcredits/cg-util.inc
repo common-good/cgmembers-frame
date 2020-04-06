@@ -1444,6 +1444,15 @@ function consta($prefix, $var) {
   u\EXPECT(defined($const), "constant not defined: $const");
   return constant($const);
 }
+
+/**
+ * Return the given number with the given number of digits of precision (not like round())
+ */
+function vague($n, $prec = 1) {
+  $n = sprintf('%.' . ($prec - 1) . 'e', $n);
+  list ($sig, $log10) = explode('e', $n);
+  return number_format($n, ($prec == 1 ? 0 : 1) - $log10);
+}
   
 /**
  * Return the value of the given bit.

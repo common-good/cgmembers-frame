@@ -598,10 +598,9 @@ body.page-partner blockquote {font-size:14px;}
 #frm-posts .ui-tabs-panel .container a:hover {color:silver;} 
 
 #frm-posts .emergency {font-weight:bold; color:red;}
-
 #frm-posts .radio {display:inline-block;}
-
 #frm-posts #edit-midtext {color:darkred;}
+#frm-posts .tbody .cat small {float:right; margin-top:3px; color:silver;}
 
 /* memo view */
 
