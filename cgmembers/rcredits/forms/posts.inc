@@ -174,7 +174,7 @@ function postList($type, $lat, $lon, $zip, $radius) {
   
   $zipIrrelevant = ($mya and $mya->admin) ? 1 : 0;
   $visible = $zipIrrelevant ? 1 
-  : (admin($zip) ? '(SELECT community FROM users WHERE :zip RLIKE zip AND uid<1)' : 0);
+  : (admin($zip) ? '(SELECT community FROM users WHERE :zip RLIKE zip AND uid<1 LIMIT 1)' : 0);
   $visible = "($visible OR (NOT s.private AND s.confirmed))";
 
   $sql = <<<X
