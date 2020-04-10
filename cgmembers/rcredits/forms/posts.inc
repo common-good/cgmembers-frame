@@ -164,13 +164,18 @@ X
  * Return a table of confirmed postings for the given type and category.
  */
 function postList($type, $lat, $lon, $zip, $radius) {
+  global $mya;
+  
   $distance = tr('%DISTANCE_BETWEEN');
   $myPid = vip('pid') ?: '0';
   $isMyPid = 'pid=:myPid';
   $postRadius = 'IFNULL(s.radius, 0)';
   $noPosterGeo = '(latitude=0 AND longitude=0)';
   
-  $visible = admin() ? 1 : 'NOT s.private AND s.confirmed';
+  $zipIrrelevant = ($mya and $mya->admin) ? 1 : 0;
+  $visible = $zipIrrelevant ? 1 
+  : (admin($zip) ? '(SELECT community FROM users WHERE :zip RLIKE zip AND uid<1 LIMIT 1)' : 0);
+  $visible = "($visible OR (NOT s.private AND s.confirmed))";
 
   $sql = <<<X
     SELECT IF ($noPosterGeo, 0, $distance) AS dist, s.postid, c.cat, s.item, s.details, s.emergency, $isMyPid AS mine
@@ -182,7 +187,7 @@ function postList($type, $lat, $lon, $zip, $radius) {
       AND IFNULL(s.end, :NOW) >= :NOW
       AND ((:type='tip' AND $postRadius>0) OR
         IF($noPosterGeo OR (:lat=0 AND :lon=0), 
-          MID(p.zip,1,3) = MID(:zip,1,3), 
+          MID(p.zip,1,3) = MID(:zip,1,3) OR $zipIrrelevant, 
           $distance < LEAST(IF($postRadius=0, 99999, s.radius), :radius)
         ))
       AND $visible
@@ -254,7 +259,7 @@ function postInputFlds($dfts = []) {
   $cat = selectFld(REQ . t('Category:'), '', dft($cat), $choices);
   
   $item = textFld(REQ . t('What:'), [t('What you\'re offering or need')], dft($item) + maxlen(40));
-  $private = admin() ? boolFld(t('Private:'), t('Seen only by the administrator'), dft((int) $private)) : hidFld(0);
+  $private = admin(nn($dfts['zip'])) ? boolFld(t('Private:'), t('Seen only by the administrator'), dft((int) $private)) : hidFld(0);
 
   $details = areaFld(REQ . t('Details:'), t('Max 500 characters'), dft($details) + maxlen(500));
   
@@ -279,7 +284,7 @@ function showPost($postid) {
   // set up display-only fields that are the same for user's own post and someone else's post
   $created = item(u\fmtDate($created, TRUE), t('Posted:'));
 
-  if (admin()) {
+  if (admin($zip)) {
     list ($userSince, $phone, $state) = [u\fmtDate($userSince, TRUE), u\fmtPhone($phone), r\realState($state)];
     if ($personOk) $personOk = t(' (confirmed)');
     $who = <<< X
@@ -296,11 +301,11 @@ X;
 
   // set up fields that are the different for user's own post and someone else's post
   
-  if (vip('pid') == $pid or admin()) { // user's own post: allow editing or termination
+  if (vip('pid') == $pid or admin($zip)) { // user's own post: allow editing or termination
     $frm = hidFld('editpost');
     $title = t('Edit Post');
     extract(postInputFlds($res));
-    if ($a = admin()) {
+    if ($a = admin($zip)) {
       $message = msgFld('');
       $email = hidFld($a->email); // messages from admin always come from admin
       $subtext = $postOk ? t('Post CONFIRMED') : t('Post NOT confirmed');
@@ -518,7 +523,7 @@ function formPosts_submit($form, &$sta) {
 
   // got pid, now process post or message
   $confirmed = (int) (vip('pid') == $pid and vip('confirmed') and (vip('email') == $email or $frmEditpost)); // get confirmation status of person posting, editposting, or messaging -- vip('confirmed') is for DEV and double-check
-  if (admin()) $confirmed = 1;
+  if (admin(vip('zip'))) $confirmed = 1;
   $created = time();
   $err = FALSE;
   
@@ -659,6 +664,17 @@ function isMember($email = '') {
 }
 
 /**
+ * Say whether the current user has administrative permission for the given zip.
+ */
+function admin($zip) {
+  global $mya;
+  
+  if (!$mya or !$mya->oAdmin) return FALSE;
+  if ($mya->admin) return $mya;
+  return r\communityUid($zip) == $mya->agentA->community ? $mya : FALSE;
+}
+
+/**
  * Return url query arguments urlify'd
  * @param string $op: op parameter (doesn't get urlify'd)
  * @param assoc $params: other parameters
@@ -673,7 +689,6 @@ function msgFld($req = REQ) {return areaFld($req . t('Message to Send:'), t('Max
 function postRet($msg) {return r\acct() ? w\go('empty', $msg) : doSay($msg);}
 function moderate($zip) {return in(substr(trim($zip), 0, 3), MODERATE_ZIPS);}
 function frmBools($frm) {foreach(ray(POST_FRMS) as $k) $res['frm' . ucfirst($k)] = ($frm == $k); return $res;}
-function admin() {global $mya; return ($mya and $mya->admin) ? $mya : FALSE;}
 function myLocus() {global $mya; return ($mya and $mya->agentA->stepIsDone('contact')) ? $mya->location(TRUE) : '';}
 function typeName($type, $n) {return ray(constant("POST_TYPE_NAMES$n"))[typeNum($type)];}
 function typeNum($type) {return is_numeric($type) ? $type : array_search($type, ray(POST_TYPES));}

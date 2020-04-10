@@ -177,7 +177,7 @@ WHERE u.:IS_CO AND t.uid IS NULL ORDER BY community
 /** / echo "$a->mainQid $a->fullName: $gift -- $a->postalAddr $bank<" . 'br><' . 'br>';
 
 //    list ($address, $city, $state, $zip) = u\parseAddr($a->postalAddr);
-//    echo "$a->fullName;$address;$city, $state $zip<" . 'br>';
+///    echo "$a->fullName;$address;$city, $state $zip<" . 'br>';
   }, 'NOT :IS_CO AND NOT :IS_CARDED AND :IS_MEMBER ORDER BY fullName');
   
   // duplicated by Monthly Company Income and Payments
