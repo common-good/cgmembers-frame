@@ -26,6 +26,9 @@
 . members now cannot transact so much that a 1099 is required (when they haven't supplied an SSN)
 . fixed bugs in work.inc
 
+2020-04-09 feature/ontadmin
+. added community admin (oadmin) feature to posts
+
 2020-04-06 feature/post-touchups
 . added mileage to posts
 . bug fix: admin edits no longer unset confirmed

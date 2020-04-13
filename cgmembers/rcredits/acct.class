@@ -1529,7 +1529,7 @@ X;
 
     if ($bit <= B_MAX) { // ordinary bits
       $can = (bool) ($a->flags & (1 << $bit)); // these are easy. be efficient.
-      if (in($bit, [B_ADMIN2, B_CADMIN2, B_CADMIN, B_ADMIN])) {
+      if (in($bit, [B_OADMIN, B_ADMIN2, B_CADMIN2, B_CADMIN, B_ADMIN])) {
         if ($a->id == 1) return TRUE; // this didn't use to be necessary (9/20/2017)
         if (!$a->proSe) return ($aa = $a->agentA and $aa->can($bit)); // admin permissions are for agent instead (in tests, agent sometimes doesn't exist)
         if (!$can and $bit < (R_ADMIN_CAN_MANAGE_CTTYS ? B_ADMIN : B_CADMIN)) return $a->can($bit + 1); // not this admin bit, maybe the next higher? IMPORTANT NOTE: this gives cAdmin2 Admin2 permission, so always use ->isAdmin2 rather than ->admin2 unless you WANT cAdmin2 to have the permission in question
@@ -1562,7 +1562,8 @@ X;
          : (($aa->can(B_CADMIN) and $a->community == $aa->community) ? B_MANAGE : 0) );
       
     if (!$perm) $perm = max(B_RELATED + $a->permission,
-                            ($aa->can(B_ADMIN2) or ($aa->can(B_CADMIN2) and $a->community == $aa->community)) ? B_READ : 0);
+      ($aa->can(B_OADMIN) or $aa->can(B_ADMIN2) 
+        or ($aa->can(B_CADMIN2) and $a->community == $aa->community)) ? B_READ : 0);
       
     for ($i = B_RELATED; $i <= B_MANAGE; $i++) $cans[$i] = ($i <= $perm); // set all, even the false ones
 
