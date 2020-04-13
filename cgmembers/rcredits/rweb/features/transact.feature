@@ -49,7 +49,7 @@ Scenario: A member confirms request to charge another member
   | otherName | amount | purpose |*
   | Abe One   | $100   | labor   |
   And invoices:
-  | nvid | created | status      | amount | from | to  | for   |*
+  | nvid | created | status      | amount | payer | payee | for   |*
   |    1 | %today  | %TX_PENDING |    100 | .ZZB  | .ZZA | labor |
   And balances:
   | uid  | balance |*
@@ -90,7 +90,7 @@ Scenario: A member confirms request to pay another member
   | created | fullName | otherName | amount | payeePurpose |*
   | %today  | Bea Two  | Abe One    | $100   | labor        |
   And transactions:
-  | xid | created | amount | from  | to   | purpose      | taking |*
+  | xid | created | amount | payer | payee | purpose      | taking |*
   |   1 | %today  |    100 | .ZZA  | .ZZB | labor        | 0      |
   And balances:
   | uid  | balance |*
@@ -106,7 +106,7 @@ Scenario: A member confirms request to pay another member a lot
   | op  | who     | amount        | goods | purpose |*
   | pay | Our Pub | %R_MAX_AMOUNT | %FOR_GOODS     | food    |
   Then transactions:
-  | xid | created | amount        | from  | to   | purpose      | taking |*
+  | xid | created | amount        | payer | payee | purpose      | taking |*
   |   1 | %today  | %R_MAX_AMOUNT | .ZZB  | .ZZC | food         | 0      |
   
 Scenario: A member confirms request to pay a member company
@@ -125,7 +125,7 @@ Scenario: A member confirms request to pay a member company
   | ~postalAddr | 1 A, A, AK |
   | Physical address: | 1 A St., Atown, AK 01000 |
   And transactions:
-  | xid | created | amount | from  | to   | purpose      | taking |*
+  | xid | created | amount | payer | payee | purpose      | taking |*
   |   1 | %today  |    100 | .ZZA  | .ZZC | stuff        | 0      |
   And balances:
   | uid  | balance |*
@@ -220,7 +220,7 @@ Scenario: A member pays another member repeatedly
   | created | fullName | otherName | amount | payeePurpose |*
   | %today  | Bea Two  | Abe One    | $100   | labor        |
   And transactions:
-  | xid | created | amount | from  | to   | purpose      | taking | recursId |*
+  | xid | created | amount | payer | payee | purpose      | taking | recursId |*
   |   1 | %today  |    100 | .ZZA  | .ZZB | labor        | 0      |        1 |
   And date field "created" rounded "no" in "tx_hdrs" record "1" (id field "xid")
   And these "recurs":

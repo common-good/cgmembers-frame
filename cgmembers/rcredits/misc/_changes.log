@@ -1,3 +1,31 @@
+2020-04-12 feature/surtransactions
+. created stepup, groups, and rules pages
+. admin can now see all active posts regardless of distance
+. changed field names in tx_rules and tx_templates to agree with design (fromId => from, toId => to)
+. rendA'd fields can now default
+. bank accounts in deposits are now always the latest and any errors alert admin
+. removed an unused parameter from cgForm
+. changed from and to in tests to payer and payee (because tx_rules has from and to fields)
+. changed u\urlq2ray to handle unicode encoded query lines (happened once -- probably from protonMail JS)
+. changed enum fields in tx_rules and tx_templates to strings to simplify code
+. renamed some fields in tx_rules and tx_templates
+. disabled request to confirm old post or message in posts.inc (unneeded and counterproductive)
+. fixed bug in posts that crashed on replying to a post as a new user
+. tests now correctly populate forms that have default values
+. fixed u\where function so it handles fields with reserved names
+. refactored coupons.inc to consolidate duplicate code
+. improved distance handling in posts
+. fixed bug in email confirmation
+. all forms now focus on first field
+. added (string) has() function in misc.js
+. displayName now defaults in posts
+. moved crumbs to separate step
+. forms that populate fields with JS can now be repopulated correctly on error, using w\er()
+. cleaned up util.in in migrations, so new tx fields get included in txs, etc.
+. removed restriction that accounts cannot receive rebates without "sell" permission
+. members now cannot transact so much that a 1099 is required (when they haven't supplied an SSN)
+. fixed bugs in work.inc
+
 2020-04-06 feature/post-touchups
 . added mileage to posts
 . bug fix: admin edits no longer unset confirmed

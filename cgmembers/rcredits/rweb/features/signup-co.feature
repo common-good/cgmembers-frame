@@ -56,12 +56,12 @@ Scenario: A company signs up
   And we show "Verify Your Email Address"
   And we say "status": "info saved|step completed"
   And we say "status": "refundable deposit"
-  And member ".AAA" steps left "verifyemail agree contact backing photo donate company tithein discount"
+  And member ".AAA" steps left "verifyemail agree contact backing photo donate company crumbs discount"
 
   Given member is logged out
   When member "?" visits page "settings/verifyemail/id=NEWAAA-A&code=WHATEVER&verify=1"
   Then we show "Verified!"
-  And member ".AAA" steps left "agree contact backing photo donate company tithein discount"
+  And member ".AAA" steps left "agree contact backing photo donate company crumbs discount"
 
 Scenario: A company supplies company information
   Given member ".ZZC" has "co" steps done: "signup verifyemail agree contact backing photo donate"
@@ -117,11 +117,11 @@ Scenario: A company supplies company information
   And we show "Share When You Receive" with:
   | Crumbs |
   And we say "status": "info saved|step completed"
-  And member ".ZZC" steps left "tithein discount"
+  And member ".ZZC" steps left "crumbs discount"
 
 Scenario: A company supplies incoming tithe choices
   Given member ".ZZC" has "co" steps done: "signup verifyemail agree contact backing photo donate company"
-  When member "C:A" completes form "settings/tithein" with values:
+  When member "C:A" completes form "settings/crumbs" with values:
   | crumbs | 3 |**
   Then members have:
   | uid  | crumbs |*
@@ -131,12 +131,12 @@ Scenario: A company supplies incoming tithe choices
   And member ".ZZC" steps left "discount"
 
 Scenario: A company account manager creates a discount
-  Given member ".ZZC" has "co" steps done: "signup verifyemail agree contact backing photo donate company tithein"
+  Given member ".ZZC" has "co" steps done: "signup verifyemail agree contact backing photo donate company crumbs"
   When member ".ZZC" completes form "community/discount" with values:
-  | amount | minimum | start | end     | ulimit | type     |*
+  | amount | minimum | start | end     | useMax | type     |*
   |     20 |     120 | %mdY  | %mdY+3m |      3 | discount |
   Then these "coupons":
-  | coupid | fromId | amount | ulimit | flags | start      | end                         |*
+  | coupid | fromId | amount | useMax | flags | start      | end                         |*
   |      1 |   .ZZC |     20 |      3 |       | %daystart  | %(%daystart+3m+%DAY_SECS-1) |
   And we say "status": "Your discount was created successfully."
   And we tell ".ZZC" CO "New Coupons!" with subs:
@@ -144,7 +144,7 @@ Scenario: A company account manager creates a discount
   | type      | discount |
   | amount    | 20 |
   | minimum   | 120 |
-  | ulimit    | 3 |
+  | useMax    | 3 |
   | on        | on your purchase of $120 or more |
   | start     | %daystart |
   | end       | %(%daystart+3m+%DAY_SECS-1) |

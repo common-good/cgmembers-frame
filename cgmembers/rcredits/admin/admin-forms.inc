@@ -399,7 +399,7 @@ EOF;
   if (!isset($tickle)) $list .= t('There are no followup calls to be made.');
   $list .= "</table>\n";
   
-  return cgform(compact(ray('title subtitle list')), '', FALSE);
+  return cgform(compact(ray('title subtitle list')), FALSE);
 }
 
 /**
@@ -449,7 +449,7 @@ EOF;
   }
   $list .= "</table>\n";
   
-  return cgform(compact(ray('title list')), '', FALSE);
+  return cgform(compact(ray('title list')), FALSE);
 }
 
 /**
@@ -511,7 +511,7 @@ function formPhp($form, &$sta, $res = '') {
   $res = item($res);
   $code = areaFld('', '', dft(getV('code')));
   $submit = t('Execute Code');
-  return cgform(compact('res', 'code', 'submit'), '', FALSE);
+  return cgform(compact('res', 'code', 'submit'), FALSE);
 }
 
 /**

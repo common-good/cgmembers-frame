@@ -9,10 +9,15 @@ use CG\Db as db;
 /**
  * Handle coupons for the account.
  */
+ 
+const COUPON_FLDS = 'type code amount portion count minimum start end useMax forOnly automatic on';
+
 function formCoupons($form, &$sta, $args = '') {
   global $mya;
-  extract(just('type amount', $args));
-  if (!isset($type)) $type = '';
+  
+  foreach (ray(COUPON_FLDS . ' buttons submit') as $k) $$k = NULL;
+  extract(just('type amount', $args, ''));
+
   switch ($type) {
   case 'redeem':
     $title = t('Redeem a General Gift Certificate');
@@ -23,10 +28,11 @@ function formCoupons($form, &$sta, $args = '') {
   case 'gift':
     $title = t('Create a Gift Certificate');
     $subtext = t('Each gift certificate is assigned a <b class="loud">unique code</b>. The "Count" is the number of gift certificates you want; for example if you want a gift certificate for just one person, type "1". Print the sheet of certificates only once and do not photocopy it.');
-    $amount = textFld(t('Amount:'), [t('Gift amount')], required(@$amount ? u\fmtAmt($amount) : ''));
+    $amount = textFld(t('Amount:'), [t('Gift amount')], required($amount ? u\fmtAmt($amount) : ''));
     $count = textFld(t('Count:'), [t('How many?'), t('Print how many coupons/recipients? (8 to a sheet, to be cut in half 3 times)')], required());
     $submit = t('Create');
     break;
+
   case 'discount':
     $title = t('Create a Discount');
     $subtext = t(<<<X
@@ -46,11 +52,12 @@ X
     $minimum = textFld(t('Minimum:'), [t('Minimum purchase'), t('Minimum purchase amount, to get the discount. If this amount equals the discount amount, your coupons will be labeled "Gift Certificate".')], required(0));
     $start = textFld(t('Valid from:'), [t('Start date')], required(u\fmtDate(now(), TRUE)));
     $end = textFld(t('Valid until:'), [t('End date'), t('An end date is strongly encouraged.')]);
-    $ulimit = textFld(t('Limit:'), t('Leave this blank for unlimited uses.'), suffix(t(' uses per member')));
+    $useMax = textFld(t('Limit:'), t('Leave this blank for unlimited uses.'), suffix(t(' uses per member')));
     $automatic = w\boolFld(t('Automatic?'), t('If the discount is not automatic, you will need to do the math each time.'), TRUE);
     $on = textFld(t('Description:'), [t('Discount on what')]);
-    $forOnly = textFld(t('For only:'), [t('List of account IDs'), t('If you want to restrict this discount to certain %PROJECT members, type their account IDs here, separated by commas.')]);
+//    if ($mya->admin) $forOnly = textFld(t('For only:'), [t('ID number of group'), t('If you want to restrict this discount to certain %PROJECT members, type the ID of their group.')]);
     $submit = t('Create');
+              
     break;
   default:
     $title = t('Discounts and Gift Certificates');
@@ -61,22 +68,19 @@ X
       . w\btn('/community/coupons/type=redeem', t('Redeem a General Gift Certificate'))
       . w\btn('/community/coupons/list', t('List Discounts You Offer'))
       . w\btn('/community/coupons/list/ALL', t('Show All Discounts Available to You'));
-    $type = hidFld($type);
-    return cgform(compact(ray('title buttons subtext type')));
   }
   
   $type = hidFld($type);
   jsx('coupons');
   
-  return cgform(@compact(ray('title buttons subtext code amount count minimum start end ulimit forOnly automatic on submit type')));
+  return cgform(compact(ray('title subtext buttons ' . COUPON_FLDS . ' submit')));
 }
-
-const COUPON_FIELDS = 'type code amount count minimum start end ulimit forOnly portion on';
 
 function formCoupons_validate($form, &$sta) {
   global $mya;
-  $today = today();
-  extract(just(COUPON_FIELDS, $sta['input']));
+
+  extract(just(COUPON_FLDS, $sta['input'], NULL));
+  $portion = 0;
 
   if (empty($amount) and in($mya->task, 'co co2')) return;
 
@@ -88,54 +92,46 @@ function formCoupons_validate($form, &$sta) {
       return say(t('You cannot issue more Gift Certificates than your credit line allows: (%try > %max).',
                    'try max', u\fmtAmt($amount * $count), u\fmtAmt($mya->creditLine)), 'err');
     }
-    $ulimit = 1;
+    $useMax = 1;
+    $chgFlds = 'amount portion count useMax';
     break;
 
   case 'discount':
     $amt0 = trim($amount);
     $amount = str_replace('%', '', $amount);
-    $nums = 'amount minimum' . ($ulimit === '' ? '' : ' ulimit');
+    $nums = 'amount minimum' . ($useMax === '' ? '' : ' useMax');
     foreach (ray($nums) as $k) if ($err = u\badAmount($$k, $k == 'amount' ? '>0' : '>=0')) return w\sayFieldErr($err, $k);
     //    if ($amt0[0] == '$' and $amount < 1) return w\sayFieldErr(t('The discount amount cannot be less than $1.'), 'amount');
     //    if (substr($amt0, -1, 1) == '%' and $amount > 100) return w\sayFieldErr(t('The discount percentage must be no more than 100%.'), 'amount');
     if (strpos($amt0, '%')) {
       $portion = $amount * 0.01;  // Convert percentage to value
       $amount = 0;
-    } else {
-      $portion = 0;
-    }
+    } else $portion = 0;
     
     if (!$start) $start = u\fmtDate(NOW);
-    foreach (ray('start end') as $k) if ($$k and $err = u\badDate($$k, $today)) return w\sayFieldErr($err, $k);
+    foreach (ray('start end') as $k) if ($$k and $err = u\badDate($$k, today())) return w\sayFieldErr($err, $k);
     if ($end and $end < $start) return w\sayFieldErr(t('Ending date cannot be before starting date.'), 'end');
-    foreach (ray('ulimit end') as $k) $$k = (int) $$k;
-    if ($list = mb_strtoupper(str_replace(' ', '', nn($forOnly)))) {
-      u\EXPECT(false, 'forOnly is not handled yet');
-      $forOnly = [];
-      foreach (explode(',', $list) as $qid) if ($qid and $a = r\acct($qid) and $uid = $a->id) {
-        $forOnly[] = $uid;
-      } else return say(t('"%qid" is not an account ID.', compact('qid')), 'forOnly');
-    }
+    foreach (ray('useMax end') as $k) $$k = (int) $$k;
+//    if ($forOnly and !db\exists('u_groups', ['id' => $forOnly])) return say(t('That is not a group Id.'), 'forOnly');
+    $chgFlds = 'amount portion minimum useMax start end';
     break;
 
   case 'redeem':
     if (!$a = r\iCardAcct($code, $iCode)) return say('invalid gift card', 'code');
     if ($a->id == $mya->id) return say(t('You cannot redeem your own gift card.'), 'err');
 
-    $ruleId = db\get('id', 'tx_rules r', 'r.fromId=:uid AND :iCode = r.code',
-                     ray('uid iCode', $a->id, $iCode));
-    if (! $ruleId) return say('invalid gift card', 'err');
-      
-    if (db\get('id', 'tx_entries_all', 'rule = :ruleId', compact(ray('ruleId'))))
-      return say('already redeemed', 'err');
-    u\preray(compact(ray('ruleId')), $sta['input']); // pass the results to submit function
+    $ruleId = db\get('id', 'tx_rules', ray('from code', $a->id, $iCode));
+    if (!$ruleId) return say('invalid gift card', 'err');
+    if (db\get('id', 'tx_entries_all', 'rule = :ruleId', compact(ray('ruleId')))) return say('already redeemed', 'err');
+    $chgFlds = 'code ruleId';
     break;
 
   default:
     return say(t('bad coupon'), 'err');
   }
   
-  u\preray(@compact(ray(COUPON_FIELDS)), $sta['input']); // remember fixed numeric values
+  u\preray(compact(ray($chgFlds)), $sta['input']); // remember fixed numeric values
+
 }
 
 /**
@@ -144,20 +140,17 @@ function formCoupons_validate($form, &$sta) {
  */
 function formCoupons_submit($form, &$sta, $trial = FALSE) {
   global $mya; $myid = $mya->id;
-  extract(just('type amount ruleId iCode count minimum start end ulimit automatic on forOnly', $sta['input'], NULL));
+  extract($input = just(COUPON_FLDS . ' ruleId', $sta['input'], NULL));
 
   if (empty($amount) and in($mya->task, 'co co2')) {
     return $mya->task == 'co' ? w\go($mya->nextStepUrl()) : w\goNextStep('discount'); // new member pressed skip on discount form
   }
 
-  if ($amount < 0) { $amount = 0; $portion = -$amount * 0.01; }
-  else { $portion = 0; }
-  
   switch ($type) {
   case 'redeem': 
-    $res = db\get('`fromId`, amount', 'tx_rules', 'id=:ruleId', ['ruleId' => $ruleId]);
+    $res = db\get('`from`, amount', 'tx_rules', ['id' => $ruleId]);
     extract($res);
-    $fromA = r\acct($fromId);
+    $fromA = r\acct($from);
     list ($ok, $index, $subs) = be\transfer('payment', $fromA, $mya, $amount, t('gift'), FOR_GOODS, ['force' => 1, 'ruleId' => $ruleId]);
     u\EXPECT($ok, t('failed forced gift redemption by %who for rule %ruleid', 'who ruleId', $mya->fullName, $ruleId));
     $mya->update('giftPot', $mya->giftPot + $amount);
@@ -168,56 +161,51 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
 
     $DBTX = \db_transaction();
 
-    u\EXPECT($forOnly == NULL, 'forOnly not currently handled');
-    /* if (@$forOnly) { */
-    /*   $flags |= u\bit(B_SOME); */
-    /* } */
     $start = $mya->giftCoupons + 0;
     $end = $start + $count - 1;
-    if (is_null($on)) $on = 'gift certificate';
-    if (is_null($minimum)) $minimum = 0;
+    u\setDft($minimum, 0);
+    u\setDft($on, t('gift certificate'));
     foreach (range($start, $end) as $num) {
       $code = $num; // $mya->iCardCode($num);
-      db\insert('tx_rules', ray('fromId toId action purpose', $myid, SAME_AS_PAYER, ACTION_GIFT_CARD, $on)
-                + compact(ray('amount portion minimum ulimit code')));
+      db\insert('tx_rules', ray('from to action purpose', $myid, SAME_AS_PAYER, 'gift', $on)
+                + compact(ray('amount portion minimum useMax code')));
     }
     unset($DBTX);
 
-    $args = u\urlify(http_build_query($ray = compact(ray('type amount minimum ulimit count on start end automatic'))));
-    r\tellCo(t('New Coupons!'), $ray + ray('company gift forOnly', $mya->fullName, true, nn($forOnly)));
-    if (test()) $args = u\deurlify($args);
-    $url = "/community/coupons/print/$args";
-    w\say(t('Your %thing was created successfully.', 'thing', t('gift certificate')));
-
-    if ($trial) {
-      return w\goNextStep('discount');
-    }
-    return test() ? w\go($url) : w\go2('/community/coupons/list', $url);
+    return reportCoupon(t('gift certificate'), $input);
 
   case 'discount':
     $flags = 0;
 
     $DBTX = \db_transaction();
-    if (is_null($on)) $on = $minimum ? t('on your purchase of %min or more', 'min', u\fmtAmt($minimum)) : t('on any purchase');
+    if (!$on) $on = $minimum ? t('on your purchase of %min or more', 'min', u\fmtAmt($minimum)) : t('on any purchase');
     if ($end) $end = strtotime('tomorrow', $end) - 1; // last second of the day
 
     if ($automatic) {
-      u\EXPECT($forOnly == NULL, 'forOnly not currently handled');
       /* if ($forOnly != NULL)  $flags |= u\bit(B_SOME); */
-      $ruleId = db\insert('tx_rules', ray('payee payeeType    fromId   toId           action          purpose amtLimit',
-                                          $myid, REF_ACCOUNT, $myid,   SAME_AS_PAYER, ACTION_PAYMENT, $on,    $amount )
-                          + compact(ray('amount portion minimum ulimit start end')));
+      db\insert('tx_rules', ray('payee payeeType from to action purpose extraMax',
+                            $myid, 'account', $myid, SAME_AS_PAYER, 'pay', $on, $amount)
+      + compact(ray('amount portion minimum useMax start end')));
     }
     unset($DBTX);
   
-    $args = u\urlify(http_build_query($ray = @compact(ray('type amount minimum ulimit count on start end automatic'))));
-    r\tellCo(t('New Coupons!'), $ray + ray('company gift forOnly', $mya->fullName, false, nn($forOnly)));
-    if (test()) $args = u\deurlify($args);
-    w\say(t('Your %thing was created successfully.', 'thing', t('discount')));
+    return reportCoupon(t('discount'), compact(ray('on end')) + $input);
+  }
+}
 
-  if ($mya->co and !$gift) $mya->stepDone('discount');
+/**
+ * Report the successful creation of the coupon and go somewhere else.
+ */
+function reportCoupon($thing, $info) {
+  global $mya;
+  w\say(t('Your %thing was created successfully.', compact('thing')));
+  r\tellCo(t('New Coupons!'), $info + ray('company', $mya->fullName));
+  if ($mya->co) $mya->stepDone('discount');
 
-	$printUrl = "/community/coupons/print/$args";
+  $args = u\urlify(http_build_query($info));
+  if (test()) $args = u\deurlify($args);
+
+  $printUrl = "/community/coupons/print/$args";
   $listUrl = '/community/coupons/list';
 
   return $mya->ok 

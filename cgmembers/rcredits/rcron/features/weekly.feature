@@ -53,7 +53,7 @@ Scenario: A member builds up savings
 
 Scenario: A member cashes out automatically
   Given transactions:
-  | xid | created   | amount | from | to   | purpose |*
+  | xid | created   | amount | payer | payee | purpose |*
   |   1 | %today-8w |    900 | ctty | .ZZA | signup  |
   |   2 | %today-7w |    200 | .ZZA | .ZZB | stuff   |
   |   3 | %today-6w |    500 | .ZZA | .ZZB | stuff   |

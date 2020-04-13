@@ -49,8 +49,8 @@ Scenario: Someone posts an offer
   | type  | cat  | item | details | emergency | radius | end     | email |*
   | offer | food | fish | big one | 1         | 3      | %mdY+3d | a@b.c |
   Then we show "Your Information" with:
-  | Display Name |
   | Name |
+  | Display Name |
   | Street Address |
   | City |
   | State |
@@ -62,17 +62,17 @@ Scenario: Someone posts an offer
   
 Scenario: Someone enters personal data after posting an offer
   When someone confirms "community/posts/op=who&cat=1&item=fish&details=big one&emergency=1&radius=3&end=%now+3d&email=a@b.c&type=offer&exchange=0" with:
-  | displayName | Abe |**
-  | fullName    | Abe One |
-  | address     | 1 A St. |
-  | city        | Aville |
-  | state       | MA |
-  | zip         | 01001 |
+  | fullName    | Abe One      |**
+  | displayName | Abe          |
+  | address     | 1 A St.      |
+  | city        | Aville       |
+  | state       | MA           |
+  | zip         | 01001        |
   | phone       | 413-253-0001 |
-  | method      | text |
-  | days        | 2 |
-  | washes      | 3 |
-  | health      | 2 |
+  | method      | text         |
+  | days        | 2            |
+  | washes      | 3            |
+  | health      | 2            |
   Then these "posts":
   | postid | type  | item | details | cat  | exchange | emergency | radius | pid | created | end     |* 
   | 1      | offer | fish | big one | food | 0        | 1         | 3      | 1   | %today  | %now+3d |
@@ -135,19 +135,19 @@ Scenario: Someone views the details of an offer
   | postid | type  | item | details | cat  | exchange | emergency | radius | pid | created | end     |* 
   | 1      | offer | fish | big one | food | 0        | 1         | 3      | 1   | %now    | %now+3d |
   And these "people":
-  | pid         | 1 |**
-  | displayName | Abe |
-  | fullName    | Abe One |
-  | address     | 1 A St. |
-  | city        | Aville |
-  | state       | MA |
-  | zip         | 01001 |
+  | pid         | 1            |**
+  | fullName    | Abe One      |
+  | displayName | Abe          |
+  | address     | 1 A St.      |
+  | city        | Aville       |
+  | state       | MA           |
+  | zip         | 01001        |
   | phone       | +14132530001 |
-  | email       | a@b.c |
-  | method      | text |
-  | confirmed   | 1 |
-  | latitude    | 42.5 |
-  | longitude   | -72.8 |
+  | email       | a@b.c        |
+  | method      | text         |
+  | confirmed   | 1            |
+  | latitude    | 42.5         |
+  | longitude   | -72.8        |
   When someone visits "community/posts/op=show&postid=1"
   Then we show "Details" with:
   | Category        | food |
@@ -162,19 +162,19 @@ Scenario: Someone views the details of an urgent need
   | postid | type | item | details | cat  | exchange | emergency | radius | pid | created | end     |* 
   | 1      | need | fish | big one | food | 0        | 1         | 3      | 1   | %now    | %now+3d |
   And these "people":
-  | pid         | 1 |**
-  | displayName | Abe |
-  | fullName    | Abe One |
-  | address     | 1 A St. |
-  | city        | Aville |
-  | state       | MA |
-  | zip         | 01001 |
+  | pid         | 1            |**
+  | fullName    | Abe One      |
+  | displayName | Abe          |
+  | address     | 1 A St.      |
+  | city        | Aville       |
+  | state       | MA           |
+  | zip         | 01001        |
   | phone       | +14132530001 |
-  | email       | a@b.c |
-  | method      | text |
-  | confirmed   | 1 |
-  | latitude    | 42.5 |
-  | longitude   | -72.8 |
+  | email       | a@b.c        |
+  | method      | text         |
+  | confirmed   | 1            |
+  | latitude    | 42.5         |
+  | longitude   | -72.8        |
   When someone visits "community/posts/op=show&postid=1"
   Then we show "Details" with:
   | Category        | food |
@@ -189,19 +189,19 @@ Scenario: Someone views the details of a tip
   | postid | type | item | details | cat  | exchange | emergency | radius | pid | created | end     |* 
   | 1      | tip  | fish | big one | food | 0        | 1         | 3      | 1   | %now    | %now+3d |
   And these "people":
-  | pid         | 1 |**
-  | displayName | Abe |
-  | fullName    | Abe One |
-  | address     | 1 A St. |
-  | city        | Aville |
-  | state       | MA |
-  | zip         | 01001 |
+  | pid         | 1            |**
+  | fullName    | Abe One      |
+  | displayName | Abe          |
+  | address     | 1 A St.      |
+  | city        | Aville       |
+  | state       | MA           |
+  | zip         | 01001        |
   | phone       | +14132530001 |
-  | email       | a@b.c |
-  | method      | text |
-  | confirmed   | 1 |
-  | latitude    | 42.5 |
-  | longitude   | -72.8 |
+  | email       | a@b.c        |
+  | method      | text         |
+  | confirmed   | 1            |
+  | latitude    | 42.5         |
+  | longitude   | -72.8        |
   When someone visits "community/posts/op=show&postid=1"
   Then we show "Details" with:
   | Category        | food |
@@ -218,19 +218,19 @@ Scenario: Someone replies to an offer
   | postid | type  | item | details | cat  | exchange | emergency | radius | pid | created | end     | confirmed |* 
   | 1      | offer | fish | big one | food | 0        | 1         | 26     | 1   | %now    | %now+3d | 1         |
   And these "people":
-  | pid         | 1 |**
-  | displayName | Abe |
-  | fullName    | Abe One |
-  | address     | 1 A St. |
-  | city        | Aville |
-  | state       | MA |
-  | zip         | 01330 |
+  | pid         | 1            |**
+  | fullName    | Abe One      |
+  | displayName | Abe          |
+  | address     | 1 A St.      |
+  | city        | Aville       |
+  | state       | MA           |
+  | zip         | 01001        |
   | phone       | +14132530001 |
-  | email       | a@b.c |
-  | method      | text |
-  | confirmed   | 1 |
-  | latitude    | 42.5 |
-  | longitude   | -72.8 |
+  | email       | a@b.c        |
+  | method      | text         |
+  | confirmed   | 1            |
+  | latitude    | 42.5         |
+  | longitude   | -72.8        |
   And cookie "locus" is "Greenfield, MA"
   And cookie "radius" is "100"
   And cookie "latitude" is "42.3791167"
@@ -256,8 +256,8 @@ Scenario: Someone replies to an offer
   | email | message      |*
   | b@c.d | Hello there! |
   Then we show "Your Information" with:
-  | Display Name |
   | Name |
+  | Display Name |
   | Street Address |
   | City |
   | State |
@@ -292,8 +292,8 @@ Scenario: Someone enters personal data after replying to an offer
   | pid | displayName | fullName | address | city     | state | zip   | phone     | email | method | confirmed | health |*
   | 2   | Bea         | Bea Two  | 2 B St. | Greenfield | MA  | 01301 | +14132530002 | b@c.d | email  | 0      | 2 3 ok |
   And we email "confirm-message" to member "b@c.d" with subs:
-  | fullName | item | date | thing   | code | noFrame |*
-  | Bea Two  | fish | %mdY | message |    ? |       1 |
+  | fullName | item | date | thing   | code | noFrame | what     |*
+  | Bea Two  | fish | %mdY | message |    ? |       1 | an offer |
   And we say "status": "confirm by email" with subs:
   | thing | message |**
 

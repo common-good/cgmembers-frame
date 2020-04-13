@@ -110,6 +110,7 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE signup AMemberChoosesProxies
  *     MAKE signup AMemberSetsCalling
  *     MAKE signup AMemberSetsBacking
+ *     MAKE signup AMemberChoosesToStepUp
  *     MAKE signup AMemberInvites
  *     MAKE signup AMemberConfirmsSocialSecurityNumber
  *     MAKE transact AMemberAsksToChargeAnotherMemberForGoods
@@ -158,6 +159,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE signup AMemberRegistersBadName
  *     MAKE signup AMemberRegistersBadZip
  *     MAKE signup AMemberRegistersAgain
+ *     MAKE stepup AMembersRulesComeIntoPlay
  *     MAKE transact AMemberConfirmsRequestToChargeAnotherMember
  *     MAKE transact AMemberConfirmsRequestToPayAnotherMember
  *     MAKE transact AMemberConfirmsRequestToPayAnotherMemberALot
@@ -249,8 +251,10 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     TEST signup AMemberSignsUp
  *     TEST signup AMemberVerifiesID
  *     TEST signup AMemberGivesContactInfo
+ *     MAKE signup AMemberChoosesToStepUp
  *     TEST signup ANewbieRegistersWithNoCase
  *     MAKE statement Setup
+ *     MAKE stepup Setup
  *     MAKE summary Setup
  *     MAKE transact Setup
  *     MAKE transactions Setup
@@ -397,9 +401,11 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST signup AMemberChoosesProxies
  *     TEST signup AMemberSetsCalling
  *     TEST signup AMemberSetsBacking
+ *     TEST signup AMemberChoosesToStepUp
  *     TEST signup AMemberInvites
  *     TEST signup AMemberRegistersBadEmail
  *     TEST signup AMemberRegistersBadZip
+ *     TEST stepup AMemberChoosesToStepUp
  */
 function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
 
@@ -461,6 +467,7 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST signup AMemberChoosesProxies
  *     TEST signup AMemberSetsCalling
  *     TEST signup AMemberSetsBacking
+ *     TEST signup AMemberChoosesToStepUp
  *     TEST signup AMemberConfirmsSocialSecurityNumber
  */
 function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
@@ -559,8 +566,10 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST signupco ACompanySuppliesCompanyInformation
  *     TEST signupco ACompanyAccountManagerCreatesADiscount
  *     TEST signup AMemberVerifiesID
+ *     TEST signup AMemberChoosesToStepUp
  *     TEST signup AMemberInvites
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
+ *     TEST stepup AMemberChoosesToStepUp
  *     TEST summary AMemberClicksTheSummaryTab
  *     TEST summary AMemberClicksTheSummaryTabWithRoundups
  *     TEST summary AnAgentClicksTheSummaryTabWithoutPermissionToManage
@@ -579,7 +588,6 @@ function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWit
  *     TEST posts SomeoneSubmitsALocus
  *     TEST posts SomeoneRepliesToAnOffer
  *     TEST preferences AMemberVisitsThePreferencesPage
- *     TEST preferences ACompanyAgentVisitsThePreferencesPage
  *     TEST relations ItsComplicated
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST transactions AMemberLooksAtTransactionsForThePastYear
@@ -601,6 +609,8 @@ function with($content) {return weShow($content);}
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     TEST posts SomeoneVisitsThePostsPage
  *     TEST posts SomeoneViewsTheDetailsOfATip
+ *     TEST preferences AMemberVisitsThePreferencesPage
+ *     TEST preferences ACompanyAgentVisitsThePreferencesPage
  *     TEST queries AMemberVisitsTheCommunityDataPage
  *     TEST relations MemberHasAnEmployer
  *     TEST relations MemberCompanyHasRelations
@@ -825,7 +835,9 @@ function usd($list) {return t\usd($list);}
  *     MAKE signupco ACompanySuppliesCompanyInformation
  *     MAKE signup ANewbieVisitsTheIndividualSignupPage
  *     MAKE signup AMemberSignsUp
+ *     MAKE signup AMemberChoosesToStepUp
  *     MAKE signup AMemberConfirmsSocialSecurityNumber
+ *     MAKE stepup AMemberChoosesToStepUp
  *     MAKE summary AMemberClicksTheSummaryTab
  *     MAKE summary AMemberClicksTheSummaryTabWithRoundups
  *     MAKE summary AnAgentClicksTheSummaryTabWithoutPermissionToManage
@@ -1647,7 +1659,10 @@ function weScripWithSubs($script, $args = []) {
  *     TEST showrecurs AMemberStopsAnAutopayment
  *     TEST signupco ACompanyAccountManagerCreatesADiscount
  *     TEST signup AMemberSignsUp
+ *     TEST signup AMemberSetsCalling
  *     TEST signup AMemberInvites
+ *     TEST stepup AMemberChoosesToStepUp
+ *     BOTH stepup AMembersRulesComeIntoPlay
  *     TEST transact AMemberPaysAnotherMemberRepeatedly
  *     TEST transactions AdminReversesABankTransfer
  */
@@ -1864,6 +1879,7 @@ function stepsLeft($left) {global $mya; return memberStepsLeft($mya->id, $left);
  *     TEST signup AMemberChoosesProxies
  *     TEST signup AMemberSetsCalling
  *     TEST signup AMemberSetsBacking
+ *     TEST signup AMemberChoosesToStepUp
  *     TEST signup AMemberInvites
  *     MAKE signup AMemberConfirmsSocialSecurityNumber
  */
@@ -1903,6 +1919,7 @@ function memberStepsLeft($id, $left0) {
  *     MAKE signup AMemberChoosesProxies
  *     MAKE signup AMemberSetsCalling
  *     MAKE signup AMemberSetsBacking
+ *     MAKE signup AMemberChoosesToStepUp
  *     MAKE signup AMemberInvites
  */
 function memberHasStepsDone($id, $task, $steps) {
@@ -2015,3 +2032,45 @@ function someoneConfirmsPostidCreatedWith($page, $postid, $created, $values) {
  * in: MAKE coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  */
 function txRules($list) {return t\txRules($list);}
+
+/**
+ * member (ARG) has (ARG) stepup rules
+ *
+ * in: MAKE signup AMemberChoosesToStepUp
+ *     MAKE stepup AMemberChoosesToStepUp
+ */
+function memberHasStepupRules($id, $count) {
+  global $testOnly; if ($testOnly) return FALSE; // but this would be easy to handle
+  
+  $uid = t\uid($id);
+  for ($i = 0; $i < $count; $i++) {
+    $from = CANONIC_ACCTS + $i; // arbitrary account number (doesn't have to exist at this time)
+    $info = ray('amount portion extraMax purpose start', 1, 0, NULL, 'stepup', time());
+    $info += ray('payer payerType payeeType from to action', $from, 'account', 'anyCompany', $from, $uid, 'pay');
+    db\insert('tx_rules', $info);
+  }
+  return TRUE;
+}
+
+/**
+ * member (ARG) steps up with: (ARG)
+ *
+ * in: MAKE stepup AMemberChoosesToStepUp
+ */
+function memberStepsUpWith($id, $rows) {
+  global $testOnly; if ($testOnly) return FALSE;
+  $myid = t\uid($id);
+  $i = 0; // user-supplied org field counter
+  foreach ($rows as $row) {
+    list ($org, $amt, $max) = $row;
+    if (u\starts($org, '.')) {
+      $uid = t\uid($org);
+      $org = '';
+    } else {$uid = $i; $i++;} // not a prepopulated choice
+    $uids[] = $uid;
+    foreach (ray('org amt max') as $k) if ($k != 'org' or $$k) $vs["$k$uid"] = $$k;
+  }
+  $vs['uids'] = join(' ', $uids);
+  $er = u\urlify(http_build_query($vs));
+  return t\completeForm($id, "settings/stepup/er=$er", [], TRUE);
+}

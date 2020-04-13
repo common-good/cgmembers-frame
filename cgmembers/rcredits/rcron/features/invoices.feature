@@ -19,10 +19,10 @@ Setup:
 
   Scenario: Unpaid invoices get handled
   Given transactions: 
-  | xid | created | amount | from | to   | purpose | taking |*
+  | xid | created | amount | payer | payee | purpose | taking |*
   |   1 | %today  |    100 | ctty | .ZZA | grant   |        |
   And invoices:
-  | nvid | created   | status       | amount | from | to   | for   |*
+  | nvid | created   | status       | amount | payer | payee | for   |*
   |    1 | %today    | %TX_APPROVED |    100 | .ZZA | .ZZC | one   |
   |    2 | %today    | %TX_APPROVED |    200 | .ZZA | .ZZC | two   |
   |    3 | %today    | %TX_APPROVED |    300 | .ZZB | .ZZC | three |
@@ -36,7 +36,7 @@ Setup:
   
   When cron runs "invoices"
   Then transactions: 
-  | xid | created | amount | from    | to   | purpose              | taking | type  |*
+  | xid | created | amount | payer   | payee | purpose              | taking | type  |*
   |   2 | %today  |    100 | .ZZA    | .ZZC | one (%PROJECT inv#1) |        | prime |
   |   3 | %today  |    200 | .ZZA    | .ZZC | two (%PROJECT inv#2) |        | prime |
   |   4 | %today  |      0 | bank-in | .ZZA | from bank            |      1 | bank  |
@@ -47,7 +47,7 @@ Setup:
   | txid | payee | amount | created | completed | deposit |*
   |    1 | .ZZA  |    700 | %today  |         0 |       0 |
   And invoices:
-  | nvid | created   | status       | amount | from | to   | for   | flags   |*
+  | nvid | created   | status       | amount | payer | payee | for   | flags   |*
   |    1 | %today    | 2            |    100 | .ZZA | .ZZC | one   |         |
   |    2 | %today    | 3            |    200 | .ZZA | .ZZC | two   | funding |
   |    3 | %today    | %TX_APPROVED |    300 | .ZZB | .ZZC | three |         |
@@ -83,7 +83,7 @@ Setup:
 
 Scenario: Non-member unpaid invoice does not generate a transfer request
   Given invoices:
-  | nvid | created   | status       | amount | from | to   | for   |*
+  | nvid | created   | status       | amount | payer | payee | for   |*
   |    1 | %today    | %TX_APPROVED |    100 | .ZZE | .ZZC | one   |
   Then balances:
   | uid  | balance |*
@@ -99,13 +99,13 @@ Scenario: Second invoice gets funded too for a non-refilling account
   | uid  | flags               |*
   | .ZZA | ok,confirmed,bankOk |
   And these "txs":
-  | xid | created   | amount | from    | to   | purpose   | taking |*
+  | xid | created   | amount | payer   | payee | purpose   | taking |*
   |   2 | %today-1d |      0 | bank-in | .ZZA | from bank |      1 |
   And these "usd":
   | txid | payee | amount | created   | completed | deposit | xid |*
   |    1 | .ZZA  |    100 | %today-1d |         0 |       0 |   2 |
   And invoices:
-  | nvid | created   | status       | amount | from | to   | for   | flags   |*
+  | nvid | created   | status       | amount | payer | payee | for   | flags   |*
   |    1 | %today-1d | %TX_APPROVED |    100 | .ZZA | .ZZC | one   | funding |
   |    2 | %today    | %TX_APPROVED |    200 | .ZZA | .ZZC | two   |         |
   When cron runs "invoices"
@@ -114,7 +114,7 @@ Scenario: Second invoice gets funded too for a non-refilling account
   |    1 | .ZZA  |    300 | %today-1d |         0 |       0 |
   # still dated yesterday, so it doesn't lose its place in the queue
   And invoices:
-  | nvid | created   | status       | amount | from | to   | for   | flags   |*
+  | nvid | created   | status       | amount | payer | payee | for   | flags   |*
   |    1 | %today-1d | %TX_APPROVED |    100 | .ZZA | .ZZC | one   | funding |
   |    2 | %today    | %TX_APPROVED |    200 | .ZZA | .ZZC | two   | funding |
   And we notice "banked|combined|bank tx number" to member ".ZZA" with subs:
@@ -123,7 +123,7 @@ Scenario: Second invoice gets funded too for a non-refilling account
 
 Scenario: A languishing invoice gets funded again
   Given invoices:
-  | nvid | created   | status       | amount | from | to   | for   | flags   |*
+  | nvid | created   | status       | amount | payer | payee | for   | flags   |*
   |    1 | %today-1d | %TX_APPROVED |    900 | .ZZA | .ZZC | one   | funding |
   When cron runs "invoices"
 	Then these "usd":
@@ -135,7 +135,7 @@ Scenario: An invoice is approved from an account with a negative balance
   | uid  | flags               | balance |*
   | .ZZA | ok,confirmed,bankOk |    -500 |
   And invoices:
-  | nvid | created   | status       | amount | from | to   | for   | flags   |*
+  | nvid | created   | status       | amount | payer | payee | for   | flags   |*
   |    1 | %today-1m | %TX_APPROVED |    400 | .ZZA | .ZZC | one   | funding |
   When cron runs "invoices"
 	Then these "usd":
@@ -147,11 +147,11 @@ Scenario: An invoice gets handled for an account that rounds up
   | uid  | flags                       |*
   | .ZZA | ok,confirmed,bankOk,roundup |
   And invoices:
-  | nvid | created   | status       | amount | from | to   | for   |*
+  | nvid | created   | status       | amount | payer | payee | for   |*
   |    1 | %today    | %TX_APPROVED |  99.60 | .ZZA | .ZZC | one   |
   When cron runs "invoices"
   Then transactions: 
-  | xid | created | amount | from    | to   | purpose              | taking | type  |*
+  | xid | created | amount | payer   | payee | purpose              | taking | type  |*
   |   1 | %today  |    100 | bank-in | .ZZA | from bank            |      1 | bank  |
 	And usd transfers:
   | txid | payee | amount | created | completed | deposit |*

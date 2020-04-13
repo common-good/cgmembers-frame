@@ -43,7 +43,7 @@ Setup:
   | .ZZC |    3000 |
   | .ZZD |       0 |
   Given transactions: 
-  | xid | created   | amount | from | to   | purpose |*
+  | xid | created   | amount | payer | payee | purpose |*
   |   4 | %today-5m |     10 | .ZZB | .ZZA | cash E  |
   |   5 | %today-4m |   1100 | .ZZC | .ZZA | usd F   |
   |   6 | %today-3m |    240 | .ZZA | .ZZB | what G  |

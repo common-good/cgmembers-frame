@@ -14,13 +14,17 @@ use CG\Admin as a;
 use CG\Cron as cr;
 use CG\Web as w;
 
+const T_BALANCE_FLDS = 'uid balance floor savingsAdd saveWeekly minimum';
+const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid';
+const SPECIAL_IDS = 'ctty crumb round cgf bank-in bank-out';
+const RLESS_TNMS = 'signup posts people post_cats messages'; // test tables with no "r_" prefix
+const NULL_FLDS = 'payer payee useMax extraMax template end code rule';
+
 global $base_path;
 define('BASE_PATH', $base_path);
-define('T_BALANCE_FLDS', 'uid balance floor savingsAdd saveWeekly minimum');
-define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid');
-define('SPECIAL_IDS', 'ctty crumb round cgf bank-in bank-out');
 define('DOCODE_FLNM', LOG_DIR . 'docode.txt');
 define('SAME_TIME', 60 * 20); // number of seconds that make no difference in "same time"
+
 // see R_DATE_FLDS in defs.inc
 
 /**
@@ -31,15 +35,17 @@ define('SAME_TIME', 60 * 20); // number of seconds that make no difference in "s
 function fixData(&$info, $direct = FALSE) {
   global $testOnly, $rUrl, $testVars;
 
-  $fields = key($info) . ' email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method'; // first key is probably an ID field, so keep it at the front
+  $fields = key($info) . ' email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method companyOptions'; // first key is probably an ID field, so keep it at the front
 
   if (@$testVars) foreach ($info as $k => $v) if (mb_strpos($v, '@') !== FALSE) {
     foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", $var, $v);
   }
+  foreach (ray(NULL_FLDS) as $k) if (isset($info[$k]) and empty($info[$k])) $info[$k] = NULL;
   extract(just($fields, $info));
   
   if (isset($cat)) $cat = db\get('id', 'post_cats', compact('cat'));
   if (isset($method) and !$testOnly) $method = array_search($method, ray('email phone text'));
+  if (isset($companyOptions)) $companyOptions = ray($companyOptions);
 
   if (@$who) $who = t\fullQid($who);
   foreach (ray('flags adminable') as $k) if (isset($$k)) $$k = t\fixFlags($$k);
@@ -66,11 +72,6 @@ function fixData(&$info, $direct = FALSE) {
   }
   if (!empty($boxId)) {
     $boxId = db\get('id', 'r_boxes', '`code`=:boxId', ['boxId'=>$boxId]);
-  }
-
-	foreach (ray('from:payer,to:payee,fromAgent:payerAgent,toAgent:payeeAgent') as $k => $k2) if (isset($info[$k])) {
-      $info[$k2] = $info[$k];
-      unset($info[$k]);
   }
 
   foreach (just(T_ID_FLDS, $info) as $k => $v) {
@@ -135,8 +136,8 @@ function doThing($info, $thing, $key = 'id') {
   global $testOnly;
 
   $table = $thing = strtolower($thing);
-  if (!u\starts($thing, 'tx_') and !u\starts($thing, 'x_') and !in($thing, 'signup posts people post_cats messages')) $table = 'r_' . $table;
-  if (!in($thing, 'usd coupated signup company people') and substr($thing, -1, 1) != 's') $table .= 's';
+  if (!preg_match('/^(tx|u|x)_.+/', $thing) and !in($thing, RLESS_TNMS)) $table = 'r_' . $table;
+  if (!in($thing, 'usd signup company people') and substr($thing, -1, 1) != 's') $table .= 's';
   if ($table == 'tx_hdrs') $key = 'xid';
 
 // NO!  if (@$info['id']) {$info['uid'] = $info['id']; unset($info['id']);}
@@ -455,7 +456,7 @@ function doCompanyFlags($info) {
 function doCoupons($info, $thing, $key = 'coupid') {
   global $testOnly;
 
-  $coupon = just('coupid fromId start   end   amount on  minimum ulimit flags sponsor code  amtLimit', $info,
+  $coupon = just('coupid fromId start   end   amount on  minimum useMax flags sponsor code  extraMax', $info,
                  [ null, null,  time(), null, 0,     '', 0,      null,  0,    null,   null, null ]);
   if ($coupon['amount'] < 0) {
     $amount = 0;
@@ -466,20 +467,20 @@ function doCoupons($info, $thing, $key = 'coupid') {
   }
   $rule = array_filter([ 'id' => $coupon['coupid'],
                          'payer' => null,
-                         'payerType' => REF_ANYBODY,
+                         'payerType' => 'anybody',
                          'payee' => $coupon['fromId'],
-                         'payeeType' => REF_ACCOUNT,
-                         'fromId' => (is_null($coupon['sponsor'])) ? $coupon['fromId'] : $coupon['sponsor'],
-                         'toId' => SAME_AS_PAYER,
-                         'action' => ACTION_PAYMENT,
+                         'payeeType' => 'account',
+                         'from' => (is_null($coupon['sponsor'])) ? $coupon['fromId'] : $coupon['sponsor'],
+                         'to' => SAME_AS_PAYER,
+                         'action' => 'pay',
                          'start' => $coupon['start'],
                          'end' => $coupon['end'],
                          'amount' => $amount,
                          'portion' => $portion,
                          'purpose' => $coupon['on'],
                          'minimum' => $coupon['minimum'],
-                         'ulimit' => $coupon['ulimit'] == 0 ? null : $coupon['ulimit'],
-                         'amtLimit' => $coupon['amtLimit'],
+                         'useMax' => $coupon['useMax'] == 0 ? null : $coupon['useMax'],
+                         'extraMax' => $coupon['extraMax'],
                          'code' => $coupon['code'] ]);
 
   if ($testOnly) {
@@ -1090,7 +1091,7 @@ function verifyRecord($table, $info) {
 
 /**
  * Simulate completion (and possible confirmation) of a form.
- * @param string $id: qid for the user (or company agent) completing the form
+ * @param string $id: uid or qid for the user (or company agent) completing the form
  * @param string $page: path to form from drupal root
  * @param array $values: array of assoc of field names/values (or empty)
  * @param bool $confirmed: whether the user has confirmed the values (default FALSE)
@@ -1130,16 +1131,16 @@ function completeForm($id, $page, $values = '', $confirmed = FALSE) {
 
   $dfts = [];
   foreach ($form as $key => $field) if (substr($key, 0, 1) != '#') {
-    if (@$field['#type'] == 'hidden') $dfts[$key] = $field['#value'];
+    if (isset($field['#value'])) $dfts[$key] = $field['#value'];
   }
 
   $sta['values'] = $sta['input'] = $values + $dfts; // add to whatever status the form left off in
   $fieldErr = FALSE; // no field errors yet
-  if (!@$lastGo or @$lastGo == $xlastGo) form_execute_handlers('validate', $form, $sta);
+  if (!@$lastGo or @$lastGo == $xlastGo) \form_execute_handlers('validate', $form, $sta);
   $lastIdentifierTag = '</div identifiers>';
   if ($i = strpos($testConfirmation, $lastIdentifierTag)) $testConfirmation = substr($testConfirmation, $i + strlen($lastIdentifierTag));
   if ($fieldErr) return TRUE; // no submit if field error
-  if (!@$lastGo or @$lastGo == $xlastGo) form_execute_handlers('submit', $form, $sta);
+  if (!@$lastGo or @$lastGo == $xlastGo) \form_execute_handlers('submit', $form, $sta);
 
   return TRUE;
 }
@@ -1286,9 +1287,9 @@ function selected($form) {
 
 //  $pat = '~ select>([^,]+)</option~';
   $opt = '<option value="[^"]*"( selected)?>([^<]+)</option>\\s*';
-  debug("~<select [^>]*>\\s*($opt)+</select>~");
+///  debug("~<select [^>]*>\\s*($opt)+</select>~");
   if (!preg_match_all("~<select [^>]*>\\s*($opt)+</select>~", $form, $m)) return [];
-  debug($m);
+///  debug($m);
   
 }
 
@@ -1416,7 +1417,7 @@ function clear($ch = 0) {
   w\signout(TRUE);
   \drupal_static_reset(); // clear out drupal central storage
 
-  $tables = 'messages people posts r_bad r_ballots r_boxes r_changes r_company r_coupated r_coupons r_do r_events r_honors r_investments r_invites r_invoices r_ips r_near r_notices r_options r_pairs r_photos r_proposals r_proxies r_questions r_ratings r_recurs r_relations r_shares r_stakes r_stats r_tous r_usd r_usd2 r_user_industries r_votes signup tx_disputes_all tx_entries_all tx_hdrs_all x_invoices x_photos x_relations x_usd x_users flood queue semaphore sessions cache';
+  $tables = 'messages people posts r_bad r_ballots r_boxes r_changes r_company r_do r_events r_honors r_investments r_invites r_invoices r_ips r_near r_notices r_options r_pairs r_photos r_proposals r_proxies r_questions r_ratings r_recurs r_relations r_shares r_stakes r_stats r_tous r_usd r_usd2 r_user_industries r_votes signup tx_disputes_all tx_entries_all tx_hdrs_all tx_rules tx_templates x_invoices x_photos x_relations x_usd x_users u_groups u_groupies flood queue semaphore sessions cache';
   foreach (ray('bootstrap form') as $k) $tables .= " cache_$k"; // don't empty cache_menu
   foreach (ray($tables) as $table) db\q("TRUNCATE $table");
 

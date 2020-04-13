@@ -32,7 +32,7 @@ Setup:
 
 Scenario: A member redeems a discount coupon
   Given  coupons:
-  | coupid | fromId | amount | minimum | ulimit | flags | start  | end       | on                |*
+  | coupid | fromId | amount | minimum | useMax | flags | start  | end       | on                |*
   |      1 |   .ZZC |     10 |       0 |      1 |     0 | %today | %today+7d | discount (rebate) |
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $100 for "goods": "food" at %now
   Then transaction headers:
@@ -99,4 +99,4 @@ Scenario: A member redeems a discount coupon
   | .ZZB |    -100 |
   | .ZZC |     100 |
   
-# ulimit has been reached, so no rebate
+# useMax has been reached, so no rebate

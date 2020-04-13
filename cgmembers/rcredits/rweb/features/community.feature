@@ -39,13 +39,13 @@ Setup:
   | .ZZC |    3000 |
   | .ZZD |    2000 |
   Given transactions: 
-  | xid | created   | amount | from | to   | purpose | goods      |*
+  | xid | created   | amount | payer | payee | purpose | goods      |*
   |   6 | %today-3m |     10 | .ZZB | .ZZA | cash E  | %FOR_USD   |
   |   7 | %today-3m |    100 | .ZZC | .ZZA | usd F   | %FOR_USD   |
   |   8 | %today-3m |    240 | .ZZA | .ZZB | what G  | %FOR_GOODS |
 #  And statistics get set "%tomorrow-1m"
   And transactions: 
-  | xid | created   | amount | from | to   | purpose | goods      | channel  | flags  |*
+  | xid | created   | amount | payer | payee | purpose | goods      | channel  | flags  |*
   |  15 | %today-2w |     50 | .ZZB | .ZZC | p2b     | %FOR_GOODS | %TX_WEB  |        |
   |  18 | %today-1w |    120 | .ZZA | .ZZC | this Q  | %FOR_GOODS | %TX_WEB  |        |
   |  23 | %today-6d |    100 | .ZZA | .ZZB | real V  | %FOR_GOODS | %TX_WEB  |        |

@@ -34,7 +34,7 @@ Scenario: A member donates
   | amtChoice | amount | period | honor  | honored |*
   |        -1 |     10 |      X | memory | Jane Do |
   Then transactions:
-  | xid | created | amount | from | to   | purpose      |*
+  | xid | created | amount | payer | payee | purpose      |*
   |   1 | %today  |     10 | .ZZA | cgf  | donation |
   And we say "status": "gift successful"
   And these "honors":
@@ -60,10 +60,10 @@ Scenario: A member makes a recurring donation
   | amtChoice | amount | period | honor  | honored |*
   |        -1 |     10 |      M | memory | Jane Do |
 	Then these "recurs":
-	| id | created | from | to  | amount | period | purpose  |*
+	| id | created | payer | payee | amount | period | purpose  |*
 	|  1 | %today  | .ZZA | cgf |     10 |      M | donation |
   And transactions:
-  | xid | created | amount | from | to   | purpose            | recursId |*
+  | xid | created | amount | payer | payee | purpose            | recursId |*
   |   1 | %today  |     10 | .ZZA | cgf  | donation (Monthly) |        1 |
   And we say "status": "gift successful"
   And these "honors":
@@ -75,7 +75,7 @@ Scenario: A member makes a recurring donation
   
 Scenario: A member makes a new recurring donation
 	Given these "recurs":
-	| created   | from | to  | amount | period |*
+	| created   | payer | payee | amount | period |*
 	| %today-1d | .ZZA | cgf |     25 |      Y |
   When member ".ZZA" visits page "community/donate"
   Then we show "donation replaces" with:
@@ -86,11 +86,11 @@ Scenario: A member makes a new recurring donation
   | amtChoice | amount | period | honor  | honored | share |*
   |        -1 |     10 |      M | memory | Jane Do |    10 |
   Then transactions:
-  | xid | created | amount | from | to   | purpose            |*
+  | xid | created | amount | payer | payee | purpose            |*
   |   1 | %today  |     10 | .ZZA | cgf  | donation (Monthly) |
   And we say "status": "gift successful"
 	And these "recurs":
-	| created | from | to  | amount | period |*
+	| created | payer | payee | amount | period |*
 	| %today  | .ZZA | cgf |     10 |      M |
   
 Scenario: A company makes a recurring donation
@@ -98,7 +98,7 @@ Scenario: A company makes a recurring donation
   | amtChoice | amount | period | honor  | honored |*
   |        -1 |     10 |      M | memory | Jane Do |
   Then transactions:
-  | xid | created | amount | from | to   | purpose            |*
+  | xid | created | amount | payer | payee | purpose            |*
   |   1 | %today  |     10 | .ZZC | cgf  | donation (Monthly) |
   And we say "status": "gift successful"
 	
@@ -108,7 +108,7 @@ Scenario: A member donates with insufficient funds
   |        -1 |    200 |      X | memory | Jane Do |
   Then we say "status": "gift successful|gift transfer later"
   And invoices:
-  | nvid | created | amount | from | to   | purpose  | flags | status   |*
+  | nvid | created | amount | payer | payee | purpose  | flags | status   |*
   |    1 | %today  |    200 | .ZZA | cgf  | donation | gift  | approved |
   And these "honors":
   | created | uid  | honor  | honored |*

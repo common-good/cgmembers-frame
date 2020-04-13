@@ -135,7 +135,7 @@ function formSummary($form, &$sta) {
   
   jsx('summary');
   
-  return cgform($form, '', TRUE);
+  return cgform($form);
 }
 
 function formSummary_validate($form, &$sta) {

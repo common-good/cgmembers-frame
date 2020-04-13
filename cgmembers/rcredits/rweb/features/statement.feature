@@ -33,7 +33,7 @@ Setup:
   | .ZZB |    2000 |
   | .ZZC |    3000 |
   Given transactions: 
-  | xid  | created   | amount | from | to   | purpose | taking | payerTid | payeeTid |*
+  | xid  | created   | amount | payer | payee | purpose | taking | payerTid | payeeTid |*
   | 104  | %lastm+3d |     10 | .ZZB | .ZZA | cash E  | 0      |      114 |      214 |
   | 105  | %lastm+4d |   1100 | .ZZC | .ZZA | usd F   | 1      |      115 |      215 |
   | 106  | %lastm+5d |    240 | .ZZA | .ZZB | what G  | 0      |      116 |      216 |

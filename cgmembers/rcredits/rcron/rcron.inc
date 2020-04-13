@@ -914,7 +914,7 @@ function recurs1($item) {
   $period = r\periodDesc($period);
 
   if (r\acct($payer)->payApproved($payee, $amount, "$purpose ($period)", FOR_GOODS, $data, $recursId)) {
-    r\notify($payer, 'recur pay', ray('amount period purpose to', u\fmtAmt($amount), $period, $purpose, $payeeName));
+    r\notify($payer, 'recur pay', ray('amount period purpose payee', u\fmtAmt($amount), $period, $purpose, $payeeName));
   }
 }
 

@@ -201,27 +201,53 @@ function NEWcgform($form, $onSubmit = '', $labeled = TRUE) {
   return $form;
 }
 
-function cgform($form, $onSubmit = '', $labeled = TRUE, $level = 0) {
-  if ($onSubmit) {
-    list ($zot1, $zot2, $caller) = explode('\\', u\caller());
-    w\jsx('on-submit', 'caller', strtolower($caller)); // spaces are required around $onSubmit
-    // (Drupal kills the quotes) $form['#attributes']['onsubmit'] = $onSubmit; // eg ' return func();'; 
-  }
+/**
+ * Modify a page in standard ways before passing it through to Drupal core for processing.
+ */
+function cgform($form, $labeled = TRUE) {
   $form['#attributes']['class'][] = $labeled ? 'form-horizontal' : 'form-vertical';
  
   foreach ($form as $k => $v) if (substr($k, 0, 1) != '#') {
-    if (empty($v)) continue;
-    if (!is_array($v)) {
-      if (in($k, ITEM_FLDS)) {
-        $form[$k] = $v = $k == 'submit' ? submit($v) : item($v); // let these common items be created simply
-      } else u\FAIL("field $k is not an array: " . pr($v));
+    if (empty($v)) {unset($form[$k]); continue;} // NULL is ignored
+    
+    if (!is_array($v)) { // these common fields can be specified simply
+      $form[$k] = $v = in($k, ITEM_FLDS) ? item($v)
+      : ($k == 'submit' ? submit($v)
+      : ($k == 'frm' ? hidFld($v)
+      : u\FAIL("field $k is not an array: " . pr($v)) ));
     }
+    
     $type = @$v['#type'];
     if ($type == 'hidden') f('t.POST', [$k => @$v['#value']]); // fake post for tests
-    if ($type == 'fieldset') $form[$k] = cgform($form[$k], '', $labeled, $level + 1);
+    if ($type == 'fieldset') $form[$k] = cgform($v, $labeled);
     if ($labeled and is_array($form[$k])) $form[$k]['#tabled'] = TRUE; // remember that form is laid out in a table (labels in left column)
   }
+
+  $uri = $_SERVER['REQUEST_URI'];
+  if ($i = strpos($uri, '/er=')) { // coming back after an error (or called from a test)
+    $vs = urlq2ray(u\deurlify(substr($uri, $i + 4)));
+    foreach ($vs as $k => $v) {
+      $form[$k]['#value'] = $v;
+    }
+  }
+
   return $form;
+}
+
+/**
+ * Construct a return URL with original parameter values.
+ * Call from validation function as: return er($sta, $msg, $fld)
+ * @param assoc $sta: the form's status parameter
+ * @param string $msg: what to tell the user
+ * @param string $fld: field to focus on, if any
+ */
+function er($sta, $msg, $erFld = '') {
+  $input = justNOT('form_build_id form_id opid submit', $sta['input']);
+
+  $er = u\urlify(http_build_query($input + compact('erFld')));
+  $uri = $_SERVER['REQUEST_URI'];
+  if ($args = $sta['build_info']['args'][0]) $uri = str_replace($args, '', $uri);
+  return go(str_replace('//', '/', "/$uri/er=$er"), $msg, 'err'); // sometimes has one "/" sometimes two
 }
 
 /**
@@ -1053,9 +1079,9 @@ function goButtonIf($perms, $label, $goto, $title) {
  * @return TRUE if there is a formal relationship
  */
 function suCompanyRelation($other, $data) {
-  extract(just('company companyPhone owner employee contractor', $data));
-  if ($main = findCompany($company, @$companyPhone)) { // company account exists
-    return r\acct($main)->newRelation(@compact(ray('other employee owner'))); // no permissions/draw (for security)
+  extract(just('company companyPhone owner employee contractor', $data, NULL));
+  if (($owner or $employee) and $main = findCompany($company, $companyPhone)) { // company account exists
+    return r\acct($main)->newRelation(compact(ray('other employee owner'))); // no permissions/draw (for security)
   } else return FALSE;
 }
 
@@ -1468,6 +1494,7 @@ function eLinkAcct(&$sta, &$eLink = '', $allow = 'individual') {
 function hack($message, $info = []) {
   r\tellAdmin(t('HACK attempt: ') . $message, $info + $_SERVER);
 /**/	if (isDEV) debug("$message: " . pr($info));
+  if (test()) return []; // to simulate a form
   return r\signedIn() ? signout() : w\go('');
 }
 
@@ -1753,7 +1780,10 @@ function say($index, $args = [], $errField = '') {
   $hasTable = strhas($index, '<table');
   $message = $hasTable ? $index : tr($index, $args); 
   $fieldErr = ($errField and $errField != 'ERR');
-  if ($fieldErr) \form_set_error($errField, $message); else \drupal_set_message($message, @$errField == 'ERR' ? 'error' : 'status', FALSE);
+  if ($fieldErr) {
+    \form_set_error($errField, $message);
+//    jsx('focus-on', 'field', $errField);
+  } else \drupal_set_message($message, @$errField == 'ERR' ? 'error' : 'status', FALSE);
   $adminReport = ($mya and $mya->admin2 and mb_strlen($message) > 200);
   if (!$hasTable and !$adminReport) u\loga($fieldErr ? 'sayerr' : 'say', compact('message'));
   return FALSE;

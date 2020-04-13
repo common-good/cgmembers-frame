@@ -506,19 +506,16 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
 
   // Apply coupon
   if ($amount > 0 and ($goods != FOR_USD)) {
-    if ($loserA->can(B_SELL)) { // no rebates unless buyer has permission to sell
-      $rebate = handleRules($entries, $loserA, $gainerA, $amount);
-      $needed -= $rebate;
-    } else r\notify($loserId, 'missed rebate', ['company' => $gainerA->fullName]);
+    $needed += handleRules($entries, $loserA, $gainerA, $amount);
   }
 
-  // Apply food fund (or other special) donation
+/*  // Apply food fund (or other special) donation
   if ($needed * $e1A->food > .005 and $e2A->foody) { // apply percentage donation to food fund
     $foodUid = db\get('uid', 'users', "name='foodfund'");
     $foodAmt = round($needed * $e1A->food, 2);
     if ($foodUid) txEntryPair($entries, $foodAmt, [$e1A, $foodUid], t('donation to Food Fund (%pct)', 'pct', u\fmtAmt($e1A->food, '%')), E_DONATION);
     $needed -= $foodAmt;
-  }
+  } */
 
   // Apply any roundup
   if ($e1A->roundup and $needed > 0 and !($e2Id == CGID and $recurs and $needed < 1)) { // payer roundups, not actor or loser (don't round up reversals, cashouts, roundups, or recurring gifts under $1)
@@ -533,19 +530,30 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
     if ($force) {
       $short = TRUE; // flag overdraft
     } else {
+      $DBTX->rollback();
       $short = u\fmtAmt($shortfall);
       $avail = u\fmtAmt($needed - $shortfall);
       $msg = $reallyTaking ? ($otherA->can(B_SECRET) ? 'short from vague' : 'short from') : 'short to';
       $loserA->suggestAuto();
       $details = t('|%loser was short by %short trying to pay %gainer %amount (available balance is %avail)', 'loser short gainer amount avail', $loserName, $short, $gainerName, u\fmtAmt($needed), $avail);
-      $DBTX->rollback();
       return r\txErr($msg, compact(ray('otherName short details avail')) + ['success'=>false]);
     }
   }
-
-  if ($gainerA->co and $gainerA->depends and db\sum('amt', 'txs_noreverse', 'uid2=:gainerId', compact('gainerId')) + $needed > TRIALCO_AMT_LIMIT) {
-    $DBTX->rollback();
-    return r\txErr(t('trial co over'), $erInfo);
+  
+  if (!$force) {
+    if ($gainerA->co and $gainerA->depends and db\sum('amt', 'txs_noreverse', 'uid2=:gainerId', compact('gainerId')) + $needed > TRIALCO_AMT_LIMIT) {
+      $DBTX->rollback();
+      return r\txErr(t('trial co over'), $erInfo);
+    }
+    if ($gainerA->needSsnFor($needed)) {
+      $DBTX->rollback();
+      r\tellAdmin(t('SSN needed'), $erInfo);
+      $gainerA->setTask('sell');
+      $stepsLeft = $gainerA->stepsLeft();
+      $stepsLeft[] = 'ssn';
+      $gainerA->update('stepsLeft', array_values($stepsLeft));
+      return r\txErr(t('ssn needed', $erInfo));
+    }
   }
     
   $tx->addEntries($entries);
@@ -671,43 +679,48 @@ function sendNotifications($type, $tx, $shortfall) {
  * @param assoc $entries: (MODIFIED) an array of entries to add to, if appropriate
  * @param acct $buyer:
  * @param acct $seller:
- * @param number $price: pre-discount amount
+ * @param number $price: pre-discount, pre-stepup amount
  * @param unixtime $when: when was the transaction (defaults to now)
- * @return the rebate amount
+ * @return the net increase in overall transaction amount
  */
 
 function handleRules(&$entries, $buyer, $seller, $price) {
   u\EXPECT($price > 0, 'non-positive price handling coupon');
+  
+  $payerCo = $buyer->co ? 1 : 0;
+  $payeeCo = $seller->co ? 1 : 0;
 
   // Get a list of applicable rules
   $sql = <<<EOF
-    SELECT r.id AS ruleId, r.amount, r.portion, r.fromId, r.toId, r.purpose, r.minimum, r.ulimit, r.amtLimit,
+    SELECT r.id AS ruleId, r.amount, r.portion, r.from, r.to, r.purpose, r.minimum, r.useMax, r.extraMax,
     (SELECT IFNULL(SUM(e.amount), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=ruleId AND e.uid=:buyer) AS `amtUsed`,
     (SELECT IFNULL(SUM(SIGN(e.amount)), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=ruleId AND e.uid=:buyer) AS `timesUsed`
     FROM tx_rules r
     WHERE
-    (CASE payerType
-     WHEN :REF_ANYBODY THEN TRUE
-     WHEN :REF_ACCOUNT THEN payer = :buyer
-     WHEN :REF_INDUSTRY THEN EXISTS (SELECT 1 FROM ancestors WHERE ancestor = :buyer)
-     WHEN :REF_GROUP THEN EXISTS (SELECT 1 FROM u_groups g JOIN u_groupies u ON (u.grpId = g.id)
-                                           WHERE u.uid = :buyer AND u.start <= :now
-                                           AND IFNULL(:now < u.end, TRUE))
-     ELSE FALSE
-     END)
+      (CASE payerType
+       WHEN 'anybody' THEN TRUE
+       WHEN 'account' THEN payer = :buyer
+       WHEN 'anyCompany' THEN $payerCo
+       WHEN 'industry' THEN EXISTS (SELECT 1 FROM ancestors WHERE ancestor = :buyer)
+       WHEN 'group' THEN EXISTS (SELECT 1 FROM u_groups g JOIN u_groupies u ON (u.grpId = g.id)
+                                             WHERE u.uid = :buyer AND u.start <= :now
+                                             AND IFNULL(:now < u.end, TRUE))
+       ELSE FALSE
+       END)
     AND (CASE payeeType
-         WHEN :REF_ANYBODY THEN TRUE
-         WHEN :REF_ACCOUNT THEN payee = :seller
-         WHEN :REF_INDUSTRY THEN EXISTS (SELECT 1 FROM ancestors WHERE ancestor = :seller)
-         WHEN :REF_GROUP THEN EXISTS (SELECT 1 FROM u_groups g JOIN u_groupies u ON (u.grpId = g.id)
-                                               WHERE u.uid = :seller AND u.start <= :now
-                                               AND IFNULL(:now < u.end, TRUE))
-         ELSE FALSE
-         END)
-    AND (r.action = :ACTION_PAYMENT)
+      WHEN 'anybody' THEN TRUE
+      WHEN 'account' THEN payee = :seller
+      WHEN 'anyCompany' THEN $payeeCo
+      WHEN 'industry' THEN (payee IS NULL and $payeeCo) OR EXISTS (SELECT 1 FROM ancestors WHERE ancestor = :seller)
+      WHEN 'group' THEN EXISTS (SELECT 1 FROM u_groups g JOIN u_groupies u ON (u.grpId = g.id)
+                                           WHERE u.uid = :seller AND u.start <= :now
+                                           AND IFNULL(:now < u.end, TRUE))
+      ELSE FALSE
+      END)
+    AND (r.action = 'pay')
     AND (r.start <= :now AND IFNULL(:now < r.end, TRUE))
     GROUP BY ruleId
-    HAVING (:price >= minimum) AND (ulimit IS NULL OR (timesUsed < ulimit)) AND (amtLimit IS NULL OR amtUsed < amtLimit)
+    HAVING (:price >= minimum) AND (useMax IS NULL OR (timesUsed < useMax)) AND (extraMax IS NULL OR amtUsed < extraMax)
     ORDER BY r.start
 EOF;
 
@@ -722,18 +735,20 @@ EOF;
   foreach ($res as $ruleId => $rule) {
     extract($rule);
     $value = $amount + $portion * $price;
-    if (! is_null($amtLimit)) $value = min($value, $amtLimit - $amtUsed);
+    if (! is_null($extraMax)) $value = min($value, $extraMax - $amtUsed);
     $use = min($price - $rebate, $value);
     $rebate += $use;
-    $fromId = ($fromId == SAME_AS_PAYER) ? $buyer->id : (($fromId == SAME_AS_PAYEE) ? $seller->id : $fromId);
-    $toId = ($toId == SAME_AS_PAYER) ? $buyer->id : (($toId == SAME_AS_PAYEE) ? $seller->id : $toId);
-    txEntryPair($entries, $use, [$fromId, $toId], 'discount (rebate)', E_REBATE, 0, null, null, $ruleId);
+    $from = ($from == SAME_AS_PAYER) ? $buyer->id : (($from == SAME_AS_PAYEE) ? $seller->id : $from);
+    $to = ($to == SAME_AS_PAYER) ? $buyer->id : (($to == SAME_AS_PAYEE) ? $seller->id : $to);
+    list ($type, $desc) = $to == $buyer->id ? [E_REBATE, REBATE_DESC] : [E_DONATION, STEPUP_DESC]; // any surtx not coming back to buyer is a donation of some sort
+    
+    txEntryPair($entries, $use, [$from, $to], $desc, $type, 0, null, null, $ruleId);
     if ($rebate >= $price) {
       $rebate = $price;
       break;
     }
   }
-  return $rebate;
+  return -$rebate;
 }
 
 /**

@@ -962,6 +962,14 @@ function tableRow($row) {
 }
 
 /**
+ * Convert the given array to an HTML div row (for within class "container").
+ */
+function ray2row($row) {
+  $row = join('</div><div class="cell">', $row);
+  return '<div class="row"><div class="cell">' . $row . "</div></div>\n";
+}
+
+/**
  * Return the latitude and longitude for the given address. Also the postal code at that spot.
  * call with either getLocus(location) or getLocus(addr, city, statecode, zip)
  * @param string $q: either the whole address or just number and street
@@ -1245,7 +1253,7 @@ function purify($s) {
  */
 function where($ray) {
   if (!is_numeric(key($ray))) $ray = array_keys($ray);
-  foreach ($ray as $k) $ret[] = "$k=:$k";
+  foreach ($ray as $k) $ret[] = "`$k`=:$k";
   return join(' AND ', $ret);
 }
 

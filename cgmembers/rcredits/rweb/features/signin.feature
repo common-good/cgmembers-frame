@@ -1,6 +1,6 @@
-Feature: A user signs in to their rCredits account
+Feature: A user signs in to their Common Good account
 AS a member
-I WANT to sign in to my rCredits account
+I WANT to sign in to my Common Good account
 SO I can view or change settings, view or handle past transactions, and/or pay or charge another account
 
 Setup:

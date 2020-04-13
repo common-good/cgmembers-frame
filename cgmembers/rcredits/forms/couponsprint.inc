@@ -8,18 +8,18 @@ use CG\Db as db;
 
 /**
  * Print a sheet of coupons for the current account.
- type amount minimum ulimit count automatic start end on
+ type amount minimum useMax count automatic start end on
  */
 function couponsPrint($args = '') {
   global $mya;
   require_once __DIR__ . '/../pdf.class';
   
   if (strpos($args, 'type=') === FALSE) $args = u\deurlify($args);
-  extract(just('type amount minimum ulimit count automatic start end on', $args));
+  extract(just('type amount portion minimum useMax count automatic start end on', $args));
 	
   if (!$gift = (@$type == 'gift') and @$type != 'discount') return w\hack('bad coupon args');
-  $coGift = ($amount == @$minimum);
-  $amount =  $amount < 0 ? u\fmtAmt(-$amount / 100, '%s') : u\fmtAmt($amount, 's$');
+  $coGift = ($amount > 0 and $amount == @$minimum);
+  $amount =  $amount ? u\fmtAmt($amount, 's$') : u\fmtAmt($portion, '%s');
   u\setDft($count, 8);
 
   if (@$start == today()) $start = '';
@@ -30,7 +30,7 @@ function couponsPrint($args = '') {
     $dates = @$start ? t('beginning ') . u\fmtDate($start, TRUE) : '';
     $dates .= t(' (does not expire)');
   }
-  if (@$ulimit) $dates .= t(' &mdash; %ulimit %uses per member', 'ulimit uses', $ulimit, $ulimit > 1 ? t('uses') : t('use'));
+  if (@$useMax) $dates .= t(' &mdash; %useMax %uses per member', 'useMax uses', $useMax, $useMax > 1 ? t('uses') : t('use'));
   
   $pdf = new r\Pdf();
 //  $pdf->addTTFfont(__DIR__ . '/../../tcpdf/fonts/verdana.ttf'); // do just once on DEV, then upload font

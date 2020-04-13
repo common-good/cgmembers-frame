@@ -16,21 +16,21 @@ function formCouponsList($form, &$sta, $args = '') {
 	
   $title = t('Your Discounts and Gift Certificates');
 
-	$fields = ray('type amount purpose start end minimum ulimit action');
+	$fields = ray('type amount purpose start end minimum useMax action');
   $fieldCount = count($fields);
   $hdrs = u\tableRow(ray('Type,Amount,On,Starting,Ending,Min&nbsp;Purchase,Max&nbsp;Uses,'));
 	$automatic = TRUE;
 
   $sql = <<< X
     SELECT * FROM tx_rules
-		WHERE `fromId`=:uid
+		WHERE `from`=:uid
 		ORDER BY id DESC
 X;
   $q = db\q($sql, ray('uid', $mya->id));
   
   while ($row = $q->fetchAssoc()) {
     extract($row);
-		$gift = $action == ACTION_GIFT_CARD;
+		$gift = $action == 'gift';
 		$type = $gift ? t('gift') : t('discount');
 		
 		if ($gift) {
@@ -49,7 +49,7 @@ X;
 
 		$amount = $amount < 0 ? u\fmtAmt(-$amount/100, '%') : u\fmtAmt($amount);
 		$minimum = $minimum ? u\fmtAmt($minimum) : t('none');
-		$ulimit = ($ulimit + 0) ? number_format($ulimit) : t('no limit');
+		$useMax = ($useMax + 0) ? number_format($useMax) : t('no limit');
 
     $rows[] = u\tableRow(compact($fields));
     /* if ($some) { */
@@ -88,22 +88,22 @@ function showDiscounts() {
   $nearby = tr('%DISTANCE_BETWEEN<%NEIGHBOR_MAX');
 	
   $sql = <<< X
-    SELECT `fromId` AS sponsor, `amount`, `portion`, `purpose` AS `on`, `end`, payerType, payer, ulimit, uid, amtLimit,
+    SELECT `from` AS sponsor, `amount`, `portion`, `purpose` AS `on`, `end`, payerType, payer, useMax, uid, extraMax,
     (SELECT IFNULL(SUM(e.amount), 0) FROM tx_entries e WHERE e.uid=:myid AND e.rule IS NOT NULL AND e.rule=r.id) AS `amtUsed`,
     (SELECT IFNULL(SUM(SIGN(e.amount)), 0) FROM tx_entries e WHERE e.uid=:myid AND e.rule IS NOT NULL AND e.rule=r.id) AS `used`
-    FROM tx_rules r JOIN users u ON r.`fromId`=u.uid
+    FROM tx_rules r JOIN users u ON r.`from`=u.uid
     WHERE
       (CASE payerType
-       WHEN :REF_ANYBODY THEN TRUE
-       WHEN :REF_ACCOUNT THEN payer = :myid
-       WHEN :REF_INDUSTRY THEN EXISTS (SELECT 1 FROM ancestors WHERE ancestor = :myid)
-       WHEN :REF_GROUP THEN EXISTS (SELECT 1 FROM u_groups g JOIN u_groupies u ON (u.grpId = g.id)
+       WHEN 'anybody' THEN TRUE
+       WHEN 'account' THEN payer = :myid
+       WHEN 'industry' THEN EXISTS (SELECT 1 FROM ancestors WHERE ancestor = :myid)
+       WHEN 'group' THEN EXISTS (SELECT 1 FROM u_groups g JOIN u_groupies u ON (u.grpId = g.id)
                                     WHERE u.uid = :myid AND u.start <= :NOW
                                     AND IFNULL(:NOW < u.end, TRUE))
        ELSE FALSE
        END)
     AND (u.community=:ctty OR $nearby)
-    AND (r.action = :ACTION_PAYMENT)
+    AND (r.action = 'pay')
     AND (r.start <= :NOW AND IFNULL(:NOW < r.end, TRUE))
 		ORDER BY end IS NOT NULL, end
 X;
@@ -114,7 +114,7 @@ X;
 		$a = r\acct($uid);
 		$company = $a->bestName;
  		$end = $end ? u\fmtDate($end, TRUE) : t('--');
-    $left = $ulimit > 0 ? t('%left of %ulimit', 'left ulimit', $ulimit - $used, $ulimit) : t('no limit');
+    $left = $useMax > 0 ? t('%left of %useMax', 'left useMax', $useMax - $used, $useMax) : t('no limit');
     $for = /* $some ? t('you+') : */ t('anyone');
     if ($amount != 0) {
       if($portion != 0) {
@@ -125,7 +125,7 @@ X;
     } else {
       $amount = u\fmtAmt($portion, '%');
     }
-    $amtLeft = is_null($amtLimit) ? 'no limit' : u\fmtAmt($amtLimit - $amtUsed, '$');
+    $amtLeft = is_null($extraMax) ? 'no limit' : u\fmtAmt($extraMax - $amtUsed, '$');
 
     $rows[] = u\tableRow(compact($fields));
   }

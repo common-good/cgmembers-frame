@@ -48,7 +48,7 @@ Setup:
   | .ZZI  |   cgf |      5 |     Y |
 # share is irrelevant here as long as it is non-negative
   And transactions: 
-  | xid | created   | amount | from | to   | purpose | channel |*
+  | xid | created   | amount | payer | payee | purpose | channel |*
   |   1 | %today-7m |    250 | .ZZG | .ZZC | car     | %TX_SYS |
   |   2 | %today-6m |    250 | .ZZH | .ZZC | boat    | %TX_SYS |
   |   3 | %today-6m |    250 | .ZZI | .ZZC | fish    | %TX_SYS |

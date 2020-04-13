@@ -5,25 +5,10 @@ use Phinx\Migration\AbstractMigration;
 
 class MigrateCoupons extends AbstractMigration
 {
-  const REF_ANYBODY = 1;
-  const REF_ACCOUNT = 2;
-  const REF_INDUSTRY = 3;
-  const REF_GROUP = 4;
-  const REF_LIST = [self::REF_ANYBODY, self::REF_ACCOUNT, self::REF_INDUSTRY, self::REF_GROUP];
+  const REF_LIST = 'anybody account anyCompany industry group';
+  const ACT_LIST = 'pay now gift';
+  const PERIODS = 'once day week month quarter year forever';
 
-  const ACTION_PAYMENT = 1;
-  const ACTION_BY_DATE = 2;
-  const ACTION_GIFT_CARD = 3;
-  const ACTION_LIST = [self::ACTION_PAYMENT, self::ACTION_BY_DATE, self::ACTION_GIFT_CARD];
-
-  const ONLY_ONCE = 1;
-  const DAILY = 2;
-  const WEEKLY = 3;
-  const MONTHLY = 4;
-  const QUARTERLY = 5;
-  const YEARLY = 6;
-  const FOREVER = 7;
-  const PERIOD_CODES = [self::ONLY_ONCE, self::DAILY, self::WEEKLY, self::MONTHLY, self::QUARTERLY, self::YEARLY, self::FOREVER];
 
   const SAME_AS_PAYER = -1;
   const SAME_AS_PAYEE = -2;
@@ -100,11 +85,11 @@ class MigrateCoupons extends AbstractMigration
       $portion = $coupon_amount < 0 ? -$coupon_amount * 0.01 : 0;  // Convert from % to fraction
       $ruleId = $coupon["coupid"];
       $rule = [ "id" => $ruleId,
-                "payer" => null, "payerType" => self::REF_ANYBODY,
-                "payee" => $coupon["fromId"], "payeeType" => self::REF_ACCOUNT,
-                "fromId" => $coupon["sponsor"],
-                "toId" => self::SAME_AS_PAYER,
-                "action" => self::ACTION_PAYMENT,
+                "payer" => null, "payerType" => 'anybody',
+                "payee" => $coupon["fromId"], "payeeType" => 'account',
+                "from" => $coupon["sponsor"],
+                "to" => self::SAME_AS_PAYER,
+                "action" => 'pay',
                 "start" => date('Ymd', $coupon["start"]),
                 "end" => date('Ymd', $coupon["end"]),
                 "amount" => $amount,
@@ -160,14 +145,14 @@ class MigrateCoupons extends AbstractMigration
 
       // Now create the template and connect it to the group.
       $template = ['id' => $grpId,
-                   'payer' => $grpId, 'payerType' => self::REF_GROUP, 'payee' => $coupon['fromId'], 'payeeType' => self::REF_ACCOUNT,
-                   'fromId' => $coupon['sponsor'], 'toId' => self::SAME_AS_PAYER, 'action' => self::ACTION_PAYMENT,
+                   'payer' => $grpId, 'payerType' => 'group', 'payee' => $coupon['fromId'], 'payeeType' => 'account',
+                   'from' => $coupon['sponsor'], 'to' => self::SAME_AS_PAYER, 'action' => 'pay',
                    'start' => $coupon['start'], 'end' => $coupon['end'],
                    'amount' => $coupon['amount'] < 0 ? 0 : $coupon['amount'],
                    'portion' => $coupon['amount'] < 0 ? -$coupon['amount'] * 0.01 : 0,  // convert percentage to portion
                    'purpose' => $coupon['on'], 'minimum' => $coupon['minimum'],
                    'ulimit' => $coupon['ulimit'], 'amtLimit' => max($coupon['amount'], 0),
-                   'period' => 1, 'prdUnits' => self::MONTHLY, 'duration' => 1, 'durUnits' => self::FOREVER ];
+                   'period' => 1, 'prdUnits' => 'month', 'duration' => 1, 'durUnits' => 'forever' ];
       $templates->insert($template);
       $templates->saveData();
       echo "The coupon sponsored by '$sponsorName' may need manual adjustment, particulary the amount, end date, period, and duration.\n";
@@ -199,10 +184,10 @@ class MigrateCoupons extends AbstractMigration
       /* print_r($giftCard); */
       /* echo "\n"; */
       foreach (range($giftCard['start'], $giftCard['end']-1) as $number) {
-        $newRule = ['payer' => null, 'payerType' => self::REF_ANYBODY,
-                    'payee' => null, 'payeeType' => self::REF_ANYBODY,
-                    'fromId' => $giftCard['fromId'], 'toId' => self::SAME_AS_PAYEE,
-                    'action' => self::ACTION_GIFT_CARD,
+        $newRule = ['payer' => null, 'payerType' => 'anybody',
+                    'payee' => null, 'payeeType' => 'anybody',
+                    'from' => $giftCard['fromId'], 'to' => self::SAME_AS_PAYEE,
+                    'action' => 'gift',
                     'amount' => $giftCard['amount'],
                     'portion' => 0,
                     'purpose' => $giftCard['on'] ?: 'gift card',
@@ -232,14 +217,14 @@ class MigrateCoupons extends AbstractMigration
 
   function dateIncr($start, $number, $units) {
     $startDate = (new \DateTime())->setTimestamp($start);
-    if ($units == self::FOREVER) {
+    if ($units == 'forever') {
       return null;
     }
-    if ($units == self::QUARTERLY) {
-      $units = self::MONTHLY;
+    if ($units == 'quarter') {
+      $units = 'month';
       $number *= 3;
     }
-    $unitCode = [ self::ONLY_ONCE => 'XX', self::DAILY => 'D', self::WEEKLY => 'W', self::MONTHLY => 'M', self::YEARLY => 'Y', self::FOREVER => 'X' ][$units];
+    $unitCode = [ 'once' => 'XX', 'day' => 'D', 'week' => 'W', 'month' => 'M', 'year' => 'Y', 'forever' => 'X' ][$units];
     $interval = new \DateInterval("P$number$unitCode");
     return $startDate->add($interval)->getTimestamp();
   }

@@ -141,8 +141,8 @@ define('COMPANY_FREEZE', FALSE); // companies cannot spend rewards yet
 define('R', '<span class="r">r</span>');
 define('US', '<span class="us">us</span>');
 /// define('GAME_COMPANIES', '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital');
-define('ITEM_FLDS', 'title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back submit'); // names of common fields that are wrapped automatically in w\item()
-define('R_DATE_FLDS', 'created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted'); // date field names for testing and administrative display
+define('ITEM_FLDS', 'title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back'); // names of common fields that are wrapped automatically in w\item()
+define('R_DATE_FLDS', 'start created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted'); // date field names for testing and administrative display
 define('CO_FLDS', 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd staleNudge contact'); // account fields stored in r_company
 define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo activated0'); // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
 define('MASTER_NUMERIC_FLDS', 'minimum achMin savingsAdd saveWeekly');
@@ -356,13 +356,13 @@ define('APP_CAN_BIT_DESCS', t('charge customers,undo last transaction,give %RCRE
 // Membership steps
 define('R_STEPS_OLD', 'signup:signup, verify, ssn, sign:community/agreement, donate:community/donate, proxies, prefs:settings/preferences, connect, company, relations, photo, food, discount:community/discount, backing:community/backing');
 
-define('S_ALL', 'signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, titheout, tithein, work, partnersteptwo, partnerend, food, wantsPrint, printed'); // where to go to complete each step (unordered) -- add new steps to the end
-define('S_PERSON', 'signup verifyemail verifyid agree preferences fund photo contact donate tithein proxies work backing invite'); // soon replace "preferences" with titheOut
+define('S_ALL', 'signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, stepup, crumbs, work, partnersteptwo, partnerend, food, wantsPrint, printed'); // where to go to complete each step (unordered) -- add new steps to the end
+define('S_PERSON', 'signup verifyemail verifyid agree preferences fund photo contact donate crumbs proxies work backing stepup invite');
 //define('S_CO', 'signup verifyemail');
-define('S_CO', 'signup verifyemail agree contact backing photo donate company tithein discount');
-define('S_CO2', 'agent agree contact backing photo donate company tithein discount');
+define('S_CO', 'signup verifyemail agree contact backing photo donate company crumbs discount');
+define('S_CO2', 'agent agree contact backing photo donate company crumbs discount');
 define('S_CARD', 'photo contact donate');
-define('S_SELL', 'ssn contact tithein');
+define('S_SELL', 'ssn contact crumbs'); // keep this for when an individual member goes over the limit for no 1099
 define('S_VOICE', 'contact donate proxies work backing invite'); // add comment
 define('S_PARTNER', 'signup fund partnersteptwo partnerend');
 
@@ -568,43 +568,26 @@ define('DS_DENIED', 3);  // dispute denied
 
 define('E_BANK_ONLY', 0); // bank charges and transfers between bank accounts that have no effect on CG account balances
 define('E_PRIME', 1);  // the main pair in the transaction (payer and payee)
-define('E_PAYER', 'UNUSED');  // the uid in this entry is for the payer
-define('E_PAYEE', 'UNUSED');  // the uid in this entry is for the payee (this type is not used in txs_prime or txs)
-define('E_DONATION', 2);  // this is a transaction-related donation (e.g., roundup and Food Fund donations)
+define('E_DONATION', 2);  // this is a transaction-related donation (e.g., roundup or rule-based donation)
                           // the precise nature can be determined from uid2
 define('E_REBATE', 3); // discount rebate to customer
 define('E_USD_FEE', 4); // fee from customer to merchant for buying (or selling?) Common Good credit
 define('E_BANK', 5); // CG account transfers to or from the member's bank
 define('E_XFEE', 6); // transfer fee to merchant (UNUSED)
-define('E_RULE', 7); // rule-based auxiliary pair
 define('E_TYPES', 'bank_only prime donation rebate usd_fee bank rule');
 
 // New, for the sake of tx_templates and tx_rules
-const REF_ANYBODY = 1;   // Used in rules and templates -- a rule can apply to anybody
-const REF_ACCOUNT = 2;   // Rule only applies to specified user, payer or payee must be set
-const REF_INDUSTRY = 3;  // Rule only applies when user is a company that is listed in the industry specified by payer or payee
-const REF_GROUP = 4;     // Rule only applies when user is a member of the group specified by payer or payee
-const REF_LIST = [REF_ANYBODY, REF_ACCOUNT, REF_INDUSTRY, REF_GROUP];
-
-const ACTION_PAYMENT = 1;  // This rule is only triggered by a payment
-const ACTION_BY_DATE = 2;  // This rule is triggered by the current data being start
-const ACTION_GIFT_CARD = 3; 
-const ACTION_LIST = [ACTION_PAYMENT, ACTION_BY_DATE, ACTION_GIFT_CARD];
-
-// Period and duration codes
-const ONLY_ONCE = 1;       
-const DAILY = 2;
-const WEEKLY = 3;
-const MONTHLY = 4;
-const QUARTERLY = 5;
-const YEARLY = 6;
-const FOREVER = 7;
-const PERIOD_CODES = [ONLY_ONCE, DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY, FOREVER];
+const REF_LIST = 'anybody account anyCompany industry group'; // values for payerType and payeeType in tx_rules
+const ACT_LIST = 'pay now gift'; // values for action field in tx_rules
+const PERIODS = 'once day week month quarter year forever'; // periods and durations
 
 // Special values for from and to (which are normally uids)
 const SAME_AS_PAYER = -1;
 const SAME_AS_PAYEE = -2;
 
+define('STEPUP_MIN', 10); // minimum number of stepup rules for a company to appear on the step-up page
+define('STEPUP_DESC', t('donation (by step-up)')); // step-up donation tx description
+define('REBATE_DESC', t('discount (rebate)'));
 
 $GLOBALS['emailSubjects'] = array(
   'nonmember' => t('%PROJECT invitation followup'),

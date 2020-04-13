@@ -15,8 +15,8 @@ Setup:
   
 Scenario: a member is barely below target
   And transactions:
-  | xid | created    | amount | from | to   | purpose |*
-  | 7   | %today-10d |  99.99 | ctty | .ZZA | grant   |
+  | xid | created    | amount | payer | payee | purpose |*
+  | 7   | %today-10d |  99.99 | ctty  | .ZZA | grant   |
 
   When cron runs "getFunds"
   Then usd transfers:
@@ -75,8 +75,8 @@ Scenario: an unbanked member barely below target draws on another account
   | .ZZB | 99.99 |
   When cron runs "getFunds"
   Then transactions:
-  | xid | amount | from | to   | goods         | taking | purpose                                                     |*
-  |   1 |   0.01 | .ZZA | .ZZB | %FOR_NONGOODS |      1 | automatic transfer to NEWZZB,automatic transfer from NEWZZA |
+  | xid | amount | payer | payee | goods         | taking | purpose                                                     |*
+  |   1 |   0.01 | .ZZA  | .ZZB | %FOR_NONGOODS |      1 | automatic transfer to NEWZZB,automatic transfer from NEWZZA |
   And we notice "drew" to member ".ZZB" with subs:
   | amount | why       |*
   | $0.01  | to bring your balance up to the target you set |
@@ -111,8 +111,8 @@ Scenario: a member is well below target
   | txid | payee | amount              | channel  |*
   |    1 | .ZZF  | %(100 + %R_ACHMIN) | %TX_CRON |
   And these "txs":
-  | xid | created | amount | from | to   | for1                           | for2                           | taking |*
-  | 1   | %today  |    100 | .ZZA | .ZZB | automatic transfer to NEWZZB   | automatic transfer from NEWZZA |      1 |
+  | xid | created | amount | payer | payee | for1                           | for2                           | taking |*
+  | 1   | %today  |    100 | .ZZA  | .ZZB | automatic transfer to NEWZZB   | automatic transfer from NEWZZA |      1 |
   And we notice "banked|bank tx number" to member ".ZZF" with subs:
   | action | tofrom | amount              | checkNum | why       |*
   | draw   | from   | $%(100 + %R_ACHMIN) |        2 | to bring your balance up to the target you set |
@@ -218,7 +218,7 @@ Scenario: member's bank account has not been verified
   |    1 | .ZZA  |      0 | %today  |         0 |       0 |   0 |
 	|    2 | .ZZA  |     90 | %now+3d |         0 |       0 |   1 |
   And transactions:
-  | xid | amount | from    | to   | taking |*
+  | xid | amount | payer   | payee | taking |*
   |   1 |      0 | bank-in | .ZZA |      1 |
 
 Scenario: a member's bank account gets verified
@@ -248,7 +248,7 @@ Scenario: a member account needs more funding while not yet verified and somethi
   | txid | payee | amount | created | completed | deposit | xid |*
 	|    2 | .ZZA  |     90 | %now+2d |         0 |       0 |   1 |
   And transactions:
-  | xid | amount | from    | to   | taking |*
+  | xid | amount | payer   | payee | taking |*
   |   1 |      0 | bank-in | .ZZA |      1 |
   And count "usd" is 2
   And count "txs" is 1

@@ -64,6 +64,8 @@ if (!mobile) jQuery('.navbar-nav > li > a').hover(function() {
 });
 if (!mobile) jQuery('form div').hover(function() {jQuery('* [data-toggle="popover"]').popover('hide');});
 
+$('.form-horizontal :input:enabled:visible:first').focus();
+
 $('.test-next').click(function () {
   $('#testError' + $(this).attr('index'))[0].scrollIntoView(true); window.scrollBy(0, -100);
 });
@@ -267,6 +269,7 @@ function fmtAmt(n, digits) {
   return n.toLocaleString(undefined, {maximumFractionDigits:digits}); // maximumFractionDigits fails in Safari/Firefox
 }
 
+function has(haystack, needle) {return (haystack.indexOf(needle) >= 0);}
 /**
  * Build new jQuery syntax: $(":icontains['Bozo']") selects all elements containing "bozo", case-insensitive.
  */ /* FAILS

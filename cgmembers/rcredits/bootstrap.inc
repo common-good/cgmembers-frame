@@ -1259,7 +1259,10 @@ function just($these, $info, $default = NULL) {
  * @return an associative array of "GET" parameters.
  */
 function urlq2ray($q) {
-  mb_parse_str(mb_strpos($q, urlencode('=')) ? urldecode($q) : $q, $ray);
+  $s = mb_strpos($q, urlencode('=')) ? urldecode($q) : $q;
+  $s = str_replace('\u003d', '=', $s);
+  $s = str_replace('\u0026', '&', $s);
+  mb_parse_str($s, $ray);
   return $ray;
 }
 
