@@ -96,8 +96,8 @@ class MigrateCoupons extends AbstractMigration
                 "portion" => $portion,
                 "purpose" => is_null($coupon["on"]) ? '' : $coupon["on"],
                 "minimum" => $coupon["minimum"],
-                "ulimit" => $coupon["ulimit"],
-                "amtLimit" => null ];
+                "useMax" => $coupon["ulimit"],
+                "extraMax" => null ];
       $rules->insert($rule);
       $count += 1;
     }
@@ -151,7 +151,7 @@ class MigrateCoupons extends AbstractMigration
                    'amount' => $coupon['amount'] < 0 ? 0 : $coupon['amount'],
                    'portion' => $coupon['amount'] < 0 ? -$coupon['amount'] * 0.01 : 0,  // convert percentage to portion
                    'purpose' => $coupon['on'], 'minimum' => $coupon['minimum'],
-                   'ulimit' => $coupon['ulimit'], 'amtLimit' => max($coupon['amount'], 0),
+                   'useMax' => $coupon['ulimit'], 'extraMax' => max($coupon['amount'], 0),
                    'period' => 1, 'prdUnits' => 'month', 'duration' => 1, 'durUnits' => 'forever' ];
       $templates->insert($template);
       $templates->saveData();
@@ -192,8 +192,8 @@ class MigrateCoupons extends AbstractMigration
                     'portion' => 0,
                     'purpose' => $giftCard['on'] ?: 'gift certificate',
                     'minimum' => $giftCard['minimum'],
-                    'ulimit' => $giftCard['ulimit'],
-                    'amtLimit' => $giftCard['amount'],
+                    'useMax' => $giftCard['ulimit'],
+                    'extraMax' => $giftCard['amount'],
                     'template' => null,
                     'start' => 0,
                     'end' => null,
