@@ -101,7 +101,6 @@ class MigrateCoupons extends AbstractMigration
       $rules->insert($rule);
       $count += 1;
     }
-    $rules->saveData();
 
     echo "Inserted $count tx_rules\n";
 
@@ -171,7 +170,6 @@ class MigrateCoupons extends AbstractMigration
         echo "Generated rule with starting date $shouldStart.\n";
         $shouldStart = $this->dateIncr($shouldStart, $template['period'], $template['prdUnits']);
       }
-      $rules->saveData();
     }
     
     // Unfortunately we also need to handle gift cards, :-(
@@ -202,12 +200,11 @@ class MigrateCoupons extends AbstractMigration
         echo "about to insert gift card rule\n";
         print_r($newRule);
         $rules->insert($newRule);
-        echo "inserted gift card rul\n";
-        $rules->saveData();
-        echo "saved gift card rule\n";
+        echo "inserted gift card rule\n";
         $count += 1;
       }
     }
+    $rules->saveData();
     echo "We created $count rules for gift cards.\n";
   }
   
