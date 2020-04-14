@@ -177,8 +177,9 @@ class MigrateCoupons extends AbstractMigration
     // Unfortunately we also need to handle gift cards, :-(
     $stmt = $this->query('SELECT * FROM r_coupons c WHERE (flags & 1024)=1024');  //
     $count = $stmt->rowCount();
-    echo "There are $count gift cards to be handled.\n";
+    echo "There are $count gift cards to be handled!\n";
     $giftCards = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    echo "Just executed gift card coupon selection query.\n";
     $count = 0;
     foreach ($giftCards as $giftCard) {
       /* print_r($giftCard); */
@@ -198,11 +199,15 @@ class MigrateCoupons extends AbstractMigration
                     'start' => 0,
                     'end' => null,
                     'code' => $number ];
+        echo "about to insert gift card rule\n";
+        print_r($newRule);
         $rules->insert($newRule);
+        echo "inserted gift card rul\ne");
+        $rules->saveData();
+        echo "saved gift card rule\n");
         $count += 1;
       }
     }
-    $rules->saveData();
     echo "We created $count rules for gift cards.\n";
   }
   
