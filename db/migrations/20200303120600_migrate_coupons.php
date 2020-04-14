@@ -202,9 +202,9 @@ class MigrateCoupons extends AbstractMigration
         echo "about to insert gift card rule\n";
         print_r($newRule);
         $rules->insert($newRule);
-        echo "inserted gift card rul\ne");
+        echo "inserted gift card rul\n";
         $rules->saveData();
-        echo "saved gift card rule\n");
+        echo "saved gift card rule\n";
         $count += 1;
       }
     }
