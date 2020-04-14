@@ -6,7 +6,7 @@ use Phinx\Migration\AbstractMigration;
 class MigrateCoupons extends AbstractMigration
 {
   const REF_LIST = 'anybody account anyCompany industry group';
-  const ACT_LIST = 'pay now gift';
+  const ACT_LIST = 'pay now redeem';
   const PERIODS = 'once day week month quarter year forever';
 
 
@@ -90,8 +90,8 @@ class MigrateCoupons extends AbstractMigration
                 "from" => $coupon["sponsor"],
                 "to" => self::SAME_AS_PAYER,
                 "action" => 'pay',
-                "start" => date('Ymd', $coupon["start"]),
-                "end" => date('Ymd', $coupon["end"]),
+                "start" => $coupon["start"],
+                "end" => $coupon["end"],
                 "amount" => $amount,
                 "portion" => $portion,
                 "purpose" => is_null($coupon["on"]) ? '' : $coupon["on"],
@@ -187,10 +187,10 @@ class MigrateCoupons extends AbstractMigration
         $newRule = ['payer' => null, 'payerType' => 'anybody',
                     'payee' => null, 'payeeType' => 'anybody',
                     'from' => $giftCard['fromId'], 'to' => self::SAME_AS_PAYEE,
-                    'action' => 'gift',
+                    'action' => 'redeem',
                     'amount' => $giftCard['amount'],
                     'portion' => 0,
-                    'purpose' => $giftCard['on'] ?: 'gift card',
+                    'purpose' => $giftCard['on'] ?: 'gift certificate',
                     'minimum' => $giftCard['minimum'],
                     'ulimit' => $giftCard['ulimit'],
                     'amtLimit' => $giftCard['amount'],

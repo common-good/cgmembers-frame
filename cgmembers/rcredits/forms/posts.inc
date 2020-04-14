@@ -171,7 +171,7 @@ function postList($type, $lat, $lon, $zip, $radius) {
   $isMyPid = 'pid=:myPid';
   $postRadius = 'IFNULL(s.radius, 0)';
   $noPosterGeo = '(latitude=0 AND longitude=0)';
-  $admin = admin() ? 1 : 0;
+  $admin = admin($zip) ? 1 : 0;
   
   $zipIrrelevant = ($mya and $mya->admin) ? 1 : 0;
   $visible = $zipIrrelevant ? 1 

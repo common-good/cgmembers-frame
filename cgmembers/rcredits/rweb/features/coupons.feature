@@ -44,42 +44,43 @@ Scenario: A member company creates a gift coupon
   | 20 | anybody   | anybody   | .ZZC   | %SAME_AS_PAYER |     10 | 0       | 1      |   27 |
 
 #  And member ".ZZC" visits page "community/coupons/print/type=gift&amount=10&useMax=1&count=20", which results in:
-#  When member ".ZZC" visits page "community/coupons/print/type=gift&amount=10&count=20"
+  When member ".ZZC" visits page "community/coupons/print/type=gift&amount=10&count=20"
   And members have:
   | uid  | giftCoupons |*
   | .ZZC |          28 |
-  # When member ".ZZC" visits page "community/coupons/list"
-  # Then we show "Your Discounts and Gift Certificates" with:
-  # | Type | Amount | On               | Starting | Ending | Min Purchase | Max Uses |~Action  |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
-  # | gift | $10    | gift certificate |     ?    |    ?   |           $0 |        1 | reprint |
+  When member ".ZZC" visits page "community/coupons/list"
+  Then we show "Your Discounts and Gift Certificates" with:
+  | Type | Amount | On               | Starting | Ending     | Min Purchase | Max Uses |~Action  |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
   
 Scenario: A member redeems a gift coupon
   Given members have:
   | uid  | giftCoupons | created |*
   | .ZZC |           8 | 0039200 |
 # created determines 3-letter lowSecurity code (7AA), which is used in coupon code
-  And coupons:
-  | coupid | fromId | amount | useMax | flags | start | end | sponsor | code |*
-  |      1 |   .ZZC |     10 |      1 | gift  |     8 |  28 | .ZZC    | 8    |
+  And these "tx_rules":
+  | id | payer | payerType | payeeType | from | to             | action | amount | portion  | code | start |*
+  | 1  | .ZZC  | anybody   | anybody   | .ZZC | %SAME_AS_PAYEE | redeem | 10     | 0        | 8    | %now  |
+
   When member ".ZZA" completes form "community/coupons/type=gift" with values:
   | type   | code          |*
   | redeem | DD7K CLJW EAI |
@@ -111,7 +112,7 @@ Scenario: A member company creates a dollar amount discount coupon
   | type     | amount | minimum | start | end     | useMax | automatic |*
   | discount |     12 |      20 | %mdY  | %mdY+9d |      1 |         1 |
   Then coupons:
-  | coupid | amount | fromId | minimum | useMax | flags | start     | end                | sponsor | on                              |*
+  | coupid | amount | fromId | minimum | useMax | flags | start     | end                | sponsor | on |*
   |      1 |     12 |   .ZZC |      20 |      1 |       | %daystart | %(%daystart+10d-1) | .ZZC    | on your purchase of $20 or more |
   When member ".ZZC" visits page "community/coupons/list"
   Then we show "Your Discounts and Gift Certificates" with:
@@ -124,8 +125,8 @@ Scenario: A member company creates a dollar amount discount coupon
   
 Scenario: A member redeems a dollar amount discount coupon
   Given coupons:
-  | coupid | amount | fromId | minimum | useMax | flags | start     | end                | sponsor | on |*
-  |      1 |     12 |   .ZZC |      20 |      1 |       | %daystart | %(%daystart+10d-1) |.ZZC| on your purchase of $20 or more |
+  | coupid | amount | fromId | minimum | useMax | start     | end                | sponsor | on |*
+  |      1 |     12 |   .ZZC |      20 |      1 | %daystart | %(%daystart+10d-1) |.ZZC | on your purchase of $20 or more |
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 100    | fun     |

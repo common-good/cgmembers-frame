@@ -32,8 +32,8 @@ Setup:
 
 Scenario: A member redeems a discount coupon
   Given  coupons:
-  | coupid | fromId | amount | minimum | useMax | flags | start  | end       | on                |*
-  |      1 |   .ZZC |     10 |       0 |      1 |     0 | %today | %today+7d | discount (rebate) |
+  | coupid | fromId | amount | minimum | useMax | start  | end       | on                |*
+  |      1 |   .ZZC |     10 |       0 |      1 | %today | %today+7d | discount (rebate) |
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $100 for "goods": "food" at %now
   Then transaction headers:
   | xid | goods | actorId | actorAgentId | flags  | channel | boxId  | risks | reversesXid | created |*

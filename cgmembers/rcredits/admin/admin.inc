@@ -571,6 +571,7 @@ EOF;
  */
 function printCheck(&$ck, $pos, $tx, $mark) {
   extract(just('xid txid created payee amount deposit bankAccount', $tx));
+  $escrow = 'USkk' . ESCROW_ROUTING . ($amount > 0 ? ESCROW_IN : ESCROW_OUT);
 
   $a = r\acct($payee);
   $bankAccount = u\decry('V', $bankAccount);

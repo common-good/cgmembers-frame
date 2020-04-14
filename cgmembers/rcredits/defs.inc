@@ -578,7 +578,7 @@ define('E_TYPES', 'bank_only prime donation rebate usd_fee bank rule');
 
 // New, for the sake of tx_templates and tx_rules
 const REF_LIST = 'anybody account anyCompany industry group'; // values for payerType and payeeType in tx_rules
-const ACT_LIST = 'pay now gift'; // values for action field in tx_rules
+const ACT_LIST = 'pay now redeem'; // values for action field in tx_rules
 const PERIODS = 'once day week month quarter year forever'; // periods and durations
 
 // Special values for from and to (which are normally uids)

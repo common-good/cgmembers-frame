@@ -146,6 +146,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE invoice AMemberApprovesInvoicesForevermore
  *     MAKE invoice AMemberApprovesAnInvoiceToATrustingCustomer
  *     MAKE joint AMemberRequestsAJointAccount
+ *     MAKE pale AMemberMakesATransactionThatTriggersPayingALittleExtra
  *     MAKE paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     MAKE paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
  *     MAKE signin AMemberSignsInWithUsernameOnTheMemberSite
@@ -230,6 +231,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE invest Setup
  *     MAKE invoice Setup
  *     MAKE joint Setup
+ *     MAKE pale Setup
  *     MAKE partnersignup Setup
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
@@ -324,6 +326,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
  *     TEST joint AMemberRequestsAJointAccount
  *     TEST joint AMemberRequestsTwoJoinsAtOnce
+ *     TEST pale AMemberMakesATransactionThatTriggersPayingALittleExtra
  *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
  *     TEST posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  *     TEST relations AMemberAddsARelation
@@ -489,6 +492,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST connect AMemberConnectsABankAccountDuringSignup
  *     TEST connect AMemberConnectsABankAccountLater
  *     TEST contact AMemberVisitsTheContactInfoPage
+ *     TEST coupons AMemberCompanyCreatesAGiftCoupon
  *     TEST coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     TEST coupons AMemberRedeemsAPercentageDiscountCoupon
@@ -726,6 +730,7 @@ function relations($relations) {return t\relations($relations);}
  *     TEST joint Setup
  *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     TEST joint AJoinedAccountMemberUnjoinsTheAccount
+ *     TEST pale AMemberMakesATransactionThatTriggersPayingALittleExtra
  *     BOTH queries Setup
  *     TEST statement Setup
  *     TEST summary Setup
@@ -766,6 +771,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE connect AMemberConnectsABankAccountDuringSignup
  *     MAKE connect AMemberConnectsABankAccountLater
  *     MAKE contact AMemberVisitsTheContactInfoPage
+ *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     MAKE coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsAPercentageDiscountCoupon
@@ -1136,7 +1142,7 @@ function statisticsGetSet($time) {
  * members have: (ARG)
  *
  * in: MAKE bank ASlaveMemberRequestsATransfer
- *     BOTH coupons AMemberCompanyCreatesAGiftCoupon
+ *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     BOTH coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
@@ -1592,8 +1598,7 @@ function someonePostsToPageWith($page, $args) {return t\postToPage($page, $args)
 /**
  * coupons: (ARG)
  *
- * in: MAKE coupons AMemberRedeemsAGiftCoupon
- *     TEST coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
+ * in: TEST coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsAPercentageDiscountCoupon
  *     MAKE coupons AMemberRedeemsADiscountCouponInDribsAndDrabs
@@ -1624,6 +1629,7 @@ function weScripWithSubs($script, $args = []) {
  * in: MAKE balancesheet Setup
  *     TEST community CronCalculatesTheStatistics
  *     TEST coupons AMemberCompanyCreatesAGiftCoupon
+ *     MAKE coupons AMemberRedeemsAGiftCoupon
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     MAKE custstatement AStatementGoesOntoMultiplePages
  *     MAKE demographics Setup
@@ -1646,6 +1652,7 @@ function weScripWithSubs($script, $args = []) {
  *     BOTH invest TheInvestmentClubIssuesDividends
  *     BOTH invest MembersRateAProposedLoan
  *     BOTH invest TheClubMakesALoan
+ *     TEST pale AMemberMakesATransactionThatTriggersPayingALittleExtra
  *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
  *     BOTH posts SomeoneConfirmsAnOfferOnceTwice
  *     MAKE posts SomeoneViewsTheDetailsOfAnOffer
@@ -2030,6 +2037,7 @@ function someoneConfirmsPostidCreatedWith($page, $postid, $created, $values) {
  * txRules: (ARG)
  *
  * in: MAKE coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
+ *     MAKE pale AMemberMakesATransactionThatTriggersPayingALittleExtra
  */
 function txRules($list) {return t\txRules($list);}
 

@@ -262,7 +262,8 @@ function genRulesFromTemplates($template) {
   $rule = justNot(ray('id period duration durUnit start end maxStart'), $template);
   $rule['template'] = $template['id'];
   $shouldStart = dateIncr($template['maxStart'], $template['period'], $template['prdUnits']);
-  while ($shouldStart < time()) {
+  $end = empty($end) ? time() : min(time(), $end);
+  while ($shouldStart < $end) {
     $rule['start'] = $shouldStart;
     $rule['end'] = dateIncr($shouldStart, $template['duration'], $template['durUnits']);
     db\insert('tx_rules', $rule, 'id');

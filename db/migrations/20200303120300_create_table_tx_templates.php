@@ -8,7 +8,7 @@ require_once __DIR__ . '/util.inc';
 class CreateTableTxTemplates extends AbstractMigration
 {
   const REF_LIST = 'anybody account anyCompany industry group';
-  const ACT_LIST = 'pay now gift';
+  const ACT_LIST = 'pay now redeem';
   const PERIODS = 'once daily weekly monthly quarterly yearly';
 
   const SAME_AS_PAYER = -1;
@@ -52,7 +52,7 @@ class CreateTableTxTemplates extends AbstractMigration
       ->addColumn('to', 'biginteger', ['comment' => 'Who to transfer money to'])
       ->addColumn('action', 'enum', ['values' => self::ACT_LIST,
                                      'comment' => 'Action that triggers templates of this type'])
-      ->addColumn('start', 'biginteger', ['default' => 0,
+      ->addColumn('start', 'biginteger', ['null' => false,
                                           'comment' => 'Start date of first occurrence of this template'])
       ->addColumn('end', 'biginteger', ['null' => true, 'default' => null,
                                         'comment' => 'Date after which no more occurrences will be created (NULL if no end)'])

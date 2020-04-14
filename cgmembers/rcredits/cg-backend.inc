@@ -504,19 +504,13 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
 
   $needed = abs($amount);
 
-  // Apply coupon
+  // Apply rules
   if ($amount > 0 and ($goods != FOR_USD)) {
     $needed += handleRules($entries, $loserA, $gainerA, $amount);
   }
 
 /*  // Apply food fund (or other special) donation
-  if ($needed * $e1A->food > .005 and $e2A->foody) { // apply percentage donation to food fund
-    $foodUid = db\get('uid', 'users', "name='foodfund'");
-    $foodAmt = round($needed * $e1A->food, 2);
-    if ($foodUid) txEntryPair($entries, $foodAmt, [$e1A, $foodUid], t('donation to Food Fund (%pct)', 'pct', u\fmtAmt($e1A->food, '%')), E_DONATION);
-    $needed -= $foodAmt;
   } */
-
   // Apply any roundup
   if ($e1A->roundup and $needed > 0 and !($e2Id == CGID and $recurs and $needed < 1)) { // payer roundups, not actor or loser (don't round up reversals, cashouts, roundups, or recurring gifts under $1)
     if ($cents = fmod($needed, 1.0)) {
@@ -691,45 +685,27 @@ function handleRules(&$entries, $buyer, $seller, $price) {
   $payeeCo = $seller->co ? 1 : 0;
 
   // Get a list of applicable rules
+  $payerCheck = u\genRuleSQL('payer', ':buyer');
+  $payeeCheck = u\genRuleSQL('payee', ':seller');
+  
   $sql = <<<EOF
     SELECT r.id AS ruleId, r.amount, r.portion, r.from, r.to, r.purpose, r.minimum, r.useMax, r.extraMax,
     (SELECT IFNULL(SUM(e.amount), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=ruleId AND e.uid=:buyer) AS `amtUsed`,
     (SELECT IFNULL(SUM(SIGN(e.amount)), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=ruleId AND e.uid=:buyer) AS `timesUsed`
     FROM tx_rules r
-    WHERE
-      (CASE payerType
-       WHEN 'anybody' THEN TRUE
-       WHEN 'account' THEN payer = :buyer
-       WHEN 'anyCompany' THEN $payerCo
-       WHEN 'industry' THEN EXISTS (SELECT 1 FROM ancestors WHERE ancestor = :buyer)
-       WHEN 'group' THEN EXISTS (SELECT 1 FROM u_groups g JOIN u_groupies u ON (u.grpId = g.id)
-                                             WHERE u.uid = :buyer AND u.start <= :now
-                                             AND IFNULL(:now < u.end, TRUE))
-       ELSE FALSE
-       END)
-    AND (CASE payeeType
-      WHEN 'anybody' THEN TRUE
-      WHEN 'account' THEN payee = :seller
-      WHEN 'anyCompany' THEN $payeeCo
-      WHEN 'industry' THEN (payee IS NULL and $payeeCo) OR EXISTS (SELECT 1 FROM ancestors WHERE ancestor = :seller)
-      WHEN 'group' THEN EXISTS (SELECT 1 FROM u_groups g JOIN u_groupies u ON (u.grpId = g.id)
-                                           WHERE u.uid = :seller AND u.start <= :now
-                                           AND IFNULL(:now < u.end, TRUE))
-      ELSE FALSE
-      END)
+    WHERE $payerCheck
+    AND $payeeCheck
     AND (r.action = 'pay')
     AND (r.start <= :now AND IFNULL(:now < r.end, TRUE))
+    AND (:price >= minimum)
     GROUP BY ruleId
-    HAVING (:price >= minimum) AND (useMax IS NULL OR (timesUsed < useMax)) AND (extraMax IS NULL OR amtUsed < extraMax)
+    HAVING (:price >= minimum) AND timesUsed < IFNULL(useMax, timesUsed+1) AND amtUsed < IFNULL(extraMax, amtUsed+1)
     ORDER BY r.start
 EOF;
 
   $subs = ray('buyer seller now price', $buyer->id, $seller->id, now(), $price);
   if (!$q = db\q($sql, $subs)) return 0;
-  $res = $q->fetchAllAssoc('ruleId', \PDO::FETCH_ASSOC);
-  if (empty($res)) {
-    return 0;
-  }
+  if (!$res = $q->fetchAllAssoc('ruleId', \PDO::FETCH_ASSOC)) return 0;
 
   $rebate = 0;
   foreach ($res as $ruleId => $rule) {

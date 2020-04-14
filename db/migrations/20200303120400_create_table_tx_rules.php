@@ -7,7 +7,7 @@ require_once __DIR__ . '/util.inc';
 class CreateTableTxRules extends AbstractMigration
 {
   const REF_LIST = 'anybody account anyCompany industry group';
-  const ACT_LIST = 'pay now gift';
+  const ACT_LIST = 'pay now redeem';
 
   const SAME_AS_PAYER = -1;
   const SAME_AS_PAYEE = -2;
@@ -64,7 +64,7 @@ class CreateTableTxRules extends AbstractMigration
                                           'comment' => 'Maximum amount to transfer, NULL if no limit'])
       ->addColumn('template', 'integer', ['null' => true, 'default' => null,
                                           'comment' => 'Template of which this is an occurrence'])
-      ->addColumn('start', 'biginteger', ['default' => 0,
+      ->addColumn('start', 'biginteger', ['null' => false,
                                           'comment' => 'Start of period for which this occurrence applies'])
       ->addColumn('end', 'biginteger', ['null' => true,
                                         'comment' => 'End of period for which this occurrence applies, NULL if it does not end'])
