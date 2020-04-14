@@ -52,13 +52,6 @@ X;
 		$minimum = $minimum ? u\fmtAmt($minimum) : t('none');
 		$useMax = ($useMax + 0) ? number_format($useMax) : t('no limit');
     $rows[] = u\tableRow(compact($fields));
-    /* if ($some) { */
-    /*   $uids = db\col('uid', 'r_coupated', compact('coupid')); */
-    /*   $qids = []; */
-    /*   foreach ($uids as $uid) $qids[] = $mya->cAdmin ? r\acct($uid)->fullName : r\qid($uid); */
-    /*   $rows[] = "<tr><td class=\"account-list\" colspan=\"$fieldCount\">" . t('<b>for only: </b>') . join(', ', $qids) . "</td></tr>\n"; */
-    /* } */
-    // NOT CURRENTLY HANDLED
   }
 
   if (@$rows) {
@@ -69,7 +62,7 @@ X;
     $rows
     </table>
 X;
-  } else $list = t('You do not have any discounts yet.');
+  } else $list = t('You have not yet issued any automatic discounts or gift certificates.');
   
   return cgform(compact(ray('title list')));
 }

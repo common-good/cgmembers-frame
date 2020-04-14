@@ -713,7 +713,7 @@ body.page-partner blockquote {font-size:14px;}
 #frm-coupons #edit-subtext li {margin-bottom:2px;}
 #frm-coupons #edit-useMax,
 #frm-discount #edit-useMax {max-width:50px; display:inline-block;}
-#frm-coupons .form-item-on {display:none;}
+#frm-coupons .form-item-purpose {display:none;}
 
 /* Coupons List */
 #frm-couponslist #edit-title {margin-bottom:0;}

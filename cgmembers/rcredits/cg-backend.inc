@@ -561,6 +561,8 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
     $DBTX->rollback();
     return r\txErr(t('tx save error'), $erInfo);
   }
+  
+  if ($goods != FOR_USD and $pot = $loserA->giftPot) $loserA->update('giftPot', max(0, $pot - $needed));
   unset($DBTX);
   
   // Report results

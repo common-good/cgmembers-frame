@@ -15,7 +15,7 @@ function couponsPrint($args = '') {
   require_once __DIR__ . '/../pdf.class';
   
   if (strpos($args, 'type=') === FALSE) $args = u\deurlify($args);
-  extract(just('type amount portion minimum useMax count automatic start end on', $args));
+  extract(just('type amount portion minimum useMax count automatic start end purpose', $args));
 	
   if (!$gift = (@$type == 'gift') and @$type != 'discount') return w\hack('bad coupon args');
   $coGift = ($amount > 0 and $amount == @$minimum);
@@ -42,7 +42,7 @@ function couponsPrint($args = '') {
   $coup = t('%PROJECT %type', 'type', ($gift or $coGift) ? t('Gift Certificate') : t('Discount Coupon'));
 	$off = ($gift or $coGift) ? '' : t(' OFF');
 	$goodFor = $off ? '' : t('Good for ');
-//  $iCode = $mya->iCardCode(IBY_EMAIL);
+
   $auto = (@$automatic and $off) ? t('automatically') : '';
   
   list ($mT, $mR, $mB, $mL) = [0, 0, 0, 0]; // margins
@@ -57,7 +57,6 @@ function couponsPrint($args = '') {
   list ($dxCoup, $dyCoup, $ptCoup, $dyGoodFor) = [$x0+$wLogo+.08, $y0+.07, 12.5, .95];
   list ($dxOff, $dyOff, $ptOff, $dyAt) = [$dxCoup-.02, $y0+.29, 24, $y0+.7];
   list ($dxLine, $dyLine) = [$x0, 1.25];
-//  list ($goodFor) = [t('This card good for')];
   list ($wPage, $hPage) = [8.5, 11]; // page dimensions
   $gLen = .1; // cutting guide length from card corner (for pluses in each corner of each card)
   $gStyle = ['color' => [192,192,192]];
@@ -100,7 +99,7 @@ function couponsPrint($args = '') {
       } else { // discount coupon
         $pdf->say($auto, $x+$wLogo, $y+$dyOff+.14, $wCoup-.3, '', '9;color:darkgray', 'R'); // .24 for baseline
         $pdf->say(t('at <b>%name</b>', compact('name')), $x+$dxCoup, $y+$dyAt, $wCoup, '', "$ptCoup;font-stretch:semi-condensed;color:black", 'L');
-        if (!$goodFor) $pdf->say($on, $x, $y+$dyDetails, $wCard, '', $ptDetails, 'C'); // text, x, y, w, h, format, align, borders
+        if (!$goodFor) $pdf->say($purpose, $x, $y+$dyDetails, $wCard, '', $ptDetails, 'C'); // text, x, y, w, h, format, align, borders
         $pdf->say($withCG, $x, $y+$dyDetails+$dy, $wCard, '', $ptDetails, 'C'); // text, x, y, w, h, format, align, borders
         $pdf->say($slogan, $x, $y+$dyDetails+$dy*2, $wCard, '', "$ptSlogan;I;Verdana;font-stretch:normal;color:darkgray", 'C'); // text, x, y, w, h, fmt, align, borders
         $pdf->say($dates, $x, $y+$dyDetails+$dy*3, $wCard, '', "10;color:darkgray", 'C'); // text, x, y, w, h, format, align, borders

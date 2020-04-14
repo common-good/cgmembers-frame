@@ -493,11 +493,15 @@ function doit(what, vs) {
     break;
     
   case 'coupons':
+    var purposeDft = $('#edit-purpose').val();
+    $('#edit-minimum').change(function () {
+      var min = $(this).val();
+      $('#edit-purpose').val(min == '0' ? purposeDft : vs['minText'].replace('%min', min));
+    });
+
     $('#edit-automatic-0').click(function () {
       $('.form-item-automatic').hide();
-      var min = $('#edit-minimum').val();
-      $('.form-item-on').show();
-      $('#edit-on').val(min > 0 ? 'on your purchase of $' + min + ' or more' : 'on any purchase');
+      $('.form-item-purpose').show();
     });
     break;
     

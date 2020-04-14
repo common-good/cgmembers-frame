@@ -109,8 +109,8 @@ Scenario: A member company creates a dollar amount discount coupon
  
   
   When member ".ZZC" completes form "community/coupons/type=discount" with values:
-  | type     | amount | minimum | start | end     | useMax | automatic |*
-  | discount |     12 |      20 | %mdY  | %mdY+9d |      1 |         1 |
+  | type     | amount | minimum | start | end     | useMax | automatic | purpose |*
+  | discount |     12 |      20 | %mdY  | %mdY+9d |      1 |         1 | on your purchase of $20 or more |
   Then coupons:
   | coupid | amount | fromId | minimum | useMax | flags | start     | end                | sponsor | on |*
   |      1 |     12 |   .ZZC |      20 |      1 |       | %daystart | %(%daystart+10d-1) | .ZZC    | on your purchase of $20 or more |

@@ -145,7 +145,7 @@ Scenario: A company account manager creates a discount
   | amount    | 20 |
   | minimum   | 120 |
   | useMax    | 3 |
-  | on        | on your purchase of $120 or more |
+  | purpose   | on your purchase of $120 or more |
   | start     | %daystart |
   | end       | %(%daystart+3m+%DAY_SECS-1) |
   | automatic | 1 |

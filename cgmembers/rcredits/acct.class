@@ -650,9 +650,11 @@ class Acct {
    */
   public function avail($goods = FOR_GOODS) {
     $a = $this;
+    
     // no going into debt without permission
-    if ($a->can(B_DEBT) and !$a->cttyA->noneg and $goods != FOR_USD) $floor = $a->floor;
-    else $floor = max($a->floor, 0);
+    if ($goods == FOR_USD or $a->cttyA->noneg or !$a->can(B_DEBT)) {
+      $floor = max(0, $a->floor) + $a->giftPot; // don't allow cashing out credit or gift cards
+    } else $floor = $a->floor;
 
     return round($a->balance - $floor, 2);
   }

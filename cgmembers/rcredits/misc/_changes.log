@@ -1,3 +1,7 @@
+2020-04-14 feature/surtransactions
+. fixed some bugs in gift certificates and discounts
+. giftPot now restricts the amount a gift certificate recipient can cash out
+
 2020-04-12 feature/surtransactions
 . created stepup, groups, and rules pages
 . admin can now see all active posts regardless of distance

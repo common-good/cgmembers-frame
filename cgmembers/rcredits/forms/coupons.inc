@@ -10,11 +10,13 @@ use CG\Db as db;
  * Handle coupons for the account.
  */
  
-const COUPON_FLDS = 'type code amount portion count minimum start end useMax forOnly automatic on';
+const COUPON_FLDS = 'type code amount portion count minimum start end useMax forOnly automatic purpose'; // not db fields
 
 function formCoupons($form, &$sta, $args = '') {
   global $mya;
   
+  jsx('coupons', 'minText', t('on your purchase of $%min or more'));
+
   foreach (ray(COUPON_FLDS . ' buttons submit') as $k) $$k = NULL;
   extract(just('type amount', $args, ''));
 
@@ -54,7 +56,7 @@ X
     $end = textFld(t('Valid until:'), [t('End date'), t('An end date is strongly encouraged.')]);
     $useMax = textFld(t('Limit:'), t('Leave this blank for unlimited uses.'), suffix(t(' uses per member')));
     $automatic = w\boolFld(t('Automatic?'), t('If the discount is not automatic, you will need to do the math each time.'), TRUE);
-    $on = textFld(t('Description:'), [t('Discount on what')]);
+    $purpose = textFld(t('Description:'), [t('Discount on what')], dft(t('on any purchase')));
 //    if ($mya->admin) $forOnly = textFld(t('For only:'), [t('ID number of group'), t('If you want to restrict this discount to certain %PROJECT members, type the ID of their group.')]);
     $submit = t('Create');
               
@@ -71,7 +73,6 @@ X
   }
   
   $type = hidFld($type);
-  jsx('coupons');
   
   return cgform(compact(ray('title subtext buttons ' . COUPON_FLDS . ' submit')));
 }
@@ -172,37 +173,31 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
     return say(t('coupon redeemed', 'amount giver', u\fmtAmt($amount), $fromA->fullName));
 
   case 'gift':
-
-    $DBTX = \db_transaction();
-
+    u\setDft($minimum, 0);
+    u\setDft($purpose, t('on any purchase'));
     $start = $mya->giftCoupons + 0;
     $end = $start + $count - 1;
-    u\setDft($minimum, 0);
-    u\setDft($on, t('on any purchase'));
-    foreach (range($start, $end) as $num) {
-      $code = $num; // $mya->iCardCode($num);
-      db\insert('tx_rules', ray('start from to action purpose payeeType', time(), $myid, SAME_AS_PAYER, 'redeem', $on, 'anybody') + compact(ray('amount portion minimum useMax code')));
-    }
+    $info = ray('start from to action payeeType', time(), $myid, SAME_AS_PAYER, 'redeem', 'anybody');
+    $info += compact(ray('amount portion purpose minimum useMax'));
+
+    $DBTX = \db_transaction();
+    foreach (range($start, $end) as $code) db\insert('tx_rules', $info + compact('code'));
     unset($DBTX);
 
     return reportCoupon(t('gift certificate'), $input);
 
   case 'discount':
-    $flags = 0;
-
-    $DBTX = \db_transaction();
-    if (!$on) $on = $minimum ? t('on your purchase of %min or more', 'min', u\fmtAmt($minimum)) : t('on any purchase');
     if ($end) $end = strtotime('tomorrow', $end) - 1; // last second of the day
-
+    // purpose needs a default when called from discount.inc
+    u\setDft($purpose, $minimum ? t('on your purchase of %min or more', 'min', u\fmtAmt($minimum)) : t('on any purchase'));
+    
     if ($automatic) {
-      /* if ($forOnly != NULL)  $flags |= u\bit(B_SOME); */
-      db\insert('tx_rules', ray('payee payeeType from to action purpose extraMax',
-                            $myid, 'account', $myid, SAME_AS_PAYER, 'pay', $on, $amount)
-      + compact(ray('amount portion minimum useMax start end')));
+      $info = ray('payee payeeType from to action', $myid, 'account', $myid, SAME_AS_PAYER, 'pay');
+      $info += compact(ray('amount portion purpose minimum useMax start end'));
+      db\insert('tx_rules', $info);
     }
-    unset($DBTX);
   
-    return reportCoupon(t('discount'), compact(ray('on end')) + $input);
+    return reportCoupon(t('discount'), compact(ray('end purpose')) + $input);
   }
 }
 
