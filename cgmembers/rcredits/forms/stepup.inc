@@ -21,7 +21,7 @@ function formStepUp($form, &$sta, $args = '') {
   $subtext = t('<p>Support your favorite causes by paying a little extra on your %PROJECT purchases.</p><p>Choose organizations from the list below and/or add your own choices. Type a dollar amount or percentage to add to each purchase &mdash; to be donated to that organization. And a maximum donation per transaction, if any.</p><p>If you would like to see your nonprofit or project on this list, get %STEPUP_MIN people to write it in.</p>', '_a', atag('/community/invite', away()));
   
   $mine = 'r.from=:myid';
-  foreach (ray('amount portion extraMax') as $k) $set[] = "MAX(IF($mine, $k, NULL)) AS $k";
+  foreach (ray('amount portion extraMax') as $k) $set[] = "MAX(IF($mine, `$k`, NULL)) AS `$k`";
   $set = join(', ', $set);
   
   $sql = <<< X
@@ -127,7 +127,7 @@ function formStepUp_submit($form, &$sta) {
 
     $amts = ray($changeable, $pct ? 0 : $amt, $pct ? $amt / 100 : 0, $extraMax);
     $info = ray('payer payerType payeeType from to action', $myid, 'account', 'anyCompany', $myid, $uid, 'pay');
-    if ($res = db\get('id, amount, portion, extraMax', 'tx_rules', u\where($info) . ' AND IFNULL(end, :NOW+1) > :NOW', $info)) {
+    if ($res = db\get('id, amount, `portion`, extraMax', 'tx_rules', u\where($info) . ' AND IFNULL(end, :NOW+1) > :NOW', $info)) {
       if ($amts == just($changeable, $res)) continue; // no change; done with this organization
       db\update('tx_rules', ray('id end', $res['id'], time()), 'id'); // cancel the old rule, to start a new one
     }
