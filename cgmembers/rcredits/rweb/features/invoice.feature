@@ -24,7 +24,7 @@ Scenario: A member confirms request to charge another member
   | op     | who     | amount | goods      | purpose |*
   | charge | Bea Two | 100    | %FOR_GOODS | labor   |
   Then invoices:
-  | nvid | created | status      | amount | from | to   | for   |*
+  | nvid | created | status      | amount | payer | payee | for   |*
   |    1 | %today  | %TX_PENDING |    100 | .ZZB | .ZZA | labor |
   And we message "new invoice" to member ".ZZB" with subs:
   | otherName | amount | purpose |*
@@ -41,10 +41,10 @@ Scenario: A member confirms request to charge another member
   | op   | ret | nvid | amount | payer | payee | purpose | created |*
   | pay  |     |    1 |    100 | .ZZB  | .ZZA  | labor   | %today  |
   Then transactions:
-  | xid | created | amount | from | to   | purpose                | taking |*
+  | xid | created | amount | payer | payee | purpose                | taking |*
   |   1 | %today  |    100 | .ZZB | .ZZA | labor (%PROJECT inv#1)  | 0      |
   And invoices:
-  | nvid | created | status | amount | from | to   | for   |*
+  | nvid | created | status | amount | payer | payee | for   |*
   |    1 | %today  | 1      |    100 | .ZZB | .ZZA | labor |
   And balances:
   | uid  | balance |*
@@ -57,7 +57,7 @@ Scenario: A member confirms request to charge another member who has a bank acco
   | op     | who     | amount | goods      | purpose |*
   | charge | Our Pub | 100    | %FOR_GOODS | stuff   |
   Then invoices:
-  | nvid | created | status      | amount | from | to   | for   |*
+  | nvid | created | status      | amount | payer | payee | for   |*
   |    1 | %today  | %TX_PENDING |    100 | .ZZC | .ZZA | stuff |
   And we message "new invoice" to member ".ZZC" with subs:
   | otherName | amount | purpose |*
@@ -68,7 +68,7 @@ Scenario: A member confirms request to charge a not-yet member
   | op     | who      | amount | goods          | purpose |*
   | charge | Dee Four | 100    | %FOR_GOODS     | labor   |
   Then invoices:
-  | nvid | created | status      | amount | from | to   | for   |*
+  | nvid | created | status      | amount | payer | payee | for   |*
   |    1 | %today  | %TX_PENDING |    100 | .ZZD | .ZZA | labor |
   And we message "new invoice" to member ".ZZD" with subs:
   | otherName | amount | purpose |*
@@ -85,7 +85,7 @@ Scenario: A member confirms request to charge a not-yet member
   | op   | ret | nvid | amount | payer | payee | purpose | created |*
   | pay  |     |    1 |    100 | .ZZD  | .ZZA  | labor   | %today  |
   Then invoices:
-  | nvid | created | status       | amount | from | to   | for   |*
+  | nvid | created | status       | amount | payer | payee | for   |*
   |    1 | %today  | %TX_APPROVED |    100 | .ZZD | .ZZA | labor |
   And we say "status": "finish signup|when funded"
   
@@ -97,7 +97,7 @@ Scenario: A member denies an invoice
   | op   | ret | nvid | amount | payer | payee | purpose | created | whyNot |*
   | deny |     |    1 |    100 | .ZZB  | .ZZA  | labor   | %today  | broke  |
   Then invoices:
-  | nvid | created | status     | amount | from | to   | for   |*
+  | nvid | created | status     | amount | payer | payee | for   |*
   |    1 | %today  | %TX_DENIED |    100 | .ZZB | .ZZA | labor |
   And we notice "invoice denied" to member ".ZZA" with subs:
   | payerName | created | amount | purpose | reason |*
@@ -116,7 +116,7 @@ Scenario: A member approves an invoice with insufficient funds
   | op   | ret | nvid | amount | payer | payee | purpose | created | whyNot |*
   | pay  |     |    1 |    300 | .ZZB  | .ZZA  | labor   | %today  |        |
   Then invoices:
-  | nvid | created | status       | amount | from | to   | for   |*
+  | nvid | created | status       | amount | payer | payee | for   |*
   |    1 | %today  | %TX_APPROVED |    300 | .ZZB | .ZZA | labor |
   And we say "status": "short invoice|when funded|how to fund" with subs:
   | short | payeeName | nvid |*
@@ -138,7 +138,7 @@ Scenario: A member approves invoices forevermore
   | op   | ret | nvid | amount | payer | payee | purpose | created | whyNot | always |*
   | pay  |     |    1 |    300 | .ZZB  | .ZZA  | labor   | %today  |        |      1 |
   Then invoices:
-  | nvid | created | status       | amount | from | to   | for   |*
+  | nvid | created | status       | amount | payer | payee | for   |*
   |    1 | %today  | %TX_APPROVED |    300 | .ZZB | .ZZA | labor |
   And relations:
   | main | agent | flags            |*
@@ -152,10 +152,10 @@ Scenario: A member approves an invoice to a trusting customer
   | op     | who     | amount | goods      | purpose |*
   | charge | Bea Two | 100    | %FOR_GOODS | labor   |
   Then transactions:
-  | xid | created | amount | from | to   | purpose                | taking |*
+  | xid | created | amount | payer | payee | purpose                | taking |*
   |   1 | %today  |    100 | .ZZB | .ZZA | labor (%PROJECT inv#1)  | 0      |
   And invoices:
-  | nvid | created | status | amount | from | to   | for   |*
+  | nvid | created | status | amount | payer | payee | for   |*
   |    1 | %today  | 1      |    100 | .ZZB | .ZZA | labor |
   And balances:
   | uid  | balance |*

@@ -74,9 +74,9 @@ X;
 
       $sql = <<< X
         UPDATE r_recurs r LEFT JOIN (
-          SELECT for2 AS purpose, recursId FROM txs ORDER BY xid
+          SELECT for2 AS `purpose`, recursId FROM txs ORDER BY xid
         )  t ON t.recursId=r.id
-        SET r.purpose=IF(r.payee=26742000000002, 'donation', t.purpose)
+        SET r.`purpose`=IF(r.payee=26742000000002, 'donation', t.`purpose`)
 X;
       $this->execute($sql);
     }
@@ -86,7 +86,7 @@ X;
       $this->execute('DROP VIEW txs');
       $this->execute('ALTER TABLE r_invoices DROP COLUMN recursId');
       $this->execute('ALTER TABLE tx_hdrs_all DROP COLUMN recursId');
-      $this->execute('ALTER TABLE r_recurs DROP COLUMN purpose');
+      $this->execute('ALTER TABLE r_recurs DROP COLUMN `purpose`');
       $this->execute('DROP VIEW tx_hdrs');
       $this->execute('CREATE VIEW tx_hdrs AS SELECT * FROM tx_hdrs_all WHERE deleted IS NULL');
     }

@@ -10,7 +10,7 @@ Setup:
   | .ZZB | Bea Two  | 2 B St. | Btown | PA    | 01002 | US      | 2 B, B, BC | ok,confirmed,cAdmin |         |  -400 |
   | .ZZC | Cor Pub  | 3 C St. | Ctown | CT    | 03000 | US      | 3 C, C, CT | ok,co,confirmed     | hasBank |     0 |
   And transactions:
-  | xid | created   | amount | from | to   | purpose |*
+  | xid | created   | amount | payer | payee | purpose |*
   |   1 | %today-4d |    231 | .ZZB | .ZZC | food    |
 
 Scenario: A member company cashes out monthly

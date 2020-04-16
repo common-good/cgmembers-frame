@@ -7,7 +7,7 @@ use CG\Util as u;
 use CG\Db as db;
 
 define('POST_FLDS', 'type item details cat exchange emergency radius end private'); // db fields other than contact info
-define('CONTACT_FLDS', 'displayName fullName address city state zip phone email method'); // db contact fields
+define('CONTACT_FLDS', 'fullName displayName address city state zip phone email method'); // db contact fields
 define('MESSAGE_FLDS', 'message postid sender'); // db message fields
 define('TOP_FLDS', 'locus radius latitude longitude zip'); // fields used for filtering list
 define('POST_INPUT_FLDS', 'cat item private details exchange emergency radius end type'); // post input fields
@@ -171,6 +171,7 @@ function postList($type, $lat, $lon, $zip, $radius) {
   $isMyPid = 'pid=:myPid';
   $postRadius = 'IFNULL(s.radius, 0)';
   $noPosterGeo = '(latitude=0 AND longitude=0)';
+  $admin = admin($zip) ? 1 : 0;
   
   $zipIrrelevant = ($mya and $mya->admin) ? 1 : 0;
   $visible = $zipIrrelevant ? 1 
@@ -178,23 +179,27 @@ function postList($type, $lat, $lon, $zip, $radius) {
   $visible = "($visible OR (NOT s.private AND s.confirmed))";
 
   $sql = <<<X
-    SELECT IF ($noPosterGeo, 0, $distance) AS dist, s.postid, c.cat, s.item, s.details, s.emergency, $isMyPid AS mine
+    SELECT IF ($noPosterGeo, 0, $distance) AS dist, s.postid, c.cat, s.item, s.details, s.emergency, $isMyPid AS mine,
+      LEAST(IF($postRadius=0, 99999, s.radius), :radius) AS least, $postRadius AS postRadius
     FROM posts s
     LEFT JOIN post_cats c ON c.id=s.cat
     LEFT JOIN people p USING (pid)
     WHERE s.type=:type
       AND s.created <= :NOW
       AND IFNULL(s.end, :NOW) >= :NOW
-      AND ((:type='tip' AND $postRadius>0) OR
+      AND (
+        $admin OR
+        (:type='tip' AND $postRadius>0) OR
         IF($noPosterGeo OR (:lat=0 AND :lon=0), 
           MID(p.zip,1,3) = MID(:zip,1,3) OR $zipIrrelevant, 
           $distance < LEAST(IF($postRadius=0, 99999, s.radius), :radius)
-        ))
+        )
+      )
       AND $visible
     ORDER BY s.cat,s.created DESC
 X;
 
-///     debug(u\showq($sql, compact(ray('type lat lon zip radius'))));
+///     debug(showq($sql, compact(ray('type lat lon zip radius'))));
   $q = db\q($sql, compact(ray('type lat lon zip radius myPid')));
   foreach (ray(t('category item details')) as $k) $rows[] = "<div class=\"cell k-$k\">" . ucfirst($k) . '</div>';
   $rows = ['<div class="thead"><div class="row">' . join('', $rows) . '</div></div>'];
@@ -335,8 +340,7 @@ X;
       $submit = t('Send Message');
     } else $email = $message = $submit = NULL;
 
-    $type = hidFld($type);
-    $pid = $private = NULL;
+    $type = $pid = $private = NULL;
   // Keep in mind: the person you are contacting is almost certainly a neighbor, but might be a scoundrel pretending to live nearby.
   }
   $postid = hidFld($postid);
@@ -373,8 +377,8 @@ function getWho($args) {
   
   $frm = hidFld('who');
   $title = t('Your Information');
-  $subtext = t('<p>This information is required only the first time you post or contact someone.</p><p>Only your "display name" (first name or nickname) is shown to others. Your full name, address, email, and phone are not shown to anyone unless you choose "phone" or "text" as your preferred contact method (then just your phone number is displayed when someone asks to contact you about a specific post).</p>');
-  $displayName = textFld(REQ . t('Display Name:'), [t('Your first name or nickname'), t('To be shown to publicly with your posts')]);
+  $subtext = t('<p>This information is required only the first time you post or contact someone.</p><p>Only your "display name" (first name or nickname) is shown to others. Your full name, street address, email, and phone are not shown to anyone unless you choose "phone" or "text" as your preferred contact method (then just your phone number is displayed when someone asks to contact you about a specific post). Your city and state may also be shown.</p>');
+  $displayName = textFld(REQ . t('Display Name:'), [t('Your first name or nickname'), t('To be shown to publicly with your posts, so your neighbors will recognize you.')]);
   $method = w\radiosFld(REQ . t('Preferred Contact:'), t('The "phone" and "text" options apply only when a %PROJECT member contacts you (because we have verified the identity only of members). Otherwise you will receive replies by email.'), '', ray(METHOD_OPTS));
 
   $midtext = t('And now some COVID-19 self-assessment questions for 2020:');
@@ -404,7 +408,7 @@ function confirm($op, $thing, $code) {
     
     if ($op == 'cancel') {
       $thing = t('cancelation'); // confirming cancelation not post
-      db\update('posts', ray('postid end', $postid, time()), 'postid');
+      db\update('posts', ray('postid end', $postid, now()), 'postid');
       return go($successUrl, t('Success! Your post is canceled.', compact('thing')));
       
     } elseif ($op == 'confirm') {
@@ -497,19 +501,18 @@ function formPosts_validate($form, &$sta) {
  */
 function formPosts_submit($form, &$sta) {
   $input = just(POST_FLDS . ' frm pid days washes health ' . MESSAGE_FLDS . ' ' . CONTACT_FLDS, $sta['input'], NULL);
-  extract(just('frm email type method pid days washes health zip', $input), NULL);
+  extract(just('frm email type message method pid days washes health zip', $input), NULL);
   extract(frmBools($frm)); // make code a little easier to read
 
   if ($frmTabs) return; // nothing to do (happens only when javascript fails)
 
   if ($frmTop) return go(codedUrl('top', just(TOP_FLDS, $sta['input'])));
   
-  if ($frmPost or $frmMessage) { // get pid for this post; if none, carry it through to the "who" form
-    $pid = db\get('pid', 'people', compact('email'));
-    if (!$pid) return w\go(codedUrl('who', $input));
+  if ($frmPost or $frmMessage) { // get pid for this post or message; if none, carry it through to the "who" form
+    if (!$pid = db\get('pid', 'people', compact('email'))) return w\go(codedUrl('who', $input));
     if (!db\get('confirmed', 'people', compact('pid'))) { // never confirmed first thing
-      oldEmailLink($pid);
-      return say(t('You must confirm your first post or message before you can complete this one. We are sending you another confirmation email now. Leave this window open, click the link in the email, then come back here and refresh the screen to re-submit this. If you need help, <%a>contact us</a>!', '_a', atag(PROMO_URL . '/about-us/contact-us/')), 'err');
+      say(t('NOTE: You also have a previous post or message that you never confirmed. If you can\'t find it, look in your Spam folder.'));
+//      if (oldEmailLink($pid)) return say(t('You must confirm your first post or message before you can complete this one. We are sending you another confirmation email now. Leave this window open, click the link in the email, then come back here and refresh the screen to re-submit this. If you need help, <%a>contact us</a>!', '_a', atag(PROMO_URL . '/about-us/contact-us/')), 'err');
     }
   } elseif ($frmWho) {  // carrying info about post or message, as well as contact info
     $contactInfo = just(CONTACT_FLDS, $input, NULL);
@@ -518,13 +521,13 @@ function formPosts_submit($form, &$sta) {
 
     u\EXPECT(!db\get('pid', 'people', compact('email')), 'duplicate people email in post submit');
     $pid = db\insert('people', compact(ray('method health')) + $contactInfo, 'pid');
-    if ($type) $frmPost = TRUE; else $frmMessage = TRUE; // now fall through to process the earlier data passed through by who form
+    if ($message) $frmMessage = TRUE; else $frmPost = TRUE; // now fall through to process the earlier data passed through by who form
   }
 
   // got pid, now process post or message
   $confirmed = (int) (vip('pid') == $pid and vip('confirmed') and (vip('email') == $email or $frmEditpost)); // get confirmation status of person posting, editposting, or messaging -- vip('confirmed') is for DEV and double-check
   if (admin(vip('zip'))) $confirmed = 1;
-  $created = time();
+  $created = now();
   $err = FALSE;
   
   if ($frmPost or $frmEditpost) {
@@ -549,7 +552,7 @@ function formPosts_submit($form, &$sta) {
         say(t('Your post is ended.'));
       } else say(tr('post will appear', 'when', $private ? t('when it is approved') : t('immediately')));
     } else emailLink('post', compact('postid'), $created, $type, $item, $pid);
-    if ($frmEditpost and $input['message']) $frmMessage = TRUE;
+    if ($frmEditpost and $input['message']) $frmMessage = TRUE; // handle message from admin
   }
 
   if ($frmMessage) {
@@ -599,22 +602,21 @@ function emailLink($thing, $idSub, $created, $type, $item, $pid) {
 
 /**
  * Resend the first confirmation link for the given unconfirmed person.
- */
+ *//*
 function oldEmailLink($pid) {
   if ($res = db\get('postid, created, type, item', 'posts', ray('pid confirmed', $pid, 0))) {
-    extract($res);
+    extract(just('postid created type item', $res, NULL));
     list ($thing, $idSub) = ['post', compact('postid')];
   } elseif ($res = db\get('id, created, postid', 'messages', ray('sender confirmed', $pid, 0))) {
-    extract($res);
+    extract(just('postid created', $res, NULL));
     list ($thing, $idSub) = ['message', compact('id')];
     extract(db\get('type, item', 'posts', compact('postid')));
   } else {
     r\tellAdmin(t('Cannot send old email about people pid=') . $pid);
     return softErr(t('There is an unusual problem with your data. An administrator is looking into it. We apologize for the inconvenience. Your post or message did not succeed.'));
   }
-  extract(just('created type item', $res, NULL));
   emailLink($thing, $idSub, $created, $type, $item, $pid);
-}
+}*/
 
 /**
  * Return a code to confirm, cancel, or edit the given post or message.

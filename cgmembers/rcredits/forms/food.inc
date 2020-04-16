@@ -137,7 +137,7 @@ function formFood_submit($form, &$sta) {
     $msg = 'gift successful';
     $period = r\periodDesc($period);
     if ($mya->payApproved($payee, $amount, "$purpose ($period)", FOR_GOODS, ['recurs' => 1], $recursId)) {
-      r\notify($mya->id, 'recur pay', ray('amount period to purpose', u\fmtAmt($amount), $period, t('the Food Fund'), $purpose));
+      r\notify($mya->id, 'recur pay', ray('amount period payee purpose', u\fmtAmt($amount), $period, t('the Food Fund'), $purpose));
     } else $msg .= '|gift transfer later';
     say($msg);
   }

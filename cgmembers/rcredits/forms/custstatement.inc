@@ -126,13 +126,13 @@ function getCustTxs($aUids, $bUids, $starting, $ending) {
     SELECT DISTINCT CONCAT('tx #', xid) AS tid,
       IF(uid1 IN (:aUids), -amt, amt) AS paid,
       '' AS invoiced, created, 
-      (d.status=:DS_OPEN) AS disputed, IF(uid1 IN (:aUids), for1, for2) AS purpose
+      (d.status=:DS_OPEN) AS disputed, IF(uid1 IN (:aUids), for1, for2) AS `purpose`
     FROM txs_prime LEFT JOIN tx_disputes d USING(xid)
     WHERE (uid1 IN (:aUids) AND uid2 IN (:bUids))
       OR (uid2 IN (:aUids) AND uid1 IN (:bUids))
     UNION ALL
     SELECT CONCAT('inv #', nvid) AS tid, '' AS paid, IF (payee IN (:aUids), amount, -amount) AS invoiced,
-      inv.created AS created, :IS_DISPUTED AS disputed, inv.purpose AS purpose
+      inv.created AS created, :IS_DISPUTED AS disputed, inv.`purpose` AS `purpose`
     FROM r_invoices inv
     WHERE (
       (payer IN (:aUids) AND payee IN (:bUids)) 

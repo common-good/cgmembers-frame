@@ -58,7 +58,6 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     MAKE coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
- *     MAKE coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
  *     MAKE flow AMemberOverdrawsWithNotEnoughToDrawOn
  *     MAKE food AMemberMakesAFoodDonation
  *     MAKE food AMemberMakesAFoodDonationWithoutAdequateFunds
@@ -111,6 +110,7 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE signup AMemberChoosesProxies
  *     MAKE signup AMemberSetsCalling
  *     MAKE signup AMemberSetsBacking
+ *     MAKE signup AMemberChoosesToStepUp
  *     MAKE signup AMemberInvites
  *     MAKE signup AMemberConfirmsSocialSecurityNumber
  *     MAKE transact AMemberAsksToChargeAnotherMemberForGoods
@@ -133,7 +133,6 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE contact AMemberUpdatesToADifferentName
  *     MAKE coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsAPercentageDiscountCoupon
- *     MAKE coupons AMemberRedeemsARestrictedDiscountCoupon
  *     MAKE coupons AMemberRedeemsADiscountCouponInDribsAndDrabs
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
  *     MAKE coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
@@ -147,6 +146,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE invoice AMemberApprovesInvoicesForevermore
  *     MAKE invoice AMemberApprovesAnInvoiceToATrustingCustomer
  *     MAKE joint AMemberRequestsAJointAccount
+ *     MAKE pale AMemberMakesATransactionThatTriggersPayingALittleExtra
  *     MAKE paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     MAKE paybutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
  *     MAKE signin AMemberSignsInWithUsernameOnTheMemberSite
@@ -160,6 +160,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE signup AMemberRegistersBadName
  *     MAKE signup AMemberRegistersBadZip
  *     MAKE signup AMemberRegistersAgain
+ *     MAKE stepup AMembersRulesComeIntoPlay
  *     MAKE transact AMemberConfirmsRequestToChargeAnotherMember
  *     MAKE transact AMemberConfirmsRequestToPayAnotherMember
  *     MAKE transact AMemberConfirmsRequestToPayAnotherMemberALot
@@ -230,6 +231,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE invest Setup
  *     MAKE invoice Setup
  *     MAKE joint Setup
+ *     MAKE pale Setup
  *     MAKE partnersignup Setup
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
@@ -251,8 +253,10 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     TEST signup AMemberSignsUp
  *     TEST signup AMemberVerifiesID
  *     TEST signup AMemberGivesContactInfo
+ *     MAKE signup AMemberChoosesToStepUp
  *     TEST signup ANewbieRegistersWithNoCase
  *     MAKE statement Setup
+ *     MAKE stepup Setup
  *     MAKE summary Setup
  *     MAKE transact Setup
  *     MAKE transactions Setup
@@ -322,6 +326,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
  *     TEST joint AMemberRequestsAJointAccount
  *     TEST joint AMemberRequestsTwoJoinsAtOnce
+ *     TEST pale AMemberMakesATransactionThatTriggersPayingALittleExtra
  *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
  *     TEST posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  *     TEST relations AMemberAddsARelation
@@ -330,7 +335,6 @@ function transactions($list) {return t\transactions($list);}
  *     TEST transact AMemberConfirmsRequestToChargeAnotherMember
  *     TEST transact AMemberConfirmsRequestToPayAnotherMember
  *     TEST transact AMemberConfirmsRequestToPayAMemberCompany
- *     TEST transact ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
  *     TEST transact AMemberPaysAnotherMemberRepeatedly
  */
 function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $index, $subs);}
@@ -399,9 +403,12 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST signup AMemberChoosesProxies
  *     TEST signup AMemberSetsCalling
  *     TEST signup AMemberSetsBacking
+ *     TEST signup AMemberChoosesToStepUp
  *     TEST signup AMemberInvites
  *     TEST signup AMemberRegistersBadEmail
  *     TEST signup AMemberRegistersBadZip
+ *     TEST stepup AMemberChoosesToStepUp
+ *     TEST transact ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
  */
 function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
 
@@ -463,6 +470,7 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST signup AMemberChoosesProxies
  *     TEST signup AMemberSetsCalling
  *     TEST signup AMemberSetsBacking
+ *     TEST signup AMemberChoosesToStepUp
  *     TEST signup AMemberConfirmsSocialSecurityNumber
  */
 function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
@@ -488,8 +496,6 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     TEST coupons AMemberRedeemsAPercentageDiscountCoupon
- *     TEST coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
- *     TEST coupons AMemberRedeemsARestrictedDiscountCoupon
  *     TEST coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  *     TEST custstatement ACompanyLooksAtACustomerStatement
  *     TEST demographics ACompanyAgentRunsTheDemographicsQuery
@@ -564,8 +570,10 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST signupco ACompanySuppliesCompanyInformation
  *     TEST signupco ACompanyAccountManagerCreatesADiscount
  *     TEST signup AMemberVerifiesID
+ *     TEST signup AMemberChoosesToStepUp
  *     TEST signup AMemberInvites
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
+ *     TEST stepup AMemberChoosesToStepUp
  *     TEST summary AMemberClicksTheSummaryTab
  *     TEST summary AMemberClicksTheSummaryTabWithRoundups
  *     TEST summary AnAgentClicksTheSummaryTabWithoutPermissionToManage
@@ -584,7 +592,6 @@ function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWit
  *     TEST posts SomeoneSubmitsALocus
  *     TEST posts SomeoneRepliesToAnOffer
  *     TEST preferences AMemberVisitsThePreferencesPage
- *     TEST preferences ACompanyAgentVisitsThePreferencesPage
  *     TEST relations ItsComplicated
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST transactions AMemberLooksAtTransactionsForThePastYear
@@ -606,6 +613,8 @@ function with($content) {return weShow($content);}
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     TEST posts SomeoneVisitsThePostsPage
  *     TEST posts SomeoneViewsTheDetailsOfATip
+ *     TEST preferences AMemberVisitsThePreferencesPage
+ *     TEST preferences ACompanyAgentVisitsThePreferencesPage
  *     TEST queries AMemberVisitsTheCommunityDataPage
  *     TEST relations MemberHasAnEmployer
  *     TEST relations MemberCompanyHasRelations
@@ -703,7 +712,6 @@ function relations($relations) {return t\relations($relations);}
  *     TEST coupons AMemberRedeemsAGiftCoupon
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     TEST coupons AMemberRedeemsAPercentageDiscountCoupon
- *     TEST coupons AMemberRedeemsARestrictedDiscountCoupon
  *     TEST coupons AMemberRedeemsADiscountCouponInDribsAndDrabs
  *     TEST coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
  *     TEST coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
@@ -722,6 +730,7 @@ function relations($relations) {return t\relations($relations);}
  *     TEST joint Setup
  *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     TEST joint AJoinedAccountMemberUnjoinsTheAccount
+ *     TEST pale AMemberMakesATransactionThatTriggersPayingALittleExtra
  *     BOTH queries Setup
  *     TEST statement Setup
  *     TEST summary Setup
@@ -766,8 +775,6 @@ function usd($list) {return t\usd($list);}
  *     MAKE coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsAPercentageDiscountCoupon
- *     MAKE coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
- *     MAKE coupons AMemberRedeemsARestrictedDiscountCoupon
  *     MAKE coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  *     MAKE demographics ACompanyAgentRunsTheDemographicsQuery
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
@@ -834,7 +841,9 @@ function usd($list) {return t\usd($list);}
  *     MAKE signupco ACompanySuppliesCompanyInformation
  *     MAKE signup ANewbieVisitsTheIndividualSignupPage
  *     MAKE signup AMemberSignsUp
+ *     MAKE signup AMemberChoosesToStepUp
  *     MAKE signup AMemberConfirmsSocialSecurityNumber
+ *     MAKE stepup AMemberChoosesToStepUp
  *     MAKE summary AMemberClicksTheSummaryTab
  *     MAKE summary AMemberClicksTheSummaryTabWithRoundups
  *     MAKE summary AnAgentClicksTheSummaryTabWithoutPermissionToManage
@@ -1133,7 +1142,7 @@ function statisticsGetSet($time) {
  * members have: (ARG)
  *
  * in: MAKE bank ASlaveMemberRequestsATransfer
- *     BOTH coupons AMemberCompanyCreatesAGiftCoupon
+ *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     BOTH coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
@@ -1589,16 +1598,11 @@ function someonePostsToPageWith($page, $args) {return t\postToPage($page, $args)
 /**
  * coupons: (ARG)
  *
- * in: TEST coupons AMemberCompanyCreatesAGiftCoupon
- *     MAKE coupons AMemberRedeemsAGiftCoupon
- *     TEST coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
+ * in: TEST coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsAPercentageDiscountCoupon
- *     TEST coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
- *     MAKE coupons AMemberRedeemsARestrictedDiscountCoupon
  *     MAKE coupons AMemberRedeemsADiscountCouponInDribsAndDrabs
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
- *     MAKE coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  */
 function coupons($list) {return t\coupons($list);}
 
@@ -1624,9 +1628,9 @@ function weScripWithSubs($script, $args = []) {
  *
  * in: MAKE balancesheet Setup
  *     TEST community CronCalculatesTheStatistics
+ *     TEST coupons AMemberCompanyCreatesAGiftCoupon
+ *     MAKE coupons AMemberRedeemsAGiftCoupon
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
- *     TEST coupons AMemberCompanyCreatesARestrictedDollarAmountDiscountCoupon
- *     BOTH coupons AMemberRedeemsARestrictedDiscountCoupon
  *     MAKE custstatement AStatementGoesOntoMultiplePages
  *     MAKE demographics Setup
  *     TEST food AMemberMakesAFoodDonation
@@ -1648,6 +1652,7 @@ function weScripWithSubs($script, $args = []) {
  *     BOTH invest TheInvestmentClubIssuesDividends
  *     BOTH invest MembersRateAProposedLoan
  *     BOTH invest TheClubMakesALoan
+ *     TEST pale AMemberMakesATransactionThatTriggersPayingALittleExtra
  *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
  *     BOTH posts SomeoneConfirmsAnOfferOnceTwice
  *     MAKE posts SomeoneViewsTheDetailsOfAnOffer
@@ -1661,7 +1666,10 @@ function weScripWithSubs($script, $args = []) {
  *     TEST showrecurs AMemberStopsAnAutopayment
  *     TEST signupco ACompanyAccountManagerCreatesADiscount
  *     TEST signup AMemberSignsUp
+ *     TEST signup AMemberSetsCalling
  *     TEST signup AMemberInvites
+ *     TEST stepup AMemberChoosesToStepUp
+ *     BOTH stepup AMembersRulesComeIntoPlay
  *     TEST transact AMemberPaysAnotherMemberRepeatedly
  *     TEST transactions AdminReversesABankTransfer
  */
@@ -1878,6 +1886,7 @@ function stepsLeft($left) {global $mya; return memberStepsLeft($mya->id, $left);
  *     TEST signup AMemberChoosesProxies
  *     TEST signup AMemberSetsCalling
  *     TEST signup AMemberSetsBacking
+ *     TEST signup AMemberChoosesToStepUp
  *     TEST signup AMemberInvites
  *     MAKE signup AMemberConfirmsSocialSecurityNumber
  */
@@ -1917,6 +1926,7 @@ function memberStepsLeft($id, $left0) {
  *     MAKE signup AMemberChoosesProxies
  *     MAKE signup AMemberSetsCalling
  *     MAKE signup AMemberSetsBacking
+ *     MAKE signup AMemberChoosesToStepUp
  *     MAKE signup AMemberInvites
  */
 function memberHasStepsDone($id, $task, $steps) {
@@ -2021,4 +2031,54 @@ function someoneVisitsWhereCodeIs($page, $code, $values = '', $confirmed = FALSE
 function someoneConfirmsPostidCreatedWith($page, $postid, $created, $values) {
   $code[] = compact(ray('postid created'));
   someoneVisitsWhereCodeIs($page, $code, $values, TRUE);
+}
+
+/**
+ * txRules: (ARG)
+ *
+ * in: MAKE coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
+ *     MAKE pale AMemberMakesATransactionThatTriggersPayingALittleExtra
+ */
+function txRules($list) {return t\txRules($list);}
+
+/**
+ * member (ARG) has (ARG) stepup rules
+ *
+ * in: MAKE signup AMemberChoosesToStepUp
+ *     MAKE stepup AMemberChoosesToStepUp
+ */
+function memberHasStepupRules($id, $count) {
+  global $testOnly; if ($testOnly) return FALSE; // but this would be easy to handle
+  
+  $uid = t\uid($id);
+  for ($i = 0; $i < $count; $i++) {
+    $from = CANONIC_ACCTS + $i; // arbitrary account number (doesn't have to exist at this time)
+    $info = ray('amount portion amtMax purpose start', 1, 0, NULL, 'stepup', now());
+    $info += ray('payer payerType payeeType from to action', $from, REF_ACCOUNT, REF_ANYCO, $from, $uid, ACT_SURTX);
+    db\insert('tx_rules', $info);
+  }
+  return TRUE;
+}
+
+/**
+ * member (ARG) steps up with: (ARG)
+ *
+ * in: MAKE stepup AMemberChoosesToStepUp
+ */
+function memberStepsUpWith($id, $rows) {
+  global $testOnly; if ($testOnly) return FALSE;
+  $myid = t\uid($id);
+  $i = 0; // user-supplied org field counter
+  foreach ($rows as $row) {
+    list ($org, $amt, $max) = $row;
+    if (u\starts($org, '.')) {
+      $uid = t\uid($org);
+      $org = '';
+    } else {$uid = $i; $i++;} // not a prepopulated choice
+    $uids[] = $uid;
+    foreach (ray('org amt max') as $k) if ($k != 'org' or $$k) $vs["$k$uid"] = $$k;
+  }
+  $vs['uids'] = join(' ', $uids);
+  $er = u\urlify(http_build_query($vs));
+  return t\completeForm($id, "settings/stepup/er=$er", [], TRUE);
 }

@@ -14,13 +14,17 @@ use CG\Admin as a;
 use CG\Cron as cr;
 use CG\Web as w;
 
+const T_BALANCE_FLDS = 'uid balance floor savingsAdd saveWeekly minimum';
+const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid';
+const SPECIAL_IDS = 'ctty crumb round cgf bank-in bank-out';
+const RLESS_TNMS = 'signup posts people post_cats messages'; // test tables with no "r_" prefix
+const NULL_FLDS = 'payer payee useMax amtMax template end code rule';
+
 global $base_path;
 define('BASE_PATH', $base_path);
-define('T_BALANCE_FLDS', 'uid balance floor savingsAdd saveWeekly minimum');
-define('T_ID_FLDS', 'uid jid inviter invitee person proxy helper fromId payer payee from to fromAgent toAgent partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid');
-define('SPECIAL_IDS', 'ctty crumb round cgf bank-in bank-out');
 define('DOCODE_FLNM', LOG_DIR . 'docode.txt');
 define('SAME_TIME', 60 * 20); // number of seconds that make no difference in "same time"
+
 // see R_DATE_FLDS in defs.inc
 
 /**
@@ -31,15 +35,17 @@ define('SAME_TIME', 60 * 20); // number of seconds that make no difference in "s
 function fixData(&$info, $direct = FALSE) {
   global $testOnly, $rUrl, $testVars;
 
-  $fields = key($info) . ' email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method'; // first key is probably an ID field, so keep it at the front
-  
+  $fields = key($info) . ' email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method companyOptions'; // first key is probably an ID field, so keep it at the front
+
   if (@$testVars) foreach ($info as $k => $v) if (mb_strpos($v, '@') !== FALSE) {
     foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", $var, $v);
   }
+  foreach (ray(NULL_FLDS) as $k) if (isset($info[$k]) and empty($info[$k])) $info[$k] = NULL;
   extract(just($fields, $info));
   
   if (isset($cat)) $cat = db\get('id', 'post_cats', compact('cat'));
   if (isset($method) and !$testOnly) $method = array_search($method, ray('email phone text'));
+  if (isset($companyOptions)) $companyOptions = ray($companyOptions);
 
   if (@$who) $who = t\fullQid($who);
   foreach (ray('flags adminable') as $k) if (isset($$k)) $$k = t\fixFlags($$k);
@@ -67,11 +73,6 @@ function fixData(&$info, $direct = FALSE) {
   if (!empty($boxId)) {
     $boxId = db\get('id', 'r_boxes', '`code`=:boxId', ['boxId'=>$boxId]);
   }
-
-	foreach (ray('from:payer,to:payee,fromAgent:payerAgent,toAgent:payeeAgent') as $k => $k2) if (isset($info[$k])) {
-		$info[$k2] = $info[$k];
-		unset($info[$k]);
-	}
 
   foreach (just(T_ID_FLDS, $info) as $k => $v) {
     if (preg_match('/^(\.|[A-Z]{3})[A-Z]{3}$/', $v) or in($v, SPECIAL_IDS)) {
@@ -103,13 +104,13 @@ function fixFlags($flags) {
   foreach (ray($flags) as $one) if ($one) $res |= u\bit(u\consta('b', $one));
 // NO! fails for r_txs and r_relations flags  if ($res & u\bit(B_OK)) $res |= u\bit(B_MEMBER);
   return $res;
-}    
+}
 
 /**
  * Allow abbreviated email address like "a@" meaning a@example.com. Also avoid weird characters.
  */
 function fixEmail(&$email) {
-  if (substr(@$email, -1, 1) == '@') $email .= EMAILX; 
+  if (substr(@$email, -1, 1) == '@') $email .= EMAILX;
   return plain($email);
 }
 
@@ -135,8 +136,8 @@ function doThing($info, $thing, $key = 'id') {
   global $testOnly;
 
   $table = $thing = strtolower($thing);
-  if (!u\starts($thing, 'tx_') and !u\starts($thing, 'x_') and !in($thing, 'signup posts people post_cats messages')) $table = 'r_' . $table;
-  if (!in($thing, 'usd coupated signup company people') and substr($thing, -1, 1) != 's') $table .= 's';
+  if (!preg_match('/^(tx|u|x)_.+/', $thing) and !in($thing, RLESS_TNMS)) $table = 'r_' . $table;
+  if (!in($thing, 'usd signup company people') and substr($thing, -1, 1) != 's') $table .= 's';
   if ($table == 'tx_hdrs') $key = 'xid';
 
 // NO!  if (@$info['id']) {$info['uid'] = $info['id']; unset($info['id']);}
@@ -164,7 +165,8 @@ function coupons($list) {return doRecords($list, 'Coupons');}
 function stats($list) {return doRecords($list, 'Stats');}
 function txHdrs($list) {return doRecords($list, 'Tx_Hdrs');}
 function txEntries($list) {return doRecords($list, 'Tx_Entries');}
-function coupatedRecords($list) {return doRecords($list, 'Coupated');}
+function txTemplates($list) {return doRecords($list, 'Tx_Templates');}
+function txRules($list) {return doRecords($list, 'Tx_Rules');}
 function recurs($list) {return doRecords($list, 'Recurs');}
 
 /**
@@ -182,7 +184,7 @@ function doBoxes($info = []) {
  * Set some defaults for users record before calling fixData.
  */
 //function preAccount(&$info) {}
-	
+
 /**
  * Fabricate a bogus account.
  * Minimum parameters: none
@@ -226,7 +228,7 @@ function doAccounts($info = []) {
   u\setDft($helper, t\uid('.AAB')); // everyone but .AAB should have a helper
 /**/  if ($helper === '') die(trace()); // set helper to zero if none, never blank
   u\setDft($last4bank, @substr(@$bankAccount, -4, 4));
-  
+
   if (u\getBit(@$flags, B_OK)) u\setBit($flags, B_MEMBER);
 
   $moneyFields = 'committed floor rewards'; // not minimum because NULL means not set, in Membership page
@@ -241,10 +243,10 @@ function doAccounts($info = []) {
 //  if (isset($flags) and isset($acctType) and $acctType !== CO_PERSONAL and $acctType != 'personal') $flags .= ',co';
 
 //  if (isset($risks)) $risks = getRisks($risks, K_ACCT_RISKS);
-  
+
   foreach (ray('acctType dw cc cc2') as $one) unset($info[$one]); // these are not real fields
   u\preray(@compact(ray('uid jid helper flags risks last4bank ' . $fixFields)), $info); // add in changed fields
-	
+
 //  fixData($info, TRUE);
 /*
   if ($testOnly) {
@@ -289,7 +291,7 @@ function doTxs($info, $thing) {
   $uidFlds = 'payer payee payerAgent payeeAgent';
   $testFlds = $uidFlds . ' for purpose payerFor payeeFor payerTid payeeTid risks type amount taking';
 //  $flags = 'taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding'; // These are flags that might appear
-  
+
   extract(just($hdrFlds . ' ' . $testFlds, $info, FALSE));
   if (!$reversesXid) $reversesXid = NULL;
   $for = $for ?: $purpose;
@@ -310,7 +312,7 @@ function doTxs($info, $thing) {
     foreach ($dfts as $k => $v) if ($$k === FALSE) $$k = $v;
     foreach (ray('payerAgent payeeAgent', $payer, $payee) as $k => $v) if (!$$k) $$k = $v;
   }
-  
+
   $hdr = $filter(compact(ray($hdrFlds)));
   $type = $type ?: ((r\isBank($payer) or r\isBank($payee)) ? E_BANK : E_PRIME);
 
@@ -320,6 +322,7 @@ function doTxs($info, $thing) {
     $e2 = $filter(ray('for2 uid2 agt2 tid2', $payeeFor, $payee, $payeeAgent, $payeeTid));
     u\preray(just('eid', $info), $hdr);
     $ray = $hdr + $filter(ray('type amt relType rel', $type, $amount, NULL, NULL)) + $e1 + $e2;
+    if (!isset($info['actorId'])) unset($ray['actorId']); // don't worry about this unless explicitly specified
     return verifyRecord('txs', $ray);
   } else {
     $e1 = $filter(ray($entryFlds, $xid, $type, 0-$amount, $payer, $payerAgent, $payerFor, $payerTid, NULL, NULL));
@@ -403,10 +406,10 @@ function doRelations($info) {
 
   if (@$draw) $agtA->setBit(B_DRAWS);
   foreach (ray(REL_FLAGS) as $k) if (@$$k) u\setBit($flags, $k);
-  
+
   foreach (ray('id agent num rCard ' . REL_FLAGS) as $k) unset($info[$k]);
   $info += @compact(ray('reid main other otherNum flags'));
-  
+
   if ($testOnly) {
     return verifyRecord('r_relations', $info);
   } else {
@@ -448,6 +451,43 @@ function doCompanyFlags($info) {
   return $a->update('coFlags', $res);
 }
 
+/*
+ * Temporary (we hope) record-maker for coupons.  It generates rules instead.
+ */
+function doCoupons($info, $thing, $key = 'coupid') {
+  global $testOnly;
+
+  $coupon = just('coupid fromId start   end   amount on  minimum useMax flags sponsor code  amtMax', $info,
+                 [ NULL, NULL,  now(),  NULL, 0,     '', 0,      NULL,  0,    NULL,   NULL, NULL ]);
+  $amount = $coupon['amount'];
+  list ($amount, $portion) = ($amount < 0) ? [0, -0.01 * $amount] : [$amount, 0];
+  $rule = array_filter([
+    'id' => $coupon['coupid'],
+    'payer' => NULL,
+    'payerType' => 'anybody',
+    'payee' => $coupon['fromId'],
+    'payeeType' => 'account',
+    'from' => (is_NULL($coupon['sponsor'])) ? $coupon['fromId'] : $coupon['sponsor'],
+    'to' => MATCH_PAYER,
+    'action' => ACT_SURTX,
+    'start' => $coupon['start'],
+    'end' => $coupon['end'],
+    'amount' => $amount,
+    'portion' => $portion,
+    'purpose' => $coupon['on'],
+    'minimum' => $coupon['minimum'],
+    'useMax' => $coupon['useMax'] == 0 ? NULL : $coupon['useMax'],
+    'amtMax' => $coupon['amtMax'],
+    'code' => $coupon['code'] 
+  ]);
+
+  if ($testOnly) {
+    return verifyRecord('tx_rules', $rule);
+  } else {
+    return db\insert('tx_rules', $rule, 'id');
+  }
+}
+
 /**
  * Return TRUE if the notice has been queued to member $id
  */
@@ -468,7 +508,7 @@ function notice($notice, $id, $subs = []) {
       $subs[$key] = u\fmtAmt($num, 's$' . $currency);
     }
   }
-  
+
   $map = ['&nbsp;'=>'', R_BULLET=>''];
   $message = strtr(strip_tags(tr($notice, @$subs)), $map);
   $sql = 'SELECT message FROM r_notices WHERE uid=:uid AND sent=:sent ORDER BY msgid DESC';
@@ -484,7 +524,7 @@ function notice($notice, $id, $subs = []) {
   }
 
   t\output('EXPECTED (but did not get) notice ' . pr($info + compact('message')));
-  return FALSE;  
+  return FALSE;
 }
 
 /**
@@ -504,7 +544,7 @@ function count($what, $count) {
 
 /**
  * Pretend the account has completed the given steps or see if it has.
- */ 
+ */
 function doneStep($id, $step) {
   global $testOnly;
   if (strpos($step, ' ')) {
@@ -516,7 +556,7 @@ function doneStep($id, $step) {
   if (!$a->stepsLeft and !$a->steps) $a->setTask($a->co ? 'co' : 'person');
 
   if (!$testOnly) $a->stepDone($step);
-  return $a->stepIsDone($step);  
+  return $a->stepIsDone($step);
 }
 
 /**
@@ -578,7 +618,7 @@ function doBalances($info) {
     }
     return TRUE;
   }
-    
+
   if (isset($info['balance'])) {
     $testXid -= 1;
     if (abs($info['balance']-$a->balance) >= 0.005) {
@@ -595,7 +635,7 @@ function doBalances($info) {
     if ($k == 'balance' or $k == 'uid') continue;
     $a->update($k, $v);
   }
-  
+
   // verify
   foreach ($info as $k => $v) {
     if ($v != '?' and $k != 'committed' and $uid > 0) if (t\badEq("db $k", $a->o($k), $v, $uid)) return FALSE;
@@ -613,7 +653,7 @@ function phoneField($field, $number) {
 function usdTransferCount($where = '1') {
 /**/  if (!isDEV or isPRODUCTION) die('usdTransferCount ' . DEV_ONLY_MSG);
   global $testOnly;
-  
+
   if($testOnly) {
     return db\count('r_usd', $where);
   } else {
@@ -634,7 +674,7 @@ function usdTransfers($txs) {
       if (!verifyRecord('r_usd', $tx)) return FALSE;
       continue;
     }
-    
+
     u\setDft($tx['channel'], $channel0);
     if ($err = u\badAmount($amount)) return t\output($err); // tested amount should not have commas or $ sign
     if (!$a = r\acct($payee)) return t\output('Bad payee: ' . @$payee);
@@ -668,9 +708,9 @@ function cronRuns($op) {
   global $testOnly; if(@$testOnly) return FALSE;
   global $cronOp; $cronOp = $op;
   include_once __DIR__ . '/rcron/rcron.inc';
-  
+
   $now = now();
-  
+
   if (u\starts($op, 'every')) {
     $period = strtolower(str_replace('every', '', $op));
     cr\often($period);
@@ -682,9 +722,9 @@ function cronRuns($op) {
 ///  if (strftime('%H') < R_DAILY_HOUR) die('Developer: For testing between midnight and :R_DAILY_HOUR:00, you need to temporarily change R_DAILY_HOUR in -settings.');
 //    db\q('TRUNCATE queue');
 //    setV('last_cron_end', ray('day week month', $now - DAY_SECS, 0, 0));
-//  } elseif ($op) 
+//  } elseif ($op)
 //  cr\run();
-  
+
   return TRUE;
 }
 
@@ -729,7 +769,7 @@ function fullQid($q) {
 function uid($id, $field = 'id') {
 //  u\EXPECT($id, 'empty id'); // otherwise site loops (?)
   if (is_numeric($id) or empty($id)) { return $id; }
-  $map = ray('ctty cgf bank-in bank-out crumb round', 
+  $map = ray('ctty cgf bank-in bank-out crumb round',
     r\serverUid(), CGID, BANK_IN_ID, BANK_OUT_ID, CG_CRUMBS_UID, CG_ROUNDUPS_UID);
   if ($res = nn($map[$id])) return $res;
 
@@ -780,7 +820,7 @@ function noSuchEmail($index, $email) {
 //  $pattern = strtr('%"index":"INDEX","email":"EMAIL"%', ray('INDEX EMAIL', $index, $email));
 }
 
-/** 
+/**
  * See whether the specified email has been sent (by searching the log file)
  * @param string $index: email message index
  * @param string $email: the email address to find
@@ -795,7 +835,7 @@ function findEmail($index, $email, $subs) {
   t\fixEmail($email);
   t\fixData($subs);
 //  if ($a = r\acct($email)) $subs['qid'] = $a->mainQid;
-  
+
   $esubs = [];
   foreach ($subs as $k => $v) {
     if ($k == 'nudge') $subs[$k] = $v = t($v);
@@ -816,7 +856,7 @@ function findEmail($index, $email, $subs) {
     t\output("message or subject contains unhandled subs in email \"$index\"");
   } else {
     $map = ["\n"=>'', R_BULLET=>'*', '&nbsp;'=>' '];
-    
+
     foreach ($subs as $k => $v) {
       if ($v == '?') {
         $ignore[] = $k;
@@ -826,7 +866,7 @@ function findEmail($index, $email, $subs) {
       } else $subs[$k] = tr(strtr(strip_tags($v), $map));
     }
     ksort($subs);
-    
+
     foreach ($testEmails as $one) {
       extract($one, EXTR_PREFIX_ALL, 't'); // t_ means actual values
       if (is_array($t_toEmail)) $t_toEmail = key($t_toEmail);
@@ -848,7 +888,7 @@ function findEmail($index, $email, $subs) {
       }
     }
   }
-  
+
   output(['EXPECTED (but did not get)'=>''] + compact(ray('index email subjectDpy subs messageDpy testEmails')), 'email');
   return FALSE;
 }
@@ -912,7 +952,7 @@ function hitServer($op, $extra = [], $agent, $device = '', $version = 230) {
   extract(just('amount member code created proof goods', $extra));
   if (is_numeric(@$amount)) $amount = number_format($amount, 2);
   if (@$member) $member = t\fullQid2($member);
-  if ($version >= 217) foreach (['agent', 'member'] as $k) if (@$$k) $$k = str_replace('.', '', $$k); 
+  if ($version >= 217) foreach (['agent', 'member'] as $k) if (@$$k) $$k = str_replace('.', '', $$k);
   if (@$proof == 'calc' and @$member) {
     if ($a = r\acct($member)) u\setDft($code, $a->cardCode());
     $company = ($i = strpos($agent, '-')) ? substr($agent, 0, $i) : $agent;
@@ -1011,25 +1051,26 @@ function logIn($id) {
 function verifyRecord($table, $info) {
   u\EXPECT(is_array($info), 'in verifyRecord');
   unset($info['data']);
-  foreach ($info as $key => $value) {
-    if ($value == '?') {unset($info[$key]); continue;}
-    $crit[] = $value === '' ? "($key IS NULL or $key=:$key)"
-    : ((in($key, R_DATE_FLDS) or mb_stripos($key, 'date') !== FALSE) ? 
-//      "DATE(FROM_UNIXTIME(`$key`))<=>DATE(FROM_UNIXTIME(:$key))" 
-      "ABS(`$key`-:$key)<" . SAME_TIME
-    : (in($key, 'trust risk') ? "CAST(ROUND($key, 2) AS CHAR)<=>:$key"
-    : "`$key`<=>:$key")); // null-safe ==
-  }
+  list ($infoK, $infoV) = [key($info), array_shift($info)]; // must be before ksort
+  ksort($info); // sort everything else, but leave key out of it
+  $info = [$infoK => $infoV] + $info; // keep key first
+///  echo pr(compact(ray('info0 info1 info idSub infoK infoV')));
 
+  foreach ($info as $k => $v) {
+    if ($v == '?') {unset($info[$k]); continue;}
+    $crit[] = $v === '' ? "(`$k` IS NULL OR `$k`=:$k)" // let a blank test field match null or empty string
+    : (is_null($v) ? "IF(1, `$k` IS NULL, :$k)" // :$k is just to match subs
+    : ((in($k, R_DATE_FLDS) or strhas($k, 'date')) ?
+      "ABS(`$k`-:$k)<" . SAME_TIME
+    : (in($k, 'trust risk') ? "CAST(ROUND(`$k`, 2) AS CHAR)<=>:$k"
+    : "`$k`<=>:$k"))); // null-safe =
+  }
   $crit = join(' AND ', $crit);
+
   if (!$result = db\exists($table, $crit, $info)) {
-    $info2 = $info; 
-    list ($infoK, $infoV) = [key($info2), array_shift($info2)]; // must be before ksort
-    ksort($info);
     foreach ($info as $k => $v) $subs[$k] = "'$v'";
     $sql = "SELECT * FROM $table WHERE " . strtr(u\SUBS($crit), u\prefixKeys(':', $subs));
-//    output("verifyRecord failed. sql=$sql<br>table=$table crit=$crit EXPECTED info=" . pr($info));
-    output("verifyRecord failed. " . pr(compact(ray('table infoK infoV sql crit'))));
+    output("verifyRecord failed. " . pr(compact(ray('table infoK infoV sql'))));
 
     if ($actualRow = db\get('*', $table, [$infoK => $infoV])) {
 //      ksort($actualRow);
@@ -1037,6 +1078,7 @@ function verifyRecord($table, $info) {
       $difs = '';
       foreach ($info as $k => $v) {
         $v2 = $actualRow[$k];
+        foreach (ray('v v2') as $vk) if (is_null($$vk)) $$vk = '<NULL>';
         if ($v2 != $v) $difs .= "<tr><td>$k</td><td>$v</td><td>$v2</td></tr>\n";
       }
       $hdrs = t('<tr><th>field</th><th>want</th><th>got</th></tr>');
@@ -1049,7 +1091,7 @@ function verifyRecord($table, $info) {
 
 /**
  * Simulate completion (and possible confirmation) of a form.
- * @param string $id: qid for the user (or company agent) completing the form
+ * @param string $id: uid or qid for the user (or company agent) completing the form
  * @param string $page: path to form from drupal root
  * @param array $values: array of assoc of field names/values (or empty)
  * @param bool $confirmed: whether the user has confirmed the values (default FALSE)
@@ -1070,7 +1112,7 @@ function completeForm($id, $page, $values = '', $confirmed = FALSE) {
 
   $values = @$values[0] ?: [];
 
-	
+
   t\logIn($id);
 
   $validate = TRUE;
@@ -1084,21 +1126,21 @@ function completeForm($id, $page, $values = '', $confirmed = FALSE) {
   if (!$form = t\pageForm($page, FALSE)) return FALSE; // probably access error
 
   $sta = $formSta; $formSta = NULL; // don't let $formSta influence other forms that get invoked
-  
+
   if ($page == 'pay' or $page == 'charge') $page = 'Tx';
-  
+
   $dfts = [];
   foreach ($form as $key => $field) if (substr($key, 0, 1) != '#') {
-    if (@$field['#type'] == 'hidden') $dfts[$key] = $field['#value'];
+    if (isset($field['#value'])) $dfts[$key] = $field['#value'];
   }
 
   $sta['values'] = $sta['input'] = $values + $dfts; // add to whatever status the form left off in
   $fieldErr = FALSE; // no field errors yet
-  if (!@$lastGo or @$lastGo == $xlastGo) form_execute_handlers('validate', $form, $sta);
+  if (!@$lastGo or @$lastGo == $xlastGo) \form_execute_handlers('validate', $form, $sta);
   $lastIdentifierTag = '</div identifiers>';
   if ($i = strpos($testConfirmation, $lastIdentifierTag)) $testConfirmation = substr($testConfirmation, $i + strlen($lastIdentifierTag));
   if ($fieldErr) return TRUE; // no submit if field error
-  if (!@$lastGo or @$lastGo == $xlastGo) form_execute_handlers('submit', $form, $sta);
+  if (!@$lastGo or @$lastGo == $xlastGo) \form_execute_handlers('submit', $form, $sta);
 
   return TRUE;
 }
@@ -1110,7 +1152,7 @@ function completeForm($id, $page, $values = '', $confirmed = FALSE) {
  */
 function pageForm($page) {
   global $formArray, $formSta, $lastGo, $formOut;
-  
+
 	$page = t\fixPageArgs($page);
   $formArray = $formSta = $formOut = NULL; // start with a clean slate
 
@@ -1122,11 +1164,11 @@ function pageForm($page) {
   $result = \menu_execute_active_handler($page, FALSE);
 
   if (is_numeric($result)) {
-    $result = $result == MENU_NOT_FOUND ? 'not found' 
+    $result = $result == MENU_NOT_FOUND ? 'not found'
       : ($result == MENU_ACCESS_DENIED ? 'access error' : "error #$result");
     t\output("page \"$page\": $result in t\\pageForm()");
   } elseif (@$lastGo == $xlastGo) setFormOut($result);
-  
+
   return $formArray;
 }
 
@@ -1245,9 +1287,9 @@ function selected($form) {
 
 //  $pat = '~ select>([^,]+)</option~';
   $opt = '<option value="[^"]*"( selected)?>([^<]+)</option>\\s*';
-  debug("~<select [^>]*>\\s*($opt)+</select>~");
+///  debug("~<select [^>]*>\\s*($opt)+</select>~");
   if (!preg_match_all("~<select [^>]*>\\s*($opt)+</select>~", $form, $m)) return [];
-  debug($m);
+///  debug($m);
   
 }
 
@@ -1287,7 +1329,7 @@ function strip($form) {
  * @return <the values are equal>
  */
 function eq($a, $b, $offBy = .0001) {
-  $result = (is_numeric($a) and is_numeric($b)) ? 
+  $result = (is_numeric($a) and is_numeric($b)) ?
       (abs($a - $b) < $offBy)
     : ($a == $b or (empty($a) and empty($b)));
 /// if (!$result) echo 'not equal: ' . print_r(compact('a','b'), 1); // keep for now
@@ -1355,7 +1397,7 @@ function clear($ch = 0) {
   global $newThresholds; unset($newThresholds);
   global $testRewardStep; $testRewardStep = 500;
 //  global $testRewarding; $testRewarding = TRUE; // normally set this true in tests only if testing this feature
-  global $T_POST; $T_POST = $_POST = $_COOKIE = []; // setting $_GET=[] makes things go kaflooey 
+  global $T_POST; $T_POST = $_POST = $_COOKIE = []; // setting $_GET=[] makes things go kaflooey
   $lastGo = $formOut = $formArray = $formSta = $testOp = $testConfirmation = $tChecked = $tRadios = NULL;
   $formOut['text'] = '';
   $testEmails = NULL;
@@ -1364,7 +1406,7 @@ function clear($ch = 0) {
   global $testSeq; $testSeq = NULL;
   global $channel; $channel = $ch;
   global $testMessages; $testMessages = [];
-  global $sceneTest; 
+  global $sceneTest;
   global $conf; $conf = [];
 
   if (test() and !strpos($sceneTest->name, 'Statement')) {
@@ -1375,12 +1417,72 @@ function clear($ch = 0) {
   w\signout(TRUE);
   \drupal_static_reset(); // clear out drupal central storage
 
-  $tables = 'messages people posts r_bad r_ballots r_boxes r_changes r_company r_coupated r_coupons r_do r_events r_honors r_investments r_invites r_invoices r_ips r_near r_notices r_options r_pairs r_photos r_proposals r_proxies r_questions r_ratings r_recurs r_relations r_shares r_stakes r_stats r_tous r_usd r_usd2 r_user_industries r_votes signup tx_disputes_all tx_entries_all tx_hdrs_all x_invoices x_photos x_relations x_usd x_users flood queue semaphore sessions cache';
-  foreach (ray('bootstrap form') as $k) $tables .= " cache_$k"; // don't empty cache_menu
-  foreach (ray($tables) as $table) db\q("TRUNCATE $table");
+  $tables = [             // RELATED TO
+    'cache',              // -
+    'flood',              // -
+    'messages',           // posts
+    'people',             // posts
+    'posts',              // -
+    'queue',              // -
+    'r_bad',              // -
+    'r_votes',            // r_ballots, r_options
+    'r_ballots',          // r_questions, users
+    'r_changes',          // users
+    'r_ratings',          // r_investments, users
+    'r_shares',           // r_investments
+    'r_investments',      // users, or is that r_company?, club?
+    'r_company',          // users
+    'r_do',               // users
+    'r_pairs',            // r_options
+    'r_options',          // r_questions
+    'r_questions',        // r_events
+    'r_events',           // -
+    'r_honors',           // users
+    'r_invites',          // users
+    'r_invoices',         // users, r_recurs
+    'x_invoices',         // users, r_recurs
+    'r_ips',              // users
+    'r_near',             // users
+    'r_notices',          // users
+    'r_photos',           // users
+    'x_photos',           // users
+    'r_proposals',        // -
+    'r_proxies',          // users
+    'r_relations',        // users
+    'x_relations',        // users
+    'r_stakes',           // users, club?
+    'r_stats',            // users
+    'r_tous',             // users
+    'r_usd',              // tx_hdrs, users
+    'x_usd',              // tx_hdrs, users
+    'r_usd2',             // tx_hdrs
+    'r_user_industries',  // r_industries, users
+    'semaphore',          // -
+    'sessions',           // users
+    'signup',             // -
+    'tx_disputes_all',    // tx_hdrs, users
+    'tx_entries_all',     // tx_hdrs, users, tx_rules
+    'tx_hdrs_all',        // users, r_boxes, r_recurs, self 
+    'tx_rules',           // users, u_groups, r_industries, tx_templates
+    'tx_templates',       // users, u_groups, r_industries
+    'r_boxes',            // users
+    'r_recurs',           // users
+    'u_groupies',         // u_groups, users
+    'u_groups',           // -
+    'x_users',            // standaloneish
+    ]; // never truncate: r_areas r_banks r_countries r_criteria r_industries r_regions r_states r_transit users variable
+
+/*$tables = 'r_bad r_ballots r_boxes r_changes r_company r_do r_events r_honors r_investments r_invites r_invoices r_ips 
+    r_near r_notices r_options r_pairs r_photos r_proposals r_proxies r_questions r_ratings r_recurs r_relations
+    r_shares r_stakes r_stats r_tous r_usd r_usd2 r_user_industries r_votes signup tx_disputes_all tx_entries_all 
+    tx_hdrs_all tx_rules tx_templates x_invoices x_photos x_relations x_usd x_users u_groups u_groupies flood queue semaphore sessions cache'; */
+  foreach (ray('bootstrap form') as $k) $tables[] = "cache_$k"; // don't empty cache_menu
+  foreach ($tables as $table) db\q("TRUNCATE $table");
 
   db\q('DELETE FROM users WHERE uid<>0');
   db\q('DELETE FROM r_criteria WHERE ctty<>0');
+  u\deleteFile(LOG_FLNM);
+  u\deleteFile(SQL_LOG);
 
   $varKeys = ray('cgf_uid code drupal_private_key iv menu_expanded menu_masks up version');
   db\q('DELETE FROM variable WHERE name NOT IN (:varKeys)', compact('varKeys'));
@@ -1432,7 +1534,7 @@ function getRisks($risks0, $descs) {
  *//*
 function parseAmt($var, $a) {
   u\EXPECT(!is_numeric($var), 'expected non-numeric var');
-  
+
   $bal = $a->actualUsd();
 ///  debug(compact('a','bal','var'));
 
@@ -1460,7 +1562,7 @@ function badEq($type, $v1, $v2, $id) {
  */
 function weSayWithSubs($type, $index, $subs) {
   global $testOnly;
-  
+
   if (!in($type, $choices = 'status warning error')) return output(t('"%type" is not a proper type (%choices)', compact(ray('type choices'))));
 
   $subs = @$subs[0] ?: array();
@@ -1506,7 +1608,7 @@ function weSayWithSubs($type, $index, $subs) {
 function shownWith($content, $type = 'text', $mustBePresent = TRUE) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $formOut;
-  
+
   $model = t\strip($formOut[$type]);
 //  if (!$model and $type == 'text') $model = file_get_contents(TEST_PDF_FLNM);
 
@@ -1548,7 +1650,7 @@ function constants($list) {
   global $testOnly;
   foreach ($list as $one) {
     extract(just('name value', $one));
-    
+
   }
 }
 
@@ -1565,10 +1667,10 @@ function noPhotoId($id) {
 function weMessage($index, $id, $subs) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $testMessages;
-  
+
   $subs = $subs[0];
   $uid = t\uid($id);
-  
+
   foreach ($testMessages as $one) {
     extract($one, EXTR_PREFIX_ALL, 't');
     if ($t_uid == $uid and $t_index == $index) {
@@ -1582,7 +1684,7 @@ function weMessage($index, $id, $subs) {
   }
   return t\output('Overall wanted: ' . pr(compact(ray('index id uid subs'))) . '<br>Got: ' . pr($testMessages));;
 }
-    
+
 /**
  * Check the linked URL content and any Drupal messages (which don't show up in file_get_contents) against expectations.
  */
@@ -1591,7 +1693,7 @@ function hasLinkResults($thing, $info) {
   global $testOnly; if (!$testOnly) return FALSE;
 
   if (!preg_match('/ href="([^"]*)"/', t\that($thing), $matches)) return FALSE;
-  
+
   if (isDEV) {
     $arrContextOptions = [ "ssl" => [ 'verify_peer' => false, 'verify_peer_name' => false ] ];
     $s = file_get_contents(preg_replace('@' . preg_quote(BASE_URL, '@') . '@', LOCAL_URL, $matches[1]), false, stream_context_create($arrContextOptions));

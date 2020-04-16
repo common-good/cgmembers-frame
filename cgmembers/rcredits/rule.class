@@ -1,0 +1,21 @@
+<?php
+
+/**
+ * @file
+ * Enum-like constants for tx_rules and tx_templates
+ */
+
+abstract class Act {
+  const PAY = 'pay';
+  const CHARGE = 'charge';
+  const SURTX = 'surtx';
+  const REDEEM = 'redeem';
+}
+
+abstract class Ref {
+  const ANYBODY = 'anybody';
+  const ACCOUNT = 'account';
+  const ANYCO = 'anyCo';
+  const INDUSTRY = 'industry';
+  const GROUP = 'group';
+}

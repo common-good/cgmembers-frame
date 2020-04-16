@@ -14,18 +14,19 @@ function formPrefs($form, &$sta) {
 //  $subtext = item(t('The suggested settings are best for most people. You can change your choices at any time.'));
 
   if ($mya->co) {
-    $crumbs0 = $mya->crumbs * 100;
-    $crumbs = textFld(t('Crumbs:'), [t('Contribution Percentage'), t('Another way to fund the common Good! Contribute a small percentage of every payment you receive. For example, "1%" means donate one penny for each dollar you receive. Smaller amounts such as 0.5% are also very welcome.')], dft($crumbs0 ?: '') + suffix(' %'));
+/*    $crumbs0 = $mya->crumbs * 100;
+    $crumbs = textFld(t('Crumbs:'), [t('Contribution Percentage'), t('Another way to fund the common good! Contribute a small percentage of every payment you receive. For example, "1%" means donate one penny for each dollar you receive. Smaller amounts such as 0.5% are also very welcome.')], dft($crumbs0 ?: '') + suffix(' %')); */
   } else {$roundup = w\roundupFld($mya);}
   
+  /*
   $food0 = $mya->food * 100;
   $food = textFld(t('Food Fund:'), [t('Contribution Percentage'), t('Pay a little extra every time you pay for food or meals with %PROJECT, to lower the cost of healthy local food for people who can\'t afford it otherwise. For example, 5% here means when you buy a $10 pizza, you contribute 50 cents to the %PROJECT Food Fund. To donate to the %PROJECT Food Fund directly, use the "Pay" button and type "Food Fund".')], dft($food0 ?: '') + suffix(' %'));
+  */
   
   if (!$mya->co) {
     $list = 'CHIP, CNP, EAEDC, EITC, Fuel Assistance, Medicaid, LIHEAP, Section 8, SNAP, SSP, TAFDC, TANF, WIC';
-    $st = r\realState($mya->state);
-    if ($st == 'MA') $list .= ', HIP';
-//    if ($st == 'VT') $list .= ', XXX';
+    if ($mya->st == 'MA') $list .= ', HIP';
+//    if ($mya->st == 'VT') $list .= ', XXX';
     $snap = boolFld(t('Food Assistance?'), t('If you struggle to afford healthy food, consider answering "Yes" here. This is a request for financial assistance from other %PROJECT members in your community. Your answer is private &mdash; only program administrators can tell who is receiving this assistance. Typically answer "Yes" if you are eligible for any of the following (whether or not you have actually applied): %list. (Food assistance may not yet be available in your area.)', compact('list')), $mya->snap);
   } else $snap = NULL;
   
@@ -66,7 +67,7 @@ EOF
   
 
   jsx('advanced-prefs', compact('advancedFields'));
-  $form = @compact(ray('title subtext roundup crumbs snap statements showAdvancet ' . $advancedFields)) + w\setupFoot() + compact('posttext');
+  $form = @compact(ray('title subtext roundup snap statements showAdvancet ' . $advancedFields)) + w\setupFoot() + compact('posttext');
   return cgform($form);
 }
 

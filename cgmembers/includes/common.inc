@@ -6524,7 +6524,7 @@ function element_get_visible_children(array $elements) {
 /**
  * Sets HTML attributes based on element properties.
  *
- * @param $element
+ * @param $e
  *   The renderable element to process.
  * @param $map
  *   An associative array whose keys are element property names and whose values
@@ -6533,15 +6533,13 @@ function element_get_visible_children(array $elements) {
  *   except for the leading '#', then an attribute name value is sufficient and
  *   no property name needs to be specified.
  */
-function element_set_attributes(array &$element, array $map) {
-  foreach ($map as $property => $attribute) {
-    // If the key is numeric, the attribute name needs to be taken over.
-    if (is_int($property)) {
-      $property = '#' . $attribute;
-    }
+function element_set_attributes(array &$e, array $map) {
+  foreach ($map as $property => $trib) {
+    if (is_int($property)) $property = '#' . $trib;
+
     // Do not overwrite already existing attributes.
-    if (isset($element[$property]) && !isset($element['#attributes'][$attribute])) {
-      $element['#attributes'][$attribute] = $element[$property];
+    if (isset($e[$property]) && !isset($e['#attributes'][$trib])) {
+      $e['#attributes'][$trib] = $e[$property];
     }
   }
 }

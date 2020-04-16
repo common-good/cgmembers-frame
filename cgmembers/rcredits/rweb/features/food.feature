@@ -33,10 +33,10 @@ Scenario: A member makes a food donation
   |  1 | .ZZB  |  .ZZF |    100 |      M | food donation |     0 |
   And we say "status": "gift successful"
   And we notice "recur pay" to member ".ZZB" with subs:
-  | amount | period  | to            | purpose       |*
+  | amount | period  | payee         | purpose       |*
   |   $100 | Monthly | the Food Fund | food donation |
   And these "txs":
-  | xid | created   | amount | from | to   | for                     | flags  | recursId |*
+  | xid | created   | amount | payer | payee | for                     | flags  | recursId |*
   |   1 | %today    |    100 | .ZZB | .ZZF | food donation (Monthly) | recurs |	      1 |
   
 Scenario: A member makes a food donation without adequate funds
@@ -54,6 +54,5 @@ Scenario: A member makes a food donation without adequate funds
   |  1 | .ZZA  |  .ZZF |    100 |      M | food donation |     0 |
   And we say "status": "gift successful|gift transfer later"
   And these "invoices":
-  | nvid | created   | status       | amount | from | to   | for                     | flags  | recursId |*
+  | nvid | created   | status       | amount | payer | payee | for                     | flags  | recursId |*
   |    1 | %today    | %TX_APPROVED |    100 | .ZZA | .ZZF | food donation (Monthly) | recurs |	       1 |
-  

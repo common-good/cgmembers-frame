@@ -2,11 +2,13 @@
 
 require_once __DIR__ . '/util.inc';
 
-define('E_TYPES', 'bank_only prime donation rebate usd_fee bank'); // these constants are also used in migration files
-define('BANK_IDS', ['bankIn' => 256, 'bankOut' => 257, 'bankCharges' => 192]);
-define('TX_FLDS', 'xid actorId actorAgentId flags channel boxId goods risk risks recursId reversesXid created');
-define('TXE_FLDS', 'id entryType amount description uid agentUid acctTid relType relatedId xid');
-define('TXES_FLDS', 'description AS for, uid AS uid, agentUid AS agt, acctTid AS tid');
+const E_TYPES = 'bank_only prime donation rebate usd_fee bank'; // these constants are also used in migration files
+const BANK_IDS = ['bankIn' => 256, 'bankOut' => 257, 'bankCharges' => 192];
+const TX_EXCLUDE_FLDS = 'deleted';
+const TXE_EXCLUDE_FLDS = 'deleted';
+const TXES_FLDS = 'description AS for, uid AS uid, agentUid AS agt, acctTid AS tid';
+const TXS_MAP = 'entryType:type, amount:amt, rule:rule, relType:relType, relatedId:rel, id:eid';
+const VIEWS_NOT_TO_DROP = ['ancestors', 'descendants'];
   
 /**
  * Create (or recreate) all VIEWS, starting from scratch. This makes it easier to add/change/delete fields.
@@ -16,11 +18,24 @@ define('TXES_FLDS', 'description AS for, uid AS uid, agentUid AS agt, acctTid AS
 function createViews($m, $stopAt = 0) {
   pr('clearing views');
   $q = $m->query('SELECT table_name FROM information_schema.views');
-  while ($table = $q->fetchColumn()) $m->doSql('  DROP VIEW IF EXISTS ' . $table);
-
-  // set up constants
-  $txFlds = join(',', ray(TX_FLDS));
-  $txeFlds = join(',', ray(TXE_FLDS));
+  while ($table = $q->fetchColumn()) {
+    echo "view: $table\n";
+//    print_r(VIEWS_NOT_TO_DROP); echo "\n";
+//    echo in_array($table, VIEWS_NOT_TO_DROP); echo "\n";
+    if (! in_array($table, VIEWS_NOT_TO_DROP)) { // don't drop
+      $m->doSql('  DROP VIEW IF EXISTS ' . $table);
+    }
+  }
+  
+  // get current list of columns
+  $txFldList = array_map(function($f) { return $f->getName(); },
+                         $m->table('tx_hdrs_all')->getColumns());
+  $tx_flds = array_diff($txFldList, ray(TX_EXCLUDE_FLDS));
+  $txFlds = join(',', $tx_flds);
+  $txeFldList = array_map(function($f) { return $f->getName(); },
+                         $m->table('tx_entries_all')->getColumns());
+  $txe_flds =array_diff($txeFldList, ray(TXE_EXCLUDE_FLDS));
+  $txeFlds = join(',', $txe_flds);
   
   extract(BANK_IDS);
   $isBank = "uid IN ($bankIn, $bankOut)";
@@ -37,29 +52,23 @@ function createViews($m, $stopAt = 0) {
 
   // individual views for each type of transaction
 
-  $txFlds0 = 't.' . join(', t.', ray(TX_FLDS));
+  $txFlds0 = 't.' . join(', t.', $tx_flds);
+  foreach (ray(TXS_MAP) as $fld => $as) {
+    if (in_array($fld, $txe_flds)) $txFlds0 .= ", e2.$fld AS $as";
+  }
+
   $txFlds1 = 'e1.' . join('1, e1.', explode(', ', TXES_FLDS)) . '1';
   $txFlds2 = 'e2.' . join('2, e2.', explode(', ', TXES_FLDS)) . '2';
   
   $select0 = 'SELECT e.* FROM tx_entries_all e JOIN tx_entries_all e2 USING(xid)'; // e2 mostly helps identify related prime records)
   $sql = <<< X
     CREATE VIEW _view AS 
-    SELECT DISTINCT $txFlds0, e1.entryType AS type, e2.amount AS amt, $txFlds2, $txFlds1, 
-      e2.relType, e2.relatedId AS rel, e2.id AS eid
+    SELECT DISTINCT $txFlds0, $txFlds2, $txFlds1
     FROM tx_hdrs t
     JOIN ($select0 WHERE _where1) e1 USING (xid)
     JOIN ($select0 WHERE _where2) e2 USING (xid)
     WHERE e1.id=-e2.id AND e2.id>0
 X;
-
-/*
-    CREATE VIEW _view AS 
-    SELECT DISTINCT $txFlds0, e1.entryType AS type, e2.amount AS amt, $txFlds2, $txFlds1
-    FROM tx_hdrs_all t
-    JOIN ($select0 WHERE _where1) e1 USING (xid)
-    JOIN ($select0 WHERE _where2) e2 USING (xid)
-    WHERE e1.id=-e2.id AND e2.id>0 AND t.deleted IS NULL
-    */
 
   $w1 = $w2 = [];
   $z = compact(ray('m sql w1 w2'));

@@ -13,6 +13,8 @@ require_once __DIR__ . '/coupons.inc';
  */
 function formDiscount($form, &$sta) {
   global $mya;
+
+  foreach (ray(COUPON_FLDS) as $k) $$k = NULL;
   
   $title = t('Get Your Customers Signed Up');
   $subtext = t(<<< X
@@ -27,16 +29,15 @@ X
   $amount = textFld(t('Discount:'), [t('Amount or Percentage'), t('For example $20 or 10%')], required());
   $minimum = textFld(t('Minimum:'), [t('Minimum purchase'), t('Minimum purchase amount, to get the discount.')], required(0));
   $end = textFld(t('Valid until:'), [t('End date'), t('Leave blank for no end.')], dft(u\fmtDate(strtotime('+6 months'), TRUE)));
-  $ulimit = textFld(t('Limit:'), t('Leave blank for unlimited uses.'), dft(5) + suffix(t(' uses per member')));
+  $useMax = textFld(t('Limit:'), t('Leave blank for unlimited uses.'), dft(5) + suffix(t(' uses per member')));
   
   $submit = submit(t('Create'), '', '', suffix(' ' . skipButton())); // allow user to skip this step forever
   
   $start = hidFld(u\fmtDate(now(), TRUE));
   $automatic = hidFld(TRUE);
   $type = hidFld('discount');
-  $on = NULL;
   
-  return cgform(compact(ray('title subtext amount minimum start end ulimit automatic on type submit')));
+  return cgform(compact(ray('title subtext ' . COUPON_FLDS . ' submit')));
 }
 
 function formDiscount_validate($form, &$sta) {return formCoupons_validate($form, $sta);}

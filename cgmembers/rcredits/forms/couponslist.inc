@@ -16,32 +16,33 @@ function formCouponsList($form, &$sta, $args = '') {
 	
   $title = t('Your Discounts and Gift Certificates');
 
-	$fields = ray('type amount on start end minimum ulimit action');
+	$fields = ray('type amount purpose start end minimum useMax action');
   $fieldCount = count($fields);
   $hdrs = u\tableRow(ray('Type,Amount,On,Starting,Ending,Min&nbsp;Purchase,Max&nbsp;Uses,'));
 	$automatic = TRUE;
 
   $sql = <<< X
-    SELECT :IS_SOME AS some,c.* FROM r_coupons c
-		WHERE fromId=:uid
-		ORDER BY coupid DESC
+    SELECT * FROM tx_rules
+		WHERE `from`=:uid
+		ORDER BY id DESC
 X;
   $q = db\q($sql, ray('uid', $mya->id));
   
   while ($row = $q->fetchAssoc()) {
     extract($row);
-		$gift = u\getbit($flags, B_GIFT);
+		$gift = $action == 'redeem';
 		$type = $gift ? t('gift') : t('discount');
 		
 		if ($gift) {
 			$args = "type=gift&amount=$amount";
-			$count = $end - $start;
+  		$start = u\fmtDate($start, TRUE);
+  		$end = empty($end) ? t('indefinite') : u\fmtDate($end, TRUE);
 		} else {
       $args = http_build_query(@compact($fields, 'automatic'));
       if (!test()) $args = u\urlify($args);
       $args = 'print/' . $args;
   		$start = u\fmtDate($start, TRUE);
-  		$end = $end ? u\fmtDate($end, TRUE) : t('indefinite');
+  		$end = empty($end) ? t('indefinite') : u\fmtDate($end, TRUE);
 //  		$on = $on ? w\popHelp(t(' on'), $on) : '';
 		}
 
@@ -49,15 +50,8 @@ X;
 
 		$amount = $amount < 0 ? u\fmtAmt(-$amount/100, '%') : u\fmtAmt($amount);
 		$minimum = $minimum ? u\fmtAmt($minimum) : t('none');
-		$ulimit = ($ulimit + 0) ? number_format($ulimit) : t('no limit');
-
+		$useMax = ($useMax + 0) ? number_format($useMax) : t('no limit');
     $rows[] = u\tableRow(compact($fields));
-    if ($some) {
-      $uids = db\col('uid', 'r_coupated', compact('coupid'));
-      $qids = [];
-      foreach ($uids as $uid) $qids[] = $mya->cAdmin ? r\acct($uid)->fullName : r\qid($uid);
-      $rows[] = "<tr><td class=\"account-list\" colspan=\"$fieldCount\">" . t('<b>for only: </b>') . join(', ', $qids) . "</td></tr>\n";
-    }
   }
 
   if (@$rows) {
@@ -68,7 +62,7 @@ X;
     $rows
     </table>
 X;
-  } else $list = t('You do not have any discounts yet.');
+  } else {$list = t('You have not yet issued any automatic discounts or gift certificates.');}
   
   return cgform(compact(ray('title list')));
 }
@@ -77,22 +71,26 @@ X;
  * Show automatic discounts available to the current account.
  */
 function showDiscounts() {
-	global $mya; $myid = $mya->id;
+	global $mya;
+  $myid = $mya->id;
 
 	$title = t('Automatic Discounts in Your Region');
 	$subtext = t('as of %today', 'today', u\fmtDate(NOW));
-	$fields = ray('company amount on end for left');
-  $hdrs = u\tableRow(ray('Company,Discount,On,Ending,For,Uses&nbsp;Left'));
+	$fields = ray('company amount on end for left amtLeft');
+  $hdrs = u\tableRow(ray('Company,Discount,On,Ending,For,Uses&nbsp;Left,Amount&nbsp;Left'));
   $nearby = tr('%DISTANCE_BETWEEN<%NEIGHBOR_MAX');
-	
+
+  $payerCheck = u\genRuleSQL('payer', ':myid');
   $sql = <<< X
-  	SELECT DISTINCT u.uid,amount,`on`,end,ulimit,c.:IS_SOME AS some,
-      (SELECT SUM(1) FROM txs t WHERE t.relType='D' AND t.rel=c.coupid AND t.uid2=:myid) AS used
-    FROM r_coupons c JOIN users u ON u.uid=c.fromId 
-    LEFT JOIN r_coupated d USING(coupid)
-		WHERE (u.community=:ctty OR $nearby) 
-    AND NOT c.:IS_GIFT AND (NOT c.:IS_SOME OR d.uid=:myid) AND (end=0 OR end>:NOW) AND start<=:NOW
-		ORDER BY end=0, end
+    SELECT `from` AS sponsor, `amount`, `portion`, `purpose` AS `on`, `end`, payerType, payer, useMax, uid, amtMax,
+    (SELECT IFNULL(SUM(e.amount), 0) FROM tx_entries e WHERE e.uid=:myid AND e.rule IS NOT NULL AND e.rule=r.id) AS `amtUsed`,
+    (SELECT IFNULL(SUM(SIGN(e.amount)), 0) FROM tx_entries e WHERE e.uid=:myid AND e.rule IS NOT NULL AND e.rule=r.id) AS `used`
+    FROM tx_rules r JOIN users u ON r.`from`=u.uid
+    WHERE $payerCheck
+    AND (u.community=:ctty OR $nearby)
+    AND (r.action = :ACT_SURTX)
+    AND (r.start <= :NOW AND IFNULL(:NOW < r.end, TRUE))
+		ORDER BY end IS NOT NULL, end
 X;
   $q = db\q($sql, $subs = ray('ctty state lat lon myid', $mya->community, $mya->state, $mya->latitude, $mya->longitude, $myid));
 
@@ -100,11 +98,19 @@ X;
     extract($row);
 		$a = r\acct($uid);
 		$company = $a->bestName;
- 		$end = $end ? u\fmtDate($end, TRUE) : t('--');
-    $left = $ulimit > 0 ? t('%left of %ulimit', 'left ulimit', $ulimit - $used, $ulimit) : t('no limit');
-    if ($amount > 0 and !$ulimit) $left = u\fmtAmt(be\handleCoupon($zot, $mya, $a, $amount));
-    $for = $some ? t('you+') : t('anyone');
-  	$amount = $amount < 0 ? u\fmtAmt(-$amount/100, '%') : u\fmtAmt($amount);
+ 		$end = $end ? u\fmtDate($end, TRUE) : '--';
+    $left = $useMax > 0 ? t('%left of %useMax', 'left useMax', $useMax - $used, $useMax) : t('no limit');
+    $for = /* $some ? t('you+') : */ t('anyone');
+    if ($amount != 0) {
+      if($portion != 0) {
+        $amount = u\fmtAmt($amount) . ' + ' . u\fmtAmt($portion*100, '%');
+      } else { // portion is 0
+        $amount =  u\fmtAmt($amount);
+      }
+    } else {
+      $amount = u\fmtAmt($portion, '%');
+    }
+    $amtLeft = is_null($amtMax) ? 'no limit' : u\fmtAmt($amtMax - $amtUsed, '$');
 
     $rows[] = u\tableRow(compact($fields));
   }

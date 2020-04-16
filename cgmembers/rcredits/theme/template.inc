@@ -301,7 +301,7 @@ EOF;
  * @ingroup themeable
  */
 function rcredits_form_element($variables) {
-  extract(rcElement($variables, 'name tabled type bare markup help parents children required title title_display id field_prefix field_suffix inline class box'));
+  extract(cgElement($variables, 'name tabled type bare markup help parents children required title title_display id field_prefix field_suffix inline class box'));
 
   $parentName = strtr(@$parents[0], [' '=>'-', '_'=>'-', '['=>'-', ']'=>'']);
   $for = @$name ?: $parentName;
@@ -344,9 +344,9 @@ EOF;
 }
 
 function rcredits_textfield($variables, $type = 'text') {
-  \element_set_attributes($variables['element'], ray('id name value size maxlength'));
-//  extract(rcElement($variables, 'attributes autocomplete_path required help class submitButton'));
-  extract(rcElement($variables, 'attributes required help class submitButton'));
+  cgSetAttrs($variables['element'], ray('id name value size maxlength'));
+//  extract(cgElement($variables, 'attributes autocomplete_path required help class submitButton'));
+  extract(cgElement($variables, 'attributes required help class submitButton'));
 
   if (@$submitButton) return rcredits_submit($variables);
   if (@$required) $attributes['required'] = 'yes'; // don't add this in unless it is yes
@@ -366,10 +366,9 @@ function rcredits_textfield($variables, $type = 'text') {
 }
 
 function rcredits_textarea($variables) {
-  \element_set_attributes($variables['element'], array('id', 'name'));
-  extract(rcElement($variables, 'attributes required name help class default_value value'));
+  \cgSetAttrs($variables['element'], array('id', 'name'));
+  extract(cgElement($variables, 'attributes required name help class default_value value'));
 
-  u\setDft($value, @$default_value); // allow either val or dft(val) in w\areaFld()
   $value = plain(@$value);
   if (@$required) $attributes['required'] = 'yes';
   $class[] = 'form-control input-md';
@@ -385,7 +384,7 @@ function rcredits_textarea($variables) {
 
 function rcredits_radios($variables) {
   $chn = $variables['element']['#children'];
-  extract(rcElement($variables, 'required inline'));
+  extract(cgElement($variables, 'required inline'));
   if (@$inline) $chn = str_replace(' radio">', ' radio-inline">', $chn);
   if (@$required) $chn = str_replace('type="radio"', 'type="radio" required="yes"', $chn);
   return $chn;
@@ -393,7 +392,7 @@ function rcredits_radios($variables) {
 
 function rcredits_radio($variables) {
   \element_set_attributes($variables['element'], array('id', 'name', '#return_value' => 'value'));
-  extract(rcElement($variables, 'title attributes class return_value value parents'));
+  extract(cgElement($variables, 'title attributes class return_value value parents'));
   
   if (isset($return_value) and $value == $return_value) $checked = 'checked';
   $type = 'radio';
@@ -406,7 +405,7 @@ function rcredits_radio($variables) {
 
 function rcredits_submit($variables) {
   $special = 'title class tickle';
-  extract(rcElement($variables, 'tabled bare value id size style parents ' . $special));
+  extract(cgElement($variables, 'tabled bare value id size style parents ' . $special));
 //  if (!@$id) $id = 'edit-' . strtolower(strtr($value, [' '=>'-', '_'=>'-', '['=>'-', ']'=>'']));
   $id2 = 'edit-' . @$parents[0]; // whether or not id is set (assures mixed case when appropriate
   if (!@$id or $id == strtolower($id2)) $id = $id2;
@@ -427,7 +426,7 @@ EOF;
 }
 
 function rcredits_button($variables) {
-  extract(rcElement($variables, 'tabled value href button_type class'));
+  extract(cgElement($variables, 'tabled value href button_type class'));
   if ($button_type == 'submit') return rcredits_submit($variables);
   
 /**/ if (strpos($href, 'http') === FALSE) die('no http in button'); // $onclick = $href;
@@ -436,7 +435,7 @@ function rcredits_button($variables) {
 
 function rcredits_checkbox($variables) {
   \element_set_attributes($variables['element'], array('id', 'name', 'value'));
-  extract(rcElement($variables, 'title attributes checked class default_value'));
+  extract(cgElement($variables, 'title attributes checked class default_value'));
 
   $type = 'checkbox';
   if (@$checked or @$default_value) $checked = 'checked'; else unset($checked);
@@ -447,7 +446,7 @@ function rcredits_checkbox($variables) {
 
 function rcredits_checkboxes($variables) {
   \element_set_attributes($variables['element'], array('id'));
-  extract(rcElement($variables, 'choices defaults aliases parents'));
+  extract(cgElement($variables, 'choices defaults aliases parents'));
   $for = strtr(@$parents[0], [' '=>'-', '_'=>'-', '['=>'-', ']'=>'']);
 
   // get children first
@@ -462,14 +461,14 @@ function rcredits_checkboxes($variables) {
     $title = $aliases[$k];
     $chn .= @\render(w\fld('checkbox', '', '', compact($fields)));
   }
-  extract(rcElement($variables, 'attributes class'));
+  extract(cgElement($variables, 'attributes class'));
   $class[] = 'form-checkboxes';
   return w\tag('div', $chn, $attributes + compact('class'));
 }
 
 function rcredits_select($variables) {
   \element_set_attributes($variables['element'], array('id', 'name', 'size'));
-  extract(rcElement($variables, 'attributes class required'));
+  extract(cgElement($variables, 'attributes class required'));
   $class[] = 'form-control';
   if (nn($required)) $attributes['required'] = 'yes'; // don't add this in unless it is yes
   return w\tag('select', \form_select_options($variables['element']), (nn($attributes, []) + compact('class')));
@@ -477,7 +476,7 @@ function rcredits_select($variables) {
 
 function rcredits_fieldset($variables) {
   \element_set_attributes($variables['element'], array('id'));
-  extract(rcElement($variables, 'attributes class legend bare help value children'));
+  extract(cgElement($variables, 'attributes class legend bare help value children'));
 
   $class[] = 'form-wrapper';
   u\preray(compact('class'), $attributes);
@@ -510,7 +509,7 @@ function rcredits_breadcrumb($variables) {
 function rcredits_hidden($variables) {
   \element_set_attributes($variables['element'], array('name', 'value'));
   $type = 'hidden';
-  extract(rcElement($variables, 'attributes id'));
+  extract(cgElement($variables, 'attributes id'));
   $tribs = u\tribs(@compact(ray('type id value')) + $attributes);
   return "<input $tribs />\n";
 }
@@ -518,7 +517,7 @@ function rcredits_hidden($variables) {
 /**
  * Return assoc of element parameters, plainly named.
  */
-function rcElement($variables, $fields) {
+function cgElement($variables, $fields) {
   foreach ($variables['element'] as $k => $v) $e[substr($k, 1)] = $v;
   return just($fields, $e);
 }
@@ -575,3 +574,5 @@ function spinLink($href, $text, $id = '', $style = 'primary', $size = 'md', $oth
   </$tag>
 EOF;
 }
+
+function cgSetAttrs(array &$e, array $map) {\element_set_attributes($e, $map + ['#default_value' => 'value']);}

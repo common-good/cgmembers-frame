@@ -30,7 +30,7 @@ Setup:
   | .ZZB |    2000 |
   | .ZZC |    3000 |
   Given transactions: 
-  | xid | created   | amount | from | to   | purpose | taking | payerTid | payeeTid | reversesXid |*
+  | xid | created   | amount | payer | payee | purpose | taking | payerTid | payeeTid | reversesXid |*
   |  44 | %today-5m |     10 | .ZZB | .ZZA | cash E  | 0      |       24 |       34 |             |
   |  45 | %today-4m |   1100 | .ZZC | .ZZA | usd F   | 1      |       25 |       35 |             |
   |  46 | %today-3m |    240 | .ZZA | .ZZB | what G  | 0      |       26 |       36 |             |
@@ -96,7 +96,7 @@ Scenario: A member looks at transactions for the past few days
 
 Scenario: A member looks at transactions with roundups
   Given transactions:
-  | xid | amount | from | to               | purpose          | taking | goods      | channel | type     |*
+  | xid | amount | payer | payee            | purpose          | taking | goods      | channel | type     |*
   |  41 |  49.95 | .ZZA | .ZZC             | sundries         | 1      | %FOR_GOODS | %TX_POS | prime    |
   |  41 |   0.05 | .ZZA | %CG_ROUNDUPS_UID | roundup donation | 0      | %FOR_GOODS | %TX_POS | donation |
   Then balances:

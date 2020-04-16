@@ -232,13 +232,6 @@ function doit(what, vs) {
     //      $('.form-item-loanSet').toggle(!$('#edit-equity').val());
     break;
     
-  case 'on-submit':
-    var formid = '#rcreditsweb' + vs[caller];
-    switch (caller) {
-    case '': $(formid).submit(function () {}); break;
-    }
-    break;
-
   case 'advanced-prefs':
     toggleFields(vs['advancedFields'], false);
     $('#edit-showAdvancet').click(function () { $(this).hide(); toggleFields(vs['advancedFields'], true); });
@@ -278,6 +271,50 @@ function doit(what, vs) {
     });
     break;
 
+  case 'work':
+    suggestWho('#edit-company', 1);
+    break;
+  
+  case 'stepup':
+    var lastFocus;
+    var first = true;
+    
+    $('[id^="edit-org"]').each(function () {
+      if (!$(this).val()) {
+        if (first) first = false; else $(this).parents('.row').hide();
+      }
+    });
+    suggestWho('[id^="edit-org"]', 1);
+
+    $('[id^="edit-org"]').change(function () {$(this).parents('.row').next().css('display', 'table-row');});
+    $('[id^="edit-amt"]').change(function () {
+      var s = $(this).val();
+      if (!s.match(/^$|^\$[0-9.]+$|^[0-9.]+%$/)) {
+        $.alert('You must type a number with $ at the beginning or % at the end.', 'Try again');
+        lastFocus = $(this);
+        $('.ui-dialog button').click(function () {lastFocus.focus();});
+        $('.ui-dialog button').focus();
+      }
+      
+      var val = $(this).val();
+      var max = $(this).parents('.row').find('[id^="edit-max"]');
+      if (has(val, '%')) max.prop('disabled', false);
+      if (has(val, '$')) max.prop('disabled', true);
+      
+    });
+    $('[id^="edit-amt"]').change();
+
+    break;
+
+  case 'groups':
+    suggestWho('#edit-newmember');
+    break;
+    
+  case 'rules':
+    $('#edit').click(function () {location.href = baseUrl + '/sadmin/rules/id=' + $('#edit-id').val();});
+    suggestWho('#edit-payer, #edit-payee, #edit-from, #edit-to');
+    break;
+    
   case 'posts':
     $('.form-item-radius .btn').click(function () { // click the Go button
       $('#edit-submit').click();
@@ -360,6 +397,10 @@ function doit(what, vs) {
     break;
 
   case 'post-who':
+    $('#edit-fullname').change(function () {
+      var nick = $('#edit-displayname');
+      if (!nick.val()) nick.val($(this).val().trim().split(' ')[0]);
+    });
   /*
     $('#edit-zip').change(function () {
       var moderate = (vs['moderateZips'].indexOf($(this).val().trim().substring(0, 3)) >= 0);
@@ -452,11 +493,15 @@ function doit(what, vs) {
     break;
     
   case 'coupons':
+    var purposeDft = $('#edit-purpose').val();
+    $('#edit-minimum').change(function () {
+      var min = $(this).val();
+      $('#edit-purpose').val(min == '0' ? purposeDft : vs['minText'].replace('%min', min));
+    });
+
     $('#edit-automatic-0').click(function () {
       $('.form-item-automatic').hide();
-      var min = $('#edit-minimum').val();
-      $('.form-item-on').show();
-      $('#edit-on').val(min > 0 ? 'on your purchase of $' + min + ' or more' : 'on any purchase');
+      $('.form-item-purpose').show();
     });
     break;
     

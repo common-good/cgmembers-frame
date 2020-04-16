@@ -15,7 +15,7 @@ function formProfile($form, &$sta, $company = '', $args = '') {
   if (!$uid or !$a->co) return w\softErr(t('That is not a %PROJECT company profile page.'));
 
   $pic = item($a->photoHtml());
-  $state = r\realState($a->state);
+  $state = $a->st;
   $country = r\realCountry($a->country);
   $siteList = '';
   if ($website = $a->website) foreach (ray($website) as $one) {

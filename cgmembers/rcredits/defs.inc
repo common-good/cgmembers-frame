@@ -109,6 +109,7 @@ define('EMAILX', 'example.com'); // domain for unknown, placeholder, test, or ex
 define('GFLD_LAT', 42.3791167); // Greenfield, MA latitude (in tests)
 define('GFLD_LON', -73.2819463); // Greenfield, MA latitude
 define('GFLD_ZIP', '01301'); // Greenfield, MA zipcode
+define('NULL', NULL); // for tests
 
 // Common Good Finance email and other data
 define('CGF_LEGALNAME', 'Society to Benefit Everyone, Inc.');
@@ -141,8 +142,8 @@ define('COMPANY_FREEZE', FALSE); // companies cannot spend rewards yet
 define('R', '<span class="r">r</span>');
 define('US', '<span class="us">us</span>');
 /// define('GAME_COMPANIES', '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital');
-define('ITEM_FLDS', 'title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back submit'); // names of common fields that are wrapped automatically in w\item()
-define('R_DATE_FLDS', 'created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted'); // date field names for testing and administrative display
+define('ITEM_FLDS', 'title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back'); // names of common fields that are wrapped automatically in w\item()
+define('R_DATE_FLDS', 'start end start created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted'); // date field names for testing and administrative display
 define('CO_FLDS', 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd staleNudge contact'); // account fields stored in r_company
 define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo activated0'); // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
 define('MASTER_NUMERIC_FLDS', 'minimum achMin savingsAdd saveWeekly');
@@ -319,6 +320,8 @@ define('R_DFT_PICTURE', R_ROOT . '/images/no-photo-available.jpg'); // default p
 define('R_DFT_PICTURE_WIDE', R_ROOT . '/images/no-photo-available-wide.jpg'); // default profile picture
 define('R_NOT_VALID', R_ROOT . '/images/not-valid.png'); // says rcard is not valid for purchases
 define('LOG_DIR', ROOT . '/cgLogs/'); // where to store log files
+define('LOG_FLNM', LOG_DIR . date('Ym') . '.log');
+define('SQL_LOG', LOG_DIR . date('Ym') . '.logsql');
 
 // account type bits
 define('CO_TYPES', t('personal, sole proprietor, partnership, LLC, private corporation, publicly-traded corporation, tax-exempt nonprofit, government, co-operative, unincorporated association or club, estate, trust, custodian'));
@@ -356,13 +359,13 @@ define('APP_CAN_BIT_DESCS', t('charge customers,undo last transaction,give %RCRE
 // Membership steps
 define('R_STEPS_OLD', 'signup:signup, verify, ssn, sign:community/agreement, donate:community/donate, proxies, prefs:settings/preferences, connect, company, relations, photo, food, discount:community/discount, backing:community/backing');
 
-define('S_ALL', 'signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, titheout, tithein, work, partnersteptwo, partnerend, food, wantsPrint, printed'); // where to go to complete each step (unordered) -- add new steps to the end
-define('S_PERSON', 'signup verifyemail verifyid agree preferences fund photo contact donate tithein proxies work backing invite'); // soon replace "preferences" with titheOut
+define('S_ALL', 'signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, stepup, crumbs, work, partnersteptwo, partnerend, food, wantsPrint, printed'); // where to go to complete each step (unordered) -- add new steps to the end
+define('S_PERSON', 'signup verifyemail verifyid agree preferences fund photo contact donate crumbs proxies work backing stepup invite');
 //define('S_CO', 'signup verifyemail');
-define('S_CO', 'signup verifyemail agree contact backing photo donate company tithein discount');
-define('S_CO2', 'agent agree contact backing photo donate company tithein discount');
+define('S_CO', 'signup verifyemail agree contact backing photo donate company crumbs discount');
+define('S_CO2', 'agent agree contact backing photo donate company crumbs discount');
 define('S_CARD', 'photo contact donate');
-define('S_SELL', 'ssn contact tithein');
+define('S_SELL', 'ssn contact crumbs'); // keep this for when an individual member goes over the limit for no 1099
 define('S_VOICE', 'contact donate proxies work backing invite'); // add comment
 define('S_PARTNER', 'signup fund partnersteptwo partnerend');
 
@@ -568,15 +571,37 @@ define('DS_DENIED', 3);  // dispute denied
 
 define('E_BANK_ONLY', 0); // bank charges and transfers between bank accounts that have no effect on CG account balances
 define('E_PRIME', 1);  // the main pair in the transaction (payer and payee)
-define('E_PAYER', 'UNUSED');  // the uid in this entry is for the payer
-define('E_PAYEE', 'UNUSED');  // the uid in this entry is for the payee (this type is not used in txs_prime or txs)
-define('E_DONATION', 2);  // this is a transaction-related donation (e.g., roundup and Food Fund donations)
+define('E_DONATION', 2);  // this is a transaction-related donation (e.g., roundup or rule-based donation)
                           // the precise nature can be determined from uid2
 define('E_REBATE', 3); // discount rebate to customer
 define('E_USD_FEE', 4); // fee from customer to merchant for buying (or selling?) Common Good credit
 define('E_BANK', 5); // CG account transfers to or from the member's bank
 define('E_XFEE', 6); // transfer fee to merchant (UNUSED)
-define('E_TYPES', 'bank_only prime donation rebate usd_fee bank');
+define('E_TYPES', 'bank_only prime donation rebate usd_fee bank rule');
+
+const REF_LIST = 'anybody account anyCo industry group'; // values for payerType and payeeType in tx_rules
+const REF_ANYBODY = 'anybody';
+const REF_ACCOUNT = 'account';
+const REF_ANYCO = 'anyCo';
+const REF_INDUSTRY = 'industry';
+const REF_GROUP = 'group';
+
+const ACT_LIST = 'pay charge surtx redeem'; // values for action field in tx_rules
+const ACT_PAY = 'pay';
+const ACT_CHARGE = 'charge';
+const ACT_SURTX = 'surtx';
+const ACT_REDEEM = 'redeem';
+
+const PERIODS = 'once day week month quarter year forever'; // periods and durations
+define('PERIODLY', t('once daily weekly monthly quarterly yearly always'));
+define('PERIODS_PLURAL', t('n/a days weeks months quarters years n/a'));
+
+const MATCH_PAYER = -1; // Special values for from and to (which are normally uids) in tx_rules
+const MATCH_PAYEE = -2;
+
+define('STEPUP_MIN', 10); // minimum number of stepup rules for a company to appear on the step-up page
+define('STEPUP_DESC', t('donation (by step-up)')); // step-up donation tx description
+define('REBATE_DESC', t('discount (rebate)'));
 
 $GLOBALS['emailSubjects'] = array(
   'nonmember' => t('%PROJECT invitation followup'),

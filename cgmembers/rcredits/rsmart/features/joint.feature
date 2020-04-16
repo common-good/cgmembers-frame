@@ -26,11 +26,11 @@ Setup:
   | .ZZC | .ZZA  | buy        |       |
   | .ZZC | .ZZB  | scan       |       |
   | .ZZC | .ZZD  | read       |       |
-  | .ZZC | .ZZE  | sell       | yes   |
+  | .ZZC | .ZZE  | buy        | yes   |
   | .ZZA | .ZZB  | joint      |       |
   | .ZZB | .ZZA  | joint      |       |
   And transactions: 
-  | xid | created   | amount | from | to   | purpose |*
+  | xid | created   | amount | payer | payee | purpose |*
   | 4   | %today-6m |    200 | ctty | .ZZF | stuff   |
   Then balances:
   | uid  | balance |*

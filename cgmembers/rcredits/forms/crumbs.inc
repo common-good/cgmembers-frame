@@ -9,7 +9,7 @@ use CG\Db as db;
 /**
  * Ask about crumbs and other tithing on payments received
  */
-function formTitheIn($form, &$sta, $args = '') {
+function formCrumbs($form, &$sta, $args = '') {
   global $mya;
 
   $title = t('Share When You Receive');
@@ -21,7 +21,7 @@ function formTitheIn($form, &$sta, $args = '') {
   return cgform(compact(ray('title subtext crumbs')) + setupFoot());
 }
 
-function formTitheIn_validate($form, &$sta) {
+function formCrumbs_validate($form, &$sta) {
   global $mya;
   extract(just('crumbs', $sta['input']));
 
@@ -30,12 +30,12 @@ function formTitheIn_validate($form, &$sta) {
   u\preray(compact('crumbs'), $sta['input']); // update trimmed percentage
 }
 
-function formTitheIn_submit($form, &$sta) {
+function formCrumbs_submit($form, &$sta) {
   global $mya;
   extract(just('crumbs', $sta['input']));
 
   $crumbs /= 100; // convert percentage to decimal
   $mya->update(compact('crumbs'));
 
-  return w\goNextStep('tithein');
+  return w\goNextStep('crumbs');
 }

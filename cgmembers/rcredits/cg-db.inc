@@ -120,7 +120,7 @@ function update($table, $info, $key) {
 function insert($table, $info, $key = 'id') {
   logSql(compact(ray('table info')));
 
-  foreach (ray('created modified') as $k) if (!isset($info[$k]) and hasField($table, $k)) {
+  foreach (ray('start created modified') as $k) if (!isset($info[$k]) and hasField($table, $k)) {
     $info[$k] = now(); // set these automatically
   }
 	
@@ -190,9 +190,8 @@ function logSql($args) {
   $args = date('d') . ' ' . @$mya->mainQid . ': ' . u\jsonEncode($args);
   $args = strtr($args, ['\\"' => '', '"' => '', '\\n' => '|', ';}' => '}', ';' => '; ', ',' => ', ']);
   if (!is_dir($logdir = LOG_DIR)) mkdir($logdir);
-  $fileName = $logdir . date('Ym') . '.logsql'; // new log file every month
-  file_put_contents($fileName, "$args\n", FILE_APPEND);
-  return $fileName;
+  file_put_contents(SQL_LOG, "$args\n", FILE_APPEND); // new log file every month
+  return SQL_LOG;
 }  
 
 /**
