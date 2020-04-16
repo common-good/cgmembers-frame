@@ -21,13 +21,13 @@ function formStepUp($form, &$sta, $args = '') {
   $subtext = t('<p>Support your favorite causes by paying a little extra on your %PROJECT purchases.</p><p>Choose organizations from the list below and/or add your own choices. Type a dollar amount or percentage to add to each purchase &mdash; to be donated to that organization. And a maximum donation per transaction, if any.</p><p>If you would like to see your nonprofit or project on this list, get %STEPUP_MIN people to write it in.</p>', '_a', atag('/community/invite', away()));
   
   $mine = 'r.from=:myid';
-  foreach (ray('amount portion extraMax') as $k) $set[] = "MAX(IF($mine, `$k`, NULL)) AS `$k`";
+  foreach (ray('amount portion amtMax') as $k) $set[] = "MAX(IF($mine, `$k`, NULL)) AS `$k`";
   $set = join(', ', $set);
   
   $sql = <<< X
     SELECT CONCAT_WS('-', uid, $mine) AS recK, uid, fullName, $mine AS mine, $set
     FROM tx_rules r LEFT JOIN users u ON u.uid=r.to
-    WHERE r.from>0 AND r.to>0 AND payeeType='anyCompany' AND IFNULL(end, :NOW+1) > :NOW
+    WHERE r.from>0 AND r.to>0 AND payeeType=:REF_ANYCO AND IFNULL(end, :NOW+1) > :NOW
     GROUP BY mine,r.to HAVING COUNT(id)>=:STEPUP_MIN OR mine
     ORDER BY mine, fullName, uid
 X;
@@ -43,14 +43,14 @@ X;
     if ($mine) {
       $fullName = rendA("org$uid", orgFld($fullName));
     } elseif ($myK = str_replace('-0', '-1', $recK) and $my = (array) nn($recs[$myK], [])) { // user chose a standard
-      foreach (ray('amount portion extraMax') as $k) $$k = $my[$k]; // get the amounts for the standard choice
+      foreach (ray('amount portion amtMax') as $k) $$k = $my[$k]; // get the amounts for the standard choice
       unset($recs[$myK]); // show it as standard and not as custom
     } 
     
-    foreach (ray('amount portion extraMax') as $k) $$k += 0;
+    foreach (ray('amount portion amtMax') as $k) $$k += 0;
     
     $amt = $amount ? u\fmtAmt($amount, '$') : ($portion ? u\fmtAmt($portion, '%') : '');
-    $max = $extraMax ? u\fmtAmt($extraMax) : '';
+    $max = $amtMax ? u\fmtAmt($amtMax) : '';
     $uids[] = $uid;
     if (nn($dfts["amt$uid"])) foreach (ray('amt max') as $k) $$k = nn($dfts["$k$uid"]); // what the user intended
     $rows[] = u\ray2row([$fullName, rendA("amt$uid", amtFld($amt)), rendA("max$uid", maxFld($max))]);
@@ -118,20 +118,19 @@ function formStepUp_validate($form, &$sta) {
 function formStepUp_submit($form, &$sta) {
   global $mya; $myid = $mya->id;
   
-  $changeable = 'amount portion extraMax'; // fields user can adjust from time to time
-  $paleGrpId = db\get('id', 'u_groups', "name=':PALE_TARGETS'");
+  $changeable = 'amount portion amtMax'; // fields user can adjust from time to time
   extract(just('uids', $input = $sta['input']));
 
   foreach ($uids = ray($uids) as $i => $uid) { // for each organization, create a rule for the amount
-    list ($amt, $pct, $extraMax) = [$input["amt$uid"], $input["pct$uid"], $input["max$uid"] ?: NULL];
+    list ($amt, $pct, $amtMax) = [$input["amt$uid"], $input["pct$uid"], $input["max$uid"] ?: NULL];
 
-    $amts = ray($changeable, $pct ? 0 : $amt, $pct ? $amt / 100 : 0, $extraMax);
-    $info = ray('payer payerType payeeType from to action', $myid, 'account', 'anyCompany', $myid, $uid, 'pay');
-    if ($res = db\get('id, amount, `portion`, extraMax', 'tx_rules', u\where($info) . ' AND IFNULL(end, :NOW+1) > :NOW', $info)) {
+    $amts = ray($changeable, $pct ? 0 : $amt, $pct ? $amt / 100 : 0, $amtMax);
+    $info = ray('payer payerType payeeType from to action', $myid, REF_ACCOUNT, REF_ANYCO, $myid, $uid, ACT_SURTX);
+    if ($res = db\get('id, amount, `portion`, amtMax', 'tx_rules', u\where($info) . ' AND IFNULL(end, :NOW+1) > :NOW', $info)) {
       if ($amts == just($changeable, $res)) continue; // no change; done with this organization
-      db\update('tx_rules', ray('id end', $res['id'], time()), 'id'); // cancel the old rule, to start a new one
+      db\update('tx_rules', ray('id end', $res['id'], now()), 'id'); // cancel the old rule, to start a new one
     }
-    $info += $amts + ray('purpose start', STEPUP_DESC, time());
+    $info += $amts + ray('purpose start', STEPUP_DESC, now());
     
     db\insert('tx_rules', $info);
   }

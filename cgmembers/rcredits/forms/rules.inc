@@ -10,8 +10,8 @@ use CG\Db as db;
  * Handle rules.
  */
  
-const RULE_FLDS = 'id payerType payer payeeType payee from to action amount portion purpose minimum useMax extraMax template start end code';
-const NULL_RULE_FLDS = 'payer payee from to purpose useMax extraMax template end code';
+const RULE_FLDS = 'id payerType payer payeeType payee from to action amount portion purpose minimum useMax amtMax template start end code';
+const NULL_RULE_FLDS = 'payer payee from to purpose useMax amtMax template end code';
 const ZERO_RULE_FLDS = 'amount portion minimum start';
  
 function formRules($form, &$sta, $args = '') {
@@ -25,7 +25,7 @@ function formRules($form, &$sta, $args = '') {
   foreach (ray('start end') as $k) if ($$k) $$k = u\fmtDate($$k, TRUE);
   
   $payeDesc = t('Type the full name on the account or a group/industry ID. Leave empty for ANY.');
-  $fromToDesc = t('Type a name or %SAME_AS_PAYER = same as payer, %SAME_AS_PAYEE = same as payee');
+  $fromToDesc = t('Type a name or %MATCH_PAYER = same as payer, %MATCH_PAYEE = same as payee');
   $dtDesc = [t('mm/dd/yyyy')];
   $maxDesc = t('Leave empty for no max.');
   
@@ -48,7 +48,7 @@ function formRules($form, &$sta, $args = '') {
   $purpose = textFld(REQ . t('Purpose:'), '', dft($purpose));
   $minimum = textFld(t('Minimum:'), '', dft($minimum));
   $useMax = textFld(t('Use Max:'), $maxDesc, dft($useMax));
-  $extraMax = textFld(t('Extra Max:'), $maxDesc, dft($extraMax));
+  $amtMax = textFld(t('Extra Max:'), $maxDesc, dft($amtMax));
   $template = textFld(t('Template:'), '', dft($template));
   $start = textFld(t('Start:'), $dtDesc, dft($start));
   $end = textFld(t('End:'), $dtDesc, dft($end));
@@ -74,10 +74,10 @@ function formRules_validate($form, &$sta) {
   foreach (ray('payerType payeeType') as $k) $$k = ray(REF_LIST)[$$k];
   $action = ray(ACT_LIST)[$action];
   
-  foreach (ray('start end') as $k) if ($$k and $err = u\badDate($$k, time())) return say($err, $k);
-  if (!$start) $start = time();
+  foreach (ray('start end') as $k) if ($$k and $err = u\badDate($$k, now())) return say($err, $k);
+  if (!$start) $start = now();
 
-  foreach (ray('amount portion minimum useMax extraMax') as $k) if ($$k and $err = u\badAmount($$k, '>=0', $k == 'useMax' ? 0 : 2)) return say("$err ($k)", $k);
+  foreach (ray('amount portion minimum useMax amtMax') as $k) if ($$k and $err = u\badAmount($$k, '>=0', $k == 'useMax' ? 0 : 2)) return say("$err ($k)", $k);
 
   if ($id and !db\exists('tx_rules', compact('id'))) return say(t('To insert a record, leave the id empty.'), 'id');
   

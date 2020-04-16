@@ -591,13 +591,13 @@ function fillContract($host, $data, $map, $sign = FALSE) {
     if ($pi == 0) $pdf->say("$buyer<br><br>$meter", $buyerX, $buyerY, 5, 1.75, $font, 'L'); // text, x, y, w, h, sizesEtc, align
     if ($sign and $pi == $sigPage) {
       list ($name, $signer) = nn($contact) ? [$fullName, $contact] : ['', $fullName];
-      $pdf->say(u\fmtDate(time(), TRUE), $dateX, $dateY, 5, 1.75, $font, 'L');
+      $pdf->say(u\fmtDate(now(), TRUE), $dateX, $dateY, 5, 1.75, $font, 'L');
       if ($host == 'cooppower') {
         $sellerX = 5.2;
         $pdf->say($name, $sigX, 8.3, 5, 1.75, $font, 'L');
         $pdf->say($signer, $sigX, $sigNameY, 5, 1.75, $font, 'L');
         $pdf->say('Mark Skinder, Dir. of Energy Services', $sellerX, $sigNameY, 5, 1.75, $font, 'L');
-        $pdf->say(u\fmtDate(time(), TRUE), $sellerX, $dateY, 5, 1.75, $font, 'L');
+        $pdf->say(u\fmtDate(now(), TRUE), $sellerX, $dateY, 5, 1.75, $font, 'L');
         $pdf->setTextColor(0, 0, 128); // sign in color (so do this last)
         $pdf->say('Mark Skinder', $sellerX, $sigY, 5, 1.75, '22;B;DSGabriele', 'L');
       } elseif ($host == 'nyccec') {

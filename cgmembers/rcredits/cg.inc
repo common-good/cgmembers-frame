@@ -429,7 +429,7 @@ function notifyEntries($a, $index, $entries, $force = FALSE) {
   if ($force) {
     $mailed = r\rMail($index, $a, $subs, @$subs['reply'] ?: 'ctty');
   } else { //if ($a->can(B_NOTIFY_EMAIL)) {
-    list ($message, $created) = array(t($index, $subs), r\rTime());
+    list ($message, $created) = array(t($index, $subs), now());
     f('t.output', "Actual Notice to $fullName: $message");
     db\insert('r_notices', compact(ray('uid message created')), 'msgid');
   }
@@ -872,10 +872,16 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     'tx_entries:agentUid',
     'tx_hdrs:actorId',
     'tx_hdrs:actorAgentId',
-    'tx_rules:id',
-    'tx_templates:id',
-    'u_groups:id',
-    'u_groupies:id',
+    'tx_rules:to',
+    'tx_rules:payer',
+    'tx_rules:payee',
+    'tx_rules:from',
+    'tx_templates:to',
+    'tx_templates:payer',
+    'tx_templates:payee',
+    'tx_templates:from',
+    // u_groups
+    'u_groupies:uid',
     'users:jid',
     'users:uid:D',
     'users:helper',
@@ -890,14 +896,14 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     
     if ($delete) {
       if (!$deletable) {
-        if (db\exists($table, "$field=:oldUid", compact('oldUid'))) {
+        if (db\exists($table, "`$field`=:oldUid", compact('oldUid'))) {
           $DBTX->rollback(); 
           return w\say(t('Record in table %table (field %field) cannot be deleted.', compact('table', 'field')), 'err');
         }
       } else {
         db\del($table, $field, $oldUid);
       }
-    } else db\q("UPDATE $table SET $field=:newUid WHERE $field=:oldUid", compact('newUid', 'oldUid'));
+    } else db\q("UPDATE $table SET `$field`=:newUid WHERE `$field`=:oldUid", compact('newUid', 'oldUid'));
   }
 
   if ($unusable and !$delete) {
@@ -1302,7 +1308,7 @@ function topN($res, $n = 3) {return max($n, round($n * array_sum(just('bAccts aA
  */
 function averageBalance($uid, $start, $end = NULL, $noj = FALSE) {
   $uids = is_array($uid) ? $uid : [$uid];
-  if (is_null($end)) { $end = r\rTime(); }
+  if (is_null($end)) { $end = now(); }
   $days = round(($end + 1 - $start) / DAY_SECS);
   if ($days == 0) return [0, 0, 0, 0]; // rounding is for daylight savings time changes
   $info = be\creditInfo($uids, $start);
@@ -1366,16 +1372,17 @@ function riskList($risks, $descs) {
 function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   global $scanned, $channel;
   
-  $invoicing = ($taking and $channel == TX_WEB);
-  if ($invoicing and !$a2->confirmed) $a2->setBit(B_CONFIRMED);
+  $invoicing = ($taking and $channel != TX_POS);
 
   // Check a1
   if (!$a1->ok) return [FALSE, t('Requesting account is inactive.'), []];
   
-  if (!$a1->confirmed and !$a1->isCanonic and !$a2->isCanonic and $a1->id != CGID and $a2->id != CGID) { // communities and CG can transact with newbs
+  if (!$a1->confirmed and !$a1->isCanonic and !$a2->isCanonic and $a1->id != CGID and $a2->id != CGID) { // actor is not confirmed (but newbs can transact with bank and CG)
     if ($a1->community != $a2->community or $channel != TX_POS) { // first tx must be in-person at home
-      if ($a1->helper != $a2->id) {
-        return [FALSE, 'first at home', ray('whose', $a1 == $a1 ? t('Your') : "$a1->fullName's")];
+      if ($a1->helper != $a2->id) { // unless doing business with who invited you
+        if (!$a1->hasSsn or $a1->hasRisk('badSsn')) {
+          return [FALSE, 'first at home', []];
+        }
       }
     }
   }
@@ -1390,6 +1397,9 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   if (!$a1->cttyUp and !$a1->isCanonic) return [FALSE, 'your community down', ray('contact', $a1->cAdminContact())];
   if (!$a2->cttyUp and !$a2->isCanonic) return [FALSE, 'other community down', []];
   if ($a1->id == $a2->id) return [FALSE, 'no self-trading', []];
+  
+  if ($a1->confirmed) $a2->setBit(B_CONFIRMED);
+
   return FALSE;
 }
 

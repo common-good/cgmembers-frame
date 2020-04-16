@@ -367,7 +367,7 @@ EOF
   'other no photoid' => t('%who must make a purchase in person to verify their identity, before you can pay or charge them.'),
   'duplicate transaction' => t('You already just %op that member that much. Wait a few minutes or type a different amount.'),
   'no search' => t('OR that member has chosen not to be identified by email or phone number.'),
-  'first at home' => t('%whose first transaction must be in person in your home community.'),
+  'first at home' => t('The first transaction you initiate must be in person in your home community.'),
   'zero transaction' => t('The transaction amount cannot be zero.'),
   'bad birthdate' => t('Birth date does not match.'),
   'bad coupon' => t('That is not a valid coupon type.'),

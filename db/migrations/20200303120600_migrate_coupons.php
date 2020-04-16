@@ -5,13 +5,12 @@ use Phinx\Migration\AbstractMigration;
 
 class MigrateCoupons extends AbstractMigration
 {
-  const REF_LIST = 'anybody account anyCompany industry group';
-  const ACT_LIST = 'pay now redeem';
+  const REF_LIST = 'anybody account anyCo industry group';
+  const ACT_LIST = 'pay charge surtx redeem';
   const PERIODS = 'once day week month quarter year forever';
 
-
-  const SAME_AS_PAYER = -1;
-  const SAME_AS_PAYEE = -2;
+  const MATCH_PAYER = -1;
+  const MATCH_PAYEE = -2;
 
   /**
    * More information on writing migrations is available here:
@@ -88,7 +87,7 @@ class MigrateCoupons extends AbstractMigration
                 "payer" => null, "payerType" => 'anybody',
                 "payee" => $coupon["fromId"], "payeeType" => 'account',
                 "from" => $coupon["sponsor"],
-                "to" => self::SAME_AS_PAYER,
+                "to" => self::MATCH_PAYER,
                 "action" => 'pay',
                 "start" => $coupon["start"],
                 "end" => $coupon["end"],
@@ -97,7 +96,7 @@ class MigrateCoupons extends AbstractMigration
                 "purpose" => is_null($coupon["on"]) ? '' : $coupon["on"],
                 "minimum" => $coupon["minimum"],
                 "useMax" => $coupon["ulimit"],
-                "extraMax" => null ];
+                "amtMax" => null ];
       $rules->insert($rule);
       $count += 1;
     }
@@ -145,13 +144,13 @@ class MigrateCoupons extends AbstractMigration
       // Now create the template and connect it to the group.
       $template = ['id' => $grpId,
                    'payer' => $grpId, 'payerType' => 'group', 'payee' => $coupon['fromId'], 'payeeType' => 'account',
-                   'from' => $coupon['sponsor'], 'to' => self::SAME_AS_PAYER, 'action' => 'pay',
+                   'from' => $coupon['sponsor'], 'to' => self::MATCH_PAYER, 'action' => 'pay',
                    'start' => $coupon['start'], 'end' => $coupon['end'],
                    'amount' => $coupon['amount'] < 0 ? 0 : $coupon['amount'],
                    'portion' => $coupon['amount'] < 0 ? -$coupon['amount'] * 0.01 : 0,  // convert percentage to portion
                    'purpose' => $coupon['on'], 'minimum' => $coupon['minimum'],
-                   'useMax' => $coupon['ulimit'], 'extraMax' => max($coupon['amount'], 0),
-                   'period' => 1, 'prdUnits' => 'month', 'duration' => 1, 'durUnits' => 'forever' ];
+                   'useMax' => $coupon['ulimit'], 'amtMax' => max($coupon['amount'], 0),
+                   'periods' => 1, 'period' => 'month', 'durations' => 1, 'duration' => 'forever' ];
       $templates->insert($template);
       $templates->saveData();
       echo "The coupon sponsored by '$sponsorName' may need manual adjustment, particulary the amount, end date, period, and duration.\n";
@@ -159,16 +158,16 @@ class MigrateCoupons extends AbstractMigration
       // Generate the appropriate rules -- this code should be closely related to the corresponding code in rcron.
       $shouldStart = $coupon['start'];  // start date of the first rule
 
-      $rule = array_diff_key($template, ['id' => 1, 'period' => 1, 'prdUnits' => 1, 'duration' => 1, 'durUnits' => 1, 'start' => 1, 'end' => 1, 'maxStart' => 1]);
+      $rule = array_diff_key($template, ['id' => 1, 'periods' => 1, 'period' => 1, 'durations' => 1, 'duration' => 1, 'start' => 1, 'end' => 1, 'maxStart' => 1]);
       print_r($rule);
       echo("\n");
       $rule['template'] = $grpId;
       while ($shouldStart < time() and (is_null($template['end']) or $shouldStart < $template['end'])) {
         $rule['start'] = $shouldStart;
-        $rule['end'] = $this->dateIncr($shouldStart, $template['duration'], $template['durUnits']);
+        $rule['end'] = $this->dateIncr($shouldStart, $template['durations'], $template['duration']);
         $rules->insert($rule);
         echo "Generated rule with starting date $shouldStart.\n";
-        $shouldStart = $this->dateIncr($shouldStart, $template['period'], $template['prdUnits']);
+        $shouldStart = $this->dateIncr($shouldStart, $template['periods'], $template['period']);
       }
     }
     
@@ -185,14 +184,14 @@ class MigrateCoupons extends AbstractMigration
       foreach (range($giftCard['start'], $giftCard['end']-1) as $number) {
         $newRule = ['payer' => null, 'payerType' => 'anybody',
                     'payee' => null, 'payeeType' => 'anybody',
-                    'from' => $giftCard['fromId'], 'to' => self::SAME_AS_PAYEE,
+                    'from' => $giftCard['fromId'], 'to' => self::MATCH_PAYEE,
                     'action' => 'redeem',
                     'amount' => $giftCard['amount'],
                     'portion' => 0,
                     'purpose' => $giftCard['on'] ?: 'gift certificate',
                     'minimum' => $giftCard['minimum'],
                     'useMax' => $giftCard['ulimit'],
-                    'extraMax' => $giftCard['amount'],
+                    'amtMax' => $giftCard['amount'],
                     'template' => null,
                     'start' => 0,
                     'end' => null,
@@ -218,16 +217,8 @@ class MigrateCoupons extends AbstractMigration
   }
 
   function dateIncr($start, $number, $units) {
-    $startDate = (new \DateTime())->setTimestamp($start);
-    if ($units == 'forever') {
-      return null;
-    }
-    if ($units == 'quarter') {
-      $units = 'month';
-      $number *= 3;
-    }
-    $unitCode = [ 'once' => 'XX', 'day' => 'D', 'week' => 'W', 'month' => 'M', 'year' => 'Y', 'forever' => 'X' ][$units];
-    $interval = new \DateInterval("P$number$unitCode");
-    return $startDate->add($interval)->getTimestamp();
+    if ($units == 'forever') return NULL;
+    if ($units == 'quarter') list ($units, $number) = ['month', $number * 3];
+    return strtotime("+$number $units", $start);
   }
 }

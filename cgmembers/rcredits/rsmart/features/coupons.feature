@@ -31,7 +31,7 @@ Setup:
   | .ZZC |       0 |
 
 Scenario: A member redeems a discount coupon
-  Given  coupons:
+  Given coupons:
   | coupid | fromId | amount | minimum | useMax | start  | end       | on                |*
   |      1 |   .ZZC |     10 |       0 |      1 | %today | %today+7d | discount (rebate) |
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $100 for "goods": "food" at %now
@@ -44,6 +44,7 @@ Scenario: A member redeems a discount coupon
   | 1   |   -100 | .ZZB | .ZZB     | 1       | food              |      |
   | 1   |     10 | .ZZB | .ZZB     | 1       | discount (rebate) | 1    |
   | 1   |    -10 | .ZZC | .ZZC     | 1       | discount (rebate) | 1    |
+
   And balances:
   | uid  | balance |*
   | .ZZA |       0 |

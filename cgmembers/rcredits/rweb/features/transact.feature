@@ -185,9 +185,7 @@ Scenario: A member confirms payment of an invoice before making a Common Good Ca
   Given member ".ZZA" confirms form "pay" with values:
   | op  | who     | amount | goods      | purpose |*
   | pay | Bea Two | 100    | %FOR_GOODS | labor   |  
-  Then we say "error": "first at home" with subs:
-  | whose |*
-  | Your  |
+  Then we say "error": "first at home"
   
 Skip (not sure about this feature)
 Scenario: A member asks to pay another member before the other has made a Common Good Card purchase
@@ -205,9 +203,7 @@ Scenario: A new member asks to pay another member before making a Common Good Ca
   When member ".ZZA" completes form "pay" with values:
   | op  | who     | amount | goods | purpose |*
   | pay | Bea Two | 100    | %FOR_GOODS     | labor   |
-  Then we say "error": "first at home" with subs:
-  | whose |*
-  | Your  |
+  Then we say "error": "first at home"
 
 Scenario: A member pays another member repeatedly
   When member ".ZZA" confirms form "pay" with values:

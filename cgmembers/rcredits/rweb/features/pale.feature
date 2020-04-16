@@ -13,8 +13,8 @@ Setup:
 
 Scenario: A member makes a transaction that triggers paying a little extra
   Given txRules:
-  | id | payer | payerType | payeeType | from           | to   | amount | portion | action | start  | purpose   |*
-  |  1 | .ZZA  | account   | anybody   | %SAME_AS_PAYER | .ZZD |      0 | 0.05    | 1      | %today | food fund |
+  | id | payer | payerType | payeeType | from         | to   | amount | portion | action | start  | purpose   |*
+  |  1 | .ZZA  | account   | anybody   | %MATCH_PAYER | .ZZD |      0 | 0.05    | surtx  | %today | food fund |
 
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | purpose |*

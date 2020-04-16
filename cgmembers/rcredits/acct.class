@@ -654,7 +654,7 @@ class Acct {
     // no going into debt without permission
     if ($goods == FOR_USD or $a->cttyA->noneg or !$a->can(B_DEBT)) {
       $floor = max(0, $a->floor) + $a->giftPot; // don't allow cashing out credit or gift cards
-    } else $floor = $a->floor;
+    } else {$floor = $a->floor;}
 
     return round($a->balance - $floor, 2);
   }

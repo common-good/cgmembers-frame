@@ -1183,7 +1183,7 @@ function tenure($years, $months, &$err = '') {
     if ($err = u\badAmount($$k, '>=0')) {$err = t('How-long: ') . tr($err); return NULL;}
   }
   $tenure = $years * 12 + $months ;
-  if ($mya and $mya->activated) $tenure -= (time() - $mya->activated) / MONTH_SECS; // tenure is at time of joining
+  if ($mya and $mya->activated) $tenure -= (now() - $mya->activated) / MONTH_SECS; // tenure is at time of joining
   return $tenure;
 } 
 
@@ -1336,8 +1336,8 @@ function zBadSelling(&$selling) {
  */
 function getPreId($source2 = NULL) {
   if (!$preid = nn($_COOKIE['preid'])) {
-    $preid = time() . u\randomString(9, 'digits');
-    setcookie('preid', $preid, time() + 100 * YEAR_SECS, '/', $_SERVER['HTTP_HOST']);
+    $preid = now() . u\randomString(9, 'digits');
+    setcookie('preid', $preid, now() + 100 * YEAR_SECS, '/', $_SERVER['HTTP_HOST']);
   } else $preid = substr(preg_replace('/\\D*/', '', $preid), 0, 20); // ignore all but the digits
 
   if ($oldPreid = db\get('preid', 'signup', compact('preid'))) {

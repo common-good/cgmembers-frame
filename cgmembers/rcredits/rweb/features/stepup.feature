@@ -31,16 +31,16 @@ Scenario: A member chooses to Step Up
   | payer     | .ZZB          | .ZZB          | .ZZB          |**
   | payerType | account       | account       | account       |
   | payee     |               |               |               |
-  | payeeType | anyCompany    | anyCompany    | anyCompany    |
+  | payeeType | anyCo         | anyCo         | anyCo         |
   | from      | .ZZB          | .ZZB          | .ZZB          |
   | to        | .ZZF          | .ZZG          | .ZZH          |
-  | action    | pay           | pay           | pay           |
+  | action    | surtx         | surtx         | surtx         |
   | amount    | 0             | 2             | 0             |
   | portion   | .01           | 0             | .03           |
   | purpose   | %STEPUP_DESC  | %STEPUP_DESC  | %STEPUP_DESC  |
   | minimum   | 0             | 0             | 0             |
   | useMax    |               |               |               |
-  | extraMax  | 1             |               | 4             |
+  | amtMax  | 1             |               | 4             |
   | template  |               |               |               |
   | start     | %now          | %now          | %now          |
   | end       |               |               |               |
@@ -52,16 +52,16 @@ Scenario: A member's rules come into play
   | payer     | .ZZB          | .ZZB          | .ZZB          |
   | payerType | account       | account       | account       |
   | payee     |               |               |               |
-  | payeeType | anyCompany    | anyCompany    | anyCompany    |
+  | payeeType | anyCo         | anyCo         | anyCo         |
   | from      | .ZZB          | .ZZB          | .ZZB          |
   | to        | .ZZF          | .ZZG          | .ZZH          |
-  | action    | pay           | pay           | pay           |
+  | action    | surtx         | surtx         | surtx         |
   | amount    | 0             | 2             | 0             |
   | portion   | .01           | 0             | .03           |
   | purpose   | %STEPUP_DESC  | %STEPUP_DESC  | %STEPUP_DESC  |
   | minimum   | 0             | 0             | 0             |
   | useMax    |               |               |               |
-  | extraMax  | 1             |               | 2             |
+  | amtMax  | 1             |               | 2             |
   | template  |               |               |               |
   | start     | %now          | %now          | %now          |
   | end       |               |               |               |
@@ -72,6 +72,6 @@ Scenario: A member's rules come into play
   Then these "txs":
   | eid | xid | created | amount | payer | payee | purpose      | rule | type        |*
   |   1 |   1 | %today  | 100    | .ZZB  | .ZZC  | labor        |      | %E_PRIME    |
-  |   3 |   1 | %today  | 1      | .ZZB  | .ZZF  | %STEPUP_DESC | 1    | %E_DONATION |
-  |   4 |   1 | %today  | 2      | .ZZB  | .ZZG  | %STEPUP_DESC | 2    | %E_DONATION |
-  |   5 |   1 | %today  | 2      | .ZZB  | .ZZH  | %STEPUP_DESC | 3    | %E_DONATION |
+  |   2 |   1 | %today  | 1      | .ZZB  | .ZZF  | %STEPUP_DESC | 1    | %E_DONATION |
+  |   3 |   1 | %today  | 2      | .ZZB  | .ZZG  | %STEPUP_DESC | 2    | %E_DONATION |
+  |   4 |   1 | %today  | 2      | .ZZB  | .ZZH  | %STEPUP_DESC | 3    | %E_DONATION |

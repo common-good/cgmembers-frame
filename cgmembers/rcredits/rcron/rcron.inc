@@ -251,38 +251,48 @@ X;
 	db\q('DELETE FROM x_usd WHERE amount=0'); // no need to track these
 
   $sql = <<< EOF
-    SELECT t.*, MAX(r.start) AS maxStart FROM tx_templates t LEFT OUTER JOIN tx_rules r ON r.template=t.id GROUP BY t.id
+    SELECT t.*, MAX(r.start) AS maxStart FROM tx_templates t 
+    LEFT JOIN tx_rules r ON r.template=t.id 
+    GROUP BY t.id
+    ORDER BY (t.action='surtx') DESC, t.id
 EOF;
-  queueEach('genRulesFromTemplate', $sql);
-}
-
-function genRulesFromTemplates($template) {
-  // Generate rules from template
-  $DBTX = db_transaction();
-  $rule = justNot(ray('id period duration durUnit start end maxStart'), $template);
-  $rule['template'] = $template['id'];
-  $shouldStart = dateIncr($template['maxStart'], $template['period'], $template['prdUnits']);
-  $end = empty($end) ? time() : min(time(), $end);
-  while ($shouldStart < $end) {
-    $rule['start'] = $shouldStart;
-    $rule['end'] = dateIncr($shouldStart, $template['duration'], $template['durUnits']);
-    db\insert('tx_rules', $rule, 'id');
-    $shouldStart = u\dateIncr($shouldStart, 1, $template['period']);
-  }
-  unset($DBTX);
+  queueEach('generateRule', $sql);
 }
 
 /**
- * Warn company that their trial time is past, account is deactivated, and they must open a full account.
- *//*
-function endTrialco($item) {
-  extract(just('uid', $item));
-  r\message($uid, 'trial co end');
-  $a = r\acct($uid);
-  $a->setBit(B_OK, FALSE);
-  $a->setBit(B_DEPENDS, FALSE);
-  $a->update('task', 'co2');
-}*/
+ * Generate rules, transactions, and invoices from template
+ */
+function generateRule($template) {
+  $rule = justNot(ray('id period periods duration durations start end maxStart'), $template);
+  extract(just('id maxStart period periods end duration durations action from to purpose amount', $template));
+  $rule['template'] = $id;
+  $shouldStart = empty($maxStart) ? now() : u\dateIncr($maxStart, $periods, $period);
+  if ($end and $end < $shouldStart) return; // don't create rules after template expires
+
+  if ($action == 'surtx') {
+    if ($shouldStart > now() + WEEK_SECS) return; // don't create rules more than a week in advance
+    $rule['start'] = $shouldStart;
+    $rule['end'] = u\dateIncr($shouldStart, $durations, $duration);
+    db\insert('tx_rules', $rule, 'id');
+  } else {
+    //u\FAIL('NYI');
+    if ($shouldStart > strtotime('tomorrow')) return; // don't create transactions and invoices until the right day
+    $fromA = r\acct($from); $toA = r\acct($to);
+    if ($period and $period != 'once') {
+      $p = array_search($period, ray(PERIODS));
+      $when = $periods > 1 ? t('every %n %units', 'n units', $periods, ray(PERIODS_PLURAL)[$p])
+      : ray(PERIODLY)[$p];
+      $purpose .= " ($when)";
+    }
+
+    if ($action == 'pay') {
+      list ($ok, $msg, $args) = be\transfer('payment', $fromA, $toA, $amount, $purpose, FOR_GOODS, [], $id);
+    } elseif ($action == 'charge') {
+      list ($ok, $msg, $args) = be\invoice($toA, $fromA, $amount, $purpose, FOR_GOODS, [], $id);
+    } else FAIL(t('bad action in template: ') . pr($template));    
+  }
+  
+}
 
 /**
  * Do things a certain number of days after the created, signed, invite, firstTx, last login, or last access date.

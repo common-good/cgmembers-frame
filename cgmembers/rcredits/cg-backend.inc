@@ -506,7 +506,7 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
 
   // Apply rules
   if ($amount > 0 and ($goods != FOR_USD)) {
-    $needed += handleRules($entries, $loserA, $gainerA, $amount);
+    $needed += handleSurTx($entries, $loserA, $gainerA, $amount);
   }
 
 /*  // Apply food fund (or other special) donation
@@ -680,7 +680,7 @@ function sendNotifications($type, $tx, $shortfall) {
  * @return the net increase in overall transaction amount
  */
 
-function handleRules(&$entries, $buyer, $seller, $price) {
+function handleSurTx(&$entries, $buyer, $seller, $price) {
   u\EXPECT($price > 0, 'non-positive price handling coupon');
   
   $payerCo = $buyer->co ? 1 : 0;
@@ -691,41 +691,41 @@ function handleRules(&$entries, $buyer, $seller, $price) {
   $payeeCheck = u\genRuleSQL('payee', ':seller');
   
   $sql = <<<EOF
-    SELECT r.id AS ruleId, r.amount, r.portion, r.from, r.to, r.purpose, r.minimum, r.useMax, r.extraMax,
+    SELECT r.id AS ruleId, r.amount, r.portion, r.from, r.to, r.purpose, r.minimum, r.useMax, r.amtMax,
     (SELECT IFNULL(SUM(e.amount), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=ruleId AND e.uid=:buyer) AS `amtUsed`,
     (SELECT IFNULL(SUM(SIGN(e.amount)), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=ruleId AND e.uid=:buyer) AS `timesUsed`
     FROM tx_rules r
     WHERE $payerCheck
     AND $payeeCheck
-    AND (r.action = 'pay')
+    AND (r.action = :ACT_SURTX)
     AND (r.start <= :now AND IFNULL(:now < r.end, TRUE))
     AND (:price >= minimum)
     GROUP BY ruleId
-    HAVING (:price >= minimum) AND timesUsed < IFNULL(useMax, timesUsed+1) AND amtUsed < IFNULL(extraMax, amtUsed+1)
+    HAVING (:price >= minimum) AND timesUsed < IFNULL(useMax, timesUsed+1) AND amtUsed < IFNULL(amtMax, amtUsed+1)
     ORDER BY r.start
 EOF;
 
   $subs = ray('buyer seller now price', $buyer->id, $seller->id, now(), $price);
   if (!$q = db\q($sql, $subs)) return 0;
+///  showq($sql, $subs);
   if (!$res = $q->fetchAllAssoc('ruleId', \PDO::FETCH_ASSOC)) return 0;
 
   $rebate = 0;
   foreach ($res as $ruleId => $rule) {
     extract($rule);
-    $value = $amount + $portion * $price;
-    if (! is_null($extraMax)) $value = min($value, $extraMax - $amtUsed);
-    $use = min($price - $rebate, $value);
-    $rebate += $use;
-    $from = ($from == SAME_AS_PAYER) ? $buyer->id : (($from == SAME_AS_PAYEE) ? $seller->id : $from);
-    $to = ($to == SAME_AS_PAYER) ? $buyer->id : (($to == SAME_AS_PAYEE) ? $seller->id : $to);
+
+    $value = $amount + $portion * $price; // potential rebate/stepup amount
+    if (! is_null($amtMax)) $value = min($value, $amtMax - ($portion > 0 ? 0 : $amtUsed)); // limited by amtUsed
+
+    $from = ($from == MATCH_PAYER) ? $buyer->id : (($from == MATCH_PAYEE) ? $seller->id : $from);
+    $to = ($to == MATCH_PAYER) ? $buyer->id : (($to == MATCH_PAYEE) ? $seller->id : $to);
     list ($type, $desc) = $to == $buyer->id ? [E_REBATE, REBATE_DESC] : [E_DONATION, STEPUP_DESC]; // any surtx not coming back to buyer is a donation of some sort
+    if ($to == $buyer->id) $value = min($price, $value); // don't refund more than is being spent (food fund especially)
+    $rebate += $value;
     
-    txEntryPair($entries, $use, [$from, $to], $desc, $type, 0, null, null, $ruleId);
-    if ($rebate >= $price) {
-      $rebate = $price;
-      break;
-    }
+    txEntryPair($entries, $value, [$from, $to], $desc, $type, 0, null, null, $ruleId);
   }
+
   return -$rebate;
 }
 
@@ -781,8 +781,8 @@ function maxTid($uids) {
 /**
  * Create an invoice
  * call by: list ($ok, $msg, $args) = be\invoice(...);
- * @param acct $actorA: acct object for payee (usually current user)
- * @param acct $otherA: acct object for payer
+ * @param acct $payeeA: acct object for payee (usually current user)
+ * @param acct $payerA: acct object for payer
  * @param numeric $amount: the invoiced amount
  * @param string $purpose: description of the transaction's purpose (user input)
  * @param assoc $extra:
@@ -796,10 +796,10 @@ function maxTid($uids) {
  *    index: index to result message string (if success, the index begins with "report ")
  *    subs: replacement parameters, specific to the message
  */
-function invoice($actorA, $otherA, $amount, $purpose, $goods = FOR_GOODS, $extra = [], $recursId = 0) {
+function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra = [], $recursId = 0) {
   global $channel;
   
-  u\EXPECT(compact(ray('actorA otherA amount purpose')), 'acct acct float string');
+  u\EXPECT(compact(ray('payeeA payerA amount purpose')), 'acct acct float string');
   $ks = 'status';
   extract(just($ks, $extra));
   extract(just('goods created', $extra, [FOR_GOODS, now()]));
@@ -808,33 +808,33 @@ function invoice($actorA, $otherA, $amount, $purpose, $goods = FOR_GOODS, $extra
     u\setBit($flags, $k, $v);
     unset($extra[$k]); // don't leave bits in extras (data field)
   }
-  list ($payee, $payer) = array($actorA->id, $otherA->id);
+  list ($payee, $payer) = array($payeeA->id, $payerA->id);
   u\setDft($purpose, $why = ray(R_WHYS)[$goods]);
-  $subs = ray('myName otherName otherEmail otherPhone amount why purpose did op', $actorA->fullName, $otherA->fullName, $otherA->email, u\fmtPhone($otherA->phone), u\fmtAmt($amount), $why, $purpose, t('charged'), t('charged'));
+  $subs = ray('myName otherName otherEmail otherPhone amount why purpose did op', $payeeA->fullName, $payerA->fullName, $payerA->email, u\fmtPhone($payerA->phone), u\fmtAmt($amount), $why, $purpose, t('charged'), t('charged'));
   if ($err = u\badAmount($amount, '>0')) return r\txErr($err, $subs);
-  if ($err = r\txPermErr($actorA, $otherA, TRUE)) return r\txErr($err, $subs);
+  if ($err = r\txPermErr($payeeA, $payerA, TRUE)) return r\txErr($err, $subs);
   if (r\dupTx($payee, $payer, -$amount)) return r\txErr(t('duplicate transaction'), $subs);
   
   u\setDft($status, ($channel != TX_FOREIGN and r\relation(':IS_AUTOPAY', $payee, $payer)) ? TX_APPROVED : TX_PENDING);
   $data = serialize($extra);
   $info = compact(ray('amount payer payee status purpose created flags data recursId'));
   $nvid = db\insert('r_invoices', $info, 'nvid');
-  /* $actorA->update('lastTx', [$nvid, $payer - $payee, round(-$amount, 2), $created, 'inv']); */
+  /* $payeeA->update('lastTx', [$nvid, $payer - $payee, round(-$amount, 2), $created, 'inv']); */
 
   if ($status == TX_PENDING) {
-    $link = $actorA->makeDo('inv', $nvid); // link to pay/deny
-    //$otherA->update(ray('lastTx', array($nvid, $payee - $payer, round($amount, 2), $created, 'inv')));
-    $subs += ray('_a1 reply email phone', $link, $payee, $actorA->email, u\fmtPhone($actorA->phone));
+    $link = $payeeA->makeDo('inv', $nvid); // link to pay/deny
+    //$payerA->update(ray('lastTx', array($nvid, $payee - $payer, round($amount, 2), $created, 'inv')));
+    $subs += ray('_a1 reply email phone', $link, $payee, $payeeA->email, u\fmtPhone($payeeA->phone));
     r\message($payer, 'new invoice', $subs); // tell other party by email about this invoice
   } else { // pre-approved!
-    if (!$otherA->shortfall(TX_TRANSFER, $amount)) { // don't try to pay yet if short
+    if (!$payerA->shortfall(TX_TRANSFER, $amount)) { // don't try to pay yet if short
       list($ok, $msg) = be\payInvoice($nvid);
       if (!$ok) r\tellAdmin(t('invoice payment failed'), compact('msg') + $subs + $info);
     }
   }
 
   $msg = 'report tx';
-//  if ($actorA->cttyRewardy) $msg .= '|for why';
+//  if ($payeeA->cttyRewardy) $msg .= '|for why';
   if ($amount > 0) $msg .= '|balance unchanged';
   return [TRUE, $msg, $subs + ray('success nvid', TRUE, $nvid)];
 }
@@ -980,7 +980,7 @@ function creditInfo($uids, $asof = null) {
 EOF;
 
   $sums = db\q($sql, $subs)->fetchAssoc();
-///   die(pr(u\showq($sql, ray('uids asof', join(',', $uids), $asof))));
+///   die(pr(showq($sql, ray('uids asof', join(',', $uids), $asof))));
 
   $sql = "SELECT SUM(amount) AS pendingBank FROM r_usd t WHERE (payee IN (:uids)) AND created<:asof AND completed <= 0";
   $sums += db\q($sql, $subs)->fetchAssoc();

@@ -1,3 +1,13 @@
+2020-04-15 feature/surtransactions
+. stepup maxes are now handled right, rather than like food fund max
+. start fields default to now
+. simple string constants are now automatically quoted in SQL statements
+. ACT and REF strings are now represented by constants
+. cron tests for generating rules, txs, and invoices from templates
+. all references to time() are now now() instead
+. newbs can now be invoiced in cron before confirmation
+. improved analysis of failed verifyRecord in tests
+
 2020-04-14 feature/surtransactions
 . fixed some bugs in gift certificates and discounts
 . giftPot now restricts the amount a gift certificate recipient can cash out

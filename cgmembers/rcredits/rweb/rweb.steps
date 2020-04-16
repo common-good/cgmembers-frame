@@ -335,7 +335,6 @@ function transactions($list) {return t\transactions($list);}
  *     TEST transact AMemberConfirmsRequestToChargeAnotherMember
  *     TEST transact AMemberConfirmsRequestToPayAnotherMember
  *     TEST transact AMemberConfirmsRequestToPayAMemberCompany
- *     TEST transact ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
  *     TEST transact AMemberPaysAnotherMemberRepeatedly
  */
 function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $index, $subs);}
@@ -409,6 +408,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST signup AMemberRegistersBadEmail
  *     TEST signup AMemberRegistersBadZip
  *     TEST stepup AMemberChoosesToStepUp
+ *     TEST transact ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
  */
 function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
 
@@ -2053,8 +2053,8 @@ function memberHasStepupRules($id, $count) {
   $uid = t\uid($id);
   for ($i = 0; $i < $count; $i++) {
     $from = CANONIC_ACCTS + $i; // arbitrary account number (doesn't have to exist at this time)
-    $info = ray('amount portion extraMax purpose start', 1, 0, NULL, 'stepup', time());
-    $info += ray('payer payerType payeeType from to action', $from, 'account', 'anyCompany', $from, $uid, 'pay');
+    $info = ray('amount portion amtMax purpose start', 1, 0, NULL, 'stepup', now());
+    $info += ray('payer payerType payeeType from to action', $from, REF_ACCOUNT, REF_ANYCO, $from, $uid, ACT_SURTX);
     db\insert('tx_rules', $info);
   }
   return TRUE;

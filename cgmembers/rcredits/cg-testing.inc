@@ -18,7 +18,7 @@ const T_BALANCE_FLDS = 'uid balance floor savingsAdd saveWeekly minimum';
 const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid';
 const SPECIAL_IDS = 'ctty crumb round cgf bank-in bank-out';
 const RLESS_TNMS = 'signup posts people post_cats messages'; // test tables with no "r_" prefix
-const NULL_FLDS = 'payer payee useMax extraMax template end code rule';
+const NULL_FLDS = 'payer payee useMax amtMax template end code rule';
 
 global $base_path;
 define('BASE_PATH', $base_path);
@@ -143,7 +143,7 @@ function doThing($info, $thing, $key = 'id') {
 // NO!  if (@$info['id']) {$info['uid'] = $info['id']; unset($info['id']);}
   if ($testOnly) {
     return verifyRecord($table, $info);
-  } else return db\insert($table, $info, $key);
+  } else {return db\insert($table, $info, $key);}
 
 }
 
@@ -322,6 +322,7 @@ function doTxs($info, $thing) {
     $e2 = $filter(ray('for2 uid2 agt2 tid2', $payeeFor, $payee, $payeeAgent, $payeeTid));
     u\preray(just('eid', $info), $hdr);
     $ray = $hdr + $filter(ray('type amt relType rel', $type, $amount, NULL, NULL)) + $e1 + $e2;
+    if (!isset($info['actorId'])) unset($ray['actorId']); // don't worry about this unless explicitly specified
     return verifyRecord('txs', $ray);
   } else {
     $e1 = $filter(ray($entryFlds, $xid, $type, 0-$amount, $payer, $payerAgent, $payerFor, $payerTid, NULL, NULL));
@@ -456,8 +457,8 @@ function doCompanyFlags($info) {
 function doCoupons($info, $thing, $key = 'coupid') {
   global $testOnly;
 
-  $coupon = just('coupid fromId start   end   amount on  minimum useMax flags sponsor code  extraMax', $info,
-                 [ NULL, NULL,  time(), NULL, 0,     '', 0,      NULL,  0,    NULL,   NULL, NULL ]);
+  $coupon = just('coupid fromId start   end   amount on  minimum useMax flags sponsor code  amtMax', $info,
+                 [ NULL, NULL,  now(),  NULL, 0,     '', 0,      NULL,  0,    NULL,   NULL, NULL ]);
   $amount = $coupon['amount'];
   list ($amount, $portion) = ($amount < 0) ? [0, -0.01 * $amount] : [$amount, 0];
   $rule = array_filter([
@@ -467,8 +468,8 @@ function doCoupons($info, $thing, $key = 'coupid') {
     'payee' => $coupon['fromId'],
     'payeeType' => 'account',
     'from' => (is_NULL($coupon['sponsor'])) ? $coupon['fromId'] : $coupon['sponsor'],
-    'to' => SAME_AS_PAYER,
-    'action' => 'pay',
+    'to' => MATCH_PAYER,
+    'action' => ACT_SURTX,
     'start' => $coupon['start'],
     'end' => $coupon['end'],
     'amount' => $amount,
@@ -476,7 +477,7 @@ function doCoupons($info, $thing, $key = 'coupid') {
     'purpose' => $coupon['on'],
     'minimum' => $coupon['minimum'],
     'useMax' => $coupon['useMax'] == 0 ? NULL : $coupon['useMax'],
-    'extraMax' => $coupon['extraMax'],
+    'amtMax' => $coupon['amtMax'],
     'code' => $coupon['code'] 
   ]);
 
@@ -1050,25 +1051,26 @@ function logIn($id) {
 function verifyRecord($table, $info) {
   u\EXPECT(is_array($info), 'in verifyRecord');
   unset($info['data']);
-  foreach ($info as $key => $value) {
-    if ($value == '?') {unset($info[$key]); continue;}
-    $crit[] = $value === '' ? "($key IS NULL or $key=:$key)"
-    : ((in($key, R_DATE_FLDS) or mb_stripos($key, 'date') !== FALSE) ?
-//      "DATE(FROM_UNIXTIME(`$key`))<=>DATE(FROM_UNIXTIME(:$key))"
-      "ABS(`$key`-:$key)<" . SAME_TIME
-    : (in($key, 'trust risk') ? "CAST(ROUND($key, 2) AS CHAR)<=>:$key"
-    : "`$key`<=>:$key")); // null-safe ==
-  }
+  list ($infoK, $infoV) = [key($info), array_shift($info)]; // must be before ksort
+  ksort($info); // sort everything else, but leave key out of it
+  $info = [$infoK => $infoV] + $info; // keep key first
+///  echo pr(compact(ray('info0 info1 info idSub infoK infoV')));
 
+  foreach ($info as $k => $v) {
+    if ($v == '?') {unset($info[$k]); continue;}
+    $crit[] = $v === '' ? "(`$k` IS NULL OR `$k`=:$k)" // let a blank test field match null or empty string
+    : (is_null($v) ? "IF(1, `$k` IS NULL, :$k)" // :$k is just to match subs
+    : ((in($k, R_DATE_FLDS) or strhas($k, 'date')) ?
+      "ABS(`$k`-:$k)<" . SAME_TIME
+    : (in($k, 'trust risk') ? "CAST(ROUND(`$k`, 2) AS CHAR)<=>:$k"
+    : "`$k`<=>:$k"))); // null-safe =
+  }
   $crit = join(' AND ', $crit);
+
   if (!$result = db\exists($table, $crit, $info)) {
-    $info2 = $info;
-    list ($infoK, $infoV) = [key($info2), array_shift($info2)]; // must be before ksort
-    ksort($info);
     foreach ($info as $k => $v) $subs[$k] = "'$v'";
     $sql = "SELECT * FROM $table WHERE " . strtr(u\SUBS($crit), u\prefixKeys(':', $subs));
-//    output("verifyRecord failed. sql=$sql<br>table=$table crit=$crit EXPECTED info=" . pr($info));
-    output("verifyRecord failed. " . pr(compact(ray('table infoK infoV sql crit'))));
+    output("verifyRecord failed. " . pr(compact(ray('table infoK infoV sql'))));
 
     if ($actualRow = db\get('*', $table, [$infoK => $infoV])) {
 //      ksort($actualRow);
@@ -1076,6 +1078,7 @@ function verifyRecord($table, $info) {
       $difs = '';
       foreach ($info as $k => $v) {
         $v2 = $actualRow[$k];
+        foreach (ray('v v2') as $vk) if (is_null($$vk)) $$vk = '<NULL>';
         if ($v2 != $v) $difs .= "<tr><td>$k</td><td>$v</td><td>$v2</td></tr>\n";
       }
       $hdrs = t('<tr><th>field</th><th>want</th><th>got</th></tr>');
@@ -1478,6 +1481,8 @@ function clear($ch = 0) {
 
   db\q('DELETE FROM users WHERE uid<>0');
   db\q('DELETE FROM r_criteria WHERE ctty<>0');
+  u\deleteFile(LOG_FLNM);
+  u\deleteFile(SQL_LOG);
 
   $varKeys = ray('cgf_uid code drupal_private_key iv menu_expanded menu_masks up version');
   db\q('DELETE FROM variable WHERE name NOT IN (:varKeys)', compact('varKeys'));

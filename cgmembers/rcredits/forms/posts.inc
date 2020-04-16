@@ -199,7 +199,7 @@ function postList($type, $lat, $lon, $zip, $radius) {
     ORDER BY s.cat,s.created DESC
 X;
 
-///     debug(u\showq($sql, compact(ray('type lat lon zip radius'))));
+///     debug(showq($sql, compact(ray('type lat lon zip radius'))));
   $q = db\q($sql, compact(ray('type lat lon zip radius myPid')));
   foreach (ray(t('category item details')) as $k) $rows[] = "<div class=\"cell k-$k\">" . ucfirst($k) . '</div>';
   $rows = ['<div class="thead"><div class="row">' . join('', $rows) . '</div></div>'];
@@ -408,7 +408,7 @@ function confirm($op, $thing, $code) {
     
     if ($op == 'cancel') {
       $thing = t('cancelation'); // confirming cancelation not post
-      db\update('posts', ray('postid end', $postid, time()), 'postid');
+      db\update('posts', ray('postid end', $postid, now()), 'postid');
       return go($successUrl, t('Success! Your post is canceled.', compact('thing')));
       
     } elseif ($op == 'confirm') {
@@ -527,7 +527,7 @@ function formPosts_submit($form, &$sta) {
   // got pid, now process post or message
   $confirmed = (int) (vip('pid') == $pid and vip('confirmed') and (vip('email') == $email or $frmEditpost)); // get confirmation status of person posting, editposting, or messaging -- vip('confirmed') is for DEV and double-check
   if (admin(vip('zip'))) $confirmed = 1;
-  $created = time();
+  $created = now();
   $err = FALSE;
   
   if ($frmPost or $frmEditpost) {

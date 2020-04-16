@@ -127,7 +127,7 @@ function formCoupons_validate($form, &$sta) {
       SELECT id AS ruleId, r.end FROM tx_rules r
       WHERE r.from=:issuer
       AND :iCode = r.code
-      AND r.action='redeem'
+      AND r.action=:ACT_REDEEM
       AND start<=:NOW
       AND $payeeCheck
 EOF;
@@ -169,7 +169,7 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
     list ($ok, $index, $subs) = be\transfer('payment', $fromA, r\acct($to), $amount, t('gift'), FOR_GOODS, ['force' => 1, 'ruleId' => $ruleId]);
     u\EXPECT($ok, t('failed forced gift redemption by %who for rule %ruleId', 'who ruleId', $mya->fullName, $ruleId));
     $mya->update('giftPot', $mya->giftPot + $amount);
-    db\update('tx_rules', ray('id end', $ruleId, time()), 'id'); // mark this used
+    db\update('tx_rules', ray('id end', $ruleId, now()), 'id'); // mark this used
     return say(t('coupon redeemed', 'amount giver', u\fmtAmt($amount), $fromA->fullName));
 
   case 'gift':
@@ -177,7 +177,7 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
     u\setDft($purpose, t('on any purchase'));
     $start = $mya->giftCoupons + 0;
     $end = $start + $count - 1;
-    $info = ray('start from to action payeeType', time(), $myid, SAME_AS_PAYER, 'redeem', 'anybody');
+    $info = ray('start from to action payeeType', now(), $myid, MATCH_PAYER, ACT_REDEEM, REF_ANYBODY);
     $info += compact(ray('amount portion purpose minimum useMax'));
 
     $DBTX = \db_transaction();
@@ -192,7 +192,7 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
     u\setDft($purpose, $minimum ? t('on your purchase of %min or more', 'min', u\fmtAmt($minimum)) : t('on any purchase'));
     
     if ($automatic) {
-      $info = ray('payee payeeType from to action', $myid, 'account', $myid, SAME_AS_PAYER, 'pay');
+      $info = ray('payee payeeType from to action', $myid, REF_ACCOUNT, $myid, MATCH_PAYER, ACT_SURTX);
       $info += compact(ray('amount portion purpose minimum useMax start end'));
       db\insert('tx_rules', $info);
     }

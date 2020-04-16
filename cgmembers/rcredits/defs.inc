@@ -109,6 +109,7 @@ define('EMAILX', 'example.com'); // domain for unknown, placeholder, test, or ex
 define('GFLD_LAT', 42.3791167); // Greenfield, MA latitude (in tests)
 define('GFLD_LON', -73.2819463); // Greenfield, MA latitude
 define('GFLD_ZIP', '01301'); // Greenfield, MA zipcode
+define('NULL', NULL); // for tests
 
 // Common Good Finance email and other data
 define('CGF_LEGALNAME', 'Society to Benefit Everyone, Inc.');
@@ -142,7 +143,7 @@ define('R', '<span class="r">r</span>');
 define('US', '<span class="us">us</span>');
 /// define('GAME_COMPANIES', '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital');
 define('ITEM_FLDS', 'title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back'); // names of common fields that are wrapped automatically in w\item()
-define('R_DATE_FLDS', 'start created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted'); // date field names for testing and administrative display
+define('R_DATE_FLDS', 'start end start created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted'); // date field names for testing and administrative display
 define('CO_FLDS', 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd staleNudge contact'); // account fields stored in r_company
 define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo activated0'); // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
 define('MASTER_NUMERIC_FLDS', 'minimum achMin savingsAdd saveWeekly');
@@ -319,6 +320,8 @@ define('R_DFT_PICTURE', R_ROOT . '/images/no-photo-available.jpg'); // default p
 define('R_DFT_PICTURE_WIDE', R_ROOT . '/images/no-photo-available-wide.jpg'); // default profile picture
 define('R_NOT_VALID', R_ROOT . '/images/not-valid.png'); // says rcard is not valid for purchases
 define('LOG_DIR', ROOT . '/cgLogs/'); // where to store log files
+define('LOG_FLNM', LOG_DIR . date('Ym') . '.log');
+define('SQL_LOG', LOG_DIR . date('Ym') . '.logsql');
 
 // account type bits
 define('CO_TYPES', t('personal, sole proprietor, partnership, LLC, private corporation, publicly-traded corporation, tax-exempt nonprofit, government, co-operative, unincorporated association or club, estate, trust, custodian'));
@@ -576,14 +579,25 @@ define('E_BANK', 5); // CG account transfers to or from the member's bank
 define('E_XFEE', 6); // transfer fee to merchant (UNUSED)
 define('E_TYPES', 'bank_only prime donation rebate usd_fee bank rule');
 
-// New, for the sake of tx_templates and tx_rules
-const REF_LIST = 'anybody account anyCompany industry group'; // values for payerType and payeeType in tx_rules
-const ACT_LIST = 'pay now redeem'; // values for action field in tx_rules
-const PERIODS = 'once day week month quarter year forever'; // periods and durations
+const REF_LIST = 'anybody account anyCo industry group'; // values for payerType and payeeType in tx_rules
+const REF_ANYBODY = 'anybody';
+const REF_ACCOUNT = 'account';
+const REF_ANYCO = 'anyCo';
+const REF_INDUSTRY = 'industry';
+const REF_GROUP = 'group';
 
-// Special values for from and to (which are normally uids)
-const SAME_AS_PAYER = -1;
-const SAME_AS_PAYEE = -2;
+const ACT_LIST = 'pay charge surtx redeem'; // values for action field in tx_rules
+const ACT_PAY = 'pay';
+const ACT_CHARGE = 'charge';
+const ACT_SURTX = 'surtx';
+const ACT_REDEEM = 'redeem';
+
+const PERIODS = 'once day week month quarter year forever'; // periods and durations
+define('PERIODLY', t('once daily weekly monthly quarterly yearly always'));
+define('PERIODS_PLURAL', t('n/a days weeks months quarters years n/a'));
+
+const MATCH_PAYER = -1; // Special values for from and to (which are normally uids) in tx_rules
+const MATCH_PAYEE = -2;
 
 define('STEPUP_MIN', 10); // minimum number of stepup rules for a company to appear on the step-up page
 define('STEPUP_DESC', t('donation (by step-up)')); // step-up donation tx description

@@ -1169,6 +1169,7 @@ function tr($s) {return t($s, rayy(func_get_args(), 1));}
 
 /**
  * Return defined constant replacement array for a string. (CGF)
+ * If 
  */
 function constantSubs($string, $prefix = '%') {
   $res = preg_match_all("/\\$prefix([A-Z_][A-Z0-9_]*)/ms", $string, $matches);

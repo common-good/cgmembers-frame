@@ -21,27 +21,27 @@ Scenario: A member company creates a gift coupon
   | type | amount | count |*
   | gift |     10 |    20 |
   Then these "tx_rules":
-  | id | payerType | payeeType | from   | to             | amount | portion | useMax | code |*
-  |  1 | anybody   | anybody   | .ZZC   | %SAME_AS_PAYER |     10 | 0       | 1      |    8 |
-  |  2 | anybody   | anybody   | .ZZC   | %SAME_AS_PAYER |     10 | 0       | 1      |    9 |
-  |  3 | anybody   | anybody   | .ZZC   | %SAME_AS_PAYER |     10 | 0       | 1      |   10 |
-  |  4 | anybody   | anybody   | .ZZC   | %SAME_AS_PAYER |     10 | 0       | 1      |   11 |
-  |  5 | anybody   | anybody   | .ZZC   | %SAME_AS_PAYER |     10 | 0       | 1      |   12 |
-  |  6 | anybody   | anybody   | .ZZC   | %SAME_AS_PAYER |     10 | 0       | 1      |   13 |
-  |  7 | anybody   | anybody   | .ZZC   | %SAME_AS_PAYER |     10 | 0       | 1      |   14 |
-  |  8 | anybody   | anybody   | .ZZC   | %SAME_AS_PAYER |     10 | 0       | 1      |   15 |
-  |  9 | anybody   | anybody   | .ZZC   | %SAME_AS_PAYER |     10 | 0       | 1      |   16 |
-  | 10 | anybody   | anybody   | .ZZC   | %SAME_AS_PAYER |     10 | 0       | 1      |   17 |
-  | 11 | anybody   | anybody   | .ZZC   | %SAME_AS_PAYER |     10 | 0       | 1      |   18 |
-  | 12 | anybody   | anybody   | .ZZC   | %SAME_AS_PAYER |     10 | 0       | 1      |   19 |
-  | 13 | anybody   | anybody   | .ZZC   | %SAME_AS_PAYER |     10 | 0       | 1      |   20 |
-  | 14 | anybody   | anybody   | .ZZC   | %SAME_AS_PAYER |     10 | 0       | 1      |   21 |
-  | 15 | anybody   | anybody   | .ZZC   | %SAME_AS_PAYER |     10 | 0       | 1      |   22 |
-  | 16 | anybody   | anybody   | .ZZC   | %SAME_AS_PAYER |     10 | 0       | 1      |   23 |
-  | 17 | anybody   | anybody   | .ZZC   | %SAME_AS_PAYER |     10 | 0       | 1      |   24 |
-  | 18 | anybody   | anybody   | .ZZC   | %SAME_AS_PAYER |     10 | 0       | 1      |   25 |
-  | 19 | anybody   | anybody   | .ZZC   | %SAME_AS_PAYER |     10 | 0       | 1      |   26 |
-  | 20 | anybody   | anybody   | .ZZC   | %SAME_AS_PAYER |     10 | 0       | 1      |   27 |
+  | id | payerType | payeeType | from   | to           | amount | portion | useMax | code |*
+  |  1 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |    8 |
+  |  2 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |    9 |
+  |  3 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   10 |
+  |  4 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   11 |
+  |  5 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   12 |
+  |  6 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   13 |
+  |  7 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   14 |
+  |  8 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   15 |
+  |  9 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   16 |
+  | 10 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   17 |
+  | 11 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   18 |
+  | 12 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   19 |
+  | 13 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   20 |
+  | 14 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   21 |
+  | 15 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   22 |
+  | 16 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   23 |
+  | 17 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   24 |
+  | 18 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   25 |
+  | 19 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   26 |
+  | 20 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   27 |
 
 #  And member ".ZZC" visits page "community/coupons/print/type=gift&amount=10&useMax=1&count=20", which results in:
   When member ".ZZC" visits page "community/coupons/print/type=gift&amount=10&count=20"
@@ -78,8 +78,8 @@ Scenario: A member redeems a gift coupon
   | .ZZC |           8 | 0039200 |
 # created determines 3-letter lowSecurity code (7AA), which is used in coupon code
   And these "tx_rules":
-  | id | payer | payerType | payeeType | from | to             | action | amount | portion  | code | start |*
-  | 1  | .ZZC  | anybody   | anybody   | .ZZC | %SAME_AS_PAYEE | redeem | 10     | 0        | 8    | %now  |
+  | id | payer | payerType | payeeType | from | to           | action | amount | portion  | code | start |*
+  | 1  | .ZZC  | anybody   | anybody   | .ZZC | %MATCH_PAYEE | redeem | 10     | 0        | 8    | %now  |
 
   When member ".ZZA" completes form "community/coupons/type=gift" with values:
   | type   | code          |*
@@ -134,9 +134,9 @@ Scenario: A member redeems a dollar amount discount coupon
   | did    | otherName  | amount |*
   | paid   | Corner Pub | $100   |
   And these "txs":
-  | eid | xid | type   | created | amount | payer | payee | purpose      | taking |*
-  |   1 |   1 | prime  | %today  |    100 | .ZZA  | .ZZC  | fun          |      0 |
-  |   2 |   1 | rebate | %today  |     12 | .ZZC  | .ZZA  | %REBATE_DESC |      1 |
+  | xid | type   | created | amount | payer | payee | purpose      | taking |*
+  |   1 | prime  | %today  |    100 | .ZZA  | .ZZC  | fun          |      0 |
+  |   1 | rebate | %today  |     12 | .ZZC  | .ZZA  | %REBATE_DESC |      1 |
   And balances:
   | uid  | balance |*
   | .ZZA |     -88 |
@@ -157,7 +157,7 @@ Scenario: A member redeems a dollar amount discount coupon
 
 Scenario: A member redeems a percentage discount coupon
   Given coupons:
-  | coupid | fromId | amount | minimum | useMax | flags | start     | end                | sponsor | on                        |*
+  | coupid | fromId | amount | minimum | useMax | flags | start     | end                | sponsor | on  |*
   |      7 |   .ZZC |    -12 |      20 |      2 |       | %daystart | %(%daystart+10d-1) |.ZZC| on your purchase of $20 or more |
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
@@ -256,8 +256,8 @@ Scenario: A member redeems a percentage discount coupon
   
 Scenario: A member redeems a discount coupon in dribs and drabs
   Given coupons:
-  | coupid | amount | minimum | fromId | useMax | flags | start     | end                | sponsor | extraMax |*
-  |      1 |     20 |       0 | .ZZC   |      0 |       | %daystart | %(%daystart+10d-1) | .ZZC    | 20       |
+  | coupid | amount | minimum | fromId | useMax | flags | start     | end                | sponsor | amtMax |*
+  |      1 |     20 |       0 | .ZZC   | %NULL  |       | %daystart | %(%daystart+10d-1) | .ZZC    | 20       |
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub |     12 | fun     |
@@ -305,8 +305,8 @@ Scenario: A member with nothing redeems a zero minimum discount coupon
 
 Scenario: A member redeems a discount coupon sponsored by a third party
   Given txRules:
-  | id | amount | minimum | from | to             | payeeType | payee | purpose | start     | extraMax |*
-  |  1 |     12 |       0 | .ZZB | %SAME_AS_PAYER | anybody   | .ZZC  | on zots | %daystart | 12       |
+  | id | action | amount | minimum | from | to           | payeeType | payee | purpose | start     | amtMax |*
+  |  1 | surtx  |     12 |       0 | .ZZB | %MATCH_PAYER | anybody   | .ZZC  | on zots | %daystart | 12       |
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub |     10 | fun     |

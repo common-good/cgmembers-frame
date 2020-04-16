@@ -62,7 +62,7 @@ X;
     $rows
     </table>
 X;
-  } else $list = t('You have not yet issued any automatic discounts or gift certificates.');
+  } else {$list = t('You have not yet issued any automatic discounts or gift certificates.');}
   
   return cgform(compact(ray('title list')));
 }
@@ -82,13 +82,13 @@ function showDiscounts() {
 
   $payerCheck = u\genRuleSQL('payer', ':myid');
   $sql = <<< X
-    SELECT `from` AS sponsor, `amount`, `portion`, `purpose` AS `on`, `end`, payerType, payer, useMax, uid, extraMax,
+    SELECT `from` AS sponsor, `amount`, `portion`, `purpose` AS `on`, `end`, payerType, payer, useMax, uid, amtMax,
     (SELECT IFNULL(SUM(e.amount), 0) FROM tx_entries e WHERE e.uid=:myid AND e.rule IS NOT NULL AND e.rule=r.id) AS `amtUsed`,
     (SELECT IFNULL(SUM(SIGN(e.amount)), 0) FROM tx_entries e WHERE e.uid=:myid AND e.rule IS NOT NULL AND e.rule=r.id) AS `used`
     FROM tx_rules r JOIN users u ON r.`from`=u.uid
     WHERE $payerCheck
     AND (u.community=:ctty OR $nearby)
-    AND (r.action = 'pay')
+    AND (r.action = :ACT_SURTX)
     AND (r.start <= :NOW AND IFNULL(:NOW < r.end, TRUE))
 		ORDER BY end IS NOT NULL, end
 X;
@@ -110,7 +110,7 @@ X;
     } else {
       $amount = u\fmtAmt($portion, '%');
     }
-    $amtLeft = is_null($extraMax) ? 'no limit' : u\fmtAmt($extraMax - $amtUsed, '$');
+    $amtLeft = is_null($amtMax) ? 'no limit' : u\fmtAmt($amtMax - $amtUsed, '$');
 
     $rows[] = u\tableRow(compact($fields));
   }
