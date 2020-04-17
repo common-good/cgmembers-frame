@@ -25,8 +25,8 @@ Setup:
   | .ZZB |     200 |
   |  cgf |    -400 |
   
-  And member ".ZZA" has "person" steps done: "ssn contact tithein"
-  And member ".ZZB" has "person" steps done: "ssn contact tithein"
+  And member ".ZZA" has "person" steps done: "ssn contact crumbs"
+  And member ".ZZB" has "person" steps done: "ssn contact crumbs"
 
 Scenario: A member joins the investment club
   When member ".ZZA" visits page "invest"
@@ -69,7 +69,7 @@ Scenario: A member buys a stake in the club
   | op  | amount |*
   | buy |     10 |
   Then transactions:
-  | xid | created | amount | from  | to   | purpose    | flags |*
+  | xid | created | amount | payer | payee | purpose    | flags |*
   |   1 | %now    |     10 | .ZZA  | .ZZI | investment | stake |
   And we say "status": "report tx|investment increase" with subs:
   | did  | otherName       | amount |*
@@ -349,7 +349,7 @@ Scenario: The club sells its remaining shares in an investment
   
 Scenario: Members increase and decrease their stakes
   Given transactions:
-  | xid | created | amount | from  | to   | purpose    | flags |*
+  | xid | created | amount | payer | payee | purpose    | flags |*
   |   1 | %now-3d |     10 | .ZZA  | .ZZI | investment | stake |
   |   2 | %now-1d |     70 | .ZZB  | .ZZI | investment | stake |
   And these "stakes":
@@ -427,7 +427,7 @@ Scenario: A member tries to decrease stake below zero
 
 Scenario: A club administrator handles requests to cash out
   Given transactions:
-  | xid | created | amount | from  | to   | purpose    | flags |*
+  | xid | created | amount | payer | payee | purpose    | flags |*
   |   1 | %now-3d |     10 | .ZZA  | .ZZI | investment | stake |
   |   2 | %now-1d |     70 | .ZZB  | .ZZI | investment | stake |
   And these "stakes":
@@ -457,7 +457,7 @@ Scenario: A club administrator handles requests to cash out
   | submit |
   Then we say "status": "The club paid 2 members a total of $60."
   And transactions:
-  | xid | created | amount | from  | to   | purpose           | flags |*
+  | xid | created | amount | payer | payee | purpose           | flags |*
   |   3 | %now    |     20 | .ZZI  | .ZZA | redeem investment | stake |
   |   4 | %now    |     40 | .ZZI  | .ZZB | redeem investment | stake |
   And these "stakes":
@@ -467,7 +467,7 @@ Scenario: A club administrator handles requests to cash out
 
 Scenario: The investment club issues dividends
   Given transactions:
-  | xid | created | amount | from  | to   | purpose    | flags |*
+  | xid | created | amount | payer | payee | purpose    | flags |*
   |   1 | %now-3d |     10 | .ZZA  | .ZZI | investment | stake |
   |   2 | %now-1d |     70 | .ZZB  | .ZZI | investment | stake |
   And balances:
@@ -507,7 +507,7 @@ Scenario: The investment club issues dividends
   | got | count | sum    | reCount | reSum  |*
   |   2 |     2 | $4,500 |       1 | $3,150 |
   And transactions:
-  | xid | created | amount | from  | to   | purpose                    | flags |*
+  | xid | created | amount | payer | payee | purpose                    | flags |*
   |   3 | %now    |    500 | .ZZI  |  cgf | community dividend         |       |
   |   4 | %now    |   1350 | .ZZI  | .ZZA | dividend                   |       |
   |   5 | %now    |   3150 | .ZZI  | .ZZB | dividend                   |       |

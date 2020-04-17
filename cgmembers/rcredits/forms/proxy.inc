@@ -112,7 +112,7 @@ EOF;
   while ($row = $q->fetchAssoc()) { // show choices in reverse order, so inviter(s) are at top
     extract($row);
     if (!$current = in($uid, $dfts)) $choiceList[] = $uid;
-    $state = ($state == $a->state or !$state) ? '' : (', ' . r\realState($state));
+    $state = ($state == $a->state or !$state) ? '' : (', ' . $a->$st);
 /*    if ($weight < PHP_INT_MAX / 2) { // show city and maybe state
       $state = $state == $a->state ? '' : (', ' . r\realState($state));
     } else list ($city, $state) = [t('Top Suggestions'), '']; */

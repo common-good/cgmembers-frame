@@ -20,27 +20,67 @@ Scenario: A member company creates a gift coupon
   When member ".ZZC" completes form "community/coupons/type=gift" with values:
   | type | amount | count |*
   | gift |     10 |    20 |
-  Then coupons:
-  | coupid | fromId | amount | ulimit | flags | start | end |*
-  |      1 |   .ZZC |     10 |      1 | gift  |     8 |  28 |
-#  And member ".ZZC" visits page "community/coupons/print/type=gift&amount=10&ulimit=1&count=20", which results in:
-#  When member ".ZZC" visits page "community/coupons/print/type=gift&amount=10&count=20"
+  Then these "tx_rules":
+  | id | payerType | payeeType | from   | to           | amount | portion | useMax | code |*
+  |  1 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |    8 |
+  |  2 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |    9 |
+  |  3 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   10 |
+  |  4 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   11 |
+  |  5 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   12 |
+  |  6 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   13 |
+  |  7 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   14 |
+  |  8 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   15 |
+  |  9 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   16 |
+  | 10 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   17 |
+  | 11 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   18 |
+  | 12 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   19 |
+  | 13 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   20 |
+  | 14 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   21 |
+  | 15 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   22 |
+  | 16 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   23 |
+  | 17 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   24 |
+  | 18 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   25 |
+  | 19 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   26 |
+  | 20 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   27 |
+
+#  And member ".ZZC" visits page "community/coupons/print/type=gift&amount=10&useMax=1&count=20", which results in:
+  When member ".ZZC" visits page "community/coupons/print/type=gift&amount=10&count=20"
   And members have:
   | uid  | giftCoupons |*
   | .ZZC |          28 |
   When member ".ZZC" visits page "community/coupons/list"
   Then we show "Your Discounts and Gift Certificates" with:
-  | Type | Amount | On | Starting | Ending | Min Purchase | Max Uses |~Action  |
-  | gift | $10    |    |        8 |     28 |           $0 |        1 | reprint |
+  | Type | Amount | On               | Starting | Ending     | Min Purchase | Max Uses |~Action  |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
   
 Scenario: A member redeems a gift coupon
   Given members have:
   | uid  | giftCoupons | created |*
   | .ZZC |           8 | 0039200 |
 # created determines 3-letter lowSecurity code (7AA), which is used in coupon code
-  And coupons:
-  | coupid | fromId | amount | ulimit | flags | start | end | sponsor |*
-  |      1 |   .ZZC |     10 |      1 | gift  |     8 |  28 | .ZZC    |
+  And these "tx_rules":
+  | id | payer | payerType | payeeType | from | to           | action | amount | portion  | code | start |*
+  | 1  | .ZZC  | anybody   | anybody   | .ZZC | %MATCH_PAYEE | redeem | 10     | 0        | 8    | %now  |
+
   When member ".ZZA" completes form "community/coupons/type=gift" with values:
   | type   | code          |*
   | redeem | DD7K CLJW EAI |
@@ -64,16 +104,16 @@ Scenario: A member company creates a dollar amount discount coupon
  | Valid from: |||
  | Valid until: |||
  | Limit:  |||
- | For only: |||
+# | For only: |||
  | Automatic? | No | Yes |
  
   
   When member ".ZZC" completes form "community/coupons/type=discount" with values:
-  | type     | amount | minimum | start | end     | ulimit | automatic |*
-  | discount |     12 |      20 | %mdY  | %mdY+9d |      1 |         1 |
+  | type     | amount | minimum | start | end     | useMax | automatic | purpose |*
+  | discount |     12 |      20 | %mdY  | %mdY+9d |      1 |         1 | on your purchase of $20 or more |
   Then coupons:
-  | coupid | amount | fromId | minimum | ulimit | flags | start     | end                | sponsor |*
-  |      1 |     12 |   .ZZC |      20 |      1 |       | %daystart | %(%daystart+10d-1) | .ZZC    |
+  | coupid | amount | fromId | minimum | useMax | flags | start     | end                | sponsor | on |*
+  |      1 |     12 |   .ZZC |      20 |      1 |       | %daystart | %(%daystart+10d-1) | .ZZC    | on your purchase of $20 or more |
   When member ".ZZC" visits page "community/coupons/list"
   Then we show "Your Discounts and Gift Certificates" with:
   | Type     | Amount | On                              | Starting | Ending  | Min Purchase | Max Uses |~Action  |
@@ -85,8 +125,8 @@ Scenario: A member company creates a dollar amount discount coupon
   
 Scenario: A member redeems a dollar amount discount coupon
   Given coupons:
-  | coupid | amount | fromId | minimum | ulimit | flags | start     | end                | sponsor | on |*
-  |      1 |     12 |   .ZZC |      20 |      1 |       | %daystart | %(%daystart+10d-1) |.ZZC| on your purchase of $20 or more |
+  | coupid | amount | fromId | minimum | useMax | start     | end                | sponsor | on |*
+  |      1 |     12 |   .ZZC |      20 |      1 | %daystart | %(%daystart+10d-1) |.ZZC | on your purchase of $20 or more |
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 100    | fun     |
@@ -94,9 +134,9 @@ Scenario: A member redeems a dollar amount discount coupon
   | did    | otherName  | amount |*
   | paid   | Corner Pub | $100   |
   And these "txs":
-  | eid | xid | type   | created | amount | from  | to   | purpose           | taking |*
-  |   1 |   1 | prime  | %today  |    100 | .ZZA  | .ZZC | fun               |      0 |
-  |   2 |   1 | rebate | %today  |     12 | .ZZC  | .ZZA | discount (rebate) |      1 |
+  | xid | type   | created | amount | payer | payee | purpose      | taking |*
+  |   1 | prime  | %today  |    100 | .ZZA  | .ZZC  | fun          |      0 |
+  |   1 | rebate | %today  |     12 | .ZZC  | .ZZA  | %REBATE_DESC |      1 |
   And balances:
   | uid  | balance |*
   | .ZZA |     -88 |
@@ -117,7 +157,7 @@ Scenario: A member redeems a dollar amount discount coupon
 
 Scenario: A member redeems a percentage discount coupon
   Given coupons:
-  | coupid | fromId | amount | minimum | ulimit | flags | start     | end                | sponsor | on                        |*
+  | coupid | fromId | amount | minimum | useMax | flags | start     | end                | sponsor | on  |*
   |      7 |   .ZZC |    -12 |      20 |      2 |       | %daystart | %(%daystart+10d-1) |.ZZC| on your purchase of $20 or more |
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
@@ -157,67 +197,67 @@ Scenario: A member redeems a percentage discount coupon
   | .ZZB |     -44 |
   | .ZZC |     182 |
 
-Scenario: A member company creates a restricted dollar amount discount coupon
-  When member ".ZZC" completes form "community/coupons/type=discount" with values:
-  | type     | amount | minimum | start | end     | ulimit | automatic | forOnly |*
-  | discount |     12 |      20 | %mdY  | %mdY+9d |      1 |         1 | NEWZZA  |
-  Then coupons:
-  | coupid | amount | fromId | minimum | ulimit | flags | start     | end                |*
-  |      1 |     12 |   .ZZC |      20 |      1 | some  | %daystart | %(%daystart+10d-1) |
-  And these "coupated":
-  | id | uid  | coupid | uses | when |*
-  |  1 | .ZZA |      1 |    0 |    0 |
-  When member ".ZZC" visits page "community/coupons/list"
-  Then we show "Your Discounts and Gift Certificates" with:
-  | Type     | Amount | On                              | Starting | Ending  | Min Purchase | Max Uses |~Action  |
-  | discount | $12    | on your purchase of $20 or more | %mdY     | %mdY+9d |          $20 |        1 | reprint |
-  | for only: NEWZZA ||||||||
-  When member ".ZZA" visits page "community/coupons/list/ALL"
-  Then we show "Automatic Discounts in Your Region" with:
-  | Company    | Discount | On                              | Ending  | For    | Uses Left |
-  | Corner Pub | $12      | on your purchase of $20 or more | %mdY+9d | you+   | 1         |
+# Scenario: A member company creates a restricted dollar amount discount coupon
+#   When member ".ZZC" completes form "community/coupons/type=discount" with values:
+#   | type     | amount | minimum | start | end     | useMax | automatic | forOnly |*
+#   | discount |     12 |      20 | %mdY  | %mdY+9d |      1 |         1 | NEWZZA  |
+#   Then coupons:
+#   | coupid | amount | fromId | minimum | useMax | flags | start     | end                |*
+#   |      1 |     12 | .ZZC   |      20 |      1 | some  | %daystart | %(%daystart+10d-1) |
+#   And these "coupated":
+#   | id | uid  | coupid | uses | when |*
+#   |  1 | .ZZA |      1 |    0 |    0 |
+#   When member ".ZZC" visits page "community/coupons/list"
+#   Then we show "Your Discounts and Gift Certificates" with:
+#   | Type     | Amount | On                              | Starting | Ending  | Min Purchase | Max Uses |~Action  |
+#   | discount | $12    | on your purchase of $20 or more | %mdY     | %mdY+9d |          $20 |        1 | reprint |
+#   | for only: NEWZZA ||||||||
+#   When member ".ZZA" visits page "community/coupons/list/ALL"
+#   Then we show "Automatic Discounts in Your Region" with:
+#   | Company    | Discount | On                              | Ending  | For    | Uses Left |
+#   | Corner Pub | $12      | on your purchase of $20 or more | %mdY+9d | you+   | 1         |
   
-Scenario: A member redeems a restricted discount coupon
-  Given coupons:
-  | coupid | amount | minimum | fromId | ulimit | flags | start     | end                | sponsor | on           |*
-  |      1 |     20 |       0 |   .ZZC |      0 | some  | %daystart | %(%daystart+10d-1) | .ZZC    | any purchase |
-  And these "coupated":
-  | id | uid  | coupid | when |*
-  |  1 | .ZZA |      1 |    0 |
-  When member ".ZZA" visits page "community/coupons/list/ALL"
-  Then we show "Automatic Discounts in Your Region" with:
-  | Company    | Discount | On           | Ending  | For    | Uses Left |
-  | Corner Pub | $20      | any purchase | %mdY+9d | you+   | $20       |
-
-  When member ".ZZA" confirms form "pay" with values:
-  | op  | who        | amount | purpose |*
-  | pay | Corner Pub | 6      | fun     |
-  Then balances:
-  | uid  | balance |*
-  | .ZZA |       0 |
-  | .ZZB |       0 |
-  | .ZZC |       0 |
-  And these "coupated":
-  | id | uid  | coupid | when   |*
-  |  1 | .ZZA |      1 | %today |
-  When member ".ZZA" visits page "community/coupons/list/ALL"
-  Then we show "Automatic Discounts in Your Region" with:
-  | Company    | Discount | On           | Ending  | For    | Uses Left |
-  | Corner Pub | $20      | any purchase | %mdY+9d | you+   | $14       |
+# Scenario: A member redeems a restricted discount coupon
+#   Given coupons:
+#   | coupid | amount | minimum | fromId | useMax | flags | start     | end                | sponsor | on           |*
+#   |      1 |     20 |       0 | .ZZC   |      0 | some  | %daystart | %(%daystart+10d-1) | .ZZC    | any purchase |
+#   And these "coupated":
+#   | id | uid  | coupid | when |*
+#   |  1 | .ZZA |      1 |    0 |
+#   When member ".ZZA" visits page "community/coupons/list/ALL"
+#   Then we show "Automatic Discounts in Your Region" with:
+#   | Company    | Discount | On           | Ending  | For    | Uses Left |
+#   | Corner Pub | $20      | any purchase | %mdY+9d | you+   | $20       |
+# 
+#   When member ".ZZA" confirms form "pay" with values:
+#   | op  | who        | amount | purpose |*
+#   | pay | Corner Pub | 6      | fun     |
+#   Then balances:
+#   | uid  | balance |*
+#   | .ZZA |       0 |
+#   | .ZZB |       0 |
+#   | .ZZC |       0 |
+#   And these "coupated":
+#   | id | uid  | coupid | when   |*
+#   |  1 | .ZZA |      1 | %today |
+#   When member ".ZZA" visits page "community/coupons/list/ALL"
+#   Then we show "Automatic Discounts in Your Region" with:
+#   | Company    | Discount | On           | Ending  | For    | Uses Left |
+#   | Corner Pub | $20      | any purchase | %mdY+9d | you+   | $14       |
   
-  When member ".ZZB" confirms form "pay" with values:
-  | op  | who        | amount | purpose |*
-  | pay | Corner Pub | 50     | fun     |
-  Then balances:
-  | uid  | balance |*
-  | .ZZA |       0 |
-  | .ZZB |     -50 |
-  | .ZZC |      50 |
+  # When member ".ZZB" confirms form "pay" with values:
+  # | op  | who        | amount | purpose |*
+  # | pay | Corner Pub | 50     | fun     |
+  # Then balances:
+  # | uid  | balance |*
+  # | .ZZA |       0 |
+  # | .ZZB |     -50 |
+  # | .ZZC |      50 |
   
 Scenario: A member redeems a discount coupon in dribs and drabs
   Given coupons:
-  | coupid | amount | minimum | fromId | ulimit | flags | start     | end                | sponsor |*
-  |      1 |     20 |       0 |   .ZZC |      0 |       | %daystart | %(%daystart+10d-1) | .ZZC    |
+  | coupid | amount | minimum | fromId | useMax | flags | start     | end                | sponsor | amtMax |*
+  |      1 |     20 |       0 | .ZZC   | %NULL  |       | %daystart | %(%daystart+10d-1) | .ZZC    | 20       |
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub |     12 | fun     |
@@ -251,8 +291,8 @@ Scenario: A member with nothing redeems a zero minimum discount coupon
   | uid  | flags        |*
   | .ZZA | ok,confirmed |
   And coupons:
-  | coupid | amount | minimum | fromId | ulimit | flags | start     | end                | sponsor |*
-  |      1 |     20 |       0 |   .ZZC |      0 |       | %daystart | %(%daystart+10d-1) | .ZZC    |
+  | coupid | amount | minimum | fromId | useMax | flags | start     | end                | sponsor |*
+  |      1 |     20 |       0 | .ZZC   |      0 |       | %daystart | %(%daystart+10d-1) | .ZZC    |
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub |     12 | fun     |
@@ -264,9 +304,9 @@ Scenario: A member with nothing redeems a zero minimum discount coupon
   | .ZZC |       0 |
 
 Scenario: A member redeems a discount coupon sponsored by a third party
-  Given coupons:
-  | coupid | amount | minimum | fromId | on      | ulimit | flags | start     | end | sponsor |*
-  |      1 |     12 |       0 |   .ZZC | on zots |      0 |       | %daystart |   0 | .ZZB    |
+  Given txRules:
+  | id | action | amount | minimum | from | to           | payeeType | payee | purpose | start     | amtMax |*
+  |  1 | surtx  |     12 |       0 | .ZZB | %MATCH_PAYER | anybody   | .ZZC  | on zots | %daystart | 12       |
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub |     10 | fun     |
@@ -279,8 +319,8 @@ Scenario: A member redeems a discount coupon sponsored by a third party
 
   When member ".ZZA" visits page "community/coupons/list/ALL"
   Then we show "Automatic Discounts" with:
-  | Company    | Discount | On      | Ending | For    | Uses Left |
-  | Corner Pub |      $12 | on zots | --     | anyone | $2        |
+  | Company | Discount | On      | Ending | For    | Uses Left | Amount Left |
+  | Bea Two |      $12 | on zots | --     | anyone | no limit  | $2          |
   
   When member ".ZZA" confirms form "pay" with values:
   | op  | who        | amount | purpose |*
@@ -294,5 +334,5 @@ Scenario: A member redeems a discount coupon sponsored by a third party
 
   When member ".ZZA" visits page "community/coupons/list/ALL"
   Then we show "Automatic Discounts" with:
-  | Company    | Discount | On      | Ending | For    | Uses Left |
-  | Corner Pub |      $12 | on zots | --     | anyone | $0        |
+  | Company | Discount | On      | Ending | For    | Uses Left | Amount Left |
+  | Bea Two |      $12 | on zots | --     | anyone | no limit  | $0.00       |

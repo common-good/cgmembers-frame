@@ -28,8 +28,8 @@ class MakeIndustriesRecursive extends AbstractMigration
   }
 
   public function down() {
-    $this->execute('DROP VIEW ancestors');
-    $this->execute('DROP VIEW descendants');
+    if ($this->hasTable('ancestors')) $this->execute('DROP VIEW ancestors');
+    if ($this->hasTable('descendants')) $this->execute('DROP VIEW descendants');
     $n = $this->execute('update r_industries set parent = iid where parent is null');
     $table = $this->table('r_industries');
     $table->removeIndex(['parent']);

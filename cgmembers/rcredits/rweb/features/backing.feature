@@ -17,7 +17,7 @@ Scenario: A member visits the backing page
 
 Scenario: A member changes backing amount
   Given transactions: 
-  | xid | created   | amount | from | to   | purpose |*
+  | xid | created   | amount | payer | payee | purpose |*
   |   3 | %today-1m |    250 | ctty | .ZZA | grant   |
   And member ".ZZA" has no photo ID recorded
   When member ".ZZA" completes form "community/backing" with values:

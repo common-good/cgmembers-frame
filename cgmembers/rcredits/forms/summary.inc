@@ -135,7 +135,7 @@ function formSummary($form, &$sta) {
   
   jsx('summary');
   
-  return cgform($form, '', TRUE);
+  return cgform($form);
 }
 
 function formSummary_validate($form, &$sta) {
@@ -271,11 +271,11 @@ function activate($helper) {
       u\EXPECT($mya->superAdmin, 'initial activation is only for superadmin');
 //    u\EXPECT($mya->co or $mya->dob, 'no dob!');
     // setting B_UNDERAGE must precede update of vsecure, because dob gets V-encrypted
-    $dob = $mya->dob ?: ($mya->yob ? strtotime("$mya->yob-01-01") : time());
-    if (!$mya->co and time() - $dob < MATURITY * YEAR_SECS) $mya->setBIT(B_UNDERAGE);
+    $dob = $mya->dob ?: ($mya->yob ? strtotime("$mya->yob-01-01") : now());
+    if (!$mya->co and now() - $dob < MATURITY * YEAR_SECS) $mya->setBIT(B_UNDERAGE);
     $mya->update('activated', now() - 1); // this signals it's time to V-encrypt
     $mya->update('vsecure', $mya->vsecure); // V-encrypt
-    $mya->eachPartner(function($coA, $zot, $custCode) { // tell partner: account is activated
+    $mya->eachPartner(function($coA, $mya, $custCode) { // tell partner: account is activated
       if ($api = $coA->api()) u\post($api, ray('partnerCode qid op name', $coA->emailCode, $mya->mainQid, 'complete', $mya->fullName));
     });
     $msg = 'approved';
@@ -477,7 +477,7 @@ function adminSummary() {
 
     if ($mya->id == CGID) {
       $lines = '<tr><th>Community</th><th>Donations</th><th>Paid</th><th>Bounce Fees</th><th>Due</th></tr>';
-      foreach (r\cttyGifts(time()) as $row) {
+      foreach (r\cttyGifts(now()) as $row) {
         extract((array) $row);
         $bounces = R_DEPOSIT_RETURN_FEE * $bounces;
         $due = round($in / 2 - $out, 2);

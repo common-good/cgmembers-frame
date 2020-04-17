@@ -26,7 +26,7 @@ Scenario: A member submits a Pay With Common Good button payment with account ID
   | otherName | amount | purpose |*
   | Our Pub   | $23    | food    |
   And invoices:
-  | nvid | created | status      | amount | from | to   | for  |*
+  | nvid | created | status      | amount | payer | payee | for  |*
   |    1 | %today  | %TX_PENDING |     23 | .ZZA | .ZZC | food |
 
   When member "?" visits page "handle-invoice/nvid=1&toMe=1&code=TESTDOCODE"
@@ -42,7 +42,7 @@ Scenario: A member submits a Pay With Common Good button payment with account ID
   | nvid | created | status | purpose |*
   |    1 | %today  |      1 | food    |
   And transactions:
-  | xid | created | amount | from | to   | for                      |*
+  | xid | created | amount | payer | payee | for                      |*
   |   1 | %today  |     23 | .ZZA | .ZZC | food (Common Good inv#1) |
   
   When member "?" visits page "handle-invoice/nvid=1&toMe=1&code=TESTDOCODE"
@@ -64,7 +64,7 @@ Scenario: A member submits a Pay With Common Good button payment with account ID
   | otherName | amount | purpose |*
   | Our Pub   | $23    | food    |
   And invoices:
-  | nvid | created | status      | amount | from | to   | for  |*
+  | nvid | created | status      | amount | payer | payee | for  |*
   |    1 | %today  | %TX_PENDING |     23 | .ZZA | .ZZC | food |
 
   When member "?" visits page "handle-invoice/nvid=1&toMe=1&code=TESTDOCODE"

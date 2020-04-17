@@ -525,6 +525,9 @@ function SUBS($string, $prefix = ':', $flagField = 'flags') {
   if ($prefix == ':') $string = preg_replace("/([A-za-z]+[0-9]?\.)?{$prefix}IS_([A-Z0-9_]*)/ms", "($1$flagField&(1<<:B_$2)<>0)", $string); // only for queries
 //  $string = preg_replace("/\\{$prefix}IS_([A-Z0-9_]*)/ms", "($flagField&(1<<:B_$1))", $string);
   $subs = constantSubs($string, $prefix);
+  if ($prefix == ':') foreach ($subs as $k => $v) {
+    if (!is_numeric($v) and !strhas($v, ' ') and !strhas($v, '(')) $subs[$k] = "'$v'"; // string literals in SQL (if there are spaces or parens in the string you have to put quotes around it manually, if you want them)
+  }
   $subs[':NOW'] = now(); // use current time (hypothetical time when testing)
   return strtr($string, $subs);
 }
@@ -962,6 +965,14 @@ function tableRow($row) {
 }
 
 /**
+ * Convert the given array to an HTML div row (for within class "container").
+ */
+function ray2row($row) {
+  $row = join('</div><div class="cell">', $row);
+  return '<div class="row"><div class="cell">' . $row . "</div></div>\n";
+}
+
+/**
  * Return the latitude and longitude for the given address. Also the postal code at that spot.
  * call with either getLocus(location) or getLocus(addr, city, statecode, zip)
  * @param string $q: either the whole address or just number and street
@@ -1245,7 +1256,7 @@ function purify($s) {
  */
 function where($ray) {
   if (!is_numeric(key($ray))) $ray = array_keys($ray);
-  foreach ($ray as $k) $ret[] = "$k=:$k";
+  foreach ($ray as $k) $ret[] = "`$k`=:$k";
   return join(' AND ', $ret);
 }
 
@@ -1466,6 +1477,40 @@ function bit($b) {return is_array($b) ? (bit(array_shift($b)) | ($b ? bit($b) : 
 function getBit($n, $b = NULL) {return is_null($b) ? $n : (bool) ($n & u\bit($b));}
 function setBit(&$n, $b, $on = TRUE) {return $n = $on ? (@$n | u\bit($b)) : (nn($n, 0) & ~u\bit($b));}
 
+/**
+ * Return a date the given number of units after start.
+ */
+function dateIncr($start, $number, $units) {
+  if ($units == 'forever') return NULL;
+  if ($units == 'quarter') list ($units, $number) = ['month', $number * 3];
+  return strtotime("+$number $units", $start);
+}
+
+/**
+ * Generates the SQL for determining whether a particular account meets the 
+ * criteria for the payer or payee of a rule.
+ * @param string $role -- must be 'payer' or 'payee'
+ * @param string $uid -- might be an actual uid or a string like :uid
+ * @param string $now -- might be an actual timestamp or a string like :NOW
+ * @return the sql string
+ */
+function genRuleSQL($role, $uid, $now = ':NOW') {
+  $sql = <<< EOF
+    (CASE ${role}Type
+     WHEN :REF_ANYBODY THEN TRUE
+     WHEN :REF_ACCOUNT THEN $role = $uid
+     WHEN :REF_ANYCO THEN (SELECT :IS_CO FROM users WHERE uid=$uid)
+     WHEN :REF_INDUSTRY THEN EXISTS (SELECT 1 FROM r_user_industries ui join ancestors a ON ui.iid=a.base WHERE a.ancestor=r.payee AND ui.uid=$uid)
+     WHEN :REF_GROUP THEN EXISTS (SELECT 1 FROM u_groups g JOIN u_groupies ug ON (ug.grpId = g.id)
+                                  WHERE ug.uid = $uid AND ug.start <= $now
+                                  AND IFNULL($now < ug.end, TRUE))
+     ELSE FALSE
+     END)  
+EOF;
+  return $sql;
+}
+
+
 // Single line functions that need little or no explanation
 function num($a, $else = 0) {return is_numeric($a) ? $a : $else;}
 function eq($a, $b, $else = FALSE) {return $a == $b ? $a : $else;}
@@ -1517,7 +1562,6 @@ function roughName($name) {return preg_replace("/[^A-Z '\-]/", '', mb_strtoupper
 function urlArgs() {return basename($_SERVER['REQUEST_URI']);}
 function uc1($s) {return ucwords(mb_substr($s, 0, 1)) . mb_substr($s, 1);}
 function nextAfter($needle, $hay) {return ($i = array_search($needle, $hay)) === FALSE ? NULL : $hay[$i + 1];}
-function caller($depth = 1) {return debug_backtrace()[$depth + 1]['function'];}
 function rotateBits($b, $i) {return ($i = $i % strlen($b)) ? substr($b, $i) . substr($b, 0, $i) : $b;}
 function xorBits($b1, $b2) {$res = ''; for ($i = 0; $i < strlen($b1); $i++) $res .= (@$b1[$i] xor @$b2[$i]) ? 1 : 0; return $res;}
 function a2b($s) {$b = ''; for ($i = 0; $i < strlen($s); $i++) $b .= lpad(decbin(ord($s[$i])), 8); return $b;}
@@ -1540,7 +1584,6 @@ function validEmail($email) {return filter_var($email, FILTER_VALIDATE_EMAIL);}
 //function bitCount(int $n) {return $n ? (($n % 2) ? 1 : 0) + bitCount($n / 2) : 0;}
 function stndrdth($n) {return date('S', mktime(1,1,1,1,( (($n>=10)+($n>=20)+($n==0))*10 + $n%10) ));}
 function img2string($img, $quality) {ob_start(); imagejpeg($img, NULL, $quality); return ob_get_clean();}
-function showq($sql, $subs = []) {return strtr(u\SUBS($sql), u\prefixKeys(':', $subs));}
 function deleteFile($flnm) {if (file_exists($flnm)) unlink($flnm);}
 function getFile($flnm) {return file_exists($flnm) ? file_get_contents($flnm) : '';}
 function prob($p, $yes = TRUE, $no = FALSE) {return (mt_rand() / mt_getrandmax()) < $p ? $yes : $no;}

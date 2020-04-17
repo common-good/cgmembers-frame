@@ -334,7 +334,7 @@ function formTxNonmember_submit($form, &$sta) {
   be\invoiceNonmember($name, $info);
 }
 
-function formMenu($form, &$sta) {return cgform(array('title' => item('Menu')));}
+function formMenu($form, &$sta) {return cgform(['title' => t('Menu')]);}
 
 /**
  * Present an empty slate for status and error messages.

@@ -572,8 +572,13 @@ EOF;
 function printCheck(&$ck, $pos, $tx, $mark) {
   extract(just('xid txid created payee amount deposit bankAccount', $tx));
   $escrow = 'USkk' . ESCROW_ROUTING . ($amount > 0 ? ESCROW_IN : ESCROW_OUT);
-  $bankAccount = u\decry('V', $bankAccount);
+
   $a = r\acct($payee);
+  $bankAccount = u\decry('V', $bankAccount);
+  if ($bankAccount != $a->bankAccount) {
+    r\tellAdmin(t('bank account misMatch in deposit (xid=%xid): %b1 (now), %b2 (deposit)', 'xid b1 b2', $xid, $a->bankAccount, $bankAccount));
+    if ($a->bankAccount) $bankAccount = $a->bankAccount;
+  } elseif (!$bankAccount) return r\tellAdmin(t('Empty bank account in deposit xid=%xid', compact('xid')));
   
   list ($fromName, $addr, $phone, $fromAcct, $toName, $toAcct) = $amount > 0 // which way
     //    ? [$a->legalNameDpy, $a->postalAddr, $a->phone, $bankAccount, PROJECT, $escrow] // from bank to escrow
@@ -595,13 +600,13 @@ function printCheck(&$ck, $pos, $tx, $mark) {
   $account = substr($fromAcct, 4 + 9);
 
   $bankInfo = db\get('*', 'r_banks', 'route=:routing', compact('routing'));
-  if (!$bankInfo) {w\say("Skipped transaction #$xid for $a->fullName (no bank info)"); return;}
-  //u\EXPECT((bool) $bankInfo, 'no bank info');
+  if (!$bankInfo) return r\tellAdmin(t('Skipped transaction #%xid for %nm (no bank info)', 'xid nm', $xid, $a->fullName));
+
   extract($bankInfo, EXTR_PREFIX_ALL, 'b');
   if (strlen($b_zip) > 5) $b_zip = substr($b_zip, 0, 5) . '-' . substr($b_zip, 5);
   if (!$prefix = db\get('id', 'r_transit', 'location=:location', ray('location', "$b_city, $b_state"))) {
     $prefix = db\get('id', 'r_transit', 'location=:b_state', compact('b_state'));
-    //u\EXPECT((bool) $prefix, 'no transit prefix');
+    u\EXPECT((bool) $prefix, 'no transit prefix');
   }
   $transit = $prefix . '-' . substr($routing, 4, 4) . '/' . substr($routing, 0, 4);
   

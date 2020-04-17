@@ -397,6 +397,7 @@ function payInvoice($nvid) {
  *   'noask'
  *   'funding'
  *   'crumbs', 'recurs', 'gift': gift info
+ *   'ruleId': the id of the rule associated with this transaction
  * @param int $recursId: record ID of related record in r_recurs (if any)
  * @return simple array: 
  *    ok: success?
@@ -427,7 +428,7 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
   if (is_null($goods)) $goods = FOR_GOODS;
   $taking = ($type == 'charge' or $type == 'draw' or ($type == 'transfer' and $amount < 0));
   
-  extract(just('created force boxId', $data, [now(), 0, NULL]));
+  extract(just('created force boxId ruleId', $data, [now(), 0, NULL, NULL]));
   extract(just('offline loan investment stake fine noask funding crumbs recurs gift', $data, FALSE));
 
   $short = FALSE;
@@ -489,7 +490,7 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
   $flags = 0;
   foreach (ray($flagNames) as $k) if ($$k) u\setBit($flags, $k);
 
-  txEntryPair($entries, $amount, [$e1A, $e2A], [$e1For, $e2For], E_PRIME, [$e1Tid, $e2Tid]);
+  txEntryPair($entries, $amount, [$e1A, $e2A], [$e1For, $e2For], E_PRIME, [$e1Tid, $e2Tid], NULL, NULL, $ruleId);
   
   $DBTX = \db_transaction();
 
@@ -503,22 +504,13 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
 
   $needed = abs($amount);
 
-  // Apply coupon
+  // Apply rules
   if ($amount > 0 and ($goods != FOR_USD)) {
-    if ($loserA->can(B_SELL)) { // no rebates unless buyer has permission to sell
-      $rebate = handleCoupon($entries, $loserA, $gainerA, $amount);
-      $needed -= $rebate;
-    } else r\notify($loserId, 'missed rebate', ['company' => $gainerA->fullName]);
+    $needed += handleSurTx($entries, $loserA, $gainerA, $amount);
   }
 
-  // Apply food fund (or other special) donation
-  if ($needed * $e1A->food > .005 and $e2A->foody) { // apply percentage donation to food fund
-    $foodUid = db\get('uid', 'users', "name='foodfund'");
-    $foodAmt = round($needed * $e1A->food, 2);
-    if ($foodUid) txEntryPair($entries, $foodAmt, [$e1A, $foodUid], t('donation to Food Fund (%pct)', 'pct', u\fmtAmt($e1A->food, '%')), E_DONATION);
-    $needed -= $foodAmt;
-  }
-
+/*  // Apply food fund (or other special) donation
+  } */
   // Apply any roundup
   if ($e1A->roundup and $needed > 0 and !($e2Id == CGID and $recurs and $needed < 1)) { // payer roundups, not actor or loser (don't round up reversals, cashouts, roundups, or recurring gifts under $1)
     if ($cents = fmod($needed, 1.0)) {
@@ -532,19 +524,30 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
     if ($force) {
       $short = TRUE; // flag overdraft
     } else {
+      $DBTX->rollback();
       $short = u\fmtAmt($shortfall);
       $avail = u\fmtAmt($needed - $shortfall);
       $msg = $reallyTaking ? ($otherA->can(B_SECRET) ? 'short from vague' : 'short from') : 'short to';
       $loserA->suggestAuto();
       $details = t('|%loser was short by %short trying to pay %gainer %amount (available balance is %avail)', 'loser short gainer amount avail', $loserName, $short, $gainerName, u\fmtAmt($needed), $avail);
-      $DBTX->rollback();
       return r\txErr($msg, compact(ray('otherName short details avail')) + ['success'=>false]);
     }
   }
-
-  if ($gainerA->co and $gainerA->depends and db\sum('amt', 'txs_noreverse', 'uid2=:gainerId', compact('gainerId')) + $needed > TRIALCO_AMT_LIMIT) {
-    $DBTX->rollback();
-    return r\txErr(t('trial co over'), $erInfo);
+  
+  if (!$force) {
+    if ($gainerA->co and $gainerA->depends and db\sum('amt', 'txs_noreverse', 'uid2=:gainerId', compact('gainerId')) + $needed > TRIALCO_AMT_LIMIT) {
+      $DBTX->rollback();
+      return r\txErr(t('trial co over'), $erInfo);
+    }
+    if ($gainerA->needSsnFor($needed)) {
+      $DBTX->rollback();
+      r\tellAdmin(t('SSN needed'), $erInfo);
+      $gainerA->setTask('sell');
+      $stepsLeft = $gainerA->stepsLeft();
+      $stepsLeft[] = 'ssn';
+      $gainerA->update('stepsLeft', array_values($stepsLeft));
+      return r\txErr(t('ssn needed', $erInfo));
+    }
   }
     
   $tx->addEntries($entries);
@@ -558,6 +561,8 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
     $DBTX->rollback();
     return r\txErr(t('tx save error'), $erInfo);
   }
+  
+  if ($goods != FOR_USD and $pot = $loserA->giftPot) $loserA->update('giftPot', max(0, $pot - $needed));
   unset($DBTX);
   
   // Report results
@@ -577,12 +582,12 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
  * @param int $entryType0: entry type(s)
  * @param int $acctTid0: description transaction ID (deprecated)
  */
-function txEntryPair(&$txes, $amount0, $a0, $description0, $entryType0, $acctTid0 = 0, $relType = NULL, $relatedId = NULL) {
+function txEntryPair(&$txes, $amount0, $a0, $description0, $entryType0, $acctTid0 = 0, $relType = NULL, $relatedId = NULL, $rule = NULL) {
   foreach ([1, 0] as $i) { // payee first, to agree with tests and so entry id is postive for e2, negative for e1
     foreach (ray('a description entryType acctTid') as $k) $$k = is_array(${$k . 0}) ? ${$k . 0}[$i] : ${$k . 0};
     $amount = $i == 0 ? -$amount0 : $amount0;
     list ($uid, $agentUid) = is_object($a) ? [$a->id, $a->agentId] : [$a, $a];
-    $txes[] = new r\TxEntry(compact(ray('entryType amount uid agentUid description acctTid relType relatedId')));
+    $txes[] = new r\TxEntry(compact(ray('entryType amount uid agentUid description acctTid relType relatedId rule')));
   }
 }
   
@@ -666,46 +671,62 @@ function sendNotifications($type, $tx, $shortfall) {
 }
 
 /**
- * Generate tentative transaction entries for a coupon, and update the coupated table as appropriate.
+ * Generate tentative transaction entries for a coupon
  * @param assoc $entries: (MODIFIED) an array of entries to add to, if appropriate
  * @param acct $buyer:
  * @param acct $seller:
- * @param number $price: pre-discount amount
+ * @param number $price: pre-discount, pre-stepup amount
  * @param unixtime $when: when was the transaction (defaults to now)
- * @return the rebate amount
+ * @return the net increase in overall transaction amount
  */
-function handleCoupon(&$entries, $buyer, $seller, $price) {
+
+function handleSurTx(&$entries, $buyer, $seller, $price) {
   u\EXPECT($price > 0, 'non-positive price handling coupon');
   
+  $payerCo = $buyer->co ? 1 : 0;
+  $payeeCo = $seller->co ? 1 : 0;
+
+  // Get a list of applicable rules
+  $payerCheck = u\genRuleSQL('payer', ':buyer');
+  $payeeCheck = u\genRuleSQL('payee', ':seller');
+  
   $sql = <<<EOF
-    SELECT `on`, c.coupid, amount, ulimit, id, t.got, t.gotCount, c.sponsor
-    FROM r_coupons c 
-    LEFT JOIN r_coupated d ON (c.coupid=d.coupid AND d.uid=:buyerId)
-    LEFT JOIN (
-      SELECT rel, SUM(amt) AS got, SUM(IF(amt<0, -1, 1)) AS gotCount
-      FROM txs
-      WHERE relType='D' AND uid2=:buyerId
-    ) t ON t.rel=c.coupid
-    WHERE fromId=:sellerId AND :now>=start AND (:now<end OR end=0) AND :price>=minimum 
-      AND NOT :IS_GIFT AND IF(:IS_SOME, d.id IS NOT NULL, TRUE)
-      AND (c.ulimit=0 OR IFNULL(t.gotCount,0)<c.ulimit)
-      AND (c.amount<0 OR IFNULL(t.got,0)<c.amount)
-    ORDER BY end ASC
+    SELECT r.id AS ruleId, r.amount, r.portion, r.from, r.to, r.purpose, r.minimum, r.useMax, r.amtMax,
+    (SELECT IFNULL(SUM(e.amount), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=ruleId AND e.uid=:buyer) AS `amtUsed`,
+    (SELECT IFNULL(SUM(SIGN(e.amount)), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=ruleId AND e.uid=:buyer) AS `timesUsed`
+    FROM tx_rules r
+    WHERE $payerCheck
+    AND $payeeCheck
+    AND (r.action = :ACT_SURTX)
+    AND (r.start <= :now AND IFNULL(:now < r.end, TRUE))
+    AND (:price >= minimum)
+    GROUP BY ruleId
+    HAVING (:price >= minimum) AND timesUsed < IFNULL(useMax, timesUsed+1) AND amtUsed < IFNULL(amtMax, amtUsed+1)
+    ORDER BY r.start
 EOF;
-  $subs = ray('buyerId sellerId now price', $buyer->id, $seller->id, now(), $price);
+
+  $subs = ray('buyer seller now price', $buyer->id, $seller->id, now(), $price);
   if (!$q = db\q($sql, $subs)) return 0;
-  if (!$res = $q->fetchAssoc()) return 0;
-  extract($res);
-  
-  $rebate = ($amount < 0) ? $price * (0-$amount) * .01 : min($price, $amount - $got);
-  
-  if (empty($id)) {
-    $id = db\insert('r_coupated', ray('coupid uid when', $coupid, $buyer->id, now()), 'id');
-  } else {
-    db\update('r_coupated', ray('when id', now(), $id), 'id');
+///  showq($sql, $subs);
+  if (!$res = $q->fetchAllAssoc('ruleId', \PDO::FETCH_ASSOC)) return 0;
+
+  $rebate = 0;
+  foreach ($res as $ruleId => $rule) {
+    extract($rule);
+
+    $value = $amount + $portion * $price; // potential rebate/stepup amount
+    if (! is_null($amtMax)) $value = min($value, $amtMax - ($portion > 0 ? 0 : $amtUsed)); // limited by amtUsed
+
+    $from = ($from == MATCH_PAYER) ? $buyer->id : (($from == MATCH_PAYEE) ? $seller->id : $from);
+    $to = ($to == MATCH_PAYER) ? $buyer->id : (($to == MATCH_PAYEE) ? $seller->id : $to);
+    list ($type, $desc) = $to == $buyer->id ? [E_REBATE, REBATE_DESC] : [E_DONATION, STEPUP_DESC]; // any surtx not coming back to buyer is a donation of some sort
+    if ($to == $buyer->id) $value = min($price, $value); // don't refund more than is being spent (food fund especially)
+    $rebate += $value;
+    
+    txEntryPair($entries, $value, [$from, $to], $desc, $type, 0, null, null, $ruleId);
   }
-  txEntryPair($entries, $rebate, [r\acct($sponsor), $buyer], t('discount (rebate)'), E_REBATE, 0, 'D', $coupid);
-  return $rebate;
+
+  return -$rebate;
 }
 
 /**
@@ -760,8 +781,8 @@ function maxTid($uids) {
 /**
  * Create an invoice
  * call by: list ($ok, $msg, $args) = be\invoice(...);
- * @param acct $actorA: acct object for payee (usually current user)
- * @param acct $otherA: acct object for payer
+ * @param acct $payeeA: acct object for payee (usually current user)
+ * @param acct $payerA: acct object for payer
  * @param numeric $amount: the invoiced amount
  * @param string $purpose: description of the transaction's purpose (user input)
  * @param assoc $extra:
@@ -775,10 +796,10 @@ function maxTid($uids) {
  *    index: index to result message string (if success, the index begins with "report ")
  *    subs: replacement parameters, specific to the message
  */
-function invoice($actorA, $otherA, $amount, $purpose, $goods = FOR_GOODS, $extra = [], $recursId = 0) {
+function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra = [], $recursId = 0) {
   global $channel;
   
-  u\EXPECT(compact(ray('actorA otherA amount purpose')), 'acct acct float string');
+  u\EXPECT(compact(ray('payeeA payerA amount purpose')), 'acct acct float string');
   $ks = 'status';
   extract(just($ks, $extra));
   extract(just('goods created', $extra, [FOR_GOODS, now()]));
@@ -787,33 +808,33 @@ function invoice($actorA, $otherA, $amount, $purpose, $goods = FOR_GOODS, $extra
     u\setBit($flags, $k, $v);
     unset($extra[$k]); // don't leave bits in extras (data field)
   }
-  list ($payee, $payer) = array($actorA->id, $otherA->id);
+  list ($payee, $payer) = array($payeeA->id, $payerA->id);
   u\setDft($purpose, $why = ray(R_WHYS)[$goods]);
-  $subs = ray('myName otherName otherEmail otherPhone amount why purpose did op', $actorA->fullName, $otherA->fullName, $otherA->email, u\fmtPhone($otherA->phone), u\fmtAmt($amount), $why, $purpose, t('charged'), t('charged'));
+  $subs = ray('myName otherName otherEmail otherPhone amount why purpose did op', $payeeA->fullName, $payerA->fullName, $payerA->email, u\fmtPhone($payerA->phone), u\fmtAmt($amount), $why, $purpose, t('charged'), t('charged'));
   if ($err = u\badAmount($amount, '>0')) return r\txErr($err, $subs);
-  if ($err = r\txPermErr($actorA, $otherA, TRUE)) return r\txErr($err, $subs);
+  if ($err = r\txPermErr($payeeA, $payerA, TRUE)) return r\txErr($err, $subs);
   if (r\dupTx($payee, $payer, -$amount)) return r\txErr(t('duplicate transaction'), $subs);
   
   u\setDft($status, ($channel != TX_FOREIGN and r\relation(':IS_AUTOPAY', $payee, $payer)) ? TX_APPROVED : TX_PENDING);
   $data = serialize($extra);
   $info = compact(ray('amount payer payee status purpose created flags data recursId'));
   $nvid = db\insert('r_invoices', $info, 'nvid');
-  /* $actorA->update('lastTx', [$nvid, $payer - $payee, round(-$amount, 2), $created, 'inv']); */
+  /* $payeeA->update('lastTx', [$nvid, $payer - $payee, round(-$amount, 2), $created, 'inv']); */
 
   if ($status == TX_PENDING) {
-    $link = $actorA->makeDo('inv', $nvid); // link to pay/deny
-    //$otherA->update(ray('lastTx', array($nvid, $payee - $payer, round($amount, 2), $created, 'inv')));
-    $subs += ray('_a1 reply email phone', $link, $payee, $actorA->email, u\fmtPhone($actorA->phone));
+    $link = $payeeA->makeDo('inv', $nvid); // link to pay/deny
+    //$payerA->update(ray('lastTx', array($nvid, $payee - $payer, round($amount, 2), $created, 'inv')));
+    $subs += ray('_a1 reply email phone', $link, $payee, $payeeA->email, u\fmtPhone($payeeA->phone));
     r\message($payer, 'new invoice', $subs); // tell other party by email about this invoice
   } else { // pre-approved!
-    if (!$otherA->shortfall(TX_TRANSFER, $amount)) { // don't try to pay yet if short
+    if (!$payerA->shortfall(TX_TRANSFER, $amount)) { // don't try to pay yet if short
       list($ok, $msg) = be\payInvoice($nvid);
       if (!$ok) r\tellAdmin(t('invoice payment failed'), compact('msg') + $subs + $info);
     }
   }
 
   $msg = 'report tx';
-//  if ($actorA->cttyRewardy) $msg .= '|for why';
+//  if ($payeeA->cttyRewardy) $msg .= '|for why';
   if ($amount > 0) $msg .= '|balance unchanged';
   return [TRUE, $msg, $subs + ray('success nvid', TRUE, $nvid)];
 }
@@ -959,7 +980,7 @@ function creditInfo($uids, $asof = null) {
 EOF;
 
   $sums = db\q($sql, $subs)->fetchAssoc();
-///   die(pr(u\showq($sql, ray('uids asof', join(',', $uids), $asof))));
+///   die(pr(showq($sql, ray('uids asof', join(',', $uids), $asof))));
 
   $sql = "SELECT SUM(amount) AS pendingBank FROM r_usd t WHERE (payee IN (:uids)) AND created<:asof AND completed <= 0";
   $sums += db\q($sql, $subs)->fetchAssoc();
@@ -1203,9 +1224,6 @@ function checkSanity() {
 
     if (!empty($entry->relType)) {
       switch ($entry->relType) {
-      case 'D':
-        foreignKeyCheck('TxEntry', $entryId, 'relatedId', 'r_coupated', 'id', $entry->relatedId);
-        break;
       case 'I':
         foreignKeyCheck('TxEntry', $entryId, 'relatedId', 'r_invoices', 'nvid', $entry->relatedId);
         break;
@@ -1213,6 +1231,11 @@ function checkSanity() {
         sanityErr("TxEntry $entryId relType is illegal: $entry->relType");
       }
     }
+
+    if (!empty($entry->rule)) {
+      foreignKeyCheck('TxEntry', $entryId, 'rule', 'tx_rules', 'id', $entry->rule);
+    }
+    
     $total += $entry->amount;
   }
 // odd: this fails but the individual check above succeeds!  if ($total != 0) { sanityErr("Total of all tx_entries is not 0"); }

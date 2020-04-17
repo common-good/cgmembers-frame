@@ -16,7 +16,7 @@ function formVerifyEmail($form, &$sta, $args = '') {
 
   extract(just('id code verify', $args, NULL)); // linked from an email
   if (!$verify) { // send link to verify email
-    if (!$mya or !$mya->can(B_MANAGE)) hack(t('tried to verify email without manage permission'));
+    if (!$mya or !$mya->can(B_MANAGE)) return hack(t('tried to verify email without manage permission'));
     $title = t('Verify Your Email Address');
     $subtext = t('sent email', 'email', $mya->email) . t('<p><%a>Resend or change email</a></p>', '_a', atag('/settings/resend'));
     return cgform(compact(ray('title subtext')));
@@ -50,7 +50,7 @@ function formVerifyEmail($form, &$sta, $args = '') {
   return cgform(compact(ray('title subtext uid verify')) + $passFlds + $buttons);
 }
 
-function formVerifyEmail_validate($form, &$sta) {if (isset($sta['input']['pass1'])) return formChangePassword_validate($form, $sta);}
+function formVerifyEmail_validate($form, &$sta) {if (nn($sta['input']['showPass'])) return formChangePassword_validate($form, $sta);}
 
 function formVerifyEmail_submit($form, &$sta) {
   global $mya;

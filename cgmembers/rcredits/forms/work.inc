@@ -12,9 +12,10 @@ use CG\Db as db;
 function formWork($form, &$sta, $args = '') {
   global $mya;
 
+  jsx('work');
   $title = t('Your Work');
 
-  $calling = textFld(t('Life Calling:'), [t('Your calling in life (optional)'), t('One of the main purposes of %PROJECT is to provide you the opportunity to do what you feel called to do in life. What would bring you joy to do (maybe something you\'re not doing yet)?')]);
+  $calling = textFld(t('Life Calling:'), [t('Your calling in life (optional)'), t('One of the main purposes of %PROJECT is to provide you the opportunity to do what you feel called to do in life. What would bring you joy to do (maybe something you\'re not doing yet)?')], dft($mya->calling));
 
   $companyOptions = array(
     'owner' => t('owner'),
@@ -26,7 +27,7 @@ function formWork($form, &$sta, $args = '') {
   $companyInfo = array(
     'company_text' => item(t('Are you connected to a local company, or to any %PROJECT member company? Otherwise leave this part blank.')),
     'company' => textFld(t('Company: '), [t('Your company')]),
-    'companyPhon' => textFld(t('Company Phone:'), [t('Company phone number')]),
+    'companyPhone' => textFld(t('Company Phone:'), [t('Company phone number')]),
     'companyOptions' => boxesFld('', '', @$copts, $companyOptions), 
   );
   $companyInfo = fieldSet('companyInfo', $companyInfo, BARE);
@@ -39,17 +40,18 @@ function formWork($form, &$sta, $args = '') {
 
 function formWork_validate($form, &$sta) {
   global $mya;
-  extract(just('company companyPhon companyOptions', $sta['input']));
+  extract($input = just('company companyPhone companyOptions', $sta['input'], NULL));
 
-  if (@$company or @$companyPhon) { // NOT or $gotrelation (let user get by without)
-    foreach (ray('company companyPhon') as $one) {
+  if (@$company or @$companyPhone) { // NOT or $gotrelation (let user get by without)
+    foreach (ray('company companyPhone') as $one) {
       if (u\nonish(@$$one)) $$one = '';
       // (no) return say('missing field', array('field' => $one), $one);
     }
     if (@$company and $err = u\badName($company)) return say($err, array('field' => 'Company'), 'company');
-    if (@$companyPhon and !$companyPhone = u\fmtPhone($companyPhon, '+n')) return say('bad company phone', compact('companyPhone'), 'companyPhone');
-    if (!$gotrelation) return say('what relation', 'company');
-    $signupCo = @compact(ray('company companyPhone employee owner contractor'));
+    if (@$companyPhone and !$companyPhone = u\fmtPhone($companyPhone, '+n')) return say('bad company phone', compact('companyPhone'), 'companyPhone');
+    if (!$companyOptions) return say('what relation', 'company');
+    $signupCo = compact(ray('company companyPhone')) + array_fill_keys(array_values($companyOptions), TRUE);
+
   } else $signupCo = NULL;  
 
   u\preRay(compact(ray('signupCo')), $sta['input']);
@@ -57,9 +59,9 @@ function formWork_validate($form, &$sta) {
 
 function formWork_submit($form, &$sta) {
   global $mya;
-  extract(just('calling signupCo', $sta['input']));
+  extract($input = just('calling signupCo', $sta['input']));
 
-  $mya->update(@compact(ray('calling signupCo')));
+  $mya->update(@compact(ray('calling')));
   if (@$signupCo) {
     suCompanyRelation($mya->id, $signupCo);
     $mya->update(compact('signupCo'));

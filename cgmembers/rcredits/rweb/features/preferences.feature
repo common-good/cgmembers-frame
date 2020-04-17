@@ -22,28 +22,29 @@ Scenario: A member visits the preferences page
   And radio "secretBal" is "No"
   And radio "nosearch" is "Yes"
   And with:
-  | Food Fund |  |
   | Backing   | $100 |
+  And without:
+  | Food Fund |  |
 
 Scenario: A company agent visits the preferences page
   When member "C:A" visits page "settings/preferences"
   Then we show "Account Preferences" with:
-  | Crumbs | 2 |
+  | Statements |     |
+  | Backing    | $10 |
+  And without:
+  | Food Assistance? |  |  
   And radio "statements" is "accept electronic"
   And radio "notices" is "weekly"
   And radio "secretBal" is "Yes"
-  And with:
-  | Food Fund |  |
-  | Backing   | $10 |
 
 Scenario: A member changes preferences
   Given transactions: 
-  | xid | created   | amount | from | to   | purpose |*
+  | xid | created   | amount | payer | payee | purpose |*
   |   3 | %today-1m |    250 | ctty | .ZZA | grant   |
   And member ".ZZA" has no photo ID recorded
   When member ".ZZA" completes form "settings/preferences" with values:
-  | roundup | crumbs | notices | statements | nosearch | secretBal | food | snap |*
-  |       1 |      3 | monthly | electronic |        0 |         1 |    5 |    1 |
+  | roundup | notices | statements | nosearch | secretBal | snap |*
+  |       1 | monthly | electronic |        0 |         1 |    1 |
   Then members:
-  | uid  | crumbs | food | snap | flags   |*
-  | .ZZA |    .03 | 0.05 |    1 | ok,member,confirmed,monthly,secret,roundup |
+  | uid  | snap | flags   |*
+  | .ZZA |    1 | ok,member,confirmed,monthly,secret,roundup |

@@ -46,7 +46,7 @@ function rweb_block_view($delta = '') {
 
 /**
  * Construct a menu item from its list of parts.
- * The last two parts (detail and icon) are used only for submenus (see subMenuHtml())
+ * The last two parts (detail and glyphicon) are used only for submenus (see subMenuHtml())
  */
 function makeMenuItem($k, $parts) {
   $types = ['norm' => MENU_NORMAL_ITEM, 'sub' => MENU_LOCAL_TASK, 'dft' => MENU_DEFAULT_LOCAL_TASK, 'call' => MENU_CALLBACK];
@@ -142,6 +142,8 @@ function rweb_menu($submenu = '') {
 //    'settings/settings' => ['dft', t('Settings'), 'Settings', 'manage'],
     'settings/contact' => ['sub', t('Contact Info'), 'Contact', 'manage -depends', '', t(), 'user'],
     'settings/preferences' => ['sub', t('Preferences'), 'Prefs', 'manage -depends', '', t(), 'cog'],
+    'settings/stepup' => ['sub', t('Step Up'), 'StepUp 2', 'manage', '', t(), 'export'],
+    'settings/crumbs' => ['sub', t('Share When You Receive'), 'Crumbs 2', 'manage', '', t(), 'import'],
     'settings/security' => ['sub', t('Security'), 'Security 2', 'manage -co -depends', '', t(), 'link'],
     'settings/fund' => ['sub', t('Banking'), 'Connect 2', 'manage -depends', '', t(), 'piggy-bank'],
     'settings/company' => ['sub', t('Company Info'), 'Company 2', 'manage co -depends', '', t(), 'calendar'],
@@ -166,8 +168,6 @@ function rweb_menu($submenu = '') {
     'settings/proxy' => ['call', 'Proxy', 'Proxy 2', 'manage -co'],
     'settings/verifyid' => ['call', 'Correct SSN', 'VerifyId 2', 'manage'],
     'settings/verifyemail' => ['call', 'Verify Email', 'VerifyEmail 2', ANY],
-    'settings/tithein' => ['call', 'Share When You Receive', 'TitheIn 2', 'manage'],
-    'settings/titheout' => ['call', 'Share When You Spend', 'TitheOut 2', 'manage'],
     'settings/work' => ['call', 'Work Life', 'Work 2', 'manage'],
     'settings/agent' => ['call', 'Choose an Agent', 'Agent 2', 'manage'],
     'settings/resend' => ['call', 'Resend Email', 'Resend', 'manage'],
@@ -199,7 +199,9 @@ function rweb_menu($submenu = '') {
     'sadmin/deposits' => ['sub', t('Deposits'), 'Deposits', 'superadmin'],
     'sadmin/new-member' => ['sub', t('New Member'), 'Signup code=.(admin)', 'cadmin'],
     'sadmin/make-community' => ['sub', t('Make Ctty'), 'MakeCtty', 'superadmin'],
-    'sadmin/check-sanity' => ['call', 'Check database consistency', '0', 'admin', 'checkSanity'],
+    'sadmin/groups' => [isDEV ? 'sub' : 'call', t('Groups'), 'Groups 2', 'admin'],
+    'sadmin/rules' => [isDEV ? 'sub' : 'call', t('Rules'), 'Rules 2', 'admin'],
+    'sadmin/check-sanity' => [isDEV ? 'sub' : 'call', 'Check database consistency', '0', 'admin', 'checkSanity'],
 //    'sadmin/sms' => ['sub', t('Test SMS'), 'SMS', 'superadmin'],
     'sadmin/handy' => ['sub', t('Handy'), '', 'superadminORdev', 'handyLinks'],
     'sadmin/php' => ['sub', t('PHP'), 'Php 2', 'superadminORdev'],

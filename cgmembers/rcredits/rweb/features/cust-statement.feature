@@ -17,14 +17,14 @@ Setup:
   | 1001 |  .ZZA |   1000 | %today-3m | %today-3m |
   | 1003 |  .ZZC |   3000 | %today-3m | %today-3m |
   And invoices:
-  | nvid | created   | amount | from | to   | purpose  | status       |*
+  | nvid | created   | amount | payer | payee | purpose  | status       |*
   |    1 | %today-3m |    240 | .ZZA | .ZZB | what G   |  5           |
   |    2 | %today-2m |    120 | .ZZA | .ZZC | this Q   | 17           |
   |    3 | %today-1m |     80 | .ZZA | .ZZC | this CF  | 19           |
   |    4 | %today-5d |     90 | .ZZA | .ZZC | wrongly  | %TX_DENIED   |
   |    5 | %today-2d |   2000 | .ZZA | .ZZC | realist  | %TX_APPROVED |
   And transactions: 
-  | xid | created   | amount | from | to   | purpose  | payerTid | payeeTid |*
+  | xid | created   | amount | payer | payee | purpose  | payerTid | payeeTid |*
   |  14 | %today-4m |    100 | .ZZC | .ZZA | that F   |       23 |       33 |
   |  15 | %today-2w |     50 | .ZZA | .ZZC | cacao P  |       24 |       34 |
   |  16 | %today-9d |    240 | .ZZA | .ZZC | what G   |       25 |       35 |
@@ -59,7 +59,7 @@ Scenario: A company looks at a customer statement
 
 Scenario: A statement goes onto multiple pages
   Given these "txs":
-  | xid | created   | amount | from | to   | purpose  |*
+  | xid | created   | amount | payer | payee | purpose  |*
   |  21 | %today-1d |    100 | .ZZA | .ZZC | This is a very long statement of the purpose of the transaction. Once upon a time a long long time ago in a faraway land there lived a young peasant named Abe One. Abe bought something from the Corner Pub. |
   |  22 | %today-1d |    100 | .ZZA | .ZZC | This is a very long statement of the purpose of the transaction. Once upon a time a long long time ago in a faraway land there lived a young peasant named Abe One. Abe bought something from the Corner Pub. |
   |  23 | %today-1d |    100 | .ZZA | .ZZC | This is a very long statement of the purpose of the transaction. Once upon a time a long long time ago in a faraway land there lived a young peasant named Abe One. Abe bought something from the Corner Pub. |

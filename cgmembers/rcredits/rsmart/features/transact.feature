@@ -31,7 +31,7 @@ Setup:
   | .ZZC | .ZZD  |   3 | read       |
   | .ZZF | .ZZE  |   1 | sell       |
   And transactions: 
-  | xid | created   | amount | from | to   | purpose |*
+  | xid | created   | amount | payer | payee | purpose |*
   | 3   | %today-6m |    250 | ctty | .ZZC | growth  |
   | 5   | %today-6m |    250 | ctty | .ZZF | stuff   |
   Then balances:

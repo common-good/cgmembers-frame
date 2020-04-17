@@ -59,6 +59,7 @@ function extraSetup($feature) {
  *     MAKE notices Setup
  *     MAKE recurs Setup
  *     MAKE risk Setup
+ *     MAKE rules Setup
  *     MAKE tickle Setup
  *     MAKE trust Setup
  *     MAKE weekly Setup
@@ -537,6 +538,8 @@ function stats($list) {return t\stats($list);}
  *     MAKE recurs ARecurringPaymentHappenedLongEnoughAgoToRepeat
  *     BOTH recurs ARecurringPaymentCannotBeCompleted
  *     MAKE risk Setup
+ *     MAKE rules Setup
+ *     TEST rules RulesGetInstantiated
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -644,6 +647,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE recurs ARecurringPaymentCannotBeCompleted
  *     MAKE risk Setup
  *     MAKE risk WeCalculateRisks
+ *     MAKE rules RulesGetInstantiated
  *     MAKE tickle ANewbieHasTakenOnlyTheFirstStep
  *     MAKE tickle ANewbieHasTakenSomeStepsButNotAll
  *     MAKE tickle ANonmemberHasNotAcceptedTheInvitation

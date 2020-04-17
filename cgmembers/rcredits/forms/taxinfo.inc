@@ -23,7 +23,7 @@ function formTaxInfo($form, &$sta, $ending = '') {
   $regPhone = u\fmtPhone(r\regionfield('phone'), '');
   $posttext = item(t('<p>This report is provided by %regName (EIN #%R_REGION_EIN). Address: %regAddr (%regPhone, %regEmail).</p><p>If you would rather receive reports by US Mail, you can change that setting in your <%aPrefs>Preferences</a>.', 'regName regAddr regPhone regEmail thisYear _aPrefs', $regName, r\regionfield('postalAddr'), $regPhone, r\regionfield('email'), date('Y'), atag('/settings/preferences')));
 
-  if (time() < strtotime('1/1/2021')) { // 1099-B through 2020, 1099-K thereafter
+  if (now() < strtotime('1/1/2021')) { // 1099-B through 2020, 1099-K thereafter
     $title = t('Your "Barter" Income <small>(Forms 1099-B)</small>');
     $list = "<table id='f1099b'>\n";
     $list .= "<tr><th>Date</th><th class=\"num\">Income</th><th>From</th><th>Description</th></tr>\n";

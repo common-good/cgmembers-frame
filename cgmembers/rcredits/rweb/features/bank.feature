@@ -26,7 +26,7 @@ Setup:
   | 5006 |  .ZZD |    140 | %today-2d | %today-2d | %today-1d |
   # usd transfer creation also creates corresponding transactions, if the transfer is complete
   And transactions:
-  | xid | created    | amount | from | to   | purpose |*
+  | xid | created    | amount | payer | payee | purpose |*
   | 7   | %today-10d |    100 | ctty | .ZZB | grant   |
   Then count "txs" is 7
   And balances:
@@ -59,7 +59,7 @@ Scenario: a member draws credit from the bank with zero floor
   | 5007 |  .ZZB |         0 | %now    |         0 |       0 |   0 |       0 |
   | 5008 |  .ZZB | %R_ACHMIN | %now+3d |         0 | %TX_WEB |   8 |       0 |
   And transactions:
-  | xid | created | amount | from | to   | purpose   | taking |*
+  | xid | created | amount | payer | payee | purpose   | taking |*
   |   8 | %todayd |      0 | 256  | .ZZB | from bank |      1 |
   And balances:
   | uid  | balance |*
@@ -135,7 +135,7 @@ Scenario: a member draws credit from the bank then cancels
   | txid | payee | amount | created | completed | deposit | channel | xid |*
   | 5007 |  .ZZC |     10 | %today  |    %today |       0 | %TX_WEB |   8 |
   And transactions:
-  | xid | created | amount | from | to   | purpose   | taking |*
+  | xid | created | amount | payer | payee | purpose   | taking |*
   | 8   | %today  |     10 |  256 | .ZZC | from bank |      1 |
   And balances:
   | uid  | balance |*
@@ -162,7 +162,7 @@ Scenario: a member with a negative balance requests a transfer from the bank
   | txid | payee | amount | created | completed | deposit | channel | xid |*
   | 5007 |  .ZZA |     30 | %today  |         0 |       0 | %TX_WEB |   8 |
   And transactions:
-  | xid | created | amount | from | to   | purpose   | taking |*
+  | xid | created | amount | payer | payee | purpose   | taking |*
   | 8   | %today  |      0 |  256 | .ZZA | from bank |      1 |
   
 Scenario: a slave member requests a transfer

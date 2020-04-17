@@ -90,7 +90,7 @@ Scenario: A joined account member looks at transaction history and summary
   |  603 | .ZZA  |   -100 | %today    | %today    |
   # txid 603 used to have completed 0, but that's wrong -- we always immediately complete transfers out
   And transactions: 
-  | xid | created   | amount | from | to   | purpose |*
+  | xid | created   | amount | payer | payee | purpose |*
   |  15 | %today-1m |    200 | .ZZA | .ZZD | favors  |
   |  16 | %today-1w |    500 | .ZZA | .ZZB | usd     |
   |  17 | %today-2d |     50 | .ZZD | .ZZB | cash    |
@@ -143,7 +143,7 @@ Scenario: A joined account member looks at transaction history and summary
   | .ZZA | .ZZB  | joint      |        0 |       0 |    0 |
   | .ZZB | .ZZA  | joint      |        0 |       0 |    0 |
   And transactions: 
-  | xid | created   | amount | from | to   | purpose |*
+  | xid | created   | amount | payer | payee | purpose |*
   |   4 | %today-1d |    100 | .ZZC | .ZZA | labor   |
   Then balances:
   | uid  | balance |*

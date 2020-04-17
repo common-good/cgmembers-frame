@@ -33,7 +33,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   if ($mya->superAdmin) { // do periodic stuff that only superAdmin can do
     foreach ($kids = db\col('uid', 'users', ':IS_UNDERAGE') as $uid) { // underage bit got set when activating account
       $a = r\acct($uid);
-      if (time() - $a->dob >= MATURITY * YEAR_SECS) $a->setBit(B_UNDERAGE, FALSE); // unset bit (youngster is now of age)
+      if (now() - $a->dob >= MATURITY * YEAR_SECS) $a->setBit(B_UNDERAGE, FALSE); // unset bit (youngster is now of age)
     }
   }
 
@@ -399,7 +399,7 @@ EOF;
   if (!isset($tickle)) $list .= t('There are no followup calls to be made.');
   $list .= "</table>\n";
   
-  return cgform(compact(ray('title subtitle list')), '', FALSE);
+  return cgform(compact(ray('title subtitle list')), FALSE);
 }
 
 /**
@@ -449,7 +449,7 @@ EOF;
   }
   $list .= "</table>\n";
   
-  return cgform(compact(ray('title list')), '', FALSE);
+  return cgform(compact(ray('title list')), FALSE);
 }
 
 /**
@@ -511,7 +511,7 @@ function formPhp($form, &$sta, $res = '') {
   $res = item($res);
   $code = areaFld('', '', dft(getV('code')));
   $submit = t('Execute Code');
-  return cgform(compact('res', 'code', 'submit'), '', FALSE);
+  return cgform(compact('res', 'code', 'submit'), FALSE);
 }
 
 /**

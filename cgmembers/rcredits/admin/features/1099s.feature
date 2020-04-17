@@ -6,10 +6,16 @@ SO we are following the law and won't get busted
 
 Setup:
   Given members:
-  | uid  | fullName   | floor | acctType    | flags                       | created    | risks   | activated | state |*
-  | .ZZA | Abe One    | -1000 | personal    | ok,roundup,confirmed,bankOk | %today-15m | hasBank | %now-20m  | MA    |
-  | .ZZB | Bea Two    | -2000 | personal    | ok,admin                    | %today-15m |         | %now-20m  | MA    |
-  | .ZZC | Corner Pub | -3000 | corporation | ok,co                       | %today-15m |         | %now-20m  | MA    |
+  | uid       | .ZZA                        | .ZZB       | .ZZC        |**
+  |fullName   | Abe One                     | Bea Two    | Corner Pub  |
+  |floor      | -1000                       | -2000      | -3000       |
+  |acctType   | personal                    | personal   | corporation |
+  |flags      | ok,roundup,confirmed,bankOk | ok,admin   | ok,co       |
+  |created    | %today-15m                  | %today-15m | %today-15m  |
+  |risks      | hasBank                     |            |             |
+  |activated  | %now-20m                    | %now-20m   | %now-20m    |
+  |state      | MA                          | MA         | MA          |
+  | federalId | 001010001                   | 001010002  | 001010003   |
   And relations:
   | main | agent | permission |*
   | .ZZA | .ZZB  | buy        |
@@ -31,7 +37,7 @@ Setup:
   | .ZZB |    20000 |
   | .ZZC |    30000 |
   Given transactions: 
-  | xid | created     | amount  | from | to   | purpose | taking | payerTid | payeeTid | reversesXid |*
+  | xid | created     | amount  | payer | payee | purpose | taking | payerTid | payeeTid | reversesXid |*
   |  44 | %today-361d |     100 | .ZZB | .ZZA | food E  | 0      |       24 |       34 |             |
   |  45 | %today-331d |   11000 | .ZZC | .ZZA | box F   | 1      |       25 |       35 |             |
   |  46 | %today-301d |    2400 | .ZZA | .ZZB | what G  | 0      |       26 |       36 |             |

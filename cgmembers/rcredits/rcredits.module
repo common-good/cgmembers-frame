@@ -184,14 +184,18 @@ function x($xid, $mya = '') {f('r.x', $xid, $mya);} // return a transaction obje
 /**/ function da($idfield) {list ($id, $field) = ray($idfield); debug(a($id)->$field);}
 /**/ function step($a) {debug(a($a)->step());}
 /**/ function ctty($id) {if (!$id or !a($id)) die(trace()); return a(a($id)->community);}
+
 /**/ function flog($s = '') { // log to file and return log file name
   global $channel;
   if ($channel == TX_CRON) syslog(LOG_DEBUG, pr($s) . "\n"); // because file_put_contents fails in cron
-  $fileName = LOG_DIR . date('Ym') . '.log'; // new log file every month
-  if (func_num_args()) file_put_contents($fileName, pr($s) . "\n", FILE_APPEND);
-  return $fileName;
+  if (func_num_args()) file_put_contents(LOG_FLNM, pr($s) . "\n", FILE_APPEND); // new log file every month
+  return LOG_FLNM;
 }
 /**/ function lug($s) {u\loga('debug', $s);}
+function caller($depth = 1) {return debug_backtrace()[$depth + 1]['function'];}
+function args() {return debug_backtrace()[1];}
+function showq($sql, $subs = []) {return dnp(strtr(u\SUBS($sql), u\prefixKeys(':', $subs)));}
+/**/ function dnp($s) {print_r($s); debug($s); return $s;}
 
 function who($s = '', $agent = '') {
   $a = is_object($s) ? $s : a($s, $agent); 

@@ -29,7 +29,7 @@ Setup:
   | .ZZC | .ZZB  |   1 | buy        |
   | .ZZC | .ZZA  |   2 | sell       |
   And transactions: 
-  | xid | created   | amount | from | to   | purpose      |*
+  | xid | created   | amount | payer | payee | purpose      |*
   |   1 | %today-7w |      0 | ctty | .ZZA | signup       |
   |   2 | %today-6w |      0 | ctty | .ZZB | signup       |
   |   3 | %today-6w |      0 | ctty | .ZZC | signup       |
@@ -56,7 +56,7 @@ Scenario: A member clicks the summary tab
   
 Scenario: A member clicks the summary tab with roundups
   Given transactions:
-  | xid | created | amount | from | to   | purpose |*
+  | xid | created | amount | payer | payee | purpose |*
   |   9 | %today  |  80.02 | .ZZB | .ZZC | goodies |
   When member ".ZZB" visits page "summary"
   Then balances:
