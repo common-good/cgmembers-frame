@@ -14,7 +14,7 @@ function formCouponsList($form, &$sta, $args = '') {
 
 	if ($args == 'ALL') return showDiscounts();
 	
-  $title = t('Your Discounts and Gift Certificates');
+  $title = t('Discounts and Gift Certificates From You');
 
 	$fields = ray('type amount purpose start end minimum useMax action');
   $fieldCount = count($fields);
@@ -23,7 +23,7 @@ function formCouponsList($form, &$sta, $args = '') {
 
   $sql = <<< X
     SELECT * FROM tx_rules
-		WHERE `from`=:uid
+		WHERE `from`=:uid AND (action==:ACT_REDEEM OR `to`=:SAME_AS_PAYER)
 		ORDER BY id DESC
 X;
   $q = db\q($sql, ray('uid', $mya->id));
@@ -48,7 +48,7 @@ X;
 
 		$action = w\btn("/community/coupons/$args", t('reprint'), 'primary', 'xs', $gift ? NULL: w\away());
 
-		$amount = $amount < 0 ? u\fmtAmt(-$amount/100, '%') : u\fmtAmt($amount);
+		$amount = $portion > 0 ? u\fmtAmt($portion, '%') : u\fmtAmt($amount);
 		$minimum = $minimum ? u\fmtAmt($minimum) : t('none');
 		$useMax = ($useMax + 0) ? number_format($useMax) : t('no limit');
     $rows[] = u\tableRow(compact($fields));

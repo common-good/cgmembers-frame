@@ -75,7 +75,7 @@ class MigrateCoupons extends AbstractMigration
     $groupies = $this->table('u_groupies');
     $templates = $this->table('tx_templates');
     
-    $coupons = $this->query('SELECT * FROM r_coupons')->fetchAll();
+    $coupons = $this->query('SELECT * FROM r_coupons WHERE flags=0')->fetchAll();
     $this->execute("DELETE FROM tx_rules");
     $count = 0;
     foreach ($coupons as $coupon) {
@@ -88,7 +88,7 @@ class MigrateCoupons extends AbstractMigration
                 "payee" => $coupon["fromId"], "payeeType" => 'account',
                 "from" => $coupon["sponsor"],
                 "to" => self::MATCH_PAYER,
-                "action" => 'pay',
+                "action" => 'surtx',
                 "start" => $coupon["start"],
                 "end" => $coupon["end"],
                 "amount" => $amount,
@@ -144,7 +144,7 @@ class MigrateCoupons extends AbstractMigration
       // Now create the template and connect it to the group.
       $template = ['id' => $grpId,
                    'payer' => $grpId, 'payerType' => 'group', 'payee' => $coupon['fromId'], 'payeeType' => 'account',
-                   'from' => $coupon['sponsor'], 'to' => self::MATCH_PAYER, 'action' => 'pay',
+                   'from' => $coupon['sponsor'], 'to' => self::MATCH_PAYER, 'action' => 'surtx',
                    'start' => $coupon['start'], 'end' => $coupon['end'],
                    'amount' => $coupon['amount'] < 0 ? 0 : $coupon['amount'],
                    'portion' => $coupon['amount'] < 0 ? -$coupon['amount'] * 0.01 : 0,  // convert percentage to portion
