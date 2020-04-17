@@ -49,7 +49,7 @@ Scenario: A member company creates a gift coupon
   | uid  | giftCoupons |*
   | .ZZC |          28 |
   When member ".ZZC" visits page "community/coupons/list"
-  Then we show "Your Discounts and Gift Certificates" with:
+  Then we show "Discounts and Gift Certificates From You" with:
   | Type | Amount | On               | Starting | Ending     | Min Purchase | Max Uses |~Action  |
   | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
   | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
@@ -115,7 +115,7 @@ Scenario: A member company creates a dollar amount discount coupon
   | coupid | amount | fromId | minimum | useMax | flags | start     | end                | sponsor | on |*
   |      1 |     12 |   .ZZC |      20 |      1 |       | %daystart | %(%daystart+10d-1) | .ZZC    | on your purchase of $20 or more |
   When member ".ZZC" visits page "community/coupons/list"
-  Then we show "Your Discounts and Gift Certificates" with:
+  Then we show "Discounts and Gift Certificates From You" with:
   | Type     | Amount | On                              | Starting | Ending  | Min Purchase | Max Uses |~Action  |
   | discount | $12    | on your purchase of $20 or more | %mdY     | %mdY+9d |          $20 |        1 | reprint |
   When member ".ZZA" visits page "community/coupons/list/ALL"
@@ -208,7 +208,7 @@ Scenario: A member redeems a percentage discount coupon
 #   | id | uid  | coupid | uses | when |*
 #   |  1 | .ZZA |      1 |    0 |    0 |
 #   When member ".ZZC" visits page "community/coupons/list"
-#   Then we show "Your Discounts and Gift Certificates" with:
+#   Then we show "Discounts and Gift Certificates From You" with:
 #   | Type     | Amount | On                              | Starting | Ending  | Min Purchase | Max Uses |~Action  |
 #   | discount | $12    | on your purchase of $20 or more | %mdY     | %mdY+9d |          $20 |        1 | reprint |
 #   | for only: NEWZZA ||||||||

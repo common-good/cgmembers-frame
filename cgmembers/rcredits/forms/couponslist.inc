@@ -23,7 +23,7 @@ function formCouponsList($form, &$sta, $args = '') {
 
   $sql = <<< X
     SELECT * FROM tx_rules
-		WHERE `from`=:uid AND (action==:ACT_REDEEM OR `to`=:SAME_AS_PAYER)
+		WHERE `from`=:uid AND (action=:ACT_REDEEM OR `to`=:MATCH_PAYER)
 		ORDER BY id DESC
 X;
   $q = db\q($sql, ray('uid', $mya->id));
