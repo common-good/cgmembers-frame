@@ -130,7 +130,8 @@ function formStepUp_submit($form, &$sta) {
       if ($amts == just($changeable, $res)) continue; // no change; done with this organization
       db\update('tx_rules', ray('id end', $res['id'], now()), 'id'); // cancel the old rule, to start a new one
     }
-    $info += $amts + ray('purpose start', STEPUP_DESC, now());
+    $purpose = $pct ? str_replace('3%', u\fmtAmt($amt / 100, '%s'), STEPUP_3PCT) : STEPUP_DESC;
+    $info += $amts + ray('purpose start', $purpose, now());
     
     db\insert('tx_rules', $info);
   }

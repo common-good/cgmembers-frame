@@ -719,7 +719,7 @@ EOF;
 
     $from = ($from == MATCH_PAYER) ? $buyer->id : (($from == MATCH_PAYEE) ? $seller->id : $from);
     $to = ($to == MATCH_PAYER) ? $buyer->id : (($to == MATCH_PAYEE) ? $seller->id : $to);
-    list ($type, $desc) = $to == $buyer->id ? [E_REBATE, REBATE_DESC] : [E_DONATION, STEPUP_DESC]; // any surtx not coming back to buyer is a donation of some sort
+    list ($type, $desc) = $to == $buyer->id ? [E_REBATE, REBATE_DESC] : [E_DONATION, $purpose]; // any surtx not coming back to buyer is a donation of some sort
     if ($to == $buyer->id) $value = min($price, $value); // don't refund more than is being spent (food fund especially)
     $rebate += $value;
     

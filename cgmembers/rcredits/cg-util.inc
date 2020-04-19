@@ -148,20 +148,19 @@ function poAddress($address) {
  *   the formatted amount
  */
 function fmtAmt($amount, $opt = 's$') {
-  $opt = ' ' . $opt; // simplify strpos check
   $amount0 = $amount = cleanAmount(nn($amount, 0));
-  if ($pct = strpos($opt, '%')) $amount *= 100;
+  if ($pct = strhas($opt, '%')) $amount *= 100;
   u\EXPECT(compact('amount'), 'float', 'bad num');
-  $decimals = $opt == ' %' ? 1 // default to one digit after decimal, for percents (function called with $opt=='%', space added)
-  : ($pct ? str_replace('%', '', $opt)
-  : (strpos($opt, '0') ? 0 : 2));
+  $decimals = u\starts($opt, '%') ? 1 // default to one digit after decimal, for percents
+  : ($pct ? trim(strtr($opt, '%s', '  '))
+  : (strhas($opt, '0') ? 0 : 2));
 
   $amount = number_format($amount + 0, $decimals);
-  if ($amount == '-0.00') $amount = strpos($opt, '0') ? '0' : '0.00'; // this happens, for small negative amounts
-  if (strpos($opt, '$')) $amount = '$' . $amount;
-  if (strpos($opt, 's')) $amount = preg_replace('/\\.0+$/', '', $amount);
-  if (strpos($opt, 'r')) $amount .= 'cg';
-  if (strpos($opt, 'u')) $amount .= 'us';
+  if ($amount == '-0.00') $amount = strhas($opt, '0') ? '0' : '0.00'; // this happens, for small negative amounts
+  if (strhas($opt, '$')) $amount = '$' . $amount;
+  if (strhas($opt, 's') and strhas($amount, '.')) $amount = preg_replace('/\\.?0+$/', '', $amount); // works for pct too
+  if (strhas($opt, 'r')) $amount .= 'cg';
+  if (strhas($opt, 'u')) $amount .= 'us';
   if ($pct) $amount .= '%';
   return $amount;
 }
@@ -1000,7 +999,11 @@ function getLocus($q, $city = '', $state = '', $zip = '') {
   $coods = @$matches[0]->coordinates;
   $coods = [$coods->y, $coods->x];
   */
-  if (!$res = @file_get_contents($url = GEOCODE_URL . http_build_query($params))) {
+  try {
+    $res = @file_get_contents($url = GEOCODE_URL . http_build_query($params));
+  } catch (Exception $e) { }
+  
+  if (!nn($res)) {
     r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)));
     return $none;
   }

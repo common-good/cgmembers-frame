@@ -238,6 +238,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     MAKE paybutton Setup
+ *     MAKE posts Setup
  *     MAKE preferences Setup
  *     TEST preferences AMemberChangesPreferences
  *     MAKE queries Setup
@@ -328,6 +329,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST joint AMemberRequestsTwoJoinsAtOnce
  *     TEST pale AMemberMakesATransactionThatTriggersPayingALittleExtra
  *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
+ *     TEST posts AMemberEntersDataAfterPostingAnOffer
  *     TEST posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  *     TEST relations AMemberAddsARelation
  *     TEST signin AMemberAsksForANewPasswordForACompany
@@ -420,6 +422,7 @@ function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
+ *     TEST posts AMemberEntersDataAfterPostingAnOffer
  *     TEST posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  *     TEST signin AMemberAsksForANewPasswordForUsername
  *     TEST signin AMemberAsksForANewPasswordForAccountID
@@ -527,6 +530,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST posts SomeoneVisitsThePostsPage
  *     TEST posts SomeoneSubmitsALocus
  *     TEST posts SomeonePostsAnOffer
+ *     TEST posts AMemberEntersDataAfterPostingAnOffer
  *     TEST posts SomeoneConfirmsAnOfferOnceTwice
  *     TEST posts SomeoneViewsTheDetailsOfAnOffer
  *     TEST posts SomeoneViewsTheDetailsOfAnUrgentNeed
@@ -612,6 +616,7 @@ function with($content) {return weShow($content);}
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     TEST posts SomeoneVisitsThePostsPage
+ *     TEST posts AMemberEntersDataAfterPostingAnOffer
  *     TEST posts SomeoneViewsTheDetailsOfATip
  *     TEST preferences AMemberVisitsThePreferencesPage
  *     TEST preferences ACompanyAgentVisitsThePreferencesPage
@@ -1653,7 +1658,9 @@ function weScripWithSubs($script, $args = []) {
  *     BOTH invest MembersRateAProposedLoan
  *     BOTH invest TheClubMakesALoan
  *     TEST pale AMemberMakesATransactionThatTriggersPayingALittleExtra
+ *     MAKE posts Setup
  *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
+ *     TEST posts AMemberEntersDataAfterPostingAnOffer
  *     BOTH posts SomeoneConfirmsAnOfferOnceTwice
  *     MAKE posts SomeoneViewsTheDetailsOfAnOffer
  *     MAKE posts SomeoneViewsTheDetailsOfAnUrgentNeed
@@ -1912,6 +1919,7 @@ function memberStepsLeft($id, $left0) {
  * member (ARG) has (ARG) steps done: (ARG)
  *
  * in: MAKE invest Setup
+ *     MAKE posts Setup
  *     MAKE signupco ACompanySuppliesCompanyInformation
  *     MAKE signupco ACompanySuppliesIncomingTitheChoices
  *     MAKE signupco ACompanyAccountManagerCreatesADiscount
@@ -1976,6 +1984,7 @@ function companyFlags($flags) {return t\companyFlags($flags);}
  *
  * in: MAKE posts SomeoneVisitsThePostsPage
  *     MAKE posts SomeonePostsAnOffer
+ *     MAKE posts AMemberEntersDataAfterPostingAnOffer
  *     MAKE posts SomeoneViewsTheDetailsOfAnOffer
  *     MAKE posts SomeoneViewsTheDetailsOfAnUrgentNeed
  *     MAKE posts SomeoneViewsTheDetailsOfATip
@@ -1989,6 +1998,7 @@ function someoneVisits($page) {return t\memberVisitsPage('?', $page);}
  * in: MAKE posts SomeoneSubmitsALocus
  *     MAKE posts SomeonePostsAnOffer
  *     MAKE posts SomeoneEntersPersonalDataAfterPostingAnOffer
+ *     MAKE posts AMemberEntersDataAfterPostingAnOffer
  *     MAKE posts SomeoneConfirmsAnOfferOnceTwice
  *     MAKE posts SomeoneRepliesToAnOffer
  *     MAKE posts SomeoneEntersPersonalDataAfterReplyingToAnOffer

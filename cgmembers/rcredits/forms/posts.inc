@@ -7,7 +7,7 @@ use CG\Util as u;
 use CG\Db as db;
 
 define('POST_FLDS', 'type item details cat exchange emergency radius end private'); // db fields other than contact info
-define('CONTACT_FLDS', 'fullName displayName address city state zip phone email method'); // db contact fields
+define('CONTACT_FLDS', 'fullName displayName address city state zip phone email method uid'); // db contact fields
 define('MESSAGE_FLDS', 'message postid sender'); // db message fields
 define('TOP_FLDS', 'locus radius latitude longitude zip'); // fields used for filtering list
 define('POST_INPUT_FLDS', 'cat item private details exchange emergency radius end type'); // post input fields
@@ -166,11 +166,10 @@ X
 function postList($type, $lat, $lon, $zip, $radius) {
   global $mya;
   
-  $distance = tr('%DISTANCE_BETWEEN');
+  list ($distance, $noGeo) = [DISTANCE_BETWEEN, NO_DISTANCE];
   $myPid = vip('pid') ?: '0';
   $isMyPid = 'pid=:myPid';
   $postRadius = 'IFNULL(s.radius, 0)';
-  $noPosterGeo = '(latitude=0 AND longitude=0)';
   $admin = admin($zip) ? 1 : 0;
   
   $zipIrrelevant = ($mya and $mya->admin) ? 1 : 0;
@@ -179,7 +178,7 @@ function postList($type, $lat, $lon, $zip, $radius) {
   $visible = "($visible OR (NOT s.private AND s.confirmed))";
 
   $sql = <<<X
-    SELECT IF ($noPosterGeo, 0, $distance) AS dist, s.postid, c.cat, s.item, s.details, s.emergency, $isMyPid AS mine,
+    SELECT IF ($noGeo, '', $distance) AS dist, s.postid, c.cat, s.item, s.details, s.emergency, $isMyPid AS mine,
       LEAST(IF($postRadius=0, 99999, s.radius), :radius) AS least, $postRadius AS postRadius
     FROM posts s
     LEFT JOIN post_cats c ON c.id=s.cat
@@ -190,7 +189,7 @@ function postList($type, $lat, $lon, $zip, $radius) {
       AND (
         $admin OR
         (:type='tip' AND $postRadius>0) OR
-        IF($noPosterGeo OR (:lat=0 AND :lon=0), 
+        IF($noGeo, 
           MID(p.zip,1,3) = MID(:zip,1,3) OR $zipIrrelevant, 
           $distance < LEAST(IF($postRadius=0, 99999, s.radius), :radius)
         )
@@ -208,10 +207,7 @@ X;
   while ($row = $q->fetchAssoc()) {
     extract($row);
 
-    if ($dist) {
-      $dist = $dist < .5 ? '&frac12;' : u\vague($dist); // don't show distances less than 1/2 mile
-      $cat .= " <small>$dist mi</small>";
-    }
+    if ($dist = fmtDist($dist, $zip)) { $cat .= " <small>$dist mi</small>"; }
     if ($emergency) $item = '<span class="emergency">!!</span> ' . $item;
     $item = lnk('/community/posts/op=show&postid=' . $postid, $item);
     $rowClass = 'row ' . str_replace(' ', '', $cat) . ($mine ? ' mine' : '');
@@ -280,39 +276,66 @@ function postInputFlds($dfts = []) {
  * Show details about a post.
  */
 function showPost($postid) {
-  if (!$res = db\get('pid,s.type,c.cat,s.item,s.private,s.details,s.exchange,s.emergency,s.created,s.end,s.confirmed AS postOk,p.displayName,p.fullName,p.phone,p.email,p.address,p.city,p.state,p.zip,p.method,p.created AS userSince,p.confirmed AS personOk', 'posts s LEFT JOIN post_cats c ON c.id=s.cat LEFT JOIN people p USING (pid)', compact('postid'))) return softErr(t('That is not a need or offer.'));
+  global $mya;
+  
+  $distance = tr('%DISTANCE_BETWEEN');
+  $noGeo = tr('%NO_DISTANCE');
+  list ($lat, $lon) = [nn($_COOKIE['latitude'], 0), nn($_COOKIE['longitude'], 0)];
+  
+  $flds = strtr(<<< X
+    pid,s.type,c.cat,s.item,s.private,s.details,s.exchange,s.emergency,s.created,s.end,s.confirmed AS postOk,
+    p.uid,p.displayName,p.fullName,p.phone,p.email,p.address,p.city,p.state,p.zip,p.method,p.created AS userSince,
+    p.confirmed AS personOk,IF ($noGeo, '', $distance) AS dist
+X
+  , ray(':lat :lon', $lat, $lon));
+  if (!$res = db\get($flds, 'posts s LEFT JOIN post_cats c ON c.id=s.cat LEFT JOIN people p USING (pid)', compact('postid'))) return softErr(t('That is not a need or offer.'));
   extract($res);
   
+  $admin = admin($zip);
   $phone = u\fmtPhone($phone);
   if ($emergency and $type != 'need') $item = t('(In emergency) ') . $item;
+  $ok = ($uid and db\get(':IS_OK', 'users', compact('uid')));
+  $member = $ok ? t(' (Member)') : t(' (non-member)');
   
   // set up display-only fields that are the same for user's own post and someone else's post
   $created = item(u\fmtDate($created, TRUE), t('Posted:'));
+  $mi = fmtDist($dist, $zip);
+  if ($mi) $mi = " ($mi mi)";
+  $state = r\realState($state);
+  $location = "$city, $state$mi<br>";
 
-  if (admin($zip)) {
-    list ($userSince, $phone, $state) = [u\fmtDate($userSince, TRUE), u\fmtPhone($phone), r\realState($state)];
+  if ($admin) {
+    list ($userSince, $phone) = [u\fmtDate($userSince, TRUE), u\fmtPhone($phone)];
     if ($personOk) $personOk = t(' (confirmed)');
+    if ($ok and $mya and $mya->cAdmin) $member = ' # ' . r\changeAcctLink($uid, r\qid($uid));
+    
     $who = <<< X
-      $fullName ("$displayName")<br>
+      $fullName ("$displayName")<b>$member</b><br>
       $phone<br>
-      $city, $state $zip<br>
+      $location<br>
       $email$personOk<br><br>
       Prefers: $method<br>
       User since $userSince
 X;
-  } else $who = $displayName;
+  } else {
+    $who = <<< X
+      $displayName . <b>$member</b><br>
+      $location<br>
+X;
+  }
 
+  $location = hidFld($location);
   $who = item($who, t('Who:'));
 
   // set up fields that are the different for user's own post and someone else's post
   
-  if (vip('pid') == $pid or admin($zip)) { // user's own post: allow editing or termination
+  if (vip('pid') == $pid or $admin) { // user's own post: allow editing or termination
     $frm = hidFld('editpost');
     $title = t('Edit Post');
     extract(postInputFlds($res));
-    if ($a = admin($zip)) {
+    if ($admin) {
       $message = msgFld('');
-      $email = hidFld($a->email); // messages from admin always come from admin
+      $email = hidFld($mya->email); // messages from admin always come from admin
       $subtext = $postOk ? t('Post CONFIRMED') : t('Post NOT confirmed');
     } else $subtext = $email = $message = NULL;
     
@@ -322,7 +345,6 @@ X;
     db\q('UPDATE posts SET hits=hits+1 WHERE postid=:postid', compact('postid'));
     $frm = hidFld('message');
     $title = t('Details');
-    $subtext = t('Use this form to send a message to the person who posted this %type. Your message will be sent by email with your display name and email address. Your full name and other contact information will not be sent unless you include it in the message.', ['type' => lcfirst(typeName($type, 1))]);
     $cat = item($cat, t('Category:'));
     if ($emergency) {
       list ($label, $item) = $type == 'need' 
@@ -335,17 +357,18 @@ X;
     $exchange = $emergency = $radius = $end = NULL;
     
     if ($type != 'tip') {
+      $subtext = t('Use this form to send a message to the person who posted this %type. Your message will be sent by email with your display name, city, and email address. Your full name and other contact information will not be sent unless you include it in the message.', ['type' => lcfirst(typeName($type, 1))]);
       $email = emailFld();
       $message = msgFld(REQ);
       $submit = t('Send Message');
-    } else $email = $message = $submit = NULL;
+    } else $subtext = $email = $message = $submit = NULL;
 
     $type = $pid = $private = NULL;
   // Keep in mind: the person you are contacting is almost certainly a neighbor, but might be a scoundrel pretending to live nearby.
   }
   $postid = hidFld($postid);
 
-  return cgform(compact(ray('title subtext type cat who created private item details exchange emergency radius end message email submit postid pid frm')));
+  return cgform(compact(ray('title subtext type cat who created private item details exchange emergency radius end message email submit postid pid location frm')));
 }
 
 /**
@@ -353,15 +376,16 @@ X;
  */
 function getWho($args) {
   mb_parse_str($args, $ray);
-  foreach(just(POST_FLDS . ' email ' . MESSAGE_FLDS, $ray) as $k => $v) $info[$k] = hidFld(${$k . 0} = $v);
+  foreach(just(POST_FLDS . ' email location ' . MESSAGE_FLDS, $ray) as $k => $v) $info[$k] = hidFld(${$k . 0} = $v);
   extract(just('email', $info)); // because it's in CONTACT_FLDS
 
   jsx('post-who', ray('moderateZips', MODERATE_ZIPS));
 
   if ($uid = isMember($email0)) {
     $a = r\acct($uid);
-    foreach (ray('fullName address city state zip phone') as $k) $$k = hidFld($a->$k);
+    foreach (ray('fullName address city state zip phone uid') as $k) $$k = hidFld($a->$k);
   } else {
+    $uid = NULL;
     if ($locus = nn($_COOKIE['locus'])) {
       list ($address, $city, $state, $zip) = u\parseAddr($locus);
       $state = r\stateNum($state);
@@ -377,7 +401,7 @@ function getWho($args) {
   
   $frm = hidFld('who');
   $title = t('Your Information');
-  $subtext = t('<p>This information is required only the first time you post or contact someone.</p><p>Only your "display name" (first name or nickname) is shown to others. Your full name, street address, email, and phone are not shown to anyone unless you choose "phone" or "text" as your preferred contact method (then just your phone number is displayed when someone asks to contact you about a specific post). Your city and state may also be shown.</p>');
+  $subtext = t('<p>This information is required only the first time you post or contact someone.</p><p>Only your "display name" (first name or nickname) is shown to others with your city and state. Your full name, street address, email, and phone are not shown to anyone unless you choose "phone" or "text" as your preferred contact method (then just your phone number is displayed when someone asks to contact you about a specific post).</p>');
   $displayName = textFld(REQ . t('Display Name:'), [t('Your first name or nickname'), t('To be shown to publicly with your posts, so your neighbors will recognize you.')]);
   $method = w\radiosFld(REQ . t('Preferred Contact:'), t('The "phone" and "text" options apply only when a %PROJECT member contacts you (because we have verified the identity only of members). Otherwise you will receive replies by email.'), '', ray(METHOD_OPTS));
 
@@ -386,9 +410,10 @@ function getWho($args) {
   $washes = textFld(REQ . t('Hand-washing:'), [t('Hand-washes per day'), t('About how many times a day do you wash your hands for 20 seconds or more? (This data will help us convince other people to do it more.)')]);
   $health = radiosFld(t('Health:'), t('If you are not feeling completely well, please <%a>take this quiz from the CDC</a> right away, and follow its advice.', '_a', atag('https://www.cdc.gov/coronavirus/2019-ncov/if-you-are-sick/steps-when-sick.html')), dft(2), ray(HEALTH_RATINGS));
 
+  if (!isset($location)) $location = NULL;
   $submit = t('Submit');
 
-  return cgform(compact(ray('title subtext ' . CONTACT_FLDS . ' midtext days washes health submit frm')) + $info);
+  return cgform(compact(ray('title subtext ' . CONTACT_FLDS . ' midtext days washes health submit location frm')) + $info);
 }
 
 /**
@@ -396,10 +421,8 @@ function getWho($args) {
  */
 function confirm($op, $thing, $code) {
   $code = u\decry('P', CRYPT_FLAG . $code);
-
-  
   list ($tnm, $idnm) = $thing == 'post' ? ['posts', 'postid'] : ['messages', 'id'];
-  extract(just($idnm . ' created', $code, NULL));
+  extract(just($idnm . ' created location', $code, NULL));
   $idSub = compact($idnm);
   $successUrl = POSTPAGE . ($_COOKIE['radius'] ? '/op=top' : '');
 
@@ -420,7 +443,7 @@ function confirm($op, $thing, $code) {
 
       if ($thing == 'message') {
         extract(db\get('postid,message,displayName,email', 'messages m JOIN people p ON pid=sender', compact('id')));
-        postMsg($message, $displayName, $email, $postid);      
+        postMsg($message, $displayName, $email, $location, $postid);      
         return go($successUrl, 'message success');
       } else { // post
         if ($already) {
@@ -480,7 +503,7 @@ function formPosts_validate($form, &$sta) {
     if ($err = u\badPhone($phone)) return say($err, 'phone');
     if (u\poAddress($address)) return say('po in location', 'address');
     foreach (ray('address city') as $k) if (in($$k, '0 1', strtolower($$k), strtoupper($$k))) $$k = ucwords(strtolower($$k));
-    foreach (ray('days washes') as $k) if ($err = u\badAmount($$k, '>=0')) return say($err, $k);
+    foreach (ray('days washes') as $k) if ($err = u\badAmount($$k, '>=0')) return say("$err ($k)", $k);
     
     list ($latitude, $longitude, $zot) = u\getLocus($address, $city, $state, $zip);
     if ($latitude == 0 and $longitude == 0) {
@@ -500,8 +523,8 @@ function formPosts_validate($form, &$sta) {
  *   post, message, or contact info (this last including post or message info)
  */
 function formPosts_submit($form, &$sta) {
-  $input = just(POST_FLDS . ' frm pid days washes health ' . MESSAGE_FLDS . ' ' . CONTACT_FLDS, $sta['input'], NULL);
-  extract(just('frm email type message method pid days washes health zip', $input), NULL);
+  $input = just(POST_FLDS . ' frm pid days washes health location ' . MESSAGE_FLDS . ' ' . CONTACT_FLDS, $sta['input'], NULL);
+  extract(just('frm email type message method pid days washes health zip location', $input), NULL);
   extract(frmBools($frm)); // make code a little easier to read
 
   if ($frmTabs) return; // nothing to do (happens only when javascript fails)
@@ -568,10 +591,10 @@ function formPosts_submit($form, &$sta) {
 
     if ($confirmed) {
       $fromName = db\get('displayName', 'people', compact('pid'));
-      postMsg($message, $fromName, $email, $postid);
+      postMsg($message, $fromName, $email, $location, $postid);
     } else {
       extract(db\get('type,item', 'posts', compact('postid')));
-      emailLink('message', compact('id'), $created, $type, $item, $pid);
+      emailLink('message', compact('id'), $created, $type, $item, $pid, compact('location'));
     }
   }
      
@@ -586,9 +609,10 @@ function formPosts_submit($form, &$sta) {
  * @param string $type: post type
  * @param string $item: brief description of post
  * @param int $pid: people record ID of person to send link to
+ * @param assoc $extra: other values to encode in emailed link
  */
-function emailLink($thing, $idSub, $created, $type, $item, $pid) {
-  $code = getCode($thing, $idSub);
+function emailLink($thing, $idSub, $created, $type, $item, $pid, $extra = []) {
+  $code = getCode($thing, $idSub, $extra);
   $index = "confirm-$thing";
   extract(pVal('fullName,email', $pid));
   $to = [$email => $fullName];
@@ -622,22 +646,23 @@ function oldEmailLink($pid) {
  * Return a code to confirm, cancel, or edit the given post or message.
  * @param string $thing: post or message
  * @param assoc $idSub: [record ID field name => record ID]
+ * @param assoc $other: things to encode
  */
-function getCode($thing, $idSub) {
+function getCode($thing, $idSub, $other = []) {
   $created = db\get('created', $thing . 's', $idSub);
-  return str_replace(CRYPT_FLAG, '', u\cry('P', http_build_query($idSub + ray('created word', $created, R_WORD))));
+  return str_replace(CRYPT_FLAG, '', u\cry('P', http_build_query($idSub + $other + ray('created word', $created, R_WORD))));
 }
 
 /**
  * Send a message in response to a post.
  */
-function postMsg($message, $fromName, $fromEmail, $postid) {
+function postMsg($message, $fromName, $fromEmail, $fromLocation, $postid) {
   extract(db\get('type,item,s.created,fullName,email', 'posts s JOIN people p USING (pid)', compact('postid')));
   $to = [$email => $fullName];
   $date = u\fmtDate($created, TRUE);
   $code = getCode('post', compact('postid')); // code for recipient to cancel post
   $noFrame = TRUE;
-  r\rMail('post-message', $to, compact(ray('fullName fromName type item date message code noFrame')), $fromEmail);
+  r\rMail('post-message', $to, compact(ray('fullName fromName fromLocation type item date message code noFrame')), $fromEmail);
   say('message sent');
 }
 
@@ -656,10 +681,10 @@ function vip($fld = 'pid') {
  */
 function isMember($email = '') {
   global $mya;
-  
+
   if (!$a = $mya) {
-    if ($email) return FALSE; else $email = u\cry('P', $email);
-    if (!$uid = db\get('uid', 'users', 'NOT :IS_CO AND email=:email', compact('email'))) return FALSE;
+    if (!$email) return FALSE;
+    if (!$uid = db\get('uid', 'users', 'NOT :IS_CO AND email=:email', ['email' => u\cry('P', $email)])) return FALSE;
     $a = r\acct($uid);
   }
   return $a->agentA->stepIsDone('contact') ? $a->id : FALSE;
@@ -670,10 +695,13 @@ function isMember($email = '') {
  */
 function admin($zip) {
   global $mya;
+  static $adminZips;
   
   if (!$mya or !$mya->oAdmin) return FALSE;
-  if ($mya->admin) return $mya;
-  return r\communityUid($zip) == $mya->agentA->community ? $mya : FALSE;
+  if ($mya->admin) return TRUE;
+  if (isset($adminZips) and in_array($zip, $adminZips)) return TRUE;
+  if (r\communityUid($zip) == $mya->agentA->community) { $adminZips[] = $zip; return TRUE; }
+  return FALSE;
 }
 
 /**
@@ -682,7 +710,7 @@ function admin($zip) {
  * @param assoc $params: other parameters
  */
 function codedUrl($op, $params) {return POSTPAGE . "/op=$op&code=" . u\urlify(http_build_query($params));}
-
+function fmtDist($dist, $zip) {return $dist ? (admin($zip) ? number_format($dist, 2) : ($dist < .5 ? '&frac12;' : u\vague($dist))) : '';} // don't show distances less than 1/2 mile
 function catChoices($top, $extra = []) {return ['' => $top] + db\keyed('id,cat', 'post_cats', '1 ORDER BY sort') + $extra;}
 function emailFld() {global $mya; return textFld(REQ . t('Your Email:'), [t('Your email address')], dft($mya ? $mya->email : (nn($_COOKIE['email']) ?: vip('email'))));}
 function pVal($fld, $pid) {return db\get($fld, 'people', compact('pid'));}
