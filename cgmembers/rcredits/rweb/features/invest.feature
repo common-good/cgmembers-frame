@@ -116,7 +116,7 @@ Scenario: The club adds a proposed investment
 
   And we show "Club Investments" with:
   | Status   | Investment          | Type   | Return | Value | Good |
-  | proposed | Our Pub: improve it | Equity |  4.60% |       | ?    |
+  | proposed | Our Pub: improve it | Equity |  4.6%  |       | ?    |
   
   When member "I:B" visits page "invest/rate/vestid=1&clubqid=NEWZZI"
   Then we show "Investment #1" with:
@@ -124,7 +124,7 @@ Scenario: The club adds a proposed investment
   | Company   | Our Pub |
   | Project   | improve it |
   | Type      | Equity |
-  | return    | 4.60% |
+  | return    | 4.6% |
   | soundness | 90 |
 
 Scenario: Members rate a proposed investment
@@ -146,7 +146,7 @@ Scenario: Members rate a proposed investment
   | Project/Purpose | improve it |
   | Offering size | $10,000 |
   | Share price | 10.00 |
-  | Predicted return | 4.60% |
+  | Predicted return | 4.6% |
   | Terms | Terms |
   | Company assets | $951,000 |
   | Owner character | trusty |
@@ -173,7 +173,7 @@ Scenario: Members rate a proposed investment
   |        2 |      1 | .ZZA |   20 | do it!  |        50 |
   And we show "Club Investments" with:
   | Investment          | Type   | Return | Value | Good |
-  | Our Pub: improve it | Equity |  4.60% |       |   30 |
+  | Our Pub: improve it | Equity |  4.6% |       |   30 |
   
   When member ".ZZA" visits page "invest/rate/vestid=1&clubqid=NEWZZI"
   Then we show "View or Rate Investment #1" with:
@@ -209,7 +209,7 @@ Scenario: The club buys shares
   | Project/Purpose | improve it |
   | Offering size | $10,000 |
   | Share price | 10.00 |
-  | Predicted return | 4.60% |
+  | Predicted return | 4.6% |
   | Terms | Terms |
   | Company assets | $951,000 |
   | Owner character | trusty |
@@ -243,7 +243,7 @@ Scenario: The club buys shares
   |    1 |      1 |     10 |       0 | %now |      |
   And we show "Club Investments" with:
   | Investment          | Type   | Return | Value |
-  | Our Pub: improve it | Equity |  4.60% | 100   |
+  | Our Pub: improve it | Equity |  4.6% | 100   |
   
   When member "I:B" visits page "invest/buy-or-sell/vestid=1"
   Then we show "Buy or Sell Investment #1" with:
@@ -303,7 +303,7 @@ Scenario: The club sells shares
   When member ".ZZA" visits page "invest/list/clubqid=NEWZZI"
   Then we show "Club Investments" with:
   | Investment          | Type   | Return | Value |
-  | Our Pub: improve it | Equity |  4.60% | 60    |
+  | Our Pub: improve it | Equity |  4.6% | 60    |
   When member "I:B" visits page "invest/buy-or-sell/vestid=1"
   Then we show "Buy or Sell Investment #1" with:
   | increase or decrease the club's shares in Our Pub | |
@@ -545,7 +545,7 @@ Scenario: Members rate a proposed loan
   | Co description | |
   | Project/Purpose | improve it |
   | Target | $10,000 |
-  | Interest Rate | 4.60% |
+  | Interest Rate | 4.6% |
   | Terms | Terms |
   | Company assets | $951,000 |
   | Owner character | trusty |
@@ -572,7 +572,7 @@ Scenario: Members rate a proposed loan
   |        2 |      1 | .ZZA |   20 | do it!  |        50 |
   And we show "Club Investments" with:
   | Investment          | Type   | Return | Value | Good |
-  | Our Pub: improve it | Loan   |  4.60% |       |   30 |
+  | Our Pub: improve it | Loan   |  4.6% |       |   30 |
   
   When member ".ZZA" visits page "invest/rate/vestid=1&clubqid=NEWZZI"
   Then we show "View or Rate Investment #1" with:
@@ -607,7 +607,7 @@ Scenario: The club makes a loan
   | Co description | |
   | Project/Purpose | improve it |
   | Target | $10,000 |
-  | Interest Rate | 4.60% |
+  | Interest Rate | 4.6% |
   | Terms | Terms |
   | Company assets | $951,000 |
   | Owner character | trusty |
@@ -641,7 +641,7 @@ Scenario: The club makes a loan
   |    1 |      1 |    100 |       0 | %now |      |
   And we show "Club Investments" with:
   | Investment          | Type | Return | Value |
-  | Our Pub: improve it | Loan |  4.60% | 100   |
+  | Our Pub: improve it | Loan |  4.6% | 100   |
   
   When member "I:B" visits page "invest/buy-or-sell/vestid=1"
   Then we show "Buy or Sell Investment #1" with:
@@ -700,7 +700,7 @@ Scenario: The club sells shares
   When member ".ZZA" visits page "invest/list/clubqid=NEWZZI"
   Then we show "Club Investments" with:
   | Investment          | Type | Return | Value |
-  | Our Pub: improve it | Loan |  4.60% | 60    |
+  | Our Pub: improve it | Loan |  4.6% | 60    |
   When member "I:B" visits page "invest/buy-or-sell/vestid=1"
   Then we show "Buy or Sell Investment #1" with:
   | increase or decrease the club's loan to Our Pub | |

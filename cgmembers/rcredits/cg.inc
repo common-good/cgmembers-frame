@@ -737,19 +737,12 @@ function newUid($base) {return u\firstUnusedId('uid', 'users', $base, $base + R_
     }*/
 
 /**
- * Return a link to change the current account 
- * (presumably to one the current account is allowed to change to)
+ * Return a link to change the current account (presumably to one the current account is allowed to change to)
  * @param int $uid: record ID of account to change to
  * @param string $v: link text to display
- * @param string $class: CSS class, if any
  * @return the link
  */
-function changeAcctLink($uid, $v, $class = '') {        
-  global $base_url;
-  $page = str_replace('/', ',', $_SERVER['REQUEST_URI']); // not urlencode because Drupal sees slashes anyway
-  if ($class) $class = " class=\"$class\"";
-  return "<a href=\"$base_url/change-account/acct=$uid&page=$page\"$class>$v</a>";
-}
+function changeAcctLink($uid, $v, $page = NULL) {return w\lnk("/change-account/acct=$uid", $v);}     
 
 /**
  * Record the relation of a device with an account.

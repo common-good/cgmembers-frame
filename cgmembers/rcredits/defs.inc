@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-define('R_VERSION', '3.52u'); // software version
+define('R_VERSION', '3.52v'); // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -94,174 +94,175 @@ $base_root = mb_substr($base_url, 0, mb_strlen($base_url) - mb_strlen(@$parts['p
 define('NOT_PRODUCTION', !isPRODUCTION); // safer to use than !isPRODUCTION (in case of typo)
 
 // time periods are defined here because this script uses them
-define('MIN_SECS', 60);
-define('HOUR_SECS', 60 * MIN_SECS);  // 3600
-define('DAY_SECS', 24 * HOUR_SECS);  // 86,400
-define('WEEK_SECS', 7 * DAY_SECS);   // 604,800
-define('WEEK7_SECS', 52 * DAY_SECS); // 4,492,900
-define('MONTH_SECS', 30.4368 * DAY_SECS);  // 18,408,176.64
+const MIN_SECS = 60;
+const HOUR_SECS = 60 * MIN_SECS;  // 3600
+const DAY_SECS = 24 * HOUR_SECS;  // 86,400
+const WEEK_SECS = 7 * DAY_SECS;   // 604,800
+const WEEK7_SECS = 52 * DAY_SECS; // 4,492,900
+const MONTH_SECS = 30.4368 * DAY_SECS;  // 18,408,176.64
 define('QUARTER_SECS', round(3 * MONTH_SECS));  // 55,224,530
 define('YEAR_SECS', round(12 * MONTH_SECS));    // 220,898,120
-define('FLOOR_DAYS', 183); // how many days to consider for credit line calculation
+const FLOOR_DAYS = 183; // how many days to consider for credit line calculation
 
-define('REGION_DOMAIN', R_SERVER_ID . '.' . CG_DOMAIN);
-define('EMAILX', 'example.com'); // domain for unknown, placeholder, test, or example emails
-define('GFLD_LAT', 42.3791167); // Greenfield, MA latitude (in tests)
-define('GFLD_LON', -73.2819463); // Greenfield, MA latitude
-define('GFLD_ZIP', '01301'); // Greenfield, MA zipcode
-define('NULL', NULL); // for tests
+const REGION_DOMAIN = R_SERVER_ID . '.' . CG_DOMAIN;
+const EMAILX = 'example.com'; // domain for unknown, placeholder, test, or example emails
+const GFLD_LAT = 42.3791167; // Greenfield, MA latitude (in tests)
+const GFLD_LON = -73.2819463; // Greenfield, MA latitude
+const GFLD_ZIP = '01301'; // Greenfield, MA zipcode
+define('NULL', NULL); // for tests (cannot be const)
 
 // Common Good Finance email and other data
-define('CGF_LEGALNAME', 'Society to Benefit Everyone, Inc.');
-define('CGF_PHONE', '+1 413 628 1723');
-define('CGF_ADDRESS', '48 Buckland Road');
-define('CGF_CITY', 'Ashfield');
-define('CGF_POSTALADDR', 'PO Box 21, Ashfield, MA 01330-0021');
-define('CGF_EIN', '205280780');
-define('SLOGANS', 'for truth and justice,for community power,for community democracy,for community investment,for a sustainable future,to empower communities,for community abundance,for a better future,for economic democracy,for democratic economics');
+const CGF_LEGALNAME = 'Society to Benefit Everyone, Inc.';
+const CGF_PHONE = '+1 413 628 1723';
+const CGF_ADDRESS = '48 Buckland Road';
+const CGF_CITY = 'Ashfield';
+const CGF_POSTALADDR = 'PO Box 21, Ashfield, MA 01330-0021';
+const CGF_EIN = '205280780';
+const SLOGANS = 'for truth and justice,for community power,for community democracy,for community investment,for a sustainable future,to empower communities,for community abundance,for a better future,for economic democracy,for democratic economics';
 define('R_LAUNCH', strtotime('12/15/2013')); // original launch date
-define('EMAIL_DOMAIN', CG_DOMAIN); // replace this with CG_DOMAIN when ready
-define('SYS_EMAIL', 'system@' . EMAIL_DOMAIN); // old address so we don't get marked as spam (later at REGION_DOMAIN)
-define('BOUNCE_EMAIL', 'bounce@' . EMAIL_DOMAIN); // old address so we don't get marked as spam (later at REGION_DOMAIN)
+const EMAIL_DOMAIN = CG_DOMAIN; // replace this with CG_DOMAIN when ready
+const SYS_EMAIL = 'system@' . EMAIL_DOMAIN; // old address so we don't get marked as spam (later at REGION_DOMAIN)
+const BOUNCE_EMAIL = 'bounce@' . EMAIL_DOMAIN; // old address so we don't get marked as spam (later at REGION_DOMAIN)
 define('PUBLIC_KEY', dirname($_SERVER['DOCUMENT_ROOT']) . '/.publicKey');
 define('PRIVATE_KEY', dirname($_SERVER['DOCUMENT_ROOT']) . '/.privateKey');
-define('ANY', 'any'); // accessible to anyone (if you change this, rebuild menus immediately)
-define('SVAR_HEADER', 'rcredits_'); // session variable header
-define('TEST_PDF_FLNM', 'testOutput.pdf'); // pdf output during testing
+const ANY = 'any'; // accessible to anyone (if you change this, rebuild menus immediately)
+const SVAR_HEADER = 'rcredits_'; // session variable header
+const TEST_PDF_FLNM = 'testOutput.pdf'; // pdf output during testing
 
-define('TEN99MISC', 'A'); // code for 1099-MISC
-define('TEN99B', 'B'); // code for 1099-B
-define('TEN99K', 'MC'); // code for 1099-K
-define('MINIMA1099', 'X:20000/200, MA:600/1, VT:600.01/1'); // no 1099-K for gross/txCount under this amount (by state)
-define('MINIMA1099MAVT', 600); // 1099K minimum in MA and VT (for display)
+const TEN99MISC = 'A'; // code for 1099-MISC
+const TEN99B = 'B'; // code for 1099-B
+const TEN99K = 'MC'; // code for 1099-K
+const MINIMA1099 = 'X:20000/200, MA:600/1, VT:600.01/1'; // no 1099-K for gross/txCount under this amount (by state)
+const MINIMA1099MAVT = 600; // 1099K minimum in MA and VT (for display)
 
-define('R_BULLET', '&#8226;'); // bullet in emails (where CSS is difficult)
-define('STATS_GRAIN', 10); // granularity of statistics, in days
+const R_BULLET = '&#8226;'; // bullet in emails (where CSS is difficult)
+const STATS_GRAIN = 10; // granularity of statistics, in days
 define('INFLATION_DESC', t('inflation adjustment'));
-define('COMPANY_FREEZE', FALSE); // companies cannot spend rewards yet
-define('R', '<span class="r">r</span>');
-define('US', '<span class="us">us</span>');
-/// define('GAME_COMPANIES', '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital');
-define('ITEM_FLDS', 'title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back'); // names of common fields that are wrapped automatically in w\item()
-define('R_DATE_FLDS', 'start end start created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted'); // date field names for testing and administrative display
-define('CO_FLDS', 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd staleNudge contact'); // account fields stored in r_company
-define('DATA_FLDS', 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo activated0'); // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
-define('MASTER_NUMERIC_FLDS', 'minimum achMin savingsAdd saveWeekly');
-define('MASTER_FLDS', MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank refill'); // only in master, for joint accounts
-define('R_MONEY_FLDS', 'balance rewards floor giftPot committed'); // financial amount fields in account record
-define('JOINT_FLDS', R_MONEY_FLDS . ' savings'); // add these together for joint accounts
-define('PSECURE_FLDS', 'phone email'); // personal fields that get encrypted in a searchable way (P)
-define('VSECURE_FLDS', 'federalId dob bankAccount'); // very secure fields (always soon pgp-encrypted within Acct::vsecure)
-define('SECURE_FLDS', 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode cardCode cardCode2 pin question answer idProof oneTimePass last4bank yob'); // non-personal encrypted fields (must be complete list)
-define('R_HIDE_CHANGES', R_MONEY_FLDS . ' pw2 vKeyPw ssnData hasBank changes init login access activated data secure vsecure stepsDone steps stepsLeft lastiCode pass oneTimePass notes picture photo thumb trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd'); // do not record changes to these fields: anything often-changed (automatically or not)
-define('R_APP_DATA_GETS', '!log !device !members !txs '); // data requests from the rPOS app
-//  define('R_AVAIL_BUY', '(balance-IF(u.:IS_DEBT, floor, GREATEST(floor, 0)))'); // balance available to spend
-define('R_SHARE_MAX', 50); // minimum sharing percentage
-define('R_SHARE_DFT', 25); // default sharing percentage
+const COMPANY_FREEZE = FALSE; // companies cannot spend rewards yet
+const R = '<span class="r">r</span>';
+const US = '<span class="us">us</span>';
+/// const GAME_COMPANIES = '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital';
+const ITEM_FLDS = 'title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back'; // names of common fields that are wrapped automatically in w\item()
+const R_DATE_FLDS = 'start end start created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted'; // date field names for testing and administrative display
+const CO_FLDS = 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd staleNudge contact'; // account fields stored in r_company
+const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo activated0'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
+const MASTER_NUMERIC_FLDS = 'minimum achMin savingsAdd saveWeekly';
+const MASTER_FLDS = MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank refill'; // only in master, for joint accounts
+const R_MONEY_FLDS = 'balance rewards floor giftPot committed'; // financial amount fields in account record
+const JOINT_FLDS = R_MONEY_FLDS . ' savings'; // add these together for joint accounts
+const PSECURE_FLDS = 'phone email'; // personal fields that get encrypted in a searchable way (P)
+const VSECURE_FLDS = 'federalId dob bankAccount'; // very secure fields (always soon pgp-encrypted within Acct::vsecure)
+const SECURE_FLDS = 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode cardCode cardCode2 pin question answer idProof oneTimePass last4bank yob'; // non-personal encrypted fields (must be complete list)
+const R_HIDE_CHANGES = R_MONEY_FLDS . ' pw2 vKeyPw ssnData hasBank changes init login access activated data secure vsecure stepsDone steps stepsLeft lastiCode pass oneTimePass notes picture photo thumb trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd'; // do not record changes to these fields: anything often-changed (automatically or not)
+const R_APP_DATA_GETS = '!log !device !members !txs '; // data requests from the rPOS app
+//  const R_AVAIL_BUY = '(balance-IF(u.:IS_DEBT, floor, GREATEST(floor, 0)))'; // balance available to spend
+const R_SHARE_MAX = 50; // minimum sharing percentage
+const R_SHARE_DFT = 25; // default sharing percentage
 define('R_SHARING_MSG', t('sharing rewards with CGF'));
-define('ICLUB_TITHE', .1); // fraction of profits that go to the community and the common good
-define('USERNAME_MAX_LENGTH', '100'); // max length of "name" field
+const ICLUB_TITHE = .1; // fraction of profits that go to the community and the common good
+const USERNAME_MAX_LENGTH = '100'; // max length of "name" field
 
-define('LOCUS_CITYST', -1); // means locus is city/st (so don't use lat/lon)
-define('LOCUS_PARTZIP', -2); // means locus is partial or whole zipcode (so don't use lat/lon)
-define('LOCUS_BAD', -3); // means locus is bad format
-define('LOCUS_ZIP', -4); // means locus cannot be found so just zip is returned
+const LOCUS_CITYST = -1; // means locus is city/st (so don't use lat/lon)
+const LOCUS_PARTZIP = -2; // means locus is partial or whole zipcode (so don't use lat/lon)
+const LOCUS_BAD = -3; // means locus is bad format
+const LOCUS_ZIP = -4; // means locus cannot be found so just zip is returned
 //    $zippat = "(?:$st,?\\s?)?(\\d{5})(-\\d{4})?";
-define('LOCPAT_PARTZIP', '|^\\d{1,5}$|');
-define('LOCPAT_CITYST', '|^([^,/\\s]+[^,/]+)\\s*[,/]?([a-zA-Z]{2})$|');
+const LOCPAT_PARTZIP = '|^\\d{1,5}$|';
+const LOCPAT_CITYST = '|^([^,/\\s]+[^,/]+)\\s*[,/]?([a-zA-Z]{2})$|';
 
-define('R_ADMIN_CAN_MANAGE_CTTYS', TRUE); // should be false once communities can manage themselves
-define('R_CRON_PERIOD', 5*60); // how many seconds between cron runs (must divide an hour evenly)
-define('R_MAX_TASK_TIME', 1*60); // what's the longest a queued cron task might take
-define('R_NOLOG', SECURE_FLDS . ' ' . VSECURE_FLDS . ' data secure vsecure secret oneTimeLoginUrl password pass pass1 pass2 vKeyE newPass external_input form_build_id bad args'); // don't log these (external_input may contain passwords and is duplicated as individual fields)
-define('R_NOLOG_FORMS', 'Admin Test Handy footer accounts history settings settings/icon community Summary Php'); // don't log visits to these forms
-define('R_ANON_FORMS', R_NOLOG_FORMS . ' Signup Signin PageNotFound Sinx Pass Empty TestRecovery ChangePassword Help Community Democracy Agreement CttyFunds Reports Flags Game Menu I ResetPassword Profile Accept Buy HandleInvoice FindCo'); // no login required
-define('SSN_ERR_INDEX', 'CGerror'); // where to put/find error messages in ssnData
-define('BY_CASH', '(cash)'); // app includes this in description, for a purchase of CG credit by cash
-define('BY_CHECK', '(check)'); // app includes this in description, for a purchase of CG credit by check
-define('BY_CARD', '(card)'); // app includes this in description, for a purchase of CG credit by credit card
+const R_ADMIN_CAN_MANAGE_CTTYS = TRUE; // should be false once communities can manage themselves
+const R_CRON_PERIOD = 5*60; // how many seconds between cron runs (must divide an hour evenly)
+const R_MAX_TASK_TIME = 1*60; // what's the longest a queued cron task might take
+const R_NOLOG = SECURE_FLDS . ' ' . VSECURE_FLDS . ' data secure vsecure secret oneTimeLoginUrl password pass pass1 pass2 vKeyE newPass external_input form_build_id bad args'; // don't log these (external_input may contain passwords and is duplicated as individual fields)
+const R_NOLOG_FORMS = 'Admin Test Handy footer accounts history settings settings/icon community Summary Php'; // don't log visits to these forms
+const R_ANON_FORMS = R_NOLOG_FORMS . ' Signup Signin PageNotFound Sinx Pass Empty TestRecovery ChangePassword Help Community Democracy Agreement CttyFunds Reports Flags Game Menu I ResetPassword Profile Accept Buy HandleInvoice FindCo'; // no login required
+const SSN_ERR_INDEX = 'CGerror'; // where to put/find error messages in ssnData
+const BY_CASH = '(cash)'; // app includes this in description, for a purchase of CG credit by cash
+const BY_CHECK = '(check)'; // app includes this in description, for a purchase of CG credit by check
+const BY_CARD = '(card)'; // app includes this in description, for a purchase of CG credit by credit card
 define('R_ON_FILE', t('(on file)'));
-// (NO) define('DEPOSIT_SQL', '(amount>0 XOR txid<0)'); // SQL fragment for "transfer is from bank to CG"
+// (NO) const DEPOSIT_SQL = '(amount>0 XOR txid<0)'; // SQL fragment for "transfer is from bank to CG"
 
-define('DOLLAR_POOL', 1); // uid of dollar pool account
-define('CANONIC_ACCTS', 512); // number of canonic accounts (admin/dollar pool, placeholders,...)
-define('CANONIC', 'BETWEEN 0 AND ' . (CANONIC_ACCTS - 1));
-define('AGGREGATE_MIN', 1); // minimum number of members to show aggregate data
+const DOLLAR_POOL = 1; // uid of dollar pool account
+const CANONIC_ACCTS = 512; // number of canonic accounts (admin/dollar pool, placeholders,...)
+const CANONIC = 'BETWEEN 0 AND ' . (CANONIC_ACCTS - 1);
+const AGGREGATE_MIN = 1; // minimum number of members to show aggregate data
 
-define('CG_ADMIN_UID', 1);  // uid of administrator account
-define('PLACEHOLDER_1_UID', 2);  // uid of first placeholder
-define('PLACEHOLDER_2_UID', 3);  // uid of second placeholder
-define('CG_ROUNDUPS_UID', 129);  // Donations start at 128 (128 used for general donations)
-define('CG_CRUMBS_UID', 130);  //
-define('CG_SERVICE_CHARGES_UID', 192);
-define('MINIMUM_BANK_UID', 256);
-define('BANK_IN_ID', 256);  // Bank accounts start at 256
-define('BANK_OUT_ID', 257);  //
-define('MAXIMUM_BANK_UID', 511);
+const CG_ADMIN_UID = 1;  // uid of administrator account
+const PLACEHOLDER_1_UID = 2;  // uid of first placeholder
+const PLACEHOLDER_2_UID = 3;  // uid of second placeholder
+const CG_ROUNDUPS_UID = 129;  // Donations start at 128 (128 used for general donations)
+const CG_CRUMBS_UID = 130;  //
+const CG_SERVICE_CHARGES_UID = 192;
+const MINIMUM_BANK_UID = 256;
+const BANK_IN_ID = 256;  // Bank accounts start at 256
+const BANK_OUT_ID = 257;  //
+const MAXIMUM_BANK_UID = 511;
 
-define('R_TEMP_NAME_PREFIX', 'unknown ');
-define('CO_PHOTO_FACTOR', 3); // make company photos this many times as big as individual photos
-define('MAX_UPLOAD_SIZE', 4 * 1024000); // maximum upload size in bytes
-define('MAX_ID_SIZE', 10); // max ID size in MB
+const R_TEMP_NAME_PREFIX = 'unknown ';
+const CO_PHOTO_FACTOR = 3; // make company photos this many times as big as individual photos
+const MAX_UPLOAD_SIZE = 4 * 1024000; // maximum upload size in bytes
+const MAX_ID_SIZE = 10; // max ID size in MB
 
-define('TRANSLATE_URL', 'https://translation.googleapis.com/language/translate/v2'); // google translate API URL
-define('GEOCODE_URL', 'https://api.opencagedata.com/geocode/v1/json?'); // use in acct::setLocus()
-define('MI_PER_DEGREE', 69); // varies from 68.703 at the equator to 69.407 at the poles
-define('NEIGHBOR_MAX', 40); // how far away (in miles) can a member see names of other individual members?
-define('DISTANCE_BETWEEN', 'DEGREES(ACOS(LEAST(1.0, COS(RADIANS(latitude))
+const TRANSLATE_URL = 'https://translation.googleapis.com/language/translate/v2'; // google translate API URL
+const GEOCODE_URL = 'https://api.opencagedata.com/geocode/v1/json?'; // use in acct::setLocus()
+const MI_PER_DEGREE = 69; // varies from 68.703 at the equator to 69.407 at the poles
+const NEIGHBOR_MAX = 40; // how far away (in miles) can a member see names of other individual members?
+const DISTANCE_BETWEEN = 'DEGREES(ACOS(LEAST(1.0, COS(RADIANS(latitude))
   * COS(RADIANS(:lat))
   * COS(RADIANS(longitude - :lon))
   + SIN(RADIANS(latitude))
-  * SIN(RADIANS(:lat))))) * ' . MI_PER_DEGREE); // distance from other, in miles (requires pre-processing)
-define('SIGNUP_PARTNERS', 'cooppower nyccec'); // these organizations sign people up for Common Good
+  * SIN(RADIANS(:lat))))) * ' . MI_PER_DEGREE; // distance from other, in miles (requires pre-processing)
+const NO_DISTANCE = '(latitude=0 AND longitude=0) OR (:lat=0 AND :lon=0)';
+const SIGNUP_PARTNERS = 'cooppower nyccec'; // these organizations sign people up for Common Good
 
-define('R_URL_SLASH', '%_%'); // Drupal gets confused by slashes in a url, even if urlencoded
-define('R_EXCHANGE_LIMITS', '1:5000,7:20000,52:80000,365:500000'); // per day, week, 7-week, year
-define('STALE_NUDGE', 7); // default number of days to wait before reminding a customer to pay an invoice
-define('R_INVITE_DAYS', 30); // number of days to accept invitation to membership
-//define('R_MAXR_DEFAULT', -1); // suggested maximum amount to hold in CG credit (-1 = no limit)
-define('R_CARDCODE_LEN', 14); // length of rCard security code (long to deter easy copying, max 14 for small QR)
-define('R_CARD_COST', 5); // cost to order a company or replacement rCard
-define('ORGANIZER_GRANT_MIN', 10); // minimum number of individuals to recruit, to be eligible for a grant
-define('ORGANIZER_GRANT_MAX', '$5,000'); // maximum organizer grant amount
-define('TICKLE_WELCOME', 2 * 7); // number of days to wait after activation, before followup
-define('TICKLE_DELAYED', 6 * 7); // number of days to wait after activation, before followup if no gift or no CGC
-define('OFTENS', 'W:Weekly,M:Monthly,Q:Quarterly,Y:Yearly,X:Once (now)');
-define('OFX_TX_FLDS', 'trnType dtPosted trnAmt fitId name memo');
-define('OFTENS_SECS', ['W' => WEEK_SECS, 'M' => MONTH_SECS, 'Q' => QUARTER_SECS, 'Y' => YEAR_SECS]);
+const R_URL_SLASH = '%_%'; // Drupal gets confused by slashes in a url, even if urlencoded
+const R_EXCHANGE_LIMITS = '1:5000,7:20000,52:80000,365:500000'; // per day, week, 7-week, year
+const STALE_NUDGE = 7; // default number of days to wait before reminding a customer to pay an invoice
+const R_INVITE_DAYS = 30; // number of days to accept invitation to membership
+//const R_MAXR_DEFAULT = -1; // suggested maximum amount to hold in CG credit (-1 = no limit)
+const R_CARDCODE_LEN = 14; // length of rCard security code (long to deter easy copying, max 14 for small QR)
+const R_CARD_COST = 5; // cost to order a company or replacement rCard
+const ORGANIZER_GRANT_MIN = 10; // minimum number of individuals to recruit, to be eligible for a grant
+const ORGANIZER_GRANT_MAX = '$5,000'; // maximum organizer grant amount
+const TICKLE_WELCOME = 2 * 7; // number of days to wait after activation, before followup
+const TICKLE_DELAYED = 6 * 7; // number of days to wait after activation, before followup if no gift or no CGC
+const OFTENS = 'W:Weekly,M:Monthly,Q:Quarterly,Y:Yearly,X:Once (now)';
+const OFX_TX_FLDS = 'trnType dtPosted trnAmt fitId name memo';
+const OFTENS_SECS = ['W' => WEEK_SECS, 'M' => MONTH_SECS, 'Q' => QUARTER_SECS, 'Y' => YEAR_SECS];
 
-define('ICARD_EXPIRES', 14); // how many days until invitation card expires, after account is activated
-define('ICARD_CODELEN_MIN', 10); // minimum length for an invitation code
-define('ILEN_REGION', 15); // 3 letters (radix 26-32 -- in other words, 1-6 can be used in region also)
-define('ILEN_TAIL', 19); // 3-4 letters (radix 26)
-define('ILEN_SECURITY', 16); // 3 alphanumerics (radix 35)
-define('ILEN', ILEN_REGION + ILEN_TAIL + ILEN_SECURITY);
-define('ILEN_DIV', 25); // this results in two 5-digit codes (otherwise the integer gets too big)
+const ICARD_EXPIRES = 14; // how many days until invitation card expires, after account is activated
+const ICARD_CODELEN_MIN = 10; // minimum length for an invitation code
+const ILEN_REGION = 15; // 3 letters (radix 26-32 -- in other words, 1-6 can be used in region also)
+const ILEN_TAIL = 19; // 3-4 letters (radix 26)
+const ILEN_SECURITY = 16; // 3 alphanumerics (radix 35)
+const ILEN = ILEN_REGION + ILEN_TAIL + ILEN_SECURITY;
+const ILEN_DIV = 25; // this results in two 5-digit codes (otherwise the integer gets too big)
 
 // codes for iCode field (invitation code)
-define('IBY0', -2); // lowest IBY number
-define('IBY_FORM', -2); // invited by form (including companies) (the ONLY pre-confirmed signup)
-define('IBY_LATE', -1); // invited by form, but accepted late (needs to be confirmed)
-define('IBY_SELF', 0); // signed up without an invitation/confirmation yet
-define('IBY_EMAIL', 1); // invited by email (this invitation # is re-usable, but needs to be confirmed)
-define('IBY_ICARD', 2); // >=this is invitation number, also needing confirmation
-define('IBYS', 'form late self email icard');
+const IBY0 = -2; // lowest IBY number
+const IBY_FORM = -2; // invited by form (including companies) (the ONLY pre-confirmed signup)
+const IBY_LATE = -1; // invited by form, but accepted late (needs to be confirmed)
+const IBY_SELF = 0; // signed up without an invitation/confirmation yet
+const IBY_EMAIL = 1; // invited by email (this invitation # is re-usable, but needs to be confirmed)
+const IBY_ICARD = 2; // >=this is invitation number, also needing confirmation
+const IBYS = 'form late self email icard';
 
 // notification preferences
 $GLOBALS['notifyWhens'] = t('N:Never,I:Immediately,D:Daily,W:Weekly,M:Monthly');
 $GLOBALS['notifyNowBys'] = t('E:Email,T:Text message,B:Both'); // how to send immediate messages
-define('N_DEFAULTS', 'MMNIIMDIDWD');
-define('N_EXPLICIT_OUT', 0); // manual payment or transfer out
-define('N_AUTO_OUT', 1); // automatic payment made
-define('N_AUTO_IN', 2); // auto-refill initiated
-define('N_IN_DONE', 3); // transfer from bank account complete
-define('N_INCOME', 4); // payment received
-define('N_INFLATION', 5); // inflation adjustment received
-define('N_REWARD', 6); // other incentive reward received
-define('N_OTHER_IN', 7); // fine, grant, loan, or investment received
-define('N_CHANGED', 8); // transaction/invoice edited, canceled, or disputed
-define('N_NUDGE', 9); // your invitee needs a nudge
-define('N_SUGGESTION', 10); // suggestion from the system
+const N_DEFAULTS = 'MMNIIMDIDWD';
+const N_EXPLICIT_OUT = 0; // manual payment or transfer out
+const N_AUTO_OUT = 1; // automatic payment made
+const N_AUTO_IN = 2; // auto-refill initiated
+const N_IN_DONE = 3; // transfer from bank account complete
+const N_INCOME = 4; // payment received
+const N_INFLATION = 5; // inflation adjustment received
+const N_REWARD = 6; // other incentive reward received
+const N_OTHER_IN = 7; // fine, grant, loan, or investment received
+const N_CHANGED = 8; // transaction/invoice edited, canceled, or disputed
+const N_NUDGE = 9; // your invitee needs a nudge
+const N_SUGGESTION = 10; // suggestion from the system
 
 define('R_WHYS', t('goods and services,exchange of US Dollars or other currency,loan/reimbursement/etc.')); // . R_SHARING_MSG); // transaction purposes
 define('FOR_GOODS', 0); // index into R_WHYS for goods
@@ -600,7 +601,8 @@ const MATCH_PAYER = -1; // Special values for from and to (which are normally ui
 const MATCH_PAYEE = -2;
 
 define('STEPUP_MIN', 10); // minimum number of stepup rules for a company to appear on the step-up page
-define('STEPUP_DESC', t('donation (by step-up)')); // step-up donation tx description
+define('STEPUP_DESC', t('donation (step-up)')); // step-up donation tx description
+define('STEPUP_3PCT', str_replace('(', '(3% ', STEPUP_DESC)); // description model for rules, txs, and testing
 define('REBATE_DESC', t('discount (rebate)'));
 
 $GLOBALS['emailSubjects'] = array(

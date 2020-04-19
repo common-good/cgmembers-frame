@@ -1,3 +1,27 @@
+2020-04-17 feature/post-specifics
+. revised u\fmtAmt to allow simple percentages
+. bracketed geo request in try()
+. posts and post messages now include city, state, and miles away
+. changed a lot of define()s to consts
+. added a standard 3% stepup description for testing and as a model for tx descriptions
+. posts now show whether the poster is a member
+
+eachA(function ($a) {
+  if ($a->food > 0 and $a->ok) {
+    $uid = $a->id;
+    if (db\exists('tx_rules r', 'r.from=' . $uid)) {
+      debug("RULE $a->fullName: $a->city $a->zip $a->food");
+    } else {
+      $descCrit = "(description LIKE '%\\%%' OR description LIKE '%early June%')";
+      $start = db\min('created', 'txs', "uid1=:uid AND " . str_replace('description', 'for1', $descCrit), compact('uid')) ?: ($a->activated ?: $a->created);
+      $purpose = 'donation (' . u\fmtAmt($a->food, '5%s') . ' food step-up)';
+      $info = ray('action from to amount portion purpose payerType payer payeeType payee start', 'surtx', $uid, 26742000000672, 0, $a->food, $purpose, 'account', $uid, 'industry', 2, $start);
+      $rule = db\insert('tx_rules', $info);
+      db\q("UPDATE tx_entries_all e LEFT JOIN txs t ON t.eid = ABS(e.id) SET e.rule=:rule WHERE t.uid1=:uid AND t.uid2=26742000000672 AND $descCrit", compact(ray('rule uid')));
+    }
+  }
+});
+
 2020-04-15 feature/surtransactions
 . stepup maxes are now handled right, rather than like food fund max
 . start fields default to now

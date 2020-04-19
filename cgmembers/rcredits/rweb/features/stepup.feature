@@ -23,24 +23,25 @@ Scenario: A member chooses to Step Up
   | Glo Co       |        |     |
   
   When member ".ZZB" steps up with:
-  | .ZZF   | 1% | 1 |
+  | .ZZF   | $1 |   |
   | .ZZG   | $2 |   |
   | Hip Co | 3% | 4 |
   Then we say "status": "info saved"
   And these "tx_rules":
-  | payer     | .ZZB          | .ZZB          | .ZZB          |**
+  | id        | %(%STEPUP_MIN*2+2) | %(%STEPUP_MIN*2+3) | %(%STEPUP_MIN*2+4) |**
+  | payer     | .ZZB          | .ZZB          | .ZZB          |
   | payerType | account       | account       | account       |
   | payee     |               |               |               |
   | payeeType | anyCo         | anyCo         | anyCo         |
   | from      | .ZZB          | .ZZB          | .ZZB          |
   | to        | .ZZF          | .ZZG          | .ZZH          |
   | action    | surtx         | surtx         | surtx         |
-  | amount    | 0             | 2             | 0             |
-  | portion   | .01           | 0             | .03           |
-  | purpose   | %STEPUP_DESC  | %STEPUP_DESC  | %STEPUP_DESC  |
+  | amount    | 1             | 2             | 0             |
+  | portion   | 0             | 0             | .03           |
+  | purpose   | %STEPUP_DESC  | %STEPUP_DESC  | %STEPUP_3PCT  |
   | minimum   | 0             | 0             | 0             |
   | useMax    |               |               |               |
-  | amtMax  | 1             |               | 4             |
+  | amtMax    |               |               | 4             |
   | template  |               |               |               |
   | start     | %now          | %now          | %now          |
   | end       |               |               |               |
@@ -57,11 +58,11 @@ Scenario: A member's rules come into play
   | to        | .ZZF          | .ZZG          | .ZZH          |
   | action    | surtx         | surtx         | surtx         |
   | amount    | 0             | 2             | 0             |
-  | portion   | .01           | 0             | .03           |
-  | purpose   | %STEPUP_DESC  | %STEPUP_DESC  | %STEPUP_DESC  |
+  | portion   | 1             | 0             | .03           |
+  | purpose   | %STEPUP_DESC  | %STEPUP_DESC  | %STEPUP_3PCT  |
   | minimum   | 0             | 0             | 0             |
   | useMax    |               |               |               |
-  | amtMax  | 1             |               | 2             |
+  | amtMax    | 1             |               | 2             |
   | template  |               |               |               |
   | start     | %now          | %now          | %now          |
   | end       |               |               |               |
@@ -74,4 +75,4 @@ Scenario: A member's rules come into play
   |   1 |   1 | %today  | 100    | .ZZB  | .ZZC  | labor        |      | %E_PRIME    |
   |   2 |   1 | %today  | 1      | .ZZB  | .ZZF  | %STEPUP_DESC | 1    | %E_DONATION |
   |   3 |   1 | %today  | 2      | .ZZB  | .ZZG  | %STEPUP_DESC | 2    | %E_DONATION |
-  |   4 |   1 | %today  | 2      | .ZZB  | .ZZH  | %STEPUP_DESC | 3    | %E_DONATION |
+  |   4 |   1 | %today  | 2      | .ZZB  | .ZZH  | %STEPUP_3PCT | 3    | %E_DONATION |
