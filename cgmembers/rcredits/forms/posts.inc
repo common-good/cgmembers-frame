@@ -319,7 +319,7 @@ X
 X;
   } else {
     $who = <<< X
-      $displayName . <b>$member</b><br>
+      $displayName <b>$member</b><br>
       $location<br>
 X;
   }
