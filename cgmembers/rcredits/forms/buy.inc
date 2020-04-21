@@ -7,8 +7,9 @@ use CG\Util as u;
 use CG\Db as db;
 
 include_once __DIR__ . '/signin.inc';
-define ('AUTHCODE_TIMEOUT', 10 * 60); // number of seconds before authcode expires
 
+const AUTHCODE_TIMEOUT = 10 * 60; // number of seconds before authcode expires
+const CGPAY_FLDS = 'company type code item amount suggestedItem suggestedAmount name account zip verb request api for return cancel err confirm';
 
 // There are hooks here for a call from rDo(), with doCode being the encrypted code from rDo
 
@@ -24,17 +25,17 @@ define ('AUTHCODE_TIMEOUT', 10 * 60); // number of seconds before authcode expir
  * @param string $doCode: the encrypted code from rDo, if any, or 'done'
  */
 function formBuy($form, &$sta, $doCode = '') {
+  global $mya;
   if ($doCode == 'done') return []; // shows result message and nothing else
   
   $required = 'company';
-  $fields = $required . ' code item amount suggestedItem suggestedAmount name account zip verb request api return cancel err';
-//  $_POST = ray($fields, 'Cool Item #1 with a really REALLY long description', '12.34', 'NEWZZC', 'cCode', 'Pay', 'http://google.com', '01330', 'wspademan@gmail.com');
+
   $args = strpos($doCode, '=') ? $doCode 
   : (($doCode . ' ')[0] == 'P' ? r\doCode($doCode)
   : (@$sta['input'] ?: ($_POST ?: $_GET))
   );
 
-  extract($args = just($fields, $args));
+  extract($args = just(CGPAY_FLDS, $args, NULL));
 
   foreach (ray($required) as $k) if (!@$$k) return w\softErr(t('missing field', 'field', $k)); // handle hackers gracefully
   if (!u\isQid(@$company) or !$co = r\acct($company) or !$co->co) return w\softErr('bad account id');
@@ -49,79 +50,101 @@ function formBuy($form, &$sta, $doCode = '') {
   
   if ($amount0 = @$amount) {
     if ($err = u\badAmount($amount, '>0')) return w\softErr($err);
-    $args['amount'] = $amount; // in case format got fixed
-    $amount = u\fmtAmt($amount);
-  } else $amount = '$' . w\rendA('amount', textFld('', '', required(nn($suggestedAmount))));
+    $amountDpy = u\fmtAmt($amount);
+  } else $amountDpy = '$' . w\rendA('amount', textFld(REQ, '', dft($suggestedAmount)));
 
 //  if ($code != @$co->data['cardCode']) return w\go('', 'bad account ID', 'zot');
-  $account = trim(strpos(@$account, '@') ? mb_strtolower($account) : mb_strtoupper(@$account));
-  if ($account and $a = r\acct($account)) {
-    if ((@$name and !u\similar($a->fullName, $name)) or (@$zip and !u\starts($zip, $a->zip))) $a = NULL;
+  if ($a = $mya) {
+    $confirm = FALSE;
+  } else {
+    if ($account and $id = fmtAcctId($account) and $a = r\acct($id)) {
+      if (($name and !u\similar($a->fullName, $name)) or ($zip and !u\starts($zip, $a->zip))) $a = NULL;
+    }
+    $confirm = !isset($a);
   }
-  $subtext = @$a 
-//  ? t('<h4>Hello %name!</h4><small>(Account %acct)</small>', 'name acct', $a->bestName, $a->mainQid) . @$tst
+  
+  $subtext = $a 
   ? t('<h4>Hello %name!</h4>', 'name acct', $a->bestName, $a->mainQid) . @$tst
   : t('<h4>Hello %PROJECT Member</h4>');
-//  : (t('<h4>Hello %PROJECT Member</h4>') . (@$tst ?: t('<span class="loud">Make sure this is really %PROJECT!</span>')));
 
-  if (!@$a) $confirm = TRUE;
-  
   if ($confirm) {
-    $name = textFld(t('Account ID:'), [t('Account ID'), ''], required($account));
+    $name = textFld(t('Account ID:'), [t('Your account ID'), ''], required(nn($id)));
+    $pass = NULL;
+  } elseif ($mya) {
+    $name = $pass = NULL;
   } else {
     list ($name, $pass) = w\signinFlds(@$a ? $a->mainQid : ''); // keep the $a? here in case we change the logic hereabout
   }
 
   $verbs = t('Donate, Donate, Pay');
   $verb = in(ucwords(@$verb), $verbs) ? ucwords($verb) : t('Pay');
-  $payment = item(t('%amount to %who', '_amount who', $amount, @$co->fullName ?: t('co')), "$verb:");
-
-  if (nn($item)) {
-    $args['item'] = $item;
-    $item = item($item, t('For:'));
-  } else $item = textFld(t('For:'), [t('What to pay for')], required(nn($suggestedItem)));
+  $payment = item(t('%amount to %who', '_amount who', $amountDpy, @$co->fullName ?: t('co')), "$verb:");
   
-  $args['confirm'] = $confirm;
-  $hid = hidFld(plain(serialize($args)));
-//  $option = $a ? t('OR <%a>email me an invoice</a>', '_a', 'a') : t('OR <%a>signup</a>', '_a', atag('/signup'));
-  $option = @$a ? '' : t('OR <%a>signup</a>', '_a', atag('/signup'));
+  if ($for == 'gift') {
+    $for = textFld(t('As a Gift to:'), [t('Email or account ID')]);
+    $item = t('gift of store credit');
+    $itemDpy = item(t('store credit'), t('For:'));
+  } elseif ($for == 'credit') {
+    $for = hidFld(SELF_CREDIT);
+    $item = t('store credit');
+    $itemDpy = item($item, t('For:'));
+  } else { // for is other or empty or nonsense
+    if ($for and $for != 'other') return w\softErr(t('The "for" parameter must be credit, gift or other.'));
+    if ($item) {
+      $itemDpy = item($item, t('For:'));
+    } else {
+      $item = textFld(REQ . t('For:'), [t('What to pay for')], dft($suggestedItem));
+      $itemDpy = NULL;
+    }
+  }
+  
+  $option = $a ? '' : t('OR <%a>signup</a>', '_a', atag('/signup'));
   $submit = submit($verb, '', 'md', w\suffix($option));
-  focusOn($amount0 ? 'name' : 'amount');
+//  focusOn(($amount0 and !$mya) ? 'name' : 'amount');
+
+  $form = compact(ray('subtext payment itemDpy for name pass item submit'));
+  foreach (ray(CGPAY_FLDS) as $k) if (isset($$k) and !is_array($$k)) $form[$k] = hidFld($$k);
   
-  return cgform(@compact(ray('title subtext payment item name pass hid submit')));
+  return cgform($form);
 }
 
 function formBuy_validate($form, &$sta) {
-  extract(just('name hid amount', $sta['input']));
+  global $mya;
+  extract(just('name amount for item confirm', $input = $sta['input'], NULL));
+
   if (isset($amount) and $err = u\badAmount($sta['input']['amount'], '>0')) return say($err, 'amount'); // fix amount
-  $hid = unserialize(unplain($hid));
-  $confirm = @$hid['confirm']
-  ? (bool) r\acct(mb_strtoupper($name))
-  : formSignin_validate($form, $sta);
-  if (!$confirm) return buySay('', $hid + ['account' => $name]);
+  
+  if (!$mya) {
+    if ($confirm) {
+      if (!r\acct(fmtAcctId($name))) return say(t('That account does not exist so it cannot be charged.'), 'name');
+    } else {
+      if (!formSignin_validate($form, $sta)) return buySay('', $input + ['account' => $name]);
+    }
+  }
+  if ($for and $for != SELF_CREDIT) {
+    $for = fmtAcctId($for);
+    if (!$a = r\acct($for)) return say(t('That %PROJECT account does not exist. You can currently give only to another %PROJECT member.'), 'for');
+    $item .= t(' (to %who)', 'who', $a->fullName);
+    u\preRay(compact(ray('for item')), $sta['input']);
+  }
 }
 
 function formBuy_submit($form, &$sta) {
-  extract(just('hid name item', $sta['input']));
-//  $account = strpos($name, '@') ? $name : mb_strtoupper($name);
-  extract(just('amount item company code cancel return api request confirm', $args = unserialize(unplain($hid))));
-  if (empty($amount)) extract(just('amount', $sta['input'])); // amount was a field
-  u\setDft($request, ''); // or set it to code?
+  global $mya;
+  extract(just(CGPAY_FLDS, $sta['input'], NULL)); // overwrite item from args if still set
   
-  list ($a, $co) = [$confirm ? r\acct(mb_strtoupper($name)) : r\acct($sta['uid']), r\acct($company)];
-  
-  // check for op not 'submit' here, to set confirm=TRUE and send an invoice?
-  list ($ok, $index, $subs) = $confirm 
-    ? be\invoice($co, $a, $amount, $item, FOR_GOODS, @compact(ray('api request'))) 
-    : be\transfer('payment', $a, $co, $amount, $item, FOR_GOODS);
-  $msg = tr($index, $subs);
+  $co = r\acct($company);
+  $a = $mya ?: ($confirm ? r\acct(fmtAcctId($name)) : r\acct($sta['uid']));
   
   if ($confirm) {
+    list ($ok, $index, $subs) = be\invoice($co, $a, $amount, $item, FOR_GOODS, compact(ray('api request for')));
+    $msg = tr($index, $subs);
     if ($ok) $msg = t('pay button success');
   } else {
+    list ($ok, $index, $subs) = be\transfer('payment', $a, $co, $amount, $item, FOR_GOODS, compact('for'));
+    $msg = tr($index, $subs);  
     if ($ok) $msg = t('<h3>Success!</h3> ') . $msg;
-//  . t('<br><br><%a>Click here</a> to return to the %companyName website.', '_a companyName', atag($return), $co->fullName);
-    if (@$api) u\post($api, ray('request ok msg', $request, (int) $ok, $msg));
+    if ($api) u\post($api, ray('request ok msg', $request, (int) $ok, $msg));
     foreach (ray('return cancel') as $k) if (@$$k) $$k = tr($$k, $args + compact(ray('msg ok')));
   }
   
@@ -141,6 +164,7 @@ function formBuy_submit($form, &$sta) {
 function buySay($msg, $info = '') {
   list ($code, $info) = is_array($info) ? [r\makeDoCode($info), 'err'] : ['done', $info];
 	say($msg, $info);
-  
   return w\go("pay-with-cg/$code");
 }
+
+function fmtAcctId($s) {return trim(strhas($s, '@') ? mb_strtolower($s) : mb_strtoupper($s));}

@@ -28,7 +28,7 @@ function formStepUp($form, &$sta, $args = '') {
     SELECT CONCAT_WS('-', uid, $mine) AS recK, uid, fullName, $mine AS mine, $set
     FROM tx_rules r LEFT JOIN users u ON u.uid=r.to
     WHERE r.from>0 AND r.to>0 AND payeeType=:REF_ANYCO AND IFNULL(end, :NOW+1) > :NOW
-    GROUP BY mine,r.to HAVING COUNT(id)>=:STEPUP_MIN OR mine
+    GROUP BY mine,r.to HAVING COUNT(id)>=LEAST(1, :STEPUP_MIN) OR mine
     ORDER BY mine, fullName, uid
 X;
 
@@ -40,9 +40,7 @@ X;
     extract((array) $rec);
     if (!isset($recs[$recK])) continue; // unsetting doesn't stop it from being included
 
-    if ($mine) {
-      $fullName = rendA("org$uid", orgFld($fullName));
-    } elseif ($myK = str_replace('-0', '-1', $recK) and $my = (array) nn($recs[$myK], [])) { // user chose a standard
+    if (!$mine and $myK = str_replace('-0', '-1', $recK) and $my = (array) nn($recs[$myK], [])) { // user chose a standard
       foreach (ray('amount portion amtMax') as $k) $$k = $my[$k]; // get the amounts for the standard choice
       unset($recs[$myK]); // show it as standard and not as custom
     } 

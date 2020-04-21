@@ -350,11 +350,11 @@ function payInvoice($nvid) {
   $payerA = r\acct($payer);
   $payeeA = r\acct($payee);
   $data = unserialize($data);
-  extract(just('api request shid', $data, NULL, NULL));
+  extract(just('api request shid for', $data, NULL, NULL));
   
   $DBTX = \db_transaction();
   $purpose .= ' (' . PROJECT . " inv#$nvid)";
-	$extra = ray('inv', $nvid);
+	$extra = ray('inv', $nvid) + just('api for', $data, NULL);
 	if ($flags) foreach (ray('gift crumbs recurs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
 
   list ($ok, $index, $subs) = be\transfer('invoice payment', $payerA, $payeeA, $amount, $purpose, $goods, $extra, $recursId);
@@ -383,7 +383,7 @@ function payInvoice($nvid) {
  * @param acct $otherA: acct object for the other party
  *   OR 'ALL' (paying employees) -- currently UNUSED
  * @param number $amount: the transaction amount
- * @param string|array $for: description of the transaction's purpose (user input) (or [actorFor, otherFor])
+ * @param string|array $purpose: description of the transaction's purpose (user input) (or [actorFor, otherFor])
  * @param int $goods: FOR_GOODS, FOR_USD, others?
  * @param array $data: associative array of extra info about the transaction (if any), indexed by any of:
  *   'created': time of transaction (defaults to current time)
@@ -420,8 +420,8 @@ function payInvoice($nvid) {
  *   $oked UNUSED (user confirmed the transaction request),
  *   $shortfall (how inadequate the payer's balance is)
  */
-function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $recursId = 0) {
-  u\EXPECT('string acct acct number string|array int assoc', $type, $actorA, $otherA, $amount, $for, $goods, $data);
+function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = [], $recursId = 0) {
+  u\EXPECT('string acct acct number string|array int assoc', $type, $actorA, $otherA, $amount, $purpose, $goods, $data);
   u\EXPECT($actorA and $otherA, 'missing a transfer account');
   global $scanned, $channel;
   
@@ -429,15 +429,15 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
   $taking = ($type == 'charge' or $type == 'draw' or ($type == 'transfer' and $amount < 0));
   
   extract(just('created force boxId ruleId', $data, [now(), 0, NULL, NULL]));
-  extract(just('offline loan investment stake fine noask funding crumbs recurs gift', $data, FALSE));
+  extract(just('offline loan investment stake fine noask funding crumbs recurs gift api for', $data, FALSE));
 
   $short = FALSE;
   
-  if (is_null($for)) $for = ray(R_WHYS)[$goods];
+  u\setDft($purpose, ray(R_WHYS)[$goods]);
 
   if ($force != 0) $offline = TRUE; // temporary until app handles this right
 
-  $erInfo = compact(ray('goods amount for force')) + ray('actor other op', $actorA->fullName, $otherA->fullName, $taking ? t('charged') : t('paid'));
+  $erInfo = compact(ray('goods amount purpose force')) + ray('actor other op', $actorA->fullName, $otherA->fullName, $taking ? t('charged') : t('paid'));
   $amount = round($amount, 2); // ignore fractions of cents
   if ($amount == 0) {
     r\tellAdmin('zero transaction', $erInfo + ['stack' => trace()]);
@@ -453,7 +453,7 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
     ${$k . 'Id'} = ${$k . 'A'}->id;
     ${$k . 'Name'} = ${$k . 'A'}->fullName;
     ${$k . 'Tid'} = ${$k . 'A'}->nextTid();
-    ${$k . 'For'} = is_array($for) ? $for[${$k . 'Id'} == $actorId ? 0 : 1] : $for;
+    ${$k . 'For'} = is_array($purpose) ? $purpose[${$k . 'Id'} == $actorId ? 0 : 1] : $purpose;
   }
     
   $erInfo += compact('loserId');
@@ -554,15 +554,16 @@ function transfer($type, $actorA, $otherA, $amount, $for, $goods, $data = [], $r
   if (array_key_exists('xid', $data)) {
     $tx->xid = $data['xid'];
     $xid = $tx->insert(TRUE);
-  } else {
-    $xid = $tx->insert();
-  }
+  } else { $xid = $tx->insert(); }
+  
   if (!$xid) {
     $DBTX->rollback();
     return r\txErr(t('tx save error'), $erInfo);
   }
   
   if ($goods != FOR_USD and $pot = $loserA->giftPot) $loserA->update('giftPot', max(0, $pot - $needed));
+  if (nn($for)) advanceCredit($for, $loserA, $gainerA, $amount); // purchase of store credit
+  
   unset($DBTX);
   
   // Report results
@@ -588,6 +589,28 @@ function txEntryPair(&$txes, $amount0, $a0, $description0, $entryType0, $acctTid
     $amount = $i == 0 ? -$amount0 : $amount0;
     list ($uid, $agentUid) = is_object($a) ? [$a->id, $a->agentId] : [$a, $a];
     $txes[] = new r\TxEntry(compact(ray('entryType amount uid agentUid description acctTid relType relatedId rule')));
+  }
+}
+
+/**
+ * Create a personal credit for buyer or someone else, at the seller.
+ */
+function advanceCredit($for, $buyer, $seller, $amount) {
+  if ($neg = ($amount < 0)) $amount = -$amount;
+  
+  if ($for !== SELF_CREDIT) { // gift!
+    $for = r\acct($for);
+    r\message($for->id, t('%name %action of %amount credit at %co. To redeem store credit you are given, simple pay with your %PROJECT card. Your account is credited automatically.'), ray('name action amount co', $buyer->fullName, $neg ? t('canceled your gift') : t('sent you a gift'), u\fmtAmt($amount), $seller->fullName), $neg ? t('Your gift is canceled') : t('You have received a gift through Common Good!'));
+    $buyer = $for;
+  }
+  
+  $portion = ($for == SELF_CREDIT and NOW < strtotime('6/1/2020')) ? .5 : 1;
+  $info = ray('action portion amtMax payerType payer payeeType payee from to', ACT_SURTX, $portion, $amount, REF_ACCOUNT, $buyer->id, REF_ACCOUNT, $seller->id, MATCH_PAYEE, MATCH_PAYER);
+
+  if ($neg) { // undoing, so end the rule
+    if ($id = db\get('id', 'tx_rules r', ['end' => NULL] + $info)) db\update('tx_rules', ray('id end', $id, now()) + $info, 'id');
+  } else {
+    db\insert('tx_rules', $info);
   }
 }
   
@@ -691,7 +714,7 @@ function handleSurTx(&$entries, $buyer, $seller, $price) {
   $payeeCheck = u\genRuleSQL('payee', ':seller');
   
   $sql = <<<EOF
-    SELECT r.id AS ruleId, r.amount, r.portion, r.from, r.to, r.purpose, r.minimum, r.useMax, r.amtMax,
+    SELECT r.id AS ruleId, r.amount, r.portion, r.from, r.to, r.purpose, r.minimum, r.useMax, r.amtMax, r.payerType,
     (SELECT IFNULL(SUM(e.amount), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=ruleId AND e.uid=:buyer) AS `amtUsed`,
     (SELECT IFNULL(SUM(SIGN(e.amount)), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=ruleId AND e.uid=:buyer) AS `timesUsed`
     FROM tx_rules r
@@ -715,7 +738,7 @@ EOF;
     extract($rule);
 
     $value = $amount + $portion * $price; // potential rebate/stepup amount
-    if (! is_null($amtMax)) $value = min($value, $amtMax - ($portion > 0 ? 0 : $amtUsed)); // limited by amtUsed
+    if ($amtMax) $value = min($value, $amtMax - $amtUsed); // limited by amtUsed
 
     $from = ($from == MATCH_PAYER) ? $buyer->id : (($from == MATCH_PAYEE) ? $seller->id : $from);
     $to = ($to == MATCH_PAYER) ? $buyer->id : (($to == MATCH_PAYEE) ? $seller->id : $to);
@@ -724,6 +747,9 @@ EOF;
     $rebate += $value;
     
     txEntryPair($entries, $value, [$from, $to], $desc, $type, 0, null, null, $ruleId);
+    if (($amtMax and $amtUsed + $value >= $amtMax) or ($useMax and $value > 1 and $timesUsed + 1 >= $useMax)) {
+      if ($payerType == REF_ACCOUNT) db\update('tx_rules', ray('id end', $ruleId, now()), 'id'); // rule is just for payer
+    }
   }
 
   return -$rebate;
@@ -804,7 +830,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   extract(just($ks, $extra));
   extract(just('goods created', $extra, [FOR_GOODS, now()]));
   $flags = 0;
-	foreach (justNOT("status shid coupon coupid force inv api request created", $extra) as $k => $v) {
+	foreach (justNOT("status shid coupon coupid force inv api request created for", $extra) as $k => $v) {
     u\setBit($flags, $k, $v);
     unset($extra[$k]); // don't leave bits in extras (data field)
   }

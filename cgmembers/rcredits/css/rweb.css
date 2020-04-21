@@ -380,6 +380,7 @@ body.page-partner blockquote {font-size:14px;}
 /* Create Link/Button */
 #frm-cgbutton #edit-size {width:200px; display:inline-block; margin-right:20px; vertical-align:top;}
 #frm-cgbutton #button {display:inline-block;}
+#frm-cgbutton .radio {display:inline-block;}
 
 /* Invite */
 #inviteLink {border:1px solid silver; background-color:lightyellow; color:silver;}
@@ -724,7 +725,14 @@ body.page-partner blockquote {font-size:14px;}
 #frm-findco .cmpy-list {display:table;}
 #frm-findco .row {display:table-row;}
 #frm-findco .well {padding:10px 35px;}
-#frm-findco .cmpy-img, #frm-findco .cmpy-name-does, #frm-findco .cmpy-contact {padding:10px 0; border-bottom:1px solid silver;}
+
+#frm-findco .cmpy-buttons {text-align:right; max-width:70px;}
+#frm-findco .cmpy-buttons a {display:block; font-size:9.5px; padding:0 2px; margin:0 5px 1px 0;}
+#frm-findco .cmpy-buttons a.cgpay-credit {width:65px; margin-left:0;}
+#frm-findco .cmpy-buttons a.cgpay-gift {width:55px; margin-left:10px;}
+#frm-findco .cmpy-buttons a.cgpay-other {width:45px; margin-left:20px;}
+
+#frm-findco .cmpy-img, #frm-findco .cmpy-buttons, #frm-findco .cmpy-name-does, #frm-findco .cmpy-contact {padding:10px 0; border-bottom:1px solid silver;}
 #frm-findco .cmpy-img {display:table-cell; overflow:hidden; vertical-align: middle; height:48px; margin:5px 5px 5px 20px; width:64px; text-align:center;}
 #frm-findco .cmpy-img img {overflow:hidden; height:48px; width: 64px; object-fit:cover;}
 #frm-findco .cmpy-name-does {width:300px; overflow:hidden; display:table-cell; vertical-align: middle; padding-left:10px;}
@@ -740,7 +748,7 @@ body.page-partner blockquote {font-size:14px;}
 /* Pay With CG */
 .page-pay-with-cg {width:100%; height:100%; background-color:#ccffff;}
 .page-pay-with-cg #orgname {display:inline-block;}
-.page-pay-with-cg #page-wrapper {max-width:440px; max-height:510px; margin:50px auto 0 auto; border:1px solid silver; border-top:0; box-shadow: 5px 5px 10px #888888; background-color:white; -webkit-border-radius: 15px; border-radius: 15px;}
+.page-pay-with-cg #page-wrapper {max-width:440px; max-height:540px; margin:50px auto 0 auto; border:1px solid silver; border-top:0; box-shadow: 5px 5px 10px #888888; background-color:white; -webkit-border-radius: 15px; border-radius: 15px;}
 .page-pay-with-cg .navbar {max-width:440px; margin:50px auto 0 auto;}
 .page-pay-with-cg .navbar .container {margin:0 0 0 15px;}
 .page-pay-with-cg #navbar,

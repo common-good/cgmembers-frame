@@ -20,11 +20,12 @@ function formFindCo($form, &$sta, $args = '') {
   $list = "<div class=\"cmpy-list\">$list</div>";
   
   $title = t('Companies in Your Region');
+  $subtext = t('<p>During the COVID-19 crisis, our local businesses need our support. Consider buying yourself some store credit (click a "Buy Credit" button). Then once the business reopens, every time you pay with your %PROJECT card, you automatically get a 50% rebate, which is then deducted from your store credit.</p><p>If you buy store credit as a gift to another member (click a "Buy Gift" button), the recipient gets that much off their purchases automatically.</p>');
   $which = textFld(t('Search for:'), [t('Whatever'), t('Type part of company name or industry category')], dft(@$cos));
   $region = textFld(t('Where:'), [t('Start of postal code'), t('Type the first few characters of your postal code<br>For example, use 013 for Franklin County, Massachusetts; 05 for Vermont, etc.')], dft(@$where)); // or country name
   $submit = t('Find');
 
-  return cgform(compact(ray('title which region submit list')));
+  return cgform(compact(ray('title subtext which region submit list')));
 }
 
 function formFindCo_validate($form, &$sta) {
@@ -91,6 +92,7 @@ EOF;
 function participatingCompanies($rows) {
   $model = <<< X
 <div class="row">
+  <div class="cmpy-buttons">%buttons</div>
   <div class="cmpy-img"><img src="%img" alt="profile picture" /></div>
   <div class="cmpy-name-does">
     <div class="cmpy-name">%name</div>
@@ -125,12 +127,20 @@ X;
       }
       $website = $a->website ? "http://$a->website" : "/member/$a->name";
       $name = w\lnk($website, $a->bestName);
+      $buttons = buttonHtml($a, t('Buy Credit'), 'credit', 'danger')
+      . buttonHtml($a, t('Buy Gift'), 'gift', 'primary')
+      . buttonHtml($a, $a->coType == CO_NONPROFIT ? t('Donate') : t('Pay'), 'other', 'success');
       $contact = "$a->city, $a->st<br>$a->phoneDash";
       $new = ($a->activated > REQUEST_TIME - 9 * WEEK_SECS) ? $NEW : '';
       $img = $a->photoSrc(TRUE) ?: 'images/no-photo-available.jpg';
-      $res .= tr($model, '_name desc _contact img', "$name$new", $a->shortDesc, $contact, $img) . "\n";
+      $res .= tr($model, '_name _buttons desc _contact img', "$name$new", $buttons, $a->shortDesc, $contact, $img) . "\n";
     }
   }
   if (! $firstTime) $res .= '</div>';
   return $res;
+}
+
+function buttonHtml($a, $text, $for, $style) {
+  $class = "cgpay-$for";
+  return w\btn("/pay-with-cg/company=$a->mainQid&for=$for", $text, $style, '', compact('class') + away());
 }

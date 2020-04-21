@@ -2204,7 +2204,7 @@ function skipStep($substitute = NULL, $justDid = '') {
   if (!@$mya or !$stepsLeft = $mya->stepsLeft()) return; // nothing to do
   $step = $stepsLeft[0];
   unset($stepsLeft[0]);
-  if ($step != 'discount') $stepsLeft[] = $substitute ?: $step; // put this step at the end (except discount, which can be done later)
+  if (!in($step, 'discount stepup')) $stepsLeft[] = $substitute ?: $step; // put this step at the end (except optional steps that can be done later or never)
   $mya->update('stepsLeft', array_values($stepsLeft)); // renumber and update
   $nextStep = $mya->nextStepUrl($justDid, $msg);
   if ($justDid and $msg) w\say($msg);
@@ -2215,8 +2215,8 @@ function skipStep($substitute = NULL, $justDid = '') {
  * Return account and password fields for sign-in.
  */
 function signinFlds($acct, $acctDesc = '', $passDesc = '') {
-  $acct = textFld(t('Account ID:'), [t('Account ID'), $acctDesc], required($acct) + w\autofill('section-rSignin rAccount'));
-  $pass = passFld(t('Password:'), [t('Password'), $passDesc], required() + w\autofill('section-rSignin rPass'));
+  $acct = textFld(t('Account ID:'), [t('Your account ID'), $acctDesc], required($acct) + w\autofill('section-rSignin rAccount'));
+  $pass = passFld(t('Password:'), [t('Your password'), $passDesc], required() + w\autofill('section-rSignin rPass'));
   return [$acct, $pass];
 }
 

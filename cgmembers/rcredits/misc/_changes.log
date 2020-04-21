@@ -1,3 +1,13 @@
+2020-04-20 feature/store-credit
+. skipping stepup step no longer adds it to the end of stepsLeft
+. fixed bug that formatted $1.50 as $1.5
+. implemented purchases of store credit for oneself and others
+. changed a lot of defines to const (especially in defs)
+. admin mysql query box is not textFld not areaFld (easier to submit)
+. my stepup organizations now appear as text not as text boxes
+. fixed bug in formAccountPhoto that kept icons from showing up in business listing on promo site and in findCo
+. added Buy Credit, Buy Gift, and Pay/Donate buttons to the Find Company page (and our promo site)
+
 2020-04-17 feature/post-specifics
 . revised u\fmtAmt to allow simple percentages
 . bracketed geo request in try()
@@ -10,7 +20,7 @@ eachA(function ($a) {
   if ($a->food > 0 and $a->ok) {
     $uid = $a->id;
     if (db\exists('tx_rules r', 'r.from=' . $uid)) {
-      debug("RULE $a->fullName: $a->city $a->zip $a->food");
+/**/  debug("RULE $a->fullName: $a->city $a->zip $a->food");
     } else {
       $descCrit = "(description LIKE '%\\%%' OR description LIKE '%early June%')";
       $start = db\min('created', 'txs', "uid1=:uid AND " . str_replace('description', 'for1', $descCrit), compact('uid')) ?: ($a->activated ?: $a->created);
