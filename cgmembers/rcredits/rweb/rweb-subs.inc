@@ -2204,7 +2204,7 @@ function skipStep($substitute = NULL, $justDid = '') {
   if (!@$mya or !$stepsLeft = $mya->stepsLeft()) return; // nothing to do
   $step = $stepsLeft[0];
   unset($stepsLeft[0]);
-  if (!in($step, 'discount stepup')) $stepsLeft[] = $substitute ?: $step; // put this step at the end (except optional steps that can be done later or never)
+  if (!in($step, 'discount stepup invite')) $stepsLeft[] = $substitute ?: $step; // put this step at the end (except optional steps that can be done later or never)
   $mya->update('stepsLeft', array_values($stepsLeft)); // renumber and update
   $nextStep = $mya->nextStepUrl($justDid, $msg);
   if ($justDid and $msg) w\say($msg);

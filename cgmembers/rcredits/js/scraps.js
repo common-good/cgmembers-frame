@@ -298,7 +298,18 @@ function doit(what, vs) {
     suggestWho('[id^="edit-org"]', 1);
 
     $('[id^="edit-org"]').change(function () {$(this).parents('.row').next().css('display', 'table-row');});
-    $('[id^="edit-amt"]').change(function () {
+    
+    $('[id^="edit-when"]').change(function () {
+      var max = $(this).parents('.row').find('[id^="edit-max"]');
+      var maxt = ($(this).find(':selected').val() == 'maxt');
+      max.toggle(maxt);
+      if (maxt) {
+        max.focus();
+        $('.thead .cell.max').show();
+      } else { max.val('').parent().parent().next().find('input[name^="org"]').focus(); }
+    });
+    
+/*    $('[id^="edit-amt"]').change(function () {
       var s = $(this).val();
       if (!s.match(/^$|^\$[0-9.]+$|^[0-9.]+%$/)) {
         $.alert('You must type a number with $ at the beginning or % at the end.', 'Try again');
@@ -311,10 +322,10 @@ function doit(what, vs) {
       var max = $(this).parents('.row').find('[id^="edit-max"]');
       if (has(val, '%')) max.prop('disabled', false);
       if (has(val, '$')) max.prop('disabled', true);
-      
+    
     });
-    $('[id^="edit-amt"]').change();
-
+    $('[id^="edit-amt"]').change(); */
+    
     break;
 
   case 'groups':

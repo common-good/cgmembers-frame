@@ -366,7 +366,7 @@ function rcredits_textfield($variables, $type = 'text') {
 }
 
 function rcredits_textarea($variables) {
-  \cgSetAttrs($variables['element'], array('id', 'name'));
+  cgSetAttrs($variables['element'], array('id', 'name'));
   extract(cgElement($variables, 'attributes required name help class default_value value'));
 
   $value = plain(@$value);
@@ -467,8 +467,9 @@ function rcredits_checkboxes($variables) {
 }
 
 function rcredits_select($variables) {
-  \element_set_attributes($variables['element'], array('id', 'name', 'size'));
-  extract(cgElement($variables, 'attributes class required'));
+  cgSetAttrs($variables['element'], ray('id name size'));
+  extract(cgElement($variables, 'attributes class required default_value'));
+  u\setDft($variables['element']['#value'], nn($default_value)); // otherwise rendered fields can't default
   $class[] = 'form-control';
   if (nn($required)) $attributes['required'] = 'yes'; // don't add this in unless it is yes
   return w\tag('select', \form_select_options($variables['element']), (nn($attributes, []) + compact('class')));

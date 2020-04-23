@@ -206,17 +206,16 @@ Scenario: A member chooses to Step Up
 
   When member ".ZZB" visits page "settings/stepup"
   Then we show "Step Up" with:
-  | Organization | $ or % |
-  | Fox Co       |        |
-  | Glo Co       |        |
+  | Organization | Amount | When |
+  | Fox Co       |        |      |
+  | Glo Co       |        |      |
   
   When member ".ZZB" completes form "settings/stepup" with values:
   | submit |*
   |        |
   Then we show "Invite Someone"
   And we say "status": "info saved|step completed"
-  And member ".ZZB" steps left ""
-  # because invite step is completed as soon as user visits the page
+  And member ".ZZB" steps left "invite"
 
 Scenario: A member invites
   Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund photo contact donate crumbs proxies work backing stepup"

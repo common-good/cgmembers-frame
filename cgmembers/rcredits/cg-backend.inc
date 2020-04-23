@@ -350,7 +350,7 @@ function payInvoice($nvid) {
   $payerA = r\acct($payer);
   $payeeA = r\acct($payee);
   $data = unserialize($data);
-  extract(just('api request shid for', $data, NULL, NULL));
+  extract(just('api request shid for', $data, NULL));
   
   $DBTX = \db_transaction();
   $purpose .= ' (' . PROJECT . " inv#$nvid)";
@@ -600,7 +600,7 @@ function advanceCredit($for, $buyer, $seller, $amount) {
   
   if ($for !== SELF_CREDIT) { // gift!
     $for = r\acct($for);
-    r\message($for->id, t('%name %action of %amount credit at %co. To redeem store credit you are given, simple pay with your %PROJECT card. Your account is credited automatically.'), ray('name action amount co', $buyer->fullName, $neg ? t('canceled your gift') : t('sent you a gift'), u\fmtAmt($amount), $seller->fullName), $neg ? t('Your gift is canceled') : t('You have received a gift through Common Good!'));
+    r\message($for->id, t('%name %action of %amount credit at %co. To redeem store credit you are given, simply pay with your %PROJECT card. Your account is credited automatically.'), ray('name action amount co', $buyer->fullName, $neg ? t('canceled your gift') : t('sent you a gift'), u\fmtAmt($amount), $seller->fullName), $neg ? t('Your gift is canceled') : t('You have received a gift through Common Good!'));
     $buyer = $for;
   }
   

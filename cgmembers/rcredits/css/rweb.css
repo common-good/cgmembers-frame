@@ -538,15 +538,21 @@ body.page-partner blockquote {font-size:14px;}
 
 /* Step Up */
 #frm-stepup #edit-subtext {margin-bottom:0;}
-#frm-stepup .container {margin:0 0 0 -4px; padding:0; width:auto; border-collapse:separate; border-spacing:5px;}
+#frm-stepup .container {margin:0 0 0 -4px; padding:0; width:auto;}
+
 #frm-stepup .row::before,
 #frm-stepup .row::after {display:none;}
+
 #frm-stepup .tbody .row,
 #frm-stepup .tbody .cell {padding:0;}
-#frm-stepup .cell {width:70px; text-align:right;}
-#frm-stepup .cell:first-child {width:auto; max-width:350px; text-align:left;}
-#frm-stepup .cell input {text-align:right;}
-#frm-stepup .cell:first-child input {text-align:left;}
+
+#frm-stepup .cell {width:100px; border-right:1px solid white;}
+#frm-stepup .cell.org {width:auto; max-width:350px;}
+#frm-stepup .cell.amt {width:75px; text-align:right;}
+#frm-stepup .cell.amt input {text-align:right; padding-right:8px;}
+#frm-stepup .cell.when select {padding-left:5px; padding-right:0;}
+#frm-stepup .thead .cell.max {text-align:right; display:none;}
+#frm-stepup .cell.max input {text-align:right; display:none;}
 
 /* Rules */
 #frm-rules .radio {display:inline-block;}
@@ -726,13 +732,12 @@ body.page-partner blockquote {font-size:14px;}
 #frm-findco .row {display:table-row;}
 #frm-findco .well {padding:10px 35px;}
 
-#frm-findco .cmpy-buttons {text-align:right; max-width:70px;}
-#frm-findco .cmpy-buttons a {display:block; font-size:9.5px; padding:0 2px; margin:0 5px 1px 0;}
-#frm-findco .cmpy-buttons a.cgpay-credit {width:65px; margin-left:0;}
-#frm-findco .cmpy-buttons a.cgpay-gift {width:55px; margin-left:10px;}
-#frm-findco .cmpy-buttons a.cgpay-other {width:45px; margin-left:20px;}
+#frm-findco .cmpy-buttons {text-align:right; max-width:44px; vertical-align:middle;}
+#frm-findco .cmpy-buttons a {display:block; font-size:9.5px; padding:1px 2px;}
 
-#frm-findco .cmpy-img, #frm-findco .cmpy-buttons, #frm-findco .cmpy-name-does, #frm-findco .cmpy-contact {padding:10px 0; border-bottom:1px solid silver;}
+#frm-findco .cmpy-img, #frm-findco .cmpy-buttons, #frm-findco .cmpy-name-does,
+#frm-findco .cmpy-contact {display:table-cell; padding:10px 0; border-bottom:1px solid silver;}
+
 #frm-findco .cmpy-img {display:table-cell; overflow:hidden; vertical-align: middle; height:48px; margin:5px 5px 5px 20px; width:64px; text-align:center;}
 #frm-findco .cmpy-img img {overflow:hidden; height:48px; width: 64px; object-fit:cover;}
 #frm-findco .cmpy-name-does {width:300px; overflow:hidden; display:table-cell; vertical-align: middle; padding-left:10px;}
@@ -751,12 +756,15 @@ body.page-partner blockquote {font-size:14px;}
 .page-pay-with-cg #page-wrapper {max-width:440px; max-height:540px; margin:50px auto 0 auto; border:1px solid silver; border-top:0; box-shadow: 5px 5px 10px #888888; background-color:white; -webkit-border-radius: 15px; border-radius: 15px;}
 .page-pay-with-cg .navbar {max-width:440px; margin:50px auto 0 auto;}
 .page-pay-with-cg .navbar .container {margin:0 0 0 15px;}
+
 .page-pay-with-cg #navbar,
 .page-pay-with-cg .navbar-header button,
 .page-pay-with-cg #main-menu button,
 .page-pay-with-cg #footer-menu,
 .page-pay-with-cg #footer-details,
 .page-pay-with-cg .breadcrumb {display:none !important;}
+
+.page-pay-with-cg #main-wrapper {min-height:380px;}
 .page-pay-with-cg #messages {margin:0 0 0 0; padding-bottom:0;}
 .page-pay-with-cg #messages .messages {display block; width:100%; box-shadow:none; -webkit-border-radius:0; border-radius:0; margin-bottom:0; border:0;}
 

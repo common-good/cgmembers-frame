@@ -76,10 +76,6 @@ function formBuy($form, &$sta, $doCode = '') {
     list ($name, $pass) = w\signinFlds(@$a ? $a->mainQid : ''); // keep the $a? here in case we change the logic hereabout
   }
 
-  $verbs = t('Donate, Donate, Pay');
-  $verb = in(ucwords(@$verb), $verbs) ? ucwords($verb) : t('Pay');
-  $payment = item(t('%amount to %who', '_amount who', $amountDpy, @$co->fullName ?: t('co')), "$verb:");
-  
   if ($for == 'gift') {
     $for = textFld(t('As a Gift to:'), [t('Email or account ID')]);
     $item = t('gift of store credit');
@@ -88,15 +84,23 @@ function formBuy($form, &$sta, $doCode = '') {
     $for = hidFld(SELF_CREDIT);
     $item = t('store credit');
     $itemDpy = item($item, t('For:'));
-  } else { // for is other or empty or nonsense
-    if ($for and $for != 'other') return w\softErr(t('The "for" parameter must be credit, gift or other.'));
+  } elseif ($for == 'donate') {
+    $for = NULL;
+    u\setDft($verb, t('Donate'));
+    u\setDft($item, t('donation'));
+    $itemDpy = NULL;
+  } elseif (!$for or $for == 'other') { // for is other or empty or nonsense
     if ($item) {
       $itemDpy = item($item, t('For:'));
     } else {
       $item = textFld(REQ . t('For:'), [t('What to pay for')], dft($suggestedItem));
       $itemDpy = NULL;
     }
-  }
+  } else { return w\softErr(t('The "for" parameter must be credit, gift, donate, or other.')); }
+
+  $verbs = t('Donate, Donate, Pay');
+  $verb = in(ucwords(@$verb), $verbs) ? ucwords($verb) : t('Pay');
+  $payment = item(t('%amount to %who', '_amount who', $amountDpy, @$co->fullName ?: t('co')), "$verb:");
   
   $option = $a ? '' : t('OR <%a>signup</a>', '_a', atag('/signup'));
   $submit = submit($verb, '', 'md', w\suffix($option));

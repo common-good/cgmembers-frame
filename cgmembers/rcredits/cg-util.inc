@@ -966,9 +966,12 @@ function tableRow($row) {
 /**
  * Convert the given array to an HTML div row (for within class "container").
  */
-function ray2row($row) {
-  $row = join('</div><div class="cell">', $row);
-  return '<div class="row"><div class="cell">' . $row . "</div></div>\n";
+function ray2row($row, $classes = []) {
+  foreach ($row as $i => $v) {
+    if ($class = nn($classes[$i])) $class = ' ' . $class;
+    $res[] = "<div class=\"cell$class\">$v</div>";
+  }
+  return '<div class="row">' . join('', nn($res, [])) . "</div>\n";
 }
 
 /**

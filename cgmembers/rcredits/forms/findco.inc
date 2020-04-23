@@ -92,13 +92,13 @@ EOF;
 function participatingCompanies($rows) {
   $model = <<< X
 <div class="row">
-  <div class="cmpy-buttons">%buttons</div>
   <div class="cmpy-img"><img src="%img" alt="profile picture" /></div>
   <div class="cmpy-name-does">
     <div class="cmpy-name">%name</div>
     <div class="cmpy-does">%desc</div>
   </div>
   <div class="cmpy-contact">%contact</div>
+  <div class="cmpy-buttons">%buttons</div>
 </div>
 X;
   $iModel = '<div class="cmpy-ind-wrapper"><div class="cmpy-ind">%industry</div>';
@@ -127,9 +127,13 @@ X;
       }
       $website = $a->website ? "http://$a->website" : "/member/$a->name";
       $name = w\lnk($website, $a->bestName);
-      $buttons = buttonHtml($a, t('Buy Credit'), 'credit', 'danger')
+      $buttons = $a->coType == CO_NONPROFIT 
+      ? buttonHtml($a, t('Donate'), 'donate', 'success')
+      : buttonHtml($a, t('Buy<br>Credit'), 'credit', 'primary');
+/*      $buttons = buttonHtml($a, t('Buy Credit'), 'credit', 'danger')
       . buttonHtml($a, t('Buy Gift'), 'gift', 'primary')
       . buttonHtml($a, $a->coType == CO_NONPROFIT ? t('Donate') : t('Pay'), 'other', 'success');
+      */
       $contact = "$a->city, $a->st<br>$a->phoneDash";
       $new = ($a->activated > REQUEST_TIME - 9 * WEEK_SECS) ? $NEW : '';
       $img = $a->photoSrc(TRUE) ?: 'images/no-photo-available.jpg';

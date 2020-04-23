@@ -50,5 +50,5 @@ Scenario: Admin deactivates an account
   | active | federalId  | adminable | tickle |*
   |        | %R_ON_FILE | member    |        |
   Then members:
-  | uid  | flags       | activated | activated0 |*
-  | .ZZB | member,ided | 0         | %now-3m    |
+  | uid  | flags       | activated |*
+  | .ZZB | member,ided | %now-3m   |

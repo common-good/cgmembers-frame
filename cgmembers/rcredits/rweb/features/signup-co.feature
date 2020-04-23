@@ -152,10 +152,9 @@ Scenario: A company account manager creates a discount
   | company   | Our Pub |
   | gift      | |
   | forOnly   | |
-  And we show "Account Summary" with:
-  | Next Steps |
-  | Invite |
-  | Give   |
+  And we show "Community" with:
+  | Donate |
+  | Discount |
   And without:
   | Finish |
   And we say "status": "info saved|setup complete|company approval|join thanks"
