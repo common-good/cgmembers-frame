@@ -22,18 +22,18 @@ function formStepUp($form, &$sta, $args = '') {
   $subtext = t('<p>Support your favorite causes by paying a little extra on your %PROJECT purchases.</p><p>Choose organizations from the list below and/or add your own choices. Type a dollar amount or percentage to add to each purchase &mdash; to be donated to that organization. You can also set a maximum donation per transaction or choose to donate periodically instead.</p><p>If you would like to see your nonprofit or project on this list, get %STEPUP_MIN people to write it in.</p>', '_a', atag('/community/invite', away()));
   
   $mine = 'from=:myid';
-  foreach (ray('amount portion amtMax') as $k) $set[] = "IF(r.$mine, r.$k, NULL) AS $k";
+  foreach (ray('amount portion amtMax') as $k) $set[] = "IF(r.$mine, r.$k, NULL) AS `$k`";
   $set = join(', ', $set);
   
   $sql = <<< X
     SELECT * FROM (
       SELECT 0 AS xly, CONCAT_WS('-', 'r', uid, r.$mine) AS recK, r.to, id, action,
-        IF(portion>0, IF(amtMax>0, 'pctmx', 'pct'), 'tx$') AS `when`, uid, fullName, r.$mine AS mine, $set
+        IF(r.portion>0, IF(amtMax>0, 'pctmx', 'pct'), 'tx$') AS `when`, uid, fullName, r.$mine AS mine, $set
       FROM tx_rules r LEFT JOIN users u ON u.uid=r.to
       WHERE r.action=:ACT_SURTX AND r.from>0 AND r.to>0 AND r.payeeType=:REF_ANYCO AND IFNULL(r.end, :NOW+1) > :NOW
       UNION 
       SELECT 1 AS xly, CONCAT_WS('-', 't', uid, t.$mine) AS recK, t.to, id, action,
-        t.period AS `when`, uid, fullName, t.$mine AS mine, amount, portion, amtMax
+        t.period AS `when`, uid, fullName, t.$mine AS mine, amount, t.portion, amtMax
       FROM tx_templates t LEFT JOIN users u2 ON u2.uid=t.to
       WHERE t.action=:ACT_PAY AND t.from>0 AND t.to>0 AND t.period<>'once' AND IFNULL(t.end, :NOW+1) > :NOW
     ) x    
@@ -130,7 +130,7 @@ function formStepUp_validate($form, &$sta) {
 function formStepUp_submit($form, &$sta) {
   global $mya; $myid = $mya->id;
   
-  $changeable = 'amount,portion,amtMax'; // fields user can adjust from time to time
+  $changeable = 'amount portion amtMax'; // fields user can adjust from time to time
   $periods = 1; // if the donation recurs at all, it's once per period
   extract(just('uids xlys', $input = $sta['input']));
 
@@ -153,7 +153,7 @@ function formStepUp_submit($form, &$sta) {
       $purpose = $pct ? str_replace('3%', u\fmtAmt($amt / 100, '%s'), STEPUP_3PCT) : STEPUP_DESC;
     }
       
-    if ($res = db\get("id,$matchFlds", $tnm, u\where($info) . ' AND IFNULL(end, :NOW+1) > :NOW', $info)) {
+    if ($res = db\get('id,amount,`portion`,amtMax', $tnm, u\where($info) . ' AND IFNULL(end, :NOW+1) > :NOW', $info)) {
       if ($match == just($matchFlds, $res)) continue; // no change; done with this organization
       db\update($tnm, ray('id end', $res['id'], now()), 'id'); // cancel the old rule, to start a new one
     }
