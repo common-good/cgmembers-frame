@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-define('R_VERSION', '3.52v'); // software version
+define('R_VERSION', '3.52w'); // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -63,27 +63,27 @@ $databases['default']['default'] = [
 define('PROJECT', t('Common Good')); // project name
 define('CG_DOMAIN', 'CommonGood.earth');
 define('RCREDITS', t('Common Good credit')); // don't use %PROJECT here
-define('BANK_DBA', PROJECT);
+const BANK_DBA = PROJECT;
 define('PROJECT_ID', str_replace(' ', '', strtolower(PROJECT)));
-define('PROJECT_LOGO', 'logo80.png');
+const PROJECT_LOGO = 'logo80.png';
 
-define('SCRIPTS_TOP', 'x/jquery-3.3.1.min x/jquery.once x/jquery-ui.min x/bootstrap.min x/spin.min x/ladda.min x/ie10-viewport-bug-workaround x/jquery.confirm.min x/alert');
-//define('SCRIPTS', 'form goo-jsapi misc charts chart-data download croppic crop-setup ballot x/bootstrap.slider.min countries print-country focus-on x/typeahead.bundle.min suggest-who on-submit chimp followup-email get-ssn change-ctty advanced-dates advanced-prefs bank-prefs which funding-criteria signup prejoint invite-link gift drupal user extend-settings'); // all possible scripts, in order (after SCRIPTS_TOP)
-define('SCRIPTS', 'x/bootstrap-toggle.min parse-query misc croppic crop-setup x/bootstrap-slider.min ballot countries x/typeahead.bundle.min on-submit scraps drupal user'); // all possible scripts, in order (after SCRIPTS_TOP). drupal and user are for password.
+const SCRIPTS_TOP = 'x/jquery-3.3.1.min x/jquery.once x/jquery-ui.min x/bootstrap.min x/spin.min x/ladda.min x/ie10-viewport-bug-workaround x/jquery.confirm.min x/alert';
+//const SCRIPTS = 'form goo-jsapi misc charts chart-data download croppic crop-setup ballot x/bootstrap.slider.min countries print-country focus-on x/typeahead.bundle.min suggest-who on-submit chimp followup-email get-ssn change-ctty advanced-dates advanced-prefs bank-prefs which funding-criteria signup prejoint invite-link gift drupal user extend-settings'; // all possible scripts, in order (after SCRIPTS_TOP)
+const SCRIPTS = 'x/bootstrap-toggle.min parse-query misc croppic crop-setup x/bootstrap-slider.min ballot countries x/typeahead.bundle.min on-submit scraps drupal user'; // all possible scripts, in order (after SCRIPTS_TOP). drupal and user are for password.
 
-define('DEV_PW2', 'devPassword#two!'); // second password on DEV machine (len must be 16, 24, or 32)
-define('DEV_VKEYPW', 'wt38BqWMslj3uUHUOto7fNi5ExL9CC7S7ffjn_q6zCY'); // password for very secure key, on DEV machine
-define('DEV_ADMIN_PASS', '123'); // admin password when isDEV
-define('DEFAULT_PROXIES', '2, 3'); // account record IDs for place-holder proxies
-define('TRACK_DELETED', 'r_invoices r_photos r_relations r_usd users'); // remember rows in these tables if we delete them
-define('DELETED_BY_VIEW', 'tx_hdrs tx_entries tx_disputes'); // these tables are actually views on the _all version of
+const DEV_PW2 = 'devPassword#two!'; // second password on DEV machine (len must be 16, 24, or 32)
+const DEV_VKEYPW = 'wt38BqWMslj3uUHUOto7fNi5ExL9CC7S7ffjn_q6zCY'; // password for very secure key, on DEV machine
+const DEV_ADMIN_PASS = '123'; // admin password when isDEV
+const DEFAULT_PROXIES = '2, 3'; // account record IDs for place-holder proxies
+const TRACK_DELETED = 'r_invoices r_photos r_relations r_usd users'; // remember rows in these tables if we delete them
+const DELETED_BY_VIEW = 'tx_hdrs tx_entries tx_disputes'; // these tables are actually views on the _all version of
                                                              // themselves, and deletion is just by setting "deleted"
-define('DEV_ONLY_MSG', 'only on development machine');
+const DEV_ONLY_MSG = 'only on development machine';
 
 $host = strtolower(@$_SERVER['HTTP_HOST']);
 if (!isDEV) if (mb_strlen($host) > 30 or !preg_match('/^\[?([a-zA-Z0-9-:\]_]+\.?)+$/', $host)) {header('HTTP 400 Bad Request'); exit();}
-//define('R_PATH', '/sites/all/modules/rcredits');
-define('R_PATH', '/rcredits');
+//const R_PATH', '/sites/all/modules/rcredits');
+const R_PATH = '/rcredits';
 global $rUrl; $rUrl = BASE_URL . R_PATH;
 define('R_ROOT', __DIR__);
 define('ROOT', getcwd() . '/..'); // avoid using DRUPAL_ROOT here (else gives confusing warning when tests fail)
@@ -265,200 +265,202 @@ const N_NUDGE = 9; // your invitee needs a nudge
 const N_SUGGESTION = 10; // suggestion from the system
 
 define('R_WHYS', t('goods and services,exchange of US Dollars or other currency,loan/reimbursement/etc.')); // . R_SHARING_MSG); // transaction purposes
-define('FOR_GOODS', 0); // index into R_WHYS for goods
-define('FOR_USD', 1); // index into R_WHYS for USD exchange
-define('FOR_NONGOODS', 2); // index into R_WHYS for loan, etc.
-//define('FOR_SHARE', 3); // "sharing" gift to CGF (comes out of rewards)
-//define('FOR_INVESTMENT', 4); // only in invoices (use B_INVESTMENT in txs)
-//define('FOR_STAKE', 5); // only in invoices (use B_STAKE in txs)
+const FOR_GOODS = 0; // index into R_WHYS for goods
+const FOR_USD = 1; // index into R_WHYS for USD exchange
+const FOR_NONGOODS = 2; // index into R_WHYS for loan, etc.
+const SELF_CREDIT = '#CREDIT#'; // indicates (internally) a purchase of credit for oneself (must be a string)
+//const FOR_SHARE = 3; // "sharing" gift to CGF (comes out of rewards)
+//const FOR_INVESTMENT = 4; // only in invoices (use B_INVESTMENT in txs)
+//const FOR_STAKE = 5; // only in invoices (use B_STAKE in txs)
 
-define('R_CHUNK', 10); // chunk size for buying CG credit (sales amounts are a multiple of this)
-define('R_MIN_DEFAULT', 100); // suggested minimum amount to hold in CG credit
-define('R_ACHMIN', 10); // minimum granularity of withdrawals from bank account
-define('R_ACHMIN_DEFAULT', 50); // suggested achMin
-//define('R_ACH_TRIES', 3); // how many times to retry an ACH
-define('CASHOUT_MIN', 100); // minimum dollar amount to cash out automatically
-define('VERIFICATION_DELAY', 3); // number of days to wait after requesting a zero transfer, before requesting a real transfer
+const R_CHUNK = 10; // chunk size for buying CG credit (sales amounts are a multiple of this)
+const R_MIN_DEFAULT = 100; // suggested minimum amount to hold in CG credit
+const R_ACHMIN = 10; // minimum granularity of withdrawals from bank account
+const R_ACHMIN_DEFAULT = 50; // suggested achMin
+//const R_ACH_TRIES = 3; // how many times to retry an ACH
+const CASHOUT_MIN = 100; // minimum dollar amount to cash out automatically
+const VERIFICATION_DELAY = 3; // number of days to wait after requesting a zero transfer, before requesting a real transfer
 
-define('R_SUGGEST_BUMP', 1.25); // suggested minimum multiplier, so as not to overdraw
-define('CO_ASPECT', [4, 3]); // width-to-height ratio for commercial profile picture
-define('FACE_ASPECT', [3, 4]); // width-to-height ratio for personal profile picture
-define('R_PHOTO_WIDTH', 300); // rCard photo width, in pixels
-define('R_PHOTO_HEIGHT', 400);
-define('R_PIXEL_FACTOR', 200); // what to multiply the aspect ratio components by, to get pixel dimensions
-define('THUMB_FACTOR', 12); // what to multiply the aspect ratio by, for thumbnail photo
-define('R_INDIVIDUAL_GIFT', 50); // suggested donation for individuals
-define('R_COMPANY_GIFT', 250); // suggested donation for companies
-define('R_BUYS_BEFORE_BONUS', 1); // number of purchases required before signup bonus (should probably be 3)
-define('R_REGION_MAX', 3000000000); // maximum uids in a region (46k,3T ~sqrt(PHP_INT_MAX))
-define('R_ACCT_REGION', '(-FLOOR((uid-1)/' . R_REGION_MAX . ')-1)'); // SQL region expression
-define('R_SIGNIN_HOURS', 24); // window for signing in after registering or resetting password
-define('R_MEMBER_MARK', '.'); // divides region from specific identifier in member IDs
-//define('R_AGENT_MARK', ':'); // divides region from specific identifier in relational IDs
-define('AGT_MARK', '-'); // divides main QID from agent code
-//define('R_AGENT_URL_MARK', '-'); // use this as a substitute for R_AGENT_MARK in URLs (else domain forwarding fails)
-//define('R_MARKS', '[\\' . R_MEMBER_MARK . '\\' . R_AGENT_MARK . '\\' . R_AGENT_URL_MARK . ']'); // any of those
-define('R_ANCIENT_EFT', 10); // how long, at most, an EFT might take (transferring funds to/from bank)
-define('R_REQUIRED', ' <span class="form-required" title="This field is required.">*</span>');
-define('R_CC_RATE', 2.5); // typical credit card percentage rate
-define('R_CODE_LEN', 32); // length of most random identifiers
-define('R_DUPTX_MINS', 4); // number of minutes before a duplicate transaction is allowed
-define('HAS_XFEE', "data LIKE '%s:4:\"xfee\";%'"); // sql to recognize a transaction that has an exchange fee
-define('R_DEPOSIT_RETURN_FEE', 20); // what we charge members for a second bounced transfer
-define('TRIALCO_AMT_LIMIT', 1000); // maximum payments received by a trial (dependent company) account
-//define('TRIALCO_DAY_LIMIT', 14); // maximum number of days for a trial company
-define('EQUIP_DEPOSIT', 50); // dollar cost of equipment deposit
-define('MATURITY', 21); // minimum age to have a credit limit
-define('SELLING_MAXLEN', 25); // maximum length of any short description of something being sold
+const R_SUGGEST_BUMP = 1.25; // suggested minimum multiplier, so as not to overdraw
+const CO_ASPECT = [4, 3]; // width-to-height ratio for commercial profile picture
+const FACE_ASPECT = [3, 4]; // width-to-height ratio for personal profile picture
+const R_PHOTO_WIDTH = 300; // rCard photo width, in pixels
+const R_PHOTO_HEIGHT = 400;
+const R_PIXEL_FACTOR = 200; // what to multiply the aspect ratio components by, to get pixel dimensions
+const THUMB_FACTOR = 12; // what to multiply the aspect ratio by, for thumbnail photo
+const R_INDIVIDUAL_GIFT = 50; // suggested donation for individuals
+const R_COMPANY_GIFT = 250; // suggested donation for companies
+const R_BUYS_BEFORE_BONUS = 1; // number of purchases required before signup bonus (should probably be 3)
+const R_REGION_MAX = 3000000000; // maximum uids in a region (46k,3T ~sqrt(PHP_INT_MAX))
+const R_ACCT_REGION = '(-FLOOR((uid-1)/' . R_REGION_MAX . ')-1)'; // SQL region expression
+const R_SIGNIN_HOURS = 24; // window for signing in after registering or resetting password
+const R_MEMBER_MARK = '.'; // divides region from specific identifier in member IDs
+//const R_AGENT_MARK = ':'; // divides region from specific identifier in relational IDs
+const AGT_MARK = '-'; // divides main QID from agent code
+//const R_AGENT_URL_MARK = '-'; // use this as a substitute for R_AGENT_MARK in URLs (else domain forwarding fails)
+//const R_MARKS = '[\\' . R_MEMBER_MARK . '\\' . R_AGENT_MARK . '\\' . R_AGENT_URL_MARK . ']'; // any of those
+const R_ANCIENT_EFT = 10; // how long, at most, an EFT might take (transferring funds to/from bank)
+const R_REQUIRED = ' <span class="form-required" title="This field is required.">*</span>';
+const R_CC_RATE = 2.5; // typical credit card percentage rate
+const R_CODE_LEN = 32; // length of most random identifiers
+const R_DUPTX_MINS = 4; // number of minutes before a duplicate transaction is allowed
+const HAS_XFEE = "data LIKE '%s:4:\"xfee\";%'"; // sql to recognize a transaction that has an exchange fee
+const R_DEPOSIT_RETURN_FEE = 20; // what we charge members for a second bounced transfer
+const TRIALCO_AMT_LIMIT = 1000; // maximum payments received by a trial (dependent company) account
+//const TRIALCO_DAY_LIMIT = 14; // maximum number of days for a trial company
+const EQUIP_DEPOSIT = 50; // dollar cost of equipment deposit
+const MATURITY = 21; // minimum age to have a credit limit
+const SELLING_MAXLEN = 25; // maximum length of any short description of something being sold
 
 // Filenames
-define('R_TEMPLATE_DIR', '/templates');
-define('R_EMAIL_FRAME', 'email-frame');
+const R_TEMPLATE_DIR = '/templates';
+const R_EMAIL_FRAME = 'email-frame';
 
-define('R_PICTURE_DIR', ROOT . '/cgPhotoTemp/');
-//define('R_PROOF_DIR', '/proofs/'); UNUSED
-define('R_DFT_PICTURE', R_ROOT . '/images/no-photo-available.jpg'); // default profile picture
-define('R_DFT_PICTURE_WIDE', R_ROOT . '/images/no-photo-available-wide.jpg'); // default profile picture
-define('R_NOT_VALID', R_ROOT . '/images/not-valid.png'); // says rcard is not valid for purchases
-define('LOG_DIR', ROOT . '/cgLogs/'); // where to store log files
+const R_PICTURE_DIR = ROOT . '/cgPhotoTemp/';
+//const R_PROOF_DIR = '/proofs/'; UNUSED
+const R_DFT_PICTURE = R_ROOT . '/images/no-photo-available.jpg'; // default profile picture
+const R_DFT_PICTURE_WIDE = R_ROOT . '/images/no-photo-available-wide.jpg'; // default profile picture
+const R_NOT_VALID = R_ROOT . '/images/not-valid.png'; // says rcard is not valid for purchases
+const LOG_DIR = ROOT . '/cgLogs/'; // where to store log files
 define('LOG_FLNM', LOG_DIR . date('Ym') . '.log');
 define('SQL_LOG', LOG_DIR . date('Ym') . '.logsql');
 
 // account type bits
 define('CO_TYPES', t('personal, sole proprietor, partnership, LLC, private corporation, publicly-traded corporation, tax-exempt nonprofit, government, co-operative, unincorporated association or club, estate, trust, custodian'));
 
-define('CO_PERSONAL', 0); // phase out (use type field in r_company instead)
-define('CO_SOLE_PROPRIETOR', 1);
-define('CO_PARTNERSHIP', 2);
-define('CO_LLC', 3); // used in testing
-define('CO_CUSTODIAN', 12);
+const CO_PERSONAL = 0; // phase out (use type field in r_company instead)
+const CO_SOLE_PROPRIETOR = 1;
+const CO_PARTNERSHIP = 2;
+const CO_LLC = 3; // used in testing
+const CO_NONPROFIT = 6;
+const CO_CUSTODIAN = 12;
 
 // Company Account flags (bits)
-define('CO_PRIVATE', 13); // company is not to be listed publicly (on promo site, etc.)
-define('CO_ATM', 14); // can trade cg credit for cash, even if balance is less than floor
+const CO_PRIVATE = 13; // company is not to be listed publicly (on promo site, etc.)
+const CO_ATM = 14; // can trade cg credit for cash, even if balance is less than floor
 
-define('APP_CANS', 15); // company permission bits when signed OUT: bits 15-21
-define('CO_CHARGE', 0);
-define('CO_UNDO', 1);
-define('CO_R4USD', 2);
-define('CO_USD4R', 3);
-define('CO_REFUND', 4);
-define('CO_BUY', 5);
-define('CO_u21', 6); // unused
-define('CO_MANAGE', 7); // this bit is not actually stored here, but pass B_MANAGE to the app in this position
-define('APP_CAN_BITS', 7); // number of bits for permissions (each: signed in and out)
-define('APP_AGENT_CANS', APP_CANS + APP_CAN_BITS); // company permission bits when signed IN (to be limited by agent perms)
+const APP_CANS = 15; // company permission bits when signed OUT: bits 15-21
+const CO_CHARGE = 0;
+const CO_UNDO = 1;
+const CO_R4USD = 2;
+const CO_USD4R = 3;
+const CO_REFUND = 4;
+const CO_BUY = 5;
+const CO_u21 = 6; // unused
+const CO_MANAGE = 7; // this bit is not actually stored here, but pass B_MANAGE to the app in this position
+const APP_CAN_BITS = 7; // number of bits for permissions (each: signed in and out)
+const APP_AGENT_CANS = APP_CANS + APP_CAN_BITS; // company permission bits when signed IN (to be limited by agent perms)
 define('APP_CAN_MASK', pow(2, APP_CAN_BITS + 1) - 1); // the CANS bits -- signed-IN permission bits are 22-28
-define('CO_DFTS', '0 1 7 8 9 11 12'); // set these bits by default
+const CO_DFTS = '0 1 7 8 9 11 12'; // set these bits by default
 
-define('CO_FAST', 29); // (deprecated as of app v 2.16) fast checkout -- never ask for photo Id (set by cAdmin)
-define('CO_TIP', 30); // ask customer what percent tip to add
+const CO_FAST = 29; // (deprecated as of app v 2.16) fast checkout -- never ask for photo Id (set by cAdmin)
+const CO_TIP = 30; // ask customer what percent tip to add
 
-define('APP_CAN_BIT_NAMES', 'charge undo r4usd usd4r refund buy');
+const APP_CAN_BIT_NAMES = 'charge undo r4usd usd4r refund buy';
 define('APP_CAN_BIT_DESCS', t('charge customers,undo last transaction,give %RCREDITS for USD,give USD for %RCREDITS,refund any amount,make payments'));
 
 // Membership steps
-define('R_STEPS_OLD', 'signup:signup, verify, ssn, sign:community/agreement, donate:community/donate, proxies, prefs:settings/preferences, connect, company, relations, photo, food, discount:community/discount, backing:community/backing');
+const R_STEPS_OLD = 'signup:signup, verify, ssn, sign:community/agreement, donate:community/donate, proxies, prefs:settings/preferences, connect, company, relations, photo, food, discount:community/discount, backing:community/backing';
 
-define('S_ALL', 'signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, stepup, crumbs, work, partnersteptwo, partnerend, food, wantsPrint, printed'); // where to go to complete each step (unordered) -- add new steps to the end
-define('S_PERSON', 'signup verifyemail verifyid agree preferences fund photo contact donate crumbs proxies work backing stepup invite');
-//define('S_CO', 'signup verifyemail');
-define('S_CO', 'signup verifyemail agree contact backing photo donate company crumbs discount');
-define('S_CO2', 'agent agree contact backing photo donate company crumbs discount');
-define('S_CARD', 'photo contact donate');
-define('S_SELL', 'ssn contact crumbs'); // keep this for when an individual member goes over the limit for no 1099
-define('S_VOICE', 'contact donate proxies work backing invite'); // add comment
-define('S_PARTNER', 'signup fund partnersteptwo partnerend');
+const S_ALL = 'signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, stepup, crumbs, work, partnersteptwo, partnerend, food, wantsPrint, printed'; // where to go to complete each step (unordered) -- add new steps to the end
+const S_PERSON = 'signup verifyemail verifyid agree preferences fund photo contact donate crumbs proxies work backing stepup invite';
+//const S_CO = 'signup verifyemail';
+const S_CO = 'signup verifyemail agree contact backing photo donate company crumbs discount';
+const S_CO2 = 'agent agree contact backing photo donate company crumbs discount';
+const S_CARD = 'photo contact donate';
+const S_SELL = 'ssn contact crumbs'; // keep this for when an individual member goes over the limit for no 1099
+const S_VOICE = 'contact donate proxies work backing invite'; // add comment
+const S_PARTNER = 'signup fund partnersteptwo partnerend';
 
-define('S_MEM_TASKS', 'person co'); // followup tasks for members
-define('S_PTASKS', 'person card sell voice partner');
-define('S_COTASKS', 'co co2 partner');
+const S_MEM_TASKS = 'person co'; // followup tasks for members
+const S_PTASKS = 'person card sell voice partner';
+const S_COTASKS = 'co co2 partner';
 
 // Permissions, options, and flags (flags field in account record)
 // If we need more bits, create a flags2 field and make the B_ defs negative or 32-63 for setBit
 // for documentation of IS_OK etc. see u\SUBS()
-define('B_MEMBER', 0); // fulfilled membership requirements (ready to be approved).
-define('B_CONFIRMED', 1); // invitation has been confirmed (in advance by form invite OR explicitly OR implicitly by newb first buying from the inviter in person)
-define('B_OK', 2); // can use CG for real (set by admin when ready). Set FALSE to freeze ctty funds (NYI)
-define('B_CARDED', 3); // card has been printed and mailed
-define('B_IDED', 4); // a cashier has verified the member's government-issued photo ID
-define('B_REFILL', 5); // refill the account automatically (up to a target amount)
-define('B_CO', 6); // company account
-define('B_DRAWS', 7); // this account draws on one or more others
-define('B_ROUNDUP', 8); // round payments up to nearest dollar, donate the cents to the community fund
-define('B_NONUDGE', 9); // don't send reminders
-define('B_NOSEARCH', 10); // user wants to be not findable by other members, by phone or email
-define('B_DEPENDS', 11); // dependent account (can't change settings, federalId is sponsor's)
-define('B_BANKOK', 12); // connected bank account has been verified
-define('B_WEEKLY', 13); // send notices only weekly
-define('B_MONTHLY', 14); // send notices only monthly
-define('B_u15', 15); //
-define('B_BYSMS', 16); // NYI notifications by SMS
-define('B_PAPER', 17); // will not accept electronic statements
-define('B_SECRET', 18); // don't let merchants tell me my balance on request
-define('B_UNDERAGE', 19); // too young to have a credit line (needed because dob is accessible only to superAdmin)
-define('B_DEBT', 20); // member chose to permit sub-zero balances
-define('B_REINVEST', 21); // member chose to automatically reinvest investment club dividends and inflation adjustments
-define('B_SAVINGS', 22); // the connected bank account is a savings or money market account
-define('B_CASHOUTW', 23); // cash out automatically every 7 days
-define('B_CASHOUTM', 24); // cash out automatically every 30 days
-define('B_BETA', 25); // beta tester
-define('B_OADMIN', 26); // can moderate the Offers/Needs/Tips board in a community
-define('B_ADMIN2', 27); // is an overall admin assistant or bank partner or government regulator (read-only except notes)
-define('B_CADMIN2', 28); // is a community sub-administrator (read-only except notes)
-define('B_CADMIN', 29); // is a community administrator
-define('B_ADMIN', 30); // is a system administrator -- can manage server, including assigning ctty admins, but cannot manage communities or individual accounts (except temporarily)
-define('B_MAX', 62); // maximum bit number
-define('B_ADMINABLE', 'member confirmed carded beta oAdmin cAdmin cAdmin2 nonudge cgc invites rewardy noneg'); // for cAdmin to set
-define('B_LIST', 'member confirmed ok carded ided refill co draws roundup nonudge nosearch depends bankOk weekly monthly u15 bysms paper secret underage debt reinvest savings cashoutW cashoutM beta oAdmin admin2 cAdmin2 cAdmin admin');
+const B_MEMBER = 0; // fulfilled membership requirements (ready to be approved).
+const B_CONFIRMED = 1; // invitation has been confirmed (in advance by form invite OR explicitly OR implicitly by newb first buying from the inviter in person)
+const B_OK = 2; // can use CG for real (set by admin when ready). Set FALSE to freeze ctty funds (NYI)
+const B_CARDED = 3; // card has been printed and mailed
+const B_IDED = 4; // a cashier has verified the member's government-issued photo ID
+const B_REFILL = 5; // refill the account automatically (up to a target amount)
+const B_CO = 6; // company account
+const B_DRAWS = 7; // this account draws on one or more others
+const B_ROUNDUP = 8; // round payments up to nearest dollar, donate the cents to the community fund
+const B_NONUDGE = 9; // don't send reminders
+const B_NOSEARCH = 10; // user wants to be not findable by other members, by phone or email
+const B_DEPENDS = 11; // dependent account (can't change settings, federalId is sponsor's)
+const B_BANKOK = 12; // connected bank account has been verified
+const B_WEEKLY = 13; // send notices only weekly
+const B_MONTHLY = 14; // send notices only monthly
+const B_u15 = 15; //
+const B_BYSMS = 16; // NYI notifications by SMS
+const B_PAPER = 17; // will not accept electronic statements
+const B_SECRET = 18; // don't let merchants tell me my balance on request
+const B_UNDERAGE = 19; // too young to have a credit line (needed because dob is accessible only to superAdmin)
+const B_DEBT = 20; // member chose to permit sub-zero balances
+const B_REINVEST = 21; // member chose to automatically reinvest investment club dividends and inflation adjustments
+const B_SAVINGS = 22; // the connected bank account is a savings or money market account
+const B_CASHOUTW = 23; // cash out automatically every 7 days
+const B_CASHOUTM = 24; // cash out automatically every 30 days
+const B_BETA = 25; // beta tester
+const B_OADMIN = 26; // can moderate the Offers/Needs/Tips board in a community
+const B_ADMIN2 = 27; // is an overall admin assistant or bank partner or government regulator (read-only except notes)
+const B_CADMIN2 = 28; // is a community sub-administrator (read-only except notes)
+const B_CADMIN = 29; // is a community administrator
+const B_ADMIN = 30; // is a system administrator -- can manage server, including assigning ctty admins, but cannot manage communities or individual accounts (except temporarily)
+const B_MAX = 62; // maximum bit number
+const B_ADMINABLE = 'member confirmed carded beta oAdmin cAdmin cAdmin2 nonudge cgc invites rewardy noneg'; // for cAdmin to set
+const B_LIST = 'member confirmed ok carded ided refill co draws roundup nonudge nosearch depends bankOk weekly monthly u15 bysms paper secret underage debt reinvest savings cashoutW cashoutM beta oAdmin admin2 cAdmin2 cAdmin admin';
 
 // community-specific flags
-define('B_CGC', 0); // ctty: is an official CGC (currently has no effect)
-define('B_UP', 1); // ctty: is operational (up) (see also B_CTTYUP)
+const B_CGC = 0; // ctty: is an official CGC (currently has no effect)
+const B_UP = 1; // ctty: is operational (up) (see also B_CTTYUP)
 // B_CO (see above)
-define('B_INVITES', 3); // require invitations
-define('B_REWARDY', 4); // community issues rewards explicitly
-define('B_NONEG', 5); // temporary ban on accounts going negative (set automatically in r\stats)
-define('B_CTTY_BITS', 'cgc up co invites rewardy noneg');
-define('B_ADMIN_BITS', 'member:cgc,confirmed:up,co:co,u3:invites,ided:rewardy,refill:noneg');
+const B_INVITES = 3; // require invitations
+const B_REWARDY = 4; // community issues rewards explicitly
+const B_NONEG = 5; // temporary ban on accounts going negative (set automatically in r\stats)
+const B_CTTY_BITS = 'cgc up co invites rewardy noneg';
+const B_ADMIN_BITS = 'member:cgc,confirmed:up,co:co,u3:invites,ided:rewardy,refill:noneg';
 
-define('R_CTTY_BENE', 'cttyBuys+signups+rebates+bonuss+inflations+givebacks+grants+loans+invests+fines+tradeOut'); // benefit (ever) to the community (fines and givebacks are negative)
+const R_CTTY_BENE = 'cttyBuys+signups+rebates+bonuss+inflations+givebacks+grants+loans+invests+fines+tradeOut'; // benefit (ever) to the community (fines and givebacks are negative)
 
 // Relationship flags
-define('B_EMPLOYEE', 0); // is employed by main account
-define('B_OWNER', 1); // owns the main account
-define('B_CUSTOMER', 2); // is a customer of main account
-define('B_AUTOPAY', 3); // preapproves any invoice from main account
-define('B_r4', 4); //  by main account
-define('B_r5', 5); //  by main account
-define('B_r6', 6); //  by main account
-define('B_DRAW', 7); // can draw funds from main account (same number as B_DRAWS in the users table)
-define('REL_FLAGS', 'employee owner customer autopay r4 r5 r6 draw');
-define('REL_FLDS', 'main other otherNum permission code');
-define('REL_DATA_FLDS', 'fullName email phone address city state zip address2 city2 state2 zip2 partner partnerCode customer source qid country postalAddr'); // pseudo-fields typically stored in data field
+const B_EMPLOYEE = 0; // is employed by main account
+const B_OWNER = 1; // owns the main account
+const B_CUSTOMER = 2; // is a customer of main account
+const B_AUTOPAY = 3; // preapproves any invoice from main account
+const B_r4 = 4; //  by main account
+const B_r5 = 5; //  by main account
+const B_r6 = 6; //  by main account
+const B_DRAW = 7; // can draw funds from main account (same number as B_DRAWS in the users table)
+const REL_FLAGS = 'employee owner customer autopay r4 r5 r6 draw';
+const REL_FLDS = 'main other otherNum permission code';
+const REL_DATA_FLDS = 'fullName email phone address city state zip address2 city2 state2 zip2 partner partnerCode customer source qid country postalAddr'; // pseudo-fields typically stored in data field
 
 // Relationship permissions used in calls to r\Acct::can() -- stored (less B_RELATED) in r_relations
-define('B_RELATED', 100); // has a relationship record
-define('B_NONE', 100); // no access
-define('B_READ', 101); // can view Transaction History
-define('B_SCAN', 102); // can accept CG Card payments for goods or cash for CG (or view Transaction History -- permissions are cummulative)
-define('B_REFUND', 103); // can undo transactions and make refunds or trade cash at point of sale
-define('B_SELL', 104); // can send invoices (or scan or view)
-define('B_BUY', 105); // can make purchase for the account (or sell or scan or view)
-define('B_MANAGE', 106); // can manage all aspects of the account
-define('B_JOINT', 107); // make this a joint account (subsuming the other, with permission) -- no companies!
+const B_RELATED = 100; // has a relationship record
+const B_NONE = 100; // no access
+const B_READ = 101; // can view Transaction History
+const B_SCAN = 102; // can accept CG Card payments for goods or cash for CG (or view Transaction History -- permissions are cummulative)
+const B_REFUND = 103; // can undo transactions and make refunds or trade cash at point of sale
+const B_SELL = 104; // can send invoices (or scan or view)
+const B_BUY = 105; // can make purchase for the account (or sell or scan or view)
+const B_MANAGE = 106; // can manage all aspects of the account
+const B_JOINT = 107; // make this a joint account (subsuming the other, with permission) -- no companies!
 $GLOBALS['share permissions'] = array(t('no access'), t('view transactions'), t('accept %PROJECT card payments'), t('give refunds & give USD for %RCREDITS'), t('send invoices'), t('make purchases'), t('manage account'), t('joint account'));
-define('B_PERMISSIONS', 'related read scan refund sell buy manage joint');
+const B_PERMISSIONS = 'related read scan refund sell buy manage joint';
 
 // Other special pseudo-bit values for r\Acct::can() and rweb.module menus
-define('B_MANAGING_CTTY', 120); // cadmin is actually managing a qualified account
-define('B_PERSON', 121); // personal account (!co)
-define('B_DEV', 122); // isDEV or is admin
-define('B_u123', 123); //
-define('B_CTTYUP', 124); // account's community is operating (see also B_UP)
-define('B_BANK', 125); // account has a connected bank account
-define('B_CLOSED', 126); // account is closed
-define('B_SHOW_ALL', 999); // special signal to r\Acct::can() to return all permissions
+const B_MANAGING_CTTY = 120; // cadmin is actually managing a qualified account
+const B_PERSON = 121; // personal account (!co)
+const B_DEV = 122; // isDEV or is admin
+const B_u123 = 123; //
+const B_CTTYUP = 124; // account's community is operating (see also B_UP)
+const B_BANK = 125; // account has a connected bank account
+const B_CLOSED = 126; // account is closed
+const B_SHOW_ALL = 999; // special signal to r\Acct::can() to return all permissions
 
 // Canonic strings
 define('S_REFUND', t('refund'));
@@ -466,119 +468,119 @@ define('S_USD_OUT', t('USD out'));
 define('S_USD_IN', t('USD in'));
 
 // Risk definitions (for accounts and transactions) -- suspiciousness for possible reporting to FinCEN
-define('K_THRESHOLD', 200); // how big an amount in a single transaction is suspicious
-/*define('K_DAY_THRESHOLD', 300); // how big an amount spent or received by an individual in one day is suspicious
-define('K_WEEK_THRESHOLD', 600); // how large an amount is suspicious in one week
-define('K_7WEEK_THRESHOLD', 1200); // how large an amount is suspicious in one 52-day period
-define('K_YEAR_THRESHOLD', 2400); // how large an amount is suspicious in one year */
-define('K_THRESHOLD_PCT', 5); // what percent of top accounts transaction volume per employee to flag
-define('K_LIMIT_FACTOR', 3); // how many times the various thresholds is a prohibited amount
-define('K_UNUSUAL_BUMP', 20); // what percentage 7-week increase (in or out) is suspicious
-define('K_BIT_MIN', .05); // lowest risk factor that sets a bit
-define('K_RED', 100); // lowest score to flag for investigation
-define('K_GREEN', -500); // threshold for an account or transaction to be unquestionably beyond reproach
-define('K_LINES', 20); // number of lines to show for each type of each potentially risky record (acct or tx)
-define('K_MISER_DONATION', 5); // minimum donation to not be a miser
-define('K_MISER_SHARE', 25); // minimum sharing percentage, to not be a miser
-define('K_CTTY_THRESHOLD', 100); // minimum size of community transactions to consider for risk analysis
+const K_THRESHOLD = 200; // how big an amount in a single transaction is suspicious
+/*const K_DAY_THRESHOLD = 300; // how big an amount spent or received by an individual in one day is suspicious
+const K_WEEK_THRESHOLD = 600; // how large an amount is suspicious in one week
+const K_7WEEK_THRESHOLD = 1200; // how large an amount is suspicious in one 52-day period
+const K_YEAR_THRESHOLD = 2400; // how large an amount is suspicious in one year */
+const K_THRESHOLD_PCT = 5; // what percent of top accounts transaction volume per employee to flag
+const K_LIMIT_FACTOR = 3; // how many times the various thresholds is a prohibited amount
+const K_UNUSUAL_BUMP = 20; // what percentage 7-week increase (in or out) is suspicious
+const K_BIT_MIN = .05; // lowest risk factor that sets a bit
+const K_RED = 100; // lowest score to flag for investigation
+const K_GREEN = -500; // threshold for an account or transaction to be unquestionably beyond reproach
+const K_LINES = 20; // number of lines to show for each type of each potentially risky record (acct or tx)
+const K_MISER_DONATION = 5; // minimum donation to not be a miser
+const K_MISER_SHARE = 25; // minimum sharing percentage, to not be a miser
+const K_CTTY_THRESHOLD = 100; // minimum size of community transactions to consider for risk analysis
 
 // names and weights of account and transaction risks (and, for negative weights, assurance)
 // weight is the number of such risks that together would make the account or transaction suspicious
 // a weight of "X" means the risk is named but does not contribute to the total risk score (UNUSED)
-define('K_ACCT_RISKS', 'adminOk:-0.3,trusted:-4,UNUSED:-3,hasBank:-3,geography:4,cashCo:2,new:5,moves:3,rents:10,badConx:2,homeCo:20,shady:3,miser:5,UNUSED2:1,addrOff:5,ssnOff:1,dobOff:4,poBox:5,fishy:2,moreIn:2,moreOut:2,bigDay:1,bigWeek:1,big7Week:1,bigYear:2');
-define('K_ACCT_RISKS_EDITABLE', 'adminOk cashCo rents shady photoOff addrOff ssnOff dobOff fishy');
-define('K_TX_RISKS', 'txAdminOk:-0.3,redo:2,exchange:2,cashIn:5,cashOut:2,fromBank:5,toBank:2,b2p:2,p2p:2,inhouse:2,fromSuspect:3,toSuspect:3,absent:4,invoiceless:4,bigFrom:3,biggestFrom:3,oftenFrom:3,bigTo:3,biggestTo:3,oftenTo:3,offline:10,firstOffline:3,origins:16,suspectOut:2'); // names and size of transaction risks
-define('K_ADMINOK', 0); // community admin blessed the account or transaction
-define('K_HASBANK', 3); // account has a connected bank account
-define('K_ADDROFF', 14); // account's physical address is wonky (can't be geolocated or whatever)
-define('HAS_BANK', 'risks&(1<<' . K_HASBANK . ')'); // mysql criterion (not surrounding parens, so we can do u.:HAS_BANK)
-define('MASTER', '(jid=0 OR uid < jid)'); // account is the master in a joint account
+const K_ACCT_RISKS = 'adminOk:-0.3,trusted:-4,UNUSED:-3,hasBank:-3,geography:4,cashCo:2,new:5,moves:3,rents:10,badConx:2,homeCo:20,shady:3,miser:5,UNUSED2:1,addrOff:5,ssnOff:1,dobOff:4,poBox:5,fishy:2,moreIn:2,moreOut:2,bigDay:1,bigWeek:1,big7Week:1,bigYear:2';
+const K_ACCT_RISKS_EDITABLE = 'adminOk cashCo rents shady photoOff addrOff ssnOff dobOff fishy';
+const K_TX_RISKS = 'txAdminOk:-0.3,redo:2,exchange:2,cashIn:5,cashOut:2,fromBank:5,toBank:2,b2p:2,p2p:2,inhouse:2,fromSuspect:3,toSuspect:3,absent:4,invoiceless:4,bigFrom:3,biggestFrom:3,oftenFrom:3,bigTo:3,biggestTo:3,oftenTo:3,offline:10,firstOffline:3,origins:16,suspectOut:2'; // names and size of transaction risks
+const K_ADMINOK = 0; // community admin blessed the account or transaction
+const K_HASBANK = 3; // account has a connected bank account
+const K_ADDROFF = 14; // account's physical address is wonky (can't be geolocated or whatever)
+const HAS_BANK = 'risks&(1<<' . K_HASBANK . ')'; // mysql criterion (not surrounding parens, so we can do u.:HAS_BANK)
+const MASTER = '(jid=0 OR uid < jid)'; // account is the master in a joint account
 
-/* define('U_FOODY', '(SELECT 1 FROM r_industries i JOIN r_user_industries ui USING (iid) WHERE ui.uid=u.uid AND u.name<>\'foodfund\' AND i.parent=2 LIMIT 1)'); // MySQL for "the account with record ID u.uid is a food-related business" */
-define('FOOD_INDUSTRY', 2); // any industry with this base ancestor is food-related
-define('U_FOODY', '(SELECT 1 FROM r_user_industries ui JOIN ancestors a ON ui.iid=a.base WHERE ui.uid=u.uid AND u.name<>\'foodfund\' AND a.ancestor=' . FOOD_INDUSTRY . ' LIMIT 1)'); // MySQL for "the account u is a food-related business"
+/* const U_FOODY = '(SELECT 1 FROM r_industries i JOIN r_user_industries ui USING (iid) WHERE ui.uid=u.uid AND u.name<>\'foodfund\' AND i.parent=2 LIMIT 1)'; // MySQL for "the account with record ID u.uid is a food-related business" */
+const FOOD_INDUSTRY = 2; // any industry with this base ancestor is food-related
+const U_FOODY = '(SELECT 1 FROM r_user_industries ui JOIN ancestors a ON ui.iid=a.base WHERE ui.uid=u.uid AND u.name<>\'foodfund\' AND a.ancestor=' . FOOD_INDUSTRY . ' LIMIT 1)'; // MySQL for "the account u is a food-related business"
 
-define('T_FOODY', '(SELECT ' . U_FOODY . " FROM users u WHERE u.uid=uid2)"); // MySQL involving txs VIEW, meaning "payee is FOODY"
-define('CAT_FOOD', 2); // food industry (used in signup-co and/or company feature)
-define('CAT_RETAIL', 14); // retail industry (used in signup-co and/or company feature)
+const T_FOODY = '(SELECT ' . U_FOODY . " FROM users u WHERE u.uid=uid2)"; // MySQL involving txs VIEW, meaning "payee is FOODY"
+const CAT_FOOD = 2; // food industry (used in signup-co and/or company feature)
+const CAT_RETAIL = 14; // retail industry (used in signup-co and/or company feature)
 
-define('FLOW_NONE', 0); // which way can credit flow, with another account
-define('FLOW_TO', 1);
-define('FLOW_FROM', 2);
-define('FLOW_BOTH', 3);
+const FLOW_NONE = 0; // which way can credit flow, with another account
+const FLOW_TO = 1;
+const FLOW_FROM = 2;
+const FLOW_BOTH = 3;
 
 // Coupon flags
-define('B_SOME', 1); // coupon is only for some accounts (those in r_coupated)
-// define('B_GIFT', 10); // gift coupon (defined for transactions below)
+const B_SOME = 1; // coupon is only for some accounts (those in r_coupated)
+// const B_GIFT = 10; // gift coupon (defined for transactions below)
 
 // Transaction flags (for flags field in transaction records)
-define('B_TAKING', 0); // payee initiated the transaction
-define('B_DISPUTED', 1); // non-originator disputes the transaction -- signaled by existence of tx_disputes (NOT LEGAL FOR TRANSACTIONS, BUT STILL USED BY INVOICES
-define('B_OFFLINE', 2); // transaction was taken offline (or was forced?)
-define('B_SHORT', 3); // transaction was taken (offline) despite credit shortfall
-define('OLD_B_UNDONE', 4); // undone by another transaction -- signaled by existence of reversing transaction
-define('OLD_B_UNDOES', 5); // undoes another transaction -- signaled by reversesXid not null
-define('B_CRUMBS', 6); // monthly donation of percentage of receipts
-define('OLD_B_ROUNDUPS', 7); // monthly donation of rounded up cents -- no longer occurs
+const B_TAKING = 0; // payee initiated the transaction
+const B_DISPUTED = 1; // non-originator disputes the transaction -- signaled by existence of tx_disputes (NOT LEGAL FOR TRANSACTIONS, BUT STILL USED BY INVOICES
+const B_OFFLINE = 2; // transaction was taken offline (or was forced?)
+const B_SHORT = 3; // transaction was taken (offline) despite credit shortfall
+const OLD_B_UNDONE = 4; // undone by another transaction -- signaled by existence of reversing transaction
+const OLD_B_UNDOES = 5; // undoes another transaction -- signaled by reversesXid not null
+const B_CRUMBS = 6; // monthly donation of percentage of receipts
+const OLD_B_ROUNDUPS = 7; // monthly donation of rounded up cents -- no longer occurs
 // B_ROUNDUP is 8 (defined above) // payer donated the change to the community fund -- not used here, 
-define('B_RECURS', 9); // recurring transaction
-define('B_GIFT', 10); // grant or gift (of any type)
-define('B_LOAN', 11); // community loan (UNUSED?)
-define('B_INVESTMENT', 12); // community investment (UNUSED?) or investment club investment
-define('B_STAKE', 13); // member buying or selling stake in investment club
-define('B_FINE', 14); // community fine (UNUSED?)
-define('B_NOASK', 15); // transaction was taken with ID checking OFF
-define('B_FUNDING', 16); // invoice has already instigated an appropriate bank transfer request
-define('B_FOOD', 17); // contribution to food fund
-define('TX_FLAGS', 'offline short crumbs recurs gift loan investment stake fine noask funding food');
+const B_RECURS = 9; // recurring transaction
+const B_GIFT = 10; // grant or gift (of any type)
+const B_LOAN = 11; // community loan (UNUSED?)
+const B_INVESTMENT = 12; // community investment (UNUSED?) or investment club investment
+const B_STAKE = 13; // member buying or selling stake in investment club
+const B_FINE = 14; // community fine (UNUSED?)
+const B_NOASK = 15; // transaction was taken with ID checking OFF
+const B_FUNDING = 16; // invoice has already instigated an appropriate bank transfer request
+const B_FOOD = 17; // contribution to food fund
+const TX_FLAGS = 'offline short crumbs recurs gift loan investment stake fine noask funding food';
 
 // Invoice status (txid >= TX_PAID if paid)
-define('TX_DELAYED', -3); // waiting for both accounts to qualify
-define('TX_DENIED', -2); // invoice rejected by the non-originator
-define('TX_PENDING', -1); // charged, waiting for confirmation
-define('TX_APPROVED', 0); // invoice is approved but not paid
-define('TX_PAID', 1); // any status this amount or more is a payment transaction record ID (xid)
+const TX_DELAYED = -3; // waiting for both accounts to qualify
+const TX_DENIED = -2; // invoice rejected by the non-originator
+const TX_PENDING = -1; // charged, waiting for confirmation
+const TX_APPROVED = 0; // invoice is approved but not paid
+const TX_PAID = 1; // any status this amount or more is a payment transaction record ID (xid)
 define('TX_STATUSES', t('-3:delayed,-2:denied,-1:OPEN,0:approved,1:paid'));
 
 // Transaction channels (roughly in order of simplicity and generality of messages) (CGF)
-define('TX_SYS', 0);
-define('TX_SMS', 1); 
-define('TX_WEB', 2);
-define('TX_POS', 3); // smart phone or other computer-like device
-define('TX_TONE', 4); // touch tone phone
-define('TX_CRON', 5);
-define('TX_LINK', 6); // user clicked a no-signin link
-define('TX_AJAX', 7);
-define('TX_FOREIGN', 8); // user clicked a "Pay with CG" button or request an app to charge them
-define('TX_CHANNELS', 'Sys SMS Web App Tone Cron Link Ajax Foreign'); // can't translate, because used in t() (find a solution)
+const TX_SYS = 0;
+const TX_SMS = 1; 
+const TX_WEB = 2;
+const TX_POS = 3; // smart phone or other computer-like device
+const TX_TONE = 4; // touch tone phone
+const TX_CRON = 5;
+const TX_LINK = 6; // user clicked a no-signin link
+const TX_AJAX = 7;
+const TX_FOREIGN = 8; // user clicked a "Pay with CG" button or request an app to charge them
+const TX_CHANNELS = 'Sys SMS Web App Tone Cron Link Ajax Foreign'; // can't translate, because used in t() (find a solution)
 
 // Transaction types
-define('TX_TRANSFER', 0); // normal fund transfer (usually for actual goods and services) -- not creating rC
-define('TX_BANK', 99); // used only internally, to mark bank transfers
+const TX_TRANSFER = 0; // normal fund transfer (usually for actual goods and services) -- not creating rC
+const TX_BANK = 99; // used only internally, to mark bank transfers
 
-define('TX_DEFAULT_PERIOD', 90); // number of days to show in transaction history, by default
-define('TX_DEFAULT_INV_PERIOD', -2); // number of days to show in invoice history, by default (all of them)
+const TX_DEFAULT_PERIOD = 90; // number of days to show in transaction history, by default
+const TX_DEFAULT_INV_PERIOD = -2; // number of days to show in invoice history, by default (all of them)
 
-define('MIN_TX_ROWS', 3); // minimum number of transaction lines to show
-define('NORMAL_TX_ROWS', 30); // normal number of transaction lines to show
-define('TX_MAX_ROWS', 500); // (unused) maximum number of transactions to load at once
-define('TX_MAX_MOS', 18); // maximum transaction months, for display
-define('TX_MAX_DAYS', 30.5 * TX_MAX_MOS + 2); // maximum days in a transaction query (18 months) -- 2 for leap day & daylight
-define('TX_DATA_FLDS', 'undoneBy undoes force changes'); // serialized pseudo-fields in the data field of a transaction record
+const MIN_TX_ROWS = 3; // minimum number of transaction lines to show
+const NORMAL_TX_ROWS = 30; // normal number of transaction lines to show
+const TX_MAX_ROWS = 500; // (unused) maximum number of transactions to load at once
+const TX_MAX_MOS = 18; // maximum transaction months, for display
+const TX_MAX_DAYS = 30.5 * TX_MAX_MOS + 2; // maximum days in a transaction query (18 months) -- 2 for leap day & daylight
+const TX_DATA_FLDS = 'undoneBy undoes force changes'; // serialized pseudo-fields in the data field of a transaction record
 
-define('DS_OPEN', 1);  // dispute not resolved
-define('DS_ACCEPTED', 2);  // dispute accepted and transaction reversed
-define('DS_DENIED', 3);  // dispute denied
+const DS_OPEN = 1;  // dispute not resolved
+const DS_ACCEPTED = 2;  // dispute accepted and transaction reversed
+const DS_DENIED = 3;  // dispute denied
 
-define('E_BANK_ONLY', 0); // bank charges and transfers between bank accounts that have no effect on CG account balances
-define('E_PRIME', 1);  // the main pair in the transaction (payer and payee)
-define('E_DONATION', 2);  // this is a transaction-related donation (e.g., roundup or rule-based donation)
+const E_BANK_ONLY = 0; // bank charges and transfers between bank accounts that have no effect on CG account balances
+const E_PRIME = 1;  // the main pair in the transaction (payer and payee)
+const E_DONATION = 2;  // this is a transaction-related donation (e.g., roundup or rule-based donation)
                           // the precise nature can be determined from uid2
-define('E_REBATE', 3); // discount rebate to customer
-define('E_USD_FEE', 4); // fee from customer to merchant for buying (or selling?) Common Good credit
-define('E_BANK', 5); // CG account transfers to or from the member's bank
-define('E_XFEE', 6); // transfer fee to merchant (UNUSED)
-define('E_TYPES', 'bank_only prime donation rebate usd_fee bank rule');
+const E_REBATE = 3; // discount rebate to customer
+const E_USD_FEE = 4; // fee from customer to merchant for buying (or selling?) Common Good credit
+const E_BANK = 5; // CG account transfers to or from the member's bank
+const E_XFEE = 6; // transfer fee to merchant (UNUSED)
+const E_TYPES = 'bank_only prime donation rebate usd_fee bank rule';
 
 const REF_LIST = 'anybody account anyCo industry group'; // values for payerType and payeeType in tx_rules
 const REF_ANYBODY = 'anybody';
@@ -600,7 +602,7 @@ define('PERIODS_PLURAL', t('n/a days weeks months quarters years n/a'));
 const MATCH_PAYER = -1; // Special values for from and to (which are normally uids) in tx_rules
 const MATCH_PAYEE = -2;
 
-define('STEPUP_MIN', 10); // minimum number of stepup rules for a company to appear on the step-up page
+const STEPUP_MIN = 10; // minimum number of stepup rules for a company to appear on the step-up page
 define('STEPUP_DESC', t('donation (step-up)')); // step-up donation tx description
 define('STEPUP_3PCT', str_replace('(', '(3% ', STEPUP_DESC)); // description model for rules, txs, and testing
 define('REBATE_DESC', t('discount (rebate)'));

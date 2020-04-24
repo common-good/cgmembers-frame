@@ -62,7 +62,7 @@ function growthChart() {
 }
 
 function fundsChart() {
-  var columns = `CG Credits, Dollar Pool, Savings, Top 3${vs.topPct}, Bottom 3${vs.topPct}, Credit Limits, Bals < 0`;
+  var columns = `CG Credit, Dollar Pool, Savings, Top 3${vs.topPct}, Bottom 3${vs.topPct}, Credit Limits, Bals < 0`;
   var data = myRows('fundsData', columns);
   var colors = '#00CC00 BLUE yellow red red magenta orange';
   doChart('Dollar Pool Total: ' + vs.funds, data, colors);
@@ -71,7 +71,7 @@ function fundsChart() {
 function velocityChart() {
   var data = myRows('velocityData', 'Inter-cmty, Local, Bank Transfers');
   var colors = 'YELLOW #00CC00 blue';
-// hAxis title:'What fraction of Common Good Credits turn over monthly', 
+// hAxis title:'What fraction of Common Good Credit turns over monthly', 
   var options = {
     vAxis: {format:'percent', viewWindow:{min:0, max:1.5}},
   };

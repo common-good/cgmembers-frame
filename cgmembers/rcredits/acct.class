@@ -198,7 +198,7 @@ class Acct {
     if ($field == 'creditLine') return -$a->floor;
     if ($field == 'hasFid') return ($vsec = $a->vsecure and nn($vsec['federalId'], '') !== ''); // has to be 2 steps
     if ($field == 'hasDob') return ($vsec = $a->vsecure and nn($vsec['dob'], '') !== ''); // has to be 2 steps
-    if ($field == 'closed') return (($a->activated or $a->activated0) and !$a->ok); // data[newAccount] has new qid, if any
+    if ($field == 'closed') return ($a->activated and !$a->ok); // data[newAccount] has new qid, if any
     if ($field == 'hasBank') return $a->risk('hasBank');
     if ($field == 'lowSecurity') return u\n2ai(substr($a->created, -5, 5), 3); // result is 3 chars long
     if ($field == 'inviteCode') return $a->mainQid . $a->lowSecurity;
@@ -962,7 +962,10 @@ EOF;
     u\setDft($msg, $stepDone ? 'info saved' : '');
     if ($a->closed) return 'summary';
 
-    if ($stepDone) $a->stepDone($stepDone, TRUE, $info);
+    if ($stepDone) {
+      $stepCounts = !$a->stepIsDone($stepDone);
+      $a->stepDone($stepDone, TRUE, $info);
+    } else { $stepCounts = FALSE; }
     
     if ($nextStep = ($a->task ? $a->nextStep() : FALSE)) {
       if ($stepDone and in($stepDone, r\taskSteps($a->task))) u\joins($msg, '|', 'step completed'); // say completed only when relevant
@@ -975,7 +978,8 @@ EOF;
       $approval = $a->co ? 'company approval' : 'individual approval';
       u\joins($msg, '|', "setup complete|$approval|join thanks"); // show on display, not on done
     }
-    return 'summary';
+    $url = dirname($_SERVER['REQUEST_URI']);
+    return $stepCounts ? 'summary' : ($url == '.' ? '' : $url); // go to summary page if this was the last step
   }
 
   public function setTask($task) {$this->update('task stepsLeft', $task, $this->stepsLeft($task));}

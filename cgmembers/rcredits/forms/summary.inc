@@ -221,15 +221,9 @@ function formSummary_submit($form, &$sta) {
     if ($active xor $mya->ok) { // changing activation status
       $mya->setBit(B_OK, $active);
       if ($active) {
+        if ($mya->activated) $notes = $mya->stampNote('reactivated') . $notes;
         activate($helper);
-        if ($mya->activated0) {
-          $notes = $mya->stampNote('reactivated') . $notes;
-          $mya->update('activated', $mya->activated0);
-        }
-      } else {
-        $notes = $mya->stampNote('account closed') . $notes;
-        $mya->update('activated0 activated', $mya->activated, 0);
-      }
+      } else { $notes = $mya->stampNote('account closed') . $notes; }
     }
   }
   
@@ -340,7 +334,7 @@ function choiceListFld() {
     community:invite:Invite:Invite a friend or company to join.<br><small>Your local Community Fund gets $2 for every invitation you send!</small>
     community:donate:Give:Make a donation to %PROJECT.
     community:comment:Comment:Send a comment, question, or suggestion.
-    scraps:person:Finish:Finish opening your account.<br><small>Get a %PROJECT payment card, accept payments (including discount rebates), and participate in %PROJECT economic democracy. $warning</small>
+    scraps:person:Finish:Finish opening your account.<br><small>Get a %PROJECT payment card, accept payments (including discount rebates), and participate in %PROJECT economic democracy.</small>
     scraps:co:Finish:Finish opening your complete company account.
 X
   ));

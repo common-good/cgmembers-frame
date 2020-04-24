@@ -20,11 +20,12 @@ function formFindCo($form, &$sta, $args = '') {
   $list = "<div class=\"cmpy-list\">$list</div>";
   
   $title = t('Companies in Your Region');
+  $subtext = t('<p>During the COVID-19 crisis, our local businesses need our support. Consider buying yourself some store credit (click a "Buy Credit" button). Then once the business reopens, every time you pay with your %PROJECT card, you automatically get a 50% rebate, which is then deducted from your store credit.</p><p>Or click a "Donate" button to support a local nonprofit. (To make regular purchases, sign in and click "Pay" on the menu.)</p>');
   $which = textFld(t('Search for:'), [t('Whatever'), t('Type part of company name or industry category')], dft(@$cos));
   $region = textFld(t('Where:'), [t('Start of postal code'), t('Type the first few characters of your postal code<br>For example, use 013 for Franklin County, Massachusetts; 05 for Vermont, etc.')], dft(@$where)); // or country name
   $submit = t('Find');
 
-  return cgform(compact(ray('title which region submit list')));
+  return cgform(compact(ray('title subtext which region submit list')));
 }
 
 function formFindCo_validate($form, &$sta) {
@@ -97,6 +98,7 @@ function participatingCompanies($rows) {
     <div class="cmpy-does">%desc</div>
   </div>
   <div class="cmpy-contact">%contact</div>
+  <div class="cmpy-buttons">%buttons</div>
 </div>
 X;
   $iModel = '<div class="cmpy-ind-wrapper"><div class="cmpy-ind">%industry</div>';
@@ -125,12 +127,24 @@ X;
       }
       $website = $a->website ? "http://$a->website" : "/member/$a->name";
       $name = w\lnk($website, $a->bestName);
+      $buttons = $a->coType == CO_NONPROFIT 
+      ? buttonHtml($a, t('Donate'), 'donate', 'success')
+      : buttonHtml($a, t('Buy<br>Credit'), 'credit', 'primary');
+/*      $buttons = buttonHtml($a, t('Buy Credit'), 'credit', 'danger')
+      . buttonHtml($a, t('Buy Gift'), 'gift', 'primary')
+      . buttonHtml($a, $a->coType == CO_NONPROFIT ? t('Donate') : t('Pay'), 'other', 'success');
+      */
       $contact = "$a->city, $a->st<br>$a->phoneDash";
       $new = ($a->activated > REQUEST_TIME - 9 * WEEK_SECS) ? $NEW : '';
       $img = $a->photoSrc(TRUE) ?: 'images/no-photo-available.jpg';
-      $res .= tr($model, '_name desc _contact img', "$name$new", $a->shortDesc, $contact, $img) . "\n";
+      $res .= tr($model, '_name _buttons desc _contact img', "$name$new", $buttons, $a->shortDesc, $contact, $img) . "\n";
     }
   }
   if (! $firstTime) $res .= '</div>';
   return $res;
+}
+
+function buttonHtml($a, $text, $for, $style) {
+  $class = "cgpay-$for";
+  return w\btn("/pay-with-cg/company=$a->mainQid&for=$for", $text, $style, '', compact('class') + away());
 }

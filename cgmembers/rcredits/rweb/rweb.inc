@@ -134,12 +134,11 @@ function formAccountPhoto($form, &$sta, $page = '', $args = '') {
   extract(just('qid orig', $args));
   list($zot, $type) = explode('-', $page);
 
-  header("Content-type: image/jpeg");
+  $a = nn($qid) ? r\acct($qid, $mya ? $mya->agentId : '') : ($mya ?: FALSE);
+  if ($a and ($a->co or $a->can(B_READ))) $photo = @$orig ? u\getFile($a->tempPhotoFilename) : $a->$type;
 
-  if ($a = $mya ? (@$qid ? r\acct($qid, $mya->agentId) : $mya) : FALSE) {
-    if ($a->co or $a->can(B_READ)) $photo = @$orig ? u\getFile($a->tempPhotoFilename) : $a->$type;
-  }
   $imgFlnm = ($mya and $mya->co) ? 'placeholder-co.png' : 'placeholder.png';
+  header("Content-type: image/jpeg");
 /**/  echo nn($photo) ?: \file_get_contents(R_ROOT . "/images/icons/$imgFlnm");
   return exit();
 }

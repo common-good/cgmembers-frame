@@ -1311,8 +1311,9 @@ function strhas($string, $what, $insensitive = FALSE) {
 }
 function strihas($string, $what) {return strhas($string, $what, TRUE);}
 
+function si(&$s, $i, $c) {$s = substr($s, 0, $i) . $c . substr($s, $i + 1);} // assign character
 function between($what, $low, $high) {return ($low <= $what and $what <= $high);}
-function nn(&$a, $else = '') {return (!isset($a) or is_null($a)) ? $else : $a;} // "not null"
+function nn(&$a, $else = '') {return (!isset($a) or is_null($a)) ? $else : $a;} // if null return something better
 /**/  function pr($whatever) {return print_r($whatever, TRUE);}
 function trace() {return pr(debug_backtrace());}
 

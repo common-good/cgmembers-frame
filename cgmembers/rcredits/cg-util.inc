@@ -158,7 +158,7 @@ function fmtAmt($amount, $opt = 's$') {
   $amount = number_format($amount + 0, $decimals);
   if ($amount == '-0.00') $amount = strhas($opt, '0') ? '0' : '0.00'; // this happens, for small negative amounts
   if (strhas($opt, '$')) $amount = '$' . $amount;
-  if (strhas($opt, 's') and strhas($amount, '.')) $amount = preg_replace('/\\.?0+$/', '', $amount); // works for pct too
+  if (strhas($opt, 's') and strhas($amount, '.')) $amount = preg_replace($pct ? '/\\.?0+$/' : '/\\.00/', '', $amount);
   if (strhas($opt, 'r')) $amount .= 'cg';
   if (strhas($opt, 'u')) $amount .= 'us';
   if ($pct) $amount .= '%';
@@ -966,9 +966,12 @@ function tableRow($row) {
 /**
  * Convert the given array to an HTML div row (for within class "container").
  */
-function ray2row($row) {
-  $row = join('</div><div class="cell">', $row);
-  return '<div class="row"><div class="cell">' . $row . "</div></div>\n";
+function ray2row($row, $classes = []) {
+  foreach ($row as $i => $v) {
+    if ($class = nn($classes[$i])) $class = ' ' . $class;
+    $res[] = "<div class=\"cell$class\">$v</div>";
+  }
+  return '<div class="row">' . join('', nn($res, [])) . "</div>\n";
 }
 
 /**

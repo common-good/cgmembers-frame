@@ -130,27 +130,38 @@ function doit(what, vs) {
     break;
     
   case 'cgbutton':
-    cgbutton(2);
+    cgbutton();
+    $('#edit-item').focus();
     $('.form-item-button input').click(function () {cgbutton($(this).val());});
     $('#edit-item, #edit-text, #edit-amount, #edit-size').change(function () {cgbutton($('.form-item-button input:checked').val());});
+    $('.form-item-for input').click(function () {
+      var val = $(this).val();
+      $('#edit-for').val(vs['forVals'].split(',')[val]);
+      $('.form-item-item, .form-item-amount').toggle(val == 2);
+      $(val == 2 ? '#edit-item' : '#edit-size').focus();
+      cgbutton();
+    });
+    
     $('#edit-amount, #edit-size').keypress(function (e) {return '0123456789.'.indexOf(String.fromCharCode(e.which)) >= 0;});
 
     function cgbutton(type) {
+      if (type == undefined) type = 2;
       var isButton = (type == 2);
       $('.form-item-size').toggle(isButton);
       $('.form-item-text').toggle(!isButton);
       $('.form-item-example').toggle(!isButton);
       
       var url = baseUrl + '/pay-with-cg';
+      var fer = 'credit gift other'.split(' ')[$('input[name="for"]:checked').val()];
       var item = encodeURI($('#edit-item').val());
       var text = htmlEntities($('#edit-text').val());
       var size = $('#edit-size').val().replace(/\D/g, '');
       var amt = $('#edit-amount').val().replace(/\D/g, '');
       var img = isButton ? '<img src="https://cg4.us/images/buttons/cgpay.png" height="' + size + '" />' : text;
-      style = (type == 0 || type == 2) ? '' : ' style="display:inline-block; background-color:darkgreen; border-radius:5px; border:1px solid forestgreen; color:white; font-family:Arial; font-size:17px; padding:8px 15px; text-decoration-line:none;"';
-      var html = vsprintf('<a href="%s/company=%s&item=%s&amount=%s"%s target="_blank">%s</a>', [url, vs['qid'], item, amt, style, img]);
+      var style = (type == 0 || type == 2) ? '' : ' style="display:inline-block; background-color:darkgreen; border-radius:5px; border:1px solid forestgreen; color:white; font-family:Arial; font-size:17px; padding:8px 15px; text-decoration-line:none;"';
+      var html = vsprintf('<a href="%s/company=%s&for=%s&item=%s&amount=%s"%s target="_blank">%s</a>', [url, vs['qid'], fer, item, amt, style, img]);
       
-      if (item != '' && (isButton ? size : text) != '') {
+      if ((isButton ? size : text) != '') {
         $('#edit-html').text(html);
         $('#button').html(html);
         $('.form-item-example .control-data').html(html);
@@ -287,7 +298,18 @@ function doit(what, vs) {
     suggestWho('[id^="edit-org"]', 1);
 
     $('[id^="edit-org"]').change(function () {$(this).parents('.row').next().css('display', 'table-row');});
-    $('[id^="edit-amt"]').change(function () {
+    
+    $('[id^="edit-when"]').change(function () {
+      var max = $(this).parents('.row').find('[id^="edit-max"]');
+      var pctmx = ($(this).find(':selected').val() == 'pctmx');
+      max.toggle(pctmx);
+      if (pctmx) {
+        max.focus();
+        $('.thead .cell.max').show();
+      } else { max.val('').parent().parent().next().find('input[name^="org"]').focus(); }
+    });
+    
+/*    $('[id^="edit-amt"]').change(function () {
       var s = $(this).val();
       if (!s.match(/^$|^\$[0-9.]+$|^[0-9.]+%$/)) {
         $.alert('You must type a number with $ at the beginning or % at the end.', 'Try again');
@@ -300,10 +322,10 @@ function doit(what, vs) {
       var max = $(this).parents('.row').find('[id^="edit-max"]');
       if (has(val, '%')) max.prop('disabled', false);
       if (has(val, '$')) max.prop('disabled', true);
-      
+    
     });
-    $('[id^="edit-amt"]').change();
-
+    $('[id^="edit-amt"]').change(); */
+    
     break;
 
   case 'groups':

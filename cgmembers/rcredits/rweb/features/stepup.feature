@@ -13,19 +13,19 @@ Setup:
   | .ZZG | Glo Co   | ok,confirmed,co  | 0       |
   | .ZZH | Hip Co   | ok,confirmed,co  | 0       |
 
-Scenario: A member chooses to Step Up
+Scenario: A member chooses a per-transaction Step Up
   Given member ".ZZF" has "%STEPUP_MIN" stepup rules
   And member ".ZZG" has "%(%STEPUP_MIN+1)" stepup rules
   When member ".ZZB" visits page "settings/stepup"
   Then we show "Step Up" with:
-  | Organization | $ or % | Max |
-  | Fox Co       |        |     |
-  | Glo Co       |        |     |
+  | Organization | Amount | Whe | Max |
+  | Fox Co       |        |     |     |
+  | Glo Co       |        |     |     |
   
   When member ".ZZB" steps up with:
-  | .ZZF   | $1 |   |
-  | .ZZG   | $2 |   |
-  | Hip Co | 3% | 4 |
+  | .ZZF   | 1 | tx$   |   |
+  | .ZZG   | 2 | tx$   |   |
+  | Hip Co | 3 | pctmx | 4 |
   Then we say "status": "info saved"
   And these "tx_rules":
   | id        | %(%STEPUP_MIN*2+2) | %(%STEPUP_MIN*2+3) | %(%STEPUP_MIN*2+4) |**
@@ -76,3 +76,40 @@ Scenario: A member's rules come into play
   |   2 |   1 | %today  | 1      | .ZZB  | .ZZF  | %STEPUP_DESC | 1    | %E_DONATION |
   |   3 |   1 | %today  | 2      | .ZZB  | .ZZG  | %STEPUP_DESC | 2    | %E_DONATION |
   |   4 |   1 | %today  | 2      | .ZZB  | .ZZH  | %STEPUP_3PCT | 3    | %E_DONATION |
+
+Scenario: A member chooses recurring and per-transaction donations
+  When member ".ZZB" steps up with:
+  |~org    |~amt |~when  |~max |
+  | .ZZF   | 1   | pct   |     |
+  | .ZZG   | 2   | tx$   |     |
+  | .ZZH   | 3   | pctmx | 4   |
+  | .ZZG   | 4   | week  |     |
+  | .ZZG   | 5   | pct   |     |
+  | .ZZC   | 6   | tx$   |     |
+  Then we say "status": "info saved"
+
+  When member ".ZZB" visits page "settings/stepup"
+  Then we show "Step Up" with:
+  | Organization | Amount | Whe          | Max |
+  | Cor Pub      | 6      | $ per tx     |     |
+  | Fox Co       | 1      | % per tx     |     |
+  | Glo Co       | 5      | % per tx     |     |
+  | Glo Co       | 4      | week         |     |
+  | Hip Co       | 3      | % / tx up to | $4  |
+  
+  When member ".ZZB" steps up with:
+  |~org    |~amt |~when  |~max |
+  | .ZZC   | 0   | tx$   |     |
+  | .ZZF   | 1   | pct   |     |
+  | .ZZG   | 2   | tx$   |     |
+  | .ZZH   | 3   | pctmx | 4   |
+  | .ZZG   | 0   | week  |     |
+  | .ZZG   | 5   | pct   |     |
+  Then we say "status": "info saved"
+  
+  When member ".ZZB" visits page "settings/stepup"
+  Then we show "Step Up" with:
+  | Organization | Amount | Whe          | Max |
+  | Fox Co       | 1      | % per tx     |     |
+  | Glo Co       | 5      | % per tx     |     |
+  | Hip Co       | 3      | % / tx up to | $4  |
