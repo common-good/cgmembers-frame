@@ -301,9 +301,9 @@ function doit(what, vs) {
     
     $('[id^="edit-when"]').change(function () {
       var max = $(this).parents('.row').find('[id^="edit-max"]');
-      var maxt = ($(this).find(':selected').val() == 'maxt');
-      max.toggle(maxt);
-      if (maxt) {
+      var pctmx = ($(this).find(':selected').val() == 'pctmx');
+      max.toggle(pctmx);
+      if (pctmx) {
         max.focus();
         $('.thead .cell.max').show();
       } else { max.val('').parent().parent().next().find('input[name^="org"]').focus(); }
