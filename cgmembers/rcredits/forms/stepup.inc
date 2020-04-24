@@ -21,19 +21,20 @@ function formStepUp($form, &$sta, $args = '') {
   $title = t('Step Up');
   $subtext = t('<p>Support your favorite causes by paying a little extra on your %PROJECT purchases.</p><p>Choose organizations from the list below and/or add your own choices. Type a dollar amount or percentage to add to each purchase &mdash; to be donated to that organization. You can also set a maximum donation per transaction or choose to donate periodically instead.</p><p>If you would like to see your nonprofit or project on this list, get %STEPUP_MIN people to write it in.</p>', '_a', atag('/community/invite', away()));
   
-  $mine = 'from=:myid';
-  foreach (ray('amount portion amtMax') as $k) $set[] = "IF(r.$mine, r.$k, NULL) AS `$k`";
+  $fromMe = '`from`=:myid';
+  foreach (ray('amount portion amtMax') as $k) $set[] = "IF(r.$fromMe, r.$k, NULL) AS `$k`";
   $set = join(', ', $set);
   
+  // xly means recurring with some periodicity: daily, weekly, etc. ("x"-ly)
   $sql = <<< X
     SELECT * FROM (
-      SELECT 0 AS xly, CONCAT_WS('-', 'r', uid, r.$mine) AS recK, r.to, id, action,
-        IF(r.portion>0, IF(amtMax>0, 'pctmx', 'pct'), 'tx$') AS `when`, uid, fullName, r.$mine AS mine, $set
+      SELECT 0 AS xly, CONCAT_WS('-', 'r', uid, r.$fromMe) AS recK, r.to, id, action,
+        IF(r.portion>0, IF(amtMax>0, 'pctmx', 'pct'), 'tx$') AS `when`, uid, fullName, r.$fromMe AS mine, $set
       FROM tx_rules r LEFT JOIN users u ON u.uid=r.to
       WHERE r.action=:ACT_SURTX AND r.from>0 AND r.to>0 AND r.payeeType=:REF_ANYCO AND IFNULL(r.end, :NOW+1) > :NOW
       UNION 
-      SELECT 1 AS xly, CONCAT_WS('-', 't', uid, t.$mine) AS recK, t.to, id, action,
-        t.period AS `when`, uid, fullName, t.$mine AS mine, amount, t.portion, amtMax
+      SELECT 1 AS xly, CONCAT_WS('-', 't', uid, t.$fromMe) AS recK, t.to, id, action,
+        t.period AS `when`, uid, fullName, t.$fromMe AS mine, amount, t.portion, amtMax
       FROM tx_templates t LEFT JOIN users u2 ON u2.uid=t.to
       WHERE t.action=:ACT_PAY AND t.from>0 AND t.to>0 AND t.period<>'once' AND IFNULL(t.end, :NOW+1) > :NOW
     ) x    
