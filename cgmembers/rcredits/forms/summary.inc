@@ -391,10 +391,10 @@ function adminSummary() {
 
       $donations = item($mya->giftsDesc() ?: t('none'), t('Donations:'));
       
-//      $creditLimit = textFld(t('Credit limit:'), '', dft(u\fmtAmt(-$mya->floor)));
+//      $creditLimit = numFld(t('Credit limit:'), '', dft(u\fmtAmt(-$mya->floor)));
 //      if ($mya->stepsDone['prefs']) { // don't even look at these if newbie hasn't chosen yet
-//        $minimum = textFld(t('Minimum:'), '', dft(u\fmtAmt($mya->minimum)));
-//        $achMin = textFld(t('ACH Min:'), '', dft(u\fmtAmt($mya->achMin ?: R_ACHMIN_DEFAULT, 's')));
+//        $minimum = numFld(t('Minimum:'), '', dft(u\fmtAmt($mya->minimum)));
+//        $achMin = numFld(t('ACH Min:'), '', dft(u\fmtAmt($mya->achMin ?: R_ACHMIN_DEFAULT, 's')));
 //      }
       $minimum = item(u\fmtAmt($mya->minimum), t('Target Bal:'));
       $achMin = item(u\fmtAmt($mya->achMin), t('ACH Min:'));
@@ -494,9 +494,9 @@ function adminSummary() {
     } else $notes = item(str_replace("\n", '<br>', $mya->notes), t('Notes:'));
 
     $note = areaFld(t('New Note:'), [t('Type a Note Here'), t('Abbreviations: PM=phone msg EM=email msg. Be sure to say what you left a message <i>about</i> (for example "PM setup")')]);
-    $dob = ($mya->superAdmin or !$mya->hasDob) ? textFld(t('Birth Date:'), [t('mm/dd/yyyy')], dft($mya->hasDob ? u\fmtDate($mya->dob, TRUE) : '') + autofill('off')) : NULL;
+    $dob = ($mya->superAdmin or !$mya->hasDob) ? dateFld(t('Birth Date:'), [t('mm/dd/yyyy')], dft($mya->hasDob ? u\fmtDate($mya->dob, TRUE) : '') + autofill('off')) : NULL;
     $suffix = submitTickle(1, t('Wait a day')) . submitTickle(2, t('2 days')) . submitTickle(7, '7') . submitTickle(30, '30') . submitTickle('', t('Auto')) . ' &nbsp; ' . submitTickle($mya->tickle ? 'NONE' : '', t('Save'), 'sm');
-    $tickle = textFld(t('Tickle:'), [t('Followup Date'), t('When to follow up ("Auto" sets an automatic Welcome or Annual date)')], dft($mya->tickle ? u\fmtDate($mya->tickle, TRUE) : '') + w\suffix($suffix));
+    $tickle = dateFld(t('Tickle:'), [t('Followup Date'), t('When to follow up ("Auto" sets an automatic Welcome or Annual date)')], dft($mya->tickle ? u\fmtDate($mya->tickle, TRUE) : '') + w\suffix($suffix));
     $source = item($mya->source, t('Source:'));
   }
 

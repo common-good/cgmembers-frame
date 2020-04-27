@@ -14,7 +14,6 @@ function formStepUp($form, &$sta, $args = '') {
   
   extract(just('er', $args, NULL));
   $dfts = $er ? urlq2ray(u\deurlify($er)) : []; // get defaults from error or from tests
-  rendA("amt7", amtFld(3838));
   
   jsx('stepup');
   
@@ -177,6 +176,6 @@ function whenly($when = '') {
 }
   
 function orgFld($dft = '') {return textFld(BARE, [t('Organization name')], dft($dft));}
-function amtFld($dft = '') {return textFld(BARE, [t('Amount')], dft($dft));}
+function amtFld($dft = '') {return numFld(BARE, [t('Amount')], dft($dft));}
 function whenFld($dft = '') {return selectFld(BARE, '', dft($dft), whenly());}
-function maxFld($dft = '') {return textFld(BARE, [t('Max')], dft($dft));}
+function maxFld($dft = '') {return numFld(BARE, [t('Max')], dft($dft) + vmin(.01));}

@@ -42,7 +42,7 @@ function formInvest($form, &$sta, $args = '') {
     $requests = item(u\fmtAmt($reqTot), t('Requests to Cash Out (%reqCount):', compact('reqCount')), '', suffix($btnCashout));
 		$investments = item(u\fmtAmt($investments), t('Investments (%invCount):', compact('invCount')), '', suffix($btnList . $btnPropose));
 		$lossReserve = item(u\fmtAmt($reserve - $clubA->minimum), t('Loss Reserve:'));
-		$expenseReserve = textFld(t('Expense Reserve:'), '', required(u\fmtAmt($clubA->minimum)) + suffix($btnSave));
+		$expenseReserve = numFld(t('Expense Reserve:'), '', required(u\fmtAmt($clubA->minimum)) + suffix($btnSave));
     $avail = item(u\fmtAmt($clubVal - $stakes), t('Available for Dividends:'), '', suffix($btnDividends));
 		$clubVal = item(u\fmtAmt($clubVal), t('Club Net Value:'));
     $stakes = item(u\fmtAmt($stakes), t('Total Member Stakes (%members):', compact('members')));
@@ -54,7 +54,7 @@ function formInvest($form, &$sta, $args = '') {
     $request += 0; // enable if($request)
     $stake += 0;
     $buttons = btn("/invest/list/clubqid=$clubqid", t('List Investments'), 'success');
-    $amount = textFld($stake ? t('Buy or sell:') : t('Invest:'), [t('Amount'), t('If you reduce your investment amount, that request will take effect when funds become available.') . $request ? t('  Whatever amount you request here will be in addition to your current request.') : ''], required()); // must be before request item
+    $amount = numFld($stake ? t('Buy or sell:') : t('Invest:'), [t('Amount'), t('If you reduce your investment amount, that request will take effect when funds become available.') . $request ? t('  Whatever amount you request here will be in addition to your current request.') : ''], required()); // must be before request item
     $myRequest = $request ? item(u\fmtAmt($request), t('Change request:'), t('Your pending request to %change your investment', 'change', $request < 0 ? t('reclaim part of') : t('increase'))) : NULL;
 //    $togAttrs = ray('on off offstyle', t('Sell'), t('Buy'), 'warning');
 //    $buyorsell = togFld('buysell', t('Buy or Sell:'), '', 1, $togAttrs);

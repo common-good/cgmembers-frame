@@ -236,7 +236,7 @@ function formMakeCtty($form, &$sta) {
   $zips = textFld(t('Zip Regex:'), [t('Zipcodes to include'), t('|Type a regular expression for all zipcodes to be included (by default) in the community. For example, ^013|01002 would include all zipcodes starting 013 plus zipcode 01002. Individual members can also be moved manually in or out of this community.')]);
 
   // from w\contactFields
-  $phone = textFld(t('Phone:'), [t('Contact phone number')], required(@$phone ? u\fmtPhone($phone): ''));
+  $phone = phoneFld(REQ . t('Phone:'), [t('Contact phone number')], dft($phone));
   $postalAddr = textFld(t('Postal Addr:'), [t('Complete mailing address'), t('Where does the post office send your mail (usually)?')], required(@$postalAddr));
 
   $submit = submit();
@@ -873,7 +873,7 @@ function memberId($id, $agent = '', $retroactive = FALSE) {
 function formSMS($form, &$sta) {
   $title = t('Test SMS');
   $myNumber = svar('lastSMS');
-  $number = textFld(t('From (number): '), '', required($myNumber));
+  $number = phoneFld(t('From (number): '), '', required($myNumber));
   $message = textFld(t('Message: '));
   $submit = t('Send it!');
 

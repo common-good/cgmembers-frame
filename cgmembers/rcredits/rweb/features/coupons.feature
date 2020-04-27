@@ -19,55 +19,21 @@ Scenario: A member company creates a gift coupon
   | .ZZC |           8 |
   When member ".ZZC" completes form "community/coupons/type=gift" with values:
   | type | amount | count |*
-  | gift |     10 |    20 |
+  | gift |     10 |     3 |
   Then these "tx_rules":
   | id | payerType | payeeType | from   | to           | amount | portion | useMax | code |*
   |  1 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |    8 |
   |  2 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |    9 |
   |  3 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   10 |
-  |  4 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   11 |
-  |  5 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   12 |
-  |  6 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   13 |
-  |  7 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   14 |
-  |  8 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   15 |
-  |  9 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   16 |
-  | 10 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   17 |
-  | 11 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   18 |
-  | 12 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   19 |
-  | 13 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   20 |
-  | 14 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   21 |
-  | 15 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   22 |
-  | 16 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   23 |
-  | 17 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   24 |
-  | 18 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   25 |
-  | 19 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   26 |
-  | 20 | anybody   | anybody   | .ZZC   | %MATCH_PAYER |     10 | 0       | 1      |   27 |
 
 #  And member ".ZZC" visits page "community/coupons/print/type=gift&amount=10&useMax=1&count=20", which results in:
   When member ".ZZC" visits page "community/coupons/print/type=gift&amount=10&count=20"
   And members have:
   | uid  | giftCoupons |*
-  | .ZZC |          28 |
+  | .ZZC |          11 |
   When member ".ZZC" visits page "community/coupons/list"
   Then we show "Discounts and Gift Certificates From You" with:
   | Type | Amount | On               | Starting | Ending     | Min Purchase | Max Uses |~Action  |
-  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
-  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
-  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
-  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
-  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
-  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
-  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
-  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
-  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
-  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
-  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
-  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
-  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
-  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
-  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
-  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
-  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
   | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
   | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
   | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |

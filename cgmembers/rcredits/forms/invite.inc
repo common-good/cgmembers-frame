@@ -55,7 +55,7 @@ EOF
   $subtext = $subtext2 . $warning;
 //  $contact = textFld(t('Email or Cell:'), t('An email address or cell number for the person you want to invite'), required());
 
-  $email = textFld(t('Email:'), [t('Their email address'), t('An email address for the person you want to invite')]);
+  $email = emailFld(t('Email:'), [t('Their email address'), t('An email address for the person you want to invite')]);
 //  $emails = areaFld(t('Email(s):'), t('A comma-separated list of email addresses to invite'));
   $dupsOk = $mya->cAdmin ? boolFld(t('Dups Okay?'), '', FALSE) : NULL;
   $trusted = boolFld(t('Trusted?'), t('If you lent this person (or people) $250, would you trust them to pay it back?'), $mya->cAdmin ?: NULL);

@@ -31,7 +31,7 @@ X
   $choices[-1] = t('Other');
   $minDesc = t(' (minimum $1)');
   $amtChoice = selectFld(t('Amount:'), '', required($dft) + suffix($minDesc), $choices);
-  $amount = textFld(t('Amount:'), [t('Amount to back')], suffix($minDesc));
+  $amount = numFld(t('Amount:'), [t('Amount to back')], suffix($minDesc));
 //  $signedBy = w\signedBy();
   $date = item(u\fmtDate(NULL, TRUE), t('Date:'));
   $posttext = t('<b>Note:</b> Every year you will be invited to make another backing promise for the next 12 months.');

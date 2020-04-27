@@ -42,7 +42,7 @@ function formReconcileManually($form, &$sta, $args = '') {
     $type = $batch[0] == 'B' ? t('BAD') : ($batAmt < 0 ? t('OUT') : t('IN'));
     $form[$id] = boxFld($id, u\fmtAmt($batAmt), "<b>$type</b> $batDt: $list", 0);
   }
-  $form['offset'] = textFld(t('Create offset tx:'), [t('Amount')]);
+  $form['offset'] = numFld(t('Create offset tx:'), [t('Amount')], min('any'));
   $form['memo'] = textFld(t('Memo:'), [t('Description'), t('A positive amount here reflects a positive transaction reported by the bank, that has no bearing on any %PROJECT account.')]);
   $form['submit'] = t('Match');
   

@@ -12,6 +12,10 @@
 .thead .row {background-color:#04488B; color:white;}
 .thead .cell {border-right:1px solid white;}
 
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {-webkit-appearance:none; margin:0;}
+input[type=number] {-moz-appearance:textfield;}
+
 @keyframes puff {
     from {opacity:0; font-size:0%;}
     to {opacity:1; font-size:100%;}

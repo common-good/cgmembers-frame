@@ -14,6 +14,8 @@ function formFood($form, &$sta, $args = '') {
   extract(just('welcome', $args));
   $mya = w\eLinkAcct($sta, $args, 'any');
 
+  return w\softErr(t('That link is out of date. Please sign in to your %PROJECT account and select "Step up" on the Settings menu.'));
+  
   $oftens = array_reverse(ray(OFTENS));
   unset($oftens['X']); // no one-time donation here
   
@@ -85,12 +87,12 @@ X
 
     $accountId = $pass = NULL;
     $food0 = $mya->food * 100;
-    $food = textFld(t('Contribution Percentage:'), [t('Percentage')], dft($food0 ?: '') + suffix(' %'));
+    $food = numFld(t('Contribution Percentage:'), [t('Percentage')], dft($food0 ?: '') + suffix(' %'));
     $or = item(t('AND / OR'));
       
 //    $amtChoice = selectFld(t('Donation:'), '', required($mya->co ? R_COMPANY_GIFT : R_INDIVIDUAL_GIFT), $giftLevels);
     $amtChoice = selectFld(t('Donation:'), '', dft($amtChoice0), $giftLevels);
-    $amount = textFld(t('Donation:'), [t('Amount')], dft($amount0));
+    $amount = numFld(t('Donation:'), [t('Amount')], dft($amount0));
     $period = selectFld(t('How often:'), '', dft($period0), $oftens);
     $submit = submit();
   } else {$subtext = t('You do not have permission to use this page.');}

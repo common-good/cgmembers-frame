@@ -36,7 +36,7 @@ function formTx($form, &$sta, $args = '') {
   if (!$buttons) unset($buttons);
   $who = textFld($opDesc . t(' whom:'), [t('name, id, email, or phone')], required(@$who));
 
-  $amount = textFld(t('Amount:'), [t('amount to ') . mb_strtolower($opDesc)], required(@$amount));
+  $amount = numFld(REQ . t('Amount:'), [t('amount to ') . mb_strtolower($opDesc)], dft(@$amount) + vmin(.01));
 /*  $goodsOpts = ray(R_WHYS);
   unset($goodsOpts[FOR_SHARE]); // this gets set only automatically
   */

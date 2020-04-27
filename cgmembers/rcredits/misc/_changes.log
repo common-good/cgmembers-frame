@@ -1,3 +1,8 @@
+2020-04-27 feature/input-types
+. made use of HTML3 specialized input types (number, tel, etc)
+. fixed typo bug in acct::needsSsnFor()
+. miscellaneous cleanup of calls to field functions
+
 2020-04-23 feature/donation-tweaks
 . Added option for recurring donations to stepup page
 . For active accounts, completion of a "step" redirects to the same page instead of summary page

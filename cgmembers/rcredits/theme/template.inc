@@ -343,13 +343,13 @@ $core
 EOF;
 }
 
-function rcredits_textfield($variables, $type = 'text') {
-  cgSetAttrs($variables['element'], ray('id name value size maxlength'));
-//  extract(cgElement($variables, 'attributes autocomplete_path required help class submitButton'));
-  extract(cgElement($variables, 'attributes required help class submitButton'));
+function rcredits_textfield($vs) {
+  cgSetAttrs($vs['element'], ray('id name class value size maxlength step min max autocomplete disabled index enctype pattern'));
+  extract(cgElement($vs, 'attributes required help class submitButton subtype'));
 
-  if (@$submitButton) return rcredits_submit($variables);
-  if (@$required) $attributes['required'] = 'yes'; // don't add this in unless it is yes
+  if (nn($submitButton)) return rcredits_submit($vs);
+  if (nn($required)) $attributes['required'] = 'yes'; // don't add this in unless it is yes
+  if (nn($subtype)) $attributes['type'] = $subtype; // num, tel, email, date, etc.
   $class[] = 'form-control input-md';
   if (is_array($ray = @$help)) {
     if (@$ray[0] and !@$ray[2]) $ray[2] = $ray[0]; // hover text defaults to same as hint
@@ -357,11 +357,7 @@ function rcredits_textfield($variables, $type = 'text') {
       if ($k != 'desc' and $v = $ray[$i]) $attributes[$k] = $v;
     }
   }    
-
-//  if ($extra = rcAuto(@$autocomplete_path, @$attributes['id'])) $class[] = 'form-autocomplete';
-
-  $tribs = u\tribs(compact('type', 'class') + $attributes);
-//  return "<input $tribs />" . $extra;
+  $tribs = u\tribs(compact('class') + $attributes);
   return "<input $tribs />";
 }
 

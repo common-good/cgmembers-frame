@@ -392,23 +392,64 @@ function formatField($k, $v) {
   return $v;
 }
 
-// old
-function fld($type, $label = '', $help = '', $other = [], $options = NULL) {
-  if (@$label[0] == REQ) list ($required, $label) = ['yes', substr($label, 1)];
-  if ($bare = (@$label[0] == BARE)) $label = substr($label, 1); // bare? (no div wrapper)
-  if (!is_array($other)) $other = [$type == 'item' ? 'markup' : 'value' => $other];
-  if (nn($other['wrap'])) $bare = FALSE;
-  $title = nn($other['title']) ?: $label;
-  unset($other['title']);
+/**
+ * Create a Drupal field array.
+ * Calls (typically from a helper function like numFld or selectFld):
+ *   fld(type, args)
+ *   fld(type, label, help, value)
+ *   fld(type, label, help, other, options)
+ * @param string $type: field type (text num pass area tel date email range radios select submit item hidden file checkbox)
+ *   optionally preceded by REQ and/or BARE (single characters) in that order
+ *   REQ means the field is required, BARE means don't wrap the field in a div (overrideable by wrap => TRUE in $other)
+ * @param assoc $args: all other arguments besides type
+ * @param assoc $label: textual prompt to precede the field
+ * @param mixed $help: help string to go below the field or [placeholder, help] or [placeholder, help, hover text]
+ * @param assoc $x: additional attributes
+ * @param assoc $options: options for select, radio buttons, or checkboxes
+ * @return the field array
+ */
+function fld($type, $label = '', $help = '', $x = [], $options = []) {
+  if (is_array($label)) list ($label, $help, $x, $options) = $label + ['', '', [], []];
+  if (!is_array($x)) $x = [$type == 'item' ? 'markup' : 'value' => $x];
+
+  if ($type == 'int') u\setDft($x['step'], 1);
+  $type = strtr($type, ray('text:textfield, num:number, int:number, pass:password, area:textarea, phone:tel'));
+  if (in($subtype = $type, 'number tel date email range')) {
+    if ($type == 'tel') {
+      if (nn($x['default_value'])) $x['default_value'] = u\fmtPhone($x['default_value'], '-');
+    } elseif ($type == 'number') {
+      u\setDft($x['step'], .01);
+      u\setDft($x['min'], 0);
+    }
+    $x += compact('subtype');
+    $type = 'textfield';
+  }
+  if ($type == 'select') u\setDft($x['default_value'], $options ? key($options) : ''); // Drupal's select fails without a default
   
-  if ($type == 'select' and !isset($other['default_value'])) $other['default_value'] = $options ? key($options) : ''; // Drupal's select fails without a default
-  $title_display = 'before';
-  $field = u\prefixKeys('#', $other + @compact(ray('type title title_display required bare help options')));
+  if (@$label[0] == REQ) list ($x['required'], $label) = ['yes', substr($label, 1)];
+  if ($bare = (@$label[0] == BARE)) $label = substr($label, 1); // bare? (no div wrapper)
+  if (nn($x['wrap'])) $bare = FALSE;
+  u\setDft($x['title'], $label); 
+  $x['title_display'] = 'before';
+  
+  $field = u\prefixKeys('#', $x + compact(ray('type bare help options')));
 
   return $field;
 }
 
-// Plan: move all theme functions here. Output each page as a single item(). Each field type function should have a nogroup option (start label with -) and an easier required option (start label with star)
+function textFld() {return fld('text', func_get_args());}
+function passFld() {return fld('pass', func_get_args());}
+function areaFld() {return fld('area', func_get_args());}
+function numFld() {return fld('num', func_get_args());}
+function intFld() {return fld('num', func_get_args());}
+function phoneFld() {return fld('phone', func_get_args());}
+function dateFld() {return fld('date', func_get_args());}
+function emailFld() {return fld('email', func_get_args());}
+function rangeFld() {return fld('range', func_get_args());}
+function radiosFld() {return fld('radios', func_get_args());}
+function selectFld() {return fld('select', func_get_args());}
+
+// Plan: move all theme functions here. Output each page as a single item(). Each field type function should have a nogroup option (start label with -)
 function submit($title = '', $style = '', $size = '', $other = []) {
   if (!$style) $style = 'primary';
   if (!$size) $size = 'md';
@@ -456,14 +497,8 @@ function NEWitem($value, $title = '', $desc = '', $other = []) {return fld('item
 function item($markup, $title = '', $desc = '', $other = []) {return fld('item', $title, $desc, compact('markup') + $other);}
 function hidFld($value = '', $other = []) {return fld('hidden', '', '', compact('value') + $other);}
 function NEWtextFld($label = '', $desc = '', $other = []) {return fld('text', $label, $desc, $other);}
-function textFld($label = '', $desc = '', $other = []) {return fld('textfield', $label, $desc, $other);}
-function passFld($label = '', $desc = '', $other = []) {return fld('password', $label, $desc, $other);}
-function areaFld($label = '', $desc = '', $other = []) {return fld('textarea', $label, $desc, $other);}
-function radiosFld($label, $desc, $other, $options) {return fld('radios', $label, $desc, $other, $options);}
-function selectFld($label, $desc, $other, $options = []) {return fld('select', $label, $desc, $other, $options);}
-function fileFld($label = '', $desc = '', $extra = []) {return fld('file', $label, $desc, $extra + attrib(ray('enctype', 'multipart/form-data')));}
-//function htmlFld($label = '', $desc = '', $dft = '', $other = []) {return fld('text_format', $label, $desc, ['format' => 'filtered_html'] + dft(strtr($dft, ["\r" => '', "\n" => '', '<br>' => PHP_EOL, "\0" => ''])) + $other);}
-//function htmlFld($label = '', $desc = '', $other = []) {return areaFld($label, $desc, $other);}
+
+function fileFld($label = '', $desc = '', $extra = []) {return fld('file', $label, $desc, $extra + ray('enctype', 'multipart/form-data'));}
 function dataFld($id, $data) {return item(w\tags('div', "<!--$data-->", compact('id')));}
 function boxFld($name, $label = '', $desc = '', $dft = NULL, $other = []) {
   $fld = fld('checkbox', $desc, '', compact('name') + dft(@$dft) + $other);
@@ -475,7 +510,8 @@ function togFld($name, $label = '', $desc = '', $dft = NULL, $other = []) {
   extract(just($ks = 'on off onstyle offstyle size', $other));
   foreach (ray($ks, t('Yes'), t('No'), 'success', 'default', 'mini') as $k => $v) u\setDft($$k, $v);
   
-  return boxFld($name, $label, $desc, $dft, $other + w\attrib(ray("data-toggle:togglel,data-on:$on,data-off:$off,data-onstyle:$onstyle,data-offstyle:$offstyle,data-size:$size")));
+  $other['attributes'] = ray("data-toggle:togglel,data-on:$on,data-off:$off,data-onstyle:$onstyle,data-offstyle:$offstyle,data-size:$size");
+  return boxFld($name, $label, $desc, $dft, $other);
 }
 
 /**
@@ -736,7 +772,7 @@ function pickPassword($reset = TRUE, $req = '') {
   global $mya;
   $pass1 = textFld($req . ($reset ? t('New password:') : t('Choose a Password:')), '', clas('password-field') + autofill('off'));
   $pass2 = textFld($req . ($reset ? t('Confirm new password:') : t('Confirm password:')), '', clas('password-confirm') + autofill('off'));
-  $strong = hidFld(0, attrib(['id' => 'edit-strong']));
+  $strong = hidFld(0, ['id' => 'edit-strong']);
   focusOn('pass1');
   
   $password = [
@@ -914,9 +950,8 @@ function which($choices = '', $resultField = '', $info = '', $question = 'Which 
   if ($choices) return [];
   
   svar('pop', NULL); // called with no args (#3)
-//  $tribs['onchange'] = "this.form.elements['$pop_resultField'].value=this.options[this.selectedIndex].text; this.form.submit();";
   $tribs['size'] = 12;
-  $choice = selectFld('', '', w\attrib($tribs), $pop_choices);
+  $choice = selectFld('', '', $tribs, $pop_choices);
   $choice = render($choice);
   $legend = t('Which one?');
   $popup = item(w\modal('which', $legend, $pop_question, $choice, t('Cancel')));
@@ -1211,7 +1246,7 @@ function nameAndEmailFlds($co, $fullName = '', $email = '', $hideEmail = FALSE, 
   $legalName = textFld(t('Legal name:'), ["$who " . t('full legal name (if different)'), $who . t('legalname desc')]);
   if ($email and !emailOkay($email, FALSE, $myid ? r\acct($myid) : '')) $hideEmail = FALSE; // make sure they can fix it
   if (mb_strpos($email, '@' . EMAILX) and !test()) $hideEmail = FALSE; // handle placeholder for making joint accounts
-  $email = $hideEmail ? hidFld(@$email) : textFld(t('Email:'), [t('Email'), t('<b>Type carefully.</b> All emails from the system will be sent to this address. It will not be made public, but will be viewable by accounts you transact with (you can choose greater privacy by clicking "Advanced" on the Preferences step).')], required(@$email));
+  $email = $hideEmail ? hidFld(@$email) : emailFld(t('Email:'), [t('Email'), t('<b>Type carefully.</b> All emails from the system will be sent to this address. It will not be made public, but will be viewable by accounts you transact with (you can choose greater privacy by clicking "Advanced" on the Preferences step).')], required(@$email));
   jsx('legal-name');
   return compact(ray('fullName legalName email'));
 }
@@ -1268,14 +1303,13 @@ function contactFields($defaults = []) {
       print_state(this.options[this.selectedIndex].value,'','state2');
     ");
 */
-    $stateAttrib = $addressAttrib = $cityAttrib = $zipAttrib = [];
-    $phone = textFld(t('Phone:'), [t('Your phone number')], required(@$phone ? u\fmtPhone($phone): ''));
+    $phone = phoneFld(REQ . t('Phone:'), [t('Your phone number')], dft($phone));
 //    $faxetc = @$faxetc ? textFld(t('Fax etc:'), [t('Other contact info'),t('List other ways to contact you: fax, mobile, IM, etc. This field is NOT public.')], dft(@$faxetc)) : NULL;
 //    $country = selectFld(t('Country:'), t(''), dft(@$country) + $countryAttrib); // can't use required() here
 //    $country = selectFld(t('Country:'), t(''), dft(@$country)); // can't use required() here
     $physical = item('', t('Physical Address'));
-    $address = textFld(t('Street Address:'), [t('Physical address'), t('Where is your building located (physical address)?')], required(@$address) + $addressAttrib);
-    $city = textFld(t('City:'), [t('City where you live')], required(@$city) + $cityAttrib);
+    $address = textFld(t('Street Address:'), [t('Physical address'), t('Where is your building located (physical address)?')], required(@$address));
+    $city = textFld(t('City:'), [t('City where you live')], required(@$city));
     $state = stateFld(nn($state)); // can't use required() here
     $zip = zipFld(nn($zip));
     
@@ -1285,10 +1319,10 @@ function contactFields($defaults = []) {
 //    : w\boxFld('sameAddr', t('Mailing Address'), t('same as above'), 0, w\onchange('setPostalAddr(true)'));
     
     $postalAddr = hidFld();
-    $address2 = textFld(t('Street Address:'), [t('Postal street address')], required(@$address2) + $addressAttrib);
-    $city2 = textFld(t('City:'), [t('Postal city')], required(@$city2) + $cityAttrib);
+    $address2 = textFld(t('Street Address:'), [t('Postal street address')], required(@$address2));
+    $city2 = textFld(t('City:'), [t('Postal city')], required(@$city2));
     $state2 = stateFld(nn($state2));
-    $zip2 = textFld(t('Postal Code:'), [t('Postal code'), ''], required(@$zip2) + $zipAttrib);
+    $zip2 = textFld(t('Postal Code:'), [t('Postal code'), ''], required(@$zip2));
     
     $other = $step0 ? item('', t('Other Information')) : NULL;
     if ((!@$mya or !$mya->co) and !nn($source)) {
@@ -1296,10 +1330,9 @@ function contactFields($defaults = []) {
     } else $source = hidFld(nn($source));
   }
 
-//  $tenure = (in('tenure', $fieldsToHide) or !$step0) ? NULL : textFld(t('How long:'), [t('MONTHS at current address.'), t('How long have you been at your current address, in months (roughly)')], required(@$tenure));
   if (!in('tenure', $fieldsToHide) and $step0) {
-    $years = textFld(BARE, [t('Years')], suffix(t('&nbsp years + ')));
-    $months = textFld(BARE, [t('Months')], dft(nn($tenure)) + suffix(t('&nbsp months')));
+    $years = intFld(BARE, [t('Years')], suffix(t('&nbsp years + ')));
+    $months = intFld(BARE, [t('Months')], dft(nn($tenure)) + suffix(t('&nbsp months')));
     $tenure = fieldSet('tenure2', compact('years', 'months'), t('How long:'), t('How long have you been at your current address (roughly)'));
   } else {$tenure = NULL;}
 
@@ -1364,10 +1397,10 @@ function ssnFields($personal = TRUE, $required = []) {
   if ($personal) {
     $ssReason = $required ? t('Required by the IRS if you accept more than $20,000 a year in payments through %PROJECT ($600 a year in MA and VT).') : '';
     $federalId = passFld(t('ssTitle'), [t('ssDesc'), $ssReason], $required + autofill('off'));
-    $dob = textFld(t('Birth Date:'), [t('Your birth date'), t('Your date of birth (mm/dd/yyyy)')], $required + autofill('off'));
+    $dob = dateFld(t('Birth Date:'), [t('Your birth date'), t('Your date of birth (mm/dd/yyyy)')], $required + autofill('off'));
   } else {
     $federalId = passFld(t('einTitle'), [t('einDesc')], $required + autofill('off'));
-    $dob = textFld(t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)')], $required);
+    $dob = dateFld(t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)')], $required);
   }
   
   return compact(ray('federalId dob'));
@@ -1389,14 +1422,14 @@ function onFile($field, $sta) {
 
 function dropdown($name, $value, $options, $id) {
   $name = "$name-$id";
-  $zot = array('zot' => selectFld('', '', compact('value') + attrib(compact('name')), $options));
+  $zot = array('zot' => selectFld('', '', compact('value', 'name'), $options));
   return \render($zot);
 }
 
 function amountField($name, $value, $id) {
   $name = "$name-$id";
   $class = 'amount'; $class = compact('class');
-  $zot = array('zot' => textFld('', '', compact('value') + attrib(compact('name', 'class'))));
+  $zot = array('zot' => textFld('', '', compact(ray('value name class'))));
   return \render($zot);
 }
 
@@ -1405,30 +1438,7 @@ function toggle($field, $value, $id, $highlight = 'never') {
   $zot = w\togFld($id, '', '', $value);
   return \render($zot);
 }
-  /*
-function toggle($field, $value, $id, $highlight = 'never') {
-  $path = current_path();
-  $name = $id = "$field-$id";
-  $zot = array($id => hidFld($value, attrib(compact(ray('id name')))));
-  $input = \render($zot);
-  $b1 = button(' - ', "toggle('$id');", t('Change to NO'), 'danger');
-  $b2 = button(' + ', "toggle('$id');", t('Change to YES'), 'success');
-
-  if ('never' != (string) $highlight) {
-    list ($visHigh, $invisHigh) = u\order($highlight, ' highlight', '');
-  } else $highlight = $visHigh = $invisHigh = '';
-
-  list ($yesvis, $novis) = u\order($value, "visible$visHigh", "gone$invisHigh");
-  return <<<EOF
-    <div class="$field-buttons$highlight">
-    <div id="$id-YES" class="$yesvis form-yes">Yes $b1</div>
-    <div id="$id-NO" class="$novis form-no">No &nbsp;$b2</div>
-    $input
-    </div>
-EOF;
-}
-*/
-
+  
 /**
  * Return the recipient of a recent invitation OR mark an invitation USED
  * Call by:
@@ -1564,8 +1574,8 @@ function dateRange($args, $url, $choices = [], $settings = '', $downloadable = T
   $showSimple2 = '<a id="showSimple">simpler</a>';
   if ($downloadable) $downloadDates = submi(t('download')); // must be lowercase
   $actions = fieldSet('actionsAdvanced', @compact('submitDates', 'downloadDates'), '', '', suffix($showSimple2));
-  $starting = textFld(t('Starting:'), '', dft(u\fmtDate($starting)));
-  $ending = textFld(t('Ending:'), '', dft(u\fmtDate($ending)));
+  $starting = dateFld(t('Starting:'), '', dft(u\fmtDate($starting)));
+  $ending = dateFld(t('Ending:'), '', dft(u\fmtDate($ending)));
   if ($downloadable) $downloadMsg = item(t('<b class="loud">TIP</b>: Tell your browser to allow popups for this site.'));
   $advanced = fieldSet('advanced', @compact(ray('starting ending states2 actions')), BARE);
   $dateRange = @compact(ray('simple advanced downloadMsg'));
@@ -1586,8 +1596,8 @@ function dateRange2($args, $url, $download = TRUE) {
 ///  debug(rendA(compact('submitPeriod')));
 ///  $actions = render($submitPeriod) . render(@$downloadPeriod) . render($showAdvanced);
   
-  $starting = textFld(t('Starting:'), '', dft(u\fmtDate($starting)));
-  $ending = textFld(t('Ending:'), '', dft(u\fmtDate($ending)));
+  $starting = dateFld(t('Starting:'), '', dft(u\fmtDate($starting)));
+  $ending = dateFld(t('Ending:'), '', dft(u\fmtDate($ending)));
   $advanced = fieldSet('advanced', compact(ray('starting ending download show url')), BARE);
 }
 */
@@ -2297,22 +2307,21 @@ function backButton() {
 
 // one-line functions that need no explanation
 
-function disabled($value = NULL, $disabled = TRUE) {return attrib(compact('disabled')) + (!is_null($value) ? compact('value') : []);}
-//function on($what, $do) {return w\attrib(["on$what" => $do]);}
-//function onchange($do) {return on('change', $do);}
-function dft($v) {return ray('default_value', $v);}
+function disabled($value = NULL, $disabled = TRUE) {return compact('disabled') + (isset($value) ? compact('value') : []);}
+function dft($v) {return ray('default_value', nn($v, NULL));}
 function weight($weight) {return compact('weight');}
 function clas($class) {return ['class' => [$class]];}
-function attrib($attributes) {return compact('attributes');}
 function suffix($field_suffix = '') {return compact('field_suffix');}
 function prefix($prefix) {return compact('prefix');}
-function maxlen($max) {return attrib(['maxlength' => $max]);}
-function autofill($settings = 'on') {return attrib(['autocomplete' => $settings]);}
+function maxlen($maxlength) {return compact('maxlength');}
+function vmin($min) {return compact('min');}
+function vmax($max) {return compact('max');}
+function vrange($min, $max) {return compact('min', 'max');}
+function step($step) {return compact('step');}
+function autofill($autocomplete = 'on') {return compact('autocomplete');}
 function required($dft = NULL) {return ['required' => TRUE] + (isset($dft) ? dft($dft) : []);}
-// UNUSED function check($array, $type = 'plain') {return array_map("check_$type", $array);} // Check an array for plain or markup.
 function op($sta) {global $testOp; return test() ? $testOp : substr(@$sta['input']['opid'], 5);} // without edit-
 function verifyBy($byVoice) {return $byVoice ? t('Voice') : t('SMS');}
-//function blurbLink() {global $rUrl; return "<a href=\"$rUrl/templates/invite.html\" target=\"_blank\">" . t('description of %PROJECT') . '</a>';}
 function sayFieldErr($err, $field) {return say(strtoupper($field) . ': ' . t($err), $field);}
 function err($msg) {return say($msg, 'err');}
 function rent($element) {return \render($element);} // Drupal makes render hard, requires pass by reference

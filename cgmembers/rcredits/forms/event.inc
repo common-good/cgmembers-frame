@@ -95,8 +95,8 @@ EOF;
   $type = selectFld(t('Type:'), '', required(@$type), $types);
   $event = textFld(t('Event name:'), [t('Short Descriptive Event Name'), t('For example, "Voting on 3 questions".')], required(@$event));
   $details = areaFld(t('Details:'), [t('Event Details')], dft(@$details));
-  $start = textFld(t('Start:'), [t('Start Date')], required(@$start ? u\fmtDate($start, TRUE) : ''));
-  $end = textFld(t('End:'), [t('End Date')], required(@$end ? u\fmtDate($end, TRUE) : ''));
+  $start = dateFld(t('Start:'), [t('Start Date')], required(@$start ? u\fmtDate($start, TRUE) : ''));
+  $end = dateFld(t('End:'), [t('End Date')], required(@$end ? u\fmtDate($end, TRUE) : ''));
   if ($mya->cAdmin) $submit = submit();
 	$back = button(t('Back to Events'), "$base_url/community/events");
   

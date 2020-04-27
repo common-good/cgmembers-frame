@@ -35,8 +35,8 @@ function formOption($form, &$sta, $args = '') {
   $text = textFld(t('Option:'), [t('Option Text')], v\realOpts($type) ? required(@$text) : dft(@$text));
   $detail = areaFld(t('Detail:'), [t('Option Detail')], dft(@$detail));
 	if ($type == 'R') {
-		$minimum = textFld(t('Minimum:'), [t('Minimum Value')], required(@$min));
-		$maximum = textFld(t('Maximum:'), [t('Maximum Value')], required(@$max));		
+		$minimum = numFld(t('Minimum:'), [t('Minimum Value')], required(@$min));
+		$maximum = numFld(t('Maximum:'), [t('Maximum Value')], required(@$max));		
 	}
   
   if ($mya->cAdmin) $submit = submit();

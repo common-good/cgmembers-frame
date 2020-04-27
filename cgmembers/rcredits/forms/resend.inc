@@ -14,7 +14,7 @@ include_once __DIR__ . '/pass.inc';
 function formResend($form, &$sta) {
   global $mya;
   $title = t('Resend Verification Email');
-  $email = textFld(t('Email:'), [t('Email'), t('Type carefully.')], required($mya->email));
+  $email = emailFld(t('Email:'), [t('Email'), t('Type carefully.')], required($mya->email));
   $submit = t('Resend');
   return cgform(compact(ray('title email submit')));
 }

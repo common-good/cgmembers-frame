@@ -95,18 +95,18 @@ Requests can be made for up to %max (smaller requests are more likely to be fund
 EOF
   , compact(ray('end cttyName max _list _aInfo _aCrit cttyEmail cttyPhone')));
  
-  $project = textFld(t('Project title:'), [t('Project Title')], required());
-  $overview = areaFld(t('What:'), [t('Project Description'), t('Describe your project briefly. What specific actions will be taken?')], required());
-  $categories = boxFlds('cats', t('Categories'), t('What category or categories are most applicable to this project:'), array_combine($optionKeys, $options), required());
+  $project = textFld(REQ . t('Project title:'), [t('Project Title')]);
+  $overview = areaFld(REQ . t('What:'), [t('Project Description'), t('Describe your project briefly. What specific actions will be taken?')]);
+  $categories = boxFlds('cats', t('Categories'), t('What category or categories are most applicable to this project:'), array_combine($optionKeys, $options));
 
-  $purpose = areaFld(t('Purpose:'), [t('Purpose of Project'), t('Describe the Project\'s purpose. How does it promote the common good? How does it address each of the categories you checked above?')], required());
-	$systemic = areaFld(t('Change:'), [t('Systemic Change'), t('%cttyName funds systemic change. In our society today, people suffer. Work that eases that suffering here and now is very important. It is also important to change the world to prevent such suffering from happening year after year. How does your project promote systemic change?', compact('cttyName'))], required());
+  $purpose = areaFld(REQ . t('Purpose:'), [t('Purpose of Project'), t('Describe the Project\'s purpose. How does it promote the common good? How does it address each of the categories you checked above?')]);
+	$systemic = areaFld(REQ . t('Change:'), [t('Systemic Change'), t('%cttyName funds systemic change. In our society today, people suffer. Work that eases that suffering here and now is very important. It is also important to change the world to prevent such suffering from happening year after year. How does your project promote systemic change?', compact('cttyName'))]);
 
-  $where = textFld(t('Where:'), [t('Project Zip Code'), t('Where will the project take place? (zip code)')], required());
-  $when = textFld(t('When:'), [t('Project Start Date'), t('When will the project begin?')], required());
-  $until = textFld(t('Until:'), [t('Project End Date'), t('When will the project be completed?')], required());
-  $how = areaFld(t('How:'), [t('Implementation Plan'), t('Provide details of HOW your project will be implemented.')], required());
-  $amount = textFld(t('Amount:'), [t('Amount to Fund'), t('How much funding are you proposing from the Community Fund? Be sure to read the <%aCrit>Evaluation Criteria</a>.', compact('_aCrit'))], required());
+  $where = textFld(REQ . t('Where:'), [t('Project Zip Code'), t('Where will the project take place? (zip code)')]);
+  $when = dateFld(REQ . t('When:'), [t('Project Start Date'), t('When will the project begin?')]);
+  $until = dateFld(REQ . t('Until:'), [t('Project End Date'), t('When will the project be completed?')]);
+  $how = areaFld(REQ . t('How:'), [t('Implementation Plan'), t('Provide details of HOW your project will be implemented.')]);
+  $amount = numFld(REQ . t('Amount:'), [t('Amount to Fund'), t('How much funding are you proposing from the Community Fund? Be sure to read the <%aCrit>Evaluation Criteria</a>.', compact('_aCrit'))]);
 /*  $typeDesc = <<<EOF
 "Incentive" means a program of incentive rewards to %PROJECT members, to encourage a specific behavior; for example: voting, using alternative energy, or inviting people to join %PROJECT. If "Other", explain above under "What" (the project description).
 EOF;
@@ -116,19 +116,19 @@ EOF;
 	
 	$recovery = boxesFld(t('Recovery:'), t('How will some or all of these funds come back to the Community Fund? For grant requests, this "coming back" may happen indirectly. (check all that apply)'), [], ray(RECOVERY_OPTS));
 
-  $budgetTotal = textFld(t('Budget:'), [t('Total Project Budget'), t('What is the Total Project Expense Budget? Type or paste a complete Income and Expense budget below. Include your top 3 sources and amounts of committed funds. Please do not show subtotals.')], required());
-  $budget = areaFld('', [t('Itemized Income and Expense Budget')], required());
+  $budgetTotal = numFld(REQ . t('Budget:'), [t('Total Project Budget'), t('What is the Total Project Expense Budget? Type or paste a complete Income and Expense budget below. Include your top 3 sources and amounts of committed funds. Please do not show subtotals.')]);
+  $budget = areaFld(REQ, [t('Itemized Income and Expense Budget')]);
   //   $budget = htmlFld('', [t('Itemized Income and Expense Budget')], '', required());
-  $committed = textFld(t('Committed:'), [t('Amount Already Raised'), t('How much of the project budget has already been raised?')], required());
-  $contingency = areaFld(t('Contingency:'), [t('Contingency Plan, for Partial Funding'), t('Funds are limited, and projects may not receive the full amount requested. If you receive less than the amount requested, how will that impact your ability to conduct the project?')], required());
-  $qualifications = areaFld(t('Qualifications:'), [t('Skills, Experience, and Qualities'), t('Who will complete the project? What are their specific skills, experience, or qualities that assure success?')], required());
-  $evaluation = areaFld(t('Evaluation:'), [t('Evaluation Plan'), t('How will you measure and evaluate the project\'s success?')], required());
+  $committed = numFld(REQ . t('Committed:'), [t('Amount Already Raised'), t('How much of the project budget has already been raised?')]);
+  $contingency = areaFld(REQ . t('Contingency:'), [t('Contingency Plan, for Partial Funding'), t('Funds are limited, and projects may not receive the full amount requested. If you receive less than the amount requested, how will that impact your ability to conduct the project?')]);
+  $qualifications = areaFld(REQ . t('Qualifications:'), [t('Skills, Experience, and Qualities'), t('Who will complete the project? What are their specific skills, experience, or qualities that assure success?')]);
+  $evaluation = areaFld(REQ . t('Evaluation:'), [t('Evaluation Plan'), t('How will you measure and evaluate the project\'s success?')]);
 
-  $name = textFld(t('Applicant:'), [t('Applicant Name'), t('Type the name of the organization or individual who will receive the funding (properly capitalized).')], required());
-  $contact = textFld(t('Contact:'), [t('Contact Name'), t('If you are applying on behalf of yourself, type "self". Otherwise type the full name of the contact person for this project. If the contact person is not you, add your name in parenthesis &mdash; for example, "Jane Dough (per Millie Baker)".')], required());
-  $phone = textFld(t('Phone:'), [t('Contact Telephone Number')], required());
-  $email = textFld(t('Email:'), [t('Contact Email Address')], required());
-  $sponsor = textFld(t('Sponsor:'), [t('%PROJECT Member(s) Sponsoring this Funding Proposal'), t('Name(s) of %PROJECT member(s) sponsoring this funding proposal, if any (or "self" if you are a member)')], required());
+  $name = textFld(REQ . t('Applicant:'), [t('Applicant Name'), t('Type the name of the organization or individual who will receive the funding (properly capitalized).')]);
+  $contact = textFld(REQ . t('Contact:'), [t('Contact Name'), t('If you are applying on behalf of yourself, type "self". Otherwise type the full name of the contact person for this project. If the contact person is not you, add your name in parenthesis &mdash; for example, "Jane Dough (per Millie Baker)".')]);
+  $phone = phoneFld(REQ . t('Phone:'), [t('Contact Telephone Number')]);
+  $email = emailFld(REQ . t('Email:'), [t('Contact Email Address')]);
+  $sponsor = textFld(REQ . t('Sponsor:'), [t('%PROJECT Member(s) Sponsoring this Funding Proposal'), t('Name(s) of %PROJECT member(s) sponsoring this funding proposal, if any (or "self" if you are a member)')]);
   $submitProposal = submit(t('Submit Proposal'));
   return cgform(compact(ray('title subtext project overview categories purpose systemic where when until how amount recovery budgetTotal budget committed contingency qualifications evaluation name contact phone email sponsor submitProposal critPop event')));
 } 

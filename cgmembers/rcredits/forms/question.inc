@@ -57,7 +57,7 @@ function formQuestion($form, &$sta, $args = '') {
   $types = ray(' :Choose Type,M:Multiple choice,B:Budget (penny vote among various options),R:Range,Y:Yes/No,E:Essay');
   $type = selectFld(t('Type:'), '', required(@$type), $types);
   //  $units = textFld(t('Units:'), [t('Units'), t('Units for Budget or Range question. Defaults to dollars.'), dft(@$units));
-  $budget = textFld(t('Budget:'), [t('Budget Amount'), t('If this is a Budget question, how much (money) is to be budgeted.')], dft(@$budget));
+  $budget = numFld(t('Budget:'), [t('Budget Amount'), t('If this is a Budget question, how much (money) is to be budgeted.')], dft(@$budget));
   $optOrders = ray('N:No change (static),S:Shuffle (randomize),Z:Reverse sometimes');
   $optOrder = selectFld(t('Option order:'), ['', t('In a Multiple choice or Budget question, how to scramble the options, if at all')], dft(@$optOrder), $optOrders);
   

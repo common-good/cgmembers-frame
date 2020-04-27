@@ -240,7 +240,7 @@ function getPost() {
   $title = t('Post Something');
   $subtext = t('<p>Think about what you want to post in each category, one at a time.</p><p>Do not put identifying information in the "What" or "Details". People contact you through the system, without knowing your full name or email address. You can be more specific when you reply to them.</p>%confirm', compact('_confirm'));
   extract(postInputFlds());
-  $email = emailFld();
+  $email = eFld();
   $submit = submit(t('Post'));
   
   return cgform(compact(ray('title subtext type cat item private details exchange emergency radius end email submit frm')));
@@ -266,8 +266,8 @@ function postInputFlds($dfts = []) {
   
   $exchange = boolFld(t('Exchange:'), t('Are you offering something in exchange? (include it in the details too)'), dft($exchange ? 1 : 0));
   $emergency = boolFld(t('Emergency:'), t('This is an emergency need or applies only in an emergency.'), dft($emergency ? 1 : 0));
-  $radius = textFld(REQ . t('Radius:'), [t('Visibility radius'), t('Up to how many miles away do you want this seen? 10 usually covers neighboring towns. Use zero for "anywhere".')], dft($radius ?: 10) + suffix(t(' miles')));
-  $end = textFld(t('End Date:'), [t('mm/dd/yyyy'), t('When to stop listing this (you can also cancel it at any time)')], dft($end ? u\fmtDate($end, TRUE) : '') + ($dfts ? suffix(lnk('', t('end now'))) : []));
+  $radius = numFld(REQ . t('Radius:'), [t('Visibility radius'), t('Up to how many miles away do you want this seen? 10 usually covers neighboring towns. Use zero for "anywhere".')], dft($radius ?: 10) + suffix(t(' miles')));
+  $end = dateFld(t('End Date:'), [t('mm/dd/yyyy'), t('When to stop listing this (you can also cancel it at any time)')], dft($end ? u\fmtDate($end, TRUE) : '') + ($dfts ? suffix(lnk('', t('end now'))) : []));
 
   return compact(ray(POST_INPUT_FLDS));
 }
@@ -358,7 +358,7 @@ X;
     
     if ($type != 'tip') {
       $subtext = t('Use this form to send a message to the person who posted this %type. Your message will be sent by email with your display name, city, and email address. Your full name and other contact information will not be sent unless you include it in the message.', ['type' => lcfirst(typeName($type, 1))]);
-      $email = emailFld();
+      $email = eFld();
       $message = msgFld(REQ);
       $submit = t('Send Message');
     } else $subtext = $email = $message = $submit = NULL;
@@ -396,7 +396,7 @@ function getWho($args) {
     $city = textFld(REQ . t('City:'), [t('City where you live')], dft($city));
     $state = stateFld($state ?: R_STATE_ID); // can't use required() here
     $zip = zipFld($zip);
-    $phone = textFld(REQ . t('Phone:'), [t('Phone number'), t('Just in case we need to contact you. This is not shared with other users unless you choose "phone" or "text" as your preferred contact method. We have only ever needed to contact one person so far (as of %date), but it helped a lot to have their phone number.', 'date', u\fmtDate(NOW - DAY_SECS, TRUE))]);
+    $phone = phoneFld(REQ . t('Phone:'), [t('Phone number'), t('Just in case we need to contact you. This is not shared with other users unless you choose "phone" or "text" as your preferred contact method. We have only ever needed to contact one person so far (as of %date), but it helped a lot to have their phone number.', 'date', u\fmtDate(NOW - DAY_SECS, TRUE))]);
   }
   
   $frm = hidFld('who');
@@ -406,8 +406,8 @@ function getWho($args) {
   $method = w\radiosFld(REQ . t('Preferred Contact:'), t('The "phone" and "text" options apply only when a %PROJECT member contacts you (because we have verified the identity only of members). Otherwise you will receive replies by email.'), '', ray(METHOD_OPTS));
 
   $midtext = t('And now some COVID-19 self-assessment questions for 2020:');
-  $days = textFld(REQ . t('Distancing Days:'), [t('Days practicing social distancing'), t('About how long have you been practicing social distancing consistently (staying at least 6 feet away from all but a handful of people)? Thank you! Your voluntary inconvenience could save thousands of lives &mdash; especially your friends, family, and neighbors.')]);
-  $washes = textFld(REQ . t('Hand-washing:'), [t('Hand-washes per day'), t('About how many times a day do you wash your hands for 20 seconds or more? (This data will help us convince other people to do it more.)')]);
+  $days = intFld(REQ . t('Distancing Days:'), [t('Days practicing social distancing'), t('About how long have you been practicing social distancing consistently (staying at least 6 feet away from all but a handful of people)? Thank you! Your voluntary inconvenience could save thousands of lives &mdash; especially your friends, family, and neighbors.')]);
+  $washes = intFld(REQ . t('Hand-washing:'), [t('Hand-washes per day'), t('About how many times a day do you wash your hands for 20 seconds or more? (This data will help us convince other people to do it more.)')]);
   $health = radiosFld(t('Health:'), t('If you are not feeling completely well, please <%a>take this quiz from the CDC</a> right away, and follow its advice.', '_a', atag('https://www.cdc.gov/coronavirus/2019-ncov/if-you-are-sick/steps-when-sick.html')), dft(2), ray(HEALTH_RATINGS));
 
   if (!isset($location)) $location = NULL;
@@ -712,7 +712,7 @@ function admin($zip) {
 function codedUrl($op, $params) {return POSTPAGE . "/op=$op&code=" . u\urlify(http_build_query($params));}
 function fmtDist($dist, $zip) {return $dist ? (admin($zip) ? number_format($dist, 2) : ($dist < .5 ? '&frac12;' : u\vague($dist))) : '';} // don't show distances less than 1/2 mile
 function catChoices($top, $extra = []) {return ['' => $top] + db\keyed('id,cat', 'post_cats', '1 ORDER BY sort') + $extra;}
-function emailFld() {global $mya; return textFld(REQ . t('Your Email:'), [t('Your email address')], dft($mya ? $mya->email : (nn($_COOKIE['email']) ?: vip('email'))));}
+function eFld() {global $mya; return emailFld(REQ . t('Your Email:'), [t('Your email address')], dft($mya ? $mya->email : (nn($_COOKIE['email']) ?: vip('email'))));}
 function pVal($fld, $pid) {return db\get($fld, 'people', compact('pid'));}
 function zipOnlyMsg($specifics, $zip) {return t('We are unable to geolocate that address at this time, so %specifics in the "%zip3" Zip Code area.', 'specifics zip3', $specifics, substr($zip, 0, 3));}
 function msgFld($req = REQ) {return areaFld($req . t('Message to Send:'), t('Max 200 characters'), maxlen(200));}

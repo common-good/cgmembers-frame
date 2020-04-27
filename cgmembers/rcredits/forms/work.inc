@@ -27,7 +27,7 @@ function formWork($form, &$sta, $args = '') {
   $companyInfo = array(
     'company_text' => item(t('Are you connected to a local company, or to any %PROJECT member company? Otherwise leave this part blank.')),
     'company' => textFld(t('Company: '), [t('Your company')]),
-    'companyPhone' => textFld(t('Company Phone:'), [t('Company phone number')]),
+    'companyPhone' => phoneFld(t('Company Phone:'), [t('Company phone number')]),
     'companyOptions' => boxesFld('', '', @$copts, $companyOptions), 
   );
   $companyInfo = fieldSet('companyInfo', $companyInfo, BARE);

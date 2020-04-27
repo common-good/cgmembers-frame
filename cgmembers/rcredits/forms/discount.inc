@@ -26,10 +26,10 @@ X
   );
   //  A printable sheet of coupons will be displayed (to be cut in half three times). <-- No. Mail the coupons to them.
 
-  $amount = textFld(t('Discount:'), [t('Amount or Percentage'), t('For example $20 or 10%')], required());
-  $minimum = textFld(t('Minimum:'), [t('Minimum purchase'), t('Minimum purchase amount, to get the discount.')], required(0));
-  $end = textFld(t('Valid until:'), [t('End date'), t('Leave blank for no end.')], dft(u\fmtDate(strtotime('+6 months'), TRUE)));
-  $useMax = textFld(t('Limit:'), t('Leave blank for unlimited uses.'), dft(5) + suffix(t(' uses per member')));
+  $amount = textFld(REQ . t('Discount:'), [t('Amount or Percentage'), t('For example $20 or 10%')]);
+  $minimum = numFld(REQ . t('Minimum:'), [t('Minimum purchase'), t('Minimum purchase amount, to get the discount.')], dft(0));
+  $end = dateFld(t('Valid until:'), [t('End date'), t('Leave blank for no end.')], dft(u\fmtDate(strtotime('+6 months'), TRUE)));
+  $useMax = intFld(t('Limit:'), t('Leave blank for unlimited uses.'), dft(5) + suffix(t(' uses per member')));
   
   $submit = submit(t('Create'), '', '', suffix(' ' . skipButton())); // allow user to skip this step forever
   

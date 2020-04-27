@@ -11,9 +11,7 @@
  */
 function phptemplate_init($template) {
   $file = dirname($template->filename) . '/template.inc'; // cg changed from .php to .inc 2018-03-30
-  if (file_exists($file)) {
-    include_once DRUPAL_ROOT . '/' . $file;
-  }
+  include_once DRUPAL_ROOT . '/' . $file;
 }
 
 /**

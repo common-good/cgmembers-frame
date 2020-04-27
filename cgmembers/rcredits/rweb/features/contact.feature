@@ -16,7 +16,7 @@ Scenario: A member visits the contact info page
   Then we show "Contact Information" with:
   | Your Name | Abe One   |
   | Email | a@ |
-  | Phone | +1 413 200 1000 |
+  | Phone | 413-200-1000 |
 #  | Country | United States |
   | Physical Address | |
   | Street Address | 1 A St. |

@@ -75,10 +75,10 @@ EOF
   $helper = hidFld($helperA ? $helperA->id : @$inviter);
   $source = $helperA ? hidFld($helperA->fullName) : sourceFld();
   
-  $phone = textFld(t('Phone:'), [t('Your phone number')], required(nn($phone) ? u\fmtPhone($phone): ''));
+  $phone = phoneFld(REQ . t('Phone:'), [t('Your phone number')], dft($phone));
   $zip = zipFld(nn($zip));
   $fullName = textFld(t('Name:'), [t('Your full name'), t('Your full name, properly capitalized, as you would like it to appear on your %PROJECT card.')], required(nn($fullName)));
-  $email = textFld(t('Email:'), [t('Email'), t('<b>Type carefully.</b> All emails from the system will be sent to this address. It will not be made public, but will be viewable by accounts you transact with (you can choose greater privacy by clicking "Advanced" on the Preferences Settings page).')], required(nn($email)));
+  $email = emailFld(t('Email:'), [t('Email'), t('<b>Type carefully.</b> All emails from the system will be sent to this address. It will not be made public, but will be viewable by accounts you transact with (you can choose greater privacy by clicking "Advanced" on the Preferences Settings page).')], required(nn($email)));
   
   $form = compact(ray('title forother subtext acctType fullName phone email zip source submit myid args confirmed helper iCode notes preid source2'));
 //  $sponsorConfirmation = w\whoFldSubmit('sponsor', t('Your sponsoring organization is %name, yes?'));

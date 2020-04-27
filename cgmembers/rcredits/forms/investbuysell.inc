@@ -47,7 +47,7 @@ X
   if ($equity) {
     $ourShares = item(t('%shares (at %price)', 'shares price', number_format($shares), u\fmtAmt($price)), t('Current Shares:'));
   } else $ourShares = item(u\fmtAmt($shares), t('Current Loan'));
-  $shares = textFld($shares ? "$buyOrSell:" : "$amtToBuy:", $amtTip, required());
+  $shares = numFld($shares ? "$buyOrSell:" : "$amtToBuy:", $amtTip, required());
   $old = hidFld(serialize(compact(ray('vestid coid clubqid types count'))));
 
   return cgform(compact(ray('title subtext ourShares selling shares submit old')));
