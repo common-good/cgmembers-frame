@@ -1344,21 +1344,21 @@ o;
     $subs = ['id' => $a->id];
 
     $sql = <<< X
-      SELECT r.created AS recurStart, r.amount AS recurAmt, r.period, h.honor, h.honored
-      FROM r_recurs r
-      LEFT JOIN r_honors h ON h.uid=r.payer
-      WHERE r.payer=:id AND r.payee=:CGID
-      AND r.ended=0
+      SELECT r.start AS recurStart, r.amount AS recurAmt, r.period, r.periods, h.honor, h.honored
+      FROM tx_templates r
+      LEFT JOIN r_honors h ON h.uid=r.from
+      WHERE r.action=:ACT_PAY AND r.from=:id AND r.to=:CGID
+      AND r.end IS NULL
 X;
     $res = db\q($sql, $subs)->fetchAssoc();
     if ($res) extract($res);
 
     if ($res and $period) {
-      $period = ray(OFTENS)[$period];
+      $recurDesc = r\recurDesc($period, $periods);
       $recurAmt = u\fmtAmt($recurAmt);
       $recurStart = u\fmtDate($recurStart, TRUE);
-      $gift = "<%b>$recurAmt</b> $period";
-    } else $period = $recurAmt = $recurStart = $gift = '';
+      $gift = "<%b>$recurAmt</b> $recurDesc";
+    } else { $period = $gift = ''; }
 
     $sql = <<< X
       SELECT created AS lastGiftDate, amt AS lastGift 
@@ -1719,19 +1719,19 @@ X;
     
   /**
    * Try to transfer funds from payer to payee for a pre-approved payment.
-   * @param int $payeeId: record ID of recipient -- expected to be an active account, 
+   * @param int $payee: record ID of recipient -- expected to be an active account, 
    *   but payer can be a not-yet-activated account (to be invoiced) for gifts to CG
    * @param numeric $amount: payment amount
    * @param string $desc: description of payment
    * @param assoc $data: extra data for transaction or invoice
-   * @param int $recursId: record ID of related record in r_recurs (if any)
+   * @param int $recursId: record ID of related record in tx_templates (if any)
    * @return TRUE if the funds were successfully transferred (otherwise the payer is invoiced).
    */
   public function payApproved($payee, $amount, $desc, $goods, $data = [], $recursId = 0) {
     $a = $this;
     $payeeA = r\acct($payee);
     u\EXPECT($payeeA->ok, 'inactive recipient');
-    if ($payee != CGID /*or $a->activated*/) u\EXPECT($a->ok, 'inactive payer'); // not-yet-active accounts can be invoiced for gifts to CG
+    if ($payee != CGID) u\EXPECT($a->ok, 'inactive payer'); // not-yet-active accounts can be invoiced for gifts to CG
 
     if ($a->ok) {
       list ($ok, $msg, $args) = be\transfer('payment', $a, $payeeA, $amount, $desc, $goods, $data, $recursId);

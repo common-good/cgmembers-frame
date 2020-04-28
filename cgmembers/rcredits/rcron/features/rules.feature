@@ -42,7 +42,7 @@ Setup:
   | durations | 1            | 1            | 1            | 1             | 1            |
 
 Scenario: Rules get instantiated
-  When cron runs "everyDay"
+  When cron runs "recurs"
   Then these "tx_rules":
   | id        | 1            | 2           |**
   | action    | surtx        | surtx       |
@@ -62,7 +62,6 @@ Scenario: Rules get instantiated
   | end       | %now+1m      | %NULL       |
   | template  | 3            | 5           |
   And these "txs":
-  # when templates replace recurs, these txs and invoices will have a recursId
   | eid | xid | type   | created | amount | payer | payee | purpose                 | rule  | recursId |*
   |   1 |   1 | prime  | %today  |    100 | .ZZB  | .ZZC  | payment (every 2 weeks) | %NULL | 1        |
   |   2 |   1 | rebate | %today  |      3 | .ZZC  | .ZZB  | %REBATE_DESC            | 1     | 1        |

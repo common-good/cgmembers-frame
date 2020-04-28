@@ -1439,8 +1439,8 @@ function clear($ch = 0) {
     'r_events',           // -
     'r_honors',           // users
     'r_invites',          // users
-    'r_invoices',         // users, r_recurs
-    'x_invoices',         // users, r_recurs
+    'r_invoices',         // users
+    'x_invoices',         // users
     'r_ips',              // users
     'r_near',             // users
     'r_notices',          // users
@@ -1462,20 +1462,15 @@ function clear($ch = 0) {
     'signup',             // -
     'tx_disputes_all',    // tx_hdrs, users
     'tx_entries_all',     // tx_hdrs, users, tx_rules
-    'tx_hdrs_all',        // users, r_boxes, r_recurs, self 
+    'tx_hdrs_all',        // users, r_boxes, self 
     'tx_rules',           // users, u_groups, r_industries, tx_templates
     'tx_templates',       // users, u_groups, r_industries
     'r_boxes',            // users
-    'r_recurs',           // users
     'u_groupies',         // u_groups, users
     'u_groups',           // -
     'x_users',            // standaloneish
     ]; // never truncate: r_areas r_banks r_countries r_criteria r_industries r_regions r_states r_transit users variable
 
-/*$tables = 'r_bad r_ballots r_boxes r_changes r_company r_do r_events r_honors r_investments r_invites r_invoices r_ips 
-    r_near r_notices r_options r_pairs r_photos r_proposals r_proxies r_questions r_ratings r_recurs r_relations
-    r_shares r_stakes r_stats r_tous r_usd r_usd2 r_user_industries r_votes signup tx_disputes_all tx_entries_all 
-    tx_hdrs_all tx_rules tx_templates x_invoices x_photos x_relations x_usd x_users u_groups u_groupies flood queue semaphore sessions cache'; */
   foreach (ray('bootstrap form') as $k) $tables[] = "cache_$k"; // don't empty cache_menu
   foreach ($tables as $table) db\q("TRUNCATE $table");
 

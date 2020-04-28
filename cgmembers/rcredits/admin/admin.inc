@@ -785,9 +785,9 @@ function donationTrend($co = FALSE, $since = NULL) {
 	$where = "$co AND u.:IS_OK AND u.created>:since";
 	
 	$sql =<<< X
-	  SELECT AVG(g.amount*IF(often='M', 12, IF(often='Q', 4, IF(often='Y', 1, IF(often='W', 52, 0))))) AS regular
-		FROM r_recurs g LEFT JOIN users u ON u.uid=g.payer
-		WHERE g.payee=:CGID AND $where
+	  SELECT AVG(g.amount*perYear(period, periods)) AS regular
+		FROM tx_templates g LEFT JOIN users u ON u.uid=g.from
+		WHERE g.action=:ACT_PAY AND g.to=:CGID AND $where
 X;
   $subs = compact('since');
 	$res = db\q($sql, $subs)->fetchAssoc();

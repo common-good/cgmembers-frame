@@ -21,7 +21,7 @@ function formSignup($form, &$sta, $args = '') {
   if (!$args) $args = @$_POST ?: basename($_SERVER['REQUEST_URI']); // because menu_execute_active_handler fails
   if (is_string($args)) $args = urlq2ray($args);
 
-  extract(just('preid source2 joint reid inviter code fullName email helper phone zip partner partnerCode customer source', $args));
+  extract(just('preid source2 joint reid inviter code fullName email helper phone zip partner partnerCode customer source', $args, NULL));
 
   u\setDft($source2, nn($_COOKIE['ad']));
   u\setDft($preid, getPreId($source2));

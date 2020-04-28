@@ -139,5 +139,5 @@ Scenario: A member runs a query about Whence
   When member ".ZZB" runs query "Where Do Our Members Hear About Common Good"
   Then we show "" with:
   | origin    | member | stuck | avgYearlyGiftDollars | avgRoundup | eachInvited |
-  | Invited   |      3 |     0 |                 0.00 |     0.3333 |             |
-  | "(Other)" |      7 |     4 |                 0.00 |     0.0000 |             |
+  | Invited   |      3 |     0 |                      |     0.3333 |             |
+  | "(Other)" |      7 |     4 |                      |     0.0000 |             |

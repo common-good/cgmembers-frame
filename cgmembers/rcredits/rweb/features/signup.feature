@@ -144,7 +144,7 @@ Scenario: A member donates
   Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund photo contact"
   When member ".ZZB" completes form "community/donate" with values:
   | amtChoice | period | honor | honored |*
-  |        50 |      M |     - |         |
+  |        50 | month  |     - |         |
   Then we show "Share When You Receive"
   And we say "status": "gift successful|gift transfer later"
   And we say "status": "step completed"

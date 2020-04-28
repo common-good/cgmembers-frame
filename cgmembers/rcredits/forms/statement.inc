@@ -167,7 +167,7 @@ function statement($period = '') {
 /**
  * Return the start and end dates and human-readable description of a given month, quarter, or year.
  * @param string $period: mmmyyyy (month) or CYyyyy (calendar year) or FYyyyy (fiscal year)
- * @return [$start, $end, $periodDesc] -
+ * @return [$start, $end, $recurDesc] -
  *   start is the start of the current period
  *   end is one second beyond the end of the current period, so use should be exclusive not inclusive
  */
@@ -184,12 +184,12 @@ function statementMonth($period, $fiscalYearEnd = '12/31') {
       $lastDay = $type == 'CY' ? "12/31/$year" : "$fiscalYearEnd/$year";
     }
     $end = strtotime($lastDay) + DAY_SECS; // fails if FY ends on clock change day
-    list ($start, $periodDesc) = [u\plusMonths(-12, $end), "$type $year"];
+    list ($start, $recurDesc) = [u\plusMonths(-12, $end), "$type $year"];
   } else {
     $start = strtotime("1$period");
     if (!$start) { return w\softErr(t('That is not a recognizable month.')); }
     $start = u\monthDay1($start);
-    list ($end, $periodDesc) = [u\plusMonths(1, $start), strftime('%B %Y', $start)];
+    list ($end, $recurDesc) = [u\plusMonths(1, $start), strftime('%B %Y', $start)];
   }
-  return [$start, $end, $periodDesc];
+  return [$start, $end, $recurDesc];
 }

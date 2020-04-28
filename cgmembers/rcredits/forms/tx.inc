@@ -42,9 +42,7 @@ function formTx($form, &$sta, $args = '') {
   */
   
   $purpose = textFld(t('For:'), [t('purpose or description of goods and services')], required(@$purpose));
-  $oftens = ['' => t('No repeat')] + ray(OFTENS);
-  unset($oftens['X']);  
-  if ($paying) $repeat = selectFld(t('&nbsp;'), '', dft(''), $oftens);
+  if ($paying) $repeat = selectFld(t('&nbsp;'), '', dft(''), ['' => t('No repeat')] + r\recurRay());
   
   $scanClass = 'not-scanned';
   $$type = submit($opDesc);
@@ -83,18 +81,18 @@ function formTx_submit($form, &$sta) {
   if ($func == 'pay' and $mya->snap) r\tellAdmin(t('SNAP member %who %did something', 'who did', $mya->fullName, $ok ? t('bought') : t('tried to buy')), ['topic' => t('SNAP purchase') . ($ok ? '' : t(' failed'))]);
 
   if ($ok and $period = @$repeat) {
-    $created = today();
-    $subs = ray('payer payee ended', $mya->id, $uid, 0);
-    $info = $subs + compact(ray('amount purpose period created'));
-    if ($id = db\get('id', 'r_recurs', $subs)) {
-      $info += compact('id');
+    $start = today();
+    $subs = ray('from to end duration', $mya->id, $uid, NULL, 'forever');
+    $info = $subs + compact(ray('amount purpose period start duration'));
+    if ($id = db\get('id', 'tx_templates', $subs)) {
+      db\del('tx_templates', 'id', $id);
       say(t('Your recurring payment has been updated.'));
     }
-    $newId = db\updateOrInsert('r_recurs', $info, 'id');
+    $id = db\insert('tx_templates', $info, 'id');
     list ($tnm, $idFnm) = $func == 'pay' ? ['tx_hdrs', 'xid'] : ['r_invoices', 'nvid'];
-    db\update($tnm, ray("$idFnm recursId", $args[$idFnm], $id ?: $newId), $idFnm);
+    db\update($tnm, ray("$idFnm recursId", $args[$idFnm], $id), $idFnm);
     
-    $often = ray(OFTENS)[@$repeat];
+    $often = r\recurDesc(@$repeat, 1);
     $msg .= '|repeats';
   }
   unset($DBTX);

@@ -1646,6 +1646,7 @@ function weScripWithSubs($script, $args = []) {
  *     TEST cgbutton AMemberTypeAccountIDToBuyStoreCredit
  *     BOTH cgbutton AMemberRedeemsStoreCredit
  *     TEST cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
+ *     MAKE community Setup
  *     TEST community CronCalculatesTheStatistics
  *     TEST coupons AMemberCompanyCreatesAGiftCoupon
  *     MAKE coupons AMemberRedeemsAGiftCoupon
@@ -1730,8 +1731,7 @@ function withChoices($choices) {
 /**
  * recurs: (ARG)
  *
- * in: MAKE community Setup
- *     MAKE showrecurs Setup
+ * in: 
  */
 function recurs($list) {return t\recurs($list);}
 

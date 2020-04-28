@@ -14,7 +14,7 @@ use CG\Cron as cr;
 function formDonate($form, &$sta, $args = '') {
   if (!$mya = w\eLinkAcct($sta, $args, 'acct')) return;
 
-  $oftens = [0 => t('How often?')] + array_reverse(ray(OFTENS));
+  $oftens = [0 => t('How often?')] + array_reverse(r\recurRay(TRUE));
   $giftLevels = array(
   // 10000 => t('Marble .. $10,000'),
   // 5000 => t('Granite ... 5,000'),
@@ -31,14 +31,14 @@ function formDonate($form, &$sta, $args = '') {
 //       5 => t('Cloth ........ $5'),
   );
 
-	if ($recurs = db\get('id,period,amount', 'r_recurs', 'payer=:payer AND payee=:CGID AND ended=0', ray('payer', $mya->id))) {
+	if ($recurs = db\get('id,period,amount', 'tx_templates t', 'action=:ACT_PAY AND t.from=:payer AND t.to=:CGID AND end IS NULL', ray('payer', $mya->id))) {
 		extract($recurs);
 		$recurId = hidFld($id);
     $replaces = t('donation replaces', 'period amt', $oftens[$period], u\fmtAmt($amount));
 	} else $recurId = NULL;
   
   if (!$mya->activated or !$recurs or !r\acct()) {
-		unset($oftens['X']); // no one-time donation unless the account is active, has a recurring donation, and is signed in
+		unset($oftens['once']); // no one-time donation unless the account is active, has a recurring donation, and is signed in
 		$recurOnly = t(': monthly, quarterly, or yearly');
     $noOneTime = t('<p><small><%aWhy>Why no option for a one-time donation?</a></small></p>', '_aWhy', atag('/help/why-no-single-donation-option'));
 	} else $noOneTime = '';
@@ -48,9 +48,9 @@ function formDonate($form, &$sta, $args = '') {
   $title = t('Donate to %PROJECT');
   $amountTip = $mya->co ? '' : t('The most common amounts chosen are $50 and $25.');
   $subtext = t('<p>Make a tax-deductible gift of ZERO OR MORE%recurOnly. %replaces %amountTip</p><p>To donate an amount not listed (including ZERO), choose "Water" (and fill in the amount).</p><p><b class="loud">NOTE: This is a donation, not a deposit.</b> Thank you for your support!</p>', 'recurOnly replaces amountTip', @$recurOnly, @$replaces, $amountTip) . $noOneTime;
-  $amtChoice = selectFld(t('Donation:'), '', required($mya->co ? R_COMPANY_GIFT : R_INDIVIDUAL_GIFT), $giftLevels);
+  $amtChoice = selectFld(REQ . t('Donation:'), '', dft($mya->co ? R_COMPANY_GIFT : R_INDIVIDUAL_GIFT), $giftLevels);
   $amount = numFld(t('Donation:'), [t('Amount')]);
-  $period = selectFld(t('When:'), '', required(0), $oftens);
+  $period = selectFld(REQ . t('When:'), '', dft(0), $oftens);
   $honor = selectFld(t('Honoring:'), '', suffix(t('(optional)')), $honors);
   $honored = areaFld('', [t('Honoring whom or what')]);
 //    $roundup = $mya->ok ? '' : w\roundupFld($mya),
@@ -68,22 +68,22 @@ function formDonate_submit($form, &$sta) {
 
   extract(just('amount period honor honored roundup recurId', $sta['input']));
   $info = ray('payer payee amount period created lastTx invoiced', $mya->id, CGID, $amount, $period, now(), 0, 0);
-  if ($period != 'X' and nn($recurId)) {
-		db\update('r_recurs', ray('id ended', $recurId, now()), 'id');
+  if ($period != 'once' and nn($recurId)) {
+		db\update('tx_templates', ray('id end', $recurId, now()), 'id');
 		say(t('Your previous recurring gift has been canceled.'));
 	}
 
   if ($amount > 0) {
     if ($honored) db\insert('r_honors', ray('uid honor honored', $mya->id, $honor, $honored));
     $purpose = t('donation');
-    list ($recursId, $periodDesc) = $period == 'X' 
+    list ($recursId, $recurDesc) = $period == 'once' 
     ? [0, '']
-    : [db\insert('r_recurs', ray('payer payee amount period purpose', $mya->id, CGID, $amount, $period, $purpose))
-       , ' (' . r\periodDesc($period) . ')'];
+    : [db\insert('tx_templates', ray('action from to amount period purpose duration', ACT_PAY, $mya->id, CGID, $amount, $period, $purpose, 'forever'))
+       , ' (' . r\recurDesc($period, 1) . ')'];
 //    $count = db\count('r_txs', 'payer=:payer AND payee=:payee AND :IS_RECURS AND created>=:created', compact(ray('payer payee created')));
     $msg = 'gift successful';
     $data = ray('gift recurs', 1, (bool) $recursId);
-    if ($mya->payApproved(CGID, $amount, $purpose . $periodDesc, FOR_NONGOODS, $data, $recursId)) {
+    if ($mya->payApproved(CGID, $amount, $purpose . $recurDesc, FOR_NONGOODS, $data, $recursId)) {
       r\notify($mya->id, 'gift sent', ray('amount', u\fmtAmt($amount)));
     } else $msg .= '|gift transfer later';
     say($msg);

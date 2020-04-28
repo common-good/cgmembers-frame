@@ -187,7 +187,7 @@ function formAdminPanel_submit($form, &$sta) {
     return say(a\showQuery('txs', 1, 'xid DESC, type', $fields, 'uid1 uid2'));
   }
 
-  if ($op == 'recurs') return say(a\showQuery('r_recurs', 1, 'id DESC', 'id,created,payer,payee,amount,purpose,period,ended', 'payer payee'));
+  if ($op == 'recurs') return say(a\showQuery('tx_templates t', 1, 'id DESC', 'id,t.start AS created,t.from,t.to,amount,purpose,period,t.end', 't.from t.to'));
   if ($op == 'invites') return say(a\showQuery('r_invites', 1, 'invited DESC', 'invited, inviter, invitee, email', 'inviter'));
   if ($op == 'notices') return say(a\showQuery('r_notices', 1, 'msgid DESC'));
   if ($op == 'proxies') return say(a\showQuery('r_proxies', 1, 'id DESC', 'person, proxy, priority', 'person'));

@@ -539,24 +539,12 @@ function callDetails($type = '', $when = '') {
   $subtext = $now < $when ? t('in %days days', 'days', -$late) : t('%late days overdue', compact('late'));
   $subtext = !$when ? '' : "<br><span>$subtext</span>";
   
-  if (!$mya->member) {
-    $head .= $setup ? '<p>Do you need help?</p>' : '';
-    //    return "<div class=\"well\"><h3>$head$body</h3></div>";
-  }
+  if (!$mya->member) $head .= $setup ? '<p>Do you need help?</p>' : '';
 
   $subs = ray('id', $mya->id);
   $gifts = ($mya->giftsDesc() ?: $mya->totalGifts())
-	?: db\get('amount', 'r_recurs', 'payer=:id AND payee=:CGID AND ended=0', $subs); // a promised gift counts here, if none yet
-  
-  /*        $help = $gifts ? 'thanks' : 'ask';
-            $msg = t('<span class="loud">%when <b>Welcome</b></span> to %PROJECT, How\'s it going%lastTx? %help donation(s), %signupCo volunteer? [<%a>details</a>]', 'when lastTx help signupCo _a', u\fmtDate($when, TRUE), $a->lastTxDesc(), ucfirst($help), @$signupCo, w\atag("/help/welcome/gifts=$gifts"));
-            if ($a->paper) $msg .= t(' <span class="loud">Paper statements</span> at $%R_STATEMENT_COST/month &mdash; really?');
-            $gift = $gifts ? t('Thanks for donation(s). Annual gift?') : t('Donate?');
-            $feature = $a->co ? t('cash-out') : t('joint account');
-
-            return [t('Annual'), $when = strtotime("+$yearsIn years", $activated), t('<span class="loud">%when <b>Annual</b></span>: Thanks for participating. How\'s it going%lastTx? %gift Mailing address okay? Volunteer? Consider %feature? [<%a>details</a>]', 'when lastTx gift _a feature', u\fmtDate($when, TRUE), $a->lastTxDesc(), $gift, w\atag("/help/annual/gifts=$gifts&years=$yearsIn"), $feature)];
-  */
-      
+	?: db\get('amount', 'tx_templates t', 'action=:ACT_PAY AND t.from=:id AND t.to=:CGID AND end IS NULL', $subs); // a promised gift counts here, if none yet
+        
   $welcome = t('<li><b>Welcome</b> to %PROJECT. Thanks for participating!</li>');
   if (!$mya->co and $myCo = $mya->firstCo()) {
     list ($signupCo, $myCo) = ['', t(' (personally rather than for company "%myCo")', compact('myCo'))];

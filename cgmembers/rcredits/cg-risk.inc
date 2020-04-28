@@ -54,9 +54,7 @@ function acctRisk1($uid, $thresholds, &$risk = 0, &$calc = 0) {
   setRisk('shady', $a); // no substantial internet search results and/or no SSN history
 //  if ($a->can(B_BANK)) setRisk('hasBank'); // has a connected bank account
   setRisk('hasBank', $a); // has a connected bank account
-  if ($uid != CGID and db\get("SUM(amount*IF(period='W',52,IF(period='M',12,IF(period='Q',4,1))))", 'r_recurs', 'payer=:id AND payee=:CGID AND ended=0', $idSub) + 0 < K_MISER_DONATION and !$a->roundup and $a->crumbs == 0) setRisk('miser'); // unusually small donation to CGF
-///  	debug(ray('uid roundup crumbs sum', $uid, $a->roundup, $a->crumbs, db\get("SUM(amount*IF(period='M',12,IF(period='Q',4,1)))", 'r_recurs', 'payer=:id AND payee=:cg', $idSub + ray('cg', CGID)) + 0));
-  //  and $a->share < K_MISER_SHARE
+  if ($uid != CGID and db\get('SUM(amount*perYear(period, periods))', 'tx_templates t', 'action=:ACT_PAY AND t.from=:id AND t.to=:CGID AND t.end IS NULL', $idSub) + 0 < K_MISER_DONATION and !$a->roundup and $a->crumbs == 0) setRisk('miser'); // unusually small donation to CGF
   
 //  setRisk('photoOff', $a); // photo mismatches ID or DOB
   setRisk('addrOff', $a); // addr mismatches ID
