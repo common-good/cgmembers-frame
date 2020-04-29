@@ -1487,7 +1487,7 @@ function setBit(&$n, $b, $on = TRUE) {return $n = $on ? (@$n | u\bit($b)) : (nn(
  * Return a date the given number of units after start.
  */
 function dateIncr($start, $number, $units) {
-  if ($units == 'forever') return NULL;
+  if (in($units, 'once forever')) return NULL;
   if ($units == 'quarter') list ($units, $number) = ['month', $number * 3];
   return strtotime("+$number $units", $start);
 }

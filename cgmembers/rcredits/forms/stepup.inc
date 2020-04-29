@@ -21,23 +21,30 @@ function formStepUp($form, &$sta, $args = '') {
   $subtext = t('<p>Support your favorite causes by paying a little extra on your %PROJECT purchases.</p><p>Choose organizations from the list below and/or add your own choices. Type a dollar amount or percentage to add to each purchase &mdash; to be donated to that organization. You can also set a maximum donation per transaction or choose to donate periodically instead.</p><p>If you would like to see your nonprofit or project on this list, get %STEPUP_MIN people to write it in.</p>', '_a', atag('/community/invite', away()));
   
   $fromMe = '`from`=:myid';
-  foreach (ray('amount portion amtMax') as $k) $set[] = "IF(r.$fromMe, r.$k, NULL) AS `$k`";
+  foreach (ray('amount portion amtMax') as $k) $set[] = "IF($fromMe, `$k`, NULL) AS `$k`";
   $set = join(', ', $set);
   
   // xly means recurring with some periodicity: daily, weekly, etc. ("x"-ly)
   $sql = <<< X
-    SELECT * FROM (
-      SELECT 0 AS xly, CONCAT_WS('-', 'r', uid, r.$fromMe) AS recK, r.to, id, action,
-        IF(r.portion>0, IF(amtMax>0, 'pctmx', 'pct'), 'tx$') AS `when`, uid, fullName, r.$fromMe AS mine, $set
-      FROM tx_rules r LEFT JOIN users u ON u.uid=r.to
+    SELECT DISTINCT x.*,u.uid,u.fullName FROM (
+    
+      SELECT 0 AS xly, $fromMe AS mine, CONCAT_WS('-', 'r', r.to, $fromMe) AS recK, 
+        r.to, id, IF($fromMe, IF(r.portion>0, IF(amtMax>0, 'pctmx', 'pct'), 'tx$'), 'pct') AS `when`, $set
+      FROM tx_rules r
       WHERE r.action=:ACT_SURTX AND r.from>0 AND r.to>0 AND r.payeeType=:REF_ANYCO AND IFNULL(r.end, :NOW+1) > :NOW
+
       UNION 
-      SELECT 1 AS xly, CONCAT_WS('-', 't', uid, t.$fromMe) AS recK, t.to, id, action,
-        t.period AS `when`, uid, fullName, t.$fromMe AS mine, amount, t.portion, amtMax
-      FROM tx_templates t LEFT JOIN users u2 ON u2.uid=t.to
+      SELECT IF($fromMe, 1, 0) AS xly, $fromMe AS mine, CONCAT_WS('-', IF($fromMe, 't', 'r'), t.to, $fromMe) AS recK,
+        t.to, id, IF($fromMe, t.period, 'pct') AS `when`, $set
+      FROM tx_templates t
       WHERE t.action=:ACT_PAY AND t.from>0 AND t.to>0 AND t.period<>'once' AND IFNULL(t.end, :NOW+1) > :NOW
-    ) x    
-    GROUP BY mine,x.to,action HAVING COUNT(id)>=LEAST(1, :STEPUP_MIN) OR mine
+      
+    ) x 
+    LEFT JOIN users u ON u.uid=x.to
+    LEFT JOIN r_company c USING(uid)
+    WHERE (mine AND NOT xly) OR (u.:IS_CO AND c.coType=:CO_NONPROFIT)
+    GROUP BY mine,x.to,xly 
+    HAVING COUNT(id)>=LEAST(1, :STEPUP_MIN) OR mine
     ORDER BY mine, fullName, uid, xly
 X;
 
@@ -47,17 +54,15 @@ X;
 
   if ($recs = $q->fetchAllAssoc('recK')) foreach ($recs as $rec) {
     extract((array) $rec);
-    if (!isset($recs[$recK])) continue; // unsetting doesn't stop it from being included
-
-    if (!$mine and $myK = preg_replace('/-0$/', '-1', $recK) and $my = (array) nn($recs[$myK], [])) { // chose a standard
-      foreach (ray('amount portion amtMax') as $k) $$k = $my[$k]; // get the amounts for the standard choice
-      unset($recs[$myK]); // show it as standard and not as custom
-    } 
+    if (!$mine and (
+      isset($recs[preg_replace('/r-(.*)-0$/', 'r-$1-1', $recK)]) or 
+      isset($recs[preg_replace('/r-(.*)-0$/', 't-$1-1', $recK)])
+    )) continue; // ignore the blank standard because it will appear as one of mine
     
     foreach (ray('amount portion amtMax') as $k) $$k += 0;
     
     $amt = $amount ? u\fmtAmt($amount, '') : ($portion ? str_replace('%', '', u\fmtAmt($portion, '%')) : '');
-    $max = $amtMax ? u\fmtAmt($amtMax) : '';
+    $max = $amtMax ? u\fmtAmt($amtMax, '') : '';
     $uids[] = $uid;
     $xlys[] = $xly;
     if (nn($dfts["amt-$xly-$uid"])) foreach (ray('amt max') as $k) $$k = nn($dfts["$k-$xly-$uid"]); // what the user intended
@@ -105,12 +110,10 @@ function formStepUp_validate($form, &$sta) {
       if (!$fullName = $org) {unset($uids[$i]); continue;}
 
       if (!$id = db\get('uid', '(SELECT * FROM users ORDER BY trust DESC) u', compact('fullName'))) return er($sta, t('This is not a member organization: %fullName. Organization names are suggested automatically when you type 3 or more letters in the name. Please try again. For the list of participating organizations, <%a>click here</a>.', 'fullName _a', $fullName, atag(PROMO_URL . '/businesses')), "org-$xly-$uid");
-      
-      $xly = in($when, PERIODS) ? 1 : 0;
+
       foreach (ray('amt when max') as $k) $input["$k-$xly-$id"] = $$k;
       $uids[$i] = $uid = $id;
-      si($xlys, $i, $xly);
-      
+            
     } elseif (!$amt) { continue; }
     
     $amt = strtr($amt, ray('$ %', '', ''));
@@ -134,13 +137,13 @@ function formStepUp_submit($form, &$sta) {
   $periods = 1; // if the donation recurs at all, it's once per period
   extract(just('uids xlys', $input = $sta['input']));
 
-  foreach ($uids = ray($uids) as $i => $uid) { // for each organization, create a rule for the amount
+  foreach ($uids = ray($uids) as $i => $uid) { // for each organization, create a rule or template for the amount
     $xly = $xlys[$i];
     foreach(ray('amt:amt,period:when,amtMax:max') as $k => $v) $$k = $input["$v-$xly-$uid"] ?: NULL;
     $pct = strhas($period, 'pct');
     $match = ray($changeable, $pct ? 0 : $amt, $pct ? $amt / 100 : 0, $period == 'pctmx' ? $amtMax : NULL);
     
-    if ($xly) { // periodic donation
+    if (in($period, PERIODS)) { // periodic donation
       $tnm = 'tx_templates';
       $info = ray('action from to periods', ACT_PAY, $myid, $uid, 1);
       $matchFlds = $changeable . ' period';
@@ -169,13 +172,11 @@ function formStepUp_submit($form, &$sta) {
  * @return a description or a map of all descriptions, if no "when" choice is specified.
  */
 function whenly($when = '') {
-  $whenMap = array_combine(ray('pct, tx$, pctmx'), ray(t('% per tx, $ per tx, % / tx up to'))) + array_combine(ray(PERIODS), ray(PERIODLY));
-  foreach (ray('once forever') as $k) unset($whenMap[$k]);
-
+  $whenMap = array_combine(ray('pct, tx$, pctmx'), ray(t('% per tx, $ per tx, % / tx up to'))) + r\recurRay();
   return $when ? $whenMap[$when] : $whenMap;
 }
   
 function orgFld($dft = '') {return textFld(BARE, [t('Organization name')], dft($dft));}
 function amtFld($dft = '') {return numFld(BARE, [t('Amount')], dft($dft));}
 function whenFld($dft = '') {return selectFld(BARE, '', dft($dft), whenly());}
-function maxFld($dft = '') {return numFld(BARE, [t('Max')], dft($dft) + vmin(.01));}
+function maxFld($dft = '') {return numFld(BARE, [t('Max')], dft($dft) + vmin(.01) + prefix('$'));}

@@ -35,7 +35,7 @@ define('SAME_TIME', 60 * 20); // number of seconds that make no difference in "s
 function fixData(&$info, $direct = FALSE) {
   global $testOnly, $rUrl, $testVars;
 
-  $fields = key($info) . ' email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method companyOptions'; // first key is probably an ID field, so keep it at the front
+  $fields = key($info) . ' email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method companyOptions coType'; // first key is probably an ID field, so keep it at the front
 
   if (@$testVars) foreach ($info as $k => $v) if (mb_strpos($v, '@') !== FALSE) {
     foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", $var, $v);
@@ -46,6 +46,9 @@ function fixData(&$info, $direct = FALSE) {
   if (isset($cat)) $cat = db\get('id', 'post_cats', compact('cat'));
   if (isset($method) and !$testOnly) $method = array_search($method, ray('email phone text'));
   if (isset($companyOptions)) $companyOptions = ray($companyOptions);
+  if (isset($coType) and !is_numeric($coType)) {
+    if ($coType) $coType = array_search($coType, ray(CO_TYPES)); else { unset($coType); unset($info['coType']); }
+  }
 
   if (@$who) $who = t\fullQid($who);
   foreach (ray('flags adminable') as $k) if (isset($$k)) $$k = t\fixFlags($$k);
@@ -117,7 +120,6 @@ function fixEmail(&$email) {
 function doRecords($list, $thing) {
   global $testOnly;
 
-//  if ($testOnly) t\output("Expect $thing: " . pr($list), 'expect');
   if (is_object($list)) $list = (array) $list;
   u\EXPECT(is_array(@$list) and !is_numeric(@key(@$list[0])), 'doThing object should be an assoc: ' . pr($list));
   $func = 'CG\\Testing\\do';

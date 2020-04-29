@@ -42,7 +42,7 @@ function formTx($form, &$sta, $args = '') {
   */
   
   $purpose = textFld(t('For:'), [t('purpose or description of goods and services')], required(@$purpose));
-  if ($paying) $repeat = selectFld(t('&nbsp;'), '', dft(''), ['' => t('No repeat')] + r\recurRay());
+  $repeat = selectFld(t('&nbsp;'), '', dft(''), ['' => t('No repeat')] + r\recurRay());
   
   $scanClass = 'not-scanned';
   $$type = submit($opDesc);
@@ -82,14 +82,14 @@ function formTx_submit($form, &$sta) {
 
   if ($ok and $period = @$repeat) {
     $start = today();
-    $subs = ray('from to end duration', $mya->id, $uid, NULL, 'forever');
-    $info = $subs + compact(ray('amount purpose period start duration'));
+    list ($action, $tnm, $idFnm) = $func == 'pay' ? [ACT_PAY, 'tx_hdrs', 'xid'] : [ACT_CHARGE, 'r_invoices', 'nvid'];
+    $subs = ray('from to end duration', $mya->id, $uid, NULL, 'once');
+    $info = $subs + compact(ray('action amount purpose period start duration'));
     if ($id = db\get('id', 'tx_templates', $subs)) {
       db\del('tx_templates', 'id', $id);
       say(t('Your recurring payment has been updated.'));
     }
     $id = db\insert('tx_templates', $info, 'id');
-    list ($tnm, $idFnm) = $func == 'pay' ? ['tx_hdrs', 'xid'] : ['r_invoices', 'nvid'];
     db\update($tnm, ray("$idFnm recursId", $args[$idFnm], $id), $idFnm);
     
     $often = r\recurDesc(@$repeat, 1);

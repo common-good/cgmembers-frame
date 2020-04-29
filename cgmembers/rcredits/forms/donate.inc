@@ -78,7 +78,7 @@ function formDonate_submit($form, &$sta) {
     $purpose = t('donation');
     list ($recursId, $recurDesc) = $period == 'once' 
     ? [0, '']
-    : [db\insert('tx_templates', ray('action from to amount period purpose duration', ACT_PAY, $mya->id, CGID, $amount, $period, $purpose, 'forever'))
+    : [db\insert('tx_templates', ray('action from to amount period purpose duration', ACT_PAY, $mya->id, CGID, $amount, $period, $purpose, 'once'))
        , ' (' . r\recurDesc($period, 1) . ')'];
 //    $count = db\count('r_txs', 'payer=:payer AND payee=:payee AND :IS_RECURS AND created>=:created', compact(ray('payer payee created')));
     $msg = 'gift successful';

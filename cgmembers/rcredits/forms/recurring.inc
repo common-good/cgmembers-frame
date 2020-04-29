@@ -56,7 +56,7 @@ X;
     $fPeriod = ucfirst(r\recurDesc($period, $periods));
     $fCreated = u\fmtDate($start, TRUE);
     $finished = ($end and $end < now());
-    $fNext = $finished ? '' : u\fmtDate(nextRecur($start, $period, $periods), TRUE);
+    $fNext = $finished ? '' : u\fmtDate(u\dateIncr($start, $periods, $period), TRUE);
     $fEnd = $end ? u\fmtDate($end, TRUE) : '';
     $button = $finished ? '' : t('Stop recurring transaction');
     $arrow = $paying ? $to : $from;
@@ -97,16 +97,6 @@ function addLine($info, $classes, $url) {
     $res .= "  <td class=\"$class\">$v</td>\n";
   }
   return $res . "</tr>\n";
-}
-
-function nextRecur($starting, $period, $periods = 1) {
-  if (array_key_exists($period, OFTENS_SECS)) {
-    $perSecs = OFTENS_SECS[$period] * $periods;
-    $nPer = ceil((now() - $starting) / $perSecs);
-    return round($starting + ($nPer * $perSecs));
-  } else {
-    return FALSE;
-  }
 }
 
 function formRecurring_validate($form, &$sta) {}

@@ -555,8 +555,8 @@ body.page-partner blockquote {font-size:14px;}
 #frm-stepup .cell.amt {width:75px; text-align:right;}
 #frm-stepup .cell.amt input {text-align:right; padding-right:8px;}
 #frm-stepup .cell.when select {padding-left:5px; padding-right:0;}
-#frm-stepup .thead .cell.max {text-align:right; display:none;}
-#frm-stepup .cell.max input {text-align:right; display:none;}
+#frm-stepup .thead .cell.max, #frm-stepup .tbody .cell.max {text-align:right; display:none; width:75px;}
+#frm-stepup .cell.max input {width:60px; display:inline-block; text-align:right; margin-left:2px;}
 
 /* Rules */
 #frm-rules .radio {display:inline-block;}

@@ -635,6 +635,7 @@ function with($content) {return weShow($content);}
  *     TEST signupco ACompanyAccountManagerCreatesADiscount
  *     TEST signup AMemberInvites
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
+ *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     TEST summary AnAgentClicksTheSummaryTabWithoutPermissionToManage
  *     TEST transactions AMemberLooksAtTransactionsForThePastYear
  *     TEST transactions AMemberLooksAtTransactionsForThePastFewDays

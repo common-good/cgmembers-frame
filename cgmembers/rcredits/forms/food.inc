@@ -134,7 +134,7 @@ function formFood_submit($form, &$sta) {
   if ($amount > 0) {
     $payee = db\get('uid', 'users', "name='foodfund'");
     $purpose = t('food donation');
-    $recursId = db\insert('tx_templates', ray('action from to amount period purpose duration', ACT_PAY, $mya->id, $payee, $amount, $period, $purpose, 'forever'));
+    $recursId = db\insert('tx_templates', ray('action from to amount period purpose duration', ACT_PAY, $mya->id, $payee, $amount, $period, $purpose, 'once'));
     $msg = 'gift successful';
     $period = r\recurDesc($period, 1);
     if ($mya->payApproved($payee, $amount, "$purpose ($period)", FOR_GOODS, ['recurs' => 1], $recursId)) {
