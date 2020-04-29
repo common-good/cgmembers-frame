@@ -62,7 +62,7 @@ function formConnect($form, &$sta, $args = '') {
     
     if ($usa) $routingNumber = intFld(t('Routing:'), t('Type carefully your bank\'s routing number.'), vrange(100000000, 999999999));
     //$bankAccount = textFld(t('Account:'), t('Type carefully your checking account number.'));
-    $bankAccount = textFld(t('Account:'), t('Type <b class="loud">carefully</b> your <b>checking</b> account number. <span>Savings accounts will not work, at this time.</span>'));
+    $bankAccount = intFld(t('Account:'), t('Type <b class="loud">carefully</b> your <b>checking</b> account number. <span>Savings accounts will not work, at this time.</span>'), maxlen(17));
 //    $bankAccount2 = textFld(t('Again:'), t('Type your account number again.<br>(we need to be REALLY SURE we don\'t connect to the wrong account)'));
   
     $connectFields = fieldSet('connectFields2', @compact(ray('connectText routingNumber bankAccount cashout autopay autoboxes refills targetFields')), BARE);

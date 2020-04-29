@@ -1,3 +1,7 @@
+2020-04-29 feature/input-types2
+. reverted a couple minor things
+. added comments to tests for MariaDb10.4 changes
+
 2020-04-28 feature/recurs-central
 . moved r_recurs records into tx_templates and revised code accordingly
 

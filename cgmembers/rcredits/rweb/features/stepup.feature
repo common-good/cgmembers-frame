@@ -76,6 +76,7 @@ Scenario: A member's rules come into play
   |   3 |   1 | %today  | 1      | .ZZB  | .ZZF  | %STEPUP_DESC | 1    | %E_DONATION |
   |   4 |   1 | %today  | 2      | .ZZB  | .ZZG  | %STEPUP_DESC | 2    | %E_DONATION |
   |   5 |   1 | %today  | 2      | .ZZB  | .ZZH  | %STEPUP_3PCT | 3    | %E_DONATION |
+  # MariaDb bug: autonumber skips id=2 when there are record ids 1 and -1
 
 Scenario: A member chooses recurring and per-transaction donations
   When member ".ZZB" steps up with:

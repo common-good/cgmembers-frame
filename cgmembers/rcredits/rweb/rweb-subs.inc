@@ -416,7 +416,7 @@ function fld($type, $label = '', $help = '', $x = [], $options = []) {
   $type = strtr($type, ray('text:textfield, num:number, int:number, pass:password, area:textarea, phone:tel'));
   if (in($subtype = $type, 'number tel date email range')) {
     if ($type == 'tel') {
-      if (nn($x['default_value'])) $x['default_value'] = u\fmtPhone($x['default_value'], '-');
+      if (nn($x['default_value'])) $x['default_value'] = u\fmtPhone($x['default_value']);
     } elseif ($type == 'number') {
       u\setDft($x['step'], .01);
       u\setDft($x['min'], 0);
