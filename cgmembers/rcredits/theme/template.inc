@@ -485,10 +485,6 @@ function rcredits_fieldset($variables) {
   return rcredits_form_element($variables);
 }
 
-function rcredits_password($variables) {
-  return rcredits_textfield($variables, 'password');
-}
-
 function rcredits_breadcrumb($variables) {
   $cnt = count($breadcrumb = @$variables['breadcrumb']);
   if ($cnt < 2) return '';
