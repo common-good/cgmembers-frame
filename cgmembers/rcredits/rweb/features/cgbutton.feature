@@ -123,15 +123,15 @@ Scenario: a member redeems store credit
   Then transactions:
   | eid | xid | created | amount | payer | payee | purpose          | taking | rule | type      |*
   |   1 |   1 | %today  |     20 | .ZZA  | .ZZC | stuff             | 0      |      | %E_PRIME  |
-  |   2 |   1 | %today  |     10 | .ZZC  | .ZZA | discount (rebate) | 0      | 1    | %E_REBATE |
+  |   3 |   1 | %today  |     10 | .ZZC  | .ZZA | discount (rebate) | 0      | 1    | %E_REBATE |
 
   When member ".ZZA" confirms form "pay" with values:
   | op  | who     | amount | goods      | purpose |*
   | pay | Our Pub | 40     | %FOR_GOODS | stuff   |
   Then transactions:
   | eid | xid | created | amount | payer | payee | purpose          | taking | rule | type      |*
-  |   3 |   2 | %today  |     40 | .ZZA  | .ZZC | stuff             | 0      |      | %E_PRIME  |
-  |   4 |   2 | %today  |     13 | .ZZC  | .ZZA | discount (rebate) | 0      | 1    | %E_REBATE |
+  |   4 |   2 | %today  |     40 | .ZZA  | .ZZC | stuff             | 0      |      | %E_PRIME  |
+  |   5 |   2 | %today  |     13 | .ZZC  | .ZZA | discount (rebate) | 0      | 1    | %E_REBATE |
   And these "tx_rules":
   | id | end  |*
   |  1 | %now |
