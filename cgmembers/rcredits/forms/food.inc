@@ -14,8 +14,9 @@ function formFood($form, &$sta, $args = '') {
   extract(just('welcome', $args));
   $mya = w\eLinkAcct($sta, $args, 'any');
 
-  $oftens = array_reverse(ray(OFTENS));
-  unset($oftens['X']); // no one-time donation here
+  return w\softErr(t('That link is out of date. Please sign in to your %PROJECT account and select "Step up" on the Settings menu.'));
+  
+  $oftens = array_reverse(r\recurRay());
   
   $giftLevels = [
     1000 => t('$1,000'),
@@ -56,7 +57,7 @@ X
     $img = item(tr('<img src="%BASE_URL/rcredits/images/pages/simple-gifts-purchase.jpg" />'));
   } elseif ($mya and $mya->canManage) {
     $foodId = db\get('uid', 'users', "name='foodfund'");
-    if ($recurs = db\get('id,period,amount', 'r_recurs', 'payer=:payer AND payee=:foodId AND ended=0', ray('payer foodId', $mya->id, $foodId))) {
+    if ($recurs = db\get('id,period,amount', 'tx_templates', 't.from=:payer AND t.to=:foodId AND t.end IS NULL', ray('from foodId', $mya->id, $foodId))) {
       extract($recurs);
       $recurs = hidFld(serialize($recurs));
       $replaces = t('donation replaces', 'period amt', $oftens[$period], u\fmtAmt($amount));
@@ -66,7 +67,7 @@ X
       $amount0 = $amtChoice0 == -1 ? $amount : '';
     } else {
       $replaces = '';
-      $period0 = 'M';
+      $period0 = 'month';
       $amtChoice0 = '0';
       $amount0 = '';
     }
@@ -85,12 +86,12 @@ X
 
     $accountId = $pass = NULL;
     $food0 = $mya->food * 100;
-    $food = textFld(t('Contribution Percentage:'), [t('Percentage')], dft($food0 ?: '') + suffix(' %'));
+    $food = numFld(t('Contribution Percentage:'), [t('Percentage')], dft($food0 ?: '') + suffix(' %'));
     $or = item(t('AND / OR'));
       
 //    $amtChoice = selectFld(t('Donation:'), '', required($mya->co ? R_COMPANY_GIFT : R_INDIVIDUAL_GIFT), $giftLevels);
     $amtChoice = selectFld(t('Donation:'), '', dft($amtChoice0), $giftLevels);
-    $amount = textFld(t('Donation:'), [t('Amount')], dft($amount0));
+    $amount = numFld(t('Donation:'), [t('Amount')], dft($amount0));
     $period = selectFld(t('How often:'), '', dft($period0), $oftens);
     $submit = submit();
   } else {$subtext = t('You do not have permission to use this page.');}
@@ -122,7 +123,7 @@ function formFood_submit($form, &$sta) {
   if (@$recurs) {
     extract(just('id period amount', unserialize($recurs)), EXTR_PREFIX_ALL, 'x');
     if ($x_period != $period or $x_amount != $amount) {
-      db\update('r_recurs', ray('id ended', $x_id, now()), 'id');
+      db\update('tx_templates', ray('id end', $x_id, now()), 'id');
       say(t('Your previous recurring contribution has been canceled.'));
     } else {
       $amount = 0;
@@ -133,9 +134,9 @@ function formFood_submit($form, &$sta) {
   if ($amount > 0) {
     $payee = db\get('uid', 'users', "name='foodfund'");
     $purpose = t('food donation');
-    $recursId = db\insert('r_recurs', ray('payer payee amount period purpose', $mya->id, $payee, $amount, $period, $purpose));
+    $recursId = db\insert('tx_templates', ray('action from to amount period purpose duration', ACT_PAY, $mya->id, $payee, $amount, $period, $purpose, 'once'));
     $msg = 'gift successful';
-    $period = r\periodDesc($period);
+    $period = r\recurDesc($period, 1);
     if ($mya->payApproved($payee, $amount, "$purpose ($period)", FOR_GOODS, ['recurs' => 1], $recursId)) {
       r\notify($mya->id, 'recur pay', ray('amount period payee purpose', u\fmtAmt($amount), $period, t('the Food Fund'), $purpose));
     } else $msg .= '|gift transfer later';

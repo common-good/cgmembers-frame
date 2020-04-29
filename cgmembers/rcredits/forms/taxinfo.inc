@@ -94,7 +94,7 @@ EOF
     $submit = submit(); // display suppressed in CSS
     $go = w\submi(t('Change')); // requires suppressed submit button (find a better way)
     
-  //  $ending = textFld(t('For year ending:'), [t('Fiscal Year End')], required($endDesc) + w\suffix('&nbsp;' . \render($go)));
+  //  $ending = dateFld(t('For year ending:'), [t('Fiscal Year End')], required($endDesc) + w\suffix('&nbsp;' . \render($go)));
     return cgform(compact(ray('title subtext summary list posttext')));
   
   } else {

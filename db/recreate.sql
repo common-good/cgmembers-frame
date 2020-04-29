@@ -1,5 +1,7 @@
-drop database cg;
-create database cg;
-grant all on cg.* to cg@localhost;
-use cg;
-source db/startup.sql;
+DROP DATABASE cg;
+DROP USER IF EXISTS cg@localhost;
+CREATE DATABASE cg;
+CREATE USER cg@localhost IDENTIFIED BY '';
+GRANT ALL ON cg.* TO cg@localhost;
+USE cg;
+SOURCE db/startup.sql;

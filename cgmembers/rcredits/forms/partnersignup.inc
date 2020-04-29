@@ -70,9 +70,9 @@ function signedContract($code, &$sta = '') {
 X
   , compact(ray('m_company partnerName')));
 
-  $routingNumber = textFld(t('Routing:'), t('Type carefully your bank\'s routing number.'), required());
+  $routingNumber = intFld(REQ . t('Routing:'), t('Type carefully your bank\'s routing number.'), vrange(100000000, 999999999));
   //$bankAccount = textFld(t('Account:'), t('Type carefully your checking account number.'));
-  $bankAccount = textFld(t('Account:'), t('Type <b>carefully</b> your <b>checking account</b> number.'), required());
+  $bankAccount = intFld(REQ . t('Account:'), t('Type <b>carefully</b> your <b>checking account</b> number.'), maxlen(17));
     
   $midtext = t(<<< X
     <p>Now choose which financial institution will process your payments. We recommend using %PROJECT because it provides a lot of other community benefits and costs us less. %PROJECT is to banking what %partnerName is to energy. Check out their website: <%a>CommonGood.earth</a>.</p>
@@ -410,9 +410,9 @@ X
   
   $midtext2 = t('<p>Enter the bank account information for the savings or checking account you will use to pay your solar subscription bill.</p>');
 
-  $routingNumber = textFld(t('Routing:'), t('Type your bank\'s routing number. (Please check to be sure it\'s correct!)'), required());
+  $routingNumber = intFld(REQ . t('Routing:'), t('Type your bank\'s routing number. (Please check to be sure it\'s correct!)'), vrange(100000000, 999999999));
   //$bankAccount = textFld(t('Account:'), t('Type carefully your checking account number.'));
-  $bankAccount = textFld(t('Account:'), t('Type your bank account number. (Please check to be sure it\'s correct!)'), required());
+  $bankAccount = intFld(REQ . t('Account:'), t('Type your bank account number. (Please check to be sure it\'s correct!)'), maxlen(17));
   $sorch = radiosFld(t('Type:'), '', required(-1), [t('Checking'), t('Savings')]);
 
 //  $bankInfo = fieldSet(BARE . 'bankInfo', compact(ray('midtext2 routingNumber bankAccount sorch')));
@@ -426,7 +426,7 @@ X
   $fullName = textFld(t('Name on Bank Account:'), [t('Name'), t('Please correct, if needed')], required($fullName));
 //  $contact = $co ? textFld(t('Your Name:'), '', required($contact)) : NULL;
   $contact = $co ? hidFld($contact) : NULL;
-//  $phone = textFld(t('Phone:'), [t('Your phone number')], required(u\fmtPhone($phone, '-')));
+//  $phone = phoneFld(REQ . t('Phone:'), [t('Your phone number')], dft($phone));
   $phoneDpy = item(u\fmtPhone($phone, '-'), t('Phone:'));
   $phone = hidFld($phone);
 
@@ -437,8 +437,8 @@ X
   $city2 = textFld(t('City:'), [t('Postal city')], required($city));
   $state2 = stateFld($state);
   $zip2 = textFld(t('Postal Code:'), [t('Postal code')], required($zip));
-  $years = textFld(BARE, [t('Years')], suffix(t('&nbsp years + ')));
-  $months = textFld(BARE, [t('Months')], suffix(t('&nbsp months')));
+  $years = intFld(BARE, [t('Years')], suffix(t('&nbsp years + ')));
+  $months = intFld(BARE, [t('Months')], suffix(t('&nbsp months')));
   $tenure = fieldSet('tenure2', compact('years', 'months'), t('How long:'), t('How long have you been at your current address (roughly)'));
   $owns = radiosFld('', '', required(-1), [t('Rent'), t('Own')]);
   $myid = hidFld($mya->id);

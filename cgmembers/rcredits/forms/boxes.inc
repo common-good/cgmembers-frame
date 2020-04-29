@@ -49,7 +49,7 @@ function formBoxes($form, &$sta) {
     'title' => item(t('Devices (computers, phones, tablets, etc.)')),
     'subtext' => item(t('These are the devices used with this account.')),
     'boxes' => fld('tableselect', '', '', array('header' => $headers, 'multiple' => TRUE, 'empty' => t('no devices')), $list),
-    'new' => textFld(t('Add a cell phone*: ')),
+    'new' => phoneFld(t('Add a cell phone*: ')),
     'save' => submit(t('Save changes')),
 //    'delete' => submit(t('Remove Selected')),
 //    'postscript' => item(t('* You may have a cell phone listed on the <a href="settings/contact">Contact Information</a> page, or even as a POS device on this page, but to use it for text message transactions you must add its phone number here.')),

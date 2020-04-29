@@ -30,8 +30,8 @@ function formCoupons($form, &$sta, $args = '') {
   case 'gift':
     $title = t('Create a Gift Certificate');
     $subtext = t('Each gift certificate is assigned a <b class="loud">unique code</b>. The "Count" is the number of gift certificates you want; for example if you want a gift certificate for just one person, type "1". Print the sheet of certificates only once and do not photocopy it.');
-    $amount = textFld(t('Amount:'), [t('Gift amount')], required($amount ? u\fmtAmt($amount) : ''));
-    $count = textFld(t('Count:'), [t('How many?'), t('Print how many coupons/recipients? (8 to a sheet, to be cut in half 3 times)')], required());
+    $amount = numFld(t('Amount:'), [t('Gift amount')], required($amount ? u\fmtAmt($amount) : ''));
+    $count = intFld(REQ . t('Count:'), [t('How many?'), t('Print how many coupons/recipients? (8 to a sheet, to be cut in half 3 times)')]);
     $submit = t('Create');
     break;
 
@@ -50,11 +50,11 @@ function formCoupons($form, &$sta, $args = '') {
 X
       );
   
-    $amount = textFld(t('Discount:'), [t('Amount or Percentage'), t('For example $20 or 10%')], required());
-    $minimum = textFld(t('Minimum:'), [t('Minimum purchase'), t('Minimum purchase amount, to get the discount. If this amount equals the discount amount, your coupons will be labeled "Gift Certificate".')], required(0));
-    $start = textFld(t('Valid from:'), [t('Start date')], required(u\fmtDate(now(), TRUE)));
-    $end = textFld(t('Valid until:'), [t('End date'), t('An end date is strongly encouraged.')]);
-    $useMax = textFld(t('Limit:'), t('Leave this blank for unlimited uses.'), suffix(t(' uses per member')));
+    $amount = textFld(REQ . t('Discount:'), [t('Amount or Percentage'), t('For example $20 or 10%')]);
+    $minimum = numFld(t('Minimum:'), [t('Minimum purchase'), t('Minimum purchase amount, to get the discount. If this amount equals the discount amount, your coupons will be labeled "Gift Certificate".')], required(0));
+    $start = dateFld(t('Valid from:'), [t('Start date')], required(u\fmtDate(now(), TRUE)));
+    $end = dateFld(t('Valid until:'), [t('End date'), t('An end date is strongly encouraged.')]);
+    $useMax = intFld(t('Limit:'), t('Leave this blank for unlimited uses.'), suffix(t(' uses per member')));
     $automatic = w\boolFld(t('Automatic?'), t('If the discount is not automatic, you will need to do the math each time.'), TRUE);
     $purpose = textFld(t('Description:'), [t('Discount on what')], dft(t('on any purchase')));
 //    if ($mya->admin) $forOnly = textFld(t('For only:'), [t('ID number of group'), t('If you want to restrict this discount to certain %PROJECT members, type the ID of their group.')]);

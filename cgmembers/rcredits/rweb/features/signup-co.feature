@@ -39,11 +39,11 @@ Scenario: Someone wants to open a company account
 Scenario: A company signs up
   Given next random code is "WHATEVER"
   When member ".ZZA" completes form "signup-co/relate=1" with values:
-  | fullName | legalName | federalId | dob      | zip   | phone        | email | selling | source  | coType  | ownPhone |*
-  | New Co   |           | 04-3849283 | %mdY-3y | 01004 | 413-253-0004 | d@    | fish    | thither | %CO_LLC |        0 |
+  | fullName | legalName | federalId | dob      | zip   | phone        | email | selling | source  | coType | ownPhone |*
+  | New Co   |           | 04-3849283 | %mdY-3y | 01004 | 413-253-0004 | d@    | fish    | thither | LLC    |        0 |
   Then members:
-  | uid  | fullName | legalName | federalId | dob          | zip   | phone        | email | coType  | selling |*
-  | .AAA | New Co   | New Co    | 043849283 | %daystart-3y | 01004 | +14132530004 | d@    | %CO_LLC | fish    |
+  | uid  | fullName | legalName | federalId | dob          | zip   | phone        | email | coType | selling |*
+  | .AAA | New Co   | New Co    | 043849283 | %daystart-3y | 01004 | +14132530004 | d@    | LLC    | fish    |
   And relations:
   | main | other | permission |*
   | .AAA | .ZZA  | manage     |

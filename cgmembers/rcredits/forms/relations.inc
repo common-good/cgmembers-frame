@@ -91,7 +91,6 @@ EOF;
 
   $title = t('Relations');
   $list = fld('item', '', '', array('markup' => $list));
-//    'newPerson' => textFld(t('Add Someone:'), t('name, id, email, or phone')), // autocomplete causes problems
   $newPerson = textFld(t('Add Someone:'), [t('Name, id, email, or phone')]);
   $go = submit(t('Save Changes'));
   $showCustomers = hidFld(@$showCustomers);

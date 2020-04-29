@@ -570,7 +570,7 @@ function optStart($opti, $rowclass, $defaults) {
     $v = "$k$opti";
     $label = $k == 'note' ? t('Comment') : t('Veto');
 //    $html .= w\rendA($v, w\boxFld($v, '', "<b>$label</b>", @$defaults[$v], w\onchange("opts[$opti].noteClick();")));
-    $html .= w\rendA($v, w\boxFld($v, '', "<b>$label</b>", @$defaults[$v], w\attrib(ray('index', $opti))));
+    $html .= w\rendA($v, w\boxFld($v, '', "<b>$label</b>", @$defaults[$v], ray('index', $opti)));
   }
   w\jsx('veto');
 	return <<<EOF

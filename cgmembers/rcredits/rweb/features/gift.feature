@@ -22,20 +22,21 @@ Scenario: A member donates
   | When      | How often? |
   | Honoring | |
   And with choices:
-  | 0 | How often? |
-  | Y | Yearly |
-  | Q | Quarterly |
-  | M | Monthly |
-  | W | Weekly |
+  | 0       | How often? |
+  | year    | yearly |
+  | quarter | quarterly |
+  | month   | monthly |
+  | week    | weekly |
+  | day     | daily |
 #  And without: (can't tell this isn't showing because it's CSS)
 #  | Other amount |
   
   When member ".ZZA" completes form "community/donate" with values:
   | amtChoice | amount | period | honor  | honored |*
-  |        -1 |     10 |      X | memory | Jane Do |
+  |        -1 |     10 | once   | memory | Jane Do |
   Then transactions:
   | xid | created | amount | payer | payee | purpose      |*
-  |   1 | %today  |     10 | .ZZA | cgf  | donation |
+  |   1 | %today  |     10 | .ZZA  | cgf  | donation |
   And we say "status": "gift successful"
   And these "honors":
   | created | uid  | honor  | honored |*
@@ -58,13 +59,13 @@ Scenario: A member donates
 Scenario: A member makes a recurring donation
   When member ".ZZA" completes form "community/donate" with values:
   | amtChoice | amount | period | honor  | honored |*
-  |        -1 |     10 |      M | memory | Jane Do |
-	Then these "recurs":
-	| id | created | payer | payee | amount | period | purpose  |*
-	|  1 | %today  | .ZZA | cgf |     10 |      M | donation |
+  |        -1 |     10 | month  | memory | Jane Do |
+	Then these "tx_templates":
+	| id | start  | from | to  | amount | period | purpose  |*
+	|  1 | %today | .ZZA | cgf |     10 | month  | donation |
   And transactions:
   | xid | created | amount | payer | payee | purpose            | recursId |*
-  |   1 | %today  |     10 | .ZZA | cgf  | donation (Monthly) |        1 |
+  |   1 | %today  |     10 | .ZZA  | cgf   | donation (monthly) |        1 |
   And we say "status": "gift successful"
   And these "honors":
   | created | uid  | honor  | honored |*
@@ -74,38 +75,38 @@ Scenario: A member makes a recurring donation
   |    $10 |        $0.50 | 
   
 Scenario: A member makes a new recurring donation
-	Given these "recurs":
-	| created   | payer | payee | amount | period |*
-	| %today-1d | .ZZA | cgf |     25 |      Y |
+	Given these "tx_templates":
+	| start     | from | to  | amount | period |*
+	| %today-1d | .ZZA | cgf |     25 | year   |
   When member ".ZZA" visits page "community/donate"
   Then we show "donation replaces" with:
   | period | amt |*
-  | Yearly | $25 |
+  | yearly | $25 |
 
   When member ".ZZA" completes form "community/donate" with values:
   | amtChoice | amount | period | honor  | honored | share |*
-  |        -1 |     10 |      M | memory | Jane Do |    10 |
+  |        -1 |     10 | month  | memory | Jane Do |    10 |
   Then transactions:
   | xid | created | amount | payer | payee | purpose            |*
-  |   1 | %today  |     10 | .ZZA | cgf  | donation (Monthly) |
+  |   1 | %today  |     10 | .ZZA | cgf  | donation (monthly) |
   And we say "status": "gift successful"
-	And these "recurs":
-	| created | payer | payee | amount | period |*
-	| %today  | .ZZA | cgf |     10 |      M |
+	And these "tx_templates":
+	| start  | from | to  | amount | period |*
+	| %today | .ZZA | cgf |     10 | month  |
   
 Scenario: A company makes a recurring donation
   When member ".ZZC" completes form "community/donate" with values:
   | amtChoice | amount | period | honor  | honored |*
-  |        -1 |     10 |      M | memory | Jane Do |
+  |        -1 |     10 | month  | memory | Jane Do |
   Then transactions:
   | xid | created | amount | payer | payee | purpose            |*
-  |   1 | %today  |     10 | .ZZC | cgf  | donation (Monthly) |
+  |   1 | %today  |     10 | .ZZC | cgf  | donation (monthly) |
   And we say "status": "gift successful"
 	
 Scenario: A member donates with insufficient funds
   When member ".ZZA" completes form "community/donate" with values:
   | amtChoice | amount | period | honor  | honored |*
-  |        -1 |    200 |      X | memory | Jane Do |
+  |        -1 |    200 | once   | memory | Jane Do |
   Then we say "status": "gift successful|gift transfer later"
   And invoices:
   | nvid | created | amount | payer | payee | purpose  | flags | status   |*
@@ -115,4 +116,4 @@ Scenario: A member donates with insufficient funds
   | %today  | .ZZA | memory | Jane Do |
   And we tell "ctty" CO "gift" with subs:
   | amount | period |*
-  |    200 |      X |
+  |    200 | once   |

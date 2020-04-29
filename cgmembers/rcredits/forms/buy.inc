@@ -51,7 +51,7 @@ function formBuy($form, &$sta, $doCode = '') {
   if ($amount0 = @$amount) {
     if ($err = u\badAmount($amount, '>0')) return w\softErr($err);
     $amountDpy = u\fmtAmt($amount);
-  } else $amountDpy = '$' . w\rendA('amount', textFld(REQ, '', dft($suggestedAmount)));
+  } else $amountDpy = '$' . w\rendA('amount', numFld(REQ, '', dft($suggestedAmount)));
 
 //  if ($code != @$co->data['cardCode']) return w\go('', 'bad account ID', 'zot');
   if ($a = $mya) {

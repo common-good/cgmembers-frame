@@ -28,16 +28,16 @@ Scenario: A member makes a food donation
   Then members have:
   | uid  | food |*
   | .ZZB |  .03 |
-  And these "recurs":
-  | id | payer | payee | amount | period | purpose       | ended |*
-  |  1 | .ZZB  |  .ZZF |    100 |      M | food donation |     0 |
+  And these "tx_templates":
+  | id | from | to   | amount | period | purpose       | end |*
+  |  1 | .ZZB | .ZZF |    100 | month  | food donation |     |
   And we say "status": "gift successful"
   And we notice "recur pay" to member ".ZZB" with subs:
   | amount | period  | payee         | purpose       |*
   |   $100 | Monthly | the Food Fund | food donation |
   And these "txs":
   | xid | created   | amount | payer | payee | for                     | flags  | recursId |*
-  |   1 | %today    |    100 | .ZZB | .ZZF | food donation (Monthly) | recurs |	      1 |
+  |   1 | %today    |    100 | .ZZB  | .ZZF  | food donation (Monthly) | recurs |	       1 |
   
 Scenario: A member makes a food donation without adequate funds
   When member ".ZZA" visits page "settings/food"
@@ -45,14 +45,14 @@ Scenario: A member makes a food donation without adequate funds
 
   When member ".ZZA" completes form "settings/food" with values:
   | food | amtChoice | amount | period |*
-  |    3 |       100 |        |      M |
+  |    3 |       100 |        | month  |
   Then members have:
   | uid  | food |*
   | .ZZA |  .03 |
-  And these "recurs":
-  | id | payer | payee | amount | period | purpose       | ended |*
-  |  1 | .ZZA  |  .ZZF |    100 |      M | food donation |     0 |
+  And these "tx_templates":
+  | id | from | to   | amount | period | purpose       | end |*
+  |  1 | .ZZA | .ZZF |    100 | month  | food donation |     |
   And we say "status": "gift successful|gift transfer later"
   And these "invoices":
   | nvid | created   | status       | amount | payer | payee | for                     | flags  | recursId |*
-  |    1 | %today    | %TX_APPROVED |    100 | .ZZA | .ZZF | food donation (Monthly) | recurs |	       1 |
+  |    1 | %today    | %TX_APPROVED |    100 | .ZZA  | .ZZF  | food donation (Monthly) | recurs |	       1 |

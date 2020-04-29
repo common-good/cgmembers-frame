@@ -187,7 +187,7 @@ function formAdminPanel_submit($form, &$sta) {
     return say(a\showQuery('txs', 1, 'xid DESC, type', $fields, 'uid1 uid2'));
   }
 
-  if ($op == 'recurs') return say(a\showQuery('r_recurs', 1, 'id DESC', 'id,created,payer,payee,amount,purpose,period,ended', 'payer payee'));
+  if ($op == 'recurs') return say(a\showQuery('tx_templates t', 1, 'id DESC', 'id,t.start AS created,t.from,t.to,amount,purpose,period,t.end', 't.from t.to'));
   if ($op == 'invites') return say(a\showQuery('r_invites', 1, 'invited DESC', 'invited, inviter, invitee, email', 'inviter'));
   if ($op == 'notices') return say(a\showQuery('r_notices', 1, 'msgid DESC'));
   if ($op == 'proxies') return say(a\showQuery('r_proxies', 1, 'id DESC', 'person, proxy, priority', 'person'));
@@ -236,7 +236,7 @@ function formMakeCtty($form, &$sta) {
   $zips = textFld(t('Zip Regex:'), [t('Zipcodes to include'), t('|Type a regular expression for all zipcodes to be included (by default) in the community. For example, ^013|01002 would include all zipcodes starting 013 plus zipcode 01002. Individual members can also be moved manually in or out of this community.')]);
 
   // from w\contactFields
-  $phone = textFld(t('Phone:'), [t('Contact phone number')], required(@$phone ? u\fmtPhone($phone): ''));
+  $phone = phoneFld(REQ . t('Phone:'), [t('Contact phone number')], dft($phone));
   $postalAddr = textFld(t('Postal Addr:'), [t('Complete mailing address'), t('Where does the post office send your mail (usually)?')], required(@$postalAddr));
 
   $submit = submit();
@@ -873,7 +873,7 @@ function memberId($id, $agent = '', $retroactive = FALSE) {
 function formSMS($form, &$sta) {
   $title = t('Test SMS');
   $myNumber = svar('lastSMS');
-  $number = textFld(t('From (number): '), '', required($myNumber));
+  $number = phoneFld(t('From (number): '), '', required($myNumber));
   $message = textFld(t('Message: '));
   $submit = t('Send it!');
 

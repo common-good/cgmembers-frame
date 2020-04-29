@@ -59,8 +59,6 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
  *     MAKE flow AMemberOverdrawsWithNotEnoughToDrawOn
- *     MAKE food AMemberMakesAFoodDonation
- *     MAKE food AMemberMakesAFoodDonationWithoutAdequateFunds
  *     MAKE gift AMemberDonates
  *     MAKE gift AMemberMakesARecurringDonation
  *     MAKE gift AMemberMakesANewRecurringDonation
@@ -230,7 +228,6 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE demographics Setup
  *     MAKE download Setup
  *     MAKE flow Setup
- *     MAKE food Setup
  *     MAKE gift Setup
  *     MAKE invest Setup
  *     MAKE invoice Setup
@@ -367,8 +364,6 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST coupons AMemberRedeemsADiscountCouponInDribsAndDrabs
  *     TEST coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
  *     TEST coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
- *     TEST food AMemberMakesAFoodDonation
- *     TEST food AMemberMakesAFoodDonationWithoutAdequateFunds
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
  *     TEST gift AMemberMakesANewRecurringDonation
@@ -453,9 +448,6 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *
  * in: TEST changeaccount ACommunityAdminClicksTheProfilePhoto
  *     TEST changeaccount ASuperadminClicksTheProfilePhoto
- *     TEST food ANonmemberVisitsTheFoodPage
- *     TEST food AMemberMakesAFoodDonation
- *     TEST food AMemberMakesAFoodDonationWithoutAdequateFunds
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     TEST invest AMemberCompanyJoinsTheInvestmentClub
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
@@ -643,6 +635,7 @@ function with($content) {return weShow($content);}
  *     TEST signupco ACompanyAccountManagerCreatesADiscount
  *     TEST signup AMemberInvites
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
+ *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     TEST summary AnAgentClicksTheSummaryTabWithoutPermissionToManage
  *     TEST transactions AMemberLooksAtTransactionsForThePastYear
  *     TEST transactions AMemberLooksAtTransactionsForThePastFewDays
@@ -808,9 +801,6 @@ function usd($list) {return t\usd($list);}
  *     MAKE demographics ACompanyAgentRunsTheDemographicsQuery
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
  *     MAKE download AMemberDownloadsIncomingInvoicesForThePastYear
- *     MAKE food ANonmemberVisitsTheFoodPage
- *     MAKE food AMemberMakesAFoodDonation
- *     MAKE food AMemberMakesAFoodDonationWithoutAdequateFunds
  *     MAKE gift AMemberDonates
  *     MAKE gift AMemberMakesANewRecurringDonation
  *     MAKE invest AMemberJoinsTheInvestmentClub
@@ -1015,7 +1005,6 @@ function memberOnetimePasswordIs($id, $pass) {
  *
  * in: TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
- *     TEST food AMemberMakesAFoodDonation
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
  *     TEST invoice AMemberDeniesAnInvoice
@@ -1172,8 +1161,6 @@ function statisticsGetSet($time) {
  *     BOTH coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
- *     TEST food AMemberMakesAFoodDonation
- *     TEST food AMemberMakesAFoodDonationWithoutAdequateFunds
  *     MAKE invoice AMemberApprovesInvoicesForevermore
  *     TEST joint AMemberRequestsAJointAccount
  *     BOTH joint AJoinedAccountSlaveMemberRequestsANewMinimum
@@ -1660,14 +1647,13 @@ function weScripWithSubs($script, $args = []) {
  *     TEST cgbutton AMemberTypeAccountIDToBuyStoreCredit
  *     BOTH cgbutton AMemberRedeemsStoreCredit
  *     TEST cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
+ *     MAKE community Setup
  *     TEST community CronCalculatesTheStatistics
  *     TEST coupons AMemberCompanyCreatesAGiftCoupon
  *     MAKE coupons AMemberRedeemsAGiftCoupon
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     MAKE custstatement AStatementGoesOntoMultiplePages
  *     MAKE demographics Setup
- *     TEST food AMemberMakesAFoodDonation
- *     TEST food AMemberMakesAFoodDonationWithoutAdequateFunds
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
  *     BOTH gift AMemberMakesANewRecurringDonation
@@ -1746,8 +1732,7 @@ function withChoices($choices) {
 /**
  * recurs: (ARG)
  *
- * in: MAKE community Setup
- *     MAKE showrecurs Setup
+ * in: 
  */
 function recurs($list) {return t\recurs($list);}
 

@@ -76,7 +76,7 @@ function ajax() {
     }
 
     // create modal selection form
-    $choice = selectFld('', '', attrib(['size' => 12]), $choices);
+    $choice = selectFld('', '', ['size' => 12], $choices);
     $which = render($choice);
     $title = t($question ?: t('Which account?'), ray('name amount', t('whom'), $amtDpy));
     ajaxRet(compact('which', 'title', 'message'));

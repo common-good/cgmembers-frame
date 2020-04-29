@@ -23,8 +23,8 @@ function formCGButton($form, &$sta, $args = '') {
   $for = radiosFld(t('For:'), '', dft(2), ray($forVals));
   $item = textFld(t('Item:'), [t('Item being sold'), t('Short description to appear on confirmation/invoice to the customer (leave blank to let customer specify).')], dft($selling));
   $text = textFld(REQ . t('Link Text:'), [t('Text')], dft(t('Pay with %PROJECT')));
-  $amount = textFld(t('Price/Amount:'), [t('Amount'), t('Leave blank to let the customer choose an amount (for donations, for example)')]);
-  $size = textFld(REQ . t('Size/Button:'), [t('Size'), t('Button height, in pixels')], dft(50) + suffix(tr('<div id="button">%img</div>', 'img', t('(Button will appear here)'))));
+  $amount = numFld(t('Price/Amount:'), [t('Amount'), t('Leave blank to let the customer choose an amount (for donations, for example)')]);
+  $size = intFld(REQ . t('Size/Button:'), [t('Size'), t('Button height, in pixels')], dft(50) + vmin(1) + suffix(tr('<div id="button">%img</div>', 'img', t('(Button will appear here)'))));
   $example = item(t('(Link will appear here)'), t('Link:'));
   $html = areaFld(t('HTML:'), [t('(HTML will appear here)'), t('Copy this HTML into your website or copy the link or button into an email.')]);
   

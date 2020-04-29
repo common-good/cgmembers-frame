@@ -34,7 +34,7 @@ function formRules($form, &$sta, $args = '') {
   $title = t('Rules');
   
   $btn = $id ? [] : suffix(btn('', t('Edit'), 'default', 'xs', 'edit'));
-  $id = textFld(t('Rule ID:'), [t('Rule ID'), t('Leave this blank to add a new record')], dft($id) + $btn);
+  $id = intFld(t('Rule ID:'), [t('Rule ID'), t('Leave this blank to add a new record')], dft($id) + vmin(1) + $btn);
   
   $payerType = radiosFld(REQ . t('Payer Type:'), '', dft($payerType), ray(REF_LIST));
   $payer = textFld(t('Payer:'), $payeDesc, dft($payer));
@@ -43,15 +43,15 @@ function formRules($form, &$sta, $args = '') {
   $from = textFld(REQ . t('From:'), $fromToDesc, dft($from));
   $to = textFld(REQ . t('To:'), $fromToDesc, dft($to));
   $action = radiosFld(REQ . t('Action:'), '', dft($action), ray(ACT_LIST));
-  $amount = textFld(t('Amount:'), '', dft($amount));
-  $portion = textFld(t('Portion:'), '', dft($portion));
+  $amount = numFld(t('Amount:'), '', dft($amount) + vmin(.01));
+  $portion = numFld(t('Portion:'), '', dft($portion) + vmin(.001) + step('.001'));
   $purpose = textFld(REQ . t('Purpose:'), '', dft($purpose));
-  $minimum = textFld(t('Minimum:'), '', dft($minimum));
-  $useMax = textFld(t('Use Max:'), $maxDesc, dft($useMax));
-  $amtMax = textFld(t('Extra Max:'), $maxDesc, dft($amtMax));
+  $minimum = numFld(t('Minimum:'), '', dft($minimum));
+  $useMax = intFld(t('Use Max:'), $maxDesc, dft($useMax));
+  $amtMax = numFld(t('Extra Max:'), $maxDesc, dft($amtMax));
   $template = textFld(t('Template:'), '', dft($template));
-  $start = textFld(t('Start:'), $dtDesc, dft($start));
-  $end = textFld(t('End:'), $dtDesc, dft($end));
+  $start = dateFld(t('Start:'), $dtDesc, dft($start));
+  $end = dateFld(t('End:'), $dtDesc, dft($end));
   $code = textFld(t('Code:'), '', dft($code));
   
   $submit = t('Submit');

@@ -22,7 +22,7 @@ function formRecurring($form, &$sta, $args = '') {
     if (isset($reid)) $result = stopAutoPay($reid);
   }
 
-  $classes = ray('arrow:arrows, fWho:name, fAmount:amount, fPurpose:purpose, fPeriod:period, fCreated:date, fNext:date, fEnded:date, button:buttons');
+  $classes = ray('arrow:arrows, fWho:name, fAmount:amount, fPurpose:purpose, fPeriod:period, fCreated:date, fNext:date, fEnd:date, button:buttons');
   $fields = array_keys($classes);
   $url0 = BASE_URL . '/history/recurring';
   $to = "<img src=\"$rUrl/images/icons/arrow-right-red.png\" border=0 />";
@@ -41,17 +41,23 @@ function formRecurring($form, &$sta, $args = '') {
     <th></th>
 EOF;
 
-  $sql = 'SELECT id as recId, IF(:myid=payer,payee,payer) AS fWho, payer=:myid AS paying, amount, purpose AS fPurpose, period, created, ended FROM r_recurs WHERE :myid IN (payer,payee) ORDER BY payee=:myid';
+  $sql = <<< X
+    SELECT id as recId, IF(:myid=t.from,t.to,t.from) AS fWho, t.from=:myid AS paying, 
+      amount, purpose AS fPurpose, period, periods, start, t.end 
+    FROM tx_templates t 
+    WHERE action IN (:ACT_PAY, :ACT_CHARGE) AND :myid IN (t.from,t.to) 
+    ORDER BY t.to=:myid
+X;
   $q = db\q($sql, compact('myid'));
   
   foreach ($q as $row) {
     extract((array)$row);
     $fAmount = u\fmtAmt($amount, '$');
-    $fPeriod = t(ray(OFTENS)[$period]);
-    $fCreated = u\fmtDate($created, TRUE);
-    $finished = (0 < $ended) and ($ended < now());
-    $fNext = $finished ? '' : u\fmtDate(nextRecur($created, $period), TRUE);
-    $fEnded = $ended <= 0 ? '' : u\fmtDate($ended, TRUE);
+    $fPeriod = ucfirst(r\recurDesc($period, $periods));
+    $fCreated = u\fmtDate($start, TRUE);
+    $finished = ($end and $end < now());
+    $fNext = $finished ? '' : u\fmtDate(u\dateIncr($start, $periods, $period), TRUE);
+    $fEnd = $end ? u\fmtDate($end, TRUE) : '';
     $button = $finished ? '' : t('Stop recurring transaction');
     $arrow = $paying ? $to : $from;
     $html .= addLine(compact($fields), $classes, "$url0/recId=$recId");
@@ -64,7 +70,7 @@ EOF;
   foreach ($q as $row) {
     extract((array)$row);
     list ($fPeriod, $fPurpose) = ray(t('AutoPay Invoice'));
-    $fAmount = $fCreated = $fNext = $fEnded = '';
+    $fAmount = $fCreated = $fNext = $fEnd = '';
     $button = t('Stop automatic payment');
     $arrow = $paying ? $to : $from;
     $html .= addLine(compact($fields), $classes, "$url0/reid=$reid");
@@ -93,16 +99,6 @@ function addLine($info, $classes, $url) {
   return $res . "</tr>\n";
 }
 
-function nextRecur($starting, $period) {
-  if (array_key_exists($period, OFTENS_SECS)) {
-    $perSecs = OFTENS_SECS[$period];
-    $nPer = ceil((now() - $starting) / $perSecs);
-    return round($starting + ($nPer * $perSecs));
-  } else {
-    return FALSE;
-  }
-}
-
 function formRecurring_validate($form, &$sta) {}
 
 function formRecurring_submit($form, &$sta) {}
@@ -110,14 +106,14 @@ function formRecurring_submit($form, &$sta) {}
 function stopRecur($id) {
   global $mya;
   
-  $row = db\get('payer, payee, ended', 'r_recurs', compact('id'));
+  $row = db\get('t.from, t.to, end', 'tx_templates t', compact('id'));
   if (!$row) return w\err('invalid recur id');
 
   extract($row);
-  if ($ended) return w\err('recur already ended');
-  if (!in_array($mya->id, [$payer, $payee])) return w\err('recur not yours');
+  if ($end) return w\err('recur already ended');
+  if (!in_array($mya->id, [$from, $to])) return w\err('recur not yours');
 
-  db\update('r_recurs', ray('id ended', $id, now()), 'id');
+  db\update('tx_templates', ray('id end', $id, now()), 'id');
   return w\say('recur stopped');
 }
 

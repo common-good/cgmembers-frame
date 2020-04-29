@@ -34,18 +34,17 @@ Setup:
   | .ZZC | .ZZA  | scan       |        Y |     0 |    0 |
   | .ZZC | .ZZB  |            |          |       |      |
   | .ZZC | .ZZD  |            |          |       |      |
-  And these "recurs":
-  | payer | payee | amount | period |*
-  | .ZZA  |   cgf |     10 |     Y |
-  | .ZZB  |   cgf |      5 |     Y |
-  | .ZZC  |   cgf |      1 |     Y |
-  | .ZZD  |   cgf |      1 |     Q |
-  | .ZZE  |   cgf |      1 |     M |
-  | .ZZF  |   cgf |      1 |     Y |
-  | .ZZG  |   cgf |      5 |     Y |
-  | .ZZH  |   cgf |      5 |     Y |
-  | .ZZI  |   cgf |      5 |     Y |
-# share is irrelevant here as long as it is non-negative
+  And these "tx_templates":
+  | action | from | to  | amount | period |*
+  | pay    | .ZZA | cgf |     10 | year    |
+  | pay    | .ZZB | cgf |      5 | year    |
+  | pay    | .ZZC | cgf |      1 | year    |
+  | pay    | .ZZD | cgf |      1 | quarter |
+  | pay    | .ZZE | cgf |      1 | month   |
+  | pay    | .ZZF | cgf |      1 | year    |
+  | pay    | .ZZG | cgf |      5 | year    |
+  | pay    | .ZZH | cgf |      5 | year    |
+  | pay    | .ZZI | cgf |      5 | year    |
   And transactions: 
   | xid | created   | amount | payer | payee | purpose | channel |*
   |   1 | %today-7m |    250 | ctty | .ZZA | signup  | %TX_SYS |

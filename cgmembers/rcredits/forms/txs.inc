@@ -119,11 +119,11 @@ function formTxs_submit($form, &$sta) {
 /*   $orig = hidFld(serialize((array)$tx)); */
 /*   $title = t('Edit Transaction'); */
 /*   $to = item(r\acct($toMe ? $payer : $payee)->fullName, $toMe ? t('From:') : t('To:')); */
-/*   $amount = textFld(t('Amount: $'), '', dft(number_format($amount,2))); */
+/*   $amount = numFld(t('Amount: $'), '', dft(number_format($amount,2))); */
 /*   $goods = $mya->cttyRewardy ? radiosFld('&nbsp;', '', dft((int) $goods), ray(R_WHYS)) : hidFld($goods); */
 /*   $purpose = textFld(t('For:'), '', dft(u\nonish(@$purpose) ? '' : $purpose)); */
 /*   $created0 = hidFld($created); */
-/*   if ($mya->cAdmin) $created = textFld(t('Date:'), '', dft(u\fmtDate($created, TRUE))); else unset($created); */
+/*   if ($mya->cAdmin) $created = dateFld(t('Date:'), '', dft(u\fmtDate($created, TRUE))); else unset($created); */
 /*   $submit = t('Update'); */
 
 /*   return cgform($form + compact(ray('title to amount goods purpose created0 created submit orig'))); */

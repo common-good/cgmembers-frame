@@ -63,8 +63,8 @@ function formInvestRate($form, &$sta, $args = '') {
     $patronage = item($patronage, t('Your patronage:'));
     $comment = item($comment, t('Your comment'));
   } else { // not rated yet
-    $good = textFld(t('Common Goodness:'), [t('Common Goodness'), t('Rate this investment\'s benefit to the community and the common good (0-100)')], required());
-    $patronage = textFld(t('Your patronage:'), [t('Monthly spending'), t('How much you will probably spend monthly, paying this company for its new or expanded services (estimate)')], required());
+    $good = intFld(REQ . t('Common Goodness:'), [t('Common Goodness'), t('Rate this investment\'s benefit to the community and the common good (0-100)')]);
+    $patronage = numFld(REQ . t('Your patronage:'), [t('Monthly spending'), t('How much you will probably spend monthly, paying this company for its new or expanded services (estimate)')]);
     $comment = areaFld(t('Comments:'), [t('Comments')]);
     $submit = t('Rate it');
   }

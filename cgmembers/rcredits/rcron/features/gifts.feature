@@ -13,24 +13,24 @@ Setup:
   |   1 | %today-4m |    100 | .ZZB | .ZZA | loan    |
 
 Scenario: A donation to CG is visible to admin
-  Given these "recurs":
-  | created | payer | payee | amount | period | purpose |*
-  | %today  | .ZZA  | cgf   |     10 |      W | gift!   |
+  Given these "tx_templates":
+  | start  | from | to  | amount | period | purpose |*
+  | %today | .ZZA | cgf |     10 | week   | gift!   |
   When member "A:B" visits page ""
   Then we show "Summary" with:
-  | Donations: | $10 Weekly |
+  | Donations: | $10 weekly |
 
 Scenario: A brand new recurring donation to CG can be completed
-  Given these "recurs":
-  | id | created    | payer | payee | amount | period | purpose |*
-  |  7 | %yesterday | .ZZA  | cgf   |     10 |      M | gift!   |
+  Given these "tx_templates":
+  | id | start      | from | to  | amount | period | purpose |*
+  |  7 | %yesterday | .ZZA | cgf |     10 | month  | gift!   |
   When cron runs "recurs"
   Then transactions:
   | xid | created | amount | payer | payee | purpose         | flags       | recursId |*
-  |   2 | %today  |     10 | .ZZA | cgf | gift! (Monthly) | gift,recurs |        7 |
+  |   2 | %today  |     10 | .ZZA  | cgf   | gift! (monthly) | gift,recurs |        7 |
   And we notice "new payment linked" to member "cgf" with subs:
   | otherName | amount | payeePurpose    | aPayLink |*
-  | Abe One   | $10    | gift! (Monthly) | ?        |
+  | Abe One   | $10    | gift! (monthly) | ?        |
   And that "notice" has link results:
   | ~name | Abe One |
   | ~postalAddr | 1 A, A, AK |
@@ -38,7 +38,7 @@ Scenario: A brand new recurring donation to CG can be completed
   | ~footer | %PROJECT |
   And we notice "recur pay" to member ".ZZA" with subs:
   | amount | period  | purpose | payee    |*
-  |    $10 | Monthly | gift!   | %PROJECT |
+  |    $10 | monthly | gift!   | %PROJECT |
   # and many other fields
 	And count "txs" is 2
 	And count "usd" is 0
@@ -49,12 +49,12 @@ Scenario: A brand new recurring donation to CG can be completed
 	And count "invoices" is 0
 
 Scenario: A second recurring donation to CG can be completed
-  Given these "recurs":
-  | created   | payer | payee | amount | period | purpose |*
-  | %today-3m | .ZZA  | cgf   |     10 |      M | gift!   |
+  Given these "tx_templates":
+  | start     | from | to  | amount | period | purpose |*
+  | %today-3m | .ZZA | cgf |     10 | month  | gift!   |
   And transactions:
   | xid | created    | amount | payer | payee | purpose         | flags       |*
-  |   1 | %today-32d |     10 | .ZZA | cgf | gift! (Monthly) | gift,recurs |
+  |   1 | %today-32d |     10 | .ZZA | cgf | gift! (monthly) | gift,recurs |
   When cron runs "recurs"
   Then transactions:
   | xid | created | amount | payer | payee | purpose         | flags          |*
@@ -62,9 +62,9 @@ Scenario: A second recurring donation to CG can be completed
 
 Scenario: A donation invoice (to CG) can be completed
 # even if the member has never yet made a cgCard purchase
-  Given these "recurs":
-  | id | created    | payer | payee | amount | period | purpose |*
-  |  8 | %yesterday | .ZZA  | cgf   |     10 |      M | gift!   |
+  Given these "tx_templates":
+  | id | start      | from | to  | amount | period | purpose |*
+  |  8 | %yesterday | .ZZA | cgf |     10 | month  | gift!   |
   And invoices:
   | nvid | created   | status       | amount | payer | payee | for      | flags       | recursId |*
   |    2 | %today    | %TX_APPROVED |     50 | .ZZA | cgf | donation | gift,recurs |        8 |
@@ -78,13 +78,13 @@ Scenario: A donation invoice (to CG) can be completed
   |    2 | %today    | 2      | donation |
 
 Scenario: A recurring donation to CG cannot be completed
-  Given these "recurs":
-  | created   | payer | payee | amount | period | purpose |*
-  | %today-3m | .ZZA  | cgf   |    200 |      M | gift!   |
+  Given these "tx_templates":
+  | start     | from | to  | amount | period | purpose |*
+  | %today-3m | .ZZA | cgf |    200 | month  | gift!   |
   When cron runs "recurs"
 	Then invoices:
   | nvid | created   | status       | amount | payer | payee | for             | flags          |*
-  |    1 | %today    | %TX_APPROVED |    200 | .ZZA | cgf | gift! (Monthly) | gift,recurs |	
+  |    1 | %today    | %TX_APPROVED |    200 | .ZZA | cgf | gift! (monthly) | gift,recurs |	
 	And count "txs" is 1
 	And count "usd" is 0
 	And count "invoices" is 1
@@ -95,7 +95,7 @@ Scenario: A recurring donation to CG cannot be completed
   And count "invoices" is 1
   And	invoices:
   | nvid | created   | status       | amount | payer | payee | for             | flags               |*
-  |    1 | %today    | %TX_APPROVED |    200 | .ZZA | cgf | gift! (Monthly) | gift,recurs,funding |	
+  |    1 | %today    | %TX_APPROVED |    200 | .ZZA | cgf | gift! (monthly) | gift,recurs,funding |	
 
 	When cron runs "recurs"
 	Then count "txs" is 2
@@ -107,27 +107,29 @@ Scenario: A non-member chooses a donation to CG
   | uid  | fullName | flags  | risks   | activated | balance |*
   | .ZZD | Dee Four |        | hasBank |         0 |       0 |
   | .ZZE | Eve Five | refill | hasBank | %today-9m |     200 |
-  And these "recurs":
-  | created   | payer | payee | amount | period |*
-  | %today-3y | .ZZD  | cgf   |      1 |      Y |
-  | %today-3m | .ZZE  | cgf   |    200 |      M |
+  And these "tx_templates":
+  | id | start     | from | to  | amount | period | purpose  |*
+  | 2  | %today-3y | .ZZD | cgf |      1 | year   | donation |
+  | 3  | %today-3m | .ZZE | cgf |    200 | month  | donation |
   When cron runs "recurs"
 	Then count "txs" is 1
 	And count "usd" is 0
-	And count "invoices" is 0
+	And these "invoices":
+  | nvid | created   | status       | amount | payer | payee | for               | flags       | recursId |*
+  |    1 | %today    | %TX_APPROVED |      1 | .ZZD  | cgf   | donation (yearly) | gift,recurs |        2 |
 
 Scenario: It's time to warn about an upcoming annual donation to CG
   Given members:
-  | uid  | fullName | flags  | risks   | activated               |*
-  | .ZZD | Dee Four | ok     | hasBank | %now-1y                 |
-  | .ZZE | Eve Five | ok     | hasBank | %(strtotime('+7 days', strtotime('-1 year', %daystart))) |
-  And these "recurs":
-  | id | created               | payer | payee | amount | period | purpose |*
-  |  1 | %(strtotime('+7 days', strtotime('-1 year', %daystart))) | .ZZD  | cgf   |      1 |      Y | gift!   |
+  | uid  | fullName | flags  | risks   | activated   |*
+  | .ZZD | Dee Four | ok     | hasBank | %now-1y     |
+  | .ZZE | Eve Five | ok     | hasBank | %yearAgo+7d |
+  And these "tx_templates":
+  | id | action | start       | from | to  | amount | period | purpose |*
+  |  1 | pay    | %yearAgo+7d | .ZZD | cgf |      1 | year   | gift!   |
 	And transactions:
-  | xid | created               | amount | payer | payee | purpose                    | flags       | recursId |*
-  |   1 | %(strtotime('+7 days', strtotime('-1 year', %daystart))) | 10 | .ZZD | cgf | gift! (Yearly) | gift,recurs | 1 |
-  When cron runs "tickle"
+  | xid | created     | amount | payer | payee | purpose        | flags       | recursId |*
+  |   1 | %yearAgo+7d | 10     | .ZZD  | cgf   | gift! (Yearly) | gift,recurs | 1        |
+  When cron runs "warnAnnualGifts"
 	Then we email "annual-gift" to member "d@example.com" with subs:
 	| amount | when    | aDonate |*
 	|     $1 | %mdY+7d |       ? |

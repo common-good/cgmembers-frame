@@ -101,7 +101,7 @@ $queries = [
             SUM(IF(u.:IS_ROUNDUP, 1, 0)) AS roundupy,
             SUM(IF(u.crumbs>0, 1, 0)) AS crumby,
             AVG(IF(u.crumbs>0, u.crumbs, NULL)) AS avgCrumbs
-    FROM users u LEFT JOIN r_recurs r ON (r.payer=u.uid AND r.ended<>0 AND r.payee=:CGID) LEFT JOIN users c ON c.uid=u.community
+    FROM users u LEFT JOIN tx_templates r ON (r.from=u.uid AND r.end IS NOT NULL AND r.to=:CGID) LEFT JOIN users c ON c.uid=u.community
     WHERE u.:IS_OK AND NOT u.:IS_CO AND u.uid NOT :CANONIC
     GROUP BY u.community
     ~roundupy = number who do Roundups, crumby = number who do Crumb donations",
@@ -126,7 +126,7 @@ $queries = [
       ) AS origin,
       SUM(IF(:IS_OK, 1, 0)) AS member,
       SUM(IF(:IS_OK OR uid IS NULL, 0, 1)) AS stuck,
-      SUM(IFNULL(r.amount, 0) * IF(r.period='Y', 1, IF(r.period='Q', 4, IF(r.period='M', 12, IF(r.period='W', 52, 0)))))
+      SUM(IFNULL(r.amount, 0) * perYear(r.period, r.periods))
         / SUM(IF(:IS_OK OR data LIKE '%"donate";b:1%', 1, 0)) AS avgYearlyGiftDollars,
       SUM(IF(:IS_ROUNDUP, 1, 0))
         / SUM(IF(:IS_OK OR data LIKE '%"prefs";b:1%', 1, 0)) AS avgRoundup,
@@ -137,7 +137,7 @@ $queries = [
       UNION SELECT NULL AS uid, NULL AS helper, source, 0 aS flags, '' AS data, created FROM signup s0 
         WHERE (SELECT 1 FROM users u0 WHERE u0.fullName=s0.fullName LIMIT 1) IS NULL
     ) u
-    LEFT JOIN r_recurs r ON r.payer=u.uid AND r.payee=:CGID AND r.ended=0
+    LEFT JOIN tx_templates r ON r.from=u.uid AND r.to=:CGID AND r.end IS NULL
     LEFT JOIN (SELECT uid AS helper,fullName AS helperName FROM users) h USING(helper)
     GROUP BY origin
     ORDER BY member

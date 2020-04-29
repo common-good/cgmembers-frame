@@ -9,14 +9,14 @@ Setup:
   | .ZZA | Abe One    | -100  | personal    | ok,roundup | %now-15m |
   | .ZZB | Bea Two    | -200  | personal    | ok,co      | %now-15m |
   | .ZZC | Corner Pub | -300  | corporation | ok,co      | %now-15m |
-  And recurs:
-  | id    | payer | payee | amount | purpose    | period | created  | ended      |*
-  | 99900 | .ZZA  | .ZZC  | 37.00  | this       | Q      | %now-13m | 0          |
-  | 99901 | .ZZA  | .ZZB  | 43.00  | that       | W      | %now-13m | %now-11m   |
-  | 99902 | .ZZA  | .ZZB  | 59.59  | something  | Y      | %now-16m | 0          |
-  | 99903 | .ZZB  | .ZZA  | 22.00  | nothing    | Q      | %now-13m | 0          |
-  | 99904 | .ZZB  | .ZZC  | 37.37  | everything | Q      | %now-13m | 0          |
-  | 99905 | .ZZC  | .ZZA  | 37.43  | whatever   | W      | %now-13d | 0          |
+  And these "tx_templates":
+  | id    | action | from  | to    | amount | purpose    | period  | start    | end        |*
+  | 99900 | pay    | .ZZA  | .ZZC  | 37.00  | this       | quarter | %now-13m |            |
+  | 99901 | pay    | .ZZA  | .ZZB  | 43.00  | that       | week    | %now-13m | %now-11m   |
+  | 99902 | pay    | .ZZA  | .ZZB  | 59.59  | something  | year    | %now-16m |            |
+  | 99903 | pay    | .ZZB  | .ZZA  | 22.00  | nothing    | quarter | %now-13m |            |
+  | 99904 | pay    | .ZZB  | .ZZC  | 37.37  | everything | quarter | %now-13m |            |
+  | 99905 | pay    | .ZZC  | .ZZA  | 37.43  | whatever   | week    | %now-13d |            |
   And these "relations":
   | reid | main | other | flags   |*
   | 7773 | .ZZC | .ZZA  | autopay |

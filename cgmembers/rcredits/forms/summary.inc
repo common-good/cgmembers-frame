@@ -391,10 +391,10 @@ function adminSummary() {
 
       $donations = item($mya->giftsDesc() ?: t('none'), t('Donations:'));
       
-//      $creditLimit = textFld(t('Credit limit:'), '', dft(u\fmtAmt(-$mya->floor)));
+//      $creditLimit = numFld(t('Credit limit:'), '', dft(u\fmtAmt(-$mya->floor)));
 //      if ($mya->stepsDone['prefs']) { // don't even look at these if newbie hasn't chosen yet
-//        $minimum = textFld(t('Minimum:'), '', dft(u\fmtAmt($mya->minimum)));
-//        $achMin = textFld(t('ACH Min:'), '', dft(u\fmtAmt($mya->achMin ?: R_ACHMIN_DEFAULT, 's')));
+//        $minimum = numFld(t('Minimum:'), '', dft(u\fmtAmt($mya->minimum)));
+//        $achMin = numFld(t('ACH Min:'), '', dft(u\fmtAmt($mya->achMin ?: R_ACHMIN_DEFAULT, 's')));
 //      }
       $minimum = item(u\fmtAmt($mya->minimum), t('Target Bal:'));
       $achMin = item(u\fmtAmt($mya->achMin), t('ACH Min:'));
@@ -494,9 +494,9 @@ function adminSummary() {
     } else $notes = item(str_replace("\n", '<br>', $mya->notes), t('Notes:'));
 
     $note = areaFld(t('New Note:'), [t('Type a Note Here'), t('Abbreviations: PM=phone msg EM=email msg. Be sure to say what you left a message <i>about</i> (for example "PM setup")')]);
-    $dob = ($mya->superAdmin or !$mya->hasDob) ? textFld(t('Birth Date:'), [t('mm/dd/yyyy')], dft($mya->hasDob ? u\fmtDate($mya->dob, TRUE) : '') + autofill('off')) : NULL;
+    $dob = ($mya->superAdmin or !$mya->hasDob) ? dateFld(t('Birth Date:'), [t('mm/dd/yyyy')], dft($mya->hasDob ? u\fmtDate($mya->dob, TRUE) : '') + autofill('off')) : NULL;
     $suffix = submitTickle(1, t('Wait a day')) . submitTickle(2, t('2 days')) . submitTickle(7, '7') . submitTickle(30, '30') . submitTickle('', t('Auto')) . ' &nbsp; ' . submitTickle($mya->tickle ? 'NONE' : '', t('Save'), 'sm');
-    $tickle = textFld(t('Tickle:'), [t('Followup Date'), t('When to follow up ("Auto" sets an automatic Welcome or Annual date)')], dft($mya->tickle ? u\fmtDate($mya->tickle, TRUE) : '') + w\suffix($suffix));
+    $tickle = dateFld(t('Tickle:'), [t('Followup Date'), t('When to follow up ("Auto" sets an automatic Welcome or Annual date)')], dft($mya->tickle ? u\fmtDate($mya->tickle, TRUE) : '') + w\suffix($suffix));
     $source = item($mya->source, t('Source:'));
   }
 
@@ -539,24 +539,12 @@ function callDetails($type = '', $when = '') {
   $subtext = $now < $when ? t('in %days days', 'days', -$late) : t('%late days overdue', compact('late'));
   $subtext = !$when ? '' : "<br><span>$subtext</span>";
   
-  if (!$mya->member) {
-    $head .= $setup ? '<p>Do you need help?</p>' : '';
-    //    return "<div class=\"well\"><h3>$head$body</h3></div>";
-  }
+  if (!$mya->member) $head .= $setup ? '<p>Do you need help?</p>' : '';
 
   $subs = ray('id', $mya->id);
   $gifts = ($mya->giftsDesc() ?: $mya->totalGifts())
-	?: db\get('amount', 'r_recurs', 'payer=:id AND payee=:CGID AND ended=0', $subs); // a promised gift counts here, if none yet
-  
-  /*        $help = $gifts ? 'thanks' : 'ask';
-            $msg = t('<span class="loud">%when <b>Welcome</b></span> to %PROJECT, How\'s it going%lastTx? %help donation(s), %signupCo volunteer? [<%a>details</a>]', 'when lastTx help signupCo _a', u\fmtDate($when, TRUE), $a->lastTxDesc(), ucfirst($help), @$signupCo, w\atag("/help/welcome/gifts=$gifts"));
-            if ($a->paper) $msg .= t(' <span class="loud">Paper statements</span> at $%R_STATEMENT_COST/month &mdash; really?');
-            $gift = $gifts ? t('Thanks for donation(s). Annual gift?') : t('Donate?');
-            $feature = $a->co ? t('cash-out') : t('joint account');
-
-            return [t('Annual'), $when = strtotime("+$yearsIn years", $activated), t('<span class="loud">%when <b>Annual</b></span>: Thanks for participating. How\'s it going%lastTx? %gift Mailing address okay? Volunteer? Consider %feature? [<%a>details</a>]', 'when lastTx gift _a feature', u\fmtDate($when, TRUE), $a->lastTxDesc(), $gift, w\atag("/help/annual/gifts=$gifts&years=$yearsIn"), $feature)];
-  */
-      
+	?: db\get('amount', 'tx_templates t', 'action=:ACT_PAY AND t.from=:id AND t.to=:CGID AND end IS NULL', $subs); // a promised gift counts here, if none yet
+        
   $welcome = t('<li><b>Welcome</b> to %PROJECT. Thanks for participating!</li>');
   if (!$mya->co and $myCo = $mya->firstCo()) {
     list ($signupCo, $myCo) = ['', t(' (personally rather than for company "%myCo")', compact('myCo'))];

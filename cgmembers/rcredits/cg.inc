@@ -841,8 +841,6 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     'r_proxies:proxy:D',
     // r_questions
     'r_ratings:uid',
-    'r_recurs:payer:D',
-    'r_recurs:payee:D',
     // r_regions
     'r_relations:main:D',
     'r_relations:other:D',
@@ -1207,9 +1205,9 @@ X;
 
   // get patronage (total recurring gifts expected per month)
   $sqls['patronage'] = <<< X
-    SELECT SUM(amount * IF(period='Y', 1/12, IF(period='Q', 1/3, IF(period='W', :MONTH_SECS/:WEEK_SECS, 1)))) AS patronage
-    FROM r_recurs r JOIN users u ON u.uid=r.payer
-    WHERE payee=:CGID AND r.created<:created AND (ended=0 OR ended>:created-:YEAR_SECS) AND u.$cttyCrit
+    SELECT SUM(amount * perYear(r.period, r.periods) / 12) AS patronage
+    FROM tx_templates r JOIN users u ON u.uid=r.from
+    WHERE r.action=:ACT_PAY AND r.to=:CGID AND r.start<:created AND (r.end IS NULL OR r.end>:created-:YEAR_SECS) AND u.$cttyCrit
 X;
    
   // get invites ever
@@ -1575,6 +1573,16 @@ o;
 }
 
 /**
+ * Return a selection list for recurrence period.
+ */
+function recurRay($keepOne = FALSE) {
+  $oftens = array_combine(ray(PERIODS), ray(PERIODLY));
+  unset($oftens['forever']);
+  if (!$keepOne) unset($oftens['once']);
+  return $oftens;
+}
+
+/**
  * Return the appropriate exchange fee for the given transaction description and amount.
  */
 function xfee($for, $amount) {
@@ -1594,6 +1602,11 @@ function disputeTx($xid, $reason = '') {
   u\EXPECT($result, "error inserting dispute record");
 
   return TRUE;
+}
+
+function recurDesc($period, $periods = 1) {
+  $p = array_search($period, ray(PERIODS));
+  return $periods > 1 ? t('every %n %units', 'n units', $periods, ray(PERIODS_PLURAL)[$p]) : ray(PERIODLY)[$p];
 }
   
 function makeDoCode($ray) {
@@ -1623,5 +1636,4 @@ function cttyList() {return db\q("SELECT uid,fullname FROM users WHERE uid<0 ORD
 function allKnowing() {global $mya; return ($mya->superAdmin and $mya->agentA->vKeyPw);}
 function clubid() {return r\serverUid();} // temporarily use the region as the club
 function pic($flnm) {if (!is_dir(R_PICTURE_DIR)) mkdir(R_PICTURE_DIR); return R_PICTURE_DIR . $flnm;}
-function periodDesc($period) {return $period == 'X' ? '' : ray(OFTENS)[$period];}
 function isBank($uid) {return ($uid == BANK_IN_ID or $uid == BANK_OUT_ID);}

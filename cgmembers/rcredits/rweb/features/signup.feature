@@ -144,7 +144,7 @@ Scenario: A member donates
   Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund photo contact"
   When member ".ZZB" completes form "community/donate" with values:
   | amtChoice | period | honor | honored |*
-  |        50 |      M |     - |         |
+  |        50 | month  |     - |         |
   Then we show "Share When You Receive"
   And we say "status": "gift successful|gift transfer later"
   And we say "status": "step completed"
@@ -198,9 +198,9 @@ Scenario: A member sets backing
 Scenario: A member chooses to Step Up
   Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund photo contact donate crumbs proxies work backing"
   And members:
-  | uid  | fullName | flags |*
-  | .ZZF | Fox Co   | ok,co |
-  | .ZZG | Glo Co   | ok,co |
+  | uid  | fullName | flags | coType    |*
+  | .ZZF | Fox Co   | ok,co | nonprofit |
+  | .ZZG | Glo Co   | ok,co | nonprofit |
   And member ".ZZF" has "%STEPUP_MIN" stepup rules
   And member ".ZZG" has "%(%STEPUP_MIN+1)" stepup rules
 

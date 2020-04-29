@@ -5,22 +5,26 @@ SO I can support my favorite causes easily and often
 
 Setup:
   Given members:
-  | uid  | fullName | flags            | balance |*
-  | .ZZA | Abe One  | member           | 0       |
-  | .ZZB | Bea Two  | ok,confirmed     | 500     |
-  | .ZZC | Cor Pub  | ok,confirmed,co  | 0       |
-  | .ZZF | Fox Co   | ok,confirmed,co  | 0       |
-  | .ZZG | Glo Co   | ok,confirmed,co  | 0       |
-  | .ZZH | Hip Co   | ok,confirmed,co  | 0       |
+  | uid  | fullName | flags            | balance | coType    |*
+  | .ZZA | Abe One  | member           | 0       |           |
+  | .ZZB | Bea Two  | ok,confirmed     | 500     |           |
+  | .ZZC | Cor Pub  | ok,confirmed,co  | 0       | nonprofit |
+  | .ZZF | Fox Co   | ok,confirmed,co  | 0       | nonprofit |
+  | .ZZG | Glo Co   | ok,confirmed,co  | 0       | nonprofit |
+  | .ZZH | Hip Co   | ok,confirmed,co  | 0       | nonprofit |
+  | .ZZI | Ida Co   | ok,confirmed,co  | 0       |           |
 
 Scenario: A member chooses a per-transaction Step Up
   Given member ".ZZF" has "%STEPUP_MIN" stepup rules
   And member ".ZZG" has "%(%STEPUP_MIN+1)" stepup rules
+  And member ".ZZI" has "%(%STEPUP_MIN+2)" stepup rules
   When member ".ZZB" visits page "settings/stepup"
   Then we show "Step Up" with:
   | Organization | Amount | Whe | Max |
   | Fox Co       |        |     |     |
   | Glo Co       |        |     |     |
+  And without:
+  | Ida Co       |        |     |     |
   
   When member ".ZZB" steps up with:
   | .ZZF   | 1 | tx$   |   |
@@ -28,7 +32,7 @@ Scenario: A member chooses a per-transaction Step Up
   | Hip Co | 3 | pctmx | 4 |
   Then we say "status": "info saved"
   And these "tx_rules":
-  | id        | %(%STEPUP_MIN*2+2) | %(%STEPUP_MIN*2+3) | %(%STEPUP_MIN*2+4) |**
+  | id        | %(%STEPUP_MIN*3+4) | %(%STEPUP_MIN*3+5) | %(%STEPUP_MIN*3+6) |**
   | payer     | .ZZB          | .ZZB          | .ZZB          |
   | payerType | account       | account       | account       |
   | payee     |               |               |               |
@@ -73,9 +77,10 @@ Scenario: A member's rules come into play
   Then these "txs":
   | eid | xid | created | amount | payer | payee | purpose      | rule | type        |*
   |   1 |   1 | %today  | 100    | .ZZB  | .ZZC  | labor        |      | %E_PRIME    |
-  |   2 |   1 | %today  | 1      | .ZZB  | .ZZF  | %STEPUP_DESC | 1    | %E_DONATION |
-  |   3 |   1 | %today  | 2      | .ZZB  | .ZZG  | %STEPUP_DESC | 2    | %E_DONATION |
-  |   4 |   1 | %today  | 2      | .ZZB  | .ZZH  | %STEPUP_3PCT | 3    | %E_DONATION |
+  |   3 |   1 | %today  | 1      | .ZZB  | .ZZF  | %STEPUP_DESC | 1    | %E_DONATION |
+  |   4 |   1 | %today  | 2      | .ZZB  | .ZZG  | %STEPUP_DESC | 2    | %E_DONATION |
+  |   5 |   1 | %today  | 2      | .ZZB  | .ZZH  | %STEPUP_3PCT | 3    | %E_DONATION |
+  # MariaDb bug: autonumber skips id=2 when there are record ids 1 and -1
 
 Scenario: A member chooses recurring and per-transaction donations
   When member ".ZZB" steps up with:

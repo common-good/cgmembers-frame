@@ -84,6 +84,8 @@ function run() {
   global $channel; $channel = TX_CRON; // set this even if called from PHP window by admin
 // NO (happens too often)  u\log('running cron');
   // Allow execution to continue even if the request gets canceled.
+  if (between(now(), strtotime('2:40am'), strtotime('2:44am'))) return; // swiftMailer crashes during this period
+  
   @ignore_user_abort(TRUE);
 
   // Prevent session information from being saved while cron is running.
@@ -170,7 +172,6 @@ function everyHour() { // stuff to do every hour
   
   db\q('DELETE FROM cache_form WHERE created<:REQUEST_TIME-:HOUR_SECS'); // clean up form cache (is this needed?)
 
-  // r\tellAdmin('hourly cron');
 }
 
 function geocode($item) {
@@ -249,48 +250,69 @@ X;
 	if ($uids) db\del('r_usd', 'txid', 'amount=0 AND payee IN (:uids)', compact('uids'));
 	unset($DBTX);
 	db\q('DELETE FROM x_usd WHERE amount=0'); // no need to track these
-
-  $sql = <<< EOF
-    SELECT t.*, MAX(r.start) AS maxStart FROM tx_templates t 
-    LEFT JOIN tx_rules r ON r.template=t.id 
-    GROUP BY t.id
-    ORDER BY (t.action='surtx') DESC, t.id
-EOF;
-  queueEach('generateRule', $sql);
 }
 
 /**
- * Generate rules, transactions, and invoices from template
+ * Generate rules, transactions, and invoices from template.
+ * Instantiate surtx rules first so they apply to subsequent transactions.
  */
-function generateRule($template) {
+function recurs() {
+  $sql = <<< EOF
+    SELECT t.*, MAX(
+      IF(t.action=:ACT_SURTX, r.start, 
+      IF(t.action=:ACT_PAY, GREATEST(IFNULL(x.created,0), IFNULL(i.created,0)),
+      i.created))
+    ) AS maxStart
+    FROM tx_templates t 
+    LEFT JOIN tx_rules r ON r.template=t.id
+    LEFT JOIN txs x ON x.recursId=t.id
+    LEFT JOIN r_invoices i ON i.recursId=t.id
+    WHERE t.action IN (:ACT_SURTX, :ACT_PAY, :ACT_CHARGE)
+    GROUP BY t.id
+    ORDER BY (t.action=:ACT_SURTX) DESC, t.id
+EOF;
+  queueEach('recur', $sql);
+}
+  
+function recur($template) {
   $rule = justNot(ray('id period periods duration durations start end maxStart'), $template);
   extract(just('id maxStart period periods end duration durations action from to purpose amount', $template));
   $rule['template'] = $id;
   $shouldStart = empty($maxStart) ? now() : u\dateIncr($maxStart, $periods, $period);
   if ($end and $end < $shouldStart) return; // don't create rules after template expires
+  $erSubs = compact(ray('template rule shouldStart'));
 
   if ($action == 'surtx') {
     if ($shouldStart > now() + WEEK_SECS) return; // don't create rules more than a week in advance
     $rule['start'] = $shouldStart;
     $rule['end'] = u\dateIncr($shouldStart, $durations, $duration);
-    db\insert('tx_rules', $rule, 'id');
-  } else {
-    //u\FAIL('NYI');
+    $ok = db\insert('tx_rules', $rule, 'id');
+    if (!$ok) r\tellAdmin(t('Insert rule failed in recur'), $erSubs);
+  } elseif (in($action, 'pay charge')) {
     if ($shouldStart > strtotime('tomorrow')) return; // don't create transactions and invoices until the right day
     $fromA = r\acct($from); $toA = r\acct($to);
-    if ($period and $period != 'once') {
-      $p = array_search($period, ray(PERIODS));
-      $when = $periods > 1 ? t('every %n %units', 'n units', $periods, ray(PERIODS_PLURAL)[$p])
-      : ray(PERIODLY)[$p];
-      $purpose .= " ($when)";
-    }
+    if ($action == 'pay' and !$toA->ok) return r\tellAdmin(t('Attempt to pay an inactive account in recur'), $erSubs);
+    if ($fromA->closed) return r\tellAdmin(t('Attempt to pay from or invoice a closed account in recur'), $erSubs);
 
+    $purpose0 = $purpose; // remember original purpose
+    if ($period and $period != 'once') {
+      $when = r\recurDesc($period, $periods);
+      $purpose .= " ($when)";
+      $erSubs += compact(ray('when purpose'));
+    } else { $when = t('one-time'); }
+
+    $data = ray('created recurs', $shouldStart, TRUE); // keep this synced with template even if cron fails for a few days
+    if ($action == 'pay' and $to == CGID) $data += ['gift' => TRUE]; // assume any recurring payment to CG is a gift
+    
     if ($action == 'pay') {
-      list ($ok, $msg, $args) = be\transfer('payment', $fromA, $toA, $amount, $purpose, FOR_GOODS, [], $id);
-    } elseif ($action == 'charge') {
-      list ($ok, $msg, $args) = be\invoice($toA, $fromA, $amount, $purpose, FOR_GOODS, [], $id);
-    } else FAIL(t('bad action in template: ') . pr($template));    
-  }
+      $ok = $fromA->payApproved($to, $amount, $purpose, FOR_GOODS, $data, $id);
+      if (!$ok) return r\tellAdmin(t('Pay failed in recur'), $erSubs);
+      r\notify($from, 'recur pay', ray('amount period purpose payee', u\fmtAmt($amount), $when, $purpose0, $toA->fullName));
+    } else { // charge
+      list ($ok, $msg, $args) = be\invoice($toA, $fromA, $amount, $purpose, FOR_GOODS, $data, $id);
+      if (!$ok) return r\tellAdmin(t('Invoice failed in recur'), $erSubs + compact('msg', 'args'));
+    }
+  } else FAIL(t('bad action in template: ') . pr($template));
   
 }
 
@@ -311,12 +333,7 @@ function tickle() {
 X;
 
   queueEach('tickleSignup', $sql);
-/*    SELECT i.email, inviter, code, $elapsed AS elapsed FROM r_invites i
-    LEFT JOIN users u ON u.email=i.email
-    WHERE $elapsed IN ($delays) AND u.uid IS NULL AND invitee=0 */
-    
-  // Remind newbie to take another step (or admin to activate it)
-//  $delays = '1,2,3,5,8'; // Fibonacci progression of delays (followed by every week)
+
   $delays = '1,4,9'; // delays proposed by staff (ultimately every week)
   $elapsed = str_replace('@DATE', 'access', $timeSince);
   $sql = <<< X
@@ -348,20 +365,7 @@ X;
   
   queueEach('activeWeekly', "SELECT DISTINCT uid FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS AND $sinceActivated>0 AND $sinceActivated % 7 = 0");
 	
-	$advanceDays = 7;
-  
-	$sql = <<< X
-	  SELECT DISTINCT u.uid, r.amount, r.period, r.created AS base, $advanceDays AS advanceDays,
-      UNIX_TIMESTAMP(ADDDATE(CURDATE(), INTERVAL $advanceDays DAY)) AS `when`,
-		  (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.recursId=r.id AND status<:TX_PAID LIMIT 1) AS invoiced,
-      (SELECT MAX(created) FROM txs_noreverse WHERE uid1=r.payer AND uid2=r.payee AND recursId=r.id) AS lastTx
-		FROM users u LEFT JOIN r_recurs r ON r.payer=u.uid AND r.payee=:CGID AND r.ended=0
-		WHERE u.:IS_OK AND u.activated AND u.uid>0 AND u.uid NOT :CANONIC AND IFNULL(r.period, 'Y')='Y'
-X;
-// activated is for testing, even though redundant with IS_OK
-//		AND FLOOR((:NOW-IFNULL(r.created, u.activated)) / :DAY_SECS) MOD 365 <= 365 - 7
-
-  queueEach('warnAnnualGift', $sql); // call at the right time for members with no recurring donation OR for any member with an annual donation
+  warnAnnualGifts();
   
   queueNext();
 }
@@ -373,8 +377,6 @@ function tickleSignup($item) {
   extract(just('email inviter code elapsed', $item));
   if (r\acct($email = u\decry('P', $email))) return; // invitee already began to open an account
   $inviterName = r\acct($inviter)->fullName;
-//  $count = $elapsed < 7 ? t('two') : ($elapsed < 14 ? t('one') : 0);
-//  $nudge = $count ? t("We will send you just @count more reminder(s)", compact('count')) : t('This is your last reminder');
   $nudge = t($elapsed < 7 ? 'reminder coming' : 'reminder one');
   r\rMail('nonmember', $email, ray('fullName nudge code noFrame', $inviterName, $nudge, $code, TRUE));
   r\notify($inviter, 'invite languishing', compact('email', 'elapsed'));
@@ -440,27 +442,32 @@ function activeWeekly($item) {
 }
  
 /**
- * Warn member about upcoming annual donation (or lack thereof) -- about a week before it's due.
- * This is called at the right time for members with no recurring donation OR for any member with an annual donation (whether it's time or not).
+ * Warn members about upcoming annual donation (or lack thereof) -- a week before it's due.
  */
+function warnAnnualGifts() {
+	$advanceDays = 7;
+  
+	$sql = <<< X
+	  SELECT DISTINCT u.uid, r.amount, FROM_UNIXTIME(IFNULL(r.start, u.activated)) AS base, $advanceDays AS advanceDays,
+      ADDDATE(CURDATE(), INTERVAL $advanceDays DAY) AS target,
+      ADDDATE(CURDATE(), INTERVAL ($advanceDays-1) DAY) AS beforeTarget
+		FROM users u 
+    LEFT JOIN tx_templates r ON r.action=:ACT_PAY AND r.from=u.uid AND r.to=:CGID AND r.period='year' AND r.end IS NULL
+		WHERE u.:IS_OK AND u.activated AND u.uid>0 AND u.uid NOT :CANONIC
+    HAVING TIMESTAMPDIFF(YEAR, base, target) > TIMESTAMPDIFF(YEAR, base, beforeTarget)
+X;
+// activated is for testing, even though redundant with IS_OK
+
+  queueEach('warnAnnualGift', $sql);
+}
+
 function warnAnnualGift($item) {
-///    debug('warnAnnualGift(' . pr($item) .')');
-	extract(just('uid amount when base period advanceDays invoiced lastTx', $item));
+	extract(just('uid amount base target advanceDays', $item));
 
 	$a = r\acct($uid);
-  if (!$period) { // annual reminder for zero donation
-    $base = strtotime('today', $a->activated);
-    for ($i = 1; ; $i++) {
-      $dt = strtotime("+$i years", $base);
-      if ($dt > NOW) break;
-    }
-    if ($dt != $when) return;
-  } elseif (!empty($amount)) {
-    if (!empty($invoiced) or !giveNow($period, $lastTx, $base, $when) or giveNow($period, $lastTx, $base, strtotime("-1 day", $when))) { return; } // not time yet for annual (or it was also time yesterday)
-  }
 	$aDonate = w\atag("/do/doDonate~$a->mainQid~$a->emailCode");
-  r\notify($uid, 'annual-gift', $ray = ray('amount when aDonate', u\fmtAmt($amount), u\fmtDate($when, TRUE), $aDonate), TRUE);
-//	r\tellAdmin('annual gift warning', $ray + ray('who', $a->fullName));
+  $subs = ray('amount when aDonate', u\fmtAmt($amount), u\fmtDate(strtotime($target), TRUE), $aDonate);
+  r\notify($uid, 'annual-gift', $subs, TRUE);
 }
 
 /**
@@ -637,16 +644,6 @@ function cgc($item) {
     }
   }
 }  
-  
-/**
- * Mark recently completed bank transfers complete.
- * @param assoc $tx: the USD deposit or withdrawal transaction
- * Note that transfers to the bank were marked complete immediately, but not with the correct ClearingDate.
- *//*
-function bankFollowup($tx) {
-  r\usdTransferDone($tx);
-}
-*/
 
 /**
  * Check accounts for consistency, scams, whatever.
@@ -888,73 +885,6 @@ function txRisk1($xid) {
 }
 
 /**
- * Handle recurring transactions that it's time to handle.
- */
-function recurs() {
-  $sql = <<< EOF
-    SELECT DISTINCT r.id AS recursId, r.period, r.created, r.amount, r.payer, r.payee, u2.fullName AS payeeName, purpose,
-    (SELECT 1 FROM r_invoices i WHERE i.recursId=r.id AND status<:TX_PAID LIMIT 1) AS invoiced,
-    (SELECT MAX(created) FROM txs_noreverse WHERE recursId=r.id) AS lastTxDt
-    FROM r_recurs r JOIN users u1 ON u1.uid=r.payer JOIN users u2 ON u2.uid=r.payee
-    WHERE ended=0 AND u1.:IS_OK AND u2.:IS_OK
-EOF;
-  queueEach('recurs1', $sql);
-  queueNext();
-}
-/*
-  $sql = <<< X
-    SELECT DISTINCT r.payer,r.payee,r.period,r.amount,r.created,
-		  (SELECT 1 FROM r_invoices i WHERE i.payer=r.payer AND i.payee=r.payee AND i.:IS_RECURS AND status<:TX_PAID LIMIT 1) AS invoiced,
-  		(SELECT MAX(t.created) FROM r_txs t WHERE t.payer=r.payer AND t.payee=r.payee AND t.:IS_RECURS AND NOT t.:IS_UNDONE AND NOT t.:IS_UNDOES) AS lastTx
-		FROM r_recurs r	INNER JOIN users u1 ON u1.uid=r.payer INNER JOIN users u2 ON u2.uid=r.payee
-		WHERE u1.:IS_OK AND u2.:IS_OK AND r.ended=0
-X;
-*/
-
-/**
- * Handle a recurring payment, if it's time (often a gift to CG).
- * If funds are insufficient, an approved invoice is created instead (which tries to get money as a next step).
- */
-function recurs1($item) {
-	extract(just('recursId period lastTxDt created invoiced amount payer payee payeeName purpose', $item));
-	if ($invoiced or !giveNow($period, $lastTxDt, $created)) return;
-
-  $data = ['recurs' => 1];
-//  if (nn($firstXid) and $flags = db\get('flags', 'txs', 'xid=:firstXid', compact('firstXid')) and u\getBit($flags, B_GIFT))
-  if ($payee == CGID) $data['gift'] = 1;
-  $period = r\periodDesc($period);
-
-  if (r\acct($payer)->payApproved($payee, $amount, "$purpose ($period)", FOR_GOODS, $data, $recursId)) {
-    r\notify($payer, 'recur pay', ray('amount period purpose payee', u\fmtAmt($amount), $period, $purpose, $payeeName));
-  }
-}
-
-/**
- * Say whether it's time to make a recurring payment, based on how long ago the last one was and when they're supposed to happen
- * -- letting go of any totally missed payments (automation does not guarantee squareness).
- * @param char $period: how often (W, M, Q, Y)
- * @param int $lastPmt: Unixtime of last relevant payment
- * @param int $firstPmt: Unixtime of first relevant payment
- * @param int $now: is it time as of what "now" (if not now(), don't return true for first gift)
- */
-function giveNow($period, $lastPmt, $firstPmt, $now = NULL) {
-	if (is_null($now) and empty($lastPmt)) return TRUE; // never given, so now's the time
-  // the is_null($now) check above is because we ask in advance about an annual gift even when the member didn't make one
-  if (empty($now)) $now = now();
-
-  if (strpos('MQY', $period) !== FALSE) {
-    $m = $period == 'M' ? 1 : ($period == 'Q' ? 3 : 12);
-	  $windowSize = MONTH_SECS * $m; // should be at least a third of a period since the last gift
-  } else $windowSize = $period == 'W' ? WEEK_SECS : DAY_SECS;
-///  debug(compact(ray('period lastPmt now windowSize firstPmt m')));
-	if (($now - $lastPmt) < ($windowSize / 3)) return FALSE; // should be at least a third of a period since the last gift
-	$lastTrigger = $firstPmt + $windowSize * floor(($now - $firstPmt) / $windowSize); // most recent time to give
-///  debug(compact(ray('lastPmt now windowSize lastTrigger m')));
-///  debug($lastTrigger > $lastPmt);
-	return ($lastTrigger > $lastPmt); // last Trigger must be after last gift
-}
-
-/**
  * 1. Mark deposited transfers complete USDTX_DAYS business days after deposit (if not already marked complete)
  * 2. Get funds from a connected bank account or drawable CG account, as needed
  * This (in particular getFunds) should be called before invoices and investments, so those ADD to the minimum balance
@@ -978,8 +908,6 @@ function getFunds1($item) {
   extract(just('uid jid', $item));
   $a = r\acct($uid);
 	$amount = ($a->minimum - $a->balance) - $a->getPendingDeposits();
-///     debug("uid=$uid amount=$amount min=$a->minimum bal=$a->balance pend=" . $a->getPendingDeposits());
-//	if ($a->hasBank) $amount += db\sum('amount', 'r_invoices', 'status=:TX_APPROVED AND :IS_FUNDING AND payer IN (:uid,:jid)', $item) /*- $a->waitingFromBank()*/; // subtract out other non-invoice-related transfers
 	if ($amount > 0) $a->getFunds($amount, t('to target'));
 }
 
@@ -1104,6 +1032,3 @@ function END() {
   $topic = t('cron end');
   r\tellAdmin($msg, compact('topic'));
 }
-
-
-//function realId($uid) {return ($uid <= CGID);}

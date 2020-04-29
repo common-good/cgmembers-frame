@@ -208,19 +208,19 @@ Scenario: A new member asks to pay another member before making a Common Good Ca
 Scenario: A member pays another member repeatedly
   When member ".ZZA" confirms form "pay" with values:
   | op  | who     | amount | purpose | repeat |*
-  | pay | Bea Two | 100    |  labor  |      W |
+  | pay | Bea Two | 100    |  labor  | week   |
   Then we say "status": "report tx|repeats" with subs:
   | did  | otherName | amount | often  |*
-  | paid | Bea Two   | $100   | Weekly |
+  | paid | Bea Two   | $100   | weekly |
   And we notice "new payment" to member ".ZZB" with subs:
   | created | fullName | otherName | amount | payeePurpose |*
   | %today  | Bea Two  | Abe One    | $100   | labor        |
   And transactions:
   | xid | created | amount | payer | payee | purpose      | taking | recursId |*
-  |   1 | %today  |    100 | .ZZA  | .ZZB | labor        | 0      |        1 |
+  |   1 | %today  |    100 | .ZZA  | .ZZB  | labor        | 0      |        1 |
   And date field "created" rounded "no" in "tx_hdrs" record "1" (id field "xid")
-  And these "recurs":
-  | id | payer | payee | amount | period | purpose | created   | ended |*
-  |  1 | .ZZA  | .ZZB  |    100 |      W | labor   | %daystart |     0 |
-  And date field "created" rounded "yes" in "recurs" record "1" (id field "id")
-  And field "tx_hdrs/xid/1/created" is ">=" field "recurs/id/1/created"
+  And these "tx_templates":
+  | id | from | to   | amount | period | purpose | start     | end | action | duration |*
+  |  1 | .ZZA | .ZZB |    100 | week   | labor   | %daystart |     | pay    | once     |
+  And date field "start" rounded "yes" in "tx_templates" record "1" (id field "id")
+  And field "tx_hdrs/xid/1/created" is ">=" field "tx_templates/id/1/start"

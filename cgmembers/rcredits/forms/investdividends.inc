@@ -25,7 +25,7 @@ function formInvestDividends($form, &$sta, $args = '') {
     $amount = item(t('You cannot issue dividends at this time.'));
     $submit = NULL;
   } else {
-    $amount = textFld(t('Total Dividends to Issue:'), '', required($amt));
+    $amount = numFld(t('Total Dividends to Issue:'), '', required($amt));
     $submit = t('Issue Dividends');
   }
   $back = backButton();

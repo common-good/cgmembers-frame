@@ -36,7 +36,7 @@ function formGet($form, &$sta, $args = '') {
   $subtext = t('<p>When you transfer funds FROM your bank account to your Common Good account, you are buying Common Good credit. Your Common Good credit is backed partly by Dollars in your Common Good Community’s Dollar Pool and partly by collateral, including promises of members and member organizations [<%aBacking>more about backing</a>]. It may take several business days for your bank to send the funds.</p>
   <p>Funds going TO your bank account also may take several days to arrive. If you have an emergency and need funds immediately, talk to us.</p><p>To refill your %PROJECT Account automatically (or not), as needed, adjust your "refills" setting on the <%aSettings>Banking Settings</a> page.</p>', '_aBacking _aSettings', atag('/help/backing-common-good-credits'), atag('/settings/fund')) . t('note|ach warning');
 
-//  $minimum = textFld(t('Minimum:'), t('prompt min'), dft(u\fmtAmt(!$mya->prefsSet ? $mya->minimum : R_MINR_DEFAULT, 's')));
+//  $minimum = numFld(t('Minimum:'), t('prompt min'), dft(u\fmtAmt(!$mya->prefsSet ? $mya->minimum : R_MINR_DEFAULT, 's')));
 //  $toSpend = u\fmtAmt($mya->avail(FOR_GOODS));
 //  $toSpend = u\fmtAmt($mya->r - $mya->committed);
   $balance = u\fmtAmt($mya->balance);
@@ -92,12 +92,12 @@ function formGet($form, &$sta, $args = '') {
   $avail = hidFld($avail);
   $credit = u\fmtAmt(-$mya->floor);
   $balances = item(t('balances', compact(ray('balance credit cashoutable'))), t('Balance:'));
-  $amount = textFld(t('Amount $'), t('Transfer how much?') . ($mya->cAdmin ? t(' (no limit for admin)') : ''));
+  $amount = numFld(t('Amount $'), t('Transfer how much?') . ($mya->cAdmin ? t(' (no limit for admin)') : ''));
   $get = submit(BARE . t('From Bank'));
 //  $fromBank = fld('checkbox', t('Automate:'), t('(recommended) Refill my %PROJECT Account from my bank account automatically, as needed.'), dft(!$mya->prefsSet ? $mya->can(B_FROM_BANK) : TRUE));
   
-//  $maximum = textFld(t('Maximum:'), t('prompt max'), dft(u\fmtAmt(!$mya->prefsSet ? $mya->maximum : R_MAXR_DEFAULT, 's')));
-//  $excess = textFld(t('Excess'), '', dft(u\fmtAmt($mya->overMax(), 's')));
+//  $maximum = numFld(t('Maximum:'), t('prompt max'), dft(u\fmtAmt(!$mya->prefsSet ? $mya->maximum : R_MAXR_DEFAULT, 's')));
+//  $excess = numFld(t('Excess'), '', dft(u\fmtAmt($mya->overMax(), 's')));
 //  $toBank = fld('checkbox', t('Automate:'), t('Transfer any excess to my bank account automatically every few days.'), dft(!$mya->prefsSet ? $mya->can(B_TO_BANK) : TRUE));
   $put = submit(BARE . t('To Bank'));
   $actions = fieldSet('actions', compact('get', 'put'));

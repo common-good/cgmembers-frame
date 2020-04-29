@@ -15,17 +15,17 @@ function formGrant($form, &$sta) {
   $subtext = t('<p>Are you passionate about democratic economics and the potential of %PROJECT to create a society to benefit everyone? Do you have the skills to organize a group to begin the process of becoming a Common Good Community? Great! Common Good Finance has a grant for you.</p><p>Open a %PROJECT Account, form an organizing committee of 3 or more people, get one retail business and 10 other people to sign up, then fill out this form to request a grant of up to $5,000. Please also email us your resume, CV, or equivalent.</p><p>Remember the board may not be familiar with your work or your local community, so explain as needed.</p>');
   $did10 = boolFld(t('Got 10/1:'), t('Have you successfully recruited 10 %PROJECT members and at least 1 %PROJECT business?'));
   $biz = textFld(REQ . t('Biz:'), [t('Business name(s)'), t('Which business(es) did you recruit?')]);
-  $amount = textFld(REQ . t('Request:'), [t('Requested grant amount'), t('How much grant funding are you requesting (up to $5,000)?')]);
+  $amount = numFld(REQ . t('Request:'), [t('Requested grant amount'), t('How much grant funding are you requesting (up to $5,000)?')]);
   
   $class = ['class' => ['inline']];
   foreach ($gets = ray('_getOrganizers _getIndividuals _getCompanies') as $k) {
-    $$k = w\rendA($k, textFld(BARE, [t('How many')], $class));
+    $$k = w\rendA($k, intFld(BARE, [t('How many')], $class));
   }
 
   $_getPartners = w\rendA('getPartners', textFld(BARE, [t('Organization name(s)')], $class));
   $_getOther = w\rendA('getOther', textFld(BARE, [t('Describe')], $class));
-  $_start = w\rendA('start', textFld(BARE, [t('Start date')], $class));
-  $_end = w\rendA('end', textFld(BARE, [t('End date')], $class));
+  $_start = w\rendA('start', dateFld(BARE, [t('Start date')], $class));
+  $_end = w\rendA('end', dateFld(BARE, [t('End date')], $class));
 
   $plan = item(t(<<<EOF
 <p>What do you plan to accomplish with this funding and over what (near future) time period?<br>

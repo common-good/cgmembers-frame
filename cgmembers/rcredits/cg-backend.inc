@@ -398,7 +398,7 @@ function payInvoice($nvid) {
  *   'funding'
  *   'crumbs', 'recurs', 'gift': gift info
  *   'ruleId': the id of the rule associated with this transaction
- * @param int $recursId: record ID of related record in r_recurs (if any)
+ * @param int $recursId: record ID of related record in tx_templates (if any)
  * @return simple array: 
  *    ok: success?
  *    index: index to result message string (if success, the index begins with "report ")
@@ -816,7 +816,7 @@ function maxTid($uids) {
  *    shid: record id of related record in r_shares
  *    status: ?
  *    created: UNIXtime
- * @param int $recursId: record ID of related record in r_recurs (if any)
+ * @param int $recursId: record ID of related record in tx_templates (if any)
  * @return simple array: 
  *    ok: success?
  *    index: index to result message string (if success, the index begins with "report ")

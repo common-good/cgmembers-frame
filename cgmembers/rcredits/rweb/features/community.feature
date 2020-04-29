@@ -21,9 +21,9 @@ Setup:
   | .ZZC | .ZZA  | sell       |
   | .ZZB | .ZZD  | joint      |
   | .ZZD | .ZZB  | joint      |
-  And recurs:
-  | id | created   | ended | amount | payer | payee | period | purpose |*
-  |  1 | %today-8m |     0 |     12 | .ZZC  | .AAB  |      Y | gift    |
+  And these "tx_templates":
+  | id | action | start     | end | amount | from | to   | period | purpose |*
+  |  1 | pay    | %today-8m |     |     12 | .ZZC | .AAB | year   | gift    |
   And usd transfers:
   | txid | payee | amount | created    | completed  |*
   |  100 | .ZZA  |   1000 | %today-20d | %today-13d |

@@ -287,7 +287,6 @@ function doit(what, vs) {
     break;
   
   case 'stepup':
-    var lastFocus;
     var first = true;
     
     $('[id^="edit-org"]').each(function () {
@@ -300,7 +299,7 @@ function doit(what, vs) {
     $('[id^="edit-org"]').change(function () {$(this).parents('.row').next().css('display', 'table-row');});
     
     $('[id^="edit-when"]').change(function () {
-      var max = $(this).parents('.row').find('[id^="edit-max"]');
+      var max = $(this).parents('.row').find('[id^="edit-max"]').parent();
       var pctmx = ($(this).find(':selected').val() == 'pctmx');
       max.toggle(pctmx);
       if (pctmx) {
@@ -309,23 +308,8 @@ function doit(what, vs) {
       } else { max.val('').parent().parent().next().find('input[name^="org"]').focus(); }
     });
     
-/*    $('[id^="edit-amt"]').change(function () {
-      var s = $(this).val();
-      if (!s.match(/^$|^\$[0-9.]+$|^[0-9.]+%$/)) {
-        $.alert('You must type a number with $ at the beginning or % at the end.', 'Try again');
-        lastFocus = $(this);
-        $('.ui-dialog button').click(function () {lastFocus.focus();});
-        $('.ui-dialog button').focus();
-      }
-      
-      var val = $(this).val();
-      var max = $(this).parents('.row').find('[id^="edit-max"]');
-      if (has(val, '%')) max.prop('disabled', false);
-      if (has(val, '$')) max.prop('disabled', true);
-    
-    });
-    $('[id^="edit-amt"]').change(); */
-    
+    $('[id^="edit-when"]').change();
+        
     break;
 
   case 'groups':

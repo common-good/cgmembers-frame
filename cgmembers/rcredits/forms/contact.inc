@@ -17,7 +17,7 @@ function formContact($form, &$sta) {
   $title = t('Contact Information');
   $fullName = textFld($mya->co ? t('Company Name:') : t('Your Name:'), $nameDesc, required(@$mya->fullName));
 //  $onchange = w\onchange("jQuery('.form-item-pass').show();");
-  $email = textFld(t('Email:'), '', required(@$mya->email));
+  $email = emailFld(t('Email:'), '', required(@$mya->email));
   $pass = $mya->cAdmin ? NULL : passFld(t('Password:'), t('Required for changing email address'));
 
   $submit = submit();

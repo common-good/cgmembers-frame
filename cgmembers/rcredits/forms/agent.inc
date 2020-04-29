@@ -17,7 +17,7 @@ function formAgent($form, &$sta, $args = '') {
   
   $agent = db\get('other', 'r_relations', 'main=:main', ['main' => $mya->id]);
   $agent = textFld(REQ . t('Personal Account:'), [t('Account ID')], dft($agent ? r\acct($agent)->mainQid : ''));
-  $phone = textFld(REQ . t('Phone:'), [t('Phone number'), t('Type the phone number on your personal account, for verification.')]);
+  $phone = phoneFld(REQ . t('Phone:'), [t('Phone number'), t('Type the phone number on your personal account, for verification.')]);
 
   $coTypes = ray(CO_TYPES);
   unset($coTypes[CO_PERSONAL]);
