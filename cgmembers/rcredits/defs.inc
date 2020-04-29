@@ -602,7 +602,7 @@ define('PERIODS_PLURAL', t('n/a days weeks months quarters years n/a'));
 const MATCH_PAYER = -1; // Special values for from and to (which are normally uids) in tx_rules
 const MATCH_PAYEE = -2;
 
-const STEPUP_MIN = 1; // minimum number of stepup rules for a company to appear on the step-up page
+const STEPUP_MIN = 3; // minimum number of stepup rules for a company to appear on the step-up page
 define('STEPUP_DESC', t('donation (step-up)')); // step-up donation tx description
 define('STEPUP_3PCT', str_replace('(', '(3% ', STEPUP_DESC)); // description model for rules, txs, and testing
 define('REBATE_DESC', t('discount (rebate)'));

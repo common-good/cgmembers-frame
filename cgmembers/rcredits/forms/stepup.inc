@@ -44,7 +44,7 @@ function formStepUp($form, &$sta, $args = '') {
     LEFT JOIN r_company c USING(uid)
     WHERE (mine AND NOT xly) OR (u.:IS_CO AND c.coType=:CO_NONPROFIT)
     GROUP BY mine,x.to,xly 
-    HAVING COUNT(id)>=LEAST(1, :STEPUP_MIN) OR mine
+    HAVING COUNT(id)>=:STEPUP_MIN OR mine
     ORDER BY mine, fullName, uid, xly
 X;
 
