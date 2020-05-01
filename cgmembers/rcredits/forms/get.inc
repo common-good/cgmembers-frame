@@ -20,13 +20,11 @@ function formGet($form, &$sta, $args = '') {
   $jid = $mya->jid ?: 0;
   extract(just('cancel', $args));
   if ($txid = @$cancel) {
-    if ($xid = db\get('xid', 'r_usd', 'txid=:txid AND payee=:myid and deposit=0', compact('txid', 'myid'))) {
+    if ($xid = db\get('xid', 'r_usd', ray('txid payee deposit', $txid, $myid, 0))) {
       $crit = compact('xid');
-      $DBTX = \db_transaction();
-      foreach (ray('tx_entries tx_hdrs r_usd') as $table) db\del($table, $crit);
-      unset($DBTX);
-      say('transfer canceled', compact('txid'));
-      r\tellAdmin("canceled exchange #$txid");
+      db\del('r_usd', $crit);
+      say('transfer canceled', $crit);
+      r\tellAdmin("canceled exchange #$xid");
       r\notify($mya->id, t('bank tx canceled', $crit));
       return w\go('/get'); // don't leave the cancelation on the URL (submitting like that cancels the future)
     } else say('That transfer does not exist.');

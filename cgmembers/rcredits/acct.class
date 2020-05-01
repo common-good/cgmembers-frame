@@ -350,8 +350,8 @@ class Acct {
   function setCategories($cats) {
     $a = $this;
     $DBTX = db_transaction();
-    db\del('r_user_industries', 'id', 'uid=:id', ['id'=>$a->id]);  // out with the old
-    foreach ($cats as $iid) db\insert('r_user_industries', ray('uid iid', $a->id, $iid));
+    db\del('r_user_industries', 'uid=:id', ['id'=>$a->id]);  // out with the old
+    foreach ($cats as $iid) db\insert('r_user_industries', ray('uid iid', $a->id, $iid)); // in with the new
     unset($DBTX); // commit
   }  
   
@@ -733,11 +733,13 @@ X;
   public function proxy($priority = 1, $proxy = NULL) {
     $a = $this;
     $subs = ['person' => $a->id, 'priority' => $priority];
-    if (empty($proxy))
+    if (empty($proxy)) { // return it
       return db\get('proxy', 'r_proxies', 'person=:person AND priority=:priority', $subs);
-    db\del('r_proxies', 'id', 'person=:person AND priority=:priority', $subs);
-    $subs['proxy'] = $proxy;
-    db\insert('r_proxies', $subs);
+    } else { // set it
+      db\del('r_proxies', 'person=:person AND priority=:priority', $subs);
+      $subs['proxy'] = $proxy;
+      db\insert('r_proxies', $subs);
+    }
   }
 
   /**

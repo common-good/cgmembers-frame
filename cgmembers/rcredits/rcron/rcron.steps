@@ -91,6 +91,7 @@ function members($list) {return t\members($list);}
  *     TEST joint AJointAccountNeedsRefilling
  *     MAKE joint AJointAccountDoesNotNeedRefilling
  *     TEST monthly Setup
+ *     TEST rules AnEndedTemplateHasNoEffect
  *     TEST weekly AMemberCrawlsOutOfDebt
  *     BOTH weekly CronTriesToRunTheWeeklyStuffTwiceInOneDay
  *     TEST weekly AMemberBuildsUpSavings
@@ -540,6 +541,7 @@ function stats($list) {return t\stats($list);}
  *     MAKE risk Setup
  *     MAKE rules Setup
  *     TEST rules RulesGetInstantiated
+ *     MAKE rules AnEndedTemplateHasNoEffect
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -560,6 +562,8 @@ function these($thing, $list) {return t\these($thing, $list);}
  *     TEST recurs ARecurringPaymentHappenedYesterday
  *     TEST recurs ARecurringPaymentHappenedLongEnoughAgoToRepeat
  *     TEST recurs ARecurringPaymentCannotBeCompleted
+ *     TEST rules RulesGetInstantiated
+ *     TEST rules AnEndedTemplateHasNoEffect
  */
 function countIs($what, $count) {return t\count($what, $count);}
 
@@ -648,6 +652,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE risk Setup
  *     MAKE risk WeCalculateRisks
  *     MAKE rules RulesGetInstantiated
+ *     MAKE rules AnEndedTemplateHasNoEffect
  *     MAKE tickle ANewbieHasTakenOnlyTheFirstStep
  *     MAKE tickle ANewbieHasTakenSomeStepsButNotAll
  *     MAKE tickle ANonmemberHasNotAcceptedTheInvitation

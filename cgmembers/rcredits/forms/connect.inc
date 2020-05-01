@@ -137,13 +137,7 @@ function formConnect_submit($form, &$sta) {
   if ($bankAccount != 'no change') { // bank account changed. update and reverify.
     $fields .= ' bankAccount last4bank'; // avoid overwriting v-encrypted value
     $mya->setBit(B_BANKOK, FALSE);
-    if (!$connect) while ($xid = db\get('xid', 'r_usd', 'deposit=0 AND payee=:id', ray('id', $mya->id))) {
-      $DBTX = \db_transaction();
-      foreach (ray('tx_entries tx_hdrs r_usd') as $table) {
-        db\del($table, '', 'xid = :xid', compact('xid')); // no transfers for a deleted bank connection
-      }
-      unset($DBTX);
-    }
+    if (!$connect) db\del('r_usd', ray('deposit payee', 0, $mya->id)); // zap pending transfers
   }
   $mya->update(compact(ray($fields)));
   
