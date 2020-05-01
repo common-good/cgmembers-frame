@@ -240,14 +240,14 @@ X;
     r\deleteAccount($a);
   } , $where);
   if ($uid = db\get('u1.uid', 'users u1 JOIN users u2 ON u2.uid=u1.jid', 'u1.jid<>0 AND u2.jid<>u1.uid')) r\tellAdmin('Orphaned joint account: ' . r\acct($uid)->fullName, [], $uid);
-//  db\del('users', 'uid', $where); // abandoned new joint acct (must postcede setting jids)
+//  db\del('users', $where); // abandoned new joint acct (must postcede setting jids)
 
   // Notice which bank accounts have been verified
 	$where = 'deposit<>0 AND deposit<UNIX_TIMESTAMP()-:VERIFICATION_DELAY*:DAY_SECS AND (SELECT 1 FROM r_usd d2 WHERE d2.txid=-d.txid) IS NULL';
 	$uids = db\col('payee', 'r_usd d', $where);
 	$DBTX = \db_transaction();
 	foreach ($uids as $uid) r\acct($uid)->setBit(B_BANKOK);
-	if ($uids) db\del('r_usd', 'txid', 'amount=0 AND payee IN (:uids)', compact('uids'));
+	if ($uids) db\del('r_usd', 'amount=0 AND payee IN (:uids)', compact('uids'));
 	unset($DBTX);
 	db\q('DELETE FROM x_usd WHERE amount=0'); // no need to track these
 }
@@ -268,9 +268,11 @@ function recurs() {
     LEFT JOIN txs x ON x.recursId=t.id
     LEFT JOIN r_invoices i ON i.recursId=t.id
     WHERE t.action IN (:ACT_SURTX, :ACT_PAY, :ACT_CHARGE)
+    AND IFNULL(t.end, :NOW+1) > :NOW
     GROUP BY t.id
     ORDER BY (t.action=:ACT_SURTX) DESC, t.id
 EOF;
+
   queueEach('recur', $sql);
 }
   

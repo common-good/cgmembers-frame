@@ -234,7 +234,7 @@ function updateRelations($updates) {
     if (!u\getBit($flags, 'customer')) u\setbit($flags, 'autopay', FALSE);
 
     if (!@$permission and !@$flags and !$wasEmpty) { // empty now and wasn't before
-      db\del('r_relations', 'reid', $reid);
+      db\del('r_relations', compact('reid'));
       $msg = 'deleted relation';
     } else {
       $a = r\acct($main, $other);
@@ -905,7 +905,7 @@ function addCell($number, $validate = FALSE) {
 
 function deleteCell($number) {
   $number = u\fmtPhone($number, '+n'); // internal format
-  db\del('r_boxes', 'id', 'code=:number LIMIT 1', compact('number'));
+  db\del('r_boxes', 'code=:number LIMIT 1', compact('number'));
   $number = u\fmtPhone($number); // pretty format
   return array('report delete cell', compact('number'));
 }

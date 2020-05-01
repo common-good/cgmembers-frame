@@ -234,30 +234,59 @@ function setFlag($table, $id, $bit, $bool = TRUE) {
 
 /**
  * Make a backup copy of the record before deleting it if appropriate (then delete it).
- * @param string $table: delete a record from this table
- * @param string $idnm: name of key field of table OR assoc of criteria; for example:
+ * Call with:
+ *   db\del(tnm, ray)
+ *   db\del(tnm, where)
+ *   db\del(tnm, where, subs)
+ *   db\del(tnm, where, subs, override)
+ *   db\del(tnm, idnm, id)
+ * @param string $tnm: delete a record from this table
+ * @param assoc $ray: assoc of criteria; for example:
  *   foreach (ray('tx_entries tx_hdrs r_usd') as $tnm) db\del($tnm, ['xid' => 12345]);
- * @param mixed $id: id of record to delete (integer or spaceless string) OR criteria
+ * @param string $where: criteria string
+ * @param assoc $subs: substitutions in $where
+ * @param bool $override: allow deletions from tx_hdrs_all and tx_entries_all
+ * @param string $idnm: name of key field of table
+ * @param mixed $id: id of record to delete (not empty)
  * @param assoc $subs: parameters for selection criteria
  */
-function del($table, $idnm, $id = '', $subs = []) {
-  u\EXPECT(!strpos($table, '_all') and !u\starts($table, 'txs'), 'you must delete only from tx_hdrs and tx_entries');
+//function del($tnm, $idnm, $id = '', $subs = []) {
+function del($tnm, $where, $subs = [], $override = FALSE) {
+  if (strhas($tnm, 'tx_hdrs')
+    or strhas($tnm, 'tx_entries')
+    or strhas($tnm, 'txs_')
+  ) u\EXPECT($override and strhas($tnm, '_all'), t('you must delete transactions only from txs or r_usd, which delete all things with that xid'));
   
-  if (is_array($idnm)) {
-    list ($where, $subs) = [u\where($idnm), $idnm];
-  } else $where = strpos($id, ' ') ? $id : "$idnm='$id'";
+  if (is_array($where)) {
+    u\EXPECT(empty($subs), t('mixed parameter sets in db\\del()'));
+    list ($where, $subs) = [u\where($where), $where];
+  } elseif (!is_array($subs)) { list ($where, $subs) = ["$where=:id", ['id' => $subs]]; } // del(tnm, idnm, id)
   
-  if (in($table, DELETED_BY_VIEW)) {
-    $all_table = $table . '_all';
-    $q = db\q("UPDATE $all_table SET deleted=:NOW WHERE (deleted IS NULL OR deleted=0) AND $where", $subs);
+  $DBTX = \db_transaction();
+  
+  if (in($tnm, DELETED_BY_VIEW)) {
+    $q = db\q("UPDATE $tnm SET deleted=:NOW WHERE (deleted IS NULL OR deleted=0) AND $where", $subs);
     $ok = ($q->rowCount() > 0);
     return;
-  } elseif (in($table, TRACK_DELETED)) {
-    $xtable = $table == 'users' ? 'x_users' : str_replace('r_', 'x_', $table);
-    $q = db\q("INSERT INTO $xtable SELECT :NOW AS deleted,a.* FROM $table a WHERE $where", $subs);
+    
+  } elseif (in($tnm, TRACK_DELETED)) {
+    $xtnm = $tnm == 'users' ? 'x_users' : str_replace('r_', 'x_', $tnm);
+    $q = db\q("INSERT INTO $xtnm SELECT :NOW AS deleted,a.* FROM $tnm a WHERE $where", $subs);
     $ok = ($q->rowCount() > 0);
+    if ($ok and $tnm == 'r_usd') { // need to delete related txs records as well as r_usd records
+      if ($rows = db\col('xid', $tnm, $where, $subs)) db\del('txs', 'xid IN (:rows)', compact('rows'));
+    }
+    
+  } elseif ($tnm == 'txs') {
+    if ($rows = db\col('xid', $tnm, $where, $subs)) foreach (ray('tx_entries_all tx_hdrs_all') as $allTnm) {
+      db\del($allTnm, 'xid IN (:rows)', compact('rows'), (bool) 'OVERRIDE');
+    }
+    return; // txs IS tx_hdrs_all and tx_entries_all, so no further action needed
+    
   } else { $ok = TRUE; }
-  if ($ok) db\q("DELETE FROM $table WHERE $where", $subs);
+  
+  if ($ok) db\q("DELETE FROM $tnm WHERE $where", $subs);
+  unset($DBTX);
 }
 
 function hasField($table, $field) {return hasCol($table, $field);}

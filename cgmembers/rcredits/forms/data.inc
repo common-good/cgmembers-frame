@@ -19,7 +19,7 @@ function formData($form, &$sta, $args = '', $isco = FALSE) {
   $qName0 = nn($qName);
 
   $btn = w\submi('Go', 'success', 'xs', ['parents' => ['go']]);
-  $sql = $mya->admin ? textFld(t('SQL:'), [t('MySQL Select Query')], dft($sql0) + w\suffix(\render($btn))) : NULL;
+  $sql = $mya->admin ? textFld(t('SQL:'), [t('MySQL Select Query')], dft($sql0) + maxlen(4096) + suffix(\render($btn))) : NULL;
 
   if ($mya->admin and $sql0) {
     $title = t('MySQL Query');
