@@ -294,7 +294,7 @@ function recur($template) {
     if ($shouldStart > strtotime('tomorrow')) return; // don't create transactions and invoices until the right day
     $fromA = r\acct($from); $toA = r\acct($to);
     if ($action == 'pay' and !$toA->ok) return r\tellAdmin(t('Attempt to pay an inactive account in recur'), $erSubs);
-    if ($fromA->closed) return r\tellAdmin(t('Attempt to pay from or invoice a closed account in recur'), $erSubs);
+    if ($fromA->closed) return; // we keep recurring donations around in case member re-opens account
 
     $purpose0 = $purpose; // remember original purpose
     if ($period and $period != 'once') {
@@ -875,7 +875,7 @@ function txRisk() {
   $sql = <<<EOF
     SELECT DISTINCT xid FROM txs
     WHERE risk IS NULL AND uid2 NOT :CANONIC AND amt<>0
-    ORDER BY created
+    ORDER BY created,xid
 EOF;
   queueEach('txRisk1', $sql);
   queueNext();

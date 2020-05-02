@@ -16,7 +16,7 @@ function formRelations($form, &$sta, $args = '') {
   extract(just('showCustomers', $args)); // linked from an email
 
   //  if ($confirm = sureForm($sta)) return $confirm; // confirm only getUSD
-  $acctIdentifiers = be\accountName($myid);
+  $acctIdentifiers ="$mya->fullName ($mya->mainQid)";
   $header = ray('The other account,Draw,Employee,Family,Permission');
   if ($co = $mya->co) $header[3] = 'Owns 10%+';
   $classes = ray('person draw employee owner permission');

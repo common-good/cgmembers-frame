@@ -30,13 +30,13 @@ Setup:
   | .ZZB |    2000 |
   | .ZZC |    3000 |
   Given transactions: 
-  | xid | created   | amount | payer | payee | purpose | taking | payerTid | payeeTid |*
-  |  44 | %today-5m |     10 | .ZZB | .ZZA | cash E  | 0      |       24 |       34 |
-  |  45 | %today-4m |   1100 | .ZZC | .ZZA | usd F   | 1      |       25 |       35 |
-  |  46 | %today-3m |    240 | .ZZA | .ZZB | what G  | 0      |       26 |       36 |
-  |  47 | %today-2w |     50 | .ZZB | .ZZC | cash P  | 0      |       27 |       37 |
-  |  48 | %today-1w |    120 | .ZZA | .ZZC | this Q  | 1      |       28 |       38 |
-  |  49 | %today-6d |    100 | .ZZA | .ZZB | cash V  | 0      |       29 |       39 |
+  | xid | created   | amount | payer | payee | purpose | taking |*
+  |  44 | %today-5m |     10 | .ZZB  | .ZZA  | cash E  | 0      |
+  |  45 | %today-4m |   1100 | .ZZC  | .ZZA  | usd F   | 1      |
+  |  46 | %today-3m |    240 | .ZZA  | .ZZB  | what G  | 0      |
+  |  47 | %today-2w |     50 | .ZZB  | .ZZC  | cash P  | 0      |
+  |  48 | %today-1w |    120 | .ZZA  | .ZZC  | this Q  | 1      |
+  |  49 | %today-6d |    100 | .ZZA  | .ZZB  | cash V  | 0      |
   Then balances:
   | uid  | balance |*
   | .ZZA |    1595 |

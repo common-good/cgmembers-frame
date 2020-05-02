@@ -25,6 +25,7 @@ function setupBasicAccounts() {
   $keys = ray('uid community name fullName email zip country minimum flags');
   $flags = u\bit(B_CO) | u\bit(B_OK);
   
+  if (isDEV and !isPRODUCTION) db\q('TRUNCATE users'); // !isPRODUCTION is a safety measure
   if (!db\exists('users', 'uid=0')) db\insert('users', ['uid' => 0], 'uid'); // required for signed-out messages (w\say())
   
   $q = db\q('SELECT region,fullName,st,zip,postalAddr,federalId,hasServer FROM r_regions');
@@ -64,17 +65,16 @@ function setupBasicAccounts() {
 
   $flagsCo = u\bit([B_MEMBER, B_CONFIRMED, B_OK, B_CO]); // flags for an active company account
   
-  $server = r\serverUid();
   $x1=new r\Acct(array_combine($keys, array(CG_ROUNDUPS_UID, 0, t('roundup'), t('%PROJECT Region'), 'cg@commongood.earth', '', 0, 0, $flagsCo)));
   new r\Acct(array_combine($keys, array(CG_CRUMBS_UID, 0, t('crumbs'), t('%PROJECT Region'), 'cg@commongood.earth', '', 0, 0, $flagsCo))); 
   new r\Acct(array_combine($keys, array(CG_SERVICE_CHARGES_UID, 0, t('bank fees'), t('Bank service charges'), 'cg@commongood.earth', '', 0, 0, $flagsCo))); 
   new r\Acct(array_combine($keys, array(BANK_IN_ID, 0, t('bank-in'), t('--'), 'cg@commongood.earth', '', 0, 0, $flagsCo))); 
   new r\Acct(array_combine($keys, array(BANK_OUT_ID, 0, t('bank-out'), t('--'), 'cg@commongood.earth', '', 0, 0, $flagsCo)));
   
+  $server = r\serverUid();
   if ($server == r\serverUid('NEW')) { // no need to set up CGF unless in Western Mass (or testing)
     r\acct($server)->update('created', R_LAUNCH); // a date in the past makes tests work better
-    if (db\exists('users', 'uid=' . CGID)) return; // already done
-    if (NOT_PRODUCTION and db\exists('users', "name='cornerstore'")) return; // already done
+    if ($cgId = getV('cgf_uid') and db\exists('users', 'uid=' . $cgId)) return; // already done (don't use CGID here)
 
     $values = array(r\qo('NEWAAB')->id, $server, u\shortName(PROJECT), PROJECT, CGF_EMAIL, '01330', US_COUNTRY_ID, 0, $flagsCo);
     $info = array_combine($keys, $values);
@@ -82,10 +82,11 @@ function setupBasicAccounts() {
     $helper = 1; //$wws->id;
     $info += compact(ray('email phone address city state postalAddr helper'));
     $cgf = new r\Acct($info);
-    \setV('cgf_uid', $cgf->id);
+    setV('cgf_uid', $cgf->id);
     $cgf->update('emailCode website activated created', '1495kJHm0h145PHh2345h', 'cg4.us', R_LAUNCH, R_LAUNCH);
 //    $cgf->newRelation($wws->id, r\perm(B_MANAGE));
     $cgf->reread(); // keeps tests from dying when using CGF as a funder for doBalance immediately after recreating the db
+//    if (!$cgId) w\say(t('CGID had not yet been set up. It is now.'), 'err');
   }
 }
 

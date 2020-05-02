@@ -24,14 +24,14 @@ Setup:
   |    4 | %today-5d |     90 | .ZZA | .ZZC | wrongly  | %TX_DENIED   |
   |    5 | %today-2d |   2000 | .ZZA | .ZZC | realist  | %TX_APPROVED |
   And transactions: 
-  | xid | created   | amount | payer | payee | purpose  | payerTid | payeeTid |*
-  |  14 | %today-4m |    100 | .ZZC | .ZZA | that F   |       23 |       33 |
-  |  15 | %today-2w |     50 | .ZZA | .ZZC | cacao P  |       24 |       34 |
-  |  16 | %today-9d |    240 | .ZZA | .ZZC | what G   |       25 |       35 |
-  |  17 | %today-8d |    120 | .ZZA | .ZZC | this Q   |       26 |       36 |
-  |  18 | %today-4d |    100 | .ZZA | .ZZB | thug V   |       27 |       37 |
-  |  19 | %today-3d |     80 | .ZZA | .ZZC | this CF  |       28 |       38 |
-  |  20 | %today-1d |    100 | .ZZC | .ZZA | pool CJ  |       29 |       39 |
+  | xid | created   | amount | payer | payee | purpose  |*
+  |  14 | %today-4m |    100 | .ZZC | .ZZA | that F   |
+  |  15 | %today-2w |     50 | .ZZA | .ZZC | cacao P  |
+  |  16 | %today-9d |    240 | .ZZA | .ZZC | what G   |
+  |  17 | %today-8d |    120 | .ZZA | .ZZC | this Q   |
+  |  18 | %today-4d |    100 | .ZZA | .ZZB | thug V   |
+  |  19 | %today-3d |     80 | .ZZA | .ZZC | this CF  |
+  |  20 | %today-1d |    100 | .ZZC | .ZZA | pool CJ  |
 
 Scenario: A company looks at a customer statement
   When agent "C:B" views "customer" statement for member ".ZZA"

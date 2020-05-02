@@ -230,7 +230,7 @@ EOF
   'agent created' => t('The agent account was successfully created.'),
   'phone verified' => t('Your phone number has been verified.'),
   'txs upload done' => t('<br>Transaction upload was successful. You %did %count accounts a total of %total.'),
-  'tx edited' => t('Your transaction #%tid was edited by %who.'),
+  'tx edited' => t('Your transaction #%xid was edited by %who.'),
   'new tx goods' => t('It is now for %what.'),
   'new tx amount' => t('The new amount is %amount.'),
   'expired invite converted' => t('Your invitation has expired, so %inviterName will be asked to re-confirm.'),

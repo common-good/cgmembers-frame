@@ -175,11 +175,7 @@ class Tx {
       u\EXPECT($xid, 'tx_hdrs insert failed');
     }
     u\EXPECT($xid, "Failed to insert transaction header record");
-    foreach ($tx->entries as $entry) {
-      if (empty($entry->acctTid)) {
-        $entry->acctTid = r\acct($entry->uid)->nextTid();
-      }
-    }
+
     foreach ($tx->entries as $i => $entry) {
       $eid = $entry->insert($xid, ($i % 2) ? -$eid : 0); // eid of second entry in each pair is the inverse of its companion
       u\EXPECT($eid, "Failed to insert transaction entry");

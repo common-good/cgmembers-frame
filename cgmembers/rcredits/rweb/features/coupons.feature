@@ -42,6 +42,7 @@ Scenario: A member redeems a gift coupon
   Given members have:
   | uid  | giftCoupons | created |*
   | .ZZC |           8 | 0039200 |
+
 # created determines 3-letter lowSecurity code (7AA), which is used in coupon code
   And these "tx_rules":
   | id | payer | payerType | payeeType | from | to           | action | amount | portion  | code | start |*
@@ -49,7 +50,7 @@ Scenario: A member redeems a gift coupon
 
   When member ".ZZA" completes form "community/coupons/type=gift" with values:
   | type   | code          |*
-  | redeem | DD7K CLJW EAI |
+  | redeem | IUBA 3M1N QFI |
   Then balances:
   | uid  | balance |*
   | .ZZA |      10 |
@@ -59,7 +60,7 @@ Scenario: A member redeems a gift coupon
   | .ZZA |      10 |
   When member ".ZZB" completes form "community/coupons/type=gift" with values:
   | type   | code          |*
-  | redeem | DD7K CLJW EAI |
+  | redeem | IUBA 3M1N QFI |
   Then we say "error": "already redeemed"
 
 Scenario: A member company creates a dollar amount discount coupon

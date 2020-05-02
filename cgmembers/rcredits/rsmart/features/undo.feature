@@ -208,9 +208,9 @@ Scenario: A cashier reverses a transaction with insufficient funds
   | xid | created | actorId | actorAgentId |*
   | 5   | %now-1h |    .ZZC |         .ZZB |
   And transaction entries:
-  | xid | entryType | amount | uid  | agentUid | description | acctTid |*
-  |   5 | %E_PRIME  |    100 | .ZZA | .ZZA     | cash in     | 1       |
-  |   5 | %E_PRIME  |   -100 | .ZZC | .ZZB     | cash in     | 2       |
+  | xid | entryType | amount | uid  | agentUid | description |*
+  |   5 | %E_PRIME  |    100 | .ZZA | .ZZA     | cash in     |
+  |   5 | %E_PRIME  |   -100 | .ZZC | .ZZB     | cash in     |
   Given transactions:
   | xid | created | amount | payer | payee | purpose |*
   | 6   | %today  |      1 | .ZZA | .ZZB | cash    |

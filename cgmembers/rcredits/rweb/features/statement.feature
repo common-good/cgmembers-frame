@@ -33,13 +33,13 @@ Setup:
   | .ZZB |    2000 |
   | .ZZC |    3000 |
   Given transactions: 
-  | xid  | created   | amount | payer | payee | purpose | taking | payerTid | payeeTid |*
-  | 104  | %lastm+3d |     10 | .ZZB | .ZZA | cash E  | 0      |      114 |      214 |
-  | 105  | %lastm+4d |   1100 | .ZZC | .ZZA | usd F   | 1      |      115 |      215 |
-  | 106  | %lastm+5d |    240 | .ZZA | .ZZB | what G  | 0      |      116 |      216 |
-  | 109  | %lastm+6d |     50 | .ZZB | .ZZC | cash P  | 0      |      119 |      219 |
-  | 200  | %lastm+7d |    120 | .ZZA | .ZZC | this Q  | 1      |      120 |      220 |
-  | 203  | %lastm+9d |    100 | .ZZA | .ZZB | cash V  | 0      |      123 |      223 |
+  | xid  | created   | amount | payer | payee | purpose | taking |*
+  | 104  | %lastm+3d |     10 | .ZZB  | .ZZA  | cash E  | 0      |
+  | 105  | %lastm+4d |   1100 | .ZZC  | .ZZA  | usd F   | 1      |
+  | 106  | %lastm+5d |    240 | .ZZA  | .ZZB  | what G  | 0      |
+  | 109  | %lastm+6d |     50 | .ZZB  | .ZZC  | cash P  | 0      |
+  | 200  | %lastm+7d |    120 | .ZZA  | .ZZC  | this Q  | 1      |
+  | 203  | %lastm+9d |    100 | .ZZA  | .ZZB  | cash V  | 0      |
   Then balances:
   | uid  | balance |*
   | .ZZA |    1606 |

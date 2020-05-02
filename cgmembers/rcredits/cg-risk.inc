@@ -205,14 +205,14 @@ function setBigRisk($uid, $ago, $thresholds, $bitName) {
   $threshold = $thresholds[$bitName];
   $now = now();
   $since = $now - $ago - 2 * HOUR_SECS; // an extra couple hours to handle daylight time changes and cron timing
-  $mySql = <<<EOF
+  $sql = <<<EOF
     SELECT COUNT(*) AS count0, 
       SUM(IF(:uid=uid2 XOR amt<0, ABS(amt), 0)) AS `in`, 
       SUM(IF(:uid=uid1 XOR amt<0, ABS(amt), 0)) AS `out`
     FROM txs 
     WHERE :uid IN (uid1, uid2) AND created BETWEEN :since AND :now
 EOF;
-  if (!$res = db\q($mySql, compact(ray('uid since now')))->fetchAssoc()) return;
+  if (!$res = db\q($sql, compact(ray('uid since now')))->fetchAssoc()) return;
   extract($res);
   $a = r\acct($uid);
   $max = max($in, $out) / max(1, $a->employees);
@@ -293,5 +293,5 @@ function setOriginRisk($uid, $created, $amount) {
   $since = $created - YEAR_SECS;
   $where = ':uid IN (uid1,uid2) AND risk IS NOT NULL AND created BETWEEN :since AND :created';
   $avgRisk = db\get('AVG(risk/ABS(amt))', 'txs', $where, compact(ray('uid since created')));
-  if ($avgRisk > 0) setRisk('origins', $avgRisk);
+  if ($avgRisk > K_SKETCHY) setRisk('origins', $avgRisk);
 }

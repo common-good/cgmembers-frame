@@ -2,34 +2,32 @@
 namespace CG;
 use CG as r;
 use CG\DB as db;
-use CG\Backend as be;
 use CG\Util as u;
 
 /**
  * @file
- * rCredits Transaction class (and extension MyTX, which looks at the transaction from one party's view)
+ * Common Good transaction class
  *
  * Note that a transaction has at least two entries, which this class also contains
  */
 
-/* define('TX_FIELDS', 'serial type amount goods payer payee payerAgent payeeAgent for flags created'); */
-
 class TxEntry {
   const REQUIRED_FIELDS = 'amount uid agentUid';
-  const INSERT_FIELDS = self::REQUIRED_FIELDS . ' entryType description acctTid relType relatedId rule';
+  const INSERT_FIELDS = self::REQUIRED_FIELDS . ' entryType description rule';
   const E_FIELDS = self::INSERT_FIELDS . ' id xid';
 
-  public $id; // second entry in a pair should have a positive ID, first is the inverse
-  public $xid;
-  public $entryType; // always identical for the two entries in a pair
-  public $amount; // amount of paired entry is the inverse of this
-  public $uid;
-  public $agentUid; // should really be NULL if irrelevant or same as uid
-  public $description;
-  public $acctTid; // this should go away
-  public $relType;
-  public $relatedId; // this and relType should move to header (each tx has at most one related ID?)
-  public $rule;
+  public $id;           // record ID (second entry in a pair should have a positive ID, first is the inverse)
+  public $xid;          // record ID of the header for this transaction in tx_hdrs
+  public $entryType;    // always identical for the two entries in a pair
+  public $amount;       // amount of paired entry is the inverse of this
+  public $uid;          // record ID of account to credit (or debit, if $amount is negative)
+  public $agentUid;     // should really be NULL if irrelevant or same as uid
+  public $description;  // readable description of transaction from this account's point of view
+  public $rule;         // pointer to related record ID in tx_rules
+
+  public $acctTid; // unused
+  public $relType; // unused
+  public $relatedId; // unused
   
   /**
    * Instantiate (construct) a transaction entry record.

@@ -52,8 +52,8 @@ Scenario: A member donates
   | ~postalAddr | 1 A, A, AK |
   | Physical address: | 1 A St., Atown, AK 01000 |
 #  And we tell admin "gift accepted" with subs:
-#  | amount | period | txField  |*
-#  |     10 |     1 | payerTid |
+#  | amount | period |*
+#  |     10 |     1 |
   # and many other fields
 
 Scenario: A member makes a recurring donation

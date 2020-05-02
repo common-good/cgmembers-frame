@@ -11,7 +11,7 @@ use CG\Web as w;
  * Functions that need to be loaded on every request.
  */
 
-define('VERSION', '7.34'); // The current system version.
+define('VERSION', '7.34'); // The current Drupal version.
 define('THEME', 'rcredits'); // The only theme we use.
 define('DRUPAL_CORE_COMPATIBILITY', '7.x'); // Core API compatibility.
 define('DRUPAL_MINIMUM_PHP', '5.2.4'); // Minimum supported version of PHP.
