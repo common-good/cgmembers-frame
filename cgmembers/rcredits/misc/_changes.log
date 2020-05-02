@@ -1,3 +1,12 @@
+2020-05-01 feature/cleanup
+. fixed risk tests (finally)
+. got rid of account-specific transaction ids (tids)
+. lack of an account for Common Good no longer kills tests on first run after recreating database
+. got rid of relType and relatedId in transactions
+. made tests independent of config.json settings
+. zapped be\accountName function
+. cleaned up startup db
+
 2020-04-30 feature/db-del
 . revised db\del() so it handles deletions of txs and r_usd, including all related transactions
 . fixed bug in rcron that (mis)handled alread-ended templates

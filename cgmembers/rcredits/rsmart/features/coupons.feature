@@ -39,11 +39,11 @@ Scenario: A member redeems a discount coupon
   | xid | goods | actorId | actorAgentId | flags  | channel | boxId  | risks | reversesXid | created |*
   | 1   | 0     | .ZZC    | .ZZA         | 0      | 3       | devC   |     0 |             | %today  |
   And transaction entries: 
-  | xid | amount |  uid | agentUid | acctTid | description       | rule |*
-  | 1   |    100 | .ZZC | .ZZA     | 1       | food              |      |
-  | 1   |   -100 | .ZZB | .ZZB     | 1       | food              |      |
-  | 1   |     10 | .ZZB | .ZZB     | 1       | discount (rebate) | 1    |
-  | 1   |    -10 | .ZZC | .ZZC     | 1       | discount (rebate) | 1    |
+  | xid | amount |  uid | agentUid | description       | rule |*
+  | 1   |    100 | .ZZC | .ZZA     | food              |      |
+  | 1   |   -100 | .ZZB | .ZZB     | food              |      |
+  | 1   |     10 | .ZZB | .ZZB     | discount (rebate) | 1    |
+  | 1   |    -10 | .ZZC | .ZZC     | discount (rebate) | 1    |
 
   And balances:
   | uid  | balance |*
@@ -58,11 +58,11 @@ Scenario: A member redeems a discount coupon
   | xid | goods | actorId | actorAgentId | flags  | channel | boxId | risks | reversesXid | created |*
   | 2   | 0     | .ZZC    | .ZZA         | 0      | 3       | devC  |     0 | 1           | %today  |
   And transaction entries: 
-  | xid | amount |  uid | agentUid | acctTid | description       | rule |*
-  | 2   |   -100 | .ZZC | .ZZA     | 2       | food              |      |
-  | 2   |    100 | .ZZB | .ZZB     | 2       | food              |      |
-  | 2   |    -10 | .ZZB | .ZZB     | 2       | discount (rebate) | 1    |
-  | 2   |     10 | .ZZC | .ZZC     | 2       | discount (rebate) | 1    |
+  | xid | amount |  uid | agentUid | description       | rule |*
+  | 2   |   -100 | .ZZC | .ZZA     | food              |      |
+  | 2   |    100 | .ZZB | .ZZB     | food              |      |
+  | 2   |    -10 | .ZZB | .ZZB     | discount (rebate) | 1    |
+  | 2   |     10 | .ZZC | .ZZC     | discount (rebate) | 1    |
   And balances:
   | uid  | balance |*
   | .ZZA |       0 |
@@ -74,11 +74,11 @@ Scenario: A member redeems a discount coupon
   | xid | goods | actorId | actorAgentId | flags  | channel | boxId | risks | reversesXid | created |*
   | 3   | 0     | .ZZC    | .ZZA         | 0      | 3       | devC  |     0 |             | %today  |
   And transaction entries: 
-  | xid | amount |  uid | agentUid | acctTid | description       | rule |*
-  | 3   |     50 | .ZZC | .ZZA     | 3       | sundries          |      |
-  | 3   |    -50 | .ZZB | .ZZB     | 3       | sundries          |      |
-  | 3   |    -10 | .ZZC | .ZZC     | 3       | discount (rebate) | 1    |
-  | 3   |     10 | .ZZB | .ZZB     | 3       | discount (rebate) | 1    |
+  | xid | amount |  uid | agentUid | description       | rule |*
+  | 3   |     50 | .ZZC | .ZZA     | sundries          |      |
+  | 3   |    -50 | .ZZB | .ZZB     | sundries          |      |
+  | 3   |    -10 | .ZZC | .ZZC     | discount (rebate) | 1    |
+  | 3   |     10 | .ZZB | .ZZB     | discount (rebate) | 1    |
   And balances:
   | uid  | balance |*
   | .ZZA |       0 |
@@ -90,9 +90,9 @@ Scenario: A member redeems a discount coupon
   | xid | goods | actorId | actorAgentId | flags  | channel | boxId  | risks | reversesXid | created |*
   | 4   | 0     | .ZZC    | .ZZA         | 0      | 3       | devC   |     0 |             | %today  |
   And transaction entries: 
-  | xid | amount |  uid | agentUid | acctTid | description | relType | relatedId |*
-  | 4   |     60 | .ZZC | .ZZA     | 4       | stuff       |         |         |
-  | 4   |    -60 | .ZZB | .ZZB     | 4       | stuff       |         |         |
+  | xid | amount |  uid | agentUid | description | relType | relatedId |*
+  | 4   |     60 | .ZZC | .ZZA     | stuff       |         |         |
+  | 4   |    -60 | .ZZB | .ZZB     | stuff       |         |         |
   And transaction header count is 4
   And balances:
   | uid  | balance |*

@@ -895,13 +895,18 @@ function formSMS_submit($form, $sta) {
  */
 function tests($arg = '') {
   if (!isDEV) return;
+  
   \drupal_get_messages(); // clear messages
   db\q('TRUNCATE test'); // clear in advance, rather than after, so we can inspect results when tests fail
-  
   $modules = u\prefixValues('rcredits/', ray('admin rvote rweb rcron rsmart'));
   jsx('test');
   test(TRUE);
-  
+
+  if (!getv('cgf_uid')) {
+    a\setupBasicAccounts();
+    return w\go('/tests/?' . $arg, t('redirecting after setting up basic accounts'), 'err');
+  }
+
   include_once DRUPAL_ROOT . '/vendor/gherkin/test.php';
   //  $_SESSION = [];
   if (ini_get("session.use_cookies")) { // from PHP's session_destroy page

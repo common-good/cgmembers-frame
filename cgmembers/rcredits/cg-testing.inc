@@ -1081,6 +1081,8 @@ function verifyRecord($table, $info) {
       foreach ($info as $k => $v) {
         $v2 = $actualRow[$k];
         foreach (ray('v v2') as $vk) if (is_null($$vk)) $$vk = '<NULL>';
+        if ($k == 'flags') foreach (ray('v v2') as $vk) $$vk = u\bits($$vk, B_LIST);
+        if ($k == 'risks') foreach (ray('v v2') as $vk) $$vk = u\bits($$vk, K_TX_RISKS);
         if ($v2 != $v) $difs .= "<tr><td>$k</td><td>$v</td><td>$v2</td></tr>\n";
       }
       $hdrs = t('<tr><th>field</th><th>want</th><th>got</th></tr>');
@@ -1481,7 +1483,7 @@ function clear($ch = 0) {
   u\deleteFile(LOG_FLNM);
   u\deleteFile(SQL_LOG);
 
-  $varKeys = ray('cgf_uid code drupal_private_key iv menu_expanded menu_masks up version');
+  $varKeys = ray('cgf_uid code drupal_private_key iv menu_expanded menu_masks up');
   db\q('DELETE FROM variable WHERE name NOT IN (:varKeys)', compact('varKeys'));
   a\setupBasicAccounts();
 

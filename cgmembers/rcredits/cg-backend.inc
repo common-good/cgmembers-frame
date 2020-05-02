@@ -69,14 +69,12 @@ EOF;
     $myTxAmount = 0;
     $byMe = FALSE;
     $banking = FALSE;
-    $tid = NULL;
     $myAgentUid = NULL;
     $suppressRoundupEntries = TRUE;
     $newEntries = [];
     foreach ($entries as $entry) {
       if (in_array($entry['uid'], $uids)) {
         $myTxAmount += $entry['amount'];
-        if (!empty($entry['acctTid'])) $tid = $entry['acctTid'];
         $myAgentUid = $entry['agentUid'];
         if ($entry['entryType'] == E_DONATION) $suppressRoundupEntries = FALSE;
       }
@@ -89,7 +87,6 @@ EOF;
       $entry['balance'] = $myBalance;
       $entry['byMe'] = $byMe;
       $entry['banking'] = $banking;
-      $entry['tid'] = $tid;
       $entry['myAgentUid'] = $myAgentUid;
       if (!empty($entry['reversesXid'])) $entry['description'] .= t(" (reverses #" . $entry['reversesXid'] . ")");
       if (!empty($entry['reversedBy'])) $entry['description'] .= t(" (reversed by #" . $entry['reversedBy'] . ")");
@@ -314,7 +311,6 @@ function reverse($xid) {
     $newEntry->id = NULL;
     $newEntry->xid = NULL;  // new entry belongs to reversing transaction
     $newEntry->amount = -$oldEntry->amount;
-    $newEntry->acctTid = r\acct($newEntry->uid)->nextTid();
     $newTx->entries[] = $newEntry;
   }
   $xid = $newTx->insert();
@@ -452,7 +448,6 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   foreach ($ptrs as $k) {
     ${$k . 'Id'} = ${$k . 'A'}->id;
     ${$k . 'Name'} = ${$k . 'A'}->fullName;
-    ${$k . 'Tid'} = ${$k . 'A'}->nextTid();
     ${$k . 'For'} = is_array($purpose) ? $purpose[${$k . 'Id'} == $actorId ? 0 : 1] : $purpose;
   }
     
@@ -490,7 +485,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   $flags = 0;
   foreach (ray($flagNames) as $k) if ($$k) u\setBit($flags, $k);
 
-  txEntryPair($entries, $amount, [$e1A, $e2A], [$e1For, $e2For], E_PRIME, [$e1Tid, $e2Tid], NULL, NULL, $ruleId);
+  txEntryPair($entries, $amount, [$e1A, $e2A], [$e1For, $e2For], E_PRIME, $ruleId);
   
   $DBTX = \db_transaction();
 
@@ -581,14 +576,14 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
  * @param mixed $a0: account object(s) and/or uid(s)
  * @param string $description0: transaction purpose(s)
  * @param int $entryType0: entry type(s)
- * @param int $acctTid0: description transaction ID (deprecated)
+ * @param int $rule: relevant record ID in tx_rules table
  */
-function txEntryPair(&$txes, $amount0, $a0, $description0, $entryType0, $acctTid0 = 0, $relType = NULL, $relatedId = NULL, $rule = NULL) {
+function txEntryPair(&$txes, $amount0, $a0, $description0, $entryType0, $rule = NULL) {
   foreach ([1, 0] as $i) { // payee first, to agree with tests and so entry id is postive for e2, negative for e1
-    foreach (ray('a description entryType acctTid') as $k) $$k = is_array(${$k . 0}) ? ${$k . 0}[$i] : ${$k . 0};
+    foreach (ray('a description entryType') as $k) $$k = is_array(${$k . 0}) ? ${$k . 0}[$i] : ${$k . 0};
     $amount = $i == 0 ? -$amount0 : $amount0;
     list ($uid, $agentUid) = is_object($a) ? [$a->id, $a->agentId] : [$a, $a];
-    $txes[] = new r\TxEntry(compact(ray('entryType amount uid agentUid description acctTid relType relatedId rule')));
+    $txes[] = new r\TxEntry(compact(ray('entryType amount uid agentUid description rule')));
   }
 }
 
@@ -746,7 +741,7 @@ EOF;
     if ($to == $buyer->id) $value = min($price, $value); // don't refund more than is being spent (food fund especially)
     $rebate += $value;
     
-    txEntryPair($entries, $value, [$from, $to], $desc, $type, 0, null, null, $ruleId);
+    txEntryPair($entries, $value, [$from, $to], $desc, $type, $ruleId);
     if (($amtMax and $amtUsed + $value >= $amtMax) or ($useMax and $value > 1 and $timesUsed + 1 >= $useMax)) {
       if ($payerType == REF_ACCOUNT) db\update('tx_rules', ray('id end', $ruleId, now()), 'id'); // rule is just for payer
     }
@@ -790,20 +785,6 @@ function checkForShortfall($goods, $payer, $payee, $actorA, $otherA, $needed, $f
                            $otherA->fullName, u\fmtAmt($shortfall), $details, u\fmtAmt($needed-$shortfall)));
 }
   
-/**
- * Find the maximum tid used by any of the accounts in the argument.
- * @param array uids: the uids of the accounts to check.
- * @return the maximum tid used.
- */
-function maxTid($uids) {
-  if (!is_array($uids)) {
-    $a = r\acct($uids);
-    $uids = $a->jid != 0 ? [$uids, $a->jid] : [$uids];
-  }
-  u\EXPECT(is_array($uids), 'argument should be an array');
-  return db\max('acctTid', 'tx_entries', 'uid IN (:uids)', ['uids' => $uids]);
-}
-
 /**
  * Create an invoice
  * call by: list ($ok, $msg, $args) = be\invoice(...);
@@ -891,8 +872,7 @@ function addCell($number, $validate = FALSE) {
     if ($result = db\q('SELECT * FROM r_boxes WHERE code=:numberInternal', compact('numberInternal'))->fetchAssoc()) {
       extract($result, EXTR_PREFIX_ALL, 'old');
       if ($old_uid == $myid) return array('already cell', $subs);
-      $accountName = accountName($old_uid);
-//      if (!isTempAccount($old_uid)) return array('cell taken', compact(ray('number accountName')));
+      $accountName = "$mya->fullName ($mya->mainQid)";
     }
     return NULL;
   }
@@ -1198,22 +1178,8 @@ function completeUsdTx($txid, $automatic, $completed = NULL, $deposit = 0) {
 }
 
 /**
- * Create a zero-amount transaction to go with a (not-yet-created) bank transfer to or from a Common Good account.
- * same arguments as for completeUsdTx (above)
- * @return the inserted transaction record ID (FALSE on failure)
- */
-function makeBankTx($amount) {
-
-
-}
-                           
-function accountName($uid) {
-  $acct = r\acct($uid);
-  return $acct->fullName . ' ' . u\hug($acct->mainQid);
-}
-
-/**
- * Check the sanity of the database.  This currently only checks the tables added or modified in the transaction reformatting.
+ * Check the sanity of the database.
+ * This currently only checks the tables added or modified in the transaction reformatting.
  */
 function checkSanity() {
   // Check transactions and their associated entries
@@ -1247,16 +1213,6 @@ function checkSanity() {
     foreignKeyCheck('TxEntry', $entryId, 'uid', 'users', 'uid', $entry->uid);
     foreignKeyCheck('TxEntry', $entryId, 'agentUid', 'users', 'uid', $entry->agentUid);
     if ($entry->entryType > count(ray(E_TYPES))) sanityErr("TxEntry $entryId entryType is invalid: $entry->entryType");
-
-    if (!empty($entry->relType)) {
-      switch ($entry->relType) {
-      case 'I':
-        foreignKeyCheck('TxEntry', $entryId, 'relatedId', 'r_invoices', 'nvid', $entry->relatedId);
-        break;
-      default:
-        sanityErr("TxEntry $entryId relType is illegal: $entry->relType");
-      }
-    }
 
     if (!empty($entry->rule)) {
       foreignKeyCheck('TxEntry', $entryId, 'rule', 'tx_rules', 'id', $entry->rule);

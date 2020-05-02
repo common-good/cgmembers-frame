@@ -1,3 +1,3 @@
-c:\xampp\mysql\bin\mysql -uroot -p<db\clear-db.sql
+%SqlPath% -uroot<db\clear-db.sql
 
 

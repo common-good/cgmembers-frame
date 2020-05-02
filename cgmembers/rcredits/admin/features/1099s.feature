@@ -37,15 +37,15 @@ Setup:
   | .ZZB |    20000 |
   | .ZZC |    30000 |
   Given transactions: 
-  | xid | created     | amount  | payer | payee | purpose | taking | payerTid | payeeTid | reversesXid |*
-  |  44 | %today-361d |     100 | .ZZB | .ZZA | food E  | 0      |       24 |       34 |             |
-  |  45 | %today-331d |   11000 | .ZZC | .ZZA | box F   | 1      |       25 |       35 |             |
-  |  46 | %today-301d |    2400 | .ZZA | .ZZB | what G  | 0      |       26 |       36 |             |
-  |  47 | %today-271d |     500 | .ZZB | .ZZC | book P  | 0      |       27 |       37 |             |
-  |  48 | %today-271d |    1200 | .ZZA | .ZZC | this Q  | 1      |       28 |       38 |             |
-  |  49 | %today-45d  |    1000 | .ZZA | .ZZB | vibe V  | 0      |       29 |       39 |             |
-  |  50 | %today-3d   |    -100 | .ZZB | .ZZA | food E  | 0      |       30 |       40 |          44 |
-  |  51 | %today      |    -123 | .ZZB | .ZZA | stuff W | 0      |       31 |       41 |             |
+  | xid | created     | amount  | payer | payee | purpose | taking | reversesXid |*
+  |  44 | %today-361d |     100 | .ZZB | .ZZA | food E  | 0        |             |
+  |  45 | %today-331d |   11000 | .ZZC | .ZZA | box F   | 1        |             |
+  |  46 | %today-301d |    2400 | .ZZA | .ZZB | what G  | 0        |             |
+  |  47 | %today-271d |     500 | .ZZB | .ZZC | book P  | 0        |             |
+  |  48 | %today-271d |    1200 | .ZZA | .ZZC | this Q  | 1        |             |
+  |  49 | %today-45d  |    1000 | .ZZA | .ZZB | vibe V  | 0        |             |
+  |  50 | %today-3d   |    -100 | .ZZB | .ZZA | food E  | 0        |          44 |
+  |  51 | %today      |    -123 | .ZZB | .ZZA | stuff W | 0        |             |
   Then balances:
   | uid  | balance  |*
   | .ZZA |    15727 |
