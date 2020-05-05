@@ -36,8 +36,8 @@ EOF
     $end = $fri = strtotime('next Friday', strtotime('-3 days'));
     $start = $fri - 13 * DAY_SECS + HOUR_SECS; // + HOUR_SECS is in case of daylight time
   }
-  $startDate = dateFld(t('Starting:'), [t('Pay period start')], required(u\fmtDate($start, TRUE)));
-  $endDate = dateFld(t('Ending:'), [t('Pay period end')], required(u\fmtDate($end, TRUE)));
+  $startDate = dateFld(REQ . t('Starting:'), [t('Pay period start')], dft($start));
+  $endDate = dateFld(REQ . t('Ending:'), [t('Pay period end')], dft($end));
   $submit = submit('Upload and Pay');
 
   return cgform(compact(ray('title subtext startDate endDate file submit')));

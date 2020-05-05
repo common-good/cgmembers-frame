@@ -18,7 +18,6 @@ function formTaxInfo($form, &$sta, $ending = '') {
   global $mya;
   
   if (!$ending) $ending = strtotime('last day of December last year'); // can't use setDft because cmdline param is never null
-  $endDesc = u\fmtDate($ending, TRUE);
   $regName = r\regionfield('legalName');
   $regPhone = u\fmtPhone(r\regionfield('phone'), '');
   $posttext = item(t('<p>This report is provided by %regName (EIN #%R_REGION_EIN). Address: %regAddr (%regPhone, %regEmail).</p><p>If you would rather receive reports by US Mail, you can change that setting in your <%aPrefs>Preferences</a>.', 'regName regAddr regPhone regEmail thisYear _aPrefs', $regName, r\regionfield('postalAddr'), $regPhone, r\regionfield('email'), date('Y'), atag('/settings/preferences')));
@@ -94,7 +93,7 @@ EOF
     $submit = submit(); // display suppressed in CSS
     $go = w\submi(t('Change')); // requires suppressed submit button (find a better way)
     
-  //  $ending = dateFld(t('For year ending:'), [t('Fiscal Year End')], required($endDesc) + w\suffix('&nbsp;' . \render($go)));
+  //  $ending = dateFld(REQ . t('For year ending:'), [t('Fiscal Year End')], dft($ending) + w\suffix('&nbsp;' . \render($go)));
     return cgform(compact(ray('title subtext summary list posttext')));
   
   } else {

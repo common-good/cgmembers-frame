@@ -17,11 +17,6 @@ include_once __DIR__ . '/admin-web.inc';
 define('T_MSG_FILE', 'test-messages.txt');
 
 /**
- * Display top level Admin options.
- */
-function formAdmin($form, &$sta) {return w\subMenu(t('Admin Options'), 'sadmin');}
-  
-/**
  * Make various administrative operations available to the admin and cAdmin.
  * 'wrong community' => 'SELECT * FROM `users` WHERE uid>0 AND MID(community, 2, 7)<>MID(uid, 1, 7)',
  */
@@ -393,7 +388,7 @@ EOF;
     $notes = strtr($notes, ["\n" => '|| ', date('Y') => '']);
     if ($type == t('pre')) $notes = db\get('code', 'r_relations', 'other=:uid AND :IS_CUSTOMER', compact('uid')) . " $notes";
     $notes = substr($notes, 0, 200) . (mb_strlen($notes) > 200 ? '...' : '');
-    $ctty = $cttys[$community];
+    $ctty = nn($cttys[$community], '?'); // ? is for dev machine after running a test with ZZA in ctty -2
     $list .= strtr("<tr>$guts</tr>\n", compact($fields));
   }
   if (!isset($tickle)) $list .= t('There are no followup calls to be made.');
@@ -485,11 +480,10 @@ EOF
 $chimp = boolFld(t('Exporting to MailChimp?'), '', TRUE);
   
 if ($mya->admin) $allCttys2 = boxFld('allCttys', t('All communities:'), '', TRUE); // temporary for CGF oversight
-$requests2 = boxFld('requests', t('Include requests:'), t('Include non-members who have requested an invitation 8/9/2017 or later.'), TRUE);
 $status = w\radiosFld(t('Status:'), '', dft(2), ray('active not-yet-active both'));
 $types = w\radiosfld(t('Types:'), '', dft(2), ray('individuals companies both'));
 $anonymous = boxFld('anonymous', t('Anonymous:'), t('Export only non-identifying information (for data-mapping and analysis)'), FALSE);
-$chimpSet = w\fieldSet('fields', @compact(ray('allCttys2 requests2 status types anonymous')));
+$chimpSet = w\fieldSet('fields', @compact(ray('allCttys2 status types anonymous')));
   
 $submit = t('Download');
   

@@ -274,6 +274,7 @@ function recurs() {
 EOF;
 
   queueEach('recur', $sql);
+  queueNext();
 }
   
 function recur($template) {

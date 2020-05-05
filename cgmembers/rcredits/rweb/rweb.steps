@@ -2107,5 +2107,5 @@ function memberStepsUpWith($id, $rows) {
   $vs['uids'] = join(' ', $uids);
   $vs['xlys'] = join('', $xlys);
   $er = u\urlify(http_build_query($vs));
-  return t\completeForm($id, "settings/stepup/er=$er", [], TRUE);
+  return t\completeForm($id, "community/stepup/er=$er", [], TRUE);
 }

@@ -1185,6 +1185,7 @@ function setFormOut($out) {
   $formOut['done'] = join('', t\getSteps($out, TRUE));
   $formOut['text'] = t\strip($out);
   $formOut['notags'] = strip_tags($out);
+  $formOut['hasDate'] = strhas($out, 'type="date"');
   t\output('ACTUAL: ' . $formOut['text'], 'screen');
 }
 
@@ -1622,8 +1623,11 @@ function shownWith($content, $type = 'text', $mustBePresent = TRUE) {
     $one = t($one); // translate constants in member
     if (($one = u\redash($one)) === '') continue;
     $i = mb_strpos($model, $one, $xi = $i);
-///    debug(compact(ray('model one xi i')));
-    if ($i === FALSE) $i = mb_strpos($model, plain($one), $xi);
+    if ($i === FALSE) {
+      if ($formOut['hasDate'] and $onetm = strtotime($one) and date('m/d/Y', $onetm) == $one) { // date formatted m/d/Y
+        $i = mb_strpos($model, date('Y-m-d', $onetm), $xi); // look for Y-M-d instead (quirk of input type="date")
+      } else { $i = mb_strpos($model, plain($one), $xi); }
+    }
     if ($i === FALSE xor !$mustBePresent) {
       t\output(t('EXPECT page %with %this', 'with this', $mustBePresent ? t('with') : t('without'), u\purify($one, '')));
       t\output(compact('xi','i','one'));

@@ -61,9 +61,12 @@ function cttyList() {
 /**
  * Sections with submenus.
  */
-function formCommunity($form, &$sta) {return w\subMenu(t('Community'), 'community');}
 function formHistory($form, &$sta) {return w\subMenu(t('Account History'), 'history');}
+// Invest has its own page
+function formCommunity($form, &$sta) {return w\subMenu(t('Community'), 'community');}
+function formCo($form, &$sta) {return w\subMenu(t('Company Options'), 'co');}
 function formSettings($form, &$sta) {return w\subMenu(t('Settings'), 'settings');}
+function formAdmin($form, &$sta) {return w\subMenu(t('Admin Options'), 'sadmin');}
 
 /**
  * Show an example invitation email.

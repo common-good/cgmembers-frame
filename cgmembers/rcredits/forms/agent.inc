@@ -23,7 +23,7 @@ function formAgent($form, &$sta, $args = '') {
   unset($coTypes[CO_PERSONAL]);
   $coType = radiosFld(t('Account type:'), '', required(), $coTypes);
   $legalName = textFld(t('Legal name:'), [t('Company legal name'), t('Type the full legal name of the company.')], required($mya->fullName));
-  extract(ssnFields(FALSE, required()));
+  extract(ssnFields(FALSE, REQ));
   $submit = t('Next');
   
   return cgform(compact(ray('title subtext agent phone coType legalName federalId dob submit'))); // not setupFoot (don't skip this step)

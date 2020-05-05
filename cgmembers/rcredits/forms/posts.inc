@@ -267,7 +267,7 @@ function postInputFlds($dfts = []) {
   $exchange = boolFld(t('Exchange:'), t('Are you offering something in exchange? (include it in the details too)'), dft($exchange ? 1 : 0));
   $emergency = boolFld(t('Emergency:'), t('This is an emergency need or applies only in an emergency.'), dft($emergency ? 1 : 0));
   $radius = numFld(REQ . t('Radius:'), [t('Visibility radius'), t('Up to how many miles away do you want this seen? 10 usually covers neighboring towns. Use zero for "anywhere".')], dft($radius ?: 10) + suffix(t(' miles')));
-  $end = dateFld(t('End Date:'), [t('mm/dd/yyyy'), t('When to stop listing this (you can also cancel it at any time)')], dft($end ? u\fmtDate($end, TRUE) : '') + ($dfts ? suffix(lnk('', t('end now'))) : []));
+  $end = dateFld(t('End Date:'), [t('mm/dd/yyyy'), t('When to stop listing this (you can also cancel it at any time)')], dft($end) + ($dfts ? suffix(lnk('', t('end now'))) : []));
 
   return compact(ray(POST_INPUT_FLDS));
 }

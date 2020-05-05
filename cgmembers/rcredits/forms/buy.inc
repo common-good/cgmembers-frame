@@ -68,7 +68,7 @@ function formBuy($form, &$sta, $doCode = '') {
   : t('<h4>Hello %PROJECT Member</h4>');
 
   if ($confirm) {
-    $name = textFld(t('Account ID:'), [t('Your account ID'), ''], required(nn($id)));
+    $name = textFld(t('Account ID:'), [t('Your account ID or Email'), ''], required(nn($id)));
     $pass = NULL;
   } elseif ($mya) {
     $name = $pass = NULL;

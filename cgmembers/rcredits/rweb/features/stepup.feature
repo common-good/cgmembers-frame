@@ -18,7 +18,7 @@ Scenario: A member chooses a per-transaction Step Up
   Given member ".ZZF" has "%STEPUP_MIN" stepup rules
   And member ".ZZG" has "%(%STEPUP_MIN+1)" stepup rules
   And member ".ZZI" has "%(%STEPUP_MIN+2)" stepup rules
-  When member ".ZZB" visits page "settings/stepup"
+  When member ".ZZB" visits page "community/stepup"
   Then we show "Step Up" with:
   | Organization | Amount | Whe | Max |
   | Fox Co       |        |     |     |
@@ -93,7 +93,7 @@ Scenario: A member chooses recurring and per-transaction donations
   | .ZZC   | 6   | tx$   |     |
   Then we say "status": "info saved"
 
-  When member ".ZZB" visits page "settings/stepup"
+  When member ".ZZB" visits page "community/stepup"
   Then we show "Step Up" with:
   | Organization | Amount | Whe          | Max |
   | Cor Pub      | 6      | $ per tx     |     |
@@ -112,7 +112,7 @@ Scenario: A member chooses recurring and per-transaction donations
   | .ZZG   | 5   | pct   |     |
   Then we say "status": "info saved"
   
-  When member ".ZZB" visits page "settings/stepup"
+  When member ".ZZB" visits page "community/stepup"
   Then we show "Step Up" with:
   | Organization | Amount | Whe          | Max |
   | Fox Co       | 1      | % per tx     |     |

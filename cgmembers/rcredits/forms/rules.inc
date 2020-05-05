@@ -22,7 +22,6 @@ function formRules($form, &$sta, $args = '') {
   if ($id and $res = db\get('*', 'tx_rules', compact('id'))) extract($res);
   foreach (ray('payerType payeeType') as $k) if (isset($$k)) $$k = array_search($$k, ray(REF_LIST));
   foreach (ray('payer payee from to') as $k) if (isset($$k) and !is_numeric($$k)) $$k = db\get('fullName', 'users', ['uid' => $$k]);
-  foreach (ray('start end') as $k) if ($$k) $$k = u\fmtDate($$k, TRUE);
   
   $payeDesc = t('Type the full name on the account or a group/industry ID. Leave empty for ANY.');
   $fromToDesc = t('Type a name or %MATCH_PAYER = same as payer, %MATCH_PAYEE = same as payee');

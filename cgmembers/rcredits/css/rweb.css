@@ -180,12 +180,12 @@ textarea.form-control {height:100px;}
   #frm-buy .control-data {text-align:center;}
   #frm-buy #edit-account {margin:0 auto;}
   #frm-accounts .control-label {width:auto; visibility:hidden;}
-  
+/*  
   .page-pay-with-cg {background-color:white !important;}
   .page-pay-with-cg #page-wrapper {margin-top:0 !important; max-width:100% !important; max-height:200% !important; border:0 !important; box-shadow:none !important;}
   .page-pay-with-cg .navbar {max-width:100% !important; margin-top:0 !important; }
   .page-pay-with-cg .navbar .container {margin:0 !important;}
-  
+  */
 }
 
 #which option:hover {background-color:#7CC6F0;}
@@ -667,6 +667,7 @@ body.page-partner blockquote {font-size:14px;}
 }
 
 /* Summary / Member Info / Account Info */
+#frm-summary .form-item-special {background-color:lightyellow;}
 #frm-summary .form-item-left {float:left; width:50%;}
 #frm-summary .form-item-right {float:right; width:50%;}
 @media (max-width:768px) {
@@ -731,30 +732,31 @@ body.page-partner blockquote {font-size:14px;}
 #coupons th, #coupons td {text-align:center;}
 #coupons span[data-toggle="popover"] {color:#2fa4e7;}
 
-/* Find Company */
-#frm-findco .cmpy-list {display:table;}
-#frm-findco .row {display:table-row;}
-#frm-findco .well {padding:10px 35px;}
+/* Find Company and Buy Credit */
+.cmpy-list {display:table;}
+.cmpy-list .row {display:table-row;}
+.cmpy-list .well {padding:10px 35px;}
 
-#frm-findco .cmpy-buttons {text-align:right; max-width:44px; vertical-align:middle;}
-#frm-findco .cmpy-buttons a {display:block; font-size:9.5px; padding:1px 2px;}
+.cmpy-list .cmpy-buttons {text-align:right; max-width:44px; vertical-align:middle;}
+.cmpy-list .cmpy-buttons a {display:block; font-size:9.5px; padding:1px 2px;}
 
-#frm-findco .cmpy-img, #frm-findco .cmpy-buttons, #frm-findco .cmpy-name-does,
-#frm-findco .cmpy-contact {display:table-cell; padding:10px 0; border-bottom:1px solid silver;}
+.cmpy-list .cmpy-img, .cmpy-list .cmpy-buttons, .cmpy-list .cmpy-name-does,
+.cmpy-list .cmpy-contact {display:table-cell; padding:10px 0; border-bottom:1px solid silver;}
 
-#frm-findco .cmpy-img {display:table-cell; overflow:hidden; vertical-align: middle; height:48px; margin:5px 5px 5px 20px; width:64px; text-align:center;}
-#frm-findco .cmpy-img img {overflow:hidden; height:48px; width: 64px; object-fit:cover;}
-#frm-findco .cmpy-name-does {width:300px; overflow:hidden; display:table-cell; vertical-align: middle; padding-left:10px;}
-#frm-findco .cmpy-name {color:darkblue; padding-left:10px;}
-#frm-findco .cmpy-does {padding-left:10px;}
-#frm-findco .cmpy-contact {width:150px; overflow:hidden; padding-left:5px; vertical-align: middle; display:table-cell;}
-#frm-findco .cmpy-ind-wrapper {margin-top:10px;}
-#frm-findco .cmpy-ind {font-weight:bold; color:#004d00; font-size:150%; margin:30px 0 5px 0;}
+.cmpy-list .cmpy-img {display:table-cell; overflow:hidden; vertical-align: middle; height:48px; margin:5px 5px 5px 20px; width:64px; text-align:center;}
+.cmpy-list .cmpy-img img {overflow:hidden; height:48px; width: 64px; object-fit:cover;}
+.cmpy-list .cmpy-name-does {width:300px; overflow:hidden; display:table-cell; vertical-align: middle; padding-left:10px;}
+.cmpy-list .cmpy-name {color:darkblue; padding-left:10px;}
+.cmpy-list .cmpy-does {padding-left:10px;}
+.cmpy-list .cmpy-contact {width:150px; overflow:hidden; padding-left:5px; vertical-align: middle; display:table-cell;}
+.cmpy-list .cmpy-ind-wrapper {margin-top:10px;}
+.cmpy-list .cmpy-ind {font-weight:bold; color:#004d00; font-size:150%; margin:30px 0 5px 0;}
 .company-listing {color:red; font-weight:bold;}
 
 /* Pay/Charge/Tx */
 
 /* Pay With CG */
+/*
 .page-pay-with-cg {width:100%; height:100%; background-color:#ccffff;}
 .page-pay-with-cg #orgname {display:inline-block;}
 .page-pay-with-cg #page-wrapper {max-width:440px; max-height:540px; margin:50px auto 0 auto; border:1px solid silver; border-top:0; box-shadow: 5px 5px 10px #888888; background-color:white; -webkit-border-radius: 15px; border-radius: 15px;}
@@ -774,6 +776,7 @@ body.page-partner blockquote {font-size:14px;}
 
 #frm-buy .control-label {width:100px; min-width:0; text-align:right;}
 #frm-buy .control-data {width:70%;}
+*/
 #frm-buy #edit-subtext {margin-bottom:0px;}
 #frm-buy #edit-subtext h4 {margin:0;}
 #frm-buy #edit-payment {vertical-align:top; margin-top:0px;}

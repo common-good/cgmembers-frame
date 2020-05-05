@@ -204,13 +204,13 @@ Scenario: A member chooses to Step Up
   And member ".ZZF" has "%STEPUP_MIN" stepup rules
   And member ".ZZG" has "%(%STEPUP_MIN+1)" stepup rules
 
-  When member ".ZZB" visits page "settings/stepup"
+  When member ".ZZB" visits page "community/stepup"
   Then we show "Step Up" with:
   | Organization | Amount | When |
   | Fox Co       |        |      |
   | Glo Co       |        |      |
   
-  When member ".ZZB" completes form "settings/stepup" with values:
+  When member ".ZZB" completes form "community/stepup" with values:
   | submit |*
   |        |
   Then we show "Invite Someone"
