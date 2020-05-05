@@ -123,7 +123,7 @@ function formTxs_submit($form, &$sta) {
 /*   $goods = $mya->cttyRewardy ? radiosFld('&nbsp;', '', dft((int) $goods), ray(R_WHYS)) : hidFld($goods); */
 /*   $purpose = textFld(t('For:'), '', dft(u\nonish(@$purpose) ? '' : $purpose)); */
 /*   $created0 = hidFld($created); */
-/*   if ($mya->cAdmin) $created = dateFld(t('Date:'), '', dft(u\fmtDate($created, TRUE))); else unset($created); */
+/*   if ($mya->cAdmin) $created = dateFld(t('Date:'), '', dft($created)); else unset($created); */
 /*   $submit = t('Update'); */
 
 /*   return cgform($form + compact(ray('title to amount goods purpose created0 created submit orig'))); */

@@ -17,6 +17,9 @@ function formSummary($form, &$sta) {
   global $base_url;
   global $mya; $myid = $mya->id;
 
+  $special = t('<h4>%PROJECT response to COVID-19</h4>It\'s up to us. Support our local businesses and nonprofits!<ul><li><%aBuyCredit>Buy Credit</a></li><li><%aStepups>Make Step-up Contributions</a></li><li> <%aBack>Increase Your Backing</a></li></ul>', '_aBuyCredit _aStepups _aBack', atag('/community/buy-credit'), atag('/community/stepup'), atag('/community/backing'));
+  $special = ($mya->ok and !$mya->co) ? compact('special') : [];
+  
   if ($mya->closed) say(t('Your account is closed, but you can still see your account history.'));
 
   $stepUrl = $mya->nextStepUrl('', $msg);
@@ -56,25 +59,26 @@ function formSummary($form, &$sta) {
   $cttyBene = NULL;
 //  $cttyBene = item("$cttyBene " . t('overall, including your %gifts in contributions', compact('gifts')), t('Social return:'), t('Financial benefit to your community to date, from your participation together with other members, empowering economic democracy! [<%a>details</a>]', '_a', atag('/help/social-return')));  
     
-  // $showCustomers = item(w\btn('/community/data/qName=6Customers', t('Customer List')));
+  // $showCustomers = item(w\lnk('/community/data/qName=6Customers', t('Customer List')));
 
   if ($mya->canManage and $mya->member) {
-    $invite = w\btn('/community/invite', t('Invite a Friend or Business'), 'primary', 'xs') . '<br>';
+    $invite = w\lnk('/community/invite', t('Invite a Friend or Business'), 'primary', 'xs');
     $hasMultipleAccounts = ($mya->co or db\exists('r_relations r LEFT JOIN users u ON u.uid=r.main', 'other=:id AND permission>0 AND u.:IS_CO', ['id' => $mya->agentId]));
     $another = $hasMultipleAccounts ? t('Another') : t('a');
-    $makeCo = $mya->depends ? '' : w\btn('/signup-co/relate=1', t('Open %another Company Account', compact('another')), 'primary', 'xs');
-//    if (!$mya->jid and !$mya->co) $makeJoint = w\btn('/signup/joint=1', t('Make this a joint account'), 'primary', 'xs');
-    $makeJoint = ($mya->member and !$mya->jid and !$mya->co and !$mya->depends) ? w\btn('/prejoin', t('Make this a Joint Account'), 'primary', 'xs') . '<br>' : '';
-//    $goFood = $mya->food > 0 ? lnk('/settings/food', t('Food Fund')) : btn('/settings/food', t('Food Fund'), 'warning');
+    $makeCo = $mya->depends ? '' : w\lnk('/signup-co/relate=1', t('Open %another Company Account', compact('another')), 'primary', 'xs');
+//    if (!$mya->jid and !$mya->co) $makeJoint = w\lnk('/signup/joint=1', t('Make this a joint account'), 'primary', 'xs');
+    $makeJoint = ($mya->member and !$mya->jid and !$mya->co and !$mya->depends) ? w\lnk('/prejoin', t('Make this a Joint Account'), 'primary', 'xs') : '';
+//    $goFood = $mya->food > 0 ? lnk('/settings/food', t('Food Fund')) : lnk('/settings/food', t('Food Fund'), 'warning');
 //    if ($mya->cAdmin) $goFood = '<br><br>' . $goFood; // make sure it doesn't hide behind the photo
     $goFood = '';
     if (!$mya->co and $hasMultipleAccounts) $clickPhoto = item(t('Click your photo%where to manage your other account(s).', 'where', $mya->cAdmin ? t(' in the upper right corner') : ''));
   } else $invite = $makeCo = $makeJoint = $goFood = $reports = '';
 
-  $reports = $mya->co ? w\btn('/history/company-reports', t('Reports')) : '';
-//  if ($mya->id == CGID) $deposits = w\btn('/sadmin/show-deposits', t('Deposits'));
-  $deposits = $mya->id == CGID ? w\btn('/sadmin/show-reconciled', t('Dollar Pool Transactions')) : '';
-  $topButtons = item($invite . $makeJoint . $makeCo . $goFood . $reports . $deposits);
+  $reports = $mya->co ? w\lnk('/history/company-reports', t('Company Reports')) : '';
+//  if ($mya->id == CGID) $deposits = w\lnk('/sadmin/show-deposits', t('Deposits'));
+  $deposits = $mya->id == CGID ? w\lnk('/sadmin/show-reconciled', t('Dollar Pool Transactions')) : '';
+  foreach (ray('invite makeJoint makeCo goFood reports deposits') as $k) if ($$k) $shortcuts[] = $$k;
+  $shortcuts = item(join('', nn($shortcuts, [])), t('Shortcuts:'));
 
   $title = t('Account Summary');
   $accountName = item($mya->j_fullName . ($mya->jid ? '<br>' : ' ') . "($mya->j_name)", t('Name:'));
@@ -118,7 +122,7 @@ function formSummary($form, &$sta) {
   } else $extra = '';
   $accountId = item(($mya->mainQid ?: 'N/A') . '<span class="white">..</span>' . "($acctType)$extra", t('ID:')); // .. is for double-click select
 
-  $fields = 'photo title clickPhoto showCustomers topButtons accountId accountName address legalName shortName community balance newBalance creditLine creditLimit committed choiceList';
+  $fields = 'photo title clickPhoto showCustomers shortcuts accountId accountName address legalName shortName community balance newBalance creditLine creditLimit committed choiceList';
 //  foreach (ray('details') as $k) $$k = @$form[$k]; unset($form[$k]); // put these on the left if admin
   $fields = @compact(ray($fields));
   
@@ -135,7 +139,7 @@ function formSummary($form, &$sta) {
   
   jsx('summary');
   
-  return cgform($form);
+  return cgform($special + $form);
 }
 
 function formSummary_validate($form, &$sta) {
@@ -494,7 +498,7 @@ function adminSummary() {
     } else $notes = item(str_replace("\n", '<br>', $mya->notes), t('Notes:'));
 
     $note = areaFld(t('New Note:'), [t('Type a Note Here'), t('Abbreviations: PM=phone msg EM=email msg. Be sure to say what you left a message <i>about</i> (for example "PM setup")')]);
-    $dob = ($mya->superAdmin or !$mya->hasDob) ? dateFld(t('Birth Date:'), [t('mm/dd/yyyy')], dft($mya->hasDob ? u\fmtDate($mya->dob, TRUE) : '') + autofill('off')) : NULL;
+    $dob = ($mya->superAdmin or !$mya->hasDob) ? dateFld(t('Birth Date:'), '', dft($mya->hasDob ? $mya->dob : '') + autofill('off')) : NULL;
     $suffix = submitTickle(1, t('Wait a day')) . submitTickle(2, t('2 days')) . submitTickle(7, '7') . submitTickle(30, '30') . submitTickle('', t('Auto')) . ' &nbsp; ' . submitTickle($mya->tickle ? 'NONE' : '', t('Save'), 'sm');
     $tickle = dateFld(t('Tickle:'), [t('Followup Date'), t('When to follow up ("Auto" sets an automatic Welcome or Annual date)')], dft($mya->tickle ? u\fmtDate($mya->tickle, TRUE) : '') + w\suffix($suffix));
     $source = item($mya->source, t('Source:'));

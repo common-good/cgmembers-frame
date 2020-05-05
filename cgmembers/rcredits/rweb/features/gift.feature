@@ -64,8 +64,8 @@ Scenario: A member makes a recurring donation
 	| id | start  | from | to  | amount | period | purpose  |*
 	|  1 | %today | .ZZA | cgf |     10 | month  | donation |
   And transactions:
-  | xid | created | amount | payer | payee | purpose            | recursId |*
-  |   1 | %today  |     10 | .ZZA  | cgf   | donation (monthly) |        1 |
+  | xid | created | amount | payer | payee | purpose  | recursId |*
+  |   1 | %today  |     10 | .ZZA  | cgf   | donation |        1 |
   And we say "status": "gift successful"
   And these "honors":
   | created | uid  | honor  | honored |*
@@ -87,8 +87,8 @@ Scenario: A member makes a new recurring donation
   | amtChoice | amount | period | honor  | honored | share |*
   |        -1 |     10 | month  | memory | Jane Do |    10 |
   Then transactions:
-  | xid | created | amount | payer | payee | purpose            |*
-  |   1 | %today  |     10 | .ZZA | cgf  | donation (monthly) |
+  | xid | created | amount | payer | payee | purpose  |*
+  |   1 | %today  |     10 | .ZZA  | cgf   | donation |
   And we say "status": "gift successful"
 	And these "tx_templates":
 	| start  | from | to  | amount | period |*
@@ -99,8 +99,8 @@ Scenario: A company makes a recurring donation
   | amtChoice | amount | period | honor  | honored |*
   |        -1 |     10 | month  | memory | Jane Do |
   Then transactions:
-  | xid | created | amount | payer | payee | purpose            |*
-  |   1 | %today  |     10 | .ZZC | cgf  | donation (monthly) |
+  | xid | created | amount | payer | payee | purpose  |*
+  |   1 | %today  |     10 | .ZZC  | cgf   | donation |
   And we say "status": "gift successful"
 	
 Scenario: A member donates with insufficient funds

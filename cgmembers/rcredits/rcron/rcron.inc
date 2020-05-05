@@ -274,6 +274,7 @@ function recurs() {
 EOF;
 
   queueEach('recur', $sql);
+  queueNext();
 }
   
 function recur($template) {
@@ -281,7 +282,7 @@ function recur($template) {
   extract(just('id maxStart period periods end duration durations action from to purpose amount', $template));
   $rule['template'] = $id;
   $shouldStart = empty($maxStart) ? now() : u\dateIncr($maxStart, $periods, $period);
-  if ($end and $end < $shouldStart) return; // don't create rules after template expires
+  if ($end and $end < $shouldStart) return; // don't create anything after template expires
   $erSubs = compact(ray('template rule shouldStart'));
 
   if ($action == 'surtx') {
@@ -293,13 +294,13 @@ function recur($template) {
   } elseif (in($action, 'pay charge')) {
     if ($shouldStart > strtotime('tomorrow')) return; // don't create transactions and invoices until the right day
     $fromA = r\acct($from); $toA = r\acct($to);
-    if ($action == 'pay' and !$toA->ok) return r\tellAdmin(t('Attempt to pay an inactive account in recur'), $erSubs);
-    if ($fromA->closed) return; // we keep recurring donations around in case member re-opens account
+    if (!$toA->ok) return r\tellAdmin(t('Attempt to pay (or invoice from) an inactive account in recur'), $erSubs);
+    if (!$fromA->ok) {
+      if ($action == 'pay' or $fromA->closed) return; // keep recurring donations around in case member re-opens account
+    }
 
-    $purpose0 = $purpose; // remember original purpose
     if ($period and $period != 'once') {
       $when = r\recurDesc($period, $periods);
-      $purpose .= " ($when)";
       $erSubs += compact(ray('when purpose'));
     } else { $when = t('one-time'); }
 
@@ -309,7 +310,7 @@ function recur($template) {
     if ($action == 'pay') {
       $ok = $fromA->payApproved($to, $amount, $purpose, FOR_GOODS, $data, $id);
       if (!$ok) return r\tellAdmin(t('Pay failed in recur'), $erSubs);
-      r\notify($from, 'recur pay', ray('amount period purpose payee', u\fmtAmt($amount), $when, $purpose0, $toA->fullName));
+      r\notify($from, 'recur pay', ray('amount when purpose payee', u\fmtAmt($amount), $when, $purpose, $toA->fullName));
     } else { // charge
       list ($ok, $msg, $args) = be\invoice($toA, $fromA, $amount, $purpose, FOR_GOODS, $data, $id);
       if (!$ok) return r\tellAdmin(t('Invoice failed in recur'), $erSubs + compact('msg', 'args'));

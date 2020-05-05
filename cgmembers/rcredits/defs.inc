@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-define('R_VERSION', '3.53a'); // software version
+define('R_VERSION', '3.53b'); // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -87,7 +87,7 @@ if (!isDEV) if (mb_strlen($host) > 30 or !preg_match('/^\[?([a-zA-Z0-9-:\]_]+\.?
 const R_PATH = '/rcredits';
 global $rUrl; $rUrl = BASE_URL . R_PATH;
 define('R_ROOT', __DIR__);
-define('ROOT', getcwd() . '/..'); // avoid using DRUPAL_ROOT here (else gives confusing warning when tests fail)
+define('SHARED_DIR', __DIR__ . '/../..'); // for logs and other protected info, persistent across updates
 $parts = parse_url($base_url);
 $base_path = @$parts['path'] . '/';
 $base_root = mb_substr($base_url, 0, mb_strlen($base_url) - mb_strlen(@$parts['path'])); // everything until first slash after "scheme://"
@@ -142,8 +142,10 @@ define('INFLATION_DESC', t('inflation adjustment'));
 const COMPANY_FREEZE = FALSE; // companies cannot spend rewards yet
 const R = '<span class="r">r</span>';
 const US = '<span class="us">us</span>';
+const SUBMENUS = 'community invest history co settings sadmin';
+
 /// const GAME_COMPANIES = '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital';
-const ITEM_FLDS = 'title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back'; // names of common fields that are wrapped automatically in w\item()
+const ITEM_FLDS = 'special title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back'; // names of common fields that are wrapped automatically in w\item()
 const R_DATE_FLDS = 'start end start created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted'; // date field names for testing and administrative display
 const CO_FLDS = 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd staleNudge contact'; // account fields stored in r_company
 const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo license'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
@@ -317,12 +319,12 @@ const SELLING_MAXLEN = 25; // maximum length of any short description of somethi
 const R_TEMPLATE_DIR = '/templates';
 const R_EMAIL_FRAME = 'email-frame';
 
-const R_PICTURE_DIR = ROOT . '/cgPhotoTemp/';
+const R_PICTURE_DIR = SHARED_DIR . '/cgPhotoTemp/';
 //const R_PROOF_DIR = '/proofs/'; UNUSED
 const R_DFT_PICTURE = R_ROOT . '/images/no-photo-available.jpg'; // default profile picture
 const R_DFT_PICTURE_WIDE = R_ROOT . '/images/no-photo-available-wide.jpg'; // default profile picture
 const R_NOT_VALID = R_ROOT . '/images/not-valid.png'; // says rcard is not valid for purchases
-const LOG_DIR = ROOT . '/cgLogs/'; // where to store log files
+const LOG_DIR = SHARED_DIR . '/cgLogs/'; // where to store log files
 define('LOG_FLNM', LOG_DIR . date('Ym') . '.log');
 define('SQL_LOG', LOG_DIR . date('Ym') . '.logsql');
 
@@ -363,7 +365,7 @@ define('APP_CAN_BIT_DESCS', t('charge customers,undo last transaction,give %RCRE
 // Membership steps
 const R_STEPS_OLD = 'signup:signup, verify, ssn, sign:community/agreement, donate:community/donate, proxies, prefs:settings/preferences, connect, company, relations, photo, food, discount:community/discount, backing:community/backing';
 
-const S_ALL = 'signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, stepup, crumbs, work, partnersteptwo, partnerend, food, wantsPrint, printed'; // where to go to complete each step (unordered) -- add new steps to the end
+const S_ALL = 'signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, stepup:community/stepup, crumbs, work, partnersteptwo, partnerend, food, wantsPrint, printed'; // where to go to complete each step (unordered) -- add new steps to the end
 const S_PERSON = 'signup verifyemail verifyid agree preferences fund photo contact donate crumbs proxies work backing stepup invite';
 //const S_CO = 'signup verifyemail';
 const S_CO = 'signup verifyemail agree contact backing photo donate company crumbs discount';
@@ -606,7 +608,7 @@ const MATCH_PAYEE = -2;
 
 const STEPUP_MIN = 3; // minimum number of stepup rules for a company to appear on the step-up page
 define('STEPUP_DESC', t('donation (step-up)')); // step-up donation tx description
-define('STEPUP_3PCT', str_replace('(', '(3% ', STEPUP_DESC)); // description model for rules, txs, and testing
+define('STEPUP_3PCT', str_replace('(', '(3% ', STEPUP_DESC)); // for testing
 define('REBATE_DESC', t('discount (rebate)'));
 
 $GLOBALS['emailSubjects'] = array(

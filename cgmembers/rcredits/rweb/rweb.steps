@@ -583,6 +583,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST signup AMemberInvites
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST stepup AMemberChoosesAPertransactionStepUp
+ *     TEST stepup AMembersRulesComeIntoPlay
  *     TEST stepup AMemberChoosesRecurringAndPertransactionDonations
  *     TEST summary AMemberClicksTheSummaryTab
  *     TEST summary AMemberClicksTheSummaryTabWithRoundups
@@ -859,6 +860,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE signup AMemberChoosesToStepUp
  *     MAKE signup AMemberConfirmsSocialSecurityNumber
  *     MAKE stepup AMemberChoosesAPertransactionStepUp
+ *     MAKE stepup AMembersRulesComeIntoPlay
  *     MAKE stepup AMemberChoosesRecurringAndPertransactionDonations
  *     MAKE summary AMemberClicksTheSummaryTab
  *     MAKE summary AMemberClicksTheSummaryTabWithRoundups
@@ -2107,5 +2109,5 @@ function memberStepsUpWith($id, $rows) {
   $vs['uids'] = join(' ', $uids);
   $vs['xlys'] = join('', $xlys);
   $er = u\urlify(http_build_query($vs));
-  return t\completeForm($id, "settings/stepup/er=$er", [], TRUE);
+  return t\completeForm($id, "community/stepup/er=$er", [], TRUE);
 }

@@ -1,4 +1,25 @@
-2020-05-01 feature/cleanup
+2020-05-04 feature/txs-hist
+. moved transaction description details for recurring and surtx transactions to the be\getTxs()
+. fixed formatting of transaction history (especially on mobile)
+. added odd and even green lines to transactions
+. switched order of balance and amount on mobile so balance appears at top
+. fixed bug that left 2 invoices when not-yet-member donates and/or steps up twice
+
+2020-05-04 feature/company-menu
+. minor cleanup
+. date fields defaults now get formatted in fld()
+. fixed tests to accept yyyy-mm-dd format for dates that are actually mm/dd/yyyy (to accommodate quirk in input type="date"
+. buy-with-cg form is now full size, not a popup
+. created a "buy credit" page
+. made a company menu
+. changed buttons on home page to "shortcut" links
+. moved stepups to community menu
+. reordered community menu
+. fixed bug that put log file in the wrong place when running cron
+. moved cgbutton to company menu
+. fixed bug in cron that failed to continue after recurs()
+
+2020-05-01 feature/cleanup2
 . fixed risk tests (finally)
 . got rid of account-specific transaction ids (tids)
 . lack of an account for Common Good no longer kills tests on first run after recreating database

@@ -67,7 +67,7 @@ function changeTxAmt($xid, $oldAmt, $newAmt) {
 /**
  * Download the member list for the current community
  */
-define('EXPORT_PARAMS', 'do requests allCttys status types chimp anonymous');
+define('EXPORT_PARAMS', 'do allCttys status types chimp anonymous');
 
 function export($params) {
   extract(just(EXPORT_PARAMS, $params));
@@ -95,6 +95,7 @@ function export($params) {
   $where = @$allCttys ? '1' : 'community=:cttyId';
   if (@$status == 0) $where .= ' AND :IS_OK';
   if (@$status == 1) $where .= ' AND NOT :IS_OK';
+
   if (@$types == 0) $where .= ' AND NOT :IS_CO';
   if (@$types == 1) $where .= ' AND :IS_CO';
 

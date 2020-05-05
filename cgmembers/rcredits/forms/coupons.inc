@@ -51,8 +51,8 @@ X
       );
   
     $amount = textFld(REQ . t('Discount:'), [t('Amount or Percentage'), t('For example $20 or 10%')]);
-    $minimum = numFld(t('Minimum:'), [t('Minimum purchase'), t('Minimum purchase amount, to get the discount. If this amount equals the discount amount, your coupons will be labeled "Gift Certificate".')], required(0));
-    $start = dateFld(t('Valid from:'), [t('Start date')], required(u\fmtDate(now(), TRUE)));
+    $minimum = numFld(REQ . t('Minimum:'), [t('Minimum purchase'), t('Minimum purchase amount, to get the discount. If this amount equals the discount amount, your coupons will be labeled "Gift Certificate".')], dft(0));
+    $start = dateFld(REQ . t('Valid from:'), [t('Start date')], dft(now()));
     $end = dateFld(t('Valid until:'), [t('End date'), t('An end date is strongly encouraged.')]);
     $useMax = intFld(t('Limit:'), t('Leave this blank for unlimited uses.'), suffix(t(' uses per member')));
     $automatic = w\boolFld(t('Automatic?'), t('If the discount is not automatic, you will need to do the math each time.'), TRUE);

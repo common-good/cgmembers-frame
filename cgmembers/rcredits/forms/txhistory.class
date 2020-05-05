@@ -60,6 +60,7 @@ class TxHistory implements TxProcessor {
     /* $net = w\popHelp(t('Net'), t('The net change in account balance')); */
     $runBalance = w\popHelp(t('Balance'), t('The balance in the account after this transaction'));
     $buttons = w\popHelp(t('Action'), t('Click a symbol to reverse a transaction'));
+    $guts = $this->guts($tid, $date, $name, $purpose, $amount, $runBalance, $buttons);
     
     $this->body = <<<EOF
 <div id="txlist" class="table table-striped">
@@ -82,19 +83,7 @@ class TxHistory implements TxProcessor {
     </div>
   </div>
   <div class="row txRow head page--1 PAGE--1">
-    <div class="tid-date col-xs-2">
-      <div class="tid col-sm-5">$tid</div>
-      <div class="date col-sm-7">$date</div>
-    </div>
-    <div class="name-purpose col-xs-6">
-      <div class="name col-sm-6">$name</div>
-      <div class="purpose col-sm-6">$purpose</div>
-    </div>
-    <div class="amount-reward col-xs-3">
-      <div class="amount col-sm-5">$amount</div>
-      <div class="runBalance col-sm-7">$runBalance</div>
-    </div>
-    <div class="buttons col-xs-1">$buttons</div>
+$guts
   </div>
 EOF;
   }
@@ -140,35 +129,44 @@ EOF;
   /**
    * Called for each entry of a transaction.
    * @param assoc $info: all of the data for this entry (includes transaction data)
+   * @param int $parity: mod 2 of entry number for this transaction, starting with 0
    */
-  public function processEntry($info) {
+  public function processEntry($info, $parity) {
     if (in_array($info['uid'], $this->uids)) return;
     extract(just('name description amount xid banking', $info));
     $amount = u\fmtAmt(- $amount, '');
     if ($xid < 124873 and $banking and !test()) $xid = db\get('txid', 'r_usd', compact('xid')) ?: $xid; // old checks
+    if (!$this->dateValue) $xid = '';
+    $guts = $this->guts($xid, $this->dateValue, $name, $description, $amount, $this->runBalance, $this->buttons);
+    $parity = $parity ? ' odd' : ' even';
 
     $this->body .= <<<EOF
-<div class="txentry">
-  <div class="tid-date col-xs-2">
-    <div class="tid col-sm-5">$xid</div>
-    <div class="date col-sm-7">$this->dateValue</div>
-  </div>
-  <div class="name-purpose col-xs-6">
-    <div class="name col-sm-6">$name</div>
-    <div class="purpose col-sm-6">$description</div>
-  </div>
-  <div class="amount-reward col-xs-3">
-    <div class="amount col-sm-5">$amount</div>
-    <div class="runBalance col-sm-7">$this->runBalance</div>
-  </div>
-  <div class="buttons col-xs-1">$this->buttons</div>
+<div class="txentry$parity">
+$guts
 </div>
 EOF;
 
-//    $this->tidValue = '';
-    $this->dateValue = '';
-    $this->runBalance = '';
-    $this->buttons = '';
+    $this->dateValue = $this->runBalance = $this->buttons = ''; // don't repeat these for auxiliary entries
+  }
+
+  private function guts($tid, $date, $name, $purpose, $amount, $runBalance, $buttons) {
+    foreach(ray('tid date runBalance buttons') as $k) if (empty($$k)) $$k = '&nbsp;';
+    
+    return <<< X
+  <div class="tid-date col-xs-2">
+    <div class="tid col-sm-5">$tid</div>
+    <div class="date col-sm-7">$date</div>
+  </div>
+  <div class="name-purpose col-xs-6">
+    <div class="name col-sm-6">$name</div>
+    <div class="purpose col-sm-6">$purpose</div>
+  </div>
+  <div class="amount-runBalance col-xs-3">
+    <div class="amount col-sm-5"><div>$amount</div></div>
+    <div class="runBalance col-sm-7"><div>$runBalance</div></div>
+  </div>
+  <div class="buttons col-xs-1">$buttons</div>
+X;
   }
 
   /**

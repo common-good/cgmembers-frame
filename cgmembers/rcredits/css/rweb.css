@@ -180,12 +180,12 @@ textarea.form-control {height:100px;}
   #frm-buy .control-data {text-align:center;}
   #frm-buy #edit-account {margin:0 auto;}
   #frm-accounts .control-label {width:auto; visibility:hidden;}
-  
+/*  
   .page-pay-with-cg {background-color:white !important;}
   .page-pay-with-cg #page-wrapper {margin-top:0 !important; max-width:100% !important; max-height:200% !important; border:0 !important; box-shadow:none !important;}
   .page-pay-with-cg .navbar {max-width:100% !important; margin-top:0 !important; }
   .page-pay-with-cg .navbar .container {margin:0 !important;}
-  
+  */
 }
 
 #which option:hover {background-color:#7CC6F0;}
@@ -197,8 +197,8 @@ table {font-size:85%;}
 th {background: #757575; color:white; border-bottom-style: none;}
 tbody th {vertical-align: top;}
 td, th {padding: 4px 9px; border: 1px solid #fff; text-align: left;}
-.even {background: #e6ffe6;}
-.odd {background: #ccffcc;}
+.even {background: #f0fff0;}
+.odd {background: #daffda;}
 
 .form-checkboxes div, .form-checkboxes {display:inline-block;}
 /*.form-horizontal  .form-checkboxes input { */
@@ -667,6 +667,8 @@ body.page-partner blockquote {font-size:14px;}
 }
 
 /* Summary / Member Info / Account Info */
+#frm-summary .form-item-special {background-color:lightyellow;}
+#frm-summary #edit-shortcuts a {display:block;}
 #frm-summary .form-item-left {float:left; width:50%;}
 #frm-summary .form-item-right {float:right; width:50%;}
 @media (max-width:768px) {
@@ -731,30 +733,31 @@ body.page-partner blockquote {font-size:14px;}
 #coupons th, #coupons td {text-align:center;}
 #coupons span[data-toggle="popover"] {color:#2fa4e7;}
 
-/* Find Company */
-#frm-findco .cmpy-list {display:table;}
-#frm-findco .row {display:table-row;}
-#frm-findco .well {padding:10px 35px;}
+/* Find Company and Buy Credit */
+.cmpy-list {display:table;}
+.cmpy-list .row {display:table-row;}
+.cmpy-list .well {padding:10px 35px;}
 
-#frm-findco .cmpy-buttons {text-align:right; max-width:44px; vertical-align:middle;}
-#frm-findco .cmpy-buttons a {display:block; font-size:9.5px; padding:1px 2px;}
+.cmpy-list .cmpy-buttons {text-align:right; max-width:44px; vertical-align:middle;}
+.cmpy-list .cmpy-buttons a {display:block; font-size:9.5px; padding:1px 2px;}
 
-#frm-findco .cmpy-img, #frm-findco .cmpy-buttons, #frm-findco .cmpy-name-does,
-#frm-findco .cmpy-contact {display:table-cell; padding:10px 0; border-bottom:1px solid silver;}
+.cmpy-list .cmpy-img, .cmpy-list .cmpy-buttons, .cmpy-list .cmpy-name-does,
+.cmpy-list .cmpy-contact {display:table-cell; padding:10px 0; border-bottom:1px solid silver;}
 
-#frm-findco .cmpy-img {display:table-cell; overflow:hidden; vertical-align: middle; height:48px; margin:5px 5px 5px 20px; width:64px; text-align:center;}
-#frm-findco .cmpy-img img {overflow:hidden; height:48px; width: 64px; object-fit:cover;}
-#frm-findco .cmpy-name-does {width:300px; overflow:hidden; display:table-cell; vertical-align: middle; padding-left:10px;}
-#frm-findco .cmpy-name {color:darkblue; padding-left:10px;}
-#frm-findco .cmpy-does {padding-left:10px;}
-#frm-findco .cmpy-contact {width:150px; overflow:hidden; padding-left:5px; vertical-align: middle; display:table-cell;}
-#frm-findco .cmpy-ind-wrapper {margin-top:10px;}
-#frm-findco .cmpy-ind {font-weight:bold; color:#004d00; font-size:150%; margin:30px 0 5px 0;}
+.cmpy-list .cmpy-img {display:table-cell; overflow:hidden; vertical-align: middle; height:48px; margin:5px 5px 5px 20px; width:64px; text-align:center;}
+.cmpy-list .cmpy-img img {overflow:hidden; height:48px; width: 64px; object-fit:cover;}
+.cmpy-list .cmpy-name-does {width:300px; overflow:hidden; display:table-cell; vertical-align: middle; padding-left:10px;}
+.cmpy-list .cmpy-name {color:darkblue; padding-left:10px;}
+.cmpy-list .cmpy-does {padding-left:10px;}
+.cmpy-list .cmpy-contact {width:150px; overflow:hidden; padding-left:5px; vertical-align: middle; display:table-cell;}
+.cmpy-list .cmpy-ind-wrapper {margin-top:10px;}
+.cmpy-list .cmpy-ind {font-weight:bold; color:#004d00; font-size:150%; margin:30px 0 5px 0;}
 .company-listing {color:red; font-weight:bold;}
 
 /* Pay/Charge/Tx */
 
 /* Pay With CG */
+/*
 .page-pay-with-cg {width:100%; height:100%; background-color:#ccffff;}
 .page-pay-with-cg #orgname {display:inline-block;}
 .page-pay-with-cg #page-wrapper {max-width:440px; max-height:540px; margin:50px auto 0 auto; border:1px solid silver; border-top:0; box-shadow: 5px 5px 10px #888888; background-color:white; -webkit-border-radius: 15px; border-radius: 15px;}
@@ -774,6 +777,7 @@ body.page-partner blockquote {font-size:14px;}
 
 #frm-buy .control-label {width:100px; min-width:0; text-align:right;}
 #frm-buy .control-data {width:70%;}
+*/
 #frm-buy #edit-subtext {margin-bottom:0px;}
 #frm-buy #edit-subtext h4 {margin:0;}
 #frm-buy #edit-payment {vertical-align:top; margin-top:0px;}
@@ -1082,49 +1086,34 @@ div.password-confirm .error {font-weight:bold; color:red;}
 #frm-txs .tx-reward {width:7.5%; text-align:right;} /* 9 rewards */
 #frm-txs .tx-net {width:0; display:none;} /* 10 net */
 
-#frm-txs th,
-#frm-txs td {text-align:right;}
-
-/* #frm-txs th:first-child {text-align:right;} /* col 1: tid */
-/* #frm-txs th:first-child +th {text-align:right;} /* col 2: date */
-#frm-txs th:first-child +th+th {text-align:left;} /* col 3: name */
-/* #frm-txs th:first-child +th+th+th {text-align:right;} /* col 4: amount */
-/* #frm-txs th:first-child +th+th+th+th+th {text-align:right;} /* col 5: state */
-/* #frm-txs th:first-child +th+th+th+th+th+th {text-align:right;} /* col 6: buttons */
-/* #frm-txs th:first-child +th+th+th+th+th+th+th {text-align:right;} /* col 7: purpose */
-#frm-txs th:first-child +th+th+th+th+th+th+th {text-align:right;} /* col 8: reward */
-#frm-txs th:first-child +th+th+th+th+th+th+th+th {display:none;} /* col 9: net */
-
-/* #frm-txs td:first-child {text-align:right;} /* col 1 */
-/* #frm-txs td:first-child +td {text-align:right;} /* col 2 */
-#frm-txs td:first-child +td+td {text-align:left;} /* col 3 */
-/* #frm-txs td:first-child +td+td+td {text-align:right;} /* col 4 */
-/* #frm-txs td:first-child +td+td+td+td {text-align:right;} /* col 5 */
-/* #frm-txs td:first-child +td+td+td+td+td {text-align:right;} /* col 6 */
-/* #frm-txs td:first-child +td+td+td+td+td+td {text-align:right;} /* col 7 */
-#frm-txs td:first-child +td+td+td+td+td+td+td {text-align:right;} /* col 8 */
-#frm-txs td:first-child +td+td+td+td+td+td+td+td {display:none;} /* col 9 */
-
 #frm-txs #edit-transactions .control-data {margin:0 auto; width:100%; max-width:100%;}
 #txlist {border:1px solid silver; padding:10px; width:100%; max-width:1024px; margin:10px auto; font-size:85%;}
 #txlist-title {width:100%; margin-top:0px;}
 #txlist div.row {margin-left:0; margin-right:0;}
 #txlist .row >div {margin:0 auto;}
-/* #txlist .row >div {border-top:1px solid #d9d9d9; margin:0 auto;} */
 #txlist .row>div>div {padding-top:5px; padding-bottom:4px; min-height:2ex;}
-/* #txlist div.row {margin-left:0; margin-right:0;} */
-/* #txlist .txRow {border:0; margin:0 auto; padding-top:5px; padding-bottom:5px;} */
-/* #txlist .txRow {border-top:1px solid #d9d9d9; margin:0 auto; padding-top:5px; padding-bottom:5px;} */
-/* #txlist .txEntry {padding-top:1px; padding-bottom:1px; min-height:12px;} */
+#txlist .txentry >div {border-bottom:1px solid white;}
+
+#txlist .txentry.even div {background-color:#f0fff0} /* same as .even above */
+#txlist .txentry.odd div {background-color:#daffda}
+#txlist .txentry div.buttons {background-color:white;}
 
 #txlist .tid-date, 
 #txlist .name-purpose, 
-#txlist .amount-reward {padding: 0;}
-/* #txlist .amount-reward {border-top: 1px solid #d9d9d9; border-left:0; border-right: 0; border-bottom: 0;} */
+#txlist .amount-runBalance {padding: 0;}
 #txlist .tid, #txlist .date {text-align:center;}
 #txlist .tid {font-weight:bold;}
 #txlist .amount, #txlist .reward, #txlist .runBalance {text-align:right;}
-    
+#txlist .runBalance {font-weight:bold; color:darkblue;}
+
+@media (max-width:768px) {
+  #txlist .amount-runBalance {display:table;}
+  #txlist .amount {display:table-footer-group;}
+  #txlist .runBalance {display:table-header-group;}
+  #txlist .head .amount-runBalance div {padding:5px 15px 4px 15px; min-height:2ex;}
+  #txlist .amount-runBalance div {padding-right:15px;}
+}
+ 
 #txlist .row .buttons {padding:5px 0 4px 0; border:0; min-width:30px; max-width:50px;}
 #txlist .row .buttons div {max-width:50%;}
 #txlist .buttons a.btn-xs {font-size:9px; margin:0;}

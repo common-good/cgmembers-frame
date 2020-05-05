@@ -64,7 +64,7 @@ X
   extract(just('fullName email', w\nameAndEmailFlds(TRUE, nn($fullName), '')));
 
   $legalName = textFld(t('Legal Name:'), [t('Company legal name'), t('Type the full legal name of the company (if different).')], required());
-  extract(ssnFields(FALSE, required()));
+  extract(ssnFields(FALSE, REQ));
 
   $email['#help'][1] = preg_replace('/ \\(.*\\)/', '', $email['#help'][1]); // don't talk about settings
   $phone = textFld(t('Company Phone:'), [t('Company phone number')], required(nn($phone) ? u\fmtPhone($phone, '-') : ''));

@@ -37,26 +37,25 @@ function getTxs($uids, $starting=NULL, $ending=NULL) {
   // tReversedBy and eReversedBy refer to the transaction that reverses this transaction.
   // !(e.amount=0 AND e.entryType=:E_BANK) hides not-yet-completed bank transfers
   $sql = <<< EOF
-    SELECT t.*, e.*, u.fullName AS name,
+    SELECT t.*, e.*, u.fullName AS name, tp.period, tp.periods, ru.action=:ACT_SURTX AS surtx, ru.portion,
       (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=t.xid) AS reversedBy,
       (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=t.xid AND d.status=:DS_OPEN)) AS isDisputed
     FROM tx_entries e LEFT JOIN tx_hdrs t USING (xid) LEFT JOIN users u USING (uid)
-       LEFT JOIN r_usd ON (r_usd.xid=t.xid)
+    LEFT JOIN r_usd ON (r_usd.xid=t.xid)
+    LEFT JOIN tx_templates tp ON tp.id=t.recursId
+    LEFT JOIN tx_rules ru ON ru.id=e.rule
     WHERE (!(e.amount=0 AND e.entryType=:E_BANK) AND t.xid IN (SELECT DISTINCT xid FROM tx_entries WHERE (uid IN (:uids)))) $where
     ORDER BY t.created, t.xid, ABS(e.id), name
 EOF;
-  $results = db\q($sql, compact('uids'));
-  u\EXPECT($results, "Failure reading transactions for user " . pr($uids));
+  $q = db\q($sql, compact('uids'));
+  u\EXPECT($q, "Failure reading transactions for user " . pr($uids));
   $lastXid = 0;  // no xid should ever be 0
   $txs = [];  // an array of arrays of entries
   $entries = [];
-  foreach ($results as $result) {
-    $entry = (array)$result;
+  while ($entry = $q->fetchAssoc()) {
     if ($entry['xid'] != $lastXid) {  // start of new transaction
-      if ($entries != []) {  // if there was a transaction already
-        $txs[] = $entries;
-        $entries = [];
-      }
+      if ($entries != []) $txs[] = $entries; // if there was a transaction already
+      $entries = [];
       $lastXid = $entry['xid'];
     }
     $entries[] = $entry;
@@ -64,35 +63,32 @@ EOF;
   if ($entries != []) $txs[] = $entries;
   
   // arrange for running balance to appear in, and be the same in, every entry for a transaction
-  $myBalance = balanceAsOf($uids, $starting);
+  $balance = balanceAsOf($uids, $starting);
   foreach ($txs as $i => $entries) {
-    $myTxAmount = 0;
+    $myAmount = 0;
     $byMe = FALSE;
     $banking = FALSE;
-    $myAgentUid = NULL;
-    $suppressRoundupEntries = TRUE;
+    $hideRoundups = TRUE;
     $newEntries = [];
     foreach ($entries as $entry) {
       if (in_array($entry['uid'], $uids)) {
-        $myTxAmount += $entry['amount'];
-        $myAgentUid = $entry['agentUid'];
-        if ($entry['entryType'] == E_DONATION) $suppressRoundupEntries = FALSE;
+        $myAmount += $entry['amount'];
+        if ($entry['entryType'] == E_DONATION) $hideRoundups = FALSE;
       }
       if (in_array($entry['actorId'], $uids)) $byMe = TRUE;
       if (in_array($entry['uid'], [BANK_IN_ID, BANK_OUT_ID])) $banking = TRUE;
     }
-    $myBalance += $myTxAmount;
-    foreach ($entries as $j => $entry) {
-      $entry['myAmount'] = $myTxAmount;
-      $entry['balance'] = $myBalance;
-      $entry['byMe'] = $byMe;
-      $entry['banking'] = $banking;
-      $entry['myAgentUid'] = $myAgentUid;
-      if (!empty($entry['reversesXid'])) $entry['description'] .= t(" (reverses #" . $entry['reversesXid'] . ")");
-      if (!empty($entry['reversedBy'])) $entry['description'] .= t(" (reversed by #" . $entry['reversedBy'] . ")");
-      if (! ($suppressRoundupEntries and ($entry['entryType'] == E_DONATION))) {
-        $newEntries[] = $entry;
+    $balance += $myAmount;
+    foreach ($entries as $entry) if (!($entry['entryType'] == E_DONATION and $hideRoundups)) {
+      extract(just('entryType reversesXid reversedBy description period periods surtx portion', $entry, NULL));
+      if ($entryType == E_PRIME) {
+        if ($period) $description .= t(' (%xly)', 'xly', r\recurDesc($period, $periods));
+        if ($reversesXid) $description .= t(' (reverses #%reversesXid)', compact('reversesXid'));
+        if ($reversedBy) $description .= t(' (reversed by #%reversedBy)', compact('reversedBy'));
+      } else {
+        if ($surtx) $description .= $portion > 0 ? t(' (%x step-up)', 'x', u\fmtAmt($portion, '%s')) : t(' (step-up)');
       }
+      $newEntries[] = compact(ray('myAmount balance byMe banking description')) + $entry;
     }
     $txs[$i] = $newEntries;
   }
@@ -120,8 +116,8 @@ function processTxs($processor, $uids, $starting=NULL, $ending=NULL, $descending
   $first = TRUE;
   foreach ($txs as $entries) {
     $processor->txnHdr($entries[0], $first ? 'none' : '');
-    foreach ($entries as $entry) {
-      $processor->processEntry($entry);
+    foreach ($entries as $j => $entry) {
+      $processor->processEntry($entry, $j & 2);
     }
     $processor->txnFtr($entries[0]);
     $first = FALSE;

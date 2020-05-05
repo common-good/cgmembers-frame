@@ -415,11 +415,14 @@ function fld($type, $label = '', $help = '', $x = [], $options = []) {
   if ($type == 'int') u\setDft($x['step'], 1);
   $type = strtr($type, ray('text:textfield, num:number, int:number, pass:password, area:textarea, phone:tel'));
   if (in($subtype = $type, 'number tel date email range password')) {
+    $dft = nn($x['default_value'], NULL);
     if ($type == 'tel') {
-      if (nn($x['default_value'])) $x['default_value'] = u\fmtPhone($x['default_value']);
+      if ($dft) $x['default_value'] = u\fmtPhone($dft);
     } elseif ($type == 'number') {
       u\setDft($x['step'], .01);
       u\setDft($x['min'], 0);
+    } elseif ($type == 'date') {
+      if ($dft) $x['default_value'] = date('Y-m-d', $dft);
     }
     $x += compact('subtype');
     $type = 'textfield';
@@ -1392,15 +1395,17 @@ EOF;
   
 /**
  * Return the fields used to verify an individual's SSN or company's EIN (also asked for in signup).
+ * @param bool $personal: is the account personal (not a company)
+ * @param char $req: REQ if required, else ''
  */
-function ssnFields($personal = TRUE, $required = []) {
+function ssnFields($personal = TRUE, $req = '') {
   if ($personal) {
-    $ssReason = $required ? t('Required by the IRS if you accept more than $20,000 a year in payments through %PROJECT ($600 a year in MA and VT).') : '';
-    $federalId = passFld(t('ssTitle'), [t('ssDesc'), $ssReason], $required + autofill('off'));
-    $dob = dateFld(t('Birth Date:'), [t('Your birth date'), t('Your date of birth (mm/dd/yyyy)')], $required + autofill('off'));
+    $ssReason = $req ? t('Required by the IRS if you accept more than $20,000 a year in payments through %PROJECT ($600 a year in MA and VT).') : '';
+    $federalId = passFld($req . t('ssTitle'), [t('ssDesc'), $ssReason], autofill('off'));
+    $dob = dateFld($req . t('Birth Date:'), [t('Your birth date'), t('Your date of birth (mm/dd/yyyy)')], autofill('off'));
   } else {
-    $federalId = passFld(t('einTitle'), [t('einDesc')], $required + autofill('off'));
-    $dob = dateFld(t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)')], $required);
+    $federalId = passFld($req . t('einTitle'), [t('einDesc')], autofill('off'));
+    $dob = dateFld($req . t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)?')]);
   }
   
   return compact(ray('federalId dob'));
@@ -1574,33 +1579,13 @@ function dateRange($args, $url, $choices = [], $settings = '', $downloadable = T
   $showSimple2 = '<a id="showSimple">simpler</a>';
   if ($downloadable) $downloadDates = submi(t('download')); // must be lowercase
   $actions = fieldSet('actionsAdvanced', @compact('submitDates', 'downloadDates'), '', '', suffix($showSimple2));
-  $starting = dateFld(t('Starting:'), '', dft(u\fmtDate($starting)));
-  $ending = dateFld(t('Ending:'), '', dft(u\fmtDate($ending)));
+  $starting = dateFld(t('Starting:'), '', dft($starting));
+  $ending = dateFld(t('Ending:'), '', dft($ending));
   if ($downloadable) $downloadMsg = item(t('<b class="loud">TIP</b>: Tell your browser to allow popups for this site.'));
   $advanced = fieldSet('advanced', @compact(ray('starting ending states2 actions')), BARE);
   $dateRange = @compact(ray('simple advanced downloadMsg'));
   return compact('dateRange') + $res;
 }
-
-/*
-function dateRange2($args, $url, $download = TRUE) {
-  extract(just('starting ending', $args));
-  if (!@$starting) { // default to previous month
-    $ending = u\monthDay1() - 1;
-    $starting = u\monthDay1($ending);
-  }
-  $url = hidFld(BASE_URL . "/$url/starting=$starting&ending=$ending");
-
-  if ($download) $download = submit(t('Download')); else $show = submit(t('Show'));
-///  debug(render($submitPeriod));
-///  debug(rendA(compact('submitPeriod')));
-///  $actions = render($submitPeriod) . render(@$downloadPeriod) . render($showAdvanced);
-  
-  $starting = dateFld(t('Starting:'), '', dft(u\fmtDate($starting)));
-  $ending = dateFld(t('Ending:'), '', dft(u\fmtDate($ending)));
-  $advanced = fieldSet('advanced', compact(ray('starting ending download show url')), BARE);
-}
-*/
 
 /**
  * Validate the chosen date range.

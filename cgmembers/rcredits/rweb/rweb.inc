@@ -61,9 +61,12 @@ function cttyList() {
 /**
  * Sections with submenus.
  */
-function formCommunity($form, &$sta) {return w\subMenu(t('Community'), 'community');}
 function formHistory($form, &$sta) {return w\subMenu(t('Account History'), 'history');}
+// Invest has its own page
+function formCommunity($form, &$sta) {return w\subMenu(t('Community'), 'community');}
+function formCo($form, &$sta) {return w\subMenu(t('Company Options'), 'co');}
 function formSettings($form, &$sta) {return w\subMenu(t('Settings'), 'settings');}
+function formAdmin($form, &$sta) {return w\subMenu(t('Admin Options'), 'sadmin');}
 
 /**
  * Show an example invitation email.
@@ -291,6 +294,7 @@ function changeWho($zot, $args = '', &$sta = '') {
  * @param bool $continue: <don't go to Promo site after signout> (can't be a "go there" parameter, because it defaults wrong)
  */
 function signout($continue = FALSE) {
+  if (isDEV and !test()) db\q('TRUNCATE test');
   if ((string) $continue == 'timedout') list ($continue, $timeout) = [FALSE, '&timedout=1']; else $timeout = '';
   
   $sid = session_id();

@@ -14,7 +14,7 @@ function formSsn($form, &$sta, $args = '') {
   
   if ($mya->stepIsDone('ssn') and !$mya->admin) w\go(''); // don't allow DIY redo after SSN is verified
 
-  extract(ssnFields(!$mya->co, required()));
+  extract(ssnFields(!$mya->co, REQ));
   
   $ssnData = $mya->ssnData;
   $retry = (!empty($ssnData) or (isDEV and !$mya->member) or $mya->task == 'person');
