@@ -133,27 +133,25 @@ function formStepUp_validate($form, &$sta) {
 function formStepUp_submit($form, &$sta) {
   global $mya; $myid = $mya->id;
   
-  $changeable = 'amount portion amtMax'; // fields user can adjust from time to time
-  $periods = 1; // if the donation recurs at all, it's once per period
+  $periods = 1; // if the donation recurs at all, it's once per period (for now)
   extract(just('uids xlys', $input = $sta['input']));
 
   foreach ($uids = ray($uids) as $i => $uid) { // for each organization, create a rule or template for the amount
     $xly = $xlys[$i];
     foreach(ray('amt:amt,period:when,amtMax:max') as $k => $v) $$k = $input["$v-$xly-$uid"] ?: NULL;
     $pct = strhas($period, 'pct');
-    $match = ray($changeable, $pct ? 0 : $amt, $pct ? $amt / 100 : 0, $period == 'pctmx' ? $amtMax : NULL);
+    $matchFlds = 'amount portion amtMax'; // fields user can adjust from time to time
+    $match = ray($matchFlds, $pct ? 0 : $amt, $pct ? $amt / 100 : 0, $period == 'pctmx' ? $amtMax : NULL);
+    $purpose = t('donation'); // description gets elaborated in be\getTxs()
     
     if (in($period, PERIODS)) { // periodic donation
       $tnm = 'tx_templates';
       $info = ray('action from to periods', ACT_PAY, $myid, $uid, 1);
-      $matchFlds = $changeable . ' period';
+      $matchFlds .= ' period';
       $match += compact('period');
-      $purpose = t('donation (%xly)', 'xly', whenly($period));
     } else { // donation per transaction
       $tnm = 'tx_rules';
       $info = ray('payer payerType payeeType from to action', $myid, REF_ACCOUNT, REF_ANYCO, $myid, $uid, ACT_SURTX);
-      $matchFlds = $changeable;
-      $purpose = $pct ? str_replace('3%', u\fmtAmt($amt / 100, '%s'), STEPUP_3PCT) : STEPUP_DESC;
     }
       
     if ($res = db\get('id,amount,`portion`,amtMax', $tnm, u\where($info) . ' AND IFNULL(end, :NOW+1) > :NOW', $info)) {

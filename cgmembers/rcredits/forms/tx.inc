@@ -93,9 +93,10 @@ function formTx_submit($form, &$sta) {
     db\update($tnm, ray("$idFnm recursId", $args[$idFnm], $id), $idFnm);
     
     $often = r\recurDesc(@$repeat, 1);
+    $args += compact('often');
     $msg .= '|repeats';
   }
   unset($DBTX);
   
-  return say($msg, $args + @compact('often'), $ok ? '' : 'amount');
+  return say($msg, $args, $ok ? '' : 'amount');
 }

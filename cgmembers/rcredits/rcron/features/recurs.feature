@@ -19,13 +19,13 @@ Scenario: A brand new recurring payment can be completed
   | pay    | %yesterday | .ZZA | .ZZB |     10 | week   | pmt     |
   When cron runs "recurs"
   Then transactions:
-  | xid | created | amount | payer | payee | purpose      | flags  |*
-  |   2 | %today  |     10 | .ZZA | .ZZB | pmt (weekly) | recurs |
+  | xid | created | amount | payer | payee | purpose | flags  |*
+  |   2 | %today  |     10 | .ZZA  | .ZZB  | pmt     | recurs |
   And we notice "new payment" to member ".ZZB" with subs:
   | otherName | amount | payeePurpose | aPayLink |*
-  | Abe One   | $10    | pmt (weekly) | ?        |
+  | Abe One   | $10    | pmt          | ?        |
   And we notice "recur pay" to member ".ZZA" with subs:
-  | amount | period | purpose | payee   |*
+  | amount | when   | purpose | payee   |*
   |    $10 | weekly | pmt     | Bea Two |
   # and many other fields
 	And count "txs" is 2
@@ -41,20 +41,20 @@ Scenario: A second recurring payment can be completed
   | id | start     | from | to   | amount | period | purpose |*
   |  8 | %today-8d | .ZZA | .ZZB |     10 | week   | pmt     |
   And transactions:
-  | xid | created   | amount | payer | payee | purpose      | flags  | recursId |*
-  |   2 | %today-8d |     10 | .ZZA  | .ZZB  | pmt (weekly) | recurs |        8 |
+  | xid | created   | amount | payer | payee | purpose | flags  | recursId |*
+  |   2 | %today-8d |     10 | .ZZA  | .ZZB  | pmt     | recurs |        8 |
   When cron runs "recurs"
   Then transactions:
-  | xid | created   | amount | payer | payee | purpose      | flags  | recursId |*
-  |   3 | %today-1d |     10 | .ZZA  | .ZZB  | pmt (weekly) | recurs |        8 |
+  | xid | created   | amount | payer | payee | purpose | flags  | recursId |*
+  |   3 | %today-1d |     10 | .ZZA  | .ZZB  | pmt     | recurs |        8 |
 
 Scenario: A recurring payment happened yesterday
   Given these "tx_templates":
   | id | action | start      | from | to   | amount | period | purpose |*
   |  8 | pay    | %yesterday | .ZZA | .ZZC |     10 | month  | pmt     |
   And transactions:
-  | xid | created    | amount | payer | payee | purpose       | flags  | recursId |*
-  |   2 | %yesterday |     10 | .ZZA  | .ZZC  | pmt (monthly) | recurs |        8 |
+  | xid | created    | amount | payer | payee | purpose | flags  | recursId |*
+  |   2 | %yesterday |     10 | .ZZA  | .ZZC  | pmt     | recurs |        8 |
   When cron runs "recurs"
   Then count "txs" is 2
   
@@ -63,12 +63,12 @@ Scenario: A recurring payment happened long enough ago to repeat
   | id | start         | from | to   | amount | period | purpose |*
   |  8 | %yesterday-1m | .ZZA | .ZZC |     10 | month  | pmt     |
   And transactions:
-  | xid | created       | amount | payer | payee | purpose       | flags  | recursId |*
-  |   2 | %yesterday-1m |     10 | .ZZA  | .ZZC  | pmt (monthly) | recurs |        8 |
+  | xid | created       | amount | payer | payee | purpose | flags  | recursId |*
+  |   2 | %yesterday-1m |     10 | .ZZA  | .ZZC  | pmt     | recurs |        8 |
   When cron runs "recurs"
   Then transactions:
-  | xid | created    | amount | payer | payee | purpose       | flags  | recursId |*
-  |   3 | %yesterday |     10 | .ZZA  | .ZZC  | pmt (monthly) | recurs |        8 |
+  | xid | created    | amount | payer | payee | purpose | flags  | recursId |*
+  |   3 | %yesterday |     10 | .ZZA  | .ZZC  | pmt     | recurs |        8 |
   And count "txs" is 3
   And count "invoices" is 0
   
@@ -78,8 +78,8 @@ Scenario: A recurring payment cannot be completed
   |  8 | %yesterday | .ZZA | .ZZB |    200 | week   | pmt     |
   When cron runs "recurs"
 	Then invoices:
-  | nvid | created   | status       | amount | payer | payee | for          | flags  | recursId |*
-  |    1 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZB  | pmt (weekly) | recurs |	      8 |
+  | nvid | created   | status       | amount | payer | payee | for  | flags  | recursId |*
+  |    1 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZB  | pmt  | recurs |	      8 |
 	And count "txs" is 1
 	And count "usd" is 0
 	And count "invoices" is 1
@@ -92,8 +92,8 @@ Scenario: A recurring payment cannot be completed
   And count "usd" is 1
   And count "invoices" is 1
   And	invoices:
-  | nvid | created   | status       | amount | payer | payee | for          | flags          | recursId |*
-  |    1 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZB  | pmt (weekly) | recurs,funding |	      8 |
+  | nvid | created   | status       | amount | payer | payee | for  | flags          | recursId |*
+  |    1 | %today    | %TX_APPROVED |    200 | .ZZA  | .ZZB  | pmt  | recurs,funding |	      8 |
 
 	When cron runs "recurs"
 	Then count "txs" is 2

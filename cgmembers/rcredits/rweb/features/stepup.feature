@@ -5,14 +5,14 @@ SO I can support my favorite causes easily and often
 
 Setup:
   Given members:
-  | uid  | fullName | flags            | balance | coType    |*
-  | .ZZA | Abe One  | member           | 0       |           |
-  | .ZZB | Bea Two  | ok,confirmed     | 500     |           |
-  | .ZZC | Cor Pub  | ok,confirmed,co  | 0       | nonprofit |
-  | .ZZF | Fox Co   | ok,confirmed,co  | 0       | nonprofit |
-  | .ZZG | Glo Co   | ok,confirmed,co  | 0       | nonprofit |
-  | .ZZH | Hip Co   | ok,confirmed,co  | 0       | nonprofit |
-  | .ZZI | Ida Co   | ok,confirmed,co  | 0       |           |
+  | uid  | fullName | flags             | floor   | coType    |*
+  | .ZZA | Abe One  | member            | 0       |           |
+  | .ZZB | Bea Two  | ok,confirmed,debt | -500    |           |
+  | .ZZC | Cor Pub  | ok,confirmed,co   | 0       | nonprofit |
+  | .ZZF | Fox Co   | ok,confirmed,co   | 0       | nonprofit |
+  | .ZZG | Glo Co   | ok,confirmed,co   | 0       | nonprofit |
+  | .ZZH | Hip Co   | ok,confirmed,co   | 0       | nonprofit |
+  | .ZZI | Ida Co   | ok,confirmed,co   | 0       |           |
 
 Scenario: A member chooses a per-transaction Step Up
   Given member ".ZZF" has "%STEPUP_MIN" stepup rules
@@ -42,7 +42,7 @@ Scenario: A member chooses a per-transaction Step Up
   | action    | surtx         | surtx         | surtx         |
   | amount    | 1             | 2             | 0             |
   | portion   | 0             | 0             | .03           |
-  | purpose   | %STEPUP_DESC  | %STEPUP_DESC  | %STEPUP_3PCT  |
+  | purpose   | donation      | donation      | donation      |
   | minimum   | 0             | 0             | 0             |
   | useMax    |               |               |               |
   | amtMax    |               |               | 4             |
@@ -62,8 +62,8 @@ Scenario: A member's rules come into play
   | to        | .ZZF          | .ZZG          | .ZZH          |
   | action    | surtx         | surtx         | surtx         |
   | amount    | 0             | 2             | 0             |
-  | portion   | 1             | 0             | .03           |
-  | purpose   | %STEPUP_DESC  | %STEPUP_DESC  | %STEPUP_3PCT  |
+  | portion   | .5            | 0             | .03           |
+  | purpose   | donation      | donation      | donation      |
   | minimum   | 0             | 0             | 0             |
   | useMax    |               |               |               |
   | amtMax    | 1             |               | 2             |
@@ -77,10 +77,18 @@ Scenario: A member's rules come into play
   Then these "txs":
   | eid | xid | created | amount | payer | payee | purpose      | rule | type        |*
   |   1 |   1 | %today  | 100    | .ZZB  | .ZZC  | labor        |      | %E_PRIME    |
-  |   3 |   1 | %today  | 1      | .ZZB  | .ZZF  | %STEPUP_DESC | 1    | %E_DONATION |
-  |   4 |   1 | %today  | 2      | .ZZB  | .ZZG  | %STEPUP_DESC | 2    | %E_DONATION |
-  |   5 |   1 | %today  | 2      | .ZZB  | .ZZH  | %STEPUP_3PCT | 3    | %E_DONATION |
+  |   3 |   1 | %today  | 1      | .ZZB  | .ZZF  | donation     | 1    | %E_DONATION |
+  |   4 |   1 | %today  | 2      | .ZZB  | .ZZG  | donation     | 2    | %E_DONATION |
+  |   5 |   1 | %today  | 2      | .ZZB  | .ZZH  | donation     | 3    | %E_DONATION |
   # MariaDb bug: autonumber skips id=2 when there are record ids 1 and -1
+  
+  When member ".ZZB" visits page "history/transactions/period=365"
+  Then we show "Transaction History" with:
+  | Tx# | Date | Name     | Purpose                  | Amount  | Balance |
+  | 1   | %mdy | Cor Pub  | labor                    | -100.00 | -105.00 |
+  |     |      |          | donation (50% step-up)   |   -1.00 |         |
+  |     |      |          | donation (step-up)       |   -2.00 |         |
+  |     |      |          | donation (3% step-up)    |   -2.00 |         |
 
 Scenario: A member chooses recurring and per-transaction donations
   When member ".ZZB" steps up with:

@@ -294,6 +294,7 @@ function changeWho($zot, $args = '', &$sta = '') {
  * @param bool $continue: <don't go to Promo site after signout> (can't be a "go there" parameter, because it defaults wrong)
  */
 function signout($continue = FALSE) {
+  if (isDEV and !test()) db\q('TRUNCATE test');
   if ((string) $continue == 'timedout') list ($continue, $timeout) = [FALSE, '&timedout=1']; else $timeout = '';
   
   $sid = session_id();

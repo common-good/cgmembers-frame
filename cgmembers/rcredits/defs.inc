@@ -608,7 +608,7 @@ const MATCH_PAYEE = -2;
 
 const STEPUP_MIN = 3; // minimum number of stepup rules for a company to appear on the step-up page
 define('STEPUP_DESC', t('donation (step-up)')); // step-up donation tx description
-define('STEPUP_3PCT', str_replace('(', '(3% ', STEPUP_DESC)); // description model for rules, txs, and testing
+define('STEPUP_3PCT', str_replace('(', '(3% ', STEPUP_DESC)); // for testing
 define('REBATE_DESC', t('discount (rebate)'));
 
 $GLOBALS['emailSubjects'] = array(

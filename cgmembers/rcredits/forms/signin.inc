@@ -14,6 +14,7 @@ function formSignin($form, &$sta) {
 	
   signout(TRUE); // make sure we're signed out
 	if (isDEV) db\q('TRUNCATE sessions'); // this saves a lot of manual truncates when tests mess up
+  if (isDEV and !test()) db\q('TRUNCATE test');
 
   extract(just('name pw2 vKeyE', @$sta['input']));
   if (!isset($name)) $name = @$_GET['name']; // allow links to signin (for example from app)

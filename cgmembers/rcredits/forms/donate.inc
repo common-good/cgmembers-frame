@@ -33,9 +33,9 @@ function formDonate($form, &$sta, $args = '') {
 
 	if ($recurs = db\get('id,period,amount', 'tx_templates t', 'action=:ACT_PAY AND t.from=:payer AND t.to=:CGID AND end IS NULL', ray('payer', $mya->id))) {
 		extract($recurs);
-		$recurId = hidFld($id);
+		$recursId = hidFld($id);
     $replaces = t('donation replaces', 'period amt', $oftens[$period], u\fmtAmt($amount));
-	} else $recurId = NULL;
+	} else $recursId = NULL;
   
   if (!$mya->activated or !$recurs or !r\acct()) {
 		unset($oftens['once']); // no one-time donation unless the account is active, has a recurring donation, and is signed in
@@ -56,7 +56,7 @@ function formDonate($form, &$sta, $args = '') {
 //    $roundup = $mya->ok ? '' : w\roundupFld($mya),
 
   jsx('amtChoice');
-  return cgform(compact(ray('title subtext amtChoice amount period honor honored recurId')) + w\setupFoot(t('Donate')));
+  return cgform(compact(ray('title subtext amtChoice amount period honor honored recursId')) + w\setupFoot(t('Donate')));
 }
 
 function formDonate_validate($form, &$sta) {
@@ -66,24 +66,22 @@ function formDonate_validate($form, &$sta) {
 function formDonate_submit($form, &$sta) {
   $mya = w\eLinkAcct($sta); 
 
-  extract(just('amount period honor honored roundup recurId', $sta['input']));
+  extract(just('amount period honor honored roundup recursId', $sta['input']));
   $info = ray('payer payee amount period created lastTx invoiced', $mya->id, CGID, $amount, $period, now(), 0, 0);
-  if ($period != 'once' and nn($recurId)) {
-		db\update('tx_templates', ray('id end', $recurId, now()), 'id');
+  if ($period != 'once' and nn($recursId)) {
+    db\update('tx_templates', ray('id end', $recursId, now()), 'id');
+    db\del('r_invoices', ray('recursId status', $recursId, TX_APPROVED));
 		say(t('Your previous recurring gift has been canceled.'));
 	}
 
   if ($amount > 0) {
     if ($honored) db\insert('r_honors', ray('uid honor honored', $mya->id, $honor, $honored));
     $purpose = t('donation');
-    list ($recursId, $recurDesc) = $period == 'once' 
-    ? [0, '']
-    : [db\insert('tx_templates', ray('action from to amount period purpose duration', ACT_PAY, $mya->id, CGID, $amount, $period, $purpose, 'once'))
-       , ' (' . r\recurDesc($period, 1) . ')'];
-//    $count = db\count('r_txs', 'payer=:payer AND payee=:payee AND :IS_RECURS AND created>=:created', compact(ray('payer payee created')));
+    $recursId = $period == 'once' ? 0
+    : db\insert('tx_templates', ray('action from to amount period purpose duration', ACT_PAY, $mya->id, CGID, $amount, $period, $purpose, 'once'));
     $msg = 'gift successful';
     $data = ray('gift recurs', 1, (bool) $recursId);
-    if ($mya->payApproved(CGID, $amount, $purpose . $recurDesc, FOR_NONGOODS, $data, $recursId)) {
+    if ($mya->ok and $mya->payApproved(CGID, $amount, $purpose, FOR_NONGOODS, $data, $recursId)) {
       r\notify($mya->id, 'gift sent', ray('amount', u\fmtAmt($amount)));
     } else $msg .= '|gift transfer later';
     say($msg);

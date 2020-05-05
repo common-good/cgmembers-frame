@@ -30,7 +30,7 @@ interface TxProcessor {
    * Called for each entry of a transaction.
    * @param assoc $info: all of the data for this entry (includes transaction data)
    */
-  public function processEntry($info);
+  public function processEntry($info, $parity);
 
   /**
    * Called after each transaction.

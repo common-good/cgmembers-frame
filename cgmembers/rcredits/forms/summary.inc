@@ -18,7 +18,7 @@ function formSummary($form, &$sta) {
   global $mya; $myid = $mya->id;
 
   $special = t('<h4>%PROJECT response to COVID-19</h4>It\'s up to us. Support our local businesses and nonprofits!<ul><li><%aBuyCredit>Buy Credit</a></li><li><%aStepups>Make Step-up Contributions</a></li><li> <%aBack>Increase Your Backing</a></li></ul>', '_aBuyCredit _aStepups _aBack', atag('/community/buy-credit'), atag('/community/stepup'), atag('/community/backing'));
-  $special = compact('special');
+  $special = ($mya->ok and !$mya->co) ? compact('special') : [];
   
   if ($mya->closed) say(t('Your account is closed, but you can still see your account history.'));
 
@@ -62,19 +62,19 @@ function formSummary($form, &$sta) {
   // $showCustomers = item(w\lnk('/community/data/qName=6Customers', t('Customer List')));
 
   if ($mya->canManage and $mya->member) {
-    $invite = w\lnk('/community/invite', t('Invite a Friend or Business'), 'primary', 'xs') . '<br>';
+    $invite = w\lnk('/community/invite', t('Invite a Friend or Business'), 'primary', 'xs');
     $hasMultipleAccounts = ($mya->co or db\exists('r_relations r LEFT JOIN users u ON u.uid=r.main', 'other=:id AND permission>0 AND u.:IS_CO', ['id' => $mya->agentId]));
     $another = $hasMultipleAccounts ? t('Another') : t('a');
     $makeCo = $mya->depends ? '' : w\lnk('/signup-co/relate=1', t('Open %another Company Account', compact('another')), 'primary', 'xs');
 //    if (!$mya->jid and !$mya->co) $makeJoint = w\lnk('/signup/joint=1', t('Make this a joint account'), 'primary', 'xs');
-    $makeJoint = ($mya->member and !$mya->jid and !$mya->co and !$mya->depends) ? w\lnk('/prejoin', t('Make this a Joint Account'), 'primary', 'xs') . '<br>' : '';
+    $makeJoint = ($mya->member and !$mya->jid and !$mya->co and !$mya->depends) ? w\lnk('/prejoin', t('Make this a Joint Account'), 'primary', 'xs') : '';
 //    $goFood = $mya->food > 0 ? lnk('/settings/food', t('Food Fund')) : lnk('/settings/food', t('Food Fund'), 'warning');
 //    if ($mya->cAdmin) $goFood = '<br><br>' . $goFood; // make sure it doesn't hide behind the photo
     $goFood = '';
     if (!$mya->co and $hasMultipleAccounts) $clickPhoto = item(t('Click your photo%where to manage your other account(s).', 'where', $mya->cAdmin ? t(' in the upper right corner') : ''));
   } else $invite = $makeCo = $makeJoint = $goFood = $reports = '';
 
-  $reports = $mya->co ? w\lnk('/history/company-reports', t('Reports')) : '';
+  $reports = $mya->co ? w\lnk('/history/company-reports', t('Company Reports')) : '';
 //  if ($mya->id == CGID) $deposits = w\lnk('/sadmin/show-deposits', t('Deposits'));
   $deposits = $mya->id == CGID ? w\lnk('/sadmin/show-reconciled', t('Dollar Pool Transactions')) : '';
   foreach (ray('invite makeJoint makeCo goFood reports deposits') as $k) if ($$k) $shortcuts[] = $$k;

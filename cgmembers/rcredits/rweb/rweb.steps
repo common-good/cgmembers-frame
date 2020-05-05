@@ -583,6 +583,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST signup AMemberInvites
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST stepup AMemberChoosesAPertransactionStepUp
+ *     TEST stepup AMembersRulesComeIntoPlay
  *     TEST stepup AMemberChoosesRecurringAndPertransactionDonations
  *     TEST summary AMemberClicksTheSummaryTab
  *     TEST summary AMemberClicksTheSummaryTabWithRoundups
@@ -859,6 +860,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE signup AMemberChoosesToStepUp
  *     MAKE signup AMemberConfirmsSocialSecurityNumber
  *     MAKE stepup AMemberChoosesAPertransactionStepUp
+ *     MAKE stepup AMembersRulesComeIntoPlay
  *     MAKE stepup AMemberChoosesRecurringAndPertransactionDonations
  *     MAKE summary AMemberClicksTheSummaryTab
  *     MAKE summary AMemberClicksTheSummaryTabWithRoundups
