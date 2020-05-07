@@ -36,10 +36,10 @@ Setup:
   
   When cron runs "invoices"
   Then transactions: 
-  | xid | created | amount | payer   | payee | purpose              | taking | type  |*
-  |   2 | %today  |    100 | .ZZA    | .ZZC | one (%PROJECT inv#1) |        | prime |
-  |   3 | %today  |    200 | .ZZA    | .ZZC | two (%PROJECT inv#2) |        | prime |
-  |   4 | %today  |      0 | bank-in | .ZZA | from bank            |      1 | bank  |
+  | xid | created | amount | payer   | payee | purpose   | taking | type  |*
+  |   2 | %today  |    100 | .ZZA    | .ZZC  | one       |        | prime |
+  |   3 | %today  |    200 | .ZZA    | .ZZC  | two       |        | prime |
+  |   4 | %today  |      0 | bank-in | .ZZA  | from bank |      1 | bank  |
 	Then count "txs" is 4
 	And count "usd" is 1
 	And count "invoices" is 5

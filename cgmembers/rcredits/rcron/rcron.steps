@@ -528,7 +528,7 @@ function stats($list) {return t\stats($list);}
  *     MAKE gifts ASecondRecurringDonationToCGCanBeCompleted
  *     MAKE gifts ADonationInvoicetoCGCanBeCompleted
  *     MAKE gifts ARecurringDonationToCGCannotBeCompleted
- *     BOTH gifts ANonmemberChoosesADonationToCG
+ *     MAKE gifts ANonmemberChoosesADonationToCG
  *     MAKE gifts ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
  *     BOTH invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
  *     TEST invoices ALanguishingInvoiceGetsFundedAgain

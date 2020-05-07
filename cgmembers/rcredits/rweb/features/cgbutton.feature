@@ -43,8 +43,8 @@ Scenario: A member submits a Pay With Common Good button payment with account ID
   | nvid | created | status | purpose |*
   |    1 | %today  |      1 | food    |
   And transactions:
-  | xid | created | amount | payer | payee | for                      |*
-  |   1 | %today  |     23 | .ZZA | .ZZC | food (Common Good inv#1) |
+  | xid | created | amount | payer | payee | for  |*
+  |   1 | %today  |     23 | .ZZA  | .ZZC  | food |
   
   When member "?" visits page "handle-invoice/nvid=1&toMe=1&code=TESTDOCODE"
   Then we say "error": "already paid"
@@ -106,8 +106,8 @@ Scenario: A member type account ID to buy store credit
   | nvid | created | status | purpose      |*
   |    1 | %today  |      1 | store credit |
   And transactions:
-  | xid | created | amount | payer | payee | for                              |*
-  |   1 | %today  |     23 | .ZZA  | .ZZC  | store credit (Common Good inv#1) |
+  | xid | created | amount | payer | payee | for          |*
+  |   1 | %today  |     23 | .ZZA  | .ZZC  | store credit |
   And these "tx_rules":
   | id | action     | payerType | payer | payeeType | payee | from         | to           | portion | amtMax |*
   |  1 | %ACT_SURTX | account   | .ZZA  | account   | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER | .5      | 23     |
@@ -171,8 +171,8 @@ Scenario: A member type account ID to buy a gift of store credit
   | nvid | created | status | purpose                           |*
   |    1 | %today  |      1 | gift of store credit (to Bea Two) |
   And transactions:
-  | xid | created | amount | payer | payee | for                                                   |*
-  |   1 | %today  |     23 | .ZZA  | .ZZC  | gift of store credit (to Bea Two) (Common Good inv#1) |
+  | xid | created | amount | payer | payee | for                               |*
+  |   1 | %today  |     23 | .ZZA  | .ZZC  | gift of store credit (to Bea Two) |
   And these "tx_rules":
   | id | payerType | payer | payeeType | payee | from         | to           | portion | amtMax |*
   |  1 | account   | .ZZB  | account   | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER | 1       | 23     |

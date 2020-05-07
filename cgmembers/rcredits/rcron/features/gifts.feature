@@ -71,8 +71,8 @@ Scenario: A donation invoice (to CG) can be completed
   And member ".ZZA" has no photo ID recorded
   When cron runs "invoices"
   Then transactions: 
-  | xid | created | amount | payer | payee | purpose                      | flags       | recursId |*
-  |   2 | %today  |     50 | .ZZA  | cgf   | donation (Common Good inv#2) | gift,recurs |        8 |
+  | xid | created | amount | payer | payee | purpose  | flags       | recursId |*
+  |   2 | %today  |     50 | .ZZA  | cgf   | donation | gift,recurs |        8 |
 	And invoices:
   | nvid | created   | status | purpose  |*
   |    2 | %today    | 2      | donation |
@@ -114,9 +114,7 @@ Scenario: A non-member chooses a donation to CG
   When cron runs "recurs"
 	Then count "txs" is 1
 	And count "usd" is 0
-	And these "invoices":
-  | nvid | created   | status       | amount | payer | payee | for      | flags       | recursId |*
-  |    1 | %today    | %TX_APPROVED |      1 | .ZZD  | cgf   | donation | gift,recurs |        2 |
+  And count "invoices" is 0
 
 Scenario: It's time to warn about an upcoming annual donation to CG
   Given members:

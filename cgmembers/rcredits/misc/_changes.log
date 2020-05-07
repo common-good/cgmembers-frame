@@ -1,3 +1,8 @@
+2020-05-07 feature/no-invnum
+. invoice numbers are no longer stored in payment transaction description
+. fixed bugs in intFld calls (can't format the field with dollar signs and commas)
+. fixed bug in routingFld that forbade first digit zero
+
 2020-05-04 feature/txs-hist
 . moved transaction description details for recurring and surtx transactions to the be\getTxs()
 . fixed formatting of transaction history (especially on mobile)

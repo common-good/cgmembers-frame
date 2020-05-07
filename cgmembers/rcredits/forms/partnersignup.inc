@@ -70,7 +70,7 @@ function signedContract($code, &$sta = '') {
 X
   , compact(ray('m_company partnerName')));
 
-  $routingNumber = intFld(REQ . t('Routing:'), t('Type carefully your bank\'s routing number.'), vrange(100000000, 999999999));
+  $routingNumber = routingFld(REQ);
   //$bankAccount = textFld(t('Account:'), t('Type carefully your checking account number.'));
   $bankAccount = intFld(REQ . t('Account:'), t('Type <b>carefully</b> your <b>checking account</b> number.'), maxlen(17));
     
@@ -410,7 +410,7 @@ X
   
   $midtext2 = t('<p>Enter the bank account information for the savings or checking account you will use to pay your solar subscription bill.</p>');
 
-  $routingNumber = intFld(REQ . t('Routing:'), t('Type your bank\'s routing number. (Please check to be sure it\'s correct!)'), vrange(100000000, 999999999));
+  $routingNumber = routingFld(REQ);
   //$bankAccount = textFld(t('Account:'), t('Type carefully your checking account number.'));
   $bankAccount = intFld(REQ . t('Account:'), t('Type your bank account number. (Please check to be sure it\'s correct!)'), maxlen(17));
   $sorch = radiosFld(t('Type:'), '', required(-1), [t('Checking'), t('Savings')]);
