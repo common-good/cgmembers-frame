@@ -500,7 +500,7 @@ function adminSummary() {
     $note = areaFld(t('New Note:'), [t('Type a Note Here'), t('Abbreviations: PM=phone msg EM=email msg. Be sure to say what you left a message <i>about</i> (for example "PM setup")')]);
     $dob = ($mya->superAdmin or !$mya->hasDob) ? dateFld(t('Birth Date:'), '', dft($mya->hasDob ? $mya->dob : '') + autofill('off')) : NULL;
     $suffix = submitTickle(1, t('Wait a day')) . submitTickle(2, t('2 days')) . submitTickle(7, '7') . submitTickle(30, '30') . submitTickle('', t('Auto')) . ' &nbsp; ' . submitTickle($mya->tickle ? 'NONE' : '', t('Save'), 'sm');
-    $tickle = dateFld(t('Tickle:'), [t('Followup Date'), t('When to follow up ("Auto" sets an automatic Welcome or Annual date)')], dft($mya->tickle ? u\fmtDate($mya->tickle, TRUE) : '') + w\suffix($suffix));
+    $tickle = dateFld(t('Tickle:'), [t('Followup Date'), t('When to follow up ("Auto" sets an automatic Welcome or Annual date)')], dft($mya->tickle) + w\suffix($suffix));
     $source = item($mya->source, t('Source:'));
   }
 

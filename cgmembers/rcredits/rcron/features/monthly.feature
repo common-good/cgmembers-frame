@@ -153,8 +153,8 @@ Scenario: Crumbs are invoiced
 
   When cron runs "invoices"
   Then transactions:
-  | xid | created | amount | payer | payee | purpose                                                       | flags       |*
-  | 15  | %now    |   2.40 | .ZZC | crumb | crumbs donation: 2.0% of past month receipts (%PROJECT inv#1) | gift,crumbs |
+  | xid | created | amount | payer | payee | purpose                                     | flags       |*
+  | 15  | %now    |   2.40 | .ZZC | crumb | crumbs donation: 2.0% of past month receipts | gift,crumbs |
   And count "txs" is 15
 
   When cron runs "invoices"

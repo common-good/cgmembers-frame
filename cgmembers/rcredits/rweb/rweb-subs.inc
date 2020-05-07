@@ -1348,6 +1348,7 @@ function stateFld($dft) {return selectFld(t('State:'), t(''), required($dft), ['
 function sourceFld($dft = NULL) {return textFld(t('Referred By:'), [t('How you heard about %PROJECT'), t('Where did you hear about %PROJECT? (name of company or person, web address, publication name, radio station name, or whatever)')], dft(@$dft));}
 function zipFld($zip = NULL) {return textFld(t('Postal Code:'), [t('Physical location postal code'), t('Postal code for your <em>physical location</em>')], required(@$zip));}
 function sellingFld($selling = NULL) {return areaFld(t('Selling:'), [t('Products'),t('Enter one or more <b>VERY SHORT</b> transaction descriptions (for example "food") for when you make a sale &mdash; one line for each. Put the most common one first. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', u\fmtDate(now(), TRUE))], required($selling));}
+function routingFld($req = '') {return intFld(REQ . t('Routing:'), t('Type carefully your bank\'s routing number. (check to be sure it\'s correct!)'), vrange(10000000, 999999999));}
 
 /**
  * Standardize the "selling" field input.

@@ -51,16 +51,16 @@ Scenario: A member downloads transactions for the past year
   When member ".ZZA" visits page "history/transactions/period=365&download=1"
   Then we download "%PROJECT_ID%todayn-12m-%todayn.csv" with:
   # For example commongood20120525-20130524.csv
-  | Tx# | Date    | Name          | Purpose        | From You | To You | Balance |*
-  | 28  | %ymd-5d | Our Pub       | cash CJ        |          |    100 |    670 |
-  | 13  | %ymd-5d | Our Pub       | this CF        |       80 |        |    570 |
-  | 27  | %ymd-6d | Bea Two       | cash V         |      100 |        |    650 |
-  | 12  | %ymd-1w | Our Pub       | this Q         |      120 |        |    750 |
-  | 11  | %ymd-3m | Bea Two       | what G         |      240 |        |    870 |
-  | 25  | %ymd-4m | Our Pub       | usd F          |          |    100 |   1110 |
-  | 1   | %ymd-5m | --            | from bank      |          |   1000 |   1010 |
-  | 24  | %ymd-6m | Bea Two       | cash E         |          |     10 |     10 |
-  |     |         | TOTALS        |                |      540 |   1210 |        |
+  | Tx# | Date    | Name          | Purpose            | From You | To You | Balance |*
+  | 28  | %ymd-5d | Our Pub       | cash CJ            |          |    100 |    670 |
+  | 13  | %ymd-5d | Our Pub       | this CF (CG inv#3) |       80 |        |    570 |
+  | 27  | %ymd-6d | Bea Two       | cash V             |      100 |        |    650 |
+  | 12  | %ymd-1w | Our Pub       | this Q (CG inv#2)  |      120 |        |    750 |
+  | 11  | %ymd-3m | Bea Two       | what G (CG inv#1)  |      240 |        |    870 |
+  | 25  | %ymd-4m | Our Pub       | usd F              |          |    100 |   1110 |
+  | 1   | %ymd-5m | --            | from bank          |          |   1000 |   1010 |
+  | 24  | %ymd-6m | Bea Two       | cash E             |          |     10 |     10 |
+  |     |         | TOTALS        |                    |      540 |   1210 |        |
 
 Scenario: A member downloads incoming invoices for the past year
   When member ".ZZA" visits page "history/invoices-to/period=365&download=1"

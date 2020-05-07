@@ -41,8 +41,8 @@ Scenario: A member confirms request to charge another member
   | op   | ret | nvid | amount | payer | payee | purpose | created |*
   | pay  |     |    1 |    100 | .ZZB  | .ZZA  | labor   | %today  |
   Then transactions:
-  | xid | created | amount | payer | payee | purpose                | taking |*
-  |   1 | %today  |    100 | .ZZB | .ZZA | labor (%PROJECT inv#1)  | 0      |
+  | xid | created | amount | payer | payee | purpose | taking |*
+  |   1 | %today  |    100 | .ZZB | .ZZA | labor     | 0      |
   And invoices:
   | nvid | created | status | amount | payer | payee | for   |*
   |    1 | %today  | 1      |    100 | .ZZB | .ZZA | labor |
@@ -152,8 +152,8 @@ Scenario: A member approves an invoice to a trusting customer
   | op     | who     | amount | goods      | purpose |*
   | charge | Bea Two | 100    | %FOR_GOODS | labor   |
   Then transactions:
-  | xid | created | amount | payer | payee | purpose                | taking |*
-  |   1 | %today  |    100 | .ZZB | .ZZA | labor (%PROJECT inv#1)  | 0      |
+  | xid | created | amount | payer | payee | purpose | taking |*
+  |   1 | %today  |    100 | .ZZB | .ZZA | labor     | 0      |
   And invoices:
   | nvid | created | status | amount | payer | payee | for   |*
   |    1 | %today  | 1      |    100 | .ZZB | .ZZA | labor |

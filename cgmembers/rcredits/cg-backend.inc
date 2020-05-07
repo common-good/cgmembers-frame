@@ -37,13 +37,14 @@ function getTxs($uids, $starting=NULL, $ending=NULL) {
   // tReversedBy and eReversedBy refer to the transaction that reverses this transaction.
   // !(e.amount=0 AND e.entryType=:E_BANK) hides not-yet-completed bank transfers
   $sql = <<< EOF
-    SELECT t.*, e.*, u.fullName AS name, tp.period, tp.periods, ru.action=:ACT_SURTX AS surtx, ru.portion,
+    SELECT t.*, e.*, u.fullName AS name, tp.period, tp.periods, ru.action=:ACT_SURTX AS surtx, ru.portion, i.nvid,
       (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=t.xid) AS reversedBy,
       (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=t.xid AND d.status=:DS_OPEN)) AS isDisputed
     FROM tx_entries e LEFT JOIN tx_hdrs t USING (xid) LEFT JOIN users u USING (uid)
     LEFT JOIN r_usd ON (r_usd.xid=t.xid)
     LEFT JOIN tx_templates tp ON tp.id=t.recursId
     LEFT JOIN tx_rules ru ON ru.id=e.rule
+    LEFT JOIN r_invoices i ON i.status=t.xid
     WHERE (!(e.amount=0 AND e.entryType=:E_BANK) AND t.xid IN (SELECT DISTINCT xid FROM tx_entries WHERE (uid IN (:uids)))) $where
     ORDER BY t.created, t.xid, ABS(e.id), name
 EOF;
@@ -80,9 +81,10 @@ EOF;
     }
     $balance += $myAmount;
     foreach ($entries as $entry) if (!($entry['entryType'] == E_DONATION and $hideRoundups)) {
-      extract(just('entryType reversesXid reversedBy description period periods surtx portion', $entry, NULL));
+      extract(just('entryType reversesXid reversedBy description period periods surtx portion nvid', $entry, NULL));
       if ($entryType == E_PRIME) {
         if ($period) $description .= t(' (%xly)', 'xly', r\recurDesc($period, $periods));
+        if ($nvid) $description .= t(' (CG inv#%nvid)', compact('nvid'));
         if ($reversesXid) $description .= t(' (reverses #%reversesXid)', compact('reversesXid'));
         if ($reversedBy) $description .= t(' (reversed by #%reversedBy)', compact('reversedBy'));
       } else {
@@ -345,7 +347,6 @@ function payInvoice($nvid) {
   extract(just('api request shid for', $data, NULL));
   
   $DBTX = \db_transaction();
-  $purpose .= ' (' . PROJECT . " inv#$nvid)";
 	$extra = ray('inv', $nvid) + just('api for', $data, NULL);
 	if ($flags) foreach (ray('gift crumbs recurs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
 
