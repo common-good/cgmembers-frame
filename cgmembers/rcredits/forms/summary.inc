@@ -200,7 +200,7 @@ function formSummary_submit($form, &$sta) {
   }
 
   u\setDft($notes, $mya->notes);
-  if (nn($note)) $notes = $mya->stampNote($note) . $notes;
+  if (nn($note)) $notes = r\stampNote($note) . $notes;
 
   $DBTX = \db_transaction();
 
@@ -225,9 +225,9 @@ function formSummary_submit($form, &$sta) {
     if ($active xor $mya->ok) { // changing activation status
       $mya->setBit(B_OK, $active);
       if ($active) {
-        if ($mya->activated) $notes = $mya->stampNote('reactivated') . $notes;
+        if ($mya->activated) $notes = r\stampNote('reactivated') . $notes;
         activate($helper);
-      } else { $notes = $mya->stampNote('account closed') . $notes; }
+      } else { $notes = r\stampNote('account closed') . $notes; }
     }
   }
   

@@ -32,7 +32,7 @@ EOF
 //  if ($gotBoth) $mya->stepDone('proxies'); // sometimes doesn't get set in formProxy (dunno why)
   $proxy1 = item($proxy[1], t('Proxy:'), t('Who will vote on your behalf, when you don\'t vote directly? (You can change your choices at any time.)'));
   $proxy2 = item($proxy[2], t('Alternate:'), t('Who will vote on your behalf, if your Proxy doesn\'t vote either? (even before resorting to your Proxy\'s Proxy)'));
-  $form = compact(ray('title subtext proxy1 proxy2')) + ($mya->member ? [] : w\setupFoot());
+  $form = compact(ray('title subtext proxy1 proxy2')) + ($mya->stepIsDone('proxies') ? [] : w\setupFoot());
   return cgform($form);
 }
 

@@ -13,7 +13,7 @@ function formScraps($form, &$sta, $arg = '') {
   global $mya;
 
   if (in($arg, S_MEM_TASKS)) { // called from Summary page when member clicks to launch a followup task
-    $note = $mya->stampNote(t('member clicked "Finish"'));
+    $note = r\stampNote(t('member clicked "Finish"'));
     $mya->update('notes', $note . $mya->notes);
 
     $mya->setTask($arg);

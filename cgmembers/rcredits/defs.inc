@@ -508,6 +508,9 @@ const T_FOODY = '(SELECT ' . U_FOODY . " FROM users u WHERE u.uid=uid2)"; // MyS
 const CAT_FOOD = 2; // food industry (used in signup-co and/or company feature)
 const CAT_RETAIL = 14; // retail industry (used in signup-co and/or company feature)
 
+define('SHOUT_TEXT', t('"Please sign up now for %PROJECT"'));
+define('ORG_DISCLAIMER', t(' Organizational affiliations are for identification purposes only and do not necessarily reflect the views of the organization.'));
+  
 const FLOW_NONE = 0; // which way can credit flow, with another account
 const FLOW_TO = 1;
 const FLOW_FROM = 2;

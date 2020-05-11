@@ -78,6 +78,7 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE invest TheInvestmentClubIssuesDividends
  *     MAKE invest MembersRateAProposedLoan
  *     MAKE invest TheClubMakesALoan
+ *     MAKE invite AMemberInvites
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
@@ -230,6 +231,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE flow Setup
  *     MAKE gift Setup
  *     MAKE invest Setup
+ *     MAKE invite Setup
  *     MAKE invoice Setup
  *     MAKE joint Setup
  *     MAKE pale Setup
@@ -450,6 +452,7 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST changeaccount ASuperadminClicksTheProfilePhoto
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     TEST invest AMemberCompanyJoinsTheInvestmentClub
+ *     TEST invite AMemberInvites
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
@@ -525,6 +528,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST invest TheInvestmentClubIssuesDividends
  *     TEST invest MembersRateAProposedLoan
  *     TEST invest TheClubMakesALoan
+ *     TEST invite AMemberInvites
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST joint AMemberRequestsAJointAccount
@@ -816,6 +820,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE invest TheInvestmentClubIssuesDividends
  *     MAKE invest MembersRateAProposedLoan
  *     MAKE invest TheClubMakesALoan
+ *     MAKE invite AMemberInvites
  *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMember
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
@@ -1673,6 +1678,7 @@ function weScripWithSubs($script, $args = []) {
  *     BOTH invest TheInvestmentClubIssuesDividends
  *     BOTH invest MembersRateAProposedLoan
  *     BOTH invest TheClubMakesALoan
+ *     TEST invite AMemberInvites
  *     TEST pale AMemberMakesATransactionThatTriggersPayingALittleExtra
  *     MAKE posts Setup
  *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer

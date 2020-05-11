@@ -1473,6 +1473,7 @@ function clear($ch = 0) {
     'r_boxes',            // users
     'u_groupies',         // u_groups, users
     'u_groups',           // -
+    'u_shouters',         // users
     'x_users',            // standaloneish
     ]; // never truncate: r_areas r_banks r_countries r_criteria r_industries r_regions r_states r_transit users variable
 

@@ -388,6 +388,30 @@ body.page-partner blockquote {font-size:14px;}
 
 /* Invite */
 #inviteLink {border:1px solid silver; background-color:lightyellow; color:silver;}
+#frm-invite #edit-subtext h4 {display:inline-block; margin:10px 0 0px 30px; background-color:lightyellow;}
+#frm-invite .form-item-question,
+#frm-invite .form-item-quote,
+#frm-invite .form-item-org,
+#frm-invite .form-item-position,
+#frm-invite .form-item-website {display:none;}
+
+/* Shouters */
+#frm-shouters .footnote {color:red;}
+#frm-shouters #edit-signed {font-weight:bold;}
+#frm-shouters .row {display:block; width:100%; color:black;}
+#frm-shouters .cell {padding:0 5px 0 0;}
+#frm-shouters .fullName {color:darkblue; font-weight:bold;}
+#frm-shouters .fullName::before {
+  display:inline-block;
+  width:15px;
+  content:"•";
+  font-weight:bold;
+  font-size:110%;
+  color:silver;
+}
+#frm-shouters .quote {display:block; width:90%; padding-left:35px; font-style:italic; color:#666666; font-weight:normal;}
+#frm-shouters .quote::before,
+#frm-shouters .quote::after {content:"\""; padding:0 1px; color:silver;}
 
 /* Export */
 .form-item-chimpSet, .form-item-chimpSet>.control-label {display:none;}

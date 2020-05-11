@@ -215,6 +215,7 @@ class Acct {
     if ($field == 'superAdmin') return ($a->agentId == 1) ?: (test() and $a->admin and $a->agentA->name == 'abeone');
     if ($field == 'bankInfo') return (!$routing = substr($a->bankAccount, 4, 9)) ? NULL
                                 : db\get('*', 'r_banks', 'route=:routing', compact('routing'));
+    if ($field == 'shouter') return db\exists('u_shouters', ['uid' => $a->id]);
     if ($field == 'tempPhotoFilename') return r\pic("$a->mainQid.jpg");
 
     if (isset(self::$rs[$a->id]->$field)) { // actual database field?
@@ -881,16 +882,6 @@ EOF;
     if ($aA->$field) r\badCard($qid, $aA->$field, t('making new card for %nm', 'nm', $a->fullName)); // (don't mark previous code bad if none)
 //    if ($oldCode = $aA->$field) db\insert('r_bad', ray('qid code created', $qid, $oldCode, now()), 'created');
     $aA->update($field, $newCode ?: r\cardCode($qid)); // resave the secure fields
-  }
-    
-  /**
-   * Add a date stamp and agent's initials to the given note (before updating the notes field with it).
-   */
-  public function stampNote($note) {
-    $rep = mb_strtolower(u\initials(r\agent()->legalName) ?: 'WS');
-    //    $date = str_replace('-', '', u\fmtDate());
-    $date = u\fmtDate();
-    return "$date  $rep: $note\n";
   }
     
   /**
