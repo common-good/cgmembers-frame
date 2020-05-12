@@ -190,7 +190,7 @@ function postList($type, $lat, $lon, $zip, $radius) {
         $admin OR
         (:type='tip' AND $postRadius>0) OR
         IF($noGeo, 
-          MID(p.zip,1,3) = MID(:zip,1,3) OR $zipIrrelevant, 
+          LEFT(p.zip,3) = LEFT(:zip,3) OR $zipIrrelevant, 
           $distance < LEAST(IF($postRadius=0, 99999, s.radius), :radius)
         )
       )

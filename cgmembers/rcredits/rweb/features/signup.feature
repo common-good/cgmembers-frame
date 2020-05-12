@@ -198,9 +198,9 @@ Scenario: A member sets backing
 Scenario: A member chooses to Step Up
   Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund photo contact donate crumbs proxies work backing"
   And members:
-  | uid  | fullName | flags | coType    |*
-  | .ZZF | Fox Co   | ok,co | nonprofit |
-  | .ZZG | Glo Co   | ok,co | nonprofit |
+  | uid  | fullName | flags | coType    | zip   |*
+  | .ZZF | Fox Co   | ok,co | nonprofit | 02006 |
+  | .ZZG | Glo Co   | ok,co | nonprofit | 02007 |
   And member ".ZZF" has "%STEPUP_MIN" stepup rules
   And member ".ZZG" has "%(%STEPUP_MIN+1)" stepup rules
 

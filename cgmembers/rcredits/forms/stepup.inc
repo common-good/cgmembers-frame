@@ -30,7 +30,7 @@ function formStepUp($form, &$sta, $args = '') {
   $sql = <<< X
     SELECT DISTINCT x.*,u.uid,u.fullName FROM (
     
-      SELECT 0 AS xly, $fromMe AS mine, CONCAT_WS('-', 'r', r.to, $fromMe) AS recK, 
+      SELECT 0 AS xly, $fromMe AS mine, CONCAT_WS('-', 'r', r.to, $fromMe) AS recK,
         r.to, id, IF($fromMe, IF(r.portion>0, IF(amtMax>0, 'pctmx', 'pct'), 'tx$'), 'pct') AS `when`, $set
       FROM tx_rules r
       WHERE r.action=:ACT_SURTX AND r.from>0 AND r.to>0 AND r.payeeType=:REF_ANYCO AND IFNULL(r.end, :NOW+1) > :NOW
@@ -46,7 +46,7 @@ function formStepUp($form, &$sta, $args = '') {
     LEFT JOIN r_company c USING(uid)
     WHERE (mine AND NOT xly)
       OR (u.:IS_CO AND c.coType=:CO_NONPROFIT AND (
-        IF($noGeo, MID(u.zip,1,3) = MID(:zip,1,3), $distance < :NEIGHBOR_MAX * 2) OR u.uid IN (:globalOrgs)
+        IF($noGeo, LEFT(u.zip,3) = LEFT(:zip,3), $distance < :NEIGHBOR_MAX * 2) OR u.uid IN (:globalOrgs)
       ))
     GROUP BY mine,x.to,xly 
     HAVING COUNT(id)>=:STEPUP_MIN OR mine

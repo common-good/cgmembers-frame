@@ -711,13 +711,14 @@ body.page-partner blockquote {font-size:14px;}
 #frm-summary .admin .control-data {width:auto; max-width:auto;}
 #frm-summary #left2.admin .control-data,
 #frm-summary #right2.admin .control-data {width:450px; max-width:500px;}
-#frm-summary #left2.admin #edit-details .control-data {width:auto; max-width:650px;}
-#frm-summary #left2.admin #edit-details>.control-data,
+/* #frm-summary #left2.admin #edit-details .control-data {width:auto; max-width:650px;}
+#frm-summary #left2.admin #edit-details>.control-data, */
+#frm-summary #edit-details .well {padding:0 19px;}
 #frm-summary #left2.admin .scripts {width:100%; max-width:100%;}
 #frm-summary .admin textarea {width:450px;}
 #frm-summary .admin .form-checkboxes {width:500px; max-width:500px;}
 #frm-summary #edit-notes .control-data {width:450px; max-height:150px; overflow-x:hidden; overflow-y:scroll; overflow-wrap:break-word}
-#frm-summary #edit-tickle {max-width:120px; display:inline-block;}
+#frm-summary #edit-tickle {max-width:135px; display:inline-block;}
 #frm-summary #edit-photo img {width:100px; margin-top:20px;}
 #frm-summary #edit-creditlimit .help-block,
 #frm-summary #edit-committed .help-block,
@@ -744,6 +745,10 @@ body.page-partner blockquote {font-size:14px;}
 #frm-summary #edit-choiceList a div:first-child {font-size:115%; font-weight:bold; width:43px; color:darkgreen; padding-left:0;}
 #frm-summary #edit-choiceList a:hover {text-decoration:none; background-color:aliceblue; max-width:420px;}
 #frm-summary #edit-choiceList a small {color:silver;}
+
+#frm-summary #edit-altid {display:inline-block; width:180px;}
+#frm-summary #edit-altSt {display:inline-block; width:80px; margin-left:10px;}
+#frm-summary #edit-dob {display:inline-block; width:135px; margin-left:10px;}
 
 /* Coupons and Discounts */
 #frm-coupons #edit-buttons a.btn {margin:0 100% 10px 0;}

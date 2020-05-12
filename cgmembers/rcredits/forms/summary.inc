@@ -146,10 +146,11 @@ function formSummary_validate($form, &$sta) {
   global $mya;
 
   if (in(op($sta), 'openCompany openJoint')) return;
-  extract(just('uid legalName creditLimit dob active helper moves tickle adminable', $sta['input']));
+  extract(just('uid legalName creditLimit dob altId altSt active helper moves tickle adminable', $sta['input'], NULL));
   if (nn($tickle, NULL) !== '' and $err = u\badDate($tickle)) return say($err, 'tickle');
 
-  if (nn($dob) and !formBasic_validate($form, $sta, FALSE, 'dob')) return;
+  if ($dob and !formBasic_validate($form, $sta, FALSE, 'dob')) return;
+  if ($altId xor $altSt) return say(t('You must give both an Alternate ID and a state or neither. If it\'s not a driver\'s license, choose "AA" and describe the ID type in one or two words at the end of the number.'), 'altId');
   
 /*  if (in(nn($federalId), [R_ON_FILE, t('SSN')])) {
     unset($sta['input']['federalId']);
@@ -189,24 +190,24 @@ function formSummary_submit($form, &$sta) {
   if (!$mya->admin2) return; // hack attempt
   if ($op == 'secureMsgs') return w\go('', showSecureMessages());
 
-  extract($args = just('uid who legalName creditLimit tickle note notes dob helper mediaConx moves active risks adminable', $sta['input']));
+  extract($args = just('uid who legalName creditLimit tickle note notes dob altId altSt helper moves active risks adminable', $sta['input'], NULL));
   if (!$mya->cAdmin) u\EXPECT(!array_diff(array_keys($args), ray('uid tickle note')), 'too many unpermitted changing fields in ' . pr($args));
 
-  if (!@$tickle) {
-    $tickleDone = $mya->ok ? (nn($note) and !$tickle and $mya->tickle) : 'activate';
+  if (!$tickle) {
+    $tickleDone = $mya->ok ? ($note and !$tickle and $mya->tickle) : 'activate';
     list ($zot, $tickle) = $mya->nextTickle($tickleDone);
-//    if ($tickleDone) $note = trim(t('(%typeDone) ', 'type', @$note ? '': "$tickleType ") . @$note);
-//    if ($tickleDone === TRUE) $note = trim(t('Done ') . @$note);
   }
 
   u\setDft($notes, $mya->notes);
-  if (nn($note)) $notes = r\stampNote($note) . $notes;
+  if ($note) $notes = r\stampNote($note) . $notes;
 
   $DBTX = \db_transaction();
 
-  if (nn($dob)) $mya->update(compact('dob')); // must precede activate()
-  if (nn($federalId) and $federalId != $mya->federalId) {
-    $mya->update(compact('federalId'));
+  if ($dob) $mya->update(compact('dob')); // must precede activate()
+  if ($altId) $mya->update(ray('altId', $altSt . $altId)); // must precede activate()
+
+  if ($federalId and $federalId != $mya->federalId) {
+    $mya->update(compact('federalId')); // must precede activate()
     $mya->update('ssnData', '');
   }
   
@@ -231,9 +232,10 @@ function formSummary_submit($form, &$sta) {
     }
   }
   
-  if (!nn($helper)) unset($helper); // don't overwrite if too late or empty
+  $fields = 'notes';
+  foreach (ray('legalName tickle moves helper') as $k) if ($$k) $fields .= ' ' . $$k; // don't overwrite
 
-  $mya->update(@compact(ray('legalName tickle notes helper mediaConx moves')));
+  $mya->update(@compact(ray($fields)));
   unset($DBTX);
   
   say('info saved');
@@ -259,17 +261,15 @@ function activate($helper) {
 
   $DBTX = \db_transaction();
   u\EXPECT($helper, 'no helper!');
-///  debug("helper=$mya->helper ok=$mya->ok");
   $mya->update(compact('helper')); // must precede welcome message
   $mya->setBit(B_OK, TRUE); // must precede welcome message
   $mya->setBit(B_NONUDGE, FALSE);
-///  debug("helper=$mya->helper ok=$mya->ok");
   
   if ($firstTime = !$mya->activated) { // first time activation
       u\EXPECT($mya->superAdmin, 'initial activation is only for superadmin');
 //    u\EXPECT($mya->co or $mya->dob, 'no dob!');
     // setting B_UNDERAGE must precede update of vsecure, because dob gets V-encrypted
-    $dob = $mya->dob ?: ($mya->yob ? strtotime("$mya->yob-01-01") : now());
+    $dob = $mya->dob ?: ($mya->yob ? strtotime("$mya->yob-12-31 11:59:59pm") : now());
     if (!$mya->co and now() - $dob < MATURITY * YEAR_SECS) $mya->setBIT(B_UNDERAGE);
     $mya->update('activated', now() - 1); // this signals it's time to V-encrypt
     $mya->update('vsecure', $mya->vsecure); // V-encrypt
@@ -497,8 +497,14 @@ function adminSummary() {
       $notes = areaFld(t('Notes:'), '', dft(unplain($mya->notes))); // only needed for default in areaFld
     } else $notes = item(str_replace("\n", '<br>', $mya->notes), t('Notes:'));
 
-    $note = areaFld(t('New Note:'), [t('Type a Note Here'), t('Abbreviations: PM=phone msg EM=email msg. Be sure to say what you left a message <i>about</i> (for example "PM setup")')]);
-    $dob = ($mya->superAdmin or !$mya->hasDob) ? dateFld(t('Birth Date:'), '', dft($mya->hasDob ? $mya->dob : '') + autofill('off')) : NULL;
+    $note = textFld(t('New Note:'), [t('Type a Note Here'), t('Abbreviations: PM=phone msg EM=email msg. Be sure to say what you left a message <i>about</i> (for example "PM setup")')]);
+
+    if ($mya->superAdmin or !$mya->hasDob) if (!$mya->hasDob) {
+      $altSt = rendA('altSt', stFld(substr($mya->altId, 0, 2)));
+      $dob = rendA('dob', dateFld(BARE, '', dft($mya->hasDob ? $mya->dob : '') + autofill('off')));
+      $altId = textFld(t('Alt ID / DOB:'), [t('License# etc.')], dft(substr($mya->altId, 2)) + suffix($altSt . $dob));
+    } else { $dob = $altId = $altSt = NULL; }
+
     $suffix = submitTickle(1, t('Wait a day')) . submitTickle(2, t('2 days')) . submitTickle(7, '7') . submitTickle(30, '30') . submitTickle('', t('Auto')) . ' &nbsp; ' . submitTickle($mya->tickle ? 'NONE' : '', t('Save'), 'sm');
     $tickle = dateFld(t('Tickle:'), [t('Followup Date'), t('When to follow up ("Auto" sets an automatic Welcome or Annual date)')], dft($mya->tickle) + w\suffix($suffix));
     $source = item($mya->source, t('Source:'));
@@ -510,7 +516,7 @@ function adminSummary() {
   w\jsx('tickle');
   
   $bigFields = $mya->ok ? 'adminable risks ssnShow' : 'ssnShow adminable risks';
-  return @compact(ray("photo details notes note dob tickle donations active activity relations source helper $bigFields community balance cgfDonations legalName shortName calling signupCo tenure tasks steps dwInfo invited invitedBy proxies proxyFor moves floor minimum achMin risk trust mediaConx count back uid submit"));
+  return @compact(ray("photo details notes note altId tickle donations active activity relations source helper $bigFields community balance cgfDonations legalName shortName calling signupCo tenure tasks steps dwInfo invited invitedBy proxies proxyFor moves floor minimum achMin risk trust mediaConx count back uid submit"));
 }
 
 /**
@@ -651,3 +657,5 @@ function giftsToDate() {
   if ($total) $total = t('for your contributions, totaling ') . $total;
   return u\unite($total, $x, ', ');
 }
+
+function stFld($dft) {return selectFld(BARE, t(''), dft($dft), ['' => t('state')] + db\keyed('abbreviation,abbreviation', 'r_states', 'country_id IN (:US_COUNTRY_ID, :CA_COUNTRY_ID) ORDER BY abbreviation'));}
