@@ -440,6 +440,15 @@ function doit(what, vs) {
   case 'prejoint': $('#edit-old-0').click(function () {this.form.submit();}); break;
 
   case 'invite-link': $('#inviteLink').click(function () {SelectText(this.id);}); break;
+  
+  case 'invite':
+    $('#edit-sign-1').click(function () {
+      $('.form-item-question, .form-item-quote, .form-item-org').show();
+    });
+    $('#edit-org').keypress(function () {
+      if ($(this).val().length > 0) $('.form-item-position, .form-item-website').show();
+    });
+    break;
 
   case 'amtChoice':
     var other = jQuery('.form-item-amount'); 

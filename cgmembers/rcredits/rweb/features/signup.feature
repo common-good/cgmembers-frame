@@ -198,9 +198,9 @@ Scenario: A member sets backing
 Scenario: A member chooses to Step Up
   Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund photo contact donate crumbs proxies work backing"
   And members:
-  | uid  | fullName | flags | coType    |*
-  | .ZZF | Fox Co   | ok,co | nonprofit |
-  | .ZZG | Glo Co   | ok,co | nonprofit |
+  | uid  | fullName | flags | coType    | zip   |*
+  | .ZZF | Fox Co   | ok,co | nonprofit | 02006 |
+  | .ZZG | Glo Co   | ok,co | nonprofit | 02007 |
   And member ".ZZF" has "%STEPUP_MIN" stepup rules
   And member ".ZZG" has "%(%STEPUP_MIN+1)" stepup rules
 
@@ -213,18 +213,18 @@ Scenario: A member chooses to Step Up
   When member ".ZZB" completes form "community/stepup" with values:
   | submit |*
   |        |
-  Then we show "Invite Someone"
+  Then we show "Invite People"
   And we say "status": "info saved|step completed"
   And member ".ZZB" steps left "invite"
 
 Scenario: A member invites
   Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund photo contact donate crumbs proxies work backing stepup"
   When member ".ZZB" completes form "community/invite" with values:
-  | email | trusted | zip   | subject | message |*
-  | a@    |       1 | 01002 | test    | hi!     |
-  Then these "invites":
-  | inviter | invited | zip   | subject | message |*
-  | .ZZB    | %today  | 01002 | test    | hi!     |
+  | sign | quote | org  | position | website |*
+  | 1    | cuz   | MeCo | Boss     | me.co   |
+  Then these "u_shouters":
+  | uid  | quote | org  | title | website |*
+  | .ZZB | cuz   | MeCo | Boss  | me.co   |
   And we show "Account Summary" with:
   | Next Steps |
   | Invite |

@@ -56,7 +56,7 @@ X
     , '_payExtra _orRegular _aSignin _aSignup _aFood', $_payExtra, $_orRegular, atag('/signin'), atagB('/signup/source2=food', 'primary', 'md'), atagB('', 'warning'));
     $img = item(tr('<img src="%BASE_URL/rcredits/images/pages/simple-gifts-purchase.jpg" />'));
   } elseif ($mya and $mya->canManage) {
-    $foodId = db\get('uid', 'users', "name='foodfund'");
+    $foodId = r\foodFundId();
     if ($recurs = db\get('id,period,amount', 'tx_templates', 't.from=:payer AND t.to=:foodId AND t.end IS NULL', ray('from foodId', $mya->id, $foodId))) {
       extract($recurs);
       $recurs = hidFld(serialize($recurs));

@@ -388,6 +388,30 @@ body.page-partner blockquote {font-size:14px;}
 
 /* Invite */
 #inviteLink {border:1px solid silver; background-color:lightyellow; color:silver;}
+#frm-invite #edit-subtext h4 {display:inline-block; margin:10px 0 0px 30px; background-color:lightyellow;}
+#frm-invite .form-item-question,
+#frm-invite .form-item-quote,
+#frm-invite .form-item-org,
+#frm-invite .form-item-position,
+#frm-invite .form-item-website {display:none;}
+
+/* Shouters */
+#frm-shouters .footnote {color:red;}
+#frm-shouters #edit-signed {font-weight:bold;}
+#frm-shouters .row {display:block; width:100%; color:black;}
+#frm-shouters .cell {padding:0 5px 0 0;}
+#frm-shouters .fullName {color:darkblue; font-weight:bold;}
+#frm-shouters .fullName::before {
+  display:inline-block;
+  width:15px;
+  content:"•";
+  font-weight:bold;
+  font-size:110%;
+  color:silver;
+}
+#frm-shouters .quote {display:block; width:90%; padding-left:35px; font-style:italic; color:#666666; font-weight:normal;}
+#frm-shouters .quote::before,
+#frm-shouters .quote::after {content:"\""; padding:0 1px; color:silver;}
 
 /* Export */
 .form-item-chimpSet, .form-item-chimpSet>.control-label {display:none;}
@@ -687,13 +711,14 @@ body.page-partner blockquote {font-size:14px;}
 #frm-summary .admin .control-data {width:auto; max-width:auto;}
 #frm-summary #left2.admin .control-data,
 #frm-summary #right2.admin .control-data {width:450px; max-width:500px;}
-#frm-summary #left2.admin #edit-details .control-data {width:auto; max-width:650px;}
-#frm-summary #left2.admin #edit-details>.control-data,
+/* #frm-summary #left2.admin #edit-details .control-data {width:auto; max-width:650px;}
+#frm-summary #left2.admin #edit-details>.control-data, */
+#frm-summary #edit-details .well {padding:0 19px;}
 #frm-summary #left2.admin .scripts {width:100%; max-width:100%;}
 #frm-summary .admin textarea {width:450px;}
 #frm-summary .admin .form-checkboxes {width:500px; max-width:500px;}
 #frm-summary #edit-notes .control-data {width:450px; max-height:150px; overflow-x:hidden; overflow-y:scroll; overflow-wrap:break-word}
-#frm-summary #edit-tickle {max-width:120px; display:inline-block;}
+#frm-summary #edit-tickle {max-width:135px; display:inline-block;}
 #frm-summary #edit-photo img {width:100px; margin-top:20px;}
 #frm-summary #edit-creditlimit .help-block,
 #frm-summary #edit-committed .help-block,
@@ -720,6 +745,10 @@ body.page-partner blockquote {font-size:14px;}
 #frm-summary #edit-choiceList a div:first-child {font-size:115%; font-weight:bold; width:43px; color:darkgreen; padding-left:0;}
 #frm-summary #edit-choiceList a:hover {text-decoration:none; background-color:aliceblue; max-width:420px;}
 #frm-summary #edit-choiceList a small {color:silver;}
+
+#frm-summary #edit-altid {display:inline-block; width:180px;}
+#frm-summary #edit-altSt {display:inline-block; width:80px; margin-left:10px;}
+#frm-summary #edit-dob {display:inline-block; width:135px; margin-left:10px;}
 
 /* Coupons and Discounts */
 #frm-coupons #edit-buttons a.btn {margin:0 100% 10px 0;}

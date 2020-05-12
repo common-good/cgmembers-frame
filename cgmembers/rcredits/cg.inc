@@ -79,6 +79,24 @@ function insert($table, $idField, $record) {
 }
 
 /**
+ * Add a date stamp and agent's initials to the given note (before updating the notes field with it).
+ */
+function stampNote($note) {
+  global $mya;
+
+  if ($mya->proSe) {
+    $rep = t('self');
+  } elseif ($mya->superAdmin) {
+    $rep = 'sadmin';
+  } else {
+    list ($first, $last) = u\parseName($mya->agentA->fullName);
+    $rep = mb_strtolower(($first ? $first[0] : '') . $last);
+  }
+  $date = u\fmtDate();
+  return "$date  $rep: $note\n";
+}
+
+/**
  * Say whether a given payment is giving back rewards to the community.
  * @param int $payer: record id of who is maybe giving back
  * @param int $payee: record id of payee
@@ -873,6 +891,7 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     'tx_templates:from',
     // u_groups
     'u_groupies:uid',
+    'u_shouters:uid',
     'users:jid',
     'users:uid:D',
     'users:helper',
@@ -1637,3 +1656,4 @@ function allKnowing() {global $mya; return ($mya->superAdmin and $mya->agentA->v
 function clubid() {return r\serverUid();} // temporarily use the region as the club
 function pic($flnm) {if (!is_dir(R_PICTURE_DIR)) mkdir(R_PICTURE_DIR); return R_PICTURE_DIR . $flnm;}
 function isBank($uid) {return ($uid == BANK_IN_ID or $uid == BANK_OUT_ID);}
+function foodFundId() {return db\get('uid', 'users', "name='foodfund'") ?: 0;}

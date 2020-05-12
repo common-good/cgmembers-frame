@@ -23,12 +23,14 @@ function formStepUp($form, &$sta, $args = '') {
   $fromMe = '`from`=:myid';
   foreach (ray('amount portion amtMax') as $k) $set[] = "IF($fromMe, `$k`, NULL) AS `$k`";
   $set = join(', ', $set);
-  
+  list ($distance, $noGeo) = [DISTANCE_BETWEEN, NO_DISTANCE];
+  list ($lat, $lon, $zip) = [$mya->latitude, $mya->longitude, $mya->zip];
+
   // xly means recurring with some periodicity: daily, weekly, etc. ("x"-ly)
   $sql = <<< X
     SELECT DISTINCT x.*,u.uid,u.fullName FROM (
     
-      SELECT 0 AS xly, $fromMe AS mine, CONCAT_WS('-', 'r', r.to, $fromMe) AS recK, 
+      SELECT 0 AS xly, $fromMe AS mine, CONCAT_WS('-', 'r', r.to, $fromMe) AS recK,
         r.to, id, IF($fromMe, IF(r.portion>0, IF(amtMax>0, 'pctmx', 'pct'), 'tx$'), 'pct') AS `when`, $set
       FROM tx_rules r
       WHERE r.action=:ACT_SURTX AND r.from>0 AND r.to>0 AND r.payeeType=:REF_ANYCO AND IFNULL(r.end, :NOW+1) > :NOW
@@ -42,15 +44,20 @@ function formStepUp($form, &$sta, $args = '') {
     ) x 
     LEFT JOIN users u ON u.uid=x.to
     LEFT JOIN r_company c USING(uid)
-    WHERE (mine AND NOT xly) OR (u.:IS_CO AND c.coType=:CO_NONPROFIT)
+    WHERE (mine AND NOT xly)
+      OR (u.:IS_CO AND c.coType=:CO_NONPROFIT AND (
+        IF($noGeo, LEFT(u.zip,3) = LEFT(:zip,3), $distance < :NEIGHBOR_MAX * 2) OR u.uid IN (:globalOrgs)
+      ))
     GROUP BY mine,x.to,xly 
     HAVING COUNT(id)>=:STEPUP_MIN OR mine
     ORDER BY mine, fullName, uid, xly
 X;
 
+  $info = ray('myid globalOrgs lat lon zip', $myid, [CGID, r\foodFundId()], $mya->latitude, $mya->longitude, $mya->zip);
+  $q = db\q($sql, $info);
+
   $classes = ray('org amt when max');
   $hdrs = u\ray2row(ray(t('Organization, Amount, When, Max')), $classes);
-  $q = db\q($sql, compact('myid'));
 
   if ($recs = $q->fetchAllAssoc('recK')) foreach ($recs as $rec) {
     extract((array) $rec);

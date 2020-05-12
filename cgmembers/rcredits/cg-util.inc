@@ -967,6 +967,7 @@ function tableRow($row) {
  * Convert the given array to an HTML div row (for within class "container").
  */
 function ray2row($row, $classes = []) {
+  if (!$classes and $row and !is_numeric(key($row))) list ($row, $classes) = [array_values($row), array_keys($row)];
   foreach ($row as $i => $v) {
     if ($class = nn($classes[$i])) $class = ' ' . $class;
     $res[] = "<div class=\"cell$class\">$v</div>";
