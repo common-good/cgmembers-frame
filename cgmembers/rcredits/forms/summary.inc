@@ -147,7 +147,7 @@ function formSummary_validate($form, &$sta) {
 
   if (in(op($sta), 'openCompany openJoint')) return;
   extract(just('uid legalName creditLimit dob altId altSt active helper moves tickle adminable', $sta['input'], NULL));
-  if (nn($tickle, NULL) !== '' and $err = u\badDate($tickle)) return say($err, 'tickle');
+  if ($tickle !== '' and $err = u\badDate($tickle)) return say($err, 'tickle');
 
   if ($dob and !formBasic_validate($form, $sta, FALSE, 'dob')) return;
   if ($altId xor $altSt) return say(t('You must give both an Alternate ID and a state or neither. If it\'s not a driver\'s license, choose "AA" and describe the ID type in one or two words at the end of the number.'), 'altId');
@@ -194,7 +194,7 @@ function formSummary_submit($form, &$sta) {
   if (!$mya->cAdmin) u\EXPECT(!array_diff(array_keys($args), ray('uid tickle note')), 'too many unpermitted changing fields in ' . pr($args));
 
   if (!$tickle) {
-    $tickleDone = $mya->ok ? ($note and !$tickle and $mya->tickle) : 'activate';
+    $tickleDone = $mya->ok ? ($note and $mya->tickle) : 'activate';
     list ($zot, $tickle) = $mya->nextTickle($tickleDone);
   }
 
@@ -206,10 +206,11 @@ function formSummary_submit($form, &$sta) {
   if ($dob) $mya->update(compact('dob')); // must precede activate()
   if ($altId) $mya->update(ray('altId', $altSt . $altId)); // must precede activate()
 
+/*
   if ($federalId and $federalId != $mya->federalId) {
     $mya->update(compact('federalId')); // must precede activate()
     $mya->update('ssnData', '');
-  }
+  } */
   
   if ($mya->cAdmin or $mya->admin) setRisksAndFlags($mya, @$risks, @$adminable); // don't test for isset (allow turning off all bits); must precede activate() because that function sets ssnOff bit
     
@@ -233,8 +234,7 @@ function formSummary_submit($form, &$sta) {
   }
   
   $fields = 'notes';
-  foreach (ray('legalName tickle moves helper') as $k) if ($$k) $fields .= ' ' . $$k; // don't overwrite
-
+  foreach (ray('legalName tickle moves helper') as $k) if ($$k) $fields .= " $k"; // don't overwrite
   $mya->update(@compact(ray($fields)));
   unset($DBTX);
   
@@ -527,7 +527,7 @@ function adminSummary() {
  */
 function submitTickle($v, $text, $size = 'xs') {
   if ($v == 'NONE') return w\rent(w\submi($text, 'primary', $size)); // not change to tickler
-  if ($v) $v = u\fmtDate(strtotime("+$v days"), TRUE);
+  if ($v) $v = date('Y-m-d', strtotime("+$v days"));
   return w\rent(w\submi($text, 'primary', $size, ray('class tickle', 'tickle', $v)));
 }
 
