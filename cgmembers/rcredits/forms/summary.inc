@@ -499,7 +499,7 @@ function adminSummary() {
 
     $note = textFld(t('New Note:'), [t('Type a Note Here'), t('Abbreviations: PM=phone msg EM=email msg. Be sure to say what you left a message <i>about</i> (for example "PM setup")')]);
 
-    if ($mya->superAdmin or !$mya->hasDob) if (!$mya->hasDob) {
+    if ($mya->superAdmin or !$mya->hasDob) {
       $altSt = rendA('altSt', stFld(substr($mya->altId, 0, 2)));
       $dob = rendA('dob', dateFld(BARE, '', dft($mya->hasDob ? $mya->dob : '') + autofill('off')));
       $altId = textFld(t('Alt ID / DOB:'), [t('License# etc.')], dft(substr($mya->altId, 2)) + suffix($altSt . $dob));
