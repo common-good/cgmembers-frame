@@ -1,3 +1,8 @@
+2020-05-13 feature/step-bugs
+. fixed bug in work.inc that omitted "Next"
+. fixed bug in stepup.inc that failed to delete dangling invoice when terminating a recurring donation
+. added "invite someone" to our response to covid-19
+
 2020-05-12 feature/alt-id
 . created field and input methods for drivers license
 

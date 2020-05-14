@@ -1623,6 +1623,17 @@ function disputeTx($xid, $reason = '') {
   return TRUE;
 }
 
+/**
+ * Mark a rule (or template) ended (now) and delete any related unpaid invoices.
+ * @param bool $recurs: template not rule
+ * @param int $id: rule or template id
+ */
+function endRule($recurs, $id) {
+  $tnm = $recurs ? 'tx_templates' : 'tx_rules';
+  db\update($tnm, ray('id end', $id, now()), 'id');
+  if ($recurs) db\del('r_invoices', 'recursId=:id AND status<:TX_PAID', compact('id'));
+}
+
 function recurDesc($period, $periods = 1) {
   $p = array_search($period, ray(PERIODS));
   return $periods > 1 ? t('every %n %units', 'n units', $periods, ray(PERIODS_PLURAL)[$p]) : ray(PERIODLY)[$p];

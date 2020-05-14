@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.53c'; // software version
+const R_VERSION = '3.53e'; // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -379,6 +379,8 @@ const S_PARTNER = 'signup fund partnersteptwo partnerend';
 const S_MEM_TASKS = 'person co'; // followup tasks for members
 const S_PTASKS = 'person card sell voice partner';
 const S_COTASKS = 'co co2 partner';
+
+const S_OPTIONAL = 'discount stepup'; // optional steps
 
 // Permissions, options, and flags (flags field in account record)
 // If we need more bits, create a flags2 field and make the B_ defs negative or 32-63 for setBit

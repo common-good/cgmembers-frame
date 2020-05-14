@@ -17,18 +17,12 @@ function formSummary($form, &$sta) {
   global $base_url;
   global $mya; $myid = $mya->id;
 
-  $special = t('<h4>%PROJECT response to COVID-19</h4>It\'s up to us. Support our local businesses and nonprofits!<ul><li><%aBuyCredit>Buy Credit</a></li><li><%aStepups>Make Step-up Contributions</a></li><li> <%aBack>Increase Your Backing</a></li></ul>', '_aBuyCredit _aStepups _aBack', atag('/community/buy-credit'), atag('/community/stepup'), atag('/community/backing'));
+  $special = t('<h4>%PROJECT response to COVID-19</h4>It\'s up to us. Support our local businesses and nonprofits!<ul><li><%aBuyCredit>Buy Credit</a></li><li><%aStepups>Make Step-up Contributions</a></li><li> <%aBack>Increase Your Backing</a></li><li><%aInvite>Invite Someone</a></li></ul>', '_aBuyCredit _aStepups _aBack _aInvite', atag('/community/buy-credit'), atag('/community/stepup'), atag('/community/backing'), atag('/community/invite'));
   $special = ($mya->ok and !$mya->co) ? compact('special') : [];
   
   if ($mya->closed) say(t('Your account is closed, but you can still see your account history.'));
 
   $stepUrl = $mya->nextStepUrl('', $msg);
-/*
-  if ($stepUrl == 'signup' and $info = r\relation('reid,code', "other=:myid AND :IS_CUSTOMER AND code<>''", compact('myid'))) {
-    extract($info);
-    $stepUrl .= "/reid=$reid&customer=$code";
-  }
-  */
   $extras = '<br>' . u\fmtPhone($mya->phone) . " ($mya->faxetc)<br>$mya->email ";
 
   if ($mya->admin2 and !$mya->proSe) { // some kind of admin (but not self)

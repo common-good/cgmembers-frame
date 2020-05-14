@@ -10,7 +10,7 @@ use CG\Db as db;
  * Exchange USD for rCredits or vice-versa (the Bank tab)
  */
 function formBacking($form, &$sta, $args = '') {
-  global $mya;
+  if (!$mya = w\eLinkAcct($sta, $args, 'acct')) return;
   
   $title = t('Backing Promise');
   $subtext = t(<<< X
@@ -48,7 +48,8 @@ function formBacking_validate($form, &$sta) {
 }
   
 function formBacking_submit($form, &$sta) {
-  global $mya;
+  $mya = w\eLinkAcct($sta); 
+
   extract(just('amount', $sta['input']));
   if ($amount < $mya->backing) say('backing in effect');
   $mya->update('backing backingDate', $amount, today());
