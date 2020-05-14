@@ -151,7 +151,7 @@ function formStepUp_submit($form, &$sta) {
     $match = ray($matchFlds, $pct ? 0 : $amt, $pct ? $amt / 100 : 0, $period == 'pctmx' ? $amtMax : NULL);
     $purpose = t('donation'); // description gets elaborated in be\getTxs()
     
-    if (in($period, PERIODS)) { // periodic donation
+    if ($xly = in($period, PERIODS)) { // periodic donation
       $tnm = 'tx_templates';
       $info = ray('action from to periods', ACT_PAY, $myid, $uid, 1);
       $matchFlds .= ' period';
@@ -163,7 +163,7 @@ function formStepUp_submit($form, &$sta) {
       
     if ($res = db\get('id,amount,`portion`,amtMax', $tnm, u\where($info) . ' AND IFNULL(end, :NOW+1) > :NOW', $info)) {
       if ($match == just($matchFlds, $res)) continue; // no change; done with this organization
-      db\update($tnm, ray('id end', $res['id'], now()), 'id'); // cancel the old rule, to start a new one
+      r\endRule($xly, $res['id']); // cancel the old rule, to start a new one
     }
     $info += $match + ray('purpose start', $purpose, now());
     if ($amt) db\insert($tnm, $info); // setting amt to zero ends the old rule without creating a new one

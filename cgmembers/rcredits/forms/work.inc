@@ -31,11 +31,8 @@ function formWork($form, &$sta, $args = '') {
     'companyOptions' => boxesFld('', '', @$copts, $companyOptions), 
   );
   $companyInfo = fieldSet('companyInfo', $companyInfo, BARE);
-
-
-  $submit = t('Save');
   
-  return cgform(compact(ray('title calling companyInfo submit')));
+  return cgform(compact(ray('title calling companyInfo')) + setupFoot());
 }
 
 function formWork_validate($form, &$sta) {
