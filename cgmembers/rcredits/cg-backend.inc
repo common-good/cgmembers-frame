@@ -843,6 +843,67 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   return [TRUE, $msg, $subs + ray('success nvid', TRUE, $nvid)];
 }
 
+/**
+ * Create an invoice and return status and messages.  No error messages generated.
+ * call by: list ($ok, $msg, $args) = be\createInvoiceBase(...);
+ * @param acct $payeeA: acct object for payee (usually current user)
+ * @param acct $payerA: acct object for payer
+ * @param numeric $amount: the invoiced amount
+ * @param string $purpose: description of the transaction's purpose (user input)
+ * @param assoc $extra:
+ *    goods: what we're trading in, defaults to FOR_GOODS
+ *    shid: record id of related record in r_shares
+ *    status: ?
+ *    created: UNIXtime
+ * @param int $recursId: record ID of related record in tx_templates (if any)
+ * @return simple array: 
+ *    ok: success?
+ *    index: index to result message string (if success, the index begins with "report ")
+ *    subs: replacement parameters, specific to the message
+ */
+function createInvoiceBase($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra = [], $recursId = 0) {
+  global $channel;
+  
+  u\EXPECT(compact(ray('payeeA payerA amount purpose')), 'acct acct float string');
+  $ks = 'status';
+  extract(just($ks, $extra));
+  extract(just('goods created', $extra, [FOR_GOODS, now()]));
+  $flags = 0;
+	foreach (justNOT("status shid coupon coupid force inv api request created for", $extra) as $k => $v) {
+    u\setBit($flags, $k, $v);
+    unset($extra[$k]); // don't leave bits in extras (data field)
+  }
+  list ($payee, $payer) = array($payeeA->id, $payerA->id);
+  u\setDft($purpose, $why = ray(R_WHYS)[$goods]);
+  $subs = ray('myName otherName otherEmail otherPhone amount why purpose did op', $payeeA->fullName, $payerA->fullName, $payerA->email, u\fmtPhone($payerA->phone), u\fmtAmt($amount), $why, $purpose, t('charged'), t('charged'));
+  if ($err = u\badAmount($amount, '>0')) return r\txErr($err, $subs);
+  if ($err = r\txPermErr($payeeA, $payerA, TRUE)) return r\txErr($err, $subs);
+  if (r\dupTx($payee, $payer, -$amount)) return r\txErr(t('duplicate transaction'), $subs);
+  
+  u\setDft($status, ($channel != TX_FOREIGN and r\relation(':IS_AUTOPAY', $payee, $payer)) ? TX_APPROVED : TX_PENDING);
+  $data = serialize($extra);
+  $info = compact(ray('amount payer payee status purpose created flags data recursId'));
+  $nvid = db\insert('r_invoices', $info, 'nvid');
+  /* $payeeA->update('lastTx', [$nvid, $payer - $payee, round(-$amount, 2), $created, 'inv']); */
+
+  if ($status == TX_PENDING) {
+    $link = $payeeA->makeDo('inv', $nvid); // link to pay/deny
+    //$payerA->update(ray('lastTx', array($nvid, $payee - $payer, round($amount, 2), $created, 'inv')));
+    $subs += ray('_a1 reply email phone', $link, $payee, $payeeA->email, u\fmtPhone($payeeA->phone));
+    r\message($payer, 'new invoice', $subs); // tell other party by email about this invoice
+  } else { // pre-approved!
+    if (!$payerA->shortfall(TX_TRANSFER, $amount)) { // don't try to pay yet if short
+      list($ok, $msg) = be\payInvoice($nvid);
+      if (!$ok) r\tellAdmin(t('invoice payment failed'), compact('msg') + $subs + $info);
+    }
+  }
+
+  $msg = 'report tx';
+//  if ($payeeA->cttyRewardy) $msg .= '|for why';
+  if ($amount > 0) $msg .= '|balance unchanged';
+  return [TRUE, $msg, $subs + ray('success nvid', TRUE, $nvid)];
+}
+
 /* /\** */
 /*  * Send an email invoice to a nonmember, inviting them to join. */
 /*  * @param string $name: name of person to invoice */
