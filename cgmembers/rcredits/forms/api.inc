@@ -46,10 +46,12 @@ function api($args = null) {
   }
   
   switch($op) {
+  case 'validate-code':
+    return validateCodes($userId, $requests);
   case 'signup':
     return signups($userId, $requests);
-  case 'invoices':
-    return invoices($userId, $requests);
+  case 'generate-invoices':
+    return generateInvoices($userId, $requests);
   case 'pay':
     /* return pay($userId, $requests); */
   case 'invoice-status':
@@ -73,6 +75,24 @@ function okResponse($op, $userId, $responses, $status = 'OK') {
   exit(json_encode($response));
 }
 
+function validateCodes($userId, $requests) {
+  $responses = [];
+  foreach ($requests as $request) {
+    extract(just('cgId fullName email phone address city state zipCode', $request, null));
+    $userA = r\acct($cgId);
+    if (! $userA) {
+      $responses[] = [ 'status' => 'BAD', 'errors' => [ 'Common Good Account not found' ], 'cgId' => $cgId];
+      continue;
+    }
+    if (! u\similar($userA->fullName, $fullName, 5, .5) or !($userA->phone == u\fmtPhone(@$phone, '+n') or $userA->email == $email)) {
+      $responses[] = [ 'status' => 'BAD', 'errors' => [ t('That does not appear to be your correct %PROJECT member ID.') ], 'cgId' => $cgId];
+      continue;
+    }
+    $responses[] = [ 'status' => 'OK', 'cgId' => $cgId ];
+  }
+  okResponse('validate-codes', $userId, $responses);
+}
+
 function signups($userId, $requests) {
   $responses = [];
   foreach ($requests as $request) {
@@ -87,7 +107,22 @@ function signups($userId, $requests) {
   okResponse('signup', $userId, $responses);
 }
 
-function invoices($userId, $data) {
+function generateInvoices($userId, $data) {
+  $responses = [];
+  foreach($requests as $request) {
+    generateInvoice($request);
+  }
+  okResponse('generate-invoices', $userId, $responses);
+}
+
+function generateInvoice($request) {
+  extract(just('amount payerId billingDate dueDate smtInvoiceId purpose'), $request, null);
+  list($success, $msg, $subs) = be\invoice($myA, r\acct($payerId), $amount, $purpose);
+  if ($success) {
+    
+    return compact(ray('smtInvoiceId status errors payer amount cgInvoiceId'));
+}
+
   /* global $mya; */
   
   /* $responses = []; */
