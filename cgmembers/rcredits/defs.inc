@@ -562,7 +562,8 @@ const TX_CRON = 5;
 const TX_LINK = 6; // user clicked a no-signin link
 const TX_AJAX = 7;
 const TX_FOREIGN = 8; // user clicked a "Pay with CG" button or request an app to charge them
-const TX_CHANNELS = 'Sys SMS Web App Tone Cron Link Ajax Foreign'; // can't translate, because used in t() (find a solution)
+const TX_API = 9;
+const TX_CHANNELS = 'Sys SMS Web App Tone Cron Link Ajax Foreign API'; // can't translate, because used in t() (find a solution)
 
 // Transaction types
 const TX_TRANSFER = 0; // normal fund transfer (usually for actual goods and services) -- not creating rC
