@@ -944,6 +944,27 @@ function weShowWith($title0, $content = FALSE, $mustBePresent = TRUE) {
 
 function makePicture($photo, $a) {return $a->update(compact('photo'));}
 
+function hitAPI($op, $userId, $password, $requests) {
+  global $rAPIResult;
+  include_once __DIR__ . '/forms/api.inc';
+  $userId = t\fullQid2($userId);
+  $fixedRequests = [];
+  foreach ($requests as $request) {
+    fixData($request);
+    $request['cgId'] = t\fullQid2($request['cgId']);
+    $fixedRequests[] = $request;
+  }
+  $overall = ['op'=>$op, 'userId'=>$userId, 'password'=>$password, 'requests'=>$fixedRequests];
+  $json = json_encode($overall);
+  $result_json = w\api($json);
+  $result = json_decode($result_json);
+  echo '<br />result: ';
+  print_r($result);
+  echo '<br />';
+  $rAPIResult = (array)$result;
+  print_r($rAPIResult);
+  return TRUE;
+}
 /**
  * Send an RPC API request to the server, for rPOS.
  * @todo: after everyone is up to version 217, add penultimate param: $proof = 'calc'
