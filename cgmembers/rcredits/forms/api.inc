@@ -31,12 +31,13 @@ use CG\Web as w;
  */
 function api($args = null) {
   global $mya;
+  global $channel = TX_API;
   
   $data = (array)json_decode($args);
   extract(just('op userId password requests', $data, NULL));
   $mya = r\acct($userId);
   if (! $mya) {
-    errorResponse($op, $userId, ["User id $userId not found"]);
+    errorResponse($op, $userId, ["User id $userId not found"]); // combine these two!!
   }
   if (! $mya->passwordOkay($password, 'pass')) {
     errorResponse($op, $userId, [ "Incorrect password for user $userId" ]);
@@ -44,92 +45,167 @@ function api($args = null) {
   if (is_null($requests) or ! is_array($requests) or $requests = []) {
     errorResponse($op, $userId, [ "Improperly formed request" ]);
   }
+
   
   switch($op) {
-  case 'validate-code':
-    return validateCodes($userId, $requests);
-  case 'signup':
-    return signups($userId, $requests);
-  case 'generate-invoices':
-    return generateInvoices($userId, $requests);
-  case 'pay':
-    /* return pay($userId, $requests); */
-  case 'invoice-status':
-    /* return invoiceStatus($userId, $requests); */
+  case 'validate-user-ids':  return validateUserIds($userId, $requests);
+  case 'sign-up-user':       return signUpUsers($userId, $requests);
+  case 'generate-invoices':  return generateInvoices($userId, $requests);
+  case 'make-payments':      return makePayments($userId, $requests);
+  case 'get-invoice-status': return getInvoiceStatus($userId, $requests);
   default:
-    return '';
+    return errorResponse($op, $userId, ['Invalid API operation']);
   }
 }
 
 function errorResponse($op, $userId, $errors, $status = 'BAD') {
-  $response = ['op' => $op . "-response", 'userId' => $userId, 'status' => $status,
-               'errors' => $errors];
+  $op += '-response';
+  $response = compact('op userId errors status');
   header('Access-Control-Allow-Origin: *'); // allow access from web browsers
   exit(json_encode($response));
 }
 
 function okResponse($op, $userId, $responses, $status = 'OK') {
-  $response = ['op' => $op . "-response", 'userId' => $userId, 'status' => $status,
-               'responses' => $responses];
+  $op += '-response';
+  $response = compact('op userId status responses');
   header('Access-Control-Allow-Origin: *'); // allow access from web browsers
   exit(json_encode($response));
 }
 
-function validateCodes($userId, $requests) {
+function validateUserIds($userId, $requests) {
   $responses = [];
   foreach ($requests as $request) {
-    extract(just('cgId fullName email phone address city state zipCode', $request, null));
-    $userA = r\acct($cgId);
-    if (! $userA) {
-      $responses[] = [ 'status' => 'BAD', 'errors' => [ 'Common Good Account not found' ], 'cgId' => $cgId];
-      continue;
-    }
-    if (! u\similar($userA->fullName, $fullName, 5, .5) or !($userA->phone == u\fmtPhone(@$phone, '+n') or $userA->email == $email)) {
-      $responses[] = [ 'status' => 'BAD', 'errors' => [ t('That does not appear to be your correct %PROJECT member ID.') ], 'cgId' => $cgId];
-      continue;
-    }
-    $responses[] = [ 'status' => 'OK', 'cgId' => $cgId ];
+    $response[] = validateUserId($userId, $request);
   }
-  okResponse('validate-codes', $userId, $responses);
+  okResponse('validate-user-ids', $userId, $responses);
 }
 
-function signups($userId, $requests) {
+function validateUserId($userId, $request) {
+  global $mya;
+  extract(just('cgId fullName email phone address city state zipCode', $request, null));
+  $userA = r\acct($cgId);
+  if (! $userA) { return [ 'status' => 'BAD', 'errors' => [ 'Common Good Account not found' ], 'cgId' => $cgId]; }
+  if (! u\similar($userA->fullName, $fullName, 5, .5) or !($userA->phone == u\fmtPhone(@$phone, '+n') or $userA->email == $email)) {
+    return [ 'status' => 'BAD', 'errors' => [ t('That does not appear to be your correct %PROJECT member ID.') ], 'cgId' => $cgId];
+  }
+  return [ 'status' => 'OK', 'cgId' => $cgId ];
+}
+
+function signUpUsers($userId, $requests) {
   $responses = [];
   foreach ($requests as $request) {
-    extract(just('firstName lastName email phone address1 address2 city state zip_code userPassword nonce', $request, null));
-    $fullName = "$firstName $lastName";
-    $zip = $zip_code;
-    $address = "$address1, $address2";
-    $newa = new r\Acct(compact(ray('fullName email phone address city state zip')));
-    $newa->update(['pass' => $userPassword]);
-    $responses[] = ['nonce' => $nonce, 'status' => 'OK', 'cgid' => $mya->mainQid];
+    responses[] = signUpUser($userId, $request);
   }
   okResponse('signup', $userId, $responses);
 }
 
-function generateInvoices($userId, $data) {
+function signUpUser($userId, $request) {
+  extract(just('fullName email phone address city state zip_code userPassword nonce', $request, null));
+  $zip = $zip_code;
+  $newa = new r\Acct(compact(ray('fullName email phone address city state zip')));
+  $newa->update(['pass' => $userPassword]);
+  return ['nonce' => $nonce, 'status' => 'OK', 'cgid' => $mya->mainQid];
+}
+
+function generateInvoices($userId, $requests) {
   $responses = [];
   foreach($requests as $request) {
-    generateInvoice($request);
+    responses[] = generateInvoice($request);
   }
   okResponse('generate-invoices', $userId, $responses);
 }
 
 function generateInvoice($request) {
-  extract(just('amount payerId billingDate dueDate smtInvoiceId purpose'), $request, null);
-  list($success, $msg, $subs) = be\invoice($myA, r\acct($payerId), $amount, $purpose);
+  global $myA;
+  extract(just('amount payerId billingDate dueDate smtInvoiceId purpose status'), $request, null);
+  $payerA = r\acct($payerId);
+  if (! $payerA) { return ray('smtInvoiceId status payerId amount errors', $smtInvoiceId, $status, $payerId, $amount, ['Payer not found']); }
+  $existing = db\get(ray('nvid, status', 'r_invoices', ray('amount payer payee purpose created', $amount, $payerA->uid, $myA->uid, $purpose, $billingDate)));
+  if ($existing) {
+    extract(just('nvid status', $existing));
+    $status = statusString($status) . '-DUPLICATE';
+    if ($status == 'BAD-DUPLICATE') {
+      return ray('smtInvoiceId status payerId amount errors', $smtInvoiceId, 'BAD', $payerId, $amount, ['CG system internal error']);
+    }
+    return ray('smtInvoiceId status payerId amount cgInvoiceId', $smtInvoiceId, $status, $payerId, $amount, $nvid);
+  }
+  // Not a duplicate
+  list($success, $msg, $subs) = be\invoice($myA, $payerA, $amount, $purpose, FOR_GOODS, ['created' => $billingDate]);
   if ($success) {
-    
-    return compact(ray('smtInvoiceId status errors payer amount cgInvoiceId'));
+    $status = statusString($subs['status']);
+    if ($status == 'BAD') {
+      return ray('smtInvoiceId status payerId amount errors', $smtInvoiceId, 'BAD', $payerId, $amount, ['CG system internal error']);
+    }
+    $cgInvoiceId = $subs['nvid'];
+    return compact(ray('smtInvoiceId status payerId amount cgInvoiceId'));
+  } else {
+    $status = 'BAD';
+    $errors = [ $msg ];
+    return compact(ray('smtInvoiceId status errors payerId amount'));
+  }
 }
 
-  /* global $mya; */
-  
-  /* $responses = []; */
-  /* $requests = $data['requests']; */
-  /* foreach ($requests as $request) { */
-  /*   extract(just('amount payer billingDate dueDate smtInvoiceId purpose', $request, NULL)); */
-  /*   $payerA = r\acct($payer); */
-  /*   list($ok, $msg, $args, ?, $nvid) = be\invoice($mya, $payer, $amount, $purpose, FOR_NONGOODS); */
-  /*   if ($ok) { */
+function makePayments($userId, $requests) {
+  $responses = [];
+  foreach($requests as $request) {
+    responses[] = makePayment($request);
+  }
+  okResponse('make-payments', $userId, $responses);
+}
+
+function makePayment($request) {
+  global $myA;
+  extract(just('amount payeeId billingDate purpose smtInvoiceId'), $request, null);
+  $payeeA = r\acct($payeeId);
+  if (! $payeeA) { return ray('smtInvoiceId status errors', $smtInvoiceId, 'BAD', ['payee account not found']); }
+  $existing = db\get('xid', 'txs_prime', 'amt=:amt and uid1=:uid1 and uid2=:uid2 and created=:created and for1=:for1',
+                     ray('amt uid1 uid2 created for1', $amount, $myA->uid, $payeeA->uid, $billingDate, $purpose));
+  if ($existing) {
+    $status = 'DUPLICATE';
+    return compact('smtInvoiceId status');
+  }
+  list($ok, $msg, $subs) = be\transfer('payment', $myA, $payeeA, $amount, $purpose, FOR_GOODS, ['created'=>$billingDate]);
+  if ($ok) {
+    return ray('smtInvoiceId status', $smtInvoiceId, 'OK');
+  }
+  $errors = [ t($msg, $subs) ];
+  switch ($msg) {
+  case 'short from vague':
+  case 'short from':
+  case 'short to':
+    $status = 'NSF';
+    break;
+  default:
+    $status = 'BAD';
+  }
+  return compact('smtInvoiceId status errors');
+}
+
+function getInvoiceStatus($userId, $requests) {
+  $responses = [];
+  foreach($requests as $request) {
+    responses[] = getOneInvoiceStatus($request);
+  }
+  okResponse('get-invoice-status', $userId, $responses);
+}
+
+function getOneInvoiceStatus($request) {
+  global $myA;
+  extract(just('cgInvoiceId amount payerId', $request));
+  $payerA = r\acct($payerId);
+  if (! $payerA) { return ray('cgInvoiceId amount payerId status errors', $cgInvoiceId, $amount, $payerId, 'BAD', ['payer account missing']); }
+  $status = db\get('status', 'r_invoices', ['nvid'=>$cgInvoiceId, 'amount'=>$amount, 'payer'=>$payerA->uid, 'payee'=>$myA->uid]);
+  if (! $status) { return ray('cgInvoiceId amount payerId status', $cgInvoiceId, $amount, $payerId, statusString($status)); }
+  return ray('cgInvoiceId amount payerId status errors', $cgInvoiceId, $amount, $payerId, 'BAD', ['no invoice found']);
+}
+
+function statusString($status) {
+  if ($status >= TX_PAID) return 'PAID';
+  switch ($status) {
+  case TX_DELAYED: return('DELAYED');
+  case TX_DENIED: return('DENIED');
+  case TX_PENDING: return('PENDING');
+  case TX_APPROVED: return('APPROVED');
+  default: return('BAD');
+  }
 }
