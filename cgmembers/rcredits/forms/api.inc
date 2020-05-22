@@ -31,22 +31,36 @@ use CG\Web as w;
  */
 function api($args = null) {
   global $mya;
-  global $channel = TX_API;
-  
+  global $channel; $channel = TX_API;
+
+  echo 'here1 ';
   $data = (array)json_decode($args);
+  print_r($data);
   extract(just('op userId password requests', $data, NULL));
+  echo '<br />';
+  print_r($op);
+  echo '<br />';
+  print_r($userId);
+  echo '<br />';
+  print_r($password);
+  echo '<br />';
+  print_r($requests);
+  echo '<br />';
+  echo 'here2 ';
   $mya = r\acct($userId);
   if (! $mya) {
-    errorResponse($op, $userId, ["User id $userId not found"]); // combine these two!!
+    return errorResponse($op, $userId, ["User id $userId not found"]); // combine these two!!
   }
+  echo 'here3 ';
   if (! $mya->passwordOkay($password, 'pass')) {
-    errorResponse($op, $userId, [ "Incorrect password for user $userId" ]);
+    return errorResponse($op, $userId, [ "Incorrect password for user $userId" ]);
   }
-  if (is_null($requests) or ! is_array($requests) or $requests = []) {
-    errorResponse($op, $userId, [ "Improperly formed request" ]);
+  echo 'here4 ';
+  if (is_null($requests) or ! is_array($requests) or $requests == []) {
+    return errorResponse($op, $userId, [ "Improperly formed request" ]);
   }
 
-  
+  echo 'here5 ';
   switch($op) {
   case 'validate-user-ids':  return validateUserIds($userId, $requests);
   case 'sign-up-user':       return signUpUsers($userId, $requests);
@@ -54,49 +68,61 @@ function api($args = null) {
   case 'make-payments':      return makePayments($userId, $requests);
   case 'get-invoice-status': return getInvoiceStatus($userId, $requests);
   default:
+    echo 'here6 ';
     return errorResponse($op, $userId, ['Invalid API operation']);
   }
 }
 
 function errorResponse($op, $userId, $errors, $status = 'BAD') {
-  $op += '-response';
+  $op .= '-response';
   $response = compact('op userId errors status');
   header('Access-Control-Allow-Origin: *'); // allow access from web browsers
-  exit(json_encode($response));
+  return (json_encode($response));
 }
 
 function okResponse($op, $userId, $responses, $status = 'OK') {
-  $op += '-response';
-  $response = compact('op userId status responses');
+  $op .= '-response';
+  $response = compact(ray('op userId status responses'));
   header('Access-Control-Allow-Origin: *'); // allow access from web browsers
-  exit(json_encode($response));
+  echo '<br />okResponse returning: ';
+  print_r($response);
+  echo '<br />thats all';
+  return (json_encode($response));
 }
 
 function validateUserIds($userId, $requests) {
+  echo 'here7 ';
+  print_r($requests);
   $responses = [];
   foreach ($requests as $request) {
-    $response[] = validateUserId($userId, $request);
+    $responses[] = validateUserId($userId, $request);
   }
-  okResponse('validate-user-ids', $userId, $responses);
+  echo 'here10 ';
+  print_r($responses);
+  return okResponse('validate-user-ids', $userId, $responses);
 }
 
 function validateUserId($userId, $request) {
+  echo 'here8 ';
   global $mya;
   extract(just('cgId fullName email phone address city state zipCode', $request, null));
+  echo "<br />cgId=$cgId<br />";
   $userA = r\acct($cgId);
   if (! $userA) { return [ 'status' => 'BAD', 'errors' => [ 'Common Good Account not found' ], 'cgId' => $cgId]; }
   if (! u\similar($userA->fullName, $fullName, 5, .5) or !($userA->phone == u\fmtPhone(@$phone, '+n') or $userA->email == $email)) {
     return [ 'status' => 'BAD', 'errors' => [ t('That does not appear to be your correct %PROJECT member ID.') ], 'cgId' => $cgId];
   }
+  echo 'here9 ';
   return [ 'status' => 'OK', 'cgId' => $cgId ];
 }
 
 function signUpUsers($userId, $requests) {
   $responses = [];
   foreach ($requests as $request) {
-    responses[] = signUpUser($userId, $request);
+    $responses[] = signUpUser($userId, $request);
   }
-  okResponse('signup', $userId, $responses);
+  echo 'here21 <br />';
+  return okResponse('signup', $userId, $responses);
 }
 
 function signUpUser($userId, $request) {
@@ -110,9 +136,9 @@ function signUpUser($userId, $request) {
 function generateInvoices($userId, $requests) {
   $responses = [];
   foreach($requests as $request) {
-    responses[] = generateInvoice($request);
+    $responses[] = generateInvoice($request);
   }
-  okResponse('generate-invoices', $userId, $responses);
+  return okResponse('generate-invoices', $userId, $responses);
 }
 
 function generateInvoice($request) {
@@ -148,9 +174,9 @@ function generateInvoice($request) {
 function makePayments($userId, $requests) {
   $responses = [];
   foreach($requests as $request) {
-    responses[] = makePayment($request);
+    $responses[] = makePayment($request);
   }
-  okResponse('make-payments', $userId, $responses);
+  return okResponse('make-payments', $userId, $responses);
 }
 
 function makePayment($request) {
@@ -184,9 +210,9 @@ function makePayment($request) {
 function getInvoiceStatus($userId, $requests) {
   $responses = [];
   foreach($requests as $request) {
-    responses[] = getOneInvoiceStatus($request);
+    $responses[] = getOneInvoiceStatus($request);
   }
-  okResponse('get-invoice-status', $userId, $responses);
+  return okResponse('get-invoice-status', $userId, $responses);
 }
 
 function getOneInvoiceStatus($request) {

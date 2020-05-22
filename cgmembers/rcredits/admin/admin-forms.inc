@@ -892,7 +892,7 @@ function tests($arg = '') {
   
   \drupal_get_messages(); // clear messages
   db\q('TRUNCATE test'); // clear in advance, rather than after, so we can inspect results when tests fail
-  $modules = u\prefixValues('rcredits/', ray('admin rvote rweb rcron rsmart'));
+  $modules = u\prefixValues('rcredits/', ray('admin rvote rweb rcron rsmart api'));
   jsx('test');
   test(TRUE);
 
