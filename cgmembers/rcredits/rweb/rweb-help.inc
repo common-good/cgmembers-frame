@@ -55,14 +55,15 @@ X
   w\backButton() . '</p>';
   
   if ($i == 'general') return t(<<< X
-    <p>Here's what to click, to find what you want:</p>
+    <p>Here's what to click, to find what you want. Some items will not appear, if your account is not yet active or if you do not have permission.</p>
     <ul>
       <li><b>Summary</b>: See an overview of your account or open a %PROJECT Account for your company.</li>
       <li><b>Charge</b>: Invoice another participant.</li>
       <li><b>Pay</b>: Transfer %RCREDITS to another participant.</li>
       <li><b>Bank</b> Transfer money to or from your bank account.</li>
-      <li><b>History</b>: See a list of your recent transactions, invoices, notices, monthly statements, or annual tax forms (Form 1099-B).</li>
+      <li><b>History</b>: See a list of your recent transactions, invoices, notices, monthly statements, or annual tax forms (Form 1099-K).</li>
       <li><b>Community</b>. See how the %PROJECT economy is doing in your community. Review the %PROJECT Agreement, signed by all %PROJECT members. Find a participating company. Help the %PROJECT community grow by making a financial contribution or by inviting someone.</li>
+      <li><b>Company</b>. Find tools, reports, and settings for your company account.</li>
       <li><b>Settings</b>. Change your account settings, including contact information, general preferences, security settings, bank account connection, relations with other accounts, and proxy choices.</li>
       <li><b>Photo (Choose an Account to Manage)</b>: Click your photo in the upper right corner, to select an account to manage, if you have more than one.</li>
     </ul>
@@ -418,6 +419,18 @@ X
     , compact('_helpus')) . $back;
   }
 //      <p><b class="conx">Connections</b> ("conx") are the number of other members and participating businesses each active member has transacted with in the %PROJECT System.</p>
+
+  if ($i == 'success-metrics') return w\chartFrame('success') . t(<<< X
+    <ul>
+    <li><b class="success">Success</b>. Our overall success measure is a weighted combination of the factors listed here.</li>
+    <li><b class="active">Active</b>. An active account is one that has participated in a payment through %PROJECT in the past %RECENT_DAYS days.</li>
+    <li><b class="gifts">Gifts</b>. Total donations to %PROJECT in the past 30 days, divided by 5.</li>
+    <li><b class="payees">Payees</b>. Average number of different accounts paid by each active account in the past 30 days, multiplied by 50.</li>
+    <li><b class="basket">Basket</b>. Average purchase size in the past %RECENT_DAYS days.</li>
+    <li><b class="invites">Invites</b>. Total number of invitations sent by members in the past 30 days.</li>
+    </ul>
+X
+  ) . $back;
 
   if ($i == 'dollar-pool') return w\chartFrame('funds') . t(<<< X
     <p>There are two kinds of funds in the %PROJECT system:</p>

@@ -1349,6 +1349,7 @@ function sourceFld($dft = NULL) {return textFld(t('Referred By:'), [t('How you h
 function zipFld($zip = NULL) {return textFld(t('Postal Code:'), [t('Physical location postal code'), t('Postal code for your <em>physical location</em>')], required(@$zip));}
 function sellingFld($selling = NULL) {return areaFld(t('Selling:'), [t('Products'),t('Enter one or more <b>VERY SHORT</b> transaction descriptions (for example "food") for when you make a sale &mdash; one line for each. Put the most common one first. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', u\fmtDate(now(), TRUE))], required($selling));}
 function routingFld($req = '') {return intFld(REQ . t('Routing:'), t('Type carefully your bank\'s routing number. (check to be sure it\'s correct!)'), vrange(10000000, 999999999));}
+function crumbsFld($dft, $req = FALSE) {return numFld($req . t('Crumbs:'), [t('Contribution Percentage'), t('Percentage to contribute on each payment you receive')], dft(($dft * 100) ?: '') + step(.1) + suffix(' %'));}
 
 /**
  * Standardize the "selling" field input.
@@ -1810,7 +1811,7 @@ function chartFrame($chart, $selectable = FALSE, $ctty = NULL) {
   global $base_url, $mya;
   u\setDft($ctty, $mya ? $mya->community : 0);
   $region = r\acct('!' . R_SERVER_ID)->fullName;
-  list ($w, $h) = $selectable ? [600, 600]: [480, 320];
+  list ($w, $h) = $selectable ? [600, 600]: [480, 365];
 //  $url = isDEV ? "$base_url/rcredits/misc/chart.php?site=dev" : ("https://cg4.us/chart.php?site=" . str_replace('https://', '', $base_url));
   $url = (isDEV ? "$base_url/rcredits/misc" : "https://cg4.us") . "/chart.php?site=$base_url";
   return w\tag('iframe', '', ray('src width height', "$url&region=$region&ctty=0&chart=$chart&selectable=$selectable&t=" . now(), $w, $h)); // src must be first
@@ -2290,7 +2291,7 @@ function goNextStep($step, $msg = NULL, $info = []) {
 
 function backButton() {
   jsx('back-button'); 
-  return '<button class="btn btn-back btn-xs btn-primary"><div>&laquo;</div><div>&nbsp;Go Back</div></button>';
+  return '<button class="btn btn-back btn-xs btn-primary" tabindex="-1"><span>&laquo;</span>&nbsp;Go Back</button>';
 }
 
 // one-line functions that need no explanation

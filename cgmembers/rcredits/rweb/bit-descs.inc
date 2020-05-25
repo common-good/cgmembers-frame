@@ -20,6 +20,7 @@ $flagHelp = array(
   'bankOk' => t('The member\'s connected bank account has been verified.'),
   'weekly' => t('Send notices only weekly.'),
   'monthly' => t('Send notices only monthly.'),
+  'contactable' => t('It\'s okay for members to contact this member about their calling.'),
   'bysms' => t('NYI Send notifications by SMS.'),
   'paper' => t('Will not accept electronic statements.'),
   'secret' => t('Don\'t let merchants tell the member their balance on request.'),

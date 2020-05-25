@@ -30,7 +30,7 @@ function formHelp($form, &$sta, $what = '', $args = '') {
   if ($signedIn and !$what) {
     
     $message = areaFld(t('Send a message to a %PROJECT Administrator:'), '', required());
-    $file = fileFld(t('Secure Attachment:'), t('(optionally) attach a file to your message. The file will be encrypted.'));
+// Fix this before uncommenting (nobody uses it anyway)    $file = fileFld(t('Secure Attachment:'), t('(optionally) attach a file to your message. The file will be encrypted.'));
     $submit = t('Send');
   }
 
@@ -56,13 +56,13 @@ function formHelp_submit($form, &$sta) {
     $filename = UPLOAD_DIR . "/$mya->id-$time";
     extract(just('name type size', $file));
     $link = '/help/' . u\urlify("type=$type&filename=$filename");
-    $_aAttach = atag($link);
+    $aAttach = atag($link);
     if (!rename($tmp, $filename)) return say('file save error', 'file');
-  }  
+  } else { $aAttach = $name = $type = $size = ''; } 
 //  $message = u\crypt($message);
 //  db\insert('r_tous', compact('uid', 'time', 'message'));
   $body = tr("$msg|$message");
   $subs = compact(ray('who body aAttach name type size'));
-  r\tellAdmin(t('Secure message'), $subs, @$aAttach ? $uid : NULL); // tell CO only if there is no attachment
+  r\tellAdmin(t('Secure message'), $subs, @$aAttach ? NULL : $uid); // tell CO only if there is no attachment
   say(t('Your message has been sent. An administrator will respond as soon as possible.'));
 }

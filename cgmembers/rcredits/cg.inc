@@ -22,8 +22,6 @@ require_once __DIR__ . '/cg-db.inc';
 require_once __DIR__ . '/acct.class';
 require_once __DIR__ . '/qo.class';
 
-define('RECENT_SECS', 60 * DAY_SECS); // back how long is "recent" (don't change this without recreating r_stats data)
-
 /**
  * Save a record in the given table, in the appropriate regional section of the id field's number space.
  * @param string $table: table to save in (users or r_relations)

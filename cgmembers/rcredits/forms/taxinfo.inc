@@ -10,7 +10,7 @@ use CG\Txs as x;
 include __DIR__ . '/../cg-txs.inc';
 
 /**
- * Show forms 1099-B for the previous calendar (or fiscal) year.
+ * Show form 1099-K for the previous calendar (or fiscal) year.
  * @param int $ending: date/time year ends (defaults to end of previous calendar year)
  */
 function formTaxInfo($form, &$sta, $ending = '') {

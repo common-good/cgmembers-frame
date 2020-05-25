@@ -84,7 +84,7 @@ function formTx_submit($form, &$sta) {
     $start = today();
     list ($action, $tnm, $idFnm) = $func == 'pay' ? [ACT_PAY, 'tx_hdrs', 'xid'] : [ACT_CHARGE, 'r_invoices', 'nvid'];
     $subs = ray('from to end duration', $mya->id, $uid, NULL, 'once');
-    $info = $subs + compact(ray('action amount purpose period start duration'));
+    $info = $subs + compact(ray('action amount purpose period start'));
     if ($id = db\get('id', 'tx_templates', $subs)) {
       db\del('tx_templates', 'id', $id);
       say(t('Your recurring payment has been updated.'));

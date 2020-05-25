@@ -322,10 +322,12 @@ function urlify($s) {
 function deurlify($s) {
   $s0 = $s;
   list ($s, $tail) = explode('~', $s . '~');
-  for ($i = 0, $result = ''; $i < strlen($s) - 1; $i += 2) $result .= a22x3(substr($s, $i, 2));
-//  if (test()) return $s0;
-  return hex2bin($result . $tail);
+  for ($i = 0, $res = ''; $i < strlen($s) - 1; $i += 2) $res .= a22x3(substr($s, $i, 2));
+  $res .= $tail;
+  return isHex($res) ? hex2bin($res) : FALSE;
 }
+
+function isHex($s) {return (preg_match('/^[0-9a-f]+$/i', $s) and !(strlen($s) & 1));}
 
 /**
  * Return the ein in standard format (xx-xxxxxxx)

@@ -19,6 +19,7 @@ function formPrefs($form, &$sta) {
     $snap = boolFld(t('Food Assistance?'), t('If you struggle to afford healthy food, consider answering "Yes" here. This is a request for financial assistance from other %PROJECT members in your community. Your answer is private &mdash; only program administrators can tell who is receiving this assistance. Typically answer "Yes" if you are eligible for any of the following (whether or not you have actually applied): %list. (Food assistance may not yet be available in your area.)', compact('list')), $mya->snap);
   } else { $snap = $roundup = NULL; }
   
+  $crumbs = $mya->ok ? NULL : crumbsFld($mya->crumbs);
   $backing0 = u\fmtAmt(($mya->backing + 0) ?: 0); // don't default to 1 except on backing page
   $backing = item($backing0, t('Backing:'), t('Backing allows you and your community to make grants. For the next 12 months, if there is a cash crunch, you agree to buy this much more %PROJECT credit. If the system fails utterly in that time, your %backing0 credit becomes a contribution.', compact('backing0')), suffix(' <small>[' . lnk('/community/backing', t('change')) . ']</small>'));
   
@@ -56,20 +57,21 @@ EOF
   
 
   jsx('advanced-prefs', compact('advancedFields'));
-  $form = @compact(ray('title subtext roundup snap statements showAdvancet ' . $advancedFields)) + w\setupFoot() + compact('posttext');
+  $form = @compact(ray('title subtext roundup crumbs snap statements showAdvancet ' . $advancedFields)) + w\setupFoot() + compact('posttext');
   return cgform($form);
 }
 
 function formPrefs_validate($form, &$sta) {
-  extract(just('crumbs food snap', $sta['input']));
+  extract(just('crumbs food snap', $sta['input'], NULL));
+  require_once __DIR__ . '/crumbs.inc';
 //  global $mya;
-  if (!$crumbs = str_replace('%', '', @$crumbs)) $crumbs = 0;
-  if ($err = u\badAmount($crumbs, '>=0', 1, 100)) return say($err, 'crumbs');
+
+  if ($crumbs and !formCrumbs_validate($form, $sta)) return; // error is already said
   $food = @$food ?: 0;
   if ($err = u\badAmount($food, '>=0', 1, 100)) return say($err, 'food');
   snapErr($snap); // just to remove punctuation
 /// (no SNAP checking for now)  if (@$snap and $err = snapErr($snap)) return say($err, 'snap');
-  u\preray(compact(ray('crumbs food snap')), $sta['input']); // update trimmed percentage
+  u\preray(compact(ray('food snap')), $sta['input']); // update trimmed percentage
 }
 
 function formPrefs_submit($form, $sta) {

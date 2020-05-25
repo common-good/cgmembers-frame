@@ -571,7 +571,7 @@ function whatsup($item) {
  */
 function everyYear() {
   $topic = t('Annual task list');
-  r\tellAdmin(t('Generate 1099-B forms for IRS and states'), compact('topic'));
+  r\tellAdmin(t('Generate 1099-K forms for IRS and states'), compact('topic'));
   
   $year = date('Y') - 1;
   $start = strtotime("$year-01-01"); // previous year
@@ -580,7 +580,7 @@ function everyYear() {
 }
 
 /**
- * Notify each user about their 1099-B forms.
+ * Notify each user about their 1099-K form.
  */
 function taxInfo($item) {
   extract(just('uid year', $item));

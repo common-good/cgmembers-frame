@@ -23,11 +23,10 @@ var chart = null; // the chart object
 var period;
 
 var chartAreaW = '50%'; // leave room for yAxis labels and legend
-var chartW = 960; // was 480
+var chartW = 480;
 var chartH = 300;
 if (getv.selectable) {chartW = 600; chartH = 400;}
 
-var helpline = $('#help-line');
 var chData = $('#chart-data').html();
 chData = chData.substr(4, chData.length - 7); // trim off the comment markers
 chData = JSON.parse(chData);
@@ -161,8 +160,11 @@ function myRows(dataName, columns, remove) {
  * Change the help link.
  */
 function chgHelp(from, to) {
-  from = from == '' ? 'CHARTHELP' : chartHelp[from];
+  var helpline = $('#help-line');
+  from = chartHelp[from];
   to = chartHelp[to];
+
+  helpline.html(helpline.html().replace('CHARTHELP', to)); // first time
   helpline.html(helpline.html().replace(from, to));
 }
 

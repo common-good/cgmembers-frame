@@ -1,3 +1,13 @@
+2020-05-24 feature/crumbs-tweak
+. made crumbs a separate settings page
+. minor changes to 1099 text
+. added "contactable" to work.inc
+. users can now cancel any transfer that hasn't gone through yet
+. disabled secure file attachment in help.inc and fixed reporting
+. fixed bug that gave a warning in tx.inc
+. fixed bug that prevented chart help from working
+. fixed bug in t\pageForm that died when an empty array is returned by \menu_execute_active_handler (eg from couponsprint.inc)
+
 2020-05-13 feature/step-bugs
 . fixed bug in work.inc that omitted "Next"
 . fixed bug in stepup.inc that failed to delete dangling invoice when terminating a recurring donation
