@@ -173,6 +173,7 @@ EOF
   'recur stopped' => t('Success: The recurring transaction is ended.'),
   'recur already ended' => t('That recurring transaction is already ended.'),
   'recur not yours' => 'invalid recur id', // don't let on that these are different
+  'thing scheduled' => t('Your %thing has been scheduled.'),
   'refundable deposit' => t('%PROJECT will supply a smartphone running the CGPay app. Your account has been invoiced $%EQUIP_DEPOSIT as a refundable deposit.'),
   'see tax info' => t('Your 1099-K information form for calendar year %year (or any tax year you select) is available any time. Sign in at %CG_DOMAIN and select "Tax Info" on the History menu. This form is just for your information and you are not required to file it with your tax return.'),
   // reports

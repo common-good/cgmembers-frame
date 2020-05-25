@@ -444,7 +444,7 @@ function textFld() {return fld('text', func_get_args());}
 function passFld() {return fld('pass', func_get_args());}
 function areaFld() {return fld('area', func_get_args());}
 function numFld() {return fld('num', func_get_args());}
-function intFld() {return fld('num', func_get_args());}
+function intFld() {return fld('int', func_get_args());}
 function phoneFld() {return fld('phone', func_get_args());}
 function dateFld() {return fld('date', func_get_args());}
 function emailFld() {return fld('email', func_get_args());}
@@ -568,7 +568,7 @@ function badShare(&$share, $required = FALSE) {
 function boolFld($title = '', $help = '', $dft = NULL, $labels = NULL, $extra = []) {
   $class = ['yesno'];
   $inline = TRUE;
-  $dft = is_null($dft) ? [] : (is_array($dft) ? $dft : dft((@$dft + 0) ?: 0));
+  $dft = is_null($dft) ? [] : (is_array($dft) ? $dft : dft(nn($dft, 0) ?: 0));
   return radiosFld($title, $help, $extra + $dft + compact('class', 'inline'), @$labels ?: array(t('No'), t('Yes')));
 }
 

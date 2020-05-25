@@ -37,66 +37,83 @@ function formTx($form, &$sta, $args = '') {
   $who = textFld($opDesc . t(' whom:'), [t('name, id, email, or phone')], required(@$who));
 
   $amount = numFld(REQ . t('Amount:'), [t('amount to ') . mb_strtolower($opDesc)], dft(@$amount) + vmin(.01));
-/*  $goodsOpts = ray(R_WHYS);
-  unset($goodsOpts[FOR_SHARE]); // this gets set only automatically
-  */
-  
   $purpose = textFld(t('For:'), [t('purpose or description of goods and services')], required(@$purpose));
-  $repeat = selectFld(t('&nbsp;'), '', dft(''), ['' => t('No repeat')] + r\recurRay());
+  $start = dateFld(t('Date:'));
+  $period = rendA('period', selectFld(BARE, '', dft(''), r\recurRay(FALSE, PERIODS_PLURAL)));
+  $periods = intFld(t('Every:'), '', dft(0) + suffix($period));
+  $end = dateFld(t('Ending:'), t('Leave blank for "never". You can end it at any time at <%a>History / Recurring Transactions</a>.', '_a', atag('/history/recurring')));
   
-  $scanClass = 'not-scanned';
-  $$type = submit($opDesc);
+  $btns = btn('', t('delay'), 'delay') . btn('', t('repeat'), 'repeat') . btn('/history/recurring', t('manage'), 'manage');
+  $$type = submit($opDesc, '', '', suffix($btns));
 
   w\whoFldSubmit('who', $opDesc . t(' %amount to %name?'), ray('allowNonmember', !$paying));
   
-  $form = cgform(@compact(ray("title buttons who amount purpose repeat $type")));
-  $form['#attributes']['class'][] = $scanClass;
+  jsx('tx');
+  $form = cgform(@compact(ray("title buttons who amount purpose start periods end $type")));
+  $form['#attributes']['class'][] = 'not-scanned';
 
   return $form; // get defaults from which('info')
 }
 
 function formTx_validate($form, &$sta) {
-  $info = just('who amount purpose repeat', $sta['input']);
+  $info = just('who amount purpose start end', $sta['input'], NULL);
   extract($info);
   if (mb_strpos($who, '@') and !u\validEmail($email = $who)) return say('bad email', compact('email'), 'who');
   if (!$a = w\whois($who, 'who', $info, 'no self-trading', op($sta) == 'pay')) return FALSE;
   $uid = $a->id;
   if ($err = u\badAmount($amount, '>0')) return say($err, 'amount');
-  u\preray(compact(ray('amount uid')), $sta['input']);
+  foreach (ray('start end') as $k) if ($$k and $err = u\badDate($$k, today())) return say($err, $k);
+  u\preray(compact(ray('amount uid start end')), $sta['input']);
 }
 
 function formTx_submit($form, &$sta) {
   global $mya;
   $myid = $mya->id;
-  extract($info = just('who amount purpose repeat uid goods', $sta['input']));
+  extract($info = just('amount purpose period periods start end uid goods', $sta['input'], NULL));
 //  if (mb_strpos($who, '@')) return w\go('/charge/nonmember/' . u\urlify(serialize($info)));
 
   u\setDft($goods, FOR_GOODS);
   $DBTX = \db_transaction();
   $func = op($sta);
-  list ($ok, $msg, $args) = $func == 'pay'
-  ? be\transfer('payment', $mya, r\acct($uid), $amount, $purpose, $goods, @$repeat ? ['recurs' => 1] : [])
-  : be\invoice($mya, r\acct($uid), $amount, $purpose, $goods, @$repeat ? ['recurs' => 1] : []);
-
+  $delay = ($start > today());
+  $repeats = ($periods > 0);
+  
+  if (!$delay) {
+    $start = today();
+    $recurs = $period ? ['recurs' => 1] : [];
+    list ($ok, $msg, $args) = $func == 'pay'
+    ? be\transfer('payment', $mya, r\acct($uid), $amount, $purpose, $goods, $recurs)
+    : be\invoice($mya, r\acct($uid), $amount, $purpose, $goods, $recurs);
+  } else list($ok, $msg, $args) = [TRUE, '', []];
+  
   if ($func == 'pay' and $mya->snap) r\tellAdmin(t('SNAP member %who %did something', 'who did', $mya->fullName, $ok ? t('bought') : t('tried to buy')), ['topic' => t('SNAP purchase') . ($ok ? '' : t(' failed'))]);
 
-  if ($ok and $period = @$repeat) {
-    $start = today();
-    list ($action, $tnm, $idFnm) = $func == 'pay' ? [ACT_PAY, 'tx_hdrs', 'xid'] : [ACT_CHARGE, 'r_invoices', 'nvid'];
-    $subs = ray('from to end duration', $mya->id, $uid, NULL, 'once');
-    $info = $subs + compact(ray('action amount purpose period start'));
-    if ($id = db\get('id', 'tx_templates', $subs)) {
-      db\del('tx_templates', 'id', $id);
-      say(t('Your recurring payment has been updated.'));
-    }
-    $id = db\insert('tx_templates', $info, 'id');
-    db\update($tnm, ray("$idFnm recursId", $args[$idFnm], $id), $idFnm);
+  if ($delay or ($repeats and $ok)) { // need a rule template
+    if (!$end) $end = NULL;
+    list ($action, $thing, $tnm, $idFnm) = $func == 'pay' 
+    ? [ACT_PAY, t('payment'), 'tx_hdrs', 'xid'] 
+    : [ACT_CHARGE, t('invoice'), 'r_invoices', 'nvid'];
+    $subs = ray('from to', $mya->id, $uid);
+   
+    if ($repeats) {
+      $where = "`from`=:from AND `to`=:to AND action=:ACT_PAY AND period<>'once' AND IFNULL(end, :NOW + 1) > :NOW";
+      if (!$delay and $id = db\get('id', 'tx_templates', $where, $subs)) {
+        r\endRule(TRUE, $id);
+        say(t('Your recurring %thing has been updated.', compact('thing')));
+      }
+      $often = r\recurDesc($period, $periods);
+      $args += compact('often');
+      $msg .= '|repeats';
+    } else { list ($periods, $period) = [1, 'once']; }
     
-    $often = r\recurDesc(@$repeat, 1);
-    $args += compact('often');
-    $msg .= '|repeats';
+    $info = $subs + compact(ray('action amount purpose period periods start end'));
+    $id = db\insert('tx_templates', $info, 'id');
+    if ($delay) {
+      $msg .= '|thing scheduled';
+      $args += compact('thing');
+    } else { db\update($tnm, ray("$idFnm recursId", $args[$idFnm], $id), $idFnm); }
   }
   unset($DBTX);
-  
+
   return say($msg, $args, $ok ? '' : 'amount');
 }

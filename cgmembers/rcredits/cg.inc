@@ -1592,10 +1592,11 @@ o;
 /**
  * Return a selection list for recurrence period.
  */
-function recurRay($keepOne = FALSE) {
-  $oftens = array_combine(ray(PERIODS), ray(PERIODLY));
+function recurRay($keepOne = FALSE, $text = PERIODLY) {
+  $oftens = array_combine(ray(PERIODS), ray($text));
   unset($oftens['forever']);
   if (!$keepOne) unset($oftens['once']);
+  if ($text != PERIODLY) unset($oftens['quarter']);
   return $oftens;
 }
 

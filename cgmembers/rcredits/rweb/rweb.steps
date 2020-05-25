@@ -168,6 +168,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE transact AMemberConfirmsRequestToPayAnotherMemberALot
  *     MAKE transact AMemberConfirmsRequestToPayAMemberCompany
  *     MAKE transact AMemberPaysAnotherMemberRepeatedly
+ *     MAKE transact AMemberPaysAnotherMemberLater
  */
 function memberConfirmsFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
 
@@ -343,6 +344,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST transact AMemberConfirmsRequestToPayAnotherMember
  *     TEST transact AMemberConfirmsRequestToPayAMemberCompany
  *     TEST transact AMemberPaysAnotherMemberRepeatedly
+ *     TEST transact AMemberPaysAnotherMemberLater
  */
 function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $index, $subs);}
 
@@ -1700,6 +1702,7 @@ function weScripWithSubs($script, $args = []) {
  *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     BOTH stepup AMembersRulesComeIntoPlay
  *     TEST transact AMemberPaysAnotherMemberRepeatedly
+ *     TEST transact AMemberPaysAnotherMemberLater
  *     TEST transactions AdminReversesABankTransfer
  */
 function these($thing, $list) {return t\these($thing, $list);}
@@ -1826,6 +1829,7 @@ function memberIsUnconfirmed($id) {
  *
  * in: TEST bank Setup
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
+ *     TEST transact AMemberPaysAnotherMemberLater
  */
 function countIs($what, $count) {return t\count($what, $count);}
 

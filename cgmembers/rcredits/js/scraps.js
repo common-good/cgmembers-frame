@@ -42,6 +42,17 @@ function doit(what, vs) {
     $('#activate-credit').click(function () {post('setBit', {bit:'debt', on:1}, report);});
     break;
     
+  case 'tx':
+    $('.btn-delay').click(function () {
+      $('.form-item-start').show();
+      $('#edit-start').focus();
+    });
+    $('.btn-repeat').click(function () {
+      $('.form-item-periods, .form-item-end').show();
+      $('#edit-periods').val(1).focus();
+    });
+    break;
+    
   case 'invest':
     $('.form-item-expenseReserve a').click(function () {
       var reserve = parseFloat($('#edit-expensereserve').val().replace('$', ''));

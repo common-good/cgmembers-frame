@@ -791,6 +791,10 @@ body.page-partner blockquote {font-size:14px;}
 .company-listing {color:red; font-weight:bold;}
 
 /* Pay/Charge/Tx */
+#frm-tx #edit-periods {width:40px; display:inline-block; margin-right:10px;}
+#frm-tx .form-item-start,
+#frm-tx .form-item-end,
+#frm-tx .form-item-periods {display:none;}
 
 /* Pay With CG */
 /*

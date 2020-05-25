@@ -1,3 +1,9 @@
+2020-05-25 feature/periods
+. pay and charge pages now allow specification of start and end dates and multiple periods
+. fixed bug that deleted templates on update of a recurring payment or invoice instead of just marking it end'ed
+. fixed bug that treated intFld like numFld
+. fixed bug that showed an error meesage for bool fields on prefs page
+
 2020-05-24 feature/crumbs-tweak
 . made crumbs a separate settings page
 . minor changes to 1099 text
@@ -1276,7 +1282,6 @@ db\del('tx_hdrs', '', "xid IN ($xids)");
 		}
 	}
 /**/	echo $s;
-. 
 
 2018-08-03
 . fixed stats bug that undercounted members by omitting slaves in joint accounts (284 vs 275)
