@@ -1,4 +1,4 @@
-<?php
+˘<?php
 /**
  * @file
  * rPos Steps
@@ -106,7 +106,10 @@ function weRespondWith($args) {
 /**
  * user (ARG) with password (ARG) asks API whether these users are valid: (ARG)
  *
- * in: MAKE validateUserIds UserWantsToValidateAnotherCustomerAccount
+ * in: MAKE validateUserIds UserWantsToValidateAnotherCustomerAccountAndSucceeds
+ *     MAKE validateUserIds UserWantsToValidateAnotherCustomerAccountAndFails
+ *     MAKE validateUserIds UserWantsToValidateSeveralCustomerAccountsSomeOfWhichSucceed
+ *     MAKE validateUserIds UserWantsToValidateAnotherAccountWithWrongPassword
  */
 function userWithPasswordAsksAPIWhetherTheseUsersAreValid($member, $password, $requests) {
   global $testOnly;
@@ -116,7 +119,9 @@ function userWithPasswordAsksAPIWhetherTheseUsersAreValid($member, $password, $r
 /**
  * the response op is (ARG) and the status is (ARG) and there are (ARG) responses and they are: (ARG)
  *
- * in: 
+ * in: TEST validateUserIds UserWantsToValidateAnotherCustomerAccountAndSucceeds
+ *     TEST validateUserIds UserWantsToValidateAnotherCustomerAccountAndFails
+ *     TEST validateUserIds UserWantsToValidateSeveralCustomerAccountsSomeOfWhichSucceed
  */
 function theResponseOpIsAndTheStatusIsAndThereAreResponsesAndTheyAre($op, $status, $num, $correctResponses) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -124,27 +129,51 @@ function theResponseOpIsAndTheStatusIsAndThereAreResponsesAndTheyAre($op, $statu
 
   extract($rAPIResult, EXTR_PREFIX_ALL, 't');
           
-  print_r($op);
-  echo '<br />';
-  print_r($status);
-  echo '<br />';
-  print_r($num);
-  echo '<br />';
-  print_r($correctResponses);
-  echo '<br />';
-  print_r($t_op);
-  echo '<br />';
-  print_r($t_status);
-  echo '<br />';
-  print_r($t_responses);
-  echo '<br />';
+  /* print_r($op); */
+  /* echo '<br />'; */
+  /* print_r($status); */
+  /* echo '<br />'; */
+  /* print_r($num); */
+  /* echo '<br />'; */
+  /* print_r($correctResponses); */
+  /* echo '<br />'; */
+  /* print_r($t_op); */
+  /* echo '<br />'; */
+  /* print_r($t_status); */
+  /* echo '<br />'; */
+  /* print_r($t_responses); */
+  /* echo '<br />'; */
 
-  if (count($t_responses) != $num) {
-    t\output("Expected $num responses, got:" . $rAPIResult['responses'].length());
+  if ($op != $t_op) {
+    t\output("Expected op: $op, got: $t_op");
     return FALSE;
   }
-  die('here');
-  /* $correct */
-  /* if ($rAPIResult[ */
-  /* return FALSE; */
+  if ($status != $t_status) {
+    t\output("Expected status $status, got: $t_status");
+    return FALSE;
+  }
+  return t\jsonResponses($correctResponses, $t_responses);
+}
+
+/**
+ * the response op is (ARG) and the status is (ARG) and the errors are: (ARG)
+ *
+ * in: TEST validateUserIds UserWantsToValidateAnotherAccountWithWrongPassword
+ */
+function theResponseOpIsAndTheStatusIsAndTheErrorsAre($op, $status, $errors) {
+  global $testOnly;
+  global $rAPIResult;
+
+  extract($rAPIResult, EXTR_PREFIX_ALL, 't');
+  
+  if ($op != $t_op) {
+    t\output("Expected op: $op, got: $t_op");
+    return FALSE;
+  }
+  if ($status != $t_status) {
+    t\output("Expected status $status, got: $t_status");
+    return FALSE;
+  }
+  return t\jsonResponses($errors, $t_errors);
+  todo;
 }
