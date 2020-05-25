@@ -15,7 +15,7 @@ use CG\Cron as cr;
 use CG\Web as w;
 
 const T_BALANCE_FLDS = 'uid balance floor savingsAdd saveWeekly minimum';
-const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid';
+const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid cgId';
 const SPECIAL_IDS = 'ctty crumb round cgf bank-in bank-out';
 const RLESS_TNMS = 'signup posts people post_cats messages'; // test tables with no "r_" prefix
 const NULL_FLDS = 'payer payee useMax amtMax template end code rule';
@@ -944,27 +944,6 @@ function weShowWith($title0, $content = FALSE, $mustBePresent = TRUE) {
 
 function makePicture($photo, $a) {return $a->update(compact('photo'));}
 
-function hitAPI($op, $userId, $password, $requests) {
-  global $rAPIResult;
-  include_once __DIR__ . '/forms/api.inc';
-  $userId = t\fullQid2($userId);
-  $fixedRequests = [];
-  foreach ($requests as $request) {
-    fixData($request);
-    $request['cgId'] = t\fullQid2($request['cgId']);
-    $fixedRequests[] = $request;
-  }
-  $overall = ['op'=>$op, 'userId'=>$userId, 'password'=>$password, 'requests'=>$fixedRequests];
-  $json = json_encode($overall);
-  $result_json = w\api($json);
-  $result = json_decode($result_json);
-  echo '<br />result: ';
-  print_r($result);
-  echo '<br />';
-  $rAPIResult = (array)$result;
-  print_r($rAPIResult);
-  return TRUE;
-}
 /**
  * Send an RPC API request to the server, for rPOS.
  * @todo: after everyone is up to version 217, add penultimate param: $proof = 'calc'
@@ -1796,3 +1775,76 @@ function sameTime($a, $b) {return t\eq($a, $b, SAME_TIME);}
 function rewarding() {return ctty('aab')->cttyRewardy;}
 function ray2assoc($ray) {foreach ($ray as $one) $res[$one[0]] = $one[1]; return @$res ?: [];}
 function doCode($code = '') {if ($code) file_put_contents(DOCODE_FLNM, $code); else return file_get_contents(DOCODE_FLNM);}
+
+
+function hitAPI($op, $userId, $password, $requests) {
+  global $rAPIResult;
+  include_once __DIR__ . '/forms/api.inc';
+  $userId = t\fullQid2($userId);
+  $fixedRequests = [];
+  foreach ($requests as $request) {
+    fixData($request);
+    $request['cgId'] = t\fullQid2($request['cgId']);
+    $fixedRequests[] = $request;
+  }
+  $overall = ['op'=>$op, 'userId'=>$userId, 'password'=>$password, 'requests'=>$fixedRequests];
+  $json = json_encode($overall);
+  $result_json = w\api($json);
+  $result = json_decode($result_json);
+  echo '<br />result: ';
+  print_r($result);
+  echo '<br />';
+  $rAPIResult = (array)$result;
+  print_r($rAPIResult);
+  echo '<br /><br />hitAPI returning true<br />';
+  return TRUE;
+}
+
+function jsonResponses($correctResponses, $actualResponses) {
+  foreach ($correctResponses as $correctResponse) {
+    fixData($correctResponse);
+    if (! oneJsonResponse($correctResponse, $actualResponses)) {
+      output("Correct response not found " . print_r($correctResponse, TRUE));
+      return FALSE;
+    }
+  }
+  echo '<br /><br />jsonResponses returning true<br />';
+  return TRUE;
+}
+
+function oneJsonResponse($correctResponse, $actualResponses) {
+  foreach ($actualResponses as $actualResponse) {
+    $actualResponse = (array)$actualResponse;
+    foreach ($correctResponse as $key => $value) {
+      if ($value != "?") {
+        if (! array_key_exists($key, $actualResponse)) {
+          t\output("Response is missing $key");
+          return FALSE;
+        }
+        if (is_array($value)) {
+          if (!is_array($actualResponse)) {
+            t\output("$key should be an array but is not");
+          }
+          foreach($value as $msg) {
+            if (!is_array($actualResponse) or ! in_array($msg, $actualResponse)) {
+              t\output("Response $msg is missing");
+              return FALSE;
+            }
+          }
+        }
+        $actualValue = $actualResponse[$key];
+        if (is_array($actualValue) and !is_array($value)) {
+          if (!in_array($value, $actualValue)) {
+            t\output("Response $value is missing, got: " . print_r($actualValue, TRUE));
+            return FALSE;
+          }
+        }
+        if ($value != $actualResponse[$key]) {
+          t\output("$key should be $value and is $actualResponse[$key]");
+          return FALSE;
+        }
+      }
+    }
+  }
+  return TRUE;
+}
