@@ -64,7 +64,7 @@ if (!mobile) jQuery('.navbar-nav > li > a').hover(function() {
 });
 if (!mobile) jQuery('form div').hover(function() {jQuery('* [data-toggle="popover"]').popover('hide');});
 
-$('.form-horizontal :input:enabled:visible:first').focus();
+$('.form-horizontal :input:enabled:visible:first:not([tabindex="-1"])').focus();
 
 $('.test-next').click(function () {
   $('#testError' + $(this).attr('index'))[0].scrollIntoView(true); window.scrollBy(0, -100);

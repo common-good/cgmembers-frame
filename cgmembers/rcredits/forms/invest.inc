@@ -17,7 +17,7 @@ function formInvest($form, &$sta, $args = '') {
   $clubid = $mya->iclub? $uid : db\get('uid', 'users', 'fullName LIKE :club AND :zip REGEXP zip AND :IS_OK', ray('club zip', t('%Investment Club%'), $mya->zip));
   
   if (!$clubid) {
-    $subtext = t('There is no active investment club in your community at this time. Consider starting one! Your %PROJECT community administrator can set it up for you.');
+    $subtext = t('There is no active investment club in your community at this time. Consider starting one! Contact %PROJECT staff for help getting started (see contact information below).');
     return cgform(compact(ray('title subtext')));
   } elseif (!$mya->can(B_SELL)) return w\go('summary', 'no receive invest');
 

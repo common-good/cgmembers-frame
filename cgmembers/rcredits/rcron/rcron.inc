@@ -278,19 +278,20 @@ EOF;
 }
   
 function recur($template) {
-  $rule = justNot(ray('id period periods duration durations start end maxStart'), $template);
   extract(just('id maxStart period periods end duration durations action from to purpose amount', $template));
-  $rule['template'] = $id;
   $shouldStart = empty($maxStart) ? now() : u\dateIncr($maxStart, $periods, $period);
   if ($end and $end < $shouldStart) return; // don't create anything after template expires
-  $erSubs = compact(ray('template rule shouldStart'));
+  $erSubs = compact(ray('template shouldStart'));
 
   if ($action == 'surtx') {
     if ($shouldStart > now() + WEEK_SECS) return; // don't create rules more than a week in advance
+    $rule = justNot(ray('id period periods duration durations start end maxStart'), $template);
+    $rule['template'] = $id;
     $rule['start'] = $shouldStart;
     $rule['end'] = u\dateIncr($shouldStart, $durations, $duration);
     $ok = db\insert('tx_rules', $rule, 'id');
     if (!$ok) r\tellAdmin(t('Insert rule failed in recur'), $erSubs);
+
   } elseif (in($action, 'pay charge')) {
     if ($shouldStart > strtotime('tomorrow')) return; // don't create transactions and invoices until the right day
     $fromA = r\acct($from); $toA = r\acct($to);
@@ -315,6 +316,7 @@ function recur($template) {
       list ($ok, $msg, $args) = be\invoice($toA, $fromA, $amount, $purpose, FOR_GOODS, $data, $id);
       if (!$ok) return r\tellAdmin(t('Invoice failed in recur'), $erSubs + compact('msg', 'args'));
     }
+    if ($period == 'once') r\endRule(TRUE, $id);
   } else FAIL(t('bad action in template: ') . pr($template));
   
 }
@@ -571,7 +573,7 @@ function whatsup($item) {
  */
 function everyYear() {
   $topic = t('Annual task list');
-  r\tellAdmin(t('Generate 1099-B forms for IRS and states'), compact('topic'));
+  r\tellAdmin(t('Generate 1099-K forms for IRS and states'), compact('topic'));
   
   $year = date('Y') - 1;
   $start = strtotime("$year-01-01"); // previous year
@@ -580,7 +582,7 @@ function everyYear() {
 }
 
 /**
- * Notify each user about their 1099-B forms.
+ * Notify each user about their 1099-K form.
  */
 function taxInfo($item) {
   extract(just('uid year', $item));

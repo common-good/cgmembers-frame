@@ -36,9 +36,8 @@ iframe {border:0; float:right; margin-right:-60px;}
 .form-type-checkboxes > .control-label {padding-top:0;}
 
 form ul>li {display: block;}
-.btn-back {height:22px; margin-right:10px;}
-.btn-back div:first-child {display:inline-block; padding-top:0px; font-size:160%; margin-bottom:5px; margin-top:-7px;}
-.btn-back div:first-child + div {display:inline-block;}
+.btn-back {height:28px; font-size:13px; padding:0 6px; line-height:2px;}
+.btn-back span {font-size:140%;}
 
 form ul>li:before {
     /*Using a Bootstrap glyphicon as the bullet point*/
@@ -393,7 +392,8 @@ body.page-partner blockquote {font-size:14px;}
 #frm-invite .form-item-quote,
 #frm-invite .form-item-org,
 #frm-invite .form-item-position,
-#frm-invite .form-item-website {display:none;}
+#frm-invite .form-item-website,
+#frm-invite .form-item-usePhoto.form-type-radios {display:none;}
 
 /* Shouters */
 #frm-shouters .footnote {color:red;}
@@ -531,6 +531,7 @@ body.page-partner blockquote {font-size:14px;}
 /*#frm-help #edit-text {font-size:85%;}*/
 #frm-help h2 {font-weight:normal; color:darkblue;}
 #frm-help b {color:darkgreen;}
+#frm-help b[class] {padding:0 3px;} /* most of these have a background so they need padding */
 #frm-help i {color:darkblue;}
 #frm-help .onechart {float:right; max-width:50%;} /* for charts */
 #frm-help .p2p {color:orange;}
@@ -553,6 +554,13 @@ body.page-partner blockquote {font-size:14px;}
 #frm-help .conx {color:white; background-color:orange;}
 #frm-help .local {color:white; background-color:green;}
 #frm-help .inter {color:black; background-color:yellow;}
+
+#frm-help .success {color:white; background-color:blue;}
+#frm-help .active {color:white; background-color:green;}
+#frm-help .gifts {color:black; background-color:silver;}
+#frm-help .payees {color:white; background-color:darkred;}
+#frm-help .basket {color:black; background-color:yellow;}
+#frm-help .invites {color:white; background-color:orange;}
 
 #frm-help ol {margin-left:20px;}
 #risk-help .goodRisk, #risk-help .badRisk, #risk-help .tagged {font-weight:bold;}
@@ -784,6 +792,10 @@ body.page-partner blockquote {font-size:14px;}
 .company-listing {color:red; font-weight:bold;}
 
 /* Pay/Charge/Tx */
+#frm-tx #edit-periods {width:40px; display:inline-block; margin-right:10px;}
+#frm-tx .form-item-start,
+#frm-tx .form-item-end,
+#frm-tx .form-item-periods {display:none;}
 
 /* Pay With CG */
 /*
@@ -854,11 +866,13 @@ body.page-partner blockquote {font-size:14px;}
 /* Bank (Get) */
 #frm-get #edit-get {margin-right:70px;}
 
-/* TaxInfo 1099-B */
+/* TaxInfo 1099-B (phasing out in 2020) */
 #f1099b td:first-child {width:60px;} /* date */
 #f1099b td:first-child +td {min-width:75px;} /* amount */
 #f1099b td:first-child +td+td {min-width:200px;} /* account */
 #f1099b .num {text-align:right;}
+
+/* TaxInfo */
 #frm-taxinfo #edit-posttext p {font-size:12px;}
 #frm-taxinfo #summary {width:auto;}
 #frm-taxinfo #summary .count {text-align:center;}
@@ -1121,11 +1135,12 @@ div.password-confirm .error {font-weight:bold; color:red;}
 #txlist div.row {margin-left:0; margin-right:0;}
 #txlist .row >div {margin:0 auto;}
 #txlist .row>div>div {padding-top:5px; padding-bottom:4px; min-height:2ex;}
-#txlist .txentry >div {border-bottom:1px solid white;}
 
+#txlsit .txentry {clear:both}
 #txlist .txentry.even div {background-color:#f0fff0} /* same as .even above */
 #txlist .txentry.odd div {background-color:#daffda}
 #txlist .txentry div.buttons {background-color:white;}
+#txlist .txentry >div {border-bottom:1px solid white;}
 
 #txlist .tid-date, 
 #txlist .name-purpose, 

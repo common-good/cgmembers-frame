@@ -42,6 +42,17 @@ function doit(what, vs) {
     $('#activate-credit').click(function () {post('setBit', {bit:'debt', on:1}, report);});
     break;
     
+  case 'tx':
+    $('.btn-delay').click(function () {
+      $('.form-item-start').show();
+      $('#edit-start').focus();
+    });
+    $('.btn-repeat').click(function () {
+      $('.form-item-periods, .form-item-end').show();
+      $('#edit-periods').val(1).focus();
+    });
+    break;
+    
   case 'invest':
     $('.form-item-expenseReserve a').click(function () {
       var reserve = parseFloat($('#edit-expensereserve').val().replace('$', ''));
@@ -443,9 +454,9 @@ function doit(what, vs) {
   
   case 'invite':
     $('#edit-sign-1').click(function () {
-      $('.form-item-question, .form-item-quote, .form-item-org').show();
+      $('.form-item-question, .form-item-quote, .form-item-org, .form-item-usePhoto.form-type-radios').show();
     });
-    $('#edit-org').keypress(function () {
+    $('#edit-org').keyup(function () {
       if ($(this).val().length > 0) $('.form-item-position, .form-item-website').show();
     });
     break;

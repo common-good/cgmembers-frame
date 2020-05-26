@@ -1,6 +1,6 @@
-Feature: Transact
+Feature: Tx
 AS a member
-I WANT to transfer rCredits to or from another member (acting on their own behalf)
+I WANT to transfer credit to or from another member (acting on their own behalf)
 SO I can buy and sell stuff.
  We will eventually need variants or separate feature files for neighbor (member of different community within the region) to member, etc.
  And foreigner (member on a different server) to member, etc.
@@ -207,8 +207,8 @@ Scenario: A new member asks to pay another member before making a Common Good Ca
 
 Scenario: A member pays another member repeatedly
   When member ".ZZA" confirms form "pay" with values:
-  | op  | who     | amount | purpose | repeat |*
-  | pay | Bea Two | 100    |  labor  | week   |
+  | op  | who     | amount | purpose | period | periods |*
+  | pay | Bea Two | 100    |  labor  | week   |       1 |
   Then we say "status": "report tx|repeats" with subs:
   | did  | otherName | amount | often  |*
   | paid | Bea Two   | $100   | weekly |
@@ -224,3 +224,15 @@ Scenario: A member pays another member repeatedly
   |  1 | .ZZA | .ZZB |    100 | week   | labor   | %daystart |     | pay    | once     |
   And date field "start" rounded "yes" in "tx_templates" record "1" (id field "id")
   And field "tx_hdrs/xid/1/created" is ">=" field "tx_templates/id/1/start"
+
+Scenario: A member pays another member later
+  When member ".ZZA" confirms form "pay" with values:
+  | op  | who     | amount | purpose | start   |*
+  | pay | Bea Two | 100    |  labor  | %mdy+3d |
+  Then we say "status": "thing scheduled" with subs:
+  | thing   |*
+  | payment |
+  And count "txs" is 0
+  And these "tx_templates":
+  | id | from | to   | amount | period | purpose | start        | end | action | duration |*
+  |  1 | .ZZA | .ZZB |    100 | once   | labor   | %daystart+3d |     | pay    | once     |

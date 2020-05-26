@@ -23,16 +23,14 @@ $data = file_get_contents("$site/community/chart-data/ctty=$ctty");
 $version = time();
 $title = 'Charts | ' . $region;
 
-if ($selectable) {
-  $cttys = file_get_contents("$site/community/list");
-  $cttys = (array) json_decode($cttys);
+$cttys = file_get_contents("$site/community/list");
+$cttys = (array) json_decode($cttys);
 //  $cttys[-1] = 'Northern PV';
-  $cttys = opts($cttys, $ctty);
-  
-  $atoms = opts(['d' => 'Days', 'w' => 'Weeks', 'm' => 'Months', 'q' => 'Quarters', 'y' => 'Years'], 'w');
-  
-  $downloadText = 'Download by Month';
+$cttys = opts($cttys, $ctty);
+$atoms = opts(['d' => 'Days', 'w' => 'Weeks', 'm' => 'Months', 'q' => 'Quarters', 'y' => 'Years'], 'w');
 
+if ($selectable) {
+  $help = 'More information';
   $charts = [
     'success' => 'Success Metrics',
     'funds' => 'Dollar Pool',
@@ -44,6 +42,8 @@ if ($selectable) {
 
   $charts = opts($charts, $chart);
 
+  $downloadText = 'Download by Month';
+
   $controls = <<<X
     <div>
     <select id="ctty" class="form-control">$cttys</select>
@@ -52,7 +52,15 @@ if ($selectable) {
     <a href="$site/community/graphs/ctty=$ctty&download=1" class="controlish">$downloadText</a>
     </div>
 X;
-} else $controls = $help = '';
+} else {
+  $help = '';
+  $controls = <<<X
+    <div>
+    <select id="ctty" class="form-control">$cttys</select>
+    <select id="atom" class="form-control">$atoms</select><br>
+    </div>
+X;
+}
 
 /**/ echo <<<EOF
  
@@ -100,7 +108,7 @@ X;
 $controls
 <div id="onechart" class="onechart"></div>
 <div id="chart-data"><!--$data--></div>
-<div id="help-line"><a href="$site/help/CHARTHELP/qid=$ctty">More information</a></div>
+<div id="help-line"><a href="$site/help/CHARTHELP/qid=$ctty">$help</a></div>
 
 <script src="$site/rcredits/js/x/jquery-3.3.1.min.js"></script>
 <script id="script-goo-jsapi" src="https://www.google.com/jsapi"></script>

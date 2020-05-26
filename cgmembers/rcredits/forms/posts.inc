@@ -376,6 +376,7 @@ X;
  */
 function getWho($args) {
   mb_parse_str($args, $ray);
+  $info = []; // needed if $args/$ray is empty
   foreach(just(POST_FLDS . ' email location ' . MESSAGE_FLDS, $ray) as $k => $v) $info[$k] = hidFld(${$k . 0} = $v);
   extract(just('email', $info)); // because it's in CONTACT_FLDS
 

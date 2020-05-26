@@ -22,8 +22,6 @@ require_once __DIR__ . '/cg-db.inc';
 require_once __DIR__ . '/acct.class';
 require_once __DIR__ . '/qo.class';
 
-define('RECENT_SECS', 60 * DAY_SECS); // back how long is "recent" (don't change this without recreating r_stats data)
-
 /**
  * Save a record in the given table, in the appropriate regional section of the id field's number space.
  * @param string $table: table to save in (users or r_relations)
@@ -1594,10 +1592,11 @@ o;
 /**
  * Return a selection list for recurrence period.
  */
-function recurRay($keepOne = FALSE) {
-  $oftens = array_combine(ray(PERIODS), ray(PERIODLY));
+function recurRay($keepOne = FALSE, $text = PERIODLY) {
+  $oftens = array_combine(ray(PERIODS), ray($text));
   unset($oftens['forever']);
   if (!$keepOne) unset($oftens['once']);
+  if ($text != PERIODLY) unset($oftens['quarter']);
   return $oftens;
 }
 

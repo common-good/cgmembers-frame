@@ -19,24 +19,12 @@ function formGet($form, &$sta, $args = '') {
   $myid = $mya->id;
   $jid = $mya->jid ?: 0;
   extract(just('cancel', $args));
-  if ($txid = @$cancel) {
-    if ($xid = db\get('xid', 'r_usd', ray('txid payee deposit', $txid, $myid, 0))) {
-      $crit = compact('xid');
-      db\del('r_usd', $crit);
-      say('transfer canceled', $crit);
-      r\tellAdmin("canceled exchange #$xid");
-      r\notify($mya->id, t('bank tx canceled', $crit));
-      return w\go('/get'); // don't leave the cancelation on the URL (submitting like that cancels the future)
-    } else say('That transfer does not exist.');
-  }
+  if ($txid = @$cancel) return cancelTx($txid);
   
   $title = t('Transfer Funds');
   $subtext = t('<p>When you transfer funds FROM your bank account to your Common Good account, you are buying Common Good credit. Your Common Good credit is backed partly by Dollars in your Common Good Community’s Dollar Pool and partly by collateral, including promises of members and member organizations [<%aBacking>more about backing</a>]. It may take several business days for your bank to send the funds.</p>
   <p>Funds going TO your bank account also may take several days to arrive. If you have an emergency and need funds immediately, talk to us.</p><p>To refill your %PROJECT Account automatically (or not), as needed, adjust your "refills" setting on the <%aSettings>Banking Settings</a> page.</p>', '_aBacking _aSettings', atag('/help/backing-common-good-credits'), atag('/settings/fund')) . t('note|ach warning');
 
-//  $minimum = numFld(t('Minimum:'), t('prompt min'), dft(u\fmtAmt(!$mya->prefsSet ? $mya->minimum : R_MINR_DEFAULT, 's')));
-//  $toSpend = u\fmtAmt($mya->avail(FOR_GOODS));
-//  $toSpend = u\fmtAmt($mya->r - $mya->committed);
   $balance = u\fmtAmt($mya->balance);
   $credit = u\fmtAmt(-$mya->floor);
   $fromBank = $mya->waitingFromBank();
@@ -55,20 +43,8 @@ function formGet($form, &$sta, $args = '') {
   $toBankFmt = u\fmtAmt(-$toBank);
   $fromBankFmt = u\fmtAmt($fromBank);
   $cashoutable = u\fmtAmt(max(0, min($mya->balance, $avail)));
-  if ($fromBank != 0) {
-    $where = 'payee IN (:myid, :jid) AND completed=0 AND deposit=0 ORDER BY txid DESC';
-    if ($rec = db\get('amount, txid', 'r_usd', $where, compact('myid', 'jid'))) {
-      extract($rec);
-      if ($toBank == 0) {
-        $text = t('Cancel');
-      } else {
-        $text = t('Cancel %fromBankFmt request', compact('fromBankFmt'));
-      }
-      $link = " <a class=\"buttino\" href=\"$base_url/get/cancel=$txid\">$text</a>";
-    } else { $link = ''; }
-  } else { $link = ''; }
-  
-  /* $way = $waiting0 < 0 ? t('to') : ('from'); */
+
+  $inProcess = t('You have exchange requests in process: ');
   if ($fromBank == 0) {
     if ($toBank == 0) {
       $waiting = t('You have no pending exchange requests.');
@@ -85,19 +61,19 @@ function formGet($form, &$sta, $args = '') {
                    compact('toBankFmt', 'fromBankFmt'));
     }
   }
+  
+  $where = 'payee IN (:myid, :jid) AND deposit=0 ORDER BY txid DESC';
+  $txid = db\get('txid', 'r_usd', $where, compact('myid', 'jid'));
+  $link = $txid ? tr(" <a class=\"buttino\" href=\"$base_url/get/cancel=$txid\">%text</a>", 'text', t('Cancel')) : '';
   $waiting = item($waiting . $link, t('Pending:'));
-  /* $waiting = item($waiting == '$0' ? t('You have no pending exchange requests.') : (t('You have total pending exchange requests of %waiting %way your bank account.', compact('waiting', 'way')) . @$link), t('Pending:')); // amount already requested (if any) */
+
   $avail = hidFld($avail);
   $credit = u\fmtAmt(-$mya->floor);
   $balances = item(t('balances', compact(ray('balance credit cashoutable'))), t('Balance:'));
   $amount = numFld(t('Amount $'), t('Transfer how much?') . ($mya->cAdmin ? t(' (no limit for admin)') : ''));
-  $get = submit(BARE . t('From Bank'));
-//  $fromBank = fld('checkbox', t('Automate:'), t('(recommended) Refill my %PROJECT Account from my bank account automatically, as needed.'), dft(!$mya->prefsSet ? $mya->can(B_FROM_BANK) : TRUE));
-  
-//  $maximum = numFld(t('Maximum:'), t('prompt max'), dft(u\fmtAmt(!$mya->prefsSet ? $mya->maximum : R_MAXR_DEFAULT, 's')));
-//  $excess = numFld(t('Excess'), '', dft(u\fmtAmt($mya->overMax(), 's')));
-//  $toBank = fld('checkbox', t('Automate:'), t('Transfer any excess to my bank account automatically every few days.'), dft(!$mya->prefsSet ? $mya->can(B_TO_BANK) : TRUE));
-  $put = submit(BARE . t('To Bank'));
+
+  $get = submit(BARE . t('From Bank to %PROJECT'));
+  $put = submit(BARE . t('From %PROJECT to Bank'));
   $actions = fieldSet('actions', compact('get', 'put'));
 
   return cgform(compact(ray('title subtext waiting balances amount actions avail')));
@@ -129,4 +105,22 @@ function formGet_submit($form, &$sta) {
   $mya->bank(op($sta) == 'get' ? $amount : -$amount, t('at your request'), [], $why);
   say($why); // expanded message
 //  r\tellAdmin('banked' . $extra, $subs);
+}
+
+/**
+ * Cancel the given transfer.
+ * @param int $txid: transfer record ID
+ */
+function cancelTx($txid) {
+  global $mya; $myid = $mya ? $mya->id : 0;
+  
+  if ($xid = db\get('xid', 'r_usd', ray('txid payee deposit', $txid, $myid, 0))) {
+    $crit = compact('xid');
+    db\del('r_usd', $crit);
+    say('transfer canceled', $crit);
+    r\tellAdmin("canceled exchange #$xid");
+    r\notify($myid, t('bank tx canceled', $crit));
+  } else say('That transfer does not exist.');
+
+  return w\go('/get'); // don't leave the cancelation on the URL (submitting like that cancels the future)
 }

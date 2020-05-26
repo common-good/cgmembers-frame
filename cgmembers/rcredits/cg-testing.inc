@@ -1171,9 +1171,9 @@ function pageForm($page) {
     $result = $result == MENU_NOT_FOUND ? 'not found'
       : ($result == MENU_ACCESS_DENIED ? 'access error' : "error #$result");
     t\output("page \"$page\": $result in t\\pageForm()");
-  } elseif (@$lastGo == $xlastGo) setFormOut($result);
+  } elseif (@$lastGo == $xlastGo) setFormOut($result ?: ''); // '' for when $result is an empty array, eg couponsprint.inc
 
-  return $formArray;
+  return $formArray; // this got set in w\showForm
 }
 
 function setFormOut($out) {

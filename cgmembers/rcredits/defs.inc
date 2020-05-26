@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.53e'; // software version
+const R_VERSION = '3.53f'; // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -105,6 +105,8 @@ const MONTH_SECS = 30.4368 * DAY_SECS;  // 18,408,176.64
 define('QUARTER_SECS', round(3 * MONTH_SECS));  // 55,224,530
 define('YEAR_SECS', round(12 * MONTH_SECS));    // 220,898,120
 const FLOOR_DAYS = 183; // how many days to consider for credit line calculation
+const RECENT_DAYS = 60; // back how long is "recent" (don't change this without recreating r_stats data)
+const RECENT_SECS = RECENT_DAYS * DAY_SECS;
 
 const REGION_DOMAIN = R_SERVER_ID . '.' . CG_DOMAIN;
 const EMAILX = 'example.com'; // domain for unknown, placeholder, test, or example emails
@@ -400,7 +402,7 @@ const B_DEPENDS = 11; // dependent account (can't change settings, federalId is 
 const B_BANKOK = 12; // connected bank account has been verified
 const B_WEEKLY = 13; // send notices only weekly
 const B_MONTHLY = 14; // send notices only monthly
-const B_u15 = 15; //
+const B_CONTACTABLE = 15; // okay for members to contact this member about their calling
 const B_BYSMS = 16; // NYI notifications by SMS
 const B_PAPER = 17; // will not accept electronic statements
 const B_SECRET = 18; // don't let merchants tell me my balance on request
@@ -418,7 +420,7 @@ const B_CADMIN = 29; // is a community administrator
 const B_ADMIN = 30; // is a system administrator -- can manage server, including assigning ctty admins, but cannot manage communities or individual accounts (except temporarily)
 const B_MAX = 62; // maximum bit number
 const B_ADMINABLE = 'member confirmed carded beta oAdmin cAdmin cAdmin2 nonudge cgc invites rewardy noneg'; // for cAdmin to set
-const B_LIST = 'member confirmed ok carded ided refill co draws roundup nonudge nosearch depends bankOk weekly monthly u15 bysms paper secret underage debt reinvest savings cashoutW cashoutM beta oAdmin admin2 cAdmin2 cAdmin admin';
+const B_LIST = 'member confirmed ok carded ided refill co draws roundup nonudge nosearch depends bankOk weekly monthly contactable bysms paper secret underage debt reinvest savings cashoutW cashoutM beta oAdmin admin2 cAdmin2 cAdmin admin';
 
 // community-specific flags
 const B_CGC = 0; // ctty: is an official CGC (currently has no effect)
@@ -612,7 +614,7 @@ define('PERIODS_PLURAL', t('n/a days weeks months quarters years n/a'));
 const MATCH_PAYER = -1; // Special values for from and to (which are normally uids) in tx_rules
 const MATCH_PAYEE = -2;
 
-const STEPUP_MIN = 3; // minimum number of stepup rules for a company to appear on the step-up page
+const STEPUP_MIN = 1; // minimum number of stepup rules for a company to appear on the step-up page
 define('STEPUP_DESC', t('donation (step-up)')); // step-up donation tx description
 define('STEPUP_3PCT', str_replace('(', '(3% ', STEPUP_DESC)); // for testing
 define('REBATE_DESC', t('discount (rebate)'));

@@ -25,7 +25,7 @@ function formShouters($form, &$sta, $args = '') {
     LEFT JOIN r_states s ON s.id=u.state AND s.country_id=u.country
     ORDER BY org IS NULL, fullName
 X;
-  $q = db\q($sql, ray('ctty', $mya->community));
+  $q = db\q($sql, ray('ctty', $mya ? $mya->community : 0));
   
   $dpyFlds = ray('fullName title org quote');
   while ($row = $q->fetchAssoc()) {

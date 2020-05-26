@@ -73,8 +73,9 @@ EOF
     $org = textFld(t('Organization (if any):'), [t('Organization name'), t('Sometimes your voice carries more weight when you hold a responsible position in society. The list will say explicitly: <i>"%ORG_DISCLAIMER"</i>.')]);
     $position = textFld(t('Title:'), [t('Your position there')]);
     $website = textFld(t('Website:'), [t('Organization website URL')]);
+    $usePhoto = boolFld(t('Include Photo?'), t('Would you your account photo to be included in a collage of photos of members inviting the public to sign up?'), 1);
     jsx('invite');
-    return cgform(compact(ray('title subtext sign question quote org position website')) + w\setupFoot());
+    return cgform(compact(ray('title subtext sign question quote org position website usePhoto')) + w\setupFoot());
   }
 }
 
@@ -94,12 +95,13 @@ function formInvite_validate($form, &$sta) {
 }
 
 function formInvite_submit($form, &$sta) {
-  extract(just('sign quote org position website', $sta['input'], NULL));
+  extract(just('sign quote org position website usePhoto', $sta['input'], NULL));
   if (isset($sign)) { // community invitation
     global $mya; // (individual invitatins use w\elinkAcct instead)
     if ($sign) {
       $website = preg_replace('~http(s?)://~', '', $website);
-      db\insert('u_shouters', ray('uid quote org title website', $mya->id, $quote, $org, $position, $website), 'uid');
+      list ($uid, $title) = [$mya->id, $position];
+      db\insert('u_shouters', compact(ray('uid quote org title website usePhoto')), 'uid');
       say(t('Thank you! Your name has been added to the list.'));
     }
     return w\goNextStep('invite');
