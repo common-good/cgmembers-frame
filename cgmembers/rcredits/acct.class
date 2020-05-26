@@ -1878,7 +1878,7 @@ function setAcct($myid = '', &$sta = NULL) {
   if (!$myid) return $mya = NULL;
 
   $a = r\acct($myid, $agentId);
-  if (!$mya or ($a != $mya and !$mya->admin2)) $a->accessed(); // admin access doesn't count
+  if ($a->proSe or !$a->admin2) $a->accessed(); // admin access doesn't count
   return $mya = $a;
 }
 

@@ -121,8 +121,8 @@ Scenario: a member asks to do two transfers out in one day
   | op  | amount |*
   | put |     10 |
   Then we show "Transfer Funds" with:
-  |~Pending |
-  | You have total pending exchange requests of $6 to your bank account. |
+  | Pending  | |
+  | You have | $6 from %PROJECT to your bank account. |
   And we say "error": "short put" with subs:
   | max |*
   | $0  |
@@ -141,7 +141,7 @@ Scenario: a member draws credit from the bank then cancels
   | uid  | balance |*
   | .ZZC |      40 |
   And count "txs" is 8
-  When member "C:B" visits page "get/cancel=5007"
+  When member "C:B" visits page "get/cancel=in"
   Then balances:
   | uid  | balance |*
   | .ZZC |      30 |
