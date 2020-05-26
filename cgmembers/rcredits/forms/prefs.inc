@@ -21,7 +21,9 @@ function formPrefs($form, &$sta) {
   
   $crumbs = $mya->ok ? NULL : crumbsFld($mya->crumbs);
   $backing0 = u\fmtAmt(($mya->backing + 0) ?: 0); // don't default to 1 except on backing page
-  $backing = item($backing0, t('Backing:'), t('Backing allows you and your community to make grants. For the next 12 months, if there is a cash crunch, you agree to buy this much more %PROJECT credit. If the system fails utterly in that time, your %backing0 credit becomes a contribution.', compact('backing0')), suffix(' <small>[' . lnk('/community/backing', t('change')) . ']</small>'));
+  $backingLink = lnk('/community/backing', t('change'));
+  $backingEnd = $mya->backing > 0 ? t(' until ') . u\fmtDate($mya->backingDate + YEAR_SECS, TRUE) : '';
+  $backing = item($backing0, t('Backing:'), t('Backing allows you and your community to make grants. For the next 12 months, if there is a cash crunch, you agree to buy this much more %PROJECT credit. If the system fails utterly in that time, your %backing0 credit becomes a contribution.', compact('backing0')), suffix(" $backingEnd <small>[$backingLink]</small>"));
   
   $mediumRadios = array(
     t('I will accept electronic statements**.'), 
