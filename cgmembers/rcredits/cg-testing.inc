@@ -1778,6 +1778,7 @@ function doCode($code = '') {if ($code) file_put_contents(DOCODE_FLNM, $code); e
 
 
 function hitAPI($op, $userId, $password, $requests) {
+  global $testOnly; if ($testOnly) return FALSE;
   global $rAPIResult;
   include_once __DIR__ . '/forms/api.inc';
   $userId = t\fullQid2($userId);
@@ -1801,6 +1802,7 @@ function hitAPI($op, $userId, $password, $requests) {
 }
 
 function jsonResponses($correctResponses, $actualResponses) {
+  global $testOnly; if (! $testOnly) return FALSE;
   foreach ($correctResponses as $correctResponse) {
     fixData($correctResponse);
     if (! oneJsonResponse($correctResponse, $actualResponses)) {
@@ -1808,41 +1810,42 @@ function jsonResponses($correctResponses, $actualResponses) {
       return FALSE;
     }
   }
-  echo '<br /><br />jsonResponses returning true<br />';
   return TRUE;
 }
 
 function oneJsonResponse($correctResponse, $actualResponses) {
   foreach ($actualResponses as $actualResponse) {
-    $actualResponse = (array)$actualResponse;
-    foreach ($correctResponse as $key => $value) {
-      if ($value != "?") {
-        if (! array_key_exists($key, $actualResponse)) {
-          t\output("Response is missing $key");
+    if (checkOneArray($correctResponse, $actualResponse)) {
+      return TRUE;
+    }
+  }
+  t\output("correct response '" . print_r($correctResponse, TRUE) .
+           "' is not present in actual responses: '" . print_r($actualResponses, TRUE));
+  return FALSE;
+}
+
+function checkOneArray($correctResponse, $actualResponse) {
+  $actualResponse = (array)$actualResponse;
+  foreach ($correctResponse as $key => $value) {
+    echo("<br />$key => $value");
+    if ($value == '?') continue;
+
+    if (! array_key_exists($key, $actualResponse)) {
+      return FALSE;
+    }
+    if (is_array($value)) {
+      if (!is_array($actualResponse)) {
+        return FALSE;
+      }
+      foreach($value as $msg) {
+        if (!is_array($actualResponse) or ! in_array($msg, $actualResponse)) {
           return FALSE;
         }
-        if (is_array($value)) {
-          if (!is_array($actualResponse)) {
-            t\output("$key should be an array but is not");
-          }
-          foreach($value as $msg) {
-            if (!is_array($actualResponse) or ! in_array($msg, $actualResponse)) {
-              t\output("Response $msg is missing");
-              return FALSE;
-            }
-          }
-        }
-        $actualValue = $actualResponse[$key];
-        if (is_array($actualValue) and !is_array($value)) {
-          if (!in_array($value, $actualValue)) {
-            t\output("Response $value is missing, got: " . print_r($actualValue, TRUE));
-            return FALSE;
-          }
-        }
-        if ($value != $actualResponse[$key]) {
-          t\output("$key should be $value and is $actualResponse[$key]");
-          return FALSE;
-        }
+      }
+    } else {
+      $actualValue = $actualResponse[$key];
+      if ($actualValue != $actualResponse[$key] and ! in_array($value, $actualValue)) {
+        return FALSE;
       }
     }
   }

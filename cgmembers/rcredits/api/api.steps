@@ -129,21 +129,6 @@ function theResponseOpIsAndTheStatusIsAndThereAreResponsesAndTheyAre($op, $statu
 
   extract($rAPIResult, EXTR_PREFIX_ALL, 't');
           
-  /* print_r($op); */
-  /* echo '<br />'; */
-  /* print_r($status); */
-  /* echo '<br />'; */
-  /* print_r($num); */
-  /* echo '<br />'; */
-  /* print_r($correctResponses); */
-  /* echo '<br />'; */
-  /* print_r($t_op); */
-  /* echo '<br />'; */
-  /* print_r($t_status); */
-  /* echo '<br />'; */
-  /* print_r($t_responses); */
-  /* echo '<br />'; */
-
   if ($op != $t_op) {
     t\output("Expected op: $op, got: $t_op");
     return FALSE;
@@ -156,11 +141,11 @@ function theResponseOpIsAndTheStatusIsAndThereAreResponsesAndTheyAre($op, $statu
 }
 
 /**
- * the response op is (ARG) and the status is (ARG) and the errors are: (ARG)
+ * the response op is (ARG) and the status is (ARG) and the error is: (ARG)
  *
  * in: TEST validateUserIds UserWantsToValidateAnotherAccountWithWrongPassword
  */
-function theResponseOpIsAndTheStatusIsAndTheErrorsAre($op, $status, $errors) {
+function theResponseOpIsAndTheStatusIsAndTheErrorIs($op, $status, $error) {
   global $testOnly;
   global $rAPIResult;
 
@@ -174,6 +159,9 @@ function theResponseOpIsAndTheStatusIsAndTheErrorsAre($op, $status, $errors) {
     t\output("Expected status $status, got: $t_status");
     return FALSE;
   }
-  return t\jsonResponses($errors, $t_errors);
-  todo;
+  if (! in_array($error, $t_errors)) {
+    t\output("Expected error '$error' but got " . print_r($t_errors, TRUE));
+    return FALSE;
+  }
+  return TRUE;
 }

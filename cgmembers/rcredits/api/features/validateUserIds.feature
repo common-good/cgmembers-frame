@@ -41,7 +41,7 @@ Scenario: user wants to validate several customer accounts some of which succeed
   | OK     | .ZZB | ?           |
   | OK     | .ZZD | ?           |
   | BAD    | .ZZE | That does not appear to be your correct Common Good member ID. |
-  | BAD    |      | bad account |
+  | BAD    |      | xyzz |
 
 Scenario: user wants to validate another account with wrong password
   Given user ".ZZA" with password "456" asks API whether these users are valid:
@@ -51,6 +51,4 @@ Scenario: user wants to validate another account with wrong password
   | .ZZE | John R     | john@ | 4137777777 | 37 Nowhere  | Northfield | MA    | 99999   |
   | .ZZG | Gary Seven | g@    |            | 125 Main St | Greenfield | MA    | 01301   |
   
-  Then the response op is "validate-user-ids-response" and the status is "BAD" and the errors are:
-  | message      |*
-  | bad password |
+  Then the response op is "validate-user-ids-response" and the status is "BAD" and the error is: "Incorrect password for user NEWZZA"
