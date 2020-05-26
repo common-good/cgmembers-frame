@@ -15,11 +15,11 @@ Scenario: A member invites
   Then we show "Invite People"
 
   When member ".ZZB" completes form "community/invite" with values:
-  | sign | quote | org  | position | website |*
-  | 1    | cuz   | MeCo | Boss     | me.co   |
+  | sign | quote | org  | position | website | usePhoto |*
+  | 1    | cuz   | MeCo | Boss     | me.co   | 1        |
   Then these "u_shouters":
-  | uid  | quote | org  | title | website |*
-  | .ZZB | cuz   | MeCo | Boss  | me.co   |
+  | uid  | quote | org  | title | website | usePhoto |*
+  | .ZZB | cuz   | MeCo | Boss  | me.co   | 1        |
   
   When member ".ZZA" visits page "community/invite/all"
   Then we show "Please sign up now" with:

@@ -392,7 +392,8 @@ body.page-partner blockquote {font-size:14px;}
 #frm-invite .form-item-quote,
 #frm-invite .form-item-org,
 #frm-invite .form-item-position,
-#frm-invite .form-item-website {display:none;}
+#frm-invite .form-item-website,
+#frm-invite .form-item-usePhoto.form-type-radios {display:none;}
 
 /* Shouters */
 #frm-shouters .footnote {color:red;}
