@@ -75,7 +75,7 @@ function api($args = null) {
 
 function errorResponse($op, $userId, $errors, $status = 'BAD') {
   $op .= '-response';
-  $response = compact('op userId errors status');
+  $response = compact(ray('op userId errors status'));
   header('Access-Control-Allow-Origin: *'); // allow access from web browsers
   return (json_encode($response));
 }
@@ -188,7 +188,7 @@ function makePayment($request) {
                      ray('amt uid1 uid2 created for1', $amount, $myA->uid, $payeeA->uid, $billingDate, $purpose));
   if ($existing) {
     $status = 'DUPLICATE';
-    return compact('smtInvoiceId status');
+    return compact(ray('smtInvoiceId status'));
   }
   list($ok, $msg, $subs) = be\transfer('payment', $myA, $payeeA, $amount, $purpose, FOR_GOODS, ['created'=>$billingDate]);
   if ($ok) {
@@ -204,7 +204,7 @@ function makePayment($request) {
   default:
     $status = 'BAD';
   }
-  return compact('smtInvoiceId status errors');
+  return compact(ray('smtInvoiceId status errors'));
 }
 
 function getInvoiceStatus($userId, $requests) {
