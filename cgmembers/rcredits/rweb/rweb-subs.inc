@@ -703,7 +703,7 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
     $formArray = $form2 = $form; 
     return \render($form2);
     
-  } catch(Exception $e) {r\Web\exception_handler($e);}
+  } catch(\Exception $e) {r\Web\exception_handler($e);}
 }
 
 /**

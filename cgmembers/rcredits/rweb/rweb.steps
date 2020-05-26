@@ -112,10 +112,10 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE signup AMemberChoosesToStepUp
  *     MAKE signup AMemberInvites
  *     MAKE signup AMemberConfirmsSocialSecurityNumber
- *     MAKE transact AMemberAsksToChargeAnotherMemberForGoods
- *     MAKE transact AMemberAsksToPayAnotherMemberForGoods
- *     MAKE transact AMemberAsksToPayAnotherMemberForLoanreimbursement
- *     MAKE transact ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
+ *     MAKE tx AMemberAsksToChargeAnotherMemberForGoods
+ *     MAKE tx AMemberAsksToPayAnotherMemberForGoods
+ *     MAKE tx AMemberAsksToPayAnotherMemberForLoanreimbursement
+ *     MAKE tx ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
  */
 function memberCompletesFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values);}
 
@@ -163,12 +163,12 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE signup AMemberRegistersBadZip
  *     MAKE signup AMemberRegistersAgain
  *     MAKE stepup AMembersRulesComeIntoPlay
- *     MAKE transact AMemberConfirmsRequestToChargeAnotherMember
- *     MAKE transact AMemberConfirmsRequestToPayAnotherMember
- *     MAKE transact AMemberConfirmsRequestToPayAnotherMemberALot
- *     MAKE transact AMemberConfirmsRequestToPayAMemberCompany
- *     MAKE transact AMemberPaysAnotherMemberRepeatedly
- *     MAKE transact AMemberPaysAnotherMemberLater
+ *     MAKE tx AMemberConfirmsRequestToChargeAnotherMember
+ *     MAKE tx AMemberConfirmsRequestToPayAnotherMember
+ *     MAKE tx AMemberConfirmsRequestToPayAnotherMemberALot
+ *     MAKE tx AMemberConfirmsRequestToPayAMemberCompany
+ *     MAKE tx AMemberPaysAnotherMemberRepeatedly
+ *     MAKE tx AMemberPaysAnotherMemberLater
  */
 function memberConfirmsFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
 
@@ -262,8 +262,8 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE statement Setup
  *     MAKE stepup Setup
  *     MAKE summary Setup
- *     MAKE transact Setup
- *     MAKE transactions Setup
+ *     MAKE tx Setup
+ *     MAKE txs Setup
  */
 function members($list) {return t\members($list);}
 
@@ -301,12 +301,12 @@ function members($list) {return t\members($list);}
  *     MAKE statement Setup
  *     MAKE summary Setup
  *     MAKE summary AMemberClicksTheSummaryTabWithRoundups
- *     TEST transact AMemberConfirmsRequestToPayAnotherMember
- *     TEST transact AMemberConfirmsRequestToPayAnotherMemberALot
- *     TEST transact AMemberConfirmsRequestToPayAMemberCompany
- *     TEST transact AMemberPaysAnotherMemberRepeatedly
- *     MAKE transactions Setup
- *     MAKE transactions AMemberLooksAtTransactionsWithRoundups
+ *     TEST tx AMemberConfirmsRequestToPayAnotherMember
+ *     TEST tx AMemberConfirmsRequestToPayAnotherMemberALot
+ *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
+ *     TEST tx AMemberPaysAnotherMemberRepeatedly
+ *     MAKE txs Setup
+ *     MAKE txs AMemberLooksAtTransactionsWithRoundups
  */
 function transactions($list) {return t\transactions($list);}
 
@@ -340,11 +340,11 @@ function transactions($list) {return t\transactions($list);}
  *     TEST relations AMemberAddsARelation
  *     TEST signin AMemberAsksForANewPasswordForACompany
  *     TEST signup AMemberRegistersAgain
- *     TEST transact AMemberConfirmsRequestToChargeAnotherMember
- *     TEST transact AMemberConfirmsRequestToPayAnotherMember
- *     TEST transact AMemberConfirmsRequestToPayAMemberCompany
- *     TEST transact AMemberPaysAnotherMemberRepeatedly
- *     TEST transact AMemberPaysAnotherMemberLater
+ *     TEST tx AMemberConfirmsRequestToChargeAnotherMember
+ *     TEST tx AMemberConfirmsRequestToPayAnotherMember
+ *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
+ *     TEST tx AMemberPaysAnotherMemberRepeatedly
+ *     TEST tx AMemberPaysAnotherMemberLater
  */
 function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $index, $subs);}
 
@@ -418,7 +418,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST signup AMemberRegistersBadZip
  *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     TEST stepup AMemberChoosesRecurringAndPertransactionDonations
- *     TEST transact ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
+ *     TEST tx ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
  */
 function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
 
@@ -595,9 +595,9 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST summary AMemberClicksTheSummaryTabWithRoundups
  *     TEST summary AnAgentClicksTheSummaryTabWithoutPermissionToManage
  *     TEST summary ACompanyAgentClicksTheSummaryTab
- *     TEST transactions AMemberLooksAtTransactionsForThePastYear
- *     TEST transactions AMemberLooksAtTransactionsForThePastFewDays
- *     TEST transactions AMemberLooksAtTransactionsWithRoundups
+ *     TEST txs AMemberLooksAtTransactionsForThePastYear
+ *     TEST txs AMemberLooksAtTransactionsForThePastFewDays
+ *     TEST txs AMemberLooksAtTransactionsWithRoundups
  */
 function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWith($title, $content, $debug);}
 
@@ -613,9 +613,9 @@ function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWit
  *     TEST preferences AMemberVisitsThePreferencesPage
  *     TEST relations ItsComplicated
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
- *     TEST transactions AMemberLooksAtTransactionsForThePastYear
- *     TEST transactions AMemberLooksAtTransactionsForThePastFewDays
- *     TEST transactions AMemberLooksAtTransactionsWithRoundups
+ *     TEST txs AMemberLooksAtTransactionsForThePastYear
+ *     TEST txs AMemberLooksAtTransactionsForThePastFewDays
+ *     TEST txs AMemberLooksAtTransactionsWithRoundups
  */
 function with($content) {return weShow($content);}
 
@@ -644,8 +644,8 @@ function with($content) {return weShow($content);}
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     TEST summary AnAgentClicksTheSummaryTabWithoutPermissionToManage
- *     TEST transactions AMemberLooksAtTransactionsForThePastYear
- *     TEST transactions AMemberLooksAtTransactionsForThePastFewDays
+ *     TEST txs AMemberLooksAtTransactionsForThePastYear
+ *     TEST txs AMemberLooksAtTransactionsForThePastFewDays
  */
 function without($content) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -713,8 +713,8 @@ function withoutOptions($options) {
  *     TEST signupco ACompanySignsUp
  *     MAKE statement Setup
  *     MAKE summary Setup
- *     MAKE transact Setup
- *     MAKE transactions Setup
+ *     MAKE tx Setup
+ *     MAKE txs Setup
  */
 function relations($relations) {return t\relations($relations);}
 
@@ -756,13 +756,13 @@ function relations($relations) {return t\relations($relations);}
  *     TEST statement Setup
  *     TEST summary Setup
  *     TEST summary AMemberClicksTheSummaryTabWithRoundups
- *     TEST transact Setup
- *     TEST transact AMemberConfirmsRequestToChargeAnotherMember
- *     TEST transact AMemberConfirmsRequestToPayAnotherMember
- *     MAKE transact AMemberConfirmsRequestToPayAnotherMemberALot
- *     TEST transact AMemberConfirmsRequestToPayAMemberCompany
- *     BOTH transactions Setup
- *     TEST transactions AMemberLooksAtTransactionsWithRoundups
+ *     TEST tx Setup
+ *     TEST tx AMemberConfirmsRequestToChargeAnotherMember
+ *     TEST tx AMemberConfirmsRequestToPayAnotherMember
+ *     MAKE tx AMemberConfirmsRequestToPayAnotherMemberALot
+ *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
+ *     BOTH txs Setup
+ *     TEST txs AMemberLooksAtTransactionsWithRoundups
  */
 function balances($list) {return t\balances($list);}
 
@@ -873,10 +873,10 @@ function usd($list) {return t\usd($list);}
  *     MAKE summary AMemberClicksTheSummaryTabWithRoundups
  *     MAKE summary AnAgentClicksTheSummaryTabWithoutPermissionToManage
  *     MAKE summary ACompanyAgentClicksTheSummaryTab
- *     MAKE transactions AMemberLooksAtTransactionsForThePastYear
- *     MAKE transactions AMemberLooksAtTransactionsForThePastFewDays
- *     MAKE transactions AMemberLooksAtTransactionsWithRoundups
- *     MAKE transactions AdminReversesABankTransfer
+ *     MAKE txs AMemberLooksAtTransactionsForThePastYear
+ *     MAKE txs AMemberLooksAtTransactionsForThePastFewDays
+ *     MAKE txs AMemberLooksAtTransactionsWithRoundups
+ *     MAKE txs AdminReversesABankTransfer
  */
 function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
 
@@ -1017,9 +1017,9 @@ function memberOnetimePasswordIs($id, $pass) {
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
  *     TEST invoice AMemberDeniesAnInvoice
- *     TEST transact AMemberConfirmsRequestToPayAnotherMember
- *     TEST transact AMemberConfirmsRequestToPayAMemberCompany
- *     TEST transact AMemberPaysAnotherMemberRepeatedly
+ *     TEST tx AMemberConfirmsRequestToPayAnotherMember
+ *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
+ *     TEST tx AMemberPaysAnotherMemberRepeatedly
  */
 function weNoticeToMemberWithSubs($notice, $id, $subs) {return t\notice($notice, $id, $subs);}
 
@@ -1094,8 +1094,8 @@ function withDownloadColumns($columns) {
  *     MAKE queries Setup
  *     MAKE statement Setup
  *     MAKE summary Setup
- *     MAKE transactions Setup
- *     TEST transactions AdminReversesABankTransfer
+ *     MAKE txs Setup
+ *     TEST txs AdminReversesABankTransfer
  */
 function usdTransfers($tx) {return t\usdTransfers($tx);}
 
@@ -1184,7 +1184,7 @@ function statisticsGetSet($time) {
  *     TEST signup AMemberChoosesTithes
  *     MAKE statement Setup
  *     MAKE summary Setup
- *     MAKE transactions AMemberLooksAtTransactionsForThePastYear
+ *     MAKE txs AMemberLooksAtTransactionsForThePastYear
  */
 function membersHave($list) {return t\membersHave($list);}
 
@@ -1236,7 +1236,7 @@ function accountWasSetUpByMember($coId, $id) {
  * next DO code is (ARG)
  *
  * in: MAKE gift AMemberDonates
- *     MAKE transact AMemberConfirmsRequestToPayAMemberCompany
+ *     MAKE tx AMemberConfirmsRequestToPayAMemberCompany
  */
 function nextDOCodeIs($code) {
   global $testOnly; if ($testOnly) return FALSE;
@@ -1282,7 +1282,7 @@ function devices($list) {return t\devices($list);}
  *     TEST invoice AMemberApprovesInvoicesForevermore
  *     TEST invoice AMemberApprovesAnInvoiceToATrustingCustomer
  *     TEST signupco ACompanySignsUp
- *     TEST transact AMemberConfirmsRequestToChargeAnotherMember
+ *     TEST tx AMemberConfirmsRequestToChargeAnotherMember
  */
 function invoices($list) {return t\invoices($list);}
 
@@ -1309,7 +1309,7 @@ function signupCompanyInfoForAccountIsRemembered($id) {
  * that (ARG) has link results: (ARG)
  *
  * in: TEST gift AMemberDonates
- *     TEST transact AMemberConfirmsRequestToPayAMemberCompany
+ *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
  */
 function thatHasLinkResults($thing, $info) {return t\hasLinkResults($thing, $info);}
 
@@ -1440,7 +1440,7 @@ function memberHasCompanyInfo($id, $info) {
 /**
  * member (ARG) clicks (ARG) on transaction (ARG)
  *
- * in: MAKE transactions AdminReversesABankTransfer
+ * in: MAKE txs AdminReversesABankTransfer
  */
 function memberClicksOnTransaction($id, $do, $xid) {
   global $testPeriod;
@@ -1469,7 +1469,7 @@ function memberConfirmsOnTransaction($id, $do, $xid) {
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
- *     TEST transact AMemberConfirmsRequestToChargeAnotherMember
+ *     TEST tx AMemberConfirmsRequestToChargeAnotherMember
  */
 function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($index, $id, $subs);}
 
@@ -1635,9 +1635,9 @@ function coupons($list) {return t\coupons($list);}
 /**
  * we scrip (ARG) with subs: (ARG)
  *
- * in: TEST transact AMemberAsksToChargeAnotherMemberForGoods
- *     TEST transact AMemberAsksToPayAnotherMemberForGoods
- *     TEST transact AMemberAsksToPayAnotherMemberForLoanreimbursement
+ * in: TEST tx AMemberAsksToChargeAnotherMemberForGoods
+ *     TEST tx AMemberAsksToPayAnotherMemberForGoods
+ *     TEST tx AMemberAsksToPayAnotherMemberForLoanreimbursement
  */
 function weScripWithSubs($script, $args = []) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -1701,9 +1701,9 @@ function weScripWithSubs($script, $args = []) {
  *     TEST signup AMemberInvites
  *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     BOTH stepup AMembersRulesComeIntoPlay
- *     TEST transact AMemberPaysAnotherMemberRepeatedly
- *     TEST transact AMemberPaysAnotherMemberLater
- *     TEST transactions AdminReversesABankTransfer
+ *     TEST tx AMemberPaysAnotherMemberRepeatedly
+ *     TEST tx AMemberPaysAnotherMemberLater
+ *     TEST txs AdminReversesABankTransfer
  */
 function these($thing, $list) {return t\these($thing, $list);}
 
@@ -1777,7 +1777,7 @@ function variableIs($k, $v) {return t\varIs($k, $v);}
 /**
  * field (ARG) is (ARG) field (ARG)
  *
- * in: TEST transact AMemberPaysAnotherMemberRepeatedly
+ * in: TEST tx AMemberPaysAnotherMemberRepeatedly
  */
 function fieldIsField($fld1, $op, $fld2) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -1799,7 +1799,7 @@ function fieldIsField($fld1, $op, $fld2) {
 /**
  * date field (ARG) rounded (ARG) in (ARG) record (ARG) (id field (ARG))
  *
- * in: TEST transact AMemberPaysAnotherMemberRepeatedly
+ * in: TEST tx AMemberPaysAnotherMemberRepeatedly
  */
 function dateFieldRoundedInRecordidField($dateFnm, $round, $tnm, $id, $idFnm) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -1816,7 +1816,7 @@ function strStarts($haystack, $needle) {
 /**
  * member (ARG) is unconfirmed
  *
- * in: MAKE transact ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
+ * in: MAKE tx ANewMemberAsksToPayAnotherMemberBeforeMakingACommonGoodCardPurchase
  */
 function memberIsUnconfirmed($id) {
   global $testOnly;
@@ -1829,7 +1829,7 @@ function memberIsUnconfirmed($id) {
  *
  * in: TEST bank Setup
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
- *     TEST transact AMemberPaysAnotherMemberLater
+ *     TEST tx AMemberPaysAnotherMemberLater
  */
 function countIs($what, $count) {return t\count($what, $count);}
 

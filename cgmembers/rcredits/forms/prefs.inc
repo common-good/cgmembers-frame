@@ -21,7 +21,9 @@ function formPrefs($form, &$sta) {
   
   $crumbs = $mya->ok ? NULL : crumbsFld($mya->crumbs);
   $backing0 = u\fmtAmt(($mya->backing + 0) ?: 0); // don't default to 1 except on backing page
-  $backing = item($backing0, t('Backing:'), t('Backing allows you and your community to make grants. For the next 12 months, if there is a cash crunch, you agree to buy this much more %PROJECT credit. If the system fails utterly in that time, your %backing0 credit becomes a contribution.', compact('backing0')), suffix(' <small>[' . lnk('/community/backing', t('change')) . ']</small>'));
+  $backingLink = lnk('/community/backing', t('change'));
+  $backingEnd = $mya->backing > 0 ? t(' until ') . u\fmtDate($mya->backingDate + YEAR_SECS, TRUE) : '';
+  $backing = item($backing0, t('Backing:'), t('Backing allows you and your community to make grants. For the next 12 months, if there is a cash crunch, you agree to buy this much more %PROJECT credit. If the system fails utterly in that time, your %backing0 credit becomes a contribution.', compact('backing0')), suffix(" $backingEnd <small>[$backingLink]</small>"));
   
   $mediumRadios = array(
     t('I will accept electronic statements**.'), 
@@ -78,15 +80,18 @@ function formPrefs_submit($form, $sta) {
   include_once __DIR__ . '/../admin/admin.inc';
   global $mya;
 
-  $fields = 'crumbs food snap';
-  extract(just($fields . ' roundup smsNotices notices statements nosearch debtOk secretBal', $sta['input']));
+  extract(just('crumbs food snap roundup smsNotices notices statements nosearch debtOk secretBal', $sta['input']));
 ///  if ($food) $mya->stepsDone('food'); // don't show the food fund page unnecessarily?
+  $fields = 'food snap';
+  if (isset($crumbs)) {
+    $crumbs /= 100; // convert percentage to decimal
+    $fields .= ' crumbs';
+  }
+  $food /= 100;
 
   foreach (ray($fields) as $k) $old["_old $k"] = $mya->$k;
   $old += ['_old flags' => u\bits($mya->flags)];
   $bits = ray('roundup weekly monthly paper secret debt nosearch', @$roundup, @$notices == 1, @$notices == 2, @$statements, @$secretBal, @$debtOk, @$nosearch);
-  $crumbs /= 100; // convert percentage to decimal
-  $food /= 100;
   $info = compact(ray($fields)) + $bits;
 
   if (@$statements) r\tellAdmin(t('%who wants paper statements', 'who', $mya->fullName), ['topic' => t('paper')]);

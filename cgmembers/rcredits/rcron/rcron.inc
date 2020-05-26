@@ -112,8 +112,9 @@ function run() {
     try {
       cr\doTask(unserialize($item));
       db\q('DELETE FROM queue WHERE id=:id', compact('id'));
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
       u\log('cron task failed'); // In case of exception log it and leave the item in the queue to be processed again later.
+      r\tellAdmin('cron task failed id=' . $id);
     }
   }
   // Restore the user.
@@ -1017,7 +1018,7 @@ function notice1($item) {
   $now = now();
   if ($args = r\noticeArgs($uid, 'NOT sent', $weekly, $monthly)) {
     $args['messages'] = str_replace('stule=', 'style=', $args['messages']); // revert in emails (but CSP forbids inline styles online)
-    r\notify($uid, 'notices', $args, TRUE);
+    if (!r\notify($uid, 'notices', $args, TRUE)) return;
     db\q('UPDATE r_notices SET sent=:now WHERE uid=:uid AND NOT sent', compact('uid', 'now'));
   }
 }

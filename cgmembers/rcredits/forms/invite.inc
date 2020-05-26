@@ -73,7 +73,7 @@ EOF
     $org = textFld(t('Organization (if any):'), [t('Organization name'), t('Sometimes your voice carries more weight when you hold a responsible position in society. The list will say explicitly: <i>"%ORG_DISCLAIMER"</i>.')]);
     $position = textFld(t('Title:'), [t('Your position there')]);
     $website = textFld(t('Website:'), [t('Organization website URL')]);
-    $usePhoto = boolFld(t('Include Photo?'), t('Would you your account photo to be included in a collage of photos of members inviting the public to sign up?'), 1);
+    $usePhoto = boolFld(t('Include Photo?'), t('Would you like your account photo included in a collage of photos of members inviting the public to sign up?'), 1);
     jsx('invite');
     return cgform(compact(ray('title subtext sign question quote org position website usePhoto')) + w\setupFoot());
   }

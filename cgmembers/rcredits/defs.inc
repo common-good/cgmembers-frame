@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.53f'; // software version
+const R_VERSION = '3.53g'; // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -21,7 +21,7 @@ define('isPRODUCTION', $stage == 'production');
 const US_COUNTRY_ID = 1228; // United States (used in settings file and elsewhere)
 const CA_COUNTRY_ID = 1039; // Canada
 require_once __DIR__ . '/cg-settings.inc'; // custom settings for this community's CG server
-const TEST_INVITE_KEY = '10101';
+const TEST_INVITE_KEY = '111';
 
 $base_url = config('baseUrl');
 define('GEOCODE_KEY', config('geocodeKey'));
@@ -36,7 +36,7 @@ define('CG_SMTP_PORT', config('cgSmtpPort', 587));
 define('CG_SMTP_USER', config('cgSmtpUser', CGF_EMAIL));
 define('CG_SMTP_PASS', config('cgSmtpPass'));
 define('DKIM_PRIVATE', config('dkimPrivate'));
-define('R_INVITE_KEY', (!function_exists('test') or test()) ? TEST_INVITE_KEY : config('inviteKey'));
+define('R_INVITE_KEY', basename(strstr($_SERVER['REQUEST_URI'], '?', TRUE)) == 'tests' ? TEST_INVITE_KEY : config('inviteKey'));
 define('R_SSN_USER', config('ssnUser'));
 define('R_SSN_PASS', config('ssnPass'));
 define('R_SSN_REQUEST', config('ssnRequest'));

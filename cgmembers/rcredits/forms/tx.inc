@@ -75,31 +75,32 @@ function formTx_submit($form, &$sta) {
   u\setDft($goods, FOR_GOODS);
   $DBTX = \db_transaction();
   $func = op($sta);
+  $paying = ($func == 'pay');
   $delay = ($start > today());
   $repeats = ($periods > 0);
   
   if (!$delay) {
     $start = today();
     $recurs = $period ? ['recurs' => 1] : [];
-    list ($ok, $msg, $args) = $func == 'pay'
+    list ($ok, $msg, $args) = $paying
     ? be\transfer('payment', $mya, r\acct($uid), $amount, $purpose, $goods, $recurs)
     : be\invoice($mya, r\acct($uid), $amount, $purpose, $goods, $recurs);
   } else list($ok, $msg, $args) = [TRUE, '', []];
   
-  if ($func == 'pay' and $mya->snap) r\tellAdmin(t('SNAP member %who %did something', 'who did', $mya->fullName, $ok ? t('bought') : t('tried to buy')), ['topic' => t('SNAP purchase') . ($ok ? '' : t(' failed'))]);
+  if ($paying and $mya->snap) r\tellAdmin(t('SNAP member %who %did something', 'who did', $mya->fullName, $ok ? t('bought') : t('tried to buy')), ['topic' => t('SNAP purchase') . ($ok ? '' : t(' failed'))]);
 
   if ($delay or ($repeats and $ok)) { // need a rule template
     if (!$end) $end = NULL;
-    list ($action, $thing, $tnm, $idFnm) = $func == 'pay' 
+    list ($action, $thing, $tnm, $idFnm) = $paying
     ? [ACT_PAY, t('payment'), 'tx_hdrs', 'xid'] 
     : [ACT_CHARGE, t('invoice'), 'r_invoices', 'nvid'];
-    $subs = ray('from to', $mya->id, $uid);
+    $subs = ray($paying ? 'from to' : 'to from', $mya->id, $uid);
    
     if ($repeats) {
-      $where = "`from`=:from AND `to`=:to AND action=:ACT_PAY AND period<>'once' AND IFNULL(end, :NOW + 1) > :NOW";
-      if (!$delay and $id = db\get('id', 'tx_templates', $where, $subs)) {
-        r\endRule(TRUE, $id);
-        say(t('Your recurring %thing has been updated.', compact('thing')));
+      $where = "tp.from=:from AND tp.to=:to AND action=:ACT_PAY AND period<>'once' AND IFNULL(end, :NOW + 1) > :NOW";
+      if (!$delay and db\exists('tx_templates tp', $where, $subs)) {
+        $otherName = db\get('fullName', 'users', compact('uid'));
+        if ($otherName) say(t('Note: You also have another active recurring transaction with %otherName. Go to <%a>History / Recurring Payments</a> to manage your recurring transactions.', 'otherName _a', $otherName, atag('/history/recurring')));
       }
       $often = r\recurDesc($period, $periods);
       $args += compact('often');

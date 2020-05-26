@@ -1,3 +1,14 @@
+2020-05-27 feature/exceptions
+. added backslash before "Exception" in non-working catches
+. unsent notices are no longer marked sent
+
+2020-05-26 feature/fixes
+. admin visits no longer change access time of accounts
+. TEST_INVITE_KEY is now used when testing
+. bank transfer cancelations are now handled more elegantly
+. preferences page no longer complains about null crumbs
+. recurring transactions no longer replace other recurring transactions
+
 2020-05-25 feature/photo-permission
 . we now ask inviter whether to use their photo in a collage
 

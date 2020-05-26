@@ -1007,7 +1007,7 @@ function getLocus($q, $city = '', $state = '', $zip = '') {
   */
   try {
     $res = @file_get_contents($url = GEOCODE_URL . http_build_query($params));
-  } catch (Exception $e) { }
+  } catch (\Exception $e) { }
   
   if (!nn($res)) {
     r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)));

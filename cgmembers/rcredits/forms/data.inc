@@ -31,7 +31,7 @@ function formData($form, &$sta, $args = '', $isco = FALSE) {
         $list = w\makeTable($rows, $hdrs);
       } else $list = t('Zero matching rows found.');
       $form = compact(ray('title list'));
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
       say($e->getMessage(), 'sql');
       $form = compact(ray('title sql'));
     }
