@@ -33,7 +33,7 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   if ($log and mb_strpos($sql, 'SELECT ') === FALSE) u\loga('db', $subs + compact('sql'));
   try {
     return \db_query(u\SUBS($sql), u\prefixKeys(':', $subs), @compact('return'));
-  } catch (Exception $e) {
+  } catch (\Exception $e) {
 /**/ if (@$channel == TX_WEB) r\Web\exception_handler($e); else die('in q');
   }
 }

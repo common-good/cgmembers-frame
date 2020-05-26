@@ -182,7 +182,7 @@ function photoUpload($uid = '', $sid = '') {
 //  if (!$mya->co)
   try {
     if (!$recrop) imagejpeg($img0, $tempFilename, 100); // save for a few days in case we have to recrop
-  } catch (Exception $e) {
+  } catch (\Exception $e) {
 /**/    lug('failed to save photo file ' . $tempFilename);
   }
 
@@ -191,7 +191,7 @@ function photoUpload($uid = '', $sid = '') {
   try {
       $photo = u\img2string($img, $quality);
       $mya->update(compact('photo')); // do not combine this with line above
-  } catch (Exception $e) {
+  } catch (\Exception $e) {
     return w\photoRet(t('Your photo could not be uploaded (%err). Try a smaller version or <%a>email it</a> to us?', ray('_err _a', $e->getMessage(), w\emailtag(NULL, t('Here is a photo for my %PROJECT card')))));
   }
   

@@ -39,7 +39,7 @@ function regionalInsert($table, $idField, $record, $region = NULL) {
     if (!$id = $record[$idField] = u\firstUnusedId($idField, $table, $start, $end)) break;
     try {
       if (db\insert($table, $record, $idField)) return $id;
-    } catch (Exception $e) { // BIG MYSTERY: why does this happen sometimes with no collision?
+    } catch (\Exception $e) { // BIG MYSTERY: why does this happen sometimes with no collision?
       r\tellAdmin(t('cannot save regional: ') . $e->getMessage(), $record + ['topic' => t('cannot save')]);
     }
   }
@@ -54,26 +54,6 @@ function regionRange($region = NULL) {
   $end = $region + ($region < 0 ? -(R_REGION_MAX - 1) : (R_REGION_MAX - 1));
   $start = $region < 0 ? $region - 1 : $region; // -1: do not use the uid of the region itself
   return [$start, $end, -$region];
-}
-
-/**
- * Save a record in the given table *that has no AUTO_INCREMENT* returning the record ID of the inserted record.
- * @param string $table: table to save in (anything but users or r_relations)
- * @param string $idField: name of record ID field (uid or reid)
- * @param assoc  $record: the record to save (possibly with record ID already chosen)
- * @return record ID of the inserted record
- */
-function insert($table, $idField, $record) {
-  if (@$record[$idField]) return db\insert($table, $record, $idField); // predestined id (probably for testing)
-  for ($try = 0; $try < 20; $try++) { // limit the retries
-    if (!$id = $record[$idField] = u\firstUnusedId($idField, $table, 1)) break;
-    try {
-      if (db\insert($table, $record, $idField)) return $id;
-    } catch (Exception $e) { // BIG MYSTERY: can this happen sometimes with no collision?
-      r\tellAdmin(t('cannot save: ') . $e->getMessage(), $record + ['topic' => t('cannot save')]);
-    }
-  }
-  u\EXPECT(FALSE, "failed to save $table record after $try tries.");
 }
 
 /**
@@ -306,7 +286,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
 
   if (!isPRODUCTION and (isDEV or db\count('users') > 200)) { // make sure we never send rogue emails from test server with real data
 /**/  if (!test() and (isDEV or ($mya and $mya->cAdmin))) debug(compact(ray('subject to reply body')));
-    return; // no emails unless real!!
+    return TRUE; // no emails unless real!!
   }
   
   require_once DRUPAL_ROOT . '/vendor/swiftmailer/lib/swift_required.php';
@@ -351,9 +331,9 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
       $m->setSubject($subject . t(' (for %acct)', 'acct', $jA->fullName));
       $mailer->send($m);
     }
-  } catch (Exception $e) {
+  } catch (\Exception $e) {
     u\EXPECT($toEmail != R_ADMIN_EMAIL, 'cannot send admin email');
-    r\tellAdmin(t('cannot send email'), $erInfo);
+    return r\tellAdmin(t('cannot send email'), $erInfo);
   }
   return TRUE;
 }
@@ -399,6 +379,7 @@ function message($uid, $index, $subs = [], $topic = '') {
  * @param string $index: message index
  * @param assoc $subs: substitutions/parameters for the message
  * @param bool $force: send by email NOW
+ * @return <successfully mailed> if $force
  */
 function notify($uid, $index, $subs = [], $force = FALSE) {
   global $channel;
@@ -411,7 +392,7 @@ function notify($uid, $index, $subs = [], $force = FALSE) {
   $warnIndexes = ray('new invoice,new offer,charge disputed');
   
   if ($force) {
-    $mailed = r\rMail($index, $a, $subs, @$subs['reply'] ?: 'ctty');
+    return r\rMail($index, $a, $subs, @$subs['reply'] ?: 'ctty');
   } else {
     list ($message, $created) = array(t($index, $subs), now());
     f('t.output', "Actual Notice to $fullName: $message");
