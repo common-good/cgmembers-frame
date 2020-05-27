@@ -1,4 +1,4 @@
-˘<?php
+<?php
 /**
  * @file
  * rPos Steps
@@ -39,14 +39,18 @@ function extraSetup() {
 /**
  * members: (ARG)
  *
- * in: MAKE validateUserIds Setup
+ * in: MAKE generateInvoices Setup
+ *     MAKE makePayments Setup
+ *     MAKE signUpUsers Setup
+ *     MAKE validateUserIds Setup
  */
 function members($list) {return t\members($list);}
 
 /**
  * relations: (ARG)
  *
- * in: 
+ * in: MAKE generateInvoices Setup
+ *     MAKE makePayments Setup
  */
 function relations($relations) {return t\relations($relations);}
 
@@ -104,22 +108,46 @@ function weRespondWith($args) {
 
 
 /**
- * user (ARG) with password (ARG) asks API whether these users are valid: (ARG)
+ * member (ARG) with password (ARG) sends (ARG) requests: (ARG)
  *
- * in: MAKE validateUserIds UserWantsToValidateAnotherCustomerAccountAndSucceeds
+ * in: MAKE generateInvoices MemberWantsToInvoiceAnotherMemberAndSucceeds
+ *     MAKE generateInvoices MemberWantsToInvoiceAnotherMemberAndTheInvoiceIsApproved
+ *     MAKE generateInvoices MemberWantsToInvoiceAnotherMemberAndTheInvoiceIsAutopaid
+ *     MAKE generateInvoices MemberWantsToInvoiceAnotherMemberAndFails
+ *     MAKE generateInvoices AMemberInvoicesAnotherMemberTwiceForTheSameThingAndItWasPaidTheFirstTime
+ *     MAKE generateInvoices AMemberInvoicesAnotherMemberTwiceForTheSameThingAndItWasApprovedTheFirstTime
+ *     MAKE makePayments MemberWantsToPayAnotherMemberAndSucceeds
+ *     MAKE makePayments MemberWantsToPayAnotherMemberButDoesNotHaveEnoughMoney
+ *     MAKE makePayments MemberWantsToPayAnotherMemberAndFails
+ *     MAKE makePayments AMemberPaysAnotherMemberTwiceForTheSameThingAndItWasDoneTheFirstTime
+ *     MAKE signUpUsers MemberWantsToSignUpAnotherMemberAndSucceeds
+ *     MAKE signUpUsers MemberWantsToSignUpSeveralMembersAllOfWhichSucceed
+ *     MAKE validateUserIds MemberWantsToValidateAnotherMemberAccountAndSucceeds
  *     MAKE validateUserIds UserWantsToValidateAnotherCustomerAccountAndFails
  *     MAKE validateUserIds UserWantsToValidateSeveralCustomerAccountsSomeOfWhichSucceed
  *     MAKE validateUserIds UserWantsToValidateAnotherAccountWithWrongPassword
  */
-function userWithPasswordAsksAPIWhetherTheseUsersAreValid($member, $password, $requests) {
+function memberWithPasswordSendsRequests($member, $password, $op, $requests) {
   global $testOnly;
-  return t\hitAPI('validate-user-ids', $member, $password, $requests);
+  return t\hitAPI($op, $member, $password, $requests);
 }
 
 /**
  * the response op is (ARG) and the status is (ARG) and there are (ARG) responses and they are: (ARG)
  *
- * in: TEST validateUserIds UserWantsToValidateAnotherCustomerAccountAndSucceeds
+ * in: TEST generateInvoices MemberWantsToInvoiceAnotherMemberAndSucceeds
+ *     TEST generateInvoices MemberWantsToInvoiceAnotherMemberAndTheInvoiceIsApproved
+ *     TEST generateInvoices MemberWantsToInvoiceAnotherMemberAndTheInvoiceIsAutopaid
+ *     TEST generateInvoices MemberWantsToInvoiceAnotherMemberAndFails
+ *     TEST generateInvoices AMemberInvoicesAnotherMemberTwiceForTheSameThingAndItWasPaidTheFirstTime
+ *     TEST generateInvoices AMemberInvoicesAnotherMemberTwiceForTheSameThingAndItWasApprovedTheFirstTime
+ *     TEST makePayments MemberWantsToPayAnotherMemberAndSucceeds
+ *     TEST makePayments MemberWantsToPayAnotherMemberButDoesNotHaveEnoughMoney
+ *     TEST makePayments MemberWantsToPayAnotherMemberAndFails
+ *     TEST makePayments AMemberPaysAnotherMemberTwiceForTheSameThingAndItWasDoneTheFirstTime
+ *     TEST signUpUsers MemberWantsToSignUpAnotherMemberAndSucceeds
+ *     TEST signUpUsers MemberWantsToSignUpSeveralMembersAllOfWhichSucceed
+ *     TEST validateUserIds MemberWantsToValidateAnotherMemberAccountAndSucceeds
  *     TEST validateUserIds UserWantsToValidateAnotherCustomerAccountAndFails
  *     TEST validateUserIds UserWantsToValidateSeveralCustomerAccountsSomeOfWhichSucceed
  */
@@ -134,7 +162,10 @@ function theResponseOpIsAndTheStatusIsAndThereAreResponsesAndTheyAre($op, $statu
     return FALSE;
   }
   if ($status != $t_status) {
-    t\output("Expected status $status, got: $t_status");
+    t\output("Expected request status $status, got: $t_status");
+    if (key_exists('errors', $rAPIResult)) {
+      t\output("Errors were: " . print_r($t_errors, TRUE));
+    }                
     return FALSE;
   }
   return t\jsonResponses($correctResponses, $t_responses);
@@ -165,3 +196,16 @@ function theResponseOpIsAndTheStatusIsAndTheErrorIs($op, $status, $error) {
   }
   return TRUE;
 }
+
+/**
+ * balances: (ARG)
+ *
+ * in: TEST generateInvoices MemberWantsToInvoiceAnotherMemberAndTheInvoiceIsApproved
+ *     BOTH generateInvoices MemberWantsToInvoiceAnotherMemberAndTheInvoiceIsAutopaid
+ *     BOTH generateInvoices AMemberInvoicesAnotherMemberTwiceForTheSameThingAndItWasPaidTheFirstTime
+ *     TEST generateInvoices AMemberInvoicesAnotherMemberTwiceForTheSameThingAndItWasApprovedTheFirstTime
+ *     BOTH makePayments MemberWantsToPayAnotherMemberAndSucceeds
+ *     TEST makePayments MemberWantsToPayAnotherMemberButDoesNotHaveEnoughMoney
+ *     BOTH makePayments AMemberPaysAnotherMemberTwiceForTheSameThingAndItWasDoneTheFirstTime
+ */
+function balances($list) {return t\balances($list);}

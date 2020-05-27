@@ -833,14 +833,15 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   } else { // pre-approved!
     if (!$payerA->shortfall(TX_TRANSFER, $amount)) { // don't try to pay yet if short
       list($ok, $msg) = be\payInvoice($nvid);
-      if (!$ok) r\tellAdmin(t('invoice payment failed'), compact('msg') + $subs + $info);
+      if (!$ok) { r\tellAdmin(t('invoice payment failed'), compact('msg') + $subs + $info);
+      } else { $status = TX_PAID; }
     }
   }
 
   $msg = 'report tx';
 //  if ($payeeA->cttyRewardy) $msg .= '|for why';
   if ($amount > 0) $msg .= '|balance unchanged';
-  return [TRUE, $msg, $subs + ray('success nvid status', TRUE, $nvid)];
+  return [TRUE, $msg, $subs + ray('success nvid status', TRUE, $nvid, $status)];
 }
 
 /* /\** */
