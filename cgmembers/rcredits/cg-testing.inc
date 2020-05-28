@@ -15,7 +15,7 @@ use CG\Cron as cr;
 use CG\Web as w;
 
 const T_BALANCE_FLDS = 'uid balance floor savingsAdd saveWeekly minimum';
-const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid cgId';
+const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid cgId payerId payeeId';
 const SPECIAL_IDS = 'ctty crumb round cgf bank-in bank-out';
 const RLESS_TNMS = 'signup posts people post_cats messages'; // test tables with no "r_" prefix
 const NULL_FLDS = 'payer payee useMax amtMax template end code rule';
@@ -1776,30 +1776,6 @@ function rewarding() {return ctty('aab')->cttyRewardy;}
 function ray2assoc($ray) {foreach ($ray as $one) $res[$one[0]] = $one[1]; return @$res ?: [];}
 function doCode($code = '') {if ($code) file_put_contents(DOCODE_FLNM, $code); else return file_get_contents(DOCODE_FLNM);}
 
-function fixId($id) {
-  if (preg_match('/^\.([A-Z]{3})$/', $id, $matches)) {
-    return 'NEW' . $matches[1];
-  }
-  if (preg_match('/^([A-Z]{6})$/', $id, $matches)) {
-    print_r($id);
-    return $id;
-  }
-  switch ($id) {
-  case '': return '';
-  case '26742000017551': return 'NEWZZA';
-  case '26742000017552': return 'NEWZZB';
-  case '26742000017553': return 'NEWZZC';
-  case '26742000017554': return 'NEWZZD';
-  case '26742000017555': return 'NEWZZE';
-  case '26742000017556': return 'NEWZZF';
-  case '26742000017557': return 'NEWZZG';
-  case '26742000017558': return 'NEWZZH';
-  case '26742000017559': return 'NEWZZI';
-  default:
-    die("'$id' not recognized");
-  }
-}
-
 function hitAPI($op, $userId, $password, $requests) {
   global $testOnly; if ($testOnly) return FALSE;
   global $rAPIResult;
@@ -1808,9 +1784,6 @@ function hitAPI($op, $userId, $password, $requests) {
   $fixedRequests = [];
   foreach ($requests as $request) {
     fixData($request);
-    if (key_exists('cgId', $request)) { $request['cgId'] = fixId($request['cgId']); }
-    if (key_exists('payerId', $request)) { $request['payerId'] = fixId($request['payerId']); }
-    if (key_exists('payeeId', $request)) { $request['payeeId'] = fixId($request['payeeId']); }
     $fixedRequests[] = $request;
   }
   $overall = ['op'=>$op, 'userId'=>$userId, 'password'=>$password, 'requests'=>$fixedRequests];
@@ -1824,9 +1797,7 @@ function hitAPI($op, $userId, $password, $requests) {
 function jsonResponses($correctResponses, $actualResponses) {
   global $testOnly; if (! $testOnly) return FALSE;
   foreach ($correctResponses as $correctResponse) {
-    if (key_exists('cgId', $correctResponse)) { $correctResponse['cgId'] = fixId($correctResponse['cgId']); }
-    if (key_exists('payerId', $correctResponse)) { $correctResponse['payerId'] = fixId($correctResponse['payerId']); }
-    if (key_exists('payeeId', $correctResponse)) { $correctResponse['payeeId'] = fixId($correctResponse['payeeId']); }
+    fixData($correctResponse);
     if (! oneJsonResponse($correctResponse, $actualResponses)) {
       output("Correct response not found " . print_r($correctResponse, TRUE));
       return FALSE;
@@ -1848,35 +1819,18 @@ function oneJsonResponse($correctResponse, $actualResponses) {
 
 function checkOneArray($correctResponse, $actualResponse) {
   $actualResponse = (array)$actualResponse;
-  if (key_exists('cgId', $actualResponse)) { $actualResponse['cgId'] = fixId($actualResponse['cgId']); }
-  if (key_exists('payeeId', $actualResponse)) { $actualResponse['payeeId'] = fixId($actualResponse['payeeId']); }
-  if (key_exists('payerId', $actualResponse)) { $actualResponse['payerId'] = fixId($actualResponse['payerId']); }
+  fixData($actualResponse);
   foreach ($correctResponse as $key => $value) {
     if ($value == '?') continue;
 
     if (! array_key_exists($key, $actualResponse)) {
+      t\output("$key missing from response");
       return FALSE;
     }
-    if (is_array($value)) {
-      if (!is_array($actualResponse)) {
-        return FALSE;
-      }
-      foreach($value as $msg) {
-        if (!is_array($actualResponse) or ! in_array($msg, $actualResponse)) {
-          return FALSE;
-        }
-      }
-    } else {
-      $actualValue = $actualResponse[$key];
-      if (is_array($actualValue)) {
-        if (! in_array($value, $actualValue)) {
-          return FALSE;
-        }
-      } else {
-        if ($value != $actualValue) {
-          return FALSE;
-        }
-      }
+    $actualValue = $actualResponse[$key];
+    if ($value != $actualValue) {
+      t\output("$value != $actualValue");
+      return FALSE;
     }
   }
   return TRUE;

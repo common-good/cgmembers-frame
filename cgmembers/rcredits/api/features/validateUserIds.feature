@@ -16,8 +16,8 @@ Scenario: member wants to validate another member account and succeeds
   | .ZZC | Corner Pub | c@    |            | 12 Main St  | Greenfield | MA    | 01301   |
   
   Then the response op is "validate-user-ids-response" and the status is "OK" and there are 1 responses and they are:
-  | status | cgId | errors      |*
-  | OK     | .ZZC | ?           |
+  | status | cgId | error |*
+  | OK     | .ZZC | ?     |
 
 Scenario: user wants to validate another customer account and fails
   Given member ".ZZA" with password "123" sends "validate-user-ids" requests:
@@ -25,7 +25,7 @@ Scenario: user wants to validate another customer account and fails
   | .ZZC | Corner Pub |       | 7777777777           | 25 Federal St | Greenfield | MA    | 01301   |
   
   Then the response op is "validate-user-ids-response" and the status is "OK" and there are 1 responses and they are:
-  | status | cgId | errors                                                         |*
+  | status | cgId | error                                                          |*
   | BAD    | .ZZC | That does not appear to be your correct Common Good member ID. |
 
 Scenario: user wants to validate several customer accounts some of which succeed
@@ -37,7 +37,7 @@ Scenario: user wants to validate several customer accounts some of which succeed
   | .ZZG | Gary Seven | g@    |            | 125 Main St | Greenfield | MA    | 01301   |
   
   Then the response op is "validate-user-ids-response" and the status is "OK" and there are 4 responses and they are:
-  | status | cgId | errors                                                         |*
+  | status | cgId | error                                                          |*
   | OK     | .ZZB | ?                                                              |
   | OK     | .ZZD | ?                                                              |
   | BAD    | .ZZE | That does not appear to be your correct Common Good member ID. |

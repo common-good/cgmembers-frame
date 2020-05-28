@@ -25,7 +25,7 @@ use CG\Web as w;
  * { "op": the incoming request op with "-response" tacked on to the end,
  *   "userId": the userId of the requester (for verification),
  *   "status": 'OK' or 'BAD',
- *   "errors": only present if status=="BAD", an array of strings, explanatory messages
+ *   "error": only present if status=="BAD", an explanatory message
  *   "responses": only present if status=="OK", an array of responses, one for each element
  *                in the original requests array; each response has a format based on "op"
  */
@@ -37,13 +37,13 @@ function api($args = null) {
   extract(just('op userId password requests', $data, NULL));
   $mya = r\acct($userId);
   if (! $mya) {
-    return errorResponse($op, $userId, ["User id $userId not found"]); // combine these two!!
+    return errorResponse($op, $userId, "User id $userId not found"); // combine these two!!
   }
   if (! $mya->passwordOkay($password, 'pass')) {
-    return errorResponse($op, $userId, [ "Incorrect password for user $userId" ]);
+    return errorResponse($op, $userId, "Incorrect password for user $userId");
   }
   if (is_null($requests) or ! is_array($requests) or $requests == []) {
-    return errorResponse($op, $userId, [ "Improperly formed request" ]);
+    return errorResponse($op, $userId, "Improperly formed request");
   }
 
   switch($op) {
@@ -53,13 +53,13 @@ function api($args = null) {
   case 'make-payments':      return makePayments($userId, $requests);
   case 'get-invoice-status': return getInvoiceStatus($userId, $requests);
   default:
-    return errorResponse($op, $userId, ['Invalid API operation']);
+    return errorResponse($op, $userId, 'Invalid API operation');
   }
 }
 
-function errorResponse($op, $userId, $errors, $status = 'BAD') {
+function errorResponse($op, $userId, $error, $status = 'BAD') {
   $op .= '-response';
-  $response = compact(ray('op userId errors status'));
+  $response = compact(ray('op userId error status'));
   header('Access-Control-Allow-Origin: *'); // allow access from web browsers
   return (json_encode($response));
 }
@@ -83,9 +83,9 @@ function validateUserId($userId, $request) {
   global $mya;
   extract(just('cgId fullName email phone address city state zipCode', $request, null));
   $userA = r\acct($cgId);
-  if (! $userA) { return [ 'status' => 'BAD', 'errors' => [ 'Common Good Account not found' ], 'cgId' => $cgId]; }
+  if (! $userA) { return [ 'status' => 'BAD', 'error' => 'Common Good Account not found', 'cgId' => $cgId]; }
   if (! u\similar($userA->fullName, $fullName, 5, .5) or !($userA->phone == u\fmtPhone(@$phone, '+n') or $userA->email == $email)) {
-    return [ 'status' => 'BAD', 'errors' => [ t('That does not appear to be your correct %PROJECT member ID.') ], 'cgId' => $cgId];
+    return [ 'status' => 'BAD', 'error' => t('That does not appear to be your correct %PROJECT member ID.'), 'cgId' => $cgId];
   }
   return [ 'status' => 'OK', 'cgId' => $cgId ];
 }
@@ -117,31 +117,31 @@ function generateInvoices($userId, $requests) {
 
 function generateInvoice($request) {
   global $mya;
-  extract(just('amount payerId billingDate dueDate smtInvoiceId purpose status', $request, null));
+  extract(just('amount payerId billingDate dueDate nonce purpose status', $request, null));
   $payerA = r\acct($payerId);
-  if (! $payerA) { return ray('smtInvoiceId status payerId amount errors', $smtInvoiceId, 'BAD', $payerId, $amount, ['Payer not found']); }
+  if (! $payerA) { return ray('nonce status payerId amount error', $nonce, 'BAD', $payerId, $amount, 'Payer not found'); }
   $existing = db\get('nvid, status', 'r_invoices', ray('amount payer payee purpose created', $amount, $payerA->uid, $mya->uid, $purpose, $billingDate));
   if ($existing) {
     extract(just('nvid status', $existing));
     $status = statusString($status) . '-DUPLICATE';
     if ($status == 'BAD-DUPLICATE') {
-      return ray('smtInvoiceId status payerId amount errors', $smtInvoiceId, 'BAD', $payerId, $amount, ['CG system internal error']);
+      return ray('nonce status payerId amount error', $nonce, 'BAD', $payerId, $amount, 'CG system internal error');
     }
-    return ray('smtInvoiceId status payerId amount cgInvoiceId', $smtInvoiceId, $status, $payerId, $amount, $nvid);
+    return ray('nonce status payerId amount cgInvoiceId', $nonce, $status, $payerId, $amount, $nvid);
   }
   // Not a duplicate
   list($success, $msg, $subs) = be\invoice($mya, $payerA, $amount, $purpose, FOR_GOODS, ['created' => $billingDate]);
   if ($success) {
     $status = statusString($subs['status']);
     if ($status == 'BAD') {
-      return ray('smtInvoiceId status payerId amount errors', $smtInvoiceId, 'BAD', $payerId, $amount, ['CG system internal error']);
+      return ray('nonce status payerId amount error', $nonce, 'BAD', $payerId, $amount, 'CG system internal error');
     }
     $cgInvoiceId = $subs['nvid'];
-    return compact(ray('smtInvoiceId status payerId amount cgInvoiceId'));
+    return compact(ray('nonce status payerId amount cgInvoiceId'));
   } else {
     $status = 'BAD';
-    $errors = [ $msg ];
-    return compact(ray('smtInvoiceId status errors payerId amount'));
+    $error = [ $msg ];
+    return compact(ray('nonce status error payerId amount'));
   }
 }
 
@@ -155,22 +155,22 @@ function makePayments($userId, $requests) {
 
 function makePayment($request) {
   global $mya;
-  extract(just('amount payeeId billingDate purpose smtInvoiceId', $request, null));
+  extract(just('amount payeeId billingDate purpose nonce', $request, null));
   $payeeA = r\acct($payeeId);
   $status = 'BAD';
-  $errors = ['payee account not found'];
-  if (! $payeeA) { return compact(ray('smtInvoiceId status payeeId amount errors')); }
+  $error = 'payee account not found';
+  if (! $payeeA) { return compact(ray('nonce status payeeId amount error')); }
   $existing = db\get('xid', 'txs_prime', 'amt=:amt and uid1=:uid1 and uid2=:uid2 and created=:created and for1=:for1',
                      ray('amt uid1 uid2 created for1', $amount, $mya->uid, $payeeA->uid, $billingDate, $purpose));
   if ($existing) {
     $status = 'DUPLICATE';
-    return compact(ray('smtInvoiceId status payeeId amount'));
+    return compact(ray('nonce status payeeId amount'));
   }
   list($ok, $msg, $subs) = be\transfer('payment', $mya, $payeeA, $amount, $purpose, FOR_GOODS, ['created'=>$billingDate]);
   if ($ok) {
-    return ray('smtInvoiceId status payeeId amount', $smtInvoiceId, 'OK', $payeeId, $amount);
+    return ray('nonce status payeeId amount', $nonce, 'OK', $payeeId, $amount);
   }
-  $errors = [ t($msg, $subs) ];
+  $error = t($msg, $subs);
   switch ($msg) {
   case 'short from vague':
   case 'short from':
@@ -180,7 +180,7 @@ function makePayment($request) {
   default:
     $status = 'BAD';
   }
-  return compact(ray('smtInvoiceId status payeeId amount errors'));
+  return compact(ray('nonce status payeeId amount error'));
 }
 
 function getInvoiceStatus($userId, $requests) {
@@ -195,10 +195,12 @@ function getOneInvoiceStatus($request) {
   global $mya;
   extract(just('cgInvoiceId amount payerId', $request));
   $payerA = r\acct($payerId);
-  if (! $payerA) { return ray('cgInvoiceId amount payerId status errors', $cgInvoiceId, $amount, $payerId, 'BAD', ['payer account missing']); }
-  $status = db\get('status', 'r_invoices', ['nvid'=>$cgInvoiceId, 'amount'=>$amount, 'payer'=>$payerA->uid, 'payee'=>$mya->uid]);
-  if (! $status) { return ray('cgInvoiceId amount payerId status', $cgInvoiceId, $amount, $payerId, statusString($status)); }
-  return ray('cgInvoiceId amount payerId status errors', $cgInvoiceId, $amount, $payerId, 'BAD', ['no invoice found']);
+  if (! $payerA) { return ray('cgInvoiceId amount payerId status error', $cgInvoiceId, $amount, $payerId, 'BAD', 'payer account missing'); }
+  $result = db\get('status, payee', 'r_invoices', ['nvid'=>$cgInvoiceId, 'amount'=>$amount, 'payer'=>$payerA->uid, 'payee'=>$mya->uid]);
+  if ($result == FALSE) {
+    return ray('cgInvoiceId amount payerId status error', $cgInvoiceId, $amount, $payerId, 'BAD', 'no invoice found');
+  }
+  return ray('cgInvoiceId amount payerId status', $cgInvoiceId, $amount, $payerId, statusString($result['status']));
 }
 
 function statusString($status) {

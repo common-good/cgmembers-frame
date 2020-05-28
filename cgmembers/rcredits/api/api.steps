@@ -40,6 +40,7 @@ function extraSetup() {
  * members: (ARG)
  *
  * in: MAKE generateInvoices Setup
+ *     MAKE getInvoiceStatus Setup
  *     MAKE makePayments Setup
  *     MAKE signUpUsers Setup
  *     MAKE validateUserIds Setup
@@ -50,6 +51,7 @@ function members($list) {return t\members($list);}
  * relations: (ARG)
  *
  * in: MAKE generateInvoices Setup
+ *     MAKE getInvoiceStatus Setup
  *     MAKE makePayments Setup
  */
 function relations($relations) {return t\relations($relations);}
@@ -116,6 +118,11 @@ function weRespondWith($args) {
  *     MAKE generateInvoices MemberWantsToInvoiceAnotherMemberAndFails
  *     MAKE generateInvoices AMemberInvoicesAnotherMemberTwiceForTheSameThingAndItWasPaidTheFirstTime
  *     MAKE generateInvoices AMemberInvoicesAnotherMemberTwiceForTheSameThingAndItWasApprovedTheFirstTime
+ *     MAKE getInvoiceStatus MemberInvoicesAnotherMemberAndGetsPENDINGThenGetsInvoiceStatus
+ *     MAKE getInvoiceStatus MemberInvoicesAnotherMemberAndGetsAPPROVEDThenGetsInvoiceStatus
+ *     MAKE getInvoiceStatus MemberWantsToInvoiceAnotherMemberAndTheInvoiceIsAutopaidThenGetsInvoiceStatus
+ *     MAKE getInvoiceStatus MemberWantsToGetInvoiceStatusAndFailsBecauseTheyDontOwnIt
+ *     MAKE getInvoiceStatus MemberWantsToGetInvoiceStatusForANonexistentInvoice
  *     MAKE makePayments MemberWantsToPayAnotherMemberAndSucceeds
  *     MAKE makePayments MemberWantsToPayAnotherMemberButDoesNotHaveEnoughMoney
  *     MAKE makePayments MemberWantsToPayAnotherMemberAndFails
@@ -141,6 +148,11 @@ function memberWithPasswordSendsRequests($member, $password, $op, $requests) {
  *     TEST generateInvoices MemberWantsToInvoiceAnotherMemberAndFails
  *     TEST generateInvoices AMemberInvoicesAnotherMemberTwiceForTheSameThingAndItWasPaidTheFirstTime
  *     TEST generateInvoices AMemberInvoicesAnotherMemberTwiceForTheSameThingAndItWasApprovedTheFirstTime
+ *     TEST getInvoiceStatus MemberInvoicesAnotherMemberAndGetsPENDINGThenGetsInvoiceStatus
+ *     TEST getInvoiceStatus MemberInvoicesAnotherMemberAndGetsAPPROVEDThenGetsInvoiceStatus
+ *     TEST getInvoiceStatus MemberWantsToInvoiceAnotherMemberAndTheInvoiceIsAutopaidThenGetsInvoiceStatus
+ *     TEST getInvoiceStatus MemberWantsToGetInvoiceStatusAndFailsBecauseTheyDontOwnIt
+ *     TEST getInvoiceStatus MemberWantsToGetInvoiceStatusForANonexistentInvoice
  *     TEST makePayments MemberWantsToPayAnotherMemberAndSucceeds
  *     TEST makePayments MemberWantsToPayAnotherMemberButDoesNotHaveEnoughMoney
  *     TEST makePayments MemberWantsToPayAnotherMemberAndFails
@@ -163,8 +175,8 @@ function theResponseOpIsAndTheStatusIsAndThereAreResponsesAndTheyAre($op, $statu
   }
   if ($status != $t_status) {
     t\output("Expected request status $status, got: $t_status");
-    if (key_exists('errors', $rAPIResult)) {
-      t\output("Errors were: " . print_r($t_errors, TRUE));
+    if (key_exists('error', $rAPIResult)) {
+      t\output("Error was: " . print_r($t_error, TRUE));
     }                
     return FALSE;
   }
@@ -190,8 +202,8 @@ function theResponseOpIsAndTheStatusIsAndTheErrorIs($op, $status, $error) {
     t\output("Expected status $status, got: $t_status");
     return FALSE;
   }
-  if (! in_array($error, $t_errors)) {
-    t\output("Expected error '$error' but got " . print_r($t_errors, TRUE));
+  if ($error != $t_error) {
+    t\output("Expected error '$error' but got '$t_error'");
     return FALSE;
   }
   return TRUE;
@@ -204,6 +216,8 @@ function theResponseOpIsAndTheStatusIsAndTheErrorIs($op, $status, $error) {
  *     BOTH generateInvoices MemberWantsToInvoiceAnotherMemberAndTheInvoiceIsAutopaid
  *     BOTH generateInvoices AMemberInvoicesAnotherMemberTwiceForTheSameThingAndItWasPaidTheFirstTime
  *     TEST generateInvoices AMemberInvoicesAnotherMemberTwiceForTheSameThingAndItWasApprovedTheFirstTime
+ *     TEST getInvoiceStatus MemberInvoicesAnotherMemberAndGetsAPPROVEDThenGetsInvoiceStatus
+ *     BOTH getInvoiceStatus MemberWantsToInvoiceAnotherMemberAndTheInvoiceIsAutopaidThenGetsInvoiceStatus
  *     BOTH makePayments MemberWantsToPayAnotherMemberAndSucceeds
  *     TEST makePayments MemberWantsToPayAnotherMemberButDoesNotHaveEnoughMoney
  *     BOTH makePayments AMemberPaysAnotherMemberTwiceForTheSameThingAndItWasDoneTheFirstTime

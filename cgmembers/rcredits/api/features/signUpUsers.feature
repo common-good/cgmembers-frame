@@ -24,7 +24,7 @@ Scenario: member wants to sign up several members all of which succeed
   | Far Co     |       |            |             |            | MA    |         | 380   |
 
   Then the response op is "sign-up-users-response" and the status is "OK" and there are 1 responses and they are:
-  | nonce | status | cgId | errors |*
-  | 378   | OK     | .AAA | ?      |
-  | 379   | OK     | .AAC | ?      |
-  | 380   | OK     | .AAD | ?      |
+  | nonce | status | cgId | error |*
+  | 378   | OK     | .AAA | ?     |
+  | 379   | OK     | .AAC | ?     |
+  | 380   | OK     | .AAD | ?     |
