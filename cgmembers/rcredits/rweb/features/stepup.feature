@@ -86,9 +86,9 @@ Scenario: A member's rules come into play
   Then we show "Transaction History" with:
   | Tx# | Date | Name     | Purpose                  | Amount  | Balance |
   | 1   | %mdy | Cor Pub  | labor                    | -100.00 | -105.00 |
-  |     |      |          | donation (50% step-up)   |   -1.00 |         |
-  |     |      |          | donation (step-up)       |   -2.00 |         |
-  |     |      |          | donation (3% step-up)    |   -2.00 |         |
+  |     |      | Fox Co   | donation (50% step-up)   |   -1.00 |         |
+  |     |      | Glo Co   | donation (step-up)       |   -2.00 |         |
+  |     |      | Hip Co   | donation (3% step-up)    |   -2.00 |         |
 
 Scenario: A member chooses recurring and per-transaction donations
   When member ".ZZB" steps up with:

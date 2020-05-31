@@ -38,7 +38,7 @@ function getTxs($uids, $starting=NULL, $ending=NULL) {
   // !(e.amount=0 AND e.entryType=:E_BANK) hides not-yet-completed bank transfers
   $sql = <<< EOF
     SELECT t.*, e.*, u.fullName AS name, tp.period, tp.periods, ru.portion, i.nvid,
-      (ru.action=:ACT_SURTX AND tp.from IN (:MATCH_PAYER, e.uid)) AS stepup,
+      (ru.action=:ACT_SURTX AND (ru.from IN (:MATCH_PAYER, e.uid) OR ru.to=e.uid)) AS stepup,
       (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=t.xid) AS reversedBy,
       (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=t.xid AND d.status=:DS_OPEN)) AS isDisputed
     FROM tx_entries e LEFT JOIN tx_hdrs t USING (xid) LEFT JOIN users u USING (uid)

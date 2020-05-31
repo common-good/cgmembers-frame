@@ -61,10 +61,10 @@ Scenario: A recurring payment happened yesterday
 Scenario: A recurring payment happened long enough ago to repeat
   Given these "tx_templates":
   | id | start         | from | to   | amount | period | purpose |*
-  |  8 | %yesterday-1m | .ZZA | .ZZC |     10 | month  | pmt     |
+  |  8 | %yesterday-1w | .ZZA | .ZZC |     10 | week   | pmt     |
   And transactions:
   | xid | created       | amount | payer | payee | purpose | flags  | recursId |*
-  |   2 | %yesterday-1m |     10 | .ZZA  | .ZZC  | pmt     | recurs |        8 |
+  |   2 | %yesterday-1w |     10 | .ZZA  | .ZZC  | pmt     | recurs |        8 |
   When cron runs "recurs"
   Then transactions:
   | xid | created    | amount | payer | payee | purpose | flags  | recursId |*
