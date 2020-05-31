@@ -399,10 +399,10 @@ function formatField($k, $v) {
  *   fld(type, label, help, value)
  *   fld(type, label, help, other, options)
  * @param string $type: field type (text num pass area tel date email range radios select submit item hidden file checkbox)
- *   optionally preceded by REQ and/or BARE (single characters) in that order
- *   REQ means the field is required, BARE means don't wrap the field in a div (overrideable by wrap => TRUE in $other)
  * @param assoc $args: all other arguments besides type
  * @param assoc $label: textual prompt to precede the field
+ *   optionally preceded by REQ and/or BARE (single characters) in that order
+ *   REQ means the field is required, BARE means don't wrap the field in a div (overrideable by wrap => TRUE in $other)
  * @param mixed $help: help string to go below the field or [placeholder, help] or [placeholder, help, hover text]
  * @param assoc $x: additional attributes
  * @param assoc $options: options for select, radio buttons, or checkboxes
@@ -542,20 +542,6 @@ function fieldSet($id, $flds, $label = '', $desc = '', $other = []) {return fld(
  */
 function roundupFld($a) {
   return w\boolFld(t('Round Up!'), t('Round all your payments up to a whole dollar amount and donate the cents toward building the %PROJECT Economy in your area.'), $a ? $a->roundup : FALSE);
-}
-
-/**
- * Return an error message if the chosen sharing amount is invalid.
- * @param string $share: (MODIFIED) the member's chosen sharing percentage (returned normalized)
- * @param bool $required: whether to insist on input
- * @return FALSE if no error, otherwise the error message or index.
- */
-function badShare(&$share, $required = FALSE) {
-  $share = trim(str_replace('%', '', $share));
-  if ($required and $share === '') return t('missing field', 'field', 'share');
-  if ($err = u\badAmount($share, '>=0', 3)) return t('AMOUNT:|') . $err;
-  if ($share < 1) $share *= 100; // if under 1% assume they meant more
-  if ($share > R_SHARE_MAX) return 'share too big';
 }
 
 /**

@@ -1,3 +1,13 @@
+2020-05-31 feature/little-stuff
+. fixed bug that showed step-ups on discounts list
+. added asof field to mailchimp export, so we can be sure something goes only to members
+. fixed exception handler so no white screen of death
+. added usePhoto to public invitation form and changed the quote to "Common Good could have a huge positive impact..."
+. added "region" to backing page text
+. fixed bug that showed error message in contact form for Co-op Power members
+. discounts available to you now shows "you+" when appropriate, instead of "anyone"
+. specifying drivers license now completes verifyid step
+
 2020-05-27 feature/exceptions
 . added backslash before "Exception" in non-working catches
 . unsent notices are no longer marked sent

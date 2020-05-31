@@ -7,7 +7,7 @@ use CG\Util as u;
 use CG\Db as db;
 
 /**
- * Invite someone to sign up for rCredits (on behalf of the account, not the agent).
+ * Invite someone to sign up for Common Good (on behalf of the account, not the agent).
  * NOTE: We allow agents to send invitations on behalf of a company, but be aware that companies are not people and there is a danger in giving companies permission to act like people. On this invitation form, the company is "trusting" whoever it invites -- something usually reserved for humans.
  */
 function formInvite($form, &$sta, $args = '') {
@@ -66,16 +66,18 @@ EOF
     
   } else {
     $title = t('Invite People');
-    $subtext = t('<p>On average, the %PROJECT Community Fund grows by thousands of dollars with every participant. Let\'s get all of %city signed up and have a  multi-million dollar fund to help the community through this pandemic crisis and beyond.</p><p>Join other thought leaders in signing this public invitation:</p><h4>%SHOUT_TEXT<br><small>&mdash; %nm (and many others)</small></h4>', 'nm city', $mya->fullName, $mya->city);
+    $subtext = t('<p>On average, the %PROJECT Community Fund grows by thousands of dollars with every participant. Let\'s get all of %city signed up and have a  multi-million dollar fund to help the community through this pandemic crisis and beyond.</p><p>If you have not yet seen our video, please see it now, before finishing this page: %videoBtn</p><p>Join other thought leaders in signing this public endorsement:</p><h5>%SHOUT_TEXT<br><small>&mdash; %nm (and many others)</small></h5>', 'nm city _videoBtn', $mya->fullName, $mya->city, btn(VIDEO_URL, t('Video'), 'success'));
     $sign = boolFld(t('Sign:'), '', -1);
-    $question = item(t('Why do you want people to sign up? How do you see %PROJECT benefiting you, your family, the community, or your organization\'s mission?'));
+    $question = item(t('Why do you want people to sign up? How do you see %PROJECT benefiting you, your family, the community, or your organization\'s mission? When people are thinking about signing up, they will read this as you-talking-to-them. So you may want to tell them explicitly to sign up.'));
     $quote = textFld(t('Answer:'), [t('Your answer to the question above'), t('Your answer will appear below your name in the list.')]);
     $org = textFld(t('Organization (if any):'), [t('Organization name'), t('Sometimes your voice carries more weight when you hold a responsible position in society. The list will say explicitly: <i>"%ORG_DISCLAIMER"</i>.')]);
     $position = textFld(t('Title:'), [t('Your position there')]);
     $website = textFld(t('Website:'), [t('Organization website URL')]);
-    $usePhoto = boolFld(t('Include Photo?'), t('Would you like your account photo included in a collage of photos of members inviting the public to sign up?'), 1);
+    $usePhoto = boxFld('usePhoto', t('Include Photo:'), t('Include my photo in the collage of members inviting the public to sign up.'), 1);
+    $postPhoto = boxFld('postPhoto', NBSP, t('You may also include my photo and my answer (above) in a media post.'));
+
     jsx('invite');
-    return cgform(compact(ray('title subtext sign question quote org position website usePhoto')) + w\setupFoot());
+    return cgform(compact(ray('title subtext sign question quote org position website usePhoto postPhoto')) + w\setupFoot());
   }
 }
 
@@ -95,10 +97,11 @@ function formInvite_validate($form, &$sta) {
 }
 
 function formInvite_submit($form, &$sta) {
-  extract(just('sign quote org position website usePhoto', $sta['input'], NULL));
+  extract(just('sign quote org position website usePhoto postPhoto', $sta['input'], NULL));
   if (isset($sign)) { // community invitation
     global $mya; // (individual invitatins use w\elinkAcct instead)
     if ($sign) {
+      foreach (ray('usePhoto postPhoto') as $k) $$k = $$k ? 1 : 0;
       $website = preg_replace('~http(s?)://~', '', $website);
       list ($uid, $title) = [$mya->id, $position];
       db\insert('u_shouters', compact(ray('uid quote org title website usePhoto')), 'uid');

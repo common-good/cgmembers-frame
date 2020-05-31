@@ -1503,16 +1503,21 @@ function dateIncr($start, $number, $units) {
  * @param string $now -- might be an actual timestamp or a string like :NOW
  * @return the sql string
  */
-function genRuleSQL($role, $uid, $now = ':NOW') {
+function genRuleSQL($role, $uid, $now = ':NOW', $rulesTnm = 'ru') {
   $sql = <<< EOF
-    (CASE ${role}Type
+    (CASE $rulesTnm.${role}Type
      WHEN :REF_ANYBODY THEN TRUE
      WHEN :REF_ACCOUNT THEN $role = $uid
      WHEN :REF_ANYCO THEN (SELECT :IS_CO FROM users WHERE uid=$uid)
-     WHEN :REF_INDUSTRY THEN EXISTS (SELECT 1 FROM r_user_industries ui join ancestors a ON ui.iid=a.base WHERE a.ancestor=r.payee AND ui.uid=$uid)
-     WHEN :REF_GROUP THEN EXISTS (SELECT 1 FROM u_groups g JOIN u_groupies ug ON (ug.grpId = g.id)
-                                  WHERE ug.uid = $uid AND ug.start <= $now
-                                  AND IFNULL($now < ug.end, TRUE))
+     WHEN :REF_INDUSTRY THEN EXISTS (
+       SELECT 1 FROM r_user_industries ui join ancestors a ON ui.iid=a.base 
+       WHERE a.ancestor=$rulesTnm.payee AND ui.uid=$uid
+     )
+     WHEN :REF_GROUP THEN EXISTS (
+       SELECT 1 FROM u_groups g JOIN u_groupies ug ON (ug.grpId = g.id)
+       WHERE ug.uid = $uid AND ug.start <= $now
+       AND IFNULL($now < ug.end, TRUE)
+     )
      ELSE FALSE
      END)  
 EOF;

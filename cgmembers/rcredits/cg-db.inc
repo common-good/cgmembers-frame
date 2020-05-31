@@ -34,7 +34,8 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   try {
     return \db_query(u\SUBS($sql), u\prefixKeys(':', $subs), @compact('return'));
   } catch (\Exception $e) {
-/**/ if (@$channel == TX_WEB) r\Web\exception_handler($e); else die('in q');
+    \rcredits_exception_handler($e);
+/// if (@$channel == TX_WEB) \exception_handler($e); else die('in q');
   }
 }
 

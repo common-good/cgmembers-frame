@@ -124,10 +124,10 @@ function formCoupons_validate($form, &$sta) {
     $ruleId = db\get('id', 'tx_rules', ray('from code', $fromA->id, $iCode));
     $payeeCheck = u\genRuleSQL('payee', ':payee');
     $sql = <<< EOF
-      SELECT id AS ruleId, r.end FROM tx_rules r
-      WHERE r.from=:issuer
-      AND :iCode = r.code
-      AND r.action=:ACT_REDEEM
+      SELECT id AS ruleId, ru.end FROM tx_rules ru
+      WHERE ru.from=:issuer
+      AND :iCode = ru.code
+      AND ru.action=:ACT_REDEEM
       AND start<=:NOW
       AND $payeeCheck
 EOF;

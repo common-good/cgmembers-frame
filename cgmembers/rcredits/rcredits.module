@@ -87,6 +87,7 @@ function rcredits_exception_handler($e) {
     $message = str_replace('&nbsp;', '', str_replace('<br>', '', $msg));
     mail(R_ADMIN_EMAIL, t('%PROJECT FATAL ERROR'), $message);
     $R_FATAL_ERROR = f('u.loga', 'FATAL', compact('message')); // this gets picked up by rcredits_shutdown()
+    if ($channel == TX_WEB) return w\softErr(t('<h4>Well Darn.</h4><p>You have encountered a software glitch. Our tech team has been notified.</p><p>In case more information would be helpful to them, please consider reporting this problem &mdash; and what you were trying to do &mdash; to %CGF_EMAIL.</p><p>Thank you for your patience and thank you for participating in %PROJECT!</p>'));
 /**/ } else echo $msg;
 /**/ die(); // invoke shutdown
 }
