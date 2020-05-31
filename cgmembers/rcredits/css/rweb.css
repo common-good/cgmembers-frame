@@ -400,7 +400,8 @@ body.page-partner blockquote {font-size:14px;}
 
 /* Shouters */
 #frm-shouters .footnote {color:red;}
-#frm-shouters #edit-signed {font-weight:bold;}
+#frm-shouters .form-item-ask {font-size:125%; color:seagreen; background-color:lightyellow; padding-bottom:10px;}
+#frm-shouters #edit-signed {font-size:125%; color:#317eac; font-weight:bold;}
 #frm-shouters .row {display:block; width:100%; color:black;}
 #frm-shouters .cell {padding:0 5px 0 0;}
 #frm-shouters .fullName {color:darkblue; font-weight:bold;}

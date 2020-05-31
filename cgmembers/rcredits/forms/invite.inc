@@ -87,49 +87,32 @@ function formInvite_validate($form, &$sta) {
     if ($position and !$org) return say(t('If you are not associated with an organization, leave your title blank.'), 'title');
   } else { // individual invitation
     extract(just('email emails trusted zip', $sta['input']));
-    if (op($sta) == 'submitN') {
-      if (!$emails) return say('bad email', compact('emails'), 'emails');
-      foreach (ray($emails) as $one) if (!u\validEmail($one)) return say(t('bad email: %one', compact('one')), 'emails');
-    } elseif (!u\validEmail($email)) return say('bad email', compact('email'), 'email');
+    if (!u\validEmail($email)) return say('bad email', compact('email'), 'email');
     if (!@$trusted) return say('must trust', 'trusted');
     if ($err = u\badZip($zip)) return say($err, 'zip');
   }
 }
 
 function formInvite_submit($form, &$sta) {
-  extract(just('sign quote org position website usePhoto postPhoto', $sta['input'], NULL));
-  if (isset($sign)) { // community invitation
-    global $mya; // (individual invitatins use w\elinkAcct instead)
+  $mya = w\eLinkAcct($sta); 
+  global $base_url;
+
+  if (isset($sta['input']['sign'])) { // community invitation
+    extract(just('sign quote org position website usePhoto postPhoto', $sta['input'], NULL));
     if ($sign) {
       foreach (ray('usePhoto postPhoto') as $k) $$k = $$k ? 1 : 0;
       $website = preg_replace('~http(s?)://~', '', $website);
       list ($uid, $title) = [$mya->id, $position];
-      db\insert('u_shouters', compact(ray('uid quote org title website usePhoto')), 'uid');
+      db\insert('u_shouters', compact(ray('uid quote org title website usePhoto postPhoto')), 'uid');
       say(t('Thank you! Your name has been added to the list.'));
     }
-    return w\goNextStep('invite');
-  }
-  
-  // individual invitation
-  $mya = w\eLinkAcct($sta); 
-  global $base_url;
-  extract(just('email emails subject message dupsOk zip', $sta['input']));
-
-  if (op($sta) == 'submitN') {
-//    foreach (ray($email) as $one) sendInvite($one, $subject, $message, @$dupsOk);
-    $code = ''; // get a random code just once
-    foreach (ray($emails) as $email) {
-      $code = r\invite($email, $mya->id, $code, $subject, $message, $zip);
-      $links[] = "$base_url/signup/code=$code/e=$email";
-    }
-    $links = join('<br>', $links);
-    say('invite links', compact('links'));
-  } else {
+  } else { // individual invitation
+    extract(just('email emails subject message dupsOk zip', $sta['input'], NULL));
     $email = mb_strtolower($email); // otherwise constantSubs breaks on cap after @
-    sendInvite($mya, $email, $subject, $message, @$dupsOk, $zip);
+    sendInvite($mya, $email, $subject, $message, $dupsOk, $zip);
     $data = ray('inviteBody', mb_substr($message, 0, 10000)) + $mya->data;
     $mya->update(compact('data'));
   }
-  if (!r\acct()) return w\doSay();
-  return w\goNextStep('invite');
+
+  return r\acct() ? w\goNextStep('invite') : w\doSay();
 }

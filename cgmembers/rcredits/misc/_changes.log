@@ -1,3 +1,6 @@
+2020-05-31 feature/invite-all
+. finished preparing invite page for appeal to members, etc.
+
 2020-05-31 feature/little-stuff
 . fixed bug that showed step-ups on discounts list
 . added asof field to mailchimp export, so we can be sure something goes only to members

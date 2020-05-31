@@ -15,14 +15,14 @@ Scenario: A member invites
   Then we show "Invite People"
 
   When member ".ZZB" completes form "community/invite" with values:
-  | sign | quote | org  | position | website | usePhoto |*
-  | 1    | cuz   | MeCo | Boss     | me.co   | 1        |
+  | sign | quote | org  | position | website | usePhoto | postPhoto |*
+  | 1    | cuz   | MeCo | Boss     | me.co   | on       |           |
   Then these "u_shouters":
-  | uid  | quote | org  | title | website | usePhoto |*
-  | .ZZB | cuz   | MeCo | Boss  | me.co   | 1        |
+  | uid  | quote | org  | title | website | usePhoto | postPhoto |*
+  | .ZZB | cuz   | MeCo | Boss  | me.co   | 1        | 0         |
   
   When member ".ZZA" visits page "community/invite/all"
-  Then we show "Please sign up now" with:
+  Then we show "%SHOUT_TEXT" with:
   | Bea Two | Boss | MeCo | cuz |
 
   When member ".ZZB" visits page "community/invite"
