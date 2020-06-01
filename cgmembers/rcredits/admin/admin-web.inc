@@ -87,7 +87,7 @@ function export($params) {
       . ' created activated signed helper iCode balance rewards savingsAdd minimum share risk trust'
       . ' community co gross employees achMin pinThreshold lastiCode tenure moves mediaConx jid'
       . ' owns bankName slave closed notices secret'
-  : (@$chimp ? 'id name phone email city state zip community type ecode'
+  : (@$chimp ? 'id name phone email city state zip community type ecode asof'
   : 'id fullName manages lastTx solar snap phone email address city state zip community type ecode modified created');
   u\csv($fields = ray($fields), $delimiter);
 
@@ -105,7 +105,9 @@ function export($params) {
   while ($row = $q->fetchAssoc()) {
     extract($row);
     $a = r\acct($id);
-    $type = $a->ok ? ($a->co ? 'member company' : 'member') : ($a->co ? 'company' : '');
+    $type = $a->ok ? 'member' : ($a->activated ? 'deactivated' : 'notyet');
+    if ($a->co) $type .= ' company';
+    
     if (@$anonymous) {
       foreach ($fields as $k) $$k = $a->$k; // do this first. some will be null.
       $zip = $a->zip;
@@ -126,7 +128,7 @@ function export($params) {
       $phone = u\fmtPhone($phone);
       $id = $a->mainQid;
       $ecode = "$a->emailCode";
-      $modified = u\fmtDate(now());
+      $asof = $modified = u\fmtDate(now());
       $manages = db\get('fullName', 'r_relations r LEFT JOIN users u ON u.uid=r.main', 'r.permission>=:B_MANAGE-:B_RELATED AND u.:IS_CO AND r.other=:id', ['id' => $a->id]);
       $tx = $a->lastTx;
       $lastTx = empty($tx) ? '' : u\fmtDate($tx->created, TRUE);

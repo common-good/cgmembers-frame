@@ -60,11 +60,11 @@ function formContact_validate($form, &$sta) {
 }
 
 function formContact_submit($form, &$sta) {
+  global $mya;
   global $partnerInfo; // information used within eachPartner function argument (so must be global)
   extract($info = just('fullName name email phone faxetc zip state city address postalAddr tenure owns', $sta['input']));
   unset($info['owns']);
   
-  global $mya;
   if ($mya->id == 1 OR $mya->isRegion) unset($info['name']); // don't change 'admin' or region shortname
   
   $info = u\normalizeCase(just('fullName city address postalAddr', $info)) + $info;
@@ -73,7 +73,7 @@ function formContact_submit($form, &$sta) {
   $partnerInfo = just('email phone address city state zip postalAddr', $info); // what to tell partner about
 
   $mya->eachPartner(function($coA, $custA, $custCode) { // tell partner what changed
-    global $partnerInfo;
+    global $partnerInfo, $mya;
     foreach ($partnerInfo as $k => $v) if ($custA->$k == $v) unset($partnerInfo[$k]);
     if ($partnerInfo and $api = $coA->api()) u\post($api, ray('partnerCode qid op name', $coA->emailCode, $mya->mainQid, 'change', $custA->fullName) + $partnerInfo);
   });

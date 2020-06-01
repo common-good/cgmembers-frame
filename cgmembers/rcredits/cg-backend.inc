@@ -37,7 +37,8 @@ function getTxs($uids, $starting=NULL, $ending=NULL) {
   // tReversedBy and eReversedBy refer to the transaction that reverses this transaction.
   // !(e.amount=0 AND e.entryType=:E_BANK) hides not-yet-completed bank transfers
   $sql = <<< EOF
-    SELECT t.*, e.*, u.fullName AS name, tp.period, tp.periods, ru.action=:ACT_SURTX AS surtx, ru.portion, i.nvid,
+    SELECT t.*, e.*, u.fullName AS name, tp.period, tp.periods, ru.portion, i.nvid,
+      (ru.action=:ACT_SURTX AND (ru.from IN (:MATCH_PAYER, e.uid) OR ru.to=e.uid)) AS stepup,
       (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=t.xid) AS reversedBy,
       (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=t.xid AND d.status=:DS_OPEN)) AS isDisputed
     FROM tx_entries e LEFT JOIN tx_hdrs t USING (xid) LEFT JOIN users u USING (uid)
@@ -81,14 +82,14 @@ EOF;
     }
     $balance += $myAmount;
     foreach ($entries as $entry) if (!($entry['entryType'] == E_DONATION and $hideRoundups)) {
-      extract(just('entryType reversesXid reversedBy description period periods surtx portion nvid', $entry, NULL));
+      extract(just('entryType reversesXid reversedBy description period periods stepup portion nvid', $entry, NULL));
       if ($entryType == E_PRIME) {
         if ($period) $description .= t(' (%xly)', 'xly', r\recurDesc($period, $periods));
         if ($nvid) $description .= t(' (CG inv#%nvid)', compact('nvid'));
         if ($reversesXid) $description .= t(' (reverses #%reversesXid)', compact('reversesXid'));
         if ($reversedBy) $description .= t(' (reversed by #%reversedBy)', compact('reversedBy'));
       } else {
-        if ($surtx) $description .= $portion > 0 ? t(' (%x step-up)', 'x', u\fmtAmt($portion, '%s')) : t(' (step-up)');
+        if ($stepup) $description .= $portion > 0 ? t(' (%x step-up)', 'x', u\fmtAmt($portion, '%s')) : t(' (step-up)');
       }
       $newEntries[] = compact(ray('myAmount balance byMe banking description')) + $entry;
     }
@@ -706,18 +707,19 @@ function handleSurTx(&$entries, $buyer, $seller, $price) {
   $payeeCheck = u\genRuleSQL('payee', ':seller');
   
   $sql = <<<EOF
-    SELECT r.id AS ruleId, r.amount, r.portion, r.from, r.to, r.purpose, r.minimum, r.useMax, r.amtMax, r.payerType,
+    SELECT ru.id AS ruleId, ru.amount, ru.portion, ru.from, ru.to, ru.purpose, ru.minimum, ru.useMax, 
+      ru.amtMax, ru.payerType,
     (SELECT IFNULL(SUM(e.amount), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=ruleId AND e.uid=:buyer) AS `amtUsed`,
     (SELECT IFNULL(SUM(SIGN(e.amount)), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=ruleId AND e.uid=:buyer) AS `timesUsed`
-    FROM tx_rules r
+    FROM tx_rules ru
     WHERE $payerCheck
     AND $payeeCheck
-    AND (r.action = :ACT_SURTX)
-    AND (r.start <= :now AND IFNULL(:now < r.end, TRUE))
+    AND (ru.action = :ACT_SURTX)
+    AND (ru.start <= :now AND IFNULL(:now < ru.end, TRUE))
     AND (:price >= minimum)
     GROUP BY ruleId
     HAVING (:price >= minimum) AND timesUsed < IFNULL(useMax, timesUsed+1) AND amtUsed < IFNULL(amtMax, amtUsed+1)
-    ORDER BY r.start
+    ORDER BY ru.start
 EOF;
 
   $subs = ray('buyer seller now price', $buyer->id, $seller->id, now(), $price);

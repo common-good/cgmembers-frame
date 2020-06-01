@@ -198,7 +198,10 @@ function formSummary_submit($form, &$sta) {
   $DBTX = \db_transaction();
 
   if ($dob) $mya->update(compact('dob')); // must precede activate()
-  if ($altId) $mya->update(ray('altId', $altSt . $altId)); // must precede activate()
+  if ($altId) {
+    $mya->update(ray('altId', $altSt . $altId)); // must precede activate()
+    $mya->stepDone('verifyid');
+  }
 
 /*
   if ($federalId and $federalId != $mya->federalId) {

@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.53g'; // software version
+const R_VERSION = '3.53h'; // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -139,6 +139,7 @@ const TEN99K = 'MC'; // code for 1099-K
 const MINIMA1099 = 'X:20000/200, MA:600/1, VT:600.01/1'; // no 1099-K for gross/txCount under this amount (by state)
 const MINIMA1099MAVT = 600; // 1099K minimum in MA and VT (for display)
 
+const NBSP = '&nbsp;'; // non-breaking space
 const R_BULLET = '&#8226;'; // bullet in emails (where CSS is difficult)
 const STATS_GRAIN = 10; // granularity of statistics, in days
 define('INFLATION_DESC', t('inflation adjustment'));
@@ -210,6 +211,7 @@ const CO_PHOTO_FACTOR = 3; // make company photos this many times as big as indi
 const MAX_UPLOAD_SIZE = 4 * 1024000; // maximum upload size in bytes
 const MAX_ID_SIZE = 10; // max ID size in MB
 
+const VIDEO_URL = 'https://youtu.be/yyn8cAe7rAA'; // Nuts & Bolts video
 const TRANSLATE_URL = 'https://translation.googleapis.com/language/translate/v2'; // google translate API URL
 const GEOCODE_URL = 'https://api.opencagedata.com/geocode/v1/json?'; // use in acct::setLocus()
 const MI_PER_DEGREE = 69; // varies from 68.703 at the equator to 69.407 at the poles
@@ -513,7 +515,7 @@ const T_FOODY = '(SELECT ' . U_FOODY . " FROM users u WHERE u.uid=uid2)"; // MyS
 const CAT_FOOD = 2; // food industry (used in signup-co and/or company feature)
 const CAT_RETAIL = 14; // retail industry (used in signup-co and/or company feature)
 
-define('SHOUT_TEXT', t('"Please sign up now for %PROJECT"'));
+define('SHOUT_TEXT', t('"%PROJECT could have a huge positive impact on our region, if a lot of people and businesses sign up and participate."'));
 define('ORG_DISCLAIMER', t(' Organizational affiliations are for identification purposes only and do not necessarily reflect the views of the organization.'));
   
 const FLOW_NONE = 0; // which way can credit flow, with another account
@@ -615,8 +617,6 @@ const MATCH_PAYER = -1; // Special values for from and to (which are normally ui
 const MATCH_PAYEE = -2;
 
 const STEPUP_MIN = 1; // minimum number of stepup rules for a company to appear on the step-up page
-define('STEPUP_DESC', t('donation (step-up)')); // step-up donation tx description
-define('STEPUP_3PCT', str_replace('(', '(3% ', STEPUP_DESC)); // for testing
 define('REBATE_DESC', t('discount (rebate)'));
 
 $GLOBALS['emailSubjects'] = array(

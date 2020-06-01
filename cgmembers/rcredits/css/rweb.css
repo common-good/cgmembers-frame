@@ -387,17 +387,21 @@ body.page-partner blockquote {font-size:14px;}
 
 /* Invite */
 #inviteLink {border:1px solid silver; background-color:lightyellow; color:silver;}
-#frm-invite #edit-subtext h4 {display:inline-block; margin:10px 0 0px 30px; background-color:lightyellow;}
+#frm-invite #edit-subtext h5 {display:inline-block; margin:10px 0 0px 30px; background-color:lightyellow; font-size:105%;}
+#frm-invite #edit-subtext small {display:inline-block; margin-top:10px;}
 #frm-invite .form-item-question,
 #frm-invite .form-item-quote,
 #frm-invite .form-item-org,
 #frm-invite .form-item-position,
 #frm-invite .form-item-website,
-#frm-invite .form-item-usePhoto.form-type-radios {display:none;}
+#frm-invite #edit-usePhoto,
+#frm-invite #edit-postPhoto {display:none;}
+#frm-invite #edit-usePhoto {margin-bottom:0;}
 
 /* Shouters */
 #frm-shouters .footnote {color:red;}
-#frm-shouters #edit-signed {font-weight:bold;}
+#frm-shouters .form-item-ask {font-size:125%; color:seagreen; background-color:lightyellow; padding-bottom:10px;}
+#frm-shouters #edit-signed {font-size:125%; color:#317eac; font-weight:bold;}
 #frm-shouters .row {display:block; width:100%; color:black;}
 #frm-shouters .cell {padding:0 5px 0 0;}
 #frm-shouters .fullName {color:darkblue; font-weight:bold;}
