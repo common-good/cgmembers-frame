@@ -118,7 +118,6 @@ function statement($period = '') {
       if ($xid < 124873 and $banking and !test()) $xid = db\get('txid', 'r_usd', compact('xid')) ?: $xid; // old checks
       $date = strftime('%b %d', $created); // reformat for single month
       if (mb_strlen($description) > $purposeLenMax + 3) $description = mb_substr($description, 0, $purposeLenMax) . '...';
-      $amount = -$amount;  // since we're looking at it from the other party's view
       
       foreach ($fields as $field) {
         list ($head, $fldName, $width, $align) = explode('/', $field);
