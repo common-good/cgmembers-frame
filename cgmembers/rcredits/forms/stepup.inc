@@ -12,7 +12,8 @@ const STEPUP_MIN_DPY = 1; // eventually delete this and use stepup_min
  * Ask about paying a little extra
  */
 function formStepUp($form, &$sta, $args = '') {
-  global $mya; $myid = $mya->id;
+  if (!$mya = w\eLinkAcct($sta, $args, 'acct')) return;
+  $myid = $mya->id;
   
   extract(just('er', $args, NULL));
   $dfts = $er ? urlq2ray(u\deurlify($er)) : []; // get defaults from error or from tests
@@ -107,7 +108,6 @@ X;
 }
 
 function formStepUp_validate($form, &$sta) {
-  global $mya;
   extract(just('uids xlys', $input = $sta['input']));
 
   foreach ($uids = ray($uids) as $i => $uid) {
@@ -140,7 +140,8 @@ function formStepUp_validate($form, &$sta) {
 }
 
 function formStepUp_submit($form, &$sta) {
-  global $mya; $myid = $mya->id;
+  $mya = w\eLinkAcct($sta);
+  $myid = $mya->id;
   
   $periods = 1; // if the donation recurs at all, it's once per period (for now)
   extract(just('uids xlys', $input = $sta['input']));
@@ -149,21 +150,22 @@ function formStepUp_submit($form, &$sta) {
     $xly = $xlys[$i];
     foreach(ray('amt:amt,period:when,amtMax:max') as $k => $v) $$k = $input["$v-$xly-$uid"] ?: NULL;
     $pct = strhas($period, 'pct');
-    $matchFlds = 'amount portion amtMax'; // fields user can adjust from time to time
+    $matchFlds = 'amount,portion,amtMax'; // fields user can adjust from time to time
     $match = ray($matchFlds, $pct ? 0 : $amt, $pct ? $amt / 100 : 0, $period == 'pctmx' ? $amtMax : NULL);
     $purpose = t('donation'); // description gets elaborated in be\getTxs()
     
     if ($xly = in($period, PERIODS)) { // periodic donation
       $tnm = 'tx_templates';
       $info = ray('action from to periods', ACT_PAY, $myid, $uid, 1);
-      $matchFlds .= ' period';
+      $matchFlds .= ',period';
       $match += compact('period');
     } else { // donation per transaction
       $tnm = 'tx_rules';
       $info = ray('payer payerType payeeType from to action', $myid, REF_ACCOUNT, REF_ANYCO, $myid, $uid, ACT_SURTX);
     }
-      
-    if ($res = db\get('id,amount,`portion`,amtMax', $tnm, u\where($info) . ' AND IFNULL(end, :NOW+1) > :NOW', $info)) {
+    
+    $getFlds = str_replace('portion', '`portion`', $matchFlds);
+    if ($res = db\get('id,' . $getFlds, $tnm, u\where($info) . ' AND IFNULL(end, :NOW+1) > :NOW', $info)) {
       if ($match == just($matchFlds, $res)) continue; // no change; done with this organization
       r\endRule($xly, $res['id']); // cancel the old rule, to start a new one
     }
@@ -171,7 +173,7 @@ function formStepUp_submit($form, &$sta) {
     if ($amt) db\insert($tnm, $info); // setting amt to zero ends the old rule without creating a new one
   }
   
-  return w\goNextStep('stepup');
+  return r\acct() ? w\goNextStep('stepup') : w\doSay();
 }
 
 /**

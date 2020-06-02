@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.53i'; // software version
+const R_VERSION = '3.53j'; // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -370,7 +370,7 @@ define('APP_CAN_BIT_DESCS', t('charge customers,undo last transaction,give %RCRE
 // Membership steps
 const R_STEPS_OLD = 'signup:signup, verify, ssn, sign:community/agreement, donate:community/donate, proxies, prefs:settings/preferences, connect, company, relations, photo, food, discount:community/discount, backing:community/backing';
 
-const S_ALL = 'signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, stepup:community/stepup, crumbs, work, partnersteptwo, partnerend, food, wantsPrint, printed'; // where to go to complete each step (unordered) -- add new steps to the end
+const S_ALL = 'signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, stepup:community/stepup, crumbs:community/crumbs, work, partnersteptwo, partnerend, food, wantsPrint, printed'; // where to go to complete each step (unordered) -- add new steps to the end
 const S_PERSON = 'signup verifyemail verifyid agree preferences fund photo contact donate crumbs proxies work backing stepup invite';
 //const S_CO = 'signup verifyemail';
 const S_CO = 'signup verifyemail agree contact backing photo donate company crumbs discount';
