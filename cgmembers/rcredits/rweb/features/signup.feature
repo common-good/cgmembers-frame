@@ -152,7 +152,7 @@ Scenario: A member donates
 
 Scenario: A member chooses tithes
   Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund photo contact donate"
-  When member ".ZZB" completes form "settings/crumbs" with values:
+  When member ".ZZB" completes form "community/crumbs" with values:
   | crumbs | 1.5 |**
   Then members have:
   | uid  | crumbs |*

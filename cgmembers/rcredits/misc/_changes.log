@@ -1,3 +1,9 @@
+2020-06-01 feature/stepup-dup
+. fixed bug that restarted recurring donations on submission of stepup
+. made stepup callable without signing in
+. fixed transaction row coloring
+. moved stepups to community menu
+
 2020-06-01 feature/bugs
 . simplified be\getTxs to use txs instead of tx_hdrs and tx_entries
 . removed time limit on 50% (instead of 100%) portion for Buy Credit templates

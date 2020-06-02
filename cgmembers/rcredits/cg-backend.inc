@@ -116,7 +116,7 @@ function processTxs($processor, $uids, $starting=NULL, $ending=NULL, $descending
   foreach ($txs as $entries) {
     $processor->txnHdr($entries[0], $first ? 'none' : '');
     foreach ($entries as $j => $entry) {
-      $processor->processEntry($entry, $j & 2);
+      $processor->processEntry($entry, $j & 1);
     }
     $processor->txnFtr($entries[0]);
     $first = FALSE;

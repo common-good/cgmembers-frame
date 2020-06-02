@@ -121,7 +121,7 @@ Scenario: A company supplies company information
 
 Scenario: A company supplies incoming tithe choices
   Given member ".ZZC" has "co" steps done: "signup verifyemail agree contact backing photo donate company"
-  When member "C:A" completes form "settings/crumbs" with values:
+  When member "C:A" completes form "community/crumbs" with values:
   | crumbs | 3 |**
   Then members have:
   | uid  | crumbs |*
