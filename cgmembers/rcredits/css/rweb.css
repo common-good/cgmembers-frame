@@ -1138,6 +1138,7 @@ div.password-confirm .error {font-weight:bold; color:red;}
 #txlist-title {width:100%; margin-top:0px;}
 #txlist div.row {margin-left:0; margin-right:0;}
 #txlist .row >div {margin:0 auto;}
+#txlist .tbody .row >div {clear:both;}
 #txlist .row>div>div {padding-top:5px; padding-bottom:4px; min-height:2ex;}
 
 #txlsit .txentry {clear:both}

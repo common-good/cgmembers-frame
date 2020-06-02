@@ -24,7 +24,7 @@ define('REAL', @$_SERVER['SystemRoot'] != 'C:\\Windows'); // used?
  *        if $uids is an integer it is the only uid
  * @param integer $starting: the starting unix time
  * @param integer $ending: the ending unix time
- * @return an array of transactions each element of which is a single entry associated with the transaction.  Note that tx_hdrs data is in each of the entries.  If there's a failure it will return FALSE.
+ * @return an array of transactions each element of which is a single entry associated with the transaction.  Note that tx_hdrs data is in each of the entries. If there's a failure return FALSE.
  */
 function getTxs($uids, $starting=NULL, $ending=NULL) {
   if (is_integer($uids)) { $uids = [ $uids ]; }
@@ -32,58 +32,54 @@ function getTxs($uids, $starting=NULL, $ending=NULL) {
   $where = '';
   if (!is_null($starting)) { $where .= " AND t.created>=$starting"; }
   if (!is_null($ending)) { $where .= " AND t.created<=$ending"; }
+  $fromMe = 't.uid1 IN (:uids)';
+  $toMe = 't.uid2 IN (:uids)';
 
   // tReversed and eReversed refer to the transaction that this transaction reverses.
   // tReversedBy and eReversedBy refer to the transaction that reverses this transaction.
-  // !(e.amount=0 AND e.entryType=:E_BANK) hides not-yet-completed bank transfers
+  // !(t.amt=0 AND t.type=:E_BANK) hides bank account verifications
   $sql = <<< EOF
-    SELECT t.*, e.*, u.fullName AS name, tp.period, tp.periods, ru.portion, i.nvid,
-      (ru.action=:ACT_SURTX AND (ru.from IN (:MATCH_PAYER, e.uid) OR ru.to=e.uid)) AS stepup,
+    SELECT t.*, u.uid, u.fullName AS name, tp.period, tp.periods, ru.portion, i.nvid, $toMe AS toMe,
+      IF($toMe, amt, -amt) AS amount, IF($toMe, for1, for2) AS description, IF($toMe, agt1, agt2) AS agt,
+      (ru.action=:ACT_SURTX AND IF($toMe, ru.to=t.uid2, ru.from IN (:MATCH_PAYER, t.uid1))) AS stepup,
       (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=t.xid) AS reversedBy,
       (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=t.xid AND d.status=:DS_OPEN)) AS isDisputed
-    FROM tx_entries e LEFT JOIN tx_hdrs t USING (xid) LEFT JOIN users u USING (uid)
+    FROM txs t LEFT JOIN users u ON u.uid=IF($toMe, t.uid1, t.uid2)
     LEFT JOIN r_usd ON (r_usd.xid=t.xid)
     LEFT JOIN tx_templates tp ON tp.id=t.recursId
-    LEFT JOIN tx_rules ru ON ru.id=e.rule
+    LEFT JOIN tx_rules ru ON ru.id=t.rule
     LEFT JOIN r_invoices i ON i.status=t.xid
-    WHERE (!(e.amount=0 AND e.entryType=:E_BANK) AND t.xid IN (SELECT DISTINCT xid FROM tx_entries WHERE (uid IN (:uids)))) $where
-    ORDER BY t.created, t.xid, ABS(e.id), name
+    WHERE (!(t.amt=0 AND t.type=:E_BANK) AND ($fromMe XOR $toMe)) $where
+    ORDER BY t.created, t.xid, t.eid, name
 EOF;
   $q = db\q($sql, compact('uids'));
   u\EXPECT($q, "Failure reading transactions for user " . pr($uids));
   $lastXid = 0;  // no xid should ever be 0
   $txs = [];  // an array of arrays of entries
   $entries = [];
-  while ($entry = $q->fetchAssoc()) {
-    if ($entry['xid'] != $lastXid) {  // start of new transaction
-      if ($entries != []) $txs[] = $entries; // if there was a transaction already
+  while ($row = $q->fetchAssoc()) {
+    $xid = $row['xid'];
+    if ($xid != $lastXid) {  // start of new transaction
+      if ($entries) $txs[] = $entries; // if there was a transaction already
       $entries = [];
-      $lastXid = $entry['xid'];
+      $lastXid = $xid;
     }
-    $entries[] = $entry;
+    $entries[] = $row;
   }
-  if ($entries != []) $txs[] = $entries;
+  if ($entries) $txs[] = $entries;
   
   // arrange for running balance to appear in, and be the same in, every entry for a transaction
   $balance = balanceAsOf($uids, $starting);
   foreach ($txs as $i => $entries) {
-    $myAmount = 0;
-    $byMe = FALSE;
-    $banking = FALSE;
-    $hideRoundups = TRUE;
+    $byMe = in_array($entries[0]['actorId'], $uids);
+    $banking = ($entries[0]['type'] == E_BANK);
     $newEntries = [];
+    $myAmount = 0; foreach ($entries as $entry) $myAmount += $entry['amount'];
+    $balance = round($balance + $myAmount, 2);
+    
     foreach ($entries as $entry) {
-      if (in_array($entry['uid'], $uids)) {
-        $myAmount += $entry['amount'];
-        if ($entry['entryType'] == E_DONATION) $hideRoundups = FALSE;
-      }
-      if (in_array($entry['actorId'], $uids)) $byMe = TRUE;
-      if (in_array($entry['uid'], [BANK_IN_ID, BANK_OUT_ID])) $banking = TRUE;
-    }
-    $balance += $myAmount;
-    foreach ($entries as $entry) if (!($entry['entryType'] == E_DONATION and $hideRoundups)) {
-      extract(just('entryType reversesXid reversedBy description period periods stepup portion nvid', $entry, NULL));
-      if ($entryType == E_PRIME) {
+      extract(just('type reversesXid reversedBy description period periods stepup portion nvid', $entry, NULL));
+      if (in($type, [E_PRIME, E_BANK])) {
         if ($period) $description .= t(' (%xly)', 'xly', r\recurDesc($period, $periods));
         if ($nvid) $description .= t(' (CG inv#%nvid)', compact('nvid'));
         if ($reversesXid) $description .= t(' (reverses #%reversesXid)', compact('reversesXid'));
@@ -95,7 +91,7 @@ EOF;
     }
     $txs[$i] = $newEntries;
   }
-  return $txs;
+  return $txs ?: FALSE;
 }
 
 /**
@@ -597,7 +593,7 @@ function advanceCredit($for, $buyer, $seller, $amount) {
     $buyer = $for;
   }
   
-  $portion = ($for == SELF_CREDIT and NOW < strtotime('6/1/2020')) ? .5 : 1;
+  $portion = $for == SELF_CREDIT ? .5 : 1;
   $info = ray('action portion amtMax payerType payer payeeType payee from to', ACT_SURTX, $portion, $amount, REF_ACCOUNT, $buyer->id, REF_ACCOUNT, $seller->id, MATCH_PAYEE, MATCH_PAYER);
 
   if ($neg) { // undoing, so end the rule
@@ -1093,7 +1089,7 @@ function createUsdTransfer($a, $amount, $created=NULL, $txid=NULL, &$xid = NULL)
   if ($xid) $txid = db\insert('r_usd', $info, 'txid'); else $txid = FALSE;
   
   if (!$xid or !$txid) {
-    $DBTX.rollback();
+    $DBTX->rollback();
     r\tellAdmin(t('bank transfer insert failed'), compact($amount, $completed));
     return FALSE;
   }
@@ -1163,7 +1159,7 @@ function completeUsdTx($txid, $automatic, $completed = NULL, $deposit = 0) {
   $res2 = db\update('tx_entries', ray('id amount', $eid, $amount), 'id');
   if (!($res and $res0 and $res1 and $res2)) {
     r\tellAdmin(t('usd update failed'), compact($txid, $amount, $automatic));
-    $DBTX.rollback();
+    $DBTX->rollback();
     return FALSE;
   }
   unset($DBTX);

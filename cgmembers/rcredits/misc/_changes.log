@@ -1,3 +1,8 @@
+2020-06-01 feature/bugs
+. simplified be\getTxs to use txs instead of tx_hdrs and tx_entries
+. removed time limit on 50% (instead of 100%) portion for Buy Credit templates
+. finally fixed bug that left tx history columns askew when a multiline description was followed by a surtx
+
 2020-05-31 feature/invite-all
 . finished preparing invite page for appeal to members, etc.
 

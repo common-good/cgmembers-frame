@@ -1625,7 +1625,7 @@ function shownWith($content, $type = 'text', $mustBePresent = TRUE) {
     if (($one = u\redash($one)) === '') continue;
     $i = mb_strpos($model, $one, $xi = $i);
     if ($i === FALSE) {
-      if ($formOut['hasDate'] and $onetm = strtotime($one) and date('m/d/Y', $onetm) == $one) { // date formatted m/d/Y
+      if (nn($formOut['hasDate']) and $onetm = strtotime($one) and date('m/d/Y', $onetm) == $one) { // date formatted m/d/Y
         $i = mb_strpos($model, date('Y-m-d', $onetm), $xi); // look for Y-M-d instead (quirk of input type="date")
       } else { $i = mb_strpos($model, plain($one), $xi); }
     }
