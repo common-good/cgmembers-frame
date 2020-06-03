@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.53j'; // software version
+const R_VERSION = '3.53k'; // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -211,7 +211,7 @@ const CO_PHOTO_FACTOR = 3; // make company photos this many times as big as indi
 const MAX_UPLOAD_SIZE = 4 * 1024000; // maximum upload size in bytes
 const MAX_ID_SIZE = 10; // max ID size in MB
 
-const VIDEO_URL = 'https://youtu.be/yyn8cAe7rAA'; // Nuts & Bolts video
+const VIDEO_URL = 'http://cg4.us/video'; // Nuts & Bolts video
 const TRANSLATE_URL = 'https://translation.googleapis.com/language/translate/v2'; // google translate API URL
 const GEOCODE_URL = 'https://api.opencagedata.com/geocode/v1/json?'; // use in acct::setLocus()
 const MI_PER_DEGREE = 69; // varies from 68.703 at the equator to 69.407 at the poles
