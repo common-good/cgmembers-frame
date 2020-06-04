@@ -427,6 +427,8 @@ function fld($type, $label = '', $help = '', $x = [], $options = []) {
     $x += compact('subtype');
     $type = 'textfield';
   }
+
+  if ($type == 'textfield') u\setDft($x['maxlength'], 4096);
   if ($type == 'select') u\setDft($x['default_value'], $options ? key($options) : ''); // Drupal's select fails without a default
   
   if (@$label[0] == REQ) list ($x['required'], $label) = ['yes', substr($label, 1)];
@@ -689,7 +691,7 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
     $formArray = $form2 = $form; 
     return \render($form2);
     
-  } catch(\Exception $e) {r\Web\exception_handler($e);}
+  } catch(\Exception $e) {\rcredits_exception_handler($e);}
 }
 
 /**
