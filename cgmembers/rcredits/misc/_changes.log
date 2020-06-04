@@ -1,3 +1,7 @@
+2020-06-04 hotfix/text-fieldlen
+. added a failsafe to db\del to complain about a call like db\del($tnm, 3);
+. changed default fieldlen for text fields to 4096
+
 2020-06-01 feature/stepup-dup
 . fixed bug that restarted recurring donations on submission of stepup
 . made stepup callable without signing in

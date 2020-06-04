@@ -35,7 +35,6 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
     return \db_query(u\SUBS($sql), u\prefixKeys(':', $subs), @compact('return'));
   } catch (\Exception $e) {
     \rcredits_exception_handler($e);
-/// if (@$channel == TX_WEB) \exception_handler($e); else die('in q');
   }
 }
 
@@ -262,6 +261,8 @@ function del($tnm, $where, $subs = [], $override = FALSE) {
     u\EXPECT(empty($subs), t('mixed parameter sets in db\\del()'));
     list ($where, $subs) = [u\where($where), $where];
   } elseif (!is_array($subs)) { list ($where, $subs) = ["$where=:id", ['id' => $subs]]; } // del(tnm, idnm, id)
+  
+  if (is_numeric($where)) u\FAIL(t('Wrong syntax for call to db\del')); // don't accidentally delete all records in a table
   
   $DBTX = \db_transaction();
   
