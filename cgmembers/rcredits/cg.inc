@@ -259,6 +259,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
     if ($toA->depends and !$toA->co) $jA = r\acct($toA->helper); // sponsored accounts are never joint
     if (nn($jA) and test()) $testEmails[] = ray('index toEmail subs', $index, $jA->email, $subs);
   } else $to = $toEmail = $to0;
+  $subs['emailCoded'] = urlencode(u\cry('P', is_array($toEmail) ? key($toEmail) : $toEmail));
   
   $testEmails[] = compact(ray('index toEmail subs'));
 

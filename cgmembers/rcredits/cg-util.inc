@@ -1515,7 +1515,7 @@ function genRuleSQL($role, $uid, $now = ':NOW', $rulesTnm = 'ru') {
      )
      WHEN :REF_GROUP THEN EXISTS (
        SELECT 1 FROM u_groups g JOIN u_groupies ug ON (ug.grpId = g.id)
-       WHERE ug.uid = $uid AND ug.start <= $now
+       WHERE ug.uid = $uid AND ug.start <= $now AND ug.start <= $rulesTnm.start
        AND IFNULL($now < ug.end, TRUE)
      )
      ELSE FALSE

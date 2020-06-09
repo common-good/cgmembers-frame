@@ -453,12 +453,15 @@ function doit(what, vs) {
   case 'invite-link': $('#inviteLink').click(function () {SelectText(this.id);}); break;
   
   case 'invite':
-    $('#edit-sign-1').click(function () {
+    function showInviteFlds() {
       $('.form-item-question, .form-item-quote, .form-item-org, #edit-usePhoto, #edit-postPhoto').show();
-    });
+    }
+    $('#edit-sign-0').click(function () {$('.form-item-whyNot').show();});
+    $('#edit-sign-1').click(function () {showInviteFlds(); $('.form-item-whyNot').hide();});
     $('#edit-org').keyup(function () {
       if ($(this).val().length > 0) $('.form-item-position, .form-item-website').show();
     });
+    if (vs['edit']) {showInviteFlds(); $('#edit-org').keyup();}
     break;
 
   case 'amtChoice':

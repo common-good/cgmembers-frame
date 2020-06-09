@@ -39,6 +39,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   
   $title = t('System Administration');
   
+  $toSMT = submi(t('To SMT'));
   $inviteeStatus = submi(t('Invitee Status'));
   $signupCos = submi(t('Connections to Companies'));
   $queries = selectFld(t('Query:'), '', '', $queries);
@@ -80,7 +81,7 @@ EOF;
   }
 
   foreach (ray($tables) as $one) $do[$one] = submi($one);
-  $funcs = ray('inviteeStatus signupCos do1099ktest do1099k reconcile special stop start stopCtty startCtty');
+  $funcs = ray('toSMT inviteeStatus signupCos do1099ktest do1099k reconcile special stop start stopCtty startCtty');
 //  foreach ($funcs as $func) if (isset($$func)) $do[$func] = $$func;
   $do += @compact($funcs);
   $do = fieldSet('do', $do);
@@ -151,6 +152,8 @@ function formAdminPanel_submit($form, &$sta) {
     r\Special\do1099s(TEN99K, @$test1099);
 	} elseif ($op == 'reconcile') {
 		w\go('sadmin/reconcile-ctty-fund');
+  } elseif ($op == 'toSMT') {
+    a\toSMT();
   } elseif ($op == 'inviteeStatus') {
     return w\go('community/invite/invited-whom');
   } elseif ($op == 'signupCos') {

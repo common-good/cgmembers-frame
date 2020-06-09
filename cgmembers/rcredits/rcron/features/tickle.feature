@@ -5,12 +5,12 @@ SO I don't get forgotten and miss out on stuff.
 
 Setup:
   Given members:
-  | uid  | fullName | email | flags   | access    | floor |*
-  | .ZZA | Abe One  | a@    |         | %today-1d |     0 |
-  | .ZZB | Bea Two  | b@    |         | %today-2d |     0 |
-  | .ZZD | Dee Four | d@    |         | %today-9d |     0 |
-  | .ZZE | Eve Five | e@    | ok      | %today-3m |     0 |
-  | .ZZF | Flo Six  | f@    | ok      | %today-3m |     0 |
+  | uid  | fullName | email | flags   | access    | floor | phone        | signed  |*
+  | .ZZA | Abe One  | a@    |         | %today-1d |     0 | +14132530001 | 0       |
+  | .ZZB | Bea Two  | b@    |         | %today-2d |     0 | +14132530002 | 0       |
+  | .ZZD | Dee Four | d@    |         | %today-9d |     0 | +14132530004 | 0       |
+  | .ZZE | Eve Five | e@    | ok      | %today-3m |     0 | +14132530005 | %now-5d |
+  | .ZZF | Flo Six  | f@    | ok      | %today-3m |     0 | +14132530006 | %now-6d |
 
 Scenario: A newbie has taken only the first step
   Given invites:
@@ -49,9 +49,8 @@ Scenario: A nonmember has not accepted the invitation
   | zot@example.com | .ZZF    | codeF1 | %today-8d |
   When cron runs "tickle"
   Then we email "nonmember" to member "zot@example.com" with subs:
-  | inviterName | code   | site                      | nudge        | noFrame |*
-  | Flo Six     | codeF1 | http://localhost/rMembers | reminder one | 1       |
-  # site should be %BASE_URL, but compiler doesn't know stuff defined in boot.inc (just defs.inc)
+  | fullName | code   | phone        | signed  | nudge        | noFrame |*
+  | Flo Six  | codeF1 | 413-253-0006 | %mdY-6d | reminder one | 1       |
   And we notice "invite languishing" to member ".ZZF" with subs:
   | email           | elapsed |*
   | zot@example.com |       8 |

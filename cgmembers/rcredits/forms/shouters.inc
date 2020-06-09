@@ -23,11 +23,12 @@ function formShouters($form, &$sta, $args = '') {
     FROM u_shouters h 
     LEFT JOIN users u USING (uid) 
     LEFT JOIN r_states s ON s.id=u.state AND s.country_id=u.country
-    ORDER BY org IS NULL, fullName
+    ORDER BY IFNULL(org, '')='', IFNULL(quote, '')='', fullName
 X;
   $q = db\q($sql, ray('ctty', $mya ? $mya->community : 0));
   
   $dpyFlds = ray('fullName orgTitle org quote');
+  $list = '';
   while ($row = $q->fetchAssoc()) {
     extract($row);
 
@@ -37,9 +38,8 @@ X;
       if ($orgTitle and $org) $orgTitle .= ', ';
       if ($org and $website) $org = lnk('http://' . $website, $org);
     } else { list ($orgTitle, $org) = ["$city, ", $st]; }
-    $list[] = u\ray2row(compact($dpyFlds));
+    $list .= u\ray2row(compact($dpyFlds));
   }
   
-  $list = join('', nn($list, []));
   return cgform(compact(ray('title ask signed list posttext')));
 }

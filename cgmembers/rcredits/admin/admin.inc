@@ -895,7 +895,7 @@ function toSMT() {
     $notes = strtr($notes, ["\r" => '', "\n" => '']);
     $nameOnBankAcct = $fullName;
     list ($billingAddress, $billingCity, $billingState, $billingZip) = u\parseAddr($postalAddr);
-    extract($partnerInfo);
+    extract($partnerInfo ?: []);
     $cgAccount = $a->member ? $a->mainQid : '';
     $phone = u\fmtPhone($phone, '-');
     $out = compact(ray('smtid fullName orgName m_company m_number cgAccount phone email address city state zip tenure owns routing bankAccount isSavings nameOnBankAcct billingAddress billingCity billingState billingZip noContract created notes'));
@@ -908,7 +908,7 @@ function toSMT() {
     }
     u\csv(array_values($out), "\t");
   }
-
+  if (!$hdrDone) return w\go('/sadmin/panel', t('nothing to send to SMT'));
   exit();
 }
   

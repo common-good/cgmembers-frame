@@ -105,7 +105,7 @@ function rweb_menu($submenu = '') {
     
 //    'community' => ['norm', t('Community'), 'FindCo', ANY],
     'community' => ['norm', t('Community'), 'Community', ANY],
-    'community/invite' => ['sub', t('Invite'), 'Invite', ANY, '', t(), 'share-alt'],
+    'community/invite' => ['sub', t('Invite / Endorse'), 'Invite 2', ANY, '', t(), 'share-alt'],
     'community/invite/all' => ['call', t('Shouters'), 'Shouters 3', ANY],
     'community/invite/example' => ['call', t('Invite Someone'), '', 'ok manage', 'inviteExample'],
     'community/invite/print' => ['call', t('Print Invite'), '', 'manage', 'printInvite'],
@@ -262,6 +262,8 @@ function rweb_menu($submenu = '') {
     'partner' => ['call', 'Signup Through Partner', 'PartnerSignup 1', ANY],
     'accounts' => isDEV ? ['call', 'Account Choices', 'Accounts', 'manage'] : NULL,
     'redirect' => ['call', 'Redirect', '', ANY, 'redirect'],
+    'mailus' => ['call', t('Mail %PROJECT'), 'MailUs 1', ANY],
+    'unsubscribe' => ['call', t('Unsubscribe'), 'Unsubscribe 1', ANY],
   );
 
   foreach ($items as $k => $v) {

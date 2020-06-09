@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.53l'; // software version
+const R_VERSION = '3.53m'; // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -84,9 +84,8 @@ const DEV_ONLY_MSG = 'only on development machine';
 
 $host = strtolower(@$_SERVER['HTTP_HOST']);
 if (!isDEV) if (mb_strlen($host) > 30 or !preg_match('/^\[?([a-zA-Z0-9-:\]_]+\.?)+$/', $host)) {header('HTTP 400 Bad Request'); exit();}
-//const R_PATH', '/sites/all/modules/rcredits');
-const R_PATH = '/rcredits';
-global $rUrl; $rUrl = BASE_URL . R_PATH;
+const R_PATH = BASE_URL . '/rcredits';
+global $rUrl; $rUrl = R_PATH;
 define('R_ROOT', __DIR__);
 define('SHARED_DIR', __DIR__ . '/../..'); // for logs and other protected info, persistent across updates
 $parts = parse_url($base_url);
@@ -523,10 +522,6 @@ const FLOW_TO = 1;
 const FLOW_FROM = 2;
 const FLOW_BOTH = 3;
 
-// Coupon flags
-const B_SOME = 1; // coupon is only for some accounts (those in r_coupated)
-// const B_GIFT = 10; // gift coupon (defined for transactions below)
-
 // Transaction flags (for flags field in transaction records)
 const B_TAKING = 0; // payee initiated the transaction
 const B_DISPUTED = 1; // non-originator disputes the transaction -- signaled by existence of tx_disputes (NOT LEGAL FOR TRANSACTIONS, BUT STILL USED BY INVOICES
@@ -616,7 +611,7 @@ define('PERIODS_PLURAL', t('n/a days weeks months quarters years n/a'));
 const MATCH_PAYER = -1; // Special values for from and to (which are normally uids) in tx_rules
 const MATCH_PAYEE = -2;
 
-const STEPUP_MIN = 1; // minimum number of stepup rules for a company to appear on the step-up page
+const STEPUP_MIN = 2; // minimum number of stepup rules for a company to appear on the step-up page
 define('REBATE_DESC', t('discount (rebate)'));
 
 $GLOBALS['emailSubjects'] = array(

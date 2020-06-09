@@ -6,8 +6,6 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
-const STEPUP_MIN_DPY = 1; // eventually delete this and use stepup_min
-
 /**
  * Ask about paying a little extra
  */
@@ -21,7 +19,7 @@ function formStepUp($form, &$sta, $args = '') {
   jsx('stepup');
   
   $title = t('Step Up');
-  $subtext = t('<p>Support your favorite causes by paying a little extra on your %PROJECT purchases.</p><p>Choose organizations from the list below and/or add your own choices. Type a dollar amount or percentage to add to each purchase &mdash; to be donated to that organization. You can also set a maximum donation per transaction or choose to donate periodically instead.</p><p>If you would like to see your nonprofit or project on this list, get %STEPUP_MIN_DPY people to write it in (of course it has to have a %PROJECT account first).</p>', '_a', atag('/community/invite', away()));
+  $subtext = t('<p>Support your favorite causes by paying a little extra on your %PROJECT purchases.</p><p>Choose organizations from the list below and/or add your own choices. Type a dollar amount or percentage to add to each purchase &mdash; to be donated to that organization. You can also set a maximum donation per transaction or choose to donate periodically instead.</p><p>If you would like to see your nonprofit or project on this list, get 10 people to write it in (of course it has to have a %PROJECT account first).</p>', '_a', atag('/community/invite', away()));
   
   $fromMe = '`from`=:myid';
   foreach (ray('amount portion amtMax') as $k) $set[] = "IF($fromMe, `$k`, NULL) AS `$k`";
@@ -48,7 +46,7 @@ function formStepUp($form, &$sta, $args = '') {
     LEFT JOIN users u ON u.uid=x.to
     LEFT JOIN r_company c USING(uid)
     WHERE (mine AND NOT xly)
-      OR (u.:IS_CO AND c.coType=:CO_NONPROFIT AND (
+      OR (u.:IS_CO AND c.coType=:CO_NONPROFIT AND (c.coFlags & (1<<:CO_PRIVATE))=0 AND (
         IF($noGeo, LEFT(u.zip,3) = LEFT(:zip,3), $distance < :NEIGHBOR_MAX * 2) OR u.uid IN (:globalOrgs)
       ))
     GROUP BY mine,x.to,xly 
