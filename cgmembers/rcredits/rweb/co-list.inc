@@ -19,21 +19,25 @@ const SIMPLE_CO_LIST = '%simple-list%';
 function coList($which = SIMPLE_CO_LIST, $region = '') {
   global $mya;
 
-  $stateCrit = '(s.abbreviation=:region OR c.name=:region)';
+  list ($lat, $lon) = $mya ? [$mya->latitude, $mya->longitude] : [0, 0];
+  if (!$region and $mya and !$lat and !$lon) $region = $mya->zip;
+  $isZip = (is_numeric($region) or preg_match('/^[A-Z][0-9][A-Z] ?([0-9][A-Z][0-9])?$/i', $region));
+  $subFlds = 'which value';
   
-  list ($region, $crit) =
-    !$region ? [($mya and $mya->id != 1) ? $mya->community : r\serverUid(), 'u.uid=:region'] // center on user or region
-  : (preg_match('/[A-Z]{3}/', $region) ? [$region . '.', 'u.name=:region'] // eg NEW or MIW
-  : (preg_match('/[0-9]{1,5}/', $region) ? [$region . '%', 'u.zip LIKE :region'] // eg 013 or 01002
-  : [$region, $stateCrit] // eg MA or Germany
-  ));
-
-  $table = 'users u LEFT JOIN r_states s ON s.id=u.state LEFT JOIN r_countries c ON c.id=u.country';
-  $res = db\get('latitude AS lat,longitude AS lon', $table, $crit, compact('region'));
-  if (!$res) return participatingCompanies(''); // nothing in that area
-  
-  extract($res); // get lat,lon
-  $regionCrit = tr('%DISTANCE_BETWEEN<%NEIGHBOR_MAX OR ') . $stateCrit;
+  if ($isZip) { // eg 013 or 01002
+    list ($value, $crit) = [$region, 'u.zip LIKE :value'];
+    $crit .= ' OR ' . distCrit($crit, ray('value', $value . '%'));
+    $subFlds .= ' lat lon';
+  } elseif (!$region and $mya) {
+    if (!$lat or !$lon) return participatingCompanies(''); // nothing in that area (this might be improved, but
+    list ($value, $crit, $subFlds) = [NULL, distCrit(1, []), 'which lat lon'];
+  } elseif (!$region) {
+    list ($value, $crit) = [1, ':value=1'];
+  } elseif (preg_match('/[A-Z]{3}/', $region)) {  // eg NEW or MIW
+    list ($value, $crit) = [r\serverUid($region), 'u.uid BETWEEN -:value AND -:value+:R_REGION_MAX-1'];
+  } else { // eg MA or Germany
+    list ($value, $crit) = [$region, 's.abbreviation=:value OR c.name=:value'];
+  }
 
   if ($which == SIMPLE_CO_LIST) {
     list ($fields, $order) = ['u.uid', 'u.fullName'];
@@ -47,16 +51,16 @@ function coList($which = SIMPLE_CO_LIST, $region = '') {
 
   $sql = <<<EOF
     SELECT DISTINCT $fields
-    FROM users u 
+    FROM users u
     LEFT JOIN r_user_industries ui ON ui.uid=u.uid
     LEFT JOIN ancestors a on a.base=ui.iid
     LEFT JOIN r_states s ON s.id=u.state
     LEFT JOIN r_countries c ON c.id=u.country
-    WHERE :IS_CO AND u.uid>:CANONIC_ACCTS AND :IS_OK AND ($regionCrit) AND (u.fullName LIKE :which OR a.baseIndustry LIKE :which)
+    WHERE :IS_CO AND u.uid>:CANONIC_ACCTS AND :IS_OK AND ($crit) AND (u.fullName LIKE :which OR a.baseIndustry LIKE :which)
     ORDER BY $order
 EOF;
 
-  $result = db\q($sql, compact(ray('region which lat lon')));
+  $result = db\q($sql, compact(ray($subFlds)));
   $rows = [];
   foreach ($result as $row) {
     if (!nn($xrow) or $xrow->uid != $row->uid) $rows[] = $row; // eliminate dups within class (DISTINCT fails)
@@ -128,4 +132,13 @@ X;
 function buttonHtml($a, $text, $for, $style) {
   $class = "cgpay-$for";
   return w\btn("/pay-with-cg/company=$a->mainQid&for=$for", $text, $style, '', compact('class') + away());
+}
+
+/**
+ * Return neighborhood criteria for the given search data.
+ */
+function distCrit($where, $subs) {
+  $res = db\get('AVG(latitude) AS lat,AVG(longitude) AS lon', 'users u', $where, $subs);
+  extract($res); // get lat,lon
+  return tr('(%DISTANCE_BETWEEN<%NEIGHBOR_MAX)', compact(ray('lat lon')));
 }

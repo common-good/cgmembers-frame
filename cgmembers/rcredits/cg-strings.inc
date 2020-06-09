@@ -379,7 +379,7 @@ EOF
   'ssn needed' => t('You have reached the maximum legal amount or number of transactions allowed for one year in your state without a Social Security Number. Please sign in at %CG_DOMAIN and follow the prompts to add your Social Security Number to your account.'),
   'co nonpass' => t('None. Sign in to your personal account, then click your photo in the upper right corner to select the company account.'),
   'pass advice' => t('<p>Your password must be very long OR it must have at least 8 characters, including uppercase, lowercase, digit, and punctuation.</p><p>Consider choosing 4 random words &mdash; hard to guess, but easy for you to remember.</p>'),
-  'bad locus' => t('That is not a recognizable address. Try again with a postal code.'),
+  'bad locus' => t('That location is not specific enough. Try again with a postal code or full address.'),
   'post success' => t('Success! Your post is confirmed.'),
   'message success' => t('Success! Your message is confirmed.'),
   'post will appear' => t('Your post will appear %when. To edit or cancel it, click on it in the list.'),
