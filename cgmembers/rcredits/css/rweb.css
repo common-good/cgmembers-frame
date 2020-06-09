@@ -389,6 +389,8 @@ body.page-partner blockquote {font-size:14px;}
 #inviteLink {border:1px solid silver; background-color:lightyellow; color:silver;}
 #frm-invite #edit-subtext h5 {display:inline-block; margin:10px 0 0px 30px; background-color:lightyellow; font-size:105%;}
 #frm-invite #edit-subtext small {display:inline-block; margin-top:10px;}
+#frm-invite #edit-buttons a {margin-right:10px;}
+#frm-invite .form-item-whyNot,
 #frm-invite .form-item-question,
 #frm-invite .form-item-quote,
 #frm-invite .form-item-org,

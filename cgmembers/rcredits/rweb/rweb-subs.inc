@@ -1999,33 +1999,6 @@ function userMenuItem($router_path, $link_title) {
  */
 function hidFlds($ray) {return is_array($ray) ? hidFld(plain(serialize($ray))) : unserialize(unplain($ray));}
 
-/**
- * Send an invitation to the email and optionally report it.
- * $mya must be passed as a parameter in case called from an email link.
- */
-function sendInvite($mya, $email, $subject, $message, $dupsOk = TRUE, $zip = NULL) {
-  if (!$dupsOk) { // applies only to community admins
-    $cemail = u\cry('P', $email);
-    $now = now();
-    if (db\exists('r_invites', 'email=:cemail and :now-invited<:R_INVITE_DAYS*:DAY_SECS', compact('cemail', 'now'))) return say(t('NOT sent to %email (dup).', compact('email')));
-//     if (db\exists('users', 'email=:email', compact('email'))) return say("NOT sent to $email (already a member).");
-  }
-
-  $info = array(
-    'uid' => $mya->id,
-    'noFrame' => TRUE,
-    'subject' => $subject,
-    'personalNote' => str_replace("\n", "<br>\n", $message), 
-    'fullName' => $mya->fullName, 
-    'phone' => u\fmtPhone($mya->phone),
-    'signed' => u\fmtDate($mya->signed),
-    'CODE' => r\invite($email, $mya->id, '', $subject, $message, $zip),
-  );
-  r\rMail('invite', $email, $info, $mya);
-  say(!$dupsOk ? 'Sent to %email' : 'invite sent|repeat invite', compact('email'));
-  if (!$mya->admin) r\tellAdmin('invited', $info + compact('email'), $mya->id);
-}
-
 function focusOn($focusFieldName) {
   u\EXPECT(!empty($focusFieldName), 'focus on null');
   $focusFieldName = str_replace('_', '-', $focusFieldName);

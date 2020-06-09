@@ -22,7 +22,7 @@ function printInvite($accts = '') {
     foreach ($accts as $a) printInvite1($a, $pdf);
   } else printInvite1($a = $accts ?: r\acct(), $pdf); // default to current account
   if ($accts) say($pdf->pageNo() . t(' invitation cards have been downloaded to the %PROJECT temp directory.'));
-  $pdf->output(DRUPAL_ROOT . R_PATH . '/temp/' . str_replace(' ', '', PROJECT) . '-Invitation-Cards.pdf', $accts ? 'F' : 'I'); //Close and output PDF document
+  $pdf->output(str_replace(BASE_URL, DRUPAL_ROOT, R_PATH) . '/temp/' . str_replace(' ', '', PROJECT) . '-Invitation-Cards.pdf', $accts ? 'F' : 'I'); //Close and output PDF document
 }
 
 /**

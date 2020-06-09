@@ -213,7 +213,7 @@ EOF;
   } else $acctName = $co = '';
 
   $breadcrumb = rcredits_breadcrumb(['breadcrumb' => \drupal_get_breadcrumb()]);
-  $logo = BASE_URL . R_PATH . '/images/' . PROJECT_LOGO . '?' . R_VERSION;
+  $logo = R_PATH . '/images/' . PROJECT_LOGO . '?' . R_VERSION;
   
   return <<<EOF
 <div class="nav2">

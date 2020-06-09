@@ -1,3 +1,12 @@
+2020-06-08 feature/invite-overhaul
+. added button on admin panel to send data to SMT
+. restricted access to food fund for new recipients to future rules
+. added sawVideo bit to shouters
+. it asks now why not if a new member won't endorse
+. simplified invitation process and improved invitation form, including a working link for "unsubscribe"
+. we now ask why when someone clicks unsubscribes, and mark them "ZAP" automatically
+. began a page for links to email CG
+
 2020-06-04 hotfix/text-fieldlen
 . added a failsafe to db\del to complain about a call like db\del($tnm, 3);
 . changed default fieldlen for text fields to 4096

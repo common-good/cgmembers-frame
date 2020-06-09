@@ -335,7 +335,7 @@ function tickle() {
   $sql = <<< X
     SELECT DISTINCT i.email, i.inviter, i.code, $elapsed AS elapsed FROM r_invites i
     LEFT JOIN users u ON u.uid=i.inviter
-    WHERE $elapsed IN ($delays) AND i.invitee=0 AND u.:IS_OK
+    WHERE $elapsed IN ($delays) AND i.invitee=0 AND u.:IS_OK AND i.nonudge IS NULL
 X;
 
   queueEach('tickleSignup', $sql);
@@ -530,15 +530,10 @@ function everyWeek() {
  * Do monthly tasks.
  */
 function everyMonth() {
-  $server = r\serverUid();
-  $bene = test() ? CGID : db\get('uid', 'users', "name='bene' AND uid<0");
   $start = u\monthDay1($end = u\monthDay1() - 1); // mark start and end of preceding month
   if (test()) $start = strtotime('-30 days', $end = today() - 1) + 1; // test: the past 30 days
-  $whatsupStart = $start - 30 * DAY_SECS;
   
-  queueEach('whatsup', "SELECT DISTINCT uid, u.:IS_CO as co, MAX(t.created) AS lastTx FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid) WHERE uid>:CANONIC_ACCTS AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $whatsupStart");
-  /* queueEach('inflationAdjust', "SELECT uid, $start AS start, $end AS end FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS");   */
-//  queueEach('shareCommitted', 'SELECT uid, committed, share FROM users WHERE :IS_OK AND committed>0');
+  queueEach('whatsup', "SELECT DISTINCT uid, u.:IS_CO as co, MAX(t.created) AS lastTx FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid) WHERE uid>:CANONIC_ACCTS AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $start");
   
   $sql = <<< X
     SELECT DISTINCT u.uid, ROUND(SUM(t.amt)*u.crumbs, 2) AS donate, $end AS date
@@ -552,7 +547,6 @@ X;
   queueEach('sweep', "SELECT $start AS start,$end AS end"); // must come after all crumbs
 
 	// figure amount to share with each official Common Good Community
-
 // Not until cgc means signed the CG/CGC agreement (and then not retroactive) queueEach('cgc', $cttyGiftsSql($end));
   
   $list = db\lst("CONCAT(fullName,' (',city,')')", 'users', ':IS_OK AND :IS_PAPER');
