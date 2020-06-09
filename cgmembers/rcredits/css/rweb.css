@@ -405,17 +405,18 @@ body.page-partner blockquote {font-size:14px;}
 #frm-shouters .form-item-ask {font-size:125%; color:seagreen; background-color:lightyellow; padding-bottom:10px;}
 #frm-shouters #edit-signed {font-size:125%; color:#317eac; font-weight:bold;}
 #frm-shouters .row {display:block; width:100%; color:black;}
-#frm-shouters .cell {padding:0 5px 0 0;}
+#frm-shouters .cell {display:inline; padding:0 1px 0 0;}
 #frm-shouters .fullName {color:darkblue; font-weight:bold;}
 #frm-shouters .fullName::before {
-  display:inline-block;
+  display:block;
+  float:left;
   width:15px;
   content:"•";
   font-weight:bold;
   font-size:110%;
   color:silver;
 }
-#frm-shouters .quote {display:block; width:90%; padding-left:35px; font-style:italic; color:#666666; font-weight:normal;}
+#frm-shouters .quote {display:block; width:90%; padding-left:35px; font-style:italic; color:#666666; font-weight:normal; text-indent:-7px;}
 #frm-shouters .quote::before,
 #frm-shouters .quote::after {content:"\""; padding:0 1px; color:silver;}
 
