@@ -24,7 +24,7 @@ define('REAL', @$_SERVER['SystemRoot'] != 'C:\\Windows'); // used?
  *        if $uids is an integer it is the only uid
  * @param integer $starting: the starting unix time
  * @param integer $ending: the ending unix time
- * @return an array of transactions each element of which is a single entry associated with the transaction.  Note that tx_hdrs data is in each of the entries. If there's a failure return FALSE.
+ * @return an array of transactions each element of which is a single entry associated with the transaction.  Note that tx_hdrs data is in each of the entries. If there's a failure return [].
  */
 function getTxs($uids, $starting=NULL, $ending=NULL) {
   if (is_integer($uids)) { $uids = [ $uids ]; }
@@ -91,7 +91,7 @@ EOF;
     }
     $txs[$i] = $newEntries;
   }
-  return $txs ?: FALSE;
+  return $txs;
 }
 
 /**
