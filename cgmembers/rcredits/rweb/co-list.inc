@@ -23,14 +23,15 @@ function coList($which = SIMPLE_CO_LIST, $region = '') {
   if (!$region and $mya and !$lat and !$lon) $region = $mya->zip;
   $isZip = (is_numeric($region) or preg_match('/^[A-Z][0-9][A-Z] ?([0-9][A-Z][0-9])?$/i', $region));
   $subFlds = 'which value';
+  $distCrit = tr('((latitude<>0 OR longitude<>0) AND %DISTANCE_BETWEEN<%NEIGHBOR_MAX)');
   
   if ($isZip) { // eg 013 or 01002
     list ($value, $crit) = [$region, 'u.zip LIKE :value'];
-    $crit .= ' OR ' . distCrit($crit, ray('value', $value . '%'));
-    $subFlds .= ' lat lon';
+    extract(db\get('AVG(latitude) AS lat,AVG(longitude) AS lon', 'users u', $crit, ray('value', $value . '%')));
+    $crit .= ' OR ' . strtr($distCrit, ray(':lat :lon', $lat ?: 0, $lon ?: 0));
   } elseif (!$region and $mya) {
     if (!$lat or !$lon) return participatingCompanies(''); // nothing in that area (this might be improved, but
-    list ($value, $crit, $subFlds) = [NULL, distCrit(1, []), 'which lat lon'];
+    list ($value, $crit, $subFlds) = [NULL, $distCrit, 'which lat lon'];
   } elseif (!$region) {
     list ($value, $crit) = [1, ':value=1'];
   } elseif (preg_match('/[A-Z]{3}/', $region)) {  // eg NEW or MIW
@@ -132,13 +133,4 @@ X;
 function buttonHtml($a, $text, $for, $style) {
   $class = "cgpay-$for";
   return w\btn("/pay-with-cg/company=$a->mainQid&for=$for", $text, $style, '', compact('class') + away());
-}
-
-/**
- * Return neighborhood criteria for the given search data.
- */
-function distCrit($where, $subs) {
-  $res = db\get('AVG(latitude) AS lat,AVG(longitude) AS lon', 'users u', $where, $subs);
-  extract($res); // get lat,lon
-  return tr('(%DISTANCE_BETWEEN<%NEIGHBOR_MAX)', compact(ray('lat lon')));
 }

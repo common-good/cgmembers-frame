@@ -26,7 +26,7 @@ function formFindCo($form, &$sta, $args = '') {
   $region = textFld(t('Where:'), [t('Start of postal code'), t('Type the first few characters of your postal code or your state abbreviation.<br>For example, type 013 for Franklin County, Massachusetts; 05 or VT for Vermont, etc.')], dft(@$where)); // or country name
   $submit = t('Find');
 
-  return cgform(compact(ray('title which region submit list')));
+  return cgform(compact(ray('title region which submit list')));
 }
 
 function formFindCo_validate($form, &$sta) {

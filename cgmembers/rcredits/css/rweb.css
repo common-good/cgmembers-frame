@@ -208,6 +208,7 @@ td, th {padding: 4px 9px; border: 1px solid #fff; text-align: left;}
 #frm-community,
 #frm-history,
 #frm-settings,
+#frm-co,
 #frm-admin {max-width:300px; margin:0 auto;}
 #frm-adminpanel button {margin:0 10px 20px 0;}
 
@@ -788,7 +789,7 @@ body.page-partner blockquote {font-size:14px;}
 .cmpy-list .cmpy-img, .cmpy-list .cmpy-buttons, .cmpy-list .cmpy-name-does,
 .cmpy-list .cmpy-contact {display:table-cell; padding:10px 0; border-bottom:1px solid silver;}
 
-.cmpy-list .cmpy-img {display:table-cell; overflow:hidden; vertical-align: middle; height:48px; margin:5px 5px 5px 20px; width:64px; text-align:center;}
+.cmpy-list .cmpy-img {display:table-cell; overflow:hidden; vertical-align: middle; height:48px; margin:5px 5px 5px 20px; width:64px; text-align:center; max-width:auto;} // max-width is for promo site
 .cmpy-list .cmpy-img img {overflow:hidden; height:48px; width: 64px; object-fit:cover;}
 .cmpy-list .cmpy-name-does {width:300px; overflow:hidden; display:table-cell; vertical-align: middle; padding-left:10px;}
 .cmpy-list .cmpy-name {color:darkblue; padding-left:10px;}
