@@ -2,6 +2,7 @@
 . revamped find-co to handle state/region selections better
 . fixed spacing on shouters.inc
 . added "building" to u\getLocus
+. fixed bug that returned FALSE instead of empty array in be\getTxs()
 
 2020-06-08 feature/invite-overhaul
 . added button on admin panel to send data to SMT
