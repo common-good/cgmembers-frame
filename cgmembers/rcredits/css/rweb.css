@@ -208,6 +208,7 @@ td, th {padding: 4px 9px; border: 1px solid #fff; text-align: left;}
 #frm-community,
 #frm-history,
 #frm-settings,
+#frm-co,
 #frm-admin {max-width:300px; margin:0 auto;}
 #frm-adminpanel button {margin:0 10px 20px 0;}
 
@@ -404,7 +405,7 @@ body.page-partner blockquote {font-size:14px;}
 #frm-shouters .footnote {color:red;}
 #frm-shouters .form-item-ask {font-size:125%; color:seagreen; background-color:lightyellow; padding-bottom:10px;}
 #frm-shouters #edit-signed {font-size:125%; color:#317eac; font-weight:bold;}
-#frm-shouters .row {display:block; width:100%; color:black;}
+#frm-shouters .row {display:block; width:100%; color:black; margin-bottom:10px;}
 #frm-shouters .cell {display:inline; padding:0 1px 0 0;}
 #frm-shouters .fullName {color:darkblue; font-weight:bold;}
 #frm-shouters .fullName::before {
@@ -788,7 +789,7 @@ body.page-partner blockquote {font-size:14px;}
 .cmpy-list .cmpy-img, .cmpy-list .cmpy-buttons, .cmpy-list .cmpy-name-does,
 .cmpy-list .cmpy-contact {display:table-cell; padding:10px 0; border-bottom:1px solid silver;}
 
-.cmpy-list .cmpy-img {display:table-cell; overflow:hidden; vertical-align: middle; height:48px; margin:5px 5px 5px 20px; width:64px; text-align:center;}
+.cmpy-list .cmpy-img {display:table-cell; overflow:hidden; vertical-align: middle; height:48px; margin:5px 5px 5px 20px; width:64px; text-align:center; max-width:auto;} // max-width is for promo site
 .cmpy-list .cmpy-img img {overflow:hidden; height:48px; width: 64px; object-fit:cover;}
 .cmpy-list .cmpy-name-does {width:300px; overflow:hidden; display:table-cell; vertical-align: middle; padding-left:10px;}
 .cmpy-list .cmpy-name {color:darkblue; padding-left:10px;}
