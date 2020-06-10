@@ -789,8 +789,8 @@ body.page-partner blockquote {font-size:14px;}
 .cmpy-list .cmpy-img, .cmpy-list .cmpy-buttons, .cmpy-list .cmpy-name-does,
 .cmpy-list .cmpy-contact {display:table-cell; padding:10px 0; border-bottom:1px solid silver;}
 
-.cmpy-list .cmpy-img {display:table-cell; overflow:hidden; vertical-align: middle; height:48px; margin:5px 5px 5px 20px; width:64px; text-align:center; max-width:auto;} // max-width is for promo site
-.cmpy-list .cmpy-img img {overflow:hidden; height:48px; width: 64px; object-fit:cover;}
+.cmpy-list .cmpy-img {display:table-cell; overflow:hidden; vertical-align: middle; margin:5px 5px 5px 20px; text-align:center;}
+.cmpy-list .cmpy-img img {overflow:hidden; width:64px; height:48px; max-width:64px; max-height:48px; object-fit:cover;}  /* max-width and max-height are for mobile / promo site */
 .cmpy-list .cmpy-name-does {width:300px; overflow:hidden; display:table-cell; vertical-align: middle; padding-left:10px;}
 .cmpy-list .cmpy-name {color:darkblue; padding-left:10px;}
 .cmpy-list .cmpy-does {padding-left:10px;}
