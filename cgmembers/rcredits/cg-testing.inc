@@ -33,7 +33,7 @@ define('SAME_TIME', 60 * 20); // number of seconds that make no difference in "s
  * @param bool $direct: directly to or from db, rather than user input (default FALSE)
  */
 function fixData(&$info, $direct = FALSE) {
-  global $testOnly, $rUrl, $testVars;
+  global $testOnly, $rUrl, $testVars, $T;
 
   $fields = key($info) . ' email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method companyOptions coType'; // first key is probably an ID field, so keep it at the front
 
@@ -44,7 +44,7 @@ function fixData(&$info, $direct = FALSE) {
   extract(just($fields, $info));
   
   if (isset($cat)) $cat = db\get('id', 'post_cats', compact('cat'));
-  if (isset($method) and !$testOnly) $method = array_search($method, ray('email phone text'));
+  if ($T->feature == 'posts' and isset($method) and !$testOnly) $method = array_search($method, ray('email phone text'));
   if (isset($companyOptions)) $companyOptions = ray($companyOptions);
   if (isset($coType) and !is_numeric($coType)) {
     if ($coType) $coType = array_search($coType, ray(CO_TYPES)); else { unset($coType); unset($info['coType']); }

@@ -204,8 +204,8 @@ function doit(what, vs) {
     
   case 'verifyid':
     if (vs['method'] >= 0) verifyid(vs['method']);
-    $('[id^="edit-field-"]').click(function () {verifyid($(this).val());});
-    $('#edit-file').click(function () {if ($(this).val() == '') $('#edit-field-0').prop("checked", true);});
+    $('[id^="edit-method-"]').click(function () {verifyid($(this).val());});
+    $('#edit-file').click(function () {if ($(this).val() == '') $('#edit-method-0').prop("checked", true);});
     break;
 
   case 'which':
@@ -585,14 +585,16 @@ function doit(what, vs) {
  * Show or hide ID verification fields according to verification method
  */
 function verifyid(method) {
-  $('#edit-field-' + method).prop('checked', true); // needed after error
+  $('#edit-method-' + method).prop('checked', true); // needed after error
   var ssn = $('.form-item-federalId');
   var dob = $('.form-item-dob');
   var idtype = $('.form-item-idtype');
   var file = $('.form-item-file');
-  if (method == 0) {reqNot(ssn); reqNot(dob); req(file); reqNot(idtype);}
-  if (method == 1) {reqNot(ssn); reqNot(dob); req(file); req(idtype); $('#edit-idtype').focus();}
-  if (method == 2) {req(ssn); req(dob); reqNot(file); reqNot(idtype); $('#edit-federalid').focus();}
+
+  req(dob);
+  if (method == 0) {reqNot(ssn); req(file); reqNot(idtype);}
+  if (method == 1) {reqNot(ssn); req(file); req(idtype); $('#edit-idtype').focus();}
+  if (method == 2) {req(ssn); reqNot(file); reqNot(idtype); $('#edit-federalid').focus();}
 }  
 
 function setInvestFields() {

@@ -144,7 +144,7 @@ function formSummary_validate($form, &$sta) {
   if ($tickle !== '' and $err = u\badDate($tickle)) return say($err, 'tickle');
 
   if ($dob and !formBasic_validate($form, $sta, FALSE, 'dob')) return;
-  if ($altId xor $altSt) return say(t('You must give both an Alternate ID and a state or neither. If it\'s not a driver\'s license, choose "AA" and describe the ID type in one or two words at the end of the number.'), 'altId');
+  if ($altId xor $altSt) return say(t('You must give both an Alternate ID and a state or neither. If it\'s not a driver\'s license, describe the ID type in one or two words at the start of the number; for example "US Passport #12345". If there is no state, choose "AA".'), 'altId');
   
 /*  if (in(nn($federalId), [R_ON_FILE, t('SSN')])) {
     unset($sta['input']['federalId']);

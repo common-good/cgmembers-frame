@@ -56,9 +56,9 @@ Scenario: A member signs up
 Scenario: A member verifies ID
   Given member ".ZZB" has "person" steps done: "signup verifyemail"
   When member ".ZZB" completes form "settings/verifyid" with values:
-  | field | federalId   | dob      |*
-  |     2 | 123-45-6789 | 2/1/1990 |
-  # field 2 is SSN and DOB, as opposed to file upload
+  | legalName | method | federalId   | dob      |*
+  |           |     2  | 123-45-6789 | 2/1/1990 |
+  # field 2 is SSN, as opposed to file upload
   Then members:
   | uid  | federalId | dob       |*
   | .ZZB | 123456789 | 633848400 |

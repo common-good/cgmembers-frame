@@ -853,9 +853,8 @@ body.page-partner blockquote {font-size:14px;}
 /* Partner Step Two */
 
 /* Verify ID */
+#frm-verifyid .form-item-file label {padding-top:2px;}
 #frm-verifyid .form-item-federalId,
-#frm-verifyid .form-item-dob,
-/*#frm-verifyid .form-item-file,*/
 #frm-verifyid .form-item-idtype {display:none;}
 
 /* Bank Info */
