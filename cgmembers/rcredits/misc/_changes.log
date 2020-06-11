@@ -1,3 +1,8 @@
+2020-06-10 feature/verifyid-fix
+. require dob no matter how ID is verified (so bug fix of spurious warning is moot)
+. warnings now cause fatal error
+. fixed bug in verifyid that forgot to ask for legalName
+
 2020-06-09 feature/findco-redo
 . revamped find-co to handle state/region selections better
 . fixed spacing on shouters.inc

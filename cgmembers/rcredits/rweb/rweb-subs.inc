@@ -1392,7 +1392,7 @@ function ssnFields($personal = TRUE, $req = '') {
   if ($personal) {
     $ssReason = $req ? t('Required by the IRS if you accept more than $20,000 a year in payments through %PROJECT ($600 a year in MA and VT).') : '';
     $federalId = passFld($req . t('ssTitle'), [t('ssDesc'), $ssReason], autofill('off'));
-    $dob = dateFld($req . t('Birth Date:'), [t('Your birth date'), t('Your date of birth (mm/dd/yyyy)')], autofill('off'));
+    $dob = dateFld($req . t('Birth Date:'), [t('Your birth date'), t('Your date of birth (mm/dd/yyyy) &mdash; must match the date on your ID.')], autofill('off'));
   } else {
     $federalId = passFld($req . t('einTitle'), [t('einDesc')], autofill('off'));
     $dob = dateFld($req . t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)?')]);
