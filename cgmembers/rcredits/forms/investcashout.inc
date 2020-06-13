@@ -33,10 +33,10 @@ function formInvestCashout($form, &$sta, $args = '') {
 function formInvestCashout_submit($form, &$sta) {
 	global $mya;
 	
-	extract(just('method hid', $sta['input']));
+	extract(just('method hid', $sta['input'], NULL));
 	extract(just('clubid avail total', unserialize($hid)));
 	$icA = r\acct($clubid);
-	$pct = ($partial = @$method) ? min(1, $avail / $total) : 1;
+	$pct = ($partial = $method) ? min(1, $avail / $total) : 1;
 	$count = $sum = 0;
 	
 	$q = db\q('SELECT stakeid,stake,uid,request FROM r_stakes WHERE clubid=:clubid AND request<0 ORDER BY requestedOut', compact('clubid'));

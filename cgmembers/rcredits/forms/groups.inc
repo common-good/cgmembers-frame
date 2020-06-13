@@ -27,7 +27,7 @@ function formGroups($form, &$sta, $args = '') {
     extract($row);
     $list[] = u\ray2row([$id, lnk("/sadmin/groups/grpId=$id", $name)]);
   }
-  $list = join("\n", @$list ?: []);
+  $list = join("\n", nn($list) ?: []);
   $list = <<< X
 <div class="container">
 <div class="thead">$hdrs</div>

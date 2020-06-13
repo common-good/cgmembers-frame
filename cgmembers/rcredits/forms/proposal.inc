@@ -19,8 +19,8 @@ include_once R_ROOT . '/rvote/rvote-results.inc';
 function formProposal($form, &$sta, $args = '') {
   global $base_url, $mya;
 	
-  extract(just('ctty', $args));
-	if (!@$ctty or !$cttyA = r\acct($ctty)) return w\go(''); // don't even bother with an error message if no ctty
+  extract(just('ctty', $args, NULL));
+	if (!$ctty or !$cttyA = r\acct($ctty)) return w\go(''); // don't even bother with an error message if no ctty
 	list ($ctty, $cttyName) = [$cttyA->id, $cttyA->fullName];
 	list ($cttyEmail, $cttyPhone) = [$cttyA->email, u\fmtPhone($cttyA->phone)];
   
@@ -134,8 +134,8 @@ EOF;
 } 
   
 function formProposal_validate($form, &$sta) {
-  extract(just('cats when until amount budgetTotal phone email', $sta['input']));
-  if (!@$cats) return say(t('You must choose at least one category.'), 'categories');
+  extract(just('cats when until amount budgetTotal phone email', $sta['input'], NULL));
+  if (!$cats) return say(t('You must choose at least one category.'), 'categories');
   if ($err = u\badDate($when, now() - 30 * DAY_SECS)) return sayFieldErr($err, 'when');
   if ($err = u\badDate($until, max($when, now()))) return sayFieldErr($err, 'until');
   foreach (ray('amount budgetTotal committed') as $k) if ($err = amtErr($k, $sta)) return sayFieldErr($err, $k);
@@ -149,8 +149,8 @@ function formProposal_submit($form, &$sta) {
   $dbFields = 'event project categories overview purpose systemic where when until how amount recovery budgetTotal budget committed contingency qualifications evaluation name contact phone email sponsor';
   $input['categories'] = join(' ', array_keys($input['cats']));
 	
-	foreach (@$input['recovery'] ?: [] as $k => $v) u\setBit($recs, $k);
-	$input['recovery'] = @$recs ?: 0;
+	foreach (nni($input, 'recovery') ?: [] as $k => $v) u\setBit($recs, $k);
+	$input['recovery'] = nn($recs) ?: 0;
   db\insert('r_proposals', $info = just($dbFields, $input));
   r\tellCO('funding proposal received', $info);
   w\go('community', t('Your funding application has been submitted! The process of evaluating proposals may take several weeks. You will hear from us whether or not your proposal is chosen for funding.'));

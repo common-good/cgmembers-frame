@@ -38,7 +38,7 @@ function formProx($form, &$sta, $args) {
   $func = 'CG\\Web\\form' . ucwords($page);
   $form = $func($form, $sta, $args0);
   foreach (['validate', 'submit'] as $k) {
-    if (!@$form["#$k"] and function_exists($func . "_$k")) $form["#$k"] = [$func . "_$k"];
+    if (!nni($form, "#$k") and function_exists($func . "_$k")) $form["#$k"] = [$func . "_$k"];
   }
   return $form;
 }
@@ -134,11 +134,11 @@ EOF;
  */
 function formAccountPhoto($form, &$sta, $page = '', $args = '') {
   global $mya;
-  extract(just('qid orig', $args));
+  extract(just('qid orig', $args, NULL));
   list($zot, $type) = explode('-', $page);
 
   $a = nn($qid) ? r\acct($qid, $mya ? $mya->agentId : '') : ($mya ?: FALSE);
-  if ($a and ($a->co or $a->can(B_READ))) $photo = @$orig ? u\getFile($a->tempPhotoFilename) : $a->$type;
+  if ($a and ($a->co or $a->can(B_READ))) $photo = $orig ? u\getFile($a->tempPhotoFilename) : $a->$type;
 
   $imgFlnm = ($mya and $mya->co) ? 'placeholder-co.png' : 'placeholder.png';
   header("Content-type: image/jpeg");
@@ -163,15 +163,19 @@ function photoUpload($uid = '', $sid = '') {
   $params = $_POST; // don't sanitize this, it only comes from us!
   foreach ($params2 = array_combine($f0, $f) as $k0 => $k) $$k = $params[$k0];
   
-  if (!@$uid or !@$sid or !$sessionVars = w\sessionVars($sid)) return w\photoRet(t('bad sid'));
+  if (!nn($uid) or !nn($sid) or !$sessionVars = w\sessionVars($sid)) return w\photoRet(t('bad sid'));
   $mya = r\acct($uid);
   $tempFilename = $mya->tempPhotoFilename;
   $quality = $mya->co ? 100 : 50; // jpeg compression/quality (0=worst quality, 100=best quality)
   if ($mya->co) foreach ([$cropH, $cropW] as $k) $$k *= CO_PHOTO_FACTOR; // higher quality for businesses
 
   if ($recrop = u\starts($url, 'http')) $url = $tempFilename; // picture is already saved and is just being recropped
-        
-  if (!$what = @getimagesize($url)) return w\photoRet(t('That is not an image file.'));
+
+  try {
+    $what = @getimagesize($url);
+  } catch (\Exception $e) {$what = FALSE;}
+  if (!$what) return w\photoRet(t('That is not an image file.'));
+  
   list ($actualW, $actualH, $type, $zotAttr) = $what;
   if ($actualW != $w0 or $actualH != $h0) r\tellAdmin('photo problem?', $_POST + compact('actualW', 'actualH', 'uid'));
   if (!(imagetypes() & $type)) return w\photoRet(t('That image format is not recognized.'));
@@ -207,7 +211,7 @@ function formAccounts($form, &$sta) {
   global $base_url, $rUrl, $mya;
 
   if (!$mya) return []; //['signin' => item('<a href="' . "$base_url/signin" . '">Sign in</a>')];
-  $myid = @$mya->id; // may be a non-existent account if tests are run while looking at .ZZA, for example
+  $myid = $mya->id; // may be a non-existent account if tests are run while looking at .ZZA, for example
   
   if ($mya->cAdmin2 or $mya->isAdmin2) { // admin: show a search box instead of a list of choices
     $newAcct = textFld(t('Switch to account:'), [t('Type part of name, phone, email, record ID, or qid.')]);
@@ -282,7 +286,7 @@ function changeWho($zot, $args = '', &$sta = '') {
   if (nn($acct) == 'signout') return signout();
   if (!$mya and !isDEV) return w\go($page, t('No previous account. Try again.')); // get old current account
   if (!$mya->cAdmin2 and !$mya->isAdmin2 and !$mya->can()) return hack('accts');
-  $mya = r\acct($acct, @$mya->agentId); // tentative new account (agent is the same, so adminishness is the same)
+  $mya = r\acct($acct, $mya->agentId); // tentative new account (agent is the same, so adminishness is the same)
   if ($mya->cAdmin and !$mya->admin and !$mya->isAdmin2 and $mya->community != $mya->agentA->community) return w\go($page, t('You can switch only to accounts in your community.')); // cAdmin check is a bug fix
   r\setAcct($mya, $sta); // set new current account
 
@@ -346,21 +350,21 @@ function formMenu($form, &$sta) {return cgform(['title' => t('Menu')]);}
  */
 function formEmpty($form, &$sta = '', $args = '') {
   if ($form and !is_array($form)) say(plain($form));
-  extract(just('say field msg', $args));
+  extract(just('say field msg', $args, NULL));
   
   $title = t('Miscellaneous'); // this is suppressed with CSS
-  if (@$msg) say(plain($msg), @$field);
-  if (@$say) $subtext = t('<p>To protect your account, <%span>no sign-in was required</span> for this action. To sign in safely, always go to %CG_DOMAIN.</p><p>You may now close this browser page.</p>', '_span', 'span class="loud"');
+  if ($msg) say(plain($msg), $field);
+  $subtext = $say ? t('<p>To protect your account, <%span>no sign-in was required</span> for this action. To sign in safely, always go to %CG_DOMAIN.</p><p>You may now close this browser page.</p>', '_span', 'span class="loud"') : NULL;
 ///   FAILS :(  if ($doSay == 'test') $testMessages = item(pr(\drupal_get_messages()));
-  return cgform(@compact(ray('title testMessages subtext')));
+  return cgform(compact(ray('title subtext')));
 }
 
 /**
  * Return a one-use auth code
  */
 function authcode() {
-  extract($args = just('company cocode', $_GET));
-  if (!@$cocode or !u\isQid(@$company) or !($co = r\acct($company)) or !$co->co or $co->emailCode != $cocode) exit(t('bad company account ID or cocode'));
+  extract($args = just('company cocode', $_GET, NULL));
+  if (!$cocode or !u\isQid($company) or !($co = r\acct($company)) or !$co->co or $co->emailCode != $cocode) exit(t('bad company account ID or cocode'));
   $now = now();
   exit(substr(u\cry('P', u\randomString(1) . serialize(compact('cocode', 'now'))), 2));
 }
@@ -369,7 +373,7 @@ function authcode() {
  * Certify that a business is indeed a Common Good participant.
  */
 function formCgBiz($form, &$sta, $id) {
-  if (!@$id or !$a = r\acct(strtoupper($id)) or !$a->ok) return w\go('', t('That is not a %PROJECT Business.'));
+  if (!nn($id) or !$a = r\acct(strtoupper($id)) or !$a->ok) return w\go('', t('That is not a %PROJECT Business.'));
   w\go('member/' . $a->name, t('<big><b>%fullName</b> is a %PROJECT Business since %activated.</big> For more information about Common Good, <%a>click here</a>.', 'fullName activated _a', $a->fullName, u\fmtDate($a->activated), atag(r\promoLink(''))));
 }
 
@@ -427,7 +431,7 @@ function formBasic_validate($form, &$sta, $co = 'mya', $fields = R_BASIC_FLDS) {
   if (isset($federalId) and $err = u\badSsn($federalId, nn($dob))) return say($err, compact('what'), 'federalId');
   if (isset($dob) and $err = u\badDob($dob, $co)) return say($err, 'dob');
 
-  u\preray(@compact(ray($fields)), $sta['input']);
+  foreach (ray($fields) as $k) if (isset($$k)) $sta['input'][$k] = $$k;
   return TRUE;
 }
 
@@ -463,7 +467,7 @@ function chartData($args = '') {
   extract(just('ctty', $args));
   
   $data = showAllCharts(nn($ctty, 0));
-/**/  if (!@$data) die(t('No such chart data.'));
+/**/  if (!nn($data)) die(t('No such chart data.')); // die not u\FAIL or u\EXPECT
 /**/  echo $data;
   exit();
 }

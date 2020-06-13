@@ -64,7 +64,7 @@ function formPosts($form, &$sta, $args = '') {
   extract(just(TOP_FLDS . ' postid thing email', $args, NULL));
 
   foreach (ray(TOP_FLDS . ' email') as $k) {
-    if (nn($$k)) r\setCook($k, $$k); else $$k = nn($_COOKIE[$k]); // default from previous time (useful also in getWho)
+    if (nn($$k)) r\setCook($k, $$k); else $$k = nni($_COOKIE, $k); // default from previous time (useful also in getWho)
     ${$k . '0'} = $$k; // remember initial values
   }
 
@@ -260,7 +260,7 @@ function postInputFlds($dfts = []) {
   $cat = selectFld(REQ . t('Category:'), '', dft($cat), $choices);
   
   $item = textFld(REQ . t('What:'), [t('What you\'re offering or need')], dft($item) + maxlen(40));
-  $private = admin(nn($dfts['zip'])) ? boolFld(t('Private:'), t('Seen only by the administrator'), dft((int) $private)) : hidFld(0);
+  $private = admin(nni($dfts, 'zip')) ? boolFld(t('Private:'), t('Seen only by the administrator'), dft((int) $private)) : hidFld(0);
 
   $details = areaFld(REQ . t('Details:'), t('Max 500 characters'), dft($details) + maxlen(500));
   
@@ -280,7 +280,7 @@ function showPost($postid) {
   
   $distance = tr('%DISTANCE_BETWEEN');
   $noGeo = tr('%NO_DISTANCE');
-  list ($lat, $lon) = [nn($_COOKIE['latitude'], 0), nn($_COOKIE['longitude'], 0)];
+  list ($lat, $lon) = [nni($_COOKIE, 'latitude', 0), nni($_COOKIE, 'longitude', 0)];
   
   $flds = strtr(<<< X
     pid,s.type,c.cat,s.item,s.private,s.details,s.exchange,s.emergency,s.created,s.end,s.confirmed AS postOk,
@@ -387,7 +387,7 @@ function getWho($args) {
     foreach (ray('fullName address city state zip phone uid') as $k) $$k = hidFld($a->$k);
   } else {
     $uid = NULL;
-    if ($locus = nn($_COOKIE['locus'])) {
+    if ($locus = nni($_COOKIE, 'locus')) {
       list ($address, $city, $state, $zip) = u\parseAddr($locus);
       $state = r\stateNum($state);
     } else $address = $city = $state = $zip = '';
@@ -425,7 +425,7 @@ function confirm($op, $thing, $code) {
   list ($tnm, $idnm) = $thing == 'post' ? ['posts', 'postid'] : ['messages', 'id'];
   extract(just($idnm . ' created location', $code, NULL));
   $idSub = compact($idnm);
-  $successUrl = POSTPAGE . ($_COOKIE['radius'] ? '/op=top' : '');
+  $successUrl = POSTPAGE . (nni($_COOKIE, 'radius') ? '/op=top' : '');
 
   if (db\exists($tnm, $idSub + compact('created'))) {
     $pid = db\get($thing == 'post' ? 'pid' : 'sender', $tnm, $idSub);
@@ -671,7 +671,7 @@ function postMsg($message, $fromName, $fromEmail, $fromLocation, $postid) {
  * Return a specified field from the people record of the last person verified on the current device.
  */
 function vip($fld = 'pid') {
-  if (!$pid = nn($_COOKIE[VIPID])) return FALSE;
+  if (!$pid = nni($_COOKIE, VIPID)) return FALSE;
   return $fld == 'pid' ? $pid : db\get($fld, 'people', compact('pid'));
 }
 
@@ -713,7 +713,7 @@ function admin($zip) {
 function codedUrl($op, $params) {return POSTPAGE . "/op=$op&code=" . u\urlify(http_build_query($params));}
 function fmtDist($dist, $zip) {return $dist ? (admin($zip) ? number_format($dist, 2) : ($dist < .5 ? '&frac12;' : u\vague($dist))) : '';} // don't show distances less than 1/2 mile
 function catChoices($top, $extra = []) {return ['' => $top] + db\keyed('id,cat', 'post_cats', '1 ORDER BY sort') + $extra;}
-function eFld() {global $mya; return emailFld(REQ . t('Your Email:'), [t('Your email address')], dft($mya ? $mya->email : (nn($_COOKIE['email']) ?: vip('email'))));}
+function eFld() {global $mya; return emailFld(REQ . t('Your Email:'), [t('Your email address')], dft($mya ? $mya->email : (nni($_COOKIE, 'email') ?: vip('email'))));}
 function pVal($fld, $pid) {return db\get($fld, 'people', compact('pid'));}
 function zipOnlyMsg($specifics, $zip) {return t('We are unable to geolocate that address at this time, so %specifics in the "%zip3" Zip Code area.', 'specifics zip3', $specifics, substr($zip, 0, 3));}
 function msgFld($req = REQ) {return areaFld($req . t('Message to Send:'), t('Max 200 characters'), maxlen(200));}

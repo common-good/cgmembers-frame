@@ -36,7 +36,7 @@ ini_set('error_reporting', isDEV ? E_ALL : (E_ALL & ~E_NOTICE & ~E_DEPRECATED & 
 ini_set('max_execution_time', isDEV ? 0 : 240); // don't ever timeout when developing
 ini_set('session.gc_probability', 1); // garbage collection this fraction of the time on startup (numerator)
 ini_set('session.gc_divisor', 100); // (denominator)
-define('SESSION_LIFE', (@$_COOKIE['pw2'] or @$_POST['pw2']) ? 12 * HOUR_SECS : 24 * MIN_SECS); // standard 24 mins (more for admin)
+define('SESSION_LIFE', (nni($_COOKIE, 'pw2') or nni($_POST, 'pw2')) ? 12 * HOUR_SECS : 24 * MIN_SECS); // standard 24 mins (more for admin)
 ini_set('session.gc_maxlifetime', SESSION_LIFE); // session timeout (and garbage collection happens)
 ini_set('session.cookie_lifetime', 0); // SESSION_LIFE); // (drupal doesn't refresh the cookie)
 
@@ -78,7 +78,7 @@ if (count(explode('.', $cookie_domain)) > 2 && !is_numeric(str_replace('.', '', 
   ini_set('session.cookie_domain', $cookie_domain);
 }
 
-$agt = nn($_SERVER['HTTP_USER_AGENT']);
+$agt = nni($_SERVER, 'HTTP_USER_AGENT');
 define('isSAFARI', stripos($agt, 'Chrome') === FALSE and stripos($agt, 'Safari') !== FALSE);
 
 /**

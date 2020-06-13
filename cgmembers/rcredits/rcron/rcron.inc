@@ -86,7 +86,7 @@ function run() {
   // Allow execution to continue even if the request gets canceled.
   if (between(now(), strtotime('2:40am'), strtotime('2:44am'))) return; // swiftMailer crashes during this period
   
-  @ignore_user_abort(TRUE);
+  ignore_user_abort(TRUE);
 
   // Prevent session information from being saved while cron is running.
   $original_session_saving = \drupal_save_session();
@@ -133,9 +133,10 @@ function doTask($item) {
   $op = array_shift($item);
   $func = 'CG\\Cron\\' . $op;
 
-  if ($uid = @$item['uid']) $mya = r\acct($uid); // fudge current account
+  extract(just('uid', $item, NULL));
+  if ($uid) $mya = r\acct($uid); // fudge current account
   if (!in($op, 'acctHourly checkAcct whatsUp tickleStep activeWeekly activeMonthly') and substr($op, -1, 1) != '1') u\log($op, 'cr', $item);
-    
+
   $func($item);
 }
 
@@ -168,7 +169,7 @@ function everyHour() { // stuff to do every hour
 //  queueEach('acctHourly', "SELECT uid FROM users WHERE uid<>0");
   if (strftime('%H') + 0 == (R_DAILY_HOUR + 6) % 24) {
     $lastCron = getV('last_cron_end', []);
-    if (now() - nn($lastCron['end'], 0) > DAY_SECS) r\tellAdmin('daily cron FAILED');
+    if (now() - nni($lastCron, 'end', 0) > DAY_SECS) r\tellAdmin('daily cron FAILED');
   }
   
   db\q('DELETE FROM cache_form WHERE created<:REQUEST_TIME-:HOUR_SECS'); // clean up form cache (is this needed?)
@@ -218,7 +219,7 @@ function everyDay() {
 
   $cttys = db\q('SELECT uid AS ctty FROM users WHERE uid<0')->fetchCol();
   foreach ($cttys as $ctty) $companies[$ctty] = r\companies($ctty, FALSE);  
-  \setV('companies', @$companies ?: []);
+  \setV('companies', nn($companies) ?: []);
   
   $sql = <<< X
   SELECT DISTINCT u.uid, c.uid AS ctty, u.fullName AS person, c.fullName AS cttyName 
@@ -766,7 +767,7 @@ function cttyStats($dt1 = 0, $redo = '') {
     u\preray([0 => min($cttys), 1 => min($cttys)], $cttys); // show all dates overall
 
     if ($dt1 < 0) $dt1 = db\max('created', 'r_stats'); // repeat last date to catch missing cttys
-    if (!$dt1) $dt1 = nn($cttys[0]) ?: now();
+    if (!$dt1) $dt1 = nni($cttys, 0, 0) ?: now();
     $dt = strtotime('today', $dt1); // use first moment of the day
 
     while ($dt <= now()) {
@@ -994,8 +995,9 @@ function notices() {
   global $timeFor; // for testing
   
   $lastStart = getV('last_cron_start', []);
-  $timeFor_weekly = (strftime('%w', @$lastStart['day']) == R_WEEKLY_DAY);
-  $timeFor_monthly = (strftime('%d', @$lastStart['day']) == R_MONTHLY_DAY);
+  $day = nni($lastStart, 'day');
+  $timeFor_weekly = ($day and strftime('%w', $day) == R_WEEKLY_DAY);
+  $timeFor_monthly = ($day and strftime('%d', $day) == R_MONTHLY_DAY);
   if (test() and isset($timeFor)) extract(just('weekly monthly', $timeFor), EXTR_PREFIX_ALL, 'timeFor');
 
   $where = $dailySql = '((NOT :IS_WEEKLY AND NOT :IS_MONTHLY) OR NOT :IS_MEMBER)'; // daily
@@ -1026,7 +1028,7 @@ function END() {
   $lastCron = getV('last_cron_end', []);
   $lastCron['end'] = now();
   setV('last_cron_end', $lastCron);
-  $elapsed = now() - @$lastCron['day'];
+  $elapsed = now() - nni($lastCron, 'day', 0);
   $time = strftime('%I:%M%P');
   $msg = t('At %time, after %elapsed secs, daily cron ended successfully.', compact(ray('time elapsed')));
   $topic = t('cron end');

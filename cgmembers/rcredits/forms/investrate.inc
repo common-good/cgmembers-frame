@@ -44,11 +44,12 @@ function formInvestRate($form, &$sta, $args = '') {
   foreach (ray('gross assets offering') as $k) $vs[$k] = u\fmtAmt($vs[$k]);
   $vs['return'] = u\fmtAmt($vs['return'], '%2');
   foreach ($vs as $k => $v) $ds[$k] = item($vs[$k], $ds[$k] . ':');
-  $goods = NULL;
+  $goods = $patronages = NULL;
 
-  if ($mya->iclub or $shares = db\get('shares', 'r_shares', compact('vestid'))) { // is the club or already invested
-    $value = item(u\fmtAmt(@$shares * $price), t('Value:'));
-    $shares = item(u\fmtAmt(@$shares), t('Club\'s stake:'));
+  if ($mya->iclub or $shares = db\get('shares', 'r_shares', compact('vestid')) ?: 0) { // is the club or already invested
+    u\setDft($shares, 0);
+    $value = item(u\fmtAmt($shares * $price), t('Value:'));
+    $shares = item(u\fmtAmt($shares), t('Club\'s stake:'));
     if ($mya->iclub) {
       foreach (ray('good patronage') as $k) ${$k . 's'} = number_format(db\avg($k, 'r_ratings', compact('vestid')));
       $goodsMed = (int) db\med('good', 'r_ratings', compact('vestid'));
@@ -74,7 +75,9 @@ function formInvestRate($form, &$sta, $args = '') {
   $vestid = hidFld($vestid);
   $clubqid = hidFld($clubqid);
   
-  return cgform(@compact(ray('title subtext buttons vestid goods patronages')) + $ds + @compact(ray('stake value good patronage comment submit clubqid')));
+  $info = compact(ray('title subtext buttons vestid goods patronages')) + $ds;
+  foreach (ray('stake value good patronage comment submit clubqid') as $k) if (isset($$k)) $info[$k] = $$k;
+  return cgform($info);
 }
 
 function formInvestRate_validate($form, &$sta) {

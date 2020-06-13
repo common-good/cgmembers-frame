@@ -69,7 +69,7 @@ function do1099s($type, $testMode = FALSE, $rows = FALSE, $badNames = [], $badTI
   putRec(recF($bCount * $aCount, $aCount));
   if (test()) return;
   flush();
-  if (@$err1099) return w\go('sadmin/panel'); else exit(); // shouldn't we exit in any case?
+  if (nn($err1099)) return w\go('sadmin/panel'); else exit(); // shouldn't we exit in any case?
 }
 
 /**
@@ -163,7 +163,7 @@ function do1099($type, $year, $payee, &$total, $mod = '', $badNames = [], $badTI
       return 0; // might be better to just skip it and send admin a message (to get most of the reporting done)
     }
     $acctFields = ray('nm qid co addr ein txCount', u\asciiOnly($a->legalNameDpy), $a->mainQid, $a->co, u\asciiOnly($a->postalAddr), $a->federalId, $txCount);
-    putRec(recB($type, $year, $acctFields, $amount, $created, $for, $mod, @$badNames[$id], @$badTINs[$id]));
+    putRec(recB($type, $year, $acctFields, $amount, $created, $for, $mod, nni($badNames, $id), nni($badTINs, $id)));
   }
   return $bCount;
 }
@@ -217,19 +217,19 @@ function recA($type, $year) {
  * Return a payee ("B") record for the given year, account, amount, and purpose.
  * @param string $mod: normally ''. C=show corrected info. G=show incorrect name and/or TIN (as submitted before)
  */
-function recB($type, $year, $acctFields, $amount, $completed = '', $for = '', $mod = '', $badName = NULL, $badTIN = NULL) {
+function recB($type, $year, $acctFields, $amount, $completed = '', $for = '', $mod = '', $badName = '', $badTIN = '') {
   extract(just('nm qid co addr ein txCount', $acctFields));
   $who = "$nm ($qid)";
-  if (!isset($badName) and !isset($badTIN)) {
+  if (!$badName and !$badTIN) {
     if ($mod == 'G') return err1099(t('Original B Record has no error to be corrected: ') . $who);
-  } elseif ($mod != 'G') if (isset($badName) or isset($badTIN)) return err1099(t('Spurious badName (%badName) or badTIN (%badTIN) for payee %who.', compact('badName', 'badTIN', 'who')));
+  } elseif ($mod != 'G') if ($badName or $badTIN) return err1099(t('Spurious badName (%badName) or badTIN (%badTIN) for payee %who.', compact('badName', 'badTIN', 'who')));
   $corrected = pad($mod, 1);
   $tinType = pad($co ? 1 : 2, 1);
-  $payeeTIN = pad(isset($badTIN) ? $badTIN : nodash($ein), 9);
+  $payeeTIN = pad($badTIN ?: nodash($ein), 9);
   $accountNum = pad($qid, 20);
   $payerOffice = pad('', 4);
   $foreignPayee = pad('', 1);
-  $payeeName = pad(noBreakAt(preg_replace('/[^A-Z &\-]/i', '', u\asciiOnly(isset($badName) ? $badName : $nm)), 40), 2 * 40);
+  $payeeName = pad(noBreakAt(preg_replace('/[^A-Z &\-]/i', '', u\asciiOnly($badName ?: $nm)), 40), 2 * 40);
   list ($payeeFirst, $payeeLast) = u\parseName($payeeName);
   $nameControl = pad(preg_replace('/[^A-Z]/i', '', $co ? $payeeName : ($payeeLast . $payeeFirst)), 4);
 //  $nameControl = pad(preg_replace('/[^A-Z]/i', '', ($co and $mod != 'G') ? $payeeName : $payeeLast), 4); // temporary for TY2014,2015
@@ -325,7 +325,7 @@ function err1099($msg) {
  * @param string $rec: the record
  */
 function putRec($rec) {
-  global $err1099; if (@$err1099) return;
+  global $err1099; if (nn($err1099)) return;
   global $testRecs1099; if (test()) $testRecs1099[] = $rec;
 
 /**/  echo lenCheck($rec);
@@ -337,7 +337,7 @@ function putRec($rec) {
  */
 function seq() {
   global $seq1099;
-  return $seq1099 = u\lpad(@$seq1099 ? $seq1099 + 1 : 1, 8);
+  return $seq1099 = u\lpad(nn($seq1099) ? $seq1099 + 1 : 1, 8);
 }
 
 /**

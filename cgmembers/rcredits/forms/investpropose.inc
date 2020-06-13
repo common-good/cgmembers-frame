@@ -64,9 +64,9 @@ function formInvestPropose($form, &$sta, $args = '') {
 
 function formInvestPropose_validate($form, &$sta) {
   global $mya; $clubid = $mya->id;
-  extract($info = just(INVEST_ALLFLDS, $sta['input']));
+  extract($info = just(INVEST_ALLFLDS, $sta['input'], NULL));
 
-  if (@$company) {
+  if ($company) {
     if (!$a = whois($company, 'company', $info, t('no self-investing'))) return FALSE;
     $company = $a->id;
   } else {
@@ -80,19 +80,18 @@ function formInvestPropose_validate($form, &$sta) {
   }
   $types = ''; // not actually used until submit
   
-  u\preray(@compact(ray(INVEST_ALLFLDS)), $sta['input']); // update changed fields
+  foreach (ray(INVEST_ALLFLDS) as $k) if (isset($$k)) $sta['input'][$k] = $$k; // update changed fields
 }
 
 function formInvestPropose_submit($form, &$sta) {
   global $mya; 
+  
+  extract(just(INVEST_ALLFLDS . ' equity exempt', $sta['input'], NULL));
   list ($clubid, $clubqid) = [$mya->id, $mya->mainQid];
+  $types = $equity ? 'D' : 'I';
+  if ($exempt) $types .= 'T';
   
-  extract(just(INVEST_ALLFLDS . ' equity exempt', $sta['input']));
-  
-  $types = @$equity ? 'D' : 'I';
-  if (@$exempt) $types .= 'T';
-  
-  if (@$fullName) {
+  if ($fullName) {
     $a = new r\Acct(compact(ray(INVEST_COFLDS)));
     $a->setCategories($bizCats);
   } else $a = r\acct($company);

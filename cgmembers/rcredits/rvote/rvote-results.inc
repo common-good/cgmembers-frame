@@ -16,7 +16,7 @@ function showResults($eid, $noProxies = FALSE) {
   if ($eid < 0 and !$eid = db\max('id', 'r_events', ray('ctty', $eid))) return t('This community has no events');
   list($quids, $qutypes) = getQuestions($eid); 
 	$ans = '';
-  if (@$quids) {
+  if (nn($quids)) {
     $ctty = v\event('ctty', $eid);
 	  foreach($quids as $i => $k) $ans .= showResult($ctty, $i + 1, $k, $noProxies, TRUE);
   }
@@ -39,7 +39,7 @@ function showResult($ctty, $qi, $question, $noProxies, $withheader = TRUE) {
 	$qu = db\get('id, type, text, detail, budget, minveto, result', 'r_questions', 'id=:question', compact('question'));
   extract($qu);
   
-  if ($mya->superAdmin or !@$result) {
+  if ($mya->superAdmin or !nn($result)) {
 //    if ($type == 'E') return ''; // don't show essay results (and don't create ballots for them)
     
     $opts = optList($question);
@@ -63,7 +63,7 @@ function optList($question) {
 	$q = db\q('SELECT id FROM r_options WHERE question=:question ORDER BY displayOrder', compact('question'));
 	while($row = $q->fetchAssoc()) $opts[] = $row['id'];
 
-	return @$opts ?: [];
+	return nn($opts, []);
 }
 
 function getResult($qi, $quText, $quDetail, $quType, $budget, $tot, $votesDirect, $votesAll, $withheader) {
@@ -101,7 +101,7 @@ function getResult($qi, $quText, $quDetail, $quType, $budget, $tot, $votesDirect
 		$optlinehdr = "<b>#$inum</b>";
 		$vetos = number_format($toti->vetos, $quType == 'M' ? 0 : 1);
 
-    if ($comments = join('</li><li>', array_merge(@$toti->canceled_vetotexts ?: [], @$toti->veto_texts ?: []))) {
+    if ($comments = join('</li><li>', array_merge(nn($toti->canceled_vetotexts, []), nn($toti->veto_texts, [])))) {
       $showComments = w\btnShowDiv("comments$qi-$inum", t('comments'), 'warning');
       $comments = "<div id=\"comments$qi-$inum\" class=\"comment collapse\"><ul><li>$comments</li></ul></div>";
     } else $showComments = '';
@@ -182,7 +182,7 @@ EOF;
 function result_midM($toti, $i) {
 //  ksort($toti->prefs);
 	for ($j = 1, $eachpref = ''; $j <= count($toti->prefs); $j++) {
-		$prefij = ($i == $j) ? '- &nbsp;' : number_format(@$toti->prefs[$j], 0);
+		$prefij = ($i == $j) ? '- &nbsp;' : number_format(nni($toti->prefs, $j), 0);
 //		$prefij = ($i == $j) ? '- &nbsp;' : number_format($v, 0);
 		$eachpref .= "<td>$prefij</td>";
 	}
@@ -238,7 +238,7 @@ function tallyResults($voters, $qtype, $qbudget, $qminveto, $opts, $skipoptid=''
 		} elseif (!$badtot->funds) $badtot->result = 'unfunded';
 	} elseif ($qtype == 'M') {
 		foreach ($newtot as $k => $one) {
-      foreach ($newKeys as $index => $i) $newPrefs[$index + 1] = @$one->prefs[$i];
+      foreach ($newKeys as $index => $i) $newPrefs[$index + 1] = nni($one->prefs, $i);
       $newtot[$k]->prefs = $newPrefs;
     }
 	} elseif ($qtype == 'R') {
@@ -343,7 +343,7 @@ function scoreM(&$tot, $i) {
 
 	$toti = &$tot[$i];
 
-	foreach(array_keys($tot) as $j) $toti->prefdifs[$j] = @$toti->prefs[$j] - @$tot[$j]->prefs[$i]; // get difs
+	foreach(array_keys($tot) as $j) $toti->prefdifs[$j] = nni($toti->prefs, $j, 0) - nni($tot[$j]->prefs, $i, 0); // get difs
 	$toti->minprefdif = min($toti->prefdifs);
 	$toti->sumprefdif = array_sum($toti->prefdifs);
 	return $toti->minprefdif + (($toti->vetos  + $toti->grade / 30) / ($votesAll+1) + $toti->sumprefdif) / ($votesAll+1);
@@ -421,7 +421,7 @@ EOF;
 //		if(ISDEMO) $weight = $voter == $thisvoter ? $proxiesForThisVoter : rand(1, 20);
 		$voters[$voter] = $weight;
 	}
-	return @$voters ?: [];
+	return nn($voters, []);
 }
 
 function tallyVoter(&$tot, $voter, $quType, $optlist, $weight) {
@@ -451,20 +451,20 @@ function tallyVote(&$tot, $quType, $info, $weight, $vetoWeight, &$voterGrades) {
   extract(just('option grade gradeMax text isVeto', $info));
 	if(($quType == 'B') or ($grade != BLANKGRADE)) { // don't count ungraded opts; but blank B option means 0%, so count it
 		$tot[$option]->weight += $weight;
-		if (@$isVeto) $tot[$option]->vetos += $vetoWeight; else $tot[$option]->grade += $weight * $grade;
+		if (nn($isVeto)) $tot[$option]->vetos += $vetoWeight; else $tot[$option]->grade += $weight * $grade;
 	}
 	if($quType == 'M') foreach($voterGrades as $otheropt => $othergrade) { // for each other option already tallied
 		if($othergrade != $grade) {
 			list ($i, $j) = u\order($grade < $othergrade, $otheropt, $option); // i is preferred to j
 			if ($grade != BLANKGRADE and $othergrade != BLANKGRADE) { // ignore blanks
-        $tot[$i]->prefs[$j] = @$tot[$i]->prefs[$j] + $weight;
+        $tot[$i]->prefs[$j] = nni($tot[$i]->prefs, $j, 0) + $weight;
       }
 		}
 	}
 	$voterGrades[$option] = $grade;
   if ($quType == 'R') $voterGrades['max'] = $gradeMax;
-	if(@$text) {
-		if(@$isVeto) $tot[$option]->veto_texts[] = $text; else $tot[$option]->canceled_vetotexts[] = $text;
+	if(nn($text)) {
+		if(nn($isVeto)) $tot[$option]->veto_texts[] = $text; else $tot[$option]->canceled_vetotexts[] = $text;
 	}
 }
 

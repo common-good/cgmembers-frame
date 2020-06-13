@@ -1142,7 +1142,7 @@ function t($string = '', $subs0 = []) {
   $messages = $string[0] == '|' ? [substr($string, 1)] : explode('|', $string);
 
   foreach ($messages as $i => $message) {
-    if (!$model = @$GLOBALS['tStrings'][$message] ?: $message) continue;
+    if (!$model = nn($GLOBALS['tStrings'][$message], $message)) continue;
 //    if ($p = mb_strpos($model, '. Type ') and @$channel != @TX_SMS) $model = substr($model, 0, $p + 1); // don't tell the user to type something unless it's SMS
     
     if ($i > 0 and $model[0] != '.') $model = ' ' . $model; // separate the messages, unless adding a period
@@ -1188,7 +1188,7 @@ function constantSubs($string, $prefix = '%') {
  */
 function rayy($args, $n = 0) {
   array_splice($args, 0, $n); // ignore first n args
-  if (is_array(@$args[0])) return $args[0];
+  if (is_array(nn($args[0]))) return $args[0];
   return (count($args) >= 2 and is_string($args[0])) ? call_user_func_array('ray', $args) : [];
 }
 
@@ -1278,7 +1278,7 @@ function justNot($these, $info) {
   $info = (array) $info;
   if ($assoc = isset($info[0])) {
     foreach ($info as $v) if (!in($v, $these)) $res[] = $v;
-    return @$res ?: [];
+    return nn($res, []);
   } else {
     foreach ($these as $field) unset($info[$field]);
     return $info;
@@ -1313,7 +1313,8 @@ function strihas($string, $what) {return strhas($string, $what, TRUE);}
 
 function si(&$s, $i, $c) {$s = substr($s, 0, $i) . $c . substr($s, $i + 1);} // assign character
 function between($what, $low, $high) {return ($low <= $what and $what <= $high);}
-function nn(&$a, $else = '') {return (!isset($a) or is_null($a)) ? $else : $a;} // if null return something better
+function nn(&$a, $else = '') {return isset($a) ? $a : $else;} // if null return something better
+function nni($ray, $i, $else = '') {return isset($ray[$i]) ? $ray[$i] : $else;} // same as nn but for indexed value
 /**/  function pr($whatever) {return print_r($whatever, TRUE);}
 function trace() {return pr(debug_backtrace());}
 
@@ -1719,60 +1720,11 @@ function drupal_base64_encode($string) {
  */
 function drupal_random_bytes($count)  {
   // $random_state does not use drupal_static as it stores random bytes.
-  static $random_state, $bytes, $has_openssl;
+  static $random_state, $bytes;
 
   $missing_bytes = $count - strlen($bytes);
 
-  if ($missing_bytes > 0) {
-    // PHP versions prior 5.3.4 experienced openssl_random_pseudo_bytes()
-    // locking on Windows and rendered it unusable.
-    if (!isset($has_openssl)) {
-      $has_openssl = version_compare(PHP_VERSION, '5.3.4', '>=') && function_exists('openssl_random_pseudo_bytes');
-    }
-
-    // openssl_random_pseudo_bytes() will find entropy in a system-dependent
-    // way.
-    if ($has_openssl) {
-      $bytes .= openssl_random_pseudo_bytes($missing_bytes);
-    }
-
-    // Else, read directly from /dev/urandom, which is available on many *nix
-    // systems and is considered cryptographically secure.
-    elseif ($fh = @fopen('/dev/urandom', 'rb')) {
-      // PHP only performs buffered reads, so in reality it will always read
-      // at least 4096 bytes. Thus, it costs nothing extra to read and store
-      // that much so as to speed any additional invocations.
-      $bytes .= fread($fh, max(4096, $missing_bytes));
-      fclose($fh);
-    }
-
-    // If we couldn't get enough entropy, this simple hash-based PRNG will
-    // generate a good set of pseudo-random bytes on any system.
-    // Note that it may be important that our $random_state is passed
-    // through hash() prior to being rolled into $output, that the two hash()
-    // invocations are different, and that the extra input into the first one -
-    // the microtime() - is prepended rather than appended. This is to avoid
-    // directly leaking $random_state via the $output stream, which could
-    // allow for trivial prediction of further "random" numbers.
-    if (strlen($bytes) < $count) {
-      // Initialize on the first call. The contents of $_SERVER includes a mix of
-      // user-specific and system information that varies a little with each page.
-      if (!isset($random_state)) {
-        $random_state = pr($_SERVER);
-        if (function_exists('getmypid')) {
-          // Further initialize with the somewhat random PHP process ID.
-          $random_state .= getmypid();
-        }
-        $bytes = '';
-      }
-
-      do {
-        $random_state = hash('sha256', microtime() . mt_rand() . $random_state);
-        $bytes .= hash('sha256', mt_rand() . $random_state, TRUE);
-      }
-      while (strlen($bytes) < $count);
-    }
-  }
+  if ($missing_bytes > 0) $bytes .= openssl_random_pseudo_bytes($missing_bytes);
   $output = substr($bytes, 0, $count);
   $bytes = substr($bytes, $count);
   return $output;
@@ -1974,7 +1926,7 @@ function drupal_bootstrap() {
 /**
  * Returns the time zone of the current user.
  */
-function drupal_get_user_timezone() {return @date_default_timezone_get();} // cg 20171119
+function drupal_get_user_timezone() {return date_default_timezone_get();} // cg 20171119
 
 /**
  * Gets a salt useful for hardening against SQL injection.

@@ -36,7 +36,7 @@ function formData($form, &$sta, $args = '', $isco = FALSE) {
       $form = compact(ray('title sql'));
     }
   } elseif (!empty($qName0)) {
-    $sql = @$queries[$qName0];
+    $sql = nn($queries[$qName0]);
     if (!empty($sql)) {
       $title = w\queryPermitted($qName0, $sql, $subtext); // alters $sql
       $subtext = $subtext ?: '&nbsp;';
@@ -109,7 +109,7 @@ X;
       $res[] = [$qid, $a->fullName, $phone, $email, number_format($net, 2)];
       $classes[] = $invs ? 'hiRow' : '';
     }
-    return w\item(w\makeTable(@$res, $heads, $colClasses, @$rowClasses));
+    return w\item(w\makeTable(nn($res), $heads, $colClasses, nn($rowClasses)));
   } elseif ($nm == 'demographics') {
     w\go('/history/company-reports/demographics');
   }

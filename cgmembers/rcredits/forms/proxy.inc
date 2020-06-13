@@ -40,12 +40,12 @@ function formProxy($form, &$sta, $args = '') {
 }
 
 function formProxy_validate($form, &$sta) {
-  extract(just('priority proxyChoice', $sta['input']));
+  extract(just('priority', $sta['input']));
   $mya = w\eLinkAcct($sta, $args); 
   $choice = key($sta['input']);
   u\EXPECT(substr($choice, 0, 2) == 'i-', 'missing proxy choice');
   $proxyChoice = substr($choice, 2);
-  if (@$proxyChoice == $mya->proxy(1+2 - $priority)) {
+  if ($proxyChoice == $mya->proxy(1+2 - $priority)) {
     return w\go("prox/page=Proxies&$args", 'doubled proxy', 'err');
   }
   $sta['input'] += compact('proxyChoice');

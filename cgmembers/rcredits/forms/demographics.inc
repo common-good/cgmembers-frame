@@ -68,8 +68,8 @@ X;
   // calculate medians and avgs
   $count = w\item(number_format(count($ages)), t('Customer Count:'));
   $age = w\item((int) u\median($ages), t('Median Age:'));
-  $tenure = w\item(t('%n months at current location', 'n', (int) u\median(@$tenures ?: [])), t('Median Tenure:'));
-  $owns = w\item(u\fmtAmt(@$owns ? array_sum($owns) / count($owns) : 0, '%'), t('Owns vs. Rents:'));
+  $tenure = w\item(t('%n months at current location', 'n', (int) u\median(nn($tenures) ?: [])), t('Median Tenure:'));
+  $owns = w\item(u\fmtAmt(nn($owns) ? array_sum($owns) / count($owns) : 0, '%'), t('Owns vs. Rents:'));
   $cities = w\item(makeTable($cities, [t('City/Town'), t('Count')]), t('Top Cities:'));
   $pays = w\item(makeTable($pays, [t('Company'), t('Count')]), t('Also Shop At:'));
   return w\cgform(compact(ray('title count age tenure owns cities pays')));

@@ -36,12 +36,12 @@ function rdo($code, $args = '') {
   if (test()) foreach (['error', 'status'] as $k) u\deleteFile(f('t.dosayFilename', $k));
   if (strpos($code, ' ')) return doSay(plain($code), 'err');
   if ($i = strpos($code, '~') and $i < 15) { // mailChimp-type action
-    @list ($op, $qid, $ecode, $mo, $v) = explode('~', $code . '~~~~~~');
+    list ($op, $qid, $ecode, $mo, $v) = explode('~', $code . '~~~~~~');
 /// 		flog($lug = pr(compact(ray('op qid ecode mo v code'))));
-    if (!@$op or !@$qid or !@$a = r\acct($qid) or @$ecode != $a->emailCode) return doSay(t('That is not a valid link.'), 'err');
+    if (!$op or !$qid or !$a = r\acct($qid) or $ecode != $a->emailCode) return doSay(t('That is not a valid link.'), 'err');
   } else {
     if (!$info = r\doCode($code)) return doSay(t('That link is archaic.'), 'err');
-    if ($once = is_numeric($doid = @$info['op'])) {
+    if ($once = is_numeric($doid = nni($info, 'op'))) {
       if (!$row = db\get('uid,data,expires', 'r_do', 'doid=:doid', compact('doid'))) return doSay(t('That link is no longer valid.'), 'err'); // already used OR deleted because it expired
       extract($row);
       $info = unserialize($data) + $row; // get new op, etc.
@@ -50,9 +50,9 @@ function rdo($code, $args = '') {
     extract(just('op v mo expires sql subs', $info));
   }
   
-  if (@$mo) $expires = (r\rdoMonth() > $mo + 3) ? 1 : FALSE; // finagle expiration if link is older than 3 months
+  $expires = ($mo and r\rdoMonth() > $mo + 3) ? 1 : FALSE; // finagle expiration if link is older than 3 months
 
-  if (@$expires and now() >= $expires) return doSay('link expired', 'err');
+  if ($expires and now() >= $expires) return doSay('link expired', 'err');
 
   $channel = TX_LINK;
   
@@ -91,16 +91,16 @@ function rdo($code, $args = '') {
     if ($issue != '20141220') return doSay('link expired', 'err');
 //    $vote = 0;
 //    foreach (ray('wl sl wd ed no') as $k => $vv) $vote |= u\setBit($vote, $k, isset($_POST[$vv]));
-    extract(just('yes no', $args));
-    $vote = @$yes ? 1 : 0;
+    extract(just('yes no', $args, NULL));
+    $vote = $yes ? 1 : 0;
     $info = compact(ray('uid issue vote'));
     $vid = db\get('vid', 'r_votes', 'uid=:uid AND issue=:issue', compact('uid', 'issue'));
 //    $vid = 0;
 ///  debug(compact(ray('op args issue yes no vote info vid')));
     if ($vid) db\update('r_votes', $info + compact('vid'), 'vid'); else db\insert('r_votes', $info, 'vid');
     $say = t('Thank you for your RSVP! ');
-    if (@$no) $say .= t('We will miss you. ');
-    r\tellAdmin('RSVP!', ['coming'=>@$yes ? 'yes' : 'no'], $uid);
+    if ($no) $say .= t('We will miss you. ');
+    r\tellAdmin('RSVP!', ['coming' => $yes ? 'yes' : 'no'], $uid);
     $res = TRUE;
   }
   
@@ -115,9 +115,9 @@ function rdo($code, $args = '') {
     }
   }
 
-  if (!@$res) return doSay(t('Request failed.'), 'err');
+  if (!nn($res)) return doSay(t('Request failed.'), 'err');
   if ($once) db\q('DELETE FROM r_do WHERE doid=:doid', compact('doid'));
 
-  return doSay(@$say . t('Your request was successfully completed.'));
+  return doSay(nn($say) . t('Your request was successfully completed.'));
 }
 

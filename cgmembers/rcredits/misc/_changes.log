@@ -1,3 +1,7 @@
+2020-06-13 feature/no-at
+. replaced most @-sign error suppression with try blocks and nn() and nni()
+. exempted formPhp from crashes on error
+
 2020-06-10 feature/verifyid-fix
 . require dob no matter how ID is verified (so bug fix of spurious warning is moot)
 . warnings now cause fatal error

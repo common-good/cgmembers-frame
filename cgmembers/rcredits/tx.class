@@ -91,7 +91,7 @@ class Tx {
   
   public function is($bit) {return (bool) u\getBit($this->flags, $bit);}
 
-  private function getE($e) {return nn($this->entries[$e], NULL);}
+  private function getE($e) {return nni($this->entries, $e, NULL);}
 
   private function getPayerEntry() {
     foreach ($this->entries as $i => $entry) {

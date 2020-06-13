@@ -84,11 +84,11 @@ Scenario: A member sets preferences
   And we say "status": "info saved|step completed"
   And member ".ZZB" steps left "fund photo contact donate crumbs proxies work backing stepup invite"
 
-Scenario: A member connect bank account
+Scenario: A member connects a bank account
   Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences"
   When member ".ZZB" completes form "settings/fund" with values:
   | op     | connect | routingNumber | bankAccount | bankAccount2 | cashout | refills | target | achMin | saveWeekly |*
-  | submit |       2 |     053000196 |         123 |          123 |       0 |       1 |     $0 |    $20 |         $0 |  
+  | submit |       0 |     053000196 |         123 |          123 |       0 |       1 |     $0 |    $20 |         $0 |  
   Then we show "Photo ID Picture"
   And we say "status": "info saved|step completed"
 	And members have:

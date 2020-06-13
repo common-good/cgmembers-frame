@@ -23,21 +23,20 @@ function formTx($form, &$sta, $args = '') {
   : [t('Charge'), 'payee'];
   
   $selling = explode("\n", $mya->selling);
-  $purpose = @$purpose ?: ($paying ? '' : @$selling[0]);
+  $purpose = nn($purpose) ?: ($paying ? '' : nni($selling, 0));
   
-  focusOn(@$who ? 'amount' : 'who');
+  focusOn(nn($who) ? 'amount' : 'who');
 
   $title = $opDesc;
-  $buttons = $paying ? w\btn('/pay/payments', t('Upload Payments'), 'default') : '';
+  $buttons = $paying ? w\btn('/pay/payments', t('Upload Payments'), 'default') : NULL;
   if ($mya->co) $buttons .= ' ' . ($paying 
     ? w\btn('/pay/payroll', t('Upload Payroll'), 'default')
     : w\btn('/charge/invoices', t('Upload Invoices'), 'default')
   );
-  if (!$buttons) unset($buttons);
-  $who = textFld($opDesc . t(' whom:'), [t('name, id, email, or phone')], required(@$who));
+  $who = textFld($opDesc . t(' whom:'), [t('name, id, email, or phone')], required(nn($who)));
 
-  $amount = numFld(REQ . t('Amount:'), [t('amount to ') . mb_strtolower($opDesc)], dft(@$amount) + vmin(.01));
-  $purpose = textFld(t('For:'), [t('purpose or description of goods and services')], required(@$purpose));
+  $amount = numFld(REQ . t('Amount:'), [t('amount to ') . mb_strtolower($opDesc)], dft(nn($amount)) + vmin(.01));
+  $purpose = textFld(t('For:'), [t('purpose or description of goods and services')], required(nn($purpose)));
   $start = dateFld(t('Date:'));
   $period = rendA('period', selectFld(BARE, '', dft(''), r\recurRay(FALSE, PERIODS_PLURAL)));
   $periods = intFld(t('Every:'), '', dft(0) + suffix($period));
@@ -49,7 +48,7 @@ function formTx($form, &$sta, $args = '') {
   w\whoFldSubmit('who', $opDesc . t(' %amount to %name?'), ray('allowNonmember', !$paying));
   
   jsx('tx');
-  $form = cgform(@compact(ray("title buttons who amount purpose start periods end $type")));
+  $form = cgform(compact(ray("title buttons who amount purpose start periods end $type")));
   $form['#attributes']['class'][] = 'not-scanned';
 
   return $form; // get defaults from which('info')

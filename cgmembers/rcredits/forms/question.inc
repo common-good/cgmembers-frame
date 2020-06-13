@@ -50,16 +50,16 @@ function formQuestion($form, &$sta, $args = '') {
 
   $title = item($add ? t('Add Question') : t('Edit Question'));
   $event = hidFld($eid);
-  $text = textFld(t('Question:'), [t('Question Text')], required(@$text));
-  $detail = areaFld(t('Detail:'), [t('Question Detail'), t('Arbitrarily complex description, using <%a>markdown</a>. Use "&#92;" for line breaks.', '_a', atag('http://commonmark.org/help/'))], dft(@$detail));
+  $text = textFld(t('Question:'), [t('Question Text')], required(nn($text)));
+  $detail = areaFld(t('Detail:'), [t('Question Detail'), t('Arbitrarily complex description, using <%a>markdown</a>. Use "&#92;" for line breaks.', '_a', atag('http://commonmark.org/help/'))], dft(nn($detail)));
 
-  $linkDiscussion = textFld(t('Discussion Link:'), [t('Link to Discussion')], dft(@$linkDiscussion));
+  $linkDiscussion = textFld(t('Discussion Link:'), [t('Link to Discussion')], dft(nn($linkDiscussion)));
   $types = ray(' :Choose Type,M:Multiple choice,B:Budget (penny vote among various options),R:Range,Y:Yes/No,E:Essay');
-  $type = selectFld(t('Type:'), '', required(@$type), $types);
+  $type = selectFld(t('Type:'), '', required(nn($type)), $types);
   //  $units = textFld(t('Units:'), [t('Units'), t('Units for Budget or Range question. Defaults to dollars.'), dft(@$units));
-  $budget = numFld(t('Budget:'), [t('Budget Amount'), t('If this is a Budget question, how much (money) is to be budgeted.')], dft(@$budget));
+  $budget = numFld(t('Budget:'), [t('Budget Amount'), t('If this is a Budget question, how much (money) is to be budgeted.')], dft(nn($budget)));
   $optOrders = ray('N:No change (static),S:Shuffle (randomize),Z:Reverse sometimes');
-  $optOrder = selectFld(t('Option order:'), ['', t('In a Multiple choice or Budget question, how to scramble the options, if at all')], dft(@$optOrder), $optOrders);
+  $optOrder = selectFld(t('Option order:'), ['', t('In a Multiple choice or Budget question, how to scramble the options, if at all')], dft(nn($optOrder)), $optOrders);
   
   if ($mya->cAdmin) $submit = submit();
   $back = button(t('Back to Event'), "$base_url/community/events/event/do=edit&eid=$eid");
@@ -70,7 +70,7 @@ function formQuestion($form, &$sta, $args = '') {
 function formQuestion_validate($form, &$sta) {
   extract(just('type budget optOrder linkDiscussion', $sta['input']));
   if ($type == 'M' or $type == 'B') foreach (['type', 'optOrder'] as $k) if (w\blank_field(compact($k))) return NULL;
-  if (!@$budget) $budget = 0;
+  if (!nn($budget)) $budget = 0;
   if ($linkDiscussion and !u\starts(mb_strtolower($linkDiscussion), 'http')) $linkDiscussion = 'http://' . $linkDiscussion;
   if ($err = u\badAmount($budget)) return say($err, 'budget');
   u\preray(compact(ray('budget linkDiscussion')), $sta['input']);
@@ -81,10 +81,10 @@ function formQuestion_submit($form, &$sta) {
   extract($info = just('id event text detail linkDiscussion type budget optOrder', $sta['input']));
 	
   $qid = db\updateOrInsert('r_questions', $info, 'id'); // qid is valid only if question is new
-  if (!v\realOpts($type) and !@$id) { // these question types have a single option
+  if (!v\realOpts($type) and !nn($id)) { // these question types have a single option
     db\insert('r_options', ray('question text maximum', $qid, '', $type == 'R' ? $budget : 0));
   }
 	
   //  w\go("community/events/event/do=edit&eid=$event", 'info saved');
-  w\go('community/events/question/qid=' . (@$id ?: $qid), 'info saved');
+  w\go('community/events/question/qid=' . (nn($id) ?: $qid), 'info saved');
 }

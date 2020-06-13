@@ -18,9 +18,9 @@ function formPass($form, $sta, $id = '') {
 }
 
 function formPass_validate($form, &$sta) {
-  extract(just('name', $sta['input']));
-  if (!@$name) return say('missing field', ['field' => 'account'], 'name');
-  if (!@$uid = r\loginString($name)) return say('bad account id', 'name');
+  extract(just('name', $sta['input'], NULL));
+  if (!$name) return say('missing field', ['field' => 'account'], 'name');
+  if (!$uid = r\loginString($name)) return say('bad account id', 'name');
   $a = r\acct($uid);
   if ($a->co and !$a->trialco) return say('no co pass', ['company' => $a->fullName], 'name');
   $sta['input']['uid'] = $uid;
@@ -32,14 +32,15 @@ function formPass_validate($form, &$sta) {
  * @see formResend_submit()
  */
 function formPass_submit($form, &$sta, $goto = '') {
-  extract(just('uid', $sta['input']));
-  $a = r\acct(@$uid); // defaults to current account when called from formResend_submit (without uid)
-  $myid = @$uid ?: $a->id;
+  extract(just('uid', $sta['input'], NULL));
+  $a = r\acct($uid); // defaults to current account when called from formResend_submit (without uid)
+  $myid = $uid ?: $a->id;
+  $qid = r\acct($myid)->mainQid;
   $name = $a->name;
   $code = $a->oneTimePass($name);
   $verify = (bool) $goto;
 //  list ($region, $code) = [strtolower(R_SERVER_ID), $pw];
-  r\notify($myid, $verify ? 'verify' : 'password-reset', @compact(ray('name qid code')), TRUE);
+  r\notify($myid, $verify ? 'verify' : 'password-reset', compact(ray('name qid code')), TRUE);
   if (isDEV or (NOT_PRODUCTION and $a->cAdmin)) {
     $page = $goto ?: 'reset';
     say(t('Attention admin: code=%code Link: <a href="%BASE_URL/%page/id=%name&code=%code&verify=%verify">reset</a>', compact(ray('page name code verify'))));

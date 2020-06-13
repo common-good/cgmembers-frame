@@ -79,7 +79,7 @@ function statement($period = '') {
   $underline0 = $underline9;
 
   $numFields = ray('total0 bal0 amount frombank fromyou toyou bal9 committed in out bank');
-  foreach ($numFields as $one) $$one = number_format(@$$one ?: 0, 2); // ?: is needed because $$one might be null or ''
+  foreach ($numFields as $one) $$one = number_format(nn($$one) ?: 0, 2); // ?: is needed because $$one might be null or ''
   
   $pdf->setFontSize(.9 * $size);
   for ($i = 1; $i <= 1; $i++) {
@@ -88,7 +88,7 @@ function statement($period = '') {
       foreach (ray('fromyou', 1) as $k => $v) {
         if ($fldName == $k) $$k .= str_repeat(' ', $v); // footnote alignment
       }
-      $pdf->Cell($width, 0, @$fldName ? @$$fldName : '', '', @$fldName[mb_strlen(@$fldName) - 1] == '9' ? 1 : 0, $align);
+      $pdf->Cell($width, 0, nn($fldName) ? nn($$fldName) : '', '', substr($fldName, mb_strlen(nn($fldName)) - 1, 1) == '9' ? 1 : 0, $align);
     }
   }
   
@@ -130,7 +130,7 @@ function statement($period = '') {
         $pdf->Cell($width, 0, $$fldName, '', $head == $lastHead ? 1 : 0, $align, '', '', 1);
       }
       foreach (['amount', 'reward'] as $k) {
-        $$k = u\cleanAmount(@$$k) ?: 0; // convert from string
+        $$k = u\cleanAmount(nn($$k)) ?: 0; // convert from string
       }
       if ($amount) x\addCat($cats, $description, $amount, $dups);
     }

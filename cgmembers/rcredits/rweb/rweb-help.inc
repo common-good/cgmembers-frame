@@ -22,12 +22,13 @@ function rawHelp($i, $tag = '', &$args = '') {
   global $rUrl;
   
   extract(just('gifts years', $args)); // must precede eLinkAcct
-  $mya = w\eLinkAcct($zot, $args, 'any');
-  
-  $ctty = @$mya->community ?: 0;
-  $company = @$mya->co;
-  $username = @$mya->name; // @ is for SMS testing (when not signed in)
-  $cttyName = @$mya->cttyA->fullName;
+
+  if ($mya = w\eLinkAcct($zot, $args, 'any')) {
+    $ctty = $mya->community ?: 0;
+    $company = $mya->co;
+    $username = $mya->name;
+    $cttyName = $mya->cttyA->fullName;
+  } else $ctty = $company = $username = $cttyName = '';
   
   $site = str_replace('https://', '', BASE_URL);
   $_aPage = atag("/member/$username", w\away());
@@ -402,7 +403,7 @@ X
   , '_aCircles', atag('/help/economic-circles')) . $back;
 
   if ($i == 'growth') {
-    $_helpus = @$mya ? t('You can help! Invite your friends and all the local businesses where you want to spend your %RCREDITS. Sit with your friends while they sign up &mdash; it takes only half an hour, but without a nudge most people spend several weeks putting it off.', '_aInvite', atag('/community/invite')) : t('<%aSignup>Join us</a>!', '_aSignup', atag('/signup'));
+    $_helpus = $mya ? t('You can help! Invite your friends and all the local businesses where you want to spend your %RCREDITS. Sit with your friends while they sign up &mdash; it takes only half an hour, but without a nudge most people spend several weeks putting it off.', '_aInvite', atag('/community/invite')) : t('<%aSignup>Join us</a>!', '_aSignup', atag('/signup'));
     
     return w\chartFrame('growth') . t(<<< X
       <p>The real power and purpose of the %PROJECT system is in our gathering as a community to decide what our funding priorities should be &mdash;</p>
@@ -611,7 +612,7 @@ X
 
 function riskHelpLine($k, $weight, $extra = '', $tag) {
   global $riskHelp;
-  if (!$basic = u\uc1(@$riskHelp[$k])) return '';
+  if (!nn($riskHelp) or !$basic = u\uc1(nni($riskHelp, $k))) return '';
 //  $class = $tag == $k ? 'tagged' : ($weight < 0 ? 'goodRisk' : 'badRisk');
   $class = $weight < 0 ? 'goodRisk' : 'badRisk';
   return "<tr><td class=\"$class\">$k</td><td class=\"weight\">[$weight]</td><td>$basic. $extra</td></tr>\n";

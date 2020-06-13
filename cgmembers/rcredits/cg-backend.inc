@@ -14,7 +14,7 @@ use CG\Web as w;
 require_once __DIR__ . '/tx.class';
 require_once __DIR__ . '/txentry.class';
 
-define('REAL', @$_SERVER['SystemRoot'] != 'C:\\Windows'); // used?
+define('REAL', nni($_SERVER, 'SystemRoot') != 'C:\\Windows'); // used?
 // require_once __DIR__ . '/cg-util.inc';
 
 /**
@@ -217,21 +217,21 @@ function updateRelations($updates) {
   $myid = r\acct()->id;
   $report = '';
   foreach ($updates as $reid => $data) {
-    extract(just('main other fullName permission flags', $data['original']));
-    $wasEmpty = (!@$permission and !@$flags);
+    extract(just('main other fullName permission flags', $data['original'], NULL));
+    $wasEmpty = (!$permission and !$flags);
     unset($data['original']);
     extract(just('permission flags', $data));
 //    foreach (ray('employee owner customer draws') as $k) u\setBit($flags, $k, @$data[$k]);
-    foreach (ray('employee owner customer draw') as $k) u\setBit($flags, $k, @$data[$k]); // drawS?
+    foreach (ray('employee owner customer draw') as $k) u\setBit($flags, $k, nni($data, $k)); // drawS?
     if (!u\getBit($flags, 'customer')) u\setbit($flags, 'autopay', FALSE);
 
-    if (!@$permission and !@$flags and !$wasEmpty) { // empty now and wasn't before
+    if (!$permission and !$flags and !$wasEmpty) { // empty now and wasn't before
       db\del('r_relations', compact('reid'));
       $msg = 'deleted relation';
     } else {
       $a = r\acct($main, $other);
-      if (@$data) $a->setRel($data); // db\update('r_relations', $data + $reidSub, 'reid');
-      if (@$data['draw']) r\acct($other)->setBit(B_DRAWS);
+      if ($data) $a->setRel($data); // db\update('r_relations', $data + $reidSub, 'reid');
+      if (nni($data, 'draw')) r\acct($other)->setBit(B_DRAWS);
       $msg = 'updated relation';
     }
     $otherName = $fullName;
@@ -352,7 +352,7 @@ function payInvoice($nvid) {
     db\update('r_invoices', ray('status nvid', $subs['xid'], $nvid), 'nvid');
     if (!empty($api)) u\post($api, ray('request ok msg', $request, (int) $ok, tr($index, $subs)));
 
-    if (u\getBit(@$flags, B_INVESTMENT)) { // club reclaiming an investment
+    if (u\getBit($flags, B_INVESTMENT)) { // club reclaiming an investment
       if ($shid and $res = db\get('vestid,price', 'r_shares JOIN r_investments USING(vestid)', compact('shid'))) { // record sale
         extract($res);
         db\update('r_shares', ray('shid shares pending when', $shid, -round($amount / $price), 0, now()), 'shid');
@@ -937,7 +937,7 @@ EOF;
   // QID? if not, maybe first word is a QID if this is from a list showing QID and fullName
   $qid = trim(($i = mb_strpos($who, ':')) ? mb_substr($who, 0, $i) : mb_strtoupper($who));
   if ($a = r\acct($qid)) $result[$a->id] = $a->fullName; // explicit QID is a result, regardless of community
-  if (count($result) == 1 and @$result[$myid]) return [$self_message, [], []];
+  if (count($result) == 1 and nni($result, $myid)) return [$self_message, [], []];
   unset($result[$myid]); // self is one of many results, so ignore it
   if (!$result) return [($mya->admin ? 'unknown member' : 'unknown ctty member') . ("$cphone$cmail" == '--' ? '' : '|no search'), $subs, []];
   if (count($result) == 1) return r\acct(key($zot = $result)); // get the one entry (zot resets the pointer)
@@ -1024,15 +1024,15 @@ function accountChoices() {
 
   if ($mya->admin or $mya->isAdmin2) {
     $where = $mya->superAdmin ? '1' : 'uid NOT IN (0,1,2,3)';
-    $q = @db\q("SELECT uid AS id, fullName FROM users WHERE $where ORDER BY (uid<0) DESC, $nameOrder");
+    $q = db\q("SELECT uid AS id, fullName FROM users WHERE $where ORDER BY (uid<0) DESC, $nameOrder");
   } elseif ($mya->cAdmin2) {
     $sql = <<<EOF
 SELECT DISTINCT id, fullName FROM
   (SELECT uid AS id, fullName FROM users WHERE community=:ctty UNION $sqlNormal) w
 ORDER BY (id<0) DESC, $nameOrder
 EOF;
-    $q = @db\q($sql, ray('ctty aid', $mya->community, $aid));
-  } else $q = @db\q("$sqlNormal ORDER BY $nameOrder", compact('aid')); // the usual case
+    $q = db\q($sql, ray('ctty aid', $mya->community, $aid));
+  } else $q = db\q("$sqlNormal ORDER BY $nameOrder", compact('aid')); // the usual case
 
   return $result + $q->fetchAllKeyed();
 }
@@ -1073,8 +1073,7 @@ function createUsdTransfer($a, $amount, $created=NULL, $txid=NULL, &$xid = NULL)
   $automatic = ($channel == TX_CRON);
   $payee = $a->id;
   u\setDft($created, now());
-  $vsecure = $a->vsecure; // must be separate from the line below. Can't use $a->bankAccount here because it requires superAdmin
-  $bankAccount = nn($vsecure['bankAccount'], NULL); // was   isDEV ? 'xxxxy' :
+  $bankAccount = nni($a->vsecure, 'bankAccount', NULL); // was   isDEV ? 'xxxxy' :
   $bankId = $amount >= 0 ? BANK_IN_ID : BANK_OUT_ID;
 
   $tx = new r\Tx(ray('goods flags actorId actorAgentId channel created', FOR_USD, 0, $payee, $payee, $channel, NULL));

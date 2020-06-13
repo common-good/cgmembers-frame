@@ -11,11 +11,11 @@ use CG\Txs as x;
  * Show graphs to clarify a community's (or the region's) finances
  */
 function formGraphs($form, &$sta, $args) {
-  extract(just('ctty download chart', $args));
+  extract(just('ctty download chart', $args, NULL));
   $a = w\eLinkAcct($sta, $args, 'any'); // may be called with ctty=<communityUid>
   u\setDft($ctty, $a ? $a->community : 0);
 
-  if (@$download) { // download a spreadsheet with the chart data
+  if ($download) { // download a spreadsheet with the chart data
     $dt = strftime('%Y%m%d');
     u\setDft($chart, 'success');
     $cttyName = $ctty ? r\acct($ctty)->name : t('region');

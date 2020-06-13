@@ -101,7 +101,7 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE signup AMemberVerifiesID
  *     MAKE signup AMemberSignsAgreement
  *     MAKE signup AMemberSetsPreferences
- *     MAKE signup AMemberConnectBankAccount
+ *     MAKE signup AMemberConnectsABankAccount
  *     MAKE signup AMemberUploadsAPhoto
  *     MAKE signup AMemberGivesContactInfo
  *     MAKE signup AMemberDonates
@@ -404,7 +404,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST signup AMemberVerifiesID
  *     TEST signup AMemberSignsAgreement
  *     TEST signup AMemberSetsPreferences
- *     TEST signup AMemberConnectBankAccount
+ *     TEST signup AMemberConnectsABankAccount
  *     TEST signup AMemberUploadsAPhoto
  *     TEST signup AMemberGivesContactInfo
  *     TEST signup AMemberDonates
@@ -471,7 +471,7 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST signup AMemberSignsUp
  *     TEST signup AMemberSignsAgreement
  *     TEST signup AMemberSetsPreferences
- *     TEST signup AMemberConnectBankAccount
+ *     TEST signup AMemberConnectsABankAccount
  *     TEST signup AMemberUploadsAPhoto
  *     TEST signup AMemberGivesContactInfo
  *     TEST signup AMemberDonates
@@ -1180,7 +1180,7 @@ function statisticsGetSet($time) {
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     BOTH signupco ACompanySuppliesCompanyInformation
  *     TEST signupco ACompanySuppliesIncomingTitheChoices
- *     TEST signup AMemberConnectBankAccount
+ *     TEST signup AMemberConnectsABankAccount
  *     TEST signup AMemberChoosesTithes
  *     MAKE statement Setup
  *     MAKE summary Setup
@@ -1910,7 +1910,7 @@ function stepsLeft($left) {global $mya; return memberStepsLeft($mya->id, $left);
  *     TEST signup AMemberVerifiesID
  *     TEST signup AMemberSignsAgreement
  *     TEST signup AMemberSetsPreferences
- *     TEST signup AMemberConnectBankAccount
+ *     TEST signup AMemberConnectsABankAccount
  *     TEST signup AMemberUploadsAPhoto
  *     TEST signup AMemberGivesContactInfo
  *     TEST signup AMemberDonates
@@ -1951,7 +1951,7 @@ function memberStepsLeft($id, $left0) {
  *     MAKE signup AMemberVerifiesID
  *     MAKE signup AMemberSignsAgreement
  *     MAKE signup AMemberSetsPreferences
- *     MAKE signup AMemberConnectBankAccount
+ *     MAKE signup AMemberConnectsABankAccount
  *     MAKE signup AMemberUploadsAPhoto
  *     MAKE signup AMemberGivesContactInfo
  *     MAKE signup AMemberDonates

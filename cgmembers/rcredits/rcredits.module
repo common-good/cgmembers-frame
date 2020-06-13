@@ -70,11 +70,11 @@ function rcredits_exception_handler($e) {
   foreach ($trace as $one) {
     if (count($traceMsg) > 10) break; // don't overflow memory
     $line = $file = '';
-    @extract($one); // (file, line, function, args) OR just (function, args)
-    $line = @$line ?: '';
-    $file = basename(@$file);
-    $function = basename(@$function);
-    $args = preg_replace('/Array\s+\(/sm', 'Array', pr(@$args));
+    if (is_array($one)) extract($one); // (file, line, function, args) OR just (function, args)
+    $line = nn($line) ?: '';
+    $file = basename(nn($file));
+    $function = basename(nn($function));
+    $args = preg_replace('/Array\s+\(/sm', 'Array', pr(nn($args)));
     $args = substr($args, 6); // discard the gratuitous "Array" at the start
     $args = preg_replace('/$\s*\)$\s$/sm', '', $args);
     $args = '    ' . str_replace("\n", "<br>\n    ", $args);
@@ -97,7 +97,7 @@ function rcredits_exception_handler($e) {
  */
 function rcredits_shutdown() {
   global $R_FATAL_ERROR;
-  if (@$R_FATAL_ERROR) \drupal_goto('error/' . $R_FATAL_ERROR);
+  if (nn($R_FATAL_ERROR)) \drupal_goto('error/' . $R_FATAL_ERROR);
 }
 
 /**
@@ -230,7 +230,7 @@ function f($func) {
   global $cronOp; 
   list ($prefix, $funcName) = explode('.', $func);
   $incs = ray('a:admin/admin.inc,y:cg-yearly.inc,w:rweb/rweb.inc,cr:rcron/rcron.inc,be:cg-backend.inc,s:rsmart/rsmart.inc,t:cg-testing.inc');
-  if ($flnm = @$incs[$prefix]) require_once __DIR__ . "/$flnm";
+  if ($flnm = nni($incs, $prefix)) require_once __DIR__ . "/$flnm";
 
   if ($prefix == 'v') {
     include_once R_ROOT . '/rvote/rvote.inc';

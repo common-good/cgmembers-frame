@@ -59,13 +59,13 @@ function formInvest($form, &$sta, $args = '') {
 //    $togAttrs = ray('on off offstyle', t('Sell'), t('Buy'), 'warning');
 //    $buyorsell = togFld('buysell', t('Buy or Sell:'), '', 1, $togAttrs);
     $buy = submi(t('Invest MORE'), '', 'md');
-    if ($stake or $request) $sell = submi(t('Invest LESS'), '', 'md');
+    $sell = ($stake or $request) ? submi(t('Invest LESS'), '', 'md') : NULL;
     //$myStake = item(u\fmtAmt($stake, ''), t('Your investment:'));
 		$pct = myShareOfClub($uid, $clubid);
 		$myVal = $pct * $clubVal;
 		$clubVal = item(t('%val (%liquid liquid)', 'val liquid', u\fmtAmt($clubVal), u\fmtAmt($liquid)), t('Club Value:'));
 		$myShare = item(tr('%amt (%pct)', 'amt pct', u\fmtAmt($myVal), u\fmtAmt($pct, '%')), t('Your Share:'));
-    $submit = fieldSet('submit2', @compact('buy', 'sell'), ' ');
+    $submit = fieldSet('submit2', compact(ray('buy sell')), ' ');
     $fields = 'title buttons old clubVal myShare myRequest amount submit';
   } else { // not a member yet
     $old = hidFld(serialize(compact('clubid')));
@@ -101,21 +101,22 @@ function formInvest_validate($form, &$sta) {
  // buy or sell
   if ($err = u\badAmount($amount, '>0')) return say($err, 'amount');
   extract(just('request stake', unserialize($old)));
+  u\setDft($request, 0);
 
   if (op($sta) == 'buy') {
-    if (@$request + $amount > 0 and $short = $mya->shortfall(FOR_USD, @$request + $amount)) {
+    if ($request + $amount > 0 and $short = $mya->shortfall(FOR_USD, $request + $amount)) {
       if (!$mya->hasBank) return say(t('You are %short short for that investment.', 'short', u\fmtAmt($short)), 'amount');
       $sta['input']['short'] = $short;
     }
-  } elseif ($stake + @$request - $amount < 0) return say(t('investment oversell'), 'amount');
+  } elseif ($stake + $request - $amount < 0) return say(t('investment oversell'), 'amount');
   $sta['input']['amount'] = $amount;
 }
 
 function formInvest_submit($form, &$sta) {
   global $mya;
-  extract(just('signedBy old amount short reserve', $sta['input']));
+  extract(just('signedBy old amount short reserve', $sta['input'], NULL));
   
-  if (@$signedBy) {
+  if ($signedBy) {
     extract(just('clubid', unserialize($old)));
     db\insert('r_stakes', ray('uid clubid joined', $mya->id, $clubid, now()), 'stakeid');
     return say(t('now a member'));
@@ -129,14 +130,16 @@ function formInvest_submit($form, &$sta) {
   
   // buy or sell  
   extract(just('stakeid clubid stake request requestedOut', unserialize($old)));
+  if (test() and !nn($stakeid)) return say('no stakeid -- invest module may be disabled', 'err'); // keep tests from dying
+
   $buy = (op($sta) == 'buy');
   $request = round($request + ($buy ? $amount : -$amount), 2);
-	if (!$buy) $requestedOut = now();
-  if (test() and !@$stakeid) return say('no stakeid -- invest module may be disabled', 'err'); // keep tests from dying
-  db\update('r_stakes', @compact(ray('stakeid request requestedOut')), 'stakeid');
+  $info = compact(ray('stakeid request'));
+	if (!$buy) $info['requestedOut'] = now();
+  db\update('r_stakes', $info, 'stakeid');
   
   if ($buy and $request > 0) {
-    if (@$short) {
+    if ($short) {
       $msg = t('You do not currently have enough funds in your %PROJECT account for that investment, so %short will be drawn automatically from your bank account. Once that transfer is complete, your requested investment will be made automatically.', 'short', u\fmtAmt($short));
       $mya->getFunds($short, t('for investment'));
     } else r\handleInvestmentRequest($stakeid, $msg);

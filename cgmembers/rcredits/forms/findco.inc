@@ -16,14 +16,14 @@ require_once R_ROOT . '/rweb/co-list.inc';
  */
 function formFindCo($form, &$sta, $args = '') {
   global $mya;
-  extract(just('where cos', $args));
+  extract(just('where cos', $args, NULL));
 
   $list = w\coList(nn($cos), nn($where));
   $list = "<div class=\"cmpy-list\">$list</div>";
   
   $title = t('Companies in Your Region');
-  $which = textFld(t('Search for:'), [t('Whatever'), t('Type part of company name or industry category')], dft(@$cos));
-  $region = textFld(t('Where:'), [t('Start of postal code'), t('Type the first few characters of your postal code or your state abbreviation.<br>For example, type 013 for Franklin County, Massachusetts; 05 or VT for Vermont, etc.')], dft(@$where)); // or country name
+  $which = textFld(t('Search for:'), [t('Whatever'), t('Type part of company name or industry category')], dft($cos));
+  $region = textFld(t('Where:'), [t('Start of postal code'), t('Type the first few characters of your postal code or your state abbreviation.<br>For example, type 013 for Franklin County, Massachusetts; 05 or VT for Vermont, etc.')], dft($where)); // or country name
   $submit = t('Find');
 
   return cgform(compact(ray('title region which submit list')));
