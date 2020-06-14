@@ -799,35 +799,8 @@ function user_role_permissions($roles = array()) {
  */
 function user_access($string, $account = NULL) {
   global $user;
-
-  if (!isset($account)) {
-    $account = $user;
-  }
-
-  // User #1 has all privileges:
-  if ($account->uid == 1) {
-    return TRUE;
-  } else return FALSE; // cgf begin cgf end
-
-  // To reduce the number of SQL queries, we cache the user's permissions
-  // in a static variable.
-  // Use the advanced drupal_static() pattern, since this is called very often.
-  static $drupal_static_fast;
-  if (!isset($drupal_static_fast)) {
-    $drupal_static_fast['perm'] = &drupal_static(__FUNCTION__);
-  }
-  $perm = &$drupal_static_fast['perm'];
-  if (!isset($perm[$account->uid])) {
-    $role_permissions = user_role_permissions($account->roles);
-
-    $perms = array();
-    foreach ($role_permissions as $one_role) {
-      $perms += $one_role;
-    }
-    $perm[$account->uid] = $perms;
-  }
-
-  return isset($perm[$account->uid][$string]);
+  if (!isset($account)) $account = $user;
+  return ($account->uid == 1) return TRUE; // User #1 has all privileges:
 }
 
 /**
@@ -1247,16 +1220,7 @@ function user_account_form_validate($form, &$form_state) {
     // Validate the e-mail address, and check if it is taken by an existing user.
     if ($error = user_validate_mail($form_state['values']['mail'])) {
       form_set_error('mail', $error);
-    } else patch('user_account_form_validate1250', $account->uid, $form_state['values']['mail']); /* CGF begin
-    elseif ((bool) db_select('users')->fields('users', array('uid'))->condition('uid', $account->uid, '<>')->condition('mail', db_like($form_state['values']['mail']), 'LIKE')->range(0, 1)->execute()->fetchField()) {
-      // Format error message dependent on whether the user is logged in or not.
-      if ($GLOBALS['user']->uid) {
-        form_set_error('mail', t('The e-mail address %email is already taken.', array('%email' => $form_state['values']['mail'])));
-      }
-      else {
-        form_set_error('mail', t('The e-mail address %email is already registered. <a href="@password">Have you forgotten your password?</a>', array('%email' => $form_state['values']['mail'], '@password' => url('user/password'))));
-      }
-    } CGF end */
+    }
 
     // Make sure the signature isn't longer than the size of the database field.
     // Signatures are disabled by default, so make sure it exists first.
@@ -2204,10 +2168,6 @@ function user_login_final_validate($form, &$form_state) {
         form_set_error('name', t('Sorry, too many failed login attempts from your IP address. This IP address is temporarily blocked. Try again later or <a href="@url">request a new password</a>.', array('@url' => url('user/password'))));
       }
     }
-    else patch('user_login_final_validate2207', $form_state['values']['name']); /* CGF begin
-      form_set_error('name', t('Sorry, unrecognized username or password. <a href="@password">Have you forgotten your password?</a>', array('@password' => url('user/password', array('query' => array('name' => $form_state['values']['name']))))));
-      watchdog('user', 'Login attempt failed for %user.', array('%user' => $form_state['values']['name']));
-    } CGF end */
   }
   elseif (isset($form_state['flood_control_user_identifier'])) {
     // Clear past failures for this user so as not to block a user who might
@@ -3533,53 +3493,6 @@ function user_preferred_language($account, $default = NULL) {
 }
 
 /**
- * Conditionally create and send a notification email when a certain
- * operation happens on the given user account.
- *
- * @see user_mail_tokens()
- * @see drupal_mail()
- *
- * @param $op
- *   The operation being performed on the account. Possible values:
- *   - 'register_admin_created': Welcome message for user created by the admin.
- *   - 'register_no_approval_required': Welcome message when user
- *     self-registers.
- *   - 'register_pending_approval': Welcome message, user pending admin
- *     approval.
- *   - 'password_reset': Password recovery request.
- *   - 'status_activated': Account activated.
- *   - 'status_blocked': Account blocked.
- *   - 'cancel_confirm': Account cancellation request.
- *   - 'status_canceled': Account canceled.
- *
- * @param $account
- *   The user object of the account being notified. Must contain at
- *   least the fields 'uid', 'name', and 'mail'.
- * @param $language
- *   Optional language to use for the notification, overriding account language.
- *
- * @return
- *   The return value from drupal_mail_system()->mail(), if ends up being
- *   called.
- */
-function _user_mail_notify($op, $account, $language = NULL) {
-  // By default, we always notify except for canceled and blocked.
-  $default_notify = ($op != 'status_canceled' && $op != 'status_blocked');
-  $notify = variable_get('user_mail_' . $op . '_notify', $default_notify);
-  if ($notify) $mail = patch('_user_mail_notify3569', $op, $account, $language); /* CGF begin
-    $params['account'] = $account;
-    $language = $language ? $language : user_preferred_language($account);
-    $mail = drupal_mail('user', $op, $account->mail, $language, $params);
-    if ($op == 'register_pending_approval') {
-      // If a user registered requiring admin approval, notify the admin, too.
-      // We use the site default language for this.
-      drupal_mail('user', 'register_pending_approval_admin', variable_get('site_mail', ini_get('sendmail_from')), language_default(), $params);
-    }
-  } CGF end */
-  return empty($mail) ? NULL : $mail['result'];
-}
-
-/**
  * Form element process handler for client-side password validation.
  *
  * This #process handler is automatically invoked for 'password_confirm' form
@@ -3592,7 +3505,7 @@ function user_form_process_password_confirm($element) {
   global $user;
 
   $js_settings = array(
-    'password' => patch('user_form_process_password_confirm3595') + array( /* CGF begin CGF end */
+    'password' => array( /* CGF begin CGF end */
       'strengthTitle' => t('Password strength:'),
       'hasWeaknesses' => t('To make your password stronger:'),
       'tooShort' => t('Make it at least 6 characters'),

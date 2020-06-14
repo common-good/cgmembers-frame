@@ -1171,9 +1171,6 @@ function file_munge_filename($filename, $extensions, $alerts = TRUE) {
     }
     $filename = $new_filename . '.' . $final_extension;
 
-    if ($alerts && $original != $filename) patch('file_munge_filename1174'); /* CGF begin {
-      drupal_set_message(t('For security reasons, your upload has been renamed to %filename.', array('%filename' => $filename)));
-    } CGF end */
   }
 
   return $filename;

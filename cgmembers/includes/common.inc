@@ -2682,7 +2682,12 @@ function drupal_deliver_html_page($page_callback_result) {
         if (empty($return) || $return == MENU_NOT_FOUND || $return == MENU_ACCESS_DENIED) {
           // Standard 403 handler.
           drupal_set_title(t('Access denied'));
-          $return = menu_execute_active_handler(function_exists('patch') ? patch('common2682', @$return) : 'signin', FALSE); // cgf begin cgf end
+
+          f('db.q', 'DELETE FROM sessions WHERE uid=0'); // cgf 4/22/2016 (else loops when Drupal sets uid=0 on timeout)
+          global $mya; // cgf BEGIN 6/14/2020
+          $nfPage = !$mya ? 'signin' : ($mya->cAdmin ? 'sadmin' : 'summary');
+          die($nfPage);
+          $return = menu_execute_active_handler($nfPage, FALSE); // cgf end
         }
 
         print drupal_render_page($return);
