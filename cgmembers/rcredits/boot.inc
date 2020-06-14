@@ -13,18 +13,21 @@ global $cookie_domain, $conf, $is_https, $base_secure_url, $base_insecure_url;
 global $CGdomain;
 
 require __DIR__ . '/defs.inc';
+require_once DRUPAL_ROOT . '/includes/errors.inc';
 
-set_error_handler('_drupal_error_handler');
+set_exception_handler('handleException');
+set_error_handler('handleError');
+register_shutdown_function('shutdown');
+
 timer_start('page');
-if (NOT_PRODUCTION) {
-  error_reporting(E_ALL);
-  ini_set('display_errors', 'On');
-  ini_set('display_startup_errors', TRUE);
-}
 
 $uri = 'I' . $_SERVER['REQUEST_URI']; // handle scanned rCard URIs
 $_SERVER['REQUEST_URI'] = $_GET['q'] = preg_match('~^I/[A-Z]+[\.-]~', $uri) ? $uri : \request_path();
     
+if (NOT_PRODUCTION) {
+  ini_set('display_startup_errors', TRUE);
+}
+ini_set('display_errors', 0);
 ini_set('magic_quotes_runtime', '0'); // Don't escape quotes when reading files from the database, disk, etc.
 ini_set('session.use_cookies', '1'); // Use session cookies, not transparent sessions with the session id in the query string.
 ini_set('session.use_only_cookies', '1');
@@ -32,7 +35,7 @@ ini_set('session.use_trans_sid', '0');
 ini_set('session.cache_limiter', ''); // Don't send HTTP headers using PHP's session handler.
 ini_set('session.cookie_httponly', '1'); // Use httponly session cookies.
 
-ini_set('error_reporting', isDEV ? E_ALL : (E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT));
+ini_set('error_reporting', E_ALL);
 ini_set('max_execution_time', isDEV ? 0 : 240); // don't ever timeout when developing
 ini_set('session.gc_probability', 1); // garbage collection this fraction of the time on startup (numerator)
 ini_set('session.gc_divisor', 100); // (denominator)
