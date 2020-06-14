@@ -288,7 +288,7 @@ function showQuery($table, $where = '1', $order = '', $fields = '*', $joinFields
 function ssnShow($a) {
   if (isDEV) return t('no SSN data');
   
-  $ssnData = nn($a->ssnCheck());
+  $ssnData = $a->ssnCheck();
   if (!is_array($ssnData)) return "<p class=\"loud\">$ssnData</p>";
   
   $d = nni($ssnData, 'searchResults') ?: []; // [] for admin without vKeyE

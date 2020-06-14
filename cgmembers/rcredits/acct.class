@@ -1657,7 +1657,7 @@ X;
     if ($fid == '000000000') return t('Nonmember SSN.');
     if ($fid == '999999999') return t('SSN is a test.');
     //    if (u\isEncrypted($a->federalId)) return t('SSN available only to superAdmin');
-    if (nn($a->ssnData) and !u\starts($a->ssnErr, SSN_TIMEOUT_MSG) and !$force) return $a->ssnData;
+    if ($a->ssnData and !u\starts($a->ssnErr, SSN_TIMEOUT_MSG) and !$force) return $a->ssnData;
     
     $max = 5;
     for ($i = 0; $i < $max; $i++) {
