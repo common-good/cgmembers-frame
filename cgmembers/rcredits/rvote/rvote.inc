@@ -110,7 +110,7 @@ $list
 $qdivs
 EOF;
 
-	return array($list, @$phase, u\fmtDate(@$endDate));
+	return array($list, nn($phase), u\fmtDate(nn($endDate, 0)));
 }
 
 /**
@@ -256,7 +256,7 @@ function formatQuestionDates($dt1, $dt2, $startplusdays=0) {
 function getQuestions($eid, $mya = NULL) {
 	// note that if a ballot is kept open beyond the election end time, the following query will disallow it
 //	if(!$crit) $crit = 'NOW() BETWEEN question_startdate AND question_enddate';
-  if (!@$eid) {
+  if (!nn($eid)) {
     $event = v\getCurrentEvent($mya->community);
     extract(just('eid', $event));
   }
@@ -270,7 +270,7 @@ function getQuestions($eid, $mya = NULL) {
 		$qTypes[$question] = $type;
 	}
 
-	return [@$qIds, @$qTypes];
+	return [nn($qIds, NULL), nn($qTypes, NULL)];
 }
 
 /**

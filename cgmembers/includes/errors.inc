@@ -1,5 +1,8 @@
 <?php
 
+use \CG\Util as u;
+use \CG\Web as w;
+
 /**
  * @file
  * Functions for error handling.
@@ -14,71 +17,92 @@
  * @ingroup logging_severity_levels
  */
 function drupal_error_levels() {
-  $types = array(
-    E_ERROR => array('Error', WATCHDOG_ERROR),
-    E_WARNING => array('Warning', WATCHDOG_WARNING),
-    E_PARSE => array('Parse error', WATCHDOG_ERROR),
-    E_NOTICE => array('Notice', WATCHDOG_NOTICE),
-    E_CORE_ERROR => array('Core error', WATCHDOG_ERROR),
-    E_CORE_WARNING => array('Core warning', WATCHDOG_WARNING),
-    E_COMPILE_ERROR => array('Compile error', WATCHDOG_ERROR),
-    E_COMPILE_WARNING => array('Compile warning', WATCHDOG_WARNING),
-    E_USER_ERROR => array('User error', WATCHDOG_ERROR),
-    E_USER_WARNING => array('User warning', WATCHDOG_WARNING),
-    E_USER_NOTICE => array('User notice', WATCHDOG_NOTICE),
-    E_STRICT => array('Strict warning', WATCHDOG_DEBUG),
-    E_RECOVERABLE_ERROR => array('Recoverable fatal error', WATCHDOG_ERROR),
-  );
-  // E_DEPRECATED and E_USER_DEPRECATED were added in PHP 5.3.0.
-  if (defined('E_DEPRECATED')) {
-    $types[E_DEPRECATED] = array('Deprecated function', WATCHDOG_DEBUG);
-    $types[E_USER_DEPRECATED] = array('User deprecated function', WATCHDOG_DEBUG);
-  }
-  return $types;
+  return [
+    E_ERROR => ['Error', WATCHDOG_ERROR],
+    E_WARNING => ['Warning', WATCHDOG_WARNING],
+    E_PARSE => ['Parse error', WATCHDOG_ERROR],
+    E_NOTICE => ['Notice', WATCHDOG_NOTICE],
+    E_CORE_ERROR => ['Core error', WATCHDOG_ERROR],
+    E_CORE_WARNING => ['Core warning', WATCHDOG_WARNING],
+    E_COMPILE_ERROR => ['Compile error', WATCHDOG_ERROR],
+    E_COMPILE_WARNING => ['Compile warning', WATCHDOG_WARNING],
+    E_USER_ERROR => ['User error', WATCHDOG_ERROR],
+    E_USER_WARNING => ['User warning', WATCHDOG_WARNING],
+    E_USER_NOTICE => ['User notice', WATCHDOG_NOTICE],
+    E_DEPRECATED => ['Deprecated function', WATCHDOG_DEPRECATED],
+    E_USER_DEPRECATED => ['User deprecated function', WATCHDOG_USER_DEPRECATED],
+    E_STRICT => ['Strict warning', WATCHDOG_DEBUG],
+    E_RECOVERABLE_ERROR => ['Recoverable fatal error', WATCHDOG_ERROR],
+  ];
 }
 
 /**
- * Provides custom PHP error handling.
- *
- * @param $error_level
- *   The level of the error raised.
- * @param $message
- *   The error message.
- * @param $filename
- *   The filename that the error was raised in.
- * @param $line
- *   The line number the error was raised at.
- * @param $context
- *   An array that points to the active symbol table at the point the error
- *   occurred.
+ * Handle unhandled exceptions like we handle errors.
  */
-function _drupal_error_handler_real($error_level, $message, $filename, $line, $context) {
-  if ($error_level < WATCHDOG_DEBUG) {
-    if ($error_level == WATCHDOG_CRITICAL and substr($message, 0, 6) == 'fopen(') return; // no easy way to avoid an fopen error on not found
-    throw new \Exception($message . ' ' . pr(compact(ray('error_level line filename'))));
+function handleException($e) {return handleError(E_EXCEPTION, $e->getMessage(), $e->getFile(), $e->getLine(), NULL, $e->getTrace());}
+
+/**
+ * Handle all errors, including warnings.
+ * On production, all errors generate an email to admin, user sees a friendly apology on fatal error, otherwise nothing
+ * On dev, all errors die with stack trace, except from PHP window where the error is displayed without a stack trace
+ * Treat recoverable errors as fatal.
+ * @param $level: The level of the error raised.
+ * @param $msg: The error message.
+ * @param $file: The filename that the error was raised in.
+ * @param $line: The line number the error was raised at.
+ * @param $context: An array that points to the active symbol table at the point the error occurred.
+ * @param $trace: Stack trace (only when called from handleException)
+ */
+function handleError($level, $msg, $file, $line, $context, $trace = NULL) {
+  global $channel;
+  list($severity_msg, $severity) = nni(drupal_error_levels(), $level, ['unknown error', WATCHDOG_ERROR]);
+
+  if ($level == E_WARNING and substr($msg, 0, 6) == 'fopen(') return; // work around flaw in fopen
+  if ($severity == WATCHDOG_DEBUG) return;
+///  debug($context); echo pr($context); // handy when debugging
+
+  $nasty = ($severity < WATCHDOG_WARNING);
+  $title = $nasty ? t('CRASH!') : t('WARNING');
+  $file = basename($file);
+  $msg = $msg0 = t('<b>%title: </b>%msg<br> - line %line in %file' . "<br>\n", compact(ray('title msg line file')));
+  f('u.loga', $title, $msg);
+
+  if (!function_exists('filter_xss_admin')) require_once DRUPAL_ROOT . '/includes/common.inc';
+//  echo $msg0 . 'trace is null? ' . is_null($trace); die();
+  if (empty($trace)) $trace = debug_backtrace();
+  if (!empty($trace) and is_array($trace)) array_shift($trace); // don't repeat the final call
+  $traceMsg = [];
+  foreach ($trace as $one) {
+    if (!is_array($one) or count($traceMsg) > 20) break; // don't overflow memory
+    extract(just('line file function args', $one, ''), EXTR_PREFIX_ALL, 'x'); // sometimes just function and args
+
+    $x_file = basename($x_file);
+    $x_function = basename($x_function);
+    $args = preg_replace('/Array\s+\(/sm', 'Array', pr($x_args));
+    $args = substr($args, 6); // discard the gratuitous "Array" at the start
+    $args = preg_replace('/$\s*\)$\s$/sm', '', $args);
+    $args = '    ' . str_replace("\n", "<br>\n    ", $args);
+    $args = str_replace('  ', ' &nbsp;', $args);
+    $traceMsg[] = "- $x_line in $x_file, calling $x_function() with:<br>\n$args";
   }
 
-  if ($error_level & error_reporting()) {
-    $types = drupal_error_levels();
-    list($severity_msg, $severity_level) = $types[$error_level];
-    $caller = _drupal_get_last_caller(debug_backtrace());
-
-    if (!function_exists('filter_xss_admin')) {
-      require_once DRUPAL_ROOT . '/includes/common.inc';
+  $msg = \filter_xss_admin($msg . join("<br>\n", $traceMsg));
+  
+  if (isPRODUCTION) {
+    $msg = str_replace('&nbsp;', '', str_replace('<br>', '', $msg));
+    mail(R_ADMIN_EMAIL, t('%PROJECT ' . $title), $msg);
+    if (!$nasty) return;
+    if ($channel == TX_WEB) return w\softErr(tr('crash msg'));
+    die();
+  } else {
+    if ($channel == TX_WEB and basename($_SERVER['REQUEST_URI']) == 'php') {
+      w\say($msg0, 'err');
+      return w\go('sadmin/php');
     }
-
-    // We treat recoverable errors as fatal.
-    _drupal_log_error(array(
-      '%type' => isset($types[$error_level]) ? $severity_msg : 'Unknown error',
-      // The standard PHP error handler considers that the error messages
-      // are HTML. We mimick this behavior here.
-      '!message' => filter_xss_admin($message),
-      '%function' => $caller['function'],
-      '%file' => $caller['file'],
-      '%line' => $caller['line'],
-      'severity_level' => $severity_level,
-    ), $error_level == E_RECOVERABLE_ERROR);
+    echo $msg;
+    die();
   }
+      
 }
 
 /**

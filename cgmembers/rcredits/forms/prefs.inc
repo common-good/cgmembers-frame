@@ -59,8 +59,8 @@ EOF
   
 
   jsx('advanced-prefs', compact('advancedFields'));
-  $form = @compact(ray('title subtext roundup crumbs snap statements showAdvancet ' . $advancedFields)) + w\setupFoot() + compact('posttext');
-  return cgform($form);
+  foreach (ray("title roundup crumbs snap statements showAdvancet $advancedFields") as $k) if (isset($$k)) $form[$k] = $$k;
+  return cgform($form + w\setupFoot() + compact('posttext'));
 }
 
 function formPrefs_validate($form, &$sta) {
@@ -69,10 +69,10 @@ function formPrefs_validate($form, &$sta) {
 //  global $mya;
 
   if ($crumbs and !formCrumbs_validate($form, $sta)) return; // error is already said
-  $food = @$food ?: 0;
+  $food = $food ?: 0;
   if ($err = u\badAmount($food, '>=0', 1, 100)) return say($err, 'food');
   snapErr($snap); // just to remove punctuation
-/// (no SNAP checking for now)  if (@$snap and $err = snapErr($snap)) return say($err, 'snap');
+/// (no SNAP checking for now)  if ($snap and $err = snapErr($snap)) return say($err, 'snap');
   u\preray(compact(ray('food snap')), $sta['input']); // update trimmed percentage
 }
 
@@ -80,7 +80,7 @@ function formPrefs_submit($form, $sta) {
   include_once __DIR__ . '/../admin/admin.inc';
   global $mya;
 
-  extract(just('crumbs food snap roundup smsNotices notices statements nosearch debtOk secretBal', $sta['input']));
+  extract(just('crumbs food snap roundup smsNotices notices statements nosearch debtOk secretBal', $sta['input'], NULL));
 ///  if ($food) $mya->stepsDone('food'); // don't show the food fund page unnecessarily?
   $fields = 'food snap';
   if (isset($crumbs)) {
@@ -91,11 +91,11 @@ function formPrefs_submit($form, $sta) {
 
   foreach (ray($fields) as $k) $old["_old $k"] = $mya->$k;
   $old += ['_old flags' => u\bits($mya->flags)];
-  $bits = ray('roundup weekly monthly paper secret debt nosearch', @$roundup, @$notices == 1, @$notices == 2, @$statements, @$secretBal, @$debtOk, @$nosearch);
+  $bits = ray('roundup weekly monthly paper secret debt nosearch', $roundup, $notices == 1, $notices == 2, $statements, $secretBal, $debtOk, $nosearch);
   $info = compact(ray($fields)) + $bits;
 
-  if (@$statements) r\tellAdmin(t('%who wants paper statements', 'who', $mya->fullName), ['topic' => t('paper')]);
-  if (@$snap) r\tellAdmin(t('%who has SNAP', 'who', $mya->fullName), ['topic' => t('SNAP')]);
+  if ($statements) r\tellAdmin(t('%who wants paper statements', 'who', $mya->fullName), ['topic' => t('paper')]);
+  if ($snap) r\tellAdmin(t('%who has SNAP', 'who', $mya->fullName), ['topic' => t('SNAP')]);
   
   $mya->update($info);
   return w\goNextStep('preferences');
@@ -109,7 +109,7 @@ function formPrefs_submit($form, $sta) {
  */
 function snapErr(&$snap) {
   $snap = preg_replace('/[^A-Z\\d]/i', '', $snap);
-  $c1 = @$snap[0];
+  $c1 = strlen($snap)? $snap[0] : '';
   if (!preg_match('/(37|04|06|08|91|92|93|94|96)(\\d{3})(\\d{2})([A-Z\\d]\\d{2,5})/i', $snap, $m) or ($c1 == '9' and $m[3] != '22')) return t('That is not a valid SNAP number.');
   return FALSE;
 }

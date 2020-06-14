@@ -269,10 +269,10 @@ function doit(what, vs) {
     }
 
     if ($('#edit-connect-2')[0]) {
-      showBank($('#edit-connect-2').attr('checked') == 'checked');
-      $('#edit-connect-0').click(function () {showBank(false);});
+      showBank($('#edit-connect-0').attr('checked') == 'checked');
+      $('#edit-connect-0').click(function () {showBank(true);});
       $('#edit-connect-1').click(function () {showBank(false);});
-      $('#edit-connect-2').click(function () {showBank(true);});
+      $('#edit-connect-2').click(function () {showBank(false);});
     } else if ($('#edit-connect-1')[0]) {
       showBank($('#edit-connect-1').attr('checked') == 'checked');
       $('#edit-connect-0').click(function () {showBank(false);});

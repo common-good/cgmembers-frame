@@ -38,12 +38,12 @@ function formInvoiceUpload_submit($form, &$sta, $args = NULL) {
   
   $total = 0;
 
-  if ($rows = @$sta['rows']) foreach ($rows as $i => $row) {
-    if ($i == 0 and !mb_strpos(@$row[0], '@')) {say(t('The header row (line 1) will be ignored.')); continue;}
+  if ($rows = nni($sta, 'rows')) foreach ($rows as $i => $row) {
+    if ($i == 0 and !mb_strpos(nni($row, 0), '@')) {say(t('The header row (line 1) will be ignored.')); continue;}
 
     $e = ray('did line row', $did, $i + 1, join(' | ', $row)); // params for error message(s)
     if (count($row) < 3) return say('csv error', $e + ray('msg', t('Incomplete row')), 'file');
-    @list ($account, $email, $amt, $desc) = $row; // desc is optional
+    list ($account, $email, $amt, $desc) = u\padRay($row, 4); // desc is optional
     foreach (ray('account email desc') as $k) $$k = trim($$k);
     if (!$account or strtoupper($account) == t('TOTAL')) break; // should never happen unless user has a total line
     if ($err = u\badAmount($amt, '>=0')) {iuErr($err, $e); continue;}
@@ -60,9 +60,9 @@ function formInvoiceUpload_submit($form, &$sta, $args = NULL) {
     $total += $amt;
   }      
 
-	if (@$iuErrs) return say(join('<br>', $iuErrs), 'file');
+	if (nn($iuErrs)) return say(join('<br>', $iuErrs), 'file');
 	
-  if (!@$txs) return say('nothing to do', 'file');
+  if (!nn($txs)) return say('nothing to do', 'file');
   
   if (!$inv) {
     if ($shortfall = $mya->shortfall(FOR_GOODS, $total)) return say('short to', ray('short avail', u\fmtAmt($shortfall), u\fmtAmt($total - $shortfall)), 'file');
@@ -74,7 +74,7 @@ function formInvoiceUpload_submit($form, &$sta, $args = NULL) {
     list ($ok, $msg, $subs) = $inv 
       ? be\invoice($mya, $a2, $amt, $desc, FOR_GOODS)
       : be\transfer('payment', $mya, $a2, $amt, $desc, FOR_GOODS);
-    if (!@$ok) $err = TRUE;
+    if (!nn($ok)) $err = TRUE;
     if ($inv) {
       $msg = str_replace('|balance unchanged', '', $msg); // otherwise this gets tiresome, repeated over and over
       if (!$err and !$a2->ok) $msg .= '|' . t('<b class="loud">NOTE: </b>%otherName will need to finish opening a %PROJECT account.');
@@ -82,7 +82,7 @@ function formInvoiceUpload_submit($form, &$sta, $args = NULL) {
     say($msg, $subs);
   }
   
-  if (!@$err) {
+  if (!nn($err)) {
     if (is_callable($onSuccess)) $onSuccess($total);
     return w\go('/history', t('txs upload done', 'did total count', $did, u\fmtAmt($total), count($txs)));
   }

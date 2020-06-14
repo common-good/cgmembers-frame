@@ -18,43 +18,43 @@ use CG\Db as db;
  *   
  */
 function formSignup($form, &$sta, $args = '') {
-  if (!$args) $args = @$_POST ?: basename($_SERVER['REQUEST_URI']); // because menu_execute_active_handler fails
+  if (!$args) $args = nn($_POST) ?: basename($_SERVER['REQUEST_URI']); // because menu_execute_active_handler fails
   if (is_string($args)) $args = urlq2ray($args);
 
   extract(just('preid source2 joint reid inviter code fullName email helper phone zip partner partnerCode customer source', $args, NULL));
 
-  u\setDft($source2, nn($_COOKIE['ad']));
+  u\setDft($source2, nni($_COOKIE, 'ad'));
   u\setDft($preid, getPreId($source2));
   $source2 = hidFld($source2);
 
-  if (@$reid) return softErr('old partner link');
+  if (nn($reid)) return softErr('old partner link');
 
-  if (@$joint and $a = r\acct() and $a->canManage) {
+  if (nn($joint) and $a = r\acct() and $a->canManage) {
     if (!$a->co) $myid = w\jointSignup(); else return w\go('', t('A company cannot have a joint account.'), 'err');
   } 
   
-  if (test() and is_array(@$myid)) return; // array means returned r\go
-  $myid = hidFld($myid0 = @$myid);
+  if (test() and is_array(nn($myid))) return; // array means returned r\go
+  $myid = hidFld($myid0 = nn($myid));
 
-  $title = @$joint ? t('Create a Partner Account<br><small>(joined to yours)</small>') : t('Open a Personal Account');
+  $title = nn($joint) ? t('Create a Partner Account<br><small>(joined to yours)</small>') : t('Open a Personal Account');
 
-  if (!@$helper) {
-    $helper = @$partner ?: 0;
+  if (!nn($helper)) {
+    $helper = nn($partner) ?: 0;
     $forother = item(w\lnk('/signup-co/' . http_build_query($args), t('Did you want to open a COMPANY account instead?')));
   } else $forother = NULL;
 
-  if (!@$code) $code = 'self ()';
+  if (!nn($code)) $code = 'self ()';
 
   $notes = '';
-  if ($i = mb_strpos(@$code, '(')) { // self-invitation with friend's name and zipcode
+  if ($i = mb_strpos(nn($code), '(')) { // self-invitation with friend's name and zipcode
     $inviterName = substr($code, 0, $i);
-    if (!@$partner) $notes = "knows: $code";
+    if (!nn($partner)) $notes = "knows: $code";
     $code = r\acct(1)->iCardCode(IBY_SELF); // inviter is admin for now; invitation() will set $iCode=IBY_SELF
   }
   $notes = hidFld($notes);
-  w\invitation(@$code, '', $inviter, $iCode, $err);
+  w\invitation(nn($code), '', $inviter, $iCode, $err);
 
-  $subtext = @$joint 
+  $subtext = nn($joint)
   ? t('<%b>NOTE:</b> From here on, "you" means the person for whom you are creating a new account, which will be joined to an existing account (creating a joint account).') 
   : t(<<<EOF
 <p>Opening a %PROJECT Account takes 10-15 minutes and is very much like opening an online bank account, plus a couple extra steps for security and democracy. After this page we will guide you through <%b>several short steps</b>.</p>
@@ -67,12 +67,12 @@ EOF
 
   jsx('signup', ray('preid', nn($preid))); // must be before $preid = hidFld()
   $submit = t('Next');
-  $args = hidFld(@$args);
+  $args = hidFld(nn($args));
   $preid = hidFld($preid);
-  $confirmed = hidFld(@$iCode == IBY_FORM); // iff inviter used form (or opening a company account), invitation is already confirmed
-  $iCode = hidFld(@$iCode + 0);
+  $confirmed = hidFld(nn($iCode) == IBY_FORM); // iff inviter used form (or opening a company account), invitation is already confirmed
+  $iCode = hidFld(nn($iCode) + 0);
   $helperA = nn($helper) ? r\acct($helper) : NULL;
-  $helper = hidFld($helperA ? $helperA->id : @$inviter);
+  $helper = hidFld($helperA ? $helperA->id : nn($inviter));
   $source = $helperA ? hidFld($helperA->fullName) : sourceFld();
   
   $phone = phoneFld(REQ . t('Phone:'), [t('Your phone number')], dft($phone));
@@ -92,11 +92,11 @@ function formSignup_validate($form, &$sta) {
   $fullName = u\normalizeCase($fullName);
   
   if ($err = u\badPhone($phone)) return say($err, 'phone');
-  if (!emailOkay($email, FALSE, @$myid ? r\acct($myid) : '')) return;
+  if (!emailOkay($email, FALSE, nn($myid) ? r\acct($myid) : '')) return;
   if ($err = u\badZip($zip)) return say($err, 'zip');
   
-  if (@$companyOptions) extract(just('owner employee contractor', $companyOptions));
-  $gotrelation = (@$employee or @$owner or @$contractor);
+  if (nn($companyOptions)) extract(just('owner employee contractor', $companyOptions));
+  $gotrelation = (nn($employee) or nn($owner) or nn($contractor));
 
   u\preray(compact(ray('fullName phone email zip')), $sta['input']);
 }
@@ -112,22 +112,21 @@ function formSignup_submit($form, &$sta) {
   global $mya;
   $dbFields = 'fullName email flags phone federalId dob pin zip address city state postalAddr helper iCode notes tenure source';
   extract(just('myid preid confirmed acctType args ats owns partner customer source2 ' . $dbFields, $sta['input']));
-  if (test() and !@$args) $args = basename($_SERVER['REQUEST_URI']);
+  if (test() and !nn($args)) $args = basename($_SERVER['REQUEST_URI']);
   extract(just('code source2', $args)); // source2 may come from either partner or an ad (through our promo site)
   $helper = $helper + 0; // don't let lack of helper stop us (on DEV)
 
   u\setDft($source, '');
-  if (@$notes) list ($source, $notes) = [trim("$notes $source"), ''];
-  if (@$source2) $source = trim(mb_strtoupper($source2) . "-$source");
+  if (nn($notes)) list ($source, $notes) = [trim("$notes $source"), ''];
+  if (nn($source2)) $source = trim(mb_strtoupper($source2) . "-$source");
   $flags = nn($confirmed) ? u\bit(B_CONFIRMED) : 0;
   
   list ($city, $state, $latitude, $longitude) = zipCity($zip);
 
-
-  $info = @compact(ray($dbFields));
+  foreach (ray($dbFields) as $k) if (isset($$k)) $info[$k] = $$k;
   $info += $acctType == CO_PERSONAL ? ['preid' => $preid] : ['coType' => $acctType];
   
-  if (@$myid) {
+  if (nn($myid)) {
     $a = r\acct($myid);
     if ($a->jid) $info['name'] = r\uniqueName($fullName, $info); // make sure name reflects partner name
     $a->update($info);
@@ -142,12 +141,12 @@ function formSignup_submit($form, &$sta) {
   
   if (nn($source2) == 'food') $mya->stepDone('food', FALSE); // signed up through Food Fund promo (cg4.us/food), so add this special step
   
-  if (@$iCode < 0) w\invitation($code, $myid); // mark the invitation used
+  if (nn($iCode) < 0) w\invitation($code, $myid); // mark the invitation used
   $email = u\cry('P', $email);
   db\q('UPDATE r_invites SET invitee=:myid WHERE email=:email', compact('myid', 'email')); // and all such
-  if (!@$owns) $mya->setRisk('rents');
+  if (!nn($owns)) $mya->setRisk('rents');
   
-  if ($h = $mya->helperA and @$args and !$h->cAdmin) suCreatorRelation($helper, $args, $myid);
+  if ($h = $mya->helperA and nn($args) and !$h->cAdmin) suCreatorRelation($helper, $args, $myid);
   $info += compact(ray('acctType qid name'));
 
   tellStaffNewMember($info); // report to admin
@@ -182,7 +181,7 @@ function jointSignup($a = NULL) {
     $a = new r\Acct($args + ['email' => t('name@') . EMAILX]);
     u\EXPECT($a, 'cannot create account');
     $a->update('tenure', round($mya->tenure + ($a->created - $mya->created) / (30 * DAY_SECS)));
-    if (@$mya->risk('rents')) $a->setRisk('rents');
+    if ($mya->risk('rents')) $a->setRisk('rents');
     $a->newRelation(ray('other permission', $mya->id, r\perm(B_JOINT)));
   }
   $mya->newRelation(ray('other permission', $a->id, r\perm(B_JOINT)));

@@ -35,7 +35,7 @@ Scenario: A member changes some settings
   And with:
   | %dmy | achMin      |                   10 |                          11 | abeone     |
   And with:
-  | %dmy | bankAccount | (secret)             | (secret)                    | abeone     |
+  | %dmy | bankAccount |                      | (secret)                    | abeone     |
 # sometimes this happens out of order (dunno why)
 
 #  | %dmy | bankAccount |                      | USkk211870281123            | abeone     | (this will work with member "D:1" when decry('V') works)

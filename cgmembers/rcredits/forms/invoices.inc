@@ -16,16 +16,16 @@ function formInvoices($form, &$sta, $toFrom, $args = '') {
   w\downloadCheck('history/invoices-' . $toFrom);
 
   $toMe = ($toFrom == 'to');
-  extract(just('period starting ending download downloaded states nvid do', $args)); 
+  extract(just('period starting ending download downloaded states nvid do', $args, NULL));
 
   $choices = array(t('open'), t('paid'), t('denied'));
   extract(just('dateRange url starting ending states', dateRange($args, "history/invoices-$toFrom", $choices, '0,1,2')));
 /*
-  if (@$do == 'ok') {list($ok, $msg) = be\payInvoice($nvid); say($msg, $ok ? '' : 'ERR');}
-  if (@$do == 'no') return w\go("handle-invoice/nvid=$nvid&toMe=$toMe&ret=" . u\urlify($url));
+  if ($do == 'ok') {list($ok, $msg) = be\payInvoice($nvid); say($msg, $ok ? '' : 'ERR');}
+  if ($do == 'no') return w\go("handle-invoice/nvid=$nvid&toMe=$toMe&ret=" . u\urlify($url));
 */
   
-  $list = item(invoiceList($toMe, $starting, $ending, $states, $url, @$download, $toFrom)); // must precede starting & ending
+  $list = item(invoiceList($toMe, $starting, $ending, $states, $url, $download, $toFrom)); // must precede starting & ending
 
   $title = t('Invoices ') . ($toMe ? t('TO You') : t('FROM You'));
   $subtext =  $toMe ? t('pay or deny an invoice') : t('edit or delete an invoice');
@@ -34,7 +34,7 @@ function formInvoices($form, &$sta, $toFrom, $args = '') {
 
   //simple advanced
   $form = compact('title', 'subtext') + $dateRange + compact(ray('list toFrom'));
-  if (@$downloaded) js('download', compact('url'));
+  if ($downloaded) js('download', compact('url'));
   
   w\jsx('invoices', ray('args', "&toMe=$toMe&ret=" . u\urlify($url)));
   return cgform($form);
@@ -61,8 +61,8 @@ function invoiceList($toMe, $starting, $ending, $states, $url, $download, $toFro
   $downloadHeader = $header;
   foreach ($header as $key => $value) $header[$key] = w\popHelp($value, $headHelp[$key]);
 
-  $maxRows = @$download ? PHP_INT_MAX : TX_MAX_ROWS; // don't overwhelm the screen
-  if (@$download) {
+  $maxRows = $download ? PHP_INT_MAX : TX_MAX_ROWS; // don't overwhelm the screen
+  if ($download) {
     $csv = x\setupDownload($starting, $ending, 'cg' . t('Invoices%way', 'way', $toFrom == 'to' ? t('To') : t('From')));
     u\csv($downloadHeader);
   } else $csv = FALSE;
@@ -92,10 +92,10 @@ EOF;
 ///   debug(compact('sql','starting','ending', 'mya'));
   while (count($rows) < $maxRows and $tx = $q->fetchAssoc()) {
     extract($tx);
-    if (!@$download) $amount = number_format($amount, 2);
-    $row = array($nvid, strftime(@$download ? '%Y-%m-%d' : '%m/%d/%Y', $created), $other, $purpose, $amount);
+    if (!$download) $amount = number_format($amount, 2);
+    $row = array($nvid, strftime($download ? '%Y-%m-%d' : '%m/%d/%Y', $created), $other, $purpose, $amount);
     
-    $do = @"$url&nvid=$nvid&do";
+    $do = "$url&nvid=$nvid&do";
 
     if ($status0 > 1) {
 //      $button1 = $button2 = $button3 = '';
@@ -104,20 +104,20 @@ EOF;
       $statuses = ray(TX_STATUSES);
       $data = unserialize($data);
       $status = $status1 = ucfirst($statuses[$status0]);
-      if ($status0 == TX_DENIED) $status = tags('a', w\popHelp($status, t('Reason: ') . @$data['whyNot']));
+      if ($status0 == TX_DENIED) $status = tags('a', w\popHelp($status, t('Reason: ') . nni($data, 'whyNot')));
     }
 
 //    $buttons = "<div class='txs-buttons'><div>$button1</div><div>$button2</div><div>$status</div></div>";
     $buttons = "<div class='txs-buttons'>$status</div>";
     
-    $row[] = @$download
-    ? ($status0 == TX_DENIED ? $status1 . tr(' (%whyNot)', 'whyNot', @$data['whyNot']) : $status)
+    $row[] = $download
+    ? ($status0 == TX_DENIED ? $status1 . tr(' (%whyNot)', 'whyNot', nni($data, 'whyNot')) : $status)
     : $buttons;
     $rows[] = $row;
   }
   if ($tx and $q->fetchAssoc()) say('transaction list truncated'); // there was more than we could show
 
-  if (@$download) {
+  if ($download) {
     foreach ($rows as $row) u\csv($row);
     if (test()) return; else exit();
   }

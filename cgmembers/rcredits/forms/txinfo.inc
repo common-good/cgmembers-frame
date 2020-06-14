@@ -36,7 +36,7 @@ function formTxInfo($form, &$sta, $xid = '') {
   if ($x->reversedByXid) $rel[] = t('undone by tx#') . txLink($x->reversedByXid);
 // THIS DOESN'T WORK YET  if ($x->xfee) $rel[] = u\fmtAmt($x->xfee) . ' xfee';
 
-  $related = @$rel ? item(join(', ', $rel), t('Related Txs:')) : NULL;
+  $related = nn($rel) ? item(join(', ', $rel), t('Related Txs:')) : NULL;
   $riskDesc = $x->risk < K_RED ? t('low') : ($x->risk < 2 * K_RED ? t('moderate') : t('high'));
   $risks = r\riskList($risks0 = $x->risks, K_TX_RISKS); 
   $risk = item(round($x->risk) . ' ' . button(t('Recalculate'), "$base_url/rerisk/tx/$x->xid/1") . " ($riskDesc): $risks", t('Risk:'));

@@ -21,10 +21,10 @@ function formEvent($form, &$sta, $args='') {
   include_once R_ROOT . '/rvote/rvote-results.inc';
   global $base_url, $mya;
 	
-	extract(just('do eid', $args));
+	extract(just('do eid', $args, NULL));
 
   $typeDescs = ray(t('I:Meeting,V:Vote,G:Grading,P:RFP'));
-  if (strpos(@$eid, '=')) extract(just('eid do', $eid)); // passed from rdo()
+  if (strpos($eid, '=')) extract(just('eid do', $eid)); // passed from rdo()
   
   if (isset($eid)) {
     $fields = 'type,event,details,start,end';
@@ -34,8 +34,9 @@ function formEvent($form, &$sta, $args='') {
     }
   }
 
-  $vote = (@$type == 'V');
-	$grading = (@$type == 'G');
+  u\setDft($type, NULL);
+  $vote = ($type == 'V');
+	$grading = ($type == 'G');
 	
   if ($do == 'report') {
     include_once R_ROOT . '/rvote/rvote-results.inc';
@@ -73,7 +74,7 @@ function formEvent($form, &$sta, $args='') {
 <tr><td>$q_text</td><td>$q_type</td><td>$budget</td><td>$buttons</td></tr>
 EOF;
       }
-      if (@$list) {
+      if (nn($list)) {
         $list = join("\n", $list);
         $list = <<<EOF
 <table>
@@ -92,9 +93,9 @@ EOF;
   // add or edit
   $title = item($do == 'add' ? t('Add Event') : t('Edit Event'));
   $types = ray(' :Choose Type,I:In-person,V:Vote,G:Grade Proposals,P:Request For Proposals');
-  $type = selectFld(t('Type:'), '', required(@$type), $types);
-  $event = textFld(t('Event name:'), [t('Short Descriptive Event Name'), t('For example, "Voting on 3 questions".')], required(@$event));
-  $details = areaFld(t('Details:'), [t('Event Details')], dft(@$details));
+  $type = selectFld(t('Type:'), '', required($type), $types);
+  $event = textFld(t('Event name:'), [t('Short Descriptive Event Name'), t('For example, "Voting on 3 questions".')], required(nn($event)));
+  $details = areaFld(t('Details:'), [t('Event Details')], dft(nn($details)));
   $start = dateFld(REQ . t('Start:'), [t('Start Date')], dft(nn($start)));
   $end = dateFld(REQ . t('End:'), [t('End Date')], dft(nn($end)));
   if ($mya->cAdmin) $submit = submit();

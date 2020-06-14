@@ -20,7 +20,7 @@ function ajax() {
   header('Content-Type: application/json');
 
   if ($op != 'presignup') { // no sid if not signed in
-    if (!@$sid or !$vars = w\sessionVars($sid)) return ajaxErr('bad sid');
+    if (!nn($sid) or !$vars = w\sessionVars($sid)) return ajaxErr('bad sid');
     if (!$aid = $vars['uid'] or !$myid = $vars['myid']) return ajaxErr('not signed in');
   }
 //  $mya = r\acct($myid, $aid);

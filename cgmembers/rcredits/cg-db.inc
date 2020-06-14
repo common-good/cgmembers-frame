@@ -28,11 +28,10 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   global $channel;
   //  \db_query("SET NAMES 'utf8'"); // only needed once per connection, but hey
   u\EXPECT(compact(ray('sql subs')), 'notempty assoc');
-  if ($retId) $return = \Database::RETURN_INSERT_ID;
-  if (preg_match('/^DELETE FROM ([^ ]+)( |$)/', $sql, $match) and !in(NO_LOGSQL_TABLES, @$match)) logSql(compact(ray('sql subs retId')));
+  if (preg_match('/^DELETE FROM ([^ ]+)( |$)/', $sql, $match) and !in(NO_LOGSQL_TABLES, nn($match))) logSql(compact(ray('sql subs retId')));
   if ($log and mb_strpos($sql, 'SELECT ') === FALSE) u\loga('db', $subs + compact('sql'));
   try {
-    return \db_query(u\SUBS($sql), u\prefixKeys(':', $subs), @compact('return'));
+    return \db_query(u\SUBS($sql), u\prefixKeys(':', $subs), $retId ? ray('return', \Database::RETURN_INSERT_ID) : []);
   } catch (\Exception $e) {
     \rcredits_exception_handler($e);
   }
@@ -149,7 +148,7 @@ function insert($table, $info, $key = 'id') {
  * @return: if inserting, then the id of the inserted record, else TRUE (FALSE on failure)
  */
 function updateOrInsert($table, $info, $key) {
-  if (@$info[$key] and db\exists($table, "$key=:$key", [$key => $info[$key]])) {
+  if (nni($info, $key) and db\exists($table, "$key=:$key", [$key => $info[$key]])) {
     return db\update($table, $info, $key);
   } else {
     return db\insert($table, $info, $key);
@@ -187,7 +186,7 @@ function keyed($fields, $table, $where = '1', $subs = []) {
  */
 function logSql($args) {
   global $mya;
-  $args = date('d') . ' ' . @$mya->mainQid . ': ' . u\jsonEncode($args);
+  $args = date('d') . ' ' . ($mya ? $mya->mainQid : '') . ': ' . u\jsonEncode($args);
   $args = strtr($args, ['\\"' => '', '"' => '', '\\n' => '|', ';}' => '}', ';' => '; ', ',' => ', ']);
   if (!is_dir($logdir = LOG_DIR)) mkdir($logdir);
   file_put_contents(SQL_LOG, "$args\n", FILE_APPEND); // new log file every month

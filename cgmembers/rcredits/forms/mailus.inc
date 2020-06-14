@@ -10,7 +10,7 @@ use CG\Db as db;
  * Send an email to Common Good
  */
 function formEmailUs($form, &$sta, $args = '') {
-  die('NYI');
+/**/  die('NYI');
   global $mya;
   extract(just('nothing', $args));
 

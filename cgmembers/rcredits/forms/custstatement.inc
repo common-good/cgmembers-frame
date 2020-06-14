@@ -64,7 +64,7 @@ function custStatement($args = []) {
   $space = '';
 
   foreach ($rows as $row) {
-    if (!@$classes) $classes = array_keys($row);
+    if (!nn($classes)) $classes = array_keys($row);
 //    extract(just('tid date name amount purpose reward', array_combine($classes, $row)));
     extract(just('tid created purpose invoiced paid', $row));
     $date = nn($created) ? u\fmtDate($created, TRUE) : '';
@@ -75,7 +75,7 @@ function custStatement($args = []) {
     foreach ($fields as $i => $one) {
       list ($head, $fldName, $width, $align) = explode('/', $one);
       if (!$fldName) $fldName = mb_strtolower($head);
-      $debit = ($align == 'R' and is_numeric($n = @$$fldName) and $n < 0);
+      $debit = ($align == 'R' and is_numeric($n = nn($$fldName)) and $n < 0);
       if ($debit) $pdf->SetTextColor(128, 0, 0); else $pdf->SetTextColor();
       if (in($fldName, $numFields) and isset($$fldName)) {
         $$fldName = ($$fldName == 0 and $fldName != 'balance') ? '' : number_format($$fldName ?: 0, 2);
@@ -102,7 +102,7 @@ function custStatement($args = []) {
 
   $pdf->newLine();
   
-  $closing = @$classes
+  $closing = nn($classes)
   ? ($bal ? t('Total due: $') . $balance : t('No payment is due.'))
   : t('There are no transactions this month.');
 

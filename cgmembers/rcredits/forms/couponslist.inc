@@ -38,7 +38,7 @@ X;
   		$start = u\fmtDate($start, TRUE);
   		$end = empty($end) ? t('indefinite') : u\fmtDate($end, TRUE);
 		} else {
-      $args = http_build_query(@compact($fields, 'automatic'));
+      $args = http_build_query(compact($fields, 'automatic'));
       if (!test()) $args = u\urlify($args);
       $args = 'print/' . $args;
   		$start = u\fmtDate($start, TRUE);
@@ -54,7 +54,7 @@ X;
     $rows[] = u\tableRow(compact($fields));
   }
 
-  if (@$rows) {
+  if (nn($rows)) {
     $rows = join($rows, "\n");
     $list = <<< X
     <table id="coupons">
@@ -115,7 +115,7 @@ X;
     $rows[] = u\tableRow(compact($fields));
   }
 
-  if (@$rows) {
+  if (nn($rows)) {
     $rows = join($rows, "\n");
     $list = <<< X
     <table id="coupons">

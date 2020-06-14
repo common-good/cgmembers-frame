@@ -26,7 +26,7 @@ function formSecurity($form, &$sta, $arg = '') {
   $disAdmin = ($mya->cAdmin and !$mya->proSe) ? disabled() : [];
   $questionDesc = t('Type a question no one but you could guess the answer to.');
   $question = $mya->co ? NULL : textFld(t('Question:'), [t('Choose a security question'), $questionDesc], required($mya->question) + $disAdmin);
-  $answer = $mya->co ? NULL : textFld(t('Answer:'), [t('The answer to that question')], required(@$mya->answer) + $disAdmin);
+  $answer = $mya->co ? NULL : textFld(t('Answer:'), [t('The answer to that question')], required($mya->answer) + $disAdmin);
 
   $submit = submit();
   $form = compact(ray('title change question answer submit'));
@@ -43,7 +43,7 @@ function formSecurity_submit($form, &$sta) {
   global $mya;
   $info = just('question answer', $sta['input']);
 
-  foreach ($info as $k => $v) if ($v == R_ON_FILE or $v == @$form[$k]['#default_value']) unset($info[$k]); // don't change if on file or unchanged
+  foreach ($info as $k => $v) if ($v == R_ON_FILE or $v == nni($form[$k], '#default_value')) unset($info[$k]); // don't change if on file or unchanged
 
   if (!empty($info)) {
     if (!$mya->update($info)) return say('info not saved', 'ERR');

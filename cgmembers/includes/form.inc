@@ -2746,11 +2746,8 @@ function theme_select($variables) {
  *   An HTML string of options and optgroups for use in a select form element.
  */
 function form_select_options($element, $choices = NULL) {
-  if (!isset($choices)) if (is_null($choices = patch('form_select_options2741', $element))) return '';/* CGF begin
-    $choices = $element['#options'];
-  } CGF end */
-  // array_key_exists() accommodates the rare event where $element['#value'] is NULL.
-  // isset() fails in this situation.
+  if (!isset($choices)) if (is_null($choices = $element['#options'])) return ''; // (cgf) This accommodation for dynamic javascript dropdowns (set #options = NULL) is inadequate when there is an error on the form (see signup form)
+
   $value_valid = isset($element['#value']) || array_key_exists('#value', $element);
   $value_is_array = $value_valid && is_array($element['#value']);
   $options = '';
@@ -2919,19 +2916,23 @@ function theme_radios($variables) {
  * Expand a password_confirm field into two text boxes.
  */
 function form_process_password_confirm($element) {
-  $element['pass1'] =  patch('form_process_password_confirm2914') + array(
+  $element['pass1'] = array(
     '#type' => 'password',
-    '#title' => t('Password'),
+    '#title' => t('New password'),
     '#value' => empty($element['#value']) ? NULL : $element['#value']['pass1'],
     '#required' => $element['#required'],
+    '#class' => ['password-field'], // cgf
     '#attributes' => array('class' => array('password-field')),
+    '#tabled' => TRUE, // cgf
   );
-  $element['pass2'] =  patch('form_process_password_confirm2921') + array(
+  $element['pass2'] = array(
     '#type' => 'password',
-    '#title' => t('Confirm password'),
+    '#title' => t('Confirm new password:'),
     '#value' => empty($element['#value']) ? NULL : $element['#value']['pass2'],
     '#required' => $element['#required'],
+    '#class' => ['password-confirm'], // cgf
     '#attributes' => array('class' => array('password-confirm')),
+    '#tabled' => TRUE, // cgf
   );
   $element['#element_validate'] = array('password_confirm_validate');
   $element['#tree'] = TRUE;

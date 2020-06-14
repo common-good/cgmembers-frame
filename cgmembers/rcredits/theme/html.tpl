@@ -44,36 +44,32 @@ global $pageTitle;
  * @see template_preprocess_html()
  * @see template_process()
  */
-
 global $rUrl, $base_url, $pageScripts, $scriptScraps, $mya, $styleNonce;
 $version = isPRODUCTION ? R_VERSION : now();
 $styles = preg_replace('~<style.*</style>~ms', '', $styles); // zap all the drupal styles
 
 // handle scripts
-if (@$scriptScraps) w\js('scraps', 'args', urlencode(json_encode($scriptScraps))); // fragments
+if (nn($scriptScraps)) w\js('scraps', 'args', urlencode(json_encode($scriptScraps))); // fragments
 $s = array_flip(ray(SCRIPTS_TOP)); // standard (included first on every page)
 $s += just(array_keys($pageScripts), array_merge(array_flip(ray(SCRIPTS)), $pageScripts)); // select and reorder ad hoc scripts
   u\EXPECT(count($s) >= count(ray(SCRIPTS_TOP)) + count($pageScripts), 'scripts! ' . pr(justNOT(ray(SCRIPTS_TOP . ' ' . SCRIPTS), $pageScripts)) . pr($pageScripts));
 $scripts = '';
 $tm = now();
-
 foreach ($s as $id => $v) { // having selected the scripts, format for inclusion in page
-  $id0 = $id;
   $src = "$rUrl/js/$id.js";
   if (!strpos($src, 'x/') or $v) {
     if (u\starts($id, 'goo-')) $src = 'https://www.google.com/' . substr($id, 4); else $src .= "?v=$tm&$v"; // $v is either a small integer (from array_flip) or all script arguments
-    $id = "script-$id";
-  } else unset($id); // no id for 3rd-party scripts
-  
-  if (strpos($src, 'spin.min')) $nonce = $styleNonce; else unset($nonce); // external nonce fails in Edge as of 12/14/2017
+    $idRay = ray('id', "script-$id");
+  } else { $idRay = []; } // no id for 3rd-party scripts
+  $nonceRay = strpos($src, 'spin.min') ? ray('nonce', $styleNonce) : []; // external nonce fails in Edge as of 12/14/2017
   
   if (strpos($v, ';')) { // temporary for inline
-    $scripts .= w\tags('script', $v, compact('id')) . "\n";
-  } else $scripts .= w\tags('script', '', @compact(ray('id src nonce'))) . "\n";
+    $scripts .= w\tags('script', $v, $idRay) . "\n";
+  } else $scripts .= w\tags('script', '', compact('src') + $idRay + $nonceRay) . "\n";
 }
 
 w\sanitizePage($page); // assure no HTML insertion of script, styles, etc.
-if (@$mya) $classes = str_replace('not-logged', 'logged', $classes);
+if ($mya) $classes = str_replace('not-logged', 'logged', $classes);
 
 $favicon = <<<EOF
   <link rel="apple-touch-icon" sizes="180x180" href="$rUrl/images/favicons/apple-touch-icon.png">

@@ -30,7 +30,7 @@ function formWork($form, &$sta, $args = '') {
     'company_text' => item(t('Are you connected to a local company, or to any %PROJECT member company? Otherwise leave this part blank.')),
     'company' => textFld(t('Company: '), [t('Your company')]),
     'companyPhone' => phoneFld(t('Company Phone:'), [t('Company phone number')]),
-    'companyOptions' => boxesFld('', '', @$copts, $companyOptions), 
+    'companyOptions' => boxesFld('', '', nn($copts), $companyOptions), 
   );
   $companyInfo = fieldSet('companyInfo', $companyInfo, BARE);
   
@@ -41,13 +41,13 @@ function formWork_validate($form, &$sta) {
   global $mya;
   extract($input = just('company companyPhone companyOptions', $sta['input'], NULL));
 
-  if (@$company or @$companyPhone) { // NOT or $gotrelation (let user get by without)
+  if (nn($company) or nn($companyPhone)) { // NOT or $gotrelation (let user get by without)
     foreach (ray('company companyPhone') as $one) {
-      if (u\nonish(@$$one)) $$one = '';
+      if (u\nonish(nn($$one))) $$one = '';
       // (no) return say('missing field', array('field' => $one), $one);
     }
-    if (@$company and $err = u\badName($company)) return say($err, array('field' => 'Company'), 'company');
-    if (@$companyPhone and !$companyPhone = u\fmtPhone($companyPhone, '+n')) return say('bad company phone', compact('companyPhone'), 'companyPhone');
+    if (nn($company) and $err = u\badName($company)) return say($err, array('field' => 'Company'), 'company');
+    if (nn($companyPhone) and !$companyPhone = u\fmtPhone($companyPhone, '+n')) return say('bad company phone', compact('companyPhone'), 'companyPhone');
     if (!$companyOptions) return say('what relation', 'company');
     $signupCo = compact(ray('company companyPhone')) + array_fill_keys(array_values($companyOptions), TRUE);
 
@@ -58,10 +58,10 @@ function formWork_validate($form, &$sta) {
 
 function formWork_submit($form, &$sta) {
   global $mya;
-  extract($input = just('calling signupCo', $sta['input']));
+  extract($input = just('calling contactable signupCo', $sta['input']));
 
-  $mya->update(@compact(ray('calling contactable')));
-  if (@$signupCo) {
+  foreach (ray('calling contactable') as $k) $mya->update($k, $$k);
+  if (nn($signupCo)) {
     suCompanyRelation($mya->id, $signupCo);
     $mya->update(compact('signupCo'));
   }
@@ -77,6 +77,6 @@ function formWork_submit($form, &$sta) {
  * @return flat array of values (not display names) of checked boxes
  */
 function boxOpt($field, $opts, $sta) {
-  foreach ((@$sta['input'][$field] ?: []) as $k => $v) $res[] = $k; // $opts[$k]; // note that k==v
-  return @$res ?: [];
+  foreach ((nni($sta['input'], $field) ?: []) as $k => $v) $res[] = $k; // $opts[$k]; // note that k==v
+  return nn($res) ?: [];
 }

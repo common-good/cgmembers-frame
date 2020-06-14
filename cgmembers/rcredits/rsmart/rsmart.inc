@@ -91,23 +91,23 @@ function pos($args = FALSE) {
   if ($args) f('t.POST', $args); else $args = $_POST;
   $args0 = $args;
 //  $args = u\sanitizeInput($args0 = $args);
-  extract(just('op device agent member version', $args));
-  if (@$op != 'time') u\loga('in', $args); // avoid filling the log with time requests
-  $args['version'] = (int) @$version;
+  extract(just('op device agent member version', $args, NULL));
+  if ($op != 'time') u\loga('in', $args); // avoid filling the log with time requests
+  $args['version'] = (int) $version;
   
-  if (!@$op or !in($op, 'time identify photo charge test')) return posErr('bad op');
+  if (!$op or !in($op, 'time identify photo charge test')) return posErr('bad op');
   
   if (isDEV and $op == 'test') return smartTest($args0);
   
-  $mya = getAgent(@$agent ?: @$member, $agentErr);
+  $mya = getAgent($agent ?: $member, $agentErr);
 ///     print_r(compact(ray('mya agent member agentErr')));
-  if (@$device) { // device was specified, substitute its record id, herein
+  if ($device) { // device was specified, substitute its record id, herein
     if (!$mya) return posErr($agentErr);
     if ($boxUser = getDevice($device, $mya->id)) {
       $edit = ray('id access', $boxUser, now());
       db\update('r_boxes', $edit, 'id'); // remember time last accessed so we can drop the deadwood
     } elseif ($op != 'identify') return posErr('unknown device');
-  } elseif (@$agent or $op != 'identify') return posErr('missing device');
+  } elseif ($agent or $op != 'identify') return posErr('missing device');
   
   if ($op == 'time') return getTime($args); // no agent required
 
@@ -126,7 +126,7 @@ function pos($args = FALSE) {
  * @return: does not return (when testing, return the json result)
  */
 function ok($args, $ok = "1") {
-  if ($msg = @$args['message']) $args['message'] = strip_tags($msg);
+  if ($msg = nni($args, 'message')) $args['message'] = strip_tags($msg);
   $result = u\jsonEncode(compact('ok') + $args);
   if (key($args) != 'time') u\loga('out', $args); // avoid filling the log with time requests
   //{t\output($args, 'output'); 
@@ -185,13 +185,13 @@ function smartTest($args) {
 function getTime($args) {
   global $mya;
   if ($err = missingArg($keys = 'version', $args)) return posErr($err); 
-  extract(just($keys . ' data', $args));
+  extract(just($keys . ' data', $args, NULL));
   $time = now();
   
   if ($version < RPOS_VERSION) $message = $version < 230 
   ? t("IMPORTANT: Your app needs updating.\n\nSearch for \"CGPay\" in the Google Play Store, to download the latest version (uninstall this one after your latest transactions are uploaded).")
   : '!update';
-  if (@$data or !@$message) $message = handleAppMsg(@$data);
+  if ($data or !nn($message)) $message = handleAppMsg(@$data);
 
   return ok(compact(ray('time message')));
 }
@@ -234,11 +234,11 @@ function identify($args) {
   u\EXPECT($version > 217, 'archaic version of app');
 
   if ($agent) { // get other party
-    if ($info = machine(@$member, $code)) return ok($info + $companyInfo); // purchase from fuel pump or other machine
-    if (!$a = getMember(@$member, $code, $err, TRUE)) return posErr($err, [], $companyInfo);
+    if ($info = machine($member, $code)) return ok($info + $companyInfo); // purchase from fuel pump or other machine
+    if (!$a = getMember($member, $code, $err, TRUE)) return posErr($err, [], $companyInfo);
   } else $a = $mya; // get agent
 
-  if (@$device) $deviceId = getDevice($device, $mya->id);
+  $deviceId = $device ? getDevice($device, $mya->id) : NULL;
 
   if ($signin) { //  identifying agent
     if ($agent and $a == $mya) return posErr('already scanned in', [], $companyInfo);
@@ -249,7 +249,7 @@ function identify($args) {
       r\tellAdmin('bad code in identify op: ' . $err, compact(ray('member code')));
     }
     if (!$a->can(B_SCAN)) return posErr('agent cannot scan', [], $companyInfo);
-    if (!@$deviceId) {
+    if (!$deviceId) {
       if (!$device) $device = u\code();
       r\makeDevice($a->id, $device, TX_POS); // card is legit, so use device's code, if any
     }
@@ -262,7 +262,7 @@ function identify($args) {
     
   } else { // identifying customer
     if (!$agent) return posErr('scan in first', [], $companyInfo);
-    if (!@$deviceId) return posErr('unknown device'); // tried to scan a customer card before very first agent scan-in
+    if (!$deviceId) return posErr('unknown device'); // tried to scan a customer card before very first agent scan-in
     if (isset($pin) and $pin != $a->agentA->pin) return posErr('bad pin', [], $companyInfo); // maybe never use this
     $agentCans = 0;
 
@@ -282,8 +282,8 @@ function identify($args) {
   $first = (($a->co and $a->proSe) or $a->agentA->ided) ? '0' : '1'; // regular or first-time transaction (proSe co never)
   
   $fields = $version < 230 ? 'first device name place company default time' : 'device first person company place time';
-
-  return ok(@compact(ray($fields)) + balrew($a, $version < 230) + $companyInfo); // companyInfo last (don't overwrite bal)
+  foreach (ray($fields) as $k) if (isset($$k)) $res[$k] = $$k;
+  return ok($res + balrew($a, $version < 230) + $companyInfo); // companyInfo last (don't overwrite bal)
 }
 
 /**
@@ -297,10 +297,10 @@ function identify($args) {
  */
 function photo($args) {
   if ($err = missingArg($keys = 'member', $args)) return photoReturn($err);
-  extract(just($keys . ' code version', $args));
+  extract(just($keys . ' code version', $args, NULL));
 
-  if (!@$member) return photoReturn('missing member');
-  if (!@$code) r\tellAdmin('missing code in photo op', compact(ray('member code')));
+  if (!$member) return photoReturn('missing member');
+  if (!$code) r\tellAdmin('missing code in photo op', compact(ray('member code')));
   if (!$a = getMember($member, $code, $err, TRUE)) return photoReturn($err);
 
 	$signingIn = (bool) strpos($member, '-'); // allow agents with no photo by faking a photo (>= 100 chars)
@@ -349,7 +349,7 @@ function charge($args, $type = 'charge') {
   
   $keys = 'agent member amount goods description created';
   if ($err = missingArg($keys, $args)) return posErr($err);
-  extract(just($keys . ' proof force version', $args));
+  extract(just($keys . ' proof force version', $args, NULL));
   $boxId = $boxUser;
   
   /* extract(just('description device', $args, ['', null])); */
@@ -358,9 +358,9 @@ function charge($args, $type = 'charge') {
   /* $goods = $args['goods']; */
   /* unset($args['goods']); */
    
-  if (!@$member) return posErr('missing member'); // handle empty string (versus missing param)
-  if (!@$proof) return posErr(missingArg('proof', []));
-  if (@$description === '') return posErr('missing description');
+  if (!$member) return posErr('missing member'); // handle empty string (versus missing param)
+  if (!$proof) return posErr(missingArg('proof', []));
+  if ($description === '') return posErr('missing description');
   if (mb_strpos($description, ' ') !== FALSE) {
     r\tellAdmin(t('POS tx description not urlencoded'), $args);
   } else $description = urldecode($description);
@@ -396,10 +396,10 @@ EOF;
     }
   }
 
-  if (@$force == "1" and nn($xid)) { // does exist and should (always background)
+  if ($force == "1" and nn($xid)) { // does exist and should (always background)
     $message = $did = $undo = '';
     $txid = $xid;
-  } elseif (@$force == "-1" and nn($xid)) { // does exists and shouldn't
+  } elseif ($force == "-1" and nn($xid)) { // does exists and shouldn't
     $did = '';
     $undo = $xid;
 
@@ -408,7 +408,7 @@ EOF;
       extract(just('undo created', $revRes));
       $message = t('Transaction has been reversed.');
     } else {
-      list ($ok, $msg, $subs) = be\undoTx($xid, (@$amount < 0 and !$mya->co) ? 'amount>0' : "amount='$amount'", [], $force);
+      list ($ok, $msg, $subs) = be\undoTx($xid, ($amount < 0 and !$mya->co) ? 'amount>0' : "amount='$amount'", [], $force);
       if (!$ok) return badTx($args, $name, $msg, $subs);
       $txid = $subs['xid'];
       $created = $subs['created0'];
@@ -417,17 +417,17 @@ EOF;
       $message = t($msg, $subsNoTx);
       r\tellAdmin('reversing tx', ray('xid uid created message subs', $xid, $mya->id, u\fmtDate($created), $message, $subs));
     }
-  } elseif (@$force == "-1" and !@$xid) { // doesn't exist and shouldn't
+  } elseif ($force == "-1" and !nn($xid)) { // doesn't exist and shouldn't
     $did = $undo = $created = '';
     $txid = 0;
     $message = "Transaction has been canceled.";
   } else { // doesn't exist and should (forcing or not)
-//    if (@$amount < 0 and $a->co and $a->proSe) return badTx($args, $name, $msg, $subs);
-    if (@$amount < 0 and !$mya->co) list ($type, $amount) = ['payment', -$amount];
-    list ($ok, $msg, $subs) = be\transfer($type, $mya, $a, @$amount, @$description, $goods, compact(ray('created force boxId')));
+//    if ($amount < 0 and $a->co and $a->proSe) return badTx($args, $name, $msg, $subs);
+    if ($amount < 0 and !$mya->co) list ($type, $amount) = ['payment', -$amount];
+    list ($ok, $msg, $subs) = be\transfer($type, $mya, $a, $amount, $description, $goods, compact(ray('created force boxId')));
     if (!$ok) return badTx($args, $name, $msg, $subs);
 
-    if (!@$force and $aa = $a->agentA and $mya->co and !$aa->ided) $aa->setBit(B_IDED);
+    if (!$force and $aa = $a->agentA and $mya->co and !$aa->ided) $aa->setBit(B_IDED);
     $txid = $subs['xid'];
     if ($selfhelp) {
       $msg = 'selfhelp tx';
@@ -461,9 +461,9 @@ function machine($member, $code){
  * Tell the device owner about a failed background transaction
  */
 function badTx($args, $account, $msg, $subs = []) {
-  extract(just('force amount created', $args));
+  extract(just('force amount created', $args, NULL));
   
-  if (@$force) {
+  if ($force) {
     global $mya;
     $by = $mya->proSe ? '' : t(' (agent %agent)', 'agent', $mya->agentA->fullName);
     $subs += ray('account amount created by', $account, u\fmtAmt($amount), u\fmtDate($created), $by);

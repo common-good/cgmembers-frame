@@ -51,12 +51,12 @@ function queueNext($task = NULL) {
 define('TIME_CODES', 'year:Ym,month:md,week:Ua,day:dH,hour:HM');
 
 function timeFor($time, $period, $chosen) {
-  global $timeFor; if (test() and isset($timefor)) return @$timefor[$period];
+  global $timeFor; if (test() and isset($timefor)) return nni($timefor, $period);
 
   $lastStart = getV('last_cron_start', []);
-  if ($lastStart and now() - nn($lastStart[$period], 0) < HOUR_SECS) return FALSE;
+  if ($lastStart and now() - nni($lastStart, $period, 0) < HOUR_SECS) return FALSE;
   $lastCron = \variable_get('last_cron_end') ?: [];
-  $lastTime = @$lastCron[$period];
+  $lastTime = nni($lastCron, $period, 0);
   list ($periodCode, $withinCode) = str_split(ray(TIME_CODES)[$period]);
   $point = strftime("%$withinCode", $time);
   if ($withinCode == 'a') $point = u\day2n($point); // %u and %w fail on dev machine (among others)
@@ -68,7 +68,7 @@ function queue($op, $item = []) {
   global $cronOp; // this is set when calling cron() from PHP window on test server
 
   $item = compact('op') + $item;
-  if (@$cronOp or test()) {
+  if (nn($cronOp) or test()) {
     cr\doTask($item);
   } else {
     $item = serialize($item0 = $item);

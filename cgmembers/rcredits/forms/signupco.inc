@@ -53,7 +53,7 @@ X
   
 //  $forother = item(w\lnk('/signup/' . $args, t('open a personal account instead')));
   
-  u\setDft($source, nn($_COOKIE['ad']));
+  u\setDft($source, nni($_COOKIE, 'ad'));
   $source2 = hidFld($source);
   $args = hidFld($args);
 
@@ -87,7 +87,7 @@ function formSignupCo_validate($form, &$sta) {
   extract(just('zip phone email selling federalId dob', $sta['input']));
 
   foreach (ray('fullName legalName') as $field) {
-    $$field = trim(str_replace('  ', ' ', u\normalizeCase(@$$field))); // @ for testing
+    $$field = trim(str_replace('  ', ' ', u\normalizeCase(nn($$field))));
     if ($err = u\badName($$field)) return say($err, compact('field'), $field);
   }
 
@@ -107,7 +107,7 @@ function formSignupCo_validate($form, &$sta) {
   if (!emailOkay($email, TRUE, NULL)) return;
   if ($err = zBadSelling($selling)) return say($err, 'selling');
   
-  u\preray(@compact(ray('fullName agentQid zip phone email selling')), $sta['input']); // fix formatting and add name
+  u\preray(compact(ray('fullName zip phone email selling')), $sta['input']); // fix formatting and add name
 }
   
 function formSignupCo_submit($form, &$sta) {
@@ -125,9 +125,9 @@ function formSignupCo_submit($form, &$sta) {
   
   list ($city, $state, $latitude, $longitude) = zipCity($zip);
   $preid = getPreId($source);
-  if (@$source2) $source = trim(mb_strtoupper($source2) . "-$source");  
+  if (nn($source2)) $source = trim(mb_strtoupper($source2) . "-$source");  
   $flags = u\bit(B_CO) | u\bit(B_CONFIRMED);
-  $info = @compact(ray($dbFields));
+  foreach (ray($dbFields) as $k) if (isset($$k)) $info[$k] = $$k;
   
   if (!$newA = new r\Acct($info)) return say('cannot create account', 'zot');
   r\setAcct($newA->id, $sta); // this works for both an individual account (proSe) and a company account (with agent)

@@ -15,7 +15,7 @@ require_once __DIR__ . '/rcron.inc';
 
 drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 
-if (variable_get('cron_key', 'drupal') != @$_GET['cron_key']) {
+if (variable_get('cron_key', 'drupal') != nni($_GET, 'cron_key')) {
   u\log(t('Cron could not run because an invalid key was used.'));
   \drupal_access_denied();
 } elseif (variable_get('maintenance_mode', 0)) {

@@ -49,8 +49,8 @@ SELECT q.text AS question,COUNT(b2.voter) AS votes,o.text AS opt,grade,grademax,
 function formEvents($form, &$sta, $args = '') {
   global $base_url, $mya;
   
-  extract(just('question do results eid noProxies qid', $args));
-  if ($mya and !@$qid) $args = str_replace('qid=&ecode=', "qid=$mya->mainQid&ecode=$mya->emailCode", $args);
+  extract(just('question do results eid noProxies qid', $args, NULL));
+  if ($mya and !$qid) $args = str_replace('qid=&ecode=', "qid=$mya->mainQid&ecode=$mya->emailCode", $args);
   $mya = w\eLinkAcct($sta, $args, $mya ? 'acct' : 'individual'); // allow any signed in account, so user can switch to personal account, below
 
   $cttyA = $mya->cttyA;
@@ -58,7 +58,7 @@ function formEvents($form, &$sta, $args = '') {
 
   $title = item(t('Community Democracy') . "<br><small>$cttyA->fullName</small>");
 //  $subtitle = item($cttyA->fullName);
-  $event0 = @$eid 
+  $event0 = $eid 
   ? db\get('id AS eid, type, event, details, start, end', 'r_events', 'id=:eid AND ctty=:ctty', ray('eid ctty', $eid, $cttyA->id))
   : v\getCurrentEvent($cttyA->id);
   if ($event0) {
@@ -76,38 +76,39 @@ function formEvents($form, &$sta, $args = '') {
       }
 
 	  $proxLink = $aA == $mya ? '/settings/proxies' : "/prox/page=Proxy&priority=1&allow=individual&qid=$mya->mainQid&ecode=$mya->emailCode";
-      if (!@$do) $voting = $type == 'V' ? v\votingWelcome($end, $proxLink) : v\gradingWelcome($end, $proxLink); // end is displayable end date
-    }
+      $voting = $do ? NULL : ($type == 'V' ? v\votingWelcome($end, $proxLink) : v\gradingWelcome($end, $proxLink)); // end is displayable end date
+    } else { $voting = NULL; }
 
     $start = $start <= now() ? t('NOW') : u\fmtDate($start, TRUE);
     $status0 = t('<b>Status:</b> %event from %start to %end', compact(ray('event start end')));
     if ($details) $status0 .= u\lf2br("\n\n$details");
   } else $status0 = t('There are no upcoming %PROJECT events scheduled in your community at this time.');
 
-  if (!@$do) $status = item($status0);
+  $status = $do ? NULL : item($status0);
 
   if (FALSE and $mya->community == -26742000000002) {
     $middle = file_get_contents(__DIR__ . '/greenfieldma2017.html');
 //    $middle = v\showProposalGrades($mya, $args); // FUDGE for 19 Jan 2017 (pending reworking the overall flow and logic of voting phases)
-  } elseif (@$do == 'proposals') {
+  } elseif ($do == 'proposals') {
 		
-  } elseif (@$do == 'results') {
-//		$middle = $type == 'G' ? v\showProposalGrades($eid, @$noProxies) : v\showResults($eid, @$noProxies);
-		$middle = $type == 'G' ? v\showProposalGrades($eid, @$noProxies) : t('The results of the recent vote are being tabulated and will be reported soon.');
-  } elseif (@$do == 'options') { // UNUSED
-    list($middle, $phase, $endDate) = v\questionList($eid, @$question, @$do);
-  } elseif (@$do == 'ballot') {
-    $middle = v\ballot($mya, $extraFields, @$question);
-  } elseif (@$do == 'done' and $eid) { // @todo: handle proposals too
+  } elseif ($do == 'results') {
+//		$middle = $type == 'G' ? v\showProposalGrades($eid, $noProxies) : v\showResults($eid, $noProxies);
+		$middle = $type == 'G' ? v\showProposalGrades($eid, $noProxies) : t('The results of the recent vote are being tabulated and will be reported soon.');
+  } elseif ($do == 'options') { // UNUSED
+    list($middle, $phase, $endDate) = v\questionList($eid, $question, $do);
+  } elseif ($do == 'ballot') {
+    $middle = v\ballot($mya, $extraFields, $question);
+  } elseif ($do == 'done' and $eid) { // @todo: handle proposals too
     $table = "r_votes v INNER JOIN r_ballots b ON v.ballot=b.id INNER JOIN r_questions q ON q.id=b.question";
     $notes = db\col('DISTINCT v.text', $table, "q.event=:eid AND b.voter=:uid AND v.text<>''", ray('uid eid', $mya->id, $eid));
     r\tellCO($mya->fullName . t(' has voted. '), $notes);
     $middle = v\done($mya);
     if (!r\acct()) return doSay($middle, 'err');
-  } elseif (@$do == 'grade') {
-//	  if (!@$question) $question = db\min('id', 'r_proposals', 'event=:eid', compact('eid'));
-    $extraFields = v\showProposal($mya, -@$question, $middle, TRUE); // middle here is an error message, if anything
+  } elseif ($do == 'grade') {
+//	  if (!$question) $question = db\min('id', 'r_proposals', 'event=:eid', compact('eid'));
+    $extraFields = v\showProposal($mya, -$question, $middle, TRUE); // middle here is an error message, if anything
   } else {
+    $extraFields = NULL;
     $middle = t('Event History');
     if ($cAdmin) $middle .= ' ' . button(t('Add Event'), "$base_url/community/events/event/do=add", '', 'warning');
     $middle = "<h4>$middle</h4>";
@@ -136,25 +137,26 @@ EOF;
 //  } else $middle = t('There is no vote in progress in your community.');
 //  } else $middle = t('There are no questions pending in your community.');
   
-  $middle = item(@$middle);
+  $middle = item(nn($middle));
   $args = hidFld($args);
 
   w\js('ballot');
   w\css('rvote.css');
   
-  return cgform(@compact(ray('args title subtitle status showVotes')) + (@$voting ?: []) + compact('middle') + (@$extraFields ?: []));
+  u\setDft($extraFields, NULL);
+  return cgform(compact(ray('args title status voting middle extraFields')));
 }
 
 function formEvents_validate($form, &$sta) {
-  extract(just('question agree op', $sta['input']));
+  extract(just('question agree op', $sta['input'], NULL));
   $mya = w\eLinkAcct($sta);
-  if (@$question < 0 and w\op($sta) == 'submit') {
+  if ($question < 0 and w\op($sta) == 'submit') {
     // for each option, if blank then error
   }
 }
 
 function formEvents_submit($form, &$sta) {
-  extract(just('question agree op', $sta['input']));
+  extract(just('question agree op', $sta['input'], NULL));
   $mya = w\eLinkAcct($sta, $args);
   $ctty = $mya->community;
 
@@ -163,10 +165,10 @@ function formEvents_submit($form, &$sta) {
   if (in($op, 'noDirect noVote')) return w\say(v\showNonVoters($ctty, $op == 'noDirect'));
 
   if ($op == 'gradeIt') return w\go("prox/page=Events&do=grade&$args");
-  if (@$agree) return w\go("prox/page=Events&do=ballot&$args");
+  if ($agree) return w\go("prox/page=Events&do=ballot&$args");
   
   // process ballot submission
-  if (@$question < 0) {
+  if ($question < 0) {
     $type = 'M';
     $do = 'grade';
     if (is_numeric($question = bumpQnum(-$question, v\getProposals($mya), $op))) $question = -$question;
@@ -192,6 +194,6 @@ function formEvents_submit($form, &$sta) {
  */
 function bumpQnum($question, $quids, $op) {
   $qnum = array_search($question, $quids); // this works even if the number of elections/questions changes during voting
-  if (@$op == 'prev') $qnum--; else $qnum++;
-  return $qnum < 0 ? 'before' : ($qnum >= count($quids) ? 'done' : @$quids[$qnum]);
+  if (nn($op) == 'prev') $qnum--; else $qnum++;
+  return $qnum < 0 ? 'before' : ($qnum >= count($quids) ? 'done' : nni($quids, $qnum));
 }

@@ -37,7 +37,7 @@ function fixData(&$info, $direct = FALSE) {
 
   $fields = key($info) . ' email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method companyOptions coType'; // first key is probably an ID field, so keep it at the front
 
-  if (@$testVars) foreach ($info as $k => $v) if (mb_strpos($v, '@') !== FALSE) {
+  if (nn($testVars)) foreach ($info as $k => $v) if (mb_strpos($v, '@') !== FALSE) {
     foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", $var, $v);
   }
   foreach (ray(NULL_FLDS) as $k) if (isset($info[$k]) and empty($info[$k])) $info[$k] = NULL;
@@ -50,28 +50,27 @@ function fixData(&$info, $direct = FALSE) {
     if ($coType) $coType = array_search($coType, ray(CO_TYPES)); else { unset($coType); unset($info['coType']); }
   }
 
-  if (@$who) $who = t\fullQid($who);
+  if (nn($who)) $who = t\fullQid($who);
   foreach (ray('flags adminable') as $k) if (isset($$k)) $$k = t\fixFlags($$k);
   if (isset($adminable)) {
     for ($i = 0; $i < B_MAX; $i++) if (u\getBit($adminable, $i)) $adminable2[$i] = TRUE;
-    $adminable = @$adminable2 ?: [];
+    $adminable = nn($adminable2) ?: [];
   }
- 	extract(fixState(@$state, @$country ?: US_COUNTRY_ID));
+ 	extract(fixState(nn($state), nn($country) ?: US_COUNTRY_ID));
 
 	foreach (ray('why error') as $k) if (isset($$k)) $$k = tr($$k); // convert embedded message references to actual text
   foreach (['rewards'] as $k) if (isset($$k)) $$k += 0; // make sure numeric fields are numeric.
-  if (@$notices) $notices = array_search($notices, ray('daily weekly monthly'), TRUE);
-  if (@$statements) $statements = array_search($statements, ray('electronic paper'), TRUE);
-  if (@$email) $info['email'] = t\fixEmail($email);
-//  if (@$mail) t\fixEmail($mail);
-  if (@$email) t\fixEmail($email);
+  if (nn($notices)) $notices = array_search($notices, ray('daily weekly monthly'), TRUE);
+  if (nn($statements)) $statements = array_search($statements, ray('electronic paper'), TRUE);
+  if (nn($email)) $info['email'] = t\fixEmail($email);
+  if (nn($email)) t\fixEmail($email);
   if (!empty($phone)) {
-    if (strlen(@$phone) == 1) u\prefix('+1413772000', $phone); else $phone = u\fmtPhone($phone, 'internal');
+    if (strlen(nn($phone)) == 1) u\prefix('+1413772000', $phone); else $phone = u\fmtPhone($phone, 'internal');
   }
-  if (@$idProof) u\prefix("$rUrl/images/", $idProof);
+  if (nn($idProof)) u\prefix("$rUrl/images/", $idProof);
   if ($direct) {
-    if (@$federalId) u\digits($federalId);
-    if (@$dob and !is_numeric($dob)) $dob = strtotime(str_replace('/', '-', $dob));
+    if (nn($federalId)) u\digits($federalId);
+    if (nn($dob) and !is_numeric($dob)) $dob = strtotime(str_replace('/', '-', $dob));
   }
   if (!empty($boxId)) {
     $boxId = db\get('id', 'r_boxes', '`code`=:boxId', ['boxId'=>$boxId]);
@@ -85,7 +84,7 @@ function fixData(&$info, $direct = FALSE) {
     }
   }
   foreach (ray('state country') as $k) if (!isset($info[$k])) unset($$k);
-  $info = @compact(ray($fields)) + $info;
+  foreach (ray($fields) as $k) if (isset($$k)) $info[$k] = $$k;
 }
 
 /**
@@ -113,7 +112,7 @@ function fixFlags($flags) {
  * Allow abbreviated email address like "a@" meaning a@example.com. Also avoid weird characters.
  */
 function fixEmail(&$email) {
-  if (substr(@$email, -1, 1) == '@') $email .= EMAILX;
+  if (substr(nn($email), -1, 1) == '@') $email .= EMAILX;
   return plain($email);
 }
 
@@ -121,7 +120,7 @@ function doRecords($list, $thing) {
   global $testOnly;
 
   if (is_object($list)) $list = (array) $list;
-  u\EXPECT(is_array(@$list) and !is_numeric(@key(@$list[0])), 'doThing object should be an assoc: ' . pr($list));
+  u\EXPECT(is_array(nn($list)) and !is_numeric(key(nn($list[0]))), 'doThing object should be an assoc: ' . pr($list));
   $func = 'CG\\Testing\\do';
   $func .= function_exists($func . $thing) ? $thing : 'Thing';
   foreach ($list as $one) {
@@ -177,7 +176,7 @@ function recurs($list) {return doRecords($list, 'Recurs');}
 function doBoxes($info = []) {
   global $testOnly, $channel; // be careful not to overwrite channel with a local variable
   //$boxName = $info['boxName'];
-  $info['channel'] = @strtr(@$info['channel'], ray('sms pos web', TX_SMS, TX_POS, TX_WEB)) ?: $channel;
+  $info['channel'] = strtr(nn($info['channel']), ray('sms pos web', TX_SMS, TX_POS, TX_WEB)) ?: $channel;
   //if ($testOnly) $boxName = htmlspecialchars(@$boxName);
   return doThing($info, 'boxe');
 }
@@ -199,18 +198,18 @@ function doAccounts($info = []) {
 /**/  if (!is_array($info)) {die('not array: ' . pr($info) . trace());} // keep for now
 //  unset($info['rebate']);
   extract($info); // any user table fields
-  $uid0 = @$uid;
+  $uid0 = nn($uid);
   u\setDft($uid, r\Acct::nextId()); // default to first available number
   $uid = t\uid($uid); // change .AAB to 1, etc.
 
-  if (@$jid) $jid = t\uid($jid);
+  if (nn($jid)) $jid = t\uid($jid);
 
   $nmMap = ray('ZZA:Abe One,ZZB:Bea Two,ZZC:Cat Pub,ZZD:Dee Four,ZZE:Eve Five,ZZF:Fin Corp,ZZG:Glo Seven');
   u\setDft($fullName, substr($uid, 0, 2) == 'ZZ' ? strtr($nmMap) : 'doAccount ' . u\randomString(20, 'word'));
   $name = u\shortName($fullName);
   u\setDft($legalName, $fullName);
 //  $pass = @$my_password ?: '$S$D2YT5TTwLHHbbdO3Zpzi9EPcMt5WSuCTWAO274vjzYXyOxZ9kFae'; // default to 123
-  if (trim(@$pass) === '') $pass = '123';
+  if (trim(nn($pass)) === '') $pass = '123';
 
   $zza = r\qo('.ZZA')->id;
   $mailDft = ($zza <= $uid and $uid < $zza + 26) ? chr(ord('a') + $uid - $zza) : u\randomString(10, 'word');
@@ -219,24 +218,24 @@ function doAccounts($info = []) {
   u\setDft($community, r\serverUid());
   u\setDft($zip, '01301');
   u\setDft($country, 'US');
-  extract(fixState(@$state, @$country));
+  extract(fixState(nn($state), nn($country)));
 
   u\setDft($address, '1 My Street');
   u\setDft($city, 'Mytown');
   $st = r\realState($state);
-  u\setDft($postalAddr, @$address2 ? "$address2, $city2, $state2 $zip2" : "$address, $city, $st $zip");
+  u\setDft($postalAddr, nn($address2) ? "$address2, $city2, $state2 $zip2" : "$address, $city, $st $zip");
 
 //    u\setDft($photoId, "$state-{$zip}999");
   u\setDft($helper, t\uid('.AAB')); // everyone but .AAB should have a helper
 /**/  if ($helper === '') die(trace()); // set helper to zero if none, never blank
-  u\setDft($last4bank, @substr(@$bankAccount, -4, 4));
+  u\setDft($last4bank, substr(nn($bankAccount), -4, 4));
 
-  if (u\getBit(@$flags, B_OK)) u\setBit($flags, B_MEMBER);
+  if (u\getBit(nn($flags), B_OK)) u\setBit($flags, B_MEMBER);
 
   $moneyFields = 'committed floor rewards'; // not minimum because NULL means not set, in Membership page
   foreach (ray($moneyFields) as $one) u\setDft($$one, 0);
-  if (@$cc) $cardCode = $cc;
-  if (@$cc2) $cardCode2 = $cc2;
+  if (nn($cc)) $cardCode = $cc;
+  if (nn($cc2)) $cardCode2 = $cc2;
   if (isset($risks)) $risks = getRisks($risks, K_ACCT_RISKS);
 
   $fixFields = 'fullName legalName name pass email secure community zip country postalAddr cardCode cardCode2 ' . $moneyFields;
@@ -247,27 +246,10 @@ function doAccounts($info = []) {
 //  if (isset($risks)) $risks = getRisks($risks, K_ACCT_RISKS);
 
   foreach (ray('acctType dw cc cc2') as $one) unset($info[$one]); // these are not real fields
-  u\preray(@compact(ray('uid jid helper flags risks last4bank ' . $fixFields)), $info); // add in changed fields
+  foreach (ray('uid jid helper flags risks last4bank ' . $fixFields) as $k) if (isset($$k)) $info[$k] = $$k; // add in changed fields
 
-//  fixData($info, TRUE);
-/*
-  if ($testOnly) {
-    if (!$a = r\acct($uid)) return output("No such uid: $uid");
-    $a->reread(TRUE); // this is required, for example, for cron's Trust test
-    foreach ($info as $key => $want) {
-      if ($key == 'uid') continue;
-      $actual = ($key == 'trust' or $key == 'risk') ? round($a->o($key), 2) : $a->o($key);
-      if (!eq($actual, $want)) {
-        if ($key == 'pass' and (!isset($pass) or $a->passwordOkay(@$pass, 'pass', $err))) continue;
-        if ($key == 'flags') list ($want, $actual) = [u\bits($want, B_LIST), u\bits($actual, B_LIST)];
-        return output("uid $uid -- Wrong value for $key. Expected:$want Got:$actual");
-      }
-    }
-    return TRUE;
-  }
-*/
   if (!$a = new r\Acct($info)) return t\output('Cannot create account: ' . pr($info));
-  if (@$picture) if (!makePicture($picture, $a)) return FALSE;
+  if (nn($picture)) if (!makePicture($picture, $a)) return FALSE;
   $a->stepDone('signup');
   if ($uid0 == $uid) $a->setBit(B_IDED); // assume we have a photoId for givens unless a step says otherwise
 
@@ -394,31 +376,32 @@ function doRelations($info) {
 
 //  t\fixData($info);
   extract($info);
-  if (@$agent) {
+  if (nn($agent)) {
     $info['other'] = $other = $agent;
     unset($info['agent']);
   }
 
-  list ($mainA, $agtA) = [r\acct($main), r\acct(@$other)];
+  list ($mainA, $agtA) = [r\acct($main), r\acct(nn($other))];
   foreach ([$main => $mainA, $other => $agtA] as $i => $a) if (!$a or !$a->proSe) return t\output("bad rel acct: $i");
 
-  if (isset($id) and !@$reid) $reid = $id;
-  u\setDft($otherNum, @$num ?: 0);
-  $info['permission'] = @$permission ? u\consta('b', $permission) - B_RELATED : 0;
+  if (isset($id) and !nn($reid)) $reid = $id;
+  u\setDft($otherNum, nn($num) ?: 0);
+  $info['permission'] = nn($permission) ? u\consta('b', $permission) - B_RELATED : 0;
 
-  if (@$draw) $agtA->setBit(B_DRAWS);
-  foreach (ray(REL_FLAGS) as $k) if (@$$k) u\setBit($flags, $k);
+  if (nn($draw)) $agtA->setBit(B_DRAWS);
+  foreach (ray(REL_FLAGS) as $k) if (nn($$k)) u\setBit($flags, $k);
 
   foreach (ray('id agent num rCard ' . REL_FLAGS) as $k) unset($info[$k]);
-  $info += @compact(ray('reid main other otherNum flags'));
+//  $info += @compact(ray('reid main other otherNum flags'));
+  foreach (ray('reid main other otherNum flags') as $k) if (isset($$k)) $info[$k] = $$k;
 
   if ($testOnly) {
     return verifyRecord('r_relations', $info);
   } else {
     $mainA->newRelation($info);
-    if (@$rCard == 'yes') {
+    if (nn($rCard) == 'yes') {
       if (!$agtA->cardCode2) r\acct($main, $other)->makeCardCode();
-      if (!@$memberIdCalled) r\Web\memberId($main, $other, TRUE); // make a Company Agent rCard
+      if (!nn($memberIdCalled)) r\Web\memberId($main, $other, TRUE); // make a Company Agent rCard
       $memberIdCalled = TRUE;
     }
     return TRUE;
@@ -497,24 +480,24 @@ function notice($notice, $id, $subs = []) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $base_url, $thatThing;
 
-  $subs = @$subs[0];
-  if (mb_strpos($nm = @$subs['otherName'], 'href="do/')) {
+  if (is_array($subs0 = nn($subs[0]))) $subs = $subs0;
+  if (mb_strpos($nm = nn($subs['otherName']), 'href="do/')) {
     $subs['otherName'] = str_replace('href="do/', "href=\"$base_url/do/", $nm);
   }
 
   $uid = uid($id);
   if (is_array($subs)) foreach ($subs as $key => $value) {
     if (preg_match('/^\$(.*)(r|us)?$/U', $value, $matches)) {
-      list ($num, $currency) = array($matches[1], @$matches[2]);
+      list ($num, $currency) = array($matches[1], nn($matches[2]));
       if ($currency == 'us') $currency = 'u';
       $subs[$key] = u\fmtAmt($num, 's$' . $currency);
     }
   }
 
   $map = ['&nbsp;'=>'', R_BULLET=>''];
-  $message = strtr(strip_tags(tr($notice, @$subs)), $map);
+  $message = strtr(strip_tags(tr($notice, nn($subs))), $map);
   $sql = 'SELECT message FROM r_notices WHERE uid=:uid AND sent=:sent ORDER BY msgid DESC';
-  $info = ray('uid sent', $uid, @$subs['sent'] ?: 0);
+  $info = ray('uid sent', $uid, nn($subs['sent']) ?: 0);
   $msgs = db\q($sql, $info)->fetchCol();
 ///  debug(compact(ray('message sql info msgs')));
   foreach ($msgs as $msg) {
@@ -679,7 +662,7 @@ function usdTransfers($txs) {
 
     u\setDft($tx['channel'], $channel0);
     if ($err = u\badAmount($amount)) return t\output($err); // tested amount should not have commas or $ sign
-    if (!$a = r\acct($payee)) return t\output('Bad payee: ' . @$payee);
+    if (!$a = r\acct($payee)) return t\output('Bad payee: ' . nn($payee));
 
     if (isset($xid) xor !$amount) { // specifying an xid means the test will list the txs explicitly. amount=0 needs no tx.
       $txid = db\insert('r_usd', $tx, 'txid');
@@ -707,7 +690,7 @@ function usdTransfers($txs) {
    f('t.cronRuns', 'op');
  */
 function cronRuns($op) {
-  global $testOnly; if(@$testOnly) return FALSE;
+  global $testOnly; if(nn($testOnly)) return FALSE;
   global $cronOp; $cronOp = $op;
   include_once __DIR__ . '/rcron/rcron.inc';
 
@@ -740,7 +723,7 @@ function uidCredit($uid, $ignoreCalc = TRUE) {
   $info = be\creditInfo([$uid]);
   $a = r\acct($uid);
   if ($uid > 0 and !$a->jid) foreach (ray('balance') as $k) { // (community amounts don't get cached)
-      $v1 = nn($info[$k], NULL);
+      $v1 = nni($info, $k, NULL);
       if (!t\eq($v1, $v2 = $a->o($k) + 0)) {
         output("$uid Calculated $k different from cache: $v1 <> $v2");
         if (!$ignoreCalc) return FALSE;
@@ -773,7 +756,7 @@ function uid($id, $field = 'id') {
   if (is_numeric($id) or empty($id)) { return $id; }
   $map = ray('ctty cgf bank-in bank-out crumb round',
     r\serverUid(), CGID, BANK_IN_ID, BANK_OUT_ID, CG_CRUMBS_UID, CG_ROUNDUPS_UID);
-  if ($res = nn($map[$id])) return $res;
+  if ($res = nni($map, $id)) return $res;
 
   //  return r\qo($id)->$field; FAILS
   return r\qo(t\fullQid2($id))->$field;
@@ -791,7 +774,7 @@ function a($id) {
 
 function getErrors() {
   $errors = \drupal_get_messages('error', FALSE);
-  $errors = @$errors['error'] ?: [];
+  $errors = nni($errors, 'error') ?: [];
   foreach ($errors as $key => $value) {
     if (u\abbreviates('Unable to send e-mail', $value) or mb_strpos(strip_tags($value), 'expected to be a reference, value given in drupal_retrieve_form()')) unset($errors[$key]); // ignore these when testing
   }
@@ -807,7 +790,7 @@ function getErrors() {
 function weTellAdmin($topic, $subs = [], $coUid = FALSE) {
   global $testOnly; if (!$testOnly) return t\output('Cannot MAKE tellStaff!');
 
-  if (!@$subs[0]) $subs[0] = [];
+  if (!nni($subs, 0)) $subs[0] = [];
   $email = $coUid ? r\acct($coUid)->cttyA->email : R_ADMIN_EMAIL;
   return t\findEmail('tell-staff', $email, $subs[0] + ray('topic noFrame message', $topic, TRUE, '?'));
 }
@@ -831,9 +814,9 @@ function noSuchEmail($index, $email) {
  */
 function findEmail($index, $email, $subs) {
   global $testOnly; if (!$testOnly) return t\output('Cannot MAKE findEmail!');
-  global $testEmails; if (!@$testEmails) return t\output('There are no testEmails!');
+  global $testEmails; if (!nn($testEmails)) return t\output('There are no testEmails!');
 
-  $subs = is_array(@$subs[0]) ? $subs[0] : @$subs;
+  $subs = is_array(nni($subs, 0)) ? $subs[0] : nn($subs);
   t\fixEmail($email);
   t\fixData($subs);
 //  if ($a = r\acct($email)) $subs['qid'] = $a->mainQid;
@@ -843,12 +826,12 @@ function findEmail($index, $email, $subs) {
     if ($k == 'nudge') $subs[$k] = $v = t($v);
     $esubs['{' . $k . '}'] = $v;
   }
-  $message = @$subs['noFrame'] ? r\emailTemplate($index) : r\emailBody($index);
+  $message = nni($subs, 'noFrame') ? r\emailTemplate($index) : r\emailBody($index);
   $message = str_replace("\r\n", '', $message);
   $messageDpy = strtr(t\showSubs($message, $esubs), ray('href= style= src=', 'hrref=', 'styyle=', 'srrc='));
   $esubs['{companies}'] = ''; // don't test this
   $message = strtr($message, $esubs);
-  $subject = @$info['subject'] ?: $GLOBALS['emailSubjects'][$index];
+  $subject = nni($subs, 'subject') ?: $GLOBALS['emailSubjects'][$index];
   $subject = $GLOBALS['emailSubjects'][$index];
   $subjectDpy = t\showSubs($subject, $esubs);
   $subject = strtr($subject, $esubs);
@@ -879,14 +862,14 @@ function findEmail($index, $email, $subs) {
           ksort($subs); // reorder
         }
 ///        print_r($subs); die('here');
-        if (@$ignore) foreach ($ignore as $k) unset($t_subs[$k]);
+        if (nn($ignore)) foreach ($ignore as $k) unset($t_subs[$k]);
         ksort($t_subs);
         $wantedInActual = just(array_keys($subs), $t_subs);
         $actualInWanted = just(array_keys($t_subs), $subs);
         if ($wantedInActual == $actualInWanted) return TRUE; // actual is exactly what was wanted
         t\output(compact('wantedInActual', 'actualInWanted'), 'email');
-        foreach ($subs as $k=>$v) if (isset($t_subs[$k]) and $v != $t_subs[$k]) t\output("k=$k v=$v tv=" . @$t_subs[$k], 'email');
-        foreach ($t_subs as $k=>$v) if (isset($subs[$k]) and $v != $subs[$k]) t\output("k=$k tv=$v v=" . @$subs[$k], 'email');
+        foreach ($subs as $k=>$v) if (isset($t_subs[$k]) and $v != $t_subs[$k]) t\output("k=$k v=$v tv=" . nni($t_subs, $k), 'email');
+        foreach ($t_subs as $k=>$v) if (isset($subs[$k]) and $v != $subs[$k]) t\output("k=$k tv=$v v=" . nn($subs[$k]), 'email');
       }
     }
   }
@@ -903,7 +886,7 @@ function noEmailTo($email) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $testEmails;
 
-  if (@$testEmails) foreach ($testEmails as $one) if ($one['toEmail'] == $email) return FALSE;
+  if (nn($testEmails)) foreach ($testEmails as $one) if ($one['toEmail'] == $email) return FALSE;
   return TRUE;
 }
 
@@ -937,7 +920,7 @@ function memberVisitsPage($id, $page) { // pass options in URL
 
 function weShowWith($title0, $content = FALSE, $mustBePresent = TRUE) {
   global $testOnly; if (!$testOnly) return FALSE;
-  $title = tr($title0, @$content[0]); // just in case
+  $title = tr($title0, nn($content[0])); // just in case
   if ($title and !weShow($title, $mustBePresent)) return FALSE;
   return $title == $title0 ? weShow($content, $mustBePresent) : TRUE;
 }
@@ -948,25 +931,26 @@ function makePicture($photo, $a) {return $a->update(compact('photo'));}
  * Send an RPC API request to the server, for rPOS.
  * @todo: after everyone is up to version 217, add penultimate param: $proof = 'calc'
  */
-function hitServer($op, $extra = [], $agent, $device = '', $version = 230) {
+function hitServer($op, $info = [], $agent, $device = '', $version = 230) {
   global $rposResult;
   if ($agent) $agent = t\fullQid2($agent);
-  extract(just('amount member code created proof goods', $extra));
-  if (is_numeric(@$amount)) $amount = number_format($amount, 2);
-  if (@$member) $member = t\fullQid2($member);
-  if ($version >= 217) foreach (['agent', 'member'] as $k) if (@$$k) $$k = str_replace('.', '', $$k);
-  if (@$proof == 'calc' and @$member) {
+  extract(just('amount member code created proof goods', $info));
+  if (is_numeric(nn($amount))) $amount = number_format($amount, 2);
+  if (nn($member)) $member = t\fullQid2($member);
+  if ($version >= 217) foreach (['agent', 'member'] as $k) if (nn($$k)) $$k = str_replace('.', '', $$k);
+  if (nn($proof) == 'calc' and nn($member)) {
     if ($a = r\acct($member)) u\setDft($code, $a->cardCode());
     $company = ($i = strpos($agent, '-')) ? substr($agent, 0, $i) : $agent;
     $proof = u\hash($hashOf = "$company$amount$member$code$created");
     t\output("proof is hash of $hashOf", 'normal');
-    unset($extra['code']);
+    unset($info['code']);
   }
-  if (@$goods and !is_numeric($goods)) $goods = t\goodsBit($goods);
+  if (nn($goods) and !is_numeric($goods)) $goods = t\goodsBit($goods);
 
-  $input = @compact(ray('op agent device version amount member proof goods')) + $extra;
-  t\output('request: ' . pr($input), 'input'); // keep this
-  $rposResult = r\Smart\pos($input);
+//  $input = @compact(ray('op agent device version amount member proof goods')) + $extra;
+  foreach (ray('op agent device version amount member proof goods') as $k) if (isset($$k)) $info[$k] = $$k;
+  t\output('request: ' . pr($info), 'input'); // keep this
+  $rposResult = r\Smart\pos($info);
   if ($op != 'photo') $rposResult = (array) json_decode($rposResult);
   t\output('answer: ' . pr($rposResult), 'output');
   return TRUE;
@@ -1107,14 +1091,14 @@ function verifyRecord($table, $info) {
 function completeForm($id, $page, $values = '', $confirmed = FALSE) {
   global $testOnly; if ($testOnly) return FALSE;
   global $fieldErr;
-  global $testOp; $testOp = @$values[0]['op'];
+  global $testOp; $testOp = nn($values[0]['op']);
   global $testConfirmation; // confirmation message output, if any
   global $formSta, $lastGo;
-  $xlastGo = @$lastGo; // notice whether a goto happens, so we can skip post-processing
+  $xlastGo = nn($lastGo); // notice whether a goto happens, so we can skip post-processing
 	$lastGo = NULL;
 ///  debug(compact(ray('id page values confirmed testOnly')));
 
-  $values = @$values[0] ?: [];
+  $values = nn($values[0]) ?: [];
 
 
   t\logIn($id);
@@ -1140,11 +1124,11 @@ function completeForm($id, $page, $values = '', $confirmed = FALSE) {
 
   $sta['values'] = $sta['input'] = $values + $dfts; // add to whatever status the form left off in
   $fieldErr = FALSE; // no field errors yet
-  if (!@$lastGo or @$lastGo == $xlastGo) \form_execute_handlers('validate', $form, $sta);
+  if (!nn($lastGo) or $lastGo == $xlastGo) \form_execute_handlers('validate', $form, $sta);
   $lastIdentifierTag = '</div identifiers>';
   if ($i = strpos($testConfirmation, $lastIdentifierTag)) $testConfirmation = substr($testConfirmation, $i + strlen($lastIdentifierTag));
   if ($fieldErr) return TRUE; // no submit if field error
-  if (!@$lastGo or @$lastGo == $xlastGo) \form_execute_handlers('submit', $form, $sta);
+  if (!nn($lastGo) or $lastGo == $xlastGo) \form_execute_handlers('submit', $form, $sta);
 
   return TRUE;
 }
@@ -1163,7 +1147,7 @@ function pageForm($page) {
   if (!$page) $page = 'summary';
   t\SERVER('REQUEST_URI', $page);
   $args = basename($page);
-  $xlastGo = @$lastGo; // notice whether a goto happens. ignore all but the deepest (last).
+  $xlastGo = nn($lastGo); // notice whether a goto happens. ignore all but the deepest (last).
 
   $result = \menu_execute_active_handler($page, FALSE);
 
@@ -1171,7 +1155,7 @@ function pageForm($page) {
     $result = $result == MENU_NOT_FOUND ? 'not found'
       : ($result == MENU_ACCESS_DENIED ? 'access error' : "error #$result");
     t\output("page \"$page\": $result in t\\pageForm()");
-  } elseif (@$lastGo == $xlastGo) setFormOut($result ?: ''); // '' for when $result is an empty array, eg couponsprint.inc
+  } elseif (nn($lastGo) == $xlastGo) setFormOut($result ?: ''); // '' for when $result is an empty array, eg couponsprint.inc
 
   return $formArray; // this got set in w\showForm
 }
@@ -1196,14 +1180,14 @@ function setFormOut($out) {
  * @return: array of step numbers
  */
 function getSteps($out, $set = NULL) {
-  if (!@$set) $set = isset($set) ? '>' : '';
+  if (!nn($set)) $set = isset($set) ? '>' : '';
   if (!preg_match_all("/done-(\d) state$set/", $out, $matches)) return [];
   return $matches[1];
 }
 
 function postProcess($form, $formName, $type) {
-  $functions = @$form["#$type"];
-  if (!@$functions or @($functions == '<')) {
+  $functions = nn($form["#$type"]);
+  if (!nn($functions) or $functions == '<') {
     $function = "CG\\Web\\form{$formName}_$type";
     $functions = function_exists($function) ? array($function) : [];
   }
@@ -1213,28 +1197,10 @@ function postProcess($form, $formName, $type) {
 function postLogout($function) {
   return TRUE; // never actually log out
   global $skipToStep;
-/*  if ($messages = @cache_get('t_messages')->data) {
-    extract(just('msgs skipToStep', $messages));
-    if ($skipToStep == $function) {
-      if (strlen(serialize($msgs)) > strlen(serialize(@$_SESSION['messages']))) {
-        foreach (ray('status error notice') as $type) {
-          $_SESSION['messages'][$type] = array_merge((@$msgs[$type] ?: []), (@$_SESSION['messages'][$type] ?: []));
-          if (empty($_SESSION['messages'][$type])) unset($_SESSION['messages'][$type]);
-        }
-      }
-//      cache_set('t_messages', FALSE);
-//u\deb('postLogout returning TRUE, skipToStep was ='.@$skipToStep.' (now NULL)');
-      $skipToStep = NULL; // strangely, this has to be = NULL not unset()
-      return TRUE;
-    }
-  }
-  */
-//u\deb('postLogout returning FALSE, about to save skiptostep '.$function);
   $vars = array(
-    'msgs' => @$_SESSION['messages'] ?: [],
+    'msgs' => nn($_SESSION['messages']) ?: [],
     'skipToStep' => $function, // tell gherkin function to skip steps in interrupted scene until this step
   );
-//  cache_set('t_messages', $vars); // save the test results so far
   return FALSE;
 }
 
@@ -1314,6 +1280,7 @@ function strip($form) {
   $form = preg_replace('~<input type="hidden".*?/>~sm', '', $form); // remove hidden inputs
   $form = preg_replace('/<input[^>]* value=" *(.*?) *".*?>/sm', '$1', $form); // show button labels
   $form = preg_replace('/<input[^>]* checked[^>]* data-on="([^"]*)"[^>]*>/sm', '$1', $form); // bootstrap toggle on
+  $form = preg_replace('/<input[^>]* data-on="([^"]*)"[^>]* checked[^>]*>/sm', '$1', $form); // ditto (either order)
   $form = preg_replace('/<input[^>]* data-off="([^"]*)"[^>]*>/sm', '$1', $form); // bootstrap toggle off
   $form = preg_replace_callback('~<img src="([^"]+)"[^>]*>~sm', function ($m) {
     $s = strtr(basename($m[1]), ray('.gif .png .jpg', '', '', ''));
@@ -1383,7 +1350,7 @@ function color($msg, $color = 'normal') {
  */
 function output($msg, $color = 'error') {
   global $wholeModule;
-  if (test() and !@$wholeModule) \drupal_set_message(color($msg, $color));
+  if (test() and !nn($wholeModule)) \drupal_set_message(color($msg, $color));
   return $color == 'error' ? FALSE : TRUE;
 }
 
@@ -1523,35 +1490,6 @@ function getRisks($risks0, $descs) {
   return $risks;
 }
 
-/**
- * Parse a partially-USD amount expression, such as "AMT+34.21"
- * @param string $var: the expression to parse -- a simple addition or subtraction to/from a named variable
- *   representing the account's initial USD balance -- or just the named variable itself.
- *   if the variable name is preceded by '+', the variable is set to the USD balance
- * @param acct $a: the account whose USD balance might be a parameter in the expression $s
- * @return: [$value, $bal], where
- *   $bal is the current actual USD balance for account $a
- *   $value is the value of the expression
- *//*
-function parseAmt($var, $a) {
-  u\EXPECT(!is_numeric($var), 'expected non-numeric var');
-
-  $bal = $a->actualUsd();
-///  debug(compact('a','bal','var'));
-
-  if (($i = strpos($var, '+')) or ($i = strpos($var, '-'))) {
-    $op = mb_substr($var, $i, 1);
-    list ($var, $value) = explode($op, $var);
-    if ($op == '-') $value = -$value;
-  } else $value = 0;
-  if (mb_substr($var, 0, 1) == '+') list ($set, $var) = array(TRUE, mb_substr($var, 1));
-  global $$var;
-  if (@$set) $$var = $bal; // not defined yet, set the var to actual USD balance
-///  debug(compact(ray('var a bal i op value')));
-  return array($$var + $value, $bal);
-}
-*/
-
 function badEq($type, $v1, $v2, $id) {
   if (t\eq($v1, $v2)) return FALSE;
   t\output("uid=$id badEq $type v1=$v1, expected v2=$v2");
@@ -1566,7 +1504,7 @@ function weSayWithSubs($type, $index, $subs) {
 
   if (!in($type, $choices = 'status warning error')) return output(t('"%type" is not a proper type (%choices)', compact(ray('type choices'))));
 
-  $subs = @$subs[0] ?: array();
+  $subs = nn($subs[0]) ?: array();
   if (isset($subs['email'])) t\fixEmail($subs['email']);
   foreach (explode('|', $index) as $one) if (!tr($one)) return t\output('Empty %type message in "%index": "%one"', compact(ray('type index one')));
   $msg0 = tr($index);
@@ -1582,12 +1520,12 @@ function weSayWithSubs($type, $index, $subs) {
   if (isset($wild)) {
     $i = mb_strpos($wantMsg, $wild);
     $tailLen = strlen($wantMsg) - $i - strlen($wild);
-    foreach (@$msgs ?: [] as $actual) {
+    foreach (nn($msgs) ?: [] as $actual) {
       if (mb_substr($actual, 0, $i) == mb_substr($wantMsg, 0, $i) and mb_substr($actual, -$tailLen) == mb_substr($wantMsg, -$tailLen)) {$res = TRUE; break;}
     }
   } else {
     $tmsg = strip_tags($wantMsg);
-    foreach (@$msgs ?: [] as $actual) {
+    foreach (nn($msgs) ?: [] as $actual) {
       $actual = strip_tags($actual);
       $actual = strtr($actual, ["ACTUAL: \r\n"=>'', "Confirm\r\n"=>'', "\r\nOkay\r\n"=>'', "Cancel\r\n\r\n"=>'']);
       if ($actual == $tmsg) {$res = TRUE; break;}
@@ -1679,11 +1617,11 @@ function weMessage($index, $id, $subs) {
     extract($one, EXTR_PREFIX_ALL, 't');
     if ($t_uid == $uid and $t_index == $index) {
       $matching = true;
-      foreach ($subs as $k => $v) if ($v != '?' and @$t_subs[$k] != $v) {
-        t\output("Wanted $k=\"$v\". Got " . @$t_subs[$k]);
+      foreach ($subs as $k => $v) if ($v != '?' and nn($t_subs[$k]) != $v) {
+        t\output("Wanted $k=\"$v\". Got " . nn($t_subs[$k]));
         $matching = FALSE; break;
       }
-      if ($matching and !preg_match('/[@\{]/', @$t_topic)) return TRUE;
+      if ($matching and !preg_match('/[@\{]/', nn($t_topic))) return TRUE;
     }
   }
   return t\output('Overall wanted: ' . pr(compact(ray('index id uid subs'))) . '<br>Got: ' . pr($testMessages));;
@@ -1709,7 +1647,7 @@ function hasLinkResults($thing, $info) {
 
 function seq($table = 'r_usd') {
   global $testSeq;
-  $id = $testSeq[$table] = @$testSeq[$table] + 1;
+  $id = $testSeq[$table] = nn($testSeq[$table]) + 1;
   $k = $table == 'r_usd' ? 'txid' : '';
 //  t\log("seq table=$table id=$id");
   u\EXPECT(!db\exists('r_usd', "$k=:id", compact('id')), "duplicate seq: $id in table $table");
@@ -1721,7 +1659,7 @@ function seq($table = 'r_usd') {
  * Return the state and country, defaulted (if any) and fixed.
  */
 function fixState($state, $country) {
-	if (!@$state and !@$country) return [];
+	if (!nn($state) and !nn($country)) return [];
 	u\setDft($country, 'US');
 	if ($country == 'US' or $country == US_COUNTRY_ID) u\setDft($state, 'MA');
 
@@ -1773,5 +1711,5 @@ function dosayFilename($type) {return LOG_DIR . "dosay-$type.txt";}
 function goodsBit($s) {return $s == 'goods' ? "1" : ($s == 'cash' ? "0" : "ERROR");} // no 3rd why for rSmart
 function sameTime($a, $b) {return t\eq($a, $b, SAME_TIME);}
 function rewarding() {return ctty('aab')->cttyRewardy;}
-function ray2assoc($ray) {foreach ($ray as $one) $res[$one[0]] = $one[1]; return @$res ?: [];}
+function ray2assoc($ray) {foreach ($ray as $one) $res[$one[0]] = $one[1]; return nn($res) ?: [];}
 function doCode($code = '') {if ($code) file_put_contents(DOCODE_FLNM, $code); else return file_get_contents(DOCODE_FLNM);}

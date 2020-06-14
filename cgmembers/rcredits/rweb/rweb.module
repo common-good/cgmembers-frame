@@ -50,7 +50,8 @@ function rweb_block_view($delta = '') {
  */
 function makeMenuItem($k, $parts) {
   $types = ['norm' => MENU_NORMAL_ITEM, 'sub' => MENU_LOCAL_TASK, 'dft' => MENU_DEFAULT_LOCAL_TASK, 'call' => MENU_CALLBACK];
-  @list ($type, $title, $args, $perms, $func) = $parts;
+  for ($i = 0; $i < 5; $i++) $parts[] = ''; // enough to satisfy list()
+  list ($type, $title, $args, $perms, $func) = $parts;
   return w\menu($k, $title, $types[$type], $func ?: 'showForm', $args, $perms);
 }
 

@@ -103,8 +103,8 @@ $menu1 = \theme('links__system_main_menu', array(
 ));
 
 foreach (ray('header accounts help action_links content footer highlighted') as $k) {
-	$$k = @$page[$k];
-	$$k = @$$k ? \render($$k) : '';
+	$$k = nni($page, $k);
+	$$k = nn($$k) ? \render($$k) : '';
 }
 
 global $pagePartner; // branding for partner signups

@@ -15,9 +15,9 @@ function formContact($form, &$sta) {
   $nameDesc = t('usename desc');
   if ($mya->ok) $nameDesc .= '<br>' . ($mya->co ? t('Your username and %PROJECT webpage address') : t('triggers new card', 'field', t('name')) . t('Your username')) . t(' will also change.');
   $title = t('Contact Information');
-  $fullName = textFld($mya->co ? t('Company Name:') : t('Your Name:'), $nameDesc, required(@$mya->fullName));
+  $fullName = textFld($mya->co ? t('Company Name:') : t('Your Name:'), $nameDesc, required($mya->fullName));
 //  $onchange = w\onchange("jQuery('.form-item-pass').show();");
-  $email = emailFld(t('Email:'), '', required(@$mya->email));
+  $email = emailFld(t('Email:'), '', required($mya->email));
   $pass = $mya->cAdmin ? NULL : passFld(t('Password:'), t('Required for changing email address'));
 
   $submit = submit();
@@ -56,7 +56,7 @@ function formContact_validate($form, &$sta) {
     $extras = ' tenure';
   } else $extras = '';
   
-  u\preray(@compact(ray($normals . ' email phone name' . $extras)), $sta['input']); // fix formatting and add name
+  foreach (ray($normals . ' email phone name' . $extras) as $k) if (isset($$k)) $sta['input'][$k] = $$k;
 }
 
 function formContact_submit($form, &$sta) {

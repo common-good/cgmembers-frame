@@ -44,7 +44,7 @@ function setupBasicAccounts() {
       $state = r\stateNum($st);
       $values = array($uid, $uid, $region . '.', $fullName, $email, $zip, R_COUNTRY_ID, 0, $flags);
       $info = array_combine($keys, $values);
-      $info += @compact(ray('postalAddr state federalId activated'));
+      $info += compact(ray('postalAddr state federalId activated'));
       new r\Acct($info);
     }
   }
@@ -288,26 +288,26 @@ function showQuery($table, $where = '1', $order = '', $fields = '*', $joinFields
 function ssnShow($a) {
   if (isDEV) return t('no SSN data');
   
-  $ssnData = @$a->ssnCheck();
+  $ssnData = nn($a->ssnCheck());
   if (!is_array($ssnData)) return "<p class=\"loud\">$ssnData</p>";
   
-  $d = @$ssnData['searchResults'] ?: []; // [] for admin without vKeyE
-  if ($err = @$ssnData[SSN_ERR_INDEX]) $rows[] = ["<b class=\"err\">ERROR</b>", $err, '', '', ''];
+  $d = nni($ssnData, 'searchResults') ?: []; // [] for admin without vKeyE
+  if ($err = nni($ssnData, SSN_ERR_INDEX)) $rows[] = ["<b class=\"err\">ERROR</b>", $err, '', '', ''];
   $name = $a->fullName . ($a->legalName == $a->fullName ? '' : "<br>$a->legalName");
   $rows[] = array(t('Data Given'), $name, u\fmtDate(is_numeric($a->dob) ? $a->dob: 0), $a->location(TRUE), '', ''); // is_numeric check for admin without vKeyE
-  $name = u\ssnName($one = (object) @$d['ssnnames']['ssnname']);
-  $dob = @$one->dob ? u\fmtDate(strtotime($one->dob)) : ''; // arrives as an empty array if none
-  $rows[] = array(t('Found'), $name, $dob, @$d['deathsearchresults'] ? '<h1 color="red">DEAD</h1>' : '', '', '');
+  $name = u\ssnName($one = (object) nn($d['ssnnames']['ssnname']));
+  $dob = nn($one->dob) ? u\fmtDate(strtotime($one->dob)) : ''; // arrives as an empty array if none
+  $rows[] = array(t('Found'), $name, $dob, nni($d, 'deathsearchresults') ? '<h1 color="red">DEAD</h1>' : '', '', '');
   
   $counties = [];
-  $addresses = @$d['addresses']['address'] ?: [];
-  if (@$addresses['lastname']) $addresses = [$addresses];
+  $addresses = nn($d['addresses']['address']) ?: [];
+  if (nni($addresses, 'lastname')) $addresses = [$addresses];
   foreach($addresses as $rec) {
     $rec = (object) $rec;
-    $rows[] = array($rec->datereported ? u\fmtDate(strtotime($rec->datereported)) : '', u\ssnName($rec), $rec->dob ? u\fmtDate(strtotime($rec->dob)) : '', u\ssnAddr($rec), ucwords(@mb_strtolower(pr($rec->county)))); // county was an array once
-    if (now() - @strtotime($rec->datereported) < 10 * YEAR_SECS) $counties[pr($rec->county)] = 1;
+    $rows[] = array($rec->datereported ? u\fmtDate(strtotime($rec->datereported)) : '', u\ssnName($rec), $rec->dob ? u\fmtDate(strtotime($rec->dob)) : '', u\ssnAddr($rec), ucwords(mb_strtolower(pr($rec->county)))); // county was an array once
+    if (now() - strtotime(pr($rec->datereported)) < 10 * YEAR_SECS) $counties[pr($rec->county)] = 1;
   }
-  if (!@$a->moves) $a->update('moves', max(0, count($counties) - 1));
+  if (!$a->moves) $a->update('moves', max(0, count($counties) - 1));
   
   $lines = '';
   foreach ($rows as $rec) {
@@ -381,7 +381,7 @@ function getBanks() {
 function photoFromFile($a, $filename = '', &$err = '') {
   if ($a->co) return !$err = 'tried to shrink a company photo';
   //  if ($a->hasPhoto('picture2')) return !$err = 'POS photo already exists';
-  if (@$a->photo) $err = 'POS photo already exists'; // not really an error
+  if ($a->photo) $err = 'POS photo already exists'; // not really an error
   $photoPath = r\pic($filename ?: "$a->name.jpg");
   $img = u\alterImg(imagecreatefromjpeg($photoPath), R_PHOTO_WIDTH, R_PHOTO_HEIGHT);
   ob_start();
@@ -402,7 +402,7 @@ function moveFieldFrom($field, $from = 'data') {
   foreach ($uids as $uid) {
     $a = r\acct($uid);
     $ray = $a->$from;
-    $$field = @$ray[$field]; // not $$from[] because PHP attaches the index first
+    $$field = nni($ray, $field); // not $$from[] because PHP attaches the index first
     if ($field = 'helper') {
       $$field = $$field ? r\acct($$field)->id : 0;
     }
@@ -452,7 +452,7 @@ function changeIt($a) {
 function flagsDesc($n, $list) {
   $bits = ray($list);
   if (!is_numeric(key($bits))) $bits = array_keys($bits);
-  for ($i = 0; $i < 32; $i++) if (!@$bits[$i]) $bits[$i] = $i; // show bit number if no name
+  for ($i = 0; $i < 32; $i++) if (!nni($bits, $i)) $bits[$i] = $i; // show bit number if no name
   $res = '';
   for ($i=0; $i <= B_MAX; $i++) if ($n & u\bit($i)) {$res .= $bits[$i] . ' ';}
   return $res;
@@ -516,7 +516,7 @@ EOF;
       $firstline = FALSE;
     }
   }
-  $deposits = join("\n", @$deposits ?: []);
+  $deposits = join("\n", nn($deposits) ?: []);
   $header = t('<th>Transfers</th><th></th><th>Count</th><th>Total</th><th></th>');
   $header .= $showTxIds ? t('<th>Bank Tx IDs</th>') : '';
   return <<<EOF
@@ -773,7 +773,7 @@ function recropLink() {return spinLink('/settings/photo/recrop=1', t('Recrop Pho
 function nextMember($id = 0) {
   $members = db\col('uid', 'users', ':IS_OK AND NOT :IS_CO AND activated<1486098000 ORDER BY community, uid');
   $i = $id ? array_search($id, $members) : -1;
-  return @$members[$i + 1];
+  return nni($members, $i + 1);
 }
 
 /**

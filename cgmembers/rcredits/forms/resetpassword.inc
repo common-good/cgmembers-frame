@@ -22,9 +22,9 @@ function formResetPassword($form, &$sta, $args = '') {
     
   if (!$mya or $mya != $a) { // no longer signed in to the right account, so sign in
     w\signout(TRUE); // close the wrong old account, if any
-    if (flooding($uid = r\loginString(@$id), $sta, $err)) return w\softErr($err); // handle getting hammered
+    if (flooding($uid = r\loginString(nn($id)), $sta, $err)) return w\softErr($err); // handle getting hammered
     if (!$mya = $a ?: r\acct($uid)) return w\softErr(t('That is not a recognized account ID and one-time password.'));
-    if (!$mya->passwordOkay(@$code, 'pass', $err)) return w\softErr($err);
+    if (!$mya->passwordOkay(nn($code), 'pass', $err)) return w\softErr($err);
     noFlood($sta);
   }
   

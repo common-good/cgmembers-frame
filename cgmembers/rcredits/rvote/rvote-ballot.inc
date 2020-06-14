@@ -161,7 +161,7 @@ EOF;
     t('When:') => t('From %start to %end.', 'start end', u\fmtDate($when, TRUE), u\fmtDate($until, TRUE)),
     t('Implementation Plan:') => $how,
     t('Amount Requested:') => u\fmtAmt($amount),
-    t('Recovery of Funds:') => join("\n", @$ways ?: []),
+    t('Recovery of Funds:') => join("\n", nn($ways) ?: []),
 //    t('Funding Type:') => $types[$type],
     t('Total Budget:') => u\fmtAmt($budgetTotal),
     t('Budget Details:') => $budget,
@@ -286,19 +286,20 @@ function processvote($args, $type) {
 	if (!$optionCount = $args['optionCount']) return;
 
 	for($opti = 0; $opti < $optionCount; $opti++) {
-    $isVeto = @$args["veto$opti"] ? 1 : 0;
+    $isVeto = nni($args, "veto$opti") ? 1 : 0;
     if ($type != 'E') {
 
-      $grade = ($isVeto and $type != 'R') ? VETOGRADE : @$args["option$opti"];
+      $grade = ($isVeto and $type != 'R') ? VETOGRADE : nni($args, "option$opti");
       if($type == 'B') {
         $grade *= BPCT2INT; // convert penny grade (pct) to integer
       } elseif($type == 'M' and !$isVeto) $grade = round($grade * 3); // multiply letter grades by 3 to keep +/-
-      if ($type == 'R') $gradeMax = @$args['max'];
+      if ($type == 'R') $gradeMax = nni($args, 'max', NULL);
     }
       
-    list ($id, $text, $modified) = [$args["vote$opti"], @$args["votenote$opti"], now()];
+    list ($id, $text, $modified) = [$args["vote$opti"], nni($args, "votenote$opti"), now()];
 ///    debug(compact(ray('args type quids now optionCount opti isVeto type grade id text modified')));
-    db\update('r_votes', @compact(ray('id grade gradeMax text isVeto modified')), 'id');
+    foreach (ray('id grade gradeMax text isVeto modified') as $k) if (isset($$k)) $info[$k] = $$k;
+    db\update('r_votes', $info, 'id');
 	}
 	$ballot = $args['ballot'];
   $voter = db\get('voter', 'r_ballots', 'id=:ballot', compact('ballot'));
@@ -421,7 +422,7 @@ function getOptsB($opti, $rowclass, $opttext, $optdetail, $defaults) {
 	$option = "option$opti";
 //  $onchange = 'changepct($opti);';
 
-  $dft = @$defaults[$option];
+  $dft = nni($defaults, $option);
   $sliderHtml = <<<EOF
 <input id="$slider" data-slider-id='$slider' type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="$dft" data-slider-handle="triangle" />
 EOF;
@@ -479,7 +480,7 @@ EOF;
  */
 function getOptsE($opti, $rowclass, $opttext, $optdetail, $defaults) {
 	$votenote = "votenote$opti";	
-  $votenoteHtml = w\rendA($votenote, w\areaFld(BARE, '', w\dft(@$defaults[$votenote])));
+  $votenoteHtml = w\rendA($votenote, w\areaFld(BARE, '', w\dft(nni($defaults, $votenote))));
 
 	return <<<EOF
 <div class="optdetailE">
@@ -569,8 +570,8 @@ function optStart($opti, $rowclass, $defaults) {
   foreach (['note', 'veto'] as $k) {
     $v = "$k$opti";
     $label = $k == 'note' ? t('Comment') : t('Veto');
-//    $html .= w\rendA($v, w\boxFld($v, '', "<b>$label</b>", @$defaults[$v], w\onchange("opts[$opti].noteClick();")));
-    $html .= w\rendA($v, w\boxFld($v, '', "<b>$label</b>", @$defaults[$v], ray('index', $opti)));
+//    $html .= w\rendA($v, w\boxFld($v, '', "<b>$label</b>", nn($defaults[$v]), w\onchange("opts[$opti].noteClick();")));
+    $html .= w\rendA($v, w\boxFld($v, '', "<b>$label</b>", nni($defaults, $v), ray('index', $opti)));
   }
   w\jsx('veto');
 	return <<<EOF
@@ -582,7 +583,7 @@ EOF;
 function optEnd($opti, $rowclass, $opttext, $optdetail, $defaults) {
 	global $rUrl;
 	$votenote = "votenote$opti";	
-  $votenoteHtml = w\rendA($votenote, w\areaFld(BARE, '', w\dft(@$defaults[$votenote])));
+  $votenoteHtml = w\rendA($votenote, w\areaFld(BARE, '', w\dft(nni($defaults, $votenote))));
   $optImgWrapClass = $optdetail ? 'optImgWrap' : 'hidden';
 
 	return <<<EOF
@@ -692,7 +693,7 @@ EOF;
   while ($qvRow = $qvQ->fetchAssoc()) {
     extract($qvRow); // qId, bId, voter, qType, fullName, trust, question
     if ($voter != $proxy) $bId = db\get('id', 'r_ballots', 'voter=:proxy AND question=:question', compact('proxy', 'question')); // this could be incorporated into query for efficiency
-    if (!@$qId1) $qId1 = $qId; // remember first question number
+    if (!nn($qId1)) $qId1 = $qId; // remember first question number
     $grade = $gradeMax = $text = $isVeto = [];
     $sql = <<<EOF
       SELECT v.grade, v.gradeMax, v.text, v.isVeto 
@@ -728,7 +729,7 @@ EOF;
     $line = $byVoter > 1 ? ($qType == 'E' ? '' : "$qId: $line<br>") : ("$qId: $fullName ($trust) -- $line<br>" . $texts);
     $lines[] = $qId == $qId1 ? "<br>$line" : $line;
   }
-  return join('', @$lines ?: []);
+  return join('', nn($lines, []));
 }
 
 /**
@@ -751,7 +752,7 @@ EOF;
     $a = r\acct($uid);
     $lines[] = u\fmtPhone($a->phone) . ": $a->fullName<br>\n";
   }
-  return join('', @$lines ?: []);
+  return join('', nn($lines, []));
 }    
 
 /**
@@ -814,5 +815,7 @@ EOF
     $agree = w\item(str_replace('<input ', '<input required="required" ', w\rendA('agree', $agree)));
   }
   $gradeIt = w\submit(t('Grade a Proposal'), 'success', 'lg', w\suffix(' &nbsp; ' . t('Grading ends at midnight on %date.', 'date', $endDate)));
-  return w\cgform(@compact(ray('title showVotes noVote noDirect results resultsNoProx subtext agree gradeIt args')));
+  
+  foreach (ray('title showVotes noVote noDirect results resultsNoProx subtext agree gradeIt args') as $k) if (isset($$k)) $info[$k] = $$k;
+  return w\cgform($info);
 } 

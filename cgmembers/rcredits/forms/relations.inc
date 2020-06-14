@@ -13,24 +13,26 @@ function formRelations($form, &$sta, $args = '') {
   global $base_url;
   global $mya;
   $myid = $mya->id;
-  extract(just('showCustomers', $args)); // linked from an email
+  extract(just('showCustomers', $args, FALSE)); // linked from an email
 
   //  if ($confirm = sureForm($sta)) return $confirm; // confirm only getUSD
   $acctIdentifiers ="$mya->fullName ($mya->mainQid)";
   $header = ray('The other account,Draw,Employee,Family,Permission');
   if ($co = $mya->co) $header[3] = 'Owns 10%+';
   $classes = ray('person draw employee owner permission');
-  if (@$showCustomers) {
+  if ($showCustomers) {
     $header[] = t('Customer');
     $classes[] = 'customer';
   }
   $classes = u\prefixValues('rel-', $classes);
 
-  if ($mya->hasCustomers) $buttons = @$showCustomers
-  ? item(w\btn("/settings/relations", t('Hide Customers')))
-  : item(w\btn('/settings/relations/showCustomers=1', t('Show Customers Too')));
+  if ($mya->hasCustomers) {
+    $buttons = $showCustomers
+    ? item(w\btn("/settings/relations", t('Hide Customers')))
+    : item(w\btn('/settings/relations/showCustomers=1', t('Show Customers Too')));
+  } else $buttons = NULL;
   
-  $where = @$showCustomers ? '1' : '(NOT s.:IS_CUSTOMER OR s.permission OR s.:IS_EMPLOYEE OR s.:IS_OWNER OR s.:IS_DRAW)';
+  $where = $showCustomers ? '1' : '(NOT s.:IS_CUSTOMER OR s.permission OR s.:IS_EMPLOYEE OR s.:IS_OWNER OR s.:IS_DRAW)';
   $sql = <<<EOF
     SELECT DISTINCT s.reid, s.main, s.other, IF(:myid=s.main, v.fullName, u.fullName) AS fullName,
       s.permission, s.:IS_EMPLOYEE AS employee, s.:IS_OWNER AS owner, s.:IS_CUSTOMER AS customer, s.:IS_DRAW AS draw
@@ -67,7 +69,7 @@ EOF;
     $perm = $otherPerson ? dropdown('permission', $permission, $permissions, $ii) : R_NONE;
     $amountValue = ''; // was amountField('amount', number_format($amount,0), $ii);
 
-    $rows[] = @$showCustomers
+    $rows[] = $showCustomers
     ? [$fullName, $drawn, $employee, $owner, $perm, $customer] // what to show on screen
     : [$fullName, $drawn, $employee, $owner, $perm];
   }
@@ -93,9 +95,9 @@ EOF;
   $list = fld('item', '', '', array('markup' => $list));
   $newPerson = textFld(t('Add Someone:'), [t('Name, id, email, or phone')]);
   $go = submit(t('Save Changes'));
-  $showCustomers = hidFld(@$showCustomers);
+  $showCustomers = hidFld($showCustomers);
 
-  $form = @compact(ray('title subtext buttons list newPerson go showCustomers'));
+  $form = compact(ray('title subtext buttons list newPerson go showCustomers'));
 
   if (!$mya->member and !$mya->stepDone['relations']) $form += w\setupFoot();
   w\whoFldSubmit('newperson', t('Create a new relation with %name?'));
@@ -107,7 +109,7 @@ EOF;
 function formRelations_validate($form, &$sta) {
 //  if (confirming_v($sta)) return;
   global $mya;
-  if ($newPerson = @$sta['input']['newPerson']) {
+  if ($newPerson = nn($sta['input']['newPerson'])) {
     $a = whois($newPerson, 'newPerson', $sta['input'], 'no self-relation');
     $id = $a ? $a->id : '';
     if ($id and r\relation(1, $mya->id, $id)) {
@@ -135,7 +137,7 @@ function formRelations_submit($form, &$sta) {
   global $mya;
 
   $vs = $sta['input'];
-  if ($other = @$vs['newPerson']) { // adding a new relation
+  if ($other = nni($vs, 'newPerson')) { // adding a new relation
     $permission = r\perm(B_READ);
     $mya->newRelation(compact('other', 'permission'));
     $who = r\acct($other)->fullName;
@@ -151,19 +153,19 @@ function formRelations_submit($form, &$sta) {
   foreach (array_keys($raws0) as $i => $reid) {
     foreach (ray('permission draw employee owner customer') as $fld) {
       $k = "$fld-$i-$reid"; // rawnum
-      $v = 0 + ($fld == 'permission' ? @$vs[$k] : (bool) @$vs[$k]);
+      $v = 0 + ($fld == 'permission' ? nni($vs, $k, 0) : (int) nni($vs, $k, 0));
       $vX = 0 + $raws[$i][$fld];
 
       if ($v != $vX) { // changed
         if ($fld == 'permission' and ($v == $joinPerm or $vX == $joinPerm)) {
           if ($v == $joinPerm) {
-            if (@$gotJoin) {say('too many joins', 'err'); continue;} else $gotJoin = TRUE;
+            if (nn($gotJoin)) {say('too many joins', 'err'); continue;} else $gotJoin = TRUE;
           }
-          $msg = r\setJoin($reid, @$gotJoin); // handle joining or unjoining accounts
+          $msg = r\setJoin($reid, nn($gotJoin)); // handle joining or unjoining accounts
           say($msg);
         }
         $changes[$reid][$fld] = $v;
-        $changes[$reid]['original'] = @$raws0[$reid]; // save for update reporting and permission-checking
+        $changes[$reid]['original'] = nni($raws0, $reid); // save for update reporting and permission-checking
       }
     }
   }
@@ -171,6 +173,6 @@ function formRelations_submit($form, &$sta) {
   if (!empty($changes)) say(be\updateRelations($changes));
   unset($DBTX);
   
-  $show = @$vs['showCustomers'] ? 'showCustomers=1' : '';
+  $show = nni($vs, 'showCustomers') ? 'showCustomers=1' : '';
   return w\go("/settings/relations/$show");
 }

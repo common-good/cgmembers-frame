@@ -66,9 +66,9 @@ EOF;
   if ($mya->cAdmin) {
     if (FALSE) $fast = boolFld(t('No ID Chk:'), t('Never ask customer for photo ID (set by admin)'), $mya->coCan(CO_FAST) ?: 0); // no exemptions
     $atm = boolFld(t('ATM service:'), t('Allow company to trade %RCREDITS for cash even if their balance is less than their rewards (in-person only).'), $mya->coCan(CO_ATM) ?: 0);
-  }
+  } else { $fast = $atm = NULL; }
 //  $submit = submit();
-  return cgform(@compact(ray('title links cgbutton photo name private categories selling shortDesc employees gross dob website descPreface description can2 staleNudge tips fast atm')) + w\setupFoot(''));
+  return cgform(compact(ray('title links cgbutton photo name private categories selling shortDesc employees gross dob website descPreface description can2 staleNudge tips fast atm')) + w\setupFoot(''));
 }
 
 function formCompany_validate($form, &$sta) {
@@ -88,18 +88,18 @@ function formCompany_submit($form, &$sta) {
 
   extract($info = just('private description shortDesc website selling categories can requireCashier employees gross staleNudge dob tips fast atm', $sta['input']));
   
-  $website = preg_replace('~https?://~i', '', @$website);
+  $website = preg_replace('~https?://~i', '', nn($website));
 
-  $mya->setCoCans(@$can);
+  $mya->setCoCans(nn($can));
   //$mya->setBits(APP_CAN_BITS, $can, 'co');
 // (keep this) $mya->setBit(CO_REQUIRE_CASHIER, @$requireCashier, 'coFlags');
-  $mya->setCoBit(CO_PRIVATE, @$private);
+  $mya->setCoBit(CO_PRIVATE, nn($private));
   $mya->setCoBit(CO_TIP, $tips);
-  if ($mya->cAdmin) $mya->setCoBit(CO_FAST, @$fast);
+  if ($mya->cAdmin) $mya->setCoBit(CO_FAST, nn($fast));
   if ($mya->cAdmin) $mya->setCoBit(CO_ATM, $atm);
-  $mya->update(@compact(ray('description shortDesc website selling employees gross staleNudge dob')));
+  $mya->update(compact(ray('description shortDesc website selling employees gross staleNudge dob')));
   
-  if (@$categories) $mya->setCategories($categories);
+  if (nn($categories)) $mya->setCategories($categories);
 
 //  $mya->stepDone('company', $info);
 //  return $mya->ok ? say('options saved') : w\go('status', 'options saved|step completed');

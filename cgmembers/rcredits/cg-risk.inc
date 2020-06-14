@@ -29,7 +29,7 @@ function acctRisk1($uid, $thresholds, &$risk = 0, &$calc = 0) {
   if (!$a->cttyA or $a->cttyA->risk('geography')) setRisk('geography'); // HIDTA (eg Washtenaw cty, MI) (!$a->cttyA is for tests)
   // criminal
   setRisk('cashCo', $a); // high-risk company type according to regs
-  $tenure = $a->tenure / 12 + (now() - $a->created) / YEAR_SECS; // years of residence ($a->tenure is in months)
+  $tenure = ($a->tenure ?: 0) / 12 + (now() - $a->created) / YEAR_SECS; // years of residence ($a->tenure is in months)
   setRisk('new', $tenure ? .5 / ($tenure * $tenure) : 99999); // half a year is the standard
   setRisk('moves', $a->moves); // moves over past decade
   setRisk('rents', $a);
@@ -156,7 +156,7 @@ function setRisk($bitName = NULL, $multiplier = 1) {
   global $_acctRisks, $_txRisks, $_acctRiskBits, $_txRiskBits;
   if (!$multiplier) $multiplier = 0;
   
-  if (@$_risk === '') {
+  if (nn($_risk) === '') {
     $_risk = $_risks = 0;
     $_acctRisks = ray(K_ACCT_RISKS);
     $_txRisks = ray(K_TX_RISKS);
@@ -165,7 +165,7 @@ function setRisk($bitName = NULL, $multiplier = 1) {
   }
   if (is_null($bitName)) return ray('risk risks', $_risk, $_risks); // must come after $_risks=0
   
-  if (is_numeric($bit = @$_acctRiskBits[$bitName])) { // look up bit and weight in proper table (K_ACCT_RISKS or K_TX_RISKS)
+  if (is_numeric($bit = nni($_acctRiskBits, $bitName))) { // look up bit and weight in proper table (K_ACCT_RISKS or K_TX_RISKS)
     $weight = $_acctRisks[$bitName];
   } else list ($bit, $weight) = [$_txRiskBits[$bitName], $_txRisks[$bitName]];
 

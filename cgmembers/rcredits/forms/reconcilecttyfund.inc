@@ -39,7 +39,7 @@ function formReconcileCttyFund_validate($form, &$sta) {
     foreach (ray('acct dts ofxBal') as $k) foreach(${$k}[$i] as $k2 => $v2) ${$k2 . $i} = $v2; // bankId2, etc.
 	}
 
-  if (@$acct[2]) {
+  if (nni($acct, 2)) {
     if ($dtEnd1 != $dtEnd2) return w\say(t('Ending date must be the same for both downloaded OFX files.'), 'file1');
     foreach (ray('bankId acctId') as $k) $acct[$k] = u\unite($acct[1][$k], $acct[2][$k]);
     $dts['dtStart'] = min($dtStart1, $dtStart2);
@@ -129,7 +129,7 @@ function formReconcileCttyFund_submit($form, &$sta) {
       extract($ray);
       db\update('r_usd', compact('bankTxId', 'txid'), 'txid');
       $bi = ($txidSign == '<0' ? 'B' : ($trnAmt < 0 ? 'O' : 'I')) . $deposit;
-      $batAmt = @$batches[$bi];
+      $batAmt = nni($batches, $bi);
       u\EXPECT($batAmt, 'logic error in reconcile reversal');
       if ($batAmt - $trnAmt) { // this was a batch with more than one transaction
         $batches[$bi] -= $trnAmt; // make the rest of this batch recognizable
@@ -153,7 +153,7 @@ function formReconcileCttyFund_submit($form, &$sta) {
   setv('reconciledAsOf', $asOf);
   setv('batches', $batches);
   setv('ofxTxs', $txs);
-	if (@$errs) say(join('<br>', $errs));
+	if (nn($errs)) say(join('<br>', $errs));
   $where = 'bankTxId<>0 AND deposit<=:NOW+:DAY_SECS';
 //  $bal = db\sum('amount', $table, $where); // <=:NOW is a placeholder for when we want earlier balances
 	$bal = db\sum('amount', 'r_usd', $where);
@@ -198,7 +198,7 @@ function offerOffsetTransfer($asOf) {
   $btidTomorrow = 0 + ($btidTomorrow . str_repeat('0', isDEV ? 5 : 12));
   $dpBal = $offsets + db\sum('amount', 'r_usd', 'bankTxId<>0 AND bankTxId<:btidTomorrow', compact('btidTomorrow'));
   say(t('Total Dollar Pool balance as of %dt is %amt', 'dt amt', u\fmtDate($asOf, TRUE), u\fmtAmt($dpBal)));
-  jsx('dollar-pool-offset', 'amount', @$offsets);
+  jsx('dollar-pool-offset', 'amount', nn($offsets));
  
-  return @$button;
+  return nn($button);
 }

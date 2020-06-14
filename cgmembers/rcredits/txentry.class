@@ -35,7 +35,7 @@ class TxEntry {
    */
   function __construct($info) {
     u\vetObjectInfo($info, self::E_FIELDS, self::REQUIRED_FIELDS, 'TxEntry');
-    foreach (ray(self::E_FIELDS) as $k) $this->$k = nn($info[$k], $k == 'entryType' ? -1 : NULL); // -1 is tentative
+    foreach (ray(self::E_FIELDS) as $k) $this->$k = nni($info, $k, $k == 'entryType' ? -1 : NULL); // -1 is tentative
   }
 
   /**

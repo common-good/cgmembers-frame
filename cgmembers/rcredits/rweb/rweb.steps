@@ -101,7 +101,7 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE signup AMemberVerifiesID
  *     MAKE signup AMemberSignsAgreement
  *     MAKE signup AMemberSetsPreferences
- *     MAKE signup AMemberConnectBankAccount
+ *     MAKE signup AMemberConnectsABankAccount
  *     MAKE signup AMemberUploadsAPhoto
  *     MAKE signup AMemberGivesContactInfo
  *     MAKE signup AMemberDonates
@@ -404,7 +404,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST signup AMemberVerifiesID
  *     TEST signup AMemberSignsAgreement
  *     TEST signup AMemberSetsPreferences
- *     TEST signup AMemberConnectBankAccount
+ *     TEST signup AMemberConnectsABankAccount
  *     TEST signup AMemberUploadsAPhoto
  *     TEST signup AMemberGivesContactInfo
  *     TEST signup AMemberDonates
@@ -471,7 +471,7 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST signup AMemberSignsUp
  *     TEST signup AMemberSignsAgreement
  *     TEST signup AMemberSetsPreferences
- *     TEST signup AMemberConnectBankAccount
+ *     TEST signup AMemberConnectsABankAccount
  *     TEST signup AMemberUploadsAPhoto
  *     TEST signup AMemberGivesContactInfo
  *     TEST signup AMemberDonates
@@ -1040,7 +1040,7 @@ function weDownloadWith($name, $rows) {
   global $testOnly;
   global $testCSV, $testCSVname;
 
-  if (@$testCSVname != $name) return t\output("$testCSVname <> $name");
+  if (nn($testCSVname) != $name) return t\output("$testCSVname <> $name");
   if (!is_array($testCSV) or empty($testCSV)) return t\output('testCSV empty');
   $csv2 = $testCSV; // don't change this
   $headers = array_values(array_shift($csv2));
@@ -1050,7 +1050,7 @@ function weDownloadWith($name, $rows) {
     $csvRow = array_combine($headers, $csvRow); // add keys
     foreach ($row as $k => $v) {
       if (mb_strpos($v, '%') !== FALSE) $v = t\lastMinuteSubs($v);
-      if (!t\eq($csvValue = @$csvRow[$k], $v)) return t\output("key=$k csvValue<>expected value ($csvValue<>$v) csvRow:" . pr($csvRow));
+      if (!t\eq($csvValue = nni($csvRow, $k), $v)) return t\output("key=$k csvValue<>expected value ($csvValue<>$v) csvRow:" . pr($csvRow));
     }
   }
   if (count($testCSV) != count($rows) + 1) return t\output('There are extra rows in testCSV: '. pr($testCSV) . ' rows: ' . pr($rows));
@@ -1180,7 +1180,7 @@ function statisticsGetSet($time) {
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     BOTH signupco ACompanySuppliesCompanyInformation
  *     TEST signupco ACompanySuppliesIncomingTitheChoices
- *     TEST signup AMemberConnectBankAccount
+ *     TEST signup AMemberConnectsABankAccount
  *     TEST signup AMemberChoosesTithes
  *     MAKE statement Setup
  *     MAKE summary Setup
@@ -1416,7 +1416,7 @@ function memberHasNoPhotoIDRecorded($id) {return t\noPhotoId($id);}
 function signupArgs($args) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $signupArgs;
-  foreach ($args[0] as $k => $v) if (@$signupArgs[$k] != $v) {
+  foreach ($args[0] as $k => $v) if (nni($signupArgs, $k) != $v) {
     t\output(compact('args', 'signupArgs'));
     return FALSE;
   }
@@ -1493,7 +1493,7 @@ function weShowChecked($what, $wantSet = TRUE) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $tChecked;
 
-  $checks = join('|', @$tChecked ?: []);
+  $checks = join('|', nn($tChecked) ?: []);
   $checked = $wantSet ? 'checked' : 'unchecked';
   
   foreach ($what as $one) {
@@ -1522,7 +1522,7 @@ function radioIs($k, $v) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $tRadios;
 
-  return (mb_strpos(@$tRadios[$k], $v) !== FALSE);  
+  return (mb_strpos(nni($tRadios, $k), $v) !== FALSE);  
 }
 
 /**
@@ -1543,7 +1543,7 @@ function rewardStepIs($step) {
 function memberOnetimePasswordIsSetTo($id, $pass) {
   global $testOnly; if (!$testOnly) return FALSE;
   if (!$a = r\acct(t\uid($id))) return FALSE;
-  return (@$a->oneTimePass['pass'] == $pass and @$a->oneTimePass['expires'] > REQUEST_TIME);
+  return (nni($a->oneTimePass, 'pass') == $pass and nni($a->oneTimePass, 'expires') > REQUEST_TIME);
 }
 /**
  * member (ARG) completes form (ARG) with name (ARG) and all checkboxes
@@ -1645,7 +1645,7 @@ function weScripWithSubs($script, $args = []) {
   if (!isset($scriptScraps[$script])) return FALSE;
   $args = $args[0];
   $got = just(array_keys($args), $scriptScraps[$script]);
-  foreach ($args as $k => $v) if (!t\eq(@$got[$k], $v)) return FALSE;
+  foreach ($args as $k => $v) if (!t\eq(nni($got, $k), $v)) return FALSE;
   return TRUE;
 }
 
@@ -1732,9 +1732,9 @@ function withChoices($choices) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $formOut;
   foreach ($choices as list ($k, $v)) $ch[] = "$k=>$v";
-  $res = @$ch ? (mb_strpos($formOut['options'], join(PHP_EOL, $ch)) !== FALSE) : FALSE;
+  $res = nn($ch) ? (mb_strpos($formOut['options'], join(PHP_EOL, $ch)) !== FALSE) : FALSE;
   if (!$res) {
-    t\output(@$ch);
+    t\output(nn($ch));
     t\output($formOut['options']);
   }
   return $res;
@@ -1885,7 +1885,7 @@ function nextRandomPasswordIs($code) {global $nextPass; return $nextPass = $code
 function memberPasswordIsSetTo($id, $pass) {
   global $testOnly; if (!$testOnly) return FALSE;
   if (!$a = r\acct(t\uid($id))) return FALSE;
-  return @$a->passwordOkay($pass, 'pass', $err) ?: t\output($err);
+  return $a->passwordOkay($pass, 'pass', $err) ?: t\output($err);
 }
 
 /**
@@ -1910,7 +1910,7 @@ function stepsLeft($left) {global $mya; return memberStepsLeft($mya->id, $left);
  *     TEST signup AMemberVerifiesID
  *     TEST signup AMemberSignsAgreement
  *     TEST signup AMemberSetsPreferences
- *     TEST signup AMemberConnectBankAccount
+ *     TEST signup AMemberConnectsABankAccount
  *     TEST signup AMemberUploadsAPhoto
  *     TEST signup AMemberGivesContactInfo
  *     TEST signup AMemberDonates
@@ -1951,7 +1951,7 @@ function memberStepsLeft($id, $left0) {
  *     MAKE signup AMemberVerifiesID
  *     MAKE signup AMemberSignsAgreement
  *     MAKE signup AMemberSetsPreferences
- *     MAKE signup AMemberConnectBankAccount
+ *     MAKE signup AMemberConnectsABankAccount
  *     MAKE signup AMemberUploadsAPhoto
  *     MAKE signup AMemberGivesContactInfo
  *     MAKE signup AMemberDonates

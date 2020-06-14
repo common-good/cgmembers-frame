@@ -73,7 +73,7 @@ X;
     $max = $amtMax ? u\fmtAmt($amtMax, '') : '';
     $uids[] = $uid;
     $xlys[] = $xly;
-    if (nn($dfts["amt-$xly-$uid"])) foreach (ray('amt max') as $k) $$k = nn($dfts["$k-$xly-$uid"]); // what the user intended
+    if (nni($dfts, "amt-$xly-$uid")) foreach (ray('amt max') as $k) $$k = nni($dfts, "$k-$xly-$uid"); // what the user intended
     $rows[] = u\ray2row([$fullName, rendA("amt-$xly-$uid", amtFld($amt)), rendA("when-$xly-$uid", whenFld($when)), rendA("max-$xly-$uid", maxFld($max))], $classes);
   }
   
@@ -82,7 +82,7 @@ X;
     $xlys[] = 'x';
     foreach (ray('org amt when max') as $k) {
       $func = ($k . 'Fld');
-      $$k = rendA("$k-x-$i", f("w.{$k}Fld", nn($dfts["$k-x-$i"])));
+      $$k = rendA("$k-x-$i", f("w.{$k}Fld", nni($dfts, "$k-x-$i")));
     }
     $rows[] = u\ray2row([$org, $amt, $when, $max], $classes);
   }
@@ -110,7 +110,7 @@ function formStepUp_validate($form, &$sta) {
 
   foreach ($uids = ray($uids) as $i => $uid) {
     $xly = $xlys[$i];
-    foreach (ray('org amt when max') as $k) $$k = trim(nn($input["$k-$xly-$uid"]));
+    foreach (ray('org amt when max') as $k) $$k = trim(nni($input, "$k-$xly-$uid"));
     
     if ($uid >= 0 and $uid < CANONIC_ACCTS) { // lookup organization
       if (empty($org) and !empty($amt)) return er($sta, t('You must choose an organization if there is an amount.'), "org-xly-$uid");
@@ -146,7 +146,7 @@ function formStepUp_submit($form, &$sta) {
 
   foreach ($uids = ray($uids) as $i => $uid) { // for each organization, create a rule or template for the amount
     $xly = $xlys[$i];
-    foreach(ray('amt:amt,period:when,amtMax:max') as $k => $v) $$k = $input["$v-$xly-$uid"] ?: NULL;
+    foreach(ray('amt:amt,period:when,amtMax:max') as $k => $v) $$k = nni($input, "$v-$xly-$uid") ?: NULL;
     $pct = strhas($period, 'pct');
     $matchFlds = 'amount,portion,amtMax'; // fields user can adjust from time to time
     $match = ray($matchFlds, $pct ? 0 : $amt, $pct ? $amt / 100 : 0, $period == 'pctmx' ? $amtMax : NULL);

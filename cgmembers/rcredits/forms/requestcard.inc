@@ -11,7 +11,7 @@ use CG\Db as db;
  */
 function formRequestRCard($form, &$sta, $other = '') {
   global $mya;
-  if (!$acct = r\acct($mya->id, @$other)) return hack('request rCard');
+  if (!$acct = r\acct($mya->id, nn($other))) return hack('request rCard');
 //  if (!$mya->co or !$mya->can(B_REFUND)) return say('no account permission');
   if (!$mya->can(B_SCAN)) return say('no account permission', 'err');
   $fullName = $acct->fullName;

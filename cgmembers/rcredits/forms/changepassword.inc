@@ -28,7 +28,7 @@ function formChangePassword_validate($form, &$sta) {
   extract(just('pass1 pass2 strong pass', $sta['input']));
 
   if (!$mya or !$mya->cAdmin) {
-    if (!$strong and u\weakPass(@$pass1)) return say('weak pass', 'pass1');
+    if (!$strong and u\weakPass(nn($pass1))) return say('weak pass', 'pass1');
     if (isset($pass) and !$mya->passwordOkay($pass, 'pass', $err)) return say($err, 'pass');
   }
   if ($pass1 != $pass2) return say('mismatch', ['thing' => t('password')], 'pass1');

@@ -32,11 +32,11 @@ function formOption($form, &$sta, $args = '') {
 
   $title = item($add ? t('Add Option') : t('Edit Option'));
   $question = hidFld($qid);
-  $text = textFld(t('Option:'), [t('Option Text')], v\realOpts($type) ? required(@$text) : dft(@$text));
-  $detail = areaFld(t('Detail:'), [t('Option Detail')], dft(@$detail));
+  $text = textFld((v\realOpts($type) ? REQ : '') . t('Option:'), [t('Option Text')], dft(nn($text)));
+  $detail = areaFld(t('Detail:'), [t('Option Detail')], dft(nn($detail)));
 	if ($type == 'R') {
-		$minimum = numFld(t('Minimum:'), [t('Minimum Value')], required(@$min));
-		$maximum = numFld(t('Maximum:'), [t('Maximum Value')], required(@$max));		
+		$minimum = numFld(t('Minimum:'), [t('Minimum Value')], required(nn($min)));
+		$maximum = numFld(t('Maximum:'), [t('Maximum Value')], required(nn($max)));
 	}
   
   if ($mya->cAdmin) $submit = submit();

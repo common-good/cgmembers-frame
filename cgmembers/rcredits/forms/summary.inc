@@ -27,7 +27,7 @@ function formSummary($form, &$sta) {
 
   if ($mya->admin2 and !$mya->proSe) { // some kind of admin (but not self)
     $form = adminSummary();
-    foreach (ray('photo legalName shortName community') as $k) if (@$form[$k]) { // move these up (see return line)
+    foreach (ray('photo legalName shortName community') as $k) if (nni($form, $k)) { // move these up (see return line)
       $$k = $form[$k];
       unset($form[$k]);
     }
@@ -38,12 +38,12 @@ function formSummary($form, &$sta) {
     }
     
     if ($stepUrl == 'summary') {
-      if (@$msg) say(t('New member is told: ') . t($msg));
+      if (nn($msg)) say(t('New member is told: ') . t($msg));
     } elseif ($stepUrl) say(t('New member will be sent <a href="%stepUrl">there</a> upon signing in.', 'stepUrl', "$base_url/$stepUrl"));
     
   } else { // normal
     if ($stepUrl and $stepUrl != 'summary') return w\go($stepUrl, $msg);
-    if (@$msg) say($msg);
+    if (nn($msg)) say($msg);
     if ($mya->legalName != $mya->fullName and !$mya->depends) $legalName = item($mya->legalName, t('Legal Name:'));    
   }
 
@@ -116,9 +116,10 @@ function formSummary($form, &$sta) {
   } else $extra = '';
   $accountId = item(($mya->mainQid ?: 'N/A') . '<span class="white">..</span>' . "($acctType)$extra", t('ID:')); // .. is for double-click select
 
-  $fields = 'photo title clickPhoto showCustomers shortcuts accountId accountName address legalName shortName community balance newBalance creditLine creditLimit committed choiceList';
+  $fields0 = 'photo title clickPhoto showCustomers shortcuts accountId accountName address legalName shortName community balance newBalance creditLine creditLimit committed choiceList';
 //  foreach (ray('details') as $k) $$k = @$form[$k]; unset($form[$k]); // put these on the left if admin
-  $fields = @compact(ray($fields));
+//  $fields = @compact(ray($fields));
+  foreach (ray($fields0) as $k) if (isset($$k)) $fields[$k] = $$k;
   
 //  if ($mya->superAdmin and !$mya->ok) $onSubmit = w\whoFldSubmit('helper', t('This person was invited by %name, yes?'));
   if ($mya->admin2 and !$mya->proSe) {
@@ -150,31 +151,25 @@ function formSummary_validate($form, &$sta) {
     unset($sta['input']['federalId']);
   } elseif (@$federalId and $err = u\badSsn($federalId, $mya->dob)) return say($err, ['what' => 'federalId'], 'federalId');
 */
-  if (@$helper) {
+  if (nn($helper)) {
     if (!$h = whois($helper, 'helper', $sta['input'])) return say(t('I don\'t know what helper account you mean.'), 'helper');
     $helper = $h->id;
   } else {unset($helper); unset($sta['input']['helper']);}
 
-  if (@$active and !$mya->ok and !$mya->isCtty) { // activating
-    if (!@$helper) return say(t('You must specify who gets the helper reward.'), 'helper');
+  if (nn($active) and !$mya->ok and !$mya->isCtty) { // activating
+    if (!nn($helper)) return say(t('You must specify who gets the helper reward.'), 'helper');
 //    if (!@$helper or $helper == 1) return say(t('You must specify who gets the helper reward.'), 'helper');
-    if (!$mya->member and is_null(nn($adminable[B_MEMBER], NULL))) return say(t('That account is not READY (not a member).'), 'adminable'); // test "is_null" because 0 is the value when set
+    if (!$mya->member and is_null(nni($adminable, B_MEMBER, NULL))) return say(t('That account is not READY (not a member).'), 'adminable'); // test "is_null" because 0 is the value when set
     if (!$mya->confirmed and $mya->helper != 1) say(t('NOTE: Member %helperName has not yet confirmed this invitation.', 'helperName', $h->fullName));
     if (!$mya->co and !nn($dob) and !$mya->idVerifiedBy) return say(t('You cannot activate the account without a date of birth (except for solar1 signups).'), 'dob');
   }
 
-  if (!@$active and $mya->ok) { // de-activating
+  if (!nn($active) and $mya->ok) { // de-activating
     if ($mya->balance + 0) return say(t('You cannot de-activate an account with a non-zero balance.'), 'err');
   }
-
-  foreach (ray('creditLimit') as $k) {
-    if (isset($$k)) {
-      if ($err = u\badAmount($$k)) return sayFieldErr($err, $k); 
-      $$k = u\cleanAmount($$k);
-    }
-  }
+  if (isset($creditLimit) and $err = u\badAmount($creditLimit)) return sayFieldErr($err, 'creditLimit'); 
   if (isset($moves) and $err = u\badAmount($moves, '>=0', 0)) return sayFieldErr($err, 'moves');
-  u\preray(@compact(ray('tickle helper who creditLimit')), $sta['input']);
+  foreach (ray('tickle helper creditLimit') as $k) if (isset($$k)) $sta['input'][$k] = $$k;
 }
 
 function formSummary_submit($form, &$sta) {
@@ -209,11 +204,11 @@ function formSummary_submit($form, &$sta) {
     $mya->update('ssnData', '');
   } */
   
-  if ($mya->cAdmin or $mya->admin) setRisksAndFlags($mya, @$risks, @$adminable); // don't test for isset (allow turning off all bits); must precede activate() because that function sets ssnOff bit
+  if ($mya->cAdmin or $mya->admin) setRisksAndFlags($mya, nn($risks), nn($adminable)); // don't test for isset (allow turning off all bits); must precede activate() because that function sets ssnOff bit
     
   if (!$mya->isCtty) {
     $fullName = $mya->fullName;
-    if (FALSE and !$mya->confirmed and @$helper and @$helper != $mya->helper) { // self-signup
+    if (FALSE and !$mya->confirmed and nn($helper) and nn($helper) != $mya->helper) { // self-signup
       $_a1 = r\acct($helper)->makeDo('confirmInvite', $mya->id); // link to confirm invitedness
       r\message($helper, 'confirm invite', compact('_a1', 'fullName')); // ask inviter to confirm
     }
@@ -232,7 +227,8 @@ function formSummary_submit($form, &$sta) {
   
   $fields = 'notes';
   foreach (ray('legalName tickle moves helper') as $k) if ($$k) $fields .= " $k"; // don't overwrite
-  $mya->update(@compact(ray($fields)));
+  $info = []; foreach (ray($fields) as $k) if (isset($$k)) $info[$k] = $$k;
+  $mya->update($info);
   unset($DBTX);
   
   say('info saved');
@@ -245,7 +241,7 @@ function setRisksAndFlags($a, $risks, $adminable) {
     include_once __DIR__ . '/../cg-risk.inc';
     k\acctRisk1($a->id, getv('riskThresholds', [0,0,0,0]));
   }
-  $a->setBits(@$adminable);
+  $a->setBits(nn($adminable));
 }
 
 /**
@@ -279,14 +275,14 @@ function activate($helper) {
 
     if (!$mya->stepsDone($mya->co ? 'co' : 'person')) $msg .= '|suggest completion';
     
-    $subs = ray('inviterName youName', @$mya->helperA->fullName, $mya->fullName);
+    $subs = ray('inviterName youName', $mya->helper ? $mya->helperA->fullName : '', $mya->fullName);
     
     r\message($mya->id, $msg, $subs);
     
   }
 
   if ($firstTime and !$mya->co) { // no bonus or helper bonus for a company signing up
-    if (@$mya->ssnData['CGerror'] and !$mya->risk('ssnOff') and !$mya->risk('dobOff')) $mya->setRisk('ssnOff'); // make SURE this bit gets set (might not if admin signs the person up
+    if ($mya->ssnErr and !$mya->risk('ssnOff') and !$mya->risk('dobOff')) $mya->setRisk('ssnOff'); // make SURE this bit gets set (might not if admin signs the person up
 
     if (!$mya->helperA->co and !$mya->helperA->superAdmin) { // no helper bonus for company referral or help by superAdmin (cAdmin is okay) [don't require $mya->confirmed]
       $fullName = $mya->fullName;
@@ -413,7 +409,7 @@ function adminSummary() {
           $helper = "$hA->mainQid: $hA->fullName";
         }
         $helper = textFld(t('Helped by:'), t('Who gets the "inviter/helper" reward? Must be exactly one account.'), dft($helper)); //  + autocomplete()
-      } else $helper = item(@$mya->helperA->fullName ?: t('N/A'), t('Helped by:'));
+      } else $helper = item($mya->helper ?: t('N/A'), t('Helped by:'));
     }
   
     $activity = item(a\showActivity($mya), t('Activity:'));
@@ -447,7 +443,7 @@ function adminSummary() {
     foreach ($riskBits as $k) {
       $class = $acctRisks[$k] < 0 ? 'goodRisk' : 'badRisk';
       if (!isset($risksEditable[$k])) $class .= ' noEdit';
-      $dpy = w\popHelp($k, @$riskHelp[$k], '#');
+      $dpy = w\popHelp($k, nni($riskHelp, $k), '#');
       $aliases[$k] = "<div class=\"$class\">$dpy</div>";
     }
     $risks = bitsFld(t('Risks:'), $mya->risks, '', K_ACCT_RISKS, $aliases);
@@ -513,7 +509,8 @@ function adminSummary() {
   w\jsx('tickle');
   
   $bigFields = $mya->ok ? 'adminable risks ssnShow' : 'ssnShow adminable risks';
-  return @compact(ray("photo details notes note altId tickle donations active activity relations source helper $bigFields community balance cgfDonations legalName shortName calling signupCo tenure tasks steps dwInfo invited invitedBy proxies proxyFor moves floor minimum achMin risk trust mediaConx count back uid submit"));
+  $info = []; foreach (ray("photo details notes note altId tickle donations active activity relations source helper $bigFields community balance cgfDonations legalName shortName calling signupCo tenure tasks steps dwInfo invited invitedBy proxies proxyFor moves floor minimum achMin risk trust mediaConx count back uid submit") as $k) if (isset($$k)) $info[$k] = $$k;
+  return $info;
 }
 
 /**
@@ -557,7 +554,7 @@ function callDetails($type = '', $when = '') {
     list ($signupCo, $myCo) = ['', t(' (personally rather than for company "%myCo")', compact('myCo'))];
   } else $signupCo = $mya->signupCo ? t('<li><b>Company</b>. How about signing up your company: %coName? (%co)</li>', 'co coName', w\signupCoDisplay($mya->signupCo, $coName), $coName) : '';
   $notyet = t("<li><b>Want</b>. What's a place you would like to use your %PROJECT card but can't yet?</li>");
-  $how = t("<li><b>How's it going?</b> %myCo %lastTx Do you have any questions, suggestions, or concerns? Are you getting our newsletter? What do you find most valuable about the %PROJECT system? If you could change or improve one thing about the %PROJECT system, what would it be?</li>", '_lastTx myCo', $mya->lastTxDesc(), @$myCo) . $notyet;
+  $how = t("<li><b>How's it going?</b> %myCo %lastTx Do you have any questions, suggestions, or concerns? Are you getting our newsletter? What do you find most valuable about the %PROJECT system? If you could change or improve one thing about the %PROJECT system, what would it be?</li>", '_lastTx myCo', $mya->lastTxDesc(), nn($myCo)) . $notyet;
   if ($mya->paper) $how .= t('<li><b>Paper statements</b>. Do you really want paper statements? ($%R_STATEMENT_COST/month)</li>');
   if ($mya->balance < 0) $how .= t('<li><b>Negative</b>. You have a negative balance of <%b>%bal</b>. Do you need help getting money into your account? That amount is, in effect, borrowed from your local community of %PROJECT members. So it is much better of course, for the community\'s financial health, if you bring your balance back up above zero when you can.</li>', '_b bal', 'b class="outgoing"', u\fmtAmt($mya->balance));
   
@@ -607,7 +604,7 @@ function callDetails($type = '', $when = '') {
   $giftDetails = t('(Wait for answer, then ask:) What amount would you like to give and do you prefer yearly, quarterly, or monthly? Suggested amounts are $50 for individuals and $250 for companies, but any amount is wonderful.');
   $ask = t('<li><b>Offer</b>. The idea of %PROJECT is to empower us to take responsibility for our local economy, so most of our members contribute some small amount periodically and/or choose roundups or crumbs, to support the system. Would you like to contribute at this time? %details</li>', 'details', $giftDetails) . $coAsk;
   $thx = t('<li><b>Donations</b>. Thank you very much %gifts.</li>', '_gifts', giftsToDate());
-  $reask = @$often ? $thx : $thx . t('<li><b>Gift</b>. Would you like to %contribute at this time? %details</li>', 'contribute details', $type == 'annual' ? t('make an annual contribution') : t('contribute'), $giftDetails);
+  $reask = nn($often) ? $thx : $thx . t('<li><b>Gift</b>. Would you like to %contribute at this time? %details</li>', 'contribute details', $type == 'annual' ? t('make an annual contribution') : t('contribute'), $giftDetails);
   if ($options) $options = t('<li><b>Features</b>. %options</li>', compact('options'));
   $options .= t('<li><b>Tell people!</b> Do you need more handout cards or brochures, to tell %who about %PROJECT?', 'who', $mya->co ? t('your customers and suppliers') : t('your friends or local businesses'));
   $addressCheck = t('<li><b>Address</b>. Are you still at %addr? (if not, ask about postal address too)</li>', 'addr', $mya->location(TRUE));
@@ -618,11 +615,11 @@ function callDetails($type = '', $when = '') {
   $annualAsk = '<ol><li>' . t("<b>Thanks</b>. Thank you for being a pioneer of economic democracy! (member for %yearsIn year/s) Thanks to your participation, along with other members, we were able to issue $10,000 in grants and loans this year. (Were you in on the discussions of what to fund?)", compact('yearsIn')) . "</li>\n$how\n$ask\n$addressCheck\n$signupCo\n$volunteer\n$options\n</ol>";
   
   $res = '';
-  if ($type == 'annual') $res = @$gifts ? str_replace($ask, $reask, $annualAsk) : $annualAsk;
-  if ($type == 'welcome') $res = @$gifts ? "<ol>$welcome\n$thx\n$how\n$signupCo\n$volunteer\n</ol>" : "<ol>$welcome\n$how\n$ask\n$volunteer\n</ol>";
+  if ($type == 'annual') $res = nn($gifts) ? str_replace($ask, $reask, $annualAsk) : $annualAsk;
+  if ($type == 'welcome') $res = nn($gifts) ? "<ol>$welcome\n$thx\n$how\n$signupCo\n$volunteer\n</ol>" : "<ol>$welcome\n$how\n$ask\n$volunteer\n</ol>";
   $email .= $res . t('<p>I look forward to hearing from you!</p><p>Sincerely,</p><p>%name<br>for the %PROJECT Team</p>', 'name', $mya->agentA->shortName);
   $live .= $res . t('<p>Thank you very much for your time and for being a %PROJECT member. Have a great day.</p>');
-  if (@$_volunteerLink) $email = str_replace($_volunteerLink, t('volunteer'), $email);
+  if (nn($_volunteerLink)) $email = str_replace($_volunteerLink, t('volunteer'), $email);
   $email = str_replace('id="volunteer"', '', $email);  // make sure the div isn't duplicated (causing expansion to fail)
   $email = preg_replace('/\([^)]+\)/', '', $email);
   

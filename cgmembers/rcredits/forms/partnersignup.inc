@@ -97,7 +97,7 @@ function formPartnerSignup_validate($form, &$sta, $args = '') {
   $accts = 'routingNumber bankAccount';
   extract(just($accts, $sta['input']));
   
-  foreach (ray($accts) as $one) $$one = preg_replace('/[\.\- ]/', '', @$$one);
+  foreach (ray($accts) as $one) $$one = preg_replace('/[\.\- ]/', '', nn($$one));
   u\preray(compact(ray($accts)), $sta['input']);
   if (!u\routingOk($routingNumber)) return say('bad routing number', 'routingNumber');
   if (!u\bankAcctOk($bankAccount)) return say('bad account number', 'bankAccount');
@@ -250,7 +250,7 @@ function gotSignup($pA) {
   $flnms = renameUploads($_FILES, $customer);
   
   if ($cgAccount) { // person already has an account, according to them (be careful not to trust that), so no need for this form
-    if (!$mya = r\acct($cgAccount) or !$similar = u\similar($mya->fullName, $fullName, 5, .5) or !($mya->phone == u\fmtPhone(@$phone, '+n') or $mya->email == $email)) {
+    if (!$mya = r\acct($cgAccount) or !$similar = u\similar($mya->fullName, $fullName, 5, .5) or !($mya->phone == u\fmtPhone(nn($phone), '+n') or $mya->email == $email)) {
       if ($mya and !$similar) w\say(t('The name on that account is different.'), 'alert');
       return w\softErr(t('That does not appear to be your correct %PROJECT member ID. Use your browser\'s Back button to go back to the previous page and be sure to use the same name, phone number, and email address that you use in your %PROJECT account. If you are not yet a %PROJECT member, leave that field blank!', '_a', atag('/signin')), 'cgAccount'); // member mistyped their qid (a royal pain in the butt)
     }
@@ -266,7 +266,7 @@ function gotSignup($pA) {
 
     $legalName = '*';
     $tenure = $years * 12;
-    if (@$referrer) $source = @$source . ': ' . $referrer;
+    if (nn($referrer)) $source = nn($source) . ': ' . $referrer;
     $idVerifiedBy = $pA->fullName;
     $helper = $pA->uid;
     $state = $m_stateId;
@@ -477,7 +477,7 @@ function tellPartner($pA, $info, $flnms) {
   extract(just('customer fullName cgAccount email', $info));
   
   $fields = ray('partnerName cgAccount fullName email customer noFrame', $pA->fullName, $cgAccount, $fullName, $email, $customer, TRUE);
-  r\rMail('partner-signup', $pA, $fields, NULL, @$flnms);
+  r\rMail('partner-signup', $pA, $fields, NULL, nn($flnms));
 }
 
 //  $fields = ray('op partnerCode qid name email customer', $op, $pA->emailCode, $a->mainQid, $a->fullName, $a->email, $customer)
@@ -655,5 +655,5 @@ function contractFlnm($customer) {
   return CONTRACT_DIR . "/$customer.pdf"; // customer-specific flnm
 }
 //function contractUrl($customer) {return str_replace(ROOT, BASE_URL, contractFlnm($customer));}
-function pA($pid) {return (@$pid and $pA = r\acct($pid) and in($pA->name, SIGNUP_PARTNERS)) ? $pA : FALSE;}
+function pA($pid) {return (nn($pid) and $pA = r\acct($pid) and in($pA->name, SIGNUP_PARTNERS)) ? $pA : FALSE;}
 function cgA($qid) {return r\acct(str_replace('*', '', $qid));}

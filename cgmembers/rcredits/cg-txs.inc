@@ -54,7 +54,7 @@ function addCat(&$cats, $purpose, $amount, &$dups) {
     $cat = trim(mb_substr($purpose, 0, $i));
   } else $cat = $purpose;
   
-  if ($one = @$cats[$cat]) $dups = TRUE; else $one = array(0, 0);
+  if ($one = nni($cats, $cat)) $dups = TRUE; else $one = array(0, 0);
   list ($oldCount, $oldAmount) = $one;
   $cats[$cat] = array($oldCount + 1, $oldAmount + $amount);
 }
