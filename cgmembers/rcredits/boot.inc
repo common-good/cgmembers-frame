@@ -17,7 +17,6 @@ require_once DRUPAL_ROOT . '/includes/errors.inc';
 
 set_exception_handler('handleException');
 set_error_handler('handleError');
-register_shutdown_function('shutdown');
 
 timer_start('page');
 

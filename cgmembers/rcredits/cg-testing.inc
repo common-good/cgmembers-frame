@@ -176,7 +176,7 @@ function recurs($list) {return doRecords($list, 'Recurs');}
 function doBoxes($info = []) {
   global $testOnly, $channel; // be careful not to overwrite channel with a local variable
   //$boxName = $info['boxName'];
-  $info['channel'] = @strtr(nn($info['channel']), ray('sms pos web', TX_SMS, TX_POS, TX_WEB)) ?: $channel;
+  $info['channel'] = strtr(nn($info['channel']), ray('sms pos web', TX_SMS, TX_POS, TX_WEB)) ?: $channel;
   //if ($testOnly) $boxName = htmlspecialchars(@$boxName);
   return doThing($info, 'boxe');
 }
@@ -228,7 +228,7 @@ function doAccounts($info = []) {
 //    u\setDft($photoId, "$state-{$zip}999");
   u\setDft($helper, t\uid('.AAB')); // everyone but .AAB should have a helper
 /**/  if ($helper === '') die(trace()); // set helper to zero if none, never blank
-  u\setDft($last4bank, @substr(nn($bankAccount), -4, 4));
+  u\setDft($last4bank, substr(nn($bankAccount), -4, 4));
 
   if (u\getBit(nn($flags), B_OK)) u\setBit($flags, B_MEMBER);
 

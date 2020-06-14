@@ -93,7 +93,7 @@ function handleError($level, $msg, $file, $line, $context, $trace = NULL) {
     mail(R_ADMIN_EMAIL, t('%PROJECT ' . $title), $msg);
     if (!$nasty) return;
     if ($channel == TX_WEB) return w\softErr(tr('crash msg'));
-    die(); // invoke shutdown
+    die();
   } else {
     if ($channel == TX_WEB and basename($_SERVER['REQUEST_URI']) == 'php') {
       w\say($msg0, 'err');
@@ -104,11 +104,6 @@ function handleError($level, $msg, $file, $line, $context, $trace = NULL) {
   }
       
 }
-
-/**
- * Shutdown function (not used).
- */
-function shutdown() { }
 
 /**
  * Decodes an exception and retrieves the correct caller.
