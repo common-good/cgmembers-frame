@@ -322,7 +322,7 @@ function memberTradesUSDToMemberForRCredits($id1, $amount, $id2) {
 function weMessageMemberWithTopicAndSubs($id, $topic, $subs) {
   global $testOnly; if (!$testOnly) return FALSE;
   $a = acct(t\uid($id));
-  $message = t($topic, @$subs[0]);
+  $message = t($topic, nni($subs, 0));
   $topic = $GLOBALS['topics'][$topic];
   $fullName = $a->fullName;
   return weEmailToMemberWithSubs('message', $a->email, compact(ray('message topic fullName')));

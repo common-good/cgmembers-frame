@@ -38,5 +38,5 @@ function formUnsubscribe_submit($form, &$sta) {
   } else { $info['fishy'] = t('Might be a hack; email disagrees with account.'); }
   
   r\tellCo(t('%nm unsbuscribed (%qid)', 'nm qid', $a->fullName, $qid), $info, $a->id);
-  return go('/empty', t('Thank you for telling us!'));
+  return go('empty', t('Thank you for telling us!'));
 }

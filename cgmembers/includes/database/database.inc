@@ -477,9 +477,7 @@ abstract class DatabaseConnection extends PDO {
    *   A PDO prepared statement ready for its execute() method.
    */
   public function prepareQuery($query) {
-// CGF    $query = $this->prefixTables($query);
     $query = strtr($query, ['{' => '', '}' => '']);
-    // Call PDO::prepare.
     return parent::prepare($query);
   }
 

@@ -1,3 +1,10 @@
+2020-06-13 feature-handle-errors
+. revamped error handling so:
+  - on production all errors generate an email to admin, user sees a friendly apology on fatal error, otherwise nothing
+  - on dev all errors die with stack trace, except from PHP window where the error is displayed without a stack trace
+  - errors and exceptions are handled in a single function in errors.inc
+  - even warnings are errors
+
 2020-06-13 feature/no-at
 . replaced most @-sign error suppression with try blocks and nn() and nni()
 . exempted formPhp from crashes on error

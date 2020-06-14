@@ -9,6 +9,7 @@ require_once __DIR__ . '/defs.inc';
 
 $GLOBALS['tStrings'] = array(
   // reports
+  'crash msg' => t('<h4>Well Darn.</h4><p>You have encountered a software glitch. Our tech team has been notified.</p><p>In case more information would be helpful to them, please consider reporting this problem &mdash; and what you were trying to do &mdash; to %CGF_EMAIL.</p><p>Thank you for your patience and thank you for participating in %PROJECT!</p>'),
   'system down' => t('The %PROJECT system is under maintenance. Please try again in a few minutes?'),
   'your community down' => t('Your %PROJECT community is temporarily on hold. Contact your %PROJECT community Admin for details: %contact'),
   'other community down' => t('That %PROJECT community is temporarily on hold.'),

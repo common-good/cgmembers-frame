@@ -4,143 +4,61 @@ use CG\Util as u;
 use CG\Db as db;
 use CG\Web as w;
 
-/**/ if (preg_match('/msie [1-7][^0]/i', @$_SERVER["HTTP_USER_AGENT"])) die("\n\n\n" . t('<h2>We apologize</h2><p>The %PROJECT site does not work with your (very old) browser.</p>')); // avoid some nasty XSS holes in MSIE < 8
-
 /**
  * @file
  * Functions that need to be loaded on every request.
  */
+ 
+/**/ if (preg_match('/msie [1-7][^0]/i', @$_SERVER["HTTP_USER_AGENT"])) die("\n\n\n" . t('<h2>We apologize</h2><p>The %PROJECT site does not work with your (very old) browser.</p>')); // avoid some nasty XSS holes in MSIE < 8
 
-define('VERSION', '7.34'); // The current Drupal version.
-define('THEME', 'rcredits'); // The only theme we use.
-define('DRUPAL_CORE_COMPATIBILITY', '7.x'); // Core API compatibility.
-define('DRUPAL_MINIMUM_PHP', '5.2.4'); // Minimum supported version of PHP.
-define('DRUPAL_MINIMUM_PHP_MEMORY_LIMIT', '32M'); // Minimum recommended value of PHP memory_limit.
-define('ERROR_REPORTING_HIDE', 0); // Error reporting level: display no errors.
-define('ERROR_REPORTING_DISPLAY_SOME', 1); // Error reporting level: display errors and warnings.
-define('ERROR_REPORTING_DISPLAY_ALL', 2); // Error reporting level: display all messages.
-define('CACHE_PERMANENT', 0); // Indicates that the item should never be removed unless explicitly selected. The item may be removed using cache_clear_all() with a cache ID.
-define('CACHE_TEMPORARY', -1); // Indicates that the item should be removed at the next general cache wipe.
+const VERSION = '7.34'; // The current Drupal version.
+const THEME = 'rcredits'; // The only theme we use.
+const DRUPAL_CORE_COMPATIBILITY = '7.x'; // Core API compatibility.
+const DRUPAL_MINIMUM_PHP = '5.2.4'; // Minimum supported version of PHP.
+const DRUPAL_MINIMUM_PHP_MEMORY_LIMIT = '32M'; // Minimum recommended value of PHP memory_limit.
+const ERROR_REPORTING_HIDE = 0; // Error reporting level: display no errors.
+const ERROR_REPORTING_DISPLAY_SOME = 1; // Error reporting level: display errors and warnings.
+const ERROR_REPORTING_DISPLAY_ALL = 2; // Error reporting level: display all messages.
+const CACHE_PERMANENT = 0; // Indicates that the item should never be removed unless explicitly selected. The item may be removed using cache_clear_all() with a cache ID.
+const CACHE_TEMPORARY = -1; // Indicates that the item should be removed at the next general cache wipe.
 
-define('WATCHDOG_EMERGENCY', 0);
-define('WATCHDOG_ALERT', 1); // Alert: action must be taken immediately.
-define('WATCHDOG_CRITICAL', 2); // Critical conditions.
-define('WATCHDOG_ERROR', 3); // Error conditions.
-define('WATCHDOG_WARNING', 4); // Warning conditions.
-define('WATCHDOG_NOTICE', 5); // Normal but significant conditions.
-define('WATCHDOG_INFO', 6); // Informational messages.
-define('WATCHDOG_DEBUG', 7); // Debug-level messages.
+const E_EXCEPTION = -2; // error level of unhandled exception
+const WATCHDOG_EMERGENCY = 0;
+const WATCHDOG_ALERT = 1; // Alert: action must be taken immediately.
+const WATCHDOG_CRITICAL = 2; // Critical conditions.
+const WATCHDOG_ERROR = 3; // Error conditions.
+const WATCHDOG_WARNING = 4; // Warning conditions.
+const WATCHDOG_NOTICE = 5; // Normal but significant conditions.
+const WATCHDOG_INFO = 6; // Informational messages.
+const WATCHDOG_DEPRECATED = 7; // Informational messages.
+const WATCHDOG_USER_DEPRECATED = 8; // Informational messages.
+const WATCHDOG_DEBUG = 9; // Debug-level messages.
 
-define('DRUPAL_BOOTSTRAP_CONFIGURATION', 0); // First bootstrap phase: initialize configuration.
-define('DRUPAL_BOOTSTRAP_PAGE_CACHE', 1); // Second bootstrap phase: try to serve a cached page.
-define('DRUPAL_BOOTSTRAP_DATABASE', 2); // Third bootstrap phase: initialize database layer.
-define('DRUPAL_BOOTSTRAP_VARIABLES', 3); // Fourth bootstrap phase: initialize the variable system.
-define('DRUPAL_BOOTSTRAP_SESSION', 4); // Fifth bootstrap phase: initialize session handling.
-define('DRUPAL_BOOTSTRAP_PAGE_HEADER', 5); // Sixth bootstrap phase: set up the page header.
-define('DRUPAL_BOOTSTRAP_LANGUAGE', 6); // Seventh bootstrap phase: find out language of the page.
-define('DRUPAL_BOOTSTRAP_FULL', 7); // Final bootstrap phase: Drupal is fully loaded; validate and fix input data.
-
-/**
- * Role ID for anonymous users; should match what's in the "role" table.
- */
-define('DRUPAL_ANONYMOUS_RID', 1);
-
-/**
- * Role ID for authenticated users; should match what's in the "role" table.
- */
-define('DRUPAL_AUTHENTICATED_RID', 2);
-
-/**
- * The number of bytes in a kilobyte.
- *
- * For more information, visit http://en.wikipedia.org/wiki/Kilobyte.
- */
-define('DRUPAL_KILOBYTE', 1024);
-
-/**
- * The language code used when no language is explicitly assigned.
- *
- * Defined by ISO639-2 for "Undetermined".
- */
-define('LANGUAGE_NONE', 'und');
-
-/**
- * The type of language used to define the content language.
- */
-define('LANGUAGE_TYPE_CONTENT', 'language_content');
-
-/**
- * The type of language used to select the user interface.
- */
-define('LANGUAGE_TYPE_INTERFACE', 'language');
-
-/**
- * The type of language used for URLs.
- */
-define('LANGUAGE_TYPE_URL', 'language_url');
-
-/**
- * Language written left to right. Possible value of $language->direction.
- */
-define('LANGUAGE_LTR', 0);
-
-/**
- * Language written right to left. Possible value of $language->direction.
- */
-define('LANGUAGE_RTL', 1);
-
-/**
- * Time of the current request in seconds elapsed since the Unix Epoch.
- *
- * This differs from $_SERVER['REQUEST_TIME'], which is stored as a float
- * since PHP 5.4.0. Float timestamps confuse most PHP functions
- * (including date_create()).
- *
- * @see http://php.net/manual/reserved.variables.server.php
- * @see http://php.net/manual/function.time.php
- */
-define('REQUEST_TIME', (int) $_SERVER['REQUEST_TIME']);
-define('NOW', REQUEST_TIME); // cg 20170418
-
-/**
- * Flag used to indicate that text is not sanitized, so run check_plain().
- *
- * @see drupal_set_title()
- */
-define('CHECK_PLAIN', 0);
-
-/**
- * Flag used to indicate that text has already been sanitized.
- *
- * @see drupal_set_title()
- */
-define('PASS_THROUGH', -1);
-
-/**
- * Signals that the registry lookup cache should be reset.
- */
-define('REGISTRY_RESET_LOOKUP_CACHE', 1);
-
-/**
- * Signals that the registry lookup cache should be written to storage.
- */
-define('REGISTRY_WRITE_LOOKUP_CACHE', 2);
-
-/**
- * Regular expression to match PHP function names.
- *
- * @see http://php.net/manual/language.functions.php
- */
-define('DRUPAL_PHP_FUNCTION_PATTERN', '[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*');
-
-/**
- * A RFC7231 Compliant date.
- *
- * http://tools.ietf.org/html/rfc7231#section-7.1.1.1
- *
- * Example: Sun, 06 Nov 1994 08:49:37 GMT
- */
-if (!defined('DATE_RFC7231')) define('DATE_RFC7231', 'D, d M Y H:i:s \G\M\T'); // if is for PHP<7.0
+const DRUPAL_BOOTSTRAP_CONFIGURATION = 0; // First bootstrap phase: initialize configuration.
+const DRUPAL_BOOTSTRAP_PAGE_CACHE = 1; // Second bootstrap phase: try to serve a cached page.
+const DRUPAL_BOOTSTRAP_DATABASE = 2; // Third bootstrap phase: initialize database layer.
+const DRUPAL_BOOTSTRAP_VARIABLES = 3; // Fourth bootstrap phase: initialize the variable system.
+const DRUPAL_BOOTSTRAP_SESSION = 4; // Fifth bootstrap phase: initialize session handling.
+const DRUPAL_BOOTSTRAP_PAGE_HEADER = 5; // Sixth bootstrap phase: set up the page header.
+const DRUPAL_BOOTSTRAP_LANGUAGE = 6; // Seventh bootstrap phase: find out language of the page.
+const DRUPAL_BOOTSTRAP_FULL = 7; // Final bootstrap phase: Drupal is fully loaded; validate and fix input data.
+const DRUPAL_ANONYMOUS_RID = 1; // Role ID for anonymous users; should match what's in the "role" table.
+const DRUPAL_AUTHENTICATED_RID = 2; // Role ID for authenticated users; should match what's in the "role" table.
+const DRUPAL_KILOBYTE = 1024; // The number of bytes in a kilobyte.
+const LANGUAGE_NONE = 'und'; // The language when no language is explicitly assigned. Defined by ISO639-2 for "Undetermined".
+const LANGUAGE_TYPE_CONTENT = 'language_content'; // The type of language used to define the content language.
+const LANGUAGE_TYPE_INTERFACE = 'language'; // The type of language used to select the user interface.
+const LANGUAGE_TYPE_URL = 'language_url'; // The type of language used for URLs.
+const LANGUAGE_LTR = 0; // Language written left to right. Possible value of $language->direction.
+const LANGUAGE_RTL = 1; // Language written right to left. Possible value of $language->direction.
+define('REQUEST_TIME', (int) $_SERVER['REQUEST_TIME']); // Time of the current request in seconds since the Unix Epoch.
+define('NOW', REQUEST_TIME);
+define('CHECK_PLAIN', 0); // Flag used to indicate that text is not sanitized, so run check_plain(). @see drupal_set_title()
+define('PASS_THROUGH', -1); // Flag used to indicate that text has already been sanitized. @see drupal_set_title()
+define('REGISTRY_RESET_LOOKUP_CACHE', 1); // Signals that the registry lookup cache should be reset.
+define('REGISTRY_WRITE_LOOKUP_CACHE', 2); // Signals that the registry lookup cache should be written to storage.
+define('DRUPAL_PHP_FUNCTION_PATTERN', '[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*'); // to match PHP function names.
+if (!defined('DATE_RFC7231')) define('DATE_RFC7231', 'D, d M Y H:i:s \G\M\T'); // Example: Sun, 06 Nov 1994 08:49:37 GMT
 
 /**
  * Provides a caching wrapper to be used in place of large array structures.

@@ -458,7 +458,7 @@ function confirm($op, $thing, $code) {
     } else return u\FAIL('Bad do in confirm: ' . pr($code));
 
 
-  } else return go('empty', t('That %thing does not exist.', compact('thing')));
+  } else return softErr(t('That %thing does not exist.', compact('thing')));
   
 }
 
@@ -717,7 +717,7 @@ function eFld() {global $mya; return emailFld(REQ . t('Your Email:'), [t('Your e
 function pVal($fld, $pid) {return db\get($fld, 'people', compact('pid'));}
 function zipOnlyMsg($specifics, $zip) {return t('We are unable to geolocate that address at this time, so %specifics in the "%zip3" Zip Code area.', 'specifics zip3', $specifics, substr($zip, 0, 3));}
 function msgFld($req = REQ) {return areaFld($req . t('Message to Send:'), t('Max 200 characters'), maxlen(200));}
-function postRet($msg) {return r\acct() ? w\go('empty', $msg) : doSay($msg);}
+function postRet($msg) {return r\acct() ? softErr($msg) : doSay($msg);}
 function moderate($zip) {return in(substr(trim($zip), 0, 3), MODERATE_ZIPS);}
 function frmBools($frm) {foreach(ray(POST_FRMS) as $k) $res['frm' . ucfirst($k)] = ($frm == $k); return $res;}
 function myLocus() {global $mya; return ($mya and $mya->agentA->stepIsDone('contact')) ? $mya->location(TRUE) : '';}

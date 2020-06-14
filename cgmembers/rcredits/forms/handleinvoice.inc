@@ -19,7 +19,7 @@ use CG\Testing as t;
 function formHandleInvoice($form, &$sta, $args = '') {
   global $mya;
   extract(just('nvid ret code toMe webpay', $args, NULL));
-  $ret = $ret ? u\deurlify($ret) : 'empty/1';
+  $ret = $ret ? u\deurlify($ret) : 'empty'; // was empty/1
 
   $inv = db\get('*', 'r_invoices', 'nvid=:nvid', compact('nvid'));
   $err = r\badUnpaidInv($inv);
