@@ -996,28 +996,93 @@ function notices() {
   global $timeFor; // for testing
   
   $lastStart = getV('last_cron_start', []);
-  $day = nni($lastStart, 'day');
-  $timeFor_weekly = ($day and strftime('%w', $day) == R_WEEKLY_DAY);
+  $timeForW = (strftime('%w', nni($lastStart, 'day')) == R_WEEKLY_DAY);
+  $timeForM = (strftime('%d', nni($lastStart, 'day')) == R_MONTHLY_DAY);
   $timeFor_monthly = ($day and strftime('%d', $day) == R_MONTHLY_DAY);
   if (test() and isset($timeFor)) extract(just('weekly monthly', $timeFor), EXTR_PREFIX_ALL, 'timeFor');
 
   $where = $dailySql = '((NOT :IS_WEEKLY AND NOT :IS_MONTHLY) OR NOT :IS_MEMBER)'; // daily
-  if ($timeFor_weekly) $where .= ' OR :IS_WEEKLY';
-  if ($timeFor_monthly) $where .= ' OR :IS_MONTHLY';
-  $sql = "SELECT DISTINCT u.uid, :IS_WEEKLY AS weekly, :IS_MONTHLY AS monthly FROM r_notices n JOIN users u ON u.uid=n.uid WHERE IF(activated, u.:IS_OK, NOT u.:IS_NONUDGE) AND NOT sent AND ($where)";
+  if ($timeForW) $where .= ' OR :IS_WEEKLY';
+  if ($timeForM) $where .= ' OR :IS_MONTHLY';
+  $sql = "SELECT DISTINCT u.uid, :IS_WEEKLY AS weekly, :IS_MONTHLY AS monthly FROM r_notices n JOIN users u ON u.uid=n.uid  AND NOT sent AND ($where)";
 
   queueEach('notice1', $sql);
+  
+  $fields = 'uid fullName email notices latitude longitude radius zip timeForW timeForM';
+  
+  $sql = <<< X
+    SELECT pid, $fields, '$fields' as fields 
+    FROM people WHERE uid IS NULL
+    UNION
+    SELECT p.pid, $fields, '$fields' as fields
+    FROM users u LEFT JOIN (SELECT pid, uid FROM people) p USING (uid)
+    WHERE IF(activated, :IS_OK, NOT :IS_NONUDGE)
+X;
+  queueEach('postNotices1', $sql);
+  
   queueNext();
 }
 
+/*   foreach (ray('d w m') as $k) ${$k . 'Sql'} = "(notices LIKE 'O`$k' OR notices LIKE 'N`$k' OR notices LIKE 'T`$k')";
+  $where = $dSql;
+  if ($timeForW) $where .= ' OR ' . $wSql;
+  if ($timeForM) $where .= ' OR ' . $mSql;
+  $where = "notices IS NULL OR ($where)"; */
+
 function notice1($item) {
   extract(just('uid daily weekly monthly', $item));
-  $now = now();
+
   if ($args = r\noticeArgs($uid, 'NOT sent', $weekly, $monthly)) {
     $args['messages'] = str_replace('stule=', 'style=', $args['messages']); // revert in emails (but CSP forbids inline styles online)
     if (!r\notify($uid, 'notices', $args, TRUE)) return;
-    db\q('UPDATE r_notices SET sent=:now WHERE uid=:uid AND NOT sent', compact('uid', 'now'));
+    db\q('UPDATE r_notices SET sent=:NOW WHERE uid=:uid AND NOT sent', compact('uid'));
   }
+}
+
+/**
+ * Send a notice about recent posts to the given person.
+ * The person's notices field is a string of (EOL-delimited) lines, each one in the form:
+ * $type`$freq`$radius`$words, where
+ *   $type = 
+ */
+function postNotices1($item) {
+  require_once R_ROOT . '/forms/posts.inc'; // for getPosts()
+  extract(just('pid fields', $item, NULL));
+  extract(just($fields, $item, NULL));
+  
+  $cell = 'display:table-cell; padding:5px 8px; ';
+  $map0 = [
+     'tbody' => 'display:table; width:100%;', // use the body wrap as the table
+     'row' => 'display:table-row;',
+     'cell cat' => $cell . '',
+     'cell item' => $cell . '',
+     'cell details' => $cell . '',
+     'emergency' => 'font-weight:bold; color:red;',
+     
+  ];
+  foreach ($map0 as $k => $v) $map["class =\"$k\"] = "style=\"$v\"";
+  $map['<small>'] = '<small style="color:silver;">';
+
+  $posts = '';
+
+  foreach (explode("\n", $notices) as $one) {
+    list ($type, $freq, $radius, $words) = u\padRay(explode('`', $one), 4);
+    if (!in($type, 'offer need tip')) continue;
+    if ($freq != 'd' and !($freq == 'w' and $timeForW) and !($freq == 'm' and $timeForM)) continue;
+
+    $unit = ray('d:day w:week m:month')[$freq];
+    $since = strtotime("-1 $unit", now());
+
+    $q = getPosts($type, $latitude, $longitude, $zip, $radius, $pid ?: 0, FALSE, FALSE, $since);
+    if (!$q->rowCount()) continue;
+    $rows = strtr(join('', postRows($q, FALSE)), $map);
+    $Type = typeName($type, 2);
+    $posts .= "<h3>$Type</h3>\n$rows\n";
+  }
+
+  $noFrame = TRUE;  
+  $code = $uid ? getCode('users', compact('uid')) : getCode('people', compact('pid'));
+  r\rMail('post-notice', [$email => $fullName], compact(ray('fullName posts radius code noFrame')));
 }
 
 /**

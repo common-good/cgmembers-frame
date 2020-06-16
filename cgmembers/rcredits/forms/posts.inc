@@ -72,6 +72,7 @@ function formPosts($form, &$sta, $args = '') {
   if ($op == 'post') return getPost();
   if ($op == 'show') return showPost($postid);
   if ($op == 'who') return getWho($args);
+  if ($op == 'prefs') return getPrefs($code);
 
   $title = t('Offers, Needs, & Tips'); // for top or tabs
   $subtext = t('<p>Think about what you need and what you want to offer in each category. This only works if you also get a couple neighbors to post something, so do that too!</p>');
@@ -161,67 +162,22 @@ X
 }
 
 /**
- * Return a table of confirmed postings for the given type and category.
+ * Return a table of confirmed postings of the given type.
+ * @param string $type: post, offer, or tip
+ * @param numeric $lat: latitude of user
+ * @param numeric $lon: longitude of user
+ * @param string $zip: zip of user
+ * @param numeric $radius: up to how far away user is interested
  */
 function postList($type, $lat, $lon, $zip, $radius) {
   global $mya;
   
-  list ($distance, $noGeo) = [DISTANCE_BETWEEN, NO_DISTANCE];
   $myPid = vip('pid') ?: '0';
-  $isMyPid = 'pid=:myPid';
-  $postRadius = 'IFNULL(s.radius, 0)';
   $admin = admin($zip) ? 1 : 0;
-  
   $zipIrrelevant = ($mya and $mya->admin) ? 1 : 0;
-  $visible = $zipIrrelevant ? 1 
-  : (admin($zip) ? '(SELECT community FROM users WHERE :zip RLIKE zip AND uid<1 LIMIT 1)' : 0);
-  $visible = "($visible OR (NOT s.private AND s.confirmed))";
-
-  $sql = <<<X
-    SELECT IF ($noGeo, '', $distance) AS dist, s.postid, c.cat, s.item, s.details, s.emergency, $isMyPid AS mine,
-      LEAST(IF($postRadius=0, 99999, s.radius), :radius) AS least, $postRadius AS postRadius
-    FROM posts s
-    LEFT JOIN post_cats c ON c.id=s.cat
-    LEFT JOIN people p USING (pid)
-    WHERE s.type=:type
-      AND s.created <= :NOW
-      AND IFNULL(s.end, :NOW) >= :NOW
-      AND (
-        $admin OR
-        (:type='tip' AND $postRadius>0) OR
-        IF($noGeo, 
-          LEFT(p.zip,3) = LEFT(:zip,3) OR $zipIrrelevant, 
-          $distance < LEAST(IF($postRadius=0, 99999, s.radius), :radius)
-        )
-      )
-      AND $visible
-    ORDER BY s.cat,s.created DESC
-X;
-
-///     debug(showq($sql, compact(ray('type lat lon zip radius'))));
-  $q = db\q($sql, compact(ray('type lat lon zip radius myPid')));
-  foreach (ray(t('category item details')) as $k) $rows[] = "<div class=\"cell k-$k\">" . ucfirst($k) . '</div>';
-  $rows = ['<div class="thead"><div class="row">' . join('', $rows) . '</div></div>'];
-  $rows[] = '<div class="tbody">';
   
-  while ($row = $q->fetchAssoc()) {
-    extract($row);
-
-    if ($dist = fmtDist($dist, $zip)) { $cat .= " <small>$dist mi</small>"; }
-    if ($emergency) $item = '<span class="emergency">!!</span> ' . $item;
-    $item = lnk('/community/posts/op=show&postid=' . $postid, $item);
-    $rowClass = 'row ' . str_replace(' ', '', $cat) . ($mine ? ' mine' : '');
-    $rows[] = <<< X
-    <div class="$rowClass">
-      <div class="cell cat">$cat</div>
-      <div class="cell item">$item</div>
-      <div class="cell details">$details</div>
-    </div>
-X;
-  }
-  
-  $rows[] = '</div>';
-  return $rows;
+  $q = getPosts($type, $lat, $lon, $zip, $radius, $myPid, $admin, $zipIrrelevant);
+  return postRows($q, TRUE);
 }
 
 /**
@@ -418,6 +374,9 @@ function getWho($args) {
 }
 
 /**
+ * Edit notice preferences.
+ * @param string $code: 
+/**
  * Respond to user's click of confirm, cancel, or edit link in email.
  */
 function confirm($op, $thing, $code) {
@@ -613,7 +572,7 @@ function formPosts_submit($form, &$sta) {
  * @param assoc $extra: other values to encode in emailed link
  */
 function emailLink($thing, $idSub, $created, $type, $item, $pid, $extra = []) {
-  $code = getCode($thing, $idSub, $extra);
+  $code = getCode($thing . 's', $idSub, $extra);
   $index = "confirm-$thing";
   extract(pVal('fullName,email', $pid));
   $to = [$email => $fullName];
@@ -645,12 +604,12 @@ function oldEmailLink($pid) {
 
 /**
  * Return a code to confirm, cancel, or edit the given post or message.
- * @param string $thing: post or message
+ * @param string $tnm: table name
  * @param assoc $idSub: [record ID field name => record ID]
  * @param assoc $other: things to encode
  */
-function getCode($thing, $idSub, $other = []) {
-  $created = db\get('created', $thing . 's', $idSub);
+function getCode($tnm, $idSub, $other = []) {
+  $created = db\get('created', $tnm, $idSub);
   return str_replace(CRYPT_FLAG, '', u\cry('P', http_build_query($idSub + $other + ray('created word', $created, R_WORD))));
 }
 
@@ -661,7 +620,7 @@ function postMsg($message, $fromName, $fromEmail, $fromLocation, $postid) {
   extract(db\get('type,item,s.created,fullName,email', 'posts s JOIN people p USING (pid)', compact('postid')));
   $to = [$email => $fullName];
   $date = u\fmtDate($created, TRUE);
-  $code = getCode('post', compact('postid')); // code for recipient to cancel post
+  $code = getCode('posts', compact('postid')); // code for recipient to cancel post
   $noFrame = TRUE;
   r\rMail('post-message', $to, compact(ray('fullName fromName fromLocation type item date message code noFrame')), $fromEmail);
   say('message sent');
@@ -703,6 +662,84 @@ function admin($zip) {
   if (isset($adminZips) and in_array($zip, $adminZips)) return TRUE;
   if (r\communityUid($zip) == $mya->agentA->community) { $adminZips[] = $zip; return TRUE; }
   return FALSE;
+}
+
+/**
+ * Return a result set for the given parameters
+ * @param string $type: post, offer, or tip
+ * @param numeric $lat: latitude of user
+ * @param numeric $lon: longitude of user
+ * @param string $zip: zip of user
+ * @param numeric $radius: up to how far away user is interested
+ * @param date $since: first post date to include (0 to include all dates)
+ * @return the query result set
+ */
+function getPosts($type, $lat, $lon, $zip, $radius, $myPid, $admin, $zipIrrelevant, $since = 0) {
+  extract($args);
+  
+  $visible = $zipIrrelevant ? 1 
+  : ($admin ? '(SELECT community FROM users WHERE :zip RLIKE zip AND uid<1 LIMIT 1)' : 0);
+  $visible = "($visible OR (NOT s.private AND s.confirmed))";
+  list ($distance, $noGeo) = [DISTANCE_BETWEEN, NO_DISTANCE];
+  $postRadius = 'IFNULL(s.radius, 0)';
+  $isMyPid = 'pid=:myPid';
+
+  $sql = <<<X
+    SELECT IF ($noGeo, '', $distance) AS dist, s.postid, c.cat, s.item, s.details, s.emergency, $isMyPid AS mine,
+      LEAST(IF($postRadius=0, 99999, s.radius), :radius) AS least, $postRadius AS postRadius, p.displayName, p.city
+    FROM posts s
+    LEFT JOIN post_cats c ON c.id=s.cat
+    LEFT JOIN people p USING (pid)
+    WHERE s.type=:type
+      AND s.created <= :NOW AND s.created >= $since
+      AND IFNULL(s.end, :NOW) >= :NOW
+      AND (
+        $admin OR
+        (:type='tip' AND $postRadius>0) OR
+        IF($noGeo, 
+          MID(p.zip,1,3) = MID(:zip,1,3) OR $zipIrrelevant, 
+          $distance < LEAST(IF($postRadius=0, 99999, s.radius), :radius)
+        )
+      )
+      AND $visible
+    ORDER BY s.cat,s.created DESC
+X;
+
+///     debug(showq($sql, compact(ray('type lat lon zip radius'))));
+  return db\q($sql, compact(ray('type lat lon zip radius myPid')));
+}
+
+/**
+ * Return the given post selection query as HTML rows of summary information.
+ * @param q $q: query result set
+ * @param bool $classify: add categories to row class
+ * @return the HTML rows (including header)
+ */
+function postRows($q, $classify = FALSE) {
+  if ($classify) {
+    foreach (ray(t('category item details')) as $k) $cells[] = "<div class=\"cell k-$k\">" . ucfirst($k) . '</div>';
+    $rows = ['<div class="thead"><div class="row">' . join('', $cells) . '</div></div>'];
+  }
+  $rows[] = '<div class="tbody">';
+  
+  while ($row = $q->fetchAssoc()) {
+    extract(just('postid dist cat emergency item mine details', $row));
+
+    if ($dist = fmtDist($dist, $zip)) { $cat .= " <small>$dist mi</small>"; }
+    if ($emergency) $item = '<span class="emergency">!!</span> ' . $item;
+    $item = lnk('/community/posts/op=show&postid=' . $postid, $item);
+    $rowClass = $classify ? 'row ' . str_replace(' ', '', $cat) . ($mine ? ' mine' : '') : 'row';
+    $rows[] = <<< X
+    <div class="$rowClass">
+      <div class="cell cat">$cat</div>
+      <div class="cell item">$item</div>
+      <div class="cell details">$details</div>
+    </div>
+X;
+  }
+  
+  $rows[] = '</div>';
+  return $rows;
 }
 
 /**

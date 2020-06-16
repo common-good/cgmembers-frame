@@ -734,7 +734,7 @@ body.page-partner blockquote {font-size:14px;}
 #frm-summary .admin textarea {width:450px;}
 #frm-summary .admin .form-checkboxes {width:500px; max-width:500px;}
 #frm-summary #edit-notes .control-data {width:450px; max-height:150px; overflow-x:hidden; overflow-y:scroll; overflow-wrap:break-word}
-#frm-summary #edit-tickle {max-width:135px; display:inline-block;}
+#frm-summary #edit-tickle {max-width:140px; display:inline-block;}
 #frm-summary #edit-photo img {width:100px; margin-top:20px;}
 #frm-summary #edit-creditlimit .help-block,
 #frm-summary #edit-committed .help-block,

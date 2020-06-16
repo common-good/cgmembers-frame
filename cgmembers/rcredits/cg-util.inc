@@ -1604,4 +1604,4 @@ function prob($p, $yes = TRUE, $no = FALSE) {return (mt_rand() / mt_getrandmax()
 function routingOk($r) {return (preg_match('/^(|[0-9]{9})$/', $r) and db\exists('r_banks', 'route=:r', compact('r')));}
 function bankAcctOk($ba) {return preg_match('/^[0-9]{3,17}$/', $ba);}  // {3,20} ? Dwolla says 3-17
 function joins(&$s, $m, $other = '') {return $s = (empty($s) ? '' : "$s$m") . $other;}
-function padRay($ray, $n, $fill = []) {for ($i = 0; $i < $n; $i++) $ray[] = $fill; return $ray;}
+function padRay($ray, $n, $fill = '') {for ($i = 0; $i < $n; $i++) $ray[] = $fill; return $ray;}
