@@ -30,11 +30,7 @@ function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   u\EXPECT(compact(ray('sql subs')), 'notempty assoc');
   if (preg_match('/^DELETE FROM ([^ ]+)( |$)/', $sql, $match) and !in(NO_LOGSQL_TABLES, nn($match))) logSql(compact(ray('sql subs retId')));
   if ($log and mb_strpos($sql, 'SELECT ') === FALSE) u\loga('db', $subs + compact('sql'));
-  try {
-    return \db_query(u\SUBS($sql), u\prefixKeys(':', $subs), $retId ? ray('return', \Database::RETURN_INSERT_ID) : []);
-  } catch (\Exception $e) {
-    \rcredits_exception_handler($e);
-  }
+  return \db_query(u\SUBS($sql), u\prefixKeys(':', $subs), $retId ? ray('return', \Database::RETURN_INSERT_ID) : []);
 }
 
 /**

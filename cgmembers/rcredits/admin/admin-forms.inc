@@ -28,7 +28,7 @@ function formAdminPanel($form, &$sta, $args = '') {
   if ($mya->superAdmin) { // do periodic stuff that only superAdmin can do
     foreach ($kids = db\col('uid', 'users', ':IS_UNDERAGE') as $uid) { // underage bit got set when activating account
       $a = r\acct($uid);
-      if (now() - $a->dob >= MATURITY * YEAR_SECS) $a->setBit(B_UNDERAGE, FALSE); // unset bit (youngster is now of age)
+      if (now() - ($a->dob ?: now()) >= MATURITY * YEAR_SECS) $a->setBit(B_UNDERAGE, FALSE); // unset bit (youngster is now of age)
     }
   }
 
@@ -529,21 +529,14 @@ function formPhp_submit($form, &$sta) {
   foreach (ray($u) as $k => $v) $uses[] = "use CG$v as $k;";
 
   $code = join('', $uses) . $code;
-  $e = NULL;
   
   ob_start();
   try {
     eval($code);
-  } catch (\ParseError $e0) {$e = $e0;}
-    catch (\Exception $e0) {$e = $e0;}
-  
-  $res = ob_get_clean();
-
-  if ($e) {
-    $msg = preg_replace('/ Array.*\[line\] => ([^ ]+).*/ms', ' - line $1', $e->getMessage());
-    \drupal_set_message(t('ERROR: ' . $msg, 'error'));
+  } catch (\CompileError $e) {
+    say(t('<b>COMPILE:</b> %msg - line %line', 'msg line', $e->getMessage(), $e->getLine()), 'err');
   }
-  \drupal_set_message(pr($res));
+  say(pr(ob_get_clean()));
   //  w\go('sadmin/php/');
 }
 

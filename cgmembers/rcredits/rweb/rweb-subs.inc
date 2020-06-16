@@ -661,40 +661,37 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
     }
   }
 
-  try {
-    $args = 'arg1' . ($arg2 !== '' ? ' arg2' : '') . ($arg3 !== '' ? ' arg3' : '') . ($arg4 !== '' ? ' arg4' : '');
-    $formName = substr($function, 0, 1) == '/' ? substr($function, 1) : "CG\\Web\\form$function";
-    $specialForm = in($function, 'Empty footer accounts Login');
-    $adminForm = in($function, 'Admin MemberList MemberInfo');
-    $args = func_get_args(); // this and next few lines are from \drupal_get_form()
-    array_shift($args); // Remove $function from the arguments.
-    $formSta['build_info'] = compact('args');
-    $formSta['cache'] = TRUE;
+  $args = 'arg1' . ($arg2 !== '' ? ' arg2' : '') . ($arg3 !== '' ? ' arg3' : '') . ($arg4 !== '' ? ' arg4' : '');
+  $formName = substr($function, 0, 1) == '/' ? substr($function, 1) : "CG\\Web\\form$function";
+  $specialForm = in($function, 'Empty footer accounts Login');
+  $adminForm = in($function, 'Admin MemberList MemberInfo');
+  $args = func_get_args(); // this and next few lines are from \drupal_get_form()
+  array_shift($args); // Remove $function from the arguments.
+  $formSta['build_info'] = compact('args');
+  $formSta['cache'] = TRUE;
 //    $formSta['method'] = 'post';
-    if (!r\up() and !$adminForm and (!$specialForm or $function == 'Help')) {
-      if ($mya and $mya->superAdmin) {
-        say(t('The system is DOWN.'));
-        //if (!$mya->cttyUp) say(t('The community is DOWN.'));
-      } else $formName = 'CG\\Web\\formSystemDown';
-    }
-    
-    $form = \drupal_build_form($formName, $formSta);
-
-    $req = basename($_SERVER['REQUEST_URI']);
-    if (!$mya and in($req, 'login logout')) return w\go(PROMO_URL); // nothing else works
-    if ($req == 'user' and $mya) return w\go('summary'); // summary not ''
-    foreach ($form as $k => $v) if (is_array($v) and nni($v, '#type') == 'submit') {$submit1 = nni($v, '#id') ?: "edit-$k"; break;}
-    $form['opid'] = hidFld(nn($submit1) ?: 'none', ['name' => 'opid']); // default to first, in case submitted programmatically
+  if (!r\up() and !$adminForm and (!$specialForm or $function == 'Help')) {
+    if ($mya and $mya->superAdmin) {
+      say(t('The system is DOWN.'));
+      //if (!$mya->cttyUp) say(t('The community is DOWN.'));
+    } else $formName = 'CG\\Web\\formSystemDown';
+  }
   
-    if (!nni($form, 'confirm')) $form += which(); // add the choices popup form, if any
-    if (!$specialForm) {
-      \drupal_set_breadcrumb(makeBread());
-      setPageTitle($form);
-    }
-    $formArray = $form2 = $form; 
-    return \render($form2);
-    
-  } catch(\Exception $e) {\rcredits_exception_handler($e);}
+  $form = \drupal_build_form($formName, $formSta);
+
+  $req = basename($_SERVER['REQUEST_URI']);
+  if (!$mya and in($req, 'login logout')) return w\go(PROMO_URL); // nothing else works
+  if ($req == 'user' and $mya) return w\go('summary'); // summary not ''
+  foreach ($form as $k => $v) if (is_array($v) and nni($v, '#type') == 'submit') {$submit1 = nni($v, '#id') ?: "edit-$k"; break;}
+  $form['opid'] = hidFld(nn($submit1) ?: 'none', ['name' => 'opid']); // default to first, in case submitted programmatically
+
+  if (!nni($form, 'confirm')) $form += which(); // add the choices popup form, if any
+  if (!$specialForm) {
+    \drupal_set_breadcrumb(makeBread());
+    setPageTitle($form);
+  }
+  $formArray = $form2 = $form; 
+  return \render($form2);
 }
 
 /**
@@ -751,9 +748,9 @@ function sanitizePage($page) {
  * @param string $status: 'success' or 'error' (the default)
  */
 function photoRet($msg, $status = 'error') {
-  if ($status == 'success') $url = $msg; else $message = $msg;
-  u\loga('photoRet', compact('status', 'message', 'url'));
-/**/	echo json_encode(compact('status', 'message', 'url'), JSON_UNESCAPED_SLASHES);
+  $res = compact('status') + ray($status == 'success' ? 'url' : 'message', $msg);
+  u\loga('photoRet', $res);
+/**/	echo json_encode($res, JSON_UNESCAPED_SLASHES);
   exit();
 }
 
@@ -2168,7 +2165,7 @@ function skipStep($substitute = NULL, $justDid = '') {
 
   if (!$mya or !$stepsLeft = $mya->stepsLeft()) return; // nothing to do
   $step = $stepsLeft[0];
-  if (in($step, S_OPTIONAL)) return w\go($mya->nextStepUrl($step, $msg, $info), '');
+  if (in($step, S_OPTIONAL)) return w\go($mya->nextStepUrl($step, $msg), '');
     
   unset($stepsLeft[0]);
   if (!in($step, S_OPTIONAL)) $stepsLeft[] = $substitute ?: $step; // put this step at the end (except optional steps that can be done later or never)

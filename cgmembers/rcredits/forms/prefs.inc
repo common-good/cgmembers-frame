@@ -19,7 +19,6 @@ function formPrefs($form, &$sta) {
     $snap = boolFld(t('Food Assistance?'), t('If you struggle to afford healthy food, consider answering "Yes" here. This is a request for financial assistance from other %PROJECT members in your community. Your answer is private &mdash; only program administrators can tell who is receiving this assistance. Typically answer "Yes" if you are eligible for any of the following (whether or not you have actually applied): %list. (Food assistance may not yet be available in your area.)', compact('list')), $mya->snap);
   } else { $snap = $roundup = NULL; }
   
-  $crumbs = $mya->ok ? NULL : crumbsFld($mya->crumbs);
   $backing0 = u\fmtAmt(($mya->backing + 0) ?: 0); // don't default to 1 except on backing page
   $backingLink = lnk('/community/backing', t('change'));
   $backingEnd = $mya->backing > 0 ? t(' until ') . u\fmtDate($mya->backingDate + YEAR_SECS, TRUE) : '';
@@ -59,16 +58,13 @@ EOF
   
 
   jsx('advanced-prefs', compact('advancedFields'));
-  foreach (ray("title roundup crumbs snap statements showAdvancet $advancedFields") as $k) if (isset($$k)) $form[$k] = $$k;
+  foreach (ray("title roundup snap statements showAdvancet $advancedFields") as $k) if (isset($$k)) $form[$k] = $$k;
   return cgform($form + w\setupFoot() + compact('posttext'));
 }
 
 function formPrefs_validate($form, &$sta) {
-  extract(just('crumbs food snap', $sta['input'], NULL));
-  require_once __DIR__ . '/crumbs.inc';
-//  global $mya;
+  extract(just('food snap', $sta['input'], NULL));
 
-  if ($crumbs and !formCrumbs_validate($form, $sta)) return; // error is already said
   $food = $food ?: 0;
   if ($err = u\badAmount($food, '>=0', 1, 100)) return say($err, 'food');
   snapErr($snap); // just to remove punctuation
@@ -80,13 +76,9 @@ function formPrefs_submit($form, $sta) {
   include_once __DIR__ . '/../admin/admin.inc';
   global $mya;
 
-  extract(just('crumbs food snap roundup smsNotices notices statements nosearch debtOk secretBal', $sta['input'], NULL));
+  extract(just('food snap roundup smsNotices notices statements nosearch debtOk secretBal', $sta['input'], NULL));
 ///  if ($food) $mya->stepsDone('food'); // don't show the food fund page unnecessarily?
   $fields = 'food snap';
-  if (isset($crumbs)) {
-    $crumbs /= 100; // convert percentage to decimal
-    $fields .= ' crumbs';
-  }
   $food /= 100;
 
   foreach (ray($fields) as $k) $old["_old $k"] = $mya->$k;

@@ -43,8 +43,8 @@ function acctRisk1($uid, $thresholds, &$risk = 0, &$calc = 0) {
     setRisk('trusted', $trusted);
   }
   
-  $conxRisk = db\count('users u INNER JOIN r_invites i ON i.invitee=u.uid', "i.inviter=:id AND u.risk>=:K_RED", $idSub); // invited by this account
-  $relationsRisk = db\count('r_relations r LEFT JOIN users u ON u.uid=r.main', 'r.permission>0 AND r.other=:id AND u.risk>=:K_RED', $idSub); // access to (trusted by) suspect businesses
+  $conxRisk = db\count('users u INNER JOIN r_invites i ON i.invitee=u.uid', "i.inviter=:id AND u.risk>=:K_RED", $idSub); // invited suspect accounts
+  $relationsRisk = db\count('r_relations r LEFT JOIN users u ON u.uid=r.main', 'r.permission>0 AND r.other=:id AND u.risk>=:K_RED', $idSub); // access to (trusted by) suspect accounts
   setRisk('badConx', $conxRisk + $relationsRisk); // invited suspicious accounts
 
 // UNUSED  setRisk('socialConx', $a->mediaConx, 'ifany'); // 1st or 2nd-degree social media connections to administrator
@@ -59,7 +59,7 @@ function acctRisk1($uid, $thresholds, &$risk = 0, &$calc = 0) {
 //  setRisk('photoOff', $a); // photo mismatches ID or DOB
   setRisk('addrOff', $a); // addr mismatches ID
   if ($a->postalAddr) {
-    if (mb_strpos($a->postalAddr, $a->address) === FALSE or mb_strpos($a->postalAddr, 'box') !== FALSE) setRisk('poBox'); // separate postal address
+    if (strihas($a->postalAddr, 'box') or ($a->address and !strihas($a->postalAddr, $a->address))) setRisk('poBox'); // separate postal address
   }
   setRisk('ssnOff', $a); // weird, conflicting, or unknown SSN history
   setRisk('dobOff', $a); // birth date unverifiable in SSN check

@@ -1348,6 +1348,7 @@ function _form_validate(&$elements, &$form_state, $form_id = NULL) {
 
   // Validate the current input.
   if (!isset($elements['#validated']) || !$elements['#validated']) {
+    if (isset($elements['#value']) and $elements['#type'] != 'password') $elements['#value'] = trim($elements['#value']); // cgf 6/15/2020
     // The following errors are always shown.
     if (isset($elements['#needs_validation'])) {
       // Verify that the value is not longer than #maxlength.

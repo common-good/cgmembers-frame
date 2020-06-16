@@ -68,7 +68,6 @@ function handleError($level, $msg, $file, $line, $context, $trace = NULL) {
   f('u.loga', $title, $msg);
 
   if (!function_exists('filter_xss_admin')) require_once DRUPAL_ROOT . '/includes/common.inc';
-//  echo $msg0 . 'trace is null? ' . is_null($trace); die();
   if (empty($trace)) $trace = debug_backtrace();
   if (!empty($trace) and is_array($trace)) array_shift($trace); // don't repeat the final call
   $traceMsg = [];
@@ -89,18 +88,18 @@ function handleError($level, $msg, $file, $line, $context, $trace = NULL) {
   $msg = \filter_xss_admin($msg . join("<br>\n", $traceMsg));
   
   if (isPRODUCTION) {
-    $msg = str_replace('&nbsp;', '', str_replace('<br>', '', $msg));
+    $msg = strtr($msg, ['&nbsp;' => '', '<br>' => '', '&gt;' => '>']);
     mail(R_ADMIN_EMAIL, t('%PROJECT ' . $title), $msg);
     if (!$nasty) return;
     if ($channel == TX_WEB) return w\softErr(tr('crash msg'));
-    die();
+/**/die();
   } else {
     if ($channel == TX_WEB and basename($_SERVER['REQUEST_URI']) == 'php') {
       w\say($msg0, 'err');
       return w\go('sadmin/php');
     }
-    echo $msg;
-    die();
+/**/echo $msg;
+/**/die();
   }
       
 }
