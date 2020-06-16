@@ -239,11 +239,6 @@ function doAccounts($info = []) {
   if (isset($risks)) $risks = getRisks($risks, K_ACCT_RISKS);
 
   $fixFields = 'fullName legalName name pass email secure community zip country postalAddr cardCode cardCode2 ' . $moneyFields;
-//  } else $fixFields = '';
-
-//  if (isset($flags) and isset($acctType) and $acctType !== CO_PERSONAL and $acctType != 'personal') $flags .= ',co';
-
-//  if (isset($risks)) $risks = getRisks($risks, K_ACCT_RISKS);
 
   foreach (ray('acctType dw cc cc2') as $one) unset($info[$one]); // these are not real fields
   foreach (ray('uid jid helper flags risks last4bank ' . $fixFields) as $k) if (isset($$k)) $info[$k] = $$k; // add in changed fields
@@ -626,6 +621,14 @@ function doBalances($info) {
     if ($v != '?' and $k != 'committed' and $uid > 0) if (t\badEq("db $k", $a->o($k), $v, $uid)) return FALSE;
   }
   return TRUE;
+}
+
+/**
+ * Check the member's risks.
+ */
+function memberHasRisks($id, $risks) {
+  global $testOnly; if (!$testOnly) return FALSE;
+  return verifyRecord('users', ray('uid risks', t\uid($id), getRisks($risks, K_ACCT_RISKS)), K_ACCT_RISKS);
 }
 
 /**
@@ -1033,8 +1036,9 @@ function logIn($id) {
  * Example call:
  *   $info = doRelation($info, TRUE);
  *   return verifyRecord('r_relations', $info);
+ * @param string $riskRay: how to describe risk bits, if necessary (K_TX_RISKS or K_TX_ACCTS)
  */
-function verifyRecord($table, $info) {
+function verifyRecord($table, $info, $riskRay = K_TX_RISKS) {
   u\EXPECT(is_array($info), 'in verifyRecord');
   unset($info['data']);
   list ($infoK, $infoV) = [key($info), array_shift($info)]; // must be before ksort
@@ -1066,7 +1070,7 @@ function verifyRecord($table, $info) {
         $v2 = $actualRow[$k];
         foreach (ray('v v2') as $vk) if (is_null($$vk)) $$vk = '<NULL>';
         if ($k == 'flags') foreach (ray('v v2') as $vk) $$vk = u\bits($$vk, B_LIST);
-        if ($k == 'risks') foreach (ray('v v2') as $vk) $$vk = u\bits($$vk, K_TX_RISKS);
+        if ($k == 'risks') foreach (ray('v v2') as $vk) $$vk = u\bits($$vk, $riskRay);
         if ($v2 != $v) $difs .= "<tr><td>$k</td><td>$v</td><td>$v2</td></tr>\n";
       }
       $hdrs = t('<tr><th>field</th><th>want</th><th>got</th></tr>');

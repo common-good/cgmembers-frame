@@ -167,7 +167,7 @@ function photoUpload($uid = '', $sid = '') {
   $mya = r\acct($uid);
   $tempFilename = $mya->tempPhotoFilename;
   $quality = $mya->co ? 100 : 50; // jpeg compression/quality (0=worst quality, 100=best quality)
-  if ($mya->co) foreach ([$cropH, $cropW] as $k) $$k *= CO_PHOTO_FACTOR; // higher quality for businesses
+  if ($mya->co) foreach (ray('cropH cropW') as $k) $$k *= CO_PHOTO_FACTOR; // higher quality for businesses
 
   if ($recrop = u\starts($url, 'http')) $url = $tempFilename; // picture is already saved and is just being recropped
 

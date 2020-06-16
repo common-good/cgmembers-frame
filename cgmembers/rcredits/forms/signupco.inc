@@ -39,7 +39,7 @@ X
   if (nn($a)) {
     $agentQid = $a->mainQid;
     if ($coInfo = $a->signupCo) {
-      extract(just('company companyPhone', $coInfo)); // predict co name
+      extract(just('company companyPhone', $coInfo, '')); // predict co name
       if (!findCompany($company, $companyPhone)) list ($fullName, $phone) = [$company, $companyPhone];
     }
   } else $agentQid = '';

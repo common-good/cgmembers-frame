@@ -47,7 +47,7 @@ function rdo($code, $args = '') {
       $info = unserialize($data) + $row; // get new op, etc.
       $a = r\acct($uid);
     }
-    extract(just('op v mo expires sql subs', $info));
+    extract(just('op v mo expires sql subs', $info, ''));
   }
   
   $expires = ($mo and r\rdoMonth() > $mo + 3) ? 1 : FALSE; // finagle expiration if link is older than 3 months

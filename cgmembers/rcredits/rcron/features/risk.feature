@@ -5,16 +5,17 @@ SO I can handle those risks appropriately
 
 Setup:
   Given members:
-  | uid  | fullName   | address | zip   | flags      | risks    | tenure | moves |*
-  | .ZZA | Abe One    | 1 A St. | 01001 | ok         | adminOk  | 21     | 0     |
-  | .ZZB | Bea Two    | 2 A St. | 01001 | ok         | rents    | 43     | 1     |
-  | .ZZC | Corner Pub | 3 C St. | 01003 | ok,co      | cashCo   | 18     |       |
-  | .ZZD | Dee Four   | 3 C St. | 01003 | ok         | hasBank  | 25     | 0     |
-  | .ZZE | Eve Five   | 5 A St. | 01001 | ok         | shady    | 1      | 0     |
-  | .ZZF | Flo Six    | 6 A St. | 01001 | ok,roundup |          | 32     | 0     |
-  | .ZZG | Guy Seven  | 7 A St. | 01001 | ok         | addrOff  | 11     | 5     |
-  | .ZZH | Hal Eight  | 8 A St. | 01001 | ok         | ssnOff   | 100    | 10    |
-  | .ZZI | Ida Nine   | 9 A St. | 01001 | ok         | fishy    | 3      | 20    |
+  | uid  | fullName   | address | zip   | flags      | risks    | tenure | moves | postalAddr                |*
+  | .ZZA | Abe One    | 1 A St. | 01001 | ok         | adminOk  | 21     | 0     | 1 A St., Aville, MA 01001 |
+  | .ZZB | Bea Two    | 2 B St. | 01002 | ok         | rents    | 43     | 1     | 2 B St., Bville, MA 01002 |
+  | .ZZC | Corner Pub | 1 A St. | 01001 | ok,co      | cashCo   | 18     |       | 1 A St., Cville, MA 01003 |
+  | .ZZD | Dee Four   | 4 D St. | 01004 | ok         | hasBank  | 25     | 0     | 4 D St., Dville, MA 01004 |
+  | .ZZE | Eve Five   | 5 E St. | 01005 | ok         | shady    | 1      | 0     | POBox 5, Eville, MA 01005 |
+  | .ZZF | Flo Six    | 6 F St. | 01006 | ok,roundup |          | 32     | 0     | 6 F St., Fville, MA 01006 |
+  | .ZZG | Guy Seven  | 7 G St. | 01007 | ok         | addrOff  | 11     | 5     | 7 G St., Gville, MA 01007 |
+  | .ZZH | Hal Eight  | 8 H St. | 01008 | ok         | ssnOff   | 100    | 10    | 8 H St., Hville, MA 01008 |
+  | .ZZI | Ida Nine   | 9 I St. | 01009 | ok         | fishy    | 3      | 20    | 9 I St., Iville, MA 01009 |
+  | -2   | Ctty-2     |         |       | co         | geography |       |       |                           |
   And invites:
   | inviter | invitee | email |*
   | .ZZA    | .ZZD    | d2@   |
@@ -72,8 +73,7 @@ Setup:
   |    6 | .ZZC  |   -500 | %today    |
   And member field values:
   | uid  | field      | value |*
-  | .ZZA | community  |    -2 |
-  | .ZZE | postalAddr | Box 5 |
+  | .ZZB | community  |    -2 |
 # don't set community to -2 until after transactions  
   And riskThresholds:
   | Day | Week | 7Week | Year |*
@@ -93,18 +93,17 @@ Setup:
 
 Scenario: We calculate risks
   When cron runs "acctRisk"
-  Then members have:
-  | uid  | risks |*
-  | .ZZE | new,shady,poBox,moreIn |
-  | .ZZI | new,moves,fishy |
-  | .ZZH | moves,ssnOff |
-  | .ZZC | cashCo,homeCo,miser,bigDay,bigWeek,big7Week |
+  When cron runs "acctRisk"
+  Then member ".ZZA" has risks "adminOk,trusted,badConx,moreOut,big7Week"
+  And member ".ZZB" has risks "trusted,geography,badConx,moreOut,big7Week"
+  And member ".ZZC" has risks "cashCo,homeCo,miser,bigDay,bigWeek,big7Week"
+  And member ".ZZD" has risks "trusted,hasBank,miser"
+  And member ".ZZE" has risks "new,shady,poBox,moreIn"
+  And member ".ZZF" has risks "bigDay,bigWeek"
+  And member ".ZZG" has risks "new,moves,badConx,addrOff"
+  And member ".ZZH" has risks "moves,ssnOff"
+  And member ".ZZI" has risks "new,moves,fishy"
 #  | .ZZC | cashCo,homeCo,miser,bigDay | (this happens sometimes but is WRONG: 1270>1200 and 660>600)
-  | .ZZG | new,moves,badConx,addrOff |
-  | .ZZF | bigDay,bigWeek |
-  | .ZZB | trusted,moves,rents,moreIn,moreOut |
-  | .ZZA | adminOk,trusted,geography,badConx,moreOut,big7Week |
-  | .ZZD | trusted,hasBank,miser |
 # Do not specify exact risk because minor tweaks in the calculations cause major changes
 
   Given riskThresholdPercent is "10"

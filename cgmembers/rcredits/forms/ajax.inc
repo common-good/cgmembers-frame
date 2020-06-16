@@ -16,7 +16,7 @@ use CG\Db as db;
 
 function ajax() {
   global $channel; $channel = TX_AJAX; // tell log and tellAdmin our environment
-  extract(just('op sid data', $_POST ?: $_GET)); // don't sanitize this, it only comes from us!
+  extract(just('op sid data', $_POST ?: $_GET, NULL)); // don't sanitize this, it only comes from us!
   header('Content-Type: application/json');
 
   if ($op != 'presignup') { // no sid if not signed in
@@ -26,7 +26,7 @@ function ajax() {
 //  $mya = r\acct($myid, $aid);
 /**/  lug(compact(ray('op data myid aid')));
   $data = json_decode($data); // must be passed encoded or jQuery post() passes null
-  $mya = r\acct($myid, $aid); // usually relevant
+  $mya = ($myid and $aid) ? r\acct($myid, $aid) : NULL; // usually relevant
   
   if ($op == 'ssn') { // verify member's SSN
     if ($mya) $mya->ssnCheck();
@@ -56,7 +56,7 @@ function ajax() {
     $info = just('preid fullName legalName email phone', $data);
     db\update('signup', $info, 'preid');
   } elseif ($op == 'dpOffset') {
-    if (!$mya->superAdmin) return ajaxErr(t('You do not have permission.'));
+    if (!$mya or !$mya->superAdmin) return ajaxErr(t('You do not have permission.'));
     extract(just('amount', $data));
     if (!is_numeric($amount) or $amount <= 0) return ajaxErr('bad dollar pool offset transfer amount: ' . $amount);
     // temporarily disabled until we remember what this is supposed to do! r\acct(1)->bank(-amount, '', [], $why);
@@ -82,7 +82,7 @@ function ajax() {
     ajaxRet(compact('which', 'title', 'message'));
   } elseif ($op == 'whoami') { // return one or more data fields
 //    $data = just('fullName', ray($data)); // limit what we can get to what we need
-    ajaxRet(ray('whoami', "$mya->fullName ($mya->mainQid)"));
+    return $mya ? ajaxRet(ray('whoami', "$mya->fullName ($mya->mainQid)")) : ajaxErr('no current account!');
   } else return ajaxErr(t('Invalid op'));
   return ajaxMsg(t('Done!'));
 }

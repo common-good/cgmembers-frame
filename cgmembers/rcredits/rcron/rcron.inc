@@ -73,7 +73,8 @@ NOTES:
   where <star> means * (not the same as for the production site) 
  */
 
-define('DAILY_TASKS', 'START checkAccts setNear cttyStats trust acctRisk acctRiskFinish txRisk tickle lessOften recurs getFunds invoices invest notices END');
+// Calculate risks twice, to take into account connections with scoundrels
+define('DAILY_TASKS', 'START checkAccts setNear cttyStats trust acctRisk acctRisk acctRiskFinish txRisk tickle lessOften recurs getFunds invoices invest notices END');
 
 include_once __DIR__ . '/rcron-subs.inc';
 
@@ -836,7 +837,7 @@ function acctRisk() {
   setv('newThresholds', ray('bigDay bigWeek big7Week bigYear', [], [], [], []));
 
   db\q('UPDATE users SET risk=NULL'); // avoid unnecessary badConx. don't touch risks though!
-  foreach ([1, 2] as $zot) queueEach('acctRisk1', 'SELECT DISTINCT uid FROM users WHERE uid>:CANONIC_ACCTS and :IS_OK ORDER BY :IS_CO DESC'); // do this twice, to take into account connections with scoundrels
+  queueEach('acctRisk1', 'SELECT DISTINCT uid FROM users WHERE uid>:CANONIC_ACCTS and :IS_OK ORDER BY :IS_CO DESC');
   queueNext();
 }
 

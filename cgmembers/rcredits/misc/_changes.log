@@ -1,3 +1,14 @@
+2020-06-15 feature-tidy
+. input is now always trimmed except passwords
+. formPhp error handling simplified
+. bug fixed in checking for not underage in formAdminPanel
+. crumbs removed from prefs (now just in standalone page)
+. unused catches removed
+. poBox risk check fixed
+. account risk tests separated
+. bug fixed in company photo sizing
+. warnings fixed
+
 2020-06-13 feature-handle-errors
 . revamped error handling so:
   - on production all errors generate an email to admin, user sees a friendly apology on fatal error, otherwise nothing
