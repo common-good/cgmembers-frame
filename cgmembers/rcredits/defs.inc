@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.53t'; // software version
+const R_VERSION = '3.53u'; // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -407,7 +407,7 @@ const B_CONTACTABLE = 15; // okay for members to contact this member about their
 const B_BYSMS = 16; // NYI notifications by SMS
 const B_PAPER = 17; // will not accept electronic statements
 const B_SECRET = 18; // don't let merchants tell me my balance on request
-const B_UNDERAGE = 19; // too young to have a credit line (needed because dob is accessible only to superAdmin)
+const B_UNDERAGE = 19; // too young to have a credit line or DOB empty (needed because dob is accessible only to superAdmin)
 const B_DEBT = 20; // member chose to permit sub-zero balances
 const B_REINVEST = 21; // member chose to automatically reinvest investment club dividends and inflation adjustments
 const B_SAVINGS = 22; // the connected bank account is a savings or money market account
