@@ -911,7 +911,7 @@ EOF;
       $stepsLeft = $a->stepsLeft;
       unset($stepsLeft['partnerend']);
       $stepsLeft[] = 'partnerend';
-      $update(compact('stepsLeft'));
+      $a->update(compact('stepsLeft'));
     }
     return $nextStep;
   }
