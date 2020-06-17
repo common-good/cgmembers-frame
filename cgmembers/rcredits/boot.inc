@@ -134,4 +134,3 @@ function setCSP() {
   // Use <iframe sandbox="allow-scripts" ...> for cg4.us frame showing charts
 
 }
-
