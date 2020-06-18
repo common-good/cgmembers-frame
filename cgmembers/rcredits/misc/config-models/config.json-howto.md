@@ -18,7 +18,7 @@ Geocoding will work if you sign up with opencagedata.com and get a key.
 
 ### Encryption
 
-Each of the elements under encryption provides parameters for exncryption serving a specific purpose:
+Each of the elements under encryption provides parameters for encryption serving a specific purpose:
 
 *C*       cookie (last step of encryption is b64)
 *H*       photo
@@ -53,7 +53,7 @@ For maximum security, the method list for "V" (but no other) should include pgp.
 *ssnRequest*   template for REST request for SSN verification
 
 ### Other
-  
+
 *stage*        development, staging, game, or production
 *baseUrl*      URL of the application
 *promoUrl*     URL of the Common Good Promotional site

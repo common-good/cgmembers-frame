@@ -17,7 +17,7 @@
     "user": "root",
     "pass": "",
     "salt": "28859e345f55ce45426724100617830af221bdf3e01f4333ee34ba58d2df4429",
-    "word": "abcdefghijklmnopqrstuvwxyz123456",
+    "word": "c27c091cb80a3faade1552c46c63f27a",
     "encryption": {
       "C": ["xor b64", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
       "H": ["aes-256-ctr", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
