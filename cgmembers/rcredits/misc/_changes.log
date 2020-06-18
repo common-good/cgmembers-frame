@@ -1,3 +1,8 @@
+2020-06-17 feature/config-models
+. created better models for config files and documentation for their values
+. created (partially tested) .sh versions of batch files for recreating database and phinx commands
+. deleted some unneeded files
+
 2020-06-17 hotfix/typos
 . fixed a typo causing partner signup to fail
 . reversed a change in rcron handling of acctRisk (that failed)
