@@ -765,6 +765,7 @@ body.page-partner blockquote {font-size:14px;}
 #frm-summary #edit-altid {display:inline-block; width:180px;}
 #frm-summary #edit-altSt {display:inline-block; width:80px; margin-left:10px; margin-right:10px;}
 #frm-summary #edit-dob {display:inline-block; width:137px; padding-left:2px;} /* no left margin, in case it is first */
+#frm-summary #edit-altId .loneDob {margin-top:10px;}
 
 /* Coupons and Discounts */
 #frm-coupons #edit-buttons a.btn {margin:0 100% 10px 0;}
