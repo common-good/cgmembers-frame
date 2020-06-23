@@ -16,8 +16,8 @@
     "port": "3306",
     "user": "root",
     "pass": "",
-    "salt": "28859e345f55ce45426724100617830af221bdf3e01f4333ee34ba58d2df4429",
-    "word": "abcdefghijklmnopqrstuvwxyz123456",
+    "salt": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "word": "0123456789abcdef0123456789abcdef",
     "encryption": {
       "C": ["xor b64", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
       "H": ["aes-256-ctr", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],

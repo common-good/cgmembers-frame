@@ -1,3 +1,13 @@
+2020-06-23 feature/misc
+. fixed bug in photo.inc so company photos now resize properly
+. fixed bug in photo.inc croppic.js javascript to display error messages properly
+. unsubscribe ZAP notes (any anonymous notes) are now labeled as "self"
+. SSN verification now uses Curl, to accommodate file_get_contents's inability to handle SSH on our new server
+. fixed display of DOB, Alt ID, etc.
+. added a flip bit so companies can choose between a Donate button and a Buy Credit button
+. fixed several small bugs that generated warnings and display anomalies
+. fixed bug in Actual Donations to CG query
+
 2020-06-17 feature/config-models
 . created better models for config files and documentation for their values
 . created (partially tested) .sh versions of batch files for recreating database and phinx commands

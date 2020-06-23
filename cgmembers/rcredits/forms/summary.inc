@@ -492,12 +492,18 @@ function adminSummary() {
 
     $note = textFld(t('New Note:'), [t('Type a Note Here'), t('Abbreviations: PM=phone msg EM=email msg. Be sure to say what you left a message <i>about</i> (for example "PM setup")')]);
 
-    if ($mya->superAdmin or !$mya->hasDob) {
-      $altSt = rendA('altSt', stFld(substr($mya->altId, 0, 2)));
+    if (!$mya->co and ($mya->superAdmin or !$mya->hasDob)) {
       $dob = rendA('dob', dateFld(BARE, '', dft($mya->hasDob ? $mya->dob : '') + autofill('off')));
-      $altId = textFld(t('Alt ID / DOB:'), [t('License# etc.')], dft(substr($mya->altId, 2)) + suffix($altSt . $dob));
-    } else { $dob = $altId = $altSt = NULL; }
+    } else { $dob = NULL; }
 
+    if (!$mya->co and !$mya->hasFid) {
+      $altSt = rendA('altSt', stFld(substr($mya->altId, 0, 2)));
+      $altId = textFld(t('Alt ID / DOB:'), [t('License# etc.')], dft(substr($mya->altId, 2)) + suffix($altSt . $dob));
+    } else { 
+      $altId = $dob ? item($dob, t('DOB:')) : NULL; // dob is not shown directly, so show it here if no license is shown
+      $altSt = NULL;
+    }
+    
     $suffix = submitTickle(1, t('Wait a day')) . submitTickle(2, t('2 days')) . submitTickle(7, '7') . submitTickle(30, '30') . submitTickle('', t('Auto')) . ' &nbsp; ' . submitTickle($mya->tickle ? 'NONE' : '', t('Save'), 'sm');
     $tickle = dateFld(t('Tickle:'), [t('Followup Date'), t('When to follow up ("Auto" sets an automatic Welcome or Annual date)')], dft($mya->tickle) + w\suffix($suffix));
     $source = item($mya->source, t('Source:'));
