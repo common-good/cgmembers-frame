@@ -22,6 +22,7 @@ function formPhoto($form, &$sta, $arg = '') {
   $body = t('I am attaching a photo of me for my %PROJECT card. &nbsp; - %fullName', 'fullName', $mya->fullName);
   $emailIt = t('<%a>Email one to us</a>', '_a', atag('mailto:' . r\regionField('email') . '?subject=photo&body=' . $body));
 	$recropIt = $mya->cAdmin ? w\btn('/settings/photo/recrop=1', t('Recrop')) : '';
+  $progress = $nextStep = NULL; // may get set by extracting w\setupFoot()
 
   if ($ok) {
     say('got photo');
@@ -32,13 +33,10 @@ function formPhoto($form, &$sta, $arg = '') {
     $allSet = $mya->member ? t('you\'re all set') : t('click "%buttonName" above', compact('buttonName'));
     $desc = t('If you like this photo, %allSet. Otherwise:', compact('allSet'));
   } else {
-//    if ($err) say($err, 'err');
+    if ($err) say($err, 'err');
     if ($mya->hasPhoto) {
       extract(w\setupFoot()); // be sure new member has a chance to continue
-    } else {
-      $nextStep = item(w\skipButton());
-      $progress = NULL;
-    }
+    } else { $nextStep = item(w\skipButton()); }
     $desc = $mya->co
     ? t('<p>1. Choose a picture to represent your company in %PROJECT promotions. You will then resize and crop to fit it in the box (%R_PHOTO_WIDTHpx tall by %R_PHOTO_HEIGHTpx wide).</p>')
     : t('<p>1. Choose a recent color picture of yourself for your photo-ID %PROJECT card. Your photo will be encrypted and will not be visible to other members (unless you show it to them).<%b>Requirements</b>:
@@ -72,12 +70,6 @@ function formPhoto($form, &$sta, $arg = '') {
 
 EOF
   );
-  
-//  $sid = db\get('sid', 'sessions', 'uid=:uid', ['uid' => $mya->agentA->id]);
-//  $sid = session_id();
-//  $failure = urlencode(t('That is not a usable image file. Try again.'));
-//  $maxSize = R_MAX_UPLOAD_SIZE * 1024 * 1024;
-//  $maxSizeDpy = R_MAX_UPLOAD_SIZE . 'MB';
 
   js('croppic');
   js('crop-setup', 'recrop uid', $recrop, $mya->id);

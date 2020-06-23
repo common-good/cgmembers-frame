@@ -18,6 +18,7 @@ function ajax() {
   global $channel; $channel = TX_AJAX; // tell log and tellAdmin our environment
   extract(just('op sid data', $_POST ?: $_GET, NULL)); // don't sanitize this, it only comes from us!
   header('Content-Type: application/json');
+  $myid = $aid = NULL;
 
   if ($op != 'presignup') { // no sid if not signed in
     if (!nn($sid) or !$vars = w\sessionVars($sid)) return ajaxErr('bad sid');

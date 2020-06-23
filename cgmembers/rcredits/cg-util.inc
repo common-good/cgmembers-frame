@@ -504,6 +504,10 @@ function post($url, $content = FALSE, $responseFormat = 'raw', $extra_headers = 
   return $result;
 }
 
+function get($url, $content = FALSE, $responseFormat = 'raw', $extra_headers = [], $request_format = 'url') {
+  return post($url, $content, $responseFormat, $extra_headers, 'GET', $request_format);
+} 
+
 function randomInt($len = NULL) {
   $result = '';
   while (strlen($result) < $len) $result .= mt_rand(100000000, 999999999);
@@ -662,11 +666,24 @@ function seeAssoc($info) {
  * Look up the given SSN and return xml data.
  */
 function ssnLookup($ssn) {
-  $xml = tr(R_SSN_REQUEST, 'username password ssn', R_SSN_USER, R_SSN_PASS, $ssn);
+  $xml = tr(R_SSN_REQUEST, '_username _password _ssn', R_SSN_USER, R_SSN_PASS, $ssn);
   if (NOT_PRODUCTION) return u\getFile('ssnresult.txt'); // testing
-  try {
-    return file_get_contents("https://www.nationalpublicdata.com/feeds/FDSFeed.cfm?xml=" . urlencode($xml));
-  } catch (\Exception $e) { return NULL; }}
+  return getSSLPage('https://www.nationalpublicdata.com/feeds/FDSFeed.cfm?xml=' . urlencode($xml));
+}
+
+/**
+ * Curl page getter, because file_get_contents and u\get() fail
+ */
+function getSSLPage($url) {
+  $curl = curl_init();
+  curl_setopt($curl, CURLOPT_URL, $url);
+  curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+// NO! curl_setopt($ch, CURLOPT_SSLVERSION, 3); 
+  curl_setopt($curl, CURLOPT_HEADER, false);
+  $res = curl_exec($curl);
+  curl_close($curl);
+  return $res;
+}
 
 /**
  * Parse the bank ID number (BIN) into a US routing number and account number.

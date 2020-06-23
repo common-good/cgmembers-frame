@@ -58,18 +58,21 @@ function regionRange($region = NULL) {
 
 /**
  * Add a date stamp and agent's initials to the given note (before updating the notes field with it).
+ * Agent is deemed to be self if no current account, because it's surely an unsubscribe from an email notice link.
  */
 function stampNote($note) {
   global $mya;
 
-  if ($mya->proSe) {
-    $rep = t('self');
-  } elseif ($mya->superAdmin) {
-    $rep = 'sadmin';
-  } else {
-    list ($first, $last) = u\parseName($mya->agentA->fullName);
-    $rep = mb_strtolower(($first ? $first[0] : '') . $last);
-  }
+  if ($mya) {
+    if ($mya->proSe) {
+      $rep = t('self');
+    } elseif ($mya->superAdmin) {
+      $rep = 'sadmin';
+    } else {
+      list ($first, $last) = u\parseName($mya->agentA->fullName);
+      $rep = mb_strtolower(($first ? $first[0] : '') . $last);
+    }
+  } else { $rep = 'self'; }
   $date = u\fmtDate();
   return "$date  $rep: $note\n";
 }
