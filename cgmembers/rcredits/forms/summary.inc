@@ -496,7 +496,7 @@ function adminSummary() {
     if (!$mya->co) {
       if ($mya->superAdmin or !$mya->hasDob) $dob = rendA('dob', dateFld(BARE, '', dft($mya->hasDob ? $mya->dob : '') + autofill('off') + clas('noCalendar')));
       if ($mya->hasFid) {
-        if ($dob) $altId = item($dob, t('DOB:'), '&nbsp;', clas('loneDob')); // dob is not shown directly, so show it here if no license is shown
+        if ($dob) $altId = item($dob, t('DOB:'), '', clas('loneDob')); // dob is not shown directly, so show it here if no license is shown
       } else { 
         $altSt = rendA('altSt', stFld(substr($mya->altId, 0, 2)));
         $altId = textFld(t('Alt ID / DOB:'), [t('License# etc.')], dft(substr($mya->altId, 2)) + suffix($altSt . $dob));
