@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.53v'; // software version
+const R_VERSION = '3.53w'; // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -360,6 +360,8 @@ const APP_AGENT_CANS = APP_CANS + APP_CAN_BITS; // company permission bits when 
 define('APP_CAN_MASK', pow(2, APP_CAN_BITS + 1) - 1); // the CANS bits -- signed-IN permission bits are 22-28
 const CO_DFTS = '0 1 7 8 9 11 12'; // set these bits by default
 
+const CO_u22 = 22; // unused
+const CO_FLIP = 28; // flip the normal Donate vs Buy Credit button choice
 const CO_FAST = 29; // (deprecated as of app v 2.16) fast checkout -- never ask for photo Id (set by cAdmin)
 const CO_TIP = 30; // ask customer what percent tip to add
 
