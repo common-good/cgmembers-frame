@@ -1255,9 +1255,10 @@ function contactFields($defaults = []) {
 
   $step0 = !$mya->stepIsDone('contact');
   $partnerExtras = ' partner customer partnerCode'; // add-on fields passed through only for partner signup (start with space) (even partnerCode is necessary, in case form is redrawn on error)
-  $fields = 'phone physical address city state zip tenure owns sameAddr2 address2 city2 state2 zip2 postalAddr hidCountry hidState hidState2 other source';
+  $dbFlds = 'phone address city state zip tenure owns postalAddr source';
+  $fields = 'phone physical address city state zip tenure owns sameAddr2 address2 city2 state2 zip2 postalAddr hidState hidState2 other source';
   foreach ($defaults as $k => $v) if (is_null($v)) unset($defaults[$k]); // needed for joint account setup
-  extract($defaults + (array) $mya->account($fields));
+  extract($defaults + (array) $mya->account($dbFlds));
 
   if (nn($postalAddr)) list ($address2, $city2, $state2, $zip2) = u\parseAddr(nn($postalAddr));
   if (!nn($state2)) $state2 = 0; // otherwise default fails in countrys.js
@@ -1292,15 +1293,8 @@ function contactFields($defaults = []) {
   //  js('http://ziplookup.googlecode.com/git/public/ziplookup/zipLookup.min.js', 'file', 'header');
 //    js('zipLookup.js', 'file', 'footer');
     jsx('addr');
-
-/*    $countryAttrib = w\onchange("
-      print_state(this.options[this.selectedIndex].value,'','state');
-      print_state(this.options[this.selectedIndex].value,'','state2');
-    ");
-*/
     $phone = phoneFld(REQ . t('Phone:'), [t('Your phone number')], dft($phone));
 //    $faxetc = @$faxetc ? textFld(t('Fax etc:'), [t('Other contact info'),t('List other ways to contact you: fax, mobile, IM, etc. This field is NOT public.')], dft(@$faxetc)) : NULL;
-//    $country = selectFld(t('Country:'), t(''), dft(@$country) + $countryAttrib); // can't use required() here
 //    $country = selectFld(t('Country:'), t(''), dft(@$country)); // can't use required() here
     $physical = item('', t('Physical Address'));
     $address = textFld(t('Street Address:'), [t('Physical address'), t('Where is your building located (physical address)?')], required(nn($address)));
@@ -1311,7 +1305,6 @@ function contactFields($defaults = []) {
     $sameAddr2 = ($step0 ? nn($state2) : !(nn($mya) and $mya->cAdmin)) // show box on signup (until mailing addr filled) & to admin
     ? item('', t('Mailing Address')) 
     : w\boxFld('sameAddr', t('Mailing Address'), t('same as above'), 0);
-//    : w\boxFld('sameAddr', t('Mailing Address'), t('same as above'), 0, w\onchange('setPostalAddr(true)'));
     
     $postalAddr = hidFld();
     $address2 = textFld(t('Street Address:'), [t('Postal street address')], required(nn($address2)));

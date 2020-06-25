@@ -30,6 +30,9 @@ input[type=number] {-moz-appearance:textfield;}
 .skip {margin-left:10px;}
 .positive {color:green;} /* highlights donations and other happy amounts */
 .white {color:white;} /* to make things disappear */
+.noCalendar::-webkit-inner-spin-button,
+.noCalendar::-webkit-calendar-picker-indicator {display: none; -webkit-appearance: none;}
+
 tr.hiRow {background-color:lightyellow;}
 #edit-none {display:none;} /* for hidden submit button */
 iframe {border:0; float:right; margin-right:-60px;}
@@ -734,7 +737,7 @@ body.page-partner blockquote {font-size:14px;}
 #frm-summary .admin textarea {width:450px;}
 #frm-summary .admin .form-checkboxes {width:500px; max-width:500px;}
 #frm-summary #edit-notes .control-data {width:450px; max-height:150px; overflow-x:hidden; overflow-y:scroll; overflow-wrap:break-word}
-#frm-summary #edit-tickle {max-width:137px; display:inline-block; padding-left:2px;}
+#frm-summary #edit-tickle {max-width:105px; display:inline-block; margin-right:10px;}
 #frm-summary #edit-photo img {width:100px; margin-top:20px;}
 #frm-summary #edit-creditlimit .help-block,
 #frm-summary #edit-committed .help-block,
@@ -764,7 +767,7 @@ body.page-partner blockquote {font-size:14px;}
 
 #frm-summary #edit-altid {display:inline-block; width:180px;}
 #frm-summary #edit-altSt {display:inline-block; width:80px; margin-left:10px; margin-right:10px;}
-#frm-summary #edit-dob {display:inline-block; width:137px; padding-left:2px;} /* no left margin, in case it is first */
+#frm-summary #edit-dob {display:inline-block; width:105px;} /* no left margin, in case it is first */
 #frm-summary #edit-altId .loneDob {margin-top:10px;}
 
 /* Coupons and Discounts */
@@ -799,6 +802,10 @@ body.page-partner blockquote {font-size:14px;}
 .cmpy-list .cmpy-ind-wrapper {margin-top:10px;}
 .cmpy-list .cmpy-ind {font-weight:bold; color:#004d00; font-size:150%; margin:30px 0 5px 0;}
 .company-listing {color:red; font-weight:bold;}
+
+/* Unsubscribe */
+#frm-unsubscribe #edit-why .checkbox {display:block;}
+#frm-unsubscribe #edit-why .checkbox i {color:silver;}
 
 /* Pay/Charge/Tx */
 #frm-tx #edit-periods {width:40px; display:inline-block; margin-right:10px;}

@@ -72,12 +72,12 @@ X
 
   $selling = textFld(t('Selling:'), [t('Products'),t('Enter a <b>VERY SHORT</b> transaction description (for example "food") for when you make a sale. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', u\fmtDate(now(), TRUE))], required($mya->selling) + maxlen(SELLING_MAXLEN));
   $source = $source ? hidFld($source) : sourceFld('');
-  $ownPhone = boolFld(t('Own Phone:'), t('Will you be running the CGPay app on your own Android phone? (%PROJECT is happy to supply one, with a $%EQUIP_DEPOSIT refundable equipment deposit).'), FALSE);
+  $needPhone = boolFld(t('Need Phone:'), t('Do you need %PROJECT to supply an Android phone, to run the CGPay app? (you will be charged a $%EQUIP_DEPOSIT refundable equipment deposit).'), FALSE);
 
   $submit = t('Submit');
   jsx('signupco');
   
-  return cgform(compact(ray('title subtext source2 coType fullName legalName email zip phone selling federalId dob source ownPhone submit args agentQid')));
+  return cgform(compact(ray('title subtext source2 coType fullName legalName email zip phone selling federalId dob source needPhone submit args agentQid')));
 }
   
 function formSignupCo_validate($form, &$sta) {
@@ -114,7 +114,7 @@ function formSignupCo_submit($form, &$sta) {
   global $mya;
   
   $dbFields = 'coType source selling fullName legalName email flags phone federalId dob zip state helper';
-  extract(just($dbFields . ' source2 ownPhone agentQid args', $sta['input']));
+  extract(just($dbFields . ' source2 needPhone agentQid args', $sta['input']));
   extract(just('code relate', nn($args)));
 
   signout(TRUE);
@@ -147,8 +147,9 @@ function formSignupCo_submit($form, &$sta) {
   
   say('info saved');
 
-  if ($ownPhone != 1) {
+  if ($needPhone) {
     be\invoice(r\acct(CGID), $mya, EQUIP_DEPOSIT, t('equipment deposit'), FOR_NONGOODS);
+    r\tellCo(t('New business has paid a deposit for a smartphone. Please deliver one ASAP.'));
     say('refundable deposit');
   }
 

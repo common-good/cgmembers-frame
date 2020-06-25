@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.53w'; // software version
+const R_VERSION = '3.53x'; // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -151,11 +151,11 @@ const SUBMENUS = 'community invest history co settings sadmin';
 const ITEM_FLDS = 'special title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back'; // names of common fields that are wrapped automatically in w\item()
 const R_DATE_FLDS = 'start end start created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted'; // date field names for testing and administrative display
 const CO_FLDS = 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd staleNudge contact'; // account fields stored in r_company
-const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
+const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo otherAssets otherLiabilities fyEnd'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
 const MASTER_NUMERIC_FLDS = 'minimum achMin savingsAdd saveWeekly';
 const MASTER_FLDS = MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank refill'; // only in master, for joint accounts
 const R_MONEY_FLDS = 'balance rewards floor giftPot committed'; // financial amount fields in account record
-const JOINT_FLDS = R_MONEY_FLDS . ' savings'; // add these together for joint accounts
+const JOINT_FLDS = R_MONEY_FLDS . ' savings'; // add these together for joint accounts (except balance)
 const PSECURE_FLDS = 'phone email'; // personal fields that get encrypted in a searchable way (P)
 const VSECURE_FLDS = 'federalId dob bankAccount altId'; // very secure fields (always soon pgp-encrypted within Acct::vsecure)
 const SECURE_FLDS = 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode cardCode cardCode2 pin question answer idProof oneTimePass last4bank yob smtPass'; // non-personal encrypted fields (must be complete list)
@@ -210,7 +210,7 @@ const CO_PHOTO_FACTOR = 3; // make company photos this many times as big as indi
 const MAX_UPLOAD_SIZE = 4 * 1024000; // maximum upload size in bytes
 const MAX_ID_SIZE = 10; // max ID size in MB
 
-const VIDEO_URL = 'http://cg4.us/video'; // Nuts & Bolts video
+const VIDEO_URL = 'https://cg4.us/video'; // Nuts & Bolts video
 const TRANSLATE_URL = 'https://translation.googleapis.com/language/translate/v2'; // google translate API URL
 const GEOCODE_URL = 'https://api.opencagedata.com/geocode/v1/json?'; // use in acct::setLocus()
 const MI_PER_DEGREE = 69; // varies from 68.703 at the equator to 69.407 at the poles
@@ -331,6 +331,7 @@ const R_NOT_VALID = R_ROOT . '/images/not-valid.png'; // says rcard is not valid
 const LOG_DIR = SHARED_DIR . '/cgLogs/'; // where to store log files
 define('LOG_FLNM', LOG_DIR . date('Ym') . '.log');
 define('SQL_LOG', LOG_DIR . date('Ym') . '.logsql');
+const PHOTOID_DIR = R_PICTURE_DIR . 'photoids';
 
 // account type bits
 define('CO_TYPES', t('personal, sole proprietor, partnership, LLC, private corporation, publicly-traded corporation, nonprofit, government, co-operative, unincorporated association or club, estate, trust, custodian'));

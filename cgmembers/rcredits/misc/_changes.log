@@ -1,3 +1,14 @@
+2020-06-25 feature/misc2
+. unset account fields now generate a warning
+. fixed some undiscovered bugs (from the new warnings)
+. fixed formatting on AltId and Tickle
+. improved unsubscribe page to give choice boxes
+. fixed bug in endorsement (if member submits without saying sign or not sign)
+. added alert to CO to deliver a phone
+. flipped ownPhone (in signup-co.inc) to needPhone, to avoid invoice denials
+. fixed risks test
+. automated renaming of photo ID files on change of account uid
+
 2020-06-23 feature/misc
 . fixed bug in photo.inc so company photos now resize properly
 . fixed bug in photo.inc croppic.js javascript to display error messages properly

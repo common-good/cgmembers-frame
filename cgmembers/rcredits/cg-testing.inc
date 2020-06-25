@@ -601,9 +601,9 @@ function doBalances($info) {
 
   if (isset($info['balance'])) {
     $testXid -= 1;
-    if (abs($info['balance']-$a->balance) >= 0.005) {
+    if (abs($info['balance'] - $a->balance) >= 0.005) {
       $cgA = r\acct(CGID);
-      u\EXPECT((bool) $cgA, 'no cgA!');  // when running the rCron Joint test first after recreating, r\acct(CGID) fails here because the CG account was just created (shouldn't fail -- reflects some coding error in acct object maybe?). Creating with $cgA = new r\Acct([CGID, CGID]) here did not help. SOLUTION: First run some other test that doesn't create balances like this, just to get the CG account created.
+      u\EXPECT((bool) $cgA, 'no cgA!');
       u\EXPECT($a != $cgA, "CG balance ($cgA->balance) cannot be set directly to " . $info['balance']); // (if setting it to what it already is, no problem)
       $res = be\transfer('charge', $cgA, $a, -($info['balance']-$a->balance), 'set balance for testing', FOR_NONGOODS,
                          ['force'=>1, 'xid'=>$testXid]);

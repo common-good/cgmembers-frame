@@ -6,8 +6,6 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
-define('PHOTOID_DIR', R_PICTURE_DIR . '/photoids');
-
 /**
  * Ask new member to verify their identity.
  */
