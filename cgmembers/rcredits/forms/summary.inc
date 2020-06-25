@@ -504,7 +504,7 @@ function adminSummary() {
     }
     
     $suffix = submitTickle(1, t('Wait a day')) . submitTickle(2, t('2 days')) . submitTickle(7, '7') . submitTickle(30, '30') . submitTickle('', t('Auto')) . ' &nbsp; ' . submitTickle($mya->tickle ? 'NONE' : '', t('Save'), 'sm');
-    $tickle = dateFld(t('Tickle:'), [t('Followup Date'), t('When to follow up ("Auto" sets an automatic Welcome or Annual date)')], dft($mya->tickle) + w\suffix($suffix));
+    $tickle = dateFld(t('Tickle:'), [t('Followup Date'), t('When to follow up ("Auto" sets an automatic Welcome or Annual date)')], dft($mya->tickle) + w\suffix($suffix) + clas('noCalendar'));
     $source = item($mya->source, t('Source:'));
   }
 

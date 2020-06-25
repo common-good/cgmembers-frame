@@ -274,6 +274,10 @@ EOF
   'verification code' => t('Your verification code for using %PROJECT online is: %nonce'), // used in rWeb
   'whats up' => t('You have not had any %PROJECT transactions in the past month. Most members have at least one transaction per month, so this is a little unusual and we hope all is well with you. Please email or call us if you have any problems or questions.'),
   'co promo' => t('And if you need more promotional cards to hand out to customers, just let us know!'),
+  'thank tell' => t('Thank you for telling us!'),
+  'acct deleted' => t('Your account has been deleted.'),
+  'now closed' => t('Your account is closed.'),
+  'return welcome' => t('You are welcome back any time.'),
   
   // error messages
   'syntax' => t('Wrong syntax!'),

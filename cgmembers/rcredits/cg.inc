@@ -470,10 +470,10 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
   $keyUid = nni($subs, 'uid');
   $keyA = $tellCOA ?: ($keyUid ? r\acct($keyUid) : NULL);
   
-  $currentAcct = $mya ? $mya->nameAndQid : NULL;
-  $keyAcct = $keyA ? $keyA->nameAndQid : NULL;
+  $currentAcct = $mya ? $mya->nameAndQid() : NULL;
+  $keyAcct = $keyA ? $keyA->nameAndQid() : NULL;
   $email = $tellCOA ? $tellCOA->cttyA->email : R_ADMIN_EMAIL; // tell cAdmin if appropriate, else superAdmin
-  $replyTo = ($keyA or $mya) ? ($keyA ?: $mya)->nameAndEmail : NULL;
+  $replyTo = ($keyA or $mya) ? ($keyA ?: $mya)->nameAndEmail() : NULL;
   
   $topic = mb_strlen($index) < 50 ? strip_tags($index) : '';
   $message .= u\seeAssoc($subs);
@@ -776,10 +776,9 @@ function deleteAccount($a) {r\changeUid($a, 0, FALSE, TRUE);}
 function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
   global $mya;
   if (!$a or !$a = is_object($a) ? $a : r\acct($a)) return w\say(t('nope'), 'err');
-  if ($a->id == $mya->id) return w\say(t('You can\'t delete or change the uid of an acct while it\'s the current acct.'), 'err');
+  if ($mya and $a->id == $mya->id) return w\say(t('You can\'t delete or change the uid of an acct while it\'s the current acct.'), 'err');
   $oldUid = $a->id;
   $nm = $a->fullName;
-  $photoFlnm = $a->tempPhotoFilename;
   $oldQid = r\qid($oldUid);
 
   if ($delCtty = ($delete and $a->isCtty)) { // deleting a community (merge into Seedpack)
@@ -900,9 +899,16 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
   }
   
   unset($DBTX); // commit
-  if (!$delete) rename($photoFlnm, str_replace($oldQid, r\qid($newUid), $photoFlnm));
+
+  if (!$delete) {
+    $newQid = r\qid($newUid);
+    foreach ([R_PICTURE_DIR, PHOTOID_DIR . '/'] as $dir) { // original card photo(s) if any AND photo ID file(s) if any
+      foreach (glob("$dir/$oldQid.*") as $flnm) rename($flnm, str_replace("/$oldQid.", "/$newQid.", $flnm));
+    }
+  }
+
+  if ($mya and $mya->superAdmin) w\say(t('Success. Account %nm has been %what.', 'nm what', $nm, $newUid ? t('changed to ') . $newUid : t('deleted')));
   
-  w\say(t('Success. Account %nm has been %what.', 'nm what', $nm, $newUid ? t('changed to ') . $newUid : t('deleted')));
 }
 
 /**
@@ -1368,7 +1374,7 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   if (!$a1->confirmed and !$a1->isCanonic and !$a2->isCanonic and $a1->id != CGID and $a2->id != CGID) { // actor is not confirmed (but newbs can transact with bank and CG)
     if ($a1->community != $a2->community or $channel != TX_POS) { // first tx must be in-person at home
       if ($a1->helper != $a2->id) { // unless doing business with who invited you
-        if (!$a1->hasSsn or $a1->hasRisk('badSsn')) {
+        if (!$a1->hasId or $a1->hasRisk('badSsn')) {
           return [FALSE, 'first at home', []];
         }
       }
