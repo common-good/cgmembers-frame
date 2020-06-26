@@ -344,6 +344,9 @@ const CO_NONPROFIT = 6;
 const CO_CUSTODIAN = 12;
 
 // Company Account flags (bits)
+const CO_SELLCG = 0; // company sells Common Good credit
+const CO_FLIP = 1; // flip the normal Donate vs Buy Credit button choice
+
 const CO_PRIVATE = 13; // company is not to be listed publicly (on promo site, etc.)
 const CO_ATM = 14; // can trade cg credit for cash, even if balance is less than floor
 
@@ -358,13 +361,12 @@ const CO_u21 = 6; // unused
 const CO_MANAGE = 7; // this bit is not actually stored here, but pass B_MANAGE to the app in this position
 const APP_CAN_BITS = 7; // number of bits for permissions (each: signed in and out)
 const APP_AGENT_CANS = APP_CANS + APP_CAN_BITS; // company permission bits when signed IN (to be limited by agent perms)
-define('APP_CAN_MASK', pow(2, APP_CAN_BITS + 1) - 1); // the CANS bits -- signed-IN permission bits are 22-28
-const CO_DFTS = '0 1 7 8 9 11 12'; // set these bits by default
+const APP_CAN_MASK = (1 << (APP_CAN_BITS + 1)) - 1; // the CANS bits -- signed-IN permission bits are 22-28
 
-const CO_u22 = 22; // unused
-const CO_FLIP = 28; // flip the normal Donate vs Buy Credit button choice
 const CO_FAST = 29; // (deprecated as of app v 2.16) fast checkout -- never ask for photo Id (set by cAdmin)
 const CO_TIP = 30; // ask customer what percent tip to add
+
+const CO_APP_DFTS = '0 1 7 8 11 12'; // set these app bits by default (R4USD only if chosen in signupco.inc)
 
 const APP_CAN_BIT_NAMES = 'charge undo r4usd usd4r refund buy';
 define('APP_CAN_BIT_DESCS', t('charge customers,undo last transaction,give %RCREDITS for USD,give USD for %RCREDITS,refund any amount,make payments'));

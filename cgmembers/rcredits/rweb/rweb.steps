@@ -1999,7 +1999,8 @@ function weRedirectOffsiteTo($content) {
 /**
  * company flags: (ARG)
  *
- * in: TEST signupco ACompanySuppliesCompanyInformation
+ * in: TEST signupco ACompanySignsUp
+ *     TEST signupco ACompanySuppliesCompanyInformation
  */
 function companyFlags($flags) {return t\companyFlags($flags);}
 

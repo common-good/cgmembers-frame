@@ -781,22 +781,19 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
   $nm = $a->fullName;
   $oldQid = r\qid($oldUid);
 
+  $DBTX = \db_transaction();
+
   if ($delCtty = ($delete and $a->isCtty)) { // deleting a community (merge into Seedpack)
     db\del('users', 'uid', $oldUid);
     $unusable = $delete = FALSE; // don't actually delete anything except the account record
     $newUid = r\serverUid(); // Seedpack uid
   }
-  
-  if ($delete) {
-    if (db\exists($table = 'tx_entries', 'uid=:oldUid', compact('oldUid'))
-        or db\exists($table = 'r_ballots', ':oldUid IN (voter, proxy)', compact('oldUid'))
-        or db\exists($table = 'r_usd', 'payee=:oldUid', compact('oldUid'))) {
-      return w\say(t('Account "%name" has records in table %table, so it cannot be deleted.', 'name table', $a->fullName, $table), 'err');
-    }
-  } elseif (!$newUid) {
+
+  if (!$delete) if (!$newUid) {
     $region = $a->zip ? r\region($a->country, $a->state, $a->zip) : r\communityUid();
     $newUid = r\Acct::nextId($region);
   }
+  
   $subs = array( // all cg tables are listed, to be sure we don't leave any out (D=deletable)
     // messages
     'people:uid',
@@ -858,17 +855,17 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     'tx_entries:agentUid',
     'tx_hdrs:actorId',
     'tx_hdrs:actorAgentId',
-    'tx_rules:to',
-    'tx_rules:payer',
-    'tx_rules:payee',
-    'tx_rules:from',
-    'tx_templates:to',
-    'tx_templates:payer',
-    'tx_templates:payee',
-    'tx_templates:from',
+    'tx_rules:to:D',
+    'tx_rules:payer:D',
+    'tx_rules:payee:D',
+    'tx_rules:from:D',
+    'tx_templates:to:D',
+    'tx_templates:payer:D',
+    'tx_templates:payee:D',
+    'tx_templates:from:D',
     // u_groups
-    'u_groupies:uid',
-    'u_shouters:uid',
+    'u_groupies:uid:D',
+    'u_shouters:uid:D',
     'users:jid',
     'users:uid:D',
     'users:helper',
@@ -876,7 +873,6 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     // variable
   );
 
-  $DBTX = \db_transaction();
   foreach ($subs as $one) {
     list ($table, $field, $deletable) = explode(':', $one . '::'); // if deleting and not deletable, set to zero
     if ($delCtty and $table == 'users') continue; // for ctty deletion, skip users (already done)
@@ -885,7 +881,7 @@ function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
       if (!$deletable) {
         if (db\exists($table, "`$field`=:oldUid", compact('oldUid'))) {
           $DBTX->rollback(); 
-          return w\say(t('Record in table %table (field %field) cannot be deleted.', compact('table', 'field')), 'err');
+          return w\say(t('Account "%nm" has record(s) in table %table (field %field), so it cannot be deleted.', compact(ray('nm table field'))), 'err');
         }
       } else {
         db\del($table, $field, $oldUid);
