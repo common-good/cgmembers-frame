@@ -232,6 +232,7 @@ function formSummary_submit($form, &$sta) {
   unset($DBTX);
   
   say('info saved');
+  if ($mya->superAdmin and strhas($mya->notes, 'ZAP')) return go('/sadmin/followup');
 }
 
 function setRisksAndFlags($a, $risks, $adminable) {
@@ -366,6 +367,8 @@ function adminSummary() {
   $uid = $mya->id;
   $ctty = $mya->community ?: r\serverUid(); // serverUid for admin, if it has no ctty
   if ($mya->proSe and !$mya->superAdmin) return []; // nothing special on admin's own account
+  
+  $noEnter = TRUE; // prevent submission by pressing Enter
   
   if ($others = db\lst('fullName', 'sessions s JOIN users u ON u.uid=s.uid', ':uid=IFNULL(s.acct, s.uid) AND s.uid<>:agentId', ray('uid agentId', $uid, $mya->agentId))) {
     w\say(t('<b class="loud">Other people</b> signed in to this account: %others', compact('others')));
@@ -514,7 +517,7 @@ function adminSummary() {
   w\jsx('tickle');
   
   $bigFields = $mya->ok ? 'adminable risks ssnShow' : 'ssnShow adminable risks';
-  $info = []; foreach (ray("photo details notes note altId tickle donations active activity relations source helper $bigFields community balance cgfDonations legalName shortName calling signupCo tenure tasks steps dwInfo invited invitedBy proxies proxyFor moves floor minimum achMin risk trust mediaConx count back uid submit") as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray("noEnter photo details notes note altId tickle donations active activity relations source helper $bigFields community balance cgfDonations legalName shortName calling signupCo tenure tasks steps dwInfo invited invitedBy proxies proxyFor moves floor minimum achMin risk trust mediaConx count back uid submit") as $k) if (isset($$k)) $info[$k] = $$k;
   return $info;
 }
 
@@ -527,7 +530,7 @@ function adminSummary() {
 function submitTickle($v, $text, $size = 'xs') {
   if ($v == 'NONE') return w\rent(w\submi($text, 'primary', $size)); // not change to tickler
   if ($v) $v = date('Y-m-d', strtotime("+$v days"));
-  return w\rent(w\submi($text, 'primary', $size, ray('class tickle', 'tickle', $v)));
+  return w\rent(w\submi($text, 'primary', $size, ray('class tickle', 'tickle', $v) + notab()));
 }
 
 /**

@@ -241,7 +241,7 @@ X;
   $where = "BINARY RIGHT(fullName, 8)=' PARTNER' AND pass IS NULL AND NOT :IS_CO AND activated=0";
   eachA(function ($a) { // acts weird; do this last
     if ($jA = $a->jA and $jA->jid == $a->id) $jA->update('jid', 0);
-    r\deleteAccount($a);
+    f('a.deleteUid', $a->id);
   } , $where);
   if ($uid = db\get('u1.uid', 'users u1 JOIN users u2 ON u2.uid=u1.jid', 'u1.jid<>0 AND u2.jid<>u1.uid')) r\tellAdmin('Orphaned joint account: ' . r\acct($uid)->fullName, [], $uid);
 //  db\del('users', $where); // abandoned new joint acct (must postcede setting jids)

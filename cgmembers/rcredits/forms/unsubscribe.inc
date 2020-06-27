@@ -6,7 +6,7 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
-define('UNSUBSCRIBE_REASONS', t('moved:I have moved or am moving., clueless:I don\'t get the point of it. <i>You might want to see our short <b>%vid</b>. It\'s actually pretty amazing.</i>, barren:There are not enough participating businesses in my area., scared:I don\'t trust it., frustrated:It\'s too hard to use., other:Other'));
+define('UNSUBSCRIBE_REASONS', t('moved:I have moved or am moving., clueless:I don\'t get the point of it. <i>You might want to see our short <b>%vid</b>. It\'s actually pretty amazing.</i>, desert:There are not enough participating businesses in my area., scared:I don\'t trust it., frustrated:It\'s too hard to use., other:Other'));
 
 /**
  * Send an email to Common Good
@@ -50,7 +50,7 @@ function formUnsubscribe_submit($form, &$sta) {
 
   $msgs[] = 'thank tell';
   if ($a and !$a->activated) {
-    r\deleteAccount($a);
+    f('a.deleteUid', $a->id);
     $msgs[] = 'acct deleted|return welcome';
   } elseif ($a and $a->balance == 0) {
     if ($a->jid) $a->unjoinAllBut();

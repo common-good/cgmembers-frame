@@ -31,6 +31,7 @@ Scenario: Someone wants to open a company account
   | Postal Code   | |
   | Company Phone | |
   | Selling       | |
+  | Sell Credit   | |
   | Federal ID    | |
   | Founded       | |
   | Referred By   | |
@@ -39,11 +40,33 @@ Scenario: Someone wants to open a company account
 Scenario: A company signs up
   Given next random code is "WHATEVER"
   When member ".ZZA" completes form "signup-co/relate=1" with values:
-  | fullName | legalName | federalId | dob      | zip   | phone        | email | selling | source  | coType | needPhone |*
-  | New Co   |           | 04-3849283 | %mdY-3y | 01004 | 413-253-0004 | d@    | fish    | thither | LLC    |         1 |
+  | fullName  | New Co       |**
+  | legalName |              |
+  | federalId | 04-3849283   |
+  | dob       | %mdY-3y      |
+  | zip       | 01004        |
+  | phone     | 413-253-0004 |
+  | email     | d@           |
+  | selling   | fish         |
+  | sellCg    | 1            |
+  | source    | thither      |
+  | coType    | LLC          |
+  | needPhone | 1            |
   Then members:
-  | uid  | fullName | legalName | federalId | dob          | zip   | phone        | email | coType | selling |*
-  | .AAA | New Co   | New Co    | 043849283 | %daystart-3y | 01004 | +14132530004 | d@    | LLC    | fish    |
+  | uid       | .AAA         |**
+  | fullName  | New Co       |
+  | legalName | New Co       |
+  | federalId | 043849283    |
+  | dob       | %daystart-3y |
+  | zip       | 01004        |
+  | phone     | +14132530004 |
+  | email     | d@           |
+  | selling   | fish         |
+  | source    | thither      |
+  | coType    | LLC          |
+  And company flags:
+  | uid  | coFlags     |*
+  | .AAA | sellcg      |
   And relations:
   | main | other | permission |*
   | .AAA | .ZZA  | manage     |

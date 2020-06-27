@@ -1,3 +1,12 @@
+2020-06-27 feature/move-change-uid
+. moved changeUid function to admin and made deleteUid work when account is current
+. suppressed submit-on-Enter on Summary page
+
+2020-06-26 feature/sellcg
+. ask in company signup whether they want to sell CG
+. fixed bug that kept tellAdmin from sending right replyTo address
+. fixed bug that kept accounts from being deleted when they had a rule or template
+
 2020-06-25 feature/misc2
 . unset account fields now generate a warning
 . fixed some undiscovered bugs (from the new warnings)

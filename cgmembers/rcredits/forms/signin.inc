@@ -31,7 +31,7 @@ function formSignin($form, &$sta) {
   $signup = isDEV ? "<a href=\"$base_url/signup\">Signup</a> <a href=\"$base_url/signup-co\">SignupCo</a>" : '';
   $subtext = t('<p>Not yet a member? <%a>Check it out</a>!</p>', '_a', atag(r\promoLink(''))) . $signup . t('<p><b>TIP</b>: Try not to sign in to your financial accounts on a public computer. Or if you do, be careful! Check the address bar at the top of the screen to make sure you have the right website (<b><em>%BASE_URL/</em>...</b>). And be sure to sign OUT when you\'re done!</p>');
 
-  $_a = atag('/settings/password/' . $name, ['tabindex' => 3]); // uses $name, so must precede $name = textField
+  $_a = atag('/settings/password/' . $name, tabindex(3)); // uses $name, so must precede $name = textField
   $passDesc = t('<%a>Forgot password?</a>', compact('_a'));
   list ($name, $pass) = w\signinFlds($name, t('Your account ID or email address'), $passDesc);
   $pw2 = hidFld(nn($pw2) ?: ''); // extra password for admins

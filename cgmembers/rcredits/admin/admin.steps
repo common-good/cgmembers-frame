@@ -67,7 +67,8 @@ function usdTransfers($tx) {return t\usdTransfers($tx);}
 /**
  * member (ARG) visits page (ARG)
  *
- * in: MAKE changes AMemberChangesSomeSettings
+ * in: MAKE aaOther AdminDeletesAnAccount
+ *     MAKE changes AMemberChangesSomeSettings
  *     MAKE checks AdminPrintsChecks
  */
 function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
@@ -85,8 +86,7 @@ function weShowWith($title, $content = FALSE, $showDebugs = TRUE) {
 /**
  * member (ARG) completes form (ARG) with values: (ARG)
  *
- * in: MAKE aaOther AdminDeletesAnAccount
- *     MAKE activate AdminActivatesAnAccount
+ * in: MAKE activate AdminActivatesAnAccount
  *     MAKE activate AdminActivatesAnAccountUnconfirmed
  *     MAKE activate AdminDeactivatesAnAccount
  *     MAKE changes AMemberChangesSomeSettings
