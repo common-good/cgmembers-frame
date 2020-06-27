@@ -1,0 +1,39 @@
+{
+  "stage": "development",
+  "baseUrl": "http://localhost/cgmembers-frame/cgmembers",
+  "promoUrl": "http://CommonGood.earth",
+  "coApiUrl": "http://%website/cgapi/%etc",
+  "cgfEmail": "adeveloper@example.com",
+  "cgSmtpServer": "smtp.example.com",
+  "cgSmtpTls": "tls",
+  "cgSmtpPort": "587",
+  "cgSmtpUser": "no-reply@example.com",
+  "cgSmtpPass": "",
+  "db": {
+    "name": "cg",
+    "driver": "mysql",
+    "host": "localhost",
+    "port": "3306",
+    "user": "root",
+    "pass": "",
+    "salt": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "word": "0123456789abcdef0123456789abcdef",
+    "encryption": {
+      "C": ["xor b64", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
+      "H": ["aes-256-ctr", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
+      "P": ["rot b64", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
+      "R": ["rot scram", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
+      "S": ["xor", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"],
+      "V": ["xor", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6", "MDEyMzQ1Njc4OWFiY2RlZmdo"]
+    }
+  },
+  "dkimPrivate": "(not used in development)",
+  "dkimPublic": "(not used in development)",
+  "geocodeKey": "abc123",
+  "inviteKey": "10101",
+  "ssnUser": "abc123",
+  "ssnPass": "abc123",
+  "ssnRequest": "(not used in development)",
+
+  "comments": "See documentation config.json.howto.md"
+}

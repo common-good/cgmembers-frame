@@ -97,13 +97,15 @@ X
   } else {$subtext = t('You do not have permission to use this page.');}
   
   jsx('amtChoice');
-  return cgform(@compact(ray('title img subtext food or amtChoice amount period accountId pass submit recurs')));
+  
+  foreach (ray('title img subtext food or amtChoice amount period accountId pass submit recurs') as $k) if (isset($$k)) $form[$k] = $$k;
+  return cgform($form);
 }
 
 function formFood_validate($form, &$sta) {
   if (!w\checkAmtChoice($sta)) return;
-  extract(just('food', $sta['input']));
-  $food = @$food ?: 0;
+  extract(just('food', $sta['input'], NULL));
+  $food = $food ?: 0;
   if ($err = u\badAmount($food, '>=0', 1, 100)) return say($err, 'food');
   u\preray(compact(ray('food')), $sta['input']); // update trimmed percentage
 }
@@ -111,7 +113,7 @@ function formFood_validate($form, &$sta) {
 function formFood_submit($form, &$sta) {
   $mya = w\eLinkAcct($sta); 
 
-  extract($info = just('food amount period recurs', $sta['input']));
+  extract($info = just('food amount period recurs', $sta['input'], NULL));
   
   $food /= 100;
   $pctGift = t('Your percentage contribution to the Food Fund');
@@ -120,7 +122,7 @@ function formFood_submit($form, &$sta) {
     say(t('%pctGift is now %food.', 'pctGift food', $pctGift, u\fmtAmt($food, '%')));
   } elseif ($food) {say(t('%pctGift is unchanged.', compact('pctGift')));}
   
-  if (@$recurs) {
+  if ($recurs) {
     extract(just('id period amount', unserialize($recurs)), EXTR_PREFIX_ALL, 'x');
     if ($x_period != $period or $x_amount != $amount) {
       db\update('tx_templates', ray('id end', $x_id, now()), 'id');

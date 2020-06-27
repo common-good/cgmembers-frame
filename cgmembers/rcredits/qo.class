@@ -52,7 +52,7 @@ class Qo {
     if ($field == 'id') return $qo->id();
     if ($field == 'agent') return $qo->agent();
     if ($field == 'ia') return [$qo->id(), $qo->agent()];
-    if ($field == 'rel') return (@$qo->agent or @$qo->agentQid or @$qo->agentCode);
+    if ($field == 'rel') return (nn($qo->agent) or nn($qo->agentQid) or nn($qo->agentCode));
     if ($field == 'proSe') return !$qo->rel;
     if ($field == 'agentCode') return $qo->agentCode();
     if ($field == 'agentNum') return $qo->rel ? u\a2n($qo->agentCode()) : 0;
@@ -79,8 +79,8 @@ class Qo {
   private function agent() {
     $qo = $this;
     if ($qo->rel) {
-      if ($agt = @$qo->agent) return $agt;
-      if (@$qo->agentQid) return $qo->agent = qo($qo->agentQid)->id;
+      if ($agt = nn($qo->agent)) return $agt;
+      if (nn($qo->agentQid)) return $qo->agent = qo($qo->agentQid)->id;
       list ($main, $num) = [$qo->id, u\a2n($qo->agentCode) + 1]; // agentNum 1 is A
       return $qo->agent = r\relation('other', 'main=:main AND otherNum=:num', compact('main', 'num'));
     } else return $qo->id();
@@ -88,7 +88,7 @@ class Qo {
   
   private function agentCode() {
     $qo = $this;
-    if ($code = @$qo->agentCode) return $code;
+    if ($code = nn($qo->agentCode)) return $code;
     if ($qo->proSe) return '';
     if (!$num = r\relation('otherNum', $qo->id(), $qo->agent())) return '';
     return $qo->agentCode = u\n2a($num - 1, -1); // agent num 1 is A

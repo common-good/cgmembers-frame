@@ -21,14 +21,14 @@ define('T_MSG_FILE', 'test-messages.txt');
  * 'wrong community' => 'SELECT * FROM `users` WHERE uid>0 AND MID(community, 2, 7)<>MID(uid, 1, 7)',
  */
 function formAdminPanel($form, &$sta, $args = '') {
-  extract(just('qid', $args));
+  extract(just('qid', $args, NULL));
   global $mya;
   if (!$mya->cAdmin) hack('panel');
   
   if ($mya->superAdmin) { // do periodic stuff that only superAdmin can do
     foreach ($kids = db\col('uid', 'users', ':IS_UNDERAGE') as $uid) { // underage bit got set when activating account
       $a = r\acct($uid);
-      if (now() - $a->dob >= MATURITY * YEAR_SECS) $a->setBit(B_UNDERAGE, FALSE); // unset bit (youngster is now of age)
+      if (now() - ($a->dob ?: now()) >= MATURITY * YEAR_SECS) $a->setBit(B_UNDERAGE, FALSE); // unset bit (youngster is now of age)
     }
   }
 
@@ -39,10 +39,11 @@ function formAdminPanel($form, &$sta, $args = '') {
   
   $title = t('System Administration');
   
+  $toSMT = submi(t('To SMT'));
   $inviteeStatus = submi(t('Invitee Status'));
   $signupCos = submi(t('Connections to Companies'));
   $queries = selectFld(t('Query:'), '', '', $queries);
-  $account = textFld(t('Account:'), t('Account to do something to'), dft(@$qid ?: svar('adminingAcct')));
+  $account = textFld(t('Account:'), t('Account to do something to'), dft($qid ?: svar('adminingAcct')));
   
   if ($mya->superAdmin) {
     if (r\up()) $stop = submi(t('STOP')); else $start = submi(t('START'));
@@ -80,12 +81,13 @@ EOF;
   }
 
   foreach (ray($tables) as $one) $do[$one] = submi($one);
-  $funcs = ray('inviteeStatus signupCos do1099ktest do1099k reconcile special stop start stopCtty startCtty');
-//  foreach ($funcs as $func) if (isset($$func)) $do[$func] = $$func;
-  $do += @compact($funcs);
+  $ks = ray('toSMT inviteeStatus signupCos do1099ktest do1099k reconcile special stop start stopCtty startCtty');
+  foreach ($ks as $k) if (isset($$k)) $do[$k] = $$k;
   $do = fieldSet('do', $do);
   
-  $acctSet = fieldSet('acctSet', @compact(ray('account make2 printId seeData seeChanges ssnLink seeSecure resetSSN askForAppData seeAppData')));
+  $ks = ray('account make2 printId seeData seeChanges ssnLink seeSecure resetSSN askForAppData seeAppData');
+  foreach ($ks as $k) if (isset($$k)) $acctSet[$k] = $$k;
+  $acctSet = fieldSet('acctSet', $acctSet);
 
   return cgform(compact(ray('title do acctSet')));
 }
@@ -94,7 +96,7 @@ function formAdminPanel_submit($form, &$sta) {
   global $base_url;
   global $mya;
   
-  extract(just('account make', $sta['input']));
+  extract(just('account make', $sta['input'], NULL));
   $op = op($sta);
 
   if ($op == 'start' or $op == 'stop') {
@@ -108,15 +110,15 @@ function formAdminPanel_submit($form, &$sta) {
     return $up ? say(t('Community is UP.')) : say(t('Community is DOWN.'), 'ERR');
   }
 
-  if (@$account) {
+  if ($account) {
     if (!$a = a($account)) return say('That is not an account.'); // should use whois first
     svar('adminingAcct', $account); // remember what account we're working on
     if (!$mya->admin and $a->community != $mya->community) return say('That account is not in your community.', 'ERR');
   } else $a = $mya;
   
-  if (@$a and $op == 'printId') {
+  if ($a and $op == 'printId') {
     if ($a->co and $a->proSe) return say(t('A company cannot have a %PROJECT card (only its agents have %PROJECT cards).'));
-    if (@$make) {
+    if ($make) {
       $oldFile = $a->photoFilename(TRUE); // get this before makeCardCode
       $a->makeCardCode(); // this changes photo filename
       if (file_exists($oldFile)) {
@@ -130,16 +132,16 @@ function formAdminPanel_submit($form, &$sta) {
     say(t('Request for app data sent to ') . $a->fullName);
   } elseif ($op == 'seeAppData') {
 /**/  debug($a->appData);
-  } elseif ($op == 'seeSecure' and @$a) {
-    say(u\rayTable(ray('fullName phone dob physicalAddr', $a->fullName, substr(@$a->phone, 2), $admin ? u\fmtDate(@$a->dob) : '', @$a->address . ' ' . $a->zip)));
+  } elseif ($op == 'seeSecure' and $a) {
+    say(u\rayTable(ray('fullName phone dob physicalAddr', $a->fullName, substr($a->phone, 2), $admin ? u\fmtDate($a->dob) : '', $a->address . ' ' . $a->zip)));
     //      seeHidden($a);
     seeSecure($a);
-  } elseif ($op == 'resetSSN' and @$a) {
+  } elseif ($op == 'resetSSN' and $a) {
     $a->setBit(B_MEMBER, FALSE);
     $a->stepDone('verifyid', FALSE);
     $a->update('ssnData', '');    
   } elseif ($op == 'seeData') {
-    if (@$a and $a->proSe) say(u\rayTable($a->data, FALSE, TRUE));
+    if ($a and $a->proSe) say(u\rayTable($a->data, FALSE, TRUE));
     /*  } elseif ($op == 'connectBank') {
         r\Web\connectBank($a); */
   } elseif ($op == 'seeChanges') {
@@ -148,9 +150,11 @@ function formAdminPanel_submit($form, &$sta) {
     w\say($a->fullName. t(' SSN Link:<br><br> &nbsp; %PROMO_URL/do/doSsn~%qid~%code &nbsp; ', 'qid code', $a->mainQid, $a->emailCode));
   } elseif ($op == 'do1099k' or $test1099 = ($op == 'do1099ktest')) {
     include_once __DIR__ . '/../cg-yearly.inc';
-    r\Special\do1099s(TEN99K, @$test1099);
+    r\Special\do1099s(TEN99K, nn($test1099));
 	} elseif ($op == 'reconcile') {
 		w\go('sadmin/reconcile-ctty-fund');
+  } elseif ($op == 'toSMT') {
+    a\toSMT();
   } elseif ($op == 'inviteeStatus') {
     return w\go('community/invite/invited-whom');
   } elseif ($op == 'signupCos') {
@@ -161,8 +165,8 @@ function formAdminPanel_submit($form, &$sta) {
         if (is_integer($a) or (is_string($a) and ctype_digit($a))) $a = r\acct($a);
         u\EXPECT([$a], 'Acct');
         if ($signupCo = $a->signupCo) {
-          extract($signupCo);
-          $signupCos[mb_strtolower("$a->community$company$a->id")] = ray('acct fullName relation company', $a->mainQid, $a->fullName, @$isOwner ? t('owner') : ((@$employee or @$employeeOk) ? t('employee') : (@$contractor ? t('contractor') : '')), $company);
+          extract(just('isOwner employee employeeOk contractor', $signupCo, NULL));
+          $signupCos[mb_strtolower("$a->community$company$a->id")] = ray('acct fullName relation company', $a->mainQid, $a->fullName, $isOwner ? t('owner') : (($employee or $employeeOk) ? t('employee') : ($contractor ? t('contractor') : '')), $company);
         }
       }, '(uid<0 OR uid>:CANONIC_ACCTS) AND ' . $crit . ' ORDER BY community');
     ksort($signupCos);
@@ -206,7 +210,10 @@ function formSeeChanges($form, &$sta, $qid = '') {
   while ($row = $q->fetchAssoc()) {
     extract($row);
     $date = u\fmtDate($created);
-    foreach (ray('oldValue newValue') as $k) $$k = a\formatField($field, ($type = u\crypted($$k)) ? decryChange($type, $$k) : $$k);
+    foreach (ray('oldValue newValue') as $k) {
+      $type = u\crypted($$k);
+      $$k = a\formatField($field, $type ? decryChange($type, $$k) : $$k);
+    }
     $changedBy = $changerName ?: "($changedBy)";
     $list[] = "<tr><td>$date</td><td>$field</td><td>$oldValue</td><td>$newValue</td><td>$changedBy</td></tr>";
   }
@@ -232,7 +239,7 @@ function formMakeCtty($form, &$sta) {
 
   // from w\contactFields
   $phone = phoneFld(REQ . t('Phone:'), [t('Contact phone number')], dft($phone));
-  $postalAddr = textFld(t('Postal Addr:'), [t('Complete mailing address'), t('Where does the post office send your mail (usually)?')], required(@$postalAddr));
+  $postalAddr = textFld(REQ . t('Postal Addr:'), [t('Complete mailing address'), t('Where does the post office send your mail (usually)?')], dft(nn($postalAddr)));
 
   $submit = submit();
   
@@ -246,13 +253,13 @@ function formMakeCtty($form, &$sta) {
 function formMakeCtty_validate($form, &$sta) {
   global $mya;
   $myid = $mya->id;
-  extract(u\normalizeCase(just($normals = 'fullName legalName postalAddr', $sta['input'])));
-  extract(just('zips region email phone federalId', $sta['input']));
+  extract(u\normalizeCase(just($normals = 'fullName legalName postalAddr', $sta['input'], NULL)));
+  extract(just('zips region email phone federalId', $sta['input'], NULL));
 
   if (preg_match("~$zips~", null) === FALSE) return say(t('bad Zips REGEX'), 'zips');
   if (!$region or !preg_match('/[A-Z]{3}/i', $region)) return say(t('bad region code'), 'region');
 
-  if (!@$fullName) $fullName = $legalName;
+  if (!$fullName) $fullName = $legalName;
   foreach (ray('fullName legalName') as $field) {
     if ($err = u\badName($$field)) return say($err, compact('field'), $field);
   }
@@ -388,7 +395,7 @@ EOF;
     $notes = strtr($notes, ["\n" => '|| ', date('Y') => '']);
     if ($type == t('pre')) $notes = db\get('code', 'r_relations', 'other=:uid AND :IS_CUSTOMER', compact('uid')) . " $notes";
     $notes = substr($notes, 0, 200) . (mb_strlen($notes) > 200 ? '...' : '');
-    $ctty = nn($cttys[$community], '?'); // ? is for dev machine after running a test with ZZA in ctty -2
+    $ctty = nni($cttys, $community, '?'); // ? is for dev machine after running a test with ZZA in ctty -2
     $list .= strtr("<tr>$guts</tr>\n", compact($fields));
   }
   if (!isset($tickle)) $list .= t('There are no followup calls to be made.');
@@ -454,10 +461,10 @@ EOF;
 function formDownloadMemberList($form, &$sta, $args = '') {
   global $base_url;
 
-  extract($params = just(EXPORT_PARAMS, $args));
-  if (@$do == 'export') return w\export($params);
+  extract($params = just(EXPORT_PARAMS, $args, NULL));
+  if ($do == 'export') return w\export($params);
 
-  if (@$do == 'done') {
+  if ($do == 'done') {
     $do = 'export';
     $params = http_build_query(compact(ray(EXPORT_PARAMS)));
 ///    return w\go("$base_url/sadmin/export-list/$params"); // debug(
@@ -479,11 +486,11 @@ EOF
   
 $chimp = boolFld(t('Exporting to MailChimp?'), '', TRUE);
   
-if ($mya->admin) $allCttys2 = boxFld('allCttys', t('All communities:'), '', TRUE); // temporary for CGF oversight
+$allCttys2 = $mya->admin ? boxFld('allCttys', t('All communities:'), '', TRUE) : NULL; // temporary for CGF oversight
 $status = w\radiosFld(t('Status:'), '', dft(2), ray('active not-yet-active both'));
 $types = w\radiosfld(t('Types:'), '', dft(2), ray('individuals companies both'));
 $anonymous = boxFld('anonymous', t('Anonymous:'), t('Export only non-identifying information (for data-mapping and analysis)'), FALSE);
-$chimpSet = w\fieldSet('fields', @compact(ray('allCttys2 status types anonymous')));
+$chimpSet = w\fieldSet('fields', compact(ray('allCttys2 status types anonymous')));
   
 $submit = t('Download');
   
@@ -510,29 +517,26 @@ function formPhp($form, &$sta, $res = '') {
 
 /**
  * Process PHP execute form submissions.
+ * WARNING: ALL ERRORS are suppressed on this page
  */
 function formPhp_submit($form, &$sta) {
   extract(just('code', $sta['input']));
-  \setV('code', $code); // remember for next time
   $code = str_replace('<.', '<', $code); // fudge around drupal's sanitizing of all HTML
-  $code = <<<EOF
-    use CG as r;
-  use CG\DB as db;
-  use CG\Backend as be;
-  use CG\Util as u;
-  use CG\Admin as a;
-  use CG\Web as w;  
-  use CG\Cron as cr;
-  use CG\Smart as s;
-  use CG\Vote as v;
-  $code
-EOF;
+  \setV('code', $code); // remember for next time
+
+  $u = 'r:, db:\DB, be:\Backend, u:\Util, a:\Admin, w:\Web, cr:\Cron, s:\Smart, v:\Vote, k:\Risk';
+  if (!isPRODUCTION) $u .= ', t:\Testing';
+  foreach (ray($u) as $k => $v) $uses[] = "use CG$v as $k;";
+
+  $code = join('', $uses) . $code;
   
-  if (!isPRODUCTION) $code = "use CG\Testing as t;\n" . $code;
   ob_start();
-  eval($code);
-  $res = ob_get_clean();
-  \drupal_set_message(pr($res));
+  try {
+    eval($code);
+  } catch (\CompileError $e) {
+    say(t('<b>COMPILE:</b> %msg - line %line', 'msg line', $e->getMessage(), $e->getLine()), 'err');
+  }
+  say(pr(ob_get_clean()));
   //  w\go('sadmin/php/');
 }
 
@@ -607,7 +611,7 @@ X;
     $lines[] = "<tr$class>\n" . join("\n", $line) . '</tr>';
     $bal -= $amt;
   }
-  $deposits = join("\n", @$lines ?: []);
+  $deposits = join("\n", nn($lines) ?: []);
   foreach (ray('Date Memo Payment Deposit Balance') as $i => $k) $line[$i] = "<th class='$k'>$k</th>";
   $header = "<tr>\n" . join("\n", $line) . '</tr>';
   $list = <<< X
@@ -628,7 +632,7 @@ X;
  * Show a PDF of a (populated) deposit slip for a particular Dollar Pool transfer group ("deposit") in and/or out.
  */
 function depositDetails($args) {
-  extract(just('way date total count only', $args));
+  extract(just('way date total count only', $args, NULL));
   include_once __DIR__ . '/../pdf.class';
   $pdf = new r\Pdf();
 
@@ -689,7 +693,7 @@ EOF;
     // (needs htmlcell instead of cell)   if (!$in) $name = r\acct($uid)->bankInfoLink();
     //    if (!$in) $name = r\acct($uid)->legalNameDpy;
     $pdf->setX($x);
-    if (@$only and ($amount > 0 xor $in)) continue;
+    if ($only and ($amount > 0 xor $in)) continue;
     if ($amount < 0) $pdf->SetTextColor(255, 0, 0);
     $pdf->Cell(1, 0, u\fmtAmt($amount, ''), '', 0, 'R');
     $pdf->SetTextColor(0);
@@ -798,7 +802,7 @@ function memberId($id, $agent = '', $retroactive = FALSE) {
     : (mb_strlen($acctName) > 33 ? 'font-stretch:semi-condensed;' : '');
   
   if (!$proSe = $a->proSe) {
-    if (!@$a->agentA->cardCode2) $a->makeCardCode(); // NOT r\cardCode($a->qid);
+    if (!$a->agentA->cardCode2) $a->makeCardCode(); // NOT r\cardCode($a->qid);
     $aa = $a->agentA; // hereafter it's all about the agent
   } else $aa = $a;
 
@@ -910,7 +914,7 @@ function tests($arg = '') {
               $params["secure"], $params["httponly"]
               );
   }
-  if (session_id() and session_status() == PHP_SESSION_ACTIVE and @$_SESSION) session_destroy();
+  if (session_id() and session_status() == PHP_SESSION_ACTIVE and nn($_SESSION)) session_destroy();
   db\q('TRUNCATE sessions');
   \drupal_goto('sadmin/test-results'); // has to be a form available when logged out
 }
@@ -929,7 +933,7 @@ function formTestResults($form, &$sta) {
     extract($row);
     $list[] = "<div class=\"$type messages\">$value</div>\n";
   }
-  $list = item(join('', @$list ?: []));
+  $list = item(join('', nn($list, [])));
   \drupal_get_messages(); // throw out any existing messages
 
   return cgForm(compact(ray('list')));
@@ -937,12 +941,19 @@ function formTestResults($form, &$sta) {
 
 /**
  * Delete an account (superAdmin only)
- * @param int $uid: account to delete
+ * @param mixed $uid: account to delete (uid, qid, acct or 'this')
  */
 function deleteAccount($uid) {
   global $mya;
-  r\deleteAccount($uid);
+
+  if (is_object($a = $uid)) $uid = $a->id;
+  if ($uid == 'this') {
+    $uid = $mya->id;
+  } elseif (!is_numeric($uid)) { $uid = r\acct(strtoupper($uid))->id; } // qid
+  
+  if (!$uid) return w\softErr(t('You must not delete account zero.'));
   if ($uid == $mya->id) r\setAcct(1); // don't leave us on a deleted account (switch to superAdmin)
+  a\deleteUid($uid);
   return w\go('/sadmin/followup');
 }
 
@@ -1022,17 +1033,11 @@ function handyLinks() {
   //    'devel/theme/registry|View a list of available theme functions across the whole site.|Theme registry',
 
   foreach ($links as $link) {
-    list ($url, $detail, $label, $icon) = explode('|', $link);
+    list ($url, $detail, $label, $icon) = explode('|', u\padRay($link, 4));
     if (!$label) $label = $detail;
-    $handy[$url] = ['', $label, '', ANY, '', $detail, @$icon];
-    /*    $result[] = <<<EOF
-          <div><a href="$url" title="$detail">$label</a></div>
-EOF; */
+    $handy[$url] = ['', $label, '', ANY, '', $detail, $icon];
   }
   return w\subMenu(t('<h2>Handy Links</h2>'), $handy);
-  /*  $result = join(' | ', $result);
-      return "<h2 id=\"edit-title\"><br>Handy Links</h2><div class='develw'>\n$result</div>";
-  */
 }
 
 /**

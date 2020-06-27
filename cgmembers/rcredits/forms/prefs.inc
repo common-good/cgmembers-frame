@@ -19,7 +19,6 @@ function formPrefs($form, &$sta) {
     $snap = boolFld(t('Food Assistance?'), t('If you struggle to afford healthy food, consider answering "Yes" here. This is a request for financial assistance from other %PROJECT members in your community. Your answer is private &mdash; only program administrators can tell who is receiving this assistance. Typically answer "Yes" if you are eligible for any of the following (whether or not you have actually applied): %list. (Food assistance may not yet be available in your area.)', compact('list')), $mya->snap);
   } else { $snap = $roundup = NULL; }
   
-  $crumbs = $mya->ok ? NULL : crumbsFld($mya->crumbs);
   $backing0 = u\fmtAmt(($mya->backing + 0) ?: 0); // don't default to 1 except on backing page
   $backingLink = lnk('/community/backing', t('change'));
   $backingEnd = $mya->backing > 0 ? t(' until ') . u\fmtDate($mya->backingDate + YEAR_SECS, TRUE) : '';
@@ -59,20 +58,17 @@ EOF
   
 
   jsx('advanced-prefs', compact('advancedFields'));
-  $form = @compact(ray('title subtext roundup crumbs snap statements showAdvancet ' . $advancedFields)) + w\setupFoot() + compact('posttext');
-  return cgform($form);
+  foreach (ray("title roundup snap statements showAdvancet $advancedFields") as $k) if (isset($$k)) $form[$k] = $$k;
+  return cgform($form + w\setupFoot() + compact('posttext'));
 }
 
 function formPrefs_validate($form, &$sta) {
-  extract(just('crumbs food snap', $sta['input'], NULL));
-  require_once __DIR__ . '/crumbs.inc';
-//  global $mya;
+  extract(just('food snap', $sta['input'], NULL));
 
-  if ($crumbs and !formCrumbs_validate($form, $sta)) return; // error is already said
-  $food = @$food ?: 0;
+  $food = $food ?: 0;
   if ($err = u\badAmount($food, '>=0', 1, 100)) return say($err, 'food');
   snapErr($snap); // just to remove punctuation
-/// (no SNAP checking for now)  if (@$snap and $err = snapErr($snap)) return say($err, 'snap');
+/// (no SNAP checking for now)  if ($snap and $err = snapErr($snap)) return say($err, 'snap');
   u\preray(compact(ray('food snap')), $sta['input']); // update trimmed percentage
 }
 
@@ -80,22 +76,18 @@ function formPrefs_submit($form, $sta) {
   include_once __DIR__ . '/../admin/admin.inc';
   global $mya;
 
-  extract(just('crumbs food snap roundup smsNotices notices statements nosearch debtOk secretBal', $sta['input']));
+  extract(just('food snap roundup smsNotices notices statements nosearch debtOk secretBal', $sta['input'], NULL));
 ///  if ($food) $mya->stepsDone('food'); // don't show the food fund page unnecessarily?
   $fields = 'food snap';
-  if (isset($crumbs)) {
-    $crumbs /= 100; // convert percentage to decimal
-    $fields .= ' crumbs';
-  }
   $food /= 100;
 
   foreach (ray($fields) as $k) $old["_old $k"] = $mya->$k;
   $old += ['_old flags' => u\bits($mya->flags)];
-  $bits = ray('roundup weekly monthly paper secret debt nosearch', @$roundup, @$notices == 1, @$notices == 2, @$statements, @$secretBal, @$debtOk, @$nosearch);
+  $bits = ray('roundup weekly monthly paper secret debt nosearch', $roundup, $notices == 1, $notices == 2, $statements, $secretBal, $debtOk, $nosearch);
   $info = compact(ray($fields)) + $bits;
 
-  if (@$statements) r\tellAdmin(t('%who wants paper statements', 'who', $mya->fullName), ['topic' => t('paper')]);
-  if (@$snap) r\tellAdmin(t('%who has SNAP', 'who', $mya->fullName), ['topic' => t('SNAP')]);
+  if ($statements) r\tellAdmin(t('%who wants paper statements', 'who', $mya->fullName), ['topic' => t('paper')]);
+  if ($snap) r\tellAdmin(t('%who has SNAP', 'who', $mya->fullName), ['topic' => t('SNAP')]);
   
   $mya->update($info);
   return w\goNextStep('preferences');
@@ -109,7 +101,7 @@ function formPrefs_submit($form, $sta) {
  */
 function snapErr(&$snap) {
   $snap = preg_replace('/[^A-Z\\d]/i', '', $snap);
-  $c1 = @$snap[0];
+  $c1 = strlen($snap)? $snap[0] : '';
   if (!preg_match('/(37|04|06|08|91|92|93|94|96)(\\d{3})(\\d{2})([A-Z\\d]\\d{2,5})/i', $snap, $m) or ($c1 == '9' and $m[3] != '22')) return t('That is not a valid SNAP number.');
   return FALSE;
 }

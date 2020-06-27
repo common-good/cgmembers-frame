@@ -15,9 +15,9 @@ include_once R_ROOT . '/rvote/rvote-results.inc';
  * Show notes for a single proposal report.
  */
 function formProposalNotes($form, &$sta, $args = '') {
-  extract(just('p', $args));
+  extract(just('p', $args, NULL));
 
-  if (!$id = @$p or !$project = db\get('project', 'r_proposals', compact('id'))) return w\softErr(t('No such proposal.'));
+  if (!$id = $p or !$project = db\get('project', 'r_proposals', compact('id'))) return w\softErr(t('No such proposal.'));
   $VETO = t('VETO!');
 
   $sql = <<<EOF

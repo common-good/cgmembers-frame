@@ -44,7 +44,7 @@ function setupBasicAccounts() {
       $state = r\stateNum($st);
       $values = array($uid, $uid, $region . '.', $fullName, $email, $zip, R_COUNTRY_ID, 0, $flags);
       $info = array_combine($keys, $values);
-      $info += @compact(ray('postalAddr state federalId activated'));
+      $info += compact(ray('postalAddr state federalId activated'));
       new r\Acct($info);
     }
   }
@@ -142,6 +142,146 @@ function makeTestAccounts() {
  */
 function makeTestAdmins() {
   if (isSTAGE) foreach (ray(R_COS . ' ' . DEV_ACCTS) as $k) if ($k and $a = a($k)) $a->setBit(B_CADMIN);
+}
+
+/**
+ * Assign the given account a new id (or delete it).
+ * @param int $oldUid: record ID of the account to change or delete
+ * @param int $newUid: the new record ID to give the account (defaults to next available)
+ * @param bool $unusable: whether to mark the old account record ID as unusuable
+ * @param bool $delete: whether to delete the account rather than giving it a new ID (called by a\deleteAccount)
+ */
+function deleteUid($oldUid) {a\changeUid($oldUid, 0, FALSE, TRUE);}
+function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
+  global $mya;
+  if (!$a = r\acct($oldUid)) return w\say(t('That account does not exist.'), 'err');
+  if ($mya and $a->id == $mya->id) return w\say(t('You can\'t delete or change the uid of an acct while it\'s the current acct.'), 'err');
+  $nm = $a->fullName;
+  $oldQid = r\qid($oldUid);
+
+  $subs = array( // all cg tables are listed, to be sure we don't leave any out (D=deletable)
+    // messages
+    'people:uid',
+    // posts
+    // post_cats
+    // r_areas
+    // r_bad
+    'r_ballots:voter',
+    'r_ballots:proxy',
+    // r_banks
+    'r_boxes:uid:D',
+    'r_changes:uid:D',
+    'r_changes:changedBy',
+    'r_company:uid:D',
+    // r_countries
+    'r_criteria:ctty:D',
+    'r_do:uid:D',
+    'r_events:ctty',
+    'r_honors:uid:D', // honors are deletable if donation never completed
+    // r_industries
+    'r_investments:coid',
+    'r_investments:clubid',
+    'r_invites:inviter',
+    'r_invites:invitee:D',
+    'r_invoices:payer:D',
+    'r_invoices:payee:D',
+    'r_ips:uid:D',
+    'r_near:uid1:D',
+    'r_near:uid2:D',
+    // r_nonces
+    'r_notices:uid:D',
+    // r_options
+    // r_pairs
+    'r_photos:uid:D',
+    'r_proposals:ctty',
+    'r_proxies:person:D',
+    'r_proxies:proxy:D',
+    // r_questions
+    'r_ratings:uid',
+    // r_regions
+    'r_relations:main:D',
+    'r_relations:other:D',
+    // r_states
+    // r_shares',
+    'r_stakes:uid',
+    'r_stakes:clubid',
+    'r_stats:ctty:D',
+    'r_tous:uid:D',
+    // r_transit
+    'r_usd:payee',
+    // r_usd2
+    'r_user_industries:uid:D',
+    // r_votes
+    'sessions:uid:D',
+    // signup
+    'tx_disputes:uid',
+    'tx_disputes:agentUid',
+    'tx_entries:uid',
+    'tx_entries:agentUid',
+    'tx_hdrs:actorId',
+    'tx_hdrs:actorAgentId',
+    'tx_rules:to:D',
+    'tx_rules:payer:D',
+    'tx_rules:payee:D',
+    'tx_rules:from:D',
+    'tx_templates:to:D',
+    'tx_templates:payer:D',
+    'tx_templates:payee:D',
+    'tx_templates:from:D',
+    // u_groups
+    'u_groupies:uid:D',
+    'u_shouters:uid:D',
+    'users:jid', // users should be last, because it's the main table for what we're deleting/changing
+    'users:uid:D',
+    'users:helper',
+    'users:community',
+    // variable
+  );
+  
+  $DBTX = \db_transaction();
+
+  if ($delCtty = ($delete and $a->isCtty)) { // deleting a community (merge into Seedpack)
+    db\del('users', 'uid', $oldUid);
+    $unusable = $delete = FALSE; // don't actually delete anything except the account record
+    $newUid = r\serverUid(); // Seedpack uid
+  }
+
+  if (!$delete) if (!$newUid) {
+    $region = $a->zip ? r\region($a->country, $a->state, $a->zip) : r\communityUid();
+    $newUid = r\Acct::nextId($region);
+  }
+
+  foreach ($subs as $one) {
+    list ($table, $field, $deletable) = explode(':', $one . '::'); // if deleting and not deletable, set to zero
+    if ($delCtty and $table == 'users') continue; // for ctty deletion, skip users (already done)
+    
+    if ($delete) {
+      if (!$deletable) {
+        if (db\exists($table, "`$field`=:oldUid", compact('oldUid'))) {
+          $DBTX->rollback(); 
+          return w\say(t('Account "%nm" has record(s) in table %table (field %field), so it cannot be deleted.', compact(ray('nm table field'))), 'err');
+        }
+      } else {
+        db\del($table, $field, $oldUid);
+      }
+    } else db\q("UPDATE $table SET `$field`=:newUid WHERE `$field`=:oldUid", compact('newUid', 'oldUid'));
+  }
+
+  if ($unusable and !$delete) {
+    list ($uid, $name, $email) = array($oldUid, "unusable-$oldQid", "unusable$oldQid@" . CG_DOMAIN);
+    db\insert('users', compact(ray('uid name email')), 'uid'); // mark old uid unusable
+  }
+  
+  unset($DBTX); // commit
+
+  if (!$delete) {
+    $newQid = r\qid($newUid);
+    foreach ([R_PICTURE_DIR, PHOTOID_DIR . '/'] as $dir) { // original card photo(s) if any AND photo ID file(s) if any
+      foreach (glob("$dir/$oldQid.*") as $flnm) rename($flnm, str_replace("/$oldQid.", "/$newQid.", $flnm));
+    }
+  }
+
+  if ($mya and $mya->superAdmin) w\say(t('Success. Account %nm has been %what.', 'nm what', $nm, $newUid ? t('changed to ') . $newUid : t('deleted')));
 }
 
 /**
@@ -288,26 +428,26 @@ function showQuery($table, $where = '1', $order = '', $fields = '*', $joinFields
 function ssnShow($a) {
   if (isDEV) return t('no SSN data');
   
-  $ssnData = @$a->ssnCheck();
+  $ssnData = $a->ssnCheck();
   if (!is_array($ssnData)) return "<p class=\"loud\">$ssnData</p>";
   
-  $d = @$ssnData['searchResults'] ?: []; // [] for admin without vKeyE
-  if ($err = @$ssnData[SSN_ERR_INDEX]) $rows[] = ["<b class=\"err\">ERROR</b>", $err, '', '', ''];
+  $d = nni($ssnData, 'searchResults') ?: []; // [] for admin without vKeyE
+  if ($err = nni($ssnData, SSN_ERR_INDEX)) $rows[] = ["<b class=\"err\">ERROR</b>", $err, '', '', ''];
   $name = $a->fullName . ($a->legalName == $a->fullName ? '' : "<br>$a->legalName");
   $rows[] = array(t('Data Given'), $name, u\fmtDate(is_numeric($a->dob) ? $a->dob: 0), $a->location(TRUE), '', ''); // is_numeric check for admin without vKeyE
-  $name = u\ssnName($one = (object) @$d['ssnnames']['ssnname']);
-  $dob = @$one->dob ? u\fmtDate(strtotime($one->dob)) : ''; // arrives as an empty array if none
-  $rows[] = array(t('Found'), $name, $dob, @$d['deathsearchresults'] ? '<h1 color="red">DEAD</h1>' : '', '', '');
+  $name = u\ssnName($one = (object) nn($d['ssnnames']['ssnname']));
+  $dob = nn($one->dob) ? u\fmtDate(strtotime($one->dob)) : ''; // arrives as an empty array if none
+  $rows[] = array(t('Found'), $name, $dob, nni($d, 'deathsearchresults') ? '<h1 color="red">DEAD</h1>' : '', '', '');
   
   $counties = [];
-  $addresses = @$d['addresses']['address'] ?: [];
-  if (@$addresses['lastname']) $addresses = [$addresses];
+  $addresses = nn($d['addresses']['address']) ?: [];
+  if (nni($addresses, 'lastname')) $addresses = [$addresses];
   foreach($addresses as $rec) {
     $rec = (object) $rec;
-    $rows[] = array($rec->datereported ? u\fmtDate(strtotime($rec->datereported)) : '', u\ssnName($rec), $rec->dob ? u\fmtDate(strtotime($rec->dob)) : '', u\ssnAddr($rec), ucwords(@mb_strtolower(pr($rec->county)))); // county was an array once
-    if (now() - @strtotime($rec->datereported) < 10 * YEAR_SECS) $counties[pr($rec->county)] = 1;
+    $rows[] = array($rec->datereported ? u\fmtDate(strtotime($rec->datereported)) : '', u\ssnName($rec), $rec->dob ? u\fmtDate(strtotime($rec->dob)) : '', u\ssnAddr($rec), ucwords(mb_strtolower(pr($rec->county)))); // county was an array once
+    if (now() - strtotime(pr($rec->datereported)) < 10 * YEAR_SECS) $counties[pr($rec->county)] = 1;
   }
-  if (!@$a->moves) $a->update('moves', max(0, count($counties) - 1));
+  if (!$a->moves) $a->update('moves', max(0, count($counties) - 1));
   
   $lines = '';
   foreach ($rows as $rec) {
@@ -381,7 +521,7 @@ function getBanks() {
 function photoFromFile($a, $filename = '', &$err = '') {
   if ($a->co) return !$err = 'tried to shrink a company photo';
   //  if ($a->hasPhoto('picture2')) return !$err = 'POS photo already exists';
-  if (@$a->photo) $err = 'POS photo already exists'; // not really an error
+  if ($a->photo) $err = 'POS photo already exists'; // not really an error
   $photoPath = r\pic($filename ?: "$a->name.jpg");
   $img = u\alterImg(imagecreatefromjpeg($photoPath), R_PHOTO_WIDTH, R_PHOTO_HEIGHT);
   ob_start();
@@ -402,7 +542,7 @@ function moveFieldFrom($field, $from = 'data') {
   foreach ($uids as $uid) {
     $a = r\acct($uid);
     $ray = $a->$from;
-    $$field = @$ray[$field]; // not $$from[] because PHP attaches the index first
+    $$field = nni($ray, $field); // not $$from[] because PHP attaches the index first
     if ($field = 'helper') {
       $$field = $$field ? r\acct($$field)->id : 0;
     }
@@ -452,7 +592,7 @@ function changeIt($a) {
 function flagsDesc($n, $list) {
   $bits = ray($list);
   if (!is_numeric(key($bits))) $bits = array_keys($bits);
-  for ($i = 0; $i < 32; $i++) if (!@$bits[$i]) $bits[$i] = $i; // show bit number if no name
+  for ($i = 0; $i < 32; $i++) if (!nni($bits, $i)) $bits[$i] = $i; // show bit number if no name
   $res = '';
   for ($i=0; $i <= B_MAX; $i++) if ($n & u\bit($i)) {$res .= $bits[$i] . ' ';}
   return $res;
@@ -516,7 +656,7 @@ EOF;
       $firstline = FALSE;
     }
   }
-  $deposits = join("\n", @$deposits ?: []);
+  $deposits = join("\n", nn($deposits) ?: []);
   $header = t('<th>Transfers</th><th></th><th>Count</th><th>Total</th><th></th>');
   $header .= $showTxIds ? t('<th>Bank Tx IDs</th>') : '';
   return <<<EOF
@@ -773,7 +913,7 @@ function recropLink() {return spinLink('/settings/photo/recrop=1', t('Recrop Pho
 function nextMember($id = 0) {
   $members = db\col('uid', 'users', ':IS_OK AND NOT :IS_CO AND activated<1486098000 ORDER BY community, uid');
   $i = $id ? array_search($id, $members) : -1;
-  return @$members[$i + 1];
+  return nni($members, $i + 1);
 }
 
 /**
@@ -895,7 +1035,7 @@ function toSMT() {
     $notes = strtr($notes, ["\r" => '', "\n" => '']);
     $nameOnBankAcct = $fullName;
     list ($billingAddress, $billingCity, $billingState, $billingZip) = u\parseAddr($postalAddr);
-    extract($partnerInfo);
+    extract($partnerInfo ?: []);
     $cgAccount = $a->member ? $a->mainQid : '';
     $phone = u\fmtPhone($phone, '-');
     $out = compact(ray('smtid fullName orgName m_company m_number cgAccount phone email address city state zip tenure owns routing bankAccount isSavings nameOnBankAcct billingAddress billingCity billingState billingZip noContract created notes'));
@@ -908,7 +1048,7 @@ function toSMT() {
     }
     u\csv(array_values($out), "\t");
   }
-
+  if (!$hdrDone) return w\go('/sadmin/panel', t('nothing to send to SMT'));
   exit();
 }
   

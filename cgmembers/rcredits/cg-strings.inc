@@ -9,6 +9,7 @@ require_once __DIR__ . '/defs.inc';
 
 $GLOBALS['tStrings'] = array(
   // reports
+  'crash msg' => t('<h4>Well Darn.</h4><p>You have encountered a software glitch. Our tech team has been notified.</p><p>In case more information would be helpful to them, please consider reporting this problem &mdash; and what you were trying to do &mdash; to %CGF_EMAIL.</p><p>Thank you for your patience and thank you for participating in %PROJECT!</p>'),
   'system down' => t('The %PROJECT system is under maintenance. Please try again in a few minutes?'),
   'your community down' => t('Your %PROJECT community is temporarily on hold. Contact your %PROJECT community Admin for details: %contact'),
   'other community down' => t('That %PROJECT community is temporarily on hold.'),
@@ -213,14 +214,14 @@ EOF
   'repeat gift' => t('If you wish to make a donation again sometime, click "Membership" in the upper right corner, then on "Donate".'),
 //  'setup complete' => t('<p>Your account setup is complete. Expect an email within the next 24 hours, saying your account is activated. Your %PROJECT card will arrive by US Mail within a few days. Thank you for joining!</p>'),
   'setup complete' => t('<h2>Your Account Setup Is Complete</h2>You have done everything you need to do.'),
-  'individual approval' => t('Once a staff member has approved your account, you can expect to receive your %PROJECT card in the mail soon.'),
+  'individual approval' => t('Once a staff member has approved your account (part of our security protocol), you can expect to receive your %PROJECT card in the mail soon.'),
 //  'individual approval' => t('Once a staff member has approved your account, you will be able to make payments online.'),
-  'company approval' => t('Once a staff member has approved your account, you can begin accepting %PROJECT payments.'),
+  'company approval' => t('Once a staff member has approved your account (part of our security protocol), you can begin accepting %PROJECT payments.'),
 //  'card member' => t('Once a staff member has approved your account, you can expect to receive your %PROJECT card in the mail soon.'),
 //  'no card member' => t('Your first transaction must be with someone who invited you OR in person (with a %PROJECT card) at a participating business in your community. If you would like to have a %PROJECT card, click "Card" in the Next Steps.'),
 //  'sell member' => t('Hurray! You can now receive payments through %PROJECT.'),
 //  'voice member' => t('Congratulations! You are now a full participating member of %PROJECT and the %PROJECT Democratic Economy.'),
-  'co2 member' => t('Contratulations! Your company account is complete.'),
+  'co2 member' => t('Congratulations! Your company account is complete.'),
   'join thanks' => t('Thank you for joining us!'),
   'next steps' => t('<span class="loud">See some important Next Steps listed below.</span>'),
   'use temporary card' => t('<p>While you wait for your %PROJECT card to arrive, you can use your invitation card to make purchases at any member business (beginning with your inviter).</p>'),
@@ -273,6 +274,10 @@ EOF
   'verification code' => t('Your verification code for using %PROJECT online is: %nonce'), // used in rWeb
   'whats up' => t('You have not had any %PROJECT transactions in the past month. Most members have at least one transaction per month, so this is a little unusual and we hope all is well with you. Please email or call us if you have any problems or questions.'),
   'co promo' => t('And if you need more promotional cards to hand out to customers, just let us know!'),
+  'thank tell' => t('Thank you for telling us!'),
+  'acct deleted' => t('Your account has been deleted.'),
+  'now closed' => t('Your account is closed.'),
+  'return welcome' => t('You are welcome back any time.'),
   
   // error messages
   'syntax' => t('Wrong syntax!'),
@@ -379,7 +384,7 @@ EOF
   'ssn needed' => t('You have reached the maximum legal amount or number of transactions allowed for one year in your state without a Social Security Number. Please sign in at %CG_DOMAIN and follow the prompts to add your Social Security Number to your account.'),
   'co nonpass' => t('None. Sign in to your personal account, then click your photo in the upper right corner to select the company account.'),
   'pass advice' => t('<p>Your password must be very long OR it must have at least 8 characters, including uppercase, lowercase, digit, and punctuation.</p><p>Consider choosing 4 random words &mdash; hard to guess, but easy for you to remember.</p>'),
-  'bad locus' => t('That is not a recognizable address. Try again with a postal code.'),
+  'bad locus' => t('That location is not specific enough. Try again with a postal code or full address.'),
   'post success' => t('Success! Your post is confirmed.'),
   'message success' => t('Success! Your message is confirmed.'),
   'post will appear' => t('Your post will appear %when. To edit or cancel it, click on it in the list.'),

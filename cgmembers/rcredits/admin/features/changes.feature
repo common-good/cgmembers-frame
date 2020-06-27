@@ -17,8 +17,8 @@ Setup:
 
 Scenario: A member changes some settings
   Given member ".ZZA" completes form "settings/preferences" with values:
-  | roundup | notices | statements | secretBal | crumbs |*
-  |       0 |  weekly |      paper |         0 |      1 |
+  | roundup | notices | statements | secretBal |*
+  |       0 |  weekly |      paper |         0 |
   And member ".ZZA" has done step "fund"
   And member ".ZZA" completes form "settings/fund" with values:
   | connect | routingNumber | bankAccount | bankAccount2 | cashout | refills | target | achMin | saveWeekly |*
@@ -31,11 +31,9 @@ Scenario: A member changes some settings
   And with:
   | %dmy | flags       | ok ided weekly paper | ok ided refill weekly paper | abeone     |
   And with:
-  | %dmy | crumbs      |                 0.02 |                        0.01 | abeone     |
-  And with:
   | %dmy | achMin      |                   10 |                          11 | abeone     |
   And with:
-  | %dmy | bankAccount | (secret)             | (secret)                    | abeone     |
+  | %dmy | bankAccount |                      | (secret)                    | abeone     |
 # sometimes this happens out of order (dunno why)
 
 #  | %dmy | bankAccount |                      | USkk211870281123            | abeone     | (this will work with member "D:1" when decry('V') works)

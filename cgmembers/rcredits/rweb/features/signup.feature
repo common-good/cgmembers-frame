@@ -56,9 +56,9 @@ Scenario: A member signs up
 Scenario: A member verifies ID
   Given member ".ZZB" has "person" steps done: "signup verifyemail"
   When member ".ZZB" completes form "settings/verifyid" with values:
-  | field | federalId   | dob      |*
-  |     2 | 123-45-6789 | 2/1/1990 |
-  # field 2 is SSN and DOB, as opposed to file upload
+  | legalName | method | federalId   | dob      |*
+  |           |     2  | 123-45-6789 | 2/1/1990 |
+  # field 2 is SSN, as opposed to file upload
   Then members:
   | uid  | federalId | dob       |*
   | .ZZB | 123456789 | 633848400 |
@@ -78,17 +78,17 @@ Scenario: A member signs agreement
 Scenario: A member sets preferences
   Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree"
   When member ".ZZB" completes form "settings/preferences" with values:
-  | roundup | crumbs | notices | statements | nosearch | secretBal |*
-  |       1 |      2 | monthly | electronic |        0 |         1 |
+  | roundup | notices | statements | nosearch | secretBal |*
+  |       1 | monthly | electronic |        0 |         1 |
   Then we show "Getting Money In or Out"
   And we say "status": "info saved|step completed"
   And member ".ZZB" steps left "fund photo contact donate crumbs proxies work backing stepup invite"
 
-Scenario: A member connect bank account
+Scenario: A member connects a bank account
   Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences"
   When member ".ZZB" completes form "settings/fund" with values:
   | op     | connect | routingNumber | bankAccount | bankAccount2 | cashout | refills | target | achMin | saveWeekly |*
-  | submit |       2 |     053000196 |         123 |          123 |       0 |       1 |     $0 |    $20 |         $0 |  
+  | submit |       0 |     053000196 |         123 |          123 |       0 |       1 |     $0 |    $20 |         $0 |  
   Then we show "Photo ID Picture"
   And we say "status": "info saved|step completed"
 	And members have:
@@ -152,7 +152,7 @@ Scenario: A member donates
 
 Scenario: A member chooses tithes
   Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund photo contact donate"
-  When member ".ZZB" completes form "settings/crumbs" with values:
+  When member ".ZZB" completes form "community/crumbs" with values:
   | crumbs | 1.5 |**
   Then members have:
   | uid  | crumbs |*

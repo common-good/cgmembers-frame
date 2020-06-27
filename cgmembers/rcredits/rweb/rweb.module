@@ -50,7 +50,8 @@ function rweb_block_view($delta = '') {
  */
 function makeMenuItem($k, $parts) {
   $types = ['norm' => MENU_NORMAL_ITEM, 'sub' => MENU_LOCAL_TASK, 'dft' => MENU_DEFAULT_LOCAL_TASK, 'call' => MENU_CALLBACK];
-  @list ($type, $title, $args, $perms, $func) = $parts;
+  for ($i = 0; $i < 5; $i++) $parts[] = ''; // enough to satisfy list()
+  list ($type, $title, $args, $perms, $func) = $parts;
   return w\menu($k, $title, $types[$type], $func ?: 'showForm', $args, $perms);
 }
 
@@ -105,12 +106,13 @@ function rweb_menu($submenu = '') {
     
 //    'community' => ['norm', t('Community'), 'FindCo', ANY],
     'community' => ['norm', t('Community'), 'Community', ANY],
-    'community/invite' => ['sub', t('Invite'), 'Invite', ANY, '', t(), 'share-alt'],
+    'community/invite' => ['sub', t('Invite / Endorse'), 'Invite 2', ANY, '', t(), 'share-alt'],
     'community/invite/all' => ['call', t('Shouters'), 'Shouters 3', ANY],
     'community/invite/example' => ['call', t('Invite Someone'), '', 'ok manage', 'inviteExample'],
     'community/invite/print' => ['call', t('Print Invite'), '', 'manage', 'printInvite'],
     'community/invite/invited-whom' => ['call', 'Invited Whom', 'InvitedWhom', 'manage'],
     'community/stepup' => ['sub', t('Step Up'), 'StepUp 2', 'manage', '', t(), 'export'],
+    'community/crumbs' => ['sub', t('Share When You Receive'), 'Crumbs 2', 'manage', '', t(), 'import'],
     'community/buy-credit' => ['sub', t('Buy Credit for Later'), 'BuyCredit 2', 'manage', '', t(), 'time'],
     'community/donate' => ['sub', t('Donate to %PROJECT'), 'Donate', 'manage', '', t(), 'thumbs-up'],
     'community/coupons' => ['sub', t('Discount / Gift Certificates'), 'Coupons 2', 'manage', '', t(), 'usd'],
@@ -152,7 +154,6 @@ function rweb_menu($submenu = '') {
 //    'settings/settings' => ['dft', t('Settings'), 'Settings', 'manage'],
     'settings/contact' => ['sub', t('Contact Info'), 'Contact', 'manage -depends', '', t(), 'user'],
     'settings/preferences' => ['sub', t('Preferences'), 'Prefs', 'manage -depends', '', t(), 'cog'],
-    'settings/crumbs' => ['sub', t('Share When You Receive'), 'Crumbs 2', 'manage', '', t(), 'import'],
     'settings/security' => ['sub', t('Security'), 'Security 2', 'manage -co -depends', '', t(), 'link'],
     'settings/fund' => ['sub', t('Banking'), 'Connect 2', 'manage -depends', '', t(), 'piggy-bank'],
     'settings/company' => ['sub', t('Company Info'), 'Company 2', 'manage co -depends', '', t(), 'calendar'],
@@ -260,7 +261,10 @@ function rweb_menu($submenu = '') {
     'partner' => ['call', 'Signup Through Partner', 'PartnerSignup 1', ANY],
     'accounts' => isDEV ? ['call', 'Account Choices', 'Accounts', 'manage'] : NULL,
     'redirect' => ['call', 'Redirect', '', ANY, 'redirect'],
+    'mailus' => ['call', t('Mail %PROJECT'), 'MailUs 1', ANY],
+    'unsubscribe' => ['call', t('Unsubscribe'), 'Unsubscribe 1', ANY],  
 
+    'pos' => ['call', 'POS', '1', ANY, 'pos'], // called from the CGPay app
     'pos' => ['call', 'POS', '1', ANY, 'pos'], // called from the CGPay app
     'ajax' => ['call', 'AJAX', '1', ANY, 'ajax'], // called from the CGPay app
     'api' => ['call', 'API', '1', ANY, 'api'],

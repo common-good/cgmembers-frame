@@ -19,7 +19,7 @@ function formCompany($form, &$sta, $arg = '') {
 
   $canDescs = ray(APP_CAN_BIT_DESCS);
   $permissions = '';
-  if (!$mya->stepDone['company'] and !$mya->coCan(APP_CANS + APP_CAN_BITS)) foreach (ray(CO_DFTS) as $i) $mya->setCoBit(APP_CANS + $i); // set defaults if doing initial account setup AND manager has no permission to charge custs yet
+  if (!$mya->stepIsDone('company') and !$mya->coCan(APP_CANS + APP_CAN_BITS)) foreach (ray(CO_APP_DFTS) as $i) $mya->setCoBit(APP_CANS + $i); // set defaults if doing initial account setup AND manager has no permission to charge custs yet
   
   foreach ($canDescs as $i => $desc) {
     $outbox = <<<EOF
@@ -64,11 +64,11 @@ EOF;
   $staleNudge = intFld(t('Nudge Every:'), [t('Number of days between nudges'), t('Wait this many days before nudging a customer to pay an invoice you sent them (zero means never send a reminder).')], required($mya->staleNudge ?: STALE_NUDGE));
   $tips = boolFld(t('Tips:'), t('After each %PROJECT card sale, ask the customer to choose a tip percentage (or no tip)'), $mya->coCan(CO_TIP) ?: 0);
   if ($mya->cAdmin) {
-    if (FALSE) $fast = boolFld(t('No ID Chk:'), t('Never ask customer for photo ID (set by admin)'), $mya->coCan(CO_FAST) ?: 0); // no exemptions
+    $fast = NULL; // boolFld(t('No ID Chk:'), t('Never ask customer for photo ID (set by admin)'), $mya->coCan(CO_FAST) ?: 0); // no exemptions
     $atm = boolFld(t('ATM service:'), t('Allow company to trade %RCREDITS for cash even if their balance is less than their rewards (in-person only).'), $mya->coCan(CO_ATM) ?: 0);
-  }
-//  $submit = submit();
-  return cgform(@compact(ray('title links cgbutton photo name private categories selling shortDesc employees gross dob website descPreface description can2 staleNudge tips fast atm')) + w\setupFoot(''));
+  } else { $fast = $atm = NULL; }
+
+  return cgform(compact(ray('title links cgbutton photo name private categories selling shortDesc employees gross dob website descPreface description can2 staleNudge tips fast atm')) + w\setupFoot(''));
 }
 
 function formCompany_validate($form, &$sta) {
@@ -86,22 +86,17 @@ function formCompany_validate($form, &$sta) {
 function formCompany_submit($form, &$sta) {
   global $mya;
 
-  extract($info = just('private description shortDesc website selling categories can requireCashier employees gross staleNudge dob tips fast atm', $sta['input']));
+  extract($rawInfo = just('private description shortDesc website selling categories can requireCashier employees gross staleNudge dob tips fast atm', $sta['input'], NULL));
   
-  $website = preg_replace('~https?://~i', '', @$website);
+  $website = preg_replace('~https?://~i', '', nn($website));
 
-  $mya->setCoCans(@$can);
-  //$mya->setBits(APP_CAN_BITS, $can, 'co');
-// (keep this) $mya->setBit(CO_REQUIRE_CASHIER, @$requireCashier, 'coFlags');
-  $mya->setCoBit(CO_PRIVATE, @$private);
+  $mya->setCoCans(nn($can));
+  $mya->setCoBit(CO_PRIVATE, nn($private));
   $mya->setCoBit(CO_TIP, $tips);
-  if ($mya->cAdmin) $mya->setCoBit(CO_FAST, @$fast);
-  if ($mya->cAdmin) $mya->setCoBit(CO_ATM, $atm);
-  $mya->update(@compact(ray('description shortDesc website selling employees gross staleNudge dob')));
-  
-  if (@$categories) $mya->setCategories($categories);
-
-//  $mya->stepDone('company', $info);
-//  return $mya->ok ? say('options saved') : w\go('status', 'options saved|step completed');
-  return w\goNextStep('company', NULL, $info);
+  if ($mya->cAdmin) $mya->setCoBit(CO_FAST, nn($fast));
+  if ($mya->cAdmin) $mya->setCoBit(CO_ATM, nn($atm));
+  foreach (ray('description shortDesc website selling employees gross staleNudge dob') as $k) if (isset($$k)) $info[$k] = $$k;
+  $mya->update($info);
+    if (nn($categories)) $mya->setCategories($categories);
+  return w\goNextStep('company', NULL, $rawInfo);
 }

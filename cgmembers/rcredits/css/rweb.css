@@ -2,6 +2,7 @@
 
 .debug {margin-bottom:8px;}
 .debug pre {margin:0; background-color:#fde8ec;}
+#edit-noEnter {display:none;}
 
 .container {display:table; width:100%;}
 .thead {display:table-header-group;}
@@ -30,6 +31,9 @@ input[type=number] {-moz-appearance:textfield;}
 .skip {margin-left:10px;}
 .positive {color:green;} /* highlights donations and other happy amounts */
 .white {color:white;} /* to make things disappear */
+.noCalendar::-webkit-inner-spin-button,
+.noCalendar::-webkit-calendar-picker-indicator {display: none; -webkit-appearance: none;}
+
 tr.hiRow {background-color:lightyellow;}
 #edit-none {display:none;} /* for hidden submit button */
 iframe {border:0; float:right; margin-right:-60px;}
@@ -208,6 +212,7 @@ td, th {padding: 4px 9px; border: 1px solid #fff; text-align: left;}
 #frm-community,
 #frm-history,
 #frm-settings,
+#frm-co,
 #frm-admin {max-width:300px; margin:0 auto;}
 #frm-adminpanel button {margin:0 10px 20px 0;}
 
@@ -387,29 +392,36 @@ body.page-partner blockquote {font-size:14px;}
 
 /* Invite */
 #inviteLink {border:1px solid silver; background-color:lightyellow; color:silver;}
-#frm-invite #edit-subtext h4 {display:inline-block; margin:10px 0 0px 30px; background-color:lightyellow;}
+#frm-invite #edit-subtext h5 {display:inline-block; margin:10px 0 0px 30px; background-color:lightyellow; font-size:105%;}
+#frm-invite #edit-subtext small {display:inline-block; margin-top:10px;}
+#frm-invite #edit-buttons a {margin-right:10px;}
+#frm-invite .form-item-whyNot,
 #frm-invite .form-item-question,
 #frm-invite .form-item-quote,
 #frm-invite .form-item-org,
 #frm-invite .form-item-position,
 #frm-invite .form-item-website,
-#frm-invite .form-item-usePhoto.form-type-radios {display:none;}
+#frm-invite #edit-usePhoto,
+#frm-invite #edit-postPhoto {display:none;}
+#frm-invite #edit-usePhoto {margin-bottom:0;}
 
 /* Shouters */
 #frm-shouters .footnote {color:red;}
-#frm-shouters #edit-signed {font-weight:bold;}
-#frm-shouters .row {display:block; width:100%; color:black;}
-#frm-shouters .cell {padding:0 5px 0 0;}
+#frm-shouters .form-item-ask {font-size:125%; color:seagreen; background-color:lightyellow; padding-bottom:10px;}
+#frm-shouters #edit-signed {font-size:125%; color:#317eac; font-weight:bold;}
+#frm-shouters .row {display:block; width:100%; color:black; margin-bottom:10px;}
+#frm-shouters .cell {display:inline; padding:0 1px 0 0;}
 #frm-shouters .fullName {color:darkblue; font-weight:bold;}
 #frm-shouters .fullName::before {
-  display:inline-block;
+  display:block;
+  float:left;
   width:15px;
   content:"•";
   font-weight:bold;
   font-size:110%;
   color:silver;
 }
-#frm-shouters .quote {display:block; width:90%; padding-left:35px; font-style:italic; color:#666666; font-weight:normal;}
+#frm-shouters .quote {display:block; width:90%; padding-left:35px; font-style:italic; color:#666666; font-weight:normal; text-indent:-7px;}
 #frm-shouters .quote::before,
 #frm-shouters .quote::after {content:"\""; padding:0 1px; color:silver;}
 
@@ -726,7 +738,7 @@ body.page-partner blockquote {font-size:14px;}
 #frm-summary .admin textarea {width:450px;}
 #frm-summary .admin .form-checkboxes {width:500px; max-width:500px;}
 #frm-summary #edit-notes .control-data {width:450px; max-height:150px; overflow-x:hidden; overflow-y:scroll; overflow-wrap:break-word}
-#frm-summary #edit-tickle {max-width:135px; display:inline-block;}
+#frm-summary #edit-tickle {max-width:105px; display:inline-block; margin-right:10px;}
 #frm-summary #edit-photo img {width:100px; margin-top:20px;}
 #frm-summary #edit-creditlimit .help-block,
 #frm-summary #edit-committed .help-block,
@@ -755,8 +767,9 @@ body.page-partner blockquote {font-size:14px;}
 #frm-summary #edit-choiceList a small {color:silver;}
 
 #frm-summary #edit-altid {display:inline-block; width:180px;}
-#frm-summary #edit-altSt {display:inline-block; width:80px; margin-left:10px;}
-#frm-summary #edit-dob {display:inline-block; width:135px; margin-left:10px;}
+#frm-summary #edit-altSt {display:inline-block; width:80px; margin-left:10px; margin-right:10px;}
+#frm-summary #edit-dob {display:inline-block; width:105px;} /* no left margin, in case it is first */
+#frm-summary #edit-altId .loneDob {margin-top:10px;}
 
 /* Coupons and Discounts */
 #frm-coupons #edit-buttons a.btn {margin:0 100% 10px 0;}
@@ -781,8 +794,8 @@ body.page-partner blockquote {font-size:14px;}
 .cmpy-list .cmpy-img, .cmpy-list .cmpy-buttons, .cmpy-list .cmpy-name-does,
 .cmpy-list .cmpy-contact {display:table-cell; padding:10px 0; border-bottom:1px solid silver;}
 
-.cmpy-list .cmpy-img {display:table-cell; overflow:hidden; vertical-align: middle; height:48px; margin:5px 5px 5px 20px; width:64px; text-align:center;}
-.cmpy-list .cmpy-img img {overflow:hidden; height:48px; width: 64px; object-fit:cover;}
+.cmpy-list .cmpy-img {display:table-cell; overflow:hidden; vertical-align: middle; margin:5px 5px 5px 20px; text-align:center;}
+.cmpy-list .cmpy-img img {overflow:hidden; width:64px; height:48px; max-width:64px; max-height:48px; object-fit:cover;}  /* max-width and max-height are for mobile / promo site */
 .cmpy-list .cmpy-name-does {width:300px; overflow:hidden; display:table-cell; vertical-align: middle; padding-left:10px;}
 .cmpy-list .cmpy-name {color:darkblue; padding-left:10px;}
 .cmpy-list .cmpy-does {padding-left:10px;}
@@ -790,6 +803,10 @@ body.page-partner blockquote {font-size:14px;}
 .cmpy-list .cmpy-ind-wrapper {margin-top:10px;}
 .cmpy-list .cmpy-ind {font-weight:bold; color:#004d00; font-size:150%; margin:30px 0 5px 0;}
 .company-listing {color:red; font-weight:bold;}
+
+/* Unsubscribe */
+#frm-unsubscribe #edit-why .checkbox {display:block;}
+#frm-unsubscribe #edit-why .checkbox i {color:silver;}
 
 /* Pay/Charge/Tx */
 #frm-tx #edit-periods {width:40px; display:inline-block; margin-right:10px;}
@@ -845,9 +862,8 @@ body.page-partner blockquote {font-size:14px;}
 /* Partner Step Two */
 
 /* Verify ID */
+#frm-verifyid .form-item-file label {padding-top:2px;}
 #frm-verifyid .form-item-federalId,
-#frm-verifyid .form-item-dob,
-/*#frm-verifyid .form-item-file,*/
 #frm-verifyid .form-item-idtype {display:none;}
 
 /* Bank Info */
@@ -1134,6 +1150,7 @@ div.password-confirm .error {font-weight:bold; color:red;}
 #txlist-title {width:100%; margin-top:0px;}
 #txlist div.row {margin-left:0; margin-right:0;}
 #txlist .row >div {margin:0 auto;}
+#txlist .tbody .row >div {clear:both;}
 #txlist .row>div>div {padding-top:5px; padding-bottom:4px; min-height:2ex;}
 
 #txlsit .txentry {clear:both}

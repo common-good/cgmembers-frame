@@ -70,7 +70,7 @@ function formGrant_submit($form, &$sta) {
   $helperCount = db\count('users', ':IS_OK AND NOT :IS_CO AND helper=:myid', ['myid' => $aA->id]);
   extract($params = $sta['input'], EXTR_PREFIX_ALL, 'i');
   extract($i_crits, EXTR_PREFIX_ALL, 'i');
-  foreach (ray('i_did10 i_meet i_report i_sayOther') as $k) $$k = @$$k ? t('YES') : t('NO');
+  foreach (ray('i_did10 i_meet i_report i_sayOther') as $k) $$k = nn($$k) ? t('YES') : t('NO');
 
   $th = 'th class="grant-th"';
   $td = 'td class="grant-td"';

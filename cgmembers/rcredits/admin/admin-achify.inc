@@ -46,7 +46,7 @@ function achify($where = 'deposit=0') {
 		$amount *= 100;
     if ($amount <= 0) $credits -= $amount; else $debits += $amount;
     $txCode = $amount == 0 ? 23 
-    : (@$bankAccountType == 'checking' ? ($amount < 0 ? 22 : 27) : ($amount < 0 ? 32 : 37));
+    : ($bankAccountType == 'checking' ? ($amount < 0 ? 22 : 27) : ($amount < 0 ? 32 : 37));
 		$amount = abs($amount);
 
     $recs[] = achRecord(compact(array_keys($ray = ray(F_PPD))), $ray);

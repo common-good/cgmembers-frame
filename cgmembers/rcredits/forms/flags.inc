@@ -14,8 +14,8 @@ function formFlags($form, &$sta, $args = '') {
   include R_ROOT . '/rweb/risk-descs.inc';
 
 // fails  u\setDft($args['period'], 1);
-  extract($args = just('period starting ending download downloaded', $args)); 
-  if (!@$period) $args['period'] = $period = 7;
+  extract($args = just('period starting ending download downloaded', $args, NULL)); 
+  if (!$period) $args['period'] = $period = 7;
   extract(just('dateRange url starting ending', dateRange($args, 'community/flags', [], '', FALSE)));
   $url = hidFld($url);
   
@@ -71,7 +71,7 @@ EOF;
 EOF
   );
 
-  if (@$downloaded) jsx('download', compact('url'));
+  if ($downloaded) jsx('download', compact('url'));
   return cgform(compact('title') + $dateRange + compact('subtext', 'table'));
 }
 
@@ -88,18 +88,18 @@ function formFlags_submit($form, &$sta) {dateRangeRedirect('community/flags', $s
  */
 function riskLine($q, $descs, &$red = '') {
   global $mya;
-  global $riskUids; if (!@$riskUids) $riskUids = [];
+  global $riskUids; if (!nn($riskUids)) $riskUids = [];
   global $base_url; 
   $abridgable = ray(t('labor,automatic transfer,donation,deferred'));
   if (!$row = $q->fetchAssoc()) return FALSE;
   
   if (!$mya or !$mya->cAdmin2) unset($row['description']);
-  if (@$row['amount'] + 0 < 0) list ($row['payer'], $row['payee'], $row['amount']) = array(@$row['payee'], @$row['payer'], -$row['amount']); // don't show user negative amounts
+  if (nni($row, 'amount', 0) + 0 < 0) list ($row['payer'], $row['payee'], $row['amount']) = array(nni($row, 'payee'), nni($row, 'payer'), -$row['amount']); // don't show user negative amounts
   extract(just('uid xid created description score amount risks', $row));
 
   $extra = (($mya = r\acct()) and $mya->can(B_ADMIN2));
   global $riskQ, $riskCount; 
-  if ($q == @$riskQ) {
+  if ($q == nn($riskQ)) {
     $riskCount++;
     if ($riskCount > K_LINES) return FALSE;
   } else {$riskQ = $q; $riskCount = 1;}
@@ -130,7 +130,7 @@ function riskLine($q, $descs, &$red = '') {
 
   if (isset($amount)) $row['amount'] = number_format($amount, 2);
   if ($extra and isset($xid)) $row['xid'] = "<a href=\"$base_url/sadmin/tx-info/$xid\">$xid</a>";
-  if (isset($created)) $row['created'] = strftime(@$uid ? '%d-%b-%Y' : '%d-%b', $created);
+  if (isset($created)) $row['created'] = strftime(nn($uid) ? '%d-%b-%Y' : '%d-%b', $created);
   if (isset($description)) foreach ($abridgable as $k) if (u\starts($description, $k)) $row['description'] = $k;
 
   $row['risks'] = r\riskList($risks, $descs);

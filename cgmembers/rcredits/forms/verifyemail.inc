@@ -26,9 +26,9 @@ function formVerifyEmail($form, &$sta, $args = '') {
   
   if (!$mya or $mya != $a) { // no longer signed in to the right account, so sign in
     w\signout(TRUE); // close the wrong old account, if any
-    if (flooding($uid = r\loginString(@$id), $sta, $err)) return w\softErr($err); // handle getting hammered
+    if (flooding($uid = r\loginString(nn($id)), $sta, $err)) return w\softErr($err); // handle getting hammered
     $mya = r\acct($id);
-    if (!$mya->passwordOkay(@$code, 'pass', $err)) return w\softErr($err);
+    if (!$mya->passwordOkay(nn($code), 'pass', $err)) return w\softErr($err);
     noFlood($sta);
   }
   
@@ -50,7 +50,7 @@ function formVerifyEmail($form, &$sta, $args = '') {
   return cgform(compact(ray('title subtext uid verify')) + $passFlds + $buttons);
 }
 
-function formVerifyEmail_validate($form, &$sta) {if (nn($sta['input']['showPass'])) return formChangePassword_validate($form, $sta);}
+function formVerifyEmail_validate($form, &$sta) {if (nni($sta['input'], 'showPass')) return formChangePassword_validate($form, $sta);}
 
 function formVerifyEmail_submit($form, &$sta) {
   global $mya;

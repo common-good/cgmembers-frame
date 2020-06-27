@@ -134,11 +134,11 @@ function weRespondWith($args) {
 
   t\output('expecting: ' . pr($args[0]));
   foreach ($args[0] as $k => $v) {
-    $got = @$rposResult[$k];
+    $got = nni($rposResult, $k);
     if ($k == 'descriptions') $v = empty($v) ? [0 => ''] : ray($v);
     if ($k == 'bad') $v = empty($v) ? [] : ray($v);
     if ($k == 'can' or $k == 'canMgr') { // currently tests only signed-out permissions
-      if ($k == 'canMgr') $got = @$rposResult['can'] >> (APP_CAN_BITS + 1);
+      if ($k == 'canMgr') $got = nni($rposResult, 'can') >> (APP_CAN_BITS + 1);
       $got &= APP_CAN_MASK;
       $flags = 0;
       if ($v) foreach (ray($v) as $one) $flags |= u\bit(u\consta('co', $one));
@@ -151,7 +151,7 @@ function weRespondWith($args) {
     if ($k == 'time' and t\sameTime($v, $rposResult["time"])) continue; // %now time is approximate
     
     if ($v != $got) {
-      $v = pr(@$v);
+      $v = pr(nn($v));
       t\output("Expected $k=$v, got:" . pr($got));
       return FALSE;
     }
@@ -305,10 +305,10 @@ function agentAsksDeviceToUndoTransactionWithSubs($agent, $device, $subs) {
 function withBalance($subs) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $rposResult;
-  if (!$got = @$rposResult['balance']) return !$subs; else $subs = $subs[0];
+  if (!$got = nni($rposResult, 'balance')) return !$subs; else $subs = $subs[0];
   $balance = t('customer balance', $subs);
-  if (@$subs['did']) {
-    if (@$subs['forCash']) u\prefix(' ', $subs['forCash']);
+  if (nni($subs, 'did')) {
+    if (nni($subs, 'forCash')) u\prefix(' ', $subs['forCash']);
     $balance .= t('just did', $subs);
   }
 /**/  t\output('Expecting ' . print_r(compact('balance'), 1), 'expect');
@@ -339,7 +339,7 @@ function withUndo($subs) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $rposResult;
 
-  $got = @$rposResult['undo'];
+  $got = nni($rposResult, 'undo');
   
   if (is_array($subs)) {
     if ($got) $subs = $subs[0]; else return !$subs;
@@ -371,7 +371,7 @@ function withUndo($subs) {
 function weReturnErrorWithSubs($msg, $subs) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $rposResult;
-  $msg = strip_tags(t($msg, @$subs[0]));
+  $msg = strip_tags(t($msg, nni($subs, 0)));
   if ($rposResult['ok'] == '0' and $rposResult['message'] == $msg) return TRUE;
 /**/ t\output(ray('wanted,actually sent', $msg, print_r($rposResult, 1)));
   return FALSE;
@@ -448,7 +448,7 @@ function companyFlags($flags) {return t\companyFlags($flags);}
  */
 function agentAsksDeviceForOpWith($agent, $device, $op, $extra) {
   global $testOnly; if ($testOnly) return FALSE;
-  $extra = @$extra[0] ?: array();
+  $extra = nni($extra, 0) ?: array();
   return t\hitServer($op, $extra, $agent, $device);
 }
 
@@ -571,7 +571,7 @@ function withDid($subs) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $rposResult;
   $expect = $subs ? t('just did', $subs[0]) : '';
-  return (@$rposResult['did'] == $expect) ?: t\output("Expected: $expect\n Got: " . @$rposResult['did']);
+  return (nni($rposResult, 'did') == $expect) ?: t\output("Expected: $expect\n Got: " . nni($rposResult, 'did'));
 }
 
 /**
@@ -601,7 +601,7 @@ function withMessageWithSubs($msg, $subs) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $rposResult;
   $expect = $subs ? t($msg, $subs[0]) : '';
-  return (@$rposResult['message'] == $expect) ?: t\output("Expected: $expect\n Got: " . @$rposResult['message']);
+  return (nni($rposResult, 'message') == $expect) ?: t\output("Expected: $expect\n Got: " . nni($rposResult, 'message'));
 }
 
 /**
@@ -674,7 +674,7 @@ function withProofOfAgentAmountCreatedMemberCode($agent, $amount, $created, $mem
   $amount = number_format($amount, 2);
   $proof = "$agent$amount$member$code$created";
 //  $hash = \_password_crypt('sha512', $proof, @$rposResult['proof']);
-  return (@$rposResult['proof'] == u\hash($proof));
+  return (nni($rposResult, 'proof') == u\hash($proof));
 }
 /**
  * we respond ok txid (ARG) created (ARG) balance (ARG) saying: (ARG)
@@ -701,20 +701,20 @@ function weRespondOkTxidCreatedBalanceSaying($txid, $created, $balance, $msg = N
 
   extract($rposResult, EXTR_PREFIX_ALL, 'a'); // actual results
   $ok = '1';
-  foreach (ray('ok txid balance') as $k) if (@$rposResult[$k] != $$k) $error = 1;
-  if (!t\sameTime(@$a_created, $created)) $error = 2;
+  foreach (ray('ok txid balance') as $k) if (nni($rposResult, $k) != $$k) $error = 1;
+  if (!t\sameTime(nn($a_created), $created)) $error = 2;
   
-  if (@$msg) {
+  if (nn($msg)) {
     $msg = $msg[0];
-    $index = (@$msg['solution'] ? 'report undo|' : '') . 'report tx'; // |for why
+    $index = (nni($msg, 'solution') ? 'report undo|' : '') . 'report tx'; // |for why
     $wantMsg = t($index, $msg);
     if ($a_message != $wantMsg) $error = 3;
 ///    debug(compact('a_message','wantMsg','error'));
   }
 ///  debug(compact(ray('rposResult msg')));
 
-  if (@$error) {
-    if (@$msg) u\preray(compact('wantMsg'), $msg);
+  if (nn($error)) {
+    if (nn($msg)) u\preray(compact('wantMsg'), $msg);
     t\output('Expecting (but did not get): ' . pr(compact(ray('ok txid created balance msg'))), 'expect');
     t\output('Got: ' . pr($rposResult + compact('error')));
     return FALSE;

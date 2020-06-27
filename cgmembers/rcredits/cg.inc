@@ -58,18 +58,21 @@ function regionRange($region = NULL) {
 
 /**
  * Add a date stamp and agent's initials to the given note (before updating the notes field with it).
+ * Agent is deemed to be self if no current account, because it's surely an unsubscribe from an email notice link.
  */
 function stampNote($note) {
   global $mya;
 
-  if ($mya->proSe) {
-    $rep = t('self');
-  } elseif ($mya->superAdmin) {
-    $rep = 'sadmin';
-  } else {
-    list ($first, $last) = u\parseName($mya->agentA->fullName);
-    $rep = mb_strtolower(($first ? $first[0] : '') . $last);
-  }
+  if ($mya) {
+    if ($mya->proSe) {
+      $rep = t('self');
+    } elseif ($mya->superAdmin) {
+      $rep = 'sadmin';
+    } else {
+      list ($first, $last) = u\parseName($mya->agentA->fullName);
+      $rep = mb_strtolower(($first ? $first[0] : '') . $last);
+    }
+  } else { $rep = 'self'; }
   $date = u\fmtDate();
   return "$date  $rep: $note\n";
 }
@@ -259,11 +262,12 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
     if ($toA->depends and !$toA->co) $jA = r\acct($toA->helper); // sponsored accounts are never joint
     if (nn($jA) and test()) $testEmails[] = ray('index toEmail subs', $index, $jA->email, $subs);
   } else $to = $toEmail = $to0;
+  $subs['emailCoded'] = urlencode(u\cry('P', is_array($toEmail) ? key($toEmail) : $toEmail));
   
   $testEmails[] = compact(ray('index toEmail subs'));
 
   if (!is_array($reply = $reply0) and !is_object($reply0) and !strpos($reply0, '@')) {
-    $reply = (!@$reply0 or $reply0 == 'region') ? [CGF_EMAIL => PROJECT] // standard
+    $reply = (!nn($reply0) or $reply0 == 'region') ? [CGF_EMAIL => PROJECT] // standard
       : ($reply0 == 'ctty' ? $toA->cttyA : r\acct($reply0)); // get account object
   }
 
@@ -274,14 +278,14 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
     $resubs[$k] = $v;
   }
 
-  $subject = u\SUBS(strtr(@$subject ?: $GLOBALS['emailSubjects'][$index], $resubs), '%');
-  $body = u\SUBS(strtr(@$body ?: (@$noFrame ? r\emailTemplate($index) : r\emailBody($index)), $resubs), '%');
+  $subject = u\SUBS(strtr(nn($subject) ?: $GLOBALS['emailSubjects'][$index], $resubs), '%');
+  $body = u\SUBS(strtr(nn($body) ?: (nn($noFrame) ? r\emailTemplate($index) : r\emailBody($index)), $resubs), '%');
 
   // log
   $logSubs = u\noSecrets($resubs) + ["\r\n" => '', ' style=' => ' stylish=']; // easier reading for log and tests & evade CSP
   $message = strtr($body, $logSubs);
   $erInfo = compact(ray('index toEmail subject message'));
-  u\loga('email', $erInfo + ['toUid' => @$toA->id]);
+  u\loga('email', $erInfo + ['toUid' => nn($toA->id)]);
   f('t.output', 'Actual (in rMail) ' . pr($erInfo), 'email');
 
   if (!isPRODUCTION and (isDEV or db\count('users') > 200)) { // make sure we never send rogue emails from test server with real data
@@ -323,7 +327,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
   }
   
   if ($reply) $m->setReplyTo($reply);
-  if (@$sms) $m->setSubject('')->setTo($toEmail); // send as text message
+  if (nn($sms)) $m->setSubject('')->setTo($toEmail); // send as text message
   try {
     $mailer->send($m);
     if (nn($jA) and $index != 'tell-staff') { // also send to partner in joint account unless it's an admin notice
@@ -365,10 +369,10 @@ function badCard($qid, $code, $msg) {
 function message($uid, $index, $subs = [], $topic = '') {
   global $testMessages;
 
-  $subs['otherName'] = @$subs['myName']; // messaging someone else about US, if anyone
-  $reply = @$subs['reply'];
+  $subs['otherName'] = nni($subs, 'myName'); // messaging someone else about US, if anyone
+  $reply = nni($subs, 'reply');
   $message = t($index, $subs);
-  $topic = $topic ?: (t(@$GLOBALS['topics'][$index], $subs) ?: $index); // index should never be used literally (wrong language) but more importantly never fail
+  $topic = $topic ?: (t(nni($GLOBALS['topics'], $index), $subs) ?: $index); // index should never be used literally (wrong language) but more importantly never fail
   $testMessages[] = compact(ray('uid index subs topic'));
   r\notify($uid, 'message', compact(ray('message topic reply')), TRUE);
 }
@@ -387,12 +391,12 @@ function notify($uid, $index, $subs = [], $force = FALSE) {
   u\EXPECT($a, 'no account');
   $subs['uid'] = $uid;
   u\setDft($subs['qid'], $a->qid); // might have an agent too, so don't overwrite
-  $subs['otherName'] = nn($subs['myName'], NULL); // notifying someone else about US, if anyone
+  $subs['otherName'] = nni($subs, 'myName', NULL); // notifying someone else about US, if anyone
   $fullName = $a->fullName;
   $warnIndexes = ray('new invoice,new offer,charge disputed');
   
   if ($force) {
-    return r\rMail($index, $a, $subs, @$subs['reply'] ?: 'ctty');
+    return r\rMail($index, $a, $subs, nni($subs, 'reply') ?: 'ctty');
   } else {
     list ($message, $created) = array(t($index, $subs), now());
     f('t.output', "Actual Notice to $fullName: $message");
@@ -424,7 +428,7 @@ function notifyEntries($a, $index, $entries, $force = FALSE) {
   /* $warnIndexes = ray('new invoice,new offer,charge disputed'); */
   
   if ($force) {
-    $mailed = r\rMail($index, $a, $subs, @$subs['reply'] ?: 'ctty');
+    $mailed = r\rMail($index, $a, $subs, nni($subs, 'reply') ?: 'ctty');
   } else { //if ($a->can(B_NOTIFY_EMAIL)) {
     list ($message, $created) = array(t($index, $subs), now());
     f('t.output', "Actual Notice to $fullName: $message");
@@ -434,11 +438,11 @@ function notifyEntries($a, $index, $entries, $force = FALSE) {
   if ($a->can(B_BYSMS)) {
     if ($num = $a->smsNumber) $smsed = SMS\send($num, t($index, $subs));
   }
-  if (FALSE and !@$mailed and !@$smsed and array_search($index, $warnIndexes) !== FALSE) {
+  if (FALSE and !nn($mailed) and !nn($smsed) and array_search($index, $warnIndexes) !== FALSE) {
     $notification = str_replace('-', ' ', $index);
     $warning = t('cannot contact', compact('fullName', 'notification'));
   }
-  if (@$warning) {
+  if (nn($warning)) {
     if ($channel == TX_WEB) Web\say($warning);
     if ($channel == TX_SMS) SMS\send($a->smsNumber, $warning);
     if ($channel == TX_POS) { } // dunno how to handle this
@@ -463,19 +467,19 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
   ksort($subs); // put the keys in a predictable order, for testing and easy reading
 
   $tellCOA = $uid == 1 ? $mya : ($uid == 0 ? NULL : r\acct($uid));
-  $keyUid = nn($subs['uid']);
+  $keyUid = nni($subs, 'uid');
   $keyA = $tellCOA ?: ($keyUid ? r\acct($keyUid) : NULL);
   
-  $currentAcct = $mya ? $mya->nameAndQid : NULL;
-  $keyAcct = $keyA ? $keyA->nameAndQid : NULL;
+  $currentAcct = $mya ? $mya->nameAndQid() : NULL;
+  $keyAcct = $keyA ? $keyA->nameAndQid() : NULL;
   $email = $tellCOA ? $tellCOA->cttyA->email : R_ADMIN_EMAIL; // tell cAdmin if appropriate, else superAdmin
-  $replyTo = ($keyA or $mya) ? ($keyA ?: $mya)->nameAndEmail : NULL;
+  $replyTo = ($keyA or $mya) ? ($keyA ?: $mya)->nameAndEmail() : NULL;
   
   $topic = mb_strlen($index) < 50 ? strip_tags($index) : '';
   $message .= u\seeAssoc($subs);
   $noFrame = TRUE;
   $chan = ray(TX_CHANNELS)[$channel];
-  $info = @compact(ray('cAdmin email topic message keyAcct currentAcct chan noFrame')) + $subs;
+  $info = compact(ray('email topic message keyAcct currentAcct chan noFrame')) + $subs;
 
   r\rMail('tell-staff', $email, $info, $replyTo, $attachment);
   $info['topic'] .= t(' (to admin)');
@@ -492,7 +496,7 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
  */
 function tellCO($index, $subs = [], $uid = NULL) {
   global $mya;
-  if (!$uid) $uid = $mya ? $mya->id : @$subs['loserId'];
+  if (!$uid) $uid = $mya ? $mya->id : nni($subs, 'loserId');
   return tellAdmin($index, $subs, $uid);
 }
 
@@ -557,7 +561,7 @@ function setCook($key, $value, $expires = NULL, $raw = FALSE) {
 }
 
 function setCryptCook($k, $v) {return setCook($k, substr(u\cry('C', $v), 3), 0, TRUE);}
-function cryptCook($k) {return ($v = @$_COOKIE[$k]) ? u\decry('C', CRYPT_FLAG . 'C' . $v) : '';}
+function cryptCook($k) {return ($v = nni($_COOKIE, $k)) ? u\decry('C', CRYPT_FLAG . 'C' . $v) : '';}
 
 /**
  * Return the unformatted private key for highly sensitive data (use u\fmtKey() to get the formatted key).
@@ -608,7 +612,8 @@ function owning($uid1, $uid2) {
  * @param int $company: defaults to current account ID
  */
 function isEmployee($uid, $company = '') {
-  return relation(1, $company ?: @r\acct()->id, $uid, ':IS_EMPLOYEE');
+  global $mya;
+  return relation(1, $company ?: ($mya ? $mya->id : ''), $uid, ':IS_EMPLOYEE');
 }
 
 /**
@@ -638,8 +643,8 @@ function uniqueName($fullName, $info = []) {
   if (!$fullName) {
     extract(just('phone email', $info));
     $fullName = R_TEMP_NAME_PREFIX .
-      (@$phone ?  u\fmtPhone($phone, 'n')
-       : (@$email ? R_TEMP_NAME_PREFIX . strtr($email, ['@'=>'AT', '.'=>'DOT'])
+      (nn($phone) ?  u\fmtPhone($phone, 'n')
+       : (nn($email) ? R_TEMP_NAME_PREFIX . strtr($email, ['@'=>'AT', '.'=>'DOT'])
           : substr(md5('zot' . strval(now())), 0, 10))); // pseudo random
   }
   $name = $name0 = u\shortName($fullName);
@@ -754,156 +759,10 @@ function makeDevice($uid, $code = '', $ch = NULL) {
   
   u\setDft($ch, $channel);
 
-  //  if ($ch == TX_WEB and $mya and $mya->superAdmin) return 0; // don't create spurious devices as admin
-  /*  if ($boxName === '0') {
-      $where = "t1.boxName REGEXP '^[0-9]+$' AND t1.uid=:uid";
-      $boxName = u\firstUnusedId('boxName', 'r_boxes', 1, PHP_INT_MAX-1, $where, compact('uid'));
-      } else */
-  //if (!$boxName) $boxName = $code; // code serves as boxName for dumb cell phones
   $created = $access = now();
   $boxnum = db\get('MAX(boxnum)', 'r_boxes', 'uid=:uid', compact('uid')) + 1;
   $info = ray('channel', $ch) + compact(ray('uid code boxnum access created'));
-  return @db\insert('r_boxes', $info);  // WHY ARE WE IGNORING ERRORS HERE???????
-}
-
-/**
- * Assign the given account a new id (or delete it).
- * @param int $a: the account to delete (qid or uid are also acceptable)
- * @param int $newUid: the new record ID to give the account (defaults to next available)
- * @param bool $unusable: whether to mark the old account record ID as unusuable
- * @param bool $delete: whether to delete the account rather than giving it a new ID (called by deleteAccount)
- */
-function deleteAccount($a) {r\changeUid($a, 0, FALSE, TRUE);}
-function changeUid($a, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
-  global $mya;
-  if (!$a or !$a = is_object($a) ? $a : r\acct($a)) return w\say(t('nope'), 'err');
-  if ($a->id == $mya->id) return w\say(t('You can\'t delete or change the uid of an acct while it\'s the current acct.'), 'err');
-  $oldUid = $a->id;
-  $nm = $a->fullName;
-  $photoFlnm = $a->tempPhotoFilename;
-  $oldQid = r\qid($oldUid);
-
-  if ($delCtty = ($delete and $a->isCtty)) { // deleting a community (merge into Seedpack)
-    db\del('users', 'uid', $oldUid);
-    $unusable = $delete = FALSE; // don't actually delete anything except the account record
-    $newUid = r\serverUid(); // Seedpack uid
-  }
-  
-  if ($delete) {
-    if (db\exists($table = 'tx_entries', 'uid=:oldUid', compact('oldUid'))
-        or db\exists($table = 'r_ballots', ':oldUid IN (voter, proxy)', compact('oldUid'))
-        or db\exists($table = 'r_usd', 'payee=:oldUid', compact('oldUid'))) {
-      return w\say(t('Account "%name" has records in table %table, so it cannot be deleted.', 'name table', $a->fullName, $table), 'err');
-    }
-  } elseif (!$newUid) {
-    $region = @$a->zip ? r\region(@$a->country, @$a->state, $a->zip) : r\communityUid();
-    $newUid = r\Acct::nextId($region);
-  }
-  $subs = array( // all cg tables are listed, to be sure we don't leave any out (D=deletable)
-    // messages
-    'people:uid',
-    // posts
-    // post_cats
-    // r_areas
-    // r_bad
-    'r_ballots:voter',
-    'r_ballots:proxy',
-    // r_banks
-    'r_boxes:uid:D',
-    'r_changes:uid:D',
-    'r_changes:changedBy',
-    'r_company:uid:D',
-    // r_countries
-    'r_criteria:ctty:D',
-    'r_do:uid:D',
-    'r_events:ctty',
-    'r_honors:uid:D', // honors are deletable if donation never completed
-    // r_industries
-    'r_investments:coid',
-    'r_investments:clubid',
-    'r_invites:inviter',
-    'r_invites:invitee:D',
-    'r_invoices:payer:D',
-    'r_invoices:payee:D',
-    'r_ips:uid:D',
-    'r_near:uid1:D',
-    'r_near:uid2:D',
-    // r_nonces
-    'r_notices:uid:D',
-    // r_options
-    // r_pairs
-    'r_photos:uid:D',
-    'r_proposals:ctty',
-    'r_proxies:person:D',
-    'r_proxies:proxy:D',
-    // r_questions
-    'r_ratings:uid',
-    // r_regions
-    'r_relations:main:D',
-    'r_relations:other:D',
-    // r_states
-    // r_shares',
-    'r_stakes:uid',
-    'r_stakes:clubid',
-    'r_stats:ctty:D',
-    'r_tous:uid:D',
-    // r_transit
-    'r_usd:payee',
-    // r_usd2
-    'r_user_industries:uid:D',
-    // r_votes
-    'sessions:uid:D',
-    // signup
-    'tx_disputes:uid',
-    'tx_disputes:agentUid',
-    'tx_entries:uid',
-    'tx_entries:agentUid',
-    'tx_hdrs:actorId',
-    'tx_hdrs:actorAgentId',
-    'tx_rules:to',
-    'tx_rules:payer',
-    'tx_rules:payee',
-    'tx_rules:from',
-    'tx_templates:to',
-    'tx_templates:payer',
-    'tx_templates:payee',
-    'tx_templates:from',
-    // u_groups
-    'u_groupies:uid',
-    'u_shouters:uid',
-    'users:jid',
-    'users:uid:D',
-    'users:helper',
-    'users:community',
-    // variable
-  );
-
-  $DBTX = \db_transaction();
-  foreach ($subs as $one) {
-    list ($table, $field, $deletable) = explode(':', $one . '::'); // if deleting and not deletable, set to zero
-    if ($delCtty and $table == 'users') continue; // for ctty deletion, skip users (already done)
-    
-    if ($delete) {
-      if (!$deletable) {
-        if (db\exists($table, "`$field`=:oldUid", compact('oldUid'))) {
-          $DBTX->rollback(); 
-          return w\say(t('Record in table %table (field %field) cannot be deleted.', compact('table', 'field')), 'err');
-        }
-      } else {
-        db\del($table, $field, $oldUid);
-      }
-    } else db\q("UPDATE $table SET `$field`=:newUid WHERE `$field`=:oldUid", compact('newUid', 'oldUid'));
-  }
-
-  if ($unusable and !$delete) {
-    list ($uid, $name, $email) = array($oldUid, "unusable-$oldQid", "unusable$oldQid@" . CG_DOMAIN);
-    db\insert('users', compact(ray('uid name email')), 'uid'); // mark old uid unusable
-  }
-  
-  unset($DBTX); // commit
-  if (!$delete) rename($photoFlnm, str_replace($oldQid, r\qid($newUid), $photoFlnm));
-  
-  w\say(t('Success. Account %nm has been %what.', 'nm what', $nm, $newUid ? t('changed to ') . $newUid : t('deleted')));
+  return db\insert('r_boxes', $info);
 }
 
 /**
@@ -956,7 +815,7 @@ function noticeArgs($uid, $where = '0', $weekly = FALSE, $monthly = FALSE, $at =
       $date = ($weekly or $monthly) ? (strftime('%b&nbsp;%d', $row->created)) : R_BULLET;
       $messages[] = "<tr><td class=\"notice-date\" stule=\"vertical-align:top; margin-right:5px;\">$date</td><td>$row->message</td></tr>"; // "stule" because CSP forbids inline online (rcron reverts it before emailing)
     }
-    if (@$messages) $messages = join("\n", $messages); else return FALSE;
+    if (nn($messages)) $messages = join("\n", $messages); else return FALSE;
   }
   
   $unit = $weekly ? 'week' : ($monthly ? 'month' : 'day');
@@ -1215,7 +1074,7 @@ X;
 
 /// *********************************    
   
-  if (@$created0 and $created < today()) { // redoing stats for the past, so figure bals, floors, and topN the hard way
+  if (nn($created0) and $created < today()) { // redoing stats for the past, so figure bals, floors, and topN the hard way
     $recently = strtotime(-FLOOR_DAYS . ' days', $created); // six months ago
     $isPayer = '(uid1 IN (uid, jid))';
     $isPayee = '(uid2 IN (uid, jid))';
@@ -1262,7 +1121,7 @@ X;
 
   $res = [];
   foreach (ray($do) as $k) {
-    if (!$sql = nn($sqls[$k])) continue; // don't do bals2 if bal was good enough
+    if (!$sql = nni($sqls, $k)) continue; // don't do bals2 if bal was good enough
     if ($k == 'topN' or $k == 'botN') $sql = tr($sql, '_topnSQL', topN($res));
     $res = (db\q($sql, $subs)->fetchAssoc() ?: []) + $res; // +$res so OLD takes precedence for bals2
 ///   if ($created == today() and $k == 'accts') debug(compact(ray('res sql subs')));    
@@ -1342,12 +1201,12 @@ function riskList($risks, $descs) {
   foreach ($bitNames AS $bit => $bitName) {
     if (u\getBit($risks, $bit)) {
       $class = $descs[$bitName] < 0 ? 'goodRisk' : 'badRisk';
-      $helpIndex = @$riskHelp ? array_search($bitName, array_keys($riskHelp)) : -1;
+      $helpIndex = nn($riskHelp) ? array_search($bitName, array_keys($riskHelp)) : -1;
       $why[] = w\popHelp($bitName, $riskHelp[$bitName], "$base_url/help/risks@$bitName", $class);
       //      $why[] = "<a href=\"$base_url/help/flags@$bitName\" class=\"$class riskHelp$helpIndex\">$bitName</a>";
     }
   }
-  return @$why ? join(', ', $why) : '';
+  return nn($why) ? join(', ', $why) : '';
 }
 
 /**
@@ -1369,7 +1228,7 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   if (!$a1->confirmed and !$a1->isCanonic and !$a2->isCanonic and $a1->id != CGID and $a2->id != CGID) { // actor is not confirmed (but newbs can transact with bank and CG)
     if ($a1->community != $a2->community or $channel != TX_POS) { // first tx must be in-person at home
       if ($a1->helper != $a2->id) { // unless doing business with who invited you
-        if (!$a1->hasSsn or $a1->hasRisk('badSsn')) {
+        if (!$a1->hasId or $a1->hasRisk('badSsn')) {
           return [FALSE, 'first at home', []];
         }
       }
@@ -1490,7 +1349,7 @@ function reward($from, $to, $amount = 1, $isPayer = TRUE) {
   if (relation(1, $from, $to, ':IS_OWNER OR :IS_DRAW')) return 0;
   $a = r\acct($isPayer ? $from : $to);
   //  $pct = test() ? $a->rebate : max(R_MIN_REWARD_PCT, R_REBATE - floor($a->rewards / R_REWARD_STEP));
-  $step = @$testRewardStep ?: R_REWARD_STEP;
+  $step = nn($testRewardStep) ?: R_REWARD_STEP;
 
   $over = (($isPayer xor $amount < 0) and $a->balance + $a->rewards - abs($amount) < max(0, $a->floor)); // ignore floor<0
   if ($over) { // member is spending in (or into) debt
@@ -1544,7 +1403,7 @@ function no1099k($tot, $cnt, $st) {
  */
 function minima1099($st) {
   $minima = ray(MINIMA1099);
-  return explode('/', nn($minima[$st]) ?: $minima['X']);
+  return explode('/', nni($minima, $st) ?: $minima['X']);
 }
 
 /**
@@ -1625,6 +1484,19 @@ function makeDoCode($ray) {
   return $code; // must be on separate line (PHP bug)
 }
 
+/**
+ * Return
+ * See also forms/rdo.inc
+ */
+function doCode($code) {
+  if ($code == 'TESTDOCODE') $code = t\doCode();
+  $code = CRYPT_FLAG . $code;
+  try {
+    return u\crypted($code) ? unserialize(u\decry('P', $code)) : '';
+  } catch (\Exception $e) {return '';}
+}
+
+
 // Single line functions that need no explanation
 function serverUid($regionId = R_SERVER_ID) {return -1 - R_REGION_MAX * u\a2n($regionId);} // -u\a2n($regionId) - 1;}
 function emailTemplate($key) {return file_get_contents(__DIR__ . R_TEMPLATE_DIR . "/$key.html");}
@@ -1634,7 +1506,6 @@ function realState($state, $country = R_COUNTRY_ID) {return db\get($country == U
 function stateNum($st) {return $st ? db\get('id', 'r_states', 'abbreviation=:st and country_id=:US_COUNTRY_ID', compact('st')) : $st;}
 function perm($bit) {return $bit - B_RELATED;}
 function foreignServer($uid) {return (r\uidRegion($uid) != serverUid());}
-function doCode($code) {return @unserialize(@u\decry('P', CRYPT_FLAG . ($code == 'TESTDOCODE' ? t\doCode() : $code)));} // (see forms/rdo.inc)
 function cgA() {return r\acct(CGID);}
 function denyInv($nvid) {return db\setData('r_invoices', $nvid, ['denied' => TRUE]);}
 //function usdin($for) {return u\abbreviates('usd in (', strtolower(is_array($for) ? $for[1] : $for));}

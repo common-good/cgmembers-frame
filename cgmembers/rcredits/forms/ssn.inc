@@ -20,7 +20,7 @@ function formSsn($form, &$sta, $args = '') {
   $retry = (!empty($ssnData) or (isDEV and !$mya->member) or $mya->task == 'person');
   
   if ($retry) {
-    if ($badBday = (nn($ssnData[SSN_ERR_INDEX]) == t('bad birthdate'))) {
+    if ($badBday = (is_array($ssnData) and nni($ssnData, SSN_ERR_INDEX) == t('bad birthdate'))) {
       $thing = t('Birth Date');
       $federalId = NULL;
     } else {

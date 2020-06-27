@@ -18,18 +18,18 @@ use CG\Testing as t;
  */
 function formHandleInvoice($form, &$sta, $args = '') {
   global $mya;
-  extract(just('nvid ret code toMe webpay', $args));
-  $ret = @$ret ? @u\deurlify($ret) : 'empty/1';
+  extract(just('nvid ret code toMe webpay', $args, NULL));
+  $ret = $ret ? u\deurlify($ret) : 'empty'; // was empty/1
 
   $inv = db\get('*', 'r_invoices', 'nvid=:nvid', compact('nvid'));
   $err = r\badUnpaidInv($inv);
   if ($err) return w\go($ret, $err, 'ERR');
 
   extract(just('nvid amount payer payee purpose created data', $inv));
-  if (@$code) {
+  if ($code) {
     if (test() and $code == 'TESTDOCODE') $code = t\doCode(); // most recently created doCode
     if (!$info = r\doCode($code)) return hack(t('fake doCode in handleInvoice'));
-    if (@$mya and $payer != $mya->id) w\signout(TRUE); // make sure we're signed out of any possibly different acct
+    if ($mya and $payer != $mya->id) w\signout(TRUE); // make sure we're signed out of any possibly different acct
   } elseif (!$mya) {
     return hack(t('attempt to handle invoice not signed in'));
   } else if (!in($mya->id, [$payer, $payee]) or ($mya->id == $payer xor $toMe)) {
@@ -38,14 +38,14 @@ function formHandleInvoice($form, &$sta, $args = '') {
 
   $subs = ray('amount what date', u\fmtAmt($amount), $purpose, u\fmtDate($created, TRUE));
   
-  if (@$toMe) {
+  if ($toMe) {
     $a = r\acct($payer);
     $title = t('Confirm Payment');
     $subs += ray('who', r\acct($payee)->fullName);
 
     if ($a->hasBank) {
       $_warning = t('<p><b>IMPORTANT:</b> To avoid insufficient funds charges, be sure there are enough funds in your bank account to cover any transfer that may result from approving payment of this invoice (and future invoices, if you check the "Auto" box).</p>');
-      if (!@$webpay) $always = boxFld('always', t('Auto:'), t('Pay all invoices from %who automatically.', $subs), 0);
+      if (!$webpay) $always = boxFld('always', t('Auto:'), t('Pay all invoices from %who automatically.', $subs), 0);
     } elseif ($a->avail() < $amount) {
       $_warning = t('You cannot approve this invoice until you have enough money in your account. Sign in at %CG_DOMAIN and click "Bank" on the menu to transfer funds from (or to) your bank account.');
       $disabled = w\disabled();
@@ -53,7 +53,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
 
     $subtext = t('<p>Pay %amount to %who for %what.</p>%warning', $subs + compact('_warning'));
     $link = '&nbsp; &nbsp;' . w\lnk('', t('dispute'), ray('id', 'dispute-it'));
-    $pay = submit(t('Pay Now'), '', '', w\suffix($link) + (@$disabled ?: []));
+    $pay = submit(t('Pay Now'), '', '', w\suffix($link) + (nn($disabled) ?: []));
     
     $whyNot = textFld(t('Reason for dispute:'));
     $deny = submit(t('Dispute'));
@@ -69,32 +69,34 @@ function formHandleInvoice($form, &$sta, $args = '') {
   
   $toMe = hidFld($toMe);
   $hid = w\hidFlds(compact('ret') + $inv);
+
+  foreach (ray('title subtext always pay denySet delSet toMe hid') as $k) if (isset($$k)) $form[$k] = $$k;
   $form['#validate'] = array('CG\\Web\\formHandleInvoice_validate');
   $form['#submit'] = array('CG\\Web\\formHandleInvoice_submit');
   w\jsx('dispute');
   
-  return cgform(@compact(ray('title subtext always pay denySet delSet toMe hid')) + $form);
+  return cgform($form);
 }
 
 function formHandleInvoice_validate($form, &$sta) {
-  extract(just('whyNot toMe', $sta['input']));
+  extract(just('whyNot toMe', $sta['input'], NULL));
   $deny = (op($sta) == 'deny');
-  if (@$toMe and $deny and !$whyNot) return say('say why not', 'whyNot');
+  if ($toMe and $deny and !$whyNot) return say('say why not', 'whyNot');
 }
 
 function formHandleInvoice_submit($form, &$sta) {
   $hidFlds = 'ret nvid amount payer payee purpose created data';
-  extract(just('hid whyNot toMe always ' . $hidFlds, $sta['input'])); // hidFlds here is for testing
+  extract(just('hid whyNot toMe always ' . $hidFlds, $sta['input'], NULL)); // hidFlds here is for testing
   extract(just($hidFlds, w\hidFlds($hid)));
 
   list ($fromA, $toA) = [r\acct($payer), r\acct($payee)];
   $payeeName = $toA->fullName;
-  $subs = ray('amount payerName payeeName created purpose reason', u\fmtAmt($amount), $fromA->fullName, $payeeName, u\fmtDate($created), $purpose, @$whyNot);
+  $subs = ray('amount payerName payeeName created purpose reason', u\fmtAmt($amount), $fromA->fullName, $payeeName, u\fmtDate($created), $purpose, $whyNot);
 
   $op = op($sta);
   $ok = TRUE; // messages default to status, rather than error
 
-  if ($op == 'pay' and !@$whyNot) {
+  if ($op == 'pay' and !$whyNot) {
     $short = round($amount - $fromA->avail(), 2);
     if ($fromA->ok and $short <= 0) {
       list($ok, $msg) = be\payInvoice($nvid);
@@ -106,7 +108,7 @@ function formHandleInvoice_submit($form, &$sta) {
       } else $msg = t('finish signup|when funded');
     }
     
-    if (@$always) {
+    if ($always) {
       r\acct($payee, $payer)->setRel('customer autopay', TRUE, TRUE);
       $msg .= '|' . t('auto pay on', compact('payeeName'));
     }
@@ -114,8 +116,8 @@ function formHandleInvoice_submit($form, &$sta) {
     db\del('r_invoices', 'nvid', $nvid);
     r\notify($payer, 'invoice withdrawn', $subs);
     $msg = 'invoice delete done';
-  } elseif ($op == 'deny' or @$whyNot) {
-    $data = serialize(compact('whyNot') + (@$data ? unserialize($data) : []));
+  } elseif ($op == 'deny' or $whyNot) {
+    $data = serialize(compact('whyNot') + ($data ? unserialize($data) : []));
 //    db\q('UPDATE r_invoices SET status=:TX_DENIED, data=:data WHERE nvid=:nvid', compact('nvid', 'data'));
     db\update('r_invoices', ray('status data nvid', TX_DENIED, $data, $nvid), 'nvid');
     r\notify($payee, 'invoice denied', $subs);

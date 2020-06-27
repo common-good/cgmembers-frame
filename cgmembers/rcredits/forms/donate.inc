@@ -47,7 +47,7 @@ function formDonate($form, &$sta, $args = '') {
 //  $inSetup = $mya->ok ? '' : t(' The amount you choose will come from your account once it is activated and has enough funds.</p>');
   $title = t('Donate to %PROJECT');
   $amountTip = $mya->co ? '' : t('The most common amounts chosen are $50 and $25.');
-  $subtext = t('<p>Make a tax-deductible gift of ZERO OR MORE%recurOnly. %replaces %amountTip</p><p>To donate an amount not listed (including ZERO), choose "Water" (and fill in the amount).</p><p><b class="loud">NOTE: This is a donation, not a deposit.</b> Thank you for your support!</p>', 'recurOnly replaces amountTip', @$recurOnly, @$replaces, $amountTip) . $noOneTime;
+  $subtext = t('<p>Make a tax-deductible gift of ZERO OR MORE%recurOnly. %replaces %amountTip</p><p>To donate an amount not listed (including ZERO), choose "Water" (and fill in the amount).</p><p><b class="loud">NOTE: This is a donation, not a deposit.</b> Thank you for your support!</p>', 'recurOnly replaces amountTip', nn($recurOnly), nn($replaces), $amountTip) . $noOneTime;
   $amtChoice = selectFld(REQ . t('Donation:'), '', dft($mya->co ? R_COMPANY_GIFT : R_INDIVIDUAL_GIFT), $giftLevels);
   $amount = numFld(t('Donation:'), [t('Amount')]);
   $period = selectFld(REQ . t('When:'), '', dft(0), $oftens);

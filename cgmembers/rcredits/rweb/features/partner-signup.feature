@@ -61,8 +61,8 @@ Scenario: A newbie visits the registration page sent by a partner and opts out o
   And without:
   | "Continue to %PROJECT" |
   And we email "partner-report" to member "c@" with subs:
-  | partnerName | fullName | customer | processor    | email         | cgAccount | extra |*
-  | Coop Power  | Abe One  | E123456  | Standard ACH | a@example.com | (none)    | You will need to delete the %PROJECT account ID in your database. |
+  | partnerName | fullName | customer | processor    | email         | cgAccount | noFrame | extra |*
+  | Coop Power  | Abe One  | E123456  | Standard ACH | a@example.com | (none)    | 1       | You will need to delete the %PROJECT account ID in your database. |
   And we email "partner-end" to member "a@" with subs:
   | partnerName | partnerAddress           | partnerPhone | partnerEmail  | noFrame | extra |*
   | Coop Power  | 14 L St., Lton, MA 01014 | 413-253-0014 | c@example.com |       1 |       |
@@ -129,8 +129,8 @@ Scenario: A newbie visits the registration page sent by a partner and chooses Co
   | .AAA | .AIL | .AAA  | customer,autopay | E123456 |
   And member ".AAA" steps left ""
   And we email "partner-report" to member "c@" with subs:
-  | partnerName | fullName | customer | processor | email         | cgAccount | extra |*
-  | Coop Power  | Abe One  | E123456  | %PROJECT  | a@example.com | NEWAAA    |       |
+  | partnerName | fullName | customer | processor | email         | cgAccount | noFrame | extra |*
+  | Coop Power  | Abe One  | E123456  | %PROJECT  | a@example.com | NEWAAA    |       1 |       |
   And we email "partner-end" to member "a@" with subs:
   | partnerName | partnerAddress           | partnerPhone | partnerEmail  | noFrame | extra |*
   | Coop Power  | 14 L St., Lton, MA 01014 | 413-253-0014 | c@example.com |       1 |     ? |
@@ -191,8 +191,8 @@ Scenario: A member visits the registration page sent by a partner
   | reid | main | agent | flags            | code    |*
   | .AAA | .AIL | .AAA  | customer,autopay | E123456 |
   And we email "partner-report" to member "c@" with subs:
-  | partnerName | fullName | customer | processor | email         | cgAccount | extra |*
-  | Coop Power  | Abe One  | E123456  | %PROJECT  | a@example.com | NEWAAA    |       |
+  | partnerName | fullName | customer | processor | email         | cgAccount | noFrame | extra |*
+  | Coop Power  | Abe One  | E123456  | %PROJECT  | a@example.com | NEWAAA    |       1 |       |
   And we email "partner-end" to member "a@" with subs:
   | partnerName | partnerAddress           | partnerPhone | partnerEmail  | noFrame | extra |*
   | Coop Power  | 14 L St., Lton, MA 01014 | 413-253-0014 | c@example.com |       1 |       |
@@ -261,8 +261,8 @@ Scenario: A company visits the registration page sent by a partner
   | .AAA | .AIL | .AAA  | customer,autopay | E123456 |
   And member ".AAA" steps left ""
   And we email "partner-report" to member "c@" with subs:
-  | partnerName | fullName | customer | processor | email         | cgAccount | extra |*
-  | Coop Power  | Go Co    | E123456  | %PROJECT  | g@example.com | NEWAAA    |     ? |
+  | partnerName | fullName | customer | processor | email         | cgAccount | noFrame | extra |*
+  | Coop Power  | Go Co    | E123456  | %PROJECT  | g@example.com | NEWAAA    |       1 |     ? |
   And we email "partner-end" to member "g@" with subs:
   | partnerName | partnerAddress           | partnerPhone | partnerEmail  | noFrame | extra |*
   | Coop Power  | 14 L St., Lton, MA 01014 | 413-253-0014 | c@example.com |       1 |     ? |

@@ -45,59 +45,7 @@ use CG\Admin as a;
 use CG\Cron as cr;
 use CG\Testing as t;
 
-define('R_SYS_ERR', t('The %PROJECT system has detected an unusual problem. If your activity was interrupted, please feel free to try again.') . "<br>\n");
 define('ONE_CRON_OP', 'one cron op'); // flags a call of f('cr. in PHP window, to prevent side-effects
-
-set_exception_handler('rcredits_exception_handler');
-\drupal_register_shutdown_function('rcredits_shutdown');
-
-/**
- * Top level exception handler (not a hook)
- * Log the error and follow up according to channel.
- *   Web: Jump to default member page and display a complete error message.
- *   SMS: Give a short apology.
- *   Smart: Give a short apology.
- *   Uninitialized: print the full error information and die
- */
-function rcredits_exception_handler($e) {
-  global $channel;
-  global $R_FATAL_ERROR;
-  
-  list ($msg, $line0, $file0, $trace) = array($e->getMessage(), $e->getLine(), $e->getFile(), $e->getTrace());
-  $file0 = basename($file0);
-  $traceMsg = [];
-
-  foreach ($trace as $one) {
-    if (count($traceMsg) > 10) break; // don't overflow memory
-    $line = $file = '';
-    @extract($one); // (file, line, function, args) OR just (function, args)
-    $line = @$line ?: '';
-    $file = basename(@$file);
-    $function = basename(@$function);
-    $args = preg_replace('/Array\s+\(/sm', 'Array', pr(@$args));
-    $args = substr($args, 6); // discard the gratuitous "Array" at the start
-    $args = preg_replace('/$\s*\)$\s$/sm', '', $args);
-    $args = '    ' . str_replace("\n", "<br>\n    ", $args);
-    $args = str_replace('  ', ' &nbsp;', $args);
-    $traceMsg[] = "- $line in $file, calling $function() with:<br>\n$args";
-  }
-
-  $msg = '<b>Exception:</b>' . R_SYS_ERR. "<br>\n($msg)<br>\n- $line0 ($file0)" . join("<br>\n", $traceMsg);
-  if (isPRODUCTION) {
-    $message = str_replace('&nbsp;', '', str_replace('<br>', '', $msg));
-    mail(R_ADMIN_EMAIL, t('%PROJECT FATAL ERROR'), $message);
-    $R_FATAL_ERROR = f('u.loga', 'FATAL', compact('message')); // this gets picked up by rcredits_shutdown()
-/**/ } else echo $msg;
-/**/ die(); // invoke shutdown
-}
-
-/**
- * Shutdown function to redirect to error page, if there is an error.
- */
-function rcredits_shutdown() {
-  global $R_FATAL_ERROR;
-  if (@$R_FATAL_ERROR) \drupal_goto('error/' . $R_FATAL_ERROR);
-}
 
 /**
  * Implements hook_im_send().
@@ -229,7 +177,7 @@ function f($func) {
   global $cronOp; 
   list ($prefix, $funcName) = explode('.', $func);
   $incs = ray('a:admin/admin.inc,y:cg-yearly.inc,w:rweb/rweb.inc,cr:rcron/rcron.inc,be:cg-backend.inc,s:rsmart/rsmart.inc,t:cg-testing.inc');
-  if ($flnm = @$incs[$prefix]) require_once __DIR__ . "/$flnm";
+  if ($flnm = nni($incs, $prefix)) require_once __DIR__ . "/$flnm";
 
   if ($prefix == 'v') {
     include_once R_ROOT . '/rvote/rvote.inc';
@@ -277,48 +225,4 @@ function eachA($func = 'a.changeIt', $where = 'uid>:CANONIC_ACCTS') {
   $result = q("SELECT uid FROM users u WHERE $where")->fetchCol();
   if (!is_callable($func)) $func = funcNickname($func);
   foreach ($result as $uid) $func(a($uid));
-}
-
-/**
- * Execute a "patch" to a built-in Drupal script. Patched files are also copied to .../rcredits/patches/
- * @param string $function: name of the Drupal function being patched, concatenated with the starting line number
- * @param #2, etc.: varies.
- * @return varies.
- * Note that javascript patches do not appear here. 
- * And query.js is not patched, it is simply updated to the latest jquery.min.js (currently version 1.11).
- */
-function patch($name) {
-  global $base_url;
-  $args = func_get_args();
-  
-  // common.inc
-  if ($name == 'common2682') {
-    q('DELETE FROM sessions WHERE uid=0'); // added 4/22/2016 (else loops when Drupal sets uid=0 on timeout)
-    if (!$mya = a()) return 'signin'; // do not return!
-    if ($mya->cAdmin) return 'sadmin';
-    f('w.say', t('You do not have permission to visit that page.'), 'err');
-    return 'summary';
-    //$click = " <a href=\"$base_url\signin\">" . t('Click here to sign in.') . '</a>'; // w\go('signout') fails
-    //return t('You are not authorized to access this page.') . (isDEV ? $args[1] : '') . @$click;
-  }
-  // user.module
-  if ($name == 'user_access810') return FALSE;
-//  if ($name == 'user_account_form_validate1250') return w\emailDup($args[1], $args[2]); // does this get called?
-  if ($name == '_user_mail_notify3569') { // UNUSED
-    list ($index, $account, $language) = $args;
-//    $language = @$language ?: \user_preferred_language($account);
-    $uid = $account->uid;
-    return f('r.rMail', $index, a($uid)->email, compact('uid'));
-  }
-  if ($name == 'user_form_process_password_confirm3595') return []; // patch no longer used (see w\formReset())
-
-  // form.inc
-  $tabled = ['#tabled' => TRUE];
-  if ($name == 'form_select_options2741') return $args[1]['#options']; // this accommodation for dynamic javascript dropdowns (set #options = NULL) is inadequate when there is an error on the form (see signup form)
-  if ($name == 'form_process_password_confirm2914') return $tabled + ['#title' => t('New password:')] + ['#class' => ['password-field']];
-  if ($name == 'form_process_password_confirm2921') return $tabled + ['#title' => t('Confirm new password:')] + ['#class' => ['password-confirm']];
-  
-  if ($name == '_update_cron_notify') return; // update.fetch.inc
-  if ($name == 'file_munge_filename1174') return; // file.inc
-  if ($name == 'filter_access1023') return TRUE; // filter.module (allows all users access to all field formats)
 }

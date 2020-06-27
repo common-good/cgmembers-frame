@@ -16,14 +16,15 @@ function formPhoto($form, &$sta, $arg = '') {
   global $mya;
 
   $chooserStyle = 'btn-md btn-primary';
-	extract(just('ok err recrop', $arg));
-	$recrop = @$recrop ? "$base_url/account-photo/orig=1/" . now() : '';
+	extract(just('ok err recrop', $arg, NULL));
+	$recrop = $recrop ? "$base_url/account-photo/orig=1/" . now() : '';
 
   $body = t('I am attaching a photo of me for my %PROJECT card. &nbsp; - %fullName', 'fullName', $mya->fullName);
   $emailIt = t('<%a>Email one to us</a>', '_a', atag('mailto:' . r\regionField('email') . '?subject=photo&body=' . $body));
 	$recropIt = $mya->cAdmin ? w\btn('/settings/photo/recrop=1', t('Recrop')) : '';
+  $progress = $nextStep = NULL; // may get set by extracting w\setupFoot()
 
-  if (@$ok) {
+  if ($ok) {
     say('got photo');
     $chooserStyle = 'btn-xs btn-secondary';
 // No! wait for user to be happy with the photo   $mya->stepDone('photo');
@@ -32,10 +33,10 @@ function formPhoto($form, &$sta, $arg = '') {
     $allSet = $mya->member ? t('you\'re all set') : t('click "%buttonName" above', compact('buttonName'));
     $desc = t('If you like this photo, %allSet. Otherwise:', compact('allSet'));
   } else {
-//    if ($err) say($err, 'err');
+    if ($err) say($err, 'err');
     if ($mya->hasPhoto) {
       extract(w\setupFoot()); // be sure new member has a chance to continue
-    } else {$nextStep = item(w\skipButton());}
+    } else { $nextStep = item(w\skipButton()); }
     $desc = $mya->co
     ? t('<p>1. Choose a picture to represent your company in %PROJECT promotions. You will then resize and crop to fit it in the box (%R_PHOTO_WIDTHpx tall by %R_PHOTO_HEIGHTpx wide).</p>')
     : t('<p>1. Choose a recent color picture of yourself for your photo-ID %PROJECT card. Your photo will be encrypted and will not be visible to other members (unless you show it to them).<%b>Requirements</b>:
@@ -51,11 +52,14 @@ function formPhoto($form, &$sta, $arg = '') {
   if ($mya->hasPhoto) {
     $choose = t('Choose a New Photo');
     if (!$mya->co and $mya->ok) $desc .= '<p>' . t('triggers new card', ['field' => t('photo')]) . '</p>';
-    if ($mya->superAdmin) $del = submit(t('Delete'));
-  } else $choose = t('Choose a Photo File');
+    $del = $mya->superAdmin ? submit(t('Delete')) : NULL;
+  } else {
+    $choose = t('Choose a Photo File');
+    $del = NULL;
+  }
 
   $class = $mya->co ? ' class="co"' : '';
-  w\svar('userAgent', @$_SERVER['HTTP_USER_AGENT']); // for debugging spurious photo rotations
+  w\svar('userAgent', nni($_SERVER, 'HTTP_USER_AGENT')); // for debugging spurious photo rotations
 
   $desc = item($desc);
   $newPhoto = item(<<<EOF
@@ -66,18 +70,12 @@ function formPhoto($form, &$sta, $arg = '') {
 
 EOF
   );
-  
-//  $sid = db\get('sid', 'sessions', 'uid=:uid', ['uid' => $mya->agentA->id]);
-//  $sid = session_id();
-//  $failure = urlencode(t('That is not a usable image file. Try again.'));
-//  $maxSize = R_MAX_UPLOAD_SIZE * 1024 * 1024;
-//  $maxSizeDpy = R_MAX_UPLOAD_SIZE . 'MB';
 
   js('croppic');
   js('crop-setup', 'recrop uid', $recrop, $mya->id);
   css('x/croppic.css');
 
-  $form = @compact(ray('title nextStep progress desc newPhoto del'));
+  $form = compact(ray('title nextStep progress desc newPhoto del'));
   return cgform($form);
 }
 

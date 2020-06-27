@@ -79,7 +79,7 @@ function statement($period = '') {
   $underline0 = $underline9;
 
   $numFields = ray('total0 bal0 amount frombank fromyou toyou bal9 committed in out bank');
-  foreach ($numFields as $one) $$one = number_format(@$$one ?: 0, 2); // ?: is needed because $$one might be null or ''
+  foreach ($numFields as $one) $$one = number_format(nn($$one) ?: 0, 2); // ?: is needed because $$one might be null or ''
   
   $pdf->setFontSize(.9 * $size);
   for ($i = 1; $i <= 1; $i++) {
@@ -88,7 +88,7 @@ function statement($period = '') {
       foreach (ray('fromyou', 1) as $k => $v) {
         if ($fldName == $k) $$k .= str_repeat(' ', $v); // footnote alignment
       }
-      $pdf->Cell($width, 0, @$fldName ? @$$fldName : '', '', @$fldName[mb_strlen(@$fldName) - 1] == '9' ? 1 : 0, $align);
+      $pdf->Cell($width, 0, nn($fldName) ? nn($$fldName) : '', '', substr($fldName, mb_strlen(nn($fldName)) - 1, 1) == '9' ? 1 : 0, $align);
     }
   }
   
@@ -118,7 +118,6 @@ function statement($period = '') {
       if ($xid < 124873 and $banking and !test()) $xid = db\get('txid', 'r_usd', compact('xid')) ?: $xid; // old checks
       $date = strftime('%b %d', $created); // reformat for single month
       if (mb_strlen($description) > $purposeLenMax + 3) $description = mb_substr($description, 0, $purposeLenMax) . '...';
-      $amount = -$amount;  // since we're looking at it from the other party's view
       
       foreach ($fields as $field) {
         list ($head, $fldName, $width, $align) = explode('/', $field);
@@ -131,7 +130,7 @@ function statement($period = '') {
         $pdf->Cell($width, 0, $$fldName, '', $head == $lastHead ? 1 : 0, $align, '', '', 1);
       }
       foreach (['amount', 'reward'] as $k) {
-        $$k = u\cleanAmount(@$$k) ?: 0; // convert from string
+        $$k = u\cleanAmount(nn($$k)) ?: 0; // convert from string
       }
       if ($amount) x\addCat($cats, $description, $amount, $dups);
     }

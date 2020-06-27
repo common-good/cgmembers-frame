@@ -5,32 +5,28 @@
 
 <p>You received an invitation to %PROJECT a few days ago, from %fullName. Click the link below to sign up now! (%nudge)</p>
 <center><a href="%BASE_URL/signup/code=%code" style="font:bold 16px Arial;  text-decoration:none;  background-color:green;  color:white;  padding:8px 12px;  margin-bottom:5px;    -webkit-border-radius:8px;    -moz-border-radius:8px;    border-radius:8px;    border:solid 1px #20538D;    text-shadow:0 -1px 0 rgba(0, 0, 0, 0.4);    -webkit-box-shadow:inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);    -moz-box-shadow:inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);    box-shadow:inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);">Accept Invitation</a><br>
-<a href="%BASE_URL/signup/code=%code" style="font-size:85%; display:block; margin-top:10px; text-decoration:none;">(%BASE_URL/signup/code=%code)</a></center><br>
+</center><br>
 
 <div style="padding:15px; background-color:lightyellow; border:1px solid darkgreen;">
-  <div>
-    <img src="%BASE_URL%R_PATH/images/%PROJECT_LOGO" align="left" hspace="5" height="96" alt="" style="margin-right:10px;" />
-    <h2><br><span style="color:darkblue;">%PROJECT<sup>&reg;</sup></span><small style="font-weight:normal; font-size:75%; color:darkgray;"><br><i>the payment card for community power</i></small><br>&nbsp;</h2>
-  </div><br>
+  <table><tr>
+    <td style="margin-right:10px; vertical-align:center;"><img src="%R_PATH/images/%PROJECT_LOGO" hspace="5" height="96" alt="" /></td>
+    <td style="vertical-align:center;"><h2 style="font-size:36px;"><span style="color:darkblue;font-stretch:expanded;">%PROJECT<sup>&reg;</sup></span><small style="font-weight:normal; font-size:50%; color:darkgray;"><br><i>Tools for a new economy&trade;</i></small></h2></td>
+  </tr></table>
   <ul>
     <li>Generate funds for community projects every time you use it.</li>
     <li>You and other members decide together what to fund. </li>
     <li>Easy to use. Easy to accept as payment.</li>
     <li>No fees for you. No fees for businesses.</li>
   </ul>
-   <a href="%PROMO_URL" style="font-size:75%; font-weight:bold; text-decoration:none; margin-left:200px;">[MORE]</a></p>
+   <a href="%VIDEO_URL" style="font-size:75%; font-weight:bold; text-decoration:none; margin-left:200px;">[See the Video]</a></p>
 </div>
 
-<p>%PROJECT is a 501(c)(3) nonprofit organization.</p>
-
-<p style="text-align:center;">
-<a href="%BASE_URL/signup/code=%code" style="font:bold 16px Arial;  text-decoration:none;  background-color:green;  color:white;  padding:8px 12px;  margin-bottom:5px;    -webkit-border-radius:8px;    -moz-border-radius:8px;    border-radius:8px;    border:solid 1px #20538D;    text-shadow:0 -1px 0 rgba(0, 0, 0, 0.4);    -webkit-box-shadow:inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);    -moz-box-shadow:inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);    box-shadow:inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);">Accept Invitation</a><br>
-<a href="%BASE_URL/signup/code=%code" style="font-size:85%; display:block; margin-top:10px; text-decoration:none;">(%BASE_URL/signup/code=%code)</a>
-</p>
-
-<p><b style="color:darkblue;">%PROJECT</b><br>
+<p style="text-align:center;"><b style="color:darkblue;">%PROJECT</b><br>
 %CGF_POSTALADDR USA<br>
 %CGF_PHONE<br>
-<a href="mailto:%CGF_EMAIL" style="text-decoration:none;">%CGF_EMAIL</a>
+<a href="mailto:%CGF_EMAIL" style="text-decoration:none;">%CGF_EMAIL</a><br>
+<br>
+<small>You are receiving this email because a friend invited you. To "unsubscribe", <a href="%BASE_URL/unsubscribe/code=%emailCoded">click here</a>.</small>
+</p>
 </div>
 </body></html>

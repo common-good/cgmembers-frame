@@ -51,7 +51,7 @@ X;
     $rows[] = u\tableRow(compact($fields));
   }
 
-  if (@$rows) {
+  if (nn($rows)) {
     $rows = join($rows, "\n");
     $list = <<< X
     <table id="investments">

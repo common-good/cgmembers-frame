@@ -24,8 +24,8 @@ function splice(&$input, $key, $len = 0, $replacement = NULL) {
   $i = array_search($key, $keys = array_keys($input));
   if ($i === FALSE) return NULL;
   $values = array_values($input);
-  $iKeys = array_splice($keys, $i, $len, @array_keys($replacement));
-  $iValues = array_splice($values, $i, $len, @array_values($replacement));
+  $iKeys = array_splice($keys, $i, $len, array_keys(nn($replacement, [])));
+  $iValues = array_splice($values, $i, $len, array_values(nn($replacement, [])));
   $input = array_combine($keys, $values);
   return array_combine($iKeys, $iValues);
 }
@@ -92,7 +92,7 @@ function badDob(&$dob, $co) {
 function badSsn(&$ssn, $dob = '') {
 //  if (in_array($ssn, ray('5551234567 777777777 888888888 999999999'))) return FALSE; // test numbers
   if (strlen(u\digits($ssn)) != 9) $bad = TRUE; // zap all but the digits (call by ref)
-  if (FALSE AND @$dob) { // ssn (not ein) -- We once got a valid SSN that violated these rules, so skip this.
+  if (FALSE AND nn($dob)) { // ssn (not ein) -- We once got a valid SSN that violated these rules, so skip this.
     $c1 = substr($ssn, 0, 1);
     $s1 = substr($ssn, 0, 3);
     $s2 = substr($ssn, 3, 2);
@@ -101,7 +101,7 @@ function badSsn(&$ssn, $dob = '') {
     if (substr($ssn, 0, 8) == '98765432') $bad = TRUE; // advertising numbers, according to Wikipedia
     if ($dob < strtotime('25Jun2011')) if ($c1 == '8' or ($c1 == '7' and $s1 > '771')) $bad = TRUE;
   }
-  return @$bad ? (@$dob ? 'bad ssn' : 'bad federal id') : FALSE;
+  return nn($bad) ? (nn($dob) ? 'bad ssn' : 'bad federal id') : FALSE;
 }
 
 function ssnName($v, &$firstname = '', &$middlename = '', &$lastname = '') {
@@ -110,9 +110,9 @@ function ssnName($v, &$firstname = '', &$middlename = '', &$lastname = '') {
     if (is_array($v->$k)) $v->$k = join(' ', $v->$k); // concatenate multiple first, middle, or last names
     if ($$k = ucWords(mb_strtolower(str_replace('-', '', $v->$k)))) $res[] = $$k;
   }
-  return @$res ? join(' ', $res) : '';
+  return nn($res) ? join(' ', $res) : '';
 }
-function ssnAddr($v) {return ucWords(mb_strtolower(@"$v->address, $v->city, $v->state $v->zip"));}
+function ssnAddr($v) {return ucWords(mb_strtolower(nn($v->address) . ', ' . nn($v->city) . ', ' . nn($v->state) . ' ' . nn($v->zip)));}
 
 /**
  * Say whether the given postal code is bad.
@@ -130,7 +130,7 @@ function badZip(&$z, $country = US_COUNTRY_ID) {
  * Say where the given address contains a PO box.
  */
 function poAddress($address) {
-  return (strihas(@$address, ' box ') or strihas(@$address, 'pob '));
+  return (strihas(nn($address), ' box ') or strihas(nn($address), 'pob '));
 }
 
 /**
@@ -155,7 +155,7 @@ function fmtAmt($amount, $opt = 's$') {
   : ($pct ? trim(strtr($opt, '%s', '  '))
   : (strhas($opt, '0') ? 0 : 2));
 
-  $amount = number_format($amount + 0, $decimals);
+  $amount = number_format(floatval($amount), $decimals);
   if ($amount == '-0.00') $amount = strhas($opt, '0') ? '0' : '0.00'; // this happens, for small negative amounts
   if (strhas($opt, '$')) $amount = '$' . $amount;
   if (strhas($opt, 's') and strhas($amount, '.')) $amount = preg_replace($pct ? '/\\.?0+$/' : '/\\.00/', '', $amount);
@@ -298,7 +298,7 @@ function tribs($ray) {
   foreach ($ray as $k => $v) if (!is_null($v)) {
     $tribs[$k] = "$k=\"" . plain(is_array($v) ? join(' ', $v) : $v) . '"';
   }
-  return join(' ', @$tribs ?: []);
+  return join(' ', nn($tribs) ?: []);
 }
 
 /**
@@ -413,7 +413,7 @@ function changeKey($oldKey, $newKey, &$ray) {
 function diff($a, $b) {
   $result = [];
   foreach ($a as $key => $one) if (!is_null($a[$key])) {
-    if ($a[$key] != @$b[$key] or !isset($b[$key])) $result[] = $key . (isset($b[$key]) ? '' : ': missing in #2');
+    if ($a[$key] != nni($b, $key) or !isset($b[$key])) $result[] = $key . (isset($b[$key]) ? '' : ': missing in #2');
   }
   foreach ($b as $key => $one) if (!is_null($b[$key]) and !isset($a[$key])) $result[] = $key . ': missing in #1';
   return $result;
@@ -486,9 +486,8 @@ function post($url, $content = FALSE, $responseFormat = 'raw', $extra_headers = 
   }
 
   $context = stream_context_create(compact('http'));
-  if ($fp = @fopen($url, 'rb', FALSE, $context)) {
-      // If you're troubleshooting, uncomment the next line to see the HTTP response headers across all redirects:
-      // $meta = stream_get_meta_data($fp); var_dump($meta['wrapper_data']);
+  if ($fp = fopen($url, 'rb', FALSE, $context)) {
+    /// $meta = stream_get_meta_data($fp); var_dump($meta['wrapper_data']); // for debugging
     $response = stream_get_contents($fp);
   } else $response = FALSE;
 
@@ -504,6 +503,10 @@ function post($url, $content = FALSE, $responseFormat = 'raw', $extra_headers = 
   EXPECT(!is_null($result), "$method $url returned error: $response");
   return $result;
 }
+
+function get($url, $content = FALSE, $responseFormat = 'raw', $extra_headers = [], $request_format = 'url') {
+  return post($url, $content, $responseFormat, $extra_headers, 'GET', $request_format);
+} 
 
 function randomInt($len = NULL) {
   $result = '';
@@ -622,17 +625,17 @@ function loga($type, $info = [], $adhocChannel = FALSE) {
   
 /**/  if (strlen($type) >= 60) die("in loga: $type " . trace()); // don't use EXPECT here
 
-  $ch = @$channel ? ray(TX_CHANNELS)[$channel] : t('hack');
+  $ch = nn($channel) ? ray(TX_CHANNELS)[$channel] : t('hack');
 //  $useTextLogToo = FALSE; // isDEV;
 
-  $qid = @$mya ? $mya->qid . (($mya->cAdmin2 and !$mya->proSe) ? strtolower($mya->agentA->mainQid) : '') : t('nobody');
+  $qid = $mya ? $mya->qid . (($mya->cAdmin2 and !$mya->proSe) ? strtolower($mya->agentA->mainQid) : '') : t('nobody');
   $time = date('d H:i:s');
 
   if (is_array($info)) {
     $map = ["\r" => '', "\n" => '', '    ' => ' '];
-    if ($msg = @$info['message']) $info['message'] = strtr(strip_tags(str_replace('>', '>|', $msg)), $map);
-    if (@$info['form_id']) {$type .= str_replace('CG\\Web\\form', '', $info['form_id']);}
-    if (@$info['toEmail']) $info = just('index subject', $info); // don't show whole email
+    if ($msg = nni($info, 'message')) $info['message'] = strtr(strip_tags(str_replace('>', '>|', $msg)), $map);
+    if (nni($info, 'form_id')) {$type .= str_replace('CG\\Web\\form', '', $info['form_id']);}
+    if (nni($info, 'toEmail')) $info = just('index subject', $info); // don't show whole email
     foreach (ray('form_id form_build_id form_token orig') as $k) unset($info[$k]);
     $info = json_encode(u\noSecrets($info), JSON_UNESCAPED_SLASHES);
   }
@@ -663,9 +666,23 @@ function seeAssoc($info) {
  * Look up the given SSN and return xml data.
  */
 function ssnLookup($ssn) {
-  $xml = tr(R_SSN_REQUEST, 'username password ssn', R_SSN_USER, R_SSN_PASS, $ssn);
+  $xml = tr(R_SSN_REQUEST, '_username _password _ssn', R_SSN_USER, R_SSN_PASS, $ssn);
   if (NOT_PRODUCTION) return u\getFile('ssnresult.txt'); // testing
-  return file_get_contents("https://www.nationalpublicdata.com/feeds/FDSFeed.cfm?xml=" . urlencode($xml));
+  return getSSLPage('https://www.nationalpublicdata.com/feeds/FDSFeed.cfm?xml=' . urlencode($xml));
+}
+
+/**
+ * Curl page getter, because file_get_contents and u\get() fail
+ */
+function getSSLPage($url) {
+  $curl = curl_init();
+  curl_setopt($curl, CURLOPT_URL, $url);
+  curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+// NO! curl_setopt($ch, CURLOPT_SSLVERSION, 3); 
+  curl_setopt($curl, CURLOPT_HEADER, false);
+  $res = curl_exec($curl);
+  curl_close($curl);
+  return $res;
 }
 
 /**
@@ -674,8 +691,8 @@ function ssnLookup($ssn) {
  * @return array [$routing, $account]
  */
 function parseBankAccount($bankAccount) {
-  $route = substr(@$bankAccount, 4, 9); // chop of USkk
-  $account = substr(@$bankAccount, 4 + 9); // everything after the routing number
+  $route = substr(nn($bankAccount), 4, 9); // chop of USkk
+  $account = substr(nn($bankAccount), 4 + 9); // everything after the routing number
   return [$route, $account];
 }
 
@@ -760,7 +777,7 @@ function cry($type, $data, $de = FALSE, $pwInstead = '') {
   }
 
 	$chow = $cryHows[$type];
-	foreach ($chow as $i => $v) if ($chow0 = @$cryHows[$v]) $chow[$i] = $chow0[$i]; // allow reference to other how
+	foreach ($chow as $i => $v) if ($chow0 = nni($cryHows, $v)) $chow[$i] = $chow0[$i]; // allow reference to other how
 	list ($hows, $pw, $iv) = $chow;
 	$pw = u\b64decode($pwInstead ?: $pw);
 	u\EXPECT($pw, 'missing pw in cry');
@@ -801,7 +818,7 @@ function cry($type, $data, $de = FALSE, $pwInstead = '') {
 		}
 	}
 
-	return $de ? $data : (CRYPT_FLAG . $type . @$nonce . $data);
+	return $de ? $data : (CRYPT_FLAG . $type . nn($nonce) . $data);
 }
 
 /**
@@ -815,7 +832,8 @@ function cry($type, $data, $de = FALSE, $pwInstead = '') {
  */
 function crypted($type, $s = NULL) {
 	if (func_num_args() == 1) {
-	  list ($type, $s) = [@$type[strlen(CRYPT_FLAG)], $type];
+    if (strlen($type) < strlen(CRYPT_FLAG) + 1) return FALSE;
+	  list ($type, $s) = [$type[strlen(CRYPT_FLAG)], $type];
 	  if (!$type or !strhas('PSV', $type)) return FALSE;
 		return u\starts($s, CRYPT_FLAG) ? $type : FALSE;
   } else return u\starts($s, CRYPT_FLAG . $type);
@@ -881,14 +899,14 @@ function csv($line, $delimiter = ',') {
  */
 function randomString($len = 16, $choices = '') {
   global $nextCode;
-  if (test() and @$nextCode and in($choices, ' lower upper word')) return $nextCode;
+  if (test() and nn($nextCode) and in($choices, ' lower upper word')) return $nextCode;
 
   $lower = 'abcdefghijklmnopqrstuvwxyz';
   $upper = strtoupper($lower);
   $digits = '0123456789';
   $word = $lower . $upper . $digits;
 
-  if (@$$choices) $choices = $$choices;
+  if (nn($$choices)) $choices = $$choices;
   $chlen = strlen($choices);
 
   for ($s = '', $i = 0; $i < $len; $i++) {
@@ -929,7 +947,7 @@ function ctype_print_unicode($input) {
  * @return FALSE if date is okay, else an error index
  */
 function badDate(&$s, $min = '', $max = PHP_INT_MAX) {
-  if (!$dt = u\s2t(@$s)) return 'bad date'; // slashes makes it mdy (else dmy assumed)
+  if (!$dt = u\s2t(nn($s))) return 'bad date'; // slashes makes it mdy (else dmy assumed)
   if ($min !== '' and ($dt < $min or $dt > $max)) {
     $err = $dt < $min ? 'date too early' : 'date too late';
     if (!is_numeric(@substr($s, -3, 1))) $err .= '|year is 4 digits';
@@ -971,7 +989,7 @@ function tableRow($row) {
 function ray2row($row, $classes = []) {
   if (!$classes and $row and !is_numeric(key($row))) list ($row, $classes) = [array_values($row), array_keys($row)];
   foreach ($row as $i => $v) {
-    if ($class = nn($classes[$i])) $class = ' ' . $class;
+    if ($class = nni($classes, $i)) $class = ' ' . $class;
     $res[] = "<div class=\"cell$class\">$v</div>";
   }
   return '<div class="row">' . join('', nn($res, [])) . "</div>\n";
@@ -1017,7 +1035,7 @@ function getLocus($q, $city = '', $state = '', $zip = '') {
 
   foreach (nn($res->results, []) as $one) if ($one->components->country_code == 'us') {
     $i = $one->confidence; // confidence is actually specificity. Be as specific as possible.
-    if (in($one->components->_category, 'place transportation postcode') 
+    if (in($one->components->_category, 'building place transportation postcode') 
       and nn($one->components->postcode)
       and !isset($coods[$i])) { // don't overwrite with later same confidence
       $coods[$i] = $one->geometry;
@@ -1087,7 +1105,7 @@ function parseName($name, $withMiddles = FALSE) {
     $name = preg_replace('/( Jr?)$/', '', $name);
   }
   $names = explode(' ', $name);
-  $last = str_replace('_', ' ', array_pop($names) . @$suffix);
+  $last = str_replace('_', ' ', array_pop($names) . nn($suffix));
   if ($withMiddles) {
     $first = array_shift($names);
     return [$first, $last, join(' ', $names)];
@@ -1154,8 +1172,8 @@ function trimAll(&$ray) {
 
 function deb($arg = '') {
   global $counterI;
-  $msgCount = count(@$_SESSION['messages']['status'] ?: []);
-  log(($counterI = @$counterI + 1) . " ($msgCount messages): " . pr($arg), 'debug');
+  $msgCount = count(nn($_SESSION['messages']['status']) ?: []);
+  log(($counterI = nn($counterI) + 1) . " ($msgCount messages): " . pr($arg), 'debug');
 }
 
 /**
@@ -1208,7 +1226,7 @@ function rayTable($ray, $across = TRUE, $recurse = FALSE) {
  */
 function code($upper = FALSE, $len = R_CODE_LEN) {
   global $nextCode;
-  if (test() and @$nextCode) return $nextCode;
+  if (test() and nn($nextCode)) return $nextCode;
   $res = u\randomString($len, 'word');
   return $upper ? strtoupper($res) : $res;
 }
@@ -1216,10 +1234,10 @@ function code($upper = FALSE, $len = R_CODE_LEN) {
 function showCaller($skip = 0) {
   $trace = debug_backtrace();
   for ($i = 0; $i <= $skip; $i++) array_shift($trace); // discard THIS call
-  $caller = (object) array_shift($trace); $file = basename(@$caller->file);
-  $precaller = (object) array_shift($trace); $prefile = basename(@$precaller->file);
-  $args = pr(@$caller->args);
-  $preargs = pr(@$precaller->args);
+  $caller = (object) array_shift($trace); $file = basename(nn($caller->file));
+  $precaller = (object) array_shift($trace); $prefile = basename(nn($precaller->file));
+  $args = pr(nn($caller->args));
+  $preargs = pr(nn($precaller->args));
   return " called $caller->function($args) ($caller->line in $file), from $precaller->function($preargs) ($precaller->line in $file)\n";
 }
 
@@ -1334,7 +1352,7 @@ function earthDistance($lat1, $lon1, $lat2, $lon2) {
  * @return <the first string abbreviates the second>
  */
 function abbreviates($starts, $s, $noCase = FALSE, $starting = 0) {
-  if (!@$s or is_numeric($s)) $s = @$s . '';
+  if (!nn($s) or is_numeric($s)) $s = nn($s) . '';
   u\EXPECT(compact('starts', 's', 'noCase'), 'string string bool');
   if ($noCase) list ($starts, $s) = array(mb_strtolower($starts), mb_strtolower($s));
   return (mb_substr($s, $starting, mb_strlen($starts)) == $starts);
@@ -1365,7 +1383,7 @@ function median($ray) {
   if (!$len = count($ray)) return NULL;
   $mid = (int) $len / 2;
   $v = $ray[$mid];
-  $v2 = @$ray[$mid + 1];
+  $v2 = nni($ray, $mid + 1);
   return (($len & 2) and is_numeric($v) and is_numeric($v2)) ? ($v + $v2) / 2 : $v;
 }
 
@@ -1483,8 +1501,8 @@ function vague($n, $prec = 1) {
  */
 function bit($b) {return is_array($b) ? (bit(array_shift($b)) | ($b ? bit($b) : 0)) : (1 << (is_numeric($b) ? $b : u\consta('b', $b)));}
 
-function getBit($n, $b = NULL) {return is_null($b) ? $n : (bool) ($n & u\bit($b));}
-function setBit(&$n, $b, $on = TRUE) {return $n = $on ? (@$n | u\bit($b)) : (nn($n, 0) & ~u\bit($b));}
+function getBit($n, $b = NULL) {return is_null($b) ? $n : (bool) (($n ?: 0) & u\bit($b));}
+function setBit(&$n, $b, $on = TRUE) {return $n = $on ? (nn($n, 0) | u\bit($b)) : (nn($n, 0) & ~u\bit($b));}
 
 /**
  * Return a date the given number of units after start.
@@ -1503,22 +1521,26 @@ function dateIncr($start, $number, $units) {
  * @param string $now -- might be an actual timestamp or a string like :NOW
  * @return the sql string
  */
-function genRuleSQL($role, $uid, $now = ':NOW') {
+function genRuleSQL($role, $uid, $now = ':NOW', $rulesTnm = 'ru') {
   $sql = <<< EOF
-    (CASE ${role}Type
+    (CASE $rulesTnm.${role}Type
      WHEN :REF_ANYBODY THEN TRUE
      WHEN :REF_ACCOUNT THEN $role = $uid
      WHEN :REF_ANYCO THEN (SELECT :IS_CO FROM users WHERE uid=$uid)
-     WHEN :REF_INDUSTRY THEN EXISTS (SELECT 1 FROM r_user_industries ui join ancestors a ON ui.iid=a.base WHERE a.ancestor=r.payee AND ui.uid=$uid)
-     WHEN :REF_GROUP THEN EXISTS (SELECT 1 FROM u_groups g JOIN u_groupies ug ON (ug.grpId = g.id)
-                                  WHERE ug.uid = $uid AND ug.start <= $now
-                                  AND IFNULL($now < ug.end, TRUE))
+     WHEN :REF_INDUSTRY THEN EXISTS (
+       SELECT 1 FROM r_user_industries ui join ancestors a ON ui.iid=a.base 
+       WHERE a.ancestor=$rulesTnm.payee AND ui.uid=$uid
+     )
+     WHEN :REF_GROUP THEN EXISTS (
+       SELECT 1 FROM u_groups g JOIN u_groupies ug ON (ug.grpId = g.id)
+       WHERE ug.uid = $uid AND ug.start <= $now AND ug.start <= $rulesTnm.start
+       AND IFNULL($now < ug.end, TRUE)
+     )
      ELSE FALSE
      END)  
 EOF;
   return $sql;
 }
-
 
 // Single line functions that need little or no explanation
 function num($a, $else = 0) {return is_numeric($a) ? $a : $else;}
@@ -1548,7 +1570,7 @@ function s2t($s) {return strtotime(preg_match('/[A-Z]/i', $s) ? $s : str_replace
 function fmtDate($time = NULL, $numeric = FALSE) {return strftime($numeric ? '%m/%d/%Y' : '%d%b%Y', nn($time, now()));}
 function fmtTime($time = NULL) {return strtolower(strftime('%I:%M%p', nn($time, now())));}
 function lastCall($far = 4) {$back = debug_backtrace(); return array_slice($back, 1, $far);}
-function digits(&$n) {return $n = preg_replace('/\D/', '', @$n);}
+function digits(&$n) {return $n = preg_replace('/\D/', '', nn($n));}
 function monthDay1($time = NULL) {return strtotime(strftime('1%b%Y', nn($time, now())));}
   function mdt1($time = NULL) {return monthDay1($time);}
 function monthDif($dt2, $dt1) {return (date('Y', $dt2) - date('Y', $dt1)) * 12 + (date('m', $dt2) - date('m', $dt1));}
@@ -1572,7 +1594,7 @@ function urlArgs() {return basename($_SERVER['REQUEST_URI']);}
 function uc1($s) {return ucwords(mb_substr($s, 0, 1)) . mb_substr($s, 1);}
 function nextAfter($needle, $hay) {return ($i = array_search($needle, $hay)) === FALSE ? NULL : $hay[$i + 1];}
 function rotateBits($b, $i) {return ($i = $i % strlen($b)) ? substr($b, $i) . substr($b, 0, $i) : $b;}
-function xorBits($b1, $b2) {$res = ''; for ($i = 0; $i < strlen($b1); $i++) $res .= (@$b1[$i] xor @$b2[$i]) ? 1 : 0; return $res;}
+function xorBits($b1, $b2) {$res = ''; for ($i = 0; $i < strlen($b1); $i++) $res .= (substr($b1, $i, 1) xor substr($b2, $i, 1)) ? 1 : 0; return $res;}
 function a2b($s) {$b = ''; for ($i = 0; $i < strlen($s); $i++) $b .= lpad(decbin(ord($s[$i])), 8); return $b;}
 function randomFloat($min = 0, $max = 1) {return $min + mt_rand() / mt_getrandmax() * ($max - $min);}
 function hash($s) {return \hash('sha256', $s, false);}
@@ -1599,3 +1621,4 @@ function prob($p, $yes = TRUE, $no = FALSE) {return (mt_rand() / mt_getrandmax()
 function routingOk($r) {return (preg_match('/^(|[0-9]{9})$/', $r) and db\exists('r_banks', 'route=:r', compact('r')));}
 function bankAcctOk($ba) {return preg_match('/^[0-9]{3,17}$/', $ba);}  // {3,20} ? Dwolla says 3-17
 function joins(&$s, $m, $other = '') {return $s = (empty($s) ? '' : "$s$m") . $other;}
+function padRay($ray, $n, $fill = []) {for ($i = 0; $i < $n; $i++) $ray[] = $fill; return $ray;}

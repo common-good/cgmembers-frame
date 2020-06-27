@@ -73,6 +73,7 @@ NOTES:
   where <star> means * (not the same as for the production site) 
  */
 
+// Calculate risks twice, to take into account connections with scoundrels
 define('DAILY_TASKS', 'START checkAccts setNear cttyStats trust acctRisk acctRiskFinish txRisk tickle lessOften recurs getFunds invoices invest notices END');
 
 include_once __DIR__ . '/rcron-subs.inc';
@@ -86,7 +87,7 @@ function run() {
   // Allow execution to continue even if the request gets canceled.
   if (between(now(), strtotime('2:40am'), strtotime('2:44am'))) return; // swiftMailer crashes during this period
   
-  @ignore_user_abort(TRUE);
+  ignore_user_abort(TRUE);
 
   // Prevent session information from being saved while cron is running.
   $original_session_saving = \drupal_save_session();
@@ -109,12 +110,13 @@ function run() {
   
   while (now() < $end and $row = $q->fetchAssoc()) {
     extract($row);
+    $item = unserialize($item);
     try {
-      cr\doTask(unserialize($item));
+      cr\doTask($item);
       db\q('DELETE FROM queue WHERE id=:id', compact('id'));
     } catch (\Exception $e) {
       u\log('cron task failed'); // In case of exception log it and leave the item in the queue to be processed again later.
-      r\tellAdmin('cron task failed id=' . $id);
+      r\tellAdmin('cron task failed id=' . $id, $item);
     }
   }
   // Restore the user.
@@ -133,9 +135,10 @@ function doTask($item) {
   $op = array_shift($item);
   $func = 'CG\\Cron\\' . $op;
 
-  if ($uid = @$item['uid']) $mya = r\acct($uid); // fudge current account
+  extract(just('uid', $item, NULL));
+  if ($uid) $mya = r\acct($uid); // fudge current account
   if (!in($op, 'acctHourly checkAcct whatsUp tickleStep activeWeekly activeMonthly') and substr($op, -1, 1) != '1') u\log($op, 'cr', $item);
-    
+
   $func($item);
 }
 
@@ -168,7 +171,7 @@ function everyHour() { // stuff to do every hour
 //  queueEach('acctHourly', "SELECT uid FROM users WHERE uid<>0");
   if (strftime('%H') + 0 == (R_DAILY_HOUR + 6) % 24) {
     $lastCron = getV('last_cron_end', []);
-    if (now() - nn($lastCron['end'], 0) > DAY_SECS) r\tellAdmin('daily cron FAILED');
+    if (now() - nni($lastCron, 'end', 0) > DAY_SECS) r\tellAdmin('daily cron FAILED');
   }
   
   db\q('DELETE FROM cache_form WHERE created<:REQUEST_TIME-:HOUR_SECS'); // clean up form cache (is this needed?)
@@ -218,7 +221,7 @@ function everyDay() {
 
   $cttys = db\q('SELECT uid AS ctty FROM users WHERE uid<0')->fetchCol();
   foreach ($cttys as $ctty) $companies[$ctty] = r\companies($ctty, FALSE);  
-  \setV('companies', @$companies ?: []);
+  \setV('companies', nn($companies) ?: []);
   
   $sql = <<< X
   SELECT DISTINCT u.uid, c.uid AS ctty, u.fullName AS person, c.fullName AS cttyName 
@@ -238,7 +241,7 @@ X;
   $where = "BINARY RIGHT(fullName, 8)=' PARTNER' AND pass IS NULL AND NOT :IS_CO AND activated=0";
   eachA(function ($a) { // acts weird; do this last
     if ($jA = $a->jA and $jA->jid == $a->id) $jA->update('jid', 0);
-    r\deleteAccount($a);
+    f('a.deleteUid', $a->id);
   } , $where);
   if ($uid = db\get('u1.uid', 'users u1 JOIN users u2 ON u2.uid=u1.jid', 'u1.jid<>0 AND u2.jid<>u1.uid')) r\tellAdmin('Orphaned joint account: ' . r\acct($uid)->fullName, [], $uid);
 //  db\del('users', $where); // abandoned new joint acct (must postcede setting jids)
@@ -335,7 +338,7 @@ function tickle() {
   $sql = <<< X
     SELECT DISTINCT i.email, i.inviter, i.code, $elapsed AS elapsed FROM r_invites i
     LEFT JOIN users u ON u.uid=i.inviter
-    WHERE $elapsed IN ($delays) AND i.invitee=0 AND u.:IS_OK
+    WHERE $elapsed IN ($delays) AND i.invitee=0 AND u.:IS_OK AND i.nonudge IS NULL
 X;
 
   queueEach('tickleSignup', $sql);
@@ -530,15 +533,10 @@ function everyWeek() {
  * Do monthly tasks.
  */
 function everyMonth() {
-  $server = r\serverUid();
-  $bene = test() ? CGID : db\get('uid', 'users', "name='bene' AND uid<0");
   $start = u\monthDay1($end = u\monthDay1() - 1); // mark start and end of preceding month
   if (test()) $start = strtotime('-30 days', $end = today() - 1) + 1; // test: the past 30 days
-  $whatsupStart = $start - 30 * DAY_SECS;
   
-  queueEach('whatsup', "SELECT DISTINCT uid, u.:IS_CO as co, MAX(t.created) AS lastTx FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid) WHERE uid>:CANONIC_ACCTS AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $whatsupStart");
-  /* queueEach('inflationAdjust', "SELECT uid, $start AS start, $end AS end FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS");   */
-//  queueEach('shareCommitted', 'SELECT uid, committed, share FROM users WHERE :IS_OK AND committed>0');
+  queueEach('whatsup', "SELECT DISTINCT uid, u.:IS_CO as co, MAX(t.created) AS lastTx FROM users u LEFT JOIN tx_entries e USING(uid) JOIN tx_hdrs t USING(xid) WHERE uid>:CANONIC_ACCTS AND u.:IS_OK GROUP BY uid HAVING lastTx IS NULL OR lastTx < $start");
   
   $sql = <<< X
     SELECT DISTINCT u.uid, ROUND(SUM(t.amt)*u.crumbs, 2) AS donate, $end AS date
@@ -552,7 +550,6 @@ X;
   queueEach('sweep', "SELECT $start AS start,$end AS end"); // must come after all crumbs
 
 	// figure amount to share with each official Common Good Community
-
 // Not until cgc means signed the CG/CGC agreement (and then not retroactive) queueEach('cgc', $cttyGiftsSql($end));
   
   $list = db\lst("CONCAT(fullName,' (',city,')')", 'users', ':IS_OK AND :IS_PAPER');
@@ -772,7 +769,7 @@ function cttyStats($dt1 = 0, $redo = '') {
     u\preray([0 => min($cttys), 1 => min($cttys)], $cttys); // show all dates overall
 
     if ($dt1 < 0) $dt1 = db\max('created', 'r_stats'); // repeat last date to catch missing cttys
-    if (!$dt1) $dt1 = nn($cttys[0]) ?: now();
+    if (!$dt1) $dt1 = nni($cttys, 0, 0) ?: now();
     $dt = strtotime('today', $dt1); // use first moment of the day
 
     while ($dt <= now()) {
@@ -835,13 +832,16 @@ X;
 /**
  * Calculate risks of financial misbehavior for each account.
  * Do companies first, so their risk can be used to help assess individual risk.
- * Do the whole thing twice (see DAILY_TASKS), to take into account relations with suspicious individuals.
+ * Do the whole thing twice, to take into account relations with suspicious individuals.
+ * @todo: use a temp table instead of newThresholds array OR just a complex SQL
  */
 function acctRisk() {
   setv('newThresholds', ray('bigDay bigWeek big7Week bigYear', [], [], [], []));
 
   db\q('UPDATE users SET risk=NULL'); // avoid unnecessary badConx. don't touch risks though!
-  foreach ([1, 2] as $zot) queueEach('acctRisk1', 'SELECT DISTINCT uid FROM users WHERE uid>:CANONIC_ACCTS and :IS_OK ORDER BY :IS_CO DESC'); // do this twice, to take into account connections with scoundrels
+  foreach ([1, 2] as $zot) { // do this twice, to take into account connections with scoundrels
+    queueEach('acctRisk1', 'SELECT DISTINCT uid FROM users WHERE uid>:CANONIC_ACCTS and :IS_OK ORDER BY :IS_CO DESC');
+  }
   queueNext();
 }
 
@@ -1000,8 +1000,9 @@ function notices() {
   global $timeFor; // for testing
   
   $lastStart = getV('last_cron_start', []);
-  $timeFor_weekly = (strftime('%w', @$lastStart['day']) == R_WEEKLY_DAY);
-  $timeFor_monthly = (strftime('%d', @$lastStart['day']) == R_MONTHLY_DAY);
+  $day = nni($lastStart, 'day');
+  $timeFor_weekly = ($day and strftime('%w', $day) == R_WEEKLY_DAY);
+  $timeFor_monthly = ($day and strftime('%d', $day) == R_MONTHLY_DAY);
   if (test() and isset($timeFor)) extract(just('weekly monthly', $timeFor), EXTR_PREFIX_ALL, 'timeFor');
 
   $where = $dailySql = '((NOT :IS_WEEKLY AND NOT :IS_MONTHLY) OR NOT :IS_MEMBER)'; // daily
@@ -1032,7 +1033,7 @@ function END() {
   $lastCron = getV('last_cron_end', []);
   $lastCron['end'] = now();
   setV('last_cron_end', $lastCron);
-  $elapsed = now() - @$lastCron['day'];
+  $elapsed = now() - nni($lastCron, 'day', 0);
   $time = strftime('%I:%M%P');
   $msg = t('At %time, after %elapsed secs, daily cron ended successfully.', compact(ray('time elapsed')));
   $topic = t('cron end');

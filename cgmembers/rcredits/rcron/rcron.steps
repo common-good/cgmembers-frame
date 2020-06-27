@@ -322,7 +322,7 @@ function memberTradesUSDToMemberForRCredits($id1, $amount, $id2) {
 function weMessageMemberWithTopicAndSubs($id, $topic, $subs) {
   global $testOnly; if (!$testOnly) return FALSE;
   $a = acct(t\uid($id));
-  $message = t($topic, @$subs[0]);
+  $message = t($topic, nni($subs, 0));
   $topic = $GLOBALS['topics'][$topic];
   $fullName = $a->fullName;
   return weEmailToMemberWithSubs('message', $a->email, compact(ray('message topic fullName')));
@@ -345,7 +345,6 @@ function weMessageMemberWithTopicAndSubs($id, $topic, $subs) {
  *     MAKE invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalance
  *     MAKE invoices AnInvoiceGetsHandledForAnAccountThatRoundsUp
  *     TEST risk Setup
- *     TEST risk WeCalculateRisks
  *     TEST trust WeCalculateTrust
  *     MAKE weekly AMemberBuildsUpSavings
  *     MAKE weekly AMemberCashesOutAutomatically
@@ -695,3 +694,10 @@ function weDoNotMessageToMemberWithSubs($index, $id, $subs) {return !t\weMessage
  * in: TEST aaSeldomNotices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
  */
 function notThese($things, $list) {return !t\these($things, $list);}
+
+/**
+ * member (ARG) has risks (ARG)
+ *
+ * in: TEST risk WeCalculateRisks
+ */
+function memberHasRisks($id, $risks) {return t\memberHasRisks($id, $risks);}

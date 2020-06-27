@@ -24,19 +24,19 @@ function formTxs($form, &$sta, $args = '') {
 
   extract(just('options period starting ending do xid download downloaded', $args)); 
   
-  global $testPeriod; $testPeriod = @$period ?: TX_DEFAULT_PERIOD; // remember for tests
-  if (@$do) if ($result = handleTx($do, $xid, $sta, $args)) return $result;
+  global $testPeriod; $testPeriod = nn($period) ?: TX_DEFAULT_PERIOD; // remember for tests
+  if (nn($do)) if ($result = handleTx($do, $xid, $sta, $args)) return $result;
   extract(just('dateRange downloadMsg url starting ending', dateRange($args, 'history/transactions')));
 
-  $descending = TRUE;
-  $optionSet = @compact(ray('download agents channels boxes descending'));
+//  $descending = TRUE;
+//  foreach (ray('download agents channels boxes descending') as $k) if (isset($$k)) $optionSet[$k] = $$k;
 
   $summary = fld('markup', '', '', array('markup' => txSummary($starting, $ending, $run)));
 
 
   
   $uids = ($mya->jid > 0) ? [ $mya->id, $mya->jid ] : [ $mya->id ];
-  if (@$download) {
+  if (nn($download)) {
     global $mya;
     $dt1 = strftime('%Y%m%d', $starting);
     $dt2 = strftime('%Y%m%d', $ending);
@@ -50,8 +50,8 @@ function formTxs($form, &$sta, $args = '') {
 
   be\processTxs($processor, $uids, $starting, $ending, TRUE);
 
-  if (test() and @$download) return;
-  if (@$download) exit();
+  if (test() and nn($download)) return;
+  if (nn($download)) exit();
   
   $pgFactor = MIN_TX_ROWS / NORMAL_TX_ROWS;
 
@@ -82,7 +82,7 @@ EOF;
   $title = t('Transaction History');
   extract(just('simple advanced downloadMsg', $dateRange));
   $dateRange = w\fieldSet('dateRange', compact(ray('simple advanced downloadMsg')), BARE);
-  $form = @compact(ray('title dateRange summary transactions states'));
+  $form = compact(ray('title dateRange summary transactions'));
   
   jsx('paginate', compact('pgFactor'));
   jsx('reverse-tx', 'msg title', t('Reverse this transaction?'), t('Reverse'));
@@ -204,7 +204,7 @@ function handleTx($do, $xid, &$sta, $args) {
     return w\go($url, t('Reversed %amount bank transfer for %who.', 'amount who', u\fmtAmt(-$amount), $mya->fullName));
   }
   
-  if (!$xid = (int) @$xid) return FALSE;
+  if (!$xid = (int) nn($xid)) return FALSE;
   if ($do == 'edit') return txEdit($xid);
   if ($do == 'ok' or $do == 'no') {
     txOKorNO($do, $xid);

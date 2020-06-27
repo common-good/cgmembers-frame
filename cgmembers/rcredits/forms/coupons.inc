@@ -124,10 +124,10 @@ function formCoupons_validate($form, &$sta) {
     $ruleId = db\get('id', 'tx_rules', ray('from code', $fromA->id, $iCode));
     $payeeCheck = u\genRuleSQL('payee', ':payee');
     $sql = <<< EOF
-      SELECT id AS ruleId, r.end FROM tx_rules r
-      WHERE r.from=:issuer
-      AND :iCode = r.code
-      AND r.action=:ACT_REDEEM
+      SELECT id AS ruleId, ru.end FROM tx_rules ru
+      WHERE ru.from=:issuer
+      AND :iCode = ru.code
+      AND ru.action=:ACT_REDEEM
       AND start<=:NOW
       AND $payeeCheck
 EOF;
@@ -168,7 +168,7 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
     $amount = db\get('amount', 'tx_rules', ['id' => $ruleId]);
     list ($ok, $index, $subs) = be\transfer('payment', $fromA, r\acct($to), $amount, t('gift'), FOR_GOODS, ['force' => 1, 'ruleId' => $ruleId]);
     u\EXPECT($ok, t('failed forced gift redemption by %who for rule %ruleId', 'who ruleId', $mya->fullName, $ruleId));
-    $mya->update('giftPot', $mya->giftPot + $amount);
+    $mya->update('giftPot', ($mya->giftPot ?: 0) + $amount);
     db\update('tx_rules', ray('id end', $ruleId, now()), 'id'); // mark this used
     return say(t('coupon redeemed', 'amount giver', u\fmtAmt($amount), $fromA->fullName));
 

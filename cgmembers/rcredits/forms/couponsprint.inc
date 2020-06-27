@@ -15,22 +15,22 @@ function couponsPrint($args = '') {
   require_once __DIR__ . '/../pdf.class';
   
   if (strpos($args, 'type=') === FALSE) $args = u\deurlify($args);
-  extract(just('type amount portion minimum useMax count automatic start end purpose', $args));
+  extract(just('type amount portion minimum useMax count automatic start end purpose', $args, NULL));
 	
-  if (!$gift = (@$type == 'gift') and @$type != 'discount') return w\hack('bad coupon args');
-  $coGift = ($amount > 0 and $amount == @$minimum);
+  if (!$gift = ($type == 'gift') and $type != 'discount') return w\hack('bad coupon args');
+  $coGift = ($amount > 0 and $amount == $minimum);
   $amount =  $amount ? u\fmtAmt($amount, 's$') : u\fmtAmt($portion, '%s');
   u\setDft($count, 8);
 
-  if (@$start == today()) $start = '';
-  if (@$end) {
-    $end = u\fmtDate(@$end, TRUE);
-    $dates = @$start ? u\fmtDate($start, TRUE) . t(' to ') . $end : (t('expires ') . $end);
+  if ($start == today()) $start = '';
+  if ($end) {
+    $end = u\fmtDate($end, TRUE);
+    $dates = $start ? u\fmtDate($start, TRUE) . t(' to ') . $end : (t('expires ') . $end);
   } else {
-    $dates = @$start ? t('beginning ') . u\fmtDate($start, TRUE) : '';
+    $dates = $start ? t('beginning ') . u\fmtDate($start, TRUE) : '';
     $dates .= t(' (does not expire)');
   }
-  if (@$useMax) $dates .= t(' &mdash; %useMax %uses per member', 'useMax uses', $useMax, $useMax > 1 ? t('uses') : t('use'));
+  if ($useMax) $dates .= t(' &mdash; %useMax %uses per member', 'useMax uses', $useMax, $useMax > 1 ? t('uses') : t('use'));
   
   $pdf = new r\Pdf();
 //  $pdf->addTTFfont(__DIR__ . '/../../tcpdf/fonts/verdana.ttf'); // do just once on DEV, then upload font
@@ -43,7 +43,7 @@ function couponsPrint($args = '') {
 	$off = ($gift or $coGift) ? '' : t(' OFF');
 	$goodFor = $off ? '' : t('Good for ');
 
-  $auto = (@$automatic and $off) ? t('automatically') : '';
+  $auto = ($automatic and $off) ? t('automatically') : '';
   
   list ($mT, $mR, $mB, $mL) = [0, 0, 0, 0]; // margins
   list ($hLogo, $dySite, $ptSite, $sSite) = [.9, 2.3, 14, 'semi-expanded'];
@@ -105,7 +105,7 @@ function couponsPrint($args = '') {
         $pdf->say($dates, $x, $y+$dyDetails+$dy*3, $wCard, '', "10;color:darkgray", 'C'); // text, x, y, w, h, format, align, borders
       }
       $cardi++; // how many cards have been completed
-      if ($cardi >= @$count) {$y = 999; break;} elseif ($cardi % 8 == 0) $pdf->AddPage();
+      if ($cardi >= nn($count)) {$y = 999; break;} elseif ($cardi % 8 == 0) $pdf->AddPage();
     }
   }
 

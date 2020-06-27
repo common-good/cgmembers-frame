@@ -32,23 +32,23 @@ function formBuy($form, &$sta, $doCode = '') {
 
   $args = strpos($doCode, '=') ? $doCode 
   : (($doCode . ' ')[0] == 'P' ? r\doCode($doCode)
-  : (@$sta['input'] ?: ($_POST ?: $_GET))
+  : (nni($sta, 'input') ?: ($_POST ?: $_GET))
   );
 
   extract($args = just(CGPAY_FLDS, $args, NULL));
 
-  foreach (ray($required) as $k) if (!@$$k) return w\softErr(t('missing field', 'field', $k)); // handle hackers gracefully
-  if (!u\isQid(@$company) or !$co = r\acct($company) or !$co->co) return w\softErr('bad account id');
+  foreach (ray($required) as $k) if (!nn($$k)) return w\softErr(t('missing field', 'field', $k)); // handle hackers gracefully
+  if (!u\isQid(nn($company)) or !$co = r\acct($company) or !$co->co) return w\softErr('bad account id');
   
-  if (!@$code) { // no company code -- this type of link requires confirmation by email or SMS
+  if (!nn($code)) { // no company code -- this type of link requires confirmation by email or SMS
     $confirm = TRUE;
   } elseif (mb_strtolower($code) != t('demo')) { // not looking at the demo
-    if (strpos($code, ' ') or !$cocodes = substr(u\decry('P', CRYPT_FLAG . $code), 1) or !$cocodes = unserialize($cocodes) or @$cocodes['cocode'] != $co->emailCode) return w\softErr('bad co code'); // space in code is probably "bad company ID or cocode" message
-    $t = now() - @$cocodes['now'];
+    if (strpos($code, ' ') or !$cocodes = substr(u\decry('P', CRYPT_FLAG . $code), 1) or !$cocodes = unserialize($cocodes) or nni($cocodes, 'cocode') != $co->emailCode) return w\softErr('bad co code'); // space in code is probably "bad company ID or cocode" message
+    $t = now() - nni($cocodes, 'now');
     if ($t < 0 or $t > AUTHCODE_TIMEOUT) return w\softErr('co code timeout');
   } else {$tst = t('<span class="loud">DEMO</span>');}
   
-  if ($amount0 = @$amount) {
+  if ($amount0 = nn($amount)) {
     if ($err = u\badAmount($amount, '>0')) return w\softErr($err);
     $amountDpy = u\fmtAmt($amount);
   } else $amountDpy = '$' . w\rendA('amount', numFld(REQ, '', dft($suggestedAmount)));
@@ -64,7 +64,7 @@ function formBuy($form, &$sta, $doCode = '') {
   }
   
   $subtext = $a 
-  ? t('<h4>Hello %name!</h4>', 'name acct', $a->bestName, $a->mainQid) . @$tst
+  ? t('<h4>Hello %name!</h4>', 'name acct', $a->bestName, $a->mainQid) . nn($tst)
   : t('<h4>Hello %PROJECT Member</h4>');
 
   if ($confirm) {
@@ -73,7 +73,7 @@ function formBuy($form, &$sta, $doCode = '') {
   } elseif ($mya) {
     $name = $pass = NULL;
   } else {
-    list ($name, $pass) = w\signinFlds(@$a ? $a->mainQid : ''); // keep the $a? here in case we change the logic hereabout
+    list ($name, $pass) = w\signinFlds(nn($a) ? $a->mainQid : ''); // keep the $a? here in case we change the logic hereabout
   }
 
   if ($for == 'gift') {
@@ -99,8 +99,8 @@ function formBuy($form, &$sta, $doCode = '') {
   } else { return w\softErr(t('The "for" parameter must be credit, gift, donate, or other.')); }
 
   $verbs = t('Donate, Donate, Pay');
-  $verb = in(ucwords(@$verb), $verbs) ? ucwords($verb) : t('Pay');
-  $payment = item(t('%amount to %who', '_amount who', $amountDpy, @$co->fullName ?: t('co')), "$verb:");
+  $verb = in(ucwords(nn($verb)), $verbs) ? ucwords($verb) : t('Pay');
+  $payment = item(t('%amount to %who', '_amount who', $amountDpy, $co->fullName ?: t('co')), "$verb:");
   
   $option = $a ? '' : t('OR <%a>signup</a>', '_a', atag('/signup'));
   $submit = submit($verb, '', 'md', w\suffix($option));
@@ -149,14 +149,14 @@ function formBuy_submit($form, &$sta) {
     $msg = tr($index, $subs);  
     if ($ok) $msg = t('<h3>Success!</h3> ') . $msg;
     if ($api) u\post($api, ray('request ok msg', $request, (int) $ok, $msg));
-    foreach (ray('return cancel') as $k) if (@$$k) $$k = tr($$k, $args + compact(ray('msg ok')));
+    foreach (ray('return cancel') as $k) if (nn($$k)) $$k = tr($$k, $args + compact(ray('msg ok')));
   }
   
   if ($ok) {
-    if (@$return) return w\goFar($return, "request=$request");
+    if (nn($return)) return w\goFar($return, "request=$request");
     return buySay($msg);
   } else {
-    return @$cancel ? w\goFar($cancel, "request=$request") : softErr($msg);
+    return nn($cancel) ? w\goFar($cancel, "request=$request") : softErr($msg);
   }
 }
 

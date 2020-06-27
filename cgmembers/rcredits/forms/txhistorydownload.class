@@ -50,14 +50,14 @@ class TxHistoryDownload implements TxProcessor {
    */
   public function processEntry($info, $parity = NULL) {
     if (in_array($info['uid'], $this->uids)) return;
-    extract(just('xid created name description amount balance agentUid banking', $info, null));
+    extract(just('xid created name description amount balance agt banking', $info, null));
 //    $frombank = $banking ? round(-$amount, 2) : 0;
     if ($xid < 124873 and $banking and !test()) $xid = db\get('txid', 'r_usd', compact('xid')) ?: $xid; // old checks
-    $fromyou = round($amount > 0 ? $amount : 0, 2);
-    $toyou = round($amount < 0 ? -$amount : 0, 2);
+    $fromyou = round($amount < 0 ? -$amount : 0, 2);
+    $toyou = round($amount > 0 ? $amount : 0, 2);
     $balance = round($balance, 2);
 //    $net = round($amount, 2);
-    u\csv([$xid, strftime('%Y-%m-%d', $created), $name, $description, $fromyou, $toyou, $balance, r\qid($agentUid)]);
+    u\csv([$xid, strftime('%Y-%m-%d', $created), $name, $description, $fromyou, $toyou, $balance, r\qid($agt)]);
     foreach (ray('fromyou toyou') as $k => $fld) $this->totals[$fld] += $$fld;
   }
 

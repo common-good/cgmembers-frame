@@ -82,9 +82,10 @@ class TxHistory implements TxProcessor {
       <a class="nextPage" title="Next Page"><span class="glyphicon glyphicon-triangle-right"></span></a>
     </div>
   </div>
-  <div class="row txRow head page--1 PAGE--1">
+  <div class="row txRow thead head page--1 PAGE--1">
 $guts
   </div>
+  <div class="tbody">
 EOF;
   }
 
@@ -134,8 +135,8 @@ EOF;
   public function processEntry($info, $parity) {
     if (in_array($info['uid'], $this->uids)) return;
     extract(just('name description amount xid banking', $info));
-    $amount = u\fmtAmt(- $amount, '');
-    if ($xid < 124873 and $banking and !test()) $xid = db\get('txid', 'r_usd', compact('xid')) ?: $xid; // old checks
+    $amount = u\fmtAmt($amount, '');
+    if ($xid < 124873 and $banking and !isDEV) $xid = db\get('txid', 'r_usd', compact('xid')) ?: $xid; // old checks
     if (!$this->dateValue) $xid = '';
     $guts = $this->guts($xid, $this->dateValue, $name, $description, $amount, $this->runBalance, $this->buttons);
     $parity = $parity ? ' odd' : ' even';
@@ -185,7 +186,7 @@ X;
     if ($this->count < 1) {
       $this->body .= '<div><div colspan=6>' . t('no txs') . '</div></div>';
     }
-    $this->body .= "</div>\n</div>\n";
+    $this->body .= "</div>\n</div>\n</div>\n";
   }
 
   /**

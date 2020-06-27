@@ -204,8 +204,8 @@ function doit(what, vs) {
     
   case 'verifyid':
     if (vs['method'] >= 0) verifyid(vs['method']);
-    $('[id^="edit-field-"]').click(function () {verifyid($(this).val());});
-    $('#edit-file').click(function () {if ($(this).val() == '') $('#edit-field-0').prop("checked", true);});
+    $('[id^="edit-method-"]').click(function () {verifyid($(this).val());});
+    $('#edit-file').click(function () {if ($(this).val() == '') $('#edit-method-0').prop("checked", true);});
     break;
 
   case 'which':
@@ -269,10 +269,10 @@ function doit(what, vs) {
     }
 
     if ($('#edit-connect-2')[0]) {
-      showBank($('#edit-connect-2').attr('checked') == 'checked');
-      $('#edit-connect-0').click(function () {showBank(false);});
+      showBank($('#edit-connect-0').attr('checked') == 'checked');
+      $('#edit-connect-0').click(function () {showBank(true);});
       $('#edit-connect-1').click(function () {showBank(false);});
-      $('#edit-connect-2').click(function () {showBank(true);});
+      $('#edit-connect-2').click(function () {showBank(false);});
     } else if ($('#edit-connect-1')[0]) {
       showBank($('#edit-connect-1').attr('checked') == 'checked');
       $('#edit-connect-0').click(function () {showBank(false);});
@@ -453,12 +453,15 @@ function doit(what, vs) {
   case 'invite-link': $('#inviteLink').click(function () {SelectText(this.id);}); break;
   
   case 'invite':
-    $('#edit-sign-1').click(function () {
-      $('.form-item-question, .form-item-quote, .form-item-org, .form-item-usePhoto.form-type-radios').show();
-    });
+    function showInviteFlds() {
+      $('.form-item-question, .form-item-quote, .form-item-org, #edit-usePhoto, #edit-postPhoto').show();
+    }
+    $('#edit-sign-0').click(function () {$('.form-item-whyNot').show();});
+    $('#edit-sign-1').click(function () {showInviteFlds(); $('.form-item-whyNot').hide();});
     $('#edit-org').keyup(function () {
       if ($(this).val().length > 0) $('.form-item-position, .form-item-website').show();
     });
+    if (vs['edit']) {showInviteFlds(); $('#edit-org').keyup();}
     break;
 
   case 'amtChoice':
@@ -582,14 +585,16 @@ function doit(what, vs) {
  * Show or hide ID verification fields according to verification method
  */
 function verifyid(method) {
-  $('#edit-field-' + method).prop('checked', true); // needed after error
+  $('#edit-method-' + method).prop('checked', true); // needed after error
   var ssn = $('.form-item-federalId');
   var dob = $('.form-item-dob');
   var idtype = $('.form-item-idtype');
   var file = $('.form-item-file');
-  if (method == 0) {reqNot(ssn); reqNot(dob); req(file); reqNot(idtype);}
-  if (method == 1) {reqNot(ssn); reqNot(dob); req(file); req(idtype); $('#edit-idtype').focus();}
-  if (method == 2) {req(ssn); req(dob); reqNot(file); reqNot(idtype); $('#edit-federalid').focus();}
+
+  req(dob);
+  if (method == 0) {reqNot(ssn); req(file); reqNot(idtype);}
+  if (method == 1) {reqNot(ssn); req(file); req(idtype); $('#edit-idtype').focus();}
+  if (method == 2) {req(ssn); reqNot(file); reqNot(idtype); $('#edit-federalid').focus();}
 }  
 
 function setInvestFields() {

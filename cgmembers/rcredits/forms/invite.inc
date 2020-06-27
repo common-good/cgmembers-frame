@@ -7,126 +7,128 @@ use CG\Util as u;
 use CG\Db as db;
 
 /**
- * Invite someone to sign up for rCredits (on behalf of the account, not the agent).
+ * Invite someone to sign up for Common Good (on behalf of the account, not the agent).
  * NOTE: We allow agents to send invitations on behalf of a company, but be aware that companies are not people and there is a danger in giving companies permission to act like people. On this invitation form, the company is "trusting" whoever it invites -- something usually reserved for humans.
  */
 function formInvite($form, &$sta, $args = '') {
+  extract(just('edit example code', $args, NULL));
+
   if (!$mya = w\eLinkAcct($sta, $args, 'acct')) return;
-  global $base_url;
 
-  if ($mya->co or $mya->shouter) { // no signature wanted (co) or already did it, so ask for a specific inviation
-      if ($mya->cAdmin and !$mya->proSe) say(t('Note: Admins cannot invite on behalf of someone.'), 'err');
-    $title = t('Invite Someone');
-    $_a2 = w\atagB('/community/invite/invited-whom');
-    $_a2 = r\acct() ? t('<%a2>Who you have invited</a>', compact('_a2')) : '';
-    $where = $mya->cttyA->location(); // currently UNUSED
-    $inviteCode = $mya->iCardCode(IBY_EMAIL);
-    $_inviteLink = PROMO_URL . "/signup/code=$inviteCode";
-    $warning = $mya->co ? t('<p>Note you are sending an invitation on behalf of a company. The company is "trusting" whoever you invite. We at %PROJECT recognize that companies are not people, and that it\'s a bit odd to allow them a sentiment usually reserved for humans.</p>') : '';
+  $quote = db\get('quote', 'u_shouters', ray('uid', $mya->id)) ?: SHOUT_TEXT;
+  if (!$mya->co and (!$mya->shouter or $edit)) return endorse($mya, $quote, $edit);
 
-    $_aMailInvites = atag('mailto:' . CGF_EMAIL . '?subject=' . t('%PROJECT Invitation Card request') . '&body=' . t('Please send me some more %PROJECT invitation cards. Thanks!') . " -- $mya->fullName (account #$mya->mainQid)");
-    $region = $mya->qo->region;
-    foreach (ray('NEW MIW') as $k) if ($region == $k) {
-      list ($nm, $zot) = explode('@', $mya->cttyA->email);
-  //    $aBack = str_replace('-back', '-back-' . $nm, $aBack);
-    }
-    $friend = $mya->co ? t('customer, employee, or supplier') : t('friend');
-    $_size = $mya->co ? '4.25" &times; 2.75"' : '3.5" &times; 2"';
-    
-    $midtext2 = t(<<<EOF
-  <p>Invite <b>only people you trust</b> who live, shop, or work in your community. You may need to help or nudge the people you invite. %a2</p>
-    <br>
-    <p>Here are three different ways to invite someone:</p>
-      <ul>
-        <li><b>Best: Complete the form below</b> to send an invitation now. For each person you invite in your community, an anonymous donor contributes <span class="loud">$2</span> to your Community Fund!</li>
-        <li><b>Tell your %friend</b> to sign up at %CG_DOMAIN or send them this link: <div id=inviteLink>%inviteLink</div></li>
-        <li><b><%aMailInvites>Ask us</a></b> to mail you some promo cards at no charge.</li>
-      </ul>
-EOF
-    , compact(ray('_a2 _size where _aMailInvites _inviteLink inviteCode friend')));
-  //  (Later, you will need to confirm you know and trust them.)
-    $midtext = $midtext2 . $warning;
-  //  $contact = textFld(t('Email or Cell:'), t('An email address or cell number for the person you want to invite'), required());
+  $fullName = $mya->fullName;
+  $phone = $mya->phoneDash;
+  $signed = u\fmtDate($mya->signed, TRUE);
+  $code = $mya->iCardCode(IBY_EMAIL); // this code is different from the one emailed in form
+  $info = compact(ray('fullName quote phone signed'));
+  $buttons = btn('/community/invite/all', t('Recent Endorsements'), '', '', away());
 
-    $email = emailFld(t('Email:'), [t('Their email address'), t('An email address for the person you want to invite')]);
-  //  $emails = areaFld(t('Email(s):'), t('A comma-separated list of email addresses to invite'));
-    $dupsOk = $mya->cAdmin ? boolFld(t('Dups Okay?'), '', FALSE) : NULL;
-    $trusted = boolFld(t('Trusted?'), t('If you lent this person (or people) $250, would you trust them to pay it back?'), $mya->cAdmin ?: NULL);
-    $zip = textFld(t('Postal Code:'), [t('Physical location postal code'), t('Where does the person live or work?')], required());
-    $subject = textFld(t('Subject:'), t('The subject of your message'), required($mya->fullName . t(' invites you to %PROJECT')));
+  if ($example) return exampleInvite($info, $code);
 
-    $default = @$mya->data['inviteBody'] ?: t('invite default', 'name', $mya->fullName);
-    $messageHelp = t('Invite them to sign up, and say why. A <%a>description of %PROJECT</a> will follow your message.', '_a', atag('/community/invite/example', w\away()));
-    $message = areaFld(t('Message:'), $messageHelp, required($default));
-    $submit = ($mya->proSe or !$mya->cAdmin) ? t('Send') : NULL; // don't let cAdmins send on behalf of anyone
-    jsx('invite-link');
-
-    return cgform(compact(ray('title midtext email dupsOk trusted zip subject message')) + w\setupFoot($submit));
-    
-    
-  } else {
-    $title = t('Invite People');
-    $subtext = t('<p>On average, the %PROJECT Community Fund grows by thousands of dollars with every participant. Let\'s get all of %city signed up and have a  multi-million dollar fund to help the community through this pandemic crisis and beyond.</p><p>Join other thought leaders in signing this public invitation:</p><h4>%SHOUT_TEXT<br><small>&mdash; %nm (and many others)</small></h4>', 'nm city', $mya->fullName, $mya->city);
-    $sign = boolFld(t('Sign:'), '', -1);
-    $question = item(t('Why do you want people to sign up? How do you see %PROJECT benefiting you, your family, the community, or your organization\'s mission?'));
-    $quote = textFld(t('Answer:'), [t('Your answer to the question above'), t('Your answer will appear below your name in the list.')]);
-    $org = textFld(t('Organization (if any):'), [t('Organization name'), t('Sometimes your voice carries more weight when you hold a responsible position in society. The list will say explicitly: <i>"%ORG_DISCLAIMER"</i>.')]);
-    $position = textFld(t('Title:'), [t('Your position there')]);
-    $website = textFld(t('Website:'), [t('Organization website URL')]);
-    $usePhoto = boolFld(t('Include Photo?'), t('Would you like your account photo included in a collage of photos of members inviting the public to sign up?'), 1);
-    jsx('invite');
-    return cgform(compact(ray('title subtext sign question quote org position website usePhoto')) + w\setupFoot());
-  }
+  return inviteOne($mya, $code, $info, $buttons, $args); // nonperson or already signed
 }
 
 function formInvite_validate($form, &$sta) {
-  extract(just('sign org position', $sta['input'], NULL));
-  if (isset($sign)) { // community invitation
+  extract(just('sawVideo org position', $sta['input'], ''));
+
+  if (isset($sawVideo)) { // community invitation (can't use isset($sign))
     if ($position and !$org) return say(t('If you are not associated with an organization, leave your title blank.'), 'title');
   } else { // individual invitation
-    extract(just('email emails trusted zip', $sta['input']));
-    if (op($sta) == 'submitN') {
-      if (!$emails) return say('bad email', compact('emails'), 'emails');
-      foreach (ray($emails) as $one) if (!u\validEmail($one)) return say(t('bad email: %one', compact('one')), 'emails');
-    } elseif (!u\validEmail($email)) return say('bad email', compact('email'), 'email');
-    if (!@$trusted) return say('must trust', 'trusted');
-    if ($err = u\badZip($zip)) return say($err, 'zip');
+    extract(just('email', $sta['input']));
+    if (!u\validEmail($email)) return say('bad email', compact('email'), 'email');
   }
 }
 
 function formInvite_submit($form, &$sta) {
-  extract(just('sign quote org position website usePhoto', $sta['input'], NULL));
-  if (isset($sign)) { // community invitation
-    global $mya; // (individual invitatins use w\elinkAcct instead)
-    if ($sign) {
-      $website = preg_replace('~http(s?)://~', '', $website);
-      list ($uid, $title) = [$mya->id, $position];
-      db\insert('u_shouters', compact(ray('uid quote org title website usePhoto')), 'uid');
-      say(t('Thank you! Your name has been added to the list.'));
-    }
-    return w\goNextStep('invite');
-  }
-  
-  // individual invitation
   $mya = w\eLinkAcct($sta); 
   global $base_url;
-  extract(just('email emails subject message dupsOk zip', $sta['input']));
 
-  if (op($sta) == 'submitN') {
-//    foreach (ray($email) as $one) sendInvite($one, $subject, $message, @$dupsOk);
-    $code = ''; // get a random code just once
-    foreach (ray($emails) as $email) {
-      $code = r\invite($email, $mya->id, $code, $subject, $message, $zip);
-      $links[] = "$base_url/signup/code=$code/e=$email";
+  if (isset($sta['input']['sawVideo'])) { // community invitation
+    extract($input = just('sign quote org position website usePhoto postPhoto sawVideo whyNot', $sta['input'], NULL));
+    if ($sign) {
+      foreach (ray('usePhoto postPhoto sawVideo') as $k) $$k = $$k ? 1 : 0;
+      $website = preg_replace('~http(s?)://~', '', $website);
+      list ($uid, $title) = [$mya->id, $position];
+      db\updateOrInsert('u_shouters', compact(ray('uid quote org title website usePhoto postPhoto sawVideo')), 'uid');
+      say(t('Thank you! Your name has been added to the list.'));
+    } else {
+      r\tellAdmin(t('non-endorsement'), $input + ray('fullName', $mya->fullName));
+      if ($whyNot) say(t('Thank you for telling us! We will use your feedback to improve.'));
     }
-    $links = join('<br>', $links);
-    say('invite links', compact('links'));
-  } else {
+  } else { // individual invitation
+    extract(just('email subs', $sta['input'], NULL));
     $email = mb_strtolower($email); // otherwise constantSubs breaks on cap after @
-    sendInvite($mya, $email, $subject, $message, @$dupsOk, $zip);
-    $data = ray('inviteBody', mb_substr($message, 0, 10000)) + $mya->data;
-    $mya->update(compact('data'));
+    $subject = t('%nm invites you to %PROJECT', 'nm', $mya->fullName);
+    $subs = unserialize($subs) + ray('subject uid noFrame', $subject, $mya->id, TRUE);
+    $code = r\invite($email, $mya->id, '', $subject, '', $mya->zip);
+    r\rMail('invite', $email, $subs + compact(ray('code')), $mya);
+    say('invite sent|repeat invite', compact('email'));
+    if (!$mya->admin) r\tellAdmin('invited', $subs + compact('email'), $mya->id);
   }
-  if (!r\acct()) return w\doSay();
-  return w\goNextStep('invite');
+
+  return r\acct() ? w\goNextStep('invite') : w\doSay();
+}
+
+/**
+ * Display the standard invitation that will be sent for this member.
+ */
+function exampleInvite($subs, $code, $emailCoded = '') {
+  header_remove('Content-Security-Policy'); // allow the template's CSS
+/**/  if (!$res = file_get_contents(BASE_URL . '/rcredits/templates/invite.html')) die('missing invitation template');
+/**/  echo tr($res, $subs + compact(ray('code emailCoded')));
+  exit();
+}
+
+/**
+ * Form to invite one person
+ */
+function inviteOne($mya, $code, $info, $buttons, $args) {
+  $title = t('Invite Someone');
+
+  if ($mya->shouter) $buttons .= btn('/community/invite/edit=1', t('Edit Yours'));
+  if (db\exists('r_invites', 'inviter=:id', ray('id', $mya->id))) $buttons .= btn('/community/invite/invited-whom', t('Who you invited'));
+
+  $_aInvite = atag(PROMO_URL . "/signup/code=$code");
+  $_aStd = atag("/community/invite/example=1&code=$code&$args", away());
+  $friend = $mya->co ? t('customer, employee, or supplier') : t('friend');
+  $subs = hidFld(serialize($info));
+  
+  $subtext = t('<p>Invite a %friend</b> to sign up for a free %PROJECT card! Type an email address below to send a message <%aStd>[like this]</a>. OR copy [<%aInvite>Sign up for %PROJECT</a>] into an email you write yourself.</p><p>Some people may need your help signing up &mdash; especially uploading or emailing a photo.</p>'
+  , compact(ray('_aStd _aInvite friend')));
+
+  $email = emailFld(t('Email:'), [t('Their email address'), t('An email address for the person you want to invite')]);
+  $submit = t('Send');
+  $foot = ($mya->proSe or !$mya->cAdmin) ? w\setupFoot($submit) : []; // don't let cAdmins send on behalf of anyone
+  jsx('invite-link');
+
+  return cgform(compact(ray('buttons title subtext email subs')) + $foot);
+}    
+
+/**
+ * Community invitation
+ */
+function endorse($mya, $quote, $edit) {
+  $fields = 'quote, org, title, website, usePhoto, postPhoto, sawVideo';
+  $info = db\get($fields, 'u_shouters', ray('uid', $mya->id));
+  if ($info) extract($info); else foreach (ray($fields) as $k) $$k = NULL;
+  $position = $title;
+  
+  $title = t('Invite People');
+  $subtext = t('<p>On average, the %PROJECT Community Fund grows by thousands of dollars with every participant. Let\'s get all of %city signed up and have a  multi-million dollar fund to help the community through this pandemic crisis and beyond.</p><p>If you have not yet seen our video, please see it now, before finishing this page: %videoBtn</p><p>Then join other thought leaders signing this public endorsement:</p><h5>%SHOUT_TEXT<br><small>&mdash; %nm (and many others)</small></h5>', 'nm city _videoBtn', $mya->fullName, $mya->city, btn(VIDEO_URL, t('Video'), 'success'));
+  
+  $sawVideo = boolFld(REQ . t('Watched Video?'), '', $edit ? $sawVideo : 0);
+  $sign = $edit ? hidFld(1) : boolFld(REQ . t('Sign:'), '', -1);
+  $whyNot = textFld(t('Why?'), [t('Reason'), t('If you\'re willing, please say why you\'re not endorsing %PROJECT.')]);
+  $question = item(t('Why do you want people to sign up? How do you see %PROJECT benefiting you, your family, the community, or your organization\'s mission? When people are thinking about signing up, they will read this as you-talking-to-them. So you may want to tell them explicitly to sign up.'));
+  $quote = textFld(t('Answer:'), [t('Your answer to the question above'), t('Your answer will appear below your name in the list.')], dft($quote));
+  $org = textFld(t('Organization (if any):'), [t('Organization name'), t('Sometimes your voice carries more weight when you hold a responsible position in society. The list will say explicitly: <i>"%ORG_DISCLAIMER"</i>.')], dft($org));
+  $position = textFld(t('Title:'), [t('Your position there')], dft($position));
+  $website = textFld(t('Website:'), [t('Organization website URL')], dft($website));
+  $usePhoto = boxFld('usePhoto', t('Include Photo:'), t('Include my photo in the collage of members inviting the public to sign up.'), $edit ? $usePhoto : 1);
+  $postPhoto = boxFld('postPhoto', NBSP, t('You may also include my photo and my answer (above) in a media post.'), $edit ? $postPhoto : 0);
+
+  jsx('invite', 'edit', $edit);
+  return cgform(compact(ray('title subtext sawVideo sign whyNot question quote org position website usePhoto postPhoto')) + w\setupFoot());
 }

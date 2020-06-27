@@ -19,7 +19,7 @@ function seeSecure($a) {
     $new[$k] = $secure[$k]; // reorder
     $show[$k] = $a->$k; // some need decrypting
   }
-  $a->update('secure', @$new ?: []);
+  $a->update('secure', nn($new, []));
 
 	if ($mya->superAdmin) {
 	  $vsecure = $a->vsecure;
@@ -27,7 +27,7 @@ function seeSecure($a) {
 			$vnew[$k] = $vsecure[$k]; // reorder
 			$show[$k] = $a->$k; // some need decrypting
 		}
-    $a->update('vsecure', @$vnew ?: '');
+    $a->update('vsecure', nn($vnew));
   }
 
   say(u\rayTable($show, FALSE));
@@ -70,34 +70,34 @@ function changeTxAmt($xid, $oldAmt, $newAmt) {
 define('EXPORT_PARAMS', 'do allCttys status types chimp anonymous');
 
 function export($params) {
-  extract(just(EXPORT_PARAMS, $params));
+  extract(just(EXPORT_PARAMS, $params, NULL));
   global $mya;
   $cttyA = r\acct($mya->community);
   $solarUid = db\get('uid', 'users', "name='cooppower'");
 
-  $filename = (@$allCttys ? PROJECT : str_replace('.', '', $cttyA->name))
-  . (@$status == 0 ? t('-active') : (@$status == 1 ? t('-notyet') : ''))
-  . (@$types == 0 ? t('-members') : (@$types == 1 ? t('-orgs') : t('-accounts')))
+  $filename = ($allCttys ? PROJECT : str_replace('.', '', $cttyA->name))
+  . ($status == 0 ? t('-active') : ($status == 1 ? t('-notyet') : ''))
+  . ($types == 0 ? t('-members') : ($types == 1 ? t('-orgs') : t('-accounts')))
   . '.csv';
   u\csvStart($filename);
-  $delimiter = @$chimp ? "\t" : ',';
+  $delimiter = $chimp ? "\t" : ',';
   
-  $fields = @$anonymous ?
+  $fields = $anonymous ?
     'uid city state zip type'
       . ' created activated signed helper iCode balance rewards savingsAdd minimum share risk trust'
       . ' community co gross employees achMin pinThreshold lastiCode tenure moves mediaConx jid'
       . ' owns bankName slave closed notices secret'
-  : (@$chimp ? 'id name phone email city state zip community type ecode'
+  : ($chimp ? 'id name phone email city state zip community type ecode asof'
   : 'id fullName manages lastTx solar snap phone email address city state zip community type ecode modified created');
   u\csv($fields = ray($fields), $delimiter);
 
   // add actual accounts
-  $where = @$allCttys ? '1' : 'community=:cttyId';
-  if (@$status == 0) $where .= ' AND :IS_OK';
-  if (@$status == 1) $where .= ' AND NOT :IS_OK';
+  $where = $allCttys ? '1' : 'community=:cttyId';
+  if ($status == 0) $where .= ' AND :IS_OK';
+  if ($status == 1) $where .= ' AND NOT :IS_OK';
 
-  if (@$types == 0) $where .= ' AND NOT :IS_CO';
-  if (@$types == 1) $where .= ' AND :IS_CO';
+  if ($types == 0) $where .= ' AND NOT :IS_CO';
+  if ($types == 1) $where .= ' AND :IS_CO';
 
   $sql = "SELECT uid AS id, fullName FROM users WHERE uid>:CANONIC_ACCTS AND NOT :IS_NONUDGE AND (NOT activated OR :IS_OK) AND $where ORDER BY :IS_OK, -signed, -created";
   
@@ -105,8 +105,10 @@ function export($params) {
   while ($row = $q->fetchAssoc()) {
     extract($row);
     $a = r\acct($id);
-    $type = $a->ok ? ($a->co ? 'member company' : 'member') : ($a->co ? 'company' : '');
-    if (@$anonymous) {
+    $type = $a->ok ? 'member' : ($a->activated ? 'deactivated' : 'notyet');
+    if ($a->co) $type .= ' company';
+    
+    if ($anonymous) {
       foreach ($fields as $k) $$k = $a->$k; // do this first. some will be null.
       $zip = $a->zip;
       foreach (ray('weekly monthly secret') as $k) $$k = $a->can(u\consta('b', $k));
@@ -126,7 +128,7 @@ function export($params) {
       $phone = u\fmtPhone($phone);
       $id = $a->mainQid;
       $ecode = "$a->emailCode";
-      $modified = u\fmtDate(now());
+      $asof = $modified = u\fmtDate(now());
       $manages = db\get('fullName', 'r_relations r LEFT JOIN users u ON u.uid=r.main', 'r.permission>=:B_MANAGE-:B_RELATED AND u.:IS_CO AND r.other=:id', ['id' => $a->id]);
       $tx = $a->lastTx;
       $lastTx = empty($tx) ? '' : u\fmtDate($tx->created, TRUE);

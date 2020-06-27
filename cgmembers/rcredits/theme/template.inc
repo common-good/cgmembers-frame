@@ -213,7 +213,7 @@ EOF;
   } else $acctName = $co = '';
 
   $breadcrumb = rcredits_breadcrumb(['breadcrumb' => \drupal_get_breadcrumb()]);
-  $logo = BASE_URL . R_PATH . '/images/' . PROJECT_LOGO . '?' . R_VERSION;
+  $logo = R_PATH . '/images/' . PROJECT_LOGO . '?' . R_VERSION;
   
   return <<<EOF
 <div class="nav2">
@@ -303,10 +303,10 @@ EOF;
 function rcredits_form_element($variables) {
   extract(cgElement($variables, 'name tabled type bare markup help parents children required title title_display id field_prefix field_suffix inline class box'));
 
-  $parentName = strtr(@$parents[0], [' '=>'-', '_'=>'-', '['=>'-', ']'=>'']);
-  $for = @$name ?: $parentName;
+  $parentName = isset($parents) ? strtr(nni($parents, 0), [' '=>'-', '_'=>'-', '['=>'-', ']'=>'']) : '';
+  $for = nn($name) ?: $parentName;
   if ($for == 'title') $children = "<h3>$children</h3>";
-  $children = @$field_prefix . $children . @$field_suffix;
+  $children = nn($field_prefix) . $children . nn($field_suffix);
 
   u\setDft($title_display, 'before');
 //  $boxy = in_array($type, ['radio', 'checkbox']) ? ($type . (@$inline ? '-inline' : '')) : '';
@@ -314,13 +314,13 @@ function rcredits_form_element($variables) {
 
   $class[] = $boxy ? 'option' : 'control-label col-sm-offset-1 col-xs-2';
   if ($title_display == 'invisible') $class[] = 'sr-only';
-  $label = w\tag('label', $boxy ? $children . @$title : @$title, compact('for', 'class'));
-  if (@$bare) return $boxy ? $label : $children;
+  $label = w\tag('label', $boxy ? $children . nn($title) : nn($title), compact('for', 'class'));
+  if (nn($bare)) return $boxy ? $label : $children;
     
-  if (@$tabled) {
-    if (is_array(@$help)) $help = @$help[1]; // ignore hint here (see rcredits_textfield)
-    $help = @$help ? "\n      <div class=\"help-block\">$help</div>" : '';
-    $lineup = is_null(@$markup) ? '' : ' lineup';
+  if (nn($tabled)) {
+    if (is_array(nn($help))) $help = nni($help, 1); // ignore hint here (see rcredits_textfield)
+    $help = nn($help) ? "\n      <div class=\"help-block\">$help</div>" : '';
+    $lineup = isset($markup) ? ' lineup' : '';
     $core = <<<EOF
     $label
     <div class="control-data col-xs-10 col-sm-6$lineup">
@@ -329,13 +329,12 @@ function rcredits_form_element($variables) {
 EOF;
   } else $core = $boxy ? $label : $label . $children;
 
-  $id = @$markup ? " id=\"edit-$for\"" : '';
+  $id = isset($markup) ? " id=\"edit-$for\"" : '';
   $outerClass = "form-group form-item-$for";
   if ($for != $parentName) $outerClass .= " form-item-$parentName";
   $outerClass .= ' ' . ($boxy ?: "form-type-$type");
-  $required = @$required ? ' required="yes"' : '';
-  if (@$class[0] == 'boxes') $outerClass .= ' boxes';
-  if (@$attributes['disabled']) $outerClass .= ' disabled';
+  $required = nn($required) ? ' required="yes"' : '';
+  if ($class[0] == 'boxes') $outerClass .= ' boxes';
   return <<<EOF
   <div$id class="$outerClass"$required>
 $core
@@ -351,8 +350,8 @@ function rcredits_textfield($vs) {
   if (nn($required)) $attributes['required'] = 'yes'; // don't add this in unless it is yes
   if (nn($subtype)) $attributes['type'] = $subtype; // num, tel, email, date, etc.
   $class[] = 'form-control input-md';
-  if (is_array($ray = @$help)) {
-    if (@$ray[0] and !@$ray[2]) $ray[2] = $ray[0]; // hover text defaults to same as hint
+  if (is_array($ray = nn($help))) {
+    if (nni($ray, 0) and !nni($ray, 2)) $ray[2] = $ray[0]; // hover text defaults to same as hint
     foreach (['placeholder', 'desc', 'title'] as $i => $k) {
       if ($k != 'desc' and $v = $ray[$i]) $attributes[$k] = $v;
     }
@@ -365,24 +364,24 @@ function rcredits_textarea($variables) {
   cgSetAttrs($variables['element'], array('id', 'name'));
   extract(cgElement($variables, 'attributes required name help class default_value value'));
 
-  $value = plain(@$value);
-  if (@$required) $attributes['required'] = 'yes';
+  $value = plain(nn($value));
+  if (nn($required)) $attributes['required'] = 'yes';
   $class[] = 'form-control input-md';
-  if (is_array($ray = @$help)) {
-    if (@$ray[0] and !@$ray[2]) $ray[2] = $ray[0]; // hover text defaults to same as hint
+  if (is_array($ray = nn($help))) {
+    if (nni($ray, 0) and !nni($ray, 2)) $ray[2] = $ray[0]; // hover text defaults to same as hint
     foreach (['placeholder', 'desc', 'title'] as $i => $k) {
       if ($k != 'desc' and $v = $ray[$i]) $attributes[$k] = $v;
     }
   }    
-  $tribs = u\tribs(compact('class') + (@$attributes ?: []));
+  $tribs = u\tribs(compact('class') + (nn($attributes) ?: []));
   return "<textarea $tribs />$value</textarea>";
 }
 
 function rcredits_radios($variables) {
   $chn = $variables['element']['#children'];
   extract(cgElement($variables, 'required inline'));
-  if (@$inline) $chn = str_replace(' radio">', ' radio-inline">', $chn);
-  if (@$required) $chn = str_replace('type="radio"', 'type="radio" required="yes"', $chn);
+  if (nn($inline)) $chn = str_replace(' radio">', ' radio-inline">', $chn);
+  if (nn($required)) $chn = str_replace('type="radio"', 'type="radio" required="yes"', $chn);
   return $chn;
 }
 
@@ -390,35 +389,23 @@ function rcredits_radio($variables) {
   \element_set_attributes($variables['element'], array('id', 'name', '#return_value' => 'value'));
   extract(cgElement($variables, 'title attributes class return_value value parents'));
   
-  if (isset($return_value) and $value == $return_value) $checked = 'checked';
+  if (isset($return_value) and $value == $return_value) $attributes['checked'] = 'checked';
   $type = 'radio';
   $class[] = 'form-radio';
-  $tribs = u\tribs(@compact(ray('type class checked')) + $attributes);
-  if (@$checked) f('t.setRadio', $parents[0], $title);
+  $tribs = u\tribs(compact(ray('type class')) + $attributes);
+  if (nni($attributes, 'checked')) f('t.setRadio', $parents[0], $title);
 
   return "<input $tribs />";
 }
 
 function rcredits_submit($variables) {
-  $special = 'title class tickle';
+  $special = 'title class tickle tabindex disabled';
   extract(cgElement($variables, 'tabled bare value id size style parents ' . $special));
-//  if (!@$id) $id = 'edit-' . strtolower(strtr($value, [' '=>'-', '_'=>'-', '['=>'-', ']'=>'']));
-  $id2 = 'edit-' . @$parents[0]; // whether or not id is set (assures mixed case when appropriate
-  if (!@$id or $id == strtolower($id2)) $id = $id2;
-///    if ($id == 'edit-opencompany') die(print_r(compact('parents','id'), 1));
-//  u\setDft($id, strtolower("edit-$value"));
-//  u\setDft($size, 'md');
-//  u\setDft($style, 'primary');
-//  u\setDft($name, @$parents[0]);
-  $variables['element']['#children'] = $res = spinLink('submit', $value, $id, @$style, @$size, @compact(ray($special)));
-/*
-  <<<EOF
-  <button type="submit" id="$id" name="$name" value="$value" class="btn btn-$style btn-$size ladda-button" data-style="expand-right">
-    <span class="ladda-label">$value</span>
-  </button>
-EOF;
-*/
-  return @$bare ? $res : rcredits_form_element($variables);
+  $id2 = 'edit-' . (isset($parents) ? nni($parents, 0) : 'xx'); // even if no id is set (assures mixed case when appropriate
+  if (!nn($id) or $id == strtolower($id2)) $id = $id2;
+  $extra = cgElement($variables, $special);
+  $variables['element']['#children'] = $res = spinLink('submit', $value, $id, nn($style), nn($size), $extra);
+  return nn($bare) ? $res : rcredits_form_element($variables);
 }
 
 function rcredits_button($variables) {
@@ -426,7 +413,7 @@ function rcredits_button($variables) {
   if ($button_type == 'submit') return rcredits_submit($variables);
   
 /**/ if (strpos($href, 'http') === FALSE) die('no http in button'); // $onclick = $href;
-  return w\tag(@$href ? 'a' : 'button', $value, compact(@$onclick ? 'onclick' : 'href', 'class'));
+  return w\tag(nn($href) ? 'a' : 'button', $value, compact(nn($onclick) ? 'onclick' : 'href', 'class'));
 }
 
 function rcredits_checkbox($variables) {
@@ -434,20 +421,22 @@ function rcredits_checkbox($variables) {
   extract(cgElement($variables, 'title attributes checked class default_value'));
 
   $type = 'checkbox';
-  if (@$checked or @$default_value) $checked = 'checked'; else unset($checked);
-  if (@$checked) f('t.setChecked', $title);
-  $tribs = u\tribs(@compact('type', 'checked', 'class') + $attributes);
+  if (nn($checked) or nn($default_value)) $attributes['checked'] = 'checked';
+  if (nn($class)) $attributes['class'] = $class;
+  if (nni($attributes, 'checked')) f('t.setChecked', $title);
+  $tribs = u\tribs(compact('type') + $attributes);
   return "<input $tribs />";
 }
 
 function rcredits_checkboxes($variables) {
   \element_set_attributes($variables['element'], array('id'));
   extract(cgElement($variables, 'choices defaults aliases parents'));
-  $for = strtr(@$parents[0], [' '=>'-', '_'=>'-', '['=>'-', ']'=>'']);
+  $for = strtr(nni($parents, 0), [' '=>'-', '_'=>'-', '['=>'-', ']'=>'']);
 
   // get children first
   $type = 'checkbox';
-  $fields = ray('name value checked title class');
+  $fields = ray('name value checked title');
+  $classRay = nn($class) ? compact('class') : [];
   $chn = '';
   foreach ($choices as $k => $v) {
     $name = "{$for}[$k]";
@@ -455,7 +444,8 @@ function rcredits_checkboxes($variables) {
     $checked = in($k, $defaults);
 ///    debug(compact(ray('k v defaults checked')));
     $title = $aliases[$k];
-    $chn .= @\render(w\fld('checkbox', '', '', compact($fields)));
+    $fld = w\fld('checkbox', '', '', compact($fields) + $classRay); // \render arg is called by reference
+    $chn .= \render($fld);
   }
   extract(cgElement($variables, 'attributes class'));
   $class[] = 'form-checkboxes';
@@ -477,16 +467,14 @@ function rcredits_fieldset($variables) {
 
   $class[] = 'form-wrapper';
   u\preray(compact('class'), $attributes);
-  if (@$legend) $legend = w\tag('legend', w\tag('span', $legend, ['class'=>'fieldset-legend']));
-//  if (@$help) $help = w\tag('div', $help, ['class'=>'fieldset-help']);
-  $wrapper = w\tag('div', $children . @$value, ['class'=>'fieldset-wrapper']);
-//  return w\tag('fieldset', @$title . $wrapper, $attributes + compact('class'));
-  $variables['element']['#children'] = w\tag('fieldset', @$legend . $wrapper, $attributes);
+  if (nn($legend)) $legend = w\tag('legend', w\tag('span', $legend, ['class'=>'fieldset-legend']));
+  $wrapper = w\tag('div', $children . nn($value), ['class'=>'fieldset-wrapper']);
+  $variables['element']['#children'] = w\tag('fieldset', nn($legend) . $wrapper, $attributes);
   return rcredits_form_element($variables);
 }
 
 function rcredits_breadcrumb($variables) {
-  $cnt = count($breadcrumb = @$variables['breadcrumb']);
+  $cnt = count($breadcrumb = nni($variables, 'breadcrumb'));
   if ($cnt < 2) return '';
   $map = ['Sadmin' => t('Sys Admin'), 'Account' => t('Settings')];
   $head = '<h2 class="sr-only">' . t('You are here') . '</h2>';
@@ -503,7 +491,8 @@ function rcredits_hidden($variables) {
   \element_set_attributes($variables['element'], array('name', 'value'));
   $type = 'hidden';
   extract(cgElement($variables, 'attributes id'));
-  $tribs = u\tribs(@compact(ray('type id value')) + $attributes);
+  foreach (ray('value id') as $k) if (isset($$k)) $attributes[$k] = $$k;
+  $tribs = u\tribs(compact('type') + $attributes);
   return "<input $tribs />\n";
 }
 
@@ -516,50 +505,30 @@ function cgElement($variables, $fields) {
 }
 
 /**
- * Return autocomplete HTML, if appropriate.
- * @param string $path: autocomplete URL, if any
- * @param string $id: id of the associated text input element
- * @return HTML (empty if path is empty)
- */ /*
-function rcAuto($path, $id) {
-  if (!$path) return '';
-//  \drupal_add_library('system', 'drupal.autocomplete');
-
-  $type = 'hidden';
-  $id .= '-autocomplete';
-  $value = url($path, array('absolute' => TRUE));
-  $disabled = 'disabled';
-  $class = 'autocomplete';
-  $tribs = u\tribs(compact(ray('type id value disabled class')));
-  return "<input $tribs />";
-}*/
-
-/**
  * Return HTML for a button-like link with a spinner.
  * @param string $href: where to go.
  */
 function spinLink($href, $text, $id = '', $style = 'primary', $size = 'md', $other = []) {
   $dataStyles = ray('zoom-in zoom-out slide-left slide-right'); // slide-up slide-down don't work well on menus
   $dataStyle = $dataStyles[rand(0, count($dataStyles) - 1)];
-  list ($tag, $class, $attrs) = ['a', "btn btn-$style btn-$size", 'href id']; // default tag, class, and attribs
+  list ($tag, $class, $attrs) = ['a', "btn btn-$style btn-$size", 'class href id']; // default tag, class, and attribs
 //  if ($id == 'edit-nextStep') $class .= ' center-block';
   if (!$id) unset($id);
   
   if ($href == 'submit') { // submit button
     list ($type, $value, $name, $tag) = ['submit', $text, 'op', 'button']; // name must be "op" for Drupal
-    $attrs = 'type name id value';
+    $attrs = 'class type name id value';
   } else { // menu (or list) -type link (not a button)
     if ($href[0] == '/') $href = BASE_URL . $href;
     if (mb_strpos($href, BASE_URL) !== 0 and mb_substr($href, 0, 4) == 'http')  $other += w\away();
     if (!$size) $class = $style;
   }
 
-  if ($class2 = @$other['class']) {$class .= ' ' . (is_array($class2) ? join(' ', $class2) : $class2); unset($other['class']);}
-  if (!@$other['target']) $class .= ' ladda-button'; // don't spin if opening a window
+  if ($class2 = nni($other, 'class')) {$class .= ' ' . (is_array($class2) ? join(' ', $class2) : $class2); unset($other['class']);}
+  if (!nni($other, 'target')) $class .= ' ladda-button'; // don't spin if opening a window
 
-//  foreach ($other + compact(ray($attrs)) as $k => $v) if ($v = plain($v)) $attrs2 = @$attrs2 . " $k=\"$v\"";
-  $attrs2 = u\tribs($other + @compact('class', ray($attrs)));
-  //$attrs2 = \drupal_attributes($other + compact(ray($attrs)));
+  foreach (ray($attrs) as $k) if (isset($$k)) $other[$k] = $$k;
+  $attrs2 = u\tribs($other);
 
   return <<<EOF
   <$tag $attrs2 data-style="$dataStyle">

@@ -38,7 +38,7 @@ X;
   		$start = u\fmtDate($start, TRUE);
   		$end = empty($end) ? t('indefinite') : u\fmtDate($end, TRUE);
 		} else {
-      $args = http_build_query(@compact($fields, 'automatic'));
+      $args = http_build_query(compact($fields, 'automatic'));
       if (!test()) $args = u\urlify($args);
       $args = 'print/' . $args;
   		$start = u\fmtDate($start, TRUE);
@@ -54,7 +54,7 @@ X;
     $rows[] = u\tableRow(compact($fields));
   }
 
-  if (@$rows) {
+  if (nn($rows)) {
     $rows = join($rows, "\n");
     $list = <<< X
     <table id="coupons">
@@ -83,13 +83,13 @@ function showDiscounts() {
   $payerCheck = u\genRuleSQL('payer', ':myid');
   $sql = <<< X
     SELECT `from` AS sponsor, `amount`, `portion`, `purpose` AS `on`, `end`, payerType, payer, useMax, uid, amtMax,
-    (SELECT IFNULL(SUM(e.amount), 0) FROM tx_entries e WHERE e.uid=:myid AND e.rule IS NOT NULL AND e.rule=r.id) AS `amtUsed`,
-    (SELECT IFNULL(SUM(SIGN(e.amount)), 0) FROM tx_entries e WHERE e.uid=:myid AND e.rule IS NOT NULL AND e.rule=r.id) AS `used`
-    FROM tx_rules r JOIN users u ON r.`from`=u.uid
+    (SELECT IFNULL(SUM(e.amount), 0) FROM tx_entries e WHERE e.uid=:myid AND e.rule IS NOT NULL AND e.rule=ru.id) AS `amtUsed`,
+    (SELECT IFNULL(SUM(SIGN(e.amount)), 0) FROM tx_entries e WHERE e.uid=:myid AND e.rule IS NOT NULL AND e.rule=ru.id) AS `used`
+    FROM tx_rules ru JOIN users u ON ru.from=u.uid
     WHERE $payerCheck
     AND (u.community=:ctty OR $nearby)
-    AND (r.action = :ACT_SURTX)
-    AND (r.start <= :NOW AND IFNULL(:NOW < r.end, TRUE))
+    AND (ru.action=:ACT_SURTX AND ru.to=:MATCH_PAYER)
+    AND (ru.start <= :NOW AND IFNULL(:NOW < ru.end, TRUE))
 		ORDER BY end IS NOT NULL, end
 X;
   $q = db\q($sql, $subs = ray('ctty state lat lon myid', $mya->community, $mya->state, $mya->latitude, $mya->longitude, $myid));
@@ -100,7 +100,7 @@ X;
 		$company = $a->bestName;
  		$end = $end ? u\fmtDate($end, TRUE) : '--';
     $left = $useMax > 0 ? t('%left of %useMax', 'left useMax', $useMax - $used, $useMax) : t('no limit');
-    $for = /* $some ? t('you+') : */ t('anyone');
+    $for = $payerType == REF_GROUP ? t('you+') : t('anyone');
     if ($amount != 0) {
       if($portion != 0) {
         $amount = u\fmtAmt($amount) . ' + ' . u\fmtAmt($portion*100, '%');
@@ -115,7 +115,7 @@ X;
     $rows[] = u\tableRow(compact($fields));
   }
 
-  if (@$rows) {
+  if (nn($rows)) {
     $rows = join($rows, "\n");
     $list = <<< X
     <table id="coupons">

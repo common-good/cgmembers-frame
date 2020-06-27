@@ -1,3 +1,113 @@
+2020-06-27 feature/move-change-uid
+. moved changeUid function to admin and made deleteUid work when account is current
+. suppressed submit-on-Enter on Summary page
+
+2020-06-26 feature/sellcg
+. ask in company signup whether they want to sell CG
+. fixed bug that kept tellAdmin from sending right replyTo address
+. fixed bug that kept accounts from being deleted when they had a rule or template
+
+2020-06-25 feature/misc2
+. unset account fields now generate a warning
+. fixed some undiscovered bugs (from the new warnings)
+. fixed formatting on AltId and Tickle
+. improved unsubscribe page to give choice boxes
+. fixed bug in endorsement (if member submits without saying sign or not sign)
+. added alert to CO to deliver a phone
+. flipped ownPhone (in signup-co.inc) to needPhone, to avoid invoice denials
+. fixed risks test
+. automated renaming of photo ID files on change of account uid
+
+2020-06-23 feature/misc
+. fixed bug in photo.inc so company photos now resize properly
+. fixed bug in photo.inc croppic.js javascript to display error messages properly
+. unsubscribe ZAP notes (any anonymous notes) are now labeled as "self"
+. SSN verification now uses Curl, to accommodate file_get_contents's inability to handle SSH on our new server
+. fixed display of DOB, Alt ID, etc.
+. added a flip bit so companies can choose between a Donate button and a Buy Credit button
+. fixed several small bugs that generated warnings and display anomalies
+. fixed bug in Actual Donations to CG query
+
+2020-06-17 feature/config-models
+. created better models for config files and documentation for their values
+. created (partially tested) .sh versions of batch files for recreating database and phinx commands
+. deleted some unneeded files
+
+2020-06-17 hotfix/typos
+. fixed a typo causing partner signup to fail
+. reversed a change in rcron handling of acctRisk (that failed)
+. fixed error in forms.inc that tried to trim arrays
+
+2020-06-15 feature/tidy
+. input is now always trimmed except passwords
+. formPhp error handling simplified
+. bug fixed in checking for not underage in formAdminPanel
+. crumbs removed from prefs (now just in standalone page)
+. unused catches removed
+. poBox risk check fixed
+. account risk tests separated
+. bug fixed in company photo sizing
+. warnings fixed
+
+2020-06-13 feature/handle-errors
+. revamped error handling so:
+  - on production all errors generate an email to admin, user sees a friendly apology on fatal error, otherwise nothing
+  - on dev all errors die with stack trace, except from PHP window where the error is displayed without a stack trace
+  - errors and exceptions are handled in a single function in errors.inc
+  - even warnings are errors
+
+2020-06-13 feature/no-at
+. replaced most @-sign error suppression with try blocks and nn() and nni()
+. exempted formPhp from crashes on error
+
+2020-06-10 feature/verifyid-fix
+. require dob no matter how ID is verified (so bug fix of spurious warning is moot)
+. warnings now cause fatal error
+. fixed bug in verifyid that forgot to ask for legalName
+
+2020-06-09 feature/findco-redo
+. revamped find-co to handle state/region selections better
+. fixed spacing on shouters.inc
+. added "building" to u\getLocus
+. fixed bug that returned FALSE instead of empty array in be\getTxs()
+
+2020-06-08 feature/invite-overhaul
+. added button on admin panel to send data to SMT
+. restricted access to food fund for new recipients to future rules
+. added sawVideo bit to shouters
+. it asks now why not if a new member won't endorse
+. simplified invitation process and improved invitation form, including a working link for "unsubscribe"
+. we now ask why when someone clicks unsubscribes, and mark them "ZAP" automatically
+. began a page for links to email CG
+
+2020-06-04 hotfix/text-fieldlen
+. added a failsafe to db\del to complain about a call like db\del($tnm, 3);
+. changed default fieldlen for text fields to 4096
+
+2020-06-01 feature/stepup-dup
+. fixed bug that restarted recurring donations on submission of stepup
+. made stepup callable without signing in
+. fixed transaction row coloring
+. moved stepups to community menu
+
+2020-06-01 feature/bugs
+. simplified be\getTxs to use txs instead of tx_hdrs and tx_entries
+. removed time limit on 50% (instead of 100%) portion for Buy Credit templates
+. finally fixed bug that left tx history columns askew when a multiline description was followed by a surtx
+
+2020-05-31 feature/invite-all
+. finished preparing invite page for appeal to members, etc.
+
+2020-05-31 feature/little-stuff
+. fixed bug that showed step-ups on discounts list
+. added asof field to mailchimp export, so we can be sure something goes only to members
+. fixed exception handler so no white screen of death
+. added usePhoto to public invitation form and changed the quote to "Common Good could have a huge positive impact..."
+. added "region" to backing page text
+. fixed bug that showed error message in contact form for Co-op Power members
+. discounts available to you now shows "you+" when appropriate, instead of "anyone"
+. specifying drivers license now completes verifyid step
+
 2020-05-27 feature/exceptions
 . added backslash before "Exception" in non-working catches
 . unsent notices are no longer marked sent

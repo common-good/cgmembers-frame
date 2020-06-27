@@ -6,8 +6,6 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
-define('PHOTOID_DIR', R_PICTURE_DIR . '/photoids');
-
 /**
  * Ask new member to verify their identity.
  */
@@ -15,33 +13,34 @@ function formVerifyId($form, &$sta, $args = '') {
   global $mya;
   
   if ($mya->stepIsDone('ssn') and !$mya->admin) return w\goNextStep(''); // don't allow DIY redo after SSN is verified
-  extract(just('method', $args, -1));
+  extract(just('setMethod', $args, -1));
 
+  jsx('verifyid', 'method', $setMethod);
   $title = t('Identity Verification');
   $subtext = t('As a registered Money Services Business, we are required by law to verify your identity. Fortunately, we have <%aSecure>top notch security</a>. How do you want to do it?', '_aSecure', atag(r\promoLink('about-us/privacy-and-security')));
-  $legalName = textFld(t('Your Legal Name:'), [t('Legal name'), t('If your legal name is longer or different from the name on your %PROJECT card ("%fullName"), type it here. Otherwise you can leave it blank.', 'fullName')]);
-  $methodChoices = ray(t('Upload driver\'s license.,Upload other state-issued photo ID.,Type your social security number and birth date. This is simplest and is required by the states of Vermont and Massachusetts if you are going to be <i class="loud">accepting</i> more than $%MINIMA1099MAVT a year in payments through %PROJECT (including receiving rebates).'));
-  $field = radiosFld(' ', '', required(-1), $methodChoices);  
+  $legalName = textFld(t('Your Legal Name:'), [t('Legal name (if different)'), t('If your legal name is longer or different from the name on your %PROJECT card ("%fullName"), type it here. Otherwise you can leave it blank.', 'fullName', $mya->fullName)]);
+  $methodChoices = ray(t('|Upload driver\'s license.|Upload other state-issued photo ID.|Type your social security number and birth date. This is simplest and is required by the IRS if you <i class="loud">accept</i> more than $20,000 a year in payments through %PROJECT and by the states of Vermont and Massachusetts if you accept more than $%MINIMA1099MAVT a year (not including purchase rebates offered by %PROJECT businesses).'));
+  $method = radiosFld(' ', '', required(-1), $methodChoices);  
   $idtype = textFld(t('ID Type:'), [t('Type of ID')]);
   $file = fileFld(t('ID File:'), t('Take a photo of your ID and upload it here (or email it us at %CGF_EMAIL).'));
   extract(ssnFields(!$mya->co), FALSE);
-  jsx('verifyid', compact('method'));
 
-  $form = compact(ray('title subtext field idtype file federalId dob')) + w\setupFoot(t('Submit'), [], TRUE);
+  $form = compact(ray('title subtext method idtype file legalName federalId dob')) + w\setupFoot(t('Submit'), [], TRUE);
   return cgform($form);
 }
 
 function formVerifyId_validate($form, &$sta) {
   global $mya;
-  extract(just('field idtype', $sta['input']));
+  extract(just('method idtype', $sta['input']));
 
   if (!is_dir(PHOTOID_DIR)) mkdir(PHOTOID_DIR, 0755) or u\FAIL('cannot create photo ID directory'); // required for tests
 
-  if ($field == 2) {
-    $res = formBasic_validate($form, $sta, FALSE, 'federalId dob');
-    return $res ? '' : w\go('/settings/verifyid/method=2');
-  }
-
+  $ssnMethod = ($method == 2); // user chose SSN verification
+  $checkFlds = $ssnMethod ? 'federalId dob' : 'dob';
+  if (!formBasic_validate($form, $sta, FALSE, $checkFlds)) return w\go('/settings/verifyid/setMethod=' . $method);
+  if ($ssnMethod) return;
+  
+  // not SSN verification
   foreach (ray('name type tmp_name error size') as $k) $$k = $_FILES['files'][$k]['file'];
   if ($size > MAX_ID_SIZE * 1024 * 1024) return say(t('That file is too big. It must be under %MAX_ID_SIZE MB'), 'err');
   if ($error) return say(t('File upload failed. Maybe try emailing it?'), 'err');
@@ -58,15 +57,16 @@ function formVerifyId_submit($form, &$sta) {
   global $mya;
   extract(just('legalName filedata dob federalId', $sta['input'], NULL));
 
+  $mya->update('legalName dob yob', $legalName ?: $mya->fullName, $dob, date('Y', $dob)); // must precede ->verifySsn...
+
   if (nn($filedata)) {
     $filedata = unserialize($filedata);
     r\tellAdmin('id to verify', $filedata, TRUE, $filedata['path']);
   } else {
-    $mya->update(compact(ray('federalId dob'))); // both federalId and dob are needed here
+    $mya->update(compact('federalId'));
     $mya->verifySsnInBackground();
   }
-  
-  $mya->update('dob yob legalName', $dob, date('Y', $dob), $legalName ?: $mya->fullName);
+
   say(t('info saved'));
 
   return (!nn($filedata) and $mya->stepCount() > 1) ? w\skipStep('ssn', 'verifyid') : w\goNextStep('verifyid');
