@@ -216,8 +216,9 @@ function cgform($form, $labeled = TRUE) {
     if (!is_array($v)) { // these common fields can be specified simply
       $form[$k] = $v = in($k, ITEM_FLDS) ? item($v)
       : ($k == 'submit' ? submit($v)
+      : ($k == 'noEnter' ? submit('', '', '', disabled()) // prevent Enter from submitting form (must precede submits)
       : ($k == 'frm' ? hidFld($v)
-      : u\FAIL("field $k is not an array: " . pr($v)) ));
+      : u\FAIL("field $k is not an array: " . pr($v)) )));
     }
     
     $type = nni($v, '#type');
@@ -2127,7 +2128,7 @@ function atagB($href, $style = 'primary', $size = 'xs', $extras = []) {
  */
 function atag($href, $extras = []) {
   if (is_string($extras)) $extras = ['id' => $extras];
-  if (nni($extras, 'role') != 'button') $extras += ['tabindex' => '-1'];
+  if (nni($extras, 'role') != 'button') $extras += notab();
   if (substr($href, 0, 1) == '/') $href = BASE_URL . $href;
 // NO  if ($href[0] == '$') $href = 'javascript:' . substr($href, 1);
   if ($href and !u\starts($href, BASE_URL)) {
@@ -2278,3 +2279,5 @@ function jsx($script, $args = '') {global $scriptScraps; $scriptScraps[$script] 
 function softErr($msg) {w\say($msg, 'err'); return w\go('empty');}
 function clearHeaders() {if (!headers_sent()) header_remove();}
 function skipButton() {return button(t('Skip for now'), '/settings/skip', t('Leave this step for last'), 'default', 'xs', ['class' => 'skip']);}
+function notab() {return tabindex(-1);}
+function tabindex($n) {return ['tabindex' => $n];}

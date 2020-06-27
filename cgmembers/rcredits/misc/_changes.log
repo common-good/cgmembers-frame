@@ -1,3 +1,7 @@
+2020-06-27 feature/move-change-uid
+. moved changeUid function to admin and made deleteUid work when account is current
+. suppressed submit-on-Enter on Summary page
+
 2020-06-26 feature/sellcg
 . ask in company signup whether they want to sell CG
 . fixed bug that kept tellAdmin from sending right replyTo address

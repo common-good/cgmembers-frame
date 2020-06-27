@@ -2,6 +2,7 @@
 
 .debug {margin-bottom:8px;}
 .debug pre {margin:0; background-color:#fde8ec;}
+#edit-noEnter {display:none;}
 
 .container {display:table; width:100%;}
 .thead {display:table-header-group;}

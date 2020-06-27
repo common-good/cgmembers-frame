@@ -941,12 +941,19 @@ function formTestResults($form, &$sta) {
 
 /**
  * Delete an account (superAdmin only)
- * @param int $uid: account to delete
+ * @param mixed $uid: account to delete (uid, qid, acct or 'this')
  */
 function deleteAccount($uid) {
   global $mya;
-  r\deleteAccount($uid);
+
+  if (is_object($a = $uid)) $uid = $a->id;
+  if ($uid == 'this') {
+    $uid = $mya->id;
+  } elseif (!is_numeric($uid)) { $uid = r\acct(strtoupper($uid))->id; } // qid
+  
+  if (!$uid) return w\softErr(t('You must not delete account zero.'));
   if ($uid == $mya->id) r\setAcct(1); // don't leave us on a deleted account (switch to superAdmin)
+  a\deleteUid($uid);
   return w\go('/sadmin/followup');
 }
 
