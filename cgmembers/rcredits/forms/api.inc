@@ -84,7 +84,7 @@ function validateUserId($userId, $request) {
   extract(just('cgId fullName email phone address city state zipCode', $request, null));
   $userA = r\acct($cgId);
   if (! $userA) { return [ 'status' => 'BAD', 'error' => 'Common Good Account not found', 'cgId' => $cgId]; }
-  if (! u\similar($userA->fullName, $fullName, 5, .5) or !($userA->phone == u\fmtPhone(@$phone, '+n') or $userA->email == $email)) {
+  if (! u\similar($userA->fullName, $fullName, 5, .5) or !($userA->phone == u\fmtPhone(nn($phone), '+n') or $userA->email == $email)) {
     return [ 'status' => 'BAD', 'error' => t('That does not appear to be your correct %PROJECT member ID.'), 'cgId' => $cgId];
   }
   return [ 'status' => 'OK', 'cgId' => $cgId ];

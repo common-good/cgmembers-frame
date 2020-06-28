@@ -817,7 +817,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   if ($err = r\txPermErr($payeeA, $payerA, TRUE)) return r\txErr($err, $subs);
   if (r\dupTx($payee, $payer, -$amount)) return r\txErr(t('duplicate transaction'), $subs);
   
-  if (! $status) { $status = ($channel != TX_FOREIGN and r\relation(':IS_AUTOPAY', $payee, $payer)) ? TX_APPROVED : TX_PENDING; }
+  u\setDft($status, ($channel != TX_FOREIGN and r\relation(':IS_AUTOPAY', $payee, $payer)) ? TX_APPROVED : TX_PENDING);
   $data = serialize($extra);
   $info = compact(ray('amount payer payee status purpose created flags data recursId'));
   $nvid = db\insert('r_invoices', $info, 'nvid');
