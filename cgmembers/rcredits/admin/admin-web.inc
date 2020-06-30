@@ -87,7 +87,7 @@ function export($params) {
       . ' created activated signed helper iCode balance rewards savingsAdd minimum share risk trust'
       . ' community co gross employees achMin pinThreshold lastiCode tenure moves mediaConx jid'
       . ' owns bankName slave closed notices secret'
-  : ($chimp ? 'id name phone email city state zip community type ecode asof'
+  : ($chimp ? 'id name firstname lastname phone email city state zip community type ecode asof'
   : 'id fullName manages lastTx solar snap phone email address city state zip community type ecode modified created');
   u\csv($fields = ray($fields), $delimiter);
 
@@ -118,7 +118,7 @@ function export($params) {
         $bankName = db\get('name', 'r_banks', 'route=:routing', compact('routing'));
       } else $bankName = '';
     } else {
-//      list ($first_name, $last_name) = u\parseName($fullName);
+      list ($firstname, $lastname) = u\parseName($fullName);
       $name = $a->fullName;
       $email = $a->email;
       $phone = $a->phone;
