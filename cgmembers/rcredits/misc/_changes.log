@@ -1,3 +1,6 @@
+2020-06-30 hotfix/invite-link
+. changed invite link from promo site to member site (bug fix)
+
 2020-06-27 feature/move-change-uid
 . moved changeUid function to admin and made deleteUid work when account is current
 . suppressed submit-on-Enter on Summary page
