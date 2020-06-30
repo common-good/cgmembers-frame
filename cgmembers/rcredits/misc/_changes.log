@@ -1,3 +1,6 @@
+2020-06-30 hotfix/export-firrstname
+. added firstname and lastname to mailchimp export
+
 2020-06-30 hotfix/invite-link
 . changed invite link from promo site to member site (bug fix)
 
