@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.53y'; // software version
+const R_VERSION = '3.53z'; // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
