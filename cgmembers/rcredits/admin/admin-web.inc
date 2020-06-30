@@ -118,7 +118,8 @@ function export($params) {
         $bankName = db\get('name', 'r_banks', 'route=:routing', compact('routing'));
       } else $bankName = '';
     } else {
-      list ($firstname, $lastname) = u\parseName($fullName);
+      list ($firstname, $lastname, $mid) = $a->co ? [$a->fullName, '', ''] : u\parseName($a->fullName, TRUE);
+      if (strlen($firstname) < 2 and strlen($mid) > 2) $firstname = $mid;
       $name = $a->fullName;
       $email = $a->email;
       $phone = $a->phone;
