@@ -40,7 +40,7 @@ function formGet($form, &$sta, $args = '') {
     $where .= in($k, 'in other') ? 'amount>0' : 'amount<0';
     $where .= $k == 'other' ? ' AND deposit<>0 AND completed=0' : ' AND deposit=0';
     if ($amt = db\sum('ABS(amount)', 'r_usd', $where, $subs)) {
-      $link = $k == 'other' ? t('not cancelable') : tr(" <a class=\"buttino\" href=\"$base_url/get/cancel=$k\">%text</a>", 'text', t('Cancel'));
+      $link = $k == 'other' ? t('(not cancelable)') : tr(" <a class=\"buttino\" href=\"$base_url/get/cancel=$k\">%text</a>", 'text', t('Cancel'));
       $text = $k == 'out' ? t('%link %amt from %PROJECT to your bank account.')
       : t('%link %amt from your bank account to %PROJECT.');
       $wait = tr($text, 'amt _link', u\fmtAmt($amt), $link);
