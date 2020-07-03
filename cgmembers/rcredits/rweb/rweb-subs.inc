@@ -737,9 +737,16 @@ function sanitizePage($page) {
   $page = preg_replace("~$except~", '', $page);
 
   if ($tags = preg_match(FORBID_TAGS, $page, $matches) or preg_match(FORBID_ATTRS, $page, $matches)) {
-  $msg = t('Page has a forbidden HTML %thing: %what', 'thing what', $tags ? t('tag') : t('attribute'), pr($matches));
-  if (isPRODUCTION) w\hack($msg);
-/**/ die($msg);
+    $msg = t('Page has a forbidden HTML %thing: %what', 'thing what', $tags ? t('tag') : t('attribute'), pr($matches));
+    if (isPRODUCTION) w\hack($msg);
+    
+  	if (isDEV) {
+      header_remove('Content-Security-Policy'); // let us show styles
+      $page = str_replace('pre>', 'WASPRE>', $page);
+      $m = htmlentities($matches[0]);
+      $msg .= '<br><br>' . str_replace($matches[0], "--><code style=\"background-color:yellow;\">$m</code>", $page);
+    }
+/**/die($msg);
   }
 }
 

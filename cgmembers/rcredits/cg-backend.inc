@@ -788,25 +788,25 @@ function checkForShortfall($goods, $payer, $payee, $actorA, $otherA, $needed, $f
  * @param numeric $amount: the invoiced amount
  * @param string $purpose: description of the transaction's purpose (user input)
  * @param assoc $extra:
- *    goods: what we're trading in, defaults to FOR_GOODS
  *    shid: record id of related record in r_shares
- *    status: ?
+ *    status: used by acct->payApproved to mark transaction approved
  *    created: UNIXtime
  * @param int $recursId: record ID of related record in tx_templates (if any)
  * @return simple array: 
  *    ok: success?
  *    index: index to result message string (if success, the index begins with "report ")
  *    subs: replacement parameters, specific to the message
+ *
+ * NOTE: goods is no longer allowed in $extra, it's its own parameter
  */
 function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra = [], $recursId = 0) {
   global $channel;
   
   u\EXPECT(compact(ray('payeeA payerA amount purpose')), 'acct acct float string');
-  $ks = 'status';
-  extract(just($ks, $extra));
-  extract(just('goods created', $extra, [FOR_GOODS, now()]));
+  u\EXPECT(! array_key_exists('goods', $extra), 'invoice() no longer accepts goods in extra');
+  extract(just('created status', $extra, [now(), null]));
   $flags = 0;
-	foreach (justNOT("status shid coupon coupid force inv api request created for", $extra) as $k => $v) {
+  foreach (justNOT("status shid coupon coupid force inv api request created for", $extra) as $k => $v) {
     u\setBit($flags, $k, $v);
     unset($extra[$k]); // don't leave bits in extras (data field)
   }
@@ -831,14 +831,15 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   } else { // pre-approved!
     if (!$payerA->shortfall(TX_TRANSFER, $amount)) { // don't try to pay yet if short
       list($ok, $msg) = be\payInvoice($nvid);
-      if (!$ok) r\tellAdmin(t('invoice payment failed'), compact('msg') + $subs + $info);
+      if (!$ok) { r\tellAdmin(t('invoice payment failed'), compact('msg') + $subs + $info);
+      } else { $status = TX_PAID; }
     }
   }
 
   $msg = 'report tx';
 //  if ($payeeA->cttyRewardy) $msg .= '|for why';
   if ($amount > 0) $msg .= '|balance unchanged';
-  return [TRUE, $msg, $subs + ray('success nvid', TRUE, $nvid)];
+  return [TRUE, $msg, $subs + ray('success nvid status', TRUE, $nvid, $status)];
 }
 
 /* /\** */

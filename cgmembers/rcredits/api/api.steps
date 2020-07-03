@@ -1,0 +1,225 @@
+<?php
+/**
+ * @file
+ * rPos Steps
+ *
+ * Provide step functions for functional testing.
+ * This file is created automatically by the Gherkin compiler.
+ *
+ * Note, therefore, that most of this file might be changed automatically
+ * when you run the compiler again. This @file description will not be affected,
+ * but all of the function header comments are (re)generated automatically.
+ *
+ * Be assured that no functions will be deleted and the compiler will
+ * not alter code within a function unless you make it look like a function header.
+ *
+ * You may also add statements just below this header (for example "use" and "require_once").
+ */
+
+use CG as r;
+use CG\DB as db;
+use CG\Testing as t;
+use CG\Util as u;
+use CG\Backend as be;
+
+require_once __DIR__ . '/../defs.inc';
+
+if (basename($_SERVER['SCRIPT_FILENAME']) != 'compile.php') {
+  require_once __DIR__ . '/../cg.inc';
+  require_once __DIR__ . '/../cg-testing.inc';
+}
+
+/**
+ * Add additional setup for any or all features or tests
+ */
+function extraSetup() {
+  t\clear(TX_POS);
+}
+
+/**
+ * members: (ARG)
+ *
+ * in: MAKE generateInvoices Setup
+ *     MAKE getInvoiceStatus Setup
+ *     MAKE makePayments Setup
+ *     MAKE signUpUsers Setup
+ *     MAKE validateUserIds Setup
+ */
+function members($list) {return t\members($list);}
+
+/**
+ * relations: (ARG)
+ *
+ * in: MAKE generateInvoices Setup
+ *     MAKE getInvoiceStatus Setup
+ *     MAKE makePayments Setup
+ */
+function relations($relations) {return t\relations($relations);}
+
+/**
+ * transactions: (ARG)
+ *
+ * in: 
+ */
+function transactions($list) {return t\transactions($list);}
+
+/**
+ * agent (ARG) asks device (ARG) to identify (ARG)
+ *
+ * in: 
+ */
+function agentAsksDeviceToIdentify($agent, $device, $qr) {
+  return agentAsksDeviceToIdentifyWithPIN($agent, $device, $qr);
+}
+
+/**
+ * we respond with: (ARG)
+ *
+ * in: 
+ */
+function weRespondWith($args) {
+  global $testOnly; if (!$testOnly) return FALSE;
+  global $rposResult;
+
+  t\output('expecting: ' . pr($args[0]));
+  foreach ($args[0] as $k => $v) {
+    $got = @$rposResult[$k];
+    if ($k == 'descriptions') $v = empty($v) ? [0 => ''] : ray($v);
+    if ($k == 'bad') $v = empty($v) ? [] : ray($v);
+    if ($k == 'can' or $k == 'canMgr') { // currently tests only signed-out permissions
+      if ($k == 'canMgr') $got = @$rposResult['can'] >> (APP_CAN_BITS + 1);
+      $got &= APP_CAN_MASK;
+      $flags = 0;
+      if ($v) foreach (ray($v) as $one) $flags |= u\bit(u\consta('co', $one));
+      $v = $flags & APP_CAN_MASK;
+      if ($k == 'can') {
+        if ($got & (u\bit(CO_MANAGE) << (APP_CAN_BITS + 1))) $v |= (u\bit(CO_MANAGE) << (APP_CAN_BITS + 1)); // make manage bit go away, since it applies to agent
+      }
+    }
+    if ($k == 'device' and $v == '?' and $got) continue; // any value will do for new dev
+    if ($k == 'time' and t\sameTime($v, $rposResult["time"])) continue; // %now time is approximate
+    
+    if ($v != $got) {
+      $v = pr(@$v);
+      t\output("Expected $k=$v, got:" . pr($got));
+      return FALSE;
+    }
+  }
+  return TRUE;
+}
+
+
+/**
+ * member (ARG) with password (ARG) sends (ARG) requests: (ARG)
+ *
+ * in: MAKE generateInvoices MemberWantsToInvoiceAnotherMemberAndSucceeds
+ *     MAKE generateInvoices MemberWantsToInvoiceAnotherMemberAndTheInvoiceIsApproved
+ *     MAKE generateInvoices MemberWantsToInvoiceAnotherMemberAndTheInvoiceIsAutopaid
+ *     MAKE generateInvoices MemberWantsToInvoiceAnotherMemberAndFails
+ *     MAKE generateInvoices AMemberInvoicesAnotherMemberTwiceForTheSameThingAndItWasPaidTheFirstTime
+ *     MAKE generateInvoices AMemberInvoicesAnotherMemberTwiceForTheSameThingAndItWasApprovedTheFirstTime
+ *     MAKE getInvoiceStatus MemberInvoicesAnotherMemberAndGetsPENDINGThenGetsInvoiceStatus
+ *     MAKE getInvoiceStatus MemberInvoicesAnotherMemberAndGetsAPPROVEDThenGetsInvoiceStatus
+ *     MAKE getInvoiceStatus MemberWantsToInvoiceAnotherMemberAndTheInvoiceIsAutopaidThenGetsInvoiceStatus
+ *     MAKE getInvoiceStatus MemberWantsToGetInvoiceStatusAndFailsBecauseTheyDontOwnIt
+ *     MAKE getInvoiceStatus MemberWantsToGetInvoiceStatusForANonexistentInvoice
+ *     MAKE makePayments MemberWantsToPayAnotherMemberAndSucceeds
+ *     MAKE makePayments MemberWantsToPayAnotherMemberButDoesNotHaveEnoughMoney
+ *     MAKE makePayments MemberWantsToPayAnotherMemberAndFails
+ *     MAKE makePayments AMemberPaysAnotherMemberTwiceForTheSameThingAndItWasDoneTheFirstTime
+ *     MAKE signUpUsers MemberWantsToSignUpAnotherMemberAndSucceeds
+ *     MAKE signUpUsers MemberWantsToSignUpSeveralMembersAllOfWhichSucceed
+ *     MAKE validateUserIds MemberWantsToValidateAnotherMemberAccountAndSucceeds
+ *     MAKE validateUserIds UserWantsToValidateAnotherCustomerAccountAndFails
+ *     MAKE validateUserIds UserWantsToValidateSeveralCustomerAccountsSomeOfWhichSucceed
+ *     MAKE validateUserIds UserWantsToValidateAnotherAccountWithWrongPassword
+ */
+function memberWithPasswordSendsRequests($member, $password, $op, $requests) {
+  global $testOnly;
+  return t\hitAPI($op, $member, $password, $requests);
+}
+
+/**
+ * the response op is (ARG) and the status is (ARG) and there are (ARG) responses and they are: (ARG)
+ *
+ * in: TEST generateInvoices MemberWantsToInvoiceAnotherMemberAndSucceeds
+ *     TEST generateInvoices MemberWantsToInvoiceAnotherMemberAndTheInvoiceIsApproved
+ *     TEST generateInvoices MemberWantsToInvoiceAnotherMemberAndTheInvoiceIsAutopaid
+ *     TEST generateInvoices MemberWantsToInvoiceAnotherMemberAndFails
+ *     TEST generateInvoices AMemberInvoicesAnotherMemberTwiceForTheSameThingAndItWasPaidTheFirstTime
+ *     TEST generateInvoices AMemberInvoicesAnotherMemberTwiceForTheSameThingAndItWasApprovedTheFirstTime
+ *     TEST getInvoiceStatus MemberInvoicesAnotherMemberAndGetsPENDINGThenGetsInvoiceStatus
+ *     TEST getInvoiceStatus MemberInvoicesAnotherMemberAndGetsAPPROVEDThenGetsInvoiceStatus
+ *     TEST getInvoiceStatus MemberWantsToInvoiceAnotherMemberAndTheInvoiceIsAutopaidThenGetsInvoiceStatus
+ *     TEST getInvoiceStatus MemberWantsToGetInvoiceStatusAndFailsBecauseTheyDontOwnIt
+ *     TEST getInvoiceStatus MemberWantsToGetInvoiceStatusForANonexistentInvoice
+ *     TEST makePayments MemberWantsToPayAnotherMemberAndSucceeds
+ *     TEST makePayments MemberWantsToPayAnotherMemberButDoesNotHaveEnoughMoney
+ *     TEST makePayments MemberWantsToPayAnotherMemberAndFails
+ *     TEST makePayments AMemberPaysAnotherMemberTwiceForTheSameThingAndItWasDoneTheFirstTime
+ *     TEST signUpUsers MemberWantsToSignUpAnotherMemberAndSucceeds
+ *     TEST signUpUsers MemberWantsToSignUpSeveralMembersAllOfWhichSucceed
+ *     TEST validateUserIds MemberWantsToValidateAnotherMemberAccountAndSucceeds
+ *     TEST validateUserIds UserWantsToValidateAnotherCustomerAccountAndFails
+ *     TEST validateUserIds UserWantsToValidateSeveralCustomerAccountsSomeOfWhichSucceed
+ */
+function theResponseOpIsAndTheStatusIsAndThereAreResponsesAndTheyAre($op, $status, $num, $correctResponses) {
+  global $testOnly; if (!$testOnly) return FALSE;
+  global $rAPIResult;
+
+  extract($rAPIResult, EXTR_PREFIX_ALL, 't');
+          
+  if ($op != $t_op) {
+    t\output("Expected op: $op, got: $t_op");
+    return FALSE;
+  }
+  if ($status != $t_status) {
+    t\output("Expected request status $status, got: $t_status");
+    if (key_exists('error', $rAPIResult)) {
+      t\output("Error was: " . print_r($t_error, TRUE));
+    }                
+    return FALSE;
+  }
+  return t\jsonResponses($correctResponses, $t_responses);
+}
+
+/**
+ * the response op is (ARG) and the status is (ARG) and the error is: (ARG)
+ *
+ * in: TEST validateUserIds UserWantsToValidateAnotherAccountWithWrongPassword
+ */
+function theResponseOpIsAndTheStatusIsAndTheErrorIs($op, $status, $error) {
+  global $testOnly;
+  global $rAPIResult;
+
+  extract($rAPIResult, EXTR_PREFIX_ALL, 't');
+  
+  if ($op != $t_op) {
+    t\output("Expected op: $op, got: $t_op");
+    return FALSE;
+  }
+  if ($status != $t_status) {
+    t\output("Expected status $status, got: $t_status");
+    return FALSE;
+  }
+  if ($error != $t_error) {
+    t\output("Expected error '$error' but got '$t_error'");
+    return FALSE;
+  }
+  return TRUE;
+}
+
+/**
+ * balances: (ARG)
+ *
+ * in: TEST generateInvoices MemberWantsToInvoiceAnotherMemberAndTheInvoiceIsApproved
+ *     BOTH generateInvoices MemberWantsToInvoiceAnotherMemberAndTheInvoiceIsAutopaid
+ *     BOTH generateInvoices AMemberInvoicesAnotherMemberTwiceForTheSameThingAndItWasPaidTheFirstTime
+ *     TEST generateInvoices AMemberInvoicesAnotherMemberTwiceForTheSameThingAndItWasApprovedTheFirstTime
+ *     TEST getInvoiceStatus MemberInvoicesAnotherMemberAndGetsAPPROVEDThenGetsInvoiceStatus
+ *     BOTH getInvoiceStatus MemberWantsToInvoiceAnotherMemberAndTheInvoiceIsAutopaidThenGetsInvoiceStatus
+ *     BOTH makePayments MemberWantsToPayAnotherMemberAndSucceeds
+ *     TEST makePayments MemberWantsToPayAnotherMemberButDoesNotHaveEnoughMoney
+ *     BOTH makePayments AMemberPaysAnotherMemberTwiceForTheSameThingAndItWasDoneTheFirstTime
+ */
+function balances($list) {return t\balances($list);}

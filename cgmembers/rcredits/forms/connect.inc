@@ -53,9 +53,9 @@ function formConnect($form, &$sta, $args = '') {
       $subtext = NULL;
     } else { // during account setup
       $title = t('Getting Money In or Out');
-      $subtext = t('<p>Choose how you want to get money into (or out of) your %PROJECT Account. The first two options are available through %PROJECT only in Western Massachusetts, Ann Arbor Michigan, and Goshen Indiana.</p>');
-      $methodChoices = ray(t('I want to transfer funds to or from my bank account.,My employer will pay me through %PROJECT or I will sell goods and services through %PROJECT.,I live near a store that will put money on my card in exchange for cash.'));
-      $connect = radiosFld(t('Connect How:'), '', required(-1), $methodChoices);
+      $subtext = t('<p>Choose how you want to get money into (or out of) your %PROJECT Account. The third option is available through %PROJECT only in Western Massachusetts, Ann Arbor Michigan, Goshen Indiana, and Madison Wisconsin.</p>');
+      $methodChoices = ray(t('I want to transfer funds to and from my checking account (recommended).,My employer will pay me through %PROJECT or I will sell goods and services through %PROJECT and I do NOT want to connect a checking account.,I live near a store that will put money on my card in exchange for cash and I do NOT want to connect a checking account.'));
+      $connect = radiosFld(t('Connect How:'), '', required(0), $methodChoices);
       $chox = 3; // number of choices
     }
     $chox = hidFld($chox);

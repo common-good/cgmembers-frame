@@ -28,7 +28,7 @@ use CG\Db as db;
  *   do<form>: allow member to visit one specific page
  * Alternatively, code can be an error message (recognized by having a space in it).
  * @param string $args: urlencoded array of arguments passed from an email (from whence $_POST is not reliably received by Drupal)
- * @see also r\makeDo()
+ * @see also acct::makeDo()
  */
 function rdo($code, $args = '') {
 /**/	flog(pr(compact(ray('code args'))));
@@ -50,9 +50,8 @@ function rdo($code, $args = '') {
     extract(just('op v mo expires sql subs', $info, ''));
   }
   
-  $expires = ($mo and r\rdoMonth() > $mo + 3) ? 1 : FALSE; // finagle expiration if link is older than 3 months
-
-  if ($expires and now() >= $expires) return doSay('link expired', 'err');
+  if ($mo and r\rdoMonth() > $mo + 3) $expires = 1; // two ways of handling expiration (after 3 months or after given date)
+  if (nn($expires) and now() >= $expires) return doSay('link expired', 'err');
 
   $channel = TX_LINK;
   

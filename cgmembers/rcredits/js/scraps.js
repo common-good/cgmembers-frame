@@ -40,6 +40,7 @@ function doit(what, vs) {
 
   case 'summary':
     $('#activate-credit').click(function () {post('setBit', {bit:'debt', on:1}, report);});
+    $('#endorse a').click(function () {$('#endorse').hide();});
     break;
     
   case 'tx':
@@ -169,7 +170,7 @@ function doit(what, vs) {
       var size = $('#edit-size').val().replace(/\D/g, '');
       var amt = $('#edit-amount').val().replace(/\D/g, '');
       var img = isButton ? '<img src="https://cg4.us/images/buttons/cgpay.png" height="' + size + '" />' : text;
-      var style = (type == 0 || type == 2) ? '' : ' style="display:inline-block; background-color:darkgreen; border-radius:5px; border:1px solid forestgreen; color:white; font-family:Arial; font-size:17px; padding:8px 15px; text-decoration-line:none;"';
+      var style = type == 1 ? vsprintf(' style="%s"', [vs['style']]) : '';
       var html = vsprintf('<a href="%s/company=%s&for=%s&item=%s&amount=%s"%s target="_blank">%s</a>', [url, vs['qid'], fer, item, amt, style, img]);
       
       if ((isButton ? size : text) != '') {
@@ -464,6 +465,14 @@ function doit(what, vs) {
     if (vs['edit']) {showInviteFlds(); $('#edit-org').keyup();}
     break;
 
+  case 'shouters':
+    $('.rating').click(function () {
+      post('bumpShout', {qid:$(this).attr('qid')}, null);
+      var rating = $(this).attr('rating');
+      $(this).attr('rating', rating == '3' ? 0 : (parseInt(rating) + 1));
+    });
+    break;
+    
   case 'amtChoice':
     var other = jQuery('.form-item-amount'); 
     var amtChoice = jQuery('#edit-amtchoice');

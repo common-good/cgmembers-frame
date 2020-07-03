@@ -28,7 +28,7 @@ function formCGButton($form, &$sta, $args = '') {
   $example = item(t('(Link will appear here)'), t('Link:'));
   $html = areaFld(t('HTML:'), [t('(HTML will appear here)'), t('Copy this HTML into your website or copy the link or button into an email.')]);
   
-  jsx('cgbutton', ray('qid forVals selling', $mya->mainQid, $forVals, $selling));
+  jsx('cgbutton', ray('qid forVals selling style', $mya->mainQid, $forVals, $selling, TEXT_BUTTON_STYLE));
   
   return cgform(compact(ray('title subtext button for item amount text example size html')));
 }

@@ -424,6 +424,11 @@ body.page-partner blockquote {font-size:14px;}
 #frm-shouters .quote {display:block; width:90%; padding-left:35px; font-style:italic; color:#666666; font-weight:normal; text-indent:-7px;}
 #frm-shouters .quote::before,
 #frm-shouters .quote::after {content:"\""; padding:0 1px; color:silver;}
+#frm-shouters .rating {display:inline; margin:0 5px; font-weight:bold;}
+#frm-shouters .rating[rating="0"] {background-color:white; color:black;}
+#frm-shouters .rating[rating="1"] {background-color:yellow; color:black;}
+#frm-shouters .rating[rating="2"] {background-color:blue; color:white;}
+#frm-shouters .rating[rating="3"] {background-color:red; color:white;}
 
 /* Export */
 .form-item-chimpSet, .form-item-chimpSet>.control-label {display:none;}
@@ -711,7 +716,22 @@ body.page-partner blockquote {font-size:14px;}
 }
 
 /* Summary / Member Info / Account Info */
+#frm-summary #endorse {position: absolute; z-index:2; top: 200px; right: 0; bottom: 0; left: 0;}
+#frm-summary #endorse>div {
+  display:block;
+  width:80%;
+  height:50%;
+  margin:auto auto;
+  background-color:#eeeeff;
+  border:2px solid darkblue;
+  box-shadow: 3px 3px 7px #888888; -webkit-border-radius: 10px; border-radius: 10px;
+  padding:20px;
+}
+#frm-summary #endorse div div {display:inline-block; position: relative; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align:center;}
+#frm-summary #endorse div div .btn-large {font-weight:bold; -webkit-border-radius: 30px; border-radius: 30px; margin-bottom:10px;}
+
 #frm-summary .form-item-special {background-color:lightyellow;}
+#frm-summary #edit-special .invite {font-weight:normal; color:#66cc00;}
 #frm-summary #edit-shortcuts a {display:block;}
 #frm-summary .form-item-left {float:left; width:50%;}
 #frm-summary .form-item-right {float:right; width:50%;}
@@ -867,7 +887,7 @@ body.page-partner blockquote {font-size:14px;}
 #frm-verifyid .form-item-idtype {display:none;}
 
 /* Bank Info */
-#frm-connect #connectFields2 {margin:20px 0; background:silver; padding:10px;}
+#frm-connect #connectFields2 {margin:20px 0; background:##e0e0e0e0; padding:10px;}
 #frm-connect #connectFields2 .fieldset-wrapper {background:url(../images/check-hint.png) no-repeat right top; background-size:25%;}
 #frm-connect #edit-checkHint {position:absolute; left:850px;}
 #frm-connect #edit-checkHint img {width:300px;}

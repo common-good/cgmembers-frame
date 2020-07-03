@@ -12,6 +12,10 @@ use CG\Db as db;
 function formShouters($form, &$sta, $args = '') {
   global $mya;
 
+  extract(just('raw', $args, NULL));
+  if ($raw) return raw();
+
+  jsx('shouters');
   $title = t('Endorsements');
   $ask = item(tr('%SHOUT_TEXT'));
   $footnote = '<b class="footnote">*</b>';
@@ -19,18 +23,26 @@ function formShouters($form, &$sta, $args = '') {
   $posttext = $footnote . ORG_DISCLAIMER;
 
   $sql = <<< X
-    SELECT fullName,city,abbreviation AS st,quote,title AS orgTitle,org,website,community=:ctty AS mine
+    SELECT uid,rating,fullName,city,abbreviation AS st,quote,title AS orgTitle,org,website,community=:ctty AS mine
     FROM u_shouters h 
     LEFT JOIN users u USING (uid) 
     LEFT JOIN r_states s ON s.id=u.state AND s.country_id=u.country
     ORDER BY IFNULL(org, '')='', IFNULL(quote, '')='', fullName
 X;
   $q = db\q($sql, ray('ctty', $mya ? $mya->community : 0));
-  
+
   $dpyFlds = ray('fullName orgTitle org quote');
   $list = '';
   while ($row = $q->fetchAssoc()) {
     extract($row);
+    $a = r\acct($uid);
+    
+    if ($mya->admin) {  // rating: 0=unrated 1=poor 2=normal 3=great
+      $rating = <<< X
+        <div class="rating" qid="$a->mainQid" rating="$rating">*** </div>
+X;
+      $quote = $rating . w\lnk("/do/doInvite~$a->mainQid~$a->emailCode", $quote); // editable for admins
+    } elseif (!$rating) continue;
 
     $fullName .= ', ';
 
@@ -38,8 +50,30 @@ X;
       if ($orgTitle and $org) $orgTitle .= ', ';
       if ($org and $website) $org = lnk('http://' . $website, $org);
     } else { list ($orgTitle, $org) = ["$city, ", $st]; }
+      
     $list .= u\ray2row(compact($dpyFlds));
   }
   
   return cgform(compact(ray('title ask signed list posttext')));
+}
+
+function raw() {
+  $sql = <<< X
+    SELECT uid,fullName,city,abbreviation AS st,quote
+    FROM u_shouters h 
+    LEFT JOIN users u USING (uid) 
+    LEFT JOIN r_states s ON s.id=u.state AND s.country_id=u.country
+    WHERE u.:IS_OK AND IFNULL(quote, '')<>'' AND h.created>:NOW-7*:DAY_SECS
+    ORDER BY rating DESC, RAND()
+X;
+  $q = db\q($sql);
+  
+  while ($row = $q->fetchAssoc()) {
+    extract($row);
+    list ($first, $last, $middles) = u\parseName($fullName);
+    $nm = $first . ' ' . substr($last, 0, 1);
+    $res[] = [$quote, "$nm ($city, $st)"];
+  }
+  echo json_encode($res);
+  exit();
 }

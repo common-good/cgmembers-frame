@@ -1016,12 +1016,20 @@ function notices() {
 
 function notice1($item) {
   extract(just('uid daily weekly monthly', $item));
-  $now = now();
-  if ($args = r\noticeArgs($uid, 'NOT sent', $weekly, $monthly)) {
-    $args['messages'] = str_replace('stule=', 'style=', $args['messages']); // revert in emails (but CSP forbids inline styles online)
-    if (!r\notify($uid, 'notices', $args, TRUE)) return;
-    db\q('UPDATE r_notices SET sent=:now WHERE uid=:uid AND NOT sent', compact('uid', 'now'));
-  }
+
+  if (!$args = r\noticeArgs($uid, 'NOT sent', $weekly, $monthly)) return;
+  $a = r\acct($uid);
+
+  if ($a->ok) {
+    $link = BASE_URL . "/do/doInvite~$a->mainQid~$a->emailCode~" . (r\rdoMonth() + 12);
+    list ($question, $btnText) 
+    = ($a->co or $a->shouter) ? ['', t('Invite Someone!')] : [t('If you support %PROJECT, please say so! '), t('Endorse')];
+    $args['shout'] = '<p><br>' . $question . w\lnk($link, $btnText, ray('stule', TEXT_BUTTON_STYLE)) . '</p>';
+  } else { $args['shout'] = ''; }
+  
+  if (!test()) foreach (ray('messages shout') as $k) $args[$k] = str_replace('stule=', 'style=', $args[$k]); // revert in emails (CSP forbids inline styles online)
+  if (!r\notify($uid, 'notices', $args, TRUE)) return;
+  db\q('UPDATE r_notices SET sent=:NOW WHERE uid=:uid AND NOT sent', compact('uid'));
 }
 
 /**

@@ -141,7 +141,7 @@ function formSignup_submit($form, &$sta) {
   
   if (nn($source2) == 'food') $mya->stepDone('food', FALSE); // signed up through Food Fund promo (cg4.us/food), so add this special step
   
-  if (nn($iCode) < 0) w\invitation($code, $myid); // mark the invitation used
+  if (nn($iCode) < 0) w\invitation(nn($code), $myid); // mark the invitation used
   $email = u\cry('P', $email);
   db\q('UPDATE r_invites SET invitee=:myid WHERE email=:email', compact('myid', 'email')); // and all such
   if (!nn($owns)) $mya->setRisk('rents');
