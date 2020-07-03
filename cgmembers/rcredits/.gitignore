@@ -1,6 +1,5 @@
 GoogChart.class.php
 *.test
-doSay.txt
 *.crt
 OLD/
 GnuMICR.ttf
@@ -8,5 +7,3 @@ unminified/
 test/
 dosay-status.txt
 dosay-error.txt
-gf.bat
-graveyard.txt

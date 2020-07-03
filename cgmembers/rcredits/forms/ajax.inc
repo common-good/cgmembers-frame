@@ -84,6 +84,8 @@ function ajax() {
   } elseif ($op == 'whoami') { // return one or more data fields
 //    $data = just('fullName', ray($data)); // limit what we can get to what we need
     return $mya ? ajaxRet(ray('whoami', "$mya->fullName ($mya->mainQid)")) : ajaxErr('no current account!');
+  } elseif ($op == 'bumpShout') {
+    db\q('UPDATE u_shouters SET rating=IF(rating=3, 0, rating+1) where uid=:uid', ray('uid', r\qo($data->qid)->id));
   } else return ajaxErr(t('Invalid op'));
   return ajaxMsg(t('Done!'));
 }

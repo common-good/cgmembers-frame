@@ -1,3 +1,19 @@
+2020-07-03 feature/push-endorse
+. deleted some unused things from .gitignore and rcredits/.gitignore
+. fixed a couple undefined index warnings
+. fixed bug that kept text button from showing as button on cgbutton page
+. added bullets to weekly and monthly email statements
+. added ratings to shouters and a way for admin to bump them easily or edit the quote
+. added a request for a raw list of shouts to use on promo site
+. fixed text on connect page
+. clarified endorse page
+. fixed expiration bug in rdo
+. fixed bug that disallowed amounts over 100 on stepup page (for non-percents)
+. added popup endorse button on Summary page
+. fixed bug that suppressed DOB on Summary page for non-super admins
+. added endorse or invite button to notices
+. added highlighting to help developers when CSP catches something
+
 2020-06-30 hotfix/export-firrstname
 . added firstname and lastname to mailchimp export
 

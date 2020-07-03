@@ -17,8 +17,17 @@ function formSummary($form, &$sta) {
   global $base_url;
   global $mya; $myid = $mya->id;
 
-  $special = t('<h4>%PROJECT response to COVID-19</h4>It\'s up to us. Support our local businesses and nonprofits!<ul><li><%aBuyCredit>Buy Credit</a></li><li><%aStepups>Make Step-up Contributions</a></li><li> <%aBack>Increase Your Backing</a></li><li><%aInvite>Invite Someone</a></li></ul>', '_aBuyCredit _aStepups _aBack _aInvite', atag('/community/buy-credit'), atag('/community/stepup'), atag('/community/backing'), atag('/community/invite'));
-  $special = ($mya->ok and !$mya->co) ? compact('special') : [];
+  $special = $endorse = NULL;
+  
+  if ($mya->ok and !$mya->co) {
+    $special = t('<h4>%PROJECT response to COVID-19</h4>It\'s up to us. Support our local businesses and nonprofits!<ul><li><%aBuyCredit>Buy Credit</a></li><li><%aStepups>Make Step-up Contributions</a></li><li> <%aBack>Increase Your Backing</a></li><li><%aInvite>Invite Someone</a></li></ul>', '_aBuyCredit _aStepups _aBack _aInvite', atag('/community/buy-credit'), atag('/community/stepup'), atag('/community/backing'), atag('/community/invite', clas('invite')));
+    if (!$mya->shouter) {
+      $endorseText = t('<h2>We need your help to grow.</h2>');
+      $endorseBtn = btn('/community/invite', t('Endorse %PROJECT'), 'success', 'large');
+      $skipLnk = lnk('', t('Skip for now'), clas('skipLnk'));
+      $endorse = item("<div id=\"endorse\"><div><div>$endorseText<br>$endorseBtn<br>$skipLnk</div></div></div>", BARE);
+    }
+  }
   
   if ($mya->closed) say(t('Your account is closed, but you can still see your account history.'));
 
@@ -134,7 +143,7 @@ function formSummary($form, &$sta) {
   
   jsx('summary');
   
-  return cgform($special + $form);
+  return cgform(compact(ray('special endorse')) + $form);
 }
 
 function formSummary_validate($form, &$sta) {
@@ -497,7 +506,10 @@ function adminSummary() {
     $dob = $altSt = $altId = NULL;
 
     if (!$mya->co) {
-      if ($mya->superAdmin or !$mya->hasDob) $dob = rendA('dob', dateFld(BARE, '', dft($mya->hasDob ? $mya->dob : '') + autofill('off') + clas('noCalendar')));
+      if ($mya->superAdmin or !$mya->hasId) {
+        $dob = $mya->hasDob ? item(u\fmtDate($mya->dob, TRUE), BARE) : dateFld(BARE, '', autofill('off') + clas('noCalendar'));
+        $dob = rendA('dob', $dob);
+      }
       if ($mya->hasFid) {
         if ($dob) $altId = item($dob, t('DOB:'), '', clas('loneDob')); // dob is not shown directly, so show it here if no license is shown
       } else { 
