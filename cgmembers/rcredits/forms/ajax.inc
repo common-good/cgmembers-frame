@@ -17,7 +17,10 @@ use CG\Db as db;
 function ajax() {
   global $channel; $channel = TX_AJAX; // tell log and tellAdmin our environment
   extract(just('op sid data', $args = $_POST ?: $_GET, NULL));
-  if ($_SERVER['HTTP_X_REQUESTED_WITH'] != 'XMLHttpRequest') return ajaxErr('xss'); r\tellAdmin('ajax xss', $args);
+  if ($_SERVER['HTTP_X_REQUESTED_WITH'] != 'XMLHttpRequest') {
+    return ajaxErr('cross-site'); 
+    r\tellAdmin('ajax cross-site', $args + $_SERVER);
+  }
 
   header('Content-Type: application/json');
   $myid = $aid = NULL;
