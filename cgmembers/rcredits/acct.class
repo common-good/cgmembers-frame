@@ -1261,12 +1261,6 @@ o;
     if (!$web) $msg[] = 'you were short';
     $msg[] = $a->hasBank ? ($a->refill ? 'suggest higher target' : 'suggest refills') : 'how to fund';
 
-    /*		
-		$suggested0 = max(R_ACHMIN, (R_SUGGEST_BUMP * $a->minimum) ?: 100);
-		$args['suggested'] = u\fmtAmt($suggested0);
-		$args['_a1'] = $a->makeDo('min', $suggested0);
-    */	
-		
     $args = [];
     if ($a->secret) {
       $args['_aSecret'] = $web ? w\atag('/settings/preferences') : $a->makeDo('nosecret');
