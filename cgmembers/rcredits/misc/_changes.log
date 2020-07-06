@@ -1,3 +1,6 @@
+2020-07-06 feature/inv-security
+. fixed a bug in invoicing that could have allowed anyone to approve payment of an invoice
+
 2020-07-06 feature/misc3
 . changed w\changeWho to report hack when someone tries to change to an account they don't have permission for
 . improved appearance of endorse popup on Summary page

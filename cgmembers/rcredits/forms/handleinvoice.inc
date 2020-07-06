@@ -28,7 +28,12 @@ function formHandleInvoice($form, &$sta, $args = '') {
   extract(just('nvid amount payer payee purpose created data', $inv));
   if ($code) {
     if (test() and $code == 'TESTDOCODE') $code = t\doCode(); // most recently created doCode
-    if (!$info = r\doCode($code)) return hack(t('fake doCode in handleInvoice'));
+    if (!$info = r\doCode($code) 
+      or !$doInfo = db\get('data,uid', 'r_do', ray('doid', nni($info, 'op'))) 
+      or $doInfo['uid'] != $payee
+      or !$doData = unserialize($doInfo['data'])
+      or nni($doData, 'op') != 'inv' or nni($doData, 'v') != $nvid
+    ) return hack(t('fake doCode in handleInvoice'), $info);
     if ($mya and $payer != $mya->id) w\signout(TRUE); // make sure we're signed out of any possibly different acct
   } elseif (!$mya) {
     return hack(t('attempt to handle invoice not signed in'));
