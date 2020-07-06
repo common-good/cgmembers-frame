@@ -28,12 +28,7 @@ function formTxs($form, &$sta, $args = '') {
   if (nn($do)) if ($result = handleTx($do, $xid, $sta, $args)) return $result;
   extract(just('dateRange downloadMsg url starting ending', dateRange($args, 'history/transactions')));
 
-//  $descending = TRUE;
-//  foreach (ray('download agents channels boxes descending') as $k) if (isset($$k)) $optionSet[$k] = $$k;
-
   $summary = fld('markup', '', '', array('markup' => txSummary($starting, $ending, $run)));
-
-
   
   $uids = ($mya->jid > 0) ? [ $mya->id, $mya->jid ] : [ $mya->id ];
   if (nn($download)) {

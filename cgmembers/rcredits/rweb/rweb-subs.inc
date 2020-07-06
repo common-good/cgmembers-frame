@@ -181,8 +181,8 @@ function NEWfld($type, $label, $desc = '', $other = []) {
   if (!$title) $title = $placeholder; // hover text defaults to same as hint
   foreach (['placeholder', 'title'] as $k) if ($$k) $tribs[$k] = $$k;
 
-  foreach (ray('type label required bare help tribs other') as $k) if (isset($$k)) $res[$k] = $$k;
-  return $res; // see rend()
+  $info = []; foreach (ray('type label required bare help tribs other') as $k) if (isset($$k)) $info[$k] = $$k;
+  return $info; // see rend()
 }
 
 // only barely begun

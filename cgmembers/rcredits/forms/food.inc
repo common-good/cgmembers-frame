@@ -98,8 +98,8 @@ X
   
   jsx('amtChoice');
   
-  foreach (ray('title img subtext food or amtChoice amount period accountId pass submit recurs') as $k) if (isset($$k)) $form[$k] = $$k;
-  return cgform($form);
+  $info = []; foreach (ray('title img subtext food or amtChoice amount period accountId pass submit recurs') as $k) if (isset($$k)) $info[$k] = $$k;
+  return cgform($info);
 }
 
 function formFood_validate($form, &$sta) {

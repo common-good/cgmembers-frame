@@ -1485,7 +1485,7 @@ function makeDoCode($ray) {
 }
 
 /**
- * Return
+ * Unencrypt and return a doCode array created by r\makeDoCode
  * See also forms/rdo.inc
  */
 function doCode($code) {
@@ -1495,7 +1495,6 @@ function doCode($code) {
     return u\crypted($code) ? unserialize(u\decry('P', $code)) : '';
   } catch (\Exception $e) {return '';}
 }
-
 
 // Single line functions that need no explanation
 function serverUid($regionId = R_SERVER_ID) {return -1 - R_REGION_MAX * u\a2n($regionId);} // -u\a2n($regionId) - 1;}

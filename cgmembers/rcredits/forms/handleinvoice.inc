@@ -69,13 +69,13 @@ function formHandleInvoice($form, &$sta, $args = '') {
   
   $toMe = hidFld($toMe);
   $hid = w\hidFlds(compact('ret') + $inv);
-
-  foreach (ray('title subtext always pay denySet delSet toMe hid') as $k) if (isset($$k)) $form[$k] = $$k;
-  $form['#validate'] = array('CG\\Web\\formHandleInvoice_validate');
-  $form['#submit'] = array('CG\\Web\\formHandleInvoice_submit');
   w\jsx('dispute');
+
+  $info = []; foreach (ray('title subtext always pay denySet delSet toMe hid') as $k) if (isset($$k)) $info[$k] = $$k;
+  $info['#validate'] = array('CG\\Web\\formHandleInvoice_validate');
+  $info['#submit'] = array('CG\\Web\\formHandleInvoice_submit');
   
-  return cgform($form);
+  return cgform($info);
 }
 
 function formHandleInvoice_validate($form, &$sta) {

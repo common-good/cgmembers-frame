@@ -95,7 +95,7 @@ function formCompany_submit($form, &$sta) {
   $mya->setCoBit(CO_TIP, $tips);
   if ($mya->cAdmin) $mya->setCoBit(CO_FAST, nn($fast));
   if ($mya->cAdmin) $mya->setCoBit(CO_ATM, nn($atm));
-  foreach (ray('description shortDesc website selling employees gross staleNudge dob') as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray('description shortDesc website selling employees gross staleNudge dob') as $k) if (isset($$k)) $info[$k] = $$k;
   $mya->update($info);
     if (nn($categories)) $mya->setCategories($categories);
   return w\goNextStep('company', NULL, $rawInfo);
