@@ -80,13 +80,13 @@ EOF;
     if ($mya->cttyUp) $stopCtty = submi(t('STOP ') . $cttyName); else $startCtty = submi(t('START ') . $cttyName);
   }
 
-  foreach (ray($tables) as $one) $do[$one] = submi($one);
+  $do = []; foreach (ray($tables) as $one) $do[$one] = submi($one);
   $ks = ray('toSMT inviteeStatus signupCos do1099ktest do1099k reconcile special stop start stopCtty startCtty');
   foreach ($ks as $k) if (isset($$k)) $do[$k] = $$k;
   $do = fieldSet('do', $do);
   
   $ks = ray('account make2 printId seeData seeChanges ssnLink seeSecure resetSSN askForAppData seeAppData');
-  foreach ($ks as $k) if (isset($$k)) $acctSet[$k] = $$k;
+  $acctSet = []; foreach ($ks as $k) if (isset($$k)) $acctSet[$k] = $$k;
   $acctSet = fieldSet('acctSet', $acctSet);
 
   return cgform(compact(ray('title do acctSet')));

@@ -128,7 +128,7 @@ function formSignupCo_submit($form, &$sta) {
   $preid = getPreId($source);
   if (nn($source2)) $source = trim(mb_strtoupper($source2) . "-$source");  
   $flags = u\bit(B_CO) | u\bit(B_CONFIRMED);
-  foreach (ray($dbFields) as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray($dbFields) as $k) if (isset($$k)) $info[$k] = $$k;
   
   if (!$newA = new r\Acct($info)) return say('cannot create account', 'zot');
   r\setAcct($newA->id, $sta); // this works for both an individual account (proSe) and a company account (with agent)
