@@ -802,8 +802,8 @@ function cttyStats1($item) {
     }
     $cttyA = r\acct($ctty);
     $subs = ray('months', BAN_MONTHS);
-    if ($allNeg and !$cttyA->noneg) r\tellCo('credit ban on', $subs, $ctty);
-    if ($allPos and $cttyA->noneg) r\tellCo('credit ban off', $subs, $ctty);
+    if ($allNeg and !$cttyA->noneg) r\tellCAdmin('credit ban on', $subs, $ctty);
+    if ($allPos and $cttyA->noneg) r\tellCAdmin('credit ban off', $subs, $ctty);
   }
 }
 
@@ -1024,7 +1024,8 @@ function notice1($item) {
     $link = BASE_URL . "/do/doInvite~$a->mainQid~$a->emailCode~" . (r\rdoMonth() + 12);
     list ($question, $btnText) 
     = ($a->co or $a->shouter) ? ['', t('Invite Someone!')] : [t('If you support %PROJECT, please say so! '), t('Endorse')];
-    $args['shout'] = '<p><br>' . $question . w\lnk($link, $btnText, ray('stule', TEXT_BUTTON_STYLE)) . '</p>';
+    $style = TEXT_BUTTON_STYLE . ' padding:3px 7px; margin-left:4px;'; // smaller for emails
+    $args['shout'] = '<p>' . $question . w\lnk($link, $btnText, ray('stule', $style)) . '</p>';
   } else { $args['shout'] = ''; }
   
   if (!test()) foreach (ray('messages shout') as $k) $args[$k] = str_replace('stule=', 'style=', $args[$k]); // revert in emails (CSP forbids inline styles online)

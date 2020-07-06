@@ -208,5 +208,5 @@ function clubA($clubqid = NULL) {
     if ($clubid = $mya->iClubId) return r\acct($clubid);
   }
   
-  return w\go('/invest/overview', t('You do not have permission to visit that page.'));
+  return w\go('/invest/overview', t('no page permission'));
 }

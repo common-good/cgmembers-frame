@@ -106,10 +106,10 @@ function formBuy($form, &$sta, $doCode = '') {
   $submit = submit($verb, '', 'md', w\suffix($option));
 //  focusOn(($amount0 and !$mya) ? 'name' : 'amount');
 
-  $form = compact(ray('subtext payment itemDpy for name pass item submit'));
-  foreach (ray(CGPAY_FLDS) as $k) if (isset($$k) and !is_array($$k)) $form[$k] = hidFld($$k);
+  $info = compact(ray('subtext payment itemDpy for name pass item submit'));
+  foreach (ray(CGPAY_FLDS) as $k) if (isset($$k) and !is_array($$k)) $info[$k] = hidFld($$k);
   
-  return cgform($form);
+  return cgform($info);
 }
 
 function formBuy_validate($form, &$sta) {

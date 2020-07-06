@@ -80,13 +80,13 @@ EOF;
     if ($mya->cttyUp) $stopCtty = submi(t('STOP ') . $cttyName); else $startCtty = submi(t('START ') . $cttyName);
   }
 
-  foreach (ray($tables) as $one) $do[$one] = submi($one);
+  $do = []; foreach (ray($tables) as $one) $do[$one] = submi($one);
   $ks = ray('toSMT inviteeStatus signupCos do1099ktest do1099k reconcile special stop start stopCtty startCtty');
   foreach ($ks as $k) if (isset($$k)) $do[$k] = $$k;
   $do = fieldSet('do', $do);
   
   $ks = ray('account make2 printId seeData seeChanges ssnLink seeSecure resetSSN askForAppData seeAppData');
-  foreach ($ks as $k) if (isset($$k)) $acctSet[$k] = $$k;
+  $acctSet = []; foreach ($ks as $k) if (isset($$k)) $acctSet[$k] = $$k;
   $acctSet = fieldSet('acctSet', $acctSet);
 
   return cgform(compact(ray('title do acctSet')));
@@ -389,7 +389,7 @@ EOF;
     if (in($color, $whities)) $color .= ' fu-whitey';
     $type = "<span class=\"fu-$color\">$type</span>";
     $call = u\fmtDate($tickle ?: $created);
-    $name = w\lnk("$base_url/change-account/acct=$uid&page=summary", $fullName ?: $uid);
+    $name = w\lnk("$base_url/change-account/acct=$uid", $fullName ?: $uid);
     if ($co) $name = "<span class=\"co\">$name</span>";
     $phone = u\fmtPhone(u\decry('P', $phone), '-');
     $notes = strtr($notes, ["\n" => '|| ', date('Y') => '']);
@@ -428,7 +428,7 @@ function formMemberList($form, &$sta) {
     $phone = str_replace('+1 ', '', u\fmtPhone($phone0 = $a->phone));
     $postalAddr = $a->postalAddr;
     $email = $a->email;
-    $fullName = "<a href=\"$base_url/change-account/acct=$a->mainQid&page=summary\">$fullName</a>";
+    $fullName = "<a href=\"$base_url/change-account/acct=$a->mainQid\">$fullName</a>";
     $steps = a\showSteps($a);
     $date = u\fmtDate($a->ok ? $access : $login);
 
@@ -1033,7 +1033,7 @@ function handyLinks() {
   //    'devel/theme/registry|View a list of available theme functions across the whole site.|Theme registry',
 
   foreach ($links as $link) {
-    list ($url, $detail, $label, $icon) = explode('|', u\padRay($link, 4));
+    list ($url, $detail, $label, $icon) = u\padRay(explode('|', $link), 4);
     if (!$label) $label = $detail;
     $handy[$url] = ['', $label, '', ANY, '', $detail, $icon];
   }

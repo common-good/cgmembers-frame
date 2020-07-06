@@ -28,7 +28,6 @@ $GLOBALS['tStrings'] += [ // these have to be here, not in cg-strings.inc, becau
 //  'new savings balance' => t('<p>IMPORTANT! Your %RCREDITS balance has been split to include a Credit Reserve containing your incentive rewards. Read <%a>last week\'s %PROJECT newsletter</a> for details.</p>', '_a', atag('http://us9.campaign-archive1.com/?u=b1d89f860859e1d9b906fa0b0&id=f1f54edd80&e=')),
   'increase min' => t('<%a>Click here</a> to increase your target balance!', '_a', atag('/settings/preferences')),
   'no such company' => t('There is no such company.'),
-  'no page permission' => t('You do not have permission to visit this page. Return to your <%a>Summary</a> page.', '_a', atag('/summary')),
   'insufficient relation' => t('You cannot open an account unless you have a close relationship to it. <%a>Invite someone</a> instead.', '_a', atag('/community/invite')),
   'bad login' => t('That account/password combination does not exist. Try again or <%a>ask for a new password</a>.', '_a', atag('/settings/password')),
   'change min first' => t('That request would leave you with less than your target balance. <%a>Lower your target balance</a> first.','_a', atag('/settings/fund')),
@@ -182,8 +181,8 @@ function NEWfld($type, $label, $desc = '', $other = []) {
   if (!$title) $title = $placeholder; // hover text defaults to same as hint
   foreach (['placeholder', 'title'] as $k) if ($$k) $tribs[$k] = $$k;
 
-  foreach (ray('type label required bare help tribs other') as $k) if (isset($$k)) $res[$k] = $$k;
-  return $res; // see rend()
+  $info = []; foreach (ray('type label required bare help tribs other') as $k) if (isset($$k)) $info[$k] = $$k;
+  return $info; // see rend()
 }
 
 // only barely begun
@@ -1013,8 +1012,7 @@ function subMenuHtml($menu) {
   if (!is_array($menu)) $menu = \rweb_menu($menu);
   $list = '';
   foreach ($menu as $k => $v) {
-    for ($i = 0; $i < 7; $i++) $v[] = ''; // keep list() from dying
-    list ($type, $head, $args, $perms, $func, $detail, $icon) = $v;
+    list ($type, $head, $args, $perms, $func, $detail, $icon) = u\padRay($v, 7);
     if ($type == 'call' or !w\webAccess($perms)) continue;
     if (nn($detail)) $detail = "<p class=\"list-group-item-text\">$detail</p>";
     $text = <<<EOF
@@ -1186,7 +1184,7 @@ function tellStaffNewMember($params) {
   $params = compact(ray('phone state acctType helper copts ats')) + $params;
   unset($params['code']); // don't need to see this
   $message = '<h2>NEW SIGNUP</h2>';
-  r\tellCO($message, $params);
+  r\tellCAdmin($message, $params);
 }
 
 /**

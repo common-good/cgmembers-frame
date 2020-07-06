@@ -77,9 +77,9 @@ class Acct {
     u\setDft($emailCode, r\cardCode(r\qid($uid)));
 
     foreach (ray('number region') as $k) unset($info[$k]);
-    foreach (ray('phone email pass fullName legalName flags state country community created login access emailCode cardCode') as $k) if (isset($$k)) $fix[$k] = $$k; // things we may have added or changed ($fix is never empty)
+    foreach (ray('phone email pass fullName legalName flags state country community created login access emailCode cardCode') as $k) if (isset($$k)) $info[$k] = $$k; // things we may have added or changed
 
-    $a->update($fix + $info); // this is a lot easier to do after saving the record
+    $a->update($info); // this is a lot easier to do after saving the record
     if (!$a->member) $a->setTask($co ? 'co' : 'person');
     
     unset($DBTX); // commit
@@ -571,7 +571,7 @@ class Acct {
    */
   public function linkedDesc() {
     global $base_url;
-    $qid = "<a href=\"$base_url/change-account/acct=$this->mainQid&page=summary\">$this->mainQid</a>";
+    $qid = "<a href=\"$base_url/change-account/acct=$this->mainQid\">$this->mainQid</a>";
     return "$this->fullName ($qid)";
   }
   
@@ -898,7 +898,7 @@ EOF;
     if ($done and empty($nextStep)) {
       $a->update('task', '');
       if (!$a->member) {
-        r\tellCO(t('New Member (%name)', ['name' => $a->fullName] + $details));
+        r\tellCAdmin(t('New Member (%name)', ['name' => $a->fullName] + $details));
         $a->setBit(B_MEMBER);
         $a->update('tickle', now());
       }
@@ -1261,12 +1261,6 @@ o;
     if (!$web) $msg[] = 'you were short';
     $msg[] = $a->hasBank ? ($a->refill ? 'suggest higher target' : 'suggest refills') : 'how to fund';
 
-    /*		
-		$suggested0 = max(R_ACHMIN, (R_SUGGEST_BUMP * $a->minimum) ?: 100);
-		$args['suggested'] = u\fmtAmt($suggested0);
-		$args['_a1'] = $a->makeDo('min', $suggested0);
-    */	
-		
     $args = [];
     if ($a->secret) {
       $args['_aSecret'] = $web ? w\atag('/settings/preferences') : $a->makeDo('nosecret');

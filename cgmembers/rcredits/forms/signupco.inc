@@ -128,7 +128,7 @@ function formSignupCo_submit($form, &$sta) {
   $preid = getPreId($source);
   if (nn($source2)) $source = trim(mb_strtoupper($source2) . "-$source");  
   $flags = u\bit(B_CO) | u\bit(B_CONFIRMED);
-  foreach (ray($dbFields) as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray($dbFields) as $k) if (isset($$k)) $info[$k] = $$k;
   
   if (!$newA = new r\Acct($info)) return say('cannot create account', 'zot');
   r\setAcct($newA->id, $sta); // this works for both an individual account (proSe) and a company account (with agent)
@@ -151,7 +151,7 @@ function formSignupCo_submit($form, &$sta) {
 
   if ($needPhone) {
     be\invoice(r\acct(CGID), $mya, EQUIP_DEPOSIT, t('equipment deposit'), FOR_NONGOODS);
-    r\tellCo(t('New business has paid a deposit for a smartphone. Please deliver one ASAP.'));
+    r\tellCAdmin(t('New business has paid a deposit for a smartphone. Please deliver one ASAP.'));
     say('refundable deposit');
   }
 

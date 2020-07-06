@@ -244,7 +244,7 @@ function doAccounts($info = []) {
   foreach (ray('uid jid helper flags risks last4bank ' . $fixFields) as $k) if (isset($$k)) $info[$k] = $$k; // add in changed fields
 
   if (!$a = new r\Acct($info)) return t\output('Cannot create account: ' . pr($info));
-  if (nn($picture)) if (!makePicture($picture, $a)) return FALSE;
+  if (nn($picture) and !makePicture($picture, $a)) return FALSE;
   $a->stepDone('signup');
   if ($uid0 == $uid) $a->setBit(B_IDED); // assume we have a photoId for givens unless a step says otherwise
 
@@ -793,6 +793,7 @@ function getErrors() {
 function weTellAdmin($topic, $subs = [], $coUid = FALSE) {
   global $testOnly; if (!$testOnly) return t\output('Cannot MAKE tellStaff!');
 
+  if (!$subs) $subs = []; // handle '' for not subs
   if (!nni($subs, 0)) $subs[0] = [];
   $email = $coUid ? r\acct($coUid)->cttyA->email : R_ADMIN_EMAIL;
   return t\findEmail('tell-staff', $email, $subs[0] + ray('topic noFrame message', $topic, TRUE, '?'));
@@ -864,7 +865,7 @@ function findEmail($index, $email, $subs) {
           $subs['site'] = BASE_URL; // site parameter is set in boot.inc so compiler.php can't see it.
           ksort($subs); // reorder
         }
-        ///        print_r($subs); die('here');
+///        print_r($subs); die('here');
         if (nn($ignore)) foreach ($ignore as $k) unset($t_subs[$k]);
         ksort($t_subs);
         $wantedInActual = just(array_keys($subs), $t_subs);
@@ -1044,7 +1045,7 @@ function verifyRecord($table, $info, $riskRay = K_TX_RISKS) {
   list ($infoK, $infoV) = [key($info), array_shift($info)]; // must be before ksort
   ksort($info); // sort everything else, but leave key out of it
   $info = [$infoK => $infoV] + $info; // keep key first
-  ///  echo pr(compact(ray('info0 info1 info idSub infoK infoV')));
+///  echo pr(compact(ray('info0 info1 info idSub infoK infoV')));
 
   foreach ($info as $k => $v) {
     if ($v == '?') {unset($info[$k]); continue;}
@@ -1308,7 +1309,7 @@ function eq($a, $b, $offBy = .0001) {
   $result = (is_numeric($a) and is_numeric($b)) ?
     (abs($a - $b) < $offBy)
     : ($a == $b or (empty($a) and empty($b)));
-  /// if (!$result) echo 'not equal: ' . print_r(compact('a','b'), 1); // keep for now
+/// if (!$result) echo 'not equal: ' . print_r(compact('a','b'), 1); // keep for now
   if (!$result) {
     if (is_array($a)) {
       output("unequal arrays ($offBy):<br>" . pr($a) . pr($b));
@@ -1386,7 +1387,7 @@ function clear($ch = 0) {
   global $conf; $conf = [];
 
   if (test() and !strpos($sceneTest->name, 'Statement')) {
-    /**/  echo "scene: $sceneTest->module / $sceneTest->feature / $sceneTest->name<br>\n"; // VERY helpful when test dies
+/**/  echo "scene: $sceneTest->module / $sceneTest->feature / $sceneTest->name<br>\n"; // VERY helpful when test dies
   }
 
   t\log('clearing');

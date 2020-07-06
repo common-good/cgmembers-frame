@@ -280,6 +280,7 @@ EOF
   'return welcome' => t('You are welcome back any time.'),
   
   // error messages
+  'no page permission' => t('You do not have permission to visit this page.'),
   'syntax' => t('Wrong syntax!'),
   'nyi' => t('That feature is not available through the SMS interface.'),
   'already started' => t('You are already a %PROJECT member. For help, type "helpme".'),

@@ -716,19 +716,23 @@ body.page-partner blockquote {font-size:14px;}
 }
 
 /* Summary / Member Info / Account Info */
-#frm-summary #endorse {position: absolute; z-index:2; top: 200px; right: 0; bottom: 0; left: 0;}
+#frm-summary #endorse {position: absolute; z-index:4; top: 200px; right: 0; bottom: 0; left: 0;}
 #frm-summary #endorse>div {
   display:block;
   width:80%;
   height:50%;
   margin:auto auto;
-  background-color:#eeeeff;
+/*  background-color:#eeeeff; */
+  background-image:url(../images/blue-sky5.jpg);
+  background-size:cover;
   border:2px solid darkblue;
   box-shadow: 3px 3px 7px #888888; -webkit-border-radius: 10px; border-radius: 10px;
   padding:20px;
 }
+#frm-summary #endorse>div h2 {color:white;}
+#frm-summary #endorse>div a {color:silver;}
 #frm-summary #endorse div div {display:inline-block; position: relative; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align:center;}
-#frm-summary #endorse div div .btn-large {font-weight:bold; -webkit-border-radius: 30px; border-radius: 30px; margin-bottom:10px;}
+#frm-summary #endorse div div .btn-large {font-weight:normal; -webkit-border-radius: 30px; border-radius: 30px; margin-bottom:10px; color:white; padding:10px 20px; font-size:18px;}
 
 #frm-summary .form-item-special {background-color:lightyellow;}
 #frm-summary #edit-special .invite {font-weight:normal; color:#66cc00;}

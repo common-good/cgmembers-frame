@@ -1,4 +1,5 @@
 <?php
+use CG\Web as w;
 
 /**
  * @file
@@ -497,31 +498,18 @@ function menu_get_item($path = NULL, $router_item = NULL) {
  *   the result to the caller (FALSE).
  */
 function menu_execute_active_handler($path = NULL, $deliver = TRUE) {
-  // Check if site is offline.
-  $page_callback_result = _menu_site_is_offline() ? MENU_SITE_OFFLINE : MENU_SITE_ONLINE;
+  if ($router_item = menu_get_item($path)) {
+    if ($router_item['access']) {
+      if ($router_item['include_file']) require_once DRUPAL_ROOT . '/' . $router_item['include_file'];
+      $page_callback_result = call_user_func_array($router_item['page_callback'], $router_item['page_arguments']);
+    } else { return w\softErr(t('no page permission')); }
+  } else { $page_callback_result = MENU_NOT_FOUND; }
 
-  // Allow other modules to change the site status but not the path because that
-  // would not change the global variable. hook_url_inbound_alter() can be used
-  // to change the path. Code later will not use the $read_only_path variable.
-  $read_only_path = !empty($path) ? $path : drupal_path_initialize();
-  drupal_alter('menu_site_status', $page_callback_result, $read_only_path);
-
-  // Only continue if the site status is not set.
-  if ($page_callback_result == MENU_SITE_ONLINE) {
-    if ($router_item = menu_get_item($path)) {
-      if ($router_item['access']) {
-        if ($router_item['include_file']) require_once DRUPAL_ROOT . '/' . $router_item['include_file'];
-        $page_callback_result = call_user_func_array($router_item['page_callback'], $router_item['page_arguments']);
-      } else $page_callback_result = MENU_ACCESS_DENIED;
-    } else $page_callback_result = MENU_NOT_FOUND;
-  }
-
-  // Deliver the result of the page callback to the browser, or if requested,
-  // return it raw, so calling code can do more processing.
+  // Deliver the result of the page callback, or if requested, return it raw, so calling code can do more processing.
   if ($deliver) {
-    $default_delivery_callback = (isset($router_item) && $router_item) ? $router_item['delivery_callback'] : NULL;
+    $default_delivery_callback = nn($router_item) ? $router_item['delivery_callback'] : NULL;
     drupal_deliver_page($page_callback_result, $default_delivery_callback);
-  } else  return $page_callback_result;
+  } else { return $page_callback_result; }
 
 }
 
@@ -1727,7 +1715,7 @@ function menu_get_custom_theme($initialize = FALSE) {
   $custom_theme = &drupal_static(__FUNCTION__);
   // Skip this if the site is offline or being installed or updated, since the
   // menu system may not be correctly initialized then.
-  if ($initialize && !_menu_site_is_offline(TRUE) && (!defined('MAINTENANCE_MODE') || (MAINTENANCE_MODE != 'update' && MAINTENANCE_MODE != 'install'))) {
+  if ($initialize && (!defined('MAINTENANCE_MODE') || (MAINTENANCE_MODE != 'update' && MAINTENANCE_MODE != 'install'))) {
     // First allow modules to dynamically set a custom theme for the current
     // page. Since we can only have one, the last module to return a valid
     // theme takes precedence.
@@ -3831,47 +3819,3 @@ function _menu_router_save($menu, $masks) {
 
   return $menu;
 }
-
-/**
- * Checks whether the site is in maintenance mode.
- *
- * This function will log the current user out and redirect to front page
- * if the current user has no 'access site in maintenance mode' permission.
- *
- * @param $check_only
- *   If this is set to TRUE, the function will perform the access checks and
- *   return the site offline status, but not log the user out or display any
- *   messages.
- *
- * @return
- *   FALSE if the site is not in maintenance mode, the user login page is
- *   displayed, or the user has the 'access site in maintenance mode'
- *   permission. TRUE for anonymous users not being on the login page when the
- *   site is in maintenance mode.
- */
-function _menu_site_is_offline($check_only = FALSE) {
-  // Check if site is in maintenance mode.
-  if (getV('maintenance_mode', 0)) {
-    if (user_access('access site in maintenance mode')) {
-      // Ensure that the maintenance mode message is displayed only once
-      // (allowing for page redirects) and specifically suppress its display on
-      // the maintenance mode settings page.
-      if (!$check_only && $_GET['q'] != 'admin/config/development/maintenance') {
-        if (user_access('administer site configuration')) {
-          drupal_set_message(t('Operating in maintenance mode. <a href="@url">Go online.</a>', array('@url' => url('admin/config/development/maintenance'))), 'status', FALSE);
-        }
-        else {
-          drupal_set_message(t('Operating in maintenance mode.'), 'status', FALSE);
-        }
-      }
-    }
-    else {
-      return TRUE;
-    }
-  }
-  return FALSE;
-}
-
-/**
- * @} End of "defgroup menu".
- */

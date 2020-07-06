@@ -27,7 +27,7 @@ function formShouters($form, &$sta, $args = '') {
     FROM u_shouters h 
     LEFT JOIN users u USING (uid) 
     LEFT JOIN r_states s ON s.id=u.state AND s.country_id=u.country
-    ORDER BY IFNULL(org, '')='', IFNULL(quote, '')='', fullName
+    ORDER BY IFNULL(org, '')='', IFNULL(quote, '')='', rating DESC, fullName
 X;
   $q = db\q($sql, ray('ctty', $mya ? $mya->community : 0));
 
@@ -37,11 +37,11 @@ X;
     extract($row);
     $a = r\acct($uid);
     
-    if ($mya->admin) {  // rating: 0=unrated 1=poor 2=normal 3=great
+    if ($mya and $mya->admin) {  // rating: 0=unrated 1=poor 2=normal 3=great
       $rating = <<< X
         <div class="rating" qid="$a->mainQid" rating="$rating">*** </div>
 X;
-      $quote = $rating . w\lnk("/do/doInvite~$a->mainQid~$a->emailCode", $quote); // editable for admins
+      $quote = $rating . w\lnk("/change-account/acct=$a->mainQid&page=" . u\urlify('/community/invite/edit=1'), $quote); // editable for admins
     } elseif (!$rating) continue;
 
     $fullName .= ', ';
@@ -63,17 +63,17 @@ function raw() {
     FROM u_shouters h 
     LEFT JOIN users u USING (uid) 
     LEFT JOIN r_states s ON s.id=u.state AND s.country_id=u.country
-    WHERE u.:IS_OK AND IFNULL(quote, '')<>'' AND h.created>:NOW-7*:DAY_SECS
+    WHERE u.:IS_OK AND IFNULL(quote, '')<>'' AND rating>0
     ORDER BY rating DESC, RAND()
 X;
   $q = db\q($sql);
   
   while ($row = $q->fetchAssoc()) {
     extract($row);
-    list ($first, $last, $middles) = u\parseName($fullName);
-    $nm = $first . ' ' . substr($last, 0, 1);
+    list ($first, $last, $middles) = u\parseName($fullName, TRUE);
+    $nm = $first . ' ' . substr($last, 0, 1) . '.';
     $res[] = [$quote, "$nm ($city, $st)"];
   }
-  echo json_encode($res);
+/**/  echo json_encode(nn($res));
   exit();
 }
