@@ -389,7 +389,7 @@ EOF;
     if (in($color, $whities)) $color .= ' fu-whitey';
     $type = "<span class=\"fu-$color\">$type</span>";
     $call = u\fmtDate($tickle ?: $created);
-    $name = w\lnk("$base_url/change-account/acct=$uid&page=summary", $fullName ?: $uid);
+    $name = w\lnk("$base_url/change-account/acct=$uid", $fullName ?: $uid);
     if ($co) $name = "<span class=\"co\">$name</span>";
     $phone = u\fmtPhone(u\decry('P', $phone), '-');
     $notes = strtr($notes, ["\n" => '|| ', date('Y') => '']);
@@ -428,7 +428,7 @@ function formMemberList($form, &$sta) {
     $phone = str_replace('+1 ', '', u\fmtPhone($phone0 = $a->phone));
     $postalAddr = $a->postalAddr;
     $email = $a->email;
-    $fullName = "<a href=\"$base_url/change-account/acct=$a->mainQid&page=summary\">$fullName</a>";
+    $fullName = "<a href=\"$base_url/change-account/acct=$a->mainQid\">$fullName</a>";
     $steps = a\showSteps($a);
     $date = u\fmtDate($a->ok ? $access : $login);
 

@@ -41,7 +41,7 @@ X;
       $rating = <<< X
         <div class="rating" qid="$a->mainQid" rating="$rating">*** </div>
 X;
-      $quote = $rating . w\lnk("/do/doInvite~$a->mainQid~$a->emailCode", $quote); // editable for admins
+      $quote = $rating . w\lnk("/change-account/acct=$a->mainQid&page=" . u\urlify('/community/invite/edit=1'), $quote); // editable for admins
     } elseif (!$rating) continue;
 
     $fullName .= ', ';

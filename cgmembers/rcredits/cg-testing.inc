@@ -793,6 +793,7 @@ function getErrors() {
 function weTellAdmin($topic, $subs = [], $coUid = FALSE) {
   global $testOnly; if (!$testOnly) return t\output('Cannot MAKE tellStaff!');
 
+  if (!$subs) $subs = []; // handle '' for not subs
   if (!nni($subs, 0)) $subs[0] = [];
   $email = $coUid ? r\acct($coUid)->cttyA->email : R_ADMIN_EMAIL;
   return t\findEmail('tell-staff', $email, $subs[0] + ray('topic noFrame message', $topic, TRUE, '?'));

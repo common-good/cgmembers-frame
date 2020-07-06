@@ -284,11 +284,11 @@ function tribs($ray) {
 }
 
 /**
- * URL encode an arbitrary non-empty ascii string compactly.
+ * URL encode an arbitrary ascii string compactly.
  * Note that this uses non-mb functions, to encode bytes rather than characters.
  */
 function urlify($s) {
-  u\EXPECT($s !== '', 'empty string in urlify');
+  if ($s === '') return '';
   $len = strlen($s = bin2hex($s0 = $s));
   for ($i = 0, $result = ''; $i < $len - 2; $i += 3) $result .= x32a2(substr($s, $i, 3));
   if ($taili = $len % 3) $result .= '~' . substr($s, -$taili);
@@ -302,6 +302,7 @@ function urlify($s) {
  * @return string: the original un-encoded string (FALSE if error)
  */
 function deurlify($s) {
+  if ($s === '') return '';
   $s0 = $s;
   list ($s, $tail) = explode('~', $s . '~');
   for ($i = 0, $res = ''; $i < strlen($s) - 1; $i += 2) $res .= a22x3(substr($s, $i, 2));

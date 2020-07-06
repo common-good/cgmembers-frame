@@ -28,7 +28,6 @@ $GLOBALS['tStrings'] += [ // these have to be here, not in cg-strings.inc, becau
 //  'new savings balance' => t('<p>IMPORTANT! Your %RCREDITS balance has been split to include a Credit Reserve containing your incentive rewards. Read <%a>last week\'s %PROJECT newsletter</a> for details.</p>', '_a', atag('http://us9.campaign-archive1.com/?u=b1d89f860859e1d9b906fa0b0&id=f1f54edd80&e=')),
   'increase min' => t('<%a>Click here</a> to increase your target balance!', '_a', atag('/settings/preferences')),
   'no such company' => t('There is no such company.'),
-  'no page permission' => t('You do not have permission to visit this page. Return to your <%a>Summary</a> page.', '_a', atag('/summary')),
   'insufficient relation' => t('You cannot open an account unless you have a close relationship to it. <%a>Invite someone</a> instead.', '_a', atag('/community/invite')),
   'bad login' => t('That account/password combination does not exist. Try again or <%a>ask for a new password</a>.', '_a', atag('/settings/password')),
   'change min first' => t('That request would leave you with less than your target balance. <%a>Lower your target balance</a> first.','_a', atag('/settings/fund')),

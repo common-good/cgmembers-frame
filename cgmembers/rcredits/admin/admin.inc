@@ -369,7 +369,7 @@ EOF;
                     : ($customer ? t('buys from')
                        : t('probably works for'))))));
     }
-    $ret .= ($ret ? ', ' : '') . "$role <a href=\"$base_url/change-account/acct=$them&page=summary\">$who</a>$extra";
+    $ret .= ($ret ? ', ' : '') . "$role <a href=\"$base_url/change-account/acct=$them\">$who</a>$extra";
   }
   return $ret;
 }

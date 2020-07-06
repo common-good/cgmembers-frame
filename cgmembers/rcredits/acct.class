@@ -571,7 +571,7 @@ class Acct {
    */
   public function linkedDesc() {
     global $base_url;
-    $qid = "<a href=\"$base_url/change-account/acct=$this->mainQid&page=summary\">$this->mainQid</a>";
+    $qid = "<a href=\"$base_url/change-account/acct=$this->mainQid\">$this->mainQid</a>";
     return "$this->fullName ($qid)";
   }
   
