@@ -74,6 +74,6 @@ X;
     $nm = $first . ' ' . substr($last, 0, 1) . '.';
     $res[] = [$quote, "$nm ($city, $st)"];
   }
-  echo json_encode(nn($res));
+/**/  echo json_encode(nn($res));
   exit();
 }

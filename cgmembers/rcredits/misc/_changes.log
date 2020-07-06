@@ -1,4 +1,10 @@
-2020-07-05
+2020-07-06 feature/misc3
+. changed w\changeWho to report hack when someone tries to change to an account they don't have permission for
+. improved appearance of endorse popup on Summary page
+. improved functioning of shouters list for admins
+. change-account now allows page arguments
+
+2020-07-05 feature/misc3
 . fixed errors from several previous features
 . renamed tellCo to tellCAdmin
 . fixed default for function u\padRay
