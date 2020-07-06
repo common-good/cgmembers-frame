@@ -98,8 +98,8 @@ X
   
   jsx('amtChoice');
   
-  foreach (ray('title img subtext food or amtChoice amount period accountId pass submit recurs') as $k) if (isset($$k)) $form[$k] = $$k;
-  return cgform($form);
+  $info = []; foreach (ray('title img subtext food or amtChoice amount period accountId pass submit recurs') as $k) if (isset($$k)) $info[$k] = $$k;
+  return cgform($info);
 }
 
 function formFood_validate($form, &$sta) {
@@ -143,7 +143,7 @@ function formFood_submit($form, &$sta) {
     } else $msg .= '|gift transfer later';
     say($msg);
   }
-  r\tellCo(t('Food Fund gift from %nm: %%food, $%amount/%period', 'nm food amount period', $mya->fullName, $food, $amount, $period));
+  r\tellCAdmin(t('Food Fund gift from %nm: %%food, $%amount/%period', 'nm food amount period', $mya->fullName, $food, $amount, $period));
 
   say(t('Thank you for supporting the Food Fund.'));
   return r\acct() ? ($mya->member ? w\go('') : w\goNextStep('food', '')) : w\doSay();

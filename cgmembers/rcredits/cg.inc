@@ -356,7 +356,7 @@ function badCard($qid, $code, $msg) {
     db\insert('r_bad', $info, 'created');
     $index = 'card marked bad';
   } else $index = 'attempted card already marked bad';
-  r\tellCO($index, $info + compact('msg'));
+  r\tellCAdmin($index, $info + compact('msg'));
 }
 
 /**
@@ -494,7 +494,7 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
  * @param int $uid: record ID of an account in the community to report about.
  *    If none, choose something reasonable, reporting to superAdmin as a last resort.
  */
-function tellCO($index, $subs = [], $uid = NULL) {
+function tellCAdmin($index, $subs = [], $uid = NULL) {
   global $mya;
   if (!$uid) $uid = $mya ? $mya->id : nni($subs, 'loserId');
   return tellAdmin($index, $subs, $uid);
@@ -771,7 +771,7 @@ function makeDevice($uid, $code = '', $ch = NULL) {
  * @param assoc $info: (optional) message substitutions and other info about transaction
  */
 function txErr($message, $info = []) {
-  r\tellCO('failed transaction', $info + compact('message'));
+  r\tellCAdmin('failed transaction', $info + compact('message'));
   return is_array($message) ? $message : [FALSE, $message, $info];
 }
 
@@ -1485,7 +1485,7 @@ function makeDoCode($ray) {
 }
 
 /**
- * Return
+ * Unencrypt and return a doCode array created by r\makeDoCode
  * See also forms/rdo.inc
  */
 function doCode($code) {
@@ -1495,7 +1495,6 @@ function doCode($code) {
     return u\crypted($code) ? unserialize(u\decry('P', $code)) : '';
   } catch (\Exception $e) {return '';}
 }
-
 
 // Single line functions that need no explanation
 function serverUid($regionId = R_SERVER_ID) {return -1 - R_REGION_MAX * u\a2n($regionId);} // -u\a2n($regionId) - 1;}

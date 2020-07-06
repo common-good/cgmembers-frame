@@ -23,7 +23,7 @@ function formInvite($form, &$sta, $args = '') {
   $signed = u\fmtDate($mya->signed, TRUE);
   $code = $mya->iCardCode(IBY_EMAIL); // this code is different from the one emailed in form
   $info = compact(ray('fullName quote phone signed'));
-  $buttons = btn('/community/invite/all', t('Recent Endorsements'), '', '', away());
+  $buttons = btn('/community/invite/all', t('Recent Endorsements'));
 
   if ($example) return exampleInvite($info, $code);
 

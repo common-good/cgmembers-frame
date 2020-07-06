@@ -58,6 +58,8 @@ function formEvents($form, &$sta, $args = '') {
 
   $title = item(t('Community Democracy') . "<br><small>$cttyA->fullName</small>");
 //  $subtitle = item($cttyA->fullName);
+  $voting = NULL; // default
+  
   $event0 = $eid 
   ? db\get('id AS eid, type, event, details, start, end', 'r_events', 'id=:eid AND ctty=:ctty', ray('eid ctty', $eid, $cttyA->id))
   : v\getCurrentEvent($cttyA->id);
@@ -77,7 +79,7 @@ function formEvents($form, &$sta, $args = '') {
 
 	  $proxLink = $aA == $mya ? '/settings/proxies' : "/prox/page=Proxy&priority=1&allow=individual&qid=$mya->mainQid&ecode=$mya->emailCode";
       $voting = $do ? NULL : ($type == 'V' ? v\votingWelcome($end, $proxLink) : v\gradingWelcome($end, $proxLink)); // end is displayable end date
-    } else { $voting = NULL; }
+    }
 
     $start = $start <= now() ? t('NOW') : u\fmtDate($start, TRUE);
     $status0 = t('<b>Status:</b> %event from %start to %end', compact(ray('event start end')));
@@ -101,7 +103,7 @@ function formEvents($form, &$sta, $args = '') {
   } elseif ($do == 'done' and $eid) { // @todo: handle proposals too
     $table = "r_votes v INNER JOIN r_ballots b ON v.ballot=b.id INNER JOIN r_questions q ON q.id=b.question";
     $notes = db\col('DISTINCT v.text', $table, "q.event=:eid AND b.voter=:uid AND v.text<>''", ray('uid eid', $mya->id, $eid));
-    r\tellCO($mya->fullName . t(' has voted. '), $notes);
+    r\tellCAdmin($mya->fullName . t(' has voted. '), $notes);
     $middle = v\done($mya);
     if (!r\acct()) return doSay($middle, 'err');
   } elseif ($do == 'grade') {

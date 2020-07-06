@@ -298,7 +298,7 @@ function processvote($args, $type) {
       
     list ($id, $text, $modified) = [$args["vote$opti"], nni($args, "votenote$opti"), now()];
 ///    debug(compact(ray('args type quids now optionCount opti isVeto type grade id text modified')));
-    foreach (ray('id grade gradeMax text isVeto modified') as $k) if (isset($$k)) $info[$k] = $$k;
+    $info = []; foreach (ray('id grade gradeMax text isVeto modified') as $k) if (isset($$k)) $info[$k] = $$k;
     db\update('r_votes', $info, 'id');
 	}
 	$ballot = $args['ballot'];
@@ -816,6 +816,6 @@ EOF
   }
   $gradeIt = w\submit(t('Grade a Proposal'), 'success', 'lg', w\suffix(' &nbsp; ' . t('Grading ends at midnight on %date.', 'date', $endDate)));
   
-  foreach (ray('title showVotes noVote noDirect results resultsNoProx subtext agree gradeIt args') as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray('title showVotes noVote noDirect results resultsNoProx subtext agree gradeIt args') as $k) if (isset($$k)) $info[$k] = $$k;
   return w\cgform($info);
 } 

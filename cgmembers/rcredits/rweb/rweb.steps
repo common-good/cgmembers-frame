@@ -443,7 +443,7 @@ function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, 
 /**
  * we tell admin (ARG) with subs: (ARG)
  *
- * in: 
+ * in: TEST changeaccount AMemberTriesToChangeToAnAccountWithoutPermission
  */
 function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs);}
 
@@ -795,6 +795,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE changeaccount ACommunityAdminChangesAccount
  *     MAKE changeaccount ASuperadminClicksTheProfilePhoto
  *     MAKE changeaccount ASuperadminChangesAccount
+ *     MAKE changeaccount AMemberTriesToChangeToAnAccountWithoutPermission
  *     MAKE community CronCalculatesTheStatistics
  *     MAKE company AMemberVisitsTheCompanyInfoPage
  *     MAKE connect AMemberConnectsABankAccountDuringSignup
@@ -2122,4 +2123,3 @@ function memberStepsUpWith($id, $rows) {
   $er = u\urlify(http_build_query($vs));
   return t\completeForm($id, "community/stepup/er=$er", [], TRUE);
 }
-

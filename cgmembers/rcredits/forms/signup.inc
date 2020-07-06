@@ -123,7 +123,7 @@ function formSignup_submit($form, &$sta) {
   
   list ($city, $state, $latitude, $longitude) = zipCity($zip);
 
-  foreach (ray($dbFields) as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray($dbFields) as $k) if (isset($$k)) $info[$k] = $$k;
   $info += $acctType == CO_PERSONAL ? ['preid' => $preid] : ['coType' => $acctType];
   
   if (nn($myid)) {

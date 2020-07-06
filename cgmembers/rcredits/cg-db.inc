@@ -162,6 +162,8 @@ function rows($fields, $table, $where = '1', $subs = [], $labeled = TRUE) {
   return $res;
 }
 
+function row($table, $where = '1', $subs = []) {return rows('*', $table, $where, $subs);}
+
 /**
  * Return an array of matching data.
  */

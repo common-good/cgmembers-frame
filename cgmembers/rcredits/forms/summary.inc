@@ -128,7 +128,7 @@ function formSummary($form, &$sta) {
   $fields0 = 'photo title clickPhoto showCustomers shortcuts accountId accountName address legalName shortName community balance newBalance creditLine creditLimit committed choiceList';
 //  foreach (ray('details') as $k) $$k = @$form[$k]; unset($form[$k]); // put these on the left if admin
 //  $fields = @compact(ray($fields));
-  foreach (ray($fields0) as $k) if (isset($$k)) $fields[$k] = $$k;
+  $fields = []; foreach (ray($fields0) as $k) if (isset($$k)) $fields[$k] = $$k;
   
 //  if ($mya->superAdmin and !$mya->ok) $onSubmit = w\whoFldSubmit('helper', t('This person was invited by %name, yes?'));
   if ($mya->admin2 and !$mya->proSe) {
@@ -170,7 +170,7 @@ function formSummary_validate($form, &$sta) {
 //    if (!@$helper or $helper == 1) return say(t('You must specify who gets the helper reward.'), 'helper');
     if (!$mya->member and is_null(nni($adminable, B_MEMBER, NULL))) return say(t('That account is not READY (not a member).'), 'adminable'); // test "is_null" because 0 is the value when set
     if (!$mya->confirmed and $mya->helper != 1) say(t('NOTE: Member %helperName has not yet confirmed this invitation.', 'helperName', $h->fullName));
-    if (!$mya->co and !nn($dob) and !$mya->idVerifiedBy) return say(t('You cannot activate the account without a date of birth (except for solar1 signups).'), 'dob');
+    if (!$mya->co and !nn($dob) and !$mya->hasDob and !$mya->idVerifiedBy) return say(t('You cannot activate the account without a date of birth (except for solar1 signups).'), 'dob');
   }
 
   if (!nn($active) and $mya->ok) { // de-activating
@@ -415,13 +415,13 @@ function adminSummary() {
       $risk = item(round($mya->risk) . ' ' . button(t('Recalc'), "$base_url/rerisk/acct/$uid/1"), t('Risk Score:'));
       if (!$mya->co) $trust = item(number_format($mya->trust, 1), t('Trust:'));
 
-    if (!$mya->ok or $mya->helper == 1) { // don't show helper field if it's moot (too late -- somebody already got credit)
-        if ($helper = $mya->helper ?: ($mya->co ? $mya->by : db\get('inviter', 'r_invites', 'invitee=:uid', compact('uid')))) {
+      if (!$mya->ok or $mya->helper == 1) { // don't show helper field if it's moot (too late -- somebody already got credit)
+        if ($helper = $mya->helper ?: ($mya->co ? $mya->agentId : db\get('inviter', 'r_invites', 'invitee=:uid', compact('uid')))) {
           $hA = r\acct($helper);
           $helper = "$hA->mainQid: $hA->fullName";
         }
         $helper = textFld(t('Helped by:'), t('Who gets the "inviter/helper" reward? Must be exactly one account.'), dft($helper)); //  + autocomplete()
-      } else $helper = item($mya->helper ?: t('N/A'), t('Helped by:'));
+      } else $helper = item($mya->helper ? $mya->helperA->fullName: t('N/A'), t('Helped by:'));
     }
   
     $activity = item(a\showActivity($mya), t('Activity:'));

@@ -1,3 +1,58 @@
+2020-07-06 feature/inv-security
+. fixed a bug in invoicing that could have allowed anyone to approve payment of an invoice
+
+2020-07-06 feature/misc3
+. changed w\changeWho to report hack when someone tries to change to an account they don't have permission for
+. improved appearance of endorse popup on Summary page
+. improved functioning of shouters list for admins
+. change-account now allows page arguments
+. made some array initializations explicit
+
+2020-07-05 feature/misc3
+. fixed errors from several previous features
+. renamed tellCo to tellCAdmin
+. fixed default for function u\padRay
+. added a check in ajax.inc for cross-site call
+. improvements to shouters lists
+. gave admin view of DOB if not active yet
+. improved Endorse button appearance in emails
+. deleted some unused Drupal functions and files:
+  - block_menu
+  - _menu_site_is_offline
+  - _block_themes_access
+  - menu_form_node_form_alter
+  - system_admin_config_page
+  - system_modules
+  - user_file_download
+  - hook_query_TAG_alter
+  - _system_themes_access
+  - system_custom_theme
+  - hook_user_cancel_methods_alter
+  - hook_user_view
+  - user_search_access
+  - user_search_execute
+  - user_account_form
+  - user_block_view
+  - template_preprocess_user_picture
+  - user_view_access
+  - user_edit_access
+  - user_cancel_access
+  - user_menu_site_status_alter
+  - user_role_edit_access
+  - user_user_operations
+  - user_admin_account
+  - user_build_filter_query
+  - user_register_form
+  - user_save
+  - user_delete
+  _ user_cancel
+
+  - user.pages.inc :
+  - block.test
+  - user.test
+  - block.admin.inc:
+  - modules/user/*.tpl
+
 2020-07-03 feature/push-endorse
 . deleted some unused things from .gitignore and rcredits/.gitignore
 . fixed a couple undefined index warnings

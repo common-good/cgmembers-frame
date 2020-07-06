@@ -28,7 +28,12 @@ function formHandleInvoice($form, &$sta, $args = '') {
   extract(just('nvid amount payer payee purpose created data', $inv));
   if ($code) {
     if (test() and $code == 'TESTDOCODE') $code = t\doCode(); // most recently created doCode
-    if (!$info = r\doCode($code)) return hack(t('fake doCode in handleInvoice'));
+    if (!$info = r\doCode($code) 
+      or !$doInfo = db\get('data,uid', 'r_do', ray('doid', nni($info, 'op'))) 
+      or $doInfo['uid'] != $payee
+      or !$doData = unserialize($doInfo['data'])
+      or nni($doData, 'op') != 'inv' or nni($doData, 'v') != $nvid
+    ) return hack(t('fake doCode in handleInvoice'), $info);
     if ($mya and $payer != $mya->id) w\signout(TRUE); // make sure we're signed out of any possibly different acct
   } elseif (!$mya) {
     return hack(t('attempt to handle invoice not signed in'));
@@ -69,13 +74,13 @@ function formHandleInvoice($form, &$sta, $args = '') {
   
   $toMe = hidFld($toMe);
   $hid = w\hidFlds(compact('ret') + $inv);
-
-  foreach (ray('title subtext always pay denySet delSet toMe hid') as $k) if (isset($$k)) $form[$k] = $$k;
-  $form['#validate'] = array('CG\\Web\\formHandleInvoice_validate');
-  $form['#submit'] = array('CG\\Web\\formHandleInvoice_submit');
   w\jsx('dispute');
+
+  $info = []; foreach (ray('title subtext always pay denySet delSet toMe hid') as $k) if (isset($$k)) $info[$k] = $$k;
+  $info['#validate'] = array('CG\\Web\\formHandleInvoice_validate');
+  $info['#submit'] = array('CG\\Web\\formHandleInvoice_submit');
   
-  return cgform($form);
+  return cgform($info);
 }
 
 function formHandleInvoice_validate($form, &$sta) {

@@ -563,8 +563,10 @@ function _theme_process_registry(&$cache, $name, $type, $theme, $path) {
       if (isset($info['file'])) {
         $include_file = isset($info['path']) ? $info['path'] : $path;
         $include_file .= '/' . $info['file'];
-        include_once DRUPAL_ROOT . '/' . $include_file;
-        $result[$hook]['includes'][] = $include_file;
+        if (!in(basename($include_file), 'block.admin.inc')) {
+          include_once DRUPAL_ROOT . '/' . $include_file;
+          $result[$hook]['includes'][] = $include_file;
+        }
       }
 
       // If the default keys are not set, use the default values registered
@@ -2467,14 +2469,6 @@ function _template_preprocess_default_variables() {
     'logged_in' => FALSE,
   );
 
-  // The user object has no uid property when the database does not exist during
-  // install. The user_access() check deals with issues when in maintenance mode
-  // as uid is set but the user.module has not been included.
-  if (isset($user->uid) && function_exists('user_access')) {
-    $variables['is_admin'] = user_access('access administration pages');
-    $variables['logged_in'] = ($user->uid > 0);
-  }
-
   // drupal_is_front_page() might throw an exception.
   try {
     $variables['is_front'] = drupal_is_front_page();
@@ -2948,15 +2942,10 @@ function template_preprocess_username(&$variables) {
   }
   $variables['name'] = check_plain($name);
 
-  $variables['profile_access'] = user_access('access user profiles');
+  $variables['profile_access'] = FALSE;
   $variables['link_attributes'] = array();
   // Populate link path and attributes if appropriate.
-  if ($variables['uid'] && $variables['profile_access']) {
-    // We are linking to a local user.
-    $variables['link_attributes'] = array('title' => t('View user profile.'));
-    $variables['link_path'] = 'user/' . $variables['uid'];
-  }
-  elseif (!empty($account->homepage)) {
+  if (!empty($account->homepage)) {
     // Like the 'class' attribute, the 'rel' attribute can hold a
     // space-separated set of values, so initialize it as an array to make it
     // easier for other preprocess functions to append to it.
