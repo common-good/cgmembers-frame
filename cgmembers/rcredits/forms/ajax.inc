@@ -16,7 +16,9 @@ use CG\Db as db;
 
 function ajax() {
   global $channel; $channel = TX_AJAX; // tell log and tellAdmin our environment
-  extract(just('op sid data', $_POST ?: $_GET, NULL)); // don't sanitize this, it only comes from us!
+  extract(just('op sid data', $args = $_POST ?: $_GET, NULL));
+  if ($_SERVER['HTTP_X_REQUESTED_WITH'] != 'XMLHttpRequest') return ajaxErr('xss'); r\tellAdmin('ajax xss', $args);
+
   header('Content-Type: application/json');
   $myid = $aid = NULL;
 

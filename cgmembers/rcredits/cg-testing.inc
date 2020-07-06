@@ -244,7 +244,7 @@ function doAccounts($info = []) {
   foreach (ray('uid jid helper flags risks last4bank ' . $fixFields) as $k) if (isset($$k)) $info[$k] = $$k; // add in changed fields
 
   if (!$a = new r\Acct($info)) return t\output('Cannot create account: ' . pr($info));
-  if (nn($picture)) if (!makePicture($picture, $a)) return FALSE;
+  if (nn($picture) and !makePicture($picture, $a)) return FALSE;
   $a->stepDone('signup');
   if ($uid0 == $uid) $a->setBit(B_IDED); // assume we have a photoId for givens unless a step says otherwise
 
@@ -864,7 +864,7 @@ function findEmail($index, $email, $subs) {
           $subs['site'] = BASE_URL; // site parameter is set in boot.inc so compiler.php can't see it.
           ksort($subs); // reorder
         }
-        ///        print_r($subs); die('here');
+///        print_r($subs); die('here');
         if (nn($ignore)) foreach ($ignore as $k) unset($t_subs[$k]);
         ksort($t_subs);
         $wantedInActual = just(array_keys($subs), $t_subs);

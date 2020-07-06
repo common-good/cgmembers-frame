@@ -1013,8 +1013,7 @@ function subMenuHtml($menu) {
   if (!is_array($menu)) $menu = \rweb_menu($menu);
   $list = '';
   foreach ($menu as $k => $v) {
-    for ($i = 0; $i < 7; $i++) $v[] = ''; // keep list() from dying
-    list ($type, $head, $args, $perms, $func, $detail, $icon) = $v;
+    list ($type, $head, $args, $perms, $func, $detail, $icon) = u\padRay($v, 7);
     if ($type == 'call' or !w\webAccess($perms)) continue;
     if (nn($detail)) $detail = "<p class=\"list-group-item-text\">$detail</p>";
     $text = <<<EOF
@@ -1186,7 +1185,7 @@ function tellStaffNewMember($params) {
   $params = compact(ray('phone state acctType helper copts ats')) + $params;
   unset($params['code']); // don't need to see this
   $message = '<h2>NEW SIGNUP</h2>';
-  r\tellCO($message, $params);
+  r\tellCAdmin($message, $params);
 }
 
 /**

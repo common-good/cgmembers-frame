@@ -246,7 +246,7 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     $newUid = r\serverUid(); // Seedpack uid
   }
 
-  if (!$delete) if (!$newUid) {
+  if (!$delete and !$newUid) {
     $region = $a->zip ? r\region($a->country, $a->state, $a->zip) : r\communityUid();
     $newUid = r\Acct::nextId($region);
   }

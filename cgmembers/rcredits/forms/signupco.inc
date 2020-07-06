@@ -151,7 +151,7 @@ function formSignupCo_submit($form, &$sta) {
 
   if ($needPhone) {
     be\invoice(r\acct(CGID), $mya, EQUIP_DEPOSIT, t('equipment deposit'), FOR_NONGOODS);
-    r\tellCo(t('New business has paid a deposit for a smartphone. Please deliver one ASAP.'));
+    r\tellCAdmin(t('New business has paid a deposit for a smartphone. Please deliver one ASAP.'));
     say('refundable deposit');
   }
 

@@ -111,44 +111,6 @@ function hook_user_cancel($edit, $account, $method) {
 }
 
 /**
- * Modify account cancellation methods.
- *
- * By implementing this hook, modules are able to add, customize, or remove
- * account cancellation methods. All defined methods are turned into radio
- * button form elements by user_cancel_methods() after this hook is invoked.
- * The following properties can be defined for each method:
- * - title: The radio button's title.
- * - description: (optional) A description to display on the confirmation form
- *   if the user is not allowed to select the account cancellation method. The
- *   description is NOT used for the radio button, but instead should provide
- *   additional explanation to the user seeking to cancel their account.
- * - access: (optional) A boolean value indicating whether the user can access
- *   a method. If #access is defined, the method cannot be configured as default
- *   method.
- *
- * @param $methods
- *   An array containing user account cancellation methods, keyed by method id.
- *
- * @see user_cancel_methods()
- * @see user_cancel_confirm_form()
- */
-function hook_user_cancel_methods_alter(&$methods) {
-  // Limit access to disable account and unpublish content method.
-  $methods['user_cancel_block_unpublish']['access'] = user_access('administer site configuration');
-
-  // Remove the content re-assigning method.
-  unset($methods['user_cancel_reassign']);
-
-  // Add a custom zero-out method.
-  $methods['mymodule_zero_out'] = array(
-    'title' => t('Delete the account and remove all content.'),
-    'description' => t('All your content will be replaced by empty strings.'),
-    // access should be used for administrative methods only.
-    'access' => user_access('access zero-out account cancellation method'),
-  );
-}
-
-/**
  * Add mass user operations.
  *
  * This hook enables modules to inject custom operations into the mass operations
@@ -319,41 +281,6 @@ function hook_user_logout($account) {
       'time' => time(),
     ))
     ->execute();
-}
-
-/**
- * The user's account information is being displayed.
- *
- * The module should format its custom additions for display and add them to the
- * $account->content array.
- *
- * Note that when this hook is invoked, the changes have not yet been written to
- * the database, because a database transaction is still in progress. The
- * transaction is not finalized until the save operation is entirely completed
- * and user_save() goes out of scope. You should not rely on data in the
- * database at this time as it is not updated yet. You should also note that any
- * write/update database queries executed from this hook are also not committed
- * immediately. Check user_save() and db_transaction() for more info.
- *
- * @param $account
- *   The user object on which the operation is being performed.
- * @param $view_mode
- *   View mode, e.g. 'full'.
- * @param $langcode
- *   The language code used for rendering.
- *
- * @see hook_user_view_alter()
- * @see hook_entity_view()
- */
-function hook_user_view($account, $view_mode, $langcode) {
-  if (user_access('create blog content', $account)) {
-    $account->content['summary']['blog'] =  array(
-      '#type' => 'user_profile_item',
-      '#title' => t('Blog'),
-      '#markup' => l(t('View recent blog entries'), "blog/$account->uid", array('attributes' => array('title' => t("Read !username's latest blog entries.", array('!username' => format_username($account)))))),
-      '#attributes' => array('class' => array('blog')),
-    );
-  }
 }
 
 /**

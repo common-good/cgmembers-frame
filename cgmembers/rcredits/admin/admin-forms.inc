@@ -1033,7 +1033,7 @@ function handyLinks() {
   //    'devel/theme/registry|View a list of available theme functions across the whole site.|Theme registry',
 
   foreach ($links as $link) {
-    list ($url, $detail, $label, $icon) = explode('|', u\padRay($link, 4));
+    list ($url, $detail, $label, $icon) = u\padRay(explode('|', $link), 4);
     if (!$label) $label = $detail;
     $handy[$url] = ['', $label, '', ANY, '', $detail, $icon];
   }

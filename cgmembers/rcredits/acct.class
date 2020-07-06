@@ -898,7 +898,7 @@ EOF;
     if ($done and empty($nextStep)) {
       $a->update('task', '');
       if (!$a->member) {
-        r\tellCO(t('New Member (%name)', ['name' => $a->fullName] + $details));
+        r\tellCAdmin(t('New Member (%name)', ['name' => $a->fullName] + $details));
         $a->setBit(B_MEMBER);
         $a->update('tickle', now());
       }

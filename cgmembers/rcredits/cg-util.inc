@@ -79,29 +79,11 @@ function badDob(&$dob, $co) {
 }
 
 /**
- * Say whether the given SSN is bad.
- * @param string $ssn: the social security number to test (RETURNED stripped of all but the digits)
- * @param int $dob: the person's birth date (null if the ssn is actually an EIN)
- * @return an error index if the SSN is bad, else FALSE
- * From the SSA site:
-     We do not assign a Social Security number with the first three digits of: 000, 666, 900 - 999.
-     Nor do we assign Social Security number with "00" in the fourth and fifth position, 
-     or "0000" in the last four positions of the numbers.
-     Additionally, prior to June 25, 2011, we had never assigned a Social Security number with the first three digits of: 000, 666, 772 - 799, 800 - 899, 900 - 999.
+ * Say whether the given SSN is the wrong length (since they are random, that's all we can tell).
  */
 function badSsn(&$ssn, $dob = '') {
-//  if (in_array($ssn, ray('5551234567 777777777 888888888 999999999'))) return FALSE; // test numbers
-  if (strlen(u\digits($ssn)) != 9) $bad = TRUE; // zap all but the digits (call by ref)
-  if (FALSE AND nn($dob)) { // ssn (not ein) -- We once got a valid SSN that violated these rules, so skip this.
-    $c1 = substr($ssn, 0, 1);
-    $s1 = substr($ssn, 0, 3);
-    $s2 = substr($ssn, 3, 2);
-    $s3 = substr($ssn, 5);
-    if ($c1 == '9' or $s1 == '000' or $s1 == '666' or $s2 == '00' or $s3 == '0000') $bad = TRUE;
-    if (substr($ssn, 0, 8) == '98765432') $bad = TRUE; // advertising numbers, according to Wikipedia
-    if ($dob < strtotime('25Jun2011')) if ($c1 == '8' or ($c1 == '7' and $s1 > '771')) $bad = TRUE;
-  }
-  return nn($bad) ? (nn($dob) ? 'bad ssn' : 'bad federal id') : FALSE;
+  if (strlen(u\digits($ssn)) == 9) return FALSE;
+  return nn($dob) ? 'bad ssn' : 'bad federal id';
 }
 
 function ssnName($v, &$firstname = '', &$middlename = '', &$lastname = '') {
@@ -1621,4 +1603,4 @@ function prob($p, $yes = TRUE, $no = FALSE) {return (mt_rand() / mt_getrandmax()
 function routingOk($r) {return (preg_match('/^(|[0-9]{9})$/', $r) and db\exists('r_banks', 'route=:r', compact('r')));}
 function bankAcctOk($ba) {return preg_match('/^[0-9]{3,17}$/', $ba);}  // {3,20} ? Dwolla says 3-17
 function joins(&$s, $m, $other = '') {return $s = (empty($s) ? '' : "$s$m") . $other;}
-function padRay($ray, $n, $fill = []) {for ($i = 0; $i < $n; $i++) $ray[] = $fill; return $ray;}
+function padRay($ray, $n, $fill = '') {for ($i = 0; $i < $n; $i++) $ray[] = $fill; return $ray;}
