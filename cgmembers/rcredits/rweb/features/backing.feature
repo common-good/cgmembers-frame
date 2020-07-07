@@ -1,45 +1,48 @@
 Feature: Backing
 AS a member
 I WANT to set a backing amount
-SO I can support my Common Good community in making grants.
+SO I can support my Common Good community in making grants and investments.
 
 Setup:
   Given members:
-  | uid  | legalName | crumbs | minimum | savingsAdd | saveWeekly | achMin | backing | floor | flags   |*
-  | .ZZA | Abe One   |    .01 |     100 |          0 |          1 |     20 |       0 |    10 | ok,confirmed,nosearch,paper |
-  | .ZZB | Bea Two   |    .02 |     -10 |         10 |          0 |     50 |      10 |     0 | ok,co,confirmed,weekly,secret |
+  | uid  | legalName | backing | floor | flags                         |*
+  | .ZZA | Abe One   |       0 |    10 | ok,confirmed,nosearch,paper   |
+  | .ZZB | Bea Two   |      10 |     0 | ok,co,confirmed,weekly,secret |
   
 Scenario: A member visits the backing page
   When member ".ZZA" visits page "community/backing"
   Then we show "Backing Promise" with:
   | Amount | $1 |
-#  | Signed |    |
 
-Scenario: A member changes backing amount
+Scenario: A member increases backing amount
   Given transactions: 
   | xid | created   | amount | payer | payee | purpose |*
   |   3 | %today-1m |    250 | ctty | .ZZA | grant   |
   And member ".ZZA" has no photo ID recorded
   When member ".ZZA" completes form "community/backing" with values:
-#  | amtChoice | signedBy |*
-#  |       500 | Abe One  |
   | amtChoice |*
   |       500 |
   Then members:
   | uid  | backing | backingDate |*
-  | .ZZA |     500 | %daystart      |
+  | .ZZA |     500 | %daystart   |
   
   When member ".ZZA" completes form "community/backing" with values:
   | amtChoice |*
   |      1000 |
   Then members:
   | uid  | backing | backingDate |*
-  | .ZZA |    1000 | %daystart      |
+  | .ZZA |    1000 | %daystart   |
 
-  When member ".ZZA" completes form "community/backing" with values:
+Scenario: A member decreases backing amount
+  Given members have:
+  | uid  | backingDate |*
+  | .ZZB | %today-3m   |
+  When member ".ZZB" completes form "community/backing" with values:
   | amtChoice |*
-  |         1 |
+  |         5 |
   Then members:
-  | uid  | backing | backingDate |*
-  | .ZZA |       1 | %daystart      |
-  And we say "status": "backing in effect"
+  | uid  | backing | backingDate | backingNext |*
+  | .ZZB |      10 | %today-3m   |           5 |
+  And we say "status": "backing in effect" with subs:
+  | renewDate | %mdY+9m |**
+  

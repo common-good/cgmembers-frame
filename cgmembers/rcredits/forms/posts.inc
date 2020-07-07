@@ -421,9 +421,9 @@ function getWho($args) {
  * Respond to user's click of confirm, cancel, or edit link in email.
  */
 function confirm($op, $thing, $code) {
-  $code = u\decry('P', CRYPT_FLAG . $code);
+  $ray = u\decryRay($code);
   list ($tnm, $idnm) = $thing == 'post' ? ['posts', 'postid'] : ['messages', 'id'];
-  extract(just($idnm . ' created location', $code, NULL));
+  extract(just($idnm . ' created location', $ray, NULL));
   $idSub = compact($idnm);
   $successUrl = POSTPAGE . (nni($_COOKIE, 'radius') ? '/op=top' : '');
 
@@ -455,7 +455,7 @@ function confirm($op, $thing, $code) {
     } elseif ($op == 'edit') {
       return go(POSTPAGE . '/op=show&postid=' . $idSub['postid']); // showing is editing, for the right person
       
-    } else return u\FAIL('Bad do in confirm: ' . pr($code));
+    } else return u\FAIL('Bad do in confirm: ' . pr($ray));
 
 
   } else return softErr(t('That %thing does not exist.', compact('thing')));
@@ -651,7 +651,7 @@ function oldEmailLink($pid) {
  */
 function getCode($thing, $idSub, $other = []) {
   $created = db\get('created', $thing . 's', $idSub);
-  return str_replace(CRYPT_FLAG, '', u\cry('P', http_build_query($idSub + $other + ray('created word', $created, R_WORD))));
+  return u\cryRay($idSub + $other + ray('created word', $created, R_WORD));
 }
 
 /**

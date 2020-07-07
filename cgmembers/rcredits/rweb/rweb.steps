@@ -42,7 +42,8 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
 /**
  * member (ARG) completes form (ARG) with values: (ARG)
  *
- * in: MAKE backing AMemberChangesBackingAmount
+ * in: MAKE backing AMemberIncreasesBackingAmount
+ *     MAKE backing AMemberDecreasesBackingAmount
  *     MAKE bank AMemberMovesCreditToTheBank
  *     MAKE bank AMemberDrawsCreditFromTheBankWithZeroFloor
  *     MAKE bank AMemberDrawsCreditFromTheBankWithAdequateFloor
@@ -211,7 +212,8 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  * members: (ARG)
  *
  * in: MAKE backing Setup
- *     TEST backing AMemberChangesBackingAmount
+ *     TEST backing AMemberIncreasesBackingAmount
+ *     TEST backing AMemberDecreasesBackingAmount
  *     MAKE balancesheet Setup
  *     MAKE bank Setup
  *     MAKE bank ASlaveMemberRequestsATransfer
@@ -270,7 +272,7 @@ function members($list) {return t\members($list);}
 /**
  * transactions: (ARG)
  *
- * in: MAKE backing AMemberChangesBackingAmount
+ * in: MAKE backing AMemberIncreasesBackingAmount
  *     MAKE balancesheet Setup
  *     MAKE bank Setup
  *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
@@ -313,7 +315,8 @@ function transactions($list) {return t\transactions($list);}
 /**
  * we say (ARG): (ARG) with subs: (ARG)
  *
- * in: TEST bank AMemberMovesCreditToTheBank
+ * in: TEST backing AMemberDecreasesBackingAmount
+ *     TEST bank AMemberMovesCreditToTheBank
  *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
  *     TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
  *     TEST bank AMemberMovesTooMuchToTheBank
@@ -351,8 +354,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
 /**
  * we say (ARG): (ARG)
  *
- * in: TEST backing AMemberChangesBackingAmount
- *     TEST bank AMemberMovesTooLittleToTheBank
+ * in: TEST bank AMemberMovesTooLittleToTheBank
  *     TEST bank AMemberTriesToGoBelowTheirMinimum
  *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
@@ -1166,7 +1168,8 @@ function statisticsGetSet($time) {
 /**
  * members have: (ARG)
  *
- * in: MAKE bank ASlaveMemberRequestsATransfer
+ * in: MAKE backing AMemberDecreasesBackingAmount
+ *     MAKE bank ASlaveMemberRequestsATransfer
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     BOTH coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
@@ -1404,7 +1407,7 @@ function memberCacheIsOk($id) {return r\acct(t\uid($id))->cacheOk();}
 /**
  * member (ARG) has no photo ID recorded
  *
- * in: MAKE backing AMemberChangesBackingAmount
+ * in: MAKE backing AMemberIncreasesBackingAmount
  *     MAKE preferences AMemberChangesPreferences
  */
 function memberHasNoPhotoIDRecorded($id) {return t\noPhotoId($id);}

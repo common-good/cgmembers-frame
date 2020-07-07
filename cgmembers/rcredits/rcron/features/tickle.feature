@@ -45,15 +45,15 @@ Scenario: A newbie has taken some steps but not all
 
 Scenario: A nonmember has not accepted the invitation
   Given invites:
-  | email           | inviter | code   | invited   |*
-  | zot@example.com | .ZZF    | codeF1 | %today-8d |
+  | email           | inviter | code   | invited    |*
+  | zot@example.com | .ZZF    | codeF1 | %today-21d |
   When cron runs "tickle"
   Then we email "nonmember" to member "zot@example.com" with subs:
-  | fullName | code   | phone        | signed  | nudge        | noFrame |*
-  | Flo Six  | codeF1 | 413-253-0006 | %mdY-6d | reminder one | 1       |
+  | fullName | code   | phone        | signed  | nudge         | noFrame |*
+  | Flo Six  | codeF1 | 413-253-0006 | %mdY-6d | reminder last | 1       |
   And we notice "invite languishing" to member ".ZZF" with subs:
   | email           | elapsed |*
-  | zot@example.com |       8 |
+  | zot@example.com |      21 |
 
 Scenario: A nonmember has not accepted the invitation from a not-yet-active member
   Given invites:

@@ -204,7 +204,7 @@ function doAccounts($info = []) {
 
   if (nn($jid)) $jid = t\uid($jid);
 
-  $nmMap = ray('ZZA:Abe One,ZZB:Bea Two,ZZC:Cat Pub,ZZD:Dee Four,ZZE:Eve Five,ZZF:Fin Corp,ZZG:Glo Seven');
+  $nmMap = ray('ZZA:Abe One,ZZB:Bea Two,ZZC:Cat Pub,ZZD:Dee Four,ZZE:Eve Five,ZZF:Fin Corp,ZZG:Glo Seven,ZZH:Hal Co,ZZI:Ivy Nine,ZZJ:Joe Ten');
   u\setDft($fullName, substr($uid, 0, 2) == 'ZZ' ? strtr($nmMap) : 'doAccount ' . u\randomString(20, 'word'));
   $name = u\shortName($fullName);
   u\setDft($legalName, $fullName);
@@ -237,11 +237,13 @@ function doAccounts($info = []) {
   if (nn($cc)) $cardCode = $cc;
   if (nn($cc2)) $cardCode2 = $cc2;
   if (isset($risks)) $risks = getRisks($risks, K_ACCT_RISKS);
+  
+  foreach (ray('backingNext') as $k) if (nn($$k, NULL) === '') $info[$k] = NULL; // empty for these means NULL
 
-  $fixFields = 'fullName legalName name pass email secure community zip country postalAddr cardCode cardCode2 ' . $moneyFields;
+  $fixFields = $moneyFields . ' fullName legalName name pass email secure community zip country postalAddr cardCode cardCode2 uid jid helper flags risks last4bank';
 
+  foreach (ray($fixFields) as $k) if (isset($$k)) $info[$k] = $$k; // add in changed fields
   foreach (ray('acctType dw cc cc2') as $one) unset($info[$one]); // these are not real fields
-  foreach (ray('uid jid helper flags risks last4bank ' . $fixFields) as $k) if (isset($$k)) $info[$k] = $$k; // add in changed fields
 
   if (!$a = new r\Acct($info)) return t\output('Cannot create account: ' . pr($info));
   if (nn($picture) and !makePicture($picture, $a)) return FALSE;
@@ -1684,7 +1686,7 @@ function postCode($code) {
     $dt = db\get('created', $tnm, "$idnm=" . $code[$idnm]);
     if (t\sameTime($dt, $created)) $code['created'] = $dt; // wiggle room
   }
-  return str_replace(CRYPT_FLAG, '', u\cry('P', http_build_query($code + ['word' => R_WORD])));
+  return u\cryRay($code + ['word' => R_WORD]);
 }
 
 function getLocus($q) {

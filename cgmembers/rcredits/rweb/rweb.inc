@@ -364,8 +364,7 @@ function formEmpty($form, &$sta = '', $args = '') {
 function authcode() {
   extract($args = just('company cocode', $_GET, NULL));
   if (!$cocode or !u\isQid($company) or !($co = r\acct($company)) or !$co->co or $co->emailCode != $cocode) exit(t('bad company account ID or cocode'));
-  $now = now();
-  exit(substr(u\cry('P', u\randomString(1) . serialize(compact('cocode', 'now'))), 2));
+  exit(u\cryRay(compact(ray('cocode now r', $cocode, now(), u\randomString(1)))));
 }
 
 /**

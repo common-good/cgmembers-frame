@@ -40,7 +40,7 @@ function rdo($code, $args = '') {
 /// 		flog($lug = pr(compact(ray('op qid ecode mo v code'))));
     if (!$op or !$qid or !$a = r\acct($qid) or $ecode != $a->emailCode) return doSay(t('That is not a valid link.'), 'err');
   } else {
-    if (!$info = r\doCode($code)) return doSay(t('That link is archaic.'), 'err');
+    if (!$info = u\decryRay($code)) return doSay(t('That link is archaic.'), 'err');
     if ($once = is_numeric($doid = nni($info, 'op'))) {
       if (!$row = db\get('uid,data,expires', 'r_do', 'doid=:doid', compact('doid'))) return doSay(t('That link is no longer valid.'), 'err'); // already used OR deleted because it expired
       extract($row);

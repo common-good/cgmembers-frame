@@ -37,7 +37,7 @@ function queueNext($task = NULL) {
     
   u\setDft($task, str_replace(__NAMESPACE__ . '\\', '', caller()));
   u\loga('queueNext', json_encode(compact('task')));
-  cr\queue(u\nextAfter($task, ray(DAILY_TASKS)));
+  cr\queue(u\nextAfter($task, ray(DAILY_OPS)));
 //  if (isDEV) while (db\exists('queue')) cr\run();
 }
 
