@@ -115,22 +115,3 @@ Scenario: A non-member chooses a donation to CG
 	Then count "txs" is 1
 	And count "usd" is 0
   And count "invoices" is 0
-
-Scenario: It's time to warn about an upcoming annual donation to CG
-  Given members:
-  | uid  | fullName | flags  | risks   | activated   |*
-  | .ZZD | Dee Four | ok     | hasBank | %now-1y     |
-  | .ZZE | Eve Five | ok     | hasBank | %yearAgo+7d |
-  And these "tx_templates":
-  | id | action | start       | from | to  | amount | period | purpose |*
-  |  1 | pay    | %yearAgo+7d | .ZZD | cgf |      1 | year   | gift!   |
-	And transactions:
-  | xid | created     | amount | payer | payee | purpose | flags       | recursId |*
-  |   1 | %yearAgo+7d | 10     | .ZZD  | cgf   | gift!   | gift,recurs | 1        |
-  When cron runs "warnAnnualGifts"
-	Then we email "annual-gift" to member "d@example.com" with subs:
-	| amount | when    | aDonate |*
-	|     $1 | %mdY+7d |       ? |
-	And we email "annual-gift" to member "e@example.com" with subs:
-	| amount | when    | aDonate |*
-	|     $0 | %mdY+7d |       ? |	

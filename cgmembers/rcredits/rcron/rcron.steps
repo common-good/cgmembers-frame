@@ -41,6 +41,8 @@ function extraSetup($feature) {
  * members: (ARG)
  *
  * in: MAKE aaSeldomNotices Setup
+ *     MAKE aaSeldomNotices ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
+ *     BOTH aaSeldomNotices ItsTimeToRenewBacking
  *     MAKE bank Setup
  *     MAKE bank AMemberIsWellBelowTarget
  *     MAKE bank AMemberIsUnderTargetAndHasRequestedInsufficientFundsFromTheBank
@@ -52,7 +54,6 @@ function extraSetup($feature) {
  *     MAKE daily Setup
  *     MAKE gifts Setup
  *     MAKE gifts ANonmemberChoosesADonationToCG
- *     MAKE gifts ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
  *     MAKE invoices Setup
  *     MAKE joint Setup
  *     MAKE monthly Setup
@@ -152,7 +153,8 @@ function relations($relations) {return t\relations($relations);}
 /**
  * transactions: (ARG)
  *
- * in: MAKE bank AMemberIsBarelyBelowTarget
+ * in: MAKE aaSeldomNotices ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
+ *     MAKE bank AMemberIsBarelyBelowTarget
  *     TEST bank AnUnbankedMemberBarelyBelowTargetDrawsOnAnotherAccount
  *     TEST bank MembersBankAccountHasNotBeenVerified
  *     TEST bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
@@ -161,7 +163,6 @@ function relations($relations) {return t\relations($relations);}
  *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     BOTH gifts ASecondRecurringDonationToCGCanBeCompleted
  *     TEST gifts ADonationInvoicetoCGCanBeCompleted
- *     MAKE gifts ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
  *     BOTH invoices UnpaidInvoicesGetHandled
  *     TEST invoices AnInvoiceGetsHandledForAnAccountThatRoundsUp
  *     MAKE joint AJointAccountNeedsRefilling
@@ -240,7 +241,8 @@ function notices($list) {return t\notices($list);}
 /**
  * we email (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST gifts ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
+ * in: TEST aaSeldomNotices ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
+ *     TEST aaSeldomNotices ItsTimeToRenewBacking
  *     TEST notices AMemberGetsSomeNotices
  *     TEST notices AMemberGetsSomeWeeklyNotices
  *     TEST tickle ANonmemberHasNotAcceptedTheInvitation
@@ -381,7 +383,8 @@ function invites($list) {return t\invites($list);}
 /**
  * we do not email (ARG) to member (ARG)
  *
- * in: TEST tickle ANonmemberHasAcceptedTheInvitation
+ * in: TEST aaSeldomNotices ItsTimeToRenewBacking
+ *     TEST tickle ANonmemberHasAcceptedTheInvitation
  *     TEST tickle ANonmemberHasAcceptedAnInvitationFromSomeoneElseInstead
  */
 function weDoNotEmailToMember($index, $email) {return t\noSuchEmail($index, $email);}
@@ -517,7 +520,8 @@ function stats($list) {return t\stats($list);}
 /**
  * these (ARG): (ARG)
  *
- * in: TEST bank AMemberIsWellBelowTarget
+ * in: MAKE aaSeldomNotices ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
+ *     TEST bank AMemberIsWellBelowTarget
  *     TEST cashout AMemberCompanyCashesOutMonthly
  *     TEST cashout AMemberCompanyCashesOutWeekly
  *     MAKE daily Setup
@@ -528,7 +532,6 @@ function stats($list) {return t\stats($list);}
  *     MAKE gifts ADonationInvoicetoCGCanBeCompleted
  *     MAKE gifts ARecurringDonationToCGCannotBeCompleted
  *     MAKE gifts ANonmemberChoosesADonationToCG
- *     MAKE gifts ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
  *     BOTH invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
  *     TEST invoices ALanguishingInvoiceGetsFundedAgain
  *     TEST invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalance
@@ -602,6 +605,8 @@ function riskThresholdPercentIs($pct) {
  * cron runs (ARG)
  *
  * in: MAKE aaSeldomNotices AWeeklyNoticeMemberDoesntGetNoticesOnOtherDays
+ *     MAKE aaSeldomNotices ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
+ *     MAKE aaSeldomNotices ItsTimeToRenewBacking
  *     MAKE bank AMemberIsBarelyBelowTarget
  *     MAKE bank AMemberGetsCreditForTheBankTransferImmediately
  *     MAKE bank AMemberWithLowCreditLineGetsCreditForTheBankTransferAfterEnoughTime
@@ -629,7 +634,6 @@ function riskThresholdPercentIs($pct) {
  *     MAKE gifts ADonationInvoicetoCGCanBeCompleted
  *     MAKE gifts ARecurringDonationToCGCannotBeCompleted
  *     MAKE gifts ANonmemberChoosesADonationToCG
- *     MAKE gifts ItsTimeToWarnAboutAnUpcomingAnnualDonationToCG
  *     MAKE invoices UnpaidInvoicesGetHandled
  *     MAKE invoices NonmemberUnpaidInvoiceDoesNotGenerateATransferRequest
  *     MAKE invoices SecondInvoiceGetsFundedTooForANonrefillingAccount

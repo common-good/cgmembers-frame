@@ -1389,7 +1389,7 @@ X;
       $info = ray('op', db\insert('r_do', $data, 'doid')); // (preliminary) op is r_do record ID
     } else $info += ['mo'=>rdoMonth()]; // remember month, in case we need to know when link was created
 
-    return BASE_URL . "/do/" . r\makeDoCode($info);
+    return BASE_URL . "/do/" . u\cryRay($info);
   }
   function makeDo($op, $v = NULL, $life = WEEK7_SECS, $info = []) {
     return 'a href="' . $this->makeDo0($op, $v, $life, $info) . '"';

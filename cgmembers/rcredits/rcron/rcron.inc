@@ -11,71 +11,32 @@ use CG\Cron as cr;
 /**
  * @file
  * Functions to run periodically.
- 
- To run a single CRON function "zot" from the PHP window, use:
- f('cr.zot', arg1,...);
- 
- To run all the daily functions starting with a particular function "zot", use:
- CG\Cron\zot(arg1,...); // to run all daily functions, zot=everyDay
- 
-  On development machines:
-  include __DIR__ . '/../rcron/rcron.inc';
-  cr\everyDay(); while (db\exists('queue')) cr\run(); debug ('done'); 
- 
- * = written
- ** = tested
-
-TODO:
-- identify pending joint accounts and alert both parties (with link to complete or cancel) select reid, u1.fullName, u2.fullName FROM r_relations r LEFT JOIN users u1 ON r.main=u1.uid LEFT JOIN users u2 ON u2.uid=r.other WHERE (SELECT reid FROM r_relations WHERE main=r.other AND other=r.main) IS NULL AND r.permission=7 
-
-
-DAILY (every 5 mins for 5 mins, starting at 2am)
-- * usdTxsThere() rollback lost USD transactions, mark completed deposits/withdrawals
-- checkAccts() check for consistency, security, scams
-- ** stats(): calculate daily statistics and record in r_stats and in the stats field of user records
-- ** paySuppliers(): automatic payment exchanges to suppliers
-- UNUSED ** payEmployees(): Each employee (and supplier) gets relieved of their excess rCredits immediately if they don't have enough USD to trade the employer for them.
-- ** gifts(): donations to CGF (not shares)
-- UNUSED * redistribute(): (selling of unwanted rCredits) looks at accounts over their maximum (maximum is ignored for companies that do payment exchanges)
-- ** homogenize(): spread the USD out a little in the system (just until we can do ACH debits)
-- ** pool(): hold some USD in the community account (just until we can do ACH debits)
-- ** bank(): automatic transfers from bank accounts
-- [later] notify and maybe fine late borrowers (might figure interest at the same time, since it requires examining each balance -- but only actually credit the interest monthly, otherwise discard it)
-- ** tickle(): things to do 2/30/60/90 (etc) days after login/access/created date
-  . 1mo: notice - suggest sending invitations
-      $email = $mya->email;
-      $invited = ($nonperson or db\count('r_invites', 'inviter=:myid AND email<>:email', compact('myid', 'email')) >= 1);
-          $step4 = t('<a>Invite someone</a> to sign up for rCredits! No one can join without an invitation. You can help by sending one. You might particularly want to invite companies and individuals you buy from or sell to (for example your employer or employees).');
-
-  . 1mo: suggest another donation if first was small
-  . 6mo: allow cashing out rewards if system stable? Probably not.
-- [later] statements for those who want daily statements
-- weekly / monthly / quarterly / annual stuff
-- ** notices(): send notices (daily, weekly, or monthly digest)
-- CREATE RULES FROM TEMPLATES
-
-WEEKLY
-- soldOut() and missedOut() tell members what they did that was dumb (sold rC or missed a chance to buy them)
-- after first month, lower floor according to sales (only if B_DEBT)
-
-MONTHLY
-- inflation adjustment (monthly, calculating daily bals from history) is credited to the new month. calculated as the sum of t*bal*APR, where bal is each balance they had during the preceding month and t is the number of years that balance lasted. (see daily notify and fine, above)
-- share to CGF
-- adjust rewards pct for each account (based on growth of account's wider economic ctty)
-- archive the 13th previous month (13 is a parameter -- transactions are accessible for ever, but slower)
-
-YEARLY
-- 1099s
-
-NOTES:
-- Timer Cron is disabled on the staging site. Here's what the cron job would be:
+ *
+ * To run a SINGLE cron function "zot" from the PHP window, use: f('cr.zot', arg1,...);
+ * To run all the daily functions starting with a particular function "zot", use:
+ * cr\zot(arg1,...); // to run ALL daily functions, zot=everyDay
+ *
+ * Note: Timed cron is disabled on the staging site. Here's what the cron job would be:
   <star>/5 * * * * curl https://new2.CommonGood.earth/cron.php?cron_key=w8x3lfzNQK1bxMz6RMTuF54mMInAs4b8SiVJO9zvWYg
-  where <star> means * (not the same as for the production site) 
+  where <star> means * (not the same key as for the production site) 
+ 
+ * @todo:
+- identify pending joint accounts and alert both parties (with link to complete or cancel) select reid, u1.fullName, u2.fullName FROM r_relations r LEFT JOIN users u1 ON r.main=u1.uid LEFT JOIN users u2 ON u2.uid=r.other WHERE (SELECT reid FROM r_relations WHERE main=r.other AND other=r.main) IS NULL AND r.permission=7 
+DAILY (every 5 mins for 5 mins, starting at 2am)
+- checkAccts() check accounts (and their activity) more thoroughly for consistency, security, scams
+- notify and maybe fine late borrowers
+- suggest another donation (after a year?) if first was small
+WEEKLY
+- tell members what they did that was dumb
+MONTHLY
+- distribute community dividends (based on growth of account's wider economic ctty)
+- archive the 13th previous month (13 is a parameter -- transactions are accessible for ever, but slower)
+YEARLY
  */
 
 // Calculate risks twice, to take into account connections with scoundrels
-define('DAILY_TASKS', 'START checkAccts setNear cttyStats trust acctRisk acctRiskFinish txRisk tickle lessOften recurs getFunds invoices invest notices END');
-
+const DAILY_OPS = 'START checkAccts setNear cttyStats trust acctRisk acctRiskFinish txRisk tickle annualGift renewBacking lessOften recurs getFunds invoices invest notices END';
+const LOGLESS_OPS = 'acctHourly checkAcct whatsUp tickleStep activeWeekly activeMonthly recur'; // don't log these calls
 include_once __DIR__ . '/rcron-subs.inc';
 
 /**
@@ -137,7 +98,7 @@ function doTask($item) {
 
   extract(just('uid', $item, NULL));
   if ($uid) $mya = r\acct($uid); // fudge current account
-  if (!in($op, 'acctHourly checkAcct whatsUp tickleStep activeWeekly activeMonthly') and substr($op, -1, 1) != '1') u\log($op, 'cr', $item);
+  if (!in($op, LOGLESS_OPS) and substr($op, -1, 1) != '1') u\log($op, 'cr', $item);
 
   $func($item);
 }
@@ -333,7 +294,7 @@ function tickle() {
   $timeSince = "(ROUND((:NOW-@DATE)/:DAY_SECS, 0))";
 
   // Remind invitee to accept
-  $delays = '8';
+  $delays = '3,8,21';
   $elapsed = str_replace('@DATE', 'invited', $timeSince);
   $sql = <<< X
     SELECT DISTINCT i.email, i.inviter, i.code, $elapsed AS elapsed FROM r_invites i
@@ -343,7 +304,7 @@ X;
 
   queueEach('tickleSignup', $sql);
 
-  $delays = '1,4,9'; // delays proposed by staff (ultimately every week)
+  $delays = '1,4,9,22'; // delays proposed by staff (ultimately every week)
   $elapsed = str_replace('@DATE', 'access', $timeSince);
   $sql = <<< X
     SELECT DISTINCT uid, $elapsed AS elapsed FROM users 
@@ -371,13 +332,9 @@ X;
 X;
 
   queueEach('activeMonthly', $sql); // no need for jid here (floors get summed)
-  
   queueEach('activeWeekly', "SELECT DISTINCT uid FROM users WHERE :IS_OK AND uid>:CANONIC_ACCTS AND $sinceActivated>0 AND $sinceActivated % 7 = 0");
-	
-  warnAnnualGifts();
-  
   queueNext();
-}
+}	
 
 /**
  * Remind invitee to accept invitation.
@@ -386,7 +343,7 @@ function tickleSignup($item) {
   extract(just('email inviter code elapsed', $item));
   if (r\acct($email = u\decry('P', $email))) return; // invitee already began to open an account
   $inviterName = r\acct($inviter)->fullName;
-  $nudge = t($elapsed < 7 ? 'reminder coming' : 'reminder one');
+  $nudge = t($elapsed < 10 ? 'reminder coming' : 'reminder last');
   r\rMail('nonmember', $email, ray('fullName nudge code noFrame', $inviterName, $nudge, $code, TRUE));
   r\notify($inviter, 'invite languishing', compact('email', 'elapsed'));
 }
@@ -449,34 +406,51 @@ function activeWeekly($item) {
   $a = r\acct($uid);
   if ($a->cashoutW) $a->cashout();
 }
- 
+
 /**
  * Warn members about upcoming annual donation (or lack thereof) -- a week before it's due.
  */
-function warnAnnualGifts() {
-	$advanceDays = 7;
-  
-	$sql = <<< X
-	  SELECT DISTINCT u.uid, r.amount, FROM_UNIXTIME(IFNULL(r.start, u.activated)) AS base, $advanceDays AS advanceDays,
-      ADDDATE(CURDATE(), INTERVAL $advanceDays DAY) AS target,
-      ADDDATE(CURDATE(), INTERVAL ($advanceDays-1) DAY) AS beforeTarget
-		FROM users u 
-    LEFT JOIN tx_templates r ON r.action=:ACT_PAY AND r.from=u.uid AND r.to=:CGID AND r.period='year' AND r.end IS NULL
-		WHERE u.:IS_OK AND u.activated AND u.uid>0 AND u.uid NOT :CANONIC
-    HAVING TIMESTAMPDIFF(YEAR, base, target) > TIMESTAMPDIFF(YEAR, base, beforeTarget)
-X;
-// activated is for testing, even though redundant with IS_OK
-
-  queueEach('warnAnnualGift', $sql);
+function annualGift() {
+  $join = "LEFT JOIN tx_templates tp ON tp.action=:ACT_PAY AND tp.from=u.uid AND tp.to=:CGID AND tp.period='year' AND tp.end IS NULL";
+  queueEach('warnAnnual1', annualSql('Donate', 'tp.amount', 'IFNULL(tp.start, u.activated)', $join));
+  queueNext();
 }
 
-function warnAnnualGift($item) {
-	extract(just('uid amount base target advanceDays', $item));
+/**  
+ * Warn members about upcoming backing renewal date (a week ahead).
+ */
+function renewBacking() {
+  $backMin = isPRODUCTION ? strtotime('7/17/2019') : 0; // because we didn't start renewing on time. Delete this minimum after 7/11/2020
+  $sql = annualSql('Backing', 'backing AS amount', "GREATEST(backingDate, $backMin)", '', 'backingNext IS NULL');
+  queueEach('warnAnnual1', $sql);
+  db\q('UPDATE users SET backing=IFNULL(backingNext, backing), backingDate=:today, backingNext=NULL WHERE backingDate+:YEAR_SECS<:NOW AND :IS_OK AND backing>0', ray('today', today())); // automatically renew (member decreased it or didn't update it in time)
+  queueNext();
+}
+ 
+/**
+ * Give the member a chance to renew their annual donation or backing.
+ */
+function warnAnnual1($item) {
+	extract(just('func uid amount base target', $item));
+  $tpls = ray('Donate:annual-gift, Backing:renew-backing');
 
 	$a = r\acct($uid);
-	$aDonate = w\atag("/do/doDonate~$a->mainQid~$a->emailCode");
-  $subs = ray('amount when aDonate', u\fmtAmt($amount), u\fmtDate(strtotime($target), TRUE), $aDonate);
-  r\notify($uid, 'annual-gift', $subs, TRUE);
+	$atag = w\atag("/do/do$func~$a->mainQid~$a->emailCode");
+  $track = u\cryRay(ray('qid type', $a->mainQid, strtolower($func)));
+  $subs = ray('amount when atag track', u\fmtAmt($amount), u\fmtDate(strtotime($target), TRUE), $atag, $track);
+  r\notify($uid, $tpls[$func], $subs, TRUE);
+}
+
+function annualSql($func, $amtFld, $dtFld, $join = '', $where = '1') {
+  return <<< X
+	  SELECT DISTINCT '$func' AS func, u.uid, $amtFld, FROM_UNIXTIME($dtFld) AS base,
+      ADDDATE(CURDATE(), INTERVAL :RENEW_ADVANCE_DAYS DAY) AS target,
+      ADDDATE(CURDATE(), INTERVAL (:RENEW_ADVANCE_DAYS-1) DAY) AS beforeTarget
+		FROM users u $join
+		WHERE u.:IS_OK AND u.uid>0 AND u.uid NOT :CANONIC AND $where
+    HAVING TIMESTAMPDIFF(YEAR, base, target) > TIMESTAMPDIFF(YEAR, base, beforeTarget)
+X;
+  // activated is for testing, even though redundant with IS_OK (NO, fix the test)
 }
 
 /**
@@ -1019,6 +993,7 @@ function notice1($item) {
 
   if (!$args = r\noticeArgs($uid, 'NOT sent', $weekly, $monthly)) return;
   $a = r\acct($uid);
+  $args['track'] = u\cryRay(ray('qid type', $a->mainQid, 'notice'));
 
   if ($a->ok) {
     $link = BASE_URL . "/do/doInvite~$a->mainQid~$a->emailCode~" . (r\rdoMonth() + 12);

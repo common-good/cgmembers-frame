@@ -10,6 +10,7 @@ use CG as r; // get rid of this
 use CG\DB as db;
 use CG\Util as u;
 use CG\Web as w;
+use CG\Testing as t;
 
 define ('URL_CHARS', 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-_~'); // 66 valid URLchars
 define ('HEX_CHARS', '0123456789abcdef');
@@ -732,6 +733,25 @@ function alterImg($img0, $w, $h, $x1 = 0, $y1 = 0, $cropW = 0, $cropH = 0, $angl
 }
 
 define('CRYPT_FLAG', '`!'); // flag start of encrypted data (add a single type letter)
+
+/**
+ * encrypt an array for use in URLs
+ */
+function cryRay($ray) {
+  $res = substr(u\cry('P', serialize($ray)), strlen(CRYPT_FLAG));
+  if (test()) t\doCode($res); // must be on separate line (PHP bug)
+  return $res;
+}
+
+/**
+ * decrypt a URL array.
+ */
+function decryRay($code) {
+  if ($code == 'TESTDOCODE') $code = t\doCode(); // test()
+  try {
+    return unserialize(u\decry('P', CRYPT_FLAG . $code));
+  } catch (\Exception $e) {return '';}
+}
 
 /**
  * Perform the given type of encryption (or decryption).

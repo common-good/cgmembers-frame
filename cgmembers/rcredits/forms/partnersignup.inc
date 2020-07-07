@@ -38,14 +38,14 @@ function formPartnerSignup($form, &$sta, $args = '') {
  * Create a PDF of the signed contract, based on the $code, and store it where we told the partner's Salesforce to expect it.
  * Next, see how the customer wants to pay.
  * If they choose Common Good, initiate an appropriate short multi-step signup sequence.
- * @param string $code: a doCode of an assoc of all data needed for the contract, plus a permanent or temporary cgAccount.
+ * @param string $code: an encrypted array of all data needed for the contract, plus a permanent or temporary cgAccount.
  * @return a form to display to request payment information
  */
 function signedContract($code, &$sta = '') {
   global $pagePartner, $mya;
   
-  if (!$info = r\doCode($code)) return softErr(t('That is not a valid link.'));
-  signout(TRUE); // after doCode, so tests work
+  if (!$info = u\decryRay($code)) return softErr(t('That is not a valid link.'));
+  signout(TRUE); // after decryRay, so tests work
   extract(just('cgAccount pid customer m_company co', $info, FALSE));
   if (!$pA = pA($pid)) return softErr(t('bad partner'));
   $partnerName = $pA->fullName;
@@ -542,7 +542,7 @@ function emailContract($pA, $info, $sign, $contractFlnm) {
     r\rMail($tpl, [$email => $fullName], $subs + compact('extra', 'links'), $partnerReply, $contractFlnm);
   } else {
     r\tellAdmin(t('New %partnerName customer: %fullName', compact('partnerName', 'fullName')), $info);
-    $code = r\makeDoCode($info);
+    $code = u\cryRay($info);
     r\rMail('partner-contract', [$email => $fullName], $subs + compact('code'), $partnerReply, $contractFlnm);
   }
 }

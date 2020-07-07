@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.54d'; // software version
+const R_VERSION = '3.54e'; // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -319,6 +319,7 @@ const TRIALCO_AMT_LIMIT = 1000; // maximum payments received by a trial (depende
 const EQUIP_DEPOSIT = 50; // dollar cost of equipment deposit
 const MATURITY = 21; // minimum age to have a credit limit
 const SELLING_MAXLEN = 25; // maximum length of any short description of something being sold
+const RENEW_ADVANCE_DAYS = 7; // how many days in advance to ask people to renew something annual
 
 // Filenames
 const R_TEMPLATE_DIR = '/templates';
@@ -637,6 +638,7 @@ $GLOBALS['emailSubjects'] = array(
   'notices' => t('%PROJECT Notices for %qid for %range'),
   'message' => t('%PROJECT %topic'),
 	'annual-gift' => t('your chosen annual gift to %PROJECT'),
+  'renew-backing' => t('your %PROJECT backing is ready to renew'),
   'confirm-post' => t('Confirm your post to %PROJECT Offers & Needs'),
   'confirm-message' => t('Confirm your message'),
   'post-message' => t('Response to your Offers & Needs post'),

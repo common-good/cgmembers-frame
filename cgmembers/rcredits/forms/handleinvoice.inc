@@ -28,7 +28,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
   extract(just('nvid amount payer payee purpose created data', $inv));
   if ($code) {
     if (test() and $code == 'TESTDOCODE') $code = t\doCode(); // most recently created doCode
-    if (!$info = r\doCode($code) 
+    if (!$info = u\decryRay($code) 
       or !$doInfo = db\get('data,uid', 'r_do', ray('doid', nni($info, 'op'))) 
       or $doInfo['uid'] != $payee
       or !$doData = unserialize($doInfo['data'])

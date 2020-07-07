@@ -1,3 +1,43 @@
+2020-07-07 feature/renew-backing
+. made encryption of data for use in URLs more consistent (replaced makeDoCode and doCode with u\cryRay and u\decryRay)
+. db\insert, db\update, and db\updateOrInsert all now default to key='id'
+. members now receive an annual email asking them to renew their backing (it renews automatically if they don't act)
+. cleaned up top of cron.inc
+. added a couple invite reminders
+. added tracking to annual emails and periodic notices
+
+. deleted unused Drupal files:
+  - *.install
+  - mail.inc
+  - user.admin.inc
+. deleted unused Drupal functions:
+  - user_authenticate
+  - user_external_login_register
+  - user_user_operations_unblock
+  - user_user_operations_block
+  - user_multiple_role_edit
+  - user_block_user_action
+  - user_help
+  - user_field_info_alter
+  - user_field_extra_fields
+  - user_external_load
+  - user_login_finalize
+  - user_load_by_mail
+  - user_load_by_name
+  - user_validate_picture
+  - user_role_permissions
+  - user_login_name_validate
+  - user_login_default_validators
+  - user_login_final_validate
+  - user_mail (and related functions)
+  - user_role_load (and related functions)
+  - user_filters
+  - user_roles
+  - user_login (dies)
+  - system_mail
+  - system_send_email_action
+  - system_send_email_action_form
+
 2020-07-06 feature/inv-security
 . fixed a bug in invoicing that could have allowed anyone to approve payment of an invoice
 
