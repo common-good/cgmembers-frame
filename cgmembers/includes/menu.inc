@@ -498,11 +498,12 @@ function menu_get_item($path = NULL, $router_item = NULL) {
  *   the result to the caller (FALSE).
  */
 function menu_execute_active_handler($path = NULL, $deliver = TRUE) {
+  global $mya;
   if ($router_item = menu_get_item($path)) {
     if ($router_item['access']) {
       if ($router_item['include_file']) require_once DRUPAL_ROOT . '/' . $router_item['include_file'];
       $page_callback_result = call_user_func_array($router_item['page_callback'], $router_item['page_arguments']);
-    } else { return w\softErr(t('no page permission')); }
+    } else { return $mya ? w\softErr(t('no page permission')) : w\go('signin'); }
   } else { $page_callback_result = MENU_NOT_FOUND; }
 
   // Deliver the result of the page callback, or if requested, return it raw, so calling code can do more processing.
