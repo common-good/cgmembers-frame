@@ -1,3 +1,6 @@
+2020-07-08 feature/create-migration
+. DOS batch file to create migrations according to a model
+
 2020-07-07 feature/renew-backing
 . made encryption of data for use in URLs more consistent (replaced makeDoCode and doCode with u\cryRay and u\decryRay)
 . db\insert, db\update, and db\updateOrInsert all now default to key='id'
