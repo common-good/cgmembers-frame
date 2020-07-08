@@ -1,3 +1,9 @@
+2020-07-08 feature/findco-tight
+. added "nearby" checkbox to findco page
+
+2020-07-08 feature/redirect-new
+. fixed bug that gave error on direct access to new.commongood.earth when signed out
+
 2020-07-08 feature/create-migration
 . DOS batch file to create migrations according to a model
 

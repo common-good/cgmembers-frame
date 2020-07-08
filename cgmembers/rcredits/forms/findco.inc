@@ -13,28 +13,34 @@ require_once R_ROOT . '/rweb/co-list.inc';
  * @param string $args: optional parameters from URL:
  *    where   community qid or start of zip pattern
  *    cos     part of company name or industry category
+ *    nearby  include nearby businesses in the region?
  */
 function formFindCo($form, &$sta, $args = '') {
   global $mya;
-  extract(just('where cos', $args, NULL));
+  extract(just('where cos nearby', $args, ''));
 
-  $list = w\coList(nn($cos), nn($where));
-  $list = "<div class=\"cmpy-list\">$list</div>";
+  $list = w\coList($cos, $where, $nearby, $place);
   
-  $title = t('Companies in Your Region');
-  $which = textFld(t('Search for:'), [t('Whatever'), t('Type part of company name or industry category')], dft($cos));
-  $region = textFld(t('Where:'), [t('Start of postal code'), t('Type the first few characters of your postal code or your state abbreviation.<br>For example, type 013 for Franklin County, Massachusetts; 05 or VT for Vermont, etc.')], dft($where)); // or country name
-  $submit = t('Find');
+  $title = t('Companies ') . $place;
+  if ((!$where and !$cos) or !strhas($list, '</div>')) { // nothing listed
+    $subtext = $posttext = NULL;
+    $cos = textFld(t('Search for:'), [t('Whatever'), t('Type part of company name or industry category')], dft($cos));
+    $where = textFld(t('Where:'), [t('Start of postal code'), t('Type the first few characters of your postal code or your state abbreviation.<br>For example, type 013 for Franklin County, Massachusetts; 05 or VT for Vermont, etc.')], dft($where)); // or country name
+    $nearby = boxFld('nearby', t('Wider Area:'), t('Include nearby businesses in the region (within %NEIGHBOR_MAX miles)?'), TRUE);
+    $submit = t('Find');
+  } else { // list whatever, with option to go back to search
+    $cos = $where = $nearby = $submit = NULL;
+    $subtext = $posttext = backButton();
+  }
 
-  return cgform(compact(ray('title region which submit list')));
+  $list = "<div class=\"cmpy-list\">$list</div>";
+
+  return cgform(compact(ray('title subtext where cos nearby submit list posttext')));
 }
 
 function formFindCo_validate($form, &$sta) {
 }
 
 function formFindCo_submit($form, &$sta) {
-  extract($sta['input']);
-  w\go("community/find-company/where=$region&cos=$which");
-//  svar('which_companies', trim($which));
-//  svar('region', trim($region));
+  w\go('/community/find-company/' . http_build_query(just('where cos nearby', $sta['input'])));
 }
