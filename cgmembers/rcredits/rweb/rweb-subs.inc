@@ -1381,7 +1381,7 @@ function getPreId($source2 = NULL) {
 function coCats() {
   $sql = <<<EOF
     SELECT iid, IF(parent IS NULL, UCASE(industry), CONCAT('--', industry)) AS cat, parent 
-    FROM r_industries ORDER BY IFNULL(parent, 0), iid
+    FROM r_industries ORDER BY IFNULL(parent, iid), iid
 EOF;
   return db\q($sql)->fetchAllKeyed();
 }
@@ -1501,8 +1501,8 @@ function eLinkAcct(&$sta, &$eLink = '', $allow = 'individual') {
 
 function hack($message, $info = []) {
   r\tellAdmin(t('HACK attempt: ') . $message, $info + $_SERVER);
-/**/	if (isDEV) debug("$message: " . pr($info));
-  if (test()) return []; // to simulate a form
+/**/	if (isDEV) debug("HACK - $message: " . pr($info));
+  if (test()) return w\err('hack', 'err'); // to simulate a form
   return r\signedIn() ? signout() : w\go('');
 }
 
@@ -1676,6 +1676,7 @@ function doSay($msg = '', $err = '') {
   if (isDEV) file_put_contents(f('t.dosayFilename', $err ? 'error' : 'status'), $msg); // no way to know if actually testing
   return w\go('empty/say=1', $msg, $err);
 }
+function doErr($msg) {return doSay($msg, 'err');}
 
 /**
  * Add an item to the menu structure (called when reinstalling or rebuilding menus).
@@ -1862,8 +1863,8 @@ function showCharts($ctty = 0, $period = 'months', $download = FALSE) {
       $x2x = [];
       foreach ($txTypes as $k => $desc) {
         $v = max(1, ${"d_{$k}0"}); // to make the logarithmic scale look okay
-        $cnt = ${"d_{$k}Count"};
-        $cnt .= empty($cnt + 0) ? '' : (' @ ' . u\fmtAmt($v / $cnt) . ' avg');
+        $cnt = (float) ${"d_{$k}Count"};
+        $cnt = number_format($cnt) . ($cnt ? (' @ ' . u\fmtAmt($v / $cnt) . ' avg') : '');
         $f = ${"d_{$k}"} . " ($cnt) $desc"; // eg "$123 (7 @ $6.25 avg)"
         $x2x[] = compact('v', 'f');
       }

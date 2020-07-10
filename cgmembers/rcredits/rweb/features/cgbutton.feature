@@ -30,12 +30,12 @@ Scenario: A member submits a Pay With Common Good button payment with account ID
   | nvid | created | status      | amount | payer | payee | for  |*
   |    1 | %today  | %TX_PENDING |     23 | .ZZA | .ZZC | food |
 
-  When member "?" visits page "handle-invoice/nvid=1&toMe=1&code=TESTDOCODE"
+  When member "?" visits page "handle-invoice/nvid=1&code=TESTDOCODE"
   Then we show "Confirm Payment" with:
   | | Pay $23 to Our Pub for food. |
   | Pay | Dispute |
 
-  When member "?" confirms form "handle-invoice/nvid=1&toMe=1&code=TESTDOCODE" with values:
+  When member "?" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
   | op  |*
   | pay |
   Then we say "status": "You paid Our Pub $23."
@@ -46,7 +46,7 @@ Scenario: A member submits a Pay With Common Good button payment with account ID
   | xid | created | amount | payer | payee | for  |*
   |   1 | %today  |     23 | .ZZA  | .ZZC  | food |
   
-  When member "?" visits page "handle-invoice/nvid=1&toMe=1&code=TESTDOCODE"
+  When member "?" visits page "handle-invoice/nvid=1&code=TESTDOCODE"
   Then we say "error": "already paid"
 
 Scenario: A member clicks a Pay With Common Good button with variable amount
@@ -68,7 +68,7 @@ Scenario: A member submits a Pay With Common Good button payment with account ID
   | nvid | created | status      | amount | payer | payee | for  |*
   |    1 | %today  | %TX_PENDING |     23 | .ZZA | .ZZC | food |
 
-  When member "?" visits page "handle-invoice/nvid=1&toMe=1&code=TESTDOCODE"
+  When member "?" visits page "handle-invoice/nvid=1&code=TESTDOCODE"
   Then we show "Confirm Payment" with:
   | | Pay $23 to Our Pub for food. |
   | Pay | Dispute |
@@ -92,13 +92,13 @@ Scenario: A member type account ID to buy store credit
   | nvid | created | status      | amount | payer | payee | for          |*
   |    1 | %today  | %TX_PENDING |     23 | .ZZA  | .ZZC  | store credit |
 
-  When member "?" visits page "handle-invoice/nvid=1&toMe=1&code=TESTDOCODE"
+  When member "?" visits page "handle-invoice/nvid=1&code=TESTDOCODE"
   Then we show "Confirm Payment" with:
   | Pay $23 to Our Pub for store credit. |
   And with:
   | Pay | Dispute |
 
-  When member "?" confirms form "handle-invoice/nvid=1&toMe=1&code=TESTDOCODE" with values:
+  When member "?" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
   | op  |*
   | pay |
   Then we say "status": "You paid Our Pub $23."
@@ -157,13 +157,13 @@ Scenario: A member type account ID to buy a gift of store credit
   | nvid | created | status      | amount | payer | payee | for                               |*
   |    1 | %today  | %TX_PENDING |     23 | .ZZA  | .ZZC  | gift of store credit (to Bea Two) |
 
-  When member "?" visits page "handle-invoice/nvid=1&toMe=1&code=TESTDOCODE"
+  When member "?" visits page "handle-invoice/nvid=1&code=TESTDOCODE"
   Then we show "Confirm Payment" with:
   | Pay $23 to Our Pub for gift of store credit (to Bea Two) |
   And with:
   | Pay | Dispute |
 
-  When member "?" confirms form "handle-invoice/nvid=1&toMe=1&code=TESTDOCODE" with values:
+  When member "?" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
   | op  |*
   | pay |
   Then we say "status": "You paid Our Pub $23."

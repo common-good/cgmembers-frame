@@ -30,14 +30,14 @@ Scenario: A member confirms request to charge another member
   | otherName | amount | purpose |*
   | Abe One   | $100   | labor   |
 
-  When member ".ZZB" visits page "handle-invoice/nvid=1&toMe=1"
+  When member ".ZZB" visits page "handle-invoice/nvid=1&code=TESTDOCODE"
   Then we show "Confirm Payment" with:
   | ~question | Pay $100 to Abe One for labor |
   | ~ | Pay |
   | Reason ||
   | ~ | Dispute |
 
-  When member ".ZZB" confirms form "handle-invoice/nvid=1&toMe=1" with values:
+  When member ".ZZB" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
   | op   | ret | nvid | amount | payer | payee | purpose | created |*
   | pay  |     |    1 |    100 | .ZZB  | .ZZA  | labor   | %today  |
   Then transactions:
@@ -74,14 +74,14 @@ Scenario: A member confirms request to charge a not-yet member
   | otherName | amount | purpose |*
   | Abe One   | $100   | labor   |
 
-  When member ".ZZD" visits page "handle-invoice/nvid=1&toMe=1"
+  When member ".ZZD" visits page "handle-invoice/nvid=1"
   Then we show "Confirm Payment" with:
   | ~question | Pay $100 to Abe One for labor |
   | ~ | Pay |
   | Reason ||
   | ~ | Dispute |
 
-  When member ".ZZD" confirms form "handle-invoice/nvid=1&toMe=1" with values:
+  When member ".ZZD" confirms form "handle-invoice/nvid=1" with values:
   | op   | ret | nvid | amount | payer | payee | purpose | created |*
   | pay  |     |    1 |    100 | .ZZD  | .ZZA  | labor   | %today  |
   Then invoices:
@@ -93,7 +93,7 @@ Scenario: A member denies an invoice
   When member ".ZZA" confirms form "charge" with values:
   | op     | who     | amount | goods | purpose |*
   | charge | Bea Two | 100    | %FOR_GOODS     | labor   |
-  And member ".ZZB" confirms form "handle-invoice/nvid=1&toMe=1" with values:
+  And member ".ZZB" confirms form "handle-invoice/nvid=1" with values:
   | op   | ret | nvid | amount | payer | payee | purpose | created | whyNot |*
   | deny |     |    1 |    100 | .ZZB  | .ZZA  | labor   | %today  | broke  |
   Then invoices:
@@ -112,7 +112,7 @@ Scenario: A member approves an invoice with insufficient funds
   When member ".ZZA" confirms form "charge" with values:
   | op     | who     | amount | goods | purpose |*
   | charge | Bea Two | 300    | %FOR_GOODS     | labor   |
-  And member ".ZZB" confirms form "handle-invoice/nvid=1&toMe=1" with values:
+  And member ".ZZB" confirms form "handle-invoice/nvid=1" with values:
   | op   | ret | nvid | amount | payer | payee | purpose | created | whyNot |*
   | pay  |     |    1 |    300 | .ZZB  | .ZZA  | labor   | %today  |        |
   Then invoices:
@@ -134,7 +134,7 @@ Scenario: A member approves invoices forevermore
   When member ".ZZA" confirms form "charge" with values:
   | op     | who     | amount | goods      | purpose |*
   | charge | Bea Two | 300    | %FOR_GOODS | labor   |
-  And member ".ZZB" confirms form "handle-invoice/nvid=1&toMe=1" with values:
+  And member ".ZZB" confirms form "handle-invoice/nvid=1" with values:
   | op   | ret | nvid | amount | payer | payee | purpose | created | whyNot | always |*
   | pay  |     |    1 |    300 | .ZZB  | .ZZA  | labor   | %today  |        |      1 |
   Then invoices:

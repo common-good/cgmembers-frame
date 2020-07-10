@@ -32,7 +32,7 @@ function formInvoices($form, &$sta, $toFrom, $args = '') {
   $form = compact('title', 'subtext') + $dateRange + compact(ray('list toFrom'));
   if ($downloaded) js('download', compact('url'));
   
-  w\jsx('invoices', ray('args', "&toMe=$toMe&ret=" . u\urlify($url)));
+  w\jsx('invoices', ray('args', "&ret=" . u\urlify($url)));
   return cgform($form);
 }
 

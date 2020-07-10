@@ -292,7 +292,7 @@ Scenario: The club sells shares
   | | Sell Shares |  
 
   # finish sale
-  When member "C:A" completes form "handle-invoice/nvid=1&code=TESTDOCODE&toMe=1" with values:
+  When member "C:A" completes form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
   | op  |*
   | pay |
   Then these "shares":
@@ -338,7 +338,7 @@ Scenario: The club sells its remaining shares in an investment
   And invoices:
   | nvid | payer | payee | amount | purpose                               | flags      |*
   |    1 | .ZZC  | .ZZI  |     60 | redeeming investment: 6 shares at $10 | investment |  
-  When member "C:A" completes form "handle-invoice/nvid=1&code=TESTDOCODE&toMe=1" with values:
+  When member "C:A" completes form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
   | op  |*
   | pay |
   Then these "shares":
@@ -690,7 +690,7 @@ Scenario: The club sells shares
   | | Request Repayment |  
 
   # finish sale
-  When member "C:A" completes form "handle-invoice/nvid=1&code=TESTDOCODE&toMe=1" with values:
+  When member "C:A" completes form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
   | op  |*
   | pay |
   Then these "shares":
@@ -735,7 +735,7 @@ Scenario: The club sells its remaining shares in an investment
   And invoices:
   | nvid | payer | payee | amount | purpose        | flags      |*
   |    1 | .ZZC  | .ZZI  |     60 | loan repayment | investment |  
-  When member "C:A" completes form "handle-invoice/nvid=1&code=TESTDOCODE&toMe=1" with values:
+  When member "C:A" completes form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
   | op  |*
   | pay |
   Then these "shares":

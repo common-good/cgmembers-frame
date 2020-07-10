@@ -310,7 +310,7 @@ EOF;
   function noUndo(&$subs = []) {
     if (db\exists('tx_hdrs', 'reversesXid=:xid', ['xid' => $this->xid])) return 'already undone';
 
-    $a1 = r\acct($this->toMe ? $this->payeeId : $this->payerId, $this->actorA->agentUid);
+    $a1 = r\acct($this->toMe ? $this->payeeId : $this->payerId, $this->actorA->agentId);
     $a2 = r\acct($this->toMe ? $this->payerId : $this->payeeId); // second account's permissions are irrelevant
     if ($err = r\txPermErr($a1, $a2, $this->toMe, $this->toMe xor $this->actorEntry->amount < 0)) return $err;
 

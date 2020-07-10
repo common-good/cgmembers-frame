@@ -1369,30 +1369,19 @@ X;
 
   /**
    * Return a link to a "no signin required" action.
-   * Omit $life only for a forever link not specific to a particular account
+   * The account should be the recipient of the emailed link.
    * @param string $op: what to do (REQUIRED)
-   * @param numeric $v: an amount or identifier
-   * @param int $life: number of seconds until link expires (link gets invalidated after doing operation once)
+   * @param numeric $v: an amount, identifier
+   * @param int $expire: number of days until link expires
    * @param assoc $info: other parameters (sql, subs, etc.)
    * @return <a> tag guts for a clickable link that will do something without requiring the member to sign in
-   *    makeDo0 returns just the url (for form action, for example)
    * @see also r\Web\rdo()
    */
-  function makeDo0($op, $v = NULL, $life = WEEK7_SECS, $info = []) {
-    //  extract($data = rayy(func_get_args()) ?: $data);
-    extract($info);
-    $info += compact('op');
-    if (!is_null($v)) $info += compact('v');
-    
-    if (nn($life)) {
-      $data = ray('uid expires data', $this->id, now() + $life, serialize($info));
-      $info = ray('op', db\insert('r_do', $data, 'doid')); // (preliminary) op is r_do record ID
-    } else $info += ['mo'=>rdoMonth()]; // remember month, in case we need to know when link was created
-
-    return BASE_URL . "/do/" . u\cryRay($info);
-  }
-  function makeDo($op, $v = NULL, $life = WEEK7_SECS, $info = []) {
-    return 'a href="' . $this->makeDo0($op, $v, $life, $info) . '"';
+  function makeDo($op, $v = NULL, $expire = 90, $info = []) {
+    if (isset($expire)) $expire = now() + $expire * DAY_SECS;
+    $qid = $this->mainQid;
+    foreach (ray('op qid v expire') as $k) if (isset($$k)) $info[$k] = $$k;
+    return w\atag(BASE_URL . "/do/" . u\cryRay($info));
   }
   
   /**
