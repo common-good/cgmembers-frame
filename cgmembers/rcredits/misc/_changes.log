@@ -1,3 +1,12 @@
+2020-07-09 feature/rdo-makeover
+. reworked doCodes and invoicing for greater consistency, ease, and security
+. eliminated use of r_do table!
+. endorse plea no longer shown for partial members (active accounts with no photo)
+. fixed bug that did delayed payments/charges immediately
+. fixed bug that scrambled company category choice list
+. fixed a couple warnings about undefined variables
+. fixed bug in testing that failed to clear dosay files
+
 2020-07-08 feature/findco-tight
 . added "nearby" checkbox to findco page
 

@@ -625,14 +625,14 @@ function sendNotifications($type, $tx, $shortfall) {
         $notice = 'new payment';
         $did = 'credited';
       }
-    } else {
-      $notice = 'new charge';  // I charged other
+    } else { // I charged other
+      $notice = 'new charge';
       $did = 'charged';
     }
     break;
   case 'payment':
-    if (!$toMe) {
-      $notice = 'new payment';  // I made a payment to other
+    if (!$toMe) { // I made a payment to other
+      $notice = 'new payment';
       $did = 'paid';
     } else {
       $notice = 'new charge';  // I charged other
@@ -640,11 +640,11 @@ function sendNotifications($type, $tx, $shortfall) {
     }
     break;
   case 'invoice payment':
-    if (!$toMe) {
-      $notice = 'new payment';  // I made a payment to other
+    if (!$toMe) { // I made a payment to other
+      $notice = 'new payment';
       $did = 'paid';
-    } else {
-      $notice = 'new charge';  // I charged other -- I don't think this should happen.  JVER
+    } else { // I charged other -- I don't think this should happen.  JVER
+      $notice = 'new charge';
       $did = 'charged';
     }
     break;
@@ -660,7 +660,7 @@ function sendNotifications($type, $tx, $shortfall) {
     } elseif (!$byMe and $toMe) {
       $notice = 'payment';  // Other made payment to me, reverse is refunding
       $did = 'paid';
-    } else { /*!byMe and !$toMe*/
+    } else { // !byMe and !$toMe
       $notice = 'dispute';  // Other charged me, reversing requires dispute
       $did = 'disputed';
     }
@@ -673,10 +673,10 @@ function sendNotifications($type, $tx, $shortfall) {
   $args = $tx->reportArgs($tx->actorA, TRUE, $shortfall);
   if ($notice == 'new payment' and $otherA->co) { // not "new charge" (the most common); payment at payer's initiative
     $notice = 'new payment linked';
-    $args['_aPayLink'] = $otherA->makeDo('addr', $tx->actorId, 0); // link to address, so merchant can ship or nonprofit can thank
+    $args['_aPayLink'] = $otherA->makeDo('addr', $tx->actorId); // link to address, so merchant can ship or nonprofit can thank
   }
 
-  if ($otherA->id < 0 or $otherA->id > CANONIC_ACCTS) r\notify($tx->otherId, $notice, $args);  // no notifications to canonic accounts
+  if (!$otherA->isCanonic) r\notify($tx->otherId, $notice, $args);  // no notifications to canonic accounts
   $msg = 'report tx';
 //  return r\txErr($msg, $tx->reportArgs($tx->actorA, TRUE, $shortfall) + compact(ray('msg did')));
   return [TRUE, $msg, $args + compact(ray('msg did'))];
@@ -824,7 +824,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   /* $payeeA->update('lastTx', [$nvid, $payer - $payee, round(-$amount, 2), $created, 'inv']); */
 
   if ($status == TX_PENDING) {
-    $link = $payeeA->makeDo('inv', $nvid); // link to pay/deny
+    $link = $payerA->makeDo('inv', $nvid); // link to pay/deny
     //$payerA->update(ray('lastTx', array($nvid, $payee - $payer, round($amount, 2), $created, 'inv')));
     $subs += ray('_a1 reply email phone', $link, $payee, $payeeA->email, u\fmtPhone($payeeA->phone));
     r\message($payer, 'new invoice', $subs); // tell other party by email about this invoice

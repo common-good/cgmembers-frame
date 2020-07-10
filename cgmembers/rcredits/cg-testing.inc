@@ -867,7 +867,6 @@ function findEmail($index, $email, $subs) {
           $subs['site'] = BASE_URL; // site parameter is set in boot.inc so compiler.php can't see it.
           ksort($subs); // reorder
         }
-///        print_r($subs); die('here');
         if (nn($ignore)) foreach ($ignore as $k) unset($t_subs[$k]);
         ksort($t_subs);
         $wantedInActual = just(array_keys($subs), $t_subs);
@@ -1311,7 +1310,7 @@ function eq($a, $b, $offBy = .0001) {
   $result = (is_numeric($a) and is_numeric($b)) ?
     (abs($a - $b) < $offBy)
     : ($a == $b or (empty($a) and empty($b)));
-/// if (!$result) echo 'not equal: ' . print_r(compact('a','b'), 1); // keep for now
+/// if (!$result) echo 'not equal: ' . pr(compact('a','b'));
   if (!$result) {
     if (is_array($a)) {
       output("unequal arrays ($offBy):<br>" . pr($a) . pr($b));
@@ -1387,6 +1386,8 @@ function clear($ch = 0) {
   global $testMessages; $testMessages = [];
   global $sceneTest;
   global $conf; $conf = [];
+
+  foreach (ray('error status') as $one) u\deleteFile(t\dosayFilename($one));
 
   if (test() and !strpos($sceneTest->name, 'Statement')) {
 /**/  echo "scene: $sceneTest->module / $sceneTest->feature / $sceneTest->name<br>\n"; // VERY helpful when test dies
@@ -1744,7 +1745,7 @@ function jsonResponses($correctResponses, $actualResponses) {
   foreach ($correctResponses as $correctResponse) {
     fixData($correctResponse);
     if (! oneJsonResponse($correctResponse, $actualResponses)) {
-      output("Correct response not found " . print_r($correctResponse, TRUE));
+      output("Correct response not found " . pr($correctResponse));
       return FALSE;
     }
   }
@@ -1757,8 +1758,8 @@ function oneJsonResponse($correctResponse, $actualResponses) {
       return TRUE;
     }
   }
-  t\output("correct response '" . print_r($correctResponse, TRUE) .
-           "' is not present in actual responses: '" . print_r($actualResponses, TRUE));
+  t\output("correct response '" . pr($correctResponse) .
+           "' is not present in actual responses: '" . pr($actualResponses));
   return FALSE;
 }
 

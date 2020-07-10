@@ -223,19 +223,20 @@ X;
  */
 function recurs() {
   $sql = <<< EOF
-    SELECT t.*, MAX(
-      IF(t.action=:ACT_SURTX, r.start, 
-      IF(t.action=:ACT_PAY, GREATEST(IFNULL(x.created,0), IFNULL(i.created,0)),
+    SELECT tp.*, MAX(
+      IF(tp.action=:ACT_SURTX, ru.start, 
+      IF(tp.action=:ACT_PAY, GREATEST(IFNULL(x.created,0), IFNULL(i.created,0)),
       i.created))
     ) AS maxStart
-    FROM tx_templates t 
-    LEFT JOIN tx_rules r ON r.template=t.id
-    LEFT JOIN txs x ON x.recursId=t.id
-    LEFT JOIN r_invoices i ON i.recursId=t.id
-    WHERE t.action IN (:ACT_SURTX, :ACT_PAY, :ACT_CHARGE)
-    AND IFNULL(t.end, :NOW+1) > :NOW
-    GROUP BY t.id
-    ORDER BY (t.action=:ACT_SURTX) DESC, t.id
+    FROM tx_templates tp
+    LEFT JOIN tx_rules ru ON ru.template=tp.id
+    LEFT JOIN txs x ON x.recursId=tp.id
+    LEFT JOIN r_invoices i ON i.recursId=tp.id
+    WHERE tp.action IN (:ACT_SURTX, :ACT_PAY, :ACT_CHARGE)
+    AND tp.start <= :NOW
+    AND IFNULL(tp.end, :NOW+1) > :NOW
+    GROUP BY tp.id
+    ORDER BY (tp.action=:ACT_SURTX) DESC, tp.id
 EOF;
 
   queueEach('recur', $sql);

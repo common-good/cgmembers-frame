@@ -10,40 +10,49 @@ use CG\Testing as t;
 /**
  * Pay or deny an invoice, possibly by clicking a link without signing in (from rDo).
  * If no user is signed in, $args must include the do code (to prevent mischief)
- * @param mixed $args: array of paramaters (from rDo) or invoice number (if signed in):
- *   int nvid: invoice number
- *   bool toMe: is the invoice for me to pay (or deny)? (FALSE if it is FROM me)
- *   string ret: URL to return to
- *   bool webpay: <this is confirmation after clicking a "Pay with Common Good" button>
+ * @param mixed $args: http query with parameters:
+ *   int $nvid: invoice number
+ *   string $ret: URL to return to
+ *   bool $webpay: <this is confirmation after clicking a "Pay with Common Good" button>
+ *   string $code: the docode, including op='inv' and v=nvid for verification
  */
 function formHandleInvoice($form, &$sta, $args = '') {
   global $mya;
-  extract(just('nvid ret code toMe webpay', $args, NULL));
+
+  extract(just('nvid ret webpay code', $args, NULL));
   $ret = $ret ? u\deurlify($ret) : 'empty'; // was empty/1
 
   $inv = db\get('*', 'r_invoices', 'nvid=:nvid', compact('nvid'));
-  $err = r\badUnpaidInv($inv);
-  if ($err) return w\go($ret, $err, 'ERR');
-
+  if (!$inv or $err = r\badUnpaidInv($inv)) return w\go($ret, $err, 'ERR');
   extract(just('nvid amount payer payee purpose created data', $inv));
-  if ($code) {
+  
+  if ($mya and !in($mya->id, [$payer, $payee])) w\signout(TRUE); // make sure we're signed out of any possibly different acct
+  if (!$mya) { // not signed in (might have changed in previous line)
     if (test() and $code == 'TESTDOCODE') $code = t\doCode(); // most recently created doCode
-    if (!$info = u\decryRay($code) 
-      or !$doInfo = db\get('data,uid', 'r_do', ray('doid', nni($info, 'op'))) 
-      or $doInfo['uid'] != $payee
-      or !$doData = unserialize($doInfo['data'])
-      or nni($doData, 'op') != 'inv' or nni($doData, 'v') != $nvid
-    ) return hack(t('fake doCode in handleInvoice'), $info);
-    if ($mya and $payer != $mya->id) w\signout(TRUE); // make sure we're signed out of any possibly different acct
-  } elseif (!$mya) {
-    return hack(t('attempt to handle invoice not signed in'));
-  } else if (!in($mya->id, [$payer, $payee]) or ($mya->id == $payer xor $toMe)) {
-    return hack(t('bad person in invoice payment'));
+    if (!$code or !$info = u\decryRay($code)) return hack(t('fake doCode in handleInvoice'), compact('args'));
+
+    extract(just('op v', $info, NULL));
+    if (!isset($v)) { // legacy (delete after 10/1/2020)
+      $doInfo = db\get('data,uid', 'r_do', ray('doid', nni($info, 'op')));
+      $doData = unserialize($doInfo['data']);
+      extract(just('v', $doData, NULL));
+      if ($doData['op'] != 'inv') $op = ''; // error
+    }
+    if ($op != 'inv' or $v != $nvid) return hack(t('legacy handleInvoice fake')); // change to u\EXPECT after 10/1/2020
   }
 
   $subs = ray('amount what date', u\fmtAmt($amount), $purpose, u\fmtDate($created, TRUE));
-  
-  if ($toMe) {
+  $toMe = ($mya and $mya->id == $payee); // toMe means payment is to me
+
+  if ($toMe) { // confirming delete by originator
+    $title = t('Delete?');
+    $subs += ray('who', r\acct($payer)->fullName);
+    $subtext = t('Delete %date invoice charging %who %amount for %what?', $subs);
+    $delete = submit(t('Delete'));
+    $cancel = submit(t('Cancel'));
+    $delSet = fieldSet('delSet', compact('delete', 'cancel'), BARE); // separate it from subtext
+
+  } else { // approving or denying
     $a = r\acct($payer);
     $title = t('Confirm Payment');
     $subs += ray('who', r\acct($payee)->fullName);
@@ -63,13 +72,6 @@ function formHandleInvoice($form, &$sta, $args = '') {
     $whyNot = textFld(t('Reason for dispute:'));
     $deny = submit(t('Dispute'));
     $denySet = fieldSet('denySet', compact('whyNot', 'deny'), BARE);
-  } else { // confirming delete by originator
-    $title = t('Delete?');
-    $subs += ray('who', r\acct($payer)->fullName);
-    $subtext = t('Delete %date invoice charging %who %amount for %what?', $subs);
-    $delete = submit(t('Delete'));
-    $cancel = submit(t('Cancel'));
-    $delSet = fieldSet('delSet', compact('delete', 'cancel'), BARE); // separate it from subtext
   }
   
   $toMe = hidFld($toMe);
@@ -86,12 +88,12 @@ function formHandleInvoice($form, &$sta, $args = '') {
 function formHandleInvoice_validate($form, &$sta) {
   extract(just('whyNot toMe', $sta['input'], NULL));
   $deny = (op($sta) == 'deny');
-  if ($toMe and $deny and !$whyNot) return say('say why not', 'whyNot');
+  if (!$toMe and $deny and !$whyNot) return say('say why not', 'whyNot');
 }
 
 function formHandleInvoice_submit($form, &$sta) {
   $hidFlds = 'ret nvid amount payer payee purpose created data';
-  extract(just('hid whyNot toMe always ' . $hidFlds, $sta['input'], NULL)); // hidFlds here is for testing
+  extract(just('hid whyNot always ' . $hidFlds, $sta['input'], NULL)); // hidFlds here is for testing
   extract(just($hidFlds, w\hidFlds($hid)));
 
   list ($fromA, $toA) = [r\acct($payer), r\acct($payee)];
@@ -123,12 +125,10 @@ function formHandleInvoice_submit($form, &$sta) {
     $msg = 'invoice delete done';
   } elseif ($op == 'deny' or $whyNot) {
     $data = serialize(compact('whyNot') + ($data ? unserialize($data) : []));
-//    db\q('UPDATE r_invoices SET status=:TX_DENIED, data=:data WHERE nvid=:nvid', compact('nvid', 'data'));
     db\update('r_invoices', ray('status data nvid', TX_DENIED, $data, $nvid), 'nvid');
     r\notify($payee, 'invoice denied', $subs);
     $msg = 'denial done';
   } else $msg = ''; // default: canceled
 
-//  if ($toMe and !r\acct()) return w\go('do/code=' . ($msg ?: 'nothing done', $ok ? 'status' : 'error');
   return w\go($ret, $msg ?: 'nothing done', $ok ? '' : 'ERR');
 }
