@@ -74,7 +74,7 @@ function rdo($code) {
   if (u\starts($op, 'do') and $formName = substr($op, 2)) {
     $file = strtolower(R_ROOT . "/forms/$formName.inc");
     if (file_exists($file)) include_once $file;		
-    return w\showForm($formName, "qid=$a->mainQid&ecode=$ecode&$v");
+    return w\showForm($formName, "qid=$a->mainQid&ecode=$a->emailCode&$v");
   }
 
   if ($op == 'nosecret') $res = $a->setBit(B_SECRET, FALSE);
