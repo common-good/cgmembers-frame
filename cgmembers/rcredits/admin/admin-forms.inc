@@ -487,7 +487,7 @@ EOF
   
 $chimp = boolFld(t('Export to email list?'), '', TRUE);
   
-$allCttys = $mya->admin ? boxFld('allCttys', t('All communities:'), '', TRUE) : NULL; // temporary for CGF oversight
+$allCttys = $mya->admin ? boxFld('allCttys', t('All communities:'), '', TRUE) : hidFld(FALSE); // temporary for CGF oversight
 $status = w\radiosFld(t('Status:'), '', dft(2), ray('active not-yet-active both'));
 $types = w\radiosfld(t('Types:'), '', dft(2), ray('individuals companies both'));
 $anonymous = boxFld('anonymous', t('Anonymous:'), t('Export only non-identifying information (for data-mapping and analysis)'), FALSE);
