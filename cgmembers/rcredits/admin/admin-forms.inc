@@ -483,15 +483,15 @@ function formDownloadMemberList($form, &$sta, $args = '') {
     $base_url/%eg2 (MailChimp)</blockquote>
     <p>Other action choices might be listed here someday. :)</p>
 EOF
-    , 'cttyName eg1 eg2', $cttyA->fullName, 'do/doEvents~{$code}', 'do/doEvents~*|code|*');
+    , 'cttyName code eg1 eg2', $cttyA->fullName, '<site>/do/<op>~<code>', 'do/doEvents~{$code}', 'do/doEvents~*|code|*');
   
-$chimp = boolFld(t('Exporting to MailChimp?'), '', TRUE);
+$chimp = boolFld(t('Export to email list?'), '', TRUE);
   
-$allCttys2 = $mya->admin ? boxFld('allCttys', t('All communities:'), '', TRUE) : NULL; // temporary for CGF oversight
+$allCttys = $mya->admin ? boxFld('allCttys', t('All communities:'), '', TRUE) : NULL; // temporary for CGF oversight
 $status = w\radiosFld(t('Status:'), '', dft(2), ray('active not-yet-active both'));
 $types = w\radiosfld(t('Types:'), '', dft(2), ray('individuals companies both'));
 $anonymous = boxFld('anonymous', t('Anonymous:'), t('Export only non-identifying information (for data-mapping and analysis)'), FALSE);
-$chimpSet = w\fieldSet('fields', compact(ray('allCttys2 status types anonymous')));
+$chimpSet = w\fieldSet('fields', compact(ray('allCttys status types anonymous')));
   
 $submit = t('Download');
   
