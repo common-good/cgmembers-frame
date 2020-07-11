@@ -477,20 +477,21 @@ function formDownloadMemberList($form, &$sta, $args = '') {
   $title = t('Download Member List');
   $expMo = r\rdoMonth();
   $subtext = t(<<<EOF
-               <p>Generate a CSV format spreadsheet for accounts in your community (%cttyName). We recommend you use a service like MailChimp and import this list there before each mailing. Company accounts and members are marked, so there is generally no need to export them separately &mdash; you can do that separation within the mailing program.</p>
-                                                                                                                                                                                                                                                                                                                    <p>Action links for individual accounts take the form %code, where expMonth is the number of an expiration month (the current month is number %expMo). For example, a link from MailChimp to the democracy page, expiring next month, would be:</p>
-               <blockquote>%example</blockquote>
-               <p>Other action choices might be listed here someday. :)</p>
+    <p>Generate a CSV format spreadsheet for accounts in your community (%cttyName). We recommend you use a service like MailChimp or MailerLite and import this list there before each mailing. Company accounts and members are marked, so there is generally no need to export them separately &mdash; you can do that separation within the mailing program (type contains "member" or "company" or "member company").</p>
+    <p>Action links for individual accounts take the form %code. For example, a link from MailChimp to the democracy page would be:</p>
+    <blockquote>$base_url/%eg1 (MailerLite) OR<br>
+    $base_url/%eg2 (MailChimp)</blockquote>
+    <p>Other action choices might be listed here someday. :)</p>
 EOF
-    , 'cttyName code expMo _example', $cttyA->fullName, 'do/action~qid~ecode~monthNum', $expMo, $base_url . '/do/doEvents~*|ID|*~*|ECODE|*~' . ($expMo + 1));
+    , 'cttyName code eg1 eg2', $cttyA->fullName, '<site>/do/<op>~<code>', 'do/doEvents~{$code}', 'do/doEvents~*|code|*');
   
-$chimp = boolFld(t('Exporting to MailChimp?'), '', TRUE);
+$chimp = boolFld(t('Export to email list?'), '', TRUE);
   
-$allCttys2 = $mya->admin ? boxFld('allCttys', t('All communities:'), '', TRUE) : NULL; // temporary for CGF oversight
+$allCttys = $mya->admin ? boxFld('allCttys', t('All communities:'), '', TRUE) : hidFld(FALSE); // temporary for CGF oversight
 $status = w\radiosFld(t('Status:'), '', dft(2), ray('active not-yet-active both'));
 $types = w\radiosfld(t('Types:'), '', dft(2), ray('individuals companies both'));
 $anonymous = boxFld('anonymous', t('Anonymous:'), t('Export only non-identifying information (for data-mapping and analysis)'), FALSE);
-$chimpSet = w\fieldSet('fields', compact(ray('allCttys2 status types anonymous')));
+$chimpSet = w\fieldSet('fields', compact(ray('allCttys status types anonymous')));
   
 $submit = t('Download');
   

@@ -55,12 +55,13 @@ function formBacking_submit($form, &$sta) {
   extract(just('amount', $sta['input']));
   $renewDate = $mya->backingDate + YEAR_SECS;
   $earliestRenew = $renewDate - RENEW_ADVANCE_DAYS * DAY_SECS;
+  r\tellAdmin("$mya->fullName set backing to " . u\fmtAmt($amount) . ' (was ' . u\fmtAmt($mya->backing) . ')');
+
   if ($amount < $mya->backing and now() < $earliestRenew) {
     $mya->update('backingNext', $amount);
     say('backing in effect', ray('renewDate', u\fmtDate($renewDate, TRUE)));
   } else { $mya->update('backing backingDate', $amount, today()); }
   
-  r\tellAdmin("$mya->fullName set backing to " . u\fmtAmt($amount) . ' (was ' . u\fmtAmt($mya->backing) . ')');
   if ($amount > 1) say(t('Thank you for backing your %PROJECT community!'));
   return r\acct() ? w\goNextStep('backing') : w\doSay();
 }

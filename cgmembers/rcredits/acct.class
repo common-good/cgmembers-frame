@@ -1263,11 +1263,11 @@ o;
 
     $args = [];
     if ($a->secret) {
-      $args['_aSecret'] = $web ? w\atag('/settings/preferences') : $a->makeDo('nosecret');
+      $args['_aSecret'] = $web ? w\atag('/settings/preferences') : $a->doLink('nosecret');
       $msg[] = 'be not secretive';
     }
     if (!$a->debt and $a->floor < 0) {
-      $args['_aDebt'] = $web ? w\atag('/settings/preferences') : $a->makeDo('debtok');
+      $args['_aDebt'] = $web ? w\atag('/settings/preferences') : $a->doLink('debtok');
       $msg[] = 'try debt';
     }
 		
@@ -1368,20 +1368,27 @@ X;
   }
 
   /**
-   * Return a link to a "no signin required" action.
-   * The account should be the recipient of the emailed link.
-   * @param string $op: what to do (REQUIRED)
+   * Return a "no signin required" action. Called directly from a\export and ->doCode (above).
+   * The account should be the recipient of the emailed link, if more than one account is involved.
+   * @param string $op: what to do (NULL means allow any no-sign-in operation)
    * @param numeric $v: an amount, identifier
    * @param int $expire: number of days until link expires
    * @param assoc $info: other parameters (sql, subs, etc.)
-   * @return <a> tag guts for a clickable link that will do something without requiring the member to sign in
    * @see also r\Web\rdo()
    */
-  function makeDo($op, $v = NULL, $expire = 90, $info = []) {
+  function doCode($op = NULL, $v = NULL, $expire = 90, $info = []) {
     if (isset($expire)) $expire = now() + $expire * DAY_SECS;
     $qid = $this->mainQid;
     foreach (ray('op qid v expire') as $k) if (isset($$k)) $info[$k] = $$k;
-    return w\atag(BASE_URL . "/do/" . u\cryRay($info));
+    return u\cryRay($info);
+  }
+  
+  /**
+   * Return a link to a "no signin required" code.
+   * @return <a> tag guts for a clickable link that will do something without requiring the member to sign in
+   */
+  function doLink($op = NULL, $v = NULL, $expire = 90, $info = []) {
+    return w\atag(BASE_URL . "/do/" . $this->doCode($op, $v, $expire, $info));
   }
   
   /**
