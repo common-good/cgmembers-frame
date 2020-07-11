@@ -477,12 +477,13 @@ function formDownloadMemberList($form, &$sta, $args = '') {
   $title = t('Download Member List');
   $expMo = r\rdoMonth();
   $subtext = t(<<<EOF
-               <p>Generate a CSV format spreadsheet for accounts in your community (%cttyName). We recommend you use a service like MailChimp and import this list there before each mailing. Company accounts and members are marked, so there is generally no need to export them separately &mdash; you can do that separation within the mailing program.</p>
-                                                                                                                                                                                                                                                                                                                    <p>Action links for individual accounts take the form %code, where expMonth is the number of an expiration month (the current month is number %expMo). For example, a link from MailChimp to the democracy page, expiring next month, would be:</p>
-               <blockquote>%example</blockquote>
-               <p>Other action choices might be listed here someday. :)</p>
+    <p>Generate a CSV format spreadsheet for accounts in your community (%cttyName). We recommend you use a service like MailChimp or MailerLite and import this list there before each mailing. Company accounts and members are marked, so there is generally no need to export them separately &mdash; you can do that separation within the mailing program (type contains "member" or "company" or "member company").</p>
+    <p>Action links for individual accounts take the form %code. For example, a link from MailChimp to the democracy page would be:</p>
+    <blockquote>$base_url/%eg1 (MailerLite) OR<br>
+    $base_url/%eg2 (MailChimp)</blockquote>
+    <p>Other action choices might be listed here someday. :)</p>
 EOF
-    , 'cttyName code expMo _example', $cttyA->fullName, 'do/action~qid~ecode~monthNum', $expMo, $base_url . '/do/doEvents~*|ID|*~*|ECODE|*~' . ($expMo + 1));
+    , 'cttyName eg1 eg2', $cttyA->fullName, 'do/doEvents~{$code}', 'do/doEvents~*|code|*');
   
 $chimp = boolFld(t('Exporting to MailChimp?'), '', TRUE);
   

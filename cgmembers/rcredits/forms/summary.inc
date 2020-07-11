@@ -218,7 +218,7 @@ function formSummary_submit($form, &$sta) {
   if (!$mya->isCtty) {
     $fullName = $mya->fullName;
     if (FALSE and !$mya->confirmed and nn($helper) and nn($helper) != $mya->helper) { // self-signup
-      $_a1 = r\acct($helper)->makeDo('confirmInvite', $mya->id); // link to confirm invitedness
+      $_a1 = r\acct($helper)->doLink('confirmInvite', $mya->id); // link to confirm invitedness
       r\message($helper, 'confirm invite', compact('_a1', 'fullName')); // ask inviter to confirm
     }
   }

@@ -942,7 +942,7 @@ function invoice1($item) {
     $daysAgo = max(1, round((now() - $created) / DAY_SECS));
     $nudge = $a2->staleNudge;
     if ($nudge !== 0 and $daysAgo % ($nudge ?: STALE_NUDGE) == 0) {
-      $subs = ray('daysAgo created amount purpose nvid _a1 payerName payeeName email phone', $daysAgo, u\fmtDate($created, TRUE), u\fmtAmt($amount), $purpose, $nvid, $a->makeDo('inv', $nvid), $a->fullName, $payeeName, $a2->email, $a2->phone);
+      $subs = ray('daysAgo created amount purpose nvid _a1 payerName payeeName email phone', $daysAgo, u\fmtDate($created, TRUE), u\fmtAmt($amount), $purpose, $nvid, $a->doLink('inv', $nvid), $a->fullName, $payeeName, $a2->email, $a2->phone);
       r\message($payer, 'stale invoice', $subs + ['reply' => $payee]); // tell other party by email about this invoice
       r\message($payee, 'stale invoice report', $subs); // tell the payee we're following up on it
     }

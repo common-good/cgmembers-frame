@@ -673,7 +673,7 @@ function sendNotifications($type, $tx, $shortfall) {
   $args = $tx->reportArgs($tx->actorA, TRUE, $shortfall);
   if ($notice == 'new payment' and $otherA->co) { // not "new charge" (the most common); payment at payer's initiative
     $notice = 'new payment linked';
-    $args['_aPayLink'] = $otherA->makeDo('addr', $tx->actorId); // link to address, so merchant can ship or nonprofit can thank
+    $args['_aPayLink'] = $otherA->doLink('addr', $tx->actorId); // link to address, so merchant can ship or nonprofit can thank
   }
 
   if (!$otherA->isCanonic) r\notify($tx->otherId, $notice, $args);  // no notifications to canonic accounts
@@ -824,7 +824,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   /* $payeeA->update('lastTx', [$nvid, $payer - $payee, round(-$amount, 2), $created, 'inv']); */
 
   if ($status == TX_PENDING) {
-    $link = $payerA->makeDo('inv', $nvid); // link to pay/deny
+    $link = $payerA->doLink('inv', $nvid); // link to pay/deny
     //$payerA->update(ray('lastTx', array($nvid, $payee - $payer, round($amount, 2), $created, 'inv')));
     $subs += ray('_a1 reply email phone', $link, $payee, $payeeA->email, u\fmtPhone($payeeA->phone));
     r\message($payer, 'new invoice', $subs); // tell other party by email about this invoice

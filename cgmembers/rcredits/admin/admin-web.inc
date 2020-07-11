@@ -87,8 +87,8 @@ function export($params) {
       . ' created activated signed helper iCode balance rewards savingsAdd minimum share risk trust'
       . ' community co gross employees achMin pinThreshold lastiCode tenure moves mediaConx jid'
       . ' owns bankName slave closed notices secret'
-  : ($chimp ? 'id name firstname lastname phone email city state zip community type ecode asof'
-  : 'id fullName manages lastTx solar snap phone email address city state zip community type ecode modified created');
+  : ($chimp ? 'id name phone email city state zip community type code'
+  : 'id fullName manages lastTx solar snap phone email address city state zip community type code modified created');
   u\csv($fields = ray($fields), $delimiter);
 
   // add actual accounts
@@ -120,7 +120,7 @@ function export($params) {
     } else {
       list ($firstname, $lastname, $mid) = $a->co ? [$a->fullName, '', ''] : u\parseName($a->fullName, TRUE);
       if (strlen($firstname) < 2 and strlen($mid) > 2) $firstname = $mid;
-      $name = $a->fullName;
+      $name = $firstname; // Company name or person's first name
       $email = $a->email;
       $phone = $a->phone;
       list ($address, $city, $state, $zip) = $a->postalAddr
@@ -128,7 +128,7 @@ function export($params) {
       : [$a->address, $a->city, $a->st, $a->zip];
       $phone = u\fmtPhone($phone);
       $id = $a->mainQid;
-      $ecode = "$a->emailCode";
+      $code = $a->doCode(); 
       $asof = $modified = u\fmtDate(now());
       $manages = db\get('fullName', 'r_relations r LEFT JOIN users u ON u.uid=r.main', 'r.permission>=:B_MANAGE-:B_RELATED AND u.:IS_CO AND r.other=:id', ['id' => $a->id]);
       $tx = $a->lastTx;

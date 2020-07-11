@@ -431,6 +431,7 @@ body.page-partner blockquote {font-size:14px;}
 #frm-shouters .rating[rating="3"] {background-color:red; color:white;}
 
 /* Export */
+#frm-downloadmemberlist blockquote {font-size:100%;font-weight:bold;}
 .form-item-chimpSet, .form-item-chimpSet>.control-label {display:none;}
 
 /* Events */

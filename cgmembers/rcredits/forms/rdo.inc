@@ -30,7 +30,7 @@ use CG\Db as db;
  *   inv: pay invoice number $v
  *   confirmInvite: confirm an invitation
  *   do<form>: allow member to visit one specific page
- * @see also acct::makeDo()
+ * @see also acct::doLink()
  */
 function rdo($code) {
 /**/	flog(pr(compact(ray('code'))));
@@ -45,6 +45,7 @@ function rdo($code) {
       list ($op, $code) = explode('~', $code);
       $info = u\decryRay($code);
       extract(just('qid expire v sql subs', $info, NULL));
+      if (isset($info['op'])) $op = $info['op']; // overwrite op, if op is specified
       if (!$qid or !$a = r\acct($qid)) return doErr($nonMemberErr);
     } else {
       list ($op, $qid, $ecode, $mo, $v) = u\padRay(explode('~', $code),5);

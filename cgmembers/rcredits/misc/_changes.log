@@ -1,3 +1,6 @@
+2020-07-11 feature/export-makeover
+. revised admin export member spreadsheet feature to use new rdo format and fewer fields (switching from chimp to mailerlite)
+
 2020-07-09 feature/rdo-makeover
 . reworked doCodes and invoicing for greater consistency, ease, and security
 . eliminated use of r_do table!
