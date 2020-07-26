@@ -99,7 +99,7 @@ EOF;
 
   $form = compact(ray('title subtext buttons list newPerson go showCustomers'));
 
-  if (!$mya->member and !$mya->stepDone['relations']) $form += w\setupFoot();
+  if (!$mya->member and !$mya->stepIsDone('relations')) $form += w\setupFoot();
   w\whoFldSubmit('newperson', t('Create a new relation with %name?'));
 //  w\jsx('toggle');
 

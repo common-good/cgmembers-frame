@@ -308,7 +308,7 @@ function signout($continue = FALSE) {
     db\del('sessions', 'ssid', $sid);
     session_unset();
   }
-  global $mya; $mya = NULL;
+  r\setAcct(NULL);
   r\Acct::_clear(); // empty the acct cache
   if (isDEV and !test() and !$continue) return w\go('signin');
   if (!$continue) return w\go(PROMO_URL . '?region=' . R_SERVER_ID . $timeout);

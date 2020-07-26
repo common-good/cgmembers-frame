@@ -207,6 +207,10 @@ function doit(what, vs) {
     if (vs['method'] >= 0) verifyid(vs['method']);
     $('[id^="edit-method-"]').click(function () {verifyid($(this).val());});
     $('#edit-file').click(function () {if ($(this).val() == '') $('#edit-method-0').prop("checked", true);});
+    $('#edit-dob').on('press', function(e) {
+      $(this).attr('type', 'text').css('background-color', '#e6ffcc'); // make it not a date type field and go green
+      $(this).click(); // show keyboard
+    });
     break;
 
   case 'which':

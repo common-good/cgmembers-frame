@@ -111,8 +111,8 @@ function setCSP() {
   ? "'unsafe-inline'"  // allow inline styles when creating button
   : "'nonce-$styleNonce' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=' 'sha256-+t47tgldASBy5zANml11C5vRg3a/7oPrKstKXlzZfkI=' 'sha256-nX7L7GcvxmPKgeYAFQSzFcLplU7F/i/72ytdtLdJYoI=' 'sha256-2EA12+9d+s6rrc0rkdIjfmjbh6p2o0ZSXs4wbZuk/tA='";
 
-  \drupal_add_http_header('Content-Security-Policy', 
-      "base-uri 'self';"
+  header('Content-Security-Policy: '
+    . "base-uri 'self';"
     . "block-all-mixed-content;"
     . "default-src 'self';"
           . "connect-src 'self';"
@@ -130,7 +130,7 @@ function setCSP() {
 //    . "report-uri /csp-report.php?sid=$sid;"
   );
 
-  \drupal_add_http_header('X-Frame-Options', 'DENY');
+  header('X-Frame-Options: DENY');
   // Use <iframe sandbox="allow-scripts" ...> for cg4.us frame showing charts
 
 }

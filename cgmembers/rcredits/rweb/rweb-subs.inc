@@ -47,12 +47,13 @@ $GLOBALS['tStrings']['flooded'] = $GLOBALS['tStrings']['bad login'];
  */
 function go($page, $msg = '', $field = '') {
   global $base_url;
+  global $lastPage, $referrer; $referrer = nn($lastPage); // for testing
   global $lastGo, $xlastGo; list ($xlastGo, $lastGo) = [nn($lastGo), $page]; // for testing
 
   $msg = strip_tags($msg);
   if (substr($page, 0, 1) == '/') $page = substr($page, 1); // supplying the slash is preferred, to agree with w\atag()
 
-  t\output("Going to page $page (page0=$lastGo msg=$msg field=$field)");
+  t\output("Going to page $page from $referrer (page0=$lastGo msg=$msg field=$field)");
   if ($msg) say($msg, $field);
  
   if (test()) {
@@ -1392,13 +1393,14 @@ EOF;
  * @param char $req: REQ if required, else ''
  */
 function ssnFields($personal = TRUE, $req = '') {
+  $mobileDobTxt = u\isMobile() ? t(' Tap for calendar, <%b>press to type</b>.', '_b', 'b class="loud"') : '';
   if ($personal) {
     $ssReason = $req ? t('Required by the IRS if you accept more than $20,000 a year in payments through %PROJECT ($600 a year in MA and VT).') : '';
     $federalId = passFld($req . t('ssTitle'), [t('ssDesc'), $ssReason], autofill('off'));
-    $dob = dateFld($req . t('Birth Date:'), [t('Your birth date'), t('Your date of birth (mm/dd/yyyy) &mdash; must match the date on your ID.')], autofill('off'));
+    $dob = dateFld($req . t('Birth Date:'), [t('Your birth date (mm/dd/yyyy)'), t('Your date of birth &mdash; must match the date on your ID.') . $mobileDobTxt], autofill('off'));
   } else {
     $federalId = passFld($req . t('einTitle'), [t('einDesc')], autofill('off'));
-    $dob = dateFld($req . t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)?')]);
+    $dob = dateFld($req . t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)?') . $mobileDobTxt]);
   }
   
   return compact(ray('federalId dob'));
@@ -1488,12 +1490,12 @@ function invitation($code, $invitee = '', &$inviter = '', &$iCode = -1, &$err = 
  */
 function eLinkAcct(&$sta, &$eLink = '', $allow = 'individual') {
   if (!$eLink) extract(just('eLink', $sta)); // verifying or submitting; get stored eLink args
-  extract(just('qid ecode allow', $eLink));
-  $a = r\acct($qid = nn($qid)); // current or specified account
+  extract(just('qid ecode allow', $eLink, ''));
+  $a = r\acct($qid); // current or specified account
   if ($allow != 'any') {
     if (!$a) return !w\go('', 'requires signin');
     if ($allow == 'individual' and $a->co) return !w\go('', t('That page is for individual accounts only.'));
-    if ($qid and nn($ecode) != $a->emailCode) return !w\hack('bad ecode');
+    if ($qid and $ecode != $a->emailCode) return !w\hack('bad ecode');
   }
   $eLink = $sta['eLink'] = "allow=$allow&qid=$qid&ecode=" . nn($ecode); // remember it (cttys don't use ecode)
   return $a;
@@ -1971,7 +1973,7 @@ function monthChoices($title, $things, $subtext = '', $end = -1, $target = '_bla
   if ($end >= $start) {
     $headers = $data = '';
     foreach ($list as $year => $v) {
-      $headers .= "<th>$year</th>";
+      $headers .= "<th><a href=\"$base_url/history/$things/CY$year\" target=\"$target\">$year</a></th>";
       $data .= "<td>$v</td>";
     }
     $list = "<table id=\"$things\">\n<tr>$headers</tr>\n<tr>$data</tr>\n</table>";

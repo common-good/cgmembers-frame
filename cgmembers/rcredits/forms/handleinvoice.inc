@@ -22,8 +22,8 @@ function formHandleInvoice($form, &$sta, $args = '') {
   extract(just('nvid ret webpay code', $args, NULL));
   $ret = $ret ? u\deurlify($ret) : 'empty'; // was empty/1
 
-  $inv = db\get('*', 'r_invoices', 'nvid=:nvid', compact('nvid'));
-  if (!$inv or $err = r\badUnpaidInv($inv)) return w\go($ret, $err, 'ERR');
+  if (!$inv = db\get('*', 'r_invoices', 'nvid=:nvid', compact('nvid'))) return w\go($ret, t('That link is no longer valid. To pay the invoice, sign in at :CG_DOMAIN and click History / Invoice To You.'), 'err');
+  if ($err = r\badUnpaidInv($inv)) return w\go($ret, $err, 'ERR');
   extract(just('nvid amount payer payee purpose created data', $inv));
   
   if ($mya and !in($mya->id, [$payer, $payee])) w\signout(TRUE); // make sure we're signed out of any possibly different acct

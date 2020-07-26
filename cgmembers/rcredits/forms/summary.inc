@@ -48,10 +48,13 @@ function formSummary($form, &$sta) {
     
     if ($stepUrl == 'summary') {
       if (nn($msg)) say(t('New member is told: ') . t($msg));
-    } elseif ($stepUrl) say(t('New member will be sent <a href="%stepUrl">there</a> upon signing in.', 'stepUrl', "$base_url/$stepUrl"));
+    } elseif ($stepUrl) say(t('New member will be sent <%a>there</a> upon signing in.', '_a', atag("/$stepUrl")));
     
   } else { // normal
-    if ($stepUrl and $stepUrl != 'summary') return w\go($stepUrl, $msg);
+    if ($stepUrl and $stepUrl != 'summary') {
+      if (r\referrer() == 'signin') return w\go($stepUrl, $msg); // go right to next step
+      say(t('To continue opening your %PROJECT account, <%a>click here</a>.', '_a', atag("/$stepUrl")));
+    }
     if (nn($msg)) say($msg);
     if ($mya->legalName != $mya->fullName and !$mya->depends) $legalName = item($mya->legalName, t('Legal Name:'));    
   }

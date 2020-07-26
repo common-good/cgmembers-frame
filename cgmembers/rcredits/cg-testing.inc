@@ -1016,8 +1016,10 @@ function addAttribs(&$thing) {
  * @return: successful (always successful for anonymous)
  */
 function logIn($id) {
-  global $boxUser, $mya;
-  if ($id != '?') {
+  global $boxUser, $mya, $user;
+  if ($id == '?') {
+    w\signout(TRUE);
+  } else {
     list ($qid, $agt, $zot) = explode(':', "$id::"); // in case company:agent
     $a = r\acct(t\fullQid($qid), $agt ? t\fullQid($agt) : '');
     if (!u\isAcct($a)) return t\output("id not account: $id (qid=$qid agt=$agt)");
@@ -1145,7 +1147,7 @@ function completeForm($id, $page, $values = '', $confirmed = FALSE) {
  * @return: the form before rendering
  */
 function pageForm($page) {
-  global $formArray, $formSta, $lastGo, $formOut;
+  global $formArray, $formSta, $lastGo, $formOut, $lastPage;
 
 	$page = t\fixPageArgs($page);
   $formArray = $formSta = $formOut = NULL; // start with a clean slate
@@ -1155,7 +1157,7 @@ function pageForm($page) {
   $args = basename($page);
   $xlastGo = nn($lastGo); // notice whether a goto happens. ignore all but the deepest (last).
 
-  $result = \menu_execute_active_handler($page, FALSE);
+  $result = \menu_execute_active_handler($lastPage = $page, FALSE);
 
   if (is_numeric($result)) {
     $result = $result == MENU_NOT_FOUND ? 'not found'

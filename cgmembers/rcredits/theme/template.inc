@@ -361,7 +361,7 @@ function rcredits_textfield($vs) {
 }
 
 function rcredits_textarea($variables) {
-  cgSetAttrs($variables['element'], array('id', 'name'));
+  cgSetAttrs($variables['element'], ray('id name maxlength'));
   extract(cgElement($variables, 'attributes required name help class default_value value'));
 
   $value = plain(nn($value));

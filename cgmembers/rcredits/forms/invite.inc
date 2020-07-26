@@ -76,7 +76,7 @@ function formInvite_submit($form, &$sta) {
  */
 function exampleInvite($subs, $code, $emailCoded = '') {
   header_remove('Content-Security-Policy'); // allow the template's CSS
-/**/  if (!$res = file_get_contents(BASE_URL . '/rcredits/templates/invite.html')) die('missing invitation template');
+/**/  if (!$res = file_get_contents(R_ROOT . '/templates/invite.html')) die('missing invitation template');
 /**/  echo tr($res, $subs + compact(ray('code emailCoded')));
   exit();
 }
@@ -90,12 +90,12 @@ function inviteOne($mya, $code, $info, $buttons, $args) {
   if ($mya->shouter) $buttons .= btn('/community/invite/edit=1', t('Edit Yours'));
   if (db\exists('r_invites', 'inviter=:id', ray('id', $mya->id))) $buttons .= btn('/community/invite/invited-whom', t('Who you invited'));
 
-  $_aInvite = atag(PROMO_URL . "/signup/code=$code");
-  $_aStd = atag("/community/invite/example=1&code=$code&$args", away());
+  $_aInvite = atag(BASE_URL . "/signup/code=$code");
+  $_aStd = atag("/community/invite/example=1&allow=acct&qid=$mya->mainQid&ecode=$mya->emailCode", away());
   $friend = $mya->co ? t('customer, employee, or supplier') : t('friend');
   $subs = hidFld(serialize($info));
   
-  $subtext = t('<p>Invite a %friend</b> to sign up for a free %PROJECT card! Type an email address below to send a message <%aStd>[like this]</a>. OR copy [<%aInvite>Sign up for %PROJECT</a>] into an email you write yourself.</p><p>Some people may need your help signing up &mdash; especially uploading or emailing a photo.</p>'
+  $subtext = t('<p>Invite a %friend</b> to sign up for a free %PROJECT card! Type an email address below and we\'ll send a message <%aStd>[like this]</a>. Or copy this link: [<%aInvite>Sign up for %PROJECT</a>] into an email you write yourself (or copy the whole example into an email).</p><p>Some people may need your help signing up &mdash; especially uploading or emailing a photo.</p>'
   , compact(ray('_aStd _aInvite friend')));
 
   $email = emailFld(t('Email:'), [t('Their email address'), t('An email address for the person you want to invite')]);
