@@ -1,3 +1,22 @@
+2020-07-25 feature/misc
+. fixed message for when maxlen exceeded
+. fixed bug that permitted typing past maxlen on textarea fields
+. improved error message for when signed-in user tries to sign in
+. setting of altId is always recorded as a change, so we know who approved it (security accountability)
+. using header instead of drupal_set_header, to fix bug in cgbutton.inc that failed to show what button would look like
+. changed first-at-home rule to apply only if SSN check failed -- then must be close to home and in-person
+. added u\isMobile() function
+. added full-year statement links (for calendar year -- fiscal year works, but has no link)
+. now gives a better message for no-longer-valid invoice link
+. avoid unnecessary warning for undefined array index in help.inc
+. fixed several bug on invite page (thanks to Peg Hall)
+. fixed rare bug on relations page (typo)
+. improved selection of shouters for admins
+. for DOB field on mobile, a long press not converts the field from date field to text field
+. added referrer function so tests can detect what page user actually wanted
+. improved formatting in invitations
+. signout in tests is now more thorough
+
 2020-07-11 feature/export-makeover
 . revised admin export member spreadsheet feature to use new rdo format and fewer fields (switching from chimp to mailerlite)
 

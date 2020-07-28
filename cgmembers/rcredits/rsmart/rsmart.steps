@@ -244,7 +244,7 @@ function devices($list) {return t\devices($list);}
  *     TEST offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThrough
  *     TEST offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThroughButCustomerIsBroke
  *     TEST transact Setup
- *     TEST transact ACashierAsksToChargeSomeone
+ *     TEST transact ACashierAsksToChargeSomeonePayingWithCreditLine
  *     TEST transact ACashierAsksToRefundSomeone
  *     TEST undo Setup
  *     TEST undo AnAgentAsksToUndoAChargeWithInsufficientBalance
@@ -323,7 +323,7 @@ function withBalance($subs) {
  *     TEST joint ACashierAsksToChargeSomeone
  *     TEST offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThrough
  *     TEST offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThroughButCustomerIsBroke
- *     TEST transact ACashierAsksToChargeSomeone
+ *     TEST transact ACashierAsksToChargeSomeonePayingWithCreditLine
  *     TEST transact ACashierAsksToRefundSomeone
  *     TEST undo AnAgentAsksToUndoACharge
  *     TEST undo AnAgentAsksToUndoAChargeWhenBalanceIsSecret
@@ -462,7 +462,7 @@ function agentAsksDeviceForOpWith($agent, $device, $op, $extra) {
  *     TEST offline ACashierChargedSomeoneOfflineAndTheyHaveInsufficientBalance
  *     TEST offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThrough
  *     TEST offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThroughButCustomerIsBroke
- *     TEST transact ACashierAsksToChargeSomeone
+ *     TEST transact ACashierAsksToChargeSomeonePayingWithCreditLine
  *     TEST transact ACashierAsksToRefundSomeone
  *     TEST undo AnAgentAsksToUndoACharge
  *     TEST undo AnAgentAsksToUndoAChargeWhenBalanceIsSecret
@@ -499,7 +499,7 @@ function weNoticeToMemberWithSubs($notice, $id, $subs) {return t\notice($notice,
  *     MAKE offline ACashierChargedSomeoneOfflineButItActuallyWentThrough
  *     MAKE offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThrough
  *     MAKE offline ACashierCanceledOfflineASupposedlyOfflineChargeThatActuallyWentThroughButCustomerIsBroke
- *     MAKE transact ACashierAsksToChargeSomeone
+ *     MAKE transact ACashierAsksToChargeSomeonePayingWithCreditLine
  *     MAKE transact ACashierAsksToRefundSomeone
  *     MAKE transact ACashierAsksToChargeAnotherMemberWithInsufficientBalance
  *     MAKE transact ACashierAsksToRefundAnotherMemberWithInsufficientBalance
@@ -556,7 +556,7 @@ function reconcilingOnChargingForAtForce($agent, $device, $member, $amount, $goo
  * in: TEST exchange ACashierAsksToChargeSomeoneForCash
  *     TEST exchange ACashierAsksToRefundSomeone
  *     TEST joint ACashierAsksToChargeSomeone
- *     TEST transact ACashierAsksToChargeSomeone
+ *     TEST transact ACashierAsksToChargeSomeonePayingWithCreditLine
  *     TEST transact ACashierAsksToRefundSomeone
  *     TEST undo AnAgentAsksToUndoACharge
  *     TEST undo AnAgentAsksToUndoAChargeWhenBalanceIsSecret
@@ -682,7 +682,7 @@ function withProofOfAgentAmountCreatedMemberCode($agent, $amount, $created, $mem
  * in: TEST joint ACashierAsksToChargeSomeone
  *     TEST offline ACashierChargedSomeoneOffline
  *     TEST offline DeviceSendsCorrectOldProofForLegitTxAfterMemberLosesCardWithAppOffline
- *     TEST transact ACashierAsksToChargeSomeone
+ *     TEST transact ACashierAsksToChargeSomeonePayingWithCreditLine
  *     TEST transact ACashierAsksToRefundSomeone
  *     TEST transact ACashierInTheSameCommunityAsksToChargeSomeoneUnconfirmed
  *     TEST undo AnAgentAsksToUndoACharge

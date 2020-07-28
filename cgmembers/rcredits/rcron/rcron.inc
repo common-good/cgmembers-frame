@@ -1014,7 +1014,7 @@ function notice1($item) {
  */
 function END() {
   global $mya; $mya = NULL; // don't tell Admin the last current member
-  if (db\exists('queue')) r\tellAdmin('queue has dingleberries'); else db\q('TRUNCATE queue'); // reset serial field
+  if (db\exists('queue')) r\tellAdmin('queue has dingleberries'); else db\q('TRUNCATE queue'); // reset autoincr
   $lastCron = getV('last_cron_end', []);
   $lastCron['end'] = now();
   setV('last_cron_end', $lastCron);

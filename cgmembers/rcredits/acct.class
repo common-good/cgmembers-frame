@@ -437,7 +437,7 @@ class Acct {
     foreach (just(REL_FLDS . ' ' . REL_FLAGS, $info) as $k => $v) {$a->setRel($k, $v); unset($info[$k]);}
     if ($coFlds = just(CO_FLDS, $info)) {$a->setCo($coFlds); $info = justNOT(CO_FLDS, $info);}
 
-    if ($a->ok or $a->activated) $a->recordChanges($info); // record changes if member is (or was) active
+    if ($a->ok or $a->activated or nni($info, 'altId')) $a->recordChanges($info); // record changes if member is (or was) active or verifying ID (so we have a record of who verified it)
     foreach (just('hasBank', $info) as $k => $v) {$a->setRisk($k, $v); unset($info[$k]);}
 
     foreach (ray('photo thumb') as $k) if (isset($info[$k])) $a->updatePhoto($info, $k);
@@ -1843,7 +1843,6 @@ function setAcct($myid = '', &$sta = NULL) {
   global $mya;
   global $user;
   global $channel; 
-
   if (is_object($myid)) list ($myid, $agentId) = [$myid->id, $myid->agentId]; else $agentId = FALSE;
   if ($sta) $sta['uid'] = $myid;
 
@@ -1855,7 +1854,6 @@ function setAcct($myid = '', &$sta = NULL) {
 
   if ($myid) w\svar('myid', $myid); else $myid = w\svar('myid') ?: (w\svar('agentId') ?: 0);
   if (!$agentId and !$agentId = w\svar('agentId')) w\svar('agentId', $agentId = $myid);
-
   if ($sid = session_id()) db\update('sessions', ray('uid acct ssid', $agentId, $myid, $sid), 'ssid');
   w\svar('agentId', $agentId); w\svar('myid', $myid); // redo in case 
   if (empty($user)) $user = obj('uid', $myid); else $user->uid = $agentId;

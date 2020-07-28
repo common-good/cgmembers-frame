@@ -158,6 +158,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE signin AMemberTypesTheWrongPassword
  *     MAKE signin AMemberTypesAnUnknownUsernameID
  *     MAKE signin AMemberClicksALinkToResetPassword
+ *     MAKE signup AMemberConfirmsSocialSecurityNumber
  *     MAKE signup ANewbieRegistersWithNoCase
  *     MAKE signup AMemberRegistersBadEmail
  *     MAKE signup AMemberRegistersBadName
@@ -868,7 +869,6 @@ function usd($list) {return t\usd($list);}
  *     MAKE signup ANewbieVisitsTheIndividualSignupPage
  *     MAKE signup AMemberSignsUp
  *     MAKE signup AMemberChoosesToStepUp
- *     MAKE signup AMemberConfirmsSocialSecurityNumber
  *     MAKE stepup AMemberChoosesAPertransactionStepUp
  *     MAKE stepup AMembersRulesComeIntoPlay
  *     MAKE stepup AMemberChoosesRecurringAndPertransactionDonations

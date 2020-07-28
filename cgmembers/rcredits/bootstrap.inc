@@ -1827,7 +1827,7 @@ function drupal_bootstrap() {
   drupal_session_initialize();
   
   setCSP(); // must come after drupal_session_initialize
-  
+
   _drupal_bootstrap_page_header();
   drupal_language_initialize();
   require_once DRUPAL_ROOT . '/includes/common.inc';

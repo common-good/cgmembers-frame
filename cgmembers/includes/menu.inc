@@ -503,7 +503,11 @@ function menu_execute_active_handler($path = NULL, $deliver = TRUE) {
     if ($router_item['access']) {
       if ($router_item['include_file']) require_once DRUPAL_ROOT . '/' . $router_item['include_file'];
       $page_callback_result = call_user_func_array($router_item['page_callback'], $router_item['page_arguments']);
-    } else { return $mya ? w\softErr(t('no page permission')) : w\go('signin'); }
+    } elseif ($mya) {
+      if ($router_item['path'] == 'signin') {
+        return w\go('summary', t('You are already signed in.'));
+      } else { return w\softErr(t('no page permission')); }
+    } else { return w\go('signin'); }
   } else { $page_callback_result = MENU_NOT_FOUND; }
 
   // Deliver the result of the page callback, or if requested, return it raw, so calling code can do more processing.

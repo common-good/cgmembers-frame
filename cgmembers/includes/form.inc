@@ -1353,7 +1353,7 @@ function _form_validate(&$elements, &$form_state, $form_id = NULL) {
     if (isset($elements['#needs_validation'])) {
       // Verify that the value is not longer than #maxlength.
       if (isset($elements['#maxlength']) && drupal_strlen($elements['#value']) > $elements['#maxlength']) {
-        form_error($elements, $t('!name cannot be longer than %max characters but is currently %length characters long.', array('!name' => empty($elements['#title']) ? $elements['#parents'][0] : $elements['#title'], '%max' => $elements['#maxlength'], '%length' => drupal_strlen($elements['#value']))));
+        form_error($elements, $t('%name cannot be longer than %max characters but is currently %length characters long.', ray('name max length', empty($elements['#title']) ? $elements['#parents'][0] : $elements['#title'], $elements['#maxlength'], drupal_strlen($elements['#value']))));
       }
 
       if (isset($elements['#options']) && isset($elements['#value'])) {

@@ -47,7 +47,7 @@ Setup:
 #  | ".ZZB" asks device "devC" | ".ZZB" asks device "codeC" | ".ZZA" $ | ".ZZC" $ | # agent to member |
 #  | ".ZZB" asks device "devC" | ".ZZB" asks device "codeC" | ".ZZA" $ | ".ZZC" $ | # agent to agent  |
 
-Scenario: A cashier asks to charge someone
+Scenario: A cashier asks to charge someone, paying with credit line
   When agent "C:A" asks device "devC" to charge ".ZZB,ccB" $100 for "goods": "food" at %now
   # cash exchange would be for "cash": "cash out"
   Then we respond ok txid 6 created %now balance -100 saying:

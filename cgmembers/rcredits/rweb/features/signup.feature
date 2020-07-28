@@ -239,7 +239,10 @@ Scenario: A member invites
 
 Scenario: A member confirms social security number
   Given member ".ZZB" steps left "ssn"
-  When member ".ZZB" visits page "summary"
+#  When member ".ZZB" visits page "summary"
+  When member "?" confirms form "signin" with values:
+  | name   | pass |*
+  | NEWZZB | 123  |
   Then we show "Confirm Your Social Security Number"
   
   When member ".ZZB" completes form "settings/ssn" with values:

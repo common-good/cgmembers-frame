@@ -1226,9 +1226,10 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   if (!$a1->ok) return [FALSE, t('Requesting account is inactive.'), []];
   
   if (!$a1->confirmed and !$a1->isCanonic and !$a2->isCanonic and $a1->id != CGID and $a2->id != CGID) { // actor is not confirmed (but newbs can transact with bank and CG)
-    if ($a1->community != $a2->community or $channel != TX_POS) { // first tx must be in-person at home
-      if ($a1->helper != $a2->id) { // unless doing business with who invited you
-        if (!$a1->hasId or $a1->hasRisk('badSsn')) {
+    if ($a1->helper != $a2->id) { // unless doing business with who invited you
+      if (!$a1->hasId or $a1->hasRisk('badSsn')) {
+        $atHome = in(r\serverUid(), [$a1->community, $a2->community]) ? ($a1->community == $a2->community) : (substr($a1->zip, 0, 3) == substr($a2->zip, 0, 3) or u\earthDistance($a1->latitude, $a1->longitude, $a2->latitude, $a2->longitude) < 20);
+        if (!$atHome or $channel != TX_POS) { // first tx must be in-person at home
           return [FALSE, 'first at home', []];
         }
       }
@@ -1501,3 +1502,4 @@ function clubid() {return r\serverUid();} // temporarily use the region as the c
 function pic($flnm) {if (!is_dir(R_PICTURE_DIR)) mkdir(R_PICTURE_DIR); return R_PICTURE_DIR . $flnm;}
 function isBank($uid) {return ($uid == BANK_IN_ID or $uid == BANK_OUT_ID);}
 function foodFundId() {return db\get('uid', 'users', "name='foodfund'") ?: 0;}
+function referrer() {global $referrer; return test() ? nn($referrer) : basename($_SERVER['HTTP_REFERER']);}
