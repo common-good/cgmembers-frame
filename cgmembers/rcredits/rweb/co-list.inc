@@ -7,7 +7,7 @@ use CG\Util as u;
 use CG\Db as db;
 
 const SIMPLE_CO_LIST = '%simple-list%';
-const NO_STORE_CREDIT = '';
+const NO_STORE_CREDIT = 'INAACQ'; // who opted out of offering store credit (temporary)
 
 /**
  * Return a formatted list of member companies
