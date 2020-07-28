@@ -105,6 +105,7 @@ function rweb_menu($submenu = '') {
     
 //    'community' => ['norm', t('Community'), 'FindCo', ANY],
     'community' => ['norm', t('Community'), 'Community', ANY],
+    'community/endorse' => ['call', t('Invite / Endorse'), 'Endorse 2', ANY, '', t(), 'share-alt'],
     'community/invite' => ['sub', t('Invite / Endorse'), 'Invite 2', ANY, '', t(), 'share-alt'],
     'community/invite/all' => ['call', t('Shouters'), 'Shouters 3', ANY],
     'community/invite/example' => ['call', t('Invite Someone'), '', 'ok manage', 'inviteExample'],

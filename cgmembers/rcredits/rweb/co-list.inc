@@ -7,6 +7,7 @@ use CG\Util as u;
 use CG\Db as db;
 
 const SIMPLE_CO_LIST = '%simple-list%';
+const NO_STORE_CREDIT = '';
 
 /**
  * Return a formatted list of member companies
@@ -122,6 +123,7 @@ X;
       $buttons = ($a->coType == CO_NONPROFIT xor $a->coCan(CO_FLIP))
       ? buttonHtml($a, t('Donate'), 'donate', 'success')
       : buttonHtml($a, t('Buy<br>Credit'), 'credit', 'primary');
+      if (in($a->mainQid, NO_STORE_CREDIT)) $buttons = '';
 
       $contact = "$a->city, $a->st<br>$a->phoneDash";
       $new = ($a->activated > REQUEST_TIME - 9 * WEEK_SECS) ? $NEW : '';
