@@ -791,6 +791,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE cgbutton AMemberTypeAccountIDToBuyStoreCredit
  *     MAKE cgbutton AMemberClicksAButtonToBuyAGiftOfStoreCredit
  *     MAKE cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
+ *     MAKE cgbutton ACompanyGetsAnAuthcode
  *     MAKE changeaccount AMemberClicksTheProfilePhoto
  *     MAKE changeaccount AMemberChangesAccount
  *     MAKE changeaccount AMemberChangesAccountToGoToADifferentPage
@@ -1170,6 +1171,7 @@ function statisticsGetSet($time) {
  *
  * in: MAKE backing AMemberDecreasesBackingAmount
  *     MAKE bank ASlaveMemberRequestsATransfer
+ *     MAKE cgbutton ACompanyGetsAnAuthcode
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     BOTH coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
@@ -2125,4 +2127,14 @@ function memberStepsUpWith($id, $rows) {
   $vs['xlys'] = join('', $xlys);
   $er = u\urlify(http_build_query($vs));
   return t\completeForm($id, "community/stepup/er=$er", [], TRUE);
+}
+
+/**
+ * we exit showing: (ARG)
+ *
+ * in: TEST cgbutton ACompanyGetsAnAuthcode
+ */
+function weExitShowing($ray) {
+  if (!$actualRay = db\get('value', 'test', "type='echo'")) return FALSE;
+  return t\checkOneArray($ray[0], unserialize($actualRay));
 }

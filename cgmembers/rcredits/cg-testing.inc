@@ -19,13 +19,12 @@ const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromI
 const SPECIAL_IDS = 'ctty crumb round cgf bank-in bank-out';
 const RLESS_TNMS = 'signup posts people post_cats messages'; // test tables with no "r_" prefix
 const NULL_FLDS = 'payer payee useMax amtMax template end code rule';
+// see R_DATE_FLDS in defs.inc
 
 global $base_path;
 define('BASE_PATH', $base_path);
 define('DOCODE_FLNM', LOG_DIR . 'docode.txt');
 define('SAME_TIME', 60 * 20); // number of seconds that make no difference in "same time"
-
-// see R_DATE_FLDS in defs.inc
 
 /**
  * Allow mnemonic and abbreviated data in test scenario columns.
@@ -1500,9 +1499,13 @@ function getRisks($risks0, $descs) {
   return $risks;
 }
 
-function badEq($type, $v1, $v2, $id) {
-  if (t\eq($v1, $v2)) return FALSE;
-  t\output("uid=$id badEq $type v1=$v1, expected v2=$v2");
+/**
+ * Complain if the given value is not what was wanted.
+ */
+function badEq($type, $got, $want, $id = '') {
+  if (t\eq($got, $want)) return FALSE;
+  if ($id !== '') $id = "uid=$id ";
+  t\output($id . t('%type: wanted "%want" got "%got"', compact(ray('id type want got'))));
   return TRUE;
 }
 
@@ -1765,21 +1768,22 @@ function oneJsonResponse($correctResponse, $actualResponses) {
   return FALSE;
 }
 
-function checkOneArray($correctResponse, $actualResponse) {
-  $actualResponse = (array)$actualResponse;
-  fixData($actualResponse);
-  foreach ($correctResponse as $key => $value) {
-    if ($value == '?') continue;
-
-    if (! array_key_exists($key, $actualResponse)) {
-      t\output("$key missing from response");
-      return FALSE;
-    }
-    $actualValue = $actualResponse[$key];
-    if ($value != $actualValue) {
-      t\output("$value != $actualValue");
-      return FALSE;
-    }
+function checkOneArray($wantRay, $gotRay) {
+  $gotRay = (array)$gotRay;
+  fixData($gotRay);
+  foreach ($wantRay as $k => $v) {
+    $gotV = $gotRay[$k];
+    if ($v == '?') continue;
+    if (in($k, R_DATE_FLDS) and sameTime($gotV, $v)) continue;
+    if (! array_key_exists($k, $gotRay)) return t\output("$k missing from response");
+    if (t\badEq("For $k", $gotV, $v)) return FALSE;
   }
   return TRUE;
+}
+
+/**
+ * Add a record with the given type and value to the test table, along with the test name.
+ */
+function logRec($type, $value) {
+  return db\insert('test', ray('type value test', $type, is_array($value) ? serialize($value) : $value, \sceneId()));
 }

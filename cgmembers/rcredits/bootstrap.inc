@@ -3,6 +3,7 @@ use CG as r;
 use CG\Util as u;
 use CG\Db as db;
 use CG\Web as w;
+use CG\Testing as t;
 
 /**
  * @file
@@ -1454,7 +1455,7 @@ function drupal_set_message($message = NULL, $type = 'status', $repeat = TRUE) {
     $message = (is_array($message) or is_object($message)) ? pr($message) : trim($message);
     if (!isset($_SESSION['messages'][$type])) $_SESSION['messages'][$type] = [];
     if ($repeat or !in($message, $_SESSION['messages'][$type])) $_SESSION['messages'][$type][] = $message;
-    if (test()) db\insert('test', ray('type value test', $type, $message, \sceneId()), 'id');
+    if (test()) t\logRec($type, $message);
     
     drupal_page_is_cacheable(FALSE); // Mark this page as being uncacheable.
   }

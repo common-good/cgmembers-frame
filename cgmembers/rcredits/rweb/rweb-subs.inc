@@ -1676,7 +1676,8 @@ function whois($who, $field_name, $info, $selfMsg = 'no self-trading', $paying =
  */
 function doSay($msg = '', $err = '') {
   if (isDEV) file_put_contents(f('t.dosayFilename', $err ? 'error' : 'status'), $msg); // no way to know if actually testing
-  return w\go('empty/say=1', $msg, $err);
+  say($msg, $err);
+  return w\go('empty/say=1');
 }
 function doErr($msg) {return doSay($msg, 'err');}
 
@@ -2259,6 +2260,17 @@ function goNextStep($step, $msg = NULL, $info = []) {
 function backButton() {
   jsx('back-button'); 
   return '<button class="btn btn-back btn-xs btn-primary" tabindex="-1"><span>&laquo;</span>&nbsp;Go Back</button>';
+}
+
+/**
+ * Output the given array and exit.
+ * @param array $ray: the array to echo
+ * @param bool $cry: <encrypt it>
+ */
+function exitRay($ray, $cry = FALSE) {
+  if (test()) return t\logRec('echo', $ray + compact('cry'));
+/**/  echo $cry ? u\cryRay($ray) : pr($ray);
+  exit();
 }
 
 // one-line functions that need no explanation

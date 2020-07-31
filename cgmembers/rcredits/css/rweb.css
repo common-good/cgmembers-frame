@@ -1,4 +1,5 @@
 /* CSS specific to Common Good members site */
+@import url("find-co.css"); /* Find Company and Buy Credit CSS, also used by our promo site */
 
 .debug {margin-bottom:8px;}
 .debug pre {margin:0; background-color:#fde8ec;}
@@ -807,27 +808,6 @@ body.page-partner blockquote {font-size:14px;}
 #frm-couponslist #edit-title {margin-bottom:0;}
 #coupons th, #coupons td {text-align:center;}
 #coupons span[data-toggle="popover"] {color:#2fa4e7;}
-
-/* Find Company and Buy Credit */
-.cmpy-list {display:table;}
-.cmpy-list .row {display:table-row;}
-.cmpy-list .well {padding:10px 35px;}
-
-.cmpy-list .cmpy-buttons {text-align:right; max-width:44px; vertical-align:middle;}
-.cmpy-list .cmpy-buttons a {display:block; font-size:9.5px; padding:1px 2px;}
-
-.cmpy-list .cmpy-img, .cmpy-list .cmpy-buttons, .cmpy-list .cmpy-name-does,
-.cmpy-list .cmpy-contact {display:table-cell; padding:10px 0; border-bottom:1px solid silver;}
-
-.cmpy-list .cmpy-img {display:table-cell; overflow:hidden; vertical-align: middle; margin:5px 5px 5px 20px; text-align:center;}
-.cmpy-list .cmpy-img img {overflow:hidden; width:64px; height:48px; max-width:64px; max-height:48px; object-fit:cover;}  /* max-width and max-height are for mobile / promo site */
-.cmpy-list .cmpy-name-does {width:300px; overflow:hidden; display:table-cell; vertical-align: middle; padding-left:10px;}
-.cmpy-list .cmpy-name {color:darkblue; padding-left:10px;}
-.cmpy-list .cmpy-does {padding-left:10px;}
-.cmpy-list .cmpy-contact {width:150px; overflow:hidden; padding-left:5px; vertical-align: middle; display:table-cell;}
-.cmpy-list .cmpy-ind-wrapper {margin-top:10px;}
-.cmpy-list .cmpy-ind {font-weight:bold; color:#004d00; font-size:150%; margin:30px 0 5px 0;}
-.company-listing {color:red; font-weight:bold;}
 
 /* Unsubscribe */
 #frm-unsubscribe #edit-why .checkbox {display:block;}
