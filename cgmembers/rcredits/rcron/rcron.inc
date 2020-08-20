@@ -208,13 +208,14 @@ X;
 //  db\del('users', $where); // abandoned new joint acct (must postcede setting jids)
 
   // Notice which bank accounts have been verified
-	$where = 'deposit<>0 AND deposit<UNIX_TIMESTAMP()-:VERIFICATION_DELAY*:DAY_SECS AND (SELECT 1 FROM r_usd d2 WHERE d2.txid=-d.txid) IS NULL';
+	$where = 'deposit>:NOW-7*:DAY_SECS AND deposit<UNIX_TIMESTAMP()-:VERIFICATION_DELAY*:DAY_SECS AND (SELECT 1 FROM r_usd d2 WHERE d2.txid=-d.txid) IS NULL';
+//  $res = db\get('uid,bankAccount', 'r_usd d', $where);
 	$uids = db\col('payee', 'r_usd d', $where);
 	$DBTX = \db_transaction();
-	foreach ($uids as $uid) r\acct($uid)->setBit(B_BANKOK);
+	foreach ($uids as $uid) if ($a = r\acct($uid) and $a->hasBank) $a->setBit(B_BANKOK);
 	if ($uids) db\del('r_usd', 'amount=0 AND payee IN (:uids)', compact('uids'));
 	unset($DBTX);
-	db\q('DELETE FROM x_usd WHERE amount=0'); // no need to track these
+	if ($uids) db\q('DELETE FROM x_usd WHERE amount=0'); // no need to track these
 }
 
 /**
@@ -641,12 +642,10 @@ function checkAcct1($item) {
   extract($item);
   $a = r\acct($uid);
   if (!$reid or !$partnerJid or $partnerJid != $uid or $relatedUid != $jid) r\tellAdmin('bad relation', $item);
-  if ($a->hasBank and !$a->masterA->vsecure['bankAccount']) {
-    $a->setRisk('hasBank', FALSE);
-    r\tellAdmin('hasBank(had) wo bank account', $item);
-  } elseif ($a->masterA->vsecure['bankAccount'] and !$a->hasBank) {
-    $a->setRisk('hasBank');
-    r\tellAdmin('bank account wo (until now) hasBank', $item);
+
+  if ($a->masterA->hasBank xor $a->masterA->risk('hasBank')) {
+    $a->setRisk('hasBank', $a->masterA->hasBank);
+    r\tellAdmin('hasBank was set wrong', $item);
   }
   //look at agreement date and first transaction date and last transaction date. queue appropriate funcs
 }

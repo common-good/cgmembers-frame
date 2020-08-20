@@ -204,11 +204,11 @@ class Acct {
       case 'legalNameDpy': return str_replace('_', ' ', $a->legalName); // for u\parseName of names like Jay di_Fiori
       case 'owns': return !$a->risk('rents');
       case 'creditLine': return -$a->floor;
-      case 'hasFid': return (nni($a->vsecure, 'federalId', '') !== '');
-      case 'hasId': return ($a->hasFid or nni($a->vsecure, 'altId', '') !== '');
-      case 'hasDob': return (nni($a->vsecure, 'dob', '') !== ''); // has to be 2 steps
+      case 'hasFid': return $a->hasVSecure('federalId');
+      case 'hasId': return ($a->hasFid or $a->hasVSecure('altId'));
+      case 'hasDob': return $a->hasVSecure('dob');
       case 'closed': return ($a->activated and !$a->ok); // data[newAccount] has new qid, if any
-      case 'hasBank': return $a->risk('hasBank');
+      case 'hasBank': return $a->hasVSecure('bankAccount');
       case 'lowSecurity': return u\n2ai(substr($a->created, -5, 5), 3); // result is 3 chars long
       case 'inviteCode': return $a->mainQid . $a->lowSecurity;
       case 'isCanonic': return ($a->id >= 0 and $a->id < CANONIC_ACCTS);
@@ -322,6 +322,9 @@ class Acct {
   
   /**
    * Set a relation field.
+   * Current account is expected to be r\acct($main, $other).
+   * @param assoc $info: fields and values to change (if relations record does not exist, create it)
+   *   $info may include bit names for the flags field
    */
   public function setRel($info) {
     $a = $this;
@@ -334,10 +337,10 @@ class Acct {
         u\setBit($flags, $k, $v);
         unset($info[$k]);
       }
-      u\preray(compact('flags'), $info);
+      $info += compact('flags');
     }
-    if ($reid = $a->relfld('reid')) {
-      return db\updateOrInsert('r_relations', $info + ['reid' => $reid], 'reid');
+    if ($reid = $a->relFld('reid')) {
+      return db\updateOrInsert('r_relations', $info + compact('reid'), 'reid');
     } else $a->newRelation($info + ray('other', $a->agentId));
   }      
   
@@ -453,8 +456,11 @@ class Acct {
         $sFlds += $a->$special; // replace existing values with update info
       } else continue;
 
-      if ($special == 'vsecure' and $a->activated and $sFlds) foreach ($sFlds as $k => $v) {
-        if (!u\crypted('V', $v)) $sFlds[$k] = u\cry('V', $v); // hyper-encrypt when activated (when auto-access to EIN no longer needed). This and recordChanges are the ONLY places we do u\cry('V', ) !!
+      if ($special == 'vsecure' and $sFlds) {
+        if ($a->activated) foreach ($sFlds as $k => $v) {
+          if (!u\crypted('V', $v)) $sFlds[$k] = u\cry('V', $v); // hyper-encrypt when activated (when auto-access to EIN no longer needed). This and recordChanges are the ONLY places we do u\cry('V', ) !!
+        }
+        if (array_key_exists('bankAccount', $sFlds)) $a->setRisk('hasBank', (bool) $sFlds['bankAccount']);
       }
       self::$rs[$a->id]->$special = $sFlds;
       $sFlds = serialize($sFlds);
@@ -773,12 +779,6 @@ EOF;
     foreach ([$a, $b] as $i => $ai) {
       $aj = $i == 0 ? $b : $a; // the other account
       $ai->update('jid', $aj->id);
-      /* NO! bankAccount is available only to regional admins
-         if (!$ai->o_hasBank and $aj->o_hasBank) {
-         $ai->update('bankAccount last4bank', $aj->o_bankAccount, $aj->o_last4bank);
-         $ai->setRisk('hasBank');
-         } */
-      //      $ai->setBit(B_JOINED);
       foreach ($fields as $k) $$k = nn($$k, 0) + ($ai->o($k) ?: 0);
     }
 		
@@ -971,7 +971,7 @@ EOF;
   }
 
   public function setTask($task) {$this->update('task stepsLeft', $task, $this->stepsLeft($task));}
-  public function stepIsDone($step) {return (bool) u\getBit($this->steps, r\allSteps()[$step]);}
+  public function stepIsDone($step) {return (bool) u\getBit($this->steps, nni(r\allSteps(), $step));}
   public function stepsDone($task) {
     foreach(ray(r\taskSteps($task)) as $step) if (!$this->stepIsDone($step)) return FALSE; 
     return TRUE;
@@ -1778,6 +1778,7 @@ X;
     return join(', ', $result);
   }
   
+  private function hasVSecure($fld) {return (nni($this->vsecure, $fld, '') !== '');}
 
   public function isMe($uid) {return ($uid == $this->id or $uid == $this->jid);}
   public function codeHash() {return u\hash($this->cardCode());}
@@ -1855,7 +1856,7 @@ function setAcct($myid = '', &$sta = NULL) {
   if ($myid) w\svar('myid', $myid); else $myid = w\svar('myid') ?: (w\svar('agentId') ?: 0);
   if (!$agentId and !$agentId = w\svar('agentId')) w\svar('agentId', $agentId = $myid);
   if ($sid = session_id()) db\update('sessions', ray('uid acct ssid', $agentId, $myid, $sid), 'ssid');
-  w\svar('agentId', $agentId); w\svar('myid', $myid); // redo in case 
+  w\svar('agentId', $agentId); w\svar('myid', $myid); // redo in case we're testing
   if (empty($user)) $user = obj('uid', $myid); else $user->uid = $agentId;
   if (!$myid) return $mya = NULL;
 

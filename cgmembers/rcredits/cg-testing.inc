@@ -533,7 +533,7 @@ function doneStep($id, $step) {
     return TRUE;
   }
 
-  if (!$a = t\a($id)) return t\output("Not an account: $id");
+  if (!$a = t\acct($id)) return t\output("Not an account: $id");
   if (!$a->stepsLeft and !$a->steps) $a->setTask($a->co ? 'co' : 'person');
 
   if (!$testOnly) $a->stepDone($step);
@@ -755,25 +755,25 @@ function fullQid($q) {
 /**
  * Interpret the given identifier (int, full qid, or local qid) as an account ID.
  */
-function uid($id, $field = 'id') {
-  //  u\EXPECT($id, 'empty id'); // otherwise site loops (?)
+function uid($id, $field = '') {
+  u\EXPECT(!$field, 'nonempty field');
   if (is_numeric($id) or empty($id)) { return $id; }
   $map = ray('ctty cgf bank-in bank-out crumb round',
              r\serverUid(), CGID, BANK_IN_ID, BANK_OUT_ID, CG_CRUMBS_UID, CG_ROUNDUPS_UID);
   if ($res = nni($map, $id)) return $res;
 
-  //  return r\qo($id)->$field; FAILS
-  return r\qo(t\fullQid2($id))->$field;
+  $qo = r\qo(t\fullQid2($id));
+  return $qo->id; //  return r\qo($id)->$field; FAILS
 }
-function agent($id) {return t\uid($id, 'agent');}
+function agentId($id) {return t\uid($id, 'agentId');}
 
 /**
  * Return an account for the (probably abbreviated) account ID, doing error checking.
  * @param string $id: the ID
  * @return the account object (NULL if there is no account for that ID)
  */
-function a($id) {
-  return ($uid = t\uid($id) and $a = r\acct($uid)) ? $a : output(t('"%id" is not an account id', compact('id')));
+function acct($id) {
+  return r\acct(t\fullQid2($id)) ?: output(t('"%id" is not an account id', compact('id')));
 }
 
 function getErrors() {
@@ -1575,6 +1575,7 @@ function shownWith($content, $type = 'text', $mustBePresent = TRUE) {
     $one = t($one); // translate constants in member
     if (($one = u\redash($one)) === '') continue;
     $i = mb_strpos($model, $one, $xi = $i);
+///    debug("one=$one i=$i xi=$xi");
     if ($i === FALSE) {
       if (nn($formOut['hasDate']) and $onetm = strtotime($one) and date('m/d/Y', $onetm) == $one) { // date formatted m/d/Y
         $i = mb_strpos($model, date('Y-m-d', $onetm), $xi); // look for Y-M-d instead (quirk of input type="date")
@@ -1700,6 +1701,76 @@ function getLocus($q) {
     : FALSE;
 }
 
+/**
+ * Launch the given page in the default browser, appending the given javascript.
+ * This is kinda complicated. Search for "jsCode" (occurs in 5 files: this, bootstrap.inc, scraps.js, ajax.inc, html.tpl)
+ */
+function dojs($page, $id, $js) {
+  global $base_url;
+  $qid = t\acct($id)->qid;
+  $jsCode = u\cryRay(compact('js'));
+  t\execWithTimeout("start \"\" \"$base_url/$page?qid=$qid&jsCode=$jsCode\"", 2); // leave enough time to display page
+  return TRUE;
+}
+
+/**
+ * Execute a command and return its output. Wait until the time limit has expired (even if the command ends).
+ *
+ * @param string $cmd: command to execute.
+ * @param number $timeout: time limit in seconds.
+ * @return string: output of the command.
+ * @throws \Exception
+ */
+function execWithTimeout($cmd, $timeout) {
+  // File descriptors passed to the process.
+  $descriptors = array(
+    0 => array('pipe', 'r'),  // stdin
+    1 => array('pipe', 'w'),  // stdout
+    2 => array('pipe', 'w')   // stderr
+  );
+
+  // Start the process.
+  $prefix = strihas(PHP_OS, 'WIN') ? '' : 'exec ';
+  $process = proc_open($prefix . $cmd, $descriptors, $pipes);
+  if (!is_resource($process)) throw new \Exception('Could not execute process');
+
+  stream_set_blocking($pipes[1], 0); // Set the stdout stream to non-blocking, so stream_get_contents returns immediately.
+  stream_set_blocking($pipes[2], 0); // Set the stderr stream to non-blocking, so stream_get_contents returns immediately.
+
+  $timeout *= 1000000; // Turn the timeout into microseconds.
+
+  $buffer = ''; // Output buffer.
+
+  while ($timeout > 0) { // Wait until we have output or the timer expired.
+    $start = microtime(true);
+    $read  = array($pipes[1]);
+    $other = array();
+    stream_select($read, $other, $other, 0, $timeout);
+
+    // Get the status of the process. Do this before we read from the stream,
+    // this way we can't lose the last bit of output if the process dies between these functions.
+    $status = proc_get_status($process);
+
+    // Read the contents from the buffer. This function will always return immediately as the stream is non-blocking.
+    $buffer .= stream_get_contents($pipes[1]);
+
+// (end on timeout only)    if (!$status['running']) break; // Break if the process exited before the timeout.
+
+    $timeout -= (microtime(true) - $start) * 1000000; // Subtract the time we waited.
+  }
+  
+  $errors = stream_get_contents($pipes[2]);
+  if (!empty($errors)) throw new \Exception($errors);
+
+  proc_terminate($process, 9); // Kill the process in case the timeout expired and it's still running.
+
+  for ($i = 0; $i < 3; $i++) fclose($pipes[$i]);// Close all streams.
+
+  proc_close($process);
+
+  return $buffer;
+}
+
 /*
   function fixStateAndCountry(&$state, &$country) {
   global $testOnly;
@@ -1772,10 +1843,10 @@ function checkOneArray($wantRay, $gotRay) {
   $gotRay = (array)$gotRay;
   fixData($gotRay);
   foreach ($wantRay as $k => $v) {
-    $gotV = $gotRay[$k];
     if ($v == '?') continue;
+    if (! array_key_exists($k, $gotRay)) return t\output("$k missing from actual: " . pr($gotRay));
+    $gotV = $gotRay[$k];
     if (in($k, R_DATE_FLDS) and sameTime($gotV, $v)) continue;
-    if (! array_key_exists($k, $gotRay)) return t\output("$k missing from response");
     if (t\badEq("For $k", $gotV, $v)) return FALSE;
   }
   return TRUE;

@@ -791,7 +791,7 @@ function memberId($id, $agent = '', $retroactive = FALSE) {
   
   $a = r\acct($id, $agent);
   $cttyErr = (!$mya or (!$mya->admin and $a->community != $mya->community));
-  if (!$a or ($cttyErr and !$retroactive)) exit('No such account ia: ' . $id . ':' . $agent);
+  if (!$a or ($cttyErr and !$retroactive)) u\FAIL('No such account ia: ' . $id . ':' . $agent);
   
   $a->setAgentNum(); // assign an agentCode, if appropriate (and not yet done)
   $qid = $a->qid; // get this before setting $a to agent (below)

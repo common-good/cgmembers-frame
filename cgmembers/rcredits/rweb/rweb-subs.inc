@@ -745,8 +745,10 @@ function sanitizePage($page) {
       $page = str_replace('pre>', 'WASPRE>', $page);
       $m = htmlentities($matches[0]);
       $msg .= '<br><br>' . str_replace($matches[0], "--><code style=\"background-color:yellow;\">$m</code>", $page);
+/**/  die($msg);
     }
-/**/die($msg);
+    
+/**/ die(plain($msg));
   }
 }
 
@@ -2268,7 +2270,7 @@ function backButton() {
  * @param bool $cry: <encrypt it>
  */
 function exitRay($ray, $cry = FALSE) {
-  if (test()) return t\logRec('echo', $ray + compact('cry'));
+/**/  if (test()) return t\logRec('echo', $ray + compact('cry'));
 /**/  echo $cry ? u\cryRay($ray) : pr($ray);
   exit();
 }
@@ -2297,7 +2299,6 @@ function away() {return ['target' => '_blank'];}
 function js($script, $args = '') {global $pageScripts; $pageScripts[$script] = http_build_query(rayy(func_get_args(), 1));} // see html.tpl
 function jsx($script, $args = '') {global $scriptScraps; $scriptScraps[$script] = http_build_query(rayy(func_get_args(), 1));} // see html.tpl
 function softErr($msg) {w\say($msg, 'err'); return w\go('empty');}
-function clearHeaders() {if (!headers_sent()) header_remove();}
 function skipButton() {return button(t('Skip for now'), '/settings/skip', t('Leave this step for last'), 'default', 'xs', ['class' => 'skip']);}
 function notab() {return tabindex(-1);}
 function tabindex($n) {return ['tabindex' => $n];}

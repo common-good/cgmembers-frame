@@ -223,7 +223,7 @@ function letterGrade($value, $full = TRUE) {
 // value
 // RETURN    letter grade representation of the value, eg "C+" (0.42)
 
-/**/	if($value <= -5 or $value >= 5.5) die("bad grade: \"$value\"");
+/**/	if($value <= -5 or $value >= 5.5) die(plain("bad grade: \"$value\""));
   $integer = round($value);
   $fraction = $value - $integer;
   $grade = substr(GRADELTRS, $integer, 1);

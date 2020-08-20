@@ -5,9 +5,9 @@ SO I can enjoy the rCredit system's rapid growth and be a part of that.
 
 Setup:
   Given members:
-  | uid  | fullName | address | city  | state | zip   | country | postalAddr | flags               | risks   | floor |*
-  | .ZZA | Abe One  | 1 A St. | Atown | AK    | 01001 | US      | 1 A, A, AK | ok,confirmed,bankOk | hasBank |   -20 |
-  | .ZZB | Bea Two  | 2 B St. | Btown | PA    | 01002 | US      | 2 B, B, BC | ok,confirmed,cAdmin |         |  -200 |
+  | uid  | fullName | address | city  | state | zip   | country | postalAddr | flags               | bankAccount | floor |*
+  | .ZZA | Abe One  | 1 A St. | Atown | AK    | 01001 | US      | 1 A, A, AK | ok,confirmed,bankOk | USkk9000001 |   -20 |
+  | .ZZB | Bea Two  | 2 B St. | Btown | PA    | 01002 | US      | 2 B, B, BC | ok,confirmed,cAdmin |             |  -200 |
   And transactions:
   | xid | created   | amount | payer | payee | purpose |*
   |   1 | %today-4m |    100 | .ZZB | .ZZA | loan    |
@@ -104,9 +104,9 @@ Scenario: A recurring donation to CG cannot be completed
 
 Scenario: A non-member chooses a donation to CG
   Given members:
-  | uid  | fullName | flags  | risks   | activated | balance |*
-  | .ZZD | Dee Four |        | hasBank |         0 |       0 |
-  | .ZZE | Eve Five | refill | hasBank | %today-9m |     200 |
+  | uid  | fullName | flags  | bankAccount | activated | balance |*
+  | .ZZD | Dee Four |        | USkk9000004 |         0 |       0 |
+  | .ZZE | Eve Five | refill | USkk9000005 | %today-9m |     200 |
   And these "tx_templates":
   | id | start     | from | to  | amount | period | purpose  |*
   | 2  | %today-3y | .ZZD | cgf |      1 | year   | donation |
