@@ -23,9 +23,9 @@ Scenario: a weekly notice member doesn't get notices on other days
   
 Scenario: It's time to warn about an upcoming annual donation to CG
   Given members:
-  | uid  | fullName | flags  | risks   | activated   |*
-  | .ZZD | Dee Four | ok     | hasBank | %now-1y     |
-  | .ZZE | Eve Five | ok     | hasBank | %yearAgo+7d |
+  | uid  | fullName | flags  | bankAccount        | activated   |*
+  | .ZZD | Dee Four | ok     | USkk98765432100004 | %now-1y     |
+  | .ZZE | Eve Five | ok     | USkk98765432100005 | %yearAgo+7d |
   And these "tx_templates":
   | id | action | start       | from | to  | amount | period | purpose |*
   |  1 | pay    | %yearAgo+7d | .ZZD | cgf |      1 | year   | gift!   |

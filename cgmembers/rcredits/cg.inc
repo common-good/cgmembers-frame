@@ -1502,4 +1502,4 @@ function clubid() {return r\serverUid();} // temporarily use the region as the c
 function pic($flnm) {if (!is_dir(R_PICTURE_DIR)) mkdir(R_PICTURE_DIR); return R_PICTURE_DIR . $flnm;}
 function isBank($uid) {return ($uid == BANK_IN_ID or $uid == BANK_OUT_ID);}
 function foodFundId() {return db\get('uid', 'users', "name='foodfund'") ?: 0;}
-function referrer() {global $referrer; return test() ? nn($referrer) : basename($_SERVER['HTTP_REFERER']);}
+function referrer() {global $referrer; return test() ? nn($referrer) : basename(nni($_SERVER, 'HTTP_REFERER'));}

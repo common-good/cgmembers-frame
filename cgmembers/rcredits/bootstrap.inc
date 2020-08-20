@@ -1827,15 +1827,20 @@ function drupal_bootstrap() {
   require_once DRUPAL_ROOT . '/includes/session.inc';
   drupal_session_initialize();
   
-  setCSP(); // must come after drupal_session_initialize
+  $jsCode = isDEV ? nni($_GET, 'jsCode') : '';
+  if (!$jsCode) setCSP(); // must come after drupal_session_initialize
 
   _drupal_bootstrap_page_header();
   drupal_language_initialize();
   require_once DRUPAL_ROOT . '/includes/common.inc';
   _drupal_bootstrap_full();
 
+  if ($jsCode and $qid = nni($_GET, 'qid')) {
+    r\setAcct(r\acct($qid));
+    return w\go($_SERVER['REQUEST_URI'] . "?jsCode=$jsCode"); 
+  } else { $mya = r\setAcct(); }
+
   global $channel, $boxUser, $box;
-  $mya = r\setAcct();
   $channel = TX_WEB; // assume web unless this gets set otherwise downstream
   if ($mya) $boxUser = w\boxUser($box = w\box(), $mya->id); // so far used only when recording transactions
 

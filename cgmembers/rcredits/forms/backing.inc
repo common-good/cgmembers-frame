@@ -11,7 +11,7 @@ use CG\Db as db;
  */
 function formBacking($form, &$sta, $args = '') {
   if (!$mya = w\eLinkAcct($sta, $args, 'acct')) return;
-  
+
   $title = t('Backing Promise');
   $subtext = t(<<< X
   <p>Backing makes it possible for your community and region to make investments, loans, and grants. Whereas bank investments are backed (partially) by the FDIC, Common Good investments, loans, and grants are backed by the members.</p>
@@ -53,9 +53,10 @@ function formBacking_submit($form, &$sta) {
   $mya = w\eLinkAcct($sta); 
 
   extract(just('amount', $sta['input']));
-  $renewDate = $mya->backingDate + YEAR_SECS;
-  $earliestRenew = $renewDate - RENEW_ADVANCE_DAYS * DAY_SECS;
   r\tellAdmin("$mya->fullName set backing to " . u\fmtAmt($amount) . ' (was ' . u\fmtAmt($mya->backing) . ')');
+
+  $renewDate = $mya->backingDate ? strtotime('+1year', $mya->backingDate) : today();
+  $earliestRenew = $renewDate - RENEW_ADVANCE_DAYS * DAY_SECS;
 
   if ($amount < $mya->backing and now() < $earliestRenew) {
     $mya->update('backingNext', $amount);

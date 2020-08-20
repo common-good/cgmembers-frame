@@ -8,11 +8,11 @@ SO I can (eventually) spend it through the Common Good system.
 
 Setup:
   Given members:
-  | uid  | fullName | minimum | floor | flags             | risks   |*
-  | .ZZA | Abe One  |       0 |   -20 | ok,debt,bankOk    | hasBank |
-  | .ZZB | Bea Two  |       0 |     0 | ok                | hasBank |
-  | .ZZC | Our Pub  |      40 |   -10 | co,ok,debt,bankOk | hasBank |
-  | .ZZD | Dee Four |      80 |   -20 | ok,refill,debt    | hasBank |
+  | uid  | fullName | minimum | floor | flags             | bankAccount |*
+  | .ZZA | Abe One  |       0 |   -20 | ok,debt,bankOk    | USkk9000001 |
+  | .ZZB | Bea Two  |       0 |     0 | ok                | USkk9000002 |
+  | .ZZC | Our Pub  |      40 |   -10 | co,ok,debt,bankOk | USkk9000003 |
+  | .ZZD | Dee Four |      80 |   -20 | ok,refill,debt    | USkk9000004 |
 	And relations:
 	| main | other | permission |*
 	| .ZZC | .ZZB  |     manage |

@@ -53,7 +53,7 @@ function formInvite_submit($form, &$sta) {
       $website = preg_replace('~http(s?)://~', '', $website);
       list ($uid, $title) = [$mya->id, $position];
       db\updateOrInsert('u_shouters', compact(ray('uid quote org title website usePhoto postPhoto sawVideo')), 'uid');
-      say(t('Thank you! Your name has been added to the list.'));
+      say(t('Thank you for endorsing %PROJECT!')); // might be new or edited
     } else {
       r\tellAdmin(t('non-endorsement'), $input + ray('fullName', $mya->fullName));
       if ($whyNot) say(t('Thank you for telling us! We will use your feedback to improve.'));

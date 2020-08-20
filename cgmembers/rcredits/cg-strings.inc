@@ -40,7 +40,6 @@ $GLOBALS['tStrings'] = array(
 //  'report get usd' => t('%Exchange approved. %request will be transferred directly to your bank account within 24 hours.'),
 //  'get usd inactive' => t('If you were an Active Participant in the %PROJECT system, your request would transfer %amount directly to your bank account. Alas, you are not yet an Active Participant.'),
   'your demand' => t('Your total request for %RCREDITS is now %request.'),
-  'updated relation' => t('Updated settings for relation to %otherName'),
   'deleted relation' => t('Deleted relation with %otherName'),
   'customer balance' => t('The current balance for %otherName is %balance.'),
   'info saved' => t('Your information has been saved.'),

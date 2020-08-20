@@ -137,8 +137,7 @@ function formPartnerSignup_submit($form, &$sta) {
   $bankAccount = "USkk$routingNumber$bankAccount";
   $last4bank = substr($bankAccount, -4, 4);
   $bankOk = FALSE;
-  $hasBank = TRUE;
-  $mya->update(compact(ray('bankAccount last4bank hasBank bankOk')));
+  $mya->update(compact(ray('bankAccount last4bank bankOk')));
   
   if (nn($sta['input']['city2'])) { // solar1, so extra fields
     extract(just('sorch fullName name address2 city2 email phone state2 zip2 tenure owns', $sta['input']));
