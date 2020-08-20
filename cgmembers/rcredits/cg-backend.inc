@@ -206,41 +206,6 @@ X;
 }
 
 /**
- * Update relations
- * @param array $updates: list of records to update, indexed by reid
- *   each element is an associative array of new values, keyed by field name
- *   if a record is to be updated to all zeros, it is simply deleted.
- * @return string: a report of what got updated
- */
-function updateRelations($updates) {
-///     debug("updateRelations(" . print_r($updates, true) . ")");
-  $myid = r\acct()->id;
-  $report = '';
-  foreach ($updates as $reid => $data) {
-    extract(just('main other fullName permission flags', $data['original'], NULL));
-    $wasEmpty = (!$permission and !$flags);
-    unset($data['original']);
-    extract(just('permission flags', $data));
-//    foreach (ray('employee owner customer draws') as $k) u\setBit($flags, $k, @$data[$k]);
-    foreach (ray('employee owner customer draw') as $k) u\setBit($flags, $k, nni($data, $k)); // drawS?
-    if (!u\getBit($flags, 'customer')) u\setbit($flags, 'autopay', FALSE);
-
-    if (!$permission and !$flags and !$wasEmpty) { // empty now and wasn't before
-      db\del('r_relations', compact('reid'));
-      $msg = 'deleted relation';
-    } else {
-      $a = r\acct($main, $other);
-      if ($data) $a->setRel($data); // db\update('r_relations', $data + $reidSub, 'reid');
-      if (nni($data, 'draw')) r\acct($other)->setBit(B_DRAWS);
-      $msg = 'updated relation';
-    }
-    $otherName = $fullName;
-    $report .= tr($msg, compact('otherName')) . '<br>';
-  }
-  return $report;
-}
-
-/**
  * Undo the given transaction.
  * Situations:
  *     I paid someone (byMe):            REVERSE (invoice)

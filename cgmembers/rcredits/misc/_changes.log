@@ -1,3 +1,20 @@
+2020-08-20 feature/recurring-next
+. fixed bug in recurring that showed wrong "Next" date
+. suppress "Done!" message for permission changes on relations page
+. changed endorsement quote to be an area field with maxlen 4096
+. added some security checks for output with echo, die, and exit
+
+2020-08-20 feature/relations-ajax
+. toggles and permissions on relations page now use ajax
+. superAdmin can create transactions dated in the past
+. acct::hasBank now looks at acct::bankAccount instead of risks bit and risks bit is set automatically
+. invitation example now just suppresses CSP style check, not all of CSP
+. fixed bug that delete bank connection upon changing settings
+
+2020-07-31 feature/bizlists
+. added a test for authcode
+. separated out find-co.css for use on promo site
+
 2020-07-25 feature/misc
 . fixed message for when maxlen exceeded
 . fixed bug that permitted typing past maxlen on textarea fields

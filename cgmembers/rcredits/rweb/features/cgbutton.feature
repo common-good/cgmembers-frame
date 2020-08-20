@@ -176,3 +176,12 @@ Scenario: A member type account ID to buy a gift of store credit
   And these "tx_rules":
   | id | payerType | payer | payeeType | payee | from         | to           | portion | amtMax |*
   |  1 | account   | .ZZB  | account   | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER | 1       | 23     |
+
+Scenario: A company gets an authcode
+  Given members have:
+  | uid  | emailCode |*
+  | .ZZC | Abc123    |
+  When member "?" visits page "authcode/company=NEWZZC&cocode=Abc123"
+  Then we exit showing:
+  | cocode | now  | r | cry |*
+  | Abc123 | %now | ? | 1   |

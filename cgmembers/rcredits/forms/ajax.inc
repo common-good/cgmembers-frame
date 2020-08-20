@@ -39,6 +39,28 @@ function ajax() {
     exit();
   } elseif ($op == 'typeWho') { // get selections for suggestWho
     exit(json_encode(be\memberRay($myid, $aid, $data))); // data=1 means companies only
+  } elseif ($op == 'relations') {
+    extract(just('name v', $data, ''));
+    list ($fld, $reid) = explode('-', $name);
+    $other = r\relation('other', $reid);
+    $a = r\acct($myid, $other);
+    
+    if ($fld == 'delete' or $fld == 'permission') {
+      list ($managePerm, $joinPerm) = [r\perm(B_MANAGE), r\perm(B_JOINT)];
+      $v0 = r\relation('permission', $reid);
+      if ($mya->co and $v < $managePerm and !db\exists('r_relations', 'main=:main AND other<>:other AND permission>=:perm', ray('main other perm', $myid, $other, $managePerm))) return relPermErr(t('need a manager'), $reid, $managePerm);
+      if ($v == $joinPerm or $v0 == $joinPerm) { // handle joining or unjoining accounts
+        if ($v == $joinPerm and db\exists('r_relations', 'main=:myid AND other<>:other AND permission=:joinPerm', compact(ray('myid other joinPerm')))) return relPermErr(t('too many joins'), $reid, $v0);
+        $msg = r\setJoin($reid, $v == $joinPerm);
+      } else { $msg = ''; }
+      
+      if ($fld == 'delete') {
+        db\del('r_relations', compact('reid'));
+        $subs = ray('otherName', db\get('fullName', 'users', ray('uid', $other)));
+        $msg = u\joins($msg, '|', ajaxMsg(tr('deleted relation', $subs)));
+      } else { $a->setRel($fld, $v); }
+      return ajaxMsg($msg); // show messages, if any
+    } else { $a->setRel($fld, $v); } // toggle
   } elseif ($op == 'changeCtty') { // change member's community
     extract(just('newCtty retro', $data));
     if (!$mya or !$mya->changeCtty($newCtty, $retro, $err)) return ajaxErr(t('Community change failed.|') . $err);
@@ -48,10 +70,13 @@ function ajax() {
     extract(just('location', $data));
     return ajaxRet(array_combine(ray('latitude longitude zip'), u\getLocus($location)));
   } elseif ($op == 'setBit') {
-    extract(just('uid bit on', $data));
-    if ($a = r\acct($uid) and $b = u\consta('b', $bit) and $b < B_ADMIN2) {
-      $a->setBit($b, $on);
+    extract(just('bit on', $data));
+    if ($mya and $b = u\consta('b', $bit) and $b < B_ADMIN2) {
+      $mya->setBit($b, $on);
     } else return ajaxErr(t('nope'));
+  } elseif ($op == 'eval' and isDEV) {
+    extract(just('jsCode', $data, ''));
+    return ajaxRet(u\decryRay($jsCode));
   } elseif ($op == 'set') {
     extract(just('uid k v', $data));
     if ($a = r\acct($uid)) {
@@ -101,5 +126,8 @@ function ajaxRet($data0, $ok = 1) {
   $data = json_encode($data0 + compact('ok'));
   if (!isset($data0['which'])) u\loga('ajax', $data); // don't log hundreds of choices
   exit($data);
+}
+function relPermErr($message, $reid, $v0) {
+  return ajaxRet(compact(ray('message v0')), 0);
 }
 function latlonRet($latlon) {return ajaxRet(ray('latitude longitude', $latlon));}

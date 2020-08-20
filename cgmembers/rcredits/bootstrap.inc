@@ -3,6 +3,7 @@ use CG as r;
 use CG\Util as u;
 use CG\Db as db;
 use CG\Web as w;
+use CG\Testing as t;
 
 /**
  * @file
@@ -1454,7 +1455,7 @@ function drupal_set_message($message = NULL, $type = 'status', $repeat = TRUE) {
     $message = (is_array($message) or is_object($message)) ? pr($message) : trim($message);
     if (!isset($_SESSION['messages'][$type])) $_SESSION['messages'][$type] = [];
     if ($repeat or !in($message, $_SESSION['messages'][$type])) $_SESSION['messages'][$type][] = $message;
-    if (test()) db\insert('test', ray('type value test', $type, $message, \sceneId()), 'id');
+    if (test()) t\logRec($type, $message);
     
     drupal_page_is_cacheable(FALSE); // Mark this page as being uncacheable.
   }
@@ -1826,15 +1827,20 @@ function drupal_bootstrap() {
   require_once DRUPAL_ROOT . '/includes/session.inc';
   drupal_session_initialize();
   
-  setCSP(); // must come after drupal_session_initialize
+  $jsCode = isDEV ? nni($_GET, 'jsCode') : '';
+  if (!$jsCode) setCSP(); // must come after drupal_session_initialize
 
   _drupal_bootstrap_page_header();
   drupal_language_initialize();
   require_once DRUPAL_ROOT . '/includes/common.inc';
   _drupal_bootstrap_full();
 
+  if ($jsCode and $qid = nni($_GET, 'qid')) {
+    r\setAcct(r\acct($qid));
+    return w\go($_SERVER['REQUEST_URI'] . "?jsCode=$jsCode"); 
+  } else { $mya = r\setAcct(); }
+
   global $channel, $boxUser, $box;
-  $mya = r\setAcct();
   $channel = TX_WEB; // assume web unless this gets set otherwise downstream
   if ($mya) $boxUser = w\boxUser($box = w\box(), $mya->id); // so far used only when recording transactions
 

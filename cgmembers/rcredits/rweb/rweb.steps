@@ -335,8 +335,6 @@ function transactions($list) {return t\transactions($list);}
  *     TEST invest MembersRateAProposedLoan
  *     TEST invest TheClubMakesALoan
  *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
- *     TEST joint AMemberRequestsAJointAccount
- *     TEST joint AMemberRequestsTwoJoinsAtOnce
  *     TEST pale AMemberMakesATransactionThatTriggersPayingALittleExtra
  *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
  *     TEST posts AMemberEntersDataAfterPostingAnOffer
@@ -536,9 +534,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST invite AMemberInvites
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
- *     TEST joint AMemberRequestsAJointAccount
  *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
- *     TEST joint AMemberRequestsTwoJoinsAtOnce
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST posts SomeoneVisitsThePostsPage
@@ -695,7 +691,7 @@ function withoutOptions($options) {
  *     MAKE joint AMemberRequestsAJointAccount
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     MAKE joint AJoinedAccountMemberUnjoinsTheAccount
- *     MAKE joint AMemberRequestsTwoJoinsAtOnce
+ *     BOTH joint AMemberRequestsTwoJoinsAtOnce
  *     TEST joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
@@ -791,6 +787,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE cgbutton AMemberTypeAccountIDToBuyStoreCredit
  *     MAKE cgbutton AMemberClicksAButtonToBuyAGiftOfStoreCredit
  *     MAKE cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
+ *     MAKE cgbutton ACompanyGetsAnAuthcode
  *     MAKE changeaccount AMemberClicksTheProfilePhoto
  *     MAKE changeaccount AMemberChangesAccount
  *     MAKE changeaccount AMemberChangesAccountToGoToADifferentPage
@@ -1170,6 +1167,7 @@ function statisticsGetSet($time) {
  *
  * in: MAKE backing AMemberDecreasesBackingAmount
  *     MAKE bank ASlaveMemberRequestsATransfer
+ *     MAKE cgbutton ACompanyGetsAnAuthcode
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     BOTH coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
@@ -1179,6 +1177,7 @@ function statisticsGetSet($time) {
  *     BOTH joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     BOTH joint AJoinedAccountMemberUnjoinsTheAccount
+ *     MAKE joint AMemberRequestsTwoJoinsAtOnce
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
@@ -1375,10 +1374,7 @@ function weSayErrorInField($field, $index) {
 /**
  * member (ARG) completes relations form with values: (ARG)
  *
- * in: MAKE joint AMemberRequestsAJointAccount
- *     MAKE joint AJoinedAccountMemberUnjoinsTheAccount
- *     MAKE joint AMemberRequestsTwoJoinsAtOnce
- *     MAKE relations AMemberAddsARelation
+ * in: MAKE relations AMemberAddsARelation
  *     MAKE relations AMemberTriesToAddARelationWithSelf
  *     MAKE relations AMemberTriesToAddARelationAgain
  */
@@ -1685,6 +1681,7 @@ function weScripWithSubs($script, $args = []) {
  *     BOTH invest MembersRateAProposedLoan
  *     BOTH invest TheClubMakesALoan
  *     TEST invite AMemberInvites
+ *     TEST joint AMemberRequestsAJointAccount
  *     TEST pale AMemberMakesATransactionThatTriggersPayingALittleExtra
  *     MAKE posts Setup
  *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
@@ -1867,7 +1864,7 @@ function memberRunsQuery($id, $query) {
 function memberOnetimepasswordIsExpires($id, $pass, $expires) {
   global $testOnly;
 
-  if (!$a = t\a($id)) return FALSE;
+  if (!$a = t\acct($id)) return FALSE;
   $want = compact(ray('pass expires'));
   if (!$testOnly) return $a->update('oneTimePass', $want);
   return $a->oneTimePass == $want ?: t\output(tr('Wrong oneTimePass. Got %got, wanted %wanted.', 'got wanted', pr($a->oneTimepass), pr($wanted)));
@@ -1929,7 +1926,7 @@ function stepsLeft($left) {global $mya; return memberStepsLeft($mya->id, $left);
 function memberStepsLeft($id, $left0) {
   global $testOnly;
   
-  if (!$a = t\a($id)) return FALSE;
+  if (!$a = t\acct($id)) return FALSE;
   $left = ray($left0);
   
   if (!$testOnly) {
@@ -2125,4 +2122,40 @@ function memberStepsUpWith($id, $rows) {
   $vs['xlys'] = join('', $xlys);
   $er = u\urlify(http_build_query($vs));
   return t\completeForm($id, "community/stepup/er=$er", [], TRUE);
+}
+
+/**
+ * we exit showing: (ARG)
+ *
+ * in: TEST cgbutton ACompanyGetsAnAuthcode
+ */
+function weExitShowing($ray) {
+  if (!$actualRay = db\get('value', 'test', "type='echo'")) return FALSE;
+  return t\checkOneArray($ray[0], unserialize($actualRay));
+}
+
+/**
+ * member (ARG) visits (ARG) and selects (ARG): (ARG) for (ARG)
+ *
+ * in: MAKE joint AMemberRequestsAJointAccount
+ *     MAKE joint AMemberRequestsTwoJoinsAtOnce
+ */
+function memberVisitsAndSelectsFor($id1, $page, $fld, $value, $id2) {
+  global $testOnly; if ($testOnly) return FALSE;
+  
+  // assume relations page for now
+  $linei = $reid = r\relation('reid', t\uid($id1), t\uid($id2)); // compound qid
+  $val = u\consta('b', $value) - B_RELATED;
+  return t\dojs($page, $id1, "$('select[name=\"$fld-$linei\"').val($val).change();"); // js to simulate dropdown selection
+}
+
+/**
+ * member (ARG) deletes relation to (ARG)
+ *
+ * in: MAKE joint AJoinedAccountMemberUnjoinsTheAccount
+ */
+function memberDeletesRelationTo($id1, $id2) {
+  global $testOnly; if ($testOnly) return FALSE;
+  $linei = $reid = r\relation('reid', t\uid($id1), t\uid($id2)); // compound qid
+  return t\dojs('settings/relations', $id1, "$('.btn[name=\"delete-$linei\"').click();"); // js to simulate dropdown selection
 }

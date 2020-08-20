@@ -745,8 +745,10 @@ function sanitizePage($page) {
       $page = str_replace('pre>', 'WASPRE>', $page);
       $m = htmlentities($matches[0]);
       $msg .= '<br><br>' . str_replace($matches[0], "--><code style=\"background-color:yellow;\">$m</code>", $page);
+/**/  die($msg);
     }
-/**/die($msg);
+    
+/**/ die(plain($msg));
   }
 }
 
@@ -1676,7 +1678,8 @@ function whois($who, $field_name, $info, $selfMsg = 'no self-trading', $paying =
  */
 function doSay($msg = '', $err = '') {
   if (isDEV) file_put_contents(f('t.dosayFilename', $err ? 'error' : 'status'), $msg); // no way to know if actually testing
-  return w\go('empty/say=1', $msg, $err);
+  say($msg, $err);
+  return w\go('empty/say=1');
 }
 function doErr($msg) {return doSay($msg, 'err');}
 
@@ -2261,6 +2264,17 @@ function backButton() {
   return '<button class="btn btn-back btn-xs btn-primary" tabindex="-1"><span>&laquo;</span>&nbsp;Go Back</button>';
 }
 
+/**
+ * Output the given array and exit.
+ * @param array $ray: the array to echo
+ * @param bool $cry: <encrypt it>
+ */
+function exitRay($ray, $cry = FALSE) {
+/**/  if (test()) return t\logRec('echo', $ray + compact('cry'));
+/**/  echo $cry ? u\cryRay($ray) : pr($ray);
+  exit();
+}
+
 // one-line functions that need no explanation
 
 function disabled($value = NULL, $disabled = TRUE) {return compact('disabled') + (isset($value) ? compact('value') : []);}
@@ -2285,7 +2299,6 @@ function away() {return ['target' => '_blank'];}
 function js($script, $args = '') {global $pageScripts; $pageScripts[$script] = http_build_query(rayy(func_get_args(), 1));} // see html.tpl
 function jsx($script, $args = '') {global $scriptScraps; $scriptScraps[$script] = http_build_query(rayy(func_get_args(), 1));} // see html.tpl
 function softErr($msg) {w\say($msg, 'err'); return w\go('empty');}
-function clearHeaders() {if (!headers_sent()) header_remove();}
 function skipButton() {return button(t('Skip for now'), '/settings/skip', t('Leave this step for last'), 'default', 'xs', ['class' => 'skip']);}
 function notab() {return tabindex(-1);}
 function tabindex($n) {return ['tabindex' => $n];}

@@ -5,10 +5,10 @@ SO I can spend it with my rCard.
 
 Setup:
   Given members:
-  | uid  | fullName | floor | minimum | flags                         | achMin | risks   |*
-  | .ZZA | Abe One  |     0 |     100 | co,ok,refill,bankOk,confirmed | 30     | hasBank |
-  | .ZZB | Bea Two  |   -50 |     100 | ok,refill,confirmed           | 30     |         |
-  | .ZZC | Our Pub  |   -50 |     100 | ok,co                         | 50     | hasBank |
+  | uid  | fullName | floor | minimum | flags                         | achMin | bankAccount |*
+  | .ZZA | Abe One  |     0 |     100 | co,ok,refill,bankOk,confirmed | 30     | USkk9000001 |
+  | .ZZB | Bea Two  |   -50 |     100 | ok,refill,confirmed           | 30     |                    |
+  | .ZZC | Our Pub  |   -50 |     100 | ok,co                         | 50     | USkk9000003 |
   And relations:
   | main | agent | draw |*
   |.ZZA  | .ZZB  | 1    |
@@ -100,8 +100,8 @@ Scenario: a member is at target
   
 Scenario: a member is well below target
   Given members:
-  | uid  | fullName | floor | minimum | flags                         | achMin | risks   |*
-  | .ZZF | Fox 6    |     0 |     151 | co,ok,refill,bankOk,confirmed | 30     | hasBank |
+  | uid  | fullName | floor | minimum | flags                         | achMin | bankAccount |*
+  | .ZZF | Fox 6    |     0 |     151 | co,ok,refill,bankOk,confirmed | 30     | USkk9000006 |
   And balances:
   | uid  | balance | minimum |*
   | .ZZA |     150 |     100 |
@@ -133,8 +133,8 @@ Scenario: a member is under target but already requested barely enough funds fro
 Scenario: a member is under target and has requested insufficient funds from the bank
 # This works only if member requests more than USDTX_FAST the first time (hence ZZD, whose target is 300)
   Given members:
-  | uid  | fullName | floor | minimum | flags            | achMin | risks   |*
-  | .ZZD | Dee Four |   -50 |     300 | ok,refill,bankOk | 30     | hasBank |
+  | uid  | fullName | floor | minimum | flags            | achMin | bankAccount |*
+  | .ZZD | Dee Four |   -50 |     300 | ok,refill,bankOk | 30     | USkk9000004 |
   And balances:
   | uid  | balance |*
   | .ZZD |      20 |
@@ -152,8 +152,8 @@ Scenario: a member is under target and has requested insufficient funds from the
 
 Scenario: a member with zero target has balance below target
   Given members:
-  | uid  | minimum | achMin | flags            | risks   |*
-  | .ZZD |       0 |     30 | ok,refill,bankOk | hasBank |
+  | uid  | minimum | achMin | flags            | bankAccount |*
+  | .ZZD |       0 |     30 | ok,refill,bankOk | USkk9000004 |
   And balances:
   | uid  | balance | minimum |*
   | .ZZD |     -10 |       0 |
@@ -198,8 +198,8 @@ Scenario: an account has a target but no refills
 
 Scenario: a non-member has a target and refills
   Given members:
-  | uid  | fullName | floor | minimum | flags         | achMin | risks   |*
-  | .ZZE | Eve Five |     0 |     100 | refill,bankOk | 30     | hasBank |
+  | uid  | fullName | floor | minimum | flags         | achMin | bankAccount |*
+  | .ZZE | Eve Five |     0 |     100 | refill,bankOk | 30     | USkk9000005 |
 	When cron runs "getFunds"
   Then usd transfers:
   | txid | payee | amount | channel  |*

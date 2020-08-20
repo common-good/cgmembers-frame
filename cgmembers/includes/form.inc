@@ -1804,7 +1804,7 @@ function form_builder($form_id, &$element, &$form_state) {
     $element['#defaults_loaded'] = TRUE;
   }
   // Assign basic defaults common for all form elements.
-  if (!is_array($element)) {
+  if (isDEV and !is_array($element)) {
 /**/ echo 'invalid form element:';
 /**/ foreach (@$form_state['complete form'] as $k => $v) if ($k[0] != '#' and !is_array($v)) echo "\n*** Field \"$k\" should be an array! (value $v) ***\n";
 /**/ print_r(compact('element'));

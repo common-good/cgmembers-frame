@@ -137,8 +137,7 @@ function formPartnerSignup_submit($form, &$sta) {
   $bankAccount = "USkk$routingNumber$bankAccount";
   $last4bank = substr($bankAccount, -4, 4);
   $bankOk = FALSE;
-  $hasBank = TRUE;
-  $mya->update(compact(ray('bankAccount last4bank hasBank bankOk')));
+  $mya->update(compact(ray('bankAccount last4bank bankOk')));
   
   if (nn($sta['input']['city2'])) { // solar1, so extra fields
     extract(just('sorch fullName name address2 city2 email phone state2 zip2 tenure owns', $sta['input']));
@@ -493,7 +492,7 @@ function partnerErr($msg, $k) {
   return w\softErr(t('<h2>Drat.</h2><p>There was a problem with the data you submitted (field %k) -- %msg</p><p>%PROJECT is looking into the problem and we will contact you with instructions for continuing.</p><p>We apologize for the delay.</p>', $subs)); // fix double spaces and leading or trailing
 }
 
-/**/ function solarOneErr($msg, $k) {die("$msg (field $k)");}
+/**/ function solarOneErr($msg, $k) {die(plain("$msg (field $k)"));}
   
 /**
  * Send data to the partner's CRM(s)

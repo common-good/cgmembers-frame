@@ -64,7 +64,7 @@ class Qo {
     if ($field == 'region') return substr($qo->mainQid, 0, strlen($qo->mainQid) > 7 ? 4 : 3);
     if ($field == 'tail') return substr($qo->mainQid, strlen($qo->mainQid) > 7 ? 4 : 3);
     
-    u\EXPECT(FALSE, 'bad qid field: ' . $field);
+    u\EXPECT(FALSE, 'bad qo field: ' . $field);
   }
   
   private function id() {

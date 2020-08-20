@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.54l'; // software version
+const R_VERSION = '3.54m'; // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -149,7 +149,7 @@ const SUBMENUS = 'community invest history co settings sadmin';
 
 /// const GAME_COMPANIES = '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital';
 const ITEM_FLDS = 'special title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back'; // names of common fields that are wrapped automatically in w\item()
-const R_DATE_FLDS = 'start end start created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted'; // date field names for testing and administrative display
+const R_DATE_FLDS = 'start end start created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted now'; // date field names for testing and administrative display
 const CO_FLDS = 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd staleNudge contact'; // account fields stored in r_company
 const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo otherAssets otherLiabilities fyEnd'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
 const MASTER_NUMERIC_FLDS = 'minimum achMin savingsAdd saveWeekly';
@@ -159,7 +159,7 @@ const JOINT_FLDS = R_MONEY_FLDS . ' savings'; // add these together for joint ac
 const PSECURE_FLDS = 'phone email'; // personal fields that get encrypted in a searchable way (P)
 const VSECURE_FLDS = 'federalId dob bankAccount altId'; // very secure fields (always soon pgp-encrypted within Acct::vsecure)
 const SECURE_FLDS = 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode cardCode cardCode2 pin question answer idProof oneTimePass last4bank yob smtPass'; // non-personal encrypted fields (must be complete list)
-const R_HIDE_CHANGES = R_MONEY_FLDS . ' pw2 vKeyPw ssnData hasBank changes init login access activated data secure vsecure stepsDone steps stepsLeft lastiCode pass oneTimePass notes picture photo thumb trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd'; // do not record changes to these fields: anything often-changed (automatically or not)
+const R_HIDE_CHANGES = R_MONEY_FLDS . ' pw2 vKeyPw ssnData changes init login access activated data secure vsecure stepsDone steps stepsLeft lastiCode pass oneTimePass notes picture photo thumb trust risk risks stats getAppData appData special last4bank lastip tickle payrollStart payrollEnd'; // do not record changes to these fields: anything often-changed (automatically or not)
 const R_APP_DATA_GETS = '!log !device !members !txs '; // data requests from the rPOS app
 //  const R_AVAIL_BUY = '(balance-IF(u.:IS_DEBT, floor, GREATEST(floor, 0)))'; // balance available to spend
 const R_SHARE_MAX = 50; // minimum sharing percentage
