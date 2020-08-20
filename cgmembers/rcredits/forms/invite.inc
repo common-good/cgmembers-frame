@@ -123,7 +123,7 @@ function endorse($mya, $quote, $edit) {
   $sign = $edit ? hidFld(1) : boolFld(REQ . t('Sign:'), '', -1);
   $whyNot = textFld(t('Why?'), [t('Reason'), t('If you\'re willing, please say why you\'re not endorsing %PROJECT.')]);
   $question = item(t('Why do you want people to sign up? How do you see %PROJECT benefiting you, your family, the community, or your organization\'s mission? When people are thinking about signing up, they will read this as you-talking-to-them. So you may want to tell them explicitly to sign up.'));
-  $quote = textFld(t('Answer:'), [t('Your answer to the question above'), t('Your answer will appear below your name in the list. You can edit it any time.')], dft($quote));
+  $quote = areaFld(t('Answer:'), [t('Your answer to the question above'), t('Your answer will appear below your name in the list. You can edit it any time. (max 4000 chars)')], dft($quote) + maxlen(4096));
   $org = textFld(t('Organization (if any):'), [t('Organization name'), t('Sometimes your voice carries more weight when you hold a responsible position in society. The list will say explicitly: <i>"%ORG_DISCLAIMER"</i>.')], dft($org));
   $position = textFld(t('Title:'), [t('Your position there')], dft($position));
   $website = textFld(t('Website:'), [t('Organization website URL')], dft($website));

@@ -745,8 +745,10 @@ function sanitizePage($page) {
       $page = str_replace('pre>', 'WASPRE>', $page);
       $m = htmlentities($matches[0]);
       $msg .= '<br><br>' . str_replace($matches[0], "--><code style=\"background-color:yellow;\">$m</code>", $page);
+/**/  die($msg);
     }
-/**/die($msg);
+    
+/**/ die(plain($msg));
   }
 }
 
@@ -2268,7 +2270,7 @@ function backButton() {
  * @param bool $cry: <encrypt it>
  */
 function exitRay($ray, $cry = FALSE) {
-  if (test()) return t\logRec('echo', $ray + compact('cry'));
+/**/  if (test()) return t\logRec('echo', $ray + compact('cry'));
 /**/  echo $cry ? u\cryRay($ray) : pr($ray);
   exit();
 }

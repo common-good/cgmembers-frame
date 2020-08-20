@@ -1575,6 +1575,7 @@ function shownWith($content, $type = 'text', $mustBePresent = TRUE) {
     $one = t($one); // translate constants in member
     if (($one = u\redash($one)) === '') continue;
     $i = mb_strpos($model, $one, $xi = $i);
+///    debug("one=$one i=$i xi=$xi");
     if ($i === FALSE) {
       if (nn($formOut['hasDate']) and $onetm = strtotime($one) and date('m/d/Y', $onetm) == $one) { // date formatted m/d/Y
         $i = mb_strpos($model, date('Y-m-d', $onetm), $xi); // look for Y-M-d instead (quirk of input type="date")

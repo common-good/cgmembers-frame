@@ -59,7 +59,7 @@ function ajax() {
         $subs = ray('otherName', db\get('fullName', 'users', ray('uid', $other)));
         $msg = u\joins($msg, '|', ajaxMsg(tr('deleted relation', $subs)));
       } else { $a->setRel($fld, $v); }
-      if ($msg) return ajaxMsg($msg); // show messages, if any
+      return ajaxMsg($msg); // show messages, if any
     } else { $a->setRel($fld, $v); } // toggle
   } elseif ($op == 'changeCtty') { // change member's community
     extract(just('newCtty retro', $data));

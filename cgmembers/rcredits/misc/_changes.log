@@ -1,3 +1,9 @@
+2020-08-20 feature/recurring-next
+. fixed bug in recurring that showed wrong "Next" date
+. suppress "Done!" message for permission changes on relations page
+. changed endorsement quote to be an area field with maxlen 4096
+. added some security checks for output with echo, die, and exit
+
 2020-08-20 feature/relations-ajax
 . toggles and permissions on relations page now use ajax
 . superAdmin can create transactions dated in the past
