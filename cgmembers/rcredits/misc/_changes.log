@@ -1,3 +1,11 @@
+2020-08-26 feature/solar1-2
+. added pid parameter to solar1 signup
+. solar1 signup now adds people to Salesforce
+. crashes in PHP window on dev now report caller
+. fixed bug in tx undo error reporting
+. fixed bug in acct::hasVSecure by not encrypting (or decrypting) NULL
+. fixed bug that miscalculated permissions of agent (preventing tx reversals for example)
+
 2020-08-20 feature/recurring-next
 . fixed bug in recurring that showed wrong "Next" date
 . suppress "Done!" message for permission changes on relations page

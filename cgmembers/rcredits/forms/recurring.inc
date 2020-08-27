@@ -53,7 +53,7 @@ EOF;
     LEFT JOIN r_invoices i ON i.recursId=tp.id
     WHERE action IN (:ACT_PAY, :ACT_CHARGE) AND :myid IN (tp.from,tp.to) 
     GROUP BY tp.id
-    ORDER BY tp.to=:myid, tp.end IS NOT NULL, tp.start
+    ORDER BY tp.end IS NOT NULL, tp.to=:myid, tp.start DESC, tp.id DESC
 X;
   $q = db\q($sql, compact('myid'));
   

@@ -772,7 +772,7 @@ function decryRay($code) {
 function cry($type, $data, $de = FALSE, $pwInstead = '') {
 	global $cryHows, $mya;
 	
-	if ($data === '') return $data; // no point encrypting/decrypting nothing
+	if ($data === '' or $data === NULL) return $data; // no point encrypting/decrypting nothing
 	
 	if ($de) {
     u\EXPECT(u\starts($data, CRYPT_FLAG . $type), 'bad crypted');

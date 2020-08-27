@@ -226,7 +226,7 @@ function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
 
   $tx = r\Tx::lastTx([$mya->id], "xid=:xid AND $where", compact('xid') + $subs);
   if (empty($tx)) return [FALSE, 'undo no match', $subs];
-  if (!$force and $err = $tx->noUndo($subs)) return [FALSE, $err, $subs];
+  if (!$force and $err = $tx->noUndo($subs)) return $err;
 
   $byMe = $mya->isMe($tx->actorId);
   $toMe = $tx->getAmount($mya) > 0;
