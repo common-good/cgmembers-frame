@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.53t'; // software version
+const R_VERSION = '3.53y'; // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -151,11 +151,11 @@ const SUBMENUS = 'community invest history co settings sadmin';
 const ITEM_FLDS = 'special title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back'; // names of common fields that are wrapped automatically in w\item()
 const R_DATE_FLDS = 'start end start created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted'; // date field names for testing and administrative display
 const CO_FLDS = 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd staleNudge contact'; // account fields stored in r_company
-const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
+const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo otherAssets otherLiabilities fyEnd'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
 const MASTER_NUMERIC_FLDS = 'minimum achMin savingsAdd saveWeekly';
 const MASTER_FLDS = MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank refill'; // only in master, for joint accounts
 const R_MONEY_FLDS = 'balance rewards floor giftPot committed'; // financial amount fields in account record
-const JOINT_FLDS = R_MONEY_FLDS . ' savings'; // add these together for joint accounts
+const JOINT_FLDS = R_MONEY_FLDS . ' savings'; // add these together for joint accounts (except balance)
 const PSECURE_FLDS = 'phone email'; // personal fields that get encrypted in a searchable way (P)
 const VSECURE_FLDS = 'federalId dob bankAccount altId'; // very secure fields (always soon pgp-encrypted within Acct::vsecure)
 const SECURE_FLDS = 'pw2 vKeyPw ssnData address postalAddr faxetc emailCode cardCode cardCode2 pin question answer idProof oneTimePass last4bank yob smtPass'; // non-personal encrypted fields (must be complete list)
@@ -210,7 +210,7 @@ const CO_PHOTO_FACTOR = 3; // make company photos this many times as big as indi
 const MAX_UPLOAD_SIZE = 4 * 1024000; // maximum upload size in bytes
 const MAX_ID_SIZE = 10; // max ID size in MB
 
-const VIDEO_URL = 'http://cg4.us/video'; // Nuts & Bolts video
+const VIDEO_URL = 'https://cg4.us/video'; // Nuts & Bolts video
 const TRANSLATE_URL = 'https://translation.googleapis.com/language/translate/v2'; // google translate API URL
 const GEOCODE_URL = 'https://api.opencagedata.com/geocode/v1/json?'; // use in acct::setLocus()
 const MI_PER_DEGREE = 69; // varies from 68.703 at the equator to 69.407 at the poles
@@ -331,6 +331,7 @@ const R_NOT_VALID = R_ROOT . '/images/not-valid.png'; // says rcard is not valid
 const LOG_DIR = SHARED_DIR . '/cgLogs/'; // where to store log files
 define('LOG_FLNM', LOG_DIR . date('Ym') . '.log');
 define('SQL_LOG', LOG_DIR . date('Ym') . '.logsql');
+const PHOTOID_DIR = R_PICTURE_DIR . 'photoids';
 
 // account type bits
 define('CO_TYPES', t('personal, sole proprietor, partnership, LLC, private corporation, publicly-traded corporation, nonprofit, government, co-operative, unincorporated association or club, estate, trust, custodian'));
@@ -343,6 +344,9 @@ const CO_NONPROFIT = 6;
 const CO_CUSTODIAN = 12;
 
 // Company Account flags (bits)
+const CO_SELLCG = 0; // company sells Common Good credit
+const CO_FLIP = 1; // flip the normal Donate vs Buy Credit button choice
+
 const CO_PRIVATE = 13; // company is not to be listed publicly (on promo site, etc.)
 const CO_ATM = 14; // can trade cg credit for cash, even if balance is less than floor
 
@@ -357,11 +361,12 @@ const CO_u21 = 6; // unused
 const CO_MANAGE = 7; // this bit is not actually stored here, but pass B_MANAGE to the app in this position
 const APP_CAN_BITS = 7; // number of bits for permissions (each: signed in and out)
 const APP_AGENT_CANS = APP_CANS + APP_CAN_BITS; // company permission bits when signed IN (to be limited by agent perms)
-define('APP_CAN_MASK', pow(2, APP_CAN_BITS + 1) - 1); // the CANS bits -- signed-IN permission bits are 22-28
-const CO_DFTS = '0 1 7 8 9 11 12'; // set these bits by default
+const APP_CAN_MASK = (1 << (APP_CAN_BITS + 1)) - 1; // the CANS bits -- signed-IN permission bits are 22-28
 
 const CO_FAST = 29; // (deprecated as of app v 2.16) fast checkout -- never ask for photo Id (set by cAdmin)
 const CO_TIP = 30; // ask customer what percent tip to add
+
+const CO_APP_DFTS = '0 1 7 8 11 12'; // set these app bits by default (R4USD only if chosen in signupco.inc)
 
 const APP_CAN_BIT_NAMES = 'charge undo r4usd usd4r refund buy';
 define('APP_CAN_BIT_DESCS', t('charge customers,undo last transaction,give %RCREDITS for USD,give USD for %RCREDITS,refund any amount,make payments'));
@@ -407,7 +412,7 @@ const B_CONTACTABLE = 15; // okay for members to contact this member about their
 const B_BYSMS = 16; // NYI notifications by SMS
 const B_PAPER = 17; // will not accept electronic statements
 const B_SECRET = 18; // don't let merchants tell me my balance on request
-const B_UNDERAGE = 19; // too young to have a credit line (needed because dob is accessible only to superAdmin)
+const B_UNDERAGE = 19; // too young to have a credit line or DOB empty (needed because dob is accessible only to superAdmin)
 const B_DEBT = 20; // member chose to permit sub-zero balances
 const B_REINVEST = 21; // member chose to automatically reinvest investment club dividends and inflation adjustments
 const B_SAVINGS = 22; // the connected bank account is a savings or money market account
@@ -561,7 +566,8 @@ const TX_CRON = 5;
 const TX_LINK = 6; // user clicked a no-signin link
 const TX_AJAX = 7;
 const TX_FOREIGN = 8; // user clicked a "Pay with CG" button or request an app to charge them
-const TX_CHANNELS = 'Sys SMS Web App Tone Cron Link Ajax Foreign'; // can't translate, because used in t() (find a solution)
+const TX_API = 9;
+const TX_CHANNELS = 'Sys SMS Web App Tone Cron Link Ajax Foreign API'; // can't translate, because used in t() (find a solution)
 
 // Transaction types
 const TX_TRANSFER = 0; // normal fund transfer (usually for actual goods and services) -- not creating rC

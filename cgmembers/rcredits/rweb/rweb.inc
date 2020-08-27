@@ -167,7 +167,7 @@ function photoUpload($uid = '', $sid = '') {
   $mya = r\acct($uid);
   $tempFilename = $mya->tempPhotoFilename;
   $quality = $mya->co ? 100 : 50; // jpeg compression/quality (0=worst quality, 100=best quality)
-  if ($mya->co) foreach (ray('cropH cropW') as $k) $$k *= CO_PHOTO_FACTOR; // higher quality for businesses
+  if ($mya->co) foreach (ray('w h x1 y1 cropH cropW') as $k) $$k *= CO_PHOTO_FACTOR; // higher quality for businesses
 
   if ($recrop = u\starts($url, 'http')) $url = $tempFilename; // picture is already saved and is just being recropped
 
@@ -183,7 +183,7 @@ function photoUpload($uid = '', $sid = '') {
   $func = 'imagecreatefrom' . ($ext == 'bmp' ? 'wbmp' : $ext);
 ///   flog(compact(ray('uid sid f0 f params params2 sessionVars quality cropH cropW what actualW actualH type zotAttr ext func')));
   if (!$img0 = $func($url)) return w\photoRet(t('image creation error'));
-//  if (!$mya->co)
+
   try {
     if (!$recrop) imagejpeg($img0, $tempFilename, 100); // save for a few days in case we have to recrop
   } catch (\Exception $e) {
@@ -199,7 +199,6 @@ function photoUpload($uid = '', $sid = '') {
     return w\photoRet(t('Your photo could not be uploaded (%err). Try a smaller version or <%a>email it</a> to us?', ray('_err _a', $e->getMessage(), w\emailtag(NULL, t('Here is a photo for my %PROJECT card')))));
   }
   
-//  return w\photoRet(str_replace(DRUPAL_ROOT, BASE_URL, $tempFilename), 'success');
   return w\photoRet("$base_url/account-photo", 'success');
 }
 

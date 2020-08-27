@@ -1,4 +1,44 @@
-2020-06-15 feature-tidy
+2020-06-27 feature/move-change-uid
+. moved changeUid function to admin and made deleteUid work when account is current
+. suppressed submit-on-Enter on Summary page
+
+2020-06-26 feature/sellcg
+. ask in company signup whether they want to sell CG
+. fixed bug that kept tellAdmin from sending right replyTo address
+. fixed bug that kept accounts from being deleted when they had a rule or template
+
+2020-06-25 feature/misc2
+. unset account fields now generate a warning
+. fixed some undiscovered bugs (from the new warnings)
+. fixed formatting on AltId and Tickle
+. improved unsubscribe page to give choice boxes
+. fixed bug in endorsement (if member submits without saying sign or not sign)
+. added alert to CO to deliver a phone
+. flipped ownPhone (in signup-co.inc) to needPhone, to avoid invoice denials
+. fixed risks test
+. automated renaming of photo ID files on change of account uid
+
+2020-06-23 feature/misc
+. fixed bug in photo.inc so company photos now resize properly
+. fixed bug in photo.inc croppic.js javascript to display error messages properly
+. unsubscribe ZAP notes (any anonymous notes) are now labeled as "self"
+. SSN verification now uses Curl, to accommodate file_get_contents's inability to handle SSH on our new server
+. fixed display of DOB, Alt ID, etc.
+. added a flip bit so companies can choose between a Donate button and a Buy Credit button
+. fixed several small bugs that generated warnings and display anomalies
+. fixed bug in Actual Donations to CG query
+
+2020-06-17 feature/config-models
+. created better models for config files and documentation for their values
+. created (partially tested) .sh versions of batch files for recreating database and phinx commands
+. deleted some unneeded files
+
+2020-06-17 hotfix/typos
+. fixed a typo causing partner signup to fail
+. reversed a change in rcron handling of acctRisk (that failed)
+. fixed error in forms.inc that tried to trim arrays
+
+2020-06-15 feature/tidy
 . input is now always trimmed except passwords
 . formPhp error handling simplified
 . bug fixed in checking for not underage in formAdminPanel
@@ -9,7 +49,7 @@
 . bug fixed in company photo sizing
 . warnings fixed
 
-2020-06-13 feature-handle-errors
+2020-06-13 feature/handle-errors
 . revamped error handling so:
   - on production all errors generate an email to admin, user sees a friendly apology on fatal error, otherwise nothing
   - on dev all errors die with stack trace, except from PHP window where the error is displayed without a stack trace

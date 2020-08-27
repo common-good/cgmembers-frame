@@ -30,12 +30,13 @@ var croppicOptions = {
   onBeforeImgCrop: function() { console.log('onBeforeImgCrop'); },
   onAfterImgCrop:function(){
     jQuery('#photoUp').hide();
-    window.location.replace(err ? baseUrl + '/settings/photo' : baseUrl + '/settings/photo/ok=1/' + Math.random());
+    var uri =  err ? '/err=' + encodeURIComponent(err) : ('/ok=1/' + Math.random());
+    window.location.replace(baseUrl + '/settings/photo' + uri);
   },
 //    onReset:function(){ console.log('onReset') },
   onError:function(errormessage){
-    jQuery.alert(errormessage, 'Error');
-    err = true;
+// This fails -- flashes message after returning and before showing resultant image    jQuery.alert(errormessage, 'Error');
+    err = errormessage;
   }
 }
 var croppic = new Croppic('photoUp', croppicOptions);

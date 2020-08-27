@@ -95,7 +95,7 @@ Scenario: We calculate risks
   When cron runs "acctRisk"
   When cron runs "acctRisk"
   Then member ".ZZA" has risks "adminOk,trusted,badConx,moreOut,big7Week"
-  And member ".ZZB" has risks "trusted,geography,badConx,moreOut,big7Week"
+  And member ".ZZB" has risks "trusted,geography,moves,rents,moreIn,moreOut"
   And member ".ZZC" has risks "cashCo,homeCo,miser,bigDay,bigWeek,big7Week"
   And member ".ZZD" has risks "trusted,hasBank,miser"
   And member ".ZZE" has risks "new,shady,poBox,moreIn"

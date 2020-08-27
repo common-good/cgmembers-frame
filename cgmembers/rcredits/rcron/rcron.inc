@@ -74,7 +74,7 @@ NOTES:
  */
 
 // Calculate risks twice, to take into account connections with scoundrels
-define('DAILY_TASKS', 'START checkAccts setNear cttyStats trust acctRisk acctRisk acctRiskFinish txRisk tickle lessOften recurs getFunds invoices invest notices END');
+define('DAILY_TASKS', 'START checkAccts setNear cttyStats trust acctRisk acctRiskFinish txRisk tickle lessOften recurs getFunds invoices invest notices END');
 
 include_once __DIR__ . '/rcron-subs.inc';
 
@@ -110,12 +110,13 @@ function run() {
   
   while (now() < $end and $row = $q->fetchAssoc()) {
     extract($row);
+    $item = unserialize($item);
     try {
-      cr\doTask(unserialize($item));
+      cr\doTask($item);
       db\q('DELETE FROM queue WHERE id=:id', compact('id'));
     } catch (\Exception $e) {
       u\log('cron task failed'); // In case of exception log it and leave the item in the queue to be processed again later.
-      r\tellAdmin('cron task failed id=' . $id);
+      r\tellAdmin('cron task failed id=' . $id, $item);
     }
   }
   // Restore the user.
@@ -240,7 +241,7 @@ X;
   $where = "BINARY RIGHT(fullName, 8)=' PARTNER' AND pass IS NULL AND NOT :IS_CO AND activated=0";
   eachA(function ($a) { // acts weird; do this last
     if ($jA = $a->jA and $jA->jid == $a->id) $jA->update('jid', 0);
-    r\deleteAccount($a);
+    f('a.deleteUid', $a->id);
   } , $where);
   if ($uid = db\get('u1.uid', 'users u1 JOIN users u2 ON u2.uid=u1.jid', 'u1.jid<>0 AND u2.jid<>u1.uid')) r\tellAdmin('Orphaned joint account: ' . r\acct($uid)->fullName, [], $uid);
 //  db\del('users', $where); // abandoned new joint acct (must postcede setting jids)
@@ -831,13 +832,16 @@ X;
 /**
  * Calculate risks of financial misbehavior for each account.
  * Do companies first, so their risk can be used to help assess individual risk.
- * Do the whole thing twice (see DAILY_TASKS), to take into account relations with suspicious individuals.
+ * Do the whole thing twice, to take into account relations with suspicious individuals.
+ * @todo: use a temp table instead of newThresholds array OR just a complex SQL
  */
 function acctRisk() {
   setv('newThresholds', ray('bigDay bigWeek big7Week bigYear', [], [], [], []));
 
   db\q('UPDATE users SET risk=NULL'); // avoid unnecessary badConx. don't touch risks though!
-  queueEach('acctRisk1', 'SELECT DISTINCT uid FROM users WHERE uid>:CANONIC_ACCTS and :IS_OK ORDER BY :IS_CO DESC');
+  foreach ([1, 2] as $zot) { // do this twice, to take into account connections with scoundrels
+    queueEach('acctRisk1', 'SELECT DISTINCT uid FROM users WHERE uid>:CANONIC_ACCTS and :IS_OK ORDER BY :IS_CO DESC');
+  }
   queueNext();
 }
 

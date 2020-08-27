@@ -232,6 +232,7 @@ function formSummary_submit($form, &$sta) {
   unset($DBTX);
   
   say('info saved');
+  if ($mya->superAdmin and strhas($mya->notes, 'ZAP')) return go('/sadmin/followup');
 }
 
 function setRisksAndFlags($a, $risks, $adminable) {
@@ -367,6 +368,8 @@ function adminSummary() {
   $ctty = $mya->community ?: r\serverUid(); // serverUid for admin, if it has no ctty
   if ($mya->proSe and !$mya->superAdmin) return []; // nothing special on admin's own account
   
+  $noEnter = TRUE; // prevent submission by pressing Enter
+  
   if ($others = db\lst('fullName', 'sessions s JOIN users u ON u.uid=s.uid', ':uid=IFNULL(s.acct, s.uid) AND s.uid<>:agentId', ray('uid agentId', $uid, $mya->agentId))) {
     w\say(t('<b class="loud">Other people</b> signed in to this account: %others', compact('others')));
   }
@@ -491,15 +494,20 @@ function adminSummary() {
     } else $notes = item(str_replace("\n", '<br>', $mya->notes), t('Notes:'));
 
     $note = textFld(t('New Note:'), [t('Type a Note Here'), t('Abbreviations: PM=phone msg EM=email msg. Be sure to say what you left a message <i>about</i> (for example "PM setup")')]);
+    $dob = $altSt = $altId = NULL;
 
-    if ($mya->superAdmin or !$mya->hasDob) {
-      $altSt = rendA('altSt', stFld(substr($mya->altId, 0, 2)));
-      $dob = rendA('dob', dateFld(BARE, '', dft($mya->hasDob ? $mya->dob : '') + autofill('off')));
-      $altId = textFld(t('Alt ID / DOB:'), [t('License# etc.')], dft(substr($mya->altId, 2)) + suffix($altSt . $dob));
-    } else { $dob = $altId = $altSt = NULL; }
-
+    if (!$mya->co) {
+      if ($mya->superAdmin or !$mya->hasDob) $dob = rendA('dob', dateFld(BARE, '', dft($mya->hasDob ? $mya->dob : '') + autofill('off') + clas('noCalendar')));
+      if ($mya->hasFid) {
+        if ($dob) $altId = item($dob, t('DOB:'), '', clas('loneDob')); // dob is not shown directly, so show it here if no license is shown
+      } else { 
+        $altSt = rendA('altSt', stFld(substr($mya->altId, 0, 2)));
+        $altId = textFld(t('Alt ID / DOB:'), [t('License# etc.')], dft(substr($mya->altId, 2)) + suffix($altSt . $dob));
+      }
+    }
+    
     $suffix = submitTickle(1, t('Wait a day')) . submitTickle(2, t('2 days')) . submitTickle(7, '7') . submitTickle(30, '30') . submitTickle('', t('Auto')) . ' &nbsp; ' . submitTickle($mya->tickle ? 'NONE' : '', t('Save'), 'sm');
-    $tickle = dateFld(t('Tickle:'), [t('Followup Date'), t('When to follow up ("Auto" sets an automatic Welcome or Annual date)')], dft($mya->tickle) + w\suffix($suffix));
+    $tickle = dateFld(t('Tickle:'), [t('Followup Date'), t('When to follow up ("Auto" sets an automatic Welcome or Annual date)')], dft($mya->tickle) + w\suffix($suffix) + clas('noCalendar'));
     $source = item($mya->source, t('Source:'));
   }
 
@@ -509,7 +517,7 @@ function adminSummary() {
   w\jsx('tickle');
   
   $bigFields = $mya->ok ? 'adminable risks ssnShow' : 'ssnShow adminable risks';
-  $info = []; foreach (ray("photo details notes note altId tickle donations active activity relations source helper $bigFields community balance cgfDonations legalName shortName calling signupCo tenure tasks steps dwInfo invited invitedBy proxies proxyFor moves floor minimum achMin risk trust mediaConx count back uid submit") as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray("noEnter photo details notes note altId tickle donations active activity relations source helper $bigFields community balance cgfDonations legalName shortName calling signupCo tenure tasks steps dwInfo invited invitedBy proxies proxyFor moves floor minimum achMin risk trust mediaConx count back uid submit") as $k) if (isset($$k)) $info[$k] = $$k;
   return $info;
 }
 
@@ -522,7 +530,7 @@ function adminSummary() {
 function submitTickle($v, $text, $size = 'xs') {
   if ($v == 'NONE') return w\rent(w\submi($text, 'primary', $size)); // not change to tickler
   if ($v) $v = date('Y-m-d', strtotime("+$v days"));
-  return w\rent(w\submi($text, 'primary', $size, ray('class tickle', 'tickle', $v)));
+  return w\rent(w\submi($text, 'primary', $size, ray('class tickle', 'tickle', $v) + notab()));
 }
 
 /**

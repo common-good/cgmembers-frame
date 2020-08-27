@@ -70,12 +70,11 @@ class Acct {
     $DBTX = db_transaction();
     $uid = r\regionalInsert('users', 'uid', $record, $region);
     u\EXPECT($uid != 0, 'zero regionalinsert');
+    $a->reread(); // set all real fields
+    list ($a->id, $a->agentId) = array($uid, $mya ? $mya->agentId : $uid); // finish creating the object
 
     u\setDft($cardCode, r\cardCode(r\qid($uid)));
     u\setDft($emailCode, r\cardCode(r\qid($uid)));
-
-    list ($a->id, $a->agentId) = array($uid, $mya ? $mya->agentId : $uid); // finish creating the object
-    self::$rs[$a->id] = (object) $record;
 
     foreach (ray('number region') as $k) unset($info[$k]);
     foreach (ray('phone email pass fullName legalName flags state country community created login access emailCode cardCode') as $k) if (isset($$k)) $fix[$k] = $$k; // things we may have added or changed ($fix is never empty)
@@ -147,23 +146,18 @@ class Acct {
    * @return the value if it exists, else NULL
    */
   public function __get($field) {
-    $a = $this;
+    $a = $this; $uid = $a->id;
+    $uidSub = compact('uid');
     $a->reread(); // make sure record has been read in
 
-    // The following fields are always only for the current user
-    switch ($field) {
-      case 'balance':  // special case, it's the same in both
-      case 'o_balance': return db\get('balance', 'users', 'uid=:id', ['id' => $a->id]);
-      case 'lastTx': return $a->lastTx();
-      case 'isCanonic': return ($a->id >= 0 and $a->id < CANONIC_ACCTS);
-      default: break;  // fall through
-    }
-    if (u\starts($field, 'o_')) { // ignore joinedness of the account, if it is joint ("own" account)
-      $field = substr($field, 2);
-    } elseif (u\starts($field, 'j_')) { // concatenate joint fields
+    if (u\starts($field, 'j_')) { // concatenate joint fields
       $field = substr($field, 2);
       return $a->o($field) . ($a->jid ? ' & ' . $a->jA->o($field) : '');
-    } else { // tests for field must precede tests for jid or slave (else loop)
+    }
+
+    if (u\starts($field, 'o_')) { // ignore joinedness of the account ("own" account)
+      $field = substr($field, 2);
+    } elseif ($field != 'balance') { // don't add together in a joint account, even though it's a joint field (same in both)
       if (in($field, JOINT_FLDS) and $a->jid) return round(($a->o($field) ?: 0) + ($a->jA->o($field) ?: 0), 2); // sum joint fields
       if (in($field, MASTER_FLDS) and $a->slave) return $a->jA->o($field); // master only
     }
@@ -174,77 +168,77 @@ class Acct {
     if ($nick == 'rel') return $a->proSe ? NULL : $a->relFld($field);
     if ($nick == 'coy') return $a->co ? $a->coFld($field) : NULL;
     if ($nick == 'ctt' and $field != 'cttyA') return $a->cttyA->can(u\consta('b', substr($field, 4))); // ctty bit
-    
-    if ($field == 'mainQid') return $a->qo->mainQid;
-    if ($field == 'isAdmin2') return (bool) ($a->agentA->flags & u\bit(B_ADMIN2)); // not ->can() included by cAdmin etc. (see note in can())
-    if ($field == 'email') return u\decryIf('P', nn(self::$rs[$a->id]->email));
-    if ($field == 'phone') return u\decryIf('P', nn(self::$rs[$a->id]->phone));
-    if ($field == 'phoneDash') return u\fmtPhone($a->phone, '-');
-    if ($field == 'st') return r\realState($a->state, $a->country);
-    if ($field == 'agentA') return r\acct($a->agentId);
-    if ($field == 'proSe') return ($a->id == $a->agentId);
-    if ($field == 'qid') return $a->qo->qid;
-    if ($field == 'uids') return $a->jid != 0 ? [$a->id, $a->jid] : [$a->id];
-    if ($field == 'bestName') return $a->shortName ?: $a->fullName;
-    if ($field == 'isCtty') return ($a->id < 0); // or ($a->id == $a->community); (regions are communities too)
-    if ($field == 'isRegion') return (substr($a->name, -1, 1) == '.');
-    if ($field == 'cttyA') return r\acct($a->community);
-    if ($field == 'region') return r\uidRegion($a->id);
-    if ($field == 'regionA') return r\acct($a->region);
-    if ($field == 'regionName') return ($regionA = $a->regionA) ? $regionA->fullName : (PROJECT . ' ' . db\get('name', 'r_regions r INNER JOIN r_states s ON s.abbreviation=r.st', 's.country_id=:US_COUNTRY_ID AND r.region=:reg', ['reg' => $a->qo->region]));
-    if ($field == 'url') return ($a->isRegion ? '' : strtr($a->fullName, [PROJECT=>'', ' '=>'']) . $a->st . '.') . CG_DOMAIN; // applies only to communities (->cttyUrl)
-    if ($field == 'legalNameDpy') return str_replace('_', ' ', $a->legalName); // for u\parseName of names like Jay di_Fiori
-    if ($field == 'owns') return !$a->risk('rents');
-    if ($field == 'creditLine') return -$a->floor;
-    if ($field == 'hasFid') return (nni($a->vsecure, 'federalId', '') !== '');
-    if ($field == 'hasDob') return (nni($a->vsecure, 'dob', '') !== ''); // has to be 2 steps
-    if ($field == 'closed') return ($a->activated and !$a->ok); // data[newAccount] has new qid, if any
-    if ($field == 'hasBank') return $a->risk('hasBank');
-    if ($field == 'lowSecurity') return u\n2ai(substr($a->created, -5, 5), 3); // result is 3 chars long
-    if ($field == 'inviteCode') return $a->mainQid . $a->lowSecurity;
-    if ($field == 'slave') return ($jid = $a->jid and $jid < $a->id); // slave in a joint account
-    if ($field == 'jA') return $a->jid ? r\acct($a->jid) : NULL;
-    if ($field == 'masterA') return $a->slave ? $a->jA : $a;
-    if ($field == 'helperA') return $a->helper ? r\acct($a->helper) : '';
-    if ($field == 'foody') return db\get(':U_FOODY', 'users u', ['uid' => $a->id]);
-    if ($field == 'iclub') return ($a->id < 0 or strhas($a->fullName, t('Investment Club')));
-    if ($field == 'iclubId') return db\get('clubid', 'r_stakes', 'uid=:uid', ['uid' => $a->id]);
-    if ($field == 'trialco') return ($a->co and $a->depends);
-    if ($field == 'prefsSet') return !is_null($a->o_minimum); // preferences have been set at least once
-    if ($field == 'hasCustomers') return db\exists('r_relations', 'main=:id AND :IS_CUSTOMER', ['id' => $a->id]);
-    if ($field == 'superAdmin') return ($a->agentId == 1) ?: (test() and $a->admin and $a->agentA->name == 'abeone');
-    if ($field == 'bankInfo') return (!$routing = substr($a->bankAccount, 4, 9)) ? NULL
-                                : db\get('*', 'r_banks', 'route=:routing', compact('routing'));
-    if ($field == 'shouter') return db\exists('u_shouters', ['uid' => $a->id]);
-    if ($field == 'tempPhotoFilename') return r\pic("$a->mainQid.jpg");
-    if ($field == 'ssnErr') return is_array($a->ssnData) ? nni($a->ssnData, SSN_ERR_INDEX) : FALSE;
 
-    if (isset(self::$rs[$a->id]->$field)) { // actual database field?
-      $result = nn(self::$rs[$a->id]->$field, NULL);
-    } else $result = $a->getSpecial($field); // set up caches for aggregate field and get value
-
-    if ($nick == 'raw') return $result;
-    if ($field == 'hasPhoto') return db\exists('r_photos', 'uid=:id', ['id' => $a->id]);
-    if ($field == 'photo') return ($result = db\get('photo', 'r_photos', 'uid=:id', ['id' => $a->id])) ? u\decry('H', $result) : '';
-    if ($field == 'thumb') return db\get('thumb', 'r_photos', 'uid=:id', ['id' => $a->id]) ?: '';
-    if ($field == 'changes') {
-      $rows = db\rows('*', 'r_changes', 'uid=:id', ['id' => $a->id]);
-      foreach ($rows as $i => $row) {
-        foreach (ray('oldValue newValue') as $k) if ($type = u\crypted($row->$k)) $rows[$i]->$k = u\decry($type, $row->$k);
+    if (property_exists($obj = nni(self::$rs, $a->id, NULL), $field)) { // actual database field?
+      $res = $obj->$field; // get the raw data, then handle any encryption
+      /// Not currently used    if ($nick == 'raw') return $res;
+      if ($field == 'balance') return db\get('balance', 'users', $uidSub); // make sure this field is always au courant
+      if ($field == 'email') return u\decryIf('P', nn($obj->email));
+      if ($field == 'phone') return u\decryIf('P', nn($obj->phone));
+      if (in($field, 'data secure vsecure') and !is_array($res)) { // aggregated field not yet decrypted and arrayed
+        if (!$res) return [];
+        if ($field != 'data') $res = u\decry('S', $res);
+        return (self::$rs[$a->id]->$field = unserialize($res));
       }
-      return $rows;
+      return $res; // normal field (no encryption)
     }
-    if ($field == 'balance') {
-      /* $a->reread(true); */
-      return db\get('balance', 'users', 'uid=:id', ['id' => $a->id]);
+    
+    switch ($field) { // handle pseudo-fields (every case returns)
+      case 'mainQid': return $a->qo->mainQid;
+      case 'isAdmin2': return (bool) ($a->agentA->flags & u\bit(B_ADMIN2)); // not ->can() included by cAdmin etc. (see note in can())
+      case 'phoneDash': return u\fmtPhone($a->phone, '-');
+      case 'st': return r\realState($a->state, $a->country);
+      case 'agentA': return r\acct($a->agentId);
+      case 'proSe': return ($a->id == $a->agentId);
+      case 'qid': return $a->qo->qid;
+      case 'uids': return $a->jid != 0 ? [$a->id, $a->jid] : [$a->id];
+      case 'bestName': return $a->shortName ?: $a->fullName;
+      case 'isCtty': return ($a->id < 0); // or ($a->id == $a->community); (regions are communities too)
+      case 'isRegion': return (substr($a->name, -1, 1) == '.');
+      case 'cttyA': return r\acct($a->community);
+      case 'region': return r\uidRegion($a->id);
+      case 'regionA': return r\acct($a->region);
+      case 'regionName': return ($regionA = $a->regionA) ? $regionA->fullName : (PROJECT . ' ' . db\get('name', 'r_regions r INNER JOIN r_states s ON s.abbreviation=r.st', 's.country_id=:US_COUNTRY_ID AND r.region=:reg', ['reg' => $a->qo->region]));
+      case 'url': return ($a->isRegion ? '' : strtr($a->fullName, [PROJECT=>'', ' '=>'']) . $a->st . '.') . CG_DOMAIN; // applies only to communities (->cttyUrl)
+      case 'lastTx': return $a->lastTx();
+      case 'legalNameDpy': return str_replace('_', ' ', $a->legalName); // for u\parseName of names like Jay di_Fiori
+      case 'owns': return !$a->risk('rents');
+      case 'creditLine': return -$a->floor;
+      case 'hasFid': return (nni($a->vsecure, 'federalId', '') !== '');
+      case 'hasId': return ($a->hasFid or nni($a->vsecure, 'altId', '') !== '');
+      case 'hasDob': return (nni($a->vsecure, 'dob', '') !== ''); // has to be 2 steps
+      case 'closed': return ($a->activated and !$a->ok); // data[newAccount] has new qid, if any
+      case 'hasBank': return $a->risk('hasBank');
+      case 'lowSecurity': return u\n2ai(substr($a->created, -5, 5), 3); // result is 3 chars long
+      case 'inviteCode': return $a->mainQid . $a->lowSecurity;
+      case 'isCanonic': return ($a->id >= 0 and $a->id < CANONIC_ACCTS);
+      case 'slave': return ($jid = $a->jid and $jid < $a->id); // slave in a joint account
+      case 'jA': return $a->jid ? r\acct($a->jid) : NULL;
+      case 'masterA': return $a->slave ? $a->jA : $a;
+      case 'helperA': return $a->helper ? r\acct($a->helper) : '';
+      case 'foody': return db\get(':U_FOODY', 'users u', $uidSub);
+      case 'iclub': return ($a->id < 0 or strhas($a->fullName, t('Investment Club')));
+      case 'iclubId': return db\get('clubid', 'r_stakes', $uidSub);
+      case 'trialco': return ($a->co and $a->depends);
+      case 'prefsSet': return !is_null($a->o_minimum); // preferences have been set at least once
+      case 'hasCustomers': return db\exists('r_relations', 'main=:id AND :IS_CUSTOMER', ['id' => $a->id]);
+      case 'superAdmin': return ($a->agentId == 1) ?: (test() and $a->admin and $a->agentA->name == 'abeone');
+      case 'bankInfo': return (!$routing = substr($a->bankAccount, 4, 9)) ? NULL
+                                : db\get('*', 'r_banks', 'route=:routing', compact('routing'));
+      case 'shouter': return db\exists('u_shouters', $uidSub);
+      case 'tempPhotoFilename': return r\pic("$a->mainQid.jpg");
+      case 'ssnErr': return is_array($a->ssnData) ? nni($a->ssnData, SSN_ERR_INDEX) : FALSE;
+      case 'hasPhoto': return db\exists('r_photos', $uidSub);
+      case 'photo': return ($res = db\get('photo', 'r_photos', $uidSub)) ? u\decry('H', $res) : '';
+      case 'thumb': return db\get('thumb', 'r_photos', $uidSub) ?: '';
+      case 'changes':
+        $chFlds = 'oldValue,newValue';
+        foreach ($rows = db\rows($chFlds, 'r_changes', $uidSub) as $i => $row) {
+          foreach (ray($chFlds) as $k) if ($type = u\crypted($row->$k)) $rows[$i]->$k = u\decry($type, $row->$k);
+        }
+        return $rows;
+      default: return $a->getSpecial($field); // member of an aggregate field: set up caches and get value
     }
-    if (in($field, 'data secure vsecure') and !is_array($result)) { // special not yet arrayed
-      if (!$result) return [];
-      if ($field != 'data') $result = u\decry('S', $result);
-      return (self::$rs[$a->id]->$field = unserialize($result));
-    }
-
-    return $result;
   }
 
   /**
@@ -264,21 +258,22 @@ class Acct {
 
   /**
    * Cache the set of special fields of which the given field is a member.
-   * @param mixed $field: possibly special field name (data/secure)
+   * @param mixed $field: name of a field within an aggregate field (data/secure/vsecure)
    * @return the field value
+   * @throw warning if the field does not exist
    */
   private function getSpecial($field) {
     $a = $this;
     foreach (ray('data secure vsecure') as $k) {
       if ($a->special($field, strtoupper($k))) {
-///        u\EXPECT(is_array($a->$k) or !$a->$k, 'special field not ray: ' . pr($a->$k) . ' isarray:' . is_array($a->$k));
-        //        if ($set = $a->$k ?: []) u\preray($set, self::$rs[$a->id]); // cache the special field
         $set = $a->$k ?: []; // special field $k gets cached by call to $a->$k
         $result = nni($set, $field);
         if ($k == 'vsecure' and u\crypted('V', $result)) $result = u\decry('V', $result);
         return $result; // must be separate line from $a->set (PHP bug)
       }
     }
+    
+    trigger_error(t('Account pseudo-field "%field" is undefined.', compact('field')), E_USER_WARNING);
     return NULL;
   }
   
@@ -911,7 +906,7 @@ EOF;
       $stepsLeft = $a->stepsLeft;
       unset($stepsLeft['partnerend']);
       $stepsLeft[] = 'partnerend';
-      $update(compact('stepsLeft'));
+      $a->update(compact('stepsLeft'));
     }
     return $nextStep;
   }
@@ -1801,7 +1796,7 @@ X;
   public function lastTx($where = 1, $subs = []) { return r\Tx::lastTx([$this->id, $this->jid], $where, $subs); }
   public function lastTxDesc() {return ($tx = $this->lastTx) ? t(' (Last tx: %dt)', 'dt', u\fmtDate($tx->created, TRUE)) : '';}
   public function isBank() {return r\isBank($this->id);}
-  public function nameAndEmail() {return [$this->fullName => $this->email];}
+  public function nameAndEmail() {return [$this->email => $this->fullName];}
   public function nameAndQid() {return "$this->fullName ($this->mainQid)";}
   public function firstCo() {return db\get('fullName', 'r_relations r INNER JOIN users u ON r.main=u.uid', 'r.permission>0 AND r.other=:id AND u.:IS_CO ORDER BY r.created LIMIT 1', ['id' => $this->id]);}
   public function adminables() {

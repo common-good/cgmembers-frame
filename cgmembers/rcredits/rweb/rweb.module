@@ -250,8 +250,6 @@ function rweb_menu($submenu = '') {
     'do' => ['call', 'Do', '1 2', ANY, 'rdo'],
     'coup' => ['call', t('Disable account'), '1', ANY, 'coup'],
 
-    'pos' => ['call', 'POS', '1', ANY, 'pos'], // called from the CGPay app
-    'ajax' => ['call', 'AJAX', '1', ANY, 'ajax'], // called from the CGPay app
     'whosin' => ['call', t('Who\'s in?'), '1', ANY, 'whosin'], // called from promo site
     'secret' => ['call', 'Secret', '', ANY, 'secrets'],
     'error' => ['call', 'System Error', '1', ANY, 'error'],
@@ -264,7 +262,12 @@ function rweb_menu($submenu = '') {
     'accounts' => isDEV ? ['call', 'Account Choices', 'Accounts', 'manage'] : NULL,
     'redirect' => ['call', 'Redirect', '', ANY, 'redirect'],
     'mailus' => ['call', t('Mail %PROJECT'), 'MailUs 1', ANY],
-    'unsubscribe' => ['call', t('Unsubscribe'), 'Unsubscribe 1', ANY],
+    'unsubscribe' => ['call', t('Unsubscribe'), 'Unsubscribe 1', ANY],  
+
+    'pos' => ['call', 'POS', '1', ANY, 'pos'], // called from the CGPay app
+    'pos' => ['call', 'POS', '1', ANY, 'pos'], // called from the CGPay app
+    'ajax' => ['call', 'AJAX', '1', ANY, 'ajax'], // called from the CGPay app
+    'api' => ['call', 'API', '1', ANY, 'api'],
   );
 
   foreach ($items as $k => $v) {

@@ -115,5 +115,6 @@ function formTx_submit($form, &$sta) {
   }
   unset($DBTX);
 
-  return say($msg, $args, $ok ? '' : 'amount');
+  if ($msg[0] == '|') $msg = substr($msg, 1);
+  return say(tr($msg, $args), $ok ? '' : 'amount');
 }

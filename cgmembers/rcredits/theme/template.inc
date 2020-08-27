@@ -399,7 +399,7 @@ function rcredits_radio($variables) {
 }
 
 function rcredits_submit($variables) {
-  $special = 'title class tickle';
+  $special = 'title class tickle tabindex disabled';
   extract(cgElement($variables, 'tabled bare value id size style parents ' . $special));
   $id2 = 'edit-' . (isset($parents) ? nni($parents, 0) : 'xx'); // even if no id is set (assures mixed case when appropriate
   if (!nn($id) or $id == strtolower($id2)) $id = $id2;

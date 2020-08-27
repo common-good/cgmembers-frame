@@ -255,7 +255,7 @@ function del($tnm, $where, $subs = [], $override = FALSE) {
   if (is_array($where)) {
     u\EXPECT(empty($subs), t('mixed parameter sets in db\\del()'));
     list ($where, $subs) = [u\where($where), $where];
-  } elseif (!is_array($subs)) { list ($where, $subs) = ["$where=:id", ['id' => $subs]]; } // del(tnm, idnm, id)
+  } elseif (!is_array($subs)) { list ($where, $subs) = ["`$where`=:id", ['id' => $subs]]; } // del(tnm, idnm, id)
   
   if (is_numeric($where)) u\FAIL(t('Wrong syntax for call to db\del')); // don't accidentally delete all records in a table
   
