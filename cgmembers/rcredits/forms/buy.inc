@@ -31,7 +31,7 @@ function formBuy($form, &$sta, $doCode = '') {
   $required = 'company';
 
   $args = strpos($doCode, '=') ? $doCode 
-  : (($doCode . ' ')[0] == 'P' ? r\doCode($doCode)
+  : (($doCode . ' ')[0] == 'P' ? u\decryRay($doCode)
   : (nni($sta, 'input') ?: ($_POST ?: $_GET))
   );
 
@@ -43,8 +43,8 @@ function formBuy($form, &$sta, $doCode = '') {
   if (!nn($code)) { // no company code -- this type of link requires confirmation by email or SMS
     $confirm = TRUE;
   } elseif (mb_strtolower($code) != t('demo')) { // not looking at the demo
-    if (strpos($code, ' ') or !$cocodes = substr(u\decry('P', CRYPT_FLAG . $code), 1) or !$cocodes = unserialize($cocodes) or nni($cocodes, 'cocode') != $co->emailCode) return w\softErr('bad co code'); // space in code is probably "bad company ID or cocode" message
-    $t = now() - nni($cocodes, 'now');
+    if (strpos($code, ' ') or !$coRay = u\decryRay($code) or nni($coRay, 'cocode') != $co->emailCode) return w\softErr('bad co code'); // space in code is probably "bad company ID or cocode" message
+    $t = now() - nni($coRay, 'now', 0);
     if ($t < 0 or $t > AUTHCODE_TIMEOUT) return w\softErr('co code timeout');
   } else {$tst = t('<span class="loud">DEMO</span>');}
   
@@ -106,10 +106,10 @@ function formBuy($form, &$sta, $doCode = '') {
   $submit = submit($verb, '', 'md', w\suffix($option));
 //  focusOn(($amount0 and !$mya) ? 'name' : 'amount');
 
-  $form = compact(ray('subtext payment itemDpy for name pass item submit'));
-  foreach (ray(CGPAY_FLDS) as $k) if (isset($$k) and !is_array($$k)) $form[$k] = hidFld($$k);
+  $info = compact(ray('subtext payment itemDpy for name pass item submit'));
+  foreach (ray(CGPAY_FLDS) as $k) if (isset($$k) and !is_array($$k)) $info[$k] = hidFld($$k);
   
-  return cgform($form);
+  return cgform($info);
 }
 
 function formBuy_validate($form, &$sta) {
@@ -166,7 +166,7 @@ function formBuy_submit($form, &$sta) {
  * @param mixed $info: '' or 'err' (in which case show just the message) or assoc of parameters (allows retry)
  */
 function buySay($msg, $info = '') {
-  list ($code, $info) = is_array($info) ? [r\makeDoCode($info), 'err'] : ['done', $info];
+  list ($code, $info) = is_array($info) ? [u\cryRay($info), 'err'] : ['done', $info];
 	say($msg, $info);
   return w\go("pay-with-cg/$code");
 }

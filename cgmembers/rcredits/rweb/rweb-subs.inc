@@ -28,7 +28,6 @@ $GLOBALS['tStrings'] += [ // these have to be here, not in cg-strings.inc, becau
 //  'new savings balance' => t('<p>IMPORTANT! Your %RCREDITS balance has been split to include a Credit Reserve containing your incentive rewards. Read <%a>last week\'s %PROJECT newsletter</a> for details.</p>', '_a', atag('http://us9.campaign-archive1.com/?u=b1d89f860859e1d9b906fa0b0&id=f1f54edd80&e=')),
   'increase min' => t('<%a>Click here</a> to increase your target balance!', '_a', atag('/settings/preferences')),
   'no such company' => t('There is no such company.'),
-  'no page permission' => t('You do not have permission to visit this page. Return to your <%a>Summary</a> page.', '_a', atag('/summary')),
   'insufficient relation' => t('You cannot open an account unless you have a close relationship to it. <%a>Invite someone</a> instead.', '_a', atag('/community/invite')),
   'bad login' => t('That account/password combination does not exist. Try again or <%a>ask for a new password</a>.', '_a', atag('/settings/password')),
   'change min first' => t('That request would leave you with less than your target balance. <%a>Lower your target balance</a> first.','_a', atag('/settings/fund')),
@@ -48,12 +47,13 @@ $GLOBALS['tStrings']['flooded'] = $GLOBALS['tStrings']['bad login'];
  */
 function go($page, $msg = '', $field = '') {
   global $base_url;
+  global $lastPage, $referrer; $referrer = nn($lastPage); // for testing
   global $lastGo, $xlastGo; list ($xlastGo, $lastGo) = [nn($lastGo), $page]; // for testing
 
   $msg = strip_tags($msg);
   if (substr($page, 0, 1) == '/') $page = substr($page, 1); // supplying the slash is preferred, to agree with w\atag()
 
-  t\output("Going to page $page (page0=$lastGo msg=$msg field=$field)");
+  t\output("Going to page $page from $referrer (page0=$lastGo msg=$msg field=$field)");
   if ($msg) say($msg, $field);
  
   if (test()) {
@@ -182,8 +182,8 @@ function NEWfld($type, $label, $desc = '', $other = []) {
   if (!$title) $title = $placeholder; // hover text defaults to same as hint
   foreach (['placeholder', 'title'] as $k) if ($$k) $tribs[$k] = $$k;
 
-  foreach (ray('type label required bare help tribs other') as $k) if (isset($$k)) $res[$k] = $$k;
-  return $res; // see rend()
+  $info = []; foreach (ray('type label required bare help tribs other') as $k) if (isset($$k)) $info[$k] = $$k;
+  return $info; // see rend()
 }
 
 // only barely begun
@@ -737,9 +737,18 @@ function sanitizePage($page) {
   $page = preg_replace("~$except~", '', $page);
 
   if ($tags = preg_match(FORBID_TAGS, $page, $matches) or preg_match(FORBID_ATTRS, $page, $matches)) {
-  $msg = t('Page has a forbidden HTML %thing: %what', 'thing what', $tags ? t('tag') : t('attribute'), pr($matches));
-  if (isPRODUCTION) w\hack($msg);
-/**/ die($msg);
+    $msg = t('Page has a forbidden HTML %thing: %what', 'thing what', $tags ? t('tag') : t('attribute'), pr($matches));
+    if (isPRODUCTION) w\hack($msg);
+    
+  	if (isDEV) {
+      header_remove('Content-Security-Policy'); // let us show styles
+      $page = str_replace('pre>', 'WASPRE>', $page);
+      $m = htmlentities($matches[0]);
+      $msg .= '<br><br>' . str_replace($matches[0], "--><code style=\"background-color:yellow;\">$m</code>", $page);
+/**/  die($msg);
+    }
+    
+/**/ die(plain($msg));
   }
 }
 
@@ -1006,8 +1015,7 @@ function subMenuHtml($menu) {
   if (!is_array($menu)) $menu = \rweb_menu($menu);
   $list = '';
   foreach ($menu as $k => $v) {
-    for ($i = 0; $i < 7; $i++) $v[] = ''; // keep list() from dying
-    list ($type, $head, $args, $perms, $func, $detail, $icon) = $v;
+    list ($type, $head, $args, $perms, $func, $detail, $icon) = u\padRay($v, 7);
     if ($type == 'call' or !w\webAccess($perms)) continue;
     if (nn($detail)) $detail = "<p class=\"list-group-item-text\">$detail</p>";
     $text = <<<EOF
@@ -1179,7 +1187,7 @@ function tellStaffNewMember($params) {
   $params = compact(ray('phone state acctType helper copts ats')) + $params;
   unset($params['code']); // don't need to see this
   $message = '<h2>NEW SIGNUP</h2>';
-  r\tellCO($message, $params);
+  r\tellCAdmin($message, $params);
 }
 
 /**
@@ -1376,7 +1384,7 @@ function getPreId($source2 = NULL) {
 function coCats() {
   $sql = <<<EOF
     SELECT iid, IF(parent IS NULL, UCASE(industry), CONCAT('--', industry)) AS cat, parent 
-    FROM r_industries ORDER BY IFNULL(parent, 0), iid
+    FROM r_industries ORDER BY IFNULL(parent, iid), iid
 EOF;
   return db\q($sql)->fetchAllKeyed();
 }
@@ -1387,13 +1395,14 @@ EOF;
  * @param char $req: REQ if required, else ''
  */
 function ssnFields($personal = TRUE, $req = '') {
+  $mobileDobTxt = u\isMobile() ? t(' Tap for calendar, <%b>press to type</b>.', '_b', 'b class="loud"') : '';
   if ($personal) {
     $ssReason = $req ? t('Required by the IRS if you accept more than $20,000 a year in payments through %PROJECT ($600 a year in MA and VT).') : '';
     $federalId = passFld($req . t('ssTitle'), [t('ssDesc'), $ssReason], autofill('off'));
-    $dob = dateFld($req . t('Birth Date:'), [t('Your birth date'), t('Your date of birth (mm/dd/yyyy) &mdash; must match the date on your ID.')], autofill('off'));
+    $dob = dateFld($req . t('Birth Date:'), [t('Your birth date (mm/dd/yyyy)'), t('Your date of birth &mdash; must match the date on your ID.') . $mobileDobTxt], autofill('off'));
   } else {
     $federalId = passFld($req . t('einTitle'), [t('einDesc')], autofill('off'));
-    $dob = dateFld($req . t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)?')]);
+    $dob = dateFld($req . t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)?') . $mobileDobTxt]);
   }
   
   return compact(ray('federalId dob'));
@@ -1483,12 +1492,12 @@ function invitation($code, $invitee = '', &$inviter = '', &$iCode = -1, &$err = 
  */
 function eLinkAcct(&$sta, &$eLink = '', $allow = 'individual') {
   if (!$eLink) extract(just('eLink', $sta)); // verifying or submitting; get stored eLink args
-  extract(just('qid ecode allow', $eLink));
-  $a = r\acct($qid = nn($qid)); // current or specified account
+  extract(just('qid ecode allow', $eLink, ''));
+  $a = r\acct($qid); // current or specified account
   if ($allow != 'any') {
     if (!$a) return !w\go('', 'requires signin');
     if ($allow == 'individual' and $a->co) return !w\go('', t('That page is for individual accounts only.'));
-    if ($qid and nn($ecode) != $a->emailCode) return !w\hack('bad ecode');
+    if ($qid and $ecode != $a->emailCode) return !w\hack('bad ecode');
   }
   $eLink = $sta['eLink'] = "allow=$allow&qid=$qid&ecode=" . nn($ecode); // remember it (cttys don't use ecode)
   return $a;
@@ -1496,8 +1505,8 @@ function eLinkAcct(&$sta, &$eLink = '', $allow = 'individual') {
 
 function hack($message, $info = []) {
   r\tellAdmin(t('HACK attempt: ') . $message, $info + $_SERVER);
-/**/	if (isDEV) debug("$message: " . pr($info));
-  if (test()) return []; // to simulate a form
+/**/	if (isDEV) debug("HACK - $message: " . pr($info));
+  if (test()) return w\err('hack', 'err'); // to simulate a form
   return r\signedIn() ? signout() : w\go('');
 }
 
@@ -1669,8 +1678,10 @@ function whois($who, $field_name, $info, $selfMsg = 'no self-trading', $paying =
  */
 function doSay($msg = '', $err = '') {
   if (isDEV) file_put_contents(f('t.dosayFilename', $err ? 'error' : 'status'), $msg); // no way to know if actually testing
-  return w\go('empty/say=1', $msg, $err);
+  say($msg, $err);
+  return w\go('empty/say=1');
 }
+function doErr($msg) {return doSay($msg, 'err');}
 
 /**
  * Add an item to the menu structure (called when reinstalling or rebuilding menus).
@@ -1857,8 +1868,8 @@ function showCharts($ctty = 0, $period = 'months', $download = FALSE) {
       $x2x = [];
       foreach ($txTypes as $k => $desc) {
         $v = max(1, ${"d_{$k}0"}); // to make the logarithmic scale look okay
-        $cnt = ${"d_{$k}Count"};
-        $cnt .= empty($cnt + 0) ? '' : (' @ ' . u\fmtAmt($v / $cnt) . ' avg');
+        $cnt = (float) ${"d_{$k}Count"};
+        $cnt = number_format($cnt) . ($cnt ? (' @ ' . u\fmtAmt($v / $cnt) . ' avg') : '');
         $f = ${"d_{$k}"} . " ($cnt) $desc"; // eg "$123 (7 @ $6.25 avg)"
         $x2x[] = compact('v', 'f');
       }
@@ -1965,7 +1976,7 @@ function monthChoices($title, $things, $subtext = '', $end = -1, $target = '_bla
   if ($end >= $start) {
     $headers = $data = '';
     foreach ($list as $year => $v) {
-      $headers .= "<th>$year</th>";
+      $headers .= "<th><a href=\"$base_url/history/$things/CY$year\" target=\"$target\">$year</a></th>";
       $data .= "<td>$v</td>";
     }
     $list = "<table id=\"$things\">\n<tr>$headers</tr>\n<tr>$data</tr>\n</table>";
@@ -2253,6 +2264,17 @@ function backButton() {
   return '<button class="btn btn-back btn-xs btn-primary" tabindex="-1"><span>&laquo;</span>&nbsp;Go Back</button>';
 }
 
+/**
+ * Output the given array and exit.
+ * @param array $ray: the array to echo
+ * @param bool $cry: <encrypt it>
+ */
+function exitRay($ray, $cry = FALSE) {
+/**/  if (test()) return t\logRec('echo', $ray + compact('cry'));
+/**/  echo $cry ? u\cryRay($ray) : pr($ray);
+  exit();
+}
+
 // one-line functions that need no explanation
 
 function disabled($value = NULL, $disabled = TRUE) {return compact('disabled') + (isset($value) ? compact('value') : []);}
@@ -2277,7 +2299,6 @@ function away() {return ['target' => '_blank'];}
 function js($script, $args = '') {global $pageScripts; $pageScripts[$script] = http_build_query(rayy(func_get_args(), 1));} // see html.tpl
 function jsx($script, $args = '') {global $scriptScraps; $scriptScraps[$script] = http_build_query(rayy(func_get_args(), 1));} // see html.tpl
 function softErr($msg) {w\say($msg, 'err'); return w\go('empty');}
-function clearHeaders() {if (!headers_sent()) header_remove();}
 function skipButton() {return button(t('Skip for now'), '/settings/skip', t('Leave this step for last'), 'default', 'xs', ['class' => 'skip']);}
 function notab() {return tabindex(-1);}
 function tabindex($n) {return ['tabindex' => $n];}

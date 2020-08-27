@@ -50,8 +50,7 @@ function rweb_block_view($delta = '') {
  */
 function makeMenuItem($k, $parts) {
   $types = ['norm' => MENU_NORMAL_ITEM, 'sub' => MENU_LOCAL_TASK, 'dft' => MENU_DEFAULT_LOCAL_TASK, 'call' => MENU_CALLBACK];
-  for ($i = 0; $i < 5; $i++) $parts[] = ''; // enough to satisfy list()
-  list ($type, $title, $args, $perms, $func) = $parts;
+  list ($type, $title, $args, $perms, $func) = u\padRay($parts, 5);
   return w\menu($k, $title, $types[$type], $func ?: 'showForm', $args, $perms);
 }
 
@@ -106,6 +105,7 @@ function rweb_menu($submenu = '') {
     
 //    'community' => ['norm', t('Community'), 'FindCo', ANY],
     'community' => ['norm', t('Community'), 'Community', ANY],
+    'community/endorse' => ['call', t('Invite / Endorse'), 'Endorse 2', ANY, '', t(), 'share-alt'],
     'community/invite' => ['sub', t('Invite / Endorse'), 'Invite 2', ANY, '', t(), 'share-alt'],
     'community/invite/all' => ['call', t('Shouters'), 'Shouters 3', ANY],
     'community/invite/example' => ['call', t('Invite Someone'), '', 'ok manage', 'inviteExample'],
@@ -256,7 +256,7 @@ function rweb_menu($submenu = '') {
     'page-not-found' => ['call', t('Page Not Found'), 'PageNotFound', ANY],
     'go2' => ['call', t('Go to 2 pages'), '1', ANY, 'go2'],
     'pay-with-cg' => ['call', t('Pay With %RCREDITS'), 'Buy 1', ANY],
-    'authcode' => ['call', t('Supply a one-use auth code'), '', ANY, 'authcode'],
+    'authcode' => ['call', t('Supply a one-use auth code'), '1', ANY, 'authcode'],
     'scraps' => ['call', 'Scraps', 'Scraps 1', ANY],   
     'partner' => ['call', 'Signup Through Partner', 'PartnerSignup 1', ANY],
     'accounts' => isDEV ? ['call', 'Account Choices', 'Accounts', 'manage'] : NULL,
@@ -265,8 +265,8 @@ function rweb_menu($submenu = '') {
     'unsubscribe' => ['call', t('Unsubscribe'), 'Unsubscribe 1', ANY],  
 
     'pos' => ['call', 'POS', '1', ANY, 'pos'], // called from the CGPay app
-    'pos' => ['call', 'POS', '1', ANY, 'pos'], // called from the CGPay app
     'ajax' => ['call', 'AJAX', '1', ANY, 'ajax'], // called from the CGPay app
+    'api' => ['call', 'API', '1', ANY, 'api'],
     'api' => ['call', 'API', '1', ANY, 'api'],
   );
 

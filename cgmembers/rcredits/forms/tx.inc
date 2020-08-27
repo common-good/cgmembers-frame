@@ -55,13 +55,14 @@ function formTx($form, &$sta, $args = '') {
 }
 
 function formTx_validate($form, &$sta) {
+  global $mya;
   $info = just('who amount purpose start end', $sta['input'], NULL);
   extract($info);
   if (mb_strpos($who, '@') and !u\validEmail($email = $who)) return say('bad email', compact('email'), 'who');
   if (!$a = w\whois($who, 'who', $info, 'no self-trading', op($sta) == 'pay')) return FALSE;
   $uid = $a->id;
   if ($err = u\badAmount($amount, '>0')) return say($err, 'amount');
-  foreach (ray('start end') as $k) if ($$k and $err = u\badDate($$k, today())) return say($err, $k);
+  foreach (ray('start end') as $k) if ($$k and $err = u\badDate($$k, $mya->superAdmin ? today() - 180 * DAY_SECS : today())) return say($err, $k);
   u\preray(compact(ray('amount uid start end')), $sta['input']);
 }
 
@@ -79,11 +80,11 @@ function formTx_submit($form, &$sta) {
   $repeats = ($periods > 0);
   
   if (!$delay) {
-    $start = today();
-    $recurs = $period ? ['recurs' => 1] : [];
+    $data = $period ? ['recurs' => 1] : [];
+    if ($start) $data['created'] = $start; // superAdmin chose a date in the past
     list ($ok, $msg, $args) = $paying
-    ? be\transfer('payment', $mya, r\acct($uid), $amount, $purpose, $goods, $recurs)
-    : be\invoice($mya, r\acct($uid), $amount, $purpose, $goods, $recurs);
+    ? be\transfer('payment', $mya, r\acct($uid), $amount, $purpose, $goods, $data)
+    : be\invoice($mya, r\acct($uid), $amount, $purpose, $goods, $data);
   } else list($ok, $msg, $args) = [TRUE, '', []];
   
   if ($paying and $mya->snap) r\tellAdmin(t('SNAP member %who %did something', 'who did', $mya->fullName, $ok ? t('bought') : t('tried to buy')), ['topic' => t('SNAP purchase') . ($ok ? '' : t(' failed'))]);
@@ -106,6 +107,7 @@ function formTx_submit($form, &$sta) {
       $msg .= '|repeats';
     } else { list ($periods, $period) = [1, 'once']; }
     
+    if (!$start) $start = today(); // handle ''
     $info = $subs + compact(ray('action amount purpose period periods start end'));
     $id = db\insert('tx_templates', $info, 'id');
     if ($delay) {

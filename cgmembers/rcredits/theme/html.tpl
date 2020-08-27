@@ -49,6 +49,7 @@ $version = isPRODUCTION ? R_VERSION : now();
 $styles = preg_replace('~<style.*</style>~ms', '', $styles); // zap all the drupal styles
 
 // handle scripts
+if (isDEV and $jsCode = nni($_GET, 'jsCode')) w\jsx('eval', compact('jsCode')); // for testing ajax
 if (nn($scriptScraps)) w\js('scraps', 'args', urlencode(json_encode($scriptScraps))); // fragments
 $s = array_flip(ray(SCRIPTS_TOP)); // standard (included first on every page)
 $s += just(array_keys($pageScripts), array_merge(array_flip(ray(SCRIPTS)), $pageScripts)); // select and reorder ad hoc scripts
@@ -69,6 +70,7 @@ foreach ($s as $id => $v) { // having selected the scripts, format for inclusion
 }
 
 w\sanitizePage($page); // assure no HTML insertion of script, styles, etc.
+
 if ($mya) $classes = str_replace('not-logged', 'logged', $classes);
 
 $favicon = <<<EOF

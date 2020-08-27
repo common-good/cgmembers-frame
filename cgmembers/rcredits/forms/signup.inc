@@ -123,7 +123,7 @@ function formSignup_submit($form, &$sta) {
   
   list ($city, $state, $latitude, $longitude) = zipCity($zip);
 
-  foreach (ray($dbFields) as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray($dbFields) as $k) if (isset($$k)) $info[$k] = $$k;
   $info += $acctType == CO_PERSONAL ? ['preid' => $preid] : ['coType' => $acctType];
   
   if (nn($myid)) {
@@ -141,7 +141,7 @@ function formSignup_submit($form, &$sta) {
   
   if (nn($source2) == 'food') $mya->stepDone('food', FALSE); // signed up through Food Fund promo (cg4.us/food), so add this special step
   
-  if (nn($iCode) < 0) w\invitation($code, $myid); // mark the invitation used
+  if (nn($iCode) < 0) w\invitation(nn($code), $myid); // mark the invitation used
   $email = u\cry('P', $email);
   db\q('UPDATE r_invites SET invitee=:myid WHERE email=:email', compact('myid', 'email')); // and all such
   if (!nn($owns)) $mya->setRisk('rents');
@@ -158,7 +158,7 @@ function formSignup_submit($form, &$sta) {
   if (!nn($confirmed)) {
     u\EXPECT((bool) $h, 'unconfirmed with no helper');
     if ($h->id != 1) { // sysadmin helper means the potential inviter is named in the notes field
-      $_a1 = $h->makeDo('confirmInvite', $myid); // link to confirm invitedness
+      $_a1 = $h->doLink('confirmInvite', $myid); // link to confirm invitedness
       r\message($h->id, 'confirm invite', ray('_a1 fullName', $_a1, $mya->fullName)); // ask inviter to confirm
     }
   }

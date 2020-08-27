@@ -11,14 +11,16 @@ use CG\Db as db;
  */
 function formBacking($form, &$sta, $args = '') {
   if (!$mya = w\eLinkAcct($sta, $args, 'acct')) return;
-  
+
   $title = t('Backing Promise');
   $subtext = t(<<< X
   <p>Backing makes it possible for your community and region to make investments, loans, and grants. Whereas bank investments are backed (partially) by the FDIC, Common Good investments, loans, and grants are backed by the members.</p>
   
   <p>Please choose a dollar amount you will back, for 12 months. This limited promise we all make to each other assures that any <i>other</i> credit in your account is 100% backed &mdash; by Dollars and/or collateral and/or Backing Promises. This promise comes into play only if there is a <%aCrunch>cash crunch</a>.</p>
 
-  <p>In the event of a cash crunch within one year of today, you agree to increase your balance, within 7 days, by the backing amount you chose and to bring your balance up to that new target at least once a week until the cash crunch ends. If your %PROJECT Community <i>ends</i> instead of recovering, the amount you chose to back becomes a donation (from you to your %PROJECT Community and Region, for all the great things it funded) [<%aExample>example</a>].
+  <p>In the event of a cash crunch within one year of today, you agree to increase your balance, within 7 days, by the backing amount you chose and to bring your balance up to that new target at least once a week until the cash crunch ends. If your %PROJECT Community <i>ends</i> instead of recovering, the amount you chose to back becomes a donation (from you to your %PROJECT Community and Region, for all the great things it funded) [<%aExample>example</a>].</p>
+  
+  <p>When you receive a reminder message a week ahead of a year from now, you can renew, decrease, or increase your backing amount. If you take no action before the renewal date, your backing promise is automatically renewed unchanged for another 12 months.</p>
 
   <p>"If there is a cash crunch within the next 12 months, I promise to buy this amount of %PROJECT credit to back the system as described above."</p>
 X
@@ -51,9 +53,16 @@ function formBacking_submit($form, &$sta) {
   $mya = w\eLinkAcct($sta); 
 
   extract(just('amount', $sta['input']));
-  if ($amount < $mya->backing) say('backing in effect');
   r\tellAdmin("$mya->fullName set backing to " . u\fmtAmt($amount) . ' (was ' . u\fmtAmt($mya->backing) . ')');
-  $mya->update('backing backingDate', $amount, today());
+
+  $renewDate = $mya->backingDate ? strtotime('+1year', $mya->backingDate) : today();
+  $earliestRenew = $renewDate - RENEW_ADVANCE_DAYS * DAY_SECS;
+
+  if ($amount < $mya->backing and now() < $earliestRenew) {
+    $mya->update('backingNext', $amount);
+    say('backing in effect', ray('renewDate', u\fmtDate($renewDate, TRUE)));
+  } else { $mya->update('backing backingDate', $amount, today()); }
+  
   if ($amount > 1) say(t('Thank you for backing your %PROJECT community!'));
   return r\acct() ? w\goNextStep('backing') : w\doSay();
 }

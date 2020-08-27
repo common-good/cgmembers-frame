@@ -12,8 +12,8 @@ for (var what in args) doit(what, parseUrlQuery(args[what]));
 function doit(what, vs) {
   function fid(field) {return '#edit-' + vs[field].toLowerCase();}
   function fform(fid) {return $(fid).parents('form:first');}
-  function report(j) {$.alert(j.message, j.ok ? 'Success' : 'Error');};
-  function reportError(j) {if (!j.ok) $.alert(j.message, 'Error');};  
+  function report(j) {$.alert(j.message, j.ok ? 'Success' : 'Error');}
+  function reportErr(j) {if (!j.ok) $.alert(j.message, 'Error');}
 
   switch(what) {
 
@@ -40,6 +40,7 @@ function doit(what, vs) {
 
   case 'summary':
     $('#activate-credit').click(function () {post('setBit', {bit:'debt', on:1}, report);});
+    $('#endorse a').click(function () {$('#endorse').hide();});
     break;
     
   case 'tx':
@@ -76,7 +77,7 @@ function doit(what, vs) {
       /*        post('changeCtty', {newCtty:newCtty, retro:retro}, function(j) {
                 if (!j.ok) $.alert(j.message, 'Error');
                 }); */
-      post('changeCtty', {newCtty:newCtty, retro:retro}, reportError);        
+      post('changeCtty', {newCtty:newCtty, retro:retro}, reportErr);        
     }
     break;
 
@@ -139,6 +140,39 @@ function doit(what, vs) {
   case 'signupco':
     $('#edit-agentqid').keyup(function () {reqQ($('.form-item-pass'), $('#edit-agentqid').val().trim() != '');});
     break;
+
+  case 'relations':
+    $('input[type="checkbox"]').change(function () {
+      var data = {name: $(this).attr('name'), v:$(this).prop('checked')};
+      post('relations', data, reportErr);
+    });
+    $('#relations .btn[name^="delete-"]').click(function () {
+      var data = {name: $(this).attr('name'), v:0};
+      var that = $(this);
+      post('relations', data, function (j) {
+        report(j);
+        if (j.ok) that.closest('tr').remove(); // delete line
+      });
+    });
+    $('#relations select').change(function () {
+      var data = {name: $(this).attr('name'), v:$(this).val()};
+      var that = $(this);
+      post('relations', data, function (j) {
+        if (j.ok) {
+          if (j.message) $.alert(j.message, 'Success');
+        } else {
+          $.alert(j.message, 'Error');
+          that.val(j.v0);
+        }
+      });
+    });
+    break;
+    
+  case 'eval': // evaluate arbitrary expression after decrypting it (on dev machine only)
+    post('eval', {jsCode:vs['jsCode'], qid:vs['qid']}, function (j) {
+      if (j.ok) eval(j.js);
+    });
+    break;
     
   case 'cgbutton':
     cgbutton();
@@ -169,7 +203,7 @@ function doit(what, vs) {
       var size = $('#edit-size').val().replace(/\D/g, '');
       var amt = $('#edit-amount').val().replace(/\D/g, '');
       var img = isButton ? '<img src="https://cg4.us/images/buttons/cgpay.png" height="' + size + '" />' : text;
-      var style = (type == 0 || type == 2) ? '' : ' style="display:inline-block; background-color:darkgreen; border-radius:5px; border:1px solid forestgreen; color:white; font-family:Arial; font-size:17px; padding:8px 15px; text-decoration-line:none;"';
+      var style = type == 1 ? vsprintf(' style="%s"', [vs['style']]) : '';
       var html = vsprintf('<a href="%s/company=%s&for=%s&item=%s&amount=%s"%s target="_blank">%s</a>', [url, vs['qid'], fer, item, amt, style, img]);
       
       if ((isButton ? size : text) != '') {
@@ -206,6 +240,10 @@ function doit(what, vs) {
     if (vs['method'] >= 0) verifyid(vs['method']);
     $('[id^="edit-method-"]').click(function () {verifyid($(this).val());});
     $('#edit-file').click(function () {if ($(this).val() == '') $('#edit-method-0').prop("checked", true);});
+    $('#edit-dob').on('press', function(e) {
+      $(this).attr('type', 'text').css('background-color', '#e6ffcc'); // make it not a date type field and go green
+      $(this).click(); // show keyboard
+    });
     break;
 
   case 'which':
@@ -464,6 +502,14 @@ function doit(what, vs) {
     if (vs['edit']) {showInviteFlds(); $('#edit-org').keyup();}
     break;
 
+  case 'shouters':
+    $('.rating').click(function () {
+      post('bumpShout', {qid:$(this).attr('qid')}, null);
+      var rating = $(this).attr('rating');
+      $(this).attr('rating', rating == '3' ? 0 : (parseInt(rating) + 1));
+    });
+    break;
+    
   case 'amtChoice':
     var other = jQuery('.form-item-amount'); 
     var amtChoice = jQuery('#edit-amtchoice');
@@ -565,15 +611,7 @@ function doit(what, vs) {
       location.href = baseUrl + '/handle-invoice/nvid=' + nvid + vs['args'];
     });
     break;
-    
-    /*    case 'relations':
-          $('div.checkbox').click(function () {
-          var box = $('input', this);
-          alert(box.prop('checked'));
-          //box.prop('checked', !box.prop('checked'));
-          });
-          break;*/
-    
+        
   default:
     alert('ERROR: Unknown script scrap (there is no default script).');
     alert($('#script-scraps').attr('src').replace(/^[^\?]+\??/,''));

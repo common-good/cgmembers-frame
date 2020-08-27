@@ -5155,7 +5155,6 @@ function _drupal_bootstrap_full() {
   require_once DRUPAL_ROOT . '/includes/unicode.inc';
   require_once DRUPAL_ROOT . '/includes/image.inc';
   require_once DRUPAL_ROOT . '/includes/form.inc';
-  require_once DRUPAL_ROOT . '/includes/mail.inc';
   require_once DRUPAL_ROOT . '/includes/actions.inc';
   require_once DRUPAL_ROOT . '/includes/ajax.inc';
   require_once DRUPAL_ROOT . '/includes/token.inc';

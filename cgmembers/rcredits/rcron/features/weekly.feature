@@ -5,9 +5,9 @@ SO my financial position will be progressively better.
 
 Setup:
   Given members:
-  | uid  | fullName | minimum | savingsAdd | saveWeekly | achMin | floor | risks   | flags                 |*
-  | .ZZA | Abe One  |    -100 |          0 |         20 |     20 |    10 | hasBank | ok,confirmed,refill   |
-  | .ZZB | Bea Two  |     100 |          0 |         20 |     20 |    10 | hasBank | ok,confirmed,cashoutW |
+  | uid  | fullName | minimum | savingsAdd | saveWeekly | achMin | floor | bankAccount | flags                 |*
+  | .ZZA | Abe One  |    -100 |          0 |         20 |     20 |    10 | USkk9000001 | ok,confirmed,refill   |
+  | .ZZB | Bea Two  |     100 |          0 |         20 |     20 |    10 | USkk9000002 | ok,confirmed,cashoutW |
 
 Scenario: A member crawls out of debt
   When cron runs "everyWeek"

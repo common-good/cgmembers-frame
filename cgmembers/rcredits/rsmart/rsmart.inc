@@ -282,8 +282,8 @@ function identify($args) {
   $first = (($a->co and $a->proSe) or $a->agentA->ided) ? '0' : '1'; // regular or first-time transaction (proSe co never)
   
   $fields = $version < 230 ? 'first device name place company default time' : 'device first person company place time';
-  foreach (ray($fields) as $k) if (isset($$k)) $res[$k] = $$k;
-  return ok($res + balrew($a, $version < 230) + $companyInfo); // companyInfo last (don't overwrite bal)
+  $info = []; foreach (ray($fields) as $k) if (isset($$k)) $info[$k] = $$k;
+  return ok($info + balrew($a, $version < 230) + $companyInfo); // companyInfo last (don't overwrite bal)
 }
 
 /**

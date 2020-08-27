@@ -207,7 +207,7 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
 function reportCoupon($thing, $info) {
   global $mya;
   w\say(t('Your %thing was created successfully.', compact('thing')));
-  r\tellCo(t('New Coupons!'), $info + ray('company', $mya->fullName));
+  r\tellCAdmin(t('New Coupons!'), $info + ray('company', $mya->fullName));
   if ($mya->co) $mya->stepDone('discount');
 
   $args = u\urlify(http_build_query($info));

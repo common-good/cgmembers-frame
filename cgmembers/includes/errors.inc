@@ -44,7 +44,7 @@ function handleException($e) {return handleError(E_EXCEPTION, $e->getMessage(), 
 /**
  * Handle all errors, including warnings.
  * On production, all errors generate an email to admin, user sees a friendly apology on fatal error, otherwise nothing
- * On dev, all errors die with stack trace, except from PHP window where the error is displayed without a stack trace
+ * On dev, all errors die with stack trace, except from PHP window where the error is displayed with just the caller
  * Treat recoverable errors as fatal.
  * @param $level: The level of the error raised.
  * @param $msg: The error message.
@@ -66,13 +66,14 @@ function handleError($level, $msg, $file, $line, $context, $trace = NULL) {
   $file = basename($file);
   $msg = $msg0 = t('<b>%title: </b>%msg<br> - line %line in %file' . "<br>\n", compact(ray('title msg line file')));
   f('u.loga', $title, $msg);
+  $devPhpPage = (!isPRODUCTION and $channel == TX_WEB and basename($_SERVER['REQUEST_URI']) == 'php');
 
-  if (!function_exists('filter_xss_admin')) require_once DRUPAL_ROOT . '/includes/common.inc';
   if (empty($trace)) $trace = debug_backtrace();
   if (!empty($trace) and is_array($trace)) array_shift($trace); // don't repeat the final call
   $traceMsg = [];
   foreach ($trace as $one) {
     if (!is_array($one) or count($traceMsg) > 20) break; // don't overflow memory
+    if ($devPhpPage and count($traceMsg) > 2) break; // keep it short for PHP page on dev
     extract(just('line file function args', $one, ''), EXTR_PREFIX_ALL, 'x'); // sometimes just function and args
 
     $x_file = basename($x_file);
@@ -85,6 +86,7 @@ function handleError($level, $msg, $file, $line, $context, $trace = NULL) {
     $traceMsg[] = "- $x_line in $x_file, calling $x_function() with:<br>\n$args";
   }
 
+  if (!function_exists('filter_xss_admin')) require_once DRUPAL_ROOT . '/includes/common.inc';
   $msg = \filter_xss_admin($msg . join("<br>\n", $traceMsg));
   
   if (isPRODUCTION) {
@@ -94,8 +96,8 @@ function handleError($level, $msg, $file, $line, $context, $trace = NULL) {
     if ($channel == TX_WEB) return w\softErr(tr('crash msg'));
 /**/die();
   } else {
-    if ($channel == TX_WEB and basename($_SERVER['REQUEST_URI']) == 'php') {
-      w\say($msg0, 'err');
+    if ($devPhpPage) {
+      w\say($nasty ? $msg : $msg0, 'err');
       return w\go('sadmin/php');
     }
 /**/echo $msg;

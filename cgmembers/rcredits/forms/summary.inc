@@ -17,8 +17,17 @@ function formSummary($form, &$sta) {
   global $base_url;
   global $mya; $myid = $mya->id;
 
-  $special = t('<h4>%PROJECT response to COVID-19</h4>It\'s up to us. Support our local businesses and nonprofits!<ul><li><%aBuyCredit>Buy Credit</a></li><li><%aStepups>Make Step-up Contributions</a></li><li> <%aBack>Increase Your Backing</a></li><li><%aInvite>Invite Someone</a></li></ul>', '_aBuyCredit _aStepups _aBack _aInvite', atag('/community/buy-credit'), atag('/community/stepup'), atag('/community/backing'), atag('/community/invite'));
-  $special = ($mya->ok and !$mya->co) ? compact('special') : [];
+  $special = $endorse = NULL;
+  
+  if ($mya->ok and !$mya->co) {
+    $special = t('<h4>%PROJECT response to COVID-19</h4>It\'s up to us. Support our local businesses and nonprofits!<ul><li><%aBuyCredit>Buy Credit</a></li><li><%aStepups>Make Step-up Contributions</a></li><li> <%aBack>Increase Your Backing</a></li><li><%aInvite>Invite Someone</a></li></ul>', '_aBuyCredit _aStepups _aBack _aInvite', atag('/community/buy-credit'), atag('/community/stepup'), atag('/community/backing'), atag('/community/invite', clas('invite')));
+    if (!$mya->shouter and $mya->hasPhoto) { // (don't ask partial accounts to endorse)
+      $endorseText = t('<h2>We need your help to grow.</h2>');
+      $endorseBtn = btn('/community/invite', t('Endorse %PROJECT'), 'success', 'large');
+      $skipLnk = lnk('', t('Skip for now'), clas('skipLnk'));
+      $endorse = item("<div id=\"endorse\"><div><div>$endorseText<br>$endorseBtn<br>$skipLnk</div></div></div>", BARE);
+    }
+  }
   
   if ($mya->closed) say(t('Your account is closed, but you can still see your account history.'));
 
@@ -39,10 +48,13 @@ function formSummary($form, &$sta) {
     
     if ($stepUrl == 'summary') {
       if (nn($msg)) say(t('New member is told: ') . t($msg));
-    } elseif ($stepUrl) say(t('New member will be sent <a href="%stepUrl">there</a> upon signing in.', 'stepUrl', "$base_url/$stepUrl"));
+    } elseif ($stepUrl) say(t('New member will be sent <%a>there</a> upon signing in.', '_a', atag("/$stepUrl")));
     
   } else { // normal
-    if ($stepUrl and $stepUrl != 'summary') return w\go($stepUrl, $msg);
+    if ($stepUrl and $stepUrl != 'summary') {
+      if (r\referrer() == 'signin') return w\go($stepUrl, $msg); // go right to next step
+      say(t('To continue opening your %PROJECT account, <%a>click here</a>.', '_a', atag("/$stepUrl")));
+    }
     if (nn($msg)) say($msg);
     if ($mya->legalName != $mya->fullName and !$mya->depends) $legalName = item($mya->legalName, t('Legal Name:'));    
   }
@@ -119,7 +131,7 @@ function formSummary($form, &$sta) {
   $fields0 = 'photo title clickPhoto showCustomers shortcuts accountId accountName address legalName shortName community balance newBalance creditLine creditLimit committed choiceList';
 //  foreach (ray('details') as $k) $$k = @$form[$k]; unset($form[$k]); // put these on the left if admin
 //  $fields = @compact(ray($fields));
-  foreach (ray($fields0) as $k) if (isset($$k)) $fields[$k] = $$k;
+  $fields = []; foreach (ray($fields0) as $k) if (isset($$k)) $fields[$k] = $$k;
   
 //  if ($mya->superAdmin and !$mya->ok) $onSubmit = w\whoFldSubmit('helper', t('This person was invited by %name, yes?'));
   if ($mya->admin2 and !$mya->proSe) {
@@ -134,7 +146,7 @@ function formSummary($form, &$sta) {
   
   jsx('summary');
   
-  return cgform($special + $form);
+  return cgform(compact(ray('special endorse')) + $form);
 }
 
 function formSummary_validate($form, &$sta) {
@@ -161,7 +173,7 @@ function formSummary_validate($form, &$sta) {
 //    if (!@$helper or $helper == 1) return say(t('You must specify who gets the helper reward.'), 'helper');
     if (!$mya->member and is_null(nni($adminable, B_MEMBER, NULL))) return say(t('That account is not READY (not a member).'), 'adminable'); // test "is_null" because 0 is the value when set
     if (!$mya->confirmed and $mya->helper != 1) say(t('NOTE: Member %helperName has not yet confirmed this invitation.', 'helperName', $h->fullName));
-    if (!$mya->co and !nn($dob) and !$mya->idVerifiedBy) return say(t('You cannot activate the account without a date of birth (except for solar1 signups).'), 'dob');
+    if (!$mya->co and !nn($dob) and !$mya->hasDob and !$mya->idVerifiedBy) return say(t('You cannot activate the account without a date of birth (except for solar1 signups).'), 'dob');
   }
 
   if (!nn($active) and $mya->ok) { // de-activating
@@ -209,7 +221,7 @@ function formSummary_submit($form, &$sta) {
   if (!$mya->isCtty) {
     $fullName = $mya->fullName;
     if (FALSE and !$mya->confirmed and nn($helper) and nn($helper) != $mya->helper) { // self-signup
-      $_a1 = r\acct($helper)->makeDo('confirmInvite', $mya->id); // link to confirm invitedness
+      $_a1 = r\acct($helper)->doLink('confirmInvite', $mya->id); // link to confirm invitedness
       r\message($helper, 'confirm invite', compact('_a1', 'fullName')); // ask inviter to confirm
     }
   }
@@ -406,13 +418,13 @@ function adminSummary() {
       $risk = item(round($mya->risk) . ' ' . button(t('Recalc'), "$base_url/rerisk/acct/$uid/1"), t('Risk Score:'));
       if (!$mya->co) $trust = item(number_format($mya->trust, 1), t('Trust:'));
 
-    if (!$mya->ok or $mya->helper == 1) { // don't show helper field if it's moot (too late -- somebody already got credit)
-        if ($helper = $mya->helper ?: ($mya->co ? $mya->by : db\get('inviter', 'r_invites', 'invitee=:uid', compact('uid')))) {
+      if (!$mya->ok or $mya->helper == 1) { // don't show helper field if it's moot (too late -- somebody already got credit)
+        if ($helper = $mya->helper ?: ($mya->co ? $mya->agentId : db\get('inviter', 'r_invites', 'invitee=:uid', compact('uid')))) {
           $hA = r\acct($helper);
           $helper = "$hA->mainQid: $hA->fullName";
         }
         $helper = textFld(t('Helped by:'), t('Who gets the "inviter/helper" reward? Must be exactly one account.'), dft($helper)); //  + autocomplete()
-      } else $helper = item($mya->helper ?: t('N/A'), t('Helped by:'));
+      } else $helper = item($mya->helper ? $mya->helperA->fullName: t('N/A'), t('Helped by:'));
     }
   
     $activity = item(a\showActivity($mya), t('Activity:'));
@@ -497,7 +509,10 @@ function adminSummary() {
     $dob = $altSt = $altId = NULL;
 
     if (!$mya->co) {
-      if ($mya->superAdmin or !$mya->hasDob) $dob = rendA('dob', dateFld(BARE, '', dft($mya->hasDob ? $mya->dob : '') + autofill('off') + clas('noCalendar')));
+      if ($mya->superAdmin or !$mya->hasId) {
+        $dob = $mya->hasDob ? item(u\fmtDate($mya->dob, TRUE), BARE) : dateFld(BARE, '', autofill('off') + clas('noCalendar'));
+        $dob = rendA('dob', $dob);
+      }
       if ($mya->hasFid) {
         if ($dob) $altId = item($dob, t('DOB:'), '', clas('loneDob')); // dob is not shown directly, so show it here if no license is shown
       } else { 
@@ -507,7 +522,7 @@ function adminSummary() {
     }
     
     $suffix = submitTickle(1, t('Wait a day')) . submitTickle(2, t('2 days')) . submitTickle(7, '7') . submitTickle(30, '30') . submitTickle('', t('Auto')) . ' &nbsp; ' . submitTickle($mya->tickle ? 'NONE' : '', t('Save'), 'sm');
-    $tickle = dateFld(t('Tickle:'), [t('Followup Date'), t('When to follow up ("Auto" sets an automatic Welcome or Annual date)')], dft($mya->tickle) + w\suffix($suffix) + clas('noCalendar'));
+    $tickle = dateFld(t('Tickle:'), [t('Followup Date'), t('When to follow up ("Auto" sets an automatic Welcome or Annual date)')], dft($mya->tickle ?: '') + w\suffix($suffix) + clas('noCalendar'));
     $source = item($mya->source, t('Source:'));
   }
 

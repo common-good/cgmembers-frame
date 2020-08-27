@@ -77,9 +77,9 @@ class Acct {
     u\setDft($emailCode, r\cardCode(r\qid($uid)));
 
     foreach (ray('number region') as $k) unset($info[$k]);
-    foreach (ray('phone email pass fullName legalName flags state country community created login access emailCode cardCode') as $k) if (isset($$k)) $fix[$k] = $$k; // things we may have added or changed ($fix is never empty)
+    foreach (ray('phone email pass fullName legalName flags state country community created login access emailCode cardCode') as $k) if (isset($$k)) $info[$k] = $$k; // things we may have added or changed
 
-    $a->update($fix + $info); // this is a lot easier to do after saving the record
+    $a->update($info); // this is a lot easier to do after saving the record
     if (!$a->member) $a->setTask($co ? 'co' : 'person');
     
     unset($DBTX); // commit
@@ -204,11 +204,11 @@ class Acct {
       case 'legalNameDpy': return str_replace('_', ' ', $a->legalName); // for u\parseName of names like Jay di_Fiori
       case 'owns': return !$a->risk('rents');
       case 'creditLine': return -$a->floor;
-      case 'hasFid': return (nni($a->vsecure, 'federalId', '') !== '');
-      case 'hasId': return ($a->hasFid or nni($a->vsecure, 'altId', '') !== '');
-      case 'hasDob': return (nni($a->vsecure, 'dob', '') !== ''); // has to be 2 steps
+      case 'hasFid': return $a->hasVSecure('federalId');
+      case 'hasId': return ($a->hasFid or $a->hasVSecure('altId'));
+      case 'hasDob': return $a->hasVSecure('dob');
       case 'closed': return ($a->activated and !$a->ok); // data[newAccount] has new qid, if any
-      case 'hasBank': return $a->risk('hasBank');
+      case 'hasBank': return $a->hasVSecure('bankAccount');
       case 'lowSecurity': return u\n2ai(substr($a->created, -5, 5), 3); // result is 3 chars long
       case 'inviteCode': return $a->mainQid . $a->lowSecurity;
       case 'isCanonic': return ($a->id >= 0 and $a->id < CANONIC_ACCTS);
@@ -322,6 +322,9 @@ class Acct {
   
   /**
    * Set a relation field.
+   * Current account is expected to be r\acct($main, $other).
+   * @param assoc $info: fields and values to change (if relations record does not exist, create it)
+   *   $info may include bit names for the flags field
    */
   public function setRel($info) {
     $a = $this;
@@ -334,10 +337,10 @@ class Acct {
         u\setBit($flags, $k, $v);
         unset($info[$k]);
       }
-      u\preray(compact('flags'), $info);
+      $info += compact('flags');
     }
-    if ($reid = $a->relfld('reid')) {
-      return db\updateOrInsert('r_relations', $info + ['reid' => $reid], 'reid');
+    if ($reid = $a->relFld('reid')) {
+      return db\updateOrInsert('r_relations', $info + compact('reid'), 'reid');
     } else $a->newRelation($info + ray('other', $a->agentId));
   }      
   
@@ -437,7 +440,7 @@ class Acct {
     foreach (just(REL_FLDS . ' ' . REL_FLAGS, $info) as $k => $v) {$a->setRel($k, $v); unset($info[$k]);}
     if ($coFlds = just(CO_FLDS, $info)) {$a->setCo($coFlds); $info = justNOT(CO_FLDS, $info);}
 
-    if ($a->ok or $a->activated) $a->recordChanges($info); // record changes if member is (or was) active
+    if ($a->ok or $a->activated or nni($info, 'altId')) $a->recordChanges($info); // record changes if member is (or was) active or verifying ID (so we have a record of who verified it)
     foreach (just('hasBank', $info) as $k => $v) {$a->setRisk($k, $v); unset($info[$k]);}
 
     foreach (ray('photo thumb') as $k) if (isset($info[$k])) $a->updatePhoto($info, $k);
@@ -453,8 +456,11 @@ class Acct {
         $sFlds += $a->$special; // replace existing values with update info
       } else continue;
 
-      if ($special == 'vsecure' and $a->activated and $sFlds) foreach ($sFlds as $k => $v) {
-        if (!u\crypted('V', $v)) $sFlds[$k] = u\cry('V', $v); // hyper-encrypt when activated (when auto-access to EIN no longer needed). This and recordChanges are the ONLY places we do u\cry('V', ) !!
+      if ($special == 'vsecure' and $sFlds) {
+        if ($a->activated) foreach ($sFlds as $k => $v) {
+          if (!u\crypted('V', $v)) $sFlds[$k] = u\cry('V', $v); // hyper-encrypt when activated (when auto-access to EIN no longer needed). This and recordChanges are the ONLY places we do u\cry('V', ) !!
+        }
+        if (array_key_exists('bankAccount', $sFlds)) $a->setRisk('hasBank', (bool) $sFlds['bankAccount']);
       }
       self::$rs[$a->id]->$special = $sFlds;
       $sFlds = serialize($sFlds);
@@ -571,7 +577,7 @@ class Acct {
    */
   public function linkedDesc() {
     global $base_url;
-    $qid = "<a href=\"$base_url/change-account/acct=$this->mainQid&page=summary\">$this->mainQid</a>";
+    $qid = "<a href=\"$base_url/change-account/acct=$this->mainQid\">$this->mainQid</a>";
     return "$this->fullName ($qid)";
   }
   
@@ -773,12 +779,6 @@ EOF;
     foreach ([$a, $b] as $i => $ai) {
       $aj = $i == 0 ? $b : $a; // the other account
       $ai->update('jid', $aj->id);
-      /* NO! bankAccount is available only to regional admins
-         if (!$ai->o_hasBank and $aj->o_hasBank) {
-         $ai->update('bankAccount last4bank', $aj->o_bankAccount, $aj->o_last4bank);
-         $ai->setRisk('hasBank');
-         } */
-      //      $ai->setBit(B_JOINED);
       foreach ($fields as $k) $$k = nn($$k, 0) + ($ai->o($k) ?: 0);
     }
 		
@@ -898,7 +898,7 @@ EOF;
     if ($done and empty($nextStep)) {
       $a->update('task', '');
       if (!$a->member) {
-        r\tellCO(t('New Member (%name)', ['name' => $a->fullName] + $details));
+        r\tellCAdmin(t('New Member (%name)', ['name' => $a->fullName] + $details));
         $a->setBit(B_MEMBER);
         $a->update('tickle', now());
       }
@@ -971,7 +971,7 @@ EOF;
   }
 
   public function setTask($task) {$this->update('task stepsLeft', $task, $this->stepsLeft($task));}
-  public function stepIsDone($step) {return (bool) u\getBit($this->steps, r\allSteps()[$step]);}
+  public function stepIsDone($step) {return (bool) u\getBit($this->steps, nni(r\allSteps(), $step));}
   public function stepsDone($task) {
     foreach(ray(r\taskSteps($task)) as $step) if (!$this->stepIsDone($step)) return FALSE; 
     return TRUE;
@@ -1261,19 +1261,13 @@ o;
     if (!$web) $msg[] = 'you were short';
     $msg[] = $a->hasBank ? ($a->refill ? 'suggest higher target' : 'suggest refills') : 'how to fund';
 
-    /*		
-		$suggested0 = max(R_ACHMIN, (R_SUGGEST_BUMP * $a->minimum) ?: 100);
-		$args['suggested'] = u\fmtAmt($suggested0);
-		$args['_a1'] = $a->makeDo('min', $suggested0);
-    */	
-		
     $args = [];
     if ($a->secret) {
-      $args['_aSecret'] = $web ? w\atag('/settings/preferences') : $a->makeDo('nosecret');
+      $args['_aSecret'] = $web ? w\atag('/settings/preferences') : $a->doLink('nosecret');
       $msg[] = 'be not secretive';
     }
     if (!$a->debt and $a->floor < 0) {
-      $args['_aDebt'] = $web ? w\atag('/settings/preferences') : $a->makeDo('debtok');
+      $args['_aDebt'] = $web ? w\atag('/settings/preferences') : $a->doLink('debtok');
       $msg[] = 'try debt';
     }
 		
@@ -1374,31 +1368,27 @@ X;
   }
 
   /**
-   * Return a link to a "no signin required" action.
-   * Omit $life only for a forever link not specific to a particular account
-   * @param string $op: what to do (REQUIRED)
-   * @param numeric $v: an amount or identifier
-   * @param int $life: number of seconds until link expires (link gets invalidated after doing operation once)
+   * Return a "no signin required" action. Called directly from a\export and ->doCode (above).
+   * The account should be the recipient of the emailed link, if more than one account is involved.
+   * @param string $op: what to do (NULL means allow any no-sign-in operation)
+   * @param numeric $v: an amount, identifier
+   * @param int $expire: number of days until link expires
    * @param assoc $info: other parameters (sql, subs, etc.)
-   * @return <a> tag guts for a clickable link that will do something without requiring the member to sign in
-   *    makeDo0 returns just the url (for form action, for example)
    * @see also r\Web\rdo()
    */
-  function makeDo0($op, $v = NULL, $life = WEEK7_SECS, $info = []) {
-    //  extract($data = rayy(func_get_args()) ?: $data);
-    extract($info);
-    $info += compact('op');
-    if (!is_null($v)) $info += compact('v');
-    
-    if (nn($life)) {
-      $data = ray('uid expires data', $this->id, now() + $life, serialize($info));
-      $info = ray('op', db\insert('r_do', $data, 'doid')); // (preliminary) op is r_do record ID
-    } else $info += ['mo'=>rdoMonth()]; // remember month, in case we need to know when link was created
-
-    return BASE_URL . "/do/" . r\makeDoCode($info);
+  function doCode($op = NULL, $v = NULL, $expire = 90, $info = []) {
+    if (isset($expire)) $expire = now() + $expire * DAY_SECS;
+    $qid = $this->mainQid;
+    foreach (ray('op qid v expire') as $k) if (isset($$k)) $info[$k] = $$k;
+    return u\cryRay($info);
   }
-  function makeDo($op, $v = NULL, $life = WEEK7_SECS, $info = []) {
-    return 'a href="' . $this->makeDo0($op, $v, $life, $info) . '"';
+  
+  /**
+   * Return a link to a "no signin required" code.
+   * @return <a> tag guts for a clickable link that will do something without requiring the member to sign in
+   */
+  function doLink($op = NULL, $v = NULL, $expire = 90, $info = []) {
+    return w\atag(BASE_URL . "/do/" . $this->doCode($op, $v, $expire, $info));
   }
   
   /**
@@ -1788,6 +1778,7 @@ X;
     return join(', ', $result);
   }
   
+  private function hasVSecure($fld) {return (nni($this->vsecure, $fld, '') !== '');}
 
   public function isMe($uid) {return ($uid == $this->id or $uid == $this->jid);}
   public function codeHash() {return u\hash($this->cardCode());}
@@ -1853,7 +1844,6 @@ function setAcct($myid = '', &$sta = NULL) {
   global $mya;
   global $user;
   global $channel; 
-
   if (is_object($myid)) list ($myid, $agentId) = [$myid->id, $myid->agentId]; else $agentId = FALSE;
   if ($sta) $sta['uid'] = $myid;
 
@@ -1865,9 +1855,8 @@ function setAcct($myid = '', &$sta = NULL) {
 
   if ($myid) w\svar('myid', $myid); else $myid = w\svar('myid') ?: (w\svar('agentId') ?: 0);
   if (!$agentId and !$agentId = w\svar('agentId')) w\svar('agentId', $agentId = $myid);
-
   if ($sid = session_id()) db\update('sessions', ray('uid acct ssid', $agentId, $myid, $sid), 'ssid');
-  w\svar('agentId', $agentId); w\svar('myid', $myid); // redo in case 
+  w\svar('agentId', $agentId); w\svar('myid', $myid); // redo in case we're testing
   if (empty($user)) $user = obj('uid', $myid); else $user->uid = $agentId;
   if (!$myid) return $mya = NULL;
 

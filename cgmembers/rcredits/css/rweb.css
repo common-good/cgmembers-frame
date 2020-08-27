@@ -1,4 +1,5 @@
 /* CSS specific to Common Good members site */
+@import url("find-co.css"); /* Find Company and Buy Credit CSS, also used by our promo site */
 
 .debug {margin-bottom:8px;}
 .debug pre {margin:0; background-color:#fde8ec;}
@@ -424,8 +425,14 @@ body.page-partner blockquote {font-size:14px;}
 #frm-shouters .quote {display:block; width:90%; padding-left:35px; font-style:italic; color:#666666; font-weight:normal; text-indent:-7px;}
 #frm-shouters .quote::before,
 #frm-shouters .quote::after {content:"\""; padding:0 1px; color:silver;}
+#frm-shouters .rating {display:inline; margin:0 5px; font-weight:bold;}
+#frm-shouters .rating[rating="0"] {background-color:white; color:black;}
+#frm-shouters .rating[rating="1"] {background-color:yellow; color:black;}
+#frm-shouters .rating[rating="2"] {background-color:blue; color:white;}
+#frm-shouters .rating[rating="3"] {background-color:red; color:white;}
 
 /* Export */
+#frm-downloadmemberlist blockquote {font-size:100%;font-weight:bold;}
 .form-item-chimpSet, .form-item-chimpSet>.control-label {display:none;}
 
 /* Events */
@@ -711,7 +718,26 @@ body.page-partner blockquote {font-size:14px;}
 }
 
 /* Summary / Member Info / Account Info */
+#frm-summary #endorse {position: absolute; z-index:4; top: 200px; right: 0; bottom: 0; left: 0;}
+#frm-summary #endorse>div {
+  display:block;
+  width:80%;
+  height:50%;
+  margin:auto auto;
+/*  background-color:#eeeeff; */
+  background-image:url(../images/blue-sky5.jpg);
+  background-size:cover;
+  border:2px solid darkblue;
+  box-shadow: 3px 3px 7px #888888; -webkit-border-radius: 10px; border-radius: 10px;
+  padding:20px;
+}
+#frm-summary #endorse>div h2 {color:white;}
+#frm-summary #endorse>div a {color:silver;}
+#frm-summary #endorse div div {display:inline-block; position: relative; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align:center;}
+#frm-summary #endorse div div .btn-large {font-weight:normal; -webkit-border-radius: 30px; border-radius: 30px; margin-bottom:10px; color:white; padding:10px 20px; font-size:18px;}
+
 #frm-summary .form-item-special {background-color:lightyellow;}
+#frm-summary #edit-special .invite {font-weight:normal; color:#66cc00;}
 #frm-summary #edit-shortcuts a {display:block;}
 #frm-summary .form-item-left {float:left; width:50%;}
 #frm-summary .form-item-right {float:right; width:50%;}
@@ -728,7 +754,7 @@ body.page-partner blockquote {font-size:14px;}
 #frm-summary #intros div {text-align:left;}
 #frm-summary #email-details {background-color:lightyellow; padding:10px; margin:5px 0;}
 #frm-summary .admin label {min-width:100px;}
-#frm-summary .admin .control-data {width:auto; max-width:auto;}
+#frm-summary .admin .control-data {width:auto; max-width:none;}
 #frm-summary #left2.admin .control-data,
 #frm-summary #right2.admin .control-data {width:450px; max-width:500px;}
 /* #frm-summary #left2.admin #edit-details .control-data {width:auto; max-width:650px;}
@@ -783,26 +809,9 @@ body.page-partner blockquote {font-size:14px;}
 #coupons th, #coupons td {text-align:center;}
 #coupons span[data-toggle="popover"] {color:#2fa4e7;}
 
-/* Find Company and Buy Credit */
-.cmpy-list {display:table;}
-.cmpy-list .row {display:table-row;}
-.cmpy-list .well {padding:10px 35px;}
-
-.cmpy-list .cmpy-buttons {text-align:right; max-width:44px; vertical-align:middle;}
-.cmpy-list .cmpy-buttons a {display:block; font-size:9.5px; padding:1px 2px;}
-
-.cmpy-list .cmpy-img, .cmpy-list .cmpy-buttons, .cmpy-list .cmpy-name-does,
-.cmpy-list .cmpy-contact {display:table-cell; padding:10px 0; border-bottom:1px solid silver;}
-
-.cmpy-list .cmpy-img {display:table-cell; overflow:hidden; vertical-align: middle; margin:5px 5px 5px 20px; text-align:center;}
-.cmpy-list .cmpy-img img {overflow:hidden; width:64px; height:48px; max-width:64px; max-height:48px; object-fit:cover;}  /* max-width and max-height are for mobile / promo site */
-.cmpy-list .cmpy-name-does {width:300px; overflow:hidden; display:table-cell; vertical-align: middle; padding-left:10px;}
-.cmpy-list .cmpy-name {color:darkblue; padding-left:10px;}
-.cmpy-list .cmpy-does {padding-left:10px;}
-.cmpy-list .cmpy-contact {width:150px; overflow:hidden; padding-left:5px; vertical-align: middle; display:table-cell;}
-.cmpy-list .cmpy-ind-wrapper {margin-top:10px;}
-.cmpy-list .cmpy-ind {font-weight:bold; color:#004d00; font-size:150%; margin:30px 0 5px 0;}
-.company-listing {color:red; font-weight:bold;}
+/* Unsubscribe */
+#frm-unsubscribe #edit-why .checkbox {display:block;}
+#frm-unsubscribe #edit-why .checkbox i {color:silver;}
 
 /* Unsubscribe */
 #frm-unsubscribe #edit-why .checkbox {display:block;}
@@ -867,7 +876,7 @@ body.page-partner blockquote {font-size:14px;}
 #frm-verifyid .form-item-idtype {display:none;}
 
 /* Bank Info */
-#frm-connect #connectFields2 {margin:20px 0; background:silver; padding:10px;}
+#frm-connect #connectFields2 {margin:20px 0; background:##e0e0e0e0; padding:10px;}
 #frm-connect #connectFields2 .fieldset-wrapper {background:url(../images/check-hint.png) no-repeat right top; background-size:25%;}
 #frm-connect #edit-checkHint {position:absolute; left:850px;}
 #frm-connect #edit-checkHint img {width:300px;}
@@ -1248,6 +1257,8 @@ fieldset#dateRange #advanced {display:none;}
 #statements th, #statements td,
 #notices th, #notices td {text-align:left; vertical-align:top; border:1px solid silver;}
 .notice-date {vertical-align:top; margin-right:5px;}
+#statements th a, #notices th a {color:white;}
+#statements th a:hover, #notices th a:hover {color:silver; text-decoration:none;}
 
 /* Deposits */
 /* #frm-deposits {margin-left:50px;} */
@@ -1333,13 +1344,13 @@ fieldset#dateRange #advanced {display:none;}
 #frm-relations #edit-list .control-data,
 #relations {width:100%; max-width:100%;}
 #frm-relations #edit-list .control-label {display:none;}
-#frm-relations .form-type-submit {display:inline-block; width:400px;}
+#frm-relations .form-type-submit {display:inline-block;}
 #frm-relations .form-type-submit label {display:none;}
-#frm-relations #edit-go {margin-left:212px;}
+#frm-relations #edit-go {display:inline-block;}
 #frm-relations #edit-nextStep {margin-left:50px;}
 
-#frm-relations .form-item-new-person {display:inline-block;}
 #frm-relations .form-item-newPerson label {margin-left:2px; padding-left:0;}
+#frm-relations .form-item-newPerson .control-data>div {display:inline-block; margin-right:15px; width:300px;}
 #frm-relations .form-type-select {margin:0;}
 #frm-relations select {padding:0; height:24px; font-size:12px;}
 #frm-relations .form-type-select label,
@@ -1353,6 +1364,7 @@ fieldset#dateRange #advanced {display:none;}
 #frm-relations .rel-owner {width:68px;}
 #frm-relations .rel-permission {width:18%;}
 #frm-relations .rel-link {width:auto;}
+#frm-relations #relations td:last-child {width:40px; max-width:40px;}
 #frm-relations .highlight input {background-image:url(../images/icons/buttons-highlight.png);}
 
 /* Test Results form */

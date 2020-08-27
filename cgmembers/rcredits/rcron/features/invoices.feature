@@ -5,11 +5,11 @@ SO I can buy and sell stuff.
 
 Setup:
   Given members:
-  | uid  | fullName | risks   | floor | minimum | flags                           |*
-  | .ZZA | Abe One  | hasBank |  -250 |     500 | ok,confirmed,refill,debt,bankOk |
-  | .ZZB | Bea Two  |         |  -250 |     100 | ok,confirmed,debt               |
-  | .ZZC | Our Pub  |         |  -250 |       0 | ok,confirmed,co,debt            |
-  | .ZZE | Eve Five | hasBank |  -250 |     200 | bankOk                          |
+  | uid  | fullName | bankAccount | floor | minimum | flags                           |*
+  | .ZZA | Abe One  | USkk9000001 |  -250 |     500 | ok,confirmed,refill,debt,bankOk |
+  | .ZZB | Bea Two  |             |  -250 |     100 | ok,confirmed,debt               |
+  | .ZZC | Our Pub  |             |  -250 |       0 | ok,confirmed,co,debt            |
+  | .ZZE | Eve Five | USkk9000005 |  -250 |     200 | bankOk                          |
   And members have:
   | uid  | staleNudge |*
   | .ZZC |          4 |

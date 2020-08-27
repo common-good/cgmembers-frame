@@ -178,7 +178,7 @@ function setJoin($reid, $join) {
       $a1->join($a2);
       $msg = t('join success');
     } else { // requesting join
-      $_atag = $a2->makeDo('join', $main); // seek agreement
+      $_atag = $a2->doLink('join', $main); // seek agreement
       r\message($other, 'join accounts', ray('_atag name', $_atag, $a1->fullName));
       $msg = t('join request success');
     }
@@ -356,7 +356,7 @@ function badCard($qid, $code, $msg) {
     db\insert('r_bad', $info, 'created');
     $index = 'card marked bad';
   } else $index = 'attempted card already marked bad';
-  r\tellCO($index, $info + compact('msg'));
+  r\tellCAdmin($index, $info + compact('msg'));
 }
 
 /**
@@ -494,7 +494,7 @@ function tellAdmin($index, $subs = [], $uid = NULL, $attachment = NULL) {
  * @param int $uid: record ID of an account in the community to report about.
  *    If none, choose something reasonable, reporting to superAdmin as a last resort.
  */
-function tellCO($index, $subs = [], $uid = NULL) {
+function tellCAdmin($index, $subs = [], $uid = NULL) {
   global $mya;
   if (!$uid) $uid = $mya ? $mya->id : nni($subs, 'loserId');
   return tellAdmin($index, $subs, $uid);
@@ -769,9 +769,10 @@ function makeDevice($uid, $code = '', $ch = NULL) {
  * Package the return arguments and alert staff on certain errors.
  * @param mixed $message: the error message or an assoc of parameters
  * @param assoc $info: (optional) message substitutions and other info about transaction
+ * @return [ok, msg, info]
  */
 function txErr($message, $info = []) {
-  r\tellCO('failed transaction', $info + compact('message'));
+  r\tellCAdmin('failed transaction', $info + compact('message'));
   return is_array($message) ? $message : [FALSE, $message, $info];
 }
 
@@ -812,7 +813,7 @@ function noticeArgs($uid, $where = '0', $weekly = FALSE, $monthly = FALSE, $at =
     $q = db\q("SELECT message, created FROM r_notices WHERE uid=:uid AND ($where)", compact('uid'));
 
     while ($row = $q->fetch()) {
-      $date = ($weekly or $monthly) ? (strftime('%b&nbsp;%d', $row->created)) : R_BULLET;
+      $date = ($weekly or $monthly) ? R_BULLET . (strftime(' %b&nbsp;%d', $row->created)) : R_BULLET;
       $messages[] = "<tr><td class=\"notice-date\" stule=\"vertical-align:top; margin-right:5px;\">$date</td><td>$row->message</td></tr>"; // "stule" because CSP forbids inline online (rcron reverts it before emailing)
     }
     if (nn($messages)) $messages = join("\n", $messages); else return FALSE;
@@ -1226,9 +1227,10 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   if (!$a1->ok) return [FALSE, t('Requesting account is inactive.'), []];
   
   if (!$a1->confirmed and !$a1->isCanonic and !$a2->isCanonic and $a1->id != CGID and $a2->id != CGID) { // actor is not confirmed (but newbs can transact with bank and CG)
-    if ($a1->community != $a2->community or $channel != TX_POS) { // first tx must be in-person at home
-      if ($a1->helper != $a2->id) { // unless doing business with who invited you
-        if (!$a1->hasId or $a1->hasRisk('badSsn')) {
+    if ($a1->helper != $a2->id) { // unless doing business with who invited you
+      if (!$a1->hasId or $a1->hasRisk('badSsn')) {
+        $atHome = in(r\serverUid(), [$a1->community, $a2->community]) ? ($a1->community == $a2->community) : (substr($a1->zip, 0, 3) == substr($a2->zip, 0, 3) or u\earthDistance($a1->latitude, $a1->longitude, $a2->latitude, $a2->longitude) < 20);
+        if (!$atHome or $channel != TX_POS) { // first tx must be in-person at home
           return [FALSE, 'first at home', []];
         }
       }
@@ -1477,25 +1479,6 @@ function recurDesc($period, $periods = 1) {
   $p = array_search($period, ray(PERIODS));
   return $periods > 1 ? t('every %n %units', 'n units', $periods, ray(PERIODS_PLURAL)[$p]) : ray(PERIODLY)[$p];
 }
-  
-function makeDoCode($ray) {
-  $code = mb_substr(u\cry('P', serialize($ray)), strlen(CRYPT_FLAG));
-  if (test()) t\doCode($code); // must be on separate line (PHP bug)
-  return $code; // must be on separate line (PHP bug)
-}
-
-/**
- * Return
- * See also forms/rdo.inc
- */
-function doCode($code) {
-  if ($code == 'TESTDOCODE') $code = t\doCode();
-  $code = CRYPT_FLAG . $code;
-  try {
-    return u\crypted($code) ? unserialize(u\decry('P', $code)) : '';
-  } catch (\Exception $e) {return '';}
-}
-
 
 // Single line functions that need no explanation
 function serverUid($regionId = R_SERVER_ID) {return -1 - R_REGION_MAX * u\a2n($regionId);} // -u\a2n($regionId) - 1;}
@@ -1504,6 +1487,7 @@ function emailBody($key) {return str_replace('%body', emailTemplate($key), email
 function realCountry($country) {return db\get('name', 'r_countries', 'id=:country', compact('country'));}
 function realState($state, $country = R_COUNTRY_ID) {return db\get($country == US_COUNTRY_ID ? 'abbreviation' : 'name', 'r_states', 'id=:state and country_id=:country', compact('state', 'country'));}
 function stateNum($st) {return $st ? db\get('id', 'r_states', 'abbreviation=:st and country_id=:US_COUNTRY_ID', compact('st')) : $st;}
+function fullState($abbrev, $country = R_COUNTRY_ID) {return db\get('name', 'r_states', 'abbreviation=:abbrev and country_id=:country', compact('abbrev', 'country'));}
 function perm($bit) {return $bit - B_RELATED;}
 function foreignServer($uid) {return (r\uidRegion($uid) != serverUid());}
 function cgA() {return r\acct(CGID);}
@@ -1519,3 +1503,4 @@ function clubid() {return r\serverUid();} // temporarily use the region as the c
 function pic($flnm) {if (!is_dir(R_PICTURE_DIR)) mkdir(R_PICTURE_DIR); return R_PICTURE_DIR . $flnm;}
 function isBank($uid) {return ($uid == BANK_IN_ID or $uid == BANK_OUT_ID);}
 function foodFundId() {return db\get('uid', 'users', "name='foodfund'") ?: 0;}
+function referrer() {global $referrer; return test() ? nn($referrer) : basename(nni($_SERVER, 'HTTP_REFERER'));}

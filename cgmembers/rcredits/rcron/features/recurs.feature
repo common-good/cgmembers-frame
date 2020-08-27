@@ -5,10 +5,10 @@ SO I can save on memory and labor.
 
 Setup:
   Given members:
-  | uid  | fullName | address | city  | state | zip   | country | postalAddr | flags               | risks   | floor |*
-  | .ZZA | Abe One  | 1 A St. | Atown | AK    | 01000 | US      | 1 A, A, AK | ok,confirmed,bankOk | hasBank |   -20 |
-  | .ZZB | Bea Two  | 2 B St. | Btown | PA    | 01002 | US      | 2 B, B, BC | ok,confirmed,cAdmin |         |  -200 |
-  | .ZZC | Cor Pub  | 3 C St. | Ctown | CT    | 03000 | US      | 3 C, C, CT | ok,co,confirmed     |         |     0 |
+  | uid  | fullName | address | city  | state | zip   | country | postalAddr | flags               | bankAccount | floor |*
+  | .ZZA | Abe One  | 1 A St. | Atown | AK    | 01000 | US      | 1 A, A, AK | ok,confirmed,bankOk | USkk9000001 |   -20 |
+  | .ZZB | Bea Two  | 2 B St. | Btown | PA    | 01002 | US      | 2 B, B, BC | ok,confirmed,cAdmin |             |  -200 |
+  | .ZZC | Cor Pub  | 3 C St. | Ctown | CT    | 03000 | US      | 3 C, C, CT | ok,co,confirmed     |             |     0 |
   And transactions:
   | xid | created   | amount | payer | payee | purpose |*
   |   1 | %today-4m |    100 | .ZZB | .ZZA | loan    |

@@ -39,7 +39,7 @@ function formConnect($form, &$sta, $args = '') {
   //$bankAccountType = radiosFld(t('Type:'), '', required($mya->can(B_SAVINGS)), $typeOptions);
   $title = t('Banking Settings');
     
-  if ($hasBank = $mya->hasBank) {
+  if ($mya->hasBank) {
 //    if ($usa) list ($route, $bankAccount) = u\parseBankAccount(@$bankAccount);
     $remove = submi(t('Remove connection'), '', 'xs', ['parents' => ['remove']]);
     $bankAccount = item("xxxxxx$mya->last4bank &nbsp; &nbsp;", t('Account:'), '', w\suffix(\render($remove)));
@@ -53,9 +53,9 @@ function formConnect($form, &$sta, $args = '') {
       $subtext = NULL;
     } else { // during account setup
       $title = t('Getting Money In or Out');
-      $subtext = t('<p>Choose how you want to get money into (or out of) your %PROJECT Account. The first two options are available through %PROJECT only in Western Massachusetts, Ann Arbor Michigan, and Goshen Indiana.</p>');
-      $methodChoices = ray(t('I want to transfer funds to or from my bank account.,My employer will pay me through %PROJECT or I will sell goods and services through %PROJECT.,I live near a store that will put money on my card in exchange for cash.'));
-      $connect = radiosFld(t('Connect How:'), '', required(-1), $methodChoices);
+      $subtext = t('<p>Choose how you want to get money into (or out of) your %PROJECT Account. The third option is available through %PROJECT only in Western Massachusetts, Ann Arbor Michigan, Goshen Indiana, and Madison Wisconsin.</p>');
+      $methodChoices = ray(t('I want to transfer funds to and from my checking account (recommended).,My employer will pay me through %PROJECT or I will sell goods and services through %PROJECT and I do NOT want to connect a checking account.,I live near a store that will put money on my card in exchange for cash and I do NOT want to connect a checking account.'));
+      $connect = radiosFld(t('Connect How:'), '', required(0), $methodChoices);
       $chox = 3; // number of choices
     }
     $chox = hidFld($chox);
@@ -80,7 +80,7 @@ function formConnect($form, &$sta, $args = '') {
   }
   
   jsx('bank-prefs', $vs = ray('connectLabel saveLabel mindft chox', t('Connect'), t('Save'), R_MIN_DEFAULT, $chox));
-  return cgform(compact(ray($fields)) + w\setupFoot($hasBank ? $vs['saveLabel'] : $vs['connectLabel']));
+  return cgform(compact(ray($fields)) + w\setupFoot($mya->hasBank ? $vs['saveLabel'] : $vs['connectLabel']));
 }
 
 function formConnect_validate($form, &$sta) {
@@ -127,7 +127,8 @@ function formConnect_submit($form, &$sta) {
   extract(just('connect routingNumber bankAccount cashout autopay autoboxes refills target achMin saveWeekly chox', $sta['input'], NULL));
 
   if ($chox == 3 and $connect <> FUNDBY_BANK) $mya->update('fundBy', $connect == FUNDBY_CASH ? 'cash' : 'pay');
-  $connect = (!$remove and $connect == ($chox == 3 ? FUNDBY_BANK : 1));
+  $connect = $mya->hasBank ? !$remove : ($connect == ($chox == 3 ? FUNDBY_BANK : 1));
+  
   $minimum = $mya->minimum;
 
   if ($connect) { // wants bank or has bank, not removing
@@ -141,9 +142,9 @@ function formConnect_submit($form, &$sta) {
     $achMin = $mya->achMin ?: R_ACHMIN_DEFAULT;
   }
 
-  list ($hasBank, $refill) = [$connect, $connect and $refills];
+  $refill = ($connect and $refills);
   list ($cashoutW, $cashoutM) = [$connect and $cashout == 1, $connect and $cashout == 2];
-  $fields = 'hasBank refill cashoutW cashoutM minimum achMin saveWeekly';
+  $fields = 'refill cashoutW cashoutM minimum achMin saveWeekly';
   if ($bankAccount != 'no change') { // bank account changed. update and reverify.
     $fields .= ' bankAccount last4bank'; // avoid overwriting v-encrypted value
     $mya->setBit(B_BANKOK, FALSE);

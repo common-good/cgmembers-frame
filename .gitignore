@@ -1,10 +1,7 @@
 *~
 db/migrations/migrate.log
 log/capistrano.log
-cg.cnf
 cgLogs
 cgPhotoTemp
 config/config.json
 config/phinx.json
-
-/cgmembers/rcredits/forms/OLDagreement.inc

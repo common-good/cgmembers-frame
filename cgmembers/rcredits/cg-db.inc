@@ -82,10 +82,10 @@ function exists($table, $where = '1', $subs = []) {return db\get(1, $table, $whe
  * (replaces the functionality of drupal_write_record, which does not update bigint fields properly)
  * @param string $table: table name
  * @param assoc $info: data to update (must include record key)
- * @param string $key: record key name (must not be empty)
+ * @param string $key: record key name (defaults to 'id')
  * @return: TRUE (FALSE on failure)
  */
-function update($table, $info, $key) {
+function update($table, $info, $key = 'id') {
   logSql(compact(ray('table info key')));
 
   if (!isset($info['modified']) and hasField($table, 'modified')) {
@@ -140,10 +140,10 @@ function insert($table, $info, $key = 'id') {
  * Insert or update a database record 
  * @param string $table: table name
  * @param assoc $info: data to update (must include record key)
- * @param string $key: record key name (must not be empty)
+ * @param string $key: record key name (defaults to 'id')
  * @return: if inserting, then the id of the inserted record, else TRUE (FALSE on failure)
  */
-function updateOrInsert($table, $info, $key) {
+function updateOrInsert($table, $info, $key = 'id') {
   if (nni($info, $key) and db\exists($table, "$key=:$key", [$key => $info[$key]])) {
     return db\update($table, $info, $key);
   } else {
@@ -161,6 +161,8 @@ function rows($fields, $table, $where = '1', $subs = [], $labeled = TRUE) {
   if (!$labeled) foreach ($res as $i => $one) $res[$i] = array_values((array) $one);
   return $res;
 }
+
+function row($table, $where = '1', $subs = []) {return rows('*', $table, $where, $subs);}
 
 /**
  * Return an array of matching data.

@@ -10,9 +10,11 @@ use CG as r; // get rid of this
 use CG\DB as db;
 use CG\Util as u;
 use CG\Web as w;
+use CG\Testing as t;
 
-define ('URL_CHARS', 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-_~'); // 66 valid URLchars
-define ('HEX_CHARS', '0123456789abcdef');
+const URL_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-_~'; // 66 valid URLchars
+const HEX_CHARS = '0123456789abcdef';
+const MOBILE_REGEX = '/\b(?:a(?:ndroid|vantgo)|b(?:lackberry|olt|o?ost)|cricket|docomo|hiptop|i(?:emobile|p[ao]d)|kitkat|m(?:ini|obi)|palm|(?:i|smart|windows )phone|symbian|up\.(?:browser|link)|tablet(?: browser| pc)|(?:hp-|rim |sony )tablet|w(?:ebos|indows ce|os))/i'; // thanks to Justin DoCanto et al.: https://stackoverflow.com/questions/4117555/simplest-way-to-detect-a-mobile-device-in-php
 
 // Some useful Drupal db methods: fetchAllKeyed(m, n), fetchAssoc and fetchAllAssoc(fld), fetchObject and fetchAll(), fetchCol(n), fetchField()
 
@@ -79,29 +81,11 @@ function badDob(&$dob, $co) {
 }
 
 /**
- * Say whether the given SSN is bad.
- * @param string $ssn: the social security number to test (RETURNED stripped of all but the digits)
- * @param int $dob: the person's birth date (null if the ssn is actually an EIN)
- * @return an error index if the SSN is bad, else FALSE
- * From the SSA site:
-     We do not assign a Social Security number with the first three digits of: 000, 666, 900 - 999.
-     Nor do we assign Social Security number with "00" in the fourth and fifth position, 
-     or "0000" in the last four positions of the numbers.
-     Additionally, prior to June 25, 2011, we had never assigned a Social Security number with the first three digits of: 000, 666, 772 - 799, 800 - 899, 900 - 999.
+ * Say whether the given SSN is the wrong length (since they are random, that's all we can tell).
  */
 function badSsn(&$ssn, $dob = '') {
-//  if (in_array($ssn, ray('5551234567 777777777 888888888 999999999'))) return FALSE; // test numbers
-  if (strlen(u\digits($ssn)) != 9) $bad = TRUE; // zap all but the digits (call by ref)
-  if (FALSE AND nn($dob)) { // ssn (not ein) -- We once got a valid SSN that violated these rules, so skip this.
-    $c1 = substr($ssn, 0, 1);
-    $s1 = substr($ssn, 0, 3);
-    $s2 = substr($ssn, 3, 2);
-    $s3 = substr($ssn, 5);
-    if ($c1 == '9' or $s1 == '000' or $s1 == '666' or $s2 == '00' or $s3 == '0000') $bad = TRUE;
-    if (substr($ssn, 0, 8) == '98765432') $bad = TRUE; // advertising numbers, according to Wikipedia
-    if ($dob < strtotime('25Jun2011')) if ($c1 == '8' or ($c1 == '7' and $s1 > '771')) $bad = TRUE;
-  }
-  return nn($bad) ? (nn($dob) ? 'bad ssn' : 'bad federal id') : FALSE;
+  if (strlen(u\digits($ssn)) == 9) return FALSE;
+  return nn($dob) ? 'bad ssn' : 'bad federal id';
 }
 
 function ssnName($v, &$firstname = '', &$middlename = '', &$lastname = '') {
@@ -302,11 +286,11 @@ function tribs($ray) {
 }
 
 /**
- * URL encode an arbitrary non-empty ascii string compactly.
+ * URL encode an arbitrary ascii string compactly.
  * Note that this uses non-mb functions, to encode bytes rather than characters.
  */
 function urlify($s) {
-  u\EXPECT($s !== '', 'empty string in urlify');
+  if ($s === '') return '';
   $len = strlen($s = bin2hex($s0 = $s));
   for ($i = 0, $result = ''; $i < $len - 2; $i += 3) $result .= x32a2(substr($s, $i, 3));
   if ($taili = $len % 3) $result .= '~' . substr($s, -$taili);
@@ -320,6 +304,7 @@ function urlify($s) {
  * @return string: the original un-encoded string (FALSE if error)
  */
 function deurlify($s) {
+  if ($s === '') return '';
   $s0 = $s;
   list ($s, $tail) = explode('~', $s . '~');
   for ($i = 0, $res = ''; $i < strlen($s) - 1; $i += 2) $res .= a22x3(substr($s, $i, 2));
@@ -751,6 +736,25 @@ function alterImg($img0, $w, $h, $x1 = 0, $y1 = 0, $cropW = 0, $cropH = 0, $angl
 define('CRYPT_FLAG', '`!'); // flag start of encrypted data (add a single type letter)
 
 /**
+ * encrypt an array for use in URLs
+ */
+function cryRay($ray) {
+  $res = substr(u\cry('P', serialize($ray)), strlen(CRYPT_FLAG));
+  if (test()) t\doCode($res); // must be on separate line (PHP bug)
+  return $res;
+}
+
+/**
+ * decrypt a URL array.
+ */
+function decryRay($code) {
+  if ($code == 'TESTDOCODE') $code = t\doCode(); // test()
+  try {
+    return unserialize(u\decry('P', CRYPT_FLAG . $code));
+  } catch (\Exception $e) {return '';}
+}
+
+/**
  * Perform the given type of encryption (or decryption).
  * @param char $type: purpose of the encryption / decryption, as follows (each has its own methods, password, and IV):
  *   R regional admin private key for very secure data (the key is encrypted on the admin's flash drive)
@@ -768,7 +772,7 @@ define('CRYPT_FLAG', '`!'); // flag start of encrypted data (add a single type l
 function cry($type, $data, $de = FALSE, $pwInstead = '') {
 	global $cryHows, $mya;
 	
-	if ($data === '') return $data; // no point encrypting/decrypting nothing
+	if ($data === '' or $data === NULL) return $data; // no point encrypting/decrypting nothing
 	
 	if ($de) {
     u\EXPECT(u\starts($data, CRYPT_FLAG . $type), 'bad crypted');
@@ -1622,3 +1626,4 @@ function routingOk($r) {return (preg_match('/^(|[0-9]{9})$/', $r) and db\exists(
 function bankAcctOk($ba) {return preg_match('/^[0-9]{3,17}$/', $ba);}  // {3,20} ? Dwolla says 3-17
 function joins(&$s, $m, $other = '') {return $s = (empty($s) ? '' : "$s$m") . $other;}
 function padRay($ray, $n, $fill = '') {for ($i = 0; $i < $n; $i++) $ray[] = $fill; return $ray;}
+function isMobile() {return preg_match(MOBILE_REGEX, $_SERVER['HTTP_USER_AGENT']);}

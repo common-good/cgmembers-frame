@@ -206,41 +206,6 @@ X;
 }
 
 /**
- * Update relations
- * @param array $updates: list of records to update, indexed by reid
- *   each element is an associative array of new values, keyed by field name
- *   if a record is to be updated to all zeros, it is simply deleted.
- * @return string: a report of what got updated
- */
-function updateRelations($updates) {
-///     debug("updateRelations(" . print_r($updates, true) . ")");
-  $myid = r\acct()->id;
-  $report = '';
-  foreach ($updates as $reid => $data) {
-    extract(just('main other fullName permission flags', $data['original'], NULL));
-    $wasEmpty = (!$permission and !$flags);
-    unset($data['original']);
-    extract(just('permission flags', $data));
-//    foreach (ray('employee owner customer draws') as $k) u\setBit($flags, $k, @$data[$k]);
-    foreach (ray('employee owner customer draw') as $k) u\setBit($flags, $k, nni($data, $k)); // drawS?
-    if (!u\getBit($flags, 'customer')) u\setbit($flags, 'autopay', FALSE);
-
-    if (!$permission and !$flags and !$wasEmpty) { // empty now and wasn't before
-      db\del('r_relations', compact('reid'));
-      $msg = 'deleted relation';
-    } else {
-      $a = r\acct($main, $other);
-      if ($data) $a->setRel($data); // db\update('r_relations', $data + $reidSub, 'reid');
-      if (nni($data, 'draw')) r\acct($other)->setBit(B_DRAWS);
-      $msg = 'updated relation';
-    }
-    $otherName = $fullName;
-    $report .= tr($msg, compact('otherName')) . '<br>';
-  }
-  return $report;
-}
-
-/**
  * Undo the given transaction.
  * Situations:
  *     I paid someone (byMe):            REVERSE (invoice)
@@ -261,7 +226,7 @@ function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
 
   $tx = r\Tx::lastTx([$mya->id], "xid=:xid AND $where", compact('xid') + $subs);
   if (empty($tx)) return [FALSE, 'undo no match', $subs];
-  if (!$force and $err = $tx->noUndo($subs)) return [FALSE, $err, $subs];
+  if (!$force and $err = $tx->noUndo($subs)) return $err;
 
   $byMe = $mya->isMe($tx->actorId);
   $toMe = $tx->getAmount($mya) > 0;
@@ -357,7 +322,7 @@ function payInvoice($nvid) {
         extract($res);
         db\update('r_shares', ray('shid shares pending when', $shid, -round($amount / $price), 0, now()), 'shid');
         if (db\sum('shares', 'r_shares', compact('vestid')) <= 0) db\q('UPDATE r_shares SET sold=:NOW WHERE vestid=:vestid', compact('vestid'));
-      } else r\tellCo(t('Invoice payment marked as "for investment (repayment)" has no corresponding SELL request in shares table.'), $inv, $payeeA);
+      } else r\tellCAdmin(t('Invoice payment marked as "for investment (repayment)" has no corresponding SELL request in shares table.'), $inv, $payeeA);
     }
   }
   unset($DBTX);
@@ -625,14 +590,14 @@ function sendNotifications($type, $tx, $shortfall) {
         $notice = 'new payment';
         $did = 'credited';
       }
-    } else {
-      $notice = 'new charge';  // I charged other
+    } else { // I charged other
+      $notice = 'new charge';
       $did = 'charged';
     }
     break;
   case 'payment':
-    if (!$toMe) {
-      $notice = 'new payment';  // I made a payment to other
+    if (!$toMe) { // I made a payment to other
+      $notice = 'new payment';
       $did = 'paid';
     } else {
       $notice = 'new charge';  // I charged other
@@ -640,11 +605,11 @@ function sendNotifications($type, $tx, $shortfall) {
     }
     break;
   case 'invoice payment':
-    if (!$toMe) {
-      $notice = 'new payment';  // I made a payment to other
+    if (!$toMe) { // I made a payment to other
+      $notice = 'new payment';
       $did = 'paid';
-    } else {
-      $notice = 'new charge';  // I charged other -- I don't think this should happen.  JVER
+    } else { // I charged other -- I don't think this should happen.  JVER
+      $notice = 'new charge';
       $did = 'charged';
     }
     break;
@@ -660,7 +625,7 @@ function sendNotifications($type, $tx, $shortfall) {
     } elseif (!$byMe and $toMe) {
       $notice = 'payment';  // Other made payment to me, reverse is refunding
       $did = 'paid';
-    } else { /*!byMe and !$toMe*/
+    } else { // !byMe and !$toMe
       $notice = 'dispute';  // Other charged me, reversing requires dispute
       $did = 'disputed';
     }
@@ -673,10 +638,10 @@ function sendNotifications($type, $tx, $shortfall) {
   $args = $tx->reportArgs($tx->actorA, TRUE, $shortfall);
   if ($notice == 'new payment' and $otherA->co) { // not "new charge" (the most common); payment at payer's initiative
     $notice = 'new payment linked';
-    $args['_aPayLink'] = $otherA->makeDo('addr', $tx->actorId, 0); // link to address, so merchant can ship or nonprofit can thank
+    $args['_aPayLink'] = $otherA->doLink('addr', $tx->actorId); // link to address, so merchant can ship or nonprofit can thank
   }
 
-  if ($otherA->id < 0 or $otherA->id > CANONIC_ACCTS) r\notify($tx->otherId, $notice, $args);  // no notifications to canonic accounts
+  if (!$otherA->isCanonic) r\notify($tx->otherId, $notice, $args);  // no notifications to canonic accounts
   $msg = 'report tx';
 //  return r\txErr($msg, $tx->reportArgs($tx->actorA, TRUE, $shortfall) + compact(ray('msg did')));
   return [TRUE, $msg, $args + compact(ray('msg did'))];
@@ -824,7 +789,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
   /* $payeeA->update('lastTx', [$nvid, $payer - $payee, round(-$amount, 2), $created, 'inv']); */
 
   if ($status == TX_PENDING) {
-    $link = $payeeA->makeDo('inv', $nvid); // link to pay/deny
+    $link = $payerA->doLink('inv', $nvid); // link to pay/deny
     //$payerA->update(ray('lastTx', array($nvid, $payee - $payer, round($amount, 2), $created, 'inv')));
     $subs += ray('_a1 reply email phone', $link, $payee, $payeeA->email, u\fmtPhone($payeeA->phone));
     r\message($payer, 'new invoice', $subs); // tell other party by email about this invoice

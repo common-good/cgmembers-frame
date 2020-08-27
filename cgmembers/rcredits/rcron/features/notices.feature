@@ -35,13 +35,9 @@ Scenario: a member gets some weekly notices
   | .ZZB | %today  |    0 | You stone. |
   And it's time for "weekly"
   When cron runs "notices"
-#  Given variable "balance" is "balance notice" with subs:
-#  | balance | savings | rewards |*
-#  | $0      | $0      | $0      |
   Then we email "notices" to member "b@" with subs:
   | fullName | shortName | unit | range               | yestertime | region | messages                            | balance  | savings | ourEmail      |*
-  | Bea Two  | beatwo    | week | the week of %dmy-1w | %dmy-1w    | new    | %md<x>You rock.<br>%md<x>You stone. | $0       | $0      | %whatever@rCredits.org |
-#  | Bea Two  | beatwo    | week | the week of %dmy-1w | %dmy-1w    | new    | %md<x>You rock.<br>%md<x>You stone. | @balance | 5.0    | %whatever@rCredits.org |
+  | Bea Two  | beatwo    | week | the week of %dmy-1w | %dmy-1w    | new    | * %md<x>You rock.<br>* %md<x>You stone. | $0       | $0      | %whatever@rCredits.org |
   And notices:
   | uid  | created | sent   | message    |*
   | .ZZB | %today  | %today | You rock.  |

@@ -643,27 +643,7 @@ function system_menu() {
     'weight' => -1,
   );
 
-  foreach (list_themes() as $theme) {
-    $items['admin/appearance/settings/' . $theme->name] = array(
-      'title' => $theme->info['name'],
-      'page arguments' => array('system_theme_settings', $theme->name),
-      'type' => MENU_LOCAL_TASK,
-      'access callback' => '_system_themes_access',
-      'access arguments' => array($theme),
-      'file' => 'system.admin.inc',
-    );
-  }
-
   // Modules.
-  $items['admin/modules'] = array(
-    'title' => 'Modules',
-    'description' => 'Extend site functionality.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('system_modules'),
-    'access arguments' => array('administer modules'),
-    'file' => 'system.admin.inc',
-    'weight' => -2,
-  );
   $items['admin/modules/list'] = array(
     'title' => 'List',
     'type' => MENU_DEFAULT_LOCAL_TASK,
@@ -685,15 +665,6 @@ function system_menu() {
     'title' => 'Uninstall',
     'access arguments' => array('administer modules'),
     'type' => MENU_VISIBLE_IN_BREADCRUMB,
-    'file' => 'system.admin.inc',
-  );
-
-  // Configuration.
-  $items['admin/config'] = array(
-    'title' => 'Configuration',
-    'description' => 'Administer settings.',
-    'page callback' => 'system_admin_config_page',
-    'access arguments' => array('access administration pages'),
     'file' => 'system.admin.inc',
   );
 
@@ -1691,13 +1662,6 @@ function blocked_ip_load($iid) {
 }
 
 /**
- * Menu item access callback - only admin or enabled themes can be accessed.
- */
-function _system_themes_access($theme) {
-  return user_access('administer themes') && drupal_theme_access($theme);
-}
-
-/**
  * @defgroup authorize Authorized operations
  * @{
  * Functions to run operations with elevated privileges via authorize.php.
@@ -1950,17 +1914,6 @@ function system_add_module_assets() {
         drupal_add_js($script, array('every_page' => TRUE));
       }
     }
-  }
-}
-
-/**
- * Implements hook_custom_theme().
- */
-function system_custom_theme() {
-  print_r(debug_backtrace());
-  if (user_access('view the administration theme') && path_is_admin(current_path())) {
-//  if (path_is_admin(current_path())) { // cgf 3/4/2017
-    return variable_get('admin_theme');
   }
 }
 
@@ -3092,12 +3045,6 @@ function system_action_info() {
       'configurable' => TRUE,
       'triggers' => array('any'),
     ),
-    'system_send_email_action' => array(
-      'type' => 'system',
-      'label' => t('Send e-mail'),
-      'configurable' => TRUE,
-      'triggers' => array('any'),
-    ),
     'system_block_ip_action' => array(
       'type' => 'user',
       'label' => t('Ban IP address of current user'),
@@ -3111,140 +3058,6 @@ function system_action_info() {
       'triggers' => array('any'),
     ),
   );
-}
-
-/**
- * Return a form definition so the Send email action can be configured.
- *
- * @param $context
- *   Default values (if we are editing an existing action instance).
- *
- * @return
- *   Form definition.
- *
- * @see system_send_email_action_validate()
- * @see system_send_email_action_submit()
- */
-function system_send_email_action_form($context) {
-  // Set default values for form.
-  if (!isset($context['recipient'])) {
-    $context['recipient'] = '';
-  }
-  if (!isset($context['subject'])) {
-    $context['subject'] = '';
-  }
-  if (!isset($context['message'])) {
-    $context['message'] = '';
-  }
-
-  $form['recipient'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Recipient'),
-    '#default_value' => $context['recipient'],
-    '#maxlength' => '254',
-    '#description' => t('The email address to which the message should be sent OR enter [node:author:mail], [comment:author:mail], etc. if you would like to send an e-mail to the author of the original post.'),
-  );
-  $form['subject'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Subject'),
-    '#default_value' => $context['subject'],
-    '#maxlength' => '254',
-    '#description' => t('The subject of the message.'),
-  );
-  $form['message'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Message'),
-    '#default_value' => $context['message'],
-    '#cols' => '80',
-    '#rows' => '20',
-    '#description' => t('The message that should be sent. You may include placeholders like [node:title], [user:name], and [comment:body] to represent data that will be different each time message is sent. Not all placeholders will be available in all contexts.'),
-  );
-  return $form;
-}
-
-/**
- * Validate system_send_email_action form submissions.
- */
-function system_send_email_action_validate($form, $form_state) {
-  $form_values = $form_state['values'];
-  // Validate the configuration form.
-  if (!valid_email_address($form_values['recipient']) && strpos($form_values['recipient'], ':mail') === FALSE) {
-    // We want the literal %author placeholder to be emphasized in the error message.
-    form_set_error('recipient', t('Enter a valid email address or use a token e-mail address such as %author.', array('%author' => '[node:author:mail]')));
-  }
-}
-
-/**
- * Process system_send_email_action form submissions.
- */
-function system_send_email_action_submit($form, $form_state) {
-  $form_values = $form_state['values'];
-  // Process the HTML form to store configuration. The keyed array that
-  // we return will be serialized to the database.
-  $params = array(
-    'recipient' => $form_values['recipient'],
-    'subject'   => $form_values['subject'],
-    'message'   => $form_values['message'],
-  );
-  return $params;
-}
-
-/**
- * Sends an e-mail message.
- *
- * @param object $entity
- *   An optional node object, which will be added as $context['node'] if
- *   provided.
- * @param array $context
- *   Array with the following elements:
- *   - 'recipient': E-mail message recipient. This will be passed through
- *     token_replace().
- *   - 'subject': The subject of the message. This will be passed through
- *     token_replace().
- *   - 'message': The message to send. This will be passed through
- *     token_replace().
- *   - Other elements will be used as the data for token replacement.
- *
- * @ingroup actions
- */
-function system_send_email_action($entity, $context) {
-  if (empty($context['node'])) {
-    $context['node'] = $entity;
-  }
-
-  $recipient = token_replace($context['recipient'], $context);
-
-  // If the recipient is a registered user with a language preference, use
-  // the recipient's preferred language. Otherwise, use the system default
-  // language.
-  $recipient_account = user_load_by_mail($recipient);
-  if ($recipient_account) {
-    $language = user_preferred_language($recipient_account);
-  }
-  else {
-    $language = language_default();
-  }
-  $params = array('context' => $context);
-
-  if (drupal_mail('system', 'action_send_email', $recipient, $language, $params)) {
-    watchdog('action', 'Sent email to %recipient', array('%recipient' => $recipient));
-  }
-  else {
-    watchdog('error', 'Unable to send email to %recipient', array('%recipient' => $recipient));
-  }
-}
-
-/**
- * Implements hook_mail().
- */
-function system_mail($key, &$message, $params) {
-  $context = $params['context'];
-
-  $subject = token_replace($context['subject'], $context);
-  $body = token_replace($context['message'], $context);
-
-  $message['subject'] .= str_replace(array("\r", "\n"), '', $subject);
-  $message['body'][] = $body;
 }
 
 function system_message_action_form($context) {

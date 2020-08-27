@@ -1,3 +1,185 @@
+2020-08-26 feature/solar1-2
+. added pid parameter to solar1 signup
+. solar1 signup now adds people to Salesforce
+. crashes in PHP window on dev now report caller
+. fixed bug in tx undo error reporting
+. fixed bug in acct::hasVSecure by not encrypting (or decrypting) NULL
+. fixed bug that miscalculated permissions of agent (preventing tx reversals for example)
+
+2020-08-20 feature/recurring-next
+. fixed bug in recurring that showed wrong "Next" date
+. suppress "Done!" message for permission changes on relations page
+. changed endorsement quote to be an area field with maxlen 4096
+. added some security checks for output with echo, die, and exit
+
+2020-08-20 feature/relations-ajax
+. toggles and permissions on relations page now use ajax
+. superAdmin can create transactions dated in the past
+. acct::hasBank now looks at acct::bankAccount instead of risks bit and risks bit is set automatically
+. invitation example now just suppresses CSP style check, not all of CSP
+. fixed bug that delete bank connection upon changing settings
+
+2020-07-31 feature/bizlists
+. added a test for authcode
+. separated out find-co.css for use on promo site
+
+2020-07-25 feature/misc
+. fixed message for when maxlen exceeded
+. fixed bug that permitted typing past maxlen on textarea fields
+. improved error message for when signed-in user tries to sign in
+. setting of altId is always recorded as a change, so we know who approved it (security accountability)
+. using header instead of drupal_set_header, to fix bug in cgbutton.inc that failed to show what button would look like
+. changed first-at-home rule to apply only if SSN check failed -- then must be close to home and in-person
+. added u\isMobile() function
+. added full-year statement links (for calendar year -- fiscal year works, but has no link)
+. now gives a better message for no-longer-valid invoice link
+. avoid unnecessary warning for undefined array index in help.inc
+. fixed several bug on invite page (thanks to Peg Hall)
+. fixed rare bug on relations page (typo)
+. improved selection of shouters for admins
+. for DOB field on mobile, a long press not converts the field from date field to text field
+. added referrer function so tests can detect what page user actually wanted
+. improved formatting in invitations
+. signout in tests is now more thorough
+
+2020-07-11 feature/export-makeover
+. revised admin export member spreadsheet feature to use new rdo format and fewer fields (switching from chimp to mailerlite)
+
+2020-07-09 feature/rdo-makeover
+. reworked doCodes and invoicing for greater consistency, ease, and security
+. eliminated use of r_do table!
+. endorse plea no longer shown for partial members (active accounts with no photo)
+. fixed bug that did delayed payments/charges immediately
+. fixed bug that scrambled company category choice list
+. fixed a couple warnings about undefined variables
+. fixed bug in testing that failed to clear dosay files
+
+2020-07-08 feature/findco-tight
+. added "nearby" checkbox to findco page
+
+2020-07-08 feature/redirect-new
+. fixed bug that gave error on direct access to new.commongood.earth when signed out
+
+2020-07-08 feature/create-migration
+. DOS batch file to create migrations according to a model
+
+2020-07-07 feature/renew-backing
+. made encryption of data for use in URLs more consistent (replaced makeDoCode and doCode with u\cryRay and u\decryRay)
+. db\insert, db\update, and db\updateOrInsert all now default to key='id'
+. members now receive an annual email asking them to renew their backing (it renews automatically if they don't act)
+. cleaned up top of cron.inc
+. added a couple invite reminders
+. added tracking to annual emails and periodic notices
+
+. deleted unused Drupal files:
+  - *.install
+  - mail.inc
+  - user.admin.inc
+. deleted unused Drupal functions:
+  - user_authenticate
+  - user_external_login_register
+  - user_user_operations_unblock
+  - user_user_operations_block
+  - user_multiple_role_edit
+  - user_block_user_action
+  - user_help
+  - user_field_info_alter
+  - user_field_extra_fields
+  - user_external_load
+  - user_login_finalize
+  - user_load_by_mail
+  - user_load_by_name
+  - user_validate_picture
+  - user_role_permissions
+  - user_login_name_validate
+  - user_login_default_validators
+  - user_login_final_validate
+  - user_mail (and related functions)
+  - user_role_load (and related functions)
+  - user_filters
+  - user_roles
+  - user_login (dies)
+  - system_mail
+  - system_send_email_action
+  - system_send_email_action_form
+
+2020-07-06 feature/inv-security
+. fixed a bug in invoicing that could have allowed anyone to approve payment of an invoice
+
+2020-07-06 feature/misc3
+. changed w\changeWho to report hack when someone tries to change to an account they don't have permission for
+. improved appearance of endorse popup on Summary page
+. improved functioning of shouters list for admins
+. change-account now allows page arguments
+. made some array initializations explicit
+
+2020-07-05 feature/misc3
+. fixed errors from several previous features
+. renamed tellCo to tellCAdmin
+. fixed default for function u\padRay
+. added a check in ajax.inc for cross-site call
+. improvements to shouters lists
+. gave admin view of DOB if not active yet
+. improved Endorse button appearance in emails
+. deleted some unused Drupal functions and files:
+  - block_menu
+  - _menu_site_is_offline
+  - _block_themes_access
+  - menu_form_node_form_alter
+  - system_admin_config_page
+  - system_modules
+  - user_file_download
+  - hook_query_TAG_alter
+  - _system_themes_access
+  - system_custom_theme
+  - hook_user_cancel_methods_alter
+  - hook_user_view
+  - user_search_access
+  - user_search_execute
+  - user_account_form
+  - user_block_view
+  - template_preprocess_user_picture
+  - user_view_access
+  - user_edit_access
+  - user_cancel_access
+  - user_menu_site_status_alter
+  - user_role_edit_access
+  - user_user_operations
+  - user_admin_account
+  - user_build_filter_query
+  - user_register_form
+  - user_save
+  - user_delete
+  _ user_cancel
+
+  - user.pages.inc :
+  - block.test
+  - user.test
+  - block.admin.inc:
+  - modules/user/*.tpl
+
+2020-07-03 feature/push-endorse
+. deleted some unused things from .gitignore and rcredits/.gitignore
+. fixed a couple undefined index warnings
+. fixed bug that kept text button from showing as button on cgbutton page
+. added bullets to weekly and monthly email statements
+. added ratings to shouters and a way for admin to bump them easily or edit the quote
+. added a request for a raw list of shouts to use on promo site
+. fixed text on connect page
+. clarified endorse page
+. fixed expiration bug in rdo
+. fixed bug that disallowed amounts over 100 on stepup page (for non-percents)
+. added popup endorse button on Summary page
+. fixed bug that suppressed DOB on Summary page for non-super admins
+. added endorse or invite button to notices
+. added highlighting to help developers when CSP catches something
+
+2020-06-30 hotfix/export-firrstname
+. added firstname and lastname to mailchimp export
+
+2020-06-30 hotfix/invite-link
+. changed invite link from promo site to member site (bug fix)
+
 2020-06-27 feature/move-change-uid
 . moved changeUid function to admin and made deleteUid work when account is current
 . suppressed submit-on-Enter on Summary page
