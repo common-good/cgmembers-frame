@@ -9,10 +9,12 @@ use CG\Db as db;
 require_once R_ROOT . '/forms/signup.inc'; // for validation
 require_once R_ROOT . '/pdf.class';
 
-define('SF_URL', 'https://webto.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8');
-define('CRM_URL', 'SMT solar customer management URL');
-define('BILL_DIR', R_PICTURE_DIR . 'electric-bills');
-define('CONTRACT_DIR', R_PICTURE_DIR . 'contracts');
+const SF_URL = 'https://webto.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8';
+const CRM_URL = 'SMT solar customer management URL';
+const BILL_DIR = R_PICTURE_DIR . 'electric-bills';
+const CONTRACT_DIR = R_PICTURE_DIR . 'contracts';
+const FORM_KEYS2 = 'type fullName email phone address city state zip years owns pid';
+const SF_MAP = 'first_name:first_name,last_name:last_name,orgName:company,address:street,city:city,state:state,zip:zip,m_address:Meter_Street_Address__c,m_city:Meter_City__c,m_state:Meter_State__c,m_zip:Meter_ZIP_Code__c,m_company:Electric_Company__c,m_number:Electric_Account_Number__c,m_amount:Electric_Bill_Monthly_Amount__c,m_person:Electric_Account_Holder__c,referrer:Referrer__c,source:lead_source,m_wholeAddress:Electric_Meter_Address__c,cgAccount:cg_account,partnerName:host,oid:oid,retURL:retURL'; // Salesforce fields corresponding to CG fields
 
 /**
  * Accept and process signup data from a partner organization.
@@ -188,22 +190,17 @@ function partnerEnd() {
 }
 
 /**
- * Analyze and handle joint signup data from signup form on partner website. Send a contract, display a view-only page, and wait.
- * @param acct $pA: the partner account
- * @param assoc $_POST: (implicit) the data submitted in the form
+ * Handle data from partner input form.
+ * @param assoc $input: the POSTed data
+ * @param assoc $sfData: (RETURNED) data for salesforce
+ * @return processed input fields, compacted (to be extract()ed )
  */
-function gotSignup($pA) {
-  global $mya, $pagePartner;
+function handleInput($input, &$sfData = []) {
+  $sfFlds = ray(SF_MAP); // salesforce fields (mapped from POST fields)
+  $formKeys = join(' ', array_keys($sfFlds)); // keys from form corresponding to keys expected in Salesforce
+  $keys = $formKeys . ' ' . FORM_KEYS2;
   
-  signout(TRUE); // current account is irrelevant and could be confusing, so sign out
-  $partnerName = $pA->fullName;
-  $pagePartner = $pA->name; // tell page.html to use the partner's branding
-  
-  $sfFlds = ray('first_name:first_name,last_name:last_name,orgName:company,address:street,city:city,state:state,zip:zip,m_address:Meter_Street_Address__c,m_city:Meter_City__c,m_state:Meter_State__c,m_zip:Meter_ZIP_Code__c,m_company:Electric_Company__c,m_number:Electric_Account_Number__c,m_amount:Electric_Bill_Monthly_Amount__c,m_person:Electric_Account_Holder__c,referrer:Referrer__c,source:lead_source,m_wholeAddress:Electric_Meter_Address__c,cgAccount:cg_account,partnerName:host,oid:oid,retURL:retURL'); // salesforce fields (mapped from POST fields)
-  $keys = array_keys($sfFlds); // keys from form corresponding to keys expected in Salesforce
-  $sfKeys = array_values($sfFlds); // keys of data to send to Salesforce
-
-  extract($info = just(join(' ', $keys) . ' type fullName email phone address city state zip years owns pid', $_POST));
+  extract($info = just($keys, $input));
 
   // set Salesforce parameters
   $oid = '00DA0000000gGh5';
@@ -217,7 +214,7 @@ function gotSignup($pA) {
   // validate data
   $co = ($type == '1');
   
-  foreach ($keys as $k) {
+  foreach (ray($formKeys) as $k) {
     if (!in($k, 'referrer orgName cgAccount m_person') and empty($$k)) return partnerErr('parameter must not be empty', $k);
     if ($co and empty($orgName)) return partnerErr('parameter must not be empty', 'orgName');
     if ($err = u\badName($$k)) return partnerErr($err, $k);
@@ -234,11 +231,29 @@ function gotSignup($pA) {
   if ($err = u\badAmount($years, '>=0')) return partnerErr(tr($err) . ' ' . t('The number of years you have been at that address must be a number.'), 'years');
   if (test() and is_numeric($state)) $state = r\realState($state);
   foreach (ray('state m_state') as $k) if (!${$k . 'Id'} = r\stateNum($$k)) return partnerErr('bad state', $k);
-  if (r\relation(1, 'main=:main AND :IS_CUSTOMER AND code=:customer', ray('main customer', $pA->uid, $customer))) {
+  if (r\relation(1, 'main=:main AND :IS_CUSTOMER AND code=:customer', ray('main customer', $pid, $customer))) {
     return softErr(t('You are already signed up with %partnerName.', compact('partnerName')));
   }
 
   foreach ($sfFlds as $k => $v) $sfData[$v] = $$k; // save Salesforce data
+  return compact(ray($keys . ' m_stateId')) + $info;
+}
+
+/**
+ * Analyze and handle joint signup data from signup form on partner website. Send a contract, display a view-only page, and wait.
+ * @param acct $pA: the partner account
+ * @param assoc $_POST: (implicit) the data submitted in the form
+ */
+function gotSignup($pA) {
+  global $mya, $pagePartner;
+  
+  signout(TRUE); // current account is irrelevant and could be confusing, so sign out
+  $pagePartner = $pA->name; // tell page.html to use the partner's branding
+  $_POST += ray('pid partnerName', $pA->uid, $pA->fullName);
+  
+  $info = handleInput($_POST, $sfData);
+  if (!$sfData) return;
+  extract($info);
 // NO! bad security  $sfData['contractUrl'] = contractUrl($customer);
 
   // handle Common Good signup
@@ -276,17 +291,15 @@ function gotSignup($pA) {
     u\EXPECT($mya, 'cannot create account');
     if (isset($owns)) $mya->setRisk('rents', !$owns);
     $sfData['cg_account'] = $info['cgAccount'] = $mya->mainQid . '*'; // asterisk means account is tentative
-
-/*    if ($co) {
-      $mya->setTask('partnerco');
-    } else { */
-    $mya->setTask('partner');
-    if ($co) $mya->stepDoneForNow('signup'); else $mya->stepDone('signup');
-    $mya->stepDone('verifyid');
-//    }
-    $mya->stepDone('contact');
-
   }
+  
+  if (!$mya->member) {
+    $mya->setTask('partner');
+    $mya->stepDone('contact');
+    if ($co) $mya->stepDoneForNow('signup'); else $mya->stepDone('signup');
+  }
+
+  $mya->stepDone('verifyid');
 
   $mya->update('partnerInfo', $info); // store for final step and beyond
   $flnm = fillContract($pA->name, $info, [], FALSE); // get populated contract
@@ -305,22 +318,23 @@ function gotSignup($pA) {
  * Handle joint signup data from SMT (uploaded by Solar One). Combine functionality of gotSignup() and signedContract().
  * @param assoc $info: encoded parameters passed in URL
  * NOTE: to remove specialized code for Solar One, search this file (only) for Solar One and solar1.
+ * to test: .../partner/solar1=1
  */
 function gotSolarOne($info) {
   global $mya, $pagePartner;
 
-  /*debug(*/ if (isDEV or (!is_array($info) and $info == 1)) $info = bin2hex(http_build_query(ray('smtid co fullName orgName address city state zip email phone m_number source', '654321', 0, 'Jane Dough', '', '10 J St.', 'Jville', 'NY', '10101', 'wspademan+j@gmail.com', '(212) 222-1111', rand(1000, 9999), 'sunset')));
+  $keys = 'smtid pid co fullName orgName address city state zip email phone m_number source';
+  /*debug(*/ if (isDEV or (!is_array($info) and $info == 1)) $info = bin2hex(http_build_query(ray($keys, '654321', 'NEWAIL', 0, 'Jane Dough', '', '10 J St.', 'Jville', 'NY', '10101', 'wspademan+j@gmail.com', '(212) 222-1111', rand(1000, 9999), 'sunset')));
   
   signout(TRUE); // current account is irrelevant and could be confusing, so sign out
   if (!$info = hex2bin($info)) return solarOneErr('bad solar1 encoding');
-  
-  $keys = 'smtid co fullName orgName address city state zip email phone m_number source';
+
   extract($info = just($keys, $info));
 
   $noContract = TRUE;
   $m_company = 'Con Ed';
   $customer = substr($m_company, 0, 1) . $m_number; // begin meter/customer number with the company letter (ENC)
-  $pA = pA($pid = (isDEV ? 'NEWAIL' : 'NEWBHS'));
+  $pA = pA($pid);
   $partnerName = $pA->fullName;
   $pagePartner = $pA->name; // tell page.html to use the partner's branding
 
@@ -344,7 +358,16 @@ function gotSolarOne($info) {
 
   if ($ta = r\acct($email) and $ta->hasBank and $ta->partnerInfo['customer'] == $customer) return partnerContinue($ta, $sta);
 
-  $info = compact(ray($keys . ' m_company customer pid noContract')); // recreate info with possibly improved values
+  $info = compact(ray($keys . ' m_company customer pid noContract partnerName')); // recreate info with possibly improved values
+  
+  // concoct dummy input for handleInput, just to get sfData
+  foreach (ray('address city state zip') as $k) $info['m_' . $k] = $$k;
+  $info['type'] = $co ? 1 : 0;
+  foreach (ray('m_amount years owns') as $k) $info[$k] = 1;
+  
+  handleInput($info, $sfData);
+  if (!$sfData) return solarOneErr('sfData error', '?');
+  sendToCRM($pA, $sfData);
 
   $flags = u\bit(B_NONUDGE); // no way to sign in yet, so don't bug them
   if ($co) {

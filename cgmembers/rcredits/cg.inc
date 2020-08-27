@@ -769,6 +769,7 @@ function makeDevice($uid, $code = '', $ch = NULL) {
  * Package the return arguments and alert staff on certain errors.
  * @param mixed $message: the error message or an assoc of parameters
  * @param assoc $info: (optional) message substitutions and other info about transaction
+ * @return [ok, msg, info]
  */
 function txErr($message, $info = []) {
   r\tellCAdmin('failed transaction', $info + compact('message'));
