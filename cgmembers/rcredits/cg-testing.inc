@@ -59,7 +59,7 @@ function fixData(&$info, $direct = FALSE) {
 
 	foreach (ray('why error') as $k) if (isset($$k)) $$k = tr($$k); // convert embedded message references to actual text
   foreach (['rewards'] as $k) if (isset($$k)) $$k += 0; // make sure numeric fields are numeric.
-  if (nn($notices)) $notices = array_search($notices, ray('daily weekly monthly'), TRUE);
+  if (nn($notices) and !strhas($notices, ':')) $notices = array_search($notices, ray('daily weekly monthly'), TRUE);
   if (nn($statements)) $statements = array_search($statements, ray('electronic paper'), TRUE);
   if (nn($email)) $info['email'] = t\fixEmail($email);
   if (nn($email)) t\fixEmail($email);

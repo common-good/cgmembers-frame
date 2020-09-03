@@ -251,7 +251,7 @@ X
   $phone = u\fmtPhone($phone);
   if ($emergency and $type != 'need') $item = t('(In emergency) ') . $item;
   $ok = ($uid and db\get(':IS_OK', 'users', compact('uid')));
-  $member = $ok ? t(' (Member)') : t(' (non-member)');
+  $member = $ok ? t(' - member') : t(' - non-member');
   
   // set up display-only fields that are the same for user's own post and someone else's post
   $created = item(u\fmtDate($created, TRUE), t('Posted:'));
@@ -373,9 +373,6 @@ function getWho($args) {
   return cgform(compact(ray('title subtext ' . CONTACT_FLDS . ' midtext days washes health submit location frm')) + $info);
 }
 
-/**
- * Edit notice preferences.
- * @param string $code: 
 /**
  * Respond to user's click of confirm, cancel, or edit link in email.
  */
@@ -501,9 +498,10 @@ function formPosts_submit($form, &$sta) {
     $contactInfo = just(CONTACT_FLDS, $input, NULL);
     $method = ray(METHOD_OPTS)[$method];
     $health = ($days+0) . ' ' . ($washes+0) . ' ' . ray(HEALTH_RATINGS)[$health];
+    $notices = NOTICE_DFTS;
 
     u\EXPECT(!db\get('pid', 'people', compact('email')), 'duplicate people email in post submit');
-    $pid = db\insert('people', compact(ray('method health')) + $contactInfo, 'pid');
+    $pid = db\insert('people', compact(ray('method health notices')) + $contactInfo, 'pid');
     if ($message) $frmMessage = TRUE; else $frmPost = TRUE; // now fall through to process the earlier data passed through by who form
   }
 
@@ -675,7 +673,6 @@ function admin($zip) {
  * @return the query result set
  */
 function getPosts($type, $lat, $lon, $zip, $radius, $myPid, $admin, $zipIrrelevant, $since = 0) {
-  extract($args);
   
   $visible = $zipIrrelevant ? 1 
   : ($admin ? '(SELECT community FROM users WHERE :zip RLIKE zip AND uid<1 LIMIT 1)' : 0);
@@ -686,12 +683,13 @@ function getPosts($type, $lat, $lon, $zip, $radius, $myPid, $admin, $zipIrreleva
 
   $sql = <<<X
     SELECT IF ($noGeo, '', $distance) AS dist, s.postid, c.cat, s.item, s.details, s.emergency, $isMyPid AS mine,
-      LEAST(IF($postRadius=0, 99999, s.radius), :radius) AS least, $postRadius AS postRadius, p.displayName, p.city
+      LEAST(IF($postRadius=0, 99999, s.radius), :radius) AS least, $postRadius AS postRadius, p.displayName, p.city,
+      :zip AS zip
     FROM posts s
     LEFT JOIN post_cats c ON c.id=s.cat
     LEFT JOIN people p USING (pid)
     WHERE s.type=:type
-      AND s.created <= :NOW AND s.created >= $since
+      AND s.created <= :NOW + :HOUR_SECS AND s.created >= $since
       AND IFNULL(s.end, :NOW) >= :NOW
       AND (
         $admin OR
@@ -705,7 +703,7 @@ function getPosts($type, $lat, $lon, $zip, $radius, $myPid, $admin, $zipIrreleva
     ORDER BY s.cat,s.created DESC
 X;
 
-///     debug(showq($sql, compact(ray('type lat lon zip radius'))));
+///  showq($sql, compact(ray('type lat lon zip radius myPid')));
   return db\q($sql, compact(ray('type lat lon zip radius myPid')));
 }
 
@@ -723,7 +721,7 @@ function postRows($q, $classify = FALSE) {
   $rows[] = '<div class="tbody">';
   
   while ($row = $q->fetchAssoc()) {
-    extract(just('postid dist cat emergency item mine details', $row));
+    extract(just('postid dist cat emergency item mine details zip', $row));
 
     if ($dist = fmtDist($dist, $zip)) { $cat .= " <small>$dist mi</small>"; }
     if ($emergency) $item = '<span class="emergency">!!</span> ' . $item;

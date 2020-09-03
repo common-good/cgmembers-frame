@@ -75,9 +75,10 @@ class Acct {
 
     u\setDft($cardCode, r\cardCode(r\qid($uid)));
     u\setDft($emailCode, r\cardCode(r\qid($uid)));
+    u\setDft($notices, NOTICE_DFTS);
 
     foreach (ray('number region') as $k) unset($info[$k]);
-    foreach (ray('phone email pass fullName legalName flags state country community created login access emailCode cardCode') as $k) if (isset($$k)) $info[$k] = $$k; // things we may have added or changed
+    foreach (ray('phone email pass fullName legalName flags state country community created login access emailCode cardCode notices') as $k) if (isset($$k)) $info[$k] = $$k; // things we may have added or changed
 
     $a->update($info); // this is a lot easier to do after saving the record
     if (!$a->member) $a->setTask($co ? 'co' : 'person');

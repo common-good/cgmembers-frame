@@ -1422,9 +1422,16 @@ function onFile($field, $sta) {
   return (nn($sta['complete form'][$field]['#value']) == R_ON_FILE and nni($sta['input'], $field) == R_ON_FILE);
 }
 
+/**
+ * Return a select field for use in a table of such dropdowns.
+ * @param string $name: base field name (actual name will have the line ID appended)
+ * @param string $value: default value
+ * @param assoc $options: options to choose from: key=>optionName
+ * @param string $id: line ID
+ */
 function dropdown($name, $value, $options, $id) {
   $name = "$name-$id";
-  $zot = array('zot' => selectFld('', '', compact('value', 'name'), $options));
+  $zot = array('zot' => selectFld(BARE, '', compact('value', 'name'), $options));
   return \render($zot);
 }
 

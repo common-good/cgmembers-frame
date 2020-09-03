@@ -22,24 +22,15 @@ function formRecurring($form, &$sta, $args = '') {
     if (isset($reid)) $result = stopAutoPay($reid);
   }
 
+  $hdrs = ray(t(',Who,Amount,Purpose,How oten?,Starting,Next,Ending,'));
   $classes = ray('arrow:arrows, fWho:name, fAmount:amount, fPurpose:purpose, fPeriod:period, fCreated:date, fNext:date, fEnd:date, button:buttons');
   $fields = array_keys($classes);
   $url0 = BASE_URL . '/history/recurring';
   $to = "<img src=\"$rUrl/images/icons/arrow-right-red.png\" border=0 />";
   $from = "<img src=\"$rUrl/images/icons/arrow-left-green.png\" border=0 />";
   
-  $html = <<<EOF
-  <table>
-    <th></th>
-    <th>Who</th>
-    <th>Amount</th>
-    <th>Purpose</th>
-    <th>How often?</th>
-    <th>Starting</th>
-    <th>Next</th>
-    <th>Ending</th>
-    <th></th>
-EOF;
+  $html = "<table>\n";
+  foreach ($hdrs as $k) $html .= "<th>$k</th>\n";
 
   $sql = <<< X
     SELECT id as recId, IF(:myid=tp.from,tp.to,tp.from) AS fWho, tp.from=:myid AS paying, 
