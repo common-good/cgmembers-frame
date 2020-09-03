@@ -25,8 +25,8 @@ function ajax() {
   header('Content-Type: application/json');
   $myid = $aid = NULL;
 
-  if ($op != 'presignup') { // no sid if not signed in
-    if (!nn($sid) or !$vars = w\sessionVars($sid)) return ajaxErr('bad sid');
+  if (!in($op, 'presignup setNotice')) { // no sid if not signed in
+    if (!nn($sid) or !$vars = w\sessionVars($sid)) return ajaxErr(t('You are signed out. Click <%a>here</a> to sign back in.', '_a', atag('/signin')));
     if (!$aid = $vars['uid'] or !$myid = $vars['myid']) return ajaxErr('not signed in');
   }
 //  $mya = r\acct($myid, $aid);
@@ -39,6 +39,14 @@ function ajax() {
     exit();
   } elseif ($op == 'typeWho') { // get selections for suggestWho
     exit(json_encode(be\memberRay($myid, $aid, $data))); // data=1 means companies only
+  } elseif ($op = 'setNotice') { // change notice preference for one notice type (code, type, freq)
+    extract(just('code type freq', $data, ''));
+    if (!$ray = u\decryRay($code)) return ajaxErr(t('Bad ID code.'));
+    $idRay = just('pid uid', $ray);
+    $tnm = nni($idRay, 'pid') ? 'people' : 'users';
+    $notices = ray(db\get('notices', $tnm, $idRay));
+    $notices[$type] = $freq;
+    db\update($tnm, $idRay + ray('notices', u\rayify($notices)), key($idRay));
   } elseif ($op == 'relations') {
     extract(just('name v', $data, ''));
     list ($fld, $reid) = explode('-', $name);

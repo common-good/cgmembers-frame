@@ -59,7 +59,7 @@ function fixData(&$info, $direct = FALSE) {
 
 	foreach (ray('why error') as $k) if (isset($$k)) $$k = tr($$k); // convert embedded message references to actual text
   foreach (['rewards'] as $k) if (isset($$k)) $$k += 0; // make sure numeric fields are numeric.
-  if (nn($notices)) $notices = array_search($notices, ray('daily weekly monthly'), TRUE);
+  if (nn($notices) and !strhas($notices, ':')) $notices = array_search($notices, ray('daily weekly monthly'), TRUE);
   if (nn($statements)) $statements = array_search($statements, ray('electronic paper'), TRUE);
   if (nn($email)) $info['email'] = t\fixEmail($email);
   if (nn($email)) t\fixEmail($email);
@@ -1047,7 +1047,7 @@ function verifyRecord($table, $info, $riskRay = K_TX_RISKS) {
   list ($infoK, $infoV) = [key($info), array_shift($info)]; // must be before ksort
   ksort($info); // sort everything else, but leave key out of it
   $info = [$infoK => $infoV] + $info; // keep key first
-///  echo pr(compact(ray('info0 info1 info idSub infoK infoV')));
+  ///  echo pr(compact(ray('info0 info1 info idSub infoK infoV')));
 
   foreach ($info as $k => $v) {
     if ($v == '?') {unset($info[$k]); continue;}
@@ -1391,7 +1391,7 @@ function clear($ch = 0) {
   foreach (ray('error status') as $one) u\deleteFile(t\dosayFilename($one));
 
   if (test() and !strpos($sceneTest->name, 'Statement')) {
-/**/  echo "scene: $sceneTest->module / $sceneTest->feature / $sceneTest->name<br>\n"; // VERY helpful when test dies
+    /**/  echo "scene: $sceneTest->module / $sceneTest->feature / $sceneTest->name<br>\n"; // VERY helpful when test dies
   }
 
   t\log('clearing');

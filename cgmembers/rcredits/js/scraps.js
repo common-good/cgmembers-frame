@@ -611,6 +611,12 @@ function doit(what, vs) {
       location.href = baseUrl + '/handle-invoice/nvid=' + nvid + vs['args'];
     });
     break;
+    
+  case 'notice-prefs':
+    $('.k-freq select').change(function () {
+      post('setNotice', {code:vs['code'], type:$(this).attr('name').replace('freq-', ''), freq:$(this).val()}, reportErr);
+    });
+    break;
         
   default:
     alert('ERROR: Unknown script scrap (there is no default script).');

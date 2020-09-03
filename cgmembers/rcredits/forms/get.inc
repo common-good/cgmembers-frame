@@ -49,8 +49,8 @@ function formGet($form, &$sta, $args = '') {
   }
 
   $waiting = nn($waiting)
-  ? t('You have exchange requests in process: <br>') . join('<br>', $waiting)
-  : t('You have no pending exchange requests.');
+  ? t('You have bank transfer requests in process: <br>') . join('<br>', $waiting)
+  : t('You have no pending bank transfer requests.');
   $waiting = item($waiting, t('Pending:'));
 
 

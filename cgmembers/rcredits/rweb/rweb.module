@@ -89,7 +89,7 @@ function rweb_menu($submenu = '') {
 
     'history' => ['norm', t('History'), 'History', 'read'],
     'history/transactions' => ['sub', t('Transactions'), 'Txs 2', 'read', '', t(), 'list'],
-    'history/recurring' => ['sub', t('Recurring Payments'), 'Recurring', 'read', '', t(), 'list'],
+    'history/recurring' => ['sub', t('Automated Payments'), 'Recurring', 'read', '', t(), 'list'],
     'history/invoices-to' => ['sub', t('Invoices TO You'), 'Invoices to', 'read', '', t(), 'log-in'],
     'history/invoices-from' => ['sub', t('Invoices FROM You'), 'Invoices from', 'read', '', t(), 'log-out'],
     'history/company-reports' => ['sub', t('Company Reports'), 'Data 2 co', 'read co', '', t(), 'signal'],
@@ -101,9 +101,6 @@ function rweb_menu($submenu = '') {
     'history/statement' => ['call', t('Statement'), '2', 'read', 'statement'],
     'history/customer-statement' => ['call', t('Customer Statement'), '2', 'read', 'custStatement'],
 
-//    'history/notice' => ['call', t('Notice'), 'Notice 2', 'read'],
-    
-//    'community' => ['norm', t('Community'), 'FindCo', ANY],
     'community' => ['norm', t('Community'), 'Community', ANY],
     'community/endorse' => ['call', t('Invite / Endorse'), 'Endorse 2', ANY, '', t(), 'share-alt'],
     'community/invite' => ['sub', t('Invite / Endorse'), 'Invite 2', ANY, '', t(), 'share-alt'],
@@ -163,7 +160,7 @@ function rweb_menu($submenu = '') {
 
     'reset' => ['call', t('Choose New Password'), 'ResetPassword 1', ANY],
     'settings/skip' => ['call', t('Skip Step'), '', 'manage', 'skipStep'],
-    'settings/notifications' => ['call', t('Notifications'), 'Notifications', 'manage'],
+    'settings/notices' => ['call', t('Notices'), 'NoticePrefs', ANY],
     'settings/ssn' => ['call', t('Correct SSN'), 'Ssn 2', 'manage'],
     'settings/password' => ['call', t('Request New Password'), 'Pass 2', ANY],
     'settings/security/change-password' => ['call', 'Change Password', 'ChangePassword', 'manage'],
@@ -266,6 +263,7 @@ function rweb_menu($submenu = '') {
 
     'pos' => ['call', 'POS', '1', ANY, 'pos'], // called from the CGPay app
     'ajax' => ['call', 'AJAX', '1', ANY, 'ajax'], // called from the CGPay app
+    'api' => ['call', 'API', '1', ANY, 'api'],
     'api' => ['call', 'API', '1', ANY, 'api'],
   );
 

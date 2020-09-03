@@ -210,6 +210,11 @@ const CO_PHOTO_FACTOR = 3; // make company photos this many times as big as indi
 const MAX_UPLOAD_SIZE = 4 * 1024000; // maximum upload size in bytes
 const MAX_ID_SIZE = 10; // max ID size in MB
 
+//define('NOTICE_OFTENS', t('t:Immediate by Text,i:Immediate by Email,d:Daily,w:Weekly,m:Monthly'));
+define('NOTICE_OFTENS', t('i:Immediate by Email,d:Daily,w:Weekly,m:Monthly'));
+define('NOTICE_TYPES', t('offer:Offers,need:Needs,tip:Tips,request:Transactions you request,auto:Automatic transactions,othertx:Other transactions,other:Other routine messages'));
+const NOTICE_DFTS = 'offer:d,need:d,tip:w,requests:w,auto:d,othertx:i,other:d';
+
 const VIDEO_URL = 'https://cg4.us/video'; // Nuts & Bolts video
 const TRANSLATE_URL = 'https://translation.googleapis.com/language/translate/v2'; // google translate API URL
 const GEOCODE_URL = 'https://api.opencagedata.com/geocode/v1/json?'; // use in acct::setLocus()
@@ -642,6 +647,7 @@ $GLOBALS['emailSubjects'] = array(
   'confirm-post' => t('Confirm your post to %PROJECT Offers & Needs'),
   'confirm-message' => t('Confirm your message'),
   'post-message' => t('Response to your Offers & Needs post'),
+  'post-notice' => t('recent Offers & Needs posts near you'),
 );
 
 $GLOBALS['topics'] = array( // topics for 'message' email

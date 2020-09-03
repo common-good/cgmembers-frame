@@ -167,8 +167,8 @@ Scenario: A member enters data after posting an offer
 
 Scenario: Someone confirms an offer once, twice
   Given these "posts":
-  | postid | type  | item | details | cat  | exchange | emergency | radius | pid | created | end     |* 
-  | 1      | offer | fish | big one | food | 0        | 1         | 3      | 1   | %today  | %now+3d |
+  | postid | type  | item | details | cat  | exchange | emergency | radius | pid | created   | end     |* 
+  | 1      | offer | fish | big one | food | 0        | 1         | 3      | 1   | %today-1d | %now+3d |
   When someone visits "community/posts/op=confirm&thing=post&code=%code" where code is:
   | postid | created |*
   | 1      | %today  |

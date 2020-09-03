@@ -269,6 +269,7 @@ function recur($template) {
 
     if ($period and $period != 'once') {
       $when = r\recurDesc($period, $periods);
+      // $purpose = r\recurPurpose($purpose);
       $erSubs += compact(ray('when purpose'));
     } else { $when = t('one-time'); }
 
@@ -973,18 +974,31 @@ function invest1($item) {
 function notices() {
   global $timeFor; // for testing
   
-  $lastStart = getV('last_cron_start', []);
-  $day = nni($lastStart, 'day');
-  $timeFor_weekly = ($day and strftime('%w', $day) == R_WEEKLY_DAY);
-  $timeFor_monthly = ($day and strftime('%d', $day) == R_MONTHLY_DAY);
-  if (test() and isset($timeFor)) extract(just('weekly monthly', $timeFor), EXTR_PREFIX_ALL, 'timeFor');
+  $lastStart = getV('last_cron_start', []); // base timeForW and timeForM on cron start day, not current day (?!)
+  $timeForW = (int) (strftime('%w', nni($lastStart, 'day', now())) == R_WEEKLY_DAY);
+  $timeForM = (int) (strftime('%d', nni($lastStart, 'day', now())) == R_MONTHLY_DAY);
+  if (test()) list ($timeForW, $timeForM) = [(int) nni($timeFor, 'weekly'), (int) nni($timeFor, 'monthly')];
 
   $where = $dailySql = '((NOT :IS_WEEKLY AND NOT :IS_MONTHLY) OR NOT :IS_MEMBER)'; // daily
-  if ($timeFor_weekly) $where .= ' OR :IS_WEEKLY';
-  if ($timeFor_monthly) $where .= ' OR :IS_MONTHLY';
-  $sql = "SELECT DISTINCT u.uid, :IS_WEEKLY AS weekly, :IS_MONTHLY AS monthly FROM r_notices n JOIN users u ON u.uid=n.uid WHERE IF(activated, u.:IS_OK, NOT u.:IS_NONUDGE) AND NOT sent AND ($where)";
+  if ($timeForW) $where .= ' OR :IS_WEEKLY';
+  if ($timeForM) $where .= ' OR :IS_MONTHLY';
+  $sql = "SELECT DISTINCT u.uid, :IS_WEEKLY AS weekly, :IS_MONTHLY AS monthly FROM r_notices n JOIN users u ON u.uid=n.uid  AND NOT sent AND ($where)";
 
   queueEach('notice1', $sql);
+  
+  $fields = 'uid,fullName,email,notices,latitude,longitude,zip'; // comma not space
+  
+  $sql = <<< X
+    SELECT $timeForW AS timeForW, $timeForM AS timeForM, pid, $fields, '$fields' as fields FROM (
+      SELECT pid, $fields FROM people WHERE uid IS NULL
+      UNION
+      SELECT p.pid, $fields
+      FROM users u LEFT JOIN (SELECT pid, uid FROM people) p USING (uid)
+      WHERE uid>:CANONIC_ACCTS AND NOT u.:IS_CO AND IF(activated, :IS_OK, NOT :IS_NONUDGE)
+    ) x
+X;
+  queueEach('postNotices1', $sql);
+  
   queueNext();
 }
 
@@ -1006,6 +1020,57 @@ function notice1($item) {
   if (!test()) foreach (ray('messages shout') as $k) $args[$k] = str_replace('stule=', 'style=', $args[$k]); // revert in emails (CSP forbids inline styles online)
   if (!r\notify($uid, 'notices', $args, TRUE)) return;
   db\q('UPDATE r_notices SET sent=:NOW WHERE uid=:uid AND NOT sent', compact('uid'));
+}
+
+/**
+ * Send a notice about recent posts to the given person.
+ * The person's notices field is a string of comma-delimited lines, each one in the form:
+ * $type:$freq, where
+ *   $type: what type of notice (offer, need, tip)
+ *   $freq: how often to notify (t=Text now/i=Email now/d=Daily/w=Weekly/m=Monthly)
+ *   $radius: notify if within this mile radius (NYI)
+ *   $words: notify if the post includes these words (NYI)
+ */
+function postNotices1($item) {
+  require_once R_ROOT . '/forms/posts.inc'; // for getPosts()
+  extract(just('pid fields timeForW timeForM', $item, NULL));
+  extract(just($fields, $item, NULL));
+  
+  $cell = 'display:table-cell; padding:5px 8px; ';
+  $map0 = [
+     'tbody' => 'display:table; width:100%;', // use the body wrap as the table
+     'row' => 'display:table-row;',
+     'cell cat' => $cell . '',
+     'cell item' => $cell . '',
+     'cell details' => $cell . '',
+     'emergency' => 'font-weight:bold; color:red;',
+     
+  ];
+  foreach ($map0 as $k => $v) $map["class =\"$k\""] = "style=\"$v\"";
+  $map['<small>'] = '<small style="color:silver;">';
+
+  $posts = '';
+  $radius = 20; // report everything within 20 miles, for now
+
+  foreach (ray($notices) as $type => $freq) {
+//    list ($type, $freq, $radius, $words) = u\padRay(explode('`', $one), 4);
+    if (!in($type, 'offer need tip')) continue;
+    if ($freq != 'd' and !($freq == 'w' and $timeForW) and !($freq == 'm' and $timeForM)) continue;
+
+    $unit = ray('d:day,w:week,m:month')[$freq];
+    $since = strtotime("-1 $unit", now());
+
+    $q = w\getPosts($type, $latitude, $longitude, $zip, $radius, $pid ?: 0, 0, 0, $since);
+    if (!$q->rowCount()) continue;
+    $rows = strtr(join('', w\postRows($q, FALSE)), $map);
+    $Type = w\typeName($type, 2);
+    $posts .= "<h3>$Type</h3>\n$rows\n";
+  }
+  if (!$posts) return;
+
+  $noFrame = TRUE;  
+  $code = $uid ? w\getCode('users', compact('uid')) : w\getCode('people', compact('pid'));
+  r\rMail('post-notice', [$email => $fullName], compact(ray('fullName posts radius code noFrame')));
 }
 
 /**

@@ -1,3 +1,6 @@
+2020-09-03 feature/post-notices
+. users can set preferences for frequency of notices about posts
+
 2020-08-26 feature/solar1-2
 . added pid parameter to solar1 signup
 . solar1 signup now adds people to Salesforce
