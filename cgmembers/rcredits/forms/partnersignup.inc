@@ -14,7 +14,7 @@ const CRM_URL = 'SMT solar customer management URL';
 const BILL_DIR = R_PICTURE_DIR . 'electric-bills';
 const CONTRACT_DIR = R_PICTURE_DIR . 'contracts';
 const FORM_KEYS2 = 'type fullName email phone address city state zip years owns pid';
-const SF_MAP = 'first_name:first_name,last_name:last_name,orgName:company,address:street,city:city,state:state,zip:zip,m_address:Meter_Street_Address__c,m_city:Meter_City__c,m_state:Meter_State__c,m_zip:Meter_ZIP_Code__c,m_company:Electric_Company__c,m_number:Electric_Account_Number__c,m_amount:Electric_Bill_Monthly_Amount__c,m_person:Electric_Account_Holder__c,referrer:Referrer__c,source:lead_source,m_wholeAddress:Electric_Meter_Address__c,cgAccount:cg_account,partnerName:host,oid:oid,retURL:retURL'; // Salesforce fields corresponding to CG fields
+const SF_MAP = 'first_name:first_name,last_name:last_name,orgName:company,email:email,phone:phone,address:street,city:city,state:state,zip:zip,m_address:Meter_Street_Address__c,m_city:Meter_City__c,m_state:Meter_State__c,m_zip:Meter_ZIP_Code__c,m_company:Electric_Company__c,m_number:Electric_Account_Number__c,m_amount:Electric_Bill_Monthly_Amount__c,m_person:Electric_Account_Holder__c,referrer:Referrer__c,source:lead_source,m_wholeAddress:Electric_Meter_Address__c,cgAccount:00NA000000BoIaW,partnerName:project,oid:oid,retURL:retURL'; // Salesforce fields corresponding to CG fields
 
 /**
  * Accept and process signup data from a partner organization.

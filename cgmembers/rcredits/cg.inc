@@ -781,6 +781,7 @@ function noticeArgs($uid, $having = '1', $weekly = FALSE, $monthly = FALSE, $at 
     $freq = $notices[$k];
     if ($freq == 'm' ? $monthly : ($freq == 'w' ? $weekly : TRUE)) $range[] = "$desc (" . $ranges[$freq] . ')';
   }
+  u\EXPECT(isset($range), 'no range'); // could fail if user changes their notice prefs at the right instant (no biggy)
   $range = join(t(' and '), $range);
   extract(just('return', $a->j_stats()));
   $balance = u\fmtAmt($a->balance);

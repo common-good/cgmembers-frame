@@ -40,7 +40,7 @@ function formHelp($form, &$sta, $what = '', $args = '') {
 }
 
 function formHelp_validate($form, &$sta) {
-  if ($err = $_FILES['files']['error']['file'] and $err != 4) return say('file save error', 'file');
+  if (nn($_FILES) and $err = $_FILES['files']['error']['file'] and $err != 4) return say('file save error', 'file');
 }
 
 function formHelp_submit($form, &$sta) {
@@ -51,8 +51,8 @@ function formHelp_submit($form, &$sta) {
   $time = now();
   $msg = 'msg to admin';
 
-  foreach (nni($_FILES, 'files') as $k => $v) $file[$k] = $v['file'];
-  if ($tmp = nni($file, 'tmp_name')) { // got an attachment
+  if (nn($_FILES)) foreach (nni($_FILES, 'files', []) as $k => $v) $file[$k] = $v['file'];
+  if (nn($file) and $tmp = nni($file, 'tmp_name')) { // got an attachment
     $msg .= '|secure attach';
     $filename = UPLOAD_DIR . "/$mya->id-$time";
     extract(just('name type size', $file));
