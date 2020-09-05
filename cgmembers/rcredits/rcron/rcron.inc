@@ -279,7 +279,7 @@ function recur($template) {
     if ($action == 'pay') {
       $ok = $fromA->payApproved($to, $amount, $purpose, FOR_GOODS, $data, $id);
       if (!$ok) return r\tellAdmin(t('Pay failed in recur'), $erSubs);
-      r\notify($from, 'recur pay', ray('amount when purpose payee', u\fmtAmt($amount), $when, $purpose, $toA->fullName));
+      $fromA->tellOut('recur pay', ray('amount when purpose payee', u\fmtAmt($amount), $when, $purpose, $toA->fullName));
     } else { // charge
       list ($ok, $msg, $args) = be\invoice($toA, $fromA, $amount, $purpose, FOR_GOODS, $data, $id);
       if (!$ok) return r\tellAdmin(t('Invoice failed in recur'), $erSubs + compact('msg', 'args'));
@@ -345,10 +345,11 @@ X;
 function tickleSignup($item) {
   extract(just('email inviter code elapsed', $item));
   if (r\acct($email = u\decry('P', $email))) return; // invitee already began to open an account
-  $inviterName = r\acct($inviter)->fullName;
+  $inviterA = r\acct($inviter);
+  $inviterName = $inviterA->fullName;
   $nudge = t($elapsed < 10 ? 'reminder coming' : 'reminder last');
   r\rMail('nonmember', $email, ray('fullName nudge code noFrame', $inviterName, $nudge, $code, TRUE));
-  r\notify($inviter, 'invite languishing', compact('email', 'elapsed'));
+  $inviterA->tellMisc('invite languishing', compact('email', 'elapsed'));
 }
 
 /**
@@ -360,13 +361,13 @@ function tickleStep($item) {
 
   if (!$a->member and $step = $a->nextStep()) {
     $msg = ($a->stepCount() == count(ray(r\taskSteps($a->co ? 'co' : 'person'))) - 1) ? 'do step one' : 'take another step';
-    r\notify($uid, "$msg|sign in|daily messages");
+    $a->tellMisc("$msg|sign in|daily messages");
     if ($elapsed >= 9 and $elapsed < 30) {
       $sql = 'SELECT DISTINCT inviter FROM r_invites i LEFT JOIN users u ON u.uid=i.inviter WHERE invitee=:uid AND u.:IS_OK';
       $q = db\q($sql, compact('uid'));
       while ($row = $q->fetchAssoc()) {
         extract($row);
-        r\notify($inviter, 'invitee slow', ray('fullName elapsed step', $a->fullName, $elapsed, $step));
+        r\acct($inviter)->tellMisc('invitee slow', ray('fullName elapsed step', $a->fullName, $elapsed, $step));
       }
     }
   } elseif ($a->member and !$a->ok) {
@@ -398,7 +399,7 @@ function activeMonthly($item) {
 		$limit = u\fmtAmt(-$a->floor); // (report total to master of joint accounts)
     $msg = 'new floor' . ($a->can(B_DEBT) ? '' : '|no floor effect');
 //	  r\tellAdmin('new floor', compact(ray('limit monthly floor floorX ratio msg')));
-  // DISABLED FOR now() if (!$a->slave) r\notify($uid, $msg, compact('limit'));
+  // DISABLED FOR now() if (!$a->slave) $a->tellMisc($msg, compact('limit'));
   }
   
   if ($a->cashoutM) $a->cashout();
@@ -441,7 +442,7 @@ function warnAnnual1($item) {
 	$atag = w\atag("/do/do$func~$a->mainQid~$a->emailCode");
   $track = u\cryRay(ray('qid type', $a->mainQid, strtolower($func)));
   $subs = ray('amount when atag track', u\fmtAmt($amount), u\fmtDate(strtotime($target), TRUE), $atag, $track);
-  r\notify($uid, $tpls[$func], $subs, TRUE);
+  $a->tellMisc($tpls[$func], $subs);
 }
 
 function annualSql($func, $amtFld, $dtFld, $join = '', $where = '1') {
@@ -540,7 +541,7 @@ X;
 function whatsup($item) {
   extract(just('uid lastTx co', $item));
   $msg = 'whats up' . ($co ? '|co promo' : '');
-  r\notify($uid, $msg, ray('lastTx', u\fmtDate($lastTx)));
+  r\acct($uid)->tellMisc($msg, ray('lastTx', u\fmtDate($lastTx)));
 }
 
 /**
@@ -561,7 +562,7 @@ function everyYear() {
  */
 function taxInfo($item) {
   extract(just('uid year', $item));
-  r\notify($uid, 'see tax info', compact('year'));
+  r\acct($uid)->tellMisc('see tax info', compact('year'));
 }
 
 /**
@@ -908,32 +909,32 @@ X;
 
 function invoice1($item) {
   extract(just('nvid payer payee amount purpose status created funding', $item));
-  $a = r\acct($payer);
+  $a1 = r\acct($payer);
   $a2 = r\acct($payee);
   $payeeName = $a2->fullName;
   
   if ($status == TX_APPROVED) {
-		if (!$a->ok) return; // don't try to pay from an inactive account (we can delay collection by temporarily deactivating)
+		if (!$a1->ok) return; // don't try to pay from an inactive account (we can delay collection by temporarily deactivating)
 		$amtFld = 'amount';
-    $short = $a->balance > $amount ? 0 : round($a->advances() + $amount - $a->avail(), 2); //	consider credit already used for advances from the bank
+    $short = $a1->balance > $amount ? 0 : round($a1->advances() + $amount - $a1->avail(), 2); //	consider credit already used for advances from the bank
 
     if ($short <= 0) { // pay the invoice if we have enough funds
       list($paid, $msg) = be\payInvoice($nvid);
       if (!$paid) r\tellAdmin(t('invoice payment failed in cron'), compact('msg') + $item);
     } else $paid = FALSE;
 		
-		if (!$paid or $a->balance < 0) {
-      if ($funding and $a->balance + db\sum('amount', 'r_usd', 'payee=:payer AND NOT completed', compact('payer')) < $amount) {
+		if (!$paid or $a1->balance < 0) {
+      if ($funding and $a1->balance + db\sum('amount', 'r_usd', 'payee=:payer AND NOT completed', compact('payer')) < $amount) {
         $funding = FALSE; // fund it again, if necessary
       }
       if (!$funding) {
-        if ($a->roundup) $amount = ceil($amount); // take enough for the roundup
+        if ($a1->roundup) $amount = ceil($amount); // take enough for the roundup
         $DBTX = \db_transaction();
-        if ($a->getFunds($amount, t('for invoice', compact('nvid')))) {
+        if ($a1->getFunds($amount, t('for invoice', compact('nvid')))) {
           db\setFlag('r_invoices', $nvid, B_FUNDING, TRUE);
         } else { // almost always because no bank account is connected
-          $msg = 'short invoice' . ($a->hasBank ? '|expect a transfer' : '|when funded|how to fund');
-          r\notify($payer, $msg, ray('short payeeName nvid', u\fmtAmt($short), $payeeName, $nvid));
+          $msg = 'short invoice' . ($a1->hasBank ? '|expect a transfer' : '|when funded|how to fund');
+          $a1->tellOut($msg, ray('short payeeName nvid', u\fmtAmt($short), $payeeName, $nvid));
         }
         unset($DBTX);
       }
@@ -942,9 +943,9 @@ function invoice1($item) {
     $daysAgo = max(1, round((now() - $created) / DAY_SECS));
     $nudge = $a2->staleNudge;
     if ($nudge !== 0 and $daysAgo % ($nudge ?: STALE_NUDGE) == 0) {
-      $subs = ray('daysAgo created amount purpose nvid _a1 payerName payeeName email phone', $daysAgo, u\fmtDate($created, TRUE), u\fmtAmt($amount), $purpose, $nvid, $a->doLink('inv', $nvid), $a->fullName, $payeeName, $a2->email, $a2->phone);
-      r\message($payer, 'stale invoice', $subs + ['reply' => $payee]); // tell other party by email about this invoice
-      r\message($payee, 'stale invoice report', $subs); // tell the payee we're following up on it
+      $subs = ray('daysAgo created amount purpose nvid _a1 payerName payeeName email phone', $daysAgo, u\fmtDate($created, TRUE), u\fmtAmt($amount), $purpose, $nvid, $a1->doLink('inv', $nvid), $a1->fullName, $payeeName, $a2->email, $a2->phone);
+      $a1->tellMisc('stale invoice', $subs + ['reply' => $payee]); // tell other party by email about this invoice
+      $a2->tellMisc('stale invoice report', $subs); // tell the payee we're following up on it
     }
   }
 }
@@ -962,7 +963,7 @@ function invest1($item) {
   $a = r\acct($uid);
   if ($a->avail($request)) {
     r\handleInvestmentRequest($stakeid, $msg);
-    r\notify($uid, $msg);
+    $a->tellMisc($msg);
   } elseif (!$a->waitingFromBank()) {
     $a->getFunds($request, t('to fulfill your recent investment request'));
   }
@@ -979,20 +980,15 @@ function notices() {
   $timeForM = (int) (strftime('%d', nni($lastStart, 'day', now())) == R_MONTHLY_DAY);
   if (test()) list ($timeForW, $timeForM) = [(int) nni($timeFor, 'weekly'), (int) nni($timeFor, 'monthly')];
 
-  $where = $dailySql = '((NOT :IS_WEEKLY AND NOT :IS_MONTHLY) OR NOT :IS_MEMBER)'; // daily
-  if ($timeForW) $where .= ' OR :IS_WEEKLY';
-  if ($timeForM) $where .= ' OR :IS_MONTHLY';
-  $sql = "SELECT DISTINCT u.uid, :IS_WEEKLY AS weekly, :IS_MONTHLY AS monthly FROM r_notices n JOIN users u ON u.uid=n.uid  AND NOT sent AND ($where)";
-
+  $sql = "SELECT DISTINCT u.uid, notices, $timeForW AS timeForW, $timeForM AS timeForM FROM r_notices n JOIN users u USING (uid) WHERE NOT sent";
   queueEach('notice1', $sql);
   
-  $fields = 'uid,fullName,email,notices,latitude,longitude,zip'; // comma not space
-  
+  $fields = 'pid,uid,fullName,email,notices,latitude,longitude,zip'; // comma not space
   $sql = <<< X
     SELECT $timeForW AS timeForW, $timeForM AS timeForM, pid, $fields, '$fields' as fields FROM (
-      SELECT pid, $fields FROM people WHERE uid IS NULL
+      SELECT $fields FROM people WHERE uid IS NULL
       UNION
-      SELECT p.pid, $fields
+      SELECT $fields
       FROM users u LEFT JOIN (SELECT pid, uid FROM people) p USING (uid)
       WHERE uid>:CANONIC_ACCTS AND NOT u.:IS_CO AND IF(activated, :IS_OK, NOT :IS_NONUDGE)
     ) x
@@ -1003,22 +999,25 @@ X;
 }
 
 function notice1($item) {
-  extract(just('uid daily weekly monthly', $item));
+  extract(just('uid notices timeForW timeForM', $item));
 
-  if (!$args = r\noticeArgs($uid, 'NOT sent', $weekly, $monthly)) return;
+  $having = "NOT sent AND IF(wType, $timeForW, IF(mType, $timeForM, 1))";
+  if (!$args = r\noticeArgs($uid, $having, $timeForW, $timeForM)) return;
   $a = r\acct($uid);
-  $args['track'] = u\cryRay(ray('qid type', $a->mainQid, 'notice'));
+  $track = u\cryRay(ray('qid type', $a->mainQid, 'notice'));
+  $code = w\getEmailCode(compact('uid'));
 
   if ($a->ok) {
     $link = BASE_URL . "/do/doInvite~$a->mainQid~$a->emailCode~" . (r\rdoMonth() + 12);
     list ($question, $btnText) 
     = ($a->co or $a->shouter) ? ['', t('Invite Someone!')] : [t('If you support %PROJECT, please say so! '), t('Endorse')];
     $style = TEXT_BUTTON_STYLE . ' padding:3px 7px; margin-left:4px;'; // smaller for emails
-    $args['shout'] = '<p>' . $question . w\lnk($link, $btnText, ray('stule', $style)) . '</p>';
-  } else { $args['shout'] = ''; }
+    $shout = '<p>' . $question . w\lnk($link, $btnText, ray('stule', $style)) . '</p>';
+  } else { $shout = ''; }
   
+  $args += compact(ray('shout track code'));
   if (!test()) foreach (ray('messages shout') as $k) $args[$k] = str_replace('stule=', 'style=', $args[$k]); // revert in emails (CSP forbids inline styles online)
-  if (!r\notify($uid, 'notices', $args, TRUE)) return;
+  if (!$a->tell('notices', $args)) return;
   db\q('UPDATE r_notices SET sent=:NOW WHERE uid=:uid AND NOT sent', compact('uid'));
 }
 
@@ -1033,8 +1032,13 @@ function notice1($item) {
  */
 function postNotices1($item) {
   require_once R_ROOT . '/forms/posts.inc'; // for getPosts()
-  extract(just('pid fields timeForW timeForM', $item, NULL));
+  extract(just('fields timeForW timeForM', $item, NULL));
   extract(just($fields, $item, NULL));
+  
+  if (!test()) {
+    if (!$uid or !in(r\acct($uid)->name, 'williamspademan ivanussach')) return;
+    tellAdmin('emailing post notices', $item);
+  }
   
   $cell = 'display:table-cell; padding:5px 8px; ';
   $map0 = [
@@ -1060,7 +1064,7 @@ function postNotices1($item) {
     $unit = ray('d:day,w:week,m:month')[$freq];
     $since = strtotime("-1 $unit", now());
 
-    $q = w\getPosts($type, $latitude, $longitude, $zip, $radius, $pid ?: 0, 0, 0, $since);
+    $q = w\getPosts($type, $latitude, $longitude, $zip, $radius, $pid ?: 0, 0, 0, $since, FALSE);
     if (!$q->rowCount()) continue;
     $rows = strtr(join('', w\postRows($q, FALSE)), $map);
     $Type = w\typeName($type, 2);
@@ -1069,7 +1073,7 @@ function postNotices1($item) {
   if (!$posts) return;
 
   $noFrame = TRUE;  
-  $code = $uid ? w\getCode('users', compact('uid')) : w\getCode('people', compact('pid'));
+  $code = w\getEmailCode(compact($uid ? 'uid' : 'pid'));
   r\rMail('post-notice', [$email => $fullName], compact(ray('fullName posts radius code noFrame')));
 }
 

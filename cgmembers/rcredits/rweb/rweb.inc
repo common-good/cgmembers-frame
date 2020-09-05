@@ -260,8 +260,9 @@ function formAccounts($form, &$sta) {
 }
 
 function formAccounts_validate($form, &$sta) {
-  extract(just('newAcct accounts', $sta['input']));
+  extract(just('newAcct', $sta['input'], ''));
 //  t('Type part of name, phone, email, record ID, or qid.')
+  if (!$newAcct) return;
   if (mb_strpos($newAcct, '@') and !u\validEmail($email = $newAcct)) return say('bad email', compact('email'), 'newAcct');
   if (!$a = w\whois($newAcct, 'newAcct', [], t('You are already in that account.'), FALSE)) return FALSE;
   u\preray(compact('a'), $sta['input']); // ['uid' => $a->id]

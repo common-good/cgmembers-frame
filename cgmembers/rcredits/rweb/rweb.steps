@@ -2146,6 +2146,7 @@ function memberVisitsAndSelectsFor($id1, $page, $fld, $value, $id2) {
   // assume relations page for now
   $linei = $reid = r\relation('reid', t\uid($id1), t\uid($id2)); // compound qid
   $val = u\consta('b', $value) - B_RELATED;
+///  debug("$fld-$linei val=$val page=$page id=$id1");
   return t\dojs($page, $id1, "$('select[name=\"$fld-$linei\"').val($val).change();"); // js to simulate dropdown selection
 }
 

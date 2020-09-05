@@ -143,7 +143,7 @@ function formSignupCo_submit($form, &$sta) {
   $pw1 = $newA->oneTimePass($name, TRUE);
 
   $newA->newRelation(ray('other otherNum owner permission', $agentA->id, 1, TRUE, r\perm(B_MANAGE)));
-  r\notify($myid, 'verify', ray('qid code pass', "$qid-A", $pw1, t('co nonpass')), TRUE); 
+  $mya->tell('verify', ray('qid code pass', "$qid-A", $pw1, t('co nonpass')));
 
   if (nn($code)) w\invitation($code, $myid); // mark invitation used
   

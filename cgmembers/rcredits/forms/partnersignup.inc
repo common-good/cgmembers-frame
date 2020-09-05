@@ -300,6 +300,7 @@ function gotSignup($pA) {
   }
 
   $mya->stepDone('verifyid');
+  $mya->setBit('confirmed');
 
   $mya->update('partnerInfo', $info); // store for final step and beyond
   $flnm = fillContract($pA->name, $info, [], FALSE); // get populated contract
@@ -393,6 +394,7 @@ function gotSolarOne($info) {
   if ($co) $mya->stepDoneForNow('signup'); else $mya->stepDone('signup');
   $mya->stepDone('verifyid');
   $mya->stepDone('contact');
+  $mya->setBit('confirmed');
 
   $mya->update('partnerInfo', $info); // store for final step and beyond
 // ----- end of gotSignup() functionality

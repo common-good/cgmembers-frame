@@ -170,8 +170,8 @@ Scenario: Someone confirms an offer once, twice
   | postid | type  | item | details | cat  | exchange | emergency | radius | pid | created   | end     |* 
   | 1      | offer | fish | big one | food | 0        | 1         | 3      | 1   | %today-1d | %now+3d |
   When someone visits "community/posts/op=confirm&thing=post&code=%code" where code is:
-  | postid | created |*
-  | 1      | %today  |
+  | postid | created   |*
+  | 1      | %today-1d |
   Then these "people":
   | pid | confirmed |*
   | 1   | 1         |
@@ -181,13 +181,13 @@ Scenario: Someone confirms an offer once, twice
   And we say "status": "post success"
   
   When someone visits "community/posts/op=confirm&thing=post&code=%code" where code is:
-  | postid | created |*
-  | 1      | %today  |
+  | postid | created   |*
+  | 1      | %today-1d |
   Then we redirect to "community/posts/op=show&postid=1"
   And we show "Edit Post" with:
   | Category:  | food |
   | Who:       | Abe |
-  | Posted:    | %mdY |
+  | Posted:    | %mdY-1d |
   | What:      | fish |
   | Details:   | big one |
   |            | Max 500 characters |
@@ -200,8 +200,8 @@ Scenario: Someone confirms an offer once, twice
   | type | cat    | item   | details | emergency | radius | end     |*
   | tip  | health | Boston | ASAP    | 1         | 5      | %mdY+5d |
   Then these "posts":
-  | postid | type | cat    | item | details | exchange | emergency | radius | pid | created | end          |* 
-  | 1      | tip  | health | Boston | ASAP  | 0        | 1         | 5      | 1   | %now    | %daystart+5d |
+  | postid | type | cat    | item | details | exchange | emergency | radius | pid | created    | end          |* 
+  | 1      | tip  | health | Boston | ASAP  | 0        | 1         | 5      | 1   | %today-1d | %daystart+5d |
   And we show "Offers, Needs, & Tips" with:
   | List View | Post |
 #  | Needs | Offers | Tips |

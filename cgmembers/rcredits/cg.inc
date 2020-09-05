@@ -179,7 +179,7 @@ function setJoin($reid, $join) {
       $msg = t('join success');
     } else { // requesting join
       $_atag = $a2->doLink('join', $main); // seek agreement
-      r\message($other, 'join accounts', ray('_atag name', $_atag, $a1->fullName));
+      $a2->tell('join accounts', ray('_atag name', $_atag, $a1->fullName));
       $msg = t('join request success');
     }
   } else {
@@ -278,7 +278,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
     $resubs[$k] = $v;
   }
 
-  $subject = u\SUBS(strtr(nn($subject) ?: $GLOBALS['emailSubjects'][$index], $resubs), '%');
+  $subject = u\SUBS(strtr(nn($subject) ?: nni($GLOBALS['emailSubjects'], $index), $resubs), '%');
   $body = u\SUBS(strtr(nn($body) ?: (nn($noFrame) ? r\emailTemplate($index) : r\emailBody($index)), $resubs), '%');
 
   // log
@@ -360,72 +360,21 @@ function badCard($qid, $code, $msg) {
 }
 
 /**
- * Email an arbitrary message to the member, NOW (otherwise use notify).
- * @param int $uid: account record ID
- * @param string $index: index to arbitrary HTML message body (between salutation & closing) or the HTML itself
- * @param assoc $subs: message parameters
- * @param string $topic: optional specific topic (otherwise look in $GLOBALS['topics'])
- */
-function message($uid, $index, $subs = [], $topic = '') {
-  global $testMessages;
-
-  $subs['otherName'] = nni($subs, 'myName'); // messaging someone else about US, if anyone
-  $reply = nni($subs, 'reply');
-  $message = t($index, $subs);
-  $topic = $topic ?: (t(nni($GLOBALS['topics'], $index), $subs) ?: $index); // index should never be used literally (wrong language) but more importantly never fail
-  $testMessages[] = compact(ray('uid index subs topic'));
-  r\notify($uid, 'message', compact(ray('message topic reply')), TRUE);
-}
-
-/**
- * Notify the specified user, according to their preferences
- * @param integer $uid: account record id
- * @param string $index: message index
- * @param assoc $subs: substitutions/parameters for the message
- * @param bool $force: send by email NOW
- * @return <successfully mailed> if $force
- */
-function notify($uid, $index, $subs = [], $force = FALSE) {
-  global $channel;
-  $a = r\acct($uid);
-  u\EXPECT($a, 'no account');
-  $subs['uid'] = $uid;
-  u\setDft($subs['qid'], $a->qid); // might have an agent too, so don't overwrite
-  $subs['otherName'] = nni($subs, 'myName', NULL); // notifying someone else about US, if anyone
-  $fullName = $a->fullName;
-  $warnIndexes = ray('new invoice,new offer,charge disputed');
-  
-  if ($force) {
-    return r\rMail($index, $a, $subs, nni($subs, 'reply') ?: 'ctty');
-  } else {
-    list ($message, $created) = array(t($index, $subs), now());
-    f('t.output', "Actual Notice to $fullName: $message");
-    db\insert('r_notices', compact(ray('uid message created')), 'msgid');
-  }
-  
-  if ($a->can(B_BYSMS)) {
-///    $ok = SMS\send($a->phone, t($index, $subs));
-///    if (!$ok) r\tellAdmin(t('failed sending SMS to %nm @ %phone', 'nm phone', $a->fullName, $a->phone));
-  }
-
-}
-
-/**
  * Notify the specified user, according to their preferences
  * @param integer $uid: account record id
  * @param string $index: message index
  * @param array $entries: TxEntries about which we should notify
  * @param bool $force: send by email NOW
- */
+ *//* UNUSED
 function notifyEntries($a, $index, $entries, $force = FALSE) {
   global $channel;
   u\EXPECT($a, 'no account');
   $subs= [];
   $subs['uid'] = $a->uid;
   $subs['qid'] = $a->qid;
-  /* $subs['otherName'] = @$subs['myName']; // notifying someone else about US, if anyone */
+  /* $subs['otherName'] = @$subs['myName']; // notifying someone else about US, if anyone
   $fullName = $a->fullName;
-  /* $warnIndexes = ray('new invoice,new offer,charge disputed'); */
+//   $warnIndexes = ray('new invoice,new offer,charge disputed'); 
   
   if ($force) {
     $mailed = r\rMail($index, $a, $subs, nni($subs, 'reply') ?: 'ctty');
@@ -448,6 +397,7 @@ function notifyEntries($a, $index, $entries, $force = FALSE) {
     if ($channel == TX_POS) { } // dunno how to handle this
   }
 }
+*/
 
 /**
  * Notify rCredits staff (Community Admin, if uid is specified and in their area)
@@ -799,35 +749,44 @@ function invite($email, $inviter, $code = '', $subject = '', $message = '', $zip
 /**
  * Return parameters for notices for the account.
  * @param int $uid: the account record ID
- * @param string $where: criteria to filter notices for this account
+ * @param string $having: criteria to filter notices for this account
  * @param bool $weekly: digest notices for the week
  * @param bool $monthly: digest notices for the month
  * @param int $at: time of reporting
  * @return assoc of all parameters in the notices template (FALSE if none)
  */
-function noticeArgs($uid, $where = '0', $weekly = FALSE, $monthly = FALSE, $at = NULL) {
+function noticeArgs($uid, $having = '1', $weekly = FALSE, $monthly = FALSE, $at = NULL) {
   u\setDft($at, now());
   $a = r\acct($uid);
-  
-  if ($where) {
-    $q = db\q("SELECT message, created FROM r_notices WHERE uid=:uid AND ($where)", compact('uid'));
-
-    while ($row = $q->fetch()) {
-      $date = ($weekly or $monthly) ? R_BULLET . (strftime(' %b&nbsp;%d', $row->created)) : R_BULLET;
-      $messages[] = "<tr><td class=\"notice-date\" stule=\"vertical-align:top; margin-right:5px;\">$date</td><td>$row->message</td></tr>"; // "stule" because CSP forbids inline online (rcron reverts it before emailing)
-    }
-    if (nn($messages)) $messages = join("\n", $messages); else return FALSE;
+  foreach (ray('weekly monthly') as $k) $$k = (int) $$k;
+  foreach (ray('m:month,w:week,d:day') as $k => $unit) {
+    ${$k . 'Date'} = strtotime("-1 $unit", $at);
+    ${$k . 'Type'} = $k == 'd' ? NULL : "'$a->notices' LIKE CONCAT('%', type, ':$k%')";
   }
+  $mDate = u\monthDay1($mDate); // in case cron fails on first day of the month
   
-  $unit = $weekly ? 'week' : ($monthly ? 'month' : 'day');
-  $yestertime = u\fmtDate($start = $unit == 'month' ? u\plusMonths(-1, $at) : strtotime("-1 $unit", $at));
-  $range = $weekly ? "the week of $yestertime" : ($monthly ? strftime('%B %Y', $start) : $yestertime);
+  $notices = ray($a->notices);
+  
+  $q = db\q("SELECT message, created, sent, $wType AS wType, $mType AS mType FROM r_notices WHERE uid=:uid HAVING $having", compact('uid'));
+
+  while ($row = $q->fetch()) {
+    $date = ($weekly or $monthly) ? R_BULLET . (strftime(' %b&nbsp;%d', $row->created)) : R_BULLET;
+    $messages[] = "<tr><td class=\"notice-date\" stule=\"vertical-align:top; margin-right:5px;\">$date</td><td>$row->message</td></tr>"; // "stule" because CSP forbids inline online (rcron reverts it before emailing)
+  }
+  if (nn($messages)) $messages = join("\n", $messages); else return FALSE;
+  
+  $unit = $monthly ? 'month' : ($weekly ? 'week' : 'day');
+  $ranges = ray('m w d',  t('month of ') . strftime('%B %Y', $mDate), t('week of ') . u\fmtDate($wDate, TRUE), u\fmtDate($dDate, TRUE));
+  foreach (ray(NOTICE_TYPES) as $k => $desc) if (!in($k, POST_NOTICE_TYPE_KEYS)) { // just the non-post freq settings
+    $freq = $notices[$k];
+    if ($freq == 'm' ? $monthly : ($freq == 'w' ? $weekly : TRUE)) $range[] = "$desc (" . $ranges[$freq] . ')';
+  }
+  $range = join(t(' and '), $range);
   extract(just('return', $a->j_stats()));
   $balance = u\fmtAmt($a->balance);
-  //  $savings = u\fmtAmt($a->rewards);
   $creditLine = u\fmtAmt(-$a->floor);
   list ($rewards, $ourEmail) = array(u\fmtAmt($a->rewards), $a->cttyA->email);
-  return compact(ray('messages unit range yestertime balance creditLine return ourEmail'));
+  return compact(ray('messages unit range balance creditLine return ourEmail'));
 }
 
 /**
@@ -1303,7 +1262,7 @@ function median($field, $table = 'users', $where = 1, $subs = []) {
 function suggest($a, $index, $subs, $page = 'Preferences') {
   // $subs['url'] = 
   // $index .= '|click option';
-  r\notify($a->id, $index, $subs + compact('page'));
+  $a->tellMisc($index, $subs + compact('page'));
 }
 
 /**

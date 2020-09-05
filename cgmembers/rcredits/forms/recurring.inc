@@ -22,7 +22,7 @@ function formRecurring($form, &$sta, $args = '') {
     if (isset($reid)) $result = stopAutoPay($reid);
   }
 
-  $hdrs = ray(t(',Who,Amount,Purpose,How oten?,Starting,Next,Ending,'));
+  $hdrs = ray(t(',Who,Amount,Purpose,How often?,Starting,Next,Ending,'));
   $classes = ray('arrow:arrows, fWho:name, fAmount:amount, fPurpose:purpose, fPeriod:period, fCreated:date, fNext:date, fEnd:date, button:buttons');
   $fields = array_keys($classes);
   $url0 = BASE_URL . '/history/recurring';

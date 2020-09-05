@@ -154,7 +154,7 @@ function doit(what, vs) {
         if (j.ok) that.closest('tr').remove(); // delete line
       });
     });
-    $('#relations select').change(function () {
+    $('#relations select').change(function () { // permission
       var data = {name: $(this).attr('name'), v:$(this).val()};
       var that = $(this);
       post('relations', data, function (j) {
@@ -444,9 +444,8 @@ function doit(what, vs) {
       $('.form-item-exchange').toggle(need);
       if (type == 'tip') $('#edit-radius').val(0); // tips default to everywhere
     });
-    
     $('.form-item-end a').click(function () {
-      $('#edit-end').val(new Date(Date.now()).toLocaleString().split(',')[0]);
+      $('#edit-end').attr('type', 'text').val(new Date(Date.now()).toLocaleString('en-US', {month:'2-digit', day:'2-digit', year:'numeric'}).split(',')[0]);
       $('#edit-submit').focus();
     });
     break;

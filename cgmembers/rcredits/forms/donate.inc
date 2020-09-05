@@ -81,7 +81,7 @@ function formDonate_submit($form, &$sta) {
     $msg = 'gift successful';
     $data = ray('gift recurs', 1, (bool) $recursId);
     if ($mya->ok and $mya->payApproved(CGID, $amount, $purpose, FOR_NONGOODS, $data, $recursId)) {
-      r\notify($mya->id, 'gift sent', ray('amount', u\fmtAmt($amount)));
+      $mya->tellOut('gift sent', ray('amount', u\fmtAmt($amount)));
     } else $msg .= '|gift transfer later';
     say($msg);
   }

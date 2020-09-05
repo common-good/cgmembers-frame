@@ -385,6 +385,8 @@ function invites($list) {return t\invites($list);}
  * we do not email (ARG) to member (ARG)
  *
  * in: TEST aaSeldomNotices ItsTimeToRenewBacking
+ *     TEST notices AMemberGetsPostNotices
+ *     TEST notices AMemberGetsOnlyTodaysPostNotices
  *     TEST tickle ANonmemberHasAcceptedTheInvitation
  *     TEST tickle ANonmemberHasAcceptedAnInvitationFromSomeoneElseInstead
  */
@@ -538,6 +540,7 @@ function stats($list) {return t\stats($list);}
  *     TEST invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalance
  *     MAKE notices Setup
  *     MAKE notices AMemberGetsPostNotices
+ *     MAKE notices AMemberGetsOnlyTodaysPostNotices
  *     MAKE recurs ABrandNewRecurringPaymentCanBeCompleted
  *     MAKE recurs ASecondRecurringPaymentCanBeCompleted
  *     MAKE recurs ARecurringPaymentHappenedYesterday
@@ -651,6 +654,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE notices AMemberGetsSomeNotices
  *     MAKE notices AMemberGetsSomeWeeklyNotices
  *     MAKE notices AMemberGetsPostNotices
+ *     MAKE notices AMemberGetsOnlyTodaysPostNotices
  *     MAKE recurs ABrandNewRecurringPaymentCanBeCompleted
  *     MAKE recurs ASecondRecurringPaymentCanBeCompleted
  *     MAKE recurs ARecurringPaymentHappenedYesterday

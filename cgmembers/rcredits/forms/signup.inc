@@ -153,13 +153,13 @@ function formSignup_submit($form, &$sta) {
 
   $pw1 = $mya->oneTimePass($mya->name, TRUE);
   $mya->update('pass', $pass = u\randPass());
-  r\notify($myid, 'verify', ray('name qid code pass', $mya->name, $mya->mainQid, $pw1, $pass), TRUE); 
+  $mya->tell('verify', ray('name qid code pass', $mya->name, $mya->mainQid, $pw1, $pass));
 
   if (!nn($confirmed)) {
     u\EXPECT((bool) $h, 'unconfirmed with no helper');
     if ($h->id != 1) { // sysadmin helper means the potential inviter is named in the notes field
       $_a1 = $h->doLink('confirmInvite', $myid); // link to confirm invitedness
-      r\message($h->id, 'confirm invite', ray('_a1 fullName', $_a1, $mya->fullName)); // ask inviter to confirm
+      $h->tell('confirm invite', ray('_a1 fullName', $_a1, $mya->fullName)); // ask inviter to confirm
     }
   }
 

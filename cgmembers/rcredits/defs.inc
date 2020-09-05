@@ -212,8 +212,13 @@ const MAX_ID_SIZE = 10; // max ID size in MB
 
 //define('NOTICE_OFTENS', t('t:Immediate by Text,i:Immediate by Email,d:Daily,w:Weekly,m:Monthly'));
 define('NOTICE_OFTENS', t('i:Immediate by Email,d:Daily,w:Weekly,m:Monthly'));
-define('NOTICE_TYPES', t('offer:Offers,need:Needs,tip:Tips,request:Transactions you request,auto:Automatic transactions,othertx:Other transactions,other:Other routine messages'));
-const NOTICE_DFTS = 'offer:d,need:d,tip:w,requests:w,auto:d,othertx:i,other:d';
+define('NOTICE_TYPES', t('offer:Offers,need:Needs,tip:Tips,in:Transfers IN,out:Transfers OUT,misc:Other messages'));
+define('POST_NOTICE_TYPE_KEYS', 'offer need tip');
+const NOTICE_DFTS = 'offer:d,need:d,tip:w,in:w,out:d,misc:d';
+const SEND_NOW = 'i';
+const SEND_IN = 'in';
+const SEND_OUT = 'out';
+const SEND_MISC = 'misc';
 
 const VIDEO_URL = 'https://cg4.us/video'; // Nuts & Bolts video
 const TRANSLATE_URL = 'https://translation.googleapis.com/language/translate/v2'; // google translate API URL
@@ -640,7 +645,7 @@ $GLOBALS['emailSubjects'] = array(
 //  'verify-trial' => t('%PROJECT NEXT STEP: Verify your company email address.'),
   'password-reset' => t('New %PROJECT PASSWORD'),
   'tell-staff' => t('%PROJECT STAFF ALERT: %topic'),
-  'notices' => t('%PROJECT Notices for %qid for %range'),
+  'notices' => t('%PROJECT Notices for %qid %todayDesc'),
   'message' => t('%PROJECT %topic'),
 	'annual-gift' => t('your chosen annual gift to %PROJECT'),
   'renew-backing' => t('your %PROJECT backing is ready to renew'),

@@ -176,7 +176,7 @@ function postList($type, $lat, $lon, $zip, $radius) {
   $admin = admin($zip) ? 1 : 0;
   $zipIrrelevant = ($mya and $mya->admin) ? 1 : 0;
   
-  $q = getPosts($type, $lat, $lon, $zip, $radius, $myPid, $admin, $zipIrrelevant);
+  $q = getPosts($type, $lat, $lon, $zip, $radius, 0, $admin, $zipIrrelevant);
   return postRows($q, TRUE);
 }
 
@@ -379,11 +379,11 @@ function getWho($args) {
 function confirm($op, $thing, $code) {
   $ray = u\decryRay($code);
   list ($tnm, $idnm) = $thing == 'post' ? ['posts', 'postid'] : ['messages', 'id'];
-  extract(just($idnm . ' created location', $ray, NULL));
+  extract(just($idnm . ' location', $ray, NULL));
   $idSub = compact($idnm);
   $successUrl = POSTPAGE . (nni($_COOKIE, 'radius') ? '/op=top' : '');
 
-  if (db\exists($tnm, $idSub + compact('created'))) {
+  if (db\exists($tnm, $idSub)) {
     $pid = db\get($thing == 'post' ? 'pid' : 'sender', $tnm, $idSub);
     
     if ($op == 'cancel') {
@@ -570,7 +570,7 @@ function formPosts_submit($form, &$sta) {
  * @param assoc $extra: other values to encode in emailed link
  */
 function emailLink($thing, $idSub, $created, $type, $item, $pid, $extra = []) {
-  $code = getCode($thing . 's', $idSub, $extra);
+  $code = w\getEmailCode($idSub, $extra);
   $index = "confirm-$thing";
   extract(pVal('fullName,email', $pid));
   $to = [$email => $fullName];
@@ -601,24 +601,13 @@ function oldEmailLink($pid) {
 }*/
 
 /**
- * Return a code to confirm, cancel, or edit the given post or message.
- * @param string $tnm: table name
- * @param assoc $idSub: [record ID field name => record ID]
- * @param assoc $other: things to encode
- */
-function getCode($tnm, $idSub, $other = []) {
-  $created = db\get('created', $tnm, $idSub);
-  return u\cryRay($idSub + $other + ray('created word', $created, R_WORD));
-}
-
-/**
  * Send a message in response to a post.
  */
 function postMsg($message, $fromName, $fromEmail, $fromLocation, $postid) {
   extract(db\get('type,item,s.created,fullName,email', 'posts s JOIN people p USING (pid)', compact('postid')));
   $to = [$email => $fullName];
   $date = u\fmtDate($created, TRUE);
-  $code = getCode('posts', compact('postid')); // code for recipient to cancel post
+  $code = w\getEmailCode(compact('postid')); // code for recipient to cancel post
   $noFrame = TRUE;
   r\rMail('post-message', $to, compact(ray('fullName fromName fromLocation type item date message code noFrame')), $fromEmail);
   say('message sent');
@@ -670,13 +659,15 @@ function admin($zip) {
  * @param string $zip: zip of user
  * @param numeric $radius: up to how far away user is interested
  * @param date $since: first post date to include (0 to include all dates)
+ * @param bool $all: show all such posts, even mine
  * @return the query result set
  */
-function getPosts($type, $lat, $lon, $zip, $radius, $myPid, $admin, $zipIrrelevant, $since = 0) {
+function getPosts($type, $lat, $lon, $zip, $radius, $myPid, $admin, $zipIrrelevant, $since = 0, $all = TRUE) {
   
   $visible = $zipIrrelevant ? 1 
   : ($admin ? '(SELECT community FROM users WHERE :zip RLIKE zip AND uid<1 LIMIT 1)' : 0);
   $visible = "($visible OR (NOT s.private AND s.confirmed))";
+  if (!$all) $visible .= ' AND pid<>:myPid';
   list ($distance, $noGeo) = [DISTANCE_BETWEEN, NO_DISTANCE];
   $postRadius = 'IFNULL(s.radius, 0)';
   $isMyPid = 'pid=:myPid';

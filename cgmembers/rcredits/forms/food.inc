@@ -139,7 +139,7 @@ function formFood_submit($form, &$sta) {
     $recursId = db\insert('tx_templates', ray('action from to amount period purpose duration', ACT_PAY, $mya->id, $payee, $amount, $period, $purpose, 'once'));
     $msg = 'gift successful';
     if ($mya->payApproved($payee, $amount, $purpose, FOR_GOODS, ['recurs' => 1], $recursId)) {
-      r\notify($mya->id, 'recur pay', ray('amount when payee purpose', u\fmtAmt($amount), r\recurDesc($period, 1), t('the Food Fund'), $purpose));
+      $mya->tellOut('recur pay', ray('amount when payee purpose', u\fmtAmt($amount), r\recurDesc($period, 1), t('the Food Fund'), $purpose));
     } else $msg .= '|gift transfer later';
     say($msg);
   }

@@ -39,7 +39,7 @@ function ajax() {
     exit();
   } elseif ($op == 'typeWho') { // get selections for suggestWho
     exit(json_encode(be\memberRay($myid, $aid, $data))); // data=1 means companies only
-  } elseif ($op = 'setNotice') { // change notice preference for one notice type (code, type, freq)
+  } elseif ($op == 'setNotice') { // change notice preference for one notice type (code, type, freq)
     extract(just('code type freq', $data, ''));
     if (!$ray = u\decryRay($code)) return ajaxErr(t('Bad ID code.'));
     $idRay = just('pid uid', $ray);

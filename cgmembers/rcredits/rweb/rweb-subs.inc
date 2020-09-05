@@ -1418,6 +1418,15 @@ function adminField($label) {
   return ($mya->cAdmin and $mya->federalId) ? item(R_ON_FILE, $label) : NULL;
 }
 
+/**
+ * Return a code to confirm, cancel, or edit the given post or message.
+ * @param assoc $idSub: [record ID field name => record ID]
+ * @param assoc $other: things to encode
+ */
+function getEmailCode($idSub, $other = []) {
+  return u\cryRay($idSub + $other + ray('word', R_WORD));
+}
+
 function onFile($field, $sta) {
   return (nn($sta['complete form'][$field]['#value']) == R_ON_FILE and nni($sta['input'], $field) == R_ON_FILE);
 }

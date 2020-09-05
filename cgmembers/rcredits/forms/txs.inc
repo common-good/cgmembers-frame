@@ -169,7 +169,7 @@ function formTxs_submit($form, &$sta) {
 
 /*     foreach ([$x_payer => $x_payerTid, $x_payee => $x_payeeTid] as $uid => $tid) { */
 /*       $who = $uid == $agent->id ? t('you') : $agent->fullName; */
-/*       r\notify($uid, $msg, compact(ray('who tid amount what'))); */
+/*       $a->tellMisc($uid, $msg, compact(ray('who tid amount what'))); */
 /*     } */
 /*   } */
 /*   return w\go('history', 'info saved'); */

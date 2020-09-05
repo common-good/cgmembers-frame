@@ -121,12 +121,12 @@ function formHandleInvoice_submit($form, &$sta) {
     }
   } elseif ($op == 'delete') {
     db\del('r_invoices', 'nvid', $nvid);
-    r\notify($payer, 'invoice withdrawn', $subs);
+    $fromA->tellOut('invoice withdrawn', $subs);
     $msg = 'invoice delete done';
   } elseif ($op == 'deny' or $whyNot) {
     $data = serialize(compact('whyNot') + ($data ? unserialize($data) : []));
     db\update('r_invoices', ray('status data nvid', TX_DENIED, $data, $nvid), 'nvid');
-    r\notify($payee, 'invoice denied', $subs);
+    $toA->tellIn('invoice denied', $subs);
     $msg = 'denial done';
   } else $msg = ''; // default: canceled
 
