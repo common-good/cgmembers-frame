@@ -19,6 +19,7 @@ const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromI
 const SPECIAL_IDS = 'ctty crumb round cgf bank-in bank-out';
 const RLESS_TNMS = 'signup posts people post_cats messages'; // test tables with no "r_" prefix
 const NULL_FLDS = 'payer payee useMax amtMax template end code rule';
+const DOJS_TIMEOUT = 2; // number of seconds for simulated ajax; 2 seems to suffice (if tests fail, use a bigger number)
 // see R_DATE_FLDS in defs.inc
 
 global $base_path;
@@ -59,7 +60,7 @@ function fixData(&$info, $direct = FALSE) {
 
 	foreach (ray('why error') as $k) if (isset($$k)) $$k = tr($$k); // convert embedded message references to actual text
   foreach (['rewards'] as $k) if (isset($$k)) $$k += 0; // make sure numeric fields are numeric.
-  if (nn($notices)) $notices = array_search($notices, ray('daily weekly monthly'), TRUE);
+  if (nn($notices) and !strhas($notices, ':')) $notices = array_search($notices, ray('daily weekly monthly'), TRUE);
   if (nn($statements)) $statements = array_search($statements, ray('electronic paper'), TRUE);
   if (nn($email)) $info['email'] = t\fixEmail($email);
   if (nn($email)) t\fixEmail($email);
@@ -868,10 +869,10 @@ function findEmail($index, $email, $subs) {
         }
         if (nn($ignore)) foreach ($ignore as $k) unset($t_subs[$k]);
         ksort($t_subs);
-        $wantedInActual = just(array_keys($subs), $t_subs);
-        $actualInWanted = just(array_keys($t_subs), $subs);
-        if ($wantedInActual == $actualInWanted) return TRUE; // actual is exactly what was wanted
-        t\output(compact('wantedInActual', 'actualInWanted'), 'email');
+        $got = just(array_keys($subs), $t_subs);
+        $wanted = just(array_keys($t_subs), $subs);
+        if ($got == $wanted) return TRUE; // actual is exactly what was wanted
+        t\output(compact('wanted', 'got'), 'email');
         foreach ($subs as $k=>$v) if (isset($t_subs[$k]) and $v != $t_subs[$k]) t\output("k=$k v=$v tv=" . nni($t_subs, $k), 'email');
         foreach ($t_subs as $k=>$v) if (isset($subs[$k]) and $v != $subs[$k]) t\output("k=$k tv=$v v=" . nn($subs[$k]), 'email');
       }
@@ -1047,7 +1048,7 @@ function verifyRecord($table, $info, $riskRay = K_TX_RISKS) {
   list ($infoK, $infoV) = [key($info), array_shift($info)]; // must be before ksort
   ksort($info); // sort everything else, but leave key out of it
   $info = [$infoK => $infoV] + $info; // keep key first
-///  echo pr(compact(ray('info0 info1 info idSub infoK infoV')));
+  ///  echo pr(compact(ray('info0 info1 info idSub infoK infoV')));
 
   foreach ($info as $k => $v) {
     if ($v == '?') {unset($info[$k]); continue;}
@@ -1391,7 +1392,7 @@ function clear($ch = 0) {
   foreach (ray('error status') as $one) u\deleteFile(t\dosayFilename($one));
 
   if (test() and !strpos($sceneTest->name, 'Statement')) {
-/**/  echo "scene: $sceneTest->module / $sceneTest->feature / $sceneTest->name<br>\n"; // VERY helpful when test dies
+    /**/  echo "scene: $sceneTest->module / $sceneTest->feature / $sceneTest->name<br>\n"; // VERY helpful when test dies
   }
 
   t\log('clearing');
@@ -1528,7 +1529,7 @@ function weSayWithSubs($type, $index, $subs) {
   $wantMsg = trim(t($index, $subs));
   $test = \sceneId();
   $msgs = db\col('value', 'test', compact('type', 'test')); // don't look at things added by test.php or by other tests
-
+///  debug(compact(ray('wantMsg msgs subs')));
   $res = FALSE;
   if (isset($wild)) {
     $i = mb_strpos($wantMsg, $wild);
@@ -1709,7 +1710,7 @@ function dojs($page, $id, $js) {
   global $base_url;
   $qid = t\acct($id)->qid;
   $jsCode = u\cryRay(compact('js'));
-  t\execWithTimeout("start \"\" \"$base_url/$page?qid=$qid&jsCode=$jsCode\"", 2); // leave enough time to display page
+  t\execWithTimeout("start \"\" \"$base_url/$page?qid=$qid&jsCode=$jsCode\"", DOJS_TIMEOUT); // leave enough time to display page
   return TRUE;
 }
 

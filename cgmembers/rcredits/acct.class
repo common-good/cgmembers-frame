@@ -75,9 +75,10 @@ class Acct {
 
     u\setDft($cardCode, r\cardCode(r\qid($uid)));
     u\setDft($emailCode, r\cardCode(r\qid($uid)));
+    u\setDft($notices, NOTICE_DFTS);
 
     foreach (ray('number region') as $k) unset($info[$k]);
-    foreach (ray('phone email pass fullName legalName flags state country community created login access emailCode cardCode') as $k) if (isset($$k)) $info[$k] = $$k; // things we may have added or changed
+    foreach (ray('phone email pass fullName legalName flags state country community created login access emailCode cardCode notices') as $k) if (isset($$k)) $info[$k] = $$k; // things we may have added or changed
 
     $a->update($info); // this is a lot easier to do after saving the record
     if (!$a->member) $a->setTask($co ? 'co' : 'person');
@@ -724,7 +725,7 @@ X;
     }
     $msg = $left == $need ? 'cannot draw' : 'drew';
     $msg = tr($msg, 'amount', u\fmtAmt($need - $left));
-    r\notify($a->id, tr($msg, compact('why')));
+    $a->tellIn(tr($msg, compact('why')));
 
     return round($need - $left, 2);
   }
@@ -789,7 +790,43 @@ EOF;
     unset($DBTX);
   }
 
-  public function recomputeBalance() {
+  /**
+   * Notify the specified user, according to their preferences
+   * @param integer $uid: account record id
+   * @param string $index: message index
+   * @param assoc $subs: substitutions/parameters for the message
+   * @param string $topic: optional specific topic (otherwise look in $GLOBALS['topics'])
+   * @param string $type: type of message, so we know when to send (if empty, email immmediately)
+   */
+  public function tell($index, $subs = [], $topic = '', $type = '') {
+    $a = $this;
+    global $channel, $testMessages;
+    
+    $subs['uid'] = $uid = $a->id;
+    u\setDft($subs['qid'], $a->qid); // might have an agent too, so don't overwrite
+    $subs['otherName'] = nni($subs, 'myName', NULL); // notifying someone else about US, if anyone
+    $subs['todayDesc'] = u\fmtDate(now(), TRUE);
+    $topic = $topic ?: (nni($subs, 'topic') ?: (nni($GLOBALS['topics'], $index) ?: $index)); // index should never be used literally (wrong language) but more importantly never fail
+    $subs['topic'] = tr($topic, $subs);
+    $testMessages[] = compact(ray('uid index subs topic type'));
+
+    if (nni($GLOBALS['emailSubjects'], $index)) return r\rMail($index, $this, $subs, nni($subs, 'reply') ?: 'ctty');
+
+    $message = t($index, $subs);
+    $created = now();
+    f('t.output', t('Actual Notice to %fullName: %message', 'fullName message', $a->fullName, $message));
+    if ($type) {
+      return db\insert('r_notices', compact(ray('uid message created type')), 'msgid');
+    } else { return r\rMail('message', $this, $subs + compact('message'), nni($subs, 'reply') ?: 'ctty'); }
+  }
+  public function tellIn($index, $subs = [], $topic = '') {return $this->tell($index, $subs, $topic, SEND_IN);}
+  public function tellOut($index, $subs = [], $topic = '') {return $this->tell($index, $subs, $topic, SEND_OUT);}
+  public function tellMisc($index, $subs = [], $topic = '') {return $this->tell($index, $subs, $topic, SEND_MISC);}
+  public function tellInOut($in, $index, $subs = [], $topic = '') {return $this->tell($index, $subs, $topic, $in ? SEND_IN : SEND_OUT);}
+
+  private function freq($type) {return ray($this->notices)[$type];}
+
+  public function redoBal() {
     $a = $this;
     $balance = db\sum('amount', 'tx_entries', 'uid IN (:uids)', ['uids'=>$a->uids]);
     if (empty($balance)) $balance = 0;
@@ -816,8 +853,8 @@ EOF;
         //        $ai->setBit(B_JOINED, FALSE);
       }
 
-      $a->recomputeBalance();
-      $b->recomputeBalance();
+      $a->redoBal();
+      $b->redoBal();
 
       if ($a->ok and $b->ok) { // no need to settle with closed or not-yet-open account
         $diff = $a->balance - $b->balance;
@@ -842,7 +879,7 @@ EOF;
   public function suspend($why = '') {
     $this->setBit(B_OK, FALSE); // suspend the account
     if ($why) {
-      r\message($this->id, 'account suspended', compact('why'));
+      $this->tell('account suspended', compact('why'));
       $notes = u\fmtDate() . ': ' . t('account suspended') . " $why\n" . nn($this->notes);
       $this->update(compact('notes'));
       r\tellAdmin('account suspended', ray('uid fullName why', $this->id, $this->fullName, $why));
@@ -1208,9 +1245,9 @@ o;
     if ($previous) $amount -= $combinable; // don't include previous amount in notice to member
     if ($amount > 0) $msg .= '|bank tx number' . (nn($completed) ? '|available now' : '');
     list ($action, $tofrom) = $amount < 0 ? [t('deposit'), t('to')] : [t('draw'), t('from')];
-    $msg = tr($msg, ray('action tofrom amount checkNum previous total', $action, $tofrom, u\fmtAmt(abs(nn($amount))), $xid, $previous, $total));
-    if (empty($why)) $why = '';
-    r\notify($a->id, $newwhy = tr($msg, compact('why')));
+    $subs = ray('action tofrom amount checkNum previous total why', $action, $tofrom, u\fmtAmt(abs(nn($amount))), $xid, $previous, $total, nn($why));
+    $a->tellInOut($amount > 0, $msg, $subs);
+    $newwhy = tr($msg, $subs); // for return
     if ($amount > $amount0 and !$automatic) {
       $whyIncrease = $a->refill ? t('to meet your chosen auto-refill target. If this is more than you wanted, cancel or reverse this request, then turn off auto-refills in your Preference Settings before trying again.') : t('to bring your balance up to zero.');
       w\say(t('Your request has been increased ') . $whyIncrease);
@@ -1272,7 +1309,7 @@ o;
     }
 		
     $msg = join('|', $msg);
-    if ($web) return t($msg, $args); else r\notify($a->id, $msg, $args);
+    if ($web) return t($msg, $args); else $a->tellMisc($msg, $args);
   }
 	
   /**

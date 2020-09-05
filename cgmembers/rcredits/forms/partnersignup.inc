@@ -300,6 +300,7 @@ function gotSignup($pA) {
   }
 
   $mya->stepDone('verifyid');
+  $mya->setBit('confirmed');
 
   $mya->update('partnerInfo', $info); // store for final step and beyond
   $flnm = fillContract($pA->name, $info, [], FALSE); // get populated contract
@@ -327,9 +328,10 @@ function gotSolarOne($info) {
   /*debug(*/ if (isDEV or (!is_array($info) and $info == 1)) $info = bin2hex(http_build_query(ray($keys, '654321', 'NEWAIL', 0, 'Jane Dough', '', '10 J St.', 'Jville', 'NY', '10101', 'wspademan+j@gmail.com', '(212) 222-1111', rand(1000, 9999), 'sunset')));
   
   signout(TRUE); // current account is irrelevant and could be confusing, so sign out
-  if (!$info = hex2bin($info)) return solarOneErr('bad solar1 encoding');
+  if (!$info = hex2bin($info)) return solarOneErr('bad solar1 encoding', '(system)');
 
   extract($info = just($keys, $info));
+  if (!nn($pid)) $pid = $info['pid'] = 'NEWBHS'; // grandfather solar1's qid
 
   $noContract = TRUE;
   $m_company = 'Con Ed';
@@ -366,7 +368,7 @@ function gotSolarOne($info) {
   foreach (ray('m_amount years owns') as $k) $info[$k] = 1;
   
   handleInput($info, $sfData);
-  if (!$sfData) return solarOneErr('sfData error', '?');
+  if (!$sfData) return solarOneErr('sfData error', 'sfData');
   sendToCRM($pA, $sfData);
 
   $flags = u\bit(B_NONUDGE); // no way to sign in yet, so don't bug them
@@ -392,6 +394,7 @@ function gotSolarOne($info) {
   if ($co) $mya->stepDoneForNow('signup'); else $mya->stepDone('signup');
   $mya->stepDone('verifyid');
   $mya->stepDone('contact');
+  $mya->setBit('confirmed');
 
   $mya->update('partnerInfo', $info); // store for final step and beyond
 // ----- end of gotSignup() functionality

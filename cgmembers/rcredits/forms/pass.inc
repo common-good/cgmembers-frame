@@ -40,7 +40,7 @@ function formPass_submit($form, &$sta, $goto = '') {
   $code = $a->oneTimePass($name);
   $verify = (bool) $goto;
 //  list ($region, $code) = [strtolower(R_SERVER_ID), $pw];
-  r\notify($myid, $verify ? 'verify' : 'password-reset', compact(ray('name qid code')), TRUE);
+  $a->tell($verify ? 'verify' : 'password-reset', compact(ray('name qid code')));
   if (isDEV or (NOT_PRODUCTION and $a->cAdmin)) {
     $page = $goto ?: 'reset';
     say(t('Attention admin: code=%code Link: <a href="%BASE_URL/%page/id=%name&code=%code&verify=%verify">reset</a>', compact(ray('page name code verify'))));

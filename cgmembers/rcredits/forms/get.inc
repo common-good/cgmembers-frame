@@ -49,8 +49,8 @@ function formGet($form, &$sta, $args = '') {
   }
 
   $waiting = nn($waiting)
-  ? t('You have exchange requests in process: <br>') . join('<br>', $waiting)
-  : t('You have no pending exchange requests.');
+  ? t('You have bank transfer requests in process: <br>') . join('<br>', $waiting)
+  : t('You have no pending bank transfer requests.');
   $waiting = item($waiting, t('Pending:'));
 
 
@@ -113,7 +113,7 @@ function cancelTx($way) {
     db\del('r_usd', $crit);
     say('transfer canceled', $crit);
     r\tellAdmin("canceled bank transfer xid #$xid");
-    r\notify($myid, t('bank tx canceled', $crit));
+    $mya->tellInOut($way == 'in', t('bank tx canceled', $crit));
   }
 
   if (!nn($crit)); // ignore if none

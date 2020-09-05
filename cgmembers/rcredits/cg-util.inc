@@ -975,7 +975,7 @@ function badPhone(&$phone, $country = US_COUNTRY_ID) {
 
 /**
  * Return a table row with the given data (header or not).
- * @param mixed $row: an array with field names or assoc with field names and values
+ * @param mixed $row: an array with field headers or assoc with field names and values
  */
 function tableRow($row) {
   if ($th = is_numeric(key($row))) $row = array_flip($row);
@@ -1627,3 +1627,4 @@ function bankAcctOk($ba) {return preg_match('/^[0-9]{3,17}$/', $ba);}  // {3,20}
 function joins(&$s, $m, $other = '') {return $s = (empty($s) ? '' : "$s$m") . $other;}
 function padRay($ray, $n, $fill = '') {for ($i = 0; $i < $n; $i++) $ray[] = $fill; return $ray;}
 function isMobile() {return preg_match(MOBILE_REGEX, $_SERVER['HTTP_USER_AGENT']);}
+function rayify($ray) {$res = []; foreach ($ray as $k => $v) $res[] = "$k:$v"; return join(',', $res);}

@@ -376,6 +376,9 @@ body.page-partner h3 {color: #a9a9a9;}
 body.page-settings-partnerend #messages .messages.status {display:none;}
 body.page-partner blockquote {font-size:14px;}
   
+/* Notice Preferences */
+#frm-noticeprefs .k-type {font-weight:bold; font-size:14px;}
+
 /* Security */
 #frm-security #edit-change a {margin-right:10px;}
 
@@ -808,6 +811,10 @@ body.page-partner blockquote {font-size:14px;}
 #frm-couponslist #edit-title {margin-bottom:0;}
 #coupons th, #coupons td {text-align:center;}
 #coupons span[data-toggle="popover"] {color:#2fa4e7;}
+
+/* Unsubscribe */
+#frm-unsubscribe #edit-why .checkbox {display:block;}
+#frm-unsubscribe #edit-why .checkbox i {color:silver;}
 
 /* Unsubscribe */
 #frm-unsubscribe #edit-why .checkbox {display:block;}

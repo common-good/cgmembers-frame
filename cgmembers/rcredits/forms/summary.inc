@@ -221,8 +221,9 @@ function formSummary_submit($form, &$sta) {
   if (!$mya->isCtty) {
     $fullName = $mya->fullName;
     if (FALSE and !$mya->confirmed and nn($helper) and nn($helper) != $mya->helper) { // self-signup
-      $_a1 = r\acct($helper)->doLink('confirmInvite', $mya->id); // link to confirm invitedness
-      r\message($helper, 'confirm invite', compact('_a1', 'fullName')); // ask inviter to confirm
+      $helperA = r\acct($helper);
+      $_a1 = $helperA->doLink('confirmInvite', $mya->id); // link to confirm invitedness
+      $helperA->tell('confirm invite', compact('_a1', 'fullName')); // ask inviter to confirm
     }
   }
 
@@ -290,7 +291,7 @@ function activate($helper) {
     
     $subs = ray('inviterName youName', $mya->helper ? $mya->helperA->fullName : '', $mya->fullName);
     
-    r\message($mya->id, $msg, $subs);
+    $mya->tell($msg, $subs);
     
   }
 
@@ -301,7 +302,7 @@ function activate($helper) {
       $fullName = $mya->fullName;
       $helped = db\count('users', ':IS_OK AND NOT :IS_CO AND helper=:hId', ray('hId', $mya->helper)) + 0;
       if ($helped == ORGANIZER_GRANT_MIN) {
-//            r\message($mya->helper, 'organizer grant', ['_a' => w\atag('/community/grant')]);
+//            r\acct($mya->helper)->tell('organizer grant', ['_a' => w\atag('/community/grant')]);
         list ($name, $topic) = [$mya->helperA->fullName, t('eligible')];
         r\tellAdmin('eligible for grant', compact(ray('name topic')));
       }

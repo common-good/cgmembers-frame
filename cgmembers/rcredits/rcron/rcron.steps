@@ -245,6 +245,7 @@ function notices($list) {return t\notices($list);}
  *     TEST aaSeldomNotices ItsTimeToRenewBacking
  *     TEST notices AMemberGetsSomeNotices
  *     TEST notices AMemberGetsSomeWeeklyNotices
+ *     TEST notices AMemberGetsPostNotices
  *     TEST tickle ANonmemberHasNotAcceptedTheInvitation
  */
 function weEmailToMemberWithSubs($key, $email, $subs) {return t\findEmail($key, $email, $subs);}
@@ -384,6 +385,8 @@ function invites($list) {return t\invites($list);}
  * we do not email (ARG) to member (ARG)
  *
  * in: TEST aaSeldomNotices ItsTimeToRenewBacking
+ *     TEST notices AMemberGetsPostNotices
+ *     TEST notices AMemberGetsOnlyTodaysPostNotices
  *     TEST tickle ANonmemberHasAcceptedTheInvitation
  *     TEST tickle ANonmemberHasAcceptedAnInvitationFromSomeoneElseInstead
  */
@@ -535,6 +538,9 @@ function stats($list) {return t\stats($list);}
  *     BOTH invoices SecondInvoiceGetsFundedTooForANonrefillingAccount
  *     TEST invoices ALanguishingInvoiceGetsFundedAgain
  *     TEST invoices AnInvoiceIsApprovedFromAnAccountWithANegativeBalance
+ *     MAKE notices Setup
+ *     MAKE notices AMemberGetsPostNotices
+ *     MAKE notices AMemberGetsOnlyTodaysPostNotices
  *     MAKE recurs ABrandNewRecurringPaymentCanBeCompleted
  *     MAKE recurs ASecondRecurringPaymentCanBeCompleted
  *     MAKE recurs ARecurringPaymentHappenedYesterday
@@ -647,6 +653,8 @@ function riskThresholdPercentIs($pct) {
  *     MAKE monthly CrumbsAreInvoiced
  *     MAKE notices AMemberGetsSomeNotices
  *     MAKE notices AMemberGetsSomeWeeklyNotices
+ *     MAKE notices AMemberGetsPostNotices
+ *     MAKE notices AMemberGetsOnlyTodaysPostNotices
  *     MAKE recurs ABrandNewRecurringPaymentCanBeCompleted
  *     MAKE recurs ASecondRecurringPaymentCanBeCompleted
  *     MAKE recurs ARecurringPaymentHappenedYesterday

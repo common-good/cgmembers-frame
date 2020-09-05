@@ -233,7 +233,7 @@ function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
   if (!$byMe and !$toMe) { // someone charged me (either unilaterally or I approved it)
     r\disputeTx($xid); // mark it disputed
     $solution = t('marked "disputed"');
-    r\notify($tx->otherId, 'charge disputed', $tx->reportArgs($mya)); //, $tx->getMyAmt(), $payer, $payee, $payerPurpose, $payeePurpose));
+    $tx->otherA->tellIn('charge disputed', $tx->reportArgs($mya)); //, $tx->getMyAmt(), $payer, $payee, $payerPurpose, $payeePurpose));
     $amount = u\fmtAmt($tx->otherEntry->amount);
     $tofrom = !$tx->toMe ? t('to') : t('from');
     $otherUid = $tx->otherUid;
@@ -425,7 +425,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
       $msg = 'forced without perm';
       $erInfo += ['date' => u\fmtDate($created)];
       foreach (['agent1'=>$actorA, 'agent2'=>$otherA] as $k => $a) $erInfo += [$k => $a->proSe ? t('self') : $a->fullName];
-      foreach ([$actorA, $otherA] as $a) if (!$a->proSe) r\message($a->id, $msg, $erInfo);
+      foreach ([$actorA, $otherA] as $a) if (!$a->proSe) $a->tell($msg, $erInfo);
       r\tellAdmin($msg . ' ' . t($erMsg, $erSubs), $erInfo + $erSubs);
     } else return r\txErr($erMsg, $erInfo + $erSubs);
   }
@@ -554,7 +554,7 @@ function advanceCredit($for, $buyer, $seller, $amount) {
   
   if ($for !== SELF_CREDIT) { // gift!
     $for = r\acct($for);
-    r\message($for->id, t('%name %action of %amount credit at %co. To redeem store credit you are given, simply pay with your %PROJECT card. Your account is credited automatically.'), ray('name action amount co', $buyer->fullName, $neg ? t('canceled your gift') : t('sent you a gift'), u\fmtAmt($amount), $seller->fullName), $neg ? t('Your gift is canceled') : t('You have received a gift through Common Good!'));
+    $for->tell(t('%name %action of %amount credit at %co. To redeem store credit you are given, simply pay with your %PROJECT card. Your account is credited automatically.'), ray('name action amount co', $buyer->fullName, $neg ? t('canceled your gift') : t('sent you a gift'), u\fmtAmt($amount), $seller->fullName), $neg ? t('Your gift is canceled') : t('You have received a gift through Common Good!'));
     $buyer = $for;
   }
   
@@ -634,6 +634,7 @@ function sendNotifications($type, $tx, $shortfall) {
     u\EXPECT(false, "type must not be '$type'.");
   }
   if ($notice == 'charge' and $tx->goods == FOR_USD) $notice = 'cash out';
+  list ($tell1, $tell2) = u\order($toMe, 'tellIn', 'tellOut');
 
   $args = $tx->reportArgs($tx->actorA, TRUE, $shortfall);
   if ($notice == 'new payment' and $otherA->co) { // not "new charge" (the most common); payment at payer's initiative
@@ -641,7 +642,7 @@ function sendNotifications($type, $tx, $shortfall) {
     $args['_aPayLink'] = $otherA->doLink('addr', $tx->actorId); // link to address, so merchant can ship or nonprofit can thank
   }
 
-  if (!$otherA->isCanonic) r\notify($tx->otherId, $notice, $args);  // no notifications to canonic accounts
+  if (!$otherA->isCanonic) $otherA->$tell2($notice, $args);  // no notifications to canonic accounts
   $msg = 'report tx';
 //  return r\txErr($msg, $tx->reportArgs($tx->actorA, TRUE, $shortfall) + compact(ray('msg did')));
   return [TRUE, $msg, $args + compact(ray('msg did'))];
@@ -792,7 +793,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
     $link = $payerA->doLink('inv', $nvid); // link to pay/deny
     //$payerA->update(ray('lastTx', array($nvid, $payee - $payer, round($amount, 2), $created, 'inv')));
     $subs += ray('_a1 reply email phone', $link, $payee, $payeeA->email, u\fmtPhone($payeeA->phone));
-    r\message($payer, 'new invoice', $subs); // tell other party by email about this invoice
+    $payerA->tell('new invoice', $subs); // tell other party by email about this invoice
   } else { // pre-approved!
     if (!$payerA->shortfall(TX_TRANSFER, $amount)) { // don't try to pay yet if short
       list($ok, $msg) = be\payInvoice($nvid);
@@ -1132,7 +1133,7 @@ function completeUsdTx($txid, $automatic, $completed = NULL, $deposit = 0) {
   if ($amount > 0) {  
     $transfer = $automatic ? t('automatic transfer') : t('transfer');
     $amount = u\fmtAmt($amount);
-    r\notify($payee, 'transfer-in complete', compact('transfer', 'amount'));
+    r\acct($payee)->tellIn('transfer-in complete', compact('transfer', 'amount'));
   }
   return TRUE;
 }

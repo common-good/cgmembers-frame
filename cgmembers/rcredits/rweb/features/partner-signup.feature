@@ -37,8 +37,8 @@ Scenario: A newbie visits the registration page sent by a partner and opts out o
   | m_person | Abraham One |
   | cgAccount |  |
   Then members:
-  | uid  | fullName | email | phone        | zip   | flags | address | city   | state | postalAddr              |*
-  | .AAA | Abe One  | a@    | +14132530000 | 01001 |       | 1 A St. | Agawam | MA    | POB 1, Agawam, MA 01001 |
+  | uid  | fullName | email | phone        | zip   | flags             | address | city   | state | postalAddr |*
+  | .AAA | Abe One  | a@    | +14132530000 | 01001 | confirmed,nonudge | 1 A St. | Agawam | MA    | POB 1, Agawam, MA 01001 |
   And we email "partner-signup" to member "c@" with subs:
   | partnerName | cgAccount | fullName | email | customer | noFrame |*
   | Coop Power  | NEWAAA*   | Abe One  | a@    | E123456  |       1 |
@@ -93,8 +93,8 @@ Scenario: A newbie visits the registration page sent by a partner and chooses Co
   | m_person | Abraham One |
   | cgAccount |  |
   Then members:
-  | uid  | fullName | email | phone        | zip   | flags | address | city   | state | postalAddr              |*
-  | .AAA | Abe One  | a@    | +14132530000 | 01001 |       | 1 A St. | Agawam | MA    | POB 1, Agawam, MA 01001 |
+  | uid  | fullName | email | phone        | zip   | flags             | address | city   | state | postalAddr |*
+  | .AAA | Abe One  | a@    | +14132530000 | 01001 | confirmed,nonudge | 1 A St. | Agawam | MA    | POB 1, Agawam, MA 01001 |
   And member ".AAA" steps left "fund partnersteptwo partnerend"
 
   When member "?" visits page "partner/signed=TESTDOCODE"
@@ -106,8 +106,8 @@ Scenario: A newbie visits the registration page sent by a partner and chooses Co
   Then we show "%PROJECT Account Setup" with:
   | %PROJECT Agreement |
   And members have:
-  | uid  | flags   |*
-  | .AAA | nonudge |
+  | uid  | flags             |*
+  | .AAA | nonudge,confirmed |
   And member ".AAA" steps left "partnersteptwo partnerend"
 
   Given member is logged out
@@ -120,8 +120,8 @@ Scenario: A newbie visits the registration page sent by a partner and chooses Co
   | op      | roundup |*
   | I Agree |       1 |
   Then members have:
-  | uid  | flags          | signed | signedBy |*
-  | .AAA | member,roundup | %now   | Abe One  |
+  | uid  | flags                    | signed | signedBy |*
+  | .AAA | member,roundup,confirmed | %now   | Abe One  |
   And we show "Congratulations!"
   And we say "status": "info saved|step completed"
   And relations:
@@ -145,7 +145,7 @@ Scenario: A member visits the registration page sent by a partner
   | zip        | 01001 |
   | state      | MA |
   | city       | Agawam |
-  | flags      | member |
+  | flags      | member,confirmed |
   | floor      | 0 |
   | address    | 1 A St. |
   | postalAddr | POB 1, Agawam, MA 01001 |
@@ -224,8 +224,8 @@ Scenario: A company visits the registration page sent by a partner
   | m_person | Go Co Ltd |
   | cgAccount |  |
   Then members:
-  | uid  | fullName | contact  | email | phone        | zip   | flags      | address | city   | state | postalAddr             |*
-  | .AAA | Go Co    | Al Aargh | g@    | +14132530000 | 01001 | co,nonudge | 1 A St. | Agawam | MA    | POB 1, Agawam, MA 01001 |
+  | uid  | fullName | contact  | email | phone        | zip   | flags                | address | city   | state | postalAddr             |*
+  | .AAA | Go Co    | Al Aargh | g@    | +14132530000 | 01001 | co,nonudge,confirmed | 1 A St. | Agawam | MA    | POB 1, Agawam, MA 01001 |
   And member ".AAA" steps left "fund partnersteptwo partnerend"
 
   When member ".AAA" visits page "partner/signed=TESTDOCODE"
@@ -238,8 +238,8 @@ Scenario: A company visits the registration page sent by a partner
   Then we show "%PROJECT Account Setup" with:
   | %PROJECT Agreement |
   And members have:
-  | uid  | flags      |*
-  | .AAA | co,nonudge |
+  | uid  | flags                |*
+  | .AAA | co,nonudge,confirmed |
   And member ".AAA" steps left "partnersteptwo partnerend"
 
   Given member is logged out
@@ -252,8 +252,8 @@ Scenario: A company visits the registration page sent by a partner
   | op      | roundup |*
   | I Agree |       1 |
   Then members have:
-  | uid  | flags             | signed | signedBy |*
-  | .AAA | co,member,roundup | %now   | Al Aargh |
+  | uid  | flags                       | signed | signedBy |*
+  | .AAA | co,member,roundup,confirmed | %now   | Al Aargh |
   And we show "Congratulations!"
   And we say "status": "info saved|step completed"
   And relations:
