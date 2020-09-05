@@ -980,7 +980,7 @@ function notices() {
   $timeForM = (int) (strftime('%d', nni($lastStart, 'day', now())) == R_MONTHLY_DAY);
   if (test()) list ($timeForW, $timeForM) = [(int) nni($timeFor, 'weekly'), (int) nni($timeFor, 'monthly')];
 
-  $sql = "SELECT DISTINCT u.uid, notices, $timeForW AS timeForW, $timeForM AS timeForM FROM r_notices n JOIN users u USING (uid) WHERE NOT sent";
+  $sql = "SELECT DISTINCT u.uid, notices, $timeForW AS timeForW, $timeForM AS timeForM FROM r_notices n JOIN users u USING (uid) WHERE NOT sent AND NOT :CLOSED";
   queueEach('notice1', $sql);
   
   $fields = 'pid,uid,fullName,email,notices,latitude,longitude,zip'; // comma not space
@@ -1037,7 +1037,7 @@ function postNotices1($item) {
   
   if (!test()) {
     if (!$uid or !in(r\acct($uid)->name, 'williamspademan ivanussach')) return;
-    tellAdmin('emailing post notices', $item);
+    r\tellAdmin('emailing post notices', $item);
   }
   
   $cell = 'display:table-cell; padding:5px 8px; ';

@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.54o'; // software version
+const R_VERSION = '3.54p'; // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -439,6 +439,7 @@ const B_ADMIN = 30; // is a system administrator -- can manage server, including
 const B_MAX = 62; // maximum bit number
 const B_ADMINABLE = 'member confirmed carded beta oAdmin cAdmin cAdmin2 nonudge cgc invites rewardy noneg'; // for cAdmin to set
 const B_LIST = 'member confirmed ok carded ided refill co draws roundup nonudge nosearch depends bankOk weekly monthly contactable bysms paper secret underage debt reinvest savings cashoutW cashoutM beta oAdmin admin2 cAdmin2 cAdmin admin';
+const CLOSED = '(activated AND flags&(1<<' . B_OK . ')=0)';
 
 // community-specific flags
 const B_CGC = 0; // ctty: is an official CGC (currently has no effect)

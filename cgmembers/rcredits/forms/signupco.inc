@@ -23,11 +23,7 @@ function formSignupCo($form, &$sta, $args = '') {
   $title = t('Open a Company Account');
 
   extract(just('relate', $args, FALSE));
-  if ($mya) {
-    if ($mya->cAdmin) { // let admins open company accounts on behalf of others
-      if ($relate and !$mya->co) $a = $mya; else signout(TRUE);
-    } else $a = $mya->agentA;
-  } else { // no signed in (presumably from promo site)
+  if (!$mya) { // not signed in (presumably from promo site)
     $subtext = t(<<< X
       <p>To open a company account, the first step is to open an individual account. This is necessary because your personal photo will go on your company card and you will access the company account by signing in to your personal account. It is also an important part of our security system &mdash; no one can open an account unless their identity has been verified.</p>
       <p>To get started, <%a>click here</a>. Once you complete all the steps for the individual account, you can click "Open a Company Account" on your Summary page.</p>
@@ -36,14 +32,13 @@ X
     return cgform(compact(ray('title subtext')));
   }
 
-  if (nn($a)) {
-    $agentQid = $a->mainQid;
-    if ($coInfo = $a->signupCo) {
-      extract(just('company companyPhone', $coInfo, '')); // predict co name
-      if (!findCompany($company, $companyPhone)) list ($fullName, $phone) = [$company, $companyPhone];
-    }
-  } else $agentQid = '';
-  $agentQid = hidFld($agentQid);
+  $a = ($mya->cAdmin and $relate and !$mya->co) ? $mya : $mya->agentA; // admins open company accounts on behalf of others
+
+  if ($coInfo = $a->signupCo) {
+    extract(just('company companyPhone', $coInfo, '')); // predict co name
+    if (!findCompany($company, $companyPhone)) list ($fullName, $phone) = [$company, $companyPhone];
+  }
+  $agentQid = hidFld($a->mainQid);
 
   $subtext = t(<<< X
     <p>Opening a Common Good Company Account is very much like opening a personal account. We will guide you through several short steps.</p>
@@ -92,16 +87,6 @@ function formSignupCo_validate($form, &$sta) {
     if ($err = u\badName($$field)) return say($err, compact('field'), $field);
   }
 
-/*  if ($agentQid = trim(strtoupper(nn($agentQid)))) {
-    if (!$a = r\acct($agentQid)) return say(t('That is not an account ID. Please check again (look in the lower left on your %PROJECT Card).'), 'agentQid');
-    if ($mya) {
-      if ($mya->id != $a->id) u\FAIL('signed in to wrong account in signupco');
-    } else {
-      if (w\flooding($a->id, $sta, $err)) return say($err, 'pass');
-      if (!$a->passwordOkay(nn($pass), 'pass', $err)) return say('login failed', 'agentQid');
-    }
-  } */
-
   if (!formBasic_validate($form, $sta, TRUE, 'federalId dob')) return;
   if ($err = u\badZip($zip)) return say($err, 'zip');
   if ($err = u\badPhone($phone)) return say($err, 'phone');
@@ -115,8 +100,8 @@ function formSignupCo_submit($form, &$sta) {
   global $mya;
   
   $dbFields = 'coType source selling fullName legalName email flags phone federalId dob zip state helper';
-  extract(just($dbFields . ' sellCg source2 needPhone agentQid args', $sta['input']));
-  extract(just('code relate', nn($args)));
+  extract(just($dbFields . ' sellCg source2 needPhone agentQid args', $sta['input'], NULL));
+  extract(just('code', nn($args, []), NULL));
 
   signout(TRUE);
   $agentA = r\acct($agentQid);
@@ -145,7 +130,7 @@ function formSignupCo_submit($form, &$sta) {
   $newA->newRelation(ray('other otherNum owner permission', $agentA->id, 1, TRUE, r\perm(B_MANAGE)));
   $mya->tell('verify', ray('qid code pass', "$qid-A", $pw1, t('co nonpass')));
 
-  if (nn($code)) w\invitation($code, $myid); // mark invitation used
+  if ($code) w\invitation($code, $myid); // mark invitation used
   
   say('info saved');
 

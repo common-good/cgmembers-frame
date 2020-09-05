@@ -1353,7 +1353,9 @@ fieldset#dateRange #advanced {display:none;}
 #frm-relations #edit-nextStep {margin-left:50px;}
 
 #frm-relations .form-item-newPerson label {margin-left:2px; padding-left:0;}
-#frm-relations .form-item-newPerson .control-data>div {display:inline-block; margin-right:15px; width:300px;}
+#frm-relations .form-item-newPerson {display:inline-block; margin-right:0; width:auto;}
+#frm-relations .form-item-newPerson .control-data {width:400px;}
+#frm-relations #edit-submit {display:inline-block; vertical-align:top;}
 #frm-relations .form-type-select {margin:0;}
 #frm-relations select {padding:0; height:24px; font-size:12px;}
 #frm-relations .form-type-select label,
