@@ -71,8 +71,8 @@ Scenario: a member gets post notices
   | 1      | offer | fish | big one | food | 0        | 1         | 3      | 5   | %today  | %now+3d | 1         |
   When cron runs "notices"
   Then we email "post-notice" to member "d@" with subs:
-  | fullName | posts | radius | code | noFrame |*
-  | Dee Four | ?     | 20     | ?    | 1       |
+  | fullName | posts | radius        | code | noFrame |*
+  | Dee Four | ?     | %NEIGHBOR_MAX | ?    | 1       |
   And we do not email "post-notice" to member "e@"
 
 Scenario: a member gets only today's post notices
