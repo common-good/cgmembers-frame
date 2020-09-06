@@ -1,3 +1,6 @@
+2020-09-06 feature/post-notices2
+. fixed bugs and formatting in post notices
+
 2020-09-05 feature/bugs
 . salesforce wasn't getting email and phone for cooppower projects and cg_account field name changed
 . addperson button was failing on relations page

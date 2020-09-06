@@ -37,6 +37,7 @@ YEARLY
 // Calculate risks twice, to take into account connections with scoundrels
 const DAILY_OPS = 'START checkAccts setNear cttyStats trust acctRisk acctRiskFinish txRisk tickle annualGift renewBacking lessOften recurs getFunds invoices invest notices END';
 const LOGLESS_OPS = 'acctHourly checkAcct whatsUp tickleStep activeWeekly activeMonthly recur'; // don't log these calls
+const POST_DETAIL_MAXLEN = 256; // maximum number of characters to show in post detail
 include_once __DIR__ . '/rcron-subs.inc';
 
 /**
@@ -1031,6 +1032,7 @@ function notice1($item) {
  *   $words: notify if the post includes these words (NYI)
  */
 function postNotices1($item) {
+  global $base_url;
   require_once R_ROOT . '/forms/posts.inc'; // for getPosts()
   extract(just('fields timeForW timeForM', $item, NULL));
   extract(just($fields, $item, NULL));
@@ -1040,21 +1042,9 @@ function postNotices1($item) {
     r\tellAdmin('emailing post notices', $item);
   }
   
-  $cell = 'display:table-cell; padding:5px 8px; ';
-  $map0 = [
-     'tbody' => 'display:table; width:100%;', // use the body wrap as the table
-     'row' => 'display:table-row;',
-     'cell cat' => $cell . '',
-     'cell item' => $cell . '',
-     'cell details' => $cell . '',
-     'emergency' => 'font-weight:bold; color:red;',
-     
-  ];
-  foreach ($map0 as $k => $v) $map["class =\"$k\""] = "style=\"$v\"";
-  $map['<small>'] = '<small style="color:silver;">';
-
   $posts = '';
-  $radius = 20; // report everything within 20 miles, for now
+  $radius = NEIGHBOR_MAX; // report everything within this many miles
+  $logo = "<image src=\"$base_url/rcredits/images/logo80.png\" style=\"width:30px; margin-right:10px;\" />";
 
   foreach (ray($notices) as $type => $freq) {
 //    list ($type, $freq, $radius, $words) = u\padRay(explode('`', $one), 4);
@@ -1066,16 +1056,45 @@ function postNotices1($item) {
 
     $q = w\getPosts($type, $latitude, $longitude, $zip, $radius, $pid ?: 0, 0, 0, $since, FALSE);
     if (!$q->rowCount()) continue;
-    $rows = strtr(join('', w\postRows($q, FALSE)), $map);
+    $rows = fmtPostRows($q);
     $Type = w\typeName($type, 2);
-    $posts .= "<h3>$Type</h3>\n$rows\n";
+    $posts .= <<< X
+<div style="display:table-cell; vertical-align:middle;">$logo</div>
+<div style="display:table-cell; vertical-align:middle;"><b style="font-size:32px; color:navy;">$Type</b></div>
+<br>
+$rows
+X;
   }
   if (!$posts) return;
 
+  $posts = "<div style=\"font-family:Helvetica; max-width:512px; margin:0 auto;\">$posts</div>";
+  if (test()) $posts = strtr($posts, ['src='=>'surc=', 'style='=>'stule']); // avoid CSP errors
+
   $noFrame = TRUE;  
   $code = w\getEmailCode(compact($uid ? 'uid' : 'pid'));
-  r\rMail('post-notice', [$email => $fullName], compact(ray('fullName posts radius code noFrame')));
+  r\rMail('post-notice', [u\decry('P', $email) => $fullName], compact(ray('fullName posts radius code noFrame')));
 }
+
+function fmtPostRows($q) {
+  require_once R_ROOT . '/forms/posts.inc'; // for getPosts()
+
+  while ($row = $q->fetchAssoc()) {
+    extract(just('postid dist zip emergency item details city displayName', $row));
+
+    if ($emergency) $item = '<b style="color:red;">!! </b> ' . $item;
+    $btn = w\lnk('/community/posts/op=show&postid=' . $postid, t('View or Reply'), ray('style', TEXT_BUTTON_STYLE));
+    if ($dist = w\fmtDist($dist, $zip)) $city .= " - $dist mi";
+    if (strlen($details) > POST_DETAIL_MAXLEN) $details = substr($details, 0, POST_DETAIL_MAXLEN - 5) . '...';
+    $rows[] = <<< X
+<span style="font-size:22px">$item</span><br>
+<b style="color:#595959; font-size:18px;">$displayName, </b><span style="color:#999999; font-size:16px;">$city</span><br>
+<div style="margin-top:15px; color:#595959;">$details</div><br>
+<center>$btn</center><br>
+<hr style="color:silver;" />
+X;
+  }
+  return join('', nn($rows, []));
+}  
 
 /**
  * Last task queued once the everyDay() function has gotten things started.

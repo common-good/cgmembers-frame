@@ -653,7 +653,7 @@ $GLOBALS['emailSubjects'] = array(
   'confirm-post' => t('Confirm your post to %PROJECT Offers & Needs'),
   'confirm-message' => t('Confirm your message'),
   'post-message' => t('Response to your Offers & Needs post'),
-  'post-notice' => t('recent Offers & Needs posts near you'),
+  'post-notice' => t('recent Offers & Needs near you'),
 );
 
 $GLOBALS['topics'] = array( // topics for 'message' email
