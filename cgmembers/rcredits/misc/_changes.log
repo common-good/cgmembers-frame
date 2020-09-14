@@ -1,3 +1,13 @@
+2020-09-07 feature/partner-bit
+. replaced list of signup partners with a partner bit
+. revised Coop Power's salesforce field names
+. solar project is now identified by "name" field of the partner organization's CG account
+. renamed nyccec to ssps
+. changing a partner fullName now has no effect on its "name" field
+. SMT export generalized to include all projects
+. fixed bug that kept notices from being sent for not-yet-active accounts
+. activated postnotices in cron, with one-time catchup
+
 2020-09-06 feature/post-notices2
 . fixed bugs and formatting in post notices
 

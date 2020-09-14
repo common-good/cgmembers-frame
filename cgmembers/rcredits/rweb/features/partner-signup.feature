@@ -6,9 +6,9 @@ SO I can pay a partner company
 
 Setup:
   Given members:
-  | uid  | fullName   | flags  | emailCode | website | email | phone        | postalAddr               |*
-  | .AIL | Coop Power | ok,co  | Ccode     | z.ot    | c@    | 413-253-0014 | 14 L St., Lton, MA 01014 |
-  | .ZZZ | Zeta Zot   | ok     | Zcode     |         | z@    | 413-253-0026 | 26 Z St., Zton, MA 01026 |
+  | uid  | fullName   | flags         | emailCode | website | email | phone        | postalAddr               |*
+  | .AIL | Coop Power | ok,co,partner | Ccode     | z.ot    | c@    | 413-253-0014 | 14 L St., Lton, MA 01014 |
+  | .ZZZ | Zeta Zot   | ok            | Zcode     |         | z@    | 413-253-0026 | 26 Z St., Zton, MA 01026 |
   And member is logged out
 
 Scenario: A newbie visits the registration page sent by a partner and opts out of Common Good

@@ -981,7 +981,7 @@ function notices() {
   $timeForM = (int) (strftime('%d', nni($lastStart, 'day', now())) == R_MONTHLY_DAY);
   if (test()) list ($timeForW, $timeForM) = [(int) nni($timeFor, 'weekly'), (int) nni($timeFor, 'monthly')];
 
-  $sql = "SELECT DISTINCT u.uid, notices, $timeForW AS timeForW, $timeForM AS timeForM FROM r_notices n JOIN users u USING (uid) WHERE NOT sent AND NOT :CLOSED";
+  $sql = "SELECT DISTINCT u.uid, notices, $timeForW AS timeForW, $timeForM AS timeForM FROM r_notices n JOIN users u USING (uid) WHERE NOT sent AND NOT (:CLOSED)";
   queueEach('notice1', $sql);
   
   $fields = 'pid,uid,fullName,email,notices,latitude,longitude,zip'; // comma not space
@@ -1037,11 +1037,6 @@ function postNotices1($item) {
   extract(just('fields timeForW timeForM', $item, NULL));
   extract(just($fields, $item, NULL));
   
-  if (!test()) {
-    if (!$uid or !in(r\acct($uid)->name, 'williamspademan ivanussach')) return;
-    r\tellAdmin('emailing post notices', $item);
-  }
-  
   $posts = '';
   $radius = NEIGHBOR_MAX; // report everything within this many miles
   $logo = "<image src=\"$base_url/rcredits/images/logo80.png\" style=\"width:30px; margin-right:10px;\" />";
@@ -1049,10 +1044,12 @@ function postNotices1($item) {
   foreach (ray($notices) as $type => $freq) {
 //    list ($type, $freq, $radius, $words) = u\padRay(explode('`', $one), 4);
     if (!in($type, 'offer need tip')) continue;
+    if (u\fmtDate(now()) != '15Sep2020') // one-time only, email all past posts
     if ($freq != 'd' and !($freq == 'w' and $timeForW) and !($freq == 'm' and $timeForM)) continue;
 
     $unit = ray('d:day,w:week,m:month')[$freq];
     $since = strtotime("-1 $unit", now());
+    if (u\fmtDate(now()) == '15Sep2020') $since = 1;
 
     $q = w\getPosts($type, $latitude, $longitude, $zip, $radius, $pid ?: 0, 0, 0, $since, FALSE);
     if (!$q->rowCount()) continue;
