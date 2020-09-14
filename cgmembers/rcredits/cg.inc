@@ -779,10 +779,14 @@ function noticeArgs($uid, $having = '1', $weekly = FALSE, $monthly = FALSE, $at 
   $ranges = ray('m w d',  t('month of ') . strftime('%B %Y', $mDate), t('week of ') . u\fmtDate($wDate, TRUE), u\fmtDate($dDate, TRUE));
   foreach (ray(NOTICE_TYPES) as $k => $desc) if (!in($k, POST_NOTICE_TYPE_KEYS)) { // just the non-post freq settings
     $freq = $notices[$k];
-    if ($freq == 'm' ? $monthly : ($freq == 'w' ? $weekly : TRUE)) $range[] = "$desc (" . $ranges[$freq] . ')';
+    if ($freq == 'm' ? $monthly : ($freq == 'w' ? $weekly : TRUE)) {
+      $descs[] = $desc;
+      $range[] = ' (' . $ranges[$freq] . ')';
+    }
   }
   u\EXPECT(isset($range), 'no range'); // could fail if user changes their notice prefs at the right instant (no biggy)
-  $range = join(t(' and '), $range);
+  for ($i = 0; $i < count($range); $i++) $descs[$i] .= $range[$i] == nni($range, $i + 1) ? '' : $range[$i]; // don't repeat
+  $range = join(t(' and '), $descs);
   extract(just('return', $a->j_stats()));
   $balance = u\fmtAmt($a->balance);
   $creditLine = u\fmtAmt(-$a->floor);

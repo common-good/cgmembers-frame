@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.54q'; // software version
+const R_VERSION = '3.54r'; // software version
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
@@ -231,7 +231,6 @@ const DISTANCE_BETWEEN = 'DEGREES(ACOS(LEAST(1.0, COS(RADIANS(latitude))
   + SIN(RADIANS(latitude))
   * SIN(RADIANS(:lat))))) * ' . MI_PER_DEGREE; // distance from other, in miles (requires pre-processing)
 const NO_DISTANCE = '(latitude=0 AND longitude=0) OR (:lat=0 AND :lon=0)';
-const SIGNUP_PARTNERS = 'cooppower nyccec'; // these organizations sign people up for Common Good
 
 const TEXT_BUTTON_STYLE = 'display:inline-block; background-color:darkgreen; border-radius:5px; border:1px solid forestgreen; color:white; font-family:Arial; font-size:17px; padding:8px 15px; text-decoration-line:none;';
 const R_URL_SLASH = '%_%'; // Drupal gets confused by slashes in a url, even if urlencoded
@@ -421,7 +420,7 @@ const B_BANKOK = 12; // connected bank account has been verified
 const B_WEEKLY = 13; // send notices only weekly
 const B_MONTHLY = 14; // send notices only monthly
 const B_CONTACTABLE = 15; // okay for members to contact this member about their calling
-const B_BYSMS = 16; // NYI notifications by SMS
+const B_PARTNER = 16; // is a signup partner
 const B_PAPER = 17; // will not accept electronic statements
 const B_SECRET = 18; // don't let merchants tell me my balance on request
 const B_UNDERAGE = 19; // too young to have a credit line or DOB empty (needed because dob is accessible only to superAdmin)
@@ -436,10 +435,11 @@ const B_ADMIN2 = 27; // is an overall admin assistant or bank partner or governm
 const B_CADMIN2 = 28; // is a community sub-administrator (read-only except notes)
 const B_CADMIN = 29; // is a community administrator
 const B_ADMIN = 30; // is a system administrator -- can manage server, including assigning ctty admins, but cannot manage communities or individual accounts (except temporarily)
+
 const B_MAX = 62; // maximum bit number
-const B_ADMINABLE = 'member confirmed carded beta oAdmin cAdmin cAdmin2 nonudge cgc invites rewardy noneg'; // for cAdmin to set
-const B_LIST = 'member confirmed ok carded ided refill co draws roundup nonudge nosearch depends bankOk weekly monthly contactable bysms paper secret underage debt reinvest savings cashoutW cashoutM beta oAdmin admin2 cAdmin2 cAdmin admin';
-const CLOSED = '(activated AND flags&(1<<' . B_OK . ')=0)';
+const B_ADMINABLE = 'member confirmed carded beta oAdmin cAdmin cAdmin2 nonudge partner cgc invites rewardy noneg'; // for cAdmin to set
+const B_LIST = 'member confirmed ok carded ided refill co draws roundup nonudge nosearch depends bankOk weekly monthly contactable partner paper secret underage debt reinvest savings cashoutW cashoutM beta oAdmin admin2 cAdmin2 cAdmin admin';
+const CLOSED = 'flags&(1<<' . B_OK . ')=0 AND activated'; // this must be enclosed in () if negated or ORed
 
 // community-specific flags
 const B_CGC = 0; // ctty: is an official CGC (currently has no effect)

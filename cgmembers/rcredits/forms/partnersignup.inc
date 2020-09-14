@@ -14,7 +14,7 @@ const CRM_URL = 'SMT solar customer management URL';
 const BILL_DIR = R_PICTURE_DIR . 'electric-bills';
 const CONTRACT_DIR = R_PICTURE_DIR . 'contracts';
 const FORM_KEYS2 = 'type fullName email phone address city state zip years owns pid';
-const SF_MAP = 'first_name:first_name,last_name:last_name,orgName:company,email:email,phone:phone,address:street,city:city,state:state,zip:zip,m_address:Meter_Street_Address__c,m_city:Meter_City__c,m_state:Meter_State__c,m_zip:Meter_ZIP_Code__c,m_company:Electric_Company__c,m_number:Electric_Account_Number__c,m_amount:Electric_Bill_Monthly_Amount__c,m_person:Electric_Account_Holder__c,referrer:Referrer__c,source:lead_source,m_wholeAddress:Electric_Meter_Address__c,cgAccount:00NA000000BoIaW,partnerName:project,oid:oid,retURL:retURL'; // Salesforce fields corresponding to CG fields
+const SF_MAP = 'first_name:first_name,last_name:last_name,orgName:company,email:email,phone:phone,address:street,city:city,state:state,zip:zip,m_address:Meter_Street_Address__c,m_city:Meter_City__c,m_state:Meter_State__c,m_zip:Meter_ZIP_Code__c,m_company:Electric_Company__c,m_number:Electric_Account_Number__c,m_amount:Electric_Bill_Monthly_Amount__c,m_person:Electric_Account_Holder__c,referrer:Referrer__c,source:lead_source,m_wholeAddress:Electric_Meter_Address__c,cgAccount:00NA000000BoIaW,project:CSS_Project__c,oid:oid,retURL:retURL'; // Salesforce fields corresponding to CG fields
 
 /**
  * Accept and process signup data from a partner organization.
@@ -249,7 +249,7 @@ function gotSignup($pA) {
   
   signout(TRUE); // current account is irrelevant and could be confusing, so sign out
   $pagePartner = $pA->name; // tell page.html to use the partner's branding
-  $_POST += ray('pid partnerName', $pA->uid, $pA->fullName);
+  $_POST += ray('pid project partnerName', $pA->uid, $pA->name, $pA->fullName);
   
   $info = handleInput($_POST, $sfData);
   if (!$sfData) return;
@@ -303,14 +303,14 @@ function gotSignup($pA) {
   $mya->setBit('confirmed');
 
   $mya->update('partnerInfo', $info); // store for final step and beyond
-  $flnm = fillContract($pA->name, $info, [], FALSE); // get populated contract
+  $flnm = fillContract($project, $info, [], FALSE); // get populated contract
   emailContract($pA, $info, FALSE, $flnm);
   unlink($flnm);
   sendToCRM($pA, $sfData);
   tellPartner($pA, $info, $flnms);
 
   $title = t('Sign the Contract');
-  $subtext = t('<p>You have completed the first step of your solar subscription sign-up.</p><p>We emailed you a contract. Please click the button in that email within 3 days, to sign the contract.</p><p>If you do not see the email, look for it in your Spam folder.</p><p>You can also preview the standard contract <%a>here</a>.</p><p>If you have questions, please call us at %phone!', '_a phone', atag("/rcredits/images/contracts/$pA->name.pdf"), u\fmtPhone($pA->phone, '-'));
+  $subtext = t('<p>You have completed the first step of your solar subscription sign-up.</p><p>We emailed you a contract. Please click the button in that email within 3 days, to sign the contract.</p><p>If you do not see the email, look for it in your Spam folder.</p><p>You can also preview the standard contract <%a>here</a>.</p><p>If you have questions, please call us at %phone!', '_a phone', atag("/rcredits/images/contracts/$project.pdf"), u\fmtPhone($pA->phone, '-'));
   
   return cgform(compact(ray('title subtext')));
 }
@@ -338,7 +338,8 @@ function gotSolarOne($info) {
   $customer = substr($m_company, 0, 1) . $m_number; // begin meter/customer number with the company letter (ENC)
   $pA = pA($pid);
   $partnerName = $pA->fullName;
-  $pagePartner = $pA->name; // tell page.html to use the partner's branding
+  $project = $pA->name;
+  $pagePartner = $project; // tell page.html to use the partner's branding
 
   // validate data
   
@@ -360,7 +361,7 @@ function gotSolarOne($info) {
 
   if ($ta = r\acct($email) and $ta->hasBank and $ta->partnerInfo['customer'] == $customer) return partnerContinue($ta, $sta);
 
-  $info = compact(ray($keys . ' m_company customer pid noContract partnerName')); // recreate info with possibly improved values
+  $info = compact(ray($keys . ' m_company customer pid noContract project')); // recreate info with possibly improved values
   
   // concoct dummy input for handleInput, just to get sfData
   foreach (ray('address city state zip') as $k) $info['m_' . $k] = $$k;
@@ -528,7 +529,7 @@ function sendToCRM($pA, $data) {
 
   if (test()) return;
   $data['created'] = date('Y-m-d');
-  foreach (ray('created host upfront') as $k) unset($data[$k]);
+  foreach (ray('created upfront') as $k) unset($data[$k]);
 //  $data['debugEmail'] = 'wspademan@gmail.com';
 //  $data['debug'] = 1;
   $res = u\post(SF_URL, $data); // send data to partner's Salesforce (fails on DEV)
@@ -574,16 +575,16 @@ function emailContract($pA, $info, $sign, $contractFlnm) {
 
 /**
  * Create a PDF of the specified contract, filled with the given data.
- * @param string $host: the name of the contract image (without path or extention) in the contracts folder
+ * @param string $project: the name of the contract image (without path or extention) in the contracts folder
  * @param assoc $data: data to use to fill the contract
  * @param array $map: UNUSED an array of coordinates for filling the contract. Each entry is [field, page, x, y, attributes].
  * @param boot $sign: <include signature and date (current date if none given)> "signature" field is fullName in handwriting
  * @return the path to the contract
  * NOTE: use https://smallpdf.com/pdf-to-jpg to convert
  */
-function fillContract($host, $data, $map, $sign = FALSE) {
+function fillContract($project, $data, $map, $sign = FALSE) {
   global $mya;
-  $dir = R_ROOT . "/images/contracts/$host/";
+  $dir = R_ROOT . "/images/contracts/$project/";
   $pages = array_slice(scandir($dir), 2); // ignore . and ..
   
   extract(just('customer fullName contact postalAddr email phone m_company m_number m_address m_city m_state m_zip', $data));
@@ -609,15 +610,15 @@ function fillContract($host, $data, $map, $sign = FALSE) {
     $pdf->Image($dir . $page, 0, 0, $W, $H, '', '', 'L', true); // file, x, y, w, h, type, link, align, resize
     
     list ($buyerX, $buyerY, $sigX, $sigY, $sigNameY, $dateX, $dateY, $sigPage, $font) = 
-       $host == 'cooppower' ? [.47, 2.7, 1.2, 9.88, 9.23, 1.2, 8.6, 5, '10;DejaVuSans']
-    : ($host == 'nyccec' ? [.71, 3.5, .71, 9.25, 0, 6.25, 9.25, 8, '11;Times']
+       $project == 'cooppower' ? [.47, 2.7, 1.2, 9.88, 9.23, 1.2, 8.6, 5, '10;DejaVuSans']
+    : ($project == 'nyccec' ? [.71, 3.5, .71, 9.25, 0, 6.25, 9.25, 8, '11;Times']
     : NULL); // invalid partner should get caught way before this (NULL causes death)
     
     if ($pi == 0) $pdf->say("$buyer<br><br>$meter", $buyerX, $buyerY, 5, 1.75, $font, 'L'); // text, x, y, w, h, sizesEtc, align
     if ($sign and $pi == $sigPage) {
       list ($name, $signer) = nn($contact) ? [$fullName, $contact] : ['', $fullName];
       $pdf->say(u\fmtDate(now(), TRUE), $dateX, $dateY, 5, 1.75, $font, 'L');
-      if ($host == 'cooppower') {
+      if ($project == 'cooppower') {
         $sellerX = 5.2;
         $pdf->say($name, $sigX, 8.3, 5, 1.75, $font, 'L');
         $pdf->say($signer, $sigX, $sigNameY, 5, 1.75, $font, 'L');
@@ -625,7 +626,7 @@ function fillContract($host, $data, $map, $sign = FALSE) {
         $pdf->say(u\fmtDate(now(), TRUE), $sellerX, $dateY, 5, 1.75, $font, 'L');
         $pdf->setTextColor(0, 0, 128); // sign in color (so do this last)
         $pdf->say('Mark Skinder', $sellerX, $sigY, 5, 1.75, '22;B;DSGabriele', 'L');
-      } elseif ($host == 'nyccec') {
+      } elseif ($project == 'nyccec') {
         
       }
       $pdf->setTextColor(0, 0, 128); // sign in color (so do this last)
@@ -680,5 +681,5 @@ function contractFlnm($customer) {
   return CONTRACT_DIR . "/$customer.pdf"; // customer-specific flnm
 }
 //function contractUrl($customer) {return str_replace(ROOT, BASE_URL, contractFlnm($customer));}
-function pA($pid) {return (nn($pid) and $pA = r\acct($pid) and in($pA->name, SIGNUP_PARTNERS)) ? $pA : FALSE;}
+function pA($pid) {return (nn($pid) and $pA = r\acct($pid) and $pA->partner) ? $pA : FALSE;}
 function cgA($qid) {return r\acct(str_replace('*', '', $qid));}

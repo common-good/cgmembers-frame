@@ -1630,7 +1630,7 @@ X;
    *   custCode: the company's identifier for the customer
    */
   public function eachPartner($func) {
-    $sql = 'SELECT main, code FROM r_relations WHERE other=:id AND :IS_CUSTOMER ORDER BY code';
+    $sql = 'SELECT r.main, r.code FROM r_relations r JOIN users u ON u.uid=r.main WHERE r.other=:id AND r.:IS_CUSTOMER AND u.:IS_PARTNER ORDER BY r.code';
     $res = q($sql, ['id' => $this->id])->fetchAllKeyed();
     foreach ($res as $main => $code) $func(r\acct($main), $this, $code);
   }

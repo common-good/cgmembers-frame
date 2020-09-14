@@ -718,7 +718,10 @@ function printCheck(&$ck, $pos, $tx, $mark) {
   $bankAccount = u\decry('V', $bankAccount);
   if ($bankAccount != $a->bankAccount) {
     r\tellAdmin(t('bank account misMatch in deposit (xid=%xid): %b1 (now), %b2 (deposit)', 'xid b1 b2', $xid, $a->bankAccount, $bankAccount));
-    if ($a->bankAccount) $bankAccount = $a->bankAccount;
+    if ($a->bankAccount) {
+      list ($b2, $bankAccount) = [$bankAccount, $a->bankAccount];
+      if (!$b2) db\update('r_usd', compact(ray('txid bankAccount')), 'txid'); // fix it (else save for analysis)
+    }
   } elseif (!$bankAccount) return r\tellAdmin(t('Empty bank account in deposit xid=%xid', compact('xid')));
   
   list ($fromName, $addr, $phone, $fromAcct, $toName, $toAcct) = $amount > 0 // which way
@@ -1024,21 +1027,24 @@ function anonymize() {
  * Export solar1 data to SMT
  */
 function toSMT() {
-  $q = db\q("SELECT * FROM users WHERE source='solar1'");
+  $q = db\q('SELECT * FROM users WHERE uid>:CANONIC_ACCTS');
   $hdrDone = FALSE;
 
   while ($row = $q->fetchAssoc()) {
     extract(just('uid', $row));
     $a = r\acct($uid);
-    list ($routing, $bankAccount) = u\parseBankAccount($a->bankAccount);
     foreach (ray('isSavings fullName postalAddr tenure owns partnerInfo created notes') as $k) $$k = $a->$k;
+    if (!$partnerInfo) continue;
+    
+    list ($routing, $bankAccount) = u\parseBankAccount($a->bankAccount);
     $notes = strtr($notes, ["\r" => '', "\n" => '']);
     $nameOnBankAcct = $fullName;
     list ($billingAddress, $billingCity, $billingState, $billingZip) = u\parseAddr($postalAddr);
     extract($partnerInfo ?: []);
     $cgAccount = $a->member ? $a->mainQid : '';
     $phone = u\fmtPhone($phone, '-');
-    $out = compact(ray('smtid fullName orgName m_company m_number cgAccount phone email address city state zip tenure owns routing bankAccount isSavings nameOnBankAcct billingAddress billingCity billingState billingZip noContract created notes'));
+    $pid = db\get('uid', 'users', ['name' => $project]);
+    $out = compact(ray('smtid pid project fullName orgName m_company m_number cgAccount phone email address city state zip tenure owns routing bankAccount isSavings nameOnBankAcct billingAddress billingCity billingState billingZip noContract created notes'));
     if (empty($bankAccount)) continue;
 ///  if ($a->member and $bad = db\get('uid', 'users', "fullName='$a->fullName' AND NOT :IS_MEMBER")) debug("maybe delete $bad ($a->uid is good) -- $a->fullName");
     if (!$hdrDone) {
