@@ -37,6 +37,8 @@
 
 require_once 'cg.inc';
 require_once 'cg-testing.inc';
+require_once 'cg-util.inc';
+
 use CG as r;
 use CG\Util as u;
 use CG\DB as db;

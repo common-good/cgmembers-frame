@@ -125,9 +125,10 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *
  * in: MAKE cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     MAKE cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
- *     MAKE cgbutton AMemberTypeAccountIDToBuyStoreCredit
+ *     MAKE cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     MAKE cgbutton AMemberRedeemsStoreCredit
  *     MAKE cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
+ *     MAKE cgbutton ACompanyHasAnApiToProcessTransactionResults
  *     MAKE company AMemberUpdatesCompanyInfo
  *     MAKE company AMemberGivesABadEmployeeCount
  *     MAKE company AMemberGivesABadGross
@@ -280,9 +281,10 @@ function members($list) {return t\members($list);}
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST bank AMemberWithANegativeBalanceRequestsATransferFromTheBank
  *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
- *     TEST cgbutton AMemberTypeAccountIDToBuyStoreCredit
+ *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     TEST cgbutton AMemberRedeemsStoreCredit
  *     TEST cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
+ *     TEST cgbutton ACompanyHasAnApiToProcessTransactionResults
  *     MAKE community Setup
  *     MAKE custstatement Setup
  *     MAKE demographics Setup
@@ -357,7 +359,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST bank AMemberTriesToGoBelowTheirMinimum
  *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
- *     TEST cgbutton AMemberTypeAccountIDToBuyStoreCredit
+ *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     TEST cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
  *     TEST company AMemberUpdatesCompanyInfo
  *     TEST contact AMemberUpdatesContactInfo
@@ -497,7 +499,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST cgbutton AMemberClicksAPayWithCommonGoodButtonWithVariableAmount
  *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
  *     TEST cgbutton AMemberClicksAButtonToBuyStoreCredit
- *     TEST cgbutton AMemberTypeAccountIDToBuyStoreCredit
+ *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     TEST cgbutton AMemberClicksAButtonToBuyAGiftOfStoreCredit
  *     TEST cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
  *     TEST changeaccount AMemberClicksTheProfilePhoto
@@ -603,7 +605,7 @@ function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWit
 /**
  * with: (ARG)
  *
- * in: TEST cgbutton AMemberTypeAccountIDToBuyStoreCredit
+ * in: TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     TEST cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
  *     TEST custstatement ACompanyLooksAtACustomerStatement
  *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
@@ -784,10 +786,11 @@ function usd($list) {return t\usd($list);}
  *     MAKE cgbutton AMemberClicksAPayWithCommonGoodButtonWithVariableAmount
  *     MAKE cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
  *     MAKE cgbutton AMemberClicksAButtonToBuyStoreCredit
- *     MAKE cgbutton AMemberTypeAccountIDToBuyStoreCredit
+ *     MAKE cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     MAKE cgbutton AMemberClicksAButtonToBuyAGiftOfStoreCredit
  *     MAKE cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
  *     MAKE cgbutton ACompanyGetsAnAuthcode
+ *     MAKE cgbutton ACompanyHasAnApiToProcessTransactionResults
  *     MAKE changeaccount AMemberClicksTheProfilePhoto
  *     MAKE changeaccount AMemberChangesAccount
  *     MAKE changeaccount AMemberChangesAccountToGoToADifferentPage
@@ -1167,7 +1170,6 @@ function statisticsGetSet($time) {
  *
  * in: MAKE backing AMemberDecreasesBackingAmount
  *     MAKE bank ASlaveMemberRequestsATransfer
- *     MAKE cgbutton ACompanyGetsAnAuthcode
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     BOTH coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
@@ -1195,6 +1197,7 @@ function membersHave($list) {return t\membersHave($list);}
  * we redirect to (ARG)
  *
  * in: TEST bank AMemberDrawsCreditFromTheBankThenCancels
+ *     TEST cgbutton ACompanyHasAnApiToProcessTransactionResults
  *     TEST posts SomeoneConfirmsAnOfferOnceTwice
  *     TEST scancard SomeoneScansAMemberCard
  *     TEST signout AMemberSignsOut
@@ -1203,8 +1206,10 @@ function membersHave($list) {return t\membersHave($list);}
 function weRedirectTo($page) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $lastGo;
+  $far = 'goto=' . urlencode($page);
   $lastGo = preg_replace('/&tm=[0-9]+/', '', $lastGo); // ignore time, when redirecting to promo site
-  if (!$res = in($lastGo, "$page /$page")) t\output('redirect mismatch: ' . pr(compact('lastGo', 'page')));
+  $res = (strhas($lastGo, $far) or in($lastGo, "$page /$page $far"));
+  if (!$res) t\output('redirect mismatch: ' . pr(compact('lastGo', 'page')));
   return $res;
 }
 
@@ -1270,8 +1275,9 @@ function devices($list) {return t\devices($list);}
  * in: MAKE balancesheet Setup
  *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
- *     TEST cgbutton AMemberTypeAccountIDToBuyStoreCredit
+ *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     TEST cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
+ *     TEST cgbutton ACompanyHasAnApiToProcessTransactionResults
  *     MAKE custstatement Setup
  *     MAKE download Setup
  *     TEST gift AMemberDonatesWithInsufficientFunds
@@ -1464,7 +1470,7 @@ function memberConfirmsOnTransaction($id, $do, $xid) {
  *
  * in: TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
- *     TEST cgbutton AMemberTypeAccountIDToBuyStoreCredit
+ *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     TEST cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
@@ -1653,7 +1659,7 @@ function weScripWithSubs($script, $args = []) {
  * these (ARG): (ARG)
  *
  * in: MAKE balancesheet Setup
- *     TEST cgbutton AMemberTypeAccountIDToBuyStoreCredit
+ *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     BOTH cgbutton AMemberRedeemsStoreCredit
  *     TEST cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
  *     MAKE community Setup
@@ -2125,16 +2131,6 @@ function memberStepsUpWith($id, $rows) {
 }
 
 /**
- * we exit showing: (ARG)
- *
- * in: TEST cgbutton ACompanyGetsAnAuthcode
- */
-function weExitShowing($ray) {
-  if (!$actualRay = db\get('value', 'test', "type='echo'")) return FALSE;
-  return t\checkOneArray($ray[0], unserialize($actualRay));
-}
-
-/**
  * member (ARG) visits (ARG) and selects (ARG): (ARG) for (ARG)
  *
  * in: MAKE joint AMemberRequestsAJointAccount
@@ -2159,4 +2155,44 @@ function memberDeletesRelationTo($id1, $id2) {
   global $testOnly; if ($testOnly) return FALSE;
   $linei = $reid = r\relation('reid', t\uid($id1), t\uid($id2)); // compound qid
   return t\dojs('settings/relations', $id1, "$('.btn[name=\"delete-$linei\"').click();"); // js to simulate dropdown selection
+}
+
+/**
+ * we hit (ARG) with: (ARG)
+ *
+ * in: TEST cgbutton ACompanyHasAnApiToProcessTransactionResults
+ */
+function weHitWith($url, $args) {
+  global $testOnly; if (!$testOnly) return FALSE;
+  global $testHit;
+  $content = $args[0];
+  $got = just('url', $testHit) + nni($testHit, 'content');
+  foreach (compact('url') + $content as $k => $v) {
+    if ($v != '' . $got[$k]) { t\output(compact(ray('url content got'))); return FALSE; }
+  }
+  return TRUE;
+}
+
+/**
+ * we exit showing just (ARG)
+ *
+ * in: TEST cgbutton ACompanyHasAnApiToProcessTransactionResults
+ */
+function weExitShowingJust($what) {
+  global $testOnly; if (!$testOnly) return FALSE; // maybe combine this with weExitShowing?
+  if (!$actual = db\get('value', 'test', $where = "type='echo'")) return FALSE;
+  db\del('test', $where); // reset for subsequent steps
+  return ($what == '' . $actual);
+}
+
+/**
+ * we exit showing: (ARG)
+ *
+ * in: TEST cgbutton ACompanyGetsAnAuthcode
+ */
+function weExitShowing($ray) {
+  global $testOnly; if (!$testOnly) return FALSE;
+  if (!$actualRay = db\get('value', 'test', $where = "type='echo'")) return FALSE;
+  db\del('test', $where); // reset for subsequent steps
+  return t\checkOneArray($ray[0], unserialize($actualRay));
 }

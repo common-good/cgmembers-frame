@@ -285,7 +285,7 @@ define('R_WHYS', t('goods and services,exchange of US Dollars or other currency,
 const FOR_GOODS = 0; // index into R_WHYS for goods
 const FOR_USD = 1; // index into R_WHYS for USD exchange
 const FOR_NONGOODS = 2; // index into R_WHYS for loan, etc.
-const SELF_CREDIT = '#CREDIT#'; // indicates (internally) a purchase of credit for oneself (must be a string)
+const SELF_CREDIT = 'credit'; // (string) indicates (internally and in invoice data) a purchase of credit for oneself
 //const FOR_SHARE = 3; // "sharing" gift to CGF (comes out of rewards)
 //const FOR_INVESTMENT = 4; // only in invoices (use B_INVESTMENT in txs)
 //const FOR_STAKE = 5; // only in invoices (use B_STAKE in txs)
@@ -562,6 +562,7 @@ const B_FOOD = 17; // contribution to food fund
 const TX_FLAGS = 'offline short crumbs recurs gift loan investment stake fine noask funding food';
 
 // Invoice status (txid >= TX_PAID if paid)
+const TX_NOSUCH = -4; // no such charge operation (used only in forms/buy.inc)
 const TX_DELAYED = -3; // waiting for both accounts to qualify
 const TX_DENIED = -2; // invoice rejected by the non-originator
 const TX_PENDING = -1; // charged, waiting for confirmation

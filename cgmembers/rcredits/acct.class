@@ -170,7 +170,7 @@ class Acct {
     if ($nick == 'coy') return $a->co ? $a->coFld($field) : NULL;
     if ($nick == 'ctt' and $field != 'cttyA') return $a->cttyA->can(u\consta('b', substr($field, 4))); // ctty bit
 
-    if (property_exists($obj = nni(self::$rs, $a->id, NULL), $field)) { // actual database field?
+    if ($obj = nni(self::$rs, $a->id) and property_exists($obj, $field)) { // actual database field?
       $res = $obj->$field; // get the raw data, then handle any encryption
       /// Not currently used    if ($nick == 'raw') return $res;
       if ($field == 'balance') return db\get('balance', 'users', $uidSub); // make sure this field is always au courant

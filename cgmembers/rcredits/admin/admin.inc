@@ -1035,17 +1035,23 @@ function toSMT() {
     $a = r\acct($uid);
     foreach (ray('isSavings fullName postalAddr tenure owns partnerInfo created notes') as $k) $$k = $a->$k;
     if (!$partnerInfo) continue;
-    
+
+    if (!$a->hasBank) continue;
     list ($routing, $bankAccount) = u\parseBankAccount($a->bankAccount);
+    if (empty($bankAccount)) continue;
+    
+    if (isDEV) u\setDft($smtid, 0); // for testing
+    if (isDEV) u\setDft($noContract, 0); // for testing
+    
     $notes = strtr($notes, ["\r" => '', "\n" => '']);
     $nameOnBankAcct = $fullName;
     list ($billingAddress, $billingCity, $billingState, $billingZip) = u\parseAddr($postalAddr);
+    $project = NULL; // null out previous value
     extract($partnerInfo ?: []);
+    u\setDft($project, $source == 'solar1' ? 'ssps' : 'cooppower');
     $cgAccount = $a->member ? $a->mainQid : '';
     $phone = u\fmtPhone($phone, '-');
-    $pid = db\get('uid', 'users', ['name' => $project]);
     $out = compact(ray('smtid pid project fullName orgName m_company m_number cgAccount phone email address city state zip tenure owns routing bankAccount isSavings nameOnBankAcct billingAddress billingCity billingState billingZip noContract created notes'));
-    if (empty($bankAccount)) continue;
 ///  if ($a->member and $bad = db\get('uid', 'users', "fullName='$a->fullName' AND NOT :IS_MEMBER")) debug("maybe delete $bad ($a->uid is good) -- $a->fullName");
     if (!$hdrDone) {
       u\csvStart('solar1-export-' . date('Y-m-d') . '.csv');
