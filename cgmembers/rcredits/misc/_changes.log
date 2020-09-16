@@ -1,3 +1,11 @@
+2020-09-16 feature/buy-status
+. revised pay-with-cg interface, including adding a "status" request
+. fixed a startup bug that didn't recognize flags as a real database field
+. improved admin export of SMT data
+
+2020-09-15 feature/partner-bit2
+. improved failure reporting
+
 2020-09-07 feature/partner-bit
 . replaced list of signup partners with a partner bit
 . revised Coop Power's salesforce field names

@@ -757,6 +757,8 @@ function checkForShortfall($goods, $payer, $payee, $actorA, $otherA, $needed, $f
  *    shid: record id of related record in r_shares
  *    status: used by acct->payApproved to mark transaction approved
  *    created: UNIXtime
+ *    request: unique request identifier for actor using API
+ *    api: URL to which to report success or failure (for API requests)
  * @param int $recursId: record ID of related record in tx_templates (if any)
  * @return simple array: 
  *    ok: success?
@@ -776,6 +778,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
     u\setBit($flags, $k, $v);
     unset($extra[$k]); // don't leave bits in extras (data field)
   }
+  foreach (just('api request for', $extra) as $k => $v) if (empty($v)) unset($extra[$k]);
   list ($payee, $payer) = array($payeeA->id, $payerA->id);
   u\setDft($purpose, $why = ray(R_WHYS)[$goods]);
   $subs = ray('myName otherName otherEmail otherPhone amount why purpose did op', $payeeA->fullName, $payerA->fullName, $payerA->email, u\fmtPhone($payerA->phone), u\fmtAmt($amount), $why, $purpose, t('charged'), t('charged'));

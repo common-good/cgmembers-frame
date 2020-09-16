@@ -5,21 +5,21 @@ SO I can get stuff, buy credit, or make donations easily.
 
 Setup:
   Given members:
-  | uid  | fullName | pass | email | flags                    | zip   | floor |*
-  | .ZZA | Abe One  | a1   | a@    | member,ok,confirmed,debt | 01001 |  -100 |
-  | .ZZB | Bea Two  | b1   | b@    | member,ok,confirmed,debt | 01001 |  -100 |
-  | .ZZC | Our Pub  | c1   | c@    | member,ok,co,confirmed   | 01003 |     0 |
+  | uid  | fullName | pass | email | flags                    | zip   | floor | emailCode |*
+  | .ZZA | Abe One  | a1   | a@    | member,ok,confirmed,debt | 01001 |  -100 | Aa1       |
+  | .ZZB | Bea Two  | b1   | b@    | member,ok,confirmed,debt | 01001 |  -100 | Bb2       |
+  | .ZZC | Our Pub  | c1   | c@    | member,ok,co,confirmed   | 01003 |     0 | Cc3       |
   And member is logged out
 
 Scenario: A member clicks a Pay With Common Good button
-  When member "?" visits page "pay-with-cg/company=NEWZZC&item=food&amount=23.50"
+  When member "?" visits page "pay-with-cg/company=NEWZZC&code=Cc3&item=food&amount=23.50"
   Then we show "Hello %PROJECT Member" with:
   | Pay        | $23.50 to Our Pub |
   | For        | food |
   | Account ID |  |
 
 Scenario: A member submits a Pay With Common Good button payment with account ID
-  When member "?" confirms form "pay-with-cg/company=NEWZZC&item=food&amount=23" with values:
+  When member "?" confirms form "pay-with-cg/company=NEWZZC&code=Cc3&item=food&amount=23" with values:
   | name   |*
   | NEWZZA |
   Then we say "status": "pay button success"
@@ -50,14 +50,14 @@ Scenario: A member submits a Pay With Common Good button payment with account ID
   Then we say "error": "already paid"
 
 Scenario: A member clicks a Pay With Common Good button with variable amount
-  When member "?" visits page "pay-with-cg/company=NEWZZC&item=food&amount="
+  When member "?" visits page "pay-with-cg/company=NEWZZC&code=Cc3&item=food&amount="
   Then we show "Hello %PROJECT Member" with:
   | Pay        | to Our Pub |
   | For        | food |
   | Account ID |  |
 
 Scenario: A member submits a Pay With Common Good button payment with account ID and chosen amount
-  When member "?" confirms form "pay-with-cg/company=NEWZZC&item=food&amount=" with values:
+  When member "?" confirms form "pay-with-cg/company=NEWZZC&code=Cc3&item=food&amount=" with values:
   | name   | amount |*
   | NEWZZA |     23 |
   Then we say "status": "pay button success"
@@ -74,14 +74,14 @@ Scenario: A member submits a Pay With Common Good button payment with account ID
   | Pay | Dispute |
 
 Scenario: A member clicks a button to buy store credit
-  When member "?" visits page "pay-with-cg/company=NEWZZC&for=credit&item=&amount=23.50"
+  When member "?" visits page "pay-with-cg/company=NEWZZC&code=Cc3&for=credit&item=&amount=23.50"
   Then we show "Hello %PROJECT Member" with:
   | Pay        | $23.50 to Our Pub |
   | For        | store credit |
   | Account ID |  |
 
-Scenario: A member type account ID to buy store credit
-  When member "?" confirms form "pay-with-cg/company=NEWZZC&for=credit&item=&amount=23" with values:
+Scenario: A member types account ID to buy store credit
+  When member "?" confirms form "pay-with-cg/company=NEWZZC&code=Cc3&for=credit&item=&amount=23" with values:
   | name   |*
   | NEWZZA |
   Then we say "status": "pay button success"
@@ -138,7 +138,7 @@ Scenario: a member redeems store credit
   |  1 | %now |
 
 Scenario: A member clicks a button to buy a gift of store credit
-  When member "?" visits page "pay-with-cg/company=NEWZZC&for=gift&item=&amount=23.50"
+  When member "?" visits page "pay-with-cg/company=NEWZZC&code=Cc3&for=gift&item=&amount=23.50"
   Then we show "Hello %PROJECT Member" with:
   | Pay          | $23.50 to Our Pub |
   | For          | store credit |
@@ -146,7 +146,7 @@ Scenario: A member clicks a button to buy a gift of store credit
   | Account ID   | |
 
 Scenario: A member type account ID to buy a gift of store credit
-  When member "?" confirms form "pay-with-cg/company=NEWZZC&for=gift&item=&amount=23" with values:
+  When member "?" confirms form "pay-with-cg/company=NEWZZC&code=Cc3&for=gift&item=&amount=23" with values:
   | for           | name          |*
   | b@example.com | a@example.com |
   Then we say "status": "pay button success"
@@ -178,10 +178,35 @@ Scenario: A member type account ID to buy a gift of store credit
   |  1 | account   | .ZZB  | account   | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER | 1       | 23     |
 
 Scenario: A company gets an authcode
-  Given members have:
-  | uid  | emailCode |*
-  | .ZZC | Abc123    |
-  When member "?" visits page "authcode/company=NEWZZC&cocode=Abc123"
+  When member "?" visits page "pay-with-cg/op=authcode&company=NEWZZC&cocode=Cc3"
   Then we exit showing:
   | cocode | now  | r | cry |*
-  | Abc123 | %now | ? | 1   |
+  | Cc3    | %now | ? | 1   |
+
+Scenario: A company has an api to process transaction results
+  When member "?" confirms form "pay-with-cg/company=NEWZZC&code=Cc3&item=food&amount=23&return=http:%2F%2Fexample.com%2Fthanks.php&request=ABC123&api=http:%2F%2Fexample.com%2Fapi%2F" with values:
+  | name   |*
+  | NEWZZA |
+  Then invoices:
+  | nvid | created | status      | amount | payer | payee | for  |*
+  |    1 | %today  | %TX_PENDING |     23 | .ZZA  | .ZZC  | food |
+  And we redirect to "http://example.com/thanks.php?request=ABC123"
+
+  When member "?" visits page "pay-with-cg/op=status&company=NEWZZC&cocode=Cc3&request=ABC123"
+  Then we exit showing just "-1"
+  
+  When member "?" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
+  | op  |*
+  | pay |
+  Then transactions:
+  | xid | created | amount | payer | payee | for  |*
+  |   1 | %today  |     23 | .ZZA  | .ZZC  | food |
+  And invoices:
+  | nvid | created | status | amount | payer | payee | for  |*
+  |    1 | %today  | 1      |     23 | .ZZA  | .ZZC  | food |
+  And we hit "http://example.com/api/" with:
+  | request | ok | msg                   |*
+  | ABC123  | 1  | You paid Our Pub $23. |
+
+  When member "?" visits page "pay-with-cg/op=status&company=NEWZZC&cocode=Cc3&request=ABC123"
+  Then we exit showing just "1"

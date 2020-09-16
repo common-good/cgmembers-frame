@@ -279,6 +279,7 @@ EOF
   'return welcome' => t('You are welcome back any time.'),
   
   // error messages
+  'field too long' => t('Field %field is too long (it must be no more than %max characters).'),
   'no page permission' => t('You do not have permission to visit this page.'),
   'syntax' => t('Wrong syntax!'),
   'nyi' => t('That feature is not available through the SMS interface.'),
@@ -517,7 +518,7 @@ EOF
   'negative saveWeekly' => t('Your discretionary savings are already at their minimum, so your weekly savings addition cannot be negative.'),
   'requires signin' => t('You must be signed in, to use that page.'),
   'too many days' => t('You cannot view more than 18 months at a time on screen (but you can download any period).'),
-  'co code timeout' => t('That form has expired. Refresh your page and try again.'),
+  'co code timeout' => t('That form has expired. Go back and try again.'),
   'old partner link' => t('Sign in with your account ID and password to continue your account set-up.'),
   
 //  'saveWeekly too low' => t('With a negative "target balance", your weekly savings addition must be at least %min.'),

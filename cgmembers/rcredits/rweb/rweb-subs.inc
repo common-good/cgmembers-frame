@@ -2286,8 +2286,12 @@ function backButton() {
  * @param bool $cry: <encrypt it>
  */
 function exitRay($ray, $cry = FALSE) {
-/**/  if (test()) return t\logRec('echo', $ray + compact('cry'));
-/**/  echo $cry ? u\cryRay($ray) : pr($ray);
+  exitJust(test() ? $ray + compact('cry') : ($cry ? u\cryRay($ray) : pr($ray)));
+}
+
+function exitJust($s) {
+  if (test()) { t\output('exiting with: ' . pr($s)); return t\logRec('echo', $s); }
+/**/  echo $res;
   exit();
 }
 

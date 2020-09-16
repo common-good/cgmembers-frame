@@ -38,7 +38,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
       extract(just('v', $doData, NULL));
       if ($doData['op'] != 'inv') $op = ''; // error
     }
-    if ($op != 'inv' or $v != $nvid) return hack(t('legacy handleInvoice fake')); // change to u\EXPECT after 10/1/2020
+    u\EXPECT($op == 'inv' and $v == $nvid, 'legacy handleInvoice fake');
   }
 
   $subs = ray('amount what date', u\fmtAmt($amount), $purpose, u\fmtDate($created, TRUE));
@@ -61,7 +61,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
       $_warning = t('<p><b>IMPORTANT:</b> To avoid insufficient funds charges, be sure there are enough funds in your bank account to cover any transfer that may result from approving payment of this invoice (and future invoices, if you check the "Auto" box).</p>');
       if (!$webpay) $always = boxFld('always', t('Auto:'), t('Pay all invoices from %who automatically.', $subs), 0);
     } elseif ($a->avail() < $amount) {
-      $_warning = t('You cannot approve this invoice until you have enough money in your account. Sign in at %CG_DOMAIN and click "Bank" on the menu to transfer funds from (or to) your bank account.');
+      $_warning = t('You cannot approve this invoice until you have enough money in your account. Sign in at %CG_DOMAIN and click "Bank" on the menu to transfer funds from (or to) your bank account. Then click History / Invoices TO You and select this invoice to approve it.');
       $disabled = w\disabled();
     } else $_warning = '';
 

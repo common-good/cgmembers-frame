@@ -200,6 +200,7 @@ function handleInput($input, &$sfData = []) {
   $formKeys = join(' ', array_keys($sfFlds)); // keys from form corresponding to keys expected in Salesforce
   $keys = $formKeys . ' ' . FORM_KEYS2;
   
+  foreach (ray('fullName orgName city address m_city m_address') as $k) if (isset($input[$k])) $input[$k] = u\normalizeCase($input[$k]);
   extract($info = just($keys, $input));
 
   // set Salesforce parameters
@@ -220,7 +221,6 @@ function handleInput($input, &$sfData = []) {
     if ($err = u\badName($$k)) return partnerErr($err, $k);
   }
 
-  foreach (ray('fullName orgName city address m_city m_address') as $k) $info[$k] = $$k = u\normalizeCase($info[$k]);
   $info += compact(ray('co customer'));
 
   if ($err = u\badZip($zip)) return partnerErr($err, 'zip');
@@ -515,11 +515,11 @@ function tellPartner($pA, $info, $flnms) {
  */
 function partnerErr($msg, $k) {
   $subs = compact('msg', 'k');
-  r\tellAdmin(t('partner signup: %msg (field %k)', $subs), $_POST);
+  r\tellAdmin(t('partner signup: %msg (field %k)', $subs), $_POST + $_SERVER);
   return w\softErr(t('<h2>Drat.</h2><p>There was a problem with the data you submitted (field %k) -- %msg</p><p>%PROJECT is looking into the problem and we will contact you with instructions for continuing.</p><p>We apologize for the delay.</p>', $subs)); // fix double spaces and leading or trailing
 }
 
-/**/ function solarOneErr($msg, $k) {die(plain("$msg (field $k)"));}
+function solarOneErr($msg, $k) {u\FAIL(plain("$msg (field $k)"));}
   
 /**
  * Send data to the partner's CRM(s)
