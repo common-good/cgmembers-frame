@@ -8,7 +8,7 @@ use CG\Db as db;
 
 include_once __DIR__ . '/signin.inc';
 
-const AUTHCODE_TIMEOUT = 10 * 60; // number of seconds before authcode expires
+const AUTHCODE_TIMEOUT = 60 * 60; // number of seconds before authcode expires
 const CGPAY_FLDS = 'op company cocode code item amount suggestedItem suggestedAmount name account zip verb request api for return cancel err confirm';
 const CGPAY_MAXLEN = 255; // maximum field length (to prevent bloating our tables) -- return and cancel have no limit
 

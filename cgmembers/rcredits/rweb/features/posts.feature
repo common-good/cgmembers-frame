@@ -35,10 +35,9 @@ Setup:
 Scenario: Someone visits the posts page
   When someone visits "community/posts"
   Then we show "Offers, Needs, & Tips" with:
-  | Where  |    |    |
-  | Radius | 10 | Go |
+  | 10 | Go |
   And without:
-  | Post a   |
+  | Greenfield, MA |
 
 Scenario: Someone submits a locus
   When someone confirms "community/posts" with:
@@ -51,9 +50,7 @@ Scenario: Someone submits a locus
   And with:
   | Item | Details | |
   And with:
-  | There are not yet any needs within  |
-  | There are not yet any offers within |
-  | There are not yet any tips within |
+  | There are no such posts |
   And cookie "locus" is "Greenfield, MA"
   And cookie "radius" is "10"
   And cookie "latitude" is "42.3791167"
@@ -88,7 +85,7 @@ Scenario: Someone posts an offer
   And cookie "email" is "x@example.com"
   
 Scenario: Someone enters personal data after posting an offer
-  When someone confirms "community/posts/op=who&cat=1&item=fish&details=big one&emergency=1&radius=3&end=%now+3d&email=b@c.d&type=offer&exchange=0" with:
+  When someone confirms "community/posts/op=who&cat=1&item=fish&details=big one&emergency=1&radius=3&end=%now+3d&email=b@c.d&type=offer&service=1&exchange=0" with:
   | fullName    | Bea Two      |**
   | displayName | Bea          |
   | address     | 2 B St.      |
@@ -101,8 +98,8 @@ Scenario: Someone enters personal data after posting an offer
   | washes      | 3            |
   | health      | 2            |
   Then these "posts":
-  | postid | type  | item | details | cat  | exchange | emergency | radius | pid | created | end     |* 
-  | 1      | offer | fish | big one | food | 0        | 1         | 3      | 5   | %today  | %now+3d |
+  | postid | type  | item | details | cat  | service | exchange | emergency | radius | pid | created | end     |* 
+  | 1      | offer | fish | big one | food | 1       | 0        | 1         | 3      | 5   | %today  | %now+3d |
   And these "people":
   | pid         | 5            |**
   | fullName    | Bea Two      |
@@ -136,15 +133,15 @@ Scenario: A member enters data after posting an offer
   | Postal Code |
   | Phone |
 
-  When someone confirms "community/posts/op=who&cat=1&item=fish&details=big one&emergency=1&radius=3&end=%now+3d&email=e@example.com&type=offer&exchange=0" with:
+  When someone confirms "community/posts/op=who&cat=1&item=fish&details=big one&emergency=1&radius=3&end=%now+3d&email=e@example.com&type=offer&service=1&exchange=0" with:
   | displayName | Eve          |**
   | method      | text         |
   | days        | 2            |
   | washes      | 3            |
   | health      | 2            |
   Then these "posts":
-  | postid | type  | item | details | cat  | exchange | emergency | radius | pid | created | end     |* 
-  | 1      | offer | fish | big one | food | 0        | 1         | 3      | 5   | %today  | %now+3d |
+  | postid | type  | item | details | cat  | service | exchange | emergency | radius | pid | created | end     |* 
+  | 1      | offer | fish | big one | food | 1       | 0        | 1         | 3      | 5   | %today  | %now+3d |
   And these "people":
   | pid         | 5            |**
   | fullName    | Eve Five     |
@@ -167,8 +164,8 @@ Scenario: A member enters data after posting an offer
 
 Scenario: Someone confirms an offer once, twice
   Given these "posts":
-  | postid | type  | item | details | cat  | exchange | emergency | radius | pid | created   | end     |* 
-  | 1      | offer | fish | big one | food | 0        | 1         | 3      | 1   | %today-1d | %now+3d |
+  | postid | type  | item | details | cat  | service | exchange | emergency | radius | pid | created   | end     |* 
+  | 1      | offer | fish | big one | food | 1       | 0        | 1         | 3      | 1   | %today-1d | %now+3d |
   When someone visits "community/posts/op=confirm&thing=post&code=%code" where code is:
   | postid | created   |*
   | 1      | %today-1d |
@@ -192,7 +189,7 @@ Scenario: Someone confirms an offer once, twice
   | Details:   | big one |
   |            | Max 500 characters |
   | Emergency: | |
-  | Radius:    | 10 miles |
+  | Radius:    | 3 miles |
   | End Date:  | %mdY+3d |
   | Update     | |
 
@@ -200,8 +197,8 @@ Scenario: Someone confirms an offer once, twice
   | type | cat    | item   | details | emergency | radius | end     |*
   | tip  | health | Boston | ASAP    | 1         | 5      | %mdY+5d |
   Then these "posts":
-  | postid | type | cat    | item | details | exchange | emergency | radius | pid | created    | end          |* 
-  | 1      | tip  | health | Boston | ASAP  | 0        | 1         | 5      | 1   | %today-1d | %daystart+5d |
+  | postid | type | cat    | item | details | service | exchange | emergency | radius | pid | created    | end          |* 
+  | 1      | tip  | health | Boston | ASAP  | 1       | 0        | 1         | 5      | 1   | %today-1d | %daystart+5d |
   And we show "Offers, Needs, & Tips" with:
   | List View | Post |
 #  | Needs | Offers | Tips |
@@ -209,8 +206,8 @@ Scenario: Someone confirms an offer once, twice
 
 Scenario: Someone views the details of an offer
   Given these "posts":
-  | postid | type  | item | details | cat  | exchange | emergency | radius | pid | confirmed | created | end     |* 
-  | 1      | offer | fish | big one | food | 0        | 1         | 3      | 1   | 1         | %now    | %now+3d |
+  | postid | type  | item | details | cat  | service | exchange | emergency | radius | pid | confirmed | created | end |* 
+  | 1      | offer | fish | big one | food | 1       | 0        | 1         | 3      | 1   | 1         | %now   | %now+3d |
   When someone visits "community/posts/op=show&postid=1"
   Then we show "Details" with:
   | Category        | food |
@@ -222,8 +219,8 @@ Scenario: Someone views the details of an offer
 
 Scenario: Someone views the details of an urgent need
   Given these "posts":
-  | postid | type | item | details | cat  | exchange | emergency | radius | pid | created | end     |* 
-  | 1      | need | fish | big one | food | 0        | 1         | 3      | 1   | %now    | %now+3d |
+  | postid | type | item | details | cat  | service | exchange | emergency | radius | pid | created | end     |* 
+  | 1      | need | fish | big one | food | 1       | 0        | 1         | 3      | 1   | %now    | %now+3d |
   When someone visits "community/posts/op=show&postid=1"
   Then we show "Details" with:
   | Category        | food |
@@ -235,8 +232,8 @@ Scenario: Someone views the details of an urgent need
 
 Scenario: Someone views the details of a tip
   Given these "posts":
-  | postid | type | item | details | cat  | exchange | emergency | radius | pid | created | end     |* 
-  | 1      | tip  | fish | big one | food | 0        | 1         | 3      | 1   | %now    | %now+3d |
+  | postid | type | item | details | cat  | service | exchange | emergency | radius | pid | created | end     |* 
+  | 1      | tip  | fish | big one | food | 1       | 0        | 1         | 3      | 1   | %now    | %now+3d |
   When someone visits "community/posts/op=show&postid=1"
   Then we show "Details" with:
   | Category | food                |
@@ -251,8 +248,8 @@ And without:
   
 Scenario: Someone replies to an offer
   Given these "posts":
-  | postid | type  | item | details | cat  | exchange | emergency | radius | pid | created | end     | confirmed |* 
-  | 1      | offer | fish | big one | food | 0        | 1         | 26     | 1   | %now    | %now+3d | 1         |
+  | postid | type | item | details | cat  | service | exchange | emergency | radius | pid | created | end  | confirmed |* 
+  | 1     | offer | fish | big one | food | 1       | 0        | 1         | 26     | 1   | %now    | %now+3d | 1      |
   And cookie "locus" is "Greenfield, MA"
   And cookie "radius" is "100"
   And cookie "latitude" is "42.3791167"
@@ -261,8 +258,7 @@ Scenario: Someone replies to an offer
 
   When someone visits "community/posts"
   Then we show "Offers, Needs, & Tips" with:
-  | Where    | Greenfield, MA |    |
-  | Radius   | 100   | Go |
+  | Greenfield, MA | 100   | Go |
 
   When someone confirms "community/posts" with:
   | locus          | radius | latitude | longitude |*
@@ -290,8 +286,8 @@ Scenario: Someone replies to an offer
 
 Scenario: Someone enters personal data after replying to an offer
   Given these "posts":
-  | postid | type  | item | details | cat  | exchange | emergency | radius | pid | created | end     | confirmed |* 
-  | 1      | offer | fish | big one | food | 0        | 1         | 3      | 1   | %now    | %now+3d | 1         |
+  | postid | type  | item | details | cat  | service | exchange | emergency | radius | pid | created | end  | confirmed |* 
+  | 1      | offer | fish | big one | food | 1       | 0        | 1         | 3      | 1   | %now    | %now+3d | 1      |
   When someone confirms "community/posts/op=who&email=b@c.d&message=Hello there!&postid=1" with:
   | displayName | Bea |**
   | fullName    | Bea Two |
@@ -329,8 +325,8 @@ Scenario: Someone confirmed sends a message and posts again
   | pid | displayName | fullName | address | city     | state | zip   | phone        | email | method | confirmed |*
   | 2   | Bea         | Bea Two  | 2 B St. | Greenfield | MA  | 01301 | +14132530002 | b@c.d | email  | 1         |
   And these "posts":
-  | postid | type  | item | details | cat  | exchange | emergency | radius | pid | created | end     | confirmed |* 
-  | 1      | offer | fish | big one | food | 0        | 1         | 3      | 1   | %now    | %now+3d | 1         |
+  | postid | type  | item | details | cat  | service | exchange | emergency | radius | pid | created | end  | confirmed |* 
+  | 1      | offer | fish | big one | food | 1       | 0        | 1         | 3      | 1   | %now    | %now+3d | 1      |
   And cookie "vipid" is 2
   And cookie "email" is "b@c.d"
 
@@ -343,9 +339,9 @@ Scenario: Someone confirmed sends a message and posts again
   | 1  | 1      | 2      | Hello there! | %now    | 1         |
   
   When someone confirms "community/posts/op=post" with:
-  | type | cat   | item | details | emergency | exchange | radius | end     | email |*
-  | need | stuff | bag  | paper   | 0         | 1        | .25    |         | b@c.d |  
+  | type | service | cat   | item | details | emergency | exchange | radius | end     | email |*
+  | need | 0       | other | bag  | paper   | 0         | 2        | .25    |         | b@c.d |  
 
   Then these "posts":
-  | postid | type | item | details | cat   | emergency | exchange | radius | pid | created | end |* 
-  | 2      | need | bag  | paper   | stuff | 0         | 1        | .25    | 2   | %today  |     |
+  | postid | type | service | item | details | cat   | emergency | exchange | radius | pid | created | end |* 
+  | 2      | need | 0       | bag  | paper   | other | 0         | 2        | .25    | 2   | %today  |     |

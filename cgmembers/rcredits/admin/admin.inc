@@ -45,7 +45,7 @@ function setupBasicAccounts() {
       $values = array($uid, $uid, $region . '.', $fullName, $email, $zip, R_COUNTRY_ID, 0, $flags);
       $info = array_combine($keys, $values);
       $info += compact(ray('postalAddr state federalId activated'));
-      new r\Acct($info);
+      $serverA = new r\Acct($info);
     }
   }
   //$region = db\get("CONCAT(iso_code, 'A')", 'r_countries', 'id=:country', compact('country'));
@@ -71,23 +71,19 @@ function setupBasicAccounts() {
   new r\Acct(array_combine($keys, array(BANK_IN_ID, 0, t('bank-in'), t('--'), 'cg@commongood.earth', '', 0, 0, $flagsCo))); 
   new r\Acct(array_combine($keys, array(BANK_OUT_ID, 0, t('bank-out'), t('--'), 'cg@commongood.earth', '', 0, 0, $flagsCo)));
   
-  $server = r\serverUid();
-  if ($server == r\serverUid('NEW')) { // no need to set up CGF unless in Western Mass (or testing)
-    r\acct($server)->update('created', R_LAUNCH); // a date in the past makes tests work better
-    if ($cgId = getV('cgf_uid') and db\exists('users', 'uid=' . $cgId)) return; // already done (don't use CGID here)
+  $serverA->update('created', R_LAUNCH); // a date in the past makes tests work better
+  if ($cgId = getV('cgf_uid') and db\exists('users', 'uid=' . $cgId)) return; // already done (don't use CGID here)
 
-    $values = array(r\qo('NEWAAB')->id, $server, u\shortName(PROJECT), PROJECT, CGF_EMAIL, '01330', US_COUNTRY_ID, 0, $flagsCo);
-    $info = array_combine($keys, $values);
-    list ($phone, $address, $city, $state, $postalAddr) = array(u\fmtPhone(CGF_PHONE, '+n'), CGF_ADDRESS, CGF_CITY, R_STATE_ID, CGF_POSTALADDR);
-    $helper = 1; //$wws->id;
-    $info += compact(ray('email phone address city state postalAddr helper'));
-    $cgf = new r\Acct($info);
-    setV('cgf_uid', $cgf->id);
-    $cgf->update('emailCode website activated created', '1495kJHm0h145PHh2345h', 'cg4.us', R_LAUNCH, R_LAUNCH);
-//    $cgf->newRelation($wws->id, r\perm(B_MANAGE));
-    $cgf->reread(); // keeps tests from dying when using CGF as a funder for doBalance immediately after recreating the db
+  $values = array(r\qo('NEWAAB')->id, $serverA->id, u\shortName(PROJECT), PROJECT, CGF_EMAIL, '01330', US_COUNTRY_ID, 0, $flagsCo);
+  $info = array_combine($keys, $values);
+  list ($phone, $address, $city, $state, $postalAddr) = array(u\fmtPhone(CGF_PHONE, '+n'), CGF_ADDRESS, CGF_CITY, R_STATE_ID, CGF_POSTALADDR);
+  $helper = 1; //$wws->id;
+  $info += compact(ray('email phone address city state postalAddr helper'));
+  $cgf = new r\Acct($info);
+  setV('cgf_uid', $cgf->id);
+  $cgf->update('emailCode website activated created', '1495kJHm0h145PHh2345h', 'cg4.us', R_LAUNCH, R_LAUNCH);
+  $cgf->reread(); // keeps tests from dying when using CGF as a funder for doBalance immediately after recreating the db
 //    if (!$cgId) w\say(t('CGID had not yet been set up. It is now.'), 'err');
-  }
 }
 
 /**

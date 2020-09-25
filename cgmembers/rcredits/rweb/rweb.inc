@@ -362,11 +362,11 @@ function formEmpty($form, &$sta = '', $args = '') {
 /**
  * Return a one-use auth code
  */
-function authcode($args = '') {
+function authcode($args = '', $exit = TRUE) {
   extract($args = just('company cocode', $args ?: $_GET, NULL));
   if (!$cocode or !u\isQid($company) or !($co = r\acct($company)) or !$co->co or $co->emailCode != $cocode) exit(t('bad company account ID or cocode'));
   $ray = ray('cocode now r', $cocode, now(), u\randomString(1));
-  exitRay($ray, TRUE);
+  if ($exit) exitRay($ray, TRUE); else return u\cryRay($ray);
 }
 
 /**

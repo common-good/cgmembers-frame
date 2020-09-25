@@ -371,27 +371,26 @@ function doit(what, vs) {
     break;
     
   case 'posts':
-    $('.form-item-radius .btn').click(function () { // click the Go button
-      $('#edit-submit').click();
+    $('#menu-signin').hide(); // don't confuse (signin is not required for this feature)
+
+//    frm.submit(function (event) {event.preventDefault();}); // or return false;
+    $('#edit-point').click(function () { // click the Go button
+      $('#edit-submitter').click();
       return false; // cancel original link click
     });
-    $('#menu-signin').hide(); // don't confuse (signin is not required for this feature)
-    break;
-    
-  case 'post-tabs':
-// NO. use URL instead  $('#edit-back').click(function () {window.history.back(); return false;});
+    $('#edit-where').click(function () {$('#locset').toggle(); $('#edit-locus').focus();});
+
     var frm = $('#edit-search').parents('form:first');
     
-    frm.submit(function (event) {event.preventDefault();}); // or return false;
    
     $('#edit-search').change(function () { // search
-      var box = $('#tabs .container');
+      var box = $('#list .container');
 
-      $('.filter').val(99); // show "(search)" on both filter dropdowns
+      $('#edit-cat').val(99); // show "(search)"
       
       var s = $(this).val().trim().replace(/\s+/g, ' '); // the search string
       box.find('.tbody .row').show(); // show all (then eliminate non-matches)
-      if (s == '') return $('.filter').val('');
+      if (s == '') return $('#edit-cat').val('');
 
       var i, words = s.toUpperCase().split(' '); // array of words
       var cols = '.cat .item .details'.split(' ');
@@ -402,34 +401,34 @@ function doit(what, vs) {
       });
     });
 
-    $('#tabs').tabs();
-    $('#tabs ul li a[href^="http"]').unbind('click').click(function () {location.href = $(this).attr('href');});
-/*    $('[aria-controls="tab-needs"]').click(function () {$('#tab-needs').show();}); */
-    $('#tabs .tbody .row').click(function () {location.href = $(this).find('a').attr('href');});
+    $('#list .tbody .row').click(function () {location.href = $(this).find('a').attr('href');}); // click any part of box
        
-    $('.filter').mousedown(function () {$(this).parent().click();});
-    
-    $('.filter').change(function () {
-      var box = $($(this).parent().attr('href'));
-      var opt = $(this).find(':selected');
+    $('#edit-cat, #edit-terms, #edit-sorg').change(function () {
+      var box = $('#list');
+      var cat = $('#edit-cat').find(':selected').val();
+      var terms = $('#edit-terms').find(':selected').val();
+      var sorg = $('#edit-sorg').find(':selected').val();
 
-      if (opt.val() == -1) { // search
+      if ($(this).attr('id') == 'edit-cat' && cat == -1) { // search
         $('#edit-search').change();
-      } else if (opt.val()) { // show some
-        var cat = opt.text().replace(/ /g, '');
-        if (cat == vs['myPosts']) cat = 'mine';
+      } else if (cat || terms || sorg) { // show some
+        var sel = '.tbody .row';
+        if (cat > 0) sel += (cat == vs['myPosts']) ? '.mine' : ('.c' + cat);
+        if (terms >= 0) sel += '.x' + terms;
+        if (sorg >= 0) sel += '.s' + sorg;
         box.find('.tbody .row').hide(); // hide all
-        box.find('.row.' + cat).show(); // and everything in the chosen category
-        box.find('.row.none').show(); // and the "nothing found in this area" row, if any
+        var cnt = box.find(sel).show().length; // and everything in the chosen category
+        $('#none').toggle(cnt == 0); // and the "nothing found in this area" row, if any
       } else box.find('.tbody .row').show(); // show all
     });
+     
     
     $('#edit-view').click(function () {
-      if ($('#tabs.memo').length > 0) { // if memo view, switch to list view
-        $('#tabs').removeClass('memo');
+      if ($('#list.memo').length > 0) { // if memo view, switch to list view
+        $('#list').removeClass('memo');
         $(this).text(vs['memoView']);
       } else { // list view, switch to memo
-        $('#tabs').addClass('memo');
+        $('#list').addClass('memo');
         $(this).text(vs['listView']);
       }
     });
@@ -440,9 +439,10 @@ function doit(what, vs) {
     $('input[name="type"]').change(function () {
       var type = vs['types'].split(' ')[$(this).val()];
       var need = (type == 'need');
+      $('.form-item-service').toggle(type != 'tip');
       $('.form-item-radius').toggle(!need); 
-      $('.form-item-exchange').toggle(need);
-      if (type == 'tip') $('#edit-radius').val(0); // tips default to everywhere
+//      $('.form-item-exchange').toggle(need);
+      if ($('#edit-radius').val() == '') $('#edit-radius').val(type == 'tip' ? 0 : 10); // tips default to everywhere
     });
     $('.form-item-end a').click(function () {
       $('#edit-end').attr('type', 'text').val(new Date(Date.now()).toLocaleString('en-US', {month:'2-digit', day:'2-digit', year:'numeric'}).split(',')[0]);

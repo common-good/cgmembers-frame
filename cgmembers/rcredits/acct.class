@@ -90,32 +90,36 @@ class Acct {
    * Setup acct variables, returning FALSE on error.
    * @param id/qid $id: the account's record id or qid (DEFAULT to myid)
    * @param id/qid $agent: the agent's record id or qid (DEFAULT to same as $id)
-   * @param string $error: (RETURNED) the error message, if any
    * @param bool $test: <this is only a test, do not die on error>
    * @return [$id, $agent] where id and agent are actual record IDs
    */
-  public static function viable($id00, $agent0='', &$error='', $test = TRUE) {
-///       print_r("Acct::viable($id00, $agent0, $error, $test)<br>");
-    if (is_numeric($id00) and is_numeric($agent0)) return [$id00, $agent0];
-    $id0 = $id00;
-    if (strpos($id0, AGT_MARK)) list ($id0, $agentCode) = explode(AGT_MARK, $id0); // new company qid format
+  public static function viable($id00, $agent0='', $test = TRUE) {
+    if (is_numeric($id00) and (is_numeric($agent0) or empty($agent0))) {
+      list ($id, $agent) = [$id00, $agent0 ?: $id00];
+    } else {
+      $id0 = $id00;
+      if (strpos($id0, AGT_MARK)) list ($id0, $agentCode) = explode(AGT_MARK, $id0); // new company qid format
 
-    if ($error = u\EXPECT(compact(ray('id0 agent0')), 'zid|qid|assoc empty|id|qid', $test)) return FALSE;
-    if ($error = u\EXPECT((bool) $id0, 'null uid in new r\Acct()', $test)) return FALSE;
-    //    if ($error = u\EXPECT(!(strpos($id0, R_AGENT_MARK) and $agent0), 'agent already specified in qid', $test)) return FALSE;
-    list ($id, $agent) = u\isZid($id0) ? [$id0, $agent0 ?: $id0] : r\qo($id00, $agent0)->ia; // handle
+      if (u\EXPECT(compact(ray('id0 agent0')), 'zid|qid|assoc empty|id|qid', $test)) return FALSE;
+      if (!$id0) return $test ? FALSE : u\FAIL(t('null uid in new r\Acct()'));
+      list ($id, $agent) = u\isZid($id0) ? [$id0, $agent0 ?: $id0] : r\qo($id00, $agent0)->ia; // handle
 
-    if (u\isQid($agent0)) {
-      list ($agent, $zot) = r\qo($agent0)->ia;
-      if ($error = u\EXPECT($agent == $zot, 'agent agent not allowed', $test)) return FALSE;
+      if (u\isQid($agent0)) {
+        list ($agent, $zot) = r\qo($agent0)->ia;
+        if ($agent != $zot) return $test ? FALSE : u\FAIL(t('agent agent not allowed'));
+      }
+
+      if (isset($agentCode)) $agent = r\qo($id0 . AGT_MARK . $agentCode)->agent; // new company qid format
+    }
+    
+    if (!$id or !$agent) return $test ? FALSE : u\FAIL("Missing acct property: [$id, $agent]");
+    
+    foreach ($id == $agent ? [$id] : [$id, $agent] as $uid) {
+//      if (!db\exists('users', compact('uid'))) {
+      $rec = (array) self::getRecord($uid, TRUE); // read the record into cache
+      if (!nni($rec, 'uid')) return $test ? FALSE : u\FAIL(t('That account does not exist.'));
     }
 
-    $got = (bool) self::getRecord($id); // read the record into cache
-    if ($error = u\EXPECT($got, 'That account does not exist.', $test)) return FALSE; // don't use t() here (many calls)
-
-    if (isset($agentCode)) $agent = r\qo($id0 . AGT_MARK . $agentCode)->agent; // new company qid format
-
-    if ($error = u\EXPECT($id and $agent, "Missing acct property: [$id, $agent]", $test)) return FALSE;
     return [$id, $agent];
   }
   
@@ -1852,7 +1856,7 @@ X;
 function acct($uid = '', $agent = '', &$error = '') {
 ///    print_r("acct($uid, $agent, $error)<br>");
   u\EXPECT(!is_array($uid), 'array uid'); // otherwise hangs (at least for a drupal field array)
-  global $mya; // use this ONLY in this class file
+  global $mya;
   if (!$uid) return $mya ?: (!$error = 'There is no current account.');
   
   if (mb_strpos($uid, '@')) {
@@ -1860,7 +1864,7 @@ function acct($uid = '', $agent = '', &$error = '') {
   } elseif (FALSE and preg_match('/[0-9]( |-|\\)) ?[0-9]{4}/', $uid)) {
     $uid = db\get('uid', 'users', 'phone=:phone ORDER BY :IS_CO', ['phone' => u\cry('P', u\fmtPhone($uid, '+n'))]);
   }
-  if (!$ua = r\Acct::viable($uid, $agent, $error, TRUE)) return FALSE;
+  if (!$ua = r\Acct::viable($uid, $agent, TRUE)) return FALSE;
   return new r\Acct($ua); // the only place we call new r\Acct() with a flat array (meaning an existing account)
 }
 
@@ -1897,8 +1901,9 @@ function setAcct($myid = '', &$sta = NULL) {
   if (empty($user)) $user = obj('uid', $myid); else $user->uid = $agentId;
   if (!$myid) return $mya = NULL;
 
-  $a = r\acct($myid, $agentId);
-  if ($a->proSe or !$a->admin2) $a->accessed(); // admin access doesn't count
+  if ($a = r\acct($myid, $agentId)) { // we get NULL here when current account is deleted
+    if ($a->proSe or !$a->admin2) $a->accessed(); // admin access doesn't count
+  } else { $a = setAcct(NULL); }
   return $mya = $a;
 }
 

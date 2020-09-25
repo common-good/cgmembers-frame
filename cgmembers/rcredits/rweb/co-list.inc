@@ -138,5 +138,6 @@ X;
 
 function buttonHtml($a, $text, $for, $style) {
   $class = "cgpay-$for";
-  return w\btn("/pay-with-cg/company=$a->mainQid&for=$for", $text, $style, '', compact('class') + away());
+  $code = w\authcode("company=$a->mainQid&cocode=$a->emailCode", FALSE);
+  return w\btn("/pay-with-cg/company=$a->mainQid&code=$code&for=$for", $text, $style, '', compact('class') + away());
 }

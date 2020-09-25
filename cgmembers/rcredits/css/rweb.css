@@ -1,6 +1,7 @@
 /* CSS specific to Common Good members site */
 @import url("find-co.css"); /* Find Company and Buy Credit CSS, also used by our promo site */
 
+.clear {clear:both;}
 .debug {margin-bottom:8px;}
 .debug pre {margin:0; background-color:#fde8ec;}
 #edit-noEnter {display:none;}
@@ -623,12 +624,8 @@ body.page-partner blockquote {font-size:14px;}
 #frm-posts .container {margin:0; padding:0; font-size:14px;}
 
 #frm-posts #edit-title {text-align:center;}
-/* #frm-posts #edit-subtext {margin-bottom:0;} */
-/* #frm-posts #edit-buttons .control-data {text-align:center;} */
 #frm-posts #edit-buttons label {display:none;}
-#frm-posts #edit-buttons .btn {margin-right:15px;}
-#frm-posts #edit-back {margin-left:5px; font-weight:bold;}
-#frm-posts #edit-post {margin-left:-25px;}
+#frm-posts #edit-buttons .btn {margin:-1px 15px 0 0; font-size:13px;}
 #frm-posts #edit-go {
   background:transparent;
   border:none;
@@ -640,9 +637,6 @@ body.page-partner blockquote {font-size:14px;}
   left:-28px;
   z-index:2;
 }  
-/* #frm-posts #edit-buttons .control-data a {margin:0 5px;} */
-/* #frm-posts #edit-back {display:inline-block; margin:0 0 -7px 0;} */
-/*#frm-posts #edit-back .control-data {width:auto;} */
 
 #frm-posts select#edit-cat,
 #frm-posts input#edit-end,
@@ -654,38 +648,38 @@ body.page-partner blockquote {font-size:14px;}
 #frm-posts input#edit-radius,
 #frm-posts input#edit-email {max-width:250px;}
 
-#frm-posts #edit-search {display:inline-block; margin:0 5px 0 0; max-width:200px; height:30px; font-size:13px; padding:4px 6px;}
+#frm-posts #edit-search,
+#frm-posts input#edit-locus,
+#frm-posts input#edit-radius, 
+#frm-posts input#edit-point,
+#frm-posts select {display:inline-block; width:auto; font-size:13px; margin:2px 8px 0px 0px; padding:2px 4px; height:23px;}
+#frm-posts #edit-search {max-width:200px;}
+#frm-posts input#edit-locus {max-width:315px;}
+
+#frm-posts #none, #frm-posts #none0 {background-color:yellow; max-width:480px; width:auto;}
+#frm-posts #none,
+#frm-posts #locset,
+#frm-posts #edit-submitter {display:none;}
+#frm-posts input#edit-radius {width:50px;}
+#frm-posts #edit-buttons #edit-point {margin-left:5px;}
 
 #frm-posts #edit-end {display:inline-block; margin-right:15px;}
 
-#frm-posts #tab-offers,
-#frm-posts #tab-tips {display:none;}
 #frm-posts .thead .cell {padding:0px 8px;}
 
 #frm-posts .k-category {padding:4px 0 4px 9px; width:150px;}
 
-#frm-posts .filter {height:23px; padding:0px; font-size:14px; border:0; box-shadow:none; -webkit-box-shadow:none;}
-#frm-posts .filter option {background-color:white; color:#111111; margin-top:-20px;}
-#frm-posts .ui-state-active {border:#003200;}
-#frm-posts .ui-state-default .filter {background-color:#f6f6f6; color:black;}
-#frm-posts .ui-state-active .filter {background-color:darkgreen; color:white;}
-
-#frm-posts #ui-id-1,
-#frm-posts #ui-id-2 {padding:5px 0 3px 9px;}
-
 #frm-posts #edit-radius {display:inline-block; margin-right:5px;}
 #frm-posts .form-item-radius .btn {margin-left:5px;}
-
-#frm-posts .form-item-locus .help-block {margin-bottom:0;}
-
-#frm-posts .ui-tabs-panel {padding:0;}
-#frm-posts .ui-tabs-panel .container a {color:#2fa4e7;}
-#frm-posts .ui-tabs-panel .container a:hover {color:silver;} 
 
 #frm-posts .emergency {font-weight:bold; color:red;}
 #frm-posts .radio {display:inline-block;}
 #frm-posts #edit-midtext {color:darkred;}
 #frm-posts .tbody .cat small {float:right; margin-top:3px; color:silver;}
+#frm-posts .tbody .cat span {float:left;}
+#frm-posts span.forpay {color:goldenrod;}
+#frm-posts span.glyphicon-retweet {color:lightseagreen; margin-top:3px;}
+#frm-posts span.glyphicon-heart {color:red; margin-top:3px;}
 
 /* memo view */
 
