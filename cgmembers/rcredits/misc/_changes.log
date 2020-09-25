@@ -1,3 +1,10 @@
+2020-09-24 feature/post-expand
+. eliminated opening page of Offers & Needs (now shows posts everywhere by default)
+. fixed long-standing ugliness in acct::viable() function
+. fixed bugs in MakeCtty form (for admin)
+. changed shouters (endorsers) list to include website links even on promo site
+. fixed crash in justExit
+
 2020-09-16 feature/buy-status
 . revised pay-with-cg interface, including adding a "status" request
 . fixed a startup bug that didn't recognize flags as a real database field

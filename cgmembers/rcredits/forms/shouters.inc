@@ -48,11 +48,7 @@ X;
 
     $fullName .= ', ';
 
-    if ($org) {
-      if ($orgTitle and $org) $orgTitle .= ', ';
-      if ($org and $website) $org = lnk('http://' . $website, $org);
-    } else { list ($orgTitle, $org) = ["$city, ", $st]; }
-      
+    list ($org, $orgTitle) = getAffiliation($org, $orgTitle, $website, $city, $st);
     $list .= u\ray2row(compact($dpyFlds));
   }
   
@@ -61,7 +57,7 @@ X;
 
 function raw() {
   $sql = <<< X
-    SELECT uid,fullName,city,abbreviation AS st,quote
+    SELECT uid,fullName,city,abbreviation AS st,org,title AS orgTitle,website,quote
     FROM u_shouters h 
     LEFT JOIN users u USING (uid) 
     LEFT JOIN r_states s ON s.id=u.state AND s.country_id=u.country
@@ -72,10 +68,26 @@ X;
   
   while ($row = $q->fetchAssoc()) {
     extract($row);
-    list ($first, $last, $middles) = u\parseName($fullName, TRUE);
-    $nm = $first . ' ' . substr($last, 0, 1) . '.';
-    $res[] = [$quote, "$nm ($city, $st)"];
+    if ($org) {
+      $nm = $fullName;
+    } else {
+      list ($first, $last, $middles) = u\parseName($fullName, TRUE);
+      $nm = $first . ' ' . substr($last, 0, 1) . '.';
+    }
+    list ($org, $orgTitle) = getAffiliation($org, $orgTitle, $website, $city, $st);
+    $res[] = [$quote, "$nm ($orgTitle$org)"];
   }
 /**/  echo json_encode(nn($res));
   exit();
+}
+
+/**
+ * Return the shouter's context
+ */
+function getAffiliation($org, $orgTitle, $website, $city, $st) {
+  if ($org) {
+    if ($orgTitle and $org) $orgTitle .= ', ';
+    if ($org and $website) $org = lnk('http://' . $website, $org);
+    return [$org, $orgTitle];
+  } else { return [$st, "$city, "]; }
 }

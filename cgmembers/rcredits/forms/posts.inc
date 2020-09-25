@@ -6,21 +6,27 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
-define('POST_FLDS', 'type item details cat exchange emergency radius end private'); // db fields other than contact info
-define('CONTACT_FLDS', 'fullName displayName address city state zip phone email method uid'); // db contact fields
-define('MESSAGE_FLDS', 'message postid sender'); // db message fields
-define('TOP_FLDS', 'locus radius latitude longitude zip'); // fields used for filtering list
-define('POST_INPUT_FLDS', 'cat item private details exchange emergency radius end type'); // post input fields
-define('METHOD_OPTS', 'email phone text'); // contact method options
-define('VIPID', 'vipid'); // name of confirmed-email cookie (the VIP's people record ID)
-define('HEALTH_RATINGS', 'excellent good ok indisposed'); // health self-assessment
-define('POSTPAGE', '/community/posts');
-define('MODERATE_ZIPS', ''); // 3-digit zip code areas where moderation is mandatory (eg '010 013')
-define('POST_FRMS', 'top tabs post editpost who message'); // possible values for $frm
-define('POST_TYPES', 'need offer tip');
+const POST_FLDS = 'type service item details cat exchange emergency radius end private'; // db fields other than contact info
+const CONTACT_FLDS = 'fullName displayName address city state zip phone email method uid'; // db contact fields
+const MESSAGE_FLDS = 'message postid sender'; // db message fields
+const TOP_FLDS = 'locus radius latitude longitude zip'; // fields used for filtering list
+const POST_INPUT_FLDS = 'service cat item private exchange details emergency radius end type'; // post input fields
+define('METHOD_OPTS', t('email phone text')); // contact method options
+const VIPID = 'vipid'; // name of confirmed-email cookie (the VIP's people record ID)
+define('HEALTH_RATINGS', t('excellent good ok indisposed')); // health self-assessment
+const POSTPAGE = '/community/posts';
+const MODERATE_ZIPS = ''; // 3-digit zip code areas where moderation is mandatory (eg '010 013')
+const POST_FRMS = 'top post editpost who message'; // possible values for $frm
+const POST_TYPES = 'need offer tip';
 define('POST_TYPE_NAMES1', t('Need Offer Tip'));
 define('POST_TYPE_NAMES2', t('Needs Offers Tips'));
+define('POST_TERMS', t('%i0 Free, %i1 Pay, %i2 Trade or Pay'));
+const POST_TERM_ICONS = '<span class="glyphicon glyphicon-heart"></span>&nbsp;, <span class="forpay">$</span>, <span class="glyphicon glyphicon-retweet"></span>&nbsp;';
+define('TERMS_CHOICES', t('-1:Free/Pay/Trade, 0:Free, 1:Pay, 2:Trade or Pay'));
+define('POST_SORG', t('Service Goods'));
+define('SORG_CHOICES', t('-1:Goods/Services, 0:Goods, 1:Services'));
 define('CAT_FLAG', '[CAT]'); // gets replaced programmatically
+const MY_POSTS = 98; // select OPTION index for my posts
 
 /*
   Features:
@@ -38,6 +44,7 @@ define('CAT_FLAG', '[CAT]'); // gets replaced programmatically
   - Moderation required in certain 3-digit zip areas
   - COVID 19 risk survey (self-vetting)
   - Automatic translation (in process)
+  - Say when new things are posted in my area.
 */
 
 /**
@@ -46,8 +53,11 @@ define('CAT_FLAG', '[CAT]'); // gets replaced programmatically
   @todo: 
   - link in every reply that will both cancel the post AND tell the replier thank you and no longer needed or offered.
   - send an email the next day after a reply, asking if the offer/need is still ok (with a link to cancel it). At the same time, change confirmed to a date (NULL is not confirmed, date is most recent confirmation date). Allow ongoing.f
-  - say when new things are posted in my area.
   - For administrators, more fields in the summary list
+
+  For St. Louis:
+  - Reconcile the current categories with ones SESL currently uses and color-code them. And/or maybe implement key words.
+  - Define the St. Louis region by zipcodes rather than by mile radius and have that as the default for St. Louis people.
 
  */
 function formPosts($form, &$sta, $args = '') {
@@ -74,96 +84,67 @@ function formPosts($form, &$sta, $args = '') {
   if ($op == 'who') return getWho($args);
   if ($op == 'prefs') return getPrefs($code);
 
-  $title = t('Offers, Needs, & Tips'); // for top or tabs
-  $subtext = t('<p>Think about what you need and what you want to offer in each category. This only works if you also get a couple neighbors to post something, so do that too!</p>');
+  $op = 'top';
+  extract(just(TOP_FLDS, $code)); // overwrites same fields from $args
+  jsx('posts', 'listView memoView myPosts', t('List View'), t('Memo View'), MY_POSTS);
+
+  $title = t('Offers, Needs, & Tips');
+  $subtext = t('<p>In our %PROJECT Economy we want to make sure everyone has what they need, with no one left behind. Contact us to comment or collaborate or for administrative access.</p>');
+  
+  // <p>Think about what you need and what you want to offer in each category. This only works if you also get a couple neighbors to post something, so do that too!</p>
   
   if (in(substr(nn($zip), 0, 3), '010 013')) $subtext .= t('<p>In Western Massachusetts see Community Action\'s excellent <%a>Look4Help.org</a> website for every type of help you can imagine from government, social services, and community organizations.</p>', '_a', atag('http://look4help.org'));
   
-  if ($op == 'top') {
-    extract(just(TOP_FLDS, $code));
-    jsx('post-tabs', 'listView memoView myPosts', t('List View'), t('Memo View'), t('my posts'));
-    $back = btn(POSTPAGE, t('&#8679;'), '', '', 'edit-back');
-    $view = btn('', t('List View'), '', '', 'edit-view');
-    $search = rendA('search', textFld(BARE, [t('Search for words')]));
-    $go = btn('', '&#128269;', '', '', 'edit-go'); // magnifying glass
-    $post = btn(POSTPAGE . '/op=post', t('Post'), '', '', 'edit-post');
-    $buttons = item($back . $view . $search . $go . $post);
+  $view = btn('', t('List View'), '', '', 'edit-view');
+  $where = btn('', $radius ? t('Where') : t('Look Nearby'), '', '', 'edit-where');
+  $go = btn('', '&#128269;', '', '', 'edit-go'); // magnifying glass
+  $post = btn(POSTPAGE . '/op=post', t('Post Something'), '', '', 'edit-post');
 
-    $choices = catChoices(CAT_FLAG . t('(all)'), [98 => t('my posts')] + [99 => CAT_FLAG . ('(search)')]);
-    $cat = rendA('cat', selectFld(BARE, '', clas('filter'), $choices));
+  $search = rendA('search', textFld(BARE, [t('Search for words')]));
+  
+  $choices = catChoices(t('Category (all)'), [MY_POSTS => t('my posts')] + [99 => t('(search)')]);
+  $cat = rendA('cat', selectFld(BARE, '', '', $choices));
+  
+  $terms = rendA('terms', selectFld(BARE, '', '', ray(TERMS_CHOICES)));
+  $sorg = rendA('sorg', selectFld(BARE, '', '', ray(SORG_CHOICES)));
+  
+  $rows = postList('', $latitude0, $longitude0, $zip0, $radius0);
+  $none = tr('<div id="%id">%none</div>', 'id none', count($rows) < 4 ? 'none0' : 'none', t('There are no such posts (try within a larger distance?)'));
+  $list = join("\n", $rows);
 
-    foreach (ray(POST_TYPES) as $ti => $type) {
-      $k = $type . 's'; // offers and needs
-      $rows = postList($type, $latitude0, $longitude0, $zip0, $radius0);
-      ${$k . 'None'} = count($rows) < 4 ? tr('<div class="none">%none</div>', 'none', t('There are not yet any %types within %radius miles of that address.', compact(ray('type radius')))) : '';
-      $$k = join("\n", $rows);
-      
-      $k = $type . 'sCat'; // offersCat, needsCat, tipsCat
-      $label = ray(POST_TYPE_NAMES2)[$ti];
-      $$k = str_replace(CAT_FLAG, "$label ", $cat);
-      $$k = preg_replace('/edit-cat/', "\$0-$type", $$k, 1);
-    }
+  $list = item(<<< X
+<div id="list" class="memo">
+  <div class="container">
+    $list
+  </div>
+  $none
+</div>
+X
+  , BARE);
 
-    $tabs = tabFlds(compact(ray('needsCat offersCat tipsCat needs offers tips needsNone offersNone tipsNone')));
-    $frm = hidFld('tabs');
+  $clear = '<div class="clear"></div>';
 
-    return cgform(compact(ray('title subtext buttons tabs frm')));
-  }
-
-  // no op (frmTop)
-  jsx('posts');
-
-  $subtext = t('<p>In our %PROJECT Economy we want to make sure everyone has what they need, with no one left behind.  Enter your address, to get started.</p>
-    <p>Contact us to collaborate or for administrative access. Email comments and suggestions to %CGF_EMAIL.</p>');
-
-  $locus = textFld(REQ . t('Where:'), [t('Full address OR city/state/zip'), t('Your address (including zip) or just city, state, and zip.')], dft($locus ?: myLocus()));
-  $radius = textFld(REQ . t('Radius:'), [t('Max distance from address')], dft($radius ?: 10) + suffix(t('miles') . btn("$base_url/community/posts", t('Go'), '', 'sm')));
+  // location fields
+  $locus = rendA('locus', textFld(REQ . BARE, [t('Full Address (include zip)')], dft($locus ?: myLocus()) + suffix('+ ')));
+  $radius = rendA('radius', textFld(REQ . BARE, [t('Radius')], dft($radius ?: 10) + suffix(t('miles'))));
+  $point = btn("$base_url/community/posts", t('Go'), '', '', 'edit-point');
+  $locset = "<div id=\"locset\">$locus$radius$point</div>$clear";
 
   $latitude = hidFld($latitude ?: 0); // to be filled in on the fly (by JS)
   $longitude = hidFld($longitude ?: 0); // to be filled in on the fly
   $zip = hidFld($zip ?: ''); // to be filled in on the fly
-  $submit = submit(t('fake'), '', '', clas('invisible')); // Drupal keeps other solutions from calling _submit function)
+  $submitter = submit(); // Drupal keeps other solutions from calling _submit function)
+
+  $buttons = item("$view$where$post$cat$clear$locset$terms$sorg$search$go");
+  
   $frm = hidFld('top');
   
-  return cgform(compact(ray('title subtext locus radius latitude longitude zip submit frm')));
-}
-
-/**
- * Return the field with all the information and action choices.
- */
-function tabFlds($params) { 
-  global $base_url;
-  extract($params);
-  
-  foreach (ray(POST_TYPES) as $k) {
-    list ($list, $cat, $none) = [${$k . 's'}, ${$k . 'sCat'}, ${$k . 'sNone'}];
-    $links[] = "    <li><a href=\"#tab-{$k}s\">$cat</a></li>";
-    $tabs[] = <<< X
-  <div id="tab-{$k}s">
-    <div class="container">
-      $list
-    </div>
-    $none
-  </div>
-X;
-  }
-  $links = join("\n", $links);
-  $tabs = join("\n", $tabs);
-  
-  return item(<<< X
-<div id="tabs" class="memo">
-  <ul>
-$links
-  </ul>
-$tabs
-</div>
-X
-  , BARE);
+  return cgform(compact(ray('title subtext buttons list frm latitude longitude zip submitter')));
 }
 
 /**
  * Return a table of confirmed postings of the given type.
- * @param string $type: post, offer, or tip
+ * @param string $type: post, offer, or tip (default ALL)
  * @param numeric $lat: latitude of user
  * @param numeric $lon: longitude of user
  * @param string $zip: zip of user
@@ -177,7 +158,7 @@ function postList($type, $lat, $lon, $zip, $radius) {
   $zipIrrelevant = ($mya and $mya->admin) ? 1 : 0;
   
   $q = getPosts($type, $lat, $lon, $zip, $radius, 0, $admin, $zipIrrelevant);
-  return postRows($q, TRUE);
+  return postRows($q);
 }
 
 /**
@@ -199,7 +180,7 @@ function getPost() {
   $email = eFld();
   $submit = submit(t('Post'));
   
-  return cgform(compact(ray('title subtext type cat item private details exchange emergency radius end email submit frm')));
+  return cgform(compact(ray('title subtext type service cat item private exchange details emergency radius end email submit frm')));
 }
 
 /**
@@ -211,18 +192,22 @@ function postInputFlds($dfts = []) {
   jsx('post-post', 'types', POST_TYPES);
 
   $type = radiosFld(REQ . t('Type:'), '', dft(isset($type) ? typeNum($type) : -1), ray(POST_TYPE_NAMES1));
+  $service = radiosFld(REQ . t('Service or Goods:'), '', dft(nn($service, -1)), ray(POST_SORG));
   $choices = catChoices(t('Choose a category'));
   $cat = array_search($cat, $choices);
   $cat = selectFld(REQ . t('Category:'), '', dft($cat), $choices);
   
-  $item = textFld(REQ . t('What:'), [t('What you\'re offering or need')], dft($item) + maxlen(40));
+  $item = textFld(REQ . t('What:'), [t('What you\'re offering or need'), t('Include the price if you\'re selling.')], dft($item) + maxlen(40));
   $private = admin(nni($dfts, 'zip')) ? boolFld(t('Private:'), t('Seen only by the administrator'), dft((int) $private)) : hidFld(0);
 
-  $details = areaFld(REQ . t('Details:'), t('Max 500 characters'), dft($details) + maxlen(500));
+  $terms = tr(POST_TERMS, array_combine(ray('_i0 _i1 _i2'), ray(POST_TERM_ICONS)));
+  $exchange = radiosFld(REQ . t('Terms:'), t('If not Free, put the price or options for exchange in the Details, below.'), dft(nn($exchange, 0)), ray($terms));
+  $details = areaFld(REQ . t('Details:'), [t('Describe the item'), t('Describe. Also include words you think people might use to search for this item. Max 500 characters')], dft($details) + maxlen(500));
   
-  $exchange = boolFld(t('Exchange:'), t('Are you offering something in exchange? (include it in the details too)'), dft($exchange ? 1 : 0));
   $emergency = boolFld(t('Emergency:'), t('This is an emergency need or applies only in an emergency.'), dft($emergency ? 1 : 0));
-  $radius = numFld(REQ . t('Radius:'), [t('Visibility radius'), t('Up to how many miles away do you want this seen? 10 usually covers neighboring towns. Use zero for "anywhere".')], dft($radius ?: 10) + suffix(t(' miles')));
+  
+  $dft = isset($radius) ? dft(u\fmtAmt($radius, 's')) : [];
+  $radius = numFld(REQ . t('Radius:'), [t('Visibility radius'), t('Up to how many miles away do you want this seen? 10 usually covers neighboring towns. Use zero for "anywhere".')], $dft + suffix(t(' miles')));
   $end = dateFld(t('End Date:'), [t('mm/dd/yyyy'), t('When to stop listing this (you can also cancel it at any time)')], dft($end) + ($dfts ? suffix(lnk('', t('end now'))) : []));
 
   return compact(ray(POST_INPUT_FLDS));
@@ -239,7 +224,7 @@ function showPost($postid) {
   list ($lat, $lon) = [nni($_COOKIE, 'latitude', 0), nni($_COOKIE, 'longitude', 0)];
   
   $flds = strtr(<<< X
-    pid,s.type,c.cat,s.item,s.private,s.details,s.exchange,s.emergency,s.created,s.end,s.confirmed AS postOk,
+    pid,s.type,s.service,c.cat,s.item,s.private,s.details,s.exchange,s.radius,s.emergency,s.created,s.end,s.confirmed AS postOk,
     p.uid,p.displayName,p.fullName,p.phone,p.email,p.address,p.city,p.state,p.zip,p.method,p.created AS userSince,
     p.confirmed AS personOk,IF ($noGeo, '', $distance) AS dist
 X
@@ -310,7 +295,7 @@ X;
     
     $item = item($item, $label);
     $details = item($details, t('Details:'));
-    $exchange = $emergency = $radius = $end = NULL;
+    $service = $exchange = $emergency = $radius = $end = NULL;
     
     if ($type != 'tip') {
       $subtext = t('Use this form to send a message to the person who posted this %type. Your message will be sent by email with your display name, city, and email address. Your full name and other contact information will not be sent unless you include it in the message.', ['type' => lcfirst(typeName($type, 1))]);
@@ -324,7 +309,7 @@ X;
   }
   $postid = hidFld($postid);
 
-  return cgform(compact(ray('title subtext type cat who created private item details exchange emergency radius end message email submit postid pid location frm')));
+  return cgform(compact(ray('title subtext type service cat who created private item exchange details emergency radius end message email submit postid pid location frm')));
 }
 
 /**
@@ -440,14 +425,14 @@ function formPosts_validate($form, &$sta) {
     $chgFlds = 'locus latitude longitude zip';
     
   } elseif ($frmPost or $frmEditpost) {
-    extract(just('end email cat radius exchange emergency type', $input, NULL));
+    extract(just('end email cat radius service exchange emergency type', $input, NULL));
     $type = ray(POST_TYPES)[typeNum($type)]; // convert to text (typeNum() is for tests -- no effect in production)
     if (!$cat) return say(t('You must choose a category.'), 'cat');
     if (isset($radius) and $err = u\badAmount($radius, '>=0', 6)) return say($err, 'radius');
     if ($end and $err = u\badDate($end, $frmPost ? strtotime('tomorrow') : today())) return say($err, 'end');
     if ($frmPost and !emailOkay($email, TRUE)) return;
-    foreach (ray('exchange emergency') as $k) $$k = (int) $$k;
-    $chgFlds = 'email radius end exchange emergency type';
+    foreach (ray('service exchange emergency') as $k) $$k = (int) $$k;
+    $chgFlds = 'email radius end service exchange emergency type';
     
   } elseif ($frmMessage) {
     extract(just('email', $input, NULL));
@@ -468,8 +453,6 @@ function formPosts_validate($form, &$sta) {
     }
     $chgFlds = 'zip phone latitude longitude days washes address city';
     
-  } elseif ($frmTabs) { // nothing to do (happens only when javascript fails)
-    
   } else return u\FAIL(t('bad form in validate: ' . $frm));
   
   u\preray(compact(ray($chgFlds)), $sta['input']);
@@ -483,8 +466,6 @@ function formPosts_submit($form, &$sta) {
   $input = just(POST_FLDS . ' frm pid days washes health location ' . MESSAGE_FLDS . ' ' . CONTACT_FLDS, $sta['input'], NULL);
   extract(just('frm email type message method pid days washes health zip location', $input), NULL);
   extract(frmBools($frm)); // make code a little easier to read
-
-  if ($frmTabs) return; // nothing to do (happens only when javascript fails)
 
   if ($frmTop) return go(codedUrl('top', just(TOP_FLDS, $sta['input'])));
   
@@ -653,7 +634,7 @@ function admin($zip) {
 
 /**
  * Return a result set for the given parameters
- * @param string $type: post, offer, or tip
+ * @param string $type: post, offer, or tip (default ALL)
  * @param numeric $lat: latitude of user
  * @param numeric $lon: longitude of user
  * @param string $zip: zip of user
@@ -671,20 +652,22 @@ function getPosts($type, $lat, $lon, $zip, $radius, $myPid, $admin, $zipIrreleva
   list ($distance, $noGeo) = [DISTANCE_BETWEEN, NO_DISTANCE];
   $postRadius = 'IFNULL(s.radius, 0)';
   $isMyPid = 'pid=:myPid';
+  if (!$type) $type = ray('offer need tip');
 
   $sql = <<<X
-    SELECT IF ($noGeo, '', $distance) AS dist, s.postid, c.cat, s.item, s.details, s.emergency, $isMyPid AS mine,
+    SELECT IF ($noGeo, '', $distance) AS dist, s.postid, s.service, c.id AS catId, c.cat, s.item, s.details, s.exchange,
+      s.emergency, $isMyPid AS mine,
       LEAST(IF($postRadius=0, 99999, s.radius), :radius) AS least, $postRadius AS postRadius, p.displayName, p.city,
       :zip AS zip
     FROM posts s
     LEFT JOIN post_cats c ON c.id=s.cat
     LEFT JOIN people p USING (pid)
-    WHERE s.type=:type
+    WHERE s.type IN (:type)
       AND s.created <= :NOW + :HOUR_SECS AND s.created >= $since
       AND IFNULL(s.end, :NOW) >= :NOW
       AND (
-        $admin OR
-        (:type='tip' AND $postRadius>0) OR
+        $admin OR :radius='' OR
+        (s.type='tip' AND $postRadius>0) OR
         IF($noGeo, 
           MID(p.zip,1,3) = MID(:zip,1,3) OR $zipIrrelevant, 
           $distance < LEAST(IF($postRadius=0, 99999, s.radius), :radius)
@@ -701,26 +684,25 @@ X;
 /**
  * Return the given post selection query as HTML rows of summary information.
  * @param q $q: query result set
- * @param bool $classify: add categories to row class
  * @return the HTML rows (including header)
  */
-function postRows($q, $classify = FALSE) {
-  if ($classify) {
-    foreach (ray(t('category item details')) as $k) $cells[] = "<div class=\"cell k-$k\">" . ucfirst($k) . '</div>';
-    $rows = ['<div class="thead"><div class="row">' . join('', $cells) . '</div></div>'];
-  }
+function postRows($q) {
+  foreach (ray(t('category item details')) as $k) $cells[] = "<div class=\"cell k-$k\">" . ucfirst($k) . '</div>';
+  $rows = ['<div class="thead"><div class="row">' . join('', $cells) . '</div></div>'];
   $rows[] = '<div class="tbody">';
   
   while ($row = $q->fetchAssoc()) {
-    extract(just('postid dist cat emergency item mine details zip', $row));
+    extract(just('postid dist catId cat service emergency exchange item mine details zip', $row));
 
-    if ($dist = fmtDist($dist, $zip)) { $cat .= " <small>$dist mi</small>"; }
+    $terms = ray(POST_TERM_ICONS)[$exchange];
     if ($emergency) $item = '<span class="emergency">!!</span> ' . $item;
     $item = lnk('/community/posts/op=show&postid=' . $postid, $item);
-    $rowClass = $classify ? 'row ' . str_replace(' ', '', $cat) . ($mine ? ' mine' : '') : 'row';
+    $rowClass = "row s$service x$exchange c$catId" . ($mine ? ' mine' : '');
+    if ($dist = fmtDist($dist, $zip)) { $cat .= " <small>$dist mi</small>"; } // must be after $rowClass=
+    
     $rows[] = <<< X
     <div class="$rowClass">
-      <div class="cell cat">$cat</div>
+      <div class="cell cat">$terms$cat</div>
       <div class="cell item">$item</div>
       <div class="cell details">$details</div>
     </div>

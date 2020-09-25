@@ -233,12 +233,12 @@ function decryChange($type, $v) {return ($type == 'V' and !r\allKnowing()) ? t('
  */
 function formMakeCtty($form, &$sta) {
   $title = t('Make a New Community');
-  $subtext = t('<p>Typically the name of a %PROJECT community is the place name followed by "%PROJECT"; for example, "<b>Greenfield Area %PROJECT</b>". Legal names should include the state (for disambiguation), spelled out; for example, "Greenfield Massachusetts %PROJECT".</p><p>By contrast, region names begin with "%PROJECT"; for example, "<b>%PROJECT Western Mass</b>".</p><p>Email should reflect the legal name, for example "<b>greenfield@ma.%CG_DOMAIN</b>".</p>');
+  $subtext = t('<p>Typically the name of a %PROJECT community is "%PROJECT" followed by the place name; for example, "<b>%PROJECT Greenfield MA</b>". The legal name for a new organization should include the state (for disambiguation), spelled out; for example, "%PROJECT Greenfield Massachusetts".</p><p>Email should reflect the legal name, for example "<b>greenfieldMA@%CG_DOMAIN</b>".</p>');
   $region = textFld(t('Region:'), [t('Region code'), t('3-letter code of community\'s region')], required());
   $zips = textFld(t('Zip Regex:'), [t('Zipcodes to include'), t('|Type a regular expression for all zipcodes to be included (by default) in the community. For example, ^013|01002 would include all zipcodes starting 013 plus zipcode 01002. Individual members can also be moved manually in or out of this community.')]);
 
   // from w\contactFields
-  $phone = phoneFld(REQ . t('Phone:'), [t('Contact phone number')], dft($phone));
+  $phone = phoneFld(REQ . t('Phone:'), [t('Contact phone number')]);
   $postalAddr = textFld(REQ . t('Postal Addr:'), [t('Complete mailing address'), t('Where does the post office send your mail (usually)?')], dft(nn($postalAddr)));
 
   $submit = submit();
@@ -288,11 +288,10 @@ function formMakeCtty_submit($form, &$sta) {
 
   $zip = $zips; // store the regex defining the region or community
   $flags = u\bit(B_CO) | u\bit(B_OK) | u\bit(B_UP);
-  $rebate = 0;
   $country = R_COUNTRY_ID;
   $region = r\qo("!$region")->id;
-  $type = CO_PARTNERSHIP;
-  $fields .= ' zip flags rebate region address state country type';
+  $coType = CO_PARTNERSHIP;
+  $fields .= ' zip flags region address state country coType';
 
   $DBTX = \db_transaction();
   $info = compact(ray($fields));

@@ -2291,7 +2291,7 @@ function exitRay($ray, $cry = FALSE) {
 
 function exitJust($s) {
   if (test()) { t\output('exiting with: ' . pr($s)); return t\logRec('echo', $s); }
-/**/  echo $res;
+/**/  echo pr($s);
   exit();
 }
 
