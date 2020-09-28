@@ -84,7 +84,7 @@ function pos($args = FALSE) {
   global $scanned; $scanned = true;
   global $mya, $boxUser;
   
-  if (!r\up()) exit('system down'); // app does not (and should not) distinguish this from system failure
+  if (!r\up()) return exitJust('system down'); // app does not (and should not) distinguish this from system failure
   if (is_object($args)) $args = (array) $args; // this helps with debugging when passing json_decoded args
   if (is_string($args)) $args = urlq2ray($args); // convert from query string to array
 //  if (!$args) $args = t\POST(); else t\POST($args);
@@ -132,7 +132,7 @@ function ok($args, $ok = "1") {
   //{t\output($args, 'output'); 
   if (test()) return $result;
   header('Access-Control-Allow-Origin: *'); // allow access from web browsers
-  exit($result);
+  return exitJust($result);
 }
 
 /**
@@ -323,7 +323,7 @@ function photoReturn($pic) {
   }
 
   if (strlen($pic) > $max) header("Content-type: image/jpeg");
-  exit($pic);
+  return exitJust($pic);
 }
 
 /*
@@ -517,7 +517,6 @@ function missingArg($expected, $args = []) {
  * @return: the agent's company acct object (false if error)
  */
 function getAgent($agent, &$err = '') {
-//  $agent = preg_match('/[\\.:]/', $agent0) ? $agent0 : r\qo::qr2($agent0);
   if (!$mya = r\acct($agent)) return !$err = 'bad agent'; // . ": $agent";
 //  if (r\foreignServer(r\uidRegion($mya->agentId))) return !$err = 'wrong server for agent';
   if (!$mya->ok) return !$err = 'company inactive';
@@ -534,15 +533,6 @@ function getAgent($agent, &$err = '') {
  * @return: the customer's acct object (false if error)
  */
 function getMember($qid, $code, &$err = '', $requireCode = TRUE) {
-/*  if (substr($customer, -1, 1) == ':') { // invitation card -- get real account
-    if (!$inviter = r\iCardAcct($code, $seq)) return !$err = 'bad member';
-    if (!$uid = db\get('uid', 'users', 'helper=:inviter AND seq=:seq', compact('inviter', 'seq'))) return !$err = 'bad icard';
-    $a = r\acct($uid);
-    if (now() - $a->activated > ICARD_EXPIRES * DAY_SECS) return !$err = 'expired icard';
-    $code = $a->cardCode; // no need for function here
-  } else { */
-//    $customer = preg_match('/[\\.:]/', $customer0) ? $customer0 : r\qo::qr2($customer0);
-
   if (!$a = r\acct($qid) or ($requireCode and $code != $a->cardCode() and $code != $a->codeHash())) {
     r\badCard($qid, $code, $err = 'bad member'); 
     return FALSE;
@@ -550,7 +540,6 @@ function getMember($qid, $code, &$err = '', $requireCode = TRUE) {
 //  }
 //  if (r\foreignServer(r\uidRegion($a->agentId))) return !$err = 'wrong server for customer';
   if (!$a->ok) {r\badCard($qid, $code, $err = 'member inactive'); return FALSE;}
-//  if (!$a->can(B_BUY)) return !$err = 'customer cannot buy';
   return $a;
   
 //    if (!$smartInfo = db\get('owner,defaultAgent,transientId,access', 'r_boxes', 'code=:q_code', compact('q_code'))) return be\error('unknown device');

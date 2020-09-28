@@ -148,6 +148,7 @@ nav.navbar.navbar-inverse .container {display:block; max-height:50px;}
   body:not(.page-partner) #edit-title h3 {margin:10px 0 10px 0;}
   .breadcrumb {display:none;}
   #main {margin-top:50px !important;}
+  body.page-card #main {margin:0 0 0 10px !important;}
   #main .section {margin:0 !important;}
 }
 
@@ -382,6 +383,17 @@ body.page-partner blockquote {font-size:14px;}
 
 /* Security */
 #frm-security #edit-change a {margin-right:10px;}
+
+/* Card */
+#frm-card .form-item-title {margin-bottom:0;}
+#frm-card .form-item-title .control-data {margin:0;}
+#frm-card #edit-title h3 {font-size:15px; margin:10px 0;}
+#frm-card #edit-photo img {border:1px solid silver; max-width:70%;}
+
+#frm-card .form-item-submit .control-data,
+#frm-card #edit-title,
+#frm-card #edit-photo,
+#frm-card #edit-subtext {text-align:center;}
 
 /* Grant */
 #frm-grant li {margin-bottom:10px;}

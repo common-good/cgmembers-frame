@@ -27,6 +27,9 @@ function doit(what, vs) {
     break;
 
   case 'get-ssn': get('ssn', {}, function () {}); break;
+  
+  case 'card':
+    break;
     
   case 'deposits':
     $('.filename').click(function () {

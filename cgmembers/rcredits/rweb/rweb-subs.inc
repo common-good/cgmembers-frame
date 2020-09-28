@@ -81,13 +81,13 @@ function go2($url1, $url2) {
 	}
 	
 	header_remove('Content-Security-Policy'); // allow the script
-/**/	echo <<< X
+  return exitJust(<<< X
 <html><script>
   window.open('$url2', '_blank');
   location.href = '$url1';
 </script></html>
-X;
-  exit();
+X
+  );
 }
 
 /**
@@ -760,8 +760,7 @@ function sanitizePage($page) {
 function photoRet($msg, $status = 'error') {
   $res = compact('status') + ray($status == 'success' ? 'url' : 'message', $msg);
   u\loga('photoRet', $res);
-/**/	echo json_encode($res, JSON_UNESCAPED_SLASHES);
-  exit();
+  return exitJust(json_encode($res, JSON_UNESCAPED_SLASHES));
 }
 
 /**
@@ -2286,13 +2285,7 @@ function backButton() {
  * @param bool $cry: <encrypt it>
  */
 function exitRay($ray, $cry = FALSE) {
-  exitJust(test() ? $ray + compact('cry') : ($cry ? u\cryRay($ray) : pr($ray)));
-}
-
-function exitJust($s) {
-  if (test()) { t\output('exiting with: ' . pr($s)); return t\logRec('echo', $s); }
-/**/  echo pr($s);
-  exit();
+  return exitJust(test() ? $ray + compact('cry') : ($cry ? u\cryRay($ray) : pr($ray)));
 }
 
 // one-line functions that need no explanation

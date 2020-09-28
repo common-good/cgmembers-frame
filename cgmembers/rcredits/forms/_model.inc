@@ -17,8 +17,9 @@ function formModel($form, &$sta, $args = '') {
   $subtext = t('Details.');
 
   $choices = ray('this that theOther');
-  $radio = radiosFld(t('Radios:'), t('Details here'), required(2), $choices);
-  $text = textFld(t('Text:'), [t('Your text'), t('Details here')], dft('value'));
+  $radio = radiosFld(REQ . t('Radios:'), t('Details here'), dft(-1), $choices); // no default
+  $select = selectFld(REQ . t('Selection:'), t('Details here'), dft(2), $choices);
+  $text = textFld(t('Text:'), [t('Hint'), t('Details here')], dft('value'));
   jsx('model', compact('choices'));
 
   $submit = t('Save');

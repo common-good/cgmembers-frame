@@ -219,6 +219,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE balancesheet Setup
  *     MAKE bank Setup
  *     MAKE bank ASlaveMemberRequestsATransfer
+ *     MAKE card Setup
  *     MAKE cgbutton Setup
  *     MAKE changeaccount Setup
  *     MAKE community Setup
@@ -453,7 +454,8 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
 /**
  * we show (ARG)
  *
- * in: TEST changeaccount ACommunityAdminClicksTheProfilePhoto
+ * in: TEST card 
+ *     TEST changeaccount ACommunityAdminClicksTheProfilePhoto
  *     TEST changeaccount ASuperadminClicksTheProfilePhoto
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     TEST invest AMemberCompanyJoinsTheInvestmentClub
@@ -679,6 +681,7 @@ function withoutOptions($options) {
  * in: MAKE balancesheet Setup
  *     MAKE bank Setup
  *     MAKE bank ASlaveMemberRequestsATransfer
+ *     MAKE card Setup
  *     MAKE changeaccount Setup
  *     MAKE community Setup
  *     MAKE company Setup
@@ -781,6 +784,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE balancesheet AMemberLooksAtTheBalanceSheet
  *     MAKE balancesheet ANonmemberLooksAtTheBalanceSheet
  *     MAKE bank AMemberDrawsCreditFromTheBankThenCancels
+ *     MAKE card 
  *     MAKE cgbutton AMemberClicksAPayWithCommonGoodButton
  *     MAKE cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     MAKE cgbutton AMemberClicksAPayWithCommonGoodButtonWithVariableAmount
@@ -887,6 +891,7 @@ function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
  * member is logged out
  *
  * in: MAKE balancesheet ANonmemberLooksAtTheBalanceSheet
+ *     MAKE card Setup
  *     MAKE cgbutton Setup
  *     MAKE partnersignup Setup
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
@@ -2042,7 +2047,8 @@ function someoneConfirmsWith($page, $values) {return t\completeForm('?', $page, 
 /**
  * cookie (ARG) is (ARG)
  *
- * in: TEST posts SomeoneSubmitsALocus
+ * in: MAKE card 
+ *     TEST posts SomeoneSubmitsALocus
  *     TEST posts SomeonePostsAnOffer
  *     BOTH posts SomeoneRepliesToAnOffer
  *     MAKE posts SomeoneConfirmedSendsAMessageAndPostsAgain
@@ -2196,3 +2202,10 @@ function weExitShowing($ray) {
   db\del('test', $where); // reset for subsequent steps
   return t\checkOneArray($ray[0], unserialize($actualRay));
 }
+
+/**
+ * member (ARG) has picture (ARG)
+ *
+ * in: MAKE card 
+ */
+function memberHasPicture($id, $picture) {return t\hasPic($id, $picture);}
