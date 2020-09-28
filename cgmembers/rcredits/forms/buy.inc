@@ -37,7 +37,7 @@ function formBuy($form, &$sta, $doCode = '') {
   $args = just(CGPAY_FLDS, $args, NULL);
   foreach (justNOT('return cancel', $args) as $k => $v) if (strlen($v) > CGPAY_MAXLEN) return apiErr(tr('field too long', 'field max', $k, CGPAY_MAXLEN));
 
-  $op = nni($args, 'op', 'charge');
+  $op = nni($args, 'op', 'charge'); // default to "charge"
   if ($op == 'authcode') return w\authcode($args); // eventually move authcode function to this file (check logs)
   if ($op == 'charge') return charge($args);
   if ($op == 'status') return status($args);

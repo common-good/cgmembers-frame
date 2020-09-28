@@ -1854,6 +1854,15 @@ function checkOneArray($wantRay, $gotRay) {
 }
 
 /**
+ * Create an identifiable photo for the member.
+ */
+function hasPic($id, $picture) {
+  global $testOnly; if ($testOnly) return FALSE;
+  if (!$a = r\acct(t\uid($id))) return t\output("Not an account: $id");
+  return t\makePicture($picture, $a);
+}
+  
+/**
  * Add a record with the given type and value to the test table, along with the test name.
  */
 function logRec($type, $value) {

@@ -1,4 +1,5 @@
 <?php
+use \CG as r;
 
 /**
  * @file
@@ -110,7 +111,7 @@ foreach (ray('header accounts help action_links content footer highlighted') as 
 global $pagePartner; // branding for partner signups
 if (nn($pagePartner)) {
   $menu1 = $footer = '';
-  $header = tr('<img src="%BASE_URL/rcredits/images/partner-logos/%pagePartner.png" id="partner-logo" />', compact('pagePartner'));
+  $header = r\acct($pagePartner)->photoHtml();
 }
 
 /**/ echo <<<EOF

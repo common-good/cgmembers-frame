@@ -148,6 +148,7 @@ nav.navbar.navbar-inverse .container {display:block; max-height:50px;}
   body:not(.page-partner) #edit-title h3 {margin:10px 0 10px 0;}
   .breadcrumb {display:none;}
   #main {margin-top:50px !important;}
+  body.page-card #main {margin:0 0 0 10px !important;}
   #main .section {margin:0 !important;}
 }
 
@@ -364,11 +365,13 @@ body.logged-in.one-sidebar #content {width:100%;}
 .page-empty div.error {margin:20px;} 
 
 /* Partner Signup */
-body.page-partner #partner-logo, body.page-settings-partnerend #partner-logo {height:100px; margin:10px 0 0 230px;}
+body.page-partner #user-picture img, body.page-settings-partnerend #user-picture img {height:180px; margin:10px 0 0 230px;}
 body.page-partner #messages, body.page-settings-partnerend #messages {margin-top:40px;}
+body.page-partner #main #content, body.page-settings-partnerend #main #content {margin-top:40px;}
 @media (max-width:768px) {
-  body.page-partner #partner-logo, body.page-settings-partnerend #partner-logo {height:60px; margin:5px 10px;}
+  body.page-partner #user-picture img, body.page-settings-partnerend #user-picture img {height:180px; margin:5px 10px;}
   body.page-partner #messages, body.page-settings-partnerend #messages {top:70px;}
+  body.page-partner #main #content, body.page-settings-partnerend #main #content {margin-top:0px;}
 }
 body.page-partner #edit-submit {background-image: linear-gradient(#686868, #686868 60%, #686868); border: 1px solid #686868;}
 body.page-partner h3 {color: #686868;}
@@ -382,6 +385,17 @@ body.page-partner blockquote {font-size:14px;}
 
 /* Security */
 #frm-security #edit-change a {margin-right:10px;}
+
+/* Card */
+#frm-card .form-item-title {margin-bottom:0;}
+#frm-card .form-item-title .control-data {margin:0;}
+#frm-card #edit-title h3 {font-size:15px; margin:10px 0;}
+#frm-card #edit-photo img {border:1px solid silver; max-width:70%;}
+
+#frm-card .form-item-submit .control-data,
+#frm-card #edit-title,
+#frm-card #edit-photo,
+#frm-card #edit-subtext {text-align:center;}
 
 /* Grant */
 #frm-grant li {margin-bottom:10px;}

@@ -31,7 +31,7 @@ function formPartnerSignup($form, &$sta, $args = '') {
   if ($end) return partnerEnd();
   if ($signed) return signedContract($signed, $sta);
   
-  if (!$pA = pA($_POST['pid'])) return partnerErr(t('bad partner'), 'pid');
+  if (!$pA = pA(nni($_POST, 'pid'))) return partnerErr(t('bad partner'), 'pid');
   return gotSignup($pA);
 }
 
@@ -51,7 +51,7 @@ function signedContract($code, &$sta = '') {
   extract(just('cgAccount pid customer m_company co', $info, FALSE));
   if (!$pA = pA($pid)) return softErr(t('bad partner'));
   $partnerName = $pA->fullName;
-  $pagePartner = $pA->name; // tell page.html to use the partner's branding
+  $pagePartner = $pA->id; // tell page.html to use the partner's branding
   if (!$cgAccount or !$mya = cgA($cgAccount)) return softErr(t('You have already completed your signup with ') . $partnerName);
   
   $myid = hidFld($mya->id);
@@ -166,7 +166,7 @@ function partnerEnd() {
   if (!$info = $mya->partnerInfo) return softErr(t('no partner info in partner end'));
   extract(just('pid customer noContract', $info));
   if (!$pA = pA($pid)) return softErr(t('bad partner'));
-  $pagePartner = $pA->name; // tell page.html to use the partner's branding
+  $pagePartner = $pA->id; // tell page.html to use the partner's branding
 
   $title = t('Congratulations!');
   $subtext = t('<p>You have completed your solar subscription sign-up. %contractAttached</p><p>We will let you know when your array is ready to start delivering credits to your electric account and when we will start billing you for those credits. Let us know if you have any questions!</p><p><b>Learn more</b> about the organizations working together on this community solar program:</p>', 'contractAttached', nn($noContract) ? '' : t('We emailed you the signed contract.')) . getLinks($mya->zip);
@@ -248,7 +248,7 @@ function gotSignup($pA) {
   global $mya, $pagePartner;
   
   signout(TRUE); // current account is irrelevant and could be confusing, so sign out
-  $pagePartner = $pA->name; // tell page.html to use the partner's branding
+  $pagePartner = $pA->id; // tell page.html to use the partner's branding
   $_POST += ray('pid project partnerName', $pA->uid, $pA->name, $pA->fullName);
   
   $info = handleInput($_POST, $sfData);
@@ -339,7 +339,7 @@ function gotSolarOne($info) {
   $pA = pA($pid);
   $partnerName = $pA->fullName;
   $project = $pA->name;
-  $pagePartner = $project; // tell page.html to use the partner's branding
+  $pagePartner = $pA->id; // tell page.html to use the partner's branding
 
   // validate data
   
@@ -610,7 +610,7 @@ function fillContract($project, $data, $map, $sign = FALSE) {
     $pdf->Image($dir . $page, 0, 0, $W, $H, '', '', 'L', true); // file, x, y, w, h, type, link, align, resize
     
     list ($buyerX, $buyerY, $sigX, $sigY, $sigNameY, $dateX, $dateY, $sigPage, $font) = 
-       $project == 'cooppower' ? [.47, 2.7, 1.2, 9.88, 9.23, 1.2, 8.6, 5, '10;DejaVuSans']
+       TRUE ? [.47, 2.7, 1.2, 9.88, 9.23, 1.2, 8.6, 5, '10;DejaVuSans'] // was $project == 'cooppower'
     : ($project == 'nyccec' ? [.71, 3.5, .71, 9.25, 0, 6.25, 9.25, 8, '11;Times']
     : NULL); // invalid partner should get caught way before this (NULL causes death)
     
@@ -618,7 +618,7 @@ function fillContract($project, $data, $map, $sign = FALSE) {
     if ($sign and $pi == $sigPage) {
       list ($name, $signer) = nn($contact) ? [$fullName, $contact] : ['', $fullName];
       $pdf->say(u\fmtDate(now(), TRUE), $dateX, $dateY, 5, 1.75, $font, 'L');
-      if ($project == 'cooppower') {
+      if (TRUE) { // was $project == 'cooppower'
         $sellerX = 5.2;
         $pdf->say($name, $sigX, 8.3, 5, 1.75, $font, 'L');
         $pdf->say($signer, $sigX, $sigNameY, 5, 1.75, $font, 'L');

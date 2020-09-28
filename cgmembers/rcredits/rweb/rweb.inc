@@ -54,8 +54,7 @@ function cttyList() {
   asort($cttys);
   unset($cttys[$seed = r\serverUid()]);
   $cttys[$seed] = t('Seedpack (no community yet)'); // last
-/**/ echo json_encode($cttys);
-  exit();
+  return exitJust(json_encode($cttys));
 }
 
 /**
@@ -76,8 +75,7 @@ function inviteExample() {
   global $mya;
   $s = file_get_contents("$rUrl/templates/invite.html");
   $note = str_replace("\n", '', t('invite default', 'name', ''));
-/**/  echo tr($s, '_personalNote signed fullName phone CODE', $note, u\fmtDate($mya->signed), $mya->fullName, u\fmtPhone($mya->phone), '');
-  exit();
+  return exitJust(tr($s, '_personalNote signed fullName phone CODE', $note, u\fmtDate($mya->signed), $mya->fullName, u\fmtPhone($mya->phone), ''));
 }
 
 function formVideos($form, &$sta) {
@@ -123,30 +121,6 @@ EOF;
   say($showRiskCalc);
   w\go("sadmin/$type-info/$id", t('info saved'));
 }
-
-/**
- * Output an account photo or thumbnail if the caller is authorized.
- * @param string $page: account-photo or account-thumb
- * @param string $args: other parameters, including:
- *   $qid: account letter-code
- *   $orig: show the original photo before it was cropped
- * @return the photo or thumb if the account is a company or the cardCode is valid. Otherwise a generic picture.
- */
-function formAccountPhoto($form, &$sta, $page = '', $args = '') {
-  global $mya;
-  extract(just('qid orig', $args, NULL));
-  list($zot, $type) = explode('-', $page);
-
-  $a = nn($qid) ? r\acct($qid, $mya ? $mya->agentId : '') : ($mya ?: FALSE);
-  if ($a and ($a->co or $a->can(B_READ))) $photo = $orig ? u\getFile($a->tempPhotoFilename) : $a->$type;
-
-  $imgFlnm = ($mya and $mya->co) ? 'placeholder-co.png' : 'placeholder.png';
-  header("Content-type: image/jpeg");
-/**/  echo nn($photo) ?: \file_get_contents(R_ROOT . "/images/icons/$imgFlnm");
-  return exit();
-}
-
-//function formIcon($orig = FALSE) {return memberPhoto(@r\acct()->mainQid, TRUE, $orig);} // Output a small version of the current account's photo.
 
 /**
  * Handle the uploaded photo: crop, resize, rotate, and save.
@@ -364,7 +338,7 @@ function formEmpty($form, &$sta = '', $args = '') {
  */
 function authcode($args = '', $exit = TRUE) {
   extract($args = just('company cocode', $args ?: $_GET, NULL));
-  if (!$cocode or !u\isQid($company) or !($co = r\acct($company)) or !$co->co or $co->emailCode != $cocode) exit(t('bad company account ID or cocode'));
+  if (!$cocode or !u\isQid($company) or !($co = r\acct($company)) or !$co->co or $co->emailCode != $cocode) return exitJust(t('bad company account ID or cocode'));
   $ray = ray('cocode now r', $cocode, now(), u\randomString(1));
   if ($exit) exitRay($ray, TRUE); else return u\cryRay($ray);
 }
@@ -468,8 +442,7 @@ function chartData($args = '') {
   
   $data = showAllCharts(nn($ctty, 0));
 /**/  if (!nn($data)) die(t('No such chart data.')); // die not u\FAIL or u\EXPECT
-/**/  echo $data;
-  exit();
+  return exitJust($data);
 }
 
 function showAllCharts($ctty = 0) {
@@ -519,8 +492,7 @@ EOF
  */
 function whosin($ctty = '') {
   $ctty = '!' . $ctty; // promo site omits the leading '!' from the community's QID
-  if (!$uid = r\qo($ctty)->id or !$list = r\companies($uid, FALSE)) exit();
-/**/  echo $list;
-  exit();
+  if (!$uid = r\qo($ctty)->id or !$list = r\companies($uid, FALSE)) exit(); // empty list
+  return exitJust($list);
 }
 

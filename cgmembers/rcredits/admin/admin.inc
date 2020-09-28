@@ -1059,6 +1059,33 @@ function toSMT() {
   if (!$hdrDone) return w\go('/sadmin/panel', t('nothing to send to SMT'));
   exit();
 }
+
+/**
+ * Move customer transactions to a subsidiary company. (used 9/2020 for Co-op Power subsidiaries)
+ * @param string $coQid: the main company's QID
+ * @param string $custQids: space-delimited list of customer's QIDs to move txs and invoices from coQid to co2Qid
+ * @param string $co2Qid: the subsidiary company's QID
+ */
+function moveTxsToSubco($coQid, $custQids, $co2Qid) {
+  $coA = r\acct($coQid); $coid = $coA->id;
+  $co2A = r\acct($co2Qid); $co2id = $co2A->id;
+  foreach (ray($custQids) as $qid) {
+    $uid = r\acct($qid)->id;
+    $uids[] = $uid;
+    $xids = db\col('xid', 'txs', ':uid IN (uid1, uid2) AND :coid IN (uid1, uid2)', compact(ray('uid coid')));
+    if (!$xids) continue;
+    $tableFlds = ray('tx_entries_all:uid agentUid, tx_hdrs_all:actorId actorAgentId, tx_disputes_all:uid agentUid');
+    $subs = compact(ray('coid co2id xids'));
+    foreach ($tableFlds as $tnm => $flds) {
+      list ($f1, $f2) = ray($flds);
+      db\q("UPDATE $tnm SET $f1=:co2id, $f2=IF($f2=:coid, :co2id, $f2) WHERE $f1=:coid AND xid IN (:xids)", $subs);
+    }
+  }
+
+  $subs = compact(ray('coid co2id uids'));
+  db\q('UPDATE r_invoices SET payer=IF(payer=:coid, :co2id, payer), payee=IF(payee=:coid, :co2id, payee) WHERE :coid IN (payer, payee) AND (payer IN (:uids) OR payee IN (:uids))', $subs);
+  db\q('UPDATE r_relations SET main=:co2id WHERE main=:coid AND other IN (:uids)', $subs);
+}
   
 /*
   to find orphaned customers

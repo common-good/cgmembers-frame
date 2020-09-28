@@ -177,11 +177,7 @@ function agentAsksDeviceForAPictureOfMemberWithCardCode($agent, $device, $member
  * in: MAKE identify DeviceAsksForAPictureToGoWithTheQR
  *     MAKE identify DeviceAsksForAPictureWithTheWrongCardCode
  */
-function memberHasPicture($id, $picture) {
-  global $testOnly; if ($testOnly) return FALSE;
-  if (!$a = r\acct(t\uid($id))) return t\output("Not an account: $id");
-  return t\makePicture($picture, $a);
-}
+function memberHasPicture($id, $picture) {return t\hasPic($id, $picture);}
 
 /**
  * we respond with picture (ARG)

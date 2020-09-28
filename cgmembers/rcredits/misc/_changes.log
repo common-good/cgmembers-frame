@@ -1,3 +1,12 @@
+2020-09-28 feature/ape
+. added an admin function (moveTxsToSubco) to more Co-op Power transactions to a subsidiary
+. partner logos are now stored as the account photo (temporary, pending using SMT for solar signups)
+
+2020-09-28 feature/card
+. scanning a Common Good card with a standard QR reader now shows a page that simulates our app (not done yet)
+. new u\joinRays function
+. fixed qo::qr2() function
+
 2020-09-24 feature/post-expand
 . eliminated opening page of Offers & Needs (now shows posts everywhere by default)
 . fixed long-standing ugliness in acct::viable() function

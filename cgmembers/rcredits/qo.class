@@ -10,7 +10,7 @@ use CG\Util as u;
  * Strategy: Store only whatever is easiest. Figure out the rest as needed.
  */
 
-define('QR_FMTS', '1/2 1/3 2/2 2/3 3/2 3/3 3/4 4/4 4/5');
+define('QR_FMTS', '1/2 1/3 2/2 2/3 3/2 3/3 3/4 4/4 4/5'); // see qr() function below
 
 class Qo {
   private $main; // mainQid or main may be empty, but not both
@@ -141,21 +141,24 @@ class Qo {
   /**
    * Convert qr to qid
    * @param string qr: qr-style account code
-   * @return the corresponding qid (FALSE if none)
+   * @return [qid, cardCode] (FALSE if none)
    */
-  public static function qr2($qr) {
-    $fmt = substr($qr, 0, 1);
+  public static function qr2($qr, &$code = '') {
+    $qr = str_replace('/', '.', $qr); // standardize marks
+    if (substr_count($qr, '.') != 3) return FALSE;
+    list ($region, $dom, $ext, $tail) = explode('.', $qr);
+    $fmt = substr($tail, 0, 1);
     $c = u\a2n($fmt, 36);
     $fmts = ray(QR_FMTS);
     list ($regionLen, $acctLen) = explode('/', $fmts[$c / 4]);
     $agentLen = $c % 4;
 ///    debug(compact(ray('qr fmt c fmts regionLen acctLen agentLen')) + ['thefmt' => $fmts[$c / 4]]);
-    if (strlen($qr) != 1 + $regionLen + $acctLen + $agentLen) return FALSE;
-    $region = u\n2a(u\a2n(substr($qr, 1, $regionLen), 36), -3);
-    $acct = u\n2a(u\a2n(substr($qr, 1 + $regionLen, $acctLen), 36), -3);
-    $agent = $agentLen ? '-' . u\n2a(u\a2n(substr($qr, -$agentLen), 36), -1) : '';
-///    debug(compact(ray('qr fmt c regionLen acctLen agentLen region acct agent')));
-    return $region . $acct . $agent;
+    $region = u\n2a(u\a2n($region, 36), -3);
+    $acct = u\n2a(u\a2n(substr($tail, 1, $acctLen), 36), -3);
+    $agent = $agentLen ? '-' . u\n2a(u\a2n(substr($tail, -$agentLen), 36), -1) : '';
+    $code = substr($tail, 1 + $acctLen, strlen($tail) - $agentLen - $acctLen - 1);
+///    echo pr(compact(ray('qr fmt c regionLen acctLen agentLen region acct agent')));
+    return [$region . $acct . $agent, $code];
   }
   
   public function parse() {return [$this->region, $this->tail, $this->agentCode];}

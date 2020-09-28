@@ -1630,3 +1630,4 @@ function joins(&$s, $m, $other = '') {return $s = (empty($s) ? '' : "$s$m") . $o
 function padRay($ray, $n, $fill = '') {for ($i = 0; $i < $n; $i++) $ray[] = $fill; return $ray;}
 function isMobile() {return preg_match(MOBILE_REGEX, $_SERVER['HTTP_USER_AGENT']);}
 function rayify($ray) {$res = []; foreach ($ray as $k => $v) $res[] = "$k:$v"; return join(',', $res);}
+function joinRays($ray1, $ray2) {foreach ($ray2 as $k) $ray1[] = $k; return $ray1;}

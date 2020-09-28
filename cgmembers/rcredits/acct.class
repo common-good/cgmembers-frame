@@ -1641,8 +1641,9 @@ X;
   
   /**
    * Return specified account's profile picture, with markup
+   * NOTE: We assume the current user has permission to see this photo
    * @param bool $unique: should the markup force reloading the image
-   * @return: markup to display the account's picture (with a default image if none or not permitted)
+   * @return: markup to display the account's picture (with a default image if none)
    * Use result with DRUPAL_ROOT . $result OR $base_url . $result
    */
   public function photoHtml($small = FALSE, $unique = FALSE) {
@@ -1652,17 +1653,22 @@ X;
   
   /**
    * Return src attribute for specified account's profile picture, no markup, just the src
+   * NOTE: We assume the current user has permission to see this photo
+   * @param bool $small: use thumb instead of photo
    * @param bool $unique: should the markup force reloading the image
    * @return: value for the src attribute to display the account's picture (with a default image if none or not permitted)
    * Use result with DRUPAL_ROOT . $result OR $base_url . $result
    */
   public function photoSrc($small = FALSE, $unique = FALSE) {
+    global $mya, $base_url;
     $a = $this;
-    global $base_url;
+    
     if ($unique) $unique = '&t=' . now();
     $thing = $small ? 'thumb' : 'photo';
-    $qid = $a->co ? "qid=$a->mainQid" : '';
-    //    if (!$a->co) $qid .= "/$a->cardCode";
+    if ($a != $mya) { // not our own photo (anybody can see a company's photo, otherwise encode)
+      $qid = $a->co ? "qid=$a->mainQid" : ('code=' . u\cryRay(ray('qid sid', $a->mainQid, session_id())));
+    } else { $qid = ''; }
+      
     return "$base_url/account-$thing/$qid$unique";
   }
   
