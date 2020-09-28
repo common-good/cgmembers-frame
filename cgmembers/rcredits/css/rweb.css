@@ -365,11 +365,13 @@ body.logged-in.one-sidebar #content {width:100%;}
 .page-empty div.error {margin:20px;} 
 
 /* Partner Signup */
-body.page-partner #partner-logo, body.page-settings-partnerend #partner-logo {height:100px; margin:10px 0 0 230px;}
+body.page-partner #user-picture img, body.page-settings-partnerend #user-picture img {height:180px; margin:10px 0 0 230px;}
 body.page-partner #messages, body.page-settings-partnerend #messages {margin-top:40px;}
+body.page-partner #main #content, body.page-settings-partnerend #main #content {margin-top:40px;}
 @media (max-width:768px) {
-  body.page-partner #partner-logo, body.page-settings-partnerend #partner-logo {height:60px; margin:5px 10px;}
+  body.page-partner #user-picture img, body.page-settings-partnerend #user-picture img {height:180px; margin:5px 10px;}
   body.page-partner #messages, body.page-settings-partnerend #messages {top:70px;}
+  body.page-partner #main #content, body.page-settings-partnerend #main #content {margin-top:0px;}
 }
 body.page-partner #edit-submit {background-image: linear-gradient(#686868, #686868 60%, #686868); border: 1px solid #686868;}
 body.page-partner h3 {color: #686868;}
