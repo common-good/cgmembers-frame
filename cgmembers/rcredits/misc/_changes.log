@@ -1,3 +1,6 @@
+2020-09-29 feature/sweep
+. null amount in a "pay" template now sweeps all but the account's target balance into another account
+
 2020-09-29 feature/never
 . "never" is now a frequency option for notices
 
