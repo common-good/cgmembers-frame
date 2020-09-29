@@ -1002,7 +1002,7 @@ X;
 function notice1($item) {
   extract(just('uid notices timeForW timeForM', $item));
 
-  $having = "NOT sent AND IF(wType, $timeForW, IF(mType, $timeForM, 1))";
+  $having = "NOT sent AND IF(nType, 0, IF(wType, $timeForW, IF(mType, $timeForM, 1)))";
   if (!$args = r\noticeArgs($uid, $having, $timeForW, $timeForM)) return;
   $a = r\acct($uid);
   $track = u\cryRay(ray('qid type', $a->mainQid, 'notice'));

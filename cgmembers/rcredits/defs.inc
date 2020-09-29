@@ -211,7 +211,7 @@ const MAX_UPLOAD_SIZE = 4 * 1024000; // maximum upload size in bytes
 const MAX_ID_SIZE = 10; // max ID size in MB
 
 //define('NOTICE_OFTENS', t('t:Immediate by Text,i:Immediate by Email,d:Daily,w:Weekly,m:Monthly'));
-define('NOTICE_OFTENS', t('i:Immediate by Email,d:Daily,w:Weekly,m:Monthly'));
+define('NOTICE_OFTENS', t('i:Immediate by Email,d:Daily,w:Weekly,m:Monthly,n:Never'));
 define('NOTICE_TYPES', t('offer:Offers,need:Needs,tip:Tips,in:Transfers IN,out:Transfers OUT,misc:Other messages'));
 define('POST_NOTICE_TYPE_KEYS', 'offer need tip');
 const NOTICE_DFTS = 'offer:d,need:d,tip:w,in:w,out:d,misc:d';

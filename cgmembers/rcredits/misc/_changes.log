@@ -1,3 +1,6 @@
+2020-09-29 feature/never
+. "never" is now a frequency option for notices
+
 2020-09-29 feature/invest-interest
 . revised Invest page, which now redirects to InvestInterest page if signed out or no club in the area
 . introduced iclubq bit to track interest in investment club

@@ -775,15 +775,15 @@ function noticeArgs($uid, $having = '1', $weekly = FALSE, $monthly = FALSE, $at 
   u\setDft($at, now());
   $a = r\acct($uid);
   foreach (ray('weekly monthly') as $k) $$k = (int) $$k;
-  foreach (ray('m:month,w:week,d:day') as $k => $unit) {
-    ${$k . 'Date'} = strtotime("-1 $unit", $at);
-    ${$k . 'Type'} = $k == 'd' ? NULL : "'$a->notices' LIKE CONCAT('%', type, ':$k%')";
+  foreach (ray('n:never,m:month,w:week,d:day') as $k => $unit) {
+    if ($k != 'n') ${$k . 'Date'} = strtotime("-1 $unit", $at);
+    ${$k . 'Type'} = "'$a->notices' LIKE CONCAT('%', type, ':$k%')";
   }
   $mDate = u\monthDay1($mDate); // in case cron fails on first day of the month
   
   $notices = ray($a->notices);
   
-  $q = db\q("SELECT message, created, sent, $wType AS wType, $mType AS mType FROM r_notices WHERE uid=:uid HAVING $having", compact('uid'));
+  $q = db\q("SELECT message, created, sent, $nType AS nType, $wType AS wType, $mType AS mType FROM r_notices WHERE uid=:uid HAVING $having", compact('uid'));
 
   while ($row = $q->fetch()) {
     $date = ($weekly or $monthly) ? R_BULLET . (strftime(' %b&nbsp;%d', $row->created)) : R_BULLET;
@@ -795,7 +795,7 @@ function noticeArgs($uid, $having = '1', $weekly = FALSE, $monthly = FALSE, $at 
   $ranges = ray('m w d',  t('month of ') . strftime('%B %Y', $mDate), t('week of ') . u\fmtDate($wDate, TRUE), u\fmtDate($dDate, TRUE));
   foreach (ray(NOTICE_TYPES) as $k => $desc) if (!in($k, POST_NOTICE_TYPE_KEYS)) { // just the non-post freq settings
     $freq = $notices[$k];
-    if ($freq == 'm' ? $monthly : ($freq == 'w' ? $weekly : TRUE)) {
+    if ($freq == 'm' ? $monthly : ($freq == 'w' ? $weekly : ($freq != 'n'))) {
       $descs[] = $desc;
       $range[] = ' (' . $ranges[$freq] . ')';
     }
