@@ -53,7 +53,7 @@ function custStatement($args = []) {
   $pdf->setFontSize($size);
   $pdf->barHead('STATEMENT');
   $lastHead = 'Balance';
-  $fields = ray("Date//25/ /space/1/ /tid/20/C Description/purpose/83/ /space/1/ Invoiced//20/R /space/1/ Paid//20/R /space/10/ Balance/balance/20/R");
+  $fields = ray(t("Date/date/25/ /space/1/ /tid/20/C Description/purpose/83/ /space/1/ Invoiced/invoiced/20/R /space/1/ Credits/paid/20/R /space/10/ Balance/balance/20/R"));
   $pdf->colHeads($fields);
   $pdf->setFontSize(.6 * $size); // a bit of space below field headers
   $pdf->newLine();
@@ -121,17 +121,19 @@ function custStatement($args = []) {
 function getCustTxs($aUids, $bUids, $starting, $ending) {
   u\EXPECT('array array int int', $aUids, $bUids, $starting, $ending);
   // Note that we show the company's tx description, not the customer's  
+  $reverseText = t('reverses tx #');
   
   $sql = <<< X
     SELECT DISTINCT CONCAT('tx #', xid) AS tid,
       IF(uid1 IN (:aUids), -amt, amt) AS paid,
-      '' AS invoiced, created, 
-      (d.status=:DS_OPEN) AS disputed, IF(uid1 IN (:aUids), for1, for2) AS `purpose`
+      '' AS invoiced, created, (d.status=:DS_OPEN) AS disputed,
+      IF(reversesXid, CONCAT('($reverseText', reversesXid, ')'), IF(uid1 IN (:aUids), for1, for2)) AS `purpose`
     FROM txs_prime LEFT JOIN tx_disputes d USING(xid)
     WHERE (uid1 IN (:aUids) AND uid2 IN (:bUids))
       OR (uid2 IN (:aUids) AND uid1 IN (:bUids))
     UNION ALL
-    SELECT CONCAT('inv #', nvid) AS tid, '' AS paid, IF (payee IN (:aUids), amount, -amount) AS invoiced,
+    SELECT CONCAT('inv #', nvid) AS tid, '' AS paid, 
+      IF (payee IN (:aUids), amount, -amount) AS invoiced,
       inv.created AS created, :IS_DISPUTED AS disputed, inv.`purpose` AS `purpose`
     FROM r_invoices inv
     WHERE (

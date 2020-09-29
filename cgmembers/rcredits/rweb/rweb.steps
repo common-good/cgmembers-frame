@@ -144,6 +144,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  *     MAKE flow AMemberDraws
  *     MAKE flow AMemberDrawsAgain
+ *     MAKE investinterest ANonmemberExpressesInterest
  *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMember
  *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
@@ -236,6 +237,8 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE download Setup
  *     MAKE flow Setup
  *     MAKE gift Setup
+ *     MAKE investinterest Setup
+ *     TEST investinterest ANonmemberExpressesInterest
  *     MAKE invest Setup
  *     MAKE invite Setup
  *     MAKE invoice Setup
@@ -523,6 +526,8 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST demographics ACompanyAgentRunsTheDemographicsQuery
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesANewRecurringDonation
+ *     TEST investinterest AMemberExpressesInterest
+ *     TEST investinterest ANonmemberExpressesInterest
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     TEST invest AMemberCompanyJoinsTheInvestmentClub
  *     TEST invest AnAdministratorViewsTheInvestmentPage
@@ -625,7 +630,8 @@ function with($content) {return weShow($content);}
 /**
  * without: (ARG)
  *
- * in: TEST invest MembersRateAProposedInvestment
+ * in: TEST investinterest AMemberExpressesInterest
+ *     TEST invest MembersRateAProposedInvestment
  *     TEST invest TheClubBuysShares
  *     TEST invest AClubAdministratorHandlesRequestsToCashOut
  *     TEST invest TheInvestmentClubIssuesDividends
@@ -818,6 +824,8 @@ function usd($list) {return t\usd($list);}
  *     MAKE download AMemberDownloadsIncomingInvoicesForThePastYear
  *     MAKE gift AMemberDonates
  *     MAKE gift AMemberMakesANewRecurringDonation
+ *     MAKE investinterest AMemberExpressesInterest
+ *     MAKE investinterest ANonmemberExpressesInterest
  *     MAKE invest AMemberJoinsTheInvestmentClub
  *     MAKE invest AMemberCompanyJoinsTheInvestmentClub
  *     MAKE invest AnAdministratorViewsTheInvestmentPage

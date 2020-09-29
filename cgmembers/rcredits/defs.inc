@@ -383,8 +383,6 @@ const APP_CAN_BIT_NAMES = 'charge undo r4usd usd4r refund buy';
 define('APP_CAN_BIT_DESCS', t('charge customers,undo last transaction,give %RCREDITS for USD,give USD for %RCREDITS,refund any amount,make payments'));
 
 // Membership steps
-const R_STEPS_OLD = 'signup:signup, verify, ssn, sign:community/agreement, donate:community/donate, proxies, prefs:settings/preferences, connect, company, relations, photo, food, discount:community/discount, backing:community/backing';
-
 const S_ALL = 'signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, stepup:community/stepup, crumbs:community/crumbs, work, partnersteptwo, partnerend, food, wantsPrint, printed'; // where to go to complete each step (unordered) -- add new steps to the end
 const S_PERSON = 'signup verifyemail verifyid agree preferences fund photo contact donate crumbs proxies work backing stepup invite';
 //const S_CO = 'signup verifyemail';
@@ -417,8 +415,8 @@ const B_NONUDGE = 9; // don't send reminders
 const B_NOSEARCH = 10; // user wants to be not findable by other members, by phone or email
 const B_DEPENDS = 11; // dependent account (can't change settings, federalId is sponsor's)
 const B_BANKOK = 12; // connected bank account has been verified
-const B_WEEKLY = 13; // send notices only weekly
-const B_MONTHLY = 14; // send notices only monthly
+const B_u13 = 13; // 
+const B_u14 = 14; // 
 const B_CONTACTABLE = 15; // okay for members to contact this member about their calling
 const B_PARTNER = 16; // is a signup partner
 const B_PAPER = 17; // will not accept electronic statements
@@ -429,7 +427,7 @@ const B_REINVEST = 21; // member chose to automatically reinvest investment club
 const B_SAVINGS = 22; // the connected bank account is a savings or money market account
 const B_CASHOUTW = 23; // cash out automatically every 7 days
 const B_CASHOUTM = 24; // cash out automatically every 30 days
-const B_BETA = 25; // beta tester
+const B_ICLUBQ = 25; // interested in investment club
 const B_OADMIN = 26; // can moderate the Offers/Needs/Tips board in a community
 const B_ADMIN2 = 27; // is an overall admin assistant or bank partner or government regulator (read-only except notes)
 const B_CADMIN2 = 28; // is a community sub-administrator (read-only except notes)
@@ -437,8 +435,8 @@ const B_CADMIN = 29; // is a community administrator
 const B_ADMIN = 30; // is a system administrator -- can manage server, including assigning ctty admins, but cannot manage communities or individual accounts (except temporarily)
 
 const B_MAX = 62; // maximum bit number
-const B_ADMINABLE = 'member confirmed carded beta oAdmin cAdmin cAdmin2 nonudge partner cgc invites rewardy noneg'; // for cAdmin to set
-const B_LIST = 'member confirmed ok carded ided refill co draws roundup nonudge nosearch depends bankOk weekly monthly contactable partner paper secret underage debt reinvest savings cashoutW cashoutM beta oAdmin admin2 cAdmin2 cAdmin admin';
+const B_ADMINABLE = 'member confirmed carded oAdmin cAdmin cAdmin2 nonudge partner iclubq cgc invites rewardy noneg'; // for cAdmin to set
+const B_LIST = 'member confirmed ok carded ided refill co draws roundup nonudge nosearch depends bankOk u13 u14 contactable partner paper secret underage debt reinvest savings cashoutW cashoutM iclubq oAdmin admin2 cAdmin2 cAdmin admin';
 const CLOSED = 'flags&(1<<' . B_OK . ')=0 AND activated'; // this must be enclosed in () if negated or ORed
 
 // community-specific flags

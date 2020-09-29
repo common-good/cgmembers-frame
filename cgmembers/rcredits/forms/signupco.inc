@@ -109,7 +109,7 @@ function formSignupCo_submit($form, &$sta) {
   $helper = $agentA->id;
   $legalName = $legalName ?: $fullName;
   
-  list ($city, $state, $latitude, $longitude) = zipCity($zip);
+  list ($city, $state, $latitude, $longitude) = r\zipCity($zip);
   $preid = getPreId($source);
   if (nn($source2)) $source = trim(mb_strtoupper($source2) . "-$source");  
   $flags = u\bit(B_CO) | u\bit(B_CONFIRMED);

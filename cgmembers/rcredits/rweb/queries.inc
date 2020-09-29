@@ -14,7 +14,7 @@ use CG\Util as u;
  */
 
 $bizQ = 'SELECT uid as payee, goods, SUM(IF(amount>0,amount,0)) AS sales, SUM(IF(amount<0,amount,0)) AS payments, COUNT(*) AS cnt FROM tx_entries JOIN tx_hdrs USING (xid) WHERE goods=:FOR_GOODS AND created BETWEEN';
-$gifts = "r.amount * IF(period='M', 12, IF(period='Q', 4, 1))";
+$gifts = "tp.amount * IF(tp.period='week', 52 / tp.periods, IF(tp.period='month', 12 / tp.periods, IF(period='quarter', 4 / tp.periods, 1)))";
 $source = "TRIM(REPLACE(REPLACE(source,'knows: self ()', ''), '-', ' '))";
 
 $queries = [
@@ -102,7 +102,7 @@ $queries = [
             SUM(IF(u.:IS_ROUNDUP, 1, 0)) AS roundupy,
             SUM(IF(u.crumbs>0, 1, 0)) AS crumby,
             AVG(IF(u.crumbs>0, u.crumbs, NULL)) AS avgCrumbs
-    FROM users u LEFT JOIN tx_templates r ON (r.from=u.uid AND r.end IS NOT NULL AND r.to=:CGID) LEFT JOIN users c ON c.uid=u.community
+    FROM users u LEFT JOIN tx_templates tp ON (tp.from=u.uid AND tp.end IS NOT NULL AND tp.to=:CGID) LEFT JOIN users c ON c.uid=u.community
     WHERE u.:IS_OK AND NOT u.:IS_CO AND u.uid NOT :CANONIC
     GROUP BY u.community
     ~roundupy = number who do Roundups, crumby = number who do Crumb donations",

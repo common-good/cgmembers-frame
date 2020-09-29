@@ -1,3 +1,13 @@
+2020-09-29 feature/invest-interest
+. revised Invest page, which now redirects to InvestInterest page if signed out or no club in the area
+. introduced iclubq bit to track interest in investment club
+. reversed transactions now appear simply as (reverses tx #whatever) -- no description
+. \n is now accepted in test data (meaning EOL)
+. changed customer statements "Paid" column to "Credits"
+. fixed bug in expected donations query that omitted monthly, weekly, and quarterly donations
+. fixed bug in w\eLinkAcct() that caused failure of allow='any'
+. zapped B_WEEKLY and B_MONTHLY
+
 2020-09-28 feature/ape
 . added an admin function (moveTxsToSubco) to more Co-op Power transactions to a subsidiary
 . partner logos are now stored as the account photo (temporary, pending using SMT for solar signups)

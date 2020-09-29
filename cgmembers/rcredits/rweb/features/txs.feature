@@ -60,7 +60,7 @@ Scenario: A member looks at transactions for the past year
   | Tx# | Date    | Name          | Purpose                  | Amount   |  Balance | Action |
   |  6  | %mdy-4d | --            | to bank                  |   -33.00 | 1,585.00 |        |
   |  5  | %mdy-4d | --            | to bank                  |   -22.00 | 1,618.00 |        |
-  | 50  | %mdy-5d | Bea Two       | cash E (reverses #44)    |   -10.00 | 1,640.00 |        |
+  | 50  | %mdy-5d | Bea Two       | (reverses tx #44)           |   -10.00 | 1,640.00 |        |
   | 49  | %mdy-6d | Bea Two       | cash V                   |  -100.00 | 1,650.00 |        |
   | 48  | %mdy-1w | Corner Pub    | this Q                   |  -120.00 | 1,750.00 |        |
   | 46  | %mdy-3m | Bea Two       | what G                   |  -240.00 | 1,870.00 |        |
@@ -83,7 +83,7 @@ Scenario: A member looks at transactions for the past few days
   | Tx# | Date    | Name          | Purpose               | Amount  |  Balance |
   |  6  | %mdy-4d | --            | to bank               |  -33.00 | 1,585.00 |
   |  5  | %mdy-4d | --            | to bank               |  -22.00 | 1,618.00 |
-  | 50  | %mdy-5d | Bea Two       | cash E (reverses #44) |  -10.00 | 1,640.00 |
+  | 50  | %mdy-5d | Bea Two       | (reverses tx #44)        |  -10.00 | 1,640.00 |
   | 49  | %mdy-6d | Bea Two       | cash V                | -100.00 | 1,650.00 |
   | 48  | %mdy-1w | Corner Pub    | this Q                | -120.00 | 1,750.00 |
   And without:
@@ -116,7 +116,7 @@ Scenario: A member looks at transactions with roundups
   |     |         | %PROJECT Region | roundup donation         |   -0.05 |          |    | 
   |  6  | %mdy-4d | --              | to bank                  |  -33.00 | 1,585.00 |    |
   |  5  | %mdy-4d | --              | to bank                  |  -22.00 | 1,618.00 |    |
-  | 50  | %mdy-5d | Bea Two         | cash E (reverses #44)    |  -10.00 | 1,640.00 |    |
+  | 50  | %mdy-5d | Bea Two         | (reverses tx #44)           |  -10.00 | 1,640.00 |    |
   | 49  | %mdy-6d | Bea Two         | cash V                   | -100.00 | 1,650.00 |    |
   | 48  | %mdy-1w | Corner Pub      | this Q                   | -120.00 | 1,750.00 |    |
 
