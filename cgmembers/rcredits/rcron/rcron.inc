@@ -446,7 +446,7 @@ function warnAnnual1($item) {
   $tpls = ray('Donate:annual-gift, Backing:renew-backing');
 
 	$a = r\acct($uid);
-	$atag = w\atag("/do/do$func~$a->mainQid~$a->emailCode");
+	$atag = w\atag("/do/do$func~" . $a->doCode());
   $track = u\cryRay(ray('qid type', $a->mainQid, strtolower($func)));
   $subs = ray('amount when atag track', u\fmtAmt($amount), u\fmtDate(strtotime($target), TRUE), $atag, $track);
   $a->tellMisc($tpls[$func], $subs);
@@ -1015,7 +1015,7 @@ function notice1($item) {
   $code = w\getEmailCode(compact('uid'));
 
   if ($a->ok) {
-    $link = BASE_URL . "/do/doInvite~$a->mainQid~$a->emailCode~" . (r\rdoMonth() + 12);
+    $link = BASE_URL . '/do/doInvite~' . $a->doCode();
     list ($question, $btnText) 
     = ($a->co or $a->shouter) ? ['', t('Invite Someone!')] : [t('If you support %PROJECT, please say so! '), t('Endorse')];
     $style = TEXT_BUTTON_STYLE . ' padding:3px 7px; margin-left:4px;'; // smaller for emails

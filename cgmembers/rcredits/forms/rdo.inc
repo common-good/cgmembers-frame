@@ -9,11 +9,10 @@ use CG\Db as db;
 /**
  * Complete a "no signin required" request
  *   called with:
- *     <baseurl>/do/<op>~<qid>~<ecode>~<mo>~<v> (deprecated. delete 10/1/2020)
  *     <baseurl>/do/<op>~<code> (for example: new.CommonGood.earth/do/doProxies~PabcDEF123
  *     <baseurl>/do/<code>
  *     <baseurl>/do/<error message (with a space in it)>
- * @param string $form:      a form to complete without signing in
+ * @param string $form: a form to complete without signing in
  * @param string code: an array encrypted with u\cryRay, possibly including:
  *   op:    what to do (REQUIRED). Must be of the form do<form> (for example doProxies) if the call is <op>~...
  *   qid:   the account QID
@@ -38,19 +37,15 @@ function rdo($code) {
   if (test()) foreach (['error', 'status'] as $k) u\deleteFile(f('t.dosayFilename', $k));
 
   if (strpos($code, ' ')) return doErr(plain($code));
-  $nonMemberErr = t('That link is only for current members. <%a>Click here to sign up!</a>', '_a', atag('/signup'));
   
   if (strhas($code, '~')) { // newsletter link (doWhatever~code)
-    if (substr_count($code, '~') == 1) { // otherwise legacy (delete after 10/1/2020)
-      list ($op, $code) = explode('~', $code);
-      $info = u\decryRay($code);
-      extract(just('qid expire v sql subs', $info, NULL));
-      if (isset($info['op'])) $op = $info['op']; // overwrite op, if op is specified
-      if (!$qid or !$a = r\acct($qid)) return doErr($nonMemberErr);
-    } else {
-      list ($op, $qid, $ecode, $mo, $v) = u\padRay(explode('~', $code),5);
-      if (!$op or !$qid or !$a = r\acct($qid) or $ecode != $a->emailCode) return doErr($nonMemberErr);
-      if ($mo and r\rdoMonth() > $mo + 3) $expire = 1;
+    list ($op, $code) = explode('~', $code);
+    $info = u\decryRay($code);
+    extract(just('qid expire v sql subs', $info, NULL));
+    extract(just('op', $info)); // overwrite op, if op is specified
+    if (!$qid or !$a = r\acct($qid)) {
+      $nonMemberErr = t('That link is only for current members. <%a>Click here to sign up!</a>', '_a', atag('/signup'));
+      if (!u\starts($op, 'do')) return doErr($nonMemberErr); // doFormName works for nonmembers too (if allow='any')
     }
   } else { // normal email link
     if (!$info = u\decryRay($code)) return doErr(t('That link is archaic.'));
@@ -74,7 +69,7 @@ function rdo($code) {
   if (u\starts($op, 'do') and $formName = substr($op, 2)) {
     $file = strtolower(R_ROOT . "/forms/$formName.inc");
     if (file_exists($file)) include_once $file;		
-    return w\showForm($formName, "qid=$a->mainQid&ecode=$a->emailCode&$v");
+    return w\showForm($formName, nn($a) ? "qid=$a->mainQid&ecode=$a->emailCode&$v" : '');
   }
 
   if ($op == 'nosecret') $res = $a->setBit(B_SECRET, FALSE);
