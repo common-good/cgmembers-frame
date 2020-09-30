@@ -17,23 +17,23 @@ Setup:
 
 Scenario: A member changes some settings
   Given member ".ZZA" completes form "settings/preferences" with values:
-  | roundup | notices | statements | secretBal |*
-  |       0 |  weekly |      paper |         0 |
+  | roundup | statements | secretBal |*
+  |       0 | paper      |         0 |
   And member ".ZZA" has done step "fund"
   And member ".ZZA" completes form "settings/fund" with values:
   | connect | routingNumber | bankAccount | bankAccount2 | cashout | refills | target | achMin | saveWeekly |*
   |       1 |     211870281 |         123 |          123 |       0 |       1 |    100 |     11 |          0 |
   When member ".ZZD" visits page "sadmin/changes/NEWZZA"
   Then we show "Account Changes for Abe One" with:
-  | %dmy | flags       | ok ided              | ok ided weekly              | abeone     |
+  | %dmy | flags       | ok ided       | ok ided              | abeone     |
   And with:
-  | %dmy | flags       | ok ided weekly       | ok ided weekly paper        | abeone     |
+  | %dmy | flags       | ok ided       | ok ided paper        | abeone     |
   And with:
-  | %dmy | flags       | ok ided weekly paper | ok ided refill weekly paper | abeone     |
+  | %dmy | flags       | ok ided paper | ok ided refill paper | abeone     |
   And with:
-  | %dmy | achMin      |                   10 |                          11 | abeone     |
+  | %dmy | achMin      |            10 |                   11 | abeone     |
   And with:
-  | %dmy | bankAccount |                      | (secret)                    | abeone     |
+  | %dmy | bankAccount |               | (secret)             | abeone     |
 # sometimes this happens out of order (dunno why)
 
 #  | %dmy | bankAccount |                      | USkk211870281123            | abeone     | (this will work with member "D:1" when decry('V') works)

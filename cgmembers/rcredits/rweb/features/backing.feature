@@ -7,7 +7,7 @@ Setup:
   Given members:
   | uid  | legalName | backing | floor | flags                         |*
   | .ZZA | Abe One   |       0 |    10 | ok,confirmed,nosearch,paper   |
-  | .ZZB | Bea Two   |      10 |     0 | ok,co,confirmed,weekly,secret |
+  | .ZZB | Bea Two   |      10 |     0 | ok,co,confirmed,secret |
   
 Scenario: A member visits the backing page
   When member ".ZZA" visits page "community/backing"

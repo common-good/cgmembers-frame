@@ -41,9 +41,9 @@ Scenario: A company looks at a customer statement
   || 1 A St. |
   || STATEMENT |
   And with:
-  | Date    |        | Description     | Invoiced | Paid    |  Balance |
-# NOTE: Description must be in last position because that's the order it is generated in.
+# NOTE: Description data must be in last position because that's the order it is generated in.
 # | Date    |        | Invoiced | Paid    |  Balance | Description     |
+  | Date    |        | Description     | Invoiced | Credits  |  Balance |
   |         |        |          |         |     0.00 | Opening balance |
   | %mdY-4m | tx #14 |          | -100.00 |   100.00 | that F          |
   | %mdY-2m | inv #2 |   120.00 |         |   220.00 | this Q          |

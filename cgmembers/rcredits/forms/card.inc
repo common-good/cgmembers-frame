@@ -14,7 +14,13 @@ use CG\Db as db;
 function formCard($form, &$sta, $dom = '', $code = '') {
   global $mya;
   
-  if (!$mya) return w\softErr(t('You are not signed in. Sign in and consider setting "Stay signed in for scans" in Advanced Settings.') . $code);
+  if (!$mya) {
+    extract(just('trust scanner', $_COOKIE), NULL);
+    $qid = r\cryptCook('qid');
+    if (!$trust or !$scanner or !$qid or !$mya = r\acct($scanner, $qid)) return w\softErr(t('You are not signed in. Sign in and consider checking "Trust this device".'));
+  }
+  if (!$mya->can(B_SCAN)) return w\softErr(t('You do not have permission to scan a customer card for the current account.'));
+  
   $dom = strtoupper($dom); // correct a fluke in the server's rewrite
   if (!$res = r\Qo::qr2("$dom.RC2.ME/$code") or !$a = r\acct($res[0]) or $a->cardCode != $res[1]) return softErr(t('That is not a valid %PROJECT card.'));
   $title = t('You: ') . $mya->fullName;
@@ -23,7 +29,7 @@ function formCard($form, &$sta, $dom = '', $code = '') {
 
   $amount = numFld(t('Amount: '), [t('Amount')]);
   if ($mya->co) { // we are a company
-    $choices = explode("\n", $mya->selling);
+    $choices = $mya->selling ? explode("\n", $mya->selling) : [];
     $choice0Count = count($choices);
     $choices = u\joinRays($choices, ray(t('Refund to customer, %you receives cash, Customer buys cash from %you', 'you', $mya->fullName)));
   } else { // we are an individual
@@ -31,21 +37,23 @@ function formCard($form, &$sta, $dom = '', $code = '') {
     $choice0Count = count($choices);
   }
   
-  $choices[] = $otherDpy = t('Other:');
+  $choices[] = t('Other:');
   
   $for = selectFld(REQ . t('For:'), '', '', $choices);
-  $desc = textFld(REQ . t('For:'), [t('Description')], (count($choices) == 1 ? dft($otherDpy) : []) + clas('invisible'));
-  $a = hidFld(serialize($a));
-  jsx('card', compact(ray('choice0Count otherDpy')));
+  $desc = textFld(t('For:'), [t('Description')]);
+  $myid = hidFld($mya->id);
+  $uid = hidFld($a->id);
+  jsx('card', compact(ray('choice0Count')));
 
-  $submit = t('Charge');
-  $pay = $choices ? NULL : submit(t('Pay'));
+  $charge = submit(BARE . t('Charge'));
+  $pay = $choices ? NULL : submit(BARE . t('Pay'));
+  $go = submit(BARE . t('Go'));
+  $buttons = fieldSet('buttons', compact(ray('charge pay go')));
   
-  return cgform(compact(ray('title photo subtext amount for desc submit pay a')));
+  return cgform(compact(ray('title photo subtext amount for desc buttons myid uid')));
 }
 
 function formCard_validate($form, &$sta) {
-  global $mya;
   extract(just('amount', $sta['input']));
 
   if ($err = u\badAmount($amount)) return say($err, 'amount');
@@ -53,11 +61,10 @@ function formCard_validate($form, &$sta) {
 }
 
 function formCard_submit($form, &$sta) {
-  global $mya;
-  extract(just('amount desc uid a', $sta['input']));
-
-  $a = unserialize($a);
-  $goods = !strhas($desc, t('cash'));
+  extract(just('amount desc uid myid uid', $sta['input'], NULL));
+  $mya = r\acct($myid);
+  $a = r\acct($uid);
+  $goods = strhas($desc, t('cash')) ? FOR_USD : FOR_GOODS;
   $type = (op($sta) == 'charge' ? 'charge' : 'pay');
   list ($ok, $msg, $subs) = be\transfer($type, $mya, $a, $amount, $desc, $goods);
 

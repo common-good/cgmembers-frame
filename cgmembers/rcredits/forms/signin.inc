@@ -37,8 +37,10 @@ function formSignin($form, &$sta) {
   $pw2 = hidFld(nn($pw2) ?: ''); // extra password for admins
   $vKeyE = hidFld(nn($vKeyE) ?: ''); // extra password for admins
   
+  $trust = boxFld('trust', NBSP, t('Trust this device'), nni($_COOKIE, 'trust'));
+
   $submit = t('Sign in');
-  $form = compact(ray('title name pass pw2 vKeyE submit subtext'));
+  $form = compact(ray('title name pass pw2 vKeyE trust submit subtext'));
 
   $form['external_input'] = hidFld(serialize(nni($sta, 'input'))); // pass this to rweb_user_login
 
@@ -71,15 +73,14 @@ function formSignin_validate($form, &$sta, $type = 'both') {
     $pw2 = $pw2 ? u\b64decode($pw2) : (isDEV ? DEV_PW2 : '');
     if ($pw2 and !$a->pw2) a(1)->update('pw2', r\passHash($pw2)); // first ever admin signin sets pw2
     if (!$a->passwordOkay($pw2, 'pw2', $err)) return say(t('Admin requires second pass.'), 'pass');
-    r\setCryptCook('pw2', $pw2); // store as cookie, so pw2 is never on server
+    r\setCryptCook('pw2', $pw2, 0); // store as cookie, so pw2 is never on server
 		if (isDEV) u\setDft($vKeyE, getv('vKeyE', '')); // make it easier to sign in
 		if ($vKeyE) { // set cookie for very-secure private key, encrypted (encrypt it further for cookie)
 			if (!$vKeyE = u\b64decode($vKeyE)) return w\hack(t('bad vKeyE'));
-		  r\setCryptCook('vKeyE', $vKeyE);
+		  r\setCryptCook('vKeyE', $vKeyE, 0);
 			if (isDEV) setv('vKeyE', $vKeyE); // remember new vKeyE, make it easier to sign in (this is not redundant)
 		}
   }
-
   return TRUE; // TRUE is used by formBuy()
 }
 
@@ -88,10 +89,14 @@ function formSignin_validate($form, &$sta, $type = 'both') {
  * @param string $goto: what page to start on for non-admin
  */
 function formSignin_submit($form, &$sta, $goto = 'summary') {
-  extract(just('name', $sta['input']));
+  extract(just('name trust', $sta['input'], NULL));
   $uid = r\loginString($name);
   $mya = r\setAcct($uid, $sta);
 
+  r\setCryptCook('qid', $mya->mainQid, NULL);
+  r\setCook('trust', $mya->admin2 ? 0 : ($trust ? 1 : 0));
+  r\setCook('scanner', $mya->mainQid); // scan QRs with last account used
+  
   u\loga('signin', ['name' => $mya->name]);
   if (isSTAGE and !$mya->cAdmin) f('a.makeTestAdmins'); // make sure rCOs can test stuff
   return w\go($mya->admin2 ? 'sadmin/followup' : $goto);

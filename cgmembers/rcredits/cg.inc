@@ -57,6 +57,22 @@ function regionRange($region = NULL) {
 }
 
 /**
+ * Return city, state, and coordinates from zip and country
+  {"post code": "01002", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Amherst", "longitude": "-72.4646", "state": "Massachusetts", "state abbreviation": "MA", "latitude": "42.3671"}]}
+  */
+function zipCity($zip, $country = R_COUNTRY_ID) {
+  /*
+  if ($info = @file_get_contents('http://api.zippopotam.us/us/' . $zip)) {
+    if ($info = json_decode($info)) $info = (array) nn($info->places)[0];
+    if ($info) return [$info['place name'], r\stateNum($info['state abbreviation']), $info['latitude'], $info['longitude']];
+  }
+  */
+
+  if ($res = db\get('region,state', 'zip3', 'id=:zip3', ['zip3' => substr($zip, 0, 3)])) extract($res);
+  return $res ? [$region, r\stateNum($state), 0, 0] : [NULL, 0, 0, 0];
+}
+
+/**
  * Add a date stamp and agent's initials to the given note (before updating the notes field with it).
  * Agent is deemed to be self if no current account, because it's surely an unsubscribe from an email notice link.
  */
@@ -510,8 +526,8 @@ function setCook($key, $value, $expires = NULL, $raw = FALSE) {
   return $value;
 }
 
-function setCryptCook($k, $v) {return setCook($k, substr(u\cry('C', $v), 3), 0, TRUE);}
-function cryptCook($k) {return ($v = nni($_COOKIE, $k)) ? u\decry('C', CRYPT_FLAG . 'C' . $v) : '';}
+function setCryptCook($k, $v, $expires = NULL) {return setCook($k, u\ry('C', $v), $expires, TRUE);}
+function cryptCook($k) {return ($v = nni($_COOKIE, $k)) ? u\dery('C', $v) : '';}
 
 /**
  * Return the unformatted private key for highly sensitive data (use u\fmtKey() to get the formatted key).
@@ -759,15 +775,15 @@ function noticeArgs($uid, $having = '1', $weekly = FALSE, $monthly = FALSE, $at 
   u\setDft($at, now());
   $a = r\acct($uid);
   foreach (ray('weekly monthly') as $k) $$k = (int) $$k;
-  foreach (ray('m:month,w:week,d:day') as $k => $unit) {
-    ${$k . 'Date'} = strtotime("-1 $unit", $at);
-    ${$k . 'Type'} = $k == 'd' ? NULL : "'$a->notices' LIKE CONCAT('%', type, ':$k%')";
+  foreach (ray('n:never,m:month,w:week,d:day') as $k => $unit) {
+    if ($k != 'n') ${$k . 'Date'} = strtotime("-1 $unit", $at);
+    ${$k . 'Type'} = "'$a->notices' LIKE CONCAT('%', type, ':$k%')";
   }
   $mDate = u\monthDay1($mDate); // in case cron fails on first day of the month
   
   $notices = ray($a->notices);
   
-  $q = db\q("SELECT message, created, sent, $wType AS wType, $mType AS mType FROM r_notices WHERE uid=:uid HAVING $having", compact('uid'));
+  $q = db\q("SELECT message, created, sent, $nType AS nType, $wType AS wType, $mType AS mType FROM r_notices WHERE uid=:uid HAVING $having", compact('uid'));
 
   while ($row = $q->fetch()) {
     $date = ($weekly or $monthly) ? R_BULLET . (strftime(' %b&nbsp;%d', $row->created)) : R_BULLET;
@@ -779,7 +795,7 @@ function noticeArgs($uid, $having = '1', $weekly = FALSE, $monthly = FALSE, $at 
   $ranges = ray('m w d',  t('month of ') . strftime('%B %Y', $mDate), t('week of ') . u\fmtDate($wDate, TRUE), u\fmtDate($dDate, TRUE));
   foreach (ray(NOTICE_TYPES) as $k => $desc) if (!in($k, POST_NOTICE_TYPE_KEYS)) { // just the non-post freq settings
     $freq = $notices[$k];
-    if ($freq == 'm' ? $monthly : ($freq == 'w' ? $weekly : TRUE)) {
+    if ($freq == 'm' ? $monthly : ($freq == 'w' ? $weekly : ($freq != 'n'))) {
       $descs[] = $desc;
       $range[] = ' (' . $ranges[$freq] . ')';
     }

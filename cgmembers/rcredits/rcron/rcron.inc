@@ -222,6 +222,9 @@ X;
 /**
  * Generate rules, transactions, and invoices from template.
  * Instantiate surtx rules first so they apply to subsequent transactions.
+ * Action options are: 
+ *   surtx: step ups, discounts, or subsidies that recur (just for food fund subsidies so far)
+ *   pay or charge: recurring payments and invoices (if pay amount is NULL, sweep all but the account's target balance)
  */
 function recurs() {
   $sql = <<< EOF
@@ -265,12 +268,11 @@ function recur($template) {
     $fromA = r\acct($from); $toA = r\acct($to);
     if (!$toA->ok) return r\tellAdmin(t('Attempt to pay (or invoice from) an inactive account in recur'), $erSubs);
     if (!$fromA->ok) {
-      if ($action == 'pay' or $fromA->closed) return; // keep recurring donations around in case member re-opens account
+      if ($action == 'pay' or $fromA->closed) return; // keep recurring donations around in case member re-opens account (but until then don't do it)
     }
 
     if ($period and $period != 'once') {
       $when = r\recurDesc($period, $periods);
-      // $purpose = r\recurPurpose($purpose);
       $erSubs += compact(ray('when purpose'));
     } else { $when = t('one-time'); }
 
@@ -278,7 +280,10 @@ function recur($template) {
     if ($action == 'pay' and $to == CGID) $data += ['gift' => TRUE]; // assume any recurring payment to CG is a gift
     
     if ($action == 'pay') {
-      $ok = $fromA->payApproved($to, $amount, $purpose, FOR_GOODS, $data, $id);
+      if (is_null($amount)) { // sweep
+        if (!$amount = max(0, $fromA->balance - $fromA->minimum)) return;
+      }        
+      $ok = $fromA->payApproved($to, $amount, $purpose, $action == 'pay' ? FOR_GOODS : FOR_USD, $data, $id);
       if (!$ok) return r\tellAdmin(t('Pay failed in recur'), $erSubs);
       $fromA->tellOut('recur pay', ray('amount when purpose payee', u\fmtAmt($amount), $when, $purpose, $toA->fullName));
     } else { // charge
@@ -286,7 +291,8 @@ function recur($template) {
       if (!$ok) return r\tellAdmin(t('Invoice failed in recur'), $erSubs + compact('msg', 'args'));
     }
     if ($period == 'once') r\endRule(TRUE, $id);
-  } else FAIL(t('bad action in template: ') . pr($template));
+
+  } else { FAIL(t('bad action in template: ') . pr($template)); }
   
 }
 
@@ -1002,7 +1008,7 @@ X;
 function notice1($item) {
   extract(just('uid notices timeForW timeForM', $item));
 
-  $having = "NOT sent AND IF(wType, $timeForW, IF(mType, $timeForM, 1))";
+  $having = "NOT sent AND IF(nType, 0, IF(wType, $timeForW, IF(mType, $timeForM, 1)))";
   if (!$args = r\noticeArgs($uid, $having, $timeForW, $timeForM)) return;
   $a = r\acct($uid);
   $track = u\cryRay(ray('qid type', $a->mainQid, 'notice'));

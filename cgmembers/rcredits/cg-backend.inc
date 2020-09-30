@@ -82,7 +82,7 @@ EOF;
       if (in($type, [E_PRIME, E_BANK])) {
         if ($period) $description .= t(' (%xly)', 'xly', r\recurDesc($period, $periods));
         if ($nvid) $description .= t(' (CG inv#%nvid)', compact('nvid'));
-        if ($reversesXid) $description .= t(' (reverses #%reversesXid)', compact('reversesXid'));
+        if ($reversesXid) $description = t('(reverses tx #%reversesXid)', compact('reversesXid'));
         if ($reversedBy) $description .= t(' (reversed by #%reversedBy)', compact('reversedBy'));
       } else {
         if ($stepup) $description .= $portion > 0 ? t(' (%x step-up)', 'x', u\fmtAmt($portion, '%s')) : t(' (step-up)');

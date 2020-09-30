@@ -29,6 +29,20 @@ function doit(what, vs) {
   case 'get-ssn': get('ssn', {}, function () {}); break;
   
   case 'card':
+    $('#edit-desc').val($('#edit-for :selected').text()); // set desc field to initial value
+    $('#edit-for').change(function () {
+      $('edit-desc').val($('#edit-for :selected').text()); // set desc field to selected value
+      var i = $(this).find(':selected').val();
+      var other = (i == $(this).find('option').length - 1);
+      var goish = (i >= vs['choice0Count'] && !other);
+      if (other) {
+        $('.form-item-for').hide();
+        $('.form-item-desc').show()
+        $('#edit-desc').val('').attr('required', 'required').focus();
+      }
+      $('#edit-charge, #edit-pay').toggle(!goish);
+      $('#edit-go').toggle(goish);
+    });
     break;
     
   case 'deposits':

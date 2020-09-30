@@ -6,6 +6,9 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
+/**
+ * Request a new password.
+ */
 function formPass($form, $sta, $id = '') {
   $id = urldecode(u\urlArgs());
   $title = t('Request New Password');

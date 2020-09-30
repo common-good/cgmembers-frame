@@ -12,17 +12,22 @@ const POST_TYPES = 'offer need tip';
  * Set preferences for notice frequency, etc.
  */
 function formNoticePrefs($form, &$sta, $args = '') {
+  global $mya;
   extract(just('code', $args, ''));
   
   $idRay = just('pid uid', test() ? $code : u\decryRay($code));
-  if (!$idRay) return w\softErr(t('That is not a valid link for changing notice preferences.'));
-
+  if (!$idRay) {
+    if (!$mya) return w\softErr(t('That is not a valid link for changing notice preferences.'));
+    $idRay = ray('uid', $mya->id);
+    $code = u\cryRay($idRay);
+  }
+  
   $title = t('Notice Preferences');
   $subtext = t('Choose how often you want to receive each type of notice (changes are immediate).');
 
   $hdrs = ray(t('Type,How often?'));
   $oftens = ray(NOTICE_OFTENS);
-  $postOftens = just('d w m', $oftens);
+  $postOftens = just('d w m n', $oftens);
   $types = ray(NOTICE_TYPES);
   $isPid = (bool) nni($idRay, 'pid');
   $prefs = ray(db\get('notices', $isPid ? 'people' : 'users', $idRay));

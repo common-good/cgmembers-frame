@@ -1507,7 +1507,9 @@ function invitation($code, $invitee = '', &$inviter = '', &$iCode = -1, &$err = 
  */
 function eLinkAcct(&$sta, &$eLink = '', $allow = 'individual') {
   if (!$eLink) extract(just('eLink', $sta)); // verifying or submitting; get stored eLink args
-  extract(just('qid ecode allow', $eLink, ''));
+  extract(just('qid ecode', $eLink, ''));
+  extract(just('allow', $eLink)); // don't overwrite, if none
+  
   $a = r\acct($qid); // current or specified account
   if ($allow != 'any') {
     if (!$a) return !w\go('', 'requires signin');

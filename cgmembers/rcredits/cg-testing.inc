@@ -1504,6 +1504,7 @@ function getRisks($risks0, $descs) {
  * Complain if the given value is not what was wanted.
  */
 function badEq($type, $got, $want, $id = '') {
+  $want = str_replace('\\n', "\n", $want);
   if (t\eq($got, $want)) return FALSE;
   if ($id !== '') $id = "uid=$id ";
   t\output($id . t('%type: wanted "%want" got "%got"', compact(ray('id type want got'))));

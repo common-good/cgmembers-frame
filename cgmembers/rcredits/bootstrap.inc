@@ -1815,7 +1815,6 @@ function drupal_anonymous_user() {
 function drupal_bootstrap() {
   // Not drupal_static(), because does not depend on any run-time information.
 
-//  require_once DRUPAL_ROOT . '/sites/all/modules/rcredits/boot.inc';
   require_once DRUPAL_ROOT . '/rcredits/boot.inc';
   require_once DRUPAL_ROOT . '/includes/database/database.inc'; // db connection won't be initialized until requested
 

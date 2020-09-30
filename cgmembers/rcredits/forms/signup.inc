@@ -121,7 +121,7 @@ function formSignup_submit($form, &$sta) {
   if (nn($source2)) $source = trim(mb_strtoupper($source2) . "-$source");
   $flags = nn($confirmed) ? u\bit(B_CONFIRMED) : 0;
   
-  list ($city, $state, $latitude, $longitude) = zipCity($zip);
+  list ($city, $state, $latitude, $longitude) = r\zipCity($zip);
 
   $info = []; foreach (ray($dbFields) as $k) if (isset($$k)) $info[$k] = $$k;
   $info += $acctType == CO_PERSONAL ? ['preid' => $preid] : ['coType' => $acctType];
@@ -188,20 +188,4 @@ function jointSignup($a = NULL) {
   $a->join($mya);
   r\setAcct(NULL); // sign agent out so it looks joint
   return $a->id;
-}
-
-/**
- * Return city, state, and coordinates from zip and country
-  {"post code": "01002", "country": "United States", "country abbreviation": "US", "places": [{"place name": "Amherst", "longitude": "-72.4646", "state": "Massachusetts", "state abbreviation": "MA", "latitude": "42.3671"}]}
-  */
-function zipCity($zip, $country = R_COUNTRY_ID) {
-  /*
-  if ($info = @file_get_contents('http://api.zippopotam.us/us/' . $zip)) {
-    if ($info = json_decode($info)) $info = (array) nn($info->places)[0];
-    if ($info) return [$info['place name'], r\stateNum($info['state abbreviation']), $info['latitude'], $info['longitude']];
-  }
-  */
-
-  if ($res = db\get('region,state', 'zip3', 'id=:zip3', ['zip3' => substr($zip, 0, 3)])) extract($res);
-  return $res ? [$region, r\stateNum($state), 0, 0] : [NULL, 0, 0, 0];
 }

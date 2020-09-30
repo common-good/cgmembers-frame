@@ -86,6 +86,7 @@ function rweb_menu($submenu = '') {
     'invest/propose' => ['sub', t('Propose Investment'), 'InvestPropose 2', 'ok iclub', '', t(), 'fire'],
     'invest/buy-or-sell' => ['call', t('Buy or Sell Investment'), 'InvestBuySell 2', 'manage ok iclub', '', t(), 'refresh'],
     'invest/rate' => ['call', t('Rate Investment'), 'InvestRate 2', 'manage ok investor', '', t(), 'search'],
+    'invest/interest' => ['call', t('Investment Club Interest'), 'InvestInterest', ANY],
 
     'history' => ['norm', t('History'), 'History', 'read'],
     'history/transactions' => ['sub', t('Transactions'), 'Txs 2', 'read', '', t(), 'list'],

@@ -78,8 +78,8 @@ Scenario: A member signs agreement
 Scenario: A member sets preferences
   Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree"
   When member ".ZZB" completes form "settings/preferences" with values:
-  | roundup | notices | statements | nosearch | secretBal |*
-  |       1 | monthly | electronic |        0 |         1 |
+  | roundup | statements | nosearch | secretBal |*
+  |       1 | electronic |        0 |         1 |
   Then we show "Getting Money In or Out"
   And we say "status": "info saved|step completed"
   And member ".ZZB" steps left "fund photo contact donate crumbs proxies work backing stepup invite"

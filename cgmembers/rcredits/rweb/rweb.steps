@@ -123,7 +123,8 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
 /**
  * member (ARG) confirms form (ARG) with values: (ARG)
  *
- * in: MAKE cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
+ * in: MAKE card 
+ *     MAKE cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     MAKE cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
  *     MAKE cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     MAKE cgbutton AMemberRedeemsStoreCredit
@@ -144,6 +145,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  *     MAKE flow AMemberDraws
  *     MAKE flow AMemberDrawsAgain
+ *     MAKE investinterest ANonmemberExpressesInterest
  *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMember
  *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
  *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
@@ -236,6 +238,8 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE download Setup
  *     MAKE flow Setup
  *     MAKE gift Setup
+ *     MAKE investinterest Setup
+ *     TEST investinterest ANonmemberExpressesInterest
  *     MAKE invest Setup
  *     MAKE invite Setup
  *     MAKE invoice Setup
@@ -281,6 +285,7 @@ function members($list) {return t\members($list);}
  *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST bank AMemberWithANegativeBalanceRequestsATransferFromTheBank
+ *     TEST card 
  *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     TEST cgbutton AMemberRedeemsStoreCredit
@@ -326,6 +331,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST bank AMemberMovesTooMuchToTheBank
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST bank ASlaveMemberRequestsATransfer
+ *     TEST card 
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     TEST flow AMemberOverdrawsWithNotEnoughToDrawOn
  *     TEST invest AMemberBuysAStakeInTheClub
@@ -523,6 +529,8 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST demographics ACompanyAgentRunsTheDemographicsQuery
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesANewRecurringDonation
+ *     TEST investinterest AMemberExpressesInterest
+ *     TEST investinterest ANonmemberExpressesInterest
  *     TEST invest AMemberJoinsTheInvestmentClub
  *     TEST invest AMemberCompanyJoinsTheInvestmentClub
  *     TEST invest AnAdministratorViewsTheInvestmentPage
@@ -625,7 +633,8 @@ function with($content) {return weShow($content);}
 /**
  * without: (ARG)
  *
- * in: TEST invest MembersRateAProposedInvestment
+ * in: TEST investinterest AMemberExpressesInterest
+ *     TEST invest MembersRateAProposedInvestment
  *     TEST invest TheClubBuysShares
  *     TEST invest AClubAdministratorHandlesRequestsToCashOut
  *     TEST invest TheInvestmentClubIssuesDividends
@@ -660,7 +669,7 @@ function without($content) {
 /**
  * with options: (ARG)
  *
- * in: 
+ * in: TEST card 
  */
 function withOptions($options, $debug = TRUE) {return t\shownWith($options, 'options', $debug);}
 
@@ -818,6 +827,8 @@ function usd($list) {return t\usd($list);}
  *     MAKE download AMemberDownloadsIncomingInvoicesForThePastYear
  *     MAKE gift AMemberDonates
  *     MAKE gift AMemberMakesANewRecurringDonation
+ *     MAKE investinterest AMemberExpressesInterest
+ *     MAKE investinterest ANonmemberExpressesInterest
  *     MAKE invest AMemberJoinsTheInvestmentClub
  *     MAKE invest AMemberCompanyJoinsTheInvestmentClub
  *     MAKE invest AnAdministratorViewsTheInvestmentPage
@@ -1175,6 +1186,7 @@ function statisticsGetSet($time) {
  *
  * in: MAKE backing AMemberDecreasesBackingAmount
  *     MAKE bank ASlaveMemberRequestsATransfer
+ *     MAKE card 
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     BOTH coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
@@ -2209,3 +2221,10 @@ function weExitShowing($ray) {
  * in: MAKE card 
  */
 function memberHasPicture($id, $picture) {return t\hasPic($id, $picture);}
+
+/**
+ * cryptcookie (ARG) is (ARG)
+ *
+ * in: MAKE card 
+ */
+function cryptcookieIs($nm, $v) {return cookieIs($nm, u\ry('C', $v));}

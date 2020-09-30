@@ -1070,8 +1070,8 @@ function moveTxsToSubco($coQid, $custQids, $co2Qid) {
   $coA = r\acct($coQid); $coid = $coA->id;
   $co2A = r\acct($co2Qid); $co2id = $co2A->id;
   foreach (ray($custQids) as $qid) {
-    $uid = r\acct($qid)->id;
-    $uids[] = $uid;
+    if (!$a = r\acct($qid)) continue;
+    $uids[] = $uid = $a->id;
     $xids = db\col('xid', 'txs', ':uid IN (uid1, uid2) AND :coid IN (uid1, uid2)', compact(ray('uid coid')));
     if (!$xids) continue;
     $tableFlds = ray('tx_entries_all:uid agentUid, tx_hdrs_all:actorId actorAgentId, tx_disputes_all:uid agentUid');

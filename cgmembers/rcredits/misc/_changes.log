@@ -1,3 +1,23 @@
+2020-09-30 feature/cookies
+. card page now uses cookies to track default account to charge from, default agent, and "trust this device"
+. card page: added JS, so the page actually works!
+
+2020-09-29 feature/sweep
+. null amount in a "pay" template now sweeps all but the account's target balance into another account
+
+2020-09-29 feature/never
+. "never" is now a frequency option for notices
+
+2020-09-29 feature/invest-interest
+. revised Invest page, which now redirects to InvestInterest page if signed out or no club in the area
+. introduced iclubq bit to track interest in investment club
+. reversed transactions now appear simply as (reverses tx #whatever) -- no description
+. \n is now accepted in test data (meaning EOL)
+. changed customer statements "Paid" column to "Credits"
+. fixed bug in expected donations query that omitted monthly, weekly, and quarterly donations
+. fixed bug in w\eLinkAcct() that caused failure of allow='any'
+. zapped B_WEEKLY and B_MONTHLY
+
 2020-09-28 feature/ape
 . added an admin function (moveTxsToSubco) to more Co-op Power transactions to a subsidiary
 . partner logos are now stored as the account photo (temporary, pending using SMT for solar signups)
