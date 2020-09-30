@@ -15,7 +15,7 @@ function formCard($form, &$sta, $dom = '', $code = '') {
   global $mya;
   
   if (!$mya) {
-    extract(just('trust scanner', $_COOKIE), NULL);
+    extract(just('trust scanner', $_COOKIE, NULL));
     $qid = r\cryptCook('qid');
     if (!$trust or !$scanner or !$qid or !$mya = r\acct($scanner, $qid)) return w\softErr(t('You are not signed in. Sign in and consider checking "Trust this device".'));
   }

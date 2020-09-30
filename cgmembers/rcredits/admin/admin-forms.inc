@@ -147,7 +147,7 @@ function formAdminPanel_submit($form, &$sta) {
   } elseif ($op == 'seeChanges') {
     w\go("sadmin/changes/$a->mainQid");
   } elseif ($op == 'ssnLink') {
-    w\say($a->fullName. t(' SSN Link:<br><br> &nbsp; %PROMO_URL/do/doSsn~%qid~%code &nbsp; ', 'qid code', $a->mainQid, $a->emailCode));
+    w\say($a->fullName. t(' SSN Link:') . tr('<br><br> &nbsp; %BASE_URL/do/doSsn~%code &nbsp; ', 'code', $a->doCode()));
   } elseif ($op == 'do1099k' or $test1099 = ($op == 'do1099ktest')) {
     include_once __DIR__ . '/../cg-yearly.inc';
     r\Special\do1099s(TEN99K, nn($test1099));

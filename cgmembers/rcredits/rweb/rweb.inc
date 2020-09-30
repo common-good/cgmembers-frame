@@ -25,7 +25,7 @@ define('UPLOAD_DIR', dirname($_SERVER['DOCUMENT_ROOT']) . '/public_ftp/incoming'
 
 /**
  * Show a form called from a form linked to in an email or during signup, without signing in.
- * For example, /do/doEvents~NEWAAA~abcd123~ (in MailChimp: /do/doEvents~*|ID|*~*|ECODE|*~)
+ * For example, /do/doEvents~<code> (in MailChimp: /do/doEvents~*|CODE|*)
  */
 function formProx($form, &$sta, $args) {
   extract(just('page', $args0 = $args));

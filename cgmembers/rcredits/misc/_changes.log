@@ -1,3 +1,8 @@
+2020-09-30 feature/invest-interest2
+. changed rdo.inc to allow doInvestInterest~ without code (for nonmembers)
+. bypassed weird bug that crashed on admin signin, trying to set additional cookies
+. changed all instances of /do/ to use the new syntax /do/<op>~<code>
+
 2020-09-30 feature/cookies
 . card page now uses cookies to track default account to charge from, default agent, and "trust this device"
 . card page: added JS, so the page actually works!

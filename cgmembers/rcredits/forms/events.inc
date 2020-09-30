@@ -15,7 +15,7 @@ include_once R_ROOT . '/rvote/rvote-results.inc';
  * Provide infrastructure for members to discuss and vote.
  * @param string $args: miscellaneous parameters
  * @param string $qid: account QID when called from rdo() (from email link)
- * In MailChimp, use this link for voting links or buttons: https://new.CommonGood.earth/do/doEvents~*|ID|*~*|Ecode|*~~
+ * In MailChimp, use this link for voting links or buttons: https://new.CommonGood.earth/do/doEvents~*|CODE|*
  
 To get a list of proposal comments:
 

@@ -93,9 +93,11 @@ function formSignin_submit($form, &$sta, $goto = 'summary') {
   $uid = r\loginString($name);
   $mya = r\setAcct($uid, $sta);
 
-  r\setCryptCook('qid', $mya->mainQid, NULL);
-  r\setCook('trust', $mya->admin2 ? 0 : ($trust ? 1 : 0));
-  r\setCook('scanner', $mya->mainQid); // scan QRs with last account used
+  if (!$mya->superAdmin) { // why does this fail for superAdmin? (but who cares?)
+    r\setCryptCook('qid', $mya->mainQid, NULL);
+    r\setCook('trust', $mya->admin2 ? 0 : ($trust ? 1 : 0));
+    r\setCook('scanner', $mya->mainQid); // scan QRs with last account used
+  }
   
   u\loga('signin', ['name' => $mya->name]);
   if (isSTAGE and !$mya->cAdmin) f('a.makeTestAdmins'); // make sure rCOs can test stuff
