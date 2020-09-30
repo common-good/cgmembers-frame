@@ -1648,6 +1648,7 @@ X;
    */
   public function photoHtml($small = FALSE, $unique = FALSE) {
     $a = $this;
+    if (test()) return $a->photo;
     return '<div id="user-picture"><img src="' . $a->photoSrc($small, $unique) . '" alt="profile picture" /></div>';
   }
   

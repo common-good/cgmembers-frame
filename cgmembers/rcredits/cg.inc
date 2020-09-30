@@ -526,8 +526,8 @@ function setCook($key, $value, $expires = NULL, $raw = FALSE) {
   return $value;
 }
 
-function setCryptCook($k, $v) {return setCook($k, substr(u\cry('C', $v), 3), 0, TRUE);}
-function cryptCook($k) {return ($v = nni($_COOKIE, $k)) ? u\decry('C', CRYPT_FLAG . 'C' . $v) : '';}
+function setCryptCook($k, $v, $expires = NULL) {return setCook($k, u\ry('C', $v), $expires, TRUE);}
+function cryptCook($k) {return ($v = nni($_COOKIE, $k)) ? u\dery('C', $v) : '';}
 
 /**
  * Return the unformatted private key for highly sensitive data (use u\fmtKey() to get the formatted key).

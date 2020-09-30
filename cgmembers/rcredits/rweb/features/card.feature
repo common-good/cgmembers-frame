@@ -15,14 +15,31 @@ Setup:
   And member is logged out
 
 Scenario: 
-  Given cookie "qid" is "NEWZZA"
+  Given members have:
+  | uid  | selling   |*
+  | .ZZC | groceries |
+  And cryptcookie "qid" is "NEWZZB"
+  And cookie "scanner" is "NEWZZC"
   And cookie "trust" is "1"
   And member ".ZZA" has picture "picture1"
-  When member "?" visits page "/card/6vm/KDJIAa1"
+  When member "?" visits page "card/6vm/KDJIAa1"
   Then we show
-  | picture1   ||
-  | Abe One    ||
-  | Aville, AL ||
-  | Amount     ||
-  | For        | groceries |
-  | Charge     ||
+  | You: Our Pub ||
+  | picture1     ||
+  | Abe One      ||
+  | Aville, AL   ||
+  | Amount       ||
+  | For          ||
+  | Charge       ||
+  And with options:
+  | groceries |
+  
+  When member "?" confirms form "card/6vm/KDJIAa1" with values:
+  | op     | amount | desc      |*
+  | charge | 10     | groceries |
+  Then we say "status": "report tx" with subs:
+  | did     | otherName | amount |*
+  | charged | Abe One   | $10    |
+  And transactions:
+  | xid | created | amount | payer | payee | purpose   | taking |*
+  |   1 | %today  |     10 | .ZZA  | .ZZC  | groceries | 1      |

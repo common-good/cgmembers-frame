@@ -1,3 +1,7 @@
+2020-09-30 feature/cookies
+. card page now uses cookies to track default account to charge from, default agent, and "trust this device"
+. card page: added JS, so the page actually works!
+
 2020-09-29 feature/sweep
 . null amount in a "pay" template now sweeps all but the account's target balance into another account
 

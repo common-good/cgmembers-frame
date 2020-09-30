@@ -392,10 +392,15 @@ body.page-partner blockquote {font-size:14px;}
 #frm-card #edit-title h3 {font-size:15px; margin:10px 0;}
 #frm-card #edit-photo img {border:1px solid silver; max-width:70%;}
 
-#frm-card .form-item-submit .control-data,
+#frm-card .form-item-buttons {text-align:center;}
+#frm-card .form-item-buttons .btn {margin:0 30px;}
+
 #frm-card #edit-title,
 #frm-card #edit-photo,
 #frm-card #edit-subtext {text-align:center;}
+
+#frm-card .form-item-desc,
+#frm-card #edit-go {display:none;}
 
 /* Grant */
 #frm-grant li {margin-bottom:10px;}

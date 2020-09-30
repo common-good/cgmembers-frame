@@ -18,7 +18,7 @@ function formTrack($form, &$sta, $code = '') {
 
 /**/ if (!$code or !$ray = u\decryRay($code)) die(t('bad tracking'));
   extract(just('qid type', $ray, NULL));
-  if (!$type) die(t('bad tracking: ') . plain(pr($ray)));
+/**/  if (!$type) die(t('bad tracking: ') . plain(pr($ray)));
   $uid = ($qid and $a = r\acct($qid)) ? $a->id : NULL;
   
   $info = compact(ray('uid type'));
@@ -27,5 +27,5 @@ function formTrack($form, &$sta, $code = '') {
   db\updateOrInsert('u_track', $info);
   
   header('Content-Type: image/gif');
-  echo base64_decode(PIXEL);  
+/**/  echo base64_decode(PIXEL);  
 }

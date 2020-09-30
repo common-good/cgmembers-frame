@@ -741,7 +741,7 @@ define('CRYPT_FLAG', '`!'); // flag start of encrypted data (add a single type l
  * encrypt an array for use in URLs
  */
 function cryRay($ray) {
-  $res = substr(u\cry('P', serialize($ray)), strlen(CRYPT_FLAG));
+  $res = ry('P', serialize($ray));
   if (test()) t\doCode($res); // must be on separate line (PHP bug)
   return $res;
 }
@@ -752,7 +752,7 @@ function cryRay($ray) {
 function decryRay($code) {
   if ($code == 'TESTDOCODE') $code = t\doCode(); // test()
   try {
-    return unserialize(u\decry('P', CRYPT_FLAG . $code));
+    return unserialize(u\dery('P', $code));
   } catch (\Exception $e) {return '';}
 }
 
@@ -1631,3 +1631,5 @@ function padRay($ray, $n, $fill = '') {for ($i = 0; $i < $n; $i++) $ray[] = $fil
 function isMobile() {return preg_match(MOBILE_REGEX, $_SERVER['HTTP_USER_AGENT']);}
 function rayify($ray) {$res = []; foreach ($ray as $k => $v) $res[] = "$k:$v"; return join(',', $res);}
 function joinRays($ray1, $ray2) {foreach ($ray2 as $k) $ray1[] = $k; return $ray1;}
+function ry($type, $data) {return substr(u\cry($type, $data), strlen(CRYPT_FLAG));}
+function dery($type, $code) {return u\decry($type, CRYPT_FLAG . $code);}

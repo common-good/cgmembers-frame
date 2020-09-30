@@ -123,7 +123,8 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
 /**
  * member (ARG) confirms form (ARG) with values: (ARG)
  *
- * in: MAKE cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
+ * in: MAKE card 
+ *     MAKE cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     MAKE cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
  *     MAKE cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     MAKE cgbutton AMemberRedeemsStoreCredit
@@ -284,6 +285,7 @@ function members($list) {return t\members($list);}
  *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST bank AMemberWithANegativeBalanceRequestsATransferFromTheBank
+ *     TEST card 
  *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     TEST cgbutton AMemberRedeemsStoreCredit
@@ -329,6 +331,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST bank AMemberMovesTooMuchToTheBank
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST bank ASlaveMemberRequestsATransfer
+ *     TEST card 
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     TEST flow AMemberOverdrawsWithNotEnoughToDrawOn
  *     TEST invest AMemberBuysAStakeInTheClub
@@ -666,7 +669,7 @@ function without($content) {
 /**
  * with options: (ARG)
  *
- * in: 
+ * in: TEST card 
  */
 function withOptions($options, $debug = TRUE) {return t\shownWith($options, 'options', $debug);}
 
@@ -1183,6 +1186,7 @@ function statisticsGetSet($time) {
  *
  * in: MAKE backing AMemberDecreasesBackingAmount
  *     MAKE bank ASlaveMemberRequestsATransfer
+ *     MAKE card 
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     BOTH coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
@@ -2217,3 +2221,10 @@ function weExitShowing($ray) {
  * in: MAKE card 
  */
 function memberHasPicture($id, $picture) {return t\hasPic($id, $picture);}
+
+/**
+ * cryptcookie (ARG) is (ARG)
+ *
+ * in: MAKE card 
+ */
+function cryptcookieIs($nm, $v) {return cookieIs($nm, u\ry('C', $v));}
