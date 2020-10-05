@@ -7,6 +7,9 @@
 . added Type dropdown to posts page, and colored posts green/blue/orange
 . fixed formatting of advanced buttons on Tx page
 . form Empty now displays a blank title (a silver stripe on mobile)
+. fixed errors in CSS (http://csslint.net)
+. added COVID, BLM, and O&N links to console page
+. eliminated "exchange" language, in favor of "transfer"
 
 2020-09-30 feature/invest-interest2
 . changed rdo.inc to allow doInvestInterest~ without code (for nonmembers)

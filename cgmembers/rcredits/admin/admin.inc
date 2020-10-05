@@ -817,35 +817,6 @@ function printCheck(&$ck, $pos, $tx, $mark) {
   if (!$deposit and $mark) db\update('r_usd', ray('deposit txid', today(), $txid), 'txid');
 }
 
-/**
- * Do automatic stuff that can be done only when superAdmin signs in
- */
-function adminSignin() {
-  global $box;
-  //  $pw2 = @$_COOKIE['pw2'];
-  //  u\EXPECT($pw2, 'no pw2!');
-  
-  /*  $q = db\q("SELECT txid,payee,bankAccount FROM r_usd WHERE bankAccount NOT LIKE ':CRYPT_FLAG%'");
-      while ($row = $q->fetchAssoc()) {
-      extract($row);
-      if (substr($bankAccount, 0, 2) == 'US') {
-      $bankAccount = r\crypt($bankAccount . '', 0, $pw2);
-      db\update('r_usd', compact('txid', 'bankAccount'), 'txid');
-      w\say(t('bank account super-encrypted in exchange record #%txid.', compact('txid')));
-      } else r\tellAdmin('bad bank account in exchange record', ray('txid b0 hex', $txid, $b0, bin2hex($b0)));
-
-      $a = r\acct($payee);
-      if ($b0 = $bankAccount = $a->bankAccount and !u\starts($a->secure['bankAccount'], CRYPT_FLAG)) {
-      if (substr($bankAccount, 0, 2) == 'US') {
-      //        $bankAccount = u\crypt($bankAccount . '', 0, $pw2);
-      $a->update(compact('bankAccount')); // might be different (newer) than in r_usd (super-encryption is automatic)
-      w\say(t('bank account super-encrypted for user %user', 'user', $a->fullName));
-      } else r\tellAdmin('bad bank account', ray('b0 hex', $b0, bin2hex($b0)));
-      }
-      }
-  */
-}
-
 /*
   function moveFieldsToHidden() {
   $q = db\q("SELECT uid FROM users WHERE uid<>0");

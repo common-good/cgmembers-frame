@@ -351,7 +351,7 @@ function authcode($args = '', $exit = TRUE) {
  */
 function formCgBiz($form, &$sta, $id) {
   if (!nn($id) or !$a = r\acct(strtoupper($id)) or !$a->ok) return w\go('', t('That is not a %PROJECT Business.'));
-  w\go('member/' . $a->name, t('<big><b>%fullName</b> is a %PROJECT Business since %activated.</big> For more information about Common Good, <%a>click here</a>.', 'fullName activated _a', $a->fullName, u\fmtDate($a->activated), atag(r\promoLink(''))));
+  w\go('member/' . $a->name, t('<big><b>%fullName</b> is a %PROJECT Business since %activated.</big> For more information about %PROJECT, <%a>click here</a>.', 'fullName activated _a', $a->fullName, u\fmtDate($a->activated), atag(r\promoLink(''))));
 }
 
 /**
@@ -466,9 +466,9 @@ function formFooter() {
   $helpType = $mya ? '' : 'other';
   
   $markup = "<hr><div id=\"footer-menu\">$extraLinks" . t(<<<EOF
-|   <%aSite>About %PROJECT</a> |
+|   <%aSite>About Us</a> |
     <%aAgree>The Agreement</a> |
-    <%aSecurity>Privacy & Security</a> |
+    <%aSecurity>Security</a> |
     <%aHelp>Help</a>
 <br>&nbsp;
 </div>
@@ -477,7 +477,6 @@ copyright &copy; %year <%aSite>%PROJECT<sup> &reg;</sup></a><span id="footer-det
 %CGF_PHONE &nbsp; <%aEmail>%CGF_EMAIL</a><br>
 <br>
 IP: %ip</span>
-<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>&nbsp;
 EOF
   , '_aSite _aAgree _aSecurity _aHelp year _aEmail ip', atag(r\promoLink('about-us')), atag('/community/agreement'), atag(r\promoLink('about-us/privacy-and-security')), atag("/help/$helpType"), $year, u\emailTag(CGF_EMAIL), $_SERVER['REMOTE_ADDR']);
 //    <%aCttys>Communities</a> |

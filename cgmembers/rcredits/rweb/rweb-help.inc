@@ -258,9 +258,9 @@ X
          <li>transfer US Dollars from your bank account.</li>
      </ul>
      <p>Complementarily, if the system ends and you have a positive balance, you can:</p>
-     <ul><li>continue to make purchases with your credits for a limited time OR</li>
-         <li>trade them to another member in exchange for US Dollars OR</li>
-         <li>transfer them to your bank account.</li>
+     <ul><li>continue to make purchases with your credit for a limited time OR</li>
+         <li>pay it to another member in exchange for cash OR</li>
+         <li>transfer it to your bank account.</li>
      </ul>
      <p>We all make this agreement so if the system closes down, everyone is protected.</p>
 		 <p>However, if you and your %PROJECT Community have made mistakes in handling the Community's Dollar Pool and you need to close down when there are no longer enough Dollars in the Pool to redeem the %RCREDITS in circulation, the value of everyone's %RCREDITS will be proportionately diminished, as you are settlings the accounts and closing down.</p>

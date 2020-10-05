@@ -1,10 +1,9 @@
 <?php
 /**
  * @file
- * rCredits
+ * Common Good (originally "rCredits")
  *
- * A module for the rCredits financial system.
- * This module implements rCredits as an extension to Community Accounting (mcapi).
+ * A module for the Common Good democratic economics system.
  *
  * PURPOSE:
  * Specifically, this module keeps track of and manages the following:
@@ -18,21 +17,6 @@
  * CREDIT ISSUANCE:
  * In the %PROJECT system, credit is always issued as a Ricardian Contract
  * (see http://www.systemics.com/docs/ricardo/issuer/contract.html).
- * Initially, for the first 6 months, credit will be issued only by the Society to Benefit Everyone, Inc.,
- * for rebates, bonuses, and inflation adjustments. That credit will be backed by the membership
- * promise of each participant.
- *
- * After 6 months, we expect that Common Good Communities will be the sole issuers of rCredits.
- * At that time, all participants will exchange their rCredits one-for-one for new rCredits issued
- * jointly by themselves (that is, by their Common Good Community). The new contract will spell out
- * the financial relationship between Common Good Communities.
- *
- * STRUCTURE:
- * rCredits is the central engine
- * separate modules handle the various transaction channels: rSMS, rSmartphone, rBrowser, etc.
- * rIssue handles credit issuance.
- * 
- * a companion module, rDemocracy, handles participatory financial decision-making
  */
 
 require_once 'cg.inc';

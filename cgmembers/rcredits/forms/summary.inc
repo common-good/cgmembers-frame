@@ -17,12 +17,6 @@ function formSummary($form, &$sta) {
   global $base_url;
   global $mya; $myid = $mya->id;
 
-  $special = NULL;
-  
-  if ($mya->ok and !$mya->co) {
-    $special = t('<h4>%PROJECT response to COVID-19</h4>It\'s up to us. Support our local businesses and nonprofits!<ul><li><%aBuyCredit>Buy Credit</a></li><li><%aStepups>Make Step-up Contributions</a></li><li> <%aBack>Increase Your Backing</a></li><li><%aInvite>Invite Someone</a></li></ul>', '_aBuyCredit _aStepups _aBack _aInvite', atag('/community/buy-credit'), atag('/community/stepup'), atag('/community/backing'), atag('/community/invite', clas('invite')));
-  }
-
   if ($mya->closed) say(t('Your account is closed, but you can still see your account history.'));
 
   $stepUrl = $mya->nextStepUrl('', $msg);
@@ -120,7 +114,7 @@ function formSummary($form, &$sta) {
   
   jsx('summary');
   
-  return cgform(compact(ray('special')) + $form);
+  return cgform($form);
 
 }
 

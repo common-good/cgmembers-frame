@@ -56,9 +56,14 @@ function doit(what, vs) {
     break;
 
   case 'console':
+    $('#endorse a').click(function () {$('#endorse').hide();});
+    $('#covid').click(function () {location.href = baseUrl + '/community/covid';});
+    $('#blm').click(function () {location.href = 'https://commongood.earth/about-us/diversity-equity-inclusion';});
+    $('#onn').click(function () {location.href = baseUrl + '/community/posts';});
+    break;
+    
   case 'summary':
     $('#activate-credit').click(function () {post('setBit', {bit:'debt', on:1}, report);});
-    $('#endorse a').click(function () {$('#endorse').hide();});
     break;
     
   case 'tx':

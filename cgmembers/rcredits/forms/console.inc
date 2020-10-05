@@ -20,8 +20,7 @@ function formConsole($form, &$sta) {
   $special = $endorse = NULL;
   
   if ($mya->ok and !$mya->co) {
-  $special = t('<b>%PROJECT response</b> to <%aCovid>COVID-19</a> | <%aBlm>BLM</a>', '_aCovid _aBlm', 'a id="covid"', 'a id="blm"');
-  $special2 = t('<h3>It\'s up to us. Support our local businesses and nonprofits!</h3><ul><li><%aBuyCredit>Buy Credit</a></li><li><%aStepups>Make Step-up Contributions</a></li><li> <%aBack>Increase Your Backing</a></li><li><%aInvite>Invite Someone</a></li></ul>', '_aBuyCredit _aStepups _aBack _aInvite', atag('/community/buy-credit'), atag('/community/stepup'), atag('/community/backing'), atag('/community/invite', clas('invite')));
+    $special = t('|<%aCovid>%PROJECT COVID-19 response</a> | <%aBlm>BLM</a> | <%aOnN>Offers & Needs</a>', '_aCovid _aBlm _aOnN', 'a id="covid"', 'a id="blm"', 'a id="onn"');
     if (!$mya->shouter and $mya->hasPhoto) { // (don't ask partial accounts to endorse)
       $endorseText = t('<h2>We need your help to grow.</h2>');
       $endorseBtn = btn('/community/invite', t('Endorse %PROJECT'), 'success', 'large');
