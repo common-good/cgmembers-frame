@@ -1,3 +1,6 @@
+2020-10-04 feature/license
+. changed license to reserve all rights except for intended use
+
 2020-10-04 feature/mobile
 . created a new mobile-friendly Console page to replace Summary (except for admins)
 . moved qr() function from qo class to admin.inc
