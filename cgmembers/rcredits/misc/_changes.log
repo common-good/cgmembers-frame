@@ -1,3 +1,13 @@
+2020-10-04 feature/mobile
+. created a new mobile-friendly Console page to replace Summary (except for admins)
+. moved qr() function from qo class to admin.inc
+. fixed Qo::qr2() function so it works (previously unused, now used on Card page)
+. added "trust" and "qid" cookies, so user can sign in automatically and stay signed in
+. iPhone users (and anyone with a device that scans) can use a standard QR reader app to scan a Common Good card!
+. added Type dropdown to posts page, and colored posts green/blue/orange
+. fixed formatting of advanced buttons on Tx page
+. form Empty now displays a blank title (a silver stripe on mobile)
+
 2020-09-30 feature/invest-interest2
 . changed rdo.inc to allow doInvestInterest~ without code (for nonmembers)
 . bypassed weird bug that crashed on admin signin, trying to set additional cookies

@@ -55,17 +55,18 @@ function doit(what, vs) {
     });
     break;
 
+  case 'console':
   case 'summary':
     $('#activate-credit').click(function () {post('setBit', {bit:'debt', on:1}, report);});
     $('#endorse a').click(function () {$('#endorse').hide();});
     break;
     
   case 'tx':
-    $('.btn-delay').click(function () {
+    $('#btn-delay').click(function () {
       $('.form-item-start').show();
       $('#edit-start').focus();
     });
-    $('.btn-repeat').click(function () {
+    $('#btn-repeat').click(function () {
       $('.form-item-periods, .form-item-end').show();
       $('#edit-periods').val(1).focus();
     });
@@ -420,8 +421,9 @@ function doit(what, vs) {
 
     $('#list .tbody .row').click(function () {location.href = $(this).find('a').attr('href');}); // click any part of box
        
-    $('#edit-cat, #edit-terms, #edit-sorg').change(function () {
+    $('#edit-type, #edit-cat, #edit-terms, #edit-sorg').change(function () {
       var box = $('#list');
+      var type = $('#edit-type').find(':selected').val();
       var cat = $('#edit-cat').find(':selected').val();
       var terms = $('#edit-terms').find(':selected').val();
       var sorg = $('#edit-sorg').find(':selected').val();
@@ -430,6 +432,7 @@ function doit(what, vs) {
         $('#edit-search').change();
       } else if (cat || terms || sorg) { // show some
         var sel = '.tbody .row';
+        if (type >= 0) sel += '.t' + type;
         if (cat > 0) sel += (cat == vs['myPosts']) ? '.mine' : ('.c' + cat);
         if (terms >= 0) sel += '.x' + terms;
         if (sorg >= 0) sel += '.s' + sorg;

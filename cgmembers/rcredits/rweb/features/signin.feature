@@ -21,21 +21,21 @@ Scenario: A member signs in with username on the member site
   | name   | pass |*
   | abeone | a1   |
   Then member ".ZZA" is logged in
-  And we show "Account Summary"
+  And we show "You: Abe One"
 
 Scenario: A member signs in with account ID on the member site
   When member "?" confirms form "signin" with values:
   | name    | pass |*
   | newzza | a1   |
   Then member ".ZZA" is logged in
-  And we show "Account Summary"
+  And we show "You: Abe One"
 
 Scenario: A member signs in with email on the member site
   When member "?" confirms form "signin" with values:
   | name          | pass |*
   | a@example.com | a1   |
   Then member ".ZZA" is logged in
-  And we show "Account Summary"
+  And we show "You: Abe One"
 
 Scenario: A member types the wrong password
   When member "?" confirms form "signin" with values:
@@ -109,13 +109,13 @@ Scenario: A member clicks a link to reset password
   | pass1      | pass2      | strong |*
   | %whatever  | %whatever  | 1      |
   Then member ".ZZA" is logged in
-  And we show "Account Summary"
+  And we show "You: Abe One"
 
   Given member is logged out
   When member "?" confirms form "signin" with values:
   | name   | pass      |*
   | abeone | %whatever |
-  Then we show "Account Summary"
+  Then we show "You: Abe One"
   And member ".ZZA" is logged in
 
 Scenario: A member clicks a link to reset password with wrong code
@@ -125,7 +125,6 @@ Scenario: A member clicks a link to reset password with wrong code
   | a@example.com |
   When member "?" visits page "reset/id=NEWZZA&code=NOTwHatEveR"
   Then we say "error": "bad login"
-  And we show "Miscellaneous"
 
 Scenario: A member clicks a link to reset password for unknown account
   Given next random code is "wHatEveR"
@@ -134,4 +133,3 @@ Scenario: A member clicks a link to reset password for unknown account
   | a@example.com |
   When member "?" visits page "reset/id=NEWZZA&code=NOTwHatEveR"
   Then we say "error": "bad login"
-  And we show "Miscellaneous"

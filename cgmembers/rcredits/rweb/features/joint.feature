@@ -103,20 +103,10 @@ Scenario: A joined account member looks at transaction history and summary
   |   3 | %mdy-2w | --         | from bank |  400.00 | 1,800.00 |        |
   |   2 | %mdy-2w | --         | from bank |  600.00 | 1,400.00 |        |
   Given cron runs "acctStats"
-  When member ".ZZB" visits page "summary"
-  Then we show "Account Summary" with:
-  | ID            | ZZB |
-  | ~...          | (joint account) |
-  | Name          | Bea Two & Abe One |
-  | ~             | (beatwo & abeone) |
+  When member ".ZZB" visits page "console"
+  Then we show "You: Bea Two" with:
+  | ~...          | joined with Abe One |
   | Balance       | $1,850 |
-#  | Savings       | $530 |
-#  | ~rewards      | $530 |
-#  | Committed     | $0.60 |
-#  | Your return   | 21.9% | (sometimes is 20.2%)
-#  | ~ever         | 136.7% | or 137.1% (depends on daylight time?) or 68.0%?!
-#  | Social return | $68.75 |
-#  | including     | $0 |
 
   Scenario: A joined account member unjoins the account
   Given members have:
@@ -156,7 +146,7 @@ Scenario: A member requests two joins at once
   | .ZZA | .ZZB  | joint      |        0 |     0 |    0 |
   | .ZZA | .ZZD  | none       |        0 |     0 |    0 |
 
-Scenario: A member creates a joint account by clicking the Summary page button
+Scenario: A member creates a joint account by clicking a link on the Console page
   When member ".ZZA" completes form "prejoin" with values:
   | old | account |*
   |   1 | .ZZB    |

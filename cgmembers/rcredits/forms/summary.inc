@@ -17,48 +17,32 @@ function formSummary($form, &$sta) {
   global $base_url;
   global $mya; $myid = $mya->id;
 
-  $special = $endorse = NULL;
+  $special = NULL;
   
   if ($mya->ok and !$mya->co) {
     $special = t('<h4>%PROJECT response to COVID-19</h4>It\'s up to us. Support our local businesses and nonprofits!<ul><li><%aBuyCredit>Buy Credit</a></li><li><%aStepups>Make Step-up Contributions</a></li><li> <%aBack>Increase Your Backing</a></li><li><%aInvite>Invite Someone</a></li></ul>', '_aBuyCredit _aStepups _aBack _aInvite', atag('/community/buy-credit'), atag('/community/stepup'), atag('/community/backing'), atag('/community/invite', clas('invite')));
-    if (!$mya->shouter and $mya->hasPhoto) { // (don't ask partial accounts to endorse)
-      $endorseText = t('<h2>We need your help to grow.</h2>');
-      $endorseBtn = btn('/community/invite', t('Endorse %PROJECT'), 'success', 'large');
-      $skipLnk = lnk('', t('Skip for now'), clas('skipLnk'));
-      $endorse = item("<div id=\"endorse\"><div><div>$endorseText<br>$endorseBtn<br>$skipLnk</div></div></div>", BARE);
-    }
   }
-  
+
   if ($mya->closed) say(t('Your account is closed, but you can still see your account history.'));
 
   $stepUrl = $mya->nextStepUrl('', $msg);
   $extras = '<br>' . u\fmtPhone($mya->phone) . " ($mya->faxetc)<br>$mya->email ";
 
-  if ($mya->admin2 and !$mya->proSe) { // some kind of admin (but not self)
-    $form = adminSummary();
-    foreach (ray('photo legalName shortName community') as $k) if (nni($form, $k)) { // move these up (see return line)
-      $$k = $form[$k];
-      unset($form[$k]);
-    }
-
-    if (!$mya->isCtty and $mya->cAdmin) {
-      if ($mya->trialco or !$mya->co) $extras .= ' ' . a\cardLink($mya->id);
-      $extras .= ' ' . a\recropLink();
-    }
-    
-    if ($stepUrl == 'summary') {
-      if (nn($msg)) say(t('New member is told: ') . t($msg));
-    } elseif ($stepUrl) say(t('New member will be sent <%a>there</a> upon signing in.', '_a', atag("/$stepUrl")));
-    
-  } else { // normal
-    if ($stepUrl and $stepUrl != 'summary') {
-      if (r\referrer() == 'signin') return w\go($stepUrl, $msg); // go right to next step
-      say(t('To continue opening your %PROJECT account, <%a>click here</a>.', '_a', atag("/$stepUrl")));
-    }
-    if (nn($msg)) say($msg);
-    if ($mya->legalName != $mya->fullName and !$mya->depends) $legalName = item($mya->legalName, t('Legal Name:'));    
+  $form = adminSummary();
+  foreach (ray('photo legalName shortName community') as $k) if (nni($form, $k)) { // move these up (see return line)
+    $$k = $form[$k];
+    unset($form[$k]);
   }
 
+  if (!$mya->isCtty and $mya->cAdmin) {
+    if ($mya->trialco or !$mya->co) $extras .= ' ' . a\cardLink($mya->id);
+    $extras .= ' ' . a\recropLink();
+  }
+
+  if ($stepUrl == 'console') {
+    if (nn($msg)) say(t('New member is told: ') . t($msg));
+  } elseif ($stepUrl) say(t('New member will be sent <%a>there</a> upon signing in.', '_a', atag("/$stepUrl")));
+    
 //  extract(just('returnMo return cttyBeneMo cttyBene', $mya->j_stats()));
   $gifts = u\fmtAmt($mya->totalGifts());
 //  $cttyBene = item("$cttyBeneMo " . t('over the past month') . "<br>$cttyBene " . t('overall (ever), including %gifts in contributions', compact('gifts')), t('Social return:'), t('Financial benefit to your community to date, from your participation together with other members, empowering economic democracy! [<%a>details</a>]', '_a', atag('/help/social-return')));  
@@ -106,16 +90,6 @@ function formSummary($form, &$sta) {
     $creditLine = $mya->underage ? NULL : item($credit, t('Credit Line:'), t('Based%normally on your account\'s average monthly activity over the past 6 months.', compact('normally')), w\suffix($suffix));
 //    $committed = item(u\fmtAmt(max(0, $mya->committed)), t('Committed:'), t('reserved for donation to Common Good Finance'));
 
-/*    $successes = db\count('users', 'helper=:myid AND activated<>0', compact('myid'));
-    $invites = max($successes, db\count('r_invites', 'inviter=:myid', compact('myid')));
-    $doInvite = $mya->cAdmin 
-    ? w\btn('/community/invite/print', t('front')) . ' ' . w\btn($mya->invitationBack(), t('back'))
-    : t('<small>[<%a>invite someone</a>]</small>', '_a', atag('/community/invite'));
-    $invites = item(t('You have invited at least %invites people (%successes are now members). ', compact('invites', 'successes')) . $doInvite, t('Invitations:'));
-  */
-  
-    $choiceList = choiceListFld();
-    
   } else $acctType = t('community account');
 
   if ($mya->cAdmin) {
@@ -128,7 +102,7 @@ function formSummary($form, &$sta) {
   } else $extra = '';
   $accountId = item(($mya->mainQid ?: 'N/A') . '<span class="white">..</span>' . "($acctType)$extra", t('ID:')); // .. is for double-click select
 
-  $fields0 = 'photo title clickPhoto showCustomers shortcuts accountId accountName address legalName shortName community balance newBalance creditLine creditLimit committed choiceList';
+  $fields0 = 'photo title clickPhoto showCustomers shortcuts accountId accountName address legalName shortName community balance newBalance creditLine creditLimit committed';
 //  foreach (ray('details') as $k) $$k = @$form[$k]; unset($form[$k]); // put these on the left if admin
 //  $fields = @compact(ray($fields));
   $fields = []; foreach (ray($fields0) as $k) if (isset($$k)) $fields[$k] = $$k;
@@ -146,7 +120,8 @@ function formSummary($form, &$sta) {
   
   jsx('summary');
   
-  return cgform(compact(ray('special endorse')) + $form);
+  return cgform(compact(ray('special')) + $form);
+
 }
 
 function formSummary_validate($form, &$sta) {
@@ -159,10 +134,6 @@ function formSummary_validate($form, &$sta) {
   if ($dob and !formBasic_validate($form, $sta, FALSE, 'dob')) return;
   if ($altId xor $altSt) return say(t('You must give both an Alternate ID and a state or neither. If it\'s not a driver\'s license, describe the ID type in one or two words at the start of the number; for example "US Passport #12345". If there is no state, choose "AA".'), 'altId');
   
-/*  if (in(nn($federalId), [R_ON_FILE, t('SSN')])) {
-    unset($sta['input']['federalId']);
-  } elseif (@$federalId and $err = u\badSsn($federalId, $mya->dob)) return say($err, ['what' => 'federalId'], 'federalId');
-*/
   if (nn($helper)) {
     if (!$h = whois($helper, 'helper', $sta['input'])) return say(t('I don\'t know what helper account you mean.'), 'helper');
     $helper = $h->id;
@@ -210,12 +181,6 @@ function formSummary_submit($form, &$sta) {
     $mya->stepDone('verifyid');
   }
 
-/*
-  if ($federalId and $federalId != $mya->federalId) {
-    $mya->update(compact('federalId')); // must precede activate()
-    $mya->update('ssnData', '');
-  } */
-  
   if ($mya->cAdmin or $mya->admin) setRisksAndFlags($mya, nn($risks), nn($adminable)); // don't test for isset (allow turning off all bits); must precede activate() because that function sets ssnOff bit
     
   if (!$mya->isCtty) {
@@ -311,64 +276,6 @@ function activate($helper) {
   
   unset($DBTX); 
 }
-
-/**
- * Return the right specifics to include in the welcome email.
- *//*
-function getSpecifics($mya) {
-  $forOver1000 = t('This is a trial account. You will need to complete some additional steps to accept more than $1,000 through %PROJECT.');
-  $onlineOnly = t('Your account is limited to payments online. ');
-  $acceptPayments = $onlineOnly . t('To accept payments through %PROJECT you will need to complete some additional steps.');
-  $finishCo = t(' <%a>Click here</a> to get started on that, by opening a personal account. Then sign back in to your company account and click "Finish" under Next Steps.', '_a', w\atag(BASE_URL . '/signup'));
-  $cardComing = t('You may now make purchases through the Common Good system, including using your Common Good card at member businesses. Expect your Common Good card to arrive in the mail within a few days.');
-  $getCard = t('To request a free %PROJECT card,');
-  $getSell = t(' accept payments through %PROJECT,');
-  $otherSteps = t(' or participate in the %PROJECT democracy, sign back in to your account and choose from the Next Steps listed there.');
-  
-  list ($cardWorthy, $canSell) = [$mya->stepsDone('card'), $mya->stepsDone('sell')];
-  
-  return str_replace(t('To or '), t('To '), $mya->co
-  ? ($mya->trialco ? $forOver1000 . $finishCo : ($mya->stepsDone('co2') ? '' : ($acceptPayments . $finishCo)))
-  : (($cardWorthy ? $cardComing . t(' To') : ($onlineOnly . $getCard)) . ($canSell ? '' : $getSell) . $otherSteps));
-}*/
-
-/**
- * Return a list of important next steps for the account.
- * @todo: add comment as an option?
- */
-function choiceListFld() {
-  global $mya;
-  if ($mya->cAdmin) return NULL;
-  
-  $warning = t('<b class="loud">NOTE!</b> Once you click this step, your account will be temporarily deactivated and you will need to finish all steps before it can be reactivated.');
-  $choices0 = explode("\n", t(<<< X
-    community:invite:Invite:Invite a friend or company to join.<br><small>Your local Community Fund gets $2 for every invitation you send!</small>
-    community:donate:Give:Make a donation to %PROJECT.
-    community:comment:Comment:Send a comment, question, or suggestion.
-    scraps:person:Finish:Finish opening your account.<br><small>Get a %PROJECT payment card, accept payments (including discount rebates), and participate in %PROJECT economic democracy.</small>
-    scraps:co:Finish:Finish opening your complete company account.
-X
-  ));
-    
-  foreach($choices0 as $one) {
-    list ($dir, $task, $title, $text) = explode(':', trim($one));
-
-    if ($dir == 'community') {
-      $kch = "<div>$title</div><div>$text</div>";
-    } else {
-      $steps = $mya->stepCount($task);
-      $kch = $steps ? tr("<div>$title</div><div>$text (%steps)</div>", 'steps', $steps . t(' steps')) : NULL;
-    }
-    ${$task . 'Ch'} = $kch ? ["$dir/$task" => $kch] : [];
-  }
-    
-  list ($task, $finishCh) = $mya->co ? ['co', $coCh] : ['person', $personCh];
-  $choices = $mya->stepCount($task) ? $finishCh : [];
-  $choices += $inviteCh + $donateCh + $commentCh;
-  $choiceList = t('<h3>Next Steps</h3>') . "\n";
-  foreach ($choices as $url => $desc) if (!empty($desc)) $choiceList .= w\lnk("/$url", $desc) . "\n";
-  return item($choiceList . "\n");
-}  
 
 /**
  * Return Summary fields exclusively for community admins (admin, admin2, cAdmin, cAdmin2).

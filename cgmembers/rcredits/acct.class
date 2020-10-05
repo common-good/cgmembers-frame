@@ -989,7 +989,7 @@ EOF;
   public function nextStepUrl($stepDone = '', &$msg = NULL, $info = []) {
     $a = $this;
     u\setDft($msg, $stepDone ? 'info saved' : '');
-    if ($a->closed) return 'summary';
+    if ($a->closed) return 'console';
 
     if ($stepDone) {
       $stepCounts = !$a->stepIsDone($stepDone);
@@ -1007,8 +1007,8 @@ EOF;
       $approval = $a->co ? 'company approval' : 'individual approval';
       u\joins($msg, '|', "setup complete|$approval|join thanks"); // show on display, not on done
     }
-    $url = dirname($_SERVER['REQUEST_URI']);
-    return $stepCounts ? 'summary' : ($url == '.' ? '' : $url); // go to summary page if this was the last step
+
+    return $stepCounts ? 'console' : ''; // go to console if this was the last step
   }
 
   public function setTask($task) {$this->update('task stepsLeft', $task, $this->stepsLeft($task));}

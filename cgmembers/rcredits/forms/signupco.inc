@@ -26,7 +26,7 @@ function formSignupCo($form, &$sta, $args = '') {
   if (!$mya) { // not signed in (presumably from promo site)
     $subtext = t(<<< X
       <p>To open a company account, the first step is to open an individual account. This is necessary because your personal photo will go on your company card and you will access the company account by signing in to your personal account. It is also an important part of our security system &mdash; no one can open an account unless their identity has been verified.</p>
-      <p>To get started, <%a>click here</a>. Once you complete all the steps for the individual account, you can click "Open a Company Account" on your Summary page.</p>
+      <p>To get started, <%a>click here</a>. Once you complete all the steps for the individual account, you can click "Open a Company Account" on your Console page.</p>
 X
     , '_a', w\atag('/signup/' . $args));
     return cgform(compact(ray('title subtext')));

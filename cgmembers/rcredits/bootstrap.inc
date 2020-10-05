@@ -633,7 +633,7 @@ function delV($name) {
 function variable_del($nm) {return delV($nm);} // for legacy Drupal
 
 function exitJust($s) {
-  if (test()) { t\output('exiting with: ' . pr($s)); return t\logRec('echo', $s); }
+/**/  if (test()) { t\output('exiting with: ' . pr($s)); return t\logRec('echo', $s); }
 /**/  echo pr($s);
   exit();
 }
@@ -1832,7 +1832,7 @@ function drupal_bootstrap() {
   require_once DRUPAL_ROOT . '/includes/session.inc';
   drupal_session_initialize();
   
-  $jsCode = isDEV ? nni($_GET, 'jsCode') : '';
+  $jsCode = isDEV ? nni($_GET, 'jsCode') : ''; // for testing
   if (!$jsCode) setCSP(); // must come after drupal_session_initialize
 
   _drupal_bootstrap_page_header();
@@ -1843,7 +1843,10 @@ function drupal_bootstrap() {
   if ($jsCode and $qid = nni($_GET, 'qid')) {
     r\setAcct(r\acct($qid));
     return w\go($_SERVER['REQUEST_URI'] . "?jsCode=$jsCode"); 
-  } else { $mya = r\setAcct(); }
+  } else {
+    $qid = nni($_COOKIE, 'trust') ? r\cryptCook('qid') : '';
+    $mya = r\setAcct($qid ? r\acct($qid)->id : '');
+  }
 
   global $channel, $boxUser, $box;
   $channel = TX_WEB; // assume web unless this gets set otherwise downstream

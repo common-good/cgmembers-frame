@@ -58,7 +58,7 @@ X
   if ($i == 'general') return t(<<< X
     <p>Here's what to click, to find what you want. Some items will not appear, if your account is not yet active or if you do not have permission.</p>
     <ul>
-      <li><b>Summary</b>: See an overview of your account or open a %PROJECT Account for your company.</li>
+      <li><b>Console</b>: See an overview of your account or open a %PROJECT Account for your company.</li>
       <li><b>Charge</b>: Invoice another participant.</li>
       <li><b>Pay</b>: Transfer %RCREDITS to another participant.</li>
       <li><b>Bank</b> Transfer money to or from your bank account.</li>
@@ -92,7 +92,7 @@ X
 
   if ($i == 'sms') return t('The Text Message Interface is intended to be easy enough that you can just muddle your way through the first time. Give it a shot. You can even <i>sign up</i> with Text Messaging. Send your texts to +1 413.285.2867 OR use the <%aSMS>Test SMS form</a> to simulate sending a text.', '_aSMS', atag('/sms'));
 
-  if ($i == 'summary') return t(<<< X
+  if ($i == 'console') return t(<<< X
     <p>This page shows an overview of your %PROJECT Account.</p>
     <p><b>Account ID</b> has two parts. The part before the period is a 3-character identifier for your region (%regName). The part after the period uniquely identifies your account, within your region. If you have several accounts, this part will be different for each one.</p>
   <p><b>Balance</b> is the amount in your %PROJECT Account.</p>

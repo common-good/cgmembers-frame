@@ -53,5 +53,5 @@ function formResetPassword_submit($form, &$sta) {
     $mya->update('pass', $pass1);
   }
 
-  return w\go($mya->admin2 ? 'sadmin/followup' : 'summary');
+  return w\go($mya->admin2 ? 'sadmin/followup' : 'console');
 }

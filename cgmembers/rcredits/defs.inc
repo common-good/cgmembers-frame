@@ -131,6 +131,7 @@ define('PRIVATE_KEY', dirname($_SERVER['DOCUMENT_ROOT']) . '/.privateKey');
 const ANY = 'any'; // accessible to anyone (if you change this, rebuild menus immediately)
 const SVAR_HEADER = 'rcredits_'; // session variable header
 const TEST_PDF_FLNM = 'testOutput.pdf'; // pdf output during testing
+const QR_DOMS = 'RC4.ME RC2.ME'; // domains that redirect to staging and production, respectively (for QR codes)
 
 const TEN99MISC = 'A'; // code for 1099-MISC
 const TEN99B = 'B'; // code for 1099-B
@@ -180,7 +181,7 @@ const R_ADMIN_CAN_MANAGE_CTTYS = TRUE; // should be false once communities can m
 const R_CRON_PERIOD = 5*60; // how many seconds between cron runs (must divide an hour evenly)
 const R_MAX_TASK_TIME = 1*60; // what's the longest a queued cron task might take
 const R_NOLOG = SECURE_FLDS . ' ' . VSECURE_FLDS . ' data secure vsecure secret oneTimeLoginUrl password pass pass1 pass2 vKeyE newPass external_input form_build_id bad args'; // don't log these (external_input may contain passwords and is duplicated as individual fields)
-const R_NOLOG_FORMS = 'Admin Test Handy footer accounts history settings settings/icon community Summary Php'; // don't log visits to these forms
+const R_NOLOG_FORMS = 'Admin Test Handy footer accounts history settings settings/icon community Console Summary Php'; // don't log visits to these forms
 const R_ANON_FORMS = R_NOLOG_FORMS . ' Signup Signin PageNotFound Sinx Pass Empty TestRecovery ChangePassword Help Community Democracy Agreement CttyFunds Reports Flags Game Menu I ResetPassword Profile Accept Buy HandleInvoice FindCo'; // no login required
 const SSN_ERR_INDEX = 'CGerror'; // where to put/find error messages in ssnData
 const BY_CASH = '(cash)'; // app includes this in description, for a purchase of CG credit by cash

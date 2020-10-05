@@ -12,7 +12,7 @@ use CG\Db as db;
 function formSsn($form, &$sta, $args = '') {
   $mya = w\eLinkAcct($sta, $args, 'acct');
   
-  if ($mya->stepIsDone('ssn') and !$mya->admin) w\go(''); // don't allow DIY redo after SSN is verified
+  if ($mya->stepIsDone('ssn') and !$mya->admin) w\go('console'); // don't allow DIY redo after SSN is verified
 
   extract(ssnFields(!$mya->co, REQ));
   

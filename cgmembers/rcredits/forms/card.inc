@@ -12,20 +12,38 @@ use CG\Db as db;
  * Handle a scanned Common Good card.
  */
 function formCard($form, &$sta, $dom = '', $code = '') {
-  global $mya;
+  $subdom = strtoupper($dom); // correct a fluke in the server's rewrite
+  $qrDom = ray(QR_DOMS)[(bool) isPRODUCTION];
+  $res = r\Qo::qr2("$subdom.$qrDom/$code");
+  if (!$res = r\Qo::qr2("$subdom.$qrDom/$code") or !$a = r\acct($res[0]) or $a->cardCode() != $res[1]) return softErr(t('That is not a valid %PROJECT card.') . pr($a) . $a->cardCode());
+
+  if (r\acct()) signout(TRUE); // use scanner cookie, not whatever we're signed in to
   
-  if (!$mya) {
-    extract(just('trust scanner', $_COOKIE, NULL));
-    $qid = r\cryptCook('qid');
-    if (!$trust or !$scanner or !$qid or !$mya = r\acct($scanner, $qid)) return w\softErr(t('You are not signed in. Sign in and consider checking "Trust this device".'));
+  $no = submit(BARE . t('No'), '', 'lg');
+  $yes = submit(BARE . t('Yes'), '', 'lg');
+  $buttons = fieldSet('buttons', compact(ray('no yes')));
+  $uid = hidFld($a->id);
+  $nm = $a->fullName;
+  
+  if (!$scanner = r\cook('scanner') or !r\acct($scanner)) { // first time scanning a card, so ask whether to use it to set up this device
+    $title = t('Device Owner Setup');
+    $subtext = t('Associate this device with <b>%nm</b>, to charge or pay through %PROJECT?', compact('nm'));
+    $way = hidFld('up');
+    return cgform(compact(ray('title subtext buttons way uid')));
   }
-  if (!$mya->can(B_SCAN)) return w\softErr(t('You do not have permission to scan a customer card for the current account.'));
+
+  $mya = r\acct($scanner);
+  $myName = $mya->fullName;
+  $title = t('You: ') . $myName;
+    
+  if ($mya->id == $a->id) {
+    $subtext = t('Do you want to disconnect this device from %myName?', compact('myName'));
+    $way = hidFld('down');
+    return cgform(compact(ray('title subtext buttons way')));
+  }
   
-  $dom = strtoupper($dom); // correct a fluke in the server's rewrite
-  if (!$res = r\Qo::qr2("$dom.RC2.ME/$code") or !$a = r\acct($res[0]) or $a->cardCode != $res[1]) return softErr(t('That is not a valid %PROJECT card.'));
-  $title = t('You: ') . $mya->fullName;
   $photo = item($a->photoHtml(FALSE, TRUE));
-  $subtext = ($a->co ? "<small>$a->agentA->fullName</small><br>" : '') . "<b>$a->fullName</b><br>$a->city, $a->st";
+  $subtext = ($a->co ? "<small>$agentName</small><br>" : '') . "<b>$a->fullName</b><br>$a->city, $a->st";
 
   $amount = numFld(t('Amount: '), [t('Amount')]);
   if ($mya->co) { // we are a company
@@ -41,8 +59,6 @@ function formCard($form, &$sta, $dom = '', $code = '') {
   
   $for = selectFld(REQ . t('For:'), '', '', $choices);
   $desc = textFld(t('For:'), [t('Description')]);
-  $myid = hidFld($mya->id);
-  $uid = hidFld($a->id);
   jsx('card', compact(ray('choice0Count')));
 
   $charge = submit(BARE . t('Charge'));
@@ -50,24 +66,55 @@ function formCard($form, &$sta, $dom = '', $code = '') {
   $go = submit(BARE . t('Go'));
   $buttons = fieldSet('buttons', compact(ray('charge pay go')));
   
-  return cgform(compact(ray('title photo subtext amount for desc buttons myid uid')));
+  return cgform(compact(ray('title photo subtext amount for desc buttons uid')));
 }
 
 function formCard_validate($form, &$sta) {
   extract(just('amount', $sta['input']));
-
+  if (!isset($amount)) return;
   if ($err = u\badAmount($amount)) return say($err, 'amount');
   u\preRay(compact('amount'), $sta['input']);
 }
 
 function formCard_submit($form, &$sta) {
-  extract(just('amount desc uid myid uid', $sta['input'], NULL));
-  $mya = r\acct($myid);
+  extract(just('amount desc uid way', $sta['input'], NULL));
+  $mya = r\acct(r\cook('scanner'));
   $a = r\acct($uid);
+  $op = op($sta);
+  
+  if ($way == 'up') { // setting up device
+    if ($op == 'no') return cardSignout(tr('scan co card first'), 'err');
+    r\setCook('scanner', $a->qid); // scan QRs with last account used
+    r\setAcct(NULL); // 
+    return cardSignout(tr('This device is now associated with %nm.', 'nm', $a->fullName));
+  }
+  
+  if ($way == 'down') { // setting up device
+    if ($op == 'no') return cardSignout(tr('no self-trading'), 'err');
+    r\setCook('scanner', NULL); // scan QRs with last account used
+    r\setAcct(NULL); // 
+    return cardSignout(tr('This device is no longer associated with %nm.', 'nm', $mya->fullName));
+  }
+  
   $goods = strhas($desc, t('cash')) ? FOR_USD : FOR_GOODS;
-  $type = (op($sta) == 'charge' ? 'charge' : 'pay');
+  $type = ($op == 'charge' ? 'charge' : 'pay');
   list ($ok, $msg, $subs) = be\transfer($type, $mya, $a, $amount, $desc, $goods);
 
   $msg = tr($msg, $subs);
-  return $ok ? go('empty', $msg) : softErr($msg);
+  return cardSignout($msg, $ok ? '' : 'err');
+}
+
+/**
+ * Don't stay signed in after scanning a card (so employees can use the device to scan customer cards also).
+ * Display a message of success or failure on the "empty" page.
+ */
+function cardSignout($msg, $err = '') {
+  
+  $sid = session_id();
+  db\del('sessions', 'ssid', $sid);
+  session_unset();
+  
+  r\setAcct(NULL);
+  say($msg, $err);
+  return go('empty');
 }

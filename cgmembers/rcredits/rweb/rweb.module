@@ -67,7 +67,7 @@ MENU_SUGGESTED_ITEM  Menu type -- A normal menu item, hidden until enabled by an
 function rweb_menu($submenu = '') {
 
   $items = array(
-    'summary' => ['norm', t('Summary'), 'Summary', 'read'],
+    'console' => ['norm', t('Console'), 'Console', 'read'],
 
     'charge' => ['norm', t('Charge'), 'Tx 1', 'sell ok'],
     'charge/invoices' => ['sub', t('Upload Invoices'), 'InvoiceUpload', 'co sell ok'],
@@ -229,6 +229,7 @@ function rweb_menu($submenu = '') {
     'sadmin/show-deposits' => ['call', t('Show Deposits'), 'ShowDeposits', 'read'],
     'sadmin/show-reconciled' => ['call', t('Show Reconciled'), 'ShowReconciled', 'read'],
     'sadmin/test-results' => ['call', t('Test Results'), 'TestResults', 'dev'], // also go here manually, if needed
+    'sadmin/summary' => ['call', t('Summary'), 'Summary', 'admin2'],
 
     'signout' => ['norm', t('Sign out'), '', 'signedIn', 'signout'],
     'signin' => ['norm', t('Sign in'), 'Signin', '-signedIn'],

@@ -16,7 +16,7 @@ Setup:
 
 Scenario: Admin activates an account
   Given member ".ZZD" has no photo ID recorded
-  When member "D:A" completes form "summary" with values:
+  When member "D:A" completes form "sadmin/summary" with values:
   | mediaConx | active | helper  | federalId  | adminable        | tickle | dob      |*
   |         1 |      1 | Bea Two | %R_ON_FILE | member,confirmed |        | %mdy-19y |
   Then members:
@@ -31,7 +31,7 @@ Scenario: Admin activates an account unconfirmed
   And members have:
   | uid  | flags  |*
   | .ZZD | member |
-  When member "D:A" completes form "summary" with values:
+  When member "D:A" completes form "sadmin/summary" with values:
   | mediaConx | active | helper | federalId  | adminable | tickle | dob      |*
   |         1 |      1 |      1 | %R_ON_FILE | member    |        | %mdy-19y |
   Then members:
@@ -46,7 +46,7 @@ Scenario: Admin deactivates an account
   | uid  | flags          | activated |*
   | .ZZB | ok,member,ided | %now-3m   |
   # (tests add the ided bit by default when creating an active account)
-  When member "B:A" completes form "summary" with values:
+  When member "B:A" completes form "sadmin/summary" with values:
   | active | federalId  | adminable | tickle |*
   |        | %R_ON_FILE | member    |        |
   Then members:

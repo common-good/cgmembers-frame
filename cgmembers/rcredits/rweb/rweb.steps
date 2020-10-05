@@ -81,7 +81,7 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE invest TheClubMakesALoan
  *     MAKE invite AMemberInvites
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
- *     MAKE joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
+ *     MAKE joint AMemberCreatesAJointAccountByClickingALinkOnTheConsolePage
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     MAKE partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
@@ -123,7 +123,8 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
 /**
  * member (ARG) confirms form (ARG) with values: (ARG)
  *
- * in: MAKE card 
+ * in: MAKE card AMemberScansACompanyCardWithAStandardQRReader
+ *     MAKE card 
  *     MAKE cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     MAKE cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
  *     MAKE cgbutton AMemberTypesAccountIDToBuyStoreCredit
@@ -311,7 +312,7 @@ function members($list) {return t\members($list);}
  *     MAKE queries Setup
  *     MAKE statement Setup
  *     MAKE summary Setup
- *     MAKE summary AMemberClicksTheSummaryTabWithRoundups
+ *     MAKE summary AMemberClicksTheConsoleTabWithRoundups
  *     TEST tx AMemberConfirmsRequestToPayAnotherMember
  *     TEST tx AMemberConfirmsRequestToPayAnotherMemberALot
  *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
@@ -364,6 +365,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *
  * in: TEST bank AMemberMovesTooLittleToTheBank
  *     TEST bank AMemberTriesToGoBelowTheirMinimum
+ *     TEST card AMemberScansACompanyCardWithAStandardQRReader
  *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
  *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
@@ -389,7 +391,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST invest AMemberTriesToDecreaseStakeBelowZero
  *     TEST invest AClubAdministratorHandlesRequestsToCashOut
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
- *     TEST joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
+ *     TEST joint AMemberCreatesAJointAccountByClickingALinkOnTheConsolePage
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST posts SomeoneConfirmsAnOfferOnceTwice
@@ -460,7 +462,9 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
 /**
  * we show (ARG)
  *
- * in: TEST card 
+ * in: TEST card AMemberScansACompanyCardWithAStandardQRReader
+ *     TEST card 
+ *     TEST changeaccount AMemberChangesAccount
  *     TEST changeaccount ACommunityAdminClicksTheProfilePhoto
  *     TEST changeaccount ASuperadminClicksTheProfilePhoto
  *     TEST invest AMemberJoinsTheInvestmentClub
@@ -474,8 +478,6 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST signin AMemberSignsInWithAccountIDOnTheMemberSite
  *     TEST signin AMemberSignsInWithEmailOnTheMemberSite
  *     TEST signin AMemberClicksALinkToResetPassword
- *     TEST signin AMemberClicksALinkToResetPasswordWithWrongCode
- *     TEST signin AMemberClicksALinkToResetPasswordForUnknownAccount
  *     TEST signupco ACompanySignsUp
  *     TEST signupco ACompanySuppliesIncomingTitheChoices
  *     TEST signup ANewbieVisitsTheIndividualSignupPage
@@ -511,7 +513,6 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST cgbutton AMemberClicksAButtonToBuyAGiftOfStoreCredit
  *     TEST cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
  *     TEST changeaccount AMemberClicksTheProfilePhoto
- *     TEST changeaccount AMemberChangesAccount
  *     TEST changeaccount AMemberChangesAccountToGoToADifferentPage
  *     TEST changeaccount ACommunityAdminChangesAccount
  *     TEST changeaccount ASuperadminChangesAccount
@@ -602,10 +603,10 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     TEST stepup AMembersRulesComeIntoPlay
  *     TEST stepup AMemberChoosesRecurringAndPertransactionDonations
- *     TEST summary AMemberClicksTheSummaryTab
- *     TEST summary AMemberClicksTheSummaryTabWithRoundups
- *     TEST summary AnAgentClicksTheSummaryTabWithoutPermissionToManage
- *     TEST summary ACompanyAgentClicksTheSummaryTab
+ *     TEST summary AMemberClicksTheConsoleTab
+ *     TEST summary AMemberClicksTheConsoleTabWithRoundups
+ *     TEST summary AnAgentClicksTheConsoleTabWithoutPermissionToManage
+ *     TEST summary ACompanyAgentClicksTheConsoleTab
  *     TEST txs AMemberLooksAtTransactionsForThePastYear
  *     TEST txs AMemberLooksAtTransactionsForThePastFewDays
  *     TEST txs AMemberLooksAtTransactionsWithRoundups
@@ -655,7 +656,7 @@ function with($content) {return weShow($content);}
  *     TEST signup AMemberInvites
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST stepup AMemberChoosesAPertransactionStepUp
- *     TEST summary AnAgentClicksTheSummaryTabWithoutPermissionToManage
+ *     TEST summary AnAgentClicksTheConsoleTabWithoutPermissionToManage
  *     TEST txs AMemberLooksAtTransactionsForThePastYear
  *     TEST txs AMemberLooksAtTransactionsForThePastFewDays
  */
@@ -706,7 +707,7 @@ function withoutOptions($options) {
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     MAKE joint AJoinedAccountMemberUnjoinsTheAccount
  *     BOTH joint AMemberRequestsTwoJoinsAtOnce
- *     TEST joint AMemberCreatesAJointAccountByClickingTheSummaryPageButton
+ *     TEST joint AMemberCreatesAJointAccountByClickingALinkOnTheConsolePage
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
@@ -768,7 +769,7 @@ function relations($relations) {return t\relations($relations);}
  *     BOTH queries Setup
  *     TEST statement Setup
  *     TEST summary Setup
- *     TEST summary AMemberClicksTheSummaryTabWithRoundups
+ *     TEST summary AMemberClicksTheConsoleTabWithRoundups
  *     TEST tx Setup
  *     TEST tx AMemberConfirmsRequestToChargeAnotherMember
  *     TEST tx AMemberConfirmsRequestToPayAnotherMember
@@ -793,6 +794,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE balancesheet AMemberLooksAtTheBalanceSheet
  *     MAKE balancesheet ANonmemberLooksAtTheBalanceSheet
  *     MAKE bank AMemberDrawsCreditFromTheBankThenCancels
+ *     MAKE card AMemberScansACompanyCardWithAStandardQRReader
  *     MAKE card 
  *     MAKE cgbutton AMemberClicksAPayWithCommonGoodButton
  *     MAKE cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
@@ -887,10 +889,10 @@ function usd($list) {return t\usd($list);}
  *     MAKE stepup AMemberChoosesAPertransactionStepUp
  *     MAKE stepup AMembersRulesComeIntoPlay
  *     MAKE stepup AMemberChoosesRecurringAndPertransactionDonations
- *     MAKE summary AMemberClicksTheSummaryTab
- *     MAKE summary AMemberClicksTheSummaryTabWithRoundups
- *     MAKE summary AnAgentClicksTheSummaryTabWithoutPermissionToManage
- *     MAKE summary ACompanyAgentClicksTheSummaryTab
+ *     MAKE summary AMemberClicksTheConsoleTab
+ *     MAKE summary AMemberClicksTheConsoleTabWithRoundups
+ *     MAKE summary AnAgentClicksTheConsoleTabWithoutPermissionToManage
+ *     MAKE summary ACompanyAgentClicksTheConsoleTab
  *     MAKE txs AMemberLooksAtTransactionsForThePastYear
  *     MAKE txs AMemberLooksAtTransactionsForThePastFewDays
  *     MAKE txs AMemberLooksAtTransactionsWithRoundups
@@ -955,7 +957,7 @@ function noRelation($relations) {
  */
 function memberSignsInTheFirstTime($uid) {
   global $testOnly; if (!$testOnly) return FALSE;
-  memberVisitsPage($uid, 'summary');
+  memberVisitsPage($uid, 'console');
   return db\get('created=login', 'users', 'uid=' . t\uid($uid));
 }
 
@@ -2059,7 +2061,8 @@ function someoneConfirmsWith($page, $values) {return t\completeForm('?', $page, 
 /**
  * cookie (ARG) is (ARG)
  *
- * in: MAKE card 
+ * in: BOTH card AMemberScansACompanyCardWithAStandardQRReader
+ *     MAKE card 
  *     TEST posts SomeoneSubmitsALocus
  *     TEST posts SomeonePostsAnOffer
  *     BOTH posts SomeoneRepliesToAnOffer
