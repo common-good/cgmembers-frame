@@ -225,10 +225,8 @@ Scenario: A member invites
   Then these "u_shouters":
   | uid  | quote | org  | title | website |*
   | .ZZB | cuz   | MeCo | Boss  | me.co   |
-  And we show "Account Summary" with:
-  | Next Steps |
-  | Invite |
-  | Give   |
+  And we show "You: Bea Two" with:
+  | Shortcuts |
   And without:
   | Finish |
   And we say "status": "info saved|setup complete|individual approval|join thanks"
@@ -239,7 +237,7 @@ Scenario: A member invites
 
 Scenario: A member confirms social security number
   Given member ".ZZB" steps left "ssn"
-#  When member ".ZZB" visits page "summary"
+#  When member ".ZZB" visits page "console"
   When member "?" confirms form "signin" with values:
   | name   | pass |*
   | NEWZZB | 123  |
@@ -248,7 +246,7 @@ Scenario: A member confirms social security number
   When member ".ZZB" completes form "settings/ssn" with values:
   | federalId   |*
   | 123-45-6789 |
-  Then we show "Account Summary"
+  Then we show "You: Bea Two"
 
 Scenario: A newbie registers with no case
   When member "?" confirms form "signup" with values:

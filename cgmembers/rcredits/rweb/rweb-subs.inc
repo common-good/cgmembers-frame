@@ -682,7 +682,7 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
 
   $req = basename($_SERVER['REQUEST_URI']);
   if (!$mya and in($req, 'login logout')) return w\go(PROMO_URL); // nothing else works
-  if ($req == 'user' and $mya) return w\go('summary'); // summary not ''
+  if ($req == 'user' and $mya) return w\go('console'); // console not ''
   foreach ($form as $k => $v) if (is_array($v) and nni($v, '#type') == 'submit') {$submit1 = nni($v, '#id') ?: "edit-$k"; break;}
   $form['opid'] = hidFld(nn($submit1) ?: 'none', ['name' => 'opid']); // default to first, in case submitted programmatically
 

@@ -460,6 +460,34 @@ EOF;
 } 
 
 /**
+ * Return a more tightly-encoded qid for use in a QR code or magnetic stripe (radix 36 instead of 26)
+ * The first character tells the length of region, account in region, and agentCode, as follows:
+ * 0-3: 1/2/n, n=c (where c is a radix-36 digit)
+ * 4-7: 1/3/n, n=c-4
+ * 8-B: 2/2/n, n=c-8
+ * C-F: 2/3/n, n=c-C (meaning c minus twelve)
+ * G-J: 3/2/n, n=c-G, etc.
+ * K-N: 3/3/n
+ * O-R: 3/4/n
+ * S-V: 4/4/n
+ * W-Z: 4/5/n
+ * @return [fmt, region, tail, agentCode], where fmt is the format character
+ */
+function qr($a) {
+  $qo = $a->qo;
+  if (!$a->cardCode()) $a->makeCardCode(); // first time printing company card
+  $regLen = strlen($region = u\n2a(u\a2n($qo->region), -1, 36));
+  $tailLen = strlen($tail = u\n2a(u\a2n($qo->tail), $regLen > 3 ? -4 : -2, 36));
+  $codeLen = ($agentCode = $qo->agentCode()) ? strlen($agentCode = u\n2a(u\a2n($agentCode), -1, 36)) : 0;
+  $i = array_search($regLen . $tailLen, ray('12 13 22 23 32 33 34 44 45'));
+  u\EXPECT($i !== FALSE, 'bad piece lengths in qo->qr mainQid=' . $qo->mainQid);
+  u\EXPECT($codeLen < 4, 'agentCode too long: ' . $qo->agentCode);
+  $fmt = u\n2a($i * 4 + $codeLen, 1, 36);
+  $qrDom = ray(QR_DOMS)[(bool) isPRODUCTION];
+  return "HTTP://$region.$qrDom/$fmt$tail$agentCode" . $a->cardCode();
+}
+
+/**
  * Redo all the stats
  * @param int $keepUpto: date of last valid stats records (redo all subsequent dates)
  */
@@ -787,35 +815,6 @@ function printCheck(&$ck, $pos, $tx, $mark) {
   //  $ck->say('', 0, $mt - $m + CHECK_HEIGHT, $W, 1, '', '', 'T'); // comment this out
   
   if (!$deposit and $mark) db\update('r_usd', ray('deposit txid', today(), $txid), 'txid');
-}
-
-/**
- * Do automatic stuff that can be done only when superAdmin signs in
- */
-function adminSignin() {
-  global $box;
-  //  $pw2 = @$_COOKIE['pw2'];
-  //  u\EXPECT($pw2, 'no pw2!');
-  
-  /*  $q = db\q("SELECT txid,payee,bankAccount FROM r_usd WHERE bankAccount NOT LIKE ':CRYPT_FLAG%'");
-      while ($row = $q->fetchAssoc()) {
-      extract($row);
-      if (substr($bankAccount, 0, 2) == 'US') {
-      $bankAccount = r\crypt($bankAccount . '', 0, $pw2);
-      db\update('r_usd', compact('txid', 'bankAccount'), 'txid');
-      w\say(t('bank account super-encrypted in exchange record #%txid.', compact('txid')));
-      } else r\tellAdmin('bad bank account in exchange record', ray('txid b0 hex', $txid, $b0, bin2hex($b0)));
-
-      $a = r\acct($payee);
-      if ($b0 = $bankAccount = $a->bankAccount and !u\starts($a->secure['bankAccount'], CRYPT_FLAG)) {
-      if (substr($bankAccount, 0, 2) == 'US') {
-      //        $bankAccount = u\crypt($bankAccount . '', 0, $pw2);
-      $a->update(compact('bankAccount')); // might be different (newer) than in r_usd (super-encryption is automatic)
-      w\say(t('bank account super-encrypted for user %user', 'user', $a->fullName));
-      } else r\tellAdmin('bad bank account', ray('b0 hex', $b0, bin2hex($b0)));
-      }
-      }
-  */
 }
 
 /*

@@ -305,7 +305,6 @@ function formMakeCtty_submit($form, &$sta) {
 
 /**
  * Show a list of standard calls to make (to help new members, check-in, ask for donation, etc.)
- * @param int $uid: (optional) account to deal with
  * @param bool $one: (optional) <show just my community>
  * @param bool $recent: (optional) <show latest notes first>
  */
@@ -313,13 +312,8 @@ function formFollowup($form, &$sta, $args = []) {
   global $base_url;
   global $mya;
   
-	if (!$mya or (!$mya->cAdmin2 and !$mya->admin2)) return w\go('');
-  extract(just('uid one recent', $args, null));
-  
-  if (!empty($uid)) {
-    r\setAcct($uid, $sta); // switch to that user
-    return formSummary($form, $sta);
-  }
+	if (!$mya or (!$mya->cAdmin2 and !$mya->admin2)) return w\go('console');
+  extract(just('one recent', $args, null));
 
   $title = t('Admin Action Page');
   $subtitle = item(t('<p>Start with today and work backward. Click an account name.</p><ul><li><b>Live Person.</b> If you get a live person, click "live" for a script. Then, if no followup is needed, make a note about your conversation and click "Auto".</li><li><b>Message #1.</b> If you get a machine, click "msg1" for a Phone Message script, type "PM setup" or "PM welcome" or whatever as a note, and click the "2 days" button.</li><li><b>Message #2.</b> If you already left one message, try 3 more times to catch them live. If you still don\'t catch them click "msg2" for a Phone Message script, then click "email" to send them an Email Message. Type "EM setup" or whatever and click the "7" button if this is for a Setup or Annual check-in or the "Auto" button if it is for a Welcome.</li><li><b>After Setup Help Email.</b> If the email gets no response for a setup help call, keep phoning or emailing at 1-, 2-, or 7-day intervals until you reach them or we close the account.</li><li><b>After Annual Check-in Email.</b> If the email gets no response for an Annual check-in, send a US Mail fund appeal/check-in.</li></ul><p>(comments on this standard procedure are welcome)</p>') . w\btn('/sadmin/followup/one=1', t('Show just my community')) . ' &nbsp; ' . w\btn('/sadmin/followup', t('Show ALL')) . ' &nbsp; ' . w\btn('/sadmin/followup/recent=1', t('Recent notes first')));
@@ -794,24 +788,17 @@ function memberId($id, $agent = '', $retroactive = FALSE) {
   
   $a->setAgentNum(); // assign an agentCode, if appropriate (and not yet done)
   $qid = $a->qid; // get this before setting $a to agent (below)
-  list ($fmt, $region, $tail, $agentCode) = $a->qo->qr();
-  $tail = $fmt . $tail . $agentCode;
   
   $acctName = $a->bestName;
   $nameFont = mb_strlen($acctName) > 38 ? 'font-stretch:condensed;'
     : (mb_strlen($acctName) > 33 ? 'font-stretch:semi-condensed;' : '');
   
-  if (!$proSe = $a->proSe) {
-    if (!$a->agentA->cardCode2) $a->makeCardCode(); // NOT r\cardCode($a->qid);
-    $aa = $a->agentA; // hereafter it's all about the agent
-  } else $aa = $a;
+  list ($aa, $proSe) = [$a->agentA, $a->proSe];
 
-  list ($cardFld, $role, $ptQid, $yName, $bg) = $proSe 
-    ? ['cardCode', t('Member'), 10, 1.70, 'bg'] 
-    : ['cardCode2', t('Company'), '9.5;font-stretch:semi-condensed', 1.64, 'bgCo'];
+  list ($role, $ptQid, $yName, $bg) = $proSe 
+    ? [t('Member'), 10, 1.70, 'bg'] 
+    : [t('Company'), '9.5;font-stretch:semi-condensed', 1.64, 'bgCo'];
 
-  $server = isPRODUCTION ? 'RC2.ME' : 'RC4.ME';
-  $qrUrl = "HTTP://$region.$server/$tail" . $aa->$cardFld;
   $permitted = ($proSe or B_RELATED + r\relation('permission', $a->id, $aa->id) >= B_BUY);
   $photo = ($aa->hasPhoto and $permitted) ? "@$aa->photo" : R_NOT_VALID; // '@' tells tcpdf it's an image, not a file; $a->canBuy fails because admin has permission
 
@@ -851,7 +838,7 @@ function memberId($id, $agent = '', $retroactive = FALSE) {
   $sp = '<span style="font-size:50%;"> </span>';
   $url = str_replace('.', $sp . '<b style="display:inline; font-stretch:expanded; font-size:120%;">.</b>' . $sp, CG_DOMAIN);
   $pdf->say($url,  $xSite, $ySite, '', '', "7;color:white;font-stretch:normal;", 'L');
-  $pdf->write2DBarcode($qrUrl, 'QRCODE,Q', $m+1.445, $m+0.645, .8, .8, $style, 'N'); // L,M,Q,H are low-high error-correction
+  $pdf->write2DBarcode(a\qr($a), 'QRCODE,Q', $m+1.445, $m+0.645, .8, .8, $style, 'N'); // L,M,Q,H are low-high error-correction
 
   $pdf->say($acctName, $m+$xText, $m+$yName, '', '', "12;B;$nameFont", 'L');
   if ($proSe) $pdf->say($qid, $m+$xText, $m+$hCard-.19, '', '', "6.5;color:#666666;letter-spacing:.7px;", 'L');

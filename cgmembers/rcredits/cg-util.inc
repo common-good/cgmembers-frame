@@ -1629,7 +1629,7 @@ function bankAcctOk($ba) {return preg_match('/^[0-9]{3,17}$/', $ba);}  // {3,20}
 function joins(&$s, $m, $other = '') {return $s = (empty($s) ? '' : "$s$m") . $other;}
 function padRay($ray, $n, $fill = '') {for ($i = 0; $i < $n; $i++) $ray[] = $fill; return $ray;}
 function isMobile() {return preg_match(MOBILE_REGEX, $_SERVER['HTTP_USER_AGENT']);}
-function rayify($ray) {$res = []; foreach ($ray as $k => $v) $res[] = "$k:$v"; return join(',', $res);}
+function deray($ray) {$res = []; foreach (is_array($ray) ? $ray : ray($ray) as $k => $v) $res[] = "$k:$v"; return join(',', $res);}
 function joinRays($ray1, $ray2) {foreach ($ray2 as $k) $ray1[] = $k; return $ray1;}
 function ry($type, $data) {return substr(u\cry($type, $data), strlen(CRYPT_FLAG));}
 function dery($type, $code) {return u\decry($type, CRYPT_FLAG . $code);}

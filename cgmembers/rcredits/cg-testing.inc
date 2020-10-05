@@ -1152,12 +1152,13 @@ function pageForm($page) {
 	$page = t\fixPageArgs($page);
   $formArray = $formSta = $formOut = NULL; // start with a clean slate
 
-  if (!$page) $page = 'summary';
+  if (!$page) $page = 'console';
   t\SERVER('REQUEST_URI', $page);
   $args = basename($page);
   $xlastGo = nn($lastGo); // notice whether a goto happens. ignore all but the deepest (last).
 
-  $result = \menu_execute_active_handler($lastPage = $page, FALSE);
+  $lastPage = $page;
+  $result = \menu_execute_active_handler($page, FALSE);
 
   if (is_numeric($result)) {
     $result = $result == MENU_NOT_FOUND ? 'not found'
@@ -1392,7 +1393,7 @@ function clear($ch = 0) {
   foreach (ray('error status') as $one) u\deleteFile(t\dosayFilename($one));
 
   if (test() and !strpos($sceneTest->name, 'Statement')) {
-    /**/  echo "scene: $sceneTest->module / $sceneTest->feature / $sceneTest->name<br>\n"; // VERY helpful when test dies
+ /**/  echo "scene: $sceneTest->module / $sceneTest->feature / $sceneTest->name<br>\n"; // VERY helpful when test dies
   }
 
   t\log('clearing');

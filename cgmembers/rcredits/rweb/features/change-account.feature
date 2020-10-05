@@ -21,9 +21,7 @@ Scenario: A member clicks the profile photo
 
 Scenario: A member changes account
   When member "A" visits page "change-account/acct=NEWZZC"
-  Then we show "Account Summary" with:
-  | NEWZZC  |
-  | Our Pub |
+  Then we show "You: Our Pub"
 
 Scenario: A member changes account to go to a different page
   When member "A" visits page "change-account/acct=NEWZZC&page=settings,contact"
@@ -38,8 +36,7 @@ Scenario: A community admin clicks the profile photo
 Scenario: A community admin changes account
   When member "B" visits page "change-account/acct=NEWZZC"
   Then we show "Account Summary" with:
-  | NEWZZC  |
-  | Our Pub |
+  | ID | NEWZZC |
 
 Scenario: A superadmin clicks the profile photo
   When member "1" visits page "accounts"
@@ -48,8 +45,7 @@ Scenario: A superadmin clicks the profile photo
 Scenario: A superadmin changes account
   When member "1" visits page "change-account/acct=NEWZZC"
   Then we show "Account Summary" with:
-  | NEWZZC  |
-  | Our Pub |
+  | ID | NEWZZC |
 
 Scenario: A member tries to change to an account without permission
   When member "A" visits page "change-account/acct=NEWZZB"

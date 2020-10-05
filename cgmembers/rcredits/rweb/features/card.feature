@@ -5,14 +5,40 @@ SO I can avoid having multiple devices in my pocket or at the checkout counter
 
 Setup:
   Given members:
-  | uid  | fullName | pass | email | flags                    | zip   | floor | cardCode | city | state |*
-  | .ZZA | Abe One  | a1   | a@    | member,ok,confirmed,debt | 01001 |  -100 | Aa1      | Aville | AL  |
-  | .ZZB | Bea Two  | b1   | b@    | member,ok,confirmed,debt | 01001 |  -100 | Bb2      | Bville | DC  |
-  | .ZZC | Our Pub  | c1   | c@    | member,ok,co,confirmed   | 01003 |     0 | Cc3      | Cville | CA  |
+  | uid  | fullName | pass | email | flags                    | zip   | floor | cardCode | city | state | cardCode2 |*
+  | .ZZA | Abe One  | a1   | a@    | member,ok,confirmed,debt | 01001 |  -100 | Aa1      | Aville | AL  | Aa12      |
+  | .ZZB | Bea Two  | b1   | b@    | member,ok,confirmed,debt | 01001 |  -100 | Bb2      | Bville | DC  | Bb22      |
+  | .ZZC | Our Pub  | c1   | c@    | member,ok,co,confirmed   | 01003 |     0 |          | Cville | CA  |           |
   And relations:
-  | main | other | permission |*
-  | .ZZC | .ZZB  | manage     |
+  | main | other | permission | otherNum |*
+  | .ZZC | .ZZB  | manage     | 1        |
   And member is logged out
+
+Scenario: A member scans a company card with a standard QR reader
+  Given cookie "scanner" is ""
+  When member "?" visits page "card/6VM/LDJK0Bb22"
+  Then we show
+  | Device Owner Setup | |
+  | Associate this device with Our Pub | |
+  | No | Yes |
+  
+  When member "?" confirms form "card/6VM/LDJK0Bb22" with values:
+  | op  |*
+  | yes |
+  Then we say "status": "This device is now associated with Our Pub."  
+  And cookie "scanner" is "NEWZZC"
+  
+  When member "?" visits page "card/6VM/LDJK0Bb22"
+  Then we show
+  | You: Our Pub | |
+  | Do you want to disconnect | |
+  | No | Yes |
+
+  When member "?" confirms form "card/6VM/LDJK0Bb22" with values:
+  | op  |*
+  | yes |
+  Then we say "status": "This device is no longer associated with Our Pub."  
+  And cookie "scanner" is ""
 
 Scenario: 
   Given members have:

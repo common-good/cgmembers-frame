@@ -256,7 +256,7 @@ function changeWho($zot, $args = '', &$sta = '') {
   extract(just('acct page', $args, NULL));
 
   if (test()) $page = u\urlify(str_replace(',', '/', nn($page)));
-  $page = $page ? u\deurlify($page) : 'summary'; // go to summary, unless admin
+  $page = $page ? u\deurlify($page) : 'console'; // go to console, unless admin
 
   if (nn($acct) == 'signout') return signout();
   if (!$mya and !isDEV) return w\go($page, t('No previous account. Try again.')); // get old current account
@@ -264,7 +264,6 @@ function changeWho($zot, $args = '', &$sta = '') {
   if (!$mya->cAdmin2 and !$mya->isAdmin2 and !$mya->can()) return hack('accts');
   if ($mya->cAdmin and !$mya->admin and !$mya->isAdmin2 and $mya->community != $mya->agentA->community) return w\go($page, t('You can switch only to accounts in your community.')); // cAdmin check is a bug fix
   r\setAcct($mya, $sta); // set new current account
-  r\setCook('scanner', $mya->mainQid); // scan QRs with last account used
 
   return w\go($page);
 }
@@ -274,6 +273,7 @@ function changeWho($zot, $args = '', &$sta = '') {
  * @param bool $continue: <don't go to Promo site after signout> (can't be a "go there" parameter, because it defaults wrong)
  */
 function signout($continue = FALSE) {
+  global $mya;
   if (isDEV and !test()) db\q('TRUNCATE test');
   if ((string) $continue == 'timedout') list ($continue, $timeout) = [FALSE, '&timedout=1']; else $timeout = '';
   
@@ -284,6 +284,8 @@ function signout($continue = FALSE) {
     db\del('sessions', 'ssid', $sid);
     session_unset();
   }
+  
+  if ($mya and !$mya->admin2 and !$continue) r\setCook('trust', NULL);
   r\setAcct(NULL);
   r\Acct::_clear(); // empty the acct cache
   if (isDEV and !test() and !$continue) return w\go('signin');
@@ -328,7 +330,7 @@ function formEmpty($form, &$sta = '', $args = '') {
   if ($form and !is_array($form)) say(plain($form));
   extract(just('say err msg', $args, NULL));
   
-  $title = t('Miscellaneous'); // this is suppressed with CSS
+  $title = NBSP;
   if ($msg) say(plain($msg), $err);
   $subtext = $say ? t('<p>To protect your account, <%span>no sign-in was required</span> for this action. To sign in safely, always go to %CG_DOMAIN.</p><p>You may now close this browser page.</p>', '_span', 'span class="loud"') : NULL;
   return cgform(compact(ray('title subtext')));
@@ -349,7 +351,7 @@ function authcode($args = '', $exit = TRUE) {
  */
 function formCgBiz($form, &$sta, $id) {
   if (!nn($id) or !$a = r\acct(strtoupper($id)) or !$a->ok) return w\go('', t('That is not a %PROJECT Business.'));
-  w\go('member/' . $a->name, t('<big><b>%fullName</b> is a %PROJECT Business since %activated.</big> For more information about Common Good, <%a>click here</a>.', 'fullName activated _a', $a->fullName, u\fmtDate($a->activated), atag(r\promoLink(''))));
+  w\go('member/' . $a->name, t('<big><b>%fullName</b> is a %PROJECT Business since %activated.</big> For more information about %PROJECT, <%a>click here</a>.', 'fullName activated _a', $a->fullName, u\fmtDate($a->activated), atag(r\promoLink(''))));
 }
 
 /**
@@ -464,9 +466,9 @@ function formFooter() {
   $helpType = $mya ? '' : 'other';
   
   $markup = "<hr><div id=\"footer-menu\">$extraLinks" . t(<<<EOF
-|   <%aSite>About %PROJECT</a> |
+|   <%aSite>About Us</a> |
     <%aAgree>The Agreement</a> |
-    <%aSecurity>Privacy & Security</a> |
+    <%aSecurity>Security</a> |
     <%aHelp>Help</a>
 <br>&nbsp;
 </div>
@@ -475,7 +477,6 @@ copyright &copy; %year <%aSite>%PROJECT<sup> &reg;</sup></a><span id="footer-det
 %CGF_PHONE &nbsp; <%aEmail>%CGF_EMAIL</a><br>
 <br>
 IP: %ip</span>
-<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>&nbsp;
 EOF
   , '_aSite _aAgree _aSecurity _aHelp year _aEmail ip', atag(r\promoLink('about-us')), atag('/community/agreement'), atag(r\promoLink('about-us/privacy-and-security')), atag("/help/$helpType"), $year, u\emailTag(CGF_EMAIL), $_SERVER['REMOTE_ADDR']);
 //    <%aCttys>Communities</a> |

@@ -7,7 +7,7 @@ use CG\Util as u;
 use CG\Db as db;
 
 /**
- * Exchange USD for rCredits or vice-versa (the Bank tab)
+ * Transfer from bank to CG or vice versa.
  */
 function formGet($form, &$sta, $args = '') {
   global $mya;

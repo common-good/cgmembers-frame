@@ -56,7 +56,8 @@ function formSignin($form, &$sta) {
  * @param string $type: 'acct', 'pw', or 'both' -- what parameters to check
  */
 function formSignin_validate($form, &$sta, $type = 'both') {
-  extract(just('name pass pw2 vKeyE', $sta['input'], NULL));
+  extract(just('name pass pw2 vKeyE trust', $sta['input'], NULL));
+
   if (isDEV and $name == 'admin' and !a(1)) {
     require_once __DIR__ . '/../admin/admin.inc';
     db\del('sessions', 'uid', '1');
@@ -81,6 +82,12 @@ function formSignin_validate($form, &$sta, $type = 'both') {
 			if (isDEV) setv('vKeyE', $vKeyE); // remember new vKeyE, make it easier to sign in (this is not redundant)
 		}
   }
+  
+  if (!$a->superAdmin) { // why does this fail for superAdmin? (but who cares?)
+    r\setCryptCook('qid', $a->mainQid, NULL);
+    r\setCook('trust', $a->admin2 ? 0 : ($trust ? 1 : 0));
+  }
+  
   return TRUE; // TRUE is used by formBuy()
 }
 
@@ -88,17 +95,11 @@ function formSignin_validate($form, &$sta, $type = 'both') {
  * Finish signing in.
  * @param string $goto: what page to start on for non-admin
  */
-function formSignin_submit($form, &$sta, $goto = 'summary') {
-  extract(just('name trust', $sta['input'], NULL));
+function formSignin_submit($form, &$sta, $goto = 'console') {
+  extract(just('name', $sta['input'], NULL));
   $uid = r\loginString($name);
   $mya = r\setAcct($uid, $sta);
 
-  if (!$mya->superAdmin) { // why does this fail for superAdmin? (but who cares?)
-    r\setCryptCook('qid', $mya->mainQid, NULL);
-    r\setCook('trust', $mya->admin2 ? 0 : ($trust ? 1 : 0));
-    r\setCook('scanner', $mya->mainQid); // scan QRs with last account used
-  }
-  
   u\loga('signin', ['name' => $mya->name]);
   if (isSTAGE and !$mya->cAdmin) f('a.makeTestAdmins'); // make sure rCOs can test stuff
   return w\go($mya->admin2 ? 'sadmin/followup' : $goto);

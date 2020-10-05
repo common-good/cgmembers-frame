@@ -7,7 +7,7 @@ use CG\Util as u;
 use CG\Db as db;
 
 /**
- * Exchange USD for rCredits or vice-versa (the Bank tab)
+ * Promise to buy more Common Good credit, if needed.
  */
 function formBacking($form, &$sta, $args = '') {
   if (!$mya = w\eLinkAcct($sta, $args, 'acct')) return;
