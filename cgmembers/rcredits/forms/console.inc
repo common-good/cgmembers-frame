@@ -20,7 +20,7 @@ function formConsole($form, &$sta) {
   $special = $endorse = NULL;
   
   if ($mya->ok and !$mya->co) {
-    $special = t('|<%aCovid>%PROJECT COVID-19 response</a> | <%aBlm>BLM</a> | <%aOnN>Offers & Needs</a>', '_aCovid _aBlm _aOnN', 'a id="covid"', 'a id="blm"', 'a id="onn"');
+    $special = t('|<%aCovid>Our COVID-19 response</a> | <%aBlm>BLM</a> | <%aOnN>Offers & Needs</a>', '_aCovid _aBlm _aOnN', 'a id="covid"', 'a id="blm"', 'a id="onn"');
     if (!$mya->shouter and $mya->hasPhoto) { // (don't ask partial accounts to endorse)
       $endorseText = t('<h2>We need your help to grow.</h2>');
       $endorseBtn = btn('/community/invite', t('Endorse %PROJECT'), 'success', 'large');
