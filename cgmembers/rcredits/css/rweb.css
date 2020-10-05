@@ -763,15 +763,18 @@ body.page-partner blockquote {font-size:14px;}
 #frm-console #endorse div div .btn-large {font-weight:normal; border-radius: 30px; margin-bottom:10px; color:white; padding:10px 20px; font-size:18px;}
 
 #frm-console #edit-title {margin-bottom:0;}
-#frm-console #edit-subtext {line-height:10px; margin-bottom:30px;}
-#frm-console .form-item-buttons {text-align:center;}
+#frm-console #edit-subtext {line-height:10px;}
+#frm-console .form-item-buttons {margin-top:30px; text-align:left;}
 #frm-console .form-item-buttons .btn {margin:0 30px;}
+#frm-console .form-item-buttons a:first-child {margin-left:0;}
 #frm-console .form-item-buttons .control-data {max-width:480px;}
 #frm-console .form-item-special {background-color:lightyellow; padding-bottom:8px; border:1px solid khaki;}
 
 @media (max-width:768px) { 
   #frm-console {text-align:center;}
   #frm-console li {text-align:left;}
+  #frm-console .form-item-buttons {text-align:center;}
+  #frm-console .form-item-buttons a:first-child {margin-left:30px;}
   
   #frm-console .control-label,
   #frm-console .control-data {width:auto; min-width:initial; padding:0; float:none; display:inline-block;}
