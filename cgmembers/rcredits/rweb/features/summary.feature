@@ -45,40 +45,30 @@ Setup:
   | .ZZC |     365 |
   Given cron runs "acctStats"
 
-Scenario: A member clicks the summary tab
-  When member ".ZZA" visits page "summary"
-  Then we show "Account Summary" with:
-  | ID        | ZZA |
-  | ~...      | (personal account) |
-  | Name      | Abe One (abeone) |
-#  | Contact   | 1 A St., Atown, AK 01000 |
+Scenario: A member clicks the console tab
+  When member ".ZZA" visits page "console"
+  Then we show "You: Abe One" with:
   | Balance   | $10 |
   
-Scenario: A member clicks the summary tab with roundups
+Scenario: A member clicks the console tab with roundups
   Given transactions:
   | xid | created | amount | payer | payee | purpose |*
   |   9 | %today  |  80.02 | .ZZB | .ZZC | goodies |
-  When member ".ZZB" visits page "summary"
+  When member ".ZZB" visits page "console"
   Then balances:
   | uid  | balance |*
   | .ZZB |  144.98 |
-  And we show "Account Summary" with:
-  | Name          | Bea Two (beatwo) |
+  And we show "You: Bea Two" with:
   | Balance       | $144 |
 
-Scenario: An agent clicks the summary tab without permission to manage
-  When member "A:B" visits page "summary"
-  Then we show "Account Summary" with:
-  | ID        | ZZA |
-  | ~...      | (personal account) |
-  | Name | Abe One (abeone)   |
+Scenario: An agent clicks the console tab without permission to manage
+  When member "A:B" visits page "console"
+  Then we show "You: Abe One" with:
+  | Balance       | $10 |
   And without:
   | Make This a Joint |
 
-Scenario: A company agent clicks the summary tab
-  When member "C:A" visits page "summary"
-  Then we show "Account Summary" with:
-  | ID       | ZZC |
-  | ~...     | (company account) |
-  | Name     | Corner Pub (cornerpub) |
-#  | Contact  | 3 C St., Ctown, Cher, FRANCE |
+Scenario: A company agent clicks the console tab
+  When member "C:A" visits page "console"
+  Then we show "You: Corner Pub" with:
+  | Balance       | $365 |

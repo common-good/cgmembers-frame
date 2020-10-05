@@ -1,5 +1,6 @@
 <?php
 use CG\Web as w;
+use CG\Util as u;
 
 /**
  * @file
@@ -501,11 +502,13 @@ function menu_execute_active_handler($path = NULL, $deliver = TRUE) {
   global $mya;
   if ($router_item = menu_get_item($path)) {
     if ($router_item['access']) {
-      if ($router_item['include_file']) require_once DRUPAL_ROOT . '/' . $router_item['include_file'];
+      if ($flnm = $router_item['include_file']) {
+        require_once DRUPAL_ROOT . '/' . str_replace('/rweb/../', '/', $flnm);
+      }
       $page_callback_result = call_user_func_array($router_item['page_callback'], $router_item['page_arguments']);
     } elseif ($mya) {
       if ($router_item['path'] == 'signin') {
-        return w\go('summary', t('You are already signed in.'));
+        return w\go('console', t('You are already signed in.'));
       } else { return w\softErr(t('no page permission')); }
     } else { return w\go('signin'); }
   } else { $page_callback_result = MENU_NOT_FOUND; }

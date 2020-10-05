@@ -7,7 +7,7 @@ use CG\Util as u;
 use CG\Db as db;
 
 /**
- * Exchange USD for rCredits or vice-versa (the Bank tab)
+ * Transfer from bank to CG or vice versa.
  */
 function formGet($form, &$sta, $args = '') {
   global $mya;
@@ -62,8 +62,9 @@ function formGet($form, &$sta, $args = '') {
   $balances = item(t('balances', compact(ray('balance credit cashoutable'))), t('Balance:'));
   $amount = numFld(t('Amount $'), t('Transfer how much?') . ($mya->cAdmin ? t(' (no limit for admin)') : ''));
 
-  $get = submit(BARE . t('From Bank to %PROJECT'));
-  $put = submit(BARE . t('From %PROJECT to Bank'));
+  $arrow = '<span class="glyphicon glyphicon-arrow-right"></span>';
+  $get = submit(BARE . t('Bank %m CG', '_m', $arrow));
+  $put = submit(BARE . t('CG %m Bank', '_m', $arrow));
   $actions = fieldSet('actions', compact('get', 'put'));
 
   return cgform(compact(ray('title subtext waiting balances amount actions avail')));

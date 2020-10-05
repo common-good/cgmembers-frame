@@ -18,6 +18,7 @@ const POSTPAGE = '/community/posts';
 const MODERATE_ZIPS = ''; // 3-digit zip code areas where moderation is mandatory (eg '010 013')
 const POST_FRMS = 'top post editpost who message'; // possible values for $frm
 const POST_TYPES = 'need offer tip';
+define('POST_TYPES_A', 'a need, an offer, a tip');
 define('POST_TYPE_NAMES1', t('Need Offer Tip'));
 define('POST_TYPE_NAMES2', t('Needs Offers Tips'));
 define('POST_TERMS', t('%i0 Free, %i1 Pay, %i2 Trade or Pay'));
@@ -98,12 +99,13 @@ function formPosts($form, &$sta, $args = '') {
   $view = btn('', t('List View'), '', '', 'edit-view');
   $where = btn('', $radius ? t('Where') : t('Look Nearby'), '', '', 'edit-where');
   $go = btn('', '&#128269;', '', '', 'edit-go'); // magnifying glass
-  $post = btn(POSTPAGE . '/op=post', t('Post Something'), '', '', 'edit-post');
+  $post = btn(POSTPAGE . '/op=post', t('Post!'), '', '', 'edit-post');
 
-  $search = rendA('search', textFld(BARE, [t('Search for words')]));
+  $search = rendA('search', textFld(BARE, [t('Search')]));
   
-  $choices = catChoices(t('Category (all)'), [MY_POSTS => t('my posts')] + [99 => t('(search)')]);
+  $choices = catChoices(t('Any Category'), [MY_POSTS => t('my posts')] + [99 => t('(search)')]);
   $cat = rendA('cat', selectFld(BARE, '', '', $choices));
+  $type = rendA('type', selectFld(BARE, '', '', ray(t('-1:Any type,') . u\deray(POST_TYPE_NAMES2))));
   
   $terms = rendA('terms', selectFld(BARE, '', '', ray(TERMS_CHOICES)));
   $sorg = rendA('sorg', selectFld(BARE, '', '', ray(SORG_CHOICES)));
@@ -135,7 +137,7 @@ X
   $zip = hidFld($zip ?: ''); // to be filled in on the fly
   $submitter = submit(); // Drupal keeps other solutions from calling _submit function)
 
-  $buttons = item("$view$where$post$cat$clear$locset$terms$sorg$search$go");
+  $buttons = item("$view$where$post$type$cat$clear$locset$terms$sorg$search$go");
   
   $frm = hidFld('top');
   
@@ -556,7 +558,7 @@ function emailLink($thing, $idSub, $created, $type, $item, $pid, $extra = []) {
   extract(pVal('fullName,email', $pid));
   $to = [$email => $fullName];
   $date = u\fmtDate($created, TRUE);
-  $what = ray(t('a need, an offer, a tip'))[typeNum($type)];
+  $what = ray(t(POST_TYPES_A))[typeNum($type)];
   $noFrame = TRUE;
   r\rMail($index, $to, compact(ray('fullName date code what item noFrame')));
   $thing = $thing == 'post' ? t('post') : t('message'); // translatable
@@ -652,11 +654,11 @@ function getPosts($type, $lat, $lon, $zip, $radius, $myPid, $admin, $zipIrreleva
   list ($distance, $noGeo) = [DISTANCE_BETWEEN, NO_DISTANCE];
   $postRadius = 'IFNULL(s.radius, 0)';
   $isMyPid = 'pid=:myPid';
-  if (!$type) $type = ray('offer need tip');
+  if (!$type) $type = ray(POST_TYPES);
 
   $sql = <<<X
     SELECT IF ($noGeo, '', $distance) AS dist, s.postid, s.service, c.id AS catId, c.cat, s.item, s.details, s.exchange,
-      s.emergency, $isMyPid AS mine,
+      s.emergency, $isMyPid AS mine, s.type as type,
       LEAST(IF($postRadius=0, 99999, s.radius), :radius) AS least, $postRadius AS postRadius, p.displayName, p.city,
       :zip AS zip
     FROM posts s
@@ -692,12 +694,13 @@ function postRows($q) {
   $rows[] = '<div class="tbody">';
   
   while ($row = $q->fetchAssoc()) {
-    extract(just('postid dist catId cat service emergency exchange item mine details zip', $row));
+    extract(just('postid dist catId type cat service emergency exchange item mine details zip', $row));
 
+    $type = typeNum($type);
     $terms = ray(POST_TERM_ICONS)[$exchange];
     if ($emergency) $item = '<span class="emergency">!!</span> ' . $item;
     $item = lnk('/community/posts/op=show&postid=' . $postid, $item);
-    $rowClass = "row s$service x$exchange c$catId" . ($mine ? ' mine' : '');
+    $rowClass = "row t$type s$service x$exchange c$catId" . ($mine ? ' mine' : '');
     if ($dist = fmtDist($dist, $zip)) { $cat .= " <small>$dist mi</small>"; } // must be after $rowClass=
     
     $rows[] = <<< X

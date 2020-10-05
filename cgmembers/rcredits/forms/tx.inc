@@ -42,7 +42,7 @@ function formTx($form, &$sta, $args = '') {
   $periods = intFld(t('Every:'), '', dft(0) + suffix($period));
   $end = dateFld(t('Ending:'), t('Leave blank for "never". You can end it at any time at <%a>History / Recurring Transactions</a>.', '_a', atag('/history/recurring')));
   
-  $btns = btn('', t('delay'), 'delay') . btn('', t('repeat'), 'repeat') . btn('/history/recurring', t('manage'), 'manage');
+  $btns = btn('', t('delay'), 'default', '', 'btn-delay') . btn('', t('repeat'), 'default', '', 'btn-repeat') . btn('/history/recurring', t('manage'), 'default', '', 'btn-manage');
   $$type = submit($opDesc, '', '', suffix($btns));
 
   w\whoFldSubmit('who', $opDesc . t(' %amount to %name?'), ray('allowNonmember', !$paying));

@@ -175,9 +175,8 @@ Scenario: A company account manager creates a discount
   | company   | Our Pub |
   | gift      | |
   | forOnly   | |
-  And we show "Community" with:
-  | Donate |
-  | Discount |
+  And we show "You: Our Pub" with:
+  | Balance: | $0 |
   And without:
   | Finish |
   And we say "status": "info saved|setup complete|company approval|join thanks"
