@@ -277,6 +277,8 @@ fieldset#edit-accounts label {padding-right:8px;}
 #index {position:fixed; right:0; z-index:6; background-color:silver; padding:3px 0;}
 #index a {display:inline-block; color:darkred; padding:0 7px 0 7px;}
 
+/* messages */
+
 #messages {
   display:inline-block; padding:0 0 5px 0; width:100%; margin:0 5px; text-align:center;
   -webkit-animation: puff .5s linear; -moz-animation: puff .5s linear; /* Chrome, Safari, Opera */
@@ -303,7 +305,7 @@ fieldset#edit-accounts label {padding-right:8px;}
 @media (max-width:768px) {
 	body.page-community-events #messages,
 	body.page-prox #messages {position:absolute; z-index:999;} /* not ideal for some pages, but better than hidden */
-  #messages .messages {margin-bottom:0;}
+  #messages .messages {margin:40px 0 0 0;}
 }
 
 div#shout {position:absolute; z-index:2; left:300px; top:100px; background-color:yellow; color:darkgreen; font-size:500%;}
@@ -367,8 +369,8 @@ body.logged-in.one-sidebar #content {width:100%;}
 
 /* Empty */
 /* (use $title='' instead #frm-empty #edit-title {display:none;} */
-.page-empty div.status  {margin:20px; padding:10px; background-image:none;} 
-.page-empty div.error {margin:20px; padding:10px 10px 10px 20px;} 
+.page-empty div.status  {margin:10px 20px; padding:10px; background-image:none;} 
+.page-empty div.error {margin:10 px 20px; padding:10px 10px 10px 20px;} 
 
 /* Partner Signup */
 body.page-partner #user-picture img, body.page-settings-partnerend #user-picture img {height:180px; margin:10px 0 0 230px;}
@@ -396,7 +398,8 @@ body.page-partner blockquote {font-size:14px;}
 #frm-card .form-item-title {margin-bottom:0;}
 #frm-card .form-item-title .control-data {margin:0;}
 #frm-card #edit-title h3 {font-size:15px; margin:10px 0;}
-#frm-card #edit-photo img {border:1px solid silver; max-width:70%;}
+#frm-card #edit-photo {margin-bottom:0;}
+#frm-card #edit-photo img {border:1px solid silver; max-width:50%;}
 
 #frm-card .form-item-buttons {text-align:center;}
 #frm-card .form-item-buttons .btn {margin:0 30px;}
@@ -409,6 +412,11 @@ body.page-partner blockquote {font-size:14px;}
 #frm-card #edit-go {display:none;}
 
 #frm-card #edit-buttons .btn {display:inline-block; text-align:center;}
+
+@media (max-width:768px) {
+  #frm-card .control-label {width:auto; min-width:75px;}
+  #frm-card .control-data {width:auto; min-width:315px;}
+}
 
 /* Grant */
 #frm-grant li {margin-bottom:10px;}
@@ -763,18 +771,24 @@ body.page-partner blockquote {font-size:14px;}
 #frm-console #endorse div div .btn-large {font-weight:normal; border-radius: 30px; margin-bottom:10px; color:white; padding:10px 20px; font-size:18px;}
 
 #frm-console #edit-title {margin-bottom:0;}
-#frm-console #edit-subtext {line-height:10px;}
+#frm-console #edit-acct {line-height:10px;}
 #frm-console .form-item-buttons {margin-top:30px; text-align:left;}
-#frm-console .form-item-buttons .btn {margin:0 30px;}
+#frm-console .form-item-buttons .btn {margin:0 20px;}
 #frm-console .form-item-buttons a:first-child {margin-left:0;}
 #frm-console .form-item-buttons .control-data {max-width:480px;}
 #frm-console .form-item-special {background-color:lightyellow; padding-bottom:8px; border:1px solid khaki;}
+
+#frm-console #edit-choiceList a {display:table-row;}
+#frm-console #edit-choiceList a div {display:table-cell; vertical-align:top; padding:0 4px 2px 4px;}
+#frm-console #edit-choiceList a div:first-child {font-size:115%; font-weight:bold; width:43px; color:darkgreen; padding-left:0;}
+#frm-console #edit-choiceList a:hover {text-decoration:none; background-color:aliceblue; max-width:420px;}
+#frm-console #edit-choiceList a small {color:silver;}
 
 @media (max-width:768px) { 
   #frm-console {text-align:center;}
   #frm-console li {text-align:left;}
   #frm-console .form-item-buttons {text-align:center;}
-  #frm-console .form-item-buttons a:first-child {margin-left:30px;}
+  #frm-console .form-item-buttons a:first-child {margin-left:20px;}
   
   #frm-console .control-label,
   #frm-console .control-data {width:auto; min-width:initial; padding:0; float:none; display:inline-block;}
@@ -832,12 +846,6 @@ body.page-partner blockquote {font-size:14px;}
 #frm-summary  label[for="edit-adminable"] {display:inline-block;}
 #frm-summary .noEdit {margin-left:-7px; padding-left:7px; background-color:#e0e0ff;}
 #frm-summary #edit-clickPhoto .control-data {font-size:78%; background-color:lightcyan; width:auto; border-radius:15px;}
-/*#frm-summary #edit-choiceList .control-label {width:0; min-width:110px;}*/
-#frm-summary #edit-choiceList a {display:table-row;}
-#frm-summary #edit-choiceList a div {display:table-cell; vertical-align:top; padding:0 4px 2px 4px;}
-#frm-summary #edit-choiceList a div:first-child {font-size:115%; font-weight:bold; width:43px; color:darkgreen; padding-left:0;}
-#frm-summary #edit-choiceList a:hover {text-decoration:none; background-color:aliceblue; max-width:420px;}
-#frm-summary #edit-choiceList a small {color:silver;}
 
 #frm-summary #edit-altid {display:inline-block; width:180px;}
 #frm-summary #edit-altSt {display:inline-block; width:80px; margin-left:10px; margin-right:10px;}
@@ -1226,7 +1234,7 @@ div.password-confirm .error {font-weight:bold; color:red;}
 /* #txlist .row.head >div {border-bottom:0; padding-bottom:0; padding-top:5px; padding-bottom:5px;} */
 #txlist .row.head>div>div {background:#757575; color:white; font-weight:bold; border-right:1px solid white;}
 /* #txlist .row.head>div>div {background:#757575; color:white; font-weight:bold; border-right:1px solid white; padding-bottom: 5px; padding-top: 5px;} */
-#txlist .row.head .buttons {color:white; background-color:white; border:0;}
+#txlist .row.head .buttons {display:none;}
 #txlist .row.head .reward {font-size:100%;}
 #txlist tr:hover {background-color:#aaffaa;}
 

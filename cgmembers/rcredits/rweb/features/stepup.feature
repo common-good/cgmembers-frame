@@ -126,3 +126,33 @@ Scenario: A member chooses recurring and per-transaction donations
   | Fox Co       | 1      | % per tx     |     |
   | Glo Co       | 5      | % per tx     |     |
   | Hip Co       | 3      | % / tx up to | $4  |
+
+Scenario: A surtx amount rounds to zero
+  Given these "tx_rules":
+  | id        | 1             | 2             | 3             |**
+  | payer     | .ZZB          | .ZZB          | .ZZB          |
+  | payerType | account       | account       | account       |
+  | payee     |               |               |               |
+  | payeeType | anyCo         | anyCo         | anyCo         |
+  | from      | .ZZB          | .ZZB          | .ZZB          |
+  | to        | .ZZF          | .ZZG          | .ZZH          |
+  | action    | surtx         | surtx         | surtx         |
+  | amount    | 0             | 2             | 0             |
+  | portion   | .5            | 0             | .03           |
+  | purpose   | donation      | donation      | donation      |
+  | minimum   | 0             | 0             | 0             |
+  | useMax    |               |               |               |
+  | amtMax    | 1             |               | 2             |
+  | template  |               |               |               |
+  | start     | %now          | %now          | %now          |
+  | end       |               |               |               |
+  | code      |               |               |               |
+  When member ".ZZB" confirms form "pay" with values:
+  | op  | who     | amount | goods      | purpose |*
+  | pay | Cor Pub | .10    | %FOR_GOODS | labor   |
+  Then these "txs":
+  | eid | xid | created | amount | payer | payee | purpose      | rule | type        |*
+  |   1 |   1 | %today  | .10    | .ZZB  | .ZZC  | labor        |      | %E_PRIME    |
+  |   3 |   1 | %today  | .05    | .ZZB  | .ZZF  | donation     | 1    | %E_DONATION |
+  |   4 |   1 | %today  | 2      | .ZZB  | .ZZG  | donation     | 2    | %E_DONATION |
+  And count "entries" is 3

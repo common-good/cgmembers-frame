@@ -205,6 +205,14 @@ X;
     if ($jA = $a->jA and $jA->jid == $a->id) $jA->update('jid', 0);
     f('a.deleteUid', $a->id);
   } , $where);
+  eachA(function ($a) { // delete robots
+    if (!$a->member and !$a->ok and $a->nextStep() == 'verifyemail' and now() - $a->created > 7*DAY_SECS and $a->steps+0 == 1 and strhas($a->source, 'self ()')) {
+      $s = str_replace('self () ', '', $a->source);
+      $s = str_replace('knows: ', '', $s);
+      if (!strhas($s, ' ')) f('a.deleteUid', $a->id);
+    }
+  });
+
   if ($uid = db\get('u1.uid', 'users u1 JOIN users u2 ON u2.uid=u1.jid', 'u1.jid<>0 AND u2.jid<>u1.uid')) r\tellAdmin('Orphaned joint account: ' . r\acct($uid)->fullName, [], $uid);
 //  db\del('users', $where); // abandoned new joint acct (must postcede setting jids)
 

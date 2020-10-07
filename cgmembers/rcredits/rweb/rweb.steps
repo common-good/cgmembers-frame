@@ -169,6 +169,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE signup AMemberRegistersBadZip
  *     MAKE signup AMemberRegistersAgain
  *     MAKE stepup AMembersRulesComeIntoPlay
+ *     MAKE stepup ASurtxAmountRoundsToZero
  *     MAKE tx AMemberConfirmsRequestToChargeAnotherMember
  *     MAKE tx AMemberConfirmsRequestToPayAnotherMember
  *     MAKE tx AMemberConfirmsRequestToPayAnotherMemberALot
@@ -1727,6 +1728,7 @@ function weScripWithSubs($script, $args = []) {
  *     TEST signup AMemberInvites
  *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     BOTH stepup AMembersRulesComeIntoPlay
+ *     BOTH stepup ASurtxAmountRoundsToZero
  *     TEST tx AMemberPaysAnotherMemberRepeatedly
  *     TEST tx AMemberPaysAnotherMemberLater
  *     TEST txs AdminReversesABankTransfer
@@ -1855,6 +1857,7 @@ function memberIsUnconfirmed($id) {
  *
  * in: TEST bank Setup
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
+ *     TEST stepup ASurtxAmountRoundsToZero
  *     TEST tx AMemberPaysAnotherMemberLater
  */
 function countIs($what, $count) {return t\count($what, $count);}
