@@ -54,7 +54,7 @@ X;
     $fPeriod = ucfirst(r\recurDesc($period, $periods));
     $fCreated = u\fmtDate($start, TRUE);
     $finished = ($end and $end < now());
-    $fNext = $finished ? '' : u\fmtDate(max(now(), u\dateIncr($maxStart, $periods, $period)), TRUE);
+    $fNext = $finished ? '' : u\fmtDate(max($start, now(), u\dateIncr($maxStart, $periods, $period)), TRUE);
     $fEnd = $end ? u\fmtDate($end, TRUE) : '';
     $button = $finished ? '' : t('Stop recurring transaction');
     $arrow = $paying ? $to : $from;

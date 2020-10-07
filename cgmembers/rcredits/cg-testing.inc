@@ -517,10 +517,11 @@ function count($what, $count) {
   if (!$testOnly) return FALSE;
 
   switch ($what) {
-  case 'accounts': return db\count('users') == $count;
-  case 'tx_hdrs': // fall through
-  case 'txs': return (db\count('tx_hdrs', "xid > 0") == $count);
-  default: return (db\count('r_' . $what) == $count);
+    case 'accounts': return eq($count, db\count('users'));
+    case 'tx_hdrs': // fall through
+    case 'txs': return eq($count, db\count('tx_hdrs', 'xid > 0'));
+    case 'entries': return eq($count, db\count('tx_entries_all', 'xid > 0') / 2);
+    default: return eq($count, db\count('r_' . $what));
   }
 }
 

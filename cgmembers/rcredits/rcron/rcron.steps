@@ -545,6 +545,7 @@ function stats($list) {return t\stats($list);}
  *     MAKE recurs ASecondRecurringPaymentCanBeCompleted
  *     MAKE recurs ARecurringPaymentHappenedYesterday
  *     MAKE recurs ARecurringPaymentHappenedLongEnoughAgoToRepeat
+ *     MAKE recurs ADelayedPaymentDoesNotHappenImmediately
  *     BOTH recurs ARecurringPaymentCannotBeCompleted
  *     MAKE risk Setup
  *     MAKE rules Setup
@@ -569,6 +570,7 @@ function these($thing, $list) {return t\these($thing, $list);}
  *     TEST recurs ABrandNewRecurringPaymentCanBeCompleted
  *     TEST recurs ARecurringPaymentHappenedYesterday
  *     TEST recurs ARecurringPaymentHappenedLongEnoughAgoToRepeat
+ *     TEST recurs ADelayedPaymentDoesNotHappenImmediately
  *     TEST recurs ARecurringPaymentCannotBeCompleted
  *     TEST rules RulesGetInstantiated
  *     TEST rules AnEndedTemplateHasNoEffect
@@ -659,6 +661,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE recurs ASecondRecurringPaymentCanBeCompleted
  *     MAKE recurs ARecurringPaymentHappenedYesterday
  *     MAKE recurs ARecurringPaymentHappenedLongEnoughAgoToRepeat
+ *     MAKE recurs ADelayedPaymentDoesNotHappenImmediately
  *     MAKE recurs ARecurringPaymentCannotBeCompleted
  *     MAKE risk Setup
  *     MAKE risk WeCalculateRisks

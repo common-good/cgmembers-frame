@@ -500,6 +500,7 @@ function menu_get_item($path = NULL, $router_item = NULL) {
  */
 function menu_execute_active_handler($path = NULL, $deliver = TRUE) {
   global $mya;
+
   if ($router_item = menu_get_item($path)) {
     if ($router_item['access']) {
       if ($flnm = $router_item['include_file']) {

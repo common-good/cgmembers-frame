@@ -693,13 +693,15 @@ EOF;
   foreach ($res as $ruleId => $rule) {
     extract($rule);
 
-    $value = $amount + $portion * $price; // potential rebate/stepup amount
+    $value = round($amount + $portion * $price, 2); // potential rebate/stepup amount
     if ($amtMax) $value = min($value, $amtMax - $amtUsed); // limited by amtUsed
 
     $from = ($from == MATCH_PAYER) ? $buyer->id : (($from == MATCH_PAYEE) ? $seller->id : $from);
     $to = ($to == MATCH_PAYER) ? $buyer->id : (($to == MATCH_PAYEE) ? $seller->id : $to);
     list ($type, $desc) = $to == $buyer->id ? [E_REBATE, REBATE_DESC] : [E_DONATION, $purpose]; // any surtx not coming back to buyer is a donation of some sort
     if ($to == $buyer->id) $value = min($price, $value); // don't refund more than is being spent (food fund especially)
+
+    if ($value <= 0) continue;
     $rebate += $value;
     
     txEntryPair($entries, $value, [$from, $to], $desc, $type, $ruleId);

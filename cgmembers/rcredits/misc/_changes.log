@@ -1,3 +1,14 @@
+2020-10-06 feature/mobile2
+. shrink buttons to fit on console page
+. no more zero surtx entries
+. cron no longer tries to handle "i" (immediate) notices
+. improved format on console, card, and "empty" pages
+. suppress error on attempt to hack card page (hitting RC2.ME and RC4.ME)
+. added accout ID to console page
+. fixed bug that got the "next" date wrong on future-starting recurring payments
+. changed most "jQuery"s to "$" in scraps.js, in an attempt to fix browser-specific amtChoice problem
+. users created by bots are now deleted after a month
+
 2020-10-04 feature/license
 . changed license to reserve all rights except for intended use
 

@@ -72,6 +72,14 @@ Scenario: A recurring payment happened long enough ago to repeat
   And count "txs" is 3
   And count "invoices" is 0
   
+Scenario: A delayed payment does not happen immediately
+  Given these "tx_templates":
+  | id | start   | from | to   | amount | period | purpose |*
+  |  8 | %now+1w | .ZZA | .ZZC |     10 | week   | pmt     |
+  Then count "txs" is 1
+  When cron runs "recurs"
+  Then count "txs" is 1
+  
 Scenario: A recurring payment cannot be completed
   Given these "tx_templates":
   | id | start      | from | to   | amount | period | purpose |*

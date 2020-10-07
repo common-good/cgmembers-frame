@@ -54,11 +54,13 @@ function formConsole($form, &$sta) {
   $shortcuts = $shortcuts ? item("<ul><li>$shortcuts</li></ul>", t('Shortcuts:')) : NULL;
 
   $title = t('You: ' . $mya->fullName);
-  $subtext = $mya->jid ? t('(joined with %nm)', 'nm', $mya->jA->fullName) : NULL;
+  $acct = $mya->mainQid;
+  if ($mya->jid) $acct .= t(' (joined with %nm)', 'nm', $mya->jA->fullName);
+  $acct = item($acct, t('Account #:'));
 
-  $pay = btn('/pay', t('Pay'), '', 'lg');
-  $charge = btn('/charge', t('Charge'), '', 'lg');
-  $bank = btn('/get', t('Bank'), '', 'lg');
+  $pay = btn('/pay', t('Pay'), '', 'md');
+  $charge = btn('/charge', t('Charge'), '', 'md');
+  $bank = btn('/get', t('Bank'), '', 'md');
   $buttons = item($pay . $charge . $bank);
 
   $balance = u\fmtAmt($mya->balance);
@@ -78,7 +80,7 @@ function formConsole($form, &$sta) {
   }
 
   jsx('console');
-  return cgform(compact(ray('endorse title subtext buttons balance creditLine special shortcuts choiceList')));
+  return cgform(compact(ray('endorse title acct buttons balance creditLine special shortcuts choiceList')));
 }
 
 /**

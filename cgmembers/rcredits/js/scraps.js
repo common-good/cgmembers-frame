@@ -17,7 +17,7 @@ function doit(what, vs) {
 
   switch(what) {
 
-  case 'funding-criteria': jQuery('.critLink').click(function () {jQuery('#criteria').modal('show');}); break;
+  case 'funding-criteria': $('.critLink').click(function () {$('#criteria').modal('show');}); break;
   case 'download': window.open(vs['url'] + '&download=1', 'download'); break;
 
   case 'chimp':
@@ -114,11 +114,11 @@ function doit(what, vs) {
   case 'advanced-dates':
     if (!vs['showingAdv']) showAdv();
     $('#showAdvanced').click(function () {showAdv();});
-    function showAdv() {jQuery('#advanced').show(); jQuery('#simple').hide();}
+    function showAdv() {$('#advanced').show(); $('#simple').hide();}
     $('#edit-period').change(function () {
       var id='#edit-submitPeriod'; if (!$(id).is(':visible')) id='#edit-downloadPeriod'; $(id).click();
     });
-    $('#showSimple').click(function () {jQuery('#advanced').hide(); jQuery('#simple').show();});
+    $('#showSimple').click(function () {$('#advanced').hide(); $('#simple').show();});
     break;
     
   case 'new-advanced-dates':
@@ -254,7 +254,7 @@ function doit(what, vs) {
 
   case 'legal-name': // probably not needed with new signup system
     $('edit-fullname').change(function () {
-      var legal=jQuery('#edit-legalname'); 
+      var legal=$('#edit-legalname'); 
       if (legal.val()=='') legal.val(this.value);
     });
     break;
@@ -535,9 +535,9 @@ function doit(what, vs) {
     break;
     
   case 'amtChoice':
-    var other = jQuery('.form-item-amount'); 
-    var amtChoice = jQuery('#edit-amtchoice');
-    var amtChoiceWrap = jQuery('.form-item-amtChoice');
+    var other = $('.form-item-amount'); 
+    var amtChoice = $('#edit-amtchoice');
+    var amtChoiceWrap = $('.form-item-amtChoice');
     if (amtChoice.val() == -1) {
       amtChoiceWrap.hide();
       other.show(); 
@@ -550,7 +550,7 @@ function doit(what, vs) {
       if(amtChoice.val() == -1) {
         other.show(); 
         amtChoiceWrap.hide();
-        jQuery('#edit-amount').focus();
+        $('#edit-amount').focus();
       } else other.hide();
     });
     
