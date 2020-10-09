@@ -51,12 +51,11 @@ function formDonate($form, &$sta, $args = '') {
   $amtChoice = selectFld(REQ . t('Donation:'), '', dft($mya->co ? R_COMPANY_GIFT : R_INDIVIDUAL_GIFT), $giftLevels);
   $amount = numFld(t('Donation:'), [t('Amount')]);
   $period = selectFld(REQ . t('When:'), '', dft(0), $oftens);
-  $honor = selectFld(t('Honoring:'), '', suffix(t('(optional)')), $honors);
-  $honored = areaFld('', [t('Honoring whom or what')]);
-//    $roundup = $mya->ok ? '' : w\roundupFld($mya),
+  $honored = rendA('honored', textFld(BARE, [t('(optional)')]));
+  $honor = selectFld(t('Honoring:'), '', suffix($honored), $honors);
 
   jsx('amtChoice');
-  return cgform(compact(ray('title subtext amtChoice amount period honor honored recursId')) + w\setupFoot(t('Donate')));
+  return cgform(compact(ray('title subtext amtChoice amount period honor recursId')) + w\setupFoot(t('Donate')));
 }
 
 function formDonate_validate($form, &$sta) {

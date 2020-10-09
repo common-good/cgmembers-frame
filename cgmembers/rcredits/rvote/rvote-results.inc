@@ -101,9 +101,10 @@ function getResult($qi, $quText, $quDetail, $quType, $budget, $tot, $votesDirect
 		$optlinehdr = "<b>#$inum</b>";
 		$vetos = number_format($toti->vetos, $quType == 'M' ? 0 : 1);
 
-    if ($comments = join('</li><li>', array_merge(nn($toti->canceled_vetotexts, []), nn($toti->veto_texts, [])))) {
+    if ($comments = array_merge(nn($toti->canceled_vetotexts, []), nn($toti->veto_texts, []))) {
       $showComments = w\btnShowDiv("comments$qi-$inum", t('comments'), 'warning');
-      $comments = "<div id=\"comments$qi-$inum\" class=\"comment collapse\"><ul><li>$comments</li></ul></div>";
+      $comments = u\ul($comments);
+      $comments = "<div id=\"comments$qi-$inum\" class=\"comment collapse\">$comments</div>";
     } else $showComments = '';
     if ($detail = $toti->optdetail) {
       $showDetail = w\btnShowDiv("detail$qi-$inum", t('detail'), 'success');

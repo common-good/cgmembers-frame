@@ -109,14 +109,14 @@ Scenario: A member runs a query about Business Income
 Scenario: A member runs a query about Positive and Negative
   When member ".ZZA" runs query "Positive and Negative Balance Totals"
   Then we show "" with:
-  | community | negativeBalanceCount | negativeBalanceTotal | positiveBalanceCount | positiveBalanceTotal |
+  | community | negCount | negativeBalTotal | posCount | positiveBalTotal |
   | Common Good Western Mass | 0 | 0.00 | 5 | 5,945.00 |
 
 Scenario: A member runs a query about Balances
   When member ".ZZA" runs query "Company and Member Balances and Credit Lines"
   Then we show "" with:
-  | community                | memBalances | memCredit | memTargetBalances | coBalances | coCredit | coTargetBalances |
-  | Common Good Western Mass |    3,875.00 |    300.00 |              0.00 |   2,070.00 |   300.00 |             0.00 |
+  | community                | memBals  | memCredit | memTargetBals | coBals   | coCredit | coTargetBals |
+  | Common Good Western Mass | 3,875.00 |    300.00 |          0.00 | 2,070.00 |   300.00 |         0.00 |
 
 Scenario: A member runs a query about Actual Donations
   When member ".ZZA" runs query "Actual Donations to Common Good and Community"

@@ -52,7 +52,7 @@ X;
     $list .= u\ray2row(compact($dpyFlds));
   }
   
-  return cgform(compact(ray('title ask signed list posttext')));
+  return cgform(compact(ray('title ask signed list posttext')), '', 'above');
 }
 
 function raw() {

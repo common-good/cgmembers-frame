@@ -652,7 +652,7 @@ EOF;
         $date = strftime('%Y%m%d', $deposit ?: $today);
         $details = w\btn("/sadmin/deposit-details/date=$deposit&total=$total&count=$count", t('details'));
         if (!$deposit or $deposit >= $today - 90 * DAY_SECS) {
-          $details .= ' ' . w\btn('', t('flnm'), 'default', 'xs', ray('class data-flnm', 'filename', "CGach-$date.csv")) . ' ' . w\lnk("/sadmin/achs/date=$deposit&mark=0", t('download'));
+          $details .= ' ' . w\btn('', t('flnm'), 'default', 'xs', w\clas('filename') + ray('data-flnm', "CGach-$date.csv")) . ' ' . w\lnk("/sadmin/achs/date=$deposit&mark=0", t('download'));
         }
         if ($count) $details .= ' ' . ($deposit
           ? w\btn("/sadmin/checks/way=In&date=$deposit&mark=0&limit=$count", t('checks'))
@@ -906,7 +906,7 @@ function showInactive() {
 }
 
 function cardLink($link) {return spinLink("/print-rcard/$link", t('Card'), '', 'primary', 'xs', w\away());}
-function recropLink() {return spinLink('/settings/photo/recrop=1', t('Recrop Photo'), '', 'primary', 'xs');}
+function photoLink($recrop = 0) {return spinLink("/settings/photo/recrop=$recrop", $recrop ? t('Recrop Photo') : t('Photo'), '', 'primary', 'xs');}
 
 function nextMember($id = 0) {
   $members = db\col('uid', 'users', ':IS_OK AND NOT :IS_CO AND activated<1486098000 ORDER BY community, uid');

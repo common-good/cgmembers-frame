@@ -1394,7 +1394,7 @@ function clear($ch = 0) {
   foreach (ray('error status') as $one) u\deleteFile(t\dosayFilename($one));
 
   if (test() and !strpos($sceneTest->name, 'Statement')) {
- /**/  echo "scene: $sceneTest->module / $sceneTest->feature / $sceneTest->name<br>\n"; // VERY helpful when test dies
+ /**/  echo "<!--scene: $sceneTest->module / $sceneTest->feature / $sceneTest->name-->\n"; // VERY helpful when test dies
   }
 
   t\log('clearing');

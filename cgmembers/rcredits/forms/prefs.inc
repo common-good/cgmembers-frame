@@ -56,7 +56,7 @@ EOF
 
   jsx('advanced-prefs', compact('advancedFields'));
   $info = []; foreach (ray("title roundup snap statements showAdvancet $advancedFields") as $k) if (isset($$k)) $info[$k] = $$k;
-  return cgform($info + w\setupFoot() + compact('posttext'));
+  return cgform($info + w\setupFoot() + compact('posttext'), '', 'above');
 }
 
 function formPrefs_validate($form, &$sta) {

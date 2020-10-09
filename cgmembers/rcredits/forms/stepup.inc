@@ -102,7 +102,7 @@ X;
 </div>
 X;
 
-  return cgform(compact(ray('title subtext uids xlys list')) + setupFoot());
+  return cgform(compact(ray('title subtext uids xlys list')) + setupFoot(), 'nolabs');
 }
 
 function formStepUp_validate($form, &$sta) {

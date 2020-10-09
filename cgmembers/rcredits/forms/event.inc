@@ -101,7 +101,8 @@ EOF;
   if ($mya->cAdmin) $submit = submit();
 	$back = button(t('Back to Events'), "$base_url/community/events");
   
-  return cgform(compact(ray('title back id list type event details start end submit')));
+  foreach (ray('title back id list type event details start end submit') as $k) if (isset($$k)) $form[$k] = $$k;
+  return cgform($form);
 }
 
 function formEvent_validate($form, &$sta) {

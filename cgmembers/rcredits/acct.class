@@ -1151,7 +1151,7 @@ o;
    * Return the amount of pending bank transfers the member has already been credited with, against their credit line.
    */
   public function advances() {
-    return db\sum('amount', 'r_usd', "payee IN (:uids) AND amount>0 AND completed AND :NOW-created<:DAY_SECS*:USDTX_DAYS", ['uids' => $this->uids]);
+    return db\sum('amount', 'r_usd', 'payee IN (:uids) AND amount>0 AND completed AND :NOW-created<:DAY_SECS*:USDTX_DAYS', ['uids' => $this->uids]);
   }
 
   /**
@@ -1161,7 +1161,7 @@ o;
   public function getPendingDeposits() {
     $a = $this;
     $ids = empty($a->jid) ? $a->id : [$a->id, $a->jid];
-    $res = db\sum('amount', 'r_usd', "payee IN (:ids) AND amount>0 and completed=0", ['ids'=>$ids]);
+    $res = db\sum('amount', 'r_usd', 'payee IN (:ids) AND amount>0 and completed=0', ['ids'=>$ids]);
 ///       debug("$a->id getPendingDeposits() => $res");
     return $res;
   }
@@ -1173,7 +1173,7 @@ o;
   public function getApprovedInvoices() {
     $a = $this;
     $ids = empty($a->jid) ? $a->id : [$a->id, $a->jid];
-    $res = db\sum('amount', 'r_invoices', "payer IN (:ids) AND amount>0 and status=:TX_APPROVED", ['ids'=>$ids]);
+    $res = db\sum('amount', 'r_invoices', 'payer IN (:ids) AND amount>0 and status=:TX_APPROVED', ['ids'=>$ids]);
     return $res;
   }
 

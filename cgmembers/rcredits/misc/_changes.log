@@ -1,3 +1,18 @@
+2020-10-09 feature/console-tx
+. radically revised our strategy for formatting, based on a few standard page formats (wide, nolabs, mlab-above, etc)
+. fixed a number of formatting issues (especially for mobile), including check image on Connect page, label length, lists,...
+. reduced LINT warnings
+. transactions are now activated from the console by JS (to make the common case very fast)
+. fixed bug in ajax.inc that crashed cron (wrong function name)
+. removed Pay and Charge and Bank from the menu!
+. summary page is now for admins only and has a link to the console page
+. number of steps remaining is now never mentioned unless it's 1 or 2
+. changed admin SQL field on Data page to a textarea
+. changed honored field on Donate page to a textfield (not a textarea)
+. fixed search field on Posts page so it cooperates with other selectors, Enter works, and there's a clear-search button
+. temporarily removed photo from Summary page (difficult to place well)
+. pay and charge pages now return to console (for convenience)
+
 2020-10-06 feature/mobile2
 . shrink buttons to fit on console page
 . no more zero surtx entries

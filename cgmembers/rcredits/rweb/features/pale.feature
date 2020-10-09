@@ -16,7 +16,7 @@ Scenario: A member makes a transaction that triggers paying a little extra
   | id | payer | payerType | payeeType | from         | to   | amount | portion | action | start  | purpose   |*
   |  1 | .ZZA  | account   | anybody   | %MATCH_PAYER | .ZZD |      0 | 0.05    | surtx  | %today | food fund |
 
-  When member ".ZZA" confirms form "pay" with values:
+  When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who        | amount | purpose |*
   | pay | Corner Pub | 100    | fun     |
   Then we say "status": "report tx" with subs:

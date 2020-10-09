@@ -53,7 +53,7 @@ function go($page, $msg = '', $field = '') {
   $msg = strip_tags($msg);
   if (substr($page, 0, 1) == '/') $page = substr($page, 1); // supplying the slash is preferred, to agree with w\atag()
 
-  t\output("Going to page $page from $referrer (page0=$lastGo msg=$msg field=$field)");
+  if (!strhas($page, 'test-results')) t\output("Going to page $page from $referrer (page0=$lastGo msg=$msg field=$field)");
   if ($msg) say($msg, $field);
  
   if (test()) {
@@ -206,9 +206,18 @@ function NEWcgform($form, $onSubmit = '', $labeled = TRUE) {
 
 /**
  * Modify a page in standard ways before passing it through to Drupal core for processing.
+ * @param assoc $form: the form array
+ * @param string $fmt: format adjustments: narrow, wide, nolabs
+ * @param string $mlabFmt: label format adjustments for mobile: narrow, above
  */
-function cgform($form, $labeled = TRUE) {
-  $form['#attributes']['class'][] = $labeled ? 'form-horizontal' : 'form-vertical';
+function cgform($form, $fmt = '', $mlabFmt = '') {
+  foreach (ray('fmt mlabFmt') as $k) $$k = ray($$k);
+  $tabled = !nni($fmt, 'nolabs');
+
+  $classes[] = 'form-horizontal'; // for bootstrap
+  foreach ($fmt as $k) $classes[] = "frm-$k";
+  foreach ($mlabFmt as $k) $classes[] = "frm-mlabs-$k";
+  $form['#attributes']['class'] = $classes;
  
   foreach ($form as $k => $v) if (substr($k, 0, 1) != '#') {
     if (empty($v)) {unset($form[$k]); continue;} // NULL is ignored
@@ -223,8 +232,8 @@ function cgform($form, $labeled = TRUE) {
     
     $type = nni($v, '#type');
     if ($type == 'hidden') f('t.POST', [$k => nni($v, '#value')]); // fake post for tests
-    if ($type == 'fieldset') $form[$k] = cgform($v, $labeled);
-    if ($labeled and is_array($form[$k])) $form[$k]['#tabled'] = TRUE; // remember that form is laid out in a table (labels in left column)
+    if ($type == 'fieldset') $form[$k] = cgform($v);
+    if ($tabled and is_array($form[$k])) $form[$k]['#tabled'] = TRUE; // remember in each field that form is laid out in a table (labels in left column)
   }
 
   $uri = $_SERVER['REQUEST_URI'];
@@ -289,22 +298,21 @@ function wrap($name, $html, $ray) {
   $boxy = in($type, 'radio checkbox') ? $type : '';
 
   $class = [$class];
-  $class[] = $boxy ? 'option' : 'control-label col-sm-offset-1 col-xs-2';
+  $class[] = $boxy ? 'option' : 'control-label';
   if ($invisible) $class[] = 'sr-only';
   $label = w\tag('label', $boxy ? $html . $label : $label, compact('for', 'class'));
     
   if (!$bare) {
     $help = $help ? "\n      <div class=\"help-block\">$help</div>" : '';
-    $lineup = $type == 'item' ? ' lineup' : '';
     $core = <<<EOF
     $label
-    <div class="control-data col-xs-10 col-sm-6$lineup">
+    <div class="control-data">
       $html$help
     </div>
 EOF;
   } else $core = $boxy ? $label : $label . $html;
 
-  $id = $lineup ? " id=\"edit-$for\"" : '';
+  $id = $type == 'item' ? " id=\"edit-$for\"" : '';
   $outerClass = "form-group wrap-$for";
   $outerClass .= ' ' . ($boxy ?: "type-$type");
   if ($box) $outerClass .= ' box1';
@@ -367,7 +375,7 @@ function showRecords($ray, $formatFunc = 'CG\\Web\\formatField', $flagsField = B
       $v = $formatFunc($k, plain($v), $flagsField);
 //      if ($k == 'for2' and $v == $row->for1) $v = 'same'; // admin uses this for conciseness
       $align = in($k, ALIGN_RIGHT) ? 'R' : (in($k, ALIGN_CENTER) ? 'C' : 'L');
-      foreach (ray('balance credit trust count total $ pct dollars') as $w) if (strihas($k, $w)) {
+      foreach (ray('balance bal credit trust count total $ pct dollars') as $w) if (strihas($k, $w)) {
         $align = 'R';
         if ($v !== '' and is_numeric($v)) $v = in($w, 'pct') ? u\fmtAmt($v, '%') : number_format($v, in($w, FMT_INT) ? 0 : 2);
       }
@@ -1264,7 +1272,7 @@ function contactFields($defaults = []) {
   $step0 = !$mya->stepIsDone('contact');
   $partnerExtras = ' partner customer partnerCode'; // add-on fields passed through only for partner signup (start with space) (even partnerCode is necessary, in case form is redrawn on error)
   $dbFlds = 'phone address city state zip tenure owns postalAddr source';
-  $fields = 'phone physical address city state zip tenure owns sameAddr2 address2 city2 state2 zip2 postalAddr hidState hidState2 other source';
+  $fields = 'phone physical address city state zip tenure owns sameAddr2 address2 city2 state2 zip2 postalAddr hidState hidState2 source';
   foreach ($defaults as $k => $v) if (is_null($v)) unset($defaults[$k]); // needed for joint account setup
   extract($defaults + (array) $mya->account($dbFlds));
 
@@ -1320,8 +1328,8 @@ function contactFields($defaults = []) {
     $state2 = stateFld(nn($state2));
     $zip2 = textFld(t('Postal Code:'), [t('Postal code'), ''], required(nn($zip2)));
     
-    $other = $step0 ? item('', t('Other Information')) : NULL;
     if ((!nn($mya) or !$mya->co) and !nn($source)) {
+  //    $other = $step0 ? item('', t('Other Information')) : NULL;
       $source = $step0 ? sourceFld() : NULL;
     } else $source = hidFld(nn($source));
   }
@@ -1341,7 +1349,7 @@ function stateFld($dft) {return selectFld(REQ . t('State:'), t(''), dft($dft), [
 function sourceFld($dft = NULL) {return textFld(t('Referred By:'), [t('How you heard about %PROJECT'), t('Where did you hear about %PROJECT? (name of company or person, web address, publication name, radio station name, or whatever)')], dft(nn($dft)));}
 function zipFld($zip = NULL) {return textFld(t('Postal Code:'), [t('Physical location postal code'), t('Postal code for your <em>physical location</em>')], required(nn($zip)));}
 function sellingFld($selling = NULL) {return areaFld(t('Selling:'), [t('Products'),t('Enter one or more <b>VERY SHORT</b> transaction descriptions (for example "food") for when you make a sale &mdash; one line for each. Put the most common one first. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', u\fmtDate(now(), TRUE))], required($selling));}
-function routingFld($req = '') {return intFld(REQ . t('Routing:'), t('Type carefully your bank\'s routing number. (check to be sure it\'s correct!)'), vrange(10000000, 999999999));}
+function routingFld($req = '') {return intFld(REQ . t('Routing:'), t('Type carefully your bank\'s routing number.<br>(check to be sure it\'s correct!)'), vrange(10000000, 999999999));}
 function crumbsFld($dft, $req = FALSE) {return numFld($req . t('Crumbs:'), [t('Contribution Percentage'), t('Percentage to contribute on each payment you receive')], dft(($dft * 100) ?: '') + step(.1) + suffix(' %'));}
 
 /**
@@ -2091,7 +2099,7 @@ function setupFoot($label = '', $extra = [], $noSkip = FALSE) {
       $skip = $noSkip ? '' : skipButton();
       $res['nextStep'] = submit($label ?: (t('Next ') . '&raquo;'), '', '', w\suffix($skip));
       $steps = $remains == 1 ? t('step') : t('steps');
-      $res['progress'] = item(t('Just <b>%n</b> more %steps to go', 'n steps', $remains, $steps));
+      if ($remains < 3) $res['progress'] = item(t('Just <b>%n</b> more %steps to go', 'n steps', $remains, $steps));
     } else $res['nextStep'] = submit(t('Finish'));
   } else $res['submit'] = submit($label, '', '', $extra);
   return $res;
@@ -2146,9 +2154,9 @@ function tagN($tag, $html = '', $tribs = []) {return str_replace('#', '', tag($t
  */
 function atagB($href, $style = 'primary', $size = 'xs', $extras = []) {
   if (is_string($extras)) $extras = ['id' => $extras];
-  $class = nni($extras, 'class');
-  $extras['class'] =  ($class ? "$class " : '') . "btn btn-$size btn-$style";
-  return atag($href, $extras + ['role' => 'button']);
+  $class = nni($extras, 'class', []);
+  $class[] = "btn btn-$size btn-$style";
+  return atag($href, ray('class role', $class, 'button') + $extras);
 }
 
 /**
@@ -2170,7 +2178,7 @@ function emailtag($email = NULL, $subject = '', $body = '') {
   return "a href=\"mailto:$email?$subject$body\" target=\"_blank\"";
 }
 function btn($href, $text, $style = '', $size = '', $extras = []) {
-  return '<' . atagB($href, $style ?: 'primary', $size ?: 'xs', $extras) . ">$text</a>";
+  return '<' . atagB($href, $style ?: 'primary', $size ?: 'xs', $extras ?: []) . ">$text</a>";
 }
 function lnk($href, $text, $extras = []) {return '<' . atag($href, $extras) . ">$text</a>";}
 function doLnk($class, $text, $data = NULL, $extras = []) {return w\lnk('', $text, compact('class', 'data') + $extras);}

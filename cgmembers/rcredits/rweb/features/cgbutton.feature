@@ -117,7 +117,7 @@ Scenario: a member redeems store credit
   Given these "tx_rules":
   | id | action     | payerType | payer | payeeType | payee | from         | to           | portion | amtMax | end |*
   |  1 | %ACT_SURTX | account   | .ZZA  | account   | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER | .50     | 23     |     |
-  When member ".ZZA" confirms form "pay" with values:
+  When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who     | amount | goods      | purpose |*
   | pay | Our Pub | 20     | %FOR_GOODS | stuff   |
   Then transactions:
@@ -126,7 +126,7 @@ Scenario: a member redeems store credit
   |   3 |   1 | %today  |     10 | .ZZC  | .ZZA | discount (rebate) | 0      | 1    | %E_REBATE |
   # MariaDb bug: autonumber skips id=2 when there are record ids 1 and -1
 
-  When member ".ZZA" confirms form "pay" with values:
+  When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who     | amount | goods      | purpose |*
   | pay | Our Pub | 40     | %FOR_GOODS | stuff   |
   Then transactions:

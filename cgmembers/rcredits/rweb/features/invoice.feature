@@ -20,7 +20,7 @@ Setup:
   | .ZZC |       0 |
 
 Scenario: A member confirms request to charge another member
-  When member ".ZZA" confirms form "charge" with values:
+  When member ".ZZA" confirms form "tx/charge" with values:
   | op     | who     | amount | goods      | purpose |*
   | charge | Bea Two | 100    | %FOR_GOODS | labor   |
   Then invoices:
@@ -53,7 +53,7 @@ Scenario: A member confirms request to charge another member
   | .ZZC |       0 |
 	
 Scenario: A member confirms request to charge another member who has a bank account
-  When member ".ZZA" confirms form "charge" with values:
+  When member ".ZZA" confirms form "tx/charge" with values:
   | op     | who     | amount | goods      | purpose |*
   | charge | Our Pub | 100    | %FOR_GOODS | stuff   |
   Then invoices:
@@ -64,7 +64,7 @@ Scenario: A member confirms request to charge another member who has a bank acco
   | Abe One   | $100   | stuff   |
 
 Scenario: A member confirms request to charge a not-yet member
-  When member ".ZZA" confirms form "charge" with values:
+  When member ".ZZA" confirms form "tx/charge" with values:
   | op     | who      | amount | goods          | purpose |*
   | charge | Dee Four | 100    | %FOR_GOODS     | labor   |
   Then invoices:
@@ -90,7 +90,7 @@ Scenario: A member confirms request to charge a not-yet member
   And we say "status": "finish signup|when funded"
   
 Scenario: A member denies an invoice
-  When member ".ZZA" confirms form "charge" with values:
+  When member ".ZZA" confirms form "tx/charge" with values:
   | op     | who     | amount | goods | purpose |*
   | charge | Bea Two | 100    | %FOR_GOODS     | labor   |
   And member ".ZZB" confirms form "handle-invoice/nvid=1" with values:
@@ -109,7 +109,7 @@ Scenario: A member denies an invoice
   | .ZZC |       0 |
 
 Scenario: A member approves an invoice with insufficient funds
-  When member ".ZZA" confirms form "charge" with values:
+  When member ".ZZA" confirms form "tx/charge" with values:
   | op     | who     | amount | goods | purpose |*
   | charge | Bea Two | 300    | %FOR_GOODS     | labor   |
   And member ".ZZB" confirms form "handle-invoice/nvid=1" with values:
@@ -131,7 +131,7 @@ Scenario: A member approves invoices forevermore
   Given members have:
   | uid  | risks   |*
   | .ZZB | hasBank |
-  When member ".ZZA" confirms form "charge" with values:
+  When member ".ZZA" confirms form "tx/charge" with values:
   | op     | who     | amount | goods      | purpose |*
   | charge | Bea Two | 300    | %FOR_GOODS | labor   |
   And member ".ZZB" confirms form "handle-invoice/nvid=1" with values:
@@ -148,7 +148,7 @@ Scenario: A member approves an invoice to a trusting customer
   Given relations:
   | main | agent | flags            |*
   | .ZZA | .ZZB  | customer,autopay |
-  When member ".ZZA" confirms form "charge" with values:
+  When member ".ZZA" confirms form "tx/charge" with values:
   | op     | who     | amount | goods      | purpose |*
   | charge | Bea Two | 100    | %FOR_GOODS | labor   |
   Then transactions:

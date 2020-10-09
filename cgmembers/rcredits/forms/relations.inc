@@ -92,17 +92,17 @@ EOF;
 
   $title = t('Relations');
   $list = fld('item', '', '', array('markup' => $list));
-  $newPerson = textFld(t('Add Someone:'), [t('Name, id, email, or phone')]);
-  $submit = submit(BARE . t('Add'));
+  $submit = rendA('submit', submit(BARE . t('Add')));
+  $newPerson = textFld(t('Add Who:'), [t('Name, id, email, or phone')], suffix($submit));
   $showCustomers = hidFld($showCustomers);
 
-  $form = compact(ray('title subtext buttons list newPerson submit showCustomers'));
+  $form = compact(ray('title subtext buttons list newPerson showCustomers'));
 
 // no such step  if (!$mya->member and !$mya->stepIsDone('relations')) $form += w\setupFoot();
   w\whoFldSubmit('newperson', t('Create a new relation with %name?'));
   w\jsx('relations');
 
-  return cgform($form);
+  return cgform($form, '', 'above');
 }
 
 function formRelations_validate($form, &$sta) {

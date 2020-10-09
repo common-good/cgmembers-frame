@@ -63,22 +63,22 @@ $queries = [
 
   t('Positive and Negative Balance Totals') => 
     "SELECT c.fullName AS community, 
-     SUM(IF(u.balance<0, 1, 0)) AS negativeBalanceCount,
-     SUM(IF(u.balance<0, u.balance, 0)) AS negativeBalanceTotal,
-     SUM(IF(u.balance>=0, 1, 0)) AS positiveBalanceCount,
-     SUM(IF(u.balance>=0, u.balance, 0)) AS positiveBalanceTotal
+     SUM(IF(u.balance<0, 1, 0)) AS negCount,
+     SUM(IF(u.balance<0, u.balance, 0)) AS negativeBalTotal,
+     SUM(IF(u.balance>=0, 1, 0)) AS posCount,
+     SUM(IF(u.balance>=0, u.balance, 0)) AS positiveBalTotal
      FROM users u LEFT JOIN users c ON c.uid=u.community 
      WHERE IFNULL(u.jid,0)=0 AND u.:IS_OK AND u.uid NOT BETWEEN 0 AND (:CANONIC_ACCTS-1)
      GROUP BY c.fullName",
   
   t('Company and Member Balances and Credit Lines') =>
     "SELECT c.fullName AS community,
-            SUM(IF(u.:IS_CO, 0, u.balance)) AS memBalances,
+            SUM(IF(u.:IS_CO, 0, u.balance)) AS memBals,
             SUM(IF(u.:IS_CO, 0, -u.floor)) AS memCredit, 
-            SUM(IF(u.:IS_CO, 0, IF(u.:IS_REFILL, u.minimum, 0))) AS memTargetBalances,
-            SUM(IF(u.:IS_CO, u.balance, 0)) AS coBalances,
+            SUM(IF(u.:IS_CO, 0, IF(u.:IS_REFILL, u.minimum, 0))) AS memTargetBals,
+            SUM(IF(u.:IS_CO, u.balance, 0)) AS coBals,
             SUM(IF(u.:IS_CO, -u.floor, 0)) AS coCredit, 
-            SUM(IF(u.:IS_CO, IF(u.:IS_REFILL, u.minimum, 0), 0)) AS coTargetBalances 
+            SUM(IF(u.:IS_CO, IF(u.:IS_REFILL, u.minimum, 0), 0)) AS coTargetBals
      FROM users u LEFT JOIN users c ON c.uid=u.community
      WHERE IFNULL(u.jid,0)=0 AND c.uid<0 GROUP BY c.fullName",
 

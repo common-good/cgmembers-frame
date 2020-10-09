@@ -25,7 +25,7 @@ define('POST_TERMS', t('%i0 Free, %i1 Pay, %i2 Trade or Pay'));
 const POST_TERM_ICONS = '<span class="glyphicon glyphicon-heart"></span>&nbsp;, <span class="forpay">$</span>, <span class="glyphicon glyphicon-retweet"></span>&nbsp;';
 define('TERMS_CHOICES', t('-1:Free/Pay/Trade, 0:Free, 1:Pay, 2:Trade or Pay'));
 define('POST_SORG', t('Service Goods'));
-define('SORG_CHOICES', t('-1:Goods/Services, 0:Goods, 1:Services'));
+define('SORG_CHOICES', t('-1:G & S, 0:Goods, 1:Services'));
 define('CAT_FLAG', '[CAT]'); // gets replaced programmatically
 const MY_POSTS = 98; // select OPTION index for my posts
 
@@ -98,18 +98,19 @@ function formPosts($form, &$sta, $args = '') {
   
   $view = btn('', t('List View'), '', '', 'edit-view');
   $where = btn('', $radius ? t('Where') : t('Look Nearby'), '', '', 'edit-where');
-  $go = btn('', '&#128269;', '', '', 'edit-go'); // magnifying glass
   $post = btn(POSTPAGE . '/op=post', t('Post!'), '', '', 'edit-post');
 
-  $search = rendA('search', textFld(BARE, [t('Search')]));
-  
-  $choices = catChoices(t('Any Category'), [MY_POSTS => t('my posts')] + [99 => t('(search)')]);
-  $cat = rendA('cat', selectFld(BARE, '', '', $choices));
   $type = rendA('type', selectFld(BARE, '', '', ray(t('-1:Any type,') . u\deray(POST_TYPE_NAMES2))));
-  
+  $choices = catChoices(t('Any Category'), [MY_POSTS => t('my posts')]);
+  $cat = rendA('cat', selectFld(BARE, '', '', $choices));
   $terms = rendA('terms', selectFld(BARE, '', '', ray(TERMS_CHOICES)));
   $sorg = rendA('sorg', selectFld(BARE, '', '', ray(SORG_CHOICES)));
-  
+
+  $search = rendA('search', textFld(BARE, [t('Search')]));
+  $go = btn('', '&#128269;', '', '', 'edit-go'); // magnifying glass
+  $nogo = btn('', '&#128269;', '', '', 'edit-nogo'); // magnifying glass
+  $searchGroup = '<div id="searchGroup">' . $search . $go . $nogo . '</div>';
+    
   $rows = postList('', $latitude0, $longitude0, $zip0, $radius0);
   $none = tr('<div id="%id">%none</div>', 'id none', count($rows) < 4 ? 'none0' : 'none', t('There are no such posts (try within a larger distance?)'));
   $list = join("\n", $rows);
@@ -137,11 +138,11 @@ X
   $zip = hidFld($zip ?: ''); // to be filled in on the fly
   $submitter = submit(); // Drupal keeps other solutions from calling _submit function)
 
-  $buttons = item("$view$where$post$type$cat$clear$locset$terms$sorg$search$go");
+  $buttons = item("$view$where$post$type$cat$clear$locset$terms$sorg$searchGroup");
   
   $frm = hidFld('top');
   
-  return cgform(compact(ray('title subtext buttons list frm latitude longitude zip submitter')));
+  return cgform(compact(ray('title subtext buttons list frm latitude longitude zip submitter')), 'nolabs');
 }
 
 /**

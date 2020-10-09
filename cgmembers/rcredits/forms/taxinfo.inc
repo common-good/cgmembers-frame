@@ -94,7 +94,7 @@ EOF
     $go = w\submi(t('Change')); // requires suppressed submit button (find a better way)
     
   //  $ending = dateFld(REQ . t('For year ending:'), [t('Fiscal Year End')], dft($ending) + w\suffix('&nbsp;' . \render($go)));
-    return cgform(compact(ray('title subtext summary list posttext')));
+    return cgform(compact(ray('title subtext summary list posttext')), '', 'above');
   
   } else {
     $title = t('Your Form 1099-K');
@@ -114,7 +114,7 @@ EOF
 
     $form = compact(ray('title subtext txCount gross noCard withheld'));
     for ($i = 1; $i <= 12; $i++) $form["mo$i"] = item(u\fmtAmt($row["amt$i"], '$'), date("F", mktime(0, 0, 0, $i)) . ':');
-    return cgform($form + compact('posttext'));
+    return cgform($form + compact('posttext'), '', 'above');
   }
 }
 

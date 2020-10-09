@@ -13,7 +13,7 @@ function formBacking($form, &$sta, $args = '') {
   if (!$mya = w\eLinkAcct($sta, $args, 'acct')) return;
 
   $title = t('Backing Promise');
-  $subtext = t(<<< X
+  $subtext = item(t(<<< X
   <p>Backing makes it possible for your community and region to make investments, loans, and grants. Whereas bank investments are backed (partially) by the FDIC, Common Good investments, loans, and grants are backed by the members.</p>
   
   <p>Please choose a dollar amount you will back, for 12 months. This limited promise we all make to each other assures that any <i>other</i> credit in your account is 100% backed &mdash; by Dollars and/or collateral and/or Backing Promises. This promise comes into play only if there is a <%aCrunch>cash crunch</a>.</p>
@@ -24,7 +24,7 @@ function formBacking($form, &$sta, $args = '') {
 
   <p>"If there is a cash crunch within the next 12 months, I promise to buy this amount of %PROJECT credit to back the system as described above."</p>
 X
-  , '_aCrunch _aExample', atag('/help/cashflow'), atag('/help/backing-example'));
+  , '_aCrunch _aExample', atag('/help/cashflow'), atag('/help/backing-example')), BARE);
   
   $choices0 = ray('10000 2000 500 100 20 1');
   $dft = ($mya->backing + 0) ?: 1;
@@ -36,7 +36,7 @@ X
   $amount = numFld(t('Amount:'), [t('Amount to back')], suffix($minDesc));
 //  $signedBy = w\signedBy();
   $date = item(u\fmtDate(NULL, TRUE), t('Date:'));
-  $posttext = t('<b>Note:</b> Every year you will be invited to make another backing promise for the next 12 months.');
+  $posttext = item(t('<b>Note:</b> Every year you will be invited to make another backing promise for the next 12 months.'), BARE);
 
   jsx('amtChoice');
   return cgform(compact(ray('title subtext amtChoice amount date')) + w\setupFoot(t('Promise')) + compact('posttext'));

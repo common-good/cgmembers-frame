@@ -29,8 +29,8 @@ function formContact($form, &$sta) {
 
         
   jsx('contact');
-//  return cgform($form, 'return setPostalAddr(false);');
-  return cgform($form);
+
+  return cgform($form, '', 'above');
 }
 
 function formContact_validate($form, &$sta) {

@@ -24,10 +24,10 @@ function formProxies($form, &$sta, $args = '') {
   
   $title = t('Proxies');
   $afterOk = $mya->ok ? '' : ', once your account is approved,';
-  $subtext = ($mya->ok or !$gotBoth) ? t('proxy help') . t(<<<EOF
-    <p>If you don't see listed here the people you want, choose someone else temporarily, then%afterOk click <%a>Invite</a> on the Community menu to invite who you most want to represent you.</p>
+  $subtext = ($mya->ok or !$gotBoth) ? item(t('proxy help') . t(<<<EOF
+    <p>If you don't see listed here the people you want, choose someone else temporarily, then%afterOk click <%a>Invite</a> on the Community menu to invite who you most want to represent you.</p>&nbsp;
 EOF
-  , '_a afterOk', r\acct() ? atag('/community/invite') : '', $afterOk) : NULL;
+  , '_a afterOk', r\acct() ? atag('/community/invite') : '', $afterOk), BARE) : NULL;
 
 //  if ($gotBoth) $mya->stepDone('proxies'); // sometimes doesn't get set in formProxy (dunno why)
   $proxy1 = item($proxy[1], t('Proxy:'), t('Who will vote on your behalf, when you don\'t vote directly? (You can change your choices at any time.)'));

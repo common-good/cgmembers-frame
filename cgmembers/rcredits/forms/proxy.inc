@@ -27,16 +27,16 @@ function formProxy($form, &$sta, $args = '') {
   }
 
   $title = $priority == 1 ? t('Your #1 Proxy') : t('Your <%b>Alternate</b> Proxy', '_b', 'b class="loud"');
-  $title = item($title . t(' (choose one)'), BARE);
+  $title = $title . t(' (choose)');
   foreach (['warning', 'success', 'primary', 'slight'] as $i => $v) {
     $b["_b$i"] = "b class=\"btn btn-xs btn-$v\"";
   }
   
   $limitedChoice = $mya->cttyA->isRegion ? t('<p>You are outside any organized %PROJECT Community, so your choices will be very limited until more people sign up in your area. But no worries. You will have the opportunity to revise your proxy choices before your community votes on anything.</p>') : '';
-  $subtext = item(t('<p>Choose and click someone you know and trust. OR, if you prefer to have the system assign you a proxy for now, choose Placeholder One or Placeholder Two. You can change your choices at any time.</p><p>Top suggestions for you are <%b1>green</b>, <%b2>blue</b>, and <%b3>peach</b> (in that order).</p>', $b) . (($dft or $dftOther) ? t('<p>Your current selection(s), if any, is/are <%b0>orange</b>.</p>', $b) : '') . $limitedChoice, BARE);
+  $subtext = t('<br><p>Choose and click someone you know and trust. OR, if you prefer to have the system assign you a proxy for now, choose Placeholder One or Placeholder Two. You can change your choices at any time.</p><p>Top suggestions for you are <%b1>green</b>, <%b2>blue</b>, and <%b3>peach</b> (in that order).</p>', $b) . (($dft or $dftOther) ? t('<p>Your current selection(s), if any, is/are <%b0>orange</b>.</p>', $b) : '') . $limitedChoice;
   $list = $choices;
   $priority = hidFld($priority);
-  return cgform(compact(ray('title subtext list priority')), '', FALSE);
+  return cgform(compact(ray('title subtext list priority')), 'wide nolabs');
 }
 
 function formProxy_validate($form, &$sta) {

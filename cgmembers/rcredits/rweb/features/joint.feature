@@ -35,10 +35,10 @@ Scenario: A member requests a joint account
   | .ZZA | .ZZB |     150 |
   | .ZZB | .ZZA |       0 |
   
-  When member ".ZZA" confirms form "pay" with values:
+  When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who        | amount | goods      | purpose |*
   | pay | Corner Pub |     20 | %FOR_GOODS | stuff   |
-  And member ".ZZB" confirms form "pay" with values:
+  And member ".ZZB" confirms form "tx/pay" with values:
   | op  | who        | amount | goods      | purpose |*
   | pay | Corner Pub |    300 | %FOR_GOODS | crud    |
 
