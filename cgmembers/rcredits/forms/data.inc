@@ -9,11 +9,11 @@ use CG\Db as db;
 /**
  * Present a choice of data queries
  */
-function formData($form, &$sta, $args = '', $isco = FALSE) {
+function formData($form, &$sta, $args = '', $isco0 = FALSE) {
   global $mya;
-  $isco = ($isco == 'co');
+  extract(just('qName sql q d isco', $args, NULL));
+  u\setDft($isco, $isco0 == 'co');
   require queryFile($isco);
-  extract(just('qName sql q d', $args, NULL));
   
   if ($q) {
     $d = substr($q, 0, 1);
@@ -25,8 +25,8 @@ function formData($form, &$sta, $args = '', $isco = FALSE) {
   $sql0 = urldecode(nn($sql));
   $qName0 = nn($qName);
 
-  $btn = w\submi('Go', 'success', 'xs', ['parents' => ['go']]);
-  $sql = $mya->admin ? areaFld(t('SQL:'), [t('MySQL Select Query')], dft($sql0) + maxlen(4096) + suffix(\render($btn))) : NULL;
+  $sql = $mya->admin ? areaFld(t('SQL:'), [t('MySQL Select Query')], dft($sql0) + maxlen(4096)) : NULL;
+  $submit = $mya->admin ? submit(t('Go')) : NULL;
 
   if ($mya->admin and $sql0) {
     $title = t('MySQL Query');
@@ -53,13 +53,12 @@ function formData($form, &$sta, $args = '', $isco = FALSE) {
   } else {
     $title = $isco ? t('Company Reports') : t('Community and Money Data');
     $subtext = item(t('Click the query of your choice. If you need information not provided here, <%a1>request it</a>!', '_a1', u\emailTag(CGF_EMAIL, t('data request'))), '&nbsp;');
-    $isco = hidFld($isco ?: 0);
 
     foreach ($queries as $k0 => $v) {
-      if ($k = w\queryPermitted($k0)) $links[$k0] = lnk("/community/data/q=$k0", $k);
+      if ($k = w\queryPermitted($k0)) $links[$k0] = lnk("/community/data/q=$k0&isco=$isco", $k);
     }
     $links = item(u\ul($links), NBSP);
-    $form = compact(ray('title subtext sql isco links'));
+    $form = compact(ray('title subtext sql submit links'));
   }
   return cgform($form, '', 'above');
 }
@@ -72,9 +71,9 @@ function formData_validate($form, &$sta) {
 }
 
 function formData_submit($form, &$sta) {
-  extract(just('sql', $sta['input']));
+  extract(just('sql', $sta['input'], NULL));
 
-  if (op($sta) == 'go') return w\go('/community/data/sql=' . urlencode($sql));
+  if ($sql) return w\go('/community/data/sql=' . urlencode($sql));
 }
 
 function queryFile($isco) {return R_ROOT . ($isco ? '/rweb/queries-co.inc' : '/rweb/queries.inc');}

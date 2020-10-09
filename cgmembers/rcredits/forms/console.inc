@@ -88,6 +88,9 @@ function formConsole($form, &$sta, $args = '') {
   return cgform(compact('console', 'tx'));
 }
 
+function formConsole_validate($form, &$sta) {return formTx_validate($form, $sta);}
+function formConsole_submit($form, &$sta) {return formTx_submit($form, $sta);}
+
 /**
  * Return a list of important next steps for the account.
  * @todo: add comment as an option?

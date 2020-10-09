@@ -926,13 +926,9 @@ function checkSanity() {
 
 function util($arg) {
   switch ($arg) {
-  /* case 'modal': */
-  /*   drupal_goto('modal'); */
-  /*   break; */
-  /* case 'reset': */
-  /*   r\reset(); */
-  /*   break; */
   case 'reset-menu':
+    db\q("DELETE FROM menu_router WHERE page_callback LIKE 'CG%'"); // otherwise we get leftover junk
+    db\q("DELETE FROM menu_links WHERE module='rweb'");
     \menu_rebuild();
     break;
   case 'remove-test-data':

@@ -2729,15 +2729,13 @@ function menu_router_build() {
   // We need to manually call each module so that we can know which module
   // a given item came from.
   $callbacks = array();
-  $modules = module_implements('menu');
-  $modules[] = 'rweb'; // db 6/3/2017
-  foreach ($modules as $module) if (!in_array($module, ray('node'))) { // CG 3/9/2017
+  $modules = ray('rweb system') + module_implements('menu'); // make it easy to add new modules
+
+  foreach ($modules as $module) if (!in($module, 'node')) { // CG 3/9/2017
     $router_items = call_user_func($module . '_menu');
     if (isset($router_items) && is_array($router_items)) {
-      foreach (array_keys($router_items) as $path) {
-        $router_items[$path]['module'] = $module;
-      }
-      $callbacks = array_merge($callbacks, $router_items);
+      foreach (array_keys($router_items) as $path) $router_items[$path]['module'] = $module;
+      $callbacks += $router_items;
     }
   }
   // Alter the menu as defined in modules, keys are like user/%user.
