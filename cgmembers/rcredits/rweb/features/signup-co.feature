@@ -104,7 +104,7 @@ Scenario: A company supplies company information
   | Annual Gross    | |
   | Founded         | |
   | Website         | ourpub.co |
-  | Description     | |
+  | Describe        | |
   | App permissions | |
   | Nudge Every     | |
   | Tips            | |

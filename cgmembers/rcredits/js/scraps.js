@@ -55,18 +55,23 @@ function doit(what, vs) {
     });
     break;
 
+  case 'summary':
+    $('#activate-credit').click(function () {post('setBit', {bit:'debt', on:1}, report);});
+    break;
+    
   case 'console':
     $('#endorse a').click(function () {$('#endorse').hide();});
     $('#covid').click(function () {location.href = baseUrl + '/community/covid';});
     $('#blm').click(function () {location.href = 'https://commongood.earth/about-us/diversity-equity-inclusion';});
     $('#onn').click(function () {location.href = baseUrl + '/community/posts';});
-    break;
     
-  case 'summary':
-    $('#activate-credit').click(function () {post('setBit', {bit:'debt', on:1}, report);});
-    break;
+    $('.btn-pay, .btn-charge').click(function () {
+      var paying = ($(this).attr('id') == 'btn-pay');
+      $('#console').hide();
+      $('#tx').show();
+    });
     
-  case 'tx':
+  case 'tx': // fall through from console
     $('#btn-delay').click(function () {
       $('.form-item-start').show();
       $('#edit-start').focus();
@@ -89,7 +94,6 @@ function doit(what, vs) {
     $('#dp-offset').click(function () {post('dpOffset', {amount:vs['amount']}, report);});
     break;
     
-
   case 'change-ctty':
     $('#edit-community').on('change', function () {
       var newCtty = this.value;
@@ -405,46 +409,47 @@ function doit(what, vs) {
 
     var frm = $('#edit-search').parents('form:first');
     
-   
-    $('#edit-search').change(function () { // search
-      var box = $('#list .container');
-
-      $('#edit-cat').val(99); // show "(search)"
-      
-      var s = $(this).val().trim().replace(/\s+/g, ' '); // the search string
-      box.find('.tbody .row').show(); // show all (then eliminate non-matches)
-      if (s == '') return $('#edit-cat').val('');
-
-      var i, words = s.toUpperCase().split(' '); // array of words
-      var cols = '.cat .item .details'.split(' ');
-
-      box.find('.tbody .row').each(function () {
-        colText = ''; for (i in cols) colText += ' ' + $(this).find(cols[i]).text().toUpperCase();
-        for (i in words) if (colText.indexOf(words[i]) < 0) $(this).hide(); // show only if it has all words
-      });
-    });
-
     $('#list .tbody .row').click(function () {location.href = $(this).find('a').attr('href');}); // click any part of box
        
-    $('#edit-type, #edit-cat, #edit-terms, #edit-sorg').change(function () {
+    $('#edit-nogo').click(function () {$('#edit-search').val('').change();});
+//    $('#edit-go').click(function () {$('#edit-search').change();}); // this seems to be required on some computers
+    $('#edit-search').keydown(function () { // user pressed Enter in search box
+      if (event.which == 13) {
+        $(this).change().blur();
+        event.preventDefault();
+      }
+    });
+
+    $('#edit-type, #edit-cat, #edit-terms, #edit-sorg, #edit-search').change(function () {
       var box = $('#list');
       var type = $('#edit-type').find(':selected').val();
       var cat = $('#edit-cat').find(':selected').val();
       var terms = $('#edit-terms').find(':selected').val();
       var sorg = $('#edit-sorg').find(':selected').val();
+      var s = $('#edit-search').val().trim().replace(/\s{2,}/g, ' '); // the search string without extraneous spaces
+      var cnt;
 
-      if ($(this).attr('id') == 'edit-cat' && cat == -1) { // search
-        $('#edit-search').change();
-      } else if (cat || terms || sorg) { // show some
-        var sel = '.tbody .row';
-        if (type >= 0) sel += '.t' + type;
-        if (cat > 0) sel += (cat == vs['myPosts']) ? '.mine' : ('.c' + cat);
-        if (terms >= 0) sel += '.x' + terms;
-        if (sorg >= 0) sel += '.s' + sorg;
-        box.find('.tbody .row').hide(); // hide all
-        var cnt = box.find(sel).show().length; // and everything in the chosen category
-        $('#none').toggle(cnt == 0); // and the "nothing found in this area" row, if any
-      } else box.find('.tbody .row').show(); // show all
+      var sel = '.tbody .row';
+      if (type >= 0) sel += '.t' + type;
+      if (cat > 0) sel += (cat == vs['myPosts']) ? '.mine' : ('.c' + cat);
+      if (terms >= 0) sel += '.x' + terms;
+      if (sorg >= 0) sel += '.s' + sorg;
+      box.find('.tbody .row').hide(); // hide all
+      cnt = box.find(sel).show().length; // and everything in the chosen category
+    
+      if (s.length) {
+        var i, words = s.toUpperCase().split(' '); // array of words
+        var cols = '.cat .item .details'.split(' ');
+
+        box.find('.tbody .row').each(function () { // eliminate non-matches
+          colText = ''; for (i in cols) colText += ' ' + $(this).find(cols[i]).text().toUpperCase();
+          for (i in words) if (colText.indexOf(words[i]) < 0) {
+            $(this).hide(); // show only if it has all words
+            cnt -= 1;
+          }
+        });
+      }
+      $('#none').toggle(cnt <= 0); // and the "nothing found in this area" row, if any
     });
      
     

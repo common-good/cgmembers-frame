@@ -117,31 +117,6 @@ function rcredits_menu_tree($variables) {
 }
 
 /**
- * Implements theme_field__field_type().
- *//*
-function rcredits_field__taxonomy_term_reference($variables) {
-  $output = '';
-
-  // Render the label, if it's not hidden.
-  if (!$variables['label_hidden']) {
-    $output .= '<h3 class="field-label">' . $variables['label'] . ': </h3>';
-  }
-
-  // Render the items.
-  $output .= ($variables['element']['#label_display'] == 'inline') ? '<ul class="links inline">' : '<ul class="links">';
-  foreach ($variables['items'] as $delta => $item) {
-    $output .= '<li class="taxonomy-term-reference-' . $delta . '"' . $variables['item_attributes'][$delta] . '>' . drupal_render($item) . '</li>';
-  }
-  $output .= '</ul>';
-
-  // Render the top-level DIV.
-  $output = '<div class="' . $variables['classes'] . (!in_array('clearfix', $variables['classes_array']) ? ' clearfix' : '') . '"' . $variables['attributes'] .'>' . $output . '</div>';
-
-  return $output;
-}
-*/
-
-/**
  * Returns HTML for a form.
  *
  * @param $variables
@@ -312,22 +287,22 @@ function rcredits_form_element($variables) {
 //  $boxy = in_array($type, ['radio', 'checkbox']) ? ($type . (@$inline ? '-inline' : '')) : '';
   $boxy = in($type, 'radio checkbox') ? $type : '';
 
-  $class[] = $boxy ? 'option' : 'control-label col-sm-offset-1 col-xs-2';
+  $class[] = $boxy ? 'option' : 'control-label';
   if ($title_display == 'invisible') $class[] = 'sr-only';
-  $label = w\tag('label', $boxy ? $children . nn($title) : nn($title), compact('for', 'class'));
+  $label = ($boxy ? ($children . nn($title)) : nn($title)) ?: NBSP;
+  $label = w\tag('label', $label, compact('for', 'class'));
   if (nn($bare)) return $boxy ? $label : $children;
     
   if (nn($tabled)) {
     if (is_array(nn($help))) $help = nni($help, 1); // ignore hint here (see rcredits_textfield)
     $help = nn($help) ? "\n      <div class=\"help-block\">$help</div>" : '';
-    $lineup = isset($markup) ? ' lineup' : '';
     $core = <<<EOF
     $label
-    <div class="control-data col-xs-10 col-sm-6$lineup">
+    <div class="control-data">
       $children$help
     </div>
 EOF;
-  } else $core = $boxy ? $label : $label . $children;
+  } else $core = $boxy ? $label : ($label . $children);
 
   $id = isset($markup) ? " id=\"edit-$for\"" : '';
   $outerClass = "form-group form-item-$for";
@@ -400,7 +375,7 @@ function rcredits_radio($variables) {
 
 function rcredits_submit($variables) {
   $special = 'title class tickle tabindex disabled';
-  extract(cgElement($variables, 'tabled bare value id size style parents ' . $special));
+  extract(cgElement($variables, 'bare value id size style parents ' . $special));
   $id2 = 'edit-' . (isset($parents) ? nni($parents, 0) : 'xx'); // even if no id is set (assures mixed case when appropriate
   if (!nn($id) or $id == strtolower($id2)) $id = $id2;
   $extra = cgElement($variables, $special);
@@ -409,7 +384,7 @@ function rcredits_submit($variables) {
 }
 
 function rcredits_button($variables) {
-  extract(cgElement($variables, 'tabled value href button_type class'));
+  extract(cgElement($variables, 'value href button_type class'));
   if ($button_type == 'submit') return rcredits_submit($variables);
   
 /**/ if (strpos($href, 'http') === FALSE) die('no http in button'); // $onclick = $href;

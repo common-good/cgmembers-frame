@@ -1671,7 +1671,7 @@ function weScripWithSubs($script, $args = []) {
   if (!isset($scriptScraps[$script])) return FALSE;
   $args = $args[0];
   $got = just(array_keys($args), $scriptScraps[$script]);
-  foreach ($args as $k => $v) if (!t\eq(nni($got, $k), $v)) return FALSE;
+  foreach ($args as $k => $v) if ($v != '?' and !t\eq($v, nni($got, $k))) return FALSE;
   return TRUE;
 }
 

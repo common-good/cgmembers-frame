@@ -223,7 +223,7 @@ function formSeeChanges($form, &$sta, $qid = '') {
     $list = item("<table>$list</table>");
   } else $list = t('No changes');
   
-  return cgform(compact(ray('title list')));
+  return cgform(compact(ray('title list')), 'nolabs');
 }
 
 function decryChange($type, $v) {return ($type == 'V' and !r\allKnowing()) ? t('(secret)') : u\decry($type, $v);}
@@ -394,7 +394,7 @@ EOF;
   if (!isset($tickle)) $list .= t('There are no followup calls to be made.');
   $list .= "</table>\n";
   
-  return cgform(compact(ray('title subtitle list')), FALSE);
+  return cgform(compact(ray('title subtitle list')), 'wide nolabs');
 }
 
 /**
@@ -444,7 +444,7 @@ EOF;
   }
   $list .= "</table>\n";
   
-  return cgform(compact(ray('title list')), FALSE);
+  return cgform(compact(ray('title list')), 'wide nolabs');
 }
 
 /**
@@ -506,7 +506,7 @@ function formPhp($form, &$sta, $res = '') {
   $res = item($res);
   $code = areaFld('', '', dft(getV('code')));
   $submit = t('Execute Code');
-  return cgform(compact('res', 'code', 'submit'), FALSE);
+  return cgform(compact('res', 'code', 'submit'), 'wide nolabs');
 }
 
 /**
@@ -876,41 +876,11 @@ function formSMS_submit($form, $sta) {
 }
 
 /**
- * Run acceptance tests.
- */
-function tests($arg = '') {
-  if (!isDEV) return;
-  
-  \drupal_get_messages(); // clear messages
-  db\q('TRUNCATE test'); // clear in advance, rather than after, so we can inspect results when tests fail
-  $modules = u\prefixValues('rcredits/', ray('admin rvote rweb rcron rsmart api'));
-  jsx('test');
-  test(TRUE);
-
-  if (!getv('cgf_uid')) {
-    a\setupBasicAccounts();
-    return w\go('/tests/?' . $arg, t('redirecting after setting up basic accounts'), 'err');
-  }
-
-  include_once DRUPAL_ROOT . '/vendor/gherkin/test.php';
-  //  $_SESSION = [];
-  if (ini_get("session.use_cookies")) { // from PHP's session_destroy page
-    $params = session_get_cookie_params();
-    setcookie(session_name(), '', now() - 42000,
-              $params["path"], $params["domain"],
-              $params["secure"], $params["httponly"]
-              );
-  }
-  if (session_id() and session_status() == PHP_SESSION_ACTIVE and nn($_SESSION)) session_destroy();
-  db\q('TRUNCATE sessions');
-  \drupal_goto('sadmin/test-results'); // has to be a form available when logged out
-}
-
-/**
  * Log back in to admin automatically (called after testing, in case session got destroyed).
  */
-function formTestResults($form, &$sta) {
+function formTestResults($form, &$sta, $args = '') {
   if (!isDEV) return;
+  extract(just('top', $args, NULL));
   
   r\setAcct(1, $sta);
   test(FALSE);
@@ -920,10 +890,11 @@ function formTestResults($form, &$sta) {
     extract($row);
     $list[] = "<div class=\"$type messages\">$value</div>\n";
   }
-  $list = item(join('', nn($list, [])));
+  $list = item(join('', nn($list, [])), BARE);
   \drupal_get_messages(); // throw out any existing messages
+//  $title = $top ? t('Tests') : NULL;
 
-  return cgForm(compact(ray('list')));
+  return cgForm(compact(ray('list')), 'wide');
 }
 
 /**

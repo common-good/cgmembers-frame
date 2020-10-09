@@ -1633,3 +1633,4 @@ function deray($ray) {$res = []; foreach (is_array($ray) ? $ray : ray($ray) as $
 function joinRays($ray1, $ray2) {foreach ($ray2 as $k) $ray1[] = $k; return $ray1;}
 function ry($type, $data) {return substr(u\cry($type, $data), strlen(CRYPT_FLAG));}
 function dery($type, $code) {return u\decry($type, CRYPT_FLAG . $code);}
+function ul($list) {return '<ul><li>' . join("</li>\n<li>", nn($list) ?: []) . "</li></ul>\n";}

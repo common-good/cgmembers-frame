@@ -24,7 +24,7 @@ function formCoupons($form, &$sta, $args = '') {
   case 'redeem':
     $title = t('Redeem a General Gift Certificate');
     $subtext = t('Find the code on your gift certificate. If the the certificate is just for one company, there is no code &mdash; just go buy something at that business.');
-    $code = textFld(t('Certificate Code:'), [t('Code')], required());
+    $code = textFld(t('Code:'), [t('Code')], required());
     $submit = t('Redeem');
     break;
   case 'gift':
@@ -64,17 +64,17 @@ X
   default:
     $title = t('Discounts and Gift Certificates');
     $subtext = t('<p>A <b>Discount</b> applies only at your business. If the minimum purchase amount equals the discount amount, it is equivalent to a traditional gift certificate.</p><p>A <b>General Gift Certificate</b> is redeemable at any %PROJECT business.</p>');
-    $buttons = 
-      w\btn('/community/coupons/type=discount', t('Create a Discount'))
-      . w\btn('/community/coupons/type=gift', t('Create a General Gift Certificate'))
-      . w\btn('/community/coupons/type=redeem', t('Redeem a General Gift Certificate'))
-      . w\btn('/community/coupons/list', t('List Discounts You Offer'))
-      . w\btn('/community/coupons/list/ALL', t('Show All Discounts Available to You'));
+    $buttons[] = lnk('/community/coupons/type=discount', t('Create a Discount'));
+    $buttons[] = lnk('/community/coupons/type=gift', t('Create a General Gift Certificate'));
+    $buttons[] = lnk('/community/coupons/type=redeem', t('Redeem a General Gift Certificate'));
+    $buttons[] = lnk('/community/coupons/list', t('List Discounts You Offer'));
+    $buttons[] = lnk('/community/coupons/list/ALL', t('Show All Discounts Available to You'));
+    $buttons = item(u\ul($buttons));
   }
   
   $type = hidFld($type);
   
-  return cgform(compact(ray('title subtext buttons ' . COUPON_FLDS . ' submit')));
+  return cgform(compact(ray('title subtext buttons ' . COUPON_FLDS . ' submit')), '', 'none');
 }
 
 function formCoupons_validate($form, &$sta) {

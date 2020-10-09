@@ -76,8 +76,8 @@ X;
   
   $html .= "</table>\n";
 
-  $transactions = item('<div>' . $html . '</div>');
-  $title = t('Recurring Payments'); // . $mya->bestName;
+  $transactions = item('<div>' . $html . '</div>', BARE);
+  $title = t('Automated Payments'); // . $mya->bestName;
 
   return cgform(compact(ray('title transactions')));
 }
@@ -87,7 +87,7 @@ function addLine($info, $classes, $url) {
 
   extract($info);
   $fWho = r\acct($fWho)->bestName;
-  $button = $button ? "<a href=\"$url&do=stop\" title=\"Stop recurring transaction\"><img src=\"$rUrl/images/icons/close-blue.png\" border=0 /></a>" : '';
+  $button = $button ? "<a href=\"$url&do=stop\" title=\"Stop automatic transaction\"><img src=\"$rUrl/images/icons/close-blue.png\" border=0 /></a>" : '';
   $res = "<tr>\n";
   
   foreach (compact(array_keys($info)) as $k => $v) {

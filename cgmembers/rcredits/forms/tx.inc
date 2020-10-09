@@ -11,31 +11,29 @@ use CG\Db as db;
  * @param string $args: all or some parameters for the form (when called from directory or draft form)
  * NOTE: currently handles only pay and charge
  */
-function formTx($form, &$sta, $args = '') {
+function formTx($form, &$sta, $type, $args = '') {
   extract(just('who amount goods purpose', $args));
   global $mya;
 
-  $type = mb_strtolower($_SERVER['REQUEST_URI']);
-  $paying = ($type == 'pay');
+  $pay = in($type, 'pay both');
+  $charge = in($type, 'charge both');
   
-  list ($opDesc, $role) = $paying
-  ? [t('Pay'), 'payer']
-  : [t('Charge'), 'payee'];
+  $opDesc = $pay ? t('Pay') : t('Charge');
   
   $selling = explode("\n", $mya->selling);
-  $purpose = nn($purpose) ?: ($paying ? '' : nni($selling, 0));
+  $purpose = nn($purpose) ?: ($charge ? nni($selling, 0) : '');
   
   focusOn(nn($who) ? 'amount' : 'who');
 
   $title = $opDesc;
-  $buttons = $paying ? w\btn('/pay/payments', t('Upload Payments'), 'default') : NULL;
-  if ($mya->co) $buttons .= ' ' . ($paying 
-    ? w\btn('/pay/payroll', t('Upload Payroll'), 'default')
-    : w\btn('/charge/invoices', t('Upload Invoices'), 'default')
-  );
-  $who = textFld($opDesc . t(' whom:'), [t('name, id, email, or phone')], required(nn($who)));
+  if ($mya->co) {
+    $buttons = $pay ? btn('/tx/pay/payments', t('Upload Payments'), 'default') : '';
+    if ($pay) $buttons .= btn('/tx/pay/payroll', t('Upload Payroll'), 'default');
+    if ($charge) $buttons .= btn('/tx/charge/invoices', t('Upload Invoices'), 'default');
+  } else $buttons = NULL;
+  $who = textFld(t('Who:'), [t('name, id, email, or phone')], required(nn($who)));
 
-  $amount = numFld(REQ . t('Amount:'), [t('amount to ') . mb_strtolower($opDesc)], dft(nn($amount)) + vmin(.01));
+  $amount = numFld(REQ . t('Amount:'), [t('transaction amount')], dft(nn($amount)) + vmin(.01));
   $purpose = textFld(t('For:'), [t('purpose or description of goods and services')], required(nn($purpose)));
   $start = dateFld(t('Date:'));
   $period = rendA('period', selectFld(BARE, '', dft(''), r\recurRay(FALSE, PERIODS_PLURAL)));
@@ -43,23 +41,23 @@ function formTx($form, &$sta, $args = '') {
   $end = dateFld(t('Ending:'), t('Leave blank for "never". You can end it at any time at <%a>History / Recurring Transactions</a>.', '_a', atag('/history/recurring')));
   
   $btns = btn('', t('delay'), 'default', '', 'btn-delay') . btn('', t('repeat'), 'default', '', 'btn-repeat') . btn('/history/recurring', t('manage'), 'default', '', 'btn-manage');
-  $$type = submit($opDesc, '', '', suffix($btns));
+  $submit = submit(t('Submit'), '', '', suffix($btns));
 
-  w\whoFldSubmit('who', $opDesc . t(' %amount to %name?'), ray('allowNonmember', !$paying));
+  w\whoFldSubmit('who', $opDesc . t(' %amount to %name?'), ray('allowNonmember', $charge));
+  $paying = hidFld($pay);
   
   jsx('tx');
-  $form = cgform(compact(ray("title buttons who amount purpose start periods end $type")));
-  $form['#attributes']['class'][] = 'not-scanned';
+  $form = cgform(compact(ray("title buttons who amount purpose start periods end submit paying")));
 
   return $form; // get defaults from which('info')
 }
 
 function formTx_validate($form, &$sta) {
   global $mya;
-  $info = just('who amount purpose start end', $sta['input'], NULL);
+  $info = just('who amount purpose start end paying', $sta['input'], NULL);
   extract($info);
   if (mb_strpos($who, '@') and !u\validEmail($email = $who)) return say('bad email', compact('email'), 'who');
-  if (!$a = w\whois($who, 'who', $info, 'no self-trading', op($sta) == 'pay')) return FALSE;
+  if (!$a = w\whois($who, 'who', $info, 'no self-trading', $paying)) return FALSE;
   $uid = $a->id;
   if ($err = u\badAmount($amount, '>0')) return say($err, 'amount');
   foreach (ray('start end') as $k) if ($$k and $err = u\badDate($$k, $mya->superAdmin ? today() - 180 * DAY_SECS : today())) return say($err, $k);
@@ -69,13 +67,11 @@ function formTx_validate($form, &$sta) {
 function formTx_submit($form, &$sta) {
   global $mya;
   $myid = $mya->id;
-  extract($info = just('amount purpose period periods start end uid goods', $sta['input'], NULL));
+  extract($info = just('amount purpose period periods start end uid goods paying', $sta['input'], NULL));
 //  if (mb_strpos($who, '@')) return w\go('/charge/nonmember/' . u\urlify(serialize($info)));
 
   u\setDft($goods, FOR_GOODS);
   $DBTX = \db_transaction();
-  $func = op($sta);
-  $paying = ($func == 'pay');
   $delay = ($start > today());
   $repeats = ($periods > 0);
   
@@ -118,5 +114,6 @@ function formTx_submit($form, &$sta) {
   unset($DBTX);
 
   if ($msg[0] == '|') $msg = substr($msg, 1);
-  return say(tr($msg, $args), $ok ? '' : 'amount');
+  say(tr($msg, $args), $ok ? '' : 'amount');
+  return go('console');
 }

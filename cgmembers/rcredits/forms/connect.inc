@@ -54,22 +54,21 @@ function formConnect($form, &$sta, $args = '') {
     } else { // during account setup
       $title = t('Getting Money In or Out');
       $subtext = t('<p>Choose how you want to get money into (or out of) your %PROJECT Account. The third option is available through %PROJECT only in Western Massachusetts, Ann Arbor Michigan, Goshen Indiana, and Madison Wisconsin.</p>');
-      $methodChoices = ray(t('I want to transfer funds to and from my checking account (recommended).,My employer will pay me through %PROJECT or I will sell goods and services through %PROJECT and I do NOT want to connect a checking account.,I live near a store that will put money on my card in exchange for cash and I do NOT want to connect a checking account.'));
+
+      $securityLink = r\promoLink('about-us/privacy-and-security');
+      $_reassurance = $mya->minimum ? '' : t('<p><b>NOTE:</b> Funds will be taken from your bank account ONLY when you explicitly request a transfer or when you choose automatic refills. See our <%a>Privacy and Security Policy</a> for details on how your information is protected.</p>', '_a', atag($securityLink));
+      $methodChoices = explode(',', t('<p>(recommended) I want to transfer funds to and from my checking account from time to time at my request by Remotely-Created Check (RCC) or by Automated Clearing House (ACH).</p>%reassurance,My employer will pay me through %PROJECT or I will sell goods and services through %PROJECT and I do NOT want to connect a checking account.,I live near a store that will put money on my card in exchange for cash and I do NOT want to connect a checking account.', compact('_reassurance')));
       $connect = radiosFld(t('Connect How:'), '', required(0), $methodChoices);
       $chox = 3; // number of choices
     }
     $chox = hidFld($chox);
-
-    $securityLink = r\promoLink('about-us/privacy-and-security');
-    $reassurance = $mya->minimum ? '' : t('<p><b>NOTE:</b> Funds will be taken from your bank account ONLY when you explicitly request a transfer or when you choose automatic refills.</p>');
-    $connectText = item(t('<p>Complete this form to authorize funds to be transferred to or from your checking account at your request, by Remotely-Created Check (RCC) or by Automated Clearing House (ACH). See our <%a>Privacy and Security Policy</a> for details on how your information is protected.</p>', '_a', atag($securityLink)) . $reassurance);
-    
+   
     $routingNumber = $usa ? routingFld(FALSE) : NULL;
     //$bankAccount = textFld(t('Account:'), t('Type carefully your checking account number.'));
-    $bankAccount = intFld(t('Account:'), t('Type <b class="loud">carefully</b> your <b>checking</b> account number. <span>Savings accounts will not work, at this time.</span>'), maxlen(17));
+    $bankAccount = intFld(t('Account:'), t('Type <b class="loud">carefully</b> your <b>checking</b> account number. <br><span>Savings accounts will not work, at this time.</span>'), maxlen(17));
 //    $bankAccount2 = textFld(t('Again:'), t('Type your account number again.<br>(we need to be REALLY SURE we don\'t connect to the wrong account)'));
   
-    $connectFields = fieldSet('connectFields2', compact(ray('connectText routingNumber bankAccount cashout autopay autoboxes refills targetFields')), BARE);
+    $connectFields = fieldSet('connectFields2', compact(ray('routingNumber bankAccount cashout autopay autoboxes refills targetFields')), BARE);
 //    $submit = submit(t('Connect'));
     $fields = 'title subtext connect connectFields chox';
   }
@@ -80,7 +79,7 @@ function formConnect($form, &$sta, $args = '') {
   }
   
   jsx('bank-prefs', $vs = ray('connectLabel saveLabel mindft chox', t('Connect'), t('Save'), R_MIN_DEFAULT, $chox));
-  return cgform(compact(ray($fields)) + w\setupFoot($mya->hasBank ? $vs['saveLabel'] : $vs['connectLabel']));
+  return cgform(compact(ray($fields)) + w\setupFoot($mya->hasBank ? $vs['saveLabel'] : $vs['connectLabel']), '', 'above');
 }
 
 function formConnect_validate($form, &$sta) {

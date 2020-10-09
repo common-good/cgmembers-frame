@@ -14,7 +14,7 @@ function formCouponsList($form, &$sta, $args = '') {
 
 	if ($args == 'ALL') return showDiscounts();
 	
-  $title = t('Discounts and Gift Certificates From You');
+  $title = t('Discounts/Gift Certificates From You');
 
 	$fields = ray('type amount purpose start end minimum useMax action');
   $fieldCount = count($fields);
@@ -64,7 +64,7 @@ X;
 X;
   } else {$list = t('You have not yet issued any automatic discounts or gift certificates.');}
   
-  return cgform(compact(ray('title list')));
+  return cgform(compact(ray('title list')), 'nolabs');
 }
 
 /**
@@ -74,7 +74,7 @@ function showDiscounts() {
 	global $mya;
   $myid = $mya->id;
 
-	$title = t('Automatic Discounts in Your Region');
+	$title = t('Discounts in Your Region');
 	$subtext = t('as of %today', 'today', u\fmtDate(NOW));
 	$fields = ray('company amount on end for left amtLeft');
   $hdrs = u\tableRow(ray('Company,Discount,On,Ending,For,Uses&nbsp;Left,Amount&nbsp;Left'));

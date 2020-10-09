@@ -23,48 +23,28 @@ function formSummary($form, &$sta) {
   $extras = '<br>' . u\fmtPhone($mya->phone) . " ($mya->faxetc)<br>$mya->email ";
 
   $form = adminSummary();
-  foreach (ray('photo legalName shortName community') as $k) if (nni($form, $k)) { // move these up (see return line)
+  foreach (ray('legalName shortName community') as $k) if (nni($form, $k)) { // move these up (see return line)
     $$k = $form[$k];
     unset($form[$k]);
   }
 
+  $buttons = btn('/console/stay=1', t('Console'));
   if (!$mya->isCtty and $mya->cAdmin) {
-    if ($mya->trialco or !$mya->co) $extras .= ' ' . a\cardLink($mya->id);
-    $extras .= ' ' . a\recropLink();
+    if ($mya->trialco or !$mya->co) $buttons .= ' ' . a\cardLink($mya->id);
+    $buttons .= ' ' . a\photoLink(0) . ' ' . a\photoLink(1);
   }
 
   if ($stepUrl == 'console') {
     if (nn($msg)) say(t('New member is told: ') . t($msg));
   } elseif ($stepUrl) say(t('New member will be sent <%a>there</a> upon signing in.', '_a', atag("/$stepUrl")));
     
-//  extract(just('returnMo return cttyBeneMo cttyBene', $mya->j_stats()));
   $gifts = u\fmtAmt($mya->totalGifts());
-//  $cttyBene = item("$cttyBeneMo " . t('over the past month') . "<br>$cttyBene " . t('overall (ever), including %gifts in contributions', compact('gifts')), t('Social return:'), t('Financial benefit to your community to date, from your participation together with other members, empowering economic democracy! [<%a>details</a>]', '_a', atag('/help/social-return')));  
-  $cttyBene = NULL;
-//  $cttyBene = item("$cttyBene " . t('overall, including your %gifts in contributions', compact('gifts')), t('Social return:'), t('Financial benefit to your community to date, from your participation together with other members, empowering economic democracy! [<%a>details</a>]', '_a', atag('/help/social-return')));  
-    
-  // $showCustomers = item(w\lnk('/community/data/qName=6Customers', t('Customer List')));
-
-  if ($mya->canManage and $mya->member) {
-    $invite = w\lnk('/community/invite', t('Invite a Friend or Business'), 'primary', 'xs');
-    $hasMultipleAccounts = ($mya->co or db\exists('r_relations r LEFT JOIN users u ON u.uid=r.main', 'other=:id AND permission>0 AND u.:IS_CO', ['id' => $mya->agentId]));
-    $another = $hasMultipleAccounts ? t('Another') : t('a');
-    $makeCo = $mya->depends ? '' : w\lnk('/signup-co/relate=1', t('Open %another Company Account', compact('another')), 'primary', 'xs');
-//    if (!$mya->jid and !$mya->co) $makeJoint = w\lnk('/signup/joint=1', t('Make this a joint account'), 'primary', 'xs');
-    $makeJoint = ($mya->member and !$mya->jid and !$mya->co and !$mya->depends) ? w\lnk('/prejoin', t('Make this a Joint Account'), 'primary', 'xs') : '';
-//    $goFood = $mya->food > 0 ? lnk('/settings/food', t('Food Fund')) : lnk('/settings/food', t('Food Fund'), 'warning');
-//    if ($mya->cAdmin) $goFood = '<br><br>' . $goFood; // make sure it doesn't hide behind the photo
-    $goFood = '';
-    if (!$mya->co and $hasMultipleAccounts) $clickPhoto = item(t('Click your photo%where to manage your other account(s).', 'where', $mya->cAdmin ? t(' in the upper right corner') : ''));
-  } else $invite = $makeCo = $makeJoint = $goFood = $reports = '';
 
   $reports = $mya->co ? w\lnk('/history/company-reports', t('Company Reports')) : '';
 //  if ($mya->id == CGID) $deposits = w\lnk('/sadmin/show-deposits', t('Deposits'));
   $deposits = $mya->id == CGID ? w\lnk('/sadmin/show-reconciled', t('Dollar Pool Transactions')) : '';
-  foreach (ray('invite makeJoint makeCo goFood reports deposits') as $k) if ($$k) $shortcuts[] = $$k;
-  $shortcuts = item(join('', nn($shortcuts, [])), t('Shortcuts:'));
 
-  $title = t('Account Summary');
+  $title = item(t('Account Summary'), '', suffix($buttons));
   $accountName = item($mya->j_fullName . ($mya->jid ? '<br>' : ' ') . "($mya->j_name)", t('Name:'));
   $address = $mya->cAdmin ? item(($mya->trialco ? $mya->contact : $mya->postalAddr) . $extras, t('Contact:')) : NULL;
   $balance = u\fmtAmt($mya->balance);
@@ -96,7 +76,7 @@ function formSummary($form, &$sta) {
   } else $extra = '';
   $accountId = item(($mya->mainQid ?: 'N/A') . '<span class="white">..</span>' . "($acctType)$extra", t('ID:')); // .. is for double-click select
 
-  $fields0 = 'photo title clickPhoto showCustomers shortcuts accountId accountName address legalName shortName community balance newBalance creditLine creditLimit committed';
+  $fields0 = 'photo title clickPhoto buttons accountId accountName address legalName shortName community balance newBalance creditLine creditLimit committed';
 //  foreach (ray('details') as $k) $$k = @$form[$k]; unset($form[$k]); // put these on the left if admin
 //  $fields = @compact(ray($fields));
   $fields = []; foreach (ray($fields0) as $k) if (isset($$k)) $fields[$k] = $$k;
@@ -114,7 +94,7 @@ function formSummary($form, &$sta) {
   
   jsx('summary');
   
-  return cgform($form);
+  return cgform($form, 'wide');
 
 }
 
@@ -300,8 +280,9 @@ function adminSummary() {
 
     if ($mya->cAdmin and !$mya->proSe) {
       require_once R_ROOT . '/admin/admin.inc';
-      $html = $mya->photoHtml(FALSE, TRUE);
+/*      $html = $mya->photoHtml(FALSE, TRUE);
       $photo = item("<a href=\"$base_url/settings/photo\">$html</a>");
+      */
 
       $donations = item($mya->giftsDesc() ?: t('none'), t('Donations:'));
       
@@ -434,7 +415,7 @@ function adminSummary() {
   w\jsx('tickle');
   
   $bigFields = $mya->ok ? 'adminable risks ssnShow' : 'ssnShow adminable risks';
-  $info = []; foreach (ray("noEnter photo details notes note altId tickle donations active activity relations source helper $bigFields community balance cgfDonations legalName shortName calling signupCo tenure tasks steps dwInfo invited invitedBy proxies proxyFor moves floor minimum achMin risk trust mediaConx count back uid submit") as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray("noEnter details notes note altId tickle donations active activity relations source helper $bigFields community balance cgfDonations legalName shortName calling signupCo tenure tasks steps dwInfo invited invitedBy proxies proxyFor moves floor minimum achMin risk trust mediaConx count back uid submit") as $k) if (isset($$k)) $info[$k] = $$k;
   return $info;
 }
 

@@ -8,14 +8,17 @@ use CG\Db as db;
 use CG\Admin as a;
 use CG\Risk as k;
 
+include_once __DIR__ . '/tx.inc'; // include all Pay and Charge functionality
+
 /**
  * Show a console for the current account (with preference for mobile).
  */
-function formConsole($form, &$sta) {
+function formConsole($form, &$sta, $args = '') {
   global $base_url;
   global $mya; $myid = $mya->id;
+  extract(just('stay', $args, NULL));
 
-  if ($mya->admin2 and !$mya->proSe) return go('/sadmin/summary'); // admins get way more info
+  if ($mya->admin2 and !$mya->proSe and !$stay) return go('/sadmin/summary'); // admins get way more info
   
   $special = $endorse = NULL;
   
@@ -50,16 +53,15 @@ function formConsole($form, &$sta) {
   $reports = $mya->co ? w\lnk('/history/company-reports', t('Company Reports')) : '';
   $deposits = $mya->id == CGID ? w\lnk('/sadmin/show-reconciled', t('Dollar Pool Transactions')) : '';
   foreach (ray('invite makeJoint makeCo reports deposits') as $k) if ($$k) $shortcuts[] = $$k;
-  $shortcuts = join('</li><li>', nn($shortcuts, []));;
-  $shortcuts = $shortcuts ? item("<ul><li>$shortcuts</li></ul>", t('Shortcuts:')) : NULL;
+  $shortcuts = nn($shortcuts) ? item(u\ul($shortcuts), t('Shortcuts:')) : NULL;
 
   $title = t('You: ' . $mya->fullName);
   $acct = $mya->mainQid;
   if ($mya->jid) $acct .= t(' (joined with %nm)', 'nm', $mya->jA->fullName);
   $acct = item($acct, t('Account #:'));
 
-  $pay = btn('/pay', t('Pay'), '', 'md');
-  $charge = btn('/charge', t('Charge'), '', 'md');
+  $pay = btn('', t('Pay'), '', 'md', clas('btn-pay'));
+  $charge = btn('', t('Charge'), '', 'md', clas('btn-charge'));
   $bank = btn('/get', t('Bank'), '', 'md');
   $buttons = item($pay . $charge . $bank);
 
@@ -70,7 +72,7 @@ function formConsole($form, &$sta) {
   if (!$mya->isCtty) { // unless this is a community or region account
     $suffix = ($mya->debt or $mya->depends or !$mya->refill) ? '' : t(' (<%a>Click here</a> to let your balance go negative.)', '_a', 'a id="activate-credit"');
     list ($credit, $normally) = $mya->depends ? ['$0', t(' (normally)')] : [u\fmtAmt(-$mya->floor), ''];
-    $creditLine = $mya->underage ? NULL : item($credit, t('Credit Line:'), t('Based%normally on your account\'s average monthly activity over the past 6 months.', compact('normally')), w\suffix($suffix));
+    $creditLine = $mya->underage ? NULL : item($credit, t('Cred Line:'), t('Based%normally on your account\'s average monthly activity over the past 6 months.', compact('normally')), w\suffix($suffix));
   
     if ($choiceList = choiceListFld()) $shortcuts = NULL; // don't show both
     
@@ -78,9 +80,12 @@ function formConsole($form, &$sta) {
     $acctType = t('community account');
     $creditLine = $choiceList = NULL;
   }
-
+  
   jsx('console');
-  return cgform(compact(ray('endorse title acct buttons balance creditLine special shortcuts choiceList')));
+  $console = fieldSet('console', compact(ray('endorse title acct buttons balance creditLine special shortcuts choiceList')), BARE);
+  $tx = fieldSet('tx', formTx($form, $sta, 'both'), BARE);
+
+  return cgform(compact('console', 'tx'));
 }
 
 /**

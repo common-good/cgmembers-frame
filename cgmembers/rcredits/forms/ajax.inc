@@ -46,7 +46,7 @@ function ajax() {
     $tnm = nni($idRay, 'pid') ? 'people' : 'users';
     $notices = ray(db\get('notices', $tnm, $idRay));
     $notices[$type] = $freq;
-    db\update($tnm, $idRay + ray('notices', u\rayify($notices)), key($idRay));
+    db\update($tnm, $idRay + ray('notices', u\deray($notices)), key($idRay));
   } elseif ($op == 'relations') {
     extract(just('name v', $data, ''));
     list ($fld, $reid) = explode('-', $name);

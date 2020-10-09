@@ -328,6 +328,7 @@ function putRec($rec) {
   global $err1099; if (nn($err1099)) return;
   global $testRecs1099; if (test()) $testRecs1099[] = $rec;
 
+  if (!test())
 /**/  echo lenCheck($rec);
 }
 

@@ -662,7 +662,7 @@ function getLinks($zip) {
     list ($org, $_url, $desc) = explode(',', $one);
     $res[] = tr('<a href="%url">%org</a>', compact(ray('org _url desc')));
   }
-  return '<ul><li>' . join("</li><li>\n", $res) . '</li></ul>';
+  return u\ul($res);
 }
 
 /**

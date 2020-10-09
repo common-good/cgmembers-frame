@@ -20,7 +20,7 @@ Setup:
   | .ZZC |     100 |   -20 |
 
 Scenario: A member draws
-  When member ".ZZA" confirms form "pay" with values:
+  When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who  | amount | goods        | purpose |*
   | pay | .ZZB |     30 | %FOR_GOODS   | food    |
   Then tx entries:
@@ -31,7 +31,7 @@ Scenario: A member draws
   |   2 | %E_PRIME  |    -30 | .ZZA | food                           |
   
 Scenario: A member draws again
-  When member ".ZZA" confirms form "pay" with values:
+  When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who  | amount | goods        | purpose |*
   | pay | .ZZB |    130 | %FOR_GOODS | food    |
   Then tx entries:
@@ -42,7 +42,7 @@ Scenario: A member draws again
   |   2 | %E_PRIME  |   -130 | .ZZA | food                           |
 
 Scenario: A member overdraws with not enough to draw on
-  When member ".ZZA" completes form "pay" with values:
+  When member ".ZZA" completes form "tx/pay" with values:
   | op  | who  | amount | goods        | purpose |*
   | pay | .ZZB |    200 | %FOR_GOODS | food    |
   Then we say "error": "short to" with subs:
