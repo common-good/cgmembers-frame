@@ -288,7 +288,8 @@ function doit(what, vs) {
     $(fid).focus(); // must be after suggestWho
     form.submit(function (e) {
       if ($(fid).val() == '') return true; // in case this field is optional
-      return who(form, fid, vs['question'], vs['amount'] || $('input[name=amount]', form).val(), vs['allowNonmember'], vs['coOnly']);
+      var ok = who(form, fid, vs['question'], vs['amount'] || $('input[name=amount]', form).val(), vs['allowNonmember'], vs['coOnly']);
+      if (!ok) {e.preventDefault(); return false;}
     });
     
     break;

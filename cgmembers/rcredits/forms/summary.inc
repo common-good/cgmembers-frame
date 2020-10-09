@@ -28,7 +28,7 @@ function formSummary($form, &$sta) {
     unset($form[$k]);
   }
 
-  $buttons = btn('/console/stay=1', t('Console'));
+  $buttons = btn('/console/stay=1', t('Simple Console'));
   if (!$mya->isCtty and $mya->cAdmin) {
     if ($mya->trialco or !$mya->co) $buttons .= ' ' . a\cardLink($mya->id);
     $buttons .= ' ' . a\photoLink(0) . ' ' . a\photoLink(1);

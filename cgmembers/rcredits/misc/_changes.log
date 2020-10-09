@@ -1,3 +1,10 @@
+2020-10-09 feature/bugs
+. patching up bugs from the console-tx feature:
+  - transactions now actually work
+  - Handy / Rebuild Menu now clears out all rweb menu items before rebuilding
+  - some format improvements
+  - company query results now show up
+
 2020-10-09 feature/console-tx
 . radically revised our strategy for formatting, based on a few standard page formats (wide, nolabs, mlab-above, etc)
 . fixed a number of formatting issues (especially for mobile), including check image on Connect page, label length, lists,...

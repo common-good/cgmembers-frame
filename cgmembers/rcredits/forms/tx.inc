@@ -82,7 +82,7 @@ function formTx_submit($form, &$sta) {
     ? be\transfer('payment', $mya, r\acct($uid), $amount, $purpose, $goods, $data)
     : be\invoice($mya, r\acct($uid), $amount, $purpose, $goods, $data);
   } else list($ok, $msg, $args) = [TRUE, '', []];
-  
+
   if ($paying and $mya->snap) r\tellAdmin(t('SNAP member %who %did something', 'who did', $mya->fullName, $ok ? t('bought') : t('tried to buy')), ['topic' => t('SNAP purchase') . ($ok ? '' : t(' failed'))]);
 
   if ($delay or ($repeats and $ok)) { // need a rule template
@@ -114,6 +114,6 @@ function formTx_submit($form, &$sta) {
   unset($DBTX);
 
   if ($msg[0] == '|') $msg = substr($msg, 1);
-  say(tr($msg, $args), $ok ? '' : 'amount');
+  say(tr($msg, $args), $ok ? '' : 'err');
   return go('console');
 }

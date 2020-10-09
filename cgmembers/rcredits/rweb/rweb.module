@@ -76,9 +76,7 @@ function rweb_menu($submenu = '') {
     'tx/charge' => ['call', t('Charge'), 'Tx 1 2', 'sell ok'],
     'tx/charge/invoices' => ['sub', t('Upload Invoices'), 'InvoiceUpload', 'co sell ok'],
     'tx/charge/nonmember' => ['call', t('Charge Nonmember'), 'TxNonmember', 'sell ok'],
-
-    'get' => ['call', t('Bank'), 'Get 1', 'manage ok'],
-    
+   
     'invest' => ['norm', t('Invest'), 'Invest', 'manage ok'],
     'invest/overview' => ['sub', t('Investment Club Overview'), 'Invest 1', 'manage ok', '', t(), 'eye-open'],
     'invest/list' => ['sub', t('List Investments'), 'InvestList 2', 'manage ok investor', '', t(), 'list'],
@@ -266,6 +264,7 @@ function rweb_menu($submenu = '') {
     'mailus' => ['call', t('Mail %PROJECT'), 'MailUs 1', ANY],
     'unsubscribe' => ['call', t('Unsubscribe'), 'Unsubscribe 1', ANY],  
 
+    'get' => ['call', t('Bank'), 'Get 1', 'manage ok'],
     'pos' => ['call', 'POS', '1', ANY, 'pos'], // called from the CGPay app
     'ajax' => ['call', 'AJAX', '1', ANY, 'ajax'], // called from the CGPay app
     'api' => ['call', 'API', '1', ANY, 'api'],
