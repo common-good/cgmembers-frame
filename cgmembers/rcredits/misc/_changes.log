@@ -1,3 +1,6 @@
+2020-10-09 feature/relations-fix
+. newPerson now works and looks good on mobile
+
 2020-10-09 feature/bugs
 . patching up bugs from the console-tx feature:
   - transactions now actually work

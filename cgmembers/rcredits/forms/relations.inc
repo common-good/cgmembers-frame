@@ -92,11 +92,13 @@ EOF;
 
   $title = t('Relations');
   $list = fld('item', '', '', array('markup' => $list));
-  $submit = rendA('submit', submit(BARE . t('Add')));
-  $newPerson = textFld(t('Add Who:'), [t('Name, id, email, or phone')], suffix($submit));
+  $newPerson = textFld(BARE, [t('Name, id, email, or phone')]);
+  $submit = submit(BARE . t('Add'));
+  $submitGroup = fieldset('submitGroup', compact(ray('newPerson submit')), t('Add Who:'));
+
   $showCustomers = hidFld($showCustomers);
 
-  $form = compact(ray('title subtext buttons list newPerson showCustomers'));
+  $form = compact(ray('title subtext buttons list submitGroup showCustomers'));
 
 // no such step  if (!$mya->member and !$mya->stepIsDone('relations')) $form += w\setupFoot();
   w\whoFldSubmit('newperson', t('Create a new relation with %name?'));

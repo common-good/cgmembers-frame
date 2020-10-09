@@ -1357,8 +1357,9 @@ div.password-confirm .error {font-weight:bold; color:red;}
 #frm-relations #edit-go {display:inline-block;}
 #frm-relations #edit-nextStep {margin-left:50px;}
 
-#frm-relations .form-item-newPerson .control-data div {max-width:300px; display:inline-block;}
-#frm-relations #edit-submit {display:inline-block; vertical-align:top;}
+#submitGroup .fieldset-wrapper div {display:inline;}
+#submitGroup .twitter-typeahead {width:60%; display:inline-block;}
+#frm-relations #edit-submit {display:inline-block; vertical-align:top; margin-left:10px;}
 #frm-relations .form-type-select {margin:0;}
 #frm-relations select {padding:0; height:24px; font-size:12px;}
 #frm-relations .form-type-select label,
