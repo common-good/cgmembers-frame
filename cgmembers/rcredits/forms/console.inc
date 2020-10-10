@@ -81,7 +81,7 @@ function formConsole($form, &$sta, $args = '') {
     $creditLine = $choiceList = NULL;
   }
   
-  jsx('console');
+  jsx('console', 'payDesc chargeDesc', t('Pay'), t('Charge'));
   $console = fieldSet('console', compact(ray('endorse title acct buttons balance creditLine special shortcuts choiceList')), BARE);
   $tx = fieldSet('tx', formTx($form, $sta, 'both'), BARE);
 

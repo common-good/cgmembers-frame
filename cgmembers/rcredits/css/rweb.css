@@ -800,7 +800,7 @@ body.logged-in.one-sidebar #content {width:100%;}
 #frm-console #endorse div div .btn-large {font-weight:normal; border-radius: 30px; margin-bottom:10px; color:white; padding:10px 20px; font-size:18px;}
 
 #frm-console .form-item-buttons {margin-top:30px; text-align:left;}
-#frm-console .form-item-buttons .btn {margin:0 15px;}
+#frm-console .form-item-buttons .btn {margin:0 20px 0 0;}
 #frm-console .form-item-buttons a:first-child {margin-left:0;}
 #frm-console .form-item-buttons .control-data {max-width:480px;}
 #frm-console .form-item-special {background-color:lightyellow; padding-bottom:8px; border:1px solid khaki;}
