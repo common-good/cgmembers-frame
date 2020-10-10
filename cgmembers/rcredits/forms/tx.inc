@@ -17,7 +17,6 @@ function formTx($form, &$sta, $type, $args = '') {
 
   $pay = in($type, 'pay both');
   $charge = in($type, 'charge both');
-  
   $opDesc = $pay ? t('Pay') : t('Charge');
   
   $selling = explode("\n", $mya->selling);
@@ -27,9 +26,9 @@ function formTx($form, &$sta, $type, $args = '') {
 
   $title = $opDesc;
   if ($mya->co) {
-    $buttons = $pay ? btn('/tx/pay/payments', t('Upload Payments'), 'default') : '';
-    if ($pay) $buttons .= btn('/tx/pay/payroll', t('Upload Payroll'), 'default');
-    if ($charge) $buttons .= btn('/tx/charge/invoices', t('Upload Invoices'), 'default');
+    $buttons = $pay ? btn('/tx/pay/payments', t('Upload Payments'), 'default', '', clas('w-pay')) : '';
+    if ($pay) $buttons .= btn('/tx/pay/payroll', t('Upload Payroll'), 'default', '', clas('w-pay'));
+    if ($charge) $buttons .= btn('/tx/charge/invoices', t('Upload Invoices'), 'default', '', clas('w-charge'));
   } else $buttons = NULL;
   $who = textFld(t('Who:'), [t('name, id, email, or phone')], required(nn($who)));
 

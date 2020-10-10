@@ -66,8 +66,13 @@ function doit(what, vs) {
     $('#onn').click(function () {location.href = baseUrl + '/community/posts';});
     
     $('.btn-pay, .btn-charge').click(function () {
-      var paying = ($(this).attr('id') == 'btn-pay');
+      var pay = has($(this).attr('class'), 'btn-pay');
+      var desc = vs[pay ? 'payDesc' : 'chargeDesc'];
       $('#console').hide();
+      $('.w-pay').toggle(pay);
+      $('.w-charge').toggle(!pay);
+      $('#edit-title h3').html(desc);
+      $('#edit-paying').val(pay ? 1 : 0); // save this for 'suggest-who' (see herein)
       $('#tx').show();
     });
     
@@ -288,6 +293,13 @@ function doit(what, vs) {
     $(fid).focus(); // must be after suggestWho
     form.submit(function (e) {
       if ($(fid).val() == '') return true; // in case this field is optional
+
+      if ($('#edit-paying').length) { // this is ugly here, but I haven't figured out a better way yet.
+        var pay = ($('#edit-paying').val() == '1'); // see if this is the tx form and adjust the question as needed
+        if (!pay) vs['question'] = vs['question'].replace('Pay ', 'Charge ');
+        vs['allowNonmember'] = !pay;
+      }
+      
       var ok = who(form, fid, vs['question'], vs['amount'] || $('input[name=amount]', form).val(), vs['allowNonmember'], vs['coOnly']);
       if (!ok) {e.preventDefault(); return false;}
     });
