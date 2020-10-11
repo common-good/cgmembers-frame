@@ -278,6 +278,7 @@ EOF;
 function rcredits_form_element($variables) {
   extract(cgElement($variables, 'name tabled type bare markup help parents children required title title_display id field_prefix field_suffix inline class box'));
 
+  $outerClass = nn($class, []);
   $parentName = isset($parents) ? strtr(nni($parents, 0), [' '=>'-', '_'=>'-', '['=>'-', ']'=>'']) : '';
   $for = nn($name) ?: $parentName;
   if ($for == 'title') $children = "<h3>$children</h3>";
@@ -287,7 +288,7 @@ function rcredits_form_element($variables) {
 //  $boxy = in_array($type, ['radio', 'checkbox']) ? ($type . (@$inline ? '-inline' : '')) : '';
   $boxy = in($type, 'radio checkbox') ? $type : '';
 
-  $class[] = $boxy ? 'option' : 'control-label';
+  $class = $boxy ? 'option' : 'control-label';
   if ($title_display == 'invisible') $class[] = 'sr-only';
   $label = ($boxy ? ($children . nn($title)) : nn($title)) ?: NBSP;
   $label = w\tag('label', $label, compact('for', 'class'));
@@ -305,11 +306,15 @@ EOF;
   } else $core = $boxy ? $label : ($label . $children);
 
   $id = isset($markup) ? " id=\"edit-$for\"" : '';
-  $outerClass = "form-group form-item-$for";
-  if ($for != $parentName) $outerClass .= " form-item-$parentName";
-  $outerClass .= ' ' . ($boxy ?: "form-type-$type");
+  $outerClass[] = "form-group form-item-$for";
+  if ($for != $parentName) $outerClass[] = "form-item-$parentName";
+  $outerClass[] = $boxy ?: "form-type-$type";
   $required = nn($required) ? ' required="yes"' : '';
-  if ($class[0] == 'boxes') $outerClass .= ' boxes';
+  if ($class[0] == 'boxes') $outerClass[] = 'boxes';
+  $i = raypos($outerClass, 'mlab-left');
+  if ($i !== FALSE) unset($outerClass[$i]); else $outerClass[] = 'mlab-above'; // on mobile, labels default to above
+  $outerClass = join(' ', $outerClass);
+
   return <<<EOF
   <div$id class="$outerClass"$required>
 $core
@@ -355,7 +360,7 @@ function rcredits_textarea($variables) {
 function rcredits_radios($variables) {
   $chn = $variables['element']['#children'];
   extract(cgElement($variables, 'required inline'));
-  if (nn($inline)) $chn = str_replace(' radio">', ' radio-inline">', $chn);
+  if (nn($inline)) $chn = preg_replace('/ radio( |")/', " radio-inline$1", $chn);
   if (nn($required)) $chn = str_replace('type="radio"', 'type="radio" required="yes"', $chn);
   return $chn;
 }

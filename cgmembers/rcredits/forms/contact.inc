@@ -30,7 +30,7 @@ function formContact($form, &$sta) {
         
   jsx('contact');
 
-  return cgform($form, '', 'above');
+  return cgform($form);
 }
 
 function formContact_validate($form, &$sta) {

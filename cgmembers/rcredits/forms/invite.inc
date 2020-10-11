@@ -119,8 +119,8 @@ function endorse($mya, $quote, $edit) {
   $title = t('Invite People');
   $subtext = t('<p>On average, the %PROJECT Community Fund grows by thousands of dollars with every participant. Let\'s get all of %city signed up and have a  multi-million dollar fund to help the community through this pandemic crisis and beyond.</p><p>If you have not yet seen our video, please see it now, before finishing this page: %videoBtn</p><p>Then join other thought leaders signing this public endorsement (you can also add your own words after you click Yes):</p><h5>%SHOUT_TEXT<br><small>&mdash; (your name here, along with many others)</small></h5>', 'nm city _videoBtn', $mya->fullName, $mya->city, btn(VIDEO_URL, t('Video'), 'success'));
   
-  $sawVideo = boolFld(REQ . t('Watched Video?'), '', $edit ? $sawVideo : 0);
-  $sign = $edit ? hidFld(1) : boolFld(REQ . t('Sign:'), '', -1);
+  $sawVideo = boolFld(REQ . t('Saw Video?'), '', $edit ? $sawVideo : 0, NULL, clas('mlab-left'));
+  $sign = $edit ? hidFld(1) : boolFld(REQ . t('Sign:'), '', -1, NULL, clas('mlab-left'));
   $whyNot = textFld(t('Why?'), [t('Reason'), t('If you\'re willing, please say why you\'re not endorsing %PROJECT.')]);
   $question = item(t('Why do you want people to sign up? How do you see %PROJECT benefiting you, your family, the community, or your organization\'s mission? When people are thinking about signing up, they will read this as you-talking-to-them. So you may want to tell them explicitly to sign up.'));
   $quote = areaFld(t('Answer:'), [t('Your answer to the question above'), t('Your answer will appear below your name in the list. You can edit it any time. (max 4000 chars)')], dft($quote) + maxlen(4096));

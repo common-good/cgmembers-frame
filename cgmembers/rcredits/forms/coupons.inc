@@ -74,7 +74,7 @@ X
   
   $type = hidFld($type);
   
-  return cgform(compact(ray('title subtext buttons ' . COUPON_FLDS . ' submit')), '', 'none');
+  return cgform(compact(ray('title subtext buttons ' . COUPON_FLDS . ' submit')));
 }
 
 function formCoupons_validate($form, &$sta) {

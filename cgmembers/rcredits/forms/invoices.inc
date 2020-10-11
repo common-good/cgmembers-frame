@@ -33,7 +33,7 @@ function formInvoices($form, &$sta, $toFrom, $args = '') {
   if ($downloaded) js('download', compact('url'));
   
   w\jsx('invoices', ray('args', "&ret=" . u\urlify($url)));
-  return cgform($form, '', 'above');
+  return cgform($form);
 }
 
 function formInvoices_validate($form, &$sta) {w\dateRangeValidate($sta, FALSE);}

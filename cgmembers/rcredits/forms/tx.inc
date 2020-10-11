@@ -39,14 +39,14 @@ function formTx($form, &$sta, $type, $args = '') {
   $periods = intFld(t('Every:'), '', dft(0) + suffix($period));
   $end = dateFld(t('Ending:'), t('Leave blank for "never". You can end it at any time at <%a>History / Recurring Transactions</a>.', '_a', atag('/history/recurring')));
   
-  $btns = btn('', t('delay'), 'default', '', 'btn-delay') . btn('', t('repeat'), 'default', '', 'btn-repeat') . btn('/history/recurring', t('manage'), 'default', '', 'btn-manage');
-  $submit = submit(t('Submit'), '', '', suffix($btns));
+  $advanced = item(btn('', t('delay'), 'default', '', 'btn-delay') . btn('', t('repeat'), 'default', '', 'btn-repeat'));
+  $submit = t('Submit');
 
   w\whoFldSubmit('who', $opDesc . t(' %amount to %name?'), ray('allowNonmember', $charge));
   $paying = hidFld($pay);
   
   jsx('tx');
-  $form = cgform(compact(ray("title buttons who amount purpose start periods end submit paying")));
+  $form = cgform(compact(ray("title buttons who amount purpose start periods end advanced submit paying")));
 
   return $form; // get defaults from which('info')
 }
