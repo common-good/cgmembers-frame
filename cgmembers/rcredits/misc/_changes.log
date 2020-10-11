@@ -1,3 +1,11 @@
+2020-10-11 feature/format2
+. root now goes to console (again)
+. Offers & Needs page is now wide (again)
+. fixed bug in amtChoice JS
+. emailed lists of offers and needs now include links to post one
+. pages now default (again) to labels "above" on mobile
+. moved tx option buttons to above Submit
+
 2020-10-09 feature/console-fix
 . charge now works right
 

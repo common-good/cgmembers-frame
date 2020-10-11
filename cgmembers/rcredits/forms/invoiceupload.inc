@@ -20,7 +20,7 @@ function formInvoiceUpload($form, &$sta) {
   $file = fileFld();
   $submit = t('Upload and Invoice');
 
-  return cgform(compact(ray('title subtext file submit')), '', 'above');
+  return cgform(compact(ray('title subtext file submit')));
 }
 
 function formInvoiceUpload_validate($form, &$sta) {

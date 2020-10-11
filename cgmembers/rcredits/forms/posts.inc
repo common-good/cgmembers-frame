@@ -116,7 +116,7 @@ function formPosts($form, &$sta, $args = '') {
   $list = join("\n", $rows);
 
   $list = item(<<< X
-<div id="list" class="memo">
+<div id="list" class="memo form-group">
   <div class="container">
     $list
   </div>
@@ -142,7 +142,7 @@ X
   
   $frm = hidFld('top');
   
-  return cgform(compact(ray('title subtext buttons list frm latitude longitude zip submitter')), 'nolabs');
+  return cgform(compact(ray('title subtext buttons list frm latitude longitude zip submitter')), 'nolabs wide');
 }
 
 /**

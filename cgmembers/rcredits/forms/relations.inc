@@ -104,7 +104,7 @@ EOF;
   w\whoFldSubmit('newperson', t('Create a new relation with %name?'));
   w\jsx('relations');
 
-  return cgform($form, '', 'above');
+  return cgform($form, 'wider');
 }
 
 function formRelations_validate($form, &$sta) {

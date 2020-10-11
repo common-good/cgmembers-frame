@@ -23,7 +23,7 @@ function formConsole($form, &$sta, $args = '') {
   $special = $endorse = NULL;
   
   if ($mya->ok and !$mya->co) {
-    $special = t('|<%aCovid>Our COVID-19 response</a> | <%aBlm>BLM</a> | <%aOnN>Offers & Needs</a>', '_aCovid _aBlm _aOnN', 'a id="covid"', 'a id="blm"', 'a id="onn"');
+    $special = item(t('|<%aCovid>COVID-19</a> | <%aBlm>BLM</a> | <%aOnN>Offers & Needs</a>', '_aCovid _aBlm _aOnN', 'a id="covid"', 'a id="blm"', 'a id="onn"'), '', '', clas('m-nolabs'));
     if (!$mya->shouter and $mya->hasPhoto) { // (don't ask partial accounts to endorse)
       $endorseText = t('<h2>We need your help to grow.</h2>');
       $endorseBtn = btn('/community/invite', t('Endorse %PROJECT'), 'success', 'large');
@@ -85,7 +85,7 @@ function formConsole($form, &$sta, $args = '') {
   $console = fieldSet('console', compact(ray('endorse title acct buttons balance creditLine special shortcuts choiceList')), BARE);
   $tx = fieldSet('tx', formTx($form, $sta, 'both'), BARE);
 
-  return cgform(compact('console', 'tx'));
+  return cgform(compact('console', 'tx'), '', 'left');
 }
 
 function formConsole_validate($form, &$sta) {return formTx_validate($form, $sta);}

@@ -207,8 +207,8 @@ function NEWcgform($form, $onSubmit = '', $labeled = TRUE) {
 /**
  * Modify a page in standard ways before passing it through to Drupal core for processing.
  * @param assoc $form: the form array
- * @param string $fmt: format adjustments: narrow, wide, nolabs
- * @param string $mlabFmt: label format adjustments for mobile: narrow, above
+ * @param string $fmt: format adjustments: narrow, wider, wide, nolabs
+ * @param string $mlabFmt: label format adjustments for mobile: narrow, left
  */
 function cgform($form, $fmt = '', $mlabFmt = '') {
   foreach (ray('fmt mlabFmt') as $k) $$k = ray($$k);

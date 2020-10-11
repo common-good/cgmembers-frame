@@ -1217,12 +1217,13 @@ function justNot($these, $info) {
  * @param mixed $list: an assoc, array, or delimited string
  * @return <yes, $what is in $list>
  */
-function in($what, $list) {
+function raypos($list, $what) {
   if (func_num_args() == 2) {
     $list = is_array($list) ? array_values($list) : ray($list);
   } else $list = rayy(func_get_args(), 1);
-  return in_array($what, $list);
+  return array_search($what, $list);
 }
+function in($what, $list) {return raypos($list, $what) !== FALSE;}
 
 /**
  * Return "this string contains that string"

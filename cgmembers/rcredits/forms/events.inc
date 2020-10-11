@@ -146,7 +146,7 @@ EOF;
   w\css('rvote.css');
   
   u\setDft($extraFields, NULL);
-  return cgform(compact(ray('args title status voting middle extraFields')), '', 'none');
+  return cgform(compact(ray('args title status voting middle extraFields')));
 }
 
 function formEvents_validate($form, &$sta) {

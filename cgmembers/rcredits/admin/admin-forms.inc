@@ -503,8 +503,8 @@ function formDownloadMemberList_submit($form, &$sta) {
  * Generates the execute form.
  */
 function formPhp($form, &$sta, $res = '') {
-  $res = item($res);
-  $code = areaFld('', '', dft(getV('code')));
+  $res = item($res, BARE);
+  $code = areaFld(BARE, '', dft(getV('code')));
   $submit = t('Execute Code');
   return cgform(compact('res', 'code', 'submit'), 'wide nolabs');
 }

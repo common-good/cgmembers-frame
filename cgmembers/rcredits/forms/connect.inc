@@ -79,7 +79,7 @@ function formConnect($form, &$sta, $args = '') {
   }
   
   jsx('bank-prefs', $vs = ray('connectLabel saveLabel mindft chox', t('Connect'), t('Save'), R_MIN_DEFAULT, $chox));
-  return cgform(compact(ray($fields)) + w\setupFoot($mya->hasBank ? $vs['saveLabel'] : $vs['connectLabel']), '', 'above');
+  return cgform(compact(ray($fields)) + w\setupFoot($mya->hasBank ? $vs['saveLabel'] : $vs['connectLabel']));
 }
 
 function formConnect_validate($form, &$sta) {

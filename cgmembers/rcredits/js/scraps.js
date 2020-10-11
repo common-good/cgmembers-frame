@@ -78,10 +78,12 @@ function doit(what, vs) {
     
   case 'tx': // fall through from console
     $('#btn-delay').click(function () {
+      $(this).hide();
       $('.form-item-start').show();
       $('#edit-start').focus();
     });
     $('#btn-repeat').click(function () {
+      $(this).hide();
       $('.form-item-periods, .form-item-end').show();
       $('#edit-periods').val(1).focus();
     });
@@ -428,7 +430,7 @@ function doit(what, vs) {
 //    $('#edit-go').click(function () {$('#edit-search').change();}); // this seems to be required on some computers
     $('#edit-search').keydown(function () { // user pressed Enter in search box
       if (event.which == 13) {
-        $(this).change().blur();
+        $(this).blur();
         event.preventDefault();
       }
     });
@@ -448,15 +450,16 @@ function doit(what, vs) {
       if (terms >= 0) sel += '.x' + terms;
       if (sorg >= 0) sel += '.s' + sorg;
       box.find('.tbody .row').hide(); // hide all
-      cnt = box.find(sel).show().length; // and everything in the chosen category
+      box = box.find(sel); // initial selection before search
+      cnt = box.show().length; // show everything in the chosen category (and count them)
     
-      if (s.length) {
+      if (s.length) { // searching, so narrow the selection
         var i, words = s.toUpperCase().split(' '); // array of words
         var cols = '.cat .item .details'.split(' ');
 
-        box.find('.tbody .row').each(function () { // eliminate non-matches
-          colText = ''; for (i in cols) colText += ' ' + $(this).find(cols[i]).text().toUpperCase();
-          for (i in words) if (colText.indexOf(words[i]) < 0) {
+        box.each(function () { // eliminate non-matches
+          colText = ''; for (i in cols) colText += ' ' + $(this).find(cols[i]).text().toUpperCase(); // the item's text
+          for (i in words) if (colText.indexOf(words[i]) < 0) { // does it fail to match any search word?
             $(this).hide(); // show only if it has all words
             cnt -= 1;
           }
@@ -553,28 +556,20 @@ function doit(what, vs) {
     break;
     
   case 'amtChoice':
-    var other = $('.form-item-amount'); 
-    var amtChoice = $('#edit-amtchoice');
     var amtChoiceWrap = $('.form-item-amtChoice');
-    if (amtChoice.val() == -1) {
-      amtChoiceWrap.hide();
-      other.show(); 
-    } else {
-      amtChoiceWrap.show();
-      other.hide();
-    }
-    
-    amtChoice.click(function () {
-      if(amtChoice.val() == -1) {
+    var amtChoice = $('#edit-amtchoice');
+    var other = $('.form-item-amount'); 
+
+    amtChoice.change(function () {
+      if(amtChoice.val() == '-1') {
         other.show(); 
         amtChoiceWrap.hide();
         $('#edit-amount').focus();
       } else other.hide();
     });
+    amtChoice.change();
     
-    $('#edit-amount').change(function () {
-      if ($(this).val() == 0) $('#edit-often').val('Y');
-    });
+    $('#edit-amount').change(function () {if ($(this).val().trim() == '0') $('#edit-often').val('Y');});
     break;
     
   case 'contact':

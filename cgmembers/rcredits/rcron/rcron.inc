@@ -1054,6 +1054,7 @@ function postNotices1($item) {
   $posts = '';
   $radius = NEIGHBOR_MAX; // report everything within this many miles
   $logo = "<image src=\"$base_url/rcredits/images/logo80.png\" style=\"width:30px; margin-right:10px;\" />";
+  $postLink = w\lnk('/community/posts/op=post', t('Post one!'));
 
   foreach (ray($notices) as $type => $freq) {
 //    list ($type, $freq, $radius, $words) = u\padRay(explode('`', $one), 4);
@@ -1072,6 +1073,7 @@ function postNotices1($item) {
     $posts .= <<< X
 <div style="display:table-cell; vertical-align:middle;">$logo</div>
 <div style="display:table-cell; vertical-align:middle;"><b style="font-size:32px; color:navy;">$Type</b></div>
+<div style="display:table-cell; vertical-align:middle; text-align:right; width:100%;">$postLink</div>
 <br>
 $rows
 X;
@@ -1098,7 +1100,7 @@ function fmtPostRows($q) {
     if (strlen($details) > POST_DETAIL_MAXLEN) $details = substr($details, 0, POST_DETAIL_MAXLEN - 5) . '...';
     $rows[] = <<< X
 <span style="font-size:22px">$item</span><br>
-<b style="color:#595959; font-size:18px;">$displayName, </b><span style="color:#999999; font-size:16px;">$city</span><br>
+<b style="color:#595959; font-size:18px;">$displayName</b><span style="color:#999999; font-size:16px;">, $city</span><br>
 <div style="margin-top:15px; color:#595959;">$details</div><br>
 <center>$btn</center><br>
 <hr style="color:silver;" />

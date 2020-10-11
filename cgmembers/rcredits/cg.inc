@@ -296,7 +296,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
 
   $subject = u\SUBS(strtr(nn($subject) ?: nni($GLOBALS['emailSubjects'], $index), $resubs), '%');
   $body = u\SUBS(strtr(nn($body) ?: (nn($noFrame) ? r\emailTemplate($index) : r\emailBody($index)), $resubs), '%');
-
+  
   // log
   $logSubs = u\noSecrets($resubs) + ["\r\n" => '', ' style=' => ' stylish=']; // easier reading for log and tests & evade CSP
   $message = strtr($body, $logSubs);
