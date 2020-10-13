@@ -17,6 +17,17 @@ function doit(what, vs) {
 
   switch(what) {
 
+  case 'pw':
+    var min = 120; // minimum entropy
+    $('#edit-pw').keyup(function () {
+      var e = entropy($(this).val());
+      var pct = 100 * (1 - Math.min(min, e) / min);
+      $('.form-item-submit').toggle(pct == 0);
+      $(this).css('background-size', pct + '%');
+    });
+    $('#edit-pw').keyup();
+    break;
+    
   case 'funding-criteria': $('.critLink').click(function () {$('#criteria').modal('show');}); break;
   case 'download': window.open(vs['url'] + '&download=1', 'download'); break;
 
@@ -579,12 +590,11 @@ function doit(what, vs) {
     form.submit(function (e) {return setPostalAddr(false);});
     break;
 
-  case 'verifyemail': // have to use jQuery here instead of $ because of Drupal conflict
+  case 'verifyemail':
     if (vs['verify'] == 1) {
-      reqNot(jQuery('.form-item-pass1'));
-      reqNot(jQuery('.form-item-pass2'));
-    } else showPassFlds();
-    jQuery('#edit-showpass-1').click(showPassFlds);
+      reqNot($('.form-item-pw'));
+    } else $('.form-item-pw').show().focus();
+    $('#edit-showpass-1').click(function() {$('.form-item-pw').show().focus();});
     break;
     
   case 'veto':
@@ -687,6 +697,24 @@ function setInvestFields() {
 }
 
 /**
+ * Return the log of the entropy of a given password
+ */
+function entropy(s) {
+  var e = u(s, 'U');
+  if (e == 1) e = u(s, 'A') * u(s, 'a') * u(s, 'n') * u(s, 'p'); // character universe size (0-224)
+  return s.length * Math.log(Math.max(1, e));
+
+  /**
+   * Return the size of the character universe (U=unicode, A=cap, a=lower, n=digit, p=punc)
+   */
+  function u(s, u) {
+    var us = {U:'[^\u0000-\u007f]+', A:'[A-Z]+', a:'[a-z]+', n:'[0-9]+', p:'[^[A-Za-z0-9]+'};
+    var score = {U:256-32, A:26, a:26, n:10, p:128-26-26-10-32};
+    return (new RegExp(us[u]).test(s) ? score[u] : 1);
+  }
+}
+
+/**
  * Require or don't the given fields.
  * @param set items: a jQuery selector
  * @param bool yesno: set or don't
@@ -706,11 +734,6 @@ function require(items, yesno, xx) {
   }
 }
 
-function showPassFlds() {
-  jQuery('.form-item-pass1,.form-item-pass2,#edit-settings').show();
-  jQuery('#edit-pass1').focus();
-}
-  
 function req(fld) {fld.show(); fld.find('input').attr('required', 'required');}
 function reqNot(fld) {fld.find('input').removeAttr('required'); fld.hide();}
 function reqQ(fld, show) {if(show) req(fld); else reqNot(fld);}

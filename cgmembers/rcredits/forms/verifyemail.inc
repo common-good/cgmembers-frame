@@ -54,14 +54,14 @@ function formVerifyEmail_validate($form, &$sta) {if (nni($sta['input'], 'showPas
 
 function formVerifyEmail_submit($form, &$sta) {
   global $mya;
-  extract(just('pass1 uid', $sta['input'], NULL));
+  extract(just('pw uid', $sta['input'], NULL));
 
   $mya = r\setAcct($uid, $sta);
 
   $mya->update('oneTimePass', '');
-  if ($pass1) {
+  if ($pw) {
     say('pass saved');
-    $mya->update('pass', $pass1);
+    $mya->update('pass', $pw);
   }
 
   return w\goNextStep('verifyemail');

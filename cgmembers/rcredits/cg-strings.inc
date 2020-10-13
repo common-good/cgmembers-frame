@@ -385,7 +385,7 @@ EOF
   'trial co end' => t('The time for your %PROJECT trial is over. If you haven\'t yet, please go to %CG_DOMAIN to sign up for a personal account (required for a full company account), then sign in to your company account to complete it.'),
   'ssn needed' => t('You have reached the maximum legal amount or number of transactions allowed for one year in your state without a Social Security Number. Please sign in at %CG_DOMAIN and follow the prompts to add your Social Security Number to your account.'),
   'co nonpass' => t('None. Sign in to your personal account, then click your photo in the upper right corner to select the company account.'),
-  'pass advice' => t('<p>Your password must be very long OR it must have at least 8 characters, including uppercase, lowercase, digit, and punctuation.</p><p>Consider choosing 4 random words &mdash; hard to guess, but easy for you to remember.</p>'),
+  'pass advice' => t('<p>Your password must be very long OR it must have at least 8 characters, including uppercase, lowercase, digit, and punctuation.</p><p>Consider choosing 4 random words &mdash; hard to guess, but easy for you to remember. Or include an emoji!</p>'),
   'bad locus' => t('That location is not specific enough. Try again with a postal code or full address.'),
   'post success' => t('Success! Your post is confirmed.'),
   'message success' => t('Success! Your message is confirmed.'),

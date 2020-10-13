@@ -1,3 +1,6 @@
+2020-10-13 feature/pw
+. fixed reset-password page (rewrote without Drupal)
+
 2020-10-12 feature/mb4
 . convert database to ut48mb4
 

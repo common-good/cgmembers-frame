@@ -109,9 +109,9 @@ foreach (ray('header accounts help action_links content footer highlighted') as 
 }
 
 global $pagePartner; // branding for partner signups
-if (nn($pagePartner)) {
+if (nn($pagePartner) and $a = r\acct($pagePartner)) {
   $menu1 = $footer = '';
-  $header = r\acct($pagePartner)->photoHtml();
+  $header = $a->photoHtml();
 }
 
 /**/ echo <<<EOF

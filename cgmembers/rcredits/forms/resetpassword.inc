@@ -28,30 +28,30 @@ function formResetPassword($form, &$sta, $args = '') {
     noFlood($sta);
   }
   
+  jsx('pw');
   $title = t('Choose a New Password');
-  $subtext = t('pass advice');
+  $subtext = tr('pass advice');
   $passFlds = w\pickPassword(TRUE, REQ);
   $submit = t('Submit');
-  $buttons = compact('submit');
   
   $uid = hidFld($uid);
 
-  return cgform(compact(ray('title subtext uid')) + $passFlds + $buttons);
+  return cgform(compact(ray('title subtext uid')) + $passFlds + compact('submit'));
 }
 
 function formResetPassword_validate($form, &$sta) {return formChangePassword_validate($form, $sta);}
 
 function formResetPassword_submit($form, &$sta) {
   global $mya;
-  extract(just('pass1 uid', $sta['input']));
+  extract(just('pw uid', $sta['input']));
 
   $mya = r\setAcct($uid, $sta);
 
   $mya->update('oneTimePass', '');
-  if ($pass1) {
+  if ($pw) {
     say('pass saved');
-    $mya->update('pass', $pass1);
+    $mya->update('pass', $pw);
   }
 
-  return w\go($mya->admin2 ? 'sadmin/followup' : 'console');
+  return w\go($mya->admin2 ? 'sadmin/followup' : '');
 }
