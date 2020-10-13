@@ -44,7 +44,7 @@ function fixData(&$info, $direct = FALSE) {
   extract(just($fields, $info));
   
   if (isset($cat)) $cat = db\get('id', 'post_cats', compact('cat'));
-  if ($T->feature == 'posts' and isset($method) and !$testOnly) $method = array_search($method, ray('email phone text'));
+  if ($T and $T->feature == 'posts' and isset($method) and !$testOnly) $method = array_search($method, ray('email phone text'));
   if (isset($companyOptions)) $companyOptions = ray($companyOptions);
   if (isset($coType) and !is_numeric($coType)) {
     if ($coType) $coType = array_search($coType, ray(CO_TYPES)); else { unset($coType); unset($info['coType']); }
@@ -1336,8 +1336,10 @@ function SERVER($key, $value = NULL) {
  * Fake $_POST params for testing
  */
 function POST($values = NULL) {
+  global $T_POST, $T;
+  
+  if (!isset($T)) test(FALSE); // reset this
   if (!test()) return $_POST;
-  global $T_POST;
   if (isset($values)) {
     t\fixData($values);
     $_POST = $T_POST = $values;

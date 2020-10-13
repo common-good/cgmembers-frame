@@ -1,3 +1,6 @@
+2020-10-12 feature/mb4
+. convert database to ut48mb4
+
 2020-10-11 feature/format2
 . root now goes to console (again)
 . Offers & Needs page is now wide (again)
