@@ -778,40 +778,9 @@ function photoRet($msg, $status = 'error') {
  */
 function pickPassword($reset = TRUE, $req = '') {
   global $mya;
-  $pass1 = textFld($req . ($reset ? t('New password:') : t('Choose a Password:')), '', clas('password-field') + autofill('off'));
-  $pass2 = textFld($req . ($reset ? t('Confirm new password:') : t('Confirm password:')), '', clas('password-confirm') + autofill('off'));
-  $strong = hidFld(0, ['id' => 'edit-strong']);
-  focusOn('pass1');
-  
-  $password = [
-    'strengthTitle' => 'Strength:',
-    'makeLonger' => 'Make it longer',
-    'weak' => 'Weak (not strong enough)',
-    'fair' => 'Fair (but not strong enough)',
-    'good' => 'Good (but not strong enough)',
-    'strong' => 'Strong (but not strong enough)',
-    'verystrong' => 'Very strong (strong enough)',
-    'mighty' => 'Mighty (strong enough)',
-    'paranoid' => 'Paranoid? (plenty strong)',
-    'hasWeaknesses' => 'To make your password stronger:',
-    'tooShort' => 'Make it at least 6 characters',
-    'addLowerCase' => 'Add lowercase letters',
-    'addUpperCase' => 'Add uppercase letters',
-    'addNumbers' => 'Add numbers',
-    'addPunctuation' => 'Add punctuation',
-    'sameAsUsername' => 'Make it different from your username',
-    'confirmSuccess' => 'yes',
-    'confirmFailure' => 'no',
-    'confirmTitle' => 'Passwords match:',
-    'username' => $mya ? strtolower($mya->mainQid) : '',
-  ];
-
-  $settings = json_encode(compact('password'));
-  js('drupal'); // for password strength meter
-  js('user');
-  $settings = item("<!--//--><![CDATA[//><!--\njQuery.extend(Drupal.settings, {$settings});\n//--><!]]>");
-
-  return compact(ray('pass1 pass2 strong settings'));
+  $pw = textFld($req . ($reset ? t('New password:') : t('Choose a Password:')), t('Type carefully'), autofill('off'));
+  focusOn('pw');
+  return compact(ray('pw'));
 }
   
 /**

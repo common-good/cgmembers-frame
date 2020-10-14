@@ -116,7 +116,8 @@ X
       $kch = "<div>$title</div><div>$text</div>";
     } else {
       $steps = $mya->stepCount($task);
-      $kch = $steps ? tr("<div>$title</div><div>$text (%steps)</div>", 'steps', $steps . t(' steps')) : NULL;
+      if ($steps < 5) $text .= t(' (%steps steps', compact('steps'));
+      $kch = $steps ? tr("<div>$title</div><div>$text</div>") : NULL;
     }
     ${$task . 'Ch'} = $kch ? ["$dir/$task" => $kch] : [];
   }

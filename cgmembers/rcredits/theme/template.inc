@@ -323,7 +323,7 @@ EOF;
 }
 
 function rcredits_textfield($vs) {
-  cgSetAttrs($vs['element'], ray('id name class value size maxlength step min max autocomplete disabled index enctype pattern'));
+  cgSetAttrs($vs['element'], ray('id name class value size maxlength step min max autocomplete disabled index enctype pattern data-lpignore'));
   extract(cgElement($vs, 'attributes required help class submitButton subtype'));
 
   if (nn($submitButton)) return rcredits_submit($vs);

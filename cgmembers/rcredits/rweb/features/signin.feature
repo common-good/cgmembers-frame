@@ -106,8 +106,8 @@ Scenario: A member clicks a link to reset password
   Then we show "Choose a New Password"
 
   When member "?" confirms form "reset/id=NEWZZA&code=wHatEveR" with values:
-  | pass1      | pass2      | strong |*
-  | %whatever  | %whatever  | 1      |
+  | pw       |*
+  | %whatever|
   Then member ".ZZA" is logged in
   And we show "You: Abe One"
 
