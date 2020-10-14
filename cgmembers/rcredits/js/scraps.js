@@ -18,12 +18,12 @@ function doit(what, vs) {
   switch(what) {
 
   case 'pw':
-    var min = 120; // minimum entropy
+    var min = 5.14; // minimum score
     $('#edit-pw').keyup(function () {
-      var e = entropy($(this).val());
+      var e = pwScore($(this).val());
       var pct = 100 * (1 - Math.min(min, e) / min);
       $('.form-item-submit').toggle(pct == 0);
-      $(this).css('background-size', pct + '%');
+      $(this).css('background-size', pct + '% 100%');
     });
     $('#edit-pw').keyup();
     break;
@@ -698,19 +698,23 @@ function setInvestFields() {
 
 /**
  * Return the log of the entropy of a given password
+ * No. For now, return 1 point for each: UTF8, upper, lower, digit, punc, 7 chars
  */
-function entropy(s) {
-  var e = u(s, 'U');
-  if (e == 1) e = u(s, 'A') * u(s, 'a') * u(s, 'n') * u(s, 'p'); // character universe size (0-224)
-  return s.length * Math.log(Math.max(1, e));
+function pwScore(s) {
+  var e = u(s, 'U') + u(s, 'A') + u(s, 'a') + u(s, 'n') + u(s, 'p'); // character universe size (0-224)
+//  return s.length * Math.log(Math.max(1, e));
+  return e + s.length / 7;
 
   /**
    * Return the size of the character universe (U=unicode, A=cap, a=lower, n=digit, p=punc)
+   * But utf8mb4 characters are 75% discounted, because emojis make them easy to select.
+   * Actually no. Just return 1 for a match and 0 otherwise (for now).
    */
   function u(s, u) {
     var us = {U:'[^\u0000-\u007f]+', A:'[A-Z]+', a:'[a-z]+', n:'[0-9]+', p:'[^[A-Za-z0-9]+'};
-    var score = {U:256-32, A:26, a:26, n:10, p:128-26-26-10-32};
-    return (new RegExp(us[u]).test(s) ? score[u] : 1);
+    var score = {U:(256-32)/4, A:26, a:26, n:10, p:128-26-26-10-32};
+//    return (new RegExp(us[u]).test(s) ? score[u] : 1);
+    return (new RegExp(us[u]).test(s) ? 1 : 0);
   }
 }
 

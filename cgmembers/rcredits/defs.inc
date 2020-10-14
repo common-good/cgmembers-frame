@@ -54,12 +54,12 @@ $databases['default']['default'] = [
   'database' => $db_name,
   'username' => $db_user,
   'password' => $db_pass,
-  'collation' => 'utf8_general_ci', // or utf8mb4_general_ci
+  'collation' => 'utf8mb4_general_ci',
   'host' => $db_host,
   'port' => $db_port,
   'driver' => $db_driver,
   'prefix' => '',
-  'pdo' => [PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'], // or utf8mb4
+  'pdo' => [PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4'],
 ];
 
 define('PROJECT', t('Common Good')); // project name

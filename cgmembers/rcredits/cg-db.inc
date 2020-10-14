@@ -26,7 +26,7 @@ define('CGID', getV('cgf_uid')); // Common Good's account ID (has to be here rat
  */
 function q($sql, $subs = [], $retId = FALSE, $log = FALSE) {
   global $channel;
-  //  \db_query("SET NAMES 'utf8'"); // only needed once per connection, but hey
+
   u\EXPECT(compact(ray('sql subs')), 'notempty assoc');
   if (preg_match('/^DELETE FROM ([^ ]+)( |$)/', $sql, $match) and !in(NO_LOGSQL_TABLES, nn($match))) logSql(compact(ray('sql subs retId')));
   if ($log and mb_strpos($sql, 'SELECT ') === FALSE) u\loga('db', $subs + compact('sql'));
