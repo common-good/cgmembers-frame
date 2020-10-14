@@ -1,3 +1,7 @@
+2020-10-14 feature/touchup
+. set collation so mb4 actually works
+. fixed password strength meter to reasonable behavior
+
 2020-10-14 feature/pw3
 . minor tweaks to pw feature
 
