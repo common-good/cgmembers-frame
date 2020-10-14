@@ -778,7 +778,8 @@ function photoRet($msg, $status = 'error') {
  */
 function pickPassword($reset = TRUE, $req = '') {
   global $mya;
-  $pw = textFld($req . ($reset ? t('New password:') : t('Choose a Password:')), t('Type carefully'), autofill('off'));
+  $pw = textFld($req . ($reset ? t('New password:') : t('Choose a Password:')), t('Type carefully'), autofill('off') + ray('data-lpignore', 'true')); // hide vestiges of lastpass icon
+  jsx('pw');
   focusOn('pw');
   return compact(ray('pw'));
 }
