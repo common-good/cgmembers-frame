@@ -28,7 +28,6 @@ function formResetPassword($form, &$sta, $args = '') {
     noFlood($sta);
   }
   
-  jsx('pw');
   $title = t('Choose a New Password');
   $subtext = tr('pass advice');
   $passFlds = w\pickPassword(TRUE, REQ);
