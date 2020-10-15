@@ -259,9 +259,9 @@ function changeWho($zot, $args = '', &$sta = '') {
   $page = $page ? u\deurlify($page) : 'console'; // go to console, unless admin
 
   if (nn($acct) == 'signout') return signout();
-  if (!$mya and !isDEV) return w\go($page, t('No previous account. Try again.')); // get old current account
-  $mya = r\acct($acct, $mya->agentId); // tentative new account (agent is the same, so adminishness is the same)
-  if (!$mya->cAdmin2 and !$mya->isAdmin2 and !$mya->can()) return hack('accts');
+  if (!$mya and !isDEV) return softErr(t('Your session timed out. Please <%a>Sign back in</a> and try again.', '_a', atag('signin')));
+  if (!$mya = r\acct($acct, $mya->agentId)) return hack('change to nonexistent', ray('args mya', pr($args), pr($mya))); // tentative new account (agent is the same, so adminishness is the same)
+  if (!$mya->cAdmin2 and !$mya->isAdmin2 and !$mya->can()) return hack('change to illegal', ray('args mya', pr($args), pr($mya)));
   if ($mya->cAdmin and !$mya->admin and !$mya->isAdmin2 and $mya->community != $mya->agentA->community) return w\go($page, t('You can switch only to accounts in your community.')); // cAdmin check is a bug fix
   r\setAcct($mya, $sta); // set new current account
 

@@ -19,9 +19,9 @@ function formProxy($form, &$sta, $args = '') {
   $dft = $mya->proxy($priority);
   $dftOther = $mya->proxy(3 - $priority);
   if (!$choices = w\proxyChoices($mya, [$dft, $dftOther], $choiceList)) return w\go("prox/page=Proxies&$args", 'no local proxy');
-  if (!$mya->member and count($choiceList) <= 2) { // no real choices, so don't make the member choose
-    if (!$dft) $mya->proxy($priority, $choiceList[0]);
-    if (!$dftOther) $mya->proxy(3 - $priority, $choiceList[$dft ? 0 : 1]);
+  if (!$mya->member and count($choiceList ?: []) <= 2) { // no real choices, so don't make the member choose
+    if (!$dft) $mya->proxy($priority, nni($choiceList, 0, PLACEHOLDER_1_UID));
+    if (!$dftOther) $mya->proxy(3 - $priority, nn($choiceList, $dft ? 0 : 1, PLACEHOLDER_2_UID));
     say('no local proxy');
     return w\goNextStep('proxies');
   }
@@ -109,6 +109,7 @@ EOF;
   $q = db\q($sql, ray('uid state city zip ctty', $uid, $a->state, $a->city, $a->zip, $a->community));
   $res = '';
   $cityX = '(none)'; // required for placeholders to work right
+  $choiceList = [];
   while ($row = $q->fetchAssoc()) { // show choices in reverse order, so inviter(s) are at top
     extract($row);
     if (!$current = in($uid, $dfts)) $choiceList[] = $uid;

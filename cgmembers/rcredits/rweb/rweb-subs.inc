@@ -433,6 +433,7 @@ function fld($type, $label = '', $help = '', $x = [], $options = []) {
     } elseif ($type == 'number') {
       u\setDft($x['step'], .01);
       u\setDft($x['min'], 0);
+      if ($dft) $x['default_value'] = str_replace(',', '', $dft); // commas prevent it from displaying (HTML bug as of 10/15/2020)
     } elseif ($type == 'date') {
       if ($dft) $x['default_value'] = date('Y-m-d', $dft);
     }
