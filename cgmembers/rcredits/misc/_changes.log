@@ -1,3 +1,8 @@
+2020-10-15 feature/tweaks
+. suppress in-your-face endorsement ask on console page
+. better handling of errors in account change
+. minor fixes
+
 2020-10-14 feature/touchup
 . set collation so mb4 actually works
 . fixed password strength meter to reasonable behavior

@@ -62,10 +62,6 @@ const MY_POSTS = 98; // select OPTION index for my posts
 
  */
 function formPosts($form, &$sta, $args = '') {
-  /* $title = t('Offers & Posts');
-  $subtext = t('We\'re sorry. This page is under maintenance for a few minutes. Try again a bit later please.');
-  return cgform(compact(ray('title subtext'))); */
-  
   global $base_url;
   extract(just('op code', $args, NULL));
   if ($code == '%code') u\FAIL('top');
@@ -301,7 +297,7 @@ X;
     $service = $exchange = $emergency = $radius = $end = NULL;
     
     if ($type != 'tip') {
-      $subtext = t('Use this form to send a message to the person who posted this %type. Your message will be sent by email with your display name, city, and email address. Your full name and other contact information will not be sent unless you include it in the message.', ['type' => lcfirst(typeName($type, 1))]);
+      $subtext = t('Send a message to the person who posted this %type. They will see your display name, city, and email address. You can include your full name and/or other contact information in the message (or not).', ['type' => lcfirst(typeName($type, 1))]);
       $email = eFld();
       $message = msgFld(REQ);
       $submit = t('Send Message');
@@ -347,7 +343,7 @@ function getWho($args) {
   $frm = hidFld('who');
   $title = t('Your Information');
   $subtext = t('<p>This information is required only the first time you post or contact someone.</p><p>Only your "display name" (first name or nickname) is shown to others with your city and state. Your full name, street address, email, and phone are not shown to anyone unless you choose "phone" or "text" as your preferred contact method (then just your phone number is displayed when someone asks to contact you about a specific post).</p>');
-  $displayName = textFld(REQ . t('Display Name:'), [t('Your first name or nickname'), t('To be shown to publicly with your posts, so your neighbors will recognize you.')]);
+  $displayName = textFld(REQ . t('Display Name:'), [t('Your first name or nickname'), t('To be shown with your posts, so your neighbors will recognize you.')]);
   $method = w\radiosFld(REQ . t('Preferred Contact:'), t('The "phone" and "text" options apply only when a %PROJECT member contacts you (because we have verified the identity only of members). Otherwise you will receive replies by email.'), '', ray(METHOD_OPTS));
 
   $midtext = t('And now some COVID-19 self-assessment questions for 2020:');
