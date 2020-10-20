@@ -1894,6 +1894,7 @@ function setAcct($myid = '', &$sta = NULL) {
   global $channel; 
   if (is_object($myid)) list ($myid, $agentId) = [$myid->id, $myid->agentId]; else $agentId = FALSE;
   if ($sta) $sta['uid'] = $myid;
+  w\uncacheSubmenus();
 
   if (is_null($myid)) { // sign out
     $user = obj('uid', 0);
