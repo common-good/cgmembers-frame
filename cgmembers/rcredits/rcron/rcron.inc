@@ -837,7 +837,7 @@ function acctRisk() {
 }
 
 function acctRisk1($item) {
-  include_once __DIR__ . '/../cg-risk.inc';
+  include_once R_ROOT . '/cg-risk.inc';
   global $newThresholds;
   
   $newThresholds = getv('newThresholds');
@@ -877,7 +877,7 @@ EOF;
 }
 
 function txRisk1($xid) {
-  include_once __DIR__ . '/../cg-risk.inc';
+  include_once R_ROOT . '/cg-risk.inc';
   k\txRisk1(is_array($xid) ? $xid['xid'] : $xid);
 }
 

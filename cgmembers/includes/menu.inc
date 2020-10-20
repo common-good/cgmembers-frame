@@ -504,7 +504,7 @@ function menu_execute_active_handler($path = NULL, $deliver = TRUE) {
   if ($router_item = menu_get_item($path)) {
     if ($router_item['access']) {
       if ($flnm = $router_item['include_file']) {
-        require_once DRUPAL_ROOT . '/' . str_replace('/rweb/../', '/', $flnm);
+        require_once DRUPAL_ROOT . "/$flnm";
       }
       $page_callback_result = call_user_func_array($router_item['page_callback'], $router_item['page_arguments']);
     } elseif ($mya) {
@@ -2729,7 +2729,7 @@ function menu_router_build() {
   // We need to manually call each module so that we can know which module
   // a given item came from.
   $callbacks = array();
-  $modules = ray('rweb system') + module_implements('menu'); // make it easy to add new modules
+  $modules = ray('rcredits system') + module_implements('menu'); // make it easy to add new modules
 
   foreach ($modules as $module) if (!in($module, 'node')) { // CG 3/9/2017
     $router_items = call_user_func($module . '_menu');
@@ -3071,6 +3071,7 @@ function menu_link_save(&$item, $existing_item = array(), $parent_candidates = a
     'customized' => 0,
     'updated' => 0,
   );
+
   if (isset($item['mlid'])) {
     if (!$existing_item) {
       $existing_item = db_query('SELECT * FROM {menu_links} WHERE mlid = :mlid', array('mlid' => $item['mlid']))->fetchAssoc();

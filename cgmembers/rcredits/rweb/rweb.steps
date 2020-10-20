@@ -25,8 +25,8 @@ use CG\Web as w;
 require_once __DIR__ . '/../defs.inc';
 
 if (basename($_SERVER['SCRIPT_FILENAME']) != 'compile.php') {
-  require_once __DIR__ . '/../cg.inc';
-  require_once __DIR__ . '/../cg-testing.inc';
+  require_once R_ROOT . '/cg.inc';
+  require_once R_ROOT . '/cg-testing.inc';
 }
 
 /**

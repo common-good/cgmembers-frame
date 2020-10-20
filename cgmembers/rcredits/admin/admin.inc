@@ -4,8 +4,6 @@
  * CG admin
  error_reporting(E_ALL);
  ini_set("display_errors", 1);
-
- include_once __DIR__ . '/../rcredits/admin/admin.inc';
 */
 namespace CG\Admin;
 
@@ -506,7 +504,7 @@ function fixStats() {
  * Download from http://www.fededirectory.frb.org/agreement.cfm
  * branch is o (main office) or B (branch)
  * type is 0=fed bank 1=use routing 2=use newRouting
- include_once __DIR__ . '/../rcredits/admin/admin.inc';
+ include_once R_ROOT . '/admin/admin.inc';
  f('a.getBanks');
 */
 function getBanks() {
@@ -516,7 +514,7 @@ function getBanks() {
   $fields = array_combine(ray($fieldNames), $lens);
   db\q('TRUNCATE r_banks');
   
-  $s = explode("\n", file_get_contents(__DIR__ . '/../FedACHdir.txt'));
+  $s = explode("\n", file_get_contents(R_ROOT . '/misc/FedACHdir.txt'));
   foreach ($s as $line) {
     if (!$line) continue; // handle possible blank line at end
     $i = 0;
@@ -537,7 +535,7 @@ function getBanks() {
  * @param string $filename: the photo filename (defaults to account's shortname)
  * @param string $err: (RETURNED) the error message, if any
  * @return <success>
- include_once __DIR__ . '/../rcredits/admin/admin.inc';
+ include_once R_ROOT . '/admin/admin.inc';
  debug (f('a.photoFromFile', a('aaa'), $err));
  debug ($err);
  currently called only from a.makeTestAccounts()
@@ -558,7 +556,7 @@ function photoFromFile($a, $filename = '', &$err = '') {
 /**
  * Move a field out of data or secure and into its own field in users.
  * (call after reinstall)
- include_once __DIR__ . '/../rcredits/admin/admin.inc';
+ include_once R_ROOT . '/admin/admin.inc';
  f('a.moveFieldFrom', 'helper', 'data');
 */
 function moveFieldFrom($field, $from = 'data') {
@@ -578,7 +576,7 @@ function moveFieldFrom($field, $from = 'data') {
 
 /**
  * Move a field into data or secure in users.
- include_once __DIR__ . '/../rcredits/admin/admin.inc';
+ include_once R_ROOT . '/admin/admin.inc';
  f('a.moveFieldTo', 'question', 'secure');
 */
 function moveFieldTo($field, $to = 'data') {
@@ -596,7 +594,7 @@ function moveFieldTo($field, $to = 'data') {
  * General purpose utility, usually called from eachAcct, as above.
  * For example:
  *    changeIt($a);
- include_once __DIR__ . '/../rcredits/admin/admin.inc';
+ include_once R_ROOT . '/admin/admin.inc';
  foreach (array(3201932, 3244519, 3350610, 3510402) as $one) {
  f('a.changeIt', $one);
  OR changeIt(a('aaa'));
@@ -795,13 +793,13 @@ function printCheck(&$ck, $pos, $tx, $mark) {
   
   $ck->say(u\n2english($dollars) . " and $cents/100", $m, $y += .65, 6.9, $lineH, '', '', 'B');
   $ck->say('DOLLARS', $m + 6.9, '', '', $lineH, '8');
-  //  $ck->Image(__DIR__ . '/../images/icons/padlock.gif', $W - $m - .5, $y, $lineH, $lineH);
+  //  $ck->Image(R_ROOT . '/images/icons/padlock.gif', $W - $m - .5, $y, $lineH, $lineH);
   
   $ck->say("<b>$b_name</b><br><small>$b_address<br>$b_city, $b_state $b_zip</small>", $m + 1, $y += .4, '', '', '9');
   
   $ck->say($signature, $W - $W / 3, $y + .35, $W / 3 - $m, $lineH, 'CAPS', 'C', 'B'); // $y+ not +=
   $ck->say($belowLine, '', $y + .35 + $lineH, $W / 3 - $m, $lineH, '8;CAPS', 'C');
-  //  if (!$signature) $ck->Image(__DIR__ . '/../images/checksig.png', $W - $W / 3, $y, $W / 3 - $m, 5 * $lineH);
+  //  if (!$signature) $ck->Image(R_ROOT . '/images/checksig.png', $W - $W / 3, $y, $W / 3 - $m, 5 * $lineH);
   
   $ck->say('MEMO:', $m, $y += .5, '', $lineH, '8');
   $ck->say($memo, $m + .5, '');

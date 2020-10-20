@@ -4,12 +4,14 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.55i'; // software version
+const R_VERSION = '3.55j'; // software version
+define('R_ROOT', __DIR__);
+define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
 global $db_name, $cryHows;
 global $configRay; // the configuration array currently being examined -- used only in this file
 
-$configFlnm = __DIR__ . '/../../config/config.json';
+$configFlnm = SHARED_DIR . '/config/config.json';
 $configRay = (array) json_decode(utf8_encode(file_get_contents($configFlnm)));
 /**/ if (!$stage = config('stage')) die('There is no valid config file ' . $configFlnm);
 
@@ -86,8 +88,6 @@ $host = strtolower(@$_SERVER['HTTP_HOST']);
 if (!isDEV) if (mb_strlen($host) > 30 or !preg_match('/^\[?([a-zA-Z0-9-:\]_]+\.?)+$/', $host)) {header('HTTP 400 Bad Request'); exit();}
 const R_PATH = BASE_URL . '/rcredits';
 global $rUrl; $rUrl = R_PATH;
-define('R_ROOT', __DIR__);
-define('SHARED_DIR', __DIR__ . '/../..'); // for logs and other protected info, persistent across updates
 $parts = parse_url($base_url);
 $base_path = @$parts['path'] . '/';
 $base_root = mb_substr($base_url, 0, mb_strlen($base_url) - mb_strlen(@$parts['path'])); // everything until first slash after "scheme://"

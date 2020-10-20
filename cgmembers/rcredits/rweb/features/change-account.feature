@@ -49,4 +49,4 @@ Scenario: A superadmin changes account
 
 Scenario: A member tries to change to an account without permission
   When member "A" visits page "change-account/acct=NEWZZB"
-  Then we tell admin "HACK attempt: accts" with subs: ""
+  Then we tell admin "HACK attempt: change to illegal" with subs: ""

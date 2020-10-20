@@ -23,6 +23,31 @@ require_once __DIR__ . '/acct.class';
 require_once __DIR__ . '/qo.class';
 
 /**
+ * Return TRUE if the current account has all the required permissions.
+ */
+function access($perms = NULL) {
+  global $mya;
+
+  foreach (ray($perms) as $perm) {
+    if ($not = (substr($perm, 0, 1) == '-')) $perm = substr($perm, 1);
+
+    $pass =
+      $perm == ANY ? TRUE // needed for submenus (see w\subMenu())
+    : ($perm == 'dev' ? isDEV
+    : ($perm == 'signedIn' ? (bool) $mya
+    : ($perm == 'iclub' ? ($mya and $mya->iclub)
+    : ($perm == 'superadmin' ? ($mya and $mya->superAdmin)
+    : ($perm == 'superadminORdev' ? (($mya and $mya->superAdmin) or isDEV)
+    : ($perm == 'prose' ? ($mya and $mya->proSe)
+    : ($perm == 'investor' ? ($mya and ($mya->iclub or db\exists('r_stakes', 'uid=:id', ['id'=>$mya->id])))
+    : ($perm == 'depends' ? ($mya and $mya->depends and $mya->proSe)
+    : ($mya and $mya->can(u\consta('b', $perm))) ))))))));
+    if ($not ? $pass : !$pass) return FALSE;
+  }
+  return TRUE;
+}
+
+/**
  * Save a record in the given table, in the appropriate regional section of the id field's number space.
  * @param string $table: table to save in (users or r_relations)
  * @param string $idField: name of record ID field (uid or reid)

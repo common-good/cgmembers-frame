@@ -598,8 +598,12 @@ function setV($name, $value) {
   global $conf;
   require_once __DIR__ . '/cg-db.inc';
 
-  $res = db\updateOrInsert('variable', ray('name value', $name, serialize($value)), 'name');
-  u\EXPECT($res, 'cannot setV: ' . pr(compact(ray('name value'))));
+  if (is_null($value)) {
+    db\del('variable', 'name', $name);
+  } else {
+    $res = db\updateOrInsert('variable', ray('name value', $name, serialize($value)), 'name');
+    u\EXPECT($res, 'cannot setV: ' . pr(compact(ray('name value'))));
+  }
 
   cache_clear_all('variables', 'cache_bootstrap');
 
@@ -1240,7 +1244,7 @@ function strihas($string, $what) {return strhas($string, $what, TRUE);}
 function si(&$s, $i, $c) {$s = substr($s, 0, $i) . $c . substr($s, $i + 1);} // assign character
 function between($what, $low, $high) {return ($low <= $what and $what <= $high);}
 function nn(&$a, $else = '') {return isset($a) ? $a : $else;} // if null return something better
-function nni($ray, $i, $else = '') {return isset($ray[$i]) ? $ray[$i] : $else;} // same as nn but for indexed value
+function nni($ray, $i, $else = '') {return isset(((array) $ray)[$i]) ? ((array) $ray)[$i] : $else;} // same as nn but for indexed value
 /**/  function pr($whatever) {return print_r($whatever, TRUE);}
 function trace() {return pr(debug_backtrace());}
 
@@ -1839,7 +1843,9 @@ function drupal_bootstrap() {
   _drupal_bootstrap_page_header();
   drupal_language_initialize();
   require_once DRUPAL_ROOT . '/includes/common.inc';
+  
   _drupal_bootstrap_full();
+  if (!db\exists('menu_links')) \menu_rebuild();
 
   if ($jsCode and $qid = nni($_GET, 'qid')) {
     r\setAcct(r\acct($qid));

@@ -18,7 +18,7 @@ use CG\Web as w;
  */
 
 require_once __DIR__ . '/rweb-subs.inc';
-require_once __DIR__ . '/../cg-backend.inc';
+require_once R_ROOT . '/cg-backend.inc';
 //include_once __DIR__ . '/rweb-txs.inc';
 
 define('UPLOAD_DIR', dirname($_SERVER['DOCUMENT_ROOT']) . '/public_ftp/incoming');
@@ -94,7 +94,7 @@ function formUser($form, &$sta) {return \user_login($form, $sta);} // called fro
  * @param bool $show: <show the risk calculation>
  */
 function formRerisk($form, &$sta, $type = '', $id = '', $show = FALSE) {
-  include_once __DIR__ . '/../cg-risk.inc';
+  include_once R_ROOT . '/cg-risk.inc';
   global $showRiskCalc; 
   
   $showRiskCalc = '';
@@ -260,7 +260,7 @@ function changeWho($zot, $args = '', &$sta = '') {
 
   if (nn($acct) == 'signout') return signout();
   if (!$mya and !isDEV) return softErr(t('Your session timed out. Please <%a>Sign back in</a> and try again.', '_a', atag('signin')));
-  if (!$mya = r\acct($acct, $mya->agentId)) return hack('change to nonexistent', ray('args mya', pr($args), pr($mya))); // tentative new account (agent is the same, so adminishness is the same)
+  if (!$mya = r\acct($acct, $agt = $mya->agentId)) return hack('change to nonexistent', ray('args mya agt', pr($args), pr($mya, $agt))); // tentative new account (agent is the same, so adminishness is the same)
   if (!$mya->cAdmin2 and !$mya->isAdmin2 and !$mya->can()) return hack('change to illegal', ray('args mya', pr($args), pr($mya)));
   if ($mya->cAdmin and !$mya->admin and !$mya->isAdmin2 and $mya->community != $mya->agentA->community) return w\go($page, t('You can switch only to accounts in your community.')); // cAdmin check is a bug fix
   r\setAcct($mya, $sta); // set new current account
@@ -418,7 +418,7 @@ function formBasic_validate($form, &$sta, $co = 'mya', $fields = R_BASIC_FLDS) {
 function formShowDeposits($form, &$sta) {
   global $mya;
   if (!$mya or $mya->id != CGID) return w\softErr(t('You are not authorized to view that page.'));
-  include_once __DIR__ . '/../admin/admin-forms.inc';
+  include_once R_ROOT . '/admin/admin-forms.inc';
   return w\formDeposits($form, $sta);
 }
 

@@ -425,7 +425,7 @@ function nonce($minLen = 1) {
  */
 function randPass($len = 4) {
   global $nextPass; if (test() and nn($nextPass)) return $nextPass;
-  $list = explode("\n", file_get_contents(R_ROOT . '/../../config/words.txt'));
+  $list = explode("\n", file_get_contents(SHARED_DIR . '/config/words.txt'));
   $listLen = count($list);
   for ($i = 0; $i < $len; $i++) $res[] = str_replace("\r", '', $list[rand(0, $listLen - 1)]); // \r only in Windows
   return join(' ', $res);
@@ -1039,7 +1039,7 @@ function getLocus($q, $city = '', $state = '', $zip = '') {
   }
   $res = json_decode($res);
 
-  foreach (nn($res->results, []) as $one) if ($one->components->country_code == 'us') {
+  foreach (nn($res->results, []) as $one) if (nni($one->components, country_code) == 'us') {
     $i = $one->confidence; // confidence is actually specificity. Be as specific as possible.
     if (in($one->components->_category, 'building place transportation postcode') 
       and nn($one->components->postcode)

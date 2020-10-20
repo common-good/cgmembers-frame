@@ -847,13 +847,12 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 /*#frm-summary .admin #user-picture {position:fixed; top:80px; right:50%; z-index:99;}*/
 #frm-summary .admin #edit-photo {position:absolute; top:5px; right:15px; z-index:1;}
 
-#frm-summary .form-type-item {margin-bottom:0;}
-
-#frm-summary  .checkbox {width:110px; font-size:85%;}
-#frm-summary  .checkbox div {margin-top:2px;}
-#frm-summary #edit-risks, #frm-summary #edit-adminable {margin-top:0;}
-#frm-summary  label[for="edit-risks"],
-#frm-summary  label[for="edit-adminable"] {display:inline-block;}
+#frm-summary .form-type-item {margin-bottom:5px;}
+#frm-summary .form-item-risks .control-data {margin-top:8px;}
+#frm-summary .checkbox {width:110px; font-size:85%; margin-bottom:5px;}
+#frm-summary .checkbox div {margin-top:2px;}
+#frm-summary label[for="edit-risks"],
+#frm-summary label[for="edit-adminable"] {display:inline-block;}
 #frm-summary .noEdit {margin-left:-7px; padding-left:7px; background-color:#e0e0ff;}
 #frm-summary #edit-clickPhoto .control-data {font-size:78%; background-color:lightcyan; width:auto; border-radius:15px;}
 

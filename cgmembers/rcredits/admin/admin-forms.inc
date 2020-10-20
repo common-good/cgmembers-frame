@@ -149,7 +149,7 @@ function formAdminPanel_submit($form, &$sta) {
   } elseif ($op == 'ssnLink') {
     w\say($a->fullName. t(' SSN Link:') . tr('<br><br> &nbsp; %BASE_URL/do/doSsn~%code &nbsp; ', 'code', $a->doCode()));
   } elseif ($op == 'do1099k' or $test1099 = ($op == 'do1099ktest')) {
-    include_once __DIR__ . '/../cg-yearly.inc';
+    include_once R_ROOT . '/cg-yearly.inc';
     r\Special\do1099s(TEN99K, nn($test1099));
 	} elseif ($op == 'reconcile') {
 		w\go('sadmin/reconcile-ctty-fund');
@@ -165,7 +165,7 @@ function formAdminPanel_submit($form, &$sta) {
         if (is_integer($a) or (is_string($a) and ctype_digit($a))) $a = r\acct($a);
         u\EXPECT([$a], 'Acct');
         if ($signupCo = $a->signupCo) {
-          extract(just('isOwner employee employeeOk contractor', $signupCo, NULL));
+          extract(just('company isOwner employee employeeOk contractor', $signupCo, ''));
           $signupCos[mb_strtolower("$a->community$company$a->id")] = ray('acct fullName relation company', $a->mainQid, $a->fullName, $isOwner ? t('owner') : (($employee or $employeeOk) ? t('employee') : ($contractor ? t('contractor') : '')), $company);
         }
       }, '(uid<0 OR uid>:CANONIC_ACCTS) AND ' . $crit . ' ORDER BY community');
@@ -627,7 +627,7 @@ X;
  */
 function depositDetails($args) {
   extract(just('way date total count only', $args, NULL));
-  include_once __DIR__ . '/../pdf.class';
+  include_once R_ROOT . '/pdf.class';
   $pdf = new r\Pdf();
 
   if (!$in = (!isset($way) or strtoupper($way) == 'IN')) $total = str_replace('-', '', $total);
@@ -744,7 +744,7 @@ function achBatch($args) {
  
 function printChecks($args) {
   extract(just('way date mark limit', $args));
-  include_once __DIR__ . '/../pdf.class';
+  include_once R_ROOT . '/pdf.class';
   $ck = new r\Pdf();
   $ck->setPrintHeader(FALSE);
   $ck->setPrintFooter(FALSE);
@@ -780,7 +780,7 @@ function printChecks($args) {
  */
 function memberId($id, $agent = '', $retroactive = FALSE) {
   global $mya;
-  require_once __DIR__ . '/../pdf.class';
+  require_once R_ROOT . '/pdf.class';
   
   $a = r\acct($id, $agent);
   $cttyErr = (!$mya or (!$mya->admin and $a->community != $mya->community));
@@ -927,6 +927,7 @@ function checkSanity() {
 function util($arg) {
   switch ($arg) {
   case 'reset-menu':
+    foreach (ray(SUBMENUS) as $k) setv("menu-$k", NULL);
     db\q("DELETE FROM menu_router WHERE page_callback LIKE 'CG%'"); // otherwise we get leftover junk
     db\q("DELETE FROM menu_links WHERE module='rweb'");
     \menu_rebuild();
@@ -962,29 +963,6 @@ function handyLinks() {
     'rcredits/util/clear|Empty the cache and sessions tables|Clear Cache & Sessions|unchecked',
     'sadmin/variables|Edit and delete site variables.|Variables|copy',
   ];
-
-  /*    'devel/settings|Helper functions, pages, and blocks to assist Drupal developers. The devel blocks can be managed via the block administration page.|Devel settings|cog',
-        'devel/cache/clear?destination=sadmin|Clear the CSS cache and all database cache tables which store page, node, theme and variable caches.|Empty cache|new-window',
-        'devel/reference|View a list of currently defined user functions with documentation links.|Functions|education',
-        'devel/elements|View the active form/render elements for this site.|Elements|align-center',
-        'devel/phpinfo|View your server&#039;s PHP configuration|PHPinfo()|queen',
-        'devel/variable?destination=sadmin|Edit and delete site variables.|Variables|copy',
-  */
-  //    "$test_path/gherkin/compile.php?module=rcredits/rsms&return=1|Compile rSMS|",
-  //    'rcredits/test?menu=1|Test Menu|',
-  //    'rcredits/util/changeAgent|Change Agent to Bea|',
-  //    'sms|Simulate an SMS transaction|Simulate SMS',
-  //    'admin/config/development/testing|Test|Test',
-  //    'deletetests.php|Delete old tests|Delete old tests',
-  //    'rcredits/util/reset|Reset rCredits|',
-  //    'devel/entity/info|View entity information across the whole site.|Entity info',
-  //    'devel/php|Execute some PHP code|Execute PHP Code',
-  //    'devel/field/info|View fields information across the whole site.|Field info',
-  //(empty array)    'devel/menu/item?path=node|Details about a given menu item.|Menu item',
-  //    'devel/reinstall?destination=sadmin/handy|Run hook_uninstall() and then hook_install() for a given module.|Reinstall modules',
-  //    'devel/run-cron|Run cron|Run cron',
-  //    'devel/session|List the contents of SESSION.|Session viewer',
-  //    'devel/theme/registry|View a list of available theme functions across the whole site.|Theme registry',
 
   foreach ($links as $link) {
     list ($url, $detail, $label, $icon) = u\padRay(explode('|', $link), 4);

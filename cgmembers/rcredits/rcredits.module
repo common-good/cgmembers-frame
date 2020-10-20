@@ -34,6 +34,18 @@ use CG\Testing as t;
 define('ONE_CRON_OP', 'one cron op'); // flags a call of f('cr. in PHP window, to prevent side-effects
 
 /**
+ * Implements hook_menu().
+ */
+function rcredits_menu() {
+  include_once __DIR__ . '/cg-menu.inc';
+  return r\menu();
+}
+
+function rcredits_menu_alter(&$items) {
+  foreach (ray('node user/password user/register') as $one) unset($items[$one]);
+}
+
+/**
  * Implements hook_im_send().
  */
 function rcredits_im_send($index, &$message, $subs) {
