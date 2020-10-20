@@ -56,6 +56,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
     $a = r\acct($payer);
     $title = t('Confirm Payment');
     $subs += ray('who', r\acct($payee)->fullName);
+    $amount = be\invRemains($nvid);
 
     if ($a->hasBank) {
       $_warning = t('<p><b>IMPORTANT:</b> To avoid insufficient funds charges, be sure there are enough funds in your bank account to cover any transfer that may result from approving payment of this invoice (and future invoices, if you check the "Auto" box).</p>');
@@ -65,7 +66,10 @@ function formHandleInvoice($form, &$sta, $args = '') {
       $disabled = w\disabled();
     } else $_warning = '';
 
-    $subtext = t('<p>Pay %amount to %who for %what.</p>%warning', $subs + compact('_warning'));
+    $payAmount = numFld(t('Amount to Pay:'), [t('Amount')], dft(number_format($amount, 2)));
+    $amount = u\fmtAmt($amount);
+    $remains = $amount == $subs['amount'] ? '' : t(' (%amount remaining)', compact('amount'));
+    $subtext = t('<p>Pay %amount to %who for %what%remains.</p>%warning', $subs + compact(ray('_warning remains')));
     $link = '&nbsp; &nbsp;' . w\lnk('', t('dispute'), ray('id', 'dispute-it'));
     $pay = submit(t('Pay Now'), '', '', w\suffix($link) + (nn($disabled) ?: []));
     
@@ -75,10 +79,10 @@ function formHandleInvoice($form, &$sta, $args = '') {
   }
   
   $toMe = hidFld($toMe);
-  $hid = w\hidFlds(compact('ret') + $inv);
+  $hid = hidFlds(compact('ret') + $inv);
   w\jsx('dispute');
 
-  $info = []; foreach (ray('title subtext always pay denySet delSet toMe hid') as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray('title subtext payAmount always pay denySet delSet toMe hid') as $k) if (isset($$k)) $info[$k] = $$k;
   $info['#validate'] = array('CG\\Web\\formHandleInvoice_validate');
   $info['#submit'] = array('CG\\Web\\formHandleInvoice_submit');
   
@@ -86,27 +90,29 @@ function formHandleInvoice($form, &$sta, $args = '') {
 }
 
 function formHandleInvoice_validate($form, &$sta) {
-  extract(just('whyNot toMe', $sta['input'], NULL));
+  extract(just('whyNot toMe payAmount hid', $sta['input'], NULL));
+  extract(just('amount', hidFlds($hid), NULL));
   $deny = (op($sta) == 'deny');
   if (!$toMe and $deny and !$whyNot) return say('say why not', 'whyNot');
+  if ($toMe and $err = u\badAmount($payAmount, '>', 2, $amount)) return say($err, 'payAmount');
 }
 
 function formHandleInvoice_submit($form, &$sta) {
-  $hidFlds = 'ret nvid amount payer payee purpose created data';
-  extract(just('hid whyNot always ' . $hidFlds, $sta['input'], NULL)); // hidFlds here is for testing
-  extract(just($hidFlds, w\hidFlds($hid)));
+  $hidFlds = 'ret nvid payer payee purpose created data';
+  extract(just('hid whyNot always payAmount ' . $hidFlds, $sta['input'], NULL)); // hidFlds here is for testing
+  extract(just($hidFlds, hidFlds($hid)));
 
   list ($fromA, $toA) = [r\acct($payer), r\acct($payee)];
   $payeeName = $toA->fullName;
-  $subs = ray('amount payerName payeeName created purpose reason', u\fmtAmt($amount), $fromA->fullName, $payeeName, u\fmtDate($created), $purpose, $whyNot);
+  $subs = ray('amount payerName payeeName created purpose reason', u\fmtAmt($payAmount), $fromA->fullName, $payeeName, u\fmtDate($created), $purpose, $whyNot);
 
   $op = op($sta);
   $ok = TRUE; // messages default to status, rather than error
 
   if ($op == 'pay' and !$whyNot) {
-    $short = round($amount - $fromA->avail(), 2);
+    $short = round($payAmount - $fromA->avail(), 2);
     if ($fromA->ok and $short <= 0) {
-      list($ok, $msg) = be\payInvoice($nvid);
+      list($ok, $msg) = be\payInvoice($nvid, $payAmount);
     } else {
       db\update('r_invoices', ray('nvid status', $nvid, TX_APPROVED), 'nvid');
       if ($fromA->ok) {

@@ -148,12 +148,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE flow AMemberDrawsAgain
  *     MAKE investinterest ANonmemberExpressesInterest
  *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMember
- *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
- *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
- *     MAKE invoice AMemberDeniesAnInvoice
- *     MAKE invoice AMemberApprovesAnInvoiceWithInsufficientFunds
- *     MAKE invoice AMemberApprovesInvoicesForevermore
- *     MAKE invoice AMemberApprovesAnInvoiceToATrustingCustomer
+ *     MAKE invoice AMemberMakesPartialPayments
  *     MAKE joint AMemberRequestsAJointAccount
  *     MAKE pale AMemberMakesATransactionThatTriggersPayingALittleExtra
  *     MAKE signin AMemberSignsInWithUsernameOnTheMemberSite
@@ -306,7 +301,7 @@ function members($list) {return t\members($list);}
  *     BOTH invest AClubAdministratorHandlesRequestsToCashOut
  *     BOTH invest TheInvestmentClubIssuesDividends
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
- *     TEST invoice AMemberApprovesAnInvoiceToATrustingCustomer
+ *     TEST invoice AMemberMakesPartialPayments
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     MAKE joint AJoinedAccountMemberUnjoinsTheAccount
  *     MAKE preferences AMemberChangesPreferences
@@ -345,7 +340,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST invest TheInvestmentClubIssuesDividends
  *     TEST invest MembersRateAProposedLoan
  *     TEST invest TheClubMakesALoan
- *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
+ *     TEST invoice AMemberMakesPartialPayments
  *     TEST pale AMemberMakesATransactionThatTriggersPayingALittleExtra
  *     TEST posts SomeoneEntersPersonalDataAfterPostingAnOffer
  *     TEST posts AMemberEntersDataAfterPostingAnOffer
@@ -391,7 +386,6 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST invest TheClubAddsAProposedInvestment
  *     TEST invest AMemberTriesToDecreaseStakeBelowZero
  *     TEST invest AClubAdministratorHandlesRequestsToCashOut
- *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST joint AMemberCreatesAJointAccountByClickingALinkOnTheConsolePage
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
@@ -547,7 +541,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST invest TheClubMakesALoan
  *     TEST invite AMemberInvites
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
- *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
+ *     TEST invoice AMemberMakesPartialPayments
  *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
@@ -702,8 +696,6 @@ function withoutOptions($options) {
  *     MAKE flow Setup
  *     MAKE invest Setup
  *     MAKE invoice Setup
- *     TEST invoice AMemberApprovesInvoicesForevermore
- *     MAKE invoice AMemberApprovesAnInvoiceToATrustingCustomer
  *     MAKE joint AMemberRequestsAJointAccount
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     MAKE joint AJoinedAccountMemberUnjoinsTheAccount
@@ -760,9 +752,6 @@ function relations($relations) {return t\relations($relations);}
  *     BOTH invest TheInvestmentClubIssuesDividends
  *     TEST invoice Setup
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
- *     TEST invoice AMemberDeniesAnInvoice
- *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
- *     TEST invoice AMemberApprovesAnInvoiceToATrustingCustomer
  *     TEST joint Setup
  *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     TEST joint AJoinedAccountMemberUnjoinsTheAccount
@@ -846,7 +835,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE invest TheClubMakesALoan
  *     MAKE invite AMemberInvites
  *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMember
- *     MAKE invoice AMemberConfirmsRequestToChargeANotyetMember
+ *     MAKE invoice AMemberMakesPartialPayments
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
@@ -1038,7 +1027,6 @@ function memberOnetimePasswordIs($id, $pass) {
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
- *     TEST invoice AMemberDeniesAnInvoice
  *     TEST tx AMemberConfirmsRequestToPayAnotherMember
  *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
  *     TEST tx AMemberPaysAnotherMemberRepeatedly
@@ -1194,7 +1182,6 @@ function statisticsGetSet($time) {
  *     BOTH coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
- *     MAKE invoice AMemberApprovesInvoicesForevermore
  *     TEST joint AMemberRequestsAJointAccount
  *     BOTH joint AJoinedAccountSlaveMemberRequestsANewMinimum
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
@@ -1304,12 +1291,7 @@ function devices($list) {return t\devices($list);}
  *     TEST invest TheClubSellsShares
  *     TEST invest TheClubSellsItsRemainingSharesInAnInvestment
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
- *     TEST invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
- *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
- *     TEST invoice AMemberDeniesAnInvoice
- *     TEST invoice AMemberApprovesAnInvoiceWithInsufficientFunds
- *     TEST invoice AMemberApprovesInvoicesForevermore
- *     TEST invoice AMemberApprovesAnInvoiceToATrustingCustomer
+ *     BOTH invoice AMemberMakesPartialPayments
  *     TEST signupco ACompanySignsUp
  *     TEST tx AMemberConfirmsRequestToChargeAnotherMember
  */
@@ -1493,8 +1475,6 @@ function memberConfirmsOnTransaction($id, $do, $xid) {
  *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     TEST cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
- *     TEST invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
- *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST tx AMemberConfirmsRequestToChargeAnotherMember
  */
 function weMessageToMemberWithSubs($index, $id, $subs) {return t\weMessage($index, $id, $subs);}

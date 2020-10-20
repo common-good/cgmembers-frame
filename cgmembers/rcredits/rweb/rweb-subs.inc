@@ -1002,7 +1002,8 @@ function subMenuRaw($menu, $menuName = NULL) {
     setv($menuName, $res);
   }
   return $res;
-}  
+}
+function uncacheSubmenus() {foreach (ray(SUBMENUS) as $menu) setv("menu-$menu", NULL);}
 
 function keep_values(&$form) {
   if (!$info = which('info')) return $form;

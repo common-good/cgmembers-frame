@@ -295,14 +295,16 @@ function reverse($xid) {
 /**
  * Pay the given invoice, possibly without being signed in.
  * @param int $nvid: record ID of invoice to pay
+ * @param numeric $payAmount: amount to pay (defaults to the invoice amount)
  * @return [TRUE, explanation] if the payment was successful
  *         [FALSE, explanation] if the payment failed
  */
-function payInvoice($nvid) {
+function payInvoice($nvid, $payAmount = NULL) {
   u\EXPECT('int', $nvid);
   $msg = r\badUnpaidInv($nvid, $inv);
   if ($msg) return [FALSE, $msg];
   extract(just('payer payee amount goods purpose data flags recursId', $inv, [NULL, NULL, 0.0, FOR_GOODS, NULL, '', 0, 0]));
+  u\setDft($payAmount, $amount);
   $payerA = r\acct($payer);
   $payeeA = r\acct($payee);
   $data = unserialize($data);
@@ -310,17 +312,20 @@ function payInvoice($nvid) {
   
   $DBTX = \db_transaction();
 	$extra = ray('inv', $nvid) + just('api for', $data, NULL);
+  if ($payAmount < $amount) $extra['partial'] = 1;
 	if ($flags) foreach (ray('gift crumbs recurs investment') as $k) if (u\getBit($flags, $k)) $extra[$k] = 1;
 
-  list ($ok, $index, $subs) = be\transfer('invoice payment', $payerA, $payeeA, $amount, $purpose, $goods, $extra, $recursId);
+  list ($ok, $index, $subs) = be\transfer('invoice payment', $payerA, $payeeA, $payAmount, $purpose, $goods, $extra, $recursId);
   if ($ok) {
-    db\update('r_invoices', ray('status nvid', $subs['xid'], $nvid), 'nvid');
-    if (!empty($api)) u\post($api, ray('request ok msg', $request, (int) $ok, tr($index, $subs)));
+    if ($payAmount == $amount or !invRemains($nvid)) { // == is for efficiency
+      db\update('r_invoices', ray('status nvid', $subs['xid'], $nvid), 'nvid');
+      if (!empty($api)) u\post($api, ray('request ok msg', $request, (int) $ok, tr($index, $subs)));
+    }
 
     if (u\getBit($flags, B_INVESTMENT)) { // club reclaiming an investment
       if ($shid and $res = db\get('vestid,price', 'r_shares JOIN r_investments USING(vestid)', compact('shid'))) { // record sale
         extract($res);
-        db\update('r_shares', ray('shid shares pending when', $shid, -round($amount / $price), 0, now()), 'shid');
+        db\update('r_shares', ray('shid shares pending when', $shid, -round($payAmount / $price), 0, now()), 'shid');
         if (db\sum('shares', 'r_shares', compact('vestid')) <= 0) db\q('UPDATE r_shares SET sold=:NOW WHERE vestid=:vestid', compact('vestid'));
       } else r\tellCAdmin(t('Invoice payment marked as "for investment (repayment)" has no corresponding SELL request in shares table.'), $inv, $payeeA);
     }
@@ -384,9 +389,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   $taking = ($type == 'charge' or $type == 'draw' or ($type == 'transfer' and $amount < 0));
   
   extract(just('created force boxId ruleId', $data, [now(), 0, NULL, NULL]));
-  extract(just('offline loan investment stake fine noask funding crumbs recurs gift api for', $data, FALSE));
-
-  $short = FALSE;
+  extract(just(TX_FLAGS . ' inv api for', $data, FALSE));
   
   u\setDft($purpose, ray(R_WHYS)[$goods]);
 
@@ -440,11 +443,9 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   }
 
   if ($error = u\badAmount($amount)) return r\txErr($error, $erInfo);
-  $flagNames = 'offline short crumbs recurs gift loan investment stake fine noask funding';
-  $flags = 0;
-  foreach (ray($flagNames) as $k) if ($$k) u\setBit($flags, $k);
+  $flags = 0; foreach (ray(TX_FLAGS) as $k) if ($$k) u\setBit($flags, $k);
 
-  txEntryPair($entries, $amount, [$e1A, $e2A], [$e1For, $e2For], E_PRIME, $ruleId);
+  txEntryPair($entries, $amount, [$e1A, $e2A], [$e1For, $e2For], E_PRIME, $ruleId, $inv);
   
   $DBTX = \db_transaction();
 
@@ -536,13 +537,15 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
  * @param string $description0: transaction purpose(s)
  * @param int $entryType0: entry type(s)
  * @param int $rule: relevant record ID in tx_rules table
+ * @param int $inv: related invoice ID
  */
-function txEntryPair(&$txes, $amount0, $a0, $description0, $entryType0, $rule = NULL) {
+function txEntryPair(&$txes, $amount0, $a0, $description0, $entryType0, $rule = NULL, $inv = NULL) {
   foreach ([1, 0] as $i) { // payee first, to agree with tests and so entry id is postive for e2, negative for e1
     foreach (ray('a description entryType') as $k) $$k = is_array(${$k . 0}) ? ${$k . 0}[$i] : ${$k . 0};
     $amount = $i == 0 ? -$amount0 : $amount0;
     list ($uid, $agentUid) = is_object($a) ? [$a->id, $a->agentId] : [$a, $a];
-    $txes[] = new r\TxEntry(compact(ray('entryType amount uid agentUid description rule')));
+    list ($relType, $relatedId) = $inv ? ['I', $inv] : [NULL, NULL];
+    $txes[] = new r\TxEntry(compact(ray('entryType amount uid agentUid description rule relType relatedId')));
   }
 }
 
@@ -644,7 +647,13 @@ function sendNotifications($type, $tx, $shortfall) {
 
   if (!$otherA->isCanonic) $otherA->$tell2($notice, $args);  // no notifications to canonic accounts
   $msg = 'report tx';
-//  return r\txErr($msg, $tx->reportArgs($tx->actorA, TRUE, $shortfall) + compact(ray('msg did')));
+  
+  if ($tx->flags & u\bit(B_PARTIAL) and $nvid = $tx->entries[0]->relatedId) { // invoice payment or retraction
+    if ($left = be\invRemains($nvid)) {
+      $msg .= '|partial';
+      $args += ray('remaining', u\fmtAmt($left));
+    }
+  }
   return [TRUE, $msg, $args + compact(ray('msg did'))];
 }
 
@@ -1255,4 +1264,5 @@ function foreignKeyCheck($prefix, $ref, $field, $table, $keyFld, $keyVal) {
 }
 
 function sanityErr($s) {w\say("Sanity error: " . $s, 'err');}
-
+function invPayments($nvid) {return db\sum('amt', 'txs', "relType='I' AND rel=:nvid", compact('nvid'));}
+function invRemains($nvid) {return round(db\get('amount', 'r_invoices', compact('nvid')) - invPayments($nvid), 2);}
