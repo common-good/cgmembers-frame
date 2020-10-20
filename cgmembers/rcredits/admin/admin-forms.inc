@@ -953,7 +953,7 @@ function util($arg) {
   return w\go('sadmin');
 }
 
-function handyLinks() {
+function formHandy($form, &$sta) {
   global $base_path, $base_url, $base_root;
 
   $links = [
@@ -969,7 +969,7 @@ function handyLinks() {
     if (!$label) $label = $detail;
     $handy[$url] = ['', $label, '', ANY, '', $detail, $icon];
   }
-  return w\subMenu(t('<h2>Handy Links</h2>'), $handy);
+  return w\subMenu(t('<h2>Handy Links</h2>'), $handy, 'handy');
 }
 
 /**

@@ -207,8 +207,8 @@ function NEWcgform($form, $onSubmit = '', $labeled = TRUE) {
 /**
  * Modify a page in standard ways before passing it through to Drupal core for processing.
  * @param assoc $form: the form array
- * @param string $fmt: format adjustments: narrow, wider, wide, nolabs
- * @param string $mlabFmt: label format adjustments for mobile: narrow, left
+ * @param string $fmt: format adjustments: (space-string array) narrow, wider, wide, nolabs, submenu
+ * @param string $mlabFmt: (space-string array) label format adjustments for mobile: narrow, left
  */
 function cgform($form, $fmt = '', $mlabFmt = '') {
   foreach (ray('fmt mlabFmt') as $k) $$k = ray($$k);
@@ -979,22 +979,27 @@ EOF;
  * Return a submenu page (list) for a given menu or named menu section.
  * @param string $title: header for the menu
  * @param mixed $menu: menu section name or assoc of menu items
+ * @param string $menuName: menu name if $menu is an assoc
  * @return the menu as a Drupal form (not yet rendered)
  */
-function subMenu($title, $menu) {
+function subMenu($title, $menu, $menuName =  NULL) {
   $title = item($title, '', '', clas('submenu'));
-  $list = item(subMenuRaw($menu), BARE);
-  return compact('title', 'list');
+  $list = item(subMenuRaw($menu, $menuName), BARE);
+  return cgform(compact('title', 'list'), 'submenu');
 }
 
 /**
  * Return the submenu's HTML (cached)
+ *   $html = subMenuRaw($menuName);
+ *   $html = subMenuRaw($menuRay, $menuName);
+ * @param mixed $menu: menu name or menu assoc
+ * @param string $menuName: menu name if first param isn't.
  */
-function subMenuRaw($menu) {
-  if (is_array($menu) or !$res = getv($key = "menu-$menu")) {
+function subMenuRaw($menu, $menuName = NULL) {
+  if (is_array($menu) or !$res = getv($menuName = "menu-$menu")) {
     include_once R_ROOT . '/cg-menu.inc';
     $res = r\subMenuHtml($menu);
-    setv($key, $res);
+    setv($menuName, $res);
   }
   return $res;
 }  
