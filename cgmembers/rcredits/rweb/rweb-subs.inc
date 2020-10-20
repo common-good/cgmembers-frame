@@ -1003,7 +1003,6 @@ function subMenuRaw($menu, $menuName = NULL) {
   }
   return $res;
 }
-function uncacheSubmenus() {foreach (ray(SUBMENUS) as $menu) setv("menu-$menu", NULL);}
 
 function keep_values(&$form) {
   if (!$info = which('info')) return $form;
@@ -2210,3 +2209,4 @@ function softErr($msg) {w\say($msg, 'err'); return w\go('empty');}
 function skipButton() {return button(t('Skip for now'), '/settings/skip', t('Leave this step for last'), 'default', 'xs', ['class' => 'skip']);}
 function notab() {return tabindex(-1);}
 function tabindex($n) {return ['tabindex' => $n];}
+function uncacheSubmenus() {foreach (ray(SUBMENUS) as $menu) setv("menu-$menu", NULL);}
