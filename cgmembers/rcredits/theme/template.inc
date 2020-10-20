@@ -151,6 +151,7 @@ function rcredits_form($variables) {
 }
 
 function rcredits_links($variables) {
+  include_once R_ROOT . '/cg-menu.inc';
   global $rUrl, $base_url;
   $links = $variables['links'];
   $attributes = $variables['attributes'];
@@ -170,7 +171,7 @@ function rcredits_links($variables) {
     
     if (in($m_href, SUBMENUS)) {
       $class .= ' submenu';
-      $menu = w\subMenuHtml($m_href);
+      $menu = w\subMenuRaw($m_href);
       $link = <<<EOF
       <div class="popmenu">$menu</div>
       <a href="#" data-toggle="popover" data-html="true" data-trigger="manual" data-animation="false">$m_title</a>

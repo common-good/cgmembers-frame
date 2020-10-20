@@ -497,7 +497,7 @@ Scenario: The investment club issues dividends
   Then we show "Issue Dividends" with:
   | Available for Dividends | $5,500 |
   | | (10.0% is reserved for Common Good) |
-  | Total Dividends to Issue | $5,500 |
+  | Total Dividends to Issue | $5500 |
   | Issue Dividends | |
   
   When member "I:B" completes form "invest/dividends" with values:

@@ -692,7 +692,7 @@ function usdTransfers($txs) {
 
 /**
  * Run the op in the background, return TRUE.
- include_once __DIR__ . '/../rcredits/cg-testing.inc';
+ include_once R_ROOT . '/cg-testing.inc';
  f('t.cronRuns', 'op');
 */
 function cronRuns($op) {

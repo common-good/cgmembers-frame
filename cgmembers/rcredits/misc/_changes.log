@@ -1,3 +1,14 @@
+2020-10-18 feature/no-bank
+. keep "Bank" off the menu
+. moved menus out of rweb.module into rcredits.module
+. moved most menu code to a separate file and cached most submenus
+. changed __DIR__ . '/../ to R_ROOT . '/
+. rebuilds menus automatically on boot, if menu_links has been deleted (to force recreation)
+. access function moved to cg.inc
+. nni() now accepts objects
+. fixed warning in u\getLocus()
+. fixed warning in admin panel
+
 2020-10-15 feature/tweaks
 . suppress in-your-face endorsement ask on console page
 . better handling of errors in account change

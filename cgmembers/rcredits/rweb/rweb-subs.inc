@@ -19,8 +19,8 @@ define('R_AGREE_9', 8); // number of the last point in the rCredits Agreement
 define('REQ', '*'); // marks required fields (use this as start of field's label)
 define('BARE', '-'); // marks bare (unwrapped) fields -- no div wrapper around them
 
-require_once __DIR__ . '/../cg-util.inc';
-require_once __DIR__ . '/../cg-strings.inc';
+require_once R_ROOT . '/cg-util.inc';
+require_once R_ROOT . '/cg-strings.inc';
 
 global $txDays; $txDays = array(1 => 'Day', 7 => '7 days', 30 => '30 days', 90 => '90 days', 180 => '6 months', 365 => '12 months', -1 => 'Year to date', -2 => 'Ever');
 
@@ -983,32 +983,21 @@ EOF;
  */
 function subMenu($title, $menu) {
   $title = item($title, '', '', clas('submenu'));
-  $list = item(subMenuHtml($menu), BARE);
+  $list = item(subMenuRaw($menu), BARE);
   return compact('title', 'list');
 }
 
-function subMenuHtml($menu) {
-  global $base_url;
-
-  if (!is_array($menu)) $menu = \rweb_menu($menu);
-  $list = '';
-  foreach ($menu as $k => $v) {
-    list ($type, $head, $args, $perms, $func, $detail, $icon) = u\padRay($v, 7);
-    if ($type == 'call' or !w\webAccess($perms)) continue;
-    if (nn($detail)) $detail = "<p class=\"list-group-item-text\">$detail</p>";
-    $text = <<<EOF
-    <h4 class="list-group-item-heading">
-      <span class="glyphicon glyphicon-$icon"></span> &nbsp;
-      $head
-    </h4>
-    $detail
-EOF;
-//    $onclick = "jQuery(this).find('.glyphicon').css('color', 'darkblue');"; // glyph looks funny when ladda-spinning
-//    $list .= spinLink("/$k", $text, '', 'list-group-item', '', compact('onclick'));
-    $list .= spinLink("/$k", $text, '', 'list-group-item', '');
+/**
+ * Return the submenu's HTML (cached)
+ */
+function subMenuRaw($menu) {
+  if (is_array($menu) or !$res = getv($key = "menu-$menu")) {
+    include_once R_ROOT . '/cg-menu.inc';
+    $res = r\subMenuHtml($menu);
+    setv($key, $res);
   }
-  return $list;
-}
+  return $res;
+}  
 
 function keep_values(&$form) {
   if (!$info = which('info')) return $form;
@@ -1680,47 +1669,6 @@ function doSay($msg = '', $err = '') {
 function doErr($msg) {return doSay($msg, 'err');}
 
 /**
- * Add an item to the menu structure (called when reinstalling or rebuilding menus).
- * @param string $path: URL path to this item (without the domain)
- * @param string $title: human-readable label for operation
- * @param int $type: menu item type (see hook_menu)
- * @param string $function: what function to call when item is activated (with or without namespace qualifiers)
- * @param string $args: space-delimited list of arguments to pass to the function
- * @param string $perms: space-delimited list of permission bit names (lowercase without B_ )
- * @return the menu item array as expected by Drupal for hook_menu
- */
-function menu($path, $title, $type, $function, $args, $perms = '') {
-  global $menuWeight; $menuWeight += !nn($menuWeight) ?: 1;
-
-  foreach ($args = ray($args) as $k => $v) if (is_numeric($v)) $args[$k] = (int) $v;
-  
-  $adminPerms = (strihas($perms, 'admin'));
-  $admin = (u\starts($path, 'sadmin') or $perms == 'dev' or $adminPerms);
-  $smart = ($path == 'pos');
-
-  $formName = ($args and !is_numeric($args[0])) ? $args[0] : $function;
-  $alt = $smart ? 'rsmart/rsmart.inc' : ($admin ? 'admin/admin-forms.inc' : 'rweb/rweb.inc');
-  $file = strtolower("../forms/$formName.inc");
-  if (!file_exists(R_ROOT . "/rweb/$file")) $file = "../$alt";
-  
-  $item = array(
-    'title' => $title,
-    'type' => $type,
-    'page callback' => ($smart ? 'CG\\Smart\\' : 'CG\\Web\\') . $function,
-    'page arguments' => $args,
-    'access callback' => $perms ? 'CG\\Web\\webAccess' : TRUE,
-    'access arguments' => $perms ? array($perms) : NULL,
-    'weight' => $menuWeight - 1,
-    'menu_name' => 'main-menu', 
-    'module' => $smart ? 'rsmart' : 'rweb',
-    'file' => $file,
-    'options' => ray('class', $title),
-  );
-
-  return $item;
-}
-
-/**
  * Return a help message for the page.
  * @param string $args: parameters to pass to rawHelp
  * @param assoc $args: (RETURNED) returned parameters (passed from rawHelp back to caller)
@@ -1985,21 +1933,6 @@ function monthChoices($title, $things, $subtext = '', $end = -1, $target = '_bla
 }
 
 /**
- * Create a menu entry (see rweb.module)
- */
-function userMenuItem($router_path, $link_title) {
-  $menu_name = 'user-menu';
-  $link_path = $router_path;
-  if (db\exists('{menu_links}', 'menu_name=:menu_name AND link_path=:link_path', compact('menu_name', 'link_path'))) return; // done
-  $module = 'menu';
-  $customized = TRUE;
-  $depth = 1;
-  $mlid = 0;
-  $item = compact(ray('mlid menu_name router_path link_path link_title module customized depth'));
-  menu_link_save($item);
-}
-
-/**
  * Consolidate or extract hidden fields.
  */
 function hidFlds($ray) {return is_array($ray) ? hidFld(plain(serialize($ray))) : unserialize(unplain($ray));}
@@ -2008,31 +1941,6 @@ function focusOn($focusFieldName) {
   u\EXPECT(!empty($focusFieldName), 'focus on null');
   $focusFieldName = str_replace('_', '-', $focusFieldName);
   jsx('focus-on', 'field', $focusFieldName);
-}
-
-/**
- * Return TRUE if the current account has all the required permissions.
- */
-function webAccess($perms = NULL) {
-  global $mya;
-
-  foreach (ray($perms) as $perm) {
-    if ($not = (substr($perm, 0, 1) == '-')) $perm = substr($perm, 1);
-
-    $pass =
-      $perm == ANY ? TRUE // needed for submenus (see w\subMenu())
-    : ($perm == 'dev' ? isDEV
-    : ($perm == 'signedIn' ? (bool) $mya
-    : ($perm == 'iclub' ? ($mya and $mya->iclub)
-    : ($perm == 'superadmin' ? ($mya and $mya->superAdmin)
-    : ($perm == 'superadminORdev' ? (($mya and $mya->superAdmin) or isDEV)
-    : ($perm == 'prose' ? ($mya and $mya->proSe)
-    : ($perm == 'investor' ? ($mya and ($mya->iclub or db\exists('r_stakes', 'uid=:id', ['id'=>$mya->id])))
-    : ($perm == 'depends' ? ($mya and $mya->depends and $mya->proSe)
-    : ($mya and $mya->can(u\consta('b', $perm))) ))))))));
-    if ($not ? $pass : !$pass) return FALSE;
-  }
-  return TRUE;
 }
 
 function css($sheet, $weight = -99) {
