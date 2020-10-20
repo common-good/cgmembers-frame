@@ -254,7 +254,7 @@ function formAccounts_submit($form, &$sta) {
 function changeWho($zot, $args = '', &$sta = '') {
   global $mya;
   extract(just('acct page', $args, NULL));
-
+  
   if (test()) $page = u\urlify(str_replace(',', '/', nn($page)));
   $page = $page ? u\deurlify($page) : 'console'; // go to console, unless admin
 
@@ -264,6 +264,7 @@ function changeWho($zot, $args = '', &$sta = '') {
   if (!$mya->cAdmin2 and !$mya->isAdmin2 and !$mya->can()) return hack('change to illegal', ray('args mya', pr($args), pr($mya)));
   if ($mya->cAdmin and !$mya->admin and !$mya->isAdmin2 and $mya->community != $mya->agentA->community) return w\go($page, t('You can switch only to accounts in your community.')); // cAdmin check is a bug fix
   r\setAcct($mya, $sta); // set new current account
+  w\uncacheSubmenus();
 
   return w\go($page);
 }

@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.55k'; // software version
+const R_VERSION = '3.55l'; // software version
 define('R_ROOT', __DIR__);
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -558,7 +558,8 @@ const B_FINE = 14; // community fine (UNUSED?)
 const B_NOASK = 15; // transaction was taken with ID checking OFF
 const B_FUNDING = 16; // invoice has already instigated an appropriate bank transfer request
 const B_FOOD = 17; // contribution to food fund
-const TX_FLAGS = 'offline short crumbs recurs gift loan investment stake fine noask funding food';
+const B_PARTIAL = 18; // partial payment of invoice
+const TX_FLAGS = 'offline short crumbs recurs gift loan investment stake fine noask funding food partial';
 
 // Invoice status (txid >= TX_PAID if paid)
 const TX_NOSUCH = -4; // no such charge operation (used only in forms/buy.inc)

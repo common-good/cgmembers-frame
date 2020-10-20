@@ -33,16 +33,17 @@ Scenario: A member confirms request to charge another member
   When member ".ZZB" visits page "handle-invoice/nvid=1&code=TESTDOCODE"
   Then we show "Confirm Payment" with:
   | ~question | Pay $100 to Abe One for labor |
+  | Amount to Pay | 100 |
   | ~ | Pay |
   | Reason ||
   | ~ | Dispute |
 
   When member ".ZZB" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
-  | op   | ret | nvid | amount | payer | payee | purpose | created |*
-  | pay  |     |    1 |    100 | .ZZB  | .ZZA  | labor   | %today  |
+  | op   | ret | nvid | payAmount | payer | payee | purpose | created |*
+  | pay  |     |    1 |       100 | .ZZB  | .ZZA  | labor   | %today  |
   Then transactions:
-  | xid | created | amount | payer | payee | purpose | taking |*
-  |   1 | %today  |    100 | .ZZB | .ZZA | labor     | 0      |
+  | xid | created | amount | payer | payee | purpose | taking | relType | rel |*
+  |   1 | %today  |    100 | .ZZB | .ZZA | labor     | 0      | I       | 1   |
   And invoices:
   | nvid | created | status | amount | payer | payee | for   |*
   |    1 | %today  | 1      |    100 | .ZZB | .ZZA | labor |
@@ -52,6 +53,44 @@ Scenario: A member confirms request to charge another member
   | .ZZB |    -100 |
   | .ZZC |       0 |
 	
+Scenario: A member makes partial payments
+  Given invoices:
+  | nvid | created | status      | amount | payer | payee | for   |*
+  |    1 | %today  | %TX_PENDING |    100 | .ZZB | .ZZA | labor |
+  When member ".ZZB" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
+  | op   | ret | nvid | payAmount | payer | payee | purpose | created |*
+  | pay  |     |    1 |        10 | .ZZB  | .ZZA  | labor   | %today  |
+  Then we say "status": "report tx|partial" with subs:
+  | did    | otherName | amount | remaining |*
+  | paid   | Abe One   | $10    | $90       |
+  And transactions:
+  | xid | created | amount | payer | payee | purpose | taking | relType | rel |*
+  |   1 | %today  |     10 | .ZZB  | .ZZA  | labor   | 0      | I       | 1   |
+  And invoices:
+  | nvid | created | status      | amount | payer | payee | for   |*
+  |    1 | %today  | %TX_PENDING |    100 | .ZZB  | .ZZA  | labor |
+  
+  When member ".ZZB" visits page "handle-invoice/nvid=1&code=TESTDOCODE"
+  Then we show "Confirm Payment" with:
+  | ~question | Pay $100 to Abe One for labor |
+  | Amount to Pay | 90 |
+  | ~ | Pay |
+  | Reason ||
+  | ~ | Dispute |
+Skip
+  When member ".ZZB" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
+  | op   | ret | nvid | payAmount | payer | payee | purpose | created |*
+  | pay  |     |    1 |        90 | .ZZB  | .ZZA  | labor   | %today  |
+  Then we say "status": "report tx" with subs:
+  | did    | otherName | amount |*
+  | paid   | Abe One   | $90    |
+  And transactions:
+  | xid | created | amount | payer | payee | purpose | taking | relType | rel |*
+  |   2 | %today  |     90 | .ZZB  | .ZZA  | labor   | 0      | I       | 1   |
+  And invoices:
+  | nvid | created | status | amount | payer | payee | for   |*
+  |    1 | %today  | 2      |    100 | .ZZB  | .ZZA  | labor |
+
 Scenario: A member confirms request to charge another member who has a bank account
   When member ".ZZA" confirms form "tx/charge" with values:
   | op     | who     | amount | goods      | purpose |*
@@ -82,8 +121,8 @@ Scenario: A member confirms request to charge a not-yet member
   | ~ | Dispute |
 
   When member ".ZZD" confirms form "handle-invoice/nvid=1" with values:
-  | op   | ret | nvid | amount | payer | payee | purpose | created |*
-  | pay  |     |    1 |    100 | .ZZD  | .ZZA  | labor   | %today  |
+  | op   | ret | nvid | payAmount | payer | payee | purpose | created |*
+  | pay  |     |    1 |       100 | .ZZD  | .ZZA  | labor   | %today  |
   Then invoices:
   | nvid | created | status       | amount | payer | payee | for   |*
   |    1 | %today  | %TX_APPROVED |    100 | .ZZD | .ZZA | labor |
@@ -94,8 +133,8 @@ Scenario: A member denies an invoice
   | op     | who     | amount | goods | purpose |*
   | charge | Bea Two | 100    | %FOR_GOODS     | labor   |
   And member ".ZZB" confirms form "handle-invoice/nvid=1" with values:
-  | op   | ret | nvid | amount | payer | payee | purpose | created | whyNot |*
-  | deny |     |    1 |    100 | .ZZB  | .ZZA  | labor   | %today  | broke  |
+  | op   | ret | nvid | payAmount | payer | payee | purpose | created | whyNot |*
+  | deny |     |    1 |       100 | .ZZB  | .ZZA  | labor   | %today  | broke  |
   Then invoices:
   | nvid | created | status     | amount | payer | payee | for   |*
   |    1 | %today  | %TX_DENIED |    100 | .ZZB | .ZZA | labor |
@@ -113,8 +152,8 @@ Scenario: A member approves an invoice with insufficient funds
   | op     | who     | amount | goods | purpose |*
   | charge | Bea Two | 300    | %FOR_GOODS     | labor   |
   And member ".ZZB" confirms form "handle-invoice/nvid=1" with values:
-  | op   | ret | nvid | amount | payer | payee | purpose | created | whyNot |*
-  | pay  |     |    1 |    300 | .ZZB  | .ZZA  | labor   | %today  |        |
+  | op   | ret | nvid | payAmount | payer | payee | purpose | created | whyNot |*
+  | pay  |     |    1 |       300 | .ZZB  | .ZZA  | labor   | %today  |        |
   Then invoices:
   | nvid | created | status       | amount | payer | payee | for   |*
   |    1 | %today  | %TX_APPROVED |    300 | .ZZB | .ZZA | labor |
@@ -135,8 +174,8 @@ Scenario: A member approves invoices forevermore
   | op     | who     | amount | goods      | purpose |*
   | charge | Bea Two | 300    | %FOR_GOODS | labor   |
   And member ".ZZB" confirms form "handle-invoice/nvid=1" with values:
-  | op   | ret | nvid | amount | payer | payee | purpose | created | whyNot | always |*
-  | pay  |     |    1 |    300 | .ZZB  | .ZZA  | labor   | %today  |        |      1 |
+  | op   | ret | nvid | payAmount | payer | payee | purpose | created | whyNot | always |*
+  | pay  |     |    1 |       300 | .ZZB  | .ZZA  | labor   | %today  |        |      1 |
   Then invoices:
   | nvid | created | status       | amount | payer | payee | for   |*
   |    1 | %today  | %TX_APPROVED |    300 | .ZZB | .ZZA | labor |
@@ -152,8 +191,8 @@ Scenario: A member approves an invoice to a trusting customer
   | op     | who     | amount | goods      | purpose |*
   | charge | Bea Two | 100    | %FOR_GOODS | labor   |
   Then transactions:
-  | xid | created | amount | payer | payee | purpose | taking |*
-  |   1 | %today  |    100 | .ZZB | .ZZA | labor     | 0      |
+  | xid | created | amount | payer | payee | purpose | taking | relType | rel |*
+  |   1 | %today  |    100 | .ZZB | .ZZA | labor     | 0      | I       | 1   |
   And invoices:
   | nvid | created | status | amount | payer | payee | for   |*
   |    1 | %today  | 1      |    100 | .ZZB | .ZZA | labor |

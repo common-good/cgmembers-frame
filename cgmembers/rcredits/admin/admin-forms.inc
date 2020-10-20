@@ -927,7 +927,7 @@ function checkSanity() {
 function util($arg) {
   switch ($arg) {
   case 'reset-menu':
-    foreach (ray(SUBMENUS) as $k) setv("menu-$k", NULL);
+    w\uncacheSubmenus();
     db\q("DELETE FROM menu_router WHERE page_callback LIKE 'CG%'"); // otherwise we get leftover junk
     db\q("DELETE FROM menu_links WHERE module='rweb'");
     \menu_rebuild();

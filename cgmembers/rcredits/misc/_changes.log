@@ -1,3 +1,7 @@
+2020-10-20 feature/partial
+. handle partial payments of invoices
+. uncache submenus on account selection
+
 2020-10-18 feature/no-bank
 . keep "Bank" off the menu
 . moved menus out of rweb.module into rcredits.module
