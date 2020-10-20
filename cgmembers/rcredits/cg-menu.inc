@@ -159,7 +159,7 @@ function menu($submenu = '') {
     'sadmin/rules' => [isDEV ? 'sub' : 'call', t('Rules'), 'Rules 2', 'admin'],
     'sadmin/check-sanity' => [isDEV ? 'sub' : 'call', 'Check database consistency', '0', 'admin', 'checkSanity'],
 //    'sadmin/sms' => ['sub', t('Test SMS'), 'SMS', 'superadmin'],
-    'sadmin/handy' => ['sub', t('Handy'), '', 'superadminORdev', 'handyLinks'],
+    'sadmin/handy' => ['sub', t('Handy'), 'Handy', 'superadminORdev'],
     'sadmin/php' => ['sub', t('PHP'), 'Php 2', 'superadminORdev'],
 
     'sadmin/tx-info' => ['call', 'Transaction Info', 'TxInfo 2', 'admin2'],

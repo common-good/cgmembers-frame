@@ -186,6 +186,9 @@ form {max-width:834px; margin:0 auto;}
 .frm-nolabs .control-label {display:none;}
 
 .frm-narrow .control-data {max-width:450px;}
+.frm-submenu {max-width:300px;}
+.frm-submenu .form-item-title .control-data {width:100%; text-align:center;}
+.frm-submenu .form-item-title .control-label {display:none;}
 
 @media (max-width:768px) {
   #navbar {padding-right:0; position:fixed; z-index:10001; top:50px; right:0; left:auto; margin:0;}
@@ -238,11 +241,6 @@ td, th {padding: 4px 9px; border: 1px solid #fff; text-align: left;}
 .box1 .checkbox, .form-horizontal .checkbox {padding-top:0;}
 .form-horizontal .radio, .form-horizontal .radio-inline {margin-left:0; margin-right:15px;}
 
-#frm-community,
-#frm-history,
-#frm-settings,
-#frm-co,
-#frm-admin {max-width:300px; margin:0 auto;}
 #frm-adminpanel button {margin:0 10px 20px 0;}
 
 .confirmation .form-item-title .control-label {display:block !important;}
