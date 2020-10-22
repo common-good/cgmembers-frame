@@ -1,3 +1,6 @@
+2020-10-22 feature/partial2
+. handle reporting of partial transactions
+
 2020-10-20 feature/partial
 . handle partial payments of invoices
 . uncache submenus on account selection

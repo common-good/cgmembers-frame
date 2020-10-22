@@ -29,15 +29,15 @@ Setup:
   |    4 | %today-5d |     99 | .ZZA | .ZZC | wrongly  | %TX_DENIED |
   |    5 | %today-5d |     12 | .ZZA | .ZZC | realist  | %TX_APPROVED |
   And transactions: 
-  | xid | created   | amount | payer | payee | purpose  | taking |*
-  |  11 | %today-3m |    240 | .ZZA | .ZZB | what G   | 0      |
-  |  12 | %today-1w |    120 | .ZZA | .ZZC | this Q   | 0      |
-  |  13 | %today-5d |     80 | .ZZA | .ZZC | this CF  | 0      |
-  |  24 | %today-6m |     10 | .ZZB | .ZZA | cash E   | 0      |
-  |  25 | %today-4m |    100 | .ZZC | .ZZA | usd F    | 1      |
-  |  26 | %today-2w |     50 | .ZZB | .ZZC | cash P   | 0      |
-  |  27 | %today-6d |    100 | .ZZA | .ZZB | cash V   | 0      |
-  |  28 | %today-5d |    100 | .ZZC | .ZZA | cash CJ  | 1      |
+  | xid | created   | amount | payer | payee | purpose  | taking | relType | rel |*
+  |  11 | %today-3m |    240 | .ZZA  | .ZZB  | what G   | 0      | I       | 1   |
+  |  12 | %today-1w |    120 | .ZZA  | .ZZC  | this Q   | 0      | I       | 2   |
+  |  13 | %today-5d |     80 | .ZZA  | .ZZC  | this CF  | 0      | I       | 3   |
+  |  24 | %today-6m |     10 | .ZZB  | .ZZA  | cash E   | 0      |         |     |
+  |  25 | %today-4m |    100 | .ZZC  | .ZZA  | usd F    | 1      |         |     |
+  |  26 | %today-2w |     50 | .ZZB  | .ZZC  | cash P   | 0      |         |     |
+  |  27 | %today-6d |    100 | .ZZA  | .ZZB  | cash V   | 0      |         |     |
+  |  28 | %today-5d |    100 | .ZZC  | .ZZA  | cash CJ  | 1      |         |     |
   Then balances:
   | uid  | balance |*
   | .ZZA |     670 |

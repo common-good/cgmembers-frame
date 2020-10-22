@@ -1039,7 +1039,7 @@ function getLocus($q, $city = '', $state = '', $zip = '') {
   }
   $res = json_decode($res);
 
-  foreach (nn($res->results, []) as $one) if (nni($one->components, country_code) == 'us') {
+  foreach (nn($res->results, []) as $one) if (nni($one->components, 'country_code') == 'us') {
     $i = $one->confidence; // confidence is actually specificity. Be as specific as possible.
     if (in($one->components->_category, 'building place transportation postcode') 
       and nn($one->components->postcode)

@@ -60,7 +60,7 @@ Scenario: A member makes partial payments
   When member ".ZZB" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
   | op   | ret | nvid | payAmount | payer | payee | purpose | created |*
   | pay  |     |    1 |        10 | .ZZB  | .ZZA  | labor   | %today  |
-  Then we say "status": "report tx|partial" with subs:
+  Then we say "status": "report tx|left on invoice" with subs:
   | did    | otherName | amount | remaining |*
   | paid   | Abe One   | $10    | $90       |
   And transactions:
@@ -77,7 +77,7 @@ Scenario: A member makes partial payments
   | ~ | Pay |
   | Reason ||
   | ~ | Dispute |
-Skip
+
   When member ".ZZB" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
   | op   | ret | nvid | payAmount | payer | payee | purpose | created |*
   | pay  |     |    1 |        90 | .ZZB  | .ZZA  | labor   | %today  |
@@ -90,6 +90,12 @@ Skip
   And invoices:
   | nvid | created | status | amount | payer | payee | for   |*
   |    1 | %today  | 2      |    100 | .ZZB  | .ZZA  | labor |
+  
+  When member ".ZZB" visits page "history/transactions/period=15"
+  Then we show "Transaction History" with:
+  | Tx# | Date | Name    | Purpose                  | Amount |  Balance |
+  |  2  | %mdy | Abe One | labor (CG inv#1 final)   | 90.00  |  -100.00 |
+  |  1  | %mdy | Abe One | labor (CG inv#1 partial) | 10.00  |   -10.00 |
 
 Scenario: A member confirms request to charge another member who has a bank account
   When member ".ZZA" confirms form "tx/charge" with values:

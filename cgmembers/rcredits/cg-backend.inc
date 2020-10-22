@@ -14,9 +14,6 @@ use CG\Web as w;
 require_once __DIR__ . '/tx.class';
 require_once __DIR__ . '/txentry.class';
 
-define('REAL', nni($_SERVER, 'SystemRoot') != 'C:\\Windows'); // used?
-// require_once __DIR__ . '/cg-util.inc';
-
 /**
  * Generates an array of transactions, with added data.
  * @param mixed $uids: the uid or uids whose transactions we're going to process
@@ -34,13 +31,13 @@ function getTxs($uids, $starting=NULL, $ending=NULL) {
   if (!is_null($ending)) { $where .= " AND t.created<=$ending"; }
   $fromMe = 't.uid1 IN (:uids)';
   $toMe = 't.uid2 IN (:uids)';
-
+  $special = be\specialTxFlds();
   // tReversed and eReversed refer to the transaction that this transaction reverses.
   // tReversedBy and eReversedBy refer to the transaction that reverses this transaction.
   // !(t.amt=0 AND t.type=:E_BANK) hides bank account verifications
   $sql = <<< EOF
-    SELECT t.*, u.uid, u.fullName AS name, tp.period, tp.periods, ru.portion, i.nvid, $toMe AS toMe,
-      IF($toMe, amt, -amt) AS amount, IF($toMe, for1, for2) AS description, IF($toMe, agt1, agt2) AS agt,
+    SELECT t.*, u.uid, u.fullName AS name, tp.period, tp.periods, ru.portion, $toMe AS toMe,
+      IF($toMe, amt, -amt) AS amount, IF($toMe, for1, for2) AS description, IF($toMe, agt1, agt2) AS agt, $special,
       (ru.action=:ACT_SURTX AND IF($toMe, ru.to=t.uid2, ru.from IN (:MATCH_PAYER, t.uid1))) AS stepup,
       (SELECT xid FROM tx_hdrs tRev WHERE tRev.reversesXid=t.xid) AS reversedBy,
       (EXISTS (SELECT id FROM tx_disputes d WHERE d.xid=t.xid AND d.status=:DS_OPEN)) AS isDisputed
@@ -48,7 +45,7 @@ function getTxs($uids, $starting=NULL, $ending=NULL) {
     LEFT JOIN r_usd ON (r_usd.xid=t.xid)
     LEFT JOIN tx_templates tp ON tp.id=t.recursId
     LEFT JOIN tx_rules ru ON ru.id=t.rule
-    LEFT JOIN r_invoices i ON i.status=t.xid
+    LEFT JOIN r_invoices i ON i.nvid=t.rel AND t.relType='I'
     WHERE (!(t.amt=0 AND t.type=:E_BANK) AND ($fromMe XOR $toMe)) $where
     ORDER BY t.created, t.xid, t.eid, name
 EOF;
@@ -78,20 +75,41 @@ EOF;
     $balance = round($balance + $myAmount, 2);
     
     foreach ($entries as $entry) {
-      extract(just('type reversesXid reversedBy description period periods stepup portion nvid', $entry, NULL));
-      if (in($type, [E_PRIME, E_BANK])) {
-        if ($period) $description .= t(' (%xly)', 'xly', r\recurDesc($period, $periods));
-        if ($nvid) $description .= t(' (CG inv#%nvid)', compact('nvid'));
-        if ($reversesXid) $description = t('(reverses tx #%reversesXid)', compact('reversesXid'));
-        if ($reversedBy) $description .= t(' (reversed by #%reversedBy)', compact('reversedBy'));
-      } else {
-        if ($stepup) $description .= $portion > 0 ? t(' (%x step-up)', 'x', u\fmtAmt($portion, '%s')) : t(' (step-up)');
-      }
+      $description = txDesc($entry);
       $newEntries[] = compact(ray('myAmount balance byMe banking description')) + $entry;
     }
     $txs[$i] = $newEntries;
   }
   return $txs;
+}
+
+/**
+ * Return SQL for nvid, part, and stepup in a tx entry.
+ * Expects t=txs, i=r_invoices
+ */
+function specialTxFlds() {
+  list ($finalTxt, $partTxt) = [t('final'), t('partial')];
+  return <<< X
+    IF(t.relType='I', t.rel, NULL) AS nvid, 
+    IF(t.:IS_PARTIAL, IF(t.xid=i.status, ' $finalTxt', ' $partTxt'), '') AS part
+X;
+}
+
+/**
+ * Return a (modified) description for the given transaction entry.
+ */
+function txDesc($entry) {
+  extract(just('type reversesXid reversedBy description period periods stepup portion nvid part', $entry, NULL));
+
+  if (in($type, [E_PRIME, E_BANK])) {
+    if ($period) $description .= t(' (%xly)', 'xly', r\recurDesc($period, $periods));
+    if ($nvid) $description .= t(' (CG inv#%nvid%part)', compact(ray('nvid part')));
+    if ($reversesXid) $description = t('(reverses tx #%reversesXid)', compact('reversesXid'));
+    if ($reversedBy) $description .= t(' (reversed by #%reversedBy)', compact('reversedBy'));
+  } else {
+    if ($stepup) $description .= $portion > 0 ? t(' (%x step-up)', 'x', u\fmtAmt($portion, '%s')) : t(' (step-up)');
+  }
+  return $description;
 }
 
 /**
@@ -650,7 +668,7 @@ function sendNotifications($type, $tx, $shortfall) {
   
   if ($tx->flags & u\bit(B_PARTIAL) and $nvid = $tx->entries[0]->relatedId) { // invoice payment or retraction
     if ($left = be\invRemains($nvid)) {
-      $msg .= '|partial';
+      $msg .= '|left on invoice';
       $args += ray('remaining', u\fmtAmt($left));
     }
   }

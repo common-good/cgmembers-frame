@@ -55,7 +55,7 @@ Scenario: A company looks at a customer statement
   | %mdY-2d | inv #5 | 2,000.00 |         | 1,810.00 | realist         |
   | %mdY-1d | tx #20 |          | -100.00 | 1,910.00 | pool CJ         |
   And with:
-  || Total due: $1,910.00 |
+  || Account Balance: $1,910.00 |
 
 Scenario: A statement goes onto multiple pages
   Given these "txs":
