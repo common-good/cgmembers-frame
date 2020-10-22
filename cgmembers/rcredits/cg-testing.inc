@@ -268,12 +268,13 @@ function doTxs($info, $thing) {
   $channel0 = call_user_func(function () {global $channel; return $channel;}); // protect value of current channel
 
   $hdrFlds = 'xid goods actorId actorAgentId flags channel boxId risk risks recursId reversesXid created';
-  $entryFlds = 'xid entryType amount uid agentUid description acctTid relType relatedId';
+  $entryFlds = 'xid entryType amount uid agentUid description relType relatedId';
   $uidFlds = 'payer payee payerAgent payeeAgent';
-  $testFlds = $uidFlds . ' for purpose payerFor payeeFor payerTid payeeTid risks type amount taking';
+  $testFlds = $uidFlds . ' for purpose payerFor payeeFor risks type amount taking rel relType';
   //  $flags = 'taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding'; // These are flags that might appear
 
   extract(just($hdrFlds . ' ' . $testFlds, $info, FALSE));
+  extract(just('rel', $info, 0));
   if (!$reversesXid) $reversesXid = NULL;
   $for = $for ?: $purpose;
   if (mb_strpos($for, ',')) $for = explode(',', $for); // specifying both
@@ -299,15 +300,16 @@ function doTxs($info, $thing) {
 
   if ($testOnly) {
     //    return (verifyRecord('tx_hdrs', $hdr) and verifyRecord('tx_entries', $e1) and verifyRecord('tx_entries', $e2));
-    $e1 = $filter(ray('for1 uid1 agt1 tid1', $payerFor, $payer, $payerAgent, $payerTid));
-    $e2 = $filter(ray('for2 uid2 agt2 tid2', $payeeFor, $payee, $payeeAgent, $payeeTid));
+    $e1 = $filter(ray('for1 uid1 agt1', $payerFor, $payer, $payerAgent));
+    $e2 = $filter(ray('for2 uid2 agt2', $payeeFor, $payee, $payeeAgent));
     u\preray(just('eid', $info), $hdr);
-    $ray = $hdr + $filter(ray('type amt relType rel', $type, $amount, NULL, NULL)) + $e1 + $e2;
+    $ray = $hdr + $filter(ray('type amt relType rel', $type, $amount, $relType, $rel)) + $e1 + $e2;
     if (!isset($info['actorId'])) unset($ray['actorId']); // don't worry about this unless explicitly specified
     return verifyRecord('txs', $ray);
   } else {
-    $e1 = $filter(ray($entryFlds, $xid, $type, 0-$amount, $payer, $payerAgent, $payerFor, $payerTid, NULL, NULL));
-    $e2 = $filter(ray($entryFlds, $xid, $type, $amount, $payee, $payeeAgent, $payeeFor, $payeeTid, NULL, NULL));
+    foreach (ray('relType rel') as $k) if (!$$k) $$k = NULL;
+    $e1 = $filter(ray($entryFlds, $xid, $type, -$amount, $payer, $payerAgent, $payerFor, $relType, $rel));
+    $e2 = $filter(ray($entryFlds, $xid, $type, $amount, $payee, $payeeAgent, $payeeFor, $relType, $rel));
     $hdr['entries'] = [new r\TxEntry($e2), new r\TxEntry($e1)];
     $tx = new r\Tx($hdr);
     return $tx->insert(TRUE);
