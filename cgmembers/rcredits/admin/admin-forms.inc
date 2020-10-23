@@ -25,13 +25,6 @@ function formAdminPanel($form, &$sta, $args = '') {
   global $mya;
   if (!$mya->cAdmin) hack('panel');
   
-  if ($mya->superAdmin) { // do periodic stuff that only superAdmin can do
-    foreach ($kids = db\col('uid', 'users', ':IS_UNDERAGE') as $uid) { // underage bit got set when activating account
-      $a = r\acct($uid);
-      if (now() - ($a->dob ?: now()) >= MATURITY * YEAR_SECS) $a->setBit(B_UNDERAGE, FALSE); // unset bit (youngster is now of age)
-    }
-  }
-
   $tables = 'users txs usd recurs proxies relations invites'; // tables to show
   $queries = [
               '' => '',
@@ -313,6 +306,7 @@ function formFollowup($form, &$sta, $args = []) {
   global $mya;
   
 	if (!$mya or (!$mya->cAdmin2 and !$mya->admin2)) return w\go('console');
+  
   extract(just('one recent', $args, null));
 
   $title = t('Admin Action Page');

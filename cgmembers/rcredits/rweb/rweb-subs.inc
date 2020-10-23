@@ -996,10 +996,10 @@ function subMenu($title, $menu, $menuName =  NULL) {
  * @param string $menuName: menu name if first param isn't.
  */
 function subMenuRaw($menu, $menuName = NULL) {
-  if (is_array($menu) or !$res = getv($menuName = "menu-$menu")) {
+  if (is_array($menu) or !$res = w\svar($menuName = "menu-$menu")) {
     include_once R_ROOT . '/cg-menu.inc';
     $res = r\subMenuHtml($menu);
-    setv($menuName, $res);
+    w\svar($menuName, $res);
   }
   return $res;
 }
@@ -2209,4 +2209,4 @@ function softErr($msg) {w\say($msg, 'err'); return w\go('empty');}
 function skipButton() {return button(t('Skip for now'), '/settings/skip', t('Leave this step for last'), 'default', 'xs', ['class' => 'skip']);}
 function notab() {return tabindex(-1);}
 function tabindex($n) {return ['tabindex' => $n];}
-function uncacheSubmenus() {foreach (ray(SUBMENUS) as $menu) setv("menu-$menu", NULL);}
+function uncacheSubmenus() {foreach (ray(SUBMENUS) as $menu) w\svar("menu-$menu", NULL);}
