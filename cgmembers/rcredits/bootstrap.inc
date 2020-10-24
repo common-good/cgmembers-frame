@@ -889,19 +889,12 @@ function drupal_send_headers($default_headers = [], $only_default = FALSE) {
  * @see drupal_page_set_cache()
  */
 function drupal_page_header() {
-  $headers_sent = &drupal_static(__FUNCTION__, FALSE);
-  if ($headers_sent) {
-    return TRUE;
-  }
-  $headers_sent = TRUE;
-
-  $default_headers = array(
-    'Expires' => 'Sun, 19 Nov 1978 05:00:00 GMT',
-    'Last-Modified' => gmdate(DATE_RFC7231, REQUEST_TIME),
-    'Cache-Control' => 'no-cache, must-revalidate, post-check=0, pre-check=0',
-    'ETag' => '"' . REQUEST_TIME . '"',
-  );
-  drupal_send_headers($default_headers);
+  header('Cache-Control: no-cache, no-store, must-revalidate'); // for HTTP 1.1
+  header('Pragma: no-cache'); // for HTTP 1.0
+  header('Expires: 0'); // for Proxies
+  
+  header('Last-Modified: ' . gmdate(DATE_RFC7231, REQUEST_TIME));
+  header('ETag: "' . REQUEST_TIME . '"');
 }
 
 /**
