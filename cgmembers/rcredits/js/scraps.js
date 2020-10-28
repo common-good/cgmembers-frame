@@ -127,11 +127,6 @@ function doit(what, vs) {
     break;
 
   case 'focus-on': $('#edit-' + vs['field']).focus(); break;
-
-  case 'agree':
-    if (vs['show']) $('#wrap-agreement').show();
-    $('#show-agreement').click(function () {$('#wrap-agreement').show();}); 
-    break;
     
   case 'advanced-dates':
     if (!vs['showingAdv']) showAdv();
@@ -180,10 +175,6 @@ function doit(what, vs) {
       yesno(vs['msg'], function () {location.href=url;}); 
       return false;
     });
-    break;
-
-  case 'signupco':
-    $('#edit-agentqid').keyup(function () {reqQ($('.form-item-pass'), $('#edit-agentqid').val().trim() != '');});
     break;
 
   case 'relations':
@@ -282,9 +273,10 @@ function doit(what, vs) {
     break;
     
   case 'verifyid':
+    $('.form-item-submit a').click(function () {$('.form-item-method').toggle();});
     if (vs['method'] >= 0) verifyid(vs['method']);
     $('[id^="edit-method-"]').click(function () {verifyid($(this).val());});
-    $('#edit-file').click(function () {if ($(this).val() == '') $('#edit-method-0').prop("checked", true);});
+//    $('#edit-file').click(function () {if ($(this).val() == '') $('#edit-method-1').prop("checked", true);});
     $('#edit-dob').on('press', function(e) {
       $(this).attr('type', 'text').css('background-color', '#e6ffcc'); // make it not a date type field and go green
       $(this).click(); // show keyboard
@@ -525,21 +517,13 @@ function doit(what, vs) {
       }
     }); */
     break;
+
+  case 'signupco':
+    $('#edit-agentqid').keyup(function () {reqQ($('.form-item-pass'), $('#edit-agentqid').val().trim() != '');});
+    break;
     
-  case 'signup':
-    var form = $('#frm-signup');
-//    if (vs['clarify'] !== 'undefined') $('#edit-forother a').click(function () {alert(vs['clarify']);});
-    form.submit(function (e) {return setPostalAddr(false);});
-    if (vs['preid']) $('#edit-phone').change(function () {
-      data = {
-        preid: vs['preid'],
-        fullName: $('#edit-fullname').val(),
-        legalName: $('#edit-legalname').val(),
-        email: $('#edit-email').val(),
-        phone: $('#edit-phone').val()
-      };
-      post('presignup', data, null);
-    });
+  case 'agree':
+    $('#show-agreement').click(function () {$('#wrap-agreement').toggle();}); 
     break;
     
   case 'prejoint': $('#edit-old-0').click(function () {this.form.submit();}); break;
@@ -683,9 +667,9 @@ function verifyid(method) {
   var file = $('.form-item-file');
 
   req(dob);
-  if (method == 0) {reqNot(ssn); req(file); reqNot(idtype);}
-  if (method == 1) {reqNot(ssn); req(file); req(idtype); $('#edit-idtype').focus();}
-  if (method == 2) {req(ssn); reqNot(file); reqNot(idtype); $('#edit-federalid').focus();}
+  if (method == 0) {req(ssn); reqNot(file); reqNot(idtype); $('#edit-federalid').focus();}
+  if (method == 1) {reqNot(ssn); req(file); reqNot(idtype);}
+  if (method == 2) {reqNot(ssn); req(file); req(idtype); $('#edit-idtype').focus();}
 }  
 
 function setInvestFields() {

@@ -91,9 +91,6 @@ function ajax() {
       if (in($k, 'minimum') and $err = u\badAmount($v)) return ajaxErr($err);
       $a->update($k, $v);
     } else return ajaxErr(t('nope'));
-  } elseif ($op == 'presignup') {
-    $info = just('preid fullName legalName email phone', $data);
-    db\update('signup', $info, 'preid');
   } elseif ($op == 'dpOffset') {
     if (!$mya or !$mya->superAdmin) return ajaxErr(t('You do not have permission.'));
     extract(just('amount', $data));

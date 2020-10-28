@@ -1,3 +1,22 @@
+2020-10-28 feature/short-signup
+. individual signup is now pretty short, with optional longer signup to get a card
+. don't talk about unconfirmed invitations
+. underage bit now gets set with dob is set
+. better messages in several places, including for completion of steps
+. accounts are activated automatically when possible
+. improved formatting of Offers & Needs on narrow mobile screen
+. moved agreement to first signup page
+. connecting a checking account is now required (unless you ask for an exception)
+. donation period now defaults to year
+. proxy step now goes right on to next step when done
+. simple addition captcha now on signup page, to cut down on robots
+. invoice for company phone is now automatically approved
+. separated account activation out into separate non-admin file, so it can happen automatically sometimes
+. email verification for companies now works even if signed out
+. SSN verification is now the default, with other methods hidden unless asked for
+. "signup" table is no longer used, since that's almost all we ask for on signup page
+. handle '?' in redirected URLs in tests
+
 2020-10-23 feature/http-headers
 . changed HTTP page headers to prevent caching on all modern platforms
 

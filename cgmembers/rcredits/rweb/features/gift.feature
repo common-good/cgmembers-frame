@@ -19,10 +19,9 @@ Scenario: A member donates
   When member ".ZZA" visits page "community/donate"
   Then we show "Donate to %PROJECT" with:
   | Donation | One Brick |
-  | When      | How often? |
+  | When      | yearly    |
   | Honoring | |
   And with choices:
-  | 0       | How often? |
   | year    | yearly |
   | quarter | quarterly |
   | month   | monthly |

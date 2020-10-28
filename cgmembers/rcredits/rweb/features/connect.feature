@@ -10,13 +10,10 @@ Setup:
 
 Scenario: A member connects a bank account during signup
   When member ".ZZA" visits page "settings/fund"
-  Then we show "Getting Money In or Out" with:
-  | Choose how   |
-  | Connect How: |
-  |   employer   |
-  |   store      |
-  |   transfer   |  
-  | Save         |
+  Then we show "Connect a Checking Account" with:
+  | Routing |
+  | Account |
+  | Refills |
 
 #  # plus these hidden fields that appear when user selects Connect Yes:
 #  # (also the Save button changes to Connect)

@@ -32,14 +32,23 @@ function formConsole($form, &$sta, $args = '') {
     }
   }
   
-  if ($mya->closed) say(t('Your account is closed, but you can still see your account history.'));
+  if ($mya->closed) {
+    say(t('Your account is closed, but you can still see your account history.'));
+  } else {
+    $stepUrl = $mya->nextStepUrl('', $msg);
+    if (nn($msg)) say($msg);
 
-  $stepUrl = $mya->nextStepUrl('', $msg);
-  if ($stepUrl and $stepUrl != 'console') {
-    if (r\referrer() == 'signin') return w\go($stepUrl, $msg); // go right to next step
-    say(t('To continue opening your %PROJECT account, <%a>click here</a>.', '_a', atag("/$stepUrl")));
+    if ($stepUrl) { // steps to be done
+      if (!$mya->ok and r\referrer() == 'signin') return w\go($stepUrl); // go right to next step if not approved
+      say(t('To continue opening your %PROJECT account, <%a>click here</a>.', '_a', atag("/$stepUrl")));
+    } elseif (!$mya->ok) { // no steps to do, but not open
+      if ($mya->co) {
+        say(tr('tentative complete|co complete'));
+      } elseif ($mya->stepCount('card')) { // not eligible for card yet
+        say(tr('tentative partial|to get a card'));
+      } else { say(tr('tentative complete|card soon')); }
+    }
   }
-  if (nn($msg)) say($msg);
 
   if ($mya->canManage and $mya->member) {
     $invite = w\lnk('/community/invite', t('Invite a Friend or Business'), 'primary', 'xs');
@@ -60,8 +69,10 @@ function formConsole($form, &$sta, $args = '') {
   if ($mya->jid) $acct .= t(' (joined with %nm)', 'nm', $mya->jA->fullName);
   $acct = item($acct, t('Account #:'));
 
-  $pay = btn('', t('Pay'), '', 'md', clas('btn-pay'));
-  $charge = btn('', t('Charge'), '', 'md', clas('btn-charge'));
+  if ($mya->ok) {
+    $pay = btn('', t('Pay'), '', 'md', clas('btn-pay'));
+    $charge = btn('', t('Charge'), '', 'md', clas('btn-charge'));
+  } else { $pay = $charge = ''; }
   $bank = btn('/get', t('Bank'), '', 'md');
   $buttons = item($pay . $charge . $bank);
 
@@ -97,34 +108,41 @@ function formConsole_submit($form, &$sta) {return formTx_submit($form, $sta);}
  */
 function choiceListFld() {
   global $mya;
-  if ($mya->cAdmin) return NULL;
   
-  $warning = t('<b class="loud">NOTE!</b> Once you click this step, your account will be temporarily deactivated and you will need to finish all steps before it can be reactivated.');
+  // <br><small>Your local Community Fund gets $2 for every invitation you send!</small>
+  
   $choices0 = explode("\n", t(<<< X
-    community:invite:Invite:Invite a friend or company to join.<br><small>Your local Community Fund gets $2 for every invitation you send!</small>
+    community:invite:Invite:Invite a friend or company to join.
     community:donate:Give:Make a donation to %PROJECT.
     community:comment:Comment:Send a comment, question, or suggestion.
-    scraps:person:Finish:Finish opening your account.<br><small>Get a %PROJECT payment card, accept payments (including discount rebates), and participate in %PROJECT economic democracy.</small>
+    scraps:card:Finish:Get the card. Be a member.<br><small>Get a %PROJECT payment card and participate in %PROJECT economic democracy.</small>
     scraps:co:Finish:Finish opening your complete company account.
+    scraps:reopen:Reopen:Ask for your account to be reopened.
 X
   ));
     
   foreach($choices0 as $one) {
     list ($dir, $task, $title, $text) = explode(':', trim($one));
 
-    if ($dir == 'community') {
+    if ($dir == 'community' or $task == 'reopen') {
       $kch = "<div>$title</div><div>$text</div>";
     } else {
       $steps = $mya->stepCount($task);
-      if ($steps < 5) $text .= t(' (%steps steps', compact('steps'));
+      if ($steps < 5) $text .= t(' (%steps steps)', compact('steps'));
       $kch = $steps ? tr("<div>$title</div><div>$text</div>") : NULL;
     }
     ${$task . 'Ch'} = $kch ? ["$dir/$task" => $kch] : [];
   }
-    
-  list ($task, $finishCh) = $mya->co ? ['co', $coCh] : ['person', $personCh];
-  if (!$choices = $mya->stepCount($task) ? $finishCh : FALSE) return NULL;
-  $choices += $inviteCh + $donateCh + $commentCh;
+
+  if ($mya->closed) {
+    $choices = $reopenCh + $commentCh;
+  } else {
+    list ($task, $choices) = $mya->co ? ['co', $coCh] : ['card', $cardCh];
+    if (!$mya->stepCount($task)) return NULL;
+  
+    $choices += $inviteCh + $donateCh + $commentCh;
+  }
+  
   $choiceList = t('<h3>Next Steps</h3>') . "\n";
   foreach ($choices as $url => $desc) if (!empty($desc)) $choiceList .= w\lnk("/$url", $desc) . "\n";
   return item($choiceList . "\n");

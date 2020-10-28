@@ -451,7 +451,11 @@ class Acct {
     foreach (ray('photo thumb') as $k) if (isset($info[$k])) $a->updatePhoto($info, $k);
     foreach (ray(PSECURE_FLDS) as $k) if (isset($info[$k])) $info[$k] = u\cry('P', $info[$k]);
     if (isset($info['pass']) and $info['pass'] !== '') $info['pass'] = r\passHash($info['pass']);
-    if (isset($info['dob'])) $a->update('yob', $info['dob'] === '' ? '' : date('Y', $info['dob'])); // remember birth year for demographics
+    if (isset($info['dob']) and !$a->co) { // use new dob to adjust yob and underage flag
+      $dob = $info['dob'] ?: ($a->yob ? strtotime("$a->yob-12-31 11:59:59pm") : ($a->created ?: now()));
+      $a->update('yob', $dob ? date('Y', $dob) : ''); // remember birth year for demographics
+      if (now() - $dob < MATURITY * YEAR_SECS) $a->setBIT(B_UNDERAGE);
+    }
     u\preray($info, self::$rs[$a->id]); // cache the new field values (before doing special fields)
     
     foreach (ray('data secure vsecure') as $special) {
@@ -989,26 +993,35 @@ EOF;
   public function nextStepUrl($stepDone = '', &$msg = NULL, $info = []) {
     $a = $this;
     u\setDft($msg, $stepDone ? 'info saved' : '');
-    if ($a->closed) return 'console';
+    if ($a->closed) return '';
+    $inTask = ($a->task != '');
+    $cardTask = ($a->task == 'card'); // remember current task before marking step done
 
     if ($stepDone) {
       $stepCounts = !$a->stepIsDone($stepDone);
       $a->stepDone($stepDone, TRUE, $info);
     } else { $stepCounts = FALSE; }
     
-    if ($nextStep = ($a->task ? $a->nextStep() : FALSE)) {
+    if ($a->task and $nextStep = $a->nextStep()) {
       if ($stepDone and in($stepDone, r\taskSteps($a->task))) u\joins($msg, '|', 'step completed'); // say completed only when relevant
       return ray(S_ALL)[$nextStep] ?: "settings/$nextStep";
     }
 
-    // no current task (nothing to be done next)
-    if ($a->member and !$a->ok) {
-      $a->update('stepsLeft task', '', '');
-      $approval = $a->co ? 'company approval' : 'individual approval';
-      u\joins($msg, '|', "setup complete|$approval|join thanks"); // show on display, not on done
+    if ($stepDone and $a->member and $inTask) { // no current task (nothing to be done next) and just did the final step
+      if (!$a->ok and ($a->co ? ($a->helperA->ok or $a->agentA->ok) // automatic approval if company agent is OK,
+        : ($a->hasFid and !$a->risk('ssnOff')))) { // OR if individual is verified (helperA needed for verifyemail.inc)
+        include_once R_ROOT . '/cg-activate.inc';
+        r\activate($a, $a->helper ?: 0);
+      }
+      if ($a->ok) { // account needs no approval (accounts needing approval get a persistent message on the console page)
+        $msg2 = $a->co ? 'ok complete|co complete' : ($cardTask ? 'ok complete|card soon' : 'ok partial|to get a card');
+//'individual approval';
+        u\joins($msg, '|', "$msg2|join thanks"); // show on display, not on done
+        $a->update('stepsLeft task', '', ''); // mark task complete
+      }
     }
 
-    return $stepCounts ? 'console' : ''; // go to console if this was the last step
+    return '';
   }
 
   public function setTask($task) {$this->update('task stepsLeft', $task, $this->stepsLeft($task));}

@@ -208,7 +208,6 @@ function reportCoupon($thing, $info) {
   global $mya;
   w\say(t('Your %thing was created successfully.', compact('thing')));
   r\tellCAdmin(t('New Coupons!'), $info + ray('company', $mya->fullName));
-  if ($mya->co) $mya->stepDone('discount');
 
   $args = u\urlify(http_build_query($info));
   if (test()) $args = u\deurlify($args);

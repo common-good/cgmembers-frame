@@ -133,11 +133,7 @@ $queries = [
         / SUM(IF(:IS_OK OR data LIKE '%"prefs";b:1%', 1, 0)) AS avgRoundup,
       SUM((SELECT SUM(1) FROM r_invites i WHERE i.inviter=u.uid))
         / SUM(IF(:IS_OK, 1, 0)) AS eachInvited
-    FROM (
-      SELECT uid,helper,source,flags,data,created FROM users
-      UNION SELECT NULL AS uid, NULL AS helper, source, 0 aS flags, '' AS data, created FROM signup s0 
-        WHERE (SELECT 1 FROM users u0 WHERE u0.fullName=s0.fullName LIMIT 1) IS NULL
-    ) u
+    FROM users u
     LEFT JOIN tx_templates r ON r.from=u.uid AND r.to=:CGID AND r.end IS NULL
     LEFT JOIN (SELECT uid AS helper,fullName AS helperName FROM users) h USING(helper)
     GROUP BY origin

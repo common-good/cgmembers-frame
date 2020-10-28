@@ -17,7 +17,7 @@ use CG\Web as w;
 const T_BALANCE_FLDS = 'uid balance floor savingsAdd saveWeekly minimum';
 const T_ID_FLDS = 'uid jid inviter invitee person proxy helper payer payee fromId from to partner myid reid main agent other ctty voter account clubid actorId actorAgentId agentUid payerId payeeId coid proposedBy company ctty sponsor community qid agentQid cgId payerId payeeId';
 const SPECIAL_IDS = 'ctty crumb round cgf bank-in bank-out';
-const RLESS_TNMS = 'signup posts people post_cats messages'; // test tables with no "r_" prefix
+const RLESS_TNMS = 'posts people post_cats messages'; // test tables with no "r_" prefix
 const NULL_FLDS = 'payer payee useMax amtMax template end code rule';
 const DOJS_TIMEOUT = 2; // number of seconds for simulated ajax; 2 seems to suffice (if tests fail, use a bigger number)
 // see R_DATE_FLDS in defs.inc
@@ -138,7 +138,7 @@ function doThing($info, $thing, $key = 'id') {
 
   $table = $thing = strtolower($thing);
   if (!preg_match('/^(tx|u|x)_.+/', $thing) and !in($thing, RLESS_TNMS)) $table = 'r_' . $table;
-  if (!in($thing, 'usd signup company people') and substr($thing, -1, 1) != 's') $table .= 's';
+  if (!in($thing, 'usd company people') and substr($thing, -1, 1) != 's') $table .= 's';
   if ($table == 'tx_hdrs') $key = 'xid';
 
   // NO!  if (@$info['id']) {$info['uid'] = $info['id']; unset($info['id']);}
@@ -1447,7 +1447,6 @@ function clear($ch = 0) {
              'r_user_industries',  // r_industries, users
              'semaphore',          // -
              'sessions',           // users
-             'signup',             // -
              'tx_disputes_all',    // tx_hdrs, users
              'tx_entries_all',     // tx_hdrs, users, tx_rules
              'tx_hdrs_all',        // users, r_boxes, self 

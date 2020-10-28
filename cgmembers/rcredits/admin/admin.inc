@@ -207,7 +207,6 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
     'r_user_industries:uid:D',
     // r_votes
     'sessions:uid:D',
-    // signup
     'tx_disputes:uid',
     'tx_disputes:agentUid',
     'tx_entries:uid',

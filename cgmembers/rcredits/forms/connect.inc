@@ -6,10 +6,6 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
-const FUNDBY_BANK = 0; // radio button number for bank connection
-const FUNDBY_PAY = 1; // paid by employer
-const FUNDBY_CASH = 2; // buy with cash at a participating business
-
 /**
  * Connect a bank account.
  */
@@ -22,7 +18,7 @@ function formConnect($form, &$sta, $args = '') {
   $usa = ($mya->country == US_COUNTRY_ID);
   $usa = TRUE; // always true for now
 
-  $refills = boolFld(t('Refills:'), t('Refill your %PROJECT Account automatically when it goes below a chosen "Target Balance"? Say no if you tend to bounce checks or live close to the wire.'), $mya->refill);
+  $refills = boolFld(t('Refills:'), t('Refill your %PROJECT Account automatically when it goes below a chosen "Target Balance"? Say no if you tend to bounce checks or live close to the wire. Typically, people keep enough in their account to cover an average month of expenses.'), $mya->refill);
   $cashout = $mya->co ? radiosFld(t('Cashout:'), t('If you choose weekly or monthly automatic transfers to your bank account, the system will leave a balance in your %PROJECT account equal to your average weekly payments received, over the past six months.'), required($mya->cashoutW ? 1 : ($mya->cashoutM ? 2 : 0)), ray('0 1 2', t('no automatic cashout'), t('weekly (automatic)'), t('monthly (automatic)'))) : NULL;
   $autopay = autopays($orig);
   $autoboxes = hidFld(serialize($orig));
@@ -33,7 +29,7 @@ function formConnect($form, &$sta, $args = '') {
   $achMin = numFld(t('Min Transfer:'), [t('Minimum bank transfer amount'), t('This much (or more, if necessary) will be transferred from your bank account to your %PROJECT account when your balance goes below the Target Balance you chose, above. The suggested amount works well for most people.')], dft($mya->achMin ?: R_ACHMIN_DEFAULT));
 
 //  $savingsAdd = textFld(t('Extra Savings:'), [t('Extra savings amount'), t('Your incentive rewards go automatically into a Savings Reserve, for later or as needed. Your Savings Reserve works like a traditional reserve savings account that kicks in whenever you would otherwise overdraw your primary account -- except there are no fees. This also helps the community by keeping more funds in the system. You get a monthly inflation adjustment on any funds you hold in the %PROJECT system (at @inflate% APR). If you want to hold even more in your Savings Reserve (a great idea!) enter the additional amount here.', ['@inflate' => R_INFLATION_RATE * 100])], required($mya->savingsAdd));
-  $saveWeekly = numFld(t('Save Weekly:'), [t('Additional amount to add weekly to Target Balance'), t('Putting money away as savings can be a challenge. This may help: choose a small additional amount to be added automatically to your %what every week.', 'what', $mya->balance < 0 ? t('Target Balance') : t('Target Balance'))], dft($mya->saveWeekly));
+  $saveWeekly = numFld(t('Save Weekly:'), [t('Additional amount to add weekly to Target Balance'), t('Putting money away as savings can be a challenge. This may help: choose a small additional amount to be added automatically to your %what every week.', 'what', t('Target Balance'))], dft($mya->saveWeekly));
   
   $targetFields = fieldSet('targetFields2', compact(ray('target achMin saveWeekly')), BARE);
   //$bankAccountType = radiosFld(t('Type:'), '', required($mya->can(B_SAVINGS)), $typeOptions);
@@ -52,14 +48,16 @@ function formConnect($form, &$sta, $args = '') {
       $chox = 2;
       $subtext = NULL;
     } else { // during account setup
-      $title = t('Getting Money In or Out');
-      $subtext = t('<p>Choose how you want to get money into (or out of) your %PROJECT Account. The third option is available through %PROJECT only in Western Massachusetts, Ann Arbor Michigan, Goshen Indiana, and Madison Wisconsin.</p>');
-
       $securityLink = r\promoLink('about-us/privacy-and-security');
-      $_reassurance = $mya->minimum ? '' : t('<p><b>NOTE:</b> Funds will be taken from your bank account ONLY when you explicitly request a transfer or when you choose automatic refills. See our <%a>Privacy and Security Policy</a> for details on how your information is protected.</p>', '_a', atag($securityLink));
-      $methodChoices = explode(',', t('<p>(recommended) I want to transfer funds to and from my checking account from time to time at my request by Remotely-Created Check (RCC) or by Automated Clearing House (ACH).</p>%reassurance,My employer will pay me through %PROJECT or I will sell goods and services through %PROJECT and I do NOT want to connect a checking account.,I live near a store that will put money on my card in exchange for cash and I do NOT want to connect a checking account.', compact('_reassurance')));
-      $connect = radiosFld(t('Connect How:'), '', required(0), $methodChoices);
-      $chox = 3; // number of choices
+      $_reassurance = $mya->minimum ? '' : t('<p><b>NOTE:</b> Funds are transferred any time at your request, including when you overspend your %PROJECT balance or choose automatic refills. See our <%a>Privacy and Security Policy</a> for how your information is protected.</p>', '_a', atag($securityLink));
+//      $methodChoices = explode(',', t('<p>(recommended) I want to transfer funds to and from my checking account from time to time at my request by Remotely-Created Check (RCC) or by Automated Clearing House (ACH).</p>%reassurance,My employer will pay me through %PROJECT or I will sell goods and services through %PROJECT and I do NOT want to connect a checking account.,I live near a store that will put money on my card in exchange for cash and I do NOT want to connect a checking account.', compact('_reassurance')));
+//      $connect = radiosFld(t('Connect How:'), '', required(0), $methodChoices);
+//      $chox = 3; // number of choices
+//      $subtext = t('<p>Transfer funds to and from your <span class="loud">checking account</span> from time to time at your request, by Remotely-Created Check (RCC) or by Automated Clearing House (ACH).</p>%reassurance', compact('_reassurance'));
+      $title = t('Connect a Checking Account');
+      $subtext = $_reassurance;
+      $chox = 1; // number of choices
+      $connect = hidFld(FUNDBY_BANK);
     }
     $chox = hidFld($chox);
    
@@ -126,8 +124,8 @@ function formConnect_submit($form, &$sta) {
   extract(just('connect routingNumber bankAccount cashout autopay autoboxes refills target achMin saveWeekly chox', $sta['input'], NULL));
 
   if ($chox == 3 and $connect <> FUNDBY_BANK) $mya->update('fundBy', $connect == FUNDBY_CASH ? 'cash' : 'pay');
-  $connect = $mya->hasBank ? !$remove : ($connect == ($chox == 3 ? FUNDBY_BANK : 1));
-  
+  $connect = $mya->hasBank ? !$remove : ($connect == ($chox == 2 ? 1 : FUNDBY_BANK));
+
   $minimum = $mya->minimum;
 
   if ($connect) { // wants bank or has bank, not removing

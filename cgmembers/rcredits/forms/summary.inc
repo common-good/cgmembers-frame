@@ -171,8 +171,9 @@ function formSummary_submit($form, &$sta) {
     if ($active xor $mya->ok) { // changing activation status
       $mya->setBit(B_OK, $active);
       if ($active) {
+        include_once R_ROOT . '/cg-activate.inc';
         if ($mya->activated) $notes = r\stampNote('reactivated') . $notes;
-        activate($helper);
+        r\activate($mya, $helper);
       } else { $notes = r\stampNote('account closed') . $notes; }
     }
   }
@@ -195,60 +196,6 @@ function setRisksAndFlags($a, $risks, $adminable) {
     k\acctRisk1($a->id, getv('riskThresholds', [0,0,0,0]));
   }
   $a->setBits(nn($adminable));
-}
-
-/**
- * Activate the account.
- * @param int $helper: account record ID of account that invited this one
- */
-function activate($helper) {
-  global $mya;
-  u\EXPECT($mya and $mya->cAdmin, 'should be ctty admin'); // only ctty admin can approve an account
-
-  $DBTX = \db_transaction();
-  u\EXPECT($helper, 'no helper!');
-  $mya->update(compact('helper')); // must precede welcome message
-  $mya->setBit(B_OK, TRUE); // must precede welcome message
-  $mya->setBit(B_NONUDGE, FALSE);
-  
-  if ($firstTime = !$mya->activated) { // first time activation
-      u\EXPECT($mya->superAdmin, 'initial activation is only for superadmin');
-//    u\EXPECT($mya->co or $mya->dob, 'no dob!');
-    // setting B_UNDERAGE must precede update of vsecure, because dob gets V-encrypted
-    $dob = $mya->dob ?: ($mya->yob ? strtotime("$mya->yob-12-31 11:59:59pm") : now());
-    if (!$mya->co and now() - $dob < MATURITY * YEAR_SECS) $mya->setBIT(B_UNDERAGE);
-    $mya->update('activated', now() - 1); // this signals it's time to V-encrypt
-    $mya->update('vsecure', $mya->vsecure); // V-encrypt
-    $mya->eachPartner(function($coA, $mya, $custCode) { // tell partner: account is activated
-      if ($api = $coA->api()) u\post($api, ray('partnerCode qid op name', $coA->emailCode, $mya->mainQid, 'complete', $mya->fullName));
-    });
-    $msg = 'approved';
-//    if (!$mya->confirmed) $msg .= ($helper > 1 ? '|must confirm' : '|in person');
-    if (!$mya->confirmed) $msg .= ($mya->helper == 1 ? '|must confirm uninvited' : '|must confirm');
-
-    if (!$mya->stepsDone($mya->co ? 'co' : 'person')) $msg .= '|suggest completion';
-    
-    $subs = ray('inviterName youName', $mya->helper ? $mya->helperA->fullName : '', $mya->fullName);
-    
-    $mya->tell($msg, $subs);
-    
-  }
-
-  if ($firstTime and !$mya->co) { // no bonus or helper bonus for a company signing up
-    if ($mya->ssnErr and !$mya->risk('ssnOff') and !$mya->risk('dobOff')) $mya->setRisk('ssnOff'); // make SURE this bit gets set (might not if admin signs the person up
-
-    if (!$mya->helperA->co and !$mya->helperA->superAdmin) { // no helper bonus for company referral or help by superAdmin (cAdmin is okay) [don't require $mya->confirmed]
-      $fullName = $mya->fullName;
-      $helped = db\count('users', ':IS_OK AND NOT :IS_CO AND helper=:hId', ray('hId', $mya->helper)) + 0;
-      if ($helped == ORGANIZER_GRANT_MIN) {
-//            r\acct($mya->helper)->tell('organizer grant', ['_a' => w\atag('/community/grant')]);
-        list ($name, $topic) = [$mya->helperA->fullName, t('eligible')];
-        r\tellAdmin('eligible for grant', compact(ray('name topic')));
-      }
-    }
-  }
-  
-  unset($DBTX); 
 }
 
 /**

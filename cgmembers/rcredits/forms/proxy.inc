@@ -62,7 +62,7 @@ function formProxy_submit($form, &$sta) {
   if (!r\acct()) { // called from email link
     return $priority == 1 ? w\go("/prox/page=Proxy&priority=2&$args") : w\doSay(t('Success!'));
   } elseif ($mya->proxy(1+2 - $priority)) { // do we already have the other proxy?
-//    return w\go($mya->ok ? '/settings/proxies' : 'status');
+    if (!$mya->stepIsDone('proxies')) return goNextStep('proxies');
   } else say('proxy to go');
 
   return w\go('/settings/proxies', 'info saved');
