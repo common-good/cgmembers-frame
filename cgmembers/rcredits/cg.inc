@@ -826,9 +826,10 @@ function noticeArgs($uid, $having = '1', $weekly = FALSE, $monthly = FALSE, $at 
       $range[] = ' (' . $ranges[$freq] . ')';
     }
   }
-  u\EXPECT(isset($range), 'no range'); // could fail if user changes their notice prefs at the right instant (no biggy)
-  for ($i = 0; $i < count($range); $i++) $descs[$i] .= $range[$i] == nni($range, $i + 1) ? '' : $range[$i]; // don't repeat
-  $range = join(t(' and '), $descs);
+  if ($range = nn($range)) { // can be empty when called from Notices page
+    for ($i = 0; $i < count($range); $i++) $descs[$i] .= $range[$i] == nni($range, $i + 1) ? '' : $range[$i]; // don't repeat
+    $range = join(t(' and '), $descs);
+  }
   extract(just('return', $a->j_stats()));
   $balance = u\fmtAmt($a->balance);
   $creditLine = u\fmtAmt(-$a->floor);
@@ -1234,9 +1235,9 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   
   if (!$a1->confirmed and !$a1->isCanonic and !$a2->isCanonic and $a1->id != CGID and $a2->id != CGID) { // actor is not confirmed (but newbs can transact with bank and CG)
     if ($a1->helper != $a2->id) { // unless doing business with who invited you
-      if (!$a1->hasId or $a1->hasRisk('badSsn')) {
+      if (!$a1->hasId or $a1->risk('ssnOff')) {
         $atHome = in(r\serverUid(), [$a1->community, $a2->community]) ? ($a1->community == $a2->community) : (substr($a1->zip, 0, 3) == substr($a2->zip, 0, 3) or u\earthDistance($a1->latitude, $a1->longitude, $a2->latitude, $a2->longitude) < 20);
-        if (!$atHome or $channel != TX_POS) { // first tx must be in-person at home
+        if (!$atHome or $channel != TX_POS) { // first tx must be in-person at home if ID is unverified
           return [FALSE, 'first at home', []];
         }
       }

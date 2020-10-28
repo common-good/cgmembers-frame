@@ -227,6 +227,7 @@ form {max-width:834px; margin:0 auto;}
 }
 
 .form-item-title {margin-bottom:0;}
+.form-type-submit button {margin-right:10px;}
 
 #which option:hover {background-color:#7CC6F0;}
 
@@ -748,6 +749,11 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-posts .memo .tbody .item a {color:midnightblue;}
 #frm-posts .memo .tbody .details {height:100px; max-height:100px; margin-bottom:5px;}
 
+@media (max-width:458px) { /* when there's only room for one post per row */
+  #frm-posts .memo .tbody .row {display:block; width:auto;}
+  #frm-posts .memo .tbody .item {display:block; width:100%; height:auto; padding:7px 0;}
+}
+
 /*#frm-posts .memo .form-item-midtext,
 #frm-posts .memo .form-item-days,
 #frm-posts .memo .form-item-washes,
@@ -806,7 +812,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-console .form-item-advanced .btn {margin:0 20px 0 0;}
 
 #frm-console #edit-choiceList a {display:table-row;}
-#frm-console #edit-choiceList a div {display:table-cell; vertical-align:top; padding:0 4px 2px 4px;}
+#frm-console #edit-choiceList a div {display:table-cell; padding:2px 4px;}
 #frm-console #edit-choiceList a div:first-child {font-size:115%; font-weight:bold; width:43px; color:darkgreen; padding-left:0;}
 #frm-console #edit-choiceList a:hover {text-decoration:none; background-color:aliceblue; max-width:420px;}
 #frm-console #edit-choiceList a small {color:silver;}
@@ -893,33 +899,41 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 
 /* Agreement */
 /* #frm-agreement #instructions {background:lightyellow;} */
-#frm-agreement .checkbox {display:inline-block; width:0; position:relative; left:-37px; top:5px; z-index:1;}
-#frm-agreement #edit-agreement .control-label {min-width:0; margin:0; padding:0;} 
-#frm-agreement #edit-agreement .control-data {max-width:900px; width:80%;}
-#frm-agreement #agreement li {margin-top:10px;}
-#frm-agreement.form-horizontal .checkbox {min-height:0;}
-#frm-agreement #wrap-agreement {display:none;}
+/* #frm-agreement .checkbox {display:inline-block; width:0; position:relative; left:-37px; top:5px; z-index:1;}
+#frm-agreement.form-horizontal .checkbox {min-height:0;} */
+
+#edit-agreement .control-label {min-width:0; margin:0; padding:0;} 
+#edit-agreement .control-data {max-width:900px; width:80%;}
+#agreement ol {margin-left:-10px;}
+#agreement li {margin-top:10px;}
 
 /* Partner Step Two */
 
 /* Verify ID */
 #frm-verifyid .form-item-file label {padding-top:2px;}
+#frm-verifyid .form-item-method,
 #frm-verifyid .form-item-federalId,
 #frm-verifyid .form-item-idtype {display:none;}
 
 /* Bank Info / Connect */
-#frm-connect #connectFields2 {margin:20px 0; background:#e0e0e0e0; padding:30px;}
-#frm-connect #connectFields2 .fieldset-wrapper {background:url(../images/check-hint.png) no-repeat right top; background-size:43%;}
-#frm-connect #targetFields2 .fieldset-wrapper{background-image:none;}
-#frm-connect #edit-checkHint {position:absolute; left:850px;}
-#frm-connect #edit-checkHint img {width:300px;}
-#frm-connect #connectFields2 .help-block {display:inline-block; color:black;}
+#connectFields2 {margin:20px 0; background:#e6e6e6; padding:30px;}
+#connectFields2 .fieldset-wrapper {background:url(../images/check-hint.png) no-repeat right top; background-size:43%;}
+#targetFields2 .fieldset-wrapper{background-image:none;}
+#connectFields2 .help-block {display:inline-block; color:black;}
 .form-item-routingNumber input,
 .form-item-bankAccount input,
 .form-item-bankAccount2 input {width:250px;} 
 #frm-connect .form-item-bankAccount .help-block span {background-color:yellow;}
 #frm-connect #edit-remove {margin-left:10px;}
 #frm-connect #edit-autopay > div.checkbox {display:block;}
+
+@media (max-width:500px) {
+  #connectFields2 {background:white; padding:0 6px;}
+  #connectFields2 .fieldset-wrapper {background-size:35%;}
+}
+@media (max-width:500px) {
+  #connectFields2 .fieldset-wrapper {background-position:right 80px;}
+}
 
 /* Bank (Get) */
 #frm-get #edit-get {margin-right:70px;}
@@ -1112,6 +1126,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-signupco #edit-phone,
 #frm-signupco #edit-federalid,
 #frm-signupco #edit-dob {max-width:300px;}
+#frm-signupco #wrap-agreement {display:none;}
 
 /* Contact Info (labeled) */
 #frm-contact .form-item-pin,

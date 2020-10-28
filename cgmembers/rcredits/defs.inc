@@ -383,18 +383,21 @@ const CO_APP_DFTS = '0 1 7 8 11 12'; // set these app bits by default (R4USD onl
 const APP_CAN_BIT_NAMES = 'charge undo r4usd usd4r refund buy';
 define('APP_CAN_BIT_DESCS', t('charge customers,undo last transaction,give %RCREDITS for USD,give USD for %RCREDITS,refund any amount,make payments'));
 
+const FUNDBY_BANK = 0; // radio button number for bank connection
+const FUNDBY_PAY = 1; // paid by employer
+const FUNDBY_CASH = 2; // buy with cash at a participating business
+
 // Membership steps
 const S_ALL = 'signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, stepup:community/stepup, crumbs:community/crumbs, work, partnersteptwo, partnerend, food, wantsPrint, printed'; // where to go to complete each step (unordered) -- add new steps to the end
-const S_PERSON = 'signup verifyemail verifyid agree preferences fund photo contact donate crumbs proxies work backing stepup invite';
-//const S_CO = 'signup verifyemail';
-const S_CO = 'signup verifyemail agree contact backing photo donate company crumbs discount';
-const S_CO2 = 'agent agree contact backing photo donate company crumbs discount';
-const S_CARD = 'photo contact donate';
+const S_PERSON = 'signup verifyid fund preferences verifyemail';
+const S_CARD = 'photo contact donate crumbs proxies work backing stepup invite';
+const S_CO = 'signup verifyemail fund contact backing photo donate company crumbs discount';
+const S_CO2 = 'agent contact backing photo donate company crumbs discount';
 const S_SELL = 'ssn contact crumbs'; // keep this for when an individual member goes over the limit for no 1099
 const S_VOICE = 'contact donate proxies work backing invite'; // add comment
 const S_PARTNER = 'signup fund partnersteptwo partnerend';
 
-const S_MEM_TASKS = 'person co'; // followup tasks for members
+const S_MEM_TASKS = 'card co'; // followup tasks for members
 const S_PTASKS = 'person card sell voice partner';
 const S_COTASKS = 'co co2 partner';
 

@@ -27,77 +27,82 @@ Scenario: A member signs up
   Then members:
   | uid  | fullName | legalName | email | phone        | zip   | state |*
   | .AAA | Al Aargh | Al Aargh  | z@    | +14132530000 | 01002 | MA    |
-  And these "signup":
-  | preid | source | created |*
-  | ?     | ?      | %now    |
   And we email "verify" to member "z@" with subs:
   | fullName | qid    | site      | code     | pass                   |*
   | Al Aargh | NEWAAA | %BASE_URL | WHATEVER | quick brown fox jumped |
-  And member ".AAA" one-time password is set to "WHATEVER"
+  And member ".AAA" one-time password is "WHATEVER"
   And member ".AAA" password is set to "quick brown fox jumped"
   And member ".AAA" is logged in
-  And we show "Verify Your Email Address"
+  And we show "Identity Verification"
   And we say "status": "info saved|step completed"
-  And member ".AAA" steps left "verifyemail verifyid agree preferences fund photo contact donate crumbs proxies work backing stepup invite"
-
-  Given member is logged out
-  When member "?" visits page "settings/verifyemail/id=NEWAAA&code=WHATEVER&verify=1"
-  Then we show "Verified!"
-  And member ".AAA" steps left "verifyid agree preferences fund photo contact donate crumbs proxies work backing stepup invite"
-
-  When member "?" completes form "settings/verifyemail/id=NEWAAA&code=WHATEVER&verify=1" with values:
-  | zot | whatever |**
-  # no change to password
-#  | pass1 | pass2 |*
-#  |       |       |
-  Then we show "Identity Verification"
-  And member ".AAA" steps left "verifyid agree preferences fund photo contact donate crumbs proxies work backing stepup invite"
+  And member ".AAA" steps left "verifyid fund preferences verifyemail"
 
 Scenario: A member verifies ID
-  Given member ".ZZB" has "person" steps done: "signup verifyemail"
+  Given member ".ZZB" has "person" steps done: "signup"
   When member ".ZZB" completes form "settings/verifyid" with values:
   | legalName | method | federalId   | dob      |*
-  |           |     2  | 123-45-6789 | 2/1/1990 |
+  |           | 0      | 123-45-6789 | 2/1/1990 |
   # field 2 is SSN, as opposed to file upload
   Then members:
   | uid  | federalId | dob       |*
   | .ZZB | 123456789 | 633848400 |
-  And we show "%PROJECT Agreement" with:
-  | I make this agreement |
+  And we show "Connect a Checking Account" with:
+  | Routing |
+  | Account |
+  | Refill  |
   And we say "status": "info saved|step completed"
-  And member ".ZZB" steps left "agree preferences fund photo contact donate crumbs proxies work backing stepup invite ssn"
-
-Scenario: A member signs agreement
-  Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid"
-  When member ".ZZB" completes form "community/agreement" with values:
-  | op | I Agree |**
-  Then we show "Account Preferences"
-  And we say "status": "info saved|step completed"
-  And member ".ZZB" steps left "preferences fund photo contact donate crumbs proxies work backing stepup invite"
-
-Scenario: A member sets preferences
-  Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree"
-  When member ".ZZB" completes form "settings/preferences" with values:
-  | roundup | statements | nosearch | secretBal |*
-  |       1 | electronic |        0 |         1 |
-  Then we show "Getting Money In or Out"
-  And we say "status": "info saved|step completed"
-  And member ".ZZB" steps left "fund photo contact donate crumbs proxies work backing stepup invite"
+  And member ".ZZB" steps left "fund preferences verifyemail ssn"
 
 Scenario: A member connects a bank account
-  Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences"
+  Given member ".ZZB" has "person" steps done: "signup verifyid"
   When member ".ZZB" completes form "settings/fund" with values:
-  | op     | connect | routingNumber | bankAccount | bankAccount2 | cashout | refills | target | achMin | saveWeekly |*
-  | submit |       0 |     053000196 |         123 |          123 |       0 |       1 |     $0 |    $20 |         $0 |  
-  Then we show "Photo ID Picture"
+  | op     | connect      | chox | routingNumber | bankAccount | bankAccount2 | cashout | refills | target | achMin | saveWeekly |*
+  | submit | %FUNDBY_BANK | 1    |     053000196 |         123 |          123 |       0 |       1 |     $0 |    $20 |         $0 |  
+  Then we show "Account Preferences"
   And we say "status": "info saved|step completed"
 	And members have:
 	| uid  | risks   |*
 	| .ZZB | hasBank |
+  And member ".ZZB" steps left "preferences verifyemail"
+
+Scenario: A member sets preferences
+  Given member ".ZZB" has "person" steps done: "signup verifyid fund"
+  When member ".ZZB" completes form "settings/preferences" with values:
+  | roundup | statements | nosearch | secretBal |*
+  |       1 | electronic |        0 |         1 |
+  Then we show "Verify Your Email Address"
+  And we say "status": "info saved|step completed"
+  And member ".ZZB" steps left "verifyemail"
+
+Scenario: A member verifies email
+  Given member ".ZZB" has "person" steps done: "signup verifyid fund preferences"
+  And member is logged out
+  And member ".ZZB" one-time password is "WHATEVER"
+  When member "?" visits page "settings/verifyemail/qid=NEWZZB&code=WHATEVER&verify=1"
+  Then we show "Verified!"
+  And member ".ZZB" steps left ""
+
+  When member "?" completes form "settings/verifyemail/qid=NEWZZB&code=WHATEVER&verify=1" with values:
+  | zot | whatever |**
+  # no change to password
+#  | pass1 | pass2 |*
+#  |       |       |
+  Then we show "You: Bea Two"
+  And member ".ZZB" steps left ""
+  And members:
+  | uid  | flags       | task |*
+  | .ZZB | member,ided |      |
+  And we say "status": "tentative partial|to get a card"
+
+Scenario: A member clicks Finish
+  Given member ".ZZB" has "person" steps done: "signup verifyid fund preferences verifyemail"
+  Then member ".ZZB" steps left ""
+  When member ".ZZB" visits page "scraps/card"
+  Then we show "Photo ID Picture"
   And member ".ZZB" steps left "photo contact donate crumbs proxies work backing stepup invite"
 
 Scenario: A member uploads a photo
-  Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund"
+  Given member ".ZZB" has "card" steps done: ""
   When member ".ZZB" completes form "settings/photo" with values:
   | op       |*
   | nextStep |
@@ -106,7 +111,7 @@ Scenario: A member uploads a photo
   And member ".ZZB" steps left "contact donate crumbs proxies work backing stepup invite"
 
 Scenario: A member gives contact info
-  Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund photo"
+  Given member ".ZZB" has "card" steps done: "photo"
   When member ".ZZB" completes form "settings/contact" with values:
   | fullName  | Bea Two        |**
   | email     | b@             |
@@ -141,7 +146,7 @@ Scenario: A member gives contact info
   And member ".ZZB" steps left "donate crumbs proxies work backing stepup invite"
 
 Scenario: A member donates
-  Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund photo contact"
+  Given member ".ZZB" has "card" steps done: "photo contact"
   When member ".ZZB" completes form "community/donate" with values:
   | amtChoice | period | honor | honored |*
   |        50 | month  |     - |         |
@@ -150,8 +155,8 @@ Scenario: A member donates
   And we say "status": "step completed"
   And member ".ZZB" steps left "crumbs proxies work backing stepup invite"
 
-Scenario: A member chooses tithes
-  Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund photo contact donate"
+Scenario: A member chooses crumbs
+  Given member ".ZZB" has "card" steps done: "photo contact donate"
   When member ".ZZB" completes form "community/crumbs" with values:
   | crumbs | 1.5 |**
   Then members have:
@@ -162,7 +167,7 @@ Scenario: A member chooses tithes
   And member ".ZZB" steps left "proxies work backing stepup invite"
 
 Scenario: A member chooses proxies
-  Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund photo contact donate crumbs"
+  Given member ".ZZB" has "card" steps done: "photo contact donate crumbs"
   And proxies:
   | person | proxy | priority |*
   | .ZZB   | .ZZA  |        1 |
@@ -175,7 +180,7 @@ Scenario: A member chooses proxies
   And member ".ZZB" steps left "work backing stepup invite"
 
 Scenario: A member sets calling
-  Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund photo contact donate crumbs proxies"
+  Given member ".ZZB" has "card" steps done: "photo contact donate crumbs proxies"
   When member ".ZZB" completes form "settings/work" with values:
   | calling  | company | companyPhone | companyOptions |*
   | whatever | Cor Pub |              | employee       |
@@ -187,7 +192,7 @@ Scenario: A member sets calling
   And member ".ZZB" steps left "backing stepup invite"
 
 Scenario: A member sets backing  
-  Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund photo contact donate crumbs proxies work"
+  Given member ".ZZB" has "card" steps done: "photo contact donate crumbs proxies work"
   When member ".ZZB" completes form "community/backing" with values:
   | amtChoice |*
   |       100 |
@@ -196,7 +201,7 @@ Scenario: A member sets backing
   And member ".ZZB" steps left "stepup invite"
   
 Scenario: A member chooses to Step Up
-  Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund photo contact donate crumbs proxies work backing"
+  Given member ".ZZB" has "card" steps done: "photo contact donate crumbs proxies work backing"
   And members:
   | uid  | fullName | flags | coType    | zip   |*
   | .ZZF | Fox Co   | ok,co | nonprofit | 02006 |
@@ -218,7 +223,7 @@ Scenario: A member chooses to Step Up
   And member ".ZZB" steps left "invite"
 
 Scenario: A member invites
-  Given member ".ZZB" has "person" steps done: "signup verifyemail verifyid agree preferences fund photo contact donate crumbs proxies work backing stepup"
+  Given member ".ZZB" has "card" steps done: "photo contact donate crumbs proxies work backing stepup"
   When member ".ZZB" completes form "community/invite" with values:
   | sign | quote | org  | position | website |*
   | 1    | cuz   | MeCo | Boss     | me.co   |
@@ -229,7 +234,8 @@ Scenario: A member invites
   | Shortcuts |
   And without:
   | Finish |
-  And we say "status": "info saved|setup complete|individual approval|join thanks"
+  And we say "status": "info saved"
+  And we say "status": "tentative complete|card soon"
   And member ".ZZB" steps left ""
   And we tell ".ZZB" CO "New Member (Bea Two)" with subs:
   | quid | status |*

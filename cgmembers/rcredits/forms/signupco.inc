@@ -58,7 +58,7 @@ X
   
   extract(just('fullName email', w\nameAndEmailFlds(TRUE, nn($fullName), '')));
 
-  $legalName = textFld(t('Legal Name:'), [t('Company legal name'), t('Type the full legal name of the company (if different).')], required());
+  $legalName = textFld(t('Legal Name:'), [t('Company legal name'), t('Type the full legal name of the company (if different).')]);
   extract(ssnFields(FALSE, REQ));
 
   $email['#help'][1] = preg_replace('/ \\(.*\\)/', '', $email['#help'][1]); // don't talk about settings
@@ -70,19 +70,21 @@ X
   $source = $source ? hidFld($source) : sourceFld('');
   $needPhone = boolFld(t('Need Phone:'), t('Do you need %PROJECT to supply an Android phone, to run the CGPay app? (you will be charged a $%EQUIP_DEPOSIT refundable equipment deposit).'), FALSE);
 
-  $submit = t('Submit');
+  $midtext = t('<h3>%PROJECT Agreement</h3><p>I commit this company to the terms of the <%a>%PROJECT Agreement</a> (the same agreement I signed as an individual).</p>', '_a', 'a id="show-agreement"');
+  extract(just('agreement details', formAgreement($form, $sta)));
+  $submit = t('I agree'); // was t('Submit');
   jsx('signupco');
   
-  return cgform(compact(ray('title subtext source2 coType fullName legalName email zip phone selling sellCg federalId dob source needPhone submit args agentQid')));
+  return cgform(compact(ray('title subtext source2 coType fullName legalName email zip phone selling sellCg federalId dob source needPhone midtext agreement submit args agentQid')));
 }
   
 function formSignupCo_validate($form, &$sta) {
   global $mya;
   
-  extract(u\normalizeCase(just('fullName legalName', $sta['input'])));
+  extract(u\normalizeCase(just('fullName legalName', $sta['input'], NULL)));
   extract(just('zip phone email selling federalId dob', $sta['input']));
 
-  foreach (ray('fullName legalName') as $field) {
+  foreach (ray('fullName legalName') as $field) if ($field != 'legalName' or $$field) {
     $$field = trim(str_replace('  ', ' ', u\normalizeCase(nn($$field))));
     if ($err = u\badName($$field)) return say($err, compact('field'), $field);
   }
@@ -110,7 +112,6 @@ function formSignupCo_submit($form, &$sta) {
   $legalName = $legalName ?: $fullName;
   
   list ($city, $state, $latitude, $longitude) = r\zipCity($zip);
-  $preid = getPreId($source);
   if (nn($source2)) $source = trim(mb_strtoupper($source2) . "-$source");  
   $flags = u\bit(B_CO) | u\bit(B_CONFIRMED);
   $info = []; foreach (ray($dbFields) as $k) if (isset($$k)) $info[$k] = $$k;
@@ -135,7 +136,7 @@ function formSignupCo_submit($form, &$sta) {
   say('info saved');
 
   if ($needPhone) {
-    be\invoice(r\acct(CGID), $mya, EQUIP_DEPOSIT, t('equipment deposit'), FOR_NONGOODS);
+    $mya->payApproved(CGID, EQUIP_DEPOSIT, t('equipment deposit'), FOR_NONGOODS);
     r\tellCAdmin(t('New business has paid a deposit for a smartphone. Please deliver one ASAP.'));
     say('refundable deposit');
   }

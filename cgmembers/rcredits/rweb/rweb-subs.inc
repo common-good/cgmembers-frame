@@ -57,6 +57,11 @@ function go($page, $msg = '', $field = '') {
   if ($msg) say($msg, $field);
  
   if (test()) {
+    if ($i = strpos($page, '?')) {
+      parse_str(substr($page, $i + 1), $_GET);
+      $page = substr($page, 0, $i);
+      t\output("Going to page $page with GET: " . pr($_GET));
+    }
     $_POST = []; // make sure it doesn't act like we submitted the target page
     return strhas($page, 'http://') ? '' : f('t.pageForm', $page);
   }
@@ -1333,22 +1338,6 @@ function zBadSelling(&$selling) {
   $selling = join("\n", $new);
   return FALSE;
 }
-
-/**
- * Interpret cookie to get source of new member and record it in the signup table.
- * @param string $source2: where the partner or cookie says the new member came to us from, if known
- */
-function getPreId($source2 = NULL) {
-  if (!$preid = nni($_COOKIE, 'preid')) {
-    $preid = now() . u\randomString(9, 'digits');
-    setcookie('preid', $preid, now() + 100 * YEAR_SECS, '/', $_SERVER['HTTP_HOST']);
-  } else $preid = substr(preg_replace('/\\D*/', '', $preid), 0, 20); // ignore all but the digits
-
-  if ($oldPreid = db\get('preid', 'signup', compact('preid'))) {
-    $preid = $oldPreid;
-  } else {db\insert('signup', ray('preid source ip', $preid, substr($source2, 0, 255), $_SERVER['REMOTE_ADDR']), 'preid');}  
-  return $preid;
-}
   
 /**
  * Return a list of company categories.
@@ -1371,7 +1360,7 @@ function ssnFields($personal = TRUE, $req = '') {
   if ($personal) {
     $ssReason = $req ? t('Required by the IRS if you accept more than $20,000 a year in payments through %PROJECT ($600 a year in MA and VT).') : '';
     $federalId = passFld($req . t('ssTitle'), [t('ssDesc'), $ssReason], autofill('off'));
-    $dob = dateFld($req . t('Birth Date:'), [t('Your birth date (mm/dd/yyyy)'), t('Your date of birth &mdash; must match the date on your ID.') . $mobileDobTxt], autofill('off'));
+    $dob = dateFld($req . t('Birth Date:'), [t('mm/dd/yyyy'), t('Your date of birth &mdash; must match the date on your ID.') . $mobileDobTxt], autofill('off')); // maybe use textFld not dateFld because some Android users have trouble selecting the year
   } else {
     $federalId = passFld($req . t('einTitle'), [t('einDesc')], autofill('off'));
     $dob = dateFld($req . t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)?') . $mobileDobTxt]);
@@ -2107,6 +2096,15 @@ function signupCoDisplay($info, &$company = '') {
   if (!$info) return '';
   extract(just('owner employee company', $info, ''));
   return "$owner $employee: $company";
+}
+
+/**
+ * Return a simple arithmetical expression and its small integer answer.
+ */
+function captcha() {
+  $answer = mt_rand(2, 999);
+  $n1 = $answer - 1;
+  return ["$n1 + 1 =", $answer];
 }
 
 /**

@@ -6,6 +6,7 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
+include_once __DIR__ . '/agreement.inc';
 /**
  * The user signs up for a Common Good account (an individual or company account)
  * @param string $args: if not empty, 
@@ -21,10 +22,9 @@ function formSignup($form, &$sta, $args = '') {
   if (!$args) $args = nn($_POST) ?: basename($_SERVER['REQUEST_URI']); // because menu_execute_active_handler fails
   if (is_string($args)) $args = urlq2ray($args);
 
-  extract(just('preid source2 joint reid inviter code fullName email helper phone zip partner partnerCode customer source', $args, NULL));
+  extract(just('source2 joint reid inviter code fullName email helper phone zip partner partnerCode customer source', $args, NULL));
 
   u\setDft($source2, nni($_COOKIE, 'ad'));
-  u\setDft($preid, getPreId($source2));
   $source2 = hidFld($source2);
 
   if (nn($reid)) return softErr('old partner link');
@@ -65,10 +65,7 @@ EOF
   $acctType = hidFld(CO_PERSONAL);
 //    $pin = passFld(t('PIN:'), [t('Choose a PIN (any 4 digits)'), t('Your security code for online purchases.')]); // first time logging in, get PIN
 
-  jsx('signup', ray('preid', nn($preid))); // must be before $preid = hidFld()
-  $submit = t('Next');
   $args = hidFld(nn($args));
-  $preid = hidFld($preid);
   $confirmed = hidFld(nn($iCode) == IBY_FORM); // iff inviter used form (or opening a company account), invitation is already confirmed
   $iCode = hidFld(nn($iCode) + 0);
   $helperA = nn($helper) ? r\acct($helper) : NULL;
@@ -79,24 +76,32 @@ EOF
   $zip = zipFld(nn($zip));
   $fullName = textFld(t('Name:'), [t('Your full name'), t('Your full name, properly capitalized, as you would like it to appear on your %PROJECT card.')], required(nn($fullName)));
   $email = emailFld(t('Email:'), [t('Email'), t('<b>Type carefully.</b> All emails from the system will be sent to this address. It will not be made public, but will be viewable by accounts you transact with (you can choose greater privacy by clicking "Advanced" on the Preferences Settings page).')], required(nn($email)));
-  
-  $form = compact(ray('title forother subtext acctType fullName phone email zip source submit myid args confirmed helper iCode notes preid source2'));
+
+  $midtext = t('<h3>%PROJECT Agreement</h3>Please actually read this, so you know what you\'re agreeing to.</p>');
+
+  extract(just('agreement details', formAgreement($form, $sta)));
+  list ($cq, $ca) = w\captcha();
+  $cq = numFld(REQ . $cq, ['?']);
+  $ca = hidFld($ca * 2); // don't make it too easy
+  $submit = t('I agree'); //  was t('Next')
+    
+  $form = compact(ray('title forother subtext acctType fullName phone email zip source midtext agreement details cq ca submit myid args confirmed helper iCode notes source2'));
 //  $sponsorConfirmation = w\whoFldSubmit('sponsor', t('Your sponsoring organization is %name, yes?'));
   return cgform($form);
 }
 
 function formSignup_validate($form, &$sta) {
-  extract(just('fullName phone email zip myid', $sta['input']));
+  extract(just('fullName phone email zip myid cq ca', $sta['input'], NULL));
 
   if ($err = u\badName($fullName)) return say($err, ['field' => 'fullName'], 'fullName');
   $fullName = u\normalizeCase($fullName);
   
   if ($err = u\badPhone($phone)) return say($err, 'phone');
-  if (!emailOkay($email, FALSE, nn($myid) ? r\acct($myid) : '')) return;
+  if (!emailOkay($email, FALSE, $myid ? r\acct($myid) : '')) return;
   if ($err = u\badZip($zip)) return say($err, 'zip');
   
-  if (nn($companyOptions)) extract(just('owner employee contractor', $companyOptions));
-  $gotrelation = (nn($employee) or nn($owner) or nn($contractor));
+  if (!test())
+  if ($cq * 2 != $ca) return say(t('Wrong sum. Try again.'), 'cq');
 
   u\preray(compact(ray('fullName phone email zip')), $sta['input']);
 }
@@ -111,7 +116,7 @@ function zExtraErr(&$notes, $msg, $field, $value = '') {
 function formSignup_submit($form, &$sta) {
   global $mya;
   $dbFields = 'fullName email flags phone federalId dob pin zip address city state postalAddr helper iCode notes tenure source';
-  extract(just('myid preid confirmed acctType args ats owns partner customer source2 ' . $dbFields, $sta['input']));
+  extract(just('myid confirmed acctType args ats owns partner customer source2 ' . $dbFields, $sta['input']));
   if (test() and !nn($args)) $args = basename($_SERVER['REQUEST_URI']);
   extract(just('code source2', $args)); // source2 may come from either partner or an ad (through our promo site)
   $helper = $helper + 0; // don't let lack of helper stop us (on DEV)
@@ -124,7 +129,7 @@ function formSignup_submit($form, &$sta) {
   list ($city, $state, $latitude, $longitude) = r\zipCity($zip);
 
   $info = []; foreach (ray($dbFields) as $k) if (isset($$k)) $info[$k] = $$k;
-  $info += $acctType == CO_PERSONAL ? ['preid' => $preid] : ['coType' => $acctType];
+  if ($acctType != CO_PERSONAL) $info += ['coType' => $acctType];
   
   if (nn($myid)) {
     $a = r\acct($myid);

@@ -111,6 +111,7 @@ function formSignin_submit($form, &$sta, $goto = 'console') {
  * Do periodic stuff that only superAdmin can do.
  */
 function superSignin() {
+ 
   foreach ($kids = db\col('uid', 'users', ':IS_UNDERAGE') as $uid) { // underage bit got set when activating account
     $a = r\acct($uid);
     if (now() - ($a->dob ?: now()) >= MATURITY * YEAR_SECS) $a->setBit(B_UNDERAGE, FALSE); // unset bit (youngster is now of age)

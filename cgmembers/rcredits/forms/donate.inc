@@ -39,6 +39,7 @@ function formDonate($form, &$sta, $args = '') {
   
   if (!$mya->activated or !$recurs or !r\acct()) {
 		unset($oftens['once']); // no one-time donation unless the account is active, has a recurring donation, and is signed in
+    unset($oftens[0]);
 		$recurOnly = t(': monthly, quarterly, or yearly');
     $noOneTime = t('<p><small><%aWhy>Why no option for a one-time donation?</a></small></p>', '_aWhy', atag('/help/why-no-single-donation-option'));
 	} else $noOneTime = '';
@@ -50,7 +51,7 @@ function formDonate($form, &$sta, $args = '') {
   $subtext = t('<p>Make a tax-deductible gift of ZERO OR MORE%recurOnly. %replaces %amountTip</p><p>To donate an amount not listed (including ZERO), choose "Water" (and fill in the amount).</p><p><b class="loud">NOTE: This is a donation, not a deposit.</b> Thank you for your support!</p>', 'recurOnly replaces amountTip', nn($recurOnly), nn($replaces), $amountTip) . $noOneTime;
   $amtChoice = selectFld(REQ . t('Donation:'), '', dft($mya->co ? R_COMPANY_GIFT : R_INDIVIDUAL_GIFT), $giftLevels);
   $amount = numFld(t('Donation:'), [t('Amount')]);
-  $period = selectFld(REQ . t('When:'), '', dft(0), $oftens);
+  $period = selectFld(REQ . t('When:'), '', dft('year'), $oftens);
   $honored = rendA('honored', textFld(BARE, [t('(optional)')]));
   $honor = selectFld(t('Honoring:'), '', suffix($honored), $honors);
 

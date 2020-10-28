@@ -20,8 +20,8 @@ Scenario: A newbie has taken only the first step
   When cron runs "tickle"
   Then we notice "do step one|sign in|daily messages" to member ".ZZD"
   And we notice "invitee slow" to member ".ZZE" with subs:
-  | fullName | elapsed | step        |*
-  | Dee Four |       9 | verifyemail |
+  | fullName | elapsed | step     |*
+  | Dee Four |       9 | verifyid |
   
 Scenario: A newbie has taken some steps but not all
   Given member ".ZZA" has done step "signup verifyid agree preferences verifyemail"

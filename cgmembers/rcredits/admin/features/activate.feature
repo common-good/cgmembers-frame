@@ -37,7 +37,7 @@ Scenario: Admin activates an account unconfirmed
   Then members:
   | uid  | flags              | helper |*
   | .ZZD | member,ok,underage |      1 |
-  And we message "approved|must confirm uninvited|suggest completion" to member ".ZZD" with subs:
+  And we message "approved|suggest completion" to member ".ZZD" with subs:
   | youName  | inviterName          | otherName |*
   | Dee Four | System Administrator |           |
 
