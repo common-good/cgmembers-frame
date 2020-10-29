@@ -61,8 +61,11 @@ function formConsole($form, &$sta, $args = '') {
 
   $reports = $mya->co ? w\lnk('/history/company-reports', t('Company Reports')) : '';
   $deposits = $mya->id == CGID ? w\lnk('/sadmin/show-reconciled', t('Dollar Pool Transactions')) : '';
-  foreach (ray('invite makeJoint makeCo reports deposits') as $k) if ($$k) $shortcuts[] = $$k;
-  $shortcuts = nn($shortcuts) ? item(u\ul($shortcuts), t('Shortcuts:')) : NULL;
+  
+  if ($mya->member and !$mya->closed) {
+    foreach (ray('invite makeJoint makeCo reports deposits') as $k) if ($$k) $shortcuts[] = $$k;
+    $shortcuts = nn($shortcuts) ? item(u\ul($shortcuts), t('Shortcuts:')) : NULL;
+  } else $shortcuts = NULL;
 
   $title = t('You: ' . $mya->fullName);
   $acct = $mya->mainQid;
@@ -73,7 +76,7 @@ function formConsole($form, &$sta, $args = '') {
     $pay = btn('', t('Pay'), '', 'md', clas('btn-pay'));
     $charge = btn('', t('Charge'), '', 'md', clas('btn-charge'));
   } else { $pay = $charge = ''; }
-  $bank = btn('/get', t('Bank'), '', 'md');
+  $bank = $mya->closed ? '' : btn('/get', t('Bank'), '', 'md');
   $buttons = item($pay . $charge . $bank);
 
   $balance = u\fmtAmt($mya->balance);
@@ -85,7 +88,7 @@ function formConsole($form, &$sta, $args = '') {
     list ($credit, $normally) = $mya->depends ? ['$0', t(' (normally)')] : [u\fmtAmt(-$mya->floor), ''];
     $creditLine = $mya->underage ? NULL : item($credit, t('Cred Line:'), t('Based%normally on your account\'s average monthly activity over the past 6 months.', compact('normally')), w\suffix($suffix));
   
-    if ($choiceList = choiceListFld()) $shortcuts = NULL; // don't show both
+    $choiceList = choiceListFld();
     
   } else {
     $acctType = t('community account');

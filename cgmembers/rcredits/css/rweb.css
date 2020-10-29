@@ -41,7 +41,7 @@ tr.hiRow {background-color:lightyellow;}
 iframe {border:0; float:right; margin-right:-60px;}
 .form-type-checkboxes > .control-label {padding-top:0;}
 
-form ul {padding-left:30px;}
+/* form ul {padding-left:30px;} */
 form ul>li {display: block;}
 .btn-back {height:28px; font-size:13px; padding:0 6px; line-height:2px;}
 .btn-back span {font-size:140%;}
@@ -165,7 +165,8 @@ textarea.form-control {height:100px;}
 #frm-php #edit-res label,
 .page-sadmin-php .breadcrumb {display:none;}
 
-ul, ol {margin-left:25px; padding-left:25px;}
+ul {padding-left:25px;}
+ol {margin-left:25px; padding-left:25px;}
 
 /* Basic FORM Layout (labels and data) */
 form {max-width:834px; margin:0 auto;}

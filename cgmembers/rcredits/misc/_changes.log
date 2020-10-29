@@ -1,3 +1,7 @@
+2020-10-29 feature/reopen
+. Reopen link now works
+. shortcuts on console always show now when appropriate
+
 2020-10-29 hotfix/verifyid
 . Next/Finish button is now shown properly on verifyId report
 
