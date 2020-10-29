@@ -22,7 +22,9 @@ function doit(what, vs) {
     $('#edit-pw').keyup(function () {
       var e = pwScore($(this).val());
       var pct = 100 * (1 - Math.min(min, e) / min);
-      $('.form-item-submit').toggle(pct == 0);
+      if (!$('.form-item-showPass').length || $('#edit-showpass-1').is(':checked')) {
+        $('.form-item-submit').toggle(pct == 0);
+      }
       $(this).css('background-size', pct + '% 100%');
     });
     $('#edit-pw').keyup();
@@ -575,10 +577,14 @@ function doit(what, vs) {
     break;
 
   case 'verifyemail':
+    var pw = $('.form-item-pw');
     if (vs['verify'] == 1) {
-      reqNot($('.form-item-pw'));
-    } else $('.form-item-pw').show().focus();
-    $('#edit-showpass-1').click(function() {$('.form-item-pw').show().focus();});
+      reqNot(pw);
+    } else pw.show().focus();
+    $('.form-item-showPass input').click(function() {
+      pw.toggle();
+      if (pw.is(':visible')) $('#edit-pw').focus();
+    });
     break;
     
   case 'veto':
