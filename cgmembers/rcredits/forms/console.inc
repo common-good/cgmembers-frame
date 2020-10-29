@@ -76,7 +76,7 @@ function formConsole($form, &$sta, $args = '') {
     $pay = btn('', t('Pay'), '', 'md', clas('btn-pay'));
     $charge = btn('', t('Charge'), '', 'md', clas('btn-charge'));
   } else { $pay = $charge = ''; }
-  $bank = $mya->closed ? '' : btn('/get', t('Bank'), '', 'md');
+  $bank = $mya->member ? btn('/get', t('Bank'), '', 'md') : '';
   $buttons = item($pay . $charge . $bank);
 
   $balance = u\fmtAmt($mya->balance);
@@ -88,7 +88,7 @@ function formConsole($form, &$sta, $args = '') {
     list ($credit, $normally) = $mya->depends ? ['$0', t(' (normally)')] : [u\fmtAmt(-$mya->floor), ''];
     $creditLine = $mya->underage ? NULL : item($credit, t('Cred Line:'), t('Based%normally on your account\'s average monthly activity over the past 6 months.', compact('normally')), w\suffix($suffix));
   
-    $choiceList = choiceListFld();
+    $choiceList = ($mya->member or $mya->closed) ? choiceListFld() : NULL;
     
   } else {
     $acctType = t('community account');
