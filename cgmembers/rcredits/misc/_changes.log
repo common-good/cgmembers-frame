@@ -1,3 +1,6 @@
+2020-10-29 hotfix/verifyid
+. Next/Finish button is now shown properly on verifyId report
+
 2020-10-28 feature/short-signup
 . individual signup is now pretty short, with optional longer signup to get a card
 . don't talk about unconfirmed invitations

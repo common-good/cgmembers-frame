@@ -51,7 +51,7 @@ function formVerifyEmail($form, &$sta, $args = '') {
   
   $title = t('Verified!');
   $subtext = tr('verified email');
-  $buttons = setupFoot();
+  $submit = submit($a->stepCount() > 1 ? t('Next') : t('Finish')); // can't use setupFoot() here because not signed in
 
   $subtext .= t('<p>If you want a different password than the one we emailed you, you can change it here.</p>') . t('pass advice');
   $showPass = boolFld(t('Change Password?'), t('Do you want to change your assigned password?'));
@@ -61,7 +61,7 @@ function formVerifyEmail($form, &$sta, $args = '') {
   jsx('verifyemail', compact('verify'));
   $verify = hidFld($verify);
 
-  return cgform(compact(ray('title subtext uid verify')) + $passFlds + $buttons);
+  return cgform(compact(ray('title subtext uid verify')) + $passFlds + compact('submit'));
 }
 
 function formVerifyEmail_validate($form, &$sta) {if (nni($sta['input'], 'showPass')) return formChangePassword_validate($form, $sta);}
