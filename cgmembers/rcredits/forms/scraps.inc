@@ -21,6 +21,12 @@ function formScraps($form, &$sta, $arg = '') {
     w\go($nextStep ? (ray(S_ALL)[$nextStep] ?: "settings/$nextStep") : '');
   }
   
+  if ($arg == 'reopen') {
+    r\tellAdmin(t('Reopen account') . " $mya->fullName ($mya->mainQid)");
+    say(t('<h2>Request Received</h2>Your request to reopen your account has been received. Expect to hear back from us within a day or two.'));
+    return go('empty');
+  }
+  
   $title = t('');
   $subtext = t('');
 }
