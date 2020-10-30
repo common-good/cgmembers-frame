@@ -1,3 +1,7 @@
+2020-10-30 feature/cooppower-ape
+. added community solar contracts for ape-ev and ape-ng
+. fixed formatting of console page
+
 2020-10-29 feature/reopen
 . Reopen link now works
 . shortcuts on console always show now when appropriate

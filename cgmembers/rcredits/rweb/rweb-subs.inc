@@ -216,14 +216,15 @@ function NEWcgform($form, $onSubmit = '', $labeled = TRUE) {
  * @param string $mlabFmt: (space-string array) label format adjustments for mobile: narrow, left
  */
 function cgform($form, $fmt = '', $mlabFmt = '') {
-  foreach (ray('fmt mlabFmt') as $k) $$k = ray($$k);
-  $tabled = !nni($fmt, 'nolabs');
+  foreach (ray('fmt mlabFmt') as $k) if (!is_array($$k)) $$k = ray($$k); // is_array for recursion
+  $tabled = !in('nolabs', $fmt);
+  $mlabsLeft = in('left', $mlabFmt);
 
   $classes[] = 'form-horizontal'; // for bootstrap
   foreach ($fmt as $k) $classes[] = "frm-$k";
   foreach ($mlabFmt as $k) $classes[] = "frm-mlabs-$k";
   $form['#attributes']['class'] = $classes;
- 
+
   foreach ($form as $k => $v) if (substr($k, 0, 1) != '#') {
     if (empty($v)) {unset($form[$k]); continue;} // NULL is ignored
     
@@ -237,8 +238,12 @@ function cgform($form, $fmt = '', $mlabFmt = '') {
     
     $type = nni($v, '#type');
     if ($type == 'hidden') f('t.POST', [$k => nni($v, '#value')]); // fake post for tests
-    if ($type == 'fieldset') $form[$k] = cgform($v);
-    if ($tabled and is_array($form[$k])) $form[$k]['#tabled'] = TRUE; // remember in each field that form is laid out in a table (labels in left column)
+    if ($type == 'fieldset') $form[$k] = $v = cgform($v, $fmt, $mlabFmt);
+
+    if ($tabled and $type != 'hidden') {
+      $form[$k]['#tabled'] = TRUE; // remember in each field that form is laid out in a table (labels in left column)
+      if ($mlabsLeft) $form[$k]['#class'][] = 'mlab-left';
+    }
   }
 
   $uri = $_SERVER['REQUEST_URI'];
