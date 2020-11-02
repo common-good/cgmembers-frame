@@ -148,6 +148,7 @@ function makeTestAdmins() {
 function deleteUid($oldUid) {a\changeUid($oldUid, 0, FALSE, TRUE);}
 function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
   global $mya;
+  if (is_object($oldUid)) $oldUid = $oldUid->id;
   if (!$a = r\acct($oldUid)) return w\say(t('That account does not exist.'), 'err');
   if ($mya and $a->id == $mya->id) return w\say(t('You can\'t delete or change the uid of an acct while it\'s the current acct.'), 'err');
   $nm = $a->fullName;
