@@ -1811,6 +1811,7 @@ function drupal_anonymous_user() {
  *   The most recently completed phase.
  */
 function drupal_bootstrap() {
+  global $mya;
   // Not drupal_static(), because does not depend on any run-time information.
 
   require_once DRUPAL_ROOT . '/rcredits/boot.inc';
@@ -1843,9 +1844,9 @@ function drupal_bootstrap() {
   if ($jsCode and $qid = nni($_GET, 'qid')) {
     r\setAcct(r\acct($qid));
     return w\go($_SERVER['REQUEST_URI'] . "?jsCode=$jsCode"); 
-  } else {
+  } elseif (!$mya = r\setAcct()) {
     $qid = nni($_COOKIE, 'trust') ? r\cryptCook('qid') : '';
-    $mya = r\setAcct($qid ? r\acct($qid)->id : '');
+    if ($mya = $qid ? r\acct($qid) : '') r\setAcct($mya);
   }
 
   global $channel, $boxUser, $box;

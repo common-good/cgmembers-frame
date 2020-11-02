@@ -1,3 +1,9 @@
+2020-10-31 feature/goto-co
+. fixed bug that kept people from going to their company account
+. don't force individuals to type a zero for crumbs
+. added a helpful message when vKeyE cookie is not found
+. added more restrictions to license - it now requires registration and public description of any changes
+
 2020-10-30 feature/cooppower-ape
 . added community solar contracts for ape-ev and ape-ng
 . fixed formatting of console page

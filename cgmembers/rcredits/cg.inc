@@ -561,7 +561,8 @@ function cryptCook($k) {return ($v = cook($k)) ? u\dery('C', $v) : '';}
 function vKey() {
 	global $mya, $channel;
   u\EXPECT($channel == TX_WEB, 'wrong channel for vKey: ' . $channel);
-	return ($vKeyE = r\cryptCook('vKeyE') and $pw = $mya->agentA->vKeyPw) ? u\decry('R', $vKeyE, $pw) : '';
+	if ($vKeyE = r\cryptCook('vKeyE') and $pw = $mya->agentA->vKeyPw) return u\decry('R', $vKeyE, $pw);
+  u\FAIL('no vKeyE! Post vKeyE (and pw2) to signin form to set vKeyE cookie. Or create a new vKeyE with a(1)->makeVKeyE().');
 }
 
 /**

@@ -9,7 +9,7 @@ This software is Copyright © 2020 Society to Benefit Everyone, Inc. dba Common 
       a. The Copy is used only to support solidarity, economic justice, human needs, and community empowerment;
       b. No one is charged for using the Copy; and
       c. Any modification of the Software made in the Copy:
-         i. Is viewable as a branch in a publicly-viewable repository.
+         i. Is viewable in a publicly-viewable repository, the location of that repository is registered at cg4.us/branches, and the modification is described clearly and understandably in the repository’s README.md file or in a location referenced there.
          ii. Follows the same programming conventions as the Software.
          iii. Includes automated regression tests for any features added or changed in the Copy.
          iv. Maintains all interoperability between running copies of the Software.
