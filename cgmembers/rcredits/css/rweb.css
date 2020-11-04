@@ -175,6 +175,7 @@ form {max-width:834px; margin:0 auto;}
 .frm-wide, .frm-nolabs {padding:0;}
 .form-horizontal .control-label {float:left; width:20%; min-width:100px; padding:9px 10px 0 0;}
 .form-type-item .control-label {padding-top:0;}
+.middle .control-label {padding-top:9px;} /* for when the item has a field in it */
 .form-horizontal .control-data {float:left; width:60%;}
 
 .frm-wider .control-label {float:left; width:10%;}
@@ -887,11 +888,10 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 
 /* Pay With CG */
 #frm-buy #edit-subtext {margin-bottom:0;}
-#frm-buy #edit-subtext h4 {margin:0;}
+#frm-buy #edit-subtext h4 {margin:0 0 15px 0;}
 #frm-buy #edit-payment {vertical-align:top; margin-top:0;}
 #frm-buy #edit-payment .control-data label {display:none;}
-#frm-buy #edit-payment .control-data .form-type-textfield {display:inline-block; max-width:50px; margin:0;}
-#frm-buy #edit-amount {height:20px; padding:0 2px;}
+#frm-buy #edit-payment .control-data .form-type-textfield {display:inline-block; max-width:70px; margin:0;}
 #frm-buy #edit-account {width:210px;}
 #frm-buy .form-item-title .control-label {width:0;}
 #frm-buy .form-item-title .control-data {width:100%; text-align:center;}

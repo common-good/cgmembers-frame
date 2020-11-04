@@ -1,4 +1,10 @@
-2020-10-31 feature/goto-co
+2020-11-04 feature/cgpay-fix
+. fixed "missing code" error on simple cgpay button
+. fixed formatting on CG Button form
+. fixed language on steps on (admin) summary page
+. disallow self ZAP with negative balance or approved invoice
+
+2020-10-31 feature/goto-biz2
 . fixed bug that kept people from going to their company account
 . don't force individuals to type a zero for crumbs
 . added a helpful message when vKeyE cookie is not found

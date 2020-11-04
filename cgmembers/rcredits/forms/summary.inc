@@ -259,7 +259,7 @@ function adminSummary() {
   
     $activity = item(a\showActivity($mya), t('Activity:'));
     $tasks = item(a\showTasks($mya), t('Tasks:'));
-    $steps = item(a\showSteps($mya), t('Steps Done:'), t('|agree=sign agreement | fund=connect bank (or not) | work=identify employer/calling | company=company info | discount=offer a discount'));
+    $steps = item(a\showSteps($mya), t('Steps Done:'), t('|fund=connect bank account | work=identify employer/calling | company=company info | discount=offer a discount | backing=support your community\'s %PROJECT economy | stepup=support local nonprofits'));
     if ($rels = a\showRelations($mya)) $relations = item($rels, t('Relations:'));  
   }
   
