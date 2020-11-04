@@ -50,17 +50,19 @@ function formBuy($form, &$sta, $doCode = '') {
 function charge($args) {
   global $mya;
 
-  if ($err = missingArgs($args, 'company code')) return $err;
+  if ($err = missingArgs($args, 'company')) return $err;
   extract(just(CGPAY_FLDS, $args, NULL)); // use almost all parameters
   $co = getCo($company);
   
-  if (mb_strtolower($code) != t('demo')) { // not looking at the demo
-    if ($code != $co->emailCode) {
-      if (strpos($code, ' ') or !$coRay = u\decryRay($code) or nni($coRay, 'cocode') != $co->emailCode) return apiErr(t('bad code in request')); // space in code is probably "bad company ID or cocode" message
-      $t = now() - nni($coRay, 'now', 0);
-      if ($t < 0 or $t > AUTHCODE_TIMEOUT) return w\softErr('co code timeout'); // error for customer
-    }
-  } else { $tst = t('<span class="loud">DEMO</span>'); }
+  if ($code) { // make it easy to get paid the easy way (can't include a code in emails or on a web page)
+    if (mb_strtolower($code) != t('demo')) { // not looking at the demo
+      if ($code != $co->emailCode) {
+        if (strpos($code, ' ') or !$coRay = u\decryRay($code) or nni($coRay, 'cocode') != $co->emailCode) return apiErr(t('bad code in request')); // space in code is probably "bad company ID or cocode" message
+        $t = now() - nni($coRay, 'now', 0);
+        if ($t < 0 or $t > AUTHCODE_TIMEOUT) return w\softErr('co code timeout'); // error for customer
+      }
+    } else { $tst = t('<span class="loud">DEMO</span>'); }
+  }
   
   if ($amount) {
     if ($err = u\badAmount($amount, '>0')) return apiErr($err);
@@ -112,7 +114,7 @@ function charge($args) {
 
   $verbs = t('Donate, Donate, Pay');
   $verb = in(ucwords($verb), $verbs) ? ucwords($verb) : t('Pay');
-  $payment = item(t('%amount to %who', '_amount who', $amountDpy, $co->fullName ?: t('co')), "$verb:");
+  $payment = item(t('%amount to %who', '_amount who', $amountDpy, $co->fullName ?: t('co')), "$verb:", '', clas('middle'));
   
   $option = $a ? '' : t('OR <%a>signup</a>', '_a', atag('/signup'));
   $submit = submit($verb, '', 'md', w\suffix($option));
