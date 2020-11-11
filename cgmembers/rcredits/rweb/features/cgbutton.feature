@@ -47,7 +47,7 @@ Scenario: A member submits a Pay With Common Good button payment with account ID
   |   1 | %today  |     23 | .ZZA  | .ZZC  | food |
   
   When member "?" visits page "handle-invoice/nvid=1&code=TESTDOCODE"
-  Then we say "error": "already paid"
+  Then we say "error": "inv already paid"
 
 Scenario: A member clicks a Pay With Common Good button with variable amount
   When member "?" visits page "pay-with-cg/company=NEWZZC&code=Cc3&item=food&amount="

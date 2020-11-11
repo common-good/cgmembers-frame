@@ -108,6 +108,7 @@ function formTx_submit($form, &$sta) {
     if ($delay) {
       $msg .= '|thing scheduled';
       $args += compact('thing');
+      r\acct($uid)->tell($msg, $args, t('payment scheduled'), $paying ? SEND_OUT : SEND_IN);
     } else { db\update($tnm, ray("$idFnm recursId", $args[$idFnm], $id), $idFnm); }
   }
   unset($DBTX);

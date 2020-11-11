@@ -799,7 +799,7 @@ EOF;
   }
 
   /**
-   * Notify the specified user, according to their preferences
+   * Notify the user, according to their preferences
    * @param integer $uid: account record id
    * @param string $index: message index
    * @param assoc $subs: substitutions/parameters for the message

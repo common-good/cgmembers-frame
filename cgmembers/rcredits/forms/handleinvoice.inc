@@ -45,13 +45,11 @@ function formHandleInvoice($form, &$sta, $args = '') {
   $toMe = ($mya and $mya->id == $payee); // toMe means payment is to me
 
   if ($toMe) { // confirming delete by originator
-    $title = t('Delete?');
+    $title = t('Cancel?');
     $subs += ray('who', r\acct($payer)->fullName);
-    $subtext = t('Delete %date invoice charging %who %amount for %what?', $subs);
-    $delete = submit(t('Delete'));
-    $cancel = submit(t('Cancel'));
-    $delSet = fieldSet('delSet', compact('delete', 'cancel'), BARE); // separate it from subtext
-
+    $subtext = t('Cancel %date invoice charging %who %amount for %what?', $subs);
+    $cancel = submit(t('Cancel Invoice'), '', '', suffix(lnk('', t('Go back'), clas('btn-back'))));
+    jsx('back-button');
   } else { // approving or denying
     $a = r\acct($payer);
     $title = t('Confirm Payment');
@@ -82,7 +80,7 @@ function formHandleInvoice($form, &$sta, $args = '') {
   $hid = hidFlds(compact('ret') + $inv);
   w\jsx('dispute');
 
-  $info = []; foreach (ray('title subtext payAmount always pay denySet delSet toMe hid') as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray('title subtext payAmount always pay denySet cancel toMe hid') as $k) if (isset($$k)) $info[$k] = $$k;
   $info['#validate'] = array('CG\\Web\\formHandleInvoice_validate');
   $info['#submit'] = array('CG\\Web\\formHandleInvoice_submit');
   
@@ -94,7 +92,7 @@ function formHandleInvoice_validate($form, &$sta) {
   extract(just('amount', hidFlds($hid), NULL));
   $deny = (op($sta) == 'deny');
   if (!$toMe and $deny and !$whyNot) return say('say why not', 'whyNot');
-  if ($toMe and $err = u\badAmount($payAmount, '>', 2, $amount)) return say($err, 'payAmount');
+  if ($toMe and isset($payAmount) and $err = u\badAmount($payAmount, '>', 2, $amount)) return say($err, 'payAmount');
 }
 
 function formHandleInvoice_submit($form, &$sta) {
@@ -125,10 +123,11 @@ function formHandleInvoice_submit($form, &$sta) {
       r\acct($payee, $payer)->setRel('customer autopay', TRUE, TRUE);
       $msg .= '|' . t('auto pay on', compact('payeeName'));
     }
-  } elseif ($op == 'delete') {
-    db\del('r_invoices', 'nvid', $nvid);
+  } elseif ($op == 'cancel') {
+    if (db\get('status', 'r_invoices', compact('nvid')) >= TX_PAID) return go('history/invoices-from', tr('inv already paid'), 'err'); // bad timing
+    db\update('r_invoices', ray('status nvid', TX_CANCELED, $nvid), 'nvid');
     $fromA->tellOut('invoice withdrawn', $subs);
-    $msg = 'invoice delete done';
+    $msg = 'invoice cancel done';
   } elseif ($op == 'deny' or $whyNot) {
     $data = serialize(compact('whyNot') + ($data ? unserialize($data) : []));
     db\update('r_invoices', ray('status data nvid', TX_DENIED, $data, $nvid), 'nvid');

@@ -27,7 +27,7 @@ $GLOBALS['tStrings'] = array(
 //  'report short invoice' => t("SPLIT! You charged %otherName %amount (%short has been invoiced). Transaction #%tid, Invoice #%t2id"),
 //  'report short invoice' => t("SPLIT! You charged %otherName %amount (%short remains to be paid). Transaction #%tid"),
   'denial done' => t('The invoice has been marked "denied".'),
-  'invoice delete done' => t('The invoice has been deleted.'),
+  'invoice cancel done' => t('The invoice has been canceled.'),
 
   'paid employees' => t('You distributed %total to %successes of %employeeCount employees. See your transactions page for details.'),
 //  'new-invoice' => t('%otherName requests %amount for "%payerPurpose". Type "pay" or "undo".'),
@@ -301,7 +301,8 @@ EOF
 //  'no company relations' => t("Only individuals can be related to this account."),
 // not used  'no self-undo' => t("You can't undo transactions with yourself."),
   'no matching invoice' => t('That is not an invoice to be paid.'), // Type "helpme pay".'),
-  'already paid' => t('That invoice is already paid.'), // message to either payer or payee
+  'inv already paid' => t('That invoice is already paid.'), // message to either payer or payee
+  'inv is canceled' => t('That invoice has been canceled.'),
   'undo no match' => t("You have no matching transactions to undo."),
   'undo moving target' => t("Can't undo: the last matching transaction has changed."),
   'unknown member' => t('Unknown member: "%who" (they need to sign up before we can recognize them).'), // Type "helpme pay".'),

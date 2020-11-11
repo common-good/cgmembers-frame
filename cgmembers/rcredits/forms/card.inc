@@ -12,7 +12,7 @@ use CG\Db as db;
  * Handle a scanned Common Good card.
  */
 function formCard($form, &$sta, $dom = '', $code = '') {
-  if (!$subdom = strtoupper($dom)) return exit('fail'); // correct a fluke in the server's rewrite (empty subdomain is a hacker -- give no information, don't even tell admin)
+  if (!$subdom = strtoupper($dom) or !$code) return exit('fail'); // correct a fluke in the server's rewrite (empty subdomain is a hacker -- give no information, don't even tell admin)
   $qrDom = ray(QR_DOMS)[(bool) isPRODUCTION];
   $res = r\Qo::qr2("$subdom.$qrDom/$code");
   if (!$res = r\Qo::qr2("$subdom.$qrDom/$code") or !$a = r\acct($res[0]) or $a->cardCode() != $res[1]) return softErr(t('That is not a valid %PROJECT card.'));

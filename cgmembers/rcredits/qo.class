@@ -123,16 +123,13 @@ class Qo {
     list ($region, $dom, $ext, $tail) = explode('.', $qr);
     $fmt = substr($tail, 0, 1);
     $c = u\a2n($fmt, 36);
-    $fmts = ray(QR_FMTS);
-    list ($regionLen, $acctLen) = explode('/', $fmts[$c / 4]);
+    list ($regionLen, $acctLen) = explode('/', nni(ray(QR_FMTS), $c / 4));
     $agentLen = $c % 4;
     $codeLen = strlen($tail) ;
-///    debug(compact(ray('qr fmt c fmts regionLen acctLen agentLen')) + ['thefmt' => $fmts[$c / 4]]);
     $region = u\n2a(u\a2n($region, 36), -3);
     $acct = u\n2a(u\a2n(substr($tail, 1, $acctLen), 36), -3);
     $agent = $agentLen ? '-' . u\n2a(u\a2n(substr($tail, 1 + $acctLen, $agentLen), 36), -1) : '';
     $code = substr($tail, 1 + $acctLen + $agentLen);
-///    echo pr(compact(ray('qr fmt c regionLen acctLen agentLen region acct agent tail')));
     return [$region . $acct . $agent, $code];
   }
   

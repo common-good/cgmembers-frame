@@ -113,12 +113,15 @@ function choiceListFld() {
   global $mya;
   
   // <br><small>Your local Community Fund gets $2 for every invitation you send!</small>
+  $cardText = $mya->canCarded
+  ? t('Complete some steps you missed out on.') // don't mention card if they already have it
+  : t('Get the card. Get to vote.<br><small>Get a %PROJECT payment card and vote on what to fund.</small>');
   
   $choices0 = explode("\n", t(<<< X
     community:invite:Invite:Invite a friend or company to join.
     community:donate:Give:Make a donation to %PROJECT.
     community:comment:Comment:Send a comment, question, or suggestion.
-    scraps:card:Finish:Get the card. Be a member.<br><small>Get a %PROJECT payment card and participate in %PROJECT economic democracy.</small>
+    scraps:card:Finish:$cardText
     scraps:co:Finish:Finish opening your complete company account.
     scraps:reopen:Reopen:Ask for your account to be reopened.
 X

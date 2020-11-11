@@ -565,13 +565,14 @@ const B_PARTIAL = 18; // partial payment of invoice
 const TX_FLAGS = 'offline short crumbs recurs gift loan investment stake fine noask funding food partial';
 
 // Invoice status (txid >= TX_PAID if paid)
+const TX_CANCELED = -9; // invoice canceled
 const TX_NOSUCH = -4; // no such charge operation (used only in forms/buy.inc)
 const TX_DELAYED = -3; // waiting for both accounts to qualify
 const TX_DENIED = -2; // invoice rejected by the non-originator
 const TX_PENDING = -1; // charged, waiting for confirmation
 const TX_APPROVED = 0; // invoice is approved but not paid
 const TX_PAID = 1; // any status this amount or more is a payment transaction record ID (xid)
-define('TX_STATUSES', t('-3:delayed,-2:denied,-1:OPEN,0:approved,1:paid'));
+define('TX_STATUSES', t('-9:canceled,-4:no such,-3:delayed,-2:denied,-1:OPEN,0:approved,1:paid'));
 
 // Transaction channels (roughly in order of simplicity and generality of messages) (CGF)
 const TX_SYS = 0;
