@@ -1,3 +1,9 @@
+2020-11-10 feature/cancel-inv
+. invoices are now canceled, not deleted (and fixed bug that prevented it)
+. other person gets a notice when a delayed payment is created
+. don't mention card in Finish step if they already have it
+. simplified how goback button works (
+
 2020-11-04 feature/cgpay-fix
 . fixed "missing code" error on simple cgpay button
 . fixed formatting on CG Button form

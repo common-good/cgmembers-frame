@@ -140,7 +140,8 @@ function badUnpaidInv($nvid, &$inv = '') {
   $fields = 'nvid,status,amount,payer,payee,goods,purpose,flags,data,recursId,created';
   if (is_array($nvid)) $nvid = $nvid['nvid'];  // really shouldn't happen -- but apparently did at some point
   if (!$inv = db\get($fields, 'r_invoices', 'nvid=:nvid', compact('nvid'))) return 'no matching invoice';
-  if ($inv['status'] >= TX_PAID) return 'already paid';
+  if ($inv['status'] == TX_CANCELED) return 'inv is canceled';
+  if ($inv['status'] >= TX_PAID) return 'inv already paid';
   return FALSE;
 }
 
@@ -561,8 +562,13 @@ function cryptCook($k) {return ($v = cook($k)) ? u\dery('C', $v) : '';}
 function vKey() {
 	global $mya, $channel;
   u\EXPECT($channel == TX_WEB, 'wrong channel for vKey: ' . $channel);
-	if ($vKeyE = r\cryptCook('vKeyE') and $pw = $mya->agentA->vKeyPw) return u\decry('R', $vKeyE, $pw);
-  u\FAIL('no vKeyE! Post vKeyE (and pw2) to signin form to set vKeyE cookie. Or create a new vKeyE with a(1)->makeVKeyE().');
+  $ermsg = t(' Post vKeyE (and pw2) to signin form to set vKeyE cookie before signing in as admin (or running admin tests). Or create a new vKeyE with a(1)->makeVKeyE().');
+  
+  if (test() and $mya->id != 1) return '';
+  if (!$pw = $mya->agentA->vKeyPw) u\FAIL(t('missing vKeyPw!') . $ermsg);
+  if (!$vKeyE = r\cryptCook('vKeyE')) u\FAIL(t('missing vKeyE!') . $ermsg);
+
+	return u\decry('R', $vKeyE, $pw);
 }
 
 /**
