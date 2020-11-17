@@ -1,3 +1,11 @@
+2020-11-10 feature/api-q
+. api function now expects "?" instead of "/" (standard GET query)
+. fixed bug in handleinvoice.inc that notice'd zero as the invoice amount when withdrawn or denied
+. fixed bug in api feature that showed page instead of exiting with message
+. reduced number of lines of code
+. we can now handle more than one test that gives an exit message, in one run
+. fixed formatting of periods on pay and charge pages
+
 2020-11-10 feature/cancel-inv
 . invoices are now canceled, not deleted (and fixed bug that prevented it)
 . other person gets a notice when a delayed payment is created

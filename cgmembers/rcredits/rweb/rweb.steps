@@ -2221,7 +2221,7 @@ function weHitWith($url, $args) {
  */
 function weExitShowingJust($what) {
   global $testOnly; if (!$testOnly) return FALSE; // maybe combine this with weExitShowing?
-  if (!$actual = db\get('value', 'test', $where = "type='echo'")) return FALSE;
+  if (!$actual = getExitMsg()) return FALSE;
   db\del('test', $where); // reset for subsequent steps
   return ($what == '' . $actual);
 }
@@ -2233,7 +2233,7 @@ function weExitShowingJust($what) {
  */
 function weExitShowing($ray) {
   global $testOnly; if (!$testOnly) return FALSE;
-  if (!$actualRay = db\get('value', 'test', $where = "type='echo'")) return FALSE;
+  if (!$actualRay = getExitMsg()) return FALSE;
   db\del('test', $where); // reset for subsequent steps
   return t\checkOneArray($ray[0], unserialize($actualRay));
 }

@@ -97,12 +97,12 @@ function formHandleInvoice_validate($form, &$sta) {
 
 function formHandleInvoice_submit($form, &$sta) {
   $hidFlds = 'ret nvid payer payee purpose created data';
-  extract(just('hid whyNot always payAmount ' . $hidFlds, $sta['input'], NULL)); // hidFlds here is for testing
+  extract(just('hid whyNot always amount payAmount ' . $hidFlds, $sta['input'], NULL)); // hidFlds here is for testing
   extract(just($hidFlds, hidFlds($hid)));
 
   list ($fromA, $toA) = [r\acct($payer), r\acct($payee)];
   $payeeName = $toA->fullName;
-  $subs = ray('amount payerName payeeName created purpose reason', u\fmtAmt($payAmount), $fromA->fullName, $payeeName, u\fmtDate($created), $purpose, $whyNot);
+  $subs = ray('amount payerName payeeName created purpose reason', u\fmtAmt($amount), $fromA->fullName, $payeeName, u\fmtDate($created), $purpose, $whyNot);
 
   $op = op($sta);
   $ok = TRUE; // messages default to status, rather than error

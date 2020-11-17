@@ -168,16 +168,10 @@ function theResponseOpIsAndTheStatusIsAndThereAreResponsesAndTheyAre($op, $statu
   global $rAPIResult;
 
   extract($rAPIResult, EXTR_PREFIX_ALL, 't');
-          
-  if ($op != $t_op) {
-    t\output("Expected op: $op, got: $t_op");
-    return FALSE;
-  }
-  if ($status != $t_status) {
-    t\output("Expected request status $status, got: $t_status");
-    if (key_exists('error', $rAPIResult)) {
-      t\output("Error was: " . print_r($t_error, TRUE));
-    }                
+
+  if (!t\eq($op, $t_op, 0)) return FALSE;
+  if (!t\eq($status, $t_status, 0)) {
+    if (nn($t_error)) t\output("Error was: " . pr($t_error));
     return FALSE;
   }
   return t\jsonResponses($correctResponses, $t_responses);
@@ -192,20 +186,7 @@ function theResponseOpIsAndTheStatusIsAndTheErrorIs($op, $status, $error) {
   global $testOnly;
   global $rAPIResult;
 
-  extract($rAPIResult, EXTR_PREFIX_ALL, 't');
-  
-  if ($op != $t_op) {
-    t\output("Expected op: $op, got: $t_op");
-    return FALSE;
-  }
-  if ($status != $t_status) {
-    t\output("Expected status $status, got: $t_status");
-    return FALSE;
-  }
-  if ($error != $t_error) {
-    t\output("Expected error '$error' but got '$t_error'");
-    return FALSE;
-  }
+  foreach (ray('op status error') as $k) if (!t\eq($$k, $rAPIResult[$k], 0)) return FALSE;
   return TRUE;
 }
 
