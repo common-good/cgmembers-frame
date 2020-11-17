@@ -192,6 +192,8 @@ form {max-width:834px; margin:0 auto;}
 .frm-submenu .form-item-title .control-data {width:100%; text-align:center;}
 .frm-submenu .form-item-title .control-label {display:none;}
 
+.form-item-periods input {max-width:50px; display:inline-block; margin-right:5px;}
+
 @media (max-width:768px) {
   #navbar {padding-right:0; position:fixed; z-index:10001; top:50px; right:0; left:auto; margin:0;}
   .navbar-inverse .navbar-nav > li > a,

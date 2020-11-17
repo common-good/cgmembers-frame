@@ -922,7 +922,7 @@ function postToPage($page, $args) {
 function memberVisitsPage($id, $page) { // pass options in URL
   global $testOnly; if ($testOnly) return FALSE;
   if (!t\login($id)) return FALSE;
-  t\pageForm($page, FALSE);
+  t\pageForm($page);
   return TRUE;
 }
 
@@ -1122,7 +1122,7 @@ function completeForm($id, $page, $values = '', $confirmed = FALSE) {
 
   $values = t\POST($values);
 
-  if (!$form = t\pageForm($page, FALSE)) return FALSE; // probably access error
+  if (!$form = t\pageForm($page)) return FALSE; // probably access error
 
   $sta = $formSta; $formSta = NULL; // don't let $formSta influence other forms that get invoked
 
@@ -1320,7 +1320,7 @@ function eq($a, $b, $offBy = .0001) {
   if (!$result) {
     if (is_array($a)) {
       output("unequal arrays ($offBy):<br>" . pr($a) . pr($b));
-    } else {output("unequal: a=$a b=$b", 'error');}
+    } else {output("wanted: $a, got: $b", 'error');}
   }
   return $result;
 }
@@ -1377,7 +1377,8 @@ function clear($ch = 0) {
   include_once __DIR__ . '/admin/admin.inc';
   global $mya; $mya = NULL;
   global $tTime; $tTime = time(); // all events happen simultaneously during a test (conceptually)
-  global $lastGo, $formOut, $formArray, $formSta, $testOp, $testConfirmation, $tChecked, $tRadios, $testEmails;
+  global $lastGo, $formOut, $formArray, $formSta, $testOp, $testConfirmation;
+  global $tChecked, $tRadios, $testEmails, $rAPIResult;
   global $nextCode; $nextCode = NULL;
   global $sms_devel; $sms_devel = TRUE;
   global $newThresholds; unset($newThresholds);
@@ -1386,7 +1387,7 @@ function clear($ch = 0) {
   global $T_POST; $T_POST = $_POST = $_COOKIE = []; // setting $_GET=[] makes things go kaflooey
   $lastGo = $formOut = $formArray = $formSta = $testOp = $testConfirmation = $tChecked = $tRadios = NULL;
   $formOut['text'] = '';
-  $testEmails = NULL;
+  $testEmails = $rAPIResult = NULL;
 
   global $sms_devel; $sms_devel = TRUE;
   global $testSeq; $testSeq = NULL;
@@ -1809,17 +1810,13 @@ function hitAPI($op, $userId, $password, $requests) {
   global $testOnly; if ($testOnly) return FALSE;
   global $rAPIResult;
   include_once __DIR__ . '/forms/api.inc';
+
   $userId = t\fullQid2($userId);
-  $fixedRequests = [];
-  foreach ($requests as $request) {
-    fixData($request);
-    $fixedRequests[] = $request;
-  }
-  $overall = ['op'=>$op, 'userId'=>$userId, 'password'=>$password, 'requests'=>$fixedRequests];
-  $json = json_encode($overall);
-  $result_json = w\api($json);
-  $result = json_decode($result_json);
-  $rAPIResult = (array)$result;
+  foreach ($requests as $i => $zot) fixData($requests[$i]);
+  $request = json_encode(compact(ray('op userId password requests')));
+  w\api(compact('request'));
+  if (!$result_json = getExitMsg()) return FALSE;
+  $rAPIResult = (array) json_decode($result_json);
   return TRUE;
 }
 
@@ -1873,4 +1870,14 @@ function hasPic($id, $picture) {
  */
 function logRec($type, $value) {
   return db\insert('test', ray('type value test', $type, is_array($value) ? serialize($value) : $value, \sceneId()));
+}
+
+/**
+ * Return the earliest exit message and delete it from the log (so the next one will be found for a subsequent test).
+ */
+function getExitMsg() {
+  $id = db\get('id', 'test', "type='echo' ORDER BY id");
+  $res = db\get('value', 'test', compact('id'));
+  db\del('test', 'id', $id);
+  return $res;
 }
