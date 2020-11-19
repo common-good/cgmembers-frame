@@ -305,15 +305,14 @@ EOF;
   /**
    * Determine whether the record can be undone
    * @param assoc $subs: (RETURNED) necessary substitutions, if any, including whatever was already there
-   * @return [FALSE, msg, subs], or FALSE if the current agent CAN undo it on behalf of the current account
+   * @return a txRet object on "no Undo", or FALSE if the current agent CAN undo it on behalf of the current account
    */
   function noUndo(&$subs = []) {
-    if (db\exists('tx_hdrs', 'reversesXid=:xid', ['xid' => $this->xid])) return 'already undone';
+    if (db\exists('tx_hdrs', 'reversesXid=:xid', ['xid' => $this->xid])) return be\txRet(FALSE, 'already undone');
 
     list ($a1, $a2) = u\order($this->toMe, $this->actorA, $this->otherA); // second agent's permissions are irrelevant?
-    if ($err = r\txPermErr($a1, $a2, $this->toMe, $this->actorEntry->amount < 0)) return $err;
+    if ($zErr = r\txPermErr($a1, $a2, $this->toMe, $this->actorEntry->amount < 0)) return $zErr;
 
     return FALSE;
   }
 } // end of class tx
-

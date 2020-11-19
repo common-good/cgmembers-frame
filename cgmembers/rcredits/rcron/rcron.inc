@@ -291,12 +291,12 @@ function recur($template) {
       if (is_null($amount)) { // sweep
         if (!$amount = max(0, $fromA->balance - $fromA->minimum)) return;
       }        
-      $ok = $fromA->payApproved($to, $amount, $purpose, $action == 'pay' ? FOR_GOODS : FOR_USD, $data, $id);
-      if (!$ok) return r\tellAdmin(t('Pay failed in recur'), $erSubs);
+      $z = $fromA->payApproved($to, $amount, $purpose, $action == 'pay' ? FOR_GOODS : FOR_USD, $data, $id);
+      if (!$z->ok) return r\tellAdmin(t('Pay failed in recur'), $erSubs);
       $fromA->tellOut('recur pay', ray('amount when purpose payee', u\fmtAmt($amount), $when, $purpose, $toA->fullName));
     } else { // charge
-      list ($ok, $msg, $args) = be\invoice($toA, $fromA, $amount, $purpose, FOR_GOODS, $data, $id);
-      if (!$ok) return r\tellAdmin(t('Invoice failed in recur'), $erSubs + compact('msg', 'args'));
+      $z = be\invoice($toA, $fromA, $amount, $purpose, FOR_GOODS, $data, $id);
+      if (!$z->ok) return r\tellAdmin(t('Invoice failed in recur'), $erSubs + just('msg', $z));
     }
     if ($period == 'once') r\endRule(TRUE, $id);
 
@@ -605,7 +605,10 @@ function inflationAdjust($item) {
 function crumbs($item) {
   extract(just('uid donate date', $item));
   $a = r\acct($uid);
-  if ($donate > 0 and $a->ok) $a->payApproved(CG_CRUMBS_UID, $donate, t('crumbs desc', 'pct', u\fmtAmt($a->crumbs, '%')), FOR_NONGOODS, ray('created crumbs gift', $date, TRUE, TRUE));
+  if ($donate > 0 and $a->ok) {
+    $z = $a->payApproved(CG_CRUMBS_UID, $donate, t('crumbs desc', 'pct', u\fmtAmt($a->crumbs, '%')), FOR_NONGOODS, ray('created crumbs gift', $date, TRUE, TRUE));
+    if (!$z->ok) r\tellAdmin($z->msg, $z->subs);
+  }
 }
 
 /**
@@ -619,8 +622,8 @@ function sweep($item) {
     $a = r\acct($uid);
     $amt = $a->balance - db\sum('amt', 'txs', 'uid2=:uid AND created>:end', compact(ray('uid end'))); // all but what's too new
     if ($amt > 0) {
-      list ($ok, $index, $subs) = be\transfer('payment', $a, $cgA, $amt, $type . t(' donations'), FOR_GOODS, ray('created gift', $end, TRUE));
-      if (!$ok) r\tellAdmin($type . t(' sweep failed: ') . t($index, $subs));
+      $z = be\transfer('payment', $a, $cgA, $amt, $type . t(' donations'), FOR_GOODS, ray('created gift', $end, TRUE));
+      if (!$z->ok) r\tellAdmin($type . t(' sweep failed: ') . $msg);
     }
   }
 }  
@@ -635,8 +638,8 @@ function cgc($item) {
     list ($a, $cgA) = [r\acct($ctty), r\cgA()];
     $desc = t('50% share of local donations through %dt', 'dt', u\fmtDate($end));
     if ($a->ok) {
-      list ($ok, $msg, $subs) = be\transfer('payment', $cgA, $a, $kickBack, $desc, FOR_NONGOODS, ray('created gift', u\monthDay1() - 1, TRUE));
-      if (!$ok) r\tellAdmin(t('Failed sharing 50% with community ') . $a->fullName . ': ' . t($msg, $subs));
+      $z = be\transfer('payment', $cgA, $a, $kickBack, $desc, FOR_NONGOODS, ray('created gift', u\monthDay1() - 1, TRUE));
+      if (!$z->ok) r\tellAdmin(t('Failed sharing 50% with community ') . "$a->fullName: $z->msg");
     }
   }
 }  
@@ -934,8 +937,9 @@ function invoice1($item) {
     $short = $a1->balance > $amount ? 0 : round($a1->advances() + $amount - $a1->avail(), 2); //	consider credit already used for advances from the bank
 
     if ($short <= 0) { // pay the invoice if we have enough funds
-      list($paid, $msg) = be\payInvoice($nvid);
-      if (!$paid) r\tellAdmin(t('invoice payment failed in cron'), compact('msg') + $item);
+      $z = be\payInvoice($nvid);
+      $paid = $z->ok;
+      if (!$z->ok) r\tellAdmin(t('invoice payment failed in cron'), ray('msg', $z->msg) + $item);
     } else $paid = FALSE;
 		
 		if (!$paid or $a1->balance < 0) {

@@ -98,10 +98,9 @@ function formCard_submit($form, &$sta) {
   
   $goods = strhas($desc, t('cash')) ? FOR_USD : FOR_GOODS;
   $type = ($op == 'charge' ? 'charge' : 'pay');
-  list ($ok, $msg, $subs) = be\transfer($type, $mya, $a, $amount, $desc, $goods);
+  $z = be\transfer($type, $mya, $a, $amount, $desc, $goods);
 
-  $msg = tr($msg, $subs);
-  return cardSignout($msg, $ok ? '' : 'err');
+  return cardSignout($z->msg, $z->ok ? '' : 'err');
 }
 
 /**

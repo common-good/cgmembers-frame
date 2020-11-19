@@ -610,9 +610,9 @@ function doBalances($info) {
       $cgA = r\acct(CGID);
       u\EXPECT((bool) $cgA, 'no cgA!');
       u\EXPECT($a != $cgA, "CG balance ($cgA->balance) cannot be set directly to " . $info['balance']); // (if setting it to what it already is, no problem)
-      $res = be\transfer('charge', $cgA, $a, -($info['balance']-$a->balance), 'set balance for testing', FOR_NONGOODS,
+      $z = be\transfer('charge', $cgA, $a, -($info['balance']-$a->balance), 'set balance for testing', FOR_NONGOODS,
                          ['force'=>1, 'xid'=>$testXid]);
-      u\EXPECT($res[0], "trouble creating transfer to set balance");
+      u\EXPECT($z->ok, "trouble creating transfer to set balance");
     }
   }
 

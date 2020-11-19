@@ -129,17 +129,17 @@ function generateInvoice($request) {
     return ray('nonce status payerId amount cgInvoiceId', $nonce, $status, $payerId, $amount, $nvid);
   }
   // Not a duplicate
-  list($success, $msg, $subs) = be\invoice($mya, $payerA, $amount, $purpose, FOR_GOODS, ['created' => $billingDate]);
-  if ($success) {
-    $status = statusString($subs['status']);
+  $z = be\invoice($mya, $payerA, $amount, $purpose, FOR_GOODS, ['created' => $billingDate]);
+  if ($z->ok) {
+    $status = statusString($z->subs['status']);
     if ($status == 'BAD') {
       return ray('nonce status payerId amount error', $nonce, 'BAD', $payerId, $amount, 'CG system internal error');
     }
-    $cgInvoiceId = $subs['nvid'];
+    $cgInvoiceId = $z->subs['nvid'];
     return compact(ray('nonce status payerId amount cgInvoiceId'));
   } else {
     $status = 'BAD';
-    $error = [ $msg ];
+    $error = [ $z->index ];
     return compact(ray('nonce status error payerId amount'));
   }
 }
@@ -165,12 +165,10 @@ function makePayment($request) {
     $status = 'DUPLICATE';
     return compact(ray('nonce status payeeId amount'));
   }
-  list($ok, $msg, $subs) = be\transfer('payment', $mya, $payeeA, $amount, $purpose, FOR_GOODS, ['created'=>$billingDate]);
-  if ($ok) {
-    return ray('nonce status payeeId amount', $nonce, 'OK', $payeeId, $amount);
-  }
-  $error = t($msg, $subs);
-  switch ($msg) {
+  $z = be\transfer('payment', $mya, $payeeA, $amount, $purpose, FOR_GOODS, ['created'=>$billingDate]);
+  if ($z->ok) return ray('nonce status payeeId amount', $nonce, 'OK', $payeeId, $amount);
+
+  switch ($z->index) {
   case 'short from vague':
   case 'short from':
   case 'short to':
@@ -179,6 +177,8 @@ function makePayment($request) {
   default:
     $status = 'BAD';
   }
+  
+  $error = $z->msg;
   return compact(ray('nonce status payeeId amount error'));
 }
 

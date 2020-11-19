@@ -146,6 +146,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
  *     MAKE coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  *     MAKE flow AMemberDraws
+ *     MAKE flow AJointAccountSlaveMemberDraws
  *     MAKE flow AMemberDrawsAgain
  *     MAKE investinterest ANonmemberExpressesInterest
  *     MAKE invoice AMemberConfirmsRequestToChargeAnotherMember
@@ -1799,6 +1800,7 @@ function txHeaders($list) {
  * tx entries: (ARG)
  *
  * in: TEST flow AMemberDraws
+ *     TEST flow AJointAccountSlaveMemberDraws
  *     TEST flow AMemberDrawsAgain
  */
 function txEntries($list) {
@@ -2221,8 +2223,8 @@ function weHitWith($url, $args) {
  */
 function weExitShowingJust($what) {
   global $testOnly; if (!$testOnly) return FALSE; // maybe combine this with weExitShowing?
-  if (!$actual = getExitMsg()) return FALSE;
-  db\del('test', $where); // reset for subsequent steps
+  if (!$actual = t\getExitMsg()) return FALSE;
+  db\del('test', "type='echo'"); // reset for subsequent steps
   return ($what == '' . $actual);
 }
 
@@ -2233,8 +2235,8 @@ function weExitShowingJust($what) {
  */
 function weExitShowing($ray) {
   global $testOnly; if (!$testOnly) return FALSE;
-  if (!$actualRay = getExitMsg()) return FALSE;
-  db\del('test', $where); // reset for subsequent steps
+  if (!$actualRay = t\getExitMsg()) return FALSE;
+  db\del('test', "type='echo'"); // reset for subsequent steps
   return t\checkOneArray($ray[0], unserialize($actualRay));
 }
 

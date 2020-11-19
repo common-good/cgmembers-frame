@@ -1,3 +1,13 @@
+2020-11-19 feature/txret
+. refactored transaction functions to return a txRet object
+. fixed bug in error reporting on dev machines (now shows full trace reliably)
+. fixed bug in disconnect from bank account that tried to encrypt empty string
+. fixed several bugs in the draw feature (especially for joint accounts) and fixed production data
+. we now send an alert to admin whenever a snap purchase is made
+. Pay page now uses acct::payApproved(), so payments are successful even when they can't go through yet
+. fixed a really nasty bug that stored recursId in tx or invoice record with that numeric record ID value
+. we now warn admin if crumbs fail
+
 2020-11-10 feature/api-q
 . api function now expects "?" instead of "/" (standard GET query)
 . fixed bug in handleinvoice.inc that notice'd zero as the invoice amount when withdrawn or denied

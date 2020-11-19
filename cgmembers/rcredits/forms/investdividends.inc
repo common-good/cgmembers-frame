@@ -48,8 +48,8 @@ function formInvestDividends_submit($form, &$sta) {
 
   $DBTX = \db_transaction();
 
-  list ($ok, $index, $subs) = be\transfer('payment', $icA, $cgA, $amount - $pool, t('community dividend'), FOR_USD);
-  u\EXPECT($ok, 'community dividend error');
+  $z = be\transfer('payment', $icA, $cgA, $amount - $pool, t('community dividend'), FOR_USD);
+  u\EXPECT($z->ok, 'community dividend error');
 
 	$q = db\q('SELECT uid FROM r_stakes', compact('clubid'));
   while ($row = $q->fetchAssoc()) {
@@ -58,8 +58,8 @@ function formInvestDividends_submit($form, &$sta) {
     $pct = myShareOfClub($uid, $clubid);
 		$amt = round($pct * $pool, 2);
 		if ($amt > 0) {
-			list ($ok, $index, $subs) = be\transfer('payment', $icA, $a, $amt, t('dividend'), FOR_USD);
-      u\EXPECT($ok, 'dividend error');
+			$z = be\transfer('payment', $icA, $a, $amt, t('dividend'), FOR_USD);
+      u\EXPECT($z->ok, 'dividend error');
       
       if ($a->reinvest) {
 			  $ok = $a->payApproved($clubid, $amt, t('re-investment of dividends'), FOR_USD, ray('stake', 1));

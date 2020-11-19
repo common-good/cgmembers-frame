@@ -80,7 +80,7 @@ function formDonate_submit($form, &$sta) {
     : db\insert('tx_templates', ray('action from to amount period purpose duration', ACT_PAY, $mya->id, CGID, $amount, $period, $purpose, 'once'));
     $msg = 'gift successful';
     $data = ray('gift recurs', 1, (bool) $recursId);
-    if ($mya->ok and $mya->payApproved(CGID, $amount, $purpose, FOR_NONGOODS, $data, $recursId)) {
+    if ($mya->ok and $z = $mya->payApproved(CGID, $amount, $purpose, FOR_NONGOODS, $data, $recursId) and nni($z->subs, 'xid')) {
       $mya->tellOut('gift sent', ray('amount', u\fmtAmt($amount)));
     } else $msg .= '|gift transfer later';
     say($msg);

@@ -168,15 +168,13 @@ function formBuy_submit($form, &$sta) {
   $a = $mya ?: ($confirm ? r\acct(fmtAcctId($name)) : r\acct($sta['uid']));
   
   if ($confirm) {
-    list ($ok, $index, $subs) = be\invoice($co, $a, $amount, $item, FOR_GOODS, compact(ray('api request for')));
-    $msg = tr($index, $subs);
+    extract(just('ok msg', be\invoice($co, $a, $amount, $item, FOR_GOODS, compact(ray('api request for')))));
     if ($ok) $msg = t('pay button success');
   } else {
-    list ($ok, $index, $subs) = be\transfer('payment', $a, $co, $amount, $item, FOR_GOODS, compact('for'));
-    $msg = tr($index, $subs);  
+    extract(just('ok msg subs', be\transfer('payment', $a, $co, $amount, $item, FOR_GOODS, compact('for'))));
     if ($ok) $msg = t('<h3>Success!</h3> ') . $msg;
     if ($api) u\post($api, ray('request ok msg', $request, (int) $ok, $msg));
-    foreach (ray('return cancel') as $k) if (nn($$k)) $$k = tr($$k, $args + compact(ray('msg ok')));
+    foreach (ray('return cancel') as $k) if (nn($$k)) $$k = tr($$k, $args + compact(ray('msg ok subs')));
   }
   
   if ($ok) {
