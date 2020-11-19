@@ -201,7 +201,7 @@ Scenario: A new member asks to pay another member before making a Common Good Ca
   When member ".ZZA" completes form "tx/pay" with values:
   | op  | who     | amount | goods | purpose |*
   | pay | Bea Two | 100    | %FOR_GOODS     | labor   |
-  Then we say "error": "first at home"
+  Then we say "status": "first at home|when resolved"
 
 Scenario: A member pays another member repeatedly
   When member ".ZZA" confirms form "tx/pay" with values:

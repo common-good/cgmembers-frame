@@ -74,46 +74,59 @@ function formTx_submit($form, &$sta) {
   $delay = ($start > today());
   $repeats = ($periods > 0);
   
-  if (!$delay) {
+  if ($delay) { // delaying, so do nothing now but create a template for the thing (repeating or not)
+    list($ok, $msg, $subs) = [TRUE, '', []];
+  } else { // no delay
     $data = $period ? ['recurs' => 1] : [];
     if ($start) $data['created'] = $start; // superAdmin chose a date in the past
-    list ($ok, $msg, $args) = $paying
-    ? be\transfer('payment', $mya, r\acct($uid), $amount, $purpose, $goods, $data)
+      
+    $z = $paying
+    ? $mya->payApproved($uid, $amount, $purpose, $goods, $data)
     : be\invoice($mya, r\acct($uid), $amount, $purpose, $goods, $data);
-  } else list($ok, $msg, $args) = [TRUE, '', []];
-
-  if ($paying and $mya->snap) r\tellAdmin(t('SNAP member %who %did something', 'who did', $mya->fullName, $ok ? t('bought') : t('tried to buy')), ['topic' => t('SNAP purchase') . ($ok ? '' : t(' failed'))]);
-
-  if ($delay or ($repeats and $ok)) { // need a rule template
-    if (!$end) $end = NULL;
-    list ($action, $thing, $tnm, $idFnm) = $paying
-    ? [ACT_PAY, t('payment'), 'tx_hdrs', 'xid'] 
-    : [ACT_CHARGE, t('invoice'), 'r_invoices', 'nvid'];
-    $subs = ray($paying ? 'from to' : 'to from', $mya->id, $uid);
-   
-    if ($repeats) {
-      $where = "tp.from=:from AND tp.to=:to AND action=:ACT_PAY AND period<>'once' AND IFNULL(end, :NOW + 1) > :NOW";
-      if (!$delay and db\exists('tx_templates tp', $where, $subs)) {
-        $otherName = db\get('fullName', 'users', compact('uid'));
-        if ($otherName) say(t('Note: You also have another active recurring transaction with %otherName. Go to <%a>History / Recurring Payments</a> to manage your recurring transactions.', 'otherName _a', $otherName, atag('/history/recurring')));
-      }
-      $often = r\recurDesc($period, $periods);
-      $args += compact('often');
-      $msg .= '|repeats';
-    } else { list ($periods, $period) = [1, 'once']; }
-    
-    if (!$start) $start = today(); // handle ''
-    $info = $subs + compact(ray('action amount purpose period periods start end'));
-    $id = db\insert('tx_templates', $info, 'id');
-    if ($delay) {
-      $msg .= '|thing scheduled';
-      $args += compact('thing');
-      r\acct($uid)->tell($msg, $args, t('payment scheduled'), $paying ? SEND_OUT : SEND_IN);
-    } else { db\update($tnm, ray("$idFnm recursId", $args[$idFnm], $id), $idFnm); }
+    extract(just('ok msg subs', $z));
+    if (!$ok) $repeats = FALSE; // don't repeat a failure
+    if (!$repeats) { // done if we're not repeating (and not delaying)
+      unset($DBTX);
+      say($msg, $ok ? '' : 'err');
+      return go('console');
+    }
   }
+
+  // delaying or repeating, so create a rule template
+  if (!$end) $end = NULL;
+  list ($action, $thing, $way) = $paying ? [ACT_PAY, t('payment'), 'from to'] : [ACT_CHARGE, t('invoice'), 'to from'];
+  $info = ray($way, $mya->id, $uid);
+ 
+  if ($repeats) {
+    // warn user if they already have a repeating transaction like this with this other account
+    $where = "tp.from=:from AND tp.to=:to AND action=:ACT_PAY AND period<>'once' AND IFNULL(end, :NOW + 1) > :NOW";
+    if (!$delay and db\exists('tx_templates tp', $where, $info)) {
+      $otherName = db\get('fullName', 'users', compact('uid'));
+      say(t('Note: You also have another active recurring transaction with %otherName. Go to <%a>History / Recurring Payments</a> to manage your recurring transactions.', 'otherName _a', $otherName, atag('/history/recurring')));
+    }
+    
+    $subs += ray('often', r\recurDesc($period, $periods));
+    $msg .= '|repeats';
+  } else {
+    list ($periods, $period) = [1, 'once'];
+  }
+  
+  if (!$start) $start = today(); // handle ''
+  $info += compact(ray('action amount purpose period periods start end'));
+  $id = db\insert('tx_templates', $info, 'id');
+
+  if ($delay) {
+    $msg = u\joins($msg, '|', '|thing scheduled');
+    $subs += compact('thing');
+    r\acct($uid)->tell($msg, $subs, t('payment scheduled'), $paying ? SEND_OUT : SEND_IN);
+  } else { // no delay: either a transaction or invoice was created, so set its recursId (pointing to template)
+    extract(just('xid nvid', $subs, NULL)); // no other way to know whether payApproved created a tx or an invoice
+    list ($tnm, $idFnm) = $xid ? ['tx_hdrs', 'xid'] : ['r_invoices', 'nvid'];
+    db\update($tnm, ray("$idFnm recursId", $subs[$idFnm], $$idFnm), $idFnm);
+  }
+
   unset($DBTX);
 
-  if ($msg[0] == '|') $msg = substr($msg, 1);
-  say(tr($msg, $args), $ok ? '' : 'err');
+  say(tr($msg, $subs), $ok ? '' : 'err');
   return go('console');
 }

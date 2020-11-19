@@ -765,17 +765,6 @@ function makeDevice($uid, $code = '', $ch = NULL) {
 }
 
 /**
- * Package the return arguments and alert staff on certain errors.
- * @param mixed $message: the error message or an assoc of parameters
- * @param assoc $info: (optional) message substitutions and other info about transaction
- * @return [ok, msg, info]
- */
-function txErr($message, $info = []) {
-  r\tellCAdmin('failed transaction', $info + compact('message'));
-  return is_array($message) ? $message : [FALSE, $message, $info];
-}
-
-/**
  * Record an invitation
  * @param string $email: email address to which the invite was sent
  * @param int $inviter: the inviter's account uid
@@ -1230,7 +1219,7 @@ function riskList($risks, $descs) {
  * @param acct $a2: the other account
  * @param bool $taking: the first account is taking money from the second (charging or invoicing)
  * @param bool $neg: the amount is negative (refunding or undoing)
- * @return [FALSE, message, subs] on error (FALSE meaning not ok), else FALSE
+ * @return a txRet object on error, else FALSE
  */
 function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   global $scanned, $channel;
@@ -1238,14 +1227,14 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   $invoicing = ($taking and $channel != TX_POS);
 
   // Check a1
-  if (!$a1->ok) return [FALSE, t('Requesting account is inactive.'), []];
+  if (!$a1->ok) return be\txRet(FALSE, t('Requesting account is inactive.'));
   
   if (!$a1->confirmed and !$a1->isCanonic and !$a2->isCanonic and $a1->id != CGID and $a2->id != CGID) { // actor is not confirmed (but newbs can transact with bank and CG)
     if ($a1->helper != $a2->id) { // unless doing business with who invited you
       if (!$a1->hasId or $a1->risk('ssnOff')) {
         $atHome = in(r\serverUid(), [$a1->community, $a2->community]) ? ($a1->community == $a2->community) : (substr($a1->zip, 0, 3) == substr($a2->zip, 0, 3) or u\earthDistance($a1->latitude, $a1->longitude, $a2->latitude, $a2->longitude) < 20);
         if (!$atHome or $channel != TX_POS) { // first tx must be in-person at home if ID is unverified
-          return [FALSE, 'first at home', []];
+          return be\txRet(FALSE, 'first at home');
         }
       }
     }
@@ -1253,14 +1242,14 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   list ($myAccess, $otherAccess) = u\order($taking xor $neg, B_SELL, B_BUY);
   list ($myWhat, $otherWhat) = u\order($taking xor $neg, t('sales'), t('purchases'));
   if ($scanned and $taking) list ($myAccess, $myWhat) = $neg ? array(B_REFUND, t('refunds')) : array(B_SCAN, t('sales'));
-  if (!$a1->can($myAccess)) return [FALSE, "no perm", ray('what', $myWhat)];
+  if (!$a1->can($myAccess)) return be\txRet(FALSE, "no perm", ray('what', $myWhat));
   if ((!$a2->can($otherAccess)) and (!$invoicing or $a2->closed)) {
-    return [FALSE, 'other no perm', ray('otherName what', $a2->agentA->fullName, $otherWhat)];
+    return be\txRet(FALSE, 'other no perm', ray('otherName what', $a2->agentA->fullName, $otherWhat));
   }
 
-  if (!$a1->cttyUp and !$a1->isCanonic) return [FALSE, 'your community down', ray('contact', $a1->cAdminContact())];
-  if (!$a2->cttyUp and !$a2->isCanonic) return [FALSE, 'other community down', []];
-  if ($a1->id == $a2->id) return [FALSE, 'no self-trading', []];
+  if (!$a1->cttyUp and !$a1->isCanonic) return be\txRet(FALSE, 'your community down', ray('contact', $a1->cAdminContact()));
+  if (!$a2->cttyUp and !$a2->isCanonic) return be\txRet(FALSE, 'other community down');
+  if ($a1->id == $a2->id) return be\txRet(FALSE, 'no self-trading');
   
   if ($a1->confirmed) $a2->setBit(B_CONFIRMED);
 
@@ -1393,14 +1382,15 @@ function handleInvestmentRequest($stakeid, &$msg) {
   $stake += $request;
   
   $DBTX = \db_transaction();
-  list ($ok, $index, $subs) = be\transfer('payment', $a, $clubA, $request, t('investment'), FOR_USD, ray('stake', 1));
-  $msg = t($index, $subs);
-  if ($ok) {
+  $z = be\transfer('payment', $a, $clubA, $request, t('investment'), FOR_USD, ray('stake', 1));
+  $msg = $z->msg;
+
+  if ($z->ok) {
     db\update('r_stakes', ray('stakeid stake request', $stakeid, $stake, 0), 'stakeid');
     $msg .= ' ' . t('investment increase', 'amount', u\fmtAmt($request));
   }
   unset($DBTX);
-  return $ok;
+  return $z->ok;
 }
 
 /**

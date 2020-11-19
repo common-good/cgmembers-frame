@@ -96,8 +96,8 @@ function formHandleInvoice_validate($form, &$sta) {
 }
 
 function formHandleInvoice_submit($form, &$sta) {
-  $hidFlds = 'ret nvid payer payee purpose created data';
-  extract(just('hid whyNot always amount payAmount ' . $hidFlds, $sta['input'], NULL)); // hidFlds here is for testing
+  $hidFlds = 'ret nvid payer payee purpose created data amount';
+  extract(just('hid whyNot always amount payAmount ', $sta['input'], NULL));
   extract(just($hidFlds, hidFlds($hid)));
 
   list ($fromA, $toA) = [r\acct($payer), r\acct($payee)];
@@ -110,7 +110,7 @@ function formHandleInvoice_submit($form, &$sta) {
   if ($op == 'pay' and !$whyNot) {
     $short = round($payAmount - $fromA->avail(), 2);
     if ($fromA->ok and $short <= 0) {
-      list($ok, $msg) = be\payInvoice($nvid, $payAmount);
+      extract(just('ok msg', be\payInvoice($nvid, $payAmount)));
     } else {
       db\update('r_invoices', ray('nvid status', $nvid, TX_APPROVED), 'nvid');
       if ($fromA->ok) {

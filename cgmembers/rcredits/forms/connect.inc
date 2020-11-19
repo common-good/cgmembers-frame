@@ -95,7 +95,8 @@ function formConnect_validate($form, &$sta) {
   if (op($sta) == 'remove') {
     if (db\exists('r_usd', ray('deposit payee', 0, $mya->id))) {
       return go('/get', t('You must cancel your pending transfers before you can disconnect.'), 'err');
-    } else { return; }
+    }
+    return;
   }
 
   if (!$mya->hasBank) {

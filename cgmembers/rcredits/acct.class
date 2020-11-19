@@ -467,7 +467,7 @@ class Acct {
 
       if ($special == 'vsecure' and $sFlds) {
         if ($a->activated) foreach ($sFlds as $k => $v) {
-          if (!u\crypted('V', $v)) $sFlds[$k] = u\cry('V', $v); // hyper-encrypt when activated (when auto-access to EIN no longer needed). This and recordChanges are the ONLY places we do u\cry('V', ) !!
+          if ($v !== '' and !u\crypted('V', $v)) $sFlds[$k] = u\cry('V', $v); // hyper-encrypt when activated (when auto-access to EIN no longer needed). This and recordChanges are the ONLY places we do u\cry('V', ) !! ($v !== '' is for deleting a vsecure value, such as bankAccount, without being an admin)
         }
         if (array_key_exists('bankAccount', $sFlds)) $a->setRisk('hasBank', (bool) $sFlds['bankAccount']);
       }
@@ -643,14 +643,19 @@ class Acct {
    */
   public function shortfall($goods, $need = 0, $get = FALSE, $actor = NULL) {
     global $channel;
-    $a = $this;
+    $a = $this; $uid = $a->id;
+
     // don't allow companies to spend rewards unless they have ATM permission and are exchanging r for USD
     if ($a->isCanonic) return 0;
+
     if ($a->co and COMPANY_FREEZE and $a == $actor and $a->coCan(CO_ATM) and $goods == FOR_USD) { $goods = FOR_GOODS; }
     $avail = $a->avail($goods);
     if ($avail >= $need) return 0; // plenty without drawing from other accounts
-    if ($get) { $avail += $a->draw(($a->refill ? $a->minimum : 0) + $need - $a->balance); }
-    else { $avail += $a->canDraw(); }
+
+    $avail += $get
+    ? $a->draw(($a->refill ? $a->minimum : 0) + $need - $a->balance)
+    : $a->canDraw();
+
     return max(0, $need - $avail); 
   }
   
@@ -674,12 +679,12 @@ class Acct {
    * Return the amount this account can draw from other accounts.
    * Repairs the B_DRAWS bit if all such relations have ended.
    */
-  private function canDraw() {
+  public function canDraw() {
     $a = $this;
-    if (!$a->can(B_DRAWS)) return FALSE;
-    list($avail, $count) = $a->drawSourcesSummary();
-    if ($count == 0) $a->setBit(B_DRAWS, FALSE); // doesn't really have any drawable accounts
-    return $avail;
+    if (!$a->draws) return 0;
+    extract(just('avail count', $a->drawSourcesSummary(), 0));
+    if (!$count) $a->setBit(B_DRAWS, FALSE); // doesn't really have any drawable accounts
+    return max($avail ?: 0, 0);
   }
   
   /**
@@ -690,8 +695,8 @@ class Acct {
     $a = $this;
     return db\get("SUM(balance-IF(u.:IS_DEBT, floor, GREATEST(floor, 0))) AS avail, COUNT(*) as count",
                   "users u INNER JOIN r_relations r ON r.main=u.uid",
-                  "r.other IN (:id, :jid) AND r.:IS_DRAW AND u.jid<>:id",
-                  ['id' => $a->id, 'jid' => $a->jid ?: -1]);
+                  "r.other IN (:id, :jid) AND r.:IS_DRAW AND r.main<>:id",
+                  ray('id jid', $a->id, $a->jid ?: -1));
   }
   
   /**
@@ -703,7 +708,7 @@ class Acct {
     $sql = <<< X
       SELECT u.uid, (balance-IF(u.:IS_DEBT, floor, GREATEST(floor, 0))) AS avail
       FROM users u INNER JOIN r_relations r ON r.main=u.uid
-      WHERE r.other IN (:id, :jid) AND r.:IS_DRAW AND u.jid<>:id
+      WHERE r.other IN (:id, :jid) AND r.:IS_DRAW AND r.main<>:id
 X;
     return db\q($sql, ray('id jid', $a->id, $a->jid ?: -1));
   }
@@ -716,18 +721,19 @@ X;
    */
   public function draw($need, $why = '') {
     $a = $this;
-    if (!$a->can(B_DRAWS)) return 0;
+    if (!$a->draws) return 0;
     list ($from, $to, $auto) = array(t(' from '), t(' to '), t('automatic transfer'));
     $left = $need; // how much left to be drawn
     $q = $a->drawSources();
+
     foreach ($q as $row) {
       extract(just('uid avail', $row, 0));
       $amount = round(min($left, $avail), 2);
       if ($amount > 0) {
         list ($fromQid, $toQid) = [r\qid($uid), $a->mainQid];
         $for = [$auto . $from . $fromQid, $auto . $to . $toQid];
-        list($ok, $message, $subs) = be\transfer('draw', $this, r\acct($uid), $amount, $for, FOR_NONGOODS);
-        if ($ok) $left -= $amount;
+        $z = be\transfer('draw', $this, r\acct($uid), $amount, $for, FOR_NONGOODS);
+        if ($z->ok) $left -= $amount;
         if ($left <= 0) break;
       }
     }
@@ -801,7 +807,7 @@ EOF;
   /**
    * Notify the user, according to their preferences
    * @param integer $uid: account record id
-   * @param string $index: message index
+   * @param string $index: email index or message index
    * @param assoc $subs: substitutions/parameters for the message
    * @param string $topic: optional specific topic (otherwise look in $GLOBALS['topics'])
    * @param string $type: type of message, so we know when to send (if empty, email immmediately)
@@ -820,6 +826,7 @@ EOF;
 
     if (nni($GLOBALS['emailSubjects'], $index)) return r\rMail($index, $this, $subs, nni($subs, 'reply') ?: 'ctty');
 
+    // not sending an email right now; queue a notice or send immediately, as appropriate to type
     $message = t($index, $subs);
     $created = now();
     f('t.output', t('Actual Notice to %fullName: %message', 'fullName message', $a->fullName, $message));
@@ -867,8 +874,8 @@ EOF;
       if ($a->ok and $b->ok) { // no need to settle with closed or not-yet-open account
         $diff = $a->balance - $b->balance;
         $xfr = round($diff / 2, 2);
-        list ($ok, $index, $args) = be\transfer('payment', $a, $b, $xfr, t('joint account settlement'), FOR_USD, ['force'=>1]);
-        u\EXPECT($ok, t('Join account settlement failed for %p1 and %p2', 'p1 p2', $a->fullName, $b->fullName));
+        $z = be\transfer('payment', $a, $b, $xfr, t('joint account settlement'), FOR_USD, ['force'=>1]);
+        u\EXPECT($z->ok, t('Join account settlement failed for %p1 and %p2', 'p1 p2', $a->fullName, $b->fullName));
       }
     } elseif ($except) {
       $sql .= ' AND other<>:except';
@@ -1763,7 +1770,7 @@ X;
    * @param string $desc: description of payment
    * @param assoc $data: extra data for transaction or invoice
    * @param int $recursId: record ID of related record in tx_templates (if any)
-   * @return TRUE if the funds were successfully transferred (otherwise the payer is invoiced).
+   * @return a txRet object
    */
   public function payApproved($payee, $amount, $desc, $goods, $data = [], $recursId = 0) {
     $a = $this;
@@ -1772,13 +1779,13 @@ X;
     if ($payee != CGID) u\EXPECT($a->ok, 'inactive payer'); // not-yet-active accounts can be invoiced for gifts to CG
 
     if ($a->ok) {
-      list ($ok, $msg, $args) = be\transfer('payment', $a, $payeeA, $amount, $desc, $goods, $data, $recursId);
-      if ($ok) return TRUE;
-    }
+      $z = be\transfer('payment', $a, $payeeA, $amount, $desc, $goods, $data, $recursId);
+      if ($z->ok) return $z;
+    } else $z = be\txRet(FALSE, 'you wait');
+    
     $data['status'] = TX_APPROVED;
-    list ($ok, $msg, $args) = be\invoice($payeeA, $this, $amount, $desc, $goods, $data, $recursId);
-    u\EXPECT($ok, t('approved invoice from account %payee failed in payApproved: ', compact('payee')) . t($msg, $args));
-    return FALSE;
+    $z2 = be\invoice($payeeA, $this, $amount, $desc, $goods, $data, $recursId);
+    return $z2->ok ? be\txRet(TRUE, "$z->msg|when resolved") : $z; // use error message from payer's point of view
   }
 
   /**

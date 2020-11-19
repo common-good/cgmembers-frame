@@ -48,8 +48,8 @@ function formInvestCashout_submit($form, &$sta) {
       $stake = round($stake - $amount, 2);
       u\EXPECT($stake >= 0, 'negative stake');
 			$DBTX = db_transaction();
-			list ($ok, $index, $subs) = be\transfer('payment', $icA, $a, $amount, t('redeem investment'), FOR_USD, ray('stake', 1));
-      if ($ok) {
+			$z = be\transfer('payment', $icA, $a, $amount, t('redeem investment'), FOR_USD, ray('stake', 1));
+      if ($z->ok) {
         $request = round($request + $amount, 2);
 			  db\update('r_stakes', compact(ray('stakeid stake request')), 'stakeid');
 			  $count++;
