@@ -220,6 +220,7 @@ const SEND_NOW = 'i';
 const SEND_IN = 'in';
 const SEND_OUT = 'out';
 const SEND_MISC = 'misc';
+const DFT_RADIUS = 40; // what to suggest as an offer or need radius (in miles)
 
 const VIDEO_URL = 'https://cg4.us/video'; // Nuts & Bolts video
 const TRANSLATE_URL = 'https://translation.googleapis.com/language/translate/v2'; // google translate API URL

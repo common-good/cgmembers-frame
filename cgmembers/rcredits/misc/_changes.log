@@ -1,3 +1,10 @@
+2020-11-23 feature/ctty-loc
+. in posts.inc, default to showing current community posts
+. in posts.inc, get GPS data when user clicks Where
+. pages no longer cached on dev machines
+. fixed snap tx reporting bug
+. fixed warning in qo.class driven by hack attempts
+
 2020-11-19 feature/txret
 . refactored transaction functions to return a txRet object
 . fixed bug in error reporting on dev machines (now shows full trace reliably)

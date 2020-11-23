@@ -71,7 +71,7 @@ function formPosts($form, &$sta, $args = '') {
   extract(just(TOP_FLDS . ' postid thing email', $args, NULL));
 
   foreach (ray(TOP_FLDS . ' email') as $k) {
-    if (nn($$k)) r\setCook($k, $$k); else $$k = nni($_COOKIE, $k); // default from previous time (useful also in getWho)
+    if (nn($$k)) r\setCook($k, $$k); else $$k = r\cook($k); // default from previous time (useful also in getWho)
     ${$k . '0'} = $$k; // remember initial values
   }
 
@@ -83,7 +83,7 @@ function formPosts($form, &$sta, $args = '') {
 
   $op = 'top';
   extract(just(TOP_FLDS, $code)); // overwrites same fields from $args
-  jsx('posts', 'listView memoView myPosts', t('List View'), t('Memo View'), MY_POSTS);
+  jsx('posts', 'listView memoView myPosts noLocYet', t('List View'), t('Memo View'), MY_POSTS, !isset($latitude));
 
   $title = t('Offers, Needs, & Tips');
   $subtext = t('<p>In our %PROJECT Economy we want to make sure everyone has what they need, with no one left behind. Contact us to comment or collaborate or for administrative access.</p>');
@@ -125,7 +125,7 @@ X
 
   // location fields
   $locus = rendA('locus', textFld(REQ . BARE, [t('Full Address (include zip)')], dft($locus ?: myLocus()) + suffix('+ ')));
-  $radius = rendA('radius', textFld(REQ . BARE, [t('Radius')], dft($radius ?: 10) + suffix(t('miles'))));
+  $radius = rendA('radius', textFld(REQ . BARE, [t('Radius')], dft($radius ?: DFT_RADIUS) + suffix(t('miles'))));
   $point = btn("$base_url/community/posts", t('Go'), '', '', 'edit-point');
   $locset = "<div id=\"locset\">$locus$radius$point</div>$clear";
 
@@ -410,7 +410,7 @@ function formPosts_validate($form, &$sta) {
 
   if ($frmTop) {
     extract($topInfo = just(TOP_FLDS, $input, NULL));
-    if ($err = u\badAmount($radius, '>=0', 6)) {$radius = 10; say($err);}
+    if ($err = u\badAmount($radius, '>=0', 6)) {$radius = DFT_RADIUS; say($err);}
     if ($locus and $locus == myLocus()) {
       foreach (ray('latitude longitude zip') as $k) $$k = $mya->$k;
     } else {
@@ -627,7 +627,7 @@ function admin($zip) {
   if (!$mya or !$mya->oAdmin) return FALSE;
   if ($mya->admin) return TRUE;
   if (isset($adminZips) and in_array($zip, $adminZips)) return TRUE;
-  if (r\communityUid($zip) == $mya->agentA->community) { $adminZips[] = $zip; return TRUE; }
+  if (r\communityId($zip) == $mya->agentA->community) { $adminZips[] = $zip; return TRUE; }
   return FALSE;
 }
 
@@ -643,7 +643,13 @@ function admin($zip) {
  * @return the query result set
  */
 function getPosts($type, $lat, $lon, $zip, $radius, $myPid, $admin, $zipIrrelevant, $since = 0, $all = TRUE) {
-  
+
+  if (($radius ?: DFT_RADIUS) >= DFT_RADIUS  // looking broadly
+      and $zips = r\communityId($zip, TRUE, 'zip')) { // from within an established CG community
+    $cttyCrit = ":zip RLIKE '$zips'";
+    if (!$radius) $radius = DFT_RADIUS; // default to JUST ctty and DFT_RADIUS instead of all posts
+  } else $cttyCrit = 0;
+    
   $visible = $zipIrrelevant ? 1 
   : ($admin ? '(SELECT community FROM users WHERE :zip RLIKE zip AND uid<1 LIMIT 1)' : 0);
   $visible = "($visible OR (NOT s.private AND s.confirmed))";
@@ -670,7 +676,7 @@ function getPosts($type, $lat, $lon, $zip, $radius, $myPid, $admin, $zipIrreleva
         IF($noGeo, 
           MID(p.zip,1,3) = MID(:zip,1,3) OR $zipIrrelevant, 
           $distance < LEAST(IF($postRadius=0, 99999, s.radius), :radius)
-        )
+        ) OR $cttyCrit
       )
       AND $visible
     ORDER BY s.cat,s.created DESC

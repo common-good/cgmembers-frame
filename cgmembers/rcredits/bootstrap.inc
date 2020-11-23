@@ -893,10 +893,11 @@ function drupal_send_headers($default_headers = [], $only_default = FALSE) {
  * @see drupal_page_set_cache()
  */
 function drupal_page_header() {
-  header('Cache-Control: no-cache, no-store, must-revalidate'); // for HTTP 1.1
-  header('Pragma: no-cache'); // for HTTP 1.0
-  header('Expires: 0'); // for Proxies
-  
+  if (!isDEV) { // leave caching enabled for faster development and testing
+    header('Cache-Control: no-cache, no-store, must-revalidate'); // for HTTP 1.1
+    header('Pragma: no-cache'); // for HTTP 1.0
+    header('Expires: 0'); // for Proxies
+  }
   header('Last-Modified: ' . gmdate(DATE_RFC7231, REQUEST_TIME));
   header('ETag: "' . REQUEST_TIME . '"');
 }

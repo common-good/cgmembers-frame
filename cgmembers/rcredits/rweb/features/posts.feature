@@ -35,7 +35,7 @@ Setup:
 Scenario: Someone visits the posts page
   When someone visits "community/posts"
   Then we show "Offers, Needs, & Tips" with:
-  | 10 | Go |
+  | %DFT_RADIUS | Go |
   And without:
   | Greenfield, MA |
 

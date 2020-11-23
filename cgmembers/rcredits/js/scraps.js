@@ -425,7 +425,11 @@ function doit(what, vs) {
       $('#edit-submitter').click();
       return false; // cancel original link click
     });
-    $('#edit-where').click(function () {$('#locset').toggle(); $('#edit-locus').focus();});
+    $('#edit-where').click(function () {
+      if (vs['noLocYet'] && navigator.geolocation) navigator.geolocation.watchPosition(function (z) {
+        location.href = baseUrl + '/community/posts/latitute=' + z.coords.latitude + '&longitude=' + z.coords.longitude;
+      }); else $('#locset').toggle(); $('#edit-locus').focus();
+    });
 
     var frm = $('#edit-search').parents('form:first');
     

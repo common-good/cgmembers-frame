@@ -413,9 +413,10 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
 
   if ($force != 0) $offline = TRUE; // temporary until app handles this right
 
-  if ($actorA->snap or $otherA->snap) r\tellAdmin(t('SNAP member %who %did something', 'who did', $mya->fullName, $ok ? t('bought') : t('tried to buy')), ['topic' => t('SNAP purchase') . ($ok ? '' : t(' failed'))]);
-  
   $erInfo = compact(ray('goods amount purpose force')) + ray('actor other op snap', $actorA->fullName, $otherA->fullName, $taking ? t('charged') : t('paid'), $actorA->snap or $otherA->snap);
+
+  foreach ([$actorA, $otherA] as $a) if ($a->snap) r\tellAdmin(t('SNAP member tx: %who', 'who', $a->fullName), $erInfo);
+
   $amount = round($amount, 2); // ignore fractions of cents
   if ($amount == 0) {
     r\tellAdmin('zero transaction', $erInfo + ['stack' => trace()]);
@@ -426,7 +427,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   list ($loserA, $gainerA) = u\order($reallyTaking, $otherA, $actorA);
   list ($e1A, $e2A) = u\order($taking, $otherA, $actorA);
   
-  $ptrs = ray('actor other loser gainer e1 e2');
+  $ptrs = ray('actor other loser gainer e1 e2'); // set up sets of variable names
   foreach ($ptrs as $k) {
     ${$k . 'Id'} = ${$k . 'A'}->id;
     ${$k . 'Name'} = ${$k . 'A'}->fullName;
