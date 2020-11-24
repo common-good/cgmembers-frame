@@ -1,3 +1,6 @@
+2020-11-24 feature/ctty-loc3
+. ask for geolocation permission only on mobile
+
 2020-11-23 feature/ctty-loc
 . in posts.inc, default to showing current community posts
 . in posts.inc, get GPS data when user clicks Where
