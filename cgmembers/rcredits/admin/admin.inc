@@ -241,7 +241,7 @@ function changeUid($oldUid, $newUid = 0, $unusable = FALSE, $delete = FALSE) {
   }
 
   if (!$delete and !$newUid) {
-    $region = $a->zip ? r\region($a->country, $a->state, $a->zip) : r\communityUid();
+    $region = $a->zip ? r\region($a->country, $a->state, $a->zip) : r\communityId();
     $newUid = r\Acct::nextId($region);
   }
 

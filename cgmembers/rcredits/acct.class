@@ -54,7 +54,7 @@ class Acct {
       [NULL, 0, 0, NULL, now(), NULL, NULL, NULL]));
     u\setDft($legalName, $fullName);
     u\setDft($email, mb_strtolower(u\randomString(10, 'word')) . '@' . EMAILX);
-    u\setDft($community, r\communityUid($zip));
+    u\setDft($community, r\communityId($zip));
     u\setDft($login, $created);
     u\setDft($access, $login);
     u\setDft($name, r\uniqueName($fullName, $info));

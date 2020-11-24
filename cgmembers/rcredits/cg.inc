@@ -619,11 +619,12 @@ function isEmployee($uid, $company = '') {
  * Return the community record ID for the given postal code.
  * @param string $zip: postal code to identify community (if none, assume something in server community)
  * @param bool $defaultZero: return 0 if zip does not match any community? (else return server uid)
+ * @param string $field: field to return (normally uid)
  */
-function communityUid($zip = '', $defaultZero = FALSE) {
+function communityId($zip = '', $defaultZero = FALSE, $field = 'uid') {
   if (!$zip) return serverUid();
-  $where = "country=:R_COUNTRY_ID AND :zip RLIKE zip AND uid<1";
-  return db\get('uid', 'users', $where, compact('zip')) ?: ($defaultZero ? 0 : serverUid());
+  $where = 'country=:R_COUNTRY_ID AND :zip RLIKE zip AND uid<1';
+  return db\get($field, 'users', $where, compact('zip')) ?: ($defaultZero ? 0 : serverUid());
 }
 
 /**

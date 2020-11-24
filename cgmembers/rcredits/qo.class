@@ -120,10 +120,12 @@ class Qo {
   public static function qr2($qr, &$code = '') {
     $qr = str_replace('/', '.', $qr); // standardize marks
     if (substr_count($qr, '.') != 3) return FALSE;
+    $fmts = ray(QR_FMTS);
     list ($region, $dom, $ext, $tail) = explode('.', $qr);
     $fmt = substr($tail, 0, 1);
     $c = u\a2n($fmt, 36);
-    list ($regionLen, $acctLen) = explode('/', nni(ray(QR_FMTS), $c / 4));
+    if ($c >= 4 * count($fmts)) return FALSE;
+    list ($regionLen, $acctLen) = explode('/', nni($fmts, $c / 4));
     $agentLen = $c % 4;
     $codeLen = strlen($tail) ;
     $region = u\n2a(u\a2n($region, 36), -3);
