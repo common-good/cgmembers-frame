@@ -83,7 +83,8 @@ function formPosts($form, &$sta, $args = '') {
 
   $op = 'top';
   extract(just(TOP_FLDS, $code)); // overwrites same fields from $args
-  jsx('posts', 'listView memoView myPosts noLocYet', t('List View'), t('Memo View'), MY_POSTS, !isset($latitude));
+
+  jsx('posts', 'listView memoView myPosts noLocYet isMobile', t('List View'), t('Memo View'), MY_POSTS, !isset($latitude), u\isMobile());
 
   $title = t('Offers, Needs, & Tips');
   $subtext = t('<p>In our %PROJECT Economy we want to make sure everyone has what they need, with no one left behind. Contact us to comment or collaborate or for administrative access.</p>');

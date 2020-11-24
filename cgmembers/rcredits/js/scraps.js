@@ -418,6 +418,8 @@ function doit(what, vs) {
     break;
     
   case 'posts':
+    function askAddr() {$('#locset').toggle(); $('#edit-locus').focus();}
+    
     $('#menu-signin').hide(); // don't confuse (signin is not required for this feature)
 
     $('#edit-point').click(function () { // click the Go button
@@ -426,14 +428,10 @@ function doit(what, vs) {
     });
 
     $('#edit-where').click(function () {
-      if (vs['noLocYet'] && navigator.geolocation) navigator.geolocation.watchPosition(
-        function (z) {
-          location.href = baseUrl + '/community/posts/latitute=' + z.coords.latitude + '&longitude=' + z.coords.longitude;
-        }, 
-        function (error) {
-          $('#locset').toggle(); $('#edit-locus').focus();
-        }
-      ); else {$('#locset').toggle(); $('#edit-locus').focus();}
+      if (vs['noLocYet'] == 1 && vs['isMobile'] == 1 && navigator.geolocation) navigator.geolocation.watchPosition(
+        function (z) {location.href = `${baseUrl}/community/posts/latitute=${z.coords.latitude}&longitude=${z.coords.longitude}`;}, 
+        function (error) {askAddr();}
+      ); else askAddr();
     });
 
     $('#list .tbody .row').click(function () {location.href = $(this).find('a').attr('href');}); // click any part of box
@@ -548,7 +546,7 @@ function doit(what, vs) {
     $('#edit-org').keyup(function () {
       if ($(this).val().length > 0) $('.form-item-position, .form-item-website').show();
     });
-    if (vs['edit']) {showInviteFlds(); $('#edit-org').keyup();}
+    if (vs['edit'] == 1) {showInviteFlds(); $('#edit-org').keyup();}
     break;
 
   case 'shouters':
