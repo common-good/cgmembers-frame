@@ -75,6 +75,7 @@ function formInvoiceUpload_submit($form, &$sta, $args = NULL) {
       ? be\invoice($mya, $a2, $amt, $desc, FOR_GOODS)
       : be\transfer('payment', $mya, $a2, $amt, $desc, FOR_GOODS);
     if (!$z->ok) $err = TRUE;
+    $msg = $z->msg;
     if ($inv) {
       $msg = str_replace(tr('balance unchanged'), '', $msg); // otherwise this gets tiresome, repeated over and over
       if (!$err and !$a2->ok) $msg .= '|' . t('<b class="loud">NOTE: </b>%otherName will need to finish opening a %PROJECT account.');
