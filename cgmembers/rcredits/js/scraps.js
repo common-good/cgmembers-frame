@@ -420,23 +420,26 @@ function doit(what, vs) {
   case 'posts':
     $('#menu-signin').hide(); // don't confuse (signin is not required for this feature)
 
-//    frm.submit(function (event) {event.preventDefault();}); // or return false;
     $('#edit-point').click(function () { // click the Go button
       $('#edit-submitter').click();
       return false; // cancel original link click
     });
+
     $('#edit-where').click(function () {
-      if (vs['noLocYet'] && navigator.geolocation) navigator.geolocation.watchPosition(function (z) {
-        location.href = baseUrl + '/community/posts/latitute=' + z.coords.latitude + '&longitude=' + z.coords.longitude;
-      }); else $('#locset').toggle(); $('#edit-locus').focus();
+      if (vs['noLocYet'] && navigator.geolocation) navigator.geolocation.watchPosition(
+        function (z) {
+          location.href = baseUrl + '/community/posts/latitute=' + z.coords.latitude + '&longitude=' + z.coords.longitude;
+        }, 
+        function (error) {
+          $('#locset').toggle(); $('#edit-locus').focus();
+        }
+      ); else {$('#locset').toggle(); $('#edit-locus').focus();}
     });
 
-    var frm = $('#edit-search').parents('form:first');
-    
     $('#list .tbody .row').click(function () {location.href = $(this).find('a').attr('href');}); // click any part of box
        
     $('#edit-nogo').click(function () {$('#edit-search').val('').change();});
-//    $('#edit-go').click(function () {$('#edit-search').change();}); // this seems to be required on some computers
+
     $('#edit-search').keydown(function () { // user pressed Enter in search box
       if (event.which == 13) {
         $(this).blur();
