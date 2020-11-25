@@ -186,8 +186,8 @@ function everyDay() {
   \setV('companies', nn($companies) ?: []);
   
   $sql = <<< X
-  SELECT DISTINCT u.uid, c.uid AS ctty, u.fullName AS person, c.fullName AS cttyName 
-  FROM users u LEFT JOIN users c ON u.zip RLIKE c.zip
+  SELECT DISTINCT u.uid, c.uid AS ctty, u.fullName AS person, cu.fullName AS cttyName 
+  FROM users u LEFT JOIN r_company c ON u.zip RLIKE c.zips LEFT JOIN users cu ON cu.uid=c.uid
   WHERE u.community=:seedpack AND c.uid<1 AND c.uid<>:seedpack AND !u.activated
 X;
   $q = db\q($sql, ['seedpack' => r\serverUid()]);

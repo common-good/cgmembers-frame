@@ -20,19 +20,19 @@ use CG\Web as w;
  * To prepare for export for developers, f('t.clear');
  */
 function setupBasicAccounts() {
-  $keys = ray('uid community name fullName email zip country minimum flags');
+  $keys = ray('uid community name fullName email country minimum flags');
   $flags = u\bit(B_CO) | u\bit(B_OK);
   
   if (isDEV and !isPRODUCTION) db\q('TRUNCATE users'); // !isPRODUCTION is a safety measure
   if (!db\exists('users', 'uid=0')) db\insert('users', ['uid' => 0], 'uid'); // required for signed-out messages (w\say())
   
-  $q = db\q('SELECT region,fullName,st,zip,postalAddr,federalId,hasServer FROM r_regions');
+  $q = db\q('SELECT region,fullName,st,zips,postalAddr,federalId,hasServer FROM r_regions');
   while ($row = $q->fetchAssoc()) { // create or update all regions
     extract($row);
     if (!$hasServer) continue;
     //    if (isDEV and !in_array($region, [R_SERVER_ID])) continue; // don't slow the tests down
     if ($uid = db\get('uid', 'users', "name=CONCAT(:region, '.')", compact('region'))) {
-      r\acct($uid)->update(compact(ray('zip federalId flags')));
+      r\acct($uid)->update(compact(ray('zips federalId flags')));
     } else {
       $fullName = $fullName ?: db\get('name', 'r_states', 'abbreviation=:st', compact('st'));
       $email = u\shortName($fullName) . '@' . CG_DOMAIN;
@@ -40,43 +40,43 @@ function setupBasicAccounts() {
       $uid = r\serverUid($region);
       $activated = R_LAUNCH;
       $state = r\stateNum($st);
-      $values = array($uid, $uid, $region . '.', $fullName, $email, $zip, R_COUNTRY_ID, 0, $flags);
+      $values = array($uid, $uid, $region . '.', $fullName, $email, R_COUNTRY_ID, 0, $flags);
       $info = array_combine($keys, $values);
       $info += compact(ray('postalAddr state federalId activated'));
       $serverA = new r\Acct($info);
+      $serverA->update(compact('zips'));
     }
   }
   //$region = db\get("CONCAT(iso_code, 'A')", 'r_countries', 'id=:country', compact('country'));
   if (!isDEV) return; // don't mess with existing members on stage or production server
   
-  $values = array(1, 0, 'admin', t('System Administrator'), r\regionField('email'), '', 0, 0, u\bit([B_ADMIN, B_CO]));
+  $values = array(1, 0, 'admin', t('System Administrator'), r\regionField('email'), 0, 0, u\bit([B_ADMIN, B_CO]));
   $info = array_combine($keys, $values);
   $a1 = new r\Acct($info); // set up system admin record (uid=1)
   if (isDEV) $a1->update('pw2 vKeyPw', r\passHash(DEV_PW2), u\b64decode(DEV_VKEYPW));
 
   foreach (ray(t('2:PlaceHolder One,3:PlaceHolder Two')) as $k => $v) {
     $name = str_replace(' ', '', mb_strtolower($v));
-    $values = array($k, 0, $name, $v, 'z@o.t', '', 0, 0, 0);
+    $values = array($k, 0, $name, $v, 'z@o.t', 0, 0, 0);
     $info = array_combine($keys, $values);
     new r\Acct($info);
   }  
 
   $flagsCo = u\bit([B_MEMBER, B_CONFIRMED, B_OK, B_CO]); // flags for an active company account
   
-  $x1=new r\Acct(array_combine($keys, array(CG_ROUNDUPS_UID, 0, t('roundup'), t('%PROJECT Region'), 'cg@commongood.earth', '', 0, 0, $flagsCo)));
-  new r\Acct(array_combine($keys, array(CG_CRUMBS_UID, 0, t('crumbs'), t('%PROJECT Region'), 'cg@commongood.earth', '', 0, 0, $flagsCo))); 
-  new r\Acct(array_combine($keys, array(CG_SERVICE_CHARGES_UID, 0, t('bank fees'), t('Bank service charges'), 'cg@commongood.earth', '', 0, 0, $flagsCo))); 
-  new r\Acct(array_combine($keys, array(BANK_IN_ID, 0, t('bank-in'), t('--'), 'cg@commongood.earth', '', 0, 0, $flagsCo))); 
-  new r\Acct(array_combine($keys, array(BANK_OUT_ID, 0, t('bank-out'), t('--'), 'cg@commongood.earth', '', 0, 0, $flagsCo)));
+  $x1=new r\Acct(array_combine($keys, array(CG_ROUNDUPS_UID, 0, t('roundup'), t('%PROJECT Region'), 'cg@commongood.earth', 0, 0, $flagsCo)));
+  new r\Acct(array_combine($keys, array(CG_CRUMBS_UID, 0, t('crumbs'), t('%PROJECT Region'), 'cg@commongood.earth', 0, 0, $flagsCo))); 
+  new r\Acct(array_combine($keys, array(CG_SERVICE_CHARGES_UID, 0, t('bank fees'), t('Bank service charges'), 'cg@commongood.earth', 0, 0, $flagsCo))); 
+  new r\Acct(array_combine($keys, array(BANK_IN_ID, 0, t('bank-in'), t('--'), 'cg@commongood.earth', 0, 0, $flagsCo))); 
+  new r\Acct(array_combine($keys, array(BANK_OUT_ID, 0, t('bank-out'), t('--'), 'cg@commongood.earth', 0, 0, $flagsCo)));
   
   $serverA->update('created', R_LAUNCH); // a date in the past makes tests work better
   if ($cgId = getV('cgf_uid') and db\exists('users', 'uid=' . $cgId)) return; // already done (don't use CGID here)
 
-  $values = array(r\qo('NEWAAB')->id, $serverA->id, u\shortName(PROJECT), PROJECT, CGF_EMAIL, '01330', US_COUNTRY_ID, 0, $flagsCo);
+  $values = array(r\qo('NEWAAB')->id, $serverA->id, u\shortName(PROJECT), PROJECT, CGF_EMAIL, US_COUNTRY_ID, 0, $flagsCo);
   $info = array_combine($keys, $values);
-  list ($phone, $address, $city, $state, $postalAddr) = array(u\fmtPhone(CGF_PHONE, '+n'), CGF_ADDRESS, CGF_CITY, R_STATE_ID, CGF_POSTALADDR);
-  $helper = 1; //$wws->id;
-  $info += compact(ray('email phone address city state postalAddr helper'));
+  $info += ray('phone address city state postalAddr zip helper',
+    u\fmtPhone(CGF_PHONE, '+n'), CGF_ADDRESS, CGF_CITY, R_STATE_ID, CGF_ZIP, CGF_POSTALADDR, 1);
   $cgf = new r\Acct($info);
   setV('cgf_uid', $cgf->id);
   $cgf->update('emailCode website activated created', '1495kJHm0h145PHh2345h', 'cg4.us', R_LAUNCH, R_LAUNCH);

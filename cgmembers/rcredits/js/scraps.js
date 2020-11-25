@@ -324,8 +324,8 @@ function doit(what, vs) {
 
   case 'invest-proposal':
     $('#add-co').click(function () {
-      $('.form-item-fullName, .form-item-city, .form-item-serviceArea, .form-item-dob, .form-item-gross, .form-item-bizCats').show();
-      require('#edit-fullname, #edit-city, #edit-servicearea, #edit-dob, #edit-gross, #edit-bizcats', true, true);
+      $('.form-item-fullName, .form-item-city, .form-item-zips, .form-item-dob, .form-item-gross, .form-item-bizCats').show();
+      require('#edit-fullname, #edit-city, #edit-zips, #edit-dob, #edit-gross, #edit-bizcats', true, true);
       $('.form-item-company').hide();
       require('#edit-company', false, true);
       $('#edit-fullname').focus();

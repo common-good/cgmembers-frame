@@ -1,3 +1,8 @@
+2020-11-24 feature/cttys
+. moved and enlarged community zip regex to r_company table by renaming serviceArea to zips
+. similarly enlarged and renamed zip field in r_regions
+. moved formMakeCtty to its own file in forms/
+
 2020-11-24 feature/ctty-loc3
 . ask for geolocation permission only on mobile
 
