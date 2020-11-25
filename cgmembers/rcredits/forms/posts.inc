@@ -646,13 +646,13 @@ function admin($zip) {
 function getPosts($type, $lat, $lon, $zip, $radius, $myPid, $admin, $zipIrrelevant, $since = 0, $all = TRUE) {
 
   if (($radius ?: DFT_RADIUS) >= DFT_RADIUS  // looking broadly
-      and $zips = r\communityId($zip, TRUE, 'zip')) { // from within an established CG community
+      and $zips = r\communityId($zip, TRUE, 'zips')) { // from within an established CG community
     $cttyCrit = ":zip RLIKE '$zips'";
     if (!$radius) $radius = DFT_RADIUS; // default to JUST ctty and DFT_RADIUS instead of all posts
   } else $cttyCrit = 0;
     
   $visible = $zipIrrelevant ? 1 
-  : ($admin ? '(SELECT community FROM users WHERE :zip RLIKE zip AND uid<1 LIMIT 1)' : 0);
+  : ($admin ? '(SELECT 1 FROM r_company WHERE :zip RLIKE zips AND uid<1 LIMIT 1)' : 0);
   $visible = "($visible OR (NOT s.private AND s.confirmed))";
   if (!$all) $visible .= ' AND pid<>:myPid';
   list ($distance, $noGeo) = [DISTANCE_BETWEEN, NO_DISTANCE];

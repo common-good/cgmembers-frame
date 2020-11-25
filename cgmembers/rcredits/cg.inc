@@ -589,8 +589,8 @@ function uidRegion($uid) {
  */
 function region($country = '', $state = '', $zip = '', &$raw = '') {
   if (!$state) $state =  R_STATE_ID;
-  $where = "IF(zip='', country_id=:country AND s.id=:state, :zip RLIKE zip) ORDER BY (zip='') LIMIT 1";
   $table = 'r_regions r LEFT JOIN r_states s ON s.abbreviation=r.st';
+  $where = "IF(zips IS NULL, country_id=:country AND s.id=:state, :zip RLIKE zips) ORDER BY (zips IS NULL) LIMIT 1";
   if (!$region = db\get('region', $table, $where, compact(ray('state zip country')))) {
     $region = db\get("CONCAT(iso_code, 'A')", 'r_countries', 'id=:country', compact('country'));
   }
@@ -619,12 +619,12 @@ function isEmployee($uid, $company = '') {
  * Return the community record ID for the given postal code.
  * @param string $zip: postal code to identify community (if none, assume something in server community)
  * @param bool $defaultZero: return 0 if zip does not match any community? (else return server uid)
- * @param string $field: field to return (normally uid)
+ * @param string $field: field to return from users or r_company (normally uid)
  */
 function communityId($zip = '', $defaultZero = FALSE, $field = 'uid') {
   if (!$zip) return serverUid();
-  $where = 'country=:R_COUNTRY_ID AND :zip RLIKE zip AND uid<1';
-  return db\get($field, 'users', $where, compact('zip')) ?: ($defaultZero ? 0 : serverUid());
+  $where = 'country=:R_COUNTRY_ID AND :zip RLIKE zips AND uid<1';
+  return db\get($field, 'r_company JOIN users USING(uid)', $where, compact('zip')) ?: ($defaultZero ? 0 : serverUid());
 }
 
 /**

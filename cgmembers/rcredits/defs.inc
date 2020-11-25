@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.56b'; // software version
+const R_VERSION = '3.56c'; // software version
 define('R_ROOT', __DIR__);
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -119,6 +119,7 @@ const CGF_LEGALNAME = 'Society to Benefit Everyone, Inc.';
 const CGF_PHONE = '+1 413 628 1723';
 const CGF_ADDRESS = '48 Buckland Road';
 const CGF_CITY = 'Ashfield';
+const CGF_ZIP = '01330';
 const CGF_POSTALADDR = 'PO Box 21, Ashfield, MA 01330-0021';
 const CGF_EIN = '205280780';
 const SLOGANS = 'for truth and justice,for community power,for community democracy,for community investment,for a sustainable future,to empower communities,for community abundance,for a better future,for economic democracy,for democratic economics';
@@ -151,7 +152,7 @@ const SUBMENUS = 'community invest history co settings sadmin';
 /// const GAME_COMPANIES = '.,.,.,.,Gift Shop,Religious Institution,For Rent,Empty,Vacant Lot,Land,Cinema,Printing & Office Supply,Car Repair,Health Club/Gym,Restaurant,Hardware & Supply,Grocer,Farm,Food Processing,Department Store,Electric Company,Oil Company,Town Government,Community College,Hospital';
 const ITEM_FLDS = 'special title subtext midtext midtext1 midtext2 midtext3 posttext buttons list back'; // names of common fields that are wrapped automatically in w\item()
 const R_DATE_FLDS = 'start end start created completed deposit sent invited giftDate signed login access joined yesterday dob when sold deleted now'; // date field names for testing and administrative display
-const CO_FLDS = 'coType website description shortDesc selling coFlags gross serviceArea employees payrollStart payrollEnd staleNudge contact'; // account fields stored in r_company
+const CO_FLDS = 'coType website description shortDesc selling coFlags gross zips employees payrollStart payrollEnd staleNudge contact'; // account fields stored in r_company
 const DATA_FLDS = 'legalName shortName newAccount by calling wants giftPot giftCoupons notifyNowBy signupCo stepsDone stepsLeft task achMin pinThreshold lastiCode tenure moves mediaConx getAppData appData snap fundBy isSavings idVerifiedBy partnerInfo otherAssets otherLiabilities fyEnd'; // fields stored in the account's "data" array field (serialized) -- UNUSED: stepsDone
 const MASTER_NUMERIC_FLDS = 'minimum achMin savingsAdd saveWeekly';
 const MASTER_FLDS = MASTER_NUMERIC_FLDS . ' hasBank bankAccount last4bank refill draws'; // only in master, for joint accounts
