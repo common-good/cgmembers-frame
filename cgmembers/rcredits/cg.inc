@@ -558,15 +558,16 @@ function cryptCook($k) {return ($v = cook($k)) ? u\dery('C', $v) : '';}
 
 /**
  * Return the unformatted private key for highly sensitive data (use u\fmtKey() to get the formatted key).
+ * If superAdmin is not signed in, return FALSE.
  */
 function vKey() {
 	global $mya, $channel;
   u\EXPECT($channel == TX_WEB, 'wrong channel for vKey: ' . $channel);
   $ermsg = t(' Post vKeyE (and pw2) to signin form to set vKeyE cookie before signing in as admin (or running admin tests). Or create a new vKeyE with a(1)->makeVKeyE().');
   
-  if (test() and $mya->id != 1) return '';
-  if (!$pw = $mya->agentA->vKeyPw) u\FAIL(t('missing vKeyPw!') . $ermsg);
-  if (!$vKeyE = r\cryptCook('vKeyE')) u\FAIL(t('missing vKeyE!') . $ermsg);
+  if (test() and $mya->id != 1) return FALSE;
+  if (!$pw = $mya->agentA->vKeyPw) return r\tellAdmin(t('missing vKeyPw!') . $ermsg . trace());
+  if (!$vKeyE = r\cryptCook('vKeyE')) return r\tellAdmin(t('missing vKeyE!') . $ermsg . trace());
 
 	return u\decry('R', $vKeyE, $pw);
 }

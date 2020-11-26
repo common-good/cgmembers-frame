@@ -73,7 +73,7 @@ function formMakeCtty_submit($form, &$sta) {
   if (!$a = new r\Acct($info)) return say('cannot create account', 'zot');
   $a->update('community', $a->id);
 
-  db\insert('u_communities', ray('uid zips', $a->id, $zips), 'uid');
+  db\update('r_company', ray('uid zips', $a->id, $zips), 'uid');
   unset($DBTX); // commit
   say('info saved');
 }

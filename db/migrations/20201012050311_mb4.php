@@ -11,7 +11,9 @@ const SKIP_TNMS = 'menu_links'; // this one makes MySQL server "go away"
 class Mb4 extends AbstractMigration {
   public function change() {
     $dbName = $this->getAdapter()->getOption('name');
-      $this->execute("ALTER DATABASE $dbName CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;");
+    echo "\n\ndb: $dbName\n\n";
+    if ($dbName == 'demo') $dbName = 'new_demo';
+    $this->execute("ALTER DATABASE $dbName CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;");
 
     foreach (ray(TNMS) as $tnm) {
       if (in_array($tnm, ray(SKIP_TNMS))) continue;

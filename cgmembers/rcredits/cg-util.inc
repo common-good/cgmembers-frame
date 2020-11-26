@@ -1248,18 +1248,25 @@ function showCaller($skip = 0) {
 }
 
 /**
- * Show what bits are set in the given integer.
- * @param int $n: the integer bit array
+ * Show what bits are set in the given integer or what integer a string of bit names represents.
+ * @param mixed $n: the integer bit array OR space-delimited string of bit names
  * @param string $descs: string array of bit names ('': use bit numbers, default: flag bit names)
  * @return: a list of the bits set n the integer
  */ 
 function bits($n, $descs = B_LIST) {
-  $res = '';
   if ($descs) {
     $descs = ray($descs);
     if (!is_numeric(@key($descs))) $descs = array_keys($descs); // ignore extra info after colon in bit name
   }
-  for($i = 0; $i < 32; $i++) if ($n & (1 << $i)) $res .= ' ' . ($descs ? $descs[$i] : $i);
+
+  if (is_numeric($n)) { // integer bit array
+    $res = '';
+    for($i = 0; $i < 32; $i++) if ($n & (1 << $i)) $res .= ' ' . ($descs ? $descs[$i] : $i);
+  } else { // string of bit names
+    $res = 0;
+    $descs = array_flip($descs);
+    foreach (ray($n) as $b) $res |= u\bit(nni($descs, $b) ?: u\consta('b', $b));
+  }
   return $res;
 }
 

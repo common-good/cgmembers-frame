@@ -1,3 +1,11 @@
+2020-11-26 feature/demo
+. rewrote makeTestAccounts to create test accounts from scratch instead of counting on copies of production accounts
+. adjusted MB migration to handle new_demo database
+. vKey() now returns '' (non-fatal error) when superAdmin is not the user
+. u\bits() now also performs its reverse function
+. fixed typo in formMakeCtty()
+. we no longer try to show altId to admin (only superAdmin)
+
 2020-11-24 feature/cttys
 . moved and enlarged community zip regex to r_company table by renaming serviceArea to zips
 . similarly enlarged and renamed zip field in r_regions

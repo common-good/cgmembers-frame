@@ -13,6 +13,7 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Admin as a;
 use CG\Web as w;
+use CG\Testing as t;
 
 /**
  * Set up the basic user accounts and relations on the server.
@@ -88,54 +89,59 @@ function setupBasicAccounts() {
  * Re-setup the test cards on the STAGING server, after importing data from the PRODUCTION server.
  * Set bogus email addresses and phones so we DEFINITELY don't accidentally email someone (happened once)
  */
-define('TEST_ACCTS', 'aaa aab aad aaq aak abb');
-define('DEV_ACCTS', ''); // developer accounts
-define('R_COS', 'CAAAAA RMCAAA MIWAAA INAAAA NEWAAD NEWAIG NEWAKH NENAAB NEWALJ NEWAKD'); // community organizers, staff, and programmers to treat as cAdmins on test server (not the superAdmin's personal account, so the superAdmin can sign in as an ordinary individual user).
+
+const DEMO_CTTY = -2; // uid of demo community
  
 function makeTestAccounts() {
   if (isPRODUCTION) return; // protects us even if the constant is not set
-///   print_r("makeTestAccounts()<br>");
 
-  // for Corner Pub, include cardCode so we can test the company proSe as well as with an agent
-  $a = a('aab', '', true);
-  $selling = "groceries\ngifts\nsundries\ndeli\nbaked goods";
-  $a->update('name fullName selling cardCode', 'cornerstore', 'Corner Store', $selling, 'CvRM3AwXJppPmf');
-  //  $a->setBit(CO_REQUIRE_CASHIER, FALSE, 'coFlags');
+  if (!db\exists('users', 'uid=-2')) new r\Acct(ray('uid community name fullName email flags', -2, -2, 'example', t('Common Good Example'), 'ctty@example.com', u\bits('co cgc up'))); // create a bogus community
 
-  $a = a('aaa', '', true);
-  $a->update('name fullName cardCode2', 'mariamanager', 'Maria Manager', 'WeHlioM5JZv1O9G');
-  a\photoFromFile($a);
+  $testAccts = [
+  'aaa' => ['Maria Manager', '', 'WeHlioM5JZv1O9G'],
+  'aab' => ['Corner Store', TRUE, 'CvRM3AwXJppPmf'], // include cardCode so we can test the company proSe (or with agent)
+  'aad' => ['Cathy Cashier', '', 'ME04nW44DHzxVDg'],
+  'aak' => ['Curt Customer', '', 'NyCBBlUF1qWNZ2k'],
+  'aaq' => ['Helga\'s Hardware', TRUE, ''],
+  'abb' => ['Susan Shopper', '', 'ZzhWMCq0zcBowqw'],
+  ];
   
-  $a = a('aad', '', true);
-  $a->update('name fullName cardCode2', 'cathycashier', 'Cathy Cashier', 'ME04nW44DHzxVDg');
-  a\photoFromFile($a);
+  foreach ($testAccts as $qid => $vs) {
+    if (a($qid)) continue; // don't recreate
+    
+    extract(array_combine(ray('fullName co cardCode'), $vs));
+    $flags = u\bits('ok member confirmed carded ided debt');
+    if ($co) $flags |= u\bit('co');
+    $email = "$qid@example.com";
+    $phone = u\fmtPhone('413' . u\randomString(7, 'digits'));
+    $federalId = u\randomString(9, 'digits');
+    $dob = strtotime('11/1/2002');
+    $helper = 1;
+    $floor = -99999;
+    $pin = '1234';
+    $community = -2;
+    $activated = now();
+    $uid = t\uid(strtoupper(".$qid"));
+    $postalAddr = u\randomString(3, 'digits') . ' Demo St., Demoville, MA 01330';
+    list ($address, $city, $state, $zip) = u\parseAddr($postalAddr);
+    $a = new r\Acct(compact(ray('uid fullName flags cardCode email phone federalId dob helper postalAddr address city state zip pin community activated')));
+    a\photoFromFile($a);
+  }
   
-  $a = a('aaq', '', true);
-  $a->update('name fullName', 'helgas', 'Helga\'s Hardware');
-  //  $a->setBit(CO_REQUIRE_CASHIER, TRUE, 'coFlags');
-  a\photoFromFile($a);
+  a('aaa')->setBit(B_ADMIN);
   
-  $a = a('aak', '', true);
-  $a->update('name fullName cardCode cardCode2', 'curtcustomer', 'Curt Customer', 'NyCBBlUF1qWNZ2k', 'utbYceW3KLLCcaw');
-  a\photoFromFile($a);
+  foreach (ray('aaa aad') as $qid) {
+    list ($a, $perm) = [a($qid), $qid == 'aaa' ? B_MANAGE : B_SCAN];
+    a('aab')->newRelation(ray('other permission employee', $a->id, r\perm($perm), TRUE));
+    $a->update('cardCode2', $a->cardCode);
+  }
   
-  $a = a('abb', '', true);
-  $a->update('name fullName cardCode', 'susanshopper', 'Susan Shopper', 'ZzhWMCq0zcBowqw');
-  a\photoFromFile($a);
-  
-  foreach (ray(TEST_ACCTS) as $k) a($k)->update('email phone pin', 'test@example.com', '+14130000000', '1234'); // prevent accidental texts and emails to real accts
+  a('aab')->update('community selling', -2, "groceries\ngifts\nsundries\ndeli\nbaked goods");
 
-  if (!db\exists('users', 'uid=-2')) new r\Acct(ray('uid community name fullName email flags', -2, -2, 'example', t('Common Good Example'), 'ctty@example.com', u\bit([B_CO, B_CGC, B_UP]))); // create a bogus community
-  foreach (ray(TEST_ACCTS . ' ' . DEV_ACCTS) as $k) a($k)->update('community', -2); // isolate everyone into it
+  a('aak')->update('cardCode2', 'utbYceW3KLLCcaw');
+  a('aaq')->newRelation(ray('other permission employee', a('aak')->id, r\perm(B_MANAGE), TRUE));
   
-  a\makeTestAdmins();
-}
-
-/**
- * Let COs test, let techs manage testville
- */
-function makeTestAdmins() {
-  if (isSTAGE) foreach (ray(R_COS . ' ' . DEV_ACCTS) as $k) if ($k and $a = a($k)) $a->setBit(B_CADMIN);
+  w\say(t('Done!'));
 }
 
 /**
