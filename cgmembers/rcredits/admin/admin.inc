@@ -109,6 +109,7 @@ function makeTestAccounts() {
   foreach ($testAccts as $qid => $vs) {
     extract(array_combine(ray('fullName co cardCode'), $vs));
     $uid = t\uid(strtoupper(".$qid"));
+    $name = u\shortName($fullName);
     $flags = u\bits('ok member confirmed carded ided debt');
     if ($co) $flags |= u\bit('co');
     $email = "$qid@example.com";
@@ -123,9 +124,9 @@ function makeTestAccounts() {
     $postalAddr = u\randomString(3, 'digits') . ' Demo St., Demoville, MA 01330';
     list ($address, $city, $state, $zip) = u\parseAddr($postalAddr);
     $state = r\stateNum($state);
-    $info = compact(ray('uid fullName flags cardCode email phone federalId dob helper postalAddr address city state zip pin community activated'));
+    $info = compact(ray('uid fullName name flags cardCode email phone federalId dob helper postalAddr address city state zip pin community activated'));
 
-    if (a($qid)) $a->update($info); else $a = new r\Acct($info);
+    if ($a = a($qid)) $a->update($info); else $a = new r\Acct($info);
     a\photoFromFile($a);
   }
   
