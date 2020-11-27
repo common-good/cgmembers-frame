@@ -16,9 +16,10 @@ $configRay = (array) json_decode(utf8_encode(file_get_contents($configFlnm)));
 /**/ if (!$stage = config('stage')) die('There is no valid config file ' . $configFlnm);
 
 define('isDEV', $stage == 'development'); // (used in settings file and elsewhere)
+define('isDEMO', $stage == 'demo');
 define('isSTAGE', $stage == 'staging');
 define('isPRODUCTION', $stage == 'production');
-/**/  if (!isDEV and !isSTAGE and !isPRODUCTION) die('Invalid value for stage in configuration file.');
+/**/  if (!isDEV and !isSTAGE and !isPRODUCTION and !isDEMO) die('Invalid value for stage in configuration file.');
 
 const US_COUNTRY_ID = 1228; // United States (used in settings file and elsewhere)
 const CA_COUNTRY_ID = 1039; // Canada
