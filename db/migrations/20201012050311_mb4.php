@@ -12,7 +12,7 @@ class Mb4 extends AbstractMigration {
   public function change() {
     $dbName = $this->getAdapter()->getOption('name');
     echo "\n\ndb: $dbName\n\n";
-    if ($dbName == 'demo') $dbName = 'new_demo';
+    if ($dbName == 'new-demo') $dbName = 'new_demo';
     $this->execute("ALTER DATABASE $dbName CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;");
 
     foreach (ray(TNMS) as $tnm) {

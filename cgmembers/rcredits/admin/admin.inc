@@ -93,7 +93,7 @@ function setupBasicAccounts() {
 const DEMO_CTTY = -2; // uid of demo community
  
 function makeTestAccounts() {
-  if (isPRODUCTION) return; // protects us even if the constant is not set
+  if (isPRODUCTION) return w\say(t('Make test accounts only on demo or dev'), 'err'); // protects even if constant not set
 
   if (!db\exists('users', 'uid=-2')) new r\Acct(ray('uid community name fullName email flags', -2, -2, 'example', t('Common Good Example'), 'ctty@example.com', u\bits('co cgc up'))); // create a bogus community
 
@@ -107,9 +107,8 @@ function makeTestAccounts() {
   ];
   
   foreach ($testAccts as $qid => $vs) {
-    if (a($qid)) continue; // don't recreate
-    
     extract(array_combine(ray('fullName co cardCode'), $vs));
+    $uid = t\uid(strtoupper(".$qid"));
     $flags = u\bits('ok member confirmed carded ided debt');
     if ($co) $flags |= u\bit('co');
     $email = "$qid@example.com";
@@ -121,25 +120,25 @@ function makeTestAccounts() {
     $pin = '1234';
     $community = -2;
     $activated = now();
-    $uid = t\uid(strtoupper(".$qid"));
     $postalAddr = u\randomString(3, 'digits') . ' Demo St., Demoville, MA 01330';
     list ($address, $city, $state, $zip) = u\parseAddr($postalAddr);
-    $a = new r\Acct(compact(ray('uid fullName flags cardCode email phone federalId dob helper postalAddr address city state zip pin community activated')));
+    $state = r\stateNum($state);
+    $info = compact(ray('uid fullName flags cardCode email phone federalId dob helper postalAddr address city state zip pin community activated'));
+
+    if (a($qid)) $a->update($info); else $a = new r\Acct($info);
     a\photoFromFile($a);
   }
   
-  a('aaa')->setBit(B_ADMIN);
-  
   foreach (ray('aaa aad') as $qid) {
-    list ($a, $perm) = [a($qid), $qid == 'aaa' ? B_MANAGE : B_SCAN];
-    a('aab')->newRelation(ray('other permission employee', $a->id, r\perm($perm), TRUE));
-    $a->update('cardCode2', $a->cardCode);
+    $coA = a($qid == 'aak' ? 'aaq' : 'aab');
+    list ($a, $perm) = [a($qid), $qid == 'aad' ? B_SCAN : B_MANAGE];
+    if (!r\relation(1, $coA->id, $a->id)) $coA->newRelation(ray('other permission employee', $a->id, r\perm($perm), TRUE));
+    $a->update('cardCode2', $a->cardCode); // this is new for Curt (aak)
   }
   
-  a('aab')->update('community selling', -2, "groceries\ngifts\nsundries\ndeli\nbaked goods");
-
-  a('aak')->update('cardCode2', 'utbYceW3KLLCcaw');
-  a('aaq')->newRelation(ray('other permission employee', a('aak')->id, r\perm(B_MANAGE), TRUE));
+  a('aaa')->setBit(B_ADMIN);
+  a('aab')->update('selling', "groceries\ngifts\nsundries\ndeli\nbaked goods");
+  a('aaq')->update('selling', 'hardware');
   
   w\say(t('Done!'));
 }
