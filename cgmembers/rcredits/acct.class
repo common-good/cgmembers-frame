@@ -1862,6 +1862,7 @@ X;
     $res = ray(B_ADMINABLE . ($this->admin ? ' admin2' : '') . ($this->superAdmin ? ' admin' : ''));
     return array_values($this->isCtty ? array_intersect($res, ray(B_CTTY_BITS)) : array_diff($res, ray(B_CTTY_BITS)));
   }
+  public function setDftAppCans() {foreach (ray(CO_APP_DFTS) as $i) $this->setCoBit(APP_CANS + $i);}
 
 } // end of class
 

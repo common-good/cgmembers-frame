@@ -1,3 +1,13 @@
+2020-11-29 feature/demo
+. rewrote makeTestAccounts to create test accounts from scratch instead of counting on copies of production accounts
+. vKey() now returns '' (non-fatal error) when superAdmin is not the user (shouldn't happen, but better not to crash there)
+. u\bits() now also performs its reverse function
+. fixed typo in formMakeCtty()
+. we no longer try to show altId to admin (only superAdmin)
+. made phinx config files more consistent (online), including renaming user/database new-demo to new_demo for MB migration
+. better handling of SwiftMailer errors
+. fixed but in encryption: encrypting numeric failed
+
 2020-11-24 feature/cttys
 . moved and enlarged community zip regex to r_company table by renaming serviceArea to zips
 . similarly enlarged and renamed zip field in r_regions
