@@ -93,9 +93,10 @@ function setupBasicAccounts() {
 const DEMO_CTTY = -2; // uid of demo community
  
 function makeTestAccounts() {
-  if (isPRODUCTION) return w\say(t('Make test accounts only on demo or dev'), 'err'); // protects even if constant not set
+  global $mya;
+  if (isPRODUCTION or !$mya->superAdmin) return w\say(t('Make test accounts only on demo or dev'), 'err'); // protects even if constant not set
 
-  if (!db\exists('users', 'uid=-2')) new r\Acct(ray('uid community name fullName email flags', -2, -2, 'example', t('Common Good Example'), 'ctty@example.com', u\bits('co cgc up'))); // create a bogus community
+  if (!db\exists('users', 'uid=:DEMO_CTTY')) new r\Acct(ray('uid community fullName email flags', DEMO_CTTY, DEMO_CTTY, t('Common Good Example'), R_ADMIN_EMAIL, u\bits('ok co cgc up'))); // create a bogus community
 
   $testAccts = [
   'aaa' => ['Maria Manager', '', 'WeHlioM5JZv1O9G'],
@@ -105,6 +106,8 @@ function makeTestAccounts() {
   'aaq' => ['Helga\'s Hardware', TRUE, ''],
   'abb' => ['Susan Shopper', '', 'ZzhWMCq0zcBowqw'],
   ];
+
+  $info0 = ray('dob helper floor pin community activated', strtotime('11/1/2002'), 1, -9999, '1234', DEMO_CTTY, now());
   
   foreach ($testAccts as $qid => $vs) {
     extract(array_combine(ray('fullName co cardCode'), $vs));
@@ -115,25 +118,20 @@ function makeTestAccounts() {
     $email = "$qid@example.com";
     $phone = u\fmtPhone('413' . u\randomString(7, 'digits'));
     $federalId = u\randomString(9, 'digits');
-    $dob = strtotime('11/1/2002');
-    $helper = 1;
-    $floor = -99999;
-    $pin = '1234';
-    $community = -2;
-    $activated = now();
     $postalAddr = u\randomString(3, 'digits') . ' Demo St., Demoville, MA 01330';
     list ($address, $city, $state, $zip) = u\parseAddr($postalAddr);
     $state = r\stateNum($state);
-    $info = compact(ray('uid fullName name flags cardCode email phone federalId dob helper postalAddr address city state zip pin community activated'));
+    $info = $info0 + compact(ray('uid fullName name flags cardCode email phone federalId postalAddr address city state zip'));
 
     if ($a = a($qid)) $a->update($info); else $a = new r\Acct($info);
     a\photoFromFile($a);
   }
   
-  foreach (ray('aaa aad') as $qid) {
+  foreach (ray('aaa aad aak') as $qid) {
     $coA = a($qid == 'aak' ? 'aaq' : 'aab');
+    $coA->setDftAppCans();
     list ($a, $perm) = [a($qid), $qid == 'aad' ? B_SCAN : B_MANAGE];
-    if (!r\relation(1, $coA->id, $a->id)) $coA->newRelation(ray('other permission employee', $a->id, r\perm($perm), TRUE));
+    if (!r\relation(1, $coA->id, $a->id)) $coA->newRelation(ray('other permission employee otherNum', $a->id, r\perm($perm), TRUE, $qid == 'aad' ? 2 : 1));
     $a->update('cardCode2', $a->cardCode); // this is new for Curt (aak)
   }
   

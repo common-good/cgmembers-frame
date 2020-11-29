@@ -101,7 +101,6 @@ function formSignin_submit($form, &$sta, $goto = 'console') {
   $mya = r\setAcct($uid, $sta);
 
   u\loga('signin', ['name' => $mya->name]);
-  if (isSTAGE and !$mya->cAdmin) f('a.makeTestAdmins'); // make sure rCOs can test stuff
   if ($mya->superAdmin) superSignin();
   
   return w\go($mya->admin2 ? 'sadmin/followup' : $goto);
