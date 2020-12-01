@@ -213,7 +213,8 @@ function getTime($args) {
  *   code: rCard security code (possibly encrypted with itself as the key)
  *   signin: 1 if signing in
  * @return json:
- *   device: a unique device identifier (if none passed and signin is true)
+ *   device: a unique device identifier (if none passed and signin is true), consisting of the device owner's
+ *      full name encrypted with our private key, so customers paying with phone can know the business is legitimate
  *   person/name: the individual's name (if any)
  *   company: the member's (agent's or customer's) company name (if any)
  *   place: city and state of the company if customer is a company agent, otherwise of the individual
@@ -250,7 +251,7 @@ function identify($args) {
     }
     if (!$a->can(B_SCAN)) return posErr('agent cannot scan', [], $companyInfo);
     if (!$deviceId) {
-      if (!$device) $device = u\code();
+      if (!$device) $device = test() ? u\code() : u\cryPGP($a->fullName); // prove to customer who they're dealing with
       r\makeDevice($a->id, $device, TX_POS); // card is legit, so use device's code, if any
     }
     list ($person, $company) = $mya->co 

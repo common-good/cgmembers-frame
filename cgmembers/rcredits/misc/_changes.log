@@ -1,3 +1,7 @@
+2020-11-30 feature/pgp-device-id
+. encrypt device id with pgp private key in smart.inc, so it is provably from us (demo site must use same key)
+. fixed log bug in errors.inc
+
 2020-11-29 feature/demo
 . rewrote makeTestAccounts to create test accounts from scratch instead of counting on copies of production accounts
 . vKey() now returns '' (non-fatal error) when superAdmin is not the user (shouldn't happen, but better not to crash there)
