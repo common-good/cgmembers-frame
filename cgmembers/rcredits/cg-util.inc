@@ -856,10 +856,13 @@ function decry($type, $data, $pwInstead = '') {
 /**
  * Encrypt / Decrypt with our PGP key pair.
  * Test with $cry = u\cryPGP('success'); debug(u\decryPGP($cry));
+ * @param string $data: what to encrypt
+ * @param bool $priv: <use private key> (otherwise encrypt with public key)
+ * @param string $trash: (RETURNED) the randomness added before encryption
  */
-function cryPGP($data, $priv = TRUE) {
-  $data .= openssl_random_pseudo_bytes(PGP_TRASH_LEN); // add randomness
-  return cryPGP0('en', $data, $priv, $res) ? $res : '';
+function cryPGP($data, $priv = TRUE, &$trash = '') {
+  if (!$trash) $trash = openssl_random_pseudo_bytes(PGP_TRASH_LEN); // add randomness
+  return cryPGP0('en', $data . $trash, $priv, $res) ? $res : '';
 }
 
 /**

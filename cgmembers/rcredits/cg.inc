@@ -754,25 +754,6 @@ function newUid($base) {return u\firstUnusedId('uid', 'users', $base, $base + R_
 function changeAcctLink($uid, $v, $page = NULL) {return w\lnk("/change-account/acct=$uid", $v);}     
 
 /**
- * Record the relation of a device with an account.
- * @param int $uid: record ID of related account
- * @param string $code: phone # or device code
- * @param int $ch: channel (SMS, Web, or App)
- * @return int: the device record ID
- */
-function makeDevice($uid, $code = '', $ch = NULL) {
-  global $channel;
-  global $mya;
-  
-  u\setDft($ch, $channel);
-
-  $created = $access = now();
-  $boxnum = db\get('MAX(boxnum)', 'r_boxes', 'uid=:uid', compact('uid')) + 1;
-  $info = ray('channel', $ch) + compact(ray('uid code boxnum access created'));
-  return db\insert('r_boxes', $info);
-}
-
-/**
  * Record an invitation
  * @param string $email: email address to which the invite was sent
  * @param int $inviter: the inviter's account uid
