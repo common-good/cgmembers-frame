@@ -411,6 +411,9 @@ function gotSolarOne($info) {
   }
 
   $title = t('Enter Your Payment Information');
+  
+  $owed = $pid == 'NEWBLV' ? t('$80') : t('$85 plus your membership fee of $1.50, for a total due of $86.50');
+  
   $subtext = t(<<< X
     <p>The next step in your community solar sign-up is to tell us how you will pay for your solar credits.</p>
     <p>You will continue to get a bill from Con Ed as usual that shows how much electricity you used and what Con Ed is billing you for it. That bill will also have a credit that shows how much money you received from your solar subscription.</p>
@@ -422,9 +425,9 @@ function gotSolarOne($info) {
 
     <p>The bill from the NYC Community Energy Co-op would then say:<br>
     <blockquote>You received a $100 subscription solar credit on your Con Edison bill.  <br>
-    You owe the NYC Community Energy Co-op $85 plus your membership fee of $1.50, for a total due of $86.50.</blockquote></p>
+    You owe the NYC Community Energy Co-op %owed.</blockquote></p>
 X
-  , compact(ray('m_company partnerName')));
+  , compact(ray('m_company partnerName owed')));
 
   $processorPre = item(t('Now choose which payment option you want to use to process your payments. We have two options for you:'), t('Payment Option:'));
   
