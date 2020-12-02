@@ -1313,6 +1313,7 @@ function strip($form) {
  * @return <the values are equal>
  */
 function eq($a, $b, $offBy = .0001) {
+  if ($a == '?') return TRUE;
   $result = (is_numeric($a) and is_numeric($b)) ?
     (abs($a - $b) < $offBy)
     : ($a == $b or (empty($a) and empty($b)));
