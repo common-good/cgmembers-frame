@@ -2224,7 +2224,7 @@ function weHitWith($url, $args) {
 function weExitShowingJust($what) {
   global $testOnly; if (!$testOnly) return FALSE; // maybe combine this with weExitShowing?
   if (!$actual = t\getExitMsg()) return FALSE;
-  db\del('test', "type='echo'"); // reset for subsequent steps
+/**/  db\del('test', "type='echo'"); // reset for subsequent steps
   return ($what == '' . $actual);
 }
 
@@ -2236,7 +2236,7 @@ function weExitShowingJust($what) {
 function weExitShowing($ray) {
   global $testOnly; if (!$testOnly) return FALSE;
   if (!$actualRay = t\getExitMsg()) return FALSE;
-  db\del('test', "type='echo'"); // reset for subsequent steps
+/**/  db\del('test', "type='echo'"); // reset for subsequent steps
   return t\checkOneArray($ray[0], unserialize($actualRay));
 }
 

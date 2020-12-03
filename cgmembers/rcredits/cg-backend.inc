@@ -844,24 +844,23 @@ function addCell($number, $validate = FALSE) {
   global $mya;
   $myid = $mya->id;
 
-  $numberInternal = u\fmtPhone($number, '+n');
-  $numberPretty = u\fmtPhone($number);
+  $phone = u\fmtPhone($number, '+n');
+  $phoneDesc = u\fmtPhone($number);
   $subs = compact('number'); // original format
 
   if ($validate) {
-    if (!$numberPretty) return array('bad phone', $subs);
-    if ($result = db\q('SELECT * FROM r_boxes WHERE code=:numberInternal', compact('numberInternal'))->fetchAssoc()) {
-      extract($result, EXTR_PREFIX_ALL, 'old');
-      if ($old_uid == $myid) return array('already cell', $subs);
+    if (!$phoneDesc) return array('bad phone', $subs);
+    if ($uid = db\get('uid', 'r_boxes', 'code=:phone', compact('phone'))) {
+      if ($uid == $myid) return array('already cell', $subs);
       $accountName = "$mya->fullName ($mya->mainQid)";
     }
     return NULL;
   }
   
   //$status = SMS_PRIMARY;
-  r\makeDevice($myid, $numberInternal, TX_SMS);
-  if (!$mya->phone) $mya->update('phone', $numberInternal); // use it as contact phone, if none yet
-  return array('report new cell', ray('number', $numberPretty));
+  $mya->makeBox($phone, TX_SMS);
+  if (!$mya->phone) $mya->update('phone', $phone); // use it as contact phone, if none yet
+  return array('report new cell', ray('number', $numberDesc));
 }
 
 function deleteCell($number) {

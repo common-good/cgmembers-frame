@@ -382,7 +382,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
     $exErr = $e->getMessage() . "<br>\n" . trace();
     if (!isPRODUCTION) {
       if (!isDEV) u\loga('FATAL', $exErr);
-      if ($channel == TX_WEB) die($exErr);
+/**/  if ($channel == TX_WEB) die($exErr);
     }
     u\EXPECT($toEmail != R_ADMIN_EMAIL, 'cannot send admin email');
     return r\tellAdmin(t('cannot send email'), $erInfo + compact('exErr'));
@@ -572,7 +572,7 @@ function vKey() {
   $ermsg = t(' Post vKeyE (and pw2) to signin form to set vKeyE cookie before signing in as admin (or running admin tests). Or create a new vKeyE with a(1)->makeVKeyE().');
   
   if (test() and $mya->id != 1) return FALSE;
-  if (!$pw = $mya->agentA->vKeyPw) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyPw!') . $ermsg . trace());
+  if (!$mya or !$pw = $mya->agentA->vKeyPw) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyPw!') . $ermsg . trace());
   if (!$vKeyE = r\cryptCook('vKeyE')) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyE!') . $ermsg . trace());
 
 	return u\decry('R', $vKeyE, $pw);
@@ -752,25 +752,6 @@ function newUid($base) {return u\firstUnusedId('uid', 'users', $base, $base + R_
  * @return the link
  */
 function changeAcctLink($uid, $v, $page = NULL) {return w\lnk("/change-account/acct=$uid", $v);}     
-
-/**
- * Record the relation of a device with an account.
- * @param int $uid: record ID of related account
- * @param string $code: phone # or device code
- * @param int $ch: channel (SMS, Web, or App)
- * @return int: the device record ID
- */
-function makeDevice($uid, $code = '', $ch = NULL) {
-  global $channel;
-  global $mya;
-  
-  u\setDft($ch, $channel);
-
-  $created = $access = now();
-  $boxnum = db\get('MAX(boxnum)', 'r_boxes', 'uid=:uid', compact('uid')) + 1;
-  $info = ray('channel', $ch) + compact(ray('uid code boxnum access created'));
-  return db\insert('r_boxes', $info);
-}
 
 /**
  * Record an invitation

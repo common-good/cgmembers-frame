@@ -15,6 +15,9 @@ use CG\Testing as t;
 const URL_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-_~'; // 66 valid URLchars
 const HEX_CHARS = '0123456789abcdef';
 const MOBILE_REGEX = '/\b(?:a(?:ndroid|vantgo)|b(?:lackberry|olt|o?ost)|cricket|docomo|hiptop|i(?:emobile|p[ao]d)|kitkat|m(?:ini|obi)|palm|(?:i|smart|windows )phone|symbian|up\.(?:browser|link)|tablet(?: browser| pc)|(?:hp-|rim |sony )tablet|w(?:ebos|indows ce|os))/i'; // thanks to Justin DoCanto et al.: https://stackoverflow.com/questions/4117555/simplest-way-to-detect-a-mobile-device-in-php
+const PGP_TRASH_LEN = 30; // do not change this, without re-encrypting everything encrypted with its previous value
+// NOTE: whether this number is 0 or 200 makes ZERO difference in the strlen of the encrypted value. 30 is plenty
+
 
 // Some useful Drupal db methods: fetchAllKeyed(m, n), fetchAssoc and fetchAllAssoc(fld), fetchObject and fetchAll(), fetchCol(n), fetchField()
 
@@ -765,11 +768,12 @@ function decryRay($code) {
  *   P searchable data (last step of encryption is b64)
  *   C cookie
  *   H photo
+ *   D device (PGP then b64)
  * @param string $data: the data to be encrypted / decrypted
  * @param bool $de: <decrypt rather than encrypt>
  * @param string $pwInstead: password to use instead of the one in the password file (for asymmetric encryption or decryption)
  * @return the encrypted (or decrypted) data.
- * TEST with foreach (ray('S V R C P H') as $k) print "k=$k " . u\decry($k, u\cry($k, 'abcd', FALSE, $k == 'R' ? a(1)->vKeyPw : ''), $k == 'V' ? r\vKey() : ($k == 'R' ? a(1)->vKeyPw : ''));
+ * TEST with foreach (ray('D S V R C P H') as $k) print "k=$k " . u\decry($k, u\cry($k, 'abcd', FALSE, $k == 'R' ? a(1)->vKeyPw : ''), $k == 'V' ? r\vKey() : ($k == 'R' ? a(1)->vKeyPw : ''));
  */
 function cry($type, $data, $de = FALSE, $pwInstead = '') {
 	global $cryHows, $mya;
@@ -777,6 +781,8 @@ function cry($type, $data, $de = FALSE, $pwInstead = '') {
 	if ($data === '' or $data === NULL) return $data; // no point encrypting/decrypting nothing
   if (is_numeric($data)) $data = strval($data);
 	
+  if ($type == 'D') return $de ? u\decryPGP(u\b64decode($data)) : u\b64encode(u\cryPGP($data));
+  
 	if ($de) {
     u\EXPECT(u\starts($data, CRYPT_FLAG . $type), 'bad crypted');
     if ($type == 'V' and !$vKey = r\vKey()) return $data; // if we can't decrypt, return the data as is (for acct::recordChanges)
@@ -809,14 +815,12 @@ function cry($type, $data, $de = FALSE, $pwInstead = '') {
 			case 'scram': $data = strScramble($data, $pw . $iv, $de); break;
 			case 'b64': $data = $de ? u\b64decode($data) : u\b64encode($data); break; // final encrypt step if present
 			case 'pgp':
-				$trashLen = 30; // do not change this, without re-encrypting everything encrypted with its previous value
-				// NOTE: whether this number is 0 or 200 makes ZERO difference in the strlen of the encrypted value. 30 is plenty
 				if ($de) { // decrypt with supplied private key
   			  $success = openssl_private_decrypt($data, $res, u\fmtKey($vKey, 'PRIVATE')) ? $res : FALSE;
 ///					if (!$success) die(print_r(debug_backtrace(), -1));
-				  $data = $success ? substr_replace($res, '', -$trashLen) : '';
+				  $data = $success ? substr_replace($res, '', -PGP_TRASH_LEN) : '';
 				} else { // encrypt with public key
-  				$data .= openssl_random_pseudo_bytes($trashLen); // add randomness
+  				$data .= openssl_random_pseudo_bytes(PGP_TRASH_LEN); // add randomness
     			$success = openssl_public_encrypt($data, $res, u\fmtKey($pw, 'PUBLIC')) ? $res : FALSE;
 					$data = $res;
 				}
@@ -849,7 +853,59 @@ function crypted($type, $s = NULL) {
 function decryIf($type, $s) {return crypted($type, $s) ? decry($type, $s) : $s;}
 
 function decry($type, $data, $pwInstead = '') {
-	return u\starts($data, CRYPT_FLAG) ? cry($type, $data, TRUE, $pwInstead) : $data;
+	return ($type == 'D' or u\starts($data, CRYPT_FLAG)) ? cry($type, $data, TRUE, $pwInstead) : $data;
+}
+
+/**
+ * Encrypt / Decrypt with our PGP key pair.
+ * Test with $cry = u\cryPGP('success'); debug (u\decryPGP($cry));
+ * @param string $data: what to encrypt
+ * @param bool $priv: <use private key> (otherwise encrypt with public key)
+ * @param string $trash: (RETURNED) the randomness added before encryption
+ */
+function cryPGP($data, $priv = TRUE, &$trash = '') {
+  if (!$trash) $trash = openssl_random_pseudo_bytes(PGP_TRASH_LEN); // add randomness
+  return cryPGP0('en', $data . $trash, $priv, $res) ? $res : '';
+}
+
+/**
+ * Decryt with our PGP key pair (for testing at least).
+ */
+function decryPGP($data, $priv = FALSE) {
+  $success = cryPGP0('de', $data, $priv, $res);
+	return $success ? substr_replace($res, '', -30) : '';
+}
+
+function cryPGP0($way, $data, $priv, &$res = '') {
+  $func = 'openssl_' . ($priv ? 'private' : 'public') . "_{$way}crypt";
+  $k = u\fmtKey(u\unfmtKey(PGP_KEY), 'PRIVATE');
+  return $func($data, $res, $priv ? $k : u\pubKey($k)) ? $res : FALSE;
+}
+
+/**
+ * Format an RSA-encoded assymmetric key from our config file, adding BEGIN and END lines.
+ * @param string $k: the raw key
+ * @param string $f: PRIVATE or PUBLIC
+ */
+function fmtKey($k, $f) {
+  $d = '-----';
+  if ($f == 'PRIVATE') $f = 'RSA ' . $f; // fails in PHP for private without "RSA" or public with "RSA"
+  $k = chunk_split(base64_encode($k), 64);
+  return "{$d}BEGIN $f KEY$d\n$k{$d}END $f KEY$d";
+}
+
+function unfmtKey($k) {
+  $k2 = preg_replace('/(-+[^-]+-+|[\r\n ])/', '', strhas($k, '.') ? file_get_contents($k) : $k);
+  return base64_decode($k2) ?: $k2;
+}
+
+/**
+ * Extract the public key from the private key.
+ * @param string $k: a formatted private key (see u\fmtKey)
+ * @return: the corresponding public key, formatted
+ */
+function pubKey($k) {
+  return openssl_pkey_get_details(openssl_pkey_get_private($k))['key'];
 }
 
 // NEW encryption
@@ -1622,9 +1678,6 @@ function inList($needle, $hay) {return (strhas(" $hay ", " $needle ") or strhas(
 function weakPass($pw) {return (mb_strlen($pw) < 8 or !preg_match('/\d/', $pw) or !preg_match('/[A-Z]/', $pw) or !preg_match('/[a-z]/', $pw) or !preg_match('/[^0-9A-Za-z]/', $pw));}
 function b64encode($data) {return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');}
 function b64decode($data) {return base64_decode(strtr($data, '-_', '+/'));}
-function fmtKey($k, $f) {$d = '-----'; $k = chunk_split(base64_encode($k), 64); return "{$d}BEGIN $f KEY$d\n$k{$d}END $f KEY$d";}
-function unfmtKey($k) {return base64_decode(preg_replace('/(-+[^-]+-+|[\r\n ])/', '', strpos($k, ':') ? file_get_contents($k) : $k));}
-function pubKey($k) {return openssl_pkey_get_details(openssl_pkey_get_private(fmtKey(unfmtKey($k), 'PRIVATE')))['key'];}
 function validEmail($email) {return filter_var($email, FILTER_VALIDATE_EMAIL);}
 //function bitCount(int $n) {return $n ? (($n % 2) ? 1 : 0) + bitCount($n / 2) : 0;}
 function stndrdth($n) {return date('S', mktime(1,1,1,1,( (($n>=10)+($n>=20)+($n==0))*10 + $n%10) ));}
@@ -1639,6 +1692,6 @@ function padRay($ray, $n, $fill = '') {for ($i = 0; $i < $n; $i++) $ray[] = $fil
 function isMobile() {return (bool) preg_match(MOBILE_REGEX, $_SERVER['HTTP_USER_AGENT']);}
 function deray($ray) {$res = []; foreach (is_array($ray) ? $ray : ray($ray) as $k => $v) $res[] = "$k:$v"; return join(',', $res);}
 function joinRays($ray1, $ray2) {foreach ($ray2 as $k) $ray1[] = $k; return $ray1;}
-function ry($type, $data) {return substr(u\cry($type, $data), strlen(CRYPT_FLAG));}
+function ry($type, $data) {return substr(u\cry($type, $data), strlen(CRYPT_FLAG));} // encrypt without flag
 function dery($type, $code) {return u\decry($type, CRYPT_FLAG . $code);}
 function ul($list) {return '<ul><li>' . join("</li>\n<li>", nn($list) ?: []) . "</li></ul>\n";}

@@ -1,3 +1,10 @@
+2020-12-01 feature/pgp-device-id
+. encrypt device id with pgp private key in smart.inc, so it is provably from us (demo site must use same key)
+. fixed log bug in errors.inc
+. moved makeDevice from cg.inc to acct class, as makeBox()
+. bumped expected POS version to 230!
+. added version to r_boxes, to track latest app version each device is running
+
 2020-11-29 feature/demo
 . rewrote makeTestAccounts to create test accounts from scratch instead of counting on copies of production accounts
 . vKey() now returns '' (non-fatal error) when superAdmin is not the user (shouldn't happen, but better not to crash there)
@@ -280,7 +287,7 @@
 . fixed bug in recurring that showed wrong "Next" date
 . suppress "Done!" message for permission changes on relations page
 . changed endorsement quote to be an area field with maxlen 4096
-. added some security checks for output with echo, die, and exit
+. added some security checks for output with e cho, die, and exit
 
 2020-08-20 feature/relations-ajax
 . toggles and permissions on relations page now use ajax

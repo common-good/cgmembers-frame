@@ -1631,6 +1631,21 @@ X;
   }
 
   /**
+   * Record the relation of a device with an account.
+   * @param string $code: phone # or device code
+   * @param int $channel: channel (TX_POS, TX_SMS, or TX_WEB)
+   * @return int: the device record ID
+   */
+  public function makeBox($code, $channel, $version = NULL) {
+    $uid = $this->id;
+
+    $created = $access = now();
+    $boxnum = db\get('MAX(boxnum)', 'r_boxes', 'uid=:uid', compact('uid')) + 1;
+    $info = compact(ray('uid code boxnum access created channel version'));
+    return db\insert('r_boxes', $info);
+  }
+
+  /**
    * Encrypt the highly sensitive data private key for a new regional admin's sign-in form.
    * @param string $vKey: key text (PEM-formatted or not) or file path with key text
    *   If $vKey is omitted, get it from the current administrator

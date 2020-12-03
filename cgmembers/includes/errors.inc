@@ -3,6 +3,8 @@
 use \CG\Util as u;
 use \CG\Web as w;
 
+include_once R_ROOT . '/cg-util.inc';
+
 /**
  * @file
  * Functions for error handling.
@@ -65,7 +67,7 @@ function handleError($level, $msg, $file, $line, $context, $trace = NULL) {
   $title = $nasty ? t('CRASH!') : t('WARNING');
   $file = basename($file);
   $msg = t('<b>%title: </b>%msg<br> - line %line in %file' . "<br>\n", compact(ray('title msg line file')));
-  f('u.loga', $title, $msg);
+  u\loga($title, $msg);
   $devPhpPage = (!isPRODUCTION and $channel == TX_WEB and basename($_SERVER['REQUEST_URI']) == 'php');
 
   if (empty($trace)) $trace = debug_backtrace() ?: [];
