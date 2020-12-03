@@ -5,6 +5,8 @@ use CG\DB as db;
 use CG\Util as u;
 use CG\Backend as be;
 
+const DEVICE_MAXLEN = 50; // enough to uniquely identify the device (codes are typically 350-ish)
+
 /**
  * @file
  * Smart phone interface to the %PROJECT system.
@@ -41,13 +43,14 @@ use CG\Backend as be;
 ///   echo CG\Smart\pos($args));
  */
 
-define('RPOS_VERSION', 221); // lastest POS app version available for download (this should match the versionCode in the app's manifest. upload and test the app first (and make sure it is available in Google Play Store), before bumping the number up here.)
+define('RPOS_VERSION', 230); // lastest POS app version available for download (this should match the versionCode in the app's manifest. upload and test the app first (and make sure it is available in Google Play Store), before bumping the number up here.)
 define('R_QR_HEADER', 'HTTP://RC2.ME/I/'); // for transient QR IDs
 define('R_TRANSIENCE', 60); // number of seconds for device's transient QR to be valid
 
 require_once __DIR__ . '/../cg-strings.inc';
 
 $GLOBALS['tStrings'] += array(
+  'old app' => t("IMPORTANT: Your app needs updating.\n\nSearch for \"CGPay Goood\" in the Google Play Store, to download the latest version (uninstall this one after your latest transactions are uploaded)."),
   'bad proof' => t('That transaction is not valid.'),
   'bad member' => t('That is not a valid account. The customer used a lost, stolen, or fraudulent %PROJECT card.'),
 //  'card deactivated' => t('The %PROJECT card has been de-activated.'),
@@ -61,7 +64,7 @@ $GLOBALS['tStrings'] += array(
   'customer balance' => "Customer: %name\n\nBalance: %balance\nCredit line: %rewards\n", // (parseable)
   'report exchange' => t("You %did %otherName %amount in exchange for cash."),
   'just did' => t("\n\n%we just %did %amount %forCash."), // "We" not "You" here, in case viewed by manager
-  'unknown device' => t('This device is not recognized. You must scan yourself in (at least once) before charging a customer.'),
+  'unknown device' => t('This device is not recognized. Clear your data for the app and try again.'),
   'confirm undo' => t('Undo transfer of %amount %tofrom %otherName? (Press OK for Yes, Cancel for No.)'), // no creation date, unlike web and SMS
   'member inactive' => t('That account is not yet activated.'),
   'bad icard' => t('The customer has not yet activated his or her %PROJECT Account.'),
@@ -82,8 +85,8 @@ function pos($args = FALSE) {
 ///  debug("pos(" . pr($args) . ")");
   global $channel; $channel = TX_POS;
   global $scanned; $scanned = true;
-  global $mya, $boxUser;
-  
+  global $mya;
+
   if (!r\up()) return exitJust('system down'); // app does not (and should not) distinguish this from system failure
   if (is_object($args)) $args = (array) $args; // this helps with debugging when passing json_decoded args
   if (is_string($args)) $args = urlq2ray($args); // convert from query string to array
@@ -91,28 +94,17 @@ function pos($args = FALSE) {
   if ($args) f('t.POST', $args); else $args = $_POST;
   $args0 = $args;
 //  $args = u\sanitizeInput($args0 = $args);
-  extract(just('op device agent member version', $args, NULL));
+  extract(just('op signin device agent member version', $args, NULL));
   if ($op != 'time') u\loga('in', $args); // avoid filling the log with time requests
   $args['version'] = (int) $version;
   
   if (!$op or !in($op, 'time identify photo charge test')) return posErr('bad op');
   
   if (isDEV and $op == 'test') return smartTest($args0);
-  
-  $mya = getAgent($agent ?: $member, $agentErr);
-///     print_r(compact(ray('mya agent member agentErr')));
-  if ($device) { // device was specified, substitute its record id, herein
-    if (!$mya) return posErr($agentErr);
-    if ($boxUser = getDevice($device, $mya->id)) {
-      $edit = ray('id access', $boxUser, now());
-      db\update('r_boxes', $edit, 'id'); // remember time last accessed so we can drop the deadwood
-    } elseif ($op != 'identify') return posErr('unknown device');
-  } elseif ($agent or $op != 'identify') return posErr('missing device');
-  
-  if ($op == 'time') return getTime($args); // no agent required
 
-  if (!$mya) return posErr($agentErr); // set "current" account for internals
-  
+  if ($op == 'time') return getTime($args); // no agent or device required
+  if (!$mya = getAgent($agent ?: $member, $agentErr)) return posErr($agentErr); // set "current" account for internals
+  if ($err = badDevice($device, $signin, $version)) return $err; else $args['device'] = $device;
   if (!$mya->cttyUp) return posErr('your community down', ray('contact', $mya->cAdminContact()));
 
   $op = 'CG\\Smart\\' . $op;
@@ -183,14 +175,11 @@ function smartTest($args) {
  *   message: something for the app to say or do (if it begins with "!")
  */
 function getTime($args) {
-  global $mya;
   if ($err = missingArg($keys = 'version', $args)) return posErr($err); 
   extract(just($keys . ' data', $args, NULL));
   $time = now();
   
-  if ($version < RPOS_VERSION) $message = $version < 230 
-  ? t("IMPORTANT: Your app needs updating.\n\nSearch for \"CGPay\" in the Google Play Store, to download the latest version (uninstall this one after your latest transactions are uploaded).")
-  : '!update';
+  if ($version < RPOS_VERSION) $message = $version < 230 ? 'old app' : '!update';
   if ($data or !nn($message)) $message = handleAppMsg(@$data);
 
   return ok(compact(ray('time message')));
@@ -213,7 +202,8 @@ function getTime($args) {
  *   code: rCard security code (possibly encrypted with itself as the key)
  *   signin: 1 if signing in
  * @return json:
- *   device: a unique device identifier (if none passed and signin is true)
+ *   device: a unique device identifier (if none passed and signin is true), consisting of the device owner's
+ *      full name encrypted with our private key, so customers paying with phone can know the business is legitimate
  *   person/name: the individual's name (if any)
  *   company: the member's (agent's or customer's) company name (if any)
  *   place: city and state of the company if customer is a company agent, otherwise of the individual
@@ -230,7 +220,6 @@ function identify($args) {
   $companyInfo = getCompanyInfo();
   if ($err = missingArg($keys = 'device member code version', $args)) return posErr($err, [], $companyInfo);
   extract(just($keys . ' agent pin signin', $args, NULL)); // no agent on scanin
-
   u\EXPECT($version > 217, 'archaic version of app');
 
   if ($agent) { // get other party
@@ -238,21 +227,16 @@ function identify($args) {
     if (!$a = getMember($member, $code, $err, TRUE)) return posErr($err, [], $companyInfo);
   } else $a = $mya; // get agent
 
-  $deviceId = $device ? getDevice($device, $mya->id) : NULL;
-
   if ($signin) { //  identifying agent
     if ($agent and $a == $mya) return posErr('already scanned in', [], $companyInfo);
     if ($agent and $a->id != $mya->id) return posErr('wrong company', [], $companyInfo);
 //    if ($a->proSe and (!$a->co or $a->coCan(CO_REQUIRE_CASHIER))) return posErr('scan in first');
     if ($code != $a->cardCode() and $code != $a->codeHash()) {
-      if (test() or $version >= 300) return posErr('bad agent', [], $companyInfo); // . substr(bin2hex($code), 0, 20) . ' <> ' . substr(bin2hex($a->codeHash()), 0, 20) . ' <> ' . substr($code, 0, 20)); // . "=$agent (cardCode) id=$a->id myid=$mya->id agentId=$a->agentId qid=$a->qid code=$code acode=" . $a->cardCode());
+      if (test() or $version >= 230) return posErr('bad agent', [], $companyInfo); 
       r\tellAdmin('bad code in identify op: ' . $err, compact(ray('member code')));
     }
     if (!$a->can(B_SCAN)) return posErr('agent cannot scan', [], $companyInfo);
-    if (!$deviceId) {
-      if (!$device) $device = u\code();
-      r\makeDevice($a->id, $device, TX_POS); // card is legit, so use device's code, if any
-    }
+
     list ($person, $company) = $mya->co 
     ? [$a->proSe ? '' : $a->agentA->fullName, $mya->fullName] 
     : [$a->agentA->fullName, ''];
@@ -262,7 +246,6 @@ function identify($args) {
     
   } else { // identifying customer
     if (!$agent) return posErr('scan in first', [], $companyInfo);
-    if (!$deviceId) return posErr('unknown device'); // tried to scan a customer card before very first agent scan-in
     if (isset($pin) and $pin != $a->agentA->pin) return posErr('bad pin', [], $companyInfo); // maybe never use this
     $agentCans = 0;
 
@@ -275,7 +258,6 @@ function identify($args) {
       $company = $a->proSe ? "" : $a->fullName;
     }
     $place = $a->location();
-    unset($device); // don't pass it back
   }
 
   if ($version < 230) $default = $mya->mainQid;
@@ -590,13 +572,6 @@ function fixNegative(&$msg, $phrase, $rephrase) {
 }
 
 /**
- * Return the record id for the record of this company using this device.
- */
-function getDevice($code, $uid) {
-  return db\get('id', 'r_boxes', 'code=:code AND uid=:uid', compact('code', 'uid'));
-}
-
-/**
  * Handle the data requested and sent from the rPOS app on an account's device.
  * @param string $data: optional json-encoded data (perhaps data we requested from the app)
  * @return string $message: what extra to respond to the app's "time" request: another request for data or ''
@@ -626,4 +601,42 @@ function handleAppMsg($data0) {
     $mya->update('getAppData appData', $get, $appData);
   }
   return $get;
+}
+
+/**
+ * Decode the device code using a public key from the appropriate server (just this one for now).
+ * @param string $device: the b64encoded encrypted device code received from the device
+ * @return: an adequate abbreviation of $device (FALSE if error)
+ */
+function decodeDevice($device) {
+  if (!test() and !u\decryPGP(u\b64decode($device))) return FALSE;
+  return substr($device, 0, DEVICE_MAXLEN);
+}
+
+/**
+ * Check validity of specified device or create one, if none is specified.
+ * @param acct $device: the specified device
+ * @param acct $device: (RETURNED) the device code to return (undefined if error)
+ * @param bool $signin: <signing in>
+ * @return the error (FALSE if none)
+ */
+function badDevice(&$device, $signin, $version) {
+  global $mya, $boxUser;
+  global $nextCode; // tests usurp generated device code, using this instead
+  if ($version >= 230 and $device and !$device = decodeDevice($device)) return posErr('unknown device'); // bad crypt
+
+  if (!$device) { // no device specified, set it up
+    if ($version < 230) return posErr('old app');
+    if (!$signin) return posErr('missing device'); // can't do anything but time or identify without device
+    $device = nn($nextCode) ?: u\b64encode(u\cryPGP($mya->fullName)); // prove to customer who they're dealing with
+  }
+
+  // find device in the db or put it there
+  $id = $boxUser = db\get('id', 'r_boxes', ray('code uid', $device, $mya->id));
+  if ($id) { // device is in db, record this access
+    $info = ray('id access version', $id, now(), $version);
+    db\update('r_boxes', $info, 'id'); // remember time last accessed so we can drop the deadwood
+  } else { // device is not in our database, but may have been set up on another server
+    $mya->makeBox(substr($device, 0, DEVICE_MAXLEN), TX_POS, $version); // record this device (abbreviated) in our db
+  }
 }

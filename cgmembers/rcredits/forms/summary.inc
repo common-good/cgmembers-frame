@@ -345,7 +345,7 @@ function adminSummary() {
       }
       if ($mya->hasFid) {
         if ($dob) $altId = item($dob, t('DOB:'), '', clas('loneDob')); // dob is not shown directly, so show it here if no license is shown
-      } else { 
+      } elseif ($mya->superAdmin) { // altId is V-encrypted
         $altSt = rendA('altSt', stFld(substr($mya->altId, 0, 2)));
         $altId = textFld(t('Alt ID / DOB:'), [t('License# etc.')], dft(substr($mya->altId, 2)) + suffix($altSt . $dob));
       }

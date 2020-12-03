@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.56d'; // software version
+const R_VERSION = '3.56e'; // software version
 define('R_ROOT', __DIR__);
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -16,9 +16,10 @@ $configRay = (array) json_decode(utf8_encode(file_get_contents($configFlnm)));
 /**/ if (!$stage = config('stage')) die('There is no valid config file ' . $configFlnm);
 
 define('isDEV', $stage == 'development'); // (used in settings file and elsewhere)
+define('isDEMO', $stage == 'demo');
 define('isSTAGE', $stage == 'staging');
 define('isPRODUCTION', $stage == 'production');
-/**/  if (!isDEV and !isSTAGE and !isPRODUCTION) die('Invalid value for stage in configuration file.');
+/**/  if (!isDEV and !isSTAGE and !isPRODUCTION and !isDEMO) die('Invalid value for stage in configuration file.');
 
 const US_COUNTRY_ID = 1228; // United States (used in settings file and elsewhere)
 const CA_COUNTRY_ID = 1039; // Canada
@@ -37,7 +38,8 @@ define('CG_SMTP_TLS', config('cgSmtpTls', 'tls'));
 define('CG_SMTP_PORT', config('cgSmtpPort', 587));
 define('CG_SMTP_USER', config('cgSmtpUser', CGF_EMAIL));
 define('CG_SMTP_PASS', config('cgSmtpPass'));
-define('DKIM_PRIVATE', config('dkimPrivate'));
+define('PGP_KEY', config('pgpKey'));
+define('DKIM_PRIVATE', PGP_KEY);
 define('R_INVITE_KEY', basename(strstr($_SERVER['REQUEST_URI'], '?', TRUE)) == 'tests' ? TEST_INVITE_KEY : config('inviteKey'));
 define('R_SSN_USER', config('ssnUser'));
 define('R_SSN_PASS', config('ssnPass'));
@@ -83,6 +85,7 @@ const TRACK_DELETED = 'r_invoices r_photos r_relations r_usd users'; // remember
 const DELETED_BY_VIEW = 'tx_hdrs tx_entries tx_disputes'; // these tables are actually views on the _all version of
                                                              // themselves, and deletion is just by setting "deleted"
 const DEV_ONLY_MSG = 'only on development machine';
+const DEMO_CTTY = -2; // uid of demo community on demo server
 
 $host = strtolower(@$_SERVER['HTTP_HOST']);
 if (!isDEV) if (mb_strlen($host) > 30 or !preg_match('/^\[?([a-zA-Z0-9-:\]_]+\.?)+$/', $host)) {header('HTTP 400 Bad Request'); exit();}

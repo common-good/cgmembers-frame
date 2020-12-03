@@ -809,11 +809,11 @@ function box() {
  * Return the box record id for the given machine code and account record ID.
  * @param int $code: machine identifier
  */
-function boxUser($code, $uid) {
+function boxUser($code, $uid, $version = NULL) {
   if ($id = nni($_COOKIE, $cookid = 'boxnum' . $uid) and !test()) return $id; // we only get this if last set today
   if ($id = db\get('id', 'r_boxes', 'code=:code AND uid=:uid', compact(ray('code uid')))) {
-    db\update('r_boxes', ray('id access', $id, now()), 'id');
-  } else $id = r\makeDevice($uid, $code, TX_WEB);
+    db\update('r_boxes', ray('id access version', $id, now(), $version), 'id');
+  } else $id = r\acct($uid)->makeBox($code, TX_WEB, $version);
   return r\setCook($cookid, $id, now() + SESSION_LIFE);
 }
 
@@ -2178,7 +2178,7 @@ function backButton() {
 
 /**
  * Output the given array and exit.
- * @param array $ray: the array to echo
+ * @param array $ray: the array to output
  * @param bool $cry: <encrypt it>
  */
 function exitRay($ray, $cry = FALSE) {

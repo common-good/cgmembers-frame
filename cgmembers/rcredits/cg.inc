@@ -330,56 +330,62 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
   u\loga('email', $erInfo + ['toUid' => nn($toA->id)]);
   f('t.output', 'Actual (in rMail) ' . pr($erInfo), 'email');
 
-  if (!isPRODUCTION and (isDEV or db\count('users') > 200)) { // make sure we never send rogue emails from test server with real data
-/**/  if (!test() and (isDEV or ($mya and $mya->cAdmin))) debug(compact(ray('subject to reply body')));
-    return TRUE; // no emails unless real!!
+  if (!isPRODUCTION and !isDEMO) { // make sure we never send rogue emails from test server with real data
+/**/  if (!test()) debug(compact(ray('subject to reply body'))); // show stuff to tester
+    if (isDEV or $toEmail != R_ADMIN_EMAIL) return TRUE;
   }
   
-  require_once DRUPAL_ROOT . '/vendor/swiftmailer/lib/swift_required.php';
-  /* $transport = \Swift_SendmailTransport::newInstance('/usr/sbin/sendmail -bs'); */
-  $transport = \Swift_SmtpTransport::newInstance()
-    ->setHost(CG_SMTP_SERVER)
-    ->setPort(CG_SMTP_PORT)
-    ->setEncryption(CG_SMTP_TLS)
-    ->setUsername(CG_SMTP_USER)
-    ->setPassword(CG_SMTP_PASS);
-  $mailer = \Swift_Mailer::newInstance($transport);
+  try { // catch SwiftMailer errors
+    require_once DRUPAL_ROOT . '/vendor/swiftmailer/lib/swift_required.php';
+    /* $transport = \Swift_SendmailTransport::newInstance('/usr/sbin/sendmail -bs'); */
+    $transport = \Swift_SmtpTransport::newInstance()
+      ->setHost(CG_SMTP_SERVER)
+      ->setPort(CG_SMTP_PORT)
+      ->setEncryption(CG_SMTP_TLS)
+      ->setUsername(CG_SMTP_USER)
+      ->setPassword(CG_SMTP_PASS);
+    $mailer = \Swift_Mailer::newInstance($transport);
 
-  $privateKey = "-----BEGIN RSA PRIVATE KEY-----\n" . str_replace(' ', "\n", DKIM_PRIVATE) . "\n-----END RSA PRIVATE KEY-----";
-  $signer = new \Swift_Signers_DKIMSigner($privateKey, EMAIL_DOMAIN, 'system');
-  
-  $m = \Swift_SignedMessage::newInstance()
-    ->attachSigner($signer)
-    ->setSubject($subject)
-    ->setFrom([SYS_EMAIL => nn($pseudo) ?: t('%PROJECT system')])
-    ->setTo($to)
-    ->setReturnPath(BOUNCE_EMAIL)
-    ->setBody($body, 'text/html')
-    ->addPart(strip_tags($body), 'text/plain'); // don't bother making the plain text pretty
+    $privateKey = "-----BEGIN RSA PRIVATE KEY-----\n" . str_replace(' ', "\n", DKIM_PRIVATE) . "\n-----END RSA PRIVATE KEY-----";
+    $signer = new \Swift_Signers_DKIMSigner($privateKey, EMAIL_DOMAIN, 'system');
+    
+    $m = \Swift_SignedMessage::newInstance()
+      ->attachSigner($signer)
+      ->setSubject($subject)
+      ->setFrom([SYS_EMAIL => nn($pseudo) ?: t('%PROJECT system')])
+      ->setTo($to)
+      ->setReturnPath(BOUNCE_EMAIL)
+      ->setBody($body, 'text/html')
+      ->addPart(strip_tags($body), 'text/plain'); // don't bother making the plain text pretty
 
-  if (nn($cc)) $m->setCc($cc);
-  
-  if ($attachment) {
-    if (!is_array($attachment)) $attachment = [$attachment];
-    foreach (is_array($attachment) ? $attachment : [$attachment] as $flnm) {
-      $attach = \Swift_Attachment::fromPath($flnm);
-      $attach->setFilename(basename($flnm));
-      $m->attach($attach);
+    if (nn($cc)) $m->setCc($cc);
+    
+    if ($attachment) {
+      if (!is_array($attachment)) $attachment = [$attachment];
+      foreach (is_array($attachment) ? $attachment : [$attachment] as $flnm) {
+        $attach = \Swift_Attachment::fromPath($flnm);
+        $attach->setFilename(basename($flnm));
+        $m->attach($attach);
+      }
     }
-  }
-  
-  if ($reply) $m->setReplyTo($reply);
-  if (nn($sms)) $m->setSubject('')->setTo($toEmail); // send as text message
-  try {
+    
+    if ($reply) $m->setReplyTo($reply);
+    if (nn($sms)) $m->setSubject('')->setTo($toEmail); // send as text message
+
     $mailer->send($m);
     if (nn($jA) and $index != 'tell-staff') { // also send to partner in joint account unless it's an admin notice
       $m->setTo([$jA->email => $jA->fullName]);
       $m->setSubject($subject . t(' (for %acct)', 'acct', $jA->fullName));
       $mailer->send($m);
     }
-  } catch (\Exception $e) {
+  } catch (\Swift_RfcComplianceException | \Exception $e) {
+    $exErr = $e->getMessage() . "<br>\n" . trace();
+    if (!isPRODUCTION) {
+      if (!isDEV) u\loga('FATAL', $exErr);
+/**/  if ($channel == TX_WEB) die($exErr);
+    }
     u\EXPECT($toEmail != R_ADMIN_EMAIL, 'cannot send admin email');
-    return r\tellAdmin(t('cannot send email'), $erInfo);
+    return r\tellAdmin(t('cannot send email'), $erInfo + compact('exErr'));
   }
   return TRUE;
 }
@@ -558,15 +564,16 @@ function cryptCook($k) {return ($v = cook($k)) ? u\dery('C', $v) : '';}
 
 /**
  * Return the unformatted private key for highly sensitive data (use u\fmtKey() to get the formatted key).
+ * If superAdmin is not signed in, return FALSE.
  */
 function vKey() {
 	global $mya, $channel;
   u\EXPECT($channel == TX_WEB, 'wrong channel for vKey: ' . $channel);
   $ermsg = t(' Post vKeyE (and pw2) to signin form to set vKeyE cookie before signing in as admin (or running admin tests). Or create a new vKeyE with a(1)->makeVKeyE().');
   
-  if (test() and $mya->id != 1) return '';
-  if (!$pw = $mya->agentA->vKeyPw) u\FAIL(t('missing vKeyPw!') . $ermsg);
-  if (!$vKeyE = r\cryptCook('vKeyE')) u\FAIL(t('missing vKeyE!') . $ermsg);
+  if (test() and $mya->id != 1) return FALSE;
+  if (!$mya or !$pw = $mya->agentA->vKeyPw) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyPw!') . $ermsg . trace());
+  if (!$vKeyE = r\cryptCook('vKeyE')) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyE!') . $ermsg . trace());
 
 	return u\decry('R', $vKeyE, $pw);
 }
@@ -745,25 +752,6 @@ function newUid($base) {return u\firstUnusedId('uid', 'users', $base, $base + R_
  * @return the link
  */
 function changeAcctLink($uid, $v, $page = NULL) {return w\lnk("/change-account/acct=$uid", $v);}     
-
-/**
- * Record the relation of a device with an account.
- * @param int $uid: record ID of related account
- * @param string $code: phone # or device code
- * @param int $ch: channel (SMS, Web, or App)
- * @return int: the device record ID
- */
-function makeDevice($uid, $code = '', $ch = NULL) {
-  global $channel;
-  global $mya;
-  
-  u\setDft($ch, $channel);
-
-  $created = $access = now();
-  $boxnum = db\get('MAX(boxnum)', 'r_boxes', 'uid=:uid', compact('uid')) + 1;
-  $info = ray('channel', $ch) + compact(ray('uid code boxnum access created'));
-  return db\insert('r_boxes', $info);
-}
 
 /**
  * Record an invitation
