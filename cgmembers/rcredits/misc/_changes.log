@@ -1,3 +1,6 @@
+2020-12-03 hotfix/recur
+. fixed bug that stored wrong value for recursId in recurring transactions
+
 2020-12-03 feature/by-name
 . fixed bug that didn't allow pay by name within same community if latitude or longitude was wrong
 
