@@ -204,6 +204,9 @@ Scenario: A new member asks to pay another member before making a Common Good Ca
   Then we say "status": "first at home|when resolved"
 
 Scenario: A member pays another member repeatedly
+  Given these "tx_templates":
+  | id | from | to   | amount | period | purpose | start | end | action | duration |*
+  |  3 | 0    | 0    |      0 | week   | bump-id | %now  |     | pay    | once     |
   When member ".ZZA" confirms form "tx/pay" with values:
   | op  | who     | amount | purpose | period | periods |*
   | pay | Bea Two | 100    |  labor  | week   |       1 |
@@ -215,12 +218,12 @@ Scenario: A member pays another member repeatedly
   | %today  | Bea Two  | Abe One    | $100   | labor        |
   And transactions:
   | xid | created | amount | payer | payee | purpose      | taking | recursId |*
-  |   1 | %today  |    100 | .ZZA  | .ZZB  | labor        | 0      |        1 |
+  |   1 | %today  |    100 | .ZZA  | .ZZB  | labor        | 0      |        4 |
   And date field "created" rounded "no" in "tx_hdrs" record "1" (id field "xid")
   And these "tx_templates":
   | id | from | to   | amount | period | purpose | start     | end | action | duration |*
-  |  1 | .ZZA | .ZZB |    100 | week   | labor   | %daystart |     | pay    | once     |
-  And date field "start" rounded "yes" in "tx_templates" record "1" (id field "id")
+  |  4 | .ZZA | .ZZB |    100 | week   | labor   | %daystart |     | pay    | once     |
+  And date field "start" rounded "yes" in "tx_templates" record "4" (id field "id")
   And field "tx_hdrs/xid/1/created" is ">=" field "tx_templates/id/1/start"
 
 Scenario: A member pays another member later

@@ -1741,7 +1741,7 @@ function weScripWithSubs($script, $args = []) {
  *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     BOTH stepup AMembersRulesComeIntoPlay
  *     BOTH stepup ASurtxAmountRoundsToZero
- *     TEST tx AMemberPaysAnotherMemberRepeatedly
+ *     BOTH tx AMemberPaysAnotherMemberRepeatedly
  *     TEST tx AMemberPaysAnotherMemberLater
  *     TEST txs AdminReversesABankTransfer
  */
