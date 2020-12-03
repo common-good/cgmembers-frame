@@ -878,8 +878,34 @@ function decryPGP($data, $priv = FALSE) {
 
 function cryPGP0($way, $data, $priv, &$res = '') {
   $func = 'openssl_' . ($priv ? 'private' : 'public') . "_{$way}crypt";
-  $k = u\fmtKey(PGP_KEY, 'PRIVATE');
+  $k = u\fmtKey(u\unfmtKey(PGP_KEY), 'PRIVATE');
   return $func($data, $res, $priv ? $k : u\pubKey($k)) ? $res : FALSE;
+}
+
+/**
+ * Format an RSA-encoded assymmetric key from our config file, adding BEGIN and END lines.
+ * @param string $k: the raw key
+ * @param string $f: PRIVATE or PUBLIC
+ */
+function fmtKey($k, $f) {
+  $d = '-----';
+  if ($f == 'PRIVATE') $f = 'RSA ' . $f; // fails in PHP for private without "RSA" or public with "RSA"
+  $k = chunk_split(base64_encode($k), 64);
+  return "{$d}BEGIN $f KEY$d\n$k{$d}END $f KEY$d";
+}
+
+function unfmtKey($k) {
+  $k2 = preg_replace('/(-+[^-]+-+|[\r\n ])/', '', strhas($k, '.') ? file_get_contents($k) : $k);
+  return base64_decode($k2) ?: $k2;
+}
+
+/**
+ * Extract the public key from the private key.
+ * @param string $k: a formatted private key (see u\fmtKey)
+ * @return: the corresponding public key, formatted
+ */
+function pubKey($k) {
+  return openssl_pkey_get_details(openssl_pkey_get_private($k))['key'];
 }
 
 // NEW encryption
@@ -1585,29 +1611,6 @@ function genRuleSQL($role, $uid, $now = ':NOW', $rulesTnm = 'ru') {
 EOF;
   return $sql;
 }
-
-/**
- * Format an RSA-encoded assymmetric key from our config file.
- */
-function fmtKey($k, $f) {
-  $d = '-----';
-  if ($f == 'PRIVATE') $f = 'RSA ' . $f; // fails in PHP for private without "RSA" or public with "RSA"
-  $k = chunk_split(base64_encode(unfmtKey($k)), 64);
-  return "{$d}BEGIN $f KEY$d\n$k{$d}END $f KEY$d";
-}
-
-function unfmtKey($k) {
-  $k2 = preg_replace('/(-+[^-]+-+|[\r\n ])/', '', strhas($k, '.') ? file_get_contents($k) : $k);
-  return base64_decode($k2) ?: $k2;
-}
-
-/**
- * Extract the public key from the private key.
- */
-function pubKey($k) {
-  return openssl_pkey_get_details(openssl_pkey_get_private(u\fmtKey($k, 'PRIVATE')))['key'];
-}
-
 
 // Single line functions that need little or no explanation
 function num($a, $else = 0) {return is_numeric($a) ? $a : $else;}

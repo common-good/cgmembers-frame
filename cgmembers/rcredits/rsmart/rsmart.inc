@@ -86,7 +86,7 @@ function pos($args = FALSE) {
   global $channel; $channel = TX_POS;
   global $scanned; $scanned = true;
   global $mya;
-  
+
   if (!r\up()) return exitJust('system down'); // app does not (and should not) distinguish this from system failure
   if (is_object($args)) $args = (array) $args; // this helps with debugging when passing json_decoded args
   if (is_string($args)) $args = urlq2ray($args); // convert from query string to array

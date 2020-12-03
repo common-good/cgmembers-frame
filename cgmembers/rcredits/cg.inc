@@ -572,7 +572,7 @@ function vKey() {
   $ermsg = t(' Post vKeyE (and pw2) to signin form to set vKeyE cookie before signing in as admin (or running admin tests). Or create a new vKeyE with a(1)->makeVKeyE().');
   
   if (test() and $mya->id != 1) return FALSE;
-  if (!$pw = $mya->agentA->vKeyPw) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyPw!') . $ermsg . trace());
+  if (!$mya or !$pw = $mya->agentA->vKeyPw) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyPw!') . $ermsg . trace());
   if (!$vKeyE = r\cryptCook('vKeyE')) return isDEV ? u\FAIL($ermsg) : r\tellAdmin(t('missing vKeyE!') . $ermsg . trace());
 
 	return u\decry('R', $vKeyE, $pw);

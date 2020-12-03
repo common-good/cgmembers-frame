@@ -90,8 +90,6 @@ function setupBasicAccounts() {
  * Set bogus email addresses and phones so we DEFINITELY don't accidentally email someone (happened once)
  */
 
-const DEMO_CTTY = -2; // uid of demo community
- 
 function makeTestAccounts() {
   global $mya;
   if (isPRODUCTION or !$mya->superAdmin) return w\say(t('Make test accounts only on demo or dev'), 'err'); // protects even if constant not set
@@ -132,7 +130,7 @@ function makeTestAccounts() {
     $coA->setDftAppCans();
     list ($a, $perm) = [a($qid), $qid == 'aad' ? B_SCAN : B_MANAGE];
     if (!r\relation(1, $coA->id, $a->id)) $coA->newRelation(ray('other permission employee otherNum', $a->id, r\perm($perm), TRUE, $qid == 'aad' ? 2 : 1));
-    $a->update('cardCode2', $a->cardCode); // this is new for Curt (aak)
+    $a->update('cardCode2', $a->cardCode); // this is new for Maria (aaa) and Curt (aak)
   }
   
   a('aaa')->setBit(B_ADMIN);
