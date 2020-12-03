@@ -104,7 +104,7 @@ function pos($args = FALSE) {
 
   if ($op == 'time') return getTime($args); // no agent or device required
   if (!$mya = getAgent($agent ?: $member, $agentErr)) return posErr($agentErr); // set "current" account for internals
-  if ($err = badDevice($device, $signin, $version)) return $err;
+  if ($err = badDevice($device, $signin, $version)) return $err; else $args['device'] = $device;
   if (!$mya->cttyUp) return posErr('your community down', ray('contact', $mya->cAdminContact()));
 
   $op = 'CG\\Smart\\' . $op;
@@ -220,7 +220,6 @@ function identify($args) {
   $companyInfo = getCompanyInfo();
   if ($err = missingArg($keys = 'device member code version', $args)) return posErr($err, [], $companyInfo);
   extract(just($keys . ' agent pin signin', $args, NULL)); // no agent on scanin
-
   u\EXPECT($version > 217, 'archaic version of app');
 
   if ($agent) { // get other party

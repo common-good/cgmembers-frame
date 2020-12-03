@@ -768,11 +768,12 @@ function decryRay($code) {
  *   P searchable data (last step of encryption is b64)
  *   C cookie
  *   H photo
+ *   D device (PGP then b64)
  * @param string $data: the data to be encrypted / decrypted
  * @param bool $de: <decrypt rather than encrypt>
  * @param string $pwInstead: password to use instead of the one in the password file (for asymmetric encryption or decryption)
  * @return the encrypted (or decrypted) data.
- * TEST with foreach (ray('S V R C P H') as $k) print "k=$k " . u\decry($k, u\cry($k, 'abcd', FALSE, $k == 'R' ? a(1)->vKeyPw : ''), $k == 'V' ? r\vKey() : ($k == 'R' ? a(1)->vKeyPw : ''));
+ * TEST with foreach (ray('D S V R C P H') as $k) print "k=$k " . u\decry($k, u\cry($k, 'abcd', FALSE, $k == 'R' ? a(1)->vKeyPw : ''), $k == 'V' ? r\vKey() : ($k == 'R' ? a(1)->vKeyPw : ''));
  */
 function cry($type, $data, $de = FALSE, $pwInstead = '') {
 	global $cryHows, $mya;
@@ -780,6 +781,8 @@ function cry($type, $data, $de = FALSE, $pwInstead = '') {
 	if ($data === '' or $data === NULL) return $data; // no point encrypting/decrypting nothing
   if (is_numeric($data)) $data = strval($data);
 	
+  if ($type == 'D') return $de ? u\decryPGP(u\b64decode($data)) : u\b64encode(u\cryPGP($data));
+  
 	if ($de) {
     u\EXPECT(u\starts($data, CRYPT_FLAG . $type), 'bad crypted');
     if ($type == 'V' and !$vKey = r\vKey()) return $data; // if we can't decrypt, return the data as is (for acct::recordChanges)
@@ -850,12 +853,12 @@ function crypted($type, $s = NULL) {
 function decryIf($type, $s) {return crypted($type, $s) ? decry($type, $s) : $s;}
 
 function decry($type, $data, $pwInstead = '') {
-	return u\starts($data, CRYPT_FLAG) ? cry($type, $data, TRUE, $pwInstead) : $data;
+	return ($type == 'D' or u\starts($data, CRYPT_FLAG)) ? cry($type, $data, TRUE, $pwInstead) : $data;
 }
 
 /**
  * Encrypt / Decrypt with our PGP key pair.
- * Test with $cry = u\cryPGP('success'); debug(u\decryPGP($cry));
+ * Test with $cry = u\cryPGP('success'); debug (u\decryPGP($cry));
  * @param string $data: what to encrypt
  * @param bool $priv: <use private key> (otherwise encrypt with public key)
  * @param string $trash: (RETURNED) the randomness added before encryption
@@ -1686,6 +1689,6 @@ function padRay($ray, $n, $fill = '') {for ($i = 0; $i < $n; $i++) $ray[] = $fil
 function isMobile() {return (bool) preg_match(MOBILE_REGEX, $_SERVER['HTTP_USER_AGENT']);}
 function deray($ray) {$res = []; foreach (is_array($ray) ? $ray : ray($ray) as $k => $v) $res[] = "$k:$v"; return join(',', $res);}
 function joinRays($ray1, $ray2) {foreach ($ray2 as $k) $ray1[] = $k; return $ray1;}
-function ry($type, $data) {return substr(u\cry($type, $data), strlen(CRYPT_FLAG));}
+function ry($type, $data) {return substr(u\cry($type, $data), strlen(CRYPT_FLAG));} // encrypt without flag
 function dery($type, $code) {return u\decry($type, CRYPT_FLAG . $code);}
 function ul($list) {return '<ul><li>' . join("</li>\n<li>", nn($list) ?: []) . "</li></ul>\n";}

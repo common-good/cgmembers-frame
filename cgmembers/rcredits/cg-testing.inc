@@ -899,6 +899,15 @@ function noEmailTo($email) {
 }
 
 /**
+ * Set a given phrase, encrypted, as the next code to be used in tests.
+ */
+function cryNextCode($method, $phrase) {
+  global $testOnly; if ($testOnly) return FALSE;
+  global $nextCode; $nextCode = u\cry($method, $phrase);
+  return TRUE;
+}
+
+/**
  * Highlight the substitutions in a given text.
  * @param string $s: the text
  * @param assoc $subs: the substitutions
@@ -1877,7 +1886,7 @@ function logRec($type, $value) {
  * Return the earliest exit message and delete it from the log (so the next one will be found for a subsequent test).
  */
 function getExitMsg() {
-  $id = db\get('id', 'test', "type='echo' ORDER BY id");
+/**/  $id = db\get('id', 'test', "type='echo' ORDER BY id");
   $res = db\get('value', 'test', compact('id'));
   db\del('test', 'id', $id);
   return $res;

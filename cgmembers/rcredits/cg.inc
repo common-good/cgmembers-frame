@@ -382,7 +382,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
     $exErr = $e->getMessage() . "<br>\n" . trace();
     if (!isPRODUCTION) {
       if (!isDEV) u\loga('FATAL', $exErr);
-      if ($channel == TX_WEB) die($exErr);
+/**/  if ($channel == TX_WEB) die($exErr);
     }
     u\EXPECT($toEmail != R_ADMIN_EMAIL, 'cannot send admin email');
     return r\tellAdmin(t('cannot send email'), $erInfo + compact('exErr'));

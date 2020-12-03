@@ -137,6 +137,7 @@ function weRespondWith($args) {
     $got = nni($rposResult, $k);
     if ($k == 'descriptions') $v = empty($v) ? [0 => ''] : ray($v);
     if ($k == 'bad') $v = empty($v) ? [] : ray($v);
+    if ($k == 'device' and $got) $got = u\decry('D', $got);
     if ($k == 'can' or $k == 'canMgr') { // currently tests only signed-out permissions
       if ($k == 'canMgr') $got = nni($rposResult, 'can') >> (APP_CAN_BITS + 1);
       $got &= APP_CAN_MASK;
@@ -147,7 +148,7 @@ function weRespondWith($args) {
         if ($got & (u\bit(CO_MANAGE) << (APP_CAN_BITS + 1))) $v |= (u\bit(CO_MANAGE) << (APP_CAN_BITS + 1)); // make manage bit go away, since it applies to agent
       }
     }
-    if ($k == 'device' and $v == '?' and $got) continue; // any value will do for new dev
+
     if ($k == 'time' and t\sameTime($v, $rposResult["time"])) continue; // %now time is approximate
     
     if (!t\eq($v, $got)) return FALSE;
@@ -632,6 +633,7 @@ function membersHave($list) {return t\membersHave($list);}
 function agentAsksDeviceToIdentifyWithPIN($agent, $device, $qr, $pin = NULL, $signin = 0) {
   global $testOnly; if ($testOnly) return FALSE;
   list ($member, $code) = t\parseQr($qr);
+  if ($device) $device = u\cry('D', $device);
   return t\hitServer('identify', compact(ray('member code pin signin')), $agent, $device);
 }
 
@@ -795,3 +797,12 @@ function countIs($what, $count) {return t\count($what, $count);}
  *     MAKE time ACashierSignsIn
  */
 function agentAsksDeviceToSignIn($agent, $device, $qr) {return agentAsksDeviceToIdentifyWithPIN($agent, $device, $qr, NULL, 1);}
+
+/**
+ * next code is (ARG) encrypted with (ARG)
+ *
+ * in: MAKE identify DeviceHasNoIdentifierYet
+ *     MAKE identify DeviceHasNoIdentifierYetForAnIndividual
+ *     MAKE identify DeviceHasNoIdentifierYetForTrialCompany
+ */
+function nextCodeIsEncryptedWith($phrase, $method) {return t\cryNextCode($method, $phrase);}

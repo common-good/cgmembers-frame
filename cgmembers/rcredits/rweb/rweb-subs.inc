@@ -2178,7 +2178,7 @@ function backButton() {
 
 /**
  * Output the given array and exit.
- * @param array $ray: the array to echo
+ * @param array $ray: the array to output
  * @param bool $cry: <encrypt it>
  */
 function exitRay($ray, $cry = FALSE) {

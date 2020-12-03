@@ -1,6 +1,6 @@
 Feature: Identify
 AS a cashier
-I WANT to scan myself in or validate a customer's rCard
+I WANT to scan myself in or validate a customer's Common Good card
 SO I can charge customers on behalf of my company.
 
 # A is a manager
@@ -44,22 +44,25 @@ Scenario: a cashier signs in
   | 1  | Bea Two | this,that,other | refund,r4usd |     | Corner Pub | %now |
 
 Scenario: Device has no identifier yet
+  Given next code is "Jasper" encrypted with "D"
   When agent "" asks device "" to sign in "C:B,ccB2"
   Then we respond with:
   | ok | person  | descriptions    | can          | bad | device | company    | time |*
-  | 1  | Bea Two | this,that,other | refund,r4usd |     | ?      | Corner Pub | %now |
+  | 1  | Bea Two | this,that,other | refund,r4usd |     | Jasper | Corner Pub | %now |
 
 Scenario: Device has no identifier yet for an individual
+  Given next code is "Jasper" encrypted with "D"
   When agent "" asks device "" to sign in ".ZZA,ccA"
   Then we respond with:
   | ok | person  | descriptions | can | canMgr                                    | bad | device | person  | time |*
-  | 1  | Abe One |              |     | charge,undo,refund,r4usd,usd4r,buy,manage |     | ?      | Abe One | %now |
+  | 1  | Abe One |              |     | charge,undo,refund,r4usd,usd4r,buy,manage |     | Jasper | Abe One | %now |
   
 Scenario: Device has no identifier yet for trial company
+  Given next code is "Jasper" encrypted with "D"
   When agent "" asks device "" to sign in ".ZZH,ccH"
   Then we respond with:
   | ok | person | descriptions | can                 | canMgr | bad | device | company | time |*
-  | 1  |        | hills        | charge,r4usd,manage |        |     | ?      | Hill Co | %now |
+  | 1  |        | hills        | charge,r4usd,manage |        |     | Jasper | Hill Co | %now |
 
 Scenario: Device should have an identifier
   When agent "C:A" asks device "" to identify "C:B,ccB2"
