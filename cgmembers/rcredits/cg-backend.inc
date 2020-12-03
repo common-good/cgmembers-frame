@@ -905,9 +905,10 @@ function identify($who, $mya, $paying, $self_message = 'no self-trading') {
   }
   if ($paying) $where .= ' AND :IS_OK';
   if (!$mya->admin and !$mya->isAdmin2) {
-    $where .= tr(' AND (:IS_CO OR %DISTANCE_BETWEEN<%NEIGHBOR_MAX)'); // restrict to nearby
-    list ($lat, $lon) = $mya ? [$mya->latitude ?: 0, $mya->longitude ?: 0] : [0, 0]; // avoid NULL (PHP bug?)
-    $subs += compact(ray('lat lon'));
+    $where .= tr(' AND (:IS_CO OR community=:ctty OR %DISTANCE_BETWEEN<%NEIGHBOR_MAX)'); // restrict to nearby
+    list ($lat, $lon) = [$mya->latitude ?: 0, $mya->longitude ?: 0]; // avoid NULL (PHP bug?)
+    $ctty = $mya->seedpacker ? 0 : $mya->community;
+    $subs += compact(ray('lat lon ctty'));
   }
   
   $sql = <<<EOF

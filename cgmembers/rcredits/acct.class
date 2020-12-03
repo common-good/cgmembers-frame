@@ -225,6 +225,7 @@ class Acct {
       case 'iclub': return ($a->id < 0 or strhas($a->fullName, t('Investment Club')));
       case 'iclubId': return db\get('clubid', 'r_stakes', $uidSub);
       case 'trialco': return ($a->co and $a->depends);
+      case 'seedpacker': return ($a->community == r\serverUid());
       case 'prefsSet': return !is_null($a->o_minimum); // preferences have been set at least once
       case 'hasCustomers': return db\exists('r_relations', 'main=:id AND :IS_CUSTOMER', ['id' => $a->id]);
       case 'superAdmin': return ($a->agentId == 1) ?: (test() and $a->admin and $a->agentA->name == 'abeone');

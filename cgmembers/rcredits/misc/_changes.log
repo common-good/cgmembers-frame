@@ -1,3 +1,6 @@
+2020-12-03 feature/by-name
+. fixed bug that didn't allow pay by name within same community if latitude or longitude was wrong
+
 2020-12-01 feature/pgp-device-id
 . encrypt device id with pgp private key in smart.inc, so it is provably from us (demo site must use same key)
 . fixed log bug in errors.inc
