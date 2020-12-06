@@ -1,3 +1,7 @@
+2020-12-06 feature/old-app
+. fixed old-app message in rsmart.inc
+. added info to gift alert to admin
+
 2020-12-03 hotfix/recur
 . fixed bug that stored wrong value for recursId in recurring transactions
 
