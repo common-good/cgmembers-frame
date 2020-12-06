@@ -69,12 +69,14 @@ function formDonate_submit($form, &$sta) {
   extract(just('amount period honor honored roundup recursId', $sta['input']));
   $info = ray('payer payee amount period created lastTx invoiced', $mya->id, CGID, $amount, $period, now(), 0, 0);
   if ($period != 'once' and nn($recursId)) {
+    $was = (object) db\get('amount, period, periods', 'tx_templates', ray('id', $recursId));
+    $was = u\fmtAmt($was->amount) . ' ' . recurDesc($was->period, $was->periods);
     r\endRule(TRUE, $recursId);
 		say(t('Your previous recurring gift has been canceled.'));
-	}
+	} else $was = t('no previous recurring donation');
 
   if ($amount > 0) {
-    if ($honored) db\insert('r_honors', ray('uid honor honored', $mya->id, $honor, $honored));
+    if ($honored) db\insert('r_honors', $honored = ray('uid honor honored', $mya->id, $honor, $honored));
     $purpose = t('donation');
     $recursId = $period == 'once' ? 0
     : db\insert('tx_templates', ray('action from to amount period purpose duration', ACT_PAY, $mya->id, CGID, $amount, $period, $purpose, 'once'));
@@ -84,8 +86,10 @@ function formDonate_submit($form, &$sta) {
       $mya->tellOut('gift sent', ray('amount', u\fmtAmt($amount)));
     } else $msg .= '|gift transfer later';
     say($msg);
-  }
-  if ($mya->ok) r\tellCAdmin('gift', $info);
+  } else $was = $honored = '';
+  
+  $nm = $mya->fullName;
+  if ($mya->ok) r\tellCAdmin('gift', $info + compact(ray('nm was honored')));
 
   return r\acct() ? w\goNextStep('donate', '') : w\doSay();
 }

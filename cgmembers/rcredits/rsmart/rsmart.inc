@@ -50,7 +50,7 @@ define('R_TRANSIENCE', 60); // number of seconds for device's transient QR to be
 require_once __DIR__ . '/../cg-strings.inc';
 
 $GLOBALS['tStrings'] += array(
-  'old app' => t("IMPORTANT: Your app needs updating.\n\nSearch for \"CGPay Goood\" in the Google Play Store, to download the latest version (uninstall this one after your latest transactions are uploaded)."),
+  'old app' => t("IMPORTANT: Your app needs updating.\n\nMake sure your latest transactions are uploaded before you uninstall this old version. Then search for \"CGPay Goood\" in the Google Play Store to download the new app."),
   'bad proof' => t('That transaction is not valid.'),
   'bad member' => t('That is not a valid account. The customer used a lost, stolen, or fraudulent %PROJECT card.'),
 //  'card deactivated' => t('The %PROJECT card has been de-activated.'),
@@ -64,7 +64,7 @@ $GLOBALS['tStrings'] += array(
   'customer balance' => "Customer: %name\n\nBalance: %balance\nCredit line: %rewards\n", // (parseable)
   'report exchange' => t("You %did %otherName %amount in exchange for cash."),
   'just did' => t("\n\n%we just %did %amount %forCash."), // "We" not "You" here, in case viewed by manager
-  'unknown device' => t('This device is not recognized. Clear your data for the app and try again.'),
+  'unknown device' => t('This device is not recognized. Clear your data for the app (or uninstall and reinstall), then try again.'),
   'confirm undo' => t('Undo transfer of %amount %tofrom %otherName? (Press OK for Yes, Cancel for No.)'), // no creation date, unlike web and SMS
   'member inactive' => t('That account is not yet activated.'),
   'bad icard' => t('The customer has not yet activated his or her %PROJECT Account.'),
@@ -135,7 +135,7 @@ function ok($args, $ok = "1") {
  * @return: does not return (when testing, return the json result)
  */
 function posErr($message, $subs = [], $extra = []) {
-  $message = t($message, $subs);
+  $message = tr($message, $subs);
   return ok(compact('message') + $extra, "0");
 }
 
@@ -179,7 +179,7 @@ function getTime($args) {
   extract(just($keys . ' data', $args, NULL));
   $time = now();
   
-  if ($version < RPOS_VERSION) $message = $version < 230 ? 'old app' : '!update';
+  if ($version < RPOS_VERSION) $message = $version < 230 ? tr('old app') : '!update';
   if ($data or !nn($message)) $message = handleAppMsg(@$data);
 
   return ok(compact(ray('time message')));
