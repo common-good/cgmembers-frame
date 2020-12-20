@@ -120,7 +120,7 @@ function export($params) {
     } else {
       list ($firstname, $lastname, $mid) = $a->co ? [$a->fullName, '', ''] : u\parseName($a->fullName, TRUE);
       if (strlen($firstname) < 2 and strlen($mid) > 2) $firstname = $mid;
-      $name = $firstname; // Company name or person's first name
+      $name = $firstname ?: $a->fullName; // Company name or person's first name
       $email = $a->email;
       $phone = $a->phone;
       list ($address, $city, $state, $zip) = $a->postalAddr

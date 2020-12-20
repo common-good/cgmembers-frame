@@ -45,7 +45,7 @@ function rdo($code) {
     extract(just('op', $info)); // overwrite op, if op is specified
     if (!$qid or !$a = r\acct($qid)) {
       $nonMemberErr = t('That link is only for current members. <%a>Click here to sign up!</a>', '_a', atag('/signup'));
-      if (!u\starts($op, 'do')) return doErr($nonMemberErr); // doFormName works for nonmembers too (if allow='any')
+      if (!u\starts($op, 'do') and !in($op, 'survey')) return doErr($nonMemberErr); // doFormName works for nonmembers too (if allow='any')
     }
   } else { // normal email link
     if (!$info = u\decryRay($code)) return doErr(t('That link is archaic.'));
@@ -77,6 +77,13 @@ function rdo($code) {
   if ($op == 'rsv') {return w\go("savings/qid=$qid&ecode=$ecode");}
   if ($op == 'sql') $res = db\q($sql, $subs);
 
+  if ($op == 'survey') {
+      extract(just('email amt', $_GET, NULL));
+      if (!$amt or !is_numeric($amt)) return doErr(t('Survey click failed.'));
+      if ($qid) $a->update('iintent', $amt); else r\tellAdmin(t('Investment Intent'), compact(ray('email amt')));
+      return doSay(t('Your investment intent is noted. Thank you for responding! We will send you a note when it\'s time to invest and launch a club in your area.'));
+  }
+  
   if ($op == 'addr') {
     if (!$a2 = r\acct($v)) return doErr(t('That account no longer exists.'));
     $phone = $a2->co ? t('Phone: ') . u\fmtPhone($a2->phone) : '';
