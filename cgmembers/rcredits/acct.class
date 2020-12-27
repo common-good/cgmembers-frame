@@ -874,9 +874,10 @@ EOF;
 
       if ($a->ok and $b->ok) { // no need to settle with closed or not-yet-open account
         $diff = $a->balance - $b->balance;
-        $xfr = round($diff / 2, 2);
-        $z = be\transfer('payment', $a, $b, $xfr, t('joint account settlement'), FOR_USD, ['force'=>1]);
-        u\EXPECT($z->ok, t('Join account settlement failed for %p1 and %p2', 'p1 p2', $a->fullName, $b->fullName));
+        if ($xfr = round($diff / 2, 2)) {
+          $z = be\transfer('payment', $a, $b, $xfr, t('joint account settlement'), FOR_USD, ['force'=>1]);
+          u\EXPECT($z->ok, t('Join account settlement failed for %p1 and %p2', 'p1 p2', $a->fullName, $b->fullName));
+        }
       }
     } elseif ($except) {
       $sql .= ' AND other<>:except';

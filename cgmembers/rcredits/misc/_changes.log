@@ -1,3 +1,13 @@
+2020-12-27 feature/bugs
+. fixed some undefined variable warnings
+. donation attempts by nonmembers now encourage the person to sign up
+. agent form now facilitates conversaion from mistaken personal account
+. fixed undefined function bug in recurring donations
+. posts can now default to a community by specifying a zip in URL
+. fixed bug in posts that showed all posts to everyone
+. tip posts are now shown only where they are intended (like offers and needs)
+. fixed bug in unjoin that allowed a zero transaction
+
 2020-12-20 feature/survey
 . handling one-click investment club survey responses
 

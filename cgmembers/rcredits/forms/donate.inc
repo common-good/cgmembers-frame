@@ -70,7 +70,7 @@ function formDonate_submit($form, &$sta) {
   $info = ray('payer payee amount period created lastTx invoiced', $mya->id, CGID, $amount, $period, now(), 0, 0);
   if ($period != 'once' and nn($recursId)) {
     $was = (object) db\get('amount, period, periods', 'tx_templates', ray('id', $recursId));
-    $was = u\fmtAmt($was->amount) . ' ' . recurDesc($was->period, $was->periods);
+    $was = u\fmtAmt($was->amount) . ' ' . r\recurDesc($was->period, $was->periods);
     r\endRule(TRUE, $recursId);
 		say(t('Your previous recurring gift has been canceled.'));
 	} else $was = t('no previous recurring donation');
