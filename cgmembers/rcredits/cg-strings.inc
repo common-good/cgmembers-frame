@@ -521,7 +521,7 @@ EOF
   'forced without perm' => t('<p>An unauthorized transaction was made using a Company %PROJECT card.</p><ul><li>Date: %date</li><li>Customer: %a2 (by %agent2)</li><li>Company: %a1 (by %agent1)</li><li>Amount: %amount</li><li>For: %for</li></ul><p>This transaction was taken offline, so there was no way to know the agent lacked authorization.</p>'),
   'bad invite num' => t('That is not a valid username or invitation number.'),
   'negative saveWeekly' => t('Your discretionary savings are already at their minimum, so your weekly savings addition cannot be negative.'),
-  'requires signin' => t('You must be signed in, to use that page.'),
+  'requires signin' => t('You must be signed in, to use that page. Not a member yet? Consider <a href="%PROMO_URL">signing up!</a>'),
   'too many days' => t('You cannot view more than 18 months at a time on screen (but you can download any period).'),
   'co code timeout' => t('That form has expired. Go back and try again.'),
   'old partner link' => t('Sign in with your account ID and password to continue your account set-up.'),

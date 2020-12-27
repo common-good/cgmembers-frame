@@ -11,7 +11,7 @@ Setup:
   | address     | 1 A St.      | 4 D St.      |
   | city        | Aville       | Dville       |
   | state       | MA           | MA           |
-  | zip         | 01001        | 01001        |
+  | zip         | 01001        | 04004        |
   | phone       | +14132530001 | +4132530004  |
   | email       | a@b.c        | d@           |
   | method      | text         | email        |
@@ -345,3 +345,10 @@ Scenario: Someone confirmed sends a message and posts again
   Then these "posts":
   | postid | type | service | item | details | cat   | emergency | exchange | radius | pid | created | end |* 
   | 2      | need | 0       | bag  | paper   | other | 0         | 2        | .25    | 2   | %today  |     |
+
+Scenario: Someone visits a community's posts page
+  Given these "posts":
+  | postid | type  | item | details | cat  | service | exchange | emergency | radius | pid | created | confirmed |* 
+  | 1      | offer | fish | big one | food | 0       | 0        | 0         | .01    | 1   | %now-1d | 1 |
+  | 2      | offer | duck | big two | food | 0       | 0        | 0         | .01    | 4   | %now-1d | 1 |
+  When someone visits "community/posts/zip=01001"

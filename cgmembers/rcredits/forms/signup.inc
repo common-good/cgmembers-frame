@@ -185,7 +185,7 @@ function jointSignup($a = NULL) {
     $args['fullName'] .= t(' PARTNER');
     $a = new r\Acct($args + ['email' => t('name@') . EMAILX]);
     u\EXPECT($a, 'cannot create account');
-    $a->update('tenure', round($mya->tenure + ($a->created - $mya->created) / (30 * DAY_SECS)));
+    $a->update('tenure', round(($mya->tenure ?: 0) + ($a->created - $mya->created) / (30 * DAY_SECS)));
     if ($mya->risk('rents')) $a->setRisk('rents');
     $a->newRelation(ray('other permission', $mya->id, r\perm(B_JOINT)));
   }

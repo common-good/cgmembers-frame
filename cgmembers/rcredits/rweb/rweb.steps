@@ -1732,6 +1732,7 @@ function weScripWithSubs($script, $args = []) {
  *     MAKE posts SomeoneRepliesToAnOffer
  *     BOTH posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  *     BOTH posts SomeoneConfirmedSendsAMessageAndPostsAgain
+ *     MAKE posts SomeoneVisitsACommunitysPostsPage
  *     MAKE preferences Setup
  *     MAKE showrecurs Setup
  *     TEST showrecurs AMemberStopsAnAutopayment
@@ -2063,6 +2064,7 @@ function companyFlags($flags) {return t\companyFlags($flags);}
  *     MAKE posts SomeoneViewsTheDetailsOfAnUrgentNeed
  *     MAKE posts SomeoneViewsTheDetailsOfATip
  *     MAKE posts SomeoneRepliesToAnOffer
+ *     MAKE posts SomeoneVisitsACommunitysPostsPage
  */
 function someoneVisits($page) {return t\memberVisitsPage('?', $page);}
 

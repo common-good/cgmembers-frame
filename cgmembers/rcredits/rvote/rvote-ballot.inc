@@ -761,6 +761,7 @@ EOF;
 function votingWelcome($endDate, $proxLink) {
   include_once R_ROOT . '/rvote/rvote-results.inc';
 	
+  $title = t('Vote');
   $subtext = w\item(t(<<<EOF
   Before you vote, please make sure you are happy with your <%a>proxy choices</a> and adjust them as needed.<br><br>
   
@@ -772,15 +773,17 @@ EOF
     $showVotes = w\submit(t('Show votes'));
     $noVote = w\submit(t('Didn\'t vote yet'));
     $noDirect = w\submit(t('Didn\'t vote directly'));
+    $results = $resultsNoProx = NULL;
 //    $results = @$results ? w\item(v\showResults($mya->community, $noProxies)) : w\submit(t('Results'));
 //    $resultsNoProx = w\submit(t('Results (no proxies)'));
     $agree = w\hidFld(TRUE);
   } else {
     $agree = w\boxFld('agree', '', t('I agree.'), '', w\required());
     $agree = w\item(str_replace('<input ', '<input required="required" ', w\rendA('agree', $agree)));
+    $showVotes = $noVote = $noDirect = $results = $resultsNoProx = NULL;
   }
   $submit = w\submit(t('Vote Now'), 'success', 'lg', w\suffix(' &nbsp; ' . t('Polls close at midnight on the night of %date.', 'date', $endDate)));
-  return compact(ray('title showVotes noVote noDirect results resultsNoProx subtext agree submit args'));
+  return w\cgform(compact(ray('title showVotes noVote noDirect results resultsNoProx subtext agree submit')));
 } 
 
 /**
@@ -816,6 +819,6 @@ EOF
   }
   $gradeIt = w\submit(t('Grade a Proposal'), 'success', 'lg', w\suffix(' &nbsp; ' . t('Grading ends at midnight on %date.', 'date', $endDate)));
   
-  $info = []; foreach (ray('title showVotes noVote noDirect results resultsNoProx subtext agree gradeIt args') as $k) if (isset($$k)) $info[$k] = $$k;
+  $info = []; foreach (ray('title subtext agree gradeIt') as $k) if (isset($$k)) $info[$k] = $$k;
   return w\cgform($info);
 } 

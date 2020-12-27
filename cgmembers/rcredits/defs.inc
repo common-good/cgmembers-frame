@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.56h'; // software version
+const R_VERSION = '3.56i'; // software version
 define('R_ROOT', __DIR__);
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -236,7 +236,7 @@ const DISTANCE_BETWEEN = 'DEGREES(ACOS(LEAST(1.0, COS(RADIANS(latitude))
   * COS(RADIANS(longitude - :lon))
   + SIN(RADIANS(latitude))
   * SIN(RADIANS(:lat))))) * ' . MI_PER_DEGREE; // distance from other, in miles (requires pre-processing)
-const NO_DISTANCE = '(latitude=0 AND longitude=0) OR (:lat=0 AND :lon=0)';
+const NO_DISTANCE = '((latitude=0 AND longitude=0) OR (:lat=0 AND :lon=0))';
 
 const TEXT_BUTTON_STYLE = 'display:inline-block; background-color:darkgreen; border-radius:5px; border:1px solid forestgreen; color:white; font-family:Arial; font-size:17px; padding:8px 15px; text-decoration-line:none;';
 const R_URL_SLASH = '%_%'; // Drupal gets confused by slashes in a url, even if urlencoded

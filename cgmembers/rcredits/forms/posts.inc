@@ -58,8 +58,6 @@ const MY_POSTS = 98; // select OPTION index for my posts
 
   For St. Louis:
   - Reconcile the current categories with ones SESL currently uses and color-code them. And/or maybe implement key words.
-  - Define the St. Louis region by zipcodes rather than by mile radius and have that as the default for St. Louis people.
-
  */
 function formPosts($form, &$sta, $args = '') {
   global $base_url;
@@ -69,6 +67,7 @@ function formPosts($form, &$sta, $args = '') {
   $confirming = in($op, 'confirm cancel edit');
   if ($code and !$confirming) $args = u\deurlify($code);
   extract(just(TOP_FLDS . ' postid thing email', $args, NULL));
+  if (nn($zip) and !nn($radius)) $radius = DFT_RADIUS; // allow community link as domain/community/posts/zip=whatever
 
   foreach (ray(TOP_FLDS . ' email') as $k) {
     if (nn($$k)) r\setCook($k, $$k); else $$k = r\cook($k); // default from previous time (useful also in getWho)
@@ -644,10 +643,10 @@ function admin($zip) {
  * @return the query result set
  */
 function getPosts($type, $lat, $lon, $zip, $radius, $myPid, $admin, $zipIrrelevant, $since = 0, $all = TRUE) {
-
+//debug("getPosts($type, $lat, $lon, $zip, $radius, $myPid, $admin, $zipIrrelevant, $since");
   if (($radius ?: DFT_RADIUS) >= DFT_RADIUS  // looking broadly
       and $zips = r\communityId($zip, TRUE, 'zips')) { // from within an established CG community
-    $cttyCrit = ":zip RLIKE '$zips'";
+    $cttyCrit = "p.zip RLIKE '$zips'";
     if (!$radius) $radius = DFT_RADIUS; // default to JUST ctty and DFT_RADIUS instead of all posts
   } else $cttyCrit = 0;
     
@@ -659,6 +658,8 @@ function getPosts($type, $lat, $lon, $zip, $radius, $myPid, $admin, $zipIrreleva
   $postRadius = 'IFNULL(s.radius, 0)';
   $isMyPid = 'pid=:myPid';
   if (!$type) $type = ray(POST_TYPES);
+  //debug(compact(ray('type isMyPid postRadius visible admin zipIrrelevant cttyCrit myPid')));
+//    $admin as admin, :radius as radius, $noGeo as noGeo, MID(p.zip,1,3) = MID(:zip,1,3) AS zipMatch, $zipIrrelevant as noz,
 
   $sql = <<<X
     SELECT IF ($noGeo, '', $distance) AS dist, s.postid, s.service, c.id AS catId, c.cat, s.item, s.details, s.exchange,
@@ -673,7 +674,6 @@ function getPosts($type, $lat, $lon, $zip, $radius, $myPid, $admin, $zipIrreleva
       AND IFNULL(s.end, :NOW) >= :NOW
       AND (
         $admin OR :radius='' OR
-        (s.type='tip' AND $postRadius>0) OR
         IF($noGeo, 
           MID(p.zip,1,3) = MID(:zip,1,3) OR $zipIrrelevant, 
           $distance < LEAST(IF($postRadius=0, 99999, s.radius), :radius)
