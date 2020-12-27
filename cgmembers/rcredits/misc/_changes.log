@@ -1,3 +1,6 @@
+2020-12-27 feature/smart-undo
+. fixed warnings about missing params in rsmart charge()
+
 2020-12-27 feature/bugs
 . fixed some undefined variable warnings
 . donation attempts by nonmembers now encourage the person to sign up

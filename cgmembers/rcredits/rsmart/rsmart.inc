@@ -332,6 +332,7 @@ function charge($args, $type = 'charge') {
   $keys = 'agent member amount goods description created';
   if ($err = missingArg($keys, $args)) return posErr($err);
   extract(just($keys . ' proof force version', $args, NULL));
+  $force = (int) $force;
   $boxId = $boxUser;
   
   /* extract(just('description device', $args, ['', null])); */
@@ -355,16 +356,6 @@ function charge($args, $type = 'charge') {
 
   $selfhelp = ($goods == '2');
   $goods = $goods == "3" ? FOR_NONGOODS : ($goods == "0" ? FOR_USD : FOR_GOODS); // selfhelp is FOR_GOODS
-
-  if (nn($force)) {
-    $sql = <<<EOF
-      SELECT xid FROM txs 
-      WHERE created=:created AND uid1=:payer AND uid2=:payee
-      AND amt=:amount AND goods=:goods AND for2=:payeeFor
-EOF;
-    $info = ray('created uid1 uid2 amt goods for2', $created, $a->id, $mya->id, $amount, $goods, $description);
-    $xid = db\get('xid', 'txs', $info);
-  }
   
   $amount = str_replace(',', '', number_format($amount, 2)); // make sure both cents digits are included
   $code = $a->cardCode();
@@ -378,47 +369,51 @@ EOF;
     }
   }
 
-  if ($force == "1" and nn($xid)) { // does exist and should (always background)
-    $message = $did = $undo = '';
-    $txid = $xid;
-  } elseif ($force == "-1" and nn($xid)) { // does exists and shouldn't
-    $did = '';
-    $undo = $xid;
+  $message = $did = $undo = '';
+  $txid = 0;
+  
+  $info = ray('created uid1 uid2 amt goods for2', $created, $a->id, $mya->id, $amount, $goods, $description);
 
-    $revRes = db\get('xid AS `undo`, created', 'tx_hdrs', 'reversesXid=:xid', ['xid'=>$xid]);
-    if ($revRes) { // already got reversed
-      extract(just('undo created', $revRes));
-      $message = t('Transaction has been reversed.');
-    } else {
-      $z = be\undoTx($xid, ($amount < 0 and !$mya->co) ? 'amount>0' : "amount='$amount'", [], $force);
+  if ($force and $xid = db\get('xid', 'txs', $info)) { // forcing and transaction exists
+    if ($force == 1) { // does exist and should (always background)
+      $txid = $xid;
+    } elseif ($force == -1) { // does exist and should be reversed
+      if ($reversal = db\get('xid AS `undo`,created', 'tx_hdrs', 'reversesXid=:xid', compact('xid'))) { // already reversed
+        extract($reversal); // undo = xid of reversed tx
+        $message = t('Transaction has been reversed.');
+      } else {
+        $z = be\undoTx($xid, ($amount < 0 and !$mya->co) ? 'amount>0' : "amount='$amount'", [], $force);
+        if (!$z->ok) return badTx($args, $name, $z->msg, $z->subs);
+        $undo = $xid; // undo = xid of reversed tx
+        $txid = $z->subs['xid'];
+        $created = $z->subs['created0'];
+        $message = $z->msg;
+        r\tellAdmin('reversing tx', ray('xid uid created message subs', $xid, $mya->id, u\fmtDate($created), $message, $z->subs));
+      }
+    } else u\FAIL(t('force param must be 0, 1, or -1'));
+    
+  } else { // transaction doesn't exist (yet)
+    if ($force == -1) { // doesn't exist and shouldn't
+      $created = '';
+      $message = t('Transaction has been canceled.');
+    } else { // doesn't exist and should (forcing or not)
+      if ($amount < 0 and !$mya->co) list ($type, $amount) = ['payment', -$amount];
+      $z = be\transfer($type, $mya, $a, $amount, $description, $goods, compact(ray('created force boxId')));
       if (!$z->ok) return badTx($args, $name, $z->msg, $z->subs);
-      $txid = $z->subs['xid'];
-      $created = $z->subs['created0'];
-      $message = $z->msg;
-      r\tellAdmin('reversing tx', ray('xid uid created message subs', $xid, $mya->id, u\fmtDate($created), $message, $z->subs));
-    }
-  } elseif ($force == "-1" and !nn($xid)) { // doesn't exist and shouldn't
-    $did = $undo = $created = '';
-    $txid = 0;
-    $message = t('Transaction has been canceled.');
-  } else { // doesn't exist and should (forcing or not)
-//    if ($amount < 0 and $a->co and $a->proSe) return badTx($args, $name, $msg, $subs);
-    if ($amount < 0 and !$mya->co) list ($type, $amount) = ['payment', -$amount];
-    $z = be\transfer($type, $mya, $a, $amount, $description, $goods, compact(ray('created force boxId')));
-    if (!$z->ok) return badTx($args, $name, $z->msg, $z->subs);
 
-    if (!$force and $aa = $a->agentA and $mya->co and !$aa->ided) $aa->setBit(B_IDED);
-    $txid = $z->subs['xid'];
-    if ($selfhelp) {
-      $message = 'selfhelp tx';
-      if ($mya->cttyRewardy) $message .= '|for why|reward other';
-    } else {
-      $message = $z->msg;
-      $forCash = $goods == FOR_USD ? t('for USD') : '';
-      $we = $mya->co ? t('We') : t('You');
-      $did = tr('just did', $z->subs + compact('forCash', 'we'));
+      if (!$force and $aa = $a->agentA and $mya->co and !$aa->ided) $aa->setBit(B_IDED);
+      $txid = $z->subs['xid'];
+      if ($selfhelp) {
+        $message = 'selfhelp tx';
+        if ($mya->cttyRewardy) $message .= '|for why|reward other';
+      } else {
+        $message = $z->msg;
+        $forCash = $goods == FOR_USD ? t('for USD') : '';
+        $we = $mya->co ? t('We') : t('You');
+        $did = tr('just did', $z->subs + compact('forCash', 'we'));
+      }
+      $undo = ($mya->can(B_BUY) and $mya->can(B_SELL)) ? tr('confirm undo', $z->subs) : '';
     }
-    $undo = ($mya->can(B_BUY) and $mya->can(B_SELL)) ? tr('confirm undo', $z->subs) : '';
   }
 
   return ok(compact(ray('message txid created did undo')) + balrew($a, $version < 230));
