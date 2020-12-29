@@ -54,8 +54,9 @@ function formInvestInterest_submit($form, &$sta) {
   $mya = w\eLinkAcct($sta); 
 
   $a = $mya ? $mya->agentA : NULL;
-  $dbFields = 'fullName email flags phone zip notes source';
+  $dbFields = 'fullName email flags phone zip notes source city state latitude longitude';
   extract(just('comments source2 ' . $dbFields, $sta['input'], NULL));
+  list ($city, $state, $latitude, $longitude) = r\zipCity($zip);
 
   $notes = $comments ? (r\stampNote($comments) . ($a ? $a->notes : '')) : '';
   $flags = ($a ? $a->flags : u\bit(B_NONUDGE)) | u\bit(B_ICLUBQ);
@@ -69,11 +70,8 @@ function formInvestInterest_submit($form, &$sta) {
     $acctType = hidFld(CO_PERSONAL);
     u\setDft($source, '');
     if ($source2) $source = trim(mb_strtoupper($source2) . "-$source");
-    list ($city, $state, $latitude, $longitude) = r\zipCity($zip);
     $info = []; foreach (ray($dbFields) as $k) if (isset($$k)) $info[$k] = $$k;
     if (!$a = new r\Acct($info)) return softErr(t('cannot create account'));
-//    r\setAcct($a->id, $sta);
-    $a->stepDone('signup');
     $msg .= t('<p>Meanwhile, if you\'re not yet in %PROJECT, <%a>check it out</a>!</p>', '_a', atag(PROMO_URL));
   }
   say($msg);

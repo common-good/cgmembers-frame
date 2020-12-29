@@ -1322,7 +1322,7 @@ function contactFields($defaults = []) {
 
 function stateFld($dft) {return selectFld(REQ . t('State:'), t(''), dft($dft), ['' => '--'] + db\keyed('id,name', 'r_states', 'country_id=:R_COUNTRY_ID'));}
 function sourceFld($dft = NULL) {return textFld(t('Referred By:'), [t('How you heard about %PROJECT'), t('Where did you hear about %PROJECT? (name of company or person, web address, publication name, radio station name, or whatever)')], dft(nn($dft)));}
-function zipFld($zip = NULL) {return textFld(t('Postal Code:'), [t('Physical location postal code'), t('Postal code for your <em>physical location</em>')], required(nn($zip)));}
+function zipFld($zip = NULL) {return textFld(REQ . t('Postal Code:'), [t('Physical location postal code')], dft(nn($zip)));}
 function sellingFld($selling = NULL) {return areaFld(t('Selling:'), [t('Products'),t('Enter one or more <b>VERY SHORT</b> transaction descriptions (for example "food") for when you make a sale &mdash; one line for each. Put the most common one first. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', u\fmtDate(now(), TRUE))], required($selling));}
 function routingFld($req = '') {return intFld(REQ . t('Routing:'), t('Type carefully your bank\'s routing number.<br>(check to be sure it\'s correct!)'), vrange(10000000, 999999999));}
 function crumbsFld($dft, $req = FALSE) {return numFld($req . t('Crumbs:'), [t('Contribution Percentage'), t('Percentage to contribute on each payment you receive')], dft(($dft * 100) ?: '') + step(.1) + suffix(' %'));}
@@ -2104,12 +2104,20 @@ function signupCoDisplay($info, &$company = '') {
 }
 
 /**
- * Return a simple arithmetical expression and its small integer answer.
+ * Return fields with a simple arithmetical expression and twice its small integer answer.
  */
 function captcha() {
   $answer = mt_rand(2, 999);
   $n1 = $answer - 1;
-  return ["$n1 + 1 =", $answer];
+  $cq = numFld(REQ . "$n1 + 1 =", ['?'], suffix(t(' (to keep the robots out)')));
+  $ca = hidFld($answer * 2); // don't make it too easy
+  return [$cq, $ca];
+}
+
+function badCaptcha($sta) {
+  if (test()) return FALSE;
+  extract(just('cq ca', $sta['input'], NULL));
+  return ($cq * 2 == $ca) ? FALSE : !say(t('Wrong sum. Try again.'), 'cq');
 }
 
 /**

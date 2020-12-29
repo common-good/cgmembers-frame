@@ -40,6 +40,7 @@ function rdo($code) {
   
   if (strhas($code, '~')) { // newsletter link (doWhatever~code)
     list ($op, $code) = explode('~', $code);
+    if (!$code and $op == 'doDonate') return w\go('cc'); // special case for donations from nonmembers
     $info = u\decryRay($code);
     extract(just('qid expire v sql subs', $info, NULL));
     extract(just('op', $info)); // overwrite op, if op is specified

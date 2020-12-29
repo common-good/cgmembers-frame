@@ -24,7 +24,7 @@ define('POST_TYPE_NAMES2', t('Needs Offers Tips'));
 define('POST_TERMS', t('%i0 Free, %i1 Pay, %i2 Trade or Pay'));
 const POST_TERM_ICONS = '<span class="glyphicon glyphicon-heart"></span>&nbsp;, <span class="forpay">$</span>, <span class="glyphicon glyphicon-retweet"></span>&nbsp;';
 define('TERMS_CHOICES', t('-1:Free/Pay/Trade, 0:Free, 1:Pay, 2:Trade or Pay'));
-define('POST_SORG', t('Service Goods'));
+define('POST_GORS', t('Service Goods'));
 define('SORG_CHOICES', t('-1:G & S, 0:Goods, 1:Services'));
 define('CAT_FLAG', '[CAT]'); // gets replaced programmatically
 const MY_POSTS = 98; // select OPTION index for my posts
@@ -191,7 +191,7 @@ function postInputFlds($dfts = []) {
   jsx('post-post', 'types', POST_TYPES);
 
   $type = radiosFld(REQ . t('Type:'), '', dft(isset($type) ? typeNum($type) : -1), ray(POST_TYPE_NAMES1));
-  $service = radiosFld(REQ . t('Service or Goods:'), '', dft(nn($service, -1)), ray(POST_SORG));
+  $service = radiosFld(REQ . t('Goods or Service:'), '', dft(nn($service, -1)), ray(POST_GORS));
   $choices = catChoices(t('Choose a category'));
   $cat = array_search($cat, $choices);
   $cat = selectFld(REQ . t('Category:'), '', dft($cat), $choices);

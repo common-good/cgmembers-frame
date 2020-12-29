@@ -498,6 +498,30 @@ function get($url, $content = FALSE, $responseFormat = 'raw', $extra_headers = [
   return post($url, $content, $responseFormat, $extra_headers, 'GET', $request_format);
 } 
 
+/**
+ * POST and redirect (together)
+ */
+function postnGo($url, $data) {
+  $guts = '';
+  foreach ($data as $k => $v) {
+    foreach (ray('k v') as $x) $$x = htmlentities($$x);
+    $guts .= <<<X
+      <input type="hidden" name="$k" value="$v" />\n
+X;
+  }
+  $clickHere = t('Click here to continue.');
+  
+  header_remove('Content-Security-Policy');
+  echo <<<X
+    <form id="me" action="$url" method="GET">
+      $guts
+      <noscript><input type="submit" value="$clickHere" /></noscript>
+    </form>
+    <script>document.getElementById('me').submit();</script>
+X;
+  return exitJust();
+}
+
 function randomInt($len = NULL) {
   $result = '';
   while (strlen($result) < $len) $result .= mt_rand(100000000, 999999999);

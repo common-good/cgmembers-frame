@@ -640,7 +640,7 @@ function variable_del($nm) {return delV($nm);} // for legacy Drupal
  * Exit with a plaintext message.
  * @see also t\getExitMsg()
  */
-function exitJust($s) {
+function exitJust($s = '') {
 /**/  if (test()) { t\output('exiting with: ' . pr($s)); return t\logRec('echo', $s); }
 /**/  echo pr($s);
   exit();
