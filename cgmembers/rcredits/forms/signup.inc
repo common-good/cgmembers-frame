@@ -81,8 +81,6 @@ EOF
 
   extract(just('agreement details', formAgreement($form, $sta)));
   list ($cq, $ca) = w\captcha();
-  $cq = numFld(REQ . $cq, ['?']);
-  $ca = hidFld($ca * 2); // don't make it too easy
   $submit = t('I agree'); //  was t('Next')
     
   $form = compact(ray('title forother subtext acctType fullName phone email zip source midtext agreement details cq ca submit myid args confirmed helper iCode notes source2'));
@@ -91,7 +89,7 @@ EOF
 }
 
 function formSignup_validate($form, &$sta) {
-  extract(just('fullName phone email zip myid cq ca', $sta['input'], NULL));
+  extract(just('fullName phone email zip myid', $sta['input'], NULL));
 
   if ($err = u\badName($fullName)) return say($err, ['field' => 'fullName'], 'fullName');
   $fullName = u\normalizeCase($fullName);
@@ -99,9 +97,7 @@ function formSignup_validate($form, &$sta) {
   if ($err = u\badPhone($phone)) return say($err, 'phone');
   if (!emailOkay($email, FALSE, $myid ? r\acct($myid) : '')) return;
   if ($err = u\badZip($zip)) return say($err, 'zip');
-  
-  if (!test())
-  if ($cq * 2 != $ca) return say(t('Wrong sum. Try again.'), 'cq');
+  if (badCaptcha($sta)) return;
 
   u\preray(compact(ray('fullName phone email zip')), $sta['input']);
 }

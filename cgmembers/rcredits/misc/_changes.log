@@ -1,3 +1,12 @@
+2020-12-29 feature/cc
+. fixed goods and services posts, which were labeled backwards
+. nonudge people are now included in newsletter list
+. added a cc page for credit card donations
+. created a postnGo utility function to redirect and POST at the same time
+. fixed bug that set signup step done for investment club interest
+. nonmember clicking donate link from email now goes to cc form
+. refactored w\captcha to return fields rather than values and added a badCaptcha validation function
+
 2020-12-27 feature/smart-undo
 . fixed warnings about missing params in rsmart charge()
 
