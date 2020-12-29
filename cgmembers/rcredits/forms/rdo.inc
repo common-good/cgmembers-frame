@@ -68,6 +68,7 @@ function rdo($code) {
   $channel = TX_LINK;
   
   if (u\starts($op, 'do') and $formName = substr($op, 2)) {
+    if ($op == 'doDonate' and !$a->ok) return w\go('cc'); // special case for donations from nonmembers
     $file = strtolower(R_ROOT . "/forms/$formName.inc");
     if (file_exists($file)) include_once $file;		
     return w\showForm($formName, nn($a) ? "qid=$a->mainQid&ecode=$a->emailCode&$v" : '');

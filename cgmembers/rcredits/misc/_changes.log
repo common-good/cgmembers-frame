@@ -1,3 +1,7 @@
+2020-12-29 feature/invest-amt
+. invest/interest form now asks for intended amount
+. email links to donate from inactive account now redirect to cc donation
+
 2020-12-29 feature/cc
 . fixed goods and services posts, which were labeled backwards
 . nonudge people are now included in newsletter list
