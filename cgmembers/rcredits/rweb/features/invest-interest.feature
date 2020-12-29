@@ -29,9 +29,9 @@ Scenario: A non-member expresses interest
   | Keep me in the loop |
   
   When member "?" confirms form "invest/interest" with values:
-  | fullName | phone        | email | zip   | source | comments |*
-  | Dee Four | 413-628-0004 | d@    | 01004 | news   | good!    |
+  | fullName | phone        | email | zip   | source | amount | comments |*
+  | Dee Four | 413-628-0004 | d@    | 01004 | news   | 123.45 | good!    |
   Then members:
-  | uid    | fullName | name    | flags           | phone       | email | zip   | source | notes               |*
-  | NEWAAA | Dee Four | deefour | nonudge, iclubq | 14136280004 | d@    | 01004 | news   | %dmy  self: good!\n |
+  | uid    | fullName | name    | flags           | phone       | email | zip   | source | iintent | notes               |*
+  | NEWAAA | Dee Four | deefour | nonudge, iclubq | 14136280004 | d@    | 01004 | news   | 123.45  | %dmy  self: good!\n |
   
