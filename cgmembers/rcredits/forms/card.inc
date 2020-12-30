@@ -12,6 +12,11 @@ use CG\Db as db;
  * Handle a scanned Common Good card.
  */
 function formCard($form, &$sta, $dom = '', $code = '') {
+  if ($dom == 'disconnect') {
+    r\setCook('scanner', NULL);
+    return sayEmpty(t('This device is no longer associated with any account.'));
+  }
+  
   if (!$subdom = strtoupper($dom) or !$code) return exit('fail'); // correct a fluke in the server's rewrite (empty subdomain is a hacker -- give no information, don't even tell admin)
   $qrDom = ray(QR_DOMS)[(bool) isPRODUCTION];
   $res = r\Qo::qr2("$subdom.$qrDom/$code");
@@ -43,6 +48,7 @@ function formCard($form, &$sta, $dom = '', $code = '') {
   }
   
   $photo = item($a->photoHtml(FALSE, TRUE));
+  $agentName = $a->agentA->fullName;
   $subtext = ($a->co ? "<small>$agentName</small><br>" : '') . "<b>$a->fullName</b><br>$a->city, $a->st";
 
   $amount = numFld(t('Amount: '), [t('Amount')]);
@@ -114,6 +120,5 @@ function cardSignout($msg, $err = '') {
   session_unset();
   
   r\setAcct(NULL);
-  say($msg, $err);
-  return go('empty');
+  return sayEmpty($msg, $err);
 }

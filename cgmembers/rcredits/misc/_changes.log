@@ -1,3 +1,6 @@
+2020-12-30 feature/disconnect
+. when a device is associated with an account, to scan customer cards, a "Disconnect Device" choice appears on menu
+
 2020-12-29 feature/invest-amt
 . invest/interest form now asks for intended amount
 . email links to donate from inactive account now redirect to cc donation
