@@ -78,6 +78,5 @@ function formInvestInterest_submit($form, &$sta) {
     if (!$a = new r\Acct($info)) return softErr(t('cannot create account'));
     $msg .= t('<p>Meanwhile, if you\'re not yet in %PROJECT, <%a>check it out</a>!</p>', '_a', atag(PROMO_URL));
   }
-  say($msg);
-  return go('empty');
+  return sayEmpty($msg);
 }

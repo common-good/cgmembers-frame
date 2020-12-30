@@ -23,8 +23,7 @@ function formScraps($form, &$sta, $arg = '') {
   
   if ($arg == 'reopen') {
     r\tellAdmin(t('Reopen account') . " $mya->fullName ($mya->mainQid)");
-    say(t('<h2>Request Received</h2>Your request to reopen your account has been received. Expect to hear back from us within a day or two.'));
-    return go('empty');
+    return sayEmpty(t('<h2>Request Received</h2>Your request to reopen your account has been received. Expect to hear back from us within a day or two.'));
   }
   
   $title = t('');

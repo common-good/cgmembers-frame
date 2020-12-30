@@ -35,13 +35,14 @@ function access($perms = NULL) {
       $perm == ANY ? TRUE // needed for submenus (see w\subMenu())
     : ($perm == 'dev' ? isDEV
     : ($perm == 'signedIn' ? (bool) $mya
+    : ($perm == 'scanner' ? (bool) r\cook('scanner')
     : ($perm == 'iclub' ? ($mya and $mya->iclub)
     : ($perm == 'superadmin' ? ($mya and $mya->superAdmin)
     : ($perm == 'superadminORdev' ? (($mya and $mya->superAdmin) or isDEV)
     : ($perm == 'prose' ? ($mya and $mya->proSe)
     : ($perm == 'investor' ? ($mya and ($mya->iclub or db\exists('r_stakes', 'uid=:id', ['id'=>$mya->id])))
     : ($perm == 'depends' ? ($mya and $mya->depends and $mya->proSe)
-    : ($mya and $mya->can(u\consta('b', $perm))) ))))))));
+    : ($mya and $mya->can(u\consta('b', $perm))) )))))))));
     if ($not ? $pass : !$pass) return FALSE;
   }
   return TRUE;

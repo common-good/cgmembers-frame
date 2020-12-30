@@ -12,6 +12,7 @@ use CG\Util as u;
 /**
  * Return the menu.
  * @param string $submenu: (optional) a subsection of the menu structure to return RAW (unprocessed)
+ * @see r\access()
  */
 function menu($submenu = '') {
   $items = array(
@@ -197,6 +198,7 @@ function menu($submenu = '') {
     'do' => ['call', 'Do', '1 2', ANY, 'rdo'],
     'coup' => ['call', t('Disable account'), '1', ANY, 'coup'],
     'card' => ['call', t('Card'), 'Card 1 2', ANY], // might wanna be 'sell ok' if user can stay signed in
+    'disconnect' => ['norm', t('Disconnect Device'), 'Card disconnect', 'scanner'],
 
     'whosin' => ['call', t('Who\'s in?'), '1', ANY, 'whosin'], // called from promo site
     'secret' => ['call', 'Secret', '', ANY, 'secrets'],

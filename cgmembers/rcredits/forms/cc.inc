@@ -119,6 +119,5 @@ function thank($ray) {
     if (!$a = new r\Acct($info)) return softErr(t('cannot create account'));
     $msg .= t('<p>Meanwhile, if you\'re not yet a member of %PROJECT, <%a>check it out</a>!</p>', '_a', atag(PROMO_URL));
   }
-  say($msg);
-  return go('empty');
+  return sayEmpty($msg);
 }
