@@ -69,6 +69,7 @@ $databases['default']['default'] = [
 define('PROJECT', t('Common Good')); // project name
 define('CG_DOMAIN', 'CommonGood.earth');
 define('RCREDITS', t('Common Good credit')); // don't use %PROJECT here
+define('SLOGAN', t('Tools for a new economy&trade;'));
 const BANK_DBA = PROJECT;
 define('PROJECT_ID', str_replace(' ', '', strtolower(PROJECT)));
 const PROJECT_LOGO = 'logo80.png';
@@ -220,6 +221,7 @@ define('NOTICE_OFTENS', t('i:Immediate by Email,d:Daily,w:Weekly,m:Monthly,n:Nev
 define('NOTICE_TYPES', t('offer:Offers,need:Needs,tip:Tips,in:Transfers IN,out:Transfers OUT,misc:Other messages'));
 define('POST_NOTICE_TYPE_KEYS', 'offer need tip');
 const NOTICE_DFTS = 'offer:d,need:d,tip:w,in:w,out:d,misc:d';
+const NOTICE_DFTS_CTTY = 'offer:n,need:n,tip:n,in:d,out:d,misc:d';
 const SEND_NOW = 'i';
 const SEND_IN = 'in';
 const SEND_OUT = 'out';

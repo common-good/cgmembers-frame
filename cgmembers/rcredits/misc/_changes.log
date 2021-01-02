@@ -1,3 +1,11 @@
+2021-01-02 feature/bugs
+. new community notices are now set to seldom
+. fixed bug introduced in cc feature that screwed up croppic
+. fixed CSP nonce in boot.inc
+. fixed formatting of notices so there's room for the bullet and the date
+. fixed broken gift certificates and reformatted somewhat
+. fixed bug that didn't give email click donations option for one-time gift
+
 2020-12-30 feature/disconnect
 . when a device is associated with an account, to scan customer cards, a "Disconnect Device" choice appears on menu
 

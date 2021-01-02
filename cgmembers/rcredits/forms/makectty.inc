@@ -63,7 +63,7 @@ function formMakeCtty_submit($form, &$sta) {
 
   $flags = u\bit(B_CO) | u\bit(B_OK) | u\bit(B_UP);
   $country = R_COUNTRY_ID;
-  $region = r\qo("!$region")->id;
+  $region = r\qo("!$region")->id; // negative region tells newAcct to create a community instead of a regular account
   $coType = CO_PARTNERSHIP;
   $fields .= ' flags region address state zip country coType';
 

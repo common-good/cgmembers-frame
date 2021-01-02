@@ -68,14 +68,14 @@ class Acct {
     $record = empty($uid) ? compact('name') : compact('uid', 'name');
 
     $DBTX = db_transaction();
-    $uid = r\regionalInsert('users', 'uid', $record, $region);
+    $uid = r\regionalInsert('users', 'uid', $record, $region); // negative region to create a community, else regular
     u\EXPECT($uid != 0, 'zero regionalinsert');
     $a->reread(); // set all real fields
     list ($a->id, $a->agentId) = array($uid, $mya ? $mya->agentId : $uid); // finish creating the object
 
     u\setDft($cardCode, r\cardCode(r\qid($uid)));
     u\setDft($emailCode, r\cardCode(r\qid($uid)));
-    u\setDft($notices, NOTICE_DFTS);
+    u\setDft($notices, $uid < 0 ? NOTICE_DFTS_CTTY : NOTICE_DFTS);
 
     foreach (ray('number region') as $k) unset($info[$k]);
     foreach (ray('phone email pass fullName legalName flags state country community created login access emailCode cardCode notices') as $k) if (isset($$k)) $info[$k] = $$k; // things we may have added or changed
