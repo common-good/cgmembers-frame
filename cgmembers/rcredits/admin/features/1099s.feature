@@ -54,7 +54,7 @@ Setup:
   
 Scenario: admin generates a 1099 report for the past 12 months
   When member ".ZZB" runs a 1099 report type "MC" with testing "0"
-  Then we download "forms1099MC-Y2019.bin" with records:
+  Then we download "forms1099MC-Y2020.bin" with records:
   | type | who  | cnt | amounts                                     | seq |*
   | T    |      |     |                                             |   1 |  
   | A    | .AAB |     |                                             |   2 |

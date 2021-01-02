@@ -205,7 +205,7 @@ function weDownloadWithRecords($flnm, $rows) {
   global $testDownloadFlnm;
   global $testRecs1099;
   
-  if ($testDownloadFlnm != $flnm) return t\output(t('Bad download filename: ' . $testDownloadFlnm));
+  if ($testDownloadFlnm != $flnm) return t\output(t('Bad download filename. Wanted %flnm got %got', 'flnm got', $flnm, $testDownloadFlnm));
   
   if (count($testRecs1099) != count($rows)) return t\output(t('Wrong number of records in 1099: got %got, expected %want.', 'got want', count($testRecs1099), count($rows)));
   foreach ($rows as $rowNum => $row) {

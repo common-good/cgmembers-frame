@@ -799,7 +799,7 @@ function noticeArgs($uid, $having = '1', $weekly = FALSE, $monthly = FALSE, $at 
 
   while ($row = $q->fetch()) {
     $date = ($weekly or $monthly) ? R_BULLET . (strftime(' %b&nbsp;%d', $row->created)) : R_BULLET;
-    $messages[] = "<tr><td class=\"notice-date\" stule=\"vertical-align:top; margin-right:5px;\">$date</td><td>$row->message</td></tr>"; // "stule" because CSP forbids inline online (rcron reverts it before emailing)
+    $messages[] = "<tr><td class=\"notice-date\" stule=\"vertical-align:top; min-width:50px; margin-right:5px;\">$date</td><td>$row->message</td></tr>"; // "stule" because CSP forbids inline online (rcron reverts it before emailing)
   }
   if (nn($messages)) $messages = join("\n", $messages); else return FALSE;
   

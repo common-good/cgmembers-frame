@@ -37,8 +37,8 @@ function formDonate($form, &$sta, $args = '') {
     $replaces = t('donation replaces', 'period amt', $oftens[$period], u\fmtAmt($amount));
 	} else $recursId = NULL;
   
-  if (!$mya->activated or !$recurs or !r\acct()) {
-		unset($oftens['once']); // no one-time donation unless the account is active, has a recurring donation, and is signed in
+  if (!$mya->activated or !$recurs) {
+		unset($oftens['once']); // no one-time donation unless the account is activated and has a recurring donation
     unset($oftens[0]);
 		$recurOnly = t(': monthly, quarterly, or yearly');
     $noOneTime = t('<p><small><%aWhy>Why no option for a one-time donation?</a></small></p>', '_aWhy', atag('/help/why-no-single-donation-option'));

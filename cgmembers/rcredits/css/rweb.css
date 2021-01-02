@@ -173,7 +173,7 @@ ol {margin-left:25px; padding-left:25px;}
 form {max-width:834px; margin:0 auto;}
 .form-horizontal .form-group {margin:0 0 15px 0;}
 .form-group input,
-.form-group img {max-width:100%;}
+.form-item-img img {max-width:100%;}
 .frm-wide, .frm-nolabs {padding:0;}
 .form-horizontal .control-label {float:left; width:20%; min-width:100px; padding:9px 10px 0 0;}
 .form-type-item .control-label {padding-top:0;}

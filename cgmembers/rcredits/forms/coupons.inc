@@ -175,7 +175,7 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
   case 'gift':
     u\setDft($minimum, 0);
     u\setDft($purpose, t('on any purchase'));
-    $start = $mya->giftCoupons + 0;
+    $start = (int) $mya->giftCoupons;
     $end = $start + $count - 1;
     $info = ray('start from to action payeeType', now(), $myid, MATCH_PAYER, ACT_REDEEM, REF_ANYBODY);
     $info += compact(ray('amount portion purpose minimum useMax'));

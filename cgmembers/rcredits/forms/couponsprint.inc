@@ -31,7 +31,7 @@ function couponsPrint($args = '') {
     $dates .= t(' (does not expire)');
   }
   if ($useMax) $dates .= t(' &mdash; %useMax %uses per member', 'useMax uses', $useMax, $useMax > 1 ? t('uses') : t('use'));
-  
+
   $pdf = new r\Pdf();
 //  $pdf->addTTFfont(__DIR__ . '/../../tcpdf/fonts/verdana.ttf'); // do just once on DEV, then upload font
   $pdf->setPrintHeader(FALSE);
@@ -47,9 +47,11 @@ function couponsPrint($args = '') {
   
   list ($mT, $mR, $mB, $mL) = [0, 0, 0, 0]; // margins
   list ($hLogo, $dySite, $ptSite, $sSite) = [.9, 2.3, 14, 'semi-expanded'];
-  list ($dxHeart, $dyHeart, $hHeart) = [2.5, 1.6, .4];
   list ($y0, $dy, $ptDetails, $ptSlogan, $ptCode) = [.2, .23, 12.5, 11, 13];
   $dyDetails = $y0 + 1.15;
+  $dySite = $gift ? $dyDetails+$dy*2.2 : 2.3;
+  list ($dyRedeem, $ptRedeem) = [$dySite+$dy*1.5, $ptDetails * .85];
+  list ($dxHeart, $dyHeart, $hHeart) = [2.5, 1.6, .4];
   list ($x0, $wLogo, $wHeart) = [$y0, $hLogo, 1.9*$hHeart]; // left card margin, logo widths
   list ($wCard, $hCard, $tx0) = [4.25, 2.75, $x0+.04]; // card dimensions, text indent
   $wCoup = $wCard-$wLogo-$x0;
@@ -62,7 +64,6 @@ function couponsPrint($args = '') {
   $gStyle = ['color' => [192,192,192]];
   $wCode = $wCard; // code is centered on card
   $withCG = t('when you pay with <b>%PROJECT</b>') . '<sup style="font-size:50%;">&reg;</sup>';
-  $slogan = t('the payment card for community power&trade;');
   
   $sAt = 'normal';
   if (mb_strlen($name) > 20) $sAt = mb_strlen($name) > 29 ? 'condensed' : 'semi-condensed';
@@ -90,18 +91,19 @@ function couponsPrint($args = '') {
       if ($gift) { // gift coupon
         $pdf->say(t('at any member business', compact('name')), $x+$dxCoup, $y+$dyAt, $wCoup, '', "$ptCoup;font-stretch:semi-expanded;color:darkred", 'L');
         $pdf->say($withCG, $x, $y+$dyDetails, $wCard, '', $ptDetails, 'C'); // text, x, y, w, h, format, align, borders
-        $pdf->say($slogan, $x, $y+$dyDetails+$dy, $wCard, '', "$ptSlogan;I;Verdana;font-stretch:normal;color:darkgray", 'C'); // text, x, y, w, h, fmt, align, borders
+        $pdf->say(SLOGAN, $x, $y+$dyDetails+$dy, $wCard, '', "$ptSlogan;I;Verdana;font-stretch:normal;color:darkgray", 'C'); // text, x, y, w, h, fmt, align, borders
   //      $pdf->Image(__DIR__ . '/../images/heart+$70.png', $x+$dxHeart, $y+$dyHeart, $wHeart, $hHeart, '', '', '', true); // file, x, y, w, h, type, link, align, resize
 
-        $iCode = $mya->iCardCode($mya->giftCoupons + $cardi);
+        $iCode = $mya->iCardCode(($mya->giftCoupons ?: 0) + $cardi);
         $iCode = substr($iCode, 0, 4) . ' &nbsp;' . substr($iCode, 4, 4) . ' &nbsp;' . substr($iCode, 8);
-        $pdf->say(t('Redeem at Community > Discount: <b>%iCode</b>', '_iCode', $iCode), $x, $y+$dyDetails+$dy*2.5, $wCard, '', "$ptDetails;Verdana;font-stretch:semi-condensed;color:#404040", 'C'); // text, x, y, w, h, fmt, align, borders
+        $pdf->say(t('To redeem, sign in and click Community / Discount'), $x, $y+$dyRedeem, $wCard, '', "$ptRedeem;Verdana;font-stretch:semi-condensed;color:#404040", 'C'); // text, x, y, w, h, fmt, align, borders
+        $pdf->say(t('Code: <b>%iCode</b>', '_iCode', $iCode), $x, $y+$dyRedeem+$dy*.85, $wCard, '', "$ptDetails;Verdana;font-stretch:semi-condensed;color:#404040", 'C'); // text, x, y, w, h, fmt, align, borders
       } else { // discount coupon
         $pdf->say($auto, $x+$wLogo, $y+$dyOff+.14, $wCoup-.3, '', '9;color:darkgray', 'R'); // .24 for baseline
         $pdf->say(t('at <b>%name</b>', compact('name')), $x+$dxCoup, $y+$dyAt, $wCoup, '', "$ptCoup;font-stretch:semi-condensed;color:black", 'L');
         if (!$goodFor) $pdf->say($purpose, $x, $y+$dyDetails, $wCard, '', $ptDetails, 'C'); // text, x, y, w, h, format, align, borders
         $pdf->say($withCG, $x, $y+$dyDetails+$dy, $wCard, '', $ptDetails, 'C'); // text, x, y, w, h, format, align, borders
-        $pdf->say($slogan, $x, $y+$dyDetails+$dy*2, $wCard, '', "$ptSlogan;I;Verdana;font-stretch:normal;color:darkgray", 'C'); // text, x, y, w, h, fmt, align, borders
+        $pdf->say(SLOGAN, $x, $y+$dyDetails+$dy*2, $wCard, '', "$ptSlogan;I;Verdana;font-stretch:normal;color:darkgray", 'C'); // text, x, y, w, h, fmt, align, borders
         $pdf->say($dates, $x, $y+$dyDetails+$dy*3, $wCard, '', "10;color:darkgray", 'C'); // text, x, y, w, h, format, align, borders
       }
       $cardi++; // how many cards have been completed
@@ -109,7 +111,7 @@ function couponsPrint($args = '') {
     }
   }
 
-  if ($gift) $mya->update('giftCoupons', $mya->giftCoupons + $count);
+  if ($gift) $mya->update('giftCoupons', ($mya->giftCoupons ?: 0) + $count);
 
   if (!test())
   $pdf->output('cgCoupons.pdf', 'I'); //Close and output PDF document

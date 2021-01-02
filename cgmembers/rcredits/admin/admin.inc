@@ -1028,6 +1028,7 @@ function toSMT() {
   while ($row = $q->fetchAssoc()) {
     extract(just('uid', $row));
     $a = r\acct($uid);
+    if ($a->closed) continue;
     foreach (ray('isSavings fullName postalAddr tenure owns partnerInfo created notes') as $k) $$k = $a->$k;
     if (!$partnerInfo) continue;
 
@@ -1035,8 +1036,8 @@ function toSMT() {
     list ($routing, $bankAccount) = u\parseBankAccount($a->bankAccount);
     if (empty($bankAccount)) continue;
     
-    if (isDEV) u\setDft($smtid, 0); // for testing
-    if (isDEV) u\setDft($noContract, 0); // for testing
+    u\setDft($smtid, 0); // for testing
+    u\setDft($noContract, 0); // for testing
     
     $notes = strtr($notes, ["\r" => '', "\n" => '']);
     $nameOnBankAcct = $fullName;
