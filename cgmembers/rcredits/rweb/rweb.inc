@@ -100,12 +100,11 @@ function formRerisk($form, &$sta, $type = '', $id = '', $show = FALSE) {
   $showRiskCalc = '';
 
   if ($type == 'acct') {
-    k\acctRisk1($id, getv('riskThresholds', [0,0,0,0]), $risk, $calc);
+    k\acctRisk1($uid = $id, getv('riskThresholds', [0,0,0,0]), $risk, $calc);
     $w = ''; $m = K_RED;
   } elseif ($type == 'tx') {
-    $x = r\x($id);
-    k\txRisk1($x->xid, $risk, $calc);
-    $w = u\fmtAmt($x->amount);
+    k\txRisk1($xid = $id, $risk, $calc);
+    $w = u\fmtAmt(db\get('amt', 'txs', compact('xid')));
     $m = t('@K_RED / @K_THRESHOLD');
   }
 

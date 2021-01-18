@@ -300,12 +300,12 @@ function txSummary($starting, $ending, &$endBalance = '') {
 
 /**
  * Handle click 'OK' or 'NO' (approving or undoing a transaction)
+ * Currently only NO.
  */
 function txOKorNO($task, $xid) {
-  $a = r\acct();
-  $uids = empty($a->jid) ? [$a->uid] : [$a->uid, $a->jid];
-  $result = r\Tx::lastTx($uids, 'xid=:xid', compact('xid'));
-  if (empty($result)) return FALSE;
+  global $mya;
+  if (!$mya->lastTx(compact('xid'))) return err(t('That transaction does not exist.'));
+  
   $z = be\undoTx($xid); // X (reverse it)
   say($z->msg);
 }

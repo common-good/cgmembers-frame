@@ -242,7 +242,7 @@ function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
 
   u\EXPECT('int string assoc bool', $xid, $where, $subs, $force);
 
-  $tx = r\Tx::lastTx([$mya->id], "xid=:xid AND $where", compact('xid') + $subs);
+  $tx = $mya->lastTx("xid=:xid AND $where", compact('xid') + $subs);
   if (empty($tx)) return txRet(FALSE, 'undo no match', $subs);
   if (!$force and $zErr = $tx->noUndo($subs)) return $zErr;
 

@@ -1,3 +1,12 @@
+2021-01-18 feature/proxy-zips
+. seedpack nearby proxy choices now show up even if city is misspelled
+
+2021-01-18 feature/api-pw
+. companies now use the emailCode as their password for /api
+. bug fix: signup page now defaults to current user's data and the link to that signup step is correct
+. fixed bug in risk recalculation
+. fixed bugs in lastTx and refactored it
+
 2021-01-02 feature/bugs
 . new community notices are now set to seldom
 . fixed bug introduced in cc feature that screwed up croppic

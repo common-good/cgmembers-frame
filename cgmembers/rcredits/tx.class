@@ -244,7 +244,8 @@ EOF;
    */
   static function lastTx($uids, $where = 1, $subs = []) {
 ///   debug("lastTx(" . pr($uids) . ", '$where', " . pr($subs) . ")");
-    $where = "e.uid IN (:uids) AND $where ORDER BY t.created DESC LIMIT 1";
+    if (is_array($where) and !$subs) list ($where, $subs) = [u\where($where), $where];
+    $where = "e.uid IN (:uids) AND entryType=:E_PRIME AND $where ORDER BY t.created DESC LIMIT 1";
     $xid = db\get('t.xid', 'tx_hdrs t JOIN tx_entries e USING(xid)', $where, compact('uids') + $subs);
     if (empty($xid)) return FALSE;
     $tx = self::read($xid);

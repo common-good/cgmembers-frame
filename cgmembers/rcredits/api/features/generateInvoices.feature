@@ -2,17 +2,17 @@ Feature: Sign up users
 
 Setup:
   Given members:
-  | uid  | fullName   | email | cc  | cc2  | floor | phone      | address     | city       | state | zip   | flags             |*
-  | .ZZA | Abe One    | a@    | ccA | ccA2 |  -250 | 2345678901 |             |            | MA    |       | ok,ided,confirmed |
-  | .ZZB | Bea Two    | b@    | ccB | ccB2 |  -250 |            | 123 Main St | Greenfield | MA    | 01301 | ok,ided,confirmed |
-  | .ZZC | Corner Pub | c@    | ccC |      |     0 |            |             |            | MA    |       | ok,ided,confirmed |
+  | uid  | fullName   | email | floor | emailCode | phone      | flags                |*
+  | .ZZA | Abe One    | a@    |  -250 | 11111     | 2345678901 | ok,ided,confirmed    |
+  | .ZZB | Bea Two    | b@    |  -250 | 22222     |            | ok,ided,confirmed    |
+  | .ZZC | Corner Pub | c@    |     0 | 33333     |            | ok,co,ided,confirmed |
 
   And relations:
-  | main | agent | flags   |*
-  | .ZZA | .ZZC  | autopay |
+  | main | other | flags   |*
+  | .ZZC | .ZZA  | autopay |
   
 Scenario: member wants to invoice another member and succeeds
-  Given member ".ZZA" with password "123" sends "generate-invoices" requests:
+  Given member ".ZZC" with password "33333" sends "generate-invoices" requests:
   | payerId | amount | billingDate | dueDate      | nonce | purpose                   |*
   | .ZZB    | 25.00  | %today      | %(%today+1m) | 1235  | 85% of credits for 13 KWH |
 
@@ -21,41 +21,41 @@ Scenario: member wants to invoice another member and succeeds
   | 1235  | PENDING | .ZZB    | 25.00  | 1           | ?     |
 
 Scenario: member wants to invoice another member and the invoice is approved
-  Given member ".ZZA" with password "123" sends "generate-invoices" requests:
+  Given member ".ZZC" with password "33333" sends "generate-invoices" requests:
   | payerId | amount | billingDate | dueDate      | nonce | purpose                   |*
-  | .ZZC    | 29.00  | %today      | %(%today+1m) | 1238  | 85% of credits for 13 KWH |
+  | .ZZA    | 29.00  | %today      | %(%today+1m) | 1238  | 85% of credits for 13 KWH |
 
   Then the response op is "generate-invoices-response" and the status is "OK" and there are 1 responses and they are:
   | nonce | status   | payerId | amount | cgInvoiceId | error |*
-  | 1238  | APPROVED | .ZZC    | 29.00  | 1           | ?     |
+  | 1238  | APPROVED | .ZZA    | 29.00  | 1           | ?     |
 
   And balances:
   | uid  | balance |*
-  | .ZZA | 0       |
-  | .ZZB | 0       |
   | .ZZC | 0       |
+  | .ZZB | 0       |
+  | .ZZA | 0       |
   
 Scenario: member wants to invoice another member and the invoice is auto-paid
   Given  balances:
   | uid  | balance |*
-  | .ZZC | 225     |
+  | .ZZA | 225     |
 
-  When member ".ZZA" with password "123" sends "generate-invoices" requests:
+  When member ".ZZC" with password "33333" sends "generate-invoices" requests:
   | payerId | amount | billingDate | dueDate      | nonce | purpose                   |*
-  | .ZZC    | 29.00  | %today      | %(%today+1m) | 1238  | 85% of credits for 13 KWH |
+  | .ZZA    | 29.00  | %today      | %(%today+1m) | 1238  | 85% of credits for 13 KWH |
 
   Then the response op is "generate-invoices-response" and the status is "OK" and there are 1 responses and they are:
   | nonce | status   | payerId | amount | cgInvoiceId | error |*
-  | 1238  | PAID     | .ZZC    | 29.00  | 1           | ?     |
+  | 1238  | PAID     | .ZZA    | 29.00  | 1           | ?     |
 
   And balances:
   | uid  | balance |*
-  | .ZZA | 29      |
+  | .ZZC | 29      |
   | .ZZB | 0       |
-  | .ZZC | 196     |
+  | .ZZA | 196     |
 
 Scenario: member wants to invoice another member and fails
-  Given member ".ZZA" with password "123" sends "generate-invoices" requests:
+  Given member ".ZZC" with password "33333" sends "generate-invoices" requests:
   | payerId | amount | billingDate | dueDate      | nonce | purpose                   |*
   | .ZZD    | 27.00  | %today      | %(%today+1m) | 1239  | 85% of credits for 13 KWH |
 
@@ -67,39 +67,38 @@ Scenario: member wants to invoice another member and fails
 Scenario: a member invoices another member twice for the same thing and it was paid the first time
   Given  balances:
   | uid  | balance |*
-  | .ZZC | 225     |
+  | .ZZA | 225     |
 
-  When member ".ZZA" with password "123" sends "generate-invoices" requests:
+  When member ".ZZC" with password "33333" sends "generate-invoices" requests:
   | payerId | amount | billingDate | dueDate      | nonce | purpose                   |*
-  | .ZZC    | 29.00  | %today      | %(%today+1m) | 1238  | 85% of credits for 13 KWH |
+  | .ZZA    | 29.00  | %today      | %(%today+1m) | 1238  | 85% of credits for 13 KWH |
 
-  And member ".ZZA" with password "123" sends "generate-invoices" requests:
+  And member ".ZZC" with password "33333" sends "generate-invoices" requests:
   | payerId | amount | billingDate | dueDate      | nonce | purpose                   |*
-  | .ZZC    | 29.00  | %today      | %(%today+1m) | 1238  | 85% of credits for 13 KWH |
+  | .ZZA    | 29.00  | %today      | %(%today+1m) | 1238  | 85% of credits for 13 KWH |
 
   Then the response op is "generate-invoices-response" and the status is "OK" and there are 1 responses and they are:
   | nonce | status         | payerId | amount | cgInvoiceId | error |*
-  | 1238  | PAID-DUPLICATE | .ZZC    | 29.00  | 1           | ?     |
+  | 1238  | PAID-DUPLICATE | .ZZA    | 29.00  | 1           | ?     |
 
   And balances:
   | uid  | balance |*
-  | .ZZA | 29      |
+  | .ZZA | 196     |
   | .ZZB | 0       |
-  | .ZZC | 196     |
-
+  | .ZZC | 29      |
 
 Scenario: a member invoices another member twice for the same thing and it was approved the first time
-  When member ".ZZA" with password "123" sends "generate-invoices" requests:
+  When member ".ZZC" with password "33333" sends "generate-invoices" requests:
   | payerId | amount | billingDate | dueDate      | nonce | purpose                   |*
-  | .ZZC    | 29.00  | %today      | %(%today+1m) | 1238  | 85% of credits for 13 KWH |
+  | .ZZA    | 29.00  | %today      | %(%today+1m) | 1238  | 85% of credits for 13 KWH |
 
-  And member ".ZZA" with password "123" sends "generate-invoices" requests:
+  And member ".ZZC" with password "33333" sends "generate-invoices" requests:
   | payerId | amount | billingDate | dueDate      | nonce | purpose                   |*
-  | .ZZC    | 29.00  | %today      | %(%today+1m) | 1238  | 85% of credits for 13 KWH |
+  | .ZZA    | 29.00  | %today      | %(%today+1m) | 1238  | 85% of credits for 13 KWH |
 
   Then the response op is "generate-invoices-response" and the status is "OK" and there are 1 responses and they are:
   | nonce | status             | payerId | amount | cgInvoiceId | error |*
-  | 1238  | APPROVED-DUPLICATE | .ZZC    | 29.00  | 1           | ?     |
+  | 1238  | APPROVED-DUPLICATE | .ZZA    | 29.00  | 1           | ?     |
 
   And balances:
   | uid  | balance |*
