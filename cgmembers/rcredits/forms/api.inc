@@ -15,9 +15,9 @@ use CG\Web as w;
  * @param string args: a JSON object
  *
  * All requests have the same basic format:
- * { "op": whatever the operation is,
- *   "userId": the userId of the requester,
- *   "password": guess what
+ * { "op": whatever the operation is
+ *   "userId": the userId of the requester (a company)
+ *   "password": password
  *   "requests": a JSON array of objects; each request has a format based on "op"
  * }
  *
@@ -36,11 +36,8 @@ function api($args = null) {
   $data = (array) json_decode(nni($args ?: $_GET, 'request'));
   extract(just('op userId password requests', $data, NULL));
   $mya = r\acct($userId);
-  if (! $mya) {
-    return errorResponse($op, $userId, "User id $userId not found"); // combine these two!!
-  }
-  if (! $mya->passwordOkay($password, 'pass')) {
-    return errorResponse($op, $userId, "Incorrect password for user $userId");
+  if (!$mya or !$mya->co or $password != $mya->emailCode) {
+    return errorResponse($op, $userId, "Company id $userId not found or wrong password");
   }
   if (is_null($requests) or ! is_array($requests) or $requests == []) {
     return errorResponse($op, $userId, "Improperly formed request");

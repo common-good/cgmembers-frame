@@ -2,17 +2,18 @@ Feature: Get invoice status
 
 Setup:
   Given members:
-  | uid  | fullName   | email | cc  | cc2  | floor | phone      | address     | city       | state | zip   | flags             |*
-  | .ZZA | Abe One    | a@    | ccA | ccA2 |  -250 | 2345678901 |             |            | MA    |       | ok,ided,confirmed |
-  | .ZZB | Bea Two    | b@    | ccB | ccB2 |  -250 |            | 123 Main St | Greenfield | MA    | 01301 | ok,ided,confirmed |
-  | .ZZC | Corner Pub | c@    | ccC |      |     0 |            |             |            | MA    |       | ok,ided,confirmed |
+  | uid  | fullName   | email | emailCode | flags             |*
+  | .ZZA | Abe One    | a@    | 11111     | ok,ided,confirmed |
+  | .ZZB | Bea Two    | b@    | 22222     | ok,ided,confirmed |
+  | .ZZC | Corner Pub | c@    | 33333     | ok,co,ided,confirmed |
+  | .ZZD | Dee Four   | d@    | 44444     | ok,co,ided,confirmed |
 
   And relations:
   | main | agent | flags   |*
-  | .ZZA | .ZZC  | autopay |
+  | .ZZC | .ZZA  | autopay |
   
 Scenario: member invoices another member and gets PENDING then gets invoice status
-  Given member ".ZZA" with password "123" sends "generate-invoices" requests:
+  Given member ".ZZC" with password "33333" sends "generate-invoices" requests:
   | payerId | amount | billingDate | dueDate      | nonce | purpose                   |*
   | .ZZB    | 25.00  | %today      | %(%today+1m) | 1235  | 85% of credits for 13 KWH |
 
@@ -20,7 +21,7 @@ Scenario: member invoices another member and gets PENDING then gets invoice stat
   | nonce | status  | payerId | amount | cgInvoiceId | error |*
   | 1235  | PENDING | .ZZB    | 25.00  | 1           | ?     |
 
-  When member ".ZZA" with password "123" sends "get-invoice-status" requests:
+  When member ".ZZC" with password "33333" sends "get-invoice-status" requests:
   | cgInvoiceId | amount | payerId |*
   | 1           | 25.00  | .ZZB    |
 
@@ -30,89 +31,89 @@ Scenario: member invoices another member and gets PENDING then gets invoice stat
    
 
 Scenario: member invoices another member and gets APPROVED then gets invoice status
-  Given member ".ZZA" with password "123" sends "generate-invoices" requests:
+  Given member ".ZZC" with password "33333" sends "generate-invoices" requests:
   | payerId | amount | billingDate | dueDate      | nonce | purpose                   |*
-  | .ZZC    | 29.00  | %today      | %(%today+1m) | 1238  | 85% of credits for 13 KWH |
+  | .ZZA    | 29.00  | %today      | %(%today+1m) | 1238  | 85% of credits for 13 KWH |
 
   Then the response op is "generate-invoices-response" and the status is "OK" and there are 1 responses and they are:
   | nonce | status   | payerId | amount | cgInvoiceId | error |*
-  | 1238  | APPROVED | .ZZC    | 29.00  | 1           | ?     |
+  | 1238  | APPROVED | .ZZA    | 29.00  | 1           | ?     |
 
   And balances:
   | uid  | balance |*
-  | .ZZA | 0       |
-  | .ZZB | 0       |
   | .ZZC | 0       |
+  | .ZZB | 0       |
+  | .ZZA | 0       |
 
-  When member ".ZZA" with password "123" sends "get-invoice-status" requests:
+  When member ".ZZC" with password "33333" sends "get-invoice-status" requests:
   | cgInvoiceId | amount | payerId |*
-  | 1           | 29.00  | .ZZC    |
+  | 1           | 29.00  | .ZZA    |
 
   Then the response op is "get-invoice-status-response" and the status is "OK" and there are 1 responses and they are:
   | status   | payerId | amount | cgInvoiceId | error |*
-  | APPROVED | .ZZC    | 29.00  | 1           | ?     |
+  | APPROVED | .ZZA    | 29.00  | 1           | ?     |
 
 
 
 Scenario: member wants to invoice another member and the invoice is auto-paid then gets invoice status
   Given  balances:
   | uid  | balance |*
-  | .ZZC | 225     |
+  | .ZZA | 225     |
 
-  When member ".ZZA" with password "123" sends "generate-invoices" requests:
+  When member ".ZZC" with password "33333" sends "generate-invoices" requests:
   | payerId | amount | billingDate | dueDate      | nonce | purpose                   |*
-  | .ZZC    | 29.00  | %today      | %(%today+1m) | 1238  | 85% of credits for 13 KWH |
+  | .ZZA    | 29.00  | %today      | %(%today+1m) | 1238  | 85% of credits for 13 KWH |
 
   Then the response op is "generate-invoices-response" and the status is "OK" and there are 1 responses and they are:
   | nonce | status   | payerId | amount | cgInvoiceId | error |*
-  | 1238  | PAID     | .ZZC    | 29.00  | 1           | ?     |
+  | 1238  | PAID     | .ZZA    | 29.00  | 1           | ?     |
 
   And balances:
   | uid  | balance |*
-  | .ZZA | 29      |
+  | .ZZC | 29      |
   | .ZZB | 0       |
-  | .ZZC | 196     |
+  | .ZZA | 196     |
 
-  When member ".ZZA" with password "123" sends "get-invoice-status" requests:
+  When member ".ZZC" with password "33333" sends "get-invoice-status" requests:
   | cgInvoiceId | amount | payerId |*
-  | 1           | 29.00  | .ZZC    |
+  | 1           | 29.00  | .ZZA    |
 
   Then the response op is "get-invoice-status-response" and the status is "OK" and there are 1 responses and they are:
   | status   | payerId | amount | cgInvoiceId | error |*
-  | PAID     | .ZZC    | 29.00  | 1           | ?     |
+  | PAID     | .ZZA    | 29.00  | 1           | ?     |
 
 
 Scenario: member wants to get invoice status and fails because they don't own it
-  Given member ".ZZA" with password "123" sends "generate-invoices" requests:
+  Given member ".ZZC" with password "33333" sends "generate-invoices" requests:
   | payerId | amount | billingDate | dueDate      | nonce | purpose                   |*
-  | .ZZC    | 27.00  | %today      | %(%today+1m) | 1239  | 85% of credits for 13 KWH |
+  | .ZZA    | 27.00  | %today      | %(%today+1m) | 1239  | 85% of credits for 13 KWH |
 
   Then the response op is "generate-invoices-response" and the status is "OK" and there are 1 responses and they are:
   | nonce | status   | payerId | amount | cgInvoiceId | error |*
-  | 1239  | APPROVED | .ZZC    | 27.00  | 1           | ?     |
+  | 1239  | APPROVED | .ZZA    | 27.00  | 1           | ?     |
 
-  When member ".ZZA" with password "123" sends "get-invoice-status" requests:
+  When member ".ZZC" with password "33333" sends "get-invoice-status" requests:
   | cgInvoiceId | amount | payerId |*
-  | 1           | 27.00  | .ZZC    |
+  | 1           | 27.00  | .ZZA    |
 
   Then the response op is "get-invoice-status-response" and the status is "OK" and there are 1 responses and they are:
   | status   | payerId | amount | cgInvoiceId | error |*
-  | APPROVED | .ZZC    | 27.00  | 1           | ?     |
+  | APPROVED | .ZZA    | 27.00  | 1           | ?     |
 
-  When member ".ZZB" with password "123" sends "get-invoice-status" requests:
+  When member ".ZZD" with password "44444" sends "get-invoice-status" requests:
   | cgInvoiceId | amount | payerId |*
-  | 1           | 27.00  | .ZZC    |
+  | 1           | 27.00  | .ZZA    |
 
   Then the response op is "get-invoice-status-response" and the status is "OK" and there are 1 responses and they are:
   | status | payerId | amount | cgInvoiceId | error            |*
-  | BAD    | .ZZC    | 27.00  | ?           | no invoice found |
+  | BAD    | .ZZA    | 27.00  | ?           | no invoice found |
 
 
 Scenario: member wants to get invoice status for a nonexistent invoice
-  When member ".ZZA" with password "123" sends "get-invoice-status" requests:
+  When member ".ZZC" with password "33333" sends "get-invoice-status" requests:
   | payerId | amount | cgInvoiceId |*
-  | .ZZC    | 27.00  | 2           |
+  | .ZZA    | 27.00  | 2           |
 
   Then the response op is "get-invoice-status-response" and the status is "OK" and there are 1 responses and they are:
   | status | payerId | cgInvoiceId | error            |*
-  | BAD    | .ZZC    | 2           | no invoice found |
+  | BAD    | .ZZA    | 2           | no invoice found |

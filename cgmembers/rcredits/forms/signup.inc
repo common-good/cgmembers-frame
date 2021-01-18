@@ -19,10 +19,13 @@ include_once __DIR__ . '/agreement.inc';
  *   
  */
 function formSignup($form, &$sta, $args = '') {
+  global $mya;
+  
   if (!$args) $args = nn($_POST) ?: basename($_SERVER['REQUEST_URI']); // because menu_execute_active_handler fails
   if (is_string($args)) $args = urlq2ray($args);
 
-  extract(just('source2 joint reid inviter code fullName email helper phone zip partner partnerCode customer source', $args, NULL));
+  $flds = 'fullName email helper phone zip source';
+  extract($mya ? (array) $mya->account($flds) : just($flds . ' source2 joint reid inviter code partner partnerCode customer', $args, NULL));
 
   u\setDft($source2, nni($_COOKIE, 'ad'));
   $source2 = hidFld($source2);

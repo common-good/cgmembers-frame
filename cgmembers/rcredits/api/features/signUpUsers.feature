@@ -2,13 +2,13 @@ Feature: Sign up users
 
 Setup:
   Given members:
-  | uid  | fullName   | email | cc  | cc2  | floor | phone      | address     | city       | state | zip  |*
-  | .ZZA | Abe One    | a@    | ccA | ccA2 |  -250 | 2345678901 |             |            | MA    |       |
-  | .ZZB | Bea Two    | b@    | ccB | ccB2 |  -250 |            | 123 Main St | Greenfield | MA    | 01301 |
-  | .ZZC | Corner Pub | c@    | ccC |      |     0 |            |             |            | MA    |       |
+  | uid  | fullName   | email | emailCode | flags |*
+  | .ZZA | Abe One    | a@    | 11111     | ok    |
+  | .ZZB | Bea Two    | b@    | 22222     | ok    |
+  | .ZZC | Corner Pub | c@    | 33333     | ok,co |
 
 Scenario: member wants to sign up another member and succeeds
-  Given member ".ZZA" with password "123" sends "sign-up-users" requests:
+  Given member ".ZZC" with password "33333" sends "sign-up-users" requests:
   | fullName   | email | phone      | address     | city       | state | zipCode | nonce |*
   | Dee Four   | d@    | 1234567890 | 125 Main St | Greenfield | MA    | 01301   | 378   |
   
@@ -17,7 +17,7 @@ Scenario: member wants to sign up another member and succeeds
   | 378   | OK     | .AAA |
 
 Scenario: member wants to sign up several members all of which succeed
-  Given member ".ZZA" with password "123" sends "sign-up-users" requests:
+  Given member ".ZZC" with password "33333" sends "sign-up-users" requests:
   | fullName   | email | phone      | address     | city       | state | zipCode | nonce |*
   | Dee Four   | d@    | 1234567890 | 125 Main St | Greenfield | MA    | 01301   | 378   |
   | Eve Five   | e@    | 4137777777 | 123 Main St | Greenfield | MA    | 01301   | 379   |
