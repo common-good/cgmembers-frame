@@ -37,7 +37,7 @@ function formSignup($form, &$sta, $args = '') {
   } 
   
   if (test() and is_array(nn($myid))) return; // array means returned r\go
-  $myid = hidFld($myid0 = nn($myid));
+  $myid = hidFld($myid0 = nn($myid) ?: ($mya ? $mya->id : ''));
 
   $title = nn($joint) ? t('Create a Partner Account<br><small>(joined to yours)</small>') : t('Open a Personal Account');
 

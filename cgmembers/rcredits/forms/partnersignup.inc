@@ -319,16 +319,17 @@ function gotSignup($pA) {
  * Handle joint signup data from SMT (uploaded by Solar One). Combine functionality of gotSignup() and signedContract().
  * @param assoc $info: encoded parameters passed in URL
  * NOTE: to remove specialized code for Solar One, search this file (only) for Solar One and solar1.
- * to test: .../partner/solar1=1
+ * to test, run partnersignup tests, then: .../partner/solar1=1
  */
 function gotSolarOne($info) {
-  global $mya, $pagePartner;
+  global $mya, $pagePartner, $solarOneInfo; // $solarOneInfo is for error handling
 
   $keys = 'smtid pid co fullName orgName address city state zip email phone m_number source';
   /*debug(*/ if (isDEV or (!is_array($info) and $info == 1)) $info = bin2hex(http_build_query(ray($keys, '654321', 'NEWAIL', 0, 'Jane Dough', '', '10 J St.', 'Jville', 'NY', '10101', 'wspademan+j@gmail.com', '(212) 222-1111', rand(1000, 9999), 'sunset')));
   
   signout(TRUE); // current account is irrelevant and could be confusing, so sign out
   if (!$info = hex2bin($info)) return solarOneErr('bad solar1 encoding', '(system)');
+  $solarOneInfo = $info; // for error handling
 
   extract($info = just($keys, $info));
   if (!nn($pid)) $pid = $info['pid'] = 'NEWBHS'; // grandfather solar1's qid
@@ -517,12 +518,13 @@ function tellPartner($pA, $info, $flnms) {
  * Cancel the signup and alert an admin (should never happen).
  */
 function partnerErr($msg, $k) {
+  global $solarOneInfo;
   $subs = compact('msg', 'k');
-  r\tellAdmin(t('partner signup: %msg (field %k)', $subs), $_POST + $_SERVER);
+  r\tellAdmin(t('partner signup: %msg (field %k)', $subs), $_POST + $_SERVER + nn($solarOneInfo, []));
   return w\softErr(t('<h2>Drat.</h2><p>There was a problem with the data you submitted (field %k) -- %msg</p><p>%PROJECT is looking into the problem and we will contact you with instructions for continuing.</p><p>We apologize for the delay.</p>', $subs)); // fix double spaces and leading or trailing
 }
 
-function solarOneErr($msg, $k) {u\FAIL(plain("$msg (field $k)"));}
+function solarOneErr($msg, $k) {return partnerErr($msg, $k);}
   
 /**
  * Send data to the partner's CRM(s)

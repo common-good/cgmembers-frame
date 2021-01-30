@@ -171,6 +171,7 @@ const R_APP_DATA_GETS = '!log !device !members !txs '; // data requests from the
 const R_SHARE_MAX = 50; // minimum sharing percentage
 const R_SHARE_DFT = 25; // default sharing percentage
 define('R_SHARING_MSG', t('sharing rewards with CGF'));
+const SECRET_MAXLEN = 1000; // maximum len of secret data in message (short so encrypted len with box/date/domain < 2048)
 const ICLUB_TITHE = .1; // fraction of profits that go to the community and the common good
 const USERNAME_MAX_LENGTH = '100'; // max length of "name" field
 
@@ -395,7 +396,7 @@ const FUNDBY_PAY = 1; // paid by employer
 const FUNDBY_CASH = 2; // buy with cash at a participating business
 
 // Membership steps
-const S_ALL = 'signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, stepup:community/stepup, crumbs:community/crumbs, work, partnersteptwo, partnerend, food, wantsPrint, printed'; // where to go to complete each step (unordered) -- add new steps to the end
+const S_ALL = 'signup:signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, stepup:community/stepup, crumbs:community/crumbs, work, partnersteptwo, partnerend, food, wantsPrint, printed'; // where to go to complete each step (unordered) -- add new steps to the end
 const S_PERSON = 'signup verifyid fund preferences verifyemail';
 const S_CARD = 'photo contact donate crumbs proxies work backing stepup invite';
 const S_CO = 'signup verifyemail fund contact backing photo donate company crumbs discount';

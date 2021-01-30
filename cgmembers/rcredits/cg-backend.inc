@@ -810,7 +810,7 @@ function invoice($payeeA, $payerA, $amount, $purpose, $goods = FOR_GOODS, $extra
  * @return [ok, msg, info]
  */
 function txErr($message, $info = []) {
-  if (nni($info, 'snap')) $info['topic'] = nn($info, 'topic') . t(' SNAP');
+  if (nni($info, 'snap')) $info['topic'] = nni($info, 'topic') . t(' SNAP');
   r\tellCAdmin(t('failed transaction'), $info + compact('message'));
   return is_object($message) ? $message : txRet(FALSE, $message, $info);
 }

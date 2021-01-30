@@ -1,3 +1,19 @@
+2021-01-30 feature/message
+. added encryption option to Message a Member feature
+. fixed a couple bugs in permissions for superAdmin
+. all cookies are now deleted when clearing for tests
+. fixed bug in SNAP tx reporting
+. added a standard time function in utils
+. footer is suppressed for card scans
+. fields with suffixes now default to short and inline-block
+. fixed bug in signup for people who found us through investment club express-interest form
+. solarOne errors now act like other partner errors (not fatal)
+. added signup option on signin page
+. fixed bug in message reporting change in recurring tx
+. made a model .feature test file
+. made a shorter version of the "member confirms" step function syntax
+. boxUser function now updates channel
+
 2021-01-18 feature/proxy-zips
 . seedpack nearby proxy choices now show up even if city is misspelled
 

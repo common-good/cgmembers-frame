@@ -239,6 +239,7 @@ function cgform($form, $fmt = '', $mlabFmt = '') {
     $type = nni($v, '#type');
     if ($type == 'hidden') f('t.POST', [$k => nni($v, '#value')]); // fake post for tests
     if ($type == 'fieldset') $form[$k] = $v = cgform($v, $fmt, $mlabFmt);
+    if (nni($v, '#field_suffix')) $form[$k]['#class'][] = 'short';
 
     if ($tabled and $type != 'hidden') {
       $form[$k]['#tabled'] = TRUE; // remember in each field that form is laid out in a table (labels in left column)
@@ -808,11 +809,15 @@ function box() {
 /**
  * Return the box record id for the given machine code and account record ID.
  * @param int $code: machine identifier
+ * @param int $uid: current account ID (can be a company)
+ * @param string $version: app version (web version is not used here)
  */
 function boxUser($code, $uid, $version = NULL) {
+  global $channel;
   if ($id = nni($_COOKIE, $cookid = 'boxnum' . $uid) and !test()) return $id; // we only get this if last set today
   if ($id = db\get('id', 'r_boxes', 'code=:code AND uid=:uid', compact(ray('code uid')))) {
-    db\update('r_boxes', ray('id access version', $id, now(), $version), 'id');
+    $access = now();
+    db\update('r_boxes', compact(ray('id access version channel')), 'id'); // update version, channel, date
   } else $id = r\acct($uid)->makeBox($code, TX_WEB, $version);
   return r\setCook($cookid, $id, now() + SESSION_LIFE);
 }

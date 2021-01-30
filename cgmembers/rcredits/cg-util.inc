@@ -512,7 +512,7 @@ X;
   $clickHere = t('Click here to continue.');
   
   header_remove('Content-Security-Policy');
-  echo <<<X
+/**/  echo <<<X
     <form id="me" action="$url" method="GET">
       $guts
       <noscript><input type="submit" value="$clickHere" /></noscript>
@@ -1719,3 +1719,4 @@ function joinRays($ray1, $ray2) {foreach ($ray2 as $k) $ray1[] = $k; return $ray
 function ry($type, $data) {return substr(u\cry($type, $data), strlen(CRYPT_FLAG));} // encrypt without flag
 function dery($type, $code) {return u\decry($type, CRYPT_FLAG . $code);}
 function ul($list) {return '<ul><li>' . join("</li>\n<li>", nn($list) ?: []) . "</li></ul>\n";}
+function tm($tm) {return strtolower(trim(strftime('%I:%M%p', $tm), '0'));}

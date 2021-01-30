@@ -183,6 +183,13 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
 function memberConfirmsFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
 
 /**
+ * member (ARG) confirms (ARG) with: (ARG)
+ *
+ * in: MAKE message SynopsisOfScenario
+ */
+function memberConfirmsWith($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
+
+/**
  * a member confirms form (ARG) (which logs out) with values: (ARG)
  *
  * in: 
@@ -249,6 +256,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE invite Setup
  *     MAKE invoice Setup
  *     MAKE joint Setup
+ *     MAKE message Setup
  *     MAKE pale Setup
  *     MAKE partnersignup Setup
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
@@ -399,6 +407,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST invest AClubAdministratorHandlesRequestsToCashOut
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST joint AMemberCreatesAJointAccountByClickingALinkOnTheConsolePage
+ *     TEST message SynopsisOfScenario
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST posts SomeoneConfirmsAnOfferOnceTwice
@@ -446,7 +455,8 @@ function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
 /**
  * we email (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
+ * in: TEST message SynopsisOfScenario
+ *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
@@ -2209,7 +2219,7 @@ function memberDeletesRelationTo($id1, $id2) {
  */
 function weHitWith($url, $args) {
   global $testOnly; if (!$testOnly) return FALSE;
-  global $testHit;
+  global $testHit; if (!is_array($testHit)) return FALSE;
   $content = $args[0];
   $got = just('url', $testHit) + nni($testHit, 'content');
   foreach (compact('url') + $content as $k => $v) {

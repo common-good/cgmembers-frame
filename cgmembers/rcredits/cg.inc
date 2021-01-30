@@ -562,6 +562,8 @@ function setCook($key, $value, $expires = NULL, $raw = FALSE) {
 function cook($k) {return nni($_COOKIE, $k);}
 function setCryptCook($k, $v, $expires = NULL) {return setCook($k, u\ry('C', $v), $expires, TRUE);}
 function cryptCook($k) {return ($v = cook($k)) ? u\dery('C', $v) : '';}
+function deleteCook($k) {return setCook($k, NULL, time() - 99999);}
+function deleteAllCooks() {foreach ($_COOKIE as $k => $v) deleteCook($k); $_COOKIE = [];}
 
 /**
  * Return the unformatted private key for highly sensitive data (use u\fmtKey() to get the formatted key).

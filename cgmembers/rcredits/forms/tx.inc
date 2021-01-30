@@ -106,7 +106,7 @@ function formTx_submit($form, &$sta) {
     }
     
     $subs += ray('often', r\recurDesc($period, $periods));
-    $msg .= '|repeats';
+    $msg = u\joins($msg, '|', 'repeats');
   } else {
     list ($periods, $period) = [1, 'once'];
   }
@@ -116,7 +116,7 @@ function formTx_submit($form, &$sta) {
   $id = db\insert('tx_templates', $info, 'id');
 
   if ($delay) {
-    $msg = u\joins($msg, '|', '|thing scheduled');
+    $msg = u\joins($msg, '|', 'thing scheduled');
     $subs += compact('thing');
     r\acct($uid)->tell($msg, $subs, t('payment scheduled'), $paying ? SEND_OUT : SEND_IN);
   } else { // no delay: either a transaction or invoice was created, so set its recursId (pointing to template)
