@@ -17,6 +17,7 @@ $GLOBALS['tStrings'] = array(
   'invite reward' => t('inviting and/or assisting new member %fullName'),
   'when resolved' => t('Your payment will go through automatically when the issue has been resolved.'),
   'report tx' => t('You %did %otherName %amount.'), // for %why.'),
+  'success title' => t('<h3>Success!</h3>'),
   'left on invoice' => t('You have %remaining remaining to pay on this invoice.'),
   'selfhelp tx' => t('You paid %myName %amount.'), // for %why.'),
   'for why' => t('(for %why)'),

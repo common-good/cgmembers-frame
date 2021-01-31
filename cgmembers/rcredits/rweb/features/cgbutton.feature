@@ -17,37 +17,18 @@ Scenario: A member clicks a Pay With Common Good button
   | Pay        | $23.50 to Our Pub |
   | For        | food |
   | Account ID |  |
+  | Password   |  |
 
 Scenario: A member submits a Pay With Common Good button payment with account ID
   When member "?" confirms form "pay-with-cg/company=NEWZZC&code=Cc3&item=food&amount=23" with values:
-  | name   |*
-  | NEWZZA |
-  Then we say "status": "pay button success"
-  And we message "new invoice" to member ".ZZA" with subs:
-  | otherName | amount | purpose |*
-  | Our Pub   | $23    | food    |
-  And invoices:
-  | nvid | created | status      | amount | payer | payee | for  |*
-  |    1 | %today  | %TX_PENDING |     23 | .ZZA | .ZZC | food |
-
-  When member "?" visits page "handle-invoice/nvid=1&code=TESTDOCODE"
-  Then we show "Confirm Payment" with:
-  | | Pay $23 to Our Pub for food. |
-  | Pay | Dispute |
-
-  When member "?" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
-  | op  |*
-  | pay |
-  Then we say "status": "You paid Our Pub $23."
-  And invoices:
-  | nvid | created | status | purpose |*
-  |    1 | %today  |      1 | food    |
+  | name   | pass |*
+  | NEWZZA | a1   |
+  Then we say "status": "success title|report tx" with subs:
+  | did  | otherName | amount |*
+  | paid | Our Pub   | $23    |
   And transactions:
   | xid | created | amount | payer | payee | for  |*
   |   1 | %today  |     23 | .ZZA  | .ZZC  | food |
-  
-  When member "?" visits page "handle-invoice/nvid=1&code=TESTDOCODE"
-  Then we say "error": "inv already paid"
 
 Scenario: A member clicks a Pay With Common Good button with variable amount
   When member "?" visits page "pay-with-cg/company=NEWZZC&code=Cc3&item=food&amount="
@@ -55,23 +36,15 @@ Scenario: A member clicks a Pay With Common Good button with variable amount
   | Pay        | to Our Pub |
   | For        | food |
   | Account ID |  |
+  | Password   |  |
 
 Scenario: A member submits a Pay With Common Good button payment with account ID and chosen amount
   When member "?" confirms form "pay-with-cg/company=NEWZZC&code=Cc3&item=food&amount=" with values:
-  | name   | amount |*
-  | NEWZZA |     23 |
-  Then we say "status": "pay button success"
-  And we message "new invoice" to member ".ZZA" with subs:
-  | otherName | amount | purpose |*
-  | Our Pub   | $23    | food    |
-  And invoices:
-  | nvid | created | status      | amount | payer | payee | for  |*
-  |    1 | %today  | %TX_PENDING |     23 | .ZZA | .ZZC | food |
-
-  When member "?" visits page "handle-invoice/nvid=1&code=TESTDOCODE"
-  Then we show "Confirm Payment" with:
-  | | Pay $23 to Our Pub for food. |
-  | Pay | Dispute |
+  | name   | amount | pass |*
+  | NEWZZA |     23 | a1   |
+  Then we say "status": "success title|report tx" with subs:
+  | did  | otherName | amount |*
+  | paid | Our Pub   | $23    |
 
 Scenario: A member clicks a button to buy store credit
   When member "?" visits page "pay-with-cg/company=NEWZZC&code=Cc3&for=credit&item=&amount=23.50"
@@ -79,39 +52,21 @@ Scenario: A member clicks a button to buy store credit
   | Pay        | $23.50 to Our Pub |
   | For        | store credit |
   | Account ID |  |
+  | Password   |  |
 
 Scenario: A member types account ID to buy store credit
   When member "?" confirms form "pay-with-cg/company=NEWZZC&code=Cc3&for=credit&item=&amount=23" with values:
-  | name   |*
-  | NEWZZA |
-  Then we say "status": "pay button success"
-  And we message "new invoice" to member ".ZZA" with subs:
-  | otherName | amount | purpose      |*
-  | Our Pub   | $23    | store credit |
-  And invoices:
-  | nvid | created | status      | amount | payer | payee | for          |*
-  |    1 | %today  | %TX_PENDING |     23 | .ZZA  | .ZZC  | store credit |
-
-  When member "?" visits page "handle-invoice/nvid=1&code=TESTDOCODE"
-  Then we show "Confirm Payment" with:
-  | Pay $23 to Our Pub for store credit. |
-  And with:
-  | Pay | Dispute |
-
-  When member "?" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
-  | op  |*
-  | pay |
-  Then we say "status": "You paid Our Pub $23."
-  And invoices:
-  | nvid | created | status | purpose      |*
-  |    1 | %today  |      1 | store credit |
+  | name   | pass |*
+  | NEWZZA | a1   |
+  Then we say "status": "success title|report tx" with subs:
+  | did  | otherName | amount |*
+  | paid | Our Pub   | $23    |
   And transactions:
   | xid | created | amount | payer | payee | for          |*
   |   1 | %today  |     23 | .ZZA  | .ZZC  | store credit |
   And these "tx_rules":
   | id | action     | payerType | payer | payeeType | payee | from         | to           | portion | amtMax |*
   |  1 | %ACT_SURTX | account   | .ZZA  | account   | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER | .5      | 23     |
-# after 6/1/2020  |  1 | %ACT_SURTX | account   | .ZZA  | account   | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER | 1       | 23     |
 
 Scenario: a member redeems store credit
   Given these "tx_rules":
@@ -144,32 +99,36 @@ Scenario: A member clicks a button to buy a gift of store credit
   | For          | store credit |
   | As a Gift to | |
   | Account ID   | |
+  | Password     | |
 
-Scenario: A member type account ID to buy a gift of store credit
+Scenario: A member types account ID to buy a gift of store credit
   When member "?" confirms form "pay-with-cg/company=NEWZZC&code=Cc3&for=gift&item=&amount=23" with values:
-  | for           | name          |*
-  | b@example.com | a@example.com |
-  Then we say "status": "pay button success"
-  And we message "new invoice" to member ".ZZA" with subs:
-  | otherName | amount | purpose                           |*
-  | Our Pub   | $23    | gift of store credit (to Bea Two) |
-  And invoices:
-  | nvid | created | status      | amount | payer | payee | for                               |*
-  |    1 | %today  | %TX_PENDING |     23 | .ZZA  | .ZZC  | gift of store credit (to Bea Two) |
+  | for           | name          | pass |*
+  | b@example.com | a@example.com | a1   |
+  Then we say "status": "success title|report tx" with subs:
+  | did  | otherName | amount |*
+  | paid | Our Pub   | $23    |
+#  Then we say "status": "pay button success"
+#  And we message "new invoice" to member ".ZZA" with subs:
+#  | otherName | amount | purpose                           |*
+#  | Our Pub   | $23    | gift of store credit (to Bea Two) |
+#  And invoices:
+#  | nvid | created | status      | amount | payer | payee | for                               |*
+#  |    1 | %today  | %TX_PENDING |     23 | .ZZA  | .ZZC  | gift of store credit (to Bea Two) |
 
-  When member "?" visits page "handle-invoice/nvid=1&code=TESTDOCODE"
-  Then we show "Confirm Payment" with:
-  | Pay $23 to Our Pub for gift of store credit (to Bea Two) |
-  And with:
-  | Pay | Dispute |
+#  When member "?" visits page "handle-invoice/nvid=1&code=TESTDOCODE"
+#  Then we show "Confirm Payment" with:
+#  | Pay $23 to Our Pub for gift of store credit (to Bea Two) |
+#  And with:
+#  | Pay | Dispute |
 
-  When member "?" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
-  | op  |*
-  | pay |
-  Then we say "status": "You paid Our Pub $23."
-  And invoices:
-  | nvid | created | status | purpose                           |*
-  |    1 | %today  |      1 | gift of store credit (to Bea Two) |
+#  When member "?" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
+#  | op  |*
+#  | pay |
+#  Then we say "status": "You paid Our Pub $23."
+#  And invoices:
+#  | nvid | created | status | purpose                           |*
+#  |    1 | %today  |      1 | gift of store credit (to Bea Two) |
   And transactions:
   | xid | created | amount | payer | payee | for                               |*
   |   1 | %today  |     23 | .ZZA  | .ZZC  | gift of store credit (to Bea Two) |
@@ -185,28 +144,28 @@ Scenario: A company gets an authcode
 
 Scenario: A company has an api to process transaction results
   When member "?" confirms form "pay-with-cg/company=NEWZZC&code=Cc3&item=food&amount=23&return=http:%2F%2Fexample.com%2Fthanks.php&request=ABC123&api=http:%2F%2Fexample.com%2Fapi%2F" with values:
-  | name   |*
-  | NEWZZA |
-  Then invoices:
-  | nvid | created | status      | amount | payer | payee | for  |*
-  |    1 | %today  | %TX_PENDING |     23 | .ZZA  | .ZZC  | food |
-  And we redirect to "http://example.com/thanks.php?request=ABC123"
+  | name   | pass |*
+  | NEWZZA | a1   |
+#  Then invoices:
+#  | nvid | created | status      | amount | payer | payee | for  |*
+#  |    1 | %today  | %TX_PENDING |     23 | .ZZA  | .ZZC  | food |
+  Then we redirect to "http://example.com/thanks.php?request=ABC123"
 
-  When member "?" visits page "pay-with-cg/op=status&company=NEWZZC&cocode=Cc3&request=ABC123"
-  Then we exit showing just "-1"
+#  When member "?" visits page "pay-with-cg/op=status&company=NEWZZC&cocode=Cc3&request=ABC123"
+#  Then we exit showing just "-1"
   
-  When member "?" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
-  | op  |*
-  | pay |
-  Then transactions:
+#  When member "?" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
+#  | op  |*
+#  | pay |
+  And transactions:
   | xid | created | amount | payer | payee | for  |*
   |   1 | %today  |     23 | .ZZA  | .ZZC  | food |
-  And invoices:
-  | nvid | created | status | amount | payer | payee | for  |*
-  |    1 | %today  | 1      |     23 | .ZZA  | .ZZC  | food |
+#  And invoices:
+#  | nvid | created | status | amount | payer | payee | for  |*
+#  |    1 | %today  | 1      |     23 | .ZZA  | .ZZC  | food |
   And we hit "http://example.com/api/" with:
   | request | ok | msg                   |*
   | ABC123  | 1  | You paid Our Pub $23. |
 
-  When member "?" visits page "pay-with-cg/op=status&company=NEWZZC&cocode=Cc3&request=ABC123"
-  Then we exit showing just "1"
+#  When member "?" visits page "pay-with-cg/op=status&company=NEWZZC&cocode=Cc3&request=ABC123"
+#  Then we exit showing just "1"
