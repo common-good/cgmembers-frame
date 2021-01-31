@@ -9,7 +9,7 @@ use CG\Db as db;
 include_once __DIR__ . '/signin.inc';
 
 const AUTHCODE_TIMEOUT = 60 * 60; // number of seconds before authcode expires
-const CGPAY_FLDS = 'op company cocode code item amount suggestedItem suggestedAmount name account zip verb request api for return cancel err confirm';
+const CGPAY_FLDS = 'op company cocode code item amount suggestedItem suggestedAmount name account zip verb request api for for0 return cancel err confirm';
 const CGPAY_MAXLEN = 255; // maximum field length (to prevent bloating our tables) -- return and cancel have no limit
 
 // There are hooks here for a call from rDo(), with doCode being the encrypted code from rDo
@@ -35,6 +35,7 @@ function formBuy($form, &$sta, $doCode = '') {
   );
 
   $args = just(CGPAY_FLDS, $args, NULL);
+
   foreach (justNOT('return cancel', $args) as $k => $v) if (strlen($v) > CGPAY_MAXLEN) return apiErr(tr('field too long', 'field max', $k, CGPAY_MAXLEN));
 
   $op = nni($args, 'op', 'charge'); // default to "charge"
@@ -66,8 +67,8 @@ function charge($args) {
   
   if ($amount) {
     if ($err = u\badAmount($amount, '>0')) return apiErr($err);
-    $amountDpy = u\fmtAmt($amount);
-  } else $amountDpy = '$' . w\rendA('amount', numFld(REQ, '', dft($suggestedAmount)));
+    list ($amountDpy, $amtExtra) = [u\fmtAmt($amount), []];
+  } else list ($amountDpy, $amtExtra) = ['$' . w\rendA('amount', numFld(REQ, '', dft($suggestedAmount))), clas('middle')];
 
   if ($account and $id = fmtAcctId($account) and $a = r\acct($id)) { // company passed customer's email or account ID
     if (($name and !u\similar($a->fullName, $name)) or ($zip and !u\starts($zip, $a->zip))) $a = NULL;
@@ -76,11 +77,12 @@ function charge($args) {
   } else { $a = NULL; }
   
   $confirm = !isset($a);
-  
+
   $subtext = $a 
   ? t('<h4>Hello %name!</h4>', 'name acct', $a->bestName, $a->mainQid) . nn($tst)
   : t('<h4>Hello %PROJECT Member</h4>');
 
+  $confirm = FALSE; // always ask for sign-in instead (standard)
   if ($confirm) {
     $name = textFld(REQ . t('Account ID:'), [t('Your account ID or Email'), ''], nn($id));
     $pass = NULL;
@@ -90,6 +92,11 @@ function charge($args) {
     list ($name, $pass) = w\signinFlds(nn($a) ? $a->mainQid : ''); // keep the nn($a)? here in case we change the logic hereabout
   }
 
+  $verbs = t('Donate, Donate, Pay');
+  $verb = in(ucwords($verb), $verbs) ? ucwords($verb) : t('Pay');
+  if ($verb == t('Donate')) u\setDft($suggestedItem, t('donation'));
+
+  $for0 = $for; // for errors
   if ($for == 'gift') {
     $for = textFld(t('As a Gift to:'), [t('Email or account ID')]);
     $item = t('gift of store credit');
@@ -110,11 +117,9 @@ function charge($args) {
       $item = textFld(REQ . t('For:'), [t('What to pay for')], dft($suggestedItem));
       $itemDpy = NULL;
     }
-  } else { return apiErr(t('The "for" parameter must be credit, gift, donate, or other.')); }
+  } else { return apiErr(t('The "for" parameter must be credit, gift, donate, or other -- not ') . $for); }
 
-  $verbs = t('Donate, Donate, Pay');
-  $verb = in(ucwords($verb), $verbs) ? ucwords($verb) : t('Pay');
-  $payment = item(t('%amount to %who', '_amount who', $amountDpy, $co->fullName ?: t('co')), "$verb:", '', clas('middle'));
+  $payment = item(t('%amount to %who', '_amount who', $amountDpy, $co->fullName ?: t('co')), "$verb:", '', $amtExtra);
   
   $option = $a ? '' : t('OR <%a>signup</a>', '_a', atag('/signup'));
   $submit = submit($verb, '', 'md', w\suffix($option));
@@ -139,6 +144,9 @@ function status($args) {
   exitJust($status === FALSE ? TX_NOSUCH : $status);
 }
 
+/**
+ * Validate charge op
+ */
 function formBuy_validate($form, &$sta) {
   global $mya;
   extract(just('name amount for item confirm', $input = $sta['input'], NULL));
@@ -149,7 +157,7 @@ function formBuy_validate($form, &$sta) {
     if ($confirm) {
       if (!r\acct(fmtAcctId($name))) return say(t('That account does not exist so it cannot be charged.'), 'name');
     } else {
-      if (!formSignin_validate($form, $sta)) return buySay('', $input + ['account' => $name]);
+      if (!formSignin_validate($form, $sta)) return buyErr('', ray('op account', 'charge', $name) + $input);
     }
   }
   if ($for and $for != SELF_CREDIT) {
@@ -160,39 +168,44 @@ function formBuy_validate($form, &$sta) {
   }
 }
 
+/**
+ * Handle charge op submission
+ */
 function formBuy_submit($form, &$sta) {
   global $mya;
-  extract(just(CGPAY_FLDS, $sta['input'], NULL)); // overwrite item from args if still set
+
+  extract(just(CGPAY_FLDS . ' uid', $input = $sta['input'], NULL)); // overwrite item from args if still set
   
   $co = r\acct($company);
-  $a = $mya ?: ($confirm ? r\acct(fmtAcctId($name)) : r\acct($sta['uid']));
+  $a = $mya ?: ($confirm ? r\acct(fmtAcctId($name)) : r\acct($uid)); // uid is from signin_validate()
   
   if ($confirm) {
     extract(just('ok msg', be\invoice($co, $a, $amount, $item, FOR_GOODS, compact(ray('api request for')))));
     if ($ok) $msg = t('pay button success');
   } else {
     extract(just('ok msg subs', be\transfer('payment', $a, $co, $amount, $item, FOR_GOODS, compact('for'))));
-    if ($ok) $msg = t('<h3>Success!</h3> ') . $msg;
     if ($api) u\post($api, ray('request ok msg', $request, (int) $ok, $msg));
-    foreach (ray('return cancel') as $k) if (nn($$k)) $$k = tr($$k, $args + compact(ray('msg ok subs')));
+    foreach (ray('return cancel') as $k) if (nn($$k)) $$k = tr($$k, $input + compact(ray('msg ok subs')));
+    if ($ok) $msg = tr('success title') . " $msg";
   }
   
   if ($ok) {
     if (nn($return)) return w\goFar($return, "request=$request");
-    return buySay($msg);
+    return sayEmpty($msg);
   } else {
     return nn($cancel) ? w\goFar($cancel, "request=$request") : softErr($msg);
   }
 }
 
 /**
- * Show an error or success message on the Pay-with-CG page.
+ * Show an error message on the Pay-with-CG page.
  * @param string $msg: message to show
- * @param mixed $info: '' or 'err' (in which case show just the message) or assoc of parameters (allows retry)
+ * @param assoc $info: an assoc of parameters for retry, but with info[for0] holding the original value of info[for]
  */
-function buySay($msg, $info = '') {
-  list ($code, $info) = is_array($info) ? [u\cryRay($info), 'err'] : ['done', $info];
-	say($msg, $info);
+function buyErr($msg, $info) {
+  if ($for0 = nni($info ?: [], 'for0')) $info['for'] = $for0;
+  $code = u\cryRay($info + ray('op', 'charge'));
+	say($msg, $info, 'err');
   return w\go("pay-with-cg/$code");
 }
 
@@ -206,7 +219,7 @@ function missingArgs($args, $require) {
   return FALSE;
 }
 
-/**/ function apiErr($s) {die('CG API: ' . $s);} // give simple error messages for api interface errors
+/**/ function apiErr($s) {u\FAIL('CG API: ' . $s);} // give simple error messages for api interface errors
 
 /**
  * Check the company parameter for errors and return its account.

@@ -80,6 +80,7 @@ function menu($submenu = '') {
     'community/backing' => ['call', t('Backing Promise'), 'Backing', ANY, '', t(), 'knight'],
     'community/honors' => ['sub', t('Honored & Remembered'), 'Honors', ANY, '', t(), 'grain'],
     'community/message' => ['sub', t('Message a Member'), 'Message', 'ok refund', '', t(), 'envelope'],
+    'community/message/x' => ['call', t('Decode a Secret Message'), 'Message 3', ANY],
     'community/find-company' => ['sub', t('Find a Company'), 'FindCo 2', ANY, '', t(), 'search'],
 // temporarily disabled    'community/grant' => ['sub', t('Get Paid to Organize'), 'Grant', 'prose', '', t(), 'apple'],
 //    'community/funds' => ['sub', t('Funds in Each Community'), 'CttyFunds', ANY, '', t(), 'usd'],
@@ -201,7 +202,6 @@ function menu($submenu = '') {
     'disconnect' => ['norm', t('Disconnect Device'), 'Card disconnect', 'scanner'],
 
     'whosin' => ['call', t('Who\'s in?'), '1', ANY, 'whosin'], // called from promo site
-    'secret' => ['call', 'Secret', '', ANY, 'secrets'],
     'error' => ['call', 'System Error', '1', ANY, 'error'],
     'page-not-found' => ['call', t('Page Not Found'), 'PageNotFound', ANY],
     'go2' => ['call', t('Go to 2 pages'), '1', ANY, 'go2'],

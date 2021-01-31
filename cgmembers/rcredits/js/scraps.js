@@ -17,6 +17,15 @@ function doit(what, vs) {
 
   switch(what) {
 
+  case 'message':
+    var secrets = $('#secrets');
+    secrets.hide();
+    $('#edit-addSecret').click(function () {
+      $(this).hide();
+      secrets.show().find('textarea').focus();
+    });
+    break;
+    
   case 'pw':
     var min = 5.14; // minimum score
     $('#edit-pw').keyup(function () {

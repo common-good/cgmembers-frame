@@ -826,22 +826,22 @@ function findEmail($index, $email, $subs) {
   global $testEmails; if (!nn($testEmails)) return t\output('There are no testEmails!');
 
   $subs = is_array(nni($subs, 0)) ? $subs[0] : nn($subs);
+  extract(just('subject body noFrame', $subs, NULL));
+
   t\fixEmail($email);
   t\fixData($subs);
-  //  if ($a = r\acct($email)) $subs['qid'] = $a->mainQid;
 
   $esubs = [];
   foreach ($subs as $k => $v) {
     if ($k == 'nudge') $subs[$k] = $v = t($v);
     $esubs['{' . $k . '}'] = $v;
   }
-  $message = nni($subs, 'noFrame') ? r\emailTemplate($index) : r\emailBody($index);
+  $message = $index ? ($noFrame ? r\emailTemplate($index) : r\emailBody($index)) : $body;
   $message = str_replace("\r\n", '', $message);
   $messageDpy = strtr(t\showSubs($message, $esubs), ray('href= style= src=', 'hrref=', 'styyle=', 'srrc='));
   $esubs['{companies}'] = ''; // don't test this
   $message = strtr($message, $esubs);
-  $subject = nni($subs, 'subject') ?: $GLOBALS['emailSubjects'][$index];
-  $subject = $GLOBALS['emailSubjects'][$index];
+  u\setDft($subject, nni($GLOBALS['emailSubjects'], $index));
   $subjectDpy = t\showSubs($subject, $esubs);
   $subject = strtr($subject, $esubs);
 
@@ -1394,7 +1394,7 @@ function clear($ch = 0) {
   global $newThresholds; unset($newThresholds);
   global $testRewardStep; $testRewardStep = 500;
   //  global $testRewarding; $testRewarding = TRUE; // normally set this true in tests only if testing this feature
-  global $T_POST; $T_POST = $_POST = $_COOKIE = []; // setting $_GET=[] makes things go kaflooey
+  global $T_POST; $T_POST = $_POST = []; // setting $_GET=[] makes things go kaflooey
   $lastGo = $formOut = $formArray = $formSta = $testOp = $testConfirmation = $tChecked = $tRadios = NULL;
   $formOut['text'] = '';
   $testEmails = $rAPIResult = NULL;
@@ -1406,6 +1406,7 @@ function clear($ch = 0) {
   global $sceneTest;
   global $conf; $conf = [];
 
+  r\deleteAllCooks();
   foreach (ray('error status') as $one) u\deleteFile(t\dosayFilename($one));
 
   if (test() and !strpos($sceneTest->name, 'Statement')) {

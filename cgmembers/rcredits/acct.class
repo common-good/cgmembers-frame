@@ -1603,9 +1603,7 @@ X;
     $cans[B_PERSON] = !$a->can(B_CO);
     if ($id == 1) $cans[B_ADMIN] = TRUE;
 
-    $perm = $a->closed ? B_READ
-      : ($a->proSe ? B_MANAGE
-         : (($aa->can(B_CADMIN) and $a->community == $aa->community) ? B_MANAGE : 0) );
+    $perm = ($aa->can(B_CADMIN) and $a->community == $aa->community) ? B_MANAGE : ($a->proSe ? B_MANAGE : 0);
       
     if (!$perm) $perm = max(B_RELATED + $a->permission,
       ($aa->can(B_OADMIN) or $aa->can(B_ADMIN2) 
@@ -1618,7 +1616,7 @@ X;
     $cans[B_MANAGING_CTTY] = ($aa->can(B_CADMIN) and $id == $a->community);
 
     if ($aa->can(B_ADMIN) and R_ADMIN_CAN_MANAGE_CTTYS) { // temporary extra power, until communities are independent
-      $cans[B_READ] = $cans[B_SCAN] = $cans[B_SELL] = $cans[B_BUY] = $cans[B_MANAGE] = TRUE;
+      $cans[B_READ] = $cans[B_SCAN] = $cans[B_REFUND] = $cans[B_SELL] = $cans[B_BUY] = $cans[B_MANAGE] = TRUE;
     }
     
     // Lastly, place restrictions on buying and selling

@@ -28,8 +28,8 @@ function formSignin($form, &$sta) {
   focusOn(($name == 'admin' or mb_strlen($name) > 4) ? 'pass' : 'name');
 
   $title = t('Welcome to %PROJECT!');
-  $signup = isDEV ? "<a href=\"$base_url/signup\">Signup</a> <a href=\"$base_url/signup-co\">SignupCo</a>" : '';
-  $subtext = t('<p>Not yet a member? <%a>Check it out</a>!</p>', '_a', atag(r\promoLink(''))) . $signup . t('<p><b>TIP</b>: Try not to sign in to your financial accounts on a public computer. Or if you do, be careful! Check the address bar at the top of the screen to make sure you have the right website (<b><em>%BASE_URL/</em>...</b>). And be sure to sign OUT when you\'re done!</p>');
+  $signup = isDEV ? lnk('/signup-co', 'SignupCo') : '';
+  $subtext = t('<p>Not yet a member? <%aCheck>Check it out</a> or just <%aSignup>Sign up</a>!</p>', '_aCheck _aSignup', atag(r\promoLink('')), atag('/signup')) . $signup . t('<p><b>TIP</b>: Try not to sign in to your financial accounts on a public computer. Or if you do, be careful! Check the address bar at the top of the screen to make sure you have the right website (<b><em>%BASE_URL/</em>...</b>). And be sure to sign OUT when you\'re done!</p>');
 
   $_a = atag('/settings/password/' . $name, tabindex(3)); // uses $name, so must precede $name = textField
   $passDesc = t('<%a>Forgot password?</a>', compact('_a'));
@@ -63,12 +63,14 @@ function formSignin_validate($form, &$sta, $type = 'both') {
     db\del('sessions', 'uid', '1');
     \CG\admin\setupBasicAccounts(); // happens sometimes during testing
   }
+
   if (!$uid = r\loginString($name)) return say('bad login', 'name');
   if (w\flooding($uid, $sta, $err)) return say($err, 'pass');
   $a = r\acct($uid);
   $success = (isDEV and $uid == 1) ?: ($a and $a->passwordOkay($pass, 'pass', $err)); // ignore admin pass on dev machine
   w\updateFlood($sta, $success); // should be before pw2 and vKeyE checks
 	if (!$success) return say('login failed', 'name');
+  $sta['input']['uid'] = $uid; // especially for pay-with-cg
 
   if ($a->superAdmin) {
     $pw2 = $pw2 ? u\b64decode($pw2) : (isDEV ? DEV_PW2 : '');

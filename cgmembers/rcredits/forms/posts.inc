@@ -643,7 +643,6 @@ function admin($zip) {
  * @return the query result set
  */
 function getPosts($type, $lat, $lon, $zip, $radius, $myPid, $admin, $zipIrrelevant, $since = 0, $all = TRUE) {
-//debug("getPosts($type, $lat, $lon, $zip, $radius, $myPid, $admin, $zipIrrelevant, $since");
   if (($radius ?: DFT_RADIUS) >= DFT_RADIUS  // looking broadly
       and $zips = r\communityId($zip, TRUE, 'zips')) { // from within an established CG community
     $cttyCrit = "p.zip RLIKE '$zips'";
@@ -658,8 +657,7 @@ function getPosts($type, $lat, $lon, $zip, $radius, $myPid, $admin, $zipIrreleva
   $postRadius = 'IFNULL(s.radius, 0)';
   $isMyPid = 'pid=:myPid';
   if (!$type) $type = ray(POST_TYPES);
-  //debug(compact(ray('type isMyPid postRadius visible admin zipIrrelevant cttyCrit myPid')));
-//    $admin as admin, :radius as radius, $noGeo as noGeo, MID(p.zip,1,3) = MID(:zip,1,3) AS zipMatch, $zipIrrelevant as noz,
+///    $admin as admin, :radius as radius, $noGeo as noGeo, MID(p.zip,1,3) = MID(:zip,1,3) AS zipMatch, $zipIrrelevant as noz,
 
   $sql = <<<X
     SELECT IF ($noGeo, '', $distance) AS dist, s.postid, s.service, c.id AS catId, c.cat, s.item, s.details, s.exchange,

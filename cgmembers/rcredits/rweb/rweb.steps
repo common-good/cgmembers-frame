@@ -130,7 +130,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
  *     MAKE cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     MAKE cgbutton AMemberRedeemsStoreCredit
- *     MAKE cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
+ *     MAKE cgbutton AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     MAKE cgbutton ACompanyHasAnApiToProcessTransactionResults
  *     MAKE company AMemberUpdatesCompanyInfo
  *     MAKE company AMemberGivesABadEmployeeCount
@@ -181,6 +181,13 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE tx AMemberPaysAnotherMemberLater
  */
 function memberConfirmsFormWithValues($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
+
+/**
+ * member (ARG) confirms (ARG) with: (ARG)
+ *
+ * in: MAKE message SynopsisOfScenario
+ */
+function memberConfirmsWith($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
 
 /**
  * a member confirms form (ARG) (which logs out) with values: (ARG)
@@ -249,6 +256,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE invite Setup
  *     MAKE invoice Setup
  *     MAKE joint Setup
+ *     MAKE message Setup
  *     MAKE pale Setup
  *     MAKE partnersignup Setup
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
@@ -295,7 +303,7 @@ function members($list) {return t\members($list);}
  *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     TEST cgbutton AMemberRedeemsStoreCredit
- *     TEST cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
+ *     TEST cgbutton AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     TEST cgbutton ACompanyHasAnApiToProcessTransactionResults
  *     MAKE community Setup
  *     MAKE custstatement Setup
@@ -339,6 +347,10 @@ function transactions($list) {return t\transactions($list);}
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST bank ASlaveMemberRequestsATransfer
  *     TEST card 
+ *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
+ *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
+ *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
+ *     TEST cgbutton AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     TEST flow AMemberOverdrawsWithNotEnoughToDrawOn
  *     TEST invest AMemberBuysAStakeInTheClub
@@ -373,10 +385,6 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  * in: TEST bank AMemberMovesTooLittleToTheBank
  *     TEST bank AMemberTriesToGoBelowTheirMinimum
  *     TEST card AMemberScansACompanyCardWithAStandardQRReader
- *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
- *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
- *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
- *     TEST cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
  *     TEST company AMemberUpdatesCompanyInfo
  *     TEST contact AMemberUpdatesContactInfo
  *     TEST contact AMemberGivesABadPhone
@@ -399,6 +407,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST invest AClubAdministratorHandlesRequestsToCashOut
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST joint AMemberCreatesAJointAccountByClickingALinkOnTheConsolePage
+ *     TEST message SynopsisOfScenario
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST posts SomeoneConfirmsAnOfferOnceTwice
@@ -446,7 +455,8 @@ function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
 /**
  * we email (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
+ * in: TEST message SynopsisOfScenario
+ *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
@@ -516,13 +526,9 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST balancesheet ANonmemberLooksAtTheBalanceSheet
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST cgbutton AMemberClicksAPayWithCommonGoodButton
- *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     TEST cgbutton AMemberClicksAPayWithCommonGoodButtonWithVariableAmount
- *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
  *     TEST cgbutton AMemberClicksAButtonToBuyStoreCredit
- *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     TEST cgbutton AMemberClicksAButtonToBuyAGiftOfStoreCredit
- *     TEST cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
  *     TEST changeaccount AMemberClicksTheProfilePhoto
  *     TEST changeaccount AMemberChangesAccountToGoToADifferentPage
  *     TEST changeaccount ACommunityAdminChangesAccount
@@ -629,9 +635,7 @@ function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWit
 /**
  * with: (ARG)
  *
- * in: TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
- *     TEST cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
- *     TEST custstatement ACompanyLooksAtACustomerStatement
+ * in: TEST custstatement ACompanyLooksAtACustomerStatement
  *     TEST joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     TEST posts SomeoneSubmitsALocus
  *     TEST posts SomeoneRepliesToAnOffer
@@ -810,15 +814,10 @@ function usd($list) {return t\usd($list);}
  *     MAKE card AMemberScansACompanyCardWithAStandardQRReader
  *     MAKE card 
  *     MAKE cgbutton AMemberClicksAPayWithCommonGoodButton
- *     MAKE cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     MAKE cgbutton AMemberClicksAPayWithCommonGoodButtonWithVariableAmount
- *     MAKE cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
  *     MAKE cgbutton AMemberClicksAButtonToBuyStoreCredit
- *     MAKE cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     MAKE cgbutton AMemberClicksAButtonToBuyAGiftOfStoreCredit
- *     MAKE cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
  *     MAKE cgbutton ACompanyGetsAnAuthcode
- *     MAKE cgbutton ACompanyHasAnApiToProcessTransactionResults
  *     MAKE changeaccount AMemberClicksTheProfilePhoto
  *     MAKE changeaccount AMemberChangesAccount
  *     MAKE changeaccount AMemberChangesAccountToGoToADifferentPage
@@ -1315,11 +1314,6 @@ function devices($list) {return t\devices($list);}
  * invoices: (ARG)
  *
  * in: MAKE balancesheet Setup
- *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
- *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
- *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
- *     TEST cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
- *     TEST cgbutton ACompanyHasAnApiToProcessTransactionResults
  *     MAKE custstatement Setup
  *     MAKE download Setup
  *     TEST gift AMemberDonatesWithInsufficientFunds
@@ -1511,11 +1505,7 @@ function memberConfirmsOnTransaction($id, $do, $xid) {
 /**
  * we message (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
- *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
- *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
- *     TEST cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
- *     TEST invoice AMemberConfirmsRequestToChargeAnotherMember
+ * in: TEST invoice AMemberConfirmsRequestToChargeAnotherMember
  *     TEST invoice AMemberConfirmsRequestToChargeAnotherMemberWhoHasABankAccount
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST tx AMemberConfirmsRequestToChargeAnotherMember
@@ -1694,7 +1684,7 @@ function weScripWithSubs($script, $args = []) {
  * in: MAKE balancesheet Setup
  *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     BOTH cgbutton AMemberRedeemsStoreCredit
- *     TEST cgbutton AMemberTypeAccountIDToBuyAGiftOfStoreCredit
+ *     TEST cgbutton AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     MAKE community Setup
  *     TEST community CronCalculatesTheStatistics
  *     TEST coupons AMemberCompanyCreatesAGiftCoupon
@@ -2209,7 +2199,7 @@ function memberDeletesRelationTo($id1, $id2) {
  */
 function weHitWith($url, $args) {
   global $testOnly; if (!$testOnly) return FALSE;
-  global $testHit;
+  global $testHit; if (!is_array($testHit)) return FALSE;
   $content = $args[0];
   $got = just('url', $testHit) + nni($testHit, 'content');
   foreach (compact('url') + $content as $k => $v) {
@@ -2221,7 +2211,7 @@ function weHitWith($url, $args) {
 /**
  * we exit showing just (ARG)
  *
- * in: TEST cgbutton ACompanyHasAnApiToProcessTransactionResults
+ * in: 
  */
 function weExitShowingJust($what) {
   global $testOnly; if (!$testOnly) return FALSE; // maybe combine this with weExitShowing?
