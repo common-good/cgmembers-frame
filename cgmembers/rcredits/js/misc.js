@@ -239,6 +239,19 @@ function SelectText(element) { // from http://stackoverflow.com/questions/985272
   }
 }
 
+/**
+ * Copy specified value to clipboard.
+ * @param string s: string to copy
+ * @return <success>
+ */
+function clipCopy(s) {
+  var area = document.createElement('textarea');
+  area.value = s;
+  document.body.appendChild(area);
+  area.select();
+  return document.execCommand('copy');
+}
+
 function getCookie(name) {
   var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
   return v ? v[2] : null;

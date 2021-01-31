@@ -69,16 +69,17 @@ function doit(what, vs) {
     
   case 'deposits':
     $('.filename').click(function () {
-      var area = document.createElement('textarea');
-      area.value = $(this).attr('data-flnm');
-      document.body.appendChild(area);
-      area.select();
-      alert(document.execCommand('copy') ? 'filename copied to clipboard' : 'copy to clipboard failed');
+      var res = clipCopy($(this).attr('data-flnm'));
+      alert(res ? 'filename copied to clipboard' : 'copy to clipboard failed');
     });
     break;
 
   case 'summary':
     $('#activate-credit').click(function () {post('setBit', {bit:'debt', on:1}, report);});
+    $('.copyEmail').click(function () {
+      var nm = $('#edit-accountName .control-data').text().replace(/ \([^\)]*\)/, '').trim();
+      clipCopy(nm + ' <' + $('#acctEmail').text() + '>');
+    });
     break;
     
   case 'console':
