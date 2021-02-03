@@ -454,8 +454,8 @@ class Acct {
     if (isset($info['pass']) and $info['pass'] !== '') $info['pass'] = r\passHash($info['pass']);
     if (isset($info['dob']) and !$a->co) { // use new dob to adjust yob and underage flag
       $dob = $info['dob'] ?: ($a->yob ? strtotime("$a->yob-12-31 11:59:59pm") : ($a->created ?: now()));
-      $a->update('yob', $dob ? date('Y', $dob) : ''); // remember birth year for demographics
-      if (now() - $dob < MATURITY * YEAR_SECS) $a->setBIT(B_UNDERAGE);
+      if (!isset($info['yob'])) $a->update('yob', $dob ? date('Y', $dob) : ''); // remember birth year for demographics
+      $a->setBIT(B_UNDERAGE, now() - $dob < MATURITY * YEAR_SECS);
     }
     u\preray($info, self::$rs[$a->id]); // cache the new field values (before doing special fields)
     
@@ -1022,7 +1022,7 @@ EOF;
         include_once R_ROOT . '/cg-activate.inc';
         r\activate($a, $a->helper ?: 0);
       }
-      if ($a->ok) { // account needs no approval (accounts needing approval get a persistent message on the console page)
+      if ($a->ok) { // account needs no approval (accounts needing approval get a persistent message on the dashboard)
         $msg2 = $a->co ? 'ok complete|co complete' : ($cardTask ? 'ok complete|card soon' : 'ok partial|to get a card');
 //'individual approval';
         u\joins($msg, '|', "$msg2|join thanks"); // show on display, not on done

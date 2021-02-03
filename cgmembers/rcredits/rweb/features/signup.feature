@@ -243,7 +243,7 @@ Scenario: A member invites
 
 Scenario: A member confirms social security number
   Given member ".ZZB" steps left "ssn"
-#  When member ".ZZB" visits page "console"
+#  When member ".ZZB" visits page "dashboard"
   When member "?" confirms form "signin" with values:
   | name   | pass |*
   | NEWZZB | 123  |

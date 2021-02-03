@@ -29,13 +29,13 @@ function formSummary($form, &$sta) {
     unset($form[$k]);
   }
 
-  $buttons = btn('/console/stay=1', t('Simple Console'));
+  $buttons = btn('/dashboard/stay=1', t('Simple Dashboard'));
   if (!$mya->isCtty and $mya->cAdmin) {
     if ($mya->trialco or !$mya->co) $buttons .= ' ' . a\cardLink($mya->id);
     $buttons .= ' ' . a\photoLink(0) . ' ' . a\photoLink(1);
   }
 
-  if ($stepUrl == 'console') {
+  if ($stepUrl == 'dashboard') {
     if (nn($msg)) say(t('New member is told: ') . t($msg));
   } elseif ($stepUrl) say(t('New member will be sent <%a>there</a> upon signing in.', '_a', atag("/$stepUrl")));
     
@@ -52,7 +52,7 @@ function formSummary($form, &$sta) {
 //    $totalDesc = u\fmtAmt($mya->r);
 //    $balanceDesc = $mya->savings ? t(' plus your savings, for a total of @total', ['@total' => $totalDesc]) : '';
 //    $balanceDesc = '';
-  $balanceDesc = $mya->activated ? t(' <small>(see <%a>History</a>)</small>', '_a', atag('/history')) : '';
+  $balanceDesc = $mya->activated ? t(' (see <%a>History</a>)', '_a', atag('/history')) : '';
   $balance = item($balance . $balanceDesc, t('Balance:'));
 
   if (!$mya->isCtty) { // unless this is a community or region account

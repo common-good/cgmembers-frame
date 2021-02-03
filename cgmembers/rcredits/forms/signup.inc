@@ -43,7 +43,7 @@ function formSignup($form, &$sta, $args = '') {
 
   if (!nn($helper)) {
     $helper = nn($partner) ?: 0;
-    $forother = item(w\lnk('/signup-co/' . http_build_query($args), t('Did you want to open a COMPANY account instead?')));
+    $forother = item(t('If you already have a %PROJECT account, <%aSignin>Sign in</a>.<br>Did you want to open a <%aCo>COMPANY account</a> instead?', '_aSignin _aCo', atag('/signin'), atag('/signup-co/' . http_build_query($args))));
   } else $forother = NULL;
 
   if (!nn($code)) $code = 'self ()';

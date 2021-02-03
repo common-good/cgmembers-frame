@@ -45,30 +45,30 @@ Setup:
   | .ZZC |     365 |
   Given cron runs "acctStats"
 
-Scenario: A member clicks the console tab
-  When member ".ZZA" visits page "console"
+Scenario: A member clicks the dashboard tab
+  When member ".ZZA" visits page "dashboard"
   Then we show "You: Abe One" with:
   | Balance   | $10 |
   
-Scenario: A member clicks the console tab with roundups
+Scenario: A member clicks the dashboard tab with roundups
   Given transactions:
   | xid | created | amount | payer | payee | purpose |*
   |   9 | %today  |  80.02 | .ZZB | .ZZC | goodies |
-  When member ".ZZB" visits page "console"
+  When member ".ZZB" visits page "dashboard"
   Then balances:
   | uid  | balance |*
   | .ZZB |  144.98 |
   And we show "You: Bea Two" with:
   | Balance       | $144 |
 
-Scenario: An agent clicks the console tab without permission to manage
-  When member "A:B" visits page "console"
+Scenario: An agent clicks the dashboard tab without permission to manage
+  When member "A:B" visits page "dashboard"
   Then we show "You: Abe One" with:
   | Balance       | $10 |
   And without:
   | Make This a Joint |
 
-Scenario: A company agent clicks the console tab
-  When member "C:A" visits page "console"
+Scenario: A company agent clicks the dashboard tab
+  When member "C:A" visits page "dashboard"
   Then we show "You: Corner Pub" with:
   | Balance       | $365 |

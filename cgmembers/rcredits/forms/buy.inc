@@ -190,8 +190,9 @@ function formBuy_submit($form, &$sta) {
   }
   
   if ($ok) {
+    if ($return == 'json') return exitJust(json_encode(ray('ok msg request', $ok ? 1 : 0, strip_tags($msg), $request ?: '')));
     if (nn($return)) return w\goFar($return, "request=$request");
-    return sayEmpty($msg);
+    return sayEmpty($msg); // default - standard success message page
   } else {
     return nn($cancel) ? w\goFar($cancel, "request=$request") : softErr($msg);
   }

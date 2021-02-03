@@ -97,7 +97,7 @@ function formSignin_validate($form, &$sta, $type = 'both') {
  * Finish signing in.
  * @param string $goto: what page to start on for non-admin
  */
-function formSignin_submit($form, &$sta, $goto = 'console') {
+function formSignin_submit($form, &$sta, $goto = 'dashboard') {
   extract(just('name', $sta['input'], NULL));
   $uid = r\loginString($name);
   $mya = r\setAcct($uid, $sta);

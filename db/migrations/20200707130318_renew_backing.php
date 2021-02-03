@@ -14,7 +14,7 @@ class RenewBacking extends AbstractMigration {
     }
     
     $t = $this->table('u_track', ray('id primary_key comment', FALSE, 'id', 'contact information for non-members'));
-    $t->addColumn('id', 'integer', ray('identity length null comment', TRUE, phx::INT_BIG, TRUE, 'record ID'));
+    $t->addColumn('id', 'integer', ray('identity length null comment', TRUE, phx::INT_BIG, FALSE, 'record ID'));
     $t->addColumn('uid', 'integer', ray('length null comment', phx::INT_BIG, TRUE, 'related account record ID'));
     $t->addColumn('type', 'string', ray('length null comment', 255, TRUE, 'what type of email or email address (for invite)'));
     $t->addColumn('sent', 'string', ray('length null comment', 11, TRUE, 'latest date sent'));

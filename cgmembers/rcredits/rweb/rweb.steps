@@ -81,7 +81,7 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE invest TheClubMakesALoan
  *     MAKE invite AMemberInvites
  *     MAKE joint AJoinedAccountSlaveMemberRequestsANewMinimum
- *     MAKE joint AMemberCreatesAJointAccountByClickingALinkOnTheConsolePage
+ *     MAKE joint AMemberCreatesAJointAccountByClickingALinkOnTheDashboardPage
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     MAKE partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
@@ -127,6 +127,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  * in: MAKE card AMemberScansACompanyCardWithAStandardQRReader
  *     MAKE card 
  *     MAKE cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
+ *     MAKE cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentForJSONResponse
  *     MAKE cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
  *     MAKE cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     MAKE cgbutton AMemberRedeemsStoreCredit
@@ -301,6 +302,7 @@ function members($list) {return t\members($list);}
  *     TEST bank AMemberWithANegativeBalanceRequestsATransferFromTheBank
  *     TEST card 
  *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
+ *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentForJSONResponse
  *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     TEST cgbutton AMemberRedeemsStoreCredit
  *     TEST cgbutton AMemberTypesAccountIDToBuyAGiftOfStoreCredit
@@ -326,7 +328,7 @@ function members($list) {return t\members($list);}
  *     MAKE queries Setup
  *     MAKE statement Setup
  *     MAKE summary Setup
- *     MAKE summary AMemberClicksTheConsoleTabWithRoundups
+ *     MAKE summary AMemberClicksTheDashboardTabWithRoundups
  *     TEST tx AMemberConfirmsRequestToPayAnotherMember
  *     TEST tx AMemberConfirmsRequestToPayAnotherMemberALot
  *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
@@ -406,7 +408,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST invest AMemberTriesToDecreaseStakeBelowZero
  *     TEST invest AClubAdministratorHandlesRequestsToCashOut
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
- *     TEST joint AMemberCreatesAJointAccountByClickingALinkOnTheConsolePage
+ *     TEST joint AMemberCreatesAJointAccountByClickingALinkOnTheDashboardPage
  *     TEST message SynopsisOfScenario
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
@@ -622,10 +624,10 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     TEST stepup AMembersRulesComeIntoPlay
  *     TEST stepup AMemberChoosesRecurringAndPertransactionDonations
- *     TEST summary AMemberClicksTheConsoleTab
- *     TEST summary AMemberClicksTheConsoleTabWithRoundups
- *     TEST summary AnAgentClicksTheConsoleTabWithoutPermissionToManage
- *     TEST summary ACompanyAgentClicksTheConsoleTab
+ *     TEST summary AMemberClicksTheDashboardTab
+ *     TEST summary AMemberClicksTheDashboardTabWithRoundups
+ *     TEST summary AnAgentClicksTheDashboardTabWithoutPermissionToManage
+ *     TEST summary ACompanyAgentClicksTheDashboardTab
  *     TEST txs AMemberLooksAtTransactionsForThePastYear
  *     TEST txs AMemberLooksAtTransactionsForThePastFewDays
  *     TEST txs AMemberLooksAtTransactionsWithRoundups
@@ -673,7 +675,7 @@ function with($content) {return weShow($content);}
  *     TEST signup AMemberInvites
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST stepup AMemberChoosesAPertransactionStepUp
- *     TEST summary AnAgentClicksTheConsoleTabWithoutPermissionToManage
+ *     TEST summary AnAgentClicksTheDashboardTabWithoutPermissionToManage
  *     TEST txs AMemberLooksAtTransactionsForThePastYear
  *     TEST txs AMemberLooksAtTransactionsForThePastFewDays
  */
@@ -724,7 +726,7 @@ function withoutOptions($options) {
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     MAKE joint AJoinedAccountMemberUnjoinsTheAccount
  *     BOTH joint AMemberRequestsTwoJoinsAtOnce
- *     TEST joint AMemberCreatesAJointAccountByClickingALinkOnTheConsolePage
+ *     TEST joint AMemberCreatesAJointAccountByClickingALinkOnTheDashboardPage
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
@@ -786,7 +788,7 @@ function relations($relations) {return t\relations($relations);}
  *     BOTH queries Setup
  *     TEST statement Setup
  *     TEST summary Setup
- *     TEST summary AMemberClicksTheConsoleTabWithRoundups
+ *     TEST summary AMemberClicksTheDashboardTabWithRoundups
  *     TEST tx Setup
  *     TEST tx AMemberConfirmsRequestToChargeAnotherMember
  *     TEST tx AMemberConfirmsRequestToPayAnotherMember
@@ -904,10 +906,10 @@ function usd($list) {return t\usd($list);}
  *     MAKE stepup AMemberChoosesAPertransactionStepUp
  *     MAKE stepup AMembersRulesComeIntoPlay
  *     MAKE stepup AMemberChoosesRecurringAndPertransactionDonations
- *     MAKE summary AMemberClicksTheConsoleTab
- *     MAKE summary AMemberClicksTheConsoleTabWithRoundups
- *     MAKE summary AnAgentClicksTheConsoleTabWithoutPermissionToManage
- *     MAKE summary ACompanyAgentClicksTheConsoleTab
+ *     MAKE summary AMemberClicksTheDashboardTab
+ *     MAKE summary AMemberClicksTheDashboardTabWithRoundups
+ *     MAKE summary AnAgentClicksTheDashboardTabWithoutPermissionToManage
+ *     MAKE summary ACompanyAgentClicksTheDashboardTab
  *     MAKE txs AMemberLooksAtTransactionsForThePastYear
  *     MAKE txs AMemberLooksAtTransactionsForThePastFewDays
  *     MAKE txs AMemberLooksAtTransactionsWithRoundups
@@ -973,7 +975,7 @@ function noRelation($relations) {
  */
 function memberSignsInTheFirstTime($uid) {
   global $testOnly; if (!$testOnly) return FALSE;
-  memberVisitsPage($uid, 'console');
+  memberVisitsPage($uid, 'dashboard');
   return db\get('created=login', 'users', 'uid=' . t\uid($uid));
 }
 
@@ -2217,7 +2219,7 @@ function weExitShowingJust($what) {
   global $testOnly; if (!$testOnly) return FALSE; // maybe combine this with weExitShowing?
   if (!$actual = t\getExitMsg()) return FALSE;
 /**/  db\del('test', "type='echo'"); // reset for subsequent steps
-  return ($what == '' . $actual);
+  return t\eq($what, '' . $actual);
 }
 
 /**
@@ -2245,3 +2247,13 @@ function memberHasPicture($id, $picture) {return t\hasPic($id, $picture);}
  * in: MAKE card 
  */
 function cryptcookieIs($nm, $v) {return cookieIs($nm, u\ry('C', $v));}
+
+/**
+ * we show JSON of: (ARG)
+ *
+ * in: TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentForJSONResponse
+ */
+function weShowJSONOf($ray) {
+  global $testOnly; if (!$testOnly) return FALSE;
+  return weExitShowingJust(json_encode(t\fixData($ray[0])));
+}

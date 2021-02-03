@@ -88,7 +88,7 @@ function formTx_submit($form, &$sta) {
     if (!$repeats) { // done if we're not repeating (and not delaying)
       unset($DBTX);
       say($msg, $ok ? '' : 'err');
-      return go('console');
+      return go('dashboard');
     }
   }
 
@@ -128,5 +128,5 @@ function formTx_submit($form, &$sta) {
   unset($DBTX);
 
   say(tr($msg, $subs), $ok ? '' : 'err');
-  return go('console');
+  return go('dashboard');
 }
