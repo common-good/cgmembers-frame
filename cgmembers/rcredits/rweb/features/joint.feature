@@ -103,7 +103,7 @@ Scenario: A joined account member looks at transaction history and summary
   |   3 | %mdy-2w | --         | from bank |  400.00 | 1,800.00 |        |
   |   2 | %mdy-2w | --         | from bank |  600.00 | 1,400.00 |        |
   Given cron runs "acctStats"
-  When member ".ZZB" visits page "console"
+  When member ".ZZB" visits page "dashboard"
   Then we show "You: Bea Two" with:
   | ~...          | joined with Abe One |
   | Balance       | $1,850 |
@@ -146,7 +146,7 @@ Scenario: A member requests two joins at once
   | .ZZA | .ZZB  | joint      |        0 |     0 |    0 |
   | .ZZA | .ZZD  | none       |        0 |     0 |    0 |
 
-Scenario: A member creates a joint account by clicking a link on the Console page
+Scenario: A member creates a joint account by clicking a link on the Dashboard page
   When member ".ZZA" completes form "prejoin" with values:
   | old | account |*
   |   1 | .ZZB    |

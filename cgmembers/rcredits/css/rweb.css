@@ -792,10 +792,10 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 .form-item-periods {display:none;}
 .form-item-submit .btn-default {margin:0 0 0 30px;}
 
-/* Console */
+/* Dashboard */
 #tx {display:none;}
-#frm-console #endorse {position: absolute; z-index:4; top: 160px; right: 0; bottom: 0; left: 0;}
-#frm-console #endorse>div {
+#frm-dashboard #endorse {position: absolute; z-index:4; top: 160px; right: 0; bottom: 0; left: 0;}
+#frm-dashboard #endorse>div {
   display:block;
   width:80%;
   height:50%;
@@ -807,23 +807,23 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
   box-shadow: 3px 3px 7px #888888; border-radius: 10px;
   padding:20px;
 }
-#frm-console #endorse>div h2 {color:white;}
-#frm-console #endorse>div a {color:silver;}
-#frm-console #endorse div div {display:inline-block; position: relative; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align:center;}
-#frm-console #endorse div div .btn-large {font-weight:normal; border-radius: 30px; margin-bottom:10px; color:white; padding:10px 20px; font-size:18px;}
+#frm-dashboard #endorse>div h2 {color:white;}
+#frm-dashboard #endorse>div a {color:silver;}
+#frm-dashboard #endorse div div {display:inline-block; position: relative; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align:center;}
+#frm-dashboard #endorse div div .btn-large {font-weight:normal; border-radius: 30px; margin-bottom:10px; color:white; padding:10px 20px; font-size:18px;}
 
-#frm-console .form-item-buttons {margin-top:30px; text-align:left;}
-#frm-console .form-item-buttons .btn {margin:0 20px 0 0;}
-#frm-console .form-item-buttons a:first-child {margin-left:0;}
-#frm-console .form-item-buttons .control-data {max-width:480px;}
-#frm-console .form-item-special {background-color:lightyellow; padding:8px; border:1px solid khaki; text-align:center;}
-#frm-console .form-item-advanced .btn {margin:0 20px 0 0;}
+#frm-dashboard .form-item-buttons {margin-top:30px; text-align:left;}
+#frm-dashboard .form-item-buttons .btn {margin:0 20px 0 0;}
+#frm-dashboard .form-item-buttons a:first-child {margin-left:0;}
+#frm-dashboard .form-item-buttons .control-data {max-width:480px;}
+#frm-dashboard .form-item-special {background-color:lightyellow; padding:8px; border:1px solid khaki; text-align:center;}
+#frm-dashboard .form-item-advanced .btn {margin:0 20px 0 0;}
 
-#frm-console #edit-choiceList a {display:table-row;}
-#frm-console #edit-choiceList a div {display:table-cell; padding:2px 4px;}
-#frm-console #edit-choiceList a div:first-child {font-size:115%; font-weight:bold; width:43px; color:darkgreen; padding-left:0;}
-#frm-console #edit-choiceList a:hover {text-decoration:none; background-color:aliceblue; max-width:420px;}
-#frm-console #edit-choiceList a small {color:silver;}
+#frm-dashboard #edit-choiceList a {display:table-row;}
+#frm-dashboard #edit-choiceList a div {display:table-cell; padding:2px 4px;}
+#frm-dashboard #edit-choiceList a div:first-child {font-size:115%; font-weight:bold; width:43px; color:darkgreen; padding-left:0;}
+#frm-dashboard #edit-choiceList a:hover {text-decoration:none; background-color:aliceblue; max-width:420px;}
+#frm-dashboard #edit-choiceList a small {color:silver;}
 
 /* Summary / Member Info / Account Info */
 #frm-summary .form-item-left {float:left; width:50%;}

@@ -1,3 +1,13 @@
+2021-02-03 feature/cgpay-json
+. added immediate json return option to CGPay interface (and updated documentation)
+. changed console page name to Dashboard
+. bug fix: underage bit now gets updated when dob changes
+. bug fix: link on dashboard to allow negative balances now works
+. bug fix: going to root redirects to signup page
+. added signin option to signup page
+. bug fix: credit line is now not mentioned in notices to underage accounts
+. fixed some errors in migrations identified by newer MariaDB (mostly null keys)
+
 2021-01-31 feature/copy-email
 . added a button for admin to copy account name and email to clipboard
 

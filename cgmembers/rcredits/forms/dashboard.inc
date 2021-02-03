@@ -11,9 +11,9 @@ use CG\Risk as k;
 include_once __DIR__ . '/tx.inc'; // include all Pay and Charge functionality
 
 /**
- * Show a console for the current account (with preference for mobile).
+ * Show a dashboard for the current account (with preference for mobile).
  */
-function formConsole($form, &$sta, $args = '') {
+function formDashboard($form, &$sta, $args = '') {
   global $base_url;
   global $mya; $myid = $mya->id;
   extract(just('stay', $args, NULL));
@@ -95,15 +95,15 @@ function formConsole($form, &$sta, $args = '') {
     $creditLine = $choiceList = NULL;
   }
   
-  jsx('console', 'payDesc chargeDesc', t('Pay'), t('Charge'));
-  $console = fieldSet('console', compact(ray('endorse title acct buttons balance creditLine special shortcuts choiceList')), BARE);
+  jsx('dashboard', 'payDesc chargeDesc', t('Pay'), t('Charge'));
+  $dashboard = fieldSet('dashboard', compact(ray('endorse title acct buttons balance creditLine special shortcuts choiceList')), BARE);
   $tx = fieldSet('tx', formTx($form, $sta, 'both'), BARE);
 
-  return cgform(compact('console', 'tx'), '', 'left');
+  return cgform(compact('dashboard', 'tx'), '', 'left');
 }
 
-function formConsole_validate($form, &$sta) {return formTx_validate($form, $sta);}
-function formConsole_submit($form, &$sta) {return formTx_submit($form, $sta);}
+function formDashboard_validate($form, &$sta) {return formTx_validate($form, $sta);}
+function formDashboard_submit($form, &$sta) {return formTx_submit($form, $sta);}
 
 /**
  * Return a list of important next steps for the account.

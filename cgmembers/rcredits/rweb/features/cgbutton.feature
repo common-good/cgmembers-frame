@@ -29,6 +29,17 @@ Scenario: A member submits a Pay With Common Good button payment with account ID
   And transactions:
   | xid | created | amount | payer | payee | for  |*
   |   1 | %today  |     23 | .ZZA  | .ZZC  | food |
+  
+Scenario: A member submits a Pay With Common Good button payment for JSON response
+  When member "?" confirms form "pay-with-cg/company=NEWZZC&code=Cc3&item=food&amount=23&return=json" with values:
+  | name   | pass |*
+  | NEWZZA | a1   |
+  Then transactions:
+  | xid | created | amount | payer | payee | for  |*
+  |   1 | %today  |     23 | .ZZA  | .ZZC  | food |
+  And we show JSON of:
+  | ok | msg                            | request |*
+  | 1  | Success! You paid Our Pub $23. |         |
 
 Scenario: A member clicks a Pay With Common Good button with variable amount
   When member "?" visits page "pay-with-cg/company=NEWZZC&code=Cc3&item=food&amount="

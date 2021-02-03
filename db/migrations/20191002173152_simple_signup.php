@@ -15,7 +15,7 @@ class SimpleSignup extends AbstractMigration {
       
     $table = $this->table('zip3', ['id' => FALSE, 'primary_key' => 'id', 'comment' => 'meaning of first 3 digits of Zip Codes']);
     
-    $table->addColumn('id', 'string', ['length' => 3, 'null' => TRUE, 'comment' => 'first 3 digits of Zip Code']);
+    $table->addColumn('id', 'string', ['length' => 3, 'null' => FALSE, 'comment' => 'first 3 digits of Zip Code']);
     $table->addColumn('region', 'string', ['length' => 255, 'null' => TRUE, 'comment' => 'city or region within a state']);
     $table->addColumn('state', 'string', ['length' => 2, 'null' => TRUE, 'comment' => 'state abbreviation']);
     $table->create();

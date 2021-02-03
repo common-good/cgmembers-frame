@@ -17,7 +17,7 @@ function formInvest($form, &$sta, $args = '') {
   $clubid = $mya->iclub? $uid : db\get('uid', 'users', 'fullName LIKE :club AND :zip REGEXP zip AND :IS_OK', ray('club zip', t('%Investment Club%'), $mya->zip));
   
   if (!$clubid) return go('/invest/interest');
-  if (!$mya->can(B_SELL)) return go('console', 'no receive invest');
+  if (!$mya->can(B_SELL)) return go('dashboard', 'no receive invest');
 
   $clubA = r\acct($clubid);
   $clubqid = $clubA->mainQid;

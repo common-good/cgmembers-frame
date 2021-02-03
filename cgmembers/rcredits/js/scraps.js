@@ -82,7 +82,8 @@ function doit(what, vs) {
     });
     break;
     
-  case 'console':
+  case 'dashboard':
+    $('#activate-credit').click(function () {post('setBit', {bit:'debt', on:1}, report);});
     $('#endorse a').click(function () {$('#endorse').hide();});
     $('#covid').click(function () {location.href = baseUrl + '/community/covid';});
     $('#blm').click(function () {location.href = 'https://commongood.earth/about-us/diversity-equity-inclusion';});
@@ -91,7 +92,7 @@ function doit(what, vs) {
     $('.btn-pay, .btn-charge').click(function () {
       var pay = has($(this).attr('class'), 'btn-pay');
       var desc = vs[pay ? 'payDesc' : 'chargeDesc'];
-      $('#console').hide();
+      $('#dashboard').hide();
       $('.w-pay').toggle(pay);
       $('.w-charge').toggle(!pay);
       $('#edit-title h3').html(desc);
@@ -99,7 +100,7 @@ function doit(what, vs) {
       $('#tx').show();
     });
     
-  case 'tx': // fall through from console
+  case 'tx': // fall through from dashboard
     $('#btn-delay').click(function () {
       $(this).hide();
       $('.form-item-start').show();

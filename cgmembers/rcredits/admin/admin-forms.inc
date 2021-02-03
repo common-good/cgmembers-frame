@@ -230,7 +230,7 @@ function formFollowup($form, &$sta, $args = []) {
   global $base_url;
   global $mya;
   
-	if (!$mya or (!$mya->cAdmin2 and !$mya->admin2)) return w\go('console');
+	if (!$mya or (!$mya->cAdmin2 and !$mya->admin2)) return w\go('dashboard');
   
   extract(just('one recent', $args, null));
 

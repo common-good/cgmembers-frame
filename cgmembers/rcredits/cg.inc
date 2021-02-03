@@ -820,7 +820,10 @@ function noticeArgs($uid, $having = '1', $weekly = FALSE, $monthly = FALSE, $at 
   }
   extract(just('return', $a->j_stats()));
   $balance = u\fmtAmt($a->balance);
-  $creditLine = u\fmtAmt(-$a->floor);
+  $creditLine = $a->underage ? t('disabled')
+  : (u\fmtAmt(-$a->floor)
+    . ($a->debt ? t('(based on your monthly activity)') : t('disabled (sign in and see Settings / Advanced)')));
+  // (<%a>click here</a> to enable it)', '_a', 
   list ($rewards, $ourEmail) = array(u\fmtAmt($a->rewards), $a->cttyA->email);
   return compact(ray('messages unit range balance creditLine return ourEmail'));
 }

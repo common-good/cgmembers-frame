@@ -12,7 +12,7 @@ use CG\Db as db;
 function formScraps($form, &$sta, $arg = '') {
   global $mya;
 
-  if (in($arg, S_MEM_TASKS)) { // called from Console page when member clicks to launch a followup task
+  if (in($arg, S_MEM_TASKS)) { // called from Dashboard page when member clicks to launch a followup task
     $note = r\stampNote(t('member clicked "Finish"'));
     $mya->update('notes', $note . $mya->notes);
 

@@ -16,7 +16,7 @@ use CG\Util as u;
  */
 function menu($submenu = '') {
   $items = array(
-    'console' => ['norm', t('Console'), 'Console', 'read'],
+    'dashboard' => ['norm', t('Dashboard'), 'Dashboard', 'read'],
 
     'tx/pay' => ['call', t('Pay'), 'Tx 1 2', 'buy ok'],
     'tx/pay/payments' => ['sub', t('Upload Payments'), 'Payments', 'co buy ok'],

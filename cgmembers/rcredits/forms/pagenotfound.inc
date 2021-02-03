@@ -14,9 +14,9 @@ function formPageNotFound($form, &$sta, $arg = '') {
 
   $page = $_SERVER['REQUEST_URI'];
   if ($page and $page[0] == '/') $page = substr($page, 1); // ignore leading slash
-  if ($mya and !$page) return go('/console');
+  if ($mya and !$page) return go('/dashboard');
   
-  if ($page and $page[0] == '-') {
+  if (!$page or $page[0] == '-') {
     include_once __DIR__ . '/../forms/signup.inc';
     return formSignup('', $sta, 'code=' . substr($page, 1)); // invitation!
   }

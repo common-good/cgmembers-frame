@@ -35,7 +35,7 @@ define('SAME_TIME', 60 * 20); // number of seconds that make no difference in "s
 function fixData(&$info, $direct = FALSE) {
   global $testOnly, $rUrl, $testVars, $T;
 
-  $fields = key($info) . ' email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method companyOptions coType'; // first key is probably an ID field, so keep it at the front
+  $fields = key($info) . ' ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method companyOptions coType'; // first key is probably an ID field, so keep it at the front
 
   if (nn($testVars)) foreach ($info as $k => $v) if (mb_strpos($v, '@') !== FALSE) {
       foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", $var, $v);
@@ -43,6 +43,7 @@ function fixData(&$info, $direct = FALSE) {
   foreach (ray(NULL_FLDS) as $k) if (isset($info[$k]) and empty($info[$k])) $info[$k] = NULL;
   extract(just($fields, $info));
   
+  if (isset($ok)) $ok = (int) $ok; // use integers not strings in JSON
   if (isset($cat)) $cat = db\get('id', 'post_cats', compact('cat'));
   if ($T and $T->feature == 'posts' and isset($method) and !$testOnly) $method = array_search($method, ray('email phone text'));
   if (isset($companyOptions)) $companyOptions = ray($companyOptions);
@@ -85,6 +86,7 @@ function fixData(&$info, $direct = FALSE) {
   }
   foreach (ray('state country') as $k) if (!isset($info[$k])) unset($$k);
   foreach (ray($fields) as $k) if (isset($$k)) $info[$k] = $$k;
+  return $info;
 }
 
 /**
@@ -1164,7 +1166,7 @@ function pageForm($page) {
 	$page = t\fixPageArgs($page);
   $formArray = $formSta = $formOut = NULL; // start with a clean slate
 
-  if (!$page) $page = 'console';
+  if (!$page) $page = 'dashboard';
   t\SERVER('REQUEST_URI', $page);
   $args = basename($page);
   $xlastGo = nn($lastGo); // notice whether a goto happens. ignore all but the deepest (last).

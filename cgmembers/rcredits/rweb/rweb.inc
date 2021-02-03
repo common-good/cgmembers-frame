@@ -255,7 +255,7 @@ function changeWho($zot, $args = '', &$sta = '') {
   extract(just('acct page', $args, NULL));
   
   if (test()) $page = u\urlify(str_replace(',', '/', nn($page)));
-  $page = $page ? u\deurlify($page) : 'console'; // go to console, unless admin
+  $page = $page ? u\deurlify($page) : 'dashboard'; // go to dashboard, unless admin
 
   if (nn($acct) == 'signout') return signout();
   if (!$mya and !isDEV) return softErr(t('Your session timed out. Please <%a>Sign back in</a> and try again.', '_a', atag('signin')));

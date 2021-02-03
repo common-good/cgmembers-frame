@@ -509,7 +509,7 @@ function menu_execute_active_handler($path = NULL, $deliver = TRUE) {
       $page_callback_result = call_user_func_array($router_item['page_callback'], $router_item['page_arguments']);
     } elseif ($mya) {
       if ($router_item['path'] == 'signin') {
-        return w\go('console', t('You are already signed in.'));
+        return w\go('dashboard', t('You are already signed in.'));
       } else { return w\softErr(t('no page permission')); }
     } else { return w\go('signin'); }
   } else { $page_callback_result = MENU_NOT_FOUND; }
