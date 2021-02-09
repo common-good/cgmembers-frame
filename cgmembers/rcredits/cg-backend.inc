@@ -389,6 +389,7 @@ function payInvoice($nvid, $payAmount = NULL) {
  *   'rebate': the rebate amount for this request (should be negative the original bonus amount)
  *   'bonus': the bonus amount (should be negative the original rebate amount)
  *   'undoes': transaction id of the related transaction (transaction being undone)
+ *   'for': credit, gift, donate, other (or empty)
  *
  *   'short': ?
  *   'funding': ?
@@ -537,7 +538,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   }
   
   if ($goods != FOR_USD and $pot = $loserA->giftPot) $loserA->update('giftPot', max(0, $pot - $needed));
-  if (nn($for)) advanceCredit($for, $loserA, $gainerA, $amount); // purchase of store credit
+  if (nn($for) and $for != 'other') advanceCredit($for, $loserA, $gainerA, $amount); // purchase of store credit
   
   unset($DBTX);
   
