@@ -1,3 +1,13 @@
+2021-02-07 feature/agree-step
+. added country field to signup, investment interest, and contact settings so Canadians can sign up (using a US bank still)
+. fixed bug that let a user create a personal account while signed in to a company account -- messing things up
+. email is now allowed to a closed account if (and only if) it's to reset a password
+. fixed bug that discarded rendered amount field in an item() in buy.inc
+. fixed bug that prevented normal cgpay button from working with for=other
+. company code can now be lowercase for cgpay button
+. added print card button to photo page (for admin)
+. relations are now allowed only with active accounts
+
 2021-02-03 feature/cgpay-json
 . added immediate json return option to CGPay interface (and updated documentation)
 . changed console page name to Dashboard

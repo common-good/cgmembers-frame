@@ -38,7 +38,7 @@ Scenario: A member signs up
   And member ".AAA" steps left "verifyid fund preferences verifyemail"
 
 Scenario: A member verifies ID
-  Given member ".ZZB" has "person" steps done: "signup"
+  Given member ".ZZB" has "person" steps done: "signup agree"
   When member ".ZZB" completes form "settings/verifyid" with values:
   | legalName | method | federalId   | dob      |*
   |           | 0      | 123-45-6789 | 2/1/1990 |
@@ -54,7 +54,7 @@ Scenario: A member verifies ID
   And member ".ZZB" steps left "fund preferences verifyemail ssn"
 
 Scenario: A member connects a bank account
-  Given member ".ZZB" has "person" steps done: "signup verifyid"
+  Given member ".ZZB" has "person" steps done: "signup agree verifyid"
   When member ".ZZB" completes form "settings/fund" with values:
   | op     | connect      | chox | routingNumber | bankAccount | bankAccount2 | cashout | refills | target | achMin | saveWeekly |*
   | submit | %FUNDBY_BANK | 1    |     053000196 |         123 |          123 |       0 |       1 |     $0 |    $20 |         $0 |  
@@ -66,7 +66,7 @@ Scenario: A member connects a bank account
   And member ".ZZB" steps left "preferences verifyemail"
 
 Scenario: A member sets preferences
-  Given member ".ZZB" has "person" steps done: "signup verifyid fund"
+  Given member ".ZZB" has "person" steps done: "signup agree verifyid fund"
   When member ".ZZB" completes form "settings/preferences" with values:
   | roundup | statements | nosearch | secretBal |*
   |       1 | electronic |        0 |         1 |
@@ -75,7 +75,7 @@ Scenario: A member sets preferences
   And member ".ZZB" steps left "verifyemail"
 
 Scenario: A member verifies email
-  Given member ".ZZB" has "person" steps done: "signup verifyid fund preferences"
+  Given member ".ZZB" has "person" steps done: "signup agree verifyid fund preferences"
   And member is logged out
   And member ".ZZB" one-time password is "WHATEVER"
   When member "?" visits page "settings/verifyemail/qid=NEWZZB&code=WHATEVER&verify=1"
@@ -95,7 +95,7 @@ Scenario: A member verifies email
   And we say "status": "tentative partial|to get a card"
 
 Scenario: A member clicks Finish
-  Given member ".ZZB" has "person" steps done: "signup verifyid fund preferences verifyemail"
+  Given member ".ZZB" has "person" steps done: "signup agree verifyid fund preferences verifyemail"
   Then member ".ZZB" steps left ""
   When member ".ZZB" visits page "scraps/card"
   Then we show "Photo ID Picture"

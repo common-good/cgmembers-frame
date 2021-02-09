@@ -300,11 +300,12 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
     u\setDft($subs['qid'], $toA->mainQid); // might have an agent, so don't overwrite
     $subs['shortName'] = $toA->name;
     $subs['zip3'] = substr($toA->zip, 0, 2); // temporarily show a wider region than zip3
-    if ($toA->closed) return r\tellAdmin(t('attempt to email closed account'), compact(ray('index subs reply0')));
+    if ($toA->closed and $index != 'password-reset') return r\tellAdmin(t('attempt to email closed account'), compact(ray('index subs reply0')));
     if ($jid = $toA->jid) $jA = r\acct($jid);
     if ($toA->depends and !$toA->co) $jA = r\acct($toA->helper); // sponsored accounts are never joint
     if (nn($jA) and test()) $testEmails[] = ray('index toEmail subs', $index, $jA->email, $subs);
   } else $to = $toEmail = $to0;
+
   $subs['emailCoded'] = urlencode(u\cry('P', is_array($toEmail) ? key($toEmail) : $toEmail));
   
   $testEmails[] = compact(ray('index toEmail subs'));
@@ -328,7 +329,7 @@ function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
   $logSubs = u\noSecrets($resubs) + ["\r\n" => '', ' style=' => ' stylish=']; // easier reading for log and tests & evade CSP
   $message = strtr($body, $logSubs);
   $erInfo = compact(ray('index toEmail subject message'));
-  u\loga('email', $erInfo + ['toUid' => nn($toA->id)]);
+  u\loga('email', $erInfo + ['toUid' => nn($toA) ? $toA->id : 'none']);
   f('t.output', 'Actual (in rMail) ' . pr($erInfo), 'email');
 
   if (!isPRODUCTION and !isDEMO) { // make sure we never send rogue emails from test server with real data
@@ -1503,3 +1504,4 @@ function pic($flnm) {if (!is_dir(R_PICTURE_DIR)) mkdir(R_PICTURE_DIR); return R_
 function isBank($uid) {return ($uid == BANK_IN_ID or $uid == BANK_OUT_ID);}
 function foodFundId() {return db\get('uid', 'users', "name='foodfund'") ?: 0;}
 function referrer() {global $referrer; return test() ? nn($referrer) : basename(nni($_SERVER, 'HTTP_REFERER'));}
+function countryList() {return db\keyed('id,name', 'r_countries', "name in ('United States', 'Canada')");}

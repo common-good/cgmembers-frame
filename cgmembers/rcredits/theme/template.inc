@@ -334,7 +334,7 @@ function rcredits_textfield($vs) {
   if (is_array($ray = nn($help))) {
     if (nni($ray, 0) and !nni($ray, 2)) $ray[2] = $ray[0]; // hover text defaults to same as hint
     foreach (['placeholder', 'desc', 'title'] as $i => $k) {
-      if ($k != 'desc' and $v = $ray[$i]) $attributes[$k] = $v;
+      if ($k != 'desc' and $v = nni($ray, $i)) $attributes[$k] = $v;
     }
   }    
   $tribs = u\tribs(compact('class') + $attributes);

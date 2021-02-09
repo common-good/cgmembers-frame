@@ -24,20 +24,22 @@ function formSignup($form, &$sta, $args = '') {
   if (!$args) $args = nn($_POST) ?: basename($_SERVER['REQUEST_URI']); // because menu_execute_active_handler fails
   if (is_string($args)) $args = urlq2ray($args);
 
-  $flds = 'fullName email helper phone zip source';
-  extract($mya ? (array) $mya->account($flds) : just($flds . ' source2 joint reid inviter code partner partnerCode customer', $args, NULL));
+  $flds = 'fullName email helper phone zip country source';
+  extract(just($flds . ' source2 joint reid inviter code partner partnerCode customer', $args, NULL));
 
   u\setDft($source2, nni($_COOKIE, 'ad'));
   $source2 = hidFld($source2);
 
   if (nn($reid)) return softErr('old partner link');
 
-  if (nn($joint) and $a = r\acct() and $a->canManage) {
-    if (!$a->co) $myid = w\jointSignup(); else return w\go('', t('A company cannot have a joint account.'), 'err');
-  } 
+  if (nn($joint) and $mya and $mya->canManage) {
+    if (!$mya->co) $myid = w\jointSignup(); else return w\go('', t('A company cannot have a joint account.'), 'err');
+  }
+    
+  if ($mya) signout(TRUE); // must come after jointSignup
   
   if (test() and is_array(nn($myid))) return; // array means returned r\go
-  $myid = hidFld($myid0 = nn($myid) ?: ($mya ? $mya->id : ''));
+  $myid = hidFld($myid0 = nn($myid));
 
   $title = nn($joint) ? t('Create a Partner Account<br><small>(joined to yours)</small>') : t('Open a Personal Account');
 
@@ -76,6 +78,8 @@ EOF
   $source = $helperA ? hidFld($helperA->fullName) : sourceFld();
   
   $phone = phoneFld(REQ . t('Phone:'), [t('Your phone number')], dft($phone));
+  $country = selectFld(t('Country:'), t(''), dft($country ?: US_COUNTRY_ID), r\countryList()); // can't use required() here
+
   $zip = zipFld(nn($zip));
   $fullName = textFld(t('Name:'), [t('Your full name'), t('Your full name, properly capitalized, as you would like it to appear on your %PROJECT card.')], required(nn($fullName)));
   $email = emailFld(t('Email:'), [t('Email'), t('<b>Type carefully.</b> All emails from the system will be sent to this address. It will not be made public, but will be viewable by accounts you transact with (you can choose greater privacy by clicking "Advanced" on the Preferences Settings page).')], required(nn($email)));
@@ -86,20 +90,21 @@ EOF
   list ($cq, $ca) = w\captcha();
   $submit = t('I agree'); //  was t('Next')
     
-  $form = compact(ray('title forother subtext acctType fullName phone email zip source midtext agreement details cq ca submit myid args confirmed helper iCode notes source2'));
+  $form = compact(ray('title forother subtext acctType fullName phone email country zip source midtext agreement details cq ca submit args confirmed helper iCode notes source2'));
 //  $sponsorConfirmation = w\whoFldSubmit('sponsor', t('Your sponsoring organization is %name, yes?'));
   return cgform($form);
 }
 
 function formSignup_validate($form, &$sta) {
-  extract(just('fullName phone email zip myid', $sta['input'], NULL));
+  extract(just('fullName phone email zip country', $sta['input'], NULL));
 
-  if ($err = u\badName($fullName)) return say($err, ['field' => 'fullName'], 'fullName');
+  if ($err = u\badName($fullName)) return err($err, ['field' => 'fullName'], 'fullName');
   $fullName = u\normalizeCase($fullName);
   
-  if ($err = u\badPhone($phone)) return say($err, 'phone');
-  if (!emailOkay($email, FALSE, $myid ? r\acct($myid) : '')) return;
-  if ($err = u\badZip($zip)) return say($err, 'zip');
+  if ($err = u\badPhone($phone)) return err($err, 'phone');
+  if (!emailOkay($email, FALSE)) return;
+  if (emailDupCo($email)) return err(t('That email is already used by a company. To manage that account, sign in to your personal account and click your photo in the upper right corner. To create another company account, sign in and click "Open Another Company Account".'));
+  if ($err = u\badZip($zip, $country)) return err($err, 'zip');
   if (badCaptcha($sta)) return;
 
   u\preray(compact(ray('fullName phone email zip')), $sta['input']);
@@ -113,8 +118,7 @@ function zExtraErr(&$notes, $msg, $field, $value = '') {
 }
 
 function formSignup_submit($form, &$sta) {
-  global $mya;
-  $dbFields = 'fullName email flags phone federalId dob pin zip address city state postalAddr helper iCode notes tenure source';
+  $dbFields = 'fullName email flags phone federalId dob pin country zip address city state postalAddr helper iCode notes tenure source';
   extract(just('myid confirmed acctType args ats owns partner customer source2 ' . $dbFields, $sta['input']));
   if (test() and !nn($args)) $args = basename($_SERVER['REQUEST_URI']);
   extract(just('code source2', $args)); // source2 may come from either partner or an ad (through our promo site)
@@ -167,6 +171,9 @@ function formSignup_submit($form, &$sta) {
     }
   }
 
+  $mya->signed = now();
+  $mya->signedBy = $mya->fullName;
+  $mya->stepDone('agree');
   return w\goNextStep('signup');
 }
 
@@ -175,7 +182,7 @@ function formSignup_submit($form, &$sta) {
  * @param acct $a: the account to join, if it exists (otherwise create it) -- UNUSED
  */
 function jointSignup($a = NULL) {
-  global $mya; // was  $mya = r\acct();
+  global $mya;
   
   if ($mya->jid) return $mya->jid; // in case form gets run twice
   if (!$a) {
@@ -190,6 +197,5 @@ function jointSignup($a = NULL) {
   }
   $mya->newRelation(ray('other permission', $a->id, r\perm(B_JOINT)));
   $a->join($mya);
-  r\setAcct(NULL); // sign agent out so it looks joint
   return $a->id;
 }

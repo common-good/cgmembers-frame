@@ -141,5 +141,8 @@ function formSignupCo_submit($form, &$sta) {
     say('refundable deposit');
   }
 
+  $mya->signed = now();
+  $mya->signedBy = $agentA->fullName;
+  $mya->stepDone('agree');
   return w\goNextStep('signup'); 
 }

@@ -23,17 +23,18 @@ function formInvestInterest($form, &$sta, $args = '') {
   $submit = t('Keep me in the loop!');
   
   if ($mya) {
-    $fullName = $phone = $email = $zip = $source = NULL;
+    $fullName = $phone = $email = $zip = $country = $source = NULL;
   } else {
     $code = r\acct(1)->iCardCode(IBY_SELF); // inviter is admin for now; invitation() will set $iCode=IBY_SELF
     $source = sourceFld();
     $phone = phoneFld(REQ . t('Phone:'), [t('Your phone number')]);
+    $country = selectFld(t('Country:'), t(''), dft(US_COUNTRY_ID), r\countryList()); // can't use required() here
     $zip = zipFld();
     $fullName = textFld(REQ . t('Name:'), [t('Your full name')]);
     $email = emailFld(REQ . t('Email:'), [t('Email')]);
   }
   
-  return cgform(compact(ray('title subtext fullName phone email zip source amount comments submit')));
+  return cgform(compact(ray('title subtext fullName phone email country zip source amount comments submit')));
 }
 
 function formInvestInterest_validate($form, &$sta) {
@@ -57,7 +58,7 @@ function formInvestInterest_submit($form, &$sta) {
   $mya = w\eLinkAcct($sta); 
 
   $a = $mya ? $mya->agentA : NULL;
-  $dbFields = 'fullName email flags phone zip notes source city state latitude longitude iintent';
+  $dbFields = 'fullName email flags phone zip country notes source city state latitude longitude iintent';
   extract(just('comments source2 amount ' . $dbFields, $sta['input'], NULL));
   list ($city, $state, $latitude, $longitude) = r\zipCity($zip);
 
@@ -78,5 +79,6 @@ function formInvestInterest_submit($form, &$sta) {
     if (!$a = new r\Acct($info)) return softErr(t('cannot create account'));
     $msg .= t('<p>Meanwhile, if you\'re not yet in %PROJECT, <%a>check it out</a>!</p>', '_a', atag(PROMO_URL));
   }
+  $a->stepDone('signup');
   return sayEmpty($msg);
 }

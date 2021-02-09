@@ -875,14 +875,14 @@ function deleteCell($number) {
  *
  * @param string $who: how the user referred to the trader (name, phone, email, uid, or temporary code)
  * @param int $mya: current user's account
- * @param bool $paying: <we're preparing to pay this person> (in which case the person has to have an active account)
+ * @param bool $activeOnly: <the person has to have an active account> (if we're paying them or giving access)
  * @param string $self_message: index to error message for identifying oneself
  *   If true, the other trader will be created only if specified by email or phone
  * @return one of the following:
  *   the other trader's acct
  *   array(error index, array of substitutions, array of possible fullNames (0 or more) indexed by uid)
  */
-function identify($who, $mya, $paying, $self_message = 'no self-trading') {
+function identify($who, $mya, $activeOnly, $self_message = 'no self-trading') {
   if (!$mya) return ['search forbidden', [], []];
   $myid = $mya->id;
   $who = trim($who);
@@ -903,7 +903,7 @@ function identify($who, $mya, $paying, $self_message = 'no self-trading') {
     if (u\isQid($qid) and $a = r\acct($qid)) $where .= " OR uid=$a->id";
     $where = "($where OR uid=:who)";
   }
-  if ($paying) $where .= ' AND :IS_OK';
+  if ($activeOnly) $where .= ' AND :IS_OK';
   if (!$mya->admin and !$mya->isAdmin2) {
     $where .= tr(' AND (:IS_CO OR community=:ctty OR %DISTANCE_BETWEEN<%NEIGHBOR_MAX)'); // restrict to nearby
     list ($lat, $lon) = [$mya->latitude ?: 0, $mya->longitude ?: 0]; // avoid NULL (PHP bug?)

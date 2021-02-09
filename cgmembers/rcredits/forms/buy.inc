@@ -67,8 +67,11 @@ function charge($args) {
   
   if ($amount) {
     if ($err = u\badAmount($amount, '>0')) return apiErr($err);
-    list ($amountDpy, $amtExtra) = [u\fmtAmt($amount), []];
-  } else list ($amountDpy, $amtExtra) = ['$' . w\rendA('amount', numFld(REQ, '', dft($suggestedAmount))), clas('middle')];
+    list ($amount, $amtExtra) = [u\fmtAmt($amount, ''), disabled() + clas('middle')];
+  } else {
+    if ($suggestedAmount and $err = u\badAmount($suggestedAmount, '>0')) return apiErr($err);
+    list ($amount, $amtExtra) = [$suggestedAmount, clas('middle')];
+  }
 
   if ($account and $id = fmtAcctId($account) and $a = r\acct($id)) { // company passed customer's email or account ID
     if (($name and !u\similar($a->fullName, $name)) or ($zip and !u\starts($zip, $a->zip))) $a = NULL;
@@ -119,12 +122,13 @@ function charge($args) {
     }
   } else { return apiErr(t('The "for" parameter must be credit, gift, donate, or other -- not ') . $for); }
 
-  $payment = item(t('%amount to %who', '_amount who', $amountDpy, $co->fullName ?: t('co')), "$verb:", '', $amtExtra);
+//  $payment = item(t('%amount to %who', '_amount who', $amountDpy, $co->fullName ?: t('co')), "$verb:", '', $amtExtra);
+  $amount = numFld("$verb:", '', dft($amount ? u\ddddcc($amount) : '') + suffix(t(' to ') . $co->fullName ?: t('co')) + $amtExtra);
   
   $option = $a ? '' : t('OR <%a>signup</a>', '_a', atag('/signup'));
   $submit = submit($verb, '', 'md', w\suffix($option));
 
-  $info = compact(ray('subtext payment itemDpy for name pass item submit'));
+  $info = compact(ray('subtext amount itemDpy for name pass item submit'));
   foreach (ray(CGPAY_FLDS) as $k) if (isset($$k) and !is_array($$k)) $info[$k] = hidFld($$k);
   
   return cgform($info);
@@ -149,6 +153,7 @@ function status($args) {
  */
 function formBuy_validate($form, &$sta) {
   global $mya;
+
   extract(just('name amount for item confirm', $input = $sta['input'], NULL));
 
   if (isset($amount) and $err = u\badAmount($sta['input']['amount'], '>0')) return say($err, 'amount'); // fix amount
@@ -160,7 +165,7 @@ function formBuy_validate($form, &$sta) {
       if (!formSignin_validate($form, $sta)) return buyErr('', ray('op account', 'charge', $name) + $input);
     }
   }
-  if ($for and $for != SELF_CREDIT) {
+  if ($for and $for != SELF_CREDIT and $for != t('other')) {
     $for = fmtAcctId($for);
     if (!$a = r\acct($for)) return say(t('That %PROJECT account does not exist. You can currently give only to another %PROJECT member.'), 'for');
     $item .= t(' (to %who)', 'who', $a->fullName);
@@ -176,7 +181,7 @@ function formBuy_submit($form, &$sta) {
 
   extract(just(CGPAY_FLDS . ' uid', $input = $sta['input'], NULL)); // overwrite item from args if still set
   
-  $co = r\acct($company);
+  $co = getCo($company);
   $a = $mya ?: ($confirm ? r\acct(fmtAcctId($name)) : r\acct($uid)); // uid is from signin_validate()
   
   if ($confirm) {
@@ -224,8 +229,10 @@ function missingArgs($args, $require) {
 
 /**
  * Check the company parameter for errors and return its account.
+ * @param string $company: the company's qid
  */
 function getCo($company) {  
+  $company = strtoupper($company); // allow lowercase parameter
   if (!u\isQid($company) or !$co = r\acct($company) or !$co->co) return apiErr('bad company account id');
   return $co;
 }

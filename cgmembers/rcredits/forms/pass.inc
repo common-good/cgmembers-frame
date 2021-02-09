@@ -22,10 +22,11 @@ function formPass($form, $sta, $id = '') {
 
 function formPass_validate($form, &$sta) {
   extract(just('name', $sta['input'], NULL));
-  if (!$name) return say('missing field', ['field' => 'account'], 'name');
-  if (!$uid = r\loginString($name)) return say('bad account id', 'name');
+  if (!$name) return err('missing field', ['field' => 'account'], 'name');
+  if (!$uid = r\loginString($name)) return err('bad account id', 'name');
   $a = r\acct($uid);
-  if ($a->co and !$a->trialco) return say('no co pass', ['company' => $a->fullName], 'name');
+  if ($a->co and !$a->trialco) return err('no co pass', ['company' => $a->fullName], 'name');
+// No!  if (!$a->ok) return err('inactive', 'name');
   $sta['input']['uid'] = $uid;
 }
 

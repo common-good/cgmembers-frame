@@ -111,7 +111,7 @@ function formRelations_validate($form, &$sta) {
   global $mya;
 
   if ($newPerson = nn($sta['input']['newPerson'])) {
-    $a = whois($newPerson, 'newPerson', $sta['input'], 'no self-relation');
+    $a = whois($newPerson, 'newPerson', $sta['input'], 'no self-relation', TRUE);
     $id = $a ? $a->id : '';
     if ($id and r\relation(1, $mya->id, $id)) {
       say('already related', 'newPerson');
