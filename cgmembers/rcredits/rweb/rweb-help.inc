@@ -86,7 +86,7 @@ X
 
   if ($i == 'smartphone') return t(<<< X
     <p>To use the smartphone interface, you will need to install an app to read QR codes (for example QRDroid on Android phones or Qrafter for iPhones). You can pay participating businesses by scanning their QR code, then visiting the scanned URL.</p>
-    <p>Your customers (or employer) can pay you by scanning the QR code on your member ID card. You can print an Advance ID card for your individual account, using the link on the Summary page.</p>
+    <p>Your customers (or employer) can pay you by scanning the QR code on your member ID card. You can print an Advance ID card for your individual account, using the link on the Dashboard page.</p>
 X
   );
 
@@ -561,7 +561,7 @@ X
     $res = join("\n", $res);
     return t(<<< X
       <div id="bit-help">
-      <p>Community Administrators can see and set/unset most of these bits on each account's Summary page.</p>
+      <p>Community Administrators can see and set/unset most of these bits on each account's Dashboard page.</p>
       <table>$res</table>
       </div bit-help>
 X

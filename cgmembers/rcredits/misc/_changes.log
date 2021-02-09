@@ -1,3 +1,6 @@
+2021-02-07 feature/tweaks
+. fixed bugs in signup / notfound / empty URLs
+
 2021-02-07 feature/agree-step
 . added country field to signup, investment interest, and contact settings so Canadians can sign up (using a US bank still)
 . fixed bug that let a user create a personal account while signed in to a company account -- messing things up

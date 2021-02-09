@@ -2685,7 +2685,7 @@ function drupal_deliver_html_page($page_callback_result) {
 
           f('db.q', 'DELETE FROM sessions WHERE uid=0'); // cgf 4/22/2016 (else loops when Drupal sets uid=0 on timeout)
           global $mya; // cgf BEGIN 6/14/2020
-          $nfPage = !$mya ? 'signin' : ($mya->cAdmin ? 'sadmin' : 'summary');
+          $nfPage = !$mya ? 'signin' : ($mya->cAdmin ? 'sadmin' : 'dashboard');
           $return = menu_execute_active_handler($nfPage, FALSE); // cgf end
         }
 
