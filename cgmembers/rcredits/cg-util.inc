@@ -109,7 +109,9 @@ function ssnAddr($v) {return ucWords(mb_strtolower(nn($v->address) . ', ' . nn($
  */
 function badZip(&$z, $country = US_COUNTRY_ID) {
   $z = preg_replace('/[^A-Za-z0-9\\-]/', '', $z);
-  $pattern = $country == US_COUNTRY_ID ? '/^\\d{5}(\\-\\d{4})?$/' : '/*/'; // allow any postal code for other countries, for now
+  $pattern = $country == US_COUNTRY_ID ? '/^\\d{5}(\\-\\d{4})?$/' // United States
+  : ($country == CA_COUNTRY_ID ? '/^(?!.*[DFIOQU])[A-VXY]\\d[A-Z] ?\\d[A-Z]\\d$/' // Canada
+  : '/*/' ); // allow any postal code for other countries, for now
   return (!preg_match($pattern, $z)) ? 'bad zip' : FALSE;
 }
 
@@ -1720,3 +1722,4 @@ function ry($type, $data) {return substr(u\cry($type, $data), strlen(CRYPT_FLAG)
 function dery($type, $code) {return u\decry($type, CRYPT_FLAG . $code);}
 function ul($list) {return '<ul><li>' . join("</li>\n<li>", nn($list) ?: []) . "</li></ul>\n";}
 function tm($tm) {return strtolower(trim(strftime('%I:%M%p', $tm), '0'));}
+function ddddcc($n) {return cleanAmount(number_format(cleanAmount($n), 2));}

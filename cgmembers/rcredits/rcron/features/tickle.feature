@@ -16,7 +16,7 @@ Scenario: A newbie has taken only the first step
   Given invites:
   | email | inviter | code   | invited    | invitee |*
   | d@    | .ZZE    | codeD1 | %today-11d | .ZZD    |
-  And member ".ZZD" has done step "signup"
+  And member ".ZZD" has done step "signup agree"
   When cron runs "tickle"
   Then we notice "do step one|sign in|daily messages" to member ".ZZD"
   And we notice "invitee slow" to member ".ZZE" with subs:

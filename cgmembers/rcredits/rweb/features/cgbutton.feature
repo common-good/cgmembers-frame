@@ -14,7 +14,7 @@ Setup:
 Scenario: A member clicks a Pay With Common Good button
   When member "?" visits page "pay-with-cg/company=NEWZZC&code=Cc3&item=food&amount=23.50"
   Then we show "Hello %PROJECT Member" with:
-  | Pay        | $23.50 to Our Pub |
+  | Pay        | 23.50 to Our Pub |
   | For        | food |
   | Account ID |  |
   | Password   |  |
@@ -52,15 +52,15 @@ Scenario: A member clicks a Pay With Common Good button with variable amount
 Scenario: A member submits a Pay With Common Good button payment with account ID and chosen amount
   When member "?" confirms form "pay-with-cg/company=NEWZZC&code=Cc3&item=food&amount=" with values:
   | name   | amount | pass |*
-  | NEWZZA |     23 | a1   |
+  | NEWZZA | $23.45 | a1   |
   Then we say "status": "success title|report tx" with subs:
   | did  | otherName | amount |*
-  | paid | Our Pub   | $23    |
+  | paid | Our Pub   | $23.45 |
 
 Scenario: A member clicks a button to buy store credit
   When member "?" visits page "pay-with-cg/company=NEWZZC&code=Cc3&for=credit&item=&amount=23.50"
   Then we show "Hello %PROJECT Member" with:
-  | Pay        | $23.50 to Our Pub |
+  | Pay        | 23.50 to Our Pub |
   | For        | store credit |
   | Account ID |  |
   | Password   |  |
@@ -106,7 +106,7 @@ Scenario: a member redeems store credit
 Scenario: A member clicks a button to buy a gift of store credit
   When member "?" visits page "pay-with-cg/company=NEWZZC&code=Cc3&for=gift&item=&amount=23.50"
   Then we show "Hello %PROJECT Member" with:
-  | Pay          | $23.50 to Our Pub |
+  | Pay          | 23.50 to Our Pub |
   | For          | store credit |
   | As a Gift to | |
   | Account ID   | |

@@ -58,7 +58,7 @@ class Acct {
     u\setDft($login, $created);
     u\setDft($access, $login);
     u\setDft($name, r\uniqueName($fullName, $info));
-    $country = R_COUNTRY_ID;
+    u\setDft($country, R_COUNTRY_ID);
 
     if (isset($phone)) $phone = u\fmtPhone($phone, '+n');
     if (!is_numeric($state)) $state = r\stateNum($state); // allow US state abbreviations
@@ -221,6 +221,8 @@ class Acct {
       case 'jA': return $a->jid ? r\acct($a->jid) : NULL;
       case 'masterA': return $a->slave ? $a->jA : $a;
       case 'helperA': return $a->helper ? r\acct($a->helper) : '';
+      case 'usa': return ($a->country == US_COUNTRY_ID);
+      
       case 'foody': return db\get(':U_FOODY', 'users u', $uidSub);
       case 'iclub': return ($a->id < 0 or strhas($a->fullName, t('Investment Club')));
       case 'iclubId': return db\get('clubid', 'r_stakes', $uidSub);

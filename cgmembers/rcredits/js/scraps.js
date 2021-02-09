@@ -294,6 +294,11 @@ function doit(what, vs) {
       $(this).attr('type', 'text').css('background-color', '#e6ffcc'); // make it not a date type field and go green
       $(this).click(); // show keyboard
     });
+    
+    if (vs['usa'] != 1) {
+      $('#edit-method-2').click();
+      $('#frm-verifyid .form-item-submit a').hide();
+    }
     break;
 
   case 'which':

@@ -16,11 +16,11 @@ function formVerifyId($form, &$sta, $args = '') {
   extract(just('setMethod', $args, 0));
 
   if (u\isMobile()) js('x/jquery.finger.min');
-  jsx('verifyid', 'method', $setMethod);
+  jsx('verifyid', 'method usa', $setMethod, $mya->usa);
   $title = t('Identity Verification');
   $subtext = t('As a registered Money Services Business, we are required by law to verify your identity. Fortunately, we have <%aSecure>top notch security</a>.', '_aSecure', atag(r\promoLink('about-us/privacy-and-security')));
   $legalName = textFld(t('Your Legal Name:'), [t('Legal name'), t('If your legal name is different (or longer), correct it here.')], dft($mya->fullName));
-  $methodChoices = ray(t('|<b>Immediate and automatic</b> &mdash; Type your social security number and birth date.|Upload driver\'s license (to be verified by an administrator).|Upload other state-issued photo ID (to be verified by an administrator).'));
+  $methodChoices = ray(t('|<b>Immediate and automatic</b> &mdash; Type your social security number and birth date.|Upload driver\'s license (to be verified by an administrator).|Upload government-issued photo ID (to be verified by an administrator).'));
   //  This is simplest and is required by the IRS if you <i class="loud">accept</i> more than $20,000 a year in payments through %PROJECT, and by the states of Vermont and Massachusetts if you accept more than $%MINIMA1099MAVT a year (not including purchase rebates offered by %PROJECT businesses).
   $method = radiosFld(REQ, '', dft(0), $methodChoices);  
   $idtype = textFld(t('ID Type:'), [t('Type of ID')]);

@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.56r'; // software version
+const R_VERSION = '3.56s'; // software version
 define('R_ROOT', __DIR__);
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -397,7 +397,7 @@ const FUNDBY_CASH = 2; // buy with cash at a participating business
 
 // Membership steps
 const S_ALL = 'signup:signup, verifyemail, verifyid, ssn, agent, fund, contact, agree:community/agreement, donate:community/donate, invite:community/invite, proxies, preferences, company, photo, discount:community/discount, backing:community/backing, stepup:community/stepup, crumbs:community/crumbs, work, partnersteptwo, partnerend, food, wantsPrint, printed'; // where to go to complete each step (unordered) -- add new steps to the end
-const S_PERSON = 'signup verifyid fund preferences verifyemail';
+const S_PERSON = 'signup agree verifyid fund preferences verifyemail';
 const S_CARD = 'photo contact donate crumbs proxies work backing stepup invite';
 const S_CO = 'signup verifyemail fund contact backing photo donate company crumbs discount';
 const S_CO2 = 'agent contact backing photo donate company crumbs discount';

@@ -6,7 +6,6 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
-
 /**
  * Upload a photo.
  * @later: maybe drag&drop (see http://hayageek.com/drag-and-drop-file-upload-jquery/)
@@ -62,8 +61,9 @@ function formPhoto($form, &$sta, $arg = '') {
   w\svar('userAgent', nni($_SERVER, 'HTTP_USER_AGENT')); // for debugging spurious photo rotations
 
   $desc = item($desc);
+  $printCard = $mya->admin ? f('a.cardLink', $mya->id) : '';
   $newPhoto = item(<<<EOF
-<div id="choosePhotoWrap"><div class="btn $chooserStyle btn-success" id="choosePhoto">$choose</div> <div id="emailPhoto" class="btn btn-warning btn-xs">$emailIt</div> $recropIt</div>
+<div id="choosePhotoWrap"><div class="btn $chooserStyle btn-success" id="choosePhoto">$choose</div> <div id="emailPhoto" class="btn btn-warning btn-xs">$emailIt</div> $recropIt $printCard</div>
 <div class="cropHeaderWrapper">
   <div id="photoUp"$class></div>
 </div>

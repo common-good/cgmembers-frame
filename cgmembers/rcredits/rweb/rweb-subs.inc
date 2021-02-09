@@ -1148,7 +1148,7 @@ function emailDup($email, $uid, $suppressErr = FALSE) {
   global $base_url;
   $email = mb_strtolower($email);
   $crypt = u\cry('P', $email);
-  if (!$who = db\get('fullName', 'users', 'email=:crypt and uid<>:uid AND NOT :IS_CO', compact('crypt', 'uid'))) return FALSE;
+  if (!$who = db\get('fullName', 'users', 'email=:crypt AND uid<>:uid AND NOT :IS_CO', compact('crypt', 'uid'))) return FALSE;
   if (!$suppressErr) {
     $_a = atag("/settings/password/$email");
     $emailTagged = str_replace('@', '+whatever@', $email);
@@ -1158,6 +1158,12 @@ function emailDup($email, $uid, $suppressErr = FALSE) {
     say($dupMsg . nn($forgot), compact(ray('emailTagged who _a')), 'email');
   }
   return TRUE;
+}
+
+function emailDupCo($email) {
+  $email = mb_strtolower($email);
+  $crypt = u\cry('P', $email);
+  return db\exists('users', 'email=:crypt AND :IS_CO', compact('crypt'));
 }
 
 /**
@@ -1251,8 +1257,8 @@ function contactFields($defaults = []) {
 
   $step0 = !$mya->stepIsDone('contact');
   $partnerExtras = ' partner customer partnerCode'; // add-on fields passed through only for partner signup (start with space) (even partnerCode is necessary, in case form is redrawn on error)
-  $dbFlds = 'phone address city state zip tenure owns postalAddr source';
-  $fields = 'phone physical address city state zip tenure owns sameAddr2 address2 city2 state2 zip2 postalAddr hidState hidState2 source';
+  $dbFlds = 'phone address city state zip country tenure owns postalAddr source';
+  $fields = 'phone physical address city state country zip tenure owns sameAddr2 address2 city2 state2 zip2 postalAddr hidState hidState2 source';
   foreach ($defaults as $k => $v) if (is_null($v)) unset($defaults[$k]); // needed for joint account setup
   extract($defaults + (array) $mya->account($dbFlds));
 
@@ -1291,7 +1297,7 @@ function contactFields($defaults = []) {
     jsx('addr');
     $phone = phoneFld(REQ . t('Phone:'), [t('Your phone number')], dft($phone));
 //    $faxetc = @$faxetc ? textFld(t('Fax etc:'), [t('Other contact info'),t('List other ways to contact you: fax, mobile, IM, etc. This field is NOT public.')], dft(@$faxetc)) : NULL;
-//    $country = selectFld(t('Country:'), t(''), dft(@$country)); // can't use required() here
+    $country = selectFld(t('Country:'), t(''), dft($country ?: US_COUNTRY_ID), r\countryList()); // can't use required() here
     $physical = item('', t('Physical Address'));
     $address = textFld(t('Street Address:'), [t('Physical address'), t('Where is your building located (physical address)?')], required(nn($address)));
     $city = textFld(t('City:'), [t('City where you live')], required(nn($city)));
@@ -1643,15 +1649,15 @@ function rangeDates($period, $starting = '', $ending = '') {
  * @param string $field_name: name of the field the user typed in
  * @param array $info: field values to be stored, then reinstated when the page is refreshed to show the choices
  * @param string $selfMsg: index to error message to give if user self-refers
- * @param bool $paying: <we're preparing to pay this person> (in which case the person has to have an active account)
+ * @param bool $activeOnly: <the person has to have an active account> (if we're paying them or giving access)
  * @return:
  *   NULL if there is an error
  *   acct of the identified person
  *   no return (refreshes page) if ambiguous
  */
-function whois($who, $field_name, $info, $selfMsg = 'no self-trading', $paying = FALSE) {
+function whois($who, $field_name, $info, $selfMsg = 'no self-trading', $activeOnly = FALSE) {
   global $mya;
-  if (u\isAcct($result = be\identify($who, $mya, $paying, $selfMsg))) return $result;
+  if (u\isAcct($result = be\identify($who, $mya, $activeOnly, $selfMsg))) return $result;
   list ($msg, $args, $choices) = $result;
 //  foreach (ray('form_build_id form_token form_id op') as $one) unset($info[$one]); // just for neatness
   if (u\abbreviates('who=', $last = basename($return = \current_path()))) $return = dirname($return);
@@ -2216,7 +2222,7 @@ function required($dft = NULL) {return ['required' => TRUE] + (isset($dft) ? dft
 function op($sta) {global $testOp; return test() ? $testOp : substr(nni($sta['input'], 'opid'), 5);} // without edit-
 function verifyBy($byVoice) {return $byVoice ? t('Voice') : t('SMS');}
 function sayFieldErr($err, $field) {return say(strtoupper($field) . ': ' . t($err), $field);}
-function err($msg) {return say($msg, 'err');}
+function err($msg, $subs = [], $fldName = 'err') {return say($msg, $subs, $fldName);}
 function rent($element) {return \render($element);} // Drupal makes render hard, requires pass by reference
 function away() {return ['target' => '_blank'];}
 function js($script, $args = '') {global $pageScripts; $pageScripts[$script] = http_build_query(rayy(func_get_args(), 1));} // see html.tpl

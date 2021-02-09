@@ -511,6 +511,7 @@ EOF
   'bad achmin' => t('The minimum transfer amount must be at least $%R_ACHMIN.'),
   'say why not' => t('You must say why you are disputing the invoice.'),
   'no co pass' => t('Company accounts do not have passwords. Sign in to your personal account, then click your photo in the upper right corner and select %company from the dropdown.'),
+  'inactive' => t('That account is closed.'),
   'account number mismatch' => t('You must have mistyped your account number once. Try again.'),
   'yes or no' => t('You must answer Yes or No.'),
   'too many joins' => t('You can join to only one other account.'),
