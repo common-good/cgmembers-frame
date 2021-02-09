@@ -13,15 +13,13 @@ function formPageNotFound($form, &$sta, $arg = '') {
   global $mya;
 
   $page = $_SERVER['REQUEST_URI'];
+  $subtext = t('The page you requested does not exist (%page).', compact('page'));
+
   if ($page and $page[0] == '/') $page = substr($page, 1); // ignore leading slash
-  if ($mya and !$page) return go('/dashboard');
+  if ($mya) return $page ? go($mya->cAdmin ? '/sadmin' : '/dashboard', $subtext) : go('/signup');
   
-  if (!$page or $page[0] == '-') {
-    include_once __DIR__ . '/../forms/signup.inc';
-    return formSignup('', $sta, 'code=' . substr($page, 1)); // invitation!
-  }
+  if (!$page or $page[0] == '-') return go('/signup/code=' . substr($page, 1)); // invitation!
   
   $title = t('Page Not Found');
-  $subtext = t('The page you requested does not exist.');
   return cgform(compact(ray('title subtext')));
 }

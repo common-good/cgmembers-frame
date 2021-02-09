@@ -286,7 +286,7 @@ function ipok($uid) {
  * NOTE: from is always SYS_EMAIL
  */
 function rMail($index, $to0, $subs, $reply0 = NULL, $attachment = NULL) {
-  global $testEmails, $mya;
+  global $testEmails, $mya, $channel;
 
   foreach (ray('secure vsecure') as $k) unset($subs[$k]); // show not even in error messages
   $subs['site'] = BASE_URL;
