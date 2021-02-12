@@ -9,7 +9,7 @@ use CG\Db as db;
 include_once __DIR__ . '/signin.inc';
 
 const AUTHCODE_TIMEOUT = 60 * 60; // number of seconds before authcode expires
-const CGPAY_FLDS = 'op company cocode code item amount suggestedItem suggestedAmount name account zip verb request api for for0 return cancel err confirm';
+const CGPAY_FLDS = 'op company cocode code item amount credit suggestedItem suggestedAmount name account zip verb request api for for0 return cancel err confirm';
 const CGPAY_MAXLEN = 255; // maximum field length (to prevent bloating our tables) -- return and cancel have no limit
 
 // There are hooks here for a call from rDo(), with doCode being the encrypted code from rDo
@@ -65,12 +65,24 @@ function charge($args) {
     } else { $tst = t('<span class="loud">DEMO</span>'); }
   }
   
+  $verbs = t('Donate, Donate, Pay');
+  $verb = in(ucwords($verb), $verbs) ? ucwords($verb) : t('Pay');
+  if ($verb == t('Donate')) u\setDft($suggestedItem, t('donation'));
+
+  if ($credit) {
+    if ($err = u\badAmount($credit, '>0')) return apiErr($err); // fix amount
+    if (!in($for, 'credit credit50')) return apiErr(t('The <b>credit</b> parameter applies only when for is "credit" or "credit50".'));
+  }
+
+  $suffix = t(' to ') . ($co->fullName ?: t('co'));
   if ($amount) {
     if ($err = u\badAmount($amount, '>0')) return apiErr($err);
-    list ($amount, $amtExtra) = [u\fmtAmt($amount, ''), disabled() + clas('middle')];
+    $amtDpy = item(u\fmtAmt($amount, ''), "$verb:", '', suffix($suffix));
+    $amount = hidFld($amount);
   } else {
     if ($suggestedAmount and $err = u\badAmount($suggestedAmount, '>0')) return apiErr($err);
-    list ($amount, $amtExtra) = [$suggestedAmount, clas('middle')];
+    $amtDpy = NULL;
+    $amount = numFld("$verb:", '', dft($suggestedAmount ? u\ddddcc($suggestedAmount) : '') + suffix($suffix) + clas('middle'));
   }
 
   if ($account and $id = fmtAcctId($account) and $a = r\acct($id)) { // company passed customer's email or account ID
@@ -95,10 +107,6 @@ function charge($args) {
     list ($name, $pass) = w\signinFlds(nn($a) ? $a->mainQid : ''); // keep the nn($a)? here in case we change the logic hereabout
   }
 
-  $verbs = t('Donate, Donate, Pay');
-  $verb = in(ucwords($verb), $verbs) ? ucwords($verb) : t('Pay');
-  if ($verb == t('Donate')) u\setDft($suggestedItem, t('donation'));
-
   $for0 = $for; // for errors
   if ($for == 'gift') {
     $for = textFld(t('As a Gift to:'), [t('Email or account ID')]);
@@ -106,6 +114,10 @@ function charge($args) {
     $itemDpy = item(t('store credit'), t('For:'));
   } elseif ($for == 'credit') {
     $for = hidFld(SELF_CREDIT);
+    $item = ($credit ? u\fmtAmt($credit) . ' ' : '') . t('store credit');
+    $itemDpy = item($item, t('For:'));
+  } elseif ($for == 'credit50') {
+    $for = hidFld(SELF_CREDIT50);
     $item = t('store credit');
     $itemDpy = item($item, t('For:'));
   } elseif ($for == 'donate') {
@@ -114,6 +126,7 @@ function charge($args) {
     u\setDft($item, t('donation'));
     $itemDpy = NULL;
   } elseif (!$for or $for == 'other') { // for is other or empty or nonsense
+    $for = NULL;
     if ($item) {
       $itemDpy = item($item, t('For:'));
     } else {
@@ -123,12 +136,11 @@ function charge($args) {
   } else { return apiErr(t('The "for" parameter must be credit, gift, donate, or other -- not ') . $for); }
 
 //  $payment = item(t('%amount to %who', '_amount who', $amountDpy, $co->fullName ?: t('co')), "$verb:", '', $amtExtra);
-  $amount = numFld("$verb:", '', dft($amount ? u\ddddcc($amount) : '') + suffix(t(' to ') . $co->fullName ?: t('co')) + $amtExtra);
   
   $option = $a ? '' : t('OR <%a>signup</a>', '_a', atag('/signup'));
   $submit = submit($verb, '', 'md', w\suffix($option));
 
-  $info = compact(ray('subtext amount itemDpy for name pass item submit'));
+  $info = compact(ray('subtext amount amtDpy itemDpy for name pass item submit'));
   foreach (ray(CGPAY_FLDS) as $k) if (isset($$k) and !is_array($$k)) $info[$k] = hidFld($$k);
   
   return cgform($info);
@@ -165,7 +177,7 @@ function formBuy_validate($form, &$sta) {
       if (!formSignin_validate($form, $sta)) return buyErr('', ray('op account', 'charge', $name) + $input);
     }
   }
-  if ($for and $for != SELF_CREDIT and $for != t('other')) {
+  if ($for and !in($for, [SELF_CREDIT, SELF_CREDIT50])) {
     $for = fmtAcctId($for);
     if (!$a = r\acct($for)) return say(t('That %PROJECT account does not exist. You can currently give only to another %PROJECT member.'), 'for');
     $item .= t(' (to %who)', 'who', $a->fullName);
@@ -183,12 +195,17 @@ function formBuy_submit($form, &$sta) {
   
   $co = getCo($company);
   $a = $mya ?: ($confirm ? r\acct(fmtAcctId($name)) : r\acct($uid)); // uid is from signin_validate()
+  $button = 1;
   
   if ($confirm) {
-    extract(just('ok msg', be\invoice($co, $a, $amount, $item, FOR_GOODS, compact(ray('api request for')))));
+    $data = compact(ray('api request for button'));
+    if ($credit) $data += compact('credit');
+    extract(just('ok msg', be\invoice($co, $a, $amount, $item, FOR_GOODS, $data)));
     if ($ok) $msg = t('pay button success');
   } else {
-    extract(just('ok msg subs', be\transfer('payment', $a, $co, $amount, $item, FOR_GOODS, compact('for'))));
+    $data = compact(ray('for button'));
+    if ($credit) $data += compact('credit');
+    extract(just('ok msg subs', be\transfer('payment', $a, $co, $amount, $item, FOR_GOODS, $data)));
     if ($api) u\post($api, ray('request ok msg', $request, (int) $ok, $msg));
     foreach (ray('return cancel') as $k) if (nn($$k)) $$k = tr($$k, $input + compact(ray('msg ok subs')));
     if ($ok) $msg = tr('success title') . " $msg";
@@ -225,7 +242,7 @@ function missingArgs($args, $require) {
   return FALSE;
 }
 
-/**/ function apiErr($s) {u\FAIL('CG API: ' . $s);} // give simple error messages for api interface errors
+/**/ function apiErr($s) {exitJust('CG API: ' . $s);} // give simple error messages for api interface errors
 
 /**
  * Check the company parameter for errors and return its account.

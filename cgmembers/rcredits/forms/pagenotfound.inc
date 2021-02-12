@@ -12,11 +12,15 @@ use CG\Db as db;
 function formPageNotFound($form, &$sta, $arg = '') {
   global $mya;
 
-  $page = $_SERVER['REQUEST_URI'];
+  $page = plain($_SERVER['REQUEST_URI']);
   $subtext = t('The page you requested does not exist (%page).', compact('page'));
 
   if ($page and $page[0] == '/') $page = substr($page, 1); // ignore leading slash
-  if ($mya) return $page ? go($mya->cAdmin ? '/sadmin' : '/dashboard', $subtext) : go('/signup');
+  if ($mya) {
+    if (in(substr($page, -4), '.jpg jpeg .png')) {
+      r\tellAdmin('page not found', compact('page'));
+    } else return $page ? go($mya->cAdmin ? '/sadmin' : '/dashboard', $subtext) : go('/signup');
+  }
   
   if (!$page or $page[0] == '-') return go('/signup/code=' . substr($page, 1)); // invitation!
   

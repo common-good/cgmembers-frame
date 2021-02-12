@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.56u'; // software version
+const R_VERSION = '3.56v'; // software version
 define('R_ROOT', __DIR__);
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -294,7 +294,8 @@ define('R_WHYS', t('goods and services,exchange of US Dollars or other currency,
 const FOR_GOODS = 0; // index into R_WHYS for goods
 const FOR_USD = 1; // index into R_WHYS for USD exchange
 const FOR_NONGOODS = 2; // index into R_WHYS for loan, etc.
-const SELF_CREDIT = 'credit'; // (string) indicates (internally and in invoice data) a purchase of credit for oneself
+const SELF_CREDIT = 'cred'; // (string) indicates (internally and in invoice data) a purchase of credit for oneself
+const SELF_CREDIT50 = 'cred50'; // (string) similar, but redeemable later for only half the purchase price each time
 //const FOR_SHARE = 3; // "sharing" gift to CGF (comes out of rewards)
 //const FOR_INVESTMENT = 4; // only in invoices (use B_INVESTMENT in txs)
 //const FOR_STAKE = 5; // only in invoices (use B_STAKE in txs)
@@ -570,7 +571,8 @@ const B_NOASK = 15; // transaction was taken with ID checking OFF
 const B_FUNDING = 16; // invoice has already instigated an appropriate bank transfer request
 const B_FOOD = 17; // contribution to food fund
 const B_PARTIAL = 18; // partial payment of invoice
-const TX_FLAGS = 'offline short crumbs recurs gift loan investment stake fine noask funding food partial';
+const B_BUTTON = 19; // payment from CGPay button
+const TX_FLAGS = 'offline short crumbs recurs gift loan investment stake fine noask funding food partial button';
 
 // Invoice status (txid >= TX_PAID if paid)
 const TX_CANCELED = -9; // invoice canceled

@@ -1,4 +1,4 @@
-Feature: A user clicks a "Pay With Common Good" button on a participating company's website
+Feature: A user clicks a "CGPay" button on a participating company's website
 AS a member
 I WANT to pay a member company or individual by clicking a CGPay button
 SO I can get stuff, buy credit, or make donations easily.
@@ -57,16 +57,37 @@ Scenario: A member submits a Pay With Common Good button payment with account ID
   | did  | otherName | amount |*
   | paid | Our Pub   | $23.45 |
 
-Scenario: A member clicks a button to buy store credit
-  When member "?" visits page "pay-with-cg/company=NEWZZC&code=Cc3&for=credit&item=&amount=23.50"
+Scenario: A member clicks a button to buy 50% store credit
+  When member "?" visits page "pay-with-cg/company=NEWZZC&code=Cc3&for=credit50&item=&amount=23.50"
   Then we show "Hello %PROJECT Member" with:
   | Pay        | 23.50 to Our Pub |
   | For        | store credit |
   | Account ID |  |
   | Password   |  |
 
-Scenario: A member types account ID to buy store credit
-  When member "?" confirms form "pay-with-cg/company=NEWZZC&code=Cc3&for=credit&item=&amount=23" with values:
+Scenario: A member clicks a button to buy store credit for a different amount
+  When member "?" visits page "pay-with-cg/company=NEWZZC&code=Cc3&for=credit&item=&amount=23&credit=30"
+  Then we show "Hello %PROJECT Member" with:
+  | Pay        | 23.00 to Our Pub |
+  | For        | $30 store credit |
+  | Account ID |  |
+  | Password   |  |
+  
+  When member "?" confirms "pay-with-cg/company=NEWZZC&code=Cc3&for=credit&item=&amount=23&credit=30" with:
+  | name   | pass |*
+  | NEWZZA | a1   |
+  Then we say "status": "success title|report tx" with subs:
+  | did  | otherName | amount |*
+  | paid | Our Pub   | $23    |
+  And transactions:
+  | xid | created | amount | payer | payee | for              |*
+  |   1 | %today  |     23 | .ZZA  | .ZZC  | $30 store credit |
+  And these "tx_rules":
+  | id | action     | payerType | payer | payeeType | payee | from         | to           | portion | amtMax |*
+  |  1 | %ACT_SURTX | account   | .ZZA  | account   | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER | 1       | 30     |
+
+Scenario: A member types account ID to buy 50% store credit
+  When member "?" confirms form "pay-with-cg/company=NEWZZC&code=Cc3&for=credit50&item=&amount=23" with values:
   | name   | pass |*
   | NEWZZA | a1   |
   Then we say "status": "success title|report tx" with subs:

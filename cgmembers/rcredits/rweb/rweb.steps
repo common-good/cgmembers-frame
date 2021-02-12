@@ -186,7 +186,8 @@ function memberConfirmsFormWithValues($id, $page, $values) {return t\completeFor
 /**
  * member (ARG) confirms (ARG) with: (ARG)
  *
- * in: MAKE message SynopsisOfScenario
+ * in: MAKE cgbutton AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ *     MAKE message SynopsisOfScenario
  */
 function memberConfirmsWith($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
 
@@ -303,6 +304,7 @@ function members($list) {return t\members($list);}
  *     TEST card 
  *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentForJSONResponse
+ *     TEST cgbutton AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
  *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     TEST cgbutton AMemberRedeemsStoreCredit
  *     TEST cgbutton AMemberTypesAccountIDToBuyAGiftOfStoreCredit
@@ -351,6 +353,7 @@ function transactions($list) {return t\transactions($list);}
  *     TEST card 
  *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
  *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
+ *     TEST cgbutton AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
  *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     TEST cgbutton AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
@@ -530,6 +533,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST cgbutton AMemberClicksAPayWithCommonGoodButton
  *     TEST cgbutton AMemberClicksAPayWithCommonGoodButtonWithVariableAmount
  *     TEST cgbutton AMemberClicksAButtonToBuyStoreCredit
+ *     TEST cgbutton AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
  *     TEST cgbutton AMemberClicksAButtonToBuyAGiftOfStoreCredit
  *     TEST changeaccount AMemberClicksTheProfilePhoto
  *     TEST changeaccount AMemberChangesAccountToGoToADifferentPage
@@ -818,6 +822,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE cgbutton AMemberClicksAPayWithCommonGoodButton
  *     MAKE cgbutton AMemberClicksAPayWithCommonGoodButtonWithVariableAmount
  *     MAKE cgbutton AMemberClicksAButtonToBuyStoreCredit
+ *     MAKE cgbutton AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
  *     MAKE cgbutton AMemberClicksAButtonToBuyAGiftOfStoreCredit
  *     MAKE cgbutton ACompanyGetsAnAuthcode
  *     MAKE changeaccount AMemberClicksTheProfilePhoto
@@ -1684,6 +1689,7 @@ function weScripWithSubs($script, $args = []) {
  * these (ARG): (ARG)
  *
  * in: MAKE balancesheet Setup
+ *     TEST cgbutton AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
  *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
  *     BOTH cgbutton AMemberRedeemsStoreCredit
  *     TEST cgbutton AMemberTypesAccountIDToBuyAGiftOfStoreCredit
