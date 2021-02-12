@@ -1,3 +1,7 @@
+2021-02-12 feature/buy-credit-discounted
+. added a CGPay button feature to allow companies to sell store credit at a discount
+. CGPay transactions are now flagged as "button" purchases (TX_BUTTON flag)
+
 2021-02-07 feature/tweaks
 . fixed bugs in signup / notfound / empty URLs
 

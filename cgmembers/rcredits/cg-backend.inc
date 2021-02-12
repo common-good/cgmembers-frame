@@ -377,8 +377,11 @@ function payInvoice($nvid, $payAmount = NULL) {
  *   'fine'
  *   'noask'
  *   'funding'
+ *   'button': paid from a CGPay button on a company website
  *   'crumbs', 'recurs', 'gift': gift info
  *   'ruleId': the id of the rule associated with this transaction
+ *   'for': SELF_CREDIT, SELF_CREDIT50, gift, donate, other (or empty)
+ *   'credit': amount of credit, if for=SELF_CREDIT or SELF_CREDIT50
  * @param int $recursId: record ID of related record in tx_templates (if any)
  * @return a txRet object
  *
@@ -389,7 +392,6 @@ function payInvoice($nvid, $payAmount = NULL) {
  *   'rebate': the rebate amount for this request (should be negative the original bonus amount)
  *   'bonus': the bonus amount (should be negative the original rebate amount)
  *   'undoes': transaction id of the related transaction (transaction being undone)
- *   'for': credit, gift, donate, other (or empty)
  *
  *   'short': ?
  *   'funding': ?
@@ -408,7 +410,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   $taking = ($type == 'charge' or $type == 'draw' or ($type == 'transfer' and $amount < 0));
   
   extract(just('created force boxId ruleId', $data, [now(), 0, NULL, NULL]));
-  extract(just(TX_FLAGS . ' inv api for', $data, FALSE));
+  extract(just(TX_FLAGS . ' inv api for credit', $data, FALSE));
   
   u\setDft($purpose, ray(R_WHYS)[$goods]);
 
@@ -538,7 +540,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   }
   
   if ($goods != FOR_USD and $pot = $loserA->giftPot) $loserA->update('giftPot', max(0, $pot - $needed));
-  if (nn($for) and $for != 'other') advanceCredit($for, $loserA, $gainerA, $amount); // purchase of store credit
+  if (nn($for) and $for != 'other') advanceCredit($for, $loserA, $gainerA, $amount, $credit); // purchase/gift of store credit
   
   unset($DBTX);
   
@@ -573,17 +575,18 @@ function txEntryPair(&$txes, $amount0, $a0, $description0, $entryType0, $rule = 
 /**
  * Create a personal credit for buyer or someone else, at the seller.
  */
-function advanceCredit($for, $buyer, $seller, $amount) {
+function advanceCredit($for, $buyer, $seller, $amount, $credit) {
   if ($neg = ($amount < 0)) $amount = -$amount;
   
-  if ($for !== SELF_CREDIT) { // gift!
+  if (!in($for, [SELF_CREDIT, SELF_CREDIT50, 'credit'])) { // gift!
     $for = r\acct($for);
     $for->tell(t('%name %action of %amount credit at %co. To redeem store credit you are given, simply pay with your %PROJECT card. Your account is credited automatically.'), ray('name action amount co', $buyer->fullName, $neg ? t('canceled your gift') : t('sent you a gift'), u\fmtAmt($amount), $seller->fullName), $neg ? t('Your gift is canceled') : t('You have received a gift through Common Good!'));
     $buyer = $for;
   }
   
-  $portion = $for == SELF_CREDIT ? .5 : 1;
-  $info = ray('action portion amtMax payerType payer payeeType payee from to', ACT_SURTX, $portion, $amount, REF_ACCOUNT, $buyer->id, REF_ACCOUNT, $seller->id, MATCH_PAYEE, MATCH_PAYER);
+  $portion = $for == SELF_CREDIT50 ? .5 : 1;
+  $amtMax = $credit ?: $amount;
+  $info = ray('action portion amtMax payerType payer payeeType payee from to', ACT_SURTX, $portion, $amtMax, REF_ACCOUNT, $buyer->id, REF_ACCOUNT, $seller->id, MATCH_PAYEE, MATCH_PAYER);
 
   if ($neg) { // undoing, so end the rule
     if ($id = db\get('id', 'tx_rules r', ['end' => NULL] + $info)) db\update('tx_rules', ray('id end', $id, now()) + $info, 'id');
