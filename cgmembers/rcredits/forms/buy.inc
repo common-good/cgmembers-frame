@@ -65,17 +65,24 @@ function charge($args) {
     } else { $tst = t('<span class="loud">DEMO</span>'); }
   }
   
+  $verbs = t('Donate, Donate, Pay');
+  $verb = in(ucwords($verb), $verbs) ? ucwords($verb) : t('Pay');
+  if ($verb == t('Donate')) u\setDft($suggestedItem, t('donation'));
+
   if ($credit) {
     if ($err = u\badAmount($credit, '>0')) return apiErr($err); // fix amount
     if (!in($for, 'credit credit50')) return apiErr(t('The <b>credit</b> parameter applies only when for is "credit" or "credit50".'));
   }
 
+  $suffix = t(' to ') . ($co->fullName ?: t('co'));
   if ($amount) {
     if ($err = u\badAmount($amount, '>0')) return apiErr($err);
-    list ($amount, $amtExtra) = [u\fmtAmt($amount, ''), disabled() + clas('middle')];
+    $amtDpy = item(u\fmtAmt($amount, ''), "$verb:", '', suffix($suffix));
+    $amount = hidFld($amount);
   } else {
     if ($suggestedAmount and $err = u\badAmount($suggestedAmount, '>0')) return apiErr($err);
-    list ($amount, $amtExtra) = [$suggestedAmount, clas('middle')];
+    $amtDpy = NULL;
+    $amount = numFld("$verb:", '', dft($suggestedAmount ? u\ddddcc($suggestedAmount) : '') + suffix($suffix) + clas('middle'));
   }
 
   if ($account and $id = fmtAcctId($account) and $a = r\acct($id)) { // company passed customer's email or account ID
@@ -99,10 +106,6 @@ function charge($args) {
   } else {
     list ($name, $pass) = w\signinFlds(nn($a) ? $a->mainQid : ''); // keep the nn($a)? here in case we change the logic hereabout
   }
-
-  $verbs = t('Donate, Donate, Pay');
-  $verb = in(ucwords($verb), $verbs) ? ucwords($verb) : t('Pay');
-  if ($verb == t('Donate')) u\setDft($suggestedItem, t('donation'));
 
   $for0 = $for; // for errors
   if ($for == 'gift') {
@@ -133,12 +136,11 @@ function charge($args) {
   } else { return apiErr(t('The "for" parameter must be credit, gift, donate, or other -- not ') . $for); }
 
 //  $payment = item(t('%amount to %who', '_amount who', $amountDpy, $co->fullName ?: t('co')), "$verb:", '', $amtExtra);
-  $amount = numFld("$verb:", '', dft($amount ? u\ddddcc($amount) : '') + suffix(t(' to ') . $co->fullName ?: t('co')) + $amtExtra);
   
   $option = $a ? '' : t('OR <%a>signup</a>', '_a', atag('/signup'));
   $submit = submit($verb, '', 'md', w\suffix($option));
 
-  $info = compact(ray('subtext amount itemDpy for name pass item submit'));
+  $info = compact(ray('subtext amount amtDpy itemDpy for name pass item submit'));
   foreach (ray(CGPAY_FLDS) as $k) if (isset($$k) and !is_array($$k)) $info[$k] = hidFld($$k);
   
   return cgform($info);
@@ -240,7 +242,7 @@ function missingArgs($args, $require) {
   return FALSE;
 }
 
-/**/ function apiErr($s) {u\FAIL('CG API: ' . $s);} // give simple error messages for api interface errors
+/**/ function apiErr($s) {exitJust('CG API: ' . $s);} // give simple error messages for api interface errors
 
 /**
  * Check the company parameter for errors and return its account.
