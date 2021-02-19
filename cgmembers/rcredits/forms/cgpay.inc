@@ -19,7 +19,7 @@ function formCGPay($form, &$sta) {
 
   $args = u\_GET() ?: $_POST;
 
-  foreach ($args as $k => $v) {
+  foreach ($args as $k => $v) if (!in($k, 'q code')) {
     if (strlen($v) > CGPAY_MAXLEN) return exitErr(tr('field too long', 'field max', $k, CGPAY_MAXLEN));
     if (!in($k, CGPAY_VARS2)) return exitErr(t('"%k" is not a parameter. Check your spelling?', compact('k')));
   }

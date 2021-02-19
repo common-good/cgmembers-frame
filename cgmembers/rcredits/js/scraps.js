@@ -248,7 +248,7 @@ function doit(what, vs) {
         item:$('#edit-item').val(),
         amount:$('#edit-amount').val(),
         credit:$('#edit-credit').val(),
-        fer:$('.form-item-for input').val()
+        fer:$('.form-item-for input:checked').val()
       }, function (j) {
         if (j.ok) {
           cgPayCode = j.code;
@@ -273,7 +273,7 @@ function doit(what, vs) {
       var size = $('#edit-size').val().replace(/\D/g, '');
       var img = isButton ? '<img src="https://cg4.us/images/buttons/cgpay.png" height="' + size + '" />' : text;
       var style = type == 1 ? vsprintf(' style="%s"', [vs['style']]) : '';
-      var html = vsprintf('<a href="%s/code=%s"%s target="_blank">%s</a>', [url, cgPayCode, style, img]);
+      var html = vsprintf('<a href="%s?code=%s"%s target="_blank">%s</a>', [url, cgPayCode, style, img]);
       
       if ((isButton ? size : text) != '') setButtonHtml(html);
       $('.form-item-size img').height(size == '' ? 0 : size);

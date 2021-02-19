@@ -40,7 +40,7 @@ function ajax() {
     
   } elseif ($op == 'cgPayCode') { // get cgPay code
     include_once R_ROOT . '/forms/code.inc';
-    $data['for'] = ray('credit gift ')[$data['fer']];
+    $data['for'] = nni(ray('credit gift'), $data['fer']);
     unset($data['fer']);
     foreach ($data as $k => $v) if ($v == '') unset($data[$k]);
     $code = w\code($data + ray('account secret', $mya->mainQid, $mya->emailCode));
