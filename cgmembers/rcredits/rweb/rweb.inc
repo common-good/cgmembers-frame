@@ -54,7 +54,7 @@ function cttyList() {
   asort($cttys);
   unset($cttys[$seed = r\serverUid()]);
   $cttys[$seed] = t('Seedpack (no community yet)'); // last
-  return exitJust(json_encode($cttys));
+  return exitJust(u\jsonize($cttys));
 }
 
 /**
@@ -449,7 +449,7 @@ function chartData($args = '') {
 
 function showAllCharts($ctty = 0) {
   foreach (ray('days weeks months quarters years') as $period) $res[$period[0]] = showCharts(nn($ctty, 0), $period);
-  return json_encode($res);
+  return u\jsonize($res);
 }
 
 function formFooter() {

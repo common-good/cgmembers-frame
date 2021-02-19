@@ -638,13 +638,20 @@ function variable_del($nm) {return delV($nm);} // for legacy Drupal
 
 /**
  * Exit with a plaintext message.
+ * @return (only for tests): NULL
  * @see also t\getExitMsg()
  */
 function exitJust($s = '') {
-/**/  if (test()) { t\output('exiting with: ' . pr($s)); return t\logRec('echo', $s); }
+  if (test()) {
+    t\output('exiting with: ' . pr($s)); 
+/**/t\logRec('echo', $s);
+    return NULL;
+  }
+  
 /**/  echo pr($s);
   exit();
 }
+function exitErr($s = '') {return exitJust(t('ERROR: ') . $s);}
 
 /**
  * Retrieves the current page from the cache.
@@ -1172,7 +1179,7 @@ function obj() {return (object) call_user_func_array('ray', func_get_args());}
  * @return array of the results [NOT trimmed, because values might be encrypted!]
  */
 function just($these, $info, $default = NULL) {
-  $ray = is_string($info) ? urlq2ray($info) : (array) $info;
+  $ray = urlq2ray($info);
   if (!is_array($these)) $these = ray($these);
   $res = array_intersect_key($ray, array_flip($these));
   if (func_num_args() > 2) foreach ($these as $i => $k) {
@@ -1187,6 +1194,7 @@ function just($these, $info, $default = NULL) {
  * @return an associative array of "GET" parameters.
  */
 function urlq2ray($q) {
+  if (!is_string($q)) return (array) $q;
   $s = mb_strpos($q, urlencode('=')) ? urldecode($q) : $q;
   $s = str_replace('\u003d', '=', $s);
   $s = str_replace('\u0026', '&', $s);

@@ -407,7 +407,7 @@ function gotSolarOne($info) {
     r\setAcct($mya, $sta);
     $title = t('Next Step');
     $subtext = t('Click the button below to continue setting up your %PROJECT payment account, as your chosen method of paying for your community solar subscription.');
-    $go = item(button(t('Continue'), $mya->nextStepUrl()));
+    $go = item(button(t('Continue'), $mya->nextStepUrl() ?: 'dashboard'));
     return cgform(compact(ray('title subtext go')));
   }
 
@@ -677,7 +677,7 @@ function partnerContinue($a, &$sta) {
   r\setAcct($a, $sta); // part way through, so gotta sign back in
   $title = t('Next Step');
   $subtext = t('Click the button below to continue setting up your %PROJECT payment account, as your chosen method of paying for your community solar subscription.');
-  $go = item(button(t('Continue'), $a->nextStepUrl()));
+  $go = item(button(t('Continue'), $a->nextStepUrl() ?: 'dashboard'));
   return cgform(compact(ray('title subtext go')));
 }  
 

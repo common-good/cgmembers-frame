@@ -83,11 +83,13 @@ X;
 }
 
 function addLine($info, $classes, $url) {
-  global $rUrl;
+  global $rUrl, $mya;
 
   extract($info);
-  $fWho = r\acct($fWho)->bestName;
+  $a = r\acct($fWho);
+  $fWho = $a->bestName;
   $button = $button ? "<a href=\"$url&do=stop\" title=\"Stop automatic transaction\"><img src=\"$rUrl/images/icons/close-blue.png\" border=0 /></a>" : '';
+  if ($mya->admin) foreach (ray('ok:O, closed:-, hasBank:b') as $k => $c) if ($a->$k) $button .= $c;
   $res = "<tr>\n";
   
   foreach (compact(array_keys($info)) as $k => $v) {
