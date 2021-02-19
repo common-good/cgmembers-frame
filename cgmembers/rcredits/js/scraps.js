@@ -218,49 +218,71 @@ function doit(what, vs) {
     break;
     
   case 'eval': // evaluate arbitrary expression after decrypting it (on dev machine only)
-    post('eval', {jsCode:vs['jsCode'], qid:vs['qid']}, function (j) {
+    post('eval', {jsCode:vs['jsCode']}, function (j) {
       if (j.ok) eval(j.js);
     });
     break;
     
   case 'cgbutton':
-    cgbutton();
+    var cgPayCode;
+
     $('#edit-item').focus();
-    $('.form-item-button input').click(function () {cgbutton($(this).val());});
-    $('#edit-item, #edit-text, #edit-amount, #edit-size').change(function () {cgbutton($('.form-item-button input:checked').val());});
+    $('.form-item-button input').click(function () {cgbutton();});
+    $('#edit-size').change(function () {cgbutton();});
+    $('#edit-item, #edit-amount, #edit-credit').change(function () {getCGPayCode();});
     $('.form-item-for input').click(function () {
-      var val = $(this).val();
-      $('#edit-for').val(vs['forVals'].split(',')[val]);
-      $('.form-item-item, .form-item-amount').toggle(val == 2);
-      $(val == 2 ? '#edit-item' : '#edit-size').focus();
-      cgbutton();
+      var fer = $(this).val();
+      var credit = (fer < 2);
+      $('#edit-for').val(vs['forVals'].split(',')[fer]);
+      $('.form-item-credit').toggle(fer == 0); // show credit option only for credit (not for gift)
+      $('.form-item-item').toggle(!credit);
+      $(credit ? '#edit-size' : '#edit-item').focus();
+      getCGPayCode();
     });
+    $('.form-item-for input:checked').click(); // this also triggers getCGPayCode() and cgbutton()
     
     $('#edit-amount, #edit-size').keypress(function (e) {return '0123456789.'.indexOf(String.fromCharCode(e.which)) >= 0;});
 
-    function cgbutton(type) {
+    function getCGPayCode() { // get a CGPay buttonn code
+      post('cgPayCode', {
+        item:$('#edit-item').val(),
+        amount:$('#edit-amount').val(),
+        credit:$('#edit-credit').val(),
+        fer:$('.form-item-for input:checked').val()
+      }, function (j) {
+        if (j.ok) {
+          cgPayCode = j.code;
+          cgbutton();
+        } else {
+          setButtonHtml('');
+          report(j);
+        }
+      });
+    }
+    
+    function cgbutton() {
+      var type = $('.form-item-button input:checked').val();
       if (type == undefined) type = 2;
       var isButton = (type == 2);
       $('.form-item-size').toggle(isButton);
       $('.form-item-text').toggle(!isButton);
       $('.form-item-example').toggle(!isButton);
       
-      var url = baseUrl + '/pay-with-cg';
-      var fer = 'credit gift other'.split(' ')[$('input[name="for"]:checked').val()];
-      var item = encodeURI($('#edit-item').val());
+      var url = baseUrl + '/cgpay';
       var text = htmlEntities($('#edit-text').val());
       var size = $('#edit-size').val().replace(/\D/g, '');
-      var amt = $('#edit-amount').val().replace(/\D/g, '');
       var img = isButton ? '<img src="https://cg4.us/images/buttons/cgpay.png" height="' + size + '" />' : text;
       var style = type == 1 ? vsprintf(' style="%s"', [vs['style']]) : '';
-      var html = vsprintf('<a href="%s/company=%s&for=%s&item=%s&amount=%s"%s target="_blank">%s</a>', [url, vs['qid'], fer, item, amt, style, img]);
+      var html = vsprintf('<a href="%s?code=%s"%s target="_blank">%s</a>', [url, cgPayCode, style, img]);
       
-      if ((isButton ? size : text) != '') {
-        $('#edit-html').text(html);
-        $('#button').html(html);
-        $('.form-item-example .control-data').html(html);
-      }
+      if ((isButton ? size : text) != '') setButtonHtml(html);
       $('.form-item-size img').height(size == '' ? 0 : size);
+    }
+    
+    function setButtonHtml(html) {
+      $('#edit-html').text(html);
+      $('#button').html(html);
+      $('.form-item-example .control-data').html(html);
     }
     break;
     

@@ -25,7 +25,7 @@ function formTests($form, &$sta) {
     return go('/tests/?' . $arg, t('redirecting after setting up basic accounts'), 'err');
   }
 
-  include_once DRUPAL_ROOT . '/vendor/gherkin/test.php';
+  include_once DRUPAL_ROOT . '/vendor/gherkin/test.php'; // some inline code and functions
   //  $_SESSION = [];
   if (ini_get("session.use_cookies")) { // from PHP's session_destroy page
     $params = session_get_cookie_params();

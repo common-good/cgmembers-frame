@@ -1,3 +1,13 @@
+2021-02-18 feature/cgpay
+. redesigned and recoded cgpay so it can be a single step after designing on the cgbutton page
+. created jsonize and dejsonize to standardize the options (handling UTF8)
+. refactored out parsing URL parameters in tests
+. changed cryRay to json encode instead of serializing
+. decryRay now returns NULL on error instead of crashing (decry throws BadCry)
+. added clues to admin about which accounts are active and have a connected bank on recurring page
+. modified cgbutton form to create button code and HTML for most common use cases
+. fixed bug that sent members to root (signout / signup) after completing a form
+
 2021-02-12 feature/buy-credit-discounted
 . added a CGPay button feature to allow companies to sell store credit at a discount
 . CGPay transactions are now flagged as "button" purchases (TX_BUTTON flag)

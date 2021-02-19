@@ -19,7 +19,6 @@ function formSummary($form, &$sta) {
 
   if ($mya->closed) say(t('Your account is closed, but you can still see your account history.'));
 
-  $stepUrl = $mya->nextStepUrl('', $msg);
   $extras = '<br>' . u\fmtPhone($mya->phone) . "<br><span id=\"acctEmail\">$mya->email</span> "
   . btn('', 'c', 'default', '', clas('copyEmail'));
 
@@ -35,7 +34,7 @@ function formSummary($form, &$sta) {
     $buttons .= ' ' . a\photoLink(0) . ' ' . a\photoLink(1);
   }
 
-  if ($stepUrl == 'dashboard') {
+  if (!$stepUrl = $mya->nextStepUrl('', $msg)) {
     if (nn($msg)) say(t('New member is told: ') . t($msg));
   } elseif ($stepUrl) say(t('New member will be sent <%a>there</a> upon signing in.', '_a', atag("/$stepUrl")));
     

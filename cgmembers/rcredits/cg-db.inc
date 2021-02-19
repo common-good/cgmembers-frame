@@ -184,7 +184,7 @@ function keyed($fields, $table, $where = '1', $subs = []) {
  */
 function logSql($args) {
   global $mya;
-  $args = date('d') . ' ' . ($mya ? $mya->mainQid : '') . ': ' . u\jsonEncode($args);
+  $args = date('d') . ' ' . ($mya ? $mya->mainQid : '') . ': ' . u\jsonize($args);
   $args = strtr($args, ['\\"' => '', '"' => '', '\\n' => '|', ';}' => '}', ';' => '; ', ',' => ', ']);
   if (!is_dir($logdir = LOG_DIR)) mkdir($logdir);
   file_put_contents(SQL_LOG, "$args\n", FILE_APPEND); // new log file every month

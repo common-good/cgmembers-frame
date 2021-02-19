@@ -57,11 +57,7 @@ function go($page, $msg = '', $field = '') {
   if ($msg) say($msg, $field);
  
   if (test()) {
-    if ($i = strpos($page, '?')) {
-      parse_str(substr($page, $i + 1), $_GET);
-      $page = substr($page, 0, $i);
-      t\output("Going to page $page with GET: " . pr($_GET));
-    }
+    $page = t\parseQ($page);
     $_POST = []; // make sure it doesn't act like we submitted the target page
     return strhas($page, 'http://') ? '' : f('t.pageForm', $page);
   }
@@ -780,7 +776,7 @@ function sanitizePage($page) {
 function photoRet($msg, $status = 'error') {
   $res = compact('status') + ray($status == 'success' ? 'url' : 'message', $msg);
   u\loga('photoRet', $res);
-  return exitJust(json_encode($res, JSON_UNESCAPED_SLASHES));
+  return exitJust(u\jsonize($res, JSON_UNESCAPED_SLASHES));
 }
 
 /**
@@ -1175,7 +1171,7 @@ function tellStaffNewMember($params) {
   $state = nn($state) ? r\realState($state) : 'state unknown';
   $acctType = isset($acctype) ? ray(CO_TYPES)[$acctType] : NULL;
   $helper = nn($helper) ? r\acct($helper)->fullName : 'unknown';
-  $copts = u\jsonEncode(nn($copts));
+  $copts = u\jsonize(nn($copts));
   $ats = (isset($ats) and is_array($ats)) ? join(',', array_values($ats)) : '';
   $params = compact(ray('phone state acctType helper copts ats')) + $params;
   unset($params['code']); // don't need to see this
@@ -1401,7 +1397,7 @@ function adminField($label) {
  * @param assoc $other: things to encode
  */
 function getEmailCode($idSub, $other = []) {
-  return u\cryRay($idSub + $other + ray('word', R_WORD));
+  return u\cryRay($idSub + $other, 8);
 }
 
 function onFile($field, $sta) {
@@ -2084,12 +2080,12 @@ function skipStep($substitute = NULL, $justDid = '') {
 
   if (!$mya or !$stepsLeft = $mya->stepsLeft()) return; // nothing to do
   $step = $stepsLeft[0];
-  if (in($step, S_OPTIONAL)) return w\go($mya->nextStepUrl($step, $msg), '');
+  if (in($step, S_OPTIONAL)) return w\go($mya->nextStepUrl($step, $msg) ?: 'dashboard');
     
   unset($stepsLeft[0]);
   if (!in($step, S_OPTIONAL)) $stepsLeft[] = $substitute ?: $step; // put this step at the end (except optional steps that can be done later or never)
   $mya->update('stepsLeft', array_values($stepsLeft)); // renumber and update
-  $nextStep = $mya->nextStepUrl($justDid, $msg);
+  $nextStep = $mya->nextStepUrl($justDid, $msg) ?: 'dashboard';
   if ($justDid and $msg) w\say($msg);
   return w\go($nextStep);
 }
@@ -2098,8 +2094,8 @@ function skipStep($substitute = NULL, $justDid = '') {
  * Return account and password fields for sign-in.
  */
 function signinFlds($acct, $acctDesc = '', $passDesc = '') {
-  $acct = textFld(t('Account ID:'), [t('Your account ID'), $acctDesc], required($acct) + w\autofill('section-rSignin rAccount'));
-  $pass = passFld(t('Password:'), [t('Your password'), $passDesc], required() + w\autofill('section-rSignin rPass'));
+  $acct = textFld(REQ . t('Account ID:'), [t('Your account ID'), $acctDesc], dft($acct) + w\autofill('section-rSignin rAccount'));
+  $pass = passFld(REQ . t('Password:'), [t('Your password'), $passDesc], w\autofill('section-rSignin rPass'));
   return [$acct, $pass];
 }
 
@@ -2186,13 +2182,21 @@ function opText($sta) {
  */
 function goNextStep($step, $msg = NULL, $info = []) {
   global $mya;
-  $url = $mya ? $mya->nextStepUrl($step, $msg, $info) : 'signin';
+  $url = $mya ? ($mya->nextStepUrl($step, $msg, $info) ?: 'dashboard') : 'signin';
   return w\go($url, $msg);
 }
 
 function backButton() {
   jsx('back-button'); 
   return '<button class="btn btn-back btn-xs btn-primary" tabindex="-1"><span>&laquo;</span>&nbsp;Go Back</button>';
+}
+
+/**
+ * Check for missing required parameters.
+ */
+function missingArgs($args, $require) {
+  foreach (ray($require) as $k) if (empty($args[$k])) return tr('missing field', 'field', $k);
+  return FALSE;
 }
 
 /**

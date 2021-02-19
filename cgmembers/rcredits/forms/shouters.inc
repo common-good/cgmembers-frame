@@ -77,7 +77,7 @@ X;
     list ($org, $orgTitle) = getAffiliation($org, $orgTitle, $website, $city, $st);
     $res[] = [$quote, "$nm ($orgTitle$org)"];
   }
-/**/  echo json_encode(nn($res));
+/**/  echo u\jsonize(nn($res));
   exit();
 }
 

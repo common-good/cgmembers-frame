@@ -6,6 +6,7 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
+include_once R_ROOT . '/forms/code.inc';
 const SIMPLE_CO_LIST = '%simple-list%';
 const NO_STORE_CREDIT = 'INAACQ MIWAAY'; // who opted out of offering store credit (temporary)
 
@@ -138,6 +139,6 @@ X;
 
 function buttonHtml($a, $text, $for, $style) {
   $class = "cgpay-$for";
-  $code = w\authcode("company=$a->mainQid&cocode=$a->emailCode", FALSE);
-  return w\btn("/pay-with-cg/company=$a->mainQid&code=$code&for=$for", $text, $style, '', clas($class) + away());
+  $code = w\code("company=$a->mainQid&secret=$a->emailCode&for=$for");
+  return w\btn("/cgpay?code=$code", $text, $style, '', clas($class) + away());
 }

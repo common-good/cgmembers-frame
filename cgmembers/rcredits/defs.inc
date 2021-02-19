@@ -392,6 +392,11 @@ const CO_APP_DFTS = '0 1 7 8 11 12'; // set these app bits by default (R4USD onl
 const APP_CAN_BIT_NAMES = 'charge undo r4usd usd4r refund buy';
 define('APP_CAN_BIT_DESCS', t('charge customers,undo last transaction,give %RCREDITS for USD,give USD for %RCREDITS,refund any amount,make payments'));
 
+const CGPAY_VARS = 'account amount credit for item return secret verb'; // to be encoded in a CGPay button code
+const CGPAY_VARS2 = 'amount code id item name request'; // possible parameters for CGPay button link/form
+const CGPAY_FORS = 'credit credit50 donate gift other'; // possible values for the "for" parameter
+const CGPAY_MAXLEN = 255; // maximum field length (to prevent bloating our tables) -- return and cancel have no limit
+
 const FUNDBY_BANK = 0; // radio button number for bank connection
 const FUNDBY_PAY = 1; // paid by employer
 const FUNDBY_CASH = 2; // buy with cash at a participating business
@@ -704,3 +709,5 @@ function config($k, $default = NULL) {
   if ($k != 'db' and empty($configRay['db'])) $k .= ' in the database definition';
 /**/  die("The config file is missing an entry for $k.");
 }
+
+class BadCry extends \Exception { }

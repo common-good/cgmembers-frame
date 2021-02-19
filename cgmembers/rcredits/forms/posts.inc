@@ -362,6 +362,7 @@ function getWho($args) {
  */
 function confirm($op, $thing, $code) {
   $ray = u\decryRay($code);
+
   list ($tnm, $idnm) = $thing == 'post' ? ['posts', 'postid'] : ['messages', 'id'];
   extract(just($idnm . ' location', $ray, NULL));
   $idSub = compact($idnm);

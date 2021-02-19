@@ -33,7 +33,7 @@ function api($args = null) {
   global $mya;
   global $channel; $channel = TX_API;
 
-  $data = (array) json_decode(nni($args ?: $_GET, 'request'));
+  $data = (array) u\dejsonize(nni($args ?: $_GET, 'request'));
   extract(just('op userId password requests', $data, NULL));
   $mya = r\acct($userId);
   if (!$mya or !$mya->co or $password != $mya->emailCode) {
@@ -58,14 +58,14 @@ function errorResponse($op, $userId, $error, $status = 'BAD') {
   $op .= '-response';
   $response = compact(ray('op userId error status'));
   header('Access-Control-Allow-Origin: *'); // allow access from web browsers
-  return exitJust(json_encode($response));
+  return exitJust(u\jsonize($response));
 }
 
 function okResponse($op, $userId, $responses, $status = 'OK') {
   $op .= '-response';
   $response = compact(ray('op userId status responses'));
   header('Access-Control-Allow-Origin: *'); // allow access from web browsers
-  return exitJust(json_encode($response));
+  return exitJust(u\jsonize($response));
 }
 
 function validateUserIds($userId, $requests) {

@@ -35,10 +35,9 @@ function formDashboard($form, &$sta, $args = '') {
   if ($mya->closed) {
     say(t('Your account is closed, but you can still see your account history.'));
   } else {
-    $stepUrl = $mya->nextStepUrl('', $msg);
     if (nn($msg)) say($msg);
 
-    if ($stepUrl) { // steps to be done
+    if ($stepUrl = $mya->nextStepUrl('', $msg)) { // steps to be done
       if (!$mya->ok and r\referrer() == 'signin') return w\go($stepUrl); // go right to next step if not approved
       say(t('To continue opening your %PROJECT account, <%a>click here</a>.', '_a', atag("/$stepUrl")));
     } elseif (!$mya->ok) { // no steps to do, but not open

@@ -472,7 +472,7 @@ function post($url, $content = FALSE, $responseFormat = 'raw', $extra_headers = 
   if ($content) {
     $content = http_build_query($content);
     if ($method == 'POST') {
-      if ($request_format == 'json') $content = u\jsonEncode($content);
+      if ($request_format == 'json') $content = u\jsonize($content);
       $http += compact('content');
     } else $url .= '?' . $content;
   }
@@ -490,7 +490,7 @@ function post($url, $content = FALSE, $responseFormat = 'raw', $extra_headers = 
   }
   
   $result = $responseFormat == 'xml' ? simplexml_load_string($response)
-    : ($responseFormat == 'json' ? json_decode(utf8_encode($response))
+    : ($responseFormat == 'json' ? u\dejsonize(utf8_encode($response))
     : ($response) );
   EXPECT(!is_null($result), "$method $url returned error: $response");
   return $result;
@@ -653,7 +653,7 @@ function loga($type, $info = [], $adhocChannel = FALSE) {
     if (nni($info, 'form_id')) {$type .= str_replace('CG\\Web\\form', '', $info['form_id']);}
     if (nni($info, 'toEmail')) $info = just('index subject', $info); // don't show whole email
     foreach (ray('form_id form_build_id form_token orig') as $k) unset($info[$k]);
-    $info = json_encode(u\noSecrets($info), JSON_UNESCAPED_SLASHES);
+    $info = u\jsonize(u\noSecrets($info), JSON_UNESCAPED_SLASHES);
   }
 /**/ flog($s = "$qid/$time/$ch/$type/$info");
 //  if (!test())
@@ -768,9 +768,11 @@ define('CRYPT_FLAG', '`!'); // flag start of encrypted data (add a single type l
 
 /**
  * encrypt an array for use in URLs
+ * @param int $pad: add an arbitrary padding element (to make the key harder to divine)
  */
-function cryRay($ray) {
-  $res = ry('P', serialize($ray));
+function cryRay($ray, $pad = 0) {
+  if ($pad) $ray['pad'] = u\randomString($pad, 'word'); // complicate (don't encrypt non-printing characters here)
+  $res = ry('P', u\jsonize($ray));
   if (test()) t\doCode($res); // must be on separate line (PHP bug)
   return $res;
 }
@@ -780,9 +782,12 @@ function cryRay($ray) {
  */
 function decryRay($code) {
   if ($code == 'TESTDOCODE') $code = t\doCode(); // test()
-  try {
-    return unserialize(u\dery('P', $code));
-  } catch (\Exception $e) {return '';}
+
+  try {$res = u\dery('P', $code);}
+  catch (\BadCry $e) {return '';}
+
+  try {return u\dejsonize($res) ?: unserialize($res);}
+  catch (\Exception $e) {return '';}
 }
 
 /**
@@ -799,6 +804,7 @@ function decryRay($code) {
  * @param bool $de: <decrypt rather than encrypt>
  * @param string $pwInstead: password to use instead of the one in the password file (for asymmetric encryption or decryption)
  * @return the encrypted (or decrypted) data.
+ * @throws BadCry
  * TEST with foreach (ray('D S V R C P H') as $k) print "k=$k " . u\decry($k, u\cry($k, 'abcd', FALSE, $k == 'R' ? a(1)->vKeyPw : ''), $k == 'V' ? r\vKey() : ($k == 'R' ? a(1)->vKeyPw : ''));
  */
 function cry($type, $data, $de = FALSE, $pwInstead = '') {
@@ -810,7 +816,7 @@ function cry($type, $data, $de = FALSE, $pwInstead = '') {
   if ($type == 'D') return $de ? u\decryPGP(u\b64decode($data)) : u\b64encode(u\cryPGP($data));
   
 	if ($de) {
-    u\EXPECT(u\starts($data, CRYPT_FLAG . $type), 'bad crypted');
+    if (!u\starts($data, CRYPT_FLAG . $type)) throw new \BadCry('encrypted value must begin with crypt flag');
     if ($type == 'V' and !$vKey = r\vKey()) return $data; // if we can't decrypt, return the data as is (for acct::recordChanges)
     $data = substr($data, strlen(CRYPT_FLAG . $type));
   }
@@ -1120,7 +1126,7 @@ function getLocus($q, $city = '', $state = '', $zip = '') {
     r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)));
     return $none;
   }
-  $res = json_decode($res);
+  $res = u\dejsonize($res);
 
   foreach (nn($res->results, []) as $one) if (nni($one->components, 'country_code') == 'us') {
     $i = $one->confidence; // confidence is actually specificity. Be as specific as possible.
@@ -1638,6 +1644,20 @@ EOF;
   return $sql;
 }
 
+/**
+ * return (or set) URL parameters, handling tests appropriately
+ */
+function _GET($ray = NULL) {
+  if (!test()) return $_GET;
+
+  global $T_GET;
+  if (isset($ray)) {
+    t\fixData($ray);
+    $T_GET = $ray;
+  }
+  return $T_GET;
+}
+
 // Single line functions that need little or no explanation
 function num($a, $else = 0) {return is_numeric($a) ? $a : $else;}
 function eq($a, $b, $else = FALSE) {return $a == $b ? $a : $else;}
@@ -1676,7 +1696,8 @@ function setDft(&$param, $value) {return $param = isset($param) ? $param : $valu
 function ifSet(&$param, $value) {if (isset($param)) $param = $value;} // opposite of setDft
 function log($message, $type = 'state', $info = []) {return u\loga($type, compact('message') + $info);}
 function isIPhone() {return preg_match('/iPhone/i', $_SERVER['HTTP_USER_AGENT']);}
-function jsonEncode($s) {return json_encode($s) ?: json_encode(u\purify($s));} // , JSON_UNESCAPED_SLASHES
+function jsonize($obj, $flags = 0) {return json_encode($obj, JSON_UNESCAPED_UNICODE + $flags);}
+function dejsonize($s) {return json_decode($s, TRUE);}
 function redash($s) {return str_replace('—', '&mdash;', $s);}
 function nonish($s) {return in(mb_strtolower($s), 'n/a nothing na none 0.00'); }
 function padto($s, $n) {return str_pad(substr($s, 0, $n), $n);}
