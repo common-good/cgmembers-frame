@@ -15,7 +15,7 @@ function formCompany($form, &$sta, $arg = '') {
   $myCats = db\q('SELECT iid FROM r_user_industries WHERE uid=:myid', compact('myid'))->fetchCol();
   $links = t('<%a>See your public %PROJECT web page</a> (in a new window)', 
     '_a', atag("/member/$mya->name", ['id' => 'show-webpage'] + w\away()));
-  $cgbutton = item(t('Click to create a <%aSimple>simple CGPay button</a> for your website or use this code &mdash; %code &mdash; for an <%aAdvanced>advanced CGPay button</a>.', 'code _aSimple _aAdvanced', $mya->emailCode, atag('/company/cgbutton'), atag('https://docs.google.com/document/d/1QpOW0WU7RiUV900PMekyH7ve3-_9yjCnQn627cWovOQ')), t('CGPay Button:'));
+  $cgbutton = item(t('Click to create a <%aSimple>simple CGPay button</a> for your website (or emails) or use this secret code &mdash; %code &mdash; for an <%aAdvanced>advanced CGPay button</a>.', 'code _aSimple _aAdvanced', u\ry('P', $mya->emailCode), atag('/company/cgbutton'), atag('https://docs.google.com/document/d/1QpOW0WU7RiUV900PMekyH7ve3-_9yjCnQn627cWovOQ')), t('CGPay Button:'));
 
   $canDescs = ray(APP_CAN_BIT_DESCS);
   $permissions = '';

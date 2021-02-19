@@ -50,7 +50,7 @@ $styles = preg_replace('~<style.*</style>~ms', '', $styles); // zap all the drup
 
 // handle scripts
 if (isDEV and $jsCode = nni($_GET, 'jsCode')) w\jsx('eval', compact('jsCode')); // for testing ajax
-if (nn($scriptScraps)) w\js('scraps', 'args', urlencode(json_encode($scriptScraps))); // fragments
+if (nn($scriptScraps)) w\js('scraps', 'args', urlencode(u\jsonize($scriptScraps))); // fragments
 $s = array_flip(ray(SCRIPTS_TOP)); // standard (included first on every page)
 $s += just(array_keys($pageScripts), array_merge(array_flip(ray(SCRIPTS)), $pageScripts)); // select and reorder ad hoc scripts
   u\EXPECT(count($s) >= count(ray(SCRIPTS_TOP)) + count($pageScripts), 'scripts! ' . pr(justNOT(ray(SCRIPTS_TOP . ' ' . SCRIPTS), $pageScripts)) . pr($pageScripts));

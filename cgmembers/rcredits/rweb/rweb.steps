@@ -126,13 +126,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *
  * in: MAKE card AMemberScansACompanyCardWithAStandardQRReader
  *     MAKE card 
- *     MAKE cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
- *     MAKE cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentForJSONResponse
- *     MAKE cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
- *     MAKE cgbutton AMemberTypesAccountIDToBuyStoreCredit
- *     MAKE cgbutton AMemberRedeemsStoreCredit
- *     MAKE cgbutton AMemberTypesAccountIDToBuyAGiftOfStoreCredit
- *     MAKE cgbutton ACompanyHasAnApiToProcessTransactionResults
+ *     MAKE cgpay AMemberRedeemsStoreCredit
  *     MAKE company AMemberUpdatesCompanyInfo
  *     MAKE company AMemberGivesABadEmployeeCount
  *     MAKE company AMemberGivesABadGross
@@ -186,7 +180,11 @@ function memberConfirmsFormWithValues($id, $page, $values) {return t\completeFor
 /**
  * member (ARG) confirms (ARG) with: (ARG)
  *
- * in: MAKE cgbutton AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ * in: MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
+ *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountIDAndChosenAmount
+ *     MAKE cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ *     MAKE cgpay AMemberTypesAccountIDToBuyStoreCredit
+ *     MAKE cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     MAKE message SynopsisOfScenario
  */
 function memberConfirmsWith($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
@@ -236,7 +234,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE bank Setup
  *     MAKE bank ASlaveMemberRequestsATransfer
  *     MAKE card Setup
- *     MAKE cgbutton Setup
+ *     MAKE cgpay Setup
  *     MAKE changeaccount Setup
  *     MAKE community Setup
  *     MAKE company Setup
@@ -302,13 +300,11 @@ function members($list) {return t\members($list);}
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST bank AMemberWithANegativeBalanceRequestsATransferFromTheBank
  *     TEST card 
- *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
- *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentForJSONResponse
- *     TEST cgbutton AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
- *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
- *     TEST cgbutton AMemberRedeemsStoreCredit
- *     TEST cgbutton AMemberTypesAccountIDToBuyAGiftOfStoreCredit
- *     TEST cgbutton ACompanyHasAnApiToProcessTransactionResults
+ *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
+ *     TEST cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ *     TEST cgpay AMemberTypesAccountIDToBuyStoreCredit
+ *     TEST cgpay AMemberRedeemsStoreCredit
+ *     TEST cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     MAKE community Setup
  *     MAKE custstatement Setup
  *     MAKE demographics Setup
@@ -351,11 +347,11 @@ function transactions($list) {return t\transactions($list);}
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST bank ASlaveMemberRequestsATransfer
  *     TEST card 
- *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountID
- *     TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentWithAccountIDAndChosenAmount
- *     TEST cgbutton AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
- *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
- *     TEST cgbutton AMemberTypesAccountIDToBuyAGiftOfStoreCredit
+ *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
+ *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountIDAndChosenAmount
+ *     TEST cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ *     TEST cgpay AMemberTypesAccountIDToBuyStoreCredit
+ *     TEST cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     TEST flow AMemberOverdrawsWithNotEnoughToDrawOn
  *     TEST invest AMemberBuysAStakeInTheClub
@@ -530,11 +526,11 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST balancesheet AMemberLooksAtTheBalanceSheet
  *     TEST balancesheet ANonmemberLooksAtTheBalanceSheet
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
- *     TEST cgbutton AMemberClicksAPayWithCommonGoodButton
- *     TEST cgbutton AMemberClicksAPayWithCommonGoodButtonWithVariableAmount
- *     TEST cgbutton AMemberClicksAButtonToBuyStoreCredit
- *     TEST cgbutton AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
- *     TEST cgbutton AMemberClicksAButtonToBuyAGiftOfStoreCredit
+ *     TEST cgpay AMemberClicksACGPayButton
+ *     TEST cgpay AMemberClicksACGPayButtonWithVariableAmount
+ *     TEST cgpay AMemberClicksAButtonToBuyStoreCredit
+ *     TEST cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ *     TEST cgpay AMemberClicksAButtonToBuyAGiftOfStoreCredit
  *     TEST changeaccount AMemberClicksTheProfilePhoto
  *     TEST changeaccount AMemberChangesAccountToGoToADifferentPage
  *     TEST changeaccount ACommunityAdminChangesAccount
@@ -819,12 +815,11 @@ function usd($list) {return t\usd($list);}
  *     MAKE bank AMemberDrawsCreditFromTheBankThenCancels
  *     MAKE card AMemberScansACompanyCardWithAStandardQRReader
  *     MAKE card 
- *     MAKE cgbutton AMemberClicksAPayWithCommonGoodButton
- *     MAKE cgbutton AMemberClicksAPayWithCommonGoodButtonWithVariableAmount
- *     MAKE cgbutton AMemberClicksAButtonToBuyStoreCredit
- *     MAKE cgbutton AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
- *     MAKE cgbutton AMemberClicksAButtonToBuyAGiftOfStoreCredit
- *     MAKE cgbutton ACompanyGetsAnAuthcode
+ *     MAKE cgpay AMemberClicksACGPayButton
+ *     MAKE cgpay AMemberClicksACGPayButtonWithVariableAmount
+ *     MAKE cgpay AMemberClicksAButtonToBuyStoreCredit
+ *     MAKE cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ *     MAKE cgpay AMemberClicksAButtonToBuyAGiftOfStoreCredit
  *     MAKE changeaccount AMemberClicksTheProfilePhoto
  *     MAKE changeaccount AMemberChangesAccount
  *     MAKE changeaccount AMemberChangesAccountToGoToADifferentPage
@@ -927,7 +922,7 @@ function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
  *
  * in: MAKE balancesheet ANonmemberLooksAtTheBalanceSheet
  *     MAKE card Setup
- *     MAKE cgbutton Setup
+ *     MAKE cgpay Setup
  *     MAKE partnersignup Setup
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     MAKE partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
@@ -1245,7 +1240,6 @@ function membersHave($list) {return t\membersHave($list);}
  * we redirect to (ARG)
  *
  * in: TEST bank AMemberDrawsCreditFromTheBankThenCancels
- *     TEST cgbutton ACompanyHasAnApiToProcessTransactionResults
  *     TEST posts SomeoneConfirmsAnOfferOnceTwice
  *     TEST scancard SomeoneScansAMemberCard
  *     TEST signout AMemberSignsOut
@@ -1689,10 +1683,10 @@ function weScripWithSubs($script, $args = []) {
  * these (ARG): (ARG)
  *
  * in: MAKE balancesheet Setup
- *     TEST cgbutton AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
- *     TEST cgbutton AMemberTypesAccountIDToBuyStoreCredit
- *     BOTH cgbutton AMemberRedeemsStoreCredit
- *     TEST cgbutton AMemberTypesAccountIDToBuyAGiftOfStoreCredit
+ *     TEST cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ *     TEST cgpay AMemberTypesAccountIDToBuyStoreCredit
+ *     BOTH cgpay AMemberRedeemsStoreCredit
+ *     TEST cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     MAKE community Setup
  *     TEST community CronCalculatesTheStatistics
  *     TEST coupons AMemberCompanyCreatesAGiftCoupon
@@ -2203,7 +2197,7 @@ function memberDeletesRelationTo($id1, $id2) {
 /**
  * we hit (ARG) with: (ARG)
  *
- * in: TEST cgbutton ACompanyHasAnApiToProcessTransactionResults
+ * in: 
  */
 function weHitWith($url, $args) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -2231,7 +2225,7 @@ function weExitShowingJust($what) {
 /**
  * we exit showing: (ARG)
  *
- * in: TEST cgbutton ACompanyGetsAnAuthcode
+ * in: 
  */
 function weExitShowing($ray) {
   global $testOnly; if (!$testOnly) return FALSE;
@@ -2257,9 +2251,33 @@ function cryptcookieIs($nm, $v) {return cookieIs($nm, u\ry('C', $v));}
 /**
  * we show JSON of: (ARG)
  *
- * in: TEST cgbutton AMemberSubmitsAPayWithCommonGoodButtonPaymentForJSONResponse
+ * in: 
  */
 function weShowJSONOf($ray) {
   global $testOnly; if (!$testOnly) return FALSE;
-  return weExitShowingJust(json_encode(t\fixData($ray[0])));
+  return weExitShowingJust(u\jsonize(t\fixData($ray[0])));
+}
+
+/**
+ * a button code for: (ARG)
+ *
+ * in: MAKE cgpay AMemberClicksACGPayButton
+ *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
+ *     MAKE cgpay AMemberClicksACGPayButtonWithVariableAmount
+ *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountIDAndChosenAmount
+ *     MAKE cgpay AMemberClicksAButtonToBuyStoreCredit
+ *     MAKE cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ *     MAKE cgpay AMemberTypesAccountIDToBuyStoreCredit
+ *     MAKE cgpay AMemberClicksAButtonToBuyAGiftOfStoreCredit
+ *     MAKE cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
+ */
+function aButtonCodeFor($args) {
+  include_once R_ROOT . '/forms/code.inc';
+  global $testOnly; if ($testOnly) return FALSE;
+  $info = $args[0];
+  t\fixData($info);
+  if ($secret = nni($info, 'secret')) $info['secret'] = $secret; // was u\ry('P', $secret);
+  global $testCode; $testCode = w\code($info);
+  t\output(t('Button code is ') . $testCode);
+  return !strhas($testCode, ' ');
 }

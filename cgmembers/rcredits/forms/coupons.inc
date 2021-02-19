@@ -158,7 +158,7 @@ function formCoupons_submit($form, &$sta, $trial = FALSE) {
   extract($input = just(COUPON_FLDS . ' from to ruleId', $sta['input'], NULL));
 
   if (empty($amount) and in($mya->task, 'co co2')) {
-    return $mya->task == 'co' ? w\go($mya->nextStepUrl()) : w\goNextStep('discount'); // new member pressed skip on discount form
+    return $mya->task == 'co' ? w\go($mya->nextStepUrl() ?: 'dashboard') : w\goNextStep('discount'); // new member pressed skip on discount form
   }
 
   switch ($type) {

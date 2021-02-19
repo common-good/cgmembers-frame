@@ -70,7 +70,7 @@ function formSignin_validate($form, &$sta, $type = 'both') {
   $success = (isDEV and $uid == 1) ?: ($a and $a->passwordOkay($pass, 'pass', $err)); // ignore admin pass on dev machine
   w\updateFlood($sta, $success); // should be before pw2 and vKeyE checks
 	if (!$success) return say('login failed', 'name');
-  $sta['input']['uid'] = $uid; // especially for pay-with-cg
+  $sta['input']['uid'] = $uid; // especially for cgpay
 
   if ($a->superAdmin) {
     $pw2 = $pw2 ? u\b64decode($pw2) : (isDEV ? DEV_PW2 : '');

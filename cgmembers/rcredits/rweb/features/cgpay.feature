@@ -11,16 +11,22 @@ Setup:
   | .ZZC | Our Pub  | c1   | c@    | member,ok,co,confirmed   | 01003 |     0 | Cc3       |
   And member is logged out
 
-Scenario: A member clicks a Pay With Common Good button
-  When member "?" visits page "pay-with-cg/company=NEWZZC&code=Cc3&item=food&amount=23.50"
+Scenario: A member clicks a CGPay button
+  Given a button code for:
+  | account | secret | item | amount |*
+  | .ZZC    | Cc3    | food | 23.50  |
+  When member "?" visits page "cgpay?code=TESTCODE"
   Then we show "Hello %PROJECT Member" with:
   | Pay        | 23.50 to Our Pub |
   | For        | food |
   | Account ID |  |
   | Password   |  |
 
-Scenario: A member submits a Pay With Common Good button payment with account ID
-  When member "?" confirms form "pay-with-cg/company=NEWZZC&code=Cc3&item=food&amount=23" with values:
+Scenario: A member submits a CGPay button payment with account ID
+  Given a button code for:
+  | account | secret | item | amount |*
+  | .ZZC    | Cc3    | food | 23     |
+  When member "?" confirms "cgpay?code=TESTCODE" with:
   | name   | pass |*
   | NEWZZA | a1   |
   Then we say "status": "success title|report tx" with subs:
@@ -29,28 +35,23 @@ Scenario: A member submits a Pay With Common Good button payment with account ID
   And transactions:
   | xid | created | amount | payer | payee | for  |*
   |   1 | %today  |     23 | .ZZA  | .ZZC  | food |
-  
-Scenario: A member submits a Pay With Common Good button payment for JSON response
-  When member "?" confirms form "pay-with-cg/company=NEWZZC&code=Cc3&item=food&amount=23&return=json" with values:
-  | name   | pass |*
-  | NEWZZA | a1   |
-  Then transactions:
-  | xid | created | amount | payer | payee | for  |*
-  |   1 | %today  |     23 | .ZZA  | .ZZC  | food |
-  And we show JSON of:
-  | ok | msg                            | request |*
-  | 1  | Success! You paid Our Pub $23. |         |
 
-Scenario: A member clicks a Pay With Common Good button with variable amount
-  When member "?" visits page "pay-with-cg/company=NEWZZC&code=Cc3&item=food&amount="
+Scenario: A member clicks a CGPay button with variable amount
+  Given a button code for:
+  | account | secret | item |*
+  | .ZZC    | Cc3    | food |
+  When member "?" visits page "cgpay?code=TESTCODE"
   Then we show "Hello %PROJECT Member" with:
   | Pay        | to Our Pub |
   | For        | food |
   | Account ID |  |
   | Password   |  |
 
-Scenario: A member submits a Pay With Common Good button payment with account ID and chosen amount
-  When member "?" confirms form "pay-with-cg/company=NEWZZC&code=Cc3&item=food&amount=" with values:
+Scenario: A member submits a CGPay button payment with account ID and chosen amount
+  Given a button code for:
+  | account | secret | item |*
+  | .ZZC    | Cc3    | food |
+  When member "?" confirms "cgpay?code=TESTCODE" with:
   | name   | amount | pass |*
   | NEWZZA | $23.45 | a1   |
   Then we say "status": "success title|report tx" with subs:
@@ -58,7 +59,10 @@ Scenario: A member submits a Pay With Common Good button payment with account ID
   | paid | Our Pub   | $23.45 |
 
 Scenario: A member clicks a button to buy 50% store credit
-  When member "?" visits page "pay-with-cg/company=NEWZZC&code=Cc3&for=credit50&item=&amount=23.50"
+  Given a button code for:
+  | account | secret | for      | amount |*
+  | .ZZC    | Cc3    | credit50 | 23.50  |
+  When member "?" visits page "cgpay?code=TESTCODE"
   Then we show "Hello %PROJECT Member" with:
   | Pay        | 23.50 to Our Pub |
   | For        | store credit |
@@ -66,14 +70,17 @@ Scenario: A member clicks a button to buy 50% store credit
   | Password   |  |
 
 Scenario: A member clicks a button to buy store credit for a different amount
-  When member "?" visits page "pay-with-cg/company=NEWZZC&code=Cc3&for=credit&item=&amount=23&credit=30"
+  Given a button code for:
+  | account | secret | for    | amount | credit |*
+  | .ZZC    | Cc3    | credit | 23     | 30     |
+  When member "?" visits page "cgpay?code=TESTCODE"
   Then we show "Hello %PROJECT Member" with:
   | Pay        | 23.00 to Our Pub |
   | For        | $30 store credit |
   | Account ID |  |
   | Password   |  |
   
-  When member "?" confirms "pay-with-cg/company=NEWZZC&code=Cc3&for=credit&item=&amount=23&credit=30" with:
+  When member "?" confirms "cgpay?code=TESTCODE" with:
   | name   | pass |*
   | NEWZZA | a1   |
   Then we say "status": "success title|report tx" with subs:
@@ -87,7 +94,10 @@ Scenario: A member clicks a button to buy store credit for a different amount
   |  1 | %ACT_SURTX | account   | .ZZA  | account   | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER | 1       | 30     |
 
 Scenario: A member types account ID to buy 50% store credit
-  When member "?" confirms form "pay-with-cg/company=NEWZZC&code=Cc3&for=credit50&item=&amount=23" with values:
+  Given a button code for:
+  | account | secret | for      | amount |*
+  | .ZZC    | Cc3    | credit50 | 23     |
+  When member "?" confirms "cgpay?code=TESTCODE" with:
   | name   | pass |*
   | NEWZZA | a1   |
   Then we say "status": "success title|report tx" with subs:
@@ -125,7 +135,10 @@ Scenario: a member redeems store credit
   |  1 | %now |
 
 Scenario: A member clicks a button to buy a gift of store credit
-  When member "?" visits page "pay-with-cg/company=NEWZZC&code=Cc3&for=gift&item=&amount=23.50"
+  Given a button code for:
+  | account | secret | for    | amount | for  |*
+  | .ZZC    | Cc3    | credit | 23.50  | gift |
+  When member "?" visits page "cgpay?code=TESTCODE"
   Then we show "Hello %PROJECT Member" with:
   | Pay          | 23.50 to Our Pub |
   | For          | store credit |
@@ -134,70 +147,18 @@ Scenario: A member clicks a button to buy a gift of store credit
   | Password     | |
 
 Scenario: A member types account ID to buy a gift of store credit
-  When member "?" confirms form "pay-with-cg/company=NEWZZC&code=Cc3&for=gift&item=&amount=23" with values:
+  Given a button code for:
+  | account | secret | for      | amount | for  |*
+  | .ZZC    | Cc3    | credit50 | 23     | gift |
+  When member "?" confirms "cgpay?code=TESTCODE" with:
   | for           | name          | pass |*
   | b@example.com | a@example.com | a1   |
   Then we say "status": "success title|report tx" with subs:
   | did  | otherName | amount |*
   | paid | Our Pub   | $23    |
-#  Then we say "status": "pay button success"
-#  And we message "new invoice" to member ".ZZA" with subs:
-#  | otherName | amount | purpose                           |*
-#  | Our Pub   | $23    | gift of store credit (to Bea Two) |
-#  And invoices:
-#  | nvid | created | status      | amount | payer | payee | for                               |*
-#  |    1 | %today  | %TX_PENDING |     23 | .ZZA  | .ZZC  | gift of store credit (to Bea Two) |
-
-#  When member "?" visits page "handle-invoice/nvid=1&code=TESTDOCODE"
-#  Then we show "Confirm Payment" with:
-#  | Pay $23 to Our Pub for gift of store credit (to Bea Two) |
-#  And with:
-#  | Pay | Dispute |
-
-#  When member "?" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
-#  | op  |*
-#  | pay |
-#  Then we say "status": "You paid Our Pub $23."
-#  And invoices:
-#  | nvid | created | status | purpose                           |*
-#  |    1 | %today  |      1 | gift of store credit (to Bea Two) |
   And transactions:
   | xid | created | amount | payer | payee | for                               |*
   |   1 | %today  |     23 | .ZZA  | .ZZC  | gift of store credit (to Bea Two) |
   And these "tx_rules":
   | id | payerType | payer | payeeType | payee | from         | to           | portion | amtMax |*
   |  1 | account   | .ZZB  | account   | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER | 1       | 23     |
-
-Scenario: A company gets an authcode
-  When member "?" visits page "pay-with-cg/op=authcode&company=NEWZZC&cocode=Cc3"
-  Then we exit showing:
-  | cocode | now  | r | cry |*
-  | Cc3    | %now | ? | 1   |
-
-Scenario: A company has an api to process transaction results
-  When member "?" confirms form "pay-with-cg/company=NEWZZC&code=Cc3&item=food&amount=23&return=http:%2F%2Fexample.com%2Fthanks.php&request=ABC123&api=http:%2F%2Fexample.com%2Fapi%2F" with values:
-  | name   | pass |*
-  | NEWZZA | a1   |
-#  Then invoices:
-#  | nvid | created | status      | amount | payer | payee | for  |*
-#  |    1 | %today  | %TX_PENDING |     23 | .ZZA  | .ZZC  | food |
-  Then we redirect to "http://example.com/thanks.php?request=ABC123"
-
-#  When member "?" visits page "pay-with-cg/op=status&company=NEWZZC&cocode=Cc3&request=ABC123"
-#  Then we exit showing just "-1"
-  
-#  When member "?" confirms form "handle-invoice/nvid=1&code=TESTDOCODE" with values:
-#  | op  |*
-#  | pay |
-  And transactions:
-  | xid | created | amount | payer | payee | for  |*
-  |   1 | %today  |     23 | .ZZA  | .ZZC  | food |
-#  And invoices:
-#  | nvid | created | status | amount | payer | payee | for  |*
-#  |    1 | %today  | 1      |     23 | .ZZA  | .ZZC  | food |
-  And we hit "http://example.com/api/" with:
-  | request | ok | msg                   |*
-  | ABC123  | 1  | You paid Our Pub $23. |
-
-#  When member "?" visits page "pay-with-cg/op=status&company=NEWZZC&cocode=Cc3&request=ABC123"
-#  Then we exit showing just "1"

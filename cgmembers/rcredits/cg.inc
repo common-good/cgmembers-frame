@@ -89,7 +89,7 @@ function regionRange($region = NULL) {
 function zipCity($zip, $country = R_COUNTRY_ID) {
   /*
   if ($info = @file_get_contents('http://api.zippopotam.us/us/' . $zip)) {
-    if ($info = json_decode($info)) $info = (array) nn($info->places)[0];
+    if ($info = u\dejsonize($info)) $info = (array) nn($info->places)[0];
     if ($info) return [$info['place name'], r\stateNum($info['state abbreviation']), $info['latitude'], $info['longitude']];
   }
   */

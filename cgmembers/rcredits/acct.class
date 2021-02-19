@@ -1736,8 +1736,8 @@ X;
     if ($i == $max) return $a->ssnErr(SSN_TIMEOUT_MSG . t(' on %max tries.', compact('max')));
 
     $xml = simplexml_load_string($ssnData0);
-    $json = json_encode($xml);
-    $ssnData = json_decode($json, TRUE);
+    $json = u\jsonize($xml);
+    $ssnData = u\dejsonize($json, TRUE);
     if (!is_array($d = $ssnData['searchResults']) or $ssnData['ResultCount'] + 0 <= 0) { // 0 for tests, <=0 for failure
       return $a->ssnErr(t('No SSN data available: ') . pr($ssnData0));
     }

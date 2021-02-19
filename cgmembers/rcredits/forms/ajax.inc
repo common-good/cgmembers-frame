@@ -31,14 +31,24 @@ function ajax() {
   }
 //  $mya = r\acct($myid, $aid);
 /**/  lug(compact(ray('op data myid aid')));
-  $data = json_decode($data); // must be passed encoded or jQuery post() passes null
+  $data = u\dejsonize($data); // must be passed encoded or jQuery post() passes null
   $mya = ($myid and $aid) ? r\acct($myid, $aid) : NULL; // usually relevant
   
   if ($op == 'ssn') { // verify member's SSN
     if ($mya) $mya->ssnCheck();
     exit();
+    
+  } elseif ($op == 'cgPayCode') { // get cgPay code
+    include_once R_ROOT . '/forms/code.inc';
+    $data['for'] = ray('credit gift ')[$data['fer']];
+    unset($data['fer']);
+    foreach ($data as $k => $v) if ($v == '') unset($data[$k]);
+    $code = w\code($data + ray('account secret', $mya->mainQid, $mya->emailCode));
+    return strhas($code, ' ') ? ajaxErr($code) : ajaxRet(compact('code'));
+    
   } elseif ($op == 'typeWho') { // get selections for suggestWho
-    exit(json_encode(be\memberRay($myid, $aid, $data))); // data=1 means companies only
+    exit(u\jsonize(be\memberRay($myid, $aid, $data))); // data=1 means companies only
+    
   } elseif ($op == 'setNotice') { // change notice preference for one notice type (code, type, freq)
     extract(just('code type freq', $data, ''));
     if (!$ray = u\decryRay($code)) return ajaxErr(t('Bad ID code.'));
@@ -47,6 +57,7 @@ function ajax() {
     $notices = ray(db\get('notices', $tnm, $idRay));
     $notices[$type] = $freq;
     db\update($tnm, $idRay + ray('notices', u\deray($notices)), key($idRay));
+    
   } elseif ($op == 'relations') {
     extract(just('name v', $data, ''));
     list ($fld, $reid) = explode('-', $name);
@@ -69,34 +80,41 @@ function ajax() {
       } else { $a->setRel($fld, $v); }
       return ajaxMsg($msg); // show messages, if any
     } else { $a->setRel($fld, $v); } // toggle
+    
   } elseif ($op == 'changeCtty') { // change member's community
     extract(just('newCtty retro', $data));
     if (!$mya or !$mya->changeCtty($newCtty, $retro, $err)) return ajaxErr(t('Community change failed.|') . $err);
 //    ajaxRet(['msg' => "uid is $uid, newCtty is $newCtty"]);
+
   } elseif ($op == 'getLocus') {
     u\FAIL('ajax getLocus unused');
     extract(just('location', $data));
     return ajaxRet(array_combine(ray('latitude longitude zip'), u\getLocus($location)));
+    
   } elseif ($op == 'setBit') {
     extract(just('bit on', $data));
     if ($mya and $b = u\consta('b', $bit) and $b < B_ADMIN2) {
       $mya->setBit($b, $on);
     } else return ajaxErr(t('nope'));
+    
   } elseif ($op == 'eval' and isDEV) {
     extract(just('jsCode', $data, ''));
     return ajaxRet(u\decryRay($jsCode));
+    
   } elseif ($op == 'set') {
     extract(just('uid k v', $data));
     if ($a = r\acct($uid)) {
       if (in($k, 'minimum') and $err = u\badAmount($v)) return ajaxErr($err);
       $a->update($k, $v);
     } else return ajaxErr(t('nope'));
+    
   } elseif ($op == 'dpOffset') {
     if (!$mya or !$mya->superAdmin) return ajaxErr(t('You do not have permission.'));
     extract(just('amount', $data));
     if (!is_numeric($amount) or $amount <= 0) return ajaxErr('bad dollar pool offset transfer amount: ' . $amount);
     // temporarily disabled until we remember what this is supposed to do! r\acct(1)->bank(-amount, '', [], $why);
     ajaxMsg($msg);
+    
   } elseif ($op == 'who') {
     extract(just('who question amount', $data));
     $amtDpy = u\fmtAmt(nn($amount) ?: 0);
@@ -116,19 +134,23 @@ function ajax() {
     $which = render($choice);
     $title = t($question ?: t('Which account?'), ray('name amount', t('whom'), $amtDpy));
     ajaxRet(compact('which', 'title', 'message'));
+    
   } elseif ($op == 'whoami') { // return one or more data fields
 //    $data = just('fullName', ray($data)); // limit what we can get to what we need
     return $mya ? ajaxRet(ray('whoami', "$mya->fullName ($mya->mainQid)")) : ajaxErr('no current account!');
+    
   } elseif ($op == 'bumpShout') {
     db\q('UPDATE u_shouters SET rating=IF(rating=3, 0, rating+1) where uid=:uid', ray('uid', r\qo($data->qid)->id));
+    
   } else return ajaxErr(t('Invalid op'));
+  
   return ajaxMsg(t('Done!'));
 }
 
 function ajaxErr($msg) {return ajaxMsg($msg, 0);}
 function ajaxMsg($message = '', $ok = 1) {return ajaxRet(compact('message'), $ok);}
 function ajaxRet($data0, $ok = 1) {
-  $data = json_encode($data0 + compact('ok'));
+  $data = u\jsonize($data0 + compact('ok'));
   if (!isset($data0['which'])) u\loga('ajax', $data); // don't log hundreds of choices
   exit($data);
 }

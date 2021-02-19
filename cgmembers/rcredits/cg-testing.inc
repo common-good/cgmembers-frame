@@ -33,9 +33,9 @@ define('SAME_TIME', 60 * 20); // number of seconds that make no difference in "s
  * @param bool $direct: directly to or from db, rather than user input (default FALSE)
  */
 function fixData(&$info, $direct = FALSE) {
-  global $testOnly, $rUrl, $testVars, $T;
+  global $testOnly, $rUrl, $testVars, $T, $testCode;
 
-  $fields = key($info) . ' ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method companyOptions coType'; // first key is probably an ID field, so keep it at the front
+  $fields = key($info) . ' ok email phone dob federalId idProof flags adminable notices statements who rewards risks toEmail why error country state boxId cat method companyOptions coType code'; // first key is probably an ID field, so keep it at the front
 
   if (nn($testVars)) foreach ($info as $k => $v) if (mb_strpos($v, '@') !== FALSE) {
       foreach ($testVars as $varName => $var) $info[$k] = str_replace("@$varName", $var, $v);
@@ -43,6 +43,7 @@ function fixData(&$info, $direct = FALSE) {
   foreach (ray(NULL_FLDS) as $k) if (isset($info[$k]) and empty($info[$k])) $info[$k] = NULL;
   extract(just($fields, $info));
   
+  if (nn($code) == 'TESTCODE') $code = $testCode;
   if (isset($ok)) $ok = (int) $ok; // use integers not strings in JSON
   if (isset($cat)) $cat = db\get('id', 'post_cats', compact('cat'));
   if ($T and $T->feature == 'posts' and isset($method) and !$testOnly) $method = array_search($method, ray('email phone text'));
@@ -970,7 +971,7 @@ function hitServer($op, $info = [], $agent, $device = '', $version = 230) {
   foreach (ray('op agent device version amount member proof goods') as $k) if (isset($$k)) $info[$k] = $$k;
   t\output('request: ' . pr($info), 'input'); // keep this
   $rposResult = r\Smart\pos($info);
-  if ($op != 'photo') $rposResult = (array) json_decode($rposResult);
+  if ($op != 'photo') $rposResult = (array) u\dejsonize($rposResult);
   t\output('answer: ' . pr($rposResult), 'output');
   return TRUE;
 }
@@ -1113,15 +1114,14 @@ function verifyRecord($table, $info, $riskRay = K_TX_RISKS) {
 function completeForm($id, $page, $values = '', $confirmed = FALSE) {
   global $testOnly; if ($testOnly) return FALSE;
   global $fieldErr;
-  global $testOp; $testOp = nn($values[0]['op']);
   global $testConfirmation; // confirmation message output, if any
+  
+  $values = nni($values, 0, []);
+  global $testOp; $testOp = nni($values, 'op');
+
   global $formSta, $lastGo;
   $xlastGo = nn($lastGo); // notice whether a goto happens, so we can skip post-processing
 	$lastGo = NULL;
-  ///  debug(compact(ray('id page values confirmed testOnly')));
-
-  $values = nn($values[0]) ?: [];
-
 
   t\logIn($id);
 
@@ -1132,9 +1132,7 @@ function completeForm($id, $page, $values = '', $confirmed = FALSE) {
   }
 
   $values = t\POST($values);
-
   if (!$form = t\pageForm($page)) return FALSE; // probably access error
-
   $sta = $formSta; $formSta = NULL; // don't let $formSta influence other forms that get invoked
 
   if ($page == 'pay' or $page == 'charge') $page = 'Tx';
@@ -1162,6 +1160,8 @@ function completeForm($id, $page, $values = '', $confirmed = FALSE) {
  */
 function pageForm($page) {
   global $formArray, $formSta, $lastGo, $formOut, $lastPage;
+
+  $page = t\parseQ($page);
 
 	$page = t\fixPageArgs($page);
   $formArray = $formSta = $formOut = NULL; // start with a clean slate
@@ -1714,7 +1714,7 @@ function postCode($code) {
     $dt = db\get('created', $tnm, "$idnm=" . $code[$idnm]);
     if (t\sameTime($dt, $created)) $code['created'] = $dt; // wiggle room
   }
-  return u\cryRay($code + ['word' => R_WORD]);
+  return u\cryRay($code, 8);
 }
 
 function getLocus($q) {
@@ -1826,10 +1826,10 @@ function hitAPI($op, $userId, $password, $requests) {
 
   $userId = t\fullQid2($userId);
   foreach ($requests as $i => $zot) fixData($requests[$i]);
-  $request = json_encode(compact(ray('op userId password requests')));
+  $request = u\jsonize(compact(ray('op userId password requests')));
   w\api(compact('request'));
   if (!$result_json = getExitMsg()) return FALSE;
-  $rAPIResult = (array) json_decode($result_json);
+  $rAPIResult = (array) u\dejsonize($result_json);
   return TRUE;
 }
 
@@ -1870,6 +1870,22 @@ function checkOneArray($wantRay, $gotRay) {
 }
 
 /**
+ * Handle URLs containing question mark (put the part after the question mark in $T_GET)
+ * @param string $page: the URL
+ * @return $page without query parameters
+ */
+function parseQ($page) {
+  global $T_GET;
+  if ($i = strpos($page, '?')) {
+    parse_str(substr($page, $i + 1), $get);
+    u\_GET($get);
+    $page = substr($page, 0, $i);
+    t\output("Parsed out $page with GET: " . pr($T_GET));
+  }
+  return $page;
+}
+
+/**
  * Create an identifiable photo for the member.
  */
 function hasPic($id, $picture) {
@@ -1882,7 +1898,8 @@ function hasPic($id, $picture) {
  * Add a record with the given type and value to the test table, along with the test name.
  */
 function logRec($type, $value) {
-  return db\insert('test', ray('type value test', $type, is_array($value) ? serialize($value) : $value, \sceneId()));
+  $info = ray('type value test', $type, is_array($value) ? serialize($value) : $value, \sceneId());
+  return db\insert('test', $info);
 }
 
 /**

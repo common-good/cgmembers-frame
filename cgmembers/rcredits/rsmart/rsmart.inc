@@ -88,9 +88,8 @@ function pos($args = FALSE) {
   global $mya;
 
   if (!r\up()) return exitJust('system down'); // app does not (and should not) distinguish this from system failure
-  if (is_object($args)) $args = (array) $args; // this helps with debugging when passing json_decoded args
+  if (is_object($args)) $args = (array) $args; // this helps with debugging when passing u\dejsonized args
   if (is_string($args)) $args = urlq2ray($args); // convert from query string to array
-//  if (!$args) $args = t\POST(); else t\POST($args);
   if ($args) f('t.POST', $args); else $args = $_POST;
   $args0 = $args;
 //  $args = u\sanitizeInput($args0 = $args);
@@ -119,7 +118,7 @@ function pos($args = FALSE) {
  */
 function ok($args, $ok = "1") {
   if ($msg = nni($args, 'message')) $args['message'] = strip_tags($msg);
-  $result = u\jsonEncode(compact('ok') + $args);
+  $result = u\jsonize(compact('ok') + $args);
   if (key($args) != 'time') u\loga('out', $args); // avoid filling the log with time requests
   //{t\output($args, 'output'); 
   if (test()) return $result;
@@ -147,7 +146,7 @@ function smartTest($args) {
 
   if ($err = missingArg($keys = 'function testOnly args', $args)) return posErr($err); 
   extract(just($keys, $args));
-  $args = [json_decode($args)];
+  $args = [u\dejsonize($args)];
 
   require_once __DIR__ . '/rsmart.steps';
   $func = "\\$function";
@@ -580,11 +579,11 @@ function handleAppMsg($data0) {
   $appData = $mya->appData ?: [];
   if ($data0) {
     if ($getRay = !u\starts($get, '!delete:')) {
-      if (is_object($obj = json_decode($data0)) and $obj) {
+      if (is_object($obj = u\dejsonize($data0)) and $obj) {
         $data = (array) $obj;
         ksort($data);
 /*        if (is_array(array_shift($data))) {
-          foreach ($data as $k => $v) if (u\starts($v, '{') and $ray = json_decode($v)) $data[$v] = $ray;
+          foreach ($data as $k => $v) if (u\starts($v, '{') and $ray = u\dejsonize($v)) $data[$v] = $ray;
         } */
       } else $data = $data0;
         $dpy = pr($data);

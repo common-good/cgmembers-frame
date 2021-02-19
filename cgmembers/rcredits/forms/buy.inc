@@ -10,7 +10,7 @@ include_once __DIR__ . '/signin.inc';
 
 const AUTHCODE_TIMEOUT = 60 * 60; // number of seconds before authcode expires
 const CGPAY_FLDS = 'op company cocode code item amount credit suggestedItem suggestedAmount name account zip verb request api for for0 return cancel err confirm';
-const CGPAY_MAXLEN = 255; // maximum field length (to prevent bloating our tables) -- return and cancel have no limit
+const CGPAY_MAXLENGTH = 255; // maximum field length (to prevent bloating our tables) -- return and cancel have no limit
 
 // There are hooks here for a call from rDo(), with doCode being the encrypted code from rDo
 
@@ -36,7 +36,7 @@ function formBuy($form, &$sta, $doCode = '') {
 
   $args = just(CGPAY_FLDS, $args, NULL);
 
-  foreach (justNOT('return cancel', $args) as $k => $v) if (strlen($v) > CGPAY_MAXLEN) return apiErr(tr('field too long', 'field max', $k, CGPAY_MAXLEN));
+  foreach (justNOT('return cancel', $args) as $k => $v) if (strlen($v) > CGPAY_MAXLENGTH) return apiErr(tr('field too long', 'field max', $k, CGPAY_MAXLENGTH));
 
   $op = nni($args, 'op', 'charge'); // default to "charge"
   if ($op == 'authcode') return w\authcode($args); // eventually move authcode function to this file (check logs)
@@ -51,7 +51,7 @@ function formBuy($form, &$sta, $doCode = '') {
 function charge($args) {
   global $mya;
 
-  if ($err = missingArgs($args, 'company')) return $err;
+  if ($err = missingArgs($args, 'company')) apiErr($err);
   extract(just(CGPAY_FLDS, $args, NULL)); // use almost all parameters
   $co = getCo($company);
   
@@ -137,7 +137,7 @@ function charge($args) {
 
 //  $payment = item(t('%amount to %who', '_amount who', $amountDpy, $co->fullName ?: t('co')), "$verb:", '', $amtExtra);
   
-  $option = $a ? '' : t('OR <%a>signup</a>', '_a', atag('/signup'));
+  $option = $a ? '' : t('OR <%a>Sign up!</a>', '_a', atag('/signup'));
   $submit = submit($verb, '', 'md', w\suffix($option));
 
   $info = compact(ray('subtext amount amtDpy itemDpy for name pass item submit'));
@@ -212,7 +212,7 @@ function formBuy_submit($form, &$sta) {
   }
   
   if ($ok) {
-    if ($return == 'json') return exitJust(json_encode(ray('ok msg request', $ok ? 1 : 0, strip_tags($msg), $request ?: '')));
+    if ($return == 'json') return exitJust(u\jsonize(ray('ok msg request', $ok ? 1 : 0, strip_tags($msg), $request ?: '')));
     if (nn($return)) return w\goFar($return, "request=$request");
     return sayEmpty($msg); // default - standard success message page
   } else {
@@ -233,14 +233,6 @@ function buyErr($msg, $info) {
 }
 
 function fmtAcctId($s) {return trim(strhas($s, '@') ? mb_strtolower($s) : mb_strtoupper($s));}
-
-/**
- * Check for missing required parameters.
- */
-function missingArgs($args, $require) {
-  foreach (ray($require) as $k) if (empty($args[$k])) return apiErr(t('missing field', 'field', $k)); // handle interface errors gracefully
-  return FALSE;
-}
 
 /**/ function apiErr($s) {exitJust('CG API: ' . $s);} // give simple error messages for api interface errors
 
