@@ -171,8 +171,7 @@ function formSignup_submit($form, &$sta) {
     }
   }
 
-  $mya->signed = now();
-  $mya->signedBy = $mya->fullName;
+  $mya->update('signed, signedBy', now(), $mya->fullName);
   $mya->stepDone('agree');
   return w\goNextStep('signup');
 }

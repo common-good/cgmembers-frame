@@ -36,6 +36,9 @@ Scenario: A member signs up
   And we show "Identity Verification"
   And we say "status": "info saved|step completed"
   And member ".AAA" steps left "verifyid fund preferences verifyemail"
+  And members have:
+  | uid  | signed | signedBy |*
+  | .AAA | %today | Al Aargh |
 
 Scenario: A member verifies ID
   Given member ".ZZB" has "person" steps done: "signup agree"

@@ -139,6 +139,6 @@ X;
 
 function buttonHtml($a, $text, $for, $style) {
   $class = "cgpay-$for";
-  $code = w\code("company=$a->mainQid&secret=$a->emailCode&for=$for");
+  $code = w\code("account=$a->mainQid&secret=$a->emailCode&for=$for");
   return w\btn("/cgpay?code=$code", $text, $style, '', clas($class) + away());
 }
