@@ -80,6 +80,9 @@ Scenario: A company signs up
   And we say "status": "info saved|step completed"
   And we say "status": "refundable deposit"
   And member ".AAA" steps left "verifyemail fund contact backing photo donate company crumbs discount"
+  And members have:
+  | uid  | signed | signedBy |*
+  | .AAA | %today | Abe One  |
 
   Given member is logged out
   When member "?" visits page "settings/verifyemail/qid=NEWAAA-A&verify=1&code=WHATEVER"

@@ -1,3 +1,7 @@
+2021-02-20 feature/signed
+. fixed bug that left signed and signedBy fields unpopulated
+. fixed bug in co-list that used old pay-with-cg button instead of new cgpay button
+
 2021-02-18 feature/cgpay
 . redesigned and recoded cgpay so it can be a single step after designing on the cgbutton page
 . created jsonize and dejsonize to standardize the options (handling UTF8)
