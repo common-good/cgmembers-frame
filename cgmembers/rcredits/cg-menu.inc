@@ -94,6 +94,7 @@ function menu($submenu = '') {
     'co' => ['norm', t('Company'), 'Co', 'manage co'],
     'co/cgbutton' => ['sub', t('Create CGPay Button'), 'CGButton 1', 'manage', '', t(), 'unchecked'],
     'co/coupons' => ['sub', t('Discount / Gift Certificates'), 'Coupons 2', 'manage', '', t(), 'usd'],
+    'co/accredit' => ['sub', t('Give a Customer Credit'), 'Accredit', 'manage', '', t(), 'hand-right'],
     'co/relations' => ['sub', t('Authorized Users'), 'Relations 2', 'manage -depends', '', t(), 'magnet'],
     'co/reports' => ['sub', t('Company Reports'), 'Data 2 co', 'read co', '', t(), 'signal'],
     'co/settings' => ['sub', t('Company Settings'), 'Company 2', 'manage co -depends', '', t(), 'calendar'],

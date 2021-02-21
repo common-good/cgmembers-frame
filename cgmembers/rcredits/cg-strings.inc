@@ -213,7 +213,9 @@ EOF
   'tentative complete' => t('<h3>Your Account Setup Is Complete!</h3>Next, a staff member will approve your account.'),
   'ok partial' => t('<h3>You Completed the Minimum Setup</h3>You may now make purchases and accept payments online.'),
   'ok complete' => t('<h3>Your Account Setup Is Complete!</h3>'),
-  'to get a card' => t('Want to have a %PROJECT card for local purchases and be a voting member of your %PROJECT community? Click "Finish" in the Next Steps below.'),
+  'want a card' => t('Want a free %PROJECT card for local purchases and be a voting member of your %PROJECT community?'),
+  'get a card below' => t('Click "Finish" in the Next Steps below.'),
+  'finish get card' => t('To get your free %PROJECT card, sign in to your account at %CG_DOMAIN and click "Finish". Then complete the remaining steps one by one as they appear.'),
   'card soon' => t('Your %PROJECT card will arrive in the mail soon.'),
   'co complete' => t('Expect to receive your company %PROJECT card, a register sign, and some handout cards in the mail soon. You will need the card to set up your smartphone or tablet to start accepting payments in person through %PROJECT. Meanwhile, you can send and receive payments online beginning immediately.'),
   'join thanks' => t('Thank you for joining us!'),
@@ -280,6 +282,10 @@ EOF
   'acct deleted' => t('Your account has been deleted.'),
   'now closed' => t('Your account is closed.'),
   'return welcome' => t('You are welcome back any time.'),
+  'you got credit' => t('%name %action of %credit credit at %co.'),
+  'store grant' => t('%co gave you a credit of %amount.'),
+  'you gave credit' => t('You gave %nm %amount in store credit.'),
+  'to redeem' => t('To redeem your store credit, simply pay with your %PROJECT card. You get a 100% rebate automatically until your credit is used up.'),
   
   // error messages
   'scan co card first' => t('You must scan your own card to set up this device (your company card, for a company).'),
