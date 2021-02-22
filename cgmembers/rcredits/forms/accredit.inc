@@ -35,10 +35,10 @@ function formAccredit_submit($form, &$sta) {
   $msg = 'store grant|to redeem';
   if ($a->stepsLeft('card')) $msg .= '|want a card|finish get card';
   $amt = u\fmtAmt($amount);
-  $a->tell($msg, ray('co amount', $mya->fullName, $amt), t('You got credit!'));
+  $a->tellIn($msg, ray('co amount', $mya->fullName, $amt), t('You got credit!'));
 
   say($msg = 'you gave credit', $subs = ray('nm amount', $a->fullName, $amt));
-  $mya->tell($msg, $subs, t('You gave a customer credit')); // make sure management sees what credit the staff handed out
+  $mya->tellOut($msg, $subs, t('You gave a customer credit')); // make sure management sees what credit the staff handed out
   
   return w\go('dashboard');
 }

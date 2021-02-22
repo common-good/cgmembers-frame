@@ -215,7 +215,7 @@ EOF
   'ok complete' => t('<h3>Your Account Setup Is Complete!</h3>'),
   'want a card' => t('Want a free %PROJECT card for local purchases and be a voting member of your %PROJECT community?'),
   'get a card below' => t('Click "Finish" in the Next Steps below.'),
-  'finish get card' => t('To get your free %PROJECT card, sign in to your account at %CG_DOMAIN and click "Finish". Then complete the remaining steps one by one as they appear.'),
+  'finish get card' => t('<p>To get your free %PROJECT card, sign in to your account at %CG_DOMAIN and click "Finish". Then complete the remaining steps one by one as they appear.</p>'),
   'card soon' => t('Your %PROJECT card will arrive in the mail soon.'),
   'co complete' => t('Expect to receive your company %PROJECT card, a register sign, and some handout cards in the mail soon. You will need the card to set up your smartphone or tablet to start accepting payments in person through %PROJECT. Meanwhile, you can send and receive payments online beginning immediately.'),
   'join thanks' => t('Thank you for joining us!'),
