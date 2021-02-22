@@ -95,7 +95,7 @@ Scenario: A member verifies email
   And members:
   | uid  | flags       | task |*
   | .ZZB | member,ided |      |
-  And we say "status": "tentative partial|to get a card"
+  And we say "status": "tentative partial|want a card|get a card below"
 
 Scenario: A member clicks Finish
   Given member ".ZZB" has "person" steps done: "signup agree verifyid fund preferences verifyemail"

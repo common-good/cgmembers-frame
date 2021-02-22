@@ -41,5 +41,5 @@ function formModel_submit($form, &$sta) {
 
   $mya->update(compact('text'));
 
-  return w\go('');
+  return w\go('dashboard');
 }
