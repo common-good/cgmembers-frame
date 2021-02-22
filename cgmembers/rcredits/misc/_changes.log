@@ -1,3 +1,8 @@
+2021-02-21 feature/accredit
+. added an "accredit" page for companies to give a customer a credit
+. organized coupons menu page to separate giving from receiving
+. fixed a couple bugs that prevented store credit from showing up on discount/credit list for company or customer
+
 2021-02-20 feature/signed
 . fixed bug that left signed and signedBy fields unpopulated
 . fixed bug in co-list that used old pay-with-cg button instead of new cgpay button

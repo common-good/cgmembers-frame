@@ -7,7 +7,7 @@ use CG\Util as u;
 use CG\Db as db;
 
 /**
- * Print coupons for the account.
+ * Show coupons for the account.
  */
 function formCouponsList($form, &$sta, $args = '') {
   global $mya;
@@ -23,7 +23,7 @@ function formCouponsList($form, &$sta, $args = '') {
 
   $sql = <<< X
     SELECT * FROM tx_rules
-		WHERE `from`=:uid AND (action=:ACT_REDEEM OR `to`=:MATCH_PAYER)
+		WHERE IF(`from`=:MATCH_PAYEE, payee, `from`)=:uid AND (action=:ACT_REDEEM OR `to`=:MATCH_PAYER)
 		ORDER BY id DESC
 X;
   $q = db\q($sql, ray('uid', $mya->id));
@@ -38,6 +38,7 @@ X;
   		$start = u\fmtDate($start, TRUE);
   		$end = empty($end) ? t('indefinite') : u\fmtDate($end, TRUE);
 		} else {
+      if (!$purpose) $purpose = t('any purchase');
       $args = http_build_query(compact($fields, 'automatic'));
       if (!test()) $args = u\urlify($args);
       $args = 'print/' . $args;
@@ -79,20 +80,23 @@ function showDiscounts() {
 	$fields = ray('company amount on end for left amtLeft');
   $hdrs = u\tableRow(ray('Company,Discount,On,Ending,For,Uses&nbsp;Left,Amount&nbsp;Left'));
   $nearby = tr('%DISTANCE_BETWEEN<%NEIGHBOR_MAX');
-
   $payerCheck = u\genRuleSQL('payer', ':myid');
+  $anything = t('any purchase');
+  
   $sql = <<< X
-    SELECT `from` AS sponsor, `amount`, `portion`, `purpose` AS `on`, `end`, payerType, payer, useMax, uid, amtMax,
+    SELECT `from` AS sponsor, `amount`, `portion`, IF(`purpose`='', '$anything', `purpose`) AS `on`, `end`, payerType, payer, useMax, uid, amtMax,
+
     (SELECT IFNULL(SUM(e.amount), 0) FROM tx_entries e WHERE e.uid=:myid AND e.rule IS NOT NULL AND e.rule=ru.id) AS `amtUsed`,
     (SELECT IFNULL(SUM(SIGN(e.amount)), 0) FROM tx_entries e WHERE e.uid=:myid AND e.rule IS NOT NULL AND e.rule=ru.id) AS `used`
-    FROM tx_rules ru JOIN users u ON ru.from=u.uid
+
+    FROM tx_rules ru JOIN users u ON IF(ru.from=:MATCH_PAYEE, ru.payee, ru.from) = u.uid
     WHERE $payerCheck
     AND (u.community=:ctty OR $nearby)
-    AND (ru.action=:ACT_SURTX AND ru.to=:MATCH_PAYER)
+    AND (ru.action=:ACT_SURTX AND ru.to IN(:MATCH_PAYER, :myid))
     AND (ru.start <= :NOW AND IFNULL(:NOW < ru.end, TRUE))
 		ORDER BY end IS NOT NULL, end
 X;
-  $q = db\q($sql, $subs = ray('ctty state lat lon myid', $mya->community, $mya->state, $mya->latitude, $mya->longitude, $myid));
+  $q = db\q($sql, ray('ctty state lat lon myid', $mya->community, $mya->state, $mya->latitude, $mya->longitude, $myid));
 
   while ($row = $q->fetchAssoc()) {
     extract($row);
@@ -100,7 +104,7 @@ X;
 		$company = $a->bestName;
  		$end = $end ? u\fmtDate($end, TRUE) : '--';
     $left = $useMax > 0 ? t('%left of %useMax', 'left useMax', $useMax - $used, $useMax) : t('no limit');
-    $for = $payerType == REF_GROUP ? t('you+') : t('anyone');
+    $for = $payerType == REF_GROUP ? t('you+') : ($payerType == REF_ACCOUNT ? t('you') : t('anyone'));
     if ($amount != 0) {
       if($portion != 0) {
         $amount = u\fmtAmt($amount) . ' + ' . u\fmtAmt($portion*100, '%');

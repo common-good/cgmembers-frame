@@ -540,7 +540,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   }
   
   if ($goods != FOR_USD and $pot = $loserA->giftPot) $loserA->update('giftPot', max(0, $pot - $needed));
-  if (nn($for) and $for != 'other') advanceCredit($for, $loserA, $gainerA, $amount, $credit); // purchase/gift of store credit
+  if (nn($for) and $for != 'other') advanceCredit($for, $loserA, $gainerA, $credit ?: $amount); // purchase/gift of store credit
   
   unset($DBTX);
   
@@ -574,19 +574,23 @@ function txEntryPair(&$txes, $amount0, $a0, $description0, $entryType0, $rule = 
 
 /**
  * Create a personal credit for buyer or someone else, at the seller.
+ * @param string $for: SELF_CREDIT, SELF_CREDIT50, or qid of gift recipient
+ * @param acct $buyer: payer acct
+ * @param acct $seller: seller acct (where the recipient gets store credit)
+ * @param float $credit: amount of credit the recipient gets
  */
-function advanceCredit($for, $buyer, $seller, $amount, $credit) {
-  if ($neg = ($amount < 0)) $amount = -$amount;
+function advanceCredit($for, $buyer, $seller, $credit) {
+  if ($neg = ($credit < 0)) $credit = -$credit;
   
-  if (!in($for, [SELF_CREDIT, SELF_CREDIT50, 'credit'])) { // gift!
+  if (!in($for, [SELF_CREDIT, SELF_CREDIT50])) { // gift!
     $for = r\acct($for);
-    $for->tell(t('%name %action of %amount credit at %co. To redeem store credit you are given, simply pay with your %PROJECT card. Your account is credited automatically.'), ray('name action amount co', $buyer->fullName, $neg ? t('canceled your gift') : t('sent you a gift'), u\fmtAmt($amount), $seller->fullName), $neg ? t('Your gift is canceled') : t('You have received a gift through Common Good!'));
+    u\EXPECT($for, 'gift account does not exist');
+    $for->tell('you got credit|to redeem', ray('name action credit co', $buyer->fullName, $neg ? t('canceled your gift') : t('sent you a gift'), u\fmtAmt($credit), $seller->fullName), $neg ? t('Your gift is canceled') : t('You have received a gift through Common Good!'));
     $buyer = $for;
   }
   
   $portion = $for == SELF_CREDIT50 ? .5 : 1;
-  $amtMax = $credit ?: $amount;
-  $info = ray('action portion amtMax payerType payer payeeType payee from to', ACT_SURTX, $portion, $amtMax, REF_ACCOUNT, $buyer->id, REF_ACCOUNT, $seller->id, MATCH_PAYEE, MATCH_PAYER);
+  $info = ray('action portion amtMax payerType payer payeeType payee from to purpose', ACT_SURTX, $portion, $credit, REF_ACCOUNT, $buyer->id, REF_ACCOUNT, $seller->id, MATCH_PAYEE, MATCH_PAYER, t('any purchase'));
 
   if ($neg) { // undoing, so end the rule
     if ($id = db\get('id', 'tx_rules r', ['end' => NULL] + $info)) db\update('tx_rules', ray('id end', $id, now()) + $info, 'id');

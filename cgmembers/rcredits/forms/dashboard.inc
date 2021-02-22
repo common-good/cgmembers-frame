@@ -44,7 +44,7 @@ function formDashboard($form, &$sta, $args = '') {
       if ($mya->co) {
         say(tr('tentative complete|co complete'));
       } elseif ($mya->stepCount('card')) { // not eligible for card yet
-        say(tr('tentative partial|to get a card'));
+        say(tr('tentative partial|want a card|get a card below'));
       } else { say(tr('tentative complete|card soon')); }
     }
   }

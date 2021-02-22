@@ -17,7 +17,7 @@ function formCoupons($form, &$sta, $args = '') {
   
   jsx('coupons', 'minText', t('on your purchase of $%min or more'));
 
-  foreach (ray(COUPON_FLDS . ' buttons submit') as $k) $$k = NULL;
+  foreach (ray(COUPON_FLDS . ' midtext1 buttons1 midtext2 buttons2 submit') as $k) $$k = NULL;
   extract(just('type amount', $args, ''));
 
   switch ($type) {
@@ -63,18 +63,24 @@ X
     break;
   default:
     $title = t('Discounts and Gift Certificates');
-    $subtext = t('<p>A <b>Discount</b> applies only at your business. If the minimum purchase amount equals the discount amount, it is equivalent to a traditional gift certificate.</p><p>A <b>General Gift Certificate</b> is redeemable at any %PROJECT business.</p>');
-    $buttons[] = lnk('/community/coupons/type=discount', t('Create a Discount'));
-    $buttons[] = lnk('/community/coupons/type=gift', t('Create a General Gift Certificate'));
-    $buttons[] = lnk('/community/coupons/type=redeem', t('Redeem a General Gift Certificate'));
-    $buttons[] = lnk('/community/coupons/list', t('List Discounts You Offer'));
-    $buttons[] = lnk('/community/coupons/list/ALL', t('Show All Discounts Available to You'));
-    $buttons = item(u\ul($buttons));
+    $subtext = t('<p>A <i>Discount</i> applies only at one business. If the minimum purchase amount equals the discount amount, it is equivalent to a traditional gift certificate.</p><p>A <i>General Gift Certificate</i> is redeemable at any %PROJECT business.</p>');
+    
+    $midtext1 = t('<b>Offering Discounts and Credit</b>');
+    $buttons1[] = lnk('/community/coupons/type=discount', t('Create a Discount'));
+    $buttons1[] = lnk('/community/coupons/type=gift', t('Create a General Gift Certificate'));
+    $buttons1[] = lnk('/co/accredit', t('Give a Customer Credit'));
+    $buttons1[] = lnk('/community/coupons/list', t('List Discounts You Offer'));
+    $buttons1 = item(u\ul($buttons1));
+
+    $midtext2 = t('<b>Getting Discounts and Credit</b>');
+    $buttons2[] = lnk('/community/coupons/type=redeem', t('Redeem a General Gift Certificate'));
+    $buttons2[] = lnk('/community/coupons/list/ALL', t('Show All Discounts and Credits Available to You'));
+    $buttons2 = item(u\ul($buttons2));
   }
   
   $type = hidFld($type);
   
-  return cgform(compact(ray('title subtext buttons ' . COUPON_FLDS . ' submit')));
+  return cgform(compact(ray('title subtext midtext1 buttons1 midtext2 buttons2 ' . COUPON_FLDS . ' submit')));
 }
 
 function formCoupons_validate($form, &$sta) {

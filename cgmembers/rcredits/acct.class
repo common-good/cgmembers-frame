@@ -830,7 +830,7 @@ EOF;
     if (nni($GLOBALS['emailSubjects'], $index)) return r\rMail($index, $this, $subs, nni($subs, 'reply') ?: 'ctty');
 
     // not sending an email right now; queue a notice or send immediately, as appropriate to type
-    $message = t($index, $subs);
+    $message = tr($index, $subs);
     $created = now();
     f('t.output', t('Actual Notice to %fullName: %message', 'fullName message', $a->fullName, $message));
     if ($type) {
@@ -1025,7 +1025,7 @@ EOF;
         r\activate($a, $a->helper ?: 0);
       }
       if ($a->ok) { // account needs no approval (accounts needing approval get a persistent message on the dashboard)
-        $msg2 = $a->co ? 'ok complete|co complete' : ($cardTask ? 'ok complete|card soon' : 'ok partial|to get a card');
+        $msg2 = $a->co ? 'ok complete|co complete' : ($cardTask ? 'ok complete|card soon' : 'ok partial|want a card|get a card below');
 //'individual approval';
         u\joins($msg, '|', "$msg2|join thanks"); // show on display, not on done
         $a->update('stepsLeft task', '', ''); // mark task complete
