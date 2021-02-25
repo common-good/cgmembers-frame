@@ -1,3 +1,7 @@
+2021-02-25 feature/cred-link
+. added a link to credits and discounts on dashboard
+. mentioned this in the email to the member who gets a credit
+
 2021-02-25 feature/1099-nec
 . added 1099-NEC functionality
 . fixed jsonize bugs (from cgpay feature), including u\getLocus bug
