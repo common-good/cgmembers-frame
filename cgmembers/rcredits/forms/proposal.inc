@@ -20,7 +20,7 @@ function formProposal($form, &$sta, $args = '') {
   global $base_url, $mya;
 	
   extract(just('ctty', $args, NULL));
-	if (!$ctty or !$cttyA = r\acct($ctty)) return w\go(''); // don't even bother with an error message if no ctty
+	if (!$ctty or !$cttyA = r\acct($ctty)) return w\go('dashboard'); // don't even bother with an error message if no ctty
 	list ($ctty, $cttyName) = [$cttyA->id, $cttyA->fullName];
 	list ($cttyEmail, $cttyPhone) = [$cttyA->email, u\fmtPhone($cttyA->phone)];
   

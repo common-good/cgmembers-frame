@@ -146,5 +146,5 @@ function formFood_submit($form, &$sta) {
   r\tellCAdmin(t('Food Fund gift from %nm: %%food, $%amount/%period', 'nm food amount period', $mya->fullName, $food, $amount, $period));
 
   say(t('Thank you for supporting the Food Fund.'));
-  return r\acct() ? ($mya->member ? w\go('') : w\goNextStep('food', '')) : w\doSay();
+  return r\acct() ? ($mya->member ? w\go('dashboard') : w\goNextStep('food', '')) : w\doSay();
 }

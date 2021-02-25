@@ -33,7 +33,7 @@ function formSignup($form, &$sta, $args = '') {
   if (nn($reid)) return softErr('old partner link');
 
   if (nn($joint) and $mya and $mya->canManage) {
-    if (!$mya->co) $myid = w\jointSignup(); else return w\go('', t('A company cannot have a joint account.'), 'err');
+    if (!$mya->co) $myid = w\jointSignup(); else return w\softErr(t('A company cannot have a joint account.'));
   }
     
   if ($mya) signout(TRUE); // must come after jointSignup

@@ -18,7 +18,7 @@ function statement($period = '') {
   global $mya;
   $purposeLenMax = 60; // maximum number of characters in purpose field, not including added "..."
 
-  if (!$mya) return w\go('', t('You must first sign in.'), 'ERR');
+  if (!$mya) return w\softErr(t('You must first sign in.'));
 
   list ($start, $end, $period) = statementMonth($period, $mya->fyEnd ?: '12/31');
 

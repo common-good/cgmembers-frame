@@ -22,7 +22,7 @@ function formQuestion($form, &$sta, $args = '') {
   if (!$add = empty($qid)) {
     $fields = 'e.id AS eid, e.ctty, q.text, q.detail, q.linkDiscussion, q.type, q.units, q.budget, q.optOrder';
     if (is_numeric($qid) and $question = db\get($fields, 'r_questions q LEFT JOIN r_events e ON e.id=q.event', 'q.id=:qid', compact('qid'))) extract($question); else $add = FALSE;
-    if ($ctty != $mya->community) return w\go('', t('Wrong community.'));
+    if ($ctty != $mya->community) return w\softErr(t('Wrong community.'));
 
     $id = hidFld($qid);
     $q = db\q('SELECT id AS oid,text,detail FROM r_options WHERE question=:qid ORDER BY id', compact('qid'));
@@ -46,7 +46,7 @@ function formQuestion($form, &$sta, $args = '') {
       $row = $q->fetchAssoc();
       $list = tr($button0, 'text oid', t('Edit Details'), $row['oid']);
     }
-  } elseif (empty($eid)) return w\go('', t('Missing event id.'));
+  } elseif (empty($eid)) return w\softErr(t('Missing event id.'));
 
   $title = item($add ? t('Add Question') : t('Edit Question'));
   $event = hidFld($eid);

@@ -40,5 +40,5 @@ function formPrejoin_submit($form, &$sta) {
   if (!$old) return w\go('/signup/joint=1');
 
   $msg = r\setJoin([$mya->id, $account], TRUE);
-  return w\go('', $msg);
+  return w\go('dashboard', $msg);
 }

@@ -18,7 +18,7 @@ include_once __DIR__ . '/../statement.class';
 function custStatement($args = []) {
   $purposeLenMax = 60; // maximum number of characters in purpose field, not including added "..."
 
-  if (!$mya = r\acct()) return w\go('', t('You must first sign in.'), 'ERR');
+  if (!$mya = r\acct()) return w\softErr(t('You must first sign in.'));
   extract(just('cust period way', $args, [NULL, NULL, 'OUT']));
 
   $a = is_null($cust) ? null : r\acct($cust);

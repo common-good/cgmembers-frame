@@ -1124,12 +1124,12 @@ function getLocus($q, $city = '', $state = '', $zip = '') {
     $res = @file_get_contents($url = GEOCODE_URL . http_build_query($params));
   } catch (\Exception $e) { }
   
-  if (!nn($res) or !$res = u\dejsonize($res, FALSE)) {
-    r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)));
+  if (!nn($res) or !$res = u\dejsonize($res, FALSE) or !is_object($res)) {
+    r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)), compact('res'));
     return $none;
   }
 
-  foreach ($res->results as $one) if (nni($one->components, 'country_code') == 'us') {
+  foreach (nn($res->results, []) as $one) if (nni($one->components, 'country_code') == 'us') {
     $i = $one->confidence; // confidence is actually specificity. Be as specific as possible.
     if (in($one->components->_category, 'building place transportation postcode') 
       and nn($one->components->postcode)

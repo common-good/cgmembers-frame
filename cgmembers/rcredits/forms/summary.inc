@@ -134,7 +134,7 @@ function formSummary_submit($form, &$sta) {
   $op = op($sta);
 
   if (!$mya->admin2) return; // hack attempt
-  if ($op == 'secureMsgs') return w\go('', showSecureMessages());
+  if ($op == 'secureMsgs') return w\go('dashboard', showSecureMessages());
 
   extract($args = just('uid who legalName creditLimit tickle note notes dob altId altSt helper moves active risks adminable', $sta['input'], NULL));
   if (!$mya->cAdmin) u\EXPECT(!array_diff(array_keys($args), ray('uid tickle note')), 'too many unpermitted changing fields in ' . pr($args));

@@ -300,9 +300,9 @@ function formSystemDown($form, &$sta) {return array('zot' => item(t('system down
  * Pay or charge a nonmember (continued from Charge page)
  */
 function formTxNonmember($form, &$sta, $args = '') {
-  if (!$args or !$info = unserialize(u\deurlify($args))) return w\go('', t('Url Error'), 'err');
+  if (!$args or !$info = unserialize(u\deurlify($args))) return w\softErr(t('Url Error'));
   extract($info = just('who amount goods purpose', $info));
-  if (count($info) != 4) return w\go('', t('Url Error'), 'err');
+  if (count($info) != 4) return w\softErr(t('Url Error'));
   
   $title = t('Invoice a Non-member');
   $subtext = t('Sending an invoice to %email (%amount for %purpose)', 'email amount purpose', $who, u\fmtAmt($amount), $purpose);
@@ -349,7 +349,7 @@ function authcode($args = '', $exit = TRUE) {
  * Certify that a business is indeed a Common Good participant.
  */
 function formCgBiz($form, &$sta, $id) {
-  if (!nn($id) or !$a = r\acct(strtoupper($id)) or !$a->ok) return w\go('', t('That is not a %PROJECT Business.'));
+  if (!nn($id) or !$a = r\acct(strtoupper($id)) or !$a->ok) return w\softErr(t('That is not a %PROJECT Business.'));
   w\go('member/' . $a->name, t('<big><b>%fullName</b> is a %PROJECT Business since %activated.</big> For more information about %PROJECT, <%a>click here</a>.', 'fullName activated _a', $a->fullName, u\fmtDate($a->activated), atag(r\promoLink(''))));
 }
 
