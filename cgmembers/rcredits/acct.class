@@ -1559,11 +1559,8 @@ X;
     if (!is_null($lat)) return $a->update('latitude longitude', $lat, $lon);
     
     list ($lat, $lon, $zip) = u\getLocus($a->address, $a->city, $a->state, $a->zip);
-    
-    if (!$lat and !$lon) {
-      $a->setRisk('addrOff');
-      return r\tellAdmin(t('setLocus <%a>returned</a> no match', '_a', w\atag($url)));
-    } else $a->setLocus($lat, $lon);
+    if ($ok = ($lat or $lon)) $a->setLocus($lat, $lon);
+    $a->setRisk('addrOff', !$ok);
   }    
    
   /**
@@ -1737,7 +1734,7 @@ X;
 
     $xml = simplexml_load_string($ssnData0);
     $json = u\jsonize($xml);
-    $ssnData = u\dejsonize($json, TRUE);
+    $ssnData = u\dejsonize($json);
     if (!is_array($d = $ssnData['searchResults']) or $ssnData['ResultCount'] + 0 <= 0) { // 0 for tests, <=0 for failure
       return $a->ssnErr(t('No SSN data available: ') . pr($ssnData0));
     }
@@ -1759,9 +1756,9 @@ X;
       $Ls[] = mb_strtolower($L);
       if (mb_strlen($F) > 1) $Fs[] = mb_strtolower($F);
       if ($M) foreach (explode(' ', mb_strtolower($M)) as $F) {
-          if (mb_strlen($F) > 1) $Fs[] = $F;
-        }
-      if (nn($one->dob)) $DOBs[] = strtotime($one->dob);
+        if (mb_strlen($F) > 1) $Fs[] = $F;
+      }
+      if ($dob = nni($one, 'dob')) $DOBs[] = strtotime($dob);
     }
     
     if (!array_intersect([$last1, $last2], $Ls)) return $a->ssnErr(t('Last name does not match.'), $ssnData);

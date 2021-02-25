@@ -1,3 +1,9 @@
+2021-02-25 feature/1099-nec
+. added 1099-NEC functionality
+. fixed jsonize bugs (from cgpay feature), including u\getLocus bug
+. fixed partnerErr reporting
+. fixed tellAdmin on cross-site ajax
+
 2021-02-21 feature/accredit
 . added an "accredit" page for companies to give a customer a credit
 . organized coupons menu page to separate giving from receiving

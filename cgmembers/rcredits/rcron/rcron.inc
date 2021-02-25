@@ -469,7 +469,6 @@ function annualSql($func, $amtFld, $dtFld, $join = '', $where = '1') {
 		WHERE u.:IS_OK AND u.uid>0 AND u.uid NOT :CANONIC AND $where
     HAVING TIMESTAMPDIFF(YEAR, base, target) > TIMESTAMPDIFF(YEAR, base, beforeTarget)
 X;
-  // activated is for testing, even though redundant with IS_OK (NO, fix the test)
 }
 
 /**

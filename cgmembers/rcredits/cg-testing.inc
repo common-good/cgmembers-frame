@@ -971,7 +971,7 @@ function hitServer($op, $info = [], $agent, $device = '', $version = 230) {
   foreach (ray('op agent device version amount member proof goods') as $k) if (isset($$k)) $info[$k] = $$k;
   t\output('request: ' . pr($info), 'input'); // keep this
   $rposResult = r\Smart\pos($info);
-  if ($op != 'photo') $rposResult = (array) u\dejsonize($rposResult);
+  if ($op != 'photo') $rposResult = u\dejsonize($rposResult);
   t\output('answer: ' . pr($rposResult), 'output');
   return TRUE;
 }
@@ -1829,7 +1829,7 @@ function hitAPI($op, $userId, $password, $requests) {
   $request = u\jsonize(compact(ray('op userId password requests')));
   w\api(compact('request'));
   if (!$result_json = getExitMsg()) return FALSE;
-  $rAPIResult = (array) u\dejsonize($result_json);
+  $rAPIResult = u\dejsonize($result_json);
   return TRUE;
 }
 
