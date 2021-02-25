@@ -79,8 +79,8 @@ function formDashboard($form, &$sta, $args = '') {
   $buttons = item($pay . $charge . $bank);
 
   $balance = u\fmtAmt($mya->balance);
-  $balanceDesc = $mya->activated ? t(' <small>(see <%a>History</a>)</small>', '_a', atag('/history')) : '';
-  $balance = item($balance . $balanceDesc, t('Balance:'));
+  $balance .= t('| &mdash; <%aHist>History</a> | <%aCred>Credits & Discounts</a>', '_aHist _aCred', atag('/history'), atag('/community/coupons/list/ALL'));
+  $balance = item($balance, t('Balance:'));
 
   if (!$mya->isCtty) { // unless this is a community or region account
     $suffix = ($mya->debt or $mya->depends or !$mya->refill) ? '' : t(' (<%a>Click here</a> to let your balance go negative.)', '_a', 'a id="activate-credit"');
