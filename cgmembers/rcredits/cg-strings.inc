@@ -285,7 +285,7 @@ EOF
   'you got credit' => t('%name %action of %credit credit at %co.'),
   'store grant' => t('%co gave you a credit of %amount.'),
   'you gave credit' => t('You gave %nm %amount in store credit.'),
-  'to redeem' => t('To redeem your store credit, simply pay with your %PROJECT card. You get a 100% rebate automatically until your credit is used up.'),
+  'to redeem' => t('To redeem your store credit, simply pay with your %PROJECT card. You get a 100% rebate automatically until your credit is used up. To see your credits and discounts, sign in at %CG_DOMAIN and click "Credits & Discounts".'),
   
   // error messages
   'scan co card first' => t('You must scan your own card to set up this device (your company card, for a company).'),
