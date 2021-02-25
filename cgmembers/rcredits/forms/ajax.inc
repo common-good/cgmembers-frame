@@ -18,8 +18,8 @@ function ajax() {
   global $channel; $channel = TX_AJAX; // tell log and tellAdmin our environment
   extract(just('op sid data', $args = $_POST ?: $_GET, NULL));
   if (nn($_SERVER['HTTP_X_REQUESTED_WITH']) != 'XMLHttpRequest') {
-    return ajaxErr('cross-site'); 
     r\tellAdmin('ajax cross-site', $args + $_SERVER);
+    return ajaxErr('cross-site'); 
   }
 
   header('Content-Type: application/json');

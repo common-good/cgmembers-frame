@@ -325,7 +325,7 @@ function gotSolarOne($info) {
   global $mya, $pagePartner, $solarOneInfo; // $solarOneInfo is for error handling
 
   $keys = 'smtid pid co fullName orgName address city state zip email phone m_number source';
-  /*debug(*/ if (isDEV or (!is_array($info) and $info == 1)) $info = bin2hex(http_build_query(ray($keys, '654321', 'NEWAIL', 0, 'Jane Dough', '', '10 J St.', 'Jville', 'NY', '10101', 'wspademan+j@gmail.com', '(212) 222-1111', rand(1000, 9999), 'sunset')));
+  /*debug(*/ if (isDEV and !is_array($info) and $info == 1) $info = bin2hex(http_build_query(ray($keys, '654321', 'NEWAIL', 0, 'Jane Dough', '', '10 J St.', 'Jville', 'NY', '10101', 'wspademan+j@gmail.com', '(212) 222-1111', rand(1000, 9999), 'sunset')));
   
   signout(TRUE); // current account is irrelevant and could be confusing, so sign out
   if (!$info = hex2bin($info)) return solarOneErr('bad solar1 encoding', '(system)');
@@ -520,7 +520,7 @@ function tellPartner($pA, $info, $flnms) {
 function partnerErr($msg, $k) {
   global $solarOneInfo;
   $subs = compact('msg', 'k');
-  r\tellAdmin(t('partner signup: %msg (field %k)', $subs), $_POST + $_SERVER + nn($solarOneInfo, []));
+  r\tellAdmin(t('partner signup: %msg (field %k)', $subs), $_POST + $_SERVER + urlq2ray(nn($solarOneInfo)));
   return w\softErr(t('<h2>Drat.</h2><p>There was a problem with the data you submitted (field %k) -- %msg</p><p>%PROJECT is looking into the problem and we will contact you with instructions for continuing.</p><p>We apologize for the delay.</p>', $subs)); // fix double spaces and leading or trailing
 }
 

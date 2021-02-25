@@ -138,9 +138,12 @@ const SVAR_HEADER = 'rcredits_'; // session variable header
 const TEST_PDF_FLNM = 'testOutput.pdf'; // pdf output during testing
 const QR_DOMS = 'RC4.ME RC2.ME'; // domains that redirect to staging and production, respectively (for QR codes)
 
-const TEN99MISC = 'A'; // code for 1099-MISC
+const TEN99AMTS = 'B:7, MC:12456789ABCDEFG, A:7, NE:1, R:12'; // amount codes used for various 1099s
+const TEN99MISC = 'A'; // code for 1099-MISC (these codes are dictated by the IRS in Publication 1220
 const TEN99B = 'B'; // code for 1099-B
 const TEN99K = 'MC'; // code for 1099-K
+const TEN99NEC = 'NE'; // code for 1099-NEC
+const TEN99R = 'R'; // code for 1099-R
 const MINIMA1099 = 'X:20000/200, MA:600/1, VT:600.01/1'; // no 1099-K for gross/txCount under this amount (by state)
 const MINIMA1099MAVT = 600; // 1099K minimum in MA and VT (for display)
 

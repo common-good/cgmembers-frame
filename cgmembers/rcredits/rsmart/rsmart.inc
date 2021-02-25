@@ -88,7 +88,7 @@ function pos($args = FALSE) {
   global $mya;
 
   if (!r\up()) return exitJust('system down'); // app does not (and should not) distinguish this from system failure
-  if (is_object($args)) $args = (array) $args; // this helps with debugging when passing u\dejsonized args
+  if (is_object($args)) $args = (array) $args; // this helps with debugging when passing object args
   if (is_string($args)) $args = urlq2ray($args); // convert from query string to array
   if ($args) f('t.POST', $args); else $args = $_POST;
   $args0 = $args;
@@ -579,12 +579,8 @@ function handleAppMsg($data0) {
   $appData = $mya->appData ?: [];
   if ($data0) {
     if ($getRay = !u\starts($get, '!delete:')) {
-      if (is_object($obj = u\dejsonize($data0)) and $obj) {
-        $data = (array) $obj;
+      if (is_array($data = u\dejsonize($data0))) {
         ksort($data);
-/*        if (is_array(array_shift($data))) {
-          foreach ($data as $k => $v) if (u\starts($v, '{') and $ray = u\dejsonize($v)) $data[$v] = $ray;
-        } */
       } else $data = $data0;
         $dpy = pr($data);
     } else list ($data, $dpy) = [$data0, str_replace("'", "\\'", str_replace('\\"', '"', $data0))];

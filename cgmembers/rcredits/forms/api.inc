@@ -33,7 +33,7 @@ function api($args = null) {
   global $mya;
   global $channel; $channel = TX_API;
 
-  $data = (array) u\dejsonize(nni($args ?: $_GET, 'request'));
+  $data = u\dejsonize(nni($args ?: $_GET, 'request'));
   extract(just('op userId password requests', $data, NULL));
   $mya = r\acct($userId);
   if (!$mya or !$mya->co or $password != $mya->emailCode) {

@@ -9,7 +9,7 @@ Setup:
   | .ZZA | Abe One    | ok        | a@    | %NOTICE_DFTS |
   | .ZZB | Bea Two    | member,ok | b@    | offer:d,need:d,tip:w,in:m,out:d,misc:w |
   | .ZZC | Corner Pub | co,ok     | c@    | %NOTICE_DFTS |
-  And community email for member ".ZZA" is "%whatever@rCredits.org"
+  And community email for member ".ZZA" is "%whatever@commongood.earth"
 
 Scenario: a weekly notice member doesn't get notices on other days
   Given notices:
@@ -21,6 +21,7 @@ Scenario: a weekly notice member doesn't get notices on other days
   | uid  | created | sent   | message    |*
   | .ZZB | %today  | %today | You stone. |
   
+# This test (and the next) fails near the end of February in or after a leap year (yearAgo+7d <> now+7d-1y)
 Scenario: It's time to warn about an upcoming annual donation to CG
   Given members:
   | uid  | fullName | flags  | bankAccount        | activated   |*

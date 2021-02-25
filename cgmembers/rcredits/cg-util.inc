@@ -784,10 +784,12 @@ function decryRay($code) {
   if ($code == 'TESTDOCODE') $code = t\doCode(); // test()
 
   try {$res = u\dery('P', $code);}
-  catch (\BadCry $e) {return '';}
+  catch (\BadCry $e) {return NULL;}
 
-  try {return u\dejsonize($res) ?: unserialize($res);}
-  catch (\Exception $e) {return '';}
+  try {$res = u\dejsonize($res) ?: unserialize($res);}
+  catch (\Exception $e) {return NULL;}
+  
+  return is_array($res) ? $res : NULL;
 }
 
 /**
@@ -1122,13 +1124,12 @@ function getLocus($q, $city = '', $state = '', $zip = '') {
     $res = @file_get_contents($url = GEOCODE_URL . http_build_query($params));
   } catch (\Exception $e) { }
   
-  if (!nn($res)) {
+  if (!nn($res) or !$res = u\dejsonize($res, FALSE)) {
     r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)));
     return $none;
   }
-  $res = u\dejsonize($res);
 
-  foreach (nn($res->results, []) as $one) if (nni($one->components, 'country_code') == 'us') {
+  foreach ($res->results as $one) if (nni($one->components, 'country_code') == 'us') {
     $i = $one->confidence; // confidence is actually specificity. Be as specific as possible.
     if (in($one->components->_category, 'building place transportation postcode') 
       and nn($one->components->postcode)
