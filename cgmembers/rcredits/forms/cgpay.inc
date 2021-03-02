@@ -48,9 +48,6 @@ function formCGPay($form, &$sta) {
     $amount = numFld("$verb:", '', dft($s_amount ? u\ddddcc($s_amount) : '') + suffix($suffix) + clas('middle'));
   }
 
-  u\setDft($s_name, t('%PROJECT Member'));
-  $subtext = t('<h4>Hello %s_name!</h4>', compact('s_name'));
-
   if ($mya and $mya->proSe) {
     $name = $pass = NULL;
   } else {
@@ -85,10 +82,12 @@ function formCGPay($form, &$sta) {
     }
   } else u\FAIL(t('The "for" parameter must be credit, gift, donate, or other -- not "%for"', compact('for')));
 
-  $option = $s_name ? '' : t('OR <%a>Sign up!</a>', '_a', atag('/signup'));
+  $option = nn($s_name) ? '' : t('OR <big><%a>Sign up!</a></big>', '_a', atag('/signup'));
   $submit = submit($verb, '', 'md', w\suffix($option));
+  u\setDft($s_name, t('%PROJECT Member'));
+  $subtext = t('<h4>Hello %s_name!</h4>', compact('s_name'));
 
-  $info = compact(ray('subtext amount amtDpy itemDpy for name pass item submit'));
+  $info = compact(ray('subtext amount amtDpy itemDpy item for name pass submit'));
   foreach (ray(CGPAY_VARS) as $k) if (isset($$k) and !is_array($$k)) $info[$k] = hidFld($$k);
 
   return cgform($info);

@@ -1,3 +1,8 @@
+2021-03-02 feature/cgpay-bugs
+. bug fix: in button creator, changing link text now works
+. fixed order of fields in cgpay form
+. bug fix: sign up button now shows on cgpay form
+
 2021-03-01 feature/1099-again
 . refactored 1099s
 . fixed a couple little bugs
