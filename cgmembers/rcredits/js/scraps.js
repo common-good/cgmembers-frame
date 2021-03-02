@@ -229,7 +229,7 @@ function doit(what, vs) {
     $('#edit-item').focus();
     $('.form-item-button input').click(function () {cgbutton();});
     $('#edit-size').change(function () {cgbutton();});
-    $('#edit-item, #edit-amount, #edit-credit').change(function () {getCGPayCode();});
+    $('#edit-item, #edit-amount, #edit-credit, #edit-text').change(function () {getCGPayCode();});
     $('.form-item-for input').click(function () {
       var fer = $(this).val();
       var credit = (fer < 2);

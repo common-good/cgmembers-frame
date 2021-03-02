@@ -159,6 +159,7 @@ function relations($relations) {return t\relations($relations);}
  *     TEST bank MembersBankAccountHasNotBeenVerified
  *     TEST bank AMemberAccountNeedsMoreFundingWhileNotYetVerifiedAndSomethingIsCombinable
  *     MAKE cashout Setup
+ *     MAKE daily AMemberHasABigDay
  *     MAKE gifts Setup
  *     TEST gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     BOTH gifts ASecondRecurringDonationToCGCanBeCompleted
@@ -637,6 +638,7 @@ function riskThresholdPercentIs($pct) {
  *     MAKE cashout AMemberCompanyCashesOutWeekly
  *     MAKE communitybits CommunityBansSpendingBelowZero
  *     MAKE daily GeopositionGetsCalculated
+ *     MAKE daily AMemberHasABigDay
  *     MAKE gifts ABrandNewRecurringDonationToCGCanBeCompleted
  *     MAKE gifts ASecondRecurringDonationToCGCanBeCompleted
  *     MAKE gifts ADonationInvoicetoCGCanBeCompleted
@@ -716,3 +718,10 @@ function notThese($things, $list) {return !t\these($things, $list);}
  * in: TEST risk WeCalculateRisks
  */
 function memberHasRisks($id, $risks) {return t\memberHasRisks($id, $risks);}
+
+/**
+ * we tell admin (ARG) with ray: (ARG)
+ *
+ * in: TEST daily AMemberHasABigDay
+ */
+function weTellAdminWithRay($topic, $ray) {return t\weTellAdmin($topic, ['list' => $ray]);}

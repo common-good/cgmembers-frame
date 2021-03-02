@@ -1,3 +1,19 @@
+2021-03-02 feature/cgpay-bugs
+. bug fix: in button creator, changing link text now works
+. fixed order of fields in cgpay form
+. bug fix: sign up button now shows on cgpay form
+
+2021-03-01 feature/1099-again
+. refactored 1099s
+. fixed a couple little bugs
+. admin gets a daily email with transaction totals over $1,000
+. co phone orders now include company name!
+
+2021-02-25 feature/go-dft
+. bug fix: changed all go('') to either softErr or go('dashboard')
+. bug fix: null object in u\getLocus()
+. bug fix: (finally!) root goes to signin
+
 2021-02-25 feature/cred-link
 . added a link to credits and discounts on dashboard
 . mentioned this in the email to the member who gets a credit

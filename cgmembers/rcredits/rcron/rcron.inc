@@ -35,7 +35,7 @@ YEARLY
  */
 
 // Calculate risks twice, to take into account connections with scoundrels
-const DAILY_OPS = 'START checkAccts setNear cttyStats trust acctRisk acctRiskFinish txRisk tickle annualGift renewBacking lessOften recurs getFunds invoices invest notices END';
+const DAILY_OPS = 'START checkAccts setNear cttyStats trust acctRisk acctRiskFinish txRisk biggies tickle annualGift renewBacking lessOften recurs getFunds invoices invest notices END';
 const LOGLESS_OPS = 'acctHourly checkAcct whatsUp tickleStep activeWeekly activeMonthly recur'; // don't log these calls
 const POST_DETAIL_MAXLEN = 256; // maximum number of characters to show in post detail
 include_once __DIR__ . '/rcron-subs.inc';
@@ -199,7 +199,6 @@ X;
   
   if ($xid = db\get('xid', '(SELECT xid,SUM(amount) AS amt FROM tx_entries GROUP BY xid) t', 'amt<>0')) tellAdmin(t('Not all transactions have entries totaling zero (eg xid=%xid).', compact('xid')));
 
-//  $where = "RIGHT(fullName, 8)=' PARTNER' COLLATE utf8_bin AND pass='' AND NOT :IS_CO AND activated=0";
   $where = "BINARY RIGHT(fullName, 8)=' PARTNER' AND pass IS NULL AND NOT :IS_CO AND activated=0";
   eachA(function ($a) { // acts weird; do this last
     if ($jA = $a->jA and $jA->jid == $a->id) $jA->update('jid', 0);
@@ -820,6 +819,24 @@ X;
   for ($i = 0, $weight = 1; $i < 32; $i++, $weight /= 2) db\q($sql, compact('weight'));
   if (test()) db\q('UPDATE users SET trust=ROUND(trust, 2)'); // make the results easily testable
   queueNext();
+}
+
+/**
+ * Report on individual members or member businesses that have large activity over the past day (definitely > $3k)
+ */
+function biggies() {
+  $admin = t('Consider whether any of these high totals reflect money laundering.'); // appears as "admin: ..."
+  $start = strtotime('yesterday');
+  $end = today() - 1;
+  $sql = <<<X
+    SELECT fullName, SUM(ABS(amount)) AS total 
+    FROM tx_entries JOIN users USING (uid) JOIN tx_hdrs h USING (xid)
+    WHERE h.created BETWEEN $start AND $end
+    GROUP BY uid
+    HAVING total>1000
+    ORDER BY total DESC
+X;
+  if ($list = db\q($sql)->fetchAllKeyed()) r\tellAdmin(t('Big Transfers on ') . u\fmtDate(), compact(ray('admin list')));
 }
 
 /**

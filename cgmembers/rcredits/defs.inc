@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.57a'; // software version
+const R_VERSION = '3.57b'; // software version
 define('R_ROOT', __DIR__);
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -138,12 +138,8 @@ const SVAR_HEADER = 'rcredits_'; // session variable header
 const TEST_PDF_FLNM = 'testOutput.pdf'; // pdf output during testing
 const QR_DOMS = 'RC4.ME RC2.ME'; // domains that redirect to staging and production, respectively (for QR codes)
 
-const TEN99AMTS = 'B:7, MC:12456789ABCDEFG, A:7, NE:1, R:12'; // amount codes used for various 1099s
-const TEN99MISC = 'A'; // code for 1099-MISC (these codes are dictated by the IRS in Publication 1220
-const TEN99B = 'B'; // code for 1099-B
-const TEN99K = 'MC'; // code for 1099-K
-const TEN99NEC = 'NE'; // code for 1099-NEC
-const TEN99R = 'R'; // code for 1099-R
+const TEN99TYPES = 'B:B, K:MC, MISC:A, NEC:NE, R:9'; // IRS aliases dictated in Publication 1220
+const TEN99AMTS = 'B:7, K:12456789ABCDEFG, MISC:7, NEC:1, R:12'; // amount codes used for various 1099s
 const MINIMA1099 = 'X:20000/200, MA:600/1, VT:600.01/1'; // no 1099-K for gross/txCount under this amount (by state)
 const MINIMA1099MAVT = 600; // 1099K minimum in MA and VT (for display)
 

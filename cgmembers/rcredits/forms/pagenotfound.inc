@@ -17,12 +17,14 @@ function formPageNotFound($form, &$sta, $arg = '') {
 
   if ($page and $page[0] == '/') $page = substr($page, 1); // ignore leading slash
   if ($mya) {
+    if (!$page) return go('dashboard');
     if (in(substr($page, -4), '.jpg jpeg .png')) {
       r\tellAdmin('page not found', compact('page'));
-    } else return $page ? go($mya->cAdmin ? '/sadmin' : '/dashboard', $subtext) : go('/signup');
+    } else return go('dashboard', $subtext);
   }
   
-  if (!$page or $page[0] == '-') return go('/signup/code=' . substr($page, 1)); // invitation!
+  if (!$page) return go('signin');
+  if ($page[0] == '-') return go('/signup/code=' . substr($page, 1)); // invitation!
   
   $title = t('Page Not Found');
   return cgform(compact(ray('title subtext')));

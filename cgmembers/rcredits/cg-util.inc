@@ -1124,12 +1124,12 @@ function getLocus($q, $city = '', $state = '', $zip = '') {
     $res = @file_get_contents($url = GEOCODE_URL . http_build_query($params));
   } catch (\Exception $e) { }
   
-  if (!nn($res) or !$res = u\dejsonize($res, FALSE)) {
-    r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)));
+  if (!nn($res) or !$res = u\dejsonize($res, FALSE) or !is_object($res)) {
+    r\tellAdmin(t('setLocus <%a>failed</a>', '_a', w\atag($url)), compact('res'));
     return $none;
   }
 
-  foreach ($res->results as $one) if (nni($one->components, 'country_code') == 'us') {
+  foreach (nn($res->results, []) as $one) if (nni($one->components, 'country_code') == 'us') {
     $i = $one->confidence; // confidence is actually specificity. Be as specific as possible.
     if (in($one->components->_category, 'building place transportation postcode') 
       and nn($one->components->postcode)
@@ -1698,7 +1698,7 @@ function ifSet(&$param, $value) {if (isset($param)) $param = $value;} // opposit
 function log($message, $type = 'state', $info = []) {return u\loga($type, compact('message') + $info);}
 function isIPhone() {return preg_match('/iPhone/i', $_SERVER['HTTP_USER_AGENT']);}
 function jsonize($obj, $flags = 0) {return json_encode($obj, JSON_UNESCAPED_UNICODE + $flags);}
-function dejsonize($s) {return json_decode($s, TRUE);}
+function dejsonize($s, $retRay = TRUE) {return json_decode($s, $retRay);}
 function redash($s) {return str_replace('—', '&mdash;', $s);}
 function nonish($s) {return in(mb_strtolower($s), 'n/a nothing na none 0.00'); }
 function padto($s, $n) {return str_pad(substr($s, 0, $n), $n);}

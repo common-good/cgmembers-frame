@@ -33,7 +33,7 @@ function formTaxInfo($form, &$sta, $ending = '') {
     $cats = [];
     $map = [t('rebate on') => t('rewards'), t('bonus on') => t('rewards')];
       
-    while ($row = be\get1099(TEN99B, $mya->id, $ending)) {
+    while ($row = be\get1099('B', $mya->id, $ending)) {
       extract(just('created amount payer for', $row));
       if ($amount <= 0) { // do not issue 1099-B for negative amounts (per IRC 1.6041-...(c)?)
         $negatives += $amount;
@@ -100,7 +100,7 @@ EOF
   
   } else {
     $title = t('Your Form 1099-K');
-    $row = be\get1099(TEN99K, $mya->id, $ending);
+    $row = be\get1099('K', $mya->id, $ending);
     extract(just('gross noCard txCount', $row));
     // if (r\no1099k($gross, $txCount, $mya->st))
     $subtext = t(<<<EOF
