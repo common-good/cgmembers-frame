@@ -18,7 +18,7 @@ define('STATE_CODE', '25'); // Massachusetts code, for combined Federal/State fi
 /**
  * Create 1099-B, K, NEC, or R reports for the IRS as a downloadable file to be uploaded to the IRS FIRE site.
  * Log in at fire.irs.gov (or fire.test.irs.gov)
- * @param string $type: B=1099-B, MC=1099-K, N=1099-NEC
+ * @param string $type: 1099 type (B, K, MISC, etc)
  * @param mixed $testMode: TRUE if testing, otherwise FALSE
  * @param array $rows: payee data for 1099-NEC, FALSE for 1099-B
  *    each element of $rows is an assoc: [nm ein co addr qid amount],
@@ -35,7 +35,7 @@ define('STATE_CODE', '25'); // Massachusetts code, for combined Federal/State fi
     $rows = [
       (get these from production server -- see below)
     ];
-    r\Special\do1099s(TEN99NEC, TRUE, $rows); // TRUE means <test>
+    r\Special\do1099s('NEC', TRUE, $rows); // TRUE means <test>
  *
  * Get lines on production server with:
      foreach (ray('aka nevabj etc') as $qid) {
@@ -50,7 +50,7 @@ function do1099s($type, $testMode = FALSE, $rows = FALSE, $badNames = [], $badTI
   global $err1099;
   u\setDft($year, date('Y') - 1);
   $testMode = $testMode ? 'T' : '';
-  u\beginDownload("forms1099$type-Y$year.bin$testMode"); // binary file extension: discourage automatic changes during FTP
+  u\beginDownload("forms1099-$type-Y$year$testMode.bin"); // binary file extension: discourage automatic changes during FTP
   putRec(recT($year, $testMode));
   
   $uids = array_keys($badNames + $badTINs);
@@ -76,7 +76,7 @@ function do1099s($type, $testMode = FALSE, $rows = FALSE, $badNames = [], $badTI
 
 /**
  * Handle all appropriate payees for the payer (that is the Common Good regional server).
- * @param string $type: A=1099-MISC, B=1099-B, MC=1099-K
+ * @param string $type: 1099 type
  * @param int $year: year to report
  * @param mixed $sql: selection SQL for 1099-B payee records OR array of rows for 1099-MISC
  * @return the number of payee ("B") records.
@@ -84,7 +84,7 @@ function do1099s($type, $testMode = FALSE, $rows = FALSE, $badNames = [], $badTI
 function doPayer($type, $year, $sql, &$totals, $mod = '', $badNames = [], $badTINs = []) {
   global $seq1099;
   
-  $manual = in($type, [TEN99MISC, TEN99NEC, TEN99R]); // data for these is collected manually
+  $manual = in($type, 'MISC NEC R'); // data for these is collected manually
   if (is_array($rows = $sql) xor $manual) {
     err1099(t('Rows of data should be passed explicitly for 1099 type "%type", otherwise pass an SQL selection query.', compact('type')));
     return 0;
@@ -127,7 +127,7 @@ function doPayer($type, $year, $sql, &$totals, $mod = '', $badNames = [], $badTI
 
 /**
  * Create B records for each income transaction (1099-B) or each monthly total (1099-K), for each payee.
- * @param string $type: B=1099-B MC=1099-K
+ * @param string $type: 1099 type
  * @param int $year: the relevant fiscal year
  * @param int $payee: payee's account ID
  * @param float $total: array of running totals for all B records so far
@@ -141,7 +141,7 @@ function do1099($type, $year, $payee, &$total, $mod = '', $badNames = [], $badTI
   
   $bCount = 0;
   while ($row = be\get1099($type, $payee, $year)) {
-    if ($type == TEN99B) {
+    if ($type == 'B') {
       extract(just('created amount for', $row));
       $txCount = '';
       if ($amount <= 0) continue; // IRS says do NOT report non-positive transactions on 1099-B
@@ -149,7 +149,7 @@ function do1099($type, $year, $payee, &$total, $mod = '', $badNames = [], $badTI
       $total[6] = round($total[6] + $amount, 2);
       //    $amts99[] = $amount;
     }
-    if ($type == TEN99K) {
+    if ($type == 'K') {
       extract(just('gross noCard st txCount', $row));
       if (r\no1099k($gross, $txCount, $st)) continue;
       $created = $for = '';
@@ -195,18 +195,18 @@ function recT($year, $testMode) {
 
 /**
  * Create the payer record.
- * @param string $type: TEN99B, TEN99K, or TEN99NEC (MISC and NEC are currently for CG itself, B and K are for the region)
+ * @param string $type: 1099 type (MISC and NEC are currently for CG itself, B and K are for the region)
  * @param int $year: year to report
  */
 function recA($type, $year) {
-  $forCG = in($type, [TEN99MISC, TEN99NEC]);
-  $combo = pad($type != TEN99NEC, 1); // combined Federal/State filing (for anything but NEC)
+  $forCG = in($type, 'MISC NEC');
+  $combo = pad($type != 'NEC', 1); // combined Federal/State filing (for anything but NEC)
   $regionTIN = $forCG ? CGF_EIN : '461821792';
   $nameControl = sp(4);
   $lastEver = pad(FALSE, 1);
   
   $amountCodes = pad(ray(TEN99AMTS)[$type], 16);
-  $type = pad($type, 2);
+  $typeCode = pad(ray(TEN99TYPES)[$type], 2);
   
   $foreign = pad(FALSE, 1); // 1 for foreign
   $payerName = pad($forCG ? CGF_LEGALNAME : r\regionfield('legalName'), 80);
@@ -216,7 +216,7 @@ function recA($type, $year) {
   $payerAddr = pad($addr, 40) . pad($city, 40) . $st . pad(nodash($zip), 9);
   $payerPhone = pad($forCG ? u\fmtPhone(CGF_PHONE, 'n') : '4136281723', 15); // was 4133765021 (maybe again someday)
   
-  return 'A' . $year . $combo . sp(5) . $regionTIN . $nameControl . $lastEver . $type . $amountCodes . sp(8) . $foreign . $payerName . $isAgent . $payerAddr . $payerPhone . sp(260) . seq() . sp(241) . EOL;
+  return 'A' . $year . $combo . sp(5) . $regionTIN . $nameControl . $lastEver . $typeCode . $amountCodes . sp(8) . $foreign . $payerName . $isAgent . $payerAddr . $payerPhone . sp(260) . seq() . sp(241) . EOL;
 }
 
 /**
@@ -251,14 +251,14 @@ function recB($type, $year, $acctFields, $amount, $completed = '', $for = '', $m
   $withheld = u\lpad(0, 12) . u\lpad(0, 12); // state and local tax withheld (none)
   $date = pad($completed ? strftime('%Y%m%d', $completed) : '', 8);
 
-  if ($type == TEN99B) {
+  if ($type == 'B') {
 //    $amt = fmtAmt($amount, 12);
 //    $amounts = u\lpad(0, 6 * 12) . $amt . u\lpad(0, 9 * 12);
         $desc = pad($for, 39);
     $qty = u\lpad(0, 13);
     $symbol = pad(0, 13);
     $tail = sp(4) . $date . sp(13) . $desc . sp(8) . sp(1) . $qty . $symbol . sp(20) . sp(60) . $withheld . STATE_CODE . EOL;
-  } elseif ($type == TEN99K) {
+  } elseif ($type == 'K') {
     $filerType = '1'; // 1=Payment Settlement Entity (PSE)
     $pmtType = '1'; // payment card (vs 2=network) -- NOTE: amount field #2 distinguishes when card is not present
     $txCount = u\lpad($txCount ?: 0, 13);
@@ -267,9 +267,9 @@ function recB($type, $year, $acctFields, $amount, $completed = '', $for = '', $m
     $special = sp(60);
     $withheld = u\lpad(0, 12) . u\lpad(0, 12);
     $tail = $twoBadTINs . sp(2) . $filerType . $pmtType . $txCount . sp(3) . $otherPSE . $mcc . sp(54) . $special . $withheld . STATE_CODE . EOL;
-  } elseif ($type == TEN99NEC) {
+  } elseif ($type == 'NEC') {
     $tail = $twoBadTINs . sp(3) . $fatca . sp(174) . $withheld . sp(2) . EOL;
-  } elseif ($type == TEN99R) {
+  } elseif ($type == 'R') {
     $distCode = pad(7, 2);
     $totalDist = 1;
     $tail = $twoBadTINs . $distCode . sp(2) . $totalDist . sp(2) . sp(4) . $fatca . $date . sp(98) . sp(60) . $withheld . STATE_CODE . EOL;
@@ -284,7 +284,7 @@ function recC($bCount, $totals) {
   
 function recK($type, $bCount, $totals) {
   $withheld = u\lpad(0, 18) . u\lpad(0, 18);
-  $st = $type == TEN99NEC ? sp(2) : STATE_CODE; // no automatic state filing of 1099-NEC, as of Feb 2021
+  $st = $type == 'NEC' ? sp(2) : STATE_CODE; // no automatic state filing of 1099-NEC, as of Feb 2021
   return 'K' . u\lpad($bCount, 8) . sp(6) . $totals . sp(196) . seq() . sp(199) . $withheld . sp(4) . $st . EOL;
 }
 
@@ -317,10 +317,10 @@ function noBreakAt($s, $chunk) {
  */ 
 function lenCheck($rec) {
   global $seq1099;
-  $type = substr($rec, 0, 1);
+  $recType = substr($rec, 0, 1);
   $reclen = strlen($rec);
   $ideal = 750;
-  if (strlen($rec) != $ideal) return err1099("ERROR: $type record #$seq1099 is $reclen chars -- should be $ideal:\n" . breakup($rec));
+  if (strlen($rec) != $ideal) return err1099("ERROR: $recType record #$seq1099 is $reclen chars -- should be $ideal:\n" . breakup($rec));
   return $rec;
 }
 

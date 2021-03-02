@@ -17,19 +17,15 @@ use CG\Db as db;
 function ajax() {
   global $channel; $channel = TX_AJAX; // tell log and tellAdmin our environment
   extract(just('op sid data', $args = $_POST ?: $_GET, NULL));
-  if (nn($_SERVER['HTTP_X_REQUESTED_WITH']) != 'XMLHttpRequest') {
-    r\tellAdmin('ajax cross-site', $args + $_SERVER);
-    return ajaxErr('cross-site'); 
-  }
 
   header('Content-Type: application/json');
   $myid = $aid = NULL;
 
-  if (!in($op, 'presignup setNotice')) { // no sid if not signed in
+  if (!in($op, 'setNotice')) { // no sid if not signed in
     if (!nn($sid) or !$vars = w\sessionVars($sid)) return ajaxErr(t('You are signed out. Click <%a>here</a> to sign back in.', '_a', atag('/signin')));
     if (!$aid = $vars['uid'] or !$myid = $vars['myid']) return ajaxErr('not signed in');
   }
-//  $mya = r\acct($myid, $aid);
+
 /**/  lug(compact(ray('op data myid aid')));
   $data = u\dejsonize($data); // must be passed encoded or jQuery post() passes null
   $mya = ($myid and $aid) ? r\acct($myid, $aid) : NULL; // usually relevant
@@ -67,7 +63,7 @@ function ajax() {
     if ($fld == 'delete' or $fld == 'permission') {
       list ($managePerm, $joinPerm) = [r\perm(B_MANAGE), r\perm(B_JOINT)];
       $v0 = r\relation('permission', $reid);
-      if ($mya->co and $v < $managePerm and !db\exists('r_relations', 'main=:main AND other<>:other AND permission>=:perm', ray('main other perm', $myid, $other, $managePerm))) return relPermErr(t('need a manager'), $reid, $managePerm);
+      if ($mya->co and $v < $managePerm and !db\exists('r_relations', 'main=:main AND reid<>:reid AND permission>=:perm', ray('main reid perm', $myid, $reid, $managePerm))) return relPermErr(t('need a manager'), $reid, $managePerm);
       if ($v == $joinPerm or $v0 == $joinPerm) { // handle joining or unjoining accounts
         if ($v == $joinPerm and db\exists('r_relations', 'main=:myid AND other<>:other AND permission=:joinPerm', compact(ray('myid other joinPerm')))) return relPermErr(t('too many joins'), $reid, $v0);
         $msg = r\setJoin($reid, $v == $joinPerm);

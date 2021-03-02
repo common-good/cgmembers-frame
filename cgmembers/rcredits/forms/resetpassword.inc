@@ -16,7 +16,8 @@ include_once __DIR__ . '/signin.inc';
 function formResetPassword($form, &$sta, $args = '') {
   global $mya; // not yet saved in session
  
-  extract(just('id code', $args)); // linked from an email
+  extract(just('id code', $args, NULL)); // linked from an email
+  if (!$id or !$code) return softErr('invalid link');
   
   $a = r\acct($id);
     

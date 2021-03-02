@@ -1,3 +1,9 @@
+2021-03-01 feature/1099-again
+. refactored 1099s
+. fixed a couple little bugs
+. admin gets a daily email with transaction totals over $1,000
+. co phone orders now include company name!
+
 2021-02-25 feature/go-dft
 . bug fix: changed all go('') to either softErr or go('dashboard')
 . bug fix: null object in u\getLocus()

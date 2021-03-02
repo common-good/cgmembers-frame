@@ -174,8 +174,8 @@ function memberRay($myid, $aid, $coOnly = FALSE) {
 }
 
 /**
- * Return the next relevant transaction for form 1099b, for an account.
- * @param string $type: TEN99B or TEN99K
+ * Return the next relevant transaction for form 1099-B or 1099-K, for an account.
+ * @param string $type: B or K
  * @param int $payee: the account record ID
  * @param int $year: year or end-of-year date
  * @return the next relevant row (NULL if no more)
@@ -193,12 +193,12 @@ function get1099($type, $payee, $year = NULL) {
     if (test()) list ($start, $end) = [NOW - 12 * 30 * DAY_SECS, NOW - 1];
     $where = "uid2=:payee AND t.created BETWEEN $start AND $end AND type<>:E_BANK";
 
-    if ($type == TEN99B) $sql = <<< X
+    if ($type == 'B') $sql = <<< X
       SELECT created, amt AS amount, uid1 AS payer, for2 AS `for`
       FROM txs_noreverse t WHERE $where ORDER BY t.created
 X;
 
-    if ($type == TEN99K ) {
+    if ($type == 'K' ) {
       for ($m = 1; $m <= 12; $m++) {
         $dt1 = $m == 1 ? $start : ($dt2 + 1);
         $dt2 = u\plusMonths(1, $dt1) - 1;

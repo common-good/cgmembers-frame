@@ -2232,7 +2232,7 @@ function away() {return ['target' => '_blank'];}
 function js($script, $args = '') {global $pageScripts; $pageScripts[$script] = http_build_query(rayy(func_get_args(), 1));} // see html.tpl
 function jsx($script, $args = '') {global $scriptScraps; $scriptScraps[$script] = http_build_query(rayy(func_get_args(), 1));} // see html.tpl
 function softErr($msg) {sayEmpty($msg, 'err');}
-function sayEmpty($msg, $type = '') {w\say($msg, $type); return w\go('empty');}
+function sayEmpty($msg, $type = '') {say($msg, $type); return w\go('empty');}
 function skipButton() {return button(t('Skip for now'), '/settings/skip', t('Leave this step for last'), 'default', 'xs', ['class' => 'skip']);}
 function notab() {return tabindex(-1);}
 function tabindex($n) {return ['tabindex' => $n];}

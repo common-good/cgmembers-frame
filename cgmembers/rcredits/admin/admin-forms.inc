@@ -126,7 +126,7 @@ function formAdminPanel_submit($form, &$sta) {
   } elseif ($op == 'seeAppData') {
 /**/  debug($a->appData);
   } elseif ($op == 'seeSecure' and $a) {
-    say(u\rayTable(ray('fullName phone dob physicalAddr', $a->fullName, substr($a->phone, 2), $admin ? u\fmtDate($a->dob) : '', $a->address . ' ' . $a->zip)));
+    say(u\rayTable(ray('fullName phone dob physicalAddr', $a->fullName, substr($a->phone, 2), $mya->admin ? u\fmtDate($a->dob) : '', $a->address . ' ' . $a->zip)));
     //      seeHidden($a);
     seeSecure($a);
   } elseif ($op == 'resetSSN' and $a) {
@@ -143,7 +143,7 @@ function formAdminPanel_submit($form, &$sta) {
     w\say($a->fullName. t(' SSN Link:') . tr('<br><br> &nbsp; %BASE_URL/do/doSsn~%code &nbsp; ', 'code', $a->doCode()));
   } elseif ($op == 'do1099k' or $test1099 = ($op == 'do1099ktest')) {
     include_once R_ROOT . '/cg-yearly.inc';
-    r\Special\do1099s(TEN99K, nn($test1099));
+    r\Special\do1099s('K', nn($test1099));
 	} elseif ($op == 'reconcile') {
 		w\go('sadmin/reconcile-ctty-fund');
   } elseif ($op == 'toSMT') {

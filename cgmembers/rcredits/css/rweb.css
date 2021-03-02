@@ -246,7 +246,7 @@ td, th {padding: 4px 9px; border: 1px solid #fff; text-align: left;}
 .odd {background: #daffda;}
 
 .form-checkboxes div, .form-checkboxes {display:inline-block;}
-.box1 .checkbox, .form-horizontal .checkbox {padding-top:0;}
+.box1 .checkbox, .form-horizontal .checkbox {padding-top:0; margin:0; min-height:0;}
 .form-horizontal .radio, .form-horizontal .radio-inline {margin-left:0; margin-right:15px;}
 
 #frm-adminpanel button {margin:0 10px 20px 0;}

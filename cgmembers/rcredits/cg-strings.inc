@@ -390,6 +390,7 @@ EOF
   'zero transaction' => t('The transaction amount cannot be zero.'),
   'bad birthdate' => t('Birth date does not match.'),
   'bad coupon' => t('That is not a valid coupon type.'),
+  'invalid link' => t('That is not a valid link.'),
   'invalid gift card' => t('That is not a valid gift card code. Try again.'),
   'already redeemed' => t('That coupon has already been redeemed.'),
   'trial co over' => t('Temporary "trial" company accounts are limited to %TRIALCO_DAY_LIMIT days and  $%TRIALCO_AMT_LIMIT in total payments received. This payment cannot go through, because it would put the account over that amount.'),

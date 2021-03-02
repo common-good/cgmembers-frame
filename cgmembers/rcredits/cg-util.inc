@@ -1698,7 +1698,7 @@ function ifSet(&$param, $value) {if (isset($param)) $param = $value;} // opposit
 function log($message, $type = 'state', $info = []) {return u\loga($type, compact('message') + $info);}
 function isIPhone() {return preg_match('/iPhone/i', $_SERVER['HTTP_USER_AGENT']);}
 function jsonize($obj, $flags = 0) {return json_encode($obj, JSON_UNESCAPED_UNICODE + $flags);}
-function dejsonize($s) {return json_decode($s, TRUE);}
+function dejsonize($s, $retRay = TRUE) {return json_decode($s, $retRay);}
 function redash($s) {return str_replace('—', '&mdash;', $s);}
 function nonish($s) {return in(mb_strtolower($s), 'n/a nothing na none 0.00'); }
 function padto($s, $n) {return str_pad(substr($s, 0, $n), $n);}

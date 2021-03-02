@@ -48,7 +48,7 @@ function formMessage_submit($form, &$sta) {
   $a = r\acct($uid);
   if (strlen($secret)) { // encrypt secret message
     $code = u\cryRay(ray('qid secret exp', $a->mainQid, $secret, $at = now() + HOUR_SECS * $expires));
-    $url = "$base_url/community/message/code=$code";
+    $url = "$base_url/community/message/x/code=$code";
     $message .= "<br><br>Secret: " . lnk($url, t('click here')) . t('. Link expires at %tm on %dt.', 'tm dt', u\tm($at), u\fmtDate($at));
   }
   r\rMail('', [$a->email => $a->fullName], ray('noFrame subject body', TRUE, $subject, $message), [$mya->email => $mya->fullName]);
