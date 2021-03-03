@@ -37,14 +37,22 @@ function activate($a, $helper) {
     
   }
 
-  if ($firstTime and !$a->co) { // no bonus or helper bonus for a company signing up
+  if ($firstTime and !$a->co) {
     if ($a->ssnErr and !$a->risk('ssnOff') and !$a->risk('dobOff')) $a->setRisk('ssnOff'); // make SURE this bit gets set (might not if admin signs the person up
+    if ($creditLine = !$a->hasBank ? 0
+    : (($a->hasFid and !$a->risk('ssnOff')) ? CREDIT_WITH_SSN
+    : ($a->altId ? CREDIT_WITH_LICENSE : 0))) {
+      $a->update('floor', -$creditLine);
+      if ($a->refill and $a->minimum) {
+        $a->getFunds(min($creditLine, $a->minimum), tr($creditLine >= $a->minimum ? 'to target' : 'part way to target'));
+      }
+    }
 
-    if (!$a->helperA->co and !$a->helperA->superAdmin) { // no helper bonus for company referral or help by superAdmin (cAdmin is okay) [don't require $a->confirmed]
+    if (!$a->helperA->co and !$a->helperA->superAdmin) {
       $fullName = $a->fullName;
       $helped = db\count('users', ':IS_OK AND NOT :IS_CO AND helper=:hId', ray('hId', $a->helper)) + 0;
       if ($helped == ORGANIZER_GRANT_MIN) {
-//            r\acct($a->helper)->tell('organizer grant', ['_a' => w\atag('/community/grant')]);
+//            $a->helperA->tell('organizer grant', ['_a' => w\atag('/community/grant')]);
         list ($name, $topic) = [$a->helperA->fullName, t('eligible')];
         r\tellAdmin('eligible for grant', compact(ray('name topic')));
       }

@@ -275,6 +275,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE signin Setup
  *     MAKE signin AMemberAsksForANewPasswordForACompany
  *     MAKE signout Setup
+ *     MAKE signupandpay Setup
  *     MAKE signupco Setup
  *     TEST signupco ACompanySignsUp
  *     MAKE signup Setup
@@ -469,6 +470,7 @@ function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
  *     TEST signin AMemberAsksForANewPasswordForUsername
  *     TEST signin AMemberAsksForANewPasswordForAccountID
  *     TEST signin AMemberAsksForANewPasswordForEmail
+ *     TEST signupandpay ANewbieSuppliesEmailToContinueCGPay
  *     TEST signupco ACompanySignsUp
  *     TEST signup AMemberSignsUp
  */
@@ -500,6 +502,7 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST signin AMemberSignsInWithAccountIDOnTheMemberSite
  *     TEST signin AMemberSignsInWithEmailOnTheMemberSite
  *     TEST signin AMemberClicksALinkToResetPassword
+ *     TEST signupandpay ANewbieSuppliesEmailToContinueCGPay
  *     TEST signupco ACompanySignsUp
  *     TEST signupco ACompanyVerifiesEmailWhileSignedIn
  *     TEST signupco ACompanySuppliesCrumbsChoices
@@ -615,6 +618,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST showrecurs AMemberAttemptsToStopAnotherMembersRecurringTransaction
  *     TEST showrecurs AMemberStopsAnAutopayment
  *     TEST signin AMemberVisitsTheMemberSite
+ *     TEST signupandpay AMemberClicksACGPayButton
  *     TEST signupco ACompanyTriesToSignUpDirectly
  *     TEST signupco SomeoneWantsToOpenACompanyAccount
  *     TEST signupco ACompanySignsUp
@@ -899,6 +903,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE signin AMemberClicksALinkToResetPasswordForUnknownAccount
  *     MAKE signout AMemberSignsOut
  *     MAKE signout AMemberTimesOutAndSignsOutAutomatically
+ *     MAKE signupandpay AMemberClicksACGPayButton
  *     MAKE signupco ACompanyTriesToSignUpDirectly
  *     MAKE signupco SomeoneWantsToOpenACompanyAccount
  *     MAKE signupco ACompanySignsUp
@@ -934,6 +939,7 @@ function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
  *     MAKE signin Setup
  *     MAKE signin AMemberClicksALinkToResetPassword
  *     MAKE signout Setup
+ *     MAKE signupandpay Setup
  *     MAKE signupco Setup
  *     MAKE signupco ACompanySignsUp
  *     MAKE signup AMemberSignsUp
@@ -1407,6 +1413,7 @@ function memberIsLoggedIn($id) {
  *     MAKE signin AMemberClicksALinkToResetPassword
  *     MAKE signin AMemberClicksALinkToResetPasswordWithWrongCode
  *     MAKE signin AMemberClicksALinkToResetPasswordForUnknownAccount
+ *     MAKE signupandpay ANewbieSuppliesEmailToContinueCGPay
  *     MAKE signupco ACompanySignsUp
  *     MAKE signup AMemberSignsUp
  */
@@ -1917,7 +1924,8 @@ function memberOnetimepasswordIsExpires($id, $pass, $expires) {
 /**
  * next random password is (ARG)
  *
- * in: MAKE signup AMemberSignsUp
+ * in: MAKE signupandpay ANewbieSuppliesEmailToContinueCGPay
+ *     MAKE signup AMemberSignsUp
  */
 function nextRandomPasswordIs($code) {global $nextPass; return $nextPass = $code;}
 
@@ -2279,6 +2287,8 @@ function weShowJSONOf($ray) {
  *     MAKE cgpay AMemberTypesAccountIDToBuyStoreCredit
  *     MAKE cgpay AMemberClicksAButtonToBuyAGiftOfStoreCredit
  *     MAKE cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
+ *     MAKE signupandpay AMemberClicksACGPayButton
+ *     MAKE signupandpay ANewbieSuppliesEmailToContinueCGPay
  */
 function aButtonCodeFor($args) {
   include_once R_ROOT . '/forms/code.inc';
@@ -2289,4 +2299,14 @@ function aButtonCodeFor($args) {
   global $testCode; $testCode = w\code($info);
   t\output(t('Button code is ') . $testCode);
   return !strhas($testCode, ' ');
+}
+
+/**
+ * member (ARG) clicks (ARG) on page (ARG) with: (ARG)
+ *
+ * in: MAKE signupandpay ANewbieSuppliesEmailToContinueCGPay
+ */
+function memberClicksOnPageWith($arg1, $arg2, $arg3) {
+  global $testOnly;
+  todo;
 }

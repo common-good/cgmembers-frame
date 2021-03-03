@@ -82,10 +82,16 @@ function formCGPay($form, &$sta) {
     }
   } else u\FAIL(t('The "for" parameter must be credit, gift, donate, or other -- not "%for"', compact('for')));
 
-  $option = nn($s_name) ? '' : t('OR <big><%a>Sign up!</a></big>', '_a', atag('/signup'));
+  if (nn($s_name)) {
+    $subtext = t('Hello %s_name!', compact('s_name'));
+    $option = t('OR <big><%a>Sign up!</a></big>', '_a', atag('/signup'));
+  } else {
+    $subtext = t('Pay with %PROJECT');
+    $option = '';
+  }
+  
+  $subtext = "<h4>$subtext</h4>";
   $submit = submit($verb, '', 'md', w\suffix($option));
-  u\setDft($s_name, t('%PROJECT Member'));
-  $subtext = t('<h4>Hello %s_name!</h4>', compact('s_name'));
 
   $info = compact(ray('subtext amount amtDpy itemDpy item for name pass submit'));
   foreach (ray(CGPAY_VARS) as $k) if (isset($$k) and !is_array($$k)) $info[$k] = hidFld($$k);

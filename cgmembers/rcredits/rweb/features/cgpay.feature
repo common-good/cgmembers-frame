@@ -16,7 +16,7 @@ Scenario: A member clicks a CGPay button
   | account | secret | item | amount |*
   | .ZZC    | Cc3    | food | 23.50  |
   When member "?" visits page "cgpay?code=TESTCODE"
-  Then we show "Hello %PROJECT Member" with:
+  Then we show "Pay with %PROJECT" with:
   | Pay        | 23.50 to Our Pub |
   | For        | food |
   | Account ID |  |
@@ -41,7 +41,7 @@ Scenario: A member clicks a CGPay button with variable amount
   | account | secret | item |*
   | .ZZC    | Cc3    | food |
   When member "?" visits page "cgpay?code=TESTCODE"
-  Then we show "Hello %PROJECT Member" with:
+  Then we show "Pay with %PROJECT" with:
   | Pay        | to Our Pub |
   | For        | food |
   | Account ID |  |
@@ -63,7 +63,7 @@ Scenario: A member clicks a button to buy 50% store credit
   | account | secret | for      | amount |*
   | .ZZC    | Cc3    | credit50 | 23.50  |
   When member "?" visits page "cgpay?code=TESTCODE"
-  Then we show "Hello %PROJECT Member" with:
+  Then we show "Pay with %PROJECT" with:
   | Pay        | 23.50 to Our Pub |
   | For        | store credit |
   | Account ID |  |
@@ -74,7 +74,7 @@ Scenario: A member clicks a button to buy store credit for a different amount
   | account | secret | for    | amount | credit |*
   | .ZZC    | Cc3    | credit | 23     | 30     |
   When member "?" visits page "cgpay?code=TESTCODE"
-  Then we show "Hello %PROJECT Member" with:
+  Then we show "Pay with %PROJECT" with:
   | Pay        | 23.00 to Our Pub |
   | For        | $30 store credit |
   | Account ID |  |
@@ -139,7 +139,7 @@ Scenario: A member clicks a button to buy a gift of store credit
   | account | secret | for    | amount | for  |*
   | .ZZC    | Cc3    | credit | 23.50  | gift |
   When member "?" visits page "cgpay?code=TESTCODE"
-  Then we show "Hello %PROJECT Member" with:
+  Then we show "Pay with %PROJECT" with:
   | Pay          | 23.50 to Our Pub |
   | For          | store credit |
   | As a Gift to | |

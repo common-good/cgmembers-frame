@@ -116,6 +116,7 @@ $GLOBALS['tStrings'] = array(
   'over max' => t('Your balance is over the maximum you set.'),
 //  'under min' => t('Your balance has fallen below the target you set.'),
   'to target' => t('to bring your balance up to the target you set'),
+  'part way to target' => t('to bring your balance up part way to the target you set (as much as your current credit line allows)'),
 	'for invoice' => t('to pay invoice #%nvid'),
 	'for investment' => t('for an increased stake in the investment club'),
   'now a member' => t('You are now a member of the Investment Club!'),
