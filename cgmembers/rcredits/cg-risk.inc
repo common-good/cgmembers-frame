@@ -202,7 +202,7 @@ EOF;
 function setBigRisk($uid, $ago, $thresholds, $bitName) {
   global $bigYearIn, $bigYearOut, $newThresholds;
   
-  $threshold = $thresholds[$bitName];
+  $threshold = nni($thresholds, $bitName);
   $now = now();
   $since = $now - $ago - 2 * HOUR_SECS; // an extra couple hours to handle daylight time changes and cron timing
   $sql = <<<EOF
