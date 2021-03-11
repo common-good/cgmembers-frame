@@ -1245,7 +1245,7 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
 
   if (!$a1->cttyUp and !$a1->isCanonic) return be\txRet(FALSE, 'your community down', ray('contact', $a1->cAdminContact()));
   if (!$a2->cttyUp and !$a2->isCanonic) return be\txRet(FALSE, 'other community down');
-  if ($a1->id == $a2->id) return be\txRet(FALSE, 'no self-trading');
+  if ($a1->id == $a2->id) return be\txRet(FALSE, 'self-trading');
   
   if ($a1->confirmed) $a2->setBit(B_CONFIRMED);
 
@@ -1458,7 +1458,7 @@ function disputeTx($xid, $reason = '') {
   if (empty($mya)) return FALSE;
   if (db\exists('tx_disputes', compact('xid'))) u\FAIL("transaction $xid is already disputed");
 
-  $result = db\insert('tx_disputes', ['xid'=>$xid, 'reason'=>$reason, 'status'=>DS_OPEN, 'uid'=>$mya->uid], 'id');
+  $result = db\insert('tx_disputes', ray('xid reason status uid', $xid, $reason ?: t('reason unknown'), DS_OPEN, $mya->uid), 'id');
   u\EXPECT($result, "error inserting dispute record");
 
   return TRUE;
@@ -1486,7 +1486,7 @@ function emailTemplate($key) {return file_get_contents(__DIR__ . R_TEMPLATE_DIR 
 function emailBody($key) {return str_replace('%body', emailTemplate($key), emailTemplate(R_EMAIL_FRAME));}
 function realCountry($country) {return db\get('name', 'r_countries', 'id=:country', compact('country'));}
 function realState($state, $country = R_COUNTRY_ID) {return db\get($country == US_COUNTRY_ID ? 'abbreviation' : 'name', 'r_states', 'id=:state and country_id=:country', compact('state', 'country'));}
-function stateNum($st) {return $st ? db\get('id', 'r_states', 'abbreviation=:st and country_id=:US_COUNTRY_ID', compact('st')) : $st;}
+function stateNum($st) {return $st ? db\get('id', 'r_states', 'abbreviation=:st and country_id=:US_COUNTRY_ID', compact('st')) : FALSE;}
 function fullState($abbrev, $country = R_COUNTRY_ID) {return db\get('name', 'r_states', 'abbreviation=:abbrev and country_id=:country', compact('abbrev', 'country'));}
 function perm($bit) {return $bit - B_RELATED;}
 function foreignServer($uid) {return (r\uidRegion($uid) != serverUid());}

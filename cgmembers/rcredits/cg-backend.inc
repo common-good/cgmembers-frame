@@ -157,13 +157,18 @@ function balanceAsOf($uids, $date=NULL) {
 }
   
 /**
- * Return an array of member names (called with ajax, so current user is passed as arguments).
+ * Return a list of members to choose from (called with ajax, so current user is passed as arguments).
  * Restricted to within NEIGHBOR_MAX miles of the member
  * @param int $myid: account record ID
  * @param int $aid: agent account record ID
+ * @param string $restrict: MySQL to restrict the selection (for example ':IS_CO' or ':IS_OK')
+ * @return array of choices: member fullName (city, ST), indexed by uid
  */
-function memberRay($myid, $aid, $coOnly = FALSE) {
-  if (!$a = r\acct($myid, $aid)) return [];
+function memberRay($myid, $aid, $restrict = '') {
+  if (!$a = r\acct($myid, $aid)) return []; // no choices if not signed in
+  $res = identify('', $a, $restrict);
+  return $res;
+  /*
 //  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : "state=$a->state OR community=$a->community OR :IS_CO");
   $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : tr("(%DISTANCE_BETWEEN<%NEIGHBOR_MAX OR community=$a->community OR :IS_CO)"));
   if (isDEV) $where = str_replace(DISTANCE_BETWEEN, '0', $where); // no lat/lon on dev machines yet
@@ -171,6 +176,7 @@ function memberRay($myid, $aid, $coOnly = FALSE) {
   if (!$coOnly and !$a->admin and !isDEV) $subs += ray('lat lon', $a->latitude, $a->longitude);
 ///   flog(db\col('fullName', 'users', ":IS_OK AND uid<>:myid AND $where ORDER BY fullName", $subs));
   return db\col('fullName', 'users', ":IS_OK AND uid<>:myid AND $where ORDER BY fullName", $subs);
+  */
 }
 
 /**
@@ -881,61 +887,105 @@ function deleteCell($number) {
 /**
  * Figure out who the user meant. Only OK people in the user's community are eligible (except admin sees all).
  *
- * @param string $who: how the user referred to the trader (name, phone, email, uid, or temporary code)
+ * @param string $who: how the user referred to the other account:
+ *   name, phone, email, or account ID
+ *   name@city, zip, or city, ST
  * @param int $mya: current user's account
- * @param bool $activeOnly: <the person has to have an active account> (if we're paying them or giving access)
- * @param string $self_message: index to error message for identifying oneself
- *   If true, the other trader will be created only if specified by email or phone
+ * @param string $restrict: MySQL to restrict the selection (for example ':IS_CO' or ':IS_OK')
+ * @param string $selfErr: index to error message for identifying oneself
  * @return one of the following:
  *   the other trader's acct
- *   array(error index, array of substitutions, array of possible fullNames (0 or more) indexed by uid)
+ *   error message index
+ *   array of possible fullNames with city and state, indexed by uid
  */
-function identify($who, $mya, $activeOnly, $self_message = 'no self-trading') {
-  if (!$mya) return ['search forbidden', [], []];
+function identify($who, $mya, $restrict = '', $selfErr = 'self-tx') {
+  if (!$mya) return 'search forbidden';
   $myid = $mya->id;
-  $who = trim($who);
-  $subs = compact('who');
-  if ($phone = u\fmtPhone($who, '+n')) {
-    $who = $phone; $cphone = u\cry('P', $phone);
-  } else $cphone = '-';
-  
-  $short = u\shortName(" $who ", '%') ?: '-'; // abbreviations must not be null or zeroes
-  $cmail = mb_strpos($who, '@') ? u\cry('P', mb_strtolower($who)) : '-';
-  $subs = compact(ray('who short cphone cmail'));
-  $anyAdmin = ($mya->cAdmin2 or $mya->isAdmin2);
+  $who = $who0 = trim($who);
+  $searchable = $mya->anyAdmin ? '1' : '(IF(activated, :IS_OK, :IS_MEMBER) AND !:IS_NOSEARCH)';
 
-  $searchable = $anyAdmin ? '1' : '!:IS_NOSEARCH';
-  $where = "(name LIKE :short OR :who=fullName OR ($searchable AND (:cphone=phone OR :cmail=email)))";
-  if ($anyAdmin) {
-    $qid = mb_strtoupper(mb_strlen($who) == 3 ? R_SERVER_ID . $who : $who);
-    if (u\isQid($qid) and $a = r\acct($qid)) $where .= " OR uid=$a->id";
-    $where = "($where OR uid=:who)";
+  if ($atPos = mb_strpos($who, '@')) { // email or location (point to @)
+    $at = trim(mb_substr($who, $atPos + 1)); // what's after the @
+    if (strhas($at, '.') and !strhas($who, ' ')) { // email
+      $cmail = u\cry('P', mb_strtolower($who));
+      list ($where, $subs) = ['email=:cmail', compact('cmail')];
+      $err = tr('unfound', 'who where', t('anyone'), t('with that email address'));
+    } else {
+      $who = trim(mb_substr($who, 0, $atPos));
+      list ($where, $subs) = nameCriteria($who);
+
+      if (preg_match('/[0-9]/', $at)) { // postal code (anything with a digit)
+        if ($err = u\badZip($at)) return $err;
+        $where .= ' AND zip LIKE :zip';
+        $subs['zip'] = $at . '%';
+        $err = tr('unfound', 'who where', $who, t('in that postal code'));
+      } elseif (strhas($at, ',')) { // city, ST
+        list ($city, $st) = explode(',', $at);
+        $city = '%' . trim($city) . '%';
+        if (!$state = r\stateNum(trim($st))) return 'bad state';
+        $where .= ' AND city LIKE :city AND state=:state';
+        $subs += compact(ray('city state'));
+        $err = tr('unfound', 'who where', $who, t('in that city'));
+      } else { // city
+        $city = '%' . trim($at) . '%';
+        $where .= ' AND city LIKE :city';
+        $subs += compact('city');
+        $err = tr('unfound', 'who where', $who, t('in that city'));
+      }
+    }
+  } elseif ($mya->anyAdmin and is_numeric($who) and mb_strlen($who) > 10) {
+    list ($where, $subs) = ['uid=:who', compact('who')];
+    $err = tr('unfound', 'who where', t('anyone'), t('with that record ID'));
+  } elseif ($phone = u\fmtPhone($who, '+n')) { // phone
+    $cphone = u\cry('P', $phone);
+    list ($where, $subs) = ['phone=:cphone', compact('cphone')];
+    $err = tr('unfound', 'who where', t('anyone'), t('with that phone number'));
+  } else { // name or qid or empty (empty when called from memberRay)
+    list ($where, $subs) = nameCriteria($who);
+
+    if (preg_match('/^([A-Z]+|[a-z]+)$/', $who)) { // all upper or all lower
+      $qid = mb_strtoupper(($mya->anyAdmin and mb_strlen($who) == 3) ? R_SERVER_ID . $who : $who);
+      if (u\isQid($qid) and $a = r\acct($qid)) $where = "($where OR uid=$a->id)";
+    }
+    $err = tr('unfound', 'who where', $who, t('(Try using their email or phone or, if they are not nearby, add "@" followed by their postal code or city (or city, state))'));
   }
-  if ($activeOnly) $where .= ' AND :IS_OK';
-  if (!$mya->admin and !$mya->isAdmin2) {
+      
+  if ($restrict) $where .= ' AND ' . $restrict;
+  if (!$mya->admin and !$mya->isAdmin2 and !$atPos and !nn($cphone)) { // look only locally unless company
     $where .= tr(' AND (:IS_CO OR community=:ctty OR %DISTANCE_BETWEEN<%NEIGHBOR_MAX)'); // restrict to nearby
     list ($lat, $lon) = [$mya->latitude ?: 0, $mya->longitude ?: 0]; // avoid NULL (PHP bug?)
-    $ctty = $mya->seedpacker ? 0 : $mya->community;
-    $subs += compact(ray('lat lon ctty'));
+    $subs += compact(ray('lat lon'));
   }
   
+  $individual = t('individual');
+  $company = t('company');
+  $anon = "IF(:IS_CO, '$individual', '$company')";
+  $uidCrit = 'uid NOT :CANONIC';
+  if ($mya->admin) $uidCrit = "($uidCrit OR uid=1)"; // needed for helper when activating
+
   $sql = <<<EOF
-    SELECT DISTINCT uid,fullName
-    FROM users 
-    WHERE $where AND (uid<0 OR uid>:CANONIC_ACCTS)
-    ORDER BY fullName
+    SELECT DISTINCT uid, 
+      CONCAT(IF($searchable, fullName, $anon), ' @ ', IFNULL(city, ''), ', ', IFNULL(abbreviation, '')) AS nm
+    FROM users u
+    LEFT JOIN r_states s ON s.id=u.state
+    WHERE $where AND $uidCrit
+    ORDER BY community<>:ctty, fullName
 EOF;
 
+  $subs['ctty'] = test() ? $mya->community : ($mya->seedpacker ? -1 : $mya->community);
   $result = db\q($sql, $subs)->fetchAllKeyed(0, 1);
   
-  // QID? if not, maybe first word is a QID if this is from a list showing QID and fullName
-  $qid = trim(($i = mb_strpos($who, ':')) ? mb_substr($who, 0, $i) : mb_strtoupper($who));
-  if ($a = r\acct($qid)) $result[$a->id] = $a->fullName; // explicit QID is a result, regardless of community
-  if (count($result) == 1 and nni($result, $myid)) return [$self_message, [], []];
-  unset($result[$myid]); // self is one of many results, so ignore it
-  if (!$result) return [($mya->admin ? 'unknown member' : 'unknown ctty member') . ("$cphone$cmail" == '--' ? '' : '|no search'), $subs, []];
-  if (count($result) == 1) return r\acct(key($zot = $result)); // get the one entry (zot resets the pointer)
-  return ['ambiguous other', $subs, $result];
+  if (count($result) == 1 and key($result) == $myid) return $selfErr;
+  unset($result[$myid]); // if self is one of many results, ignore it
+  if (!$result) return $err ?: tr('unknown member', compact('who'));
+  
+  if (count($result) == 1) return r\acct(key($zot = $result)); // return the one entry (zot resets the pointer)
+  return $result; // array of choices
+}
+
+function nameCriteria($who) {
+  $short = u\shortName(" $who ", '%') ?: '-'; // abbreviations must not be null or zeroes
+  return ['(u.name LIKE :short OR fullName LIKE :short)', compact('short')];
 }
 
 function exception_error_handler($severity, $message, $file, $line) {

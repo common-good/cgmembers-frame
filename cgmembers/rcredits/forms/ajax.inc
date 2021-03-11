@@ -14,13 +14,15 @@ use CG\Db as db;
  * @todo: maybe all zero uid for some ops (by looking up two fields in sessions?)
  */
 
-function ajax() {
+function ajax($args = NULL) {
   global $channel; $channel = TX_AJAX; // tell log and tellAdmin our environment
-  extract(just('op sid data', $args = $_POST ?: $_GET, NULL));
+  if (!$args) $args = $_POST ?: $_GET; // not u\setDft ($args comes in as FALSE usually)
+  extract(just('op sid data', $args, NULL));
 
   header('Content-Type: application/json');
-  $myid = $aid = NULL;
 
+  $myid = $aid = NULL;
+  if (test()) extract(just('aid myid', $args)); else // skip the next block if testing (because session isn't recorded yet)
   if (!in($op, 'setNotice')) { // no sid if not signed in
     if (!nn($sid) or !$vars = w\sessionVars($sid)) return ajaxErr(t('You are signed out. Click <%a>here</a> to sign back in.', '_a', atag('/signin')));
     if (!$aid = $vars['uid'] or !$myid = $vars['myid']) return ajaxErr('not signed in');
@@ -42,8 +44,9 @@ function ajax() {
     $code = w\code($data + ray('account secret', $mya->mainQid, $mya->emailCode));
     return strhas($code, ' ') ? ajaxErr($code) : ajaxRet(compact('code'));
     
-  } elseif ($op == 'typeWho') { // get selections for suggestWho
-    exit(u\jsonize(be\memberRay($myid, $aid, $data))); // data=1 means companies only
+  } elseif ($op == 'suggestWho') { // get selections for a whoFld (see w\whoFldSubmit()
+    $res = be\memberRay($myid, $aid, $data ? nni($data, 'restrict') : ''); // data=1 means companies only
+    return exitJust(u\jsonize($res ? array_values($res) : []));
     
   } elseif ($op == 'setNotice') { // change notice preference for one notice type (code, type, freq)
     extract(just('code type freq', $data, ''));
@@ -112,23 +115,17 @@ function ajax() {
     ajaxMsg($msg);
     
   } elseif ($op == 'who') {
-    extract(just('who question amount', $data));
+    extract(just('who question amount selfMsg', $data));
     $amtDpy = u\fmtAmt(nn($amount) ?: 0);
-    if (!is_array($whoA = be\identify($who, $mya, mb_stripos(" $question", t(' pay ')) !== FALSE, 'no self-trading'))) {
-      ajaxRet(ray('who confirm', $whoA->mainQid, $question ? tr($question, 'name amount', $whoA->fullName, $amtDpy) : ''));
-    }
-    list ($msg, $args, $choices) = $whoA;
-    $message = t($msg, $args);
-    if (empty($choices)) return ajaxErr($message);
-    foreach ($choices as $uid => $fullName) {
-      $choices[$qid = r\qid($uid)] = "$qid $fullName";
-      unset($choices[$uid]);
-    }
-
-    // create modal selection form
-    $choice = selectFld('', '', ['size' => 12], $choices);
+    $who = be\identify($who, $mya, mb_stripos(" $question", t(' pay ')) !== FALSE, $selfMsg ?: 'self-tx');
+    if (is_string($who)) return ajaxErr(tr($who));
+    if (is_object($whoA = $who)) ajaxRet(ray('who confirm', $whoA->mainQid, $question ? tr($question, 'name amount', $whoA->fullName, $amtDpy) : ''));
+    
+    // $who must be an array, so create modal selection form
+    $choice = selectFld('', '', ['size' => 12], $who);
     $which = render($choice);
     $title = t($question ?: t('Which account?'), ray('name amount', t('whom'), $amtDpy));
+    $message = '';
     ajaxRet(compact('which', 'title', 'message'));
     
   } elseif ($op == 'whoami') { // return one or more data fields

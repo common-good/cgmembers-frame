@@ -81,7 +81,6 @@ function formSummary($form, &$sta) {
 //  $fields = @compact(ray($fields));
   $fields = []; foreach (ray($fields0) as $k) if (isset($$k)) $fields[$k] = $$k;
   
-//  if ($mya->superAdmin and !$mya->ok) $onSubmit = w\whoFldSubmit('helper', t('This person was invited by %name, yes?'));
   if ($mya->admin2 and !$mya->proSe) {
     $class = ['class' => ['admin']];
     $right = w\fieldSet('right2', $form, '', '', $class); // the admin part
@@ -109,15 +108,16 @@ function formSummary_validate($form, &$sta) {
   if ($altId xor $altSt) return say(t('You must give both an Alternate ID and a state or neither. If it\'s not a driver\'s license, describe the ID type in one or two words at the start of the number; for example "US Passport #12345". If there is no state, choose "AA".'), 'altId');
   
   if (nn($helper)) {
-    if (!$h = whois($helper, 'helper', $sta['input'])) return say(t('I don\'t know what helper account you mean.'), 'helper');
-    $helper = $h->id;
+    $helper = whoId($sta);
+//    if (!$h = whois($helper, 'helper', $sta['input'], 'self-help')) return say(t('I don\'t know what helper account you mean.'), 'helper');
+//    $helper = $h->id;
   } else {unset($helper); unset($sta['input']['helper']);}
 
   if (nn($active) and !$mya->ok and !$mya->isCtty) { // activating
     if (!nn($helper)) return say(t('You must specify who gets the helper reward.'), 'helper');
 //    if (!@$helper or $helper == 1) return say(t('You must specify who gets the helper reward.'), 'helper');
     if (!$mya->member and is_null(nni($adminable, B_MEMBER, NULL))) return say(t('That account is not READY (not a member).'), 'adminable'); // test "is_null" because 0 is the value when set
-    if (!$mya->confirmed and $mya->helper != 1) say(t('NOTE: Member %helperName has not yet confirmed this invitation.', 'helperName', $h->fullName));
+//    if (!$mya->confirmed and $mya->helper != 1) say(t('NOTE: Member %helperName has not yet confirmed this invitation.', 'helperName', $h->fullName));
     if (!$mya->co and !nn($dob) and !$mya->hasDob and !$mya->idVerifiedBy) return say(t('You cannot activate the account without a date of birth (except for solar1 signups).'), 'dob');
   }
 
@@ -253,7 +253,9 @@ function adminSummary() {
           $hA = r\acct($helper);
           $helper = "$hA->mainQid: $hA->fullName";
         }
-        $helper = textFld(t('Helped by:'), t('Who gets the "inviter/helper" reward? Must be exactly one account.'), dft($helper)); //  + autocomplete()
+        $helper = textFld(t('Helped by:'), t('Who gets the "inviter/helper" reward? Must be exactly one account.'), dft($helper));
+        w\whoFldSubmit('helper', t('This person was invited by %name, yes?'), 'self-help');
+
       } else $helper = item($mya->helper ? $mya->helperA->fullName: t('N/A'), t('Helped by:'));
     }
   

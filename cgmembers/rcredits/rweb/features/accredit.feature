@@ -22,7 +22,7 @@ Scenario: A member company gives a customer credit
   
   When member "C:B" confirms "co/accredit" with:
   | customer | amount |*
-  | .ZZA     |      3 |
+  | a@       |      3 |
   Then these "tx_rules":
   | id        | 1 |**
   | payerType | %REF_ACCOUNT |

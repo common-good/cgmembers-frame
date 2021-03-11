@@ -182,28 +182,26 @@ function photoUpload($uid = '', $sid = '') {
 function formAccounts($form, &$sta) {
   global $base_url, $rUrl, $mya;
 
-  if (!$mya) return []; //['signin' => item('<a href="' . "$base_url/signin" . '">Sign in</a>')];
+  if (!$mya) return [];
   $myid = $mya->id; // may be a non-existent account if tests are run while looking at .ZZA, for example
   
-  if ($mya->cAdmin2 or $mya->isAdmin2) { // admin: show a search box instead of a list of choices
+  if ($mya->anyAdmin) { // admin: show a search box instead of a list of choices
     $newAcct = textFld(t('Switch to account:'), [t('Type part of name, phone, email, record ID, or qid.')]);
     $submit = submit('Go Account!!');
     $accounts = fieldSet('edit-accounts', compact(ray('newAcct submit')));
     // can't use w\whoFldSubmit here because it fights with some pages (Pay, Charge, etc.)
     js('x/typeahead.bundle.min');
     jsx('new-acct');
-    
     return compact('accounts');
   }
   
   if (!$accounts = be\accountChoices()) return [];
-//  if (!in_array($myid, @$accounts) and $mya->can()) array_splice($accounts, 1, 0, $myid); // admin or cadmin
   $choices = $ltrs = [];
 
   foreach ($accounts as $uid => $choice) {
     $a = r\acct($uid);
-    if (!$a and isDEV) continue; // ignore this if testing -- "current" account has been undermined is all
-    if ($mya->cAdmin2 or $mya->isAdmin2) {
+    if (!$a and isDEV) continue; // ignore missing account if testing -- "current" account has been undermined is all
+    if ($mya->anyAdmin) {
       $qid = $a->mainQid;
       if ($mya->cAdmin2 and !$mya->admin) $qid = substr($qid, -2, 2); // show just last two letters for cAdmins
       if ($a->isCtty) { // show communities in a separate category
@@ -233,17 +231,19 @@ function formAccounts($form, &$sta) {
 }
 
 function formAccounts_validate($form, &$sta) {
-  extract(just('newAcct', $sta['input'], ''));
+/*  extract(just('newAcct', $sta['input'], ''));
 //  t('Type part of name, phone, email, record ID, or qid.')
   if (!$newAcct) return;
   if (mb_strpos($newAcct, '@') and !u\validEmail($email = $newAcct)) return say('bad email', compact('email'), 'newAcct');
-  if (!$a = w\whois($newAcct, 'newAcct', [], t('You are already in that account.'), FALSE)) return FALSE;
+  if (!$a = w\whois($newAcct, 'newAcct', [], 'self-switch', FALSE)) return FALSE;
   u\preray(compact('a'), $sta['input']); // ['uid' => $a->id]
+  */
 }
 
 function formAccounts_submit($form, &$sta) {
-  extract(just('a', $sta['input']));
-  changeWho('', 'acct=' . $a->id, $sta);
+//  extract(just('a', $sta['input']));
+  $uid = whoId($sta);
+  changeWho('', 'acct=' . $uid, $sta);
 }
 
 /**

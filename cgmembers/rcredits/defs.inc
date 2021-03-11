@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.57b'; // software version
+const R_VERSION = '3.57d'; // software version
 define('R_ROOT', __DIR__);
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -137,6 +137,7 @@ const ANY = 'any'; // accessible to anyone (if you change this, rebuild menus im
 const SVAR_HEADER = 'rcredits_'; // session variable header
 const TEST_PDF_FLNM = 'testOutput.pdf'; // pdf output during testing
 const QR_DOMS = 'RC4.ME RC2.ME'; // domains that redirect to staging and production, respectively (for QR codes)
+const PHONE_PUNC = '\(\) \-\./'; // punctuation commonly found in phone numbers (excluding "+")
 
 const TEN99TYPES = 'B:B, K:MC, MISC:A, NEC:NE, R:9'; // IRS aliases dictated in Publication 1220
 const TEN99AMTS = 'B:7, K:12456789ABCDEFG, MISC:7, NEC:1, R:12'; // amount codes used for various 1099s
@@ -334,6 +335,8 @@ const HAS_XFEE = "data LIKE '%s:4:\"xfee\";%'"; // sql to recognize a transactio
 const R_DEPOSIT_RETURN_FEE = 20; // what we charge members for a second bounced transfer
 const TRIALCO_AMT_LIMIT = 1000; // maximum payments received by a trial (dependent company) account
 //const TRIALCO_DAY_LIMIT = 14; // maximum number of days for a trial company
+const CREDIT_WITH_SSN = 200; // amount of initial creditline when SSN is verified
+const CREDIT_WITH_LICENSE = 50; // amount of initial creditline when drivers license is given
 const EQUIP_DEPOSIT = 50; // dollar cost of equipment deposit
 const MATURITY = 21; // minimum age to have a credit limit
 const SELLING_MAXLEN = 25; // maximum length of any short description of something being sold

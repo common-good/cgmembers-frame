@@ -42,7 +42,7 @@ function formTx($form, &$sta, $type, $args = '') {
   $advanced = item(btn('', t('delay'), 'default', '', 'btn-delay') . btn('', t('repeat'), 'default', '', 'btn-repeat'));
   $submit = t('Submit');
 
-  w\whoFldSubmit('who', $opDesc . t(' %amount to %name?'), ray('allowNonmember', $charge));
+  w\whoFldSubmit('who', $opDesc . t(' %amount to %name?'), 'self-tx', ray('allowNonmember', $charge));
   $paying = hidFld($pay);
   
   jsx('tx');
@@ -53,22 +53,23 @@ function formTx($form, &$sta, $type, $args = '') {
 
 function formTx_validate($form, &$sta) {
   global $mya;
-  $info = just('who amount purpose start end paying', $sta['input'], NULL);
+  $info = just('amount purpose start end paying', $sta['input'], NULL);
   extract($info);
-  if (mb_strpos($who, '@') and !u\validEmail($email = $who)) return say('bad email', compact('email'), 'who');
-  if (!$a = w\whois($who, 'who', $info, 'no self-trading', $paying)) return FALSE;
-  $uid = $a->id;
+/*  if (mb_strpos($who, '@') and !u\validEmail($email = $who)) return say('bad email', compact('email'), 'who');
+  if (!$a = w\whois($who, 'who', $info, 'self-tx', $paying)) return FALSE;
+  $uid = $a->id; */
   if ($err = u\badAmount($amount, '>0')) return say($err, 'amount');
   foreach (ray('start end') as $k) if ($$k and $err = u\badDate($$k, $mya->superAdmin ? today() - 180 * DAY_SECS : today())) return say($err, $k);
-  u\preray(compact(ray('amount uid start end')), $sta['input']);
+  u\preray(compact(ray('amount start end')), $sta['input']);
 }
 
 function formTx_submit($form, &$sta) {
   global $mya;
   $myid = $mya->id;
-  extract($info = just('amount purpose period periods start end uid goods paying', $sta['input'], NULL));
+  extract($info = just('amount purpose period periods start end goods paying', $sta['input'], NULL));
 //  if (mb_strpos($who, '@')) return w\go('/charge/nonmember/' . u\urlify(serialize($info)));
 
+  $uid = whoId($sta);
   u\setDft($goods, FOR_GOODS);
   $DBTX = \db_transaction();
   $delay = ($start > today());

@@ -65,7 +65,7 @@ function fixData(&$info, $direct = FALSE) {
   if (nn($notices) and !strhas($notices, ':')) $notices = array_search($notices, ray('daily weekly monthly'), TRUE);
   if (nn($statements)) $statements = array_search($statements, ray('electronic paper'), TRUE);
   if (nn($email)) $info['email'] = t\fixEmail($email);
-  if (nn($email)) t\fixEmail($email);
+
   if (!empty($phone)) {
     if (strlen(nn($phone)) == 1) u\prefix('+1413772000', $phone); else $phone = u\fmtPhone($phone, 'internal');
   }
@@ -83,7 +83,7 @@ function fixData(&$info, $direct = FALSE) {
       $fields .= ' ' . $k;
       $$k = t\uid($v);
       if ($k == 'qid') $$k = r\qid($$k); // simply convert .ABC to NEWABC for qid field
-    }
+    } elseif (strhas($v, '@')) $info[$k] = t\fixEmail($$k); // sometimes an email identifies an account ($$k not $v)
   }
   foreach (ray('state country') as $k) if (!isset($info[$k])) unset($$k);
   foreach (ray($fields) as $k) if (isset($$k)) $info[$k] = $$k;
@@ -1391,22 +1391,20 @@ function clear($ch = 0) {
   global $tTime; $tTime = time(); // all events happen simultaneously during a test (conceptually)
   global $lastGo, $formOut, $formArray, $formSta, $testOp, $testConfirmation;
   global $tChecked, $tRadios, $testEmails, $rAPIResult;
-  global $nextCode; $nextCode = NULL;
+  global $testWhoFld, $testWhoErr, $testSeq, $nextCode;
   global $sms_devel; $sms_devel = TRUE;
   global $newThresholds; unset($newThresholds);
   global $testRewardStep; $testRewardStep = 500;
-  //  global $testRewarding; $testRewarding = TRUE; // normally set this true in tests only if testing this feature
   global $T_POST; $T_POST = $_POST = []; // setting $_GET=[] makes things go kaflooey
-  $lastGo = $formOut = $formArray = $formSta = $testOp = $testConfirmation = $tChecked = $tRadios = NULL;
-  $formOut['text'] = '';
-  $testEmails = $rAPIResult = NULL;
 
-  global $sms_devel; $sms_devel = TRUE;
-  global $testSeq; $testSeq = NULL;
+  $formOut['text'] = '';
+
   global $channel; $channel = $ch;
   global $testMessages; $testMessages = [];
   global $sceneTest;
   global $conf; $conf = [];
+
+  foreach (ray('lastGo formOut formArray formSta testOp testConfirmation tChecked tRadios testEmails rAPIResult testWhoFld testWhoErr nextCode testSeq') as $k) $$k = NULL;
 
   r\deleteAllCooks();
   foreach (ray('error status') as $one) u\deleteFile(t\dosayFilename($one));

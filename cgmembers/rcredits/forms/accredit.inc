@@ -15,7 +15,7 @@ function formAccredit($form, &$sta, $args = '') {
 
   $customer = textFld(t('Customer:'), [t('Name, id, email, or phone')]);
   $amount = numFld(t('Credit:'), [t('Amount')]);
-  w\whoFldSubmit('customer', t('Grant %amount credit to %name?'));
+  w\whoFldSubmit('customer', t('Grant %amount credit to %name?'), 'self-credit');
   $submit = t('Save');
   
   return cgform(compact(ray('title subtext customer amount submit')));
@@ -27,9 +27,10 @@ function formAccredit_validate($form, &$sta) {
 
 function formAccredit_submit($form, &$sta) {
   global $mya;
-  extract(just('customer amount', $sta['input']));
+  extract(just('amount', $sta['input']));
 
-  $a = r\acct($customer);
+  $uid = whoId($sta);
+  $a = r\acct($uid);
   be\advanceCredit(SELF_CREDIT, $a, $mya, $amount);
 
   $msg = 'store grant|to redeem';

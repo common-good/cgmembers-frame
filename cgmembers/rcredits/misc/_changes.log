@@ -1,3 +1,21 @@
+2021-03-04 feature/find-anyone
+. completely revamped the way account lookups work, for beauty, speed, and finding anyone anywhere (using hidden whoId field)
+. we are no longer notified of new members (happens too often)
+. account field in panel now defaults to current account
+. fixed bug: crashed when disputing a tx by clicking X on the txs page
+. stateNum() now returns false if not found (instead of the argument)
+. added a test for ajax (to make sure it compiles at least)
+. partner signup never crashes now (softErr instead)
+. admin dashboard focuses on note field
+. pay/charge page focuses on who field
+. cron biggies report no longer includes canonic accounts
+
+2021-03-03 feature/immediate-credit
+. members now get $200 immediate credit if SSN is valid (25 for alternate IDs)
+. newly activated account gets funded immediately up to that creditline, if possible
+. Helga's now gets an emailCode on demo server
+. CGPay form no longer greets "Common Good Member", so not-yet-signed-up people will feel welcome also
+
 2021-03-02 feature/cgpay-bugs
 . bug fix: in button creator, changing link text now works
 . fixed order of fields in cgpay form

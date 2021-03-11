@@ -7,7 +7,7 @@ Setup:
   Given members:
   | uid  | fullName | flags   |*
   | .ZZA | Abe One  | ok,confirmed      |
-  | .ZZB | Abe One  | ok,confirmed      |
+  | .ZZB | Bea Two  | ok,confirmed      |
   | .ZZC | Cor Pub  | ok,confirmed,co   |
   
 Scenario: Synopsis of scenario

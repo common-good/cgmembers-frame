@@ -101,7 +101,7 @@ EOF;
   $form = compact(ray('title subtext buttons list submitGroup showCustomers'));
 
 // no such step  if (!$mya->member and !$mya->stepIsDone('relations')) $form += w\setupFoot();
-  w\whoFldSubmit('newperson', t('Create a new relation with %name?'));
+  w\whoFldSubmit('newPerson', t('Create a new relation with %name?'), 'self-relation');
   w\jsx('relations');
 
   return cgform($form, 'wider');
@@ -110,20 +110,26 @@ EOF;
 function formRelations_validate($form, &$sta) {
   global $mya;
 
-  if ($newPerson = nn($sta['input']['newPerson'])) {
-    $a = whois($newPerson, 'newPerson', $sta['input'], 'no self-relation', TRUE);
+  $uid = whoId($sta);
+  if (r\relation(1, $mya->id, $uid)) return say('already related', 'newPerson');
+
+/*  if ($newPerson = nn($sta['input']['newPerson'])) {
+    $a = whois($newPerson, 'newPerson', $sta['input'], 'self-relation', TRUE);
     $id = $a ? $a->id : '';
     if ($id and r\relation(1, $mya->id, $id)) {
       say('already related', 'newPerson');
     } else $sta['input']['newPerson'] = $id; // save for submission handling
   }
+  */
 }
 
 function formRelations_submit($form, &$sta) {
   global $mya;
 
-  extract(just('newPerson showCustomers', $sta['input'], ''));
-  if ($other = $newPerson) { // adding a new relation
+  extract(just('showCustomers', $sta['input'], ''));
+  $uid = whoId($sta);
+
+  if ($other = $uid) { // adding a new relation
     $permission = r\perm(B_READ);
     $mya->newRelation(compact('other', 'permission'));
     $who = r\acct($other)->fullName;

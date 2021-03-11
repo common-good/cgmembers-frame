@@ -36,20 +36,11 @@ function formAdminPanel($form, &$sta, $args = '') {
   $inviteeStatus = submi(t('Invitee Status'));
   $signupCos = submi(t('Connections to Companies'));
   $queries = selectFld(t('Query:'), '', '', $queries);
-  $account = textFld(t('Account:'), t('Account to do something to'), dft($qid ?: svar('adminingAcct')));
+  $account = textFld(t('Account:'), t('Account to do something to'), dft($qid ?: (svar('adminingAcct') ?: $mya->mainQid)));
   
   if ($mya->superAdmin) {
     if (r\up()) $stop = submi(t('STOP')); else $start = submi(t('START'));
-    /*    if (now() < strtotime('6/20/2017')) {
-          global $base_url;
-          $members = db\col('uid', 'users', ':IS_OK AND NOT :IS_CO AND activated<1486098000 ORDER BY community, uid');
-          foreach($members as $k) {
-          $list[] = <<<EOF
-          <a href="$base_url/print-rcard/$k" target="_blank" class="btn btn-xs btn-primary" role="button" onclick="this.style.display='none';">NEXT</a>
-EOF;
-          }
-          $start = item(join('', $list));
-          } */
+
     $do1099ktest = submi(t('1099-K TEST'));
     $do1099k = submi('1099-K');
     $reconcile = submi('Reconcile Ctty Fund');

@@ -43,7 +43,8 @@ function setupBasicAccounts() {
       $state = r\stateNum($st);
       $values = array($uid, $uid, $region . '.', $fullName, $email, R_COUNTRY_ID, 0, $flags);
       $info = array_combine($keys, $values);
-      $info += compact(ray('postalAddr state federalId activated'));
+      list ($address, $city, $zot1, $zot2) = u\parseAddr($postalAddr); // don't overwrite state or zip
+      $info += compact(ray('postalAddr address city state federalId activated'));
       $serverA = new r\Acct($info);
       $serverA->update(compact('zips'));
     }
@@ -101,7 +102,7 @@ function makeTestAccounts() {
   'aab' => ['Corner Store', TRUE, 'CvRM3AwXJppPmf'], // include cardCode so we can test the company proSe (or with agent)
   'aad' => ['Cathy Cashier', '', 'ME04nW44DHzxVDg'],
   'aak' => ['Curt Customer', '', 'NyCBBlUF1qWNZ2k'],
-  'aaq' => ['Helga\'s Hardware', TRUE, ''],
+  'aaq' => ['Helga\'s Hardware', TRUE, 'Y9d8fuwiejKfd'],
   'abb' => ['Susan Shopper', '', 'ZzhWMCq0zcBowqw'],
   ];
 
@@ -111,6 +112,7 @@ function makeTestAccounts() {
     extract(array_combine(ray('fullName co cardCode'), $vs));
     $uid = t\uid(strtoupper(".$qid"));
     $name = u\shortName($fullName);
+    $emailCode = $cardCode;
     $flags = u\bits('ok member confirmed carded ided debt');
     if ($co) $flags |= u\bit('co');
     $email = "$qid@example.com";
@@ -119,7 +121,7 @@ function makeTestAccounts() {
     $postalAddr = u\randomString(3, 'digits') . ' Demo St., Demoville, MA 01330';
     list ($address, $city, $state, $zip) = u\parseAddr($postalAddr);
     $state = r\stateNum($state);
-    $info = $info0 + compact(ray('uid fullName name flags cardCode email phone federalId postalAddr address city state zip'));
+    $info = $info0 + compact(ray('uid fullName name flags cardCode emailCode email phone federalId postalAddr address city state zip'));
 
     if ($a = a($qid)) $a->update($info); else $a = new r\Acct($info);
     a\photoFromFile($a);

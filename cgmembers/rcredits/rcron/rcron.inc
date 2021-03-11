@@ -831,11 +831,12 @@ function biggies() {
   $sql = <<<X
     SELECT fullName, SUM(ABS(amount)) AS total 
     FROM tx_entries JOIN users USING (uid) JOIN tx_hdrs h USING (xid)
-    WHERE h.created BETWEEN $start AND $end
+    WHERE h.created BETWEEN $start AND $end AND uid NOT :CANONIC
     GROUP BY uid
     HAVING total>1000
     ORDER BY total DESC
 X;
+
   if ($list = db\q($sql)->fetchAllKeyed()) r\tellAdmin(t('Big Transfers on ') . u\fmtDate(), compact(ray('admin list')));
 }
 

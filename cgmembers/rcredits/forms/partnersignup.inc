@@ -130,10 +130,10 @@ function formPartnerSignup_validate($form, &$sta, $args = '') {
 function formPartnerSignup_submit($form, &$sta) {
   global $mya;
   
-  extract(just('routingNumber bankAccount processor data myid', $sta['input']));
-  extract(just('info pid', unserialize($data)));
-  if (!$pA = r\acct($pid)) u\FAIL('no partner account');
-  if (!$mya = r\acct($myid)) u\FAIL('no customer account');
+  extract(just('routingNumber bankAccount processor data myid', $sta['input'], NULL));
+  extract(just('info pid', $data ? unserialize($data) : [], NULL));
+  if (!$pid or !$pA = r\acct($pid)) return partnerErr('no partner account');
+  if (!$myid or !$mya = r\acct($myid)) return partnerErr('no customer account');
   r\setAcct($mya, $sta); // part way through, so gotta sign back in
   
   $bankAccount = "USkk$routingNumber$bankAccount";
@@ -250,9 +250,10 @@ function gotSignup($pA) {
   signout(TRUE); // current account is irrelevant and could be confusing, so sign out
   $pagePartner = $pA->id; // tell page.html to use the partner's branding
   $_POST += ray('pid project partnerName', $pA->uid, $pA->name, $pA->fullName);
-  
+
   $info = handleInput($_POST, $sfData);
   if (!$sfData) return;
+
   extract($info);
 // NO! bad security  $sfData['contractUrl'] = contractUrl($customer);
 
@@ -483,9 +484,11 @@ X
  * @return an array of new pathnames (NULL if none)
  */
 function renameUploads($files, $meter) {
-  if (!is_dir(BILL_DIR)) mkdir(BILL_DIR, 0755) or u\FAIL('cannot create electric bill directory'); // required for tests
+  if (!is_dir(BILL_DIR)) {
+    if (!mkdir(BILL_DIR, 0755)) return partnerErr('cannot create electric bill directory'); // required for tests
+  }
   if ($files) foreach ($files as $f => $one) {
-    if (!$one['name']) {if (isDEV) break; else u\FAIL('missing file');}
+    if (!$one['name']) {if (isDEV) break; else return partnerErr('missing file');}
     extract(just('name type tmp_name error size', $one));
     if ($size > 10 * MAX_ID_SIZE * 1024 * 1024) {
       w\say(t('<p>That file is too big. You will need to send the photos of your electric bill to %partner by postal mail or as attachments to an email (%partnerEmail).</p>', 'partner partnerEmail', $pA->fullName, $pA->email), 'err');
@@ -516,8 +519,10 @@ function tellPartner($pA, $info, $flnms) {
 
 /**
  * Cancel the signup and alert an admin (should never happen).
+ * @param string $msg: error message
+ * @param string $k: field name
  */
-function partnerErr($msg, $k) {
+function partnerErr($msg, $k = '') {
   global $solarOneInfo;
   $subs = compact('msg', 'k');
   r\tellAdmin(t('partner signup: %msg (field %k)', $subs), $_POST + $_SERVER + urlq2ray(nn($solarOneInfo)));
@@ -682,7 +687,9 @@ function partnerContinue($a, &$sta) {
 }  
 
 function contractFlnm($customer) {
-  if (!is_dir(CONTRACT_DIR)) mkdir(CONTRACT_DIR, 0755) or u\FAIL('cannot create contract directory'); // required for tests
+  if (!is_dir(CONTRACT_DIR)) {
+    if (!mkdir(CONTRACT_DIR, 0755)) return partnerErr('cannot create contract directory'); // required for tests
+  }
   return CONTRACT_DIR . "/$customer.pdf"; // customer-specific flnm
 }
 //function contractUrl($customer) {return str_replace(ROOT, BASE_URL, contractFlnm($customer));}

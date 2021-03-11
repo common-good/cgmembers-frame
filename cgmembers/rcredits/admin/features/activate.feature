@@ -33,7 +33,7 @@ Scenario: Admin activates an account unconfirmed
   | .ZZD | member |
   When member "D:A" completes form "sadmin/summary" with values:
   | mediaConx | active | helper | federalId  | adminable | tickle | dob      |*
-  |         1 |      1 |      1 | %R_ON_FILE | member    |        | %mdy-19y |
+  |         1 |      1 | admin  | %R_ON_FILE | member    |        | %mdy-19y |
   Then members:
   | uid  | flags              | helper |*
   | .ZZD | member,ok,underage |      1 |
