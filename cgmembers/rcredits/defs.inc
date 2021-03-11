@@ -137,6 +137,7 @@ const ANY = 'any'; // accessible to anyone (if you change this, rebuild menus im
 const SVAR_HEADER = 'rcredits_'; // session variable header
 const TEST_PDF_FLNM = 'testOutput.pdf'; // pdf output during testing
 const QR_DOMS = 'RC4.ME RC2.ME'; // domains that redirect to staging and production, respectively (for QR codes)
+const PHONE_PUNC = '\(\) \-\./'; // punctuation commonly found in phone numbers (excluding "+")
 
 const TEN99TYPES = 'B:B, K:MC, MISC:A, NEC:NE, R:9'; // IRS aliases dictated in Publication 1220
 const TEN99AMTS = 'B:7, K:12456789ABCDEFG, MISC:7, NEC:1, R:12'; // amount codes used for various 1099s

@@ -221,6 +221,7 @@ class Acct {
       case 'jA': return $a->jid ? r\acct($a->jid) : NULL;
       case 'masterA': return $a->slave ? $a->jA : $a;
       case 'helperA': return $a->helper ? r\acct($a->helper) : '';
+      case 'anyAdmin': return ($a->cAdmin2 or $a->isAdmin2);
       case 'usa': return ($a->country == US_COUNTRY_ID);
       
       case 'foody': return db\get(':U_FOODY', 'users u', $uidSub);
@@ -954,7 +955,7 @@ EOF;
     if ($done and empty($nextStep)) {
       $a->update('task', '');
       if (!$a->member) {
-        r\tellCAdmin(t('New Member (%name)', ['name' => $a->fullName] + $details));
+//        r\tellCAdmin(t('New Member (%name)', ['name' => $a->fullName] + $details));
         $a->setBit(B_MEMBER);
         $a->update('tickle', now());
       }

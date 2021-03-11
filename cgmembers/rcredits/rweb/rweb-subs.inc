@@ -643,15 +643,33 @@ function badSignature(&$sta) {
  * Return onSubmit script for a typeahead member account field (and include needed script files).
  * @param string $field: the field name
  * @param string $question: what to ask, for confirmation or disambiguation (with params %amount and %name)
+ * @param string $selfErr: index to error message for identifying oneself
  * @param assoc $extra: less common parameters:
  *   amount: UNUSED amount substitution for question (defaults to form.amount.value)
  *   allowNonmember: <allow a non-member email address>
  *   coOnly: <restrict results to companies>
  */
-function whoFldSubmit($field, $question, $extra = []) {
+function whoFldSubmit($field, $question, $selfErr, $extra = []) {
+  global $testWhoFld, $testWhoErr; list ($testWhoFld, $testWhoErr) = [$field, $selfErr];
   extract(just('amount allowNonmember coOnly', $extra, ''));
   js('x/typeahead.bundle.min');
-  jsx('suggest-who', compact(ray('field question amount allowNonmember coOnly')));
+  jsx('suggest-who', compact(ray('field question amount allowNonmember coOnly selfErr')));
+}
+
+/**
+ * Return the uid for the account entered in a form. Called from _submit()
+ * @param assoc $sta: the form's status array
+ * @return the uid of the account, stored in a hidden field
+ * @see also whoFldSubmit
+ */
+function whoId($sta) {
+  global $testWhoFld, $testWhoErr;
+  if (test()) {
+    if (!$a = whois(nni($sta['input'], $testWhoFld), $testWhoFld, [], $testWhoErr)) return FALSE;
+    return $a->id;
+  }
+  if (!$uid = nni($sta['input'], 'whoId')) return isDEV ? u\FAIL('no whoId') : softErr(t('You need to enable Javascript to use this website.'));
+  return $uid;
 }
 
 /**
@@ -1644,22 +1662,22 @@ function rangeDates($period, $starting = '', $ending = '') {
  * @param string $who: what the user typed
  * @param string $field_name: name of the field the user typed in
  * @param array $info: field values to be stored, then reinstated when the page is refreshed to show the choices
- * @param string $selfMsg: index to error message to give if user self-refers
+ * @param string $selfErr: index to error message to give if user self-refers
  * @param bool $activeOnly: <the person has to have an active account> (if we're paying them or giving access)
  * @return:
  *   NULL if there is an error
  *   acct of the identified person
  *   no return (refreshes page) if ambiguous
  */
-function whois($who, $field_name, $info, $selfMsg = 'no self-trading', $activeOnly = FALSE) {
+function whois($who, $field_name, $info, $selfErr, $activeOnly = FALSE) {
   global $mya;
-  if (u\isAcct($result = be\identify($who, $mya, $activeOnly, $selfMsg))) return $result;
-  list ($msg, $args, $choices) = $result;
-//  foreach (ray('form_build_id form_token form_id op') as $one) unset($info[$one]); // just for neatness
+//  if (u\isAcct($result = be\identify($who, $mya, $activeOnly, $selfErr))) return $result;
+  $res = be\identify($who, $mya, $activeOnly ? ':IS_OK' : '', $selfErr);
+  if (is_object($res)) return $res;
+  if (is_string($res)) return say($res, $field_name);;
   if (u\abbreviates('who=', $last = basename($return = \current_path()))) $return = dirname($return);
   $info['return'] = plain(str_replace('/', R_URL_SLASH, $return)); // even urlencoded slashes confuse Drupal
-  foreach ($choices as $uid => $fullName) $choices[$uid] = r\qid($uid) . ': ' . $fullName;
-  if (empty($choices)) return say($msg, $args, $field_name); else which($choices, $field_name, $info, t($msg, $args));
+  which($res, $field_name, $info, t('Which account?'));
 }
   
 /**

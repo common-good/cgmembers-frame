@@ -48,7 +48,7 @@ function formMakeCtty_validate($form, &$sta) {
   
   list ($address, $city, $state, $zip) = u\parseAddr($postalAddr);
   if (!$address) return say('Bad postal address', 'postalAddr');
-  if (!$state = r\stateNum($state)) return say('Bad state', 'postalAddr');
+  if (!$state = r\stateNum($state)) return say('bad state', 'postalAddr');
   if ($err = u\badZip($zip)) return say($err, 'postalAddr');
 
   $region = strtoupper($region);

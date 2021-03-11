@@ -141,14 +141,19 @@ function noSubmit() {
 }
 function yesSubmit() {}
 
-function who(form, fid, question, amount, allowNonmember, coOnly) {
+/**
+ * Find out what account the user means (see w\whoFldSubmit).
+ * Create a hidden whoId field to store the record Id.
+ */
+function who(form, fid, question, amount, allowNonmember, coOnly, selfMsg) {
   jForm = $(form);
   var who = $(fid).val();
   if (yesSubmit) return true;
-  get('who', {who:who, question:question, amount:amount, coOnly:coOnly}, function(j) {
+  get('who', {who:who, question:question, amount:amount, coOnly:coOnly, selfMsg:selfMsg}, function(j) {
     if (j.ok) {
       if (j.who) {
-        $(fid).val(j.who);
+        setWhoId(j.who, jForm);
+        
         if (j.confirm != '') {
           yesno(j.confirm, function() {
             yesSubmit = true; jForm.submit();
@@ -166,6 +171,13 @@ function who(form, fid, question, amount, allowNonmember, coOnly) {
   return false;
 }
 
+function setWhoId(id, frm) {
+  var whoId = $('input[name="whoId"]', frm);
+  if (whoId.length > 0) { // save record ID in hidden field, creating if necessary
+    whoId.val(id);
+  } else frm.append('<input type="hidden" name="whoId" value="' + id + '" />');
+}
+
 function which(jForm, fid, title, body) {
   $('<div id="which">' + body + '</div>').dialog({
     title: title,
@@ -174,12 +186,24 @@ function which(jForm, fid, title, body) {
     dialogClass: 'which'
   });
   $('.ui-dialog-titlebar-close').html('&times;');
-  $('.ui-dialog-titlebar-close').click(function() {noSubmit();});
-  $('#which option').click(function() {
-    yesSubmit = true;
-    $(fid).val($(this).val());
-    jForm.submit();
+  $('.ui-dialog-titlebar-close').click(function () {noSubmit();});
+
+  $('#which option').click(function () {clickWhich(fid, $(this).val(), $(this).text(), jForm);});
+  
+  $('#which select').keypress(function (e) {
+    if (e.which != 13) return;
+    var id = $(this).val();
+    var text = $(this).find('option[value="' + id + '"]').text();
+    clickWhich(fid, id, text, jForm);
   });
+}
+
+function clickWhich(fid, id, text, frm) { 
+    yesSubmit = true;
+    $(fid).val(text);
+    setWhoId(id, frm);
+    $('#which').hide();
+    frm.submit();
 }
 
 /**
@@ -193,7 +217,7 @@ function suggestWho(sel, coOnly) {
     datumTokenizer: Bloodhound.tokenizers.whitespace,
     queryTokenizer: Bloodhound.tokenizers.whitespace,
     prefetch: {
-      url: ajaxUrl + '?op=typeWho&data=' + coOnly + '&sid=' + ajaxSid,
+      url: ajaxUrl + '?op=suggestWho&data=' + (coOnly ? '{"restrict":":IS_CO"}' : '') + '&sid=' + ajaxSid,
       cache: false
     }
   });

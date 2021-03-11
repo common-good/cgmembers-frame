@@ -96,7 +96,7 @@ function formCard_submit($form, &$sta) {
   }
   
   if ($way == 'down') { // setting up device
-    if ($op == 'no') return cardSignout(tr('no self-trading'), 'err');
+    if ($op == 'no') return cardSignout(tr('self-trading'), 'err');
     r\setCook('scanner', NULL); // scan QRs with last account used
     r\setAcct(NULL); // 
     return cardSignout(tr('This device is no longer associated with %nm.', 'nm', $mya->fullName));

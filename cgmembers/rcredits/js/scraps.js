@@ -80,6 +80,7 @@ function doit(what, vs) {
       var nm = $('#edit-accountName .control-data').text().replace(/ \([^\)]*\)/, '').trim();
       clipCopy(nm + ' <' + $('#acctEmail').text() + '>');
     });
+    $('#edit-note').focus();
     break;
     
   case 'dashboard':
@@ -98,6 +99,7 @@ function doit(what, vs) {
       $('#edit-title h3').html(desc);
       $('#edit-paying').val(pay ? 1 : 0); // save this for 'suggest-who' (see herein)
       $('#tx').show();
+      $('#edit-who').focus();
     });
     
   case 'tx': // fall through from dashboard
@@ -345,10 +347,9 @@ function doit(what, vs) {
         vs['allowNonmember'] = !pay;
       }
       
-      var ok = who(form, fid, vs['question'], vs['amount'] || $('input[name=amount]', form).val(), vs['allowNonmember'], vs['coOnly']);
+      var ok = who(form, fid, vs['question'], vs['amount'] || $('input[name=amount]', form).val(), vs['allowNonmember'], vs['coOnly'], vs['selfErr']);
       if (!ok) {e.preventDefault(); return false;}
     });
-    
     break;
     
   case 'new-acct':
@@ -356,7 +357,7 @@ function doit(what, vs) {
     var form = $('#frm-accounts');
     suggestWho(fid, '');
     form.submit(function (e) {
-      return who(form, fid, '', false, true, false);
+      return who(form, fid, '', false, true, false, 'self-switch');
     });
     break;
 

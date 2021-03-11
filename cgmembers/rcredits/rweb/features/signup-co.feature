@@ -210,9 +210,9 @@ Scenario: A company account manager creates a discount
   | Finish |
   And we say "status": "info saved|ok complete|co complete|join thanks"
   And member ".ZZC" steps left ""
-  And we tell ".ZZC" CO "New Member (Our Pub)" with subs:
-  | quid | status |*
-  | .ZZC | member |
+#  And we tell ".ZZC" CO "New Member (Our Pub)" with subs:
+#  | quid | status |*
+#  | .ZZC | member |
 
 Scenario: An unverified company agent completes a company account
   Given member ".ZZC" has "co" steps done: "signup verifyemail fund contact backing photo donate company discount"

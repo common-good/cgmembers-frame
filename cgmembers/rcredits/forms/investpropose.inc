@@ -55,7 +55,7 @@ function formInvestPropose($form, &$sta, $args = '') {
 
   $submit = t('Propose');
 
-  w\whoFldSubmit('company', t('Propose this investment in %name?'), ray('coOnly', TRUE));
+  w\whoFldSubmit('company', t('Propose this investment in %name?'), 'self-investing', ray('coOnly', TRUE));
   
   jsx('invest-proposal');
   
@@ -67,8 +67,8 @@ function formInvestPropose_validate($form, &$sta) {
   extract($info = just(INVEST_ALLFLDS, $sta['input'], NULL));
 
   if ($company) {
-    if (!$a = whois($company, 'company', $info, t('no self-investing'))) return FALSE;
-    $company = $a->id;
+//    if (!$a = whois($company, 'company', $info, t('self-investing'))) return FALSE;
+//    $company = $a->id;
   } else {
     if ($err = u\badDate($dob, '', now())) return say($err, 'dob');
     if ($err = u\badAmount($gross, '>=0', 2, '')) return sayFieldErr($err, 'gross');
@@ -94,7 +94,10 @@ function formInvestPropose_submit($form, &$sta) {
   if ($fullName) {
     $a = new r\Acct(compact(ray(INVEST_COFLDS)));
     $a->setCategories($bizCats);
-  } else $a = r\acct($company);
+  } else {
+    $uid = whoId($sta);
+    $a = r\acct($uid);
+  }
   list ($coid, $proposedBy) = [$a->id, $mya->agentId];
   $return /= 100; // convert % to fraction
   

@@ -143,7 +143,7 @@ Scenario: A member tries to add a relation with self
   When member ".ZZA" completes relations form with values:
   | newPerson |*
   | Abe One   |
-  Then we say "error": "no self-relation"
+  Then we say "error": "self-relation"
 
 Scenario: A member tries to add a relation again
   Given relations:

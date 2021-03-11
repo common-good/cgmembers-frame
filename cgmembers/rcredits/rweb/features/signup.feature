@@ -240,9 +240,9 @@ Scenario: A member invites
   And we say "status": "info saved"
   And we say "status": "tentative complete|card soon"
   And member ".ZZB" steps left ""
-  And we tell ".ZZB" CO "New Member (Bea Two)" with subs:
-  | quid | status |*
-  | .ZZB | member |
+#  And we tell ".ZZB" CO "New Member (Bea Two)" with subs:
+#  | quid | status |*
+#  | .ZZB | member |
 
 Scenario: A member confirms social security number
   Given member ".ZZB" steps left "ssn"

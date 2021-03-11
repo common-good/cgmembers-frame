@@ -186,7 +186,7 @@ function memberConfirmsFormWithValues($id, $page, $values) {return t\completeFor
  *     MAKE cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
  *     MAKE cgpay AMemberTypesAccountIDToBuyStoreCredit
  *     MAKE cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
- *     MAKE message SynopsisOfScenario
+ *     MAKE message AMemberSendsAMessageToAnotherMember
  */
 function memberConfirmsWith($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
 
@@ -229,6 +229,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  * members: (ARG)
  *
  * in: MAKE accredit Setup
+ *     MAKE ajax Setup
  *     MAKE backing Setup
  *     TEST backing AMemberIncreasesBackingAmount
  *     TEST backing AMemberDecreasesBackingAmount
@@ -411,7 +412,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST invest AClubAdministratorHandlesRequestsToCashOut
  *     TEST invoice AMemberConfirmsRequestToChargeANotyetMember
  *     TEST joint AMemberCreatesAJointAccountByClickingALinkOnTheDashboardPage
- *     TEST message SynopsisOfScenario
+ *     TEST message AMemberSendsAMessageToAnotherMember
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST posts SomeoneConfirmsAnOfferOnceTwice
@@ -459,7 +460,7 @@ function weSay($type, $index) {return weSayWithSubs($type, $index, array());}
 /**
  * we email (ARG) to member (ARG) with subs: (ARG)
  *
- * in: TEST message SynopsisOfScenario
+ * in: TEST message AMemberSendsAMessageToAnotherMember
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndOptsOutOfCommonGood
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
@@ -1629,7 +1630,6 @@ function memberViewsStatementFor($id, $month) {
  *
  * in: TEST gift AMemberDonatesWithInsufficientFunds
  *     TEST signupco ACompanyAccountManagerCreatesADiscount
- *     TEST signup AMemberInvites
  */
 function weTellCOWithSubs($id, $topic, $subs) {return t\weTellAdmin($topic, $subs, t\uid($id));}
 
@@ -2268,11 +2268,12 @@ function cryptcookieIs($nm, $v) {return cookieIs($nm, u\ry('C', $v));}
 /**
  * we show JSON of: (ARG)
  *
- * in: 
+ * in: TEST ajax AjaxSuggestWho
  */
 function weShowJSONOf($ray) {
   global $testOnly; if (!$testOnly) return FALSE;
-  return weExitShowingJust(u\jsonize(t\fixData($ray[0])));
+  $ray = count($ray[0]) == 1 ? call_user_func_array('array_merge', $ray) : ray[0];
+  return weExitShowingJust(u\jsonize(t\fixData($ray)));
 }
 
 /**
@@ -2306,7 +2307,24 @@ function aButtonCodeFor($args) {
  *
  * in: MAKE signupandpay ANewbieSuppliesEmailToContinueCGPay
  */
-function memberClicksOnPageWith($arg1, $arg2, $arg3) {
+function memberClicksOnPageWith($id, $button, $page, $info) {
   global $testOnly;
-  todo;
+  t\output('click on page NYI', 'err');
+  return FALSE;
+}
+
+/**
+ * member (ARG) ajax (ARG) with: (ARG)
+ *
+ * in: MAKE ajax AjaxSuggestWho
+ */
+function memberAjaxWith($id, $op, $data) {
+  global $testOnly; if ($testOnly) return FALSE;
+  global $mya;
+  include_once R_ROOT . '/forms/ajax.inc';
+  if ($id != '?') t\login($id);
+
+  $res = w\ajax(ray('op sid data myid aid', $op, session_id(), u\jsonize($data), $mya->id, $mya->agentId));
+  t\output($res);
+  return TRUE;
 }

@@ -26,15 +26,15 @@ Scenario: A newbie supplies email to continue CGPay
   Given a button code for:
   | account | secret | item | amount |*
   | .ZZC    | Cc3    | food | 23     |
-  And next random code is "WHATEVER"
+  And next random code is "turkey"
   And next random password is "quick brown fox jumped"
   When member "?" clicks "continue" on page "cgpay?code=TESTCODE" with:
   | name |
   | d@   |
   Then we show "Submit"
   And we email "verify" to member "d@" with subs:
-  | fullName | qid    | site      | code     | pass                   |*
-  | Al Aargh | NEWAAA | %BASE_URL | WHATEVER | quick brown fox jumped |
+  | fullName | qid    | site      | code   | pass                   |*
+  | Al Aargh | NEWAAA | %BASE_URL | turkey | quick brown fox jumped |
 
   
   

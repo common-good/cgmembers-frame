@@ -27,7 +27,7 @@ function formMessage($form, &$sta, $args = '') {
   $expires = numFld(t('Expires In:'), '', maxlen(4) + dft(3) + suffix(t(' hours')));
   $secrets = fieldSet('secrets', compact(ray('secret expires')), BARE);
   $submit = t('Send');
-  w\whoFldSubmit('to', t('Send to %name?'));
+  w\whoFldSubmit('to', t('Send to %name?'), 'self-message');
 
   return cgform(compact(ray('title subtext to subject message addSecret secrets submit')));
 }
@@ -36,15 +36,16 @@ function formMessage_validate($form, &$sta) {
   extract($info = just('to subject message secret expires', $sta['input'], NULL));
   if (strhas($to, '@') and empty($secret)) return say(t('If you know the member\'s email address, don\'t use this form -- just send them an email.'), 'to');
   if (strlen($secret) and $expires <= 0) return say(t('Expires must be greater than zero.'), 'expires');
-  if (!$a = w\whois($to, 'to', $info)) return FALSE;
+//  if (!$a = w\whois($to, 'to', $info, 'self-message')) return FALSE;
   if (empty($message) and empty($secret)) return say(t('You forgot to include a message.'), 'message');
-  u\preray(ray('uid', $a->id), $sta['input']);
+//  u\preray(ray('uid', $a->id), $sta['input']);
 }
 
 function formMessage_submit($form, &$sta) {
-  extract(just('uid subject message secret expires', $sta['input'], NULL));
+  extract(just('subject message secret expires', $sta['input'], NULL));
   global $mya, $base_url;
   
+  $uid = whoId($sta);
   $a = r\acct($uid);
   if (strlen($secret)) { // encrypt secret message
     $code = u\cryRay(ray('qid secret exp', $a->mainQid, $secret, $at = now() + HOUR_SECS * $expires));

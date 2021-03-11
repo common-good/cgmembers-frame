@@ -43,7 +43,8 @@ function setupBasicAccounts() {
       $state = r\stateNum($st);
       $values = array($uid, $uid, $region . '.', $fullName, $email, R_COUNTRY_ID, 0, $flags);
       $info = array_combine($keys, $values);
-      $info += compact(ray('postalAddr state federalId activated'));
+      list ($address, $city, $zot1, $zot2) = u\parseAddr($postalAddr); // don't overwrite state or zip
+      $info += compact(ray('postalAddr address city state federalId activated'));
       $serverA = new r\Acct($info);
       $serverA->update(compact('zips'));
     }

@@ -343,7 +343,7 @@ define('MIN_PHONE_DIGITS', 7);
 function fmtPhone($phone, $how = '+') {
   $sep = $how == '-' ? '-' : ' '; // digit group separator
   $foreign = ''; // set to 'n' format if the phone is outside US
-  $phone = (preg_replace('~[\(\) \-\./]~', '', $phone)); // ignore typical punctuation
+  $phone = u\noPhonePunc($phone, ''); // ignore typical punctuation (except +)
   if (substr($phone, 0, 2) == '+1') {
     $phone = substr($phone, 2);
   } elseif (substr($phone, 0, 1) == '1') {
@@ -1745,3 +1745,4 @@ function dery($type, $code) {return u\decry($type, CRYPT_FLAG . $code);}
 function ul($list) {return '<ul><li>' . join("</li>\n<li>", nn($list) ?: []) . "</li></ul>\n";}
 function tm($tm) {return strtolower(trim(strftime('%I:%M%p', $tm), '0'));}
 function ddddcc($n) {return cleanAmount(number_format(cleanAmount($n), 2));}
+function noPhonePunc($phone, $plus = '\+') {return preg_replace('~[' . $plus . PHONE_PUNC . ']~', '', $phone);}
