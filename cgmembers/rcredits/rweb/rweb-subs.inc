@@ -644,16 +644,17 @@ function badSignature(&$sta) {
  * @param string $field: the field name
  * @param string $question: what to ask, for confirmation or disambiguation (with params %amount and %name)
  * @param string $selfErr: index to error message for identifying oneself
+ * @param string $restrict: MySQL to restrict the selection (for example ':IS_CO' or ':IS_OK')
  * @param assoc $extra: less common parameters:
  *   amount: UNUSED amount substitution for question (defaults to form.amount.value)
  *   allowNonmember: <allow a non-member email address>
- *   coOnly: <restrict results to companies>
+ *   custom: <don't use the suggest-who scrap (use custom JS scrap instead)>
  */
-function whoFldSubmit($field, $question, $selfErr, $extra = []) {
-  global $testWhoFld, $testWhoErr; list ($testWhoFld, $testWhoErr) = [$field, $selfErr];
+function whoFldSubmit($field, $question, $selfErr, $restrict, $extra = []) {
+  global $testWho; $testWho = compact(ray('field selfErr restrict'));
   extract(just('amount allowNonmember coOnly', $extra, ''));
   js('x/typeahead.bundle.min');
-  jsx('suggest-who', compact(ray('field question amount allowNonmember coOnly selfErr')));
+  if (!nni($extra, 'custom')) jsx('suggest-who', compact(ray('field question amount selfErr restrict allowNonmember')));
 }
 
 /**
@@ -663,9 +664,9 @@ function whoFldSubmit($field, $question, $selfErr, $extra = []) {
  * @see also whoFldSubmit
  */
 function whoId($sta) {
-  global $testWhoFld, $testWhoErr;
   if (test()) {
-    if (!$a = whois(nni($sta['input'], $testWhoFld), $testWhoFld, [], $testWhoErr)) return FALSE;
+    global $testWho; extract($testWho);
+    if (!$a = whois(nni($sta['input'], $field), $field, [], $selfErr, $restrict)) return FALSE;
     return $a->id;
   }
   if (!$uid = nni($sta['input'], 'whoId')) return isDEV ? u\FAIL('no whoId') : softErr(t('You need to enable Javascript to use this website.'));
@@ -720,7 +721,7 @@ function showForm($function, $arg1 = '', $arg2 = '', $arg3 = '', $arg4 = '') {
   foreach ($form as $k => $v) if (is_array($v) and nni($v, '#type') == 'submit') {$submit1 = nni($v, '#id') ?: "edit-$k"; break;}
   $form['opid'] = hidFld(nn($submit1) ?: 'none', ['name' => 'opid']); // default to first, in case submitted programmatically
 
-  if (!nni($form, 'confirm')) $form += which(); // add the choices popup form, if any
+//  if (!nni($form, 'confirm')) $form += which(); // add the choices popup form, if any
   if (!$specialForm) {
     \drupal_set_breadcrumb(makeBread());
     setPageTitle($form);
@@ -932,6 +933,7 @@ function svar($name) {
 }
 
 /**
+ * NOT ACTUALLY USED?!! (not for anything necessary)
  * Offer choices for user to choose from
  * 1. If called with all arguments, the arguments are stored in svar('pop') and the form is reloaded
  * 2. If called as which('info'), this function returns $info from svar('pop')
@@ -946,27 +948,8 @@ function svar($name) {
  * @param string $question: the question to ask
  */
 function which($choices = '', $resultField = '', $info = '', $question = 'Which one?') {
-  $formName = current_path();
-  
-  if (is_array($choices)) { // called with all args (#1)
-    svar('pop', compact(ray('formName choices resultField info question')));
-    w\go($formName); // reload page
-  }
-
-  if (!is_array($pop = svar('pop'))) return [];
-  extract(svar('pop'), EXTR_PREFIX_ALL, 'pop');
-  if ($formName != $pop_formName) return [];
-  if ($choices == 'info') return $pop_info; // called as which('info') (#2)
-  if ($choices) return [];
-  
-  svar('pop', NULL); // called with no args (#3)
-  $tribs['size'] = 12;
-  $choice = selectFld('', '', $tribs, $pop_choices);
-  $choice = render($choice);
-  $legend = t('Which one?');
-  $popup = item(w\modal('which', $legend, $pop_question, $choice, t('Cancel')));
-  jsx('which', 'field', $pop_resultField);
-  return compact('popup');
+  u\FAIL('which');
+//  $popup = item(w\modal('which', $legend, $pop_question, $choice, t('Cancel')));
 }
 
 /**
@@ -1031,18 +1014,6 @@ function subMenuRaw($menu, $menuName = NULL) {
     w\svar($menuName, $res);
   }
   return $res;
-}
-
-function keep_values(&$form) {
-  if (!$info = which('info')) return $form;
-  foreach ($form as $key => $value) {
-    if (isset($info[$key])) {
-      $form[$key]['#default_value'] = $info[$key];
-    } elseif (substr($key, 0, 1) != '#') foreach ($form[$key] as $key2 => $value2) { // fieldset
-      if (isset($info[$key2])) $form[$key][$key2]['#default_value'] = $info[$key2];
-    }
-  }
-  return $form; // for convenience we both modify the form and return it
 }
 
 function memberStep($step, $done, $text, $links = '', $newWindow = FALSE) {
@@ -1658,21 +1629,22 @@ function rangeDates($period, $starting = '', $ending = '') {
 
 /**
  * Figure out who the user means, offering choices to disambiguate
- * If the intended person or company does not exist, 
+ * if the intended person or company does not exist.
+ * Called only from whoId() and only when testing
  * @param string $who: what the user typed
  * @param string $field_name: name of the field the user typed in
  * @param array $info: field values to be stored, then reinstated when the page is refreshed to show the choices
  * @param string $selfErr: index to error message to give if user self-refers
- * @param bool $activeOnly: <the person has to have an active account> (if we're paying them or giving access)
+ * @param string $restrict: MySQL to restrict the selection (for example ':IS_CO' or ':IS_OK')
  * @return:
  *   NULL if there is an error
  *   acct of the identified person
- *   no return (refreshes page) if ambiguous
+ *   no return if ambiguous (shows selection form)
  */
-function whois($who, $field_name, $info, $selfErr, $activeOnly = FALSE) {
+function whois($who, $field_name, $info, $selfErr, $restrict) {
   global $mya;
-//  if (u\isAcct($result = be\identify($who, $mya, $activeOnly, $selfErr))) return $result;
-  $res = be\identify($who, $mya, $activeOnly ? ':IS_OK' : '', $selfErr);
+  u\EXPECT(test(), 'whois when not testing');
+  $res = be\identify($who, $mya, $selfErr, $restrict);
   if (is_object($res)) return $res;
   if (is_string($res)) return say($res, $field_name);;
   if (u\abbreviates('who=', $last = basename($return = \current_path()))) $return = dirname($return);

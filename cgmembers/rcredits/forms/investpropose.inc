@@ -55,7 +55,7 @@ function formInvestPropose($form, &$sta, $args = '') {
 
   $submit = t('Propose');
 
-  w\whoFldSubmit('company', t('Propose this investment in %name?'), 'self-investing', ray('coOnly', TRUE));
+  w\whoFldSubmit('company', t('Propose this investment in %name?'), 'self-investing', '', ray('coOnly', TRUE));
   
   jsx('invest-proposal');
   

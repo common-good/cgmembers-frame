@@ -1,4 +1,8 @@
-2021-03-04 feature/find-anyone
+2021-03-11 feature/who-tweaks
+. restrictions on account choices are now handled consistently and well
+. improved which modal format
+
+2021-03-10 feature/find-anyone
 . completely revamped the way account lookups work, for beauty, speed, and finding anyone anywhere (using hidden whoId field)
 . we are no longer notified of new members (happens too often)
 . account field in panel now defaults to current account

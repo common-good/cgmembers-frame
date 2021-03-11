@@ -254,7 +254,7 @@ function adminSummary() {
           $helper = "$hA->mainQid: $hA->fullName";
         }
         $helper = textFld(t('Helped by:'), t('Who gets the "inviter/helper" reward? Must be exactly one account.'), dft($helper));
-        w\whoFldSubmit('helper', t('This person was invited by %name, yes?'), 'self-help');
+        w\whoFldSubmit('helper', t('This person was invited by %name, yes?'), 'self-help', '');
 
       } else $helper = item($mya->helper ? $mya->helperA->fullName: t('N/A'), t('Helped by:'));
     }

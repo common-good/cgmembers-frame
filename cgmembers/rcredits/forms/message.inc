@@ -27,7 +27,7 @@ function formMessage($form, &$sta, $args = '') {
   $expires = numFld(t('Expires In:'), '', maxlen(4) + dft(3) + suffix(t(' hours')));
   $secrets = fieldSet('secrets', compact(ray('secret expires')), BARE);
   $submit = t('Send');
-  w\whoFldSubmit('to', t('Send to %name?'), 'self-message');
+  w\whoFldSubmit('to', t('Send to %name?'), 'self-message', '');
 
   return cgform(compact(ray('title subtext to subject message addSecret secrets submit')));
 }

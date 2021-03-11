@@ -10,10 +10,22 @@ args = JSON.parse(args);
 for (var what in args) doit(what, parseUrlQuery(args[what]));
 
 function doit(what, vs) {
-  function fid(field) {return '#edit-' + vs[field].toLowerCase();}
   function fform(fid) {return $(fid).parents('form:first');}
   function report(j) {$.alert(j.message, j.ok ? 'Success' : 'Error');}
   function reportErr(j) {if (!j.ok) $.alert(j.message, 'Error');}
+  function fieldId() {return '#edit-' + vs['field'].toLowerCase();}
+
+  function suggestWhoScrap() {
+    var fid = fieldId();
+    var form = fform(fid);
+    suggestWho(fid, vs['restrict']);
+    $(fid).focus(); // must be after suggestWho
+    form.submit(function (e) {
+      if ($(fid).val() == '') return true; // in case this field is optional
+      var ok = who(form, fid, vs['question'], vs['amount'] || $('input[name=amount]', form).val(), vs['selfErr'], vs['restrict'], vs['allowNonmember']);
+      if (!ok) {e.preventDefault(); return false;}
+    });
+  }
 
   switch(what) {
 
@@ -89,7 +101,9 @@ function doit(what, vs) {
     $('#covid').click(function () {location.href = baseUrl + '/community/covid';});
     $('#blm').click(function () {location.href = 'https://commongood.earth/about-us/diversity-equity-inclusion';});
     $('#onn').click(function () {location.href = baseUrl + '/community/posts';});
+    break;
     
+  case 'tx':
     $('.btn-pay, .btn-charge').click(function () {
       var pay = has($(this).attr('class'), 'btn-pay');
       var desc = vs[pay ? 'payDesc' : 'chargeDesc'];
@@ -100,9 +114,12 @@ function doit(what, vs) {
       $('#edit-paying').val(pay ? 1 : 0); // save this for 'suggest-who' (see herein)
       $('#tx').show();
       $('#edit-who').focus();
+
+      if (!pay) vs['question'] = vs['question'].replace('Pay ', 'Charge ');
+      vs['allowNonmember'] = !pay;
+      vs['restrict'] = pay ? ':IS_OK' : '';
+      suggestWhoScrap();
     });
-    
-  case 'tx': // fall through from dashboard
     $('#btn-delay').click(function () {
       $(this).hide();
       $('.form-item-start').show();
@@ -114,7 +131,7 @@ function doit(what, vs) {
       $('#edit-periods').val(1).focus();
     });
     break;
-    
+
   case 'invest':
     $('.form-item-expenseReserve a').click(function () {
       var reserve = parseFloat($('#edit-expensereserve').val().replace('$', ''));
@@ -326,30 +343,12 @@ function doit(what, vs) {
     break;
 
   case 'which':
-    var fid = fid('field');
-    //      if ($(fid).val() == '') break; // don't suggest everyone
-    var form = fform(fid);
-    //      this.form.elements[vs['field']].value=this.options[this.selectedIndex].text;
+    var form = fform(fieldId());
     $('#which').modal('show');
     break;
 
-  case 'suggest-who':
-    var fid = fid('field');
-    var form = fform(fid);
-    suggestWho(fid, vs['coOnly']);
-    $(fid).focus(); // must be after suggestWho
-    form.submit(function (e) {
-      if ($(fid).val() == '') return true; // in case this field is optional
-
-      if ($('#edit-paying').length) { // this is ugly here, but I haven't figured out a better way yet.
-        var pay = ($('#edit-paying').val() == '1'); // see if this is the tx form and adjust the question as needed
-        if (!pay) vs['question'] = vs['question'].replace('Pay ', 'Charge ');
-        vs['allowNonmember'] = !pay;
-      }
-      
-      var ok = who(form, fid, vs['question'], vs['amount'] || $('input[name=amount]', form).val(), vs['allowNonmember'], vs['coOnly'], vs['selfErr']);
-      if (!ok) {e.preventDefault(); return false;}
-    });
+  case 'suggest-who': // called from whoFldSubmit with: field, question, amount, selfErr, restrict, allowNonmember
+    suggestWhoScrap();
     break;
     
   case 'new-acct':
@@ -357,7 +356,7 @@ function doit(what, vs) {
     var form = $('#frm-accounts');
     suggestWho(fid, '');
     form.submit(function (e) {
-      return who(form, fid, '', false, true, false, 'self-switch');
+      return who(form, fid, '', false, 'self-switch', '', false); // no question, amount, restriction (and no nonMembers)
     });
     break;
 
@@ -418,7 +417,7 @@ function doit(what, vs) {
     break;
 
   case 'work':
-    suggestWho('#edit-company', 1);
+    suggestWho('#edit-company', ':IS_CO');
     break;
   
   case 'stepup':
@@ -429,7 +428,7 @@ function doit(what, vs) {
         if (first) first = false; else $(this).parents('.row').hide();
       }
     });
-    suggestWho('[id^="edit-org"]', 1);
+    suggestWho('[id^="edit-org"]', ':IS_CO');
 
     $('[id^="edit-org"]').change(function () {$(this).parents('.row').next().css('display', 'table-row');});
     
@@ -448,12 +447,12 @@ function doit(what, vs) {
     break;
 
   case 'groups':
-    suggestWho('#edit-newmember');
+    suggestWho('#edit-newmember', '');
     break;
     
   case 'rules':
     $('#edit').click(function () {location.href = baseUrl + '/sadmin/rules/id=' + $('#edit-id').val();});
-    suggestWho('#edit-payer, #edit-payee, #edit-from, #edit-to');
+    suggestWho('#edit-payer, #edit-payee, #edit-from, #edit-to', '');
     break;
     
   case 'posts':
