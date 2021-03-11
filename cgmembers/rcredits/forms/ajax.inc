@@ -117,7 +117,7 @@ function ajax($args = NULL) {
   } elseif ($op == 'who') {
     extract(just('who question amount selfMsg', $data));
     $amtDpy = u\fmtAmt(nn($amount) ?: 0);
-    $who = be\identify($who, $mya, mb_stripos(" $question", t(' pay ')) !== FALSE, $selfMsg ?: 'self-tx');
+    $who = be\identify($who, $mya, strhas(" $question", t(' pay ')) ? ':IS_OK' : '', $selfMsg ?: 'self-tx');
     if (is_string($who)) return ajaxErr(tr($who));
     if (is_object($whoA = $who)) ajaxRet(ray('who confirm', $whoA->mainQid, $question ? tr($question, 'name amount', $whoA->fullName, $amtDpy) : ''));
     
