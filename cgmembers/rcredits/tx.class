@@ -292,7 +292,7 @@ EOF;
       /* $did = $toMe ? (($this->goods == FOR_GOODS) ? t('refunded') : t('credited')) : t('charged'); */
     } else {
       /* $did = $toMe ? ($reverses ? t('re-charged') : t('charged')) */
-      /*   : (($this->channel == TX_POS and $me->co) ? t('credited') : t('paid')); */
+      /*   : (($this->channel == TX_APP and $me->co) ? t('credited') : t('paid')); */
     }
 
     $balance = ($getMyBalance and $me->can(B_BUY)) ? $me->avail(FOR_GOODS) : 0;

@@ -665,7 +665,7 @@ function whoFldSubmit($field, $question, $selfErr, $restrict, $extra = []) {
  */
 function whoId($sta) {
   if (test()) {
-    global $testWho; extract($testWho);
+    global $testWho; extract(just('field selfErr restrict', $testWho, NULL));
     if (!$a = whois(nni($sta['input'], $field), $field, [], $selfErr, $restrict)) return FALSE;
     return $a->id;
   }

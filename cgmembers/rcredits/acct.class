@@ -1320,7 +1320,7 @@ o;
    */
   public function suggestAuto() {
     $a = $this;
-    global $channel; if (!in_array($channel, [TX_POS])) return;
+    global $channel; if (!in_array($channel, [TX_APP])) return;
 		
     $web = ($channel == TX_WEB);
 
@@ -1633,7 +1633,7 @@ X;
   /**
    * Record the relation of a device with an account.
    * @param string $code: phone # or device code
-   * @param int $channel: channel (TX_POS, TX_SMS, or TX_WEB)
+   * @param int $channel: channel (TX_APP, TX_SMS, or TX_WEB)
    * @return int: the device record ID
    */
   public function makeBox($code, $channel, $version = NULL) {

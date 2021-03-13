@@ -72,6 +72,8 @@ function formCGPay($form, &$sta) {
     u\setDft($verb, t('Donate'));
     u\setDft($item, t('donation'));
     $itemDpy = NULL;
+    if ($co->legalName == r\acct(CGID)->legalName) $option2 = '<small>' . t(' ... or donate with a <%a>credit card</a>', '_a', atag('/cc/qid=' . $co->mainQid)) . '</small>'; // &#9785; (frowny face)
+
   } elseif (!$for or $for == 'other') { // for is other or empty or nonsense
     $for = NULL;
     if ($item) {
@@ -84,14 +86,13 @@ function formCGPay($form, &$sta) {
 
   if (nn($s_name)) {
     $subtext = t('Hello %s_name!', compact('s_name'));
-    $option = t('OR <big><%a>Sign up!</a></big>', '_a', atag('/signup'));
   } else {
     $subtext = t('Pay with %PROJECT');
-    $option = '';
+    if (!$mya) $option = t('OR <big><%a>Sign up!</a></big>', '_a', atag('/signup')) . nn($option2);
   }
   
   $subtext = "<h4>$subtext</h4>";
-  $submit = submit($verb, '', 'md', w\suffix($option));
+  $submit = submit($verb, '', 'md', w\suffix(nn($option)));
 
   $info = compact(ray('subtext amount amtDpy itemDpy item for name pass submit'));
   foreach (ray(CGPAY_VARS) as $k) if (isset($$k) and !is_array($$k)) $info[$k] = hidFld($$k);

@@ -1,3 +1,13 @@
+2021-03-12 feature/fix-cron
+. bug fix: biggies didn't call queueNext()
+. added optional comment to cc donation
+. fixed missing jquery CSS image
+. each interface now logs to its own directory
+. disabled logging of SQL
+. fixed bug in ajax that made account selection fail
+. added option to donate by credit card to our food fund donation page (cgpay)
+. added option for admins to create a donate-to-CG button on the cgbutton page
+
 2021-03-11 feature/who-tweaks
 . restrictions on account choices are now handled consistently and well
 . improved which modal format
@@ -3344,7 +3354,7 @@ function special2() {
 . after saving summary, if any risk bits changed, rerun the risk calculation for that account
 . added a permissions bit for regulators (and bank partners) that is read-only
 . people still think they're done after the 0th step. Made it more obvious ("WAIT!" big)
-. changed TX_SMART to TX_POS (we expect to have another app or a more general app, that lets the payer initiate)
+. changed TX_SMART to TX_APP (we expect to have another app or a more general app, that lets the payer initiate)
 . changed "I don't have a bank" to "no bank" on paper signup
 . show quarterly/monthly etc. for gift on summary!
 . zapped r_ach table. (replacement is being created by transforming r_usd)

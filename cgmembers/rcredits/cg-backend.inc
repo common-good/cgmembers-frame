@@ -206,7 +206,7 @@ X;
       $moFlds = join(', ', $moFlds);
       $sql = <<< X
         SELECT uid2, SUM(amt) AS gross,
-               SUM(IF(channel=:TX_POS, 0, amt)) AS noCard,
+               SUM(IF(channel=:TX_APP, 0, amt)) AS noCard,
                SUM(1) AS txCount, $moFlds,
                s.abbreviation AS st
         FROM txs_noreverse t
@@ -454,7 +454,7 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
     } else return txErr($zErr->msg, $erInfo + $zErr->subs);
   }
 
-  foreach ([$actorA, $otherA] as $a) if (!$a->co and !($channel == TX_POS ? $a->agentA->ided : $a->ided)) {
+  foreach ([$actorA, $otherA] as $a) if (!$a->co and !($channel == TX_APP ? $a->agentA->ided : $a->ided)) {
     if ($force) {
       r\tellAdmin('forced without photoId', $erInfo); 
     } elseif ($gainerId != CGID) { // and !$gainer->coCan(CO_FAST)

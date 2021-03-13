@@ -44,8 +44,8 @@ $queries = [
   
   2 . 'Transaction Totals to Date' =>
     "SELECT COUNT(*) AS txCount, SUM(ABS(amt)) AS txDollars, 
-            SUM(IF(u2.:IS_CO AND (NOT u1.:IS_CO OR channel=:TX_POS), amt, 0)) AS inPersonDollars,
-            SUM(IF(u2.:IS_CO AND (NOT u1.:IS_CO OR channel=:TX_POS), .85*.02*amt, 0)) AS ccFeesSaved
+            SUM(IF(u2.:IS_CO AND (NOT u1.:IS_CO OR channel=:TX_APP), amt, 0)) AS inPersonDollars,
+            SUM(IF(u2.:IS_CO AND (NOT u1.:IS_CO OR channel=:TX_APP), .85*.02*amt, 0)) AS ccFeesSaved
     FROM txs t JOIN users u1 ON u1.uid=uid1 JOIN users u2 ON u2.uid=uid2
     WHERE :ctty IN (u1.community, u2.community)",
     

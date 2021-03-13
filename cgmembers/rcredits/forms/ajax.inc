@@ -38,7 +38,7 @@ function ajax($args = NULL) {
     
   } elseif ($op == 'cgPayCode') { // get cgPay code
     include_once R_ROOT . '/forms/code.inc';
-    $data['for'] = nni(ray('credit gift'), $data['fer']);
+    $data['for'] = nni(ray('credit,gift,,donate'), $data['fer']); // fer=2 (other) is ignored
     unset($data['fer']);
     foreach ($data as $k => $v) if ($v == '') unset($data[$k]);
     $code = w\code($data + ray('account secret', $mya->mainQid, $mya->emailCode));
@@ -119,7 +119,7 @@ function ajax($args = NULL) {
     $amtDpy = u\fmtAmt(nn($amount) ?: 0);
     $who = be\identify($who, $mya, $selfMsg, $restrict);
     if (is_string($who)) return ajaxErr(tr($who));
-    if (is_object($whoA = $who)) ajaxRet(ray('who confirm', $whoA->mainQid, $question ? tr($question, 'name amount', $whoA->fullName, $amtDpy) : ''));
+    if (is_object($whoA = $who)) ajaxRet(ray('who confirm', $whoA->id, $question ? tr($question, 'name amount', $whoA->fullName, $amtDpy) : ''));
     
     // $who must be an array, so create modal selection form
     $choice = selectFld(BARE, '', ['size' => 12], $who);

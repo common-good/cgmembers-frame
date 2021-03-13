@@ -36,7 +36,7 @@ function formBoxes($form, &$sta) {
     $type = $types[$channel += 0]; // make sure channel is int, not string
     $boxName = 
         nn($boxName) ? plain($boxName)
-      : ($channel == TX_POS ? (t('POS Device #') . $boxnum)
+      : ($channel == TX_APP ? (t('POS Device #') . $boxnum)
       : ($channel == TX_WEB ? (t('Computer/Browser #') . $boxnum)
       : ($channel == TX_SMS ? u\fmtPhone($code)
       : 'ERROR')));

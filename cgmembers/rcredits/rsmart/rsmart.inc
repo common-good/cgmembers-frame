@@ -83,7 +83,7 @@ $GLOBALS['tStrings'] += array(
  */
 function pos($args = FALSE) {
 ///  debug("pos(" . pr($args) . ")");
-  global $channel; $channel = TX_POS;
+  global $channel; $channel = TX_APP;
   global $scanned; $scanned = true;
   global $mya;
 
@@ -627,6 +627,6 @@ function badDevice(&$device, $signin, $version) {
     $info = ray('id access version', $id, now(), $version);
     db\update('r_boxes', $info, 'id'); // remember time last accessed so we can drop the deadwood
   } else { // device is not in our database, but may have been set up on another server
-    $mya->makeBox(substr($device, 0, DEVICE_MAXLEN), TX_POS, $version); // record this device (abbreviated) in our db
+    $mya->makeBox(substr($device, 0, DEVICE_MAXLEN), TX_APP, $version); // record this device (abbreviated) in our db
   }
 }

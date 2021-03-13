@@ -7,7 +7,7 @@
   "cgSmtpServer": "smtp.example.com",
   "cgSmtpTls": "tls",
   "cgSmtpPort": "587",
-  "cgSmtpUser": "no-reply@example.com",
+  "cgSmtpUser": "info@example.com",
   "cgSmtpPass": "",
   "db": {
     "name": "cg",

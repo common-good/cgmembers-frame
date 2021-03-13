@@ -179,7 +179,7 @@ function recurs($list) {return doRecords($list, 'Recurs');}
 function doBoxes($info = []) {
   global $testOnly, $channel; // be careful not to overwrite channel with a local variable
   //$boxName = $info['boxName'];
-  $info['channel'] = strtr(nn($info['channel']), ray('sms pos web', TX_SMS, TX_POS, TX_WEB)) ?: $channel;
+  $info['channel'] = strtr(nn($info['channel']), ray('sms pos web', TX_SMS, TX_APP, TX_WEB)) ?: $channel;
   //if ($testOnly) $boxName = htmlspecialchars(@$boxName);
   return doThing($info, 'boxe');
 }
@@ -756,7 +756,7 @@ function fullQid($q) {
   if (substr($q, 0, 1) == '.') $q = r\qo($q)->qid;
   u\EXPECT(substr($q, -1, 1) != '-', "relational qid requested with no record in r_relations: $q");
   return $q;
-  //  return ($channel == TX_POS and !strpos($q, '.')) ? substr($q, 0, 3) . substr($q, 3) : $q;
+  //  return ($channel == TX_APP and !strpos($q, '.')) ? substr($q, 0, 3) . substr($q, 3) : $q;
 }
 
 /**
@@ -1476,7 +1476,7 @@ function clear($ch = 0) {
 
   db\q('DELETE FROM users WHERE uid<>0');
   db\q('DELETE FROM r_criteria WHERE ctty<>0');
-  u\deleteFile(LOG_FLNM);
+/**/  foreach(ray(TX_CHANNELS) as $chan => $zot) u\deleteFile(flog('', $chan));
   u\deleteFile(SQL_LOG);
 
   $varKeys = ray('cgf_uid code drupal_private_key iv menu_expanded menu_masks up');

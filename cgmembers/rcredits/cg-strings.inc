@@ -86,7 +86,7 @@ $GLOBALS['tStrings'] = array(
   'new refund' => t('<b>Refund:</b> %otherName refunded you %amount for "%payerPurpose".'),
   'new payment' => t('<b>Payment:</b> %otherName paid you %amount for "%payeePurpose".'),
   'new payment linked' => t('<b>Payment:</b> <%aPayLink>%otherName</a> paid you %amount for "%payeePurpose". '), // trailing space so tests can differentiate from 'new payment'
-  'new invoice' => t('<b>Invoice:</b> %myName invoiced you %amount for "%purpose". <%a1>Click here to pay or deny this invoice</a>. Or sign in at %CG_DOMAIN and click "Invoices TO You" on the History menu. If you have any questions or concerns about this invoice, please contact %myName at %email or %phone.'), // can't separate out 'invoice concerns'
+  'new invoice' => t('<p><b>Invoice:</b> %myName invoiced you %amount for "%purpose". <%a1>Click here to pay or deny this invoice</a>. Or sign in at %CG_DOMAIN and click "Invoices TO You" on the History menu.</p><p>If you have any questions or concerns about this invoice, <i>please contact %myName</i> at %email or %phone.</p>'), // can't separate out 'invoice concerns'
   'stale invoice' => t('<b>Invoice Reminder:</b> %daysAgo days ago we emailed you an invoice from %payeeName for %amount. <%a1>Click here to pay or deny this invoice</a>. Or sign in at %CG_DOMAIN and click "Invoices TO You" on the History menu. If you have any questions or concerns about this invoice, please contact %payeeName at %email or %phone.'),
   'stale invoice report' => t('<b>Invoice Update:</b> %daysAgo days ago you invoiced %payerName %amount for %purpose (invoice #%nvid, %created). That invoice is still marked "pending", so we sent %payerName a reminder. If this invoice is no longer valid, sign in at %CG_DOMAIN and choose "Invoices FROM You" on the History menu to cancel it.'),
   //  'new invoice' => t('<b>Invoice:</b> %otherName invoiced you %amount for "%purpose". To pay (or deny) this invoice, <%a>click here</a>.'),
@@ -277,7 +277,7 @@ EOF
   'confirm funding' => t('%confirmAction %amount to %otherName?'),
   'please confirm' => t('To confirm, type: %nonce'),
   'verification code' => t('Your verification code for using %PROJECT online is: %nonce'), // used in rWeb
-  'whats up' => t('You have not had any %PROJECT transactions in the past month. Most members have at least one transaction per month, so this is a little unusual and we hope all is well with you. Please email or call us if you have any problems or questions.'),
+  'whats up' => t('<p>You have not had any %PROJECT transactions in the past month. Most members have at least one transaction per month, so this is a little unusual and we hope all is well with you.</p><p>No need to reply. But please email or call us if you have any problems or questions.</p>'),
   'co promo' => t('And if you need more promotional cards to hand out to customers, just let us know!'),
   'thank tell' => t('Thank you for telling us!'),
   'acct deleted' => t('Your account has been deleted.'),

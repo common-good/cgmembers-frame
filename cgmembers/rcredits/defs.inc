@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.57d'; // software version
+const R_VERSION = '3.57e'; // software version
 define('R_ROOT', __DIR__);
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -352,7 +352,6 @@ const R_DFT_PICTURE = R_ROOT . '/images/no-photo-available.jpg'; // default prof
 const R_DFT_PICTURE_WIDE = R_ROOT . '/images/no-photo-available-wide.jpg'; // default profile picture
 const R_NOT_VALID = R_ROOT . '/images/not-valid.png'; // says rcard is not valid for purchases
 const LOG_DIR = SHARED_DIR . '/cgLogs/'; // where to store log files
-define('LOG_FLNM', LOG_DIR . date('Ym') . '.log');
 define('SQL_LOG', LOG_DIR . date('Ym') . '.logsql');
 const PHOTOID_DIR = R_PICTURE_DIR . 'photoids';
 
@@ -595,14 +594,15 @@ define('TX_STATUSES', t('-9:canceled,-4:no such,-3:delayed,-2:denied,-1:OPEN,0:a
 const TX_SYS = 0;
 const TX_SMS = 1; 
 const TX_WEB = 2;
-const TX_POS = 3; // smart phone or other computer-like device
+const TX_APP = 3; // smart phone or other computer-like device
 const TX_TONE = 4; // touch tone phone
 const TX_CRON = 5;
 const TX_LINK = 6; // user clicked a no-signin link
 const TX_AJAX = 7;
 const TX_FOREIGN = 8; // user clicked a "Pay with CG" button or request an app to charge them
 const TX_API = 9;
-const TX_CHANNELS = 'Sys SMS Web App Tone Cron Link Ajax Foreign API'; // can't translate, because used in t() (find a solution)
+const TX_HACK = 10;
+const TX_CHANNELS = 'Sys SMS Web App Tone Cron Link Ajax Foreign API Hack';
 
 // Transaction types
 const TX_TRANSFER = 0; // normal fund transfer (usually for actual goods and services) -- not creating rC

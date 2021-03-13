@@ -183,6 +183,7 @@ function keyed($fields, $table, $where = '1', $subs = []) {
  * Log the given update, insert, or delete query
  */
 function logSql($args) {
+  return; // disabled for now (3/12/2021)
   global $mya;
   $args = date('d') . ' ' . ($mya ? $mya->mainQid : '') . ': ' . u\jsonize($args);
   $args = strtr($args, ['\\"' => '', '"' => '', '\\n' => '|', ';}' => '}', ';' => '; ', ',' => ', ']);
