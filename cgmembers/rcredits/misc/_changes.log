@@ -1,3 +1,8 @@
+2021-03-13 feature/prefs
+. moved debtOk question out of advanced, disabled if no refill
+. improved description of nosearch bit
+. added missing jquery-ui CSS images
+
 2021-03-13 feature/fix-tx
 . fixed Pay and Charge JS
 
