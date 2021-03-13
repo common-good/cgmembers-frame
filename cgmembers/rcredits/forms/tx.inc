@@ -9,7 +9,6 @@ use CG\Db as db;
 /**
  * Get a transaction request (usually pay or charge) and process it
  * @param string $args: all or some parameters for the form (when called from directory or draft form)
- * NOTE: currently handles only pay and charge
  */
 function formTx($form, &$sta, $type, $args = '') {
   extract(just('who amount goods purpose', $args));
@@ -42,13 +41,14 @@ function formTx($form, &$sta, $type, $args = '') {
   $advanced = item(btn('', t('delay'), 'default', '', 'btn-delay') . btn('', t('repeat'), 'default', '', 'btn-repeat'));
   $submit = t('Submit');
 
-  w\whoFldSubmit('who', $opDesc . t(' %amount to %name?'), 'self-tx', ray('allowNonmember', $charge));
+  list ($field, $question) = ['who', $opDesc . t(' %amount to %name?')];
+  w\whoFldSubmit($field, $question, 'self-tx', $pay ? ':IS_OK' : '', ray('allowNonmember custom', $charge, 1));
   $paying = hidFld($pay);
   
-  jsx('tx');
+  jsx('tx', compact(ray('field question')));
   $form = cgform(compact(ray("title buttons who amount purpose start periods end advanced submit paying")));
 
-  return $form; // get defaults from which('info')
+  return $form;
 }
 
 function formTx_validate($form, &$sta) {

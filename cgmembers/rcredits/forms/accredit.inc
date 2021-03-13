@@ -15,7 +15,7 @@ function formAccredit($form, &$sta, $args = '') {
 
   $customer = textFld(t('Customer:'), [t('Name, id, email, or phone')]);
   $amount = numFld(t('Credit:'), [t('Amount')]);
-  w\whoFldSubmit('customer', t('Grant %amount credit to %name?'), 'self-credit');
+  w\whoFldSubmit('customer', t('Grant %amount credit to %name?'), 'self-credit', ':IS_OK');
   $submit = t('Save');
   
   return cgform(compact(ray('title subtext customer amount submit')));

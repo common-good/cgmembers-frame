@@ -45,7 +45,7 @@ function ajax($args = NULL) {
     return strhas($code, ' ') ? ajaxErr($code) : ajaxRet(compact('code'));
     
   } elseif ($op == 'suggestWho') { // get selections for a whoFld (see w\whoFldSubmit()
-    $res = be\memberRay($myid, $aid, $data ? nni($data, 'restrict') : ''); // data=1 means companies only
+    $res = be\memberRay($myid, $aid, $data ? nni($data, 'restrict') : '');
     return exitJust(u\jsonize($res ? array_values($res) : []));
     
   } elseif ($op == 'setNotice') { // change notice preference for one notice type (code, type, freq)
@@ -115,14 +115,14 @@ function ajax($args = NULL) {
     ajaxMsg($msg);
     
   } elseif ($op == 'who') {
-    extract(just('who question amount selfMsg', $data));
+    extract(just('who question amount selfMsg restrict', $data));
     $amtDpy = u\fmtAmt(nn($amount) ?: 0);
-    $who = be\identify($who, $mya, strhas(" $question", t(' pay ')) ? ':IS_OK' : '', $selfMsg ?: 'self-tx');
+    $who = be\identify($who, $mya, $selfMsg, $restrict);
     if (is_string($who)) return ajaxErr(tr($who));
     if (is_object($whoA = $who)) ajaxRet(ray('who confirm', $whoA->mainQid, $question ? tr($question, 'name amount', $whoA->fullName, $amtDpy) : ''));
     
     // $who must be an array, so create modal selection form
-    $choice = selectFld('', '', ['size' => 12], $who);
+    $choice = selectFld(BARE, '', ['size' => 12], $who);
     $which = render($choice);
     $title = t($question ?: t('Which account?'), ray('name amount', t('whom'), $amtDpy));
     $message = '';
@@ -133,7 +133,7 @@ function ajax($args = NULL) {
     return $mya ? ajaxRet(ray('whoami', "$mya->fullName ($mya->mainQid)")) : ajaxErr('no current account!');
     
   } elseif ($op == 'bumpShout') {
-    db\q('UPDATE u_shouters SET rating=IF(rating=3, 0, rating+1) where uid=:uid', ray('uid', r\qo($data->qid)->id));
+    db\q('UPDATE u_shouters SET rating=IF(rating=3, 0, rating+1) where uid=:uid', ray('uid', r\qo($data['qid'])->id));
     
   } else return ajaxErr(t('Invalid op'));
   

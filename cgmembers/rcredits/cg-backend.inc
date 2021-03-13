@@ -159,6 +159,7 @@ function balanceAsOf($uids, $date=NULL) {
 /**
  * Return a list of members to choose from (called with ajax, so current user is passed as arguments).
  * Restricted to within NEIGHBOR_MAX miles of the member
+ * Called only from 'suggestWho' in ajax.inc
  * @param int $myid: account record ID
  * @param int $aid: agent account record ID
  * @param string $restrict: MySQL to restrict the selection (for example ':IS_CO' or ':IS_OK')
@@ -166,17 +167,8 @@ function balanceAsOf($uids, $date=NULL) {
  */
 function memberRay($myid, $aid, $restrict = '') {
   if (!$a = r\acct($myid, $aid)) return []; // no choices if not signed in
-  $res = identify('', $a, $restrict);
-  return $res;
-  /*
-//  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : "state=$a->state OR community=$a->community OR :IS_CO");
-  $where = $coOnly ? ':IS_CO' : ($a->admin ? '1' : tr("(%DISTANCE_BETWEEN<%NEIGHBOR_MAX OR community=$a->community OR :IS_CO)"));
-  if (isDEV) $where = str_replace(DISTANCE_BETWEEN, '0', $where); // no lat/lon on dev machines yet
-  $subs = compact('myid');
-  if (!$coOnly and !$a->admin and !isDEV) $subs += ray('lat lon', $a->latitude, $a->longitude);
-///   flog(db\col('fullName', 'users', ":IS_OK AND uid<>:myid AND $where ORDER BY fullName", $subs));
-  return db\col('fullName', 'users', ":IS_OK AND uid<>:myid AND $where ORDER BY fullName", $subs);
-  */
+  $res = identify('', $a, '', $restrict);
+  return is_array($res) ? $res : (is_object($res) ? [$res->id => $res->fullName] : []);
 }
 
 /**
@@ -891,14 +883,14 @@ function deleteCell($number) {
  *   name, phone, email, or account ID
  *   name@city, zip, or city, ST
  * @param int $mya: current user's account
- * @param string $restrict: MySQL to restrict the selection (for example ':IS_CO' or ':IS_OK')
  * @param string $selfErr: index to error message for identifying oneself
+ * @param string $restrict: MySQL to restrict the selection (for example ':IS_CO' or ':IS_OK')
  * @return one of the following:
  *   the other trader's acct
  *   error message index
  *   array of possible fullNames with city and state, indexed by uid
  */
-function identify($who, $mya, $restrict = '', $selfErr = 'self-tx') {
+function identify($who, $mya, $selfErr, $restrict) {
   if (!$mya) return 'search forbidden';
   $myid = $mya->id;
   $who = $who0 = trim($who);

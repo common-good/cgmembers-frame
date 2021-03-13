@@ -145,11 +145,12 @@ function yesSubmit() {}
  * Find out what account the user means (see w\whoFldSubmit).
  * Create a hidden whoId field to store the record Id.
  */
-function who(form, fid, question, amount, allowNonmember, coOnly, selfMsg) {
+function who(form, fid, question, amount, selfMsg, restrict, allowNonmember) {
   jForm = $(form);
   var who = $(fid).val();
   if (yesSubmit) return true;
-  get('who', {who:who, question:question, amount:amount, coOnly:coOnly, selfMsg:selfMsg}, function(j) {
+  
+  get('who', {who:who, question:question, amount:amount, selfMsg:selfMsg, restrict:restrict}, function(j) {
     if (j.ok) {
       if (j.who) {
         setWhoId(j.who, jForm);
@@ -209,15 +210,15 @@ function clickWhich(fid, id, text, frm) {
 /**
  * Activate typeahead functionality for an account input element.
  * @param string sel: input element selector
- * @param bool coOnly: <include only companies>
+ * @param string restrict: MySQL restrictions, if any
  */
-function suggestWho(sel, coOnly) {
+function suggestWho(sel, restrict) {
   var members = new Bloodhound({
   //  datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
     datumTokenizer: Bloodhound.tokenizers.whitespace,
     queryTokenizer: Bloodhound.tokenizers.whitespace,
     prefetch: {
-      url: ajaxUrl + '?op=suggestWho&data=' + (coOnly ? '{"restrict":":IS_CO"}' : '') + '&sid=' + ajaxSid,
+      url: ajaxUrl + '?op=suggestWho&data={"restrict":"' + restrict + '"}&sid=' + ajaxSid,
       cache: false
     }
   });

@@ -101,7 +101,7 @@ EOF;
   $form = compact(ray('title subtext buttons list submitGroup showCustomers'));
 
 // no such step  if (!$mya->member and !$mya->stepIsDone('relations')) $form += w\setupFoot();
-  w\whoFldSubmit('newPerson', t('Create a new relation with %name?'), 'self-relation');
+  w\whoFldSubmit('newPerson', t('Create a new relation with %name?'), 'self-relation', '');
   w\jsx('relations');
 
   return cgform($form, 'wider');

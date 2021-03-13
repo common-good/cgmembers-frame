@@ -1257,7 +1257,7 @@ o;
     }
 
     if (!$done) {
-      u\setDft($created, $okNow ? now() : now() + 3 * DAY_SECS);
+      u\setDft($created, $okNow ? now() : strtotime('+3 days'));
       u\setDft($completed, ($amount < 0 or ($okNow and $amount + $waiting <= -$a->floor)) ? $created : 0);
 ///    debug(compact(ray('done created okNow completed amount waiting')) + ['floor' => $a->floor]);
 

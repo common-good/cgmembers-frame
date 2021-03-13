@@ -1391,7 +1391,7 @@ function clear($ch = 0) {
   global $tTime; $tTime = time(); // all events happen simultaneously during a test (conceptually)
   global $lastGo, $formOut, $formArray, $formSta, $testOp, $testConfirmation;
   global $tChecked, $tRadios, $testEmails, $rAPIResult;
-  global $testWhoFld, $testWhoErr, $testSeq, $nextCode;
+  global $testWho, $testSeq, $nextCode;
   global $sms_devel; $sms_devel = TRUE;
   global $newThresholds; unset($newThresholds);
   global $testRewardStep; $testRewardStep = 500;
@@ -1404,7 +1404,7 @@ function clear($ch = 0) {
   global $sceneTest;
   global $conf; $conf = [];
 
-  foreach (ray('lastGo formOut formArray formSta testOp testConfirmation tChecked tRadios testEmails rAPIResult testWhoFld testWhoErr nextCode testSeq') as $k) $$k = NULL;
+  foreach (ray('lastGo formOut formArray formSta testOp testConfirmation tChecked tRadios testEmails rAPIResult testWho nextCode testSeq') as $k) $$k = NULL;
 
   r\deleteAllCooks();
   foreach (ray('error status') as $one) u\deleteFile(t\dosayFilename($one));
