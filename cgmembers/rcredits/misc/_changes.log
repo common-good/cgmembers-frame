@@ -1,3 +1,6 @@
+2021-03-13 feature/fix-tx
+. fixed Pay and Charge JS
+
 2021-03-12 feature/fix-cron
 . bug fix: biggies didn't call queueNext()
 . added optional comment to cc donation

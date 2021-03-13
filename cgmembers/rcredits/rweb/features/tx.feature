@@ -31,12 +31,10 @@ Scenario: A member asks to charge another member for goods
   When member ".ZZA" completes form "tx/charge" with values:
   | op     | who     | amount | goods | purpose |*
   | charge | Bea Two | 100    | %FOR_GOODS     | labor   |
-  Then we scrip "suggest-who" with subs:
-  | question                 | allowNonmember |*
-  | ?                        | ?              |
-#  | question                 | allowNonmember |*
-#  | Charge %amount to %name? | 1              |
-# Can't include scrip specific because it gets set by JS
+  Then we scrip "tx" with subs:
+  | field | question            | selfErr | payDesc | chargeDesc |*
+  | who   | %_%amount to %name? | self-tx | Pay     | Charge     |
+  # choice between Pay and Charge gets set in JS
 
 Scenario: A member confirms request to charge another member
   When member ".ZZA" confirms form "tx/charge" with values:
@@ -61,21 +59,17 @@ Scenario: A member asks to pay another member for goods
   When member ".ZZA" completes form "tx/pay" with values:
   | op  | who     | amount | goods | purpose |*
   | pay | Bea Two | 100    | %FOR_GOODS     | labor   |
-  Then we scrip "suggest-who" with subs:
-  | question                 | allowNonmember |*
-  | ?                        | ?              |
-#  | question              | allowNonmember |*
-#  | Pay %amount to %name? |                |
+  Then we scrip "tx" with subs:
+  | field | question            | selfErr | payDesc | chargeDesc |*
+  | who   | %_%amount to %name? | self-tx | Pay     | Charge     |
 
 Scenario: A member asks to pay another member for loan/reimbursement
   When member ".ZZA" completes form "tx/pay" with values:
   | op  | who     | amount | goods | purpose |*
   | pay | Bea Two | 100    | %FOR_NONGOODS | loan    |
-  Then we scrip "suggest-who" with subs:
-  | question                 | allowNonmember |*
-  | ?                        | ?              |
-#  | question              | allowNonmember |*
-#  | Pay %amount to %name? |                |
+  Then we scrip "tx" with subs:
+  | field | question            | selfErr | payDesc | chargeDesc |*
+  | who   | %_%amount to %name? | self-tx | Pay     | Charge     |
   
 Scenario: A member confirms request to pay another member
   When member ".ZZA" confirms form "tx/pay" with values:

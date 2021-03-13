@@ -145,12 +145,11 @@ function yesSubmit() {}
  * Find out what account the user means (see w\whoFldSubmit).
  * Create a hidden whoId field to store the record Id.
  */
-function who(form, fid, question, amount, selfMsg, restrict, allowNonmember) {
+function who(form, fid, question, amount, selfErr, restrict, allowNonmember) {
   jForm = $(form);
   var who = $(fid).val();
   if (yesSubmit) return true;
-  
-  get('who', {who:who, question:question, amount:amount, selfMsg:selfMsg, restrict:restrict}, function(j) {
+  get('who', {who:who, question:question, amount:amount, selfErr:selfErr, restrict:restrict}, function(j) {
     if (j.ok) {
       if (j.who) {
         setWhoId(j.who, jForm);

@@ -1687,7 +1687,7 @@ function coupons($list) {return t\coupons($list);}
 function weScripWithSubs($script, $args = []) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $scriptScraps;
-  if (!isset($scriptScraps[$script])) return FALSE;
+  if (!isset($scriptScraps[$script])) return t\output(t('Missing script scrap "%script".', compact('script')));
   $args = $args[0];
   $got = just(array_keys($args), $scriptScraps[$script]);
   foreach ($args as $k => $v) if ($v != '?' and !t\eq($v, nni($got, $k))) return FALSE;

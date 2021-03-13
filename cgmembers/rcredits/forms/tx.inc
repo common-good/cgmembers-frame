@@ -16,7 +16,8 @@ function formTx($form, &$sta, $type, $args = '') {
 
   $pay = in($type, 'pay both');
   $charge = in($type, 'charge both');
-  $opDesc = $pay ? t('Pay') : t('Charge');
+  list ($payDesc, $chargeDesc) = [t('Pay'), t('Charge')];
+  $opDesc = $pay ? $payDesc : $chargeDesc;
   
   $selling = explode("\n", $mya->selling);
   $purpose = nn($purpose) ?: ($charge ? nni($selling, 0) : '');
@@ -41,11 +42,12 @@ function formTx($form, &$sta, $type, $args = '') {
   $advanced = item(btn('', t('delay'), 'default', '', 'btn-delay') . btn('', t('repeat'), 'default', '', 'btn-repeat'));
   $submit = t('Submit');
 
-  list ($field, $question) = ['who', $opDesc . t(' %amount to %name?')];
-  w\whoFldSubmit($field, $question, 'self-tx', $pay ? ':IS_OK' : '', ray('allowNonmember custom', $charge, 1));
+  list ($field, $question, $selfErr) = ['who', t(' %amount to %name?'), 'self-tx'];
+  // duplicate scraps.js's question, restrict, and allowNonmember in whoFldSubmit() for testing
+  w\whoFldSubmit($field, $opDesc . $question, $selfErr, $pay ? ':IS_OK' : '', ray('allowNonmember custom', $charge, 1));
   $paying = hidFld($pay);
   
-  jsx('tx', compact(ray('field question')));
+  jsx('tx', compact(ray('field question selfErr payDesc chargeDesc')));
   $form = cgform(compact(ray("title buttons who amount purpose start periods end advanced submit paying")));
 
   return $form;

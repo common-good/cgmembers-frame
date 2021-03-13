@@ -121,7 +121,8 @@ function doit(what, vs) {
       $('#tx').show();
       $('#edit-who').focus();
 
-      if (!pay) vs['question'] = vs['question'].replace('Pay ', 'Charge ');
+      // question, allowNonmember, and restrict cannot be passed to jsx, because (bool) pay is calculated herein
+      vs['question'] = desc + vs['question'];
       vs['allowNonmember'] = !pay;
       vs['restrict'] = pay ? ':IS_OK' : '';
       suggestWhoScrap();
