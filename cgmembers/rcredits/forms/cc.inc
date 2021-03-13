@@ -12,7 +12,7 @@ use CG\Cron as cr;
   If they haven't chosen a recurring donation yet, a recurring donation is the only option
 */
 function formCC($form, &$sta, $args = '') {
-  extract(just('op code', $args, NULL));
+  extract(just('op code qid', $args, NULL));
   $ray = $code ? u\decryRay($code) : [];
   if ($op == 'done' and $ray) return thank($ray);
   
@@ -49,11 +49,14 @@ function formCC($form, &$sta, $args = '') {
 //  $permo = boxFld('permo', NBSP, t('Make this a monthly donation.'));
 //  $honored = rendA('honored', textFld(BARE, [t('(optional)')]));
 //  $honor = selectFld(t('Honoring:'), '', suffix($honored), $honors);
+  $dft = ($qid and $co = r\acct($qid) and $co->id != CGID) ? t('for ') . $co->fullName : '';
+  $comment = areaFld(t('Comment:'), '', dft($dft));
   list ($cq, $ca) = w\captcha();
-  $submit = t('Donate');
+  $submit = submit(t('Donate'), NBSP, '', suffix(lnk('', t('Add comment'))));;
 
   jsx('amtChoice');
-  return cgform(compact(ray('img title subtext fullName email zip amtChoice amount cq ca submit')));
+  jsx('cc');
+  return cgform(compact(ray('img title subtext fullName email zip amtChoice amount comment cq ca submit')));
 }
 
 function formCC_validate($form, &$sta) {
@@ -71,8 +74,11 @@ function formCC_validate($form, &$sta) {
 }
 
 function formCC_submit($form, &$sta) {
-  extract($info = just('fullName email zip amount', $sta['input'], NULL));
+  extract($info = just('fullName email zip amount comment', $sta['input'], NULL));
   
+  r\tellAdmin(t('CC donation'), $info);
+  unset($info['comment']); // don't send comment to PayPal
+
   $code = u\cryRay($info);
   $return = BASE_URL . "/cc/op=done&code=$code";
   u\EXPECT(strlen($return) <= 1024, 'cc return url too long');

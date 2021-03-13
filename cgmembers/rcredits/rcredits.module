@@ -113,17 +113,10 @@ function bankTxId($btxid) { // for reconcilecttyfund.inc (short form of bank's t
 }
 
 function a($id = '', $agent = '', $create = FALSE) { // return an account object
-///  print_r("a($id, $agent)<br>");
 	global $lastA;
   if (is_string($id) and (!ctype_digit($id)) and strlen($id)==3) { $id = '.' . $id; }
 	if (!strpos($id, '@') and !preg_match('/[0-9]/', $id)) $id = strtoupper($id);
 	$lastA = r\acct(t\fullQid($id), t\fullQid(strtoupper(strlen($agent) == 3 ? '.' . $agent : $agent)));
-  /* if (empty($lastA) and $create) { */
-  /*   $newId = r\qo($id, $agent)->id; */
-  /*   $result = db\insert('users', ['uid'=>$newId], 'uid'); */
-  /*   $lastA = r\acct(t\fullQid($id), t\fullQid(strtoupper(strlen($agent) == 3 ? '.' . $agent : $agent))); */
-  /*   } */
-  /*  u\EXPECT([$lastA], 'Acct'); */
 	return $lastA;
 }
 function x($xid, $mya = '') {f('r.x', $xid, $mya);} // return a transaction object
@@ -131,12 +124,23 @@ function x($xid, $mya = '') {f('r.x', $xid, $mya);} // return a transaction obje
 /**/ function step($a) {debug(a($a)->step());}
 /**/ function ctty($id) {if (!$id or !a($id)) die(trace()); return a(a($id)->community);}
 
-/**/ function flog($s = '') { // log to file and return log file name
-  global $channel;
-  if ($channel == TX_CRON) syslog(LOG_DEBUG, pr($s) . "\n"); // because file_put_contents fails in cron
-  if (func_num_args()) file_put_contents(LOG_FLNM, pr($s) . "\n", FILE_APPEND); // new log file every month
-  return LOG_FLNM;
+/**
+ * Log to file and return log file name
+ */
+/**/ function flog($s = '', $chan = NULL) {
+  global $channel; u\setDft($chan, nn($channel, TX_HACK));
+  $logDir = LOG_DIR . ray(TX_CHANNELS)[$chan];
+  if (!is_dir($logDir)) {
+    mkdir($logDir, 0775);
+    u\EXPECT(is_dir($logDir), 'directory creation failed');
+    if ($chan == TX_CRON) r\tellAdmin(t('You will need to create %logDir by hand', compact('logDir')));
+  }
+  $logFlnm = $logDir . '/' . date('Ym') . '.log';
+//  if ($chan == TX_CRON) syslog(LOG_DEBUG, pr($s) . "\n"); // because file_put_contents fails in cron
+  if (func_num_args()) file_put_contents($logFlnm, pr($s) . "\n", FILE_APPEND); // new log file every month
+  return $logFlnm;
 }
+
 /**/ function lug($s) {u\loga('debug', $s);}
 function caller($depth = 1) {return debug_backtrace()[$depth + 1]['function'];}
 function args() {return debug_backtrace()[1];}

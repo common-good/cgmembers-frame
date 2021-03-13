@@ -444,7 +444,7 @@ function notifyEntries($a, $index, $entries, $force = FALSE) {
   if (nn($warning)) {
     if ($channel == TX_WEB) Web\say($warning);
     if ($channel == TX_SMS) SMS\send($a->smsNumber, $warning);
-    if ($channel == TX_POS) { } // dunno how to handle this
+    if ($channel == TX_APP) { } // dunno how to handle this
   }
 }
 */
@@ -1220,7 +1220,7 @@ function riskList($risks, $descs) {
 function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
   global $scanned, $channel;
   
-  $invoicing = ($taking and $channel != TX_POS);
+  $invoicing = ($taking and $channel != TX_APP);
 
   // Check a1
   if (!$a1->ok) return be\txRet(FALSE, t('Requesting account is inactive.'));
@@ -1229,7 +1229,7 @@ function txPermErr($a1, $a2, $taking = TRUE, $neg = FALSE) {
     if ($a1->helper != $a2->id) { // unless doing business with who invited you
       if (!$a1->hasId or $a1->risk('ssnOff')) {
         $atHome = in(r\serverUid(), [$a1->community, $a2->community]) ? ($a1->community == $a2->community) : (substr($a1->zip, 0, 3) == substr($a2->zip, 0, 3) or u\earthDistance($a1->latitude, $a1->longitude, $a2->latitude, $a2->longitude) < 20);
-        if (!$atHome or $channel != TX_POS) { // first tx must be in-person at home if ID is unverified
+        if (!$atHome or $channel != TX_APP) { // first tx must be in-person at home if ID is unverified
           return be\txRet(FALSE, 'first at home');
         }
       }

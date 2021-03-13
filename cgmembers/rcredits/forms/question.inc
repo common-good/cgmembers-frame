@@ -46,7 +46,10 @@ function formQuestion($form, &$sta, $args = '') {
       $row = $q->fetchAssoc();
       $list = tr($button0, 'text oid', t('Edit Details'), $row['oid']);
     }
-  } elseif (empty($eid)) return w\softErr(t('Missing event id.'));
+  } else {
+    if (empty($eid)) return w\softErr(t('Missing event id.'));
+    $id = $list = NULL;
+  }
 
   $title = item($add ? t('Add Question') : t('Edit Question'));
   $event = hidFld($eid);

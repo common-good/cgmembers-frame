@@ -82,9 +82,7 @@ Scenario: a manager signs in
 
 Scenario: a manager asks us to identify the manager's own card
   When agent "C:A" asks device "devC" to sign in "C:A,ccA2" 
-  Then we respond with:
-  | ok | person  | descriptions    | can          | bad | company    | time |*
-  | 1  | Abe One | this,that,other | refund,r4usd |     | Corner Pub | %now |
+  Then we return error "already scanned in"
 
 Scenario: a cashier scans a customer card
   When agent "C:B" asks device "devC" to identify ".ZZD,ccD"

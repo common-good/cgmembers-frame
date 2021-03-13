@@ -97,8 +97,8 @@ Scenario: A member looks at transactions for the past few days
 Scenario: A member looks at transactions with roundups
   Given transactions:
   | xid | amount | payer | payee            | purpose          | taking | goods      | channel | type     |*
-  |  41 |  49.95 | .ZZA | .ZZC             | sundries         | 1      | %FOR_GOODS | %TX_POS | prime    |
-  |  41 |   0.05 | .ZZA | %CG_ROUNDUPS_UID | roundup donation | 0      | %FOR_GOODS | %TX_POS | donation |
+  |  41 |  49.95 | .ZZA | .ZZC             | sundries         | 1      | %FOR_GOODS | %TX_APP | prime    |
+  |  41 |   0.05 | .ZZA | %CG_ROUNDUPS_UID | roundup donation | 0      | %FOR_GOODS | %TX_APP | donation |
   Then balances:
   | uid  | balance |*
   | .ZZA | 1535.00 |

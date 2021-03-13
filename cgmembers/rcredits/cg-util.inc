@@ -641,7 +641,6 @@ function loga($type, $info = [], $adhocChannel = FALSE) {
   
 /**/  if (strlen($type) >= 60) die("in loga: $type " . trace()); // don't use EXPECT here
 
-  $ch = nn($channel) ? ray(TX_CHANNELS)[$channel] : t('hack');
 //  $useTextLogToo = FALSE; // isDEV;
 
   $qid = $mya ? $mya->qid . (($mya->cAdmin2 and !$mya->proSe) ? strtolower($mya->agentA->mainQid) : '') : t('nobody');
@@ -655,7 +654,7 @@ function loga($type, $info = [], $adhocChannel = FALSE) {
     foreach (ray('form_id form_build_id form_token orig') as $k) unset($info[$k]);
     $info = u\jsonize(u\noSecrets($info), JSON_UNESCAPED_SLASHES);
   }
-/**/ flog($s = "$qid/$time/$ch/$type/$info");
+/**/ flog($s = "$qid/$time/$type/$info");
 //  if (!test())
 //  if ($channel == TX_CRON) mail(R_ADMIN_EMAIL, 'cron log', $s); // temporary until we figure out what's going wrong with flog in cron
 }  

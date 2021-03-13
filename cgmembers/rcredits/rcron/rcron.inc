@@ -47,8 +47,6 @@ function run() {
   global $channel; $channel = TX_CRON; // set this even if called from PHP window by admin
 // NO (happens too often)  u\log('running cron');
   // Allow execution to continue even if the request gets canceled.
-  if (between(now(), strtotime('2:40am'), strtotime('2:44am'))) return; // swiftMailer crashes during this period
-  
   ignore_user_abort(TRUE);
 
   // Prevent session information from being saved while cron is running.
@@ -838,6 +836,7 @@ function biggies() {
 X;
 
   if ($list = db\q($sql)->fetchAllKeyed()) r\tellAdmin(t('Big Transfers on ') . u\fmtDate(), compact(ray('admin list')));
+  queueNext();
 }
 
 /**

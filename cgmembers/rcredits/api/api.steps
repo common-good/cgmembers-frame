@@ -33,7 +33,7 @@ if (basename($_SERVER['SCRIPT_FILENAME']) != 'compile.php') {
  * Add additional setup for any or all features or tests
  */
 function extraSetup() {
-  t\clear(TX_POS);
+  t\clear(TX_APP);
 }
 
 /**

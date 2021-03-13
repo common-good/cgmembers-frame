@@ -34,7 +34,7 @@ if (basename($_SERVER['SCRIPT_FILENAME']) != 'compile.php') {
  * Add additional setup for any or all features or tests
  */
 function extraSetup() {
-  t\clear(TX_POS);
+  t\clear(TX_APP);
 }
 
 /**
@@ -118,7 +118,6 @@ function agentAsksDeviceToIdentify($agent, $device, $qr) {
  *     TEST identify DeviceHasNoIdentifierYetForTrialCompany
  *     TEST identify ACashierSignsInSigningAnotherCashierOut
  *     TEST identify AManagerSignsIn
- *     TEST identify AManagerAsksUsToIdentifyTheManagersOwnCard
  *     TEST identify ACashierScansACustomerCard
  *     TEST identify TheDefaultCashierScansACustomerCard
  *     TEST identify ACustomerScansTheirOwnCardForSelfservice
@@ -381,6 +380,7 @@ function weReturnErrorWithSubs($msg, $subs) {
  *     TEST exchange DeviceGivesNoPurposeForGoodsAndServices
  *     TEST exchange DeviceSendsWrongProof
  *     TEST identify DeviceShouldHaveAnIdentifier
+ *     TEST identify AManagerAsksUsToIdentifyTheManagersOwnCard
  *     TEST identify ACustomerScansTheirOwnCardForSelfserviceWithWrongPIN
  *     TEST identify TheDefaultCashierScansADeactivatedCard
  *     TEST identify AnUnauthorizedCashierScansIn

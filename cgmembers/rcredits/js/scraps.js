@@ -79,6 +79,12 @@ function doit(what, vs) {
     });
     break;
     
+  case 'cc':
+    var note = $('.form-item-comment');
+    note.hide();
+    $('.form-item-submit a').click(function () {note.show().find('textarea').focus();});
+    break;
+    
   case 'deposits':
     $('.filename').click(function () {
       var res = clipCopy($(this).attr('data-flnm'));
