@@ -181,6 +181,7 @@ function memberConfirmsFormWithValues($id, $page, $values) {return t\completeFor
  * member (ARG) confirms (ARG) with: (ARG)
  *
  * in: MAKE accredit AMemberCompanyGivesACustomerCredit
+ *     MAKE accredit AMemberTriesToBuyCreditWithCredit
  *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
  *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountIDAndChosenAmount
  *     MAKE cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
@@ -306,6 +307,7 @@ function members($list) {return t\members($list);}
  *     TEST card 
  *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
  *     TEST cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ *     BOTH cgpay AMemberCancelsTheirPurchaseOfStoreCredit
  *     TEST cgpay AMemberTypesAccountIDToBuyStoreCredit
  *     TEST cgpay AMemberRedeemsStoreCredit
  *     TEST cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
@@ -720,6 +722,7 @@ function withoutOptions($options) {
  *     MAKE bank Setup
  *     MAKE bank ASlaveMemberRequestsATransfer
  *     MAKE card Setup
+ *     MAKE cgpay Setup
  *     MAKE changeaccount Setup
  *     MAKE community Setup
  *     MAKE company Setup
@@ -763,7 +766,8 @@ function relations($relations) {return t\relations($relations);}
 /**
  * balances: (ARG)
  *
- * in: TEST balancesheet Setup
+ * in: TEST accredit AMemberTriesToBuyCreditWithCredit
+ *     TEST balancesheet Setup
  *     TEST bank Setup
  *     TEST bank AMemberMovesCreditToTheBank
  *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
@@ -829,6 +833,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE cgpay AMemberClicksACGPayButtonWithVariableAmount
  *     MAKE cgpay AMemberClicksAButtonToBuyStoreCredit
  *     MAKE cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ *     MAKE cgpay AMemberCancelsTheirPurchaseOfStoreCredit
  *     MAKE cgpay AMemberClicksAButtonToBuyAGiftOfStoreCredit
  *     MAKE changeaccount AMemberClicksTheProfilePhoto
  *     MAKE changeaccount AMemberChangesAccount
@@ -1068,6 +1073,7 @@ function memberOnetimePasswordIs($id, $pass) {
  *
  * in: TEST bank AMemberDrawsCreditFromTheBankWithAdequateFloor
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
+ *     TEST cgpay AMemberCancelsTheirPurchaseOfStoreCredit
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesARecurringDonation
  *     TEST invoice AMemberDeniesAnInvoice
@@ -1499,7 +1505,8 @@ function memberHasCompanyInfo($id, $info) {
 /**
  * member (ARG) clicks (ARG) on transaction (ARG)
  *
- * in: MAKE txs AdminReversesABankTransfer
+ * in: MAKE cgpay AMemberCancelsTheirPurchaseOfStoreCredit
+ *     MAKE txs AdminReversesABankTransfer
  */
 function memberClicksOnTransaction($id, $do, $xid) {
   global $testPeriod;
@@ -1698,8 +1705,10 @@ function weScripWithSubs($script, $args = []) {
  * these (ARG): (ARG)
  *
  * in: TEST accredit AMemberCompanyGivesACustomerCredit
+ *     MAKE accredit AMemberTriesToBuyCreditWithCredit
  *     MAKE balancesheet Setup
  *     TEST cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
+ *     BOTH cgpay AMemberCancelsTheirPurchaseOfStoreCredit
  *     TEST cgpay AMemberTypesAccountIDToBuyStoreCredit
  *     BOTH cgpay AMemberRedeemsStoreCredit
  *     TEST cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
@@ -1877,7 +1886,8 @@ function memberIsUnconfirmed($id) {
 /**
  * count (ARG) is (ARG)
  *
- * in: TEST bank Setup
+ * in: TEST accredit AMemberTriesToBuyCreditWithCredit
+ *     TEST bank Setup
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST stepup ASurtxAmountRoundsToZero
  *     TEST tx AMemberPaysAnotherMemberLater
@@ -2279,7 +2289,8 @@ function weShowJSONOf($ray) {
 /**
  * a button code for: (ARG)
  *
- * in: MAKE cgpay AMemberClicksACGPayButton
+ * in: MAKE accredit AMemberTriesToBuyCreditWithCredit
+ *     MAKE cgpay AMemberClicksACGPayButton
  *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
  *     MAKE cgpay AMemberClicksACGPayButtonWithVariableAmount
  *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountIDAndChosenAmount

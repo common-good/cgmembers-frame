@@ -1350,7 +1350,7 @@ function bits($n, $descs = B_LIST) {
 
   if (is_numeric($n)) { // integer bit array
     $res = '';
-    for($i = 0; $i < 32; $i++) if ($n & (1 << $i)) $res .= ' ' . ($descs ? $descs[$i] : $i);
+    for($i = 0; $i < 32; $i++) if ($n & (1 << $i)) $res .= ' ' . ($descs ? nni($descs, $i, $i) : $i);
   } else { // string of bit names
     $res = 0;
     $descs = array_flip($descs);

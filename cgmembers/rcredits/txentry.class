@@ -47,7 +47,7 @@ class TxEntry {
     $e = $this;
     switch ($f) {
     default:
-      u\EXPECT(FALSE, "unexpected field $f requested");
+      u\EXPECT(FALSE, "unexpected field:" . $f);
     }
   }
 

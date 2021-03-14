@@ -249,7 +249,7 @@ function undoTx($xid, $where = '1', $subs = [], $force = FALSE) {
   if (!$byMe and !$toMe) { // someone charged me (either unilaterally or I approved it)
     r\disputeTx($xid); // mark it disputed
     $solution = t('marked "disputed"');
-    $tx->otherA->tellIn('charge disputed', $tx->reportArgs($mya)); //, $tx->getMyAmt(), $payer, $payee, $payerPurpose, $payeePurpose));
+    $tx->otherA->tellOut('charge disputed', $tx->reportArgs($mya)); //, $tx->getMyAmt(), $payer, $payee, $payerPurpose, $payeePurpose));
     $amount = u\fmtAmt($tx->otherEntry->amount);
     $tofrom = !$tx->toMe ? t('to') : t('from');
     $otherUid = $tx->otherUid;
@@ -277,17 +277,28 @@ function reverse($xid, &$newTx = '') {
   if (!$tx = r\Tx::read($xid)) return txErr(t('no transaction'), $subs);
 
   // It seems OK to reverse it
+
+  $e = $tx->entries[1]; // get payer half of prime entry pair  
+  if ($ruid = $e->rule and $e->entryType == E_PRIME and $cred = creditPeops($ruid)) { // purchased credit, so end the rule
+    db\update('tx_rules', ray('id end', $ruid, now()), 'id');
+    extract(just('buyerA coA', $cred));
+//    $gift = ($e->uid == $buyerA->id);
+    $amt = u\fmtAmt(-$e->amount);
+    $buyerA->tellIn('your credit canceled', ray('amount co', $amt, $coA->fullName), t('Credit canceled'));
+    $coA->tellOut('customer credit canceled', ray('customer amount', $buyerA->fullName, $amt), t('Credit canceled'));
+  }   
+
   $newTx = clone $tx;  // this is a shallow copy, entries points to the same entries
   $newTx->xid = NULL;
   $newTx->reversesXid = $xid;
   $newTx->entries = [];
   $newTx->created = now();
-  foreach ($tx->entries as $oldEntry) {
-    $newEntry = clone $oldEntry;
-    $newEntry->id = NULL;
-    $newEntry->xid = NULL;  // new entry belongs to reversing transaction
-    $newEntry->amount = -$oldEntry->amount;
-    $newTx->entries[] = $newEntry;
+  foreach ($tx->entries as $oldE) {
+    $newE = clone $oldE;
+    $newE->id = NULL;
+    $newE->xid = NULL;  // new entry belongs to reversing transaction
+    $newE->amount = -$oldE->amount;
+    $newTx->entries[] = $newE;
   }
   $xid = $newTx->insert();
   if (!$xid) {
@@ -311,6 +322,19 @@ function reverse($xid, &$newTx = '') {
   $subs = compact(ray('ok did xid txid created0 created balance solution otherName amount why'));
   
   return txRet(TRUE, $message, $subs);
+}
+
+/**
+ * Return details about a store credit rule.
+ * @param int $id: rule id
+ * @return assoc [buyerA, coA] (buyer account and store account) -- FALSE if $id does not point to a store credit rule
+ */
+function creditPeops($id) {
+  $info = db\get('*', 'tx_rules', compact('id'));
+  extract(just('action portion from to payerType payeeType payer payee', $info));
+  if ($action == ACT_SURTX and $portion == 1 and $from == MATCH_PAYEE and $to == MATCH_PAYER and $payerType == REF_ACCOUNT and $payeeType == REF_ACCOUNT and $buyerA = r\acct($payer) and $coA = r\acct($payee)) {
+    return compact(ray('buyerA coA'));
+  } else return FALSE;
 }
 
 /**
@@ -361,7 +385,7 @@ function payInvoice($nvid, $payAmount = NULL) {
  * @param acct $actorA: acct object for the initiating party (usually the current user)
  * @param acct $otherA: acct object for the other party
  *   OR 'ALL' (paying employees) -- currently UNUSED
- * @param number $amount: the transaction amount
+ * @param number $amount: the transaction amount (always positive -- reversals are only in reverse())
  * @param string|array $purpose: description of the transaction's purpose (user input) (or [actorFor, otherFor])
  * @param int $goods: FOR_GOODS, FOR_USD, others?
  * @param array $data: associative array of extra info about the transaction (if any), indexed by any of:
@@ -415,6 +439,8 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   if ($force != 0) $offline = TRUE; // temporary until app handles this right
 
   $erInfo = compact(ray('goods amount purpose force')) + ray('actor other op snap', $actorA->fullName, $otherA->fullName, $taking ? t('charged') : t('paid'), $actorA->snap or $otherA->snap);
+  if ($amount <= 0) r\tellAdmin(t('non-positive amount in be\\transfer'), $erInfo); // should never happen
+
 
   foreach ([$actorA, $otherA] as $a) if ($a->snap) r\tellAdmin(t('SNAP member tx: %who', 'who', $a->fullName), $erInfo);
 
@@ -482,11 +508,9 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
 
   // Apply rules
   if ($amount > 0 and ($goods != FOR_USD)) {
-    $needed += handleSurTx($entries, $loserA, $gainerA, $amount);
+    $needed += handleSurTx($entries, $loserA, $gainerA, $amount, nn($for) and $for != 'other');
   }
 
-/*  // Apply food fund (or other special) donation
-  } */
   // Apply any roundup
   if ($e1A->roundup and $needed > 0 and !($e2Id == CGID and $recurs and $needed < 1)) { // payer roundups, not actor or loser (don't round up reversals, cashouts, roundups, or recurring gifts under $1)
     if ($cents = fmod($needed, 1.0)) {
@@ -525,6 +549,11 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
       return txErr(t('ssn needed', $erInfo));
     }
   }
+  
+  if ($ruid = advanceCredit($for, $loserA, $gainerA, $credit ?: $amount)) { // purchase/gift of store credit
+    u\EXPECT(!$ruleId, 'credit purchase already has a rule!');
+    for ($i = 0; $i < 2; $i++) $entries[$i]->rule = $ruid; // point the main entry pair at the rule (in case of reversal)
+  }
     
   $tx->addEntries($entries);
   if (array_key_exists('xid', $data)) {
@@ -538,7 +567,6 @@ function transfer($type, $actorA, $otherA, $amount, $purpose, $goods, $data = []
   }
   
   if ($goods != FOR_USD and $pot = $loserA->giftPot) $loserA->update('giftPot', max(0, $pot - $needed));
-  if (nn($for) and $for != 'other') advanceCredit($for, $loserA, $gainerA, $credit ?: $amount); // purchase/gift of store credit
   
   unset($DBTX);
   
@@ -576,27 +604,24 @@ function txEntryPair(&$txes, $amount0, $a0, $description0, $entryType0, $rule = 
  * @param acct $buyer: payer acct
  * @param acct $seller: seller acct (where the recipient gets store credit)
  * @param float $credit: amount of credit the recipient gets
+ * @return the new rule's record ID (FALSE if not a purchase of credit)
  */
 function advanceCredit($for, $buyer, $seller, $credit) {
-  if ($neg = ($credit < 0)) $credit = -$credit;
+  if (!nn($for) or $for == 'other' or !$credit) return FALSE; // not a purchase of credit
+  u\EXPECT($credit >= 0, 'negative credit in transfer');
   
   if (!in($for, [SELF_CREDIT, SELF_CREDIT50])) { // gift!
     $for = r\acct($for);
     u\EXPECT($for, 'gift account does not exist');
-    $for->tell('you got credit|to redeem', ray('name action credit co', $buyer->fullName, $neg ? t('canceled your gift') : t('sent you a gift'), u\fmtAmt($credit), $seller->fullName), $neg ? t('Your gift is canceled') : t('You have received a gift through Common Good!'));
+    $for->tell('you got credit|to redeem', ray('name action credit co', $buyer->fullName, t('sent you a gift'), u\fmtAmt($credit), $seller->fullName), t('You have received a gift through Common Good!'));
     $buyer = $for;
   }
   
   $portion = $for == SELF_CREDIT50 ? .5 : 1;
   $info = ray('action portion amtMax payerType payer payeeType payee from to purpose', ACT_SURTX, $portion, $credit, REF_ACCOUNT, $buyer->id, REF_ACCOUNT, $seller->id, MATCH_PAYEE, MATCH_PAYER, t('any purchase'));
 
-  if ($neg) { // undoing, so end the rule
-    if ($id = db\get('id', 'tx_rules r', ['end' => NULL] + $info)) db\update('tx_rules', ray('id end', $id, now()) + $info, 'id');
-  } else {
-    db\insert('tx_rules', $info);
-  }
+  return db\insert('tx_rules', $info);
 }
-  
 
 /**
  * Send appropriate notifications and return a success message array
@@ -689,19 +714,21 @@ function sendNotifications($type, $tx, $shortfall) {
  * @param acct $buyer:
  * @param acct $seller:
  * @param number $price: pre-discount, pre-stepup amount
+ * @param bool $forCredit: <buying store credit as a gift or for oneself>
  * @param unixtime $when: when was the transaction (defaults to now)
  * @return the net increase in overall transaction amount
  */
 
-function handleSurTx(&$entries, $buyer, $seller, $price) {
+function handleSurTx(&$entries, $buyer, $seller, $price, $forCredit) {
   u\EXPECT($price > 0, 'non-positive price handling coupon');
   
   $payerCo = $buyer->co ? 1 : 0;
   $payeeCo = $seller->co ? 1 : 0;
 
   // Get a list of applicable rules
-  $payerCheck = u\genRuleSQL('payer', ':buyer');
-  $payeeCheck = u\genRuleSQL('payee', ':seller');
+  $payerCheck = u\genRuleSQL('payer', ':buyer'); // rule applies to this buyer
+  $payeeCheck = u\genRuleSQL('payee', ':seller'); // rule applies to this seller
+  $forCreditCheck = $forCredit ? '`from`<>:MATCH_PAYEE' : '1'; // no buying credit with credit or discount
   
   $sql = <<<EOF
     SELECT ru.id AS ruleId, ru.amount, ru.portion, ru.from, ru.to, ru.purpose, ru.minimum, ru.useMax, 
@@ -709,24 +736,25 @@ function handleSurTx(&$entries, $buyer, $seller, $price) {
     (SELECT IFNULL(SUM(e.amount), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=ruleId AND e.uid=:buyer) AS `amtUsed`,
     (SELECT IFNULL(SUM(SIGN(e.amount)), 0) FROM tx_entries e WHERE e.rule IS NOT NULL AND e.rule=ruleId AND e.uid=:buyer) AS `timesUsed`
     FROM tx_rules ru
-    WHERE $payerCheck
-    AND $payeeCheck
+    WHERE $payerCheck AND $payeeCheck
+    AND $forCreditCheck
     AND (ru.action = :ACT_SURTX)
     AND (ru.start <= :now AND IFNULL(:now < ru.end, TRUE))
     AND (:price >= minimum)
     GROUP BY ruleId
-    HAVING (:price >= minimum) AND timesUsed < IFNULL(useMax, timesUsed+1) AND amtUsed < IFNULL(amtMax, amtUsed+1)
+    HAVING :price >= IFNULL(minimum, 0)
+    AND timesUsed < IFNULL(useMax, timesUsed+1)
+    AND amtUsed < IFNULL(amtMax, amtUsed+1)
     ORDER BY ru.start
 EOF;
 
   $subs = ray('buyer seller now price', $buyer->id, $seller->id, now(), $price);
-  if (!$q = db\q($sql, $subs)) return 0;
-///  showq($sql, $subs);
-  if (!$res = $q->fetchAllAssoc('ruleId', \PDO::FETCH_ASSOC)) return 0;
+  ///showq($sql, $subs);
+  $q = db\q($sql, $subs);
 
   $rebate = 0;
-  foreach ($res as $ruleId => $rule) {
-    extract($rule);
+  while ($row = $q->fetchAssoc()) {
+    extract($row);
 
     $value = round($amount + $portion * $price, 2); // potential rebate/stepup amount
     if ($amtMax) $value = min($value, $amtMax - $amtUsed); // limited by amtUsed
@@ -734,7 +762,7 @@ EOF;
     $from = ($from == MATCH_PAYER) ? $buyer->id : (($from == MATCH_PAYEE) ? $seller->id : $from);
     $to = ($to == MATCH_PAYER) ? $buyer->id : (($to == MATCH_PAYEE) ? $seller->id : $to);
     list ($type, $desc) = $to == $buyer->id ? [E_REBATE, REBATE_DESC] : [E_DONATION, $purpose]; // any surtx not coming back to buyer is a donation of some sort
-    if ($to == $buyer->id) $value = min($price, $value); // don't refund more than is being spent (food fund especially)
+    if ($to == $buyer->id) $value = min($price - $rebate, $value); // don't refund more than is being spent (food fund especially)
 
     if ($value <= 0) continue;
     $rebate += $value;

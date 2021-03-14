@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.57g'; // software version
+const R_VERSION = '3.57h'; // software version
 define('R_ROOT', __DIR__);
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -578,7 +578,7 @@ const B_FUNDING = 16; // invoice has already instigated an appropriate bank tran
 const B_FOOD = 17; // contribution to food fund
 const B_PARTIAL = 18; // partial payment of invoice
 const B_BUTTON = 19; // payment from CGPay button
-const TX_FLAGS = 'offline short crumbs recurs gift loan investment stake fine noask funding food partial button';
+const TX_FLAGS = 'u0 u1 offline short u4 u5 crumbs u7 roundup recurs gift loan investment stake fine noask funding food partial button';
 
 // Invoice status (txid >= TX_PAID if paid)
 const TX_CANCELED = -9; // invoice canceled

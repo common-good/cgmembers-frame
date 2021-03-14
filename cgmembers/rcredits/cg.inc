@@ -1458,7 +1458,7 @@ function disputeTx($xid, $reason = '') {
   if (empty($mya)) return FALSE;
   if (db\exists('tx_disputes', compact('xid'))) u\FAIL("transaction $xid is already disputed");
 
-  $result = db\insert('tx_disputes', ray('xid reason status uid', $xid, $reason ?: t('reason unknown'), DS_OPEN, $mya->uid), 'id');
+  $result = db\insert('tx_disputes', ray('xid reason status uid agentUid', $xid, $reason ?: t('reason unknown'), DS_OPEN, $mya->uid, $mya->agentId), 'id');
   u\EXPECT($result, "error inserting dispute record");
 
   return TRUE;
