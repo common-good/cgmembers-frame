@@ -271,13 +271,13 @@ function doTxs($info, $thing) {
   $channel0 = call_user_func(function () {global $channel; return $channel;}); // protect value of current channel
 
   $hdrFlds = 'xid goods actorId actorAgentId flags channel boxId risk risks recursId reversesXid created';
-  $entryFlds = 'xid entryType amount uid agentUid description relType relatedId';
+  $entryFlds = 'xid entryType amount uid agentUid description relType relatedId rule';
   $uidFlds = 'payer payee payerAgent payeeAgent';
   $testFlds = $uidFlds . ' for purpose payerFor payeeFor risks type amount taking rel relType';
   //  $flags = 'taking disputed offline short undone undoes crumbs roundups roundup recurs gift loan investment stake fine noask funding'; // These are flags that might appear
 
   extract(just($hdrFlds . ' ' . $testFlds, $info, FALSE));
-  extract(just('rel', $info, 0));
+  extract(just('rel rule', $info, 0));
   if (!$reversesXid) $reversesXid = NULL;
   $for = $for ?: $purpose;
   if (mb_strpos($for, ',')) $for = explode(',', $for); // specifying both
@@ -311,8 +311,8 @@ function doTxs($info, $thing) {
     return verifyRecord('txs', $ray);
   } else {
     foreach (ray('relType rel') as $k) if (!$$k) $$k = NULL;
-    $e1 = $filter(ray($entryFlds, $xid, $type, -$amount, $payer, $payerAgent, $payerFor, $relType, $rel));
-    $e2 = $filter(ray($entryFlds, $xid, $type, $amount, $payee, $payeeAgent, $payeeFor, $relType, $rel));
+    $e1 = $filter(ray($entryFlds, $xid, $type, -$amount, $payer, $payerAgent, $payerFor, $relType, $rel, $rule));
+    $e2 = $filter(ray($entryFlds, $xid, $type, $amount, $payee, $payeeAgent, $payeeFor, $relType, $rel, $rule));
     $hdr['entries'] = [new r\TxEntry($e2), new r\TxEntry($e1)];
     $tx = new r\Tx($hdr);
     return $tx->insert(TRUE);
@@ -563,10 +563,22 @@ function doMembersHave($info) {
   if ($testOnly) {
     foreach ($info as $k => $v) if ($v != '?') {
       if (in($k, R_DATE_FLDS) and sameTime($a->o($k), $v)) continue;
-      if (t\badEq("db $k", $a->o($k), $v, $id)) return FALSE;
+      if (t\badEq("db $k", $v, $a->o($k), $id, flagList($k))) return FALSE;
     }
     return TRUE;
   } else return ($info ? $a->update1($info) : TRUE); // handle no fields other than balFields
+}
+
+/**
+ * Return the flag list for the given table and field name.
+ */
+function flagList($fnm = 'flags', $tnm = 'users') {
+  if ($tnm == 'users') {
+    if ($fnm == 'flags') return B_LIST;
+  } elseif (in($tnm, 'txs tx_hdrs r_invoices')) {
+    if ($fnm == 'flags') return TX_FLAGS;
+  }
+  return '';
 }
 
 /**
@@ -579,7 +591,7 @@ function memberFieldValues($list) {
     $a = r\acct(t\uid($uid));
     if ($field == 'helper' or $field == 'community') $value = t\uid($value);
     if ($testOnly) {
-      if (t\badEq('fieldValue wanted/actual:', $value, $a->o($field), $uid)) return FALSE;
+      if (t\badEq('fieldValue wanted/actual:', $value, $a->o($field), $uid, flagList($field))) return FALSE;
     } else $a->update1($field, $value);
   }
   return TRUE;
@@ -602,7 +614,7 @@ function doBalances($info) {
 
   if ($testOnly) {
     foreach ($info as $k => $v) if ($v != '?') {
-      if (t\badEq("db $k", $a->o($k), $v, $uid)) return FALSE;
+      if (t\badEq("db $k", $v, $a->o($k), $uid, flagList($k))) return FALSE;
     }
     return TRUE;
   }
@@ -626,7 +638,7 @@ function doBalances($info) {
 
   // verify
   foreach ($info as $k => $v) {
-    if ($v != '?' and $k != 'committed' and $uid > 0) if (t\badEq("db $k", $a->o($k), $v, $uid)) return FALSE;
+    if ($v != '?' and $k != 'committed' and $uid > 0) if (t\badEq("db $k", $v, $a->o($k), $uid, flagList($k))) return FALSE;
   }
   return TRUE;
 }
@@ -1520,9 +1532,10 @@ function getRisks($risks0, $descs) {
 /**
  * Complain if the given value is not what was wanted.
  */
-function badEq($type, $got, $want, $id = '') {
+function badEq($type, $want, $got, $id = '', $list = '') {
   $want = str_replace('\\n', "\n", $want);
-  if (t\eq($got, $want)) return FALSE;
+  if ($list) foreach (ray('want got') as $k) $$k = u\bits($$k);
+  if (t\eq($want, $got)) return FALSE;
   if ($id !== '') $id = "uid=$id ";
   t\output($id . t('%type: wanted "%want" got "%got"', compact(ray('id type want got'))));
   return TRUE;
@@ -1862,7 +1875,7 @@ function checkOneArray($wantRay, $gotRay) {
     if (! array_key_exists($k, $gotRay)) return t\output("$k missing from actual: " . pr($gotRay));
     $gotV = $gotRay[$k];
     if (in($k, R_DATE_FLDS) and sameTime($gotV, $v)) continue;
-    if (t\badEq("For $k", $gotV, $v)) return FALSE;
+    if (t\badEq("For $k", $v, $gotV, flagList($k))) return FALSE;
   }
   return TRUE;
 }

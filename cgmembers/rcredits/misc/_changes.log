@@ -1,3 +1,14 @@
+2021-03-14 feature/noc4c
+. prevent buying store credit with store credit
+. bug fix: maximum rebate is now limited to price
+. cancelation of a store credit purchase now cancels the rule
+. bug fix: disputes failed, clicking X on txs page
+. fixed want/got order in some testing functions
+. disputed tx#s are now highlighted red
+. fixed bug: TX_FLAGS was missing a lot of entries
+. fixed bug: X now shows up for seller for disputed txs
+. added verbose flags to testing
+
 2021-03-13 feature/prefs
 . moved debtOk question out of advanced, disabled if no refill
 . improved description of nosearch bit

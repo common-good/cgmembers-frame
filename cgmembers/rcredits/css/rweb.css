@@ -1182,8 +1182,8 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #txlist .row>div>div {padding-top:5px; padding-bottom:4px; min-height:2ex;}
 
 #txlsit .txentry {clear:both}
-#txlist .txentry.even div {background-color:#f0fff0} /* same as .even above */
-#txlist .txentry.odd div {background-color:#daffda}
+#txlist .txentry.even >div {background-color:#f0fff0} /* same as .even above */
+#txlist .txentry.odd >div {background-color:#daffda}
 #txlist .txentry div.buttons {background-color:white;}
 #txlist .txentry >div {border-bottom:1px solid white;}
 
@@ -1192,6 +1192,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #txlist .amount-runBalance {padding: 0;}
 #txlist .tid, #txlist .date {text-align:center;}
 #txlist .tid {font-weight:bold;}
+#txlist .disputed .tid {background-color:red; color:white;}
 #txlist .amount, #txlist .reward, #txlist .runBalance {text-align:right;}
 #txlist .runBalance {font-weight:bold; color:darkblue;}
 

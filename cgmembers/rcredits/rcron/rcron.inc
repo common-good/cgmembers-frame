@@ -214,7 +214,7 @@ X;
 //  db\del('users', $where); // abandoned new joint acct (must postcede setting jids)
 
   // Notice which bank accounts have been verified
-	$where = 'deposit>:NOW-7*:DAY_SECS AND deposit<UNIX_TIMESTAMP()-:VERIFICATION_DELAY*:DAY_SECS AND (SELECT 1 FROM r_usd d2 WHERE d2.txid=-d.txid) IS NULL';
+	$where = 'deposit>UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 7 DAY)) AND deposit<UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL :VERIFICATION_DELAY DAY))  AND (SELECT 1 FROM r_usd d2 WHERE d2.txid=-d.txid) IS NULL';
 //  $res = db\get('uid,bankAccount', 'r_usd d', $where);
 	$uids = db\col('payee', 'r_usd d', $where);
 	$DBTX = \db_transaction();

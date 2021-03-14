@@ -9,6 +9,9 @@ Setup:
   | .ZZA | Abe One  | a1   | a@    | member,ok,confirmed,debt | 01001 |  -100 | Aa1       |
   | .ZZB | Bea Two  | b1   | b@    | member,ok,confirmed,debt | 01001 |  -100 | Bb2       |
   | .ZZC | Our Pub  | c1   | c@    | member,ok,co,confirmed   | 01003 |     0 | Cc3       |
+  And relations:
+  | main | other | permission |*
+  | .ZZC | .ZZB  | manage     |
   And member is logged out
 
 Scenario: A member clicks a CGPay button
@@ -68,7 +71,7 @@ Scenario: A member clicks a button to buy 50% store credit
   | For        | store credit |
   | Account ID |  |
   | Password   |  |
-
+  
 Scenario: A member clicks a button to buy store credit for a different amount
   Given a button code for:
   | account | secret | for    | amount | credit |*
@@ -87,11 +90,33 @@ Scenario: A member clicks a button to buy store credit for a different amount
   | did  | otherName | amount |*
   | paid | Our Pub   | $23    |
   And transactions:
-  | xid | created | amount | payer | payee | for              |*
-  |   1 | %today  |     23 | .ZZA  | .ZZC  | $30 store credit |
+  | xid | created | amount | payer | payee | for              | rule |*
+  |   1 | %today  |     23 | .ZZA  | .ZZC  | $30 store credit |    1 |
   And these "tx_rules":
   | id | action     | payerType | payer | payeeType | payee | from         | to           | portion | amtMax |*
   |  1 | %ACT_SURTX | account   | .ZZA  | account   | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER | 1       | 30     |
+
+Scenario: A member cancels their purchase of store credit
+  Given transactions:
+  | xid | created | amount | payer | payee | for              | rule |*
+  |   1 | %today  |     23 | .ZZA  | .ZZC  | $30 store credit |    1 |
+  And these "tx_rules":
+  | id | action     | payerType | payer | payeeType | payee | from         | to           | portion | amtMax |*
+  |  1 | %ACT_SURTX | account   | .ZZA  | account   | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER | 1       | 30     |
+  When member "C:B" visits page "history/transactions/period=5"
+  And member "C:B" clicks "X" on transaction 1
+  Then transactions:
+  | xid | created | amount | payer | payee | for               | rule |*
+  |   2 | %today  |    -23 | .ZZA  | .ZZC  | $30 store credit  |    1 |
+  And these "tx_rules":
+  | id | end  |*
+  |  1 | %now |
+  And we notice "your credit canceled" to member ".ZZA" with subs:
+  | amount | co      |*
+  | $23    | Our Pub |
+  And we notice "customer credit canceled" to member ".ZZC" with subs:
+  | amount | customer |*
+  | $23    | Abe One  |
 
 Scenario: A member types account ID to buy 50% store credit
   Given a button code for:

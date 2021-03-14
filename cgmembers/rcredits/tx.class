@@ -146,18 +146,6 @@ class Tx {
   public function addEntries($entries) {
     $this->entries += array_merge($this->entries, $entries);
   }
-
-  /**
-   * Read an existing transaction record, with its entries.
-   * @param xid $xid: transaction record id
-   * @return the new instance of Tx
-   *//*
-  public static function read($xid, $where = '1', $subs = []) {
-    $info = db\get('*', 'tx_hdrs', "xid=:xid AND $where", $subs + compact('xid'));
-    if (!$info) return FALSE;
-    if (!$info = self::readAll($xid)) return FALSE;
-    return new Tx($info);
-  }*/
   
   /**
    * Save this transaction in the database (header record plus all entries).
@@ -191,7 +179,6 @@ class Tx {
    * return a Tx object, an array of such, or FALSE
    */
   public static function read($xid = '', $uids = '', $starting=NULL, $ending=NULL) {
-///  public static function read($xid, $where = '1', $subs = []) {
 //    u\EXPECT([$xid, $uids, $starting, $ending], 'array|int integer|empty integer|empty');
 
     if ($uids) {
