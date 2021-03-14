@@ -291,6 +291,7 @@ EOF
   'customer credit canceled' => t('%customer\'s credit of (originally) %amount has been canceled.'),
   
   // error messages
+  'button expired' => t('That button has expired.'),
   'scan co card first' => t('You must scan your own card to set up this device (your company card, for a company).'),
   'field too long' => t('Field %field is too long (it must be no more than %max characters).'),
   'no page permission' => t('You do not have permission to visit this page.'),

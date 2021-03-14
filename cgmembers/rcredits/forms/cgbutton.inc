@@ -26,11 +26,12 @@ function formCGButton($form, &$sta, $args = '') {
   $text = textFld(REQ . t('Link Text:'), [t('Text')], dft(t('Pay with %PROJECT')));
   $amount = numFld(t('Price/Amt:'), [t('Amount'), t('Leave blank to let the customer choose an amount (for donations, for example)')]);
   $credit = numFld(t('Store Credit:'), [t('Amount of credit')]);
+  $expires = dateFld(t('Expires:'), [t('Expiration date')]);
   $size = intFld(REQ . t('Size/Button:'), [t('Size'), t('Button height, in pixels')], dft(50) + vmin(1) + suffix(tr('<div id="button">%img</div>', 'img', t('(Button will appear here)'))));
   $example = item(t('(Link will appear here)'), t('Link:'));
   $html = areaFld(t('HTML:'), [t('(HTML will appear here)'), t('Copy this HTML into your website or copy the link or button into an email.')]);
   
   jsx('cgbutton', ray('qid forVals selling style', $mya->mainQid, $forVals, $selling, TEXT_BUTTON_STYLE));
   
-  return cgform(compact(ray('title subtext button for item amount credit text example size html')));
+  return cgform(compact(ray('title subtext button for item amount credit text expires example size html')));
 }

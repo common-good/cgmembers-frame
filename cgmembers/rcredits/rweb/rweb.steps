@@ -392,6 +392,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  * in: TEST bank AMemberMovesTooLittleToTheBank
  *     TEST bank AMemberTriesToGoBelowTheirMinimum
  *     TEST card AMemberScansACompanyCardWithAStandardQRReader
+ *     TEST cgpay AMemberClicksAnExpiredCGPayButton
  *     TEST company AMemberUpdatesCompanyInfo
  *     TEST contact AMemberUpdatesContactInfo
  *     TEST contact AMemberGivesABadPhone
@@ -830,6 +831,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE card AMemberScansACompanyCardWithAStandardQRReader
  *     MAKE card 
  *     MAKE cgpay AMemberClicksACGPayButton
+ *     MAKE cgpay AMemberClicksAnExpiredCGPayButton
  *     MAKE cgpay AMemberClicksACGPayButtonWithVariableAmount
  *     MAKE cgpay AMemberClicksAButtonToBuyStoreCredit
  *     MAKE cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
@@ -2291,6 +2293,7 @@ function weShowJSONOf($ray) {
  *
  * in: MAKE accredit AMemberTriesToBuyCreditWithCredit
  *     MAKE cgpay AMemberClicksACGPayButton
+ *     MAKE cgpay AMemberClicksAnExpiredCGPayButton
  *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
  *     MAKE cgpay AMemberClicksACGPayButtonWithVariableAmount
  *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountIDAndChosenAmount

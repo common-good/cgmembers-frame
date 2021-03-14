@@ -1,3 +1,6 @@
+2021-03-14 feature/cgpay-expires
+. added expires parameter to CGPay interface
+
 2021-03-14 feature/noc4c
 . prevent buying store credit with store credit
 . bug fix: maximum rebate is now limited to price
