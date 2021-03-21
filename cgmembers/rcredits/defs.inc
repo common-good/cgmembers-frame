@@ -4,7 +4,7 @@
  * Definitions required for any part of the Common Good system, including app testing
  */
 
-const R_VERSION = '3.57h'; // software version
+const R_VERSION = '3.57i'; // software version
 define('R_ROOT', __DIR__);
 define('SHARED_DIR', R_ROOT . '/../..'); // for logs and other protected info, persistent across updates
 
@@ -393,7 +393,7 @@ const CO_APP_DFTS = '0 1 7 8 11 12'; // set these app bits by default (R4USD onl
 const APP_CAN_BIT_NAMES = 'charge undo r4usd usd4r refund buy';
 define('APP_CAN_BIT_DESCS', t('charge customers,undo last transaction,give %RCREDITS for USD,give USD for %RCREDITS,refund any amount,make payments'));
 
-const CGPAY_VARS = 'account amount credit for item return secret verb'; // to be encoded in a CGPay button code
+const CGPAY_VARS = 'account amount credit for item expires return secret verb'; // to be encoded in a CGPay button code
 const CGPAY_VARS2 = 'amount code id item name request'; // possible parameters for CGPay button link/form
 const CGPAY_FORS = 'credit credit50 donate gift other'; // possible values for the "for" parameter
 const CGPAY_MAXLEN = 255; // maximum field length (to prevent bloating our tables) -- return and cancel have no limit

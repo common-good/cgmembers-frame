@@ -31,6 +31,7 @@ function formCGPay($form, &$sta) {
   extract(just(CGPAY_VARS, $ray, NULL)); // use this structure just to set the unused ones to NULL
   extract(just(CGPAY_VARS2, $args, NULL), EXTR_PREFIX_ALL, 's'); // mostly suggested parameters (amount, id, item, name) except for request -- don't overwrite
   
+  if ($expires and $expires < now()) return softErr('button expired');
   $co = r\acct($account);
   u\EXPECT($co, 'missing account in code!');
   if (isset($s_amount) and $err = u\badAmount($s_amount, '>0')) return exitErr(t('Parameter "amount" (suggested amount): %err', compact('err')));

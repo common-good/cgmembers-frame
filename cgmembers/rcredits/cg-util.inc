@@ -1038,6 +1038,7 @@ function ctype_print_unicode($input) {
 /**
  * Say whether the string date is bad.
  * @param string $s: typed date (returned with date converted to internal format, unless error)
+ * NOTE: sometimes we get a date as yyyy-mm-dd and sometimes like mm/dd/yyyy
  * @param int $min: minimum date (if any)
  * @param int $max: maximum date (if any)
  * @return FALSE if date is okay, else an error index
@@ -1046,7 +1047,7 @@ function badDate(&$s, $min = '', $max = PHP_INT_MAX) {
   if (!$dt = u\s2t(nn($s))) return 'bad date'; // slashes makes it mdy (else dmy assumed)
   if ($min !== '' and ($dt < $min or $dt > $max)) {
     $err = $dt < $min ? 'date too early' : 'date too late';
-    if (!is_numeric(@substr($s, -3, 1))) $err .= '|year is 4 digits';
+    if (mb_strlen($s) < 9) $err .= '|year is 4 digits';
     return $err;
   }
   $s = $dt;
@@ -1745,3 +1746,4 @@ function ul($list) {return '<ul><li>' . join("</li>\n<li>", nn($list) ?: []) . "
 function tm($tm) {return strtolower(trim(strftime('%I:%M%p', $tm), '0'));}
 function ddddcc($n) {return cleanAmount(number_format(cleanAmount($n), 2));}
 function noPhonePunc($phone, $plus = '\+') {return preg_replace('~[' . $plus . PHONE_PUNC . ']~', '', $phone);}
+function sqlList($s, $t) {return "$t." . join(",$t.", ray($s));} // for making SQL field lists

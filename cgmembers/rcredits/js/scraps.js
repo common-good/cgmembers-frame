@@ -256,6 +256,7 @@ function doit(what, vs) {
     $('.form-item-button input').click(function () {cgbutton();});
     $('#edit-size').change(function () {cgbutton();});
     $('#edit-item, #edit-amount, #edit-credit, #edit-text').change(function () {getCGPayCode();});
+    $('#edit-expires').blur(function () {getCGPayCode();});
     $('.form-item-for input').click(function () {
       var fer = $(this).val();
       var credit = (fer < 2);
@@ -274,7 +275,8 @@ function doit(what, vs) {
         item:$('#edit-item').val(),
         amount:$('#edit-amount').val(),
         credit:$('#edit-credit').val(),
-        fer:$('.form-item-for input:checked').val()
+        fer:$('.form-item-for input:checked').val(),
+        expires:$('#edit-expires').val()
       }, function (j) {
         if (j.ok) {
           cgPayCode = j.code;

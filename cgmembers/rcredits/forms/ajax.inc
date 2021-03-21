@@ -38,8 +38,10 @@ function ajax($args = NULL) {
     
   } elseif ($op == 'cgPayCode') { // get cgPay code
     include_once R_ROOT . '/forms/code.inc';
-    $data['for'] = nni(ray('credit,gift,,donate'), $data['fer']); // fer=2 (other) is ignored
+    extract(just('fer expires', $data));
+    $data['for'] = nni(ray('credit,gift,,donate'), $fer); // fer=2 (other) is ignored
     unset($data['fer']);
+    if ($expires and $err = u\badDate($data['expires'], strtotime('tomorrow'))) return ajaxErr(tr($err));
     foreach ($data as $k => $v) if ($v == '') unset($data[$k]);
     $code = w\code($data + ray('account secret', $mya->mainQid, $mya->emailCode));
     return strhas($code, ' ') ? ajaxErr($code) : ajaxRet(compact('code'));

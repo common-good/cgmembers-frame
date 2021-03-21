@@ -1088,7 +1088,7 @@ function accountChoices() {
 
   if ($mya->admin or $mya->isAdmin2) {
     $where = $mya->superAdmin ? '1' : 'uid NOT IN (0,1,2,3)';
-    $q = db\q("SELECT uid AS id, fullName FROM users WHERE $where ORDER BY (uid<0) DESC, $nameOrder");
+    $q = db\q("SELECT uid AS id, fullName FROM users WHERE $where UNION $sqlNormal ORDER BY (uid<0) DESC, $nameOrder");
   } elseif ($mya->cAdmin2) {
     $sql = <<<EOF
 SELECT DISTINCT id, fullName FROM

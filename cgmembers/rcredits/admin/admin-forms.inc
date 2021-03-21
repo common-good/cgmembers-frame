@@ -250,6 +250,7 @@ function formFollowup($form, &$sta, $args = []) {
     WHERE u.uid>:CANONIC_ACCTS AND NOT :IS_NONUDGE AND NOT (activated and NOT :IS_OK) AND $where2 AND (tickle>0 OR NOT :IS_MEMBER
       OR t.created<$now-60*:DAY_SECS OR t.created IS NULL OR :isDEV)
     ORDER BY $by
+    LIMIT 50
 EOF;
   
   $fields = ray('ctty type call name phone notes');

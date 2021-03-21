@@ -392,6 +392,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  * in: TEST bank AMemberMovesTooLittleToTheBank
  *     TEST bank AMemberTriesToGoBelowTheirMinimum
  *     TEST card AMemberScansACompanyCardWithAStandardQRReader
+ *     TEST cgpay AMemberClicksAnExpiredCGPayButton
  *     TEST company AMemberUpdatesCompanyInfo
  *     TEST contact AMemberUpdatesContactInfo
  *     TEST contact AMemberGivesABadPhone
@@ -554,6 +555,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     TEST coupons AMemberRedeemsAPercentageDiscountCoupon
  *     TEST coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
+ *     TEST coupons AMemberCompanyViewsCustomerStoreCredit
  *     TEST custstatement ACompanyLooksAtACustomerStatement
  *     TEST demographics ACompanyAgentRunsTheDemographicsQuery
  *     TEST gift AMemberDonates
@@ -830,6 +832,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE card AMemberScansACompanyCardWithAStandardQRReader
  *     MAKE card 
  *     MAKE cgpay AMemberClicksACGPayButton
+ *     MAKE cgpay AMemberClicksAnExpiredCGPayButton
  *     MAKE cgpay AMemberClicksACGPayButtonWithVariableAmount
  *     MAKE cgpay AMemberClicksAButtonToBuyStoreCredit
  *     MAKE cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
@@ -853,6 +856,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsAPercentageDiscountCoupon
  *     MAKE coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
+ *     MAKE coupons AMemberCompanyViewsCustomerStoreCredit
  *     MAKE demographics ACompanyAgentRunsTheDemographicsQuery
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
  *     MAKE download AMemberDownloadsIncomingInvoicesForThePastYear
@@ -1717,6 +1721,7 @@ function weScripWithSubs($script, $args = []) {
  *     TEST coupons AMemberCompanyCreatesAGiftCoupon
  *     MAKE coupons AMemberRedeemsAGiftCoupon
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
+ *     MAKE coupons AMemberCompanyViewsCustomerStoreCredit
  *     MAKE custstatement AStatementGoesOntoMultiplePages
  *     MAKE demographics Setup
  *     TEST gift AMemberDonates
@@ -2291,6 +2296,7 @@ function weShowJSONOf($ray) {
  *
  * in: MAKE accredit AMemberTriesToBuyCreditWithCredit
  *     MAKE cgpay AMemberClicksACGPayButton
+ *     MAKE cgpay AMemberClicksAnExpiredCGPayButton
  *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
  *     MAKE cgpay AMemberClicksACGPayButtonWithVariableAmount
  *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountIDAndChosenAmount

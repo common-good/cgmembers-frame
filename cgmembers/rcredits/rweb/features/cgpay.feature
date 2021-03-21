@@ -25,6 +25,13 @@ Scenario: A member clicks a CGPay button
   | Account ID |  |
   | Password   |  |
 
+Scenario: A member clicks an expired CGPay button
+  Given a button code for:
+  | account | secret | item | amount | expires |*
+  | .ZZC    | Cc3    | food | 23.50  | %now-1d |
+  When member "?" visits page "cgpay?code=TESTCODE"
+  Then we say "error": "button expired"
+
 Scenario: A member submits a CGPay button payment with account ID
   Given a button code for:
   | account | secret | item | amount |*
