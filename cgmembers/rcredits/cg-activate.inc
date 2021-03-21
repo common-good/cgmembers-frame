@@ -33,7 +33,7 @@ function activate($a, $helper) {
     
     $subs = ray('inviterName youName', $a->helper ? $a->helperA->fullName : '', $a->fullName);
     
-    $a->tell($msg, $subs);
+    $a->tell($msg, $subs, t('Approved!'));
     
   }
 

@@ -1505,3 +1505,6 @@ function isBank($uid) {return ($uid == BANK_IN_ID or $uid == BANK_OUT_ID);}
 function foodFundId() {return db\get('uid', 'users', "name='foodfund'") ?: 0;}
 function referrer() {global $referrer; return test() ? nn($referrer) : basename(nni($_SERVER, 'HTTP_REFERER'));}
 function countryList() {return db\keyed('id,name', 'r_countries', "name in ('United States', 'Canada')");}
+
+const CREDIT_RULE_ROW = [ACT_SURTX, MATCH_PAYEE, MATCH_PAYER, 0.00, 1.00, REF_ACCOUNT, REF_ACCOUNT, 0.00];
+function isCreditRule($row) {return (array_values(just('action from to amount portion payerType payeeType minimum', $row)) == CREDIT_RULE_ROW);}

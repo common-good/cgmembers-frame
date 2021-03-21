@@ -555,6 +555,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     TEST coupons AMemberRedeemsAPercentageDiscountCoupon
  *     TEST coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
+ *     TEST coupons AMemberCompanyViewsCustomerStoreCredit
  *     TEST custstatement ACompanyLooksAtACustomerStatement
  *     TEST demographics ACompanyAgentRunsTheDemographicsQuery
  *     TEST gift AMemberDonates
@@ -855,6 +856,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE coupons AMemberRedeemsADollarAmountDiscountCoupon
  *     MAKE coupons AMemberRedeemsAPercentageDiscountCoupon
  *     MAKE coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
+ *     MAKE coupons AMemberCompanyViewsCustomerStoreCredit
  *     MAKE demographics ACompanyAgentRunsTheDemographicsQuery
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
  *     MAKE download AMemberDownloadsIncomingInvoicesForThePastYear
@@ -1719,6 +1721,7 @@ function weScripWithSubs($script, $args = []) {
  *     TEST coupons AMemberCompanyCreatesAGiftCoupon
  *     MAKE coupons AMemberRedeemsAGiftCoupon
  *     TEST coupons AMemberRedeemsADollarAmountDiscountCoupon
+ *     MAKE coupons AMemberCompanyViewsCustomerStoreCredit
  *     MAKE custstatement AStatementGoesOntoMultiplePages
  *     MAKE demographics Setup
  *     TEST gift AMemberDonates

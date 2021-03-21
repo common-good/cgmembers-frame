@@ -1,4 +1,4 @@
-Feature: Gift
+Feature: Coupon
 AS a participating business
 I WANT to issue gift coupons and discount coupons
 SO I can reward my employees and attract customers
@@ -33,10 +33,8 @@ Scenario: A member company creates a gift coupon
   | .ZZC |          11 |
   When member ".ZZC" visits page "community/coupons/list"
   Then we show "Discounts/Gift Certificates From You" with:
-  | Type | Amount | On               | Starting | Ending     | Min Purchase | Max Uses |~Action  |
-  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
-  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
-  | gift | $10    | any purchase |     %mdY | indefinite |           $0 |        1 | reprint |
+  | Type     | Amount | For          | Ending     | Min Purchase | Max |~Action  |
+  | gift (3) | $10    | any purchase | indefinite |           $0 | 1x  | reprint |
   
 Scenario: A member redeems a gift coupon
   Given members have:
@@ -83,8 +81,8 @@ Scenario: A member company creates a dollar amount discount coupon
   |      1 |     12 |   .ZZC |      20 |      1 |       | %daystart | %(%daystart+10d-1) | .ZZC    | on your purchase of $20 or more |
   When member ".ZZC" visits page "community/coupons/list"
   Then we show "Discounts/Gift Certificates From You" with:
-  | Type     | Amount | On                              | Starting | Ending  | Min Purchase | Max Uses |~Action  |
-  | discount | $12    | on your purchase of $20 or more | %mdY     | %mdY+9d |          $20 |        1 | reprint |
+  | Type     | Amount | For                             | Ending  | Min Purchase | Max |~Action  |
+  | discount | $12    | on your purchase of $20 or more | %mdY+9d |          $20 | 1x  | reprint |
   When member ".ZZA" visits page "community/coupons/list/ALL"
   Then we show "Discounts in Your Region" with:
   | Company    | Discount | On                              | Ending  | For    | Uses Left |
@@ -304,3 +302,15 @@ Scenario: A member redeems a discount coupon sponsored by a third party
   Then we show "Discounts in Your Region" with:
   | Company | Discount | On      | Ending | For    | Uses Left | Amount Left |
   | Bea Two |      $12 | on zots | --     | anyone | no limit  | $0.00       |
+
+Scenario: A member company views customer store credit
+  Given these "tx_rules":
+  | id | action | payerType | payeeType | payer | payee | from         | to           | amount | portion | amtMax |*
+  |  1 | surtx  | account   | account   | .ZZA  | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER |      0 | 1       | 1      |
+  |  2 | surtx  | account   | account   | .ZZB  | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER |      0 | 1       | 2      |
+  |  3 | surtx  | account   | account   | .ZZA  | .ZZC  | %MATCH_PAYEE | %MATCH_PAYER |      0 | 1       | 3.45   |
+  When member ".ZZC" visits page "community/coupons/list"
+  Then we show "Discounts/Gift Certificates From You" with:
+  | Type         | Amount | For     | Ending     | Min Purchase | Max |~Action  |
+  | store credit | $4.45  | Abe One | indefinite |              |     |         |
+  | store credit | $2     | Bea Two | indefinite |              |     |         |

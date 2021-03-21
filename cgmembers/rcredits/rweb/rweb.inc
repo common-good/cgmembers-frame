@@ -230,16 +230,6 @@ function formAccounts($form, &$sta) {
   return compact('accounts');
 }
 
-function formAccounts_validate($form, &$sta) {
-/*  extract(just('newAcct', $sta['input'], ''));
-//  t('Type part of name, phone, email, record ID, or qid.')
-  if (!$newAcct) return;
-  if (mb_strpos($newAcct, '@') and !u\validEmail($email = $newAcct)) return say('bad email', compact('email'), 'newAcct');
-  if (!$a = w\whois($newAcct, 'newAcct', [], 'self-switch', FALSE)) return FALSE;
-  u\preray(compact('a'), $sta['input']); // ['uid' => $a->id]
-  */
-}
-
 function formAccounts_submit($form, &$sta) {
 //  extract(just('a', $sta['input']));
   $uid = whoId($sta);
@@ -260,8 +250,10 @@ function changeWho($zot, $args = '', &$sta = '') {
   if (nn($acct) == 'signout') return signout();
   if (!$mya and !isDEV) return softErr(t('Your session timed out. Please <%a>Sign back in</a> and try again.', '_a', atag('signin')));
   if (!$mya = r\acct($acct, $agt = $mya->agentId)) return hack('change to nonexistent', ray('args mya agt', pr($args), pr($mya, $agt))); // tentative new account (agent is the same, so adminishness is the same)
-  if (!$mya->cAdmin2 and !$mya->isAdmin2 and !$mya->can()) return hack('change to illegal', ray('args mya', pr($args), pr($mya)));
-  if ($mya->cAdmin and !$mya->admin and !$mya->isAdmin2 and $mya->community != $mya->agentA->community) return w\go($page, t('You can switch only to accounts in your community.')); // cAdmin check is a bug fix
+  if (!$mya->can()) {
+    if (!$mya->cAdmin2 and !$mya->isAdmin2) return hack('change to illegal', ray('args mya', pr($args), pr($mya)));
+    if ($mya->cAdmin and !$mya->admin and !$mya->isAdmin2 and $mya->community != $mya->agentA->community) return w\go($page, t('You can switch only to accounts in your community.')); // cAdmin check is a bug fix
+  }
   r\setAcct($mya, $sta); // set new current account
 
   return w\go($page);

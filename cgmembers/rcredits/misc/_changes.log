@@ -1,3 +1,12 @@
+2021-03-20 feature/view-credit
+. improved company view of store credit and added a test for that
+. limited number of results on admin followup page
+. fixed the subject of the account approval email message
+. community admin with a company in another CGC can now get to that company
+. bug fix: button-maker now properly gives an option for donating to a CG-owned company
+. eliminated Sunset Park Solar name from anything displayed to member (at Co-op Power's request)
+. bug fix: qid is no longer displayed in helper input field for admin on summary page
+
 2021-03-14 feature/cgpay-expires
 . added expires parameter to CGPay interface
 

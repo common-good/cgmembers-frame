@@ -1746,3 +1746,4 @@ function ul($list) {return '<ul><li>' . join("</li>\n<li>", nn($list) ?: []) . "
 function tm($tm) {return strtolower(trim(strftime('%I:%M%p', $tm), '0'));}
 function ddddcc($n) {return cleanAmount(number_format(cleanAmount($n), 2));}
 function noPhonePunc($phone, $plus = '\+') {return preg_replace('~[' . $plus . PHONE_PUNC . ']~', '', $phone);}
+function sqlList($s, $t) {return "$t." . join(",$t.", ray($s));} // for making SQL field lists

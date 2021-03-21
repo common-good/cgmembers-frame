@@ -6,6 +6,8 @@ use CG\Backend as be;
 use CG\Util as u;
 use CG\Db as db;
 
+const COUP_GRP_FLDS = 'action from to amount portion purpose payerType payeeType payer payee minimum useMax';
+
 /**
  * Show coupons for the account.
  */
@@ -16,42 +18,53 @@ function formCouponsList($form, &$sta, $args = '') {
 	
   $title = t('Discounts/Gift Certificates From You');
 
-	$fields = ray('type amount purpose start end minimum useMax action');
+	$fields = ray('type amount purpose end minimum max action');
   $fieldCount = count($fields);
-  $hdrs = u\tableRow(ray('Type,Amount,On,Starting,Ending,Min&nbsp;Purchase,Max&nbsp;Uses,'));
+  $hdrs = u\tableRow(ray('Type,Amount,For,Ending,Min&nbsp;Purchase,Max,'));
 	$automatic = TRUE;
+  
+  $grpFlds = u\sqlList(COUP_GRP_FLDS, 'ru');
 
   $sql = <<< X
-    SELECT * FROM tx_rules
+    SELECT $grpFlds, payer, end, useMax, SUM(amtMax) AS amtMax, fullName, COUNT(*) AS cnt
+    FROM tx_rules ru
+    LEFT JOIN users u ON u.uid=payer AND payerType=:REF_ACCOUNT
 		WHERE IF(`from`=:MATCH_PAYEE, payee, `from`)=:uid AND (action=:ACT_REDEEM OR `to`=:MATCH_PAYER)
-		ORDER BY id DESC
+    GROUP BY $grpFlds 
+		ORDER BY end, fullName, start
 X;
   $q = db\q($sql, ray('uid', $mya->id));
   
   while ($row = $q->fetchAssoc()) {
     extract($row);
-		$gift = $action == 'redeem';
-		$type = $gift ? t('gift') : t('discount');
-		
-		if ($gift) {
-			$args = "type=gift&amount=$amount";
-  		$start = u\fmtDate($start, TRUE);
-  		$end = empty($end) ? t('indefinite') : u\fmtDate($end, TRUE);
-		} else {
-      if (!$purpose) $purpose = t('any purchase');
-      $args = http_build_query(compact($fields, 'automatic'));
-      if (!test()) $args = u\urlify($args);
-      $args = 'print/' . $args;
-  		$start = u\fmtDate($start, TRUE);
-  		$end = empty($end) ? t('indefinite') : u\fmtDate($end, TRUE);
-//  		$on = $on ? w\popHelp(t(' on'), $on) : '';
-		}
+		$gift = $action == ACT_REDEEM;
+    $credit = r\isCreditRule($row);
+		$type = $gift ? t('gift (%cnt)', compact('cnt')): ($credit ? t('store credit') : t('discount'));
 
-		$action = w\btn("/community/coupons/$args", t('reprint'), 'primary', 'xs', $gift ? NULL: w\away());
+		$action = $credit ? '' : w\btn("/community/coupons/$args", t('reprint'), 'primary', 'xs', $gift ? NULL: w\away());
 
 		$amount = $portion > 0 ? u\fmtAmt($portion, '%') : u\fmtAmt($amount);
 		$minimum = $minimum ? u\fmtAmt($minimum) : t('none');
-		$useMax = ($useMax + 0) ? number_format($useMax) : t('no limit');
+		$useMax = ($useMax + 0) ? number_format($useMax) . 'x' : '-';
+    $amtMax = ($amtMax + 0) ? u\fmtAmt($amtMax) : '-';
+    $max = strtr("$useMax/$amtMax", ray('-/ /-', '', ''));
+
+		if ($gift) {
+			$args = "type=gift&amount=$amount";
+  		$end = empty($end) ? t('indefinite') : u\fmtDate($end, TRUE);
+      
+		} else {
+      if ($credit) {
+        $purpose = $fullName;
+        $amount = $amtMax;
+        $minimum = $max = '';
+      } elseif (!$purpose) $purpose = t('any purchase');
+      $args = http_build_query(compact($fields, 'automatic'));
+      if (!test()) $args = u\urlify($args);
+      $args = 'print/' . $args;
+  		$end = empty($end) ? t('indefinite') : u\fmtDate($end, TRUE);
+//  		$on = $on ? w\popHelp(t(' on'), $on) : '';
+		}
     $rows[] = u\tableRow(compact($fields));
   }
 
@@ -115,6 +128,7 @@ X;
       $amount = u\fmtAmt($portion, '%');
     }
     $amtLeft = is_null($amtMax) ? 'no limit' : u\fmtAmt($amtMax - $amtUsed, '$');
+    if (r\isCreditRule($row)) $purpose = t('store credit');
 
     $rows[] = u\tableRow(compact($fields));
   }

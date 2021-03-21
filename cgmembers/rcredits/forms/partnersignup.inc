@@ -435,7 +435,7 @@ X
   
   $processor = radiosFld('', '', required(0), [t('<b>%PROJECT</b>, a secure payment processing system (recommended<sup>*</sup>)<br><br>OR'), t('<b>Standard ACH</b>')]);
   
-  $midtext1 = t('<p><sup>*</sup> The Sunset Park Solar Team recommends using %PROJECT because it focuses on community reinvestment (like setting up a lending pool for local projects, for example). Check out their website for more information: <%a>CommonGood.earth</a>.</p>', 'partnerName _a', $partnerName, atag(PROMO_URL));  
+  $midtext1 = t('<p><sup>*</sup> The Solar Team recommends using %PROJECT because it focuses on community reinvestment (like setting up a lending pool for local projects, for example). Check out their website for more information: <%a>CommonGood.earth</a>.</p>', 'partnerName _a', $partnerName, atag(PROMO_URL));  
   
   $checkHint = item(tr('<img src="%src" />', 'src', BASE_URL . '/rcredits/images/check-hint.png'));
   
