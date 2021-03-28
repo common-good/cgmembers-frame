@@ -10,6 +10,8 @@ use CG\Db as db;
 
 /**
  * Handle a scanned Common Good card.
+ * @param string $dom: the compressed region code
+ * @param string $code: the account's compressed qid, cardCode, and possibly count
  */
 function formCard($form, &$sta, $dom = '', $code = '') {
   if ($dom == 'disconnect') {

@@ -692,6 +692,7 @@ function printChecks($args) {
 function memberId($id, $agent = '', $retroactive = FALSE) {
   global $mya;
   require_once R_ROOT . '/pdf.class';
+  require_once R_ROOT . '/forms/showqr.inc'; // for qrUrl()
   
   $a = r\acct($id, $agent);
   $cttyErr = (!$mya or (!$mya->admin and $a->community != $mya->community));
@@ -749,7 +750,7 @@ function memberId($id, $agent = '', $retroactive = FALSE) {
   $sp = '<span style="font-size:50%;"> </span>';
   $url = str_replace('.', $sp . '<b style="display:inline; font-stretch:expanded; font-size:120%;">.</b>' . $sp, CG_DOMAIN);
   $pdf->say($url,  $xSite, $ySite, '', '', "7;color:white;font-stretch:normal;", 'L');
-  $pdf->write2DBarcode(a\qr($a), 'QRCODE,Q', $m+1.445, $m+0.645, .8, .8, $style, 'N'); // L,M,Q,H are low-high error-correction
+  $pdf->write2DBarcode(w\qrUrl($a), 'QRCODE,Q', $m+1.445, $m+0.645, .8, .8, $style, 'N'); // L,M,Q,H are low-high error-correction
 
   $pdf->say($acctName, $m+$xText, $m+$yName, '', '', "12;B;$nameFont", 'L');
   if ($proSe) $pdf->say($qid, $m+$xText, $m+$hCard-.19, '', '', "6.5;color:#666666;letter-spacing:.7px;", 'L');

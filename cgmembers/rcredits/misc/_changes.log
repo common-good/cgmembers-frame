@@ -1,3 +1,10 @@
+2021-03-25 feature/qr
+. added Show QR (using endroid QR) and Scan QR (JS-based) to dashboard
+. added generalized question-mark help button feature: w\qBtn($topic), typically in a field suffix() with helpModal in footer
+. fixed bugs in statements showing fiscal year or quarters
+. added checks for ophaned tx entries or hdrs to sanityCheck function
+. deleted "deleted" tx_entries_all ids: -314085, 314085, -314088, 314088, -314091, 314091, -314094, 314094, -314096, 314096, -314099, 314099, -314101, 314101, -314103, 314103, -314105, 314105, -314107, 314107, -314109, 314109, -314112, 314112, -314114, 314114, -314117, 314117, -314120, 314120, -314123, 314123, -314125, 314125, -314127, 314127, -314130, 314130 on production server (extraneous food fund donations)
+
 2021-03-20 feature/view-credit
 . improved company view of store credit and added a test for that
 . limited number of results on admin followup page

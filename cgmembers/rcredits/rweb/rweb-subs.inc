@@ -760,14 +760,19 @@ define('FORBID_ATTRS', '/(.{0,40}\\s(href|src|style|on[a-z]+)\\s*=.{0,40})/i'); 
  * @param string $page: the body of the page, not including our selected scripts
  */
 function sanitizePage($page) {
+
   // preg_quote needed in case URL has a ~ in it
   $except = join('|', 
     ['<img src="' . preg_quote(BASE_URL, '~'), 
      '<img src="https://cg4.us/', 
+     '<img src="data:',
      '<iframe src="(' . str_replace(' ', '|', preg_quote(FRAME_SOURCES, '~')) . ')',
      'href="(mailto:|http|#|/|"|sadmin)',
      '(href|src|style)=(&quot;|&amp;)', // our tests output stuff like this
     ]);
+
+  $uri = $_SERVER['REQUEST_URI'];
+  if ($uri == 'scan-qr') $except .= '|<video';
 
   $page = preg_replace("~$except~", '', $page);
 
@@ -977,9 +982,6 @@ function modal($id, $legend, $prompt, $body, $closer = '') {
       <div class="modal-body">
         $body
       </div>
-      <!--div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div-->
     </div>
 
   </div>
@@ -2227,3 +2229,4 @@ function skipButton() {return button(t('Skip for now'), '/settings/skip', t('Lea
 function notab() {return tabindex(-1);}
 function tabindex($n) {return ['tabindex' => $n];}
 function uncacheSubmenus() {foreach (ray(SUBMENUS) as $menu) w\svar("menu-$menu", NULL);}
+function qBtn($topic) {return tr('<div class="qbtn-%topic"></div>', compact('topic'));}

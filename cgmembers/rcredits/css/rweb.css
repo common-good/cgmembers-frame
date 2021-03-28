@@ -783,6 +783,10 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
   #frm-honors .well {width:100%; box-shadow: 2px 2px 3px #888888;}
 }
 
+/* Show QR */
+#frm-showqr #edit-qr img {width:100%; max-width:800px;}
+#scanqr {width:100%;}
+
 /* Pay / Charge / Tx */
 .form-item-periods select {width:40px; display:inline-block; margin-right:10px;}
 #frm-tx .form-item-start,
@@ -1248,8 +1252,14 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 
 /* #txsum {border:1px solid black; position:absolute; z-index:1; left:0; right:0; width:500px; margin:auto auto; top:0; bottom:0} */
 /* #txsum caption {background-color:darkgreen; color:white; margin:0 auto; padding:5px 0;} */
-#txs-totals .modal-dialog {width:455px;}
+#help-modal .modal-dialog,
+#txs-totals .modal-dialog {width:455px; max-width:100%;}
+#help-modal .modal-body,
 #txs-totals .modal-body {padding:3px;}
+
+#help-modal .modal-title {text-align:left; padding:0 2px;}
+#help-modal .modal-body {text-align:left; padding:8px 16px;}
+[class^="qbtn-"] {display:inline-block; width:12px; height:12px; background:url('../images/icons/qb12.png') no-repeat; padding:0; margin:0 0 -1px 5px;}
 
 #txsum caption {display:none;}
 #txsum tr:first-child {font-weight:bold;}

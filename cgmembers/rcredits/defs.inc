@@ -76,7 +76,8 @@ const PROJECT_LOGO = 'logo80.png';
 
 const SCRIPTS_TOP = 'x/jquery-3.3.1.min x/jquery.once x/jquery-ui.min x/bootstrap.min x/spin.min x/ladda.min x/ie10-viewport-bug-workaround x/jquery.confirm.min x/alert';
 //const SCRIPTS = 'form goo-jsapi misc charts chart-data download croppic crop-setup ballot x/bootstrap.slider.min countries print-country focus-on x/typeahead.bundle.min suggest-who on-submit chimp followup-email get-ssn change-ctty advanced-dates advanced-prefs bank-prefs which funding-criteria signup prejoint invite-link gift drupal user extend-settings'; // all possible scripts, in order (after SCRIPTS_TOP)
-const SCRIPTS = 'x/bootstrap-toggle.min parse-query misc croppic crop-setup x/bootstrap-slider.min ballot countries x/typeahead.bundle.min on-submit scraps drupal user'; // all possible scripts, in order (after SCRIPTS_TOP). drupal and user are for password.
+const SCRIPTS = 'x/bootstrap-toggle.min parse-query misc croppic crop-setup x/bootstrap-slider.min ballot countries x/typeahead.bundle.min on-submit scanqr scraps drupal user'; // all possible scripts, in order (after SCRIPTS_TOP). drupal and user are for password.
+const SCRIPT_MODULES = 'scanqr';
 
 const DEV_PW2 = 'devPassword#two!'; // second password on DEV machine (len must be 16, 24, or 32)
 const DEV_VKEYPW = 'wt38BqWMslj3uUHUOto7fNi5ExL9CC7S7ffjn_q6zCY'; // password for very secure key, on DEV machine
@@ -145,6 +146,7 @@ const MINIMA1099 = 'X:20000/200, MA:600/1, VT:600.01/1'; // no 1099-K for gross/
 const MINIMA1099MAVT = 600; // 1099K minimum in MA and VT (for display)
 
 const NBSP = '&nbsp;'; // non-breaking space
+const DASH = '&mdash;';
 const R_BULLET = '&#8226;'; // bullet in emails (where CSS is difficult)
 const STATS_GRAIN = 10; // granularity of statistics, in days
 define('INFLATION_DESC', t('inflation adjustment'));

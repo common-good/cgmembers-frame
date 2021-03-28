@@ -145,7 +145,7 @@ function processTxs($processor, $uids, $starting=NULL, $ending=NULL, $descending
 /**
  * Returns the balance in an account as of a specified date.
  * @param integer $uid: the user id of the account
- * @param integer $date: the unix time to consider
+ * @param integer $date: the unix time to consider (NULL means at the beginning of time)
  */
 function balanceAsOf($uids, $date=NULL) {
   if (is_null($date)) return 0;
@@ -1260,6 +1260,10 @@ function checkSanity() {
       if ($total != 0) { sanityErr("Tx $xid entries do not sum to 0"); }
     } else sanityErr("Tx $xid has no entries");
   }
+  
+  if ($eids = db\lst('id', 'tx_hdrs LEFT JOIN tx_entries_all e USING(xid)', 'e.deleted')) sanityErr(t('These entries are deleted from non-deleted headers and must be deleted lest the txs table include them!: ') . $eids);
+  
+  if ($eids = db\lst('id', 'tx_entries JOIN tx_hdrs_all h USING(xid)', 'h.deleted OR h.created IS NULL')) sanityErr(t('These entries are orphaned from their deleted or missing headers and should be deleted: ') . $eids);
 
   // Check all entries
   $entryIds = db\rows('id', 'tx_entries');

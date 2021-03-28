@@ -455,6 +455,7 @@ function formFooter() {
   : ($mya ? '' : t('|<%aSignin>Sign in</a> |', '_aSignin', atag('/signin')));
 
   $helpType = $mya ? '' : 'other';
+  $helpModal = modal('help-modal', '', '', '', 'X');
   
   $markup = "<hr><div id=\"footer-menu\">$extraLinks" . t(<<<EOF
 |   <%aSite>About Us</a> |
@@ -468,6 +469,7 @@ copyright &copy; %year <%aSite>%PROJECT<sup> &reg;</sup></a><span id="footer-det
 %CGF_PHONE &nbsp; <%aEmail>%CGF_EMAIL</a><br>
 <br>
 IP: %ip</span>
+$helpModal
 EOF
   , '_aSite _aAgree _aSecurity _aHelp year _aEmail ip', atag(r\promoLink('about-us')), atag('/community/agreement'), atag(r\promoLink('about-us/privacy-and-security')), atag("/help/$helpType"), $year, u\emailTag(CGF_EMAIL), $_SERVER['REMOTE_ADDR']);
 //    <%aCttys>Communities</a> |
