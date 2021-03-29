@@ -113,8 +113,6 @@ function setCSP() {
   ? "'unsafe-inline'"  // allow inline styles when creating button
   : "'nonce-$styleNonce' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=' 'sha256-+t47tgldASBy5zANml11C5vRg3a/7oPrKstKXlzZfkI=' 'sha256-nX7L7GcvxmPKgeYAFQSzFcLplU7F/i/72ytdtLdJYoI=' 'sha256-2EA12+9d+s6rrc0rkdIjfmjbh6p2o0ZSXs4wbZuk/tA='";
   
-  $imgSource = in($uri, 'show-qr') ? "'unsafe-inline'" : 'https://cg4.us data:'; // data: is for photo upload
-
   header('Content-Security-Policy: '
     . "base-uri 'self';"
     . "block-all-mixed-content;"
@@ -126,7 +124,7 @@ function setCSP() {
     . "media-src 'self';"
     . "object-src 'none';"
     . "script-src 'self' 'nonce-$styleNonce' 'report-sample';" // 'report-sample' allows script fragment to be included in CSP reports
-    . "img-src 'self' $imgSource;"
+    . "img-src 'self' https://cg4.us data:;" // data: is for photo upload and QR code
     . "style-src 'self' $styleSource;"
     . "worker-src 'self';"
     . "form-action 'self';"

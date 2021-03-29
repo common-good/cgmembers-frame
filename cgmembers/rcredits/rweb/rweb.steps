@@ -273,6 +273,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE queries Setup
  *     MAKE relations Setup
  *     MAKE scancard Setup
+ *     MAKE showqr Setup
  *     MAKE showrecurs Setup
  *     MAKE signin Setup
  *     MAKE signin AMemberAsksForANewPasswordForACompany
@@ -502,6 +503,8 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
+ *     TEST showqr AnOnlineonlyMemberTriesToDisplayTheirQR
+ *     TEST showqr ACardMemberDisplaysTheirQR
  *     TEST signin AMemberSignsInWithUsernameOnTheMemberSite
  *     TEST signin AMemberSignsInWithAccountIDOnTheMemberSite
  *     TEST signin AMemberSignsInWithEmailOnTheMemberSite
@@ -655,6 +658,7 @@ function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWit
  *     TEST posts SomeoneRepliesToAnOffer
  *     TEST preferences AMemberVisitsThePreferencesPage
  *     TEST relations ItsComplicated
+ *     TEST showqr AnOnlineonlyMemberTriesToDisplayTheirQR
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST txs AMemberLooksAtTransactionsForThePastYear
  *     TEST txs AMemberLooksAtTransactionsForThePastFewDays
@@ -682,6 +686,7 @@ function with($content) {return weShow($content);}
  *     TEST queries AMemberVisitsTheCommunityDataPage
  *     TEST relations MemberHasAnEmployer
  *     TEST relations MemberCompanyHasRelations
+ *     TEST showqr ACardMemberDisplaysTheirQR
  *     TEST showrecurs AMemberStopsAnAutopayment
  *     TEST signupco ACompanyAccountManagerCreatesADiscount
  *     TEST signup AMemberInvites
@@ -2015,6 +2020,7 @@ function memberStepsLeft($id, $left0) {
  *
  * in: MAKE invest Setup
  *     MAKE posts Setup
+ *     MAKE showqr ACardMemberDisplaysTheirQR
  *     MAKE signupco ACompanyVerifiesEmailWhileSignedIn
  *     MAKE signupco ACompanySuppliesCompanyInformation
  *     MAKE signupco ACompanySuppliesCrumbsChoices
@@ -2038,6 +2044,7 @@ function memberStepsLeft($id, $left0) {
 function memberHasStepsDone($id, $task, $steps) {
   global $testOnly;
   
+  if ($steps == 'all') $steps = u\consta('s', $task);
   $a = r\acct(t\uid($id));
   if (!$testOnly) {
     $a->update('steps', 0);
@@ -2345,3 +2352,11 @@ function memberAjaxWith($id, $op, $data) {
   t\output($res);
   return TRUE;
 }
+
+/**
+ * member (ARG) visits (ARG)
+ *
+ * in: MAKE showqr AnOnlineonlyMemberTriesToDisplayTheirQR
+ *     MAKE showqr ACardMemberDisplaysTheirQR
+ */
+function memberVisits($id, $page) {return t\memberVisitsPage($id, $page);}

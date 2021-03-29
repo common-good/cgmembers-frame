@@ -48,7 +48,8 @@ Setup:
 Scenario: A member clicks the dashboard tab
   When member ".ZZA" visits page "dashboard"
   Then we show "You: Abe One" with:
-  | Balance   | $10 |
+  | Account   | NEWZZA | Show QR | Scan QR |
+  | Balance   | $10    |         |         |
   
 Scenario: A member clicks the dashboard tab with roundups
   Given transactions:

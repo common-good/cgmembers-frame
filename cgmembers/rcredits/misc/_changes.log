@@ -1,3 +1,6 @@
+2021-03-29 feature/showqr
+. don't show qr unless member has completed steps for a Common Good card
+
 2021-03-25 feature/qr
 . added Show QR (using endroid QR) and Scan QR (JS-based) to dashboard
 . added generalized question-mark help button feature: w\qBtn($topic), typically in a field suffix() with helpModal in footer

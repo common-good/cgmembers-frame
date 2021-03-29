@@ -25,9 +25,15 @@ function formShowQr($form, &$sta, $args = '') {
   if (!$mya->canBuy) softErr(t('You do not have permission to use this account\'s QR code.'));
 
   $title = t('QR Code for ') . $mya->bestName;
-  $subtext = t('Businesses will scan this code to charge your account.');
-  $qr = item(tr('<img src="%data" />', '_data', genQr(qrUrl($mya))));
-  
+  $subtext = t('<p>Businesses will scan this code to charge your account.</p>');
+
+  if ($mya->stepsDone('card')) {
+    $qr = item(tr('<img src="%data" />', '_data', genQr(qrUrl($mya))));
+  } else {
+    $subtext .= t('<p>You must <%a>complete the steps</a> for getting a %PROJECT card before you can display your account\'s code.</p>', '_a', atag('/scraps/card'));
+    $qr = NULL;
+  }
+    
   return cgform(compact(ray('title subtext qr')));
 }
 
