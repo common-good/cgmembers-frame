@@ -136,8 +136,8 @@ function formSummary_submit($form, &$sta) {
   if (!$mya->admin2) return; // hack attempt
   if ($op == 'secureMsgs') return w\go('dashboard', showSecureMessages());
 
-  extract($args = just('uid who legalName creditLimit tickle note notes dob altId altSt helper moves active risks adminable', $sta['input'], NULL));
-  if (!$mya->cAdmin) u\EXPECT(!array_diff(array_keys($args), ray('uid tickle note')), 'too many unpermitted changing fields in ' . pr($args));
+  extract($args = just('uid legalName creditLimit tickle note notes dob altId altSt helper moves active risks adminable', $sta['input'], NULL));
+  if (!$mya->cAdmin) foreach ($args as $k => $v) if (isset($v)) u\EXPECT(in($k, 'uid tickle note'), 'unpermitted changing fields in ' . pr($args));
 
   if (!$tickle) {
     $tickleDone = $mya->ok ? ($note and $mya->tickle) : 'activate';
@@ -179,7 +179,7 @@ function formSummary_submit($form, &$sta) {
   }
   
   $fields = 'notes';
-  foreach (ray('legalName tickle moves helper') as $k) if ($$k) $fields .= " $k"; // don't overwrite
+  foreach (ray('legalName tickle moves helper') as $k) if (nn($$k)) $fields .= " $k"; // don't overwrite
   $info = []; foreach (ray($fields) as $k) if (isset($$k)) $info[$k] = $$k;
   $mya->update($info);
   unset($DBTX);

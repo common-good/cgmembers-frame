@@ -1404,6 +1404,7 @@ function clear($ch = 0) {
   global $lastGo, $formOut, $formArray, $formSta, $testOp, $testConfirmation;
   global $tChecked, $tRadios, $testEmails, $rAPIResult;
   global $testWho, $testSeq, $nextCode;
+  global $testFirst, $testThen;
   global $sms_devel; $sms_devel = TRUE;
   global $newThresholds; unset($newThresholds);
   global $testRewardStep; $testRewardStep = 500;
@@ -1416,7 +1417,7 @@ function clear($ch = 0) {
   global $sceneTest;
   global $conf; $conf = [];
 
-  foreach (ray('lastGo formOut formArray formSta testOp testConfirmation tChecked tRadios testEmails rAPIResult testWho nextCode testSeq') as $k) $$k = NULL;
+  foreach (ray('lastGo formOut formArray formSta testOp testConfirmation tChecked tRadios testEmails rAPIResult testWho nextCode testSeq testFirst testThen') as $k) $$k = NULL;
 
   r\deleteAllCooks();
   foreach (ray('error status') as $one) u\deleteFile(t\dosayFilename($one));

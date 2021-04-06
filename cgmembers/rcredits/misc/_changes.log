@@ -1,3 +1,11 @@
+2021-04-05 feature/signup-to-pay
+. renamed summary feature to dashboard
+. w\first() function to signin or signup then do something, and related w\then() function and weFirstThen() step function
+. totally rewrote logic of card scan with standard QR reader, to require sign-in (once)
+. made buttino function for tiny buttons
+. added expedite feature for admins on bank transfer page
+. fixed bug that kept admins from updating fields on summary page
+
 2021-03-29 feature/showqr
 . don't show qr unless member has completed steps for a Common Good card
 

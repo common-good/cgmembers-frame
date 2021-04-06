@@ -2058,6 +2058,10 @@ function btn($href, $text, $style = '', $size = '', $extras = []) {
   return '<' . atagB($href, $style ?: 'primary', $size ?: 'xs', $extras ?: []) . ">$text</a>";
 }
 function lnk($href, $text, $extras = []) {return '<' . atag($href, $extras) . ">$text</a>";}
+
+function buttino($href, $text, $style = 'default', $size = '', $extras = []) {
+  return btn($href, $text, $style, '', $extras + clas('buttino'));
+}
 function doLnk($class, $text, $data = NULL, $extras = []) {return w\lnk('', $text, compact('class', 'data') + $extras);}
 function doBtn($class, $text, $data = '') {return w\btn('', $text, 'primary', 'xs', compact('class', 'data'));}
 
@@ -2189,6 +2193,28 @@ function backButton() {
 function missingArgs($args, $require) {
   foreach (ray($require) as $k) if (empty($args[$k])) return tr('missing field', 'field', $k);
   return FALSE;
+}
+
+/**
+ * Sign in or sign up, before doing the given task.
+ * @param string $first: signin or signup
+ * @param string $then: what to do after completing the signin or signup (defaults to current URI)
+ * @return (does not return -- redirects to signin or signup)
+ */
+function first($first, $then = NULL) {
+  global $testFirst, $testThen;
+  
+  u\setDft($then, $_SERVER['REQUEST_URI']);
+  list ($testFirst, $testThen) = [$first, $then];
+  if (!is_array($then)) $then = ray('url', $then);
+  $then = u\cryRay($then);
+  return w\go("$first/then=$then");
+}
+
+function then($then) {
+  if (!$ray = u\decryRay($then)) return;
+  extract(just('url', $ray, NULL));
+  if ($url) return w\go($url);
 }
 
 /**
