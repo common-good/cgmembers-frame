@@ -91,7 +91,7 @@ function formSummary($form, &$sta) {
 
   if ($mya->superAdmin and $mya->proSe) $form = just('title accountId accountName', $form);
   
-  jsx('summary');
+  jsx('summary', 'field', 'helper');
   
   return cgform($form, 'wide');
 
@@ -108,9 +108,11 @@ function formSummary_validate($form, &$sta) {
   if ($altId xor $altSt) return say(t('You must give both an Alternate ID and a state or neither. If it\'s not a driver\'s license, describe the ID type in one or two words at the start of the number; for example "US Passport #12345". If there is no state, choose "AA".'), 'altId');
   
   if (nn($helper)) {
-    $helper = whoId($sta);
-//    if (!$h = whois($helper, 'helper', $sta['input'], 'self-help')) return say(t('I don\'t know what helper account you mean.'), 'helper');
-//    $helper = $h->id;
+//    $helper = whoId($sta);
+    if (!$hA = $mya->helperA or $helper != $hA->fullName) {
+      if (!$hA = whois($helper, 'helper', $sta['input'], 'self-help', '')) return say(t('I don\'t know what helper account you mean.'), 'helper');
+    }
+    $helper = $hA->id;
   } else {unset($helper); unset($sta['input']['helper']);}
 
   if (nn($active) and !$mya->ok and !$mya->isCtty) { // activating
@@ -254,7 +256,7 @@ function adminSummary() {
           $helper = $hA->fullName;
         }
         $helper = textFld(t('Helped by:'), t('Who gets the "inviter/helper" reward? Must be exactly one account.'), dft($helper));
-        w\whoFldSubmit('helper', t('This person was invited by %name, yes?'), 'self-help', '');
+        w\whoFldSubmit('helper', '', 'self-help', '', ray('custom', 1));
 
       } else $helper = item($mya->helper ? $mya->helperA->fullName: t('N/A'), t('Helped by:'));
     }

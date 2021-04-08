@@ -431,6 +431,10 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 
 #frm-card .form-item-buttons .btn {display:inline-block; text-align:center;}
 
+#frm-card .form-item-account.radio {border:1px solid silver; padding:10px 0; margin-bottom:-1px;}
+#frm-card .form-item-account.radio:hover {background-color:lightyellow;}
+#frm-card .form-radio, #frm-card #edit-submit {display:none;}
+
 @media (max-width:768px) {
   #frm-card .control-label {width:75px; min-width:75px;}
 }

@@ -72,7 +72,7 @@ function formCard($form, &$sta, $dom = '', $code = '') {
 
 function formCard_validate($form, &$sta) {
   extract(just('mode amount', $sta['input'], NULL));
-  if ($mode == 'choose') return;
+  if ($mode == 'choose') return TRUE;
   
   // mode = 'normal'    
   if ($err = u\badAmount($amount)) return say($err, 'amount');
@@ -83,11 +83,12 @@ function formCard_submit($form, &$sta) {
   global $mya;
   
   extract(just('mode account tail amount desc uid', $sta['input'], NULL));
-  
   if ($mode == 'choose') { // chose an account to scan from
     $scannerA = r\acct($account);
     r\setCook('scanner', $scannerA->mainQid); // not ->qid
-    return changeWho('', "page=/card/$tail&acct=$scannerA->id", $sta);
+    $page = u\urlify("/card/$tail");
+    if (test()) $page = "/card/$tail"; // because changeWho simulates urlify for tests
+    return changeWho('', "page=$page&acct=$scannerA->id", $sta);
   }
 
   // mode = 'normal'    
@@ -124,9 +125,13 @@ function cardSignout($msg, $err = '') {
 function chooseScanner($choices, $tail) {
   global $mya;
   
-  $title = t('Scan From Which Account?');
+  jsx('cardChoose');
+
+  $title = t('Choose Account');
+  $subtext = t('Scan From Which Account?');
   $account = radiosFld(NBSP, '', '', ray($mya->id, $mya->fullName) + $choices);
   $mode = hidFld('choose');
   $tail = hidFld($tail);
-  return cgform(compact(ray('title account mode tail')));
+  $submit = submit();
+  return cgform(compact(ray('title subtext account mode tail submit')));
 }

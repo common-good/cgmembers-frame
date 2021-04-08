@@ -5,23 +5,38 @@ SO I can avoid having multiple devices in my pocket or at the checkout counter
 
 Setup:
   Given members:
-  | uid  | fullName | pass | email | flags                       | zip   | floor | cardCode | city | state |*
-  | .ZZA | Abe One  | a1   | a@    | member,ok,confirmed,debt    | 01001 |  -100 | Aa1      | Aville | AL  |
-  | .ZZB | Bea Two  | b1   | b@    | member,ok,confirmed,debt    | 01001 |  -100 | Bb2      | Bville | DC  |
-  | .ZZC | Our Pub  | c1   | c@    | member,ok,co,confirmed,debt | 01003 |  -100 |          | Cville | CA  |
+  | uid  | fullName | email | flags                       | zip   | floor | cardCode | city | state | pass |*
+  | .ZZA | Abe One  | a@    | member,ok,confirmed,debt    | 01001 |  -100 | Aa1      | Aville | AL  | 123  |
+  | .ZZB | Bea Two  | b@    | member,ok,confirmed,debt    | 01001 |  -100 | Bb2      | Bville | DC  | 123  |
+  | .ZZC | Our Pub  | c@    | member,ok,co,confirmed,debt | 01003 |  -100 |          | Cville | CA  |      |
+  And member ".ZZA" has picture "picture1"
 
 Scenario: A member scans an individual card, with no scanner set, not signed in
   Given cookie "scanner" is ""
   When member "?" visits "card/6VM/KDJIAa1"
-  Then we first "signin" then "card/6VM/KDJIAa1"
+  Then we first "signin" then "url=card/6VM/KDJIAa1"
   And we show
   | Welcome to %PROJECT |
+  
+  When member "?" completes "signin/then=TESTCODE" with:
+  | name   | pass |*
+  | NEWZZB | 123  |
+  Then cookie "scanner" is "NEWZZB"
+  And we show
+  | You: Bea Two ||
+  | picture1     ||
+  | Abe One      ||
+  | Aville, AL   ||
+  | Amount       ||
+  | For          ||
+  | Charge       ||
+  And with options:
+  | Other |
 
 Scenario: A member scans an individual card, with no scanner set, signed in, no relations
   Given cryptcookie "qid" is "NEWZZB"
   And cookie "trust" is "1"
   And cookie "scanner" is ""
-  And member ".ZZA" has picture "picture1"
 
   When member ".ZZB" visits "card/6VM/KDJIAa1"
   Then cookie "scanner" is "NEWZZB"
@@ -46,14 +61,13 @@ Scenario: A member scans an individual card, with no scanner set, signed in, wit
   And cryptcookie "qid" is "NEWZZB"
   And cookie "trust" is "1"
   And cookie "scanner" is ""
-  And member ".ZZA" has picture "picture1"
 
   When member ".ZZB" visits "card/6VM/KDJIAa1"
   Then we show "Scan From Which Account?" with:
   | Bea Two |
   | Our Pub |
-  
-  When member ".ZZB" confirms "card/6VM/KDJIAa1" with:
+
+  When member ".ZZB" completes "card/6VM/KDJIAa1" with:
   | mode   | tail        | account |*
   | choose | 6VM/KDJIAa1 | .ZZC    |
   Then cookie "scanner" is "NEWZZC"
@@ -75,7 +89,6 @@ Scenario: A member scans an individual card, with scanner set, not signed in, no
   | .ZZC | groceries |
   And cookie "trust" is "1"
   And cookie "scanner" is "NEWZZC"
-  And member ".ZZA" has picture "picture1"
 
   When member "?" visits "card/6VM/KDJIAa1"
   Then we show
@@ -96,7 +109,6 @@ Scenario: A member scans an individual card, with scanner set, not signed in, no
   | .ZZC | groceries |
   And cookie "trust" is ""
   And cookie "scanner" is "NEWZZC"
-  And member ".ZZA" has picture "picture1"
 
   When member "?" visits "card/6VM/KDJIAa1"
   Then we show
@@ -118,7 +130,6 @@ Scenario: A member scans an individual card, with scanner set, signed in, no rel
   | .ZZC | groceries |
   And cookie "trust" is ""
   And cookie "scanner" is "NEWZZC"
-  And member ".ZZA" has picture "picture1"
 
   When member ".ZZB" visits "card/6VM/KDJIAa1"
   Then we show
@@ -139,9 +150,8 @@ Scenario: a member card is charged, with scanner set, not signed in
   And cryptcookie "qid" is "NEWZZB"
   And cookie "scanner" is "NEWZZC"
   And cookie "trust" is "1"
-  And member ".ZZA" has picture "picture1"
   
-  When member "?" confirms form "card/6vm/KDJIAa1" with values:
+  When member "?" completes "card/6vm/KDJIAa1" with:
   | op     | amount | desc      |*
   | charge | 10     | groceries |
   Then we say "status": "report tx" with subs:
@@ -158,9 +168,8 @@ Scenario: a member card is paid, with scanner set, not signed in
   And cryptcookie "qid" is "NEWZZB"
   And cookie "scanner" is "NEWZZC"
   And cookie "trust" is "1"
-  And member ".ZZA" has picture "picture1"
   
-  When member "?" confirms form "card/6vm/KDJIAa1" with values:
+  When member "?" completes "card/6vm/KDJIAa1" with:
   | op     | amount | desc      |*
   | pay    | 10     | groceries |
   Then we say "status": "report tx" with subs:

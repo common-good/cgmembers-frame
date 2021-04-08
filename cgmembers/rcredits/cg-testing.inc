@@ -1859,7 +1859,7 @@ function jsonResponses($correctResponses, $actualResponses) {
 
 function oneJsonResponse($correctResponse, $actualResponses) {
   foreach ($actualResponses as $actualResponse) {
-    if (checkOneArray($correctResponse, $actualResponse)) {
+    if (rayEq($correctResponse, $actualResponse)) {
       return TRUE;
     }
   }
@@ -1868,7 +1868,7 @@ function oneJsonResponse($correctResponse, $actualResponses) {
   return FALSE;
 }
 
-function checkOneArray($wantRay, $gotRay) {
+function rayEq($wantRay, $gotRay) {
   $gotRay = (array)$gotRay;
   fixData($gotRay);
   foreach ($wantRay as $k => $v) {

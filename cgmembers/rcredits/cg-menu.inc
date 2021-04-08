@@ -183,7 +183,7 @@ function menu($submenu = '') {
     'sadmin/summary' => ['call', t('Summary'), 'Summary', 'admin2'],
 
     'signout' => ['norm', t('Sign out'), '', 'signedIn', 'signout'],
-    'signin' => ['norm', t('Sign in'), 'Signin', '-signedIn'],
+    'signin' => ['norm', t('Sign in'), 'Signin 1', '-signedIn'],
 //    'signin' => ['call', 'Sign in', 'Signin', ANY],
 //    'sinx' => ['call', 'Sign in from elsewhere', 'Sinx', ANY],
     
@@ -193,7 +193,7 @@ function menu($submenu = '') {
     'cgbiz' => ['call', t('Common Good Business'), 'CgBiz 1', ANY],
     'change-account' => ['call', t('Change Who'), '1', ANY, 'changeWho'],
     'status' => ['call', 'Status', 'Membership 1', 'manage'],
-    'signup' => ['call', t('Sign Up For %PROJECT'), 'Signup', ANY],
+    'signup' => ['call', t('Sign Up For %PROJECT'), 'Signup 1', ANY],
     'signup-co' => ['call', t('Open a Company Account'), 'SignupCo', ANY],
     'menu' => ['call', 'Main Menu', 'Menu', ANY],
     'member' => ['call', 'Company Profile', 'Profile', ANY],

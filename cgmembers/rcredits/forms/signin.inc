@@ -9,8 +9,10 @@ use CG\Db as db;
 /**
  * Completely redo the login form (see user_login() in user.module).
  */
-function formSignin($form, &$sta) {
+function formSignin($form, &$sta, $arg = '') {
   global $base_url;
+  
+  extract(just('then', $arg, NULL));
 	
   signout(TRUE); // make sure we're signed out
 	if (isDEV) db\q('TRUNCATE sessions'); // this saves a lot of manual truncates when tests mess up
@@ -28,8 +30,7 @@ function formSignin($form, &$sta) {
   focusOn(($name == 'admin' or mb_strlen($name) > 4) ? 'pass' : 'name');
 
   $title = t('Welcome to %PROJECT!');
-  $signup = isDEV ? lnk('/signup-co', 'SignupCo') : '';
-  $subtext = t('<p>Not yet a member? <%aCheck>Check it out</a> or just <%aSignup>Sign up</a>!</p>', '_aCheck _aSignup', atag(r\promoLink('')), atag('/signup')) . $signup . t('<p><b>TIP</b>: Try not to sign in to your financial accounts on a public computer. Or if you do, be careful! Check the address bar at the top of the screen to make sure you have the right website (<b><em>%BASE_URL/</em>...</b>). And be sure to sign OUT when you\'re done!</p>');
+  $subtext = t('<p>Not yet a member? <%aCheck>Check it out</a> or just <%aSignup>Sign up</a>!</p><p><b>TIP</b>: Try not to sign in to your financial accounts on a public computer. Or if you do, be careful! Check the address bar at the top of the screen to make sure you have the right website (<b><em>%BASE_URL/</em>...</b>). And be sure to sign OUT when you\'re done!</p>', '_aCheck _aSignup', atag(r\promoLink('')), atag('/signup'));
 
   $_a = atag('/settings/password/' . $name, tabindex(3)); // uses $name, so must precede $name = textField
   $passDesc = t('<%a>Forgot password?</a>', compact('_a'));
@@ -38,9 +39,9 @@ function formSignin($form, &$sta) {
   $vKeyE = hidFld(nn($vKeyE) ?: ''); // extra password for admins
   
   $trust = boxFld('trust', NBSP, t('Trust this device'), nni($_COOKIE, 'trust'));
-
+  $then = hidFld($then);
   $submit = t('Sign in');
-  $form = compact(ray('title name pass pw2 vKeyE trust submit subtext'));
+  $form = compact(ray('title name pass pw2 vKeyE trust submit subtext then'));
 
   $form['external_input'] = hidFld(serialize(nni($sta, 'input'))); // pass this to rweb_user_login
 
@@ -98,13 +99,13 @@ function formSignin_validate($form, &$sta, $type = 'both') {
  * @param string $goto: what page to start on for non-admin
  */
 function formSignin_submit($form, &$sta, $goto = 'dashboard') {
-  extract(just('name', $sta['input'], NULL));
+  extract(just('name then', $sta['input'], NULL));
   $uid = r\loginString($name);
   $mya = r\setAcct($uid, $sta);
 
   u\loga('signin', ['name' => $mya->name]);
   if ($mya->superAdmin) superSignin();
-  
+  if ($then and $res = then($then)) return $res;
   return w\go($mya->admin2 ? 'sadmin/followup' : $goto);
 }
 

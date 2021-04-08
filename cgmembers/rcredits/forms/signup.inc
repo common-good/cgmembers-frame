@@ -25,7 +25,7 @@ function formSignup($form, &$sta, $args = '') {
   if (is_string($args)) $args = urlq2ray($args);
 
   $flds = 'fullName email helper phone zip country source';
-  extract(just($flds . ' source2 joint reid inviter code partner partnerCode customer', $args, NULL));
+  extract(just($flds . ' source2 joint reid inviter code partner partnerCode customer then', $args, NULL));
 
   u\setDft($source2, nni($_COOKIE, 'ad'));
   $source2 = hidFld($source2);
@@ -88,9 +88,10 @@ EOF
 
   extract(just('agreement details', formAgreement($form, $sta)));
   list ($cq, $ca) = w\captcha();
+  $then = hidFld($then);
   $submit = t('I agree'); //  was t('Next')
     
-  $form = compact(ray('title forother subtext acctType fullName phone email country zip source midtext agreement details cq ca submit args confirmed helper iCode notes source2'));
+  $form = compact(ray('title forother subtext acctType fullName phone email country zip source midtext agreement details cq ca submit then args confirmed helper iCode notes source2'));
 //  $sponsorConfirmation = w\whoFldSubmit('sponsor', t('Your sponsoring organization is %name, yes?'));
   return cgform($form);
 }
@@ -119,7 +120,7 @@ function zExtraErr(&$notes, $msg, $field, $value = '') {
 
 function formSignup_submit($form, &$sta) {
   $dbFields = 'fullName email flags phone federalId dob pin country zip address city state postalAddr helper iCode notes tenure source';
-  extract(just('myid confirmed acctType args ats owns partner customer source2 ' . $dbFields, $sta['input']));
+  extract(just('then myid confirmed acctType args ats owns partner customer source2 ' . $dbFields, $sta['input']));
   if (test() and !nn($args)) $args = basename($_SERVER['REQUEST_URI']);
   extract(just('code source2', $args)); // source2 may come from either partner or an ad (through our promo site)
   $helper = $helper + 0; // don't let lack of helper stop us (on DEV)
@@ -173,6 +174,7 @@ function formSignup_submit($form, &$sta) {
 
   $mya->update('signed, signedBy', now(), $mya->fullName);
   $mya->stepDone('agree');
+  if (nn($then) and $res = then($then)) return $res;
   return w\goNextStep('signup');
 }
 

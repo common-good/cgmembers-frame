@@ -124,9 +124,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
 /**
  * member (ARG) confirms form (ARG) with values: (ARG)
  *
- * in: MAKE card AMemberCardIsChargedWithScannerSetNotSignedIn
- *     MAKE card AMemberCardIsPaidWithScannerSetNotSignedIn
- *     MAKE cgpay AMemberRedeemsStoreCredit
+ * in: MAKE cgpay AMemberRedeemsStoreCredit
  *     MAKE company AMemberUpdatesCompanyInfo
  *     MAKE company AMemberGivesABadEmployeeCount
  *     MAKE company AMemberGivesABadGross
@@ -182,7 +180,6 @@ function memberConfirmsFormWithValues($id, $page, $values) {return t\completeFor
  *
  * in: MAKE accredit AMemberCompanyGivesACustomerCredit
  *     MAKE accredit AMemberTriesToBuyCreditWithCredit
- *     MAKE card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
  *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
  *     MAKE cgpay AMemberSubmitsACGPayButtonPaymentWithAccountIDAndChosenAmount
  *     MAKE cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
@@ -714,7 +711,8 @@ function without($content) {
 /**
  * with options: (ARG)
  *
- * in: TEST card AMemberScansAnIndividualCardWithNoScannerSetSignedInNoRelations
+ * in: TEST card AMemberScansAnIndividualCardWithNoScannerSetNotSignedIn
+ *     TEST card AMemberScansAnIndividualCardWithNoScannerSetSignedInNoRelations
  *     TEST card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
  *     TEST card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsTrusted
  *     TEST card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsNotTrusted
@@ -2131,7 +2129,7 @@ function someoneConfirmsWith($page, $values) {return t\completeForm('?', $page, 
 /**
  * cookie (ARG) is (ARG)
  *
- * in: MAKE card AMemberScansAnIndividualCardWithNoScannerSetNotSignedIn
+ * in: BOTH card AMemberScansAnIndividualCardWithNoScannerSetNotSignedIn
  *     BOTH card AMemberScansAnIndividualCardWithNoScannerSetSignedInNoRelations
  *     BOTH card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
  *     MAKE card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsTrusted
@@ -2148,7 +2146,7 @@ function cookieIs($nm, $v) {
   global $testOnly;
 
   if (!$testOnly) r\setCook($nm, $v);
-  return t\eq($_COOKIE[$nm], $v);
+  return t\eq($v, $_COOKIE[$nm]);
 }
 
 /**
@@ -2291,19 +2289,13 @@ function weExitShowing($ray) {
   global $testOnly; if (!$testOnly) return FALSE;
   if (!$actualRay = t\getExitMsg()) return FALSE;
 /**/  db\del('test', "type='echo'"); // reset for subsequent steps
-  return t\checkOneArray($ray[0], unserialize($actualRay));
+  return t\rayEq($ray[0], unserialize($actualRay));
 }
 
 /**
  * member (ARG) has picture (ARG)
  *
- * in: MAKE card AMemberScansAnIndividualCardWithNoScannerSetSignedInNoRelations
- *     MAKE card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
- *     MAKE card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsTrusted
- *     MAKE card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsNotTrusted
- *     MAKE card AMemberScansAnIndividualCardWithScannerSetSignedInNoRelations
- *     MAKE card AMemberCardIsChargedWithScannerSetNotSignedIn
- *     MAKE card AMemberCardIsPaidWithScannerSetNotSignedIn
+ * in: MAKE card Setup
  */
 function memberHasPicture($id, $picture) {return t\hasPic($id, $picture);}
 
@@ -2405,6 +2397,18 @@ function memberVisits($id, $page) {return t\memberVisitsPage($id, $page);}
 function weFirstThen($first, $then) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $testFirst, $testThen;
-  foreach (ray('first then') as $k) if (!t\eq($$k, ${'test' . ucwords($k)})) return FALSE;
+
+  if (!t\eq($first, $testFirst)) return FALSE;
+  if (!t\eq(urlq2ray($then), $testThen)) return FALSE;
   return TRUE;
 }
+
+/**
+ * member (ARG) completes (ARG) with: (ARG)
+ *
+ * in: MAKE card AMemberScansAnIndividualCardWithNoScannerSetNotSignedIn
+ *     MAKE card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
+ *     MAKE card AMemberCardIsChargedWithScannerSetNotSignedIn
+ *     MAKE card AMemberCardIsPaidWithScannerSetNotSignedIn
+ */
+function memberCompletesWith($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}

@@ -652,9 +652,9 @@ function badSignature(&$sta) {
  */
 function whoFldSubmit($field, $question, $selfErr, $restrict, $extra = []) {
   global $testWho; $testWho = compact(ray('field selfErr restrict'));
-  extract(just('amount allowNonmember coOnly', $extra, ''));
+  extract(just('amount allowNonmember coOnly custom', $extra, ''));
   js('x/typeahead.bundle.min');
-  if (!nni($extra, 'custom')) jsx('suggest-who', compact(ray('field question amount selfErr restrict allowNonmember')));
+  if (!$custom) jsx('suggest-who', compact(ray('field question amount selfErr restrict allowNonmember')));
 }
 
 /**
@@ -1645,7 +1645,7 @@ function rangeDates($period, $starting = '', $ending = '') {
  */
 function whois($who, $field_name, $info, $selfErr, $restrict) {
   global $mya;
-  u\EXPECT(test(), 'whois when not testing');
+//  u\EXPECT(test(), 'whois when not testing');
   $res = be\identify($who, $mya, $selfErr, $restrict);
   if (is_object($res)) return $res;
   if (is_string($res)) return say($res, $field_name);;
@@ -2205,13 +2205,15 @@ function first($first, $then = NULL) {
   global $testFirst, $testThen;
   
   u\setDft($then, $_SERVER['REQUEST_URI']);
-  list ($testFirst, $testThen) = [$first, $then];
   if (!is_array($then)) $then = ray('url', $then);
+  list ($testFirst, $testThen) = [$first, $then];
   $then = u\cryRay($then);
   return w\go("$first/then=$then");
 }
 
 function then($then) {
+  global $testThen;
+  if ($then == 'TESTCODE' and test()) $then = u\cryRay($testThen);
   if (!$ray = u\decryRay($then)) return;
   extract(just('url', $ray, NULL));
   if ($url) return w\go($url);

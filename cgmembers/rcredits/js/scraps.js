@@ -64,18 +64,22 @@ function doit(what, vs) {
   
   case 'card':
     $('#edit-desc').val($('#edit-for :selected').text()); // set desc field to initial value
+    if (vs['choice0Count'] == 0) cardOther();
     $('#edit-for').change(function () {
       $('edit-desc').val($('#edit-for :selected').text()); // set desc field to selected value
       var i = $(this).find(':selected').val();
       var other = (i == $(this).find('option').length - 1);
       var goish = (i >= vs['choice0Count'] && !other);
-      if (other) {
-        $('.form-item-for').hide();
-        $('.form-item-desc').show()
-        $('#edit-desc').val('').attr('required', 'required').focus();
-      }
+      if (other) cardOther();
       $('#edit-charge, #edit-pay').toggle(!goish);
       $('#edit-go').toggle(goish);
+    });
+    break;
+    
+  case 'cardChoose':
+    $('.form-item-account.radio').click(function () {
+      $(this).find('input').prop('checked', true);
+      $(this).parents('form:first').submit();
     });
     break;
     
@@ -99,6 +103,10 @@ function doit(what, vs) {
       clipCopy(nm + ' <' + $('#acctEmail').text() + '>');
     });
     $('#edit-note').focus();
+
+    var fid = '#edit-helper';
+    var form = fform(fid);
+    suggestWho(fid, '1');
     break;
     
   case 'dashboard':
@@ -778,6 +786,13 @@ function require(items, yesno, xx) {
       $(this).attr('name', 'xx-' + $(this).attr('name'));
     });    
   }
+}
+
+function cardOther(focus) {
+  $('.form-item-for').hide();
+  $('#edit-desc').val('').attr('required', 'required');
+  $('.form-item-desc').show();
+  if (focus) $('#edit-desc').focus();
 }
 
 function req(fld) {fld.show(); fld.find('input').attr('required', 'required');}
