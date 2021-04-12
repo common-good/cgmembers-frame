@@ -160,6 +160,10 @@ Scenario: a member card is charged, with scanner set, not signed in
   And transactions:
   | xid | created | amount | payer | payee | purpose   | taking |*
   |   1 | %today  |     10 | .ZZA  | .ZZC  | groceries | 1      |
+  And we show "You: Our Pub" with:
+  | Scan Another QR |
+  And without:
+  | Show My QR |
 
 Scenario: a member card is paid, with scanner set, not signed in
   Given members have:

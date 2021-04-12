@@ -13,17 +13,21 @@ use CG\Db as db;
  */
 function formCard($form, &$sta, $dom = '', $code = '') {
   global $mya;
-  
-  if ($dom == 'disconnect') {
+
+  if ($dom == 'done') {    
+    if (!$z = u\decryRay($code)) return hack('done with no code');
+    extract(just('ok msg', $z, NULL));
+    return cardDone($ok, $msg);
+
+  } elseif ($dom == 'disconnect') {
     r\setCook('scanner', NULL);
-    return sayEmpty(t('This device is no longer associated with any account.'));
+    return cardDone(TRUE, t('This device is no longer associated with any account.'));
   }
 
   if (!$subdom = strtoupper($dom) or !$code) return exit('fail'); // correct a fluke in the server's rewrite (empty subdomain is a hacker -- give no information, don't even tell admin)
   $qrDom = ray(QR_DOMS)[(bool) isPRODUCTION];
   $res = r\Qo::qr2("$subdom.$qrDom/$code");
   if (!$res or !$a = r\acct($res[0]) or $a->cardCode() != $res[1]) return softErr(t('That is not a valid %PROJECT card.'));
-  
   
   if (!$scanner = r\cook('scanner')) {
     if (!$mya) return first('signin'); // sign in if no scanner
@@ -100,7 +104,8 @@ function formCard_submit($form, &$sta) {
   $type = ($op == 'charge' ? 'charge' : 'payment');
   $z = be\transfer($type, $scannerA, $a, $amount, $desc, $goods);
 
-  return sayEmpty($z->msg, $z->ok ? '' : 'err');
+//  say($z->msg, $z->ok ? '' : 'err');
+  return go('/card/done/' . u\cryRay($z));
 }
 
 /**
@@ -134,4 +139,22 @@ function chooseScanner($choices, $tail) {
   $tail = hidFld($tail);
   $submit = submit();
   return cgform(compact(ray('title subtext account mode tail submit')));
+}
+
+/**
+ * Report a result, showing useful links.
+ */
+function cardDone($ok, $msg) {
+  global $mya;
+
+  if (!$scanner = r\cook('scanner') or !$scannerA = r\acct($scanner)) return hack('card done with no scanner');
+
+  say($msg, $ok ? '' : 'err');
+
+  $title = t('You: ' . $scannerA->fullName);
+  $lnkShowQr = $mya ? btn('/show-qr', t('Show My QR'), '', 'md') : '';
+  $lnkScanQr = btn('/scan-qr', t('Scan Another QR'), '', 'md');
+  $subtext = item("$lnkShowQr$lnkScanQr");
+
+  return cgform(compact(ray('title subtext')));
 }

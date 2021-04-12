@@ -543,6 +543,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST balancesheet ANonmemberLooksAtTheBalanceSheet
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
+ *     TEST card AMemberCardIsChargedWithScannerSetNotSignedIn
  *     TEST cgpay AMemberClicksACGPayButton
  *     TEST cgpay AMemberClicksACGPayButtonWithVariableAmount
  *     TEST cgpay AMemberClicksAButtonToBuyStoreCredit
@@ -674,6 +675,7 @@ function with($content) {return weShow($content);}
  * without: (ARG)
  *
  * in: TEST card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsNotTrusted
+ *     TEST card AMemberCardIsChargedWithScannerSetNotSignedIn
  *     TEST dashboard AnAgentClicksTheDashboardTabWithoutPermissionToManage
  *     TEST investinterest AMemberExpressesInterest
  *     TEST invest MembersRateAProposedInvestment
