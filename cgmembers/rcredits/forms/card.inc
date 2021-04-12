@@ -71,7 +71,7 @@ function formCard($form, &$sta, $dom = '', $code = '') {
   $uid = hidFld($a->id);
   $mode = hidFld('normal');
   
-  return cgform(compact(ray('title photo subtext amount for desc buttons uid mode')));
+  return cgform(compact(ray('title photo subtext for desc amount buttons uid mode')));
 }
 
 function formCard_validate($form, &$sta) {

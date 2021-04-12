@@ -65,6 +65,7 @@ function doit(what, vs) {
   case 'card':
     $('#edit-desc').val($('#edit-for :selected').text()); // set desc field to initial value
     if (vs['choice0Count'] == 0) cardOther();
+    $(vs['choice0Count'] == 0 ? '#edit-desc' : '#edit-amount').focus();
     $('#edit-for').change(function () {
       $('edit-desc').val($('#edit-for :selected').text()); // set desc field to selected value
       var i = $(this).find(':selected').val();
