@@ -150,7 +150,7 @@ Scenario: a member card is charged, with scanner set, not signed in
   And cryptcookie "qid" is "NEWZZB"
   And cookie "scanner" is "NEWZZC"
   And cookie "trust" is "1"
-  
+
   When member "?" completes "card/6vm/KDJIAa1" with:
   | op     | amount | desc      |*
   | charge | 10     | groceries |

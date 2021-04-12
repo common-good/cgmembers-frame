@@ -211,7 +211,7 @@ form {max-width:834px; margin:0 auto;}
   .page-card #main {margin:0 0 0 10px !important;}
   #main .section {margin:0 !important;}  
   
-  .form-horizontal {padding-top:30px; margin:0 15px;}
+  .form-horizontal {padding-top:10px; margin:0 15px;}
   .mlab-above .control-label {width:100%; padding-left:0; text-align:left;}
   
   .form-horizontal .control-data {width:70%;}
@@ -781,7 +781,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-honors .control-label {display:none;}
 #frm-honors .control-data {max-width:100%; width:100%;}
 #frm-honors #edit-subtext, 
-#frm-honors .form-item-title {margin:auto; text-align:center; max-width:500px;}
+#frm-honors .form-item-title {margin:auto; text-align:center;}
 #frm-honors #edit-list {margin:auto; text-align:center;}
 @media (max-width:520px) {
   #frm-honors .well {width:100%; box-shadow: 2px 2px 3px #888888;}
