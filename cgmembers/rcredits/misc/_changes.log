@@ -1,3 +1,26 @@
+2021-04-12 feature/signin-to-scan
+. changed menu so scan-qr works without sign-in
+. minor formatting improvements
+. switched order of amount and purpose on card transaction page
+
+2021-04-11 feature/signin-to-scan
+. card scan (or card scan disconnect operation) end by showing a scan-again button
+
+2021-04-08 feature/signin-to-scan
+. used first() and then() functions to force signin for first web-based card scanning
+. reworked card.inc accordingly to handle choice of account (if the person has more than one)
+. summary page no longer asks for confirmation of helper (which was annoying)
+. made a "...completes..." step function to replace "...confirms..."
+. improved the way first/then is handled in tests
+
+2021-04-05 feature/signup-to-pay
+. renamed summary feature to dashboard
+. w\first() function to signin or signup then do something, and related w\then() function and weFirstThen() step function
+. totally rewrote logic of card scan with standard QR reader, to require sign-in (once)
+. made buttino function for tiny buttons
+. added expedite feature for admins on bank transfer page
+. fixed bug that kept admins from updating fields on summary page
+
 2021-03-29 feature/showqr
 . don't show qr unless member has completed steps for a Common Good card
 

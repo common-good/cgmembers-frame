@@ -18,8 +18,12 @@ function formGet($form, &$sta, $args = '') {
   \drupal_page_is_cacheable(false); // suppress caching, so buttons work right
   $myid = $mya->id;
   $jid = $mya->jid ?: 0;
-  extract(just('cancel', $args, NULL));
+  extract(just('cancel expedite', $args, NULL));
   if ($cancel and $mya) return cancelTx($cancel);
+  if ($expedite and $mya and $mya->admin) {
+    be\completeUsdTx($expedite, FALSE);
+    return sayEmpty(t('Bank transfer successfully expedited.'));
+  }
   
   $title = t('Transfer Funds');
   $subtext = t('<p>When you transfer funds FROM your bank account to your Common Good account, you are buying Common Good credit. Your Common Good credit is backed partly by Dollars in your Common Good Community’s Dollar Pool and partly by collateral, including promises of members and member organizations [<%aBacking>more about backing</a>]. It may take several business days for your bank to send the funds.</p>
@@ -40,9 +44,11 @@ function formGet($form, &$sta, $args = '') {
     $where .= in($k, 'in other') ? 'amount>0' : 'amount<0';
     $where .= $k == 'other' ? ' AND deposit<>0 AND completed=0' : ' AND deposit=0';
     if ($amt = db\sum('ABS(amount)', 'r_usd', $where, $subs)) {
-      $link = $k == 'other' ? t('(not cancelable)') : tr(" <a class=\"buttino\" href=\"$base_url/get/cancel=$k\">%text</a>", 'text', t('Cancel'));
+      $txid = ($mya->admin and in($k, 'in other')) ? db\get('txid', 'r_usd', 'completed=0 AND amount=' . $amt, $subs) : '';
+      $expedite = $txid ? ' ' . buttino('/get/expedite=' . $txid, t('Expedite')) : '';
+      $link = $k == 'other' ? t('(not cancelable)') : buttino("/get/cancel=$k", t('Cancel'));
       $text = $k == 'out' ? t('%link %amt from %PROJECT to your bank account.')
-      : t('%link %amt from your bank account to %PROJECT.');
+      : (t('%link %amt from your bank account to %PROJECT.') . $expedite);
       $wait = tr($text, 'amt _link', u\fmtAmt($amt), $link);
       $waiting[] = "<span>$wait</span>";
     }

@@ -183,7 +183,7 @@ function menu($submenu = '') {
     'sadmin/summary' => ['call', t('Summary'), 'Summary', 'admin2'],
 
     'signout' => ['norm', t('Sign out'), '', 'signedIn', 'signout'],
-    'signin' => ['norm', t('Sign in'), 'Signin', '-signedIn'],
+    'signin' => ['norm', t('Sign in'), 'Signin 1', '-signedIn'],
 //    'signin' => ['call', 'Sign in', 'Signin', ANY],
 //    'sinx' => ['call', 'Sign in from elsewhere', 'Sinx', ANY],
     
@@ -193,7 +193,7 @@ function menu($submenu = '') {
     'cgbiz' => ['call', t('Common Good Business'), 'CgBiz 1', ANY],
     'change-account' => ['call', t('Change Who'), '1', ANY, 'changeWho'],
     'status' => ['call', 'Status', 'Membership 1', 'manage'],
-    'signup' => ['call', t('Sign Up For %PROJECT'), 'Signup', ANY],
+    'signup' => ['call', t('Sign Up For %PROJECT'), 'Signup 1', ANY],
     'signup-co' => ['call', t('Open a Company Account'), 'SignupCo', ANY],
     'menu' => ['call', 'Main Menu', 'Menu', ANY],
     'member' => ['call', 'Company Profile', 'Profile', ANY],
@@ -211,7 +211,7 @@ function menu($submenu = '') {
     'cgpay' => ['call', t('Pay With %RCREDITS'), 'CGPay', ANY],
     'cgpay-code' => ['call', t('Supply a CGPay button code'), '', ANY, 'code'],
     'show-qr' => ['call', t('Show My QR Code'), 'ShowQr', 'read'],
-    'scan-qr' => ['call', t('Scan a QR Code'), 'ScanQr', 'read'],
+    'scan-qr' => ['call', t('Scan a QR Code'), 'ScanQr', ANY],
     'scraps' => ['call', 'Scraps', 'Scraps 1', ANY],   
     'partner' => ['call', 'Signup Through Partner', 'PartnerSignup 1', ANY],
     'accounts' => isDEV ? ['call', 'Account Choices', 'Accounts', 'manage'] : NULL,
