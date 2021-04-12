@@ -68,8 +68,10 @@ function formDashboard($form, &$sta, $args = '') {
 
   $title = t('You: ' . $mya->fullName);
   $acct = $mya->mainQid;
-  if ($mya->jid) $acct .= t(' (joined with %nm)', 'nm', $mya->jA->fullName);
-  $acct = item($acct, t('Account #:'));
+  $desc = $mya->jid ? t(' (joined with %nm)', 'nm', $mya->jA->fullName) : '';
+  $lnkShowQr = lnk('/show-qr', t('Show QR'));
+  $lnkScanQr = lnk('/scan-qr', t('Scan QR')) . qBtn('qr');
+  $acct = item($acct, t('Account:'), $desc, suffix(tr(' %DASH ') . "$lnkShowQr | $lnkScanQr"));
 
   if ($mya->ok) {
     $pay = btn('', t('Pay'), '', 'md', clas('btn-pay'));
@@ -79,13 +81,13 @@ function formDashboard($form, &$sta, $args = '') {
   $buttons = item($pay . $charge . $bank);
 
   $balance = u\fmtAmt($mya->balance);
-  $balance .= t('| &mdash; <%aHist>History</a> | <%aCred>Credits & Discounts</a>', '_aHist _aCred', atag('/history'), atag('/community/coupons/list/ALL'));
+  $balance .= t('| %DASH <%aHist>History</a> | <%aCred>Credits & Discounts</a>', '_aHist _aCred', atag('/history'), atag('/community/coupons/list/ALL'));
   $balance = item($balance, t('Balance:'));
 
   if (!$mya->isCtty) { // unless this is a community or region account
     $suffix = ($mya->debt or $mya->depends or !$mya->refill) ? '' : t(' (<%a>Click here</a> to let your balance go negative.)', '_a', 'a id="activate-credit"');
-    list ($credit, $normally) = $mya->depends ? ['$0', t(' (normally)')] : [u\fmtAmt(-$mya->floor), ''];
-    $creditLine = $mya->underage ? NULL : item($credit, t('Cred Line:'), t('Based%normally on your account\'s average monthly activity over the past 6 months.', compact('normally')), w\suffix($suffix));
+    $credit = $mya->depends ? '$0' : u\fmtAmt(-$mya->floor);
+    $creditLine = $mya->underage ? NULL : item($credit, t('Cred Line:'), t('Based normally on your account\'s average monthly activity over the past 6 months.'), w\suffix($suffix));
   
     $choiceList = ($mya->member or $mya->closed) ? choiceListFld() : NULL;
     

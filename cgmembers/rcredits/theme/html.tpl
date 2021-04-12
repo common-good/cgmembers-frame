@@ -62,6 +62,7 @@ foreach ($s as $id => $v) { // having selected the scripts, format for inclusion
     if (u\starts($id, 'goo-')) $src = 'https://www.google.com/' . substr($id, 4); else $src .= "?v=$tm&$v"; // $v is either a small integer (from array_flip) or all script arguments
     $idRay = ray('id', "script-$id");
   } else { $idRay = []; } // no id for 3rd-party scripts
+  if (in($id, SCRIPT_MODULES)) $idRay['type'] = 'module';
   $nonceRay = ray('nonce', $styleNonce); // but external nonce fails in Edge as of 12/14/2017
   
   if (strpos($v, ';')) { // temporary for inline

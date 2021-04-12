@@ -108,10 +108,11 @@ function setCSP() {
   global $styleNonce; $styleNonce = base64_encode(substr(hash('sha256', PROJECT . now(), TRUE), 0, 32));
   $sid = session_id();
   $uri = $_SERVER['REQUEST_URI'];
+
   $styleSource = ($uri == 'co/cgbutton' or ($uri == 'community/invite' and nni($_POST, 'example')))
   ? "'unsafe-inline'"  // allow inline styles when creating button
   : "'nonce-$styleNonce' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=' 'sha256-+t47tgldASBy5zANml11C5vRg3a/7oPrKstKXlzZfkI=' 'sha256-nX7L7GcvxmPKgeYAFQSzFcLplU7F/i/72ytdtLdJYoI=' 'sha256-2EA12+9d+s6rrc0rkdIjfmjbh6p2o0ZSXs4wbZuk/tA='";
-
+  
   header('Content-Security-Policy: '
     . "base-uri 'self';"
     . "block-all-mixed-content;"
@@ -123,9 +124,9 @@ function setCSP() {
     . "media-src 'self';"
     . "object-src 'none';"
     . "script-src 'self' 'nonce-$styleNonce' 'report-sample';" // 'report-sample' allows script fragment to be included in CSP reports
-    . "img-src 'self' https://cg4.us data:;" // data: is for photo upload
+    . "img-src 'self' https://cg4.us data:;" // data: is for photo upload and QR code
     . "style-src 'self' $styleSource;"
-    . "worker-src 'none';"
+    . "worker-src 'self';"
     . "form-action 'self';"
     . "frame-ancestors 'none';"
 //    . "report-uri /csp-report.php?sid=$sid;"

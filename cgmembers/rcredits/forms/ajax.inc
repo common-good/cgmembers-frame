@@ -32,7 +32,11 @@ function ajax($args = NULL) {
   $data = u\dejsonize($data); // must be passed encoded or jQuery post() passes null
   $mya = ($myid and $aid) ? r\acct($myid, $aid) : NULL; // usually relevant
   
-  if ($op == 'ssn') { // verify member's SSN
+  if ($op == 'qBtn') { // question mark help button
+    include_once R_ROOT . '/help-scraps.inc';
+    return ajaxRet(helpScrap($data['topic']));
+  
+  } elseif ($op == 'ssn') { // verify member's SSN
     if ($mya) $mya->ssnCheck();
     exit();
     

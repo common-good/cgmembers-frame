@@ -652,9 +652,9 @@ function badSignature(&$sta) {
  */
 function whoFldSubmit($field, $question, $selfErr, $restrict, $extra = []) {
   global $testWho; $testWho = compact(ray('field selfErr restrict'));
-  extract(just('amount allowNonmember coOnly', $extra, ''));
+  extract(just('amount allowNonmember coOnly custom', $extra, ''));
   js('x/typeahead.bundle.min');
-  if (!nni($extra, 'custom')) jsx('suggest-who', compact(ray('field question amount selfErr restrict allowNonmember')));
+  if (!$custom) jsx('suggest-who', compact(ray('field question amount selfErr restrict allowNonmember')));
 }
 
 /**
@@ -760,14 +760,19 @@ define('FORBID_ATTRS', '/(.{0,40}\\s(href|src|style|on[a-z]+)\\s*=.{0,40})/i'); 
  * @param string $page: the body of the page, not including our selected scripts
  */
 function sanitizePage($page) {
+
   // preg_quote needed in case URL has a ~ in it
   $except = join('|', 
     ['<img src="' . preg_quote(BASE_URL, '~'), 
      '<img src="https://cg4.us/', 
+     '<img src="data:',
      '<iframe src="(' . str_replace(' ', '|', preg_quote(FRAME_SOURCES, '~')) . ')',
      'href="(mailto:|http|#|/|"|sadmin)',
      '(href|src|style)=(&quot;|&amp;)', // our tests output stuff like this
     ]);
+
+  $uri = $_SERVER['REQUEST_URI'];
+  if ($uri == 'scan-qr') $except .= '|<video';
 
   $page = preg_replace("~$except~", '', $page);
 
@@ -977,9 +982,6 @@ function modal($id, $legend, $prompt, $body, $closer = '') {
       <div class="modal-body">
         $body
       </div>
-      <!--div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div-->
     </div>
 
   </div>
@@ -1643,7 +1645,7 @@ function rangeDates($period, $starting = '', $ending = '') {
  */
 function whois($who, $field_name, $info, $selfErr, $restrict) {
   global $mya;
-  u\EXPECT(test(), 'whois when not testing');
+//  u\EXPECT(test(), 'whois when not testing');
   $res = be\identify($who, $mya, $selfErr, $restrict);
   if (is_object($res)) return $res;
   if (is_string($res)) return say($res, $field_name);;
@@ -2056,6 +2058,10 @@ function btn($href, $text, $style = '', $size = '', $extras = []) {
   return '<' . atagB($href, $style ?: 'primary', $size ?: 'xs', $extras ?: []) . ">$text</a>";
 }
 function lnk($href, $text, $extras = []) {return '<' . atag($href, $extras) . ">$text</a>";}
+
+function buttino($href, $text, $style = 'default', $size = '', $extras = []) {
+  return btn($href, $text, $style, '', $extras + clas('buttino'));
+}
 function doLnk($class, $text, $data = NULL, $extras = []) {return w\lnk('', $text, compact('class', 'data') + $extras);}
 function doBtn($class, $text, $data = '') {return w\btn('', $text, 'primary', 'xs', compact('class', 'data'));}
 
@@ -2190,6 +2196,30 @@ function missingArgs($args, $require) {
 }
 
 /**
+ * Sign in or sign up, before doing the given task.
+ * @param string $first: signin or signup
+ * @param string $then: what to do after completing the signin or signup (defaults to current URI)
+ * @return (does not return -- redirects to signin or signup)
+ */
+function first($first, $then = NULL) {
+  global $testFirst, $testThen;
+  
+  u\setDft($then, $_SERVER['REQUEST_URI']);
+  if (!is_array($then)) $then = ray('url', $then);
+  list ($testFirst, $testThen) = [$first, $then];
+  $then = u\cryRay($then);
+  return w\go("$first/then=$then");
+}
+
+function then($then) {
+  global $testThen;
+  if ($then == 'TESTCODE' and test()) $then = u\cryRay($testThen);
+  if (!$ray = u\decryRay($then)) return;
+  extract(just('url', $ray, NULL));
+  if ($url) return w\go($url);
+}
+
+/**
  * Output the given array and exit.
  * @param array $ray: the array to output
  * @param bool $cry: <encrypt it>
@@ -2227,3 +2257,4 @@ function skipButton() {return button(t('Skip for now'), '/settings/skip', t('Lea
 function notab() {return tabindex(-1);}
 function tabindex($n) {return ['tabindex' => $n];}
 function uncacheSubmenus() {foreach (ray(SUBMENUS) as $menu) w\svar("menu-$menu", NULL);}
+function qBtn($topic) {return tr('<div class="qbtn-%topic"></div>', compact('topic'));}

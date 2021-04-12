@@ -100,7 +100,7 @@ function csvUploadInstructions($do, $dftDesc) {
     </ol>
   </li>
   <li><b>Save</b> the spreadsheet as a CSV file.</li>
-  <li><b>Upload</b> the CSV file here, to automatically %do that amount of %RCREDITS to each listed account.</li>
+  <li><b>Upload</b> the CSV file here, to automatically %do that amount to each listed account.</li>
 EOF
   , compact(ray('do dftDesc')));
 }

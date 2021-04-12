@@ -70,6 +70,16 @@ $('.test-next').click(function () {
   $('#testError' + $(this).attr('index'))[0].scrollIntoView(true); window.scrollBy(0, -100);
 });
 
+$('[class^="qbtn-"]').click(function () {
+  var pop = $('#help-modal');
+  var cl = $(this).attr('class');
+  post('qBtn', {topic:cl.substring(cl.indexOf('-') + 1)}, function (j) {
+    pop.find('.modal-title').html(j.title);
+    pop.find('.modal-body').html(j.body);
+    pop.modal('show');
+  });
+});
+
 function showMore(pgFactor) {
   page = Math.floor(page * pgFactor); 
   if (more) {

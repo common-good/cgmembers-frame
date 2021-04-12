@@ -124,9 +124,7 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
 /**
  * member (ARG) confirms form (ARG) with values: (ARG)
  *
- * in: MAKE card AMemberScansACompanyCardWithAStandardQRReader
- *     MAKE card 
- *     MAKE cgpay AMemberRedeemsStoreCredit
+ * in: MAKE cgpay AMemberRedeemsStoreCredit
  *     MAKE company AMemberUpdatesCompanyInfo
  *     MAKE company AMemberGivesABadEmployeeCount
  *     MAKE company AMemberGivesABadGross
@@ -250,6 +248,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     TEST contact AMemberUpdatesToADifferentName
  *     MAKE coupons Setup
  *     MAKE custstatement Setup
+ *     MAKE dashboard Setup
  *     MAKE demographics Setup
  *     MAKE download Setup
  *     MAKE flow Setup
@@ -273,6 +272,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE queries Setup
  *     MAKE relations Setup
  *     MAKE scancard Setup
+ *     MAKE showqr Setup
  *     MAKE showrecurs Setup
  *     MAKE signin Setup
  *     MAKE signin AMemberAsksForANewPasswordForACompany
@@ -289,7 +289,6 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     TEST signup ANewbieRegistersWithNoCase
  *     MAKE statement Setup
  *     MAKE stepup Setup
- *     MAKE summary Setup
  *     MAKE tx Setup
  *     MAKE txs Setup
  */
@@ -304,7 +303,6 @@ function members($list) {return t\members($list);}
  *     TEST bank AMemberDrawsCreditFromTheBankWithZeroFloor
  *     TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST bank AMemberWithANegativeBalanceRequestsATransferFromTheBank
- *     TEST card 
  *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
  *     TEST cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
  *     BOTH cgpay AMemberCancelsTheirPurchaseOfStoreCredit
@@ -313,6 +311,8 @@ function members($list) {return t\members($list);}
  *     TEST cgpay AMemberTypesAccountIDToBuyAGiftOfStoreCredit
  *     MAKE community Setup
  *     MAKE custstatement Setup
+ *     MAKE dashboard Setup
+ *     MAKE dashboard AMemberClicksTheDashboardTabWithRoundups
  *     MAKE demographics Setup
  *     MAKE download Setup
  *     TEST gift AMemberDonates
@@ -331,8 +331,6 @@ function members($list) {return t\members($list);}
  *     MAKE preferences AMemberChangesPreferences
  *     MAKE queries Setup
  *     MAKE statement Setup
- *     MAKE summary Setup
- *     MAKE summary AMemberClicksTheDashboardTabWithRoundups
  *     TEST tx AMemberConfirmsRequestToPayAnotherMember
  *     TEST tx AMemberConfirmsRequestToPayAnotherMemberALot
  *     TEST tx AMemberConfirmsRequestToPayAMemberCompany
@@ -352,7 +350,6 @@ function transactions($list) {return t\transactions($list);}
  *     TEST bank AMemberMovesTooMuchToTheBank
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST bank ASlaveMemberRequestsATransfer
- *     TEST card 
  *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountID
  *     TEST cgpay AMemberSubmitsACGPayButtonPaymentWithAccountIDAndChosenAmount
  *     TEST cgpay AMemberClicksAButtonToBuyStoreCreditForADifferentAmount
@@ -391,7 +388,6 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *
  * in: TEST bank AMemberMovesTooLittleToTheBank
  *     TEST bank AMemberTriesToGoBelowTheirMinimum
- *     TEST card AMemberScansACompanyCardWithAStandardQRReader
  *     TEST cgpay AMemberClicksAnExpiredCGPayButton
  *     TEST company AMemberUpdatesCompanyInfo
  *     TEST contact AMemberUpdatesContactInfo
@@ -490,9 +486,7 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
 /**
  * we show (ARG)
  *
- * in: TEST card AMemberScansACompanyCardWithAStandardQRReader
- *     TEST card 
- *     TEST changeaccount AMemberChangesAccount
+ * in: TEST changeaccount AMemberChangesAccount
  *     TEST changeaccount ACommunityAdminClicksTheProfilePhoto
  *     TEST changeaccount ASuperadminClicksTheProfilePhoto
  *     TEST invest AMemberJoinsTheInvestmentClub
@@ -502,6 +496,8 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
  *     TEST partnersignup AMemberVisitsTheRegistrationPageSentByAPartner
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
+ *     TEST showqr AnOnlineonlyMemberTriesToDisplayTheirQR
+ *     TEST showqr ACardMemberDisplaysTheirQR
  *     TEST signin AMemberSignsInWithUsernameOnTheMemberSite
  *     TEST signin AMemberSignsInWithAccountIDOnTheMemberSite
  *     TEST signin AMemberSignsInWithEmailOnTheMemberSite
@@ -557,6 +553,10 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  *     TEST coupons AMemberCompanyViewsCustomerStoreCredit
  *     TEST custstatement ACompanyLooksAtACustomerStatement
+ *     TEST dashboard AMemberClicksTheDashboardTab
+ *     TEST dashboard AMemberClicksTheDashboardTabWithRoundups
+ *     TEST dashboard AnAgentClicksTheDashboardTabWithoutPermissionToManage
+ *     TEST dashboard ACompanyAgentClicksTheDashboardTab
  *     TEST demographics ACompanyAgentRunsTheDemographicsQuery
  *     TEST gift AMemberDonates
  *     TEST gift AMemberMakesANewRecurringDonation
@@ -636,10 +636,6 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST stepup AMemberChoosesAPertransactionStepUp
  *     TEST stepup AMembersRulesComeIntoPlay
  *     TEST stepup AMemberChoosesRecurringAndPertransactionDonations
- *     TEST summary AMemberClicksTheDashboardTab
- *     TEST summary AMemberClicksTheDashboardTabWithRoundups
- *     TEST summary AnAgentClicksTheDashboardTabWithoutPermissionToManage
- *     TEST summary ACompanyAgentClicksTheDashboardTab
  *     TEST txs AMemberLooksAtTransactionsForThePastYear
  *     TEST txs AMemberLooksAtTransactionsForThePastFewDays
  *     TEST txs AMemberLooksAtTransactionsWithRoundups
@@ -655,6 +651,7 @@ function weShowWith($title, $content = FALSE, $debug = TRUE) {return t\weShowWit
  *     TEST posts SomeoneRepliesToAnOffer
  *     TEST preferences AMemberVisitsThePreferencesPage
  *     TEST relations ItsComplicated
+ *     TEST showqr AnOnlineonlyMemberTriesToDisplayTheirQR
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST txs AMemberLooksAtTransactionsForThePastYear
  *     TEST txs AMemberLooksAtTransactionsForThePastFewDays
@@ -665,7 +662,8 @@ function with($content) {return weShow($content);}
 /**
  * without: (ARG)
  *
- * in: TEST investinterest AMemberExpressesInterest
+ * in: TEST dashboard AnAgentClicksTheDashboardTabWithoutPermissionToManage
+ *     TEST investinterest AMemberExpressesInterest
  *     TEST invest MembersRateAProposedInvestment
  *     TEST invest TheClubBuysShares
  *     TEST invest AClubAdministratorHandlesRequestsToCashOut
@@ -682,12 +680,12 @@ function with($content) {return weShow($content);}
  *     TEST queries AMemberVisitsTheCommunityDataPage
  *     TEST relations MemberHasAnEmployer
  *     TEST relations MemberCompanyHasRelations
+ *     TEST showqr ACardMemberDisplaysTheirQR
  *     TEST showrecurs AMemberStopsAnAutopayment
  *     TEST signupco ACompanyAccountManagerCreatesADiscount
  *     TEST signup AMemberInvites
  *     TEST statement AMemberLooksAtAStatementForPreviousMonth
  *     TEST stepup AMemberChoosesAPertransactionStepUp
- *     TEST summary AnAgentClicksTheDashboardTabWithoutPermissionToManage
  *     TEST txs AMemberLooksAtTransactionsForThePastYear
  *     TEST txs AMemberLooksAtTransactionsForThePastFewDays
  */
@@ -701,7 +699,7 @@ function without($content) {
 /**
  * with options: (ARG)
  *
- * in: TEST card 
+ * in: 
  */
 function withOptions($options, $debug = TRUE) {return t\shownWith($options, 'options', $debug);}
 
@@ -723,12 +721,12 @@ function withoutOptions($options) {
  *     MAKE balancesheet Setup
  *     MAKE bank Setup
  *     MAKE bank ASlaveMemberRequestsATransfer
- *     MAKE card Setup
  *     MAKE cgpay Setup
  *     MAKE changeaccount Setup
  *     MAKE community Setup
  *     MAKE company Setup
  *     MAKE custstatement Setup
+ *     MAKE dashboard Setup
  *     MAKE demographics Setup
  *     MAKE download Setup
  *     MAKE flow Setup
@@ -759,7 +757,6 @@ function withoutOptions($options) {
  *     MAKE signupco Setup
  *     TEST signupco ACompanySignsUp
  *     MAKE statement Setup
- *     MAKE summary Setup
  *     MAKE tx Setup
  *     MAKE txs Setup
  */
@@ -784,6 +781,8 @@ function relations($relations) {return t\relations($relations);}
  *     TEST coupons AMemberRedeemsADiscountCouponInDribsAndDrabs
  *     TEST coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
  *     TEST coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
+ *     TEST dashboard Setup
+ *     TEST dashboard AMemberClicksTheDashboardTabWithRoundups
  *     TEST download Setup
  *     MAKE flow Setup
  *     MAKE gift Setup
@@ -802,8 +801,6 @@ function relations($relations) {return t\relations($relations);}
  *     TEST pale AMemberMakesATransactionThatTriggersPayingALittleExtra
  *     BOTH queries Setup
  *     TEST statement Setup
- *     TEST summary Setup
- *     TEST summary AMemberClicksTheDashboardTabWithRoundups
  *     TEST tx Setup
  *     TEST tx AMemberConfirmsRequestToChargeAnotherMember
  *     TEST tx AMemberConfirmsRequestToPayAnotherMember
@@ -829,8 +826,6 @@ function usd($list) {return t\usd($list);}
  *     MAKE balancesheet AMemberLooksAtTheBalanceSheet
  *     MAKE balancesheet ANonmemberLooksAtTheBalanceSheet
  *     MAKE bank AMemberDrawsCreditFromTheBankThenCancels
- *     MAKE card AMemberScansACompanyCardWithAStandardQRReader
- *     MAKE card 
  *     MAKE cgpay AMemberClicksACGPayButton
  *     MAKE cgpay AMemberClicksAnExpiredCGPayButton
  *     MAKE cgpay AMemberClicksACGPayButtonWithVariableAmount
@@ -857,6 +852,10 @@ function usd($list) {return t\usd($list);}
  *     MAKE coupons AMemberRedeemsAPercentageDiscountCoupon
  *     MAKE coupons AMemberRedeemsADiscountCouponSponsoredByAThirdParty
  *     MAKE coupons AMemberCompanyViewsCustomerStoreCredit
+ *     MAKE dashboard AMemberClicksTheDashboardTab
+ *     MAKE dashboard AMemberClicksTheDashboardTabWithRoundups
+ *     MAKE dashboard AnAgentClicksTheDashboardTabWithoutPermissionToManage
+ *     MAKE dashboard ACompanyAgentClicksTheDashboardTab
  *     MAKE demographics ACompanyAgentRunsTheDemographicsQuery
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
  *     MAKE download AMemberDownloadsIncomingInvoicesForThePastYear
@@ -926,10 +925,6 @@ function usd($list) {return t\usd($list);}
  *     MAKE stepup AMemberChoosesAPertransactionStepUp
  *     MAKE stepup AMembersRulesComeIntoPlay
  *     MAKE stepup AMemberChoosesRecurringAndPertransactionDonations
- *     MAKE summary AMemberClicksTheDashboardTab
- *     MAKE summary AMemberClicksTheDashboardTabWithRoundups
- *     MAKE summary AnAgentClicksTheDashboardTabWithoutPermissionToManage
- *     MAKE summary ACompanyAgentClicksTheDashboardTab
  *     MAKE txs AMemberLooksAtTransactionsForThePastYear
  *     MAKE txs AMemberLooksAtTransactionsForThePastFewDays
  *     MAKE txs AMemberLooksAtTransactionsWithRoundups
@@ -941,7 +936,6 @@ function memberVisitsPage($id, $page) {return t\memberVisitsPage($id, $page);}
  * member is logged out
  *
  * in: MAKE balancesheet ANonmemberLooksAtTheBalanceSheet
- *     MAKE card Setup
  *     MAKE cgpay Setup
  *     MAKE partnersignup Setup
  *     MAKE partnersignup ANewbieVisitsTheRegistrationPageSentByAPartnerAndChoosesCommonGood
@@ -1152,12 +1146,12 @@ function withDownloadColumns($columns) {
  *     TEST bank ASlaveMemberRequestsATransfer
  *     MAKE community Setup
  *     MAKE custstatement Setup
+ *     MAKE dashboard Setup
  *     MAKE demographics Setup
  *     MAKE download Setup
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
  *     MAKE queries Setup
  *     MAKE statement Setup
- *     MAKE summary Setup
  *     MAKE txs Setup
  *     TEST txs AdminReversesABankTransfer
  */
@@ -1210,8 +1204,8 @@ function agentCardCodeIs($id, $cardCode2) {
  * cron runs (ARG)
  *
  * in: MAKE community CronCalculatesTheStatistics
+ *     MAKE dashboard Setup
  *     MAKE joint AJoinedAccountMemberLooksAtTransactionHistoryAndSummary
- *     MAKE summary Setup
  */
 function cronRuns($op) {return t\cronRuns($op);}
 
@@ -1231,10 +1225,11 @@ function statisticsGetSet($time) {
  *
  * in: MAKE backing AMemberDecreasesBackingAmount
  *     MAKE bank ASlaveMemberRequestsATransfer
- *     MAKE card 
+ *     MAKE card AMemberCardIsChargedWithScannerSetNotSignedIn
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     BOTH coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberWithNothingRedeemsAZeroMinimumDiscountCoupon
+ *     MAKE dashboard Setup
  *     MAKE download AMemberDownloadsTransactionsForThePastYear
  *     MAKE invoice AMemberApprovesInvoicesForevermore
  *     TEST joint AMemberRequestsAJointAccount
@@ -1255,7 +1250,6 @@ function statisticsGetSet($time) {
  *     TEST signup AMemberConnectsABankAccount
  *     TEST signup AMemberChoosesCrumbs
  *     MAKE statement Setup
- *     MAKE summary Setup
  *     MAKE txs AMemberLooksAtTransactionsForThePastYear
  */
 function membersHave($list) {return t\membersHave($list);}
@@ -2015,6 +2009,7 @@ function memberStepsLeft($id, $left0) {
  *
  * in: MAKE invest Setup
  *     MAKE posts Setup
+ *     MAKE showqr ACardMemberDisplaysTheirQR
  *     MAKE signupco ACompanyVerifiesEmailWhileSignedIn
  *     MAKE signupco ACompanySuppliesCompanyInformation
  *     MAKE signupco ACompanySuppliesCrumbsChoices
@@ -2038,6 +2033,7 @@ function memberStepsLeft($id, $left0) {
 function memberHasStepsDone($id, $task, $steps) {
   global $testOnly;
   
+  if ($steps == 'all') $steps = u\consta('s', $task);
   $a = r\acct(t\uid($id));
   if (!$testOnly) {
     $a->update('steps', 0);
@@ -2109,8 +2105,7 @@ function someoneConfirmsWith($page, $values) {return t\completeForm('?', $page, 
 /**
  * cookie (ARG) is (ARG)
  *
- * in: BOTH card AMemberScansACompanyCardWithAStandardQRReader
- *     MAKE card 
+ * in: MAKE card AMemberCardIsChargedWithScannerSetNotSignedIn
  *     TEST posts SomeoneSubmitsALocus
  *     TEST posts SomeonePostsAnOffer
  *     BOTH posts SomeoneRepliesToAnOffer
@@ -2120,7 +2115,7 @@ function cookieIs($nm, $v) {
   global $testOnly;
 
   if (!$testOnly) r\setCook($nm, $v);
-  return t\eq($_COOKIE[$nm], $v);
+  return t\eq($v, $_COOKIE[$nm]);
 }
 
 /**
@@ -2263,20 +2258,20 @@ function weExitShowing($ray) {
   global $testOnly; if (!$testOnly) return FALSE;
   if (!$actualRay = t\getExitMsg()) return FALSE;
 /**/  db\del('test', "type='echo'"); // reset for subsequent steps
-  return t\checkOneArray($ray[0], unserialize($actualRay));
+  return t\rayEq($ray[0], unserialize($actualRay));
 }
 
 /**
  * member (ARG) has picture (ARG)
  *
- * in: MAKE card 
+ * in: MAKE card Setup
  */
 function memberHasPicture($id, $picture) {return t\hasPic($id, $picture);}
 
 /**
  * cryptcookie (ARG) is (ARG)
  *
- * in: MAKE card 
+ * in: MAKE card AMemberCardIsChargedWithScannerSetNotSignedIn
  */
 function cryptcookieIs($nm, $v) {return cookieIs($nm, u\ry('C', $v));}
 
@@ -2345,3 +2340,32 @@ function memberAjaxWith($id, $op, $data) {
   t\output($res);
   return TRUE;
 }
+
+/**
+ * member (ARG) visits (ARG)
+ *
+ * in: MAKE showqr AnOnlineonlyMemberTriesToDisplayTheirQR
+ *     MAKE showqr ACardMemberDisplaysTheirQR
+ */
+function memberVisits($id, $page) {return t\memberVisitsPage($id, $page);}
+
+/**
+ * we first (ARG) then (ARG)
+ *
+ * in: 
+ */
+function weFirstThen($first, $then) {
+  global $testOnly; if (!$testOnly) return FALSE;
+  global $testFirst, $testThen;
+
+  if (!t\eq($first, $testFirst)) return FALSE;
+  if (!t\eq(urlq2ray($then), $testThen)) return FALSE;
+  return TRUE;
+}
+
+/**
+ * member (ARG) completes (ARG) with: (ARG)
+ *
+ * in: 
+ */
+function memberCompletesWith($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
