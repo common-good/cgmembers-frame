@@ -16,7 +16,7 @@ const VIEWS_NOT_TO_DROP = ['ancestors', 'descendants'];
  * @param int $stopAt: migration date to stop at (0 = none, used for rolling back a migration)
  */
 function createViews($m, $stopAt = 0) {
-  pr('clearing views');
+  cgpr('clearing views');
   $q = $m->query('SELECT table_name FROM information_schema.views');
   while ($table = $q->fetchColumn()) {
     echo "view: $table\n";
@@ -43,7 +43,7 @@ function createViews($m, $stopAt = 0) {
   foreach (ray(E_TYPES) as $i => $k) ${$k . 'y'} = "entryType=$i"; // eg "donationy" means entryType is E_DONATION
 
   // views of not-deleted records
-  pr('making non-deleted tx views');
+  cgpr('making non-deleted tx views');
   $m->doSql("CREATE VIEW tx_hdrs AS SELECT $txFlds FROM tx_hdrs_all WHERE deleted IS NULL");
   $m->doSql("CREATE VIEW tx_entries AS SELECT $txeFlds FROM tx_entries_all WHERE deleted IS NULL");
   $m->doSql('CREATE VIEW tx_disputes AS SELECT * FROM tx_disputes_all WHERE deleted IS NULL');

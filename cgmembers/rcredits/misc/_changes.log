@@ -1,3 +1,8 @@
+2021-04-17 feature/ach
+. generalized admin-achify.inc to handle an arbitrary bank
+. modified migrations to handle latest version of phinx (even though we're not updating it yet)
+. fixed bug in card.inc that treated disconnect operation as a hack attempt
+
 2021-04-12 feature/signin-to-scan
 . changed menu so scan-qr works without sign-in
 . minor formatting improvements

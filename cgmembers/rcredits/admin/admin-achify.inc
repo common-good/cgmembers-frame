@@ -4,36 +4,44 @@ use CG as r;
 use CG\Util as u;
 use CG\DB as db;
 
-define('F_FILEHDR', 'recType:R1, priority:R2, destNum:R10, originNum:R10, datetime:R10, fileIdModifier:R1, recSize:R3, blocking:R2, format:R1, destName:L23, originName:L23, ref:L8'); // header format
-define('F_BATCHHDR', 'recType:R1, class:R3, originName:L16, data:L20, originNum:R10, secCode:L3, purpose:L10, when:L6, entryDate:R6, settle:L3, status:R1, destNum:R8, batchNum:R7'); // batch header format
-define('F_PPD', 'recType:R1, txCode:R2, routing:R9, account:L17, amount:R10, id:L15, name:L22, data:L2, addendaFlag:R1, destNum:R8, count:R7'); // PPD (Prearranged Payment and Deposit) entry detail format
-define('F_BATCHFTR', 'recType:R1, class:R3, count:R6, hash:R10, debits:R12, credits:R12, originNum:R10, auth:L19, reserve:L6, destNum:R8, batchNum:R7'); // end of batch (control record)
-define('F_FILEFTR', 'recType:R1, batches:R6, blocks:R6, entries:R8, hash:R10, debits:R12, credits:R12, reserve:L39'); // end of file (control record)
-define('DEST_NUM', '011500120'); // usually a routing number for the bank providing ACH service
+const F_FILEHDR = 'recType:R1, priority:R2, sp:L1, destNum:R9, originNum:R10, datetime:R10, fileIdModifier:R1, recSize:R3, blocking:R2, format:R1, destName:L23, originName:L23, ref:L8'; // header format
+const F_BATCHHDR = 'recType:R1, class:R3, originName:L16, data:L20, originNum:R10, secCode:L3, purpose:L10, when:L6, entryDate:R6, settle:L3, status:R1, destNum:R8, batchNum:R7'; // batch header format
+const F_PPD = 'recType:R1, txCode:R2, routing:R9, account:L17, amount:R10, id:L15, name:L22, data:L2, addendaFlag:R1, destNum:R8, count:R7'; // PPD (Prearranged Payment and Deposit) entry detail format
+const F_BATCHFTR = 'recType:R1, class:R3, count:R6, hash:R10, debits:R12, credits:R12, originNum:R10, auth:L19, reserve:L6, destNum:R8, batchNum:R7'; // end of batch (control record)
+const F_FILEFTR = 'recType:R1, batches:R6, blocks:R6, entries:R8, hash:R10, debits:R12, credits:R12, reserve:L39'; // end of file (control record)
+
+const BANK_DATA = [ // limit bank name to 23 characters
+  'BSL'      => 'Brattleboro S&L, 211672476',
+  'Citizens' => 'Citizens Bank, 011500120',
+];
+const BANK = 'BSL'; // which bank we're using (index into BANK_DATA)
 
 /**
  * Create an ACH request file (debits only, for now).
  */
 function achify($where = 'deposit=0') {
-	$CGCODE = 'ASOBENE1'; // company code assigned by Citizens Bank for upload filename
+  list ($destName, $destNum) = ray(BANK_DATA[BANK]); // our bank's name and routing number
+  $sp = ' '; // filler for routing number in header
   $reserve = ''; // leave reserved fields empty
   $count = $hash = $credits = $debits = 0;
 
   list ($recType, $priority, $recSize, $blocking, $format) = [1, 1, 94, 10, 1];
   $fileIdModifier = 'A'; // distinguishes files on the same date and between the same participants (A-Z, 0-9); never send two files on the same day, so this can be static
-  list ($destNum, $destName) = [' ' . DEST_NUM, 'Citizens Bank'];
   $datetime = strftime('%y%m%d%H%M');
   list ($originNum, $originName, $ref) = ['1' . CGF_EIN, PROJECT, ''];
+  
   $recs[] = achRecord(compact(array_keys($ray = ray(F_FILEHDR))), $ray);
   
-  $destNum = substr(DEST_NUM, 0, 8); // BATCHHDR, PPD, and BATCHFTR omit last digit (check digit) of routing number
+  $destNum = substr($destNum, 0, 8); // omit last digit (check digit) of routing number from here on (for BATCHHDR, PPD, and BATCHFTR)
   list ($recType, $class, $secCode, $settle, $status) = [5, 200, 'PPD', '', 1]; // 200=mixed (maybe), 225=debits, 220=credits
   $entryDate = strftime('%y%m%d', strtotime('tomorrow'));
   $batchNum = 1; // batch (company) number within file
   list ($data, $purpose, $when) = ['', t('CG Credit'), strftime('%b%d')];
+
   $recs[] = achRecord(compact(array_keys($ray = ray(F_BATCHHDR))), $ray);
 
   $q = db\q("SELECT txid,payee,amount,deposit FROM r_usd WHERE $where ORDER BY txid");
+
   while ($row = $q->fetchAssoc()) {
     extract($row);
     $a = r\acct($payee);
@@ -64,12 +72,11 @@ function achify($where = 'deposit=0') {
   $blocks = ceil((2 + $count + 2) / 10); // how many blocks of 10 lines, rounded up (2 hdrs, "count" entries, 2 ftrs)
   $recs[] = achRecord(compact(array_keys($ray = ray(F_FILEFTR))), $ray);
 
-/**/  foreach ($recs as $line) if (strlen($line) != $recSize) debug('bad ach line len: ' . strlen($line) . " - $line");
+  foreach ($recs as $line) if (strlen($line) != $recSize) u\FAIL('bad ach line len: ' . strlen($line) . " - $line");
 
-  $datetime = strftime('%Y%m%d%H%M'); // use full year (unlike ach record format)
 ///    if (isDEV) debug($recs);
   header('Content-type: text/plain');
-  header("Content-Disposition: attachment; filename=$CGCODE.ach-$datetime.txt");
+  header(tr('Content-Disposition: attachment; filename=ach-%BANK-20%datetime.txt', compact('datetime'))); // use full year (unlike in NACHA records)
 /**/  echo join("\n", $recs);
   exit();
 }

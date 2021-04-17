@@ -40,7 +40,7 @@ class AddFieldsToTxEntriesAll extends AbstractMigration
   }
 
   public function doSql($sql) {
-//    pr("$sql\n");
+//    cgpr("$sql\n");
     $this->execute($sql);
   }
 }

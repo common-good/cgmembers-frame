@@ -7,6 +7,6 @@ require_once __DIR__ . '/util.inc';
 
 class ShortSignup extends AbstractMigration {
   public function change() {
-    $this->table('signup')->rename('legacy_signup');
+    $this->table('signup')->rename('legacy_signup')->save();
   }
 }

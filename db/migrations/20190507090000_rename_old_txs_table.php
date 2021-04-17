@@ -30,5 +30,6 @@ class RenameOldTxsTable extends AbstractMigration
   {
     $table = $this->table('r_txs');
     $table->rename('legacy_r_txs');
+    $table->save();
   }
 }

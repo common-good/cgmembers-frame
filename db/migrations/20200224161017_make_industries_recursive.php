@@ -10,6 +10,8 @@ class MakeIndustriesRecursive extends AbstractMigration
     $table->changeColumn('parent', 'integer', ['limit' => 11, 'null' => true, 'default' => null]);
     $table->save();
     $table->addIndex(['parent']);
+    $table->save();
+    
     $n = $this->execute('update r_industries set parent = null where parent = iid');
     $this->execute('CREATE VIEW descendants AS
       WITH RECURSIVE descendants AS (
