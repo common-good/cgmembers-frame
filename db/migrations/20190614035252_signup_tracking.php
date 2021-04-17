@@ -40,6 +40,7 @@ class SignupTracking extends AbstractMigration
       $table->create();
 
       $table->addIndex(['preid'], ['unique' => TRUE]); 
+      $table->save();
 
       $this->table('users')
       ->addColumn('preid', 'integer', ['length' => MysqlAdapter::INT_BIG, 'null' => FALSE, 'default' => 0, 'after' => 'lastip', 'comment' => 'signup record ID'])

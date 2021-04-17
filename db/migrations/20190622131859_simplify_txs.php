@@ -30,39 +30,39 @@ class SimplifyTxs extends AbstractMigration {
    */
   public function up() { // not change() for anything, because order matters
     $m = $this;
-    pr('** _____ starting migration SimplifyTxs ____ **');
+    cgpr('** _____ starting migration SimplifyTxs ____ **');
     extract(BANK_IDS);
     $isBank = "uid IN ($bankIn, $bankOut)";
     $isBankish = "uid IN ($bankIn, $bankOut, $bankCharges)";
     foreach (ray(E_TYPES) as $i => $k) ${$k . 'Type'} = $i;
     $eTypes = array_flip(ray(E_TYPES));
 
-    pr('clearing triggers');
+    cgpr('clearing triggers');
     clearTriggers($m);
 
-    pr('setting new entryTypes');
-    pr('..for rebates and usd_fees');
+    cgpr('setting new entryTypes');
+    cgpr('..for rebates and usd_fees');
     $m->doSql("UPDATE tx_entries_all SET entryType=IF(relType='D',$rebateType,$usd_feeType) WHERE entryType=0");
-    pr('..for payees and donations');
+    cgpr('..for payees and donations');
     $m->doSql("UPDATE tx_entries_all SET entryType=entryType-1 WHERE entryType>1");
 
     $sql = 'UPDATE tx_entries_all e JOIN tx_entries_all other USING(xid) SET e.entryType=_that WHERE e.uid<>other.uid AND (_where)';
     $subs = ray('_that _where');
     
-    pr('..for banking');
+    cgpr('..for banking');
     $_that = $bankType;
     $_where = "e.$isBank XOR other.$isBank";
     $m->doSql(strtr($sql, compact($subs)));
 
-    pr('..for bank charges');
+    cgpr('..for bank charges');
     $_that = $bank_onlyType;
     $_where = "e.$isBankish AND other.$isBankish";
     $m->doSql(strtr($sql, compact($subs)));
     
-    pr('creating views');
+    cgpr('creating views');
     createViews($m); // create VIEWS, starting from scratch
     
-    pr('renumbering entries so pairs are easier to track (the "from" entry id is the negative of the "to" entry id');
+    cgpr('renumbering entries so pairs are easier to track (the "from" entry id is the negative of the "to" entry id');
     $idCount = $m->fetchRow('SELECT MAX(id) AS max FROM tx_entries_all')[0];
     $base = 2 * $idCount; // make room for the current negative IDs
     $m->doSql("UPDATE tx_entries_all SET id=$base+id");
@@ -84,12 +84,12 @@ class SimplifyTxs extends AbstractMigration {
       $xNewId = $newId;
       
       if (($oldId%2) == 0) {
-        if (!($id % 1000)) pr("Renumbered tx_entries to ID #$id\n");
+        if (!($id % 1000)) cgpr("Renumbered tx_entries to ID #$id\n");
         $id++;
       }
     }
     
-    pr('creating triggers');
+    cgpr('creating triggers');
     createTriggers($m); // create TRIGGERS, starting from scratch (do it last, so nothing gets changed in users table)
 
     $m->doSql("UPDATE users SET fullName='Community Fund' WHERE uid IN (129, 130)"); // fix roundup and crumb names
@@ -110,10 +110,10 @@ class SimplifyTxs extends AbstractMigration {
     $m = $this;
     foreach (ray(E_TYPES) as $i => $k) ${$k . 'Type'} = $i;
 
-    pr('changing entry types back to 0 to 3');
+    cgpr('changing entry types back to 0 to 3');
     $m->doSql("UPDATE tx_entries_all SET entryType=IF(entryType IN ($rebateType, $usd_feeType), 0, IF(entryType=2, 3, IF(e.id<0, 1, 2)))");
 
-    pr('renumbering entries in odd/even pairs starting at 1 again');
+    cgpr('renumbering entries in odd/even pairs starting at 1 again');
     $idCount = $m->fetchRow('SELECT MAX(id) AS max FROM tx_entries_all')[0];
     $base = 2 * $idCount; // make room for the current negative IDs
     $m->doSql("UPDATE tx_entries_all SET id=$base+id WHERE id>0");
@@ -121,18 +121,18 @@ class SimplifyTxs extends AbstractMigration {
     for ($id = 1; $id <= $idCount; $id++) {
       $m->chg($base+$id, 2*$id-1);
       $m->chg(-$id, 2*$id);
-      if (!($id % 1000)) pr("Renumbered tx_entries ID #$id of $idCount\n");
+      if (!($id % 1000)) cgpr("Renumbered tx_entries ID #$id of $idCount\n");
     }
     
-    pr('creating old views');
-    pr('..basic');
+    cgpr('creating old views');
+    cgpr('..basic');
     createViews($m, 20190622);
-    pr('..tx_entries_payer');
+    cgpr('..tx_entries_payer');
     $m->doSql('CREATE VIEW tx_entries_payer AS SELECT * FROM tx_entries_all WHERE entryType=1 AND deleted IS NULL');
-    pr('..tx_entries_payee');
+    cgpr('..tx_entries_payee');
     $m->doSql('CREATE VIEW tx_entries_payee AS SELECT * FROM tx_entries_all WHERE entryType=2 AND deleted IS NULL');
 
-    pr('..txs');
+    cgpr('..txs');
     $sql = <<< X
       CREATE VIEW txs AS 
       SELECT t0.*, 
@@ -146,17 +146,17 @@ class SimplifyTxs extends AbstractMigration {
 X;
     $m->doSql($sql);
 
-    pr('..txs_noreverse');
+    cgpr('..txs_noreverse');
     $m->doSql('CREATE VIEW txs_noreverse AS SELECT * FROM txs t WHERE reversesXid IS NULL AND NOT EXISTS(SELECT xid FROM tx_hdrs tr WHERE tr.reversesXid = t.xid)');
   }
   
   private function chg($oldId, $newId) {
     $this->execute("UPDATE tx_entries_all SET id=$newId WHERE id=$oldId"); // don't use doSql here (too much output)
-//    pr("changed $oldId to $newId\n");
+//    cgpr("changed $oldId to $newId\n");
   }
 
   public function doSql($sql) {
-//    pr("$sql\n");
+//    cgpr("$sql\n");
     $this->execute($sql);
   }
 }

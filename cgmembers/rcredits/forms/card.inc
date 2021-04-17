@@ -16,6 +16,7 @@ function formCard($form, &$sta, $dom = '', $code = '') {
 
   if ($dom == 'done') {    
     if (!$z = u\decryRay($code)) return hack('done with no code');
+    if (!$scanner = r\cook('scanner') or !$scannerA = r\acct($scanner)) return hack('card done with no scanner');
     extract(just('ok msg', $z, NULL));
     return cardDone($ok, $msg);
 
@@ -146,8 +147,6 @@ function chooseScanner($choices, $tail) {
  */
 function cardDone($ok, $msg) {
   global $mya;
-
-  if (!$scanner = r\cook('scanner') or !$scannerA = r\acct($scanner)) return hack('card done with no scanner');
 
   say($msg, $ok ? '' : 'err');
 

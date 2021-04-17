@@ -27,8 +27,8 @@ Scenario: A member scans an individual card, with no scanner set, not signed in
   | picture1     ||
   | Abe One      ||
   | Aville, AL   ||
-  | Amount       ||
   | For          ||
+  | Amount       ||
   | Charge       ||
   And with options:
   | Other |
@@ -45,8 +45,8 @@ Scenario: A member scans an individual card, with no scanner set, signed in, no 
   | picture1     ||
   | Abe One      ||
   | Aville, AL   ||
-  | Amount       ||
   | For          ||
+  | Amount       ||
   | Charge       ||
   And with options:
   | Other |
@@ -77,8 +77,8 @@ Scenario: A member scans an individual card, with no scanner set, signed in, wit
   | picture1     ||
   | Abe One      ||
   | Aville, AL   ||
-  | Amount       ||
   | For          ||
+  | Amount       ||
   | Charge       ||
   And with options:
   | groceries |
@@ -96,8 +96,8 @@ Scenario: A member scans an individual card, with scanner set, not signed in, no
   | picture1     ||
   | Abe One      ||
   | Aville, AL   ||
-  | Amount       ||
   | For          ||
+  | Amount       ||
   | Charge       ||
   | Pay          ||
   And with options:
@@ -116,8 +116,8 @@ Scenario: A member scans an individual card, with scanner set, not signed in, no
   | picture1     ||
   | Abe One      ||
   | Aville, AL   ||
-  | Amount       ||
   | For          ||
+  | Amount       ||
   | Charge       ||
   And with options:
   | groceries |
@@ -137,8 +137,8 @@ Scenario: A member scans an individual card, with scanner set, signed in, no rel
   | picture1     ||
   | Abe One      ||
   | Aville, AL   ||
-  | Amount       ||
   | For          ||
+  | Amount       ||
   | Charge       ||
   And with options:
   | Other |
