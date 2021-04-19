@@ -626,7 +626,9 @@ EOF;
         $date = strftime('%Y%m%d', $deposit ?: $today);
         $details = w\btn("/sadmin/deposit-details/date=$deposit&total=$total&count=$count", t('details'));
         if (!$deposit or $deposit >= $today - 90 * DAY_SECS) {
-          $details .= ' ' . w\btn('', t('flnm'), 'default', 'xs', w\clas('filename') + ray('data-flnm', "CGach-$date.csv")) . ' ' . w\lnk("/sadmin/achs/date=$deposit&mark=0", t('download'));
+          $details .= 
+//          ' ' . w\btn('', t('flnm'), 'default', 'xs', w\clas('filename') + ray('data-flnm', "CGach-$date.csv")) . 
+          ' ' . w\lnk("/sadmin/achs/date=$deposit&mark=0", t('download'));
         }
         if ($count) $details .= ' ' . ($deposit
           ? w\btn("/sadmin/checks/way=In&date=$deposit&mark=0&limit=$count", t('checks'))

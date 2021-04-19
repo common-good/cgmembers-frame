@@ -1324,6 +1324,11 @@ function zipFld($zip = NULL) {return textFld(REQ . t('Postal Code:'), [t('Physic
 function sellingFld($selling = NULL) {return areaFld(t('Selling:'), [t('Products'),t('Enter one or more <b>VERY SHORT</b> transaction descriptions (for example "food") for when you make a sale &mdash; one line for each. Put the most common one first. This will appear in the description of the transaction for both you and the customer (for example "$20 for <i>food</i> on %dt")', 'dt', u\fmtDate(now(), TRUE))], required($selling));}
 function routingFld($req = '') {return intFld(REQ . t('Routing:'), t('Type carefully your bank\'s routing number.<br>(check to be sure it\'s correct!)'), vrange(10000000, 999999999));}
 function crumbsFld($dft, $req = FALSE) {return numFld($req . t('Crumbs:'), [t('Contribution Percentage'), t('Percentage to contribute on each payment you receive')], dft(($dft * 100) ?: '') + step(.1) + suffix(' %'));}
+function ssnFld($req = REQ, $extra = []) {
+  $ssReason = $req ? t('Required by the IRS if you accept more than $20,000 a year in payments through %PROJECT ($600 a year in MA and VT).') : '';
+  return passFld($req . t('ssTitle'), [t('ssDesc'), $ssReason], autofill('off') + $extra);
+}
+function dobFld($req, $extra = []) {return dateFld($req . t('Birth Date:'), [t('mm/dd/yyyy'), mobileDobTxt()], autofill('off') + $extra);} // maybe use textFld not dateFld because some Android users have trouble selecting the year (mobildDobTxt is a workaround)
 
 /**
  * Standardize the "selling" field input.
@@ -1359,14 +1364,12 @@ EOF;
  * @param char $req: REQ if required, else ''
  */
 function ssnFields($personal = TRUE, $req = '') {
-  $mobileDobTxt = u\isMobile() ? t(' Tap for calendar, <%b>press to type</b>.', '_b', 'b class="loud"') : '';
   if ($personal) {
-    $ssReason = $req ? t('Required by the IRS if you accept more than $20,000 a year in payments through %PROJECT ($600 a year in MA and VT).') : '';
-    $federalId = passFld($req . t('ssTitle'), [t('ssDesc'), $ssReason], autofill('off'));
-    $dob = dateFld($req . t('Birth Date:'), [t('mm/dd/yyyy'), t('Your date of birth &mdash; must match the date on your ID.') . $mobileDobTxt], autofill('off')); // maybe use textFld not dateFld because some Android users have trouble selecting the year
+    $federalId = ssnFld($req);
+    $dob = dobFld($req);
   } else {
     $federalId = passFld($req . t('einTitle'), [t('einDesc')], autofill('off'));
-    $dob = dateFld($req . t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)?') . $mobileDobTxt]);
+    $dob = dateFld($req . t('Founded:'), [t('Founding date'), t('When did this company begin, approximately (mm/dd/yyyy)?') . mobileDobTxt()]);
   }
   
   return compact(ray('federalId dob'));
@@ -2234,7 +2237,7 @@ function disabled($value = NULL, $disabled = TRUE) {return compact('disabled') +
 function dft($v) {return ray('default_value', nn($v, NULL));}
 function weight($weight) {return compact('weight');}
 function clas($class) {return ['class' => [$class]];}
-function suffix($field_suffix = '') {return compact('field_suffix');}
+function suffix($suffix = '') {return ray('field_suffix', "<div class=\"suffix\">$suffix</div>");}
 function prefix($prefix) {return compact('prefix');}
 function maxlen($maxlength) {return compact('maxlength');}
 function vmin($min) {return compact('min');}
@@ -2258,3 +2261,4 @@ function notab() {return tabindex(-1);}
 function tabindex($n) {return ['tabindex' => $n];}
 function uncacheSubmenus() {foreach (ray(SUBMENUS) as $menu) w\svar("menu-$menu", NULL);}
 function qBtn($topic) {return tr('<div class="qbtn-%topic"></div>', compact('topic'));}
+function mobileDobTxt() {return u\isMobile() ? t(' Tap for calendar, <%b>press to type</b>.', '_b', 'b class="loud"') : '';}

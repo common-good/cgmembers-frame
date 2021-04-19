@@ -19,9 +19,6 @@ function formSummary($form, &$sta) {
 
   if ($mya->closed) say(t('Your account is closed, but you can still see your account history.'));
 
-  $extras = '<br>' . u\fmtPhone($mya->phone) . "<br><span id=\"acctEmail\">$mya->email</span> "
-  . btn('', 'c', 'default', '', clas('copyEmail'));
-
   $form = adminSummary();
   foreach (ray('legalName shortName community') as $k) if (nni($form, $k)) { // move these up (see return line)
     $$k = $form[$k];
@@ -45,8 +42,13 @@ function formSummary($form, &$sta) {
   $deposits = $mya->id == CGID ? w\lnk('/sadmin/show-reconciled', t('Dollar Pool Transactions')) : '';
 
   $title = item(t('Account Summary'), '', suffix($buttons));
-  $accountName = item($mya->j_fullName . ($mya->jid ? '<br>' : ' ') . "($mya->j_name)", t('Name:'));
-  $address = $mya->cAdmin ? item(($mya->trialco ? $mya->contact : $mya->postalAddr) . $extras, t('Contact:')) : NULL;
+  $accountName = item($mya->j_fullName, t('Name:')); //  . ($mya->jid ? '<br>' : ' ') . "($mya->j_name)"
+  $address = $mya->cAdmin 
+  ? item(($mya->trialco ? $mya->contact : $mya->postalAddr)
+    . '<br>' . u\fmtPhone($mya->phone) . "<br><span id=\"acctEmail\">$mya->email</span> "
+    . btn('', 'c', 'default', '', clas('copyEmail'))
+    , t('Contact:'))
+  : NULL;
   $balance = u\fmtAmt($mya->balance);
 //    $totalDesc = u\fmtAmt($mya->r);
 //    $balanceDesc = $mya->savings ? t(' plus your savings, for a total of @total', ['@total' => $totalDesc]) : '';
@@ -67,13 +69,11 @@ function formSummary($form, &$sta) {
   } else $acctType = t('community account');
 
   if ($mya->cAdmin) {
-    $extra = " id#$mya->id";
-    if (FALSE and $bankInfo = $mya->bankInfo) {
-      extract($bankInfo, EXTR_PREFIX_ALL, 'b');
-      $bankInfo = "$b_name (routing #$b_route)\n$b_address, $b_city, $b_state $b_zip";
-      $extra .= ' ' . w\popHelp(t('bank info'), $bankInfo, '#'); //strtr(t(' <@a>bank info</a>'), ['@a'=>$bankInfo]); // strtr circumvents Drupal crap
-    }
-  } else $extra = '';
+    $extra = " id#$mya->id " . btn('', 'c', 'default', '', clas('copyAcct'));
+    $copyAcct = t('your %PROJECT%co account (%qid)', 'co qid', $mya->co ? t(' company') : '', $mya->mainQid);
+    $copyEmail = "$mya->fullName <$mya->email>";
+//    if ($mya->jid) $copyEmail .= 
+  } else $extra = $copyAccount = $copyEmail = '';
   $accountId = item(($mya->mainQid ?: 'N/A') . '<span class="white">..</span>' . "($acctType)$extra", t('ID:')); // .. is for double-click select
 
   $fields0 = 'photo title clickPhoto buttons accountId accountName address legalName shortName community balance newBalance creditLine creditLimit committed';
@@ -91,7 +91,7 @@ function formSummary($form, &$sta) {
 
   if ($mya->superAdmin and $mya->proSe) $form = just('title accountId accountName', $form);
   
-  jsx('summary', 'field', 'helper');
+  jsx('summary', 'field copyAcct copyEmail', 'helper', $copyAcct, $copyEmail);
   
   return cgform($form, 'wide');
 

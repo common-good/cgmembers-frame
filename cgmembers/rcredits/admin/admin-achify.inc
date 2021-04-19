@@ -4,37 +4,40 @@ use CG as r;
 use CG\Util as u;
 use CG\DB as db;
 
-const F_FILEHDR = 'recType:R1, priority:R2, sp:L1, destNum:R9, originNum:R10, datetime:R10, fileIdModifier:R1, recSize:R3, blocking:R2, format:R1, destName:L23, originName:L23, ref:L8'; // header format
+const F_FILEHDR = 'recType:R1, priority:R2, sp:L1, destNum:R9, originPrefix:L1, originNum:R9, datetime:R10, fileIdModifier:R1, recSize:R3, blocking:R2, format:R1, destName:L23, originName:L23, ref:L8'; // header format
 const F_BATCHHDR = 'recType:R1, class:R3, originName:L16, data:L20, originNum:R10, secCode:L3, purpose:L10, when:L6, entryDate:R6, settle:L3, status:R1, destNum:R8, batchNum:R7'; // batch header format
 const F_PPD = 'recType:R1, txCode:R2, routing:R9, account:L17, amount:R10, id:L15, name:L22, data:L2, addendaFlag:R1, destNum:R8, count:R7'; // PPD (Prearranged Payment and Deposit) entry detail format
 const F_BATCHFTR = 'recType:R1, class:R3, count:R6, hash:R10, debits:R12, credits:R12, originNum:R10, auth:L19, reserve:L6, destNum:R8, batchNum:R7'; // end of batch (control record)
 const F_FILEFTR = 'recType:R1, batches:R6, blocks:R6, entries:R8, hash:R10, debits:R12, credits:R12, reserve:L39'; // end of file (control record)
 
-const BANK_DATA = [ // limit bank name to 23 characters
-  'BSL'      => 'Brattleboro S&L, 211672476',
-  'Citizens' => 'Citizens Bank, 011500120',
+const BANK_DATA = [ // our bank's name (<=23chars), routing number, prefix ("_" means blank), same-day cutoff time
+  'BSL'      => 'Brattleboro S&L, 211672476, _, 3pm',
+  'Citizens' => 'Citizens Bank, 011500120, 1, 11:59pm',
 ];
 const BANK = 'BSL'; // which bank we're using (index into BANK_DATA)
 
 /**
  * Create an ACH request file (debits only, for now).
  */
-function achify($where = 'deposit=0') {
-  list ($destName, $destNum) = ray(BANK_DATA[BANK]); // our bank's name and routing number
+function achify($where = 'deposit=0', $mark = FALSE) {
+  global $mya;
+  
+  list ($destName, $destNum, $originPrefix, $cutoff) = ray(BANK_DATA[BANK]);
   $sp = ' '; // filler for routing number in header
+  $originPrefix = str_replace('_', ' ', $originPrefix); // _ was for visibility
   $reserve = ''; // leave reserved fields empty
   $count = $hash = $credits = $debits = 0;
 
   list ($recType, $priority, $recSize, $blocking, $format) = [1, 1, 94, 10, 1];
   $fileIdModifier = 'A'; // distinguishes files on the same date and between the same participants (A-Z, 0-9); never send two files on the same day, so this can be static
   $datetime = strftime('%y%m%d%H%M');
-  list ($originNum, $originName, $ref) = ['1' . CGF_EIN, PROJECT, ''];
+  list ($originNum, $originName, $ref) = [CGF_EIN, PROJECT, ''];
   
   $recs[] = achRecord(compact(array_keys($ray = ray(F_FILEHDR))), $ray);
   
   $destNum = substr($destNum, 0, 8); // omit last digit (check digit) of routing number from here on (for BATCHHDR, PPD, and BATCHFTR)
   list ($recType, $class, $secCode, $settle, $status) = [5, 200, 'PPD', '', 1]; // 200=mixed (maybe), 225=debits, 220=credits
-  $entryDate = strftime('%y%m%d', strtotime('tomorrow'));
+  $entryDate = strftime('%y%m%d', strtotime(tr('+%n weekday', 'n', time() < strtotime($cutoff) ? 1 : 2)));
   $batchNum = 1; // batch (company) number within file
   list ($data, $purpose, $when) = ['', t('CG Credit'), strftime('%b%d')];
 
@@ -60,7 +63,7 @@ function achify($where = 'deposit=0') {
     $recs[] = achRecord(compact(array_keys($ray = ray(F_PPD))), $ray);
 
     $hash += substr($routing, 0, 8);
-    if (!$deposit) db\update('r_usd', ray('deposit txid', today(), $txid), 'txid');
+    if (!$deposit and $mark and $mya->superAdmin) db\update('r_usd', ray('deposit txid', today(), $txid), 'txid');
   }
   
   if (!$count) return 0;
@@ -76,7 +79,7 @@ function achify($where = 'deposit=0') {
 
 ///    if (isDEV) debug($recs);
   header('Content-type: text/plain');
-  header(tr('Content-Disposition: attachment; filename=ach-%BANK-20%datetime.txt', compact('datetime'))); // use full year (unlike in NACHA records)
+  header(tr('Content-Disposition: attachment; filename=%bank-20%datetime.ach', 'bank datetime', BANK, $datetime)); // use full year (unlike in NACHA records)
 /**/  echo join("\n", $recs);
   exit();
 }

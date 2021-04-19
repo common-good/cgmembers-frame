@@ -49,7 +49,7 @@ function formUnsubscribe_submit($form, &$sta) {
     $a->update('notes', r\stampNote('ZAP "' . $why . ': ' . $comments . '"') . $a->notes);
   } else { $info['fishy'] = t('Might be a hack; email disagrees with account.'); }
   
-  r\tellCAdmin(t('%nm unsbuscribed (%qid)', 'nm qid', $a->fullName, $qid), $info, $a->id);
+  r\tellCAdmin(t('%nm unsubscribed (%qid)', 'nm qid', $a->fullName, $qid), $info, $a->id);
 
   $msgs[] = 'thank tell';
   if ($a and !$a->activated) {

@@ -29,6 +29,7 @@ function formShowQr($form, &$sta, $args = '') {
 
   if ($mya->stepsDone('card')) {
     $qr = item(tr('<img src="%data" />', '_data', genQr(qrUrl($mya))));
+    $subtext .= t('<p><b>BUT NOT YET</b>. This feature will be available in May 2021.</p>');
   } else {
     $subtext .= t('<p>You must <%a>complete the steps</a> for getting a %PROJECT card before you can display your account\'s code.</p>', '_a', atag('/scraps/card'));
     $qr = NULL;
@@ -49,7 +50,7 @@ function genQr($url) {
     ->size(300)
     ->margin(10)
     ->roundBlockSizeMode(new RoundBlockSizeModeMargin())
-    ->logoPath('http://localhost/cgmembers-frame/cgmembers/rcredits/images/logo-in-white-circle30.png')
+    ->logoPath(R_ROOT . '/images/logo-in-white-square56.png')
 //    ->labelText('This is the label')
 //    ->labelFont(new NotoSans(20))
 //    ->labelAlignment(new LabelAlignmentCenter())
