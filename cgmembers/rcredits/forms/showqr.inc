@@ -49,7 +49,7 @@ function genQr($url) {
     ->size(300)
     ->margin(10)
     ->roundBlockSizeMode(new RoundBlockSizeModeMargin())
-    ->logoPath('http://localhost/cgmembers-frame/cgmembers/rcredits/images/logo-in-white-circle30.png')
+    ->logoPath(R_ROOT . '/images/logo-in-white-square56.png')
 //    ->labelText('This is the label')
 //    ->labelFont(new NotoSans(20))
 //    ->labelAlignment(new LabelAlignmentCenter())

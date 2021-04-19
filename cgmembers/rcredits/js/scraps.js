@@ -99,10 +99,8 @@ function doit(what, vs) {
 
   case 'summary':
     $('#activate-credit').click(function () {post('setBit', {bit:'debt', on:1}, report);});
-    $('.copyEmail').click(function () {
-      var nm = $('#edit-accountName .control-data').text().replace(/ \([^\)]*\)/, '').trim();
-      clipCopy(nm + ' <' + $('#acctEmail').text() + '>');
-    });
+    $('.copyAcct').click(function () {clipCopy(vs['copyAcct']);});
+    $('.copyEmail').click(function () {clipCopy(vs['copyEmail']);});
     $('#edit-note').focus();
 
     var fid = '#edit-helper';
@@ -345,7 +343,7 @@ function doit(what, vs) {
     break;
     
   case 'verifyid':
-    $('.form-item-submit a').click(function () {$('.form-item-method').toggle();});
+    $('.form-item-federalId a').click(function () {$('.form-item-method').toggle();});
     if (vs['method'] >= 0) verifyid(vs['method']);
     $('[id^="edit-method-"]').click(function () {verifyid($(this).val());});
 //    $('#edit-file').click(function () {if ($(this).val() == '') $('#edit-method-1').prop("checked", true);});

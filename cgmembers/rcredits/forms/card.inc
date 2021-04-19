@@ -16,7 +16,6 @@ function formCard($form, &$sta, $dom = '', $code = '') {
 
   if ($dom == 'done') {    
     if (!$z = u\decryRay($code)) return hack('done with no code');
-    if (!$scanner = r\cook('scanner') or !$scannerA = r\acct($scanner)) return hack('card done with no scanner');
     extract(just('ok msg', $z, NULL));
     return cardDone($ok, $msg);
 
@@ -150,7 +149,8 @@ function cardDone($ok, $msg) {
 
   say($msg, $ok ? '' : 'err');
 
-  $title = t('You: ' . $scannerA->fullName);
+  $nm = ($scanner = r\cook('scanner') and $scannerA = r\acct($scanner)) ? $scannerA->fullName : ($mya ? $mya->fullName : '');
+  $title = $nm ? t('You: ' . $nm) : t('Scanner');
   $lnkShowQr = $mya ? btn('/show-qr', t('Show My QR'), '', 'md') : '';
   $lnkScanQr = btn('/scan-qr', t('Scan Another QR'), '', 'md');
   $subtext = item("$lnkShowQr$lnkScanQr");

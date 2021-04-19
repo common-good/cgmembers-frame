@@ -468,9 +468,8 @@ EOF;
   foreach (ray('amountIn amountOut') as $k) $$k = u\fmtAmt($$k);
   $subtext = t('<b>New IN:</b> &nbsp;%countIn (%amountIn)<b class="newout">New OUT:</b> %countOut (%amountOut)', compact(ray('countIn amountIn countOut amountOut')));
   if ($mya->superAdmin) {
-    $go = w\btn("/sadmin/checks/way=In&date=$deposit&mark=1", t('Print Checks'))
-      . ' ' . w\btn("$base_url/sadmin/achs/date=$deposit&mark=1", t('Download ACH file'));
-    $go = item($go, ' ');
+//    $go = btn("/sadmin/checks/way=In&date=$deposit&mark=1", t('Print Checks')) . ' ' . 
+    $go = item(btn("$base_url/sadmin/achs/date=$deposit&mark=1", t('Download ACH file')));
   }
   
   $deposits = item(a\deposits(), ' ');
@@ -633,12 +632,19 @@ EOF;
 
 /**
  * Create an ACH Batch file for all relevant transfer requests.
+ * @params string $args: URL argument list including:
+ *   date: 0 for pending transfers (the default), unixtime for a redo
+ *   way: in or out (defaults to neither, meaning both)
+ *   mark: 1 means set deposit date to NOW, 0 (or omitted) means don't change anything
  */
 function achBatch($args) {
   include DRUPAL_ROOT . '/rcredits/admin/admin-achify.inc';
-  extract(just('way date mark', $args));
-  //  achify("deposit=$date");
-  w\achify("deposit=$date AND amount<=0 AND created<=:NOW"); // temporarily only money going OUT or verifying bank account
+  extract(just('date way mark', $args, ''));
+
+  u\setDft($date, 0);
+  if ($way) $way = ' AND amount' . ($way == 'in' ? '>=0' : '<=0');
+  w\achify("deposit=$date AND created<=:NOW" . $way, $mark); // <=:NOW lets us verify with $0 transfers before a scheduled real one
+  
   if (test()) return;
 }
 

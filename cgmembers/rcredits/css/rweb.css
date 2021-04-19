@@ -36,6 +36,7 @@ input.short {width:100px; display:inline-block;}
 .white {color:white;} /* to make things disappear */
 .noCalendar::-webkit-inner-spin-button,
 .noCalendar::-webkit-calendar-picker-indicator {display:none; -webkit-appearance:none; -moz-appearance:none;}
+.suffix {display:inline-block; margin-left:5px;}
 
 tr.hiRow {background-color:lightyellow;}
 #edit-none {display:none;} /* for hidden submit button */
@@ -929,6 +930,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 #frm-verifyid .form-item-method,
 #frm-verifyid .form-item-federalId,
 #frm-verifyid .form-item-idtype {display:none;}
+#edit-federalid {min-width:200px;}
 
 /* Bank Info / Connect */
 #connectFields2 {margin:20px 0; background:#e6e6e6; padding:30px;}
@@ -1101,6 +1103,7 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
 .page-sadmin-panel #messages .status > ul {padding:0;}
 
 /* Admin Deposits */
+#frm-deposits label {display:none;}
 #frm-deposits .control-label {min-width:150px;} /* can't be more than 153px (dunno why) */
 #frm-deposits .newout {margin-left:50px;}
 #edit-deposits .control-label {width:50px;}

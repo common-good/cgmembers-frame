@@ -25,8 +25,9 @@ function formVerifyId($form, &$sta, $args = '') {
   $method = radiosFld(REQ, '', dft(0), $methodChoices);  
   $idtype = textFld(t('ID Type:'), [t('Type of ID')]);
   $file = fileFld(t('ID File:'), t('Take a photo of your ID and upload it here (or email it us at %CGF_EMAIL).'));
-  extract(ssnFields(!$mya->co), FALSE);
-  $submit = submit(t('Submit'), '', '', suffix(lnk('', t('Show other options for ID verification'))));
+  $federalId = ssnFld(FALSE, suffix(lnk('', t('Show other options'))));
+  $dob = dobFld(FALSE);
+  $submit = t('Submit');
 
   $form = compact(ray('title subtext method idtype file legalName federalId dob submit'));
   return cgform($form);

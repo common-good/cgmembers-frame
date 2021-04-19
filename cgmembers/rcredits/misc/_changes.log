@@ -1,3 +1,13 @@
+2021-04-17 feature/ach2
+. adjusted achify to handle BS&L
+. admin deposits form no longer offers option to print new checks or show filename of ACH file
+. clarified in verifyid that other options are possible, by moving the link to the SSN line
+. wrapped suffixes in a div and made them automatically indent 5px
+. changed QR logo to a square one and fixed link bug
+. clicking on logo now goes to promo site
+. for cAdmins added a button to copy email subject to clipboard ("your Common Good account (WHATEVER)")
+. fixed bug in card scan that failed to show scanner name when done
+
 2021-04-17 feature/ach
 . generalized admin-achify.inc to handle an arbitrary bank
 . modified migrations to handle latest version of phinx (even though we're not updating it yet)

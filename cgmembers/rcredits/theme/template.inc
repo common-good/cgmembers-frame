@@ -190,6 +190,7 @@ EOF;
 
   $breadcrumb = rcredits_breadcrumb(['breadcrumb' => \drupal_get_breadcrumb()]);
   $logo = R_PATH . '/images/' . PROJECT_LOGO . '?' . R_VERSION;
+  $promoUrl = r\promoLink();
   
   return <<<EOF
 <div class="nav2">
@@ -215,7 +216,7 @@ EOF;
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="#"><div>
+      <a class="navbar-brand" href="$promoUrl"><div>
         <img src="$logo" />
         <div id="orgname">Common Good<sup> &reg;</sup></div>
       </div></a>

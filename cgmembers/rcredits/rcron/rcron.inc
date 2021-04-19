@@ -1073,7 +1073,7 @@ function postNotices1($item) {
   
   $posts = '';
   $radius = NEIGHBOR_MAX; // report everything within this many miles
-  $logo = "<image src=\"$base_url/rcredits/images/logo80.png\" style=\"width:30px; margin-right:10px;\" />";
+  $logo = tr("<image src=\"$base_url/rcredits/images/%PROJECT_LOGO\" style=\"width:30px; margin-right:10px;\" />");
   $postLink = w\lnk('/community/posts/op=post', t('Post one!'));
 
   foreach (ray($notices) as $type => $freq) {
