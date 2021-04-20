@@ -73,8 +73,8 @@ class Acct {
     $a->reread(); // set all real fields
     list ($a->id, $a->agentId) = array($uid, $mya ? $mya->agentId : $uid); // finish creating the object
 
-    u\setDft($cardCode, r\cardCode(r\qid($uid)));
-    u\setDft($emailCode, r\cardCode(r\qid($uid)));
+    u\setDft($cardCode, r\cardCode());
+    u\setDft($emailCode, r\cardCode());
     u\setDft($notices, $uid < 0 ? NOTICE_DFTS_CTTY : NOTICE_DFTS);
 
     foreach (ray('number region') as $k) unset($info[$k]);
@@ -917,23 +917,19 @@ EOF;
       : ($this->co ? R_DFT_PICTURE_WIDE : R_DFT_PICTURE);
   }
   
-  public function cardCode() {
-    $field = $this->proSe ? 'cardCode' : 'cardCode2';
-    return $this->agentA->$field;
-  }
+  public function cardCode() {return $this->qo->agentCode ? $this->agentA->cardCode2 : $this->cardCode;} // check for agentCode to handle admin acting on behalf of person (as though proSe)
 
   /**
    * Create an rCard security code for the given account (either for an individual or a company agent).
-   * @param acct $a: the account
    */
   function makeCardCode($newCode = '') {
     $a = $this;
-    $qid = $a->qid;
     $aA = $a->agentA;
-    $field = $a->proSe ? 'cardCode' : 'cardCode2';
+    $field = $this->qo->agentCode ? 'cardCode2' : 'cardCode';
+    $qid = ($a->anyAdmin and !$this->qo->agentCode) ? $a->mainQid : $a->qid;
     if ($aA->$field) r\badCard($qid, $aA->$field, t('making new card for %nm', 'nm', $a->fullName)); // (don't mark previous code bad if none)
 //    if ($oldCode = $aA->$field) db\insert('r_bad', ray('qid code created', $qid, $oldCode, now()), 'created');
-    $aA->update($field, $newCode ?: r\cardCode($qid)); // resave the secure fields
+    $aA->update($field, $newCode ?: r\cardCode()); // resave the secure fields
   }
     
   /**

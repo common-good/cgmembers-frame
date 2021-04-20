@@ -636,14 +636,15 @@ EOF;
  *   date: 0 for pending transfers (the default), unixtime for a redo
  *   way: in or out (defaults to neither, meaning both)
  *   mark: 1 means set deposit date to NOW, 0 (or omitted) means don't change anything
+ *   bank: BSL or Citizens
  */
 function achBatch($args) {
   include DRUPAL_ROOT . '/rcredits/admin/admin-achify.inc';
-  extract(just('date way mark', $args, ''));
+  extract(just('date way mark bank', $args, ''));
 
   u\setDft($date, 0);
   if ($way) $way = ' AND amount' . ($way == 'in' ? '>=0' : '<=0');
-  w\achify("deposit=$date AND created<=:NOW" . $way, $mark); // <=:NOW lets us verify with $0 transfers before a scheduled real one
+  w\achify("deposit=$date AND created<=:NOW" . $way, $mark, $bank); // <=:NOW lets us verify with $0 transfers before a scheduled real one
   
   if (test()) return;
 }
