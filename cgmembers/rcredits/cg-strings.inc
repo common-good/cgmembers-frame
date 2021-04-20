@@ -221,7 +221,7 @@ EOF
   'co complete' => t('Expect to receive your company %PROJECT card, a register sign, and some handout cards in the mail soon. You will need the card to set up your smartphone or tablet to start accepting payments in person through %PROJECT. Meanwhile, you can send and receive payments online beginning immediately.'),
   'join thanks' => t('Thank you for joining us!'),
   'verified email' => t('You have successfully verified your email address.'),
-  'continue co setup' => t('To complete your company account setup, sign back in to your PERSONAL account, then click you photo to select the company account.'),
+  'continue co setup' => t('To complete your company account setup, sign back in to your PERSONAL account, then click your photo to select the company account.'),
 //  'individual approval' => t('Once a staff member has approved your account, you will be able to make payments online.'),
 //  'company approval' => t('Once a staff member has approved your account (part of our security protocol), you can begin accepting %PROJECT payments.'),
 //  'card member' => t('Once a staff member has approved your account, you can expect to receive your %PROJECT card in the mail soon.'),

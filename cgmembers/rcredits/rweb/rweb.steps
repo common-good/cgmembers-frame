@@ -2414,3 +2414,14 @@ function weFirstThen($first, $then) {
  *     MAKE card AMemberCardIsPaidWithScannerSetNotSignedIn
  */
 function memberCompletesWith($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
+
+/**
+ * with QR (ARG)
+ *
+ * in: TEST showqr ACardMemberDisplaysTheirQR
+ */
+function withQR($url) {
+  global $testOnly; if (!$testOnly) return FALSE;
+  global $testQr;
+  return (t\eq($url, $testQr));
+}

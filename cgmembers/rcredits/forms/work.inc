@@ -17,7 +17,7 @@ function formWork($form, &$sta, $args = '') {
 
   $calling = textFld(t('Life Calling:'), [t('Your calling in life (optional)'), t('One of the main purposes of %PROJECT is to provide you the opportunity to do what you feel called to do in life. What would bring you joy to do (maybe something you\'re not doing yet)?')], dft($mya->calling));
   
-  $contactable = boolFld(t('Contactable?'), t('When a member in your region is looking for someone with that calling, may we give them your contact information (phone and email)?'), dft(0));
+  $contactable = boolFld(t('Contactable?'), t('When a member in your region is looking for someone with that calling, may we give them your contact information (phone and email)?'), dft(1));
 
   $companyOptions = array(
     'owner' => t('owner'),

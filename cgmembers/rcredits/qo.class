@@ -45,7 +45,8 @@ class Qo {
   }
   
   /**
-   * Return a pseudo-member
+   * Return a pseudo-member.
+   * NOTE: this is public, in some cases giving indirect access to private member variables of the same name.
    */
   function __get($field) {
     $qo = $this;
@@ -60,7 +61,7 @@ class Qo {
 
     if (!$qo->mainQid) $qo->mainQid = qid($qo->main); // these next fields require mainQid
     if ($field == 'mainQid') return $qo->mainQid;
-    if ($field == 'qid') return $qo->mainQid . ($qo->rel ? AGT_MARK . $qo->agentCode() : '');
+    if ($field == 'qid') return $qo->mainQid . ($qo->agentCode() ? AGT_MARK . $qo->agentCode : '');
     if ($field == 'region') return substr($qo->mainQid, 0, strlen($qo->mainQid) > 7 ? 4 : 3);
     if ($field == 'tail') return substr($qo->mainQid, strlen($qo->mainQid) > 7 ? 4 : 3);
     
