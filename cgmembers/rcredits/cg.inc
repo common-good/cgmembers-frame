@@ -511,14 +511,6 @@ function definiteName($uid) {
 }
 
 /**
- * Return an rCard security code for the specified qid.
- */
-function cardCode($qid) { 
-  $codeLen = R_CARDCODE_LEN - (strlen($qid) - 6); // shorter code when qid len > 6
-  return u\randomString($codeLen, 'word'); // create an rCard security code
-}
-
-/**
  * Return the account for the given gift card code.
  * @param string $code: the code to interpret
  * @param int $iCode: (RETURNED) the code sequence number
@@ -1508,3 +1500,4 @@ function countryList() {return db\keyed('id,name', 'r_countries', "name in ('Uni
 
 const CREDIT_RULE_ROW = [ACT_SURTX, MATCH_PAYEE, MATCH_PAYER, 0.00, 1.00, REF_ACCOUNT, REF_ACCOUNT, 0.00];
 function isCreditRule($row) {return (array_values(just('action from to amount portion payerType payeeType minimum', $row)) == CREDIT_RULE_ROW);}
+function cardCode() {return u\randomString(R_CARDCODE_LEN, 'word');}

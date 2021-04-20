@@ -1,5 +1,6 @@
 2021-04-20 feature/qr-test
 . added a test step to make sure the generated QR in showqr is what it should be
+. fixed bugs in cardCode related to admins not having an agent code for accounts they manage
 
 2021-04-17 feature/ach2
 . adjusted achify to handle BS&L
