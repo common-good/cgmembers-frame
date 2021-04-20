@@ -19,7 +19,7 @@ use Endroid\QrCode\Writer\PngWriter;
  * Show a QR code for the current account.
  */
 function formShowQr($form, &$sta, $args = '') {
-  global $mya;
+  global $mya, $testQr;
 //  extract(just('nothing', $args));
 
   if (!$mya->canBuy) softErr(t('You do not have permission to use this account\'s QR code.'));
@@ -27,9 +27,9 @@ function formShowQr($form, &$sta, $args = '') {
   $title = t('QR Code for ') . $mya->bestName;
   $subtext = t('<p>Businesses will scan this code to charge your account.</p>');
 
-  if ($mya->stepsDone('card')) {
-    $qr = item(tr('<img src="%data" />', '_data', genQr(qrUrl($mya))));
-    $subtext .= t('<p><b>BUT NOT YET</b>. This feature will be available in May 2021.</p>');
+  if ($mya->ok and $mya->stepsDone('card')) {
+    $qr = item(tr('<img src="%data" />', '_data', genQr($testQr = qrUrl($mya))));
+    u\EXPECT(r\Qo::qr2(str_replace('HTTP://', '', $testQr)) == [$mya->qid, $mya->cardCode()], 'generated QR differs from source');
   } else {
     $subtext .= t('<p>You must <%a>complete the steps</a> for getting a %PROJECT card before you can display your account\'s code.</p>', '_a', atag('/scraps/card'));
     $qr = NULL;

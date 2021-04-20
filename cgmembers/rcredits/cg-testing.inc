@@ -1402,9 +1402,7 @@ function clear($ch = 0) {
   global $mya; $mya = NULL;
   global $tTime; $tTime = time(); // all events happen simultaneously during a test (conceptually)
   global $lastGo, $formOut, $formArray, $formSta, $testOp, $testConfirmation;
-  global $tChecked, $tRadios, $testEmails, $rAPIResult;
-  global $testWho, $testSeq, $nextCode;
-  global $testFirst, $testThen;
+  global $tChecked, $tRadios, $testEmails, $rAPIResult, $testWho, $testSeq, $nextCode, $testFirst, $testThen, $testQr;
   global $sms_devel; $sms_devel = TRUE;
   global $newThresholds; unset($newThresholds);
   global $testRewardStep; $testRewardStep = 500;
@@ -1417,7 +1415,7 @@ function clear($ch = 0) {
   global $sceneTest;
   global $conf; $conf = [];
 
-  foreach (ray('lastGo formOut formArray formSta testOp testConfirmation tChecked tRadios testEmails rAPIResult testWho nextCode testSeq testFirst testThen') as $k) $$k = NULL;
+  foreach (ray('lastGo formOut formArray formSta testOp testConfirmation tChecked tRadios testEmails rAPIResult testWho nextCode testSeq testFirst testThen testQr') as $k) $$k = NULL;
 
   r\deleteAllCooks();
   foreach (ray('error status') as $one) u\deleteFile(t\dosayFilename($one));
@@ -1742,6 +1740,7 @@ function dojs($page, $id, $js) {
   global $base_url;
   $qid = t\acct($id)->qid;
   $jsCode = u\cryRay(compact('js'));
+//  return FALSE; // this suddenly started failing in windows (deep recursion exhausting session memory?)
   t\execWithTimeout("start \"\" \"$base_url/$page?qid=$qid&jsCode=$jsCode\"", DOJS_TIMEOUT); // leave enough time to display page
   return TRUE;
 }
@@ -1752,7 +1751,6 @@ function dojs($page, $id, $js) {
  * @param string $cmd: command to execute.
  * @param number $timeout: time limit in seconds.
  * @return string: output of the command.
- * @throws \Exception
  */
 function execWithTimeout($cmd, $timeout) {
   // File descriptors passed to the process.
@@ -1761,11 +1759,12 @@ function execWithTimeout($cmd, $timeout) {
     1 => array('pipe', 'w'),  // stdout
     2 => array('pipe', 'w')   // stderr
   );
+  $options = []; // ['bypass_shell' => TRUE];
 
   // Start the process.
   $prefix = strihas(PHP_OS, 'WIN') ? '' : 'exec ';
-  $process = proc_open($prefix . $cmd, $descriptors, $pipes);
-  if (!is_resource($process)) throw new \Exception('Could not execute process');
+  $process = proc_open($prefix . $cmd, $descriptors, $pipes, NULL, NULL, $options);
+  u\EXPECT(is_resource($process), 'Could not execute process');
 
   stream_set_blocking($pipes[1], 0); // Set the stdout stream to non-blocking, so stream_get_contents returns immediately.
   stream_set_blocking($pipes[2], 0); // Set the stderr stream to non-blocking, so stream_get_contents returns immediately.
@@ -1790,10 +1789,11 @@ function execWithTimeout($cmd, $timeout) {
 // (end on timeout only)    if (!$status['running']) break; // Break if the process exited before the timeout.
 
     $timeout -= (microtime(true) - $start) * 1000000; // Subtract the time we waited.
+///    if ($timeout % 10000 == 0) echo '.';
   }
   
   $errors = stream_get_contents($pipes[2]);
-  if (!empty($errors)) throw new \Exception($errors);
+  u\EXPECT(empty($errors), $errors);
 
   proc_terminate($process, 9); // Kill the process in case the timeout expired and it's still running.
 

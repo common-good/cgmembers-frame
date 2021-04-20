@@ -19,10 +19,10 @@ const BANK = 'BSL'; // which bank we're using (index into BANK_DATA)
 /**
  * Create an ACH request file (debits only, for now).
  */
-function achify($where = 'deposit=0', $mark = FALSE) {
+function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
   global $mya;
   
-  list ($destName, $destNum, $originPrefix, $cutoff) = ray(BANK_DATA[BANK]);
+  list ($destName, $destNum, $originPrefix, $cutoff) = ray(BANK_DATA[$bank]);
   $sp = ' '; // filler for routing number in header
   $originPrefix = str_replace('_', ' ', $originPrefix); // _ was for visibility
   $reserve = ''; // leave reserved fields empty
@@ -79,7 +79,7 @@ function achify($where = 'deposit=0', $mark = FALSE) {
 
 ///    if (isDEV) debug($recs);
   header('Content-type: text/plain');
-  header(tr('Content-Disposition: attachment; filename=%bank-20%datetime.ach', 'bank datetime', BANK, $datetime)); // use full year (unlike in NACHA records)
+  header(tr('Content-Disposition: attachment; filename=%bank-20%datetime.ach', compact(ray('bank datetime')))); // use full year (unlike in NACHA records)
 /**/  echo join("\n", $recs);
   exit();
 }

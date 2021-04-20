@@ -1,3 +1,6 @@
+2021-04-20 feature/qr-test
+. added a test step to make sure the generated QR in showqr is what it should be
+
 2021-04-17 feature/ach2
 . adjusted achify to handle BS&L
 . admin deposits form no longer offers option to print new checks or show filename of ACH file
