@@ -22,16 +22,17 @@ function formShowQr($form, &$sta, $args = '') {
   global $mya, $testQr;
 //  extract(just('nothing', $args));
 
-  if (!$mya->canBuy) softErr(t('You do not have permission to use this account\'s QR code.'));
+  if (!$mya->ok) return softErr(t('You cannot display this account\'s QR code until you have completed the steps to set it up.'));
+  if (!$mya->canBuy) return softErr(t('You do not have permission to use this account\'s QR code.'));
 
   $title = t('QR Code for ') . $mya->bestName;
   $subtext = t('<p>Businesses will scan this code to charge your account.</p>');
 
-  if ($mya->ok and $mya->stepsDone('card')) {
+  if ($mya->co ? ($mya->ok and $mya->agentA->hasPhoto) : ($mya->ok and $mya->stepsDone('card'))) {
     $qr = item(tr('<img src="%data" />', '_data', genQr($testQr = qrUrl($mya))));
     u\EXPECT(r\Qo::qr2(str_replace('HTTP://', '', $testQr)) == [$mya->qid, $mya->cardCode()], 'generated QR differs from source');
   } else {
-    $subtext .= t('<p>You must <%a>complete the steps</a> for getting a %PROJECT card before you can display your account\'s code.</p>', '_a', atag('/scraps/card'));
+    $subtext .= t('<p>You must <%a>complete the steps</a> for getting a %PROJECT card before you can display your account\'s code.</p>', '_a', $mya->co ? '' : atag('/scraps/card'));
     $qr = NULL;
   }
     
