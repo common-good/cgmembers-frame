@@ -917,17 +917,16 @@ EOF;
       : ($this->co ? R_DFT_PICTURE_WIDE : R_DFT_PICTURE);
   }
   
-  public function cardCode() {return $this->agentA->{$this->cardCodeFld()};}
-  private function cardCodeFld() {return $this->qo->agentCode ? 'cardCode2' : 'cardCode';} // check for agentCode to handle admin acting on behalf of person (as though proSe)
+  public function cardCode() {return $this->qo->agentCode ? $this->agentA->cardCode2 : $this->cardCode;} // check for agentCode to handle admin acting on behalf of person (as though proSe)
 
   /**
    * Create an rCard security code for the given account (either for an individual or a company agent).
    */
   function makeCardCode($newCode = '') {
     $a = $this;
-    $qid = $a->qid;
     $aA = $a->agentA;
-    $field = cardCodeFld();
+    $field = $this->qo->agentCode ? 'cardCode2' : 'cardCode';
+    $qid = ($a->anyAdmin and !$this->qo->agentCode) ? $a->mainQid : $a->qid;
     if ($aA->$field) r\badCard($qid, $aA->$field, t('making new card for %nm', 'nm', $a->fullName)); // (don't mark previous code bad if none)
 //    if ($oldCode = $aA->$field) db\insert('r_bad', ray('qid code created', $qid, $oldCode, now()), 'created');
     $aA->update($field, $newCode ?: r\cardCode()); // resave the secure fields
