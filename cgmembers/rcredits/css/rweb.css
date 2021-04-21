@@ -788,9 +788,12 @@ a.buttino {font-size:70%; display:inline-block; background-color:lightgray; bord
   #frm-honors .well {width:100%; box-shadow: 2px 2px 3px #888888;}
 }
 
-/* Show QR */
+/* Show QR / Scan QR */
 #frm-showqr #edit-qr img {width:100%; max-width:800px;}
 #scanqr {width:100%;}
+#frm-scanqr {text-align:center;}
+#frm-scanqr label {display:none;}
+#frm-scanqr .control-data {width:100%;}
 
 /* Pay / Charge / Tx */
 .form-item-periods select {width:40px; display:inline-block; margin-right:10px;}

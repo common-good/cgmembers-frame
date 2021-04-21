@@ -316,7 +316,9 @@ function fmtAmt(n, digits) {
   return n.toLocaleString(undefined, {maximumFractionDigits:digits}); // maximumFractionDigits fails in Safari/Firefox
 }
 
-function has(haystack, needle) {return (haystack.indexOf(needle) >= 0);}
+function has(hay, needle) {
+  return ((hay + '').indexOf(needle + '') >= 0);
+}
 /**
  * Build new jQuery syntax: $(":icontains['Bozo']") selects all elements containing "bozo", case-insensitive.
  */ /* FAILS

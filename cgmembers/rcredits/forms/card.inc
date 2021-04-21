@@ -44,7 +44,7 @@ function formCard($form, &$sta, $dom = '', $code = '') {
   $myName = $scannerA->fullName;
   $title = t('You: ') . $myName;
   
-  $photo = item($a->photoHtml(FALSE, TRUE));
+  $photo = item($a->agentA->photoHtml(FALSE, TRUE));
   $agentName = $a->agentA->fullName;
   $subtext = ($a->co ? "<small>$agentName</small><br>" : '') . "<b>$a->fullName</b><br>$a->city, $a->st";
 

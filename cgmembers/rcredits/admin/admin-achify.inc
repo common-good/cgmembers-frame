@@ -4,11 +4,12 @@ use CG as r;
 use CG\Util as u;
 use CG\DB as db;
 
-const F_FILEHDR = 'recType:R1, priority:R2, sp:L1, destNum:R9, originPrefix:L1, originNum:R9, datetime:R10, fileIdModifier:R1, recSize:R3, blocking:R2, format:R1, destName:L23, originName:L23, ref:L8'; // header format
-const F_BATCHHDR = 'recType:R1, class:R3, originName:L16, data:L20, originNum:R10, secCode:L3, purpose:L10, when:L6, entryDate:R6, settle:L3, status:R1, destNum:R8, batchNum:R7'; // batch header format
-const F_PPD = 'recType:R1, txCode:R2, routing:R9, account:L17, amount:R10, id:L15, name:L22, data:L2, addendaFlag:R1, destNum:R8, count:R7'; // PPD (Prearranged Payment and Deposit) entry detail format
-const F_BATCHFTR = 'recType:R1, class:R3, count:R6, hash:R10, debits:R12, credits:R12, originNum:R10, auth:L19, reserve:L6, destNum:R8, batchNum:R7'; // end of batch (control record)
-const F_FILEFTR = 'recType:R1, batches:R6, blocks:R6, entries:R8, hash:R10, debits:R12, credits:R12, reserve:L39'; // end of file (control record)
+// formats for records in a the NACHA file
+const F_FILEHDR = 'recType:R1, priority:R2, sp:L1, destNum:R9, originPrefix:L1, originNum:R9, datetime:R10, fileIdModifier:R1, recSize:R3, blocking:R2, format:R1, destName:L23, originName:L23, ref:L8';
+const F_BATCHHDR = 'recType:R1, class:R3, originName:L16, data:L20, originPrefix:L1, originNum:R9, secCode:L3, purpose:L10, when:L6, entryDate:R6, settle:L3, status:R1, destNum:R8, batchNum:R7';
+const F_PPD = 'recType:R1, txCode:R2, routing:R9, account:L17, amount:R10, id:L15, name:L22, data:L2, addendaFlag:R1, destNum:R8, count:R7'; // Prearranged Payment and Deposit (entry detail)
+const F_BATCHFTR = 'recType:R1, class:R3, count:R6, hash:R10, debits:R12, credits:R12, originPrefix:L1, originNum:R9, auth:L19, reserve:L6, destNum:R8, batchNum:R7';
+const F_FILEFTR = 'recType:R1, batches:R6, blocks:R6, entries:R8, hash:R10, debits:R12, credits:R12, reserve:L39';
 
 const BANK_DATA = [ // our bank's name (<=23chars), routing number, prefix ("_" means blank), same-day cutoff time
   'BSL'      => 'Brattleboro S&L, 211672476, _, 3pm',
@@ -22,7 +23,7 @@ const BANK = 'BSL'; // which bank we're using (index into BANK_DATA)
 function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
   global $mya;
   
-  list ($destName, $destNum, $originPrefix, $cutoff) = ray(BANK_DATA[$bank]);
+  list ($destName, $destNum, $originPrefix, $cutoff) = explode(', ', BANK_DATA[$bank]); // not ray() because of colons in the data
   $sp = ' '; // filler for routing number in header
   $originPrefix = str_replace('_', ' ', $originPrefix); // _ was for visibility
   $reserve = ''; // leave reserved fields empty
@@ -53,6 +54,7 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
     $count++;
     list ($recType, $id, $name, $addendaFlag) = [6, $a->mainQid, u\asciiOnly($a->legalName), 0];
     list ($routing, $account) = u\parseBankAccount($a->bankAccount);
+    if (isDEV and !$routing) $routing = $account = '211672476';
 		
 		$amount *= 100;
     if ($amount <= 0) $credits -= $amount; else $debits += $amount;
