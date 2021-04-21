@@ -16,11 +16,9 @@ function formScanQr($form, &$sta, $args = '') {
   js('scanqr');
   
   $title = t('Scan a %PROJECT Card');
-  $subtext = NULL;
-  //$subtext = t('Details.');
   
-  $result = item('', NBSP);
+  $result = item(t('No camera is available (yet) on this device.'), NBSP);
   $qr = item(w\tags('video', '', ray('id', 'scanqr')), BARE);
 
-  return cgform(compact(ray('title subtext result qr')));
+  return cgform(compact(ray('title result qr')));
 }
