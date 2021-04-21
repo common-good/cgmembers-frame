@@ -1,3 +1,7 @@
+2021-04-21 feature/migration-ledge
+. switched startup.sql to begin after all the migrations to date
+. fixed bug in achify that failed to default bank
+
 2021-04-21 feature/qr-scan
 . fixed bugs in qr scan
 . fixed bugs in achify
