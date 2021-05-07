@@ -1,3 +1,14 @@
+2021-05-04 feature/ach-limit
+. limit ACH total to bank's daily limit
+. fixed small bug in rsmart testing
+. fixed uninitialized var in dashboard
+. fixed bug in reporting repeating transaction success that failed to correlate first instance
+. cc donation now emails donor
+. made a cc donation test
+. cleaned up pass.inc and resetpassword.inc
+. bug fix: verifyemail no longer thinks it's a hack when new user tries to resend verification message
+. username is no longer offered as an option to identify account (except, temporarily still, "admin")
+
 2021-04-21 feature/migration-ledge
 . switched startup.sql to begin after all the migrations to date
 . fixed bug in achify that failed to default bank

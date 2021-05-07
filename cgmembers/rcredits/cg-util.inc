@@ -504,6 +504,7 @@ function get($url, $content = FALSE, $responseFormat = 'raw', $extra_headers = [
  * POST and redirect (together)
  */
 function postnGo($url, $data) {
+  if (test()) return w\go($url); // in tests, just verify the "go" part
   $guts = '';
   foreach ($data as $k => $v) {
     foreach (ray('k v') as $x) $$x = htmlentities($$x);

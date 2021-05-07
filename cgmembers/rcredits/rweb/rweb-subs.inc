@@ -59,7 +59,7 @@ function go($page, $msg = '', $field = '') {
   if (test()) {
     $page = t\parseQ($page);
     $_POST = []; // make sure it doesn't act like we submitted the target page
-    return strhas($page, 'http://') ? '' : f('t.pageForm', $page);
+    return u\starts($page, 'http') ? '' : f('t.pageForm', $page);
   }
 
   if (!u\starts($page, 'http')) $page = "$base_url/$page";
@@ -2113,7 +2113,8 @@ function signupCoDisplay($info, &$company = '') {
  * Return fields with a simple arithmetical expression and twice its small integer answer.
  */
 function captcha() {
-  $answer = mt_rand(2, 999);
+  global $testCaptchaAnswer;
+  $answer = test() ? $testCaptchaAnswer : mt_rand(2, 999);
   $n1 = $answer - 1;
   $cq = numFld(REQ . "$n1 + 1 =", ['?'], suffix(t(' (to keep the robots out)')));
   $ca = hidFld($answer * 2); // don't make it too easy
@@ -2121,7 +2122,6 @@ function captcha() {
 }
 
 function badCaptcha($sta) {
-  if (test()) return FALSE;
   extract(just('cq ca', $sta['input'], NULL));
   return ($cq * 2 == $ca) ? FALSE : !say(t('Wrong sum. Try again.'), 'cq');
 }

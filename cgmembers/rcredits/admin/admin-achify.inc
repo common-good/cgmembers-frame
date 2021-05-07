@@ -11,9 +11,9 @@ const F_PPD = 'recType:R1, txCode:R2, routing:R9, account:L17, amount:R10, id:L1
 const F_BATCHFTR = 'recType:R1, class:R3, count:R6, hash:R10, debits:R12, credits:R12, originPrefix:L1, originNum:R9, auth:L19, reserve:L6, destNum:R8, batchNum:R7';
 const F_FILEFTR = 'recType:R1, batches:R6, blocks:R6, entries:R8, hash:R10, debits:R12, credits:R12, reserve:L39';
 
-const BANK_DATA = [ // our bank's name (<=23chars), routing number, prefix ("_" means blank), same-day cutoff time
-  'BSL'      => 'Brattleboro S&L, 211672476, _, 3pm',
-  'Citizens' => 'Citizens Bank, 011500120, 1, 11:59pm',
+const BANK_DATA = [ // our bank's name (<=23chars), routing number, prefix ("_" means blank), same-day cutoff time, maximum ACH total
+  'BSL'      => 'Brattleboro S&L, 211672476, _, 3pm, 10000',
+  'Citizens' => 'Citizens Bank, 011500120, 1, 11:59pm, 9999999',
 ];
 const BANK = 'BSL'; // which bank we're using (index into BANK_DATA)
 
@@ -24,7 +24,7 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
   global $mya;
   
   if (!$bank) $bank = BANK; // links give us '' instead of omitted
-  list ($destName, $destNum, $originPrefix, $cutoff) = explode(', ', BANK_DATA[$bank]); // not ray() because of colons in the data
+  list ($destName, $destNum, $originPrefix, $cutoff, $maxAch) = explode(', ', BANK_DATA[$bank]); // not ray() because of colons in the data
   $sp = ' '; // filler for routing number in header
   $originPrefix = str_replace('_', ' ', $originPrefix); // _ was for visibility
   $reserve = ''; // leave reserved fields empty
@@ -45,14 +45,19 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
 
   $recs[] = achRecord(compact(array_keys($ray = ray(F_BATCHHDR))), $ray);
 
-  $q = db\q("SELECT txid,payee,amount,deposit FROM r_usd WHERE $where ORDER BY txid");
+  $q = db\q("SELECT txid,payee,amount,deposit FROM r_usd WHERE ($where) AND ABS(amount)<$maxAch ORDER BY amount>0, ABS(amount) DESC, txid");
+  $tot = 0;
 
+  $DBTX = \db_transaction();
   while ($row = $q->fetchAssoc()) {
     extract($row);
+    if ($tot + abs($amount) > $maxAch) continue;
+    $tot += abs($amount);
+    $count++;
+    
     $a = r\acct($payee);
     $bankAccountType = 'checking'; // we handle only checking accounts at this time
     if ($a->mainQid == 'NEWAFX') $bankAccountType = 'savings';
-    $count++;
     list ($recType, $id, $name, $addendaFlag) = [6, $a->mainQid, u\asciiOnly($a->legalName), 0];
     list ($routing, $account) = u\parseBankAccount($a->bankAccount);
     if (isDEV and !$routing) $routing = $account = '211672476';
@@ -68,6 +73,7 @@ function achify($where = 'deposit=0', $mark = FALSE, $bank = BANK) {
     $hash += substr($routing, 0, 8);
     if (!$deposit and $mark and $mya->superAdmin) db\update('r_usd', ray('deposit txid', today(), $txid), 'txid');
   }
+  unset($DBTX);
   
   if (!$count) return 0;
   

@@ -49,7 +49,7 @@ function formConnect($form, &$sta, $args = '') {
       $subtext = NULL;
     } else { // during account setup
       $securityLink = r\promoLink('about-us/privacy-and-security');
-      $_reassurance = $mya->minimum ? '' : t('<p><b>NOTE:</b> Funds are transferred any time at your request, including when you overspend your %PROJECT balance or choose automatic refills. See our <%a>Privacy and Security Policy</a> for how your information is protected.</p>', '_a', atag($securityLink));
+      $_reassurance = $mya->minimum ? '' : t('<p><b>NOTE:</b> Funds are transferred any time at your request, including when you approve an invoice, overspend your %PROJECT balance, or choose automatic refills. See our <%a>Privacy and Security Policy</a> for how your information is protected.</p>', '_a', atag($securityLink));
 //      $methodChoices = explode(',', t('<p>(recommended) I want to transfer funds to and from my checking account from time to time at my request by Remotely-Created Check (RCC) or by Automated Clearing House (ACH).</p>%reassurance,My employer will pay me through %PROJECT or I will sell goods and services through %PROJECT and I do NOT want to connect a checking account.,I live near a store that will put money on my card in exchange for cash and I do NOT want to connect a checking account.', compact('_reassurance')));
 //      $connect = radiosFld(t('Connect How:'), '', required(0), $methodChoices);
 //      $chox = 3; // number of choices

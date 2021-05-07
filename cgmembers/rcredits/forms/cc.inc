@@ -76,7 +76,7 @@ function formCC_validate($form, &$sta) {
 function formCC_submit($form, &$sta) {
   extract($info = just('fullName email zip amount comment', $sta['input'], NULL));
   
-  r\tellAdmin(t('CC donation'), $info);
+  r\tellAdmin(t('CC donation initiated'), $info);
   unset($info['comment']); // don't send comment to PayPal
 
   $code = u\cryRay($info);
@@ -106,24 +106,23 @@ function thank($ray) {
   extract(just('fullName email zip amount', $ray));
   if (!$mya) $mya = r\acct($email);
     
-  $dbFields = 'fullName email flags zip notes source city state latitude longitude';
   list ($city, $state, $latitude, $longitude) = r\zipCity($zip);
   $source = t('cc donation');
 
   $notes = r\stampNote(t('cc donation: $') . $amount) . ($mya ? $mya->notes : '');
-  $flags = ($mya ? $mya->flags : u\bit(B_NONUDGE));
   if ($mya) $fullName = $mya->fullName;
-  r\tellAdmin(t('cc donation'), compact(ray($dbFields)) + ($mya ? [] : ray('NEW!', '1')));
-  $msg = t('<p>Thank you so much for your donation! We will make the best use of it we can, to create a more just, sustainable, and beautiful world.</p>');
+  r\tellAdmin(t('CC donation complete'), compact(ray('fullName email zip city state amount')) + ($mya ? [] : ray('NEW!', '1')));
+  $msg = 'cc thanks';
 
   if ($mya) {
-    $mya->update('flags notes', $flags, $notes);
+    $mya->update('notes', $notes);
   } else {
     $acctType = hidFld(CO_PERSONAL);
-    list ($city, $state, $latitude, $longitude) = r\zipCity($zip);
-    $info = []; foreach (ray($dbFields) as $k) if (isset($$k)) $info[$k] = $$k;
+    $flags = u\bit(B_NONUDGE);
+    $info = []; foreach (ray('fullName email flags zip notes source city state latitude longitude') as $k) if (isset($$k)) $info[$k] = $$k;
     if (!$a = new r\Acct($info)) return softErr(t('cannot create account'));
-    $msg .= t('<p>Meanwhile, if you\'re not yet a member of %PROJECT, <%a>check it out</a>!</p>', '_a', atag(PROMO_URL));
+    $msg .= '|check it out';
+    $a->tell($msg, [], t('Thank you for your donation!'));
   }
   return sayEmpty($msg);
 }

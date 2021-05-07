@@ -236,6 +236,7 @@ function aMemberConfirmsFormwhichLogsOutWithValues($page, $values) {
  *     MAKE bank Setup
  *     MAKE bank ASlaveMemberRequestsATransfer
  *     MAKE card Setup
+ *     MAKE cc Setup
  *     MAKE cgpay Setup
  *     MAKE changeaccount Setup
  *     MAKE community Setup
@@ -392,6 +393,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *
  * in: TEST bank AMemberMovesTooLittleToTheBank
  *     TEST bank AMemberTriesToGoBelowTheirMinimum
+ *     TEST cc SomeoneCompletesACreditCardDonation
  *     TEST cgpay AMemberClicksAnExpiredCGPayButton
  *     TEST company AMemberUpdatesCompanyInfo
  *     TEST contact AMemberUpdatesContactInfo
@@ -544,6 +546,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST bank AMemberAsksToDoTwoTransfersOutInOneDay
  *     TEST card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
  *     TEST card AMemberCardIsChargedWithScannerSetNotSignedIn
+ *     TEST cc SomeoneAsksToMakeACreditCardDonation
  *     TEST cgpay AMemberClicksACGPayButton
  *     TEST cgpay AMemberClicksACGPayButtonWithVariableAmount
  *     TEST cgpay AMemberClicksAButtonToBuyStoreCredit
@@ -1284,6 +1287,7 @@ function membersHave($list) {return t\membersHave($list);}
  *
  * in: TEST bank AMemberDrawsCreditFromTheBankThenCancels
  *     TEST card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
+ *     TEST cc SomeoneAsksToMakeACreditCardDonation
  *     TEST posts SomeoneConfirmsAnOfferOnceTwice
  *     TEST scancard SomeoneScansAMemberCard
  *     TEST signout AMemberSignsOut
@@ -2154,7 +2158,8 @@ function cookieIs($nm, $v) {
 /**
  * someone visits (ARG) where code is: (ARG)
  *
- * in: MAKE posts SomeoneConfirmsAnOfferOnceTwice
+ * in: MAKE cc SomeoneCompletesACreditCardDonation
+ *     MAKE posts SomeoneConfirmsAnOfferOnceTwice
  *     MAKE posts SomeoneEntersPersonalDataAfterReplyingToAnOffer
  */
 function someoneVisitsWhereCodeIs($page, $code, $values = '', $confirmed = FALSE) {
@@ -2386,6 +2391,7 @@ function memberAjaxWith($id, $op, $data) {
  *     MAKE card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsTrusted
  *     MAKE card AMemberScansAnIndividualCardWithScannerSetNotSignedInNoRelationsNotTrusted
  *     MAKE card AMemberScansAnIndividualCardWithScannerSetSignedInNoRelations
+ *     MAKE cc SomeoneAsksToMakeACreditCardDonation
  *     MAKE showqr AnOnlineonlyMemberTriesToDisplayTheirQR
  *     MAKE showqr ACardMemberDisplaysTheirQR
  */
@@ -2412,6 +2418,7 @@ function weFirstThen($first, $then) {
  *     MAKE card AMemberScansAnIndividualCardWithNoScannerSetSignedInWithRelationsChoices
  *     MAKE card AMemberCardIsChargedWithScannerSetNotSignedIn
  *     MAKE card AMemberCardIsPaidWithScannerSetNotSignedIn
+ *     MAKE cc SomeoneAsksToMakeACreditCardDonation
  */
 function memberCompletesWith($id, $page, $values) {return t\completeForm($id, $page, $values, TRUE);}
 
@@ -2424,4 +2431,15 @@ function withQR($url) {
   global $testOnly; if (!$testOnly) return FALSE;
   global $testQr;
   return (t\eq($url, $testQr));
+}
+
+/**
+ * next captcha is (ARG)
+ *
+ * in: MAKE cc SomeoneAsksToMakeACreditCardDonation
+ */
+function nextCaptchaIs($ca) {
+  global $testOnly; if ($testOnly) return FALSE;
+  global $testCaptchaAnswer; $testCaptchaAnswer = $ca;
+  return TRUE;
 }
