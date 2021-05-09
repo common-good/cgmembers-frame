@@ -62,8 +62,8 @@ Scenario: A member tries to buy credit with credit
   | account | secret | for      | amount |*
   | .ZZC    | Cc3    | credit50 | 100.00 |
   When member "?" confirms "cgpay?code=TESTCODE" with:
-  | name   | pass |*
-  | NEWZZA | a1   |
+  | qid  | pass |*
+  | .ZZA | a1   |
   Then count "txs" is 1
   And balances:
   | uid  | balance |*

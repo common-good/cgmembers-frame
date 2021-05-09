@@ -122,7 +122,7 @@ function choiceListFld() {
     community:invite:Invite:Invite a friend or company to join.
     community:donate:Give:Make a donation to %PROJECT.
     community:comment:Comment:Send a comment, question, or suggestion.
-    scraps:card:Finish:$cardText
+    scraps:card:Get a Card:$cardText
     scraps:co:Finish:Finish opening your complete company account.
     scraps:reopen:Reopen:Ask for your account to be reopened.
 X

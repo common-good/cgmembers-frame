@@ -37,8 +37,8 @@ Scenario: A member submits a CGPay button payment with account ID
   | account | secret | item | amount |*
   | .ZZC    | Cc3    | food | 23     |
   When member "?" confirms "cgpay?code=TESTCODE" with:
-  | name   | pass |*
-  | NEWZZA | a1   |
+  | qid  | pass |*
+  | .ZZA | a1   |
   Then we say "status": "success title|report tx" with subs:
   | did  | otherName | amount |*
   | paid | Our Pub   | $23    |
@@ -62,8 +62,8 @@ Scenario: A member submits a CGPay button payment with account ID and chosen amo
   | account | secret | item |*
   | .ZZC    | Cc3    | food |
   When member "?" confirms "cgpay?code=TESTCODE" with:
-  | name   | amount | pass |*
-  | NEWZZA | $23.45 | a1   |
+  | qid  | amount | pass |*
+  | .ZZA | $23.45 | a1   |
   Then we say "status": "success title|report tx" with subs:
   | did  | otherName | amount |*
   | paid | Our Pub   | $23.45 |
@@ -91,8 +91,8 @@ Scenario: A member clicks a button to buy store credit for a different amount
   | Password   |  |
   
   When member "?" confirms "cgpay?code=TESTCODE" with:
-  | name   | pass |*
-  | NEWZZA | a1   |
+  | qid  | pass |*
+  | .ZZA | a1   |
   Then we say "status": "success title|report tx" with subs:
   | did  | otherName | amount |*
   | paid | Our Pub   | $23    |
@@ -130,8 +130,8 @@ Scenario: A member types account ID to buy 50% store credit
   | account | secret | for      | amount |*
   | .ZZC    | Cc3    | credit50 | 23     |
   When member "?" confirms "cgpay?code=TESTCODE" with:
-  | name   | pass |*
-  | NEWZZA | a1   |
+  | qid  | pass |*
+  | .ZZA | a1   |
   Then we say "status": "success title|report tx" with subs:
   | did  | otherName | amount |*
   | paid | Our Pub   | $23    |
@@ -183,7 +183,7 @@ Scenario: A member types account ID to buy a gift of store credit
   | account | secret | for      | amount | for  |*
   | .ZZC    | Cc3    | credit50 | 23     | gift |
   When member "?" confirms "cgpay?code=TESTCODE" with:
-  | for           | name          | pass |*
+  | for           | qid           | pass |*
   | b@example.com | a@example.com | a1   |
   Then we say "status": "success title|report tx" with subs:
   | did  | otherName | amount |*

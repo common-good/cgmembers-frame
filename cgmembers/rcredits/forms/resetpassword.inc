@@ -16,14 +16,15 @@ include_once __DIR__ . '/signin.inc';
 function formResetPassword($form, &$sta, $args = '') {
   global $mya; // not yet saved in session
  
-  extract(just('id code', $args, NULL)); // linked from an email
-  if (!$id or !$code) return softErr('invalid link');
+  extract(just('id qid code', $args, NULL)); // linked from an email (remove id after 6/1/2021)
+  u\setDft($qid, $id);
+  if (!$qid or !$code) return softErr('invalid link');
   
-  $a = r\acct($id);
+  $a = r\acct($qid);
     
   if (!$mya or $mya != $a) { // no longer signed in to the right account, so sign in
     w\signout(TRUE); // close the wrong old account, if any
-    if (flooding($uid = r\loginString(nn($id)), $sta, $err)) return w\softErr($err); // handle getting hammered
+    if (flooding($uid = r\loginString(nn($qid)), $sta, $err)) return w\softErr($err); // handle getting hammered
     if (!$mya = $a ?: r\acct($uid)) return w\softErr(t('That is not a recognized account ID and one-time password.'));
     if (!$mya->passwordOkay(nn($code), 'pass', $err)) return w\softErr($err);
     noFlood($sta);

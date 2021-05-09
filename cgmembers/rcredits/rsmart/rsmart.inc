@@ -227,8 +227,10 @@ function identify($args) {
   } else $a = $mya; // get agent
 
   if ($signin) { //  identifying agent
-    if ($agent and $a == $mya) return posErr('already scanned in', [], $companyInfo);
-    if ($agent and $a->id != $mya->id) return posErr('wrong company', [], $companyInfo);
+    if ($agent) {
+      if ($a->id != $mya->id) return posErr('wrong company', [], $companyInfo);
+      if ($a->agentId == $mya->agentId) return posErr('already scanned in', [], $companyInfo); // $a == $mya doesn't work here because of qo can vary
+    }
 //    if ($a->proSe and (!$a->co or $a->coCan(CO_REQUIRE_CASHIER))) return posErr('scan in first');
     if ($code != $a->cardCode() and $code != $a->codeHash()) {
       if (test() or $version >= 230) return posErr('bad agent', [], $companyInfo); 

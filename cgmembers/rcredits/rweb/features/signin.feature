@@ -16,36 +16,29 @@ Scenario: A member visits the member site
   | Password   | Forgot password? |
   |~promo      | Not yet a member? |
 
-Scenario: A member signs in with username on the member site
-  When member "?" confirms form "signin" with values:
-  | name   | pass |*
-  | abeone | a1   |
-  Then member ".ZZA" is logged in
-  And we show "You: Abe One"
-
 Scenario: A member signs in with account ID on the member site
   When member "?" confirms form "signin" with values:
-  | name    | pass |*
-  | newzza | a1   |
+  | qid  | pass |*
+  | .ZZA | a1   |
   Then member ".ZZA" is logged in
   And we show "You: Abe One"
 
 Scenario: A member signs in with email on the member site
   When member "?" confirms form "signin" with values:
-  | name          | pass |*
+  | qid           | pass |*
   | a@example.com | a1   |
   Then member ".ZZA" is logged in
   And we show "You: Abe One"
 
 Scenario: A member types the wrong password
   When member "?" confirms form "signin" with values:
-  | name   | pass |*
-  | abeone | a2   |
+  | qid    | pass |*
+  | .ZZA   | a2   |
   Then we say "error": "bad login"
 
 Scenario: A member types an unknown username/ID
   When member "?" confirms form "signin" with values:
-  | name  | pass |*
+  | qid   | pass |*
   | bogus | a1   |
   Then we say "error": "bad login"
 
@@ -54,33 +47,33 @@ Scenario: A member types an unknown username/ID
 Scenario: A member asks for a new password for username
   Given next random code is "wHatEveR"
   When member "?" completes form "settings/password" with values:
-  | name   |*
-  | abeone |
+  | qid    |*
+  | .ZZA   |
   Then we email "password-reset" to member "a@example.com" with subs:
-  | fullName | site        | name   | code     |*
-  | Abe One  | %BASE_URL | abeone | wHatEveR |
+  | fullName | site      | qid    | code     |*
+  | Abe One  | %BASE_URL | .ZZA   | wHatEveR |
   
 Scenario: A member asks for a new password for account ID
   Given next random code is "wHatEveR"
   When member "?" completes form "settings/password" with values:
-  | name    |*
+  | qid     |*
   | newzza |
   Then we email "password-reset" to member "a@example.com" with subs:
-  | fullName | site        | name   | code     |*
-  | Abe One  | %BASE_URL | abeone | wHatEveR |
+  | fullName | site      | qid    | code     |*
+  | Abe One  | %BASE_URL | .ZZA   | wHatEveR |
   
 Scenario: A member asks for a new password for email
   Given next random code is "wHatEveR"
   When member "?" completes form "settings/password" with values:
-  | name          |*
+  | qid           |*
   | a@example.com |
   Then we email "password-reset" to member "a@example.com" with subs:
-  | fullName | site        | name   | code     |*
-  | Abe One  | %BASE_URL | abeone | wHatEveR |
+  | fullName | site      | qid    | code     |*
+  | Abe One  | %BASE_URL | .ZZA   | wHatEveR |
 
 Scenario: A member asks for a new password for an unknown account
   When member "?" completes form "settings/password" with values:
-  | name  |*
+  | qid   |*
   | bogus |
   Then we say "error": "bad account id"
 
@@ -89,7 +82,7 @@ Scenario: A member asks for a new password for a company
   | uid  | fullName | pass | email | flags |*
   | .ZZC | Our Pub  | c1   | c@    | co    |
   When member "?" completes form "settings/password" with values:
-  | name   |*
+  | qid    |*
   | newzzc |
   Then we say "error": "no co pass" with subs:
   | company |*
@@ -100,12 +93,12 @@ Scenario: A member asks for a new password for a company
 Scenario: A member clicks a link to reset password
   Given next random code is "wHatEveR"
   When member "?" completes form "settings/password" with values:
-  | name          |*
+  | qid           |*
   | a@example.com |
-  And member "?" visits page "reset/id=NEWZZA&code=wHatEveR"
+  And member "?" visits page "reset/qid=NEWZZA&code=wHatEveR"
   Then we show "Choose a New Password"
 
-  When member "?" confirms form "reset/id=NEWZZA&code=wHatEveR" with values:
+  When member "?" confirms form "reset/qid=NEWZZA&code=wHatEveR" with values:
   | pw       |*
   | %whatever|
   Then member ".ZZA" is logged in
@@ -113,23 +106,23 @@ Scenario: A member clicks a link to reset password
 
   Given member is logged out
   When member "?" confirms form "signin" with values:
-  | name   | pass      |*
-  | abeone | %whatever |
+  | qid    | pass      |*
+  | .ZZA   | %whatever |
   Then we show "You: Abe One"
   And member ".ZZA" is logged in
 
 Scenario: A member clicks a link to reset password with wrong code
   Given next random code is "wHatEveR"
   And member "?" completes form "settings/password" with values:
-  | name          |*
+  | qid           |*
   | a@example.com |
-  When member "?" visits page "reset/id=NEWZZA&code=NOTwHatEveR"
+  When member "?" visits page "reset/qid=NEWZZA&code=NOTwHatEveR"
   Then we say "error": "bad login"
 
 Scenario: A member clicks a link to reset password for unknown account
   Given next random code is "wHatEveR"
   And member "?" completes form "settings/password" with values:
-  | name          |*
+  | qid           |*
   | a@example.com |
-  When member "?" visits page "reset/id=NEWZZA&code=NOTwHatEveR"
+  When member "?" visits page "reset/qid=NEWZZA&code=NOTwHatEveR"
   Then we say "error": "bad login"

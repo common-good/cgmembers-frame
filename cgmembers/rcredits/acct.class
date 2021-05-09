@@ -1055,13 +1055,11 @@ EOF;
 
   /**
    * Create a once-use password and return it.
-   * @param string $name: login identifier (email, account record ID, or shortname) -- not used on production server
    * @return the once-use password
    */
-  function oneTimePass($name) {
+  function oneTimePass() {
     global $base_url;
     $a = $this;
-//    $verifying = !$a->stepDone['verifyemail'];
     $pass = u\randomString(R_CODE_LEN, 'word'); // use
     $expires = now() + HOUR_SECS * R_SIGNIN_HOURS;
     $a->update('oneTimePass', compact('pass', 'expires'));
@@ -1796,7 +1794,7 @@ X;
     
     $data['status'] = TX_APPROVED;
     $z2 = be\invoice($payeeA, $this, $amount, $desc, $goods, $data, $recursId);
-    return $z2->ok ? be\txRet(TRUE, "$z->msg|when resolved") : $z; // use error message from payer's point of view
+    return $z2->ok ? be\txRet(TRUE, "$z->msg|when resolved", $z2->subs) : $z; // use error message from payer's point of view
   }
 
   /**

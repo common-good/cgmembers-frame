@@ -220,6 +220,8 @@ EOF
   'card soon' => t('Your %PROJECT card will arrive in the mail soon.'),
   'co complete' => t('Expect to receive your company %PROJECT card, a register sign, and some handout cards in the mail soon. You will need the card to set up your smartphone or tablet to start accepting payments in person through %PROJECT. Meanwhile, you can send and receive payments online beginning immediately.'),
   'join thanks' => t('Thank you for joining us!'),
+  'cc thanks' => t('<p>Thank you so much for your donation! We will make the best use of it we can, to create a more just, sustainable, and beautiful world.</p>'),
+  'check it out' => t('<p>Meanwhile, if you\'re not yet a member of %PROJECT, <a href="%PROMO_URL" tabindex="-1" target="_blank">check it out</a>!</p>'),
   'verified email' => t('You have successfully verified your email address.'),
   'continue co setup' => t('To complete your company account setup, sign back in to your PERSONAL account, then click your photo to select the company account.'),
 //  'individual approval' => t('Once a staff member has approved your account, you will be able to make payments online.'),

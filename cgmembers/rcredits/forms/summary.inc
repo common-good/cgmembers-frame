@@ -73,7 +73,7 @@ function formSummary($form, &$sta) {
     $copyAcct = t('your %PROJECT%co account (%qid)', 'co qid', $mya->co ? t(' company') : '', $mya->mainQid);
     $copyEmail = "$mya->fullName <$mya->email>";
 //    if ($mya->jid) $copyEmail .= 
-  } else $extra = $copyAccount = $copyEmail = '';
+  } else $extra = $copyAcct = $copyEmail = '';
   $accountId = item(($mya->mainQid ?: 'N/A') . '<span class="white">..</span>' . "($acctType)$extra", t('ID:')); // .. is for double-click select
 
   $fields0 = 'photo title clickPhoto buttons accountId accountName address legalName shortName community balance newBalance creditLine creditLimit committed';
