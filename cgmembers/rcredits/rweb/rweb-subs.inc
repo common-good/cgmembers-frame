@@ -2092,10 +2092,10 @@ function skipStep($substitute = NULL, $justDid = '') {
 /**
  * Return account and password fields for sign-in.
  */
-function signinFlds($acct, $acctDesc = '', $passDesc = '') {
-  $acct = textFld(REQ . t('Account ID:'), [t('Your account ID'), $acctDesc], dft($acct) + w\autofill('section-rSignin rAccount'));
+function signinFlds($qid, $acctDesc = '', $passDesc = '') {
+  $qid = textFld(REQ . t('Account ID:'), [t('Your account ID'), $acctDesc], dft($qid) + w\autofill('section-rSignin rAccount'));
   $pass = passFld(REQ . t('Password:'), [t('Your password'), $passDesc], w\autofill('section-rSignin rPass'));
-  return [$acct, $pass];
+  return [$qid, $pass];
 }
 
 /**

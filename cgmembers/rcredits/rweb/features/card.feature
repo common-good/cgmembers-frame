@@ -19,8 +19,8 @@ Scenario: A member scans an individual card, with no scanner set, not signed in
   | Welcome to %PROJECT |
   
   When member "?" completes "signin/then=TESTCODE" with:
-  | name   | pass |*
-  | NEWZZB | 123  |
+  | qid  | pass |*
+  | .ZZB | 123  |
   Then cookie "scanner" is "NEWZZB"
   And we show
   | You: Bea Two ||

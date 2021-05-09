@@ -14,20 +14,20 @@ include_once __DIR__ . '/changepassword.inc';
 function formVerifyEmail($form, &$sta, $args = '') {
   global $mya;
 
-  extract(just('id qid code verify', $args, NULL)); // linked from an email (remove "id" after 11/15/2020)
+  extract(just('qid code verify', $args, NULL));
   if (!$verify) { // send link to verify email
-    if (!$mya or !$mya->can(B_MANAGE)) return hack(t('tried to verify email without manage permission: ' . $args));
+    if (!$mya or !$mya->can(B_MANAGE)) return softErr(t('You are no longer signed in.'));
     $title = t('Verify Your Email Address');
     $subtext = t('sent email', 'email', $mya->email) . t('<p><%a>Resend or change email</a></p>', '_a', atag('/settings/resend'));
     return cgform(compact(ray('title subtext')));
   }
 
-  if (!$a = r\acct($qid ?: $id)) return hack(t('Tried to verify nonexistent account: ' . $args));
+  if (!$a = r\acct($qid)) return hack(t('Tried to verify nonexistent account: ' . $args));
   
   if (!$mya or $mya->id != $a->id or $mya->agentId != $a->agentId) { // not signed in to the right account, so sign in
     $mya = NULL; // for companies, this flags that we're not signed in right
     w\signout(TRUE); // close the wrong old account, if any
-    if (flooding(r\loginString($qid ?: $id), $sta, $err)) return w\softErr($err); // handle getting hammered
+    if (flooding(r\loginString($qid), $sta, $err)) return w\softErr($err); // handle getting hammered
     if (!$a->passwordOkay(nn($code), 'pass', $err)) return w\softErr($err); // check oneTimePass
     noFlood($sta);
     if ($a->co) {

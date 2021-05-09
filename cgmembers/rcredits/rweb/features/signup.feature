@@ -12,6 +12,7 @@ Setup:
   | .ZZA | Abe One |     1 | a@    | Atown | AK    | 01000 |     0 | member  | %whatever |
   | .ZZB | Bea Two |     2 | b@    |       | UT    | 02000 |  -200 |         | |
   | .ZZC | Cor Pub |     3 | c@    | Ctown | CA    | 03000 |     0 | ok,co   | |
+  And next captcha is "37"
 
 Scenario: A newbie visits the individual signup page
   When member "?" visits page "signup"
@@ -22,8 +23,8 @@ Scenario: A member signs up
   And next random code is "WHATEVER"
   And next random password is "quick brown fox jumped"
   When member "?" completes form "signup" with values:
-  | fullName | email | phone        | zip   | acctType     |*
-  | Al Aargh | z@    | 413-253-0000 | 01002 | %CO_PERSONAL |
+  | fullName | email | phone        | zip   | acctType     | cq | ca |*
+  | Al Aargh | z@    | 413-253-0000 | 01002 | %CO_PERSONAL | 37 | 74 |
   Then members:
   | uid  | fullName | legalName | email | phone        | zip   | state |*
   | .AAA | Al Aargh | Al Aargh  | z@    | +14132530000 | 01002 | MA    |
@@ -248,8 +249,8 @@ Scenario: A member confirms social security number
   Given member ".ZZB" steps left "ssn"
 #  When member ".ZZB" visits page "dashboard"
   When member "?" confirms form "signin" with values:
-  | name   | pass |*
-  | NEWZZB | 123  |
+  | qid  | pass |*
+  | .ZZB | 123  |
   Then we show "Confirm Your Social Security Number"
   
   When member ".ZZB" completes form "settings/ssn" with values:
@@ -259,36 +260,36 @@ Scenario: A member confirms social security number
 
 Scenario: A newbie registers with no case
   When member "?" confirms form "signup" with values:
-  | fullName | email | phone        | zip   | acctType     |*
-  | eve five | e@    | 413-253-0000 | 01002 | %CO_PERSONAL |
+  | fullName | email | phone        | zip   | acctType     | cq | ca |*
+  | eve five | e@    | 413-253-0000 | 01002 | %CO_PERSONAL | 37 | 74 |
   Then members:
   | uid  | fullName | legalName | email | phone        | zip   | country | state |*
   | .AAA | Eve Five | Eve Five  | e@    | +14132530000 | 01002 | US      | MA    |
 
 Scenario: A member registers bad email
   When member "?" confirms form "signup" with values:
-  | fullName | phone        | email     | zip   | acctType     |*
-  | Eve Five | 413-253-0000 | %whatever | 01001 | %CO_PERSONAL |
+  | fullName | phone        | email     | zip   | acctType     | cq | ca |*
+  | Eve Five | 413-253-0000 | %whatever | 01001 | %CO_PERSONAL | 37 | 74 |
   Then we say "error": "bad email"
 
 Scenario: A member registers bad name
   When member "?" confirms form "signup" with values:
-  | fullName  | email     | phone        |  zip  | acctType     |*
-  | ™ %random | e@        | 413-253-0000 | 01002 | %CO_PERSONAL |
+  | fullName  | email     | phone        |  zip  | acctType     | cq | ca |*
+  | ™ %random | e@        | 413-253-0000 | 01002 | %CO_PERSONAL | 37 | 74 |
 # NO  Then we say "error": "illegal char" with subs:
 #  | field    |*
 #  | fullName |
 
 Scenario: A member registers bad zip
   When member "?" confirms form "signup" with values:
-  | fullName  | email     | phone        |  zip    | acctType     |*
-  | Eve Five  | e@        | 413-253-0000 | %random | %CO_PERSONAL |
+  | fullName  | email     | phone        |  zip    | acctType     | cq | ca |*
+  | Eve Five  | e@        | 413-253-0000 | %random | %CO_PERSONAL | 37 | 74 |
   Then we say "error": "bad zip"
  
 Scenario: A member registers again
   When member "?" confirms form "signup" with values:
-  | fullName | email     | phone        |  zip  | acctType     |*
-  | Abe Dup  | a@        | 413-253-0002 | 01001 | %CO_PERSONAL |
+  | fullName | email     | phone        |  zip  | acctType     | cq | ca |*
+  | Abe Dup  | a@        | 413-253-0002 | 01001 | %CO_PERSONAL | 37 | 74 |
   Then we say "error": "duplicate email|forgot password" with subs:
   | who     | a                                          |*
   | Abe One | a href="settings/password/a%40example.com" |

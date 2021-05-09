@@ -260,7 +260,7 @@ const OFX_TX_FLDS = 'trnType dtPosted trnAmt fitId name memo';
 const OFTENS_SECS = ['W' => WEEK_SECS, 'M' => MONTH_SECS, 'Q' => QUARTER_SECS, 'Y' => YEAR_SECS];
 
 const ICARD_EXPIRES = 14; // how many days until invitation card expires, after account is activated
-const ICARD_CODELEN_MIN = 10; // minimum length for an invitation code
+const ICARD_CODELEN_MIN = 10; // minimum length for an invitation code (longer than any qid)
 const ILEN_REGION = 15; // 3 letters (radix 26-32 -- in other words, 1-6 can be used in region also)
 const ILEN_TAIL = 19; // 3-4 letters (radix 26)
 const ILEN_SECURITY = 16; // 3 alphanumerics (radix 35)

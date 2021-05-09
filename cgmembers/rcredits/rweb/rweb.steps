@@ -152,7 +152,6 @@ function memberCompletesFormWithValues($id, $page, $values) {return t\completeFo
  *     MAKE invoice AMemberApprovesAnInvoiceToATrustingCustomer
  *     MAKE joint AMemberRequestsAJointAccount
  *     MAKE pale AMemberMakesATransactionThatTriggersPayingALittleExtra
- *     MAKE signin AMemberSignsInWithUsernameOnTheMemberSite
  *     MAKE signin AMemberSignsInWithAccountIDOnTheMemberSite
  *     MAKE signin AMemberSignsInWithEmailOnTheMemberSite
  *     MAKE signin AMemberTypesTheWrongPassword
@@ -510,7 +509,6 @@ function weTellAdminWithSubs($topic, $subs) {return t\weTellAdmin($topic, $subs)
  *     TEST partnersignup ACompanyVisitsTheRegistrationPageSentByAPartner
  *     TEST showqr AnOnlineonlyMemberTriesToDisplayTheirQR
  *     TEST showqr ACardMemberDisplaysTheirQR
- *     TEST signin AMemberSignsInWithUsernameOnTheMemberSite
  *     TEST signin AMemberSignsInWithAccountIDOnTheMemberSite
  *     TEST signin AMemberSignsInWithEmailOnTheMemberSite
  *     TEST signin AMemberClicksALinkToResetPassword
@@ -1427,8 +1425,7 @@ function aMemberPostsToWithValues($page, $values) {return memberConfirmsFormWith
 /**
  * member (ARG) is logged in
  *
- * in: TEST signin AMemberSignsInWithUsernameOnTheMemberSite
- *     TEST signin AMemberSignsInWithAccountIDOnTheMemberSite
+ * in: TEST signin AMemberSignsInWithAccountIDOnTheMemberSite
  *     TEST signin AMemberSignsInWithEmailOnTheMemberSite
  *     TEST signin AMemberClicksALinkToResetPassword
  *     TEST signup AMemberSignsUp
@@ -2437,6 +2434,7 @@ function withQR($url) {
  * next captcha is (ARG)
  *
  * in: MAKE cc SomeoneAsksToMakeACreditCardDonation
+ *     MAKE signup Setup
  */
 function nextCaptchaIs($ca) {
   global $testOnly; if ($testOnly) return FALSE;
