@@ -1,3 +1,7 @@
+2021-05-12 feature/routing-check
+. fixed bug that failed to verify routing number after account activation
+. reinstated usernames for sign-in (grandfathered)
+
 2021-05-07 feature/no-username
 . cleaned up pass.inc and resetpassword.inc
 . bug fix: verifyemail no longer thinks it's a hack when new user tries to resend verification message

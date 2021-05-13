@@ -659,7 +659,7 @@ function uniqueName($fullName, $info = []) {
 }
 
 /**
- * Return the uid for the given qid or email.
+ * Return the uid for the given qid or email (or name field, for old time's sake).
  * If $qid is an email and more than one account has that same email address, the first non-company account is assumed.
  * @todo later: when regional prefix is required for signin, this function will ignore it in matching name field
  * @return the uid (FALSE if unsuccessful)
@@ -667,7 +667,8 @@ function uniqueName($fullName, $info = []) {
 function loginString($qid) {
   if (u\isQid($qid = trim(mb_strtoupper($qid))) and $a = r\acct($qid)) return $a->id; // try to interpret as a qid
   $email = u\cry('P', mb_strtolower($qid));
-  return db\get('uid', 'users', 'email=:email ORDER BY :IS_CO', compact('email'));
+  $name = u\shortName($qid);
+  return db\get('uid', 'users', 'name=:name OR email=:email ORDER BY :IS_CO', compact('email', 'name'));
 }
   
 /**
