@@ -33,9 +33,9 @@ function formConnect($form, &$sta, $args = '') {
   
   $targetFields = fieldSet('targetFields2', compact(ray('target achMin saveWeekly')), BARE);
   //$bankAccountType = radiosFld(t('Type:'), '', required($mya->can(B_SAVINGS)), $typeOptions);
-  $title = t('Banking Settings');
     
   if ($mya->hasBank) {
+    $title = t('Banking Settings');
 //    if ($usa) list ($route, $bankAccount) = u\parseBankAccount(@$bankAccount);
     $remove = submi(t('Remove connection'), '', 'xs', ['parents' => ['remove']]);
     $bankAccount = item("xxxxxx$mya->last4bank &nbsp; &nbsp;", t('Account:'), '', w\suffix(\render($remove)));
@@ -43,6 +43,7 @@ function formConnect($form, &$sta, $args = '') {
     $fields = 'title bankAccount cashout autopay autoboxes refills targetFields';
     $subtext = $chox = NULL;
   } else { // no connected account yet
+    $title = t('Connect a Checking Account');
     if ($mya->stepIsDone('fund')) {
       $connect = boolFld(t('Connect:'), '', 0);
       $chox = 2;
@@ -54,7 +55,6 @@ function formConnect($form, &$sta, $args = '') {
 //      $connect = radiosFld(t('Connect How:'), '', required(0), $methodChoices);
 //      $chox = 3; // number of choices
 //      $subtext = t('<p>Transfer funds to and from your <span class="loud">checking account</span> from time to time at your request, by Remotely-Created Check (RCC) or by Automated Clearing House (ACH).</p>%reassurance', compact('_reassurance'));
-      $title = t('Connect a Checking Account');
       $subtext = $_reassurance;
       $chox = 1; // number of choices
       $connect = hidFld(FUNDBY_BANK);
@@ -101,8 +101,7 @@ function formConnect_validate($form, &$sta) {
 
   if (!$mya->hasBank) {
     if ($chox == 3 and is_null($connect)) return say(t('You must choose a funding method'), 'connect');
-
-    if ($connect != FUNDBY_BANK) return; // nothing more to do
+    if ($connect != ($chox == 2 ? 1 : FUNDBY_BANK)) return; // nothing more to do
 
     foreach (ray($accts = 'routingNumber bankAccount') as $one) $$one = preg_replace('/[\.\- ]/', '', $$one);
     u\preray(compact(ray($accts)), $sta['input']);

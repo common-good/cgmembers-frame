@@ -56,6 +56,7 @@ function tlog($msg, $type = 'test', $info = array()) {return u\log($msg, $type, 
  *     MAKE bank ASlaveMemberRequestsATransfer
  *     MAKE connect AMemberConnectsABankAccountDuringSignup
  *     MAKE connect AMemberConnectsABankAccountLater
+ *     MAKE connect AnActiveMemberConnectsABankAccountWithABadRoutingNumber
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     MAKE coupons AMemberRedeemsAGiftCoupon
  *     MAKE coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
@@ -395,6 +396,7 @@ function weSayWithSubs($type, $index, $subs) {return t\weSayWithSubs($type, $ind
  *     TEST cc SomeoneCompletesACreditCardDonation
  *     TEST cgpay AMemberClicksAnExpiredCGPayButton
  *     TEST company AMemberUpdatesCompanyInfo
+ *     TEST connect AnActiveMemberConnectsABankAccountWithABadRoutingNumber
  *     TEST contact AMemberUpdatesContactInfo
  *     TEST contact AMemberGivesABadPhone
  *     TEST contact AMemberGivesABadEmail
@@ -558,6 +560,7 @@ function weShow($what, $show = TRUE) {return t\weShow($what, $show);}
  *     TEST company AMemberVisitsTheCompanyInfoPage
  *     TEST connect AMemberConnectsABankAccountDuringSignup
  *     TEST connect AMemberConnectsABankAccountLater
+ *     TEST connect AnActiveMemberConnectsABankAccountWithABadRoutingNumber
  *     TEST contact AMemberVisitsTheContactInfoPage
  *     TEST coupons AMemberCompanyCreatesAGiftCoupon
  *     TEST coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
@@ -866,6 +869,7 @@ function usd($list) {return t\usd($list);}
  *     MAKE company AMemberVisitsTheCompanyInfoPage
  *     MAKE connect AMemberConnectsABankAccountDuringSignup
  *     MAKE connect AMemberConnectsABankAccountLater
+ *     MAKE connect AnActiveMemberConnectsABankAccountWithABadRoutingNumber
  *     MAKE contact AMemberVisitsTheContactInfoPage
  *     MAKE coupons AMemberCompanyCreatesAGiftCoupon
  *     MAKE coupons AMemberCompanyCreatesADollarAmountDiscountCoupon
@@ -2034,7 +2038,8 @@ function memberStepsLeft($id, $left0) {
 /**
  * member (ARG) has (ARG) steps done: (ARG)
  *
- * in: MAKE invest Setup
+ * in: MAKE connect AnActiveMemberConnectsABankAccountWithABadRoutingNumber
+ *     MAKE invest Setup
  *     MAKE posts Setup
  *     MAKE showqr ACardMemberDisplaysTheirQR
  *     MAKE signupco ACompanyVerifiesEmailWhileSignedIn
