@@ -28,6 +28,7 @@ class FixRecurring extends AbstractMigration
      * with the Table class.
      */
     public function up() { // not change() for anything, because order matters
+      $this->execute("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))");
       $this->table('r_recurs')
       ->addColumn('purpose', 'string', ['length' => 255, 'null' => true, 'comment' => 'purpose of the recurring payment', 'after' => 'amount'])
       ->update();

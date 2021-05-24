@@ -1,4 +1,6 @@
 {
+  "comments": "See documentation config.json.howto.md",
+
   "stage": "development",
   "baseUrl": "http://localhost/cgmembers-frame/cgmembers",
   "promoUrl": "http://CommonGood.earth",
@@ -33,7 +35,5 @@
   "inviteKey": "10101",
   "ssnUser": "abc123",
   "ssnPass": "abc123",
-  "ssnRequest": "(not used in development)",
-
-  "comments": "See documentation config.json.howto.md"
+  "ssnRequest": "(not used in development)"
 }

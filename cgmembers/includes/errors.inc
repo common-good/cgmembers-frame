@@ -1,5 +1,7 @@
 <?php
 
+require_once(R_ROOT . "/rcredits.module");
+
 use \CG\Util as u;
 use \CG\Web as w;
 
